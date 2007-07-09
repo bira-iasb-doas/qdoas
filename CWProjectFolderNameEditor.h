@@ -2,9 +2,12 @@
 #define _CWPROJECTFOLDERNAMEEDITOR_H_GUARD
 
 #include <QLineEdit>
+#include <QStringList>
+#include <QTreeWidgetItem>
 
-#include "CWProjectTree.h"
 #include "CWEditor.h"
+
+class CWProjectTree;
 
 class CWProjectFolderNameEditor : public CWEditor
 {

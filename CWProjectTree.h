@@ -33,7 +33,7 @@ Q_OBJECT
 
   static int itemDepth(QTreeWidgetItem *item);
   static QTreeWidgetItem* ancestor(QTreeWidgetItem *item, int nth);
-  static QList<QTreeWidgetItem*> normalise(QList<QTreeWidgetItem*> items);
+  static QList<QTreeWidgetItem*> normalize(QList<QTreeWidgetItem*> items);
   static QList<QTreeWidgetItem*> directoryItems(const QList<QTreeWidgetItem*> &items);
 
  protected:
@@ -46,15 +46,16 @@ Q_OBJECT
   void slotDisable();
   void slotToggleEnable();
   void slotToggleDisplayDetails();
-  void slotAddNewProject();
+  void slotCreateProject();
   void slotDeleteProject();
-  void slotRefreshSelectedDirectories();
+  void slotRefreshDirectories();
   void slotCreateFolder();
   void slotRenameFolder();
   void slotInsertFile();
   void slotInsertDirectory();
   void slotRunAnalysis();
   void slotBrowseSpectra();
+  void slotDeleteSelection();
   void slotDeleteAllSpectra();
 
  signals:
@@ -95,6 +96,8 @@ class CProjectItem : public CProjectTreeItem
  public:
   CProjectItem(const QString &projectName);
   virtual ~CProjectItem();
+
+  virtual QVariant data(int column, int role) const;
 };
 
 class CAnalysisWindowBranchItem : public CProjectTreeItem
@@ -118,6 +121,8 @@ class CSpectraFolderItem : public CProjectTreeItem
  public:
   CSpectraFolderItem(QTreeWidgetItem *parent, const QString &folderName);
   virtual ~CSpectraFolderItem();
+
+  virtual QVariant data(int column, int role) const;
 };
 
 // Directory can have files and directories as children, but is driven by the filesystem
@@ -125,7 +130,7 @@ class CSpectraFolderItem : public CProjectTreeItem
 class CSpectraDirectoryItem : public CProjectTreeItem
 {
  public:
-  CSpectraDirectoryItem(QTreeWidgetItem *parent, const QString &directoryPath,
+  CSpectraDirectoryItem(QTreeWidgetItem *parent, const QDir &directory,
                         const QStringList &fileFilters, bool includesSubDirectories,
                         int *fileCount = 0);
   virtual ~CSpectraDirectoryItem();

@@ -9,6 +9,7 @@
 
 #include "CWProjectTree.h"
 #include "CWProjectFolderNameEditor.h"
+#include "CWProjectDirectoryEditor.h"
 #include "CWActiveContext.h"
 
 // pixmaps for the project tree
@@ -18,6 +19,9 @@
 
 const int cProjectTreeHideDetailMode   = 27;
 const int cProjectTreeShowDetailMode   = 28;
+
+const QRgb cDisabledTextColour         = 0xFFAAAAAA;
+const QRgb cProjectTextColour          = 0xFFA93F26;
 
 QIcon *CWProjectTree::m_folderIcon = NULL;
 QIcon *CWProjectTree::m_directoryIcon = NULL;
@@ -41,25 +45,6 @@ CWProjectTree::CWProjectTree(CWActiveContext *activeContext, QWidget *parent) :
 
 CWProjectTree::~CWProjectTree()
 {
-}
-
-void CWProjectTree::addNewProject(const QString &projectName)
-{
-  CProjectItem *projectItem = new  CProjectItem(projectName);
-
-  // add Children for Raw Soectra and Analysis Windows
-  //TODO
-  QTreeWidgetItem *tmp = new  CSpectraBranchItem(projectItem);
-  new CAnalysisWindowBranchItem(projectItem);
-
-  // TODO
-  CSpectraFolderItem *t2 = new CSpectraFolderItem(tmp, "Folder");
-  new CSpectraFileItem(t2, QFileInfo("/home/ian/sent/windoas/Data/sample.wds"));
-
-  new CSpectraDirectoryItem(tmp, "/home/ian/sent/windoas/Data", QStringList("*.spe"), true);
-  //new CSpectraDirectoryItem(tmp, "/usr/lib", QStringList("*.a"), true);
-
-  addTopLevelItem(projectItem);
 }
 
 void CWProjectTree::keyPressEvent(QKeyEvent *e)
@@ -200,6 +185,11 @@ void CWProjectTree::contextMenuEvent(QContextMenuEvent *e)
   menu.exec(e->globalPos()); // a slot will do the rest if appropriate
 }
 
+void CWProjectTree::addNewProject(const QString &projectName)
+{
+  addTopLevelItem(new CProjectItem(projectName));
+}
+
 QTreeWidgetItem *CWProjectTree::locateByPath(const QStringList &path)
 {
   QTreeWidgetItem *item, *p = NULL;
@@ -255,6 +245,10 @@ const QIcon& CWProjectTree::getIcon(int type)
     break;
   }
 }
+
+//------------------------------------------------------------------------------
+// SLOTS
+//------------------------------------------------------------------------------
 
 void CWProjectTree::slotEnable()
 {
@@ -332,7 +326,7 @@ void CWProjectTree::slotToggleDisplayDetails()
   }
 }
 
-void CWProjectTree::slotAddNewProject()
+void CWProjectTree::slotCreateProject()
 {
   // dialog for the project name ...  TODO
   addNewProject("John");
@@ -342,13 +336,13 @@ void CWProjectTree::slotDeleteProject()
 {
 }
 
-void CWProjectTree::slotRefreshSelectedDirectories()
+void CWProjectTree::slotRefreshDirectories()
 {
   // Ok for single, multi and no selection
   QList<QTreeWidgetItem*> items = CWProjectTree::directoryItems(selectedItems());
   
   if (items.count() > 1)
-    items = CWProjectTree::normalise(items);
+    items = CWProjectTree::normalize(items);
 
   QList<QTreeWidgetItem*>::iterator it = items.begin();
   while (it != items.end()) {
@@ -387,8 +381,8 @@ void CWProjectTree::slotRenameFolder()
     QTreeWidgetItem *parent = items.front();
     if (parent->type() == cSpectraFolderItemType) {
 
-      CWProjectFolderNameEditor *nameEditor = new  CWProjectFolderNameEditor(this, parent, false);
-      m_activeContext->addEditor(nameEditor);
+      CWProjectFolderNameEditor *dirEditor = new  CWProjectFolderNameEditor(this, parent, false);
+      m_activeContext->addEditor(dirEditor);
     }
   }
 }
@@ -422,24 +416,15 @@ void CWProjectTree::slotInsertFile()
 void CWProjectTree::slotInsertDirectory()
 {
   // expect selection has one item and it is a
-  // a spectra folder item
+  // a CSpectraFolderItem or a CSpectraBranchItem
   QList<QTreeWidgetItem*> items = selectedItems();
   if (items.count() == 1) {
     QTreeWidgetItem *parent = items.front();
-    if (parent->type() == cSpectraFolderItemType) {
+    if (parent->type() == cSpectraFolderItemType || parent->type() == cSpectraBranchItemType) {
 
-      // Modal File(Directory) dialog
-      QString dir = QFileDialog::getExistingDirectory(0, "Select a directory containing spectra files",
-                                                            "/home");
-      if (!dir.isEmpty()) {
-        int count = 0;
-        CSpectraDirectoryItem *dirItem = new CSpectraDirectoryItem(NULL, dir, QStringList("*.spe"), false, &count);
-
-        if (count)
-          parent->addChild(dirItem);
-        else
-          delete dirItem; // Message Box ... TODO
-      }
+      CWProjectDirectoryEditor *nameEditor = new  CWProjectDirectoryEditor(this, parent);
+      m_activeContext->addEditor(nameEditor);
+      
     }
   }
 }
@@ -452,6 +437,36 @@ void CWProjectTree::slotRunAnalysis()
 void CWProjectTree::slotBrowseSpectra()
 {
   // TODO
+}
+
+void CWProjectTree::slotDeleteSelection()
+{
+  // normalize the selection
+  QList<QTreeWidgetItem*> items = CWProjectTree::normalize(selectedItems());
+  
+  int type;
+  QList<QTreeWidgetItem*>::iterator it = items.begin();
+  while (it != items.end()) {
+    // cant delete the Raw Spectra or Analysis Window branches (instead delete all of there children)
+    type = (*it)->type();
+    if (type == cSpectraBranchItemType || type == cAnalysisWindowBranchItemType) {
+      // delete all children
+      QList<QTreeWidgetItem*> kids = (*it)->takeChildren();
+      QList<QTreeWidgetItem*>::iterator kIt = kids.begin();
+      while (kIt != kids.end())
+        delete *kIt++;
+    }
+    else if ((*it)->parent() == NULL) {
+      // top level item (a project)
+      delete takeTopLevelItem(indexOfTopLevelItem(*it));
+    }
+    else {
+      QTreeWidgetItem *p = (*it)->parent();
+      delete p->takeChild(p->indexOfChild(*it));
+    }
+
+    ++it;
+  }
 }
 
 void CWProjectTree::slotDeleteAllSpectra()
@@ -507,10 +522,23 @@ void CProjectTreeItem::setEnabled(bool enable)
 CProjectItem::CProjectItem(const QString &projectName) :
   CProjectTreeItem(QStringList(projectName), cProjectItemType)
 {
+  // add Children for Raw Spectra and Analysis Windows
+  new CSpectraBranchItem(this);
+  new CAnalysisWindowBranchItem(this);
 }
 
 CProjectItem::~CProjectItem()
 {
+}
+
+QVariant CProjectItem::data(int column, int role) const
+{
+  if (role == Qt::ForegroundRole) {
+    return QVariant(QBrush(QColor(m_enabled ? cProjectTextColour : cDisabledTextColour)));
+  }
+
+  // for other roles use the base class
+  return QTreeWidgetItem::data(column, role);
 }
 
 //------------------------------------------------------------------------------
@@ -547,13 +575,22 @@ CSpectraFolderItem::~CSpectraFolderItem()
 {
 }
 
+QVariant CSpectraFolderItem::data(int column, int role) const
+{
+  if (role == Qt::ForegroundRole && !m_enabled) {
+    return QVariant(QBrush(QColor(cDisabledTextColour)));
+  }
+  
+  // for other roles use the base class
+  return QTreeWidgetItem::data(column, role);
+}
 //------------------------------------------------------------------------------
 
-CSpectraDirectoryItem::CSpectraDirectoryItem(QTreeWidgetItem *parent, const QString &directoryPath,
+CSpectraDirectoryItem::CSpectraDirectoryItem(QTreeWidgetItem *parent, const QDir &directory,
                                                const QStringList &fileFilters, bool includeSubDirectories,
                                                int *fileCount) :
   CProjectTreeItem(parent, cSpectraDirectoryItemType),
-  m_directory(directoryPath),
+  m_directory(directory),
   m_fileFilters(fileFilters),
   m_includeSubDirectories(includeSubDirectories)
 {
@@ -585,7 +622,7 @@ QVariant CSpectraDirectoryItem::data(int column, int role) const
     return QVariant();
   }
   else if (role == Qt::ForegroundRole && !m_enabled) {
-    return QVariant(QBrush(QColor(0xFFAAAAAA)));
+    return QVariant(QBrush(QColor(cDisabledTextColour)));
   }
 
   // for other roles use the base class
@@ -629,8 +666,10 @@ int CSpectraDirectoryItem::loadBranch(void)
   }
 
   // now the files that match the filters
-
-  entries = m_directory.entryInfoList(m_fileFilters);
+  if (m_fileFilters.isEmpty())
+    entries = m_directory.entryInfoList();
+  else
+    entries = m_directory.entryInfoList(m_fileFilters);
 
   it = entries.begin();
   while (it != entries.end()) {
@@ -640,7 +679,7 @@ int CSpectraDirectoryItem::loadBranch(void)
     }
     ++it;
   }
-    
+  
   return totalFileCount;
 }
 
@@ -713,7 +752,7 @@ QVariant CSpectraFileItem::data(int column, int role) const
       return QVariant(Qt::AlignCenter);
   }
   else if (role == Qt::ForegroundRole && !m_enabled) {
-    return QVariant(QBrush(QColor(0xFFAAAAAA)));
+    return QVariant(QBrush(QColor(cDisabledTextColour)));
   }
 
   // for other roles use the base class
@@ -741,7 +780,7 @@ QTreeWidgetItem* CWProjectTree::ancestor(QTreeWidgetItem *item, int nth)
   return item;
 }
 
-QList<QTreeWidgetItem*> CWProjectTree::normalise(QList<QTreeWidgetItem*> items)
+QList<QTreeWidgetItem*> CWProjectTree::normalize(QList<QTreeWidgetItem*> items)
 {
   QList<int> depthList;
   QList<QTreeWidgetItem*> normList;

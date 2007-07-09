@@ -2,6 +2,7 @@
 #include <QVBoxLayout>
 #include <QLabel>
 
+#include "CWProjectTree.h"
 #include "CWProjectFolderNameEditor.h"
 
 
