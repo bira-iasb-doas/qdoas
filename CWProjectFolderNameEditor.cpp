@@ -85,7 +85,7 @@ bool CWProjectFolderNameEditor::actionOk()
   }
 
   // fall through failure ...
-  QMessageBox::information(this, "Insert Folder", msg);
+  QMessageBox::information(this, m_newFolder ? "Insert Folder" : "Rename Folder", msg);
   return false;
 }
 

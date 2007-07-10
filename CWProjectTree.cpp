@@ -14,6 +14,7 @@
 #include "CWProjectNameEditor.h"
 #include "CWProjectFolderNameEditor.h"
 #include "CWProjectDirectoryEditor.h"
+#include "CWProjectAnalysisWindowNameEditor.h"
 
 #include "CWActiveContext.h"
 
@@ -186,6 +187,16 @@ void CWProjectTree::contextMenuEvent(QContextMenuEvent *e)
       // cant remove this item - refers to all children
       menu.addAction("Delete All", this, SLOT(slotDeleteSelection()));
     }
+    else if (itemType == cAnalysisWindowItemType) {
+      // Analysis Window
+      menu.addAction(projItem->isEnabled() ? "Disable" : "Enable", this,
+                     SLOT(slotToggleEnable()));
+      menu.addSeparator();
+      menu.addAction("Rename...", this, SLOT(slotRenameAnalysisWindow()));
+      menu.addSeparator();
+      // cant remove this item - refers to all children
+      menu.addAction("Delete", this, SLOT(slotDeleteSelection()));
+    }
     else if (itemType == cProjectItemType) {
       menu.addAction(projItem->isEnabled() ? "Disable" : "Enable", this,
                      SLOT(slotToggleEnable()));
@@ -331,6 +342,45 @@ QString CWProjectTree::editRenameFolder(QTreeWidgetItem *item, const QString &ne
   }
   else
     return QString("The item is not a folder.");
+
+  return QString();
+}
+
+QString CWProjectTree::editInsertNewAnalysisWindow(QTreeWidgetItem *parent, const QString &windowName)
+{
+  if (parent && parent->type() == cAnalysisWindowBranchItemType) {
+    
+    // first make sure that the parent does not already have a child with this name
+    QTreeWidgetItem *item = CWProjectTree::locateChildByName(parent, windowName);
+    if (!item) {
+      new CAnalysisWindowItem(parent, windowName);
+    }
+    else
+      return QString("The project already contains an analysis window with that name.");
+  }
+  else  
+    return QString("The parent cannot have an analysis window as a child.");
+
+  // success falls through
+  return QString();
+}
+
+QString CWProjectTree::editRenameAnalysisWindow(QTreeWidgetItem *item, const QString &newWindowName)
+{
+  if (item && item->type() == cAnalysisWindowItemType) {
+
+    // first make sure that the parent does not already have a child with this name
+    QTreeWidgetItem *sibling = CWProjectTree::locateChildByName(item->parent(), newWindowName);
+    if (sibling) {
+      if (sibling != item)
+	return QString("The project already has an analysis window with that name.");
+      // do nothing if nothing changed (and consider it a successful rename)
+    }
+    else
+      item->setText(0, newWindowName);
+  }
+  else
+    return QString("The item is not an analysis window.");
 
   return QString();
 }
@@ -505,7 +555,7 @@ void CWProjectTree::slotToggleDisplayDetails()
 
 void CWProjectTree::slotCreateProject()
 {
-  CWProjectNameEditor *nameEditor = new  CWProjectNameEditor(this);
+  CWEditor *nameEditor = new  CWProjectNameEditor(this);
   m_activeContext->addEditor(nameEditor);
 }
 
@@ -516,7 +566,7 @@ void CWProjectTree::slotRenameProject()
     QTreeWidgetItem *item = items.front();
     if (item->type() == cProjectItemType) {
 
-      CWProjectNameEditor *nameEditor = new  CWProjectNameEditor(this, item);
+      CWEditor *nameEditor = new  CWProjectNameEditor(this, item);
       m_activeContext->addEditor(nameEditor);
     }
   }
@@ -551,7 +601,7 @@ void CWProjectTree::slotCreateFolder()
     QTreeWidgetItem *parent = items.front();
     if (parent->type() == cSpectraBranchItemType || parent->type() == cSpectraFolderItemType) {
 
-      CWProjectFolderNameEditor *nameEditor = new  CWProjectFolderNameEditor(this, parent, true);
+      CWEditor *nameEditor = new  CWProjectFolderNameEditor(this, parent, true);
       m_activeContext->addEditor(nameEditor);
     }
   }
@@ -567,7 +617,7 @@ void CWProjectTree::slotRenameFolder()
     QTreeWidgetItem *parent = items.front();
     if (parent->type() == cSpectraFolderItemType) {
 
-      CWProjectFolderNameEditor *dirEditor = new  CWProjectFolderNameEditor(this, parent, false);
+      CWEditor *dirEditor = new  CWProjectFolderNameEditor(this, parent, false);
       m_activeContext->addEditor(dirEditor);
     }
   }
@@ -608,7 +658,7 @@ void CWProjectTree::slotInsertDirectory()
     QTreeWidgetItem *parent = items.front();
     if (parent->type() == cSpectraFolderItemType || parent->type() == cSpectraBranchItemType) {
 
-      CWProjectDirectoryEditor *nameEditor = new  CWProjectDirectoryEditor(this, parent);
+      CWEditor *nameEditor = new  CWProjectDirectoryEditor(this, parent);
       m_activeContext->addEditor(nameEditor);
       
     }
@@ -624,10 +674,23 @@ void CWProjectTree::slotCreateAnalysisWindow()
     QTreeWidgetItem *parent = items.front();
     if (parent->type() == cAnalysisWindowBranchItemType) {
 
-      new CAnalysisWindowItem(parent, "Blob");
+      CWEditor *nameEditor = new  CWProjectAnalysisWindowNameEditor(this, parent, true);
+      m_activeContext->addEditor(nameEditor);
+    }
+  }
+}
 
-      //CWProjectFolderNameEditor *nameEditor = new  CWProjectFolderNameEditor(this, parent, true);
-      //m_activeContext->addEditor(nameEditor);
+void CWProjectTree::slotRenameAnalysisWindow()
+{  
+  // expect selection has one item and is an Anaylsis Window
+
+  QList<QTreeWidgetItem*> items = selectedItems();
+  if (items.count() == 1) {
+    QTreeWidgetItem *item = items.front();
+    if (item->type() == cAnalysisWindowItemType) {
+
+      CWEditor *nameEditor = new  CWProjectAnalysisWindowNameEditor(this, item, false);
+      m_activeContext->addEditor(nameEditor);
     }
   }
 }

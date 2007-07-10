@@ -47,7 +47,8 @@ guiobj := \
          CWSplitter.$(O) \
          CWProjectFolderNameEditor.$(O) \
          CWProjectDirectoryEditor.$(O) \
-         CWProjectNameEditor.$(O)
+         CWProjectNameEditor.$(O) \
+         CWProjectAnalysisWindowNameEditor.$(O)
 
 mocinc := $(guiobj:%.$(O)=%.h)
 

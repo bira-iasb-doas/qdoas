@@ -74,11 +74,7 @@ bool CWProjectNameEditor::actionOk()
     return true;
 
   // fall through failure ...
-  if (m_oldProjectName.isNull())
-    QMessageBox::information(this, "Insert Project", msg);
-  else
-    QMessageBox::information(this, "Rename Project", msg);
-    
+  QMessageBox::information(this, m_oldProjectName.isNull() ? "Insert Project" : "Rename Project", msg);
   return false;
 }
 

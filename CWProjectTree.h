@@ -37,6 +37,8 @@ Q_OBJECT
   QString editRenameProject(QTreeWidgetItem *item, const QString &projectName);
   QString editInsertNewFolder(QTreeWidgetItem *parent, const QString &folderName);
   QString editRenameFolder(QTreeWidgetItem *item, const QString &folderName);
+  QString editInsertNewAnalysisWindow(QTreeWidgetItem *parent, const QString &windowName);
+  QString editRenameAnalysisWindow(QTreeWidgetItem *item, const QString &windowName);
   QString editInsertDirectory(QTreeWidgetItem *parent, const QString &directoryPath,
 			      const QString &fileFilters, bool includeSubDirs);
 
@@ -68,6 +70,7 @@ Q_OBJECT
   void slotInsertFile();
   void slotInsertDirectory();
   void slotCreateAnalysisWindow();
+  void slotRenameAnalysisWindow();
   void slotRunAnalysis();
   void slotBrowseSpectra();
   void slotDeleteSelection();
