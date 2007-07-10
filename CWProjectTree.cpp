@@ -10,11 +10,15 @@
 #include <QDir>
 
 #include "CWProjectTree.h"
+
+#include "CWProjectNameEditor.h"
 #include "CWProjectFolderNameEditor.h"
 #include "CWProjectDirectoryEditor.h"
+
 #include "CWActiveContext.h"
 
 // pixmaps for the project tree
+#include "icons/project_window_16.xpm"
 #include "icons/project_folder_16.xpm"
 #include "icons/project_directory_16.xpm"
 #include "icons/project_file_16.xpm"
@@ -25,6 +29,7 @@ const int cProjectTreeShowDetailMode   = 28;
 const QRgb cDisabledTextColour         = 0xFFAAAAAA;
 const QRgb cProjectTextColour          = 0xFFA93F26;
 
+QIcon *CWProjectTree::m_windowIcon = NULL;
 QIcon *CWProjectTree::m_folderIcon = NULL;
 QIcon *CWProjectTree::m_directoryIcon = NULL;
 QIcon *CWProjectTree::m_fileIcon = NULL;
@@ -47,6 +52,22 @@ CWProjectTree::CWProjectTree(CWActiveContext *activeContext, QWidget *parent) :
 
 CWProjectTree::~CWProjectTree()
 {
+  if (m_windowIcon) {
+    delete m_windowIcon;
+    m_windowIcon = NULL;
+  }
+  if (m_folderIcon) {
+    delete m_folderIcon;
+    m_folderIcon = NULL;
+  }
+  if (m_directoryIcon) {
+    delete m_directoryIcon;
+    m_directoryIcon = NULL;
+  }
+  if (m_fileIcon) {
+    delete m_fileIcon;
+    m_fileIcon = NULL;
+  }
 }
 
 void CWProjectTree::keyPressEvent(QKeyEvent *e)
@@ -113,8 +134,11 @@ void CWProjectTree::contextMenuEvent(QContextMenuEvent *e)
       menu.addSeparator();
       menu.addAction("Run Analysis", this, SLOT(slotRunAnalysis()));
       menu.addAction("Browse Spectra", this, SLOT(slotBrowseSpectra()));
-      menu.addSeparator();
-      menu.addAction("Delete", this, SLOT(slotDeleteSelection()));
+      if (projItem->parent() && projItem->parent()->type() != cSpectraDirectoryItemType) {
+        // Cant delete an item that is a child of a directory item
+        menu.addSeparator();
+        menu.addAction("Delete", this, SLOT(slotDeleteSelection()));
+      }
     }
     else if (itemType == cSpectraFolderItemType) {
       // A Folder Item
@@ -122,8 +146,8 @@ void CWProjectTree::contextMenuEvent(QContextMenuEvent *e)
                      SLOT(slotToggleEnable()));
       menu.addAction("Rename...", this, SLOT(slotRenameFolder()));
       menu.addAction("New Sub-Folder...", this, SLOT(slotCreateFolder()));
-      menu.addAction("Insert File...", this, SLOT(slotInsertFile()));
       menu.addAction("Insert Directory...", this, SLOT(slotInsertDirectory()));
+      menu.addAction("Insert File...", this, SLOT(slotInsertFile()));
       menu.addSeparator();
       menu.addAction("Run Analysis", this, SLOT(slotRunAnalysis()));
       menu.addAction("Browse Spectra", this, SLOT(slotBrowseSpectra()));
@@ -147,6 +171,7 @@ void CWProjectTree::contextMenuEvent(QContextMenuEvent *e)
       // A Spectra Branch (Raw Spectra)
       menu.addAction("New Folder...", this, SLOT(slotCreateFolder()));
       menu.addAction("Insert Directory...", this, SLOT(slotInsertDirectory()));
+      menu.addAction("Insert File...", this, SLOT(slotInsertFile()));
       menu.addSeparator();
       menu.addAction("Run Analysis", this, SLOT(slotRunAnalysis()));
       menu.addAction("Browse Spectra", this, SLOT(slotBrowseSpectra()));
@@ -159,17 +184,18 @@ void CWProjectTree::contextMenuEvent(QContextMenuEvent *e)
       menu.addAction("New Analysis Window...", this, SLOT(slotCreateAnalysisWindow()));
       menu.addSeparator();
       // cant remove this item - refers to all children
-      menu.addAction("Delete All", this, SLOT(slotDeleteAllAnalysisWindows()));
+      menu.addAction("Delete All", this, SLOT(slotDeleteSelection()));
     }
     else if (itemType == cProjectItemType) {
       menu.addAction(projItem->isEnabled() ? "Disable" : "Enable", this,
                      SLOT(slotToggleEnable()));
+      menu.addAction("Rename...", this, SLOT(slotRenameProject()));
       menu.addAction("New Project...", this, SLOT(slotCreateProject()));
       menu.addSeparator();
       menu.addAction("Run Analysis", this, SLOT(slotRunAnalysis()));
       menu.addAction("Browse Spectra", this, SLOT(slotBrowseSpectra()));
       menu.addSeparator();
-      menu.addAction("Delete", this, SLOT(slotDeleteProject()));
+      menu.addAction("Delete", this, SLOT(slotDeleteSelection()));
     }
       
   }
@@ -220,9 +246,55 @@ QTreeWidgetItem *CWProjectTree::locateByPath(const QStringList &path)
   return p;
 }
 
+QTreeWidgetItem *CWProjectTree::locateProjectByName(const QString &projectName)
+{
+  QTreeWidgetItem *p = NULL;
+  int i = 0;
+
+  // must be a top-level item - try and find it
+  while (i < topLevelItemCount() && (p = topLevelItem(i))->text(0) != projectName) ++i;
+  if (i < topLevelItemCount())
+    return p;
+
+  return NULL;
+}
+  
 //------------------------------------------------------------------------------
 // Interface for editors
 //------------------------------------------------------------------------------
+
+QString CWProjectTree::editInsertNewProject(const QString &projectName)
+{
+  // first make sure that a project by this name does not already exist
+  if (!locateProjectByName(projectName)) {
+    addTopLevelItem(new CProjectItem(projectName));
+  }
+  else
+    return QString("A project with that name already exists.");
+
+  // success falls through
+  return QString();
+}
+
+QString CWProjectTree::editRenameProject(QTreeWidgetItem *item, const QString &projectName)
+{
+  if (item && item->type() == cProjectItemType) {
+
+    // first make sure that a project by this name does not already exist
+    QTreeWidgetItem *sibling = locateProjectByName(projectName);
+    if (sibling) {
+      if (sibling != item)
+	return QString("A project with that name already exists.");
+      // do nothing if nothing changed (and consider it a successful rename)
+    }
+    else
+      item->setText(0, projectName);
+  }
+  else
+    return QString("The item is not a project.");
+
+  return QString();
+}
 
 QString CWProjectTree::editInsertNewFolder(QTreeWidgetItem *parent, const QString &folderName)
 {
@@ -319,6 +391,13 @@ QString CWProjectTree::editInsertDirectory(QTreeWidgetItem *parent, const QStrin
 const QIcon& CWProjectTree::getIcon(int type)
 {
   switch (type) {
+  case cAnalysisWindowItemType:
+    {
+      if (!m_windowIcon)
+        m_windowIcon = new QIcon(QPixmap(project_window_16_xpm));
+      return *m_windowIcon;
+    }
+    break;
   case cSpectraFolderItemType:
     {
       if (!m_folderIcon)
@@ -333,8 +412,8 @@ const QIcon& CWProjectTree::getIcon(int type)
       return *m_directoryIcon;
     }
     break;
-  case cSpectraFileItemType:
   default:
+  case cSpectraFileItemType:
     {
       if (!m_fileIcon)
         m_fileIcon = new QIcon(QPixmap(project_file_16_xpm));
@@ -426,12 +505,21 @@ void CWProjectTree::slotToggleDisplayDetails()
 
 void CWProjectTree::slotCreateProject()
 {
-  // dialog for the project name ...  TODO
-  addNewProject("John");
+  CWProjectNameEditor *nameEditor = new  CWProjectNameEditor(this);
+  m_activeContext->addEditor(nameEditor);
 }
 
-void CWProjectTree::slotDeleteProject()
+void CWProjectTree::slotRenameProject()
 {
+  QList<QTreeWidgetItem*> items = selectedItems();
+  if (items.count() == 1) {
+    QTreeWidgetItem *item = items.front();
+    if (item->type() == cProjectItemType) {
+
+      CWProjectNameEditor *nameEditor = new  CWProjectNameEditor(this, item);
+      m_activeContext->addEditor(nameEditor);
+    }
+  }
 }
 
 void CWProjectTree::slotRefreshDirectories()
@@ -488,11 +576,11 @@ void CWProjectTree::slotRenameFolder()
 void CWProjectTree::slotInsertFile()
 {
   // expect selection has one item and it is a
-  // a spectra folder item
+  // a spectra folder item or the raw spectra branch
   QList<QTreeWidgetItem*> items = selectedItems();
   if (items.count() == 1) {
     QTreeWidgetItem *parent = items.front();
-    if (parent->type() == cSpectraFolderItemType) {
+    if (parent->type() == cSpectraFolderItemType || parent->type() == cSpectraBranchItemType) {
 
       // Modal File dialog - TODO
       QStringList files = QFileDialog::getOpenFileNames(0, "Select one or more spectra files",
@@ -523,6 +611,23 @@ void CWProjectTree::slotInsertDirectory()
       CWProjectDirectoryEditor *nameEditor = new  CWProjectDirectoryEditor(this, parent);
       m_activeContext->addEditor(nameEditor);
       
+    }
+  }
+}
+
+void CWProjectTree::slotCreateAnalysisWindow()
+{  
+  // expect selection has one item and is an Anaylsis Window Branch
+
+  QList<QTreeWidgetItem*> items = selectedItems();
+  if (items.count() == 1) {
+    QTreeWidgetItem *parent = items.front();
+    if (parent->type() == cAnalysisWindowBranchItemType) {
+
+      new CAnalysisWindowItem(parent, "Blob");
+
+      //CWProjectFolderNameEditor *nameEditor = new  CWProjectFolderNameEditor(this, parent, true);
+      //m_activeContext->addEditor(nameEditor);
     }
   }
 }
@@ -560,7 +665,9 @@ void CWProjectTree::slotDeleteSelection()
     }
     else {
       QTreeWidgetItem *p = (*it)->parent();
-      delete p->takeChild(p->indexOfChild(*it));
+      // can remove the children of directory items
+      if (p->type() !=  cSpectraDirectoryItemType)
+        delete p->takeChild(p->indexOfChild(*it));
     }
 
     ++it;
@@ -682,6 +789,7 @@ QVariant CSpectraFolderItem::data(int column, int role) const
   // for other roles use the base class
   return QTreeWidgetItem::data(column, role);
 }
+
 //------------------------------------------------------------------------------
 
 CSpectraDirectoryItem::CSpectraDirectoryItem(QTreeWidgetItem *parent, const QDir &directory,
@@ -857,7 +965,32 @@ QVariant CSpectraFileItem::data(int column, int role) const
   return QTreeWidgetItem::data(column, role);
 }
 
+//------------------------------------------------------------------------------
 
+CAnalysisWindowItem::CAnalysisWindowItem(QTreeWidgetItem *parent, const QString &windowName) :
+  CProjectTreeItem(parent, QStringList(windowName), cAnalysisWindowItemType)
+{
+  setIcon(0, CWProjectTree::getIcon(cAnalysisWindowItemType));
+}
+
+CAnalysisWindowItem::~CAnalysisWindowItem()
+{
+}
+
+QVariant CAnalysisWindowItem::data(int column, int role) const
+{
+  if (role == Qt::ForegroundRole && !m_enabled) {
+    return QVariant(QBrush(QColor(cDisabledTextColour)));
+  }
+
+  // for other roles use the base class
+  return QTreeWidgetItem::data(column, role);
+}
+
+
+//------------------------------------------------------------------------------
+// Static methods
+//------------------------------------------------------------------------------
 
 int CWProjectTree::itemDepth(QTreeWidgetItem *item)
 {

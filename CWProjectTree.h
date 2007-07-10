@@ -17,6 +17,7 @@ const int cAnalysisWindowBranchItemType = QTreeWidgetItem::UserType + 93;
 const int cSpectraFolderItemType        = QTreeWidgetItem::UserType + 94;
 const int cSpectraDirectoryItemType     = QTreeWidgetItem::UserType + 95;
 const int cSpectraFileItemType          = QTreeWidgetItem::UserType + 96;
+const int cAnalysisWindowItemType       = QTreeWidgetItem::UserType + 97;
 
 class CWProjectTree : public QTreeWidget
 {
@@ -27,13 +28,19 @@ Q_OBJECT
 
   void addNewProject(const QString &projectName); 
 
+  QTreeWidgetItem *locateProjectByName(const QString &projectName);
   QTreeWidgetItem *locateByPath(const QStringList &path);
 
+  // Interface editors use to modify the tree
+
+  QString editInsertNewProject(const QString &projectName);
+  QString editRenameProject(QTreeWidgetItem *item, const QString &projectName);
   QString editInsertNewFolder(QTreeWidgetItem *parent, const QString &folderName);
-  QString editRenameFolder(QTreeWidgetItem *parent, const QString &folderName);
+  QString editRenameFolder(QTreeWidgetItem *item, const QString &folderName);
   QString editInsertDirectory(QTreeWidgetItem *parent, const QString &directoryPath,
 			      const QString &fileFilters, bool includeSubDirs);
 
+  // static methods
 
   static const QIcon& getIcon(int type);
 
@@ -54,12 +61,13 @@ Q_OBJECT
   void slotToggleEnable();
   void slotToggleDisplayDetails();
   void slotCreateProject();
-  void slotDeleteProject();
+  void slotRenameProject();
   void slotRefreshDirectories();
   void slotCreateFolder();
   void slotRenameFolder();
   void slotInsertFile();
   void slotInsertDirectory();
+  void slotCreateAnalysisWindow();
   void slotRunAnalysis();
   void slotBrowseSpectra();
   void slotDeleteSelection();
@@ -73,7 +81,7 @@ Q_OBJECT
   CWActiveContext *m_activeContext;
 
   // icons for the tree
-  static QIcon *m_folderIcon, *m_directoryIcon, *m_fileIcon;
+  static QIcon *m_windowIcon, *m_folderIcon, *m_directoryIcon, *m_fileIcon;
   // icons for the context menu - TODO
 };
 
@@ -168,6 +176,15 @@ class CSpectraFileItem : public CProjectTreeItem
 
  private:
   QFileInfo m_fileInfo;
+};
+
+class CAnalysisWindowItem : public CProjectTreeItem
+{
+ public:
+  CAnalysisWindowItem(QTreeWidgetItem *parent, const QString &windowName);
+  virtual ~CAnalysisWindowItem();
+
+  virtual QVariant data(int column, int role) const;
 };
 
 #endif

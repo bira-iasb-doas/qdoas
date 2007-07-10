@@ -59,7 +59,6 @@ CWMain::CWMain(QWidget *parent) :
   m_activeContext = new CWActiveContext;
 
   m_projTree = new CWProjectTree(m_activeContext);
-  m_projTree->addNewProject("Fred"); // TODO - remove
 
   m_siteTree = new CWSiteTree(m_activeContext);
   m_siteTree->addNewSite("Stroud", "ST", 151.123, -31.567, 160.2); // TODO - remove
