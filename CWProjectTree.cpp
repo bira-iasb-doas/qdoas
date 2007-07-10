@@ -6,6 +6,8 @@
 #include <QShowEvent>
 #include <QContextMenuEvent>
 #include <QFileDialog>
+#include <QRegExp>
+#include <QDir>
 
 #include "CWProjectTree.h"
 #include "CWProjectFolderNameEditor.h"
@@ -218,6 +220,102 @@ QTreeWidgetItem *CWProjectTree::locateByPath(const QStringList &path)
   return p;
 }
 
+//------------------------------------------------------------------------------
+// Interface for editors
+//------------------------------------------------------------------------------
+
+QString CWProjectTree::editInsertNewFolder(QTreeWidgetItem *parent, const QString &folderName)
+{
+  if (parent && (parent->type() == cSpectraBranchItemType || parent->type() == cSpectraFolderItemType)) {
+    
+    // first make sure that the parent does not already have a child with this name
+    QTreeWidgetItem *item = CWProjectTree::locateChildByName(parent, folderName);
+    if (!item) {
+      new CSpectraFolderItem(parent, folderName);
+    }
+    else
+      return QString("The parent already contains a folder or file with that name.");
+  }
+  else  
+    return QString("The parent cannot have a folder as a child.");
+
+  // success falls through
+  return QString();
+}
+
+QString CWProjectTree::editRenameFolder(QTreeWidgetItem *item, const QString &newFolderName)
+{
+  if (item && item->type() == cSpectraFolderItemType) {
+
+    // first make sure that the parent does not already have a child with this name
+    QTreeWidgetItem *sibling = CWProjectTree::locateChildByName(item->parent(), newFolderName);
+    if (sibling) {
+      if (sibling != item)
+	return QString("The parent already has a folder, file or directory with that name.");
+      // do nothing if nothing changed (and consider it a successful rename)
+    }
+    else
+      item->setText(0, newFolderName);
+  }
+  else
+    return QString("The item is not a folder.");
+
+  return QString();
+}
+
+QString CWProjectTree::editInsertDirectory(QTreeWidgetItem *parent, const QString &directoryPath,
+					const QString &fileFilters, bool includeSubDirs)
+{
+
+  if (parent && (parent->type() == cSpectraBranchItemType || parent->type() == cSpectraFolderItemType)) {
+    // split the filter text into a list of file filter strings - an empty list means the filter is '*'
+    QStringList filters;
+
+    if (!fileFilters.isEmpty()) {
+      if (fileFilters.contains(';')) {
+	// split on ';' - NOTE whitespace is significant
+	filters = fileFilters.split(';', QString::SkipEmptyParts);
+      }
+      else {
+	// split on whitespace
+	filters = fileFilters.split(QRegExp("\\s+"));
+      }
+    }
+
+    // the directory must exist
+    QDir directory(directoryPath);
+      
+    if (directory.exists()) {
+      // create a new directory item
+      int fileCount;
+      CSpectraDirectoryItem *dirItem = new CSpectraDirectoryItem(0, directory, filters,
+								 includeSubDirs,
+								 &fileCount);
+      
+      if (fileCount) {
+	parent->addChild(dirItem);
+      }
+      else {
+	// empty file count ...
+	delete dirItem;
+	return QString("No files matched the file filters specified.");
+      }
+    }
+    else {
+      QString msg = "The directory ";
+      msg += directoryPath;
+      msg += " does not exist.";
+      return msg;
+    }
+  }
+  else {
+    return QString("The parent cannot have a directory as a child.");
+  }
+
+  // success falls through to return the null string
+  return QString();
+}
+
 const QIcon& CWProjectTree::getIcon(int type)
 {
   switch (type) {
@@ -396,7 +494,7 @@ void CWProjectTree::slotInsertFile()
     QTreeWidgetItem *parent = items.front();
     if (parent->type() == cSpectraFolderItemType) {
 
-      // Modal File dialog
+      // Modal File dialog - TODO
       QStringList files = QFileDialog::getOpenFileNames(0, "Select one or more spectra files",
                                                         "/home",
                                                         "Ascii (*.spe);;Other (*.hdf)");
@@ -856,4 +954,20 @@ QList<QTreeWidgetItem*> CWProjectTree::directoryItems(const QList<QTreeWidgetIte
   }
 
   return dirItems;
+}
+
+QTreeWidgetItem* CWProjectTree::locateChildByName(QTreeWidgetItem *parent, const QString &childName)
+{
+  if (!parent)
+    return NULL;
+
+  int i;
+  QTreeWidgetItem *item;
+
+  i = 0;
+  while (i < parent->childCount() && (item = parent->child(i))->text(0) != childName) ++i;
+  if (i < parent->childCount())
+    return item;
+
+  return NULL;
 }

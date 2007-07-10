@@ -1,6 +1,7 @@
 
 #include <QVBoxLayout>
 #include <QLabel>
+#include <QMessageBox>
 
 #include "CWProjectTree.h"
 #include "CWProjectFolderNameEditor.h"
@@ -23,7 +24,7 @@ CWProjectFolderNameEditor::CWProjectFolderNameEditor(CWProjectTree *projectTree,
 
   m_folderName = new QLineEdit(this);
   mainLayout->addWidget(m_folderName);
-  
+
   if (m_newFolder)
     m_captionStr = "Create new Folder in ";
   else
@@ -64,27 +65,28 @@ bool CWProjectFolderNameEditor::actionOk()
   if (m_folderName->text().isEmpty())
     return false;
 
+  QString msg;
+
   QTreeWidgetItem *item = m_projectTree->locateByPath(m_path);
   if (item) {
     // still a valid point in the tree
-    if (m_newFolder) {
-      if (item->type() == cSpectraBranchItemType || item->type() == cSpectraFolderItemType) {
-        // create a new sub-folder
-        new CSpectraFolderItem(item, m_folderName->text());
-      }
-    }
-    else {
-      if (item->type() == cSpectraFolderItemType) {
-        // rename
-        item->setText(0, m_folderName->text());
-      }
-    }
+    if (m_newFolder)
+      msg = m_projectTree->editInsertNewFolder(item, m_folderName->text());
+    else
+      msg = m_projectTree->editRenameFolder(item, m_folderName->text());
+    
+    if (msg.isNull())
+      return true;
+
   }
   else {
-    // no longer exists ... message box - TODO
+    // no longer exists ...
+    msg = QString("Could not locate the parent in the project tree.");
   }
 
-  return true;
+  // fall through failure ...
+  QMessageBox::information(this, "Insert Folder", msg);
+  return false;
 }
 
 void CWProjectFolderNameEditor::actionHelp()

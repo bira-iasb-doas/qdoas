@@ -3,8 +3,6 @@
 #include <QLabel>
 #include <QPushButton>
 #include <QFileDialog>
-#include <QRegExp>
-#include <QDir>
 #include <QMessageBox>
 
 #include "CWProjectTree.h"
@@ -73,62 +71,26 @@ bool CWProjectDirectoryEditor::actionOk()
   if (m_directoryName->text().isEmpty())
     return false;
 
+  QString msg;
+
   QTreeWidgetItem *item = m_projectTree->locateByPath(m_path);
   if (item) {
     // still a valid point in the tree
-    if (item->type() == cSpectraBranchItemType || item->type() == cSpectraFolderItemType) {
-      // split the filter text into a list of file filter strings - an empty list means the filter is '*'
-      QStringList filters;
-      QString filterStr = m_fileFilters->text();
 
-      if (!filterStr.isEmpty()) {
-        if (filterStr.contains(';')) {
-          // split on ';' - NOTE whitespace is significant
-          filters = filterStr.split(';', QString::SkipEmptyParts);
-        }
-        else {
-          // split on whitespace
-          filters = filterStr.split(QRegExp("\\s+"));
-        }
-      }
+    msg = m_projectTree->editInsertDirectory(item, m_directoryName->text(),
+					     m_fileFilters->text(),
+					     (m_recursiveCheckBox->checkState() == Qt::Checked));
+    if (msg.isNull())
+      return true;
 
-      // the directory must exist
-      QDir directory(m_directoryName->text());
-      
-      if (directory.exists()) {
-        // create a new directory item
-        int fileCount;
-        CSpectraDirectoryItem *dirItem = new CSpectraDirectoryItem(0, directory, filters,
-                                                                   (m_recursiveCheckBox->checkState() == Qt::Checked),
-                                                                   &fileCount);
-
-        if (fileCount) {
-          item->addChild(dirItem);
-          return true;
-        }
-        else {
-          // empty file count ...
-          delete dirItem;
-          QMessageBox::information(this, "Insert Directory Failed",
-                                   "No files matched the file filters specified.");
-        }
-      }
-      else {
-        QString msg = "The directory ";
-        msg += m_directoryName->text();
-        msg += " does not exist.";
-        QMessageBox::information(this, "Insert Directory Failed", msg);
-      }
-                                 
-    } // else - no message box - we should never have this ...
   }
   else {
-    // no longer exists ... message box - TODO
-    QMessageBox::information(this, "Insert Directory Failed" ,
-                             "Parent folder no longer exists.");
+    // no longer exists ...
+    msg = "Parent folder no longer exists.";
   }
 
-  // all errors fall through to return false 
+  // all errors fall through to here
+  QMessageBox::information(this, "Insert Directory Failed", msg);
   return false;
 }
 

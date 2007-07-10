@@ -29,12 +29,19 @@ Q_OBJECT
 
   QTreeWidgetItem *locateByPath(const QStringList &path);
 
+  QString editInsertNewFolder(QTreeWidgetItem *parent, const QString &folderName);
+  QString editRenameFolder(QTreeWidgetItem *parent, const QString &folderName);
+  QString editInsertDirectory(QTreeWidgetItem *parent, const QString &directoryPath,
+			      const QString &fileFilters, bool includeSubDirs);
+
+
   static const QIcon& getIcon(int type);
 
   static int itemDepth(QTreeWidgetItem *item);
   static QTreeWidgetItem* ancestor(QTreeWidgetItem *item, int nth);
   static QList<QTreeWidgetItem*> normalize(QList<QTreeWidgetItem*> items);
   static QList<QTreeWidgetItem*> directoryItems(const QList<QTreeWidgetItem*> &items);
+  static QTreeWidgetItem* locateChildByName(QTreeWidgetItem *parent, const QString &childName);
 
  protected:
   virtual void keyPressEvent(QKeyEvent *e);
