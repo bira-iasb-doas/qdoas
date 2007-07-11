@@ -1,4 +1,6 @@
 
+#include <iostream> // TODO
+
 #include <QResizeEvent>
 #include <QPalette>
 #include <QColor>
@@ -192,6 +194,21 @@ QSize CWActiveContext::sizeHint() const
   return QSize(m_minGeneralSize.width() + 300, m_minGeneralSize.height() + 300);
 }
 
+bool CWActiveContext::event(QEvent *e)
+{
+  if (e->type() == QEvent::LayoutRequest) {
+
+    // only need to do something if the editor is active
+    if (m_activeEditor)
+      moveAndResizeActiveEditor(width());
+
+    e->accept();
+    return true;
+  }
+
+  return QFrame::event(e);
+}
+
 void CWActiveContext::resizeEvent(QResizeEvent *e)
 {
   int wid = e->size().width();
@@ -207,7 +224,7 @@ void CWActiveContext::resizeEvent(QResizeEvent *e)
   }
   else {
     moveAndResizeGraph(wid, hei);
-  }
+   }
 }
 
 void CWActiveContext::moveAndResizeButtons(int wid, int hei)
@@ -245,7 +262,7 @@ void CWActiveContext::moveAndResizeActiveEditor(int fullWidth)
 {
   // active editor guaranteed to be valid
 
-  QSize tmpSize =  m_activeEditor->minimumSizeHint();
+  QSize tmpSize = m_activeEditor->minimumSizeHint();
 
   m_minEditSize = tmpSize;
   m_minEditSize.rheight() += m_titleRegionHeight + m_buttonRegionHeight;
@@ -259,6 +276,7 @@ void CWActiveContext::moveAndResizeActiveEditor(int fullWidth)
     int hei = tmpSize.height();
     
     tmpSize = m_activeEditor->sizeHint();
+    //tmpSize = m_activeEditor->maximumSize();
     if (tmpSize.isValid()) {
       wid = tmpSize.width();
       hei = tmpSize.height();

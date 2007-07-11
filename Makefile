@@ -34,7 +34,8 @@ INCL := -I. \
 	-I$(INC_DIR_QT4) \
 	-I$(INC_DIR_QT4)/Qt \
 	-I$(INC_DIR_QT4)/QtCore \
-	-I$(INC_DIR_QT4)/QtGui 
+	-I$(INC_DIR_QT4)/QtGui \
+        -Imediator
 
 #---------------------------------------------------------------------
 
@@ -52,7 +53,9 @@ guiobj := \
          CWProjectFolderNameEditor.$(O) \
          CWProjectDirectoryEditor.$(O) \
          CWProjectNameEditor.$(O) \
-         CWProjectAnalysisWindowNameEditor.$(O)
+         CWProjectAnalysisWindowNameEditor.$(O) \
+         CWProjectTabSpectra.$(O) \
+         CWProjectPropertyEditor.$(O)
 
 mocinc := $(guiobj:%.$(O)=%.h)
 

@@ -20,6 +20,7 @@ Q_OBJECT
   void addEditor(CWEditor *editor); // reparents and takes ownership of editor.
   
  protected:
+  virtual bool event(QEvent *e);
   virtual void resizeEvent(QResizeEvent *e);
 
   virtual QSize minimumSizeHint() const;

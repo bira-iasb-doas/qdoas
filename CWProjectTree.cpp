@@ -15,6 +15,7 @@
 #include "CWProjectFolderNameEditor.h"
 #include "CWProjectDirectoryEditor.h"
 #include "CWProjectAnalysisWindowNameEditor.h"
+#include "CWProjectPropertyEditor.h"
 
 #include "CWActiveContext.h"
 
@@ -202,6 +203,7 @@ void CWProjectTree::contextMenuEvent(QContextMenuEvent *e)
                      SLOT(slotToggleEnable()));
       menu.addAction("Rename...", this, SLOT(slotRenameProject()));
       menu.addAction("New Project...", this, SLOT(slotCreateProject()));
+      menu.addAction("Properties...", this, SLOT(slotEditProject()));
       menu.addSeparator();
       menu.addAction("Run Analysis", this, SLOT(slotRunAnalysis()));
       menu.addAction("Browse Spectra", this, SLOT(slotBrowseSpectra()));
@@ -568,6 +570,19 @@ void CWProjectTree::slotRenameProject()
 
       CWEditor *nameEditor = new  CWProjectNameEditor(this, item);
       m_activeContext->addEditor(nameEditor);
+    }
+  }
+}
+
+void CWProjectTree::slotEditProject()
+{
+  QList<QTreeWidgetItem*> items = selectedItems();
+  if (items.count() == 1) {
+    QTreeWidgetItem *item = items.front();
+    if (item->type() == cProjectItemType) {
+
+      CWEditor *propEditor = new  CWProjectPropertyEditor(this, item);
+      m_activeContext->addEditor(propEditor);
     }
   }
 }

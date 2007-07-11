@@ -64,6 +64,7 @@ Q_OBJECT
   void slotToggleDisplayDetails();
   void slotCreateProject();
   void slotRenameProject();
+  void slotEditProject();
   void slotRefreshDirectories();
   void slotCreateFolder();
   void slotRenameFolder();
