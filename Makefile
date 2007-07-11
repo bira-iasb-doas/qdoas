@@ -13,14 +13,18 @@ CCPPDBG:=-g
 CCTRCDBG:=-g -DDEBUG
 CCPPTRCDBG:=-g -DDEBUG
 
-#MOC         :=/usr/local/Trolltech/Qt-4.2.3/bin/moc
-#INC_DIR_QT4 :=/usr/local/Trolltech/Qt-4.2.3/include
-#LIB_DIR_QT4 :=/usr/lib
-#LD_RPATH    :=-Wl,-R/usr/local/lib
+# sloppy switch
+ifeq "$(HOST)" "cressida"
+MOC         :=/usr/local/Trolltech/Qt-4.2.3/bin/moc
+INC_DIR_QT4 :=/usr/local/Trolltech/Qt-4.2.3/include
+LIB_DIR_QT4 :=/usr/lib
+LD_RPATH    :=-Wl,-R/usr/local/lib
+else
 MOC         :=/usr/bin/moc-qt4
 INC_DIR_QT4 :=/usr/share/qt4/include
 LIB_DIR_QT4 :=/usr/lib
 LD_RPATH    :=
+endif
 
 LIBS:=
 SYSLIBS:= -lm
