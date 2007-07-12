@@ -12,7 +12,10 @@ struct SProjBucket
   mediate_project_t *project;
   std::map<QString,mediate_analysis_window_t*> window;
 
+  // takes ownership of projectData
   SProjBucket(mediate_project_t *projectData) : project(projectData) {}
+  // NOTE: shallow copy of dynamic memory. Use for std::map<>::insert operations ONLY.
+  SProjBucket(const SProjBucket &c) : project(c.project), window(c.window) {}
 };
 
 class CWorkSpace

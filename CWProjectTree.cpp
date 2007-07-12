@@ -1,3 +1,6 @@
+
+#include <assert.h>
+
 #include <iostream> // TODO
 
 #include <QMenu>
@@ -299,7 +302,7 @@ QString CWProjectTree::editRenameProject(QTreeWidgetItem *item, const QString &p
       item->setText(0, projectName);
     }
     else {
-      // see why it failed ...
+      // explain why it failed ...
       if (CWorkSpace::instance()->findProject(item->text(0)))
 	return QString("A project with that name already exists.");
       else
@@ -355,10 +358,10 @@ QString CWProjectTree::editInsertNewAnalysisWindow(QTreeWidgetItem *parent, cons
 {
   if (parent && parent->type() == cAnalysisWindowBranchItemType) {
     
-    QTreeWidgetItem *projItem = parent->parent();
-    if (projItem == NULL) {
+    QTreeWidgetItem *projItem = CWProjectTree::projectItem(parent);
+    if (!projItem) {
       // corrupt system
-      return QString("The tree is corrupt.");
+      return QString("The project tree is corrupt.");
     }
     if (CWorkSpace::instance()->createAnalysisWindow(projItem->text(0), windowName)) {
       new CAnalysisWindowItem(parent, windowName);
@@ -377,16 +380,16 @@ QString CWProjectTree::editRenameAnalysisWindow(QTreeWidgetItem *item, const QSt
 {
   if (item && item->type() == cAnalysisWindowItemType) {
 
-    QTreeWidgetItem *projItem = item->parent();
-    if (projItem) projItem = projItem->parent();
-    if (projItem == NULL) {
+    QTreeWidgetItem *projItem = CWProjectTree::projectItem(item);
+    if (!projItem) {
       // corrupt system
-      return QString("The tree is corrupt.");
+      return QString("The project tree is corrupt.");
     }
     if (CWorkSpace::instance()->renameAnalysisWindow(projItem->text(0), item->text(0), newWindowName)) {
       item->setText(0, newWindowName);
     }
     else {
+      // see why it failed
       if (CWorkSpace::instance()->findAnalysisWindow(projItem->text(0), item->text(0)))
 	return QString("The project or analysis window no longer exists.");
       else
@@ -824,6 +827,8 @@ CProjectItem::CProjectItem(const QString &projectName) :
 
 CProjectItem::~CProjectItem()
 {
+  // there should be a corresponding project in the workspace ...
+  CWorkSpace::instance()->destroyProject(text(0));
 }
 
 QVariant CProjectItem::data(int column, int role) const
@@ -1065,6 +1070,18 @@ CAnalysisWindowItem::CAnalysisWindowItem(QTreeWidgetItem *parent, const QString 
 
 CAnalysisWindowItem::~CAnalysisWindowItem()
 {
+  // there should be a corresponding project in the workspace ...
+
+  // NOTE: We require that the toplevel item of the tree (project item) can be
+  // found. This must be the case for any 'delete' operation (it assumes the
+  // parent item does NOT invalidate the childs 'parent' pointer before the
+  // child is destroyed...
+
+  QTreeWidgetItem *projItem = CWProjectTree::projectItem(this);
+  if (projItem)
+    CWorkSpace::instance()->destroyAnalysisWindow(projItem->text(0), text(0));
+  else
+    assert(false);
 }
 
 QVariant CAnalysisWindowItem::data(int column, int role) const
@@ -1097,6 +1114,21 @@ QTreeWidgetItem* CWProjectTree::ancestor(QTreeWidgetItem *item, int nth)
   // move back n generations. nth MUST not be larger the items depth
   while (nth--)
     item = item->parent();
+
+  return item;
+}
+
+QTreeWidgetItem* CWProjectTree::projectItem(QTreeWidgetItem *item)
+{
+  // move back to the top level of the branch containing item.
+  if (!item)
+    return NULL;
+
+  QTreeWidgetItem *p;
+
+  while ((p = item->parent()) != NULL) {
+    item = p;
+  }
 
   return item;
 }

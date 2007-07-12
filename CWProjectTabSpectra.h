@@ -14,12 +14,12 @@ class CWGeolocation;
 class CWProjectTabSpectra : public QFrame
 {
  public:
-  CWProjectTabSpectra(mediate_project_spectra_t *properties, QWidget *parent = 0);
+  CWProjectTabSpectra(const mediate_project_spectra_t *properties, QWidget *parent = 0);
   virtual ~CWProjectTabSpectra();
 
- private:
-  mediate_project_spectra_t *m_properties;
+  void apply(mediate_project_spectra_t *properties) const;
 
+ private:
   QLineEdit *m_szaMinEdit, *m_szaMaxEdit, *m_szaDeltaEdit;
   QLineEdit *m_recordMinEdit, *m_recordMaxEdit;
   QCheckBox *m_reqSpectraCheck, *m_reqDataCheck, *m_reqFitsCheck, *m_useNameCheck, *m_useDarkCheck;
@@ -30,14 +30,15 @@ class CWGeolocation : public QFrame
 {
 Q_OBJECT
  public:
-  CWGeolocation(union geolocation *geo, QWidget *parent = 0);
+  CWGeolocation(const union geolocation *geo, QWidget *parent = 0);
   virtual ~CWGeolocation();
+
+  void apply(union geolocation *geo) const;
 
   public slots:
     void slotModeChanged(int);
 
  private:
-  union geolocation *m_geo;
   QFrame *m_circleFrame, *m_rectangleFrame;
   QLineEdit *m_westEdit, *m_eastEdit, *m_southEdit, *m_northEdit;
   QLineEdit *m_cenLongEdit, *m_cenLatEdit, *m_radiusEdit;

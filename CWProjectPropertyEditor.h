@@ -27,7 +27,6 @@ Q_OBJECT
 
   CWProjectTree *m_projectTree;
   QString m_projectName;
-  mediate_project_spectra_t m_data; // TODO
 };
 
 #endif

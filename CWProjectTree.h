@@ -48,6 +48,7 @@ Q_OBJECT
 
   static int itemDepth(QTreeWidgetItem *item);
   static QTreeWidgetItem* ancestor(QTreeWidgetItem *item, int nth);
+  static QTreeWidgetItem* projectItem(QTreeWidgetItem *item);
   static QList<QTreeWidgetItem*> normalize(QList<QTreeWidgetItem*> items);
   static QList<QTreeWidgetItem*> directoryItems(const QList<QTreeWidgetItem*> &items);
   static QTreeWidgetItem* locateChildByName(QTreeWidgetItem *parent, const QString &childName);

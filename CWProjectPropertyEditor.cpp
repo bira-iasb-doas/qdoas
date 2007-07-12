@@ -3,6 +3,8 @@
 #include <QLabel>
 #include <QMessageBox>
 
+#include "CWorkSpace.h"
+
 #include "CWProjectTree.h"
 #include "CWProjectPropertyEditor.h"
 
@@ -12,20 +14,25 @@ CWProjectPropertyEditor::CWProjectPropertyEditor(CWProjectTree *projectTree, QTr
   CWEditor(parent),
   m_projectTree(projectTree)
 {
-  QVBoxLayout *mainLayout = new QVBoxLayout(this);
-  mainLayout->setMargin(25);
-  mainLayout->setSpacing(5);
-
-  m_tabs = new QTabWidget(this);
-
   m_projectName = item->text(0);
-
-  m_spectraTab = new CWProjectTabSpectra(&m_data);
-  m_tabs->addTab(m_spectraTab, "Spectra");
-
-  mainLayout->addWidget(m_tabs);
-
-  notifyAcceptActionOk(true);
+  mediate_project_t *projectData = CWorkSpace::instance()->findProject(m_projectName);
+  
+  if (projectData) {
+    
+    QVBoxLayout *mainLayout = new QVBoxLayout(this);
+    mainLayout->setMargin(25);
+    mainLayout->setSpacing(5);
+    
+    m_tabs = new QTabWidget(this);
+   
+    // Spectra Tab
+    m_spectraTab = new CWProjectTabSpectra(&(projectData->spectra));
+    m_tabs->addTab(m_spectraTab, "Spectra");
+    
+    mainLayout->addWidget(m_tabs);
+    
+    notifyAcceptActionOk(true);
+  }
 }
 
 CWProjectPropertyEditor::~CWProjectPropertyEditor()
@@ -34,6 +41,8 @@ CWProjectPropertyEditor::~CWProjectPropertyEditor()
 
 bool CWProjectPropertyEditor::actionOk()
 {
+  // call apply for all tabs ...
+
   return false;
 }
 

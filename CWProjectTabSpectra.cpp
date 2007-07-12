@@ -43,10 +43,13 @@ QValidator::State CSzaValidator::validate(QString &input, int &pos) const
 //-------------------------------
 
 
-CWProjectTabSpectra::CWProjectTabSpectra(mediate_project_spectra_t *properties, QWidget *parent) :
-  QFrame(parent),
-  m_properties(properties)
+CWProjectTabSpectra::CWProjectTabSpectra(const mediate_project_spectra_t *properties, QWidget *parent) :
+  QFrame(parent)
 {
+  // construct the GUI and use properties (if not NULL) to set the state of the edit widgets.
+  // Each of the GUI components maintains its bit of 'properties' state (until 'apply'ed).
+
+  // use font metrics to size the line edits
   QFontMetrics fm(font());
   int pixels;
 
@@ -68,12 +71,16 @@ CWProjectTabSpectra::CWProjectTabSpectra(mediate_project_spectra_t *properties, 
   displayGroupLayout->addWidget(m_reqFitsCheck);
   displayGroup->setLayout(displayGroupLayout);
 
+  m_reqSpectraCheck->setCheckState(properties && properties->requireSpectra ? Qt::Checked : Qt::Unchecked);
+  m_reqDataCheck->setCheckState(properties && properties->requireData ? Qt::Checked : Qt::Unchecked);
+  m_reqFitsCheck->setCheckState(properties && properties->requireFits ? Qt::Checked : Qt::Unchecked);
+
   leftLayout->addWidget(displayGroup);
 
   // Gelocation selection - also in a group box
   QGroupBox *geoGroup = new QGroupBox("Gelocations", this);
   QVBoxLayout *geoGroupLayout = new QVBoxLayout;
-  geoGroupLayout->addWidget(new CWGeolocation(&(m_properties->geo)));
+  geoGroupLayout->addWidget(new CWGeolocation(properties ? &(properties->geo) : NULL));
   geoGroup->setLayout(geoGroupLayout);
 
   leftLayout->addWidget(geoGroup);
@@ -148,10 +155,14 @@ CWProjectTabSpectra::~CWProjectTabSpectra()
 {
 }
 
+void CWProjectTabSpectra::apply(mediate_project_spectra_t *properties) const
+{
+  // extract state from the GUI and set properties
 
-CWGeolocation::CWGeolocation(union geolocation *geo, QWidget *parent) :
-  QFrame(parent),
-  m_geo(geo)
+}
+
+CWGeolocation::CWGeolocation(const union geolocation *geo, QWidget *parent) :
+  QFrame(parent)
 {
   QVBoxLayout *mainLayout = new QVBoxLayout(this);
    
@@ -225,6 +236,10 @@ CWGeolocation::CWGeolocation(union geolocation *geo, QWidget *parent) :
 }
 
 CWGeolocation::~CWGeolocation()
+{
+}
+
+void CWGeolocation::apply(union geolocation *geo) const
 {
 }
 
