@@ -54,6 +54,18 @@ typedef struct mediate_project_spectra
   
 } mediate_project_spectra_t;
 
+// mediate_project_t
+//
+// Contains all user-specified information about a project. It allows the GUI to
+// provide information to the engine.
+
+typedef struct mediate_project
+{
+  // To Be Defined - Coupled to the control offered by the GUI Project Tabs.
+  mediate_project_spectra_t spectra;
+
+} mediate_project_t;
+
 #if defined(_cplusplus) || defined(__cplusplus)
 }
 #endif

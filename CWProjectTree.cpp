@@ -9,6 +9,8 @@
 #include <QRegExp>
 #include <QDir>
 
+#include "CWorkSpace.h"
+
 #include "CWProjectTree.h"
 
 #include "CWProjectNameEditor.h"
@@ -278,8 +280,8 @@ QTreeWidgetItem *CWProjectTree::locateProjectByName(const QString &projectName)
 
 QString CWProjectTree::editInsertNewProject(const QString &projectName)
 {
-  // first make sure that a project by this name does not already exist
-  if (!locateProjectByName(projectName)) {
+  if (CWorkSpace::instance()->createProject(projectName)) {
+    // created the project
     addTopLevelItem(new CProjectItem(projectName));
   }
   else
@@ -293,15 +295,16 @@ QString CWProjectTree::editRenameProject(QTreeWidgetItem *item, const QString &p
 {
   if (item && item->type() == cProjectItemType) {
 
-    // first make sure that a project by this name does not already exist
-    QTreeWidgetItem *sibling = locateProjectByName(projectName);
-    if (sibling) {
-      if (sibling != item)
-	return QString("A project with that name already exists.");
-      // do nothing if nothing changed (and consider it a successful rename)
-    }
-    else
+    if (CWorkSpace::instance()->renameProject(item->text(0), projectName)) {
       item->setText(0, projectName);
+    }
+    else {
+      // see why it failed ...
+      if (CWorkSpace::instance()->findProject(item->text(0)))
+	return QString("A project with that name already exists.");
+      else
+	return QString("The project no longer exists.");
+    }
   }
   else
     return QString("The item is not a project.");
@@ -352,9 +355,12 @@ QString CWProjectTree::editInsertNewAnalysisWindow(QTreeWidgetItem *parent, cons
 {
   if (parent && parent->type() == cAnalysisWindowBranchItemType) {
     
-    // first make sure that the parent does not already have a child with this name
-    QTreeWidgetItem *item = CWProjectTree::locateChildByName(parent, windowName);
-    if (!item) {
+    QTreeWidgetItem *projItem = parent->parent();
+    if (projItem == NULL) {
+      // corrupt system
+      return QString("The tree is corrupt.");
+    }
+    if (CWorkSpace::instance()->createAnalysisWindow(projItem->text(0), windowName)) {
       new CAnalysisWindowItem(parent, windowName);
     }
     else
@@ -371,15 +377,21 @@ QString CWProjectTree::editRenameAnalysisWindow(QTreeWidgetItem *item, const QSt
 {
   if (item && item->type() == cAnalysisWindowItemType) {
 
-    // first make sure that the parent does not already have a child with this name
-    QTreeWidgetItem *sibling = CWProjectTree::locateChildByName(item->parent(), newWindowName);
-    if (sibling) {
-      if (sibling != item)
-	return QString("The project already has an analysis window with that name.");
-      // do nothing if nothing changed (and consider it a successful rename)
+    QTreeWidgetItem *projItem = item->parent();
+    if (projItem) projItem = projItem->parent();
+    if (projItem == NULL) {
+      // corrupt system
+      return QString("The tree is corrupt.");
     }
-    else
+    if (CWorkSpace::instance()->renameAnalysisWindow(projItem->text(0), item->text(0), newWindowName)) {
       item->setText(0, newWindowName);
+    }
+    else {
+      if (CWorkSpace::instance()->findAnalysisWindow(projItem->text(0), item->text(0)))
+	return QString("The project or analysis window no longer exists.");
+      else
+	return QString("The project already has an analysis window with that name.");
+    }
   }
   else
     return QString("The item is not an analysis window.");

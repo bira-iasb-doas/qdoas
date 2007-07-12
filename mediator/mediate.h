@@ -56,28 +56,9 @@
 // Structures for mediateRequest*
 //----------------------------------------------------------
 
-// mediate_project_t
-//
-// Contains all user-specified information about a project. It allows the GUI to
-// provide information to the engine.
+#include "mediate_project.h"
 
-typedef struct mediate_project
-{
-  // To Be Defined - Coupled to the control offered by the GUI Project Tabs.
-} mediate_project_t;
-
-
-// mediate_analysis_window_t
-//
-// Contains all user-specified information about a single spectral analysis window.
-// It allows the GUI to provide information to the engine.
-
-typedef struct mediate_analysis_window
-{
-  // To Be Defined - Coupled to the control offered by the GUI Analysis Window Tabs and
-  // the list of molecules/cross-sections/symbols?
-} mediate_analysis_window_t;
-
+#include "mediate_analysis_window.h"
 
 // mediate_symbol_t
 //
