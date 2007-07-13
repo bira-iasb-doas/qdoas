@@ -3,55 +3,23 @@
 #include <QVBoxLayout>
 #include <QGridLayout>
 #include <QGroupBox>
+#include <QLabel>
 #include <QFontMetrics>
 #include <QRegExpValidator>
 
 #include "CWProjectTabSpectra.h"
-
-class CSzaValidator : public QValidator
-{
- public:
-  CSzaValidator(QObject *obj);
-
-  virtual QValidator::State validate(QString &input, int &pos) const;
-};
-
-CSzaValidator::CSzaValidator(QObject *obj) :
-  QValidator(obj)
-{
-}
-
-QValidator::State CSzaValidator::validate(QString &input, int &pos) const
-{
-
-  if (input.isEmpty()) return QValidator::Intermediate;
-
-  bool ok;
-  double v = input.toDouble(&ok);
-
-  if (ok) {
-    if (v < 0.0 || v > 180.0) return QValidator::Invalid;
-    if (v < 10.0 && input.length() > 5) return QValidator::Invalid;
-    if (v < 100.0 && input.length() > 6)  return QValidator::Invalid;
-    return QValidator::Acceptable;
-  }
-
-  return QValidator::Invalid;
-}
-
-
-//-------------------------------
-
+#include "CValidator.h"
 
 CWProjectTabSpectra::CWProjectTabSpectra(const mediate_project_spectra_t *properties, QWidget *parent) :
   QFrame(parent)
 {
-  // construct the GUI and use properties (if not NULL) to set the state of the edit widgets.
+  // construct the GUI and use properties (not NULL) to set the state of the edit widgets.
   // Each of the GUI components maintains its bit of 'properties' state (until 'apply'ed).
 
   // use font metrics to size the line edits
   QFontMetrics fm(font());
   int pixels;
+  QString tmpStr;
 
   QHBoxLayout *mainLayout = new QHBoxLayout(this);
   
@@ -71,23 +39,24 @@ CWProjectTabSpectra::CWProjectTabSpectra(const mediate_project_spectra_t *proper
   displayGroupLayout->addWidget(m_reqFitsCheck);
   displayGroup->setLayout(displayGroupLayout);
 
-  m_reqSpectraCheck->setCheckState(properties && properties->requireSpectra ? Qt::Checked : Qt::Unchecked);
-  m_reqDataCheck->setCheckState(properties && properties->requireData ? Qt::Checked : Qt::Unchecked);
-  m_reqFitsCheck->setCheckState(properties && properties->requireFits ? Qt::Checked : Qt::Unchecked);
+  m_reqSpectraCheck->setCheckState(properties->requireSpectra ? Qt::Checked : Qt::Unchecked);
+  m_reqDataCheck->setCheckState(properties->requireData ? Qt::Checked : Qt::Unchecked);
+  m_reqFitsCheck->setCheckState(properties->requireFits ? Qt::Checked : Qt::Unchecked);
 
   leftLayout->addWidget(displayGroup);
 
   // Gelocation selection - also in a group box
-  QGroupBox *geoGroup = new QGroupBox("Gelocations", this);
+  QGroupBox *geoGroup = new QGroupBox("Geolocations", this);
   QVBoxLayout *geoGroupLayout = new QVBoxLayout;
-  geoGroupLayout->addWidget(new CWGeolocation(properties ? &(properties->geo) : NULL));
+  m_geolocationEdit = new CWGeolocation(&(properties->geo));
+  geoGroupLayout->addWidget(m_geolocationEdit);
   geoGroup->setLayout(geoGroupLayout);
 
   leftLayout->addWidget(geoGroup);
 
   leftLayout->addStretch(1);
 
-  mainLayout->addLayout(leftLayout);
+  mainLayout->addLayout(leftLayout, 1);
 
   // right side
 
@@ -115,6 +84,14 @@ CWProjectTabSpectra::CWProjectTabSpectra(const mediate_project_spectra_t *proper
   szaGroupLayout->addWidget(m_szaDeltaEdit, 2, 1);
   szaGroup->setLayout(szaGroupLayout);
  
+  // use the validators to input-check the initial values
+  m_szaMinEdit->validator()->fixup(tmpStr.sprintf("%.3f", properties->szaMinimum));
+  m_szaMinEdit->setText(tmpStr);
+  m_szaMaxEdit->validator()->fixup(tmpStr.sprintf("%.3f", properties->szaMaximum));
+  m_szaMaxEdit->setText(tmpStr);
+  m_szaDeltaEdit->validator()->fixup(tmpStr.sprintf("%.3f",properties->szaDelta));
+  m_szaDeltaEdit->setText(tmpStr);
+
   rightLayout->addWidget(szaGroup);
 
   // Record group
@@ -134,6 +111,11 @@ CWProjectTabSpectra::CWProjectTabSpectra(const mediate_project_spectra_t *proper
   recordGroupLayout->addWidget(m_recordMaxEdit, 1, 1);
   recordGroup->setLayout(recordGroupLayout);
 
+  m_recordMinEdit->validator()->fixup(tmpStr.sprintf("%d", properties->recordNumberMinimum));
+  m_recordMinEdit->setText(tmpStr);
+  m_recordMaxEdit->validator()->fixup(tmpStr.sprintf("%d", properties->recordNumberMaximum));
+  m_recordMaxEdit->setText(tmpStr);
+
   rightLayout->addWidget(recordGroup);
 
   // Dark + Name group
@@ -146,9 +128,12 @@ CWProjectTabSpectra::CWProjectTabSpectra(const mediate_project_spectra_t *proper
   fileGroupLayout->addWidget(m_useDarkCheck);
   fileGroup->setLayout(fileGroupLayout);
 
+  m_useNameCheck->setCheckState(properties->useNameFile ? Qt::Checked : Qt::Unchecked);
+  m_useDarkCheck->setCheckState(properties->useDarkFile ? Qt::Checked : Qt::Unchecked);
+
   rightLayout->addWidget(fileGroup);
 
-  mainLayout->addLayout(rightLayout);
+  mainLayout->addLayout(rightLayout, 0);
 }
 
 CWProjectTabSpectra::~CWProjectTabSpectra()
@@ -158,20 +143,50 @@ CWProjectTabSpectra::~CWProjectTabSpectra()
 void CWProjectTabSpectra::apply(mediate_project_spectra_t *properties) const
 {
   // extract state from the GUI and set properties
+  QString tmpStr;
 
+  // Display
+  properties->requireSpectra = (m_reqSpectraCheck->checkState() == Qt::Checked);
+  properties->requireData = (m_reqDataCheck->checkState() == Qt::Checked);
+  properties->requireFits = (m_reqFitsCheck->checkState() == Qt::Checked);
+  
+  // SZA
+  tmpStr = m_szaMinEdit->text();
+  properties->szaMinimum = tmpStr.isEmpty() ? 0.0 : tmpStr.toDouble();
+  tmpStr = m_szaMaxEdit->text();
+  properties->szaMaximum = tmpStr.isEmpty() ? 0.0 : tmpStr.toDouble();
+  tmpStr = m_szaDeltaEdit->text();
+  properties->szaDelta = tmpStr.isEmpty() ? 0.0 : tmpStr.toDouble();
+
+  // Record
+  tmpStr = m_recordMinEdit->text();
+  properties->recordNumberMinimum = tmpStr.isEmpty() ? 0 : tmpStr.toInt();
+  tmpStr = m_recordMaxEdit->text();
+  properties->recordNumberMaximum = tmpStr.isEmpty() ? 0 : tmpStr.toInt();
+  
+  // Files
+  properties->useNameFile = (m_useNameCheck->checkState() == Qt::Checked);
+  properties->useDarkFile = (m_useDarkCheck->checkState() == Qt::Checked);
+
+  // Geolocation
+  m_geolocationEdit->apply(&(properties->geo));
 }
 
 CWGeolocation::CWGeolocation(const union geolocation *geo, QWidget *parent) :
   QFrame(parent)
 {
+  // use font metrics to size the line edits
+  QFontMetrics fm(font());
+  int pixels = fm.width("00000000"); // same for all lineedits
+
   QVBoxLayout *mainLayout = new QVBoxLayout(this);
    
   m_modeCombo = new QComboBox(this);
-  m_modeCombo->addItem("Unrestricted", QVariant(int(0)));
-  m_modeCombo->addItem("Circle", QVariant(int(1)));
-  m_modeCombo->addItem("Rectangle", QVariant(int(2)));
+  m_modeCombo->addItem("Unrestricted", QVariant(cGeolocationModeNone));
+  m_modeCombo->addItem("Circle", QVariant(cGeolocationModeCircle));
+  m_modeCombo->addItem("Rectangle", QVariant(cGeolocationModeRectangle));
   mainLayout->addWidget(m_modeCombo);
-  
+
   // rectangle
   m_rectangleFrame = new QFrame;
   QGridLayout *rectangleLayout = new QGridLayout;
@@ -179,21 +194,25 @@ CWGeolocation::CWGeolocation(const union geolocation *geo, QWidget *parent) :
   // row 0
   rectangleLayout->addWidget(new QLabel("Western Limit (long. degrees)", m_rectangleFrame), 0, 0);
   m_westEdit = new QLineEdit(this);
+  m_westEdit->setFixedWidth(pixels);
   rectangleLayout->addWidget(m_westEdit, 0, 1);
 
   // row 1
   rectangleLayout->addWidget(new QLabel("Eastern Limit (long. degrees)", m_rectangleFrame), 1, 0);
   m_eastEdit = new QLineEdit(this);
+  m_eastEdit->setFixedWidth(pixels);
   rectangleLayout->addWidget(m_eastEdit, 1, 1);
   
   // row 2
   rectangleLayout->addWidget(new QLabel("Southern Limit (long. degrees)", m_rectangleFrame) , 2, 0);
   m_southEdit = new QLineEdit(this);
+  m_southEdit->setFixedWidth(pixels);
   rectangleLayout->addWidget(m_southEdit, 2, 1);
   
   // row 3 
   rectangleLayout->addWidget( new QLabel("Northern Limit (long. degrees)", m_rectangleFrame), 3, 0);
   m_northEdit = new QLineEdit(this);
+  m_northEdit->setFixedWidth(pixels);
   rectangleLayout->addWidget(m_northEdit, 3, 1);
 
   m_rectangleFrame->setLayout(rectangleLayout);
@@ -208,16 +227,19 @@ CWGeolocation::CWGeolocation(const union geolocation *geo, QWidget *parent) :
   // row 0
   circleLayout->addWidget(new QLabel("Radius (degrees)", m_circleFrame), 0, 0);
   m_radiusEdit = new QLineEdit(this);
+  m_radiusEdit->setFixedWidth(pixels);
   circleLayout->addWidget(m_radiusEdit, 0, 1);
 
   // row 1
   circleLayout->addWidget(new QLabel("Centre Longitude (degrees)", m_circleFrame), 1, 0);
-  m_westEdit = new QLineEdit(this);
-  circleLayout->addWidget(m_westEdit, 1, 1);
+  m_cenLongEdit = new QLineEdit(this);
+  m_cenLongEdit->setFixedWidth(pixels);
+  circleLayout->addWidget(m_cenLongEdit, 1, 1);
 
   circleLayout->addWidget(new QLabel("Centre Latitude (degrees)", m_circleFrame) , 2, 0);
-  m_southEdit = new QLineEdit(this);
-  circleLayout->addWidget(m_southEdit, 2, 1);
+  m_cenLatEdit = new QLineEdit(this);
+  m_cenLatEdit->setFixedWidth(pixels);  
+  circleLayout->addWidget(m_cenLatEdit, 2, 1);
 
   m_circleFrame->setLayout(circleLayout);
 
@@ -229,8 +251,29 @@ CWGeolocation::CWGeolocation(const union geolocation *geo, QWidget *parent) :
   // connections
   connect(m_modeCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(slotModeChanged(int)));
 
-  // set the mode based on the current type
-  int index =m_modeCombo->findData(QVariant(geo->type));
+  // set the mode based on the current selected item
+
+  QString tmpStr;
+  int index = m_modeCombo->findData(QVariant(geo->mode));
+  
+  switch (geo->mode) {
+  case cGeolocationModeRectangle:
+    {
+      m_westEdit->setText(tmpStr.sprintf("%.3f", geo->rectangle.westernLongitude));
+      m_eastEdit->setText(tmpStr.sprintf("%.3f", geo->rectangle.easternLongitude));
+      m_southEdit->setText(tmpStr.sprintf("%.3f", geo->rectangle.southernLatitude));
+      m_northEdit->setText(tmpStr.sprintf("%.3f", geo->rectangle.northernLatitude));
+    }
+    break;
+  case cGeolocationModeCircle:
+    {
+      m_radiusEdit->setText(tmpStr.sprintf("%.3f", geo->circle.radius));
+      m_cenLongEdit->setText(tmpStr.sprintf("%.3f", geo->circle.centreLongitude));
+      m_cenLatEdit->setText(tmpStr.sprintf("%.3f", geo->circle.centreLatitude));
+    }
+    break;
+  }
+  
   if (index != -1)
     m_modeCombo->setCurrentIndex(index);
 }
@@ -241,6 +284,39 @@ CWGeolocation::~CWGeolocation()
 
 void CWGeolocation::apply(union geolocation *geo) const
 {
+  int index = m_modeCombo->currentIndex();
+  int mode = (index == -1) ? cGeolocationModeNone : m_modeCombo->itemData(index).toInt();
+
+  switch (mode) {
+  case cGeolocationModeRectangle:
+    {
+      QString tmpStr;
+      geo->rectangle.mode = mode;
+      tmpStr = m_westEdit->text();
+      geo->rectangle.westernLongitude = tmpStr.isEmpty() ? 0.0 : tmpStr.toDouble();
+      tmpStr = m_eastEdit->text();
+      geo->rectangle.easternLongitude = tmpStr.isEmpty() ? 0.0 : tmpStr.toDouble();
+      tmpStr = m_southEdit->text();
+      geo->rectangle.southernLatitude = tmpStr.isEmpty() ? 0.0 : tmpStr.toDouble();
+      tmpStr = m_northEdit->text();
+      geo->rectangle.northernLatitude = tmpStr.isEmpty() ? 0.0 : tmpStr.toDouble();
+    }
+    break;
+  case cGeolocationModeCircle:
+    {
+      QString tmpStr;
+      geo->circle.mode = mode;
+      tmpStr = m_radiusEdit->text();
+      geo->circle.radius = tmpStr.isEmpty() ? 0.0 : tmpStr.toDouble();
+      tmpStr = m_cenLongEdit->text();
+      geo->circle.centreLongitude = tmpStr.isEmpty() ? 0.0 : tmpStr.toDouble();
+      tmpStr = m_cenLatEdit->text();
+      geo->circle.centreLatitude = tmpStr.isEmpty() ? 0.0 : tmpStr.toDouble();
+    }
+    break;
+  default:
+    geo->mode = cGeolocationModeNone;
+  }
 }
 
 void CWGeolocation::slotModeChanged(int index)
@@ -248,19 +324,18 @@ void CWGeolocation::slotModeChanged(int index)
   int type = m_modeCombo->itemData(index).toInt();
 
   switch (type) {
-  case 2: // rectangle
+  case cGeolocationModeRectangle: // rectangle
     {
       m_circleFrame->hide();
       m_rectangleFrame->show();
     }
     break;
-  case 1: // circle
+  case cGeolocationModeCircle: // circle
     {
       m_rectangleFrame->hide();
       m_circleFrame->show();
     }
     break;
-  case 0: // unrestricted
   default:
     {
       m_circleFrame->hide();

@@ -7,6 +7,7 @@
 
 #include "CWEditor.h"
 #include "CWProjectTabSpectra.h"
+#include "CWProjectTabAnalysis.h"
 
 class CWProjectTree;
 
@@ -24,6 +25,7 @@ Q_OBJECT
  private:
   QTabWidget *m_tabs;
   CWProjectTabSpectra *m_spectraTab;
+  CWProjectTabAnalysis *m_analysisTab;
 
   CWProjectTree *m_projectTree;
   QString m_projectName;

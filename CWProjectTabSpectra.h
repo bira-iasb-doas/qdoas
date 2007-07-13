@@ -5,7 +5,6 @@
 #include <QCheckBox>
 #include <QLineEdit>
 #include <QComboBox>
-#include <QLabel>
 
 #include "mediate_project.h"
 

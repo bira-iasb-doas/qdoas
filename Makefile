@@ -32,7 +32,8 @@ INCL := -I. \
 #---------------------------------------------------------------------
 
 obj := \
-         CWorkSpace.$(O)
+         CWorkSpace.$(O) \
+         CValidator.$(O)
 
 
 guiobj := \
@@ -49,6 +50,7 @@ guiobj := \
          CWProjectNameEditor.$(O) \
          CWProjectAnalysisWindowNameEditor.$(O) \
          CWProjectTabSpectra.$(O) \
+         CWProjectTabAnalysis.$(O) \
          CWProjectPropertyEditor.$(O)
 
 mocinc := $(guiobj:%.$(O)=%.h)
