@@ -35,6 +35,13 @@ CWProjectPropertyEditor::CWProjectPropertyEditor(CWProjectTree *projectTree, QTr
   m_tabs->addTab(m_analysisTab, "Analysis");
 
   mainLayout->addWidget(m_tabs);
+
+  // caption string and context tag
+  m_captionStr = "Properties of Project : ";
+  m_captionStr += m_projectName;
+
+  m_contextTag = m_projectName;
+  m_contextTag += "-ProjPropEditor";
   
   notifyAcceptActionOk(true);
 }
@@ -43,7 +50,7 @@ CWProjectPropertyEditor::~CWProjectPropertyEditor()
 {
 }
 
-bool CWProjectPropertyEditor::actionOk()
+bool CWProjectPropertyEditor::actionOk(void)
 {
   // call apply for all tabs ...
   mediate_project_t *projectData = CWorkSpace::instance()->findProject(m_projectName);
@@ -60,7 +67,7 @@ bool CWProjectPropertyEditor::actionOk()
   return false;
 }
 
-void CWProjectPropertyEditor::actionHelp()
+void CWProjectPropertyEditor::actionHelp(void)
 {
 }
 

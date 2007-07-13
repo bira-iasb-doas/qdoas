@@ -13,8 +13,10 @@ Q_OBJECT
   CWSiteEditor(CWSiteTree *siteTree, QTreeWidgetItem *editItem = 0, QWidget *parent = 0);
   virtual ~CWSiteEditor();
 
-  virtual bool actionOk();
-  virtual void actionHelp();
+  virtual bool actionOk(void);
+  virtual void actionHelp(void);
+
+  virtual void takeFocus(void);
 
  private:
   double m_long, m_lat, m_alt;

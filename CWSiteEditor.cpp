@@ -115,7 +115,7 @@ CWSiteEditor::~CWSiteEditor()
 {
 }
 
-bool CWSiteEditor::actionOk()
+bool CWSiteEditor::actionOk(void)
 {
   // should only be possible if all valid bits are set ...
 
@@ -131,9 +131,13 @@ bool CWSiteEditor::actionOk()
   return true;
 }
 
-void CWSiteEditor::actionHelp()
+void CWSiteEditor::actionHelp(void)
 {
+}
 
+void CWSiteEditor::takeFocus(void)
+{
+  m_siteName->setFocus(Qt::OtherFocusReason);
 }
 
 void CWSiteEditor::slotLongitudeChanged(const QString &text)

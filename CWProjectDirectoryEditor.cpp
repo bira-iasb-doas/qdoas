@@ -64,7 +64,7 @@ CWProjectDirectoryEditor::~CWProjectDirectoryEditor()
 {
 }
 
-bool CWProjectDirectoryEditor::actionOk()
+bool CWProjectDirectoryEditor::actionOk(void)
 {
   // use the path to locate the correct place in the tree
 
@@ -94,8 +94,13 @@ bool CWProjectDirectoryEditor::actionOk()
   return false;
 }
 
-void CWProjectDirectoryEditor::actionHelp()
+void CWProjectDirectoryEditor::actionHelp(void)
 {
+}
+
+void CWProjectDirectoryEditor::takeFocus(void)
+{
+  m_directoryName->setFocus(Qt::OtherFocusReason);
 }
 
 void CWProjectDirectoryEditor::slotDirectoryChanged(const QString &text)

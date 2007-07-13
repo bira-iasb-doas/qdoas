@@ -43,6 +43,8 @@ CWProjectNameEditor::CWProjectNameEditor(CWProjectTree *projectTree, QTreeWidget
 
   connect(m_projectName, SIGNAL(textChanged(const QString &)),
           this, SLOT(slotNameChanged(const QString &)));
+  connect(m_projectName, SIGNAL(returnPressed()),
+          this, SLOT(slotReturnPressed()));
 
 }
 
@@ -50,7 +52,7 @@ CWProjectNameEditor::~CWProjectNameEditor()
 {
 }
 
-bool CWProjectNameEditor::actionOk()
+bool CWProjectNameEditor::actionOk(void)
 {
   if (m_projectName->text().isEmpty())
     return false;
@@ -78,12 +80,23 @@ bool CWProjectNameEditor::actionOk()
   return false;
 }
 
-void CWProjectNameEditor::actionHelp()
+void CWProjectNameEditor::actionHelp(void)
 {
+}
+
+void CWProjectNameEditor::takeFocus(void)
+{
+  // give focus to the line edit
+  m_projectName->setFocus(Qt::OtherFocusReason);
 }
 
 void CWProjectNameEditor::slotNameChanged(const QString &text)
 {
   notifyAcceptActionOk(!text.isEmpty());
+}
+
+void CWProjectNameEditor::slotReturnPressed()
+{
+  shortcutActionOk();
 }
 

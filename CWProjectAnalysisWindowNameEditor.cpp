@@ -51,6 +51,8 @@ CWProjectAnalysisWindowNameEditor::CWProjectAnalysisWindowNameEditor(CWProjectTr
 
   connect(m_analysisWindowName, SIGNAL(textChanged(const QString &)),
           this, SLOT(slotNameChanged(const QString &)));
+  connect(m_analysisWindowName, SIGNAL(returnPressed()),
+          this, SLOT(slotReturnPressed()));
 
 }
 
@@ -91,12 +93,22 @@ bool CWProjectAnalysisWindowNameEditor::actionOk()
   return false;
 }
 
-void CWProjectAnalysisWindowNameEditor::actionHelp()
+void CWProjectAnalysisWindowNameEditor::actionHelp(void)
 {
+}
+
+void CWProjectAnalysisWindowNameEditor::takeFocus(void)
+{
+  m_analysisWindowName->setFocus(Qt::OtherFocusReason);
 }
 
 void CWProjectAnalysisWindowNameEditor::slotNameChanged(const QString &text)
 {
   notifyAcceptActionOk(!text.isEmpty());
+}
+
+void CWProjectAnalysisWindowNameEditor::slotReturnPressed()
+{
+  shortcutActionOk();
 }
 

@@ -51,14 +51,15 @@ CWProjectFolderNameEditor::CWProjectFolderNameEditor(CWProjectTree *projectTree,
 
   connect(m_folderName, SIGNAL(textChanged(const QString &)),
           this, SLOT(slotNameChanged(const QString &)));
-
+  connect(m_folderName, SIGNAL(returnPressed()),
+          this, SLOT(slotReturnPressed()));
 }
 
 CWProjectFolderNameEditor::~CWProjectFolderNameEditor()
 {
 }
 
-bool CWProjectFolderNameEditor::actionOk()
+bool CWProjectFolderNameEditor::actionOk(void)
 {
   // use the path to locate the correct place in the tree
 
@@ -89,8 +90,14 @@ bool CWProjectFolderNameEditor::actionOk()
   return false;
 }
 
-void CWProjectFolderNameEditor::actionHelp()
+void CWProjectFolderNameEditor::actionHelp(void)
 {
+}
+
+void CWProjectFolderNameEditor::takeFocus(void)
+{
+  // give focus to the line edit
+  m_folderName->setFocus(Qt::OtherFocusReason);
 }
 
 void CWProjectFolderNameEditor::slotNameChanged(const QString &text)
@@ -98,3 +105,7 @@ void CWProjectFolderNameEditor::slotNameChanged(const QString &text)
   notifyAcceptActionOk(!text.isEmpty());
 }
 
+void CWProjectFolderNameEditor::slotReturnPressed()
+{
+  shortcutActionOk();
+}

@@ -135,9 +135,10 @@ CWActiveContext::~CWActiveContext()
 void CWActiveContext::addEditor(CWEditor *editor)
 {
   if (m_activeEditor) {
-    // if there is an active editor, then disconnect its signalAcceptOk signal
-    // push it on the stack and make it invisible.
+    // if there is an active editor, then disconnect its signalAcceptOk & signalShortcutActionOk
+    // signals, push it on the stack and make it invisible.
     disconnect(m_activeEditor, SIGNAL(signalAcceptOk(bool)), this, SLOT(slotAcceptOk(bool)));
+    disconnect(m_activeEditor, SIGNAL(signalShortcutActionOk()), this, SLOT(slotOkButtonClicked()));
     m_editorStack.push_back(m_activeEditor);
     m_activeEditor->hide();
   }
@@ -160,7 +161,7 @@ void CWActiveContext::addEditor(CWEditor *editor)
   }
 
   // walk the list and see if an editor with the same contextTag is in the stack. If so, use it
-  // instead of editor (can just delet editor)
+  // instead of editor (can just delete editor)
   if (!m_editorStack.isEmpty()) {
     QList<CWEditor*>::iterator it = m_editorStack.begin();
     while (it != m_editorStack.end() && (*it)->editContextTag() != editor->editContextTag()) ++it;
@@ -177,11 +178,14 @@ void CWActiveContext::addEditor(CWEditor *editor)
   moveAndResizeActiveEditor(width());
 
   connect(m_activeEditor, SIGNAL(signalAcceptOk(bool)), this, SLOT(slotAcceptOk(bool)));
+  connect(m_activeEditor, SIGNAL(signalShortcutActionOk()), this, SLOT(slotOkButtonClicked()));
   m_okButton->setEnabled(m_activeEditor->isAcceptActionOk());
 
   m_title->setText(m_activeEditor->editCaption());
 
   m_activeEditor->show();
+  // give it focus
+  m_activeEditor->takeFocus();
 }
   
 QSize CWActiveContext::minimumSizeHint() const
@@ -310,7 +314,9 @@ void CWActiveContext::discardCurrentEditor(void)
   // guaranteed that m_activeEditor is not null
 
   m_activeEditor->hide();
-  delete m_activeEditor;
+  // Delete, but not immediately, since the signalShortcutActionOk is sent from a method
+  // of m_activeEditor.
+  m_activeEditor->deleteLater();
 
   // is there something to replace it with?
   if (!m_editorStack.isEmpty()) {
@@ -320,6 +326,7 @@ void CWActiveContext::discardCurrentEditor(void)
     moveAndResizeActiveEditor(width());
 
     connect(m_activeEditor, SIGNAL(signalAcceptOk(bool)), this, SLOT(slotAcceptOk(bool)));    
+    connect(m_activeEditor, SIGNAL(signalShortcutActionOk()), this, SLOT(slotOkButtonClicked()));
     m_okButton->setEnabled(m_activeEditor->isAcceptActionOk());
 
     m_title->setText(m_activeEditor->editCaption());

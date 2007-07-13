@@ -23,18 +23,23 @@ const QString& CWEditor::editContextTag(void) const
   return m_contextTag;
 }
 
-void CWEditor::actionCancel()
+void CWEditor::actionCancel(void)
 {
   // default behaviour is do nothing
 }
 
-bool CWEditor::actionOk()
+bool CWEditor::actionOk(void)
 {
   // default behaviour is do nothing - but accepts the actions
   return true;
 }
 
-void CWEditor::actionHelp()
+void CWEditor::actionHelp(void)
+{
+  // default behaviour is do nothing
+}
+
+void CWEditor::takeFocus(void)
 {
   // default behaviour is do nothing
 }
@@ -45,4 +50,11 @@ void CWEditor::notifyAcceptActionOk(bool canDoOk)
     m_lastNotification = canDoOk;
     emit signalAcceptOk(m_lastNotification);
   }
+}
+
+void CWEditor::shortcutActionOk(void)
+{
+  // allows the editor to effectively click the Ok button programatically.
+  if (m_lastNotification)
+    emit signalShortcutActionOk();
 }

@@ -181,75 +181,80 @@ CWGeolocation::CWGeolocation(const union geolocation *geo, QWidget *parent) :
 
   QVBoxLayout *mainLayout = new QVBoxLayout(this);
    
+  m_modeStack = new QStackedWidget(this);
+
   m_modeCombo = new QComboBox(this);
-  m_modeCombo->addItem("Unrestricted", QVariant(cGeolocationModeNone));
-  m_modeCombo->addItem("Circle", QVariant(cGeolocationModeCircle));
-  m_modeCombo->addItem("Rectangle", QVariant(cGeolocationModeRectangle));
   mainLayout->addWidget(m_modeCombo);
 
-  // rectangle
-  m_rectangleFrame = new QFrame;
-  QGridLayout *rectangleLayout = new QGridLayout;
+  m_modeCombo->addItem("Unrestricted", QVariant(cGeolocationModeNone));
+  m_modeStack->addWidget(new QFrame(this)); // blank placeholder
 
-  // row 0
-  rectangleLayout->addWidget(new QLabel("Western Limit (long. degrees)", m_rectangleFrame), 0, 0);
-  m_westEdit = new QLineEdit(this);
-  m_westEdit->setFixedWidth(pixels);
-  rectangleLayout->addWidget(m_westEdit, 0, 1);
-
-  // row 1
-  rectangleLayout->addWidget(new QLabel("Eastern Limit (long. degrees)", m_rectangleFrame), 1, 0);
-  m_eastEdit = new QLineEdit(this);
-  m_eastEdit->setFixedWidth(pixels);
-  rectangleLayout->addWidget(m_eastEdit, 1, 1);
-  
-  // row 2
-  rectangleLayout->addWidget(new QLabel("Southern Limit (long. degrees)", m_rectangleFrame) , 2, 0);
-  m_southEdit = new QLineEdit(this);
-  m_southEdit->setFixedWidth(pixels);
-  rectangleLayout->addWidget(m_southEdit, 2, 1);
-  
-  // row 3 
-  rectangleLayout->addWidget( new QLabel("Northern Limit (long. degrees)", m_rectangleFrame), 3, 0);
-  m_northEdit = new QLineEdit(this);
-  m_northEdit->setFixedWidth(pixels);
-  rectangleLayout->addWidget(m_northEdit, 3, 1);
-
-  m_rectangleFrame->setLayout(rectangleLayout);
-
-  m_rectangleFrame->hide();
-  mainLayout->addWidget(m_rectangleFrame);
+  // each mode has a frame widget that is placed in the stack. The widget shown is
+  // coupled to the modeCombo
 
   // circle
-  m_circleFrame = new QFrame;
+  QFrame *circleFrame = new QFrame;
   QGridLayout *circleLayout = new QGridLayout;
 
   // row 0
-  circleLayout->addWidget(new QLabel("Radius (degrees)", m_circleFrame), 0, 0);
+  circleLayout->addWidget(new QLabel("Radius (degrees)", circleFrame), 0, 0);
   m_radiusEdit = new QLineEdit(this);
   m_radiusEdit->setFixedWidth(pixels);
   circleLayout->addWidget(m_radiusEdit, 0, 1);
 
   // row 1
-  circleLayout->addWidget(new QLabel("Centre Longitude (degrees)", m_circleFrame), 1, 0);
+  circleLayout->addWidget(new QLabel("Centre Longitude (degrees)", circleFrame), 1, 0);
   m_cenLongEdit = new QLineEdit(this);
   m_cenLongEdit->setFixedWidth(pixels);
   circleLayout->addWidget(m_cenLongEdit, 1, 1);
 
-  circleLayout->addWidget(new QLabel("Centre Latitude (degrees)", m_circleFrame) , 2, 0);
+  circleLayout->addWidget(new QLabel("Centre Latitude (degrees)", circleFrame) , 2, 0);
   m_cenLatEdit = new QLineEdit(this);
   m_cenLatEdit->setFixedWidth(pixels);  
   circleLayout->addWidget(m_cenLatEdit, 2, 1);
 
-  m_circleFrame->setLayout(circleLayout);
+  circleFrame->setLayout(circleLayout);
+  m_modeStack->addWidget(circleFrame);
+  m_modeCombo->addItem("Circle", QVariant(cGeolocationModeCircle));
 
-  m_circleFrame->hide();
-  mainLayout->addWidget(m_circleFrame);
+  // rectangle
+  QFrame *rectangleFrame = new QFrame;
+  QGridLayout *rectangleLayout = new QGridLayout;
+
+  // row 0
+  rectangleLayout->addWidget(new QLabel("Western Limit (long. degrees)", rectangleFrame), 0, 0);
+  m_westEdit = new QLineEdit(this);
+  m_westEdit->setFixedWidth(pixels);
+  rectangleLayout->addWidget(m_westEdit, 0, 1);
+
+  // row 1
+  rectangleLayout->addWidget(new QLabel("Eastern Limit (long. degrees)", rectangleFrame), 1, 0);
+  m_eastEdit = new QLineEdit(this);
+  m_eastEdit->setFixedWidth(pixels);
+  rectangleLayout->addWidget(m_eastEdit, 1, 1);
+  
+  // row 2
+  rectangleLayout->addWidget(new QLabel("Southern Limit (long. degrees)", rectangleFrame) , 2, 0);
+  m_southEdit = new QLineEdit(this);
+  m_southEdit->setFixedWidth(pixels);
+  rectangleLayout->addWidget(m_southEdit, 2, 1);
+  
+  // row 3 
+  rectangleLayout->addWidget( new QLabel("Northern Limit (long. degrees)", rectangleFrame), 3, 0);
+  m_northEdit = new QLineEdit(this);
+  m_northEdit->setFixedWidth(pixels);
+  rectangleLayout->addWidget(m_northEdit, 3, 1);
+
+  rectangleFrame->setLayout(rectangleLayout);
+  m_modeStack->addWidget(rectangleFrame);
+  m_modeCombo->addItem("Rectangle", QVariant(cGeolocationModeRectangle));
+
+  mainLayout->addWidget(m_modeStack);
 
   // set the defaults
 
   // connections
-  connect(m_modeCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(slotModeChanged(int)));
+  connect(m_modeCombo, SIGNAL(currentIndexChanged(int)), m_modeStack, SLOT(setCurrentIndex(int)));
 
   // set the mode based on the current selected item
 
@@ -316,32 +321,6 @@ void CWGeolocation::apply(union geolocation *geo) const
     break;
   default:
     geo->mode = cGeolocationModeNone;
-  }
-}
-
-void CWGeolocation::slotModeChanged(int index)
-{
-  int type = m_modeCombo->itemData(index).toInt();
-
-  switch (type) {
-  case cGeolocationModeRectangle: // rectangle
-    {
-      m_circleFrame->hide();
-      m_rectangleFrame->show();
-    }
-    break;
-  case cGeolocationModeCircle: // circle
-    {
-      m_rectangleFrame->hide();
-      m_circleFrame->show();
-    }
-    break;
-  default:
-    {
-      m_circleFrame->hide();
-      m_rectangleFrame->hide();
-    }
-    break;
   }
 }
 

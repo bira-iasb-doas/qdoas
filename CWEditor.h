@@ -14,14 +14,17 @@ Q_OBJECT
   const QString& editCaption(void) const;
   const QString& editContextTag(void) const;
 
-  virtual void actionCancel();
-  virtual bool actionOk();
-  virtual void actionHelp();
+  virtual void actionCancel(void);
+  virtual bool actionOk(void);
+  virtual void actionHelp(void);
+
+  virtual void takeFocus(void);
 
   bool isAcceptActionOk(void) const;
 
  protected:
   void notifyAcceptActionOk(bool canDoOk);
+  void shortcutActionOk(void);
 
  protected:
   QString m_captionStr, m_contextTag;
@@ -31,6 +34,7 @@ Q_OBJECT
 
  signals:
   void signalAcceptOk(bool canDoOk);
+  void signalShortcutActionOk();
 
 };
 

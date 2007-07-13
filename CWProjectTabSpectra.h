@@ -5,6 +5,7 @@
 #include <QCheckBox>
 #include <QLineEdit>
 #include <QComboBox>
+#include <QStackedWidget>
 
 #include "mediate_project.h"
 
@@ -27,21 +28,17 @@ class CWProjectTabSpectra : public QFrame
 
 class CWGeolocation : public QFrame
 {
-Q_OBJECT
  public:
   CWGeolocation(const union geolocation *geo, QWidget *parent = 0);
   virtual ~CWGeolocation();
 
   void apply(union geolocation *geo) const;
 
-  public slots:
-    void slotModeChanged(int);
-
  private:
-  QFrame *m_circleFrame, *m_rectangleFrame;
   QLineEdit *m_westEdit, *m_eastEdit, *m_southEdit, *m_northEdit;
   QLineEdit *m_cenLongEdit, *m_cenLatEdit, *m_radiusEdit;
   QComboBox *m_modeCombo;
+  QStackedWidget *m_modeStack;
 };
 
 #endif

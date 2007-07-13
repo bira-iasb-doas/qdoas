@@ -18,8 +18,10 @@ Q_OBJECT
                            QWidget *parent = 0);
   virtual ~CWProjectDirectoryEditor();
 
-  virtual bool actionOk();
-  virtual void actionHelp();
+  virtual bool actionOk(void);
+  virtual void actionHelp(void);
+
+  virtual void takeFocus(void);
 
  public slots:
   void slotDirectoryChanged(const QString &text);

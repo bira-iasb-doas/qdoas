@@ -17,11 +17,14 @@ Q_OBJECT
                       QWidget *parent = 0);
   virtual ~CWProjectNameEditor();
 
-  virtual bool actionOk();
-  virtual void actionHelp();
+  virtual bool actionOk(void);
+  virtual void actionHelp(void);
+
+  virtual void takeFocus(void);
 
  public slots:
   void slotNameChanged(const QString &text);
+  void slotReturnPressed();
 
  private:
   QLineEdit *m_projectName;
