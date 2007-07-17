@@ -11,7 +11,7 @@
 #include "mediate.h"
 
 CEngineThread::CEngineThread(CEngineController *parent) :
-  QThread(),
+  QThread(parent),
   m_activeRequest(NULL),
   m_terminated(false)
 {

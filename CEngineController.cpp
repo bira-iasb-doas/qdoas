@@ -1,4 +1,6 @@
 
+#include <iostream> // TODO
+
 #include "CEngineController.h"
 #include "CEngineRequest.h"
 #include "CEngineResponse.h"
@@ -10,7 +12,7 @@ static const int cAnalyseMode = 2;
 CEngineController::CEngineController(QObject *parent) :
   QObject(parent),
   m_mode(0),
-  m_currentFile(-1),
+  m_currentProject(NULL),
   m_currentRecord(-1)
 {
 
@@ -24,46 +26,15 @@ CEngineController::~CEngineController()
 {
 }
 
-bool CEngineController::browseSpectra(const mediate_project_t *project,
-				      QList<QFileInfo> &fileList)
-{
-  // first abort the current processing if any ... TODO
-  /*
-  switch (m_mode) {
-  case cBrowseMode:
-    {
-      m_thread->request(new CEngineRequestEndBrowse);
-    }
-    break;
-  case cAnalyseMode:
-    {
-      m_thread->request(new CEngineRequestEndAnalyse);
-    }
-  }
-  */
-
-  m_mode = 0;  
-
-  // discard the current list of files and replace with the new list
-  m_fileList = fileList;
-  
-  if (!m_fileList.isEmpty()) {
-    m_mode = cBrowseMode;
-    // configure the engine - response will trigger the next action
-    m_thread->request(new CEngineRequestSetProject(project));
-  }
-}
-
 void CEngineController::notifySetProject(void)
 {
   // follow up based on the mode
   switch (m_mode) {
   case cBrowseMode:
     {
-      // set the active file to the first in the list and make a request
-      if (!m_fileList.isEmpty()) {
-	m_currentFile = 0;
-	m_thread->request(new CEngineRequestBeginBrowseFile(m_fileList.at(m_currentFile).fileName()));
+      if (!m_currentIt.atEnd()) {
+        std::cout << "CEngineController::notifySetProject" << std::endl;
+	m_thread->request(new CEngineRequestBeginBrowseFile(m_currentIt.file().fileName()));
       }
     }
     break;
@@ -84,6 +55,12 @@ void CEngineController::notifyCurrentFile(int fileNumber)
 
 void CEngineController::notifyNumberOfRecords(int nRec)
 {
+  // successfully started browsing a file
+  // TODO signals for buttons
+
+  m_currentRecord = 0;
+
+  std::cout << "CEngineController::notifyNumberOfRecords " << nRec << std::endl;
 }
 
 void CEngineController::notifyCurrentRecord(int recNumber)
@@ -145,9 +122,20 @@ void CEngineController::slotGotoRecord(int recNumber)
 {
 }
 
-void CEngineController::slotStartBrowseSession(RefCountedPtr<CSession> session)
+void CEngineController::slotStartBrowseSession(RefCountPtr<CSession> session)
 {
+  // shutdown current activity ... TODO
+
   m_session = session;
 
-  // commence ... TODO
+  m_currentIt = CSessionIterator(m_session);
+  m_currentProject = NULL;
+
+  if (!m_currentIt.atEnd()) {
+
+    m_currentProject = m_currentIt.project();
+    m_mode = cBrowseMode;
+    // configure the engine - response will trigger the next action
+    m_thread->request(new CEngineRequestSetProject(m_currentProject));    
+  }
 }

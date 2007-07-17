@@ -9,9 +9,12 @@
 #include <QList>
 #include <QSize>
 
+#include "RefCountPtr.h"
+#include "CSession.h"
+
 class CWActiveContext;
-class CSession;
 class CProjectTreeItem;
+
 
 const int cProjectItemType              = QTreeWidgetItem::UserType + 91;
 const int cSpectraBranchItemType        = QTreeWidgetItem::UserType + 92;
@@ -83,6 +86,7 @@ Q_OBJECT
 
  signals:
   void signalWidthModeChanged(int newMode);
+  void signalStartBrowseSession(RefCountPtr<CSession> session);
 
  private:
   QList<int> m_colWidthList;

@@ -50,7 +50,13 @@ CEngineResponseBeginBrowseFile::~CEngineResponseBeginBrowseFile()
 
 void CEngineResponseBeginBrowseFile::process(CEngineController *engineController)
 {
-  // TODO ...
+  // TODO
+  if (m_numberOfRecords > 0) {
+    // calibration data ... TODO ...
+
+    engineController->notifyNumberOfRecords(m_numberOfRecords);
+    // wait for the request to process a record ...
+  }
 }
 
 void CEngineResponseBeginBrowseFile::setNumberOfRecords(int numberOfRecords)

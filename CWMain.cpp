@@ -108,6 +108,10 @@ CWMain::CWMain(QWidget *parent) :
   // Controller
 
   m_controller = new CEngineController(this);
+
+  // connections to the controller
+  connect(m_projTree, SIGNAL(signalStartBrowseSession(RefCountPtr<CSession>)),
+          m_controller, SLOT(slotStartBrowseSession(RefCountPtr<CSession>)));
 }
 
 CWMain::~CWMain()

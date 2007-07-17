@@ -53,7 +53,7 @@ Q_OBJECT
   void slotNextRecord();
   void slotGotoRecord(int recNumber);
  
-  void slotStartBrowseSession(RefCountedPtr<CSession> session);
+  void slotStartBrowseSession(RefCountPtr<CSession> session);
 
  private:
   CEngineThread *m_thread;
@@ -61,9 +61,11 @@ Q_OBJECT
 
   int m_mode;
 
-  int m_currentRecord, m_currentFile;
+  const mediate_project_t *m_currentProject;
+  int m_currentRecord;
 
-  RefCountedPtr<CSession> m_session;
+  RefCountPtr<CSession> m_session;
+  CSessionIterator m_currentIt;
 };
 
 #endif

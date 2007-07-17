@@ -63,3 +63,74 @@ void CSession::addFile(const QFileInfo &file, const QString &projectName)
   }
 }
 
+CSessionIterator::CSessionIterator() :
+  m_fileIndex(0)
+{
+}
+
+CSessionIterator::CSessionIterator(RefCountPtr<CSession> session) :
+  m_session(session)
+{
+  if (m_session != 0) {
+    m_mapIt = m_session->m_map.begin();
+    m_fileIndex = 0;
+  }
+}
+
+CSessionIterator::CSessionIterator(const CSessionIterator &other) :
+  m_session(other.m_session),
+  m_mapIt(other.m_mapIt),
+  m_fileIndex(other.m_fileIndex)
+{
+}
+
+CSessionIterator::~CSessionIterator()
+{
+}
+
+CSessionIterator& CSessionIterator::operator=(const CSessionIterator &rhs)
+{
+  m_session = rhs.m_session;
+  m_mapIt = rhs.m_mapIt;
+  m_fileIndex = rhs.m_fileIndex;
+
+  return *this;
+}
+
+CSessionIterator& CSessionIterator::operator++(void)
+{
+  // no range checks here - use atEnd first ...
+
+  if (++m_fileIndex >= (m_mapIt->second)->m_files.size()) {
+    ++m_mapIt;
+    m_fileIndex = 0;
+  }
+
+  return *this;
+}
+
+bool CSessionIterator::atEnd(void) const
+{
+  return (m_session == 0 || m_mapIt == m_session->m_map.end() || m_fileIndex == (m_mapIt->second)->m_files.size());
+}
+
+const QFileInfo& CSessionIterator::file(void) const
+{
+  return (m_mapIt->second)->m_files.at(m_fileIndex);
+}
+
+const mediate_project_t* CSessionIterator::project(void) const
+{
+  return &((m_mapIt->second)->m_project);
+}
+
+bool CSessionIterator::operator==(const CSessionIterator &rhs) const
+{
+  return (m_session == rhs.m_session && m_mapIt == rhs.m_mapIt && m_fileIndex == rhs.m_fileIndex);
+}
+
+bool CSessionIterator::operator!=(const CSessionIterator &rhs) const
+{
+  return !operator==(rhs);
+}
+

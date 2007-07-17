@@ -754,6 +754,8 @@ void CWProjectTree::slotBrowseSpectra()
 
   RefCountPtr<CSession> ptr(session);
 
+  emit signalStartBrowseSession(ptr);
+
   std::cout << "CWProjectTree::slotBrowseSpectra" << std::endl;
 }
 

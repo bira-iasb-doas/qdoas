@@ -8,8 +8,12 @@
 #include <QList>
 #include <QFileInfo>
 
+#include "RefCountPtr.h"
+
 #include "mediate_project.h"
 #include "mediate_analysis_window.h"
+
+class CSessionIterator;
 
 class CSessionItem
 {
@@ -23,6 +27,8 @@ class CSessionItem
   mediate_project_t m_project;
   QList<mediate_analysis_window_t> m_windows;
   QList<QFileInfo> m_files;
+
+  friend class CSessionIterator;
 };
 
 class CSession
@@ -39,6 +45,34 @@ class CSession
   sessionmap_t m_map;
 
   bool m_forAnalysis; // indicates if analysis windows are required ...
+
+  friend class CSessionIterator;
+};
+
+class CSessionIterator
+{
+ public:
+  CSessionIterator();
+  CSessionIterator(RefCountPtr<CSession> session);
+  CSessionIterator(const CSessionIterator &other);
+  ~CSessionIterator();
+  
+  CSessionIterator& operator=(const CSessionIterator &rhs);
+
+  CSessionIterator& operator++(void);
+
+  bool atEnd(void) const;
+
+  const QFileInfo& file(void) const;
+  const mediate_project_t* project(void) const;
+
+  bool operator==(const CSessionIterator &rhs) const;
+  bool operator!=(const CSessionIterator &rhs) const;
+
+ private:
+  RefCountPtr<CSession> m_session;
+  CSession::sessionmap_t::iterator m_mapIt;
+  int m_fileIndex;
 };
 
 #endif
