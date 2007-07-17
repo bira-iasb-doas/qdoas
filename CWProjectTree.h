@@ -10,6 +10,8 @@
 #include <QSize>
 
 class CWActiveContext;
+class CSession;
+class CProjectTreeItem;
 
 const int cProjectItemType              = QTreeWidgetItem::UserType + 91;
 const int cSpectraBranchItemType        = QTreeWidgetItem::UserType + 92;
@@ -52,6 +54,7 @@ Q_OBJECT
   static QList<QTreeWidgetItem*> normalize(QList<QTreeWidgetItem*> items);
   static QList<QTreeWidgetItem*> directoryItems(const QList<QTreeWidgetItem*> &items);
   static QTreeWidgetItem* locateChildByName(QTreeWidgetItem *parent, const QString &childName);
+  static void buildSession(CSession *session, CProjectTreeItem *item);
 
  protected:
   virtual void keyPressEvent(QKeyEvent *e);
@@ -179,9 +182,13 @@ class CSpectraFileItem : public CProjectTreeItem
 
   virtual QVariant data(int column, int role) const;
 
+  const QFileInfo& file(void) const;
+
  private:
   QFileInfo m_fileInfo;
 };
+
+inline const QFileInfo& CSpectraFileItem::file(void) const { return m_fileInfo; }
 
 class CAnalysisWindowItem : public CProjectTreeItem
 {

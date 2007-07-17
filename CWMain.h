@@ -14,6 +14,7 @@ class CWProjectTree;
 class CWSiteTree;
 class CWUserSymbolTree;
 class CWActiveContext;
+class CEngineController;
 
 class CWMain : public QFrame
 {
@@ -36,6 +37,8 @@ class CWMain : public QFrame
   CWActiveContext *m_activeContext;
 
   QStatusBar *m_statusBar;
+
+  CEngineController *m_controller;
 };
 
 #endif

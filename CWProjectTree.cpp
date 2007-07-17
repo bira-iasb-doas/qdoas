@@ -24,6 +24,9 @@
 
 #include "CWActiveContext.h"
 
+#include "CSession.h"
+#include "RefCountPtr.h"
+
 // pixmaps for the project tree
 #include "icons/project_window_16.xpm"
 #include "icons/project_folder_16.xpm"
@@ -732,7 +735,26 @@ void CWProjectTree::slotRunAnalysis()
 
 void CWProjectTree::slotBrowseSpectra()
 {
-  // TODO
+  CSession *session = new CSession(false);
+
+  // normalise the selection and then traverse to build session
+  QList<QTreeWidgetItem*> items = CWProjectTree::normalize(selectedItems());
+
+  QList<QTreeWidgetItem*>::iterator it = items.begin();
+  while (it != items.end()) {
+    // only consider enabled items
+    CProjectTreeItem *tmp = dynamic_cast<CProjectTreeItem*>(*it);
+    if (tmp && tmp->isEnabled())
+      CWProjectTree::buildSession(session, tmp);
+    ++it;
+  }
+
+  // safely dispatch the session to attached slots by wrapping in a reference
+  // counting pointer.
+
+  RefCountPtr<CSession> ptr(session);
+
+  std::cout << "CWProjectTree::slotBrowseSpectra" << std::endl;
 }
 
 void CWProjectTree::slotDeleteSelection()
@@ -1225,4 +1247,17 @@ QTreeWidgetItem* CWProjectTree::locateChildByName(QTreeWidgetItem *parent, const
     return item;
 
   return NULL;
+}
+
+void CWProjectTree::buildSession(CSession *session, CProjectTreeItem *item)
+{
+  // recursive construction of the session ... TODO
+  
+  if (item->type() == cSpectraFileItemType) {
+    // individual file
+    QTreeWidgetItem *proj = CWProjectTree::projectItem(item);
+    if (proj)
+      session->addFile(static_cast<CSpectraFileItem*>(item)->file(), proj->text(0));
+  }
+  // TODO else ... other types
 }

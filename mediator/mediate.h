@@ -1,4 +1,7 @@
 
+#ifndef _MEDIATE_H_GUARD
+#define _MEDIATE_H_GUARD
+
 //
 //  DRAFT : For discussion only.       05/07/07
 //
@@ -57,8 +60,11 @@
 //----------------------------------------------------------
 
 #include "mediate_project.h"
-
 #include "mediate_analysis_window.h"
+
+#if defined(_cplusplus) || defined(__cplusplus)
+extern "C" {
+#endif
 
 // mediate_symbol_t
 //
@@ -335,3 +341,9 @@ void mediateResponseCellDataString(int page, int row, int column, const char *st
 // must be sufficient for that purpose.
 
 void mediateResponseErrorMessage(const char *messageString, int errorLevel, void *responseHandle);
+
+#if defined(_cplusplus) || defined(__cplusplus)
+}
+#endif
+
+#endif

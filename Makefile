@@ -33,7 +33,11 @@ INCL := -I. \
 
 obj := \
          CWorkSpace.$(O) \
-         CValidator.$(O)
+         CValidator.$(O) \
+         CEngineThread.$(O) \
+         CEngineRequest.$(O) \
+         CEngineResponse.$(O) \
+         CSession.$(O)
 
 
 guiobj := \
@@ -51,7 +55,10 @@ guiobj := \
          CWProjectAnalysisWindowNameEditor.$(O) \
          CWProjectTabSpectra.$(O) \
          CWProjectTabAnalysis.$(O) \
-         CWProjectPropertyEditor.$(O)
+         CWProjectPropertyEditor.$(O) \
+         CEngineController.$(O)
+
+mediatorobj := mediator/mediate.$(O)
 
 mocinc := $(guiobj:%.$(O)=%.h)
 
@@ -78,7 +85,7 @@ all: $(main)
 debug: $(main)
 trace: $(main)
 
-$(main): $(obj) $(guiobj) $(mocobj) $(main).$(O)
+$(main): $(obj) $(guiobj) $(mocobj) $(mediatorobj) $(main).$(O)
 	$(CCPP) $(CCPPOPTS) -o $@ $^ $(LIBS) $(SYSLIBS) $(GUILIBS)
 
 clean:
@@ -86,6 +93,7 @@ clean:
 	-/bin/rm $(obj) $(obj:%.$(O)=%.d)
 	-/bin/rm $(mocobj) $(guiobj) $(guiobj:%.$(O)=%.d)
 	-/bin/rm $(main) $(main:%=%.$(O)) $(main:%=%.d)
+	-/bin/rm $(mediatorobj)
 
 %.d: %.$(CPP)
 	$(CCPP) -MM $^ $(CCPPOPTS) $(INCL) > $@
@@ -98,6 +106,9 @@ clean:
 
 %.$(O): %.$(C)
 	$(CC) $(CCOPTS) -c $< $(INCL)
+
+$(mediatorobj):%.$(O): %.c
+	gcc -g -c -o $@ $< -Imediator
 
 moc_%.$(CPP): %.h
 	$(MOC) $< -o $@

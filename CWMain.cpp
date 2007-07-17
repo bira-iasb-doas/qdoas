@@ -10,6 +10,8 @@
 #include "CWActiveContext.h"
 #include "CWSplitter.h"
 
+#include "CEngineController.h"
+
 // pixmaps
 #include "icons/file_open_16.xpm"
 #include "icons/file_exit_16.xpm"
@@ -101,6 +103,11 @@ CWMain::CWMain(QWidget *parent) :
   mainLayout->addWidget(m_statusBar, 0);
 
   m_statusBar->showMessage("Status information ...");
+
+  //------------------------------
+  // Controller
+
+  m_controller = new CEngineController(this);
 }
 
 CWMain::~CWMain()
