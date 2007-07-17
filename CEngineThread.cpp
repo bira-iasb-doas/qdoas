@@ -22,7 +22,7 @@ CEngineThread::CEngineThread(CEngineController *parent) :
 CEngineThread::~CEngineThread()
 {
   m_reqQueueMutex.lock();
-  m_terminated = false;
+  m_terminated = true;
   m_reqQueueMutex.unlock();
 
   // wait intil the run thread has stopped ...
