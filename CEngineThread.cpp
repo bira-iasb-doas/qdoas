@@ -23,9 +23,10 @@ CEngineThread::~CEngineThread()
 {
   m_reqQueueMutex.lock();
   m_terminated = true;
+  m_cv.wakeOne();
   m_reqQueueMutex.unlock();
 
-  // wait intil the run thread has stopped ...
+  // wait until the run thread has stopped ...
   while (isRunning())
     QThread::msleep(50);
 
@@ -38,12 +39,12 @@ void CEngineThread::setRunState(bool setRunning)
     m_reqQueueMutex.lock();
     m_terminated = false;
     m_reqQueueMutex.unlock();
-    
     start();
   }
   else {
     m_reqQueueMutex.lock();
     m_terminated = true;
+    m_cv.wakeOne();
     m_reqQueueMutex.unlock();
     // let the run loop exit cleanly
   }
@@ -54,10 +55,8 @@ void CEngineThread::request(CEngineRequest *req)
   m_reqQueueMutex.lock();
   
   m_requests.push_back(req); // add the request
-  
-  // wake the engine thread if it is sitting idle
-  if (m_activeRequest == NULL)
-    m_cv.wakeOne();
+  // wake the engine thread if it is sitting idle (harmless if it is not idle)
+  m_cv.wakeOne();
   
   m_reqQueueMutex.unlock();
 }
@@ -88,25 +87,30 @@ void CEngineThread::run()
 {
   // engine thread - loop until terminated ...
   //
-  // m_terminated, m_requests and m_activeRequest are all protected by 
+  // m_terminated, m_requests and are protected by 
   // m_reqQueueMutex
+
+  CEngineRequest *activeRequest;
 
   m_reqQueueMutex.lock();
   while (!m_terminated) {
     
+    // will wake the thread if a request is lodged or terminated is set true.
     while (m_requests.isEmpty() && !m_terminated) {
-      m_cv.wait(&m_reqQueueMutex, 2000); // wake every two seconds to check for termination
+      m_cv.wait(&m_reqQueueMutex);
     }
+
     if (!m_requests.isEmpty() && !m_terminated) {
-      // queue is not empty - take the first item ...
-      m_activeRequest = m_requests.takeFirst();
+      // queue is not empty - process the first item
+      activeRequest = m_requests.takeFirst();
       
       m_reqQueueMutex.unlock();
 
-      // process the active request
-      m_activeRequest->process(this);
+      // process the request then discard it
+      activeRequest->process(this);
+      delete activeRequest;
 
-      // lock before checking m_terminated
+      // lock before modifying the queue and checking m_terminated 
       m_reqQueueMutex.lock();
     }
   }

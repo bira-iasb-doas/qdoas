@@ -63,8 +63,24 @@ void CSession::addFile(const QFileInfo &file, const QString &projectName)
   }
 }
 
+int CSession::size(void) const
+{
+  int count = 0;
+
+  // get the number of files in the session
+  sessionmap_t::const_iterator it = m_map.begin();
+  while (it != m_map.end()) {
+    count += (it->second)->m_files.size();
+    ++it;
+  }
+      
+  return count;
+}
+
+
 CSessionIterator::CSessionIterator() :
-  m_fileIndex(0)
+  m_fileIndex(0),
+  m_offset(0)
 {
 }
 
@@ -74,13 +90,15 @@ CSessionIterator::CSessionIterator(RefCountPtr<CSession> session) :
   if (m_session != 0) {
     m_mapIt = m_session->m_map.begin();
     m_fileIndex = 0;
+    m_offset = 0;
   }
 }
 
 CSessionIterator::CSessionIterator(const CSessionIterator &other) :
   m_session(other.m_session),
   m_mapIt(other.m_mapIt),
-  m_fileIndex(other.m_fileIndex)
+  m_fileIndex(other.m_fileIndex),
+  m_offset(other.m_offset)
 {
 }
 
@@ -93,6 +111,7 @@ CSessionIterator& CSessionIterator::operator=(const CSessionIterator &rhs)
   m_session = rhs.m_session;
   m_mapIt = rhs.m_mapIt;
   m_fileIndex = rhs.m_fileIndex;
+  m_offset = rhs.m_offset;
 
   return *this;
 }
@@ -101,7 +120,8 @@ CSessionIterator& CSessionIterator::operator++(void)
 {
   // no range checks here - use atEnd first ...
 
-  if (++m_fileIndex >= (m_mapIt->second)->m_files.size()) {
+  if (++m_fileIndex == (m_mapIt->second)->m_files.size()) {
+    m_offset += m_fileIndex;
     ++m_mapIt;
     m_fileIndex = 0;
   }
@@ -109,9 +129,35 @@ CSessionIterator& CSessionIterator::operator++(void)
   return *this;
 }
 
+CSessionIterator& CSessionIterator::operator--(void)
+{
+  // no range checks here - use atBegin first ...
+
+  if (--m_fileIndex < 0) {
+    --m_mapIt;
+    m_fileIndex = (m_mapIt->second)->m_files.size();
+    m_offset -= m_fileIndex;
+    --m_fileIndex;
+  }
+
+  return *this;
+}
+
+int CSessionIterator::index(void) const
+{
+  return m_offset + m_fileIndex;
+}
+
 bool CSessionIterator::atEnd(void) const
 {
   return (m_session == 0 || m_mapIt == m_session->m_map.end() || m_fileIndex == (m_mapIt->second)->m_files.size());
+}
+
+bool CSessionIterator::atBegin(void) const
+{
+  // NOTE returns false if session is null
+
+  return (m_session != 0 && m_mapIt == m_session->m_map.begin() && m_fileIndex == 0);
 }
 
 const QFileInfo& CSessionIterator::file(void) const

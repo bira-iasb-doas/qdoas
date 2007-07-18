@@ -13,7 +13,9 @@ CEngineController::CEngineController(QObject *parent) :
   QObject(parent),
   m_mode(0),
   m_currentProject(NULL),
-  m_currentRecord(-1)
+  m_currentRecord(-1),
+  m_numberOfRecords(0),
+  m_numberOfFiles(0)
 {
 
   // create the engine thread
@@ -28,45 +30,54 @@ CEngineController::~CEngineController()
 
 void CEngineController::notifySetProject(void)
 {
-  // follow up based on the mode
-  switch (m_mode) {
-  case cBrowseMode:
-    {
-      if (!m_currentIt.atEnd()) {
-        std::cout << "CEngineController::notifySetProject" << std::endl;
-	m_thread->request(new CEngineRequestBeginBrowseFile(m_currentIt.file().fileName()));
-      }
-    }
-    break;
-  case cAnalyseMode:
-    {
-    }
-    break;
-  }
+  std::cout << "CEngineController::notifySetProject OBSOLETE" << std::endl;
 }
 
-void CEngineController::notifyNumbeOfFiles(int nFiles)
+void CEngineController::notifyNumberOfFiles(int nFiles)
 {
+  
 }
 
 void CEngineController::notifyCurrentFile(int fileNumber)
 {
 }
 
-void CEngineController::notifyNumberOfRecords(int nRec)
+void CEngineController::notifyReadyToNavigateRecords(int numberOfRecords)
 {
   // successfully started browsing a file
   // TODO signals for buttons
 
+  m_numberOfRecords = numberOfRecords;
   m_currentRecord = 0;
 
-  std::cout << "CEngineController::notifyNumberOfRecords " << nRec << std::endl;
+  std::cout << "CEngineController::notifyNumberOfRecords " << m_numberOfRecords << std::endl;
+
+  // signals for navigation control
+  // records
+  emit signalNumberOfRecordsChanged(m_numberOfRecords);
+  emit signalCurrentRecordChanged(m_currentRecord);
+
+  // files
+  emit signalCurrentFileChanged(m_currentIt.index()+1);
 }
 
-void CEngineController::notifyCurrentRecord(int recNumber)
+void CEngineController::notifyCurrentRecord(int recordNumber)
 {
+  m_currentRecord = recordNumber;
+  
+  std::cout << "CEngineController::notifyCurrentRecord " << recordNumber << std::endl;
+
+  emit signalCurrentRecordChanged(m_currentRecord);
 }
 
+void CEngineController::notifyEndOfRecords(void)
+{
+  m_currentRecord = m_numberOfRecords + 1;
+  
+  std::cout << "CEngineController::notifyEndOfRecords"<< std::endl;
+
+  emit signalCurrentRecordChanged(m_currentRecord);
+}
 
 bool CEngineController::event(QEvent *e)
 {
@@ -98,11 +109,80 @@ void CEngineController::slotFirstFile()
 {
 }
 
-void CEngineController::slotNextFile()
+void CEngineController::slotPreviousFile()
 {
+  CEngineRequestCompound *req = new CEngineRequestCompound;
+  
+  // done with the current file
+  if (m_numberOfRecords >= 0) {
+    switch (m_mode) {
+    case cBrowseMode:
+      req->addRequest(new CEngineRequestEndBrowseFile);
+      break;
+    case cAnalyseMode:
+      break;
+    }
+  }
+
+  if (m_numberOfFiles && !m_currentIt.atBegin()) {
+    --m_currentIt;
+    // check for a change in project
+    if (m_currentProject != m_currentIt.project()) {
+      m_currentProject = m_currentIt.project();
+      req->addRequest(new CEngineRequestSetProject(m_currentProject));
+    }
+
+    switch (m_mode) {
+    case cBrowseMode:
+      req->addRequest(new CEngineRequestBeginBrowseFile(m_currentIt.file().fileName()));
+      break;
+    case cAnalyseMode:
+      break;
+    }
+  }
+
+  m_thread->request(req);
 }
 
-void CEngineController::slotPreviousFile()
+void CEngineController::slotNextFile()
+{
+  CEngineRequestCompound *req = new CEngineRequestCompound;
+  
+  // done with the current file
+  if (m_numberOfRecords >= 0) {
+    switch (m_mode) {
+    case cBrowseMode:
+      req->addRequest(new CEngineRequestEndBrowseFile);
+      break;
+    case cAnalyseMode:
+      break;
+    }
+  }
+
+  if (!m_currentIt.atEnd()) {
+    ++m_currentIt;
+    if (!m_currentIt.atEnd()) {
+      // check for a change in project
+      if (m_currentProject != m_currentIt.project()) {
+	m_currentProject = m_currentIt.project();
+	req->addRequest(new CEngineRequestSetProject(m_currentProject));
+      }
+
+      switch (m_mode) {
+      case cBrowseMode:
+	req->addRequest(new CEngineRequestBeginBrowseFile(m_currentIt.file().fileName()));
+	break;
+      case cAnalyseMode:
+	break;
+      }
+    }
+
+  }
+
+  m_thread->request(req);
+}
+
+void CEngineController::slotLastFile()
 {
 }
 
@@ -114,28 +194,75 @@ void CEngineController::slotFirstRecord()
 {
 }
 
+void CEngineController::slotPreviousRecord()
+{
+
+}
+
 void CEngineController::slotNextRecord()
+{
+  if (m_currentRecord != -1) {
+    
+    switch (m_mode) {
+    case cBrowseMode:
+      m_thread->request(new CEngineRequestBrowseNextRecord);
+      break;
+    case cAnalyseMode:
+      break;
+    }
+  }
+}
+
+void CEngineController::slotLastRecord()
 {
 }
 
-void CEngineController::slotGotoRecord(int recNumber)
+void CEngineController::slotGotoRecord(int recordNumber)
 {
+  if (m_currentRecord != -1 && recordNumber > 0 && recordNumber <= m_numberOfRecords) {
+
+    switch (m_mode) {
+    case cBrowseMode:
+      m_thread->request(new CEngineRequestBrowseSpecificRecord(recordNumber));
+      break;
+    case cAnalyseMode:
+      break;
+    }
+  }
 }
 
 void CEngineController::slotStartBrowseSession(RefCountPtr<CSession> session)
 {
-  // shutdown current activity ... TODO
+  // make a compound request
+  CEngineRequestCompound *req = new CEngineRequestCompound;
 
+  // tidy up from the previous(current) session
+  switch (m_mode) {
+  case cBrowseMode:
+    req->addRequest(new CEngineRequestEndBrowseFile); 
+    break;
+  case cAnalyseMode:
+    break;
+  }
+
+  // change session and resent current markers
   m_session = session;
-
   m_currentIt = CSessionIterator(m_session);
+  m_numberOfFiles = m_session->size();
+  m_currentRecord = -1;
   m_currentProject = NULL;
 
   if (!m_currentIt.atEnd()) {
 
-    m_currentProject = m_currentIt.project();
     m_mode = cBrowseMode;
-    // configure the engine - response will trigger the next action
-    m_thread->request(new CEngineRequestSetProject(m_currentProject));    
+
+    m_currentProject = m_currentIt.project();
+
+    req->addRequest(new CEngineRequestSetProject(m_currentProject));
+    req->addRequest(new CEngineRequestBeginBrowseFile(m_currentIt.file().fileName()));
   }
+
+  emit signalNumberOfFilesChanged(m_numberOfFiles);
+
+  m_thread->request(req);
 }

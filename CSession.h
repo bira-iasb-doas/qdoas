@@ -13,6 +13,7 @@
 #include "mediate_project.h"
 #include "mediate_analysis_window.h"
 
+class CSession;
 class CSessionIterator;
 
 class CSessionItem
@@ -28,6 +29,7 @@ class CSessionItem
   QList<mediate_analysis_window_t> m_windows;
   QList<QFileInfo> m_files;
 
+  friend class CSession;
   friend class CSessionIterator;
 };
 
@@ -38,6 +40,8 @@ class CSession
   ~CSession();
 
   void addFile(const QFileInfo &file, const QString &projectName);
+
+  int size(void) const;
 
  private:
   typedef std::map<QString,CSessionItem*> sessionmap_t;
@@ -60,8 +64,12 @@ class CSessionIterator
   CSessionIterator& operator=(const CSessionIterator &rhs);
 
   CSessionIterator& operator++(void);
+  CSessionIterator& operator--(void);
+
+  int index(void) const;
 
   bool atEnd(void) const;
+  bool atBegin(void) const;
 
   const QFileInfo& file(void) const;
   const mediate_project_t* project(void) const;
@@ -73,6 +81,7 @@ class CSessionIterator
   RefCountPtr<CSession> m_session;
   CSession::sessionmap_t::iterator m_mapIt;
   int m_fileIndex;
+  int m_offset;
 };
 
 #endif

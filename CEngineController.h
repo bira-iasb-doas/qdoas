@@ -33,11 +33,12 @@ Q_OBJECT
 
   void notifySetProject(void);
 
-  void notifyNumbeOfFiles(int nFiles);
+  void notifyNumberOfFiles(int nFiles);
   void notifyCurrentFile(int fileNumber);
-  void notifyNumberOfRecords(int nRec);
-  void notifyCurrentRecord(int recNumber);
-
+  void notifyReadyToNavigateRecords(int numberOfRecords);
+  void notifyCurrentRecord(int recordNumber);
+  void notifyEndOfRecords(void);
+  void notifyGotoRecord(int recordNumber);
 
  protected:
   virtual bool event(QEvent *e);
@@ -47,13 +48,23 @@ Q_OBJECT
   void slotFirstFile();
   void slotNextFile();
   void slotPreviousFile();
+  void slotLastFile();
   void slotGotoFile(int number);
   // toolbar record navigation interface
   void slotFirstRecord();
+  void slotPreviousRecord();
   void slotNextRecord();
+  void slotLastRecord();
   void slotGotoRecord(int recNumber);
  
   void slotStartBrowseSession(RefCountPtr<CSession> session);
+
+ signals:
+  void signalNumberOfFilesChanged(int nRecords);
+  void signalCurrentFileChanged(int recordNumber);
+
+  void signalNumberOfRecordsChanged(int nRecords);
+  void signalCurrentRecordChanged(int recordNumber);
 
  private:
   CEngineThread *m_thread;
@@ -62,7 +73,7 @@ Q_OBJECT
   int m_mode;
 
   const mediate_project_t *m_currentProject;
-  int m_currentRecord;
+  int m_currentRecord, m_numberOfRecords, m_numberOfFiles;
 
   RefCountPtr<CSession> m_session;
   CSessionIterator m_currentIt;

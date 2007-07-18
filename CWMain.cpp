@@ -11,6 +11,7 @@
 #include "CWSplitter.h"
 
 #include "CEngineController.h"
+#include "CNavigationPanel.h"
 
 // pixmaps
 #include "icons/file_open_16.xpm"
@@ -54,7 +55,11 @@ CWMain::CWMain(QWidget *parent) :
   m_toolBar = new QToolBar(this);
   m_toolBar->addAction(openAct);
 
-  mainLayout->addWidget(m_toolBar, 0);
+  QHBoxLayout *tbLayout = new QHBoxLayout;
+
+  tbLayout->addWidget(m_toolBar, 0);
+  tbLayout->addStretch(1);
+  mainLayout->addLayout(tbLayout, 0);
   
   //------------------------------
 
@@ -112,6 +117,49 @@ CWMain::CWMain(QWidget *parent) :
   // connections to the controller
   connect(m_projTree, SIGNAL(signalStartBrowseSession(RefCountPtr<CSession>)),
           m_controller, SLOT(slotStartBrowseSession(RefCountPtr<CSession>)));
+
+
+  m_toolBar->addSeparator();
+
+  CNavigationPanel *navPanelRecords = new CNavigationPanel(m_toolBar);
+  
+  // connections
+  connect(m_controller, SIGNAL(signalNumberOfRecordsChanged(int)),
+	  navPanelRecords, SLOT(slotSetMaxIndex(int)));
+  connect(m_controller, SIGNAL(signalCurrentRecordChanged(int)),
+	  navPanelRecords, SLOT(slotSetCurrentIndex(int)));
+
+  connect(navPanelRecords, SIGNAL(signalFirstClicked()),
+	  m_controller, SLOT(slotFirstRecord()));
+  connect(navPanelRecords, SIGNAL(signalNextClicked()),
+	  m_controller, SLOT(slotNextRecord()));
+  connect(navPanelRecords, SIGNAL(signalLastClicked()),
+	  m_controller, SLOT(slotLastRecord()));
+  connect(navPanelRecords, SIGNAL(signalIndexChanged(int)),
+	  m_controller, SLOT(slotGotoRecord(int)));
+
+  m_toolBar->addSeparator();
+
+  CNavigationPanel *navPanelFiles = new CNavigationPanel(m_toolBar);
+  
+  // connections
+  connect(m_controller, SIGNAL(signalNumberOfFilesChanged(int)),
+	  navPanelFiles, SLOT(slotSetMaxIndex(int)));
+  connect(m_controller, SIGNAL(signalCurrentFileChanged(int)),
+	  navPanelFiles, SLOT(slotSetCurrentIndex(int)));
+
+  connect(navPanelFiles, SIGNAL(signalFirstClicked()),
+	  m_controller, SLOT(slotFirstFile()));
+  connect(navPanelFiles, SIGNAL(signalPreviousClicked()),
+	  m_controller, SLOT(slotPreviousFile()));
+  connect(navPanelFiles, SIGNAL(signalNextClicked()),
+	  m_controller, SLOT(slotNextFile()));
+  connect(navPanelFiles, SIGNAL(signalLastClicked()),
+	  m_controller, SLOT(slotLastFile()));
+  connect(navPanelFiles, SIGNAL(signalIndexChanged(int)),
+	  m_controller, SLOT(slotGotoFile(int)));
+
+  m_toolBar->addSeparator();
 }
 
 CWMain::~CWMain()

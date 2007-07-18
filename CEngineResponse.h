@@ -8,6 +8,8 @@ class CEngineController;
 
 const int cEngineResponseSetProjectType           = 1;
 const int cEngineResponseBeginBrowseFileType      = 2;
+const int cEngineResponseBrowseRecordType         = 3;
+const int cEngineResponseGotoRecordType           = 4;
 
 //------------------------------------------------------------
 
@@ -56,6 +58,25 @@ class CEngineResponseBeginBrowseFile : public CEngineResponse
   QString m_fileName;
   int m_numberOfRecords;
 };
+
+//------------------------------------------------------------
+
+class CEngineResponseBrowseRecord : public CEngineResponse
+{
+ public:
+  CEngineResponseBrowseRecord();
+  virtual ~CEngineResponseBrowseRecord();
+
+  virtual void process(CEngineController *engineController);
+
+  void setRecordNumber(int recordNumber);
+
+ private:
+  int m_recordNumber;
+
+};
+
+//------------------------------------------------------------
 
 #endif
 

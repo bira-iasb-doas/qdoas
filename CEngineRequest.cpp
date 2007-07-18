@@ -18,6 +18,39 @@ CEngineRequest::~CEngineRequest()
 
 //------------------------------------------------------------
 
+CEngineRequestCompound::CEngineRequestCompound() :
+  CEngineRequest(cEngineRequestCompoundType)
+{
+}
+
+CEngineRequestCompound::~CEngineRequestCompound()
+{
+  // delete all requests
+  while (!m_requestList.isEmpty()) {
+    delete m_requestList.takeFirst();
+  }
+}
+
+bool CEngineRequestCompound::process(CEngineThread *engineThread)
+{
+  bool result = true; // empty is ok
+  QList<CEngineRequest*>::iterator it = m_requestList.begin();
+
+  // process sequentially until done or a failure occurred
+  while (it != m_requestList.end() && (result = (*it)->process(engineThread)))
+    ++it;
+
+  return result;
+}
+
+void CEngineRequestCompound::addRequest(CEngineRequest *req)
+{
+  // takes owneship of req
+  m_requestList.push_back(req);
+}
+
+//------------------------------------------------------------
+
 CEngineRequestSetProject::CEngineRequestSetProject(const mediate_project_t *project) :
   CEngineRequest(cEngineRequestSetProjectType)
 {
@@ -29,7 +62,7 @@ CEngineRequestSetProject::~CEngineRequestSetProject()
 {
 }
 
-void CEngineRequestSetProject::process(CEngineThread *engineThread)
+bool CEngineRequestSetProject::process(CEngineThread *engineThread)
 {
   // process is called from the thread and drives the engine through the
   // mediator interface.
@@ -37,13 +70,14 @@ void CEngineRequestSetProject::process(CEngineThread *engineThread)
   int rc = mediateRequestSetProject(engineThread->engineContext(),
 				    &m_project);
 
-  // post a response
-  CEngineResponseSetProject *resp = new CEngineResponseSetProject;
+  // TODO
 
-  if (rc == -1)
-    resp->addErrorMessage("Failed to copy project data to the engine.");
+  // no response unless there was an error
+  //  if (rc == -1) {
+    //    resp->addErrorMessage("Failed to copy project data to the engine.");
+    //engineThread->respond(resp);
 
-  engineThread->respond(resp);
+  return (rc == 0);
 }
 
 //------------------------------------------------------------
@@ -58,7 +92,7 @@ CEngineRequestBeginBrowseFile::~CEngineRequestBeginBrowseFile()
 {
 }
 
-void CEngineRequestBeginBrowseFile::process(CEngineThread *engineThread)
+bool CEngineRequestBeginBrowseFile::process(CEngineThread *engineThread)
 {
   // open the file and get back the number of records (and calibration data?)
 
@@ -72,7 +106,89 @@ void CEngineRequestBeginBrowseFile::process(CEngineThread *engineThread)
 
   // post the response
   engineThread->respond(resp);
+
+  return (rc != -1);
 }
 
 //------------------------------------------------------------
+
+CEngineRequestBrowseNextRecord::CEngineRequestBrowseNextRecord() :
+  CEngineRequest(cEngineRequestBrowseNextRecordType)
+{
+}
+
+CEngineRequestBrowseNextRecord::~CEngineRequestBrowseNextRecord()
+{
+}
+
+bool CEngineRequestBrowseNextRecord::process(CEngineThread *engineThread)
+{
+  // create a response as the handle
+  CEngineResponseBrowseRecord *resp = new CEngineResponseBrowseRecord;
+
+  int rc = mediateRequestGetNextMatchingSpectrum(engineThread->engineContext(),
+						 resp);
+
+  resp->setRecordNumber(rc); // -1 if an error occurred
+
+  // post the response
+  engineThread->respond(resp);
+
+  return (rc != -1);
+}
+
+//------------------------------------------------------------
+
+CEngineRequestBrowseSpecificRecord::CEngineRequestBrowseSpecificRecord(int recordNumber) :
+  CEngineRequest(cEngineRequestBrowseSpecificRecordType),
+  m_recordNumber(recordNumber)
+{
+}
+
+CEngineRequestBrowseSpecificRecord::~CEngineRequestBrowseSpecificRecord()
+{
+}
+
+bool CEngineRequestBrowseSpecificRecord::process(CEngineThread *engineThread)
+{
+  // create a response as the handle
+  CEngineResponseBrowseRecord *resp = new CEngineResponseBrowseRecord;
+
+  int rc = mediateRequestGotoSpectrum(engineThread->engineContext(),
+				      m_recordNumber, resp);
+  
+  if (rc > 0) {
+    // successfully positioned .. now browse
+    rc = mediateRequestGetNextMatchingSpectrum(engineThread->engineContext(),
+					       resp);
+
+    resp->setRecordNumber(rc); // -1 if an error occurred
+  }
+
+  // post the response
+  engineThread->respond(resp);
+
+  return (rc != -1);
+}
+
+//------------------------------------------------------------
+
+CEngineRequestEndBrowseFile::CEngineRequestEndBrowseFile() :
+  CEngineRequest(cEngineRequestEndBrowseFileType)
+{
+}
+
+CEngineRequestEndBrowseFile::~CEngineRequestEndBrowseFile()
+{
+}
+
+bool CEngineRequestEndBrowseFile::process(CEngineThread *engineThread)
+{
+  // create a response as the handle - TODO
+  void *resp = NULL;
+
+  int rc = mediateRequestEndBrowseSpectra(engineThread->engineContext(), resp);
+
+  return (rc != -1);
+}
 

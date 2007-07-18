@@ -56,7 +56,9 @@ guiobj := \
          CWProjectTabSpectra.$(O) \
          CWProjectTabAnalysis.$(O) \
          CWProjectPropertyEditor.$(O) \
-         CEngineController.$(O)
+         CEngineController.$(O) \
+         CNavigationPanel.$(O)
+
 
 mediatorobj := mediator/mediate.$(O)
 

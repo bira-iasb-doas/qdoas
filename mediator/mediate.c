@@ -1,16 +1,30 @@
+
+#include <stdlib.h>
+
 #include "mediate.h"
 
+// TODO
+struct dummy {
+  int record;
+  int nRecords;
+};
 
 int mediateRequestCreateEngineContext(void **engineContext)
 {
   // TODO
-  *engineContext = 0x0;
+  struct dummy *tmp = (struct dummy *)malloc(sizeof(struct dummy));
 
+  tmp->nRecords = 15;
+  tmp->record = 0;
+  *engineContext = (void*)tmp;
+  
   return 0;
 }
 
 int mediateRequestDestroyEngineContext(void *engineContext)
 {
+  free(engineContext);
+
   return 0;
 }
 
@@ -38,25 +52,54 @@ int mediateRequestBeginBrowseSpectra(void *engineContext,
 				     const char *spectraFileName,
 				     void *responseHandle)
 {
-  return 5; // TODO
+  struct dummy *tmp = (struct dummy *)engineContext;
+
+  tmp->record = 1;
+
+  return tmp->nRecords;
 }
 
 int mediateRequestGotoSpectrum(void *engineContext,
 			       int recordNumber,
 			       void *responseHandle)
 {
-  return (recordNumber > 5) ? -1 : recordNumber;
+  struct dummy *tmp = (struct dummy *)engineContext;
+
+  if (recordNumber > 0 && recordNumber <= tmp->nRecords) {
+    tmp->record = recordNumber;
+    return recordNumber;
+  }
+  else {
+    tmp->record = tmp->nRecords + 1;
+    return 0;
+  }
 }
 
 int mediateRequestGetNextMatchingSpectrum(void *engineContext,
 					  void *responseHandle)
 {
-  return 3; // TODO
+  struct dummy *tmp = (struct dummy *)engineContext;
+
+  int rec = (tmp->record)++;
+
+  while (rec % 2) {
+    rec = (tmp->record)++;
+  }
+
+  if (rec > tmp->nRecords)
+    return 0;
+  else
+    return rec;
 }
 
 int mediateRequestEndBrowseSpectra(void *engineContext,
 				   void *responseHandle)
 {
+  struct dummy *tmp = (struct dummy *)engineContext;
+  
+  tmp->record = -1;
+  ++(tmp->nRecords);
+
   return 0;
 }
 
