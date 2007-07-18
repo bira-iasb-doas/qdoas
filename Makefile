@@ -59,6 +59,8 @@ guiobj := \
          CEngineController.$(O) \
          CNavigationPanel.$(O)
 
+resources := \
+         qdoas.qrc
 
 mediatorobj := mediator/mediate.$(O)
 
@@ -66,9 +68,12 @@ mocinc := $(guiobj:%.$(O)=%.h)
 
 #---------------------------------------------------------------------
 
-mocobj := $(mocinc:%.h=moc_%.$(O))
-
 main := qdoas
+
+mocobj := $(mocinc:%.h=moc_%.$(O))
+ressrc := $(main:%=%_resources.$(CPP))
+resobj := $(ressrc:%.$(CPP)=%.$(O))
+
 
 CCOPTS:=$(CCFLAGS)
 CCPPOPTS:=$(CCPPFLAGS)
@@ -87,7 +92,7 @@ all: $(main)
 debug: $(main)
 trace: $(main)
 
-$(main): $(obj) $(guiobj) $(mocobj) $(mediatorobj) $(main).$(O)
+$(main): $(obj) $(guiobj) $(mocobj) $(resobj) $(mediatorobj) $(main).$(O)
 	$(CCPP) $(CCPPOPTS) -o $@ $^ $(LIBS) $(SYSLIBS) $(GUILIBS)
 
 clean:
@@ -96,6 +101,7 @@ clean:
 	-/bin/rm $(mocobj) $(guiobj) $(guiobj:%.$(O)=%.d)
 	-/bin/rm $(main) $(main:%=%.$(O)) $(main:%=%.d)
 	-/bin/rm $(mediatorobj)
+	-/bin/rm $(resobj)
 
 %.d: %.$(CPP)
 	$(CCPP) -MM $^ $(CCPPOPTS) $(INCL) > $@
@@ -114,6 +120,11 @@ $(mediatorobj):%.$(O): %.c
 
 moc_%.$(CPP): %.h
 	$(MOC) $< -o $@
+
+$(ressrc): $(resources)
+	/usr/bin/rcc -o $@ $(resources)
+
+$(resobj): $(ressrc)
 
 include $(obj:%.$(O)=%.d) $(guiobj:%.$(O)=%.d) $(mainobj:%=%.d)
 

@@ -27,12 +27,6 @@
 #include "CSession.h"
 #include "RefCountPtr.h"
 
-// pixmaps for the project tree
-#include "icons/project_window_16.xpm"
-#include "icons/project_folder_16.xpm"
-#include "icons/project_directory_16.xpm"
-#include "icons/project_file_16.xpm"
-
 const int cProjectTreeHideDetailMode   = 27;
 const int cProjectTreeShowDetailMode   = 28;
 
@@ -464,21 +458,21 @@ const QIcon& CWProjectTree::getIcon(int type)
   case cAnalysisWindowItemType:
     {
       if (!m_windowIcon)
-        m_windowIcon = new QIcon(QPixmap(project_window_16_xpm));
+        m_windowIcon = new QIcon(":/icons/project_window_16.png");
       return *m_windowIcon;
     }
     break;
   case cSpectraFolderItemType:
     {
       if (!m_folderIcon)
-        m_folderIcon = new QIcon(QPixmap(project_folder_16_xpm));
+        m_folderIcon = new QIcon(":/icons/project_folder_16.png");
       return *m_folderIcon;
     }
     break;
   case cSpectraDirectoryItemType:
     {
       if (!m_directoryIcon)
-        m_directoryIcon = new QIcon(QPixmap(project_directory_16_xpm));
+        m_directoryIcon = new QIcon(":/icons/project_directory_16.png");
       return *m_directoryIcon;
     }
     break;
@@ -486,7 +480,7 @@ const QIcon& CWProjectTree::getIcon(int type)
   case cSpectraFileItemType:
     {
       if (!m_fileIcon)
-        m_fileIcon = new QIcon(QPixmap(project_file_16_xpm));
+        m_fileIcon = new QIcon(":/icons/project_file_16.png");
       return *m_fileIcon;
     }
     break;

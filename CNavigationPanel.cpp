@@ -1,20 +1,18 @@
 #include "CNavigationPanel.h"
 
-#include "icons/nav_first_16.xpm"
-
 CNavigationPanel::CNavigationPanel(QToolBar *toolBar) :
   QObject(toolBar),
   m_maxIndex(0),
   m_currentIndex(0)
 {
   // Add the actions to the tool-bar
-  m_firstBtn = toolBar->addAction(QIcon(QPixmap(nav_first_16_xpm)), "first");
-  m_prevBtn = toolBar->addAction(QIcon(QPixmap(nav_first_16_xpm)), "prev");
+  m_firstBtn = toolBar->addAction(QIcon(":/icons/nav_first_22.png"), "first");
+  m_prevBtn = toolBar->addAction(QIcon(":/icons/nav_prev_22.png"), "prev");
   m_indexEdit = new QLineEdit;
   m_indexEdit->setFixedWidth(70);
   toolBar->addWidget(m_indexEdit);
-  m_nextBtn = toolBar->addAction(QIcon(QPixmap(nav_first_16_xpm)), "next");
-  m_lastBtn = toolBar->addAction(QIcon(QPixmap(nav_first_16_xpm)), "last");
+  m_nextBtn = toolBar->addAction(QIcon(":/icons/nav_next_22.png"), "next");
+  m_lastBtn = toolBar->addAction(QIcon(":/icons/nav_last_22.png"), "last");
 
   // connections for the actions ... TODO
 
