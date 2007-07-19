@@ -40,7 +40,8 @@ obj := \
          CEngineThread.$(O) \
          CEngineRequest.$(O) \
          CEngineResponse.$(O) \
-         CSession.$(O)
+         CSession.$(O) \
+         CPlotDataSet.$(O)
 
 
 guiobj := \
@@ -60,7 +61,8 @@ guiobj := \
          CWProjectTabAnalysis.$(O) \
          CWProjectPropertyEditor.$(O) \
          CEngineController.$(O) \
-         CNavigationPanel.$(O)
+         CNavigationPanel.$(O) \
+         CWPlotPage.$(O)
 
 resources := \
          qdoas.qrc

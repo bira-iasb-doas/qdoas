@@ -12,6 +12,7 @@
 
 #include "CWEditor.h"
 #include "CWActiveContext.h"
+#include "CWPlotPage.h"
 
 const int cBorderSize = 5;
 const QRgb cEditTitleBackgroundColour  = 0xFF5986EC;
@@ -130,32 +131,19 @@ CWActiveContext::CWActiveContext(QWidget *parent) :
   m_cancelButton->hide();
 
   // TODO
-  QFrame *plotPage = new QFrame;
-  QwtPlot *p1 = new QwtPlot(plotPage);
-  QwtPlot *p2 = new QwtPlot(plotPage);
-  QGridLayout *plotLayout = new QGridLayout;
-  QwtPlotCurve *c1 = new QwtPlotCurve("Curve 1");
-  QwtPlotCurve *c2 = new QwtPlotCurve("Curve 1");
+  m_plotPage = new CWPlotPage(2);
   double x1[] = {0.0, 1.0, 2.0, 3.0};
   double y1[] = {1.0, 1.4, 0.7, 1.0};
-  c1->setData(x1,y1,4);
-  c1->attach(p1);
+  RefCountPtr<const CPlotDataSet> c1(new CPlotDataSet(x1,y1,4,"fred","jack","john"));
+
   double x2[] = {0.0, 1.0, 2.0, 3.0};
   double y2[] = {1.0, -1.4, 0.7, -1.0};
-  c2->setData(x2,y2,4);
-  c2->attach(p2);
+  RefCountPtr<const CPlotDataSet> c2(new CPlotDataSet(x2,y2,4,"guff","Intensity","lambda"));
 
-  p1->setAxisTitle(QwtPlot::xBottom, "x title");
-  p1->setAxisTitle(QwtPlot::yLeft, "Y title");
+  m_plotPage->addPlot(c1);
+  m_plotPage->addPlot(c2);
 
-  p1->replot();
-  p2->replot();
-
-  plotLayout->addWidget(p1, 0, 0);
-  plotLayout->addWidget(p2, 1, 1);
-  plotPage->setLayout(plotLayout);
-
-  m_graphScrollArea->setWidget(plotPage);
+  m_graphScrollArea->setWidget(m_plotPage);
 
 }
 
@@ -291,6 +279,7 @@ void CWActiveContext::moveAndResizeGraph(int wid, int hei)
   m_graphTab->resize(wid, m_tabRegionHeight);
   
   // scroll area
+  m_plotPage->layoutPlots(wid - 16);
   m_graphScrollArea->move(0, m_titleRegionHeight);
   m_graphScrollArea->resize(wid, m_centralRegionHeight);
 } 

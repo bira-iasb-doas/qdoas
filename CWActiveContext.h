@@ -9,6 +9,7 @@
 #include <QList>
 
 class CWEditor;
+class CWPlotPage;
 
 class CWActiveContext : public QFrame
 {
@@ -47,6 +48,7 @@ public slots:
   QTabBar *m_graphTab;
   QScrollArea *m_graphScrollArea;
   QString m_graphTitleStr;
+  CWPlotPage *m_plotPage;
 
   int m_titleRegionHeight;
   int m_buttonRegionHeight;
