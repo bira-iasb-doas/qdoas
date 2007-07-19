@@ -15,18 +15,21 @@ CCPPTRCDBG:=-g -DDEBUG
 
 MOC         :=/usr/bin/moc-qt4
 INC_DIR_QT4 :=/usr/share/qt4/include
+INC_DIR_QWT :=/usr/local/qwt/include
 LIB_DIR_QT4 :=/usr/lib
-LD_RPATH    :=
+LIB_DIR_QWT :=/usr/local/qwt/lib
+LD_RPATH    := -Wl,-rpath=$(LIB_DIR_QWT)
 
 LIBS:=
 SYSLIBS:= -lm
-GUILIBS:= -L$(LIB_DIR_QT4) $(LD_RPATH) -lQtGui -lQtCore
+GUILIBS:= -L$(LIB_DIR_QT4) -L$(LIB_DIR_QWT) $(LD_RPATH) -lqwt -lQtGui -lQtCore
 
 INCL := -I. \
 	-I$(INC_DIR_QT4) \
 	-I$(INC_DIR_QT4)/Qt \
 	-I$(INC_DIR_QT4)/QtCore \
 	-I$(INC_DIR_QT4)/QtGui \
+        -I$(INC_DIR_QWT) \
         -Imediator
 
 #---------------------------------------------------------------------

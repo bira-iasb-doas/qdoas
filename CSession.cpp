@@ -143,6 +143,24 @@ CSessionIterator& CSessionIterator::operator--(void)
   return *this;
 }
 
+// specific positioning of the iterator
+
+CSessionIterator& CSessionIterator::operator()(int index)
+{
+  // no range checks
+  m_offset = 0;
+  m_fileIndex = index;
+  m_mapIt = m_session->m_map.begin();
+  while (m_mapIt != m_session->m_map.end() &&
+	 m_fileIndex >= (m_mapIt->second)->m_files.size()) {
+    m_offset += (m_mapIt->second)->m_files.size();
+    m_fileIndex = index - m_offset;
+    ++m_mapIt;
+  }
+
+  return *this;
+}
+
 int CSessionIterator::index(void) const
 {
   return m_offset + m_fileIndex;

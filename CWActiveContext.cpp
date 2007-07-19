@@ -6,6 +6,10 @@
 #include <QColor>
 #include <QBrush>
 
+#include <QGridLayout>
+#include <qwt_plot.h>
+#include <qwt_plot_curve.h>
+
 #include "CWEditor.h"
 #include "CWActiveContext.h"
 
@@ -124,6 +128,35 @@ CWActiveContext::CWActiveContext(QWidget *parent) :
   m_helpButton->hide();
   m_okButton->hide();
   m_cancelButton->hide();
+
+  // TODO
+  QFrame *plotPage = new QFrame;
+  QwtPlot *p1 = new QwtPlot(plotPage);
+  QwtPlot *p2 = new QwtPlot(plotPage);
+  QGridLayout *plotLayout = new QGridLayout;
+  QwtPlotCurve *c1 = new QwtPlotCurve("Curve 1");
+  QwtPlotCurve *c2 = new QwtPlotCurve("Curve 1");
+  double x1[] = {0.0, 1.0, 2.0, 3.0};
+  double y1[] = {1.0, 1.4, 0.7, 1.0};
+  c1->setData(x1,y1,4);
+  c1->attach(p1);
+  double x2[] = {0.0, 1.0, 2.0, 3.0};
+  double y2[] = {1.0, -1.4, 0.7, -1.0};
+  c2->setData(x2,y2,4);
+  c2->attach(p2);
+
+  p1->setAxisTitle(QwtPlot::xBottom, "x title");
+  p1->setAxisTitle(QwtPlot::yLeft, "Y title");
+
+  p1->replot();
+  p2->replot();
+
+  plotLayout->addWidget(p1, 0, 0);
+  plotLayout->addWidget(p2, 1, 1);
+  plotPage->setLayout(plotLayout);
+
+  m_graphScrollArea->setWidget(plotPage);
+
 }
 
 CWActiveContext::~CWActiveContext()

@@ -107,6 +107,7 @@ bool CEngineController::event(QEvent *e)
 
 void CEngineController::slotFirstFile()
 {
+  slotGotoFile(1);
 }
 
 void CEngineController::slotPreviousFile()
@@ -184,19 +185,55 @@ void CEngineController::slotNextFile()
 
 void CEngineController::slotLastFile()
 {
+  slotGotoFile(m_numberOfFiles);
 }
 
 void CEngineController::slotGotoFile(int number)
 {
+  CEngineRequestCompound *req = new CEngineRequestCompound;
+  
+  // done with the current file
+  if (m_numberOfRecords >= 0) {
+    switch (m_mode) {
+    case cBrowseMode:
+      req->addRequest(new CEngineRequestEndBrowseFile);
+      break;
+    case cAnalyseMode:
+      break;
+    }
+  }
+
+  --number; // make it zero indexing
+
+  if (number >= 0 && number < m_numberOfFiles) {
+    // implicitly checks that that m_numberOfFiles > 0
+    m_currentIt(number);
+    // check for a change in project
+    if (m_currentProject != m_currentIt.project()) {
+      m_currentProject = m_currentIt.project();
+      req->addRequest(new CEngineRequestSetProject(m_currentProject));
+    }
+    
+    switch (m_mode) {
+    case cBrowseMode:
+      req->addRequest(new CEngineRequestBeginBrowseFile(m_currentIt.file().fileName()));
+      break;
+    case cAnalyseMode:
+      break;
+    }
+  }
+
+  m_thread->request(req);
 }
 
 void CEngineController::slotFirstRecord()
 {
+  slotGotoRecord(1);
 }
 
 void CEngineController::slotPreviousRecord()
 {
-
+  slotGotoRecord(m_currentRecord - 1);
 }
 
 void CEngineController::slotNextRecord()
@@ -215,6 +252,7 @@ void CEngineController::slotNextRecord()
 
 void CEngineController::slotLastRecord()
 {
+  slotGotoRecord(m_numberOfRecords);
 }
 
 void CEngineController::slotGotoRecord(int recordNumber)

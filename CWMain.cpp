@@ -131,6 +131,8 @@ CWMain::CWMain(QWidget *parent) :
 
   connect(navPanelRecords, SIGNAL(signalFirstClicked()),
 	  m_controller, SLOT(slotFirstRecord()));
+  connect(navPanelRecords, SIGNAL(signalPreviousClicked()),
+	  m_controller, SLOT(slotPreviousRecord()));
   connect(navPanelRecords, SIGNAL(signalNextClicked()),
 	  m_controller, SLOT(slotNextRecord()));
   connect(navPanelRecords, SIGNAL(signalLastClicked()),

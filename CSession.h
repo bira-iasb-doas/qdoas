@@ -66,6 +66,8 @@ class CSessionIterator
   CSessionIterator& operator++(void);
   CSessionIterator& operator--(void);
 
+  CSessionIterator& operator()(int index);
+
   int index(void) const;
 
   bool atEnd(void) const;
