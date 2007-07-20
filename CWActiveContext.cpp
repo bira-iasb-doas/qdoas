@@ -394,4 +394,13 @@ void CWActiveContext::slotAcceptOk(bool canDoOk)
 void CWActiveContext::slotPlotPagesAvailable()
 {
   std::cout << "// prepare for a new set of plot pages ... TODO" << std::endl;
+  m_plotRegion->removeAllPages();
+}
+
+void CWActiveContext::slotPlotPage(RefCountPtr<const CPlotPageData> page)
+{
+  std::cout << " .. adding page " << page->pageNumber() << std::endl;
+  m_plotRegion->addPage(page);
+  // tabs ... TODO
+  m_plotRegion->displayPage(page->pageNumber(), 2); // TODO - temp
 }

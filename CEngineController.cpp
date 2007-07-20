@@ -109,6 +109,8 @@ void CEngineController::notifyPlotData(QList<SPlotDataBucket> &buckets)
   // signal that a set of pages is about to be dispatched (also by signal)
   emit signalPlotPagesAvailable();
 
+  std::cout << "notify - " << pageMap.size() << " pages" << std::endl;
+
   mIt = pageMap.begin();
   while (mIt != pageMap.end()) {
     // page is wrapped in ref counting pointer for safe signal-slot based dispatch
@@ -116,6 +118,8 @@ void CEngineController::notifyPlotData(QList<SPlotDataBucket> &buckets)
     ++mIt;
   }
   pageMap.clear();
+
+  // signal to mark end of data ...
 }
 
 bool CEngineController::event(QEvent *e)

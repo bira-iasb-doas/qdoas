@@ -7,6 +7,9 @@
 #include <QTabBar>
 #include <QList>
 
+#include "CPlotPageData.h"
+#include "RefCountPtr.h"
+
 class CWEditor;
 class CWPlotRegion;
 
@@ -34,6 +37,7 @@ Q_OBJECT
   void slotAcceptOk(bool canDoOk);
 
   void slotPlotPagesAvailable(); // prepare for a new set of plot pages ...
+  void slotPlotPage(RefCountPtr<const CPlotPageData> page);
 
  private:
   void discardCurrentEditor(void);

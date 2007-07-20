@@ -15,7 +15,6 @@
 
 // pixmaps
 #include "icons/file_open_16.xpm"
-#include "icons/file_exit_16.xpm"
 
 CWMain::CWMain(QWidget *parent) :
   QFrame(parent)
@@ -39,7 +38,7 @@ CWMain::CWMain(QWidget *parent) :
 
   // Quit
   fileMenu->addSeparator();
-  QAction *exitAct = new QAction(QIcon(QPixmap(file_exit_16_xpm)), "Quit", this);
+  QAction *exitAct = new QAction(QIcon(QPixmap(":/icons/file_exit_16.png")), "Quit", this);
   connect(exitAct, SIGNAL(triggered()), this, SLOT(close()));
   fileMenu->addAction(exitAct);
 
@@ -165,6 +164,9 @@ CWMain::CWMain(QWidget *parent) :
   // plot data transfer
   connect(m_controller, SIGNAL(signalPlotPagesAvailable()),
           m_activeContext, SLOT(slotPlotPagesAvailable()));
+  connect(m_controller, SIGNAL(signalPlotPage(RefCountPtr<const CPlotPageData>)),
+          m_activeContext, SLOT(slotPlotPage(RefCountPtr<const CPlotPageData>)));
+
 }
 
 CWMain::~CWMain()

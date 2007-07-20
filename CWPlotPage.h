@@ -3,6 +3,7 @@
 
 #include <QFrame>
 #include <QList>
+#include <QSize>
 
 #include <qwt_plot.h>
 
@@ -28,7 +29,7 @@ class CWPlotPage : public QFrame
   virtual ~CWPlotPage();
 
   void addPlot(RefCountPtr<const CPlotDataSet> dataSet);
-  void layoutPlots(int width);
+  void layoutPlots(const QSize &visibleSize);
 
  protected:
   //  virtual void resizeEvent(QResizeEvent *e);

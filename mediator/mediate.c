@@ -79,17 +79,30 @@ int mediateRequestGetNextMatchingSpectrum(void *engineContext,
 					  void *responseHandle)
 {
   struct dummy *tmp = (struct dummy *)engineContext;
-
   int rec = (tmp->record)++;
-
-  while (rec % 2) {
-    rec = (tmp->record)++;
-  }
-
-  if (rec > tmp->nRecords)
+  double x[1024], y[1024];
+  int i;
+  double xx, scale;
+  
+  if (rec > tmp->nRecords) {
     return 0;
-  else
+  }
+  else {
+
+    scale = (double)rec;
+    xx = 0.0;
+    i = 0;
+    while (i<1024) {
+      x[i] = xx;
+      y[i] = scale * sin(xx);
+      xx += scale * 0.001;
+      ++i;
+    }
+
+    mediateResponseSpectrumData(y, x, 1024, responseHandle);
+    
     return rec;
+  }
 }
 
 int mediateRequestEndBrowseSpectra(void *engineContext,
@@ -122,48 +135,3 @@ int mediateRequestEndAnalysis(void *engineContext,
   return 0;
 }
 
-void mediateResponseSpectrumData(double *intensityDataArray,
-				 double *wavelengthDataArray,
-                                 int arrayLength,
-				 void *responseHandle)
-{
-}
-
-void mediateResponseGraphicalData(double *ordinateArray,
-				  double *abscissaArray,
-				  int arrayLength,
-                                  int page,
-				  int dataType,
-				  void *responseHandle)
-{
-}
-
-void mediateResponseCellDataDouble(int page,
-				   int row,
-				   int column,
-				   double doubleValue,
-				   void *responseHandle)
-{
-}
-
-void mediateResponseCellDataInteger(int page,
-				    int row,
-				    int column,
-				    int integerValue,
-				    void *responseHandle)
-{
-}
-
-void mediateResponseCellDataString(int page,
-				   int row,
-				   int column,
-				   const char *stringValue,
-				   void * responseHandle)
-{
-}
-
-void mediateResponseErrorMessage(const char *messageString,
-				 int errorLevel,
-				 void *responseHandle)
-{
-}

@@ -70,8 +70,10 @@ guiobj := \
 resources := \
          qdoas.qrc
 
-mediatorobj := mediator/mediate.$(O)
+mediatorcobj    := mediator/mediate.$(O)
+mediatorcppobj  := mediator/mediate_response.$(O)
 
+mediatorobj     := $(mediatorcobj) $(mediatorcppobj)
 mocinc := $(guiobj:%.$(O)=%.h)
 
 #---------------------------------------------------------------------
@@ -123,8 +125,11 @@ clean:
 %.$(O): %.$(C)
 	$(CC) $(CCOPTS) -c $< $(INCL)
 
-$(mediatorobj):%.$(O): %.c
+$(mediatorcobj):%.$(O): %.c
 	gcc -g -c -o $@ $< -Imediator
+
+$(mediatorcppobj):%.$(O): %.cpp
+	$(CCPP) $(CCPPOPTS) -o $@ -c $< $(INCL)
 
 moc_%.$(CPP): %.h
 	$(MOC) $< -o $@

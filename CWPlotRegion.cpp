@@ -59,12 +59,16 @@ void CWPlotRegion::displayPage(int pageNumber, int columns)
   if (it != m_pageMap.end()) {
     m_plotPage = new CWPlotPage(columns, it->second);
     setWidget(m_plotPage); // takes care of deleting the old widget
+    m_plotPage->layoutPlots(m_visibleSize);
+    m_plotPage->show();
   }
 }
 
 void CWPlotRegion::resizeEvent(QResizeEvent *e)
 {
+  m_visibleSize = e->size();
+
   if (m_plotPage)
-    m_plotPage->layoutPlots( e->size().width() );
+    m_plotPage->layoutPlots(m_visibleSize);
 }
 

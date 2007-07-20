@@ -42,12 +42,15 @@ CWPlotPage::CWPlotPage(int columns, QWidget *parent) :
   QFrame(parent),
   m_columns(columns)
 {
+  if (m_columns < 1) m_columns = 1;
 }
 
 CWPlotPage::CWPlotPage(int columns, RefCountPtr<const CPlotPageData> page, QWidget *parent) :
   QFrame(parent),
   m_columns(columns)
 {
+  if (m_columns < 1) m_columns = 1;
+
   if (page != 0) {
 
     int nPlots = page->size();
@@ -72,12 +75,17 @@ void CWPlotPage::addPlot(RefCountPtr<const CPlotDataSet> dataSet)
   m_plots.push_back(tmp);
 }
 
-void CWPlotPage::layoutPlots(int fullWidth)
+void CWPlotPage::layoutPlots(const QSize &visibleSize)
 {
   const int cBorderSize = 10;
 
+  // MUST have at least one plot for this to be meaningful
+  if (m_plots.size() == 0)
+    return;
+
   // work out the layout ... and size ...
 
+  int columns;
   QSize unitSize, minUnitSize;
 
   QList<CWPlot*>::iterator it = m_plots.begin();
@@ -86,10 +94,22 @@ void CWPlotPage::layoutPlots(int fullWidth)
     ++it;
   }
 
-  // calculate the size that fits nicely to the full width
-  // want 3:4 ratio
-  unitSize.setWidth((fullWidth - cBorderSize * (m_columns+1)) / m_columns);
-  unitSize.setHeight(3 * unitSize.width() / 4);
+  if (m_plots.size() == 1) {
+    // only one plot ... fit to the visible area
+    unitSize = visibleSize;
+    unitSize -= QSize(2 * cBorderSize, 2 * cBorderSize);
+    columns = 1;
+  }
+  else {
+    // calculate the size that fits nicely to the full width
+    // make a local change to columns if too few plots to fill them...
+    columns = (m_plots.size() < m_columns) ? m_plots.size() : m_columns;
+    
+
+    unitSize.setWidth((visibleSize.width() - cBorderSize * (columns+1)) / columns);
+    // want 3:4 ratio
+    unitSize.setHeight(3 * unitSize.width() / 4);
+  }
 
   // respect the minimum size
   if (minUnitSize.isValid()) {
@@ -98,7 +118,7 @@ void CWPlotPage::layoutPlots(int fullWidth)
     else
       unitSize = minUnitSize;
   }
-      
+  
   // position and resize
   int fitWidth = unitSize.width() + cBorderSize;
   int fitHeight = unitSize.height() + cBorderSize;
@@ -117,5 +137,5 @@ void CWPlotPage::layoutPlots(int fullWidth)
     ++it;
   }
   // resize the plot page
-  resize(m_columns*fitWidth + cBorderSize, (row + (col?1:0)) * fitHeight + cBorderSize);
+  resize(columns*fitWidth + cBorderSize, (row + (col?1:0)) * fitHeight + cBorderSize);
 }
