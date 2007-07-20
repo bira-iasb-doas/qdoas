@@ -41,7 +41,8 @@ obj := \
          CEngineRequest.$(O) \
          CEngineResponse.$(O) \
          CSession.$(O) \
-         CPlotDataSet.$(O)
+         CPlotDataSet.$(O) \
+         CPlotPageData.$(O)
 
 
 guiobj := \
@@ -62,7 +63,9 @@ guiobj := \
          CWProjectPropertyEditor.$(O) \
          CEngineController.$(O) \
          CNavigationPanel.$(O) \
-         CWPlotPage.$(O)
+         CWPlotPage.$(O) \
+         CWPlotRegion.$(O)
+
 
 resources := \
          qdoas.qrc

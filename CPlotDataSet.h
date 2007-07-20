@@ -35,4 +35,12 @@ inline const QString& CPlotDataSet::plotTitle(void) const { return m_title; }
 inline const QString& CPlotDataSet::xAxisLabel(void) const { return m_xLabel; }
 inline const QString& CPlotDataSet::yAxisLabel(void) const { return m_yLabel; }
 
+struct SPlotDataBucket
+{
+  int page;
+  const CPlotDataSet *data;
+
+  SPlotDataBucket(int p, const CPlotDataSet *d) : page(p), data(d) {}
+};
+
 #endif

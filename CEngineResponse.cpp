@@ -74,6 +74,12 @@ CEngineResponseBrowseRecord::CEngineResponseBrowseRecord() :
 
 CEngineResponseBrowseRecord::~CEngineResponseBrowseRecord()
 {
+  // should have been emptied in the trasfer to the controller
+
+  while (!m_plotDataBuckets.isEmpty()) {
+    delete m_plotDataBuckets.front().data;
+    m_plotDataBuckets.pop_front();
+  }
 }
 
 void CEngineResponseBrowseRecord::process(CEngineController *engineController)
@@ -84,7 +90,9 @@ void CEngineResponseBrowseRecord::process(CEngineController *engineController)
     engineController->notifyEndOfRecords();
   }
   else if (m_recordNumber > 0) {
-    // display data ... TODO
+    // display data ...
+    engineController->notifyPlotData(m_plotDataBuckets);
+
     engineController->notifyCurrentRecord(m_recordNumber);
   }
   else {
@@ -95,6 +103,11 @@ void CEngineResponseBrowseRecord::process(CEngineController *engineController)
 void CEngineResponseBrowseRecord::setRecordNumber(int recordNumber)
 {
   m_recordNumber = recordNumber;
+}
+
+void CEngineResponseBrowseRecord::addDataSet(int pageNumber, const CPlotDataSet *dataSet)
+{
+  m_plotDataBuckets.push_back(SPlotDataBucket(pageNumber, dataSet));
 }
 
 //------------------------------------------------------------

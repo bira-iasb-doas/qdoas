@@ -4,6 +4,8 @@
 #include <QList>
 #include <QString>
 
+#include "CPlotDataSet.h"
+
 class CEngineController;
 
 const int cEngineResponseSetProjectType           = 1;
@@ -70,10 +72,11 @@ class CEngineResponseBrowseRecord : public CEngineResponse
   virtual void process(CEngineController *engineController);
 
   void setRecordNumber(int recordNumber);
+  void addDataSet(int pageNumber, const CPlotDataSet *dataSet);
 
  private:
   int m_recordNumber;
-
+  QList<SPlotDataBucket> m_plotDataBuckets;
 };
 
 //------------------------------------------------------------

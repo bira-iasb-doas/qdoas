@@ -7,6 +7,8 @@
 
 #include "CEngineThread.h"
 
+#include "CPlotDataSet.h"
+#include "CPlotPageData.h"
 #include "CSession.h"
 #include "RefCountPtr.h"
 
@@ -25,10 +27,6 @@ Q_OBJECT
   CEngineController(QObject *parent = 0);
   virtual ~CEngineController();
 
-  // establishes spectra browsing and returns.
-  bool browseSpectra(const mediate_project_t *project,
-		     QList<QFileInfo> &fileList);
-  
   // notify interface is for use by response classes
 
   void notifySetProject(void);
@@ -39,6 +37,7 @@ Q_OBJECT
   void notifyCurrentRecord(int recordNumber);
   void notifyEndOfRecords(void);
   void notifyGotoRecord(int recordNumber);
+  void notifyPlotData(QList<SPlotDataBucket> &buckets);
 
  protected:
   virtual bool event(QEvent *e);
@@ -65,6 +64,9 @@ Q_OBJECT
 
   void signalNumberOfRecordsChanged(int nRecords);
   void signalCurrentRecordChanged(int recordNumber);
+
+  void signalPlotPagesAvailable();
+  void signalPlotPage(RefCountPtr<const CPlotPageData> page);
 
  private:
   CEngineThread *m_thread;

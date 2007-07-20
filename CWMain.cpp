@@ -161,7 +161,10 @@ CWMain::CWMain(QWidget *parent) :
   connect(navPanelFiles, SIGNAL(signalIndexChanged(int)),
 	  m_controller, SLOT(slotGotoFile(int)));
 
-  m_toolBar->addSeparator();
+
+  // plot data transfer
+  connect(m_controller, SIGNAL(signalPlotPagesAvailable()),
+          m_activeContext, SLOT(slotPlotPagesAvailable()));
 }
 
 CWMain::~CWMain()

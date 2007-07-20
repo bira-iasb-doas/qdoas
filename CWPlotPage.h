@@ -7,6 +7,7 @@
 #include <qwt_plot.h>
 
 #include "CPlotDataSet.h"
+#include "CPlotPageData.h"
 #include "RefCountPtr.h"
 
 class CWPlot : public QwtPlot
@@ -23,6 +24,7 @@ class CWPlotPage : public QFrame
 {
  public:
   CWPlotPage(int columns, QWidget *parent = 0);
+  CWPlotPage(int columns, RefCountPtr<const CPlotPageData> page, QWidget *parent = 0);
   virtual ~CWPlotPage();
 
   void addPlot(RefCountPtr<const CPlotDataSet> dataSet);

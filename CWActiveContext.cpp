@@ -6,13 +6,10 @@
 #include <QColor>
 #include <QBrush>
 
-#include <QGridLayout>
-#include <qwt_plot.h>
-#include <qwt_plot_curve.h>
-
 #include "CWEditor.h"
 #include "CWActiveContext.h"
 #include "CWPlotPage.h"
+#include "CWPlotRegion.h"
 
 const int cBorderSize = 5;
 const QRgb cEditTitleBackgroundColour  = 0xFF5986EC;
@@ -114,7 +111,7 @@ CWActiveContext::CWActiveContext(QWidget *parent) :
     m_tabRegionHeight = 16;
   }
 
-  m_graphScrollArea = new QScrollArea(this);
+  m_plotRegion = new CWPlotRegion(this);
 
   // this might be adjusted in edit mode ...
   m_minGeneralSize = QSize(minWidth, m_titleRegionHeight + m_tabRegionHeight + 50);
@@ -129,21 +126,6 @@ CWActiveContext::CWActiveContext(QWidget *parent) :
   m_helpButton->hide();
   m_okButton->hide();
   m_cancelButton->hide();
-
-  // TODO
-  m_plotPage = new CWPlotPage(2);
-  double x1[] = {0.0, 1.0, 2.0, 3.0};
-  double y1[] = {1.0, 1.4, 0.7, 1.0};
-  RefCountPtr<const CPlotDataSet> c1(new CPlotDataSet(x1,y1,4,"fred","jack","john"));
-
-  double x2[] = {0.0, 1.0, 2.0, 3.0};
-  double y2[] = {1.0, -1.4, 0.7, -1.0};
-  RefCountPtr<const CPlotDataSet> c2(new CPlotDataSet(x2,y2,4,"guff","Intensity","lambda"));
-
-  m_plotPage->addPlot(c1);
-  m_plotPage->addPlot(c2);
-
-  m_graphScrollArea->setWidget(m_plotPage);
 
 }
 
@@ -168,7 +150,7 @@ void CWActiveContext::addEditor(CWEditor *editor)
 
     moveAndResizeButtons(width(), height());
 
-    m_graphScrollArea->hide();
+    m_plotRegion->hide();
     m_graphTab->hide();
     m_helpButton->show();
     m_okButton->show();
@@ -279,9 +261,9 @@ void CWActiveContext::moveAndResizeGraph(int wid, int hei)
   m_graphTab->resize(wid, m_tabRegionHeight);
   
   // scroll area
-  m_plotPage->layoutPlots(wid - 16);
-  m_graphScrollArea->move(0, m_titleRegionHeight);
-  m_graphScrollArea->resize(wid, m_centralRegionHeight);
+  // m_plotPage->layoutPlots(wid - 16); TODOTODO
+  m_plotRegion->move(0, m_titleRegionHeight);
+  m_plotRegion->resize(wid, m_centralRegionHeight);
 } 
 
 void CWActiveContext::moveAndResizeActiveEditor(int fullWidth)
@@ -368,7 +350,7 @@ void CWActiveContext::discardCurrentEditor(void)
     m_okButton->hide();
     m_cancelButton->hide();
     m_graphTab->show();
-    m_graphScrollArea->show();
+    m_plotRegion->show();
 
     // change title colour scheme
     QPalette palette(m_title->palette());
@@ -409,3 +391,7 @@ void CWActiveContext::slotAcceptOk(bool canDoOk)
   m_okButton->setEnabled(canDoOk);
 }
 
+void CWActiveContext::slotPlotPagesAvailable()
+{
+  std::cout << "// prepare for a new set of plot pages ... TODO" << std::endl;
+}

@@ -44,6 +44,23 @@ CWPlotPage::CWPlotPage(int columns, QWidget *parent) :
 {
 }
 
+CWPlotPage::CWPlotPage(int columns, RefCountPtr<const CPlotPageData> page, QWidget *parent) :
+  QFrame(parent),
+  m_columns(columns)
+{
+  if (page != 0) {
+
+    int nPlots = page->size();
+    int i = 0;
+    while (i < nPlots) {
+      CWPlot *tmp = new CWPlot(page->dataSet(i), this);
+      tmp->hide();
+      m_plots.push_back(tmp);
+      ++i;
+    }
+  }
+}
+
 CWPlotPage::~CWPlotPage()
 {
 }
@@ -51,9 +68,7 @@ CWPlotPage::~CWPlotPage()
 void CWPlotPage::addPlot(RefCountPtr<const CPlotDataSet> dataSet)
 {
   CWPlot *tmp = new CWPlot(dataSet, this);
-
   tmp->hide();
-
   m_plots.push_back(tmp);
 }
 
@@ -67,46 +82,40 @@ void CWPlotPage::layoutPlots(int fullWidth)
 
   QList<CWPlot*>::iterator it = m_plots.begin();
   while (it != m_plots.end()) {
-    unitSize = unitSize.expandedTo((*it)->sizeHint());
     minUnitSize = minUnitSize.expandedTo((*it)->minimumSizeHint());
     ++it;
   }
 
-  if (unitSize.isValid()) {
+  // calculate the size that fits nicely to the full width
+  // want 3:4 ratio
+  unitSize.setWidth((fullWidth - cBorderSize * (m_columns+1)) / m_columns);
+  unitSize.setHeight(3 * unitSize.width() / 4);
 
-    unitSize.setHeight((int)(0.75 * (double)unitSize.width())); // want 3:4 ratio
-
-    // calculate the scale factor that will use the full width available.
-    double ratio = (double)(fullWidth - cBorderSize * (m_columns+2)) / (double)(m_columns * unitSize.width());
-
-    // respect the minimum size
-    if (minUnitSize.isValid()) {
-      if (ratio > 0.0) {
-        unitSize *= ratio;
-        unitSize = unitSize.expandedTo(minUnitSize);
-      }
-      else
-        unitSize = minUnitSize;
-    }
-      
-    // position and resize
-    int fitWidth = unitSize.width() + cBorderSize;
-    int fitHeight = unitSize.height() + cBorderSize;
-
-    int col = 0;
-    int row = 0;
-    it = m_plots.begin();
-    while (it != m_plots.end()) {
-      (*it)->move(col * fitWidth + cBorderSize, row * fitHeight + cBorderSize);
-      (*it)->resize(unitSize);
-      (*it)->show();
-      if (++col == m_columns) {
-        col = 0;
-        ++row;
-      }
-      ++it;
-    }
-    // resize the plot page
-    resize(m_columns*fitWidth + cBorderSize, (row + (col?1:0)) * fitHeight + cBorderSize);
+  // respect the minimum size
+  if (minUnitSize.isValid()) {
+    if (unitSize.isValid())
+      unitSize = unitSize.expandedTo(minUnitSize);
+    else
+      unitSize = minUnitSize;
   }
+      
+  // position and resize
+  int fitWidth = unitSize.width() + cBorderSize;
+  int fitHeight = unitSize.height() + cBorderSize;
+  
+  int col = 0;
+  int row = 0;
+  it = m_plots.begin();
+  while (it != m_plots.end()) {
+    (*it)->move(col * fitWidth + cBorderSize, row * fitHeight + cBorderSize);
+    (*it)->resize(unitSize);
+    (*it)->show();
+    if (++col == m_columns) {
+      col = 0;
+      ++row;
+    }
+    ++it;
+  }
+  // resize the plot page
+  resize(m_columns*fitWidth + cBorderSize, (row + (col?1:0)) * fitHeight + cBorderSize);
 }

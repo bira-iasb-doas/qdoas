@@ -58,7 +58,7 @@ void CEngineController::notifyReadyToNavigateRecords(int numberOfRecords)
   emit signalCurrentRecordChanged(m_currentRecord);
 
   // files
-  emit signalCurrentFileChanged(m_currentIt.index()+1);
+  emit signalCurrentFileChanged(m_currentIt.index() + 1);
 }
 
 void CEngineController::notifyCurrentRecord(int recordNumber)
@@ -77,6 +77,45 @@ void CEngineController::notifyEndOfRecords(void)
   std::cout << "CEngineController::notifyEndOfRecords"<< std::endl;
 
   emit signalCurrentRecordChanged(m_currentRecord);
+}
+
+void CEngineController::notifyPlotData(QList<SPlotDataBucket> &buckets)
+{
+  // the controller takes the buckets and organises the data-sets
+  // into a set of pages. Each page is then (safely) dispatched.
+
+  std::map<int,CPlotPageData*> pageMap;
+  std::map<int,CPlotPageData*>::iterator mIt;
+  int pageNo;
+
+  while (!buckets.isEmpty()) {
+    // existing page?
+    pageNo = buckets.front().page;
+    mIt = pageMap.find(pageNo);
+    if (mIt == pageMap.end()) {
+      // need a new page
+      CPlotPageData *newPage = new CPlotPageData(pageNo);
+      newPage->addPlotDataSet(buckets.front().data);
+      pageMap.insert(std::map<int,CPlotPageData*>::value_type(pageNo, newPage));
+    }
+    else {
+      // exists
+      (mIt->second)->addPlotDataSet(buckets.front().data);
+    }
+    buckets.pop_front();
+  }
+
+  // built a map of pages and emptied the buckets list (argument)
+  // signal that a set of pages is about to be dispatched (also by signal)
+  emit signalPlotPagesAvailable();
+
+  mIt = pageMap.begin();
+  while (mIt != pageMap.end()) {
+    // page is wrapped in ref counting pointer for safe signal-slot based dispatch
+    emit signalPlotPage(RefCountPtr<const CPlotPageData>(mIt->second));
+    ++mIt;
+  }
+  pageMap.clear();
 }
 
 bool CEngineController::event(QEvent *e)

@@ -5,11 +5,10 @@
 #include <QPushButton>
 #include <QLabel>
 #include <QTabBar>
-#include <QScrollArea>
 #include <QList>
 
 class CWEditor;
-class CWPlotPage;
+class CWPlotRegion;
 
 class CWActiveContext : public QFrame
 {
@@ -27,12 +26,14 @@ Q_OBJECT
   virtual QSize minimumSizeHint() const;
   virtual QSize sizeHint() const;
 
-public slots:
+ public slots:
   void slotOkButtonClicked();
   void slotCancelButtonClicked();
   void slotHelpButtonClicked();
   
   void slotAcceptOk(bool canDoOk);
+
+  void slotPlotPagesAvailable(); // prepare for a new set of plot pages ...
 
  private:
   void discardCurrentEditor(void);
@@ -46,9 +47,8 @@ public slots:
   QPushButton *m_helpButton, *m_okButton, *m_cancelButton;
   QLabel *m_title;
   QTabBar *m_graphTab;
-  QScrollArea *m_graphScrollArea;
+  CWPlotRegion *m_plotRegion;
   QString m_graphTitleStr;
-  CWPlotPage *m_plotPage;
 
   int m_titleRegionHeight;
   int m_buttonRegionHeight;
