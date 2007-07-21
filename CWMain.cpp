@@ -162,10 +162,8 @@ CWMain::CWMain(QWidget *parent) :
 
 
   // plot data transfer
-  connect(m_controller, SIGNAL(signalPlotPagesAvailable()),
-          m_activeContext, SLOT(slotPlotPagesAvailable()));
-  connect(m_controller, SIGNAL(signalPlotPage(RefCountPtr<const CPlotPageData>)),
-          m_activeContext, SLOT(slotPlotPage(RefCountPtr<const CPlotPageData>)));
+  connect(m_controller, SIGNAL(signalPlotPages(const QList< RefCountConstPtr<CPlotPageData> >&)),
+          m_activeContext, SLOT(slotPlotPages(const QList< RefCountConstPtr<CPlotPageData> >&)));
 
 }
 

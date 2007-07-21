@@ -22,10 +22,10 @@ int CPlotPageData::size(void) const
   return m_dataSets.size();
 }
 
-RefCountPtr<const CPlotDataSet> CPlotPageData::dataSet(int index) const
+RefCountConstPtr<CPlotDataSet> CPlotPageData::dataSet(int index) const
 {
   if (index < 0 || index > m_dataSets.size())
-    return RefCountPtr<const CPlotDataSet>();
+    return RefCountConstPtr<CPlotDataSet>();
 
   return m_dataSets.at(index);
 }
@@ -35,6 +35,6 @@ void CPlotPageData::addPlotDataSet(const CPlotDataSet *dataSet)
   // page takes ownership responsibility, which means it is safe
   // to wrap it in a reference counting pointer
 
-  m_dataSets.push_back(RefCountPtr<const CPlotDataSet>(dataSet));
+  m_dataSets.push_back(RefCountConstPtr<CPlotDataSet>(dataSet));
 }
 

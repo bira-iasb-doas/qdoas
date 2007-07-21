@@ -16,7 +16,7 @@ class CWPlotRegion : public QScrollArea
   virtual ~CWPlotRegion();
 
   void removeAllPages();
-  void addPage(RefCountPtr<const CPlotPageData> page);
+  void addPage(RefCountConstPtr<CPlotPageData> page);
   
   void displayPage(int pageNumber, int columns);
 
@@ -25,7 +25,7 @@ class CWPlotRegion : public QScrollArea
 
  private:
   CWPlotPage *m_plotPage;
-  std::map< int,RefCountPtr<const CPlotPageData> > m_pageMap;
+  std::map< int,RefCountConstPtr<CPlotPageData> > m_pageMap;
   int m_columns;
   QSize m_visibleSize;
 };

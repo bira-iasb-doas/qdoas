@@ -65,8 +65,7 @@ Q_OBJECT
   void signalNumberOfRecordsChanged(int nRecords);
   void signalCurrentRecordChanged(int recordNumber);
 
-  void signalPlotPagesAvailable();
-  void signalPlotPage(RefCountPtr<const CPlotPageData> page);
+  void signalPlotPages(const QList< RefCountConstPtr<CPlotPageData> > &pageList);
 
  private:
   CEngineThread *m_thread;

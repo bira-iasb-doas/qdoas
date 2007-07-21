@@ -5,6 +5,7 @@
 #include <QPalette>
 #include <QColor>
 #include <QBrush>
+#include <QList>
 
 #include "CWEditor.h"
 #include "CWActiveContext.h"
@@ -391,16 +392,19 @@ void CWActiveContext::slotAcceptOk(bool canDoOk)
   m_okButton->setEnabled(canDoOk);
 }
 
-void CWActiveContext::slotPlotPagesAvailable()
+void CWActiveContext::slotPlotPages(const QList< RefCountConstPtr<CPlotPageData> > &pageList)
 {
-  std::cout << "// prepare for a new set of plot pages ... TODO" << std::endl;
+  // replace all pages of the plot list
   m_plotRegion->removeAllPages();
+
+  QList< RefCountConstPtr<CPlotPageData> >::const_iterator it = pageList.begin();
+  while (it != pageList.end()) {
+    m_plotRegion->addPage(*it);
+    ++it;
+  }
+
+  // TODO - tab page and selection
+
+  m_plotRegion->displayPage(0, 2); // TODO - temp
 }
 
-void CWActiveContext::slotPlotPage(RefCountPtr<const CPlotPageData> page)
-{
-  std::cout << " .. adding page " << page->pageNumber() << std::endl;
-  m_plotRegion->addPage(page);
-  // tabs ... TODO
-  m_plotRegion->displayPage(page->pageNumber(), 2); // TODO - temp
-}

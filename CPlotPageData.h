@@ -16,13 +16,13 @@ class CPlotPageData
 
   int pageNumber(void) const;
   int size(void) const;
-  RefCountPtr<const CPlotDataSet> dataSet(int index) const;
+  RefCountConstPtr<CPlotDataSet> dataSet(int index) const;
 
   void addPlotDataSet(const CPlotDataSet *dataSet); // page takes ownership responsibility
   
  private:
   int m_pageNumber;
-  QList< RefCountPtr<const CPlotDataSet> > m_dataSets;
+  QList< RefCountConstPtr<CPlotDataSet> > m_dataSets;
 };
 
 #endif

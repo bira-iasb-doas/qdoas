@@ -36,8 +36,8 @@ Q_OBJECT
   
   void slotAcceptOk(bool canDoOk);
 
-  void slotPlotPagesAvailable(); // prepare for a new set of plot pages ...
-  void slotPlotPage(RefCountPtr<const CPlotPageData> page);
+  void slotPlotPages(const QList< RefCountConstPtr<CPlotPageData> > &pageList);
+
 
  private:
   void discardCurrentEditor(void);
