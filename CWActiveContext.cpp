@@ -1,6 +1,4 @@
 
-#include <iostream> // TODO
-
 #include <QResizeEvent>
 #include <QPalette>
 #include <QColor>
