@@ -1,0 +1,112 @@
+#----------------------------------------------
+# General Configuration
+#----------------------------------------------
+
+CONFIG += qt thread debug
+QT = core gui
+
+# for trace-write debugging ...
+DEFINES += DEBUG
+DEFINES += LVL4
+
+#----------------------------------------------
+# Platform dependency ...
+#----------------------------------------------
+
+unix {
+  INCLUDEPATH  += /usr/local/qwt/include
+  LIBS         += -L/usr/local/qwt/lib -lqwt -lm
+  QMAKE_LFLAGS += -Wl,-rpath=/usr/local/qwt/lib
+}
+
+win32 {
+  INCLUDEPATH += C:\Qwt\include
+  LIBS        += C:\Qwt\lib\libqwt5.a
+
+  CONFIG      += windows
+}
+
+#----------------------------------------------
+# GUI Source files
+#----------------------------------------------
+SOURCES += CEngineController.cpp
+SOURCES += CEngineRequest.cpp
+SOURCES += CEngineResponse.cpp
+SOURCES += CEngineThread.cpp
+SOURCES += CNavigationPanel.cpp
+SOURCES += CPlotDataSet.cpp
+SOURCES += CPlotPageData.cpp
+SOURCES += CSession.cpp
+SOURCES += CValidator.cpp
+SOURCES += CWActiveContext.cpp
+SOURCES += CWEditor.cpp
+SOURCES += CWMain.cpp
+SOURCES += CWorkSpace.cpp
+SOURCES += CWPlotPage.cpp
+SOURCES += CWPlotRegion.cpp
+SOURCES += CWProjectAnalysisWindowNameEditor.cpp
+SOURCES += CWProjectDirectoryEditor.cpp
+SOURCES += CWProjectFolderNameEditor.cpp
+SOURCES += CWProjectNameEditor.cpp
+SOURCES += CWProjectPropertyEditor.cpp
+SOURCES += CWProjectTabAnalysis.cpp
+SOURCES += CWProjectTabSpectra.cpp
+SOURCES += CWProjectTree.cpp
+SOURCES += CWSiteEditor.cpp
+SOURCES += CWSiteTree.cpp
+SOURCES += CWSplitter.cpp
+SOURCES += CWUserSymbolTree.cpp
+SOURCES += qdoas.cpp
+
+#----------------------------------------------
+# Mediator Source files
+#----------------------------------------------
+SOURCES += mediate_response.cpp
+SOURCES += mediate.c
+
+#----------------------------------------------
+# GUI Header files
+#----------------------------------------------
+HEADERS += CEngineController.h
+HEADERS += CEngineRequest.h
+HEADERS += CEngineResponse.h
+HEADERS += CEngineThread.h
+HEADERS += CNavigationPanel.h
+HEADERS += CPlotDataSet.h
+HEADERS += CPlotPageData.h
+HEADERS += CSession.h
+HEADERS += CValidator.h
+HEADERS += CWActiveContext.h
+HEADERS += CWEditor.h
+HEADERS += CWMain.h
+HEADERS += CWorkSpace.h
+HEADERS += CWPlotPage.h
+HEADERS += CWPlotRegion.h
+HEADERS += CWProjectAnalysisWindowNameEditor.h
+HEADERS += CWProjectDirectoryEditor.h
+HEADERS += CWProjectFolderNameEditor.h
+HEADERS += CWProjectNameEditor.h
+HEADERS += CWProjectPropertyEditor.h
+HEADERS += CWProjectTabAnalysis.h
+HEADERS += CWProjectTabSpectra.h
+HEADERS += CWProjectTree.h
+HEADERS += CWSiteEditor.h
+HEADERS += CWSiteTree.h
+HEADERS += CWSplitter.h
+HEADERS += CWUserSymbolTree.h
+HEADERS += debugutil.h
+HEADERS += RefCountPtr.h
+
+#----------------------------------------------
+# Mediator Header files
+#----------------------------------------------
+HEADERS += mediate.h
+HEADERS += mediate_project.h
+HEADERS += mediate_analysis_window.h
+
+#----------------------------------------------
+# Reasource files
+#----------------------------------------------
+RESOURCES = qdoas.qrc
+
+

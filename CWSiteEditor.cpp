@@ -16,8 +16,8 @@ const unsigned int  VALID_BITS              = 0x07;
 
 CWSiteEditor::CWSiteEditor(CWSiteTree *siteTree, QTreeWidgetItem *editItem, QWidget *parent) :
   CWEditor(parent),
-  m_siteTree(siteTree),
-  m_validBits(0x0)
+  m_validBits(0x0),
+  m_siteTree(siteTree)
 {
   QGridLayout *mainLayout = new QGridLayout(this);
 

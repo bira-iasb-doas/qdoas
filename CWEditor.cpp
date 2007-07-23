@@ -3,10 +3,10 @@
 
 CWEditor::CWEditor(QWidget *parent) :
   QFrame(parent),
-  m_lastNotification(false),
-  m_captionStr("No Title")
+  m_captionStr("No Title"),
+  m_lastNotification(false)
 {
-  m_contextTag.sprintf("%p", this); // unique by default
+  m_contextTag.setNum(reinterpret_cast<unsigned long>(this)); // unique by default
 }
 
 CWEditor::~CWEditor()

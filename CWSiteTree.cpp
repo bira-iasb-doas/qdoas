@@ -3,6 +3,7 @@
 #include <QMenu>
 #include <QShowEvent>
 #include <QContextMenuEvent>
+#include <QTextStream>
 
 #include "CWSiteTree.h"
 #include "CWSiteEditor.h"
@@ -31,6 +32,7 @@ void CWSiteTree::addNewSite(const QString &siteName, const QString &abreviation,
 {
   QString tmpStr;
   QStringList labelList;
+  QTextStream tmpStream(&tmpStr);
 
   QTreeWidgetItem *siteItem = new  QTreeWidgetItem(QStringList(siteName));
 
@@ -41,20 +43,29 @@ void CWSiteTree::addNewSite(const QString &siteName, const QString &abreviation,
   new  QTreeWidgetItem(siteItem, labelList);
   labelList.clear();
 
-  // Longitude
-  labelList << "Longitude" << tmpStr.sprintf("%8.3f", longitude); 
+  tmpStream.setRealNumberNotation(QTextStream::FixedNotation);
+  tmpStream.setRealNumberPrecision(3);
+
+  // Longitude  
+  tmpStream << longitude;
+  labelList << "Longitude" << tmpStr; 
   new  QTreeWidgetItem(siteItem, labelList);
   labelList.clear();
+  tmpStr.clear();
 
   // Latitude
-  labelList << "Latitude" << tmpStr.sprintf("%8.3f", latitude); 
+  tmpStream << latitude;
+  labelList << "Latitude" << tmpStr;
   new  QTreeWidgetItem(siteItem, labelList);
   labelList.clear();
+  tmpStr.clear();
 
   // Altitude
-  labelList << "Altitude" << tmpStr.sprintf("%9.3f", altitude); 
+  tmpStream << altitude;
+  labelList << "Altitude" << tmpStr;
   new  QTreeWidgetItem(siteItem, labelList);
   labelList.clear();
+  tmpStr.clear();
 
   addTopLevelItem(siteItem);
 }
@@ -74,18 +85,30 @@ void CWSiteTree::modifySite(const QString &siteName, const QString &abreviation,
 
     QTreeWidgetItem *child;
     QString tmpStr;
+    QTextStream tmpStream(&tmpStr); 
+
+    tmpStream.setRealNumberNotation(QTextStream::FixedNotation);
+    tmpStream.setRealNumberPrecision(3);
+
     // abbrev.
     child = siteItem->child(0);
     child->setText(1, abreviation);
     // long.
+    tmpStream << longitude;
     child = siteItem->child(1);
-    child->setText(1, tmpStr.sprintf("%8.3f", longitude));
+    child->setText(1, tmpStr);
+    tmpStr.clear();
+
     // lat.
+    tmpStream << latitude;
     child = siteItem->child(2);
-    child->setText(1, tmpStr.sprintf("%8.3f", latitude));
-    // long.
+    child->setText(1, tmpStr);
+    tmpStr.clear();
+    // alt.
+    tmpStream << altitude;
     child = siteItem->child(3);
-    child->setText(1, tmpStr.sprintf("%9.3f", altitude));
+    child->setText(1, tmpStr);
+    tmpStr.clear();
   }
 
 

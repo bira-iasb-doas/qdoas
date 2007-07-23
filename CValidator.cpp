@@ -1,3 +1,4 @@
+#include <QTextStream>
 
 #include "CValidator.h"
 
@@ -33,8 +34,12 @@ void CSzaValidator::fixup(QString &input) const
   if (ok) {
     if (v < 0.0) input = "0.0";
     else if (v > 180.0) input = "180.000";
-    else
-      input.sprintf("%.3f", v); // max 3 decimal places
+    else {
+      QTextStream tmpStream(&input);
+      tmpStream.setRealNumberNotation(QTextStream::FixedNotation);
+      tmpStream.setRealNumberPrecision(3); // 3 decimal places
+      tmpStream << v;
+    }
   }
   else
     input = "0.0"; // default

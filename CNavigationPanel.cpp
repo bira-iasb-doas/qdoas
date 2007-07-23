@@ -84,7 +84,7 @@ void CNavigationPanel::slotSetCurrentIndex(int index)
     m_lastBtn->setEnabled(m_currentIndex < m_maxIndex);    
     
     QString tmpStr;
-    m_indexEdit->setText(tmpStr.sprintf("%d", m_currentIndex));
+    m_indexEdit->setText(tmpStr.setNum(m_currentIndex));
     m_indexEdit->setEnabled(true);
   }
 }
@@ -123,7 +123,7 @@ void CNavigationPanel::slotIndexEditChanged()
   else {
     QString tmpStr;
     if (m_currentIndex)
-      tmpStr.sprintf("%d", m_currentIndex);
+      tmpStr.setNum(m_currentIndex);
     m_indexEdit->setText(tmpStr);
   } 
 }

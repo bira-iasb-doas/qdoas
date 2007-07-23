@@ -1,9 +1,9 @@
 
-#include <iostream> // TODO
-
 #include "CEngineController.h"
 #include "CEngineRequest.h"
 #include "CEngineResponse.h"
+
+#include "debugutil.h"
 
 static const int cBrowseMode  = 1;
 static const int cAnalyseMode = 2;
@@ -30,7 +30,7 @@ CEngineController::~CEngineController()
 
 void CEngineController::notifySetProject(void)
 {
-  std::cout << "CEngineController::notifySetProject OBSOLETE" << std::endl;
+  TRACE4("CEngineController::notifySetProject OBSOLETE");
 }
 
 void CEngineController::notifyNumberOfFiles(int nFiles)
@@ -50,7 +50,7 @@ void CEngineController::notifyReadyToNavigateRecords(int numberOfRecords)
   m_numberOfRecords = numberOfRecords;
   m_currentRecord = 0;
 
-  std::cout << "CEngineController::notifyNumberOfRecords " << m_numberOfRecords << std::endl;
+  TRACE1("CEngineController::notifyNumberOfRecords " << m_numberOfRecords);
 
   // signals for navigation control
   // records
@@ -65,7 +65,7 @@ void CEngineController::notifyCurrentRecord(int recordNumber)
 {
   m_currentRecord = recordNumber;
   
-  std::cout << "CEngineController::notifyCurrentRecord " << recordNumber << std::endl;
+  TRACE1("CEngineController::notifyCurrentRecord " << recordNumber);
 
   emit signalCurrentRecordChanged(m_currentRecord);
 }
@@ -74,7 +74,7 @@ void CEngineController::notifyEndOfRecords(void)
 {
   m_currentRecord = m_numberOfRecords + 1;
   
-  std::cout << "CEngineController::notifyEndOfRecords"<< std::endl;
+  TRACE1("CEngineController::notifyEndOfRecords");
 
   emit signalCurrentRecordChanged(m_currentRecord);
 }
@@ -107,7 +107,6 @@ void CEngineController::notifyPlotData(QList<SPlotDataBucket> &buckets)
 
   // built a map of pages and emptied the buckets list (argument).
   // shift them to a QList for cheap and safe dispatch. 
-  std::cout << "notify - " << pageMap.size() << " pages" << std::endl;
 
   QList< RefCountConstPtr<CPlotPageData> > pageList;
 

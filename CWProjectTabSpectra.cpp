@@ -85,11 +85,11 @@ CWProjectTabSpectra::CWProjectTabSpectra(const mediate_project_spectra_t *proper
   szaGroup->setLayout(szaGroupLayout);
  
   // use the validators to input-check the initial values
-  m_szaMinEdit->validator()->fixup(tmpStr.sprintf("%.3f", properties->szaMinimum));
+  m_szaMinEdit->validator()->fixup(tmpStr.setNum(properties->szaMinimum));
   m_szaMinEdit->setText(tmpStr);
-  m_szaMaxEdit->validator()->fixup(tmpStr.sprintf("%.3f", properties->szaMaximum));
+  m_szaMaxEdit->validator()->fixup(tmpStr.setNum(properties->szaMaximum));
   m_szaMaxEdit->setText(tmpStr);
-  m_szaDeltaEdit->validator()->fixup(tmpStr.sprintf("%.3f",properties->szaDelta));
+  m_szaDeltaEdit->validator()->fixup(tmpStr.setNum(properties->szaDelta));
   m_szaDeltaEdit->setText(tmpStr);
 
   rightLayout->addWidget(szaGroup);
@@ -111,9 +111,9 @@ CWProjectTabSpectra::CWProjectTabSpectra(const mediate_project_spectra_t *proper
   recordGroupLayout->addWidget(m_recordMaxEdit, 1, 1);
   recordGroup->setLayout(recordGroupLayout);
 
-  m_recordMinEdit->validator()->fixup(tmpStr.sprintf("%d", properties->recordNumberMinimum));
+  m_recordMinEdit->validator()->fixup(tmpStr.setNum(properties->recordNumberMinimum));
   m_recordMinEdit->setText(tmpStr);
-  m_recordMaxEdit->validator()->fixup(tmpStr.sprintf("%d", properties->recordNumberMaximum));
+  m_recordMaxEdit->validator()->fixup(tmpStr.setNum(properties->recordNumberMaximum));
   m_recordMaxEdit->setText(tmpStr);
 
   rightLayout->addWidget(recordGroup);
@@ -264,6 +264,7 @@ CWGeolocation::CWGeolocation(const union geolocation *geo, QWidget *parent) :
   switch (geo->mode) {
   case cGeolocationModeRectangle:
     {
+      // TODO - ditch sprintf
       m_westEdit->setText(tmpStr.sprintf("%.3f", geo->rectangle.westernLongitude));
       m_eastEdit->setText(tmpStr.sprintf("%.3f", geo->rectangle.easternLongitude));
       m_southEdit->setText(tmpStr.sprintf("%.3f", geo->rectangle.southernLatitude));

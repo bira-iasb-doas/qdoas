@@ -1,8 +1,6 @@
 
 #include <assert.h>
 
-#include <iostream> // TODO
-
 #include <QMenu>
 #include <QDateTime>
 #include <QKeyEvent>
@@ -11,6 +9,7 @@
 #include <QFileDialog>
 #include <QRegExp>
 #include <QDir>
+#include <QTextStream>
 
 #include "CWorkSpace.h"
 
@@ -26,6 +25,9 @@
 
 #include "CSession.h"
 #include "RefCountPtr.h"
+
+#include "debugutil.h"
+
 
 const int cProjectTreeHideDetailMode   = 27;
 const int cProjectTreeShowDetailMode   = 28;
@@ -235,7 +237,8 @@ void CWProjectTree::addNewProject(const QString &projectName)
 
 QTreeWidgetItem *CWProjectTree::locateByPath(const QStringList &path)
 {
-  QTreeWidgetItem *item, *p = NULL;
+  QTreeWidgetItem *item = NULL;
+  QTreeWidgetItem *p = NULL;
   int i;
   QList<QString>::const_iterator it = path.begin();
   if (it == path.end())
@@ -749,8 +752,6 @@ void CWProjectTree::slotBrowseSpectra()
   RefCountPtr<CSession> ptr(session);
 
   emit signalStartBrowseSession(ptr);
-
-  std::cout << "CWProjectTree::slotBrowseSpectra" << std::endl;
 }
 
 void CWProjectTree::slotDeleteSelection()
@@ -969,7 +970,9 @@ int CSpectraDirectoryItem::loadBranch(void)
     while (it != entries.end()) {
       if (it->isDir() && !it->fileName().startsWith('.')) {
         int tmpFileCount;
-        std::cout << "Load sub dir " << it->filePath().toStdString() << std::endl;
+
+        TRACE3("Load sub dir " << it->filePath().toStdString());
+
         CSpectraDirectoryItem *dItem = new CSpectraDirectoryItem(NULL, it->filePath(),
                                                                    m_fileFilters, true, &tmpFileCount);
         // were there any matching files in this branch?
@@ -1035,6 +1038,7 @@ QVariant CSpectraFileItem::data(int column, int role) const
       return QVariant(m_fileInfo.fileName());
     if (column == 1) {
       QString tmpStr;
+      QTextStream tmpStream(&tmpStr);
       qint64 fs = m_fileInfo.size();
       if (fs >= 1024*100) {
         fs >>= 10; // now in KBytes
@@ -1042,16 +1046,16 @@ QVariant CSpectraFileItem::data(int column, int role) const
           fs >>= 10; // now in MBytes
           if (fs >= 1024*100) {
             fs >>= 10; // now in GBytes
-            tmpStr.sprintf("%d GB", fs);
+            tmpStream << fs << " GB";
           }
           else
-            tmpStr.sprintf("%d MB", fs);
+            tmpStream << fs << " MB";
         }
         else
-          tmpStr.sprintf("%d KB", fs);
+          tmpStream << fs << " KB";
       }
       else
-        tmpStr.sprintf("%d  B", fs);
+        tmpStream << fs << "  B";
 
       return QVariant(tmpStr);
     }
@@ -1234,10 +1238,9 @@ QTreeWidgetItem* CWProjectTree::locateChildByName(QTreeWidgetItem *parent, const
   if (!parent)
     return NULL;
 
-  int i;
-  QTreeWidgetItem *item;
+  QTreeWidgetItem *item = NULL;
+  int i = 0;
 
-  i = 0;
   while (i < parent->childCount() && (item = parent->child(i))->text(0) != childName) ++i;
   if (i < parent->childCount())
     return item;
