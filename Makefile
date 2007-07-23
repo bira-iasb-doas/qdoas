@@ -29,8 +29,7 @@ INCL := -I. \
 	-I$(INC_DIR_QT4)/Qt \
 	-I$(INC_DIR_QT4)/QtCore \
 	-I$(INC_DIR_QT4)/QtGui \
-        -I$(INC_DIR_QWT) \
-        -Imediator
+        -I$(INC_DIR_QWT)
 
 #---------------------------------------------------------------------
 
@@ -70,8 +69,8 @@ guiobj := \
 resources := \
          qdoas.qrc
 
-mediatorcobj    := mediator/mediate.$(O)
-mediatorcppobj  := mediator/mediate_response.$(O)
+mediatorcobj    := mediate.$(O)
+mediatorcppobj  := mediate_response.$(O)
 
 mediatorobj     := $(mediatorcobj) $(mediatorcppobj)
 mocinc := $(guiobj:%.$(O)=%.h)
@@ -111,7 +110,7 @@ clean:
 	-/bin/rm $(mocobj) $(guiobj) $(guiobj:%.$(O)=%.d)
 	-/bin/rm $(main) $(main:%=%.$(O)) $(main:%=%.d)
 	-/bin/rm $(mediatorobj)
-	-/bin/rm $(resobj)
+	-/bin/rm $(resobj) $(ressrc)
 
 %.d: %.$(CPP)
 	$(CCPP) -MM $^ $(CCPPOPTS) $(INCL) > $@
@@ -126,7 +125,7 @@ clean:
 	$(CC) $(CCOPTS) -c $< $(INCL)
 
 $(mediatorcobj):%.$(O): %.c
-	gcc -g -c -o $@ $< -Imediator
+	gcc -g -c -o $@ $< -I.
 
 $(mediatorcppobj):%.$(O): %.cpp
 	$(CCPP) $(CCPPOPTS) -o $@ -c $< $(INCL)
