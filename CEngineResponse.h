@@ -5,6 +5,7 @@
 #include <QString>
 
 #include "CPlotDataSet.h"
+#include "CTablePageData.h"
 
 class CEngineController;
 
@@ -73,10 +74,12 @@ class CEngineResponseBrowseRecord : public CEngineResponse
 
   void setRecordNumber(int recordNumber);
   void addDataSet(int pageNumber, const CPlotDataSet *dataSet);
+  void addCell(int pageNumber, int row, int col, const QVariant &data);
 
  private:
   int m_recordNumber;
   QList<SPlotDataBucket> m_plotDataBuckets;
+  QList<SCell> m_cells;
 };
 
 //------------------------------------------------------------

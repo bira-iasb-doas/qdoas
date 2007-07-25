@@ -110,5 +110,11 @@ void CEngineResponseBrowseRecord::addDataSet(int pageNumber, const CPlotDataSet 
   m_plotDataBuckets.push_back(SPlotDataBucket(pageNumber, dataSet));
 }
 
+void CEngineResponseBrowseRecord::addCell(int pageNumber, int row, int col,
+					  const QVariant &data)
+{
+  m_cells.push_back(SCell(pageNumber, row, col, data));
+}
+
 //------------------------------------------------------------
 

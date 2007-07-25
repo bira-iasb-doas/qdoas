@@ -32,6 +32,8 @@ void mediateResponseCellDataDouble(int page,
 				   double doubleValue,
 				   void *responseHandle)
 {
+  CEngineResponseBrowseRecord *resp = static_cast<CEngineResponseBrowseRecord*>(responseHandle);
+  resp->addCell(page, row, column, QVariant(doubleValue));
 }
 
 void mediateResponseCellDataInteger(int page,
@@ -40,6 +42,8 @@ void mediateResponseCellDataInteger(int page,
 				    int integerValue,
 				    void *responseHandle)
 {
+  CEngineResponseBrowseRecord *resp = static_cast<CEngineResponseBrowseRecord*>(responseHandle);
+  resp->addCell(page, row, column, QVariant(integerValue));
 }
 
 void mediateResponseCellDataString(int page,
@@ -48,6 +52,8 @@ void mediateResponseCellDataString(int page,
 				   const char *stringValue,
 				   void * responseHandle)
 {
+  CEngineResponseBrowseRecord *resp = static_cast<CEngineResponseBrowseRecord*>(responseHandle);
+  resp->addCell(page, row, column, QVariant(QString(stringValue)));
 }
 
 void mediateResponseErrorMessage(const char *messageString,

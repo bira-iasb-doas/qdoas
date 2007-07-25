@@ -121,6 +121,48 @@ void CEngineController::notifyPlotData(QList<SPlotDataBucket> &buckets)
   emit signalPlotPages(pageList);
 }
 
+void CEngineController::notifyTableData(QList<SCell> &cells)
+{
+  // the controller takes the cells and organises the data into
+  // pages. Each page is then (safely) dispatched.
+
+  std::map<int,CTablePageData*> pageMap;
+  std::map<int,CTablePageData*>::iterator mIt;
+  int pageNo;
+
+  while (!cells.isEmpty()) {
+    // existing page?
+    pageNo = cells.front().page;
+    mIt = pageMap.find(pageNo);
+    if (mIt == pageMap.end()) {
+      // need a new page
+      CTablePageData *newPage = new CTablePageData(pageNo);
+      newPage->addCell(cells.front().row, cells.front().col, cells.front().data);
+      pageMap.insert(std::map<int,CTablePageData*>::value_type(pageNo, newPage));
+    }
+    else {
+      // exists
+      (mIt->second)->addCell(cells.front().row, cells.front().col, cells.front().data);
+    }
+    cells.pop_front();
+  }
+
+  // built a map of pages and emptied the buckets list (argument).
+  // shift them to a QList for cheap and safe dispatch. 
+
+  QList< RefCountConstPtr<CTablePageData> > pageList;
+
+  mIt = pageMap.begin();
+  while (mIt != pageMap.end()) {
+    pageList.push_back(RefCountConstPtr<CTablePageData>(mIt->second));
+    ++mIt;
+  }
+  pageMap.clear();
+
+  // send the pages to any connected slots
+  emit signalTablePages(pageList);
+}
+
 bool CEngineController::event(QEvent *e)
 {
   if (e->type() == cEngineResponseType) {

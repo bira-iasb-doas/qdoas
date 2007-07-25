@@ -9,6 +9,7 @@
 
 #include "CPlotDataSet.h"
 #include "CPlotPageData.h"
+#include "CTablePageData.h"
 #include "CSession.h"
 #include "RefCountPtr.h"
 
@@ -38,6 +39,7 @@ Q_OBJECT
   void notifyEndOfRecords(void);
   void notifyGotoRecord(int recordNumber);
   void notifyPlotData(QList<SPlotDataBucket> &buckets);
+  void notifyTableData(QList<SCell> &cells);
 
  protected:
   virtual bool event(QEvent *e);
@@ -66,6 +68,7 @@ Q_OBJECT
   void signalCurrentRecordChanged(int recordNumber);
 
   void signalPlotPages(const QList< RefCountConstPtr<CPlotPageData> > &pageList);
+  void signalTablePages(const QList< RefCountConstPtr<CTablePageData> > &pageList);
 
  private:
   CEngineThread *m_thread;
