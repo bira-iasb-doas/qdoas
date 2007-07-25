@@ -8,13 +8,14 @@
 #include <QSplitter>
 #include <QStatusBar>
 #include <QTabWidget>
-#include <QTextEdit>
+#include <QTableView>
 
 class CWProjectTree;
 class CWSiteTree;
 class CWUserSymbolTree;
 class CWActiveContext;
 class CEngineController;
+class CMultiPageTableModel;
 
 class CWMain : public QFrame
 {
@@ -32,13 +33,16 @@ class CWMain : public QFrame
   CWSiteTree *m_siteTree;
   CWUserSymbolTree *m_userSymbolTree;
 
-  QTextEdit *m_dataWindow;
+  QTableView *m_dataWindow;
 
   CWActiveContext *m_activeContext;
 
   QStatusBar *m_statusBar;
 
   CEngineController *m_controller;
+  
+  CMultiPageTableModel *m_tableModel;
+
 };
 
 #endif

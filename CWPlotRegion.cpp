@@ -42,7 +42,7 @@ void CWPlotRegion::removeAllPages()
   setWidget(m_plotPage); // deletes the current 'viewport widget'
 }
 
-void CWPlotRegion::addPage(RefCountConstPtr<CPlotPageData> page)
+void CWPlotRegion::addPage(const RefCountConstPtr<CPlotPageData> &page)
 {
   // the page must not already exist
   std::map< int,RefCountConstPtr<CPlotPageData> >::iterator it = m_pageMap.find(page->pageNumber());

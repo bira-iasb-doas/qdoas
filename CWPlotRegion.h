@@ -16,7 +16,7 @@ class CWPlotRegion : public QScrollArea
   virtual ~CWPlotRegion();
 
   void removeAllPages();
-  void addPage(RefCountConstPtr<CPlotPageData> page);
+  void addPage(const RefCountConstPtr<CPlotPageData> &page);
   
   void displayPage(int pageNumber, int columns);
 

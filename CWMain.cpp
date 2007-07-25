@@ -9,6 +9,7 @@
 #include "CWUserSymbolTree.h"
 #include "CWActiveContext.h"
 #include "CWSplitter.h"
+#include "CMultiPageTableModel.h"
 
 #include "CEngineController.h"
 #include "CNavigationPanel.h"
@@ -77,8 +78,11 @@ CWMain::CWMain(QWidget *parent) :
   m_projEnvTab->addTab(m_siteTree, "Sites");
   m_projEnvTab->addTab(m_userSymbolTree, "Symbols");
 
-  m_dataWindow = new QTextEdit;
-  m_dataWindow->setText("Data window text in here ...\n...\n..."); // TODO
+  // data table
+  
+  m_tableModel = new CMultiPageTableModel(this);
+  m_dataWindow = new QTableView;
+  m_dataWindow->setModel(m_tableModel);
 
   // Splitters
   CWSplitter *subSplitter = new CWSplitter(Qt::Horizontal);
@@ -165,6 +169,10 @@ CWMain::CWMain(QWidget *parent) :
   // plot data transfer
   connect(m_controller, SIGNAL(signalPlotPages(const QList< RefCountConstPtr<CPlotPageData> >&)),
           m_activeContext, SLOT(slotPlotPages(const QList< RefCountConstPtr<CPlotPageData> >&)));
+
+  // table data transfer
+  connect(m_controller, SIGNAL(signalTablePages(const QList< RefCountConstPtr<CTablePageData> > &)),
+          m_tableModel, SLOT(slotTablePages(const QList< RefCountConstPtr<CTablePageData> > &)));
 
 }
 

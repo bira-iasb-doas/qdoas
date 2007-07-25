@@ -92,6 +92,8 @@ void CEngineResponseBrowseRecord::process(CEngineController *engineController)
   else if (m_recordNumber > 0) {
     // display data ...
     engineController->notifyPlotData(m_plotDataBuckets);
+    // table data
+    engineController->notifyTableData(m_cells);
 
     engineController->notifyCurrentRecord(m_recordNumber);
   }

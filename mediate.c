@@ -101,7 +101,10 @@ int mediateRequestGetNextMatchingSpectrum(void *engineContext,
 
     mediateResponseSpectrumData(y, x, 1024, responseHandle);
 
-    mediateResponseCellDataDouble(0, 3, 2, 1.23456e7, responseHandle);
+    mediateResponseCellDataString(0, 3, 2, "cell-3,2", responseHandle);
+    mediateResponseCellDataString(0, 5, 1, "cell-5,1", responseHandle);
+    mediateResponseCellDataString(0, 0, 0, "Origin", responseHandle);
+    mediateResponseCellDataString(0, 5, 4, "cell-5,4", responseHandle);
     
     return rec;
   }

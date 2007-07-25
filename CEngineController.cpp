@@ -368,9 +368,13 @@ void CEngineController::slotStartBrowseSession(const RefCountPtr<CSession> &sess
   }
 
   // change session and reset current markers
+  TRACE("m_session = session");
   m_session = session;
+  TRACE("m_currentIt = CSessionIterator(m_session)");
   m_currentIt = CSessionIterator(m_session);
+  TRACE("m_numberOfFiles = m_session->size()");
   m_numberOfFiles = m_session->size();
+  TRACE("m_currentRecord = -1");
   m_currentRecord = -1;
   m_currentProject = NULL;
 
@@ -387,4 +391,5 @@ void CEngineController::slotStartBrowseSession(const RefCountPtr<CSession> &sess
   emit signalNumberOfFilesChanged(m_numberOfFiles);
 
   m_thread->request(req);
+  TRACE1("exit slot");
 }
