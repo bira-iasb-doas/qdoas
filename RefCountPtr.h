@@ -11,19 +11,9 @@
 // const T* can be created and assigned to T*, but not visa-versa.
 // Similarly, equality and inequality comparison between const T* and T*
 // is supported.
-// RefCountPtr class implements a Copy-On-Write policy. This is implicit
-// in the dereferencing operators operator*() and operator->(). The
-// compiler will select the const or non-const version of these operators
-// based on the const or non-const nature of the method called. ie.
-//
-// RefCountPtr<T> ptr(new T);
-//
-// ptr->constMethodOfClassT(); // uses const T* operator->() const;
-//
-// ptr->nonConstMethodOfClassT(); // uses T* operator->();
-//
-//   If data is shared, the T* operator->() will make a copy of the data
-// with the copy constructor of class T.
+// Note, this allows simultaneous const/non-const reference to the same
+// data, just like normal pointers. The RefCountPtr can ensure it has
+// sole access to the data be calling the detach method.
 
 template<typename T> class RefCountPtr;
 template<typename T> class RefCountConstPtr;
@@ -39,6 +29,8 @@ class RefCountPtr {
   ~RefCountPtr();
 
   RefCountPtr<T>& operator=(const RefCountPtr<T> &rhs);
+
+  void detach(void);
 
   T& operator*(void);
   const T& operator*(void) const;
@@ -94,6 +86,8 @@ class RefCountConstPtr {
   mutable unsigned int *m_rc; // reference count
 };
 
+//------------------------------------------------------------
+
 template<typename T>
 RefCountPtr<T>::RefCountPtr() :
   m_d(NULL),
@@ -148,11 +142,9 @@ RefCountPtr<T>& RefCountPtr<T>::operator=(const RefCountPtr<T> &rhs)
   return *this;
 }
 
-
 template<typename T>
-T& RefCountPtr<T>::operator*(void)
+void RefCountPtr<T>::detach(void)
 {
-  // apply a copy on write policy
   if (m_rc && *m_rc > 1) {
     // shared reference to the data ... cut loose and copy
     T *tmp = new T(*m_d); // copy constructor ...
@@ -161,7 +153,11 @@ T& RefCountPtr<T>::operator*(void)
     *m_rc = 1;
     m_d = tmp;
   }
+}
 
+template<typename T>
+T& RefCountPtr<T>::operator*(void)
+{
   return *m_d;
 }
 
@@ -174,16 +170,6 @@ const T& RefCountPtr<T>::operator*(void) const
 template<typename T>
 T* RefCountPtr<T>::operator->(void)
 {
-  // apply a copy on write policy
-  if (m_rc && *m_rc > 1) {
-    // shared reference to the data ... cut loose and copy
-    T *tmp = new T(*m_d); // copy constructor ...
-    --(*m_rc);
-    m_rc = new unsigned int;
-    *m_rc = 1;
-    m_d = tmp;
-  }
-
   return m_d;
 }
 

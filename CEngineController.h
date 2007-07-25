@@ -56,7 +56,7 @@ Q_OBJECT
   void slotLastRecord();
   void slotGotoRecord(int recNumber);
  
-  void slotStartBrowseSession(RefCountPtr<CSession> session);
+  void slotStartBrowseSession(const RefCountPtr<CSession> &session);
 
  signals:
   void signalNumberOfFilesChanged(int nRecords);
@@ -76,7 +76,7 @@ Q_OBJECT
   const mediate_project_t *m_currentProject;
   int m_currentRecord, m_numberOfRecords, m_numberOfFiles;
 
-  RefCountPtr<CSession> m_session;
+  RefCountConstPtr<CSession> m_session;
   CSessionIterator m_currentIt;
 };
 

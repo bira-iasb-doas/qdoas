@@ -114,9 +114,10 @@ CWMain::CWMain(QWidget *parent) :
   m_controller = new CEngineController(this);
 
   // connections to the controller
-  connect(m_projTree, SIGNAL(signalStartBrowseSession(RefCountPtr<CSession>)),
-          m_controller, SLOT(slotStartBrowseSession(RefCountPtr<CSession>)));
-
+  connect(m_projTree,
+	  SIGNAL(signalStartBrowseSession(const RefCountPtr<CSession>&)),
+          m_controller,
+	  SLOT(slotStartBrowseSession(const RefCountPtr<CSession>&)));
 
   m_toolBar->addSeparator();
 

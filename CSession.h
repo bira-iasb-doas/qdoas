@@ -44,6 +44,10 @@ class CSession
   int size(void) const;
 
  private:
+  CSession(const CSession &);
+  CSession& operator=(const CSession&);
+
+ private:
   typedef std::map<QString,CSessionItem*> sessionmap_t;
 
   sessionmap_t m_map;
@@ -57,7 +61,7 @@ class CSessionIterator
 {
  public:
   CSessionIterator();
-  CSessionIterator(RefCountPtr<CSession> session);
+  CSessionIterator(const RefCountConstPtr<CSession> &session);
   CSessionIterator(const CSessionIterator &other);
   ~CSessionIterator();
   
@@ -80,8 +84,8 @@ class CSessionIterator
   bool operator!=(const CSessionIterator &rhs) const;
 
  private:
-  RefCountPtr<CSession> m_session;
-  CSession::sessionmap_t::iterator m_mapIt;
+  RefCountConstPtr<CSession> m_session;
+  CSession::sessionmap_t::const_iterator m_mapIt;
   int m_fileIndex;
   int m_offset;
 };

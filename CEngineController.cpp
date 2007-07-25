@@ -311,7 +311,7 @@ void CEngineController::slotGotoRecord(int recordNumber)
   }
 }
 
-void CEngineController::slotStartBrowseSession(RefCountPtr<CSession> session)
+void CEngineController::slotStartBrowseSession(const RefCountPtr<CSession> &session)
 {
   // make a compound request
   CEngineRequestCompound *req = new CEngineRequestCompound;
@@ -325,7 +325,7 @@ void CEngineController::slotStartBrowseSession(RefCountPtr<CSession> session)
     break;
   }
 
-  // change session and resent current markers
+  // change session and reset current markers
   m_session = session;
   m_currentIt = CSessionIterator(m_session);
   m_numberOfFiles = m_session->size();

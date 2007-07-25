@@ -1,3 +1,6 @@
+#include <QFontMetrics>
+#include <QIntValidator>
+
 #include "CNavigationPanel.h"
 
 CNavigationPanel::CNavigationPanel(QToolBar *toolBar) :
@@ -9,11 +12,21 @@ CNavigationPanel::CNavigationPanel(QToolBar *toolBar) :
   m_firstBtn = toolBar->addAction(QIcon(":/icons/nav_first_22.png"), "first");
   m_prevBtn = toolBar->addAction(QIcon(":/icons/nav_prev_22.png"), "prev");
   m_indexEdit = new QLineEdit;
-  m_indexEdit->setFixedWidth(70);
+
+  QFontMetrics fm(m_indexEdit->font());
+  m_indexEdit->setFixedWidth(fm.width("00000")); // for a 4 digit line-edit
+
   toolBar->addWidget(m_indexEdit);
   m_nextBtn = toolBar->addAction(QIcon(":/icons/nav_next_22.png"), "next");
   m_lastBtn = toolBar->addAction(QIcon(":/icons/nav_last_22.png"), "last");
 
+  // initially disabled
+  m_firstBtn->setEnabled(false);
+  m_prevBtn->setEnabled(false);
+  m_indexEdit->setEnabled(false);
+  m_nextBtn->setEnabled(false);
+  m_lastBtn->setEnabled(false);
+  
   // connections for the actions ... TODO
 
   connect(m_firstBtn, SIGNAL(triggered()), this, SLOT(slotFirstClicked()));
@@ -30,8 +43,10 @@ CNavigationPanel::~CNavigationPanel()
 void CNavigationPanel::slotSetMaxIndex(int maxIndex)
 {
   m_maxIndex = maxIndex;
+
   // change line edit validator ...
-  
+  m_indexEdit->setValidator(new QIntValidator(1, m_maxIndex, m_indexEdit));
+    
   // current index implicitly reset to 0
   m_currentIndex = 0;
 

@@ -2,12 +2,18 @@
 # General Configuration
 #----------------------------------------------
 
-CONFIG += qt thread debug
-QT = core gui
+unix {
+  CONFIG += qt thread debug
+  QT = core gui
 
-# for trace-write debugging ...
-DEFINES += DEBUG
-DEFINES += LVL4
+  # for trace-write debugging ...
+  DEFINES += DEBUG
+  DEFINES += LVL4
+}
+win32 {
+  CONFIG += qt thread release
+  QT = core gui
+}
 
 #----------------------------------------------
 # Platform dependency ...
@@ -21,7 +27,7 @@ unix {
 
 win32 {
   INCLUDEPATH += C:\Qwt\include
-  LIBS        += C:\Qwt\lib\libqwt5.a
+  LIBS        += -L"C:\Qwt\lib" -lqwt5
 
   CONFIG      += windows
 }

@@ -84,7 +84,7 @@ CSessionIterator::CSessionIterator() :
 {
 }
 
-CSessionIterator::CSessionIterator(RefCountPtr<CSession> session) :
+CSessionIterator::CSessionIterator(const RefCountConstPtr<CSession> &session) :
   m_session(session)
 {
   if (m_session != 0) {

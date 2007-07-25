@@ -86,7 +86,7 @@ Q_OBJECT
 
  signals:
   void signalWidthModeChanged(int newMode);
-  void signalStartBrowseSession(RefCountPtr<CSession> session);
+  void signalStartBrowseSession(const RefCountPtr<CSession> &session);
 
  private:
   QList<int> m_colWidthList;
