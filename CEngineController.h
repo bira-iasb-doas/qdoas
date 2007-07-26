@@ -34,12 +34,12 @@ Q_OBJECT
 
   void notifyNumberOfFiles(int nFiles);
   void notifyCurrentFile(int fileNumber);
-  void notifyReadyToNavigateRecords(int numberOfRecords);
+  void notifyReadyToNavigateRecords(const QString &filename, int numberOfRecords);
   void notifyCurrentRecord(int recordNumber);
   void notifyEndOfRecords(void);
   void notifyGotoRecord(int recordNumber);
-  void notifyPlotData(QList<SPlotDataBucket> &buckets);
-  void notifyTableData(QList<SCell> &cells);
+  void notifyPlotData(QList<SPlotData> &plotDataList, QList<STitleTag> &titleList);
+  void notifyTableData(QList<SCell> &cellList);
 
  protected:
   virtual bool event(QEvent *e);
@@ -61,9 +61,9 @@ Q_OBJECT
   void slotStartBrowseSession(const RefCountPtr<CSession> &session);
 
  signals:
-  void signalNumberOfFilesChanged(int nRecords);
-  void signalCurrentFileChanged(int recordNumber);
-
+  void signalNumberOfFilesChanged(int nFiles);
+  void signalCurrentFileChanged(int fileNumber);
+  void signalCurrentFileChanged(const QString &filename);
   void signalNumberOfRecordsChanged(int nRecords);
   void signalCurrentRecordChanged(int recordNumber);
 

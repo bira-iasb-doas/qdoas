@@ -42,10 +42,13 @@ void CEngineController::notifyCurrentFile(int fileNumber)
 {
 }
 
-void CEngineController::notifyReadyToNavigateRecords(int numberOfRecords)
+void CEngineController::notifyReadyToNavigateRecords(const QString &filename, int numberOfRecords)
 {
   // successfully started browsing a file
   // TODO signals for buttons
+
+  // sanity check - currentIt and filename must be consistent
+  assert(m_currentIt.file().fileName() == filename);
 
   m_numberOfRecords = numberOfRecords;
   m_currentRecord = 0;
@@ -59,6 +62,7 @@ void CEngineController::notifyReadyToNavigateRecords(int numberOfRecords)
 
   // files
   emit signalCurrentFileChanged(m_currentIt.index() + 1);
+  emit signalCurrentFileChanged(filename);
 }
 
 void CEngineController::notifyCurrentRecord(int recordNumber)
@@ -79,34 +83,46 @@ void CEngineController::notifyEndOfRecords(void)
   emit signalCurrentRecordChanged(m_currentRecord);
 }
 
-void CEngineController::notifyPlotData(QList<SPlotDataBucket> &buckets)
+void CEngineController::notifyPlotData(QList<SPlotData> &plotDataList, QList<STitleTag> &titleList)
 {
-  // the controller takes the buckets and organises the data-sets
-  // into a set of pages. Each page is then (safely) dispatched.
+  // the controller takes the data in plotDataList and titleList
+  // and organises the data-sets into a set of pages. Each page is
+  // then (safely) dispatched.
 
   std::map<int,CPlotPageData*> pageMap;
   std::map<int,CPlotPageData*>::iterator mIt;
   int pageNo;
 
-  while (!buckets.isEmpty()) {
+  while (!plotDataList.isEmpty()) {
     // existing page?
-    pageNo = buckets.front().page;
+    pageNo = plotDataList.front().page;
     mIt = pageMap.find(pageNo);
     if (mIt == pageMap.end()) {
       // need a new page
       CPlotPageData *newPage = new CPlotPageData(pageNo);
-      newPage->addPlotDataSet(buckets.front().data);
+      newPage->addPlotDataSet(plotDataList.front().data);
       pageMap.insert(std::map<int,CPlotPageData*>::value_type(pageNo, newPage));
     }
     else {
       // exists
-      (mIt->second)->addPlotDataSet(buckets.front().data);
+      (mIt->second)->addPlotDataSet(plotDataList.front().data);
     }
-    buckets.pop_front();
+    plotDataList.pop_front();
   }
 
-  // built a map of pages and emptied the buckets list (argument).
-  // shift them to a QList for cheap and safe dispatch. 
+  // built a map of pages and emptied the plotDataList list (argument).
+
+  // set page titles and tags if specified ... emptying the list as we go
+  while (!titleList.isEmpty()) {
+    mIt = pageMap.find(titleList.front().page);
+    if (mIt != pageMap.end()) {
+      (mIt->second)->setTitle(titleList.front().title);
+      (mIt->second)->setTag(titleList.front().tag);
+    }
+    titleList.pop_front();
+  }
+
+  // shift the items in the pageMap to a QList for cheap and safe dispatch. 
 
   QList< RefCountConstPtr<CPlotPageData> > pageList;
 
@@ -121,7 +137,7 @@ void CEngineController::notifyPlotData(QList<SPlotDataBucket> &buckets)
   emit signalPlotPages(pageList);
 }
 
-void CEngineController::notifyTableData(QList<SCell> &cells)
+void CEngineController::notifyTableData(QList<SCell> &cellList)
 {
   // the controller takes the cells and organises the data into
   // pages. Each page is then (safely) dispatched.
@@ -130,24 +146,24 @@ void CEngineController::notifyTableData(QList<SCell> &cells)
   std::map<int,CTablePageData*>::iterator mIt;
   int pageNo;
 
-  while (!cells.isEmpty()) {
+  while (!cellList.isEmpty()) {
     // existing page?
-    pageNo = cells.front().page;
+    pageNo = cellList.front().page;
     mIt = pageMap.find(pageNo);
     if (mIt == pageMap.end()) {
       // need a new page
       CTablePageData *newPage = new CTablePageData(pageNo);
-      newPage->addCell(cells.front().row, cells.front().col, cells.front().data);
+      newPage->addCell(cellList.front().row, cellList.front().col, cellList.front().data);
       pageMap.insert(std::map<int,CTablePageData*>::value_type(pageNo, newPage));
     }
     else {
       // exists
-      (mIt->second)->addCell(cells.front().row, cells.front().col, cells.front().data);
+      (mIt->second)->addCell(cellList.front().row, cellList.front().col, cellList.front().data);
     }
-    cells.pop_front();
+    cellList.pop_front();
   }
 
-  // built a map of pages and emptied the buckets list (argument).
+  // built a map of pages and emptied cellList (argument).
   // shift them to a QList for cheap and safe dispatch. 
 
   QList< RefCountConstPtr<CTablePageData> > pageList;
@@ -368,13 +384,9 @@ void CEngineController::slotStartBrowseSession(const RefCountPtr<CSession> &sess
   }
 
   // change session and reset current markers
-  TRACE("m_session = session");
   m_session = session;
-  TRACE("m_currentIt = CSessionIterator(m_session)");
   m_currentIt = CSessionIterator(m_session);
-  TRACE("m_numberOfFiles = m_session->size()");
   m_numberOfFiles = m_session->size();
-  TRACE("m_currentRecord = -1");
   m_currentRecord = -1;
   m_currentProject = NULL;
 
@@ -391,5 +403,4 @@ void CEngineController::slotStartBrowseSession(const RefCountPtr<CSession> &sess
   emit signalNumberOfFilesChanged(m_numberOfFiles);
 
   m_thread->request(req);
-  TRACE1("exit slot");
 }

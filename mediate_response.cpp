@@ -5,22 +5,27 @@
 #include "CEngineResponse.h"
 #include "CPlotDataSet.h"
 
-void mediateResponseSpectrumData(double *intensityDataArray,
+void mediateResponseSpectrumData(int page,
+				 double *intensityDataArray,
 				 double *wavelengthDataArray,
                                  int arrayLength,
+				 const char *title,
+				 const char *wavelengthLabel,
+				 const char *intensityLabel,
 				 void *responseHandle)
 {
   CEngineResponseBrowseRecord *resp = static_cast<CEngineResponseBrowseRecord*>(responseHandle);
 
+
   CPlotDataSet *dataSet = new CPlotDataSet(wavelengthDataArray, intensityDataArray, arrayLength,
-                                           "Spectrum", "Wavelength (nm)", "I");
-  resp->addDataSet(0, dataSet);
+                                           title, wavelengthLabel, intensityLabel);
+  resp->addDataSet(page, dataSet);
 }
 
-void mediateResponseGraphicalData(double *ordinateArray,
+void mediateResponseGraphicalData(int page,
+				  double *ordinateArray,
 				  double *abscissaArray,
 				  int arrayLength,
-                                  int page,
 				  int dataType,
 				  void *responseHandle)
 {
@@ -50,11 +55,21 @@ void mediateResponseCellDataString(int page,
 				   int row,
 				   int column,
 				   const char *stringValue,
-				   void * responseHandle)
+				   void *responseHandle)
 {
   CEngineResponseBrowseRecord *resp = static_cast<CEngineResponseBrowseRecord*>(responseHandle);
   resp->addCell(page, row, column, QVariant(QString(stringValue)));
 }
+
+void mediateResponseLabelPage(int page,
+			      const char *title,
+			      const char *tag,
+			      void *responseHandle)
+{
+  CEngineResponseBrowseRecord *resp = static_cast<CEngineResponseBrowseRecord*>(responseHandle);
+  resp->addPageTitleAndTag(page, title, tag);
+}
+
 
 void mediateResponseErrorMessage(const char *messageString,
 				 int errorLevel,

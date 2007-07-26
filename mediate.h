@@ -283,8 +283,9 @@ int mediateRequestEndAnalysis(void *engineContext, void *responseHandle);
 // provide the GUI with spectral data for a spectral record. The data is contained
 // in two arrays of doubles, both with the length arrayLength (indexed from 0).
 
-void mediateResponseSpectrumData(double *intensityDataArray, double *wavelengthDataArray,
-                                 int arrayLength, void *responseHandle);
+void mediateResponseSpectrumData(int page, double *intensityDataArray, double *wavelengthDataArray,
+				 int arrayLength, const char *title, const char *wavelengthLabel,
+				 const char *intensityLabel, void *responseHandle);
 
 
 // mediateResponseGraphicalData
@@ -293,8 +294,8 @@ void mediateResponseSpectrumData(double *intensityDataArray, double *wavelengthD
 // length arrayLength (indexed from 0). page is provided for organisation purposes and can have an
 // abitrary value (it is expected that page will correspond to an analysis window).
 
-void mediateResponseGraphicalData(double *ordinateArray, double *abscissaArray, int arrayLength,
-                                  int page, int dataType, void *responseHandle);
+void mediateResponseGraphicalData(int page, double *ordinateArray, double *abscissaArray, int arrayLength,
+                                  int dataType, void *responseHandle);
 
 
 
@@ -325,7 +326,19 @@ void mediateResponseCellDataInteger(int page, int row, int column, int integerVa
 // predefined limits to the number of pages, nor the number of rows/column on a page.  page can be arbitrary,
 // but both row and column index from 0. 
 
-void mediateResponseCellDataString(int page, int row, int column, const char *stringValue,void * responseHandle);
+void mediateResponseCellDataString(int page, int row, int column, const char *stringValue, void *responseHandle);
+
+
+//----------------------------------------------------------
+// Data window oriented interface
+//----------------------------------------------------------
+
+// mediateResponseLabelPage
+//
+// provide the GUI with descriptive information for labeling a page.
+
+void mediateResponseLabelPage(int page, const char *title, const char *tag, void * responseHandle);
+
 
 //----------------------------------------------------------
 // Error message handling

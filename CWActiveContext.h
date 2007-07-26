@@ -37,6 +37,7 @@ Q_OBJECT
   void slotAcceptOk(bool canDoOk);
 
   void slotPlotPages(const QList< RefCountConstPtr<CPlotPageData> > &pageList);
+  void slotCurrentTabChanged(int index);
 
 
  private:
@@ -44,6 +45,9 @@ Q_OBJECT
   void moveAndResizeButtons(int wid, int hei);
   void moveAndResizeGraph(int wid, int hei);
   void moveAndResizeActiveEditor(int wid);
+
+ signals:
+  void signalActivePageChanged(int pageNumber);
 
  private:
   CWEditor *m_activeEditor;

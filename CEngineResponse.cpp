@@ -54,7 +54,7 @@ void CEngineResponseBeginBrowseFile::process(CEngineController *engineController
   if (m_numberOfRecords > 0) {
     // calibration data ... TODO ...
 
-    engineController->notifyReadyToNavigateRecords(m_numberOfRecords);
+    engineController->notifyReadyToNavigateRecords(m_fileName, m_numberOfRecords);
     // wait for the request to process a record ...
   }
 }
@@ -76,9 +76,9 @@ CEngineResponseBrowseRecord::~CEngineResponseBrowseRecord()
 {
   // should have been emptied in the trasfer to the controller
 
-  while (!m_plotDataBuckets.isEmpty()) {
-    delete m_plotDataBuckets.front().data;
-    m_plotDataBuckets.pop_front();
+  while (!m_plotDataList.isEmpty()) {
+    delete m_plotDataList.front().data;
+    m_plotDataList.pop_front();
   }
 }
 
@@ -90,10 +90,9 @@ void CEngineResponseBrowseRecord::process(CEngineController *engineController)
     engineController->notifyEndOfRecords();
   }
   else if (m_recordNumber > 0) {
-    // display data ...
-    engineController->notifyPlotData(m_plotDataBuckets);
-    // table data
-    engineController->notifyTableData(m_cells);
+    // display ... table data MUST be before plot data
+    engineController->notifyTableData(m_cellList);
+    engineController->notifyPlotData(m_plotDataList, m_titleList);
 
     engineController->notifyCurrentRecord(m_recordNumber);
   }
@@ -109,13 +108,19 @@ void CEngineResponseBrowseRecord::setRecordNumber(int recordNumber)
 
 void CEngineResponseBrowseRecord::addDataSet(int pageNumber, const CPlotDataSet *dataSet)
 {
-  m_plotDataBuckets.push_back(SPlotDataBucket(pageNumber, dataSet));
+  m_plotDataList.push_back(SPlotData(pageNumber, dataSet));
 }
 
 void CEngineResponseBrowseRecord::addCell(int pageNumber, int row, int col,
 					  const QVariant &data)
 {
-  m_cells.push_back(SCell(pageNumber, row, col, data));
+  m_cellList.push_back(SCell(pageNumber, row, col, data));
+}
+
+void CEngineResponseBrowseRecord::addPageTitleAndTag(int pageNumber, const QString &title,
+						     const QString &tag)
+{
+  m_titleList.push_back(STitleTag(pageNumber, title, tag));
 }
 
 //------------------------------------------------------------

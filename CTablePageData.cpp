@@ -27,9 +27,6 @@ void CTablePageData::addCell(int row, int col, const QVariant &data)
     
     if (row > m_rows) m_rows = row;
     if (col > m_columns) m_columns = col;
-
-    TRACE3("max row = " << m_rows << " : max col = " << m_columns);
-
   }
   else {
     // replace the data

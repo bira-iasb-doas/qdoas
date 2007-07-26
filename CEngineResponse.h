@@ -75,11 +75,13 @@ class CEngineResponseBrowseRecord : public CEngineResponse
   void setRecordNumber(int recordNumber);
   void addDataSet(int pageNumber, const CPlotDataSet *dataSet);
   void addCell(int pageNumber, int row, int col, const QVariant &data);
+  void addPageTitleAndTag(int page, const QString &title, const QString &tag);
 
  private:
   int m_recordNumber;
-  QList<SPlotDataBucket> m_plotDataBuckets;
-  QList<SCell> m_cells;
+  QList<SPlotData> m_plotDataList;
+  QList<SCell> m_cellList;
+  QList<STitleTag> m_titleList;
 };
 
 //------------------------------------------------------------

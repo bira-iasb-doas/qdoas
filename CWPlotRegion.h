@@ -2,6 +2,7 @@
 #define _CWPLOTREGION_H_GUARD
 
 #include <QScrollArea>
+#include <QString>
 #include <QSize>
 
 #include "CPlotPageData.h"
@@ -20,13 +21,17 @@ class CWPlotRegion : public QScrollArea
   
   void displayPage(int pageNumber, int columns);
 
+  int pageDisplayed(void) const;
+  QString pageTitle(int pageNumber) const;
+  QString pageTag(int pageNumber) const;
+
  protected:
   void resizeEvent(QResizeEvent *e);
 
  private:
   CWPlotPage *m_plotPage;
   std::map< int,RefCountConstPtr<CPlotPageData> > m_pageMap;
-  int m_columns;
+  int m_activePageNumber;
   QSize m_visibleSize;
 };
 

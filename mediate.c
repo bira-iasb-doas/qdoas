@@ -99,12 +99,19 @@ int mediateRequestGetNextMatchingSpectrum(void *engineContext,
       ++i;
     }
 
-    mediateResponseSpectrumData(y, x, 1024, responseHandle);
+    mediateResponseSpectrumData(0, y, x, 1024, "Spectrum", "Lambda (nm)", NULL, responseHandle);
+    mediateResponseSpectrumData(5, y, x, 512, "Fred", "on page 5", "blah", responseHandle);
 
-    mediateResponseCellDataString(0, 3, 2, "cell-3,2", responseHandle);
-    mediateResponseCellDataString(0, 5, 1, "cell-5,1", responseHandle);
+    mediateResponseCellDataString(0, 3, 2, "of", responseHandle);
+    mediateResponseCellDataInteger(0, 5, 1, 987654, responseHandle);
     mediateResponseCellDataString(0, 0, 0, "Origin", responseHandle);
-    mediateResponseCellDataString(0, 5, 4, "cell-5,4", responseHandle);
+    mediateResponseCellDataDouble(0, 5, 4, 1.23456e7, responseHandle);
+    mediateResponseCellDataInteger(5, 3, 3, tmp->nRecords, responseHandle);
+    mediateResponseCellDataInteger(5, 3, 1, tmp->record, responseHandle);
+
+    mediateResponseLabelPage(0, "File and record number ...", "Spectrum", responseHandle);
+    mediateResponseLabelPage(5, "Analysis ...", "BrO", responseHandle);
+
     
     return rec;
   }

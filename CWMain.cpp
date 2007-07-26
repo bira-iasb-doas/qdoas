@@ -9,7 +9,7 @@
 #include "CWUserSymbolTree.h"
 #include "CWActiveContext.h"
 #include "CWSplitter.h"
-#include "CMultiPageTableModel.h"
+#include "CWTableRegion.h"
 
 #include "CEngineController.h"
 #include "CNavigationPanel.h"
@@ -80,9 +80,7 @@ CWMain::CWMain(QWidget *parent) :
 
   // data table
   
-  m_tableModel = new CMultiPageTableModel(this);
-  m_dataWindow = new QTableView;
-  m_dataWindow->setModel(m_tableModel);
+  m_tableRegion = new CWTableRegion;
 
   // Splitters
   CWSplitter *subSplitter = new CWSplitter(Qt::Horizontal);
@@ -99,7 +97,7 @@ CWMain::CWMain(QWidget *parent) :
 
   QSplitter *mainSplitter = new QSplitter(Qt::Vertical);
   mainSplitter->addWidget(subSplitter);
-  mainSplitter->addWidget(m_dataWindow);
+  mainSplitter->addWidget(m_tableRegion);
   
   mainLayout->addWidget(mainSplitter, 1); // takes all stretch
 
@@ -172,7 +170,14 @@ CWMain::CWMain(QWidget *parent) :
 
   // table data transfer
   connect(m_controller, SIGNAL(signalTablePages(const QList< RefCountConstPtr<CTablePageData> > &)),
-          m_tableModel, SLOT(slotTablePages(const QList< RefCountConstPtr<CTablePageData> > &)));
+          m_tableRegion, SLOT(slotTablePages(const QList< RefCountConstPtr<CTablePageData> > &)));
+
+  // tab-based coupling of plot and table display
+  connect(m_activeContext, SIGNAL(signalActivePageChanged(int)),
+	  m_tableRegion, SLOT(slotDisplayPage(int)));
+
+  // icon
+  setWindowIcon(QIcon(QPixmap(":/icons/logo.png")));
 
 }
 

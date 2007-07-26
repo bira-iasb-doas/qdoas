@@ -10,6 +10,8 @@
 #include "CWPlotPage.h"
 #include "CWPlotRegion.h"
 
+#include "debugutil.h"
+
 const int cBorderSize = 5;
 const QRgb cEditTitleBackgroundColour  = 0xFF5986EC;
 const QRgb cEditTitleTextColour        = 0xFFFFFFFF;
@@ -94,12 +96,8 @@ CWActiveContext::CWActiveContext(QWidget *parent) :
   // tab-bar
   m_graphTab = new QTabBar(this);
   m_graphTab->setShape(QTabBar::TriangularSouth);
+  m_graphTab->addTab("Qdoas"); // need one tab to get a sensible height from sizeHint.
 
-  m_graphTab->addTab("Tab 0");
-  m_graphTab->addTab("Tab 1");
-  m_graphTab->addTab("Tab 2");
-  m_graphTab->addTab("Tab 3");
-  
   tmpSize = m_graphTab->sizeHint();
   if (tmpSize.isValid()) {
     if (tmpSize.width() > minWidth)
@@ -107,7 +105,7 @@ CWActiveContext::CWActiveContext(QWidget *parent) :
     m_tabRegionHeight = tmpSize.height();
   }
   else {
-    m_tabRegionHeight = 16;
+    m_tabRegionHeight = 20;
   }
 
   m_plotRegion = new CWPlotRegion(this);
@@ -120,6 +118,9 @@ CWActiveContext::CWActiveContext(QWidget *parent) :
   connect(m_okButton, SIGNAL(clicked()), this, SLOT(slotOkButtonClicked()));
   connect(m_helpButton, SIGNAL(clicked()), this, SLOT(slotHelpButtonClicked()));
   connect(m_cancelButton, SIGNAL(clicked()), this, SLOT(slotCancelButtonClicked()));
+  
+  connect(m_graphTab, SIGNAL(currentChanged(int)),
+	  this, SLOT(slotCurrentTabChanged(int)));
 
   // explicitly hide the edit stuff to start with
   m_helpButton->hide();
@@ -392,17 +393,50 @@ void CWActiveContext::slotAcceptOk(bool canDoOk)
 
 void CWActiveContext::slotPlotPages(const QList< RefCountConstPtr<CPlotPageData> > &pageList)
 {
-  // replace all pages of the plot list
-  m_plotRegion->removeAllPages();
+  int index, pageNumber;
 
+  // clear all tabs
+  index = m_graphTab->count();
+  while (index > 0)
+    m_graphTab->removeTab(--index);
+
+  // replace all pages of the plot list and create new tabs
+  m_plotRegion->removeAllPages();
   QList< RefCountConstPtr<CPlotPageData> >::const_iterator it = pageList.begin();
   while (it != pageList.end()) {
+    pageNumber = (*it)->pageNumber();
     m_plotRegion->addPage(*it);
+    // store the page number as TabData
+    index = m_graphTab->addTab((*it)->tag());
+    m_graphTab->setTabData(index, QVariant(pageNumber));
     ++it;
   }
 
-  // TODO - tab page and selection
+  // set to first tab
+  if (m_graphTab->count()) {
+    m_graphTab->show();
+    if (m_graphTab->currentIndex() == 0) {
+      slotCurrentTabChanged(0);
+    }
+    else {
+      m_graphTab->setCurrentIndex(0);
+    }
+  }
+  else
+    m_graphTab->hide();
+}
 
-  m_plotRegion->displayPage(0, 2); // TODO - temp
+void CWActiveContext::slotCurrentTabChanged(int index)
+{
+  int pageNumber = (index == -1) ? -1 : m_graphTab->tabData(index).toInt();
+  
+  m_plotRegion->displayPage(pageNumber, 2); // TODO - columns
+
+  // set the graph title
+  m_graphTitleStr = m_plotRegion->pageTitle(pageNumber);
+  if (!m_activeEditor)
+    m_title->setText(m_graphTitleStr);
+  
+  emit signalActivePageChanged(pageNumber);
 }
 

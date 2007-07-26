@@ -5,6 +5,8 @@
 CPlotPageData::CPlotPageData(int pageNumber) :
   m_pageNumber(pageNumber)
 {
+  // default tag
+  m_tag.sprintf("Tag-%d", pageNumber);
 }
 
 CPlotPageData::~CPlotPageData()
@@ -22,12 +24,32 @@ int CPlotPageData::size(void) const
   return m_dataSets.size();
 }
 
+const QString& CPlotPageData::title(void) const
+{
+  return m_title;
+}
+
+const QString& CPlotPageData::tag(void) const
+{
+  return m_tag;
+}
+
 RefCountConstPtr<CPlotDataSet> CPlotPageData::dataSet(int index) const
 {
   if (index < 0 || index > m_dataSets.size())
     return RefCountConstPtr<CPlotDataSet>();
 
   return m_dataSets.at(index);
+}
+
+void CPlotPageData::setTitle(const QString &title)
+{
+  m_title = title;
+}
+
+void CPlotPageData::setTag(const QString &tag)
+{
+  m_tag = tag;
 }
 
 void CPlotPageData::addPlotDataSet(const CPlotDataSet *dataSet)

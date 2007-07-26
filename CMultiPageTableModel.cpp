@@ -69,30 +69,35 @@ void CMultiPageTableModel::setActivePage(int pageNumber)
 
 int CMultiPageTableModel::columnCount(const QModelIndex &parent) const
 {
-  if (m_currentPage != 0) {
-    TRACE("columnCount = " <<  m_currentPage->columnCount());
+  if (!parent.isValid() && m_currentPage != 0)
     return m_currentPage->columnCount();
-  }
-  TRACE("columnCount = *** 0");
+
   return 0;
 }
 
 int CMultiPageTableModel::rowCount(const QModelIndex &parent) const
 {
-  if (m_currentPage != 0) {
-    TRACE("rowCount = " <<  m_currentPage->rowCount());
+  if (!parent.isValid() && m_currentPage != 0)
     return m_currentPage->rowCount();
-  }
-  TRACE("rowCount = *** 0");
+
   return 0;
 }
 
 QVariant CMultiPageTableModel::data(const QModelIndex &index, int role) const
 {
-  TRACE2("Data ("<<index.row()<<","<<index.column()<<") ...");
+  if (!index.isValid() || m_currentPage == 0)
+    return QVariant();
 
-  if (role == Qt::DisplayRole && m_currentPage != 0)
+  // respond to display and alignment roles
+  if (role == Qt::DisplayRole) {
     return m_currentPage->cellData(index.row(), index.column());
+  }
+  else if (role == Qt::TextAlignmentRole) {
+    QVariant::Type type = m_currentPage->cellData(index.row(), index.column()).type();
+    
+    return QVariant((type == QVariant::Int || type == QVariant::Double) ?
+		    Qt::AlignRight : Qt::AlignLeft);
+  }
 
   return QVariant();
 }
@@ -100,6 +105,8 @@ QVariant CMultiPageTableModel::data(const QModelIndex &index, int role) const
 // TODO
 void CMultiPageTableModel::slotTablePages(const QList< RefCountConstPtr<CTablePageData> > &pageList)
 {
+  int activePage = (m_currentPage != 0) ? m_currentPage->pageNumber() : -1;
+
   removeAllPages();
 
   QList< RefCountConstPtr<CTablePageData> >::const_iterator it = pageList.begin();
@@ -108,6 +115,7 @@ void CMultiPageTableModel::slotTablePages(const QList< RefCountConstPtr<CTablePa
     ++it;
   }
 
-  setActivePage(0);
+  // try and restore to the same active page
+  setActivePage(activePage);
 }
 

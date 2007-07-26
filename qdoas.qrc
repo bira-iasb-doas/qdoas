@@ -1,6 +1,9 @@
 <!DOCTYPE RCC>
 <RCC version="1.0">
 <qresource>
+    <file>icons/logo.png</file>
+    <file>images/splash.png</file>
+
     <file>icons/file_exit_16.png</file>
     <file>icons/project_directory_16.png</file>
     <file>icons/project_file_16.png</file>

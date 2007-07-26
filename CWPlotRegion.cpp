@@ -1,5 +1,7 @@
 
 #include <QResizeEvent>
+#include <QLabel>
+#include <QPixmap>
 
 #include <qwt_plot.h>
 #include <qwt_plot_curve.h>
@@ -9,24 +11,16 @@
 
 CWPlotRegion::CWPlotRegion(QWidget *parent) :
   QScrollArea(parent),
-  m_plotPage(NULL)
+  m_plotPage(NULL),
+  m_activePageNumber(-1)
 {
   setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
 
-  // TODO
-  m_plotPage = new CWPlotPage(2);
-  double x1[] = {0.0, 1.0, 2.0, 3.0};
-  double y1[] = {1.0, 1.4, 0.7, 1.0};
-  RefCountConstPtr<CPlotDataSet> c1(new CPlotDataSet(x1,y1,4,"fred","jack","john"));
+  QLabel *splash = new QLabel;
+  splash->setPixmap(QPixmap(":/images/splash.png"));
 
-  double x2[] = {0.0, 1.0, 2.0, 3.0};
-  double y2[] = {1.0, -1.4, 0.7, -1.0};
-  RefCountConstPtr<CPlotDataSet> c2(new CPlotDataSet(x2,y2,4,"guff","lambda","Intensity"));
 
-  m_plotPage->addPlot(c1);
-  m_plotPage->addPlot(c2);
-
-  setWidget(m_plotPage);
+  setWidget(splash);
 }
 
 CWPlotRegion::~CWPlotRegion()
@@ -56,11 +50,39 @@ void CWPlotRegion::displayPage(int pageNumber, int columns)
 {
   std::map< int,RefCountConstPtr<CPlotPageData> >::iterator it = m_pageMap.find(pageNumber);
   if (it != m_pageMap.end()) {
+    m_activePageNumber = pageNumber;
     m_plotPage = new CWPlotPage(columns, it->second);
     setWidget(m_plotPage); // takes care of deleting the old widget
     m_plotPage->layoutPlots(m_visibleSize);
     m_plotPage->show();
   }
+  else {
+    m_activePageNumber = -1; // invalid page number
+    setWidget((m_plotPage = NULL));
+  }
+}
+
+int CWPlotRegion::pageDisplayed(void) const
+{
+  return m_activePageNumber;
+}
+
+QString CWPlotRegion::pageTitle(int pageNumber) const
+{
+  std::map< int,RefCountConstPtr<CPlotPageData> >::const_iterator it = m_pageMap.find(pageNumber);
+  if (it != m_pageMap.end())
+    return (it->second)->title();
+
+  return QString();
+}
+
+QString CWPlotRegion::pageTag(int pageNumber) const
+{
+  std::map< int,RefCountConstPtr<CPlotPageData> >::const_iterator it = m_pageMap.find(pageNumber);
+  if (it != m_pageMap.end())
+    return (it->second)->tag();
+
+  return QString();
 }
 
 void CWPlotRegion::resizeEvent(QResizeEvent *e)
