@@ -148,11 +148,12 @@ void CWProjectTree::contextMenuEvent(QContextMenuEvent *e)
   }
   else if (items.count()) {
     // one item selected - what type is it?
-    CProjectTreeItem *projItem = static_cast<CProjectTreeItem*>(items.front());
-    int itemType = projItem->type();
+    int itemType = items.front()->type();
 
     if (itemType == cSpectraDirectoryItemType) {
       // A Directory item
+      CProjectTreeItem *projItem = static_cast<CProjectTreeItem*>(items.front());
+
       menu.addAction(projItem->isEnabled() ? "Disable" : "Enable", this,
                      SLOT(slotToggleEnable()));
       menu.addAction("Refresh", this, SLOT(slotRefreshDirectories()));
@@ -167,6 +168,8 @@ void CWProjectTree::contextMenuEvent(QContextMenuEvent *e)
     }
     else if (itemType == cSpectraFolderItemType) {
       // A Folder Item
+      CProjectTreeItem *projItem = static_cast<CProjectTreeItem*>(items.front());
+	  
       menu.addAction(projItem->isEnabled() ? "Disable" : "Enable", this,
                      SLOT(slotToggleEnable()));
       menu.addAction("Rename...", this, SLOT(slotRenameFolder()));
@@ -181,6 +184,8 @@ void CWProjectTree::contextMenuEvent(QContextMenuEvent *e)
     }
     else if (itemType == cSpectraFileItemType) {
       // A File Item
+      CProjectTreeItem *projItem = static_cast<CProjectTreeItem*>(items.front());
+
       menu.addAction(projItem->isEnabled() ? "Disable" : "Enable", this,
                      SLOT(slotToggleEnable()));
       menu.addSeparator();
@@ -213,15 +218,19 @@ void CWProjectTree::contextMenuEvent(QContextMenuEvent *e)
     }
     else if (itemType == cAnalysisWindowItemType) {
       // Analysis Window
+      CProjectTreeItem *projItem = static_cast<CProjectTreeItem*>(items.front());
+
       menu.addAction(projItem->isEnabled() ? "Disable" : "Enable", this,
                      SLOT(slotToggleEnable()));
       menu.addSeparator();
       menu.addAction("Rename...", this, SLOT(slotRenameAnalysisWindow()));
       menu.addSeparator();
-      // cant remove this item - refers to all children
       menu.addAction("Delete", this, SLOT(slotDeleteSelection()));
     }
     else if (itemType == cProjectItemType) {
+      // Project
+      CProjectTreeItem *projItem = static_cast<CProjectTreeItem*>(items.front());
+
       menu.addAction(projItem->isEnabled() ? "Disable" : "Enable", this,
                      SLOT(slotToggleEnable()));
       menu.addAction("Rename...", this, SLOT(slotRenameProject()));
@@ -1269,7 +1278,7 @@ QTreeWidgetItem* CWProjectTree::locateChildByName(QTreeWidgetItem *parent, const
 
 void CWProjectTree::buildSession(CSession *session, CProjectTreeItem *item)
 {
-  // recursive construction of the session ... TODO
+  // recursive construction of the session ...
   
   if (item->type() == cSpectraFileItemType) {
     // individual file
@@ -1277,5 +1286,19 @@ void CWProjectTree::buildSession(CSession *session, CProjectTreeItem *item)
     if (proj)
       session->addFile(static_cast<CSpectraFileItem*>(item)->file(), proj->text(0));
   }
-  // TODO else ... other types
+  else if (item->type() == cSpectraFolderItemType ||
+	   item->type() == cSpectraDirectoryItemType ||
+	   item->type() == cSpectraBranchItemType ||
+	   item->type() == cProjectItemType) {
+    // all enabled sub items ... 
+    CProjectTreeItem *child;
+    int nChildren = item->childCount();
+    int i = 0;
+    while (i < nChildren) {
+      child = static_cast<CProjectTreeItem*>(item->child(i));
+      if (child->isEnabled())
+	CWProjectTree::buildSession(session, child);
+      ++i;
+    }
+  }
 }
