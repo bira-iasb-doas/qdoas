@@ -2,6 +2,8 @@
 # General Configuration
 #----------------------------------------------
 
+TEMPLATE = app
+
 unix {
   CONFIG += qt thread debug
   QT = core gui
