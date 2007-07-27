@@ -14,9 +14,6 @@
 #include "CEngineController.h"
 #include "CNavigationPanel.h"
 
-// pixmaps
-#include "icons/file_open_16.xpm"
-
 CWMain::CWMain(QWidget *parent) :
   QFrame(parent)
 {
@@ -33,7 +30,7 @@ CWMain::CWMain(QWidget *parent) :
   QMenu *fileMenu = new QMenu("File");
 
   // Open...
-  QAction *openAct = new QAction(QIcon(QPixmap(file_open_16_xpm)), "Open...", this);
+  QAction *openAct = new QAction(QIcon(QPixmap(":/icons/file_exit_16.png")), "Open...", this);
   // connect ...
   fileMenu->addAction(openAct);
 

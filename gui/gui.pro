@@ -3,6 +3,7 @@
 #----------------------------------------------
 
 TEMPLATE = app
+TARGET   = qdoas
 
 unix {
   CONFIG += qt thread debug
