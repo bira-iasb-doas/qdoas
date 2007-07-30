@@ -80,7 +80,8 @@ bool CWorkSpace::createProject(const QString &newProjectName)
   if (pIt == m_projMap.end()) {
     // does not exist
     mediate_project_t *tmp = new mediate_project_t;
-    // initialise the project data ... TODO
+
+    initializeMediateProject(tmp);
     
     // insert the project (with no windows)
     m_projMap.insert(std::map<QString,SProjBucket>::value_type(newProjectName,SProjBucket(tmp)));

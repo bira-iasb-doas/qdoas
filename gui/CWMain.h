@@ -38,10 +38,14 @@ class CWTableRegion;
 
 class CWMain : public QFrame
 {
+Q_OBJECT
  public:
 
   CWMain(QWidget *parent = 0);
   virtual ~CWMain();
+
+ public slots:
+  void slotOpenFile();
 
  private:
   QMenuBar *m_menuBar;

@@ -7,7 +7,7 @@ TARGET   = qdoas
 
 unix {
   CONFIG += qt thread debug
-  QT = core gui
+  QT = core gui xml
 
   # for trace-write debugging ...
   DEFINES += DEBUG
@@ -15,7 +15,7 @@ unix {
 }
 win32 {
   CONFIG += qt thread release
-  QT = core gui
+  QT = core gui xml
 }
 
 #----------------------------------------------
@@ -49,6 +49,8 @@ SOURCES += CTablePageData.cpp
 SOURCES += CMultiPageTableModel.cpp
 SOURCES += CSession.cpp
 SOURCES += CValidator.cpp
+SOURCES += CQdoasProjectConfigHandler.cpp
+SOURCES += CProjectConfigSubHandlers.cpp
 SOURCES += CWActiveContext.cpp
 SOURCES += CWEditor.cpp
 SOURCES += CWMain.cpp
@@ -75,6 +77,7 @@ SOURCES += qdoas.cpp
 #----------------------------------------------
 SOURCES += mediate_response.cpp
 SOURCES += mediate.c
+SOURCES += mediate_project.c
 
 #----------------------------------------------
 # GUI Header files
@@ -90,6 +93,8 @@ HEADERS += CTablePageData.h
 HEADERS += CMultiPageTableModel.h
 HEADERS += CSession.h
 HEADERS += CValidator.h
+HEADERS += CQdoasProjectConfigHandler.h
+HEADERS += CProjectConfigSubHandlers.h
 HEADERS += CWActiveContext.h
 HEADERS += CWEditor.h
 HEADERS += CWMain.h

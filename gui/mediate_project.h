@@ -17,6 +17,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
+
 #ifndef _MEDIATE_PROJECT_H_GUARD
 #define _MEDIATE_PROJECT_H_GUARD
 
@@ -27,9 +28,9 @@ extern "C" {
   /****************************************************/
   /* Geolocation */
 
-  const int cGeolocationModeNone      = 0;
-  const int cGeolocationModeCircle    = 1;
-  const int cGeolocationModeRectangle = 2;
+  static const int cGeolocationModeNone      = 0;
+  static const int cGeolocationModeCircle    = 1;
+  static const int cGeolocationModeRectangle = 2;
 
   struct geolocation_circle
   {
@@ -87,19 +88,19 @@ extern "C" {
   /****************************************************/
   /* Project Analysis */
   
-  const int cProjAnalysisMethodModeOptDens     = 1;
-  const int cProjAnalysisMethodModeMarqLevSvd  = 2;
-  const int cProjAnalysisMethodModeMarqLevFull = 3;
+  static const int cProjAnalysisMethodModeOptDens     = 1;
+  static const int cProjAnalysisMethodModeMarqLevSvd  = 2;
+  static const int cProjAnalysisMethodModeMarqLevFull = 3;
 
-  const int cProjAnalysisFitModeNone         = 0;
-  const int cProjAnalysisFitModeInstrumental = 1;
-  const int cProjAnalysisFitModeStatistical  = 2;
+  static const int cProjAnalysisFitModeNone         = 0;
+  static const int cProjAnalysisFitModeInstrumental = 1;
+  static const int cProjAnalysisFitModeStatistical  = 2;
 
-  const int cProjAnalysisUnitModePixel     = 1;
-  const int cProjAnalysisUnitModeNanometer = 2;
+  static const int cProjAnalysisUnitModePixel     = 1;
+  static const int cProjAnalysisUnitModeNanometer = 2;
 
-  const int cProjAnalysisInterpolationModeLinear = 1;
-  const int cProjAnalysisInterpolationModeSpline = 2;
+  static const int cProjAnalysisInterpolationModeLinear = 1;
+  static const int cProjAnalysisInterpolationModeSpline = 2;
 
 
   typedef struct mediate_project_analysis
@@ -125,6 +126,15 @@ extern "C" {
     
   } mediate_project_t;
   
+
+  /****************************************************/
+  /* Helper functions */
+
+  void initializeMediateProject(mediate_project_t *d);
+  void initializeMediateProjectSpectra(mediate_project_spectra_t *d);
+  void initializeMediateProjectAnalysis(mediate_project_analysis_t *d);
+  
+
 #if defined(_cplusplus) || defined(__cplusplus)
 }
 #endif

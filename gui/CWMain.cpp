@@ -21,6 +21,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QVBoxLayout>
 #include <QMenu>
 #include <QAction>
+#include <QXmlInputSource>
+#include <QXmlSimpleReader>
+#include <QFile>
 
 #include "CWMain.h"
 #include "CWProjectTree.h"
@@ -32,6 +35,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "CEngineController.h"
 #include "CNavigationPanel.h"
+#include "CQdoasProjectConfigHandler.h"
+
+#include "debugutil.h"
 
 CWMain::CWMain(QWidget *parent) :
   QFrame(parent)
@@ -51,6 +57,8 @@ CWMain::CWMain(QWidget *parent) :
   // Open...
   QAction *openAct = new QAction(QIcon(QPixmap(":/icons/file_exit_16.png")), "Open...", this);
   // connect ...
+  connect(openAct, SIGNAL(triggered()), this, SLOT(slotOpenFile()));
+
   fileMenu->addAction(openAct);
 
   // Quit
@@ -199,4 +207,24 @@ CWMain::CWMain(QWidget *parent) :
 
 CWMain::~CWMain()
 {
+}
+
+void CWMain::slotOpenFile()
+{
+
+  QFile *file = new QFile("/home/ian/qdoasproject.xml");
+  QXmlSimpleReader xmlReader;
+  QXmlInputSource *source = new QXmlInputSource(file);
+
+  CQdoasProjectConfigHandler *handler = new CQdoasProjectConfigHandler;
+  xmlReader.setContentHandler(handler);
+  xmlReader.setErrorHandler(handler);
+
+  bool ok = xmlReader.parse(source);
+  
+  if (!ok) {
+    TRACE2("Parsing failed.");
+  }
+ 
+  delete file;
 }
