@@ -129,8 +129,6 @@ bool CProjectSpectraSubHandler::start(const QString &element, const QXmlAttribut
     bool ok;
     double tmp;
 
-    m_spectra->geo.circle.mode = cGeolocationModeCircle;
-
     str = atts.value("radius");
     tmp = str.toDouble(&ok);
     if (ok)
@@ -139,20 +137,18 @@ bool CProjectSpectraSubHandler::start(const QString &element, const QXmlAttribut
     str = atts.value("long");
     tmp = str.toDouble(&ok);
     if (ok)
-      m_spectra->geo.circle.centreLongitude = tmp;
+      m_spectra->geo.circle.centerLongitude = tmp;
 
     str = atts.value("lat");
     tmp = str.toDouble(&ok);
     if (ok)
-      m_spectra->geo.circle.centreLatitude = tmp;
+      m_spectra->geo.circle.centerLatitude = tmp;
   }
   else if (element == "rectangle") {
 
     QString str;
     bool ok;
     double tmp;
-
-    m_spectra->geo.rectangle.mode = cGeolocationModeRectangle;
 
     str = atts.value("east");
     tmp = str.toDouble(&ok);
@@ -175,8 +171,15 @@ bool CProjectSpectraSubHandler::start(const QString &element, const QXmlAttribut
       m_spectra->geo.rectangle.southernLatitude = tmp;
   }
   else if (element == "geolocation") {
-    // defaults to none ...
-    m_spectra->geo.mode = cGeolocationModeNone;
+    
+    QString selected = atts.value("selected");
+
+    if (selected == "circle")
+      m_spectra->geo.mode = cGeolocationModeCircle;
+    else if (selected == "rectangle")
+      m_spectra->geo.mode = cGeolocationModeRectangle;
+    else
+      m_spectra->geo.mode = cGeolocationModeNone; // default and "none"
   }
 
   return true;

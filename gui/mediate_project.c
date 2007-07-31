@@ -50,6 +50,18 @@ void initializeMediateProjectSpectra(mediate_project_spectra_t *d)
   
   /* unrestricted geolocation */
   d->geo.mode = cGeolocationModeNone;
+
+  /* zero the restricted modes */
+  d->geo.circle.radius = 0.0;
+  d->geo.circle.centerLongitude = 0.0;
+  d->geo.circle.centerLatitude = 0.0;
+
+  d->geo.rectangle.easternLongitude = 0.0;
+  d->geo.rectangle.westernLongitude = 0.0;
+  d->geo.rectangle.northernLatitude = 0.0;
+  d->geo.rectangle.southernLatitude = 0.0;
+
+  d->geo.sites.radius = 0.0;
 }
 
 void initializeMediateProjectAnalysis(mediate_project_analysis_t *d)
@@ -58,4 +70,7 @@ void initializeMediateProjectAnalysis(mediate_project_analysis_t *d)
   d->fitType           = cProjAnalysisFitModeNone;
   d->unitType          = cProjAnalysisUnitModePixel;
   d->interpolationType = cProjAnalysisInterpolationModeLinear;
+
+  d->interpolationSecurityGap = 10;
+  d->convergenceCriterion = 1.0e-4;
 }

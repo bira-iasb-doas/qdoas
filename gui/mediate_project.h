@@ -31,29 +31,38 @@ extern "C" {
   static const int cGeolocationModeNone      = 0;
   static const int cGeolocationModeCircle    = 1;
   static const int cGeolocationModeRectangle = 2;
+  static const int cGeolocationModeSites     = 3;
 
+  /* cGeolocationModeCircle */
   struct geolocation_circle
   {
-    int mode;        /* eGeolocationModeCircle */
     double radius;
-    double centreLongitude;
-    double centreLatitude;
+    double centerLongitude;
+    double centerLatitude;
   };
   
+  /* cGeolocationModeRectangle */
   struct geolocation_rectangle
   {
-    int mode;        /* eGeolocationModeRectangle */
     double westernLongitude;
     double easternLongitude;
     double southernLatitude;
     double northernLatitude;
   };
+
+  /* cGeolocationModeSites */
+  struct geolocation_sites
+  {
+    double radius;
+  };
   
-  union geolocation
+  /* all gelocations and a selection (mode) */
+  struct geolocation
   {
     int mode;
     struct geolocation_circle circle;
     struct geolocation_rectangle rectangle;
+    struct geolocation_sites sites;
   };
   
   /****************************************************/
@@ -80,7 +89,7 @@ extern "C" {
     int useNameFile;
     
     /* geolocation limits */
-    union geolocation geo;
+    struct geolocation geo;
     
   } mediate_project_spectra_t;
 
@@ -109,6 +118,8 @@ extern "C" {
     int fitType;
     int unitType;
     int interpolationType;
+    int interpolationSecurityGap;
+    double convergenceCriterion;
   } mediate_project_analysis_t;
   
   

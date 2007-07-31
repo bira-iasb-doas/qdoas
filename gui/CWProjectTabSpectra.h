@@ -48,10 +48,10 @@ class CWProjectTabSpectra : public QFrame
 class CWGeolocation : public QFrame
 {
  public:
-  CWGeolocation(const union geolocation *geo, QWidget *parent = 0);
+  CWGeolocation(const struct geolocation *geo, QWidget *parent = 0);
   virtual ~CWGeolocation();
 
-  void apply(union geolocation *geo) const;
+  void apply(struct geolocation *geo) const;
 
  private:
   QLineEdit *m_westEdit, *m_eastEdit, *m_southEdit, *m_northEdit;

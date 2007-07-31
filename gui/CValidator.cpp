@@ -21,6 +21,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "CValidator.h"
 
+//--------------------------------------------------------------------------------
 
 CSzaValidator::CSzaValidator(QObject *obj) :
   QValidator(obj)
@@ -54,6 +55,7 @@ void CSzaValidator::fixup(QString &input) const
     if (v < 0.0) input = "0.0";
     else if (v > 180.0) input = "180.000";
     else {
+      input.clear();
       QTextStream tmpStream(&input);
       tmpStream.setRealNumberNotation(QTextStream::FixedNotation);
       tmpStream.setRealNumberPrecision(3); // 3 decimal places
@@ -62,6 +64,256 @@ void CSzaValidator::fixup(QString &input) const
   }
   else
     input = "0.0"; // default
+}
+
+
+//--------------------------------------------------------------------------------
+
+CDoubleExpFmtValidator::CDoubleExpFmtValidator(QObject *obj) :
+  QValidator(obj)
+{
+  setRange(-1.0e307, +1.0e307);
+  setSignificantFigures(10);
+}
+
+CDoubleExpFmtValidator::CDoubleExpFmtValidator(double bottom, double top, int sigFigures, QObject *obj) :
+  QValidator(obj)
+{
+  setRange(bottom, top);
+  setSignificantFigures(sigFigures);
+}
+
+QValidator::State CDoubleExpFmtValidator::validate(QString &input, int &pos) const
+{
+  if (input.isEmpty()) return QValidator::Intermediate;
+
+  bool havePoint = false;
+  bool haveExp = false;
+  bool haveSign = false;
+  int lenMantisa = 0;
+  int lenExp = 0;
+  int expMag = 0;
+
+  int len = input.length();
+  int i = 0;
+
+  while (i < len) {
+    if (i == 0) {
+      if (input[0] == '+' && m_top > 0.0) {
+	haveSign = true;
+      }
+      else if (input[0] == '-' && m_bottom < 0.0) {
+	haveSign = true;
+      }
+      else if (input[0] == '.') {
+	havePoint = true;
+      }
+      else if (input[0].isDigit()) {
+	++lenMantisa;
+      }
+      else
+	return QValidator::Invalid;
+    }
+    else {
+      if (input[i] == '.') {
+	if (havePoint) return QValidator::Invalid;
+	havePoint = true;
+      }
+      else if (input[i] == 'e' || input[i] == 'E') {
+	if (haveExp || lenMantisa == 0) return QValidator::Invalid;
+	if (lenMantisa > m_sigFigures) return QValidator::Invalid;
+	haveExp = true;
+	++i;
+	if (i < len) {
+	  if (input[i].isDigit()) {
+	    ++lenExp;
+	    expMag = input[i].digitValue();
+	  }
+	  else if (input[i] != '+' && input[i] != '-')
+	    return QValidator::Invalid;
+	}
+      }
+      else if (input[i].isDigit()) {
+	if (haveExp) {
+	  ++lenExp;
+	  if (lenExp > 3) return QValidator::Invalid;
+	  expMag *= 10;
+	  expMag += input[i].digitValue();
+	  if (expMag > 307) return QValidator::Invalid;
+	}
+	else {
+	  ++lenMantisa;
+	  if (lenMantisa > m_sigFigures && input[i] != '0') return QValidator::Invalid;
+	}
+      }
+      else
+	return QValidator::Invalid;
+    }
+    ++i;
+  }
+
+  // at least potentially ok
+  // at least potentially ok
+  if (haveExp && lenExp == 0) return QValidator::Intermediate;
+  if (lenMantisa == 0) return QValidator::Intermediate;
+  
+  // should be a real value
+  bool ok;
+  double v = input.toDouble(&ok);
+
+  if (ok) {
+    if (v >= m_bottom && v <= m_top)
+      return QValidator::Acceptable;
+
+    return QValidator::Intermediate;
+  }
+
+  return QValidator::Invalid;
+}
+
+void CDoubleExpFmtValidator::fixup(QString &input) const
+{
+  bool ok;
+  double v = input.toDouble(&ok);
+
+  if (ok) {
+    if (v < m_bottom)
+      input.setNum(m_bottom, 'e', m_sigFigures-1);
+    else if (v > m_top)
+      input.setNum(m_top, 'e', m_sigFigures-1);
+    else
+      input.setNum(v, 'e', m_sigFigures-1);
+  }
+  else
+    input.setNum(m_bottom, 'e', m_sigFigures-1); // default to the bottom value
+}
+
+void CDoubleExpFmtValidator::setRange(double bottom, double top)
+{
+  if (bottom < top) {
+    m_bottom = bottom;
+    m_top = top;
+  }
+  else {
+    m_bottom = top;
+    m_top = bottom;
+  }
+}
+
+void CDoubleExpFmtValidator::setSignificantFigures(int sigFigures)
+{
+  m_sigFigures = (sigFigures > 1) ? sigFigures : 1;
+}
+
+
+//--------------------------------------------------------------------------------
+
+CDoubleFixedFmtValidator::CDoubleFixedFmtValidator(QObject *obj) :
+  QValidator(obj)
+{
+  setRange(-1.0e307, +1.0e307);
+  setDecimals(10);
+}
+
+CDoubleFixedFmtValidator::CDoubleFixedFmtValidator(double bottom, double top, int decimals, QObject *obj) :
+  QValidator(obj)
+{
+  setRange(bottom, top);
+  setDecimals(decimals);
+}
+
+QValidator::State CDoubleFixedFmtValidator::validate(QString &input, int &pos) const
+{
+  if (input.isEmpty()) return QValidator::Intermediate;
+
+  bool havePoint = false;
+  bool haveSign = false;
+  int lenDec = 0;
+
+  int len = input.length();
+  int i = 0;
+
+  while (i < len) {
+    if (i == 0) {
+      if (input[0] == '+' && m_top > 0.0) {
+	haveSign = true;
+      }
+      else if (input[0] == '-' && m_bottom < 0.0) {
+	haveSign = true;
+      }
+      else if (input[0] == '.') {
+	havePoint = true;
+      }
+      else if (input[0] == '.') {
+	havePoint = true;
+      }
+      else if (!input[0].isDigit()) {
+	return QValidator::Invalid;
+      }
+    }
+    else {
+      if (input[i] == '.') {
+	if (havePoint) return QValidator::Invalid;
+	havePoint = true;
+      }
+      else if (input[i].isDigit()) {
+	if (havePoint) {
+	  ++lenDec;
+	  if (lenDec > m_decimals) return QValidator::Invalid;
+	}
+      }
+      else
+	return QValidator::Invalid;
+    }
+    ++i;
+  }
+
+  // at least potentially ok
+  if (len == 1 && (haveSign || havePoint)) return QValidator::Intermediate;
+  if (len == 2 && haveSign && havePoint) return QValidator::Intermediate;
+
+  // should be a real value
+  bool ok;
+  double v = input.toDouble(&ok);
+
+  if (ok && v >= m_bottom && v <= m_top)
+    return QValidator::Acceptable;
+
+  return QValidator::Invalid;
+}
+
+void CDoubleFixedFmtValidator::fixup(QString &input) const
+{
+  bool ok;
+  double v = input.toDouble(&ok);
+
+  if (ok) {
+    if (v < m_bottom)
+      input.setNum(m_bottom, 'f', m_decimals);
+    else if (v > m_top)
+      input.setNum(m_top, 'f', m_decimals);
+    else
+      input.setNum(v, 'f', m_decimals);
+  }
+  else
+    input.setNum(m_bottom, 'f', m_decimals); // default to the bottom value
+}
+
+void CDoubleFixedFmtValidator::setRange(double bottom, double top)
+{
+  if (bottom < top) {
+    m_bottom = bottom;
+    m_top = top;
+  }
+  else {
+    m_bottom = top;
+    m_top = bottom;
+  }
+}
+
+void CDoubleFixedFmtValidator::setDecimals(int decimals)
+{
+  m_decimals = (decimals > 0) ? decimals : 0;
 }
 
 

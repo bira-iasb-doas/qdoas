@@ -89,17 +89,17 @@ CWProjectTabSpectra::CWProjectTabSpectra(const mediate_project_spectra_t *proper
   szaGroupLayout->addWidget(new QLabel("Min", this), 0, 0);
   m_szaMinEdit = new QLineEdit(this);
   m_szaMinEdit->setFixedWidth(pixels);
-  m_szaMinEdit->setValidator(new CSzaValidator(m_szaMinEdit));
+  m_szaMinEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 180.0, 3, m_szaMinEdit));
   szaGroupLayout->addWidget(m_szaMinEdit, 0, 1);
   szaGroupLayout->addWidget(new QLabel("Max", this), 1, 0);
   m_szaMaxEdit = new QLineEdit(this);
   m_szaMaxEdit->setFixedWidth(pixels);
-  m_szaMaxEdit->setValidator(new CSzaValidator(m_szaMaxEdit));
+  m_szaMaxEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 180.0, 3, m_szaMaxEdit));
   szaGroupLayout->addWidget(m_szaMaxEdit, 1, 1);
   szaGroupLayout->addWidget(new QLabel("Delta", this), 2, 0);
   m_szaDeltaEdit = new QLineEdit(this);
   m_szaDeltaEdit->setFixedWidth(pixels);
-  m_szaDeltaEdit->setValidator(new CSzaValidator(m_szaDeltaEdit));
+  m_szaDeltaEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 180.0, 3, m_szaDeltaEdit));
   szaGroupLayout->addWidget(m_szaDeltaEdit, 2, 1);
   szaGroup->setLayout(szaGroupLayout);
  
@@ -191,7 +191,7 @@ void CWProjectTabSpectra::apply(mediate_project_spectra_t *properties) const
   m_geolocationEdit->apply(&(properties->geo));
 }
 
-CWGeolocation::CWGeolocation(const union geolocation *geo, QWidget *parent) :
+CWGeolocation::CWGeolocation(const struct geolocation *geo, QWidget *parent) :
   QFrame(parent)
 {
   // use font metrics to size the line edits
@@ -218,17 +218,21 @@ CWGeolocation::CWGeolocation(const union geolocation *geo, QWidget *parent) :
   // row 0
   circleLayout->addWidget(new QLabel("Radius (degrees)", circleFrame), 0, 0);
   m_radiusEdit = new QLineEdit(this);
+  m_radiusEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 6500.0, 3, m_radiusEdit));
   m_radiusEdit->setFixedWidth(pixels);
   circleLayout->addWidget(m_radiusEdit, 0, 1);
 
   // row 1
-  circleLayout->addWidget(new QLabel("Centre Longitude (degrees)", circleFrame), 1, 0);
+  circleLayout->addWidget(new QLabel("Center Longitude (degrees)", circleFrame), 1, 0);
   m_cenLongEdit = new QLineEdit(this);
+  m_cenLongEdit->setValidator(new CDoubleFixedFmtValidator(-180.0, 180.0, 3, m_cenLongEdit));
   m_cenLongEdit->setFixedWidth(pixels);
   circleLayout->addWidget(m_cenLongEdit, 1, 1);
 
-  circleLayout->addWidget(new QLabel("Centre Latitude (degrees)", circleFrame) , 2, 0);
+  // row 2
+  circleLayout->addWidget(new QLabel("Center Latitude (degrees)", circleFrame) , 2, 0);
   m_cenLatEdit = new QLineEdit(this);
+  m_cenLatEdit->setValidator(new CDoubleFixedFmtValidator(-180.0, 180.0, 3, m_cenLatEdit));
   m_cenLatEdit->setFixedWidth(pixels);  
   circleLayout->addWidget(m_cenLatEdit, 2, 1);
 
@@ -243,24 +247,28 @@ CWGeolocation::CWGeolocation(const union geolocation *geo, QWidget *parent) :
   // row 0
   rectangleLayout->addWidget(new QLabel("Western Limit (long. degrees)", rectangleFrame), 0, 0);
   m_westEdit = new QLineEdit(this);
+  m_westEdit->setValidator(new CDoubleFixedFmtValidator(-180.0, 180.0, 3, m_westEdit));
   m_westEdit->setFixedWidth(pixels);
   rectangleLayout->addWidget(m_westEdit, 0, 1);
 
   // row 1
   rectangleLayout->addWidget(new QLabel("Eastern Limit (long. degrees)", rectangleFrame), 1, 0);
   m_eastEdit = new QLineEdit(this);
+  m_eastEdit->setValidator(new CDoubleFixedFmtValidator(-180.0, 180.0, 3, m_eastEdit));
   m_eastEdit->setFixedWidth(pixels);
   rectangleLayout->addWidget(m_eastEdit, 1, 1);
   
   // row 2
-  rectangleLayout->addWidget(new QLabel("Southern Limit (long. degrees)", rectangleFrame) , 2, 0);
+  rectangleLayout->addWidget(new QLabel("Southern Limit (lat. degrees)", rectangleFrame) , 2, 0);
   m_southEdit = new QLineEdit(this);
+  m_southEdit->setValidator(new CDoubleFixedFmtValidator(-90.0, 90.0, 3, m_southEdit));
   m_southEdit->setFixedWidth(pixels);
   rectangleLayout->addWidget(m_southEdit, 2, 1);
   
   // row 3 
-  rectangleLayout->addWidget( new QLabel("Northern Limit (long. degrees)", rectangleFrame), 3, 0);
+  rectangleLayout->addWidget( new QLabel("Northern Limit (lat. degrees)", rectangleFrame), 3, 0);
   m_northEdit = new QLineEdit(this);
+  m_northEdit->setValidator(new CDoubleFixedFmtValidator(-90.0, 90.0, 3, m_northEdit));
   m_northEdit->setFixedWidth(pixels);
   rectangleLayout->addWidget(m_northEdit, 3, 1);
 
@@ -280,25 +288,24 @@ CWGeolocation::CWGeolocation(const union geolocation *geo, QWidget *parent) :
   QString tmpStr;
   int index = m_modeCombo->findData(QVariant(geo->mode));
   
-  switch (geo->mode) {
-  case cGeolocationModeRectangle:
-    {
-      // TODO - ditch sprintf
-      m_westEdit->setText(tmpStr.sprintf("%.3f", geo->rectangle.westernLongitude));
-      m_eastEdit->setText(tmpStr.sprintf("%.3f", geo->rectangle.easternLongitude));
-      m_southEdit->setText(tmpStr.sprintf("%.3f", geo->rectangle.southernLatitude));
-      m_northEdit->setText(tmpStr.sprintf("%.3f", geo->rectangle.northernLatitude));
-    }
-    break;
-  case cGeolocationModeCircle:
-    {
-      m_radiusEdit->setText(tmpStr.sprintf("%.3f", geo->circle.radius));
-      m_cenLongEdit->setText(tmpStr.sprintf("%.3f", geo->circle.centreLongitude));
-      m_cenLatEdit->setText(tmpStr.sprintf("%.3f", geo->circle.centreLatitude));
-    }
-    break;
-  }
-  
+  // rectangle
+  m_westEdit->validator()->fixup(tmpStr.setNum(geo->rectangle.westernLongitude));
+  m_westEdit->setText(tmpStr);
+  m_eastEdit->validator()->fixup(tmpStr.setNum(geo->rectangle.easternLongitude));
+  m_eastEdit->setText(tmpStr);
+  m_southEdit->validator()->fixup(tmpStr.setNum(geo->rectangle.southernLatitude));
+  m_southEdit->setText(tmpStr);
+  m_northEdit->validator()->fixup(tmpStr.setNum(geo->rectangle.northernLatitude));
+  m_northEdit->setText(tmpStr);
+
+  // circle
+  m_radiusEdit->validator()->fixup(tmpStr.setNum(geo->circle.radius));
+  m_radiusEdit->setText(tmpStr);
+  m_cenLongEdit->validator()->fixup(tmpStr.setNum(geo->circle.centerLongitude));
+  m_cenLongEdit->setText(tmpStr);
+  m_cenLatEdit->validator()->fixup(tmpStr.setNum(geo->circle.centerLatitude));
+  m_cenLatEdit->setText (tmpStr);
+
   if (index != -1)
     m_modeCombo->setCurrentIndex(index);
 }
@@ -307,40 +314,31 @@ CWGeolocation::~CWGeolocation()
 {
 }
 
-void CWGeolocation::apply(union geolocation *geo) const
+void CWGeolocation::apply(struct geolocation *geo) const
 {
   int index = m_modeCombo->currentIndex();
-  int mode = (index == -1) ? cGeolocationModeNone : m_modeCombo->itemData(index).toInt();
+  
+  geo->mode = (index == -1) ? cGeolocationModeNone : m_modeCombo->itemData(index).toInt();
 
-  switch (mode) {
-  case cGeolocationModeRectangle:
-    {
-      QString tmpStr;
-      geo->rectangle.mode = mode;
-      tmpStr = m_westEdit->text();
-      geo->rectangle.westernLongitude = tmpStr.isEmpty() ? 0.0 : tmpStr.toDouble();
-      tmpStr = m_eastEdit->text();
-      geo->rectangle.easternLongitude = tmpStr.isEmpty() ? 0.0 : tmpStr.toDouble();
-      tmpStr = m_southEdit->text();
-      geo->rectangle.southernLatitude = tmpStr.isEmpty() ? 0.0 : tmpStr.toDouble();
-      tmpStr = m_northEdit->text();
-      geo->rectangle.northernLatitude = tmpStr.isEmpty() ? 0.0 : tmpStr.toDouble();
-    }
-    break;
-  case cGeolocationModeCircle:
-    {
-      QString tmpStr;
-      geo->circle.mode = mode;
-      tmpStr = m_radiusEdit->text();
-      geo->circle.radius = tmpStr.isEmpty() ? 0.0 : tmpStr.toDouble();
-      tmpStr = m_cenLongEdit->text();
-      geo->circle.centreLongitude = tmpStr.isEmpty() ? 0.0 : tmpStr.toDouble();
-      tmpStr = m_cenLatEdit->text();
-      geo->circle.centreLatitude = tmpStr.isEmpty() ? 0.0 : tmpStr.toDouble();
-    }
-    break;
-  default:
-    geo->mode = cGeolocationModeNone;
-  }
+  // set data for all modes 
+  QString tmpStr;
+
+  tmpStr = m_westEdit->text();
+  geo->rectangle.westernLongitude = tmpStr.isEmpty() ? 0.0 : tmpStr.toDouble();
+  tmpStr = m_eastEdit->text();
+  geo->rectangle.easternLongitude = tmpStr.isEmpty() ? 0.0 : tmpStr.toDouble();
+  tmpStr = m_southEdit->text();
+  geo->rectangle.southernLatitude = tmpStr.isEmpty() ? 0.0 : tmpStr.toDouble();
+  tmpStr = m_northEdit->text();
+  geo->rectangle.northernLatitude = tmpStr.isEmpty() ? 0.0 : tmpStr.toDouble();
+
+  tmpStr = m_radiusEdit->text();
+  geo->circle.radius = tmpStr.isEmpty() ? 0.0 : tmpStr.toDouble();
+  tmpStr = m_cenLongEdit->text();
+  geo->circle.centerLongitude = tmpStr.isEmpty() ? 0.0 : tmpStr.toDouble();
+  tmpStr = m_cenLatEdit->text();
+  geo->circle.centerLatitude = tmpStr.isEmpty() ? 0.0 : tmpStr.toDouble();
+
+
 }
 

@@ -23,6 +23,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QLabel>
 
 #include "CWProjectTabAnalysis.h"
+#include "CValidator.h"
 
 
 CWProjectTabAnalysis::CWProjectTabAnalysis(const mediate_project_analysis_t *properties,
@@ -30,6 +31,7 @@ CWProjectTabAnalysis::CWProjectTabAnalysis(const mediate_project_analysis_t *pro
   QFrame(parent)
 {
   int index;
+  QString tmpStr;
 
   QVBoxLayout *mainLayout = new QVBoxLayout(this);
 
@@ -71,6 +73,20 @@ CWProjectTabAnalysis::CWProjectTabAnalysis(const mediate_project_analysis_t *pro
   m_interpCombo->addItem("Spline", QVariant(cProjAnalysisInterpolationModeSpline));
   gridLayout->addWidget(m_interpCombo, 3, 1);
 
+  // row 4
+  gridLayout->addWidget(new QLabel("Interpolation security gap", this), 4, 0);
+  m_interpolationSecuritySpinBox = new QSpinBox(this);
+  m_interpolationSecuritySpinBox->setRange(1, 50);
+  m_interpolationSecuritySpinBox->setFixedWidth(75);
+  gridLayout->addWidget(m_interpolationSecuritySpinBox, 4, 1);
+
+  // row 5
+  gridLayout->addWidget(new QLabel("Convergence criterion", this), 5, 0);
+  m_convergenceCriterionEdit = new QLineEdit(this);
+  m_convergenceCriterionEdit->setValidator(new CDoubleExpFmtValidator(1.0e-30, 1.0, 4, m_convergenceCriterionEdit));
+  m_convergenceCriterionEdit->setFixedWidth(75);
+  gridLayout->addWidget(m_convergenceCriterionEdit, 5, 1);
+
   mainLayout->addLayout(gridLayout);
   mainLayout->addStretch(4);
 
@@ -92,6 +108,12 @@ CWProjectTabAnalysis::CWProjectTabAnalysis(const mediate_project_analysis_t *pro
   if (index != -1)
     m_interpCombo->setCurrentIndex(index);
 
+  m_interpolationSecuritySpinBox->setValue(properties->interpolationSecurityGap);
+
+  // validator controls the initial range and format
+  m_convergenceCriterionEdit->validator()->fixup(tmpStr.setNum(properties->convergenceCriterion));
+  m_convergenceCriterionEdit->setText(tmpStr);
+
 }
 
 CWProjectTabAnalysis::~CWProjectTabAnalysis()
@@ -101,7 +123,9 @@ CWProjectTabAnalysis::~CWProjectTabAnalysis()
 
 void CWProjectTabAnalysis::apply(mediate_project_analysis_t *properties) const
 {
+  bool ok;
   int index;
+  double tmpDouble;
 
   // must have a current item so no need to check
   index = m_methodCombo->currentIndex();
@@ -115,5 +139,12 @@ void CWProjectTabAnalysis::apply(mediate_project_analysis_t *properties) const
 
   index = m_interpCombo->currentIndex();
   properties->interpolationType = m_interpCombo->itemData(index).toInt();
+
+  properties->interpolationSecurityGap = m_interpolationSecuritySpinBox->value();
+
+  tmpDouble = m_convergenceCriterionEdit->text().toDouble(&ok);
+
+  // default if not ok
+  properties->convergenceCriterion = ok ? tmpDouble : 1.0e-4;
 
 }

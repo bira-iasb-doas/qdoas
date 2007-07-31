@@ -33,4 +33,41 @@ class CSzaValidator : public QValidator
   virtual void fixup(QString &input) const;
 };
 
+
+// CDoubleValidator - QDoubleValidator is broken (in Qt 4.2.3)
+
+class CDoubleExpFmtValidator : public QValidator
+{
+ public:
+  CDoubleExpFmtValidator(QObject *obj);
+  CDoubleExpFmtValidator(double bottom, double top, int sigFigures, QObject *obj);
+
+  virtual QValidator::State validate(QString &input, int &pos) const;
+  virtual void fixup(QString &input) const;
+
+  void setRange(double bottom, double top);
+  void setSignificantFigures(int sigFigures);
+
+ private:
+  double m_bottom, m_top;
+  int m_sigFigures;
+};
+
+class CDoubleFixedFmtValidator : public QValidator
+{
+ public:
+  CDoubleFixedFmtValidator(QObject *obj);
+  CDoubleFixedFmtValidator(double bottom, double top, int decimals, QObject *obj);
+
+  virtual QValidator::State validate(QString &input, int &pos) const;
+  virtual void fixup(QString &input) const;
+
+  void setRange(double bottom, double top);
+  void setDecimals(int decimals);
+
+ private:
+  double m_bottom, m_top;
+  int m_decimals;
+};
+
 #endif

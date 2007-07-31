@@ -22,6 +22,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include <QFrame>
 #include <QComboBox>
+#include <QLineEdit>
+#include <QSpinBox>
 
 #include "mediate_project.h"
 
@@ -35,6 +37,8 @@ class CWProjectTabAnalysis : public QFrame
 
  private:
   QComboBox *m_methodCombo, *m_fitCombo, *m_unitCombo, *m_interpCombo;
+  QSpinBox *m_interpolationSecuritySpinBox;
+  QLineEdit *m_convergenceCriterionEdit;
 };
 
 #endif
