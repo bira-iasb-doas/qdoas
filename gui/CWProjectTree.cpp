@@ -258,11 +258,6 @@ void CWProjectTree::contextMenuEvent(QContextMenuEvent *e)
   menu.exec(e->globalPos()); // a slot will do the rest if appropriate
 }
 
-void CWProjectTree::addNewProject(const QString &projectName)
-{
-  addTopLevelItem(new CProjectItem(projectName));
-}
-
 QTreeWidgetItem *CWProjectTree::locateByPath(const QStringList &path)
 {
   QTreeWidgetItem *item = NULL;
@@ -309,11 +304,14 @@ QTreeWidgetItem *CWProjectTree::locateProjectByName(const QString &projectName)
 // Interface for editors
 //------------------------------------------------------------------------------
 
-QString CWProjectTree::editInsertNewProject(const QString &projectName)
+QString CWProjectTree::editInsertNewProject(const QString &projectName, CProjectItem **itemCreated)
 {
   if (CWorkSpace::instance()->createProject(projectName)) {
     // created the project
-    addTopLevelItem(new CProjectItem(projectName));
+    CProjectItem *item = new CProjectItem(projectName);
+    addTopLevelItem(item);
+
+    if (itemCreated != NULL) *itemCreated = item;
   }
   else
     return QString("A project with that name already exists.");
@@ -343,14 +341,16 @@ QString CWProjectTree::editRenameProject(QTreeWidgetItem *item, const QString &p
   return QString();
 }
 
-QString CWProjectTree::editInsertNewFolder(QTreeWidgetItem *parent, const QString &folderName)
+QString CWProjectTree::editInsertNewFolder(QTreeWidgetItem *parent, const QString &folderName, CSpectraFolderItem **itemCreated)
 {
   if (parent && (parent->type() == cSpectraBranchItemType || parent->type() == cSpectraFolderItemType)) {
     
     // first make sure that the parent does not already have a child with this name
     QTreeWidgetItem *item = CWProjectTree::locateChildByName(parent, folderName);
     if (!item) {
-      new CSpectraFolderItem(parent, folderName);
+      CSpectraFolderItem *tmp = new CSpectraFolderItem(parent, folderName);
+
+      if (itemCreated != NULL) *itemCreated = tmp;
     }
     else
       return QString("The parent already contains a folder or file with that name.");
@@ -382,7 +382,8 @@ QString CWProjectTree::editRenameFolder(QTreeWidgetItem *item, const QString &ne
   return QString();
 }
 
-QString CWProjectTree::editInsertNewAnalysisWindow(QTreeWidgetItem *parent, const QString &windowName)
+QString CWProjectTree::editInsertNewAnalysisWindow(QTreeWidgetItem *parent, const QString &windowName,
+						   CAnalysisWindowItem **itemCreated)
 {
   if (parent && parent->type() == cAnalysisWindowBranchItemType) {
     
@@ -392,7 +393,10 @@ QString CWProjectTree::editInsertNewAnalysisWindow(QTreeWidgetItem *parent, cons
       return QString("The project tree is corrupt.");
     }
     if (CWorkSpace::instance()->createAnalysisWindow(projItem->text(0), windowName)) {
-      new CAnalysisWindowItem(parent, windowName);
+
+      CAnalysisWindowItem *tmp = new CAnalysisWindowItem(parent, windowName);
+
+      if (itemCreated != NULL) *itemCreated = tmp;
     }
     else
       return QString("The project already contains an analysis window with that name.");
@@ -431,7 +435,8 @@ QString CWProjectTree::editRenameAnalysisWindow(QTreeWidgetItem *item, const QSt
 }
 
 QString CWProjectTree::editInsertDirectory(QTreeWidgetItem *parent, const QString &directoryPath,
-					const QString &fileFilters, bool includeSubDirs)
+					   const QString &fileFilters, bool includeSubDirs,
+					   CSpectraDirectoryItem **itemCreated)
 {
 
   if (parent && (parent->type() == cSpectraBranchItemType || parent->type() == cSpectraFolderItemType)) {
@@ -461,6 +466,8 @@ QString CWProjectTree::editInsertDirectory(QTreeWidgetItem *parent, const QStrin
       
       if (fileCount) {
 	parent->addChild(dirItem);
+
+	if (itemCreated != NULL) *itemCreated = dirItem;
       }
       else {
 	// empty file count ...
@@ -516,6 +523,110 @@ const QIcon& CWProjectTree::getIcon(int type)
     }
     break;
   }
+}
+
+QString CWProjectTree::loadConfiguration(const QList<const CProjectConfigItem*> &itemList)
+{
+  // walk the list and create ...
+  QString errStr;
+  QTreeWidgetItem *item;
+  CProjectItem *projItem;
+  mediate_project_t *properties;
+  int i;
+
+  // clear the current projects - bottom up
+  i = topLevelItemCount();
+  while (i > 0) {
+    delete takeTopLevelItem(--i);
+  }
+  // also sites and symbols .. TODO
+
+
+  // use the edit* interface to get reasonable error messages.
+
+  QList<const CProjectConfigItem*>::const_iterator it = itemList.begin();
+  while (it != itemList.end()) {
+
+    QString name = (*it)->projectName();
+
+    // create the project item
+    projItem = NULL;
+    errStr = editInsertNewProject(name, &projItem);
+    if (!errStr.isNull())
+      return errStr;
+
+    // locate the properties in the workspace then copy
+    properties = CWorkSpace::instance()->findProject(name);
+    assert(properties != NULL);
+    *properties = *((*it)->properties()); // blot copy
+
+    item = projItem->child(0); // raw spectra node for the project
+
+    // recursive construction of the project tree from the config tree ...
+    const CProjectConfigTreeNode *firstChild = (*it)->rootNode()->firstChild();
+    // top-down construction of the tree ...
+    errStr = CWProjectTree::buildRawSpectraTree(item, firstChild);
+    if (!errStr.isNull())
+      return errStr;
+      
+    ++it;
+  }
+  
+  return errStr;
+}
+
+
+QString CWProjectTree::buildRawSpectraTree(QTreeWidgetItem *parent, const CProjectConfigTreeNode *childConfigItem)
+{
+  // recursive construction ...
+  QString errStr;
+  
+  // create items for childConfigItem and its siblings
+  while (childConfigItem != NULL) {
+    
+    switch (childConfigItem->type()) {
+    case CProjectConfigTreeNode::eFile:
+      {
+	CSpectraFileItem *fileItem = new CSpectraFileItem(parent, QFileInfo(childConfigItem->name()));
+	fileItem->setEnabled(childConfigItem->isEnabled());
+
+	// should not have children ...
+      }
+      break;
+    case CProjectConfigTreeNode::eFolder:
+      {
+	CSpectraFolderItem *folderItem = NULL;
+
+	errStr += editInsertNewFolder(parent, childConfigItem->name(), &folderItem);
+	if (folderItem != NULL) {
+	  folderItem->setEnabled(childConfigItem->isEnabled());
+
+	  // can have children ...
+	  const CProjectConfigTreeNode *firstChild = childConfigItem->firstChild();
+	  if (firstChild != NULL) {
+	    errStr += CWProjectTree::buildRawSpectraTree(folderItem, firstChild);
+	  }
+	}
+      }
+      break;
+    case CProjectConfigTreeNode::eDirectory:
+      {
+	CSpectraDirectoryItem *dirItem = NULL;
+
+	errStr += editInsertDirectory(parent, childConfigItem->name(), childConfigItem->filter(),
+				      childConfigItem->recursive(), &dirItem);
+	if (dirItem != NULL)
+	  dirItem->setEnabled(childConfigItem->isEnabled());
+
+	// should not have children ...
+      }
+      break;
+    }
+    
+    childConfigItem = childConfigItem->nextSibling();
+  }
+
+  return errStr;
 }
 
 //------------------------------------------------------------------------------
@@ -690,10 +801,10 @@ void CWProjectTree::slotInsertFile()
     QTreeWidgetItem *parent = items.front();
     if (parent->type() == cSpectraFolderItemType || parent->type() == cSpectraBranchItemType) {
 
-      // Modal File dialog - TODO
+      // Modal File dialog - initial directory TODO
       QStringList files = QFileDialog::getOpenFileNames(0, "Select one or more spectra files",
                                                         "/home",
-                                                        "Ascii (*.spe);;Other (*.hdf)");
+                                                        "Ascii (*.spe);;All Files (*)");
       // Documentations says copy ??
       if (!files.isEmpty()) {
         QStringList copy = files;
@@ -1302,3 +1413,4 @@ void CWProjectTree::buildSession(CSession *session, CProjectTreeItem *item)
     }
   }
 }
+

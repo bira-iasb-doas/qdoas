@@ -24,6 +24,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QXmlInputSource>
 #include <QXmlSimpleReader>
 #include <QFile>
+#include <QMessageBox>
+#include <QFileDialog>
 
 #include "CWMain.h"
 #include "CWProjectTree.h"
@@ -55,7 +57,7 @@ CWMain::CWMain(QWidget *parent) :
   QMenu *fileMenu = new QMenu("File");
 
   // Open...
-  QAction *openAct = new QAction(QIcon(QPixmap(":/icons/file_exit_16.png")), "Open...", this);
+  QAction *openAct = new QAction(QIcon(QPixmap(":/icons/file_open_16.png")), "Open...", this);
   // connect ...
   connect(openAct, SIGNAL(triggered()), this, SLOT(slotOpenFile()));
 
@@ -212,7 +214,14 @@ CWMain::~CWMain()
 void CWMain::slotOpenFile()
 {
 
-  QFile *file = new QFile("/home/ian/qdoasproject.xml");
+  QString fileName = QFileDialog::getOpenFileName(this, "Open Project File", "/home/ian",
+						  "Qdoas Project Config (*.xml);;All Files (*)");
+
+  if (fileName.isEmpty())
+    return;
+
+  QString errMsg;
+  QFile *file = new QFile(fileName);
   QXmlSimpleReader xmlReader;
   QXmlInputSource *source = new QXmlInputSource(file);
 
@@ -222,9 +231,15 @@ void CWMain::slotOpenFile()
 
   bool ok = xmlReader.parse(source);
   
-  if (!ok) {
-    TRACE2("Parsing failed.");
-  }
+  if (!ok)
+    errMsg = handler->messages();
+  else
+    errMsg = m_projTree->loadConfiguration(handler->projectItems());
  
+  delete handler;
   delete file;
+
+  if (!errMsg.isNull())
+    QMessageBox::critical(this, "File Open", errMsg);
+
 }

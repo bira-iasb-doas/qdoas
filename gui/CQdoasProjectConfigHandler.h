@@ -25,19 +25,24 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QList>
 #include <QString>
 
+#include "CProjectConfigItem.h"
+
 class CQdoasProjectConfigHandler;
 
 class CConfigSubHandler
 {
  public:
   CConfigSubHandler(CQdoasProjectConfigHandler *master);
-  virtual ~CConfigSubHandler();
+  virtual ~CConfigSubHandler() = 0;
 
   virtual bool start(const QXmlAttributes &atts);
-  virtual bool start(const QString &element, const QXmlAttributes &atts) = 0;
+  virtual bool start(const QString &element, const QXmlAttributes &atts);
   virtual bool character(const QString &ch);
-  virtual bool end(const QString &element) = 0;
+  virtual bool end(const QString &element);
   virtual bool end(void);
+
+ protected:
+  bool postErrorMessage(const QString &msg); // always returns false
 
  protected:
   CQdoasProjectConfigHandler *m_master;
@@ -58,6 +63,12 @@ class CQdoasProjectConfigHandler : public QXmlDefaultHandler
   CQdoasProjectConfigHandler();
   virtual ~CQdoasProjectConfigHandler();
 
+  // error handling
+  virtual bool error(const QXmlParseException &exception);
+  virtual bool warning(const QXmlParseException &exception);
+  virtual bool fatalError(const QXmlParseException &exception);
+
+  // content handling
   virtual bool characters(const QString &ch);
   virtual bool endDocument();
   virtual bool endElement(const QString &namespaceURI, const QString &localName,
@@ -70,10 +81,25 @@ class CQdoasProjectConfigHandler : public QXmlDefaultHandler
 
   bool installSubHandler(CConfigSubHandler *newHandler, const QXmlAttributes &atts);
 
+  void addProjectItem(CProjectConfigItem *item); // takes ownership of item
+  QList<const CProjectConfigItem*> projectItems(void) const; // items in returned list have the same lifetime as 'this'
+
+  QString messages(void) const; // messages collected during parsing 
+
+ private:
+  friend class CConfigSubHandler;
+
+  void setSubErrorMessage(const QString &msg);
+
  private:
   QList<QString> m_elementStack;
   CConfigSubHandler *m_activeSubHandler;
   QList<SSubHandlerItem> m_subHandlerStack;
+  QString m_subErrorMessage;
+  QString m_errorMessages;
+  QList<const CProjectConfigItem*> m_projectItemList;
 };
+
+inline void CQdoasProjectConfigHandler::setSubErrorMessage(const QString &msg) { m_subErrorMessage = msg; }
 
 #endif

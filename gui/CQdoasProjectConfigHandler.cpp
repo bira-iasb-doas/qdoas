@@ -17,6 +17,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
+#include <QTextStream>
 
 #include "CQdoasProjectConfigHandler.h"
 #include "CProjectConfigSubHandlers.h"
@@ -36,6 +37,39 @@ CQdoasProjectConfigHandler::~CQdoasProjectConfigHandler()
     delete m_subHandlerStack.back().handler;
     m_subHandlerStack.pop_back();
   }
+  
+  while (!m_projectItemList.isEmpty()) {
+    delete m_projectItemList.takeFirst();
+  }
+}
+
+bool CQdoasProjectConfigHandler::error(const QXmlParseException &exception)
+{
+  QTextStream stream(&m_errorMessages);
+  stream << "Error on line " << exception.lineNumber() << " : " << exception.message() << "\n";
+
+  return true;
+}
+
+bool CQdoasProjectConfigHandler::warning(const QXmlParseException &exception)
+{
+  QTextStream stream(&m_errorMessages);
+  stream << "Warning on line " << exception.lineNumber() << " : " << exception.message() << "\n";
+
+  return true;
+}
+
+bool CQdoasProjectConfigHandler::fatalError(const QXmlParseException &exception)
+{
+  QTextStream stream(&m_errorMessages);
+  stream << "Fatal Error on line " << exception.lineNumber() << " : " << exception.message() << "\n";
+
+  return false;
+}
+
+QString CQdoasProjectConfigHandler::messages(void) const
+{
+  return m_errorMessages;
 }
 
 bool CQdoasProjectConfigHandler::characters(const QString &ch)
@@ -93,7 +127,7 @@ bool CQdoasProjectConfigHandler::endElement(const QString &namespaceURI,
 
 QString CQdoasProjectConfigHandler::errorString() const
 {
-  return QString("Some error...");
+  return m_subErrorMessage;
 }
 
 bool CQdoasProjectConfigHandler::ignorableWhitespace(const QString &ch)
@@ -141,6 +175,16 @@ bool CQdoasProjectConfigHandler::installSubHandler(CConfigSubHandler *newHandler
   return m_activeSubHandler->start(atts);
 }
 
+void CQdoasProjectConfigHandler::addProjectItem(CProjectConfigItem *item)
+{
+  m_projectItemList.push_back(item);
+}
+
+QList<const CProjectConfigItem*> CQdoasProjectConfigHandler::projectItems(void) const
+{
+  return m_projectItemList;
+}
+
 //------------------------------------------------------------------------
 
 CConfigSubHandler::CConfigSubHandler(CQdoasProjectConfigHandler *master) :
@@ -157,7 +201,17 @@ bool CConfigSubHandler::start(const QXmlAttributes &atts)
   return true;
 }
 
+bool CConfigSubHandler::start(const QString &element, const QXmlAttributes &atts)
+{
+  return true;
+}
+
 bool CConfigSubHandler::character(const QString &ch)
+{
+  return true;
+}
+
+bool CConfigSubHandler::end(const QString &element)
 {
   return true;
 }
@@ -165,5 +219,11 @@ bool CConfigSubHandler::character(const QString &ch)
 bool CConfigSubHandler::end()
 {
   return true;
+}
+
+bool CConfigSubHandler::postErrorMessage(const QString &msg)
+{
+  m_master->setSubErrorMessage(msg);
+  return false;
 }
 

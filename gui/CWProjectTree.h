@@ -30,10 +30,15 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "RefCountPtr.h"
 #include "CSession.h"
+#include "CProjectConfigItem.h"
 
 class CWActiveContext;
 class CProjectTreeItem;
-
+class CProjectItem;
+class CSpectraFileItem;
+class CSpectraFolderItem;
+class CSpectraDirectoryItem;
+class CAnalysisWindowItem;
 
 const int cProjectItemType              = QTreeWidgetItem::UserType + 91;
 const int cSpectraBranchItemType        = QTreeWidgetItem::UserType + 92;
@@ -50,21 +55,22 @@ Q_OBJECT
   CWProjectTree(CWActiveContext *activeContext, QWidget *parent = 0);
   virtual ~CWProjectTree();
 
-  void addNewProject(const QString &projectName); 
-
   QTreeWidgetItem *locateProjectByName(const QString &projectName);
   QTreeWidgetItem *locateByPath(const QStringList &path);
 
+  QString loadConfiguration(const QList<const CProjectConfigItem*> &itemList);
+
+
   // Interface editors use to modify the tree
 
-  QString editInsertNewProject(const QString &projectName);
+  QString editInsertNewProject(const QString &projectName, CProjectItem **itemCreated = NULL);
   QString editRenameProject(QTreeWidgetItem *item, const QString &projectName);
-  QString editInsertNewFolder(QTreeWidgetItem *parent, const QString &folderName);
+  QString editInsertNewFolder(QTreeWidgetItem *parent, const QString &folderName, CSpectraFolderItem **itemCreated = NULL);
   QString editRenameFolder(QTreeWidgetItem *item, const QString &folderName);
-  QString editInsertNewAnalysisWindow(QTreeWidgetItem *parent, const QString &windowName);
+  QString editInsertNewAnalysisWindow(QTreeWidgetItem *parent, const QString &windowName, CAnalysisWindowItem **itemCreated = NULL);
   QString editRenameAnalysisWindow(QTreeWidgetItem *item, const QString &windowName);
   QString editInsertDirectory(QTreeWidgetItem *parent, const QString &directoryPath,
-			      const QString &fileFilters, bool includeSubDirs);
+			      const QString &fileFilters, bool includeSubDirs, CSpectraDirectoryItem **itemCreated = NULL);
 
   // static methods
 
@@ -77,6 +83,9 @@ Q_OBJECT
   static QList<QTreeWidgetItem*> directoryItems(const QList<QTreeWidgetItem*> &items);
   static QTreeWidgetItem* locateChildByName(QTreeWidgetItem *parent, const QString &childName);
   static void buildSession(CSession *session, CProjectTreeItem *item);
+
+ private:
+  QString buildRawSpectraTree(QTreeWidgetItem *parent, const CProjectConfigTreeNode *childConfigItem);
 
  protected:
   virtual void keyPressEvent(QKeyEvent *e);

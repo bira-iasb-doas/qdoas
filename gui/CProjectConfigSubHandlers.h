@@ -23,7 +23,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "CQdoasProjectConfigHandler.h"
 
-#include "mediate.h"
 
 //-------------------------------------------------------------------
 
@@ -39,8 +38,7 @@ class CProjectSubHandler : public CConfigSubHandler
   virtual bool end(void);
 
  private:
-  QString m_name;
-  mediate_project_t *m_project;
+  CProjectConfigItem *m_project;
 };
 
 //-------------------------------------------------------------------
@@ -58,6 +56,36 @@ class CProjectSpectraSubHandler : public CConfigSubHandler
  private:
   mediate_project_spectra_t *m_spectra;
 };
+
+//-------------------------------------------------------------------
+
+class CProjectAnalysisSubHandler : public CConfigSubHandler
+{
+ public:
+  CProjectAnalysisSubHandler(CQdoasProjectConfigHandler *master,
+			    mediate_project_analysis_t *analysis);
+  virtual ~CProjectAnalysisSubHandler();
+
+  virtual bool start(const QXmlAttributes &atts);
+
+ private:
+  mediate_project_analysis_t *m_analysis;
+};
+
+
+class CProjectRawSpectraSubHandler : public CConfigSubHandler
+{
+ public:
+  CProjectRawSpectraSubHandler(CQdoasProjectConfigHandler *master,
+			      CProjectConfigTreeNode *node);
+  virtual ~CProjectRawSpectraSubHandler();
+
+  virtual bool start(const QString &element, const QXmlAttributes &atts);
+
+ private:
+  CProjectConfigTreeNode *m_node;
+};
+
 
 #endif
 
