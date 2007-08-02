@@ -74,3 +74,36 @@ void initializeMediateProjectAnalysis(mediate_project_analysis_t *d)
   d->interpolationSecurityGap = 10;
   d->convergenceCriterion = 1.0e-4;
 }
+
+void initializeMediateProjectFiltering(mediate_project_filtering_t *d)
+{
+  d->mode = cProjFilteringModeNode;
+
+  /* kaiser */
+  d->kaiser.cutoffFrequency = 0.0;
+  d->kaiser.tolerance       = 0.0;
+  d->kaiser.passband        = 0.0;
+  d->kaiser.iterations      = 0;
+
+  /* boxcar */
+  d->boxcar.width      = 0;
+  d->boxcar.iterations = 0;
+
+  /* gaussian */
+  d->gaussian.fwhm       = 0.0;
+  d->gaussian.iterations = 0;
+
+  /* triangular*/
+  d->triangular.width      = 0;
+  d->triangular.iterations = 0;
+
+  /* savitzky-golay */
+  d->savitzky.width      = 0;
+  d->savitzky.order      = 0;
+  d->savitzky.iterations = 0;
+
+  /* binomial */
+  d->binomial.width      = 0;
+  d->binomial.iterations = 0;
+
+}

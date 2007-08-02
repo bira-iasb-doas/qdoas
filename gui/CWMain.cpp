@@ -38,6 +38,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "CEngineController.h"
 #include "CNavigationPanel.h"
 #include "CQdoasProjectConfigHandler.h"
+#include "CWorkSpace.h"
 
 #include "debugutil.h"
 
@@ -231,11 +232,29 @@ void CWMain::slotOpenFile()
 
   bool ok = xmlReader.parse(source);
   
-  if (!ok)
-    errMsg = handler->messages();
-  else
+  if (ok) {
+    // store the paths in the workspace for simplification when saving ...
+    CWorkSpace *ws = CWorkSpace::instance();
+    
+    for (int i = 0; i<10; ++i) {
+      QString path = handler->getPath(i);
+      if (path.isEmpty())
+	ws->removePath(i);
+      else
+	ws->addPath(i, path);
+    }
+
+    // sites ... TODO
+
+    // symbols ... TODO
+
+    // projects
     errMsg = m_projTree->loadConfiguration(handler->projectItems());
- 
+
+  }
+  else {
+    errMsg = handler->messages();
+  }
   delete handler;
   delete file;
 

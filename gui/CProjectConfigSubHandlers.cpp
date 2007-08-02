@@ -5,6 +5,59 @@
 
 //------------------------------------------------------------------------
 //
+// Handler for <paths> element (and sub elements)
+
+CPathSubHandler::CPathSubHandler(CQdoasProjectConfigHandler *master) :
+  CConfigSubHandler(master),
+  m_index(-1)
+{
+}
+
+CPathSubHandler::~CPathSubHandler()
+{
+}
+
+bool CPathSubHandler::start(const QString &element, const QXmlAttributes &atts)
+{
+  // should be a path element <path index="?">/this/is/the/path</path>
+
+  
+  if (element == "path") {
+    bool ok;
+    m_index = atts.value("index").toInt(&ok);
+    if (!ok || m_index < 0 || m_index > 9) {
+      m_index = -1;
+      return postErrorMessage("Invalid path index");
+    }
+  }
+  else {
+    m_index = -1;
+    return postErrorMessage("Invalid child element of paths");
+  }
+
+  m_path.clear();
+
+  return true;
+}
+
+bool CPathSubHandler::character(const QString &ch)
+{
+  // collect all path characters
+  m_path += ch;
+
+  return true;
+}
+
+bool CPathSubHandler::end(const QString &element)
+{
+  if (m_index != -1)
+    m_master->setPath(m_index, m_path);
+
+  return true;
+}
+
+//------------------------------------------------------------------------
+//
 // Handler for <project> element
 
 
@@ -320,13 +373,16 @@ bool CProjectRawSpectraSubHandler::start(const QString &element, const QXmlAttri
     return false;
 
   if (element == "file") {
+    // expand the name (the filename)
+    name = m_master->pathExpand(name);
     m_node->addChild(new CProjectConfigFile(name, enabled));
   }
   else if (element == "directory") {
 
-    bool recursive = (atts.value("recursive") == "true");
-
-    m_node->addChild(new CProjectConfigDirectory(name, atts.value("filter"), recursive, enabled));
+    // expand the name (the directory name)
+    name = m_master->pathExpand(name);
+    m_node->addChild(new CProjectConfigDirectory(name, atts.value("filter"),
+						 (atts.value("recursive") == "true"), enabled));
   }
   else if (element == "folder") {
     // create an item for the folder now ...

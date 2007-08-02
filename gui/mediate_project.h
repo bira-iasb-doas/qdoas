@@ -123,7 +123,70 @@ extern "C" {
   } mediate_project_analysis_t;
   
   
+  /****************************************************/
+  /* Project Filtering */
   
+  static const int cProjFilteringModeNode              = 0;
+  static const int cProjFilteringModeKaiser            = 1;
+  static const int cProjFilteringModeBoxcar            = 2;
+  static const int cProjFilteringModeGaussian          = 3;
+  static const int cProjFilteringModeTriangular        = 4;
+  static const int cProjFilteringModeSavitzkyGolay     = 5;
+  static const int cProjFilteringModeOddEvenCorrection = 6;
+  static const int cProjFilteringModeBinomial          = 7;
+
+
+  struct filter_kaiser
+  {
+    double cutoffFrequency;
+    double tolerance;
+    double passband;
+    int iterations;
+  };
+
+  struct filter_boxcar
+  {
+    int width;            /* odd number of pixels */
+    int iterations;
+  };
+
+  struct filter_gaussian
+  {
+    double fwhm;          /* pixels */
+    int iterations;
+  };
+
+  struct filter_triangular
+  {
+    int width;            /* odd number of pixels */
+    int iterations;
+  };
+
+  struct filter_savitzky_golay
+  {
+    int width;            /* odd number of pixels */
+    int order;            /* even number */ 
+    int iterations;
+  };
+
+  struct filter_binomial
+  {
+    int width;            /* odd number of pixels */
+    int iterations;
+  };
+
+  typedef struct mediate_project_filtering
+  {
+    int mode;
+    struct filter_kaiser kaiser;
+    struct filter_boxcar boxcar;
+    struct filter_gaussian gaussian;
+    struct filter_triangular triangular;
+    struct filter_savitzky_golay savitzky;
+    struct filter_binomial binomial;
+  } mediate_project_filtering_t;
+
+
   // mediate_project_t
   //
   // Contains all user-specified information about a project. It allows the GUI to
@@ -131,9 +194,11 @@ extern "C" {
   
   typedef struct mediate_project
   {
-    // To Be Defined - Coupled to the control offered by the GUI Project Tabs.
+    // TODO - Coupled to the control offered by the GUI Project Tabs.
     mediate_project_spectra_t spectra;
     mediate_project_analysis_t analysis;
+    mediate_project_filtering_t lowpass;
+    mediate_project_filtering_t highpass;
     
   } mediate_project_t;
   
@@ -144,6 +209,7 @@ extern "C" {
   void initializeMediateProject(mediate_project_t *d);
   void initializeMediateProjectSpectra(mediate_project_spectra_t *d);
   void initializeMediateProjectAnalysis(mediate_project_analysis_t *d);
+  void initializeMediateProjectFiltering(mediate_project_filtering_t *d);
   
 
 #if defined(_cplusplus) || defined(__cplusplus)

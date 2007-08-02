@@ -22,6 +22,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include <map>
 #include <list>
+#include <set>
 #include <QString>
 
 #include "mediate.h"
@@ -37,6 +38,16 @@ struct SProjBucket
   SProjBucket(const SProjBucket &c) : project(c.project), window(c.window) {}
 };
 
+struct SPathBucket
+{
+  int index;
+  QString path;
+
+  SPathBucket(int i, const QString &p) : index(i), path(p) {}
+  // sort with longest path first ... if equal then string compare with operator<()
+  bool operator<(const SPathBucket &rhs) const { return ((path.length() > rhs.path.length()) || (path.length() == rhs.path.length() && path < rhs.path)); }
+};
+  
 class CWorkSpace
 {
  public:
@@ -56,6 +67,10 @@ class CWorkSpace
   bool destroyProject(const QString &newProjectName);
   bool destroyAnalysisWindow(const QString &projectName, const QString &newWindowName);
 
+  void removePath(int index);
+  void addPath(int index, const QString &path);
+  QString simplifyPath(const QString &name) const;
+
  private:
   // singleton => no copies permitted
   CWorkSpace() {}
@@ -66,6 +81,7 @@ class CWorkSpace
   static CWorkSpace *m_instance;
 
   std::map<QString,SProjBucket> m_projMap;
+  std::set<SPathBucket> m_pathSet;
 };
 
 #endif

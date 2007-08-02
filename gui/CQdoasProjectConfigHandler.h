@@ -24,6 +24,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QXmlDefaultHandler>
 #include <QList>
 #include <QString>
+#include <QVector>
 
 #include "CProjectConfigItem.h"
 
@@ -81,6 +82,10 @@ class CQdoasProjectConfigHandler : public QXmlDefaultHandler
 
   bool installSubHandler(CConfigSubHandler *newHandler, const QXmlAttributes &atts);
 
+  void setPath(int index, const QString &pathPrefix);
+  QString getPath(int index) const;
+  QString pathExpand(const QString &name);
+ 
   void addProjectItem(CProjectConfigItem *item); // takes ownership of item
   QList<const CProjectConfigItem*> projectItems(void) const; // items in returned list have the same lifetime as 'this'
 
@@ -97,7 +102,9 @@ class CQdoasProjectConfigHandler : public QXmlDefaultHandler
   QList<SSubHandlerItem> m_subHandlerStack;
   QString m_subErrorMessage;
   QString m_errorMessages;
+  QString m_collatedStr;
   QList<const CProjectConfigItem*> m_projectItemList;
+  QVector<QString> m_paths;
 };
 
 inline void CQdoasProjectConfigHandler::setSubErrorMessage(const QString &msg) { m_subErrorMessage = msg; }

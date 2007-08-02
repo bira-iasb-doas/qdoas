@@ -26,7 +26,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 CQdoasProjectConfigHandler::CQdoasProjectConfigHandler() :
   QXmlDefaultHandler(),
-  m_activeSubHandler(NULL)
+  m_activeSubHandler(NULL),
+  m_paths(10)
 {
 }
 
@@ -74,14 +75,12 @@ QString CQdoasProjectConfigHandler::messages(void) const
 
 bool CQdoasProjectConfigHandler::characters(const QString &ch)
 {
-  // only care about non whitespace and only in sub handlers
+  // collects all character data into a single string. This is
+  // passed to sub handlers IFF the trimmed result is not empty.
 
   if (m_activeSubHandler) {
 
-    QString tmp(ch.trimmed());
-  
-    if (!tmp.isEmpty())
-      return m_activeSubHandler->character(tmp);
+    m_collatedStr += ch;
   }
 
   return true;
@@ -89,7 +88,6 @@ bool CQdoasProjectConfigHandler::characters(const QString &ch)
 
 bool CQdoasProjectConfigHandler::endDocument()
 {
-  TRACE2("CQdoasProjectConfigHandler::endDocument");
   return true;
 }
 
@@ -101,19 +99,28 @@ bool CQdoasProjectConfigHandler::endElement(const QString &namespaceURI,
 
   if (m_activeSubHandler) {
     // delegate to the sub handler
-    if (m_subHandlerStack.back().depth == m_elementStack.count()) {
-      status = m_activeSubHandler->end();
-      // done with this handler ... discard it
-      delete m_activeSubHandler;
-      m_subHandlerStack.pop_back();
-      // revert back to the previous handler
-      if (!m_subHandlerStack.isEmpty())
-	m_activeSubHandler = m_subHandlerStack.back().handler;
-      else
-	m_activeSubHandler = NULL;
+
+    // first any collected character data
+    QString tmp(m_collatedStr.trimmed());
+    if (!tmp.isEmpty()) {
+      status = m_activeSubHandler->character(tmp);
     }
-    else {
-      status = m_activeSubHandler->end(qName);
+
+    if (status) {
+      if (m_subHandlerStack.back().depth == m_elementStack.count()) {
+	status = m_activeSubHandler->end();
+	// done with this handler ... discard it
+	delete m_activeSubHandler;
+	m_subHandlerStack.pop_back();
+	// revert back to the previous handler
+	if (!m_subHandlerStack.isEmpty())
+	  m_activeSubHandler = m_subHandlerStack.back().handler;
+	else
+	  m_activeSubHandler = NULL;
+      }
+      else {
+	status = m_activeSubHandler->end(qName);
+      }
     }
   }
   else {
@@ -137,7 +144,6 @@ bool CQdoasProjectConfigHandler::ignorableWhitespace(const QString &ch)
 
 bool CQdoasProjectConfigHandler::startDocument()
 {
-  TRACE2("CQdoasProjectConfigHandler::startDocument");
   return true;
 }
 
@@ -150,6 +156,9 @@ bool CQdoasProjectConfigHandler::startElement(const QString &namespaceURI,
   m_elementStack.push_back(qName);
 
   if (m_activeSubHandler) {
+    // prepare for collation of character data
+    m_collatedStr.clear();
+
     // delegate to the sub handler
     return m_activeSubHandler->start(qName, atts);
   }
@@ -159,6 +168,10 @@ bool CQdoasProjectConfigHandler::startElement(const QString &namespaceURI,
     if (qName == "project") {
       // new Project handler
       return installSubHandler(new CProjectSubHandler(this), atts);
+    }
+    else if (qName == "paths") {
+      // new Path handler
+      return installSubHandler(new CPathSubHandler(this), atts);
     }
     // else if (qName == "Site") ... TODO
   }
@@ -183,6 +196,46 @@ void CQdoasProjectConfigHandler::addProjectItem(CProjectConfigItem *item)
 QList<const CProjectConfigItem*> CQdoasProjectConfigHandler::projectItems(void) const
 {
   return m_projectItemList;
+}
+
+void CQdoasProjectConfigHandler::setPath(int index, const QString &pathPrefix)
+{
+  // index MUST be in the range 0-9
+  if (index < 0 || index > 9)
+    return;
+
+  // copy and remove any trailing '/' or '\' characters ...
+  QString tmp(pathPrefix);
+
+  while (!tmp.isEmpty() && (tmp.endsWith('/') || tmp.endsWith('\\')))
+    tmp.chop(1);
+
+  m_paths[index] = tmp;
+}
+
+QString CQdoasProjectConfigHandler::getPath(int index) const
+{
+  if (index < 0 || index > 9)
+    return QString();
+
+  return m_paths[index];
+}
+
+QString CQdoasProjectConfigHandler::pathExpand(const QString &name)
+{
+  // replace a '%?' prefix with a path (? must be a digit).
+
+  int len = name.length();
+  if (len > 1 && name.startsWith('%') && name.at(1).isDigit()) {
+
+    QString tmp = m_paths.at(name.at(1).digitValue());
+    if (len > 2)
+      tmp += name.right(len - 2);
+
+    return tmp;
+  }
+
+  return name;
 }
 
 //------------------------------------------------------------------------
