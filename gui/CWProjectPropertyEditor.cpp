@@ -53,6 +53,10 @@ CWProjectPropertyEditor::CWProjectPropertyEditor(CWProjectTree *projectTree, QTr
   m_analysisTab = new CWProjectTabAnalysis(&(projectData->analysis));
   m_tabs->addTab(m_analysisTab, "Analysis");
 
+  // Filtering Tab
+  m_filteringTab = new CWProjectTabFiltering(&(projectData->lowpass), &(projectData->highpass));
+  m_tabs->addTab(m_filteringTab, "Filtering");
+
   mainLayout->addWidget(m_tabs);
 
   // caption string and context tag
@@ -77,7 +81,7 @@ bool CWProjectPropertyEditor::actionOk(void)
   if (projectData) {
     m_spectraTab->apply(&(projectData->spectra));
     m_analysisTab->apply(&(projectData->analysis));
-
+    m_filteringTab->apply(&(projectData->lowpass), &(projectData->highpass));
     return true;
   }
 

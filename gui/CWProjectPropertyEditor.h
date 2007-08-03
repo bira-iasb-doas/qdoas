@@ -27,6 +27,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "CWEditor.h"
 #include "CWProjectTabSpectra.h"
 #include "CWProjectTabAnalysis.h"
+#include "CWProjectTabFiltering.h"
 
 class CWProjectTree;
 
@@ -45,6 +46,7 @@ Q_OBJECT
   QTabWidget *m_tabs;
   CWProjectTabSpectra *m_spectraTab;
   CWProjectTabAnalysis *m_analysisTab;
+  CWProjectTabFiltering *m_filteringTab;
 
   CWProjectTree *m_projectTree;
   QString m_projectName;

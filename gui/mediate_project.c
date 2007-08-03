@@ -26,6 +26,8 @@ void initializeMediateProject(mediate_project_t *d)
 
   initializeMediateProjectSpectra(&(d->spectra));
   initializeMediateProjectAnalysis(&(d->analysis));
+  initializeMediateProjectFiltering(&(d->lowpass));
+  initializeMediateProjectFiltering(&(d->highpass));
 }
 
 void initializeMediateProjectSpectra(mediate_project_spectra_t *d)
@@ -77,7 +79,7 @@ void initializeMediateProjectAnalysis(mediate_project_analysis_t *d)
 
 void initializeMediateProjectFiltering(mediate_project_filtering_t *d)
 {
-  d->mode = cProjFilteringModeNode;
+  d->mode = cProjFilteringModeNone;
 
   /* kaiser */
   d->kaiser.cutoffFrequency = 0.0;

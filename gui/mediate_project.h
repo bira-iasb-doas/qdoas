@@ -126,7 +126,7 @@ extern "C" {
   /****************************************************/
   /* Project Filtering */
   
-  static const int cProjFilteringModeNode              = 0;
+  static const int cProjFilteringModeNone              = 0;
   static const int cProjFilteringModeKaiser            = 1;
   static const int cProjFilteringModeBoxcar            = 2;
   static const int cProjFilteringModeGaussian          = 3;
