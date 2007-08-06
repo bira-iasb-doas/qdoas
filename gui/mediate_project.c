@@ -28,6 +28,7 @@ void initializeMediateProject(mediate_project_t *d)
   initializeMediateProjectAnalysis(&(d->analysis));
   initializeMediateProjectFiltering(&(d->lowpass));
   initializeMediateProjectFiltering(&(d->highpass));
+  initializeMediateProjectCalibration(&(d->calibration));
 }
 
 void initializeMediateProjectSpectra(mediate_project_spectra_t *d)
@@ -108,4 +109,21 @@ void initializeMediateProjectFiltering(mediate_project_filtering_t *d)
   d->binomial.width      = 0;
   d->binomial.iterations = 0;
 
+}
+
+void initializeMediateProjectCalibration(mediate_project_calibration_t *d)
+{
+  *(d->solarRefFile) = '\0'; // empty filename 
+  d->method = 0;
+  d->subWindows = 1;
+  d->lineShape = 0;
+  d->lorentzDegree = 0;
+  d->shiftDegree = 0;
+  d->sfpDegree = 0;
+  d->wavelengthMin = 0.0;
+  d->wavelengthMax = 0.0;
+  d->requireSpectra = 0;
+  d->requireFits = 0;
+  d->requireResidual = 0;
+  d->requireShiftSfp = 0;
 }

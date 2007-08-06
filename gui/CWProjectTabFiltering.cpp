@@ -51,7 +51,7 @@ CWProjectTabFiltering::CWProjectTabFiltering(const mediate_project_filtering_t *
   m_lowCombo->addItem("Kaiser Filter", QVariant(cProjFilteringModeKaiser));
   
   // boxcar
-  m_lowBoxcar = new CWBoxcarEdit(&(lowpass->boxcar));
+  m_lowBoxcar = new CWBoxcarTriangularBinomialEdit(&(lowpass->boxcar));
   m_lowStack->addWidget(m_lowBoxcar);
   m_lowCombo->addItem("Boxcar Filter", QVariant(cProjFilteringModeBoxcar));
   
@@ -60,6 +60,26 @@ CWProjectTabFiltering::CWProjectTabFiltering(const mediate_project_filtering_t *
   m_lowStack->addWidget(m_lowGaussian);
   m_lowCombo->addItem("Gaussian Filter", QVariant(cProjFilteringModeGaussian));
   
+  // triangular
+  m_lowTriangular = new CWBoxcarTriangularBinomialEdit(&(lowpass->triangular));
+  m_lowStack->addWidget(m_lowTriangular);
+  m_lowCombo->addItem("Triangular Filter", QVariant(cProjFilteringModeTriangular));
+  
+  // savitzky-golay
+  m_lowSavitzky = new CWSavitzkyGolayEdit(&(lowpass->savitzky));
+  m_lowStack->addWidget(m_lowSavitzky);
+  m_lowCombo->addItem("Savitzky-Golay Filter", QVariant(cProjFilteringModeSavitzkyGolay));
+  
+  // none
+  m_lowStack->addWidget(new QFrame);
+  m_lowCombo->addItem("Odd-Even Correction", QVariant(cProjFilteringModeOddEvenCorrection));
+
+  // binomial
+  m_lowBinomial = new CWBoxcarTriangularBinomialEdit(&(lowpass->binomial));
+  m_lowStack->addWidget(m_lowBinomial);
+  m_lowCombo->addItem("Binomial Filter", QVariant(cProjFilteringModeBinomial));
+  
+
   // low pass group organisation
   lowLayout->addWidget(m_lowCombo);
   lowLayout->addWidget(m_lowStack);
@@ -83,7 +103,7 @@ CWProjectTabFiltering::CWProjectTabFiltering(const mediate_project_filtering_t *
   m_highCombo->addItem("Kaiser Filter", QVariant(cProjFilteringModeKaiser));
   
   // boxcar
-  m_highBoxcar = new CWBoxcarEdit(&(highpass->boxcar));
+  m_highBoxcar = new CWBoxcarTriangularBinomialEdit(&(highpass->boxcar));
   m_highStack->addWidget(m_highBoxcar);
   m_highCombo->addItem("Boxcar Filter", QVariant(cProjFilteringModeBoxcar));
   
@@ -91,6 +111,25 @@ CWProjectTabFiltering::CWProjectTabFiltering(const mediate_project_filtering_t *
   m_highGaussian = new CWGaussianEdit(&(highpass->gaussian));
   m_highStack->addWidget(m_highGaussian);
   m_highCombo->addItem("Gaussian Filter", QVariant(cProjFilteringModeGaussian));
+  
+  // triangular
+  m_highTriangular = new CWBoxcarTriangularBinomialEdit(&(highpass->triangular));
+  m_highStack->addWidget(m_highTriangular);
+  m_highCombo->addItem("Triangular Filter", QVariant(cProjFilteringModeTriangular));
+  
+  // savitzky-golay
+  m_highSavitzky = new CWSavitzkyGolayEdit(&(highpass->savitzky));
+  m_highStack->addWidget(m_highSavitzky);
+  m_highCombo->addItem("Savitzky-Golay Filter", QVariant(cProjFilteringModeSavitzkyGolay));
+  
+  // none
+  m_highStack->addWidget(new QFrame);
+  m_highCombo->addItem("Odd-Even Correction", QVariant(cProjFilteringModeOddEvenCorrection));
+
+  // binomial
+  m_highBinomial = new CWBoxcarTriangularBinomialEdit(&(highpass->binomial));
+  m_highStack->addWidget(m_highBinomial);
+  m_highCombo->addItem("Binomial Filter", QVariant(cProjFilteringModeBinomial));
   
   // high pass group organisation
   highLayout->addWidget(m_highCombo);
@@ -138,6 +177,13 @@ void CWProjectTabFiltering::apply(mediate_project_filtering_t *lowpass, mediate_
 
   m_lowGaussian->apply(&(lowpass->gaussian));
   m_highGaussian->apply(&(highpass->gaussian));
+
+  m_lowTriangular->apply(&(lowpass->triangular));
+  m_highTriangular->apply(&(highpass->triangular));
+
+  m_lowBinomial->apply(&(lowpass->binomial));
+  m_highBinomial->apply(&(highpass->binomial));
+
 }
 
 
@@ -238,21 +284,38 @@ void CWKaiserEdit::apply(struct filter_kaiser *d) const
 
 //--------------------------------------------------------
 
-CWBoxcarEdit::CWBoxcarEdit(const struct filter_boxcar *d, QWidget *parent) :
+CWBoxcarTriangularBinomialEdit::CWBoxcarTriangularBinomialEdit(const struct filter_boxcar *d, QWidget *parent) :
   QFrame(parent)
+{
+  init(d->width, d->iterations);
+}
+
+CWBoxcarTriangularBinomialEdit::CWBoxcarTriangularBinomialEdit(const struct filter_triangular *d, QWidget *parent) :
+  QFrame(parent)
+{
+  init(d->width, d->iterations);
+}
+
+CWBoxcarTriangularBinomialEdit::CWBoxcarTriangularBinomialEdit(const struct filter_binomial *d, QWidget *parent) :
+  QFrame(parent)
+{
+  init(d->width, d->iterations);
+}
+
+void CWBoxcarTriangularBinomialEdit::init(int filterWidth, int nIterations)
 {
   int row = 0;
   QGridLayout *mainLayout = new QGridLayout(this);
 
   // row 0
-  mainLayout->addWidget(new QLabel("Box Width (pixels)", this), row, 0, cLabelAlign);
+  mainLayout->addWidget(new QLabel("Width (pixels)", this), row, 0, cLabelAlign);
 
   m_widthSpinBox = new QSpinBox(this);
   m_widthSpinBox->setRange(1, 99);
   m_widthSpinBox->setSingleStep(2);
   m_widthSpinBox->setFixedWidth(60);
 
-  m_widthSpinBox->setValue(d->width);
+  m_widthSpinBox->setValue(filterWidth);
 
   mainLayout->addWidget(m_widthSpinBox, row, 1, Qt::AlignLeft);
   ++row;
@@ -264,7 +327,7 @@ CWBoxcarEdit::CWBoxcarEdit(const struct filter_boxcar *d, QWidget *parent) :
   m_iterationsSpinBox->setRange(1, cMaxIterations);
   m_iterationsSpinBox->setFixedWidth(60);
 
-  m_iterationsSpinBox->setValue(d->iterations);
+  m_iterationsSpinBox->setValue(nIterations);
 
   mainLayout->addWidget(m_iterationsSpinBox, row, 1, Qt::AlignLeft);
   ++row;
@@ -274,11 +337,23 @@ CWBoxcarEdit::CWBoxcarEdit(const struct filter_boxcar *d, QWidget *parent) :
   mainLayout->setColumnStretch(1, 1);
 }
 
-CWBoxcarEdit::~CWBoxcarEdit()
+CWBoxcarTriangularBinomialEdit::~CWBoxcarTriangularBinomialEdit()
 {
 }
 
-void CWBoxcarEdit::apply(struct filter_boxcar *d) const
+void CWBoxcarTriangularBinomialEdit::apply(struct filter_boxcar *d) const
+{
+  d->width = m_widthSpinBox->value();
+  d->iterations = m_iterationsSpinBox->value();
+}
+
+void CWBoxcarTriangularBinomialEdit::apply(struct filter_triangular *d) const
+{
+  d->width = m_widthSpinBox->value();
+  d->iterations = m_iterationsSpinBox->value();
+}
+
+void CWBoxcarTriangularBinomialEdit::apply(struct filter_binomial *d) const
 {
   d->width = m_widthSpinBox->value();
   d->iterations = m_iterationsSpinBox->value();
@@ -340,4 +415,64 @@ void CWGaussianEdit::apply(struct filter_gaussian *d) const
 }
 
 //--------------------------------------------------------
+
+CWSavitzkyGolayEdit::CWSavitzkyGolayEdit(const struct filter_savitzky_golay *d, QWidget *parent) :
+  QFrame(parent)
+{
+  int row = 0;
+  QGridLayout *mainLayout = new QGridLayout(this);
+
+  // row 0
+  mainLayout->addWidget(new QLabel("Width (pixels)", this), row, 0, cLabelAlign);
+
+  m_widthSpinBox = new QSpinBox(this);
+  m_widthSpinBox->setRange(1, 99);
+  m_widthSpinBox->setSingleStep(2);
+  m_widthSpinBox->setFixedWidth(60);
+
+  m_widthSpinBox->setValue(d->width);
+
+  mainLayout->addWidget(m_widthSpinBox, row, 1, Qt::AlignLeft);
+  ++row;
+
+  // row 1
+  mainLayout->addWidget(new QLabel("Order", this), row, 0, cLabelAlign);
+
+  m_orderSpinBox = new QSpinBox(this);
+  m_orderSpinBox->setRange(2, 10);
+  m_orderSpinBox->setSingleStep(2);
+  m_orderSpinBox->setFixedWidth(60);
+
+  m_orderSpinBox->setValue(d->order);
+
+  mainLayout->addWidget(m_orderSpinBox, row, 1, Qt::AlignLeft);
+  ++row;
+
+  // row 2
+  mainLayout->addWidget(new QLabel("Iterations", this), row, 0, cLabelAlign);
+
+  m_iterationsSpinBox = new QSpinBox(this);
+  m_iterationsSpinBox->setRange(1, cMaxIterations);
+  m_iterationsSpinBox->setFixedWidth(60);
+
+  m_iterationsSpinBox->setValue(d->iterations);
+
+  mainLayout->addWidget(m_iterationsSpinBox, row, 1, Qt::AlignLeft);
+  ++row;
+
+  // layout control
+  mainLayout->setColumnMinimumWidth(0, cSuggestedColumnZeroWidth);
+  mainLayout->setColumnStretch(1, 1);
+}
+
+CWSavitzkyGolayEdit::~CWSavitzkyGolayEdit()
+{
+}
+
+void CWSavitzkyGolayEdit::apply(struct filter_savitzky_golay *d) const
+{
+  d->width = m_widthSpinBox->value();
+  d->order = m_orderSpinBox->value();
+  d->iterations = m_iterationsSpinBox->value();
+}
 

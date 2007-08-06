@@ -103,6 +103,33 @@ class CProjectRawSpectraSubHandler : public CConfigSubHandler
   CProjectConfigTreeNode *m_node;
 };
 
+class CProjectFilteringSubHandler : public CConfigSubHandler
+{
+ public:
+  CProjectFilteringSubHandler(CQdoasProjectConfigHandler *master,
+			   mediate_project_filtering_t *filter);
+  virtual ~CProjectFilteringSubHandler();
+
+  virtual bool start(const QXmlAttributes &atts);
+  virtual bool start(const QString &element, const QXmlAttributes &atts);
+
+ private:
+  mediate_project_filtering_t *m_filter;
+};
+
+class CProjectCalibrationSubHandler : public CConfigSubHandler
+{
+ public:
+  CProjectCalibrationSubHandler(CQdoasProjectConfigHandler *master,
+			   mediate_project_calibration_t *calibration);
+  virtual ~CProjectCalibrationSubHandler();
+
+  virtual bool start(const QXmlAttributes &atts);
+  virtual bool start(const QString &element, const QXmlAttributes &atts);
+
+ private:
+  mediate_project_calibration_t *m_calibration;
+};
 
 #endif
 

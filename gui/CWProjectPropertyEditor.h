@@ -28,6 +28,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "CWProjectTabSpectra.h"
 #include "CWProjectTabAnalysis.h"
 #include "CWProjectTabFiltering.h"
+#include "CWProjectTabCalibration.h"
 
 class CWProjectTree;
 
@@ -47,6 +48,7 @@ Q_OBJECT
   CWProjectTabSpectra *m_spectraTab;
   CWProjectTabAnalysis *m_analysisTab;
   CWProjectTabFiltering *m_filteringTab;
+  CWProjectTabCalibration *m_calibrationTab;
 
   CWProjectTree *m_projectTree;
   QString m_projectName;

@@ -57,6 +57,11 @@ CWProjectPropertyEditor::CWProjectPropertyEditor(CWProjectTree *projectTree, QTr
   m_filteringTab = new CWProjectTabFiltering(&(projectData->lowpass), &(projectData->highpass));
   m_tabs->addTab(m_filteringTab, "Filtering");
 
+  // Calibration Tab
+  m_calibrationTab = new CWProjectTabCalibration(&(projectData->calibration));
+  m_tabs->addTab(m_calibrationTab, "Calibration");
+
+
   mainLayout->addWidget(m_tabs);
 
   // caption string and context tag
@@ -82,6 +87,8 @@ bool CWProjectPropertyEditor::actionOk(void)
     m_spectraTab->apply(&(projectData->spectra));
     m_analysisTab->apply(&(projectData->analysis));
     m_filteringTab->apply(&(projectData->lowpass), &(projectData->highpass));
+    m_calibrationTab->apply(&(projectData->calibration));
+
     return true;
   }
 

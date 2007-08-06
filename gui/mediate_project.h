@@ -25,6 +25,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 extern "C" {
 #endif
 
+
+#define FILENAME_BUFFER_LENGTH 256
+
+
   /****************************************************/
   /* Geolocation */
 
@@ -187,6 +191,34 @@ extern "C" {
   } mediate_project_filtering_t;
 
 
+  /****************************************************/
+  /* Project Calibration */
+
+  static const int cSpectralLineShapeNone          = 0;
+  static const int cSpectralLineShapeGaussian      = 1;
+  static const int cSpectralLineShapeErrorFunction = 2;
+  static const int cSpectralLineShapeLorentz       = 3;
+  static const int cSpectralLineShapeVoigt         = 4;
+
+
+  typedef struct mediate_project_calibration
+  {
+    char solarRefFile[FILENAME_BUFFER_LENGTH];
+    int method;
+    int subWindows;
+    int lineShape;
+    int lorentzDegree;
+    int shiftDegree;
+    int sfpDegree;
+    double wavelengthMin;
+    double wavelengthMax;
+    int requireSpectra;
+    int requireFits;
+    int requireResidual;
+    int requireShiftSfp;
+  } mediate_project_calibration_t;
+
+  
   // mediate_project_t
   //
   // Contains all user-specified information about a project. It allows the GUI to
@@ -199,6 +231,7 @@ extern "C" {
     mediate_project_analysis_t analysis;
     mediate_project_filtering_t lowpass;
     mediate_project_filtering_t highpass;
+    mediate_project_calibration_t calibration;
     
   } mediate_project_t;
   
@@ -210,6 +243,7 @@ extern "C" {
   void initializeMediateProjectSpectra(mediate_project_spectra_t *d);
   void initializeMediateProjectAnalysis(mediate_project_analysis_t *d);
   void initializeMediateProjectFiltering(mediate_project_filtering_t *d);
+  void initializeMediateProjectCalibration(mediate_project_calibration_t *d);
   
 
 #if defined(_cplusplus) || defined(__cplusplus)

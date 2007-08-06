@@ -276,8 +276,12 @@ QValidator::State CDoubleFixedFmtValidator::validate(QString &input, int &pos) c
   bool ok;
   double v = input.toDouble(&ok);
 
-  if (ok && v >= m_bottom && v <= m_top)
-    return QValidator::Acceptable;
+  if (ok) {
+    if (v >= m_bottom && v <= m_top)
+      return QValidator::Acceptable;
+    
+    return QValidator::Intermediate;
+  }
 
   return QValidator::Invalid;
 }
