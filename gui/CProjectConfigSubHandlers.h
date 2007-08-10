@@ -131,5 +131,19 @@ class CProjectCalibrationSubHandler : public CConfigSubHandler
   mediate_project_calibration_t *m_calibration;
 };
 
+class CProjectUndersamplingSubHandler : public CConfigSubHandler
+{
+ public:
+  CProjectUndersamplingSubHandler(CQdoasProjectConfigHandler *master,
+			   mediate_project_undersampling_t *undersampling);
+  virtual ~CProjectUndersamplingSubHandler();
+
+  virtual bool start(const QXmlAttributes &atts);
+
+ private:
+  mediate_project_undersampling_t *m_undersampling;
+};
+
+
 #endif
 

@@ -61,6 +61,9 @@ CWProjectPropertyEditor::CWProjectPropertyEditor(CWProjectTree *projectTree, QTr
   m_calibrationTab = new CWProjectTabCalibration(&(projectData->calibration));
   m_tabs->addTab(m_calibrationTab, "Calibration");
 
+  // Undersampling Tab
+  m_undersamplingTab = new CWProjectTabUndersampling(&(projectData->undersampling));
+  m_tabs->addTab(m_undersamplingTab, "Undersampling");
 
   mainLayout->addWidget(m_tabs);
 
@@ -88,6 +91,7 @@ bool CWProjectPropertyEditor::actionOk(void)
     m_analysisTab->apply(&(projectData->analysis));
     m_filteringTab->apply(&(projectData->lowpass), &(projectData->highpass));
     m_calibrationTab->apply(&(projectData->calibration));
+    m_undersamplingTab->apply(&(projectData->undersampling));
 
     return true;
   }

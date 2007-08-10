@@ -29,6 +29,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "CWProjectTabAnalysis.h"
 #include "CWProjectTabFiltering.h"
 #include "CWProjectTabCalibration.h"
+#include "CWProjectTabUndersampling.h"
 
 class CWProjectTree;
 
@@ -49,6 +50,7 @@ Q_OBJECT
   CWProjectTabAnalysis *m_analysisTab;
   CWProjectTabFiltering *m_filteringTab;
   CWProjectTabCalibration *m_calibrationTab;
+  CWProjectTabUndersampling *m_undersamplingTab;
 
   CWProjectTree *m_projectTree;
   QString m_projectName;

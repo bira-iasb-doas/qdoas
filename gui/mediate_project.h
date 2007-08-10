@@ -219,6 +219,21 @@ extern "C" {
   } mediate_project_calibration_t;
 
   
+  /****************************************************/
+  /* Project Undersampling */
+
+  static const int cUndersamplingMethodFile           = 1;
+  static const int cUndersamplingMethodFixedPhase     = 2;
+  static const int cUndersamplingMethodAutomaticPhase = 3;
+
+  typedef struct mediate_project_undersampling
+  {
+    char solarRefFile[FILENAME_BUFFER_LENGTH];
+    int method;
+    double shift;
+  } mediate_project_undersampling_t;
+
+    
   // mediate_project_t
   //
   // Contains all user-specified information about a project. It allows the GUI to
@@ -232,6 +247,7 @@ extern "C" {
     mediate_project_filtering_t lowpass;
     mediate_project_filtering_t highpass;
     mediate_project_calibration_t calibration;
+    mediate_project_undersampling_t undersampling;
     
   } mediate_project_t;
   
@@ -244,7 +260,7 @@ extern "C" {
   void initializeMediateProjectAnalysis(mediate_project_analysis_t *d);
   void initializeMediateProjectFiltering(mediate_project_filtering_t *d);
   void initializeMediateProjectCalibration(mediate_project_calibration_t *d);
-  
+  void initializeMediateProjectUndersampling(mediate_project_undersampling_t *d);
 
 #if defined(_cplusplus) || defined(__cplusplus)
 }

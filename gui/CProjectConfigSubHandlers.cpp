@@ -104,6 +104,9 @@ bool CProjectSubHandler::start(const QString &element, const QXmlAttributes &att
   else if (element == "calibration") {
     return m_master->installSubHandler(new CProjectCalibrationSubHandler(m_master, &(prop->calibration)), atts);
   }
+  else if (element == "undersampling") {
+    return m_master->installSubHandler(new CProjectUndersamplingSubHandler(m_master, &(prop->undersampling)), atts);
+  }
 
   TRACE2("proj Handler : " << element.toStdString());
 
@@ -689,3 +692,49 @@ bool CProjectCalibrationSubHandler::start(const QString &element, const QXmlAttr
 
   return true;
 }
+
+//------------------------------------------------------------------------
+// handler for <undersampling> (child of project)
+
+CProjectUndersamplingSubHandler::CProjectUndersamplingSubHandler(CQdoasProjectConfigHandler *master,
+								 mediate_project_undersampling_t *undersampling) :
+  CConfigSubHandler(master),
+  m_undersampling(undersampling)
+{
+}
+
+CProjectUndersamplingSubHandler::~CProjectUndersamplingSubHandler()
+{
+}
+
+bool CProjectUndersamplingSubHandler::start(const QXmlAttributes &atts)
+{
+  QString str;
+  bool ok;
+  double tmpDouble;
+
+  str = atts.value("method");
+  if (str == "file")
+    m_undersampling->method = cUndersamplingMethodFile;
+  else if (str == "fixed")
+    m_undersampling->method = cUndersamplingMethodFixedPhase;
+  else if (str == "auto")
+    m_undersampling->method = cUndersamplingMethodAutomaticPhase;
+  else
+    return postErrorMessage("Invalid analysis method");
+  
+  str = atts.value("ref");
+  if (!str.isEmpty()) {
+    if (str.length() < (int)sizeof(m_undersampling->solarRefFile))
+      strcpy(m_undersampling->solarRefFile, str.toAscii().data());
+    else
+      return postErrorMessage("Solar Reference Filename too long");
+  }
+
+  tmpDouble = atts.value("shift").toDouble(&ok);
+  if (ok)
+    m_undersampling->shift = tmpDouble;
+
+  return true;
+}
+

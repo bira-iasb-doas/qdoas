@@ -277,10 +277,20 @@ QValidator::State CDoubleFixedFmtValidator::validate(QString &input, int &pos) c
   double v = input.toDouble(&ok);
 
   if (ok) {
-    if (v >= m_bottom && v <= m_top)
-      return QValidator::Acceptable;
-    
-    return QValidator::Intermediate;
+    // three basic ranges ...
+    if (m_bottom > 0.0) {
+      if (v >= 0.0 && v < m_bottom) return QValidator::Intermediate;
+      if (v > m_top) return QValidator::Invalid;
+    }
+    else if (m_top < 0.0) {
+      if (v <= 0.0 && v > m_top) return QValidator::Intermediate;
+      if (v < m_bottom) return QValidator::Invalid;
+    }
+    else {
+      if (v < m_bottom || v > m_top) return QValidator::Invalid;
+    }
+    // must be OK
+    return QValidator::Acceptable;
   }
 
   return QValidator::Invalid;
@@ -299,8 +309,15 @@ void CDoubleFixedFmtValidator::fixup(QString &input) const
     else
       input.setNum(v, 'f', m_decimals);
   }
-  else
-    input.setNum(m_bottom, 'f', m_decimals); // default to the bottom value
+  else {
+    // default ... closest to zero
+    if (m_bottom > 0.0)
+      input.setNum(m_bottom, 'f', m_decimals); // default to the bottom value
+    else if (m_top < 0.0)
+      input.setNum(m_top, 'f', m_decimals); // default to the bottom value
+    else
+      input.setNum(0.0, 'f', m_decimals);
+  }
 }
 
 void CDoubleFixedFmtValidator::setRange(double bottom, double top)

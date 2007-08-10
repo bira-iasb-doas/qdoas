@@ -29,6 +29,7 @@ void initializeMediateProject(mediate_project_t *d)
   initializeMediateProjectFiltering(&(d->lowpass));
   initializeMediateProjectFiltering(&(d->highpass));
   initializeMediateProjectCalibration(&(d->calibration));
+  initializeMediateProjectUndersampling(&(d->undersampling));
 }
 
 void initializeMediateProjectSpectra(mediate_project_spectra_t *d)
@@ -113,7 +114,7 @@ void initializeMediateProjectFiltering(mediate_project_filtering_t *d)
 
 void initializeMediateProjectCalibration(mediate_project_calibration_t *d)
 {
-  *(d->solarRefFile) = '\0'; // empty filename 
+  *(d->solarRefFile) = '\0'; // empty filename
   d->method = 0;
   d->subWindows = 1;
   d->lineShape = 0;
@@ -126,4 +127,11 @@ void initializeMediateProjectCalibration(mediate_project_calibration_t *d)
   d->requireFits = 0;
   d->requireResidual = 0;
   d->requireShiftSfp = 0;
+}
+
+void initializeMediateProjectUndersampling(mediate_project_undersampling_t *d)
+{
+  *(d->solarRefFile) = '\0'; // empty filename
+  d->method = 0;
+  d->shift = 0.0;
 }
