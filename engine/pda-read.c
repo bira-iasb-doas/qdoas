@@ -10,7 +10,7 @@
 //
 //  Authors           :  Caroline FAYT and Ann Carine VANDAELE (ULB)
 //
-//  QDOAS is a cross-platform application developed in QT for DOAS retrieval 
+//  QDOAS is a cross-platform application developed in QT for DOAS retrieval
 //  (Differential Optical Absorption Spectroscopy).
 //
 //  The QT version of the program has been developed jointly by the Belgian
@@ -19,21 +19,21 @@
 //
 //      BIRA-IASB                                   S[&]T
 //      Belgian Institute for Space Aeronomy        Science [&] Technology
-//      Avenue Circulaire, 3                        Postbus 608                   
-//      1180     UCCLE                              2600 AP Delft                 
-//      BELGIUM                                     THE NETHERLANDS               
-//      caroline.fayt@aeronomie.be                  info@stcorp.nl                
+//      Avenue Circulaire, 3                        Postbus 608
+//      1180     UCCLE                              2600 AP Delft
+//      BELGIUM                                     THE NETHERLANDS
+//      caroline.fayt@aeronomie.be                  info@stcorp.nl
 //
 //  This program is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU General Public License
 //  as published by the Free Software Foundation; either version 2
 //  of the License, or (at your option) any later version.
-//  
+//
 //  This program is distributed in the hope that it will be useful,
 //  but WITHOUT ANY WARRANTY; without even the implied warranty of
 //  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //  GNU General Public License for more details.
-//  
+//
 //  You should have received a copy of the GNU General Public License
 //  along with this program; if not, write to the Free Software Foundation,
 //  Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
@@ -249,6 +249,14 @@ RC ReliPDA_EGG_Logger(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDa
 
   spectrum=pSpecInfo->spectrum;
   rc=ERROR_ID_NO;
+
+  {
+  	FILE *fp;
+  	fp=fopen("toto.dat","a+t");
+  	fprintf(fp,"pdaRecord %d %d\n",recordNo,pdaLastRecord);
+  	fclose(fp);
+  }
+
 
   // Buffer allocation
 
@@ -1220,19 +1228,19 @@ RC ReliPDA_EGG_Ulb(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,F
            	rc=ERROR_SetLast("ReliPDA_EGG_Ulb",ERROR_TYPE_WARNING,ERROR_ID_DIVISION_BY_0,"Interpixel Variability");
            else
             spectrum[i]/=tmpVector[i]*pSpecInfo->NSomme;
-         }   
+         }
 
         // Detector not linearity correction
 
         if (pSpecInfo->ccd.dnl.matrix!=NULL)
          {
           for (i=0;(i<NDET) && !rc;i++)
-          
+
            if (pSpecInfo->ccd.dnl.matrix[0][i]==(double)0.)
             rc=ERROR_SetLast("ReliPDA_EGG_Ulb",ERROR_TYPE_WARNING,ERROR_ID_DIVISION_BY_0,"non linearity of the detector");
            else
             spectrum[i]/=pSpecInfo->ccd.dnl.matrix[0][i];
-         }    
+         }
 
         if (!rc)
          VECTOR_Invert(spectrum,NDET);

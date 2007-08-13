@@ -2236,9 +2236,9 @@ RC ThrdReadFile(SPEC_INFO *pSpecInfo,INT recordNo,INT dateFlag,INT localCalDay,F
       rc=SCIA_ReadPDS(pSpecInfo,recordNo);
      break;
   // ---------------------------------------------------------------------------
-     case PRJCT_INSTR_FORMAT_GOME2 :
-      rc=GOME2_Read(pSpecInfo,recordNo);
-     break;
+// QDOAS ???     case PRJCT_INSTR_FORMAT_GOME2 :
+// QDOAS ???      rc=GOME2_Read(pSpecInfo,recordNo);
+// QDOAS ???     break;
   // ---------------------------------------------------------------------------
      default :
       rc=ERROR_ID_FILE_BAD_FORMAT;

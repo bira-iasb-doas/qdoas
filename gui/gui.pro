@@ -30,9 +30,11 @@ unix {
 
 win32 {
   INCLUDEPATH += C:\Qwt\include
-  LIBS        += -L"C:\Qwt\lib" -lqwt5
-
+  INCLUDEPATH += ..\engine
+  LIBS        += -L"C:\Qwt\lib" -lqwt5 -lengine
+  LIBS        += -L"..\engine\release"
   CONFIG      += windows
+  PRE_TARGETDEPS += ..\engine\release\libengine.a
 }
 
 #----------------------------------------------

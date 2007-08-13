@@ -19,7 +19,22 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include <stdlib.h>
 
+#include <ctype.h>
+#include <fcntl.h>
+#include <math.h>
+#include <sys/stat.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <string.h>
+#include <process.h>
+#include <errno.h>
+#include <sys/types.h>
+#include <dir.h>
+#include <dirent.h>
+#include <time.h>
+
 #include "mediate.h"
+#include "engine.h"
 
 // TODO
 struct dummy {
@@ -35,7 +50,7 @@ int mediateRequestCreateEngineContext(void **engineContext)
   tmp->nRecords = 15;
   tmp->record = 0;
   *engineContext = (void*)tmp;
-  
+
   return 0;
 }
 
@@ -72,6 +87,8 @@ int mediateRequestBeginBrowseSpectra(void *engineContext,
 {
   struct dummy *tmp = (struct dummy *)engineContext;
 
+  tmp->nRecords=EngineSetFile((unsigned char *)spectraFileName);
+
   tmp->record = 1;
 
   mediateResponseErrorMessage("fred", "dummy message", 1, responseHandle);
@@ -103,13 +120,14 @@ int mediateRequestGetNextMatchingSpectrum(void *engineContext,
   double x[1024], y[1024];
   int i;
   double xx, scale;
-  
+
   if (rec > tmp->nRecords) {
     return 0;
   }
   else {
+    EngineReadFile(rec,x,y);
 
-    scale = (double)rec;
+  /*  scale = (double)rec;
     xx = 0.0;
     i = 0;
     while (i<1024) {
@@ -117,7 +135,7 @@ int mediateRequestGetNextMatchingSpectrum(void *engineContext,
       y[i] = scale * sin(xx);
       xx += scale * 0.001;
       ++i;
-    }
+    }       */
 
     mediateResponseSpectrumData(0, y, x, 1024, "Spectrum", "Lambda (nm)", NULL, responseHandle);
     mediateResponseSpectrumData(5, y, x, 512, "Fred", "on page 5", "blah", responseHandle);
@@ -132,7 +150,7 @@ int mediateRequestGetNextMatchingSpectrum(void *engineContext,
     mediateResponseLabelPage(0, "File and record number ...", "Spectrum", responseHandle);
     mediateResponseLabelPage(5, "Analysis ...", "BrO", responseHandle);
 
-    
+
     return rec;
   }
 }
@@ -141,7 +159,7 @@ int mediateRequestEndBrowseSpectra(void *engineContext,
 				   void *responseHandle)
 {
   struct dummy *tmp = (struct dummy *)engineContext;
-  
+
   tmp->record = -1;
   ++(tmp->nRecords);
 
