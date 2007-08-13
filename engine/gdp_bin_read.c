@@ -1190,7 +1190,7 @@ RC GdpBinBuildRef(GDP_BIN_REF *refList,INT nRef,INT nSpectra,double *lembda,doub
        !(rc=GDP_BIN_Read(pSpecInfo,pRef->indexRecord+1,specFp,pRef->indexFile)))    // Read and accumulate selected radiances
      {
       if (fp!=NULL)
-       fprintf(fp,"%s %#5d\t%#5d\t%#5d\t%#6.2lf\t%#6.2lf\t%#6.2lf\n",GDP_BIN_orbitFiles[pRef->indexFile].gdpBinFileNumber,pRef->indexRecord+1,pRef->pixelNumber,pRef->pixelType,pRef->sza,pRef->latitude,pRef->longitude);
+       fprintf(fp,"%s %-5d\t%-5d\t%-5d\t%-6.2lf\t%-6.2lf\t%-6.2lf\n",GDP_BIN_orbitFiles[pRef->indexFile].gdpBinFileNumber,pRef->indexRecord+1,pRef->pixelNumber,pRef->pixelType,pRef->sza,pRef->latitude,pRef->longitude);
 
       for (i=0;i<NDET;i++)
        {

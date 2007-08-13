@@ -100,12 +100,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <process.h>
+// QDOAS ??? #include <process.h>
 #include <errno.h>
 #include <sys/types.h>
-#include <dir.h>
+// QDOAS ??? #include <dir.h>
 #include <dirent.h>
 #include <time.h>
+
+
+#define strnicmp strncasecmp
 
 // QDOAS ???
 // QDOAS ??? #pragma pack(1)
@@ -129,7 +132,7 @@
 // QDOAS ???
 typedef int            INT;
 typedef char           CHAR;
-typedef unsigned char  UCHAR;
+typedef char           UCHAR;
 typedef short          SHORT;
 typedef unsigned short USHORT,WORD;
 typedef int            BOOL;

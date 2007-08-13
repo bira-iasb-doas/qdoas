@@ -23,9 +23,10 @@ win32 {
 #----------------------------------------------
 
 unix {
-  INCLUDEPATH  += /usr/local/qwt/include
-  LIBS         += -L/usr/local/qwt/lib -lqwt -lm
+  INCLUDEPATH  += /usr/local/qwt/include ../engine
+  LIBS         += -L/usr/local/qwt/lib -lqwt -L../engine -lengine -lm
   QMAKE_LFLAGS += -Wl,-rpath=/usr/local/qwt/lib
+   PRE_TARGETDEPS += ..\engine\libengine.a
 }
 
 win32 {

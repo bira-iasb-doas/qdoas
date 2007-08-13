@@ -15,7 +15,7 @@ ENGINE_CONTEXT;
 
 ENGINE_CONTEXT engineContext;
 
-int EngineSetFile(UCHAR *fileName)
+int EngineSetFile(const char *fileName)
  {
  	int i;
  	SPEC_INFO *pSpecInfo;
@@ -24,8 +24,8 @@ int EngineSetFile(UCHAR *fileName)
   NDET=engineContext.NDET=1024;
   pSpecInfo=&engineContext.specInfo;
 
-  strcpy(pSpecInfo->fileName,"E:\\My Ground Based Activities\\GB_Stations\\OHP_2005\\Data\\2007\\");
-  strcat(pSpecInfo->fileName,fileName);
+  strcpy(pSpecInfo->fileName,fileName); //"E:\\My Ground Based Activities\\GB_Stations\\OHP_2005\\Data\\2007\\");
+  //strcat(pSpecInfo->fileName,fileName);
 //  sprintf(pSpecInfo->fileName,"E:/My Ground Based Activities/GB_Stations/OHP_2005/Data/2007/%s",fileName);
 
   pSpecInfo->project.instrumental.azimuthFlag=1;

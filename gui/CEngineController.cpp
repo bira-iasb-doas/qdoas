@@ -69,7 +69,7 @@ void CEngineController::notifyReadyToNavigateRecords(const QString &filename, in
   // TODO signals for buttons
 
   // sanity check - currentIt and filename must be consistent
-  assert(m_currentIt.file().fileName() == filename);
+  assert(m_currentIt.file().filePath() == filename);
 
   m_numberOfRecords = numberOfRecords;
   m_currentRecord = 0;
@@ -284,7 +284,7 @@ void CEngineController::slotPreviousFile()
 
     switch (m_mode) {
     case cBrowseMode:
-      req->addRequest(new CEngineRequestBeginBrowseFile(m_currentIt.file().fileName()));
+      req->addRequest(new CEngineRequestBeginBrowseFile(m_currentIt.file().filePath()));
       break;
     case cAnalyseMode:
       break;
@@ -320,7 +320,7 @@ void CEngineController::slotNextFile()
 
       switch (m_mode) {
       case cBrowseMode:
-	req->addRequest(new CEngineRequestBeginBrowseFile(m_currentIt.file().fileName()));
+	req->addRequest(new CEngineRequestBeginBrowseFile(m_currentIt.file().filePath()));
 	break;
       case cAnalyseMode:
 	break;
@@ -365,7 +365,7 @@ void CEngineController::slotGotoFile(int number)
     
     switch (m_mode) {
     case cBrowseMode:
-      req->addRequest(new CEngineRequestBeginBrowseFile(m_currentIt.file().fileName()));
+      req->addRequest(new CEngineRequestBeginBrowseFile(m_currentIt.file().filePath()));
       break;
     case cAnalyseMode:
       break;
@@ -446,7 +446,7 @@ void CEngineController::slotStartBrowseSession(const RefCountPtr<CSession> &sess
     m_currentProject = m_currentIt.project();
 
     req->addRequest(new CEngineRequestSetProject(m_currentProject));
-    req->addRequest(new CEngineRequestBeginBrowseFile(m_currentIt.file().fileName()));
+    req->addRequest(new CEngineRequestBeginBrowseFile(m_currentIt.file().filePath()));
   }
 
   emit signalNumberOfFilesChanged(m_numberOfFiles);

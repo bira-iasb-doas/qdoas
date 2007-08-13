@@ -275,27 +275,27 @@ void DEBUG_PrintVar(UCHAR *message,...)
           //   break;
           // -------------------------------------------------------------------
              case MEMORY_TYPE_SHORT : // short
-              fprintf(fp,"%#6d\t",(int)pVar->varData.shortArray[indexCol][indexNewLine]);
+              fprintf(fp,"%-6d\t",(int)pVar->varData.shortArray[indexCol][indexNewLine]);
              break;
           // -------------------------------------------------------------------
              case MEMORY_TYPE_USHORT : // unsigned short
-              fprintf(fp,"%#6d\t",(int)pVar->varData.ushortArray[indexCol][indexNewLine]);
+              fprintf(fp,"%-6d\t",(int)pVar->varData.ushortArray[indexCol][indexNewLine]);
              break;
           // -------------------------------------------------------------------
              case MEMORY_TYPE_INT : // integer
-              fprintf(fp,"%#6d\t",(int)pVar->varData.intArray[indexCol][indexNewLine]);
+              fprintf(fp,"%-6d\t",(int)pVar->varData.intArray[indexCol][indexNewLine]);
              break;
           // -------------------------------------------------------------------
              case MEMORY_TYPE_LONG : // long
-              fprintf(fp,"%#6ld\t",pVar->varData.longArray[indexCol][indexNewLine]);
+              fprintf(fp,"%-6ld\t",pVar->varData.longArray[indexCol][indexNewLine]);
              break;
           // -------------------------------------------------------------------
              case MEMORY_TYPE_FLOAT : // float
-              fprintf(fp,"%#15.6f\t",pVar->varData.floatArray[indexCol][indexNewLine]);
+              fprintf(fp,"%-15.6f\t",pVar->varData.floatArray[indexCol][indexNewLine]);
              break;
           // -------------------------------------------------------------------
              case MEMORY_TYPE_DOUBLE : // double
-              fprintf(fp,"%#15.6le\t",pVar->varData.doubleArray[indexCol][indexNewLine]);
+              fprintf(fp,"%-15.6le\t",pVar->varData.doubleArray[indexCol][indexNewLine]);
              break;
           // -------------------------------------------------------------------
            }
@@ -308,27 +308,27 @@ void DEBUG_PrintVar(UCHAR *message,...)
          // break;
          // --------------------------------------------------------------------
             case MEMORY_TYPE_SHORT : // short
-             fprintf(fp,"%#6d\t",(int)pVar->varData.shortVector[indexNewLine]);
+             fprintf(fp,"%-6d\t",(int)pVar->varData.shortVector[indexNewLine]);
             break;
          // --------------------------------------------------------------------
             case MEMORY_TYPE_USHORT : // unsigned short
-             fprintf(fp,"%#6d\t",(int)pVar->varData.ushortVector[indexNewLine]);
+             fprintf(fp,"%-6d\t",(int)pVar->varData.ushortVector[indexNewLine]);
             break;
          // --------------------------------------------------------------------
             case MEMORY_TYPE_INT : // integer
-             fprintf(fp,"%#6d\t",(int)pVar->varData.intVector[indexNewLine]);
+             fprintf(fp,"%-6d\t",(int)pVar->varData.intVector[indexNewLine]);
             break;
          // --------------------------------------------------------------------
             case MEMORY_TYPE_LONG : // long
-             fprintf(fp,"%#6ld\t",pVar->varData.longVector[indexNewLine]);
+             fprintf(fp,"%-6ld\t",pVar->varData.longVector[indexNewLine]);
             break;
          // --------------------------------------------------------------------
             case MEMORY_TYPE_FLOAT : // float
-             fprintf(fp,"%#15.6f\t",pVar->varData.floatVector[indexNewLine]);
+             fprintf(fp,"%-15.6f\t",pVar->varData.floatVector[indexNewLine]);
             break;
          // --------------------------------------------------------------------
             case MEMORY_TYPE_DOUBLE : // double
-             fprintf(fp,"%#15.6le\t",pVar->varData.doubleVector[indexNewLine]);
+             fprintf(fp,"%-15.6le\t",pVar->varData.doubleVector[indexNewLine]);
             break;
          // --------------------------------------------------------------------
           }

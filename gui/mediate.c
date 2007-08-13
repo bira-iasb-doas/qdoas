@@ -19,20 +19,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include <stdlib.h>
 
-#include <ctype.h>
-#include <fcntl.h>
-#include <math.h>
-#include <sys/stat.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <string.h>
-#include <process.h>
-#include <errno.h>
-#include <sys/types.h>
-#include <dir.h>
-#include <dirent.h>
-#include <time.h>
-
 #include "mediate.h"
 #include "engine.h"
 
@@ -87,7 +73,7 @@ int mediateRequestBeginBrowseSpectra(void *engineContext,
 {
   struct dummy *tmp = (struct dummy *)engineContext;
 
-  tmp->nRecords=EngineSetFile((unsigned char *)spectraFileName);
+  tmp->nRecords=EngineSetFile(spectraFileName);
 
   tmp->record = 1;
 

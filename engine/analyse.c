@@ -115,7 +115,6 @@
 //
 
 
-
 #include "doas.h"
 
 // ===================
@@ -2406,7 +2405,7 @@ RC AnalyseSaveResiduals(UCHAR *fileName,SPEC_INFO *pSpecInfo)
       fprintf(fp,"\n");
      }
 
-    fprintf(fp,"%#5d %.3lf %#8.4lf ",pSpecInfo->indexRecord,pSpecInfo->Zm,(double)ZEN_FNCaljda(&pSpecInfo->Tm)+ZEN_FNCaldti(&pSpecInfo->Tm)/24.);
+    fprintf(fp,"%-5d %.3lf %-8.4lf ",pSpecInfo->indexRecord,pSpecInfo->Zm,(double)ZEN_FNCaljda(&pSpecInfo->Tm)+ZEN_FNCaldti(&pSpecInfo->Tm)/24.);
 
     for (j=0;j<Z;j++)
      for (i=Fenetre[j][0];i<=Fenetre[j][1];i++)
@@ -2718,7 +2717,7 @@ RC ANALYSE_Function ( double *lambda,double *X, double *Y, INT ndet, double *Y0,
 
         for (j=0;j<Feno->NTabCross;j++)
          if (TabCross[j].IndSvdA)
-          DEBUG_Print("+++ %#2d %s\n",TabCross[j].IndSvdA,WorkSpace[TabCross[j].Comp].symbolName);
+          DEBUG_Print("+++ %-2d %s\n",TabCross[j].IndSvdA,WorkSpace[TabCross[j].Comp].symbolName);
        }
       #endif
 
@@ -3439,7 +3438,7 @@ if (!Feno->hidden)
 {
 	FILE *fp;
 	fp=fopen("toto.dat","a+t");
-	fprintf(fp,"%-20s %#2d %#2d %#2d %#2d\n",
+	fprintf(fp,"%-20s %-2d %-2d %-2d %-2d\n",
 	            WorkSpace[pTabCross->Comp].symbolName,
 	            pTabCross->FitConc,pTabCross->FitParam,pTabCross->IndSvdA,pTabCross->IndSvdP);
 	fclose(fp);
