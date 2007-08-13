@@ -18,6 +18,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
 
+#include <QTextStream>
+
 #include "CEngineController.h"
 #include "CEngineRequest.h"
 #include "CEngineResponse.h"
@@ -196,6 +198,34 @@ void CEngineController::notifyTableData(QList<SCell> &cellList)
 
   // send the pages to any connected slots
   emit signalTablePages(pageList);
+}
+
+void CEngineController::notifyErrorMessages(int highestErrorLevel, const QList<CEngineError> &errorMessages)
+{
+  // format each into a message text and put in a single string for posting ...
+  QString msg;
+  QTextStream stream(&msg);
+
+  QList<CEngineError>::const_iterator it = errorMessages.begin();
+  while (it != errorMessages.end()) {
+    switch (it->errorLevel()) {
+    case cInformationEngineError:
+      stream << "INFO    (";
+      break;
+    case cWarningEngineError:
+      stream << "WARNING (";
+      break;
+    case cFatalEngineError:
+      stream << "FATAL   (";
+      break;
+    }
+
+    stream << it->tag() << ") " << it->message() << ".\n";
+
+    ++it;
+  }
+
+  emit signalErrorMessages(highestErrorLevel, msg);
 }
 
 bool CEngineController::event(QEvent *e)

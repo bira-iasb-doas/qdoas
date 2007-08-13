@@ -18,29 +18,33 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
 
-#ifndef _CWSPLITTER_H_GUARD
-#define _CWSPLITTER_H_GUARD
+#ifndef _CENGINEERROR_H_GUARD
+#define _CENGINEERROR_H_GUARD
 
-#include <map>
+#include <QString>
 
-#include <QSplitter>
+static const int cInformationEngineError = 1;
+static const int cWarningEngineError     = 2;
+static const int cFatalEngineError       = 3;
 
-// Extends QSplitter to allow control of the first splitter position
-// via signal-slot mechanism
 
-class CWSplitter : public QSplitter
+class CEngineError
 {
-Q_OBJECT
  public:
-  CWSplitter(Qt::Orientation orientation, QWidget *parent = 0);
-  virtual ~CWSplitter();
+  CEngineError(const QString &tag, const QString &msg, int errorLevel);
+  ~CEngineError();
 
-  public slots:
-    void slotSetWidthMode(int mode);
+  const QString& message(void) const;
+  const QString& tag(void) const;
+  int errorLevel(void) const;
 
  private:
-  std::map<int,int> m_modeToSizeMap;
-  int m_currentMode;
+  QString m_tag, m_message;
+  int m_errorLevel;
 };
+
+inline const QString& CEngineError::tag(void) const { return m_tag; }
+inline const QString& CEngineError::message(void) const { return m_message; }
+inline int CEngineError::errorLevel(void) const { return m_errorLevel; }
 
 #endif

@@ -24,7 +24,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //------------------------------------------------------------
 
 CEngineResponse::CEngineResponse(int type) :
-  m_type(type)
+  m_type(type),
+  m_highestErrorLevel(0)
 {
 }
 
@@ -32,9 +33,24 @@ CEngineResponse::~CEngineResponse()
 {
 }
 
-void CEngineResponse::addErrorMessage(const QString &msg)
+void CEngineResponse::addErrorMessage(const QString &tag, const QString &msg, int errorLevel)
 {
-  m_errorMessages.push_back(msg);
+  m_errorMessages.push_back(CEngineError(tag, msg, errorLevel));
+
+  if (errorLevel > m_highestErrorLevel)
+    m_highestErrorLevel = errorLevel;
+}
+
+bool CEngineResponse::processErrors(CEngineController *engineController)
+{
+  if (hasErrors()) {
+    // send the set of messages to the GUI
+    engineController->notifyErrorMessages(m_highestErrorLevel, m_errorMessages);
+
+    return hasFatalError();
+  }
+  
+  return false;
 }
 
 //------------------------------------------------------------
@@ -50,6 +66,10 @@ CEngineResponseSetProject::~CEngineResponseSetProject()
 
 void CEngineResponseSetProject::process(CEngineController *engineController)
 {
+  // consider the error messages first - if fatal stop here
+  if (processErrors(engineController))
+    return;
+
   // only called if there are no error messages ...
   engineController->notifySetProject();
 }
@@ -69,10 +89,13 @@ CEngineResponseBeginBrowseFile::~CEngineResponseBeginBrowseFile()
 
 void CEngineResponseBeginBrowseFile::process(CEngineController *engineController)
 {
-  // TODO
+  // consider the error messages first - if fatal stop here
+  if (processErrors(engineController))
+    return;
+
   if (m_numberOfRecords > 0) {
     // calibration data ... TODO ...
-
+    
     engineController->notifyReadyToNavigateRecords(m_fileName, m_numberOfRecords);
     // wait for the request to process a record ...
   }
@@ -103,6 +126,10 @@ CEngineResponseBrowseRecord::~CEngineResponseBrowseRecord()
 
 void CEngineResponseBrowseRecord::process(CEngineController *engineController)
 {
+  // consider the error messages first - if fatal stop here
+  if (processErrors(engineController))
+    return;
+
   // TODO
   if (m_recordNumber == 0) {
     // EOF

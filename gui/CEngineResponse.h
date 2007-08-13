@@ -17,6 +17,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
+
 #ifndef _CENGINERESPONSE_H_GUARD
 #define _CENGINERESPONSE_H_GUARD
 
@@ -25,13 +26,14 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "CPlotDataSet.h"
 #include "CTablePageData.h"
+#include "CEngineError.h"
 
 class CEngineController;
 
-const int cEngineResponseSetProjectType           = 1;
-const int cEngineResponseBeginBrowseFileType      = 2;
-const int cEngineResponseBrowseRecordType         = 3;
-const int cEngineResponseGotoRecordType           = 4;
+static const int cEngineResponseSetProjectType           = 1;
+static const int cEngineResponseBeginBrowseFileType      = 2;
+static const int cEngineResponseBrowseRecordType         = 3;
+static const int cEngineResponseGotoRecordType           = 4;
 
 //------------------------------------------------------------
 
@@ -42,16 +44,24 @@ class CEngineResponse
   virtual ~CEngineResponse();
 
   int type(void) const;
-  void addErrorMessage(const QString &msg);
+  void addErrorMessage(const QString &tag, const QString &msg, int errorLevel);
   
   virtual void process(CEngineController *engineController) = 0;
 
+  bool processErrors(CEngineController *engineController);
+
+  bool hasErrors(void) const;
+  bool hasFatalError(void) const;
+
  protected:
   int m_type;
-  QList<QString> m_errorMessages;
+  int m_highestErrorLevel;
+  QList<CEngineError> m_errorMessages;
 };
 
 inline int CEngineResponse::type(void) const { return m_type; }
+inline bool CEngineResponse::hasErrors(void) const { return !m_errorMessages.isEmpty(); }
+inline bool CEngineResponse::hasFatalError(void) const { return (m_highestErrorLevel == cFatalEngineError); }
 
 //------------------------------------------------------------
 

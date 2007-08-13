@@ -19,7 +19,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include <cmath>
 
-#include "mediate.h"
+#include "mediate_response.h"
 
 #include "CEngineResponse.h"
 #include "CPlotDataSet.h"
@@ -90,8 +90,11 @@ void mediateResponseLabelPage(int page,
 }
 
 
-void mediateResponseErrorMessage(const char *messageString,
+void mediateResponseErrorMessage(const char *function,
+				 const char *messageString,
 				 int errorLevel,
 				 void *responseHandle)
 {
+  CEngineResponse *resp = static_cast<CEngineResponse*>(responseHandle);
+  resp->addErrorMessage(QString(function), QString(messageString), errorLevel);
 }

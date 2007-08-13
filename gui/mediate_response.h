@@ -1,0 +1,117 @@
+/*
+Qdoas is a cross-platform application for spectral analysis with the DOAS
+algorithm.  Copyright (C) 2007  S[&]T and BIRA
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+*/
+
+
+#ifndef _MEDIATE_RESPONSE_H_GUARD
+#define _MEDIATE_RESPONSE_H_GUARD
+
+#if defined(_cplusplus) || defined(__cplusplus)
+extern "C" {
+#endif
+
+//----------------------------------------------------------
+// mediateResponse interface
+//----------------------------------------------------------
+
+//----------------------------------------------------------
+// Plotting oriented interface
+//----------------------------------------------------------
+
+// mediateResponseSpectrumData
+//
+// provide the GUI with spectral data for a spectral record. The data is contained
+// in two arrays of doubles, both with the length arrayLength (indexed from 0).
+
+void mediateResponseSpectrumData(int page, double *intensityDataArray, double *wavelengthDataArray,
+				 int arrayLength, const char *title, const char *wavelengthLabel,
+				 const char *intensityLabel, void *responseHandle);
+
+
+// mediateResponseGraphicalData
+//
+// provide the GUI with graphical data. The data is contained in two arrays of doubles, both with the
+// length arrayLength (indexed from 0). page is provided for organisation purposes and can have an
+// abitrary value (it is expected that page will correspond to an analysis window).
+
+void mediateResponseGraphicalData(int page, double *ordinateArray, double *abscissaArray, int arrayLength,
+                                  int dataType, void *responseHandle);
+
+
+
+//----------------------------------------------------------
+// Data window oriented interface
+//----------------------------------------------------------
+
+// mediateResponseCellDataDouble
+//
+// provide the GUI with a double value for a single cell in a free-format multi-page table. There are no
+// predefined limits to the number of pages, nor the number of rows/column on a page.  page can be arbitrary,
+// but both row and column index from 0. 
+
+void mediateResponseCellDataDouble(int page, int row, int column, double doubleValue, void *responseHandle);
+
+
+// mediateResponseCellDataDouble
+//
+// provide the GUI with an integer value for a single cell in a free-format multi-page table. There are no
+// predefined limits to the number of pages, nor the number of rows/column on a page.  page can be arbitrary,
+// but both row and column index from 0. 
+
+void mediateResponseCellDataInteger(int page, int row, int column, int integerValue, void *responseHandle);
+
+// mediateResponseCellDataDouble
+//
+// provide the GUI with an integer value for a single cell in a free-format multi-page table. There are no
+// predefined limits to the number of pages, nor the number of rows/column on a page.  page can be arbitrary,
+// but both row and column index from 0. 
+
+void mediateResponseCellDataString(int page, int row, int column, const char *stringValue, void *responseHandle);
+
+
+//----------------------------------------------------------
+// Data window oriented interface
+//----------------------------------------------------------
+
+// mediateResponseLabelPage
+//
+// provide the GUI with descriptive information for labeling a page.
+
+void mediateResponseLabelPage(int page, const char *title, const char *tag, void * responseHandle);
+
+
+//----------------------------------------------------------
+// Error message handling
+//----------------------------------------------------------
+
+// mediateResponseErrorMessage
+//
+// allow the mediateRequest* functions to provide error information that might be
+// meaningful to a user ...  might be. Should always be in combination with an
+// error indicating return code from a mediateRequest* function.
+// errorLevel is intended to support the messageString, and not be used for
+// programatic error handling logic. The error code from the mediateRequest* function
+// must be sufficient for that purpose.
+
+void mediateResponseErrorMessage(const char *function, const char *messageString, int errorLevel, void *responseHandle);
+
+#if defined(_cplusplus) || defined(__cplusplus)
+}
+#endif
+
+#endif

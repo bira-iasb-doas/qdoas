@@ -17,16 +17,47 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
+#include <QSettings>
+
 #include "CWSplitter.h"
+
+#include "debugutil.h"
 
 CWSplitter::CWSplitter(Qt::Orientation orientation, QWidget *parent) :
   QSplitter(orientation, parent),
   m_currentMode(0)
 {
+  // restore the map
+  int i, mode, wid;
+  QSettings settings;
+
+  int n = settings.beginReadArray("Splitter");
+  for (i=0; i<n; ++i) {
+    settings.setArrayIndex(i);
+    mode = settings.value("mode").toInt();
+    wid = settings.value("width").toInt();
+  }
+  settings.endArray();
 }
 
 CWSplitter::~CWSplitter()
 {
+  TRACE("CWSplitter::~CWSplitter");
+
+  // store the map as an array of settings
+  QSettings settings;
+  
+  settings.beginWriteArray("Splitter");
+  std::map<int,int>::const_iterator it = m_modeToSizeMap.begin();
+  int i = 0;
+  while (it != m_modeToSizeMap.end()) {
+    settings.setArrayIndex(i);
+    settings.setValue("mode", it->first);
+    settings.setValue("width", it->second);
+    ++i;
+    ++it;
+  }
+  settings.endArray();
 }
 
 void CWSplitter::slotSetWidthMode(int newMode)

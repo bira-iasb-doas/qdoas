@@ -74,6 +74,8 @@ int mediateRequestBeginBrowseSpectra(void *engineContext,
 
   tmp->record = 1;
 
+  mediateResponseErrorMessage("fred", "dummy message", 1, responseHandle);
+
   return tmp->nRecords;
 }
 

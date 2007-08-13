@@ -26,6 +26,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QFile>
 #include <QMessageBox>
 #include <QFileDialog>
+#include <QSettings>
+#include <QCloseEvent>
 
 #include "CWMain.h"
 #include "CWProjectTree.h"
@@ -199,6 +201,11 @@ CWMain::CWMain(QWidget *parent) :
   connect(m_controller, SIGNAL(signalTablePages(const QList< RefCountConstPtr<CTablePageData> > &)),
           m_tableRegion, SLOT(slotTablePages(const QList< RefCountConstPtr<CTablePageData> > &)));
 
+
+  // error messages
+  connect(m_controller, SIGNAL(signalErrorMessages(int, const QString &)),
+	  this, SLOT(slotErrorMessages(int, const QString &)));
+
   // tab-based coupling of plot and table display
   connect(m_activeContext, SIGNAL(signalActivePageChanged(int)),
 	  m_tableRegion, SLOT(slotDisplayPage(int)));
@@ -206,10 +213,27 @@ CWMain::CWMain(QWidget *parent) :
   // icon
   setWindowIcon(QIcon(QPixmap(":/icons/logo.png")));
 
+  // get the window size from the settings
+  QSettings settings;
+  
+  settings.beginGroup("MainWindow");
+  resize(settings.value("size", QSize(600,450)).toSize());
+  settings.endGroup();
 }
 
 CWMain::~CWMain()
 {
+}
+
+void CWMain::closeEvent(QCloseEvent *e)
+{
+  QSettings settings;
+
+  settings.beginGroup("MainWindow");
+  settings.setValue("size", size());
+  settings.endGroup();
+
+  e->accept();
 }
 
 void CWMain::slotOpenFile()
@@ -261,4 +285,19 @@ void CWMain::slotOpenFile()
   if (!errMsg.isNull())
     QMessageBox::critical(this, "File Open", errMsg);
 
+}
+
+void CWMain::slotErrorMessages(int highestLevel, const QString &messages)
+{
+  switch (highestLevel) {
+    case cInformationEngineError:
+      QMessageBox::information(this, "Engine Information", messages);
+      break;
+    case cWarningEngineError:
+      QMessageBox::warning(this, "Engine Warning", messages);
+      break;
+    case cFatalEngineError:
+      QMessageBox::critical(this, "Engine Fatal Error", messages);
+      break;
+  }
 }

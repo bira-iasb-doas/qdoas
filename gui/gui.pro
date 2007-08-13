@@ -41,6 +41,7 @@ win32 {
 SOURCES += CEngineController.cpp
 SOURCES += CEngineRequest.cpp
 SOURCES += CEngineResponse.cpp
+SOURCES += CEngineError.cpp
 SOURCES += CEngineThread.cpp
 SOURCES += CNavigationPanel.cpp
 SOURCES += CPlotDataSet.cpp
@@ -90,6 +91,7 @@ SOURCES += mediate_project.c
 HEADERS += CEngineController.h
 HEADERS += CEngineRequest.h
 HEADERS += CEngineResponse.h
+HEADERS += CENgineError.h
 HEADERS += CEngineThread.h
 HEADERS += CNavigationPanel.h
 HEADERS += CPlotDataSet.h

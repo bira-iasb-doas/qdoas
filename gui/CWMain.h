@@ -44,8 +44,11 @@ Q_OBJECT
   CWMain(QWidget *parent = 0);
   virtual ~CWMain();
 
+  virtual void closeEvent(QCloseEvent *e);
+ 
  public slots:
   void slotOpenFile();
+  void slotErrorMessages(int highestLevel, const QString &messages);
 
  private:
   QMenuBar *m_menuBar;

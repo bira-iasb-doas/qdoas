@@ -25,6 +25,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QFileInfo>
 
 #include "CEngineThread.h"
+#include "CEngineError.h"
 
 #include "CPlotDataSet.h"
 #include "CPlotPageData.h"
@@ -60,6 +61,8 @@ Q_OBJECT
   void notifyPlotData(QList<SPlotData> &plotDataList, QList<STitleTag> &titleList);
   void notifyTableData(QList<SCell> &cellList);
 
+  void notifyErrorMessages(int highestErrorLevel, const QList<CEngineError> &errorMessages);
+
  protected:
   virtual bool event(QEvent *e);
 
@@ -88,6 +91,8 @@ Q_OBJECT
 
   void signalPlotPages(const QList< RefCountConstPtr<CPlotPageData> > &pageList);
   void signalTablePages(const QList< RefCountConstPtr<CTablePageData> > &pageList);
+
+  void signalErrorMessages(int highestErrorLevel, const QString &messages);
 
  private:
   CEngineThread *m_thread;

@@ -24,6 +24,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 int main(int argc, char *argv[])
 {
   QApplication app(argc, argv);
+
+  // set the information that is used to locate the settings
+  QCoreApplication::setOrganizationName("BIRA-IASB");
+  QCoreApplication::setOrganizationDomain("www.oma.be");
+  QCoreApplication::setApplicationName("Qdoas");
   
   CWMain main;
 
