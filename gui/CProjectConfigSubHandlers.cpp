@@ -614,6 +614,7 @@ bool CProjectCalibrationSubHandler::start(const QXmlAttributes &atts)
   
   str = atts.value("ref");
   if (!str.isEmpty()) {
+    str = m_master->pathExpand(str);
     if (str.length() < (int)sizeof(m_calibration->solarRefFile))
       strcpy(m_calibration->solarRefFile, str.toAscii().data());
     else
@@ -725,6 +726,7 @@ bool CProjectUndersamplingSubHandler::start(const QXmlAttributes &atts)
   
   str = atts.value("ref");
   if (!str.isEmpty()) {
+    str = m_master->pathExpand(str);
     if (str.length() < (int)sizeof(m_undersampling->solarRefFile))
       strcpy(m_undersampling->solarRefFile, str.toAscii().data());
     else
