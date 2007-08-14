@@ -70,7 +70,7 @@ void mediateResponsePlotData(int page, plot_data_t *plotDataArray, int arrayLeng
 //
 // provide the GUI with a double value for a single cell in a free-format multi-page table. There are no
 // predefined limits to the number of pages, nor the number of rows/column on a page.  page can be arbitrary,
-// but both row and column index from 0. 
+// but both row and column index from 0.
 
 void mediateResponseCellDataDouble(int page, int row, int column, double doubleValue, void *responseHandle);
 
@@ -79,18 +79,25 @@ void mediateResponseCellDataDouble(int page, int row, int column, double doubleV
 //
 // provide the GUI with an integer value for a single cell in a free-format multi-page table. There are no
 // predefined limits to the number of pages, nor the number of rows/column on a page.  page can be arbitrary,
-// but both row and column index from 0. 
+// but both row and column index from 0.
 
 void mediateResponseCellDataInteger(int page, int row, int column, int integerValue, void *responseHandle);
 
-// mediateResponseCellDataDouble
+// mediateResponseCellDataString
 //
-// provide the GUI with an integer value for a single cell in a free-format multi-page table. There are no
+// provide the GUI with a string value for a single cell in a free-format multi-page table. There are no
 // predefined limits to the number of pages, nor the number of rows/column on a page.  page can be arbitrary,
-// but both row and column index from 0. 
+// but both row and column index from 0.
 
 void mediateResponseCellDataString(int page, int row, int column, const char *stringValue, void *responseHandle);
 
+// mediateResponseCellInfo
+//
+// provide the GUI with a label and a formatted string distributed in two in a free-format multi-page table. There are no
+// predefined limits to the number of pages, nor the number of rows/column on a page.  page can be arbitrary,
+// but both row and column index from 0.
+
+void mediateResponseCellInfo(int page, int row, int column, void *responseHandle, const char *label,const char *stringFormat, ...);
 
 //----------------------------------------------------------
 // Data window oriented interface

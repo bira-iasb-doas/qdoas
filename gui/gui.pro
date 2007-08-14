@@ -135,6 +135,8 @@ HEADERS += RefCountPtr.h
 # Mediator Header files
 #----------------------------------------------
 HEADERS += mediate.h
+HEADERS += mediate_response.h
+HEADERS += mediate_request.h
 HEADERS += mediate_project.h
 HEADERS += mediate_analysis_window.h
 

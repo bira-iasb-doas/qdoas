@@ -104,6 +104,25 @@ void mediateResponseCellDataString(int page,
   resp->addCell(page, row, column, QVariant(QString(stringValue)));
 }
 
+void mediateResponseCellInfo(int page,
+				   int row,
+				   int column,
+				   void *responseHandle,
+				   const char *label,
+				   const char *stringFormat,...)
+ {
+ 	va_list argList;
+ 	char stringValue[80];
+
+  va_start(argList,stringFormat);
+  vsprintf(stringValue,stringFormat,argList);
+  va_end(argList);
+
+ 	CEngineResponseBrowseRecord *resp = static_cast<CEngineResponseBrowseRecord*>(responseHandle);
+ 	resp->addCell(page,row,column,QVariant(QString(label)));
+ 	resp->addCell(page,row,column+1,QVariant(QString(stringValue)));
+ }
+
 void mediateResponseLabelPage(int page,
 			      const char *title,
 			      const char *tag,
@@ -122,3 +141,5 @@ void mediateResponseErrorMessage(const char *function,
   CEngineResponse *resp = static_cast<CEngineResponse*>(responseHandle);
   resp->addErrorMessage(QString(function), QString(messageString), errorLevel);
 }
+
+

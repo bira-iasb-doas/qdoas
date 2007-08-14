@@ -13,6 +13,11 @@ ENGINE_CONTEXT engineContext;
 ENGINE_CONTEXT *EngineCreateContext(void)
  {
  	memset(&engineContext,0,sizeof(ENGINE_CONTEXT));
+
+ 	// Initializations
+
+ 	engineContext.TDet=(double)0.;
+
  	return &engineContext;
  }
 
