@@ -76,7 +76,7 @@
 // INCLUDE
 // =======
 
-#include "doas.h"
+#include "engine.h"
 
 // ====================
 // CONSTANTS DEFINITION
@@ -249,14 +249,6 @@ RC ReliPDA_EGG_Logger(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDa
 
   spectrum=pSpecInfo->spectrum;
   rc=ERROR_ID_NO;
-
-  {
-  	FILE *fp;
-  	fp=fopen("toto.dat","a+t");
-  	fprintf(fp,"pdaRecord %d %d\n",recordNo,pdaLastRecord);
-  	fclose(fp);
-  }
-
 
   // Buffer allocation
 

@@ -1853,34 +1853,47 @@ typedef struct _omi
  }
 OMI_DATA;
 
-typedef struct _specInfo
+typedef struct _specInfo                                                        // QDOAS : future engine
  {
-  // Data on project and file
+  // Data on the current project
 
   PROJECT project;
-  UCHAR fileName[MAX_STR_LEN+1];
 
   // spectra buffers
 
-  double *lembda,         // wavelengths
-         *spectrum,       // raw spectrum
-         *sigmaSpec,      // error on raw spectrum if any
-         *darkCurrent,    // dark current
-         *specMax,        // maxima of signal over scans
-         *instrFunction,
-         *varPix,         // variability interpixel
-         *dnl;            // non linearity of detector
+  double *lembda,                                                               // wavelengths
+         *spectrum,                                                             // raw spectrum
+         *sigmaSpec,                                                            // error on raw spectrum if any
+         *darkCurrent,                                                          // dark current
+         *specMax,                                                              // maxima of signal over scans
+         *instrFunction,                                                        // instrumental function
+         *varPix,                                                               // variability interpixel
+         *dnl;                                                                  // non linearity of detector
+
+  // file information
+
+  UCHAR   fileName[MAX_STR_LEN+1];                                              // the name of the current file
+  FILE   *specFp,*namesFp,*darkFp;                                              // pointers to the current files
 
   // record information
 
-  ULONG  *recordIndexes;                                       // indexes of records for direct access
+  ULONG  *recordIndexes;                                                        // indexes of records for direct access (specific to BIRA-IASB spectra file format)
+  int     recordNumber;                                                         // the total number of records
+  int     indexRecord;                                                          // index of the current record
+
+  // data information
+
+  int     NDET;                                                                 // size of the detector
+
+  // information specific to a file format
 
   CCD     ccd;
 
-  INT     recordNumber;                                        // total number of record in file
-  INT     recordIndexesSize;                                   // size of 'recordIndexes' buffer
+// QDOAS ---> include information
+
+  int recordIndexesSize;
   INT     recordSize;                                          // size of record if length fixed
-  INDEX   indexRecord,indexFile,indexProject;
+  INDEX   indexFile,indexProject;
   INT     lastSavedRecord;
 
   // experiment data

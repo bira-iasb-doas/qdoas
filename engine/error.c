@@ -162,6 +162,7 @@ ERROR_TABLE errorTable[]=
   { ERROR_ID_FILE_AUTOMATIC            , "No automatic reference selection can be perform on this type of file"                                               },
   { ERROR_ID_NO_REF                    , "No reference spectrum found for %s in file %s"                                                                      },
   { ERROR_ID_PDS                       , "[%s] failed for %s PDS file"                                                                                        },
+  { ERROR_ID_FILE_FORMAT               , "File format is unknown"                                                                                             },
 
   // End of the table
 

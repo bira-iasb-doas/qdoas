@@ -311,6 +311,7 @@ SHORT_DATE;
 #define ERROR_ID_FILE_AUTOMATIC                1280                             // no automatic reference selection can be perform on this type of file
 #define ERROR_ID_NO_REF                        1290                             // no reference file found in the specified file
 #define ERROR_ID_PDS                           1300                             // error in the SCIA PDS file
+#define ERROR_ID_FILE_FORMAT                   1310                             // bad file format
 
 // =========
 // DEBUGGING
