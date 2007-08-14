@@ -30,6 +30,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 class CEngineController;
 
+static const int cEngineResponseMessageType              = 0;
 static const int cEngineResponseSetProjectType           = 1;
 static const int cEngineResponseBeginBrowseFileType      = 2;
 static const int cEngineResponseBrowseRecordType         = 3;
@@ -62,6 +63,17 @@ class CEngineResponse
 inline int CEngineResponse::type(void) const { return m_type; }
 inline bool CEngineResponse::hasErrors(void) const { return !m_errorMessages.isEmpty(); }
 inline bool CEngineResponse::hasFatalError(void) const { return (m_highestErrorLevel == cFatalEngineError); }
+
+//------------------------------------------------------------
+
+class CEngineResponseMessage : public CEngineResponse
+{
+ public:
+  CEngineResponseMessage();
+  virtual ~CEngineResponseMessage();
+
+  virtual void process(CEngineController *engineController);
+};
 
 //------------------------------------------------------------
 

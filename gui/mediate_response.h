@@ -33,25 +33,33 @@ extern "C" {
 // Plotting oriented interface
 //----------------------------------------------------------
 
-// mediateResponseSpectrumData
+  enum ePlotDataType {
+    PlotDataType_Spectrum,
+    PlotDataType_Fit,
+    PlotDataType_Shift,
+    PlotDataType_Fwhm,
+    PlotDataType_Points
+  };
+
+  typedef struct plot_data {
+    double *x, *y;
+    int length;
+    enum ePlotDataType plotType;
+    char *legendStr;
+  } plot_data_t;
+
+
+  void mediateAllocateAndSetPlotData(plot_data_t *d, double *xData, double *yData, int len, enum ePlotDataType type, const char *legend);
+  void mediateReleasePlotData(plot_data_t *d);
+
+// mediateResponsePlotData
 //
-// provide the GUI with spectral data for a spectral record. The data is contained
-// in two arrays of doubles, both with the length arrayLength (indexed from 0).
+// provide the GUI with plots data. The data is contained in an array
+// of plot_data of length arrayLength. 
 
-void mediateResponseSpectrumData(int page, double *intensityDataArray, double *wavelengthDataArray,
-				 int arrayLength, const char *title, const char *wavelengthLabel,
-				 const char *intensityLabel, void *responseHandle);
-
-
-// mediateResponseGraphicalData
-//
-// provide the GUI with graphical data. The data is contained in two arrays of doubles, both with the
-// length arrayLength (indexed from 0). page is provided for organisation purposes and can have an
-// abitrary value (it is expected that page will correspond to an analysis window).
-
-void mediateResponseGraphicalData(int page, double *ordinateArray, double *abscissaArray, int arrayLength,
-                                  int dataType, void *responseHandle);
-
+void mediateResponsePlotData(int page, plot_data_t *plotDataArray, int arrayLength,
+			     const char *title, const char *xLabel,
+			     const char *yLabel, void *responseHandle);
 
 
 //----------------------------------------------------------

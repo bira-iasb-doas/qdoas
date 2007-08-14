@@ -86,15 +86,16 @@ bool CEngineRequestSetProject::process(CEngineThread *engineThread)
   // process is called from the thread and drives the engine through the
   // mediator interface.
 
-  int rc = mediateRequestSetProject(engineThread->engineContext(),
-				    &m_project);
+  CEngineResponse *resp = new CEngineResponseMessage;
 
-  // TODO
+  int rc = mediateRequestSetProject(engineThread->engineContext(),
+				    &m_project, resp);
 
   // no response unless there was an error
-  //  if (rc == -1) {
-    //    resp->addErrorMessage("Failed to copy project data to the engine.");
-    //engineThread->respond(resp);
+  if (rc == -1)
+    engineThread->respond(resp);
+  else
+    delete resp;
 
   return (rc == 0);
 }
@@ -145,8 +146,8 @@ bool CEngineRequestBrowseNextRecord::process(CEngineThread *engineThread)
   // create a response as the handle
   CEngineResponseBrowseRecord *resp = new CEngineResponseBrowseRecord;
 
-  int rc = mediateRequestGetNextMatchingSpectrum(engineThread->engineContext(),
-						 resp);
+  int rc = mediateRequestNextMatchingBrowseSpectrum(engineThread->engineContext(),
+						    resp);
 
   resp->setRecordNumber(rc); // -1 if an error occurred
 
@@ -178,8 +179,8 @@ bool CEngineRequestBrowseSpecificRecord::process(CEngineThread *engineThread)
   
   if (rc > 0) {
     // successfully positioned .. now browse
-    rc = mediateRequestGetNextMatchingSpectrum(engineThread->engineContext(),
-					       resp);
+    rc = mediateRequestNextMatchingBrowseSpectrum(engineThread->engineContext(),
+						  resp);
 
     resp->setRecordNumber(rc); // -1 if an error occurred
   }

@@ -22,20 +22,20 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "mediate.h"
 #include "engine.h"
 
-int mediateRequestCreateEngineContext(void **engineContext)
+int mediateRequestCreateEngineContext(void **engineContext, void *responseHandle)
  {
   *engineContext = (void *)EngineCreateContext();
   return 0;
 }
 
-int mediateRequestDestroyEngineContext(void *engineContext)
+int mediateRequestDestroyEngineContext(void *engineContext, void *responseHandle)
 {
   EngineDestroyContext(engineContext);
   return 0;
 }
 
 int mediateRequestSetProject(void *engineContext,
-			     const mediate_project_t *project)
+			     const mediate_project_t *project, void *responseHandle)
  {
  	// Declarations
 
@@ -115,14 +115,16 @@ int mediateRequestSetProject(void *engineContext,
 
 int mediateRequestSetAnalysisWindows(void *engineContext,
 				     int numberOfWindows,
-				     const mediate_analysis_window_t *analysisWindows)
+				     const mediate_analysis_window_t *analysisWindows,
+				     void *responseHandle)
 {
   return 0;
 }
 
 int mediateRequestSetSymbols(void *engineContext,
 			     int numberOfSymbols,
-			     const mediate_symbol_t *symbols)
+			     const mediate_symbol_t *symbols,
+			     void *responseHandle)
 {
   return 0;
 }
@@ -158,9 +160,9 @@ int mediateRequestGotoSpectrum(void *engineContext,
   }
 }
 
-int mediateRequestGetNextMatchingSpectrum(void *engineContext,
-					  void *responseHandle)
- {
+int mediateRequestNextMatchingBrowseSpectrum(void *engineContext,
+					     void *responseHandle)
+{
 	 // Declarations
 
   ENGINE_CONTEXT *pEngineContext = (ENGINE_CONTEXT *)engineContext;
@@ -168,8 +170,10 @@ int mediateRequestGetNextMatchingSpectrum(void *engineContext,
   PRJCT_INSTRUMENTAL *pInstrumental;
   SHORT_DATE  *pDay;                                                            // pointer to measurement date
   struct time *pTime;                                                           // pointer to measurement date
-  int rec = (pEngineContext->indexRecord)++;
   double x[1024], y[1024];
+  int rec = (pEngineContext->indexRecord)++;
+  plot_data_t spectrumData;
+
   int i;
   double xx, scale;
 
@@ -186,8 +190,13 @@ int mediateRequestGetNextMatchingSpectrum(void *engineContext,
   else {
     EngineReadFile(pEngineContext,rec,x,y);
 
-    mediateResponseSpectrumData(0, y, x, 1024, "Spectrum", "Lambda (nm)", NULL, responseHandle);
-    mediateResponseSpectrumData(5, y, x, 512, "Fred", "on page 5", "blah", responseHandle);
+    mediateAllocateAndSetPlotData(&spectrumData, x, y, 1024, PlotDataType_Spectrum, "legend string");
+    mediateResponsePlotData(0, &spectrumData, 1, "Spectrum", "Lambda (nm)", "Y Label", responseHandle);
+    mediateReleasePlotData(&spectrumData);
+
+    mediateAllocateAndSetPlotData(&spectrumData, x, y, 512, PlotDataType_Spectrum, "legend string");
+    mediateResponsePlotData(5, &spectrumData, 1, "Fred", "on page 5", "blah", responseHandle);
+    mediateReleasePlotData(&spectrumData);
 
 
 // QDOAS ???
@@ -411,21 +420,53 @@ int mediateRequestEndBrowseSpectra(void *engineContext,
   return 0;
 }
 
-int mediateRequestBeginAnalysis(void *engineContext,
-				const char *spectraFileName,
-				void *responseHandle)
+int mediateRequestBeginAnalyseSpectra(void *engineContext,
+				      const char *spectraFileName,
+				      void *responseHandle)
 {
   return 0;
 }
 
-int mediateRequestAnalyseNextMatchingSpectrum(void *engineContext,
+int mediateRequestNextMatchingAnalyseSpectrum(void *engineContext,
 					      void *responseHandle)
 {
   return 0;
 }
 
-int mediateRequestEndAnalysis(void *engineContext,
-			      void *responseHandle)
+int mediateRequestPrevMatchingAnalyseSpectrum(void *engineContext,
+					      void *responseHandle)
+{
+  return 0;
+}
+
+int mediateRequestEndAnalyseSpectra(void *engineContext,
+				    void *responseHandle)
+{
+  return 0;
+}
+
+
+int mediateRequestBeginCalibrateSpectra(void *engineContext,
+					const char *spectraFileName,
+					void *responseHandle)
+{
+  return 0;
+}
+
+int mediateRequestNextMatchingCalibrateSpectrum(void *engineContext,
+						void *responseHandle)
+{
+  return 0;
+}
+
+int mediateRequestPrevMatchingCalibrateSpectrum(void *engineContext,
+						void *responseHandle)
+{
+  return 0;
+}
+
+int mediateRequestEndCalibrateSpectra(void *engineContext,
+				      void *responseHandle)
 {
   return 0;
 }

@@ -55,6 +55,22 @@ bool CEngineResponse::processErrors(CEngineController *engineController)
 
 //------------------------------------------------------------
 
+CEngineResponseMessage::CEngineResponseMessage() :
+  CEngineResponse(cEngineResponseMessageType)
+{
+}
+
+CEngineResponseMessage::~CEngineResponseMessage()
+{
+}
+
+void CEngineResponseMessage::process(CEngineController *engineController)
+{
+  processErrors(engineController);
+}
+
+//------------------------------------------------------------
+
 CEngineResponseSetProject::CEngineResponseSetProject() :
   CEngineResponse(cEngineResponseSetProjectType)
 {

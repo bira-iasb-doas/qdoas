@@ -35,7 +35,10 @@ CEngineThread::CEngineThread(CEngineController *parent) :
   m_terminated(false)
 {
   // get an engine context
-  assert(mediateRequestCreateEngineContext(&m_engineContext) == 0);
+  CEngineResponse *resp = new CEngineResponseMessage;
+
+  assert(mediateRequestCreateEngineContext(&m_engineContext, resp) == 0);
+  delete resp;
 }
 
 CEngineThread::~CEngineThread()
@@ -49,7 +52,10 @@ CEngineThread::~CEngineThread()
   while (isRunning())
     QThread::msleep(50);
 
-  assert(mediateRequestDestroyEngineContext(m_engineContext) == 0);
+  CEngineResponse *resp = new CEngineResponseMessage;
+
+  assert(mediateRequestDestroyEngineContext(m_engineContext, resp) == 0);
+  delete resp;
 }
 
 void CEngineThread::setRunState(bool setRunning)

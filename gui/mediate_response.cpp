@@ -24,30 +24,54 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "CEngineResponse.h"
 #include "CPlotDataSet.h"
 
-void mediateResponseSpectrumData(int page,
-				 double *intensityDataArray,
-				 double *wavelengthDataArray,
-                                 int arrayLength,
-				 const char *title,
-				 const char *wavelengthLabel,
-				 const char *intensityLabel,
-				 void *responseHandle)
+void mediateAllocateAndSetPlotData(plot_data_t *d, double *xData, double *yData, int len, enum ePlotDataType type, const char *legend)
+{
+  int byteLen = len * sizeof(double);
+
+  d->x = (double*)malloc(byteLen);
+  d->y = (double*)malloc(byteLen);
+  d->legendStr = (char*)malloc(strlen(legend)+1);
+
+  if (d->x == NULL || d->y == NULL || d->legendStr == NULL) {
+    // bail out ...
+    mediateReleasePlotData(d);
+    d->x = d->y = NULL;
+    d->legendStr = NULL;
+    d->length = 0;
+    d->plotType = type;
+  }
+  else {
+    memcpy(d->x, xData, byteLen);
+    memcpy(d->y, yData, byteLen);
+    strcpy(d->legendStr, legend);
+    d->length = len;
+    d->plotType = type;
+  }
+}
+
+void mediateReleasePlotData(plot_data_t *d)
+{
+  if (d->x) free(d->x);
+  if (d->y) free(d->y);
+  if (d->legendStr) free(d->legendStr);
+}
+
+
+void mediateResponsePlotData(int page,
+			     plot_data_t *plotDataArray,
+			     int arrayLength,
+			     const char *title,
+			     const char *xLabel,
+			     const char *yLabel,
+			     void *responseHandle)
 {
   CEngineResponseBrowseRecord *resp = static_cast<CEngineResponseBrowseRecord*>(responseHandle);
 
+  // TODO
 
-  CPlotDataSet *dataSet = new CPlotDataSet(wavelengthDataArray, intensityDataArray, arrayLength,
-                                           title, wavelengthLabel, intensityLabel);
-  resp->addDataSet(page, dataSet);
-}
-
-void mediateResponseGraphicalData(int page,
-				  double *ordinateArray,
-				  double *abscissaArray,
-				  int arrayLength,
-				  int dataType,
-				  void *responseHandle)
-{
+  //  CPlotDataSet *dataSet = new CPlotDataSet(wavelengthDataArray, intensityDataArray, arrayLength,
+  //      title, wavelengthLabel, intensityLabel);
+//  resp->addDataSet(page, dataSet);
 }
 
 void mediateResponseCellDataDouble(int page,

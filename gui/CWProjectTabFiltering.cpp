@@ -28,6 +28,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "CWProjectTabFiltering.h"
 #include "CValidator.h"
 
+#include "debugutil.h"
+
 CWProjectTabFiltering::CWProjectTabFiltering(const mediate_project_filtering_t *lowpass,
 					     const mediate_project_filtering_t *highpass, QWidget *parent) :
   QFrame(parent)
