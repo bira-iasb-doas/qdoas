@@ -18,28 +18,25 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
 
-#ifndef _CENGINEERROR_H_GUARD
-#define _CENGINEERROR_H_GUARD
+#ifndef _MEDIATE_TYPES_H_GUARD
+#define _MEDIATE_TYPES_H_GUARD
 
-#include <QString>
 
-class CEngineError
-{
- public:
-  CEngineError(const QString &tag, const QString &msg, int errorLevel);
-  ~CEngineError();
-
-  const QString& message(void) const;
-  const QString& tag(void) const;
-  int errorLevel(void) const;
-
- private:
-  QString m_tag, m_message;
-  int m_errorLevel;
+enum eEngineErrorType {
+  eNoEngineError,
+  eInformationEngineError,
+  eWarningEngineError,
+  eFatalEngineError
 };
 
-inline const QString& CEngineError::tag(void) const { return m_tag; }
-inline const QString& CEngineError::message(void) const { return m_message; }
-inline int CEngineError::errorLevel(void) const { return m_errorLevel; }
+
+enum ePlotDataType {
+  PlotDataType_Spectrum,
+  PlotDataType_Fit,
+  PlotDataType_Shift,
+  PlotDataType_Fwhm,
+  PlotDataType_Points
+};
 
 #endif
+

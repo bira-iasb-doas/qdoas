@@ -42,6 +42,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "CQdoasProjectConfigHandler.h"
 #include "CWorkSpace.h"
 
+#include "mediate_types.h"
+
 #include "debugutil.h"
 
 CWMain::CWMain(QWidget *parent) :
@@ -290,13 +292,13 @@ void CWMain::slotOpenFile()
 void CWMain::slotErrorMessages(int highestLevel, const QString &messages)
 {
   switch (highestLevel) {
-    case cInformationEngineError:
+    case eInformationEngineError:
       QMessageBox::information(this, "Engine Information", messages);
       break;
-    case cWarningEngineError:
+    case eWarningEngineError:
       QMessageBox::warning(this, "Engine Warning", messages);
       break;
-    case cFatalEngineError:
+    case eFatalEngineError:
       QMessageBox::critical(this, "Engine Fatal Error", messages);
       break;
   }

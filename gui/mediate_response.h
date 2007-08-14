@@ -21,6 +21,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #ifndef _MEDIATE_RESPONSE_H_GUARD
 #define _MEDIATE_RESPONSE_H_GUARD
 
+#include "mediate_types.h"
+
 #if defined(_cplusplus) || defined(__cplusplus)
 extern "C" {
 #endif
@@ -32,14 +34,6 @@ extern "C" {
 //----------------------------------------------------------
 // Plotting oriented interface
 //----------------------------------------------------------
-
-  enum ePlotDataType {
-    PlotDataType_Spectrum,
-    PlotDataType_Fit,
-    PlotDataType_Shift,
-    PlotDataType_Fwhm,
-    PlotDataType_Points
-  };
 
   typedef struct plot_data {
     double *x, *y;
@@ -123,7 +117,7 @@ void mediateResponseLabelPage(int page, const char *title, const char *tag, void
 // programatic error handling logic. The error code from the mediateRequest* function
 // must be sufficient for that purpose.
 
-void mediateResponseErrorMessage(const char *function, const char *messageString, int errorLevel, void *responseHandle);
+void mediateResponseErrorMessage(const char *function, const char *messageString, enum eEngineErrorType errorType, void *responseHandle);
 
 #if defined(_cplusplus) || defined(__cplusplus)
 }

@@ -32,11 +32,6 @@ extern "C" {
   /****************************************************/
   /* Geolocation */
 
-  static const int cGeolocationModeNone      = 0;
-  static const int cGeolocationModeCircle    = 1;
-  static const int cGeolocationModeRectangle = 2;
-  static const int cGeolocationModeSites     = 3;
-
   /* cGeolocationModeCircle */
   struct geolocation_circle
   {
@@ -105,17 +100,6 @@ extern "C" {
   static const int cProjAnalysisMethodModeMarqLevSvd  = 2;
   static const int cProjAnalysisMethodModeMarqLevFull = 3;
 
-  static const int cProjAnalysisFitModeNone         = 0;
-  static const int cProjAnalysisFitModeInstrumental = 1;
-  static const int cProjAnalysisFitModeStatistical  = 2;
-
-  static const int cProjAnalysisUnitModePixel     = 1;
-  static const int cProjAnalysisUnitModeNanometer = 2;
-
-  static const int cProjAnalysisInterpolationModeLinear = 1;
-  static const int cProjAnalysisInterpolationModeSpline = 2;
-
-
   typedef struct mediate_project_analysis
   {
     int methodType;
@@ -130,16 +114,6 @@ extern "C" {
   /****************************************************/
   /* Project Filtering */
   
-  static const int cProjFilteringModeNone              = 0;
-  static const int cProjFilteringModeKaiser            = 1;
-  static const int cProjFilteringModeBoxcar            = 2;
-  static const int cProjFilteringModeGaussian          = 3;
-  static const int cProjFilteringModeTriangular        = 4;
-  static const int cProjFilteringModeSavitzkyGolay     = 5;
-  static const int cProjFilteringModeOddEvenCorrection = 6;
-  static const int cProjFilteringModeBinomial          = 7;
-
-
   struct filter_kaiser
   {
     double cutoffFrequency;
@@ -194,13 +168,6 @@ extern "C" {
   /****************************************************/
   /* Project Calibration */
 
-  static const int cSpectralLineShapeNone          = 0;
-  static const int cSpectralLineShapeGaussian      = 1;
-  static const int cSpectralLineShapeErrorFunction = 2;
-  static const int cSpectralLineShapeLorentz       = 3;
-  static const int cSpectralLineShapeVoigt         = 4;
-
-
   typedef struct mediate_project_calibration
   {
     char solarRefFile[FILENAME_BUFFER_LENGTH];
@@ -221,10 +188,6 @@ extern "C" {
   
   /****************************************************/
   /* Project Undersampling */
-
-  static const int cUndersamplingMethodFile           = 1;
-  static const int cUndersamplingMethodFixedPhase     = 2;
-  static const int cUndersamplingMethodAutomaticPhase = 3;
 
   typedef struct mediate_project_undersampling
   {

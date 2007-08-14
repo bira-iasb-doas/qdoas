@@ -29,6 +29,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "CWProjectTabSpectra.h"
 #include "CValidator.h"
 
+#include "constants.h"
+
 CWProjectTabSpectra::CWProjectTabSpectra(const mediate_project_spectra_t *properties, QWidget *parent) :
   QFrame(parent)
 {
@@ -205,7 +207,7 @@ CWGeolocation::CWGeolocation(const struct geolocation *geo, QWidget *parent) :
   m_modeCombo = new QComboBox(this);
   mainLayout->addWidget(m_modeCombo);
 
-  m_modeCombo->addItem("Unrestricted", QVariant(cGeolocationModeNone));
+  m_modeCombo->addItem("Unrestricted", QVariant(PRJCT_SPECTRA_MODES_NONE));
   m_modeStack->addWidget(new QFrame(this)); // blank placeholder
 
   // each mode has a frame widget that is placed in the stack. The widget shown is
@@ -238,7 +240,7 @@ CWGeolocation::CWGeolocation(const struct geolocation *geo, QWidget *parent) :
 
   circleFrame->setLayout(circleLayout);
   m_modeStack->addWidget(circleFrame);
-  m_modeCombo->addItem("Circle", QVariant(cGeolocationModeCircle));
+  m_modeCombo->addItem("Circle", QVariant(PRJCT_SPECTRA_MODES_CIRCLE));
 
   // rectangle
   QFrame *rectangleFrame = new QFrame;
@@ -274,7 +276,7 @@ CWGeolocation::CWGeolocation(const struct geolocation *geo, QWidget *parent) :
 
   rectangleFrame->setLayout(rectangleLayout);
   m_modeStack->addWidget(rectangleFrame);
-  m_modeCombo->addItem("Rectangle", QVariant(cGeolocationModeRectangle));
+  m_modeCombo->addItem("Rectangle", QVariant(PRJCT_SPECTRA_MODES_RECTANGLE));
 
   mainLayout->addWidget(m_modeStack);
 
@@ -318,7 +320,7 @@ void CWGeolocation::apply(struct geolocation *geo) const
 {
   int index = m_modeCombo->currentIndex();
   
-  geo->mode = (index == -1) ? cGeolocationModeNone : m_modeCombo->itemData(index).toInt();
+  geo->mode = (index == -1) ? PRJCT_SPECTRA_MODES_NONE : m_modeCombo->itemData(index).toInt();
 
   // set data for all modes 
   QString tmpStr;

@@ -27,6 +27,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "CPlotDataSet.h"
 #include "CTablePageData.h"
 #include "CEngineError.h"
+#include "mediate_types.h"
 
 class CEngineController;
 
@@ -62,7 +63,7 @@ class CEngineResponse
 
 inline int CEngineResponse::type(void) const { return m_type; }
 inline bool CEngineResponse::hasErrors(void) const { return !m_errorMessages.isEmpty(); }
-inline bool CEngineResponse::hasFatalError(void) const { return (m_highestErrorLevel == cFatalEngineError); }
+inline bool CEngineResponse::hasFatalError(void) const { return (m_highestErrorLevel == eFatalEngineError); }
 
 //------------------------------------------------------------
 

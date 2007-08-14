@@ -28,6 +28,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "CWProjectTabCalibration.h"
 #include "CValidator.h"
 
+#include "constants.h"
+
 #include "debugutil.h"
 
 CWProjectTabCalibration::CWProjectTabCalibration(const mediate_project_calibration_t *properties, QWidget *parent) :
@@ -62,11 +64,11 @@ CWProjectTabCalibration::CWProjectTabCalibration(const mediate_project_calibrati
   // line shape
   topLayout->addWidget(new QLabel("Line Shape (SFP)", this), 2, 0);
   m_lineShapeCombo = new QComboBox(this);
-  m_lineShapeCombo->addItem("Dont Fit", QVariant(cSpectralLineShapeNone));
-  m_lineShapeCombo->addItem("Gaussian", QVariant(cSpectralLineShapeGaussian));
-  m_lineShapeCombo->addItem("Error Function", QVariant(cSpectralLineShapeErrorFunction));
-  m_lineShapeCombo->addItem("2n-Lorentz", QVariant(cSpectralLineShapeLorentz));
-  m_lineShapeCombo->addItem("Voigt", QVariant(cSpectralLineShapeVoigt));
+  m_lineShapeCombo->addItem("Dont Fit", QVariant(PRJCT_CALIB_FWHM_TYPE_NONE));
+  m_lineShapeCombo->addItem("Gaussian", QVariant(PRJCT_CALIB_FWHM_TYPE_GAUSS));
+  m_lineShapeCombo->addItem("Error Function", QVariant(PRJCT_CALIB_FWHM_TYPE_ERF));
+  m_lineShapeCombo->addItem("2n-Lorentz", QVariant(PRJCT_CALIB_FWHM_TYPE_INVPOLY));
+  m_lineShapeCombo->addItem("Voigt", QVariant(PRJCT_CALIB_FWHM_TYPE_VOIGT));
   topLayout->addWidget(m_lineShapeCombo, 2, 1);
  
   // degree of 2n-Lorentz
@@ -221,7 +223,7 @@ void CWProjectTabCalibration::apply(mediate_project_calibration_t *properties) c
 
 void CWProjectTabCalibration::slotLineShapeSelectionChanged(int index)
 {
-  if (m_lineShapeCombo->itemData(index).toInt() == cSpectralLineShapeLorentz)
+  if (m_lineShapeCombo->itemData(index).toInt() == PRJCT_CALIB_FWHM_TYPE_INVPOLY)
     m_degreeWidget->show();
   else
     m_degreeWidget->hide();

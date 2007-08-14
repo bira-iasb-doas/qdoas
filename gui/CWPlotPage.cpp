@@ -33,20 +33,25 @@ CWPlot::CWPlot(RefCountConstPtr<CPlotDataSet> dataSet, QWidget *parent) :
   setAxisTitle(QwtPlot::xBottom, m_dataSet->xAxisLabel());
   setAxisTitle(QwtPlot::yLeft, m_dataSet->yAxisLabel());
 
-  QwtPlotCurve *curve = new QwtPlotCurve();
-  curve->setData(m_dataSet->lines());
-  curve->attach(this);
+  // curves ...
+  
+  int n = m_dataSet->count();
+  int i = 0;
+  while (i < n) {
+    QwtPlotCurve *curve = new QwtPlotCurve();
+    curve->setData(m_dataSet->curve(i));
 
-  if (m_dataSet->hasPointData()) {
-    curve = new QwtPlotCurve();
-    curve->setData(m_dataSet->points());
-    curve->setStyle(QwtPlotCurve::NoCurve);
-    QwtSymbol sym = curve->symbol();
-    sym.setStyle(QwtSymbol::Ellipse);
-    curve->setSymbol(sym);
+    if (m_dataSet->type(i) == PlotDataType_Points) {
+      curve->setStyle(QwtPlotCurve::NoCurve);
+      QwtSymbol sym = curve->symbol();
+      sym.setStyle(QwtSymbol::Ellipse);
+      curve->setSymbol(sym);
+    }
+
     curve->attach(this);
+    ++i;
   }
-
+    
   setCanvasBackground(QColor(0xffffffff));
 
   replot();

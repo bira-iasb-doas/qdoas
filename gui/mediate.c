@@ -107,7 +107,7 @@ int mediateRequestSetProject(void *engineContext,
    }
 
 //  if (engineContext<=0)
-//   mediateResponseErrorMessage("mediateRequestSetProject","The size of the detector is invalid", 1, responseHandle);
+//   mediateResponseErrorMessage("mediateRequestSetProject","The size of the detector is invalid", eFatalEngineError, responseHandle);
 //  else
      EngineSetProject(pEngineContext);
 
@@ -140,7 +140,7 @@ int mediateRequestBeginBrowseSpectra(void *engineContext,
 
   pEngineContext->indexRecord = 1;
 
-//  mediateResponseErrorMessage("fred", "Coucou message", 1, responseHandle);
+  // mediateResponseErrorMessage("fred", "Coucou message", eWarningEngineError, responseHandle);
 
   return pEngineContext->recordNumber;
 }
@@ -194,6 +194,17 @@ int mediateRequestNextMatchingBrowseSpectrum(void *engineContext,
     return 0;
   }
   else {
+    //-----------------
+    // TEMPORARY COMMENT
+    //-----------------
+    // Caroline, I dont like the mediateAllocateAndSetPlotData stuff we added just before you left.
+    // It works, but we are copying the data too many times. I think it would be better if you
+    // adapt the system so that it justs alloocates the data arrays and your engine code can
+    // write directly into the allocated double* arrays. Right now, you read data, it gets copied
+    // into the plot_data_t by the mediateAllocateAndSetPlotData function, and the mediateResponsePlotData
+    // copies that into the structures managed by the responseHandle... we should eliminate one
+    // of the copies.
+
     EngineReadFile(pEngineContext,rec,x,y);
 
     mediateAllocateAndSetPlotData(&spectrumData, x, y, 1024, PlotDataType_Spectrum, "legend string");

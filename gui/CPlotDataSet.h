@@ -17,39 +17,62 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
+
 #ifndef _CPLOTDATASET_H_GUARD
 #define _CPLOTDATASET_H_GUARD
 
 #include <QString>
 #include <qwt_data.h>
 
+#include "mediate_types.h"
+
+class CXYPlotData
+{
+ public:
+  CXYPlotData(const double *x, const double *y, int n, enum ePlotDataType type, const char *legend);
+  ~CXYPlotData();
+
+  enum ePlotDataType type(void) const;
+  const QwtArrayData& curve(void) const;
+  const QString& legend(void) const;
+
+ private:
+  QwtArrayData m_curve;
+  enum ePlotDataType m_curveType;
+  QString m_legend;
+};
+
+inline enum ePlotDataType CXYPlotData::type(void) const { return m_curveType; }
+inline const QwtArrayData& CXYPlotData::curve(void) const { return m_curve; }
+inline const QString& CXYPlotData::legend(void) const { return m_legend; }
+
+
 class CPlotDataSet
 {
  public:
-  CPlotDataSet(const double *x, const double *y, int n,
-               const char *title, const char *xlabel, const char *ylabel);
-  CPlotDataSet(const double *x, const double *y, int n,
-               const double *px, const double *py, int pn,
-               const char *title, const char *xlabel, const char *ylabel);
+  CPlotDataSet(const char *title, const char *xlabel, const char *ylabel);
   ~CPlotDataSet();
 
-  bool hasPointData(void) const;
-  const QwtArrayData& lines(void) const;
-  const QwtArrayData& points(void) const;
+  void addPlotData(const double *x, const double *y, int n, enum ePlotDataType type, const char *legend);
+               
+  int count(void) const;
+  const QwtArrayData& curve(int index) const;
+  const QString& legend(int index) const;
+  enum ePlotDataType type(int index) const;
+
   const QString& plotTitle(void) const;
   const QString& xAxisLabel(void) const;
   const QString& yAxisLabel(void) const;
 
  private:
-  QwtArrayData m_lines;
-  QwtArrayData m_points;
-  bool m_hasPointData;
+  QList<CXYPlotData*> m_dataList;
   QString m_title, m_xLabel, m_yLabel;
 };
 
-inline bool CPlotDataSet::hasPointData(void) const { return m_hasPointData; }
-inline const QwtArrayData& CPlotDataSet::lines(void) const { return m_lines; }
-inline const QwtArrayData& CPlotDataSet::points(void) const { return m_points; }
+inline int CPlotDataSet::count(void) const { return m_dataList.count(); }
+inline const QwtArrayData& CPlotDataSet::curve(int index) const { return m_dataList.at(index)->curve(); }
+inline const QString& CPlotDataSet::legend(int index) const { return m_dataList.at(index)->legend(); }
+inline enum ePlotDataType CPlotDataSet::type(int index) const { return m_dataList.at(index)->type(); }
 inline const QString& CPlotDataSet::plotTitle(void) const { return m_title; }
 inline const QString& CPlotDataSet::xAxisLabel(void) const { return m_xLabel; }
 inline const QString& CPlotDataSet::yAxisLabel(void) const { return m_yLabel; }

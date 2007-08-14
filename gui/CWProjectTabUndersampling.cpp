@@ -27,6 +27,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "CWProjectTabUndersampling.h"
 #include "CValidator.h"
 
+#include "constants.h"
+
 #include "debugutil.h"
 
 CWProjectTabUndersampling::CWProjectTabUndersampling(const mediate_project_undersampling_t *properties, QWidget *parent) :
@@ -53,9 +55,9 @@ CWProjectTabUndersampling::CWProjectTabUndersampling(const mediate_project_under
   // method
   topLayout->addWidget(new QLabel("Method", this), 1, 0);
   m_methodCombo = new QComboBox(this);
-  m_methodCombo->addItem("From File", QVariant(cUndersamplingMethodFile));
-  m_methodCombo->addItem("Fixed Phase", QVariant(cUndersamplingMethodFixedPhase));
-  m_methodCombo->addItem("Automatic Phase", QVariant(cUndersamplingMethodAutomaticPhase));
+  m_methodCombo->addItem("From File", QVariant(PRJCT_USAMP_FILE));
+  m_methodCombo->addItem("Fixed Phase", QVariant(PRJCT_USAMP_FIXED));
+  m_methodCombo->addItem("Automatic Phase", QVariant(PRJCT_USAMP_AUTOMATIC));
   topLayout->addWidget(m_methodCombo, 1, 1);
 
   // shift

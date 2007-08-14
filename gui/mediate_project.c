@@ -19,6 +19,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
 #include "mediate_project.h"
+#include "constants.h"
 
 void initializeMediateProject(mediate_project_t *d)
 {
@@ -53,7 +54,7 @@ void initializeMediateProjectSpectra(mediate_project_spectra_t *d)
   d->useNameFile = 0;
   
   /* unrestricted geolocation */
-  d->geo.mode = cGeolocationModeNone;
+  d->geo.mode = PRJCT_SPECTRA_MODES_NONE;
 
   /* zero the restricted modes */
   d->geo.circle.radius = 0.0;
@@ -71,9 +72,9 @@ void initializeMediateProjectSpectra(mediate_project_spectra_t *d)
 void initializeMediateProjectAnalysis(mediate_project_analysis_t *d)
 {
   d->methodType        = cProjAnalysisMethodModeOptDens;
-  d->fitType           = cProjAnalysisFitModeNone;
-  d->unitType          = cProjAnalysisUnitModePixel;
-  d->interpolationType = cProjAnalysisInterpolationModeLinear;
+  d->fitType           = PRJCT_ANLYS_FIT_WEIGHTING_NONE;
+  d->unitType          = PRJCT_ANLYS_UNITS_PIXELS;
+  d->interpolationType = PRJCT_ANLYS_INTERPOL_LINEAR;
 
   d->interpolationSecurityGap = 10;
   d->convergenceCriterion = 1.0e-4;
@@ -81,7 +82,7 @@ void initializeMediateProjectAnalysis(mediate_project_analysis_t *d)
 
 void initializeMediateProjectFiltering(mediate_project_filtering_t *d)
 {
-  d->mode = cProjFilteringModeNone;
+  d->mode = PRJCT_FILTER_TYPE_NONE;
 
   /* kaiser */
   d->kaiser.cutoffFrequency = 0.0;

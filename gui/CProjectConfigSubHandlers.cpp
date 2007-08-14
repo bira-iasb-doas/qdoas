@@ -1,7 +1,10 @@
 
 #include "CProjectConfigSubHandlers.h"
 
+#include "constants.h"
+
 #include "debugutil.h"
+
 
 //------------------------------------------------------------------------
 //
@@ -262,11 +265,11 @@ bool CProjectSpectraSubHandler::start(const QString &element, const QXmlAttribut
     QString selected = atts.value("selected");
 
     if (selected == "circle")
-      m_spectra->geo.mode = cGeolocationModeCircle;
+      m_spectra->geo.mode = PRJCT_SPECTRA_MODES_CIRCLE;
     else if (selected == "rectangle")
-      m_spectra->geo.mode = cGeolocationModeRectangle;
+      m_spectra->geo.mode = PRJCT_SPECTRA_MODES_RECTANGLE;
     else
-      m_spectra->geo.mode = cGeolocationModeNone; // default and "none"
+      m_spectra->geo.mode = PRJCT_SPECTRA_MODES_NONE; // default and "none"
   }
 
   return true;
@@ -314,29 +317,29 @@ bool CProjectAnalysisSubHandler::start(const QXmlAttributes &atts)
   
   str = atts.value("fit");
   if (str == "none")
-    m_analysis->methodType = cProjAnalysisFitModeNone;
+    m_analysis->methodType = PRJCT_ANLYS_FIT_WEIGHTING_NONE;
   else if (str == "instr")
-    m_analysis->methodType = cProjAnalysisFitModeInstrumental;
-  else if (str == "stat")
-    m_analysis->methodType = cProjAnalysisFitModeStatistical;
+    m_analysis->methodType = PRJCT_ANLYS_FIT_WEIGHTING_INSTRUMENTAL;
+  //  else if (str == "stat")
+  //    m_analysis->methodType = PRJCT_ANLYS_FIT_WEIGHTING_STATISTICAL;
   else
     return postErrorMessage("Invalid analysis fit");
   
   
   str = atts.value("unit");
   if (str == "pixel")
-    m_analysis->methodType = cProjAnalysisUnitModePixel;
+    m_analysis->methodType = PRJCT_ANLYS_UNITS_PIXELS;
   else if (str == "nm")
-    m_analysis->methodType = cProjAnalysisUnitModeNanometer;
+    m_analysis->methodType = PRJCT_ANLYS_UNITS_NANOMETERS;
   else
     return postErrorMessage("Invalid analysis unit");
     
 
   str = atts.value("interpolation");
   if (str == "linear")
-    m_analysis->methodType = cProjAnalysisInterpolationModeLinear;
+    m_analysis->methodType = PRJCT_ANLYS_INTERPOL_LINEAR;
   else if (str == "spline")
-    m_analysis->methodType = cProjAnalysisInterpolationModeSpline;
+    m_analysis->methodType = PRJCT_ANLYS_INTERPOL_SPLINE;
   else
     return postErrorMessage("Invalid analysis interpolation");
     
@@ -434,21 +437,21 @@ bool CProjectFilteringSubHandler::start(const QXmlAttributes &atts)
   QString str = atts.value("selected");
 
   if (str == "none")
-    m_filter->mode = cProjFilteringModeNone;
+    m_filter->mode = PRJCT_FILTER_TYPE_NONE;
   else if (str == "kaiser")
-    m_filter->mode = cProjFilteringModeKaiser;
+    m_filter->mode = PRJCT_FILTER_TYPE_KAISER;
   else if (str == "boxcar")
-    m_filter->mode = cProjFilteringModeBoxcar;
+    m_filter->mode = PRJCT_FILTER_TYPE_BOXCAR;
   else if (str == "gaussian")
-    m_filter->mode = cProjFilteringModeGaussian;
+    m_filter->mode = PRJCT_FILTER_TYPE_GAUSSIAN;
   else if (str == "triangular")
-    m_filter->mode = cProjFilteringModeTriangular;
+    m_filter->mode = PRJCT_FILTER_TYPE_TRIANGLE;
   else if (str == "savitzky")
-    m_filter->mode = cProjFilteringModeSavitzkyGolay;
+    m_filter->mode = PRJCT_FILTER_TYPE_SG;
   else if (str == "oddeven")
-    m_filter->mode = cProjFilteringModeOddEvenCorrection;
+    m_filter->mode = PRJCT_FILTER_TYPE_BINOMIAL;
   else if (str == "binomial")
-    m_filter->mode = cProjFilteringModeBinomial;
+    m_filter->mode = PRJCT_FILTER_TYPE_BINOMIAL;
   else
     return postErrorMessage("Invalid filter method");
   
@@ -635,15 +638,15 @@ bool CProjectCalibrationSubHandler::start(const QString &element, const QXmlAttr
 
     str = atts.value("shape");
     if (str == "none")
-      m_calibration->lineShape = cSpectralLineShapeNone;
+      m_calibration->lineShape = PRJCT_CALIB_FWHM_TYPE_NONE;
     else if (str == "gaussian")
-      m_calibration->lineShape = cSpectralLineShapeGaussian;
+      m_calibration->lineShape = PRJCT_CALIB_FWHM_TYPE_GAUSS;
     else if (str == "error")
-      m_calibration->lineShape = cSpectralLineShapeErrorFunction;
+      m_calibration->lineShape = PRJCT_CALIB_FWHM_TYPE_ERF;
     else if (str == "lorentz")
-      m_calibration->lineShape = cSpectralLineShapeLorentz;
+      m_calibration->lineShape = PRJCT_CALIB_FWHM_TYPE_INVPOLY;
     else if (str == "voigt")
-      m_calibration->lineShape = cSpectralLineShapeVoigt;
+      m_calibration->lineShape = PRJCT_CALIB_FWHM_TYPE_VOIGT;
     else
       postErrorMessage("Invalid line shape");
 
@@ -716,11 +719,11 @@ bool CProjectUndersamplingSubHandler::start(const QXmlAttributes &atts)
 
   str = atts.value("method");
   if (str == "file")
-    m_undersampling->method = cUndersamplingMethodFile;
+    m_undersampling->method = PRJCT_USAMP_FILE;
   else if (str == "fixed")
-    m_undersampling->method = cUndersamplingMethodFixedPhase;
+    m_undersampling->method = PRJCT_USAMP_FIXED;
   else if (str == "auto")
-    m_undersampling->method = cUndersamplingMethodAutomaticPhase;
+    m_undersampling->method = PRJCT_USAMP_AUTOMATIC;
   else
     return postErrorMessage("Invalid analysis method");
   

@@ -208,14 +208,15 @@ void CEngineController::notifyErrorMessages(int highestErrorLevel, const QList<C
 
   QList<CEngineError>::const_iterator it = errorMessages.begin();
   while (it != errorMessages.end()) {
+    // one message per line
     switch (it->errorLevel()) {
-    case cInformationEngineError:
+    case eInformationEngineError:
       stream << "INFO    (";
       break;
-    case cWarningEngineError:
+    case eWarningEngineError:
       stream << "WARNING (";
       break;
-    case cFatalEngineError:
+    case eFatalEngineError:
       stream << "FATAL   (";
       break;
     }

@@ -28,6 +28,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "CWProjectTabFiltering.h"
 #include "CValidator.h"
 
+#include "constants.h"
+
 #include "debugutil.h"
 
 CWProjectTabFiltering::CWProjectTabFiltering(const mediate_project_filtering_t *lowpass,
@@ -45,41 +47,41 @@ CWProjectTabFiltering::CWProjectTabFiltering(const mediate_project_filtering_t *
 
   // none
   m_lowStack->addWidget(new QFrame);
-  m_lowCombo->addItem("No Filter", QVariant(cProjFilteringModeNone));
+  m_lowCombo->addItem("No Filter", QVariant(PRJCT_FILTER_TYPE_NONE));
 
   // kaiser
   m_lowKaiser = new CWKaiserEdit(&(lowpass->kaiser));
   m_lowStack->addWidget(m_lowKaiser);
-  m_lowCombo->addItem("Kaiser Filter", QVariant(cProjFilteringModeKaiser));
+  m_lowCombo->addItem("Kaiser Filter", QVariant(PRJCT_FILTER_TYPE_KAISER));
   
   // boxcar
   m_lowBoxcar = new CWBoxcarTriangularBinomialEdit(&(lowpass->boxcar));
   m_lowStack->addWidget(m_lowBoxcar);
-  m_lowCombo->addItem("Boxcar Filter", QVariant(cProjFilteringModeBoxcar));
+  m_lowCombo->addItem("Boxcar Filter", QVariant(PRJCT_FILTER_TYPE_BOXCAR));
   
   // gaussian
   m_lowGaussian = new CWGaussianEdit(&(lowpass->gaussian));
   m_lowStack->addWidget(m_lowGaussian);
-  m_lowCombo->addItem("Gaussian Filter", QVariant(cProjFilteringModeGaussian));
+  m_lowCombo->addItem("Gaussian Filter", QVariant(PRJCT_FILTER_TYPE_GAUSSIAN));
   
   // triangular
   m_lowTriangular = new CWBoxcarTriangularBinomialEdit(&(lowpass->triangular));
   m_lowStack->addWidget(m_lowTriangular);
-  m_lowCombo->addItem("Triangular Filter", QVariant(cProjFilteringModeTriangular));
+  m_lowCombo->addItem("Triangular Filter", QVariant(PRJCT_FILTER_TYPE_TRIANGLE));
   
   // savitzky-golay
   m_lowSavitzky = new CWSavitzkyGolayEdit(&(lowpass->savitzky));
   m_lowStack->addWidget(m_lowSavitzky);
-  m_lowCombo->addItem("Savitzky-Golay Filter", QVariant(cProjFilteringModeSavitzkyGolay));
+  m_lowCombo->addItem("Savitzky-Golay Filter", QVariant(PRJCT_FILTER_TYPE_SG));
   
   // none
   m_lowStack->addWidget(new QFrame);
-  m_lowCombo->addItem("Odd-Even Correction", QVariant(cProjFilteringModeOddEvenCorrection));
+  m_lowCombo->addItem("Odd-Even Correction", QVariant(PRJCT_FILTER_TYPE_ODDEVEN));
 
   // binomial
   m_lowBinomial = new CWBoxcarTriangularBinomialEdit(&(lowpass->binomial));
   m_lowStack->addWidget(m_lowBinomial);
-  m_lowCombo->addItem("Binomial Filter", QVariant(cProjFilteringModeBinomial));
+  m_lowCombo->addItem("Binomial Filter", QVariant(PRJCT_FILTER_TYPE_BINOMIAL));
   
 
   // low pass group organisation
@@ -97,41 +99,41 @@ CWProjectTabFiltering::CWProjectTabFiltering(const mediate_project_filtering_t *
 
   // none
   m_highStack->addWidget(new QFrame);
-  m_highCombo->addItem("No Filter", QVariant(cProjFilteringModeNone));
+  m_highCombo->addItem("No Filter", QVariant(PRJCT_FILTER_TYPE_NONE));
 
   // kaiser
   m_highKaiser = new CWKaiserEdit(&(highpass->kaiser));
   m_highStack->addWidget(m_highKaiser);
-  m_highCombo->addItem("Kaiser Filter", QVariant(cProjFilteringModeKaiser));
+  m_highCombo->addItem("Kaiser Filter", QVariant(PRJCT_FILTER_TYPE_KAISER));
   
   // boxcar
   m_highBoxcar = new CWBoxcarTriangularBinomialEdit(&(highpass->boxcar));
   m_highStack->addWidget(m_highBoxcar);
-  m_highCombo->addItem("Boxcar Filter", QVariant(cProjFilteringModeBoxcar));
+  m_highCombo->addItem("Boxcar Filter", QVariant(PRJCT_FILTER_TYPE_BOXCAR));
   
   // gaussian
   m_highGaussian = new CWGaussianEdit(&(highpass->gaussian));
   m_highStack->addWidget(m_highGaussian);
-  m_highCombo->addItem("Gaussian Filter", QVariant(cProjFilteringModeGaussian));
+  m_highCombo->addItem("Gaussian Filter", QVariant(PRJCT_FILTER_TYPE_GAUSSIAN));
   
   // triangular
   m_highTriangular = new CWBoxcarTriangularBinomialEdit(&(highpass->triangular));
   m_highStack->addWidget(m_highTriangular);
-  m_highCombo->addItem("Triangular Filter", QVariant(cProjFilteringModeTriangular));
+  m_highCombo->addItem("Triangular Filter", QVariant(PRJCT_FILTER_TYPE_TRIANGLE));
   
   // savitzky-golay
   m_highSavitzky = new CWSavitzkyGolayEdit(&(highpass->savitzky));
   m_highStack->addWidget(m_highSavitzky);
-  m_highCombo->addItem("Savitzky-Golay Filter", QVariant(cProjFilteringModeSavitzkyGolay));
+  m_highCombo->addItem("Savitzky-Golay Filter", QVariant(PRJCT_FILTER_TYPE_SG));
   
   // none
   m_highStack->addWidget(new QFrame);
-  m_highCombo->addItem("Odd-Even Correction", QVariant(cProjFilteringModeOddEvenCorrection));
+  m_highCombo->addItem("Odd-Even Correction", QVariant(PRJCT_FILTER_TYPE_ODDEVEN));
 
   // binomial
   m_highBinomial = new CWBoxcarTriangularBinomialEdit(&(highpass->binomial));
   m_highStack->addWidget(m_highBinomial);
-  m_highCombo->addItem("Binomial Filter", QVariant(cProjFilteringModeBinomial));
+  m_highCombo->addItem("Binomial Filter", QVariant(PRJCT_FILTER_TYPE_BINOMIAL));
   
   // high pass group organisation
   highLayout->addWidget(m_highCombo);

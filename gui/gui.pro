@@ -77,8 +77,7 @@ SOURCES += CWSiteTree.cpp
 SOURCES += CWSplitter.cpp
 SOURCES += CWUserSymbolTree.cpp
 SOURCES += qdoas.cpp
-
-#----------------------------------------------
+#----------------------------------------------
 # Mediator Source files
 #----------------------------------------------
 SOURCES += mediate_response.cpp
@@ -133,6 +132,7 @@ HEADERS += RefCountPtr.h
 # Mediator Header files
 #----------------------------------------------
 HEADERS += mediate.h
+HEADERS += mediate_types.h
 HEADERS += mediate_response.h
 HEADERS += mediate_request.h
 HEADERS += mediate_project.h

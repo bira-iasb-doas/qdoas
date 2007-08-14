@@ -25,6 +25,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "CWProjectTabAnalysis.h"
 #include "CValidator.h"
 
+#include "constants.h"
 
 CWProjectTabAnalysis::CWProjectTabAnalysis(const mediate_project_analysis_t *properties,
 					   QWidget *parent) :
@@ -54,23 +55,23 @@ CWProjectTabAnalysis::CWProjectTabAnalysis(const mediate_project_analysis_t *pro
   // row 1
   gridLayout->addWidget(new QLabel("Least Squares Fit", this), 1, 0);
   m_fitCombo = new QComboBox(this);
-  m_fitCombo->addItem("No Weighting", QVariant(cProjAnalysisFitModeNone));
-  m_fitCombo->addItem("Instrumental", QVariant(cProjAnalysisFitModeInstrumental));
-  m_fitCombo->addItem("Statistical", QVariant(cProjAnalysisFitModeStatistical));
+  m_fitCombo->addItem("No Weighting", QVariant(PRJCT_ANLYS_FIT_WEIGHTING_NONE));
+  m_fitCombo->addItem("Instrumental", QVariant(PRJCT_ANLYS_FIT_WEIGHTING_INSTRUMENTAL));
+  //m_fitCombo->addItem("Statistical", QVariant(PRJCT_ANLYS_FIT_WEIGHTING_STATISTICAL));
   gridLayout->addWidget(m_fitCombo, 1, 1);
 
   // row 2
   gridLayout->addWidget(new QLabel("Shift and Stretch Units", this), 2, 0);
   m_unitCombo = new QComboBox(this);
-  m_unitCombo->addItem("Pixel", QVariant(cProjAnalysisUnitModePixel));
-  m_unitCombo->addItem("nm", QVariant(cProjAnalysisUnitModeNanometer));
+  m_unitCombo->addItem("Pixel", QVariant(PRJCT_ANLYS_UNITS_PIXELS));
+  m_unitCombo->addItem("nm", QVariant(PRJCT_ANLYS_UNITS_NANOMETERS));
   gridLayout->addWidget(m_unitCombo, 2, 1);
 
   // row 3
   gridLayout->addWidget(new QLabel("Interpolation", this), 3, 0);
   m_interpCombo = new QComboBox(this);
-  m_interpCombo->addItem("Linear", QVariant(cProjAnalysisInterpolationModeLinear));
-  m_interpCombo->addItem("Spline", QVariant(cProjAnalysisInterpolationModeSpline));
+  m_interpCombo->addItem("Linear", QVariant(PRJCT_ANLYS_INTERPOL_LINEAR));
+  m_interpCombo->addItem("Spline", QVariant(PRJCT_ANLYS_INTERPOL_SPLINE));
   gridLayout->addWidget(m_interpCombo, 3, 1);
 
   // row 4

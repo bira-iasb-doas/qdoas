@@ -20,29 +20,35 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "CPlotDataSet.h"
 
-CPlotDataSet::CPlotDataSet(const double *x, const double *y, int n,
-                           const char *title, const char *xlabel, const char *ylabel) :
-  m_lines(x, y, n),
-  m_points(NULL, NULL, 0),
-  m_hasPointData(false),
+CXYPlotData::CXYPlotData(const double *x, const double *y, int n, enum ePlotDataType type, const char *legend) :
+  m_curve(x, y, n),
+  m_curveType(type),
+  m_legend(legend)
+{
+}
+
+CXYPlotData::~CXYPlotData()
+{
+}
+
+
+
+CPlotDataSet::CPlotDataSet(const char *title, const char *xlabel, const char *ylabel) :
   m_title(title),
   m_xLabel(xlabel),
   m_yLabel(ylabel)
 {
 }
 
-CPlotDataSet::CPlotDataSet(const double *x, const double *y, int n,
-                           const double *px, const double *py, int pn,
-                           const char *title, const char *xlabel, const char *ylabel) :
-  m_lines(x, y, n),
-  m_points(px, py, pn),
-  m_hasPointData(true),
-  m_title(title),
-  m_xLabel(xlabel),
-  m_yLabel(ylabel)
+void CPlotDataSet::addPlotData(const double *x, const double *y, int n, enum ePlotDataType type, const char *legend)
 {
+  m_dataList.push_back(new CXYPlotData(x, y, n, type, legend));
 }
+               
 
 CPlotDataSet::~CPlotDataSet()
 {
+  while (!m_dataList.empty()) {
+    delete m_dataList.takeFirst();
+  }
 }

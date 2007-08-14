@@ -67,11 +67,16 @@ void mediateResponsePlotData(int page,
 {
   CEngineResponseBrowseRecord *resp = static_cast<CEngineResponseBrowseRecord*>(responseHandle);
 
-  // TODO
+  CPlotDataSet *dataSet = new CPlotDataSet(title, xLabel, yLabel);
 
-  //  CPlotDataSet *dataSet = new CPlotDataSet(wavelengthDataArray, intensityDataArray, arrayLength,
-  //      title, wavelengthLabel, intensityLabel);
-//  resp->addDataSet(page, dataSet);
+  int i = 0;
+  while (i < arrayLength) {
+    dataSet->addPlotData(plotDataArray[i].x, plotDataArray[i].y, plotDataArray[i].length,
+			 plotDataArray[i].plotType, plotDataArray[i].legendStr);
+    ++i;
+  }
+
+  resp->addDataSet(page, dataSet);
 }
 
 void mediateResponseCellDataDouble(int page,
@@ -135,11 +140,11 @@ void mediateResponseLabelPage(int page,
 
 void mediateResponseErrorMessage(const char *function,
 				 const char *messageString,
-				 int errorLevel,
+				 enum eEngineErrorType errorType,
 				 void *responseHandle)
 {
   CEngineResponse *resp = static_cast<CEngineResponse*>(responseHandle);
-  resp->addErrorMessage(QString(function), QString(messageString), errorLevel);
+  resp->addErrorMessage(QString(function), QString(messageString), errorType);
 }
 
 
