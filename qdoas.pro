@@ -4,7 +4,7 @@
 
 TEMPLATE = subdirs
 
-SUBDIRS = engine gui
+SUBDIRS = gui
 
 CONFIG += ordered
 
