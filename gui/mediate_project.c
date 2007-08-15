@@ -136,3 +136,22 @@ void initializeMediateProjectUndersampling(mediate_project_undersampling_t *d)
   d->method = 0;
   d->shift = 0.0;
 }
+
+void initializeMediateProjectInstrumental(mediate_project_instrumental_t *d)
+{
+  d->format = PRJCT_INSTR_FORMAT_ASCII;
+  *(d->siteName) = '\0'; // empty
+  // ascii
+  d->ascii.detectorSize = 0;
+  d->ascii.flagZenithAngle = 0;
+  d->ascii.flagAzimuthAngle = 0;
+  d->ascii.flagElevationAngle = 0;
+  d->ascii.flagDate = 0;
+  d->ascii.flagTime = 0;
+  d->ascii.flagWavelength = 0;
+  *(d->ascii.calibrationFile) = '\0';
+  *(d->ascii.instrFunctionFile) = '\0';
+  // ...
+
+}
+

@@ -228,7 +228,11 @@ QString CQdoasProjectConfigHandler::pathExpand(const QString &name)
   int len = name.length();
   if (len > 1 && name.startsWith('%') && name.at(1).isDigit()) {
 
-    QString tmp = m_paths.at(name.at(1).digitValue());
+    int index = name.at(1).digitValue();
+
+    assert(index >= 0 && index <= 9);
+
+    QString tmp = m_paths.at(index);
     if (len > 2)
       tmp += name.right(len - 2);
 

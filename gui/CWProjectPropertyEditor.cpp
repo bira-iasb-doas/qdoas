@@ -65,6 +65,10 @@ CWProjectPropertyEditor::CWProjectPropertyEditor(CWProjectTree *projectTree, QTr
   m_undersamplingTab = new CWProjectTabUndersampling(&(projectData->undersampling));
   m_tabs->addTab(m_undersamplingTab, "Undersampling");
 
+  // Instrumental Tab
+  m_instrumentalTab = new CWProjectTabInstrumental(&(projectData->instrumental));
+  m_tabs->addTab(m_instrumentalTab, "Instrumental");
+
   mainLayout->addWidget(m_tabs);
 
   // caption string and context tag
@@ -92,6 +96,7 @@ bool CWProjectPropertyEditor::actionOk(void)
     m_filteringTab->apply(&(projectData->lowpass), &(projectData->highpass));
     m_calibrationTab->apply(&(projectData->calibration));
     m_undersamplingTab->apply(&(projectData->undersampling));
+    m_instrumentalTab->apply(&(projectData->instrumental));
 
     return true;
   }

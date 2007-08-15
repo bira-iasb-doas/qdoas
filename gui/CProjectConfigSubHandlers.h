@@ -144,6 +144,20 @@ class CProjectUndersamplingSubHandler : public CConfigSubHandler
   mediate_project_undersampling_t *m_undersampling;
 };
 
+class CProjectInstrumentalSubHandler : public CConfigSubHandler
+{
+ public:
+  CProjectInstrumentalSubHandler(CQdoasProjectConfigHandler *master,
+			   mediate_project_instrumental_t *instrumental);
+  virtual ~CProjectInstrumentalSubHandler();
+
+  virtual bool start(const QXmlAttributes &atts);
+  virtual bool start(const QString &element, const QXmlAttributes &atts);
+
+ private:
+  mediate_project_instrumental_t *m_instrumental;
+};
+
 
 #endif
 

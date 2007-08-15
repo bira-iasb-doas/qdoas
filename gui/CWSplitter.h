@@ -24,6 +24,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <map>
 
 #include <QSplitter>
+#include <QString>
 
 // Extends QSplitter to allow control of the first splitter position
 // via signal-slot mechanism
@@ -32,7 +33,7 @@ class CWSplitter : public QSplitter
 {
 Q_OBJECT
  public:
-  CWSplitter(Qt::Orientation orientation, QWidget *parent = 0);
+  CWSplitter(Qt::Orientation orientation, const char *settingsGroupName, QWidget *parent = 0);
   virtual ~CWSplitter();
 
   public slots:
@@ -41,6 +42,7 @@ Q_OBJECT
  private:
   std::map<int,int> m_modeToSizeMap;
   int m_currentMode;
+  QString m_settingsGroupName;
 };
 
 #endif

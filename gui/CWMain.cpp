@@ -114,7 +114,7 @@ CWMain::CWMain(QWidget *parent) :
   m_tableRegion = new CWTableRegion;
 
   // Splitters
-  CWSplitter *subSplitter = new CWSplitter(Qt::Horizontal);
+  CWSplitter *subSplitter = new CWSplitter(Qt::Horizontal, "MainSplitter");
   subSplitter->addWidget(m_projEnvTab);
   subSplitter->addWidget(m_activeContext);
 
@@ -240,15 +240,33 @@ void CWMain::closeEvent(QCloseEvent *e)
 
 void CWMain::slotOpenFile()
 {
+  QSettings settings;
 
-  QString fileName = QFileDialog::getOpenFileName(this, "Open Project File", "/home/ian",
+  settings.beginGroup("MainWindow");
+
+  QString lastDirectory = settings.value("OpenDirectory").toString();
+
+  QString fileName = QFileDialog::getOpenFileName(this, "Open Project File", lastDirectory,
 						  "Qdoas Project Config (*.xml);;All Files (*)");
 
-  if (fileName.isEmpty())
+  if (fileName.isEmpty()) {
+    settings.endGroup();
     return;
+  }
 
   QString errMsg;
   QFile *file = new QFile(fileName);
+
+  // save the last directory
+  int index = fileName.lastIndexOf('/');
+  if (index == -1) index = fileName.lastIndexOf('\\');
+  if (index != -1) {
+    lastDirectory = fileName.left(index);
+    settings.setValue("OpenDirectory", lastDirectory);
+  }
+  settings.endGroup();
+  
+  // parse the file
   QXmlSimpleReader xmlReader;
   QXmlInputSource *source = new QXmlInputSource(file);
 

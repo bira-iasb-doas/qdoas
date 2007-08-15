@@ -26,8 +26,8 @@ extern "C" {
 #endif
 
 
-#define FILENAME_BUFFER_LENGTH 256
-
+#define FILENAME_BUFFER_LENGTH  256
+#define SITE_NAME_BUFFER_LENGTH 128
 
   /****************************************************/
   /* Geolocation */
@@ -196,6 +196,34 @@ extern "C" {
     double shift;
   } mediate_project_undersampling_t;
 
+
+  /****************************************************/
+  /* Project Instrumental */
+
+  struct instrumental_ascii
+  {
+    int detectorSize;
+    int format;
+    int flagZenithAngle;
+    int flagAzimuthAngle;
+    int flagElevationAngle;
+    int flagDate;
+    int flagTime;
+    int flagWavelength;
+    char calibrationFile[FILENAME_BUFFER_LENGTH];
+    char instrFunctionFile[FILENAME_BUFFER_LENGTH];
+  };
+
+  typedef struct mediate_project_instrumental
+  {
+    int format;
+    char siteName[SITE_NAME_BUFFER_LENGTH];
+    struct instrumental_ascii ascii;
+    
+  } mediate_project_instrumental_t;
+
+
+
     
   // mediate_project_t
   //
@@ -211,6 +239,7 @@ extern "C" {
     mediate_project_filtering_t highpass;
     mediate_project_calibration_t calibration;
     mediate_project_undersampling_t undersampling;
+    mediate_project_instrumental_t instrumental;
     
   } mediate_project_t;
   
@@ -224,6 +253,7 @@ extern "C" {
   void initializeMediateProjectFiltering(mediate_project_filtering_t *d);
   void initializeMediateProjectCalibration(mediate_project_calibration_t *d);
   void initializeMediateProjectUndersampling(mediate_project_undersampling_t *d);
+  void initializeMediateProjectInstrumental(mediate_project_instrumental_t *d);
 
 #if defined(_cplusplus) || defined(__cplusplus)
 }

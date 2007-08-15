@@ -23,30 +23,39 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "debugutil.h"
 
-CWSplitter::CWSplitter(Qt::Orientation orientation, QWidget *parent) :
+CWSplitter::CWSplitter(Qt::Orientation orientation, const char *settingsGroupName, QWidget *parent) :
   QSplitter(orientation, parent),
-  m_currentMode(0)
+  m_currentMode(0),
+  m_settingsGroupName(settingsGroupName)
 {
   // restore the map
   int i, mode, wid;
+  std::map<int,int>::iterator it;
   QSettings settings;
+
+  settings.beginGroup(m_settingsGroupName);
 
   int n = settings.beginReadArray("Splitter");
   for (i=0; i<n; ++i) {
     settings.setArrayIndex(i);
     mode = settings.value("mode").toInt();
     wid = settings.value("width").toInt();
+
+    // store in the map
+    m_modeToSizeMap.insert(std::map<int,int>::value_type(mode, wid));
   }
   settings.endArray();
+
+  settings.endGroup();
 }
 
 CWSplitter::~CWSplitter()
 {
-  TRACE("CWSplitter::~CWSplitter");
-
   // store the map as an array of settings
   QSettings settings;
   
+  settings.beginGroup(m_settingsGroupName);
+
   settings.beginWriteArray("Splitter");
   std::map<int,int>::const_iterator it = m_modeToSizeMap.begin();
   int i = 0;
@@ -58,6 +67,8 @@ CWSplitter::~CWSplitter()
     ++it;
   }
   settings.endArray();
+
+  settings.endGroup();
 }
 
 void CWSplitter::slotSetWidthMode(int newMode)

@@ -110,6 +110,9 @@ bool CProjectSubHandler::start(const QString &element, const QXmlAttributes &att
   else if (element == "undersampling") {
     return m_master->installSubHandler(new CProjectUndersamplingSubHandler(m_master, &(prop->undersampling)), atts);
   }
+  else if (element == "instrumental") {
+    return m_master->installSubHandler(new CProjectInstrumentalSubHandler(m_master, &(prop->instrumental)), atts);
+  }
 
   TRACE2("proj Handler : " << element.toStdString());
 
@@ -741,5 +744,144 @@ bool CProjectUndersamplingSubHandler::start(const QXmlAttributes &atts)
     m_undersampling->shift = tmpDouble;
 
   return true;
+}
+
+//------------------------------------------------------------------------
+// handler for <instrumental> (child of project)
+
+CProjectInstrumentalSubHandler::CProjectInstrumentalSubHandler(CQdoasProjectConfigHandler *master,
+							       mediate_project_instrumental_t *instrumental) :
+  CConfigSubHandler(master),
+  m_instrumental(instrumental)
+{
+}
+
+CProjectInstrumentalSubHandler::~CProjectInstrumentalSubHandler()
+{
+}
+
+bool CProjectInstrumentalSubHandler::start(const QXmlAttributes &atts)
+{
+  // the <instrumental ...> element
+
+  QString str;
+
+  str = atts.value("format");
+  if (str == "ascii")
+    m_instrumental->format = PRJCT_INSTR_FORMAT_ASCII;
+  else if (str == "logger")
+    m_instrumental->format = PRJCT_INSTR_FORMAT_LOGGER;
+  else if (str == "acton")
+    m_instrumental->format = PRJCT_INSTR_FORMAT_ACTON;
+  else if (str == "pdaegg")
+    m_instrumental->format = PRJCT_INSTR_FORMAT_PDAEGG;
+  else if (str == "pdaegg_old")
+    m_instrumental->format = PRJCT_INSTR_FORMAT_PDAEGG_OLD;
+  else if (str == "pdaegg_ulb")
+    m_instrumental->format = PRJCT_INSTR_FORMAT_PDAEGG_ULB;
+  else if (str == "ccd_ohp_96")
+    m_instrumental->format = PRJCT_INSTR_FORMAT_CCD_OHP_96;
+  else if (str == "ccd_ha_94")
+    m_instrumental->format = PRJCT_INSTR_FORMAT_CCD_HA_94;
+  else if (str == "ccd_ulb")
+    m_instrumental->format = PRJCT_INSTR_FORMAT_CCD_ULB;
+  else if (str == "saoz_vis")
+    m_instrumental->format = PRJCT_INSTR_FORMAT_SAOZ_VIS;
+  else if (str == "saoz_uv")
+    m_instrumental->format = PRJCT_INSTR_FORMAT_SAOZ_UV;
+  else if (str == "saoz_efm")
+    m_instrumental->format = PRJCT_INSTR_FORMAT_SAOZ_EFM;
+  else if (str == "mfc")
+    m_instrumental->format = PRJCT_INSTR_FORMAT_MFC;
+  else if (str == "mfc_std")
+    m_instrumental->format = PRJCT_INSTR_FORMAT_MFC_STD;
+  else if (str == "rasas")
+    m_instrumental->format = PRJCT_INSTR_FORMAT_RASAS;
+  else if (str == "pdasi_easoe")
+    m_instrumental->format = PRJCT_INSTR_FORMAT_PDASI_EASOE;
+  else if (str == "pdasi_osma")
+    m_instrumental->format = PRJCT_INSTR_FORMAT_PDASI_OSMA;
+  else if (str == "ccd_eev")
+    m_instrumental->format = PRJCT_INSTR_FORMAT_CCD_EEV;
+  else if (str == "opus")
+    m_instrumental->format = PRJCT_INSTR_FORMAT_OPUS;
+  else if (str == "gdp_ascii")
+    m_instrumental->format = PRJCT_INSTR_FORMAT_GDP_ASCII;
+  else if (str == "gdp_bin")
+    m_instrumental->format = PRJCT_INSTR_FORMAT_GDP_BIN;
+  else if (str == "scia_hdf")
+    m_instrumental->format = PRJCT_INSTR_FORMAT_SCIA_HDF;
+  else if (str == "scia_pds")
+    m_instrumental->format = PRJCT_INSTR_FORMAT_SCIA_PDS;
+  else if (str == "uoft")
+    m_instrumental->format = PRJCT_INSTR_FORMAT_UOFT;
+  else if (str == "noaa")
+    m_instrumental->format = PRJCT_INSTR_FORMAT_NOAA;
+  else if (str == "omi")
+    m_instrumental->format = PRJCT_INSTR_FORMAT_OMI;
+  else if (str == "gome2")
+    m_instrumental->format = PRJCT_INSTR_FORMAT_GOME2;
+  else
+    return postErrorMessage("Invalid instrumental format");
+  
+  str = atts.value("site");
+  if (!str.isEmpty()) {
+    if (str.length() < (int)sizeof(m_instrumental->siteName))
+      strcpy(m_instrumental->siteName, str.toAscii().data());
+    else
+      return postErrorMessage("Instrumental Site Name too long");
+  }
+
+  return true;
+}
+
+bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAttributes &atts)
+{
+  // format specific children of instrumental
+  
+  if (element == "ascii") { // ASCII
+    QString str;
+    bool ok;
+    int tmpInt;
+
+    tmpInt = atts.value("size").toInt(&ok);
+    if (ok)
+      m_instrumental->ascii.detectorSize = tmpInt;
+
+    str = atts.value("format");
+    if (str == "line")
+      m_instrumental->ascii.format = 0; // TODO
+    else if (str == "column")
+      m_instrumental->ascii.format = 1; // TODO
+    else
+      return postErrorMessage("Invalid ascii format");
+
+    m_instrumental->ascii.flagZenithAngle = (atts.value("zen") == "true") ? 1 : 0;
+    m_instrumental->ascii.flagAzimuthAngle = (atts.value("azi") == "true") ? 1 : 0;
+    m_instrumental->ascii.flagElevationAngle = (atts.value("ele") == "true") ? 1 : 0;
+    m_instrumental->ascii.flagDate = (atts.value("date") == "true") ? 1 : 0;
+    m_instrumental->ascii.flagTime = (atts.value("time") == "true") ? 1 : 0;
+    m_instrumental->ascii.flagWavelength = (atts.value("lambda") == "true") ? 1 : 0;
+
+    str = atts.value("calib");
+    if (!str.isEmpty()) {
+      str = m_master->pathExpand(str);
+      if (str.length() < (int)sizeof(m_instrumental->ascii.calibrationFile))
+	strcpy(m_instrumental->ascii.calibrationFile, str.toAscii().data());
+      else
+	return postErrorMessage("Calibration Filename too long");
+    }
+
+    str = atts.value("instr");
+    if (!str.isEmpty()) {
+      str = m_master->pathExpand(str);
+      if (str.length() < (int)sizeof(m_instrumental->ascii.instrFunctionFile))
+	strcpy(m_instrumental->ascii.instrFunctionFile, str.toAscii().data());
+      else
+	return postErrorMessage("Calibration Filename too long");
+    }
+
+  }
+  // ... other formats ...
 }
 
