@@ -850,9 +850,9 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
 
     str = atts.value("format");
     if (str == "line")
-      m_instrumental->ascii.format = 0; // TODO
+      m_instrumental->ascii.format = PRJCT_INSTR_ASCII_FORMAT_LINE;
     else if (str == "column")
-      m_instrumental->ascii.format = 1; // TODO
+      m_instrumental->ascii.format = PRJCT_INSTR_ASCII_FORMAT_COLUMN;
     else
       return postErrorMessage("Invalid ascii format");
 
@@ -878,10 +878,179 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
       if (str.length() < (int)sizeof(m_instrumental->ascii.instrFunctionFile))
 	strcpy(m_instrumental->ascii.instrFunctionFile, str.toAscii().data());
       else
-	return postErrorMessage("Calibration Filename too long");
+	return postErrorMessage("Instrument Function  Filename too long");
     }
 
   }
+  else if (element == "logger") { // LOGGER
+    return helperLoadLogger(atts, &(m_instrumental->logger));
+
+  }
+  else if (element == "acton") { // ACTON
+    QString str;
+
+    str = atts.value("type");
+    if (str == "old")
+      m_instrumental->acton.niluType = PRJCT_INSTR_NILU_FORMAT_OLD;
+    else if (str == "new")
+      m_instrumental->acton.niluType = PRJCT_INSTR_NILU_FORMAT_NEW;
+    else
+      return postErrorMessage("Invalid acton Type");
+
+    str = atts.value("calib");
+    if (!str.isEmpty()) {
+      str = m_master->pathExpand(str);
+      if (str.length() < (int)sizeof(m_instrumental->acton.calibrationFile))
+	strcpy(m_instrumental->acton.calibrationFile, str.toAscii().data());
+      else
+	return postErrorMessage("Calibration Filename too long");
+    }
+
+    str = atts.value("instr");
+    if (!str.isEmpty()) {
+      str = m_master->pathExpand(str);
+      if (str.length() < (int)sizeof(m_instrumental->acton.instrFunctionFile))
+	strcpy(m_instrumental->acton.instrFunctionFile, str.toAscii().data());
+      else
+	return postErrorMessage("Instrument Function Filename too long");
+    }
+    
+  }
+  else if (element == "pdaegg") { // PDA EGG
+    return helperLoadLogger(atts, &(m_instrumental->pdaegg));
+
+  }
+  else if (element == "saozvis") { // SAOZ VIS
+    return helperLoadSaoz(atts, &(m_instrumental->saozvis));
+
+  }
+  else if (element == "saozuv") { // SAOZ UV
+    return helperLoadSaoz(atts, &(m_instrumental->saozuv));
+
+  }
+  else if (element == "saozefm") { // SAOZ EFM
+    return helperLoadRasas(atts, &(m_instrumental->saozefm));
+
+  }
+  else if (element == "rasas") { // RASAS
+    return helperLoadRasas(atts, &(m_instrumental->rasas));
+
+  }
+  else if (element == "pdasieasoe") { // PDASI EASOE
+    return helperLoadRasas(atts, &(m_instrumental->pdasieasoe));
+
+  }
+  else if (element == "pdasiosma") { // PDASI OSMA
+    return helperLoadLogger(atts, &(m_instrumental->pdasiosma));
+
+  }
+  else if (element == "uoft") { // UOFT
+    return helperLoadRasas(atts, &(m_instrumental->uoft));
+
+  }
+  else if (element == "noaa") { // NOAA
+    return helperLoadRasas(atts, &(m_instrumental->noaa));
+
+  }
+
   // ... other formats ...
+
+  return true;
 }
 
+bool CProjectInstrumentalSubHandler::helperLoadLogger(const QXmlAttributes &atts, struct instrumental_logger *d)
+{
+  QString str;
+
+  // spectral type
+  str = atts.value("type");
+  if (str == "all")
+    d->spectralType = PRJCT_INSTR_IASB_TYPE_ALL;
+  else if (str == "zenithal")
+    d->spectralType = PRJCT_INSTR_IASB_TYPE_ZENITHAL;
+  else if (str == "off-axis")
+    d->spectralType = PRJCT_INSTR_IASB_TYPE_OFFAXIS;
+  else
+    return postErrorMessage("Invalid spectral Type");
+
+  d->flagAzimuthAngle = (atts.value("azi") == "true") ? 1 : 0;
+
+  str = atts.value("calib");
+  if (!str.isEmpty()) {
+    str = m_master->pathExpand(str);
+    if (str.length() < (int)sizeof(d->calibrationFile))
+      strcpy(d->calibrationFile, str.toAscii().data());
+    else
+      return postErrorMessage("Calibration Filename too long");
+  }
+  
+  str = atts.value("instr");
+  if (!str.isEmpty()) {
+    str = m_master->pathExpand(str);
+    if (str.length() < (int)sizeof(d->instrFunctionFile))
+      strcpy(d->instrFunctionFile, str.toAscii().data());
+    else
+      return postErrorMessage("Instrument Function Filename too long");
+  }
+
+  return true;
+}
+
+bool CProjectInstrumentalSubHandler::helperLoadSaoz(const QXmlAttributes &atts, struct instrumental_saoz *d)
+{
+  QString str;
+
+  // spectral type
+  str = atts.value("type");
+  if (str == "zenithal")
+    d->spectralType = PRJCT_INSTR_SAOZ_TYPE_ZENITHAL;
+  else if (str == "pointed")
+    d->spectralType = PRJCT_INSTR_SAOZ_TYPE_POINTED;
+  else
+    return postErrorMessage("Invalid spectral Type");
+
+  str = atts.value("calib");
+  if (!str.isEmpty()) {
+    str = m_master->pathExpand(str);
+    if (str.length() < (int)sizeof(d->calibrationFile))
+      strcpy(d->calibrationFile, str.toAscii().data());
+    else
+      return postErrorMessage("Calibration Filename too long");
+  }
+  
+  str = atts.value("instr");
+  if (!str.isEmpty()) {
+    str = m_master->pathExpand(str);
+    if (str.length() < (int)sizeof(d->instrFunctionFile))
+      strcpy(d->instrFunctionFile, str.toAscii().data());
+    else
+      return postErrorMessage("Instrument Function Filename too long");
+  }
+
+  return true;
+}
+
+bool CProjectInstrumentalSubHandler::helperLoadRasas(const QXmlAttributes &atts, struct instrumental_rasas *d)
+{
+  QString str;
+
+  str = atts.value("calib");
+  if (!str.isEmpty()) {
+    str = m_master->pathExpand(str);
+    if (str.length() < (int)sizeof(d->calibrationFile))
+      strcpy(d->calibrationFile, str.toAscii().data());
+    else
+      return postErrorMessage("Calibration Filename too long");
+  }
+  
+  str = atts.value("instr");
+  if (!str.isEmpty()) {
+    str = m_master->pathExpand(str);
+    if (str.length() < (int)sizeof(d->instrFunctionFile))
+      strcpy(d->instrFunctionFile, str.toAscii().data());
+    else
+      return postErrorMessage("Instrument Function Filename too long");
+  }
+
+  return true;
+}

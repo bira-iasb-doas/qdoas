@@ -214,11 +214,46 @@ extern "C" {
     char instrFunctionFile[FILENAME_BUFFER_LENGTH];
   };
 
+  struct instrumental_logger {
+    int spectralType;
+    int flagAzimuthAngle;
+    char calibrationFile[FILENAME_BUFFER_LENGTH];
+    char instrFunctionFile[FILENAME_BUFFER_LENGTH];    
+  };
+
+  struct instrumental_acton {
+    int niluType;
+    char calibrationFile[FILENAME_BUFFER_LENGTH];
+    char instrFunctionFile[FILENAME_BUFFER_LENGTH];    
+  };
+
+  struct instrumental_saoz {
+    int spectralType;
+    char calibrationFile[FILENAME_BUFFER_LENGTH];
+    char instrFunctionFile[FILENAME_BUFFER_LENGTH];    
+  };
+
+  struct instrumental_rasas {
+    char calibrationFile[FILENAME_BUFFER_LENGTH];
+    char instrFunctionFile[FILENAME_BUFFER_LENGTH];    
+  };
+
   typedef struct mediate_project_instrumental
   {
     int format;
     char siteName[SITE_NAME_BUFFER_LENGTH];
     struct instrumental_ascii ascii;
+    struct instrumental_logger logger;
+    struct instrumental_acton acton;
+    struct instrumental_logger pdaegg;
+    struct instrumental_saoz saozvis;
+    struct instrumental_saoz saozuv;
+    struct instrumental_rasas saozefm;
+    struct instrumental_rasas rasas;
+    struct instrumental_rasas pdasieasoe;
+    struct instrumental_logger pdasiosma;
+    struct instrumental_rasas uoft;
+    struct instrumental_rasas noaa;
     
   } mediate_project_instrumental_t;
 

@@ -31,6 +31,7 @@ void initializeMediateProject(mediate_project_t *d)
   initializeMediateProjectFiltering(&(d->highpass));
   initializeMediateProjectCalibration(&(d->calibration));
   initializeMediateProjectUndersampling(&(d->undersampling));
+  initializeMediateProjectInstrumental(&(d->instrumental));
 }
 
 void initializeMediateProjectSpectra(mediate_project_spectra_t *d)
@@ -139,19 +140,8 @@ void initializeMediateProjectUndersampling(mediate_project_undersampling_t *d)
 
 void initializeMediateProjectInstrumental(mediate_project_instrumental_t *d)
 {
-  d->format = PRJCT_INSTR_FORMAT_ASCII;
-  *(d->siteName) = '\0'; // empty
-  // ascii
-  d->ascii.detectorSize = 0;
-  d->ascii.flagZenithAngle = 0;
-  d->ascii.flagAzimuthAngle = 0;
-  d->ascii.flagElevationAngle = 0;
-  d->ascii.flagDate = 0;
-  d->ascii.flagTime = 0;
-  d->ascii.flagWavelength = 0;
-  *(d->ascii.calibrationFile) = '\0';
-  *(d->ascii.instrFunctionFile) = '\0';
-  // ...
+  memset(d, 0, sizeof(mediate_project_instrumental_t));
 
+  // any non-zero defaults...
 }
 

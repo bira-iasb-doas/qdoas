@@ -154,6 +154,11 @@ class CProjectInstrumentalSubHandler : public CConfigSubHandler
   virtual bool start(const QXmlAttributes &atts);
   virtual bool start(const QString &element, const QXmlAttributes &atts);
 
+ protected:
+  bool helperLoadLogger(const QXmlAttributes &atts, struct instrumental_logger *d);
+  bool helperLoadSaoz(const QXmlAttributes &atts, struct instrumental_saoz *d);
+  bool helperLoadRasas(const QXmlAttributes &atts, struct instrumental_rasas *d);
+
  private:
   mediate_project_instrumental_t *m_instrumental;
 };
