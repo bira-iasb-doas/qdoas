@@ -56,22 +56,47 @@ CWProjectTabInstrumental::CWProjectTabInstrumental(const mediate_project_instrum
   // logger
   m_loggerEdit = new CWInstrLoggerEdit(&(instr->logger));
   m_formatStack->addWidget(m_loggerEdit);
-  m_formatCombo->addItem("Logger", QVariant(PRJCT_INSTR_FORMAT_LOGGER));
+  m_formatCombo->addItem("Logger (PDA, CCD or HAMAMATSU)", QVariant(PRJCT_INSTR_FORMAT_LOGGER));
 
   // acton
   m_actonEdit = new CWInstrActonEdit(&(instr->acton));
   m_formatStack->addWidget(m_actonEdit);
-  m_formatCombo->addItem("Acton", QVariant(PRJCT_INSTR_FORMAT_ACTON));
+  m_formatCombo->addItem("Acton (NILU)", QVariant(PRJCT_INSTR_FORMAT_ACTON));
 
   // pdaegg
   m_pdaEggEdit = new CWInstrLoggerEdit(&(instr->pdaegg));
   m_formatStack->addWidget(m_pdaEggEdit);
-  m_formatCombo->addItem("PDA EGG", QVariant(PRJCT_INSTR_FORMAT_PDAEGG));
+  m_formatCombo->addItem("PDA EG&G (Sept. 94 until now)", QVariant(PRJCT_INSTR_FORMAT_PDAEGG));
+
+  // pdaeggold
+  m_pdaEggOldEdit = new CWInstrLoggerEdit(&(instr->pdaeggold));
+  m_formatStack->addWidget(m_pdaEggOldEdit);
+  m_formatCombo->addItem("PDA EG&G (Spring 94)", QVariant(PRJCT_INSTR_FORMAT_PDAEGG_OLD));
+
+  // pdaeggulb
+  m_pdaEggUlbEdit = new CWInstrPdaEggUlbEdit(&(instr->pdaeggulb));
+  m_formatStack->addWidget(m_pdaEggUlbEdit);
+  m_formatCombo->addItem("PDA EG&G (ULB)", QVariant(PRJCT_INSTR_FORMAT_PDAEGG_ULB));
+
+  // ccdohp96
+  m_ccdOhp96Edit = new CWInstrCcdEdit(&(instr->ccdohp96));
+  m_formatStack->addWidget(m_ccdOhp96Edit);
+  m_formatCombo->addItem("CCD all tracks", QVariant(PRJCT_INSTR_FORMAT_CCD_OHP_96));
+
+  // ccdha94
+  m_ccdHa94Edit = new CWInstrCcdEdit(&(instr->ccdha94));
+  m_formatStack->addWidget(m_ccdHa94Edit);
+  m_formatCombo->addItem("CCD Sesame I", QVariant(PRJCT_INSTR_FORMAT_CCD_HA_94));
+
+  // ccdulb
+  m_ccdUlbEdit = new CWInstrCcdEdit(&(instr->ccdulb));
+  m_formatStack->addWidget(m_ccdUlbEdit);
+  m_formatCombo->addItem("CCD (ULB)", QVariant(PRJCT_INSTR_FORMAT_CCD_ULB));
 
   // saozvis
   m_saozVisEdit = new CWInstrSaozEdit(&(instr->saozvis));
   m_formatStack->addWidget(m_saozVisEdit);
-  m_formatCombo->addItem("SAOZ Vis", QVariant(PRJCT_INSTR_FORMAT_SAOZ_VIS));
+  m_formatCombo->addItem("SAOZ Visible", QVariant(PRJCT_INSTR_FORMAT_SAOZ_VIS));
 
   // saozuv
   m_saozUvEdit = new CWInstrSaozEdit(&(instr->saozuv));
@@ -83,10 +108,12 @@ CWProjectTabInstrumental::CWProjectTabInstrumental(const mediate_project_instrum
   m_formatStack->addWidget(m_saozEfmEdit);
   m_formatCombo->addItem("SAOZ EFM", QVariant(PRJCT_INSTR_FORMAT_SAOZ_EFM));
 
+  // MFC.... TODO
+
   // rasas
   m_rasasEdit = new CWInstrRasasEdit(&(instr->rasas));
   m_formatStack->addWidget(m_rasasEdit);
-  m_formatCombo->addItem("RASAS", QVariant(PRJCT_INSTR_FORMAT_RASAS));
+  m_formatCombo->addItem("RASAS (INTA)", QVariant(PRJCT_INSTR_FORMAT_RASAS));
 
    // pdasieasoe
   m_pdasiEasoeEdit = new CWInstrRasasEdit(&(instr->pdasieasoe));
@@ -96,14 +123,19 @@ CWProjectTabInstrumental::CWProjectTabInstrumental(const mediate_project_instrum
   // pdasiosma
   m_pdasiOsmaEdit = new CWInstrLoggerEdit(&(instr->pdasiosma));
   m_formatStack->addWidget(m_pdasiOsmaEdit);
-  m_formatCombo->addItem("PDASI OSMA", QVariant(PRJCT_INSTR_FORMAT_PDASI_OSMA));
+  m_formatCombo->addItem("PDA SI (OSMA)", QVariant(PRJCT_INSTR_FORMAT_PDASI_OSMA));
+
+  // ccdeev
+  m_ccdEevEdit = new CWInstrCcdEevEdit(&(instr->ccdeev));
+  m_formatStack->addWidget(m_ccdEevEdit);
+  m_formatCombo->addItem("CCD EEV (BIRA-IASB, NILU)", QVariant(PRJCT_INSTR_FORMAT_CCD_EEV));
 
   // uoft
   m_uoftEdit = new CWInstrRasasEdit(&(instr->uoft));
   m_formatStack->addWidget(m_uoftEdit);
-  m_formatCombo->addItem("U. of T.", QVariant(PRJCT_INSTR_FORMAT_UOFT));
+  m_formatCombo->addItem("CCD (University of Toronto)", QVariant(PRJCT_INSTR_FORMAT_UOFT));
 
-  // uoft
+  // noaa
   m_noaaEdit = new CWInstrRasasEdit(&(instr->noaa));
   m_formatStack->addWidget(m_noaaEdit);
   m_formatCombo->addItem("NOAA", QVariant(PRJCT_INSTR_FORMAT_NOAA));
@@ -158,12 +190,18 @@ void CWProjectTabInstrumental::apply(mediate_project_instrumental_t *instr) cons
   m_loggerEdit->apply(&(instr->logger));
   m_actonEdit->apply(&(instr->acton));
   m_pdaEggEdit->apply(&(instr->pdaegg));
+  m_pdaEggOldEdit->apply(&(instr->pdaeggold));
+  m_pdaEggUlbEdit->apply(&(instr->pdaeggulb));
+  m_ccdOhp96Edit->apply(&(instr->ccdohp96));
+  m_ccdHa94Edit->apply(&(instr->ccdha94));
+  m_ccdUlbEdit->apply(&(instr->ccdulb));
   m_saozVisEdit->apply(&(instr->saozvis));
   m_saozUvEdit->apply(&(instr->saozuv));
   m_saozEfmEdit->apply(&(instr->saozefm));
   m_rasasEdit->apply(&(instr->rasas));
   m_pdasiEasoeEdit->apply(&(instr->pdasieasoe));
   m_pdasiOsmaEdit->apply(&(instr->pdasiosma));
+  m_ccdEevEdit->apply(&(instr->ccdeev));
   m_uoftEdit->apply(&(instr->uoft));
   m_noaaEdit->apply(&(instr->noaa));
 }
@@ -206,6 +244,106 @@ void CWCalibInstrEdit::slotInstrBrowse()
     m_instrEdit->setText(file);
 }
 
+void CWCalibInstrEdit::helperConstructFileWidgets(QGridLayout *gridLayout, int &row,
+						  const char *calib, int lenCalib,
+						  const char *instr, int lenInstr)
+{
+  // Helper that constructs the file editing widgets and places them in a grid layout.
+  // row is the first 'free row' in the grid on entry and is updated to be the next
+  // 'free row' on exit.
+
+  // files
+  gridLayout->addWidget(new QLabel("Calibration File", this), row, 0);
+  m_calibEdit = new QLineEdit(this);
+  m_calibEdit->setMaxLength(lenCalib-1);
+  gridLayout->addWidget(m_calibEdit, row, 1);
+  QPushButton *calibBrowseBtn = new QPushButton("Browse...", this);
+  gridLayout->addWidget(calibBrowseBtn, row, 2);
+  ++row;
+
+  gridLayout->addWidget(new QLabel("Instr. Function File", this), row, 0);
+  m_instrEdit = new QLineEdit(this);
+  m_instrEdit->setMaxLength(lenInstr-1);
+  gridLayout->addWidget(m_instrEdit, row, 1);
+  QPushButton *instrBrowseBtn = new QPushButton("Browse...", this);
+  gridLayout->addWidget(instrBrowseBtn, row, 2);
+  ++row;
+
+  // initialise the values
+  m_calibEdit->setText(QString(calib));
+  m_instrEdit->setText(QString(instr));
+
+  // connections
+  connect(calibBrowseBtn, SIGNAL(clicked()), this, SLOT(slotCalibBrowse()));
+  connect(instrBrowseBtn, SIGNAL(clicked()), this, SLOT(slotInstrBrowse()));
+}
+  
+//--------------------------------------------------------
+
+CWAllFilesEdit::CWAllFilesEdit(QWidget *parent) :
+  CWCalibInstrEdit(parent)
+{
+}
+
+CWAllFilesEdit::~CWAllFilesEdit()
+{
+}
+
+void CWAllFilesEdit::slotInterPixelVariabilityBrowse()
+{
+  QString file = QFileDialog::getOpenFileName(this, "Select Inter-Pixel Variability File", QString(),
+					      "Inter-Pixel Variability File (*.ipv);;All Files (*)");
+  
+  if (!file.isEmpty())
+    m_ipvEdit->setText(file);
+}
+
+void CWAllFilesEdit::slotDetectorNonLinearityBrowse()
+{
+  QString file = QFileDialog::getOpenFileName(this, "Select Detector Non-Linearity File", QString(),
+					      "Detector Non-Linearity File (*.dnl);;All Files (*)");
+  
+  if (!file.isEmpty())
+    m_dnlEdit->setText(file);
+}
+
+void CWAllFilesEdit::helperConstructFileWidgets(QGridLayout *gridLayout, int &row,
+						const char *calib, int lenCalib,
+						const char *instr, int lenInstr,
+						const char *ipv, int lenIpv,
+						const char *dnl, int lenDnl)
+{
+  // Helper that constructs the file editing widgets and places them in a grid layout.
+  // row is the first 'free row' in the grid on entry and is updated to be the next
+  // 'free row' on exit.
+
+  CWCalibInstrEdit::helperConstructFileWidgets(gridLayout, row, calib, lenCalib, instr, lenInstr);
+
+  gridLayout->addWidget(new QLabel("Inter-Pixel Var. File", this), row, 0);
+  m_ipvEdit = new QLineEdit(this);
+  m_ipvEdit->setMaxLength(lenIpv-1);
+  gridLayout->addWidget(m_ipvEdit, row, 1);
+  QPushButton *ipvBrowseBtn = new QPushButton("Browse...", this);
+  gridLayout->addWidget(ipvBrowseBtn, row, 2);
+  ++row;
+
+  gridLayout->addWidget(new QLabel("Det. Non-Linearity File", this), row, 0);
+  m_dnlEdit = new QLineEdit(this);
+  m_dnlEdit->setMaxLength(lenDnl-1);
+  gridLayout->addWidget(m_dnlEdit, row, 1);
+  QPushButton *dnlBrowseBtn = new QPushButton("Browse...", this);
+  gridLayout->addWidget(dnlBrowseBtn, row, 2);
+  ++row;
+
+  // initialise the values
+  m_ipvEdit->setText(QString(ipv));
+  m_dnlEdit->setText(QString(dnl));
+
+  // connections
+  connect(ipvBrowseBtn, SIGNAL(clicked()), this, SLOT(slotInterPixelVariabilityBrowse()));
+  connect(dnlBrowseBtn, SIGNAL(clicked()), this, SLOT(slotDetectorNonLinearityBrowse()));
+}
+  
 //--------------------------------------------------------
 
 CWInstrAsciiEdit::CWInstrAsciiEdit(const struct instrumental_ascii *d, QWidget *parent) :
@@ -251,32 +389,26 @@ CWInstrAsciiEdit::CWInstrAsciiEdit(const struct instrumental_ascii *d, QWidget *
   mainLayout->addLayout(groupLayout);
 
   // bottom layout - det. size and files
+  int row = 0;
   QGridLayout *bottomLayout = new QGridLayout;
 
-  bottomLayout->addWidget(new QLabel("Detector Size", this), 0, 0);
+  bottomLayout->addWidget(new QLabel("Detector Size", this), row, 0);
   m_detSizeEdit = new QLineEdit(this);
   m_detSizeEdit->setFixedWidth(cDetSizeEditWidth);
   m_detSizeEdit->setValidator(new QIntValidator(0, 8192, m_detSizeEdit));
-  bottomLayout->addWidget(m_detSizeEdit, 0, 1);
-  
-  bottomLayout->addWidget(new QLabel("Calibration File", this), 1, 0);
-  m_calibEdit = new QLineEdit(this);
-  m_calibEdit->setMaxLength(sizeof(d->calibrationFile)-1);
-  bottomLayout->addWidget(m_calibEdit, 1, 1);
-  QPushButton *calibBrowseBtn = new QPushButton("Browse...", this);
-  bottomLayout->addWidget(calibBrowseBtn, 1, 2);
+  bottomLayout->addWidget(m_detSizeEdit, row, 1);
+  ++row;
 
-  bottomLayout->addWidget(new QLabel("Instr. Function File", this), 2, 0);
-  m_instrEdit = new QLineEdit(this);
-  m_instrEdit->setMaxLength(sizeof(d->instrFunctionFile)-1);
-  bottomLayout->addWidget(m_instrEdit, 2, 1);
-  QPushButton *instrBrowseBtn = new QPushButton("Browse...", this);
-  bottomLayout->addWidget(instrBrowseBtn, 2, 2);
+  // files
+  helperConstructFileWidgets(bottomLayout, row,
+			     d->calibrationFile, sizeof(d->calibrationFile),
+			     d->instrFunctionFile, sizeof(d->instrFunctionFile));
 
   bottomLayout->setColumnMinimumWidth(0, cSuggestedColumnZeroWidth);
   bottomLayout->setColumnMinimumWidth(2, cSuggestedColumnTwoWidth);
 
   mainLayout->addLayout(bottomLayout);
+  mainLayout->addStretch(1);
 
   // initial values
   QString tmpStr;
@@ -299,14 +431,6 @@ CWInstrAsciiEdit::CWInstrAsciiEdit(const struct instrumental_ascii *d, QWidget *
   m_dateCheck->setCheckState(d->flagDate ? Qt::Checked : Qt::Unchecked);
   m_timeCheck->setCheckState(d->flagTime ? Qt::Checked : Qt::Unchecked);
   m_lambdaCheck->setCheckState(d->flagWavelength ? Qt::Checked : Qt::Unchecked);
-
-  // files
-  m_calibEdit->setText(QString(d->calibrationFile));
-  m_instrEdit->setText(QString(d->instrFunctionFile));
-
-  // connections
-  connect(calibBrowseBtn, SIGNAL(clicked()), this, SLOT(slotCalibBrowse()));
-  connect(instrBrowseBtn, SIGNAL(clicked()), this, SLOT(slotInstrBrowse()));
 }
 
 CWInstrAsciiEdit::~CWInstrAsciiEdit()
@@ -341,38 +465,35 @@ void CWInstrAsciiEdit::apply(struct instrumental_ascii *d) const
 CWInstrLoggerEdit::CWInstrLoggerEdit(const struct instrumental_logger *d, QWidget *parent) :
   CWCalibInstrEdit(parent)
 {
-  QGridLayout *mainLayout = new QGridLayout(this);
+  int row = 0;
+  QVBoxLayout *mainLayout = new QVBoxLayout(this);
+  QGridLayout *gridLayout = new QGridLayout;
   
   // Spectral Type
-  mainLayout->addWidget(new QLabel("Spectral Type", this), 0, 0);
+  gridLayout->addWidget(new QLabel("Spectral Type", this), row, 0);
   m_spectralTypeCombo = new QComboBox(this);
   m_spectralTypeCombo->addItem("All", QVariant(PRJCT_INSTR_IASB_TYPE_ALL));
   m_spectralTypeCombo->addItem("Zenithal", QVariant(PRJCT_INSTR_IASB_TYPE_ZENITHAL));
   m_spectralTypeCombo->addItem("Off-Axis", QVariant(PRJCT_INSTR_IASB_TYPE_OFFAXIS));
-  mainLayout->addWidget(m_spectralTypeCombo, 0, 1);
+  gridLayout->addWidget(m_spectralTypeCombo, row, 1);
+  ++row;
 
   // Azimuth
-  mainLayout->addWidget(new QLabel("With Azimuth Angle", this), 1, 0);
+  gridLayout->addWidget(new QLabel("Format with\n   azimuth angle", this), row, 0);
   m_aziCheck = new QCheckBox(this);
-  mainLayout->addWidget(m_aziCheck, 1, 1);
-  
+  gridLayout->addWidget(m_aziCheck, row, 1);
+  ++row;
+
   // files
-  mainLayout->addWidget(new QLabel("Calibration File", this), 2, 0);
-  m_calibEdit = new QLineEdit(this);
-  m_calibEdit->setMaxLength(sizeof(d->calibrationFile)-1);
-  mainLayout->addWidget(m_calibEdit, 2, 1);
-  QPushButton *calibBrowseBtn = new QPushButton("Browse...", this);
-  mainLayout->addWidget(calibBrowseBtn, 2, 2);
+  helperConstructFileWidgets(gridLayout, row,
+			     d->calibrationFile, sizeof(d->calibrationFile),
+			     d->instrFunctionFile, sizeof(d->instrFunctionFile));
 
-  mainLayout->addWidget(new QLabel("Instr. Function File", this), 3, 0);
-  m_instrEdit = new QLineEdit(this);
-  m_instrEdit->setMaxLength(sizeof(d->instrFunctionFile)-1);
-  mainLayout->addWidget(m_instrEdit, 3, 1);
-  QPushButton *instrBrowseBtn = new QPushButton("Browse...", this);
-  mainLayout->addWidget(instrBrowseBtn, 3, 2);
+  gridLayout->setColumnMinimumWidth(0, cSuggestedColumnZeroWidth);
+  gridLayout->setColumnMinimumWidth(2, cSuggestedColumnTwoWidth);
 
-  mainLayout->setColumnMinimumWidth(0, cSuggestedColumnZeroWidth);
-  mainLayout->setColumnMinimumWidth(2, cSuggestedColumnTwoWidth);
+  mainLayout->addLayout(gridLayout);
+  mainLayout->addStretch(1);
 
   // initial values
 
@@ -383,15 +504,6 @@ CWInstrLoggerEdit::CWInstrLoggerEdit(const struct instrumental_logger *d, QWidge
 
   // flag
   m_aziCheck->setCheckState(d->flagAzimuthAngle ? Qt::Checked : Qt::Unchecked);
-
-  // files
-  m_calibEdit->setText(QString(d->calibrationFile));
-  m_instrEdit->setText(QString(d->instrFunctionFile));
-
-  // connections
-  connect(calibBrowseBtn, SIGNAL(clicked()), this, SLOT(slotCalibBrowse()));
-  connect(instrBrowseBtn, SIGNAL(clicked()), this, SLOT(slotInstrBrowse()));
-  
 }
 
 CWInstrLoggerEdit::~CWInstrLoggerEdit()
@@ -416,32 +528,28 @@ void CWInstrLoggerEdit::apply(struct instrumental_logger *d) const
 CWInstrActonEdit::CWInstrActonEdit(const struct instrumental_acton *d, QWidget *parent) :
   CWCalibInstrEdit(parent)
 {
-  QGridLayout *mainLayout = new QGridLayout(this);
+  int row = 0;
+  QVBoxLayout *mainLayout = new QVBoxLayout(this);
+  QGridLayout *gridLayout = new QGridLayout;
   
   // NILU Type
-  mainLayout->addWidget(new QLabel("NILU Format Type", this), 0, 0);
+  gridLayout->addWidget(new QLabel("NILU Format Type", this), row, 0);
   m_niluTypeCombo = new QComboBox(this);
-  m_niluTypeCombo->addItem("Old", QVariant(PRJCT_INSTR_NILU_FORMAT_OLD));
-  m_niluTypeCombo->addItem("New", QVariant(PRJCT_INSTR_NILU_FORMAT_NEW));
-  mainLayout->addWidget(m_niluTypeCombo, 0, 1);
+  m_niluTypeCombo->addItem("Old format", QVariant(PRJCT_INSTR_NILU_FORMAT_OLD));
+  m_niluTypeCombo->addItem("New format", QVariant(PRJCT_INSTR_NILU_FORMAT_NEW));
+  gridLayout->addWidget(m_niluTypeCombo, row, 1);
+  ++row;
 
   // files
-  mainLayout->addWidget(new QLabel("Calibration File", this), 1, 0);
-  m_calibEdit = new QLineEdit(this);
-  m_calibEdit->setMaxLength(sizeof(d->calibrationFile)-1);
-  mainLayout->addWidget(m_calibEdit, 1, 1);
-  QPushButton *calibBrowseBtn = new QPushButton("Browse...", this);
-  mainLayout->addWidget(calibBrowseBtn, 1, 2);
+  helperConstructFileWidgets(gridLayout, row,
+			     d->calibrationFile, sizeof(d->calibrationFile),
+			     d->instrFunctionFile, sizeof(d->instrFunctionFile));
 
-  mainLayout->addWidget(new QLabel("Instr. Function File", this), 2, 0);
-  m_instrEdit = new QLineEdit(this);
-  m_instrEdit->setMaxLength(sizeof(d->instrFunctionFile)-1);
-  mainLayout->addWidget(m_instrEdit, 2, 1);
-  QPushButton *instrBrowseBtn = new QPushButton("Browse...", this);
-  mainLayout->addWidget(instrBrowseBtn, 2, 2);
+  gridLayout->setColumnMinimumWidth(0, cSuggestedColumnZeroWidth);
+  gridLayout->setColumnMinimumWidth(2, cSuggestedColumnTwoWidth);
 
-  mainLayout->setColumnMinimumWidth(0, cSuggestedColumnZeroWidth);
-  mainLayout->setColumnMinimumWidth(2, cSuggestedColumnTwoWidth);
+  mainLayout->addLayout(gridLayout);
+  mainLayout->addStretch(1);
 
   // initial values
 
@@ -450,14 +558,6 @@ CWInstrActonEdit::CWInstrActonEdit(const struct instrumental_acton *d, QWidget *
   if (index != -1)
     m_niluTypeCombo->setCurrentIndex(index);
 
-  // files
-  m_calibEdit->setText(QString(d->calibrationFile));
-  m_instrEdit->setText(QString(d->instrFunctionFile));
-
-  // connections
-  connect(calibBrowseBtn, SIGNAL(clicked()), this, SLOT(slotCalibBrowse()));
-  connect(instrBrowseBtn, SIGNAL(clicked()), this, SLOT(slotInstrBrowse()));
-  
 }
 
 CWInstrActonEdit::~CWInstrActonEdit()
@@ -479,30 +579,22 @@ void CWInstrActonEdit::apply(struct instrumental_acton *d) const
 CWInstrSaozEdit::CWInstrSaozEdit(const struct instrumental_saoz *d, QWidget *parent) :
   CWCalibInstrEdit(parent)
 {
+  int row = 0;
   QVBoxLayout *mainLayout = new QVBoxLayout(this);
   QGridLayout *gridLayout = new QGridLayout;
   
   // Spectral Type
-  gridLayout->addWidget(new QLabel("Spectral Type", this), 0, 0);
+  gridLayout->addWidget(new QLabel("Spectral Type", this), row, 0);
   m_spectralTypeCombo = new QComboBox(this);
   m_spectralTypeCombo->addItem("Zenithal", QVariant(PRJCT_INSTR_SAOZ_TYPE_ZENITHAL));
   m_spectralTypeCombo->addItem("Pointed", QVariant(PRJCT_INSTR_SAOZ_TYPE_POINTED));
-  gridLayout->addWidget(m_spectralTypeCombo, 0, 1);
+  gridLayout->addWidget(m_spectralTypeCombo, row, 1);
+  ++row;
 
   // files
-  gridLayout->addWidget(new QLabel("Calibration File", this), 1, 0);
-  m_calibEdit = new QLineEdit(this);
-  m_calibEdit->setMaxLength(sizeof(d->calibrationFile)-1);
-  gridLayout->addWidget(m_calibEdit, 1, 1);
-  QPushButton *calibBrowseBtn = new QPushButton("Browse...", this);
-  gridLayout->addWidget(calibBrowseBtn, 1, 2);
-
-  gridLayout->addWidget(new QLabel("Instr. Function File", this), 2, 0);
-  m_instrEdit = new QLineEdit(this);
-  m_instrEdit->setMaxLength(sizeof(d->instrFunctionFile)-1);
-  gridLayout->addWidget(m_instrEdit, 2, 1);
-  QPushButton *instrBrowseBtn = new QPushButton("Browse...", this);
-  gridLayout->addWidget(instrBrowseBtn, 2, 2);
+  helperConstructFileWidgets(gridLayout, row,
+			     d->calibrationFile, sizeof(d->calibrationFile),
+			     d->instrFunctionFile, sizeof(d->instrFunctionFile));
 
   gridLayout->setColumnMinimumWidth(0, cSuggestedColumnZeroWidth);
   gridLayout->setColumnMinimumWidth(2, cSuggestedColumnTwoWidth);
@@ -517,14 +609,6 @@ CWInstrSaozEdit::CWInstrSaozEdit(const struct instrumental_saoz *d, QWidget *par
   if (index != -1)
     m_spectralTypeCombo->setCurrentIndex(index);
 
-  // files
-  m_calibEdit->setText(QString(d->calibrationFile));
-  m_instrEdit->setText(QString(d->instrFunctionFile));
-
-  // connections
-  connect(calibBrowseBtn, SIGNAL(clicked()), this, SLOT(slotCalibBrowse()));
-  connect(instrBrowseBtn, SIGNAL(clicked()), this, SLOT(slotInstrBrowse()));
-  
 }
 
 CWInstrSaozEdit::~CWInstrSaozEdit()
@@ -546,40 +630,20 @@ void CWInstrSaozEdit::apply(struct instrumental_saoz *d) const
 CWInstrRasasEdit::CWInstrRasasEdit(const struct instrumental_rasas *d, QWidget *parent) :
   CWCalibInstrEdit(parent)
 {
+  int row = 0;
   QVBoxLayout *mainLayout = new QVBoxLayout(this);
   QGridLayout *gridLayout = new QGridLayout;
   
   // files
-  gridLayout->addWidget(new QLabel("Calibration File", this), 0, 0);
-  m_calibEdit = new QLineEdit(this);
-  m_calibEdit->setMaxLength(sizeof(d->calibrationFile)-1);
-  gridLayout->addWidget(m_calibEdit, 0, 1);
-  QPushButton *calibBrowseBtn = new QPushButton("Browse...", this);
-  gridLayout->addWidget(calibBrowseBtn, 0, 2);
-
-  gridLayout->addWidget(new QLabel("Instr. Function File", this), 1, 0);
-  m_instrEdit = new QLineEdit(this);
-  m_instrEdit->setMaxLength(sizeof(d->instrFunctionFile)-1);
-  gridLayout->addWidget(m_instrEdit, 1, 1);
-  QPushButton *instrBrowseBtn = new QPushButton("Browse...", this);
-  gridLayout->addWidget(instrBrowseBtn, 1, 2);
+  helperConstructFileWidgets(gridLayout, row,
+			     d->calibrationFile, sizeof(d->calibrationFile),
+			     d->instrFunctionFile, sizeof(d->instrFunctionFile));
 
   gridLayout->setColumnMinimumWidth(0, cSuggestedColumnZeroWidth);
   gridLayout->setColumnMinimumWidth(2, cSuggestedColumnTwoWidth);
 
   mainLayout->addLayout(gridLayout);
   mainLayout->addStretch(1);
-
-  // initial values
-
-  // files
-  m_calibEdit->setText(QString(d->calibrationFile));
-  m_instrEdit->setText(QString(d->instrFunctionFile));
-
-  // connections
-  connect(calibBrowseBtn, SIGNAL(clicked()), this, SLOT(slotCalibBrowse()));
-  connect(instrBrowseBtn, SIGNAL(clicked()), this, SLOT(slotInstrBrowse()));
-  
 }
 
 CWInstrRasasEdit::~CWInstrRasasEdit()
@@ -591,4 +655,159 @@ void CWInstrRasasEdit::apply(struct instrumental_rasas *d) const
   // files
   strcpy(d->calibrationFile, m_calibEdit->text().toAscii().data());
   strcpy(d->instrFunctionFile, m_instrEdit->text().toAscii().data());  
+}
+
+//--------------------------------------------------------
+
+CWInstrCcdEdit::CWInstrCcdEdit(const struct instrumental_ccd *d, QWidget *parent) :
+  CWAllFilesEdit(parent)
+{
+  int row = 0;
+  QVBoxLayout *mainLayout = new QVBoxLayout(this);
+  QGridLayout *gridLayout = new QGridLayout;
+  
+  // files
+  helperConstructFileWidgets(gridLayout, row,
+			     d->calibrationFile, sizeof(d->calibrationFile),
+			     d->instrFunctionFile, sizeof(d->instrFunctionFile),
+			     d->interPixelVariabilityFile, sizeof(d->interPixelVariabilityFile),
+			     d->detectorNonLinearityFile, sizeof(d->detectorNonLinearityFile));
+  
+
+  gridLayout->setColumnMinimumWidth(0, cSuggestedColumnZeroWidth);
+  gridLayout->setColumnMinimumWidth(2, cSuggestedColumnTwoWidth);
+
+  mainLayout->addLayout(gridLayout);
+  mainLayout->addStretch(1);
+}
+
+CWInstrCcdEdit::~CWInstrCcdEdit()
+{
+}
+  
+void CWInstrCcdEdit::apply(struct instrumental_ccd *d) const
+{
+  // files
+  strcpy(d->calibrationFile, m_calibEdit->text().toAscii().data());
+  strcpy(d->instrFunctionFile, m_instrEdit->text().toAscii().data());  
+  strcpy(d->interPixelVariabilityFile, m_ipvEdit->text().toAscii().data());  
+  strcpy(d->detectorNonLinearityFile, m_dnlEdit->text().toAscii().data());  
+}
+
+//--------------------------------------------------------
+
+CWInstrPdaEggUlbEdit::CWInstrPdaEggUlbEdit(const struct instrumental_pdaeggulb *d, QWidget *parent) :
+  CWAllFilesEdit(parent)
+{
+  int row = 0;
+  QVBoxLayout *mainLayout = new QVBoxLayout(this);
+  QGridLayout *gridLayout = new QGridLayout;
+  
+  // Curve Type
+  gridLayout->addWidget(new QLabel("Curve Type", this), row, 0);
+  m_curveTypeCombo = new QComboBox(this);
+  m_curveTypeCombo->addItem("Manual", QVariant(PRJCT_INSTR_ULB_TYPE_MANUAL));
+  m_curveTypeCombo->addItem("High", QVariant(PRJCT_INSTR_ULB_TYPE_HIGH));
+  m_curveTypeCombo->addItem("Low", QVariant(PRJCT_INSTR_ULB_TYPE_LOW));
+  gridLayout->addWidget(m_curveTypeCombo, row, 1);
+  ++row;
+
+  // files
+  helperConstructFileWidgets(gridLayout, row,
+			     d->calibrationFile, sizeof(d->calibrationFile),
+			     d->instrFunctionFile, sizeof(d->instrFunctionFile),
+			     d->interPixelVariabilityFile, sizeof(d->interPixelVariabilityFile),
+			     d->detectorNonLinearityFile, sizeof(d->detectorNonLinearityFile));
+  
+  gridLayout->setColumnMinimumWidth(0, cSuggestedColumnZeroWidth);
+  gridLayout->setColumnMinimumWidth(2, cSuggestedColumnTwoWidth);
+
+  mainLayout->addLayout(gridLayout);
+  mainLayout->addStretch(1);
+}
+
+CWInstrPdaEggUlbEdit::~CWInstrPdaEggUlbEdit()
+{
+}
+  
+void CWInstrPdaEggUlbEdit::apply(struct instrumental_pdaeggulb *d) const
+{
+  // curve type
+  d->curveType = m_curveTypeCombo->itemData(m_curveTypeCombo->currentIndex()).toInt();
+
+  // files
+  strcpy(d->calibrationFile, m_calibEdit->text().toAscii().data());
+  strcpy(d->instrFunctionFile, m_instrEdit->text().toAscii().data());  
+  strcpy(d->interPixelVariabilityFile, m_ipvEdit->text().toAscii().data());  
+  strcpy(d->detectorNonLinearityFile, m_dnlEdit->text().toAscii().data());  
+}
+
+//--------------------------------------------------------
+
+CWInstrCcdEevEdit::CWInstrCcdEevEdit(const struct instrumental_ccdeev *d, QWidget *parent) :
+  CWAllFilesEdit(parent)
+{
+  int row = 0;
+  QVBoxLayout *mainLayout = new QVBoxLayout(this);
+  QGridLayout *gridLayout = new QGridLayout;
+  
+  // detector size
+  gridLayout->addWidget(new QLabel("Detector Size", this), row, 0);
+  m_detSizeEdit = new QLineEdit(this);
+  m_detSizeEdit->setFixedWidth(cDetSizeEditWidth);
+  m_detSizeEdit->setValidator(new QIntValidator(0, 8192, m_detSizeEdit));
+  gridLayout->addWidget(m_detSizeEdit, row, 1);
+  ++row;
+
+  // files
+  CWCalibInstrEdit::helperConstructFileWidgets(gridLayout, row,
+					       d->calibrationFile, sizeof(d->calibrationFile),
+					       d->instrFunctionFile, sizeof(d->instrFunctionFile));
+
+  //
+  gridLayout->addWidget(new QLabel("Straylight Correction", this), row, 0);
+  m_ipvEdit = new QLineEdit(this);
+  m_ipvEdit->setMaxLength(sizeof(d->straylightCorrectionFile)-1);
+  gridLayout->addWidget(m_ipvEdit, row, 1);
+  QPushButton *strayBrowseBtn = new QPushButton("Browse...", this);
+  gridLayout->addWidget(strayBrowseBtn, row, 2);
+  ++row;
+
+  gridLayout->addWidget(new QLabel("Det. Non-Linearity", this), row, 0);
+  m_dnlEdit = new QLineEdit(this);
+  m_dnlEdit->setMaxLength(sizeof(d->detectorNonLinearityFile)-1);
+  gridLayout->addWidget(m_dnlEdit, row, 1);
+  QPushButton *dnlBrowseBtn = new QPushButton("Browse...", this);
+  gridLayout->addWidget(dnlBrowseBtn, row, 2);
+  ++row;
+
+  // initialise the values
+  m_ipvEdit->setText(QString(d->straylightCorrectionFile));
+  m_dnlEdit->setText(QString(d->detectorNonLinearityFile));
+
+  // connections
+  connect(strayBrowseBtn, SIGNAL(clicked()), this, SLOT(slotInterPixelVariabilityBrowse()));
+  connect(dnlBrowseBtn, SIGNAL(clicked()), this, SLOT(slotDetectorNonLinearityBrowse()));
+  
+  gridLayout->setColumnMinimumWidth(0, cSuggestedColumnZeroWidth);
+  gridLayout->setColumnMinimumWidth(2, cSuggestedColumnTwoWidth);
+
+  mainLayout->addLayout(gridLayout);
+  mainLayout->addStretch(1);
+}
+
+CWInstrCcdEevEdit::~CWInstrCcdEevEdit()
+{
+}
+  
+void CWInstrCcdEevEdit::apply(struct instrumental_ccdeev *d) const
+{
+  // detector size
+  d->detectorSize = m_detSizeEdit->text().toInt();
+
+  // files
+  strcpy(d->calibrationFile, m_calibEdit->text().toAscii().data());
+  strcpy(d->instrFunctionFile, m_instrEdit->text().toAscii().data());  
+  strcpy(d->straylightCorrectionFile, m_ipvEdit->text().toAscii().data());  
+  strcpy(d->detectorNonLinearityFile, m_dnlEdit->text().toAscii().data());  
 }

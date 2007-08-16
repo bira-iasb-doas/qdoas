@@ -238,6 +238,29 @@ extern "C" {
     char instrFunctionFile[FILENAME_BUFFER_LENGTH];    
   };
 
+  struct instrumental_ccd {
+    char calibrationFile[FILENAME_BUFFER_LENGTH];
+    char instrFunctionFile[FILENAME_BUFFER_LENGTH];    
+    char interPixelVariabilityFile[FILENAME_BUFFER_LENGTH];
+    char detectorNonLinearityFile[FILENAME_BUFFER_LENGTH];    
+  };
+
+  struct instrumental_pdaeggulb {
+    int curveType;
+    char calibrationFile[FILENAME_BUFFER_LENGTH];
+    char instrFunctionFile[FILENAME_BUFFER_LENGTH];    
+    char interPixelVariabilityFile[FILENAME_BUFFER_LENGTH];
+    char detectorNonLinearityFile[FILENAME_BUFFER_LENGTH];    
+  };
+
+  struct instrumental_ccdeev {
+    int detectorSize;
+    char calibrationFile[FILENAME_BUFFER_LENGTH];
+    char instrFunctionFile[FILENAME_BUFFER_LENGTH];    
+    char straylightCorrectionFile[FILENAME_BUFFER_LENGTH];
+    char detectorNonLinearityFile[FILENAME_BUFFER_LENGTH];    
+  };
+
   typedef struct mediate_project_instrumental
   {
     int format;
@@ -246,12 +269,18 @@ extern "C" {
     struct instrumental_logger logger;
     struct instrumental_acton acton;
     struct instrumental_logger pdaegg;
+    struct instrumental_logger pdaeggold;
+    struct instrumental_pdaeggulb pdaeggulb;
+    struct instrumental_ccd ccdohp96;
+    struct instrumental_ccd ccdha94;
+    struct instrumental_ccd ccdulb;
     struct instrumental_saoz saozvis;
     struct instrumental_saoz saozuv;
     struct instrumental_rasas saozefm;
     struct instrumental_rasas rasas;
     struct instrumental_rasas pdasieasoe;
     struct instrumental_logger pdasiosma;
+    struct instrumental_ccdeev ccdeev;
     struct instrumental_rasas uoft;
     struct instrumental_rasas noaa;
     

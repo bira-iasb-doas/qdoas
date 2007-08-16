@@ -28,6 +28,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QSpinBox>
 #include <QCheckBox>
 #include <QRadioButton>
+#include <QGridLayout>
 
 #include "mediate_project.h"
 
@@ -36,6 +37,9 @@ class CWInstrLoggerEdit;
 class CWInstrActonEdit;
 class CWInstrSaozEdit;
 class CWInstrRasasEdit;
+class CWInstrCcdEdit;
+class CWInstrPdaEggUlbEdit;
+class CWInstrCcdEevEdit;
 
 //--------------------------------------------------------------------------
 class CWProjectTabInstrumental : public QFrame
@@ -54,20 +58,28 @@ class CWProjectTabInstrumental : public QFrame
   CWInstrLoggerEdit *m_loggerEdit;
   CWInstrActonEdit *m_actonEdit;
   CWInstrLoggerEdit *m_pdaEggEdit;
+  CWInstrLoggerEdit *m_pdaEggOldEdit;
+  CWInstrPdaEggUlbEdit *m_pdaEggUlbEdit;
+  CWInstrCcdEdit *m_ccdOhp96Edit;
+  CWInstrCcdEdit *m_ccdHa94Edit;
+  CWInstrCcdEdit *m_ccdUlbEdit;
   CWInstrSaozEdit *m_saozVisEdit;
   CWInstrSaozEdit *m_saozUvEdit;
   CWInstrRasasEdit *m_saozEfmEdit;
   CWInstrRasasEdit *m_rasasEdit;
   CWInstrRasasEdit *m_pdasiEasoeEdit;
+  CWInstrLoggerEdit *m_pdasiOsmaEdit;
+  CWInstrCcdEevEdit *m_ccdEevEdit;
   CWInstrRasasEdit *m_uoftEdit;
   CWInstrRasasEdit *m_noaaEdit;
-  CWInstrLoggerEdit *m_pdasiOsmaEdit;
+
 };
 
 //--------------------------------------------------------------------------
 
 // base class for editors with calibration and instrument files. Only provides
-// the implementation for the browse slots.
+// the implementation for the browse slots. Instanciation of the protected
+// member widgets is the responsibility of concrete derived classes.
 
 class CWCalibInstrEdit : public QFrame
 {
@@ -75,6 +87,11 @@ Q_OBJECT
  public:
   CWCalibInstrEdit(QWidget *parent = 0);
   virtual ~CWCalibInstrEdit();
+
+ protected:
+  void helperConstructFileWidgets(QGridLayout *gridLayout, int &row,
+				  const char *calib, int lenCalib,
+				  const char *instr, int lenInstr);
 
  public slots:
   void slotCalibBrowse();
@@ -86,6 +103,34 @@ Q_OBJECT
 
 //--------------------------------------------------------------------------
 
+// base class for editors with all instrument files. Only provides
+// the implementation for the browse slots.Instanciation of the protected
+// member widgets is the responsibility of concrete derived classes.
+// A helper function can be used for the construction of these widgets.
+
+class CWAllFilesEdit : public CWCalibInstrEdit
+{
+Q_OBJECT
+ public:
+  CWAllFilesEdit(QWidget *parent = 0);
+  virtual ~CWAllFilesEdit();
+
+ protected:
+  void helperConstructFileWidgets(QGridLayout *gridLayout, int &row,
+				  const char *calib, int lenCalib,
+				  const char *instr, int lenInstr,
+				  const char *ipv, int lenIpv,
+				  const char *dnl, int lenDnl);
+  
+ public slots:
+  void slotInterPixelVariabilityBrowse();
+  void slotDetectorNonLinearityBrowse();
+
+ protected:
+  QLineEdit *m_ipvEdit, *m_dnlEdit;
+};
+
+//--------------------------------------------------------------------------
 class CWInstrAsciiEdit : public CWCalibInstrEdit
 {
  public:
@@ -142,6 +187,7 @@ class CWInstrSaozEdit : public CWCalibInstrEdit
  private:
   QComboBox *m_spectralTypeCombo;
 };
+
 //--------------------------------------------------------------------------
 
 class CWInstrRasasEdit : public CWCalibInstrEdit
@@ -151,6 +197,45 @@ class CWInstrRasasEdit : public CWCalibInstrEdit
   virtual ~CWInstrRasasEdit();
   
   void apply(struct instrumental_rasas *d) const;
+};
+
+//--------------------------------------------------------------------------
+
+class CWInstrCcdEdit : public CWAllFilesEdit
+{
+ public:
+  CWInstrCcdEdit(const struct instrumental_ccd *d, QWidget *parent = 0);
+  virtual ~CWInstrCcdEdit();
+  
+  void apply(struct instrumental_ccd *d) const;
+};
+
+//--------------------------------------------------------------------------
+
+class CWInstrPdaEggUlbEdit : public CWAllFilesEdit
+{
+ public:
+  CWInstrPdaEggUlbEdit(const struct instrumental_pdaeggulb *d, QWidget *parent = 0);
+  virtual ~CWInstrPdaEggUlbEdit();
+  
+  void apply(struct instrumental_pdaeggulb *d) const;
+  
+ private:
+  QComboBox *m_curveTypeCombo;
+};
+
+//--------------------------------------------------------------------------
+
+class CWInstrCcdEevEdit : public CWAllFilesEdit
+{
+ public:
+  CWInstrCcdEevEdit(const struct instrumental_ccdeev *d, QWidget *parent = 0);
+  virtual ~CWInstrCcdEevEdit();
+  
+  void apply(struct instrumental_ccdeev *d) const;
+  
+ private:
+  QLineEdit *m_detSizeEdit;
 };
 
 
