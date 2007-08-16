@@ -415,19 +415,20 @@ CWInstrAsciiEdit::CWInstrAsciiEdit(const struct instrumental_ascii *d, QWidget *
   QGroupBox *flagsGroup = new QGroupBox("Read from file", this);
   QGridLayout *flagsLayout = new QGridLayout(flagsGroup);
 
-  m_zenCheck = new QCheckBox("Zen. Angle", flagsGroup);
+  m_zenCheck = new QCheckBox("Solar Zenith Angle", flagsGroup);
   flagsLayout->addWidget(m_zenCheck, 0, 0);
-  m_aziCheck = new QCheckBox("Azi. Angle", flagsGroup);
-  flagsLayout->addWidget(m_aziCheck, 0, 1);
-  m_eleCheck = new QCheckBox("Elev. Angle", flagsGroup);
-  flagsLayout->addWidget(m_eleCheck, 0, 2);
+  m_dateCheck = new QCheckBox("DD/MM/YYYY", flagsGroup);
+  flagsLayout->addWidget(m_dateCheck, 0, 1);
 
-  m_dateCheck = new QCheckBox("DD/MM/YY", flagsGroup);
-  flagsLayout->addWidget(m_dateCheck, 1, 0);
+  m_aziCheck = new QCheckBox("Azimuth Viewing Angle", flagsGroup);
+  flagsLayout->addWidget(m_aziCheck, 1, 0);
   m_timeCheck = new QCheckBox("Decimal Time", flagsGroup);
   flagsLayout->addWidget(m_timeCheck, 1, 1);
+
+  m_eleCheck = new QCheckBox("Elevation Viewing Angle", flagsGroup);
+  flagsLayout->addWidget(m_eleCheck, 2, 0);
   m_lambdaCheck = new QCheckBox("Lambda", flagsGroup);
-  flagsLayout->addWidget(m_lambdaCheck, 1, 2);
+  flagsLayout->addWidget(m_lambdaCheck, 2, 1);
 
   groupLayout->addWidget(flagsGroup);
 
