@@ -641,6 +641,14 @@ enum _sciaChannels
   PRJCT_INSTR_SCIA_CHANNEL_MAX
  };
 
+enum _omiSpectralTypes
+ {
+  PRJCT_INSTR_OMI_TYPE_UV1,
+  PRJCT_INSTR_OMI_TYPE_UV2,
+  PRJCT_INSTR_OMI_TYPE_VIS,
+  PRJCT_INSTR_OMI_TYPE_MAX
+ };
+
 // Types of irradiances for SCIAMACHY
 
 // D0 ESM diffuser -  neutral density filter in (regularly updated)

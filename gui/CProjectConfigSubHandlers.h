@@ -158,6 +158,10 @@ class CProjectInstrumentalSubHandler : public CConfigSubHandler
   bool helperLoadLogger(const QXmlAttributes &atts, struct instrumental_logger *d);
   bool helperLoadSaoz(const QXmlAttributes &atts, struct instrumental_saoz *d);
   bool helperLoadRasas(const QXmlAttributes &atts, struct instrumental_rasas *d);
+  bool helperLoadCcd(const QXmlAttributes &atts, struct instrumental_ccd *d);
+  bool helperLoadGdp(const QXmlAttributes &atts, struct instrumental_gdp *d);
+  bool helperLoadScia(const QXmlAttributes &atts, struct instrumental_scia *d);
+  
 
  private:
   mediate_project_instrumental_t *m_instrumental;

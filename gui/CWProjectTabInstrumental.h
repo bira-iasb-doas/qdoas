@@ -38,8 +38,13 @@ class CWInstrActonEdit;
 class CWInstrSaozEdit;
 class CWInstrRasasEdit;
 class CWInstrCcdEdit;
+class CWInstrCcdUlbEdit;
 class CWInstrPdaEggUlbEdit;
 class CWInstrCcdEevEdit;
+class CWInstrOpusEdit;
+class CWInstrGdpEdit;
+class CWInstrSciaEdit;
+class CWInstrOmiEdit;
 
 //--------------------------------------------------------------------------
 class CWProjectTabInstrumental : public QFrame
@@ -62,7 +67,7 @@ class CWProjectTabInstrumental : public QFrame
   CWInstrPdaEggUlbEdit *m_pdaEggUlbEdit;
   CWInstrCcdEdit *m_ccdOhp96Edit;
   CWInstrCcdEdit *m_ccdHa94Edit;
-  CWInstrCcdEdit *m_ccdUlbEdit;
+  CWInstrCcdUlbEdit *m_ccdUlbEdit;
   CWInstrSaozEdit *m_saozVisEdit;
   CWInstrSaozEdit *m_saozUvEdit;
   CWInstrRasasEdit *m_saozEfmEdit;
@@ -70,8 +75,14 @@ class CWProjectTabInstrumental : public QFrame
   CWInstrRasasEdit *m_pdasiEasoeEdit;
   CWInstrLoggerEdit *m_pdasiOsmaEdit;
   CWInstrCcdEevEdit *m_ccdEevEdit;
+  CWInstrOpusEdit *m_opusEdit;
+  CWInstrGdpEdit *m_gdpAsciiEdit;
+  CWInstrGdpEdit *m_gdpBinEdit;
+  CWInstrSciaEdit *m_sciaHdfEdit;
+  CWInstrSciaEdit *m_sciaPdsEdit;  
   CWInstrRasasEdit *m_uoftEdit;
   CWInstrRasasEdit *m_noaaEdit;
+  CWInstrOmiEdit *m_omiEdit;
 
 };
 
@@ -89,9 +100,9 @@ Q_OBJECT
   virtual ~CWCalibInstrEdit();
 
  protected:
-  void helperConstructFileWidgets(QGridLayout *gridLayout, int &row,
-				  const char *calib, int lenCalib,
-				  const char *instr, int lenInstr);
+  void helperConstructCalInsFileWidgets(QGridLayout *gridLayout, int &row,
+					const char *calib, int lenCalib,
+					const char *instr, int lenInstr);
 
  public slots:
   void slotCalibBrowse();
@@ -116,6 +127,10 @@ Q_OBJECT
   virtual ~CWAllFilesEdit();
 
  protected:
+  void helperConstructIpvDnlFileWidgets(QGridLayout *gridLayout, int &row,
+					const char *ipv, int lenIpv,
+					const char *dnl, int lenDnl);
+
   void helperConstructFileWidgets(QGridLayout *gridLayout, int &row,
 				  const char *calib, int lenCalib,
 				  const char *instr, int lenInstr,
@@ -212,6 +227,20 @@ class CWInstrCcdEdit : public CWAllFilesEdit
 
 //--------------------------------------------------------------------------
 
+class CWInstrCcdUlbEdit : public CWAllFilesEdit
+{
+ public:
+  CWInstrCcdUlbEdit(const struct instrumental_ccdulb *d, QWidget *parent = 0);
+  virtual ~CWInstrCcdUlbEdit();
+  
+  void apply(struct instrumental_ccdulb *d) const;
+
+ private:
+  QLineEdit *m_gratingEdit, *m_cenLambdaEdit;
+};
+
+//--------------------------------------------------------------------------
+
 class CWInstrPdaEggUlbEdit : public CWAllFilesEdit
 {
  public:
@@ -238,6 +267,79 @@ class CWInstrCcdEevEdit : public CWAllFilesEdit
   QLineEdit *m_detSizeEdit;
 };
 
+//--------------------------------------------------------------------------
+
+class CWInstrOpusEdit : public CWCalibInstrEdit
+{
+ public:
+  CWInstrOpusEdit(const struct instrumental_opus *d, QWidget *parent = 0);
+  virtual ~CWInstrOpusEdit();
+  
+  void apply(struct instrumental_opus *d) const;
+  
+ private:
+  QLineEdit *m_detSizeEdit, *m_timeShiftEdit;
+  QCheckBox *m_transmittanceCheck;
+};
+
+//--------------------------------------------------------------------------
+
+class CWInstrGdpEdit : public CWCalibInstrEdit
+{
+ public:
+  CWInstrGdpEdit(const struct instrumental_gdp *d, QWidget *parent = 0);
+  virtual ~CWInstrGdpEdit();
+  
+  void apply(struct instrumental_gdp *d) const;
+  
+ private:
+  QComboBox *m_bandTypeCombo;
+};
+
+//--------------------------------------------------------------------------
+
+class CWInstrSciaEdit : public CWCalibInstrEdit
+{
+Q_OBJECT
+ public:
+  CWInstrSciaEdit(const struct instrumental_scia *d, QWidget *parent = 0);
+  virtual ~CWInstrSciaEdit();
+  
+  void apply(struct instrumental_scia *d) const;
+  
+ public slots:
+  void slotChannelChanged(int index);
+  void slotCluster0Changed(int state);
+  void slotCluster1Changed(int state);
+  void slotCluster2Changed(int state);
+  void slotCluster3Changed(int state);
+  void slotCluster4Changed(int state);
+  void slotCluster5Changed(int state);
+
+ private:
+  QComboBox *m_channelCombo;
+  QCheckBox *m_clusterCheck[6];
+  QLineEdit *m_referenceEdit;
+  unsigned char m_clusterState[32];
+  int m_clusterOffset; // maps check box to cluster index
+};
+
+
+//--------------------------------------------------------------------------
+
+class CWInstrOmiEdit : public CWCalibInstrEdit
+{
+ public:
+  CWInstrOmiEdit(const struct instrumental_omi *d, QWidget *parent = 0);
+  virtual ~CWInstrOmiEdit();
+  
+  void apply(struct instrumental_omi *d) const;
+  
+ private:
+  QComboBox *m_spectralTypeCombo;
+  QLineEdit *m_minLambdaEdit, *m_maxLambdaEdit;
+  QCheckBox *m_averageCheck;
+};
 
 
 #endif

@@ -245,6 +245,15 @@ extern "C" {
     char detectorNonLinearityFile[FILENAME_BUFFER_LENGTH];    
   };
 
+  struct instrumental_ccdulb {
+    int grating;
+    int centralWavelength;
+    char calibrationFile[FILENAME_BUFFER_LENGTH];
+    char offsetFile[FILENAME_BUFFER_LENGTH];    
+    char interPixelVariabilityFile[FILENAME_BUFFER_LENGTH];
+    char detectorNonLinearityFile[FILENAME_BUFFER_LENGTH];    
+  };
+
   struct instrumental_pdaeggulb {
     int curveType;
     char calibrationFile[FILENAME_BUFFER_LENGTH];
@@ -261,6 +270,37 @@ extern "C" {
     char detectorNonLinearityFile[FILENAME_BUFFER_LENGTH];    
   };
 
+  struct instrumental_opus {
+    int detectorSize;
+    double timeShift;
+    int flagTransmittance;
+    char calibrationFile[FILENAME_BUFFER_LENGTH];
+    char instrFunctionFile[FILENAME_BUFFER_LENGTH];    
+  };
+
+  struct instrumental_gdp {
+    int bandType;
+    char calibrationFile[FILENAME_BUFFER_LENGTH];
+    char instrFunctionFile[FILENAME_BUFFER_LENGTH];    
+  };
+
+  struct instrumental_scia {
+    int channel;
+    unsigned char clusters[32];                      // flags with cluster number as index
+    char sunReference[4];                            // 2 characters plus terminator
+    char calibrationFile[FILENAME_BUFFER_LENGTH];
+    char instrFunctionFile[FILENAME_BUFFER_LENGTH];    
+  };
+  
+  struct instrumental_omi {
+    int spectralType;
+    double minimumWavelength;
+    double maximumWavelength;
+    int flagAverage;
+    char calibrationFile[FILENAME_BUFFER_LENGTH];
+    char instrFunctionFile[FILENAME_BUFFER_LENGTH];    
+  };
+
   typedef struct mediate_project_instrumental
   {
     int format;
@@ -273,7 +313,7 @@ extern "C" {
     struct instrumental_pdaeggulb pdaeggulb;
     struct instrumental_ccd ccdohp96;
     struct instrumental_ccd ccdha94;
-    struct instrumental_ccd ccdulb;
+    struct instrumental_ccdulb ccdulb;
     struct instrumental_saoz saozvis;
     struct instrumental_saoz saozuv;
     struct instrumental_rasas saozefm;
@@ -281,8 +321,14 @@ extern "C" {
     struct instrumental_rasas pdasieasoe;
     struct instrumental_logger pdasiosma;
     struct instrumental_ccdeev ccdeev;
+    struct instrumental_opus opus;
+    struct instrumental_gdp gdpascii;
+    struct instrumental_gdp gdpbin;
+    struct instrumental_scia sciahdf;
+    struct instrumental_scia sciapds;
     struct instrumental_rasas uoft;
     struct instrumental_rasas noaa;
+    struct instrumental_omi omi;
     
   } mediate_project_instrumental_t;
 
