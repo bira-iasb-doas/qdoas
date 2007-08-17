@@ -309,11 +309,9 @@ bool CProjectAnalysisSubHandler::start(const QXmlAttributes &atts)
 
   str = atts.value("method");
   if (str == "ODF")
-    m_analysis->methodType = cProjAnalysisMethodModeOptDens;
+    m_analysis->methodType = PRJCT_ANLYS_METHOD_SVD;
   else if (str == "ML+SVD")
-    m_analysis->methodType = cProjAnalysisMethodModeMarqLevSvd;
-  else if (str == "FML")
-    m_analysis->methodType = cProjAnalysisMethodModeMarqLevFull;
+    m_analysis->methodType = PRJCT_ANLYS_METHOD_SVDMARQUARDT;
   else
     return postErrorMessage("Invalid analysis method");
   
@@ -323,8 +321,6 @@ bool CProjectAnalysisSubHandler::start(const QXmlAttributes &atts)
     m_analysis->methodType = PRJCT_ANLYS_FIT_WEIGHTING_NONE;
   else if (str == "instr")
     m_analysis->methodType = PRJCT_ANLYS_FIT_WEIGHTING_INSTRUMENTAL;
-  //  else if (str == "stat")
-  //    m_analysis->methodType = PRJCT_ANLYS_FIT_WEIGHTING_STATISTICAL;
   else
     return postErrorMessage("Invalid analysis fit");
   
@@ -610,14 +606,12 @@ bool CProjectCalibrationSubHandler::start(const QXmlAttributes &atts)
 
   str = atts.value("method");
   if (str == "ODF")
-    m_calibration->method = cProjAnalysisMethodModeOptDens;
+    m_calibration->methodType = PRJCT_ANLYS_METHOD_SVD;
   else if (str == "ML+SVD")
-    m_calibration->method = cProjAnalysisMethodModeMarqLevSvd;
-  else if (str == "FML")
-    m_calibration->method = cProjAnalysisMethodModeMarqLevFull;
+    m_calibration->methodType = PRJCT_ANLYS_METHOD_SVDMARQUARDT;
   else
     return postErrorMessage("Invalid analysis method");
-  
+    
   str = atts.value("ref");
   if (!str.isEmpty()) {
     str = m_master->pathExpand(str);
@@ -1014,7 +1008,7 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
       if (str.length() < (int)sizeof(m_instrumental->ccdulb.offsetFile))
 	strcpy(m_instrumental->ccdulb.offsetFile, str.toAscii().data());
       else
-	return postErrorMessage("Instrument Function Filename too long");
+	return postErrorMessage("Offset Filename too long");
     }
     
     str = atts.value("ipv");
@@ -1047,6 +1041,136 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
   else if (element == "saozefm") { // SAOZ EFM
     return helperLoadRasas(atts, &(m_instrumental->saozefm));
 
+  }
+  else if (element == "mfc") { // MFC
+    QString str;
+    bool ok;
+    int tmpInt;
+    unsigned int tmpUint;
+
+    tmpInt = atts.value("size").toInt(&ok);
+    if (ok)
+      m_instrumental->mfc.detectorSize = tmpInt;
+    else
+      return postErrorMessage("Invalid mfc detector size");
+
+    tmpInt = atts.value("first").toInt(&ok);
+    if (ok)
+      m_instrumental->mfc.firstWavelength = tmpInt;
+    else
+      return postErrorMessage("Invalid mfc first wavelength");
+    
+    m_instrumental->mfc.revert = (atts.value("revert") == "true") ? 1 : 0;
+    m_instrumental->mfc.autoFileSelect = (atts.value("auto") == "true") ? 1 : 0;
+
+    tmpUint = atts.value("omask").toUInt(&ok);
+    if (ok)
+      m_instrumental->mfc.offsetMask = tmpUint;
+    else
+      return postErrorMessage("Invalid mfc omask");
+    
+    tmpUint = atts.value("imask").toUInt(&ok);
+    if (ok)
+      m_instrumental->mfc.instrFctnMask = tmpUint;
+    else
+      return postErrorMessage("Invalid mfc imask");
+
+    tmpUint = atts.value("dmask").toUInt(&ok);
+    if (ok)
+      m_instrumental->mfc.darkCurrentMask = tmpUint;
+    else
+      return postErrorMessage("Invalid mfc dmask");
+
+    tmpUint = atts.value("smask").toUInt(&ok);
+    if (ok)
+      m_instrumental->mfc.spectraMask = tmpUint;
+    else
+      return postErrorMessage("Invalid mfc smask");
+
+    str = atts.value("calib");
+    if (!str.isEmpty()) {
+      str = m_master->pathExpand(str);
+      if (str.length() < (int)sizeof(m_instrumental->mfc.calibrationFile))
+	strcpy(m_instrumental->mfc.calibrationFile, str.toAscii().data());
+      else
+	return postErrorMessage("Calibration Filename too long");
+    }
+    
+    str = atts.value("instr");
+    if (!str.isEmpty()) {
+      str = m_master->pathExpand(str);
+      if (str.length() < (int)sizeof(m_instrumental->mfc.instrFunctionFile))
+	strcpy(m_instrumental->mfc.instrFunctionFile, str.toAscii().data());
+      else
+	return postErrorMessage("Instrument Function Filename too long");
+    }
+    str = atts.value("dark");
+    if (!str.isEmpty()) {
+      str = m_master->pathExpand(str);
+      if (str.length() < (int)sizeof(m_instrumental->mfc.darkCurrentFile))
+	strcpy(m_instrumental->mfc.darkCurrentFile, str.toAscii().data());
+      else
+	return postErrorMessage("Dark Current Filename too long");
+    }
+    
+    str = atts.value("offset");
+    if (!str.isEmpty()) {
+      str = m_master->pathExpand(str);
+      if (str.length() < (int)sizeof(m_instrumental->mfc.offsetFile))
+	strcpy(m_instrumental->mfc.offsetFile, str.toAscii().data());
+      else
+	return postErrorMessage("Offset Filename too long");
+    }
+    
+  }
+  else if (element == "mfcstd") { // MFC STD
+    QString str;
+    bool ok;
+    int tmpInt;
+
+    tmpInt = atts.value("size").toInt(&ok);
+    if (ok)
+      m_instrumental->mfcstd.detectorSize = tmpInt;
+    else
+      return postErrorMessage("Invalid mfcstd detector size");
+
+    m_instrumental->mfcstd.revert = (atts.value("revert") == "true") ? 1 : 0;
+
+    str = atts.value("calib");
+    if (!str.isEmpty()) {
+      str = m_master->pathExpand(str);
+      if (str.length() < (int)sizeof(m_instrumental->mfcstd.calibrationFile))
+	strcpy(m_instrumental->mfcstd.calibrationFile, str.toAscii().data());
+      else
+	return postErrorMessage("Calibration Filename too long");
+    }
+    
+    str = atts.value("instr");
+    if (!str.isEmpty()) {
+      str = m_master->pathExpand(str);
+      if (str.length() < (int)sizeof(m_instrumental->mfcstd.instrFunctionFile))
+	strcpy(m_instrumental->mfcstd.instrFunctionFile, str.toAscii().data());
+      else
+	return postErrorMessage("Instrument Function Filename too long");
+    }
+    str = atts.value("dark");
+    if (!str.isEmpty()) {
+      str = m_master->pathExpand(str);
+      if (str.length() < (int)sizeof(m_instrumental->mfcstd.darkCurrentFile))
+	strcpy(m_instrumental->mfcstd.darkCurrentFile, str.toAscii().data());
+      else
+	return postErrorMessage("Dark Current Filename too long");
+    }
+    
+    str = atts.value("offset");
+    if (!str.isEmpty()) {
+      str = m_master->pathExpand(str);
+      if (str.length() < (int)sizeof(m_instrumental->mfcstd.offsetFile))
+	strcpy(m_instrumental->mfcstd.offsetFile, str.toAscii().data());
+      else
+	return postErrorMessage("Offset Filename too long");
+    }
+    
   }
   else if (element == "rasas") { // RASAS
     return helperLoadRasas(atts, &(m_instrumental->rasas));

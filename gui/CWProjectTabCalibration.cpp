@@ -53,12 +53,11 @@ CWProjectTabCalibration::CWProjectTabCalibration(const mediate_project_calibrati
   QPushButton *browseBtn = new QPushButton("Browse...", this);
   topLayout->addWidget(browseBtn, 0, 2);
 
-  // method
+  // methodType
   topLayout->addWidget(new QLabel("Analysis Method", this), 1, 0);
   m_methodCombo = new QComboBox(this);
-  m_methodCombo->addItem("Optical Density Fitting", QVariant(cProjAnalysisMethodModeOptDens));
-  m_methodCombo->addItem("Intensity fitting (Marquardt-Levenberg+SVD)", QVariant(cProjAnalysisMethodModeMarqLevSvd));
-  m_methodCombo->addItem("Intensity fitting (Full Marquardt-Levenberg)", QVariant(cProjAnalysisMethodModeMarqLevFull));
+  m_methodCombo->addItem("Optical Density Fitting", QVariant(PRJCT_ANLYS_METHOD_SVD));
+  m_methodCombo->addItem("Intensity fitting (Marquardt-Levenberg+SVD)", QVariant(PRJCT_ANLYS_METHOD_SVDMARQUARDT));
   topLayout->addWidget(m_methodCombo, 1, 1, 1, 2); // spans two columns
 
   // line shape
@@ -159,7 +158,7 @@ CWProjectTabCalibration::CWProjectTabCalibration(const mediate_project_calibrati
 
   m_refFileEdit->setText(QString(properties->solarRefFile));
 
-  index = m_methodCombo->findData(QVariant(properties->method));
+  index = m_methodCombo->findData(QVariant(properties->methodType));
   if (index != -1)
     m_methodCombo->setCurrentIndex(index);
 
@@ -202,7 +201,7 @@ void CWProjectTabCalibration::apply(mediate_project_calibration_t *properties) c
   // a safe text length is assured.
   strcpy(properties->solarRefFile, m_refFileEdit->text().toAscii().data());
 
-  properties->method = m_methodCombo->itemData(m_methodCombo->currentIndex()).toInt();
+  properties->methodType = m_methodCombo->itemData(m_methodCombo->currentIndex()).toInt();
   
   properties->lineShape = m_lineShapeCombo->itemData(m_lineShapeCombo->currentIndex()).toInt();
   properties->lorentzDegree = m_degreeSpinBox->value();

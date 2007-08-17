@@ -96,10 +96,6 @@ extern "C" {
   /****************************************************/
   /* Project Analysis */
   
-  static const int cProjAnalysisMethodModeOptDens     = 1;
-  static const int cProjAnalysisMethodModeMarqLevSvd  = 2;
-  static const int cProjAnalysisMethodModeMarqLevFull = 3;
-
   typedef struct mediate_project_analysis
   {
     int methodType;
@@ -171,7 +167,7 @@ extern "C" {
   typedef struct mediate_project_calibration
   {
     char solarRefFile[FILENAME_BUFFER_LENGTH];
-    int method;
+    int methodType;
     int subWindows;
     int lineShape;
     int lorentzDegree;
@@ -231,6 +227,30 @@ extern "C" {
     int spectralType;
     char calibrationFile[FILENAME_BUFFER_LENGTH];
     char instrFunctionFile[FILENAME_BUFFER_LENGTH];    
+  };
+
+  struct instrumental_mfc {
+    int detectorSize;
+    int revert;
+    int autoFileSelect;
+    int firstWavelength;
+    unsigned int offsetMask;
+    unsigned int instrFctnMask;
+    unsigned int spectraMask;
+    unsigned int darkCurrentMask;    
+    char calibrationFile[FILENAME_BUFFER_LENGTH];
+    char instrFunctionFile[FILENAME_BUFFER_LENGTH];    
+    char darkCurrentFile[FILENAME_BUFFER_LENGTH];
+    char offsetFile[FILENAME_BUFFER_LENGTH];    
+  };
+
+  struct instrumental_mfcstd {
+    int detectorSize;
+    int revert;
+    char calibrationFile[FILENAME_BUFFER_LENGTH];
+    char instrFunctionFile[FILENAME_BUFFER_LENGTH];    
+    char darkCurrentFile[FILENAME_BUFFER_LENGTH];
+    char offsetFile[FILENAME_BUFFER_LENGTH];    
   };
 
   struct instrumental_rasas {
@@ -317,6 +337,8 @@ extern "C" {
     struct instrumental_saoz saozvis;
     struct instrumental_saoz saozuv;
     struct instrumental_rasas saozefm;
+    struct instrumental_mfc mfc;
+    struct instrumental_mfcstd mfcstd;
     struct instrumental_rasas rasas;
     struct instrumental_rasas pdasieasoe;
     struct instrumental_logger pdasiosma;

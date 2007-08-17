@@ -45,6 +45,8 @@ class CWInstrOpusEdit;
 class CWInstrGdpEdit;
 class CWInstrSciaEdit;
 class CWInstrOmiEdit;
+class CWInstrMfcEdit;
+class CWInstrMfcStdEdit;
 
 //--------------------------------------------------------------------------
 class CWProjectTabInstrumental : public QFrame
@@ -70,6 +72,8 @@ class CWProjectTabInstrumental : public QFrame
   CWInstrCcdUlbEdit *m_ccdUlbEdit;
   CWInstrSaozEdit *m_saozVisEdit;
   CWInstrSaozEdit *m_saozUvEdit;
+  CWInstrMfcEdit *m_mfcEdit;
+  CWInstrMfcStdEdit *m_mfcStdEdit;
   CWInstrRasasEdit *m_saozEfmEdit;
   CWInstrRasasEdit *m_rasasEdit;
   CWInstrRasasEdit *m_pdasiEasoeEdit;
@@ -100,16 +104,21 @@ Q_OBJECT
   virtual ~CWCalibInstrEdit();
 
  protected:
+  void helperConstructFileWidget(QLineEdit **fileEdit, QGridLayout *gridLayout, int &row,
+				 const char *str, int len,
+				 const char *label, const char *slot);
+
   void helperConstructCalInsFileWidgets(QGridLayout *gridLayout, int &row,
 					const char *calib, int lenCalib,
 					const char *instr, int lenInstr);
 
  public slots:
-  void slotCalibBrowse();
-  void slotInstrBrowse();
+  void slotCalibOneBrowse();
+  void slotInstrTwoBrowse();
+  void slotOffsetTwoBrowse();
 
  protected:
-  QLineEdit *m_calibEdit, *m_instrEdit;
+  QLineEdit *m_fileOneEdit, *m_fileTwoEdit;
 };
 
 //--------------------------------------------------------------------------
@@ -138,11 +147,14 @@ Q_OBJECT
 				  const char *dnl, int lenDnl);
   
  public slots:
-  void slotInterPixelVariabilityBrowse();
-  void slotDetectorNonLinearityBrowse();
+  void slotInterPixelVariabilityThreeBrowse();
+  void slotDarkCurrentThreeBrowse();
+  void slotStraylightCorrectionThreeBrowse();
+  void slotDetectorNonLinearityFourBrowse();
+  void slotOffsetFourBrowse();
 
  protected:
-  QLineEdit *m_ipvEdit, *m_dnlEdit;
+  QLineEdit *m_fileThreeEdit, *m_fileFourEdit;
 };
 
 //--------------------------------------------------------------------------
@@ -201,6 +213,37 @@ class CWInstrSaozEdit : public CWCalibInstrEdit
   
  private:
   QComboBox *m_spectralTypeCombo;
+};
+
+//--------------------------------------------------------------------------
+
+class CWInstrMfcEdit : public CWAllFilesEdit
+{
+ public:
+  CWInstrMfcEdit(const struct instrumental_mfc *d, QWidget *parent = 0);
+  virtual ~CWInstrMfcEdit();
+  
+  void apply(struct instrumental_mfc *d) const;
+
+ private:
+  QLineEdit *m_detSizeEdit, *m_firstLambdaEdit;
+  QLineEdit *m_offsetMaskEdit, *m_instrMaskEdit, *m_darkMaskEdit, *m_spectraMaskEdit;
+  QCheckBox *m_revertCheck, *m_autoCheck;
+};
+
+//--------------------------------------------------------------------------
+
+class CWInstrMfcStdEdit : public CWAllFilesEdit
+{
+ public:
+  CWInstrMfcStdEdit(const struct instrumental_mfcstd *d, QWidget *parent = 0);
+  virtual ~CWInstrMfcStdEdit();
+  
+  void apply(struct instrumental_mfcstd *d) const;
+
+ private:
+  QLineEdit *m_detSizeEdit;
+  QCheckBox *m_revertCheck;
 };
 
 //--------------------------------------------------------------------------
