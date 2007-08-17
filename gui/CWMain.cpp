@@ -26,7 +26,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QFile>
 #include <QMessageBox>
 #include <QFileDialog>
-#include <QSettings>
+#include <QSettings> // TODO
 #include <QCloseEvent>
 
 #include "CWMain.h"
@@ -41,6 +41,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "CNavigationPanel.h"
 #include "CQdoasProjectConfigHandler.h"
 #include "CWorkSpace.h"
+#include "CPreferences.h"
 
 #include "mediate_types.h"
 
@@ -216,11 +217,7 @@ CWMain::CWMain(QWidget *parent) :
   setWindowIcon(QIcon(QPixmap(":/icons/logo.png")));
 
   // get the window size from the settings
-  QSettings settings;
-  
-  settings.beginGroup("MainWindow");
-  resize(settings.value("size", QSize(600,450)).toSize());
-  settings.endGroup();
+  resize(CPreferences::instance()->windowSize("Main", QSize(600,450)));
 }
 
 CWMain::~CWMain()
@@ -229,43 +226,31 @@ CWMain::~CWMain()
 
 void CWMain::closeEvent(QCloseEvent *e)
 {
-  QSettings settings;
-
-  settings.beginGroup("MainWindow");
-  settings.setValue("size", size());
-  settings.endGroup();
+  CPreferences *prefs = CPreferences::instance();
+  prefs->setWindowSize("Main", size());
+  delete prefs;
 
   e->accept();
 }
 
 void CWMain::slotOpenFile()
 {
-  QSettings settings;
+  CPreferences *prefs = CPreferences::instance();
 
-  settings.beginGroup("MainWindow");
-
-  QString lastDirectory = settings.value("OpenDirectory").toString();
-
-  QString fileName = QFileDialog::getOpenFileName(this, "Open Project File", lastDirectory,
+  QString fileName = QFileDialog::getOpenFileName(this, "Open Project File",
+						  prefs->directoryName("Project"),
 						  "Qdoas Project Config (*.xml);;All Files (*)");
 
   if (fileName.isEmpty()) {
-    settings.endGroup();
     return;
   }
+
+  // save the last directory
+  prefs->setDirectoryNameGivenFile("Project", fileName);
 
   QString errMsg;
   QFile *file = new QFile(fileName);
 
-  // save the last directory
-  int index = fileName.lastIndexOf('/');
-  if (index == -1) index = fileName.lastIndexOf('\\');
-  if (index != -1) {
-    lastDirectory = fileName.left(index);
-    settings.setValue("OpenDirectory", lastDirectory);
-  }
-  settings.endGroup();
-  
   // parse the file
   QXmlSimpleReader xmlReader;
   QXmlInputSource *source = new QXmlInputSource(file);

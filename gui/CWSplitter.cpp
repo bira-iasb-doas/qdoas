@@ -17,9 +17,8 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#include <QSettings>
-
 #include "CWSplitter.h"
+#include "CPreferences.h"
 
 #include "debugutil.h"
 
@@ -31,7 +30,7 @@ CWSplitter::CWSplitter(Qt::Orientation orientation, const char *settingsGroupNam
   // restore the map
   int i, mode, wid;
   std::map<int,int>::iterator it;
-  QSettings settings;
+  QSettings &settings = CPreferences::instance()->settings();
 
   settings.beginGroup(m_settingsGroupName);
 
@@ -52,7 +51,7 @@ CWSplitter::CWSplitter(Qt::Orientation orientation, const char *settingsGroupNam
 CWSplitter::~CWSplitter()
 {
   // store the map as an array of settings
-  QSettings settings;
+  QSettings &settings = CPreferences::instance()->settings();
   
   settings.beginGroup(m_settingsGroupName);
 

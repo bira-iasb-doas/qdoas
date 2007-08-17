@@ -77,6 +77,7 @@ SOURCES += CWSiteEditor.cpp
 SOURCES += CWSiteTree.cpp
 SOURCES += CWSplitter.cpp
 SOURCES += CWUserSymbolTree.cpp
+SOURCES += CPreferences.cpp
 SOURCES += qdoas.cpp
 #----------------------------------------------
 # Mediator Source files
@@ -129,6 +130,7 @@ HEADERS += CWSplitter.h
 HEADERS += CWUserSymbolTree.h
 HEADERS += debugutil.h
 HEADERS += RefCountPtr.h
+HEADERS += CPreferences.h
 
 #----------------------------------------------
 # Mediator Header files

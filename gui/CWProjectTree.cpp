@@ -45,6 +45,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "CSession.h"
 #include "RefCountPtr.h"
 
+#include "CPreferences.h"
+
 #include "debugutil.h"
 
 
@@ -801,18 +803,40 @@ void CWProjectTree::slotInsertFile()
     QTreeWidgetItem *parent = items.front();
     if (parent->type() == cSpectraFolderItemType || parent->type() == cSpectraBranchItemType) {
 
-      // Modal File dialog - initial directory TODO
+      QTreeWidgetItem *projItem = CWProjectTree::projectItem(parent);
+      if (projItem == NULL)
+	return;
+
+      // access to the project data
+      const mediate_project_t *projData = CWorkSpace::instance()->findProject(projItem->text(0));
+      if (projData == NULL)
+	return;
+
+      CPreferences *prefs = CPreferences::instance();
+      
+      QString extension = prefs->fileExtension("Instrument", projData->instrumental.format, "spe");
+      QString filter;
+      QTextStream stream(&filter);
+      
+      stream << "Spectra (*." << extension << ");;All files(*.*)";
+      
       QStringList files = QFileDialog::getOpenFileNames(0, "Select one or more spectra files",
-                                                        "/home",
-                                                        "Ascii (*.spe);;All Files (*)");
+							prefs->directoryName("Spectra"), filter);
+      
       // Documentations says copy ??
       if (!files.isEmpty()) {
-        QStringList copy = files;
-        QList<QString>::iterator it = copy.begin();
-        while (it != copy.end()) {
-          new CSpectraFileItem(parent, QFileInfo(*it));
-          ++it;
-        }
+	QStringList copy = files;
+	QList<QString>::iterator it = copy.begin();
+	if (it != copy.end()) {
+	  // store the preferences
+	  prefs->setFileExtensionGivenFile("Instrument", projData->instrumental.format, *it);
+	  prefs->setDirectoryNameGivenFile("Spectra", *it);
+	}
+	while (it != copy.end()) {
+	  // create the items
+	  new CSpectraFileItem(parent, QFileInfo(*it));
+	  ++it;
+	}
       }
     }
   }
