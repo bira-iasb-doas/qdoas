@@ -24,6 +24,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QLabel>
 
 #include "CWSiteEditor.h"
+#include "CWorkSpace.h"
 
 #include "debugutil.h"
 
@@ -33,10 +34,9 @@ const unsigned int  BIT_LATITUDE            = 0x02;
 const unsigned int  BIT_ALTITUDE            = 0x04;
 const unsigned int  VALID_BITS              = 0x07;
 
-CWSiteEditor::CWSiteEditor(CWSiteTree *siteTree, QTreeWidgetItem *editItem, QWidget *parent) :
+CWSiteEditor::CWSiteEditor(QTreeWidgetItem *editItem, QWidget *parent) :
   CWEditor(parent),
-  m_validBits(0x0),
-  m_siteTree(siteTree)
+  m_validBits(0x0)
 {
   QGridLayout *mainLayout = new QGridLayout(this);
 
@@ -140,11 +140,11 @@ bool CWSiteEditor::actionOk(void)
 
   if (m_validBits & BIT_EDIT_EXISTING_ITEM) {
     // existing set
-    m_siteTree->modifySite(m_siteName->text(), m_abbreviation->text(), m_long, m_lat, m_alt);
+   CWorkSpace::instance()->modifySite(m_siteName->text(), m_abbreviation->text(), m_long, m_lat, m_alt);
   }
   else {
     // a new entry ...
-    m_siteTree->addNewSite(m_siteName->text(), m_abbreviation->text(), m_long, m_lat, m_alt);
+    CWorkSpace::instance()->createSite(m_siteName->text(), m_abbreviation->text(), m_long, m_lat, m_alt);
   }
 
   return true;

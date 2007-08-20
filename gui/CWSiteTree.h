@@ -22,23 +22,28 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include <QTreeWidget>
 
+#include "CProjectConfigItem.h"
+#include "CWorkSpace.h"
+
 class CWActiveContext;
 
-class CWSiteTree : public QTreeWidget
+class CWSiteTree : public QTreeWidget, public CSitesObserver
 {
 Q_OBJECT
  public:
   CWSiteTree(CWActiveContext *activeContext, QWidget *parent = 0);
   virtual ~CWSiteTree();
 
-  void addNewSite(const QString &siteName, const QString &abreviation = QString(),
-                  double longitude = 0.0, double latitude = 0.0, double altitude = 0.0);
-  void modifySite(const QString &siteName, const QString &abreviation,
-                  double longitude, double latitude, double altitude);
-
+  virtual void updateNewSite(const QString &newSiteName);
+  virtual void updateModifySite(const QString &siteName);
+  virtual void updateDeleteSite(const QString &siteName);
+  
  protected:
   virtual void contextMenuEvent(QContextMenuEvent *e);
   virtual void showEvent(QShowEvent *e);
+
+ private:
+  void createSiteItem(const mediate_site_t *site);
 
  public slots:
    void slotAddNewSite();

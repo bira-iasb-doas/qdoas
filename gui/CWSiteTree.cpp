@@ -17,7 +17,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#include <cstdio> // TODO
 
 #include <QMenu>
 #include <QShowEvent>
@@ -34,104 +33,121 @@ const int cSiteTreeGeneralMode   = 37;
 
 CWSiteTree::CWSiteTree(CWActiveContext *activeContext, QWidget *parent) :
   QTreeWidget(parent),
+  CSitesObserver(),
   m_activeContext(activeContext)
 {
   QStringList labelList;
   labelList << "Observation Sites" << "Details";
 
   setHeaderLabels(labelList);
+
+  // populate from the workspace
+  int nSites;
+  mediate_site_t *siteList = CWorkSpace::instance()->siteList(nSites);
+  if (siteList != NULL) {
+    for (int i=0; i<nSites; ++i) {
+      createSiteItem(&siteList[i]);
+    }
+    delete [] siteList;
+  }
 }
 
 CWSiteTree::~CWSiteTree()
 {
 }
 
-void CWSiteTree::addNewSite(const QString &siteName, const QString &abreviation,
-                            double longitude, double latitude, double altitude)
+void CWSiteTree::createSiteItem(const mediate_site_t *site)
 {
   QString tmpStr;
   QStringList labelList;
-  QTextStream tmpStream(&tmpStr);
-
-  QTreeWidgetItem *siteItem = new  QTreeWidgetItem(QStringList(siteName));
-
+  
+  // make the tree items
+  QTreeWidgetItem *siteItem = new  QTreeWidgetItem(QStringList(QString(site->name)));
+  
   // add Children for the site details
-
+  
   // Abbreviation
-  labelList << "Abbreviaton" << abreviation;
+  labelList << "Abbreviaton" << site->abbreviation;
   new  QTreeWidgetItem(siteItem, labelList);
   labelList.clear();
-
-  tmpStream.setRealNumberNotation(QTextStream::FixedNotation);
-  tmpStream.setRealNumberPrecision(3);
-
+  
   // Longitude  
-  tmpStream << longitude;
-  labelList << "Longitude" << tmpStr; 
+  labelList << "Longitude" << tmpStr.setNum(site->longitude, 'f', 3); 
   new  QTreeWidgetItem(siteItem, labelList);
   labelList.clear();
-  tmpStr.clear();
-
+  
   // Latitude
-  tmpStream << latitude;
-  labelList << "Latitude" << tmpStr;
+  labelList << "Latitude" << tmpStr.setNum(site->latitude, 'f', 3); 
   new  QTreeWidgetItem(siteItem, labelList);
   labelList.clear();
-  tmpStr.clear();
-
+  
   // Altitude
-  tmpStream << altitude;
-  labelList << "Altitude" << tmpStr;
+  labelList << "Altitude" << tmpStr.setNum(site->altitude, 'f', 3);
   new  QTreeWidgetItem(siteItem, labelList);
   labelList.clear();
-  tmpStr.clear();
-
+  
   addTopLevelItem(siteItem);
 }
 
-void CWSiteTree::modifySite(const QString &siteName, const QString &abreviation,
-                            double longitude, double latitude, double altitude)
+void CWSiteTree::updateNewSite(const QString &newSiteName)
 {
-  int i;
-  QTreeWidgetItem *siteItem;
+  const mediate_site_t *site = CWorkSpace::instance()->findSite(newSiteName);
 
-  i = 0;
-  while ((siteItem = topLevelItem(i)) != NULL && siteItem->text(0) != siteName) ++i;
-  if (siteItem != NULL) {
-    // located the existing item - update it's children
-
-    assert(siteItem->childCount() == 4);
-
-    QTreeWidgetItem *child;
-    QString tmpStr;
-    QTextStream tmpStream(&tmpStr); 
-
-    tmpStream.setRealNumberNotation(QTextStream::FixedNotation);
-    tmpStream.setRealNumberPrecision(3);
-
-    // abbrev.
-    child = siteItem->child(0);
-    child->setText(1, abreviation);
-    // long.
-    tmpStream << longitude;
-    child = siteItem->child(1);
-    child->setText(1, tmpStr);
-    tmpStr.clear();
-
-    // lat.
-    tmpStream << latitude;
-    child = siteItem->child(2);
-    child->setText(1, tmpStr);
-    tmpStr.clear();
-    // alt.
-    tmpStream << altitude;
-    child = siteItem->child(3);
-    child->setText(1, tmpStr);
-    tmpStr.clear();
-  }
-
-
+  if (site != NULL) {
+    createSiteItem(site);
+  }  
 }
+
+void CWSiteTree::updateModifySite(const QString &siteName)
+{
+  const mediate_site_t *site = CWorkSpace::instance()->findSite(siteName);
+
+  if (site != NULL) {
+
+    QTreeWidgetItem *siteItem;
+    int i = 0;
+    
+    while ((siteItem = topLevelItem(i)) != NULL && siteItem->text(0) != siteName) ++i;
+    if (siteItem != NULL) {
+      // located the existing item - update it's children
+      
+      assert(siteItem->childCount() == 4);
+      
+      QTreeWidgetItem *child;
+      QString tmpStr;
+
+      // abbrev.
+      child = siteItem->child(0);
+      child->setText(1, QString(site->abbreviation));
+      // long.
+      child = siteItem->child(1);
+      child->setText(1, tmpStr.setNum(site->longitude, 'f', 3));
+      // lat.
+      child = siteItem->child(2);
+      child->setText(1, tmpStr.setNum(site->latitude, 'f', 3));
+      // alt.
+      child = siteItem->child(3);
+      child->setText(1, tmpStr.setNum(site->altitude, 'f', 3));
+    }
+  }   
+}
+
+void CWSiteTree::updateDeleteSite(const QString &siteName)
+{
+  const mediate_site_t *site = CWorkSpace::instance()->findSite(siteName);
+
+  if (site != NULL) {
+
+    QTreeWidgetItem *siteItem;
+    int i = 0;
+    
+    while ((siteItem = topLevelItem(i)) != NULL && siteItem->text(0) != siteName) ++i;
+    if (siteItem != NULL) {
+      delete takeTopLevelItem(i);
+    }
+  }
+}
+  
 
 void CWSiteTree::showEvent(QShowEvent *e)
 {
@@ -157,7 +173,7 @@ void CWSiteTree::contextMenuEvent(QContextMenuEvent *e)
 
 void CWSiteTree::slotAddNewSite()
 {
-  CWSiteEditor *siteEdit = new  CWSiteEditor(this);
+  CWSiteEditor *siteEdit = new CWSiteEditor;
   m_activeContext->addEditor(siteEdit);
 }
 
@@ -168,7 +184,7 @@ void CWSiteTree::slotEditSite()
 
   QList<QTreeWidgetItem*>::iterator it = selection.begin();
   while (it != selection.end()) {
-    CWSiteEditor *siteEdit = new  CWSiteEditor(this, *it);
+    CWSiteEditor *siteEdit = new  CWSiteEditor(*it);
     m_activeContext->addEditor(siteEdit);
     ++it;
   }
@@ -188,9 +204,11 @@ void CWSiteTree::slotDeleteSite()
     while (item->parent() != NULL) {
       item = item->parent();
     }
-    // take it from the tree and delete it.
-    item = takeTopLevelItem(indexOfTopLevelItem(item));
-    delete item;
+
+    QString siteName = item->text(0);
     ++it;
+
+    CWorkSpace::instance()->destroySite(siteName);
   }
 }
+

@@ -43,6 +43,21 @@ typedef struct mediate_symbol
 } mediate_symbol_t;
 
 
+// mediate_site_t
+//
+// Contains all information about a single site. It allows the GUI to provide
+// information to the engine.
+
+typedef struct mediate_site
+{
+  char name[SITE_NAME_BUFFER_LENGTH];
+  char abbreviation[8];
+  double longitude;
+  double latitude;
+  double altitude;
+} mediate_site_t;
+
+
 //----------------------------------------------------------
 // mediateRequest interface
 //----------------------------------------------------------
@@ -108,6 +123,8 @@ int mediateRequestSetAnalysisWindows(void *engineContext, int numberOfWindows, c
 
 int mediateRequestSetSymbols(void *engineContext, int numberOfSymbols, const mediate_symbol_t *symbols, void *responseHandle);
 
+  // TODO
+int mediateRequestSetSites(void *engineContext, int numberOfSites, const mediate_site_t *sites, void *responseHandle);
 
 //----------------------------------------------------------
 // Browsing Spectra Interface

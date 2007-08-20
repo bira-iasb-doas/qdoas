@@ -24,6 +24,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QSettings>
 #include <QSize>
 #include <QString>
+#include <QList>
 
 // WARNING - This class is NOT thread safe. ONLY use this in the main thread of the GUI.
 
@@ -46,6 +47,9 @@ class CPreferences
   QString fileExtension(const QString &key, int index, const QString &fallback = QString()) const;
   void setFileExtension(const QString &key, int index, const QString &extension);
   void setFileExtensionGivenFile(const QString &key, int index, const QString &fileName);
+
+  QList<int> columnWidthList(const QString &key, const QList<int> &fallback = QList<int>()) const;
+  void setColumnWidthList(const QString &key, const QList<int> &widthList);
 
   // for general stuff just get a handle to the settings
   QSettings& settings(void);

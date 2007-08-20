@@ -23,7 +23,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QString>
 #include <QList>
 
-#include "mediate_project.h"
+#include "mediate_request.h"
 
 class CEngineThread;
 
@@ -33,6 +33,7 @@ const int cEngineRequestBeginBrowseFileType      = 1002;
 const int cEngineRequestBrowseNextRecordType     = 1003;
 const int cEngineRequestBrowseSpecificRecordType = 1004;
 const int cEngineRequestEndBrowseFileType        = 1005;
+const int cEngineRequestSetSitesType             = 1006;
 
 //------------------------------------------------------------
 
@@ -78,7 +79,23 @@ class CEngineRequestSetProject : public CEngineRequest
 
   virtual bool process(CEngineThread *engineThread);
 
+ private:
   mediate_project_t m_project;
+};
+
+//------------------------------------------------------------
+
+class CEngineRequestSetSites : public CEngineRequest
+{
+ public:
+  CEngineRequestSetSites(const mediate_site_t *siteList, int nSites);
+  virtual ~CEngineRequestSetSites();
+
+  virtual bool process(CEngineThread *engineThread);
+
+ private:
+  const mediate_site_t *m_siteList;
+  int m_nSites;
 };
 
 //------------------------------------------------------------

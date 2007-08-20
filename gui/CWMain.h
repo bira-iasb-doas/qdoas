@@ -35,6 +35,7 @@ class CWUserSymbolTree;
 class CWActiveContext;
 class CEngineController;
 class CWTableRegion;
+class CWSplitter;
 
 class CWMain : public QFrame
 {
@@ -58,6 +59,8 @@ Q_OBJECT
   CWProjectTree *m_projTree;
   CWSiteTree *m_siteTree;
   CWUserSymbolTree *m_userSymbolTree;
+
+  CWSplitter *m_subSplitter;
 
   CWTableRegion *m_tableRegion;
 

@@ -60,6 +60,7 @@ Q_OBJECT
 
   QString loadConfiguration(const QList<const CProjectConfigItem*> &itemList);
 
+  void savePreferences(void);
 
   // Interface editors use to modify the tree
 

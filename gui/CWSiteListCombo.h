@@ -18,30 +18,25 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
 
-#include "CWTableRegion.h"
+#ifndef _CWSITELISTCOMBO_H_GUARD
+#define _CWSITELISTCOMBO_H_GUARD
 
-CWTableRegion::CWTableRegion(QWidget *parent) :
-  QTableView(parent)
+#include <QComboBox>
+
+#include "CWorkSpace.h"
+
+class CWSiteListCombo : public QComboBox, public CSitesObserver
 {
-  m_model = new CMultiPageTableModel(this);
-  setModel(m_model);
+ public:
+  CWSiteListCombo(QWidget *parent = 0);
+  virtual ~CWSiteListCombo();
 
-  setGridStyle(Qt::DotLine);
-}
+  virtual void updateNewSite(const QString &newSiteName);
+  virtual void updateDeleteSite(const QString &siteName);
 
-CWTableRegion::~CWTableRegion()
-{
-}
+ private:
+  void repopulate();
 
-void CWTableRegion::slotTablePages(const QList< RefCountConstPtr<CTablePageData> > &pageList)
-{
-  m_model->slotTablePages(pageList);
-}
+};
 
-void CWTableRegion::slotDisplayPage(int pageNumber)
-{
-  m_model->setActivePage(pageNumber);
-
-  resizeRowsToContents();
-  resizeColumnsToContents();
-}
+#endif

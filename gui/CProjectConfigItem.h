@@ -48,4 +48,39 @@ class CProjectConfigItem
   CProjectConfigTreeNode *m_root;
 };
 
+class CSiteConfigItem
+{
+ public:
+  CSiteConfigItem();
+  ~CSiteConfigItem();
+
+  void setSiteName(const QString &name);
+  void setAbbreviation(const QString &abbreviation);
+  void setLongitude(double longitude);
+  void setLatitude(double latitude);
+  void setAltitude(double altitude);
+  
+  const QString& siteName(void) const;
+  const QString& abbreviation(void) const;
+  double longitude(void) const;
+  double latitude(void) const;
+  double altitude(void) const;
+
+ private:
+  QString m_siteName, m_abbreviation;
+  double m_longitude, m_latitude, m_altitude;
+};
+
+inline void CSiteConfigItem::setSiteName(const QString &siteName) { m_siteName = siteName; }
+inline void CSiteConfigItem::setAbbreviation(const QString &abbreviation) { m_abbreviation = abbreviation; }
+inline void CSiteConfigItem::setLongitude(double longitude) { m_longitude = longitude; }
+inline void CSiteConfigItem::setLatitude(double latitude) { m_latitude = latitude; }
+inline void CSiteConfigItem::setAltitude(double altitude) { m_altitude = altitude; }
+
+inline const QString& CSiteConfigItem::siteName(void) const { return m_siteName; }
+inline const QString& CSiteConfigItem::abbreviation(void) const { return m_abbreviation; }
+inline double CSiteConfigItem::longitude(void) const { return m_longitude; }
+inline double CSiteConfigItem::latitude(void) const { return m_latitude; }
+inline double CSiteConfigItem::altitude(void) const { return m_altitude; }
+
 #endif

@@ -65,7 +65,7 @@ void mediateResponsePlotData(int page,
 			     const char *yLabel,
 			     void *responseHandle)
 {
-  CEngineResponseBrowseRecord *resp = static_cast<CEngineResponseBrowseRecord*>(responseHandle);
+  CEngineResponseSpecificRecord *resp = static_cast<CEngineResponseSpecificRecord*>(responseHandle);
 
   CPlotDataSet *dataSet = new CPlotDataSet(title, xLabel, yLabel);
 
@@ -85,7 +85,7 @@ void mediateResponseCellDataDouble(int page,
 				   double doubleValue,
 				   void *responseHandle)
 {
-  CEngineResponseBrowseRecord *resp = static_cast<CEngineResponseBrowseRecord*>(responseHandle);
+  CEngineResponseSpecificRecord *resp = static_cast<CEngineResponseSpecificRecord*>(responseHandle);
   resp->addCell(page, row, column, QVariant(doubleValue));
 }
 
@@ -95,7 +95,7 @@ void mediateResponseCellDataInteger(int page,
 				    int integerValue,
 				    void *responseHandle)
 {
-  CEngineResponseBrowseRecord *resp = static_cast<CEngineResponseBrowseRecord*>(responseHandle);
+  CEngineResponseSpecificRecord *resp = static_cast<CEngineResponseSpecificRecord*>(responseHandle);
   resp->addCell(page, row, column, QVariant(integerValue));
 }
 
@@ -105,7 +105,7 @@ void mediateResponseCellDataString(int page,
 				   const char *stringValue,
 				   void *responseHandle)
 {
-  CEngineResponseBrowseRecord *resp = static_cast<CEngineResponseBrowseRecord*>(responseHandle);
+  CEngineResponseSpecificRecord *resp = static_cast<CEngineResponseSpecificRecord*>(responseHandle);
   resp->addCell(page, row, column, QVariant(QString(stringValue)));
 }
 
@@ -123,7 +123,7 @@ void mediateResponseCellInfo(int page,
   vsprintf(stringValue,stringFormat,argList);
   va_end(argList);
 
- 	CEngineResponseBrowseRecord *resp = static_cast<CEngineResponseBrowseRecord*>(responseHandle);
+ 	CEngineResponseSpecificRecord *resp = static_cast<CEngineResponseSpecificRecord*>(responseHandle);
  	resp->addCell(page,row,column,QVariant(QString(label)));
  	resp->addCell(page,row,column+1,QVariant(QString(stringValue)));
  }
@@ -133,7 +133,7 @@ void mediateResponseLabelPage(int page,
 			      const char *tag,
 			      void *responseHandle)
 {
-  CEngineResponseBrowseRecord *resp = static_cast<CEngineResponseBrowseRecord*>(responseHandle);
+  CEngineResponseSpecificRecord *resp = static_cast<CEngineResponseSpecificRecord*>(responseHandle);
   resp->addPageTitleAndTag(page, title, tag);
 }
 

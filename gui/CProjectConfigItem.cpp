@@ -46,3 +46,14 @@ const CProjectConfigTreeNode* CProjectConfigItem::rootNode(void) const
   return m_root;
 }
 
+
+CSiteConfigItem::CSiteConfigItem() :
+  m_longitude(0.0),
+  m_latitude(0.0),
+  m_altitude(0.0)
+{
+}
+
+CSiteConfigItem::~CSiteConfigItem()
+{
+}

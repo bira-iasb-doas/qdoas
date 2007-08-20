@@ -71,27 +71,6 @@ void CEngineResponseMessage::process(CEngineController *engineController)
 
 //------------------------------------------------------------
 
-CEngineResponseSetProject::CEngineResponseSetProject() :
-  CEngineResponse(cEngineResponseSetProjectType)
-{
-}
-
-CEngineResponseSetProject::~CEngineResponseSetProject()
-{
-}
-
-void CEngineResponseSetProject::process(CEngineController *engineController)
-{
-  // consider the error messages first - if fatal stop here
-  if (processErrors(engineController))
-    return;
-
-  // only called if there are no error messages ...
-  engineController->notifySetProject();
-}
-
-//------------------------------------------------------------
-
 CEngineResponseBeginBrowseFile::CEngineResponseBeginBrowseFile(const QString &fileName) :
   CEngineResponse(cEngineResponseBeginBrowseFileType),
   m_fileName(fileName),
@@ -124,13 +103,13 @@ void CEngineResponseBeginBrowseFile::setNumberOfRecords(int numberOfRecords)
 
 //------------------------------------------------------------
 
-CEngineResponseBrowseRecord::CEngineResponseBrowseRecord() :
-  CEngineResponse(cEngineResponseBrowseRecordType),
+CEngineResponseSpecificRecord::CEngineResponseSpecificRecord(int type) :
+  CEngineResponse(type),
   m_recordNumber(-1)
 {
 }
 
-CEngineResponseBrowseRecord::~CEngineResponseBrowseRecord()
+CEngineResponseSpecificRecord::~CEngineResponseSpecificRecord()
 {
   // should have been emptied in the trasfer to the controller
 
@@ -140,7 +119,7 @@ CEngineResponseBrowseRecord::~CEngineResponseBrowseRecord()
   }
 }
 
-void CEngineResponseBrowseRecord::process(CEngineController *engineController)
+void CEngineResponseSpecificRecord::process(CEngineController *engineController)
 {
   // consider the error messages first - if fatal stop here
   if (processErrors(engineController))
@@ -163,26 +142,37 @@ void CEngineResponseBrowseRecord::process(CEngineController *engineController)
   }
 }
 
-void CEngineResponseBrowseRecord::setRecordNumber(int recordNumber)
+void CEngineResponseSpecificRecord::setRecordNumber(int recordNumber)
 {
   m_recordNumber = recordNumber;
 }
 
-void CEngineResponseBrowseRecord::addDataSet(int pageNumber, const CPlotDataSet *dataSet)
+void CEngineResponseSpecificRecord::addDataSet(int pageNumber, const CPlotDataSet *dataSet)
 {
   m_plotDataList.push_back(SPlotData(pageNumber, dataSet));
 }
 
-void CEngineResponseBrowseRecord::addCell(int pageNumber, int row, int col,
+void CEngineResponseSpecificRecord::addCell(int pageNumber, int row, int col,
 					  const QVariant &data)
 {
   m_cellList.push_back(SCell(pageNumber, row, col, data));
 }
 
-void CEngineResponseBrowseRecord::addPageTitleAndTag(int pageNumber, const QString &title,
+void CEngineResponseSpecificRecord::addPageTitleAndTag(int pageNumber, const QString &title,
 						     const QString &tag)
 {
   m_titleList.push_back(STitleTag(pageNumber, title, tag));
+}
+
+//------------------------------------------------------------
+
+CEngineResponseBrowseRecord::CEngineResponseBrowseRecord() :
+  CEngineResponseSpecificRecord(cEngineResponseBrowseRecordType)
+{
+}
+
+CEngineResponseBrowseRecord::~CEngineResponseBrowseRecord()
+{
 }
 
 //------------------------------------------------------------

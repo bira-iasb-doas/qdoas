@@ -43,6 +43,17 @@ class CPathSubHandler : public CConfigSubHandler
 
 //-------------------------------------------------------------------
 
+class CSiteSubHandler : public CConfigSubHandler
+{
+ public:
+  CSiteSubHandler(CQdoasProjectConfigHandler *master);
+  virtual ~CSiteSubHandler();
+
+  virtual bool start(const QString &element, const QXmlAttributes &atts);
+};
+
+//-------------------------------------------------------------------
+
 class CProjectSubHandler : public CConfigSubHandler
 {
  public:

@@ -23,6 +23,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "CPreferences.h"
 
+#include "debugutil.h"
+
 // initialise static data
 
 CPreferences *CPreferences::m_instance = NULL;
@@ -37,6 +39,7 @@ CPreferences* CPreferences::instance(void)
 
 CPreferences::~CPreferences()
 {
+  TRACE("CPreferences::~CPreferences");
   // flush data to permanent storage
   m_settings->sync();
   delete m_settings;
@@ -136,3 +139,50 @@ void CPreferences::setFileExtensionGivenFile(const QString &key, int index, cons
       setFileExtension(key, index, "*");
   }
 }
+
+QList<int> CPreferences::columnWidthList(const QString &key, const QList<int> &fallback) const
+{
+  QList<int> tmp;
+
+  m_settings->beginGroup("ColumnWidth");
+  int n = m_settings->beginReadArray(key);
+  
+  if (n > 0) {
+    int i = 0;
+    while (i<n) {
+      m_settings->setArrayIndex(i);
+      tmp.push_back(m_settings->value("width").toInt());
+      ++i;
+    }
+    while (i < fallback.count()) {
+      tmp.push_back(fallback.at(i));
+      ++i;
+    }
+  }
+  else {
+    tmp = fallback;
+  }
+
+  m_settings->endArray();
+  m_settings->endGroup();
+
+  return tmp;
+}
+
+void CPreferences::setColumnWidthList(const QString &key, const QList<int> &widthList)
+{
+  m_settings->beginGroup("ColumnWidth");
+
+  m_settings->beginWriteArray(key);
+  int i = 0;
+  while (i < widthList.count()) {
+    m_settings->setArrayIndex(i);
+    m_settings->setValue("width", widthList.at(i));
+    TRACE("Width = " << widthList.at(i));
+    ++i;
+  }
+  
+  m_settings->endArray();
+  m_settings->endGroup();
+}
+

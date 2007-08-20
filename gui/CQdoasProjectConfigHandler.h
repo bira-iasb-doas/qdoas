@@ -89,6 +89,9 @@ class CQdoasProjectConfigHandler : public QXmlDefaultHandler
   void addProjectItem(CProjectConfigItem *item); // takes ownership of item
   QList<const CProjectConfigItem*> projectItems(void) const; // items in returned list have the same lifetime as 'this'
 
+  void addSiteItem(CSiteConfigItem *item); // takes ownership of item
+  QList<const CSiteConfigItem*> siteItems(void) const; // items in returned list have the same lifetime as 'this'
+
   QString messages(void) const; // messages collected during parsing 
 
  private:
@@ -104,6 +107,7 @@ class CQdoasProjectConfigHandler : public QXmlDefaultHandler
   QString m_errorMessages;
   QString m_collatedStr;
   QList<const CProjectConfigItem*> m_projectItemList;
+  QList<const CSiteConfigItem*> m_siteItemList;
   QVector<QString> m_paths;
 };
 

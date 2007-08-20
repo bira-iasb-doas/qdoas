@@ -32,7 +32,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 class CEngineController;
 
 static const int cEngineResponseMessageType              = 0;
-static const int cEngineResponseSetProjectType           = 1;
 static const int cEngineResponseBeginBrowseFileType      = 2;
 static const int cEngineResponseBrowseRecordType         = 3;
 static const int cEngineResponseGotoRecordType           = 4;
@@ -78,17 +77,6 @@ class CEngineResponseMessage : public CEngineResponse
 
 //------------------------------------------------------------
 
-class CEngineResponseSetProject : public CEngineResponse
-{
- public:
-  CEngineResponseSetProject();
-  virtual ~CEngineResponseSetProject();
-
-  virtual void process(CEngineController *engineController);
-};
-
-//------------------------------------------------------------
-
 class CEngineResponseBeginBrowseFile : public CEngineResponse
 {
  public:
@@ -106,11 +94,11 @@ class CEngineResponseBeginBrowseFile : public CEngineResponse
 
 //------------------------------------------------------------
 
-class CEngineResponseBrowseRecord : public CEngineResponse
+class CEngineResponseSpecificRecord : public CEngineResponse
 {
  public:
-  CEngineResponseBrowseRecord();
-  virtual ~CEngineResponseBrowseRecord();
+  CEngineResponseSpecificRecord(int type);
+  virtual ~CEngineResponseSpecificRecord();
 
   virtual void process(CEngineController *engineController);
 
@@ -124,6 +112,15 @@ class CEngineResponseBrowseRecord : public CEngineResponse
   QList<SPlotData> m_plotDataList;
   QList<SCell> m_cellList;
   QList<STitleTag> m_titleList;
+};
+
+//------------------------------------------------------------
+
+class CEngineResponseBrowseRecord : public CEngineResponseSpecificRecord
+{
+ public:
+  CEngineResponseBrowseRecord();
+  virtual ~CEngineResponseBrowseRecord();
 };
 
 //------------------------------------------------------------

@@ -18,30 +18,48 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
 
-#include "CWTableRegion.h"
+#include "CWSiteListCombo.h"
 
-CWTableRegion::CWTableRegion(QWidget *parent) :
-  QTableView(parent)
+CWSiteListCombo::CWSiteListCombo(QWidget *parent) :
+  QComboBox(parent),
+  CSitesObserver()
 {
-  m_model = new CMultiPageTableModel(this);
-  setModel(m_model);
-
-  setGridStyle(Qt::DotLine);
+  repopulate();
 }
 
-CWTableRegion::~CWTableRegion()
+CWSiteListCombo::~CWSiteListCombo()
 {
 }
 
-void CWTableRegion::slotTablePages(const QList< RefCountConstPtr<CTablePageData> > &pageList)
+void CWSiteListCombo::updateNewSite(const QString &newSiteName)
 {
-  m_model->slotTablePages(pageList);
+  QString selected = currentText();
+
+  repopulate();
+
+  int index = findText(selected);
+  if (index != -1)
+    setCurrentIndex(index);
 }
 
-void CWTableRegion::slotDisplayPage(int pageNumber)
+void CWSiteListCombo::updateDeleteSite(const QString &siteName)
 {
-  m_model->setActivePage(pageNumber);
+  updateNewSite(siteName);
+}
 
-  resizeRowsToContents();
-  resizeColumnsToContents();
+void CWSiteListCombo::repopulate()
+{
+  clear();
+
+  addItem("No Site Specified");
+
+  // populate from the workspace
+  int nSites;
+  mediate_site_t *siteList = CWorkSpace::instance()->siteList(nSites);
+  if (siteList != NULL) {
+    for (int i=0; i<nSites; ++i) {
+      addItem(QString(siteList[i].name));
+    }
+    delete [] siteList;
+  }
 }

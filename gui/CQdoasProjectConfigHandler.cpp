@@ -42,6 +42,10 @@ CQdoasProjectConfigHandler::~CQdoasProjectConfigHandler()
   while (!m_projectItemList.isEmpty()) {
     delete m_projectItemList.takeFirst();
   }
+
+  while (!m_siteItemList.isEmpty()) {
+    delete m_siteItemList.takeFirst();
+  }
 }
 
 bool CQdoasProjectConfigHandler::error(const QXmlParseException &exception)
@@ -173,9 +177,11 @@ bool CQdoasProjectConfigHandler::startElement(const QString &namespaceURI,
       // new Path handler
       return installSubHandler(new CPathSubHandler(this), atts);
     }
-    // else if (qName == "Site") ... TODO
+    else if (qName == "sites") {
+      // new Site handler
+      return installSubHandler(new CSiteSubHandler(this), atts);
+    }
   }
-
   return true;
 }
 
@@ -196,6 +202,16 @@ void CQdoasProjectConfigHandler::addProjectItem(CProjectConfigItem *item)
 QList<const CProjectConfigItem*> CQdoasProjectConfigHandler::projectItems(void) const
 {
   return m_projectItemList;
+}
+
+void CQdoasProjectConfigHandler::addSiteItem(CSiteConfigItem *item)
+{
+  m_siteItemList.push_back(item);
+}
+
+QList<const CSiteConfigItem*> CQdoasProjectConfigHandler::siteItems(void) const
+{
+  return m_siteItemList;
 }
 
 void CQdoasProjectConfigHandler::setPath(int index, const QString &pathPrefix)

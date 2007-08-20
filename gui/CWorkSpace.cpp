@@ -49,6 +49,14 @@ CWorkSpace::~CWorkSpace()
   }
   m_projMap.clear(); // happens anyway
 
+  // site
+  std::map<QString,mediate_site_t*>::iterator sIt = m_siteMap.begin();
+  while (sIt != m_siteMap.end()) {
+    delete sIt->second;
+    ++sIt;
+  }
+  m_siteMap.clear();
+
   m_instance = NULL;
 }
 
@@ -72,6 +80,16 @@ mediate_analysis_window_t* CWorkSpace::findAnalysisWindow(const QString &project
       return wIt->second;
   }
   
+  return NULL; // not found
+}
+
+const mediate_site_t* CWorkSpace::findSite(const QString &siteName)
+{
+  std::map<QString,mediate_site_t*>::const_iterator it = m_siteMap.find(siteName);
+  if (it != m_siteMap.end()) {
+    return it->second;
+  }
+
   return NULL; // not found
 }
 
@@ -108,6 +126,38 @@ bool CWorkSpace::createAnalysisWindow(const QString &projectName, const QString 
       (pIt->second).window.insert(std::map<QString,mediate_analysis_window_t*>::value_type(newWindowName,tmp));
       return true;
     }
+  }
+  return false;
+}
+
+bool CWorkSpace::createSite(const QString &newSiteName, const QString &abbr,
+			    double longitude, double latitude, double altitude)
+{
+  mediate_site_t *tmp;
+
+  // limit check ...
+  if (newSiteName.length() >= (int)sizeof(tmp->name) || abbr.length() >= (int)sizeof(tmp->abbreviation))
+    return false;
+
+  std::map<QString,mediate_site_t*>::iterator it = m_siteMap.find(newSiteName);
+  if (it == m_siteMap.end()) {
+    tmp = new mediate_site_t;
+
+    strcpy(tmp->name, newSiteName.toAscii().data());
+    strcpy(tmp->abbreviation, abbr.toAscii().data());
+    tmp->longitude = longitude;
+    tmp->latitude = latitude;
+    tmp->altitude = altitude;
+    
+    m_siteMap.insert(std::map<QString,mediate_site_t*>::value_type(newSiteName, tmp));
+
+    // notify the observers
+    std::list<CSitesObserver*>::iterator obs = m_sitesObserverList.begin();
+    while (obs != m_sitesObserverList.end()) {
+      (*obs)->updateNewSite(newSiteName);
+      ++obs;
+    }
+    return true;
   }
   return false;
 }
@@ -159,6 +209,65 @@ bool CWorkSpace::renameAnalysisWindow(const QString &projectName, const QString 
   return false;
 }
 
+bool CWorkSpace::modifySite(const QString &siteName, const QString &abbr,
+			    double longitude, double latitude, double altitude)
+{  
+  mediate_site_t *tmp;
+
+  // limit check ...
+  if (siteName.length() >= (int)sizeof(tmp->name) || abbr.length() >= (int)sizeof(tmp->abbreviation))
+    return false;
+
+  std::map<QString,mediate_site_t*>::iterator it = m_siteMap.find(siteName);
+  if (it != m_siteMap.end()) {
+
+    tmp = it->second;
+
+    // cant change the name
+    strcpy(tmp->abbreviation, abbr.toAscii().data());
+    tmp->longitude = longitude;
+    tmp->latitude = latitude;
+    tmp->altitude = altitude;
+    
+    // notify the observers
+    std::list<CSitesObserver*>::iterator obs = m_sitesObserverList.begin();
+    while (obs != m_sitesObserverList.end()) {
+      (*obs)->updateModifySite(siteName);
+      ++obs;
+    }
+
+    return true;
+  }
+  return false;
+}
+
+// data returned must be freed by the client with 'opeator delete []'
+
+mediate_site_t* CWorkSpace::siteList(int &listLength) const
+{
+  size_t n = m_siteMap.size();
+  
+  if (n > 0) {
+    mediate_site_t *siteList = new mediate_site_t[n];
+    mediate_site_t *tmp = siteList;
+    
+    // walk the list and copy
+    std::map<QString,mediate_site_t*>::const_iterator it = m_siteMap.begin();
+    while (it != m_siteMap.end()) {
+      *tmp = *(it->second);
+      ++tmp;
+      ++it;
+    }
+    
+    listLength = (int)n;
+    
+    return siteList;
+  }
+  
+  listLength = 0;
+  return NULL;
+}
+
 bool CWorkSpace::destroyProject(const QString &projectName)
 {
   // project must exist
@@ -190,6 +299,25 @@ bool CWorkSpace::destroyAnalysisWindow(const QString &projectName, const QString
       (pIt->second).window.erase(wIt);
       return true;
     }
+  }
+  return false;
+}
+
+bool CWorkSpace::destroySite(const QString &siteName)
+{
+  std::map<QString,mediate_site_t*>::iterator it = m_siteMap.find(siteName);
+  if (it != m_siteMap.end()) {
+
+    // notify the observers
+    std::list<CSitesObserver*>::iterator obs = m_sitesObserverList.begin();
+    while (obs != m_sitesObserverList.end()) {
+      (*obs)->updateDeleteSite(siteName);
+      ++obs;
+    }
+
+    delete it->second;
+    m_siteMap.erase(it);
+    return true;
   }
   return false;
 }
@@ -265,3 +393,41 @@ QString CWorkSpace::simplifyPath(const QString &name) const
   // no matches
   return name;
 }
+
+void CWorkSpace::attach(CSitesObserver *observer)
+{
+  if (std::find(m_sitesObserverList.begin(), m_sitesObserverList.end(), observer) == m_sitesObserverList.end())
+    m_sitesObserverList.push_back(observer);
+}
+
+void CWorkSpace::detach(CSitesObserver *observer)
+{
+  m_sitesObserverList.remove(observer);
+}
+
+//-----------------------------------------------------------------------
+
+CSitesObserver::CSitesObserver()
+{
+  CWorkSpace::instance()->attach(this);
+}
+
+CSitesObserver::~CSitesObserver()
+{
+  CWorkSpace::instance()->detach(this);
+}
+
+void CSitesObserver::updateNewSite(const QString &newSiteName)
+{
+}
+
+void CSitesObserver::updateModifySite(const QString &siteName)
+{
+}
+
+void CSitesObserver::updateDeleteSite(const QString &siteName)
+{
+}
+
+
+

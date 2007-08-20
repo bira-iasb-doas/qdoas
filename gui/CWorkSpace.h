@@ -27,6 +27,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "mediate.h"
 
+class CSitesObserver;
+
 struct SProjBucket
 {
   mediate_project_t *project;
@@ -47,7 +49,8 @@ struct SPathBucket
   // sort with longest path first ... if equal then string compare with operator<()
   bool operator<(const SPathBucket &rhs) const { return ((path.length() > rhs.path.length()) || (path.length() == rhs.path.length() && path < rhs.path)); }
 };
-  
+
+
 class CWorkSpace
 {
  public:
@@ -58,14 +61,21 @@ class CWorkSpace
   mediate_project_t* findProject(const QString &projectName) const;
   mediate_analysis_window_t* findAnalysisWindow(const QString &projectName, const QString &windowName) const;
 
+  const mediate_site_t* findSite(const QString &siteName);
+
   bool createProject(const QString &newProjectName);
   bool createAnalysisWindow(const QString &projectName, const QString &newWindowName);
+  bool createSite(const QString &newSiteName, const QString &abbr, double longitude, double latitude, double altitude);
 
   bool renameProject(const QString &oldProjectName, const QString &newProjectName);
   bool renameAnalysisWindow(const QString &projectName, const QString &oldWindowName, const QString &newWindowName);
 
-  bool destroyProject(const QString &newProjectName);
+  bool modifySite(const QString &siteName, const QString &abbr, double longitude, double latitude, double altitude);
+  mediate_site_t* siteList(int &listLength) const;
+
+  bool destroyProject(const QString &projectName);
   bool destroyAnalysisWindow(const QString &projectName, const QString &newWindowName);
+  bool destroySite(const QString &siteName);
 
   void removePath(int index);
   void addPath(int index, const QString &path);
@@ -77,11 +87,28 @@ class CWorkSpace
   CWorkSpace(const CWorkSpace &) {}
   CWorkSpace& operator=(const CWorkSpace &) { return *this; }
 
+  void attach(CSitesObserver *observer);
+  void detach(CSitesObserver *observer);
+  
+  friend class CSitesObserver;
+
  private:
   static CWorkSpace *m_instance;
 
   std::map<QString,SProjBucket> m_projMap;
   std::set<SPathBucket> m_pathSet;
+  std::map<QString,mediate_site_t*> m_siteMap;
+  std::list<CSitesObserver*> m_sitesObserverList;
+};
+
+class CSitesObserver {
+ public:
+  CSitesObserver();   // attaches and detaches to the singleton during construction/destruction
+  virtual ~CSitesObserver();
+
+  virtual void updateNewSite(const QString &newSiteName);
+  virtual void updateModifySite(const QString &siteName);
+  virtual void updateDeleteSite(const QString &siteName);
 };
 
 #endif

@@ -278,6 +278,20 @@ CWGeolocation::CWGeolocation(const struct geolocation *geo, QWidget *parent) :
   m_modeStack->addWidget(rectangleFrame);
   m_modeCombo->addItem("Rectangle", QVariant(PRJCT_SPECTRA_MODES_RECTANGLE));
 
+  // sites
+  QFrame *sitesFrame = new QFrame;
+  QGridLayout *sitesLayout = new QGridLayout;
+
+  sitesLayout->addWidget(new QLabel("Radius (degrees)", sitesFrame), 0, 0);
+  m_sitesRadiusEdit = new QLineEdit(this);
+  m_sitesRadiusEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 6500.0, 3, m_sitesRadiusEdit));
+  m_sitesRadiusEdit->setFixedWidth(pixels);
+  sitesLayout->addWidget(m_sitesRadiusEdit, 0, 1);
+
+  sitesFrame->setLayout(sitesLayout);
+  m_modeStack->addWidget(sitesFrame);
+  m_modeCombo->addItem("Sites", QVariant(PRJCT_SPECTRA_MODES_OBSLIST));
+
   mainLayout->addWidget(m_modeStack);
 
   // set the defaults
@@ -307,6 +321,10 @@ CWGeolocation::CWGeolocation(const struct geolocation *geo, QWidget *parent) :
   m_cenLongEdit->setText(tmpStr);
   m_cenLatEdit->validator()->fixup(tmpStr.setNum(geo->circle.centerLatitude));
   m_cenLatEdit->setText (tmpStr);
+
+  // sites
+  m_sitesRadiusEdit->validator()->fixup(tmpStr.setNum(geo->sites.radius));
+  m_sitesRadiusEdit->setText(tmpStr);
 
   if (index != -1)
     m_modeCombo->setCurrentIndex(index);
@@ -341,6 +359,8 @@ void CWGeolocation::apply(struct geolocation *geo) const
   tmpStr = m_cenLatEdit->text();
   geo->circle.centerLatitude = tmpStr.isEmpty() ? 0.0 : tmpStr.toDouble();
 
+  tmpStr = m_sitesRadiusEdit->text();
+  geo->sites.radius = tmpStr.isEmpty() ? 0.0 : tmpStr.toDouble();
 
 }
 

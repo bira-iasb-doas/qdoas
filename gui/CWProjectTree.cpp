@@ -66,15 +66,23 @@ CWProjectTree::CWProjectTree(CWActiveContext *activeContext, QWidget *parent) :
   m_activeContext(activeContext)
 {
   QStringList labelList;
-  labelList << "Name" << "Size" << "Modified" << "Directory"; 
+  labelList << "Name" << "Size" << "Modified"; 
   setHeaderLabels(labelList);
 
-  setColumnWidth(0, 200);
-  setColumnWidth(1, 60);
-  setColumnWidth(2, 160);
-  setColumnWidth(3, 200);
+  QList<int> widthList;
+  widthList.push_back(260);
+  widthList.push_back(90);
+  widthList.push_back(160);
+
+  widthList = CPreferences::instance()->columnWidthList("ProjectTree", widthList);
+
+  for (int i=0; i<3; ++i) {
+    setColumnWidth(i, widthList.at(i));
+  }
 
   setSelectionMode(QAbstractItemView::ExtendedSelection);
+
+  slotToggleDisplayDetails();
 }
 
 CWProjectTree::~CWProjectTree()
@@ -95,6 +103,20 @@ CWProjectTree::~CWProjectTree()
     delete m_fileIcon;
     m_fileIcon = NULL;
   }
+}
+
+void CWProjectTree::savePreferences(void)
+{
+
+  if (m_colWidthList.empty()) {
+    QList<int> widthList;
+    for (int i=0; i<3; ++i)
+      widthList.push_back(columnWidth(i));
+
+    CPreferences::instance()->setColumnWidthList("ProjectTree", widthList);
+  }
+  else
+    CPreferences::instance()->setColumnWidthList("ProjectTree", m_colWidthList);
 }
 
 void CWProjectTree::keyPressEvent(QKeyEvent *e)
@@ -687,12 +709,12 @@ void CWProjectTree::slotToggleDisplayDetails()
 {
   if (m_colWidthList.empty()) {
     // hide the details
-    for (int i=0; i<4; ++i)
+    for (int i=0; i<3; ++i)
       m_colWidthList.push_back(columnWidth(i));
     
     hideColumn(1);
     hideColumn(2);
-    hideColumn(3);
+    //    hideColumn(3);
     
     emit signalWidthModeChanged(cProjectTreeHideDetailMode);
   }
@@ -700,10 +722,10 @@ void CWProjectTree::slotToggleDisplayDetails()
     // show the details
     showColumn(1);
     showColumn(2);
-    showColumn(3);
+    //    showColumn(3);
     
     // restore the sizes
-    for (int i=0; i<4; ++i)
+    for (int i=0; i<3; ++i)
       setColumnWidth(i, m_colWidthList.at(i));
     m_colWidthList.clear();
     
@@ -1099,8 +1121,8 @@ QVariant CSpectraDirectoryItem::data(int column, int role) const
       return QVariant(m_directory.dirName());
     //    if (column == 1)
     //      return QVariant(m_directory.nameFilters().join("; "));
-    if (column == 3)
-      return QVariant(m_directory.absolutePath());
+    //if (column == 3)
+    //  return QVariant(m_directory.absolutePath());
 
     return QVariant();
   }
@@ -1224,8 +1246,8 @@ QVariant CSpectraFileItem::data(int column, int role) const
     }
     if (column == 2)
       return QVariant(m_fileInfo.lastModified().toString());
-    if (column == 3)
-      return QVariant(m_fileInfo.absolutePath());
+    //if (column == 3)
+    //  return QVariant(m_fileInfo.absolutePath());
 
     return QVariant();
 

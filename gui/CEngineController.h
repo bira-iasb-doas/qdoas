@@ -50,8 +50,6 @@ Q_OBJECT
 
   // notify interface is for use by response classes
 
-  void notifySetProject(void);
-
   void notifyNumberOfFiles(int nFiles);
   void notifyCurrentFile(int fileNumber);
   void notifyReadyToNavigateRecords(const QString &filename, int numberOfRecords);

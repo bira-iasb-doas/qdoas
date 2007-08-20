@@ -86,7 +86,7 @@ bool CEngineRequestSetProject::process(CEngineThread *engineThread)
   // process is called from the thread and drives the engine through the
   // mediator interface.
 
-  CEngineResponse *resp = new CEngineResponseMessage;
+  CEngineResponseMessage *resp = new CEngineResponseMessage;
 
   int rc = mediateRequestSetProject(engineThread->engineContext(),
 				    &m_project, resp);
@@ -97,6 +97,40 @@ bool CEngineRequestSetProject::process(CEngineThread *engineThread)
   else
     delete resp;
 
+  return (rc == 0);
+}
+
+//------------------------------------------------------------
+
+CEngineRequestSetSites::CEngineRequestSetSites(const mediate_site_t *siteList, int nSites) :
+  CEngineRequest(cEngineRequestSetSitesType),
+  m_siteList(siteList),
+  m_nSites(nSites)
+{
+  // takes ownership of the siteList
+}
+
+CEngineRequestSetSites::~CEngineRequestSetSites()
+{
+  delete [] m_siteList;
+}
+
+bool CEngineRequestSetSites::process(CEngineThread *engineThread)
+{
+  // process is called from the thread and drives the engine through the
+  // mediator interface.
+
+  CEngineResponse *resp = new CEngineResponseMessage;
+
+  int rc = mediateRequestSetSites(engineThread->engineContext(),
+				  m_nSites, m_siteList, resp);
+
+  // no response unless there was an error
+  if (rc == -1)
+    engineThread->respond(resp);
+  else
+    delete resp;
+  
   return (rc == 0);
 }
 

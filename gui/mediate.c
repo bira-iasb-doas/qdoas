@@ -130,6 +130,15 @@ int mediateRequestSetSymbols(void *engineContext,
   return 0;
 }
 
+int mediateRequestSetSites(void *engineContext,
+			   int numberOfSites,
+			   const mediate_site_t *sites,
+			   void *responseHandle)
+{
+  return 0;
+}
+
+
 int mediateRequestBeginBrowseSpectra(void *engineContext,
 				     const char *spectraFileName,
 				     void *responseHandle)

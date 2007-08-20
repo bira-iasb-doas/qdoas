@@ -59,6 +59,62 @@ bool CPathSubHandler::end(const QString &element)
   return true;
 }
 
+
+//------------------------------------------------------------------------
+//
+// Handler for <sites> element (and sub elements)
+
+CSiteSubHandler::CSiteSubHandler(CQdoasProjectConfigHandler *master) :
+  CConfigSubHandler(master)
+{
+}
+
+CSiteSubHandler::~CSiteSubHandler()
+{
+}
+
+bool CSiteSubHandler::start(const QString &element, const QXmlAttributes &atts)
+{
+  if (element == "site") {
+    QString str;
+    bool ok;
+    double tmpDouble;
+
+    // create a new config item for the site
+    CSiteConfigItem *item = new CSiteConfigItem;
+    
+    str = atts.value("name");
+    if (str.isEmpty()) {
+      delete item;
+      return postErrorMessage("Missing site name");
+    }
+    else
+      item->setSiteName(str);
+
+    str = atts.value("abbrev");
+    if (!str.isEmpty())    
+      item->setAbbreviation(str);
+
+    tmpDouble = atts.value("long").toDouble(&ok);
+    if (ok)
+      item->setLongitude(tmpDouble);
+
+    tmpDouble = atts.value("lat").toDouble(&ok);
+    if (ok)
+      item->setLatitude(tmpDouble);
+
+    tmpDouble = atts.value("alt").toDouble(&ok);
+    if (ok)
+      item->setAltitude(tmpDouble);
+
+    m_master->addSiteItem(item);
+
+    return true;
+  }
+
+  return false;
+}
+
 //------------------------------------------------------------------------
 //
 // Handler for <project> element
@@ -213,9 +269,6 @@ bool CProjectSpectraSubHandler::start(const QString &element, const QXmlAttribut
     m_spectra->useNameFile = (atts.value("name") == "true") ? 1 : 0;
   }
   else if (element == "circle") {
-    
-    // defaults from mediateInitializeProject() are ok if attributes are not present
-
     QString str;
     bool ok;
     double tmp;
@@ -236,9 +289,6 @@ bool CProjectSpectraSubHandler::start(const QString &element, const QXmlAttribut
       m_spectra->geo.circle.centerLatitude = tmp;
   }
   else if (element == "rectangle") {
-
-    // defaults from mediateInitializeProject() are ok if attributes are not present
-
     QString str;
     bool ok;
     double tmp;
@@ -263,6 +313,16 @@ bool CProjectSpectraSubHandler::start(const QString &element, const QXmlAttribut
     if (ok)
       m_spectra->geo.rectangle.southernLatitude = tmp;
   }
+  else if (element == "sites") {
+    QString str;
+    bool ok;
+    double tmp;
+
+    str = atts.value("radius");
+    tmp = str.toDouble(&ok);
+    if (ok)
+      m_spectra->geo.sites.radius = tmp;
+  }
   else if (element == "geolocation") {
     
     QString selected = atts.value("selected");
@@ -271,6 +331,8 @@ bool CProjectSpectraSubHandler::start(const QString &element, const QXmlAttribut
       m_spectra->geo.mode = PRJCT_SPECTRA_MODES_CIRCLE;
     else if (selected == "rectangle")
       m_spectra->geo.mode = PRJCT_SPECTRA_MODES_RECTANGLE;
+    else if (selected == "sites")
+      m_spectra->geo.mode = PRJCT_SPECTRA_MODES_OBSLIST;
     else
       m_spectra->geo.mode = PRJCT_SPECTRA_MODES_NONE; // default and "none"
   }

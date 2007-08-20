@@ -21,15 +21,15 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #define _CWSITEEDITOR_H_GUARD
 
 #include <QLineEdit>
+#include <QTreeWidgetItem>
 
-#include "CWSiteTree.h"
 #include "CWEditor.h"
 
 class CWSiteEditor : public CWEditor
 {
 Q_OBJECT
  public:
-  CWSiteEditor(CWSiteTree *siteTree, QTreeWidgetItem *editItem = 0, QWidget *parent = 0);
+  CWSiteEditor(QTreeWidgetItem *editItem = 0, QWidget *parent = 0);
   virtual ~CWSiteEditor();
 
   virtual bool actionOk(void);
@@ -41,7 +41,6 @@ Q_OBJECT
   double m_long, m_lat, m_alt;
   unsigned int m_validBits;
   QLineEdit *m_siteName, *m_abbreviation;
-  CWSiteTree *m_siteTree;
 
  public slots:
    void slotLongitudeChanged(const QString &text);

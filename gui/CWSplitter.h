@@ -36,6 +36,8 @@ Q_OBJECT
   CWSplitter(Qt::Orientation orientation, const char *settingsGroupName, QWidget *parent = 0);
   virtual ~CWSplitter();
 
+  void savePreferences(void);
+
   public slots:
     void slotSetWidthMode(int mode);
 

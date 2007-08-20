@@ -100,7 +100,7 @@ CWMain::CWMain(QWidget *parent) :
   m_projTree = new CWProjectTree(m_activeContext);
 
   m_siteTree = new CWSiteTree(m_activeContext);
-  m_siteTree->addNewSite("Stroud", "ST", 151.123, -31.567, 160.2); // TODO - remove
+  //  m_siteTree->addNewSite("Stroud", "ST", 151.123, -31.567, 160.2); // TODO - remove
 
   m_userSymbolTree = new CWUserSymbolTree;
   m_userSymbolTree->addNewUserSymbol("BrO", "Cross Section (228K)"); // TODO - remove
@@ -115,20 +115,20 @@ CWMain::CWMain(QWidget *parent) :
   m_tableRegion = new CWTableRegion;
 
   // Splitters
-  CWSplitter *subSplitter = new CWSplitter(Qt::Horizontal, "MainSplitter");
-  subSplitter->addWidget(m_projEnvTab);
-  subSplitter->addWidget(m_activeContext);
+  m_subSplitter = new CWSplitter(Qt::Horizontal, "MainSplitter");
+  m_subSplitter->addWidget(m_projEnvTab);
+  m_subSplitter->addWidget(m_activeContext);
 
-  subSplitter->setStretchFactor(0, 0);
-  subSplitter->setStretchFactor(1, 1);
+  m_subSplitter->setStretchFactor(0, 0);
+  m_subSplitter->setStretchFactor(1, 1);
 
   // connections between the Trees and the multi-mode splitter
-  connect(m_projTree, SIGNAL(signalWidthModeChanged(int)), subSplitter, SLOT(slotSetWidthMode(int)));
-  connect(m_siteTree, SIGNAL(signalWidthModeChanged(int)), subSplitter, SLOT(slotSetWidthMode(int)));
-  connect(m_userSymbolTree, SIGNAL(signalWidthModeChanged(int)), subSplitter, SLOT(slotSetWidthMode(int)));
+  connect(m_projTree, SIGNAL(signalWidthModeChanged(int)), m_subSplitter, SLOT(slotSetWidthMode(int)));
+  connect(m_siteTree, SIGNAL(signalWidthModeChanged(int)), m_subSplitter, SLOT(slotSetWidthMode(int)));
+  connect(m_userSymbolTree, SIGNAL(signalWidthModeChanged(int)), m_subSplitter, SLOT(slotSetWidthMode(int)));
 
   QSplitter *mainSplitter = new QSplitter(Qt::Vertical);
-  mainSplitter->addWidget(subSplitter);
+  mainSplitter->addWidget(m_subSplitter);
   mainSplitter->addWidget(m_tableRegion);
   
   mainLayout->addWidget(mainSplitter, 1); // takes all stretch
@@ -226,9 +226,13 @@ CWMain::~CWMain()
 
 void CWMain::closeEvent(QCloseEvent *e)
 {
-  CPreferences *prefs = CPreferences::instance();
-  prefs->setWindowSize("Main", size());
-  delete prefs;
+  // save preferences ...
+  CPreferences::instance()->setWindowSize("Main", size());
+  m_projTree->savePreferences();
+  m_subSplitter->savePreferences();
+
+  // flush write and close ...
+  delete CPreferences::instance();
 
   e->accept();
 }
@@ -273,12 +277,21 @@ void CWMain::slotOpenFile()
 	ws->addPath(i, path);
     }
 
-    // sites ... TODO
+    
+    // sites
+    const QList<const CSiteConfigItem*> &siteItems = handler->siteItems();
+    QList<const CSiteConfigItem*>::const_iterator siteIt = siteItems.begin();
+    while (siteIt != siteItems.end()) {
 
+      ws->createSite((*siteIt)->siteName(), (*siteIt)->abbreviation(),
+		     (*siteIt)->longitude(), (*siteIt)->latitude(), (*siteIt)->altitude());
+      ++siteIt;
+    }
+    
     // symbols ... TODO
 
     // projects
-    errMsg = m_projTree->loadConfiguration(handler->projectItems());
+    errMsg += m_projTree->loadConfiguration(handler->projectItems());
 
   }
   else {

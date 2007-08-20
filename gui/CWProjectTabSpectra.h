@@ -55,7 +55,7 @@ class CWGeolocation : public QFrame
 
  private:
   QLineEdit *m_westEdit, *m_eastEdit, *m_southEdit, *m_northEdit;
-  QLineEdit *m_cenLongEdit, *m_cenLatEdit, *m_radiusEdit;
+  QLineEdit *m_cenLongEdit, *m_cenLatEdit, *m_radiusEdit, *m_sitesRadiusEdit;
   QComboBox *m_modeCombo;
   QStackedWidget *m_modeStack;
 };
