@@ -42,6 +42,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "CQdoasProjectConfigHandler.h"
 #include "CWorkSpace.h"
 #include "CPreferences.h"
+#include "CConfigurationWriter.h"
 
 #include "mediate_types.h"
 
@@ -66,8 +67,11 @@ CWMain::CWMain(QWidget *parent) :
   QAction *openAct = new QAction(QIcon(QPixmap(":/icons/file_open_16.png")), "Open...", this);
   // connect ...
   connect(openAct, SIGNAL(triggered()), this, SLOT(slotOpenFile()));
-
   fileMenu->addAction(openAct);
+
+  fileMenu->addSeparator();
+
+  fileMenu->addAction("Save As...", this, SLOT(slotSaveAsFile()));
 
   // Quit
   fileMenu->addSeparator();
@@ -305,6 +309,33 @@ void CWMain::slotOpenFile()
 
 }
 
+void CWMain::slotSaveAsFile()
+{
+  QMessageBox::StandardButton returnCode = QMessageBox::Retry;
+
+  CConfigurationWriter writer(m_projTree);
+
+  while (returnCode == QMessageBox::Retry) {
+
+    returnCode = QMessageBox::Cancel;
+    
+    QString fileName = QFileDialog::getSaveFileName(this, "SaveAs Project File",
+						    CPreferences::instance()->directoryName("Project"),
+						    "Qdoas Project Config (*.xml);;All Files (*)");
+
+    if (!fileName.isEmpty()) {
+      // write the file
+      QString msg = writer.write(fileName);
+      if (!msg.isNull()) {
+	msg += "\nPress Retry to select another output project file.";
+	returnCode = QMessageBox::critical(this, "Project File Write Failure", msg,
+					   QMessageBox::Retry | QMessageBox::Cancel,
+					   QMessageBox::Retry);
+      }
+    }
+  }
+}
+
 void CWMain::slotErrorMessages(int highestLevel, const QString &messages)
 {
   switch (highestLevel) {
@@ -319,3 +350,5 @@ void CWMain::slotErrorMessages(int highestLevel, const QString &messages)
       break;
   }
 }
+
+

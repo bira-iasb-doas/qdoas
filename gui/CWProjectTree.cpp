@@ -105,20 +105,6 @@ CWProjectTree::~CWProjectTree()
   }
 }
 
-void CWProjectTree::savePreferences(void)
-{
-
-  if (m_colWidthList.empty()) {
-    QList<int> widthList;
-    for (int i=0; i<3; ++i)
-      widthList.push_back(columnWidth(i));
-
-    CPreferences::instance()->setColumnWidthList("ProjectTree", widthList);
-  }
-  else
-    CPreferences::instance()->setColumnWidthList("ProjectTree", m_colWidthList);
-}
-
 void CWProjectTree::keyPressEvent(QKeyEvent *e)
 {
   if (e->key() == Qt::Key_D) {
@@ -324,6 +310,19 @@ QTreeWidgetItem *CWProjectTree::locateProjectByName(const QString &projectName)
   return NULL;
 }
   
+void CWProjectTree::savePreferences(void)
+{
+  if (m_colWidthList.empty()) {
+    QList<int> widthList;
+    for (int i=0; i<3; ++i)
+      widthList.push_back(columnWidth(i));
+
+    CPreferences::instance()->setColumnWidthList("ProjectTree", widthList);
+  }
+  else
+    CPreferences::instance()->setColumnWidthList("ProjectTree", m_colWidthList);
+}
+
 //------------------------------------------------------------------------------
 // Interface for editors
 //------------------------------------------------------------------------------
@@ -549,6 +548,10 @@ const QIcon& CWProjectTree::getIcon(int type)
   }
 }
 
+//------------------------------------------------------------------------------
+// Loading from configuration file
+//------------------------------------------------------------------------------
+
 QString CWProjectTree::loadConfiguration(const QList<const CProjectConfigItem*> &itemList)
 {
   // walk the list and create ...
@@ -563,8 +566,6 @@ QString CWProjectTree::loadConfiguration(const QList<const CProjectConfigItem*> 
   while (i > 0) {
     delete takeTopLevelItem(--i);
   }
-  // also sites and symbols .. TODO
-
 
   // use the edit* interface to get reasonable error messages.
 
@@ -598,7 +599,6 @@ QString CWProjectTree::loadConfiguration(const QList<const CProjectConfigItem*> 
   
   return errStr;
 }
-
 
 QString CWProjectTree::buildRawSpectraTree(QTreeWidgetItem *parent, const CProjectConfigTreeNode *childConfigItem)
 {
@@ -1138,6 +1138,21 @@ void CSpectraDirectoryItem::refreshBranch(void)
 {
   discardBranch();
   loadBranch();
+}
+
+QString CSpectraDirectoryItem::directoryName(void) const
+{
+  return m_directory.absolutePath();
+}
+
+QString CSpectraDirectoryItem::fileFilters(void) const
+{
+  return m_directory.nameFilters().join(";");
+}
+
+bool CSpectraDirectoryItem::isRecursive(void) const
+{
+  return m_includeSubDirectories;
 }
 
 int CSpectraDirectoryItem::loadBranch(void)

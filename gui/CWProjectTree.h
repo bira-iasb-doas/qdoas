@@ -58,9 +58,9 @@ Q_OBJECT
   QTreeWidgetItem *locateProjectByName(const QString &projectName);
   QTreeWidgetItem *locateByPath(const QStringList &path);
 
-  QString loadConfiguration(const QList<const CProjectConfigItem*> &itemList);
-
   void savePreferences(void);
+
+  QString loadConfiguration(const QList<const CProjectConfigItem*> &itemList);
 
   // Interface editors use to modify the tree
 
@@ -194,6 +194,10 @@ class CSpectraDirectoryItem : public CProjectTreeItem
   virtual QVariant data(int column, int role) const;
 
   void refreshBranch(void);
+
+  QString directoryName(void) const;
+  QString fileFilters(void) const;
+  bool isRecursive(void) const;
 
  protected:
   int loadBranch(void);

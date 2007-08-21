@@ -21,6 +21,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #ifndef _CWMAIN_H_GUARD
 #define _CWMAIN_H_GUARD
 
+#include <cstdio>
+
 #include <QFrame>
 #include <QMenuBar>
 #include <QToolBar>
@@ -47,8 +49,12 @@ Q_OBJECT
 
   virtual void closeEvent(QCloseEvent *e);
  
+ protected:
+  void writeConfiguration(FILE *fp);
+
  public slots:
   void slotOpenFile();
+  void slotSaveAsFile();
   void slotErrorMessages(int highestLevel, const QString &messages);
 
  private:

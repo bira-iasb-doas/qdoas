@@ -394,6 +394,16 @@ QString CWorkSpace::simplifyPath(const QString &name) const
   return name;
 }
 
+QString CWorkSpace::path(int index) const
+{
+  std::set<SPathBucket>::const_iterator it = m_pathSet.begin();
+  while (it != m_pathSet.end() && it->index != index) ++it;
+  if (it != m_pathSet.end())
+    return it->path;
+
+  return QString();
+}
+
 void CWorkSpace::attach(CSitesObserver *observer)
 {
   if (std::find(m_sitesObserverList.begin(), m_sitesObserverList.end(), observer) == m_sitesObserverList.end())

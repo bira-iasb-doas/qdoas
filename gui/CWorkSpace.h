@@ -80,6 +80,7 @@ class CWorkSpace
   void removePath(int index);
   void addPath(int index, const QString &path);
   QString simplifyPath(const QString &name) const;
+  QString path(int index) const;
 
  private:
   // singleton => no copies permitted

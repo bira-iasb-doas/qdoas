@@ -39,7 +39,6 @@ CPreferences* CPreferences::instance(void)
 
 CPreferences::~CPreferences()
 {
-  TRACE("CPreferences::~CPreferences");
   // flush data to permanent storage
   m_settings->sync();
   delete m_settings;
@@ -178,7 +177,6 @@ void CPreferences::setColumnWidthList(const QString &key, const QList<int> &widt
   while (i < widthList.count()) {
     m_settings->setArrayIndex(i);
     m_settings->setValue("width", widthList.at(i));
-    TRACE("Width = " << widthList.at(i));
     ++i;
   }
   
