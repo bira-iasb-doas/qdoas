@@ -233,6 +233,8 @@ void CWMain::closeEvent(QCloseEvent *e)
   // save preferences ...
   CPreferences::instance()->setWindowSize("Main", size());
   m_projTree->savePreferences();
+  m_siteTree->savePreferences();
+  m_userSymbolTree->savePreferences();
   m_subSplitter->savePreferences();
 
   // flush write and close ...

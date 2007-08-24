@@ -34,6 +34,8 @@ Q_OBJECT
   CWSiteTree(CWActiveContext *activeContext, QWidget *parent = 0);
   virtual ~CWSiteTree();
 
+  void savePreferences(void);
+
   virtual void updateNewSite(const QString &newSiteName);
   virtual void updateModifySite(const QString &siteName);
   virtual void updateDeleteSite(const QString &siteName);

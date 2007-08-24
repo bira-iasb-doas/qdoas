@@ -412,28 +412,34 @@ void CWActiveContext::slotAcceptOk(bool canDoOk)
 
 void CWActiveContext::slotPlotPages(const QList< RefCountConstPtr<CPlotPageData> > &pageList)
 {
-  int index, pageNumber;
+  int pageNumber;
 
-  // clear all tabs
-  index = m_graphTab->count();
-  while (index > 0)
+  // adjust the number of tabs
+  int nPages = pageList.count();
+  int index = m_graphTab->count();
+  while (index > nPages)
     m_graphTab->removeTab(--index);
+  while (nPages > index)
+    index = m_graphTab->addTab(QString()) + 1;
 
   // replace all pages of the plot list and create new tabs
   m_plotRegion->removeAllPages();
+  index = 0;
   QList< RefCountConstPtr<CPlotPageData> >::const_iterator it = pageList.begin();
   while (it != pageList.end()) {
     pageNumber = (*it)->pageNumber();
     m_plotRegion->addPage(*it);
-    // store the page number as TabData
-    index = m_graphTab->addTab((*it)->tag());
+    // Set the tab label and store the page number as TabData
+    m_graphTab->setTabText(index, (*it)->tag());
     m_graphTab->setTabData(index, QVariant(pageNumber));
+    ++index;
     ++it;
   }
 
   // set to first tab
   if (m_graphTab->count()) {
-    m_graphTab->show();
+    if (!m_activeEditor)
+      m_graphTab->show();
     if (m_graphTab->currentIndex() == 0) {
       slotCurrentTabChanged(0);
     }

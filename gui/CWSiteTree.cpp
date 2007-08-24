@@ -22,10 +22,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QShowEvent>
 #include <QContextMenuEvent>
 #include <QTextStream>
+#include <QList>
 
 #include "CWSiteTree.h"
 #include "CWSiteEditor.h"
 #include "CWActiveContext.h"
+
+#include "CPreferences.h"
 
 #include "debugutil.h"
 
@@ -41,6 +44,16 @@ CWSiteTree::CWSiteTree(CWActiveContext *activeContext, QWidget *parent) :
 
   setHeaderLabels(labelList);
 
+  QList<int> widthList;
+  widthList.push_back(130);
+  widthList.push_back(130);
+  
+  widthList = CPreferences::instance()->columnWidthList("SiteTree", widthList);
+
+  for (int i=0; i<2; ++i) {
+    setColumnWidth(i, widthList.at(i));
+  }
+
   // populate from the workspace
   int nSites;
   mediate_site_t *siteList = CWorkSpace::instance()->siteList(nSites);
@@ -54,6 +67,16 @@ CWSiteTree::CWSiteTree(CWActiveContext *activeContext, QWidget *parent) :
 
 CWSiteTree::~CWSiteTree()
 {
+}
+
+void CWSiteTree::savePreferences(void)
+{
+  QList<int> widthList;
+
+  for (int i=0; i<2; ++i)
+    widthList.push_back(columnWidth(i));
+
+  CPreferences::instance()->setColumnWidthList("SiteTree", widthList);
 }
 
 void CWSiteTree::createSiteItem(const mediate_site_t *site)

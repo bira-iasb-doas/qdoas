@@ -19,8 +19,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
 #include <QShowEvent>
+#include <QList>
 
 #include "CWUserSymbolTree.h"
+
+#include "CPreferences.h"
 
 const int cUserSymbolTreeGeneralMode = 47;
 
@@ -30,10 +33,30 @@ CWUserSymbolTree::CWUserSymbolTree(QWidget *parent) :
   QStringList labelList;
   labelList << "Name" << "Description";
   setHeaderLabels(labelList);
+
+  QList<int> widthList;
+  widthList.push_back(130);
+  widthList.push_back(130);
+  
+  widthList = CPreferences::instance()->columnWidthList("UserSymbolTree", widthList);
+
+  for (int i=0; i<2; ++i) {
+    setColumnWidth(i, widthList.at(i));
+  }
 }
 
 CWUserSymbolTree::~CWUserSymbolTree()
 {
+}
+
+void CWUserSymbolTree::savePreferences(void)
+{
+  QList<int> widthList;
+
+  for (int i=0; i<2; ++i)
+    widthList.push_back(columnWidth(i));
+
+  CPreferences::instance()->setColumnWidthList("UserSymbolTree", widthList);
 }
 
 void CWUserSymbolTree::addNewUserSymbol(const QString &userSymbolName, const QString &description)

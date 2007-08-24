@@ -33,7 +33,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 class CWPlot : public QwtPlot
 {
  public:
-  CWPlot(RefCountConstPtr<CPlotDataSet> dataSet, QWidget *parent = 0);
+  CWPlot(const RefCountConstPtr<CPlotDataSet> &dataSet, QWidget *parent = 0);
   virtual ~CWPlot();
 
  private:
@@ -44,10 +44,10 @@ class CWPlotPage : public QFrame
 {
  public:
   CWPlotPage(int columns, QWidget *parent = 0);
-  CWPlotPage(int columns, RefCountConstPtr<CPlotPageData> page, QWidget *parent = 0);
+  CWPlotPage(int columns, const RefCountConstPtr<CPlotPageData> &page, QWidget *parent = 0);
   virtual ~CWPlotPage();
 
-  void addPlot(RefCountConstPtr<CPlotDataSet> dataSet);
+  void addPlot(const RefCountConstPtr<CPlotDataSet> &dataSet);
   void layoutPlots(const QSize &visibleSize);
 
  protected:

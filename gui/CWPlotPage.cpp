@@ -25,7 +25,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "CWPlotPage.h"
 
-CWPlot::CWPlot(RefCountConstPtr<CPlotDataSet> dataSet, QWidget *parent) :
+CWPlot::CWPlot(const RefCountConstPtr<CPlotDataSet> &dataSet, QWidget *parent) :
   QwtPlot(parent),
   m_dataSet(dataSet)
 {
@@ -68,7 +68,7 @@ CWPlotPage::CWPlotPage(int columns, QWidget *parent) :
   if (m_columns < 1) m_columns = 1;
 }
 
-CWPlotPage::CWPlotPage(int columns, RefCountConstPtr<CPlotPageData> page, QWidget *parent) :
+CWPlotPage::CWPlotPage(int columns, const RefCountConstPtr<CPlotPageData> &page, QWidget *parent) :
   QFrame(parent),
   m_columns(columns)
 {
@@ -91,7 +91,7 @@ CWPlotPage::~CWPlotPage()
 {
 }
 
-void CWPlotPage::addPlot(RefCountConstPtr<CPlotDataSet> dataSet)
+void CWPlotPage::addPlot(const RefCountConstPtr<CPlotDataSet> &dataSet)
 {
   CWPlot *tmp = new CWPlot(dataSet, this);
   tmp->hide();

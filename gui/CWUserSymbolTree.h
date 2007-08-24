@@ -29,6 +29,8 @@ Q_OBJECT
   CWUserSymbolTree(QWidget *parent = 0);
   virtual ~CWUserSymbolTree();
 
+  void savePreferences(void);
+
   void addNewUserSymbol(const QString &userSymbolName, const QString &description = QString()); 
 
  protected:
