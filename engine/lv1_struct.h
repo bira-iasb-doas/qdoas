@@ -21,6 +21,9 @@
 #define NPMD 7
 #define MAX_DETECTOR_PIXELS  1024
 #define MAX_CHANNELS         8
+
+#pragma pack(1)
+
 /*
  * compound data types; adapted from NADC lib
  */

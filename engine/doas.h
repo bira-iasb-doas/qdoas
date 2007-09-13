@@ -590,22 +590,18 @@ RC   ReliCCD_EEV(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FIL
 RC   SetCCD (SPEC_INFO *pSpecInfo,FILE *specFp,INT flag);
 RC   ReliCCD(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *specFp,FILE *namesFp,FILE *darkFp);
 RC   ReliCCDTrack(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *specFp,FILE *namesFp,FILE *darkFp);
-RC   SetPDA_EGG(SPEC_INFO *pSpecInfo,FILE *specFp,int newFlag);
-RC   ReliPDA_EGG(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *specFp,FILE *namesFp,FILE *darkFp,int newFlag);
+RC   SetPDA_EGG(SPEC_INFO *pSpecInfo,FILE *specFp);
+RC   ReliPDA_EGG(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *specFp,FILE *namesFp,FILE *darkFp);
 RC   SetPDA_EGG_Logger(SPEC_INFO *pSpecInfo,FILE *specFp);
 RC   ReliPDA_EGG_Logger(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *specFp);
 
-RC   SetPDA_EGG_Ulb(SPEC_INFO *pSpecInfo,FILE *specFp);
-RC   ReliPDA_EGG_Ulb(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *specFp,FILE *namesFp,FILE *darkFp);
 RC   SetEASOE(SPEC_INFO *pSpecInfo,FILE *specFp,FILE *namesFp);
 RC   ReliEASOE(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *specFp,FILE *namesFp,FILE *darkFp);
 
 // SAOZ (CNRS, France)
 
-   enum _domain { UV, VIS };
-
-RC   SetSAOZ(SPEC_INFO *pSpecInfo,FILE *specFp,INT domain);
-RC   ReliSAOZ(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *specFp,FILE *namesFp,FILE *darkFp,INT domain);
+RC   SetSAOZ(SPEC_INFO *pSpecInfo,FILE *specFp);
+RC   ReliSAOZ(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *specFp,FILE *namesFp);
 RC   SetSAOZEfm(SPEC_INFO *pSpecInfo,FILE *specFp);
 RC   ReliSAOZEfm(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *specFp);
 RC   SetActon_Logger(SPEC_INFO *pSpecInfo,FILE *specFp);
@@ -614,11 +610,6 @@ RC   ASCII_Set(SPEC_INFO *pSpecInfo,FILE *specFp);
 RC   ASCII_Read(SPEC_INFO *pSpecInfo,INT recordNo,INT dateFlag,int localDay,FILE *specFp);
 RC   SetRAS(SPEC_INFO *pSpecInfo,FILE *specFp);
 RC   ReliRAS(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *specFp);
-RC   OPUS_Set(SPEC_INFO *pSpecInfo,FILE *specFp);
-RC   OPUS_Read(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *specFp);
-
-RC   SCIA_SetHDF(SPEC_INFO *pSpecInfo);
-RC   SCIA_ReadHDF(SPEC_INFO *pSpecInfo,int recordNo);
 
 void SCIA_ReleaseBuffers(UCHAR format);
 RC   SCIA_SetPDS(SPEC_INFO *pSpecInfo);
@@ -734,8 +725,6 @@ RC   OMI_ReadHDF(SPEC_INFO *pSpecInfo,int recordNo);
 
 RC   CCD_LoadInstrumental(SPEC_INFO *pSpecInfo);
 void CCD_ResetInstrumental(CCD *pCCD);
-RC   SetCCD_Ulb(SPEC_INFO *pSpecInfo,FILE *specFp);
-RC   ReliCCD_Ulb(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *specFp,FILE *darkFp);
 
 typedef struct _TOldFlags
  {

@@ -9,6 +9,6 @@ ENGINE_CONTEXT *EngineCreateContext(void);
 void            EngineDestroyContext(ENGINE_CONTEXT *pEngineContext);
 void            EngineSetProject(ENGINE_CONTEXT *pEngineContext);
 int             EngineSetFile(ENGINE_CONTEXT *pEngineContext,const char *fileName);
-void            EngineReadFile(ENGINE_CONTEXT *pEngineContext,int indexRecord,double *x,double *y);
+void            EngineReadFile(ENGINE_CONTEXT *pEngineContext,int indexRecord,INT dateFlag,INT localCalDay);
 
 #endif

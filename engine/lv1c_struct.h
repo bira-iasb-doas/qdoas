@@ -9,6 +9,8 @@
 #include "lv1_struct.h"
 #endif
 
+#pragma pack(1)
+
 /* constant part of 1c MDS */
 typedef struct mds_1c_constant
 {

@@ -98,7 +98,7 @@ CWProjectTabInstrumental::CWProjectTabInstrumental(const mediate_project_instrum
   // saozvis
   m_saozVisEdit = new CWInstrSaozEdit(&(instr->saozvis));
   m_formatStack->addWidget(m_saozVisEdit);
-  m_formatCombo->addItem("SAOZ Visible", QVariant(PRJCT_INSTR_FORMAT_SAOZ_VIS));
+  m_formatCombo->addItem("SAOZ PCD/NMOS (512)", QVariant(PRJCT_INSTR_FORMAT_SAOZ_VIS));
 
   // saozuv
   m_saozUvEdit = new CWInstrSaozEdit(&(instr->saozuv));
@@ -106,9 +106,9 @@ CWProjectTabInstrumental::CWProjectTabInstrumental(const mediate_project_instrum
   m_formatCombo->addItem("SAOZ UV", QVariant(PRJCT_INSTR_FORMAT_SAOZ_UV));
 
   // saozefm
-  m_saozEfmEdit = new CWInstrRasasEdit(&(instr->saozefm));
+  m_saozEfmEdit = new CWInstrMinimumEdit(&(instr->saozefm));
   m_formatStack->addWidget(m_saozEfmEdit);
-  m_formatCombo->addItem("SAOZ EFM", QVariant(PRJCT_INSTR_FORMAT_SAOZ_EFM));
+  m_formatCombo->addItem("SAOZ EFM (1024)", QVariant(PRJCT_INSTR_FORMAT_SAOZ_EFM));
 
   // mfc
   m_mfcEdit = new CWInstrMfcEdit(&(instr->mfc));
@@ -121,12 +121,12 @@ CWProjectTabInstrumental::CWProjectTabInstrumental(const mediate_project_instrum
   m_formatCombo->addItem("MFC Std (Heidelberg)", QVariant(PRJCT_INSTR_FORMAT_MFC_STD));
 
   // rasas
-  m_rasasEdit = new CWInstrRasasEdit(&(instr->rasas));
+  m_rasasEdit = new CWInstrMinimumEdit(&(instr->rasas));
   m_formatStack->addWidget(m_rasasEdit);
   m_formatCombo->addItem("RASAS (INTA)", QVariant(PRJCT_INSTR_FORMAT_RASAS));
 
    // pdasieasoe
-  m_pdasiEasoeEdit = new CWInstrRasasEdit(&(instr->pdasieasoe));
+  m_pdasiEasoeEdit = new CWInstrMinimumEdit(&(instr->pdasieasoe));
   m_formatStack->addWidget(m_pdasiEasoeEdit);
   m_formatCombo->addItem("EASOE", QVariant(PRJCT_INSTR_FORMAT_PDASI_EASOE));
 
@@ -166,12 +166,12 @@ CWProjectTabInstrumental::CWProjectTabInstrumental(const mediate_project_instrum
   m_formatCombo->addItem("SCIAMACHY L1C (PDS format)", QVariant(PRJCT_INSTR_FORMAT_SCIA_PDS));
 
   // uoft
-  m_uoftEdit = new CWInstrRasasEdit(&(instr->uoft));
+  m_uoftEdit = new CWInstrMinimumEdit(&(instr->uoft));
   m_formatStack->addWidget(m_uoftEdit);
   m_formatCombo->addItem("CCD (University of Toronto)", QVariant(PRJCT_INSTR_FORMAT_UOFT));
 
   // noaa
-  m_noaaEdit = new CWInstrRasasEdit(&(instr->noaa));
+  m_noaaEdit = new CWInstrMinimumEdit(&(instr->noaa));
   m_formatStack->addWidget(m_noaaEdit);
   m_formatCombo->addItem("NOAA", QVariant(PRJCT_INSTR_FORMAT_NOAA));
 
@@ -182,7 +182,7 @@ CWProjectTabInstrumental::CWProjectTabInstrumental(const mediate_project_instrum
 
   topLayout->addWidget(new QLabel("Format", this), 0, 0);
   topLayout->addWidget(m_formatCombo, 0, 1);
-  
+
   // Site
   m_siteCombo = new CWSiteListCombo(this); // automatically populated
 
@@ -202,7 +202,7 @@ CWProjectTabInstrumental::CWProjectTabInstrumental(const mediate_project_instrum
 
   // set the current format - stack will follow
   int index;
-  
+
   index = m_formatCombo->findData(QVariant(instr->format));
   if (index != -1)
     m_formatCombo->setCurrentIndex(index);
@@ -286,7 +286,7 @@ void CWCalibInstrEdit::slotInstrTwoBrowse()
 {
   QString file = QFileDialog::getOpenFileName(this, "Select Instrument Function File", QString(),
 					      "Instrument Function File (*.ins);;All Files (*)");
-  
+
   if (!file.isEmpty())
     m_fileTwoEdit->setText(file);
 }
@@ -295,7 +295,7 @@ void CWCalibInstrEdit::slotOffsetTwoBrowse()
 {
   QString file = QFileDialog::getOpenFileName(this, "Select Offset File", QString(),
 					      "Offset File (*.txt);;All Files (*)");
-  
+
   if (!file.isEmpty())
     m_fileTwoEdit->setText(file);
 }
@@ -318,13 +318,13 @@ void CWCalibInstrEdit::helperConstructFileWidget(QLineEdit **fileEdit, QGridLayo
 
   // initialise the value
   edit->setText(QString(str));
-  
+
   // connections
   connect(browseBtn, SIGNAL(clicked()), this, slot);
 
   *fileEdit = edit;
 }
-  
+
 void CWCalibInstrEdit::helperConstructCalInsFileWidgets(QGridLayout *gridLayout, int &row,
 							const char *calib, int lenCalib,
 							const char *instr, int lenInstr)
@@ -339,7 +339,7 @@ void CWCalibInstrEdit::helperConstructCalInsFileWidgets(QGridLayout *gridLayout,
   helperConstructFileWidget(&m_fileTwoEdit, gridLayout, row, instr, lenInstr,
 			    "Instr. function", SLOT(slotInstrTwoBrowse()));
 }
-  
+
 //--------------------------------------------------------
 
 CWAllFilesEdit::CWAllFilesEdit(QWidget *parent) :
@@ -355,7 +355,7 @@ void CWAllFilesEdit::slotInterPixelVariabilityThreeBrowse()
 {
   QString file = QFileDialog::getOpenFileName(this, "Select Inter-Pixel Variability File", QString(),
 					      "Inter-Pixel Variability File (*.ipv);;All Files (*)");
-  
+
   if (!file.isEmpty())
     m_fileThreeEdit->setText(file);
 }
@@ -364,7 +364,7 @@ void CWAllFilesEdit::slotDarkCurrentThreeBrowse()
 {
   QString file = QFileDialog::getOpenFileName(this, "Select Dark Current File", QString(),
 					      "Dark Current File (*.drk);;All Files (*)");
-  
+
   if (!file.isEmpty())
     m_fileThreeEdit->setText(file);
 }
@@ -373,7 +373,7 @@ void CWAllFilesEdit::slotStraylightCorrectionThreeBrowse()
 {
   QString file = QFileDialog::getOpenFileName(this, "Select Stray-Light File", QString(),
 					      "Stray-Light File (*.str);;All Files (*)");
-  
+
   if (!file.isEmpty())
     m_fileThreeEdit->setText(file);
 }
@@ -382,7 +382,7 @@ void CWAllFilesEdit::slotDetectorNonLinearityFourBrowse()
 {
   QString file = QFileDialog::getOpenFileName(this, "Select Detector Non-Linearity File", QString(),
 					      "Detector Non-Linearity File (*.dnl);;All Files (*)");
-  
+
   if (!file.isEmpty())
     m_fileFourEdit->setText(file);
 }
@@ -391,7 +391,7 @@ void CWAllFilesEdit::slotOffsetFourBrowse()
 {
   QString file = QFileDialog::getOpenFileName(this, "Select Offset File", QString(),
 					      "Offset File (*.txt);;All Files (*)");
-  
+
   if (!file.isEmpty())
     m_fileFourEdit->setText(file);
 }
@@ -409,7 +409,7 @@ void CWAllFilesEdit::helperConstructIpvDnlFileWidgets(QGridLayout *gridLayout, i
 
   helperConstructFileWidget(&m_fileFourEdit, gridLayout, row, dnl, lenDnl,
 			    "Det. Non-Linearity", SLOT(slotDetectorNonLinearityFourBrowse()));
-}  
+}
 
 void CWAllFilesEdit::helperConstructFileWidgets(QGridLayout *gridLayout, int &row,
 						const char *calib, int lenCalib,
@@ -424,7 +424,7 @@ void CWAllFilesEdit::helperConstructFileWidgets(QGridLayout *gridLayout, int &ro
   helperConstructCalInsFileWidgets(gridLayout, row, calib, lenCalib, instr, lenInstr);
   helperConstructIpvDnlFileWidgets(gridLayout, row, ipv, lenIpv, dnl, lenDnl);
 }
-  
+
 //--------------------------------------------------------
 
 CWInstrAsciiEdit::CWInstrAsciiEdit(const struct instrumental_ascii *d, QWidget *parent) :
@@ -485,7 +485,7 @@ CWInstrAsciiEdit::CWInstrAsciiEdit(const struct instrumental_ascii *d, QWidget *
   helperConstructCalInsFileWidgets(bottomLayout, row,
 				   d->calibrationFile, sizeof(d->calibrationFile),
 				   d->instrFunctionFile, sizeof(d->instrFunctionFile));
-  
+
   bottomLayout->setColumnMinimumWidth(0, cSuggestedColumnZeroWidth);
   bottomLayout->setColumnMinimumWidth(2, cSuggestedColumnTwoWidth);
 
@@ -550,7 +550,7 @@ CWInstrLoggerEdit::CWInstrLoggerEdit(const struct instrumental_logger *d, QWidge
   int row = 0;
   QVBoxLayout *mainLayout = new QVBoxLayout(this);
   QGridLayout *gridLayout = new QGridLayout;
-  
+
   // Spectral Type
   gridLayout->addWidget(new QLabel("Spectral Type", this), row, 0);
   m_spectralTypeCombo = new QComboBox(this);
@@ -569,7 +569,7 @@ CWInstrLoggerEdit::CWInstrLoggerEdit(const struct instrumental_logger *d, QWidge
   helperConstructCalInsFileWidgets(gridLayout, row,
 				   d->calibrationFile, sizeof(d->calibrationFile),
 				   d->instrFunctionFile, sizeof(d->instrFunctionFile));
-  
+
   gridLayout->setColumnMinimumWidth(0, cSuggestedColumnZeroWidth);
   gridLayout->setColumnMinimumWidth(2, cSuggestedColumnTwoWidth);
 
@@ -590,7 +590,7 @@ CWInstrLoggerEdit::CWInstrLoggerEdit(const struct instrumental_logger *d, QWidge
 CWInstrLoggerEdit::~CWInstrLoggerEdit()
 {
 }
-  
+
 void CWInstrLoggerEdit::apply(struct instrumental_logger *d) const
 {
   // spectral type
@@ -601,7 +601,7 @@ void CWInstrLoggerEdit::apply(struct instrumental_logger *d) const
 
   // files
   strcpy(d->calibrationFile, m_fileOneEdit->text().toAscii().data());
-  strcpy(d->instrFunctionFile, m_fileTwoEdit->text().toAscii().data());  
+  strcpy(d->instrFunctionFile, m_fileTwoEdit->text().toAscii().data());
 }
 
 //--------------------------------------------------------
@@ -612,7 +612,7 @@ CWInstrActonEdit::CWInstrActonEdit(const struct instrumental_acton *d, QWidget *
   int row = 0;
   QVBoxLayout *mainLayout = new QVBoxLayout(this);
   QGridLayout *gridLayout = new QGridLayout;
-  
+
   // NILU Type
   gridLayout->addWidget(new QLabel("NILU Format Type", this), row, 0);
   m_niluTypeCombo = new QComboBox(this);
@@ -625,7 +625,7 @@ CWInstrActonEdit::CWInstrActonEdit(const struct instrumental_acton *d, QWidget *
   helperConstructCalInsFileWidgets(gridLayout, row,
 				   d->calibrationFile, sizeof(d->calibrationFile),
 				   d->instrFunctionFile, sizeof(d->instrFunctionFile));
-  
+
   gridLayout->setColumnMinimumWidth(0, cSuggestedColumnZeroWidth);
   gridLayout->setColumnMinimumWidth(2, cSuggestedColumnTwoWidth);
 
@@ -644,7 +644,7 @@ CWInstrActonEdit::CWInstrActonEdit(const struct instrumental_acton *d, QWidget *
 CWInstrActonEdit::~CWInstrActonEdit()
 {
 }
-  
+
 void CWInstrActonEdit::apply(struct instrumental_acton *d) const
 {
   // nilu type
@@ -652,7 +652,7 @@ void CWInstrActonEdit::apply(struct instrumental_acton *d) const
 
   // files
   strcpy(d->calibrationFile, m_fileOneEdit->text().toAscii().data());
-  strcpy(d->instrFunctionFile, m_fileTwoEdit->text().toAscii().data());  
+  strcpy(d->instrFunctionFile, m_fileTwoEdit->text().toAscii().data());
 }
 
 //--------------------------------------------------------
@@ -695,7 +695,7 @@ CWInstrSaozEdit::CWInstrSaozEdit(const struct instrumental_saoz *d, QWidget *par
 CWInstrSaozEdit::~CWInstrSaozEdit()
 {
 }
-  
+
 void CWInstrSaozEdit::apply(struct instrumental_saoz *d) const
 {
   // spectral type
@@ -703,7 +703,7 @@ void CWInstrSaozEdit::apply(struct instrumental_saoz *d) const
 
   // files
   strcpy(d->calibrationFile, m_fileOneEdit->text().toAscii().data());
-  strcpy(d->instrFunctionFile, m_fileTwoEdit->text().toAscii().data());  
+  strcpy(d->instrFunctionFile, m_fileTwoEdit->text().toAscii().data());
 }
 
 //--------------------------------------------------------------------------
@@ -716,7 +716,7 @@ CWInstrMfcEdit::CWInstrMfcEdit(const struct instrumental_mfc *d, QWidget *parent
   QVBoxLayout *mainLayout = new QVBoxLayout(this);
 
   // detector size and first wavelength
-  QGridLayout *topLayout = new QGridLayout;  
+  QGridLayout *topLayout = new QGridLayout;
   topLayout->addWidget(new QLabel("Detector Size", this), 0, 0);
   m_detSizeEdit = new QLineEdit(this);
   m_detSizeEdit->setFixedWidth(cStandardEditWidth);
@@ -771,12 +771,12 @@ CWInstrMfcEdit::CWInstrMfcEdit(const struct instrumental_mfc *d, QWidget *parent
   mainLayout->addLayout(middleLayout);
 
   QGridLayout *gridLayout = new QGridLayout;
-  
+
   // files
   helperConstructCalInsFileWidgets(gridLayout, row,
 				   d->calibrationFile, sizeof(d->calibrationFile),
 				   d->instrFunctionFile, sizeof(d->instrFunctionFile));
-  
+
   // non-standard files...
   helperConstructFileWidget(&m_fileThreeEdit, gridLayout, row,
 			    d->darkCurrentFile, sizeof(d->darkCurrentFile),
@@ -803,7 +803,7 @@ CWInstrMfcEdit::CWInstrMfcEdit(const struct instrumental_mfc *d, QWidget *parent
   tmpStr.setNum(d->firstWavelength);
   m_firstLambdaEdit->validator()->fixup(tmpStr);
   m_firstLambdaEdit->setText(tmpStr);
-  
+
   // check boxes
   m_revertCheck->setCheckState(d->revert ? Qt::Checked : Qt::Unchecked);
   m_autoCheck->setCheckState(d->autoFileSelect ? Qt::Checked : Qt::Unchecked);
@@ -824,13 +824,13 @@ CWInstrMfcEdit::CWInstrMfcEdit(const struct instrumental_mfc *d, QWidget *parent
   tmpStr.setNum(d->spectraMask);
   m_spectraMaskEdit->validator()->fixup(tmpStr);
   m_spectraMaskEdit->setText(tmpStr);
-  
+
 }
 
 CWInstrMfcEdit::~CWInstrMfcEdit()
 {
 }
-  
+
 void CWInstrMfcEdit::apply(struct instrumental_mfc *d) const
 {
   // detector size
@@ -851,9 +851,9 @@ void CWInstrMfcEdit::apply(struct instrumental_mfc *d) const
 
   // files
   strcpy(d->calibrationFile, m_fileOneEdit->text().toAscii().data());
-  strcpy(d->instrFunctionFile, m_fileTwoEdit->text().toAscii().data());  
+  strcpy(d->instrFunctionFile, m_fileTwoEdit->text().toAscii().data());
   strcpy(d->darkCurrentFile, m_fileThreeEdit->text().toAscii().data());
-  strcpy(d->offsetFile, m_fileFourEdit->text().toAscii().data());  
+  strcpy(d->offsetFile, m_fileFourEdit->text().toAscii().data());
 }
 
 //--------------------------------------------------------------------------
@@ -864,7 +864,7 @@ CWInstrMfcStdEdit::CWInstrMfcStdEdit(const struct instrumental_mfcstd *d, QWidge
   QString tmpStr;
   int row = 0;
   QVBoxLayout *mainLayout = new QVBoxLayout(this);
-  QGridLayout *gridLayout = new QGridLayout;  
+  QGridLayout *gridLayout = new QGridLayout;
 
   // detector size
   gridLayout->addWidget(new QLabel("Detector Size", this), row, 0);
@@ -883,7 +883,7 @@ CWInstrMfcStdEdit::CWInstrMfcStdEdit(const struct instrumental_mfcstd *d, QWidge
   helperConstructCalInsFileWidgets(gridLayout, row,
 				   d->calibrationFile, sizeof(d->calibrationFile),
 				   d->instrFunctionFile, sizeof(d->instrFunctionFile));
-  
+
   // non-standard files...
   helperConstructFileWidget(&m_fileThreeEdit, gridLayout, row,
 			    d->darkCurrentFile, sizeof(d->darkCurrentFile),
@@ -913,7 +913,7 @@ CWInstrMfcStdEdit::CWInstrMfcStdEdit(const struct instrumental_mfcstd *d, QWidge
 CWInstrMfcStdEdit::~CWInstrMfcStdEdit()
 {
 }
-  
+
 void CWInstrMfcStdEdit::apply(struct instrumental_mfcstd *d) const
 {
   // detector size
@@ -924,25 +924,25 @@ void CWInstrMfcStdEdit::apply(struct instrumental_mfcstd *d) const
 
   // files
   strcpy(d->calibrationFile, m_fileOneEdit->text().toAscii().data());
-  strcpy(d->instrFunctionFile, m_fileTwoEdit->text().toAscii().data());  
+  strcpy(d->instrFunctionFile, m_fileTwoEdit->text().toAscii().data());
   strcpy(d->darkCurrentFile, m_fileThreeEdit->text().toAscii().data());
-  strcpy(d->offsetFile, m_fileFourEdit->text().toAscii().data());  
+  strcpy(d->offsetFile, m_fileFourEdit->text().toAscii().data());
 }
 
 //--------------------------------------------------------
 
-CWInstrRasasEdit::CWInstrRasasEdit(const struct instrumental_rasas *d, QWidget *parent) :
+CWInstrMinimumEdit::CWInstrMinimumEdit(const struct instrumental_minimum *d, QWidget *parent) :
   CWCalibInstrEdit(parent)
 {
   int row = 0;
   QVBoxLayout *mainLayout = new QVBoxLayout(this);
   QGridLayout *gridLayout = new QGridLayout;
-  
+
   // files
   helperConstructCalInsFileWidgets(gridLayout, row,
 				   d->calibrationFile, sizeof(d->calibrationFile),
 				   d->instrFunctionFile, sizeof(d->instrFunctionFile));
-  
+
   gridLayout->setColumnMinimumWidth(0, cSuggestedColumnZeroWidth);
   gridLayout->setColumnMinimumWidth(2, cSuggestedColumnTwoWidth);
 
@@ -950,15 +950,15 @@ CWInstrRasasEdit::CWInstrRasasEdit(const struct instrumental_rasas *d, QWidget *
   mainLayout->addStretch(1);
 }
 
-CWInstrRasasEdit::~CWInstrRasasEdit()
+CWInstrMinimumEdit::~CWInstrMinimumEdit()
 {
 }
-  
-void CWInstrRasasEdit::apply(struct instrumental_rasas *d) const
+
+void CWInstrMinimumEdit::apply(struct instrumental_minimum *d) const
 {
   // files
   strcpy(d->calibrationFile, m_fileOneEdit->text().toAscii().data());
-  strcpy(d->instrFunctionFile, m_fileTwoEdit->text().toAscii().data());  
+  strcpy(d->instrFunctionFile, m_fileTwoEdit->text().toAscii().data());
 }
 
 //--------------------------------------------------------
@@ -969,7 +969,7 @@ CWInstrCcdEdit::CWInstrCcdEdit(const struct instrumental_ccd *d, QWidget *parent
   int row = 0;
   QVBoxLayout *mainLayout = new QVBoxLayout(this);
   QGridLayout *gridLayout = new QGridLayout;
-  
+
   // files
   helperConstructFileWidgets(gridLayout, row,
 			     d->calibrationFile, sizeof(d->calibrationFile),
@@ -987,14 +987,14 @@ CWInstrCcdEdit::CWInstrCcdEdit(const struct instrumental_ccd *d, QWidget *parent
 CWInstrCcdEdit::~CWInstrCcdEdit()
 {
 }
-  
+
 void CWInstrCcdEdit::apply(struct instrumental_ccd *d) const
 {
   // files
   strcpy(d->calibrationFile, m_fileOneEdit->text().toAscii().data());
-  strcpy(d->instrFunctionFile, m_fileTwoEdit->text().toAscii().data());  
-  strcpy(d->interPixelVariabilityFile, m_fileThreeEdit->text().toAscii().data());  
-  strcpy(d->detectorNonLinearityFile, m_fileFourEdit->text().toAscii().data());  
+  strcpy(d->instrFunctionFile, m_fileTwoEdit->text().toAscii().data());
+  strcpy(d->interPixelVariabilityFile, m_fileThreeEdit->text().toAscii().data());
+  strcpy(d->detectorNonLinearityFile, m_fileFourEdit->text().toAscii().data());
 }
 
 //--------------------------------------------------------
@@ -1006,7 +1006,7 @@ CWInstrCcdUlbEdit::CWInstrCcdUlbEdit(const struct instrumental_ccdulb *d, QWidge
   int row = 0;
   QVBoxLayout *mainLayout = new QVBoxLayout(this);
   QGridLayout *gridLayout = new QGridLayout;
-  
+
   // grating
   gridLayout->addWidget(new QLabel("Grating number"), row, 0);
   m_gratingEdit = new QLineEdit(this);
@@ -1035,7 +1035,7 @@ CWInstrCcdUlbEdit::CWInstrCcdUlbEdit(const struct instrumental_ccdulb *d, QWidge
   helperConstructIpvDnlFileWidgets(gridLayout, row,
 				   d->interPixelVariabilityFile, sizeof(d->interPixelVariabilityFile),
 				   d->detectorNonLinearityFile, sizeof(d->detectorNonLinearityFile));
-  
+
   gridLayout->setColumnMinimumWidth(0, cSuggestedColumnZeroWidth);
   gridLayout->setColumnMinimumWidth(2, cSuggestedColumnTwoWidth);
 
@@ -1050,7 +1050,7 @@ CWInstrCcdUlbEdit::CWInstrCcdUlbEdit(const struct instrumental_ccdulb *d, QWidge
 CWInstrCcdUlbEdit::~CWInstrCcdUlbEdit()
 {
 }
-  
+
 void CWInstrCcdUlbEdit::apply(struct instrumental_ccdulb *d) const
 {
   // grating
@@ -1061,9 +1061,9 @@ void CWInstrCcdUlbEdit::apply(struct instrumental_ccdulb *d) const
 
   // files
   strcpy(d->calibrationFile, m_fileOneEdit->text().toAscii().data());
-  strcpy(d->offsetFile, m_fileTwoEdit->text().toAscii().data());  
-  strcpy(d->interPixelVariabilityFile, m_fileThreeEdit->text().toAscii().data());  
-  strcpy(d->detectorNonLinearityFile, m_fileFourEdit->text().toAscii().data());  
+  strcpy(d->offsetFile, m_fileTwoEdit->text().toAscii().data());
+  strcpy(d->interPixelVariabilityFile, m_fileThreeEdit->text().toAscii().data());
+  strcpy(d->detectorNonLinearityFile, m_fileFourEdit->text().toAscii().data());
 }
 
 //--------------------------------------------------------
@@ -1074,7 +1074,7 @@ CWInstrPdaEggUlbEdit::CWInstrPdaEggUlbEdit(const struct instrumental_pdaeggulb *
   int row = 0;
   QVBoxLayout *mainLayout = new QVBoxLayout(this);
   QGridLayout *gridLayout = new QGridLayout;
-  
+
   // Curve Type
   gridLayout->addWidget(new QLabel("Curve Type", this), row, 0);
   m_curveTypeCombo = new QComboBox(this);
@@ -1090,7 +1090,7 @@ CWInstrPdaEggUlbEdit::CWInstrPdaEggUlbEdit(const struct instrumental_pdaeggulb *
 			     d->instrFunctionFile, sizeof(d->instrFunctionFile),
 			     d->interPixelVariabilityFile, sizeof(d->interPixelVariabilityFile),
 			     d->detectorNonLinearityFile, sizeof(d->detectorNonLinearityFile));
-  
+
   gridLayout->setColumnMinimumWidth(0, cSuggestedColumnZeroWidth);
   gridLayout->setColumnMinimumWidth(2, cSuggestedColumnTwoWidth);
 
@@ -1109,7 +1109,7 @@ CWInstrPdaEggUlbEdit::CWInstrPdaEggUlbEdit(const struct instrumental_pdaeggulb *
 CWInstrPdaEggUlbEdit::~CWInstrPdaEggUlbEdit()
 {
 }
-  
+
 void CWInstrPdaEggUlbEdit::apply(struct instrumental_pdaeggulb *d) const
 {
   // curve type
@@ -1117,9 +1117,9 @@ void CWInstrPdaEggUlbEdit::apply(struct instrumental_pdaeggulb *d) const
 
   // files
   strcpy(d->calibrationFile, m_fileOneEdit->text().toAscii().data());
-  strcpy(d->instrFunctionFile, m_fileTwoEdit->text().toAscii().data());  
-  strcpy(d->interPixelVariabilityFile, m_fileThreeEdit->text().toAscii().data());  
-  strcpy(d->detectorNonLinearityFile, m_fileFourEdit->text().toAscii().data());  
+  strcpy(d->instrFunctionFile, m_fileTwoEdit->text().toAscii().data());
+  strcpy(d->interPixelVariabilityFile, m_fileThreeEdit->text().toAscii().data());
+  strcpy(d->detectorNonLinearityFile, m_fileFourEdit->text().toAscii().data());
 }
 
 //--------------------------------------------------------
@@ -1131,7 +1131,7 @@ CWInstrCcdEevEdit::CWInstrCcdEevEdit(const struct instrumental_ccdeev *d, QWidge
   int row = 0;
   QVBoxLayout *mainLayout = new QVBoxLayout(this);
   QGridLayout *gridLayout = new QGridLayout;
-  
+
   // detector size
   gridLayout->addWidget(new QLabel("Detector Size", this), row, 0);
   m_detSizeEdit = new QLineEdit(this);
@@ -1153,7 +1153,7 @@ CWInstrCcdEevEdit::CWInstrCcdEevEdit(const struct instrumental_ccdeev *d, QWidge
   helperConstructFileWidget(&m_fileFourEdit, gridLayout, row,
 			    d->detectorNonLinearityFile, sizeof(d->detectorNonLinearityFile),
 			    "Det. Non-Linearity", SLOT(slotDetectorNonLinearityFourBrowse()));
-  
+
   gridLayout->setColumnMinimumWidth(0, cSuggestedColumnZeroWidth);
   gridLayout->setColumnMinimumWidth(2, cSuggestedColumnTwoWidth);
 
@@ -1171,7 +1171,7 @@ CWInstrCcdEevEdit::CWInstrCcdEevEdit(const struct instrumental_ccdeev *d, QWidge
 CWInstrCcdEevEdit::~CWInstrCcdEevEdit()
 {
 }
-  
+
 void CWInstrCcdEevEdit::apply(struct instrumental_ccdeev *d) const
 {
   // detector size
@@ -1179,9 +1179,9 @@ void CWInstrCcdEevEdit::apply(struct instrumental_ccdeev *d) const
 
   // files
   strcpy(d->calibrationFile, m_fileOneEdit->text().toAscii().data());
-  strcpy(d->instrFunctionFile, m_fileTwoEdit->text().toAscii().data());  
-  strcpy(d->straylightCorrectionFile, m_fileThreeEdit->text().toAscii().data());  
-  strcpy(d->detectorNonLinearityFile, m_fileFourEdit->text().toAscii().data());  
+  strcpy(d->instrFunctionFile, m_fileTwoEdit->text().toAscii().data());
+  strcpy(d->straylightCorrectionFile, m_fileThreeEdit->text().toAscii().data());
+  strcpy(d->detectorNonLinearityFile, m_fileFourEdit->text().toAscii().data());
 }
 
 //--------------------------------------------------------
@@ -1193,7 +1193,7 @@ CWInstrOpusEdit::CWInstrOpusEdit(const struct instrumental_opus *d, QWidget *par
   int row = 0;
   QVBoxLayout *mainLayout = new QVBoxLayout(this);
   QGridLayout *gridLayout = new QGridLayout;
-  
+
   // detector size
   gridLayout->addWidget(new QLabel("Detector Size", this), row, 0);
   m_detSizeEdit = new QLineEdit(this);
@@ -1232,7 +1232,7 @@ CWInstrOpusEdit::CWInstrOpusEdit(const struct instrumental_opus *d, QWidget *par
   tmpStr.setNum(d->detectorSize);
   m_detSizeEdit->validator()->fixup(tmpStr);
   m_detSizeEdit->setText(tmpStr);
-  
+
   // transmittance
   m_transmittanceCheck->setCheckState(d->flagTransmittance ? Qt::Checked : Qt::Unchecked);
 
@@ -1246,7 +1246,7 @@ CWInstrOpusEdit::CWInstrOpusEdit(const struct instrumental_opus *d, QWidget *par
 CWInstrOpusEdit::~CWInstrOpusEdit()
 {
 }
-  
+
 void CWInstrOpusEdit::apply(struct instrumental_opus *d) const
 {
   // detector size
@@ -1260,7 +1260,7 @@ void CWInstrOpusEdit::apply(struct instrumental_opus *d) const
 
   // files
   strcpy(d->calibrationFile, m_fileOneEdit->text().toAscii().data());
-  strcpy(d->instrFunctionFile, m_fileTwoEdit->text().toAscii().data());  
+  strcpy(d->instrFunctionFile, m_fileTwoEdit->text().toAscii().data());
 }
 
 //--------------------------------------------------------
@@ -1284,12 +1284,12 @@ CWInstrGdpEdit::CWInstrGdpEdit(const struct instrumental_gdp *d, QWidget *parent
   m_bandTypeCombo->addItem("Band 4", QVariant(PRJCT_INSTR_GDP_BAND_4));
   gridLayout->addWidget(m_bandTypeCombo, row, 1);
   ++row;
-  
+
   // files
   helperConstructCalInsFileWidgets(gridLayout, row,
 				   d->calibrationFile, sizeof(d->calibrationFile),
 				   d->instrFunctionFile, sizeof(d->instrFunctionFile));
-  
+
   gridLayout->setColumnMinimumWidth(0, cSuggestedColumnZeroWidth);
   gridLayout->setColumnMinimumWidth(2, cSuggestedColumnTwoWidth);
 
@@ -1307,7 +1307,7 @@ CWInstrGdpEdit::CWInstrGdpEdit(const struct instrumental_gdp *d, QWidget *parent
 CWInstrGdpEdit::~CWInstrGdpEdit()
 {
 }
-  
+
 void CWInstrGdpEdit::apply(struct instrumental_gdp *d) const
 {
   // band
@@ -1315,7 +1315,7 @@ void CWInstrGdpEdit::apply(struct instrumental_gdp *d) const
 
   // files
   strcpy(d->calibrationFile, m_fileOneEdit->text().toAscii().data());
-  strcpy(d->instrFunctionFile, m_fileTwoEdit->text().toAscii().data());  
+  strcpy(d->instrFunctionFile, m_fileTwoEdit->text().toAscii().data());
 }
 
 //--------------------------------------------------------------------------
@@ -1329,7 +1329,7 @@ CWInstrSciaEdit::CWInstrSciaEdit(const struct instrumental_scia *d, QWidget *par
   int row = 0;
   QVBoxLayout *mainLayout = new QVBoxLayout(this);
   QGridLayout *gridLayout = new QGridLayout;
-  
+
   // channel
   gridLayout->addWidget(new QLabel("Channel", this), row, 0);
   m_channelCombo = new QComboBox(this);
@@ -1339,7 +1339,7 @@ CWInstrSciaEdit::CWInstrSciaEdit(const struct instrumental_scia *d, QWidget *par
   m_channelCombo->addItem("Channel 4", QVariant(PRJCT_INSTR_SCIA_CHANNEL_4));
   gridLayout->addWidget(m_channelCombo, row, 1);
   ++row;
-  
+
   // clusters
   gridLayout->addWidget(new QLabel("Clusters", this), row, 0);
   QHBoxLayout *checkLayout = new QHBoxLayout;
@@ -1384,7 +1384,7 @@ CWInstrSciaEdit::CWInstrSciaEdit(const struct instrumental_scia *d, QWidget *par
   }
 
   m_referenceEdit->setText(QString(d->sunReference));
-  
+
   // connections
   connect(m_channelCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(slotChannelChanged(int)));
 
@@ -1413,9 +1413,9 @@ void CWInstrSciaEdit::apply(struct instrumental_scia *d) const
 
   // files
   strcpy(d->calibrationFile, m_fileOneEdit->text().toAscii().data());
-  strcpy(d->instrFunctionFile, m_fileTwoEdit->text().toAscii().data());  
+  strcpy(d->instrFunctionFile, m_fileTwoEdit->text().toAscii().data());
 }
-  
+
 void CWInstrSciaEdit::slotChannelChanged(int index)
 {
   int i;
@@ -1512,7 +1512,7 @@ CWInstrOmiEdit::CWInstrOmiEdit(const struct instrumental_omi *d, QWidget *parent
   m_spectralTypeCombo->addItem("Visible", QVariant(PRJCT_INSTR_OMI_TYPE_VIS));
   gridLayout->addWidget(m_spectralTypeCombo, row, 1);
   ++row;
-  
+
   // spectral range
   gridLayout->addWidget(new QLabel("Wavelength Range (nm)", this), row, 0);
   QHBoxLayout *rangeLayout = new QHBoxLayout;
@@ -1532,12 +1532,12 @@ CWInstrOmiEdit::CWInstrOmiEdit(const struct instrumental_omi *d, QWidget *parent
   m_averageCheck = new QCheckBox("Average spectra in tracks", this);
   gridLayout->addWidget(m_averageCheck, row, 1, 1, 2, Qt::AlignLeft);
   ++row;
-  
+
   // files
   helperConstructCalInsFileWidgets(gridLayout, row,
 				   d->calibrationFile, sizeof(d->calibrationFile),
 				   d->instrFunctionFile, sizeof(d->instrFunctionFile));
-  
+
   gridLayout->setColumnMinimumWidth(0, cSuggestedColumnZeroWidth);
   gridLayout->setColumnMinimumWidth(2, cSuggestedColumnTwoWidth);
 
@@ -1567,7 +1567,7 @@ CWInstrOmiEdit::CWInstrOmiEdit(const struct instrumental_omi *d, QWidget *parent
 CWInstrOmiEdit::~CWInstrOmiEdit()
 {
 }
-  
+
 void CWInstrOmiEdit::apply(struct instrumental_omi *d) const
 {
   // spectral
@@ -1581,6 +1581,6 @@ void CWInstrOmiEdit::apply(struct instrumental_omi *d) const
 
   // files
   strcpy(d->calibrationFile, m_fileOneEdit->text().toAscii().data());
-  strcpy(d->instrFunctionFile, m_fileTwoEdit->text().toAscii().data());  
+  strcpy(d->instrFunctionFile, m_fileTwoEdit->text().toAscii().data());
 }
 

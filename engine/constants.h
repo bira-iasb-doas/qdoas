@@ -593,6 +593,12 @@ enum _ulbCurveTypes
   PRJCT_INSTR_ULB_TYPE_MAX
  };
 
+enum _saozSpectrumRegion
+ {
+ 	PRJCT_INSTR_SAOZ_REGION_UV,
+ 	PRJCT_INSTR_SAOZ_REGION_VIS
+ };
+
 enum _saozSpectrumTypes
  {
   PRJCT_INSTR_SAOZ_TYPE_ZENITHAL,

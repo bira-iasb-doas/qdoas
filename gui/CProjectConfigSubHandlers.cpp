@@ -24,7 +24,7 @@ bool CPathSubHandler::start(const QString &element, const QXmlAttributes &atts)
 {
   // should be a path element <path index="?">/this/is/the/path</path>
 
-  
+
   if (element == "path") {
     bool ok;
     m_index = atts.value("index").toInt(&ok);
@@ -82,7 +82,7 @@ bool CSiteSubHandler::start(const QString &element, const QXmlAttributes &atts)
 
     // create a new config item for the site
     CSiteConfigItem *item = new CSiteConfigItem;
-    
+
     str = atts.value("name");
     if (str.isEmpty()) {
       delete item;
@@ -92,7 +92,7 @@ bool CSiteSubHandler::start(const QString &element, const QXmlAttributes &atts)
       item->setSiteName(str);
 
     str = atts.value("abbrev");
-    if (!str.isEmpty())    
+    if (!str.isEmpty())
       item->setAbbreviation(str);
 
     tmpDouble = atts.value("long").toDouble(&ok);
@@ -324,7 +324,7 @@ bool CProjectSpectraSubHandler::start(const QString &element, const QXmlAttribut
       m_spectra->geo.sites.radius = tmp;
   }
   else if (element == "geolocation") {
-    
+
     QString selected = atts.value("selected");
 
     if (selected == "circle")
@@ -376,8 +376,8 @@ bool CProjectAnalysisSubHandler::start(const QXmlAttributes &atts)
     m_analysis->methodType = PRJCT_ANLYS_METHOD_SVDMARQUARDT;
   else
     return postErrorMessage("Invalid analysis method");
-  
-  
+
+
   str = atts.value("fit");
   if (str == "none")
     m_analysis->methodType = PRJCT_ANLYS_FIT_WEIGHTING_NONE;
@@ -385,8 +385,8 @@ bool CProjectAnalysisSubHandler::start(const QXmlAttributes &atts)
     m_analysis->methodType = PRJCT_ANLYS_FIT_WEIGHTING_INSTRUMENTAL;
   else
     return postErrorMessage("Invalid analysis fit");
-  
-  
+
+
   str = atts.value("unit");
   if (str == "pixel")
     m_analysis->methodType = PRJCT_ANLYS_UNITS_PIXELS;
@@ -394,7 +394,7 @@ bool CProjectAnalysisSubHandler::start(const QXmlAttributes &atts)
     m_analysis->methodType = PRJCT_ANLYS_UNITS_NANOMETERS;
   else
     return postErrorMessage("Invalid analysis unit");
-    
+
 
   str = atts.value("interpolation");
   if (str == "linear")
@@ -403,7 +403,7 @@ bool CProjectAnalysisSubHandler::start(const QXmlAttributes &atts)
     m_analysis->methodType = PRJCT_ANLYS_INTERPOL_SPLINE;
   else
     return postErrorMessage("Invalid analysis interpolation");
-    
+
 
   str = atts.value("gap");
   if (!str.isEmpty()) {
@@ -422,7 +422,7 @@ bool CProjectAnalysisSubHandler::start(const QXmlAttributes &atts)
     else
       return postErrorMessage("Invalid analysis gap");
   }
-      
+
   return true;
 }
 
@@ -515,14 +515,14 @@ bool CProjectFilteringSubHandler::start(const QXmlAttributes &atts)
     m_filter->mode = PRJCT_FILTER_TYPE_BINOMIAL;
   else
     return postErrorMessage("Invalid filter method");
-  
+
   return true;
 }
 
 bool CProjectFilteringSubHandler::start(const QString &element, const QXmlAttributes &atts)
 {
   // sub element of lowpass_filter or highpass_filter
-  
+
   if (element == "kaiser") {
     bool ok;
     double tmpDouble;
@@ -673,7 +673,7 @@ bool CProjectCalibrationSubHandler::start(const QXmlAttributes &atts)
     m_calibration->methodType = PRJCT_ANLYS_METHOD_SVDMARQUARDT;
   else
     return postErrorMessage("Invalid analysis method");
-    
+
   str = atts.value("ref");
   if (!str.isEmpty()) {
     str = m_master->pathExpand(str);
@@ -682,14 +682,14 @@ bool CProjectCalibrationSubHandler::start(const QXmlAttributes &atts)
     else
       return postErrorMessage("Solar Reference Filename too long");
   }
-  
+
   return true;
 }
 
 bool CProjectCalibrationSubHandler::start(const QString &element, const QXmlAttributes &atts)
 {
   // sub element of calibration
-  
+
   if (element == "line") {
     QString str;
     bool ok;
@@ -785,7 +785,7 @@ bool CProjectUndersamplingSubHandler::start(const QXmlAttributes &atts)
     m_undersampling->method = PRJCT_USAMP_AUTOMATIC;
   else
     return postErrorMessage("Invalid analysis method");
-  
+
   str = atts.value("ref");
   if (!str.isEmpty()) {
     str = m_master->pathExpand(str);
@@ -835,39 +835,39 @@ bool CProjectInstrumentalSubHandler::start(const QXmlAttributes &atts)
     m_instrumental->format = PRJCT_INSTR_FORMAT_PDAEGG_OLD;
   else if (str == "pdaegg_ulb")
     m_instrumental->format = PRJCT_INSTR_FORMAT_PDAEGG_ULB;
-  else if (str == "ccd_ohp_96")
+  else if (str == "ccdohp_96")
     m_instrumental->format = PRJCT_INSTR_FORMAT_CCD_OHP_96;
-  else if (str == "ccd_ha_94")
+  else if (str == "ccdha_94")
     m_instrumental->format = PRJCT_INSTR_FORMAT_CCD_HA_94;
-  else if (str == "ccd_ulb")
+  else if (str == "ccdulb")
     m_instrumental->format = PRJCT_INSTR_FORMAT_CCD_ULB;
-  else if (str == "saoz_vis")
+  else if (str == "saozvis")
     m_instrumental->format = PRJCT_INSTR_FORMAT_SAOZ_VIS;
-  else if (str == "saoz_uv")
+  else if (str == "saozuv")
     m_instrumental->format = PRJCT_INSTR_FORMAT_SAOZ_UV;
-  else if (str == "saoz_efm")
+  else if (str == "saozefm")
     m_instrumental->format = PRJCT_INSTR_FORMAT_SAOZ_EFM;
   else if (str == "mfc")
     m_instrumental->format = PRJCT_INSTR_FORMAT_MFC;
-  else if (str == "mfc_std")
+  else if (str == "mfcstd")
     m_instrumental->format = PRJCT_INSTR_FORMAT_MFC_STD;
   else if (str == "rasas")
     m_instrumental->format = PRJCT_INSTR_FORMAT_RASAS;
-  else if (str == "pdasi_easoe")
+  else if (str == "pdasieasoe")
     m_instrumental->format = PRJCT_INSTR_FORMAT_PDASI_EASOE;
-  else if (str == "pdasi_osma")
+  else if (str == "pdasiosma")
     m_instrumental->format = PRJCT_INSTR_FORMAT_PDASI_OSMA;
-  else if (str == "ccd_eev")
+  else if (str == "ccdeev")
     m_instrumental->format = PRJCT_INSTR_FORMAT_CCD_EEV;
   else if (str == "opus")
     m_instrumental->format = PRJCT_INSTR_FORMAT_OPUS;
-  else if (str == "gdp_ascii")
+  else if (str == "gdpascii")
     m_instrumental->format = PRJCT_INSTR_FORMAT_GDP_ASCII;
-  else if (str == "gdp_bin")
+  else if (str == "gdpbin")
     m_instrumental->format = PRJCT_INSTR_FORMAT_GDP_BIN;
-  else if (str == "scia_hdf")
+  else if (str == "sciahdf")
     m_instrumental->format = PRJCT_INSTR_FORMAT_SCIA_HDF;
-  else if (str == "scia_pds")
+  else if (str == "sciapds")
     m_instrumental->format = PRJCT_INSTR_FORMAT_SCIA_PDS;
   else if (str == "uoft")
     m_instrumental->format = PRJCT_INSTR_FORMAT_UOFT;
@@ -879,7 +879,7 @@ bool CProjectInstrumentalSubHandler::start(const QXmlAttributes &atts)
     m_instrumental->format = PRJCT_INSTR_FORMAT_GOME2;
   else
     return postErrorMessage("Invalid instrumental format");
-  
+
   str = atts.value("site");
   if (!str.isEmpty()) {
     if (str.length() < (int)sizeof(m_instrumental->siteName))
@@ -894,7 +894,7 @@ bool CProjectInstrumentalSubHandler::start(const QXmlAttributes &atts)
 bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAttributes &atts)
 {
   // format specific children of instrumental
-  
+
   if (element == "ascii") { // ASCII
     QString str;
     bool ok;
@@ -970,7 +970,7 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
       else
 	return postErrorMessage("Instrument Function Filename too long");
     }
-    
+
   }
   else if (element == "pdaegg") { // PDA EGG
     return helperLoadLogger(atts, &(m_instrumental->pdaegg));
@@ -1010,7 +1010,7 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
       else
 	return postErrorMessage("Instrument Function Filename too long");
     }
-    
+
     str = atts.value("ipv");
     if (!str.isEmpty()) {
       str = m_master->pathExpand(str);
@@ -1019,7 +1019,7 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
       else
 	return postErrorMessage("Inter Pixel Variability Filename too long");
     }
-    
+
     str = atts.value("dnl");
     if (!str.isEmpty()) {
       str = m_master->pathExpand(str);
@@ -1028,7 +1028,7 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
       else
 	return postErrorMessage("Detector Non-Linearity Filename too long");
     }
-    
+
   }
   else if (element == "ccdohp96") { // CCD OHP 96
     return helperLoadCcd(atts, &(m_instrumental->ccdohp96));
@@ -1054,7 +1054,7 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
       m_instrumental->ccdulb.centralWavelength = tmpInt;
     else
       return postErrorMessage("Invalid ccdulb central wavelength");
-    
+
     str = atts.value("calib");
     if (!str.isEmpty()) {
       str = m_master->pathExpand(str);
@@ -1063,7 +1063,7 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
       else
 	return postErrorMessage("Calibration Filename too long");
     }
-    
+
     str = atts.value("offset");
     if (!str.isEmpty()) {
       str = m_master->pathExpand(str);
@@ -1072,7 +1072,7 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
       else
 	return postErrorMessage("Offset Filename too long");
     }
-    
+
     str = atts.value("ipv");
     if (!str.isEmpty()) {
       str = m_master->pathExpand(str);
@@ -1081,7 +1081,7 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
       else
 	return postErrorMessage("Inter Pixel Variability Filename too long");
     }
-    
+
     str = atts.value("dnl");
     if (!str.isEmpty()) {
       str = m_master->pathExpand(str);
@@ -1101,7 +1101,7 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
 
   }
   else if (element == "saozefm") { // SAOZ EFM
-    return helperLoadRasas(atts, &(m_instrumental->saozefm));
+    return helperLoadMinimum(atts, &(m_instrumental->saozefm));
 
   }
   else if (element == "mfc") { // MFC
@@ -1121,7 +1121,7 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
       m_instrumental->mfc.firstWavelength = tmpInt;
     else
       return postErrorMessage("Invalid mfc first wavelength");
-    
+
     m_instrumental->mfc.revert = (atts.value("revert") == "true") ? 1 : 0;
     m_instrumental->mfc.autoFileSelect = (atts.value("auto") == "true") ? 1 : 0;
 
@@ -1130,7 +1130,7 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
       m_instrumental->mfc.offsetMask = tmpUint;
     else
       return postErrorMessage("Invalid mfc omask");
-    
+
     tmpUint = atts.value("imask").toUInt(&ok);
     if (ok)
       m_instrumental->mfc.instrFctnMask = tmpUint;
@@ -1157,7 +1157,7 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
       else
 	return postErrorMessage("Calibration Filename too long");
     }
-    
+
     str = atts.value("instr");
     if (!str.isEmpty()) {
       str = m_master->pathExpand(str);
@@ -1174,7 +1174,7 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
       else
 	return postErrorMessage("Dark Current Filename too long");
     }
-    
+
     str = atts.value("offset");
     if (!str.isEmpty()) {
       str = m_master->pathExpand(str);
@@ -1183,7 +1183,7 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
       else
 	return postErrorMessage("Offset Filename too long");
     }
-    
+
   }
   else if (element == "mfcstd") { // MFC STD
     QString str;
@@ -1206,7 +1206,7 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
       else
 	return postErrorMessage("Calibration Filename too long");
     }
-    
+
     str = atts.value("instr");
     if (!str.isEmpty()) {
       str = m_master->pathExpand(str);
@@ -1223,7 +1223,7 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
       else
 	return postErrorMessage("Dark Current Filename too long");
     }
-    
+
     str = atts.value("offset");
     if (!str.isEmpty()) {
       str = m_master->pathExpand(str);
@@ -1232,14 +1232,14 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
       else
 	return postErrorMessage("Offset Filename too long");
     }
-    
+
   }
   else if (element == "rasas") { // RASAS
-    return helperLoadRasas(atts, &(m_instrumental->rasas));
+    return helperLoadMinimum(atts, &(m_instrumental->rasas));
 
   }
   else if (element == "pdasieasoe") { // PDASI EASOE
-    return helperLoadRasas(atts, &(m_instrumental->pdasieasoe));
+    return helperLoadMinimum(atts, &(m_instrumental->pdasieasoe));
 
   }
   else if (element == "pdasiosma") { // PDASI OSMA
@@ -1250,13 +1250,13 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
     QString str;
     bool ok;
     int tmpInt;
-    
+
     tmpInt = atts.value("size").toInt(&ok);
     if (ok)
       m_instrumental->ccdeev.detectorSize = tmpInt;
     else
       return postErrorMessage("Invalid ccdeev Detector Size");
-      
+
     str = atts.value("calib");
     if (!str.isEmpty()) {
       str = m_master->pathExpand(str);
@@ -1274,7 +1274,7 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
       else
 	return postErrorMessage("Instrument Function Filename too long");
     }
-    
+
     str = atts.value("stray");
     if (!str.isEmpty()) {
       str = m_master->pathExpand(str);
@@ -1283,7 +1283,7 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
       else
 	return postErrorMessage("Stray Light Correction Filename too long");
     }
-    
+
     str = atts.value("dnl");
     if (!str.isEmpty()) {
       str = m_master->pathExpand(str);
@@ -1292,7 +1292,7 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
       else
 	return postErrorMessage("Detector Non-Linearity Filename too long");
     }
-    
+
   }
   else if (element == "opus") { // OPUS
     QString str;
@@ -1305,7 +1305,7 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
       m_instrumental->opus.detectorSize = tmpInt;
     else
       return postErrorMessage("Invalid opus Detector Size");
-      
+
     tmpDouble = atts.value("time").toDouble(&ok);
     if (ok)
       m_instrumental->opus.timeShift = tmpDouble;
@@ -1331,7 +1331,7 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
       else
 	return postErrorMessage("Instrument Function Filename too long");
     }
-     
+
   }
   else if (element == "gdpascii") { // GDP ASCII
     helperLoadGdp(atts, &(m_instrumental->gdpascii));
@@ -1350,11 +1350,11 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
 
   }
   else if (element == "uoft") { // UOFT
-    return helperLoadRasas(atts, &(m_instrumental->uoft));
+    return helperLoadMinimum(atts, &(m_instrumental->uoft));
 
   }
   else if (element == "noaa") { // NOAA
-    return helperLoadRasas(atts, &(m_instrumental->noaa));
+    return helperLoadMinimum(atts, &(m_instrumental->noaa));
 
   }
   else if (element == "omi") { // OMI
@@ -1403,7 +1403,7 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
       else
 	return postErrorMessage("Instrument Function Filename too long");
     }
-    
+
   }
 
   // ... other formats ...
@@ -1436,7 +1436,7 @@ bool CProjectInstrumentalSubHandler::helperLoadLogger(const QXmlAttributes &atts
     else
       return postErrorMessage("Calibration Filename too long");
   }
-  
+
   str = atts.value("instr");
   if (!str.isEmpty()) {
     str = m_master->pathExpand(str);
@@ -1470,7 +1470,7 @@ bool CProjectInstrumentalSubHandler::helperLoadSaoz(const QXmlAttributes &atts, 
     else
       return postErrorMessage("Calibration Filename too long");
   }
-  
+
   str = atts.value("instr");
   if (!str.isEmpty()) {
     str = m_master->pathExpand(str);
@@ -1483,7 +1483,7 @@ bool CProjectInstrumentalSubHandler::helperLoadSaoz(const QXmlAttributes &atts, 
   return true;
 }
 
-bool CProjectInstrumentalSubHandler::helperLoadRasas(const QXmlAttributes &atts, struct instrumental_rasas *d)
+bool CProjectInstrumentalSubHandler::helperLoadMinimum(const QXmlAttributes &atts, struct instrumental_minimum *d)
 {
   QString str;
 
@@ -1495,7 +1495,7 @@ bool CProjectInstrumentalSubHandler::helperLoadRasas(const QXmlAttributes &atts,
     else
       return postErrorMessage("Calibration Filename too long");
   }
-  
+
   str = atts.value("instr");
   if (!str.isEmpty()) {
     str = m_master->pathExpand(str);
@@ -1520,7 +1520,7 @@ bool CProjectInstrumentalSubHandler::helperLoadCcd(const QXmlAttributes &atts, s
     else
       return postErrorMessage("Calibration Filename too long");
   }
-  
+
   str = atts.value("instr");
   if (!str.isEmpty()) {
     str = m_master->pathExpand(str);
@@ -1538,7 +1538,7 @@ bool CProjectInstrumentalSubHandler::helperLoadCcd(const QXmlAttributes &atts, s
     else
       return postErrorMessage("Inter Pixel Variability Filename too long");
   }
-  
+
   str = atts.value("dnl");
   if (!str.isEmpty()) {
     str = m_master->pathExpand(str);
@@ -1547,7 +1547,7 @@ bool CProjectInstrumentalSubHandler::helperLoadCcd(const QXmlAttributes &atts, s
     else
       return postErrorMessage("Detector Non-Linearity Filename too long");
   }
-  
+
   return true;
 }
 
@@ -1568,9 +1568,9 @@ bool CProjectInstrumentalSubHandler::helperLoadGdp(const QXmlAttributes &atts, s
     d->bandType = PRJCT_INSTR_GDP_BAND_3;
   else if (str == "3")
     d->bandType = PRJCT_INSTR_GDP_BAND_4;
-  else 
+  else
     return postErrorMessage("Invalid gdp band");
-  
+
   str = atts.value("calib");
   if (!str.isEmpty()) {
     str = m_master->pathExpand(str);
@@ -1579,7 +1579,7 @@ bool CProjectInstrumentalSubHandler::helperLoadGdp(const QXmlAttributes &atts, s
     else
       return postErrorMessage("Calibration Filename too long");
   }
-  
+
   str = atts.value("instr");
   if (!str.isEmpty()) {
     str = m_master->pathExpand(str);
@@ -1588,7 +1588,7 @@ bool CProjectInstrumentalSubHandler::helperLoadGdp(const QXmlAttributes &atts, s
     else
       return postErrorMessage("Instrument Function Filename too long");
   }
-  
+
   return true;
 }
 
@@ -1605,9 +1605,9 @@ bool CProjectInstrumentalSubHandler::helperLoadScia(const QXmlAttributes &atts, 
     d->channel = PRJCT_INSTR_SCIA_CHANNEL_3;
   else if (str == "4")
     d->channel = PRJCT_INSTR_SCIA_CHANNEL_4;
-  else 
+  else
     return postErrorMessage("Invalid scia channel");
-  
+
   // clusters
   memset(d->clusters, 0, sizeof(d->clusters)); // zero
   d->clusters[2]  = (atts.value("c2")  == "true") ? 1 : 0;
@@ -1640,7 +1640,7 @@ bool CProjectInstrumentalSubHandler::helperLoadScia(const QXmlAttributes &atts, 
     else
       return postErrorMessage("Sun Reference too long");
   }
-  
+
   str = atts.value("calib");
   if (!str.isEmpty()) {
     str = m_master->pathExpand(str);
@@ -1649,7 +1649,7 @@ bool CProjectInstrumentalSubHandler::helperLoadScia(const QXmlAttributes &atts, 
     else
       return postErrorMessage("Calibration Filename too long");
   }
-  
+
   str = atts.value("instr");
   if (!str.isEmpty()) {
     str = m_master->pathExpand(str);
@@ -1658,7 +1658,7 @@ bool CProjectInstrumentalSubHandler::helperLoadScia(const QXmlAttributes &atts, 
     else
       return postErrorMessage("Instrument Function Filename too long");
   }
-  
+
   return true;
 }
 

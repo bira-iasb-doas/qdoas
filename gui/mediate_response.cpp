@@ -117,7 +117,7 @@ void mediateResponseCellInfo(int page,
 				   const char *stringFormat,...)
  {
  	va_list argList;
- 	char stringValue[80];
+ 	char stringValue[1024];
 
   va_start(argList,stringFormat);
   vsprintf(stringValue,stringFormat,argList);

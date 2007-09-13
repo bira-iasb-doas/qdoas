@@ -1,4 +1,4 @@
- 
+
 //  ----------------------------------------------------------------------------
 //
 //  Product/Project   :  THE BIRA-IASB DOAS SOFTWARE FOR WINDOWS AND LINUX
@@ -10,7 +10,7 @@
 //  Author            :  Kjersti KARLSEN (1) (kjk@nilu.no)
 //  Adaptations       :  Caroline FAYT (2) (caroline.fayt@oma.be)
 //
-//  QDOAS is a cross-platform application developed in QT for DOAS retrieval 
+//  QDOAS is a cross-platform application developed in QT for DOAS retrieval
 //  (Differential Optical Absorption Spectroscopy).
 //
 //  The QT version of the program has been developed jointly by the Belgian
@@ -19,21 +19,21 @@
 //
 //      BIRA-IASB                                   S[&]T
 //      Belgian Institute for Space Aeronomy        Science [&] Technology
-//      Avenue Circulaire, 3                        Postbus 608                   
-//      1180     UCCLE                              2600 AP Delft                 
-//      BELGIUM                                     THE NETHERLANDS               
-//      caroline.fayt@aeronomie.be                  info@stcorp.nl                
+//      Avenue Circulaire, 3                        Postbus 608
+//      1180     UCCLE                              2600 AP Delft
+//      BELGIUM                                     THE NETHERLANDS
+//      caroline.fayt@aeronomie.be                  info@stcorp.nl
 //
 //  This program is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU General Public License
 //  as published by the Free Software Foundation; either version 2
 //  of the License, or (at your option) any later version.
-//  
+//
 //  This program is distributed in the hope that it will be useful,
 //  but WITHOUT ANY WARRANTY; without even the implied warranty of
 //  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //  GNU General Public License for more details.
-//  
+//
 //  You should have received a copy of the GNU General Public License
 //  along with this program; if not, write to the Free Software Foundation,
 //  Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
@@ -296,8 +296,7 @@ RC ReliActon_Logger(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,
       pTemp=strcpy(pTemp,pSpecInfo->Nom);
 
       pTemp=(pSpecInfo->project.instrumental.user==PRJCT_INSTR_NILU_FORMAT_OLD)?pTemp+12:pTemp+15;
-      pSpecInfo->Zm=(double)atof(pTemp)/100.;
-//      pSpecInfo->Zm=(double)pSpecInfo->Zm/((pSpecInfo->project.instrumental.user==PRJCT_INSTR_NILU_FORMAT_OLD)?10.:100.); /* changed from 10 to 100 when two decimals in the SZA, 14.08.98 kjk*/
+      pSpecInfo->Zm=(double)atof(pTemp)/((pSpecInfo->project.instrumental.user==PRJCT_INSTR_NILU_FORMAT_OLD)?10.:100.); /* changed from 10 to 100 when two decimals in the SZA, 14.08.98 kjk*/
       pSpecInfo->Azimuth=(double)-1;
 
       pRecord=pRecord+20;
@@ -344,7 +343,7 @@ RC ReliActon_Logger(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,
         pRecord=pRecord+length+1;
        }
 
-      // Dark current read out (the dark current subtraction is made in the calling function)
+      // Dark current read out
 
       if ((darkFp!=NULL) && (pSpecInfo->NSomme>0))
        {
@@ -373,6 +372,11 @@ RC ReliActon_Logger(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,
              }
            }
          }
+
+        // Dark current subtraction
+
+        for (i=0;i<NDET;i++)
+         pSpecInfo->spectrum[i]-=pSpecInfo->darkCurrent[i];
        }
 
       // Daily automatic reference spectrum

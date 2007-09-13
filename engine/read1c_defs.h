@@ -12,6 +12,8 @@
 #define SCAN_LIMB_DURATION 24
 #define SCAN_LIMB_STEP_DURATION 3
 
+#pragma pack(1)
+
 				/* Error list (to be extended ...) */
 typedef enum L1C_error {OK,		/* No error */
 		FILE_NOT_FOUND,	/* File cannot be opened */

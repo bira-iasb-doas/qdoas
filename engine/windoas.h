@@ -80,6 +80,8 @@
 #define ERROR_TYPE_TIME                        0x10
 #define ERROR_TYPE_OWNERDRAWN                  0x20
 
+#pragma pack(1)
+
 // ======================
 // STRUCTURES DEFINITIONS
 // ======================
@@ -1152,13 +1154,13 @@ enum _prjctInstrFormat
   PRJCT_INSTR_FORMAT_CCD_OHP_96,                       // CCD (OHP 96)
   PRJCT_INSTR_FORMAT_CCD_HA_94,                        // CCD (HARESTUA 94)
   PRJCT_INSTR_FORMAT_CCD_ULB,                          // CCD (ULB)
-  PRJCT_INSTR_FORMAT_SAOZ_VIS,                         // SAOZ visible
+  PRJCT_INSTR_FORMAT_SAOZ_PCDNMOS,                     // SAOZ PCD/NMOS (512)
   PRJCT_INSTR_FORMAT_SAOZ_UV,                          // SAOZ UV
   PRJCT_INSTR_FORMAT_SAOZ_EFM,                         // SAOZ EFM (1024)
   PRJCT_INSTR_FORMAT_MFC,                              // MFC Heidelberg
   PRJCT_INSTR_FORMAT_MFC_STD,                          // MFC Heidelberg
   PRJCT_INSTR_FORMAT_RASAS,                            // RASAS (INTA)
-  PRJCT_INSTR_FORMAT_PDASI_EASOE,                       // EASOE
+  PRJCT_INSTR_FORMAT_PDASI_EASOE,                      // EASOE
   PRJCT_INSTR_FORMAT_PDASI_OSMA,                       // PDA SI (OSMA)
   PRJCT_INSTR_FORMAT_CCD_EEV,                          // CCD EEV
   PRJCT_INSTR_FORMAT_OPUS,                             // FOURIER,OPUS format
@@ -1173,12 +1175,10 @@ enum _prjctInstrFormat
   PRJCT_INSTR_FORMAT_MAX
  };
 
-enum _ulbCurveTypes
+enum _saozSpectrumRegion
  {
-  PRJCT_INSTR_ULB_TYPE_MANUAL,
-  PRJCT_INSTR_ULB_TYPE_HIGH,
-  PRJCT_INSTR_ULB_TYPE_LOW,
-  PRJCT_INSTR_ULB_TYPE_MAX
+ 	PRJCT_INSTR_SAOZ_REGION_UV,
+ 	PRJCT_INSTR_SAOZ_REGION_VIS
  };
 
 enum _saozSpectrumTypes
@@ -1268,6 +1268,21 @@ typedef struct _prjctAsciiFormat
  }
 PRJCT_ASCII;
 
+typedef struct _prjctSaozFormat
+ {
+ 	int spectralRegion;
+ 	int spectralType;
+ }
+PRJCT_SAOZ;
+
+typedef struct _prjctSciaFormat
+ {
+  INT         sciaChannel;
+  INT         sciaCluster[6];
+  UCHAR       sciaReference[4];
+ }
+PRJCT_SCIA;
+
 typedef struct _prjctInstrumental
  {
   UCHAR       observationSite[MAX_ITEM_NAME_LEN+1];    // index of observation site in list
@@ -1281,10 +1296,9 @@ typedef struct _prjctInstrumental
   INT         azimuthFlag;
   INT         averageFlag;
   PRJCT_ASCII ascii;
+  PRJCT_SAOZ  saoz;
+  PRJCT_SCIA  scia;
   INT         wavelength;
-  INT         sciaChannel;
-  INT         sciaCluster[6];
-  UCHAR       sciaReference[4];
   UINT        mfcMaskOffset;
   UINT        mfcMaskDark;
   UINT        mfcMaskInstr;
@@ -1778,20 +1792,6 @@ typedef struct _satelliteGeoloc
 SATELLITE_GEOLOC;
 
 //
-// OPUS format : these data have been provided by Ann-Carine VANDAELE, ULB
-//
-
-typedef struct _opusData
- {
-  UCHAR  Apodization[5],SampleName[64],SampleForm[64],ChemistName[64],Date[15],Time[10];
-  BOOL   Ascending;
-  ULONG  NumberPoints;
-  double WaveLow,WaveHigh,Resolution,Dispersion,ScaleFactor,Scantime;
-  float  IrisDiameter,Maximum;
- }
-OPUS_DATA;
-
-//
 // GOME format
 //
 
@@ -1864,7 +1864,9 @@ typedef struct _specInfo                                                        
   double *lembda,                                                               // wavelengths
          *spectrum,                                                             // raw spectrum
          *sigmaSpec,                                                            // error on raw spectrum if any
+         *irrad,                                                                // irradiance spectrum (for satellites measurements)
          *darkCurrent,                                                          // dark current
+         *specMaxx,                                                             // scans number for SpecMax
          *specMax,                                                              // maxima of signal over scans
          *instrFunction,                                                        // instrumental function
          *varPix,                                                               // variability interpixel
@@ -1889,9 +1891,9 @@ typedef struct _specInfo                                                        
 
   CCD     ccd;
 
-// QDOAS ---> include information
+  // QDOAS ---> include information
 
-  int recordIndexesSize;
+  int     recordIndexesSize;
   INT     recordSize;                                          // size of record if length fixed
   INDEX   indexFile,indexProject;
   INT     lastSavedRecord;
@@ -1946,14 +1948,8 @@ typedef struct _specInfo                                                        
 
   INDEX indexBand;
 
-  // CCD ULB
-
-  short NGrating;
-  float Nanometers;
-
   // information specific to a format
 
-  OPUS_DATA opus;                                                               // OPUS format
   GOME_DATA gome;                                                               // GOME format
   SCIA_DATA scia;                                                               // SCIAMACHY format
   GOME2_DATA gome2;                                                             // GOME2 format

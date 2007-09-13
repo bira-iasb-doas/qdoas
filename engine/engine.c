@@ -45,6 +45,8 @@ void EngineDestroyContext(ENGINE_CONTEXT *pEngineContext)
    MEMORY_ReleaseDVector("EngineDestroyContext ","spectrum",pEngineContext->spectrum,0);
   if (pEngineContext->sigmaSpec!=NULL)
    MEMORY_ReleaseDVector("EngineDestroyContext ","sigmaSpec",pEngineContext->sigmaSpec,0);
+  if (pEngineContext->irrad!=NULL)
+   MEMORY_ReleaseDVector("EngineDestroyContext ","irrad",pEngineContext->irrad,0);
   if (pEngineContext->darkCurrent!=NULL)
    MEMORY_ReleaseDVector("EngineDestroyContext ","darkCurrent",pEngineContext->darkCurrent,0);
   if (pEngineContext->specMax!=NULL)
@@ -79,13 +81,20 @@ void EngineSetProject(ENGINE_CONTEXT *pEngineContext)
  {
  	// Declarations
 
- 	PROJECT *pProject;
- 	RC rc;
- 	int i;
+ 	PROJECT *pProject;                                                            // pointer to the current project
+ 	double *lembdaInstr;                                                          // wavelength calibration of the instrument function
+ 	double *instrFunction;                                                        // instrumental function
+ 	double *instrDeriv2;                                                          // second derivative for the instrument function
+ 	RC rc;                                                                        // return code
+ 	FILE *fp;                                                                     // file pointer
+ 	UCHAR str[MAX_ITEM_TEXT_LEN+1];                                               // buffer to read the lines of the file
+ 	int i;                                                                        // index for loops and arrays
 
  	// Initializations
 
  	pProject=&pEngineContext->project;
+ 	lembdaInstr=instrFunction=instrDeriv2=NULL;
+ 	rc=ERROR_ID_NO;
 
   // Fill global variables
 
@@ -101,52 +110,130 @@ void EngineSetProject(ENGINE_CONTEXT *pEngineContext)
        (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_CCD_HA_94) ||
        (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_PDAEGG) ||
        (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_PDAEGG_OLD) ||
-       (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_PDAEGG_ULB) ||
        (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_PDASI_EASOE)) &&
 
       ((pEngineContext->recordIndexes=(ULONG *)MEMORY_AllocBuffer("EngineSetProject ","recordIndexes",2001,sizeof(ULONG),0,MEMORY_TYPE_LONG))==NULL)) ||
 
      (((pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_ASCII) ||
        (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN) ||
-       (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_HDF) ||
        (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS) ||
        (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_OMI) ||
        (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GOME2)) &&
 
-      ((pEngineContext->sigmaSpec=MEMORY_AllocDVector("EngineSetProject ","sigmaSpec",0,NDET-1))==NULL)) ||
-      ((pProject->spectra.darkFlag!=0) &&
-      ((pEngineContext->darkCurrent=MEMORY_AllocDVector("EngineSetProject ","darkCurrent",0,NDET-1))==NULL)))
+     (((pEngineContext->sigmaSpec=MEMORY_AllocDVector("EngineSetProject ","sigmaSpec",0,NDET-1))==NULL) ||
+      ((pEngineContext->irrad=MEMORY_AllocDVector("EngineSetProject ","irrad",0,NDET-1))==NULL))) ||
+
+     (((pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_ACTON) ||
+       (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_PDAEGG) ||
+       (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_PDASI_EASOE)) &&
+       ((pEngineContext->darkCurrent=MEMORY_AllocDVector("EngineSetProject ","darkCurrent",0,NDET-1))==NULL)))
 
    rc=ERROR_ID_ALLOC;
 
   else
    {
-    // Initialize buffers
+    // Load the wavelength calibration
 
-    for (i=0;i<NDET;i++)                                                        // Load calibration file from the project
-     pEngineContext->lembda[i]=i;
+    if ((fp=fopen(pProject->instrumental.calibrationFile,"rt"))!=NULL)
+     {
+      for (i=0;i<NDET;)
+       if (!fgets(str,MAX_ITEM_TEXT_LEN,fp))
+        break;
+       else if ((strchr(str,';')==NULL) && (strchr(str,'*')==NULL))
+        {
+         sscanf(str,"%lf",&pEngineContext->lembda[i]);
+         i++;
+        }
+
+      if (i!=NDET)
+       rc=ERROR_SetLast("EngineSetProject",ERROR_TYPE_FATAL,ERROR_ID_FILE_EMPTY,pProject->instrumental.calibrationFile);
+
+      fclose(fp);
+     }
+    else
+     for (i=0;i<NDET;i++)
+      pEngineContext->lembda[i]=i+1;
+
+    // Load the instrumental function
+
+    if ((fp=fopen(pProject->instrumental.instrFunction,"rt"))==NULL)
+     rc=ERROR_SetLast("EngineSetProject",ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pProject->instrumental.instrFunction);
+    else if (((pEngineContext->instrFunction=MEMORY_AllocDVector("EngineSetProject","instrFunction",0,NDET-1))==NULL) ||
+             ((lembdaInstr=MEMORY_AllocDVector("EngineSetProject","lembdaInstr",0,NDET-1))==NULL) ||
+             ((instrFunction=MEMORY_AllocDVector("EngineSetProject","instrFunction",0,NDET-1))==NULL) ||
+             ((instrDeriv2=MEMORY_AllocDVector("EngineSetProject","instrDeriv2",0,NDET-1))==NULL))
+
+     rc=ERROR_ID_ALLOC;
+
+    else
+     {
+      for (i=0;(i<NDET) && fgets(str,MAX_ITEM_TEXT_LEN,fp);)
+       if ((strchr(str,';')==NULL) && (strchr(str,'*')==NULL))
+        {
+         sscanf(str,"%lf %lf",&lembdaInstr[i],&instrFunction[i]);
+         i++;
+        }
+
+      if (!SPLINE_Deriv2(lembdaInstr,instrFunction,instrDeriv2,NDET,"EngineSetProject"))
+       rc=SPLINE_Vector(lembdaInstr,instrFunction,instrDeriv2,NDET,pEngineContext->lembda,pEngineContext->instrFunction,NDET,SPLINE_CUBIC,"EngineSetProject");
+     }
+
+    if (fp!=NULL)
+     fclose(fp);
+
+    // Initialize buffers
 
     if (pEngineContext->darkCurrent!=NULL)
      VECTOR_Init(pEngineContext->darkCurrent,(double)0.,NDET);                  // To check the initialization of the ANALYSE_zeros vector ...
    }
+
+  // Release the allocated buffers
+
+  if (lembdaInstr!=NULL)
+   MEMORY_ReleaseDVector("EngineSetProject","lembdaInstr",lembdaInstr,0);
+  if (instrFunction!=NULL)
+   MEMORY_ReleaseDVector("EngineSetProject","instrFunction",instrFunction,0);
+  if (instrDeriv2!=NULL)
+   MEMORY_ReleaseDVector("EngineSetProject","instrDeriv2",instrDeriv2,0);
  }
 
 int EngineSetFile(ENGINE_CONTEXT *pEngineContext,const char *fileName)
  {
  	// Declarations
 
+  UCHAR fileTmp[MAX_STR_LEN+1];
  	RC rc;
 
- 	// Initialization
+ 	// Initializations
 
  	rc=ERROR_ID_NO;
 
   strcpy(pEngineContext->fileName,fileName);
+  strcpy(fileTmp,fileName);
+
+  // About names of record
+
+  // SAOZ : The spectra names are used to select zenith sky or pointed measurements.
+  //        In principle, names files should be in the same directory as the spectra files
+  //        For the moment, I suppose that the file exists and if not, the selection of the
+  //        measurement is ignored.  To improve ???
+
+  if ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SAOZ_PCDNMOS) ||
+      (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_PDASI_EASOE))
+
+   pEngineContext->namesFp=fopen(FILES_BuildFileName(fileTmp,FILE_TYPE_NAMES),"rb");
+
+  // Dark current files : the file name is automatically built from the spectra file name
+
+  if ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_PDAEGG) ||
+      (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_ACTON) ||
+      (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_PDASI_EASOE))
+
+   pEngineContext->darkFp=fopen(FILES_BuildFileName(fileTmp,FILE_TYPE_DARK),"rb");
 
   // Some satellite measurements have their own functions to open the file
 
-  if ((pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_SCIA_HDF) &&
-      (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_OMI) &&
+  if ((pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_OMI) &&
       (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_SCIA_PDS) &&
       (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_GOME2) &&
      ((pEngineContext->specFp=fopen(engineContext.fileName,"rb"))==NULL))
@@ -171,27 +258,15 @@ int EngineSetFile(ENGINE_CONTEXT *pEngineContext,const char *fileName)
      break;
   // ---------------------------------------------------------------------------
      case PRJCT_INSTR_FORMAT_PDAEGG :
-      rc=SetPDA_EGG(pEngineContext,pEngineContext->specFp,1);
-     break;
-  // ---------------------------------------------------------------------------
-     case PRJCT_INSTR_FORMAT_PDAEGG_OLD :
-      rc=SetPDA_EGG(pEngineContext,pEngineContext->specFp,0);
+      rc=SetPDA_EGG(pEngineContext,pEngineContext->specFp);
      break;
   // ---------------------------------------------------------------------------
      case PRJCT_INSTR_FORMAT_LOGGER :
       rc=SetPDA_EGG_Logger(pEngineContext,pEngineContext->specFp);
      break;
   // ---------------------------------------------------------------------------
-     case PRJCT_INSTR_FORMAT_PDAEGG_ULB :
-      rc=SetPDA_EGG_Ulb(pEngineContext,pEngineContext->specFp);
-     break;
-  // ---------------------------------------------------------------------------
-     case PRJCT_INSTR_FORMAT_SAOZ_VIS :
-      rc=SetSAOZ(pEngineContext,pEngineContext->specFp,VIS);
-     break;
-  // ---------------------------------------------------------------------------
-     case PRJCT_INSTR_FORMAT_SAOZ_UV :
-      rc=SetSAOZ(pEngineContext,pEngineContext->specFp,UV);
+     case PRJCT_INSTR_FORMAT_SAOZ_PCDNMOS :
+      rc=SetSAOZ(pEngineContext,pEngineContext->specFp);
      break;
   // ---------------------------------------------------------------------------
      case PRJCT_INSTR_FORMAT_SAOZ_EFM :
@@ -234,14 +309,6 @@ int EngineSetFile(ENGINE_CONTEXT *pEngineContext,const char *fileName)
       rc=SetCCD(pEngineContext,pEngineContext->specFp,1);
      break;
   // ---------------------------------------------------------------------------
-     case PRJCT_INSTR_FORMAT_CCD_ULB :
-      rc=SetCCD_Ulb(pEngineContext,pEngineContext->specFp);
-     break;
-  // ---------------------------------------------------------------------------
-     case PRJCT_INSTR_FORMAT_OPUS :
-      rc=OPUS_Set(pEngineContext,pEngineContext->specFp);
-     break;
-  // ---------------------------------------------------------------------------
      case PRJCT_INSTR_FORMAT_GDP_ASCII :
       if (!(rc=GDP_ASC_Set(pEngineContext,pEngineContext->specFp)) && (THRD_id!=THREAD_TYPE_SPECTRA) && (THRD_id!=THREAD_TYPE_NONE))
        rc=GDP_ASC_LoadAnalysis(pEngineContext,pEngineContext->specFp);
@@ -252,13 +319,6 @@ int EngineSetFile(ENGINE_CONTEXT *pEngineContext,const char *fileName)
        rc=GDP_BIN_LoadAnalysis(pEngineContext,pEngineContext->specFp);
 
      break;
-  // ---------------------------------------------------------------------------
-     #if defined (__INCLUDE_HDF_) && __INCLUDE_HDF_
-     case PRJCT_INSTR_FORMAT_SCIA_HDF :
-      if (!(rc=SCIA_SetHDF(pEngineContext)) && (THRD_id!=THREAD_TYPE_SPECTRA) && (THRD_id!=THREAD_TYPE_NONE))
-       rc=SCIA_LoadAnalysis(pEngineContext);
-     break;
-     #endif
   // ---------------------------------------------------------------------------
      case PRJCT_INSTR_FORMAT_SCIA_PDS :
       if (!(rc=SCIA_SetPDS(pEngineContext)) && (THRD_id!=THREAD_TYPE_SPECTRA) && (THRD_id!=THREAD_TYPE_NONE))
@@ -279,10 +339,157 @@ int EngineSetFile(ENGINE_CONTEXT *pEngineContext,const char *fileName)
   return pEngineContext->recordNumber;
  }
 
-void EngineReadFile(ENGINE_CONTEXT *pEngineContext,int indexRecord,double *x,double *y)
+void EngineReadFile(ENGINE_CONTEXT *pEngineContext,int indexRecord,INT dateFlag,INT localCalDay)
  {
- 	ReliPDA_EGG_Logger(pEngineContext,indexRecord,0,0,engineContext.specFp);
+ 	// Declarations
 
- 	memcpy((double *)x,(double *)pEngineContext->lembda,sizeof(double)*pEngineContext->NDET);
-  memcpy((double *)y,(double *)pEngineContext->spectrum,sizeof(double)*pEngineContext->NDET);
+ 	INDEX i;
+ 	int rc;                                                                       // Return code
+
+ 	// Initializations
+
+  memset(pEngineContext->Nom,0,20);
+
+  pEngineContext->Zm=-1.;
+  pEngineContext->Azimuth=-1.;
+  pEngineContext->SkyObs=8;
+  pEngineContext->ReguTemp=0.;
+  pEngineContext->TDet=0.;
+  pEngineContext->BestShift=0.;
+  pEngineContext->rejected=0;
+  pEngineContext->NTracks=0;
+  pEngineContext->Cic=0.;
+  pEngineContext->elevationViewAngle=-1.;
+  pEngineContext->azimuthViewAngle=-1.;
+
+  pEngineContext->longitude=0.;
+  pEngineContext->latitude=0.;
+  pEngineContext->altitude=0.;
+
+  pEngineContext->aMoon=0.;
+  pEngineContext->hMoon=0.;
+  pEngineContext->fracMoon=0.;
+
+  switch((INT)pEngineContext->project.instrumental.readOutFormat)
+   {
+ // ---------------------------------------------------------------------------
+    case PRJCT_INSTR_FORMAT_ASCII :
+     rc=ASCII_Read(pEngineContext,indexRecord,dateFlag,localCalDay,engineContext.specFp);
+    break;
+ // ---------------------------------------------------------------------------
+    case PRJCT_INSTR_FORMAT_ACTON :
+     rc=ReliActon_Logger(pEngineContext,indexRecord,dateFlag,localCalDay,engineContext.specFp,engineContext.namesFp,engineContext.darkFp);
+    break;
+ // ---------------------------------------------------------------------------
+    case PRJCT_INSTR_FORMAT_PDASI_EASOE :
+     rc=ReliEASOE(pEngineContext,indexRecord,dateFlag,localCalDay,engineContext.specFp,engineContext.namesFp,engineContext.darkFp);
+    break;
+ // ---------------------------------------------------------------------------
+    case PRJCT_INSTR_FORMAT_PDAEGG :
+     rc=ReliPDA_EGG(pEngineContext,indexRecord,dateFlag,localCalDay,engineContext.specFp,engineContext.namesFp,engineContext.darkFp);
+    break;
+ // ---------------------------------------------------------------------------
+    case PRJCT_INSTR_FORMAT_LOGGER :
+     rc=ReliPDA_EGG_Logger(pEngineContext,indexRecord,dateFlag,localCalDay,engineContext.specFp);
+    break;
+ // ---------------------------------------------------------------------------
+    case PRJCT_INSTR_FORMAT_SAOZ_PCDNMOS :
+     rc=ReliSAOZ(pEngineContext,indexRecord,dateFlag,localCalDay,engineContext.specFp,engineContext.namesFp);
+    break;
+ // ---------------------------------------------------------------------------
+    case PRJCT_INSTR_FORMAT_SAOZ_EFM :
+     rc=ReliSAOZEfm(pEngineContext,indexRecord,dateFlag,localCalDay,engineContext.specFp);
+    break;
+ // ---------------------------------------------------------------------------
+// QDOAS ???    case PRJCT_INSTR_FORMAT_MFC :
+// QDOAS ???
+// QDOAS ???     switch(THRD_browseType)
+// QDOAS ???      {
+// QDOAS ???    // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// QDOAS ???       case THREAD_BROWSE_MFC_OFFSET :
+// QDOAS ???        mfcMask=pInstrumental->mfcMaskOffset;
+// QDOAS ???       break;
+// QDOAS ???    // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// QDOAS ???       case THREAD_BROWSE_MFC_DARK :
+// QDOAS ???        mfcMask=pInstrumental->mfcMaskDark;
+// QDOAS ???       break;
+// QDOAS ???    // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// QDOAS ???       case THREAD_BROWSE_MFC_INSTR :
+// QDOAS ???        mfcMask=pInstrumental->mfcMaskInstr;
+// QDOAS ???       break;
+// QDOAS ???    // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// QDOAS ???       default :
+// QDOAS ???        mfcMask=pInstrumental->mfcMaskSpec;
+// QDOAS ???       break;
+// QDOAS ???    // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// QDOAS ???     }
+// QDOAS ???
+// QDOAS ???     rc=ReliMFC(pEngineContext,indexRecord,dateFlag,localCalDay,engineContext.specFp,mfcMask);
+// QDOAS ???
+// QDOAS ???    break;
+ // ---------------------------------------------------------------------------
+    case PRJCT_INSTR_FORMAT_MFC_STD :
+     rc=ReliMFCStd(pEngineContext,indexRecord,dateFlag,localCalDay,engineContext.specFp);
+    break;
+ // ---------------------------------------------------------------------------
+    case PRJCT_INSTR_FORMAT_RASAS :
+     rc=ReliRAS(pEngineContext,indexRecord,dateFlag,localCalDay,engineContext.specFp);
+    break;
+ // ---------------------------------------------------------------------------
+    case PRJCT_INSTR_FORMAT_UOFT :
+     rc=ReliUofT(pEngineContext,indexRecord,dateFlag,localCalDay,engineContext.specFp);
+    break;
+ // ---------------------------------------------------------------------------
+    case PRJCT_INSTR_FORMAT_NOAA :
+     rc=ReliNOAA(pEngineContext,indexRecord,dateFlag,localCalDay,engineContext.specFp);
+    break;
+ // ---------------------------------------------------------------------------
+    #if defined (__INCLUDE_HDF_) && __INCLUDE_HDF_
+    case PRJCT_INSTR_FORMAT_OMI :
+     rc=OMI_ReadHDF(pEngineContext,indexRecord);
+    break;
+    #endif
+ // ---------------------------------------------------------------------------
+    case PRJCT_INSTR_FORMAT_CCD_EEV :
+     rc=ReliCCD_EEV(pEngineContext,indexRecord,dateFlag,localCalDay,engineContext.specFp,engineContext.darkFp);
+    break;
+ // ---------------------------------------------------------------------------
+    case PRJCT_INSTR_FORMAT_CCD_HA_94 :
+     rc=ReliCCD(pEngineContext,indexRecord,dateFlag,localCalDay,engineContext.specFp,engineContext.namesFp,engineContext.darkFp);
+    break;
+ // ---------------------------------------------------------------------------
+    case PRJCT_INSTR_FORMAT_CCD_OHP_96 :
+     rc=ReliCCDTrack(pEngineContext,indexRecord,dateFlag,localCalDay,engineContext.specFp,engineContext.namesFp,engineContext.darkFp);
+    break;
+ // ---------------------------------------------------------------------------
+    case PRJCT_INSTR_FORMAT_GDP_ASCII :
+     rc=GDP_ASC_Read(pEngineContext,indexRecord,dateFlag,engineContext.specFp);
+    break;
+ // ---------------------------------------------------------------------------
+    case PRJCT_INSTR_FORMAT_GDP_BIN :
+     rc=GDP_BIN_Read(pEngineContext,indexRecord,engineContext.specFp,GDP_BIN_currentFileIndex);
+    break;
+ // ---------------------------------------------------------------------------
+    case PRJCT_INSTR_FORMAT_SCIA_PDS :
+     rc=SCIA_ReadPDS(pEngineContext,indexRecord);
+    break;
+ // ---------------------------------------------------------------------------
+// QDOAS ???     case PRJCT_INSTR_FORMAT_GOME2 :
+// QDOAS ???      rc=GOME2_Read(pEngineContext,indexRecord);
+// QDOAS ???     break;
+ // ---------------------------------------------------------------------------
+    default :
+     rc=ERROR_ID_FILE_BAD_FORMAT;
+    break;
+ // ---------------------------------------------------------------------------
+   }
+
+  if (pEngineContext->instrFunction!=NULL)
+   {
+    for (i=0;(i<NDET) && !rc;i++)
+     if (pEngineContext->instrFunction[i]==(double)0.)
+      rc=ERROR_SetLast("EngineReadFile",ERROR_TYPE_FATAL,ERROR_ID_DIVISION_BY_0,"Instrumental function");
+     else
+      pEngineContext->spectrum[i]/=pEngineContext->instrFunction[i];
+   }
  }

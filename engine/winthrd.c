@@ -2100,151 +2100,151 @@ RC ThrdReadFile(SPEC_INFO *pSpecInfo,INT recordNo,INT dateFlag,INT localCalDay,F
   pSpecInfo->hMoon=0.;
   pSpecInfo->fracMoon=0.;
 
-  if ((spectrum=(double *)MEMORY_AllocDVector("ThrdReadFile ","spectrum",0,NDET-1))==NULL)
-   rc=ERROR_ID_ALLOC;
-  else
-
-   // Set spectra read out function
-
-   switch((INT)pProject->instrumental.readOutFormat)
-    {
-  // ---------------------------------------------------------------------------
-     case PRJCT_INSTR_FORMAT_ASCII :
-      rc=ASCII_Read(pSpecInfo,recordNo,dateFlag,localCalDay,specFp);
-     break;
-  // ---------------------------------------------------------------------------
-     case PRJCT_INSTR_FORMAT_ACTON :
-      rc=ReliActon_Logger(pSpecInfo,recordNo,dateFlag,localCalDay,specFp,namesFp,darkFp);
-     break;
-  // ---------------------------------------------------------------------------
-     case PRJCT_INSTR_FORMAT_PDASI_EASOE :
-      rc=ReliEASOE(pSpecInfo,recordNo,dateFlag,localCalDay,specFp,namesFp,darkFp);
-     break;
-  // ---------------------------------------------------------------------------
-     case PRJCT_INSTR_FORMAT_PDAEGG :
-      rc=ReliPDA_EGG(pSpecInfo,recordNo,dateFlag,localCalDay,specFp,namesFp,darkFp,1);
-     break;
-  // ---------------------------------------------------------------------------
-     case PRJCT_INSTR_FORMAT_PDAEGG_OLD :
-      rc=ReliPDA_EGG(pSpecInfo,recordNo,dateFlag,localCalDay,specFp,namesFp,darkFp,0);
-     break;
-  // ---------------------------------------------------------------------------
-     case PRJCT_INSTR_FORMAT_LOGGER :
-      rc=ReliPDA_EGG_Logger(pSpecInfo,recordNo,dateFlag,localCalDay,specFp);
-     break;
-  // ---------------------------------------------------------------------------
-     case PRJCT_INSTR_FORMAT_PDAEGG_ULB :
-      rc=ReliPDA_EGG_Ulb(pSpecInfo,recordNo,dateFlag,localCalDay,specFp,namesFp,darkFp);
-     break;
-  // ---------------------------------------------------------------------------
-     case PRJCT_INSTR_FORMAT_SAOZ_VIS :
-      rc=ReliSAOZ(pSpecInfo,recordNo,dateFlag,localCalDay,specFp,namesFp,darkFp,VIS);
-     break;
-  // ---------------------------------------------------------------------------
-     case PRJCT_INSTR_FORMAT_SAOZ_UV :
-      rc=ReliSAOZ(pSpecInfo,recordNo,dateFlag,localCalDay,specFp,namesFp,darkFp,UV);
-     break;
-  // ---------------------------------------------------------------------------
-     case PRJCT_INSTR_FORMAT_SAOZ_EFM :
-      rc=ReliSAOZEfm(pSpecInfo,recordNo,dateFlag,localCalDay,specFp);
-     break;
-  // ---------------------------------------------------------------------------
-     case PRJCT_INSTR_FORMAT_MFC :
-
-      switch(THRD_browseType)
-       {
-     // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-        case THREAD_BROWSE_MFC_OFFSET :
-         mfcMask=pInstrumental->mfcMaskOffset;
-        break;
-     // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-        case THREAD_BROWSE_MFC_DARK :
-         mfcMask=pInstrumental->mfcMaskDark;
-        break;
-     // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-        case THREAD_BROWSE_MFC_INSTR :
-         mfcMask=pInstrumental->mfcMaskInstr;
-        break;
-     // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-        default :
-         mfcMask=pInstrumental->mfcMaskSpec;
-        break;
-     // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-      }
-
-      rc=ReliMFC(pSpecInfo,recordNo,dateFlag,localCalDay,specFp,mfcMask);
-
-     break;
-  // ---------------------------------------------------------------------------
-     case PRJCT_INSTR_FORMAT_MFC_STD :
-      rc=ReliMFCStd(pSpecInfo,recordNo,dateFlag,localCalDay,specFp);
-     break;
-  // ---------------------------------------------------------------------------
-     case PRJCT_INSTR_FORMAT_RASAS :
-      rc=ReliRAS(pSpecInfo,recordNo,dateFlag,localCalDay,specFp);
-     break;
-  // ---------------------------------------------------------------------------
-     case PRJCT_INSTR_FORMAT_UOFT :
-      rc=ReliUofT(pSpecInfo,recordNo,dateFlag,localCalDay,specFp);
-     break;
-  // ---------------------------------------------------------------------------
-     case PRJCT_INSTR_FORMAT_NOAA :
-      rc=ReliNOAA(pSpecInfo,recordNo,dateFlag,localCalDay,specFp);
-     break;
-  // ---------------------------------------------------------------------------
-     #if defined (__INCLUDE_HDF_) && __INCLUDE_HDF_
-     case PRJCT_INSTR_FORMAT_OMI :
-      rc=OMI_ReadHDF(pSpecInfo,recordNo);
-     break;
-     #endif
-  // ---------------------------------------------------------------------------
-     case PRJCT_INSTR_FORMAT_CCD_EEV :
-      rc=ReliCCD_EEV(pSpecInfo,recordNo,dateFlag,localCalDay,specFp,darkFp);
-     break;
-  // ---------------------------------------------------------------------------
-     case PRJCT_INSTR_FORMAT_CCD_HA_94 :
-      rc=ReliCCD(pSpecInfo,recordNo,dateFlag,localCalDay,specFp,namesFp,darkFp);
-     break;
-  // ---------------------------------------------------------------------------
-     case PRJCT_INSTR_FORMAT_CCD_ULB :
-      rc=ReliCCD_Ulb(pSpecInfo,recordNo,dateFlag,localCalDay,specFp,darkFp);
-     break;
-  // ---------------------------------------------------------------------------
-     case PRJCT_INSTR_FORMAT_CCD_OHP_96 :
-      rc=ReliCCDTrack(pSpecInfo,recordNo,dateFlag,localCalDay,specFp,namesFp,darkFp);
-     break;
-  // ---------------------------------------------------------------------------
-     case PRJCT_INSTR_FORMAT_OPUS :
-      rc=OPUS_Read(pSpecInfo,recordNo,dateFlag,localCalDay,specFp);
-     break;
-  // ---------------------------------------------------------------------------
-     case PRJCT_INSTR_FORMAT_GDP_ASCII :
-      rc=GDP_ASC_Read(pSpecInfo,recordNo,dateFlag,specFp);
-     break;
-  // ---------------------------------------------------------------------------
-     case PRJCT_INSTR_FORMAT_GDP_BIN :
-      rc=GDP_BIN_Read(pSpecInfo,recordNo,specFp,GDP_BIN_currentFileIndex);
-     break;
-  // ---------------------------------------------------------------------------
-     #if defined (__INCLUDE_HDF_) && __INCLUDE_HDF_
-     case PRJCT_INSTR_FORMAT_SCIA_HDF :
-      rc=SCIA_ReadHDF(pSpecInfo,recordNo);
-     break;
-     #endif
-  // ---------------------------------------------------------------------------
-     case PRJCT_INSTR_FORMAT_SCIA_PDS :
-      rc=SCIA_ReadPDS(pSpecInfo,recordNo);
-     break;
-  // ---------------------------------------------------------------------------
+// QDOAS ???  if ((spectrum=(double *)MEMORY_AllocDVector("ThrdReadFile ","spectrum",0,NDET-1))==NULL)
+// QDOAS ???   rc=ERROR_ID_ALLOC;
+// QDOAS ???  else
+// QDOAS ???
+// QDOAS ???   // Set spectra read out function
+// QDOAS ???
+// QDOAS ???   switch((INT)pProject->instrumental.readOutFormat)
+// QDOAS ???    {
+// QDOAS ???  // ---------------------------------------------------------------------------
+// QDOAS ???     case PRJCT_INSTR_FORMAT_ASCII :
+// QDOAS ???      rc=ASCII_Read(pSpecInfo,recordNo,dateFlag,localCalDay,specFp);
+// QDOAS ???     break;
+// QDOAS ???  // ---------------------------------------------------------------------------
+// QDOAS ???     case PRJCT_INSTR_FORMAT_ACTON :
+// QDOAS ???      rc=ReliActon_Logger(pSpecInfo,recordNo,dateFlag,localCalDay,specFp,namesFp,darkFp);
+// QDOAS ???     break;
+// QDOAS ???  // ---------------------------------------------------------------------------
+// QDOAS ???     case PRJCT_INSTR_FORMAT_PDASI_EASOE :
+// QDOAS ???      rc=ReliEASOE(pSpecInfo,recordNo,dateFlag,localCalDay,specFp,namesFp,darkFp);
+// QDOAS ???     break;
+// QDOAS ???  // ---------------------------------------------------------------------------
+// QDOAS ???     case PRJCT_INSTR_FORMAT_PDAEGG :
+// QDOAS ???      rc=ReliPDA_EGG(pSpecInfo,recordNo,dateFlag,localCalDay,specFp,namesFp,darkFp,1);
+// QDOAS ???     break;
+// QDOAS ???  // ---------------------------------------------------------------------------
+// QDOAS ???     case PRJCT_INSTR_FORMAT_PDAEGG_OLD :
+// QDOAS ???      rc=ReliPDA_EGG(pSpecInfo,recordNo,dateFlag,localCalDay,specFp,namesFp,darkFp,0);
+// QDOAS ???     break;
+// QDOAS ???  // ---------------------------------------------------------------------------
+// QDOAS ???     case PRJCT_INSTR_FORMAT_LOGGER :
+// QDOAS ???      rc=ReliPDA_EGG_Logger(pSpecInfo,recordNo,dateFlag,localCalDay,specFp);
+// QDOAS ???     break;
+// QDOAS ???  // ---------------------------------------------------------------------------
+// QDOAS ???     case PRJCT_INSTR_FORMAT_PDAEGG_ULB :
+// QDOAS ???      rc=ReliPDA_EGG_Ulb(pSpecInfo,recordNo,dateFlag,localCalDay,specFp,namesFp,darkFp);
+// QDOAS ???     break;
+// QDOAS ???  // ---------------------------------------------------------------------------
+// QDOAS ???     case PRJCT_INSTR_FORMAT_SAOZ_VIS :
+// QDOAS ???      rc=ReliSAOZ(pSpecInfo,recordNo,dateFlag,localCalDay,specFp,namesFp,darkFp,VIS);
+// QDOAS ???     break;
+// QDOAS ???  // ---------------------------------------------------------------------------
+// QDOAS ???     case PRJCT_INSTR_FORMAT_SAOZ_UV :
+// QDOAS ???      rc=ReliSAOZ(pSpecInfo,recordNo,dateFlag,localCalDay,specFp,namesFp,darkFp,UV);
+// QDOAS ???     break;
+// QDOAS ???  // ---------------------------------------------------------------------------
+// QDOAS ???     case PRJCT_INSTR_FORMAT_SAOZ_EFM :
+// QDOAS ???      rc=ReliSAOZEfm(pSpecInfo,recordNo,dateFlag,localCalDay,specFp);
+// QDOAS ???     break;
+// QDOAS ???  // ---------------------------------------------------------------------------
+// QDOAS ???     case PRJCT_INSTR_FORMAT_MFC :
+// QDOAS ???
+// QDOAS ???      switch(THRD_browseType)
+// QDOAS ???       {
+// QDOAS ???     // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// QDOAS ???        case THREAD_BROWSE_MFC_OFFSET :
+// QDOAS ???         mfcMask=pInstrumental->mfcMaskOffset;
+// QDOAS ???        break;
+// QDOAS ???     // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// QDOAS ???        case THREAD_BROWSE_MFC_DARK :
+// QDOAS ???         mfcMask=pInstrumental->mfcMaskDark;
+// QDOAS ???        break;
+// QDOAS ???     // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// QDOAS ???        case THREAD_BROWSE_MFC_INSTR :
+// QDOAS ???         mfcMask=pInstrumental->mfcMaskInstr;
+// QDOAS ???        break;
+// QDOAS ???     // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// QDOAS ???        default :
+// QDOAS ???         mfcMask=pInstrumental->mfcMaskSpec;
+// QDOAS ???        break;
+// QDOAS ???     // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// QDOAS ???      }
+// QDOAS ???
+// QDOAS ???      rc=ReliMFC(pSpecInfo,recordNo,dateFlag,localCalDay,specFp,mfcMask);
+// QDOAS ???
+// QDOAS ???     break;
+// QDOAS ???  // ---------------------------------------------------------------------------
+// QDOAS ???     case PRJCT_INSTR_FORMAT_MFC_STD :
+// QDOAS ???      rc=ReliMFCStd(pSpecInfo,recordNo,dateFlag,localCalDay,specFp);
+// QDOAS ???     break;
+// QDOAS ???  // ---------------------------------------------------------------------------
+// QDOAS ???     case PRJCT_INSTR_FORMAT_RASAS :
+// QDOAS ???      rc=ReliRAS(pSpecInfo,recordNo,dateFlag,localCalDay,specFp);
+// QDOAS ???     break;
+// QDOAS ???  // ---------------------------------------------------------------------------
+// QDOAS ???     case PRJCT_INSTR_FORMAT_UOFT :
+// QDOAS ???      rc=ReliUofT(pSpecInfo,recordNo,dateFlag,localCalDay,specFp);
+// QDOAS ???     break;
+// QDOAS ???  // ---------------------------------------------------------------------------
+// QDOAS ???     case PRJCT_INSTR_FORMAT_NOAA :
+// QDOAS ???      rc=ReliNOAA(pSpecInfo,recordNo,dateFlag,localCalDay,specFp);
+// QDOAS ???     break;
+// QDOAS ???  // ---------------------------------------------------------------------------
+// QDOAS ???     #if defined (__INCLUDE_HDF_) && __INCLUDE_HDF_
+// QDOAS ???     case PRJCT_INSTR_FORMAT_OMI :
+// QDOAS ???      rc=OMI_ReadHDF(pSpecInfo,recordNo);
+// QDOAS ???     break;
+// QDOAS ???     #endif
+// QDOAS ???  // ---------------------------------------------------------------------------
+// QDOAS ???     case PRJCT_INSTR_FORMAT_CCD_EEV :
+// QDOAS ???      rc=ReliCCD_EEV(pSpecInfo,recordNo,dateFlag,localCalDay,specFp,darkFp);
+// QDOAS ???     break;
+// QDOAS ???  // ---------------------------------------------------------------------------
+// QDOAS ???     case PRJCT_INSTR_FORMAT_CCD_HA_94 :
+// QDOAS ???      rc=ReliCCD(pSpecInfo,recordNo,dateFlag,localCalDay,specFp,namesFp,darkFp);
+// QDOAS ???     break;
+// QDOAS ???  // ---------------------------------------------------------------------------
+// QDOAS ???     case PRJCT_INSTR_FORMAT_CCD_ULB :
+// QDOAS ???      rc=ReliCCD_Ulb(pSpecInfo,recordNo,dateFlag,localCalDay,specFp,darkFp);
+// QDOAS ???     break;
+// QDOAS ???  // ---------------------------------------------------------------------------
+// QDOAS ???     case PRJCT_INSTR_FORMAT_CCD_OHP_96 :
+// QDOAS ???      rc=ReliCCDTrack(pSpecInfo,recordNo,dateFlag,localCalDay,specFp,namesFp,darkFp);
+// QDOAS ???     break;
+// QDOAS ???  // ---------------------------------------------------------------------------
+// QDOAS ???     case PRJCT_INSTR_FORMAT_OPUS :
+// QDOAS ???      rc=OPUS_Read(pSpecInfo,recordNo,dateFlag,localCalDay,specFp);
+// QDOAS ???     break;
+// QDOAS ???  // ---------------------------------------------------------------------------
+// QDOAS ???     case PRJCT_INSTR_FORMAT_GDP_ASCII :
+// QDOAS ???      rc=GDP_ASC_Read(pSpecInfo,recordNo,dateFlag,specFp);
+// QDOAS ???     break;
+// QDOAS ???  // ---------------------------------------------------------------------------
+// QDOAS ???     case PRJCT_INSTR_FORMAT_GDP_BIN :
+// QDOAS ???      rc=GDP_BIN_Read(pSpecInfo,recordNo,specFp,GDP_BIN_currentFileIndex);
+// QDOAS ???     break;
+// QDOAS ???  // ---------------------------------------------------------------------------
+// QDOAS ???     #if defined (__INCLUDE_HDF_) && __INCLUDE_HDF_
+// QDOAS ???     case PRJCT_INSTR_FORMAT_SCIA_HDF :
+// QDOAS ???      rc=SCIA_ReadHDF(pSpecInfo,recordNo);
+// QDOAS ???     break;
+// QDOAS ???     #endif
+// QDOAS ???  // ---------------------------------------------------------------------------
+// QDOAS ???     case PRJCT_INSTR_FORMAT_SCIA_PDS :
+// QDOAS ???      rc=SCIA_ReadPDS(pSpecInfo,recordNo);
+// QDOAS ???     break;
+// QDOAS ???  // ---------------------------------------------------------------------------
 // QDOAS ???     case PRJCT_INSTR_FORMAT_GOME2 :
 // QDOAS ???      rc=GOME2_Read(pSpecInfo,recordNo);
 // QDOAS ???     break;
-  // ---------------------------------------------------------------------------
-     default :
-      rc=ERROR_ID_FILE_BAD_FORMAT;
-     break;
-  // ---------------------------------------------------------------------------
-   }
+// QDOAS ???  // ---------------------------------------------------------------------------
+// QDOAS ???     default :
+// QDOAS ???      rc=ERROR_ID_FILE_BAD_FORMAT;
+// QDOAS ???     break;
+// QDOAS ???  // ---------------------------------------------------------------------------
+// QDOAS ???   }
 
 // QDOAS ???   if (rc && (rc!=ERROR_ID_FILE_RECORD) && (rc!=ERROR_ID_PDS))
 // QDOAS ???    rc=THRD_ProcessLastError();

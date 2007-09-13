@@ -8,7 +8,7 @@
 //  Creation date     :  This module was already existing in old DOS versions and
 //                       has been added in WinDOAS package in 97
 //
-//  Authors           :  Caroline FAYT and Ann Carine VANDAELE (ULB)
+//  Authors           :  Caroline FAYT
 //
 //  QDOAS is a cross-platform application developed in QT for DOAS retrieval
 //  (Differential Optical Absorption Spectroscopy).
@@ -47,7 +47,6 @@
 //
 //        PRJCT_INSTR_FORMAT_LOGGER        ASCII  format used for logger data by IASB;
 //        PRJCT_INSTR_FORMAT_PDAEGG[_OLD]  binary format used for PDA EG&G by IASB;
-//        PRJCT_INSTR_FORMAT_PDAEGG_ULB    binary format used for PDA EG&G by ULB.
 //
 //  ----------------------------------------------------------------------------
 //
@@ -65,18 +64,13 @@
 //
 //  ReliPDA_EGG - IASB PDA EG&G binary format read out;
 //
-//  SetPDA_EGG_Ulb - calculate the size and the number of records for a new file
-//                   in ULB format;
-//
-//  ReliPDA_EGG_Ulb - ULB spectra read out and dark current correction;
-//
 //  ----------------------------------------------------------------------------
 
 // =======
 // INCLUDE
 // =======
 
-#include "engine.h"
+#include "doas.h"
 
 // ====================
 // CONSTANTS DEFINITION
@@ -295,13 +289,20 @@ RC ReliPDA_EGG_Logger(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDa
                 &pSpecInfo->elevationViewAngle);
 
       if (!pSpecInfo->project.instrumental.azimuthFlag || (pSpecInfo->Azimuth==99999.))
-       pSpecInfo->Azimuth=(double)-1.;
-      if (pSpecInfo->elevationViewAngle==99999.)
-       pSpecInfo->elevationViewAngle=(double)-1.;
-      if (pSpecInfo->azimuthViewAngle==99999.)
-       pSpecInfo->azimuthViewAngle=(double)-1.;
+       {
+        pSpecInfo->Azimuth=(double)-1.;
+        pSpecInfo->azimuthViewAngle=-1.;
+        pSpecInfo->elevationViewAngle=-1.;
+       }
       else
-       pSpecInfo->azimuthViewAngle-=90.;                                        // mirror is perpendicular to the direction of the sun
+       {
+        if (pSpecInfo->elevationViewAngle==99999.)
+         pSpecInfo->elevationViewAngle=-1.;
+        if (pSpecInfo->azimuthViewAngle==99999.)
+         pSpecInfo->azimuthViewAngle=-1.;
+        else
+         pSpecInfo->azimuthViewAngle-=90.;                                        // mirror is perpendicular to the direction of the sun
+       }
 
       // Build date and time of the current measurement
 
@@ -408,6 +409,8 @@ RC ReliPDA_EGG_Logger(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDa
 // Record description
 // ------------------
 
+#pragma pack(1)
+
 #define PDA1453A struct PDA1453A
 PDA1453A
  {
@@ -461,7 +464,7 @@ float Tps2[MAXTPS2] =
 #if defined(__BC32_) && __BC32_
 #pragma argsused
 #endif
-RC SetPDA_EGG(SPEC_INFO *pSpecInfo,FILE *specFp,INT newFlag)
+RC SetPDA_EGG(SPEC_INFO *pSpecInfo,FILE *specFp)
  {
   // Declarations
 
@@ -472,17 +475,20 @@ RC SetPDA_EGG(SPEC_INFO *pSpecInfo,FILE *specFp,INT newFlag)
         *recordIndexes;                    // save the position of each record in the file
   INDEX i;                                 // browse spectra in the file
   RC rc;                                   // return code
+  INT newFlag;
 
   // Initializations
 
   pSpecInfo->recordIndexesSize=2001;
   recordIndexes=pSpecInfo->recordIndexes;
+  newFlag=1;                                                                    // QDOAS !!! To change
   rc=ERROR_ID_NO;
 
   // Buffers allocation
 
   if (((indexes=(SHORT *)MEMORY_AllocBuffer("SetPDA_EGG ","indexes",pSpecInfo->recordIndexesSize,sizeof(SHORT),0,MEMORY_TYPE_SHORT))==NULL) ||
-      ((pSpecInfo->specMax=MEMORY_AllocDVector("SetPDA_EGG ","specMax",0,NDET-1))==NULL))
+      ((pSpecInfo->specMax=MEMORY_AllocDVector("SetPDA_EGG ","specMax",0,NDET-1))==NULL) ||
+      ((pSpecInfo->specMaxx=MEMORY_AllocDVector("SetPDA_EGG ","specMaxx",0,NDET-1))==NULL))
 
    rc=ERROR_ID_ALLOC;
 
@@ -492,6 +498,11 @@ RC SetPDA_EGG(SPEC_INFO *pSpecInfo,FILE *specFp,INT newFlag)
    rc=ERROR_SetLast("SetPDA_EGG",ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pSpecInfo->fileName);
   else
    {
+   	// Initializations
+
+   	for (i=0;i<NDET;i++)
+   	 pSpecInfo->specMaxx[i]=(double)i+1.;
+
 // !!! */    UCHAR *ptr,fileout[MAX_ITEM_TEXT_LEN+1];
 // !!! */    FILE *fp;
 
@@ -582,7 +593,7 @@ RC SetPDA_EGG(SPEC_INFO *pSpecInfo,FILE *specFp,INT newFlag)
 #if defined(__BC32_) && __BC32_
 #pragma argsused
 #endif
-RC ReliPDA_EGG(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *specFp,FILE *namesFp,FILE *darkFp,INT newFlag)
+RC ReliPDA_EGG(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *specFp,FILE *namesFp,FILE *darkFp)
  {
   // Declarations
 
@@ -606,11 +617,14 @@ RC ReliPDA_EGG(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE 
   FILE             *fp;                                 // file pointer
   SZ_LEN            nameLen;
   RC                rc;                                 // return code
+  INT               newFlag;
 
 // !!! */    FILE *gp;
 // !!! */    UCHAR fileout[MAX_ITEM_TEXT_LEN+1];
 
   // Initializations
+
+  newFlag=1;
 
   memset(fileNameShort,0,MAX_STR_SHORT_LEN+1);
   strncpy(fileNameShort,pSpecInfo->fileName,MAX_STR_SHORT_LEN);
@@ -855,12 +869,15 @@ RC ReliPDA_EGG(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE 
              pSpecInfo->darkCurrent[i]=(double)ISpectre[i];
            }
 
+          // Dark current subtraction
+
           if (pSpecInfo->NSomme!=0)
            for (i=0;i<NDET;i++)
             {
              pSpecInfo->spectrum[i]/=(double)pSpecInfo->NSomme;
              if (pSpecInfo->darkCurrent!=NULL)
               pSpecInfo->darkCurrent[i]/=(double)pSpecInfo->NSomme;
+             pSpecInfo->spectrum[i]-=pSpecInfo->darkCurrent[i];
             }
          }
        }
@@ -955,295 +972,3 @@ RC ReliPDA_EGG(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE 
   return rc;
  }
 
-// =====================================
-// ULB FORMAT (ref. Ann Carine VANDAELE)
-// =====================================
-
-// --------------------
-// Constants definition
-// --------------------
-
-#define RETBADPIXEL 3
-
-// ----------------------
-// Description of records
-// ----------------------
-
-// File header
-
-typedef struct tagFILE_HEADER_RET
- {
-  char         Reference[30];          // campaign information
-  char         Spectrometer[10];       // spectrometer type
-  char         Detector[10];           // detector used with the spectrometer
-  SHORT        Temperature;            // detector temperature
-  SHORT        BI1, BS1, BI2, BS2;     // low and high bounds
-  LONG         MeasurementTime;        // time for one Measurement
-  LONG         DelayTime;              // delay between two measurements
-  LONG         TotalExpTime;           // total experiment time
-  NEWDATE	Day;                   // date of the measurement
- }
-FILE_HEADER_RET;
-
-// Spectrum header
-
-typedef struct tagCURVE_HEADER_RET
- {
-  NEWTIME	HDeb;                  // time at the beginning of the measurement
-  NEWTIME	HFin;          	       // time at the end of the measurement
-  float  	Tint;                  // exposure Time
-  SHORT    	NScans;                // number of Scans
-  SHORT    	Rejected;              // number of rejected scans
-  float  	ReguTemp;              // temperature indicated by regulator
-  SHORT    	Shutter;               // shutter
-  SHORT    	CoolerLocked;          // cooler locked
-  char   	Type;                  // type of measurement
- }
-CURVE_HEADER_RET;
-
-FILE_HEADER_RET pdaUlbFileHeader;
-
-// -----------------------------------------------------------------------------
-// FUNCTION      SetPDA_EGG_Ulb
-// -----------------------------------------------------------------------------
-// PURPOSE       calculate the size and the number of records for a new file
-//               in ULB format
-//
-// INPUT         specFp      pointer to the spectra file
-//
-// OUTPUT        pSpecInfo   pointer to a structure whose some fields are filled
-//                           with general data on the file
-//
-// RETURN        ERROR_ID_ALLOC           buffers allocation failed
-//               ERROR_ID_FILE_NOT_FOUND  the input file pointer 'specFp' is NULL;
-//               ERROR_ID_FILE_EMPTY      the file is empty;
-//               ERROR_ID_NO              otherwise.
-// -----------------------------------------------------------------------------
-
-#if defined(__BC32_) && __BC32_
-#pragma argsused
-#endif
-RC SetPDA_EGG_Ulb(SPEC_INFO *pSpecInfo,FILE *specFp)
- {
-  // Declarations
-
-  CHAR  *indexes;                      // record indexes read out from file
-  SHORT  curvenum;                     // number of records
-  ULONG  recordSize,                   // size in bytes of a record
-        *recordIndexes;                // save the position of each record in the file
-  INDEX  i;                            // browse spectra in the file
-  RC     rc;                           // return code
-
-  // Initializations
-
-  pSpecInfo->recordIndexesSize=2001;
-  recordIndexes=pSpecInfo->recordIndexes;
-  rc=ERROR_ID_NO;
-
-  // Buffers allocation
-
-  if ((indexes=(CHAR *)MEMORY_AllocBuffer("SetPDA_EGG_Ulb ","indexes",pSpecInfo->recordIndexesSize,sizeof(CHAR),0,MEMORY_TYPE_STRING))==NULL)
-
-   rc=ERROR_ID_ALLOC;
-
-  // Open spectra file
-
-  else if (specFp==NULL)
-   rc=ERROR_SetLast("SetPDA_EGG_Ulb",ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pSpecInfo->fileName);
-  else
-   {
-    // Headers read out
-
-    fseek(specFp,0L,SEEK_SET);
-
-    if (!fread(&curvenum,sizeof(SHORT),1,specFp) ||
-        !fread(indexes,pSpecInfo->recordIndexesSize*sizeof(CHAR),1,specFp) ||
-        !fread(&pdaUlbFileHeader,sizeof(FILE_HEADER_RET),1,specFp) ||
-        (curvenum<=0))
-
-     rc=ERROR_SetLast("SetPDA_EGG_Ulb",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pSpecInfo->fileName);
-
-    else
-     {
-      // Save the position of each record in the file
-
-      pSpecInfo->recordNumber=curvenum;
-
-      recordSize=(LONG)sizeof(CURVE_HEADER_RET)+(LONG)sizeof(double)*NDET;
-      recordIndexes[0]=(LONG)pSpecInfo->recordIndexesSize*sizeof(CHAR)+sizeof(SHORT)+sizeof(FILE_HEADER_RET);
-
-      for (i=1;i<=curvenum;i++)
-       recordIndexes[i]=recordIndexes[i-1]+recordSize*indexes[i];
-     }
-   }
-
-  // Release local buffers
-
-  if (indexes!=NULL)
-   MEMORY_ReleaseBuffer("SetPDA_EGG_Ulb ","indexes",indexes);
-
-  // Return
-
-  return rc;
- }
-
-// -----------------------------------------------------------------------------
-// FUNCTION      ReliPDA_EGG_Ulb
-// -----------------------------------------------------------------------------
-// PURPOSE       ULB spectra read out and dark current correction
-//
-// INPUT         recordNo     index of record in file
-//               dateFlag     0 no date constraint; 1 a date selection is applied
-//               specFp       pointer to the spectra file
-//               namesFp      pointer to the names file if any
-//               darkFp       pointer to the dark currents file if any
-//
-// OUTPUT        pSpecInfo  : pointer to a structure whose some fields are filled
-//                            with data on the current spectrum
-//
-// RETURN        ERROR_ID_ALLOC          : a buffer allocation failed;
-//               ERROR_ID_FILE_NOT_FOUND : the input file pointer 'specFp' is NULL;
-//               ERROR_ID_FILE_END       : the end of the file is reached;
-//               ERROR_ID_FILE_RECORD    : record not found
-//               ERROR_ID_DIVISION_BY_0  : division by 0;
-//               ERROR_ID_NO             : otherwise.
-// -----------------------------------------------------------------------------
-
-#if defined(__BC32_) && __BC32_
-#pragma argsused
-#endif
-RC ReliPDA_EGG_Ulb(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *specFp,FILE *namesFp,FILE *darkFp)
- {
-  // Declarations
-
-  CURVE_HEADER_RET  CurveHeader;      // header of the current record
-  ULONG             recordSize,       // size in bytes of a record
-                    nCurve;           // the number of spectra in the current record
-  double           *spectrum,         // spectrum satisfying user constraints
-                   *tmpVector,
-                  **tmpMatrix,
-                    tmLocal;
-
-  INDEX             i,j,k;            // indexes for loops and arrays
-  INT               found;            // 0 record not found; 1 record found
-  INT               limSup,nb;        // verify bounds
-  RC                rc;               // return code
-
-  // Initializations
-
-  recordSize=(LONG)sizeof(CURVE_HEADER_RET)+(LONG)sizeof(double)*NDET;
-  spectrum=pSpecInfo->spectrum;
-  rc=ERROR_ID_NO;
-  found=0;
-
-  if (specFp==NULL)
-   rc=ERROR_ID_FILE_NOT_FOUND;
-  else if ((recordNo<=0) || (recordNo>pSpecInfo->recordNumber))
-   rc=ERROR_ID_FILE_END;
-  else
-   {
-    // Set file pointer
-
-    fseek(specFp,(LONG)pSpecInfo->recordIndexes[recordNo-1],SEEK_SET);
-    nCurve=(ULONG)(pSpecInfo->recordIndexes[recordNo]-pSpecInfo->recordIndexes[recordNo-1])/recordSize;
-
-    // Browse spectra in the current record
-
-    for (j=0;(j<(int)nCurve) && !rc && !found;j++)
-     {
-      if (!fread(&CurveHeader,sizeof(CURVE_HEADER_RET),1,specFp) ||
-          !fread(spectrum,sizeof(double)*NDET,1,specFp))
-
-       rc=ERROR_ID_FILE_END;
-
-      else if ((CurveHeader.NScans>0) && (pSpecInfo->project.instrumental.user==(INT)CurveHeader.Type))
-       {
-        found=1;
-
-        // Data on the current spectrum
-
-        pSpecInfo->TDet     = pdaUlbFileHeader.Temperature;
-        pSpecInfo->Tint     = CurveHeader.Tint;
-        pSpecInfo->NSomme   = CurveHeader.NScans;
-        pSpecInfo->Zm       = (double)-1.;
-        pSpecInfo->Azimuth  = (double)-1;
-        pSpecInfo->SkyObs   = CurveHeader.Type;       // Use sky observation field for type of measurement safe keeping
-        pSpecInfo->rejected = CurveHeader.Rejected;
-        pSpecInfo->ReguTemp = CurveHeader.ReguTemp;
-
-        pSpecInfo->present_day.da_day=pdaUlbFileHeader.Day.day;
-        pSpecInfo->present_day.da_mon=pdaUlbFileHeader.Day.month;
-        pSpecInfo->present_day.da_year=pdaUlbFileHeader.Day.year;
-
-        pSpecInfo->present_time.ti_sec=CurveHeader.HDeb.sec;
-        pSpecInfo->present_time.ti_min=CurveHeader.HDeb.min;
-        pSpecInfo->present_time.ti_hour=CurveHeader.HDeb.hour;
-
-        pSpecInfo->Tm=(double)ZEN_NbSec(&pSpecInfo->present_day,&pSpecInfo->present_time,0);
-        pSpecInfo->TotalExpTime=pdaUlbFileHeader.TotalExpTime;
-        pSpecInfo->TimeDec=(double)CurveHeader.HDeb.hour+CurveHeader.HDeb.min/60.;
-
-        tmLocal=pSpecInfo->Tm+THRD_localShift*3600.;
-
-        pSpecInfo->localCalDay=ZEN_FNCaljda(&tmLocal);
-        pSpecInfo->localTimeDec=fmod(pSpecInfo->TimeDec+24.+THRD_localShift,(double)24.);
-
-        // Bad pixels elimination
-
-        for (i=0;i<RETBADPIXEL;i++)
-         spectrum[i]=spectrum[RETBADPIXEL];
-
-        // Verify bounds
-
-        limSup=(INT)((CurveHeader.Type==PRJCT_INSTR_ULB_TYPE_HIGH)?pdaUlbFileHeader.BS2:pdaUlbFileHeader.BS1);
-
-        for (k=2,nb=(INT)(NDET/limSup+0.5);k<=nb;k++)
-         for (i=j=(k-1)*limSup;i<k*limSup;i++,j--)
-          spectrum[i]=spectrum[j-1];
-
-        for (i=j=nb*limSup;i<NDET;i++,j--)
-         spectrum[i]=spectrum[j-1];
-
-        // Dark current correction
-
-        if (pSpecInfo->ccd.drk.matrix!=NULL)
-
-          for (i=0,tmpMatrix=(double **)pSpecInfo->ccd.drk.matrix;i<NDET;i++)
-            spectrum[i]-=(tmpMatrix[1][i]+tmpMatrix[0][i]*pSpecInfo->Tint)*pSpecInfo->NSomme;
-
-        // Interpixel Variability
-
-        if (pSpecInfo->ccd.vip.matrix!=NULL)
-         {
-          for (i=0,tmpVector=(double *)pSpecInfo->ccd.vip.matrix[0];i<NDET;i++)
-           if (tmpVector[i]==(double)0.)
-           	rc=ERROR_SetLast("ReliPDA_EGG_Ulb",ERROR_TYPE_WARNING,ERROR_ID_DIVISION_BY_0,"Interpixel Variability");
-           else
-            spectrum[i]/=tmpVector[i]*pSpecInfo->NSomme;
-         }
-
-        // Detector not linearity correction
-
-        if (pSpecInfo->ccd.dnl.matrix!=NULL)
-         {
-          for (i=0;(i<NDET) && !rc;i++)
-
-           if (pSpecInfo->ccd.dnl.matrix[0][i]==(double)0.)
-            rc=ERROR_SetLast("ReliPDA_EGG_Ulb",ERROR_TYPE_WARNING,ERROR_ID_DIVISION_BY_0,"non linearity of the detector");
-           else
-            spectrum[i]/=pSpecInfo->ccd.dnl.matrix[0][i];
-         }
-
-        if (!rc)
-         VECTOR_Invert(spectrum,NDET);
-       }
-     }
-   }
-
-  if (!found)
-   rc=ERROR_ID_FILE_RECORD;
-
-  // Return
-
-  return rc;
- }

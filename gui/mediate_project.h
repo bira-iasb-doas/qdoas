@@ -39,7 +39,7 @@ extern "C" {
     double centerLongitude;
     double centerLatitude;
   };
-  
+
   /* cGeolocationModeRectangle */
   struct geolocation_rectangle
   {
@@ -54,7 +54,7 @@ extern "C" {
   {
     double radius;
   };
-  
+
   /* all gelocations and a selection (mode) */
   struct geolocation
   {
@@ -63,7 +63,7 @@ extern "C" {
     struct geolocation_rectangle rectangle;
     struct geolocation_sites sites;
   };
-  
+
   /****************************************************/
   /* Project Spectra */
 
@@ -73,29 +73,29 @@ extern "C" {
     int requireSpectra;
     int requireData;
     int requireFits;
-    
+
     /* SZA (Solar Zenith Angle) range of interest */
     double szaMinimum;
     double szaMaximum;
     double szaDelta;
-    
+
     /* Spectral record range */
     int recordNumberMinimum;
     int recordNumberMaximum;
-    
+
     /* boolean flags for separate dark and name files */
     int useDarkFile;
     int useNameFile;
-    
+
     /* geolocation limits */
     struct geolocation geo;
-    
+
   } mediate_project_spectra_t;
 
 
   /****************************************************/
   /* Project Analysis */
-  
+
   typedef struct mediate_project_analysis
   {
     int methodType;
@@ -105,11 +105,11 @@ extern "C" {
     int interpolationSecurityGap;
     double convergenceCriterion;
   } mediate_project_analysis_t;
-  
-  
+
+
   /****************************************************/
   /* Project Filtering */
-  
+
   struct filter_kaiser
   {
     double cutoffFrequency;
@@ -139,7 +139,7 @@ extern "C" {
   struct filter_savitzky_golay
   {
     int width;            /* odd number of pixels */
-    int order;            /* even number */ 
+    int order;            /* even number */
     int iterations;
   };
 
@@ -181,7 +181,7 @@ extern "C" {
     int requireShiftSfp;
   } mediate_project_calibration_t;
 
-  
+
   /****************************************************/
   /* Project Undersampling */
 
@@ -214,19 +214,20 @@ extern "C" {
     int spectralType;
     int flagAzimuthAngle;
     char calibrationFile[FILENAME_BUFFER_LENGTH];
-    char instrFunctionFile[FILENAME_BUFFER_LENGTH];    
+    char instrFunctionFile[FILENAME_BUFFER_LENGTH];
   };
 
   struct instrumental_acton {
     int niluType;
     char calibrationFile[FILENAME_BUFFER_LENGTH];
-    char instrFunctionFile[FILENAME_BUFFER_LENGTH];    
+    char instrFunctionFile[FILENAME_BUFFER_LENGTH];
   };
 
   struct instrumental_saoz {
+  	 int spectralRegion;
     int spectralType;
     char calibrationFile[FILENAME_BUFFER_LENGTH];
-    char instrFunctionFile[FILENAME_BUFFER_LENGTH];    
+    char instrFunctionFile[FILENAME_BUFFER_LENGTH];
   };
 
   struct instrumental_mfc {
@@ -237,57 +238,57 @@ extern "C" {
     unsigned int offsetMask;
     unsigned int instrFctnMask;
     unsigned int spectraMask;
-    unsigned int darkCurrentMask;    
+    unsigned int darkCurrentMask;
     char calibrationFile[FILENAME_BUFFER_LENGTH];
-    char instrFunctionFile[FILENAME_BUFFER_LENGTH];    
+    char instrFunctionFile[FILENAME_BUFFER_LENGTH];
     char darkCurrentFile[FILENAME_BUFFER_LENGTH];
-    char offsetFile[FILENAME_BUFFER_LENGTH];    
+    char offsetFile[FILENAME_BUFFER_LENGTH];
   };
 
   struct instrumental_mfcstd {
     int detectorSize;
     int revert;
     char calibrationFile[FILENAME_BUFFER_LENGTH];
-    char instrFunctionFile[FILENAME_BUFFER_LENGTH];    
+    char instrFunctionFile[FILENAME_BUFFER_LENGTH];
     char darkCurrentFile[FILENAME_BUFFER_LENGTH];
-    char offsetFile[FILENAME_BUFFER_LENGTH];    
+    char offsetFile[FILENAME_BUFFER_LENGTH];
   };
 
-  struct instrumental_rasas {
+  struct instrumental_minimum {
     char calibrationFile[FILENAME_BUFFER_LENGTH];
-    char instrFunctionFile[FILENAME_BUFFER_LENGTH];    
+    char instrFunctionFile[FILENAME_BUFFER_LENGTH];
   };
 
   struct instrumental_ccd {
     char calibrationFile[FILENAME_BUFFER_LENGTH];
-    char instrFunctionFile[FILENAME_BUFFER_LENGTH];    
+    char instrFunctionFile[FILENAME_BUFFER_LENGTH];
     char interPixelVariabilityFile[FILENAME_BUFFER_LENGTH];
-    char detectorNonLinearityFile[FILENAME_BUFFER_LENGTH];    
+    char detectorNonLinearityFile[FILENAME_BUFFER_LENGTH];
   };
 
   struct instrumental_ccdulb {
     int grating;
     int centralWavelength;
     char calibrationFile[FILENAME_BUFFER_LENGTH];
-    char offsetFile[FILENAME_BUFFER_LENGTH];    
+    char offsetFile[FILENAME_BUFFER_LENGTH];
     char interPixelVariabilityFile[FILENAME_BUFFER_LENGTH];
-    char detectorNonLinearityFile[FILENAME_BUFFER_LENGTH];    
+    char detectorNonLinearityFile[FILENAME_BUFFER_LENGTH];
   };
 
   struct instrumental_pdaeggulb {
     int curveType;
     char calibrationFile[FILENAME_BUFFER_LENGTH];
-    char instrFunctionFile[FILENAME_BUFFER_LENGTH];    
+    char instrFunctionFile[FILENAME_BUFFER_LENGTH];
     char interPixelVariabilityFile[FILENAME_BUFFER_LENGTH];
-    char detectorNonLinearityFile[FILENAME_BUFFER_LENGTH];    
+    char detectorNonLinearityFile[FILENAME_BUFFER_LENGTH];
   };
 
   struct instrumental_ccdeev {
     int detectorSize;
     char calibrationFile[FILENAME_BUFFER_LENGTH];
-    char instrFunctionFile[FILENAME_BUFFER_LENGTH];    
+    char instrFunctionFile[FILENAME_BUFFER_LENGTH];
     char straylightCorrectionFile[FILENAME_BUFFER_LENGTH];
-    char detectorNonLinearityFile[FILENAME_BUFFER_LENGTH];    
+    char detectorNonLinearityFile[FILENAME_BUFFER_LENGTH];
   };
 
   struct instrumental_opus {
@@ -295,13 +296,13 @@ extern "C" {
     double timeShift;
     int flagTransmittance;
     char calibrationFile[FILENAME_BUFFER_LENGTH];
-    char instrFunctionFile[FILENAME_BUFFER_LENGTH];    
+    char instrFunctionFile[FILENAME_BUFFER_LENGTH];
   };
 
   struct instrumental_gdp {
     int bandType;
     char calibrationFile[FILENAME_BUFFER_LENGTH];
-    char instrFunctionFile[FILENAME_BUFFER_LENGTH];    
+    char instrFunctionFile[FILENAME_BUFFER_LENGTH];
   };
 
   struct instrumental_scia {
@@ -309,16 +310,16 @@ extern "C" {
     unsigned char clusters[32];                      // flags with cluster number as index
     char sunReference[4];                            // 2 characters plus terminator
     char calibrationFile[FILENAME_BUFFER_LENGTH];
-    char instrFunctionFile[FILENAME_BUFFER_LENGTH];    
+    char instrFunctionFile[FILENAME_BUFFER_LENGTH];
   };
-  
+
   struct instrumental_omi {
     int spectralType;
     double minimumWavelength;
     double maximumWavelength;
     int flagAverage;
     char calibrationFile[FILENAME_BUFFER_LENGTH];
-    char instrFunctionFile[FILENAME_BUFFER_LENGTH];    
+    char instrFunctionFile[FILENAME_BUFFER_LENGTH];
   };
 
   typedef struct mediate_project_instrumental
@@ -336,11 +337,11 @@ extern "C" {
     struct instrumental_ccdulb ccdulb;
     struct instrumental_saoz saozvis;
     struct instrumental_saoz saozuv;
-    struct instrumental_rasas saozefm;
+    struct instrumental_minimum saozefm;
     struct instrumental_mfc mfc;
     struct instrumental_mfcstd mfcstd;
-    struct instrumental_rasas rasas;
-    struct instrumental_rasas pdasieasoe;
+    struct instrumental_minimum rasas;
+    struct instrumental_minimum pdasieasoe;
     struct instrumental_logger pdasiosma;
     struct instrumental_ccdeev ccdeev;
     struct instrumental_opus opus;
@@ -348,20 +349,20 @@ extern "C" {
     struct instrumental_gdp gdpbin;
     struct instrumental_scia sciahdf;
     struct instrumental_scia sciapds;
-    struct instrumental_rasas uoft;
-    struct instrumental_rasas noaa;
+    struct instrumental_minimum uoft;
+    struct instrumental_minimum noaa;
     struct instrumental_omi omi;
-    
+
   } mediate_project_instrumental_t;
 
 
 
-    
+
   // mediate_project_t
   //
   // Contains all user-specified information about a project. It allows the GUI to
   // provide information to the engine.
-  
+
   typedef struct mediate_project
   {
     // TODO - Coupled to the control offered by the GUI Project Tabs.
@@ -372,9 +373,9 @@ extern "C" {
     mediate_project_calibration_t calibration;
     mediate_project_undersampling_t undersampling;
     mediate_project_instrumental_t instrumental;
-    
+
   } mediate_project_t;
-  
+
 
   /****************************************************/
   /* Helper functions */

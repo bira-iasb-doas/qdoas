@@ -302,7 +302,7 @@ RC GDP_BIN_Set(SPEC_INFO *pSpecInfo,FILE *specFp)
   INDEX indexFile;
   UCHAR *ptr;
   UCHAR fileName[MAX_ITEM_TEXT_LEN+1];                                          // file name
-  INDEX i,indexRecord;                                                          // indexes for loops and arrays
+  INDEX i,j,indexRecord;                                                        // indexes for loops and arrays
   int useErrors,errorFlag;                                                      // 0 if errors are saved with spectra, 1 otherwise
   FILE *fp;
   RC rc;                                                                        // return code
@@ -493,7 +493,7 @@ RC GDP_BIN_Set(SPEC_INFO *pSpecInfo,FILE *specFp)
 
         else
          {
-          NDET=pOrbitFile->gdpBinBandInfo[pOrbitFile->gdpBinBandIndex].bandSize;
+          pSpecInfo->NDET=NDET=pOrbitFile->gdpBinBandInfo[pOrbitFile->gdpBinBandIndex].bandSize;
 
           // Read the irradiance spectrum
 
@@ -503,80 +503,79 @@ RC GDP_BIN_Set(SPEC_INFO *pSpecInfo,FILE *specFp)
           if (useErrors)
            fread(pOrbitFile->gdpBinRefError,sizeof(unsigned short)*pOrbitFile->gdpBinSpectraSize,1,fp);
 
-          pOrbitFile->specNumber=((THRD_id==THREAD_TYPE_SPECTRA) && (THRD_browseType==THREAD_BROWSE_DARK))?1:pOrbitFile->gdpBinHeader.nspectra;
+          pOrbitFile->specNumber=pOrbitFile->gdpBinHeader.nspectra;
 
-          if (THRD_browseType!=THREAD_BROWSE_DARK)
-           for (indexRecord=0;indexRecord<pOrbitFile->specNumber;indexRecord++)
-            {
-             fseek(fp,(LONG)pOrbitFile->gdpBinHeader.headerSize+indexRecord*pOrbitFile->gdpBinHeader.recordSize,SEEK_SET);
+          for (indexRecord=0;indexRecord<pOrbitFile->specNumber;indexRecord++)
+           {
+            fseek(fp,(LONG)pOrbitFile->gdpBinHeader.headerSize+indexRecord*pOrbitFile->gdpBinHeader.recordSize,SEEK_SET);
 
-             if (!fread(&pOrbitFile->gdpBinSpectrum,sizeof(SPECTRUM_RECORD),1,fp))
-              rc=ERROR_SetLast("GDP_Bin_Set (2)",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,fileName);
-             else
-              {
-               pOrbitFile->gdpBinInfo[indexRecord].pixelNumber=pOrbitFile->gdpBinSpectrum.groundPixelID;
-               pOrbitFile->gdpBinInfo[indexRecord].pixelType=pOrbitFile->gdpBinSpectrum.groundPixelType;
+            if (!fread(&pOrbitFile->gdpBinSpectrum,sizeof(SPECTRUM_RECORD),1,fp))
+             rc=ERROR_SetLast("GDP_Bin_Set (2)",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,fileName);
+            else
+             {
+              pOrbitFile->gdpBinInfo[indexRecord].pixelNumber=pOrbitFile->gdpBinSpectrum.groundPixelID;
+              pOrbitFile->gdpBinInfo[indexRecord].pixelType=pOrbitFile->gdpBinSpectrum.groundPixelType;
 
-               if (pOrbitFile->gdpBinHeader.version<2)
-                {
-                 pOrbitFile->gdpBinInfo[indexRecord].sza=(double)pOrbitFile->gdpBinSpectrum.geo.geo1.szaArray[1];
-                 pOrbitFile->gdpBinInfo[indexRecord].lat=(double)pOrbitFile->gdpBinSpectrum.geo.geo1.latArray[4];
-                 pOrbitFile->gdpBinInfo[indexRecord].lon=(double)pOrbitFile->gdpBinSpectrum.geo.geo1.lonArray[4];
-                }
-               else if (pOrbitFile->gdpBinHeader.version==2)
-                {
-                 pOrbitFile->gdpBinInfo[indexRecord].sza=(double)pOrbitFile->gdpBinSpectrum.geo.geo2.szaArray[1];
-                 pOrbitFile->gdpBinInfo[indexRecord].lat=(double)0.01*pOrbitFile->gdpBinSpectrum.geo.geo2.latArray[4];
-                 pOrbitFile->gdpBinInfo[indexRecord].lon=(double)0.01*pOrbitFile->gdpBinSpectrum.geo.geo2.lonArray[4];
-                }
-               else if (pOrbitFile->gdpBinHeader.version==3)
-                {
-                 pOrbitFile->gdpBinInfo[indexRecord].sza=(double)pOrbitFile->gdpBinSpectrum.geo.geo3.szaArray[1];
-                 pOrbitFile->gdpBinInfo[indexRecord].lat=(double)0.01*pOrbitFile->gdpBinSpectrum.geo.geo3.latArray[4];
-                 pOrbitFile->gdpBinInfo[indexRecord].lon=(double)0.01*pOrbitFile->gdpBinSpectrum.geo.geo3.lonArray[4];
-                }
-               else
-                {
-                 pOrbitFile->gdpBinInfo[indexRecord].sza=(double)pOrbitFile->gdpBinSpectrum.geo.geo3.szaArray[1];
-                 pOrbitFile->gdpBinInfo[indexRecord].lat=(double)0.01*pOrbitFile->gdpBinSpectrum.geo.geo3.latArray[4];
-                 pOrbitFile->gdpBinInfo[indexRecord].lon=(double)0.01*pOrbitFile->gdpBinSpectrum.geo.geo3.lonArray[4];
-                }
+              if (pOrbitFile->gdpBinHeader.version<2)
+               {
+                pOrbitFile->gdpBinInfo[indexRecord].sza=(double)pOrbitFile->gdpBinSpectrum.geo.geo1.szaArray[1];
+                pOrbitFile->gdpBinInfo[indexRecord].lat=(double)pOrbitFile->gdpBinSpectrum.geo.geo1.latArray[4];
+                pOrbitFile->gdpBinInfo[indexRecord].lon=(double)pOrbitFile->gdpBinSpectrum.geo.geo1.lonArray[4];
+               }
+              else if (pOrbitFile->gdpBinHeader.version==2)
+               {
+                pOrbitFile->gdpBinInfo[indexRecord].sza=(double)pOrbitFile->gdpBinSpectrum.geo.geo2.szaArray[1];
+                pOrbitFile->gdpBinInfo[indexRecord].lat=(double)0.01*pOrbitFile->gdpBinSpectrum.geo.geo2.latArray[4];
+                pOrbitFile->gdpBinInfo[indexRecord].lon=(double)0.01*pOrbitFile->gdpBinSpectrum.geo.geo2.lonArray[4];
+               }
+              else if (pOrbitFile->gdpBinHeader.version==3)
+               {
+                pOrbitFile->gdpBinInfo[indexRecord].sza=(double)pOrbitFile->gdpBinSpectrum.geo.geo3.szaArray[1];
+                pOrbitFile->gdpBinInfo[indexRecord].lat=(double)0.01*pOrbitFile->gdpBinSpectrum.geo.geo3.latArray[4];
+                pOrbitFile->gdpBinInfo[indexRecord].lon=(double)0.01*pOrbitFile->gdpBinSpectrum.geo.geo3.lonArray[4];
+               }
+              else
+               {
+                pOrbitFile->gdpBinInfo[indexRecord].sza=(double)pOrbitFile->gdpBinSpectrum.geo.geo3.szaArray[1];
+                pOrbitFile->gdpBinInfo[indexRecord].lat=(double)0.01*pOrbitFile->gdpBinSpectrum.geo.geo3.latArray[4];
+                pOrbitFile->gdpBinInfo[indexRecord].lon=(double)0.01*pOrbitFile->gdpBinSpectrum.geo.geo3.lonArray[4];
+               }
 
-    /*             {
-                    FILE *fp;
-                    UCHAR *ptr;
-                    UCHAR newFile[256];
+    /*            {
+                   FILE *fp;
+                   UCHAR *ptr;
+                   UCHAR newFile[256];
 
-                    ptr=strrchr(fileName,PATH_SEP);
-                    sprintf(newFile,"F:\\GOME_Applications\\GEO Tests\\MAT2\\%s",ptr+1);
-                    ptr=strrchr(newFile,'.');
-                    strcpy(ptr,".asc");
+                   ptr=strrchr(fileName,PATH_SEP);
+                   sprintf(newFile,"F:\\GOME_Applications\\GEO Tests\\MAT2\\%s",ptr+1);
+                   ptr=strrchr(newFile,'.');
+                   strcpy(ptr,".asc");
 
-                    if ((fp=fopen(newFile,"rt"))==NULL)
-                     {
-                      fp=fopen(newFile,"w+t");
-                      fprintf(fp,"PixelN\tPixelT\tSZA(A)\tSZA(B)\tSZA(C)\tLZA(A)\tLZA(B)\tLZA(C)\tLAZ(A)\tLAZ(B)\tLAZ(C)\tLAT(0)\tLAT(1)\tLAT(2)\tLAT(3)\tLAT(4)\tLON(0)\tLON(1)\tLON(2)\tLON(3)\tLON(4)\t\n");
-                     }
+                   if ((fp=fopen(newFile,"rt"))==NULL)
+                    {
+                     fp=fopen(newFile,"w+t");
+                     fprintf(fp,"PixelN\tPixelT\tSZA(A)\tSZA(B)\tSZA(C)\tLZA(A)\tLZA(B)\tLZA(C)\tLAZ(A)\tLAZ(B)\tLAZ(C)\tLAT(0)\tLAT(1)\tLAT(2)\tLAT(3)\tLAT(4)\tLON(0)\tLON(1)\tLON(2)\tLON(3)\tLON(4)\t\n");
+                    }
 
-                    fclose(fp);
+                   fclose(fp);
 
-                    fp=fopen(newFile,"a+t");
-                    fprintf(fp,"%#5d %#5d %#8.3f %#8.3f %#8.3f %#8.3f %#8.3f %#8.3f %#8.3f %#8.3f %#8.3f %#8.3f %#8.3f %#8.3f %#8.3f %#8.3f %#8.3f %#8.3f %#8.3f %#8.3f %#8.3f \n",
-                                pOrbitFile->gdpBinSpectrum.groundPixelID,pOrbitFile->gdpBinSpectrum.groundPixelType,
-                                pOrbitFile->gdpBinSpectrum.geo.geo3.szaArray[0],pOrbitFile->gdpBinSpectrum.geo.geo3.szaArray[1],pOrbitFile->gdpBinSpectrum.geo.geo3.szaArray[2],
-                                0.01*pOrbitFile->gdpBinSpectrum.geo.geo3.losZa[0],0.01*pOrbitFile->gdpBinSpectrum.geo.geo3.losZa[1],0.01*pOrbitFile->gdpBinSpectrum.geo.geo3.losZa[2],
-                                0.01*pOrbitFile->gdpBinSpectrum.geo.geo3.losAzim[0],0.01*pOrbitFile->gdpBinSpectrum.geo.geo3.losAzim[1],0.01*pOrbitFile->gdpBinSpectrum.geo.geo3.losAzim[2],
-                                0.01*pOrbitFile->gdpBinSpectrum.geo.geo3.latArray[0],0.01*pOrbitFile->gdpBinSpectrum.geo.geo3.latArray[1],0.01*pOrbitFile->gdpBinSpectrum.geo.geo3.latArray[2],0.01*pOrbitFile->gdpBinSpectrum.geo.geo3.latArray[3],0.01*pOrbitFile->gdpBinSpectrum.geo.geo3.latArray[4],
-                                0.01*pOrbitFile->gdpBinSpectrum.geo.geo3.lonArray[0],0.01*pOrbitFile->gdpBinSpectrum.geo.geo3.lonArray[1],0.01*pOrbitFile->gdpBinSpectrum.geo.geo3.lonArray[2],0.01*pOrbitFile->gdpBinSpectrum.geo.geo3.lonArray[3],0.01*pOrbitFile->gdpBinSpectrum.geo.geo3.lonArray[4]);
-                    fclose(fp);
-                   } */
+                   fp=fopen(newFile,"a+t");
+                   fprintf(fp,"%#5d %#5d %#8.3f %#8.3f %#8.3f %#8.3f %#8.3f %#8.3f %#8.3f %#8.3f %#8.3f %#8.3f %#8.3f %#8.3f %#8.3f %#8.3f %#8.3f %#8.3f %#8.3f %#8.3f %#8.3f \n",
+                               pOrbitFile->gdpBinSpectrum.groundPixelID,pOrbitFile->gdpBinSpectrum.groundPixelType,
+                               pOrbitFile->gdpBinSpectrum.geo.geo3.szaArray[0],pOrbitFile->gdpBinSpectrum.geo.geo3.szaArray[1],pOrbitFile->gdpBinSpectrum.geo.geo3.szaArray[2],
+                               0.01*pOrbitFile->gdpBinSpectrum.geo.geo3.losZa[0],0.01*pOrbitFile->gdpBinSpectrum.geo.geo3.losZa[1],0.01*pOrbitFile->gdpBinSpectrum.geo.geo3.losZa[2],
+                               0.01*pOrbitFile->gdpBinSpectrum.geo.geo3.losAzim[0],0.01*pOrbitFile->gdpBinSpectrum.geo.geo3.losAzim[1],0.01*pOrbitFile->gdpBinSpectrum.geo.geo3.losAzim[2],
+                               0.01*pOrbitFile->gdpBinSpectrum.geo.geo3.latArray[0],0.01*pOrbitFile->gdpBinSpectrum.geo.geo3.latArray[1],0.01*pOrbitFile->gdpBinSpectrum.geo.geo3.latArray[2],0.01*pOrbitFile->gdpBinSpectrum.geo.geo3.latArray[3],0.01*pOrbitFile->gdpBinSpectrum.geo.geo3.latArray[4],
+                               0.01*pOrbitFile->gdpBinSpectrum.geo.geo3.lonArray[0],0.01*pOrbitFile->gdpBinSpectrum.geo.geo3.lonArray[1],0.01*pOrbitFile->gdpBinSpectrum.geo.geo3.lonArray[2],0.01*pOrbitFile->gdpBinSpectrum.geo.geo3.lonArray[3],0.01*pOrbitFile->gdpBinSpectrum.geo.geo3.lonArray[4]);
+                   fclose(fp);
+                  } */
 
-               GdpBinSort(indexRecord,0,indexRecord,indexFile);                 // sort latitudes
-               GdpBinSort(indexRecord,1,indexRecord,indexFile);                 // sort SZA
-               GdpBinSort(indexRecord,2,indexRecord,indexFile);                 // sort pixel numbers
-               GdpBinSort(indexRecord,3,indexRecord,indexFile);                 // sort longitudes
-              }
-            }
+              GdpBinSort(indexRecord,0,indexRecord,indexFile);                 // sort latitudes
+              GdpBinSort(indexRecord,1,indexRecord,indexFile);                 // sort SZA
+              GdpBinSort(indexRecord,2,indexRecord,indexFile);                 // sort pixel numbers
+              GdpBinSort(indexRecord,3,indexRecord,indexFile);                 // sort longitudes
+             }
+           }
          }
 
         fclose(fp);
@@ -601,9 +600,16 @@ RC GDP_BIN_Set(SPEC_INFO *pSpecInfo,FILE *specFp)
    {
     pOrbitFile=&GDP_BIN_orbitFiles[GDP_BIN_currentFileIndex];
 
+    // Irradiance spectrum
+
+    for (i=0,j=pOrbitFile->gdpBinStartPixel[pOrbitFile->gdpBinBandIndex];
+         j<pOrbitFile->gdpBinStartPixel[pOrbitFile->gdpBinBandIndex]+pOrbitFile->gdpBinBandInfo[pOrbitFile->gdpBinBandIndex].bandSize;i++,j++)
+
+     pSpecInfo->irrad[i]=(double)pOrbitFile->gdpBinReference[j]/pOrbitFile->gdpBinBandInfo[pOrbitFile->gdpBinBandIndex].scalingFactor;
+
     pSpecInfo->gome.orbitNumber=pOrbitFile->gdpBinHeader.orbitNumber;
     pSpecInfo->useErrors=((pOrbitFile->gdpBinHeader.mask&GDP_BIN_ERROR_ID_MASK)==GDP_BIN_ERROR_ID_MASK)?1:0;
-    NDET=pOrbitFile->gdpBinBandInfo[pOrbitFile->gdpBinBandIndex].bandSize;
+    pSpecInfo->NDET=NDET=pOrbitFile->gdpBinBandInfo[pOrbitFile->gdpBinBandIndex].bandSize;
 
     GdpBinLembda(pSpecInfo->lembda,GDP_BIN_orbitFiles[GDP_BIN_currentFileIndex].gdpBinHeader.indexSpectralParam,GDP_BIN_currentFileIndex);
 
@@ -660,17 +666,6 @@ RC GDP_BIN_Read(SPEC_INFO *pSpecInfo,int recordNo,FILE *specFp,INDEX indexFile)
    rc=ERROR_ID_FILE_RECORD;
   else if ((fp=fopen(pOrbitFile->gdpBinFileName,"rb"))==NULL)
    rc=ERROR_ID_FILE_NOT_FOUND;
-
-  // Irradiance spectrum
-
-  else if ((THRD_id==THREAD_TYPE_SPECTRA) && (THRD_browseType==THREAD_BROWSE_DARK))
-
-   for (i=0,j=pOrbitFile->gdpBinStartPixel[pOrbitFile->gdpBinBandIndex];
-        j<pOrbitFile->gdpBinStartPixel[pOrbitFile->gdpBinBandIndex]+pOrbitFile->gdpBinBandInfo[pOrbitFile->gdpBinBandIndex].bandSize;i++,j++)
-    {
-     pSpecInfo->spectrum[i]=(double)pOrbitFile->gdpBinReference[j]/pOrbitFile->gdpBinBandInfo[pOrbitFile->gdpBinBandIndex].scalingFactor;
-     pSpecInfo->sigmaSpec[i]=(pSpecInfo->useErrors)?(double)pOrbitFile->gdpBinRefError[j]/pOrbitFile->gdpBinBandInfo[pOrbitFile->gdpBinBandIndex].scalingError:pSpecInfo->spectrum[i];
-    }
 
   // Buffers allocation
 

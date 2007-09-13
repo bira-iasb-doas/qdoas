@@ -45,7 +45,7 @@ QString CConfigurationWriter::write(const QString &fileName)
 
   if (fp == NULL) {
     QTextStream stream(&msg);
-    
+
     stream << "Failed to open file '" << fileName << "' for writing.";
     return msg;
   }
@@ -53,7 +53,7 @@ QString CConfigurationWriter::write(const QString &fileName)
   // fp is open for writing ...
   int i, n;
   CWorkSpace *ws = CWorkSpace::instance();
-  
+
   fprintf(fp, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<qdoas>\n");
 
   // paths
@@ -61,7 +61,7 @@ QString CConfigurationWriter::write(const QString &fileName)
 	  "    <!-- upto 10 paths can be specified (index 0 to 9). Any file or directory name in the  -->\n"
 	  "    <!-- raw_spectra tree that begins with %%? (where ? is a single digit) is expanded with -->\n"
 	  "    <!-- the correponding path.                                                            -->\n\n");
-  
+
   for (i=0; i<10; ++i) {
     QString path = ws->path(i);
     if (!path.isNull()) {
@@ -91,7 +91,7 @@ QString CConfigurationWriter::write(const QString &fileName)
 
     stream << "Error writing to the project file '" << fileName << "'";
   }
-  
+
   return msg;
 }
 
@@ -123,7 +123,7 @@ void CConfigurationWriter::writeProjects(FILE *fp)
       }
     }
     ++i;
-  }  
+  }
 }
 
 void CConfigurationWriter::writeProperties(FILE *fp, const mediate_project_t *d)
@@ -318,7 +318,7 @@ void CConfigurationWriter::writePropertiesUndersampling(FILE *fp, const mediate_
   case PRJCT_USAMP_AUTOMATIC:
     fprintf(fp, "\"auto\"");
     break;
-  default:    
+  default:
     fprintf(fp, "\"invalid\"");
   }
   fprintf(fp, " shift=\"%f\" />\n", d->shift);
@@ -378,7 +378,7 @@ void CConfigurationWriter::writePropertiesInstrumental(FILE *fp, const mediate_p
     fprintf(fp, "\"rasas\"");
     break;
   case PRJCT_INSTR_FORMAT_PDASI_EASOE:
-    fprintf(fp, "\"easoe\"");
+    fprintf(fp, "\"pdasieasoe\"");
     break;
   case PRJCT_INSTR_FORMAT_PDASI_OSMA:
     fprintf(fp, "\"osma\"");
@@ -411,7 +411,7 @@ void CConfigurationWriter::writePropertiesInstrumental(FILE *fp, const mediate_p
     fprintf(fp, "\"omi\"");
     break;
   default:
-    fprintf(fp, "\"invalid\"");    
+    fprintf(fp, "\"invalid\"");
   }
   fprintf(fp, " site=\"%s\">\n", d->siteName);
 
@@ -576,7 +576,7 @@ void CConfigurationWriter::writePropertiesInstrumental(FILE *fp, const mediate_p
 
   tmpStr = ws->simplifyPath(QString(d->pdaeggulb.detectorNonLinearityFile));
   fprintf(fp, " dnl=\"%s\" />\n", tmpStr.toAscii().constData());
-  
+
   // ccdohp96
   tmpStr = ws->simplifyPath(QString(d->ccdohp96.calibrationFile));
   fprintf(fp, "      <ccdohp96 calib=\"%s\"", tmpStr.toAscii().constData());
@@ -619,7 +619,7 @@ void CConfigurationWriter::writePropertiesInstrumental(FILE *fp, const mediate_p
   fprintf(fp, " dnl=\"%s\" />\n", tmpStr.toAscii().constData());
 
   // saoz vis
-  fprintf(fp, "      <soazvis type=");
+  fprintf(fp, "      <saozvis type=");
   switch (d->saozvis.spectralType) {
   case PRJCT_INSTR_SAOZ_TYPE_ZENITHAL:
     fprintf(fp, "\"zenithal\"");
@@ -638,7 +638,7 @@ void CConfigurationWriter::writePropertiesInstrumental(FILE *fp, const mediate_p
   fprintf(fp, " instr=\"%s\" />\n", tmpStr.toAscii().constData());
 
   // saoz uv
-  fprintf(fp, "      <soazuv type=");
+  fprintf(fp, "      <saozuv type=");
   switch (d->saozuv.spectralType) {
   case PRJCT_INSTR_SAOZ_TYPE_ZENITHAL:
     fprintf(fp, "\"zenithal\"");
@@ -668,7 +668,7 @@ void CConfigurationWriter::writePropertiesInstrumental(FILE *fp, const mediate_p
 	  d->mfc.detectorSize, d->mfc.firstWavelength,
 	  (d->mfc.revert ? sTrue: sFalse), (d->mfc.autoFileSelect ? sTrue : sFalse),
 	  d->mfc.offsetMask, d->mfc.instrFctnMask, d->mfc.darkCurrentMask, d->mfc.spectraMask);
-  
+
   tmpStr = ws->simplifyPath(QString(d->mfc.calibrationFile));
   fprintf(fp, " calib=\"%s\"", tmpStr.toAscii().constData());
 
@@ -860,7 +860,7 @@ void CConfigurationWriter::writePropertiesInstrumental(FILE *fp, const mediate_p
 
   tmpStr = ws->simplifyPath(QString(d->sciahdf.instrFunctionFile));
   fprintf(fp, " instr=\"%s\" />\n", tmpStr.toAscii().constData());
-  
+
   // sciapds
   fprintf(fp, "      <sciapds channel=");
   switch (d->sciapds.channel) {
@@ -953,7 +953,7 @@ void CConfigurationWriter::writeRawSpectraTree(FILE *fp, const QTreeWidgetItem *
   QTreeWidgetItem *item;
   int nChildren = rawSpectraItem->childCount();
   int i = 0;
-  
+
   while (i < nChildren) {
     item = rawSpectraItem->child(i);
     writeSpectraTreeNode(fp, item, 3);
@@ -970,7 +970,7 @@ void CConfigurationWriter::writeSpectraTreeNode(FILE *fp, const QTreeWidgetItem 
   switch (item->type()) {
   case cSpectraFolderItemType:
     {
-      const CSpectraFolderItem *folderItem = static_cast<const CSpectraFolderItem*>(item);      
+      const CSpectraFolderItem *folderItem = static_cast<const CSpectraFolderItem*>(item);
       int nChildren = item->childCount();
 
       for (i=0; i<depth; ++i) fprintf(fp, "  "); // indenting

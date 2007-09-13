@@ -7,9 +7,9 @@
 //  Creation date     :  This module was already existing in old DOS versions and
 //                       has been added in WinDOAS package in 97
 //
-//  Ref               :  CNRS, France            
+//  Ref               :  CNRS, France
 //
-//  QDOAS is a cross-platform application developed in QT for DOAS retrieval 
+//  QDOAS is a cross-platform application developed in QT for DOAS retrieval
 //  (Differential Optical Absorption Spectroscopy).
 //
 //  The QT version of the program has been developed jointly by the Belgian
@@ -18,21 +18,21 @@
 //
 //      BIRA-IASB                                   S[&]T
 //      Belgian Institute for Space Aeronomy        Science [&] Technology
-//      Avenue Circulaire, 3                        Postbus 608                   
-//      1180     UCCLE                              2600 AP Delft                 
-//      BELGIUM                                     THE NETHERLANDS               
-//      caroline.fayt@aeronomie.be                  info@stcorp.nl                
+//      Avenue Circulaire, 3                        Postbus 608
+//      1180     UCCLE                              2600 AP Delft
+//      BELGIUM                                     THE NETHERLANDS
+//      caroline.fayt@aeronomie.be                  info@stcorp.nl
 //
 //  This program is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU General Public License
 //  as published by the Free Software Foundation; either version 2
 //  of the License, or (at your option) any later version.
-//  
+//
 //  This program is distributed in the hope that it will be useful,
 //  but WITHOUT ANY WARRANTY; without even the implied warranty of
 //  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //  GNU General Public License for more details.
-//  
+//
 //  You should have received a copy of the GNU General Public License
 //  along with this program; if not, write to the Free Software Foundation,
 //  Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
@@ -184,7 +184,6 @@ int Ht_Reli(FILE *fp,char *Ptr,unsigned int Size,int Byte)
 //
 // INPUT         pSpecInfo : information on the file to read
 //               specFp    : pointer to the spectra file to read;
-//               domain    : the region (UV or VIS) to consider
 //
 // OUTPUT        pSpecInfo->recordNumber, the number of records
 //               pSpecInfo->recordSize, the size of records
@@ -194,17 +193,20 @@ int Ht_Reli(FILE *fp,char *Ptr,unsigned int Size,int Byte)
 //               ERROR_ID_NO              otherwise.
 // -----------------------------------------------------------------------------
 
-RC SetSAOZ (SPEC_INFO *pSpecInfo,FILE *specFp,INT domain)
+RC SetSAOZ (SPEC_INFO *pSpecInfo,FILE *specFp)
  {
   // Declarations
 
   INT recordSize;                                                               // size of record
+  INT domain;
   SAOZ saoz;                                                                    // data record
   RC rc;                                                                        // return code
 
   // Initializations
 
-  recordSize=(domain==VIS)?sizeof(SAOZ_V):sizeof(SAOZ_UV);
+  domain=pSpecInfo->project.instrumental.saoz.spectralRegion;
+
+  recordSize=(domain==PRJCT_INSTR_SAOZ_REGION_VIS)?sizeof(SAOZ_V):sizeof(SAOZ_UV);
   pSpecInfo->recordNumber=pSpecInfo->recordSize=0;
   rc=ERROR_ID_NO;
 
@@ -224,7 +226,7 @@ RC SetSAOZ (SPEC_INFO *pSpecInfo,FILE *specFp,INT domain)
      {
       // Calculate the size of records
 
-      switch((domain==VIS)?saoz.Sv.Param[3]:saoz.Suv.Param[3])
+      switch((domain==PRJCT_INSTR_SAOZ_REGION_VIS)?saoz.Sv.Param[3]:saoz.Suv.Param[3])
        {
      // -----------------------------------------------------------------------
         case 1990 :
@@ -260,7 +262,6 @@ RC SetSAOZ (SPEC_INFO *pSpecInfo,FILE *specFp,INT domain)
 //               specFp    : pointer to the spectra file
 //               namesFp   : pointer to the names file
 //               darkFp    : pointer to the dark currents file
-//               domain       the region (UV or VIS) to consider
 //
 // OUTPUT        information on the read out record
 //
@@ -270,13 +271,14 @@ RC SetSAOZ (SPEC_INFO *pSpecInfo,FILE *specFp,INT domain)
 //               ERROR_ID_NO             : otherwise.
 // -----------------------------------------------------------------------------
 
-RC ReliSAOZ(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *specFp,FILE *namesFp,FILE *darkFp,INT domain)
+RC ReliSAOZ(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *specFp,FILE *namesFp)
  {
   // Declarations
 
   SAOZ              saoz;                                                       // current record
   int               IndSec[100], N, IndMin, Base, Co1, Co2,                     // data read out from the input file
                     i, j, k;                                                    // indexes for loops and arrays
+  int               domain;                                                     // spectral region
   char              str[6], *string, *DIGITS="0123456789",                      // string buffers and pointers
                    *pSaoz,                                                      // pointer to the current record
                     names[20];                                                  // names of the current record
@@ -294,7 +296,9 @@ RC ReliSAOZ(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *sp
 
   // Initializations
 
-  if (domain==VIS)
+  domain=pSpecInfo->project.instrumental.saoz.spectralRegion;
+
+  if (domain==PRJCT_INSTR_SAOZ_REGION_VIS)
    {
     pSaoz=(char *)&saoz.Sv;
     spec=saoz.Sv.Spec;
@@ -334,10 +338,11 @@ RC ReliSAOZ(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *sp
     // Record read out
 
     if (((namesFp!=NULL) && !fread(names,20,1,namesFp)) ||
-         !Ht_Reli(specFp,pSaoz,((domain==VIS)?sizeof(SAOZ_V):sizeof(SAOZ_UV))-16,2))
+         !Ht_Reli(specFp,pSaoz,((domain==PRJCT_INSTR_SAOZ_REGION_VIS)?sizeof(SAOZ_V):sizeof(SAOZ_UV))-16,2))
      rc=ERROR_ID_FILE_END;
-    else if (((pSpecInfo->project.instrumental.user==PRJCT_INSTR_SAOZ_TYPE_ZENITHAL) && (names[11]!='Z')) ||
-             ((pSpecInfo->project.instrumental.user==PRJCT_INSTR_SAOZ_TYPE_POINTED) && (names[11]!='P')))
+    else if ((strlen(names)>0) &&
+            (((pSpecInfo->project.instrumental.saoz.spectralType==PRJCT_INSTR_SAOZ_TYPE_ZENITHAL) && (names[11]!='Z')) ||
+             ((pSpecInfo->project.instrumental.saoz.spectralType==PRJCT_INSTR_SAOZ_TYPE_POINTED) && (names[11]!='P'))))
      rc=ERROR_ID_FILE_RECORD;
     else
      {
@@ -450,8 +455,8 @@ RC ReliSAOZ(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *sp
 
       VECTOR_Init ( spectrum, (double) 1., NDET );
 
-      for ( i=0, k=(domain==VIS)?45:30; i<k; IndSec[i] = (int)ind[i], i++ );
-      for ( j=0, k=(domain==VIS)?100:70; i<k; IndSec[i++] = (int)spec[j++] );
+      for ( i=0, k=(domain==PRJCT_INSTR_SAOZ_REGION_VIS)?45:30; i<k; IndSec[i] = (int)ind[i], i++ );
+      for ( j=0, k=(domain==PRJCT_INSTR_SAOZ_REGION_VIS)?100:70; i<k; IndSec[i++] = (int)spec[j++] );
 
       if ((Co1<(int)1) ||
          ((Coef1=(double)Co2*log((double)2.)+log((double)Co1))>(double)709.) ||
@@ -464,7 +469,7 @@ RC ReliSAOZ(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *sp
        {
         InvCoef = (double) 1. / Coeff;
 
-        i=9; N=0; k=(domain==VIS)?NDET:PIXMAXUV;
+        i=9; N=0; k=(domain==PRJCT_INSTR_SAOZ_REGION_VIS)?NDET:PIXMAXUV;
         do
          {
           L = (double) 32767. * (int) ( IndSec[N]/1000 );
@@ -473,7 +478,7 @@ RC ReliSAOZ(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *sp
          }
         while ( j < k );
 
-        IndMin = (N>((domain==VIS)?45:30)) ? N-((domain==VIS)?36:21) : 9;
+        IndMin = (N>((domain==PRJCT_INSTR_SAOZ_REGION_VIS)?45:30)) ? N-((domain==PRJCT_INSTR_SAOZ_REGION_VIS)?36:21) : 9;
         j = IndMin - 9;
         i = 9;
 

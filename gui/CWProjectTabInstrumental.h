@@ -36,7 +36,7 @@ class CWInstrAsciiEdit;
 class CWInstrLoggerEdit;
 class CWInstrActonEdit;
 class CWInstrSaozEdit;
-class CWInstrRasasEdit;
+class CWInstrMinimumEdit;
 class CWInstrCcdEdit;
 class CWInstrCcdUlbEdit;
 class CWInstrPdaEggUlbEdit;
@@ -74,18 +74,18 @@ class CWProjectTabInstrumental : public QFrame
   CWInstrSaozEdit *m_saozUvEdit;
   CWInstrMfcEdit *m_mfcEdit;
   CWInstrMfcStdEdit *m_mfcStdEdit;
-  CWInstrRasasEdit *m_saozEfmEdit;
-  CWInstrRasasEdit *m_rasasEdit;
-  CWInstrRasasEdit *m_pdasiEasoeEdit;
+  CWInstrMinimumEdit *m_saozEfmEdit;
+  CWInstrMinimumEdit *m_rasasEdit;
+  CWInstrMinimumEdit *m_pdasiEasoeEdit;
   CWInstrLoggerEdit *m_pdasiOsmaEdit;
   CWInstrCcdEevEdit *m_ccdEevEdit;
   CWInstrOpusEdit *m_opusEdit;
   CWInstrGdpEdit *m_gdpAsciiEdit;
   CWInstrGdpEdit *m_gdpBinEdit;
   CWInstrSciaEdit *m_sciaHdfEdit;
-  CWInstrSciaEdit *m_sciaPdsEdit;  
-  CWInstrRasasEdit *m_uoftEdit;
-  CWInstrRasasEdit *m_noaaEdit;
+  CWInstrSciaEdit *m_sciaPdsEdit;
+  CWInstrMinimumEdit *m_uoftEdit;
+  CWInstrMinimumEdit *m_noaaEdit;
   CWInstrOmiEdit *m_omiEdit;
 
 };
@@ -145,7 +145,7 @@ Q_OBJECT
 				  const char *instr, int lenInstr,
 				  const char *ipv, int lenIpv,
 				  const char *dnl, int lenDnl);
-  
+
  public slots:
   void slotInterPixelVariabilityThreeBrowse();
   void slotDarkCurrentThreeBrowse();
@@ -179,9 +179,9 @@ class CWInstrLoggerEdit : public CWCalibInstrEdit
  public:
   CWInstrLoggerEdit(const struct instrumental_logger *d, QWidget *parent = 0);
   virtual ~CWInstrLoggerEdit();
-  
+
   void apply(struct instrumental_logger *d) const;
-  
+
  private:
   QComboBox *m_spectralTypeCombo;
   QCheckBox *m_aziCheck;
@@ -194,9 +194,9 @@ class CWInstrActonEdit : public CWCalibInstrEdit
  public:
   CWInstrActonEdit(const struct instrumental_acton *d, QWidget *parent = 0);
   virtual ~CWInstrActonEdit();
-  
+
   void apply(struct instrumental_acton *d) const;
-  
+
  private:
   QComboBox *m_niluTypeCombo;
 };
@@ -208,9 +208,9 @@ class CWInstrSaozEdit : public CWCalibInstrEdit
  public:
   CWInstrSaozEdit(const struct instrumental_saoz *d, QWidget *parent = 0);
   virtual ~CWInstrSaozEdit();
-  
+
   void apply(struct instrumental_saoz *d) const;
-  
+
  private:
   QComboBox *m_spectralTypeCombo;
 };
@@ -222,7 +222,7 @@ class CWInstrMfcEdit : public CWAllFilesEdit
  public:
   CWInstrMfcEdit(const struct instrumental_mfc *d, QWidget *parent = 0);
   virtual ~CWInstrMfcEdit();
-  
+
   void apply(struct instrumental_mfc *d) const;
 
  private:
@@ -238,7 +238,7 @@ class CWInstrMfcStdEdit : public CWAllFilesEdit
  public:
   CWInstrMfcStdEdit(const struct instrumental_mfcstd *d, QWidget *parent = 0);
   virtual ~CWInstrMfcStdEdit();
-  
+
   void apply(struct instrumental_mfcstd *d) const;
 
  private:
@@ -248,13 +248,13 @@ class CWInstrMfcStdEdit : public CWAllFilesEdit
 
 //--------------------------------------------------------------------------
 
-class CWInstrRasasEdit : public CWCalibInstrEdit
+class CWInstrMinimumEdit : public CWCalibInstrEdit
 {
  public:
-  CWInstrRasasEdit(const struct instrumental_rasas *d, QWidget *parent = 0);
-  virtual ~CWInstrRasasEdit();
-  
-  void apply(struct instrumental_rasas *d) const;
+  CWInstrMinimumEdit(const struct instrumental_minimum *d, QWidget *parent = 0);
+  virtual ~CWInstrMinimumEdit();
+
+  void apply(struct instrumental_minimum *d) const;
 };
 
 //--------------------------------------------------------------------------
@@ -264,7 +264,7 @@ class CWInstrCcdEdit : public CWAllFilesEdit
  public:
   CWInstrCcdEdit(const struct instrumental_ccd *d, QWidget *parent = 0);
   virtual ~CWInstrCcdEdit();
-  
+
   void apply(struct instrumental_ccd *d) const;
 };
 
@@ -275,7 +275,7 @@ class CWInstrCcdUlbEdit : public CWAllFilesEdit
  public:
   CWInstrCcdUlbEdit(const struct instrumental_ccdulb *d, QWidget *parent = 0);
   virtual ~CWInstrCcdUlbEdit();
-  
+
   void apply(struct instrumental_ccdulb *d) const;
 
  private:
@@ -289,9 +289,9 @@ class CWInstrPdaEggUlbEdit : public CWAllFilesEdit
  public:
   CWInstrPdaEggUlbEdit(const struct instrumental_pdaeggulb *d, QWidget *parent = 0);
   virtual ~CWInstrPdaEggUlbEdit();
-  
+
   void apply(struct instrumental_pdaeggulb *d) const;
-  
+
  private:
   QComboBox *m_curveTypeCombo;
 };
@@ -303,9 +303,9 @@ class CWInstrCcdEevEdit : public CWAllFilesEdit
  public:
   CWInstrCcdEevEdit(const struct instrumental_ccdeev *d, QWidget *parent = 0);
   virtual ~CWInstrCcdEevEdit();
-  
+
   void apply(struct instrumental_ccdeev *d) const;
-  
+
  private:
   QLineEdit *m_detSizeEdit;
 };
@@ -317,9 +317,9 @@ class CWInstrOpusEdit : public CWCalibInstrEdit
  public:
   CWInstrOpusEdit(const struct instrumental_opus *d, QWidget *parent = 0);
   virtual ~CWInstrOpusEdit();
-  
+
   void apply(struct instrumental_opus *d) const;
-  
+
  private:
   QLineEdit *m_detSizeEdit, *m_timeShiftEdit;
   QCheckBox *m_transmittanceCheck;
@@ -332,9 +332,9 @@ class CWInstrGdpEdit : public CWCalibInstrEdit
  public:
   CWInstrGdpEdit(const struct instrumental_gdp *d, QWidget *parent = 0);
   virtual ~CWInstrGdpEdit();
-  
+
   void apply(struct instrumental_gdp *d) const;
-  
+
  private:
   QComboBox *m_bandTypeCombo;
 };
@@ -347,9 +347,9 @@ Q_OBJECT
  public:
   CWInstrSciaEdit(const struct instrumental_scia *d, QWidget *parent = 0);
   virtual ~CWInstrSciaEdit();
-  
+
   void apply(struct instrumental_scia *d) const;
-  
+
  public slots:
   void slotChannelChanged(int index);
   void slotCluster0Changed(int state);
@@ -375,9 +375,9 @@ class CWInstrOmiEdit : public CWCalibInstrEdit
  public:
   CWInstrOmiEdit(const struct instrumental_omi *d, QWidget *parent = 0);
   virtual ~CWInstrOmiEdit();
-  
+
   void apply(struct instrumental_omi *d) const;
-  
+
  private:
   QComboBox *m_spectralTypeCombo;
   QLineEdit *m_minLambdaEdit, *m_maxLambdaEdit;

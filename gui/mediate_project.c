@@ -40,7 +40,10 @@ void initializeMediateProjectSpectra(mediate_project_spectra_t *d)
 
   // any non-zero defaults...
 
-  d->szaMaximum = 180.0;
+  d->requireSpectra = 1;
+  d->requireData = 1;
+  d->requireFits = 1;
+  d->szaMaximum = 96.0;
 }
 
 void initializeMediateProjectAnalysis(mediate_project_analysis_t *d)
@@ -79,5 +82,7 @@ void initializeMediateProjectInstrumental(mediate_project_instrumental_t *d)
   memset(d, 0, sizeof(mediate_project_instrumental_t));
 
   // any non-zero defaults...
+
+  d->saozvis.spectralRegion=PRJCT_INSTR_SAOZ_REGION_VIS;
 }
 

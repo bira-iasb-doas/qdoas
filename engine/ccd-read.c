@@ -10,7 +10,7 @@
 //  Authors           :  Caroline FAYT (caroline.fayt@oma.be)
 //                       Ann-Carine VANDAELE (a-c.vandaele@oma.be)
 //
-//  QDOAS is a cross-platform application developed in QT for DOAS retrieval 
+//  QDOAS is a cross-platform application developed in QT for DOAS retrieval
 //  (Differential Optical Absorption Spectroscopy).
 //
 //  The QT version of the program has been developed jointly by the Belgian
@@ -19,21 +19,21 @@
 //
 //      BIRA-IASB                                   S[&]T
 //      Belgian Institute for Space Aeronomy        Science [&] Technology
-//      Avenue Circulaire, 3                        Postbus 608                   
-//      1180     UCCLE                              2600 AP Delft                 
-//      BELGIUM                                     THE NETHERLANDS               
-//      caroline.fayt@aeronomie.be                  info@stcorp.nl                
+//      Avenue Circulaire, 3                        Postbus 608
+//      1180     UCCLE                              2600 AP Delft
+//      BELGIUM                                     THE NETHERLANDS
+//      caroline.fayt@aeronomie.be                  info@stcorp.nl
 //
 //  This program is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU General Public License
 //  as published by the Free Software Foundation; either version 2
 //  of the License, or (at your option) any later version.
-//  
+//
 //  This program is distributed in the hope that it will be useful,
 //  but WITHOUT ANY WARRANTY; without even the implied warranty of
 //  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //  GNU General Public License for more details.
-//  
+//
 //  You should have received a copy of the GNU General Public License
 //  along with this program; if not, write to the Free Software Foundation,
 //  Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
@@ -50,7 +50,6 @@
 //  - PRJCT_INSTR_FORMAT_CCD_OHP_96 for a 1024x512 detector used at OHP in summer 96;
 //  - PRJCT_INSTR_FORMAT_CCD_EEV for a 1340x400 CCD detector built in 99 for the
 //                               total solar eclipse (11 Augustus) and still in use;
-//  - PRJCT_INSTR_FORMAT_CCD_ULB for ULB
 //
 //  ----------------------------------------------------------------------------
 //
@@ -65,8 +64,6 @@
 //
 //  CCD_LoadInstrumental - load instrumental functions needed to correct measurements;
 //  CCD_ResetInstrumental - release the buffers allocated by CCD_LoadInstrumental;
-//  SetCCD_Ulb - set file pointers and get the number of records (ULB format);
-//  ReliCCD_Ulb - read the spectra measured by the CCD detector operated by ULB;
 //
 //  ----------------------------------------------------------------------------
 
@@ -1020,109 +1017,6 @@ RC ReliCCDTrack(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE
   return rc;
  }
 
-// =============================
-// CCD DETECTORS OPERATED BY ULB
-// =============================
-
-// --------------------------------------
-// Definition of constants and structures
-// --------------------------------------
-
-// see ACVD for further information on the format
-
-#define INVNCURVE 0.05 // 1/NCURVE
-
-// information on the fiber, how it lightens the CCD
-
-typedef struct tagFIBER
- {
-  short NPoint;
-  short PointType;
-  short FirstCol;
-  short NTrack;
-  short NCol;
-  short TrackType;
-  short FirstRow;
-  short NRow;
-  short Used;
- }
-FIBER;
-
-// information on the used grating
-
-typedef struct tagGRATINGS
- {
-  short Used;
-  short NGrating;
-  float Nanometers;
- }
-GRATINGS;
-
-// Header of records
-
-typedef struct tagCCDDATA
- {
-  short    Temperature;
-  short    ScansNumber;
-  short    Memories;
-  short    PrepFrames;
-  short    IgnoredScans;
-  short    TempCtrl;
-  float    ExposureTime;
-  LONG     MeasurementTime;
-  LONG     DelayTime;
-  LONG     TotalExpTime;
-  FIBER    Fiber1;
-  FIBER    Fiber2;
-  short    CoolerLocked;
-  short    Shutter;
-  GRATINGS Gratings[5];
-  char     LastFile[80];
- }
-CCDDATA;
-
-// Header of the file
-
-typedef struct tagFILE_HEADER_CCD
- {
-  char         Reference[30];            /*  Campaign information             */
-  char         Spectrometer[10];         /*  Spectrometer type                */
-  char         Detector[10];             /*  Detector used with Spectrometer  */
-  short        Temperature;              /*  Detector Temperature             */
-  FIBER        Fiber1;                   /*  Optical Fiber 1                  */
-  FIBER        Fiber2;                   /*  Optical Fiber 2;                 */
-  LONG         MeasurementTime;          /*  Time for one Measurement         */
-  LONG         DelayTime;                /*  Delay between two Measurements   */
-  LONG         TotalExpTime;             /*  Total Experiment Time            */
-  NEWDATE		Day;                          /*  Date of the measurement          */
- }
-FILE_HEADER_CCD;
-
-// Header of curves
-
-typedef struct tagCURVE_HEADER_CCD
- {
-  NEWTIME	HDeb;                /*  Time at the beginning  of the measurement  */
-  NEWTIME	HFin;                /*  Time at the end of the measurement         */
-  float    Tint;               /*  Exposure Time                              */
-  short    NTracks;            /*  Number of Tracks                           */
-  short    NScans;             /*  Number of Scans                            */
-  short    Rejected;           /*  Number of rejected scans                   */
-  short    ReguTemp;           /*  Temperature indicated by regulator         */
-  short    Shutter;            /*  Shutter                                    */
-  short    TempCtrl;           /*  Temperature Control on or off              */
-  float    CoolerLocked;       /*  Cooler Locked                              */
-  GRATINGS Grating;            /*  Information on the used grating            */
-  char     Type;               /*  Type of measurement                        */
- }
-CURVE_HEADER_CCD;
-
-// ----------------
-// Static variables
-// ----------------
-
-static FILE_HEADER_CCD ccdUlbFileHeader;
-
 // -----------------------------------------------------------------------------
 // FUNCTION      CCD_LoadInstrumental
 // -----------------------------------------------------------------------------
@@ -1200,250 +1094,3 @@ void CCD_ResetInstrumental(CCD *pCCD)
   if (pCCD->drk.matrix!=NULL)
    MATRIX_Free(&pCCD->drk,"CCD_ResetInstrumental (offset)");
  }
-
-// -----------------------------------------------------------------------------
-// FUNCTION      SetCCD_Ulb
-// -----------------------------------------------------------------------------
-// PURPOSE       set file pointers and get the number of records (ULB format)
-//
-// INPUT         pSpecInfo : information on the file to read
-//               specFp    : pointer to the current spectra file
-//
-// OUTPUT        pSpecInfo->recordNumber, the number of records
-//
-// RETURN        ERROR_ID_FILE_NOT_FOUND if the input file pointer is NULL;
-//               ERROR_ID_ALLOC if the allocation of a buffer failed;
-//               ERROR_ID_NO in case of success.
-// -----------------------------------------------------------------------------
-
-RC SetCCD_Ulb(SPEC_INFO *pSpecInfo,FILE *specFp)
- {
-  // Declarations
-
-  CHAR  *indexes;                                                               // record indexes read out from file
-  SHORT  curvenum;                                                              // number of records
-  ULONG *recordIndexes;                                                         // save the position of each record in the file
-  INDEX  i;                                                                     // browse spectra in the file
-  RC     rc;                                                                    // return code
-
-  // Initializations
-
-  pSpecInfo->recordIndexesSize=2001;
-  pSpecInfo->recordNumber=0;
-  rc=ERROR_ID_NO;
-
-  // Buffers allocation
-
-  if (((indexes=(CHAR *)MEMORY_AllocBuffer("SetCCD_Ulb","indexes",pSpecInfo->recordIndexesSize,sizeof(CHAR),0,MEMORY_TYPE_STRING))==NULL) ||
-      ((recordIndexes=pSpecInfo->recordIndexes=(ULONG *)MEMORY_AllocBuffer("SetCCD_Ulb","recordIndexes",pSpecInfo->recordIndexesSize,sizeof(ULONG),0,MEMORY_TYPE_LONG))==NULL))
-
-   rc=ERROR_ID_ALLOC;
-
-  // Check the input file pointer
-
-  else if (specFp==NULL)
-   rc=ERROR_SetLast("SetCCD_Ulb",ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pSpecInfo->fileName);
-
-  else
-   {
-    // Headers read out
-
-    fseek(specFp,0L,SEEK_SET);
-
-    if (fread(&curvenum,sizeof(SHORT),1,specFp) &&
-        fread(indexes,pSpecInfo->recordIndexesSize*sizeof(CHAR),1,specFp) &&
-        fread(&ccdUlbFileHeader,sizeof(FILE_HEADER_CCD),1,specFp) &&
-       (curvenum>0))
-     {
-      // Save the position of each record in the file
-
-      pSpecInfo->recordNumber=curvenum;
-
-      recordIndexes[0]=(LONG)pSpecInfo->recordIndexesSize*sizeof(CHAR)+sizeof(SHORT)+sizeof(FILE_HEADER_CCD);
-
-      for (i=1;i<=curvenum;i++)
-       recordIndexes[i]=recordIndexes[i-1]+sizeof(CURVE_HEADER_CCD)+(LONG)sizeof(float)*NDET*indexes[i];
-     }
-   }
-
-  // Release the allocated local buffers
-
-  if (indexes!=NULL)
-   MEMORY_ReleaseBuffer("SetCCD_Ulb","indexes",indexes);
-
-  // Return
-
-  return rc;
- }
-
-// -----------------------------------------------------------------------------
-// FUNCTION      ReliCCD_Ulb
-// -----------------------------------------------------------------------------
-// PURPOSE       read the spectra measured by the CCD detector operated by ULB
-//
-// INPUT         pSpecInfo : information on the file to read
-//               recordNo  : the index of the record to read
-//               dateFlag  : 1 to search for a reference spectrum
-//               localDay  : if dateFlag is 1, the calendar day for the
-//                           reference spectrum to search for
-//               specFp    : pointer to the spectra file
-//               darkFp    : pointer to the dark currents file if any
-//
-// OUTPUT        information on the read out record
-//
-// RETURN        ERROR_ID_ALLOC          : a buffer allocation failed;
-//               ERROR_ID_FILE_NOT_FOUND : if the input file pointer is NULL;
-//               ERROR_ID_FILE_END       : the end of the file is reached;
-//               ERROR_ID_FILE_RECORD    : the record doesn't satisfy user constraints
-//               ERROR_ID_DIVISION_BY_0  : in case of division by 0
-//               ERROR_ID_SPLINE         : if non increasing absissae are provided to the spline function;
-//               ERROR_ID_NO             : otherwise.
-// -----------------------------------------------------------------------------
-
-RC ReliCCD_Ulb(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *specFp,FILE *darkFp)
- {
- 	// Declarations
-
-  PRJCT_INSTRUMENTAL *pInput;                                                   // retrieve options on the current format
-  CURVE_HEADER_CCD  CurveHeader;                                                // header of the current record
-  double *spectrum,**vipMatrix,**dnlMatrix,dnl,**dnlDeriv,**offset;             // substitution pointers for matrices
-  double tmLocal;                                                               // local time in seconds
-  double dtrack;                                                                // a value of the track
-  float *track;                                                                 // read a track
-  INT dnlNl;                                                                    // the size of the vector for correcting the non linearity of the detector
-  INDEX i,j;                                                                    // indexes for loops and arrays
-  RC rc;                                                                        // return code
-
-  // Initializations
-
-  pInput=&pSpecInfo->project.instrumental;
-  spectrum=pSpecInfo->spectrum;
-  offset=(double **)pSpecInfo->ccd.drk.matrix;
-  vipMatrix=(double **)pSpecInfo->ccd.vip.matrix;
-  dnlMatrix=(double **)pSpecInfo->ccd.dnl.matrix;
-  dnlDeriv=(double **)pSpecInfo->ccd.dnl.deriv2;
-  dnlNl=pSpecInfo->ccd.dnl.nl;
-  rc=ERROR_ID_NO;
-
-  if ((track=(float *)MEMORY_AllocBuffer("ReliCCD_Ulb","track",NDET,sizeof(float),0,MEMORY_TYPE_FLOAT))==NULL)
-   rc=ERROR_ID_ALLOC;
-  else if (specFp==NULL)
-   rc=ERROR_SetLast("ReliCCD_Ulb",ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pSpecInfo->fileName);
-  else if ((recordNo<=0) || (recordNo>pSpecInfo->recordNumber))
-   rc=ERROR_ID_FILE_END;
-  else
-   {
-    // Spectrum initialization
-
-    VECTOR_Init(spectrum,(double)0.,NDET);
-
-    // Set file pointer
-
-    fseek(specFp,(LONG)pSpecInfo->recordIndexes[recordNo-1],SEEK_SET);
-
-    // Read the header of the record
-
-    if (!fread(&CurveHeader,sizeof(CURVE_HEADER_CCD),1,specFp))
-     rc=ERROR_ID_FILE_END;
-
-    else if ((CurveHeader.NTracks!=NCURVE) ||
-            ((pInput->user>0) && (CurveHeader.Grating.NGrating!=(short)pInput->user)) ||
-            ((pInput->wavelength>0) && ((CurveHeader.Grating.Nanometers<(float)pInput->wavelength-5.) ||
-             (CurveHeader.Grating.Nanometers>(float)pInput->wavelength+5.))))
-
-     rc=ERROR_ID_FILE_RECORD;
-
-    else
-     {
-     	// Read track per track
-
-      for (i=0;(i<NCURVE) && !rc;i++)
-       {
-        fread(track,sizeof(float)*NDET,1,specFp);
-
-        for (j=0;(j<NDET) && !rc;j++)
-         {
-          // offset correction
-
-          if (offset!=NULL)
-           track[j]-=(float)offset[i][j]*CurveHeader.NScans;
-
-          // Interpixel variability
-
-          if (vipMatrix!=NULL)
-           {
-            if (vipMatrix[i][j]==(double)0.)
-             rc=ERROR_SetLast("ReliCCD_Ulb",ERROR_TYPE_WARNING,ERROR_ID_DIVISION_BY_0,"interpixel variability");
-            else
-             track[j]/=(float)(vipMatrix[i][j]*CurveHeader.NScans);
-           }
-
-          // Non linearity
-
-          dtrack=(double)track[j];
-
-          if (!rc && (dnlMatrix!=NULL) && (dnlDeriv!=NULL) &&
-             (track[j]>=dnlMatrix[0][0]) && (track[j]<=dnlMatrix[0][dnlNl-1]) &&
-            !(rc=SPLINE_Vector(dnlMatrix[0],dnlMatrix[1],dnlDeriv[1],dnlNl,&dtrack,&dnl,1,SPLINE_CUBIC,"ReliCCD_Ulb")))
-           {
-            if (dnl==(double)0.)
-             rc=ERROR_SetLast("ReliCCD_Ulb",ERROR_TYPE_WARNING,ERROR_ID_DIVISION_BY_0,"non linearity of the detector");
-            else
-             track[j]/=(float)dnl;
-           }
-
-          if (!rc)
-           spectrum[j]+=(double)track[j];
-         }
-       }
-
-      if (!rc)
-       {
-        // Get the information on the current record
-
-        pSpecInfo->Tint      = (double)CurveHeader.Tint;
-        pSpecInfo->NSomme    = CurveHeader.NScans;
-        pSpecInfo->Zm        = -1;
-        pSpecInfo->NTracks   = CurveHeader.NTracks;
-        pSpecInfo->rejected  = CurveHeader.Rejected;
-        pSpecInfo->SkyObs    = 0;
-        pSpecInfo->TDet      = (double)ccdUlbFileHeader.Temperature;
-        pSpecInfo->ReguTemp  = (short)CurveHeader.ReguTemp;
-
-        pSpecInfo->present_day.da_year  = ccdUlbFileHeader.Day.year;
-        pSpecInfo->present_day.da_mon   = ccdUlbFileHeader.Day.month;
-        pSpecInfo->present_day.da_day   = ccdUlbFileHeader.Day.day;
-
-        pSpecInfo->present_time.ti_sec=CurveHeader.HDeb.sec;
-        pSpecInfo->present_time.ti_min=CurveHeader.HDeb.min;
-        pSpecInfo->present_time.ti_hour=CurveHeader.HDeb.hour;
-
-        pSpecInfo->Tm=(double)ZEN_NbSec(&pSpecInfo->present_day,&pSpecInfo->present_time,0);
-        pSpecInfo->TotalExpTime=ccdUlbFileHeader.TotalExpTime;
-        pSpecInfo->TimeDec=(double)CurveHeader.HDeb.hour+CurveHeader.HDeb.min/60.;
-
-        tmLocal=pSpecInfo->Tm+THRD_localShift*3600.;
-
-        pSpecInfo->localCalDay=ZEN_FNCaljda(&tmLocal);
-        pSpecInfo->localTimeDec=fmod(pSpecInfo->TimeDec+24.+THRD_localShift,(double)24.);
-
-        pSpecInfo->NGrating=CurveHeader.Grating.NGrating;
-        pSpecInfo->Nanometers=CurveHeader.Grating.Nanometers;
-
-        for (j=0;j<NDET;j++)
-         spectrum[j]*=INVNCURVE;
-       }
-     }
-   }
-
-  // Release the allocated local buffer
-
-  if (track!=NULL)
-   MEMORY_ReleaseBuffer("ReliCCD_Ulb","track",track);
-
-  // Return
-
-  return rc;
- }
-
-
