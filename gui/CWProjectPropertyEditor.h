@@ -31,6 +31,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "CWProjectTabCalibration.h"
 #include "CWProjectTabUndersampling.h"
 #include "CWProjectTabInstrumental.h"
+#include "CWProjectTabSlit.h"
 
 class CWProjectTree;
 
@@ -53,6 +54,7 @@ Q_OBJECT
   CWProjectTabCalibration *m_calibrationTab;
   CWProjectTabUndersampling *m_undersamplingTab;
   CWProjectTabInstrumental *m_instrumentalTab;
+  CWProjectTabSlit *m_slitTab;
 
   CWProjectTree *m_projectTree;
   QString m_projectName;

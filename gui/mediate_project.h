@@ -356,6 +356,26 @@ extern "C" {
   } mediate_project_instrumental_t;
 
 
+  /****************************************************/
+  /* Project Slit */
+
+  struct slit_file {
+    char filename[FILENAME_BUFFER_LENGTH];
+  };
+
+  struct slit_gaussian {
+    double fwhm;
+  };
+
+  typedef struct mediate_project_slit
+  {
+    char solarRefFile[FILENAME_BUFFER_LENGTH];
+    int applyFwhmCorrection;
+    int slitType;
+    struct slit_file file;
+    struct slit_gaussian gaussian;
+  } mediate_project_slit_t;
+
 
 
   // mediate_project_t
@@ -373,6 +393,7 @@ extern "C" {
     mediate_project_calibration_t calibration;
     mediate_project_undersampling_t undersampling;
     mediate_project_instrumental_t instrumental;
+    mediate_project_slit_t slit;
 
   } mediate_project_t;
 
@@ -387,6 +408,7 @@ extern "C" {
   void initializeMediateProjectCalibration(mediate_project_calibration_t *d);
   void initializeMediateProjectUndersampling(mediate_project_undersampling_t *d);
   void initializeMediateProjectInstrumental(mediate_project_instrumental_t *d);
+  void initializeMediateProjectSlit(mediate_project_slit_t *d);
 
 #if defined(_cplusplus) || defined(__cplusplus)
 }

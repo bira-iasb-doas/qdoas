@@ -17,6 +17,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
+#include <string.h>
 
 #include "mediate_project.h"
 #include "constants.h"
@@ -32,6 +33,7 @@ void initializeMediateProject(mediate_project_t *d)
   initializeMediateProjectCalibration(&(d->calibration));
   initializeMediateProjectUndersampling(&(d->undersampling));
   initializeMediateProjectInstrumental(&(d->instrumental));
+  initializeMediateProjectSlit(&(d->slit));
 }
 
 void initializeMediateProjectSpectra(mediate_project_spectra_t *d)
@@ -84,5 +86,12 @@ void initializeMediateProjectInstrumental(mediate_project_instrumental_t *d)
   // any non-zero defaults...
 
   d->saozvis.spectralRegion=PRJCT_INSTR_SAOZ_REGION_VIS;
+}
+
+void initializeMediateProjectSlit(mediate_project_slit_t *d)
+{
+  memset(d, 0, sizeof(mediate_project_slit_t));
+
+  // any non-zero defaults...
 }
 

@@ -69,6 +69,10 @@ CWProjectPropertyEditor::CWProjectPropertyEditor(CWProjectTree *projectTree, QTr
   m_instrumentalTab = new CWProjectTabInstrumental(&(projectData->instrumental));
   m_tabs->addTab(m_instrumentalTab, "Instrumental");
 
+  // Slit Tab
+  m_slitTab = new CWProjectTabSlit(&(projectData->slit));
+  m_tabs->addTab(m_slitTab, "Slit");
+
   mainLayout->addWidget(m_tabs);
 
   // caption string and context tag
@@ -97,6 +101,7 @@ bool CWProjectPropertyEditor::actionOk(void)
     m_calibrationTab->apply(&(projectData->calibration));
     m_undersamplingTab->apply(&(projectData->undersampling));
     m_instrumentalTab->apply(&(projectData->instrumental));
+    m_slitTab->apply(&(projectData->slit));
 
     return true;
   }
