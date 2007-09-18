@@ -70,7 +70,7 @@ CWProjectDirectoryEditor::CWProjectDirectoryEditor(CWProjectTree *projectTree, Q
     item = item->parent();
   }
   m_captionStr += m_contextTag;
-  m_contextTag += "-DirectoryEditor";
+  m_contextTag += " Dir";
 
   connect(browseButton, SIGNAL(clicked()), this, SLOT(slotBrowseButtonClicked()));
 

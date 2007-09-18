@@ -89,7 +89,7 @@ CWSiteEditor::CWSiteEditor(QTreeWidgetItem *editItem, QWidget *parent) :
     m_captionStr = "Modifying properties of observation site ";
     m_captionStr += obsSiteStr;
     m_contextTag = obsSiteStr;
-    m_contextTag += "-SiteEditor";
+    m_contextTag += " Site";
 
     // extract the current information from the child items (must be 4 of them)
     // NOTE: set setText calls to the line edits with numeric data will result in
@@ -116,7 +116,7 @@ CWSiteEditor::CWSiteEditor(QTreeWidgetItem *editItem, QWidget *parent) :
   else {
     // Update the caption and create a context tag 
     m_captionStr = "Create new observation site";
-    m_contextTag = "SiteEditor"; // only ever want one of these active at once
+    m_contextTag = "New Site"; // only ever want one of these active at once
 
     // set some defaults
 

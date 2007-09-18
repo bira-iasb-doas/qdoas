@@ -43,8 +43,11 @@ CWActiveContext::CWActiveContext(QWidget *parent) :
   m_activeEditor(NULL),
   m_titleRegionHeight(0),
   m_buttonRegionHeight(0),
-  m_tabRegionHeight(0),
-  m_centralRegionHeight(0)
+  m_graphTabRegionHeight(0),
+  m_activeTabRegionWidth(0),
+  m_centralRegionHeight(0),
+  m_centralRegionWidth(0),
+  m_blockActiveTabSlot(false)
 {
 
   // Layout is managed explicitly
@@ -112,7 +115,7 @@ CWActiveContext::CWActiveContext(QWidget *parent) :
   }
   m_buttonRegionHeight += 2 * cBorderSize;
 
-  // tab-bar
+  // graph tab-bar
   m_graphTab = new QTabBar(this);
   m_graphTab->setShape(QTabBar::TriangularSouth);
   m_graphTab->addTab("Qdoas"); // need one tab to get a sensible height from sizeHint.
@@ -121,16 +124,34 @@ CWActiveContext::CWActiveContext(QWidget *parent) :
   if (tmpSize.isValid()) {
     if (tmpSize.width() > minWidth)
       minWidth = tmpSize.width();
-    m_tabRegionHeight = tmpSize.height();
+    m_graphTabRegionHeight = tmpSize.height();
   }
   else {
-    m_tabRegionHeight = 20;
+    m_graphTabRegionHeight = 20;
+  }
+
+  // active tab-bar
+
+  // The items in the tab bar are kept in sync with the editor list, with 'off-by-one'
+  // indexing because tab-0 is always the plot.
+  m_activeTab = new QTabBar(this);
+  m_activeTab->setShape(QTabBar::RoundedEast);
+  m_activeTab->addTab("Plot"); // need one tab to get a sensible width from sizeHint.
+
+  tmpSize = m_activeTab->sizeHint();
+  if (tmpSize.isValid()) {
+    if (tmpSize.width() > minWidth)
+      minWidth = tmpSize.width();
+    m_activeTabRegionWidth = tmpSize.width();
+  }
+  else {
+    m_activeTabRegionWidth = 20;
   }
 
   m_plotRegion = new CWPlotRegion(this);
 
   // this might be adjusted in edit mode ...
-  m_minGeneralSize = QSize(minWidth, m_titleRegionHeight + m_tabRegionHeight + 50);
+  m_minGeneralSize = QSize(minWidth, m_titleRegionHeight + m_graphTabRegionHeight + 50);
   setMinimumSize(m_minGeneralSize);
 
   // connections
@@ -139,75 +160,79 @@ CWActiveContext::CWActiveContext(QWidget *parent) :
   connect(m_cancelButton, SIGNAL(clicked()), this, SLOT(slotCancelButtonClicked()));
   
   connect(m_graphTab, SIGNAL(currentChanged(int)),
-	  this, SLOT(slotCurrentTabChanged(int)));
+	  this, SLOT(slotCurrentGraphTabChanged(int)));
+  connect(m_activeTab, SIGNAL(currentChanged(int)),
+	  this, SLOT(slotCurrentActiveTabChanged(int)));
 
   // explicitly hide the edit stuff to start with
   m_helpButton->hide();
   m_okButton->hide();
   m_cancelButton->hide();
 
+  // explicitly hide the active tab
+  m_activeTab->hide();
 }
 
 CWActiveContext::~CWActiveContext()
 {
   // all widgets in the stack are parented to this so they will get deleted automagically.
-  m_editorStack.clear();
 }
 
 void CWActiveContext::addEditor(CWEditor *editor)
 {
-  if (m_activeEditor) {
-    // if there is an active editor, then disconnect its signalAcceptOk & signalShortcutActionOk
-    // signals, push it on the stack and make it invisible.
-    disconnect(m_activeEditor, SIGNAL(signalAcceptOk(bool)), this, SLOT(slotAcceptOk(bool)));
-    disconnect(m_activeEditor, SIGNAL(signalShortcutActionOk()), this, SLOT(slotOkButtonClicked()));
-    m_editorStack.push_back(m_activeEditor);
-    m_activeEditor->hide();
+  // configure/reconfigure the layout.
+
+  if (m_editorList.empty()) {
+    m_centralRegionWidth = width() - m_activeTabRegionWidth;
+    m_centralRegionHeight = height() - m_titleRegionHeight - m_buttonRegionHeight;
+    moveAndResizeActiveTab();
+
+    // add the tab and the editor to the list
+    editor->setParent(this);
+    m_editorList.push_back(editor);
+
+    // take the last part of the context tag name as the tab label
+    if (editor->editContextTag().contains(':')) {
+      QString label = editor->editContextTag();
+      m_activeTab->addTab(label.remove(0, label.lastIndexOf(':')+1));
+    }
+    else
+      m_activeTab->addTab(editor->editContextTag());
+    
+    // set this tab as active ...
+    m_activeTab->setCurrentIndex(1);
   }
   else {
-    // graph widgets were visible - hide them - reposition and make buttons visible.
+    // check for duplicates
 
-    moveAndResizeButtons(width(), height());
-
-    m_plotRegion->hide();
-    m_graphTab->hide();
-    m_helpButton->show();
-    m_okButton->show();
-    m_cancelButton->show();
-
-    // change title colour scheme
-    QPalette palette(m_title->palette());
-    palette.setColor(QPalette::Window, QColor(cEditTitleBackgroundColour));
-    palette.setColor(QPalette::WindowText, QColor(cEditTitleTextColour));
-    m_title->setPalette(palette);
-  }
-
-  // walk the list and see if an editor with the same contextTag is in the stack. If so, use it
-  // instead of editor (can just delete editor)
-  if (!m_editorStack.isEmpty()) {
-    QList<CWEditor*>::iterator it = m_editorStack.begin();
-    while (it != m_editorStack.end() && (*it)->editContextTag() != editor->editContextTag()) ++it;
-    if (it != m_editorStack.end()) {
-      delete editor;
-      editor = *it;
-      m_editorStack.erase(it);
+    int index = 0;
+    QList<CWEditor*>::iterator it = m_editorList.begin();
+    while (it != m_editorList.end() && (*it)->editContextTag() != editor->editContextTag()) {
+      ++it;
+      ++index;
     }
+    if (it != m_editorList.end()) {
+      // exists already ...
+      delete editor;
+    }
+    else {
+      index = m_editorList.size();
+      editor->setParent(this);
+      m_editorList.push_back(editor);
+
+      // take the last part of the context tag name as the tab label
+      if (editor->editContextTag().contains(':')) {
+	QString label = editor->editContextTag();
+	m_activeTab->addTab(label.remove(0, label.lastIndexOf(':')+1));
+      }
+      else
+	m_activeTab->addTab(editor->editContextTag());
+
+    }
+
+    // set this tab as active ...
+    m_activeTab->setCurrentIndex(index + 1);
   }
-
-  m_activeEditor = editor;
-
-  m_activeEditor->setParent(this);
-  moveAndResizeActiveEditor(width());
-
-  connect(m_activeEditor, SIGNAL(signalAcceptOk(bool)), this, SLOT(slotAcceptOk(bool)));
-  connect(m_activeEditor, SIGNAL(signalShortcutActionOk()), this, SLOT(slotOkButtonClicked()));
-  m_okButton->setEnabled(m_activeEditor->isAcceptActionOk());
-
-  m_title->setText(m_activeEditor->editCaption());
-
-  m_activeEditor->show();
-  // give it focus
-  m_activeEditor->takeFocus();
 }
   
 QSize CWActiveContext::minimumSizeHint() const
@@ -226,7 +251,7 @@ bool CWActiveContext::event(QEvent *e)
 
     // only need to do something if the editor is active
     if (m_activeEditor)
-      moveAndResizeActiveEditor(width());
+      moveAndResizeActiveEditor();
 
     e->accept();
     return true;
@@ -243,49 +268,65 @@ void CWActiveContext::resizeEvent(QResizeEvent *e)
   // resize the title to the full width - already positioned
   m_title->resize(wid, m_titleRegionHeight);
 
+  // determine the size of the central region ...
+  m_centralRegionHeight = hei - m_titleRegionHeight;
   if (m_activeEditor) {
-    moveAndResizeButtons(wid, hei);
-    // position the editor ...
-    moveAndResizeActiveEditor(wid);
+    // an editor must be visible
+    m_centralRegionHeight -= m_buttonRegionHeight;
   }
   else {
-    moveAndResizeGraph(wid, hei);
+    m_centralRegionHeight -= m_graphTabRegionHeight;
+  }
+  m_centralRegionWidth = wid;
+  if (m_activeTab->count() > 1) {
+    m_centralRegionWidth -= m_activeTabRegionWidth;
+    // the active tab is displayed - reposition and resize
+    moveAndResizeActiveTab();
+  }
+
+  if (m_activeEditor) {
+    moveAndResizeButtons(hei);
+    // position the editor ...
+    moveAndResizeActiveEditor();
+  }
+  else {
+    moveAndResizeGraph(hei);
    }
 }
 
-void CWActiveContext::moveAndResizeButtons(int wid, int hei)
+void CWActiveContext::moveAndResizeActiveTab(void)
+{
+  m_activeTab->move(m_centralRegionWidth, m_titleRegionHeight);
+  m_activeTab->resize(m_activeTabRegionWidth, m_centralRegionHeight + m_buttonRegionHeight);
+}
+
+void CWActiveContext::moveAndResizeButtons(int hei)
 {
   int tmpW, tmpH;
 
-  // the position and size of the central region
-  m_centralRegionHeight = hei - m_titleRegionHeight - m_buttonRegionHeight;
-  
   // position the widgets in the control region
   tmpH = hei - m_buttonRegionHeight + cBorderSize;
   m_helpButton->move(cBorderSize, tmpH);
   
-  tmpW = wid - cBorderSize - m_cancelButton->width();
+  tmpW = m_centralRegionWidth - cBorderSize - m_cancelButton->width();
   m_cancelButton->move(tmpW, tmpH);
   tmpW -= cBorderSize + m_okButton->width();
   m_okButton->move(tmpW, tmpH);
 }
 
-void CWActiveContext::moveAndResizeGraph(int wid, int hei)
+void CWActiveContext::moveAndResizeGraph(int hei)
 {
-  // the position and size of the central region
-  m_centralRegionHeight = hei - m_titleRegionHeight - m_tabRegionHeight;
-
   // position and resize the tab widget
-  m_graphTab->move(0, hei - m_tabRegionHeight);
-  m_graphTab->resize(wid, m_tabRegionHeight);
+  m_graphTab->move(0, hei - m_graphTabRegionHeight);
+  m_graphTab->resize(m_centralRegionWidth, m_graphTabRegionHeight);
   
   // scroll area
   // m_plotPage->layoutPlots(wid - 16); TODOTODO
   m_plotRegion->move(0, m_titleRegionHeight);
-  m_plotRegion->resize(wid, m_centralRegionHeight);
+  m_plotRegion->resize(m_centralRegionWidth, m_centralRegionHeight);
 } 
 
-void CWActiveContext::moveAndResizeActiveEditor(int fullWidth)
+void CWActiveContext::moveAndResizeActiveEditor(void)
 {
   // active editor guaranteed to be valid
 
@@ -297,7 +338,7 @@ void CWActiveContext::moveAndResizeActiveEditor(int fullWidth)
   setMinimumSize(m_minEditSize.expandedTo(m_minGeneralSize));
 
   // will the minimum reasonable size fit in the available space ?
-  if (tmpSize.isValid() && tmpSize.width() <= fullWidth && tmpSize.height() <= m_centralRegionHeight) {
+  if (tmpSize.isValid() && tmpSize.width() <= m_centralRegionWidth && tmpSize.height() <= m_centralRegionHeight) {
     // yes - try and make it the recommended size, or the full size
     int wid = tmpSize.width();
     int hei = tmpSize.height();
@@ -309,8 +350,8 @@ void CWActiveContext::moveAndResizeActiveEditor(int fullWidth)
       hei = tmpSize.height();
     }
 
-    if (wid > fullWidth)
-      wid = fullWidth;
+    if (wid > m_centralRegionWidth)
+      wid = m_centralRegionWidth;
     if (hei > m_centralRegionHeight)
       hei = m_centralRegionHeight;
 
@@ -323,7 +364,7 @@ void CWActiveContext::moveAndResizeActiveEditor(int fullWidth)
         hei = tmpSize.height();
     }
 
-    m_activeEditor->move((fullWidth - wid)/ 2, m_titleRegionHeight);
+    m_activeEditor->move((m_centralRegionWidth - wid)/ 2, m_titleRegionHeight);
     m_activeEditor->resize(wid, hei);
   }
   else {
@@ -336,49 +377,36 @@ void CWActiveContext::discardCurrentEditor(void)
 {
   // guaranteed that m_activeEditor is not null
 
+  // find this editor in the list in order to get its index
+  int index = 0;
+  QList<CWEditor*>::iterator it = m_editorList.begin();
+  while (it != m_editorList.end() && *it != m_activeEditor) {
+    ++it;
+    ++index;
+  }
+  assert(it != m_editorList.end());
+  m_editorList.erase(it);
+
+  disconnect(m_activeEditor, SIGNAL(signalAcceptOk(bool)), this, SLOT(slotAcceptOk(bool)));
+  disconnect(m_activeEditor, SIGNAL(signalShortcutActionOk()), this, SLOT(slotOkButtonClicked()));
   m_activeEditor->hide();
+
+  // if this was the last editor then hide the active tab
+  if (m_editorList.empty()) {
+    m_centralRegionWidth = width();
+    m_activeTab->hide();
+  }
+
+  CWEditor *oldActive = m_activeEditor;
+
+  m_blockActiveTabSlot = true;
+  m_activeTab->removeTab(index + 1); // slot will return without doing anything
+  m_blockActiveTabSlot = false;
+  slotCurrentActiveTabChanged(m_activeTab->count()-1); // make the last tab active
+
   // Delete, but not immediately, since the signalShortcutActionOk is sent from a method
   // of m_activeEditor.
-  m_activeEditor->deleteLater();
-
-  // is there something to replace it with?
-  if (!m_editorStack.isEmpty()) {
-    m_activeEditor = m_editorStack.back();
-    m_editorStack.pop_back();
-
-    moveAndResizeActiveEditor(width());
-
-    connect(m_activeEditor, SIGNAL(signalAcceptOk(bool)), this, SLOT(slotAcceptOk(bool)));    
-    connect(m_activeEditor, SIGNAL(signalShortcutActionOk()), this, SLOT(slotOkButtonClicked()));
-    m_okButton->setEnabled(m_activeEditor->isAcceptActionOk());
-
-    m_title->setText(m_activeEditor->editCaption());
-    
-    m_activeEditor->show();
-  }
-  else {
-    // no more ... hide this widget ... signal - TODO
-    m_activeEditor = NULL;
-
-    // back to the normal minimum
-    setMinimumSize(m_minGeneralSize);
-
-    moveAndResizeGraph(width(), height());
-
-    m_helpButton->hide();
-    m_okButton->hide();
-    m_cancelButton->hide();
-    m_graphTab->show();
-    m_plotRegion->show();
-
-    // change title colour scheme
-    QPalette palette(m_title->palette());
-    palette.setColor(QPalette::Window, QColor(cGraphTitleBackgroundColour));
-    palette.setColor(QPalette::WindowText, QColor(cGraphTitleTextColour));
-    m_title->setPalette(palette);
-
-    m_title->setText(m_graphTitleStr);
-  }
+  oldActive->deleteLater();
 }
 
 void CWActiveContext::slotOkButtonClicked()
@@ -441,7 +469,7 @@ void CWActiveContext::slotPlotPages(const QList< RefCountConstPtr<CPlotPageData>
     if (!m_activeEditor)
       m_graphTab->show();
     if (m_graphTab->currentIndex() == 0) {
-      slotCurrentTabChanged(0);
+      slotCurrentGraphTabChanged(0);
     }
     else {
       m_graphTab->setCurrentIndex(0);
@@ -451,7 +479,7 @@ void CWActiveContext::slotPlotPages(const QList< RefCountConstPtr<CPlotPageData>
     m_graphTab->hide();
 }
 
-void CWActiveContext::slotCurrentTabChanged(int index)
+void CWActiveContext::slotCurrentGraphTabChanged(int index)
 {
   int pageNumber = (index == -1) ? -1 : m_graphTab->tabData(index).toInt();
   
@@ -463,5 +491,89 @@ void CWActiveContext::slotCurrentTabChanged(int index)
     m_title->setText(m_graphTitleStr);
   
   emit signalActivePageChanged(pageNumber);
+}
+
+void CWActiveContext::slotCurrentActiveTabChanged(int index)
+{
+  if (m_blockActiveTabSlot) return;
+
+  if (index == 0) {
+    // changed to graph page ...
+    if (m_activeEditor) {
+      disconnect(m_activeEditor, SIGNAL(signalAcceptOk(bool)), this, SLOT(slotAcceptOk(bool)));
+      disconnect(m_activeEditor, SIGNAL(signalShortcutActionOk()), this, SLOT(slotOkButtonClicked()));
+      m_activeEditor->hide();
+      m_activeEditor = NULL;
+
+      m_helpButton->hide();
+      m_okButton->hide();
+      m_cancelButton->hide();
+    }
+
+    m_centralRegionHeight= height() - m_titleRegionHeight - m_graphTabRegionHeight;
+
+    setMinimumSize(m_minGeneralSize);
+    moveAndResizeGraph(height());
+
+    m_plotRegion->show();
+    m_graphTab->show();
+
+    // change title colour scheme
+    QPalette palette(m_title->palette());
+    palette.setColor(QPalette::Window, QColor(cGraphTitleBackgroundColour));
+    palette.setColor(QPalette::WindowText, QColor(cGraphTitleTextColour));
+    m_title->setPalette(palette);
+
+    m_title->setText(m_graphTitleStr);
+
+  }
+  else {
+    // changed to an editor ...
+    if (m_activeEditor) {
+      // Already have a visible set of buttons and the active tab is visible.
+      // Disconnect its signalAcceptOk & signalShortcutActionOk
+      // signals and make it invisible.
+      disconnect(m_activeEditor, SIGNAL(signalAcceptOk(bool)), this, SLOT(slotAcceptOk(bool)));
+      disconnect(m_activeEditor, SIGNAL(signalShortcutActionOk()), this, SLOT(slotOkButtonClicked()));
+      m_activeEditor->hide();
+      m_activeEditor = NULL;
+    }
+    else {
+      // graph was visible - hide it and make the buttons visible
+
+      m_centralRegionHeight= height() - m_titleRegionHeight - m_buttonRegionHeight;
+      moveAndResizeButtons(height());
+
+      m_plotRegion->hide();
+      m_graphTab->hide();
+
+      m_helpButton->show();
+      m_okButton->show();
+      m_cancelButton->show();
+
+      m_activeTab->show();
+    }
+
+    // change title colour scheme
+    QPalette palette(m_title->palette());
+    palette.setColor(QPalette::Window, QColor(cEditTitleBackgroundColour));
+    palette.setColor(QPalette::WindowText, QColor(cEditTitleTextColour));
+    m_title->setPalette(palette);
+
+    m_activeEditor = m_editorList.at(index - 1);
+
+    moveAndResizeActiveEditor();
+
+    connect(m_activeEditor, SIGNAL(signalAcceptOk(bool)), this, SLOT(slotAcceptOk(bool)));
+    connect(m_activeEditor, SIGNAL(signalShortcutActionOk()), this, SLOT(slotOkButtonClicked()));
+    m_okButton->setEnabled(m_activeEditor->isAcceptActionOk());
+
+    m_title->setText(m_activeEditor->editCaption());
+
+    m_activeEditor->show();
+
+    // give it focus
+    m_activeEditor->takeFocus();
+  }
 }
 

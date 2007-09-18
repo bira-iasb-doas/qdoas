@@ -62,7 +62,7 @@ CWProjectAnalysisWindowNameEditor::CWProjectAnalysisWindowNameEditor(CWProjectTr
     item = item->parent();
   }
   m_captionStr += m_contextTag;
-  m_contextTag += "-AnalysisWindowEditor";
+  m_contextTag += " Anlys Win";
 
   // if renaming
   if (!m_newAnalysisWindow && !m_path.isEmpty())

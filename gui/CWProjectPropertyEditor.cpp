@@ -76,7 +76,7 @@ CWProjectPropertyEditor::CWProjectPropertyEditor(CWProjectTree *projectTree, QTr
   m_captionStr += m_projectName;
 
   m_contextTag = m_projectName;
-  m_contextTag += "-ProjPropEditor";
+  m_contextTag += " Prop";
   
   notifyAcceptActionOk(true);
 }

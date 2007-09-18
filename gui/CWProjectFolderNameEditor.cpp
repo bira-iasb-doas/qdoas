@@ -62,7 +62,7 @@ CWProjectFolderNameEditor::CWProjectFolderNameEditor(CWProjectTree *projectTree,
     item = item->parent();
   }
   m_captionStr += m_contextTag;
-  m_contextTag += "-FolderEditor";
+  m_contextTag += " Folder";
 
   // if renaming
   if (!m_newFolder && !m_path.isEmpty())

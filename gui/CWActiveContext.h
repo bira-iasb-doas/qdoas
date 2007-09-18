@@ -56,33 +56,38 @@ Q_OBJECT
   void slotAcceptOk(bool canDoOk);
 
   void slotPlotPages(const QList< RefCountConstPtr<CPlotPageData> > &pageList);
-  void slotCurrentTabChanged(int index);
+  void slotCurrentGraphTabChanged(int index);
+  void slotCurrentActiveTabChanged(int index);
 
 
  private:
   void discardCurrentEditor(void);
-  void moveAndResizeButtons(int wid, int hei);
-  void moveAndResizeGraph(int wid, int hei);
-  void moveAndResizeActiveEditor(int wid);
+  void moveAndResizeButtons(int hei);
+  void moveAndResizeGraph(int hei);
+  void moveAndResizeActiveEditor(void);
+  void moveAndResizeActiveTab(void);
 
  signals:
   void signalActivePageChanged(int pageNumber);
 
  private:
   CWEditor *m_activeEditor;
-  QList<CWEditor*> m_editorStack;
+  QList<CWEditor*> m_editorList;
   QPushButton *m_helpButton, *m_okButton, *m_cancelButton;
   QLabel *m_title;
-  QTabBar *m_graphTab;
+  QTabBar *m_graphTab, *m_activeTab;
   CWPlotRegion *m_plotRegion;
   QString m_graphTitleStr;
 
   int m_titleRegionHeight;
   int m_buttonRegionHeight;
-  int m_tabRegionHeight;
+  int m_graphTabRegionHeight;
+  int m_activeTabRegionWidth;
   int m_centralRegionHeight;
+  int m_centralRegionWidth;
 
   QSize m_minGeneralSize, m_minEditSize;
+  bool m_blockActiveTabSlot;
 };
 
 #endif

@@ -48,14 +48,14 @@ CWProjectNameEditor::CWProjectNameEditor(CWProjectTree *projectTree, QTreeWidget
 
   if (m_oldProjectName.isNull()) {
     m_captionStr = "Create new Project";
-    // no change to the default context tag
+    m_contextTag = "New Project";
   }
   else {
     m_captionStr = "Rename Project ";
     m_captionStr += m_oldProjectName;
 
     m_contextTag = m_oldProjectName;
-    m_contextTag += "-ProjectEditor";
+    m_contextTag += " Rename";
 
     m_projectName->setText(m_oldProjectName);
   }
