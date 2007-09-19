@@ -191,7 +191,7 @@ typedef UINT        MASK,SZ_LEN;
 #define ITEM_NONE                              (int)-1                          // default value for an index or a return code out of range
 
 #if defined(WIN32) && WIN32
-    #define PATH_SEP '\\'                                                       // path separator is different according to the OS (Windows or Unix/Linux)
+    #define PATH_SEP '/'                                                       // path separator is different according to the OS (Windows or Unix/Linux)
     #define COMMENT_CHAR ';'                                                    // characters to use for commented lines
 #else
     #define PATH_SEP '/'

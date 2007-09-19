@@ -35,6 +35,15 @@ void EngineDestroyContext(ENGINE_CONTEXT *pEngineContext)
   DEBUG_FunctionBegin("EngineDestroyContext",DEBUG_FCTTYPE_FILE);
   #endif
 
+  // Close files
+
+  if (pEngineContext->specFp!=NULL)
+   fclose(pEngineContext->specFp);
+  if (pEngineContext->darkFp!=NULL)
+   fclose(pEngineContext->darkFp);
+  if (pEngineContext->namesFp!=NULL)
+   fclose(pEngineContext->namesFp);
+
   // Release buffers
 
   if (pEngineContext->lembda!=NULL)
@@ -211,6 +220,17 @@ int EngineSetFile(ENGINE_CONTEXT *pEngineContext,const char *fileName)
   strcpy(pEngineContext->fileName,fileName);
   strcpy(fileTmp,fileName);
 
+  // Close previous files
+
+  if (pEngineContext->specFp!=NULL)
+   fclose(pEngineContext->specFp);
+  if (pEngineContext->darkFp!=NULL)
+   fclose(pEngineContext->darkFp);
+  if (pEngineContext->namesFp!=NULL)
+   fclose(pEngineContext->namesFp);
+
+  pEngineContext->specFp=pEngineContext->darkFp=pEngineContext->namesFp=NULL;
+
   // About names of record
 
   // SAOZ : The spectra names are used to select zenith sky or pointed measurements.
@@ -369,6 +389,14 @@ void EngineReadFile(ENGINE_CONTEXT *pEngineContext,int indexRecord,INT dateFlag,
   pEngineContext->aMoon=0.;
   pEngineContext->hMoon=0.;
   pEngineContext->fracMoon=0.;
+
+  {
+  	FILE *fp;
+  	fp=fopen("toto.dat","a+t");
+  	fprintf(fp,"Format %d\n",pEngineContext->project.instrumental.readOutFormat);
+  	fclose(fp);
+  }
+
 
   switch((INT)pEngineContext->project.instrumental.readOutFormat)
    {
