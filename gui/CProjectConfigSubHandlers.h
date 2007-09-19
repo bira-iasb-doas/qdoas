@@ -178,6 +178,20 @@ class CProjectInstrumentalSubHandler : public CConfigSubHandler
   mediate_project_instrumental_t *m_instrumental;
 };
 
+class CProjectSlitSubHandler : public CConfigSubHandler
+{
+ public:
+  CProjectSlitSubHandler(CQdoasProjectConfigHandler *master,
+			 mediate_project_slit_t *slit);
+  virtual ~CProjectSlitSubHandler();
+
+  virtual bool start(const QXmlAttributes &atts);
+  virtual bool start(const QString &element, const QXmlAttributes &atts);
+
+ private:
+  mediate_project_slit_t *m_slit;
+};
+
 
 #endif
 

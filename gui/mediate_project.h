@@ -367,6 +367,36 @@ extern "C" {
     double fwhm;
   };
 
+  struct slit_lorentz {
+    double width;
+    int degree;
+  };
+
+  struct slit_voigt {
+    double fwhmL, fwhmR;
+    double glRatioL, glRatioR;
+  };
+
+  struct slit_error {
+    double fwhm;
+    double width;
+  };
+
+  struct slit_apod {
+    double resolution;
+    double phase;
+  };
+
+  struct slit_lorentz_file {
+    char filename[FILENAME_BUFFER_LENGTH];
+    int degree;
+  };
+
+  struct slit_error_file {
+    char filename[FILENAME_BUFFER_LENGTH];
+    double width;
+  };
+
   typedef struct mediate_project_slit
   {
     char solarRefFile[FILENAME_BUFFER_LENGTH];
@@ -374,6 +404,16 @@ extern "C" {
     int slitType;
     struct slit_file file;
     struct slit_gaussian gaussian;
+    struct slit_lorentz lorentz;
+    struct slit_voigt voigt;
+    struct slit_error error;
+    struct slit_apod boxcarapod;
+    struct slit_apod nbsapod;
+    struct slit_file gaussianfile;
+    struct slit_lorentz_file lorentzfile;
+    struct slit_error_file errorfile;
+    struct slit_file gaussiantempfile;
+    struct slit_error_file errortempfile;
   } mediate_project_slit_t;
 
 

@@ -169,6 +169,9 @@ bool CProjectSubHandler::start(const QString &element, const QXmlAttributes &att
   else if (element == "instrumental") {
     return m_master->installSubHandler(new CProjectInstrumentalSubHandler(m_master, &(prop->instrumental)), atts);
   }
+  else if (element == "slit") {
+    return m_master->installSubHandler(new CProjectSlitSubHandler(m_master, &(prop->slit)), atts);
+  }
 
   TRACE2("proj Handler : " << element.toStdString());
 
@@ -1657,6 +1660,263 @@ bool CProjectInstrumentalSubHandler::helperLoadScia(const QXmlAttributes &atts, 
       strcpy(d->instrFunctionFile, str.toAscii().data());
     else
       return postErrorMessage("Instrument Function Filename too long");
+  }
+
+  return true;
+}
+
+//------------------------------------------------------------------------
+// handler for <slit> (child of project)
+
+CProjectSlitSubHandler::CProjectSlitSubHandler(CQdoasProjectConfigHandler *master,
+					       mediate_project_slit_t *slit) :
+  CConfigSubHandler(master),
+  m_slit(slit)
+{
+}
+
+CProjectSlitSubHandler::~CProjectSlitSubHandler()
+{
+}
+
+bool CProjectSlitSubHandler::start(const QXmlAttributes &atts)
+{
+  QString str;
+
+  str = atts.value("ref");
+  if (!str.isEmpty()) {
+    str = m_master->pathExpand(str);
+    if (str.length() < (int)sizeof(m_slit->solarRefFile))
+      strcpy(m_slit->solarRefFile, str.toAscii().data());
+    else
+      return postErrorMessage("Solar Reference Filename too long");
+  }
+
+  str = atts.value("type");
+  if (str == "file")
+    m_slit->slitType = SLIT_TYPE_FILE;
+  else if (str == "gaussian")
+    m_slit->slitType = SLIT_TYPE_GAUSS;
+  else if (str == "lorentz")
+    m_slit->slitType = SLIT_TYPE_INVPOLY;
+  else if (str == "voigt")
+    m_slit->slitType = SLIT_TYPE_VOIGT;
+  else if (str == "error")
+    m_slit->slitType = SLIT_TYPE_ERF;
+  else if (str == "boxcarapod")
+    m_slit->slitType = SLIT_TYPE_APOD;
+  else if (str == "nbsapod")
+    m_slit->slitType = SLIT_TYPE_APODNBS;
+  else if (str == "gaussianfile")
+    m_slit->slitType = SLIT_TYPE_GAUSS_FILE;
+  else if (str == "lorentzfile")
+    m_slit->slitType = SLIT_TYPE_INVPOLY_FILE;
+  else if (str == "errorfile")
+    m_slit->slitType = SLIT_TYPE_ERF_FILE;
+  else if (str == "gaussiantempfile")
+    m_slit->slitType = SLIT_TYPE_GAUSS_T_FILE;
+  else if (str == "errortempfile")
+    m_slit->slitType = SLIT_TYPE_ERF_T_FILE;
+  else
+    return postErrorMessage("Invalid slit type");
+
+  m_slit->applyFwhmCorrection = (atts.value("fwhmcor") == "true") ? 1 : 0;
+
+  return true;
+}
+
+bool CProjectSlitSubHandler::start(const QString &element, const QXmlAttributes &atts)
+{
+  if (element == "file") {
+    QString str = atts.value("file");
+    if (!str.isEmpty()) {
+      str = m_master->pathExpand(str);
+      if (str.length() < (int)sizeof(m_slit->file.filename))
+	strcpy(m_slit->file.filename, str.toAscii().data());
+      else
+	return postErrorMessage("Slit Function Filename too long");
+    }
+  }
+  else if (element == "gaussian") {
+    bool ok;
+    double tmpDouble;
+
+    tmpDouble = atts.value("fwhm").toDouble(&ok);
+    if (ok)
+      m_slit->gaussian.fwhm = tmpDouble;
+    else
+      return postErrorMessage("Invalid gaussian fwhm");
+  }
+  else if (element == "lorentz") {
+    bool ok;
+    double tmpDouble;
+    int tmpInt;
+
+    tmpDouble = atts.value("width").toDouble(&ok);
+    if (ok)
+      m_slit->lorentz.width = tmpDouble;
+    else
+      return postErrorMessage("Invalid lorentz width");
+
+    tmpInt = atts.value("degree").toInt(&ok);
+    if (ok)
+      m_slit->lorentz.degree = tmpInt;
+    else
+      return postErrorMessage("Invalid lorentz degree");
+  }
+  else if (element == "voigt") {
+    bool ok;
+    double tmpDouble;
+
+    tmpDouble = atts.value("fwhmleft").toDouble(&ok);
+    if (ok)
+      m_slit->voigt.fwhmL = tmpDouble;
+    else
+      return postErrorMessage("Invalid voigt left-side fwhm");
+
+    tmpDouble = atts.value("fwhmright").toDouble(&ok);
+    if (ok)
+      m_slit->voigt.fwhmR = tmpDouble;
+    else
+      return postErrorMessage("Invalid voigt right-side fwhm");
+
+    tmpDouble = atts.value("glrleft").toDouble(&ok);
+    if (ok)
+      m_slit->voigt.glRatioL = tmpDouble;
+    else
+      return postErrorMessage("Invalid voigt left-side gaussian-lorentz half-width ratio");
+
+    tmpDouble = atts.value("glrright").toDouble(&ok);
+    if (ok)
+      m_slit->voigt.fwhmL = tmpDouble;
+    else
+      return postErrorMessage("Invalid voigt right-side gaussian-lorentz half-width ratio");
+
+  }
+  else if (element == "error") {
+    bool ok;
+    double tmpDouble;
+
+    tmpDouble = atts.value("fwhm").toDouble(&ok);
+    if (ok)
+      m_slit->error.fwhm = tmpDouble;
+    else
+      return postErrorMessage("Invalid error function fwhm");
+
+    tmpDouble = atts.value("width").toDouble(&ok);
+    if (ok)
+      m_slit->error.width = tmpDouble;
+    else
+      return postErrorMessage("Invalid error function boxcar width");
+  }
+  else if (element == "boxcarapod") {
+    bool ok;
+    double tmpDouble;
+
+    tmpDouble = atts.value("resolution").toDouble(&ok);
+    if (ok)
+      m_slit->boxcarapod.resolution = tmpDouble;
+    else
+      return postErrorMessage("Invalid boxcarapod resolution");
+
+    tmpDouble = atts.value("phase").toDouble(&ok);
+    if (ok)
+      m_slit->boxcarapod.phase = tmpDouble;
+    else
+      return postErrorMessage("Invalid boxcar apod phase");
+  }
+  else if (element == "nbsapod") {
+    bool ok;
+    double tmpDouble;
+
+    tmpDouble = atts.value("resolution").toDouble(&ok);
+    if (ok)
+      m_slit->nbsapod.resolution = tmpDouble;
+    else
+      return postErrorMessage("Invalid nbsapod resolution");
+
+    tmpDouble = atts.value("phase").toDouble(&ok);
+    if (ok)
+      m_slit->nbsapod.phase = tmpDouble;
+    else
+      return postErrorMessage("Invalid nbs apod phase");
+  }
+  else if (element == "gaussianfile") {
+    QString str = atts.value("file");
+    if (!str.isEmpty()) {
+      str = m_master->pathExpand(str);
+      if (str.length() < (int)sizeof(m_slit->gaussianfile.filename))
+	strcpy(m_slit->gaussianfile.filename, str.toAscii().data());
+      else
+	return postErrorMessage("Slit Function Filename too long");
+    }
+  }
+  else if (element == "lorentzfile") {
+    bool ok;
+    int tmpInt;
+
+    QString str = atts.value("file");
+    if (!str.isEmpty()) {
+      str = m_master->pathExpand(str);
+      if (str.length() < (int)sizeof(m_slit->lorentzfile.filename))
+	strcpy(m_slit->lorentzfile.filename, str.toAscii().data());
+      else
+	return postErrorMessage("Slit Function Filename too long");
+    }
+
+    tmpInt = atts.value("degree").toInt(&ok);
+    if (ok)
+      m_slit->lorentzfile.degree = tmpInt;
+    else
+      return postErrorMessage("Invalid Lorentz File degree");
+  }
+  else if (element == "errorfile") {
+    bool ok;
+    double tmpDouble;
+
+    QString str = atts.value("file");
+    if (!str.isEmpty()) {
+      str = m_master->pathExpand(str);
+      if (str.length() < (int)sizeof(m_slit->errorfile.filename))
+	strcpy(m_slit->errorfile.filename, str.toAscii().data());
+      else
+	return postErrorMessage("Slit Function Filename too long");
+    }
+
+    tmpDouble = atts.value("width").toDouble(&ok);
+    if (ok)
+      m_slit->errorfile.width = tmpDouble;
+    else
+      return postErrorMessage("Invalid errorfile boxcar width");
+  }
+  else if (element == "gaussiantempfile") {
+    QString str = atts.value("file");
+    if (!str.isEmpty()) {
+      str = m_master->pathExpand(str);
+      if (str.length() < (int)sizeof(m_slit->gaussiantempfile.filename))
+	strcpy(m_slit->gaussiantempfile.filename, str.toAscii().data());
+      else
+	return postErrorMessage("Slit Function Filename too long");
+    }
+  }
+  else if (element == "errortempfile") {
+    bool ok;
+    double tmpDouble;
+
+    QString str = atts.value("file");
+    if (!str.isEmpty()) {
+      str = m_master->pathExpand(str);
+      if (str.length() < (int)sizeof(m_slit->errortempfile.filename))
+	strcpy(m_slit->errortempfile.filename, str.toAscii().data());
+      else
+	return postErrorMessage("Slit Function Filename too long");
+    }
+
+    tmpDouble = atts.value("width").toDouble(&ok);
+    if (ok)
+      m_slit->errortempfile.width = tmpDouble;
+    else
+      return postErrorMessage("Invalid errortempfile boxcar width");
   }
 
   return true;

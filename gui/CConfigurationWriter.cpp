@@ -135,6 +135,7 @@ void CConfigurationWriter::writeProperties(FILE *fp, const mediate_project_t *d)
   writePropertiesCalibration(fp, &(d->calibration));
   writePropertiesUndersampling(fp, &(d->undersampling));
   writePropertiesInstrumental(fp, &(d->instrumental));
+  writePropertiesSlit(fp, &(d->slit));
 }
 
 void CConfigurationWriter::writePropertiesSpectra(FILE *fp, const mediate_project_spectra_t *d)
@@ -942,6 +943,70 @@ void CConfigurationWriter::writePropertiesInstrumental(FILE *fp, const mediate_p
   fprintf(fp, " instr=\"%s\" />\n", tmpStr.toAscii().constData());
 
   fprintf(fp, "    </instrumental>\n");
+}
+
+void CConfigurationWriter::writePropertiesSlit(FILE *fp, const mediate_project_slit_t *d)
+{
+  fprintf(fp, "    <slit ref=\"%s\" fwhmcor=\"%s\" type=", d->solarRefFile, (d->applyFwhmCorrection ? sTrue : sFalse));
+  switch (d->slitType) {
+  case SLIT_TYPE_FILE:
+    fprintf(fp, "\"file\"");
+    break;
+  case SLIT_TYPE_GAUSS:
+    fprintf(fp, "\"gaussian\"");
+    break;
+  case SLIT_TYPE_INVPOLY:
+    fprintf(fp, "\"lorentz\"");
+    break;
+  case SLIT_TYPE_VOIGT:
+    fprintf(fp, "\"voigt\"");
+    break;
+  case SLIT_TYPE_ERF:
+    fprintf(fp, "\"error\"");
+    break;
+  case SLIT_TYPE_APOD:
+    fprintf(fp, "\"boxcarapod\"");
+    break;
+  case SLIT_TYPE_APODNBS:
+    fprintf(fp, "\"nbsapod\"");
+    break;
+  case SLIT_TYPE_GAUSS_FILE:
+    fprintf(fp, "\"gaussianfile\"");
+    break;
+  case SLIT_TYPE_INVPOLY_FILE:
+    fprintf(fp, "\"lorentzfile\"");
+    break;
+  case SLIT_TYPE_ERF_FILE:
+    fprintf(fp, "\"errorfile\"");
+    break;
+  case SLIT_TYPE_GAUSS_T_FILE:
+    fprintf(fp, "\"gaussiantempfile\"");
+    break;
+  case SLIT_TYPE_ERF_T_FILE:
+    fprintf(fp, "\"errortempfile\"");
+    break;
+  default:
+    fprintf(fp, "\"invalid\"");
+  }
+  fprintf(fp, ">\n");
+
+  fprintf(fp, "      <file file=\"%s\" />\n", d->file.filename);
+  fprintf(fp, "      <gaussian fwhm=\"%.3f\" />\n", d->gaussian.fwhm);
+  fprintf(fp, "      <lorentz width=\"%.3f\" degree=\"%d\" />\n", d->lorentz.width, d->lorentz.degree);
+  fprintf(fp, "      <voigt fwhmleft=\"%.3f\" fwhmright=\"%.3f\" glrleft=\"%.3f\" glrright=\"%.3f\" />\n",
+	  d->voigt.fwhmL, d->voigt.fwhmR, d->voigt.glRatioL, d->voigt.glRatioR);
+  fprintf(fp, "      <error fwhm=\"%.3f\" width=\"%.3f\" />\n", d->error.fwhm, d->error.width);
+  fprintf(fp, "      <boxcarapod resolution=\"%.3f\" phase=\"%.3f\" />\n",
+	  d->boxcarapod.resolution, d->boxcarapod.phase);
+  fprintf(fp, "      <nbsapod resolution=\"%.3f\" phase=\"%.3f\" />\n",
+	  d->nbsapod.resolution, d->nbsapod.phase);
+  fprintf(fp, "      <gaussianfile file=\"%s\" />\n", d->gaussianfile.filename);
+  fprintf(fp, "      <lorentzfile file=\"%s\" degree=\"%d\" />\n", d->lorentzfile.filename, d->lorentzfile.degree);
+  fprintf(fp, "      <errorfile file=\"%s\" width=\"%.3f\" />\n", d->errorfile.filename, d->errorfile.width);
+  fprintf(fp, "      <gaussiantempfile file=\"%s\" />\n", d->gaussiantempfile.filename);
+  fprintf(fp, "      <errortempfile file=\"%s\" width=\"%.3f\" />\n", d->errortempfile.filename, d->errortempfile.width);
+  
+  fprintf(fp, "    </slit>\n");
 }
 
 void CConfigurationWriter::writeRawSpectraTree(FILE *fp, const QTreeWidgetItem *rawSpectraItem)
