@@ -18,6 +18,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
 
+#include <QHeaderView>
+
 #include "CWTableRegion.h"
 
 CWTableRegion::CWTableRegion(QWidget *parent) :
@@ -27,6 +29,10 @@ CWTableRegion::CWTableRegion(QWidget *parent) :
   setModel(m_model);
 
   setGridStyle(Qt::DotLine);
+
+  // hide the headers ... not useful in this context
+  horizontalHeader()->hide();
+  verticalHeader()->hide();
 }
 
 CWTableRegion::~CWTableRegion()
