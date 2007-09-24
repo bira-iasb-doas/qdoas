@@ -18,7 +18,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
 
-#include <QVBoxLayout>
+#include <QGridLayout>
 #include <QLabel>
 #include <QMessageBox>
 
@@ -28,18 +28,18 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "CWProjectPropertyEditor.h"
 
 
-CWProjectPropertyEditor::CWProjectPropertyEditor(CWProjectTree *projectTree, QTreeWidgetItem *item,
-                                         QWidget *parent) :
+CWProjectPropertyEditor::CWProjectPropertyEditor(const QString &projectName, QWidget *parent) :
   CWEditor(parent),
-  m_projectTree(projectTree)
+  m_projectName(projectName)
 {
-  m_projectName = item->text(0);
   mediate_project_t *projectData = CWorkSpace::instance()->findProject(m_projectName);
   
   if (!projectData)
     return; // TODO - assert or throw
 
-  QVBoxLayout *mainLayout = new QVBoxLayout(this);
+  QGridLayout *mainLayout = new QGridLayout(this);
+
+  //QVBoxLayout *mainLayout = new QVBoxLayout(this);
   mainLayout->setMargin(25);
   mainLayout->setSpacing(5);
   
@@ -73,7 +73,14 @@ CWProjectPropertyEditor::CWProjectPropertyEditor(CWProjectTree *projectTree, QTr
   m_slitTab = new CWProjectTabSlit(&(projectData->slit));
   m_tabs->addTab(m_slitTab, "Slit");
 
-  mainLayout->addWidget(m_tabs);
+  // try and keep the complete tab widget set at the smallest possible size.
+  mainLayout->setColumnMinimumWidth(0, 0);
+  mainLayout->addWidget(m_tabs, 0, 1);
+  mainLayout->setColumnMinimumWidth(2, 0);
+  mainLayout->setRowMinimumHeight(1, 0);
+  mainLayout->setColumnStretch(0, 1);
+  mainLayout->setColumnStretch(2, 1);
+  mainLayout->setRowStretch(1, 1);
 
   // caption string and context tag
   m_captionStr = "Properties of Project : ";

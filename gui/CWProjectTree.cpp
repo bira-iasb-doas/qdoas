@@ -39,6 +39,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "CWProjectDirectoryEditor.h"
 #include "CWProjectAnalysisWindowNameEditor.h"
 #include "CWProjectPropertyEditor.h"
+#include "CWAnalysisWindowPropertyEditor.h"
 
 #include "CWActiveContext.h"
 
@@ -232,8 +233,8 @@ void CWProjectTree::contextMenuEvent(QContextMenuEvent *e)
 
       menu.addAction(projItem->isEnabled() ? "Disable" : "Enable", this,
                      SLOT(slotToggleEnable()));
-      menu.addSeparator();
       menu.addAction("Rename...", this, SLOT(slotRenameAnalysisWindow()));
+      menu.addAction("Properties...", this, SLOT(slotEditAnalysisWindow()));
       menu.addSeparator();
       menu.addAction("Delete", this, SLOT(slotDeleteSelection()));
     }
@@ -759,10 +760,26 @@ void CWProjectTree::slotEditProject()
     QTreeWidgetItem *item = items.front();
     if (item->type() == cProjectItemType) {
 
-      CWEditor *propEditor = new  CWProjectPropertyEditor(this, item);
+      CWEditor *propEditor = new  CWProjectPropertyEditor(item->text(0), this);
       m_activeContext->addEditor(propEditor);
     }
   }
+}
+
+void CWProjectTree::slotEditAnalysisWindow()
+{
+  QList<QTreeWidgetItem*> items = selectedItems();
+  if (items.count() == 1) {
+    QTreeWidgetItem *item = items.front();
+    if (item->type() == cAnalysisWindowItemType) {
+      QTreeWidgetItem *projectItem = CWProjectTree::projectItem(item);
+      if (projectItem) {
+
+	CWEditor *awEditor = new  CWAnalysisWindowPropertyEditor(projectItem->text(0), item->text(0), this);
+	m_activeContext->addEditor(awEditor);
+      }
+    }
+  }  
 }
 
 void CWProjectTree::slotRefreshDirectories()

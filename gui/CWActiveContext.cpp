@@ -339,22 +339,11 @@ void CWActiveContext::moveAndResizeActiveEditor(void)
 
   // will the minimum reasonable size fit in the available space ?
   if (tmpSize.isValid() && tmpSize.width() <= m_centralRegionWidth && tmpSize.height() <= m_centralRegionHeight) {
-    // yes - try and make it the recommended size, or the full size
-    int wid = tmpSize.width();
-    int hei = tmpSize.height();
+    // yes - try and make it the full size
+
+    int wid = m_centralRegionWidth;
+    int hei = m_centralRegionHeight;
     
-    tmpSize = m_activeEditor->sizeHint();
-    //tmpSize = m_activeEditor->maximumSize();
-    if (tmpSize.isValid()) {
-      wid = tmpSize.width();
-      hei = tmpSize.height();
-    }
-
-    if (wid > m_centralRegionWidth)
-      wid = m_centralRegionWidth;
-    if (hei > m_centralRegionHeight)
-      hei = m_centralRegionHeight;
-
     // check for stronger upper limits
     tmpSize = m_activeEditor->maximumSize();
     if (tmpSize.isValid()) {

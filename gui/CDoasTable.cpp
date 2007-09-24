@@ -735,6 +735,8 @@ QVariant CDoasTableColumnCheck::getCellData(int rowIndex) const
   return QVariant();
 }
 
+#ifdef TEST
+
 //----------//------------//-------------
 
 Dummy::Dummy(const QString &label, QWidget *parent) :
@@ -772,3 +774,5 @@ int main(int argc, char **argv)
   
   return app.exec();
 }
+
+#endif

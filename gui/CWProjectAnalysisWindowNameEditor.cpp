@@ -18,7 +18,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
 
-#include <QVBoxLayout>
+#include <QGridLayout>
 #include <QLabel>
 #include <QMessageBox>
 
@@ -32,18 +32,21 @@ CWProjectAnalysisWindowNameEditor::CWProjectAnalysisWindowNameEditor(CWProjectTr
   m_projectTree(projectTree),
   m_newAnalysisWindow(newAnalysisWindow)
 {
-  QHBoxLayout *mainLayout = new QHBoxLayout(this);
-  mainLayout->setMargin(25);
-  mainLayout->setSpacing(5);;
+  QGridLayout *mainLayout = new QGridLayout(this);
+  mainLayout->setMargin(50);
   
   if (newAnalysisWindow)
-    mainLayout->addWidget(new QLabel("Enter a name for the new Analysis Window", this));
+    mainLayout->addWidget(new QLabel("Enter a name for the new Analysis Window", this), 0, 1);
   else
-    mainLayout->addWidget(new QLabel("Modify the Analysis Window name", this));
+    mainLayout->addWidget(new QLabel("Modify the Analysis Window name", this), 0, 1);
 
   m_analysisWindowName = new QLineEdit(this);
-  mainLayout->addWidget(m_analysisWindowName);
+  mainLayout->addWidget(m_analysisWindowName, 0, 2);
 
+  mainLayout->setColumnStretch(0, 1);
+  mainLayout->setColumnStretch(3, 1);
+  mainLayout->setRowStretch(1,1);
+  
   if (m_newAnalysisWindow)
     m_captionStr = "Create new Analysis Window in ";
   else

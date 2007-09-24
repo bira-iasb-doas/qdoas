@@ -17,12 +17,11 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
+
 #ifndef _CWPROJECTPROPERTYEDITOR_H_GUARD
 #define _CWPROJECTPROPERTYEDITOR_H_GUARD
 
-#include <QLineEdit>
-#include <QStringList>
-#include <QTreeWidgetItem>
+#include <QString>
 
 #include "CWEditor.h"
 #include "CWProjectTabSpectra.h"
@@ -33,14 +32,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "CWProjectTabInstrumental.h"
 #include "CWProjectTabSlit.h"
 
-class CWProjectTree;
 
 class CWProjectPropertyEditor : public CWEditor
 {
-Q_OBJECT
  public:
-  CWProjectPropertyEditor(CWProjectTree *projectTree, QTreeWidgetItem *item,
-                          QWidget *parent = 0);
+  CWProjectPropertyEditor(const QString &projectName, QWidget *parent = 0);
   virtual ~CWProjectPropertyEditor();
 
   virtual bool actionOk();
@@ -56,7 +52,6 @@ Q_OBJECT
   CWProjectTabInstrumental *m_instrumentalTab;
   CWProjectTabSlit *m_slitTab;
 
-  CWProjectTree *m_projectTree;
   QString m_projectName;
 };
 

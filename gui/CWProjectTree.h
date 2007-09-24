@@ -101,6 +101,7 @@ Q_OBJECT
   void slotCreateProject();
   void slotRenameProject();
   void slotEditProject();
+  void slotEditAnalysisWindow();
   void slotRefreshDirectories();
   void slotCreateFolder();
   void slotRenameFolder();
