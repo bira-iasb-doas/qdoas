@@ -33,27 +33,31 @@ CWProjectDirectoryEditor::CWProjectDirectoryEditor(CWProjectTree *projectTree, Q
   m_projectTree(projectTree)
 {
   QGridLayout *mainLayout = new QGridLayout(this);
-  mainLayout->setMargin(25);
-  mainLayout->setSpacing(5);
+  mainLayout->setMargin(50);
 
   // row 0 - directory name
-  mainLayout->addWidget(new QLabel("Directory", this), 0, 0);
+  mainLayout->addWidget(new QLabel("Directory", this), 0, 1);
 
   m_directoryName = new QLineEdit(this);
-  mainLayout->addWidget(m_directoryName, 0, 1);
+  mainLayout->addWidget(m_directoryName, 0, 2);
   
   QPushButton *browseButton = new QPushButton("Browse", this);
-  mainLayout->addWidget(browseButton, 0, 2);
+  mainLayout->addWidget(browseButton, 0, 3);
 
   // row 1 - file filters
-  mainLayout->addWidget(new QLabel("File filters", this), 1, 0);
+  mainLayout->addWidget(new QLabel("File filters", this), 1, 1);
 
   m_fileFilters = new QLineEdit(this);
-  mainLayout->addWidget(m_fileFilters, 1, 1);
+  mainLayout->addWidget(m_fileFilters, 1, 2);
 
   // row 3 - include sub-dirs
   m_recursiveCheckBox = new QCheckBox("Include Sub-Directories", this);
-  mainLayout->addWidget(m_recursiveCheckBox, 2, 0, 1, 2); // span first two columns
+  mainLayout->addWidget(m_recursiveCheckBox, 2, 2);
+
+  mainLayout->setColumnStretch(0, 1);
+  mainLayout->setColumnStretch(2, 1);
+  mainLayout->setColumnStretch(4, 1);
+  mainLayout->setRowStretch(3, 1);
 
   m_captionStr = "Insert new directory in ";
 

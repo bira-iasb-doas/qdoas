@@ -1,5 +1,6 @@
 
 #include "CProjectConfigSubHandlers.h"
+#include "CProjectConfigAnalysisWindowSubHandlers.h"
 
 #include "constants.h"
 
@@ -135,9 +136,9 @@ bool CProjectSubHandler::start(const QXmlAttributes &atts)
 {
   // the project element - must have a name
 
-  m_project->setProjectName(atts.value("name"));
+  m_project->setName(atts.value("name"));
 
-  return !m_project->projectName().isEmpty();
+  return !m_project->name().isEmpty();
 }
 
 bool CProjectSubHandler::start(const QString &element, const QXmlAttributes &atts)
@@ -171,6 +172,14 @@ bool CProjectSubHandler::start(const QString &element, const QXmlAttributes &att
   }
   else if (element == "slit") {
     return m_master->installSubHandler(new CProjectSlitSubHandler(m_master, &(prop->slit)), atts);
+  }
+  else if (element == "analysis_window") {
+    // allocate a new item in the project for this AW
+    CAnalysisWindowConfigItem *awItem = m_project->issueNewAnalysisWindowItem();
+    if (awItem)
+      return m_master->installSubHandler(new CProjectAnalysisWindowSubHandler(m_master, awItem), atts);
+
+    return false; // fall through failure
   }
 
   TRACE2("proj Handler : " << element.toStdString());
@@ -214,7 +223,6 @@ bool CProjectSpectraSubHandler::start(const QString &element, const QXmlAttribut
   if (element == "display") {
 
     // default to false if attributes are not present
-
     m_spectra->requireSpectra = (atts.value("spectra") == "true") ? 1 : 0;
     m_spectra->requireData = (atts.value("data") == "true") ? 1 : 0;
     m_spectra->requireFits = (atts.value("fits") == "true") ? 1 : 0;
@@ -222,109 +230,39 @@ bool CProjectSpectraSubHandler::start(const QString &element, const QXmlAttribut
   else if (element == "sza") {
 
     // defaults from mediateInitializeProject() are ok if attributes are not present
+    m_spectra->szaMinimum = atts.value("min").toDouble();
+    m_spectra->szaMaximum = atts.value("max").toDouble();
+    m_spectra->szaDelta = atts.value("delta").toDouble();
 
-    QString str;
-    bool ok;
-    double tmp;
-
-    str = atts.value("min");
-    if (!str.isEmpty()) {
-      tmp = str.toDouble(&ok);
-      if (ok)
-	m_spectra->szaMinimum = tmp;
-      else
-	return postErrorMessage("Invalid value for min");
-    }
-
-    str = atts.value("max");
-    tmp = str.toDouble(&ok);
-    if (ok)
-      m_spectra->szaMaximum = tmp;
-
-    str = atts.value("delta");
-    tmp = str.toDouble(&ok);
-    if (ok)
-      m_spectra->szaDelta = tmp;
   }
   else if (element == "record") {
 
     // defaults from mediateInitializeProject() are ok if attributes are not present
-
-    QString str;
-    bool ok;
-    int tmp;
-
-    str = atts.value("min");
-    tmp = str.toInt(&ok);
-    if (ok)
-      m_spectra->recordNumberMinimum = tmp;
-
-    str = atts.value("max");
-    tmp = str.toInt(&ok);
-    if (ok)
-      m_spectra->recordNumberMaximum = tmp;
+    m_spectra->recordNumberMinimum = atts.value("min").toInt();
+    m_spectra->recordNumberMaximum = atts.value("max").toInt();
   }
   else if (element == "files") {
 
     // defaults to false if attributes are no present
-
     m_spectra->useDarkFile = (atts.value("dark") == "true") ? 1 : 0;
     m_spectra->useNameFile = (atts.value("name") == "true") ? 1 : 0;
   }
   else if (element == "circle") {
-    QString str;
-    bool ok;
-    double tmp;
 
-    str = atts.value("radius");
-    tmp = str.toDouble(&ok);
-    if (ok)
-      m_spectra->geo.circle.radius = tmp;
-
-    str = atts.value("long");
-    tmp = str.toDouble(&ok);
-    if (ok)
-      m_spectra->geo.circle.centerLongitude = tmp;
-
-    str = atts.value("lat");
-    tmp = str.toDouble(&ok);
-    if (ok)
-      m_spectra->geo.circle.centerLatitude = tmp;
+    m_spectra->geo.circle.radius = atts.value("radius").toDouble();
+    m_spectra->geo.circle.centerLongitude = atts.value("long").toDouble();
+    m_spectra->geo.circle.centerLatitude = atts.value("lat").toDouble();
   }
   else if (element == "rectangle") {
-    QString str;
-    bool ok;
-    double tmp;
 
-    str = atts.value("east");
-    tmp = str.toDouble(&ok);
-    if (ok)
-      m_spectra->geo.rectangle.easternLongitude = tmp;
-
-    str = atts.value("west");
-    tmp = str.toDouble(&ok);
-    if (ok)
-      m_spectra->geo.rectangle.westernLongitude = tmp;
-
-    str = atts.value("north");
-    tmp = str.toDouble(&ok);
-    if (ok)
-      m_spectra->geo.rectangle.northernLatitude = tmp;
-
-    str = atts.value("south");
-    tmp = str.toDouble(&ok);
-    if (ok)
-      m_spectra->geo.rectangle.southernLatitude = tmp;
+    m_spectra->geo.rectangle.easternLongitude = atts.value("east").toDouble();
+    m_spectra->geo.rectangle.westernLongitude = atts.value("west").toDouble();
+    m_spectra->geo.rectangle.northernLatitude = atts.value("north").toDouble();
+    m_spectra->geo.rectangle.southernLatitude = atts.value("south").toDouble();
   }
   else if (element == "sites") {
-    QString str;
-    bool ok;
-    double tmp;
 
-    str = atts.value("radius");
-    tmp = str.toDouble(&ok);
-    if (ok)
-      m_spectra->geo.sites.radius = tmp;
+    m_spectra->geo.sites.radius = atts.value("radius").toDouble();
   }
   else if (element == "geolocation") {
 
@@ -368,9 +306,6 @@ bool CProjectAnalysisSubHandler::start(const QXmlAttributes &atts)
   // all options are in the attributes of the analysis element itself
 
   QString str;
-  int tmpInt;
-  double tmpDouble;
-  bool ok;
 
   str = atts.value("method");
   if (str == "ODF")
@@ -380,7 +315,6 @@ bool CProjectAnalysisSubHandler::start(const QXmlAttributes &atts)
   else
     return postErrorMessage("Invalid analysis method");
 
-
   str = atts.value("fit");
   if (str == "none")
     m_analysis->methodType = PRJCT_ANLYS_FIT_WEIGHTING_NONE;
@@ -388,7 +322,6 @@ bool CProjectAnalysisSubHandler::start(const QXmlAttributes &atts)
     m_analysis->methodType = PRJCT_ANLYS_FIT_WEIGHTING_INSTRUMENTAL;
   else
     return postErrorMessage("Invalid analysis fit");
-
 
   str = atts.value("unit");
   if (str == "pixel")
@@ -398,7 +331,6 @@ bool CProjectAnalysisSubHandler::start(const QXmlAttributes &atts)
   else
     return postErrorMessage("Invalid analysis unit");
 
-
   str = atts.value("interpolation");
   if (str == "linear")
     m_analysis->methodType = PRJCT_ANLYS_INTERPOL_LINEAR;
@@ -407,24 +339,8 @@ bool CProjectAnalysisSubHandler::start(const QXmlAttributes &atts)
   else
     return postErrorMessage("Invalid analysis interpolation");
 
-
-  str = atts.value("gap");
-  if (!str.isEmpty()) {
-    tmpInt = str.toInt(&ok);
-    if (ok)
-      m_analysis->interpolationSecurityGap = tmpInt;
-    else
-      return postErrorMessage("Invalid analysis gap");
-  }
-
-  str = atts.value("converge");
-  if (!str.isEmpty()) {
-    tmpDouble = str.toDouble(&ok);
-    if (ok)
-      m_analysis->convergenceCriterion = tmpDouble;
-    else
-      return postErrorMessage("Invalid analysis gap");
-  }
+  m_analysis->interpolationSecurityGap = atts.value("gap").toInt();
+  m_analysis->convergenceCriterion = atts.value("converge").toDouble();
 
   return true;
 }
@@ -527,125 +443,37 @@ bool CProjectFilteringSubHandler::start(const QString &element, const QXmlAttrib
   // sub element of lowpass_filter or highpass_filter
 
   if (element == "kaiser") {
-    bool ok;
-    double tmpDouble;
-    int tmpInt;
 
-    tmpDouble = atts.value("cutoff").toDouble(&ok);
-    if (ok)
-      m_filter->kaiser.cutoffFrequency = tmpDouble;
-    else
-      return postErrorMessage("Invalid cutoff frequency for kaiser filter");
-
-    tmpDouble = atts.value("tolerance").toDouble(&ok);
-    if (ok)
-      m_filter->kaiser.tolerance = tmpDouble;
-    else
-      return postErrorMessage("Invalid tolerance for kaiser filter");
-
-    tmpDouble = atts.value("passband").toDouble(&ok);
-    if (ok)
-      m_filter->kaiser.passband = tmpDouble;
-    else
-      return postErrorMessage("Invalid passband for kaiser filter");
-
-    tmpInt = atts.value("iterations").toInt(&ok);
-    if (ok)
-      m_filter->kaiser.iterations = tmpInt;
-    else
-      return postErrorMessage("Invalid iterations for kaiser filter");
-
+    m_filter->kaiser.cutoffFrequency = atts.value("cutoff").toDouble();
+    m_filter->kaiser.tolerance = atts.value("tolerance").toDouble();
+    m_filter->kaiser.passband = atts.value("passband").toDouble();
+    m_filter->kaiser.iterations = atts.value("iterations").toInt();
   }
   else if (element == "boxcar") {
-    bool ok;
-    int tmpInt;
 
-    tmpInt = atts.value("width").toInt(&ok);
-    if (ok)
-      m_filter->boxcar.width = tmpInt;
-    else
-      return postErrorMessage("Invalid width for boxcar filter");
-
-    tmpInt = atts.value("iterations").toInt(&ok);
-    if (ok)
-      m_filter->boxcar.iterations = tmpInt;
-    else
-      return postErrorMessage("Invalid iterations for boxcar filter");
-
+    m_filter->boxcar.width = atts.value("width").toInt();
+    m_filter->boxcar.iterations = atts.value("iterations").toInt();
   }
   else if (element == "gaussian") {
-    bool ok;
-    double tmpDouble;
-    int tmpInt;
 
-    tmpDouble = atts.value("fwhm").toDouble(&ok);
-    if (ok)
-      m_filter->gaussian.fwhm = tmpDouble;
-    else
-      return postErrorMessage("Invalid passband for gaussian filter");
-
-    tmpInt = atts.value("iterations").toInt(&ok);
-    if (ok)
-      m_filter->gaussian.iterations = tmpInt;
-    else
-      return postErrorMessage("Invalid iterations for gaussian filter");
-
+    m_filter->gaussian.fwhm = atts.value("fwhm").toDouble();
+    m_filter->gaussian.iterations = atts.value("iterations").toInt();
   }
   else if (element == "triangular") {
-    bool ok;
-    int tmpInt;
 
-    tmpInt = atts.value("width").toInt(&ok);
-    if (ok)
-      m_filter->triangular.width = tmpInt;
-    else
-      return postErrorMessage("Invalid width for triangular filter");
-
-    tmpInt = atts.value("iterations").toInt(&ok);
-    if (ok)
-      m_filter->triangular.iterations = tmpInt;
-    else
-      return postErrorMessage("Invalid iterations for triangular filter");
-
+    m_filter->triangular.width = atts.value("width").toInt();
+    m_filter->triangular.iterations = atts.value("iterations").toInt();
   }
   else if (element == "savitzky") {
-    bool ok;
-    int tmpInt;
 
-    tmpInt = atts.value("width").toInt(&ok);
-    if (ok)
-      m_filter->savitzky.width = tmpInt;
-    else
-      return postErrorMessage("Invalid width for savitzky filter");
-
-    tmpInt = atts.value("order").toInt(&ok);
-    if (ok)
-      m_filter->savitzky.order = tmpInt;
-    else
-      return postErrorMessage("Invalid order for savitzky filter");
-
-    tmpInt = atts.value("iterations").toInt(&ok);
-    if (ok)
-      m_filter->savitzky.iterations = tmpInt;
-    else
-      return postErrorMessage("Invalid iterations for savitzky filter");
-
+    m_filter->savitzky.width = atts.value("width").toInt();
+    m_filter->savitzky.order = atts.value("order").toInt();
+    m_filter->savitzky.iterations = atts.value("iterations").toInt();
   }
   else if (element == "binomial") {
-    bool ok;
-    int tmpInt;
 
-    tmpInt = atts.value("width").toInt(&ok);
-    if (ok)
-      m_filter->binomial.width = tmpInt;
-    else
-      return postErrorMessage("Invalid width for binomial filter");
-
-    tmpInt = atts.value("iterations").toInt(&ok);
-    if (ok)
-      m_filter->binomial.iterations = tmpInt;
-    else
-      return postErrorMessage("Invalid iterations for binomial filter");
+    m_filter->binomial.width = atts.value("width").toInt();
+    m_filter->binomial.iterations = atts.value("iterations").toInt();
   }
 
   return true;
@@ -695,8 +523,6 @@ bool CProjectCalibrationSubHandler::start(const QString &element, const QXmlAttr
 
   if (element == "line") {
     QString str;
-    bool ok;
-    int tmpInt;
 
     str = atts.value("shape");
     if (str == "none")
@@ -712,10 +538,7 @@ bool CProjectCalibrationSubHandler::start(const QString &element, const QXmlAttr
     else
       postErrorMessage("Invalid line shape");
 
-    tmpInt = atts.value("lorentzdegree").toInt(&ok);
-    if (ok)
-      m_calibration->lorentzDegree = tmpInt;
-
+    m_calibration->lorentzDegree = atts.value("lorentzdegree").toInt();
   }
   else if (element == "display") {
 
@@ -725,35 +548,15 @@ bool CProjectCalibrationSubHandler::start(const QString &element, const QXmlAttr
     m_calibration->requireShiftSfp = (atts.value("shiftsfp") == "true") ? 1 : 0;
   }
   else if (element == "polynomial") {
-    bool ok;
-    int tmpInt;
 
-    tmpInt = atts.value("shift").toInt(&ok);
-    if (ok)
-      m_calibration->shiftDegree = tmpInt;
-
-    tmpInt = atts.value("sfp").toInt(&ok);
-    if (ok)
-      m_calibration->sfpDegree = tmpInt;
-
+    m_calibration->shiftDegree = atts.value("shift").toInt();
+    m_calibration->sfpDegree = atts.value("sfp").toInt();
   }
   else if (element == "window") {
-    bool ok;
-    int tmpInt;
-    double tmpDouble;
 
-    tmpDouble = atts.value("min").toDouble(&ok);
-    if (ok)
-      m_calibration->wavelengthMin = tmpDouble;
-
-    tmpDouble = atts.value("max").toDouble(&ok);
-    if (ok)
-      m_calibration->wavelengthMax = tmpDouble;
-
-    tmpInt = atts.value("intervals").toInt(&ok);
-    if (ok)
-      m_calibration->subWindows = tmpInt;
-
+    m_calibration->wavelengthMin = atts.value("min").toDouble();
+    m_calibration->wavelengthMax = atts.value("max").toDouble();
+    m_calibration->subWindows = atts.value("intervals").toInt();
   }
 
   return true;
@@ -776,8 +579,6 @@ CProjectUndersamplingSubHandler::~CProjectUndersamplingSubHandler()
 bool CProjectUndersamplingSubHandler::start(const QXmlAttributes &atts)
 {
   QString str;
-  bool ok;
-  double tmpDouble;
 
   str = atts.value("method");
   if (str == "file")
@@ -798,9 +599,7 @@ bool CProjectUndersamplingSubHandler::start(const QXmlAttributes &atts)
       return postErrorMessage("Solar Reference Filename too long");
   }
 
-  tmpDouble = atts.value("shift").toDouble(&ok);
-  if (ok)
-    m_undersampling->shift = tmpDouble;
+  m_undersampling->shift = atts.value("shift").toDouble();
 
   return true;
 }
@@ -900,12 +699,8 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
 
   if (element == "ascii") { // ASCII
     QString str;
-    bool ok;
-    int tmpInt;
 
-    tmpInt = atts.value("size").toInt(&ok);
-    if (ok)
-      m_instrumental->ascii.detectorSize = tmpInt;
+    m_instrumental->ascii.detectorSize = atts.value("size").toInt();
 
     str = atts.value("format");
     if (str == "line")
@@ -1043,20 +838,9 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
   }
   else if (element == "ccdulb") { // CCD ULB
     QString str;
-    bool ok;
-    int tmpInt;
 
-    tmpInt = atts.value("grating").toInt(&ok);
-    if (ok)
-      m_instrumental->ccdulb.grating = tmpInt;
-    else
-      return postErrorMessage("Invalid ccdulb grating");
-
-    tmpInt = atts.value("cen").toInt(&ok);
-    if (ok)
-      m_instrumental->ccdulb.centralWavelength = tmpInt;
-    else
-      return postErrorMessage("Invalid ccdulb central wavelength");
+    m_instrumental->ccdulb.grating = atts.value("grating").toInt();
+    m_instrumental->ccdulb.centralWavelength = atts.value("cen").toInt();
 
     str = atts.value("calib");
     if (!str.isEmpty()) {
@@ -1109,48 +893,16 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
   }
   else if (element == "mfc") { // MFC
     QString str;
-    bool ok;
-    int tmpInt;
-    unsigned int tmpUint;
 
-    tmpInt = atts.value("size").toInt(&ok);
-    if (ok)
-      m_instrumental->mfc.detectorSize = tmpInt;
-    else
-      return postErrorMessage("Invalid mfc detector size");
-
-    tmpInt = atts.value("first").toInt(&ok);
-    if (ok)
-      m_instrumental->mfc.firstWavelength = tmpInt;
-    else
-      return postErrorMessage("Invalid mfc first wavelength");
+    m_instrumental->mfc.detectorSize = atts.value("size").toInt();
+    m_instrumental->mfc.firstWavelength = atts.value("first").toInt();
 
     m_instrumental->mfc.revert = (atts.value("revert") == "true") ? 1 : 0;
     m_instrumental->mfc.autoFileSelect = (atts.value("auto") == "true") ? 1 : 0;
-
-    tmpUint = atts.value("omask").toUInt(&ok);
-    if (ok)
-      m_instrumental->mfc.offsetMask = tmpUint;
-    else
-      return postErrorMessage("Invalid mfc omask");
-
-    tmpUint = atts.value("imask").toUInt(&ok);
-    if (ok)
-      m_instrumental->mfc.instrFctnMask = tmpUint;
-    else
-      return postErrorMessage("Invalid mfc imask");
-
-    tmpUint = atts.value("dmask").toUInt(&ok);
-    if (ok)
-      m_instrumental->mfc.darkCurrentMask = tmpUint;
-    else
-      return postErrorMessage("Invalid mfc dmask");
-
-    tmpUint = atts.value("smask").toUInt(&ok);
-    if (ok)
-      m_instrumental->mfc.spectraMask = tmpUint;
-    else
-      return postErrorMessage("Invalid mfc smask");
+    m_instrumental->mfc.offsetMask = atts.value("omask").toUInt();
+    m_instrumental->mfc.instrFctnMask = atts.value("imask").toUInt();
+    m_instrumental->mfc.darkCurrentMask = atts.value("dmask").toUInt();
+    m_instrumental->mfc.spectraMask = atts.value("smask").toUInt();
 
     str = atts.value("calib");
     if (!str.isEmpty()) {
@@ -1190,15 +942,8 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
   }
   else if (element == "mfcstd") { // MFC STD
     QString str;
-    bool ok;
-    int tmpInt;
 
-    tmpInt = atts.value("size").toInt(&ok);
-    if (ok)
-      m_instrumental->mfcstd.detectorSize = tmpInt;
-    else
-      return postErrorMessage("Invalid mfcstd detector size");
-
+    m_instrumental->mfcstd.detectorSize = atts.value("size").toInt();
     m_instrumental->mfcstd.revert = (atts.value("revert") == "true") ? 1 : 0;
 
     str = atts.value("calib");
@@ -1251,14 +996,8 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
   }
   else if (element == "ccdeev") { // CCD EEV
     QString str;
-    bool ok;
-    int tmpInt;
 
-    tmpInt = atts.value("size").toInt(&ok);
-    if (ok)
-      m_instrumental->ccdeev.detectorSize = tmpInt;
-    else
-      return postErrorMessage("Invalid ccdeev Detector Size");
+    m_instrumental->ccdeev.detectorSize = atts.value("size").toInt();
 
     str = atts.value("calib");
     if (!str.isEmpty()) {
@@ -1299,22 +1038,9 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
   }
   else if (element == "opus") { // OPUS
     QString str;
-    bool ok;
-    int tmpInt;
-    double tmpDouble;
 
-    tmpInt = atts.value("size").toInt(&ok);
-    if (ok)
-      m_instrumental->opus.detectorSize = tmpInt;
-    else
-      return postErrorMessage("Invalid opus Detector Size");
-
-    tmpDouble = atts.value("time").toDouble(&ok);
-    if (ok)
-      m_instrumental->opus.timeShift = tmpDouble;
-    else
-      return postErrorMessage("Invalid opus Time Shift");;
-
+    m_instrumental->opus.detectorSize = atts.value("size").toInt();
+    m_instrumental->opus.timeShift = atts.value("time").toDouble();
     m_instrumental->opus.flagTransmittance = (atts.value("trans") == "true") ? 1 : 0;
 
     str = atts.value("calib");
@@ -1362,8 +1088,6 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
   }
   else if (element == "omi") { // OMI
     QString str;
-    bool ok;
-    double tmpDouble;
 
     str = atts.value("type");
     if (str == "uv1")
@@ -1375,18 +1099,8 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
     else
       return postErrorMessage("Invalid omi Spectral Type");
 
-    tmpDouble = atts.value("min").toDouble(&ok);
-    if (ok)
-      m_instrumental->omi.minimumWavelength = tmpDouble;
-    else
-      return postErrorMessage("Invalid omi minimum wavelength");
-
-    tmpDouble = atts.value("max").toDouble(&ok);
-    if (ok)
-      m_instrumental->omi.maximumWavelength = tmpDouble;
-    else
-      return postErrorMessage("Invalid omi maximum wavelength");
-
+    m_instrumental->omi.minimumWavelength = atts.value("min").toDouble();
+    m_instrumental->omi.maximumWavelength = atts.value("max").toDouble();
     m_instrumental->omi.flagAverage = (atts.value("ave") == "true") ? 1 : 0;
 
     str = atts.value("calib");
@@ -1728,6 +1442,7 @@ bool CProjectSlitSubHandler::start(const QXmlAttributes &atts)
 bool CProjectSlitSubHandler::start(const QString &element, const QXmlAttributes &atts)
 {
   if (element == "file") {
+
     QString str = atts.value("file");
     if (!str.isEmpty()) {
       str = m_master->pathExpand(str);
@@ -1738,110 +1453,38 @@ bool CProjectSlitSubHandler::start(const QString &element, const QXmlAttributes 
     }
   }
   else if (element == "gaussian") {
-    bool ok;
-    double tmpDouble;
 
-    tmpDouble = atts.value("fwhm").toDouble(&ok);
-    if (ok)
-      m_slit->gaussian.fwhm = tmpDouble;
-    else
-      return postErrorMessage("Invalid gaussian fwhm");
+    m_slit->gaussian.fwhm = atts.value("fwhm").toDouble();
   }
   else if (element == "lorentz") {
-    bool ok;
-    double tmpDouble;
-    int tmpInt;
 
-    tmpDouble = atts.value("width").toDouble(&ok);
-    if (ok)
-      m_slit->lorentz.width = tmpDouble;
-    else
-      return postErrorMessage("Invalid lorentz width");
-
-    tmpInt = atts.value("degree").toInt(&ok);
-    if (ok)
-      m_slit->lorentz.degree = tmpInt;
-    else
-      return postErrorMessage("Invalid lorentz degree");
+    m_slit->lorentz.width = atts.value("width").toDouble();
+    m_slit->lorentz.degree = atts.value("degree").toInt();
   }
   else if (element == "voigt") {
-    bool ok;
-    double tmpDouble;
 
-    tmpDouble = atts.value("fwhmleft").toDouble(&ok);
-    if (ok)
-      m_slit->voigt.fwhmL = tmpDouble;
-    else
-      return postErrorMessage("Invalid voigt left-side fwhm");
-
-    tmpDouble = atts.value("fwhmright").toDouble(&ok);
-    if (ok)
-      m_slit->voigt.fwhmR = tmpDouble;
-    else
-      return postErrorMessage("Invalid voigt right-side fwhm");
-
-    tmpDouble = atts.value("glrleft").toDouble(&ok);
-    if (ok)
-      m_slit->voigt.glRatioL = tmpDouble;
-    else
-      return postErrorMessage("Invalid voigt left-side gaussian-lorentz half-width ratio");
-
-    tmpDouble = atts.value("glrright").toDouble(&ok);
-    if (ok)
-      m_slit->voigt.fwhmL = tmpDouble;
-    else
-      return postErrorMessage("Invalid voigt right-side gaussian-lorentz half-width ratio");
-
+    m_slit->voigt.fwhmL = atts.value("fwhmleft").toDouble();
+    m_slit->voigt.fwhmR = atts.value("fwhmright").toDouble();
+    m_slit->voigt.glRatioL = atts.value("glrleft").toDouble();
+    m_slit->voigt.fwhmL = atts.value("glrright").toDouble();
   }
   else if (element == "error") {
-    bool ok;
-    double tmpDouble;
 
-    tmpDouble = atts.value("fwhm").toDouble(&ok);
-    if (ok)
-      m_slit->error.fwhm = tmpDouble;
-    else
-      return postErrorMessage("Invalid error function fwhm");
-
-    tmpDouble = atts.value("width").toDouble(&ok);
-    if (ok)
-      m_slit->error.width = tmpDouble;
-    else
-      return postErrorMessage("Invalid error function boxcar width");
+    m_slit->error.fwhm = atts.value("fwhm").toDouble();
+    m_slit->error.width = atts.value("width").toDouble();
   }
   else if (element == "boxcarapod") {
-    bool ok;
-    double tmpDouble;
 
-    tmpDouble = atts.value("resolution").toDouble(&ok);
-    if (ok)
-      m_slit->boxcarapod.resolution = tmpDouble;
-    else
-      return postErrorMessage("Invalid boxcarapod resolution");
-
-    tmpDouble = atts.value("phase").toDouble(&ok);
-    if (ok)
-      m_slit->boxcarapod.phase = tmpDouble;
-    else
-      return postErrorMessage("Invalid boxcar apod phase");
+    m_slit->boxcarapod.resolution = atts.value("resolution").toDouble();
+    m_slit->boxcarapod.phase = atts.value("phase").toDouble();
   }
   else if (element == "nbsapod") {
-    bool ok;
-    double tmpDouble;
 
-    tmpDouble = atts.value("resolution").toDouble(&ok);
-    if (ok)
-      m_slit->nbsapod.resolution = tmpDouble;
-    else
-      return postErrorMessage("Invalid nbsapod resolution");
-
-    tmpDouble = atts.value("phase").toDouble(&ok);
-    if (ok)
-      m_slit->nbsapod.phase = tmpDouble;
-    else
-      return postErrorMessage("Invalid nbs apod phase");
+    m_slit->nbsapod.resolution = atts.value("resolution").toDouble();
+    m_slit->nbsapod.phase = atts.value("phase").toDouble();
   }
   else if (element == "gaussianfile") {
+
     QString str = atts.value("file");
     if (!str.isEmpty()) {
       str = m_master->pathExpand(str);
@@ -1852,8 +1495,6 @@ bool CProjectSlitSubHandler::start(const QString &element, const QXmlAttributes 
     }
   }
   else if (element == "lorentzfile") {
-    bool ok;
-    int tmpInt;
 
     QString str = atts.value("file");
     if (!str.isEmpty()) {
@@ -1864,15 +1505,9 @@ bool CProjectSlitSubHandler::start(const QString &element, const QXmlAttributes 
 	return postErrorMessage("Slit Function Filename too long");
     }
 
-    tmpInt = atts.value("degree").toInt(&ok);
-    if (ok)
-      m_slit->lorentzfile.degree = tmpInt;
-    else
-      return postErrorMessage("Invalid Lorentz File degree");
+    m_slit->lorentzfile.degree = atts.value("degree").toInt();
   }
   else if (element == "errorfile") {
-    bool ok;
-    double tmpDouble;
 
     QString str = atts.value("file");
     if (!str.isEmpty()) {
@@ -1883,13 +1518,10 @@ bool CProjectSlitSubHandler::start(const QString &element, const QXmlAttributes 
 	return postErrorMessage("Slit Function Filename too long");
     }
 
-    tmpDouble = atts.value("width").toDouble(&ok);
-    if (ok)
-      m_slit->errorfile.width = tmpDouble;
-    else
-      return postErrorMessage("Invalid errorfile boxcar width");
+    m_slit->errorfile.width = atts.value("width").toDouble();
   }
   else if (element == "gaussiantempfile") {
+
     QString str = atts.value("file");
     if (!str.isEmpty()) {
       str = m_master->pathExpand(str);
@@ -1900,8 +1532,6 @@ bool CProjectSlitSubHandler::start(const QString &element, const QXmlAttributes 
     }
   }
   else if (element == "errortempfile") {
-    bool ok;
-    double tmpDouble;
 
     QString str = atts.value("file");
     if (!str.isEmpty()) {
@@ -1912,11 +1542,7 @@ bool CProjectSlitSubHandler::start(const QString &element, const QXmlAttributes 
 	return postErrorMessage("Slit Function Filename too long");
     }
 
-    tmpDouble = atts.value("width").toDouble(&ok);
-    if (ok)
-      m_slit->errortempfile.width = tmpDouble;
-    else
-      return postErrorMessage("Invalid errortempfile boxcar width");
+    m_slit->errortempfile.width = atts.value("width").toDouble();
   }
 
   return true;

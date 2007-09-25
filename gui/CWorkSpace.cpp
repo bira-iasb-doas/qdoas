@@ -120,7 +120,8 @@ bool CWorkSpace::createAnalysisWindow(const QString &projectName, const QString 
     if (wIt == (pIt->second).window.end()) {
       // analysis window does not already exist
       mediate_analysis_window_t *tmp = new mediate_analysis_window_t;
-      // initialise the analysis window data ... TODO
+
+      initializeMediateAnalysisWindow(tmp);
 
       // insert the window into the map
       (pIt->second).window.insert(std::map<QString,mediate_analysis_window_t*>::value_type(newWindowName,tmp));

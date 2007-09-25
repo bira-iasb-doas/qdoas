@@ -192,6 +192,5 @@ class CProjectSlitSubHandler : public CConfigSubHandler
   mediate_project_slit_t *m_slit;
 };
 
-
 #endif
 

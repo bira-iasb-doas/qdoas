@@ -39,38 +39,43 @@ CWSiteEditor::CWSiteEditor(QTreeWidgetItem *editItem, QWidget *parent) :
   m_validBits(0x0)
 {
   QGridLayout *mainLayout = new QGridLayout(this);
+  mainLayout->setMargin(50);
 
   // first create and layout the widget
   // row 0 - Name
-  mainLayout->addWidget(new QLabel("Observation Site Name", this), 0, 0);
+  mainLayout->addWidget(new QLabel("Observation Site Name", this), 0, 1);
   m_siteName = new QLineEdit(this);
-  mainLayout->addWidget(m_siteName, 0, 1);
+  mainLayout->addWidget(m_siteName, 0, 2);
 
   // row 1 - Abbrev.
-  mainLayout->addWidget(new QLabel("Abbreviation", this), 1, 0);
+  mainLayout->addWidget(new QLabel("Abbreviation", this), 1, 1);
   m_abbreviation = new QLineEdit(this);
-  mainLayout->addWidget(m_abbreviation, 1, 1);
+  mainLayout->addWidget(m_abbreviation, 1, 2);
 
   // row 2 - Long.
-  mainLayout->addWidget(new QLabel("Longitude in degrees (positive eastward)", this), 2, 0);
+  mainLayout->addWidget(new QLabel("Longitude in degrees (positive eastward)", this), 2, 1);
   QLineEdit *longEdit = new QLineEdit(this);
   longEdit->setValidator(new QDoubleValidator(-180.0, +180.0, 3, longEdit));
   connect(longEdit, SIGNAL(textChanged(const QString &)), this, SLOT(slotLongitudeChanged(const QString &)));
-  mainLayout->addWidget(longEdit, 2, 1);
+  mainLayout->addWidget(longEdit, 2, 2);
 
   // row 3 - Lat.
-  mainLayout->addWidget(new QLabel("Latitude in degrees (positive northward)", this), 3, 0);
+  mainLayout->addWidget(new QLabel("Latitude in degrees (positive northward)", this), 3, 1);
   QLineEdit *latEdit = new QLineEdit(this);
   latEdit->setValidator(new QDoubleValidator(-90.0, +90.0, 3, latEdit));
   connect(latEdit, SIGNAL(textChanged(const QString &)), this, SLOT(slotLatitudeChanged(const QString &)));
-  mainLayout->addWidget(latEdit, 3, 1);
+  mainLayout->addWidget(latEdit, 3, 2);
 
   // row 4 - Alt.
-  mainLayout->addWidget(new QLabel("Altitude in meters", this), 4, 0);
+  mainLayout->addWidget(new QLabel("Altitude in meters", this), 4, 1);
   QLineEdit *altEdit = new QLineEdit(this);
   altEdit->setValidator(new QDoubleValidator(-50.0, 9000.0, 3, altEdit));
   connect(altEdit, SIGNAL(textChanged(const QString &)), this, SLOT(slotAltitudeChanged(const QString &)));
-  mainLayout->addWidget(altEdit, 4, 1);
+  mainLayout->addWidget(altEdit, 4, 2);
+
+  mainLayout->setColumnStretch(0, 1);
+  mainLayout->setColumnStretch(3, 1);
+  mainLayout->setRowStretch(5, 1);
 
   // if the editItem is NULL, then this is for a NEW item ...
   if (editItem) {

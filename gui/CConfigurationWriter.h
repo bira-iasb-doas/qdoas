@@ -52,6 +52,8 @@ class CConfigurationWriter
   void writeRawSpectraTree(FILE *fp, const QTreeWidgetItem *rawSpectraItem);
   void writeSpectraTreeNode(FILE *fp, const QTreeWidgetItem *item, int depth);
 
+  void writeAnalysisWindows(FILE *fp, const QString &projectName, const QTreeWidgetItem *item);
+
  private:
   const CWProjectTree *m_projectTree;
 };

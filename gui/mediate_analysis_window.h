@@ -25,21 +25,40 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 extern "C" {
 #endif
 
-// mediate_analysis_window_t
-//
-// Contains all user-specified information about a single spectral analysis window.
-// It allows the GUI to provide information to the engine.
+#define REF_FILENAME_BUFFER_LENGTH  256
 
-typedef struct mediate_analysis_window
-{
-  // To Be Defined - Coupled to the control offered by the GUI Analysis Window Tabs and
-  // the list of molecules/cross-sections/symbols?
-
-  int todo;
-
-} mediate_analysis_window_t;
-
-
+  
+  // mediate_analysis_window_t
+  //
+  // Contains all user-specified information about a single spectral analysis window.
+  // It allows the GUI to provide information to the engine.
+  
+  typedef struct mediate_analysis_window
+  {
+    int kuruczMode;
+    int refSpectrumSelection;
+    char refOneFile[REF_FILENAME_BUFFER_LENGTH];
+    char refTwoFile[REF_FILENAME_BUFFER_LENGTH];
+    char residualFile[REF_FILENAME_BUFFER_LENGTH];
+    double refSzaCenter;
+    double refSzaDelta;
+    int fitMinWavelength;
+    int fitMaxWavelength;
+    int requireSpectrum;
+    int requirePolynomial;
+    int requireFit;
+    int requireResidual;
+    int requirePredefined;
+    int requireRefRatio;
+    // tabs
+  } mediate_analysis_window_t;
+  
+  
+  /****************************************************/
+  /* Helper functions */
+  
+  void initializeMediateAnalysisWindow(mediate_analysis_window_t *d);
+  
 #if defined(_cplusplus) || defined(__cplusplus)
 }
 #endif

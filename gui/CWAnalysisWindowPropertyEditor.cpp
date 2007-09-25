@@ -33,6 +33,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "CDoasTable.h"
 
+#include "constants.h"
+
 CWAnalysisWindowPropertyEditor::CWAnalysisWindowPropertyEditor(const QString &projectName,
 							       const QString &analysisWindowName,
 							       QWidget *parent) :
@@ -40,13 +42,13 @@ CWAnalysisWindowPropertyEditor::CWAnalysisWindowPropertyEditor(const QString &pr
   m_projectName(projectName),
   m_analysisWindowName(analysisWindowName)
 {
-  mediate_analysis_window_t *awData = CWorkSpace::instance()->findAnalysisWindow(m_projectName, m_analysisWindowName);
+  mediate_analysis_window_t *d = CWorkSpace::instance()->findAnalysisWindow(m_projectName, m_analysisWindowName);
   
-  if (!awData)
+  if (!d)
     return; // TODO - assert or throw
 
   QVBoxLayout *mainLayout = new QVBoxLayout(this);
-  mainLayout->setMargin(25);
+  mainLayout->setMargin(10);
   mainLayout->setSpacing(5);
 
   QHBoxLayout *topLayout = new QHBoxLayout;
@@ -57,10 +59,10 @@ CWAnalysisWindowPropertyEditor::CWAnalysisWindowPropertyEditor(const QString &pr
   calibrationLayout->setMargin(3);
   calibrationLayout->setSpacing(0);
   m_calibrationCombo = new QComboBox(calibrationGroup);
-  m_calibrationCombo->addItem("None");
-  m_calibrationCombo->addItem("Ref Only");
-  m_calibrationCombo->addItem("Spectra Only");
-  m_calibrationCombo->addItem("Ref + Spectra");
+  m_calibrationCombo->addItem("None", QVariant(ANLYS_KURUCZ_NONE));
+  m_calibrationCombo->addItem("Ref Only", QVariant(ANLYS_KURUCZ_REF));
+  m_calibrationCombo->addItem("Spectra Only", QVariant(ANLYS_KURUCZ_SPEC));
+  m_calibrationCombo->addItem("Ref + Spectra", QVariant(ANLYS_KURUCZ_REF_AND_SPEC));
   calibrationLayout->addWidget(m_calibrationCombo);
   calibrationLayout->addStretch(1);
 
@@ -133,6 +135,7 @@ CWAnalysisWindowPropertyEditor::CWAnalysisWindowPropertyEditor(const QString &pr
   QLabel *labelOne = new QLabel(" Reference 1 ", m_refOneFrame);
   labelOne->setFixedWidth(85);
   m_refOneEdit = new QLineEdit(m_refOneFrame);
+  m_refOneEdit->setMaxLength(sizeof(d->refOneFile)-1);
   QPushButton *refOneBrowseBtn = new QPushButton("Browse", m_refOneFrame);
   refOneBrowseBtn->setFixedWidth(70);
   refOneFrameLayout->addWidget(labelOne);
@@ -149,6 +152,7 @@ CWAnalysisWindowPropertyEditor::CWAnalysisWindowPropertyEditor(const QString &pr
   QLabel *labelTwoEdit = new QLabel(" Reference 2 ", m_refTwoEditFrame);
   labelTwoEdit->setFixedWidth(85);
   m_refTwoEdit = new QLineEdit(m_refTwoEditFrame);
+  m_refTwoEdit->setMaxLength(sizeof(d->refTwoFile)-1);
   QPushButton *refTwoBrowseBtn = new QPushButton("Browse", m_refTwoEditFrame);
   refTwoBrowseBtn->setFixedWidth(70);
   refTwoEditFrameLayout->addWidget(labelTwoEdit);
@@ -161,16 +165,16 @@ CWAnalysisWindowPropertyEditor::CWAnalysisWindowPropertyEditor(const QString &pr
   szaLayout->setMargin(0);
   QLabel *labelTwoSza = new QLabel(" Reference 2    SZA ", m_refTwoSzaFrame);
   labelTwoSza->setFixedWidth(120);
-  m_szaValueEdit = new QLineEdit(m_refTwoSzaFrame);
-  m_szaValueEdit->setFixedWidth(50);
-  m_szaValueEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 180.0, 3, m_szaValueEdit));
-  m_szaMarginEdit = new QLineEdit(m_refTwoSzaFrame);
-  m_szaMarginEdit->setFixedWidth(50);
-  m_szaMarginEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 180.0, 3, m_szaMarginEdit));
+  m_szaCenterEdit = new QLineEdit(m_refTwoSzaFrame);
+  m_szaCenterEdit->setFixedWidth(50);
+  m_szaCenterEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 180.0, 3, m_szaCenterEdit));
+  m_szaDeltaEdit = new QLineEdit(m_refTwoSzaFrame);
+  m_szaDeltaEdit->setFixedWidth(50);
+  m_szaDeltaEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 180.0, 3, m_szaDeltaEdit));
   szaLayout->addWidget(labelTwoSza);
-  szaLayout->addWidget(m_szaValueEdit);
+  szaLayout->addWidget(m_szaCenterEdit);
   szaLayout->addWidget(new QLabel("+/-", m_refTwoSzaFrame));
-  szaLayout->addWidget(m_szaMarginEdit);
+  szaLayout->addWidget(m_szaDeltaEdit);
   szaLayout->addStretch(1);
 
   // stack for ref 2 switching ...
@@ -188,6 +192,7 @@ CWAnalysisWindowPropertyEditor::CWAnalysisWindowPropertyEditor(const QString &pr
   QLabel *labelRes = new QLabel(" Residual ", residualFrame);
   labelRes->setFixedWidth(85);
   m_residualEdit = new QLineEdit(residualFrame);
+  m_residualEdit->setMaxLength(sizeof(d->residualFile)-1);
   QPushButton *residualBrowseBtn = new QPushButton("Browse", residualFrame);
   residualBrowseBtn->setFixedWidth(70);
   residualFrameLayout->addWidget(labelRes);
@@ -222,11 +227,36 @@ CWAnalysisWindowPropertyEditor::CWAnalysisWindowPropertyEditor(const QString &pr
   m_contextTag += " Prop";
 
   // set the current values
-  autoButton->setChecked(true);
-  slotRefSelectionChanged(true);
+  int index;
+  QString tmpStr;
 
-  m_calibrationCombo->setCurrentIndex(0);
-  slotWavelengthCalibrationChanged(0);
+  autoButton->setChecked(d->refSpectrumSelection == ANLYS_REF_SELECTION_MODE_AUTOMATIC);
+  slotRefSelectionChanged(d->refSpectrumSelection == ANLYS_REF_SELECTION_MODE_AUTOMATIC);
+
+  index = m_calibrationCombo->findData(d->kuruczMode);
+  if (index != -1) {
+    m_calibrationCombo->setCurrentIndex(index);
+    slotWavelengthCalibrationChanged(index);
+  }
+
+  m_fitMinEdit->setText(tmpStr.setNum(d->fitMinWavelength));
+  m_fitMaxEdit->setText(tmpStr.setNum(d->fitMaxWavelength));
+
+  m_spectrumCheck->setChecked(d->requireSpectrum ? Qt::Checked : Qt::Unchecked);
+  m_polyCheck->setChecked(d->requirePolynomial ? Qt::Checked : Qt::Unchecked);
+  m_fitsCheck->setChecked(d->requireFit ? Qt::Checked : Qt::Unchecked);
+  m_residualCheck->setChecked(d->requireResidual ? Qt::Checked : Qt::Unchecked);
+  m_predefCheck->setChecked(d->requirePredefined ? Qt::Checked : Qt::Unchecked);
+  m_ratioCheck->setChecked(d->requireRefRatio ? Qt::Checked : Qt::Unchecked);
+
+  m_refOneEdit->setText(d->refOneFile);
+  m_refTwoEdit->setText(d->refTwoFile);
+  m_residualEdit->setText(d->residualFile);
+
+  m_szaCenterEdit->validator()->fixup(tmpStr.setNum(d->refSzaCenter));
+  m_szaCenterEdit->setText(tmpStr);
+  m_szaDeltaEdit->validator()->fixup(tmpStr.setNum(d->refSzaDelta));
+  m_szaDeltaEdit->setText(tmpStr);
 
   // slot on automatic button is sufficient
   connect(autoButton, SIGNAL(toggled(bool)), this, SLOT(slotRefSelectionChanged(bool)));
@@ -244,10 +274,31 @@ CWAnalysisWindowPropertyEditor::~CWAnalysisWindowPropertyEditor()
 
 bool CWAnalysisWindowPropertyEditor::actionOk(void)
 {
-  // call apply for all tabs ...
-  mediate_analysis_window_t *awData = CWorkSpace::instance()->findAnalysisWindow(m_projectName, m_analysisWindowName);
+  mediate_analysis_window_t *d = CWorkSpace::instance()->findAnalysisWindow(m_projectName, m_analysisWindowName);
   
-  if (awData) {
+  if (d) {
+
+    d->kuruczMode = m_calibrationCombo->itemData(m_calibrationCombo->currentIndex()).toInt();
+    d->refSpectrumSelection = m_refTwoStack->currentIndex() ? ANLYS_REF_SELECTION_MODE_FILE : ANLYS_REF_SELECTION_MODE_AUTOMATIC;
+
+    d->fitMinWavelength = m_fitMinEdit->text().toInt();
+    d->fitMaxWavelength = m_fitMaxEdit->text().toInt();
+
+    d->requireSpectrum = (m_spectrumCheck->checkState() == Qt::Checked) ? 1 : 0;
+    d->requirePolynomial = (m_polyCheck->checkState() == Qt::Checked) ? 1 : 0;
+    d->requireFit = (m_fitsCheck->checkState() == Qt::Checked) ? 1 : 0;
+    d->requireResidual = (m_residualCheck->checkState() == Qt::Checked) ? 1 : 0;
+    d->requirePredefined = (m_predefCheck->checkState() == Qt::Checked) ? 1 : 0;
+    d->requireRefRatio = (m_ratioCheck->checkState() == Qt::Checked) ? 1 : 0;
+    
+    strcpy(d->refOneFile, m_refOneEdit->text().toAscii().data());
+    strcpy(d->refTwoFile, m_refTwoEdit->text().toAscii().data());
+    strcpy(d->residualFile, m_residualEdit->text().toAscii().data());
+
+    d->refSzaCenter = m_szaCenterEdit->text().toDouble();
+    d->refSzaDelta = m_szaDeltaEdit->text().toDouble();
+
+    // call apply for all tabs ...
 
     return true;
   }
@@ -268,23 +319,25 @@ void CWAnalysisWindowPropertyEditor::slotRefSelectionChanged(bool checked)
 
 void CWAnalysisWindowPropertyEditor::slotWavelengthCalibrationChanged(int index)
 {
-  switch (index) {
-  case 0: // nothing
-  case 1: // ref only
+  int mode = m_calibrationCombo->itemData(index).toInt();
+
+  switch (mode) {
+  case ANLYS_KURUCZ_NONE:
+  case ANLYS_KURUCZ_REF:
     {
       m_refOneFrame->setEnabled(true);
       m_refTwoEditFrame->setEnabled(true);
       m_refTwoSzaFrame->setEnabled(true);
     }
     break;
-  case 2: // spectrum only
+  case ANLYS_KURUCZ_SPEC:
     {
       m_refOneFrame->setEnabled(false);
       m_refTwoEditFrame->setEnabled(false);
       m_refTwoSzaFrame->setEnabled(false);
     }
     break;
-  case 3: // ref + spectrum
+  case ANLYS_KURUCZ_REF_AND_SPEC:
     {
       m_refOneFrame->setEnabled(false);      
       m_refTwoEditFrame->setEnabled(true);

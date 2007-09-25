@@ -100,6 +100,7 @@ void CConfigurationWriter::writeProjects(FILE *fp)
   const QTreeWidgetItem *item;
   const CProjectItem *projItem;
   const mediate_project_t *properties;
+  QString projName;
 
   int n = m_projectTree->topLevelItemCount();
   int i = 0;
@@ -108,15 +109,20 @@ void CConfigurationWriter::writeProjects(FILE *fp)
     projItem = dynamic_cast<const CProjectItem*>(m_projectTree->topLevelItem(i));
     if (projItem != NULL && projItem->childCount() == 2) {
       // Should always be a project item ... with two children
-      properties = CWorkSpace::instance()->findProject(projItem->text(0));
+      projName = projItem->text(0);
+
+      properties = CWorkSpace::instance()->findProject(projName);
       if (properties != NULL) {
 	// write the project data
-	fprintf(fp, "  <project name=\"%s\">\n", projItem->text(0).toAscii().constData());
+	fprintf(fp, "  <project name=\"%s\">\n", projName.toAscii().constData());
 	writeProperties(fp, properties);
 
-	// analysis windows ...
+	// Analysis Windows ...
+	item = projItem->child(1); // Analysis Windows Branch
+	writeAnalysisWindows(fp, projName, item);
 
-	item = projItem->child(0); // Raw Spectra Node
+	// Raw spectra ...
+	item = projItem->child(0); // Raw Spectra Branch
 	writeRawSpectraTree(fp, item);
 
 	fprintf(fp, "  </project>\n");
@@ -1088,4 +1094,61 @@ void CConfigurationWriter::writeSpectraTreeNode(FILE *fp, const QTreeWidgetItem 
   }
 }
 
+void CConfigurationWriter::writeAnalysisWindows(FILE *fp, const QString &projectName, const QTreeWidgetItem *item)
+{
+  const CAnalysisWindowItem *awItem;
+  const mediate_analysis_window_t *properties;
+  QString awName;
 
+  int n = item->childCount();
+  int i = 0;
+
+  while (i < n) {
+    awItem = dynamic_cast<const CAnalysisWindowItem*>(item->child(i));
+    if (awItem != NULL) {
+      awName = awItem->text(0);
+
+      properties = CWorkSpace::instance()->findAnalysisWindow(projectName, awName);
+      if (properties != NULL) {
+
+	fprintf(fp, "    <analysis_window name=\"%s\" kurucz=", awName.toAscii().data());
+
+	switch (properties->kuruczMode) {
+	case ANLYS_KURUCZ_REF:
+	  fprintf(fp, "\"ref\""); break;
+	case ANLYS_KURUCZ_SPEC:
+	  fprintf(fp, "\"spec\""); break;
+	case ANLYS_KURUCZ_REF_AND_SPEC:
+	  fprintf(fp, "\"ref+spec\""); break;
+	default:
+	  fprintf(fp, "\"none\"");
+	}
+
+	if (properties->refSpectrumSelection == ANLYS_REF_SELECTION_MODE_AUTOMATIC)
+	  fprintf(fp, " refsel=\"auto\"");
+	else
+	  fprintf(fp, " refsel=\"file\"");
+
+	fprintf(fp, " min=\"%d\" max=\"%d\" >\n", properties->fitMinWavelength, properties->fitMaxWavelength);
+
+	fprintf(fp, "      <display spectrum=\"%s\" poly=\"%s\" fits=\"%s\" residual=\"%s\" predef=\"%s\" ratio=\"%s\" />\n",
+		(properties->requireSpectrum ? sTrue : sFalse),
+		(properties->requirePolynomial ? sTrue : sFalse),
+		(properties->requireFit ? sTrue : sFalse),
+		(properties->requireResidual ? sTrue : sFalse),
+		(properties->requirePredefined ? sTrue : sFalse),
+		(properties->requireRefRatio ? sTrue : sFalse));
+
+	fprintf(fp, "      <files refone=\"%s\" reftwo=\"%s\" residual=\"%s\" szacenter=\"%.3f\" szadelta=\"%.3f\" />\n",
+		properties->refOneFile, properties->refTwoFile, properties->residualFile,
+		properties->refSzaCenter , properties->refSzaDelta);
+
+	// write tabs ...
+
+	fprintf(fp, "    </analysis_window>\n");
+      }
+    }
+
+    ++i;
+  }
+}

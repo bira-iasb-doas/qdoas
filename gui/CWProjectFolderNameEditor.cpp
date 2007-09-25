@@ -18,7 +18,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
 
-#include <QVBoxLayout>
+#include <QGridLayout>
 #include <QLabel>
 #include <QMessageBox>
 
@@ -32,17 +32,20 @@ CWProjectFolderNameEditor::CWProjectFolderNameEditor(CWProjectTree *projectTree,
   m_projectTree(projectTree),
   m_newFolder(newFolder)
 {
-  QHBoxLayout *mainLayout = new QHBoxLayout(this);
-  mainLayout->setMargin(25);
-  mainLayout->setSpacing(5);;
+  QGridLayout *mainLayout = new QGridLayout(this);
+  mainLayout->setMargin(50);
 
   if (newFolder)
-    mainLayout->addWidget(new QLabel("Enter a name for the new Folder", this));
+    mainLayout->addWidget(new QLabel("Enter a name for the new Folder", this), 0, 1);
   else
-    mainLayout->addWidget(new QLabel("Modify the Folder name", this));
+    mainLayout->addWidget(new QLabel("Modify the Folder name", this), 0, 1);
 
   m_folderName = new QLineEdit(this);
-  mainLayout->addWidget(m_folderName);
+  mainLayout->addWidget(m_folderName, 0, 2);
+
+  mainLayout->setColumnStretch(0, 1);
+  mainLayout->setColumnStretch(3, 1);
+  mainLayout->setRowStretch(1,1);
 
   if (m_newFolder)
     m_captionStr = "Create new Folder in ";

@@ -18,7 +18,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
 
-#include <QVBoxLayout>
+#include <QGridLayout>
 #include <QLabel>
 #include <QMessageBox>
 
@@ -31,20 +31,23 @@ CWProjectNameEditor::CWProjectNameEditor(CWProjectTree *projectTree, QTreeWidget
   CWEditor(parent),
   m_projectTree(projectTree)
 {
-  QHBoxLayout *mainLayout = new QHBoxLayout(this);
-  mainLayout->setMargin(25);
-  mainLayout->setSpacing(5);;
+  QGridLayout *mainLayout = new QGridLayout(this);
+  mainLayout->setMargin(50);
 
   if (item && item->parent() == NULL) {
     // renaming a project
     m_oldProjectName = item->text(0);  // also acts as the flag for new/rename 
-    mainLayout->addWidget(new QLabel("Modify the Project name", this));
+    mainLayout->addWidget(new QLabel("Modify the Project name", this), 0, 1);
   }
   else
-    mainLayout->addWidget(new QLabel("Enter a name for the new Project", this));
+    mainLayout->addWidget(new QLabel("Enter a name for the new Project", this), 0, 1);
 
   m_projectName = new QLineEdit(this);
-  mainLayout->addWidget(m_projectName);
+  mainLayout->addWidget(m_projectName, 0, 2);
+
+  mainLayout->setColumnStretch(0, 1);
+  mainLayout->setColumnStretch(3, 1);
+  mainLayout->setRowStretch(1,1);
 
   if (m_oldProjectName.isNull()) {
     m_captionStr = "Create new Project";

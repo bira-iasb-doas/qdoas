@@ -27,25 +27,46 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "mediate.h"
 #include "CProjectConfigTreeNode.h"
 
+class CAnalysisWindowConfigItem
+{
+ public:
+  CAnalysisWindowConfigItem();
+  ~CAnalysisWindowConfigItem();
+
+  void setName(const QString &name);
+  const QString& name(void) const;
+
+  mediate_analysis_window_t* properties(void); // WARNING : allows (by design) poking at the internals ...
+  const mediate_analysis_window_t* properties(void) const;
+
+ private:
+  QString m_name;
+  mediate_analysis_window_t m_awProp;
+};
+
 class CProjectConfigItem
 {
  public:
   CProjectConfigItem();
   ~CProjectConfigItem();
 
-  void setProjectName(const QString &name);
-  const QString& projectName(void) const;
+  void setName(const QString &name);
+  const QString& name(void) const;
 
   mediate_project_t* properties(void); // WARNING : allows (by design) poking at the internals ...
   const mediate_project_t* properties(void) const;
+
+  CAnalysisWindowConfigItem* issueNewAnalysisWindowItem(void); // retains ownership
+  const QList<const CAnalysisWindowConfigItem*>& analysisWindowItems(void) const;
 
   CProjectConfigTreeNode* rootNode(void); // WARNING : allows (by design) poking at the internals ...
   const CProjectConfigTreeNode* rootNode(void) const;
 
  private:
-  QString m_projectName;
+  QString m_name;
   mediate_project_t m_projProp;
   CProjectConfigTreeNode *m_root;
+  QList<const CAnalysisWindowConfigItem*> m_awItemList;
 };
 
 class CSiteConfigItem

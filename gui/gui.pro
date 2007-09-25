@@ -52,6 +52,7 @@ SOURCES += CSession.cpp
 SOURCES += CValidator.cpp
 SOURCES += CQdoasProjectConfigHandler.cpp
 SOURCES += CProjectConfigSubHandlers.cpp
+SOURCES += CProjectConfigAnalysisWindowSubHandlers.cpp
 SOURCES += CProjectConfigTreeNode.cpp
 SOURCES += CProjectConfigItem.cpp
 SOURCES += CConfigurationWriter.cpp
@@ -90,6 +91,7 @@ SOURCES += qdoas.cpp
 SOURCES += mediate_response.cpp
 SOURCES += mediate.c
 SOURCES += mediate_project.c
+SOURCES += mediate_analysis_window.c
 
 #----------------------------------------------
 # GUI Header files
@@ -108,6 +110,7 @@ HEADERS += CSession.h
 HEADERS += CValidator.h
 HEADERS += CQdoasProjectConfigHandler.h
 HEADERS += CProjectConfigSubHandlers.h
+HEADERS += CProjectConfigAnalysisWindowSubHandlers.h
 HEADERS += CProjectConfigTreeNode.h
 HEADERS += CProjectConfigItem.h
 HEADERS += CConfigurationWriter.h

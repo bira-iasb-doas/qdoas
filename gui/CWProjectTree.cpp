@@ -559,7 +559,8 @@ QString CWProjectTree::loadConfiguration(const QList<const CProjectConfigItem*> 
   QString errStr;
   QTreeWidgetItem *item;
   CProjectItem *projItem;
-  mediate_project_t *properties;
+  mediate_project_t *projProp;
+  mediate_analysis_window_t *awProp;
   int i;
 
   // clear the current projects - bottom up
@@ -573,18 +574,20 @@ QString CWProjectTree::loadConfiguration(const QList<const CProjectConfigItem*> 
   QList<const CProjectConfigItem*>::const_iterator it = itemList.begin();
   while (it != itemList.end()) {
 
-    QString name = (*it)->projectName();
+    QString projName = (*it)->name();
 
     // create the project item
     projItem = NULL;
-    errStr = editInsertNewProject(name, &projItem);
+    errStr = editInsertNewProject(projName, &projItem);
     if (!errStr.isNull())
       return errStr;
 
-    // locate the properties in the workspace then copy
-    properties = CWorkSpace::instance()->findProject(name);
-    assert(properties != NULL);
-    *properties = *((*it)->properties()); // blot copy
+    assert(projItem && projItem->childCount() == 2); // sanity check
+
+   // locate the properties in the workspace then copy
+    projProp = CWorkSpace::instance()->findProject(projName);
+    assert(projProp != NULL);
+    *projProp = *((*it)->properties()); // blot copy
 
     item = projItem->child(0); // raw spectra node for the project
 
@@ -594,7 +597,28 @@ QString CWProjectTree::loadConfiguration(const QList<const CProjectConfigItem*> 
     errStr = CWProjectTree::buildRawSpectraTree(item, firstChild);
     if (!errStr.isNull())
       return errStr;
-      
+
+    // add any analysis windows
+    item = projItem->child(1); // the analysis window branch node
+
+    const QList<const CAnalysisWindowConfigItem*> &awList = (*it)->analysisWindowItems();
+    QList<const CAnalysisWindowConfigItem*>::const_iterator awIt = awList.begin();
+    while (awIt != awList.end()) {
+      QString awName = (*awIt)->name();
+
+      // create the item with the edit iterface
+      errStr = editInsertNewAnalysisWindow(item, awName);
+      if (!errStr.isNull())
+	return errStr;
+
+      // locate the properties in the workspace and copy
+      awProp = CWorkSpace::instance()->findAnalysisWindow(projName, awName);
+      assert(awProp != NULL);
+      *awProp = *((*awIt)->properties()); // blot copy
+
+      ++awIt;
+    }
+
     ++it;
   }
   

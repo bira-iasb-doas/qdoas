@@ -57,7 +57,7 @@ Q_OBJECT
 
   QFrame *m_refOneFrame, *m_refTwoEditFrame, *m_refTwoSzaFrame;
   QLineEdit *m_refOneEdit, *m_refTwoEdit, *m_residualEdit;
-  QLineEdit *m_szaValueEdit, *m_szaMarginEdit;
+  QLineEdit *m_szaCenterEdit, *m_szaDeltaEdit;
   QStackedLayout *m_refTwoStack;
   
 
