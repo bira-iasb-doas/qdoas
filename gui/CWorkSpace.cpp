@@ -83,7 +83,7 @@ mediate_analysis_window_t* CWorkSpace::findAnalysisWindow(const QString &project
   return NULL; // not found
 }
 
-const mediate_site_t* CWorkSpace::findSite(const QString &siteName)
+const mediate_site_t* CWorkSpace::findSite(const QString &siteName) const
 {
   std::map<QString,mediate_site_t*>::const_iterator it = m_siteMap.find(siteName);
   if (it != m_siteMap.end()) {
@@ -93,8 +93,22 @@ const mediate_site_t* CWorkSpace::findSite(const QString &siteName)
   return NULL; // not found
 }
 
+QString CWorkSpace::findSymbol(const QString &symbolName) const
+{
+  std::map<QString,QString>::const_iterator it = m_symbolMap.find(symbolName);
+  if (it != m_symbolMap.end()) {
+    // symbol exists
+    return it->second; // The string returned may be empty, but is not null.
+  }
+
+  return QString(); // a NULL string
+}
+
 bool CWorkSpace::createProject(const QString &newProjectName)
 {
+  if (newProjectName.isEmpty())
+    return false;
+
   // does it already exist?
   std::map<QString,SProjBucket>::iterator pIt = m_projMap.find(newProjectName);
   if (pIt == m_projMap.end()) {
@@ -105,6 +119,14 @@ bool CWorkSpace::createProject(const QString &newProjectName)
     
     // insert the project (with no windows)
     m_projMap.insert(std::map<QString,SProjBucket>::value_type(newProjectName,SProjBucket(tmp)));
+
+    // notify the observers
+    std::list<CProjectObserver*>::iterator obs = m_projectObserverList.begin();
+    while (obs != m_projectObserverList.end()) {
+      (*obs)->updateNewProject(newProjectName);
+      ++obs;
+    }
+
     return true;
   }
 
@@ -113,6 +135,9 @@ bool CWorkSpace::createProject(const QString &newProjectName)
 
 bool CWorkSpace::createAnalysisWindow(const QString &projectName, const QString &newWindowName)
 {
+  if (newWindowName.isEmpty())
+    return false;
+
   // project must exist
   std::map<QString,SProjBucket>::iterator pIt = m_projMap.find(projectName);
   if (pIt != m_projMap.end()) {
@@ -137,7 +162,7 @@ bool CWorkSpace::createSite(const QString &newSiteName, const QString &abbr,
   mediate_site_t *tmp;
 
   // limit check ...
-  if (newSiteName.length() >= (int)sizeof(tmp->name) || abbr.length() >= (int)sizeof(tmp->abbreviation))
+  if (newSiteName.isEmpty() || newSiteName.length() >= (int)sizeof(tmp->name) || abbr.length() >= (int)sizeof(tmp->abbreviation))
     return false;
 
   std::map<QString,mediate_site_t*>::iterator it = m_siteMap.find(newSiteName);
@@ -163,6 +188,32 @@ bool CWorkSpace::createSite(const QString &newSiteName, const QString &abbr,
   return false;
 }
 
+bool CWorkSpace::createSymbol(const QString &newSymbolName, const QString &description)
+{
+  if (newSymbolName.isEmpty())
+    return false;
+
+  std::map<QString,QString>::iterator it = m_symbolMap.find(newSymbolName);
+  if (it == m_symbolMap.end()) {
+    if (description.isNull()) {
+      // make an empty description
+      QString emptyStr = "";
+      m_symbolMap.insert(std::map<QString,QString>::value_type(newSymbolName, emptyStr));
+    }
+    else
+      m_symbolMap.insert(std::map<QString,QString>::value_type(newSymbolName, description));
+
+    // notify the observers
+    std::list<CSymbolObserver*>::iterator obs = m_symbolObserverList.begin();
+    while (obs != m_symbolObserverList.end()) {
+      (*obs)->updateNewSymbol(newSymbolName);
+      ++obs;
+    }    
+    return true;
+  }
+  return false;
+}
+
 bool CWorkSpace::renameProject(const QString &oldProjectName, const QString &newProjectName)
 {
   // project must exist - locate by old name
@@ -175,9 +226,26 @@ bool CWorkSpace::renameProject(const QString &oldProjectName, const QString &new
     // check that the new name is not in use
     std::map<QString,SProjBucket>::iterator newIt = m_projMap.find(newProjectName);
     if (newIt == m_projMap.end()) {
-      // ok to rename - change of key so insert for the new key then remove the old entry
+      // ok to rename - first notify, then touch the map, then notify again
+
+      // notify the observers of a delete
+      std::list<CProjectObserver*>::iterator obs = m_projectObserverList.begin();
+      while (obs != m_projectObserverList.end()) {
+	(*obs)->updateDeleteProject(oldProjectName);
+	++obs;
+      }
+
+      // change of key so insert for the new key then remove the old entry
       m_projMap.insert(std::map<QString,SProjBucket>::value_type(newProjectName, oldIt->second));
       m_projMap.erase(oldIt);
+
+      // notify the observers again
+      obs = m_projectObserverList.begin();
+      while (obs != m_projectObserverList.end()) {
+	(*obs)->updateNewProject(newProjectName);
+	++obs;
+      }
+
       return true;
     }
   }
@@ -242,6 +310,16 @@ bool CWorkSpace::modifySite(const QString &siteName, const QString &abbr,
   return false;
 }
 
+void CWorkSpace::modifiedProjectProperties(const QString &projectName)
+{
+  // notify the observers of the modification
+  std::list<CProjectObserver*>::iterator obs = m_projectObserverList.begin();
+  while (obs != m_projectObserverList.end()) {
+    (*obs)->updateModifyProject(projectName);
+    ++obs;
+  }
+}
+
 // data returned must be freed by the client with 'opeator delete []'
 
 mediate_site_t* CWorkSpace::siteList(int &listLength) const
@@ -274,6 +352,14 @@ bool CWorkSpace::destroyProject(const QString &projectName)
   // project must exist
   std::map<QString,SProjBucket>::iterator pIt = m_projMap.find(projectName);
   if (pIt != m_projMap.end()) {
+
+    // notify the observers
+    std::list<CProjectObserver*>::iterator obs = m_projectObserverList.begin();
+    while (obs != m_projectObserverList.end()) {
+      (*obs)->updateDeleteProject(projectName);
+      ++obs;
+    }
+
     // delete all analysis windows ...
     std::map<QString,mediate_analysis_window_t*>::iterator wIt = (pIt->second).window.begin();
     while (wIt != (pIt->second).window.end()) {
@@ -318,6 +404,23 @@ bool CWorkSpace::destroySite(const QString &siteName)
 
     delete it->second;
     m_siteMap.erase(it);
+    return true;
+  }
+  return false;
+}
+
+bool CWorkSpace::destroySymbol(const QString &symbolName)
+{
+  std::map<QString,QString>::iterator it = m_symbolMap.find(symbolName);
+  if (it != m_symbolMap.end()) {
+
+    // notify the observers
+    std::list<CSymbolObserver*>::iterator obs = m_symbolObserverList.begin();
+    while (obs != m_symbolObserverList.end()) {
+      (*obs)->updateDeleteSymbol(symbolName);
+      ++obs;
+    }
+    m_symbolMap.erase(it);
     return true;
   }
   return false;
@@ -416,6 +519,27 @@ void CWorkSpace::detach(CSitesObserver *observer)
   m_sitesObserverList.remove(observer);
 }
 
+void CWorkSpace::attach(CSymbolObserver *observer)
+{
+  if (std::find(m_symbolObserverList.begin(), m_symbolObserverList.end(), observer) == m_symbolObserverList.end())
+    m_symbolObserverList.push_back(observer);
+}
+
+void CWorkSpace::detach(CSymbolObserver *observer)
+{
+  m_symbolObserverList.remove(observer);
+}
+
+void CWorkSpace::attach(CProjectObserver *observer)
+{
+  if (std::find(m_projectObserverList.begin(), m_projectObserverList.end(), observer) == m_projectObserverList.end())
+    m_projectObserverList.push_back(observer);
+}
+void CWorkSpace::detach(CProjectObserver *observer)
+{
+  m_projectObserverList.remove(observer);
+}
+
 //-----------------------------------------------------------------------
 
 CSitesObserver::CSitesObserver()
@@ -440,5 +564,51 @@ void CSitesObserver::updateDeleteSite(const QString &siteName)
 {
 }
 
+//-----------------------------------------------------------------------
 
+CSymbolObserver::CSymbolObserver()
+{
+  CWorkSpace::instance()->attach(this);
+}
+
+CSymbolObserver::~CSymbolObserver()
+{
+  CWorkSpace::instance()->detach(this);
+}
+
+void CSymbolObserver::updateNewSymbol(const QString &newSymbolName)
+{
+}
+
+void CSymbolObserver::updateModifySymbol(const QString &symbolName)
+{
+}
+
+void CSymbolObserver::updateDeleteSymbol(const QString &symbolName)
+{
+}
+
+//-----------------------------------------------------------------------
+
+CProjectObserver::CProjectObserver()
+{
+  CWorkSpace::instance()->attach(this);
+}
+
+CProjectObserver::~CProjectObserver()
+{
+  CWorkSpace::instance()->detach(this);
+}
+
+void CProjectObserver::updateNewProject(const QString &newProjectName)
+{
+}
+
+void CProjectObserver::updateModifyProject(const QString &projectName)
+{
+}
+
+void CProjectObserver::updateDeleteProject(const QString &projectName)
+{
+}
 

@@ -18,17 +18,24 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
 
+#include <QMenu>
 #include <QShowEvent>
+#include <QContextMenuEvent>
 #include <QList>
 
 #include "CWUserSymbolTree.h"
-
 #include "CPreferences.h"
+#include "CWActiveContext.h"
+#include "CWSymbolEditor.h"
+
+#include "debugutil.h"
 
 const int cUserSymbolTreeGeneralMode = 47;
 
-CWUserSymbolTree::CWUserSymbolTree(QWidget *parent) :
-  QTreeWidget(parent)
+CWUserSymbolTree::CWUserSymbolTree(CWActiveContext *activeContext, QWidget *parent) :
+  QTreeWidget(parent),
+  CSymbolObserver(),
+  m_activeContext(activeContext)
 {
   QStringList labelList;
   labelList << "Name" << "Description";
@@ -59,20 +66,102 @@ void CWUserSymbolTree::savePreferences(void)
   CPreferences::instance()->setColumnWidthList("UserSymbolTree", widthList);
 }
 
-void CWUserSymbolTree::addNewUserSymbol(const QString &userSymbolName, const QString &description)
+void CWUserSymbolTree::updateNewSymbol(const QString &newSymbolName)
 {
-  QStringList labelList;
-  labelList << userSymbolName << description;
+  QString description = CWorkSpace::instance()->findSymbol(newSymbolName);
 
-  QTreeWidgetItem *userSymbolItem = new  QTreeWidgetItem(labelList);
+  if (!description.isNull()) {
 
-  addTopLevelItem(userSymbolItem);
+    QStringList labelList;
+    labelList << newSymbolName << description;
+
+    QTreeWidgetItem *userSymbolItem = new  QTreeWidgetItem(labelList);
+
+    addTopLevelItem(userSymbolItem);
+  }
 }
 
+void CWUserSymbolTree::updateModifySymbol(const QString &symbolName)
+{
+  TRACE("TODO");
+}
+
+void CWUserSymbolTree::updateDeleteSymbol(const QString &symbolName)
+{
+  QString description = CWorkSpace::instance()->findSymbol(symbolName);
+
+  if (!description.isNull()) {
+
+    QTreeWidgetItem *symbolItem;
+    int i = 0;
+    
+    while ((symbolItem = topLevelItem(i)) != NULL && symbolItem->text(0) != symbolName) ++i;
+    if (symbolItem != NULL) {
+      delete takeTopLevelItem(i);
+    }
+  }
+}
+  
 void CWUserSymbolTree::showEvent(QShowEvent *e)
 {
   QTreeWidget::showEvent(e);
 
   emit signalWidthModeChanged(cUserSymbolTreeGeneralMode);
+}
+
+void CWUserSymbolTree::contextMenuEvent(QContextMenuEvent *e)
+{
+  // create a popup menu
+  QMenu menu;
+
+  menu.addAction("Insert...", this, SLOT(slotAddNewSymbol()));
+  if (!selectedItems().isEmpty()) {
+    menu.addAction("Edit...", this, SLOT(slotEditSymbol()));
+    menu.addSeparator();
+    menu.addAction("Delete", this, SLOT(slotDeleteSymbol()));
+  }
+
+  menu.exec(e->globalPos()); // a slot will do the rest if appropriate
+}
+
+void CWUserSymbolTree::slotAddNewSymbol()
+{
+  CWSymbolEditor *symbolEdit = new CWSymbolEditor;
+  m_activeContext->addEditor(symbolEdit);
+}
+
+void CWUserSymbolTree::slotEditSymbol()
+{
+  // Ok for single, multi and no selection
+  QList<QTreeWidgetItem*> selection = selectedItems();
+
+  QList<QTreeWidgetItem*>::iterator it = selection.begin();
+  while (it != selection.end()) {
+    //CWSymbolEditor *symbolEdit = new CWSymbolEditor(*it);
+    //m_activeContext->addEditor(symbolEdit);
+    ++it;
+  }
+}
+
+void CWUserSymbolTree::slotDeleteSymbol()
+{
+  QTreeWidgetItem *item;
+
+  // Ok for single, multi and no selection
+  QList<QTreeWidgetItem*> selection = selectedItems();
+
+  QList<QTreeWidgetItem*>::iterator it = selection.begin();
+  while (it != selection.end()) {
+    item = *it;
+    // get the top-level item
+    while (item->parent() != NULL) {
+      item = item->parent();
+    }
+
+    QString symbolName = item->text(0);
+    ++it;
+
+    CWorkSpace::instance()->destroySymbol(symbolName);
+  }
 }
 

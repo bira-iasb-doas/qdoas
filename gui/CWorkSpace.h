@@ -28,6 +28,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "mediate.h"
 
 class CSitesObserver;
+class CSymbolObserver;
+class CProjectObserver;
 
 struct SProjBucket
 {
@@ -61,21 +63,26 @@ class CWorkSpace
   mediate_project_t* findProject(const QString &projectName) const;
   mediate_analysis_window_t* findAnalysisWindow(const QString &projectName, const QString &windowName) const;
 
-  const mediate_site_t* findSite(const QString &siteName);
+  const mediate_site_t* findSite(const QString &siteName) const;
+  QString findSymbol(const QString &symbolName) const;
 
   bool createProject(const QString &newProjectName);
   bool createAnalysisWindow(const QString &projectName, const QString &newWindowName);
   bool createSite(const QString &newSiteName, const QString &abbr, double longitude, double latitude, double altitude);
+  bool createSymbol(const QString &newSymbolName, const QString &description);
 
   bool renameProject(const QString &oldProjectName, const QString &newProjectName);
   bool renameAnalysisWindow(const QString &projectName, const QString &oldWindowName, const QString &newWindowName);
 
   bool modifySite(const QString &siteName, const QString &abbr, double longitude, double latitude, double altitude);
+  void modifiedProjectProperties(const QString &projectName);
+
   mediate_site_t* siteList(int &listLength) const;
 
   bool destroyProject(const QString &projectName);
   bool destroyAnalysisWindow(const QString &projectName, const QString &newWindowName);
   bool destroySite(const QString &siteName);
+  bool destroySymbol(const QString &symbolName);
 
   void removePath(int index);
   void addPath(int index, const QString &path);
@@ -91,7 +98,15 @@ class CWorkSpace
   void attach(CSitesObserver *observer);
   void detach(CSitesObserver *observer);
   
+  void attach(CSymbolObserver *observer);
+  void detach(CSymbolObserver *observer);
+
+  void attach(CProjectObserver *observer);
+  void detach(CProjectObserver *observer);
+
   friend class CSitesObserver;
+  friend class CSymbolObserver;
+  friend class CProjectObserver;
 
  private:
   static CWorkSpace *m_instance;
@@ -99,7 +114,10 @@ class CWorkSpace
   std::map<QString,SProjBucket> m_projMap;
   std::set<SPathBucket> m_pathSet;
   std::map<QString,mediate_site_t*> m_siteMap;
+  std::map<QString,QString> m_symbolMap;
   std::list<CSitesObserver*> m_sitesObserverList;
+  std::list<CSymbolObserver*> m_symbolObserverList;
+  std::list<CProjectObserver*> m_projectObserverList;
 };
 
 class CSitesObserver {
@@ -110,6 +128,26 @@ class CSitesObserver {
   virtual void updateNewSite(const QString &newSiteName);
   virtual void updateModifySite(const QString &siteName);
   virtual void updateDeleteSite(const QString &siteName);
+};
+
+class CSymbolObserver {
+ public:
+  CSymbolObserver();   // attaches and detaches to the singleton during construction/destruction
+  virtual ~CSymbolObserver();
+
+  virtual void updateNewSymbol(const QString &newSymbolName);
+  virtual void updateModifySymbol(const QString &symbolName);
+  virtual void updateDeleteSymbol(const QString &symbolName);
+};
+
+class CProjectObserver {
+ public:
+  CProjectObserver();   // attaches and detaches to the singleton during construction/destruction
+  virtual ~CProjectObserver();
+
+  virtual void updateNewProject(const QString &newProjectName);
+  virtual void updateModifyProject(const QString &projectName);
+  virtual void updateDeleteProject(const QString &projectName);
 };
 
 #endif

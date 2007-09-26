@@ -104,10 +104,8 @@ CWMain::CWMain(QWidget *parent) :
   m_projTree = new CWProjectTree(m_activeContext);
 
   m_siteTree = new CWSiteTree(m_activeContext);
-  //  m_siteTree->addNewSite("Stroud", "ST", 151.123, -31.567, 160.2); // TODO - remove
 
-  m_userSymbolTree = new CWUserSymbolTree;
-  m_userSymbolTree->addNewUserSymbol("BrO", "Cross Section (228K)"); // TODO - remove
+  m_userSymbolTree = new CWUserSymbolTree(m_activeContext);
 
   m_projEnvTab = new QTabWidget;
   m_projEnvTab->addTab(m_projTree, "Projects");

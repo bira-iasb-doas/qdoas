@@ -110,6 +110,8 @@ bool CWProjectPropertyEditor::actionOk(void)
     m_instrumentalTab->apply(&(projectData->instrumental));
     m_slitTab->apply(&(projectData->slit));
 
+    CWorkSpace::instance()->modifiedProjectProperties(m_projectName);
+
     return true;
   }
 

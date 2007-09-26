@@ -32,6 +32,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "CValidator.h"
 
 #include "CDoasTable.h"
+#include "CWAnalysisWindowDoasTables.h"
 
 #include "constants.h"
 
@@ -203,13 +204,15 @@ CWAnalysisWindowPropertyEditor::CWAnalysisWindowPropertyEditor(const QString &pr
   
   mainLayout->addWidget(filesGroup);
   
-  // table tabs
+  // table tabs. NOTE that the *DoasTables are dependent of the list of
+  // user symbol list and the ASCII output setting of the project properties...
+
   m_tabs = new QTabWidget(this);
 
   QStringList junk;
   junk << "One" << "Two" << "Three" << "Four";
 
-  CDoasTable *dummy = new CDoasTable("Cross Section");
+  CDoasTable *dummy = new CDoasTable("Cross Section", 100, 24);
   dummy->createColumnCheck("test", 85);
   dummy->createColumnEdit("this", 185);
   dummy->createColumnCombo("thing", 120, junk);
@@ -223,6 +226,10 @@ CWAnalysisWindowPropertyEditor::CWAnalysisWindowPropertyEditor(const QString &pr
   dummy->addRow(24, "o3727", knuj);
 
   m_tabs->addTab(dummy, "Molecules");
+
+  m_tabs->addTab(new CWLinearParametersDoasTable("Linear Parameters", 120), "Linear Parameters");
+  m_tabs->addTab(new CWNonlinearParametersDoasTable("NL Parameters", 120), "Non-Linear Parameters");
+  m_tabs->addTab(new CWShiftAndStretchDoasTable("Cross sections and spectrum", 180), "Shift and Stretch");
 
   mainLayout->addWidget(m_tabs, 1);
 

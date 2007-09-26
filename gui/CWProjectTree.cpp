@@ -584,10 +584,11 @@ QString CWProjectTree::loadConfiguration(const QList<const CProjectConfigItem*> 
 
     assert(projItem && projItem->childCount() == 2); // sanity check
 
-   // locate the properties in the workspace then copy
+    // locate the properties in the workspace then copy
     projProp = CWorkSpace::instance()->findProject(projName);
     assert(projProp != NULL);
     *projProp = *((*it)->properties()); // blot copy
+    CWorkSpace::instance()->modifiedProjectProperties(projName); // notification to any observers
 
     item = projItem->child(0); // raw spectra node for the project
 

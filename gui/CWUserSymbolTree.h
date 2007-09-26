@@ -22,23 +22,40 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include <QTreeWidget>
 
-class CWUserSymbolTree : public QTreeWidget
+#include "CWorkSpace.h"
+
+class CWActiveContext;
+
+class CWUserSymbolTree : public QTreeWidget, public CSymbolObserver
 {
 Q_OBJECT
  public:
-  CWUserSymbolTree(QWidget *parent = 0);
+ CWUserSymbolTree(CWActiveContext *activeContext, QWidget *parent = 0);
   virtual ~CWUserSymbolTree();
 
   void savePreferences(void);
 
-  void addNewUserSymbol(const QString &userSymbolName, const QString &description = QString()); 
-
+  virtual void updateNewSymbol(const QString &newSymbolName);
+  virtual void updateModifySymbol(const QString &symbolName);
+  virtual void updateDeleteSymbol(const QString &symbolName);
+  
  protected:
+  virtual void contextMenuEvent(QContextMenuEvent *e);
   virtual void showEvent(QShowEvent *e);
+
+ private:
+  void addNewUserSymbol(const QString &userSymbolName, const QString &description); 
+
+ public slots:
+   void slotAddNewSymbol();
+   void slotEditSymbol();
+   void slotDeleteSymbol();
 
  signals:
   void signalWidthModeChanged(int newMode);
 
+ private:
+  CWActiveContext *m_activeContext;
 };
 
 #endif

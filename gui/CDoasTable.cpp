@@ -1,3 +1,22 @@
+/*
+Qdoas is a cross-platform application for spectral analysis with the DOAS
+algorithm.  Copyright (C) 2007  S[&]T and BIRA
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+*/
+
 
 #include <iostream>
 
@@ -11,19 +30,19 @@
 
 #include "CDoasTable.h"
 
-CDoasTable::CDoasTable(const QString &label, QWidget *parent) :
+CDoasTable::CDoasTable(const QString &label, int columnWidth, int headerHeight, QWidget *parent) :
   QFrame(parent),
+  m_titleHeight(headerHeight),
+  m_labelWidth(columnWidth),
+  m_sbThickness(16),
   m_columnOffset(0)
 {
   m_vsb = new QScrollBar(Qt::Vertical, this);
   m_hsb = new QScrollBar(Qt::Horizontal, this);
 
-  m_sbThickness = 16;
-  m_titleHeight = 28;
-  m_labelWidth = 100;
-
   m_vsb->move(0, 0);
 
+  // default minimum size
   m_centralWidth = 200;
   m_centralHeight = 100;
 
@@ -571,6 +590,7 @@ QVariant CDoasTableColumnHeader::getCellData(int rowIndex) const
 CDoasTableColumnLineEdit::CDoasTableColumnLineEdit(QWidget *parent) :
   QLineEdit(parent)
 {
+  setFrame(false);
 }
 
 CDoasTableColumnLineEdit::~CDoasTableColumnLineEdit()
@@ -625,6 +645,7 @@ QVariant CDoasTableColumnEdit::getCellData(int rowIndex) const
 CDoasTableColumnComboBox::CDoasTableColumnComboBox(QWidget *parent) :
   QComboBox(parent)
 {
+  //setFrame(false);
 }
 
 CDoasTableColumnComboBox::~CDoasTableColumnComboBox()
@@ -661,7 +682,9 @@ QWidget* CDoasTableColumnCombo::createCellWidget(const QVariant &cellData)
     ++it;
   }
 
-  tmp->setCurrentIndex(tmp->findText(cellData.toString()));
+  int index = tmp->findText(cellData.toString());
+  if (index != -1)
+    tmp->setCurrentIndex(index);
 
   connect(tmp, SIGNAL(currentIndexChanged(const QString&)), tmp, SLOT(slotTextChanged(const QString&)));
   connect(tmp, SIGNAL(signalTextChanged(const QWidget*,const QVariant&)),
