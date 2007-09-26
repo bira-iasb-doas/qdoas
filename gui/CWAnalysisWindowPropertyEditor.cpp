@@ -206,11 +206,22 @@ CWAnalysisWindowPropertyEditor::CWAnalysisWindowPropertyEditor(const QString &pr
   // table tabs
   m_tabs = new QTabWidget(this);
 
-  CDoasTable *dummy = new CDoasTable("Fred");
-  dummy->createColumnCheck("test", 55);
-  dummy->createColumnCheck("this", 85);
-  dummy->createColumnCheck("thing", 120);
+  QStringList junk;
+  junk << "One" << "Two" << "Three" << "Four";
+
+  CDoasTable *dummy = new CDoasTable("Cross Section");
+  dummy->createColumnCheck("test", 85);
+  dummy->createColumnEdit("this", 185);
+  dummy->createColumnCombo("thing", 120, junk);
+  dummy->createColumnEdit("for", 220);
+  dummy->createColumnEdit("horizontal", 200);
+  dummy->createColumnCheck("scrolling", 120);
  
+  QList<QVariant> knuj;
+  knuj << true << "text" << "Two" << "1.234" << "comment" << false;
+  dummy->addRow(24, "BrO", knuj);
+  dummy->addRow(24, "o3727", knuj);
+
   m_tabs->addTab(dummy, "Molecules");
 
   mainLayout->addWidget(m_tabs, 1);

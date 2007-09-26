@@ -27,7 +27,13 @@ extern "C" {
 
 #define REF_FILENAME_BUFFER_LENGTH  256
 
-  
+  /* TODO
+  struct anlyswin_molecule
+  {
+    
+  };
+  */
+
   // mediate_analysis_window_t
   //
   // Contains all user-specified information about a single spectral analysis window.
@@ -50,7 +56,8 @@ extern "C" {
     int requireResidual;
     int requirePredefined;
     int requireRefRatio;
-    // tabs
+    // tabs... dynamically allocated array. Each element is a doas-table 'row'.
+
   } mediate_analysis_window_t;
   
   
