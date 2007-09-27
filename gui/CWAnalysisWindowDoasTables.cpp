@@ -20,6 +20,177 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "CWAnalysisWindowDoasTables.h"
 
+#include "debugutil.h"
+
+//------------------------------------------------------------
+
+
+CWMoleculesDiffOrthoCombo::CWMoleculesDiffOrthoCombo(const QString &excludedSymbol, const QStringList &symbols, QWidget *parent) :
+  CDoasTableColumnComboBox(parent),
+  m_excludedSymbol(excludedSymbol)
+{
+  // populate with the standard items
+  addItem("None");
+  addItem("Differential XS");
+
+  QStringList::const_iterator it = symbols.begin();
+  while (it != symbols.end()) {
+    if (*it != m_excludedSymbol)
+      addItem(*it);
+    ++it;
+  }
+}
+ 
+CWMoleculesDiffOrthoCombo::~CWMoleculesDiffOrthoCombo()
+{
+}
+
+void CWMoleculesDiffOrthoCombo::slotSymbolListChanged(const QStringList &symbols)
+{
+  // if an initial value is set, then try and select it ...
+  QString text = m_pendingInitial.isNull() ? currentText() : m_pendingInitial;
+
+  // remove all but the first two items
+  int index = count();
+  while (index > 2)
+    removeItem(--index);
+
+  QStringList::const_iterator it = symbols.begin();
+  while (it != symbols.end()) {
+    if (*it != m_excludedSymbol)
+      addItem(*it);
+    ++it;
+  }
+
+  // try and reselect ...
+  index = findText(text);
+  if (index != -1) {
+    setCurrentIndex(index);
+    if (text == m_pendingInitial)
+      m_pendingInitial = QString(); // has been set ... 
+  }
+}
+
+void CWMoleculesDiffOrthoCombo::initialSelection(const QString &text)
+{
+  // sets the initial value, which might not yet be in the list ...
+
+  int index = findText(text);
+  if (index != -1) {
+    setCurrentIndex(index); // exists .. just set it
+  }
+  else {
+    m_pendingInitial = text; // set it and try again later (in slotSymbolListChanged)
+  }
+}
+
+CMoleculeDoasTableColumnDiffOrtho::CMoleculeDoasTableColumnDiffOrtho(const QString &label, CDoasTable *owner, int columnWidth) :
+  CDoasTableColumn(label, owner, columnWidth)
+{
+  setViewportBackgroundColour(QColor(0xFFFFFFFF));
+  setCellBorders(1,1);  
+}
+
+CMoleculeDoasTableColumnDiffOrtho::~CMoleculeDoasTableColumnDiffOrtho()
+{
+}
+
+QVariant CMoleculeDoasTableColumnDiffOrtho::getCellData(int rowIndex) const
+{
+  const QWidget *p = getWidget(rowIndex);
+  if (p) {
+    const QComboBox *tmp = dynamic_cast<const QComboBox*>(p);
+    if (tmp)
+      return QVariant(tmp->currentText());
+  }
+
+  return QVariant();  
+}
+
+QWidget* CMoleculeDoasTableColumnDiffOrtho::createCellWidget(const QVariant &cellData)
+{
+  // this is called when adding a new row
+
+  CWMoleculesDoasTable *p = dynamic_cast<CWMoleculesDoasTable*>(owner());
+  assert (p != NULL);
+
+  const QStringList &symbolList = p->symbolList();
+  QString excludedSymbol = symbolList.value(rowCount()); // the last entry
+  
+  CWMoleculesDiffOrthoCombo *tmp = new CWMoleculesDiffOrthoCombo(excludedSymbol, symbolList);
+
+  tmp->initialSelection(cellData.toString());
+
+  connect(tmp, SIGNAL(currentIndexChanged(const QString&)), tmp, SLOT(slotTextChanged(const QString&)));
+  connect(tmp, SIGNAL(signalTextChanged(const QWidget*,const QVariant&)),
+	  this, SLOT(slotCellDataChanged(const QWidget*,const QVariant&)));
+  connect(p, SIGNAL(signalSymbolListChanged(const QStringList &)),
+	  tmp, SLOT(slotSymbolListChanged(const QStringList &)));
+
+  return tmp;
+}
+
+CWMoleculesDoasTable::CWMoleculesDoasTable(const QString &label, int columnWidth,
+					   int headerHeight, QWidget *parent) :
+  CDoasTable(label, columnWidth, headerHeight, parent)
+{
+  CMoleculeDoasTableColumnDiffOrtho *tmp = new CMoleculeDoasTableColumnDiffOrtho("Diff/Ortho", this, columnWidth);
+  addColumn(tmp);                            // columnIndex = 0
+
+  QStringList comboItems;
+  comboItems << "None" << "Interpolate" << "Convolve Std" << "Convolve IO" << "Convolve Ring";
+  createColumnCombo("Interp/Conv", 120, comboItems);
+
+  comboItems.clear();
+  comboItems << "None" << "SZA only" << "Climatology" << "Wavelength 1" << "Wavelength 2" << "Wavelength 3";
+  createColumnCombo("AMF", 120, comboItems); // columnIndex = 2
+
+  createColumnCheck("Fit disp.", 60);
+  createColumnCheck("Filter", 60);           // columnIndex = 4
+  createColumnCheck("CC fit", 60);
+  createColumnEdit("CC Init", 80);           // columnIndex = 6
+  createColumnEdit("CC Delta", 80);
+  createColumnCheck("CC IO", 60);            // columnIndex = 8
+}
+  
+CWMoleculesDoasTable::~CWMoleculesDoasTable()
+{
+}
+
+void CWMoleculesDoasTable::addRow(int height, const QString &label, QList<QVariant> &cellData)
+{
+  // update the symbol list and signal ...
+  m_symbols << label;
+  emit signalSymbolListChanged(m_symbols);
+
+  // really create the new row ...
+  CDoasTable::addRow(height, label, cellData);
+}
+
+void CWMoleculesDoasTable::removeRow(int rowIndex)
+{
+  m_symbols.removeAt(rowIndex);
+  emit signalSymbolListChanged(m_symbols);
+
+  // really remove the row ...
+  CDoasTable::removeRow(rowIndex);  
+}
+
+const QStringList& CWMoleculesDoasTable::symbolList(void) const
+{
+  return m_symbols;
+}
+
+void CWMoleculesDoasTable::cellDataChanged(int row, int column, const QVariant &cellData)
+{
+  std::cout << "Changed : " << row << "," << column << " : " << cellData.toString().toStdString() << std::endl;
+  if (column == 1) {
+    setCellEnabled(row, 8, (cellData.toString() == "Convolve IO"));
+  }
+}
+
+//------------------------------------------------------------
+
 CWLinearParametersDoasTable::CWLinearParametersDoasTable(const QString &label, int columnWidth,
 							 int headerHeight, QWidget *parent) :
   CDoasTable(label, columnWidth, headerHeight, parent)

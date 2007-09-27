@@ -230,6 +230,7 @@ CWAnalysisWindowPropertyEditor::CWAnalysisWindowPropertyEditor(const QString &pr
   m_tabs->addTab(new CWLinearParametersDoasTable("Linear Parameters", 120), "Linear Parameters");
   m_tabs->addTab(new CWNonlinearParametersDoasTable("NL Parameters", 120), "Non-Linear Parameters");
   m_tabs->addTab(new CWShiftAndStretchDoasTable("Cross sections and spectrum", 180), "Shift and Stretch");
+  m_tabs->addTab(new CWMoleculesDoasTable("M2", 120), "M2");
 
   mainLayout->addWidget(m_tabs, 1);
 

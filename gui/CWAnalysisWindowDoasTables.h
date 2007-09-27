@@ -21,8 +21,64 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #ifndef _CWANALYSISWINDOWDOASTABLE_GUARD_H
 #define _CWANALYSISWINDOWDOASTABLE_GUARD_H
 
+#include <QComboBox>
+
 #include "CDoasTable.h"
 
+// variable rows
+
+//----------------------------------------------------------------------
+// specialised columns for molecules ...
+
+class CWMoleculesDiffOrthoCombo : public CDoasTableColumnComboBox
+{
+Q_OBJECT
+ public:
+  CWMoleculesDiffOrthoCombo(const QString &excludedSymbol, const QStringList &symbols, QWidget *parent = 0);
+  virtual ~CWMoleculesDiffOrthoCombo();
+
+  void initialSelection(const QString &text);
+
+ public slots:
+  void slotSymbolListChanged(const QStringList &symbols);
+
+ private:
+  QString m_excludedSymbol, m_pendingInitial;
+};
+
+class CMoleculeDoasTableColumnDiffOrtho : public CDoasTableColumn
+{
+ public:
+  CMoleculeDoasTableColumnDiffOrtho(const QString &label, CDoasTable *owner, int width);
+  virtual ~CMoleculeDoasTableColumnDiffOrtho();
+
+  virtual QVariant getCellData(int rowIndex) const;
+
+ protected:
+  virtual QWidget* createCellWidget(const QVariant &cellData);
+};
+
+class CWMoleculesDoasTable : public CDoasTable
+{
+Q_OBJECT
+ public:
+  CWMoleculesDoasTable(const QString &label, int columnWidth, int headerHeight = 24, QWidget *parent = 0);
+  virtual ~CWMoleculesDoasTable();
+
+  virtual void addRow(int height, const QString &label, QList<QVariant> &cellData);
+  virtual void removeRow(int rowIndex);
+  virtual void cellDataChanged(int row, int column, const QVariant &cellData);
+
+  const QStringList& symbolList(void) const;
+
+ signals:
+  void signalSymbolListChanged(const QStringList &symbols);
+
+ private:
+  QStringList m_symbols;
+};
+
+//----------------------------------------------------------------------
 // fixed size (3 row x 3 column) table ...
 
 class CWLinearParametersDoasTable : public CDoasTable
@@ -35,6 +91,7 @@ class CWLinearParametersDoasTable : public CDoasTable
 };
 
 
+//----------------------------------------------------------------------
 // fixed size (8 row x 5 column) table ...
 
 class CWNonlinearParametersDoasTable : public CDoasTable
@@ -46,7 +103,9 @@ class CWNonlinearParametersDoasTable : public CDoasTable
   // virtual void cellDataChanged(int row, int column, const QVariant &cellData); // no cell-coupling required
 };
 
-// variable rows
+//----------------------------------------------------------------------
+// Shift And Stretch
+
 class CWShiftAndStretchDoasTable : public CDoasTable
 {
  public:

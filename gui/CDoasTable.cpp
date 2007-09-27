@@ -37,6 +37,7 @@ CDoasTable::CDoasTable(const QString &label, int columnWidth, int headerHeight, 
   m_sbThickness(16),
   m_columnOffset(0)
 {
+
   m_vsb = new QScrollBar(Qt::Vertical, this);
   m_hsb = new QScrollBar(Qt::Horizontal, this);
 
@@ -49,7 +50,7 @@ CDoasTable::CDoasTable(const QString &label, int columnWidth, int headerHeight, 
   setMinimumSize(QSize(m_labelWidth + m_sbThickness + m_centralWidth,
 		       m_titleHeight + m_sbThickness + m_centralHeight));
   
-  m_header = new CDoasTableColumnHeader(label, this, m_labelWidth, m_titleHeight);
+  m_header = new CDoasTableColumnHeader(label, this, m_labelWidth);
   m_header->setColumnHorizontalPosition(m_sbThickness);
 
   m_hsb->setRange(0, 0);
@@ -66,12 +67,22 @@ CDoasTable::~CDoasTable()
 {
 }
 
+void CDoasTable::addColumn(CDoasTableColumn *column)
+{
+  if (m_rowHeightList.count() == 0) {
+    m_columnList.push_back(column);
+    calcHorizontalScrollRange();
+  }
+  else {
+    delete column;
+  }
+}
 
 void CDoasTable::createColumnEdit(const QString &label, int columnWidth)
 {
   if (m_rowHeightList.count() == 0) {
 
-    CDoasTableColumn *tmp = new CDoasTableColumnEdit(label, this, columnWidth, m_titleHeight);
+    CDoasTableColumn *tmp = new CDoasTableColumnEdit(label, this, columnWidth);
     m_columnList.push_back(tmp);
     calcHorizontalScrollRange();
   }
@@ -80,7 +91,7 @@ void CDoasTable::createColumnEdit(const QString &label, int columnWidth)
 void CDoasTable::createColumnCombo(const QString &label, int columnWidth, const QStringList &tags)
 {
   if (m_rowHeightList.count() == 0) {
-    CDoasTableColumn *tmp = new CDoasTableColumnCombo(tags, label, this, columnWidth, m_titleHeight);
+    CDoasTableColumn *tmp = new CDoasTableColumnCombo(tags, label, this, columnWidth);
     m_columnList.push_back(tmp);
     calcHorizontalScrollRange();
   }
@@ -90,10 +101,15 @@ void CDoasTable::createColumnCheck(const QString &label, int columnWidth)
 {
   if (m_rowHeightList.count() == 0) {
 
-    CDoasTableColumn *tmp = new CDoasTableColumnCheck(label, this, columnWidth, m_titleHeight);
+    CDoasTableColumn *tmp = new CDoasTableColumnCheck(label, this, columnWidth);
     m_columnList.push_back(tmp);
     calcHorizontalScrollRange();
   }
+}
+
+QString CDoasTable::rowLabel(int rowIndex) const
+{
+  return m_header->getCellData(rowIndex).toString();
 }
 
 void CDoasTable::addRow(int rowHeight, const QString &label, QList<QVariant> &cellData)
@@ -219,7 +235,7 @@ QString CDoasTable::getRowLabel(int rowIndex) const
 void CDoasTable::cellDataChanged(int row, int column, const QVariant &cellData)
 {
   // do nothing ... default
-  std::cout << "Changed : " << row << "," << column << " : " << cellData.toString().toStdString() << std::endl;
+
 }
 
 void CDoasTable::notifyCellDataChanged(int row, const CDoasTableColumn *column, const QVariant &cellData)
@@ -276,6 +292,8 @@ void CDoasTable::resizeEvent(QResizeEvent *e)
 
 void CDoasTable::contextMenuEvent(QContextMenuEvent *e)
 {
+  static int junk = 0;
+
   if ((2 * e->x()) < width()) {
     std::cout << "adding row" << std::endl;
 
@@ -285,7 +303,10 @@ void CDoasTable::contextMenuEvent(QContextMenuEvent *e)
     initialValues.push_back(QVariant("Joe"));
     initialValues.push_back(QVariant(false));
 
-    addRow(24, "Label", initialValues);
+    QString tmp;
+    tmp.sprintf("Label %d", ++junk);
+
+    addRow(24, tmp, initialValues);
   }
   else if (m_rowHeightList.count()) {
     int rowIndex = e->y() % m_rowHeightList.count();
@@ -362,11 +383,10 @@ void CDoasTable::slotMovedVerticalScrollBar(int value)
 
 //-------------------------------------
 
-CDoasTableColumn::CDoasTableColumn(const QString &label, CDoasTable *owner, int columnWidth, int titleHeight) :
+CDoasTableColumn::CDoasTableColumn(const QString &label, CDoasTable *owner, int columnWidth) :
   QObject(owner),
   m_owner(owner),
   m_columnWidth(columnWidth),
-  m_titleHeight(titleHeight),
   m_rowOffset(0),
   m_xPosition(0),
   m_xBorder(0),
@@ -379,7 +399,7 @@ CDoasTableColumn::CDoasTableColumn(const QString &label, CDoasTable *owner, int 
   m_header->setFrameStyle(QFrame::Panel | QFrame::Raised);
   m_header->setLineWidth(2);
 
-  m_header->resize(m_columnWidth, m_titleHeight);
+  m_header->resize(m_columnWidth, m_owner->headerHeight());
   m_header->show();
 }
 
@@ -391,7 +411,7 @@ void CDoasTableColumn::setColumnHorizontalPosition(int xPosition)
 {
   m_xPosition = xPosition;
 
-  m_viewport->move(m_xPosition, m_titleHeight);
+  m_viewport->move(m_xPosition, m_owner->headerHeight());
   m_viewport->show();
 
   m_header->move(m_xPosition, 0);
@@ -488,13 +508,13 @@ void CDoasTableColumn::addRow(int height, const QVariant &cellData)
   QWidget *tmp = createCellWidget(cellData);
 
   tmp->setParent(m_viewport);
-  tmp->resize(m_columnWidth - m_xBorder - m_xBorder, height - m_yBorder - m_yBorder);
+  tmp->resize(m_columnWidth - 2 * m_xBorder, height - 2 * m_yBorder);
 
   // is it visible ??
   int y = 0;
   int index = m_rowOffset;
   while (index < m_widgetList.count()) {
-    y += m_widgetList.at(index)->height() + m_yBorder + m_yBorder;
+    y += m_widgetList.at(index)->height() + 2 * m_yBorder;
     ++index;
   }
   // y is now the vertical position for the last widget ...
@@ -555,8 +575,8 @@ void CDoasTableColumn::slotCellDataChanged(const QWidget *src, const QVariant &c
 
 //-------------------------------------
 
-CDoasTableColumnHeader::CDoasTableColumnHeader(const QString &label, CDoasTable *owner, int columnWidth, int titleHeight) :
-  CDoasTableColumn(label, owner, columnWidth, titleHeight)
+CDoasTableColumnHeader::CDoasTableColumnHeader(const QString &label, CDoasTable *owner, int columnWidth) :
+  CDoasTableColumn(label, owner, columnWidth)
 {
 }
 
@@ -604,8 +624,8 @@ void CDoasTableColumnLineEdit::slotTextChanged(const QString &newText)
   emit signalTextChanged(this, cellData);
 }
 
-CDoasTableColumnEdit::CDoasTableColumnEdit(const QString &label, CDoasTable *owner, int columnWidth, int titleHeight) :
-  CDoasTableColumn(label, owner, columnWidth, titleHeight)
+CDoasTableColumnEdit::CDoasTableColumnEdit(const QString &label, CDoasTable *owner, int columnWidth) :
+  CDoasTableColumn(label, owner, columnWidth)
 {
   setViewportBackgroundColour(QColor(0xFFFFFFFF));
   setCellBorders(1,1);
@@ -660,8 +680,8 @@ void CDoasTableColumnComboBox::slotTextChanged(const QString &newText)
 }
 
 CDoasTableColumnCombo::CDoasTableColumnCombo(const QStringList &tags, const QString &label, CDoasTable *owner,
-				 int columnWidth, int titleHeight) :
-  CDoasTableColumn(label, owner, columnWidth, titleHeight),
+				 int columnWidth) :
+  CDoasTableColumn(label, owner, columnWidth),
   m_tags(tags)
 {
   setViewportBackgroundColour(QColor(0xFFFFFFFF));
@@ -723,8 +743,8 @@ void CDoasTableColumnCheckBox::slotStateChanged(int state)
   emit signalStateChanged(this, cellData);
 }
 
-CDoasTableColumnCheck::CDoasTableColumnCheck(const QString &label, CDoasTable *owner, int columnWidth, int titleHeight) :
-  CDoasTableColumn(label, owner, columnWidth, titleHeight)
+CDoasTableColumnCheck::CDoasTableColumnCheck(const QString &label, CDoasTable *owner, int columnWidth) :
+  CDoasTableColumn(label, owner, columnWidth)
 {
   setViewportBackgroundColour(QColor(0xFFFFFFFF));
   setCellBorders(columnWidth / 3, 0);

@@ -43,12 +43,15 @@ Q_OBJECT
   CDoasTable(const QString &label, int columnWidth, int headerHeight = 24, QWidget *parent = 0);
   virtual ~CDoasTable();
   
+  int headerHeight(void) const;
+
   void createColumnEdit(const QString &label, int columnWidth);
   void createColumnCombo(const QString &label, int columnWidth, const QStringList &tags);
   void createColumnCheck(const QString &label, int columnWidth);
 
-  void addRow(int height, const QString &label, QList<QVariant> &cellData);
-  void removeRow(int rowIndex);
+  virtual void addRow(int height, const QString &label, QList<QVariant> &cellData);
+  virtual void removeRow(int rowIndex);
+  QString rowLabel(int rowIndex) const;
   int columnCount(void) const;
   void setColumnOffset(int offset);
 
@@ -63,6 +66,8 @@ Q_OBJECT
   void notifyCellDataChanged(int row, const CDoasTableColumn *column, const QVariant &cellData);
 
  protected:
+  void addColumn(CDoasTableColumn *column); // for adding custon columns in derived tables
+
   virtual void resizeEvent(QResizeEvent *e);
   virtual void contextMenuEvent(QContextMenuEvent *e);
   //  virtual void keyPressEvent(QKeyEvent *e);
@@ -85,11 +90,14 @@ Q_OBJECT
   int m_columnOffset;
 };
 
+inline int CDoasTable::headerHeight(void) const { return m_titleHeight; }
+
+
 class CDoasTableColumn : public QObject
 {
 Q_OBJECT
  public:
-  CDoasTableColumn(const QString &label, CDoasTable *owner, int columnWidth, int titleHeight);
+  CDoasTableColumn(const QString &label, CDoasTable *owner, int columnWidth);
   virtual ~CDoasTableColumn();
 
   void setColumnHorizontalPosition(int xPosition);
@@ -115,6 +123,7 @@ Q_OBJECT
   void setCellBorders(int xB, int yB);
 
   const QWidget* getWidget(int rowIndex) const;
+  CDoasTable* owner(void) const;
 
  private:
   void layoutAndDisplay(void);
@@ -125,7 +134,6 @@ Q_OBJECT
  private:
   CDoasTable *m_owner;
   int m_columnWidth;
-  int m_titleHeight;
   int m_rowOffset;
   int m_xPosition;
   int m_xBorder, m_yBorder;
@@ -135,10 +143,13 @@ Q_OBJECT
   QLabel *m_header;
 };
 
+inline CDoasTable* CDoasTableColumn::owner(void) const { return m_owner; }
+
+
 class CDoasTableColumnHeader : public CDoasTableColumn
 {
  public:
-  CDoasTableColumnHeader(const QString &label, CDoasTable *owner, int width, int titleHeight);
+  CDoasTableColumnHeader(const QString &label, CDoasTable *owner, int columnWidth);
   virtual ~CDoasTableColumnHeader();
 
   virtual QVariant getCellData(int rowIndex) const;
@@ -164,7 +175,7 @@ Q_OBJECT
 class CDoasTableColumnEdit : public CDoasTableColumn
 {
  public:
-  CDoasTableColumnEdit(const QString &label, CDoasTable *owner, int width, int titleHeight);
+  CDoasTableColumnEdit(const QString &label, CDoasTable *owner, int width);
   virtual ~CDoasTableColumnEdit();
 
   virtual QVariant getCellData(int rowIndex) const;
@@ -190,7 +201,7 @@ Q_OBJECT
 class CDoasTableColumnCombo : public CDoasTableColumn
 {
  public:
-  CDoasTableColumnCombo(const QStringList &tags, const QString &label, CDoasTable *owner, int width, int titleHeight);
+  CDoasTableColumnCombo(const QStringList &tags, const QString &label, CDoasTable *owner, int width);
   virtual ~CDoasTableColumnCombo();
 
   virtual QVariant getCellData(int rowIndex) const;
@@ -219,7 +230,7 @@ Q_OBJECT
 class CDoasTableColumnCheck : public CDoasTableColumn
 {
  public:
-  CDoasTableColumnCheck(const QString &label, CDoasTable *owner, int width, int titleHeight);
+  CDoasTableColumnCheck(const QString &label, CDoasTable *owner, int width);
   virtual ~CDoasTableColumnCheck();
 
   virtual QVariant getCellData(int rowIndex) const;
