@@ -18,8 +18,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
 
-#include <iostream>
-
 #include <QtGui>
 
 #include <QSize>
@@ -29,6 +27,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QApplication>
 
 #include "CDoasTable.h"
+
+#include "debugutil.h"
 
 CDoasTable::CDoasTable(const QString &label, int columnWidth, int headerHeight, QWidget *parent) :
   QFrame(parent),
@@ -76,6 +76,25 @@ void CDoasTable::addColumn(CDoasTableColumn *column)
   else {
     delete column;
   }
+}
+
+int CDoasTable::rowIndexAtPosition(int yPixel) const
+{
+  if (yPixel < m_titleHeight || m_rowHeightList.empty())
+    return -1;
+
+  int y = m_titleHeight;
+  int index = m_header->rowOffset();
+  
+  while (index < m_rowHeightList.count()) {
+    y += m_rowHeightList.at(index); // limit for row index
+    if (yPixel < y) break;
+    ++index;
+  }
+  if (index < m_rowHeightList.count())
+    return index;
+
+  return -1; // no match
 }
 
 void CDoasTable::createColumnEdit(const QString &label, int columnWidth)
@@ -157,7 +176,6 @@ void CDoasTable::removeRow(int rowIndex)
       (*it)->removeRow(rowIndex);
       ++it;
     }
-
     m_rowHeightList.removeAt(rowIndex);
 
     calcVerticalScrollRange();
@@ -227,9 +245,9 @@ QList<QVariant> CDoasTable::getCellData(int rowIndex) const
   return cellData;
 }
 
-QString CDoasTable::getRowLabel(int rowIndex) const
+void CDoasTable::setHeaderLabel(int rowIndex, const QString &label)
 {
-  return m_header->getCellData(rowIndex).toString();
+  m_header->setLabel(rowIndex, label);
 }
 
 void CDoasTable::cellDataChanged(int row, int column, const QVariant &cellData)
@@ -564,6 +582,16 @@ const QWidget* CDoasTableColumn::getWidget(int rowIndex) const
   return tmp;
 }
 
+QWidget* CDoasTableColumn::getWidgetNonConst(int rowIndex)
+{
+  QWidget *tmp = NULL;
+
+  if (rowIndex >= 0 && rowIndex <= m_widgetList.count())
+    tmp = m_widgetList.at(rowIndex);
+
+  return tmp;
+}
+
 void CDoasTableColumn::slotCellDataChanged(const QWidget *src, const QVariant &cellData)
 {
   // determine the row
@@ -604,6 +632,17 @@ QVariant CDoasTableColumnHeader::getCellData(int rowIndex) const
 
   return QVariant();
 }
+
+void CDoasTableColumnHeader::setLabel(int rowIndex, const QString &label)
+{
+  QWidget *p = getWidgetNonConst(rowIndex);
+  if (p) {
+    QLabel *tmp = dynamic_cast<QLabel*>(p);
+    if (tmp)
+      tmp->setText(label);
+  }
+}
+   
 
 //-------------------------------------
 

@@ -35,6 +35,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QResizeEvent>
 
 class CDoasTableColumn;
+class CDoasTableColumnHeader;
 
 class CDoasTable : public QFrame
 {
@@ -51,6 +52,7 @@ Q_OBJECT
 
   virtual void addRow(int height, const QString &label, QList<QVariant> &cellData);
   virtual void removeRow(int rowIndex);
+  int rowCount(void) const;
   QString rowLabel(int rowIndex) const;
   int columnCount(void) const;
   void setColumnOffset(int offset);
@@ -58,7 +60,6 @@ Q_OBJECT
   void setColumnEnabled(int columnIndex, bool enabled);
   void setCellEnabled(int rowIndex, int columnIndex, bool enabled);
 
-  QString getRowLabel(int rowIndex) const;
   QList<QVariant> getCellData(int rowIndex) const;
 
   virtual void cellDataChanged(int row, int column, const QVariant &cellData);
@@ -67,6 +68,8 @@ Q_OBJECT
 
  protected:
   void addColumn(CDoasTableColumn *column); // for adding custon columns in derived tables
+  int rowIndexAtPosition(int yPixel) const;
+  void setHeaderLabel(int rowIndex, const QString &label);
 
   virtual void resizeEvent(QResizeEvent *e);
   virtual void contextMenuEvent(QContextMenuEvent *e);
@@ -84,13 +87,14 @@ Q_OBJECT
   
   int m_titleHeight, m_labelWidth, m_sbThickness, m_centralWidth, m_centralHeight;
 
-  CDoasTableColumn *m_header;
+  CDoasTableColumnHeader *m_header;
   QList<CDoasTableColumn*> m_columnList;
   QList<int> m_rowHeightList;
   int m_columnOffset;
 };
 
 inline int CDoasTable::headerHeight(void) const { return m_titleHeight; }
+inline int CDoasTable::rowCount(void) const { return m_rowHeightList.count(); }
 
 
 class CDoasTableColumn : public QObject
@@ -108,6 +112,7 @@ Q_OBJECT
   void setRowEnabled(int rowIndex, bool enabled);
 
   void setRowOffset(int offset);
+  int rowOffset(void) const;
 
   int columnWidth(void) const;
   int rowCount(void) const;
@@ -123,6 +128,7 @@ Q_OBJECT
   void setCellBorders(int xB, int yB);
 
   const QWidget* getWidget(int rowIndex) const;
+  QWidget* getWidgetNonConst(int rowIndex);
   CDoasTable* owner(void) const;
 
  private:
@@ -144,6 +150,7 @@ Q_OBJECT
 };
 
 inline CDoasTable* CDoasTableColumn::owner(void) const { return m_owner; }
+inline int CDoasTableColumn::rowOffset(void) const { return m_rowOffset; }
 
 
 class CDoasTableColumnHeader : public CDoasTableColumn
@@ -153,6 +160,8 @@ class CDoasTableColumnHeader : public CDoasTableColumn
   virtual ~CDoasTableColumnHeader();
 
   virtual QVariant getCellData(int rowIndex) const;
+
+  void setLabel(int rowIndex, const QString &label);
 
  protected:
   virtual QWidget* createCellWidget(const QVariant &cellData);  

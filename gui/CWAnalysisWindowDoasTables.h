@@ -21,7 +21,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #ifndef _CWANALYSISWINDOWDOASTABLE_GUARD_H
 #define _CWANALYSISWINDOWDOASTABLE_GUARD_H
 
+#include <map>
+
 #include <QComboBox>
+#include <QListWidget>
+#include <QDialog>
 
 #include "CDoasTable.h"
 
@@ -71,11 +75,29 @@ Q_OBJECT
 
   const QStringList& symbolList(void) const;
 
+ protected:
+  virtual void contextMenuEvent(QContextMenuEvent *e);
+
+ private:
+  bool isRowLocked(int rowIndex) const;
+
+ public slots:
+  void slotLockSymbol(const QString &symbol, const QObject *holder);
+  void slotUnlockSymbol(const QString &symbol, const QObject *holder);
+  
+  void slotInsertRow();
+  void slotRemoveRow();
+
  signals:
   void signalSymbolListChanged(const QStringList &symbols);
 
  private:
+  typedef std::multimap<QString,const QObject*> symlockmap_t;
+
   QStringList m_symbols;
+  QList<int> m_rowLocks; // internal locks ...
+  symlockmap_t m_symbolLocks; // external locks ...
+  int m_selectedRow;
 };
 
 //----------------------------------------------------------------------
@@ -106,13 +128,46 @@ class CWNonlinearParametersDoasTable : public CDoasTable
 //----------------------------------------------------------------------
 // Shift And Stretch
 
+class CWShiftAndStretchDialog : public QDialog
+{
+ public:
+  CWShiftAndStretchDialog(const QStringList &availableSymbols, const QStringList &selectedSymbols, QWidget *parent = 0);
+  virtual ~CWShiftAndStretchDialog();
+
+  QStringList selectedSymbols(void) const;
+
+ private:
+  QListWidget *m_symbolView;
+};
+
 class CWShiftAndStretchDoasTable : public CDoasTable
 {
+Q_OBJECT
  public:
   CWShiftAndStretchDoasTable(const QString &label, int columnWidth, int headerHeight = 24, QWidget *parent = 0);
   virtual ~CWShiftAndStretchDoasTable();
 
+  virtual void addRow(int height, const QString &label, QList<QVariant> &cellData);
+  virtual void removeRow(int rowIndex);
   virtual void cellDataChanged(int row, int column, const QVariant &cellData); // no cell-coupling required
+
+ protected:
+  virtual void contextMenuEvent(QContextMenuEvent *e);
+
+ public slots:
+  void slotSymbolListChanged(const QStringList &symbols);
+  void slotInsertRow();
+  void slotRemoveRow();
+  void slotModifyRow();
+
+ signals:
+  void signalLockSymbol(const QString &symbol, const QObject *holder);
+  void signalUnlockSymbol(const QString &symbol, const QObject *holder);
+
+ private:
+  QStringList m_specialSymbols, m_freeSymbols;
+  QList<QStringList> m_selectedSymbolList;
+  int m_selectedRow;
 };
 
 #endif

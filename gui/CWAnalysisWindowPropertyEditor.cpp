@@ -229,8 +229,17 @@ CWAnalysisWindowPropertyEditor::CWAnalysisWindowPropertyEditor(const QString &pr
 
   m_tabs->addTab(new CWLinearParametersDoasTable("Linear Parameters", 120), "Linear Parameters");
   m_tabs->addTab(new CWNonlinearParametersDoasTable("NL Parameters", 120), "Non-Linear Parameters");
-  m_tabs->addTab(new CWShiftAndStretchDoasTable("Cross sections and spectrum", 180), "Shift and Stretch");
-  m_tabs->addTab(new CWMoleculesDoasTable("M2", 120), "M2");
+  CWShiftAndStretchDoasTable *shiftAndStretch = new CWShiftAndStretchDoasTable("Cross sections and spectrum", 180);
+  m_tabs->addTab(shiftAndStretch, "Shift and Stretch");
+  CWMoleculesDoasTable *molecules = new CWMoleculesDoasTable("M2", 120);
+  m_tabs->addTab(molecules, "M2");
+
+  connect(shiftAndStretch, SIGNAL(signalLockSymbol(const QString &, const QObject *)),
+	  molecules, SLOT(slotLockSymbol(const QString &, const QObject *)));
+  connect(shiftAndStretch, SIGNAL(signalUnlockSymbol(const QString &, const QObject *)),
+	  molecules, SLOT(slotUnlockSymbol(const QString &, const QObject *)));
+  connect(molecules, SIGNAL(signalSymbolListChanged(const QStringList&)),
+	  shiftAndStretch, SLOT(slotSymbolListChanged(const QStringList&)));
 
   mainLayout->addWidget(m_tabs, 1);
 
