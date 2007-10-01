@@ -239,9 +239,12 @@ CEngineRequestEndBrowseFile::~CEngineRequestEndBrowseFile()
 bool CEngineRequestEndBrowseFile::process(CEngineThread *engineThread)
 {
   // create a response as the handle - TODO
-  void *resp = NULL;
+  CEngineResponseEndBrowseFile *resp = new CEngineResponseEndBrowseFile;
 
   int rc = mediateRequestEndBrowseSpectra(engineThread->engineContext(), resp);
+
+  // post the response
+  engineThread->respond(resp);
 
   return (rc != -1);
 }

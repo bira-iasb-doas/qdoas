@@ -46,6 +46,10 @@ CQdoasProjectConfigHandler::~CQdoasProjectConfigHandler()
   while (!m_siteItemList.isEmpty()) {
     delete m_siteItemList.takeFirst();
   }
+
+  while (!m_symbolList.isEmpty()) {
+    delete m_symbolList.takeFirst();
+  }
 }
 
 bool CQdoasProjectConfigHandler::error(const QXmlParseException &exception)
@@ -181,6 +185,10 @@ bool CQdoasProjectConfigHandler::startElement(const QString &namespaceURI,
       // new Site handler
       return installSubHandler(new CSiteSubHandler(this), atts);
     }
+    else if (qName == "symbols") {
+      // new symbol handler
+      return installSubHandler(new CSymbolSubHandler(this), atts);
+    }
   }
   return true;
 }
@@ -213,6 +221,17 @@ QList<const CSiteConfigItem*> CQdoasProjectConfigHandler::siteItems(void) const
 {
   return m_siteItemList;
 }
+
+void CQdoasProjectConfigHandler::addSymbol(const QString &symbolName, const QString &symbolDescription)
+{
+  m_symbolList.push_back(new CSymbolConfigItem(symbolName, symbolDescription));
+}
+
+QList<const CSymbolConfigItem*> CQdoasProjectConfigHandler::symbolItems(void) const
+{
+  return m_symbolList;
+}
+
 
 void CQdoasProjectConfigHandler::setPath(int index, const QString &pathPrefix)
 {

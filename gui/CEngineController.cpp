@@ -26,8 +26,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "debugutil.h"
 
-static const int cBrowseMode  = 1;
-static const int cAnalyseMode = 2;
+static const int cBrowseMode   = 0x1;
+static const int cAnalyseMode  = 0x2;
+static const int cRequestBit = 0x8;
 
 
 CEngineController::CEngineController(QObject *parent) :
@@ -66,6 +67,8 @@ void CEngineController::notifyReadyToNavigateRecords(const QString &filename, in
   // sanity check - currentIt and filename must be consistent
   assert(m_currentIt.file().filePath() == filename);
 
+  m_mode &= ~cRequestBit; // clear the request bit 
+
   m_numberOfRecords = numberOfRecords;
   m_currentRecord = 0;
 
@@ -75,8 +78,11 @@ void CEngineController::notifyReadyToNavigateRecords(const QString &filename, in
   emit signalCurrentRecordChanged(m_currentRecord);
 
   // files
-  emit signalCurrentFileChanged(m_currentIt.index() + 1);
+  emit signalCurrentFileChanged(m_currentIt.index());
   emit signalCurrentFileChanged(filename);
+
+  // session is up and running
+  emit signalSessionRunning(isSessionRunning());
 }
 
 void CEngineController::notifyCurrentRecord(int recordNumber)
@@ -218,6 +224,16 @@ void CEngineController::notifyErrorMessages(int highestErrorLevel, const QList<C
   emit signalErrorMessages(highestErrorLevel, msg);
 }
 
+void CEngineController::notifyEndBrowseFile(void)
+{
+  // nothing to do unless the request bit is set (a stop request).
+  if (m_mode & cRequestBit) {
+    m_mode = 0; // definitely stopped
+    
+    emit signalSessionRunning(isSessionRunning());
+  }
+}
+
 bool CEngineController::event(QEvent *e)
 {
   if (e->type() == cEngineResponseType) {
@@ -242,46 +258,6 @@ bool CEngineController::event(QEvent *e)
 
   // let the base class handle it
   return QObject::event(e);
-}
-
-void CEngineController::slotFirstFile()
-{
-  slotGotoFile(1);
-}
-
-void CEngineController::slotPreviousFile()
-{
-  CEngineRequestCompound *req = new CEngineRequestCompound;
-  
-  // done with the current file
-  if (m_numberOfRecords >= 0) {
-    switch (m_mode) {
-    case cBrowseMode:
-      req->addRequest(new CEngineRequestEndBrowseFile);
-      break;
-    case cAnalyseMode:
-      break;
-    }
-  }
-
-  if (m_numberOfFiles && !m_currentIt.atBegin()) {
-    --m_currentIt;
-    // check for a change in project
-    if (m_currentProject != m_currentIt.project()) {
-      m_currentProject = m_currentIt.project();
-      req->addRequest(new CEngineRequestSetProject(m_currentProject));
-    }
-
-    switch (m_mode) {
-    case cBrowseMode:
-      req->addRequest(new CEngineRequestBeginBrowseFile(m_currentIt.file().filePath()));
-      break;
-    case cAnalyseMode:
-      break;
-    }
-  }
-
-  m_thread->request(req);
 }
 
 void CEngineController::slotNextFile()
@@ -322,11 +298,6 @@ void CEngineController::slotNextFile()
   m_thread->request(req);
 }
 
-void CEngineController::slotLastFile()
-{
-  slotGotoFile(m_numberOfFiles);
-}
-
 void CEngineController::slotGotoFile(int number)
 {
   CEngineRequestCompound *req = new CEngineRequestCompound;
@@ -341,8 +312,6 @@ void CEngineController::slotGotoFile(int number)
       break;
     }
   }
-
-  --number; // make it zero indexing
 
   if (number >= 0 && number < m_numberOfFiles) {
     // implicitly checks that that m_numberOfFiles > 0
@@ -364,6 +333,7 @@ void CEngineController::slotGotoFile(int number)
 
   m_thread->request(req);
 }
+
 
 void CEngineController::slotFirstRecord()
 {
@@ -425,13 +395,16 @@ void CEngineController::slotStartBrowseSession(const RefCountPtr<CSession> &sess
   // change session and reset current markers
   m_session = session;
   m_currentIt = CSessionIterator(m_session);
-  m_numberOfFiles = m_session->size();
+
+  QStringList sessionFileList = m_session->fileList();
+
+  m_numberOfFiles = sessionFileList.count();
   m_currentRecord = -1;
   m_currentProject = NULL;
 
   if (!m_currentIt.atEnd()) {
 
-    m_mode = cBrowseMode;
+    m_mode = cBrowseMode | cRequestBit;
 
     m_currentProject = m_currentIt.project();
 
@@ -439,7 +412,24 @@ void CEngineController::slotStartBrowseSession(const RefCountPtr<CSession> &sess
     req->addRequest(new CEngineRequestBeginBrowseFile(m_currentIt.file().filePath()));
   }
 
-  emit signalNumberOfFilesChanged(m_numberOfFiles);
+  emit signalFileListChanged(sessionFileList);
 
   m_thread->request(req);
+}
+
+// end a session
+void CEngineController::slotStopSession()
+{
+  int oldMode = m_mode;
+
+  m_mode |= cRequestBit;
+
+  // tidy up and wait for the response
+  switch (oldMode) {
+  case cBrowseMode:
+    m_thread->request(new CEngineRequestEndBrowseFile); 
+    break;
+  case cAnalyseMode:
+    break;
+  }
 }

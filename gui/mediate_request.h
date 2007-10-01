@@ -39,7 +39,8 @@ extern "C" {
 
 typedef struct mediate_symbol
 {
-  // To Be Determined.
+  char name[SYMBOL_NAME_BUFFER_LENGTH];
+  char description[SYMBOL_DESCR_BUFFER_LENGTH];
 } mediate_symbol_t;
 
 

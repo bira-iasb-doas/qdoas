@@ -25,6 +25,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <map>
 
 #include <QList>
+#include <QStringList>
 #include <QFileInfo>
 
 #include "RefCountPtr.h"
@@ -61,6 +62,7 @@ class CSession
   void addFile(const QFileInfo &file, const QString &projectName);
 
   int size(void) const;
+  QStringList fileList(void) const;
 
  private:
   CSession(const CSession &);

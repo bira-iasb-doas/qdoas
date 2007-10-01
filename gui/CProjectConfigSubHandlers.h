@@ -54,6 +54,17 @@ class CSiteSubHandler : public CConfigSubHandler
 
 //-------------------------------------------------------------------
 
+class CSymbolSubHandler : public CConfigSubHandler
+{
+ public:
+  CSymbolSubHandler(CQdoasProjectConfigHandler *master);
+  virtual ~CSymbolSubHandler();
+
+  virtual bool start(const QString &element, const QXmlAttributes &atts);
+};
+
+//-------------------------------------------------------------------
+
 class CProjectSubHandler : public CConfigSubHandler
 {
  public:

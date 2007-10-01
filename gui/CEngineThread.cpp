@@ -132,7 +132,7 @@ void CEngineThread::run()
       m_reqQueueMutex.unlock();
 
       // process the request then discard it
-      activeRequest->process(this);
+      activeRequest->process(this);           // what about the return code ???? TODO
       delete activeRequest;
 
       // lock before modifying the queue and checking m_terminated 

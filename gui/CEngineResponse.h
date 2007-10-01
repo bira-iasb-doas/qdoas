@@ -35,6 +35,7 @@ static const int cEngineResponseMessageType              = 0;
 static const int cEngineResponseBeginBrowseFileType      = 2;
 static const int cEngineResponseBrowseRecordType         = 3;
 static const int cEngineResponseGotoRecordType           = 4;
+static const int cEngineResponseEndBrowseFileType        = 5;
 
 //------------------------------------------------------------
 
@@ -124,6 +125,18 @@ class CEngineResponseBrowseRecord : public CEngineResponseSpecificRecord
 };
 
 //------------------------------------------------------------
+
+class CEngineResponseEndBrowseFile : public CEngineResponse
+{
+ public:
+  CEngineResponseEndBrowseFile();
+  virtual ~CEngineResponseEndBrowseFile();
+
+  virtual void process(CEngineController *engineController);
+};
+
+//------------------------------------------------------------
+
 
 #endif
 

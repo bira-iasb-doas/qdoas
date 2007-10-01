@@ -80,8 +80,22 @@ QString CConfigurationWriter::write(const QString &fileName)
 	      siteList[i].latitude, siteList[i].altitude);
     }
     fprintf(fp, "  </sites>\n");
+    delete [] siteList;
   }
 
+  // symbols
+  const mediate_symbol_t *symbolList = ws->symbolList(n);
+  if (symbolList != NULL) {
+    fprintf(fp, "  <symbols>\n");
+    for (i=0; i<n; ++i) {
+      fprintf(fp, "    <symbol name=\"%s\" descr=\"%s\" />\n",
+	      symbolList[i].name, symbolList[i].description);
+    }
+    fprintf(fp, "  </symbols>\n");
+    delete [] symbolList;
+  }
+
+  
   writeProjects(fp);
 
   fprintf(fp, "</qdoas>\n");

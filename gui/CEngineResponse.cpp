@@ -177,3 +177,24 @@ CEngineResponseBrowseRecord::~CEngineResponseBrowseRecord()
 
 //------------------------------------------------------------
 
+CEngineResponseEndBrowseFile::CEngineResponseEndBrowseFile() :
+  CEngineResponse(cEngineResponseEndBrowseFileType)
+{
+}
+
+CEngineResponseEndBrowseFile::~CEngineResponseEndBrowseFile()
+{
+}
+
+void CEngineResponseEndBrowseFile::process(CEngineController *engineController)
+{
+  // consider the error messages first - if fatal stop here
+  if (processErrors(engineController))
+    return;
+
+  // notify the engine controller
+  engineController->notifyEndBrowseFile();
+}
+
+//------------------------------------------------------------
+

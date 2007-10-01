@@ -78,6 +78,7 @@ class CWorkSpace
   void modifiedProjectProperties(const QString &projectName);
 
   mediate_site_t* siteList(int &listLength) const;
+  mediate_symbol_t* symbolList(int &listLength) const;
 
   bool destroyProject(const QString &projectName);
   bool destroyAnalysisWindow(const QString &projectName, const QString &newWindowName);

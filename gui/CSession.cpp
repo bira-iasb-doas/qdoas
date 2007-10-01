@@ -96,6 +96,26 @@ int CSession::size(void) const
   return count;
 }
 
+QStringList CSession::fileList(void) const
+{
+  // get an order list of the file in the session. The index of a file in this list corresponds
+  // to the index for session iterator.
+
+  QStringList fileList;
+
+  sessionmap_t::const_iterator it = m_map.begin();
+  while (it != m_map.end()) {
+    const QList<QFileInfo> &tmp = (it->second)->m_files;
+    QList<QFileInfo>::const_iterator fIt =  tmp.begin();
+    while (fIt != tmp.end()) {
+      fileList << fIt->fileName(); // JUST the name, not the path
+      ++fIt;
+    }
+    ++it;
+  }
+
+  return fileList;
+}
 
 CSessionIterator::CSessionIterator() :
   m_fileIndex(0),

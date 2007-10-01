@@ -26,8 +26,10 @@ extern "C" {
 #endif
 
 
-#define FILENAME_BUFFER_LENGTH  256
-#define SITE_NAME_BUFFER_LENGTH 128
+#define FILENAME_BUFFER_LENGTH      256
+#define SITE_NAME_BUFFER_LENGTH     128
+#define SYMBOL_NAME_BUFFER_LENGTH    64
+#define SYMBOL_DESCR_BUFFER_LENGTH  256
 
   /****************************************************/
   /* Geolocation */

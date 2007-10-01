@@ -118,6 +118,37 @@ bool CSiteSubHandler::start(const QString &element, const QXmlAttributes &atts)
 
 //------------------------------------------------------------------------
 //
+// Handler for <symbol> element
+
+CSymbolSubHandler::CSymbolSubHandler(CQdoasProjectConfigHandler *master) :
+  CConfigSubHandler(master)
+{
+}
+
+CSymbolSubHandler::~CSymbolSubHandler()
+{
+}
+
+bool CSymbolSubHandler::start(const QString &element, const QXmlAttributes &atts)
+{
+  if (element == "symbol") {
+    QString name;
+
+    name = atts.value("name");
+    if (name.isEmpty()) {
+      return postErrorMessage("Missing symbol name");
+    }
+
+    m_master->addSymbol(name, atts.value("descr"));
+
+    return true;
+  }
+
+  return false;
+}
+
+//------------------------------------------------------------------------
+//
 // Handler for <project> element
 
 

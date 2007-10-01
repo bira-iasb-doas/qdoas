@@ -108,3 +108,16 @@ CSiteConfigItem::CSiteConfigItem() :
 CSiteConfigItem::~CSiteConfigItem()
 {
 }
+
+//------------------------------------------------------------
+
+CSymbolConfigItem::CSymbolConfigItem(const QString &name, const QString &description) :
+  m_name(name),
+  m_description(description)
+{
+}
+
+CSymbolConfigItem::~CSymbolConfigItem()
+{
+}
+

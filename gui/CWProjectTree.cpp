@@ -29,6 +29,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QRegExp>
 #include <QDir>
 #include <QTextStream>
+#include <QMessageBox>
 
 #include "CWorkSpace.h"
 
@@ -64,7 +65,8 @@ QIcon *CWProjectTree::m_fileIcon = NULL;
 
 CWProjectTree::CWProjectTree(CWActiveContext *activeContext, QWidget *parent) :
   QTreeWidget(parent),
-  m_activeContext(activeContext)
+  m_activeContext(activeContext),
+  m_sessionActive(false)
 {
   QStringList labelList;
   labelList << "Name" << "Size" << "Modified"; 
@@ -959,6 +961,11 @@ void CWProjectTree::slotRunAnalysis()
 
 void CWProjectTree::slotBrowseSpectra()
 {
+  if (m_sessionActive) {
+    QMessageBox::information(this, "Browse Spectra", "A session is currently active.");
+    return;
+  }
+
   CSession *session = new CSession(false);
 
   // normalise the selection and then traverse to build session
@@ -1016,6 +1023,11 @@ void CWProjectTree::slotDeleteSelection()
 void CWProjectTree::slotDeleteAllSpectra()
 {
   // TODO
+}
+
+void CWProjectTree::slotSessionRunning(bool running)
+{
+  m_sessionActive = running;
 }
 
 //------------------------------------------------------------------------------

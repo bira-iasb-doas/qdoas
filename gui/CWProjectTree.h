@@ -113,6 +113,7 @@ Q_OBJECT
   void slotBrowseSpectra();
   void slotDeleteSelection();
   void slotDeleteAllSpectra();
+  void slotSessionRunning(bool running);
 
  signals:
   void signalWidthModeChanged(int newMode);
@@ -121,6 +122,7 @@ Q_OBJECT
  private:
   QList<int> m_colWidthList;
   CWActiveContext *m_activeContext;
+  bool m_sessionActive;
 
   // icons for the tree
   static QIcon *m_windowIcon, *m_folderIcon, *m_directoryIcon, *m_fileIcon;

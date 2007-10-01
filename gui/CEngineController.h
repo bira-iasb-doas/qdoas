@@ -23,6 +23,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QObject>
 #include <QList>
 #include <QFileInfo>
+#include <QStringList>
 
 #include "CEngineThread.h"
 #include "CEngineError.h"
@@ -48,6 +49,9 @@ Q_OBJECT
   CEngineController(QObject *parent = 0);
   virtual ~CEngineController();
 
+  // query interface
+  bool isSessionRunning(void) const;
+
   // notify interface is for use by response classes
 
   void notifyNumberOfFiles(int nFiles);
@@ -60,16 +64,14 @@ Q_OBJECT
   void notifyTableData(QList<SCell> &cellList);
 
   void notifyErrorMessages(int highestErrorLevel, const QList<CEngineError> &errorMessages);
+  void notifyEndBrowseFile(void);
 
  protected:
   virtual bool event(QEvent *e);
 
  public slots:
   // toolbar file navigation interface
-  void slotFirstFile();
   void slotNextFile();
-  void slotPreviousFile();
-  void slotLastFile();
   void slotGotoFile(int number);
   // toolbar record navigation interface
   void slotFirstRecord();
@@ -77,11 +79,13 @@ Q_OBJECT
   void slotNextRecord();
   void slotLastRecord();
   void slotGotoRecord(int recNumber);
+  // end a session
+  void slotStopSession();
  
   void slotStartBrowseSession(const RefCountPtr<CSession> &session);
 
  signals:
-  void signalNumberOfFilesChanged(int nFiles);
+  void signalFileListChanged(const QStringList &fileList);
   void signalCurrentFileChanged(int fileNumber);
   void signalCurrentFileChanged(const QString &filename);
   void signalNumberOfRecordsChanged(int nRecords);
@@ -91,6 +95,8 @@ Q_OBJECT
   void signalTablePages(const QList< RefCountConstPtr<CTablePageData> > &pageList);
 
   void signalErrorMessages(int highestErrorLevel, const QString &messages);
+
+  void signalSessionRunning(bool running);
 
  private:
   CEngineThread *m_thread;
@@ -104,5 +110,7 @@ Q_OBJECT
   RefCountConstPtr<CSession> m_session;
   CSessionIterator m_currentIt;
 };
+
+inline bool CEngineController::isSessionRunning(void) const { return (m_mode != 0); }
 
 #endif

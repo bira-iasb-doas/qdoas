@@ -65,13 +65,19 @@ CWMain::CWMain(QWidget *parent) :
 
   // Open...
   QAction *openAct = new QAction(QIcon(QPixmap(":/icons/file_open_16.png")), "Open...", this);
-  // connect ...
   connect(openAct, SIGNAL(triggered()), this, SLOT(slotOpenFile()));
   fileMenu->addAction(openAct);
 
   fileMenu->addSeparator();
 
-  fileMenu->addAction("Save As...", this, SLOT(slotSaveAsFile()));
+  // Save + Save As ...
+  m_saveAction = new QAction(QIcon(QPixmap(":/icons/file_save_16.png")), "Save", this);
+  connect(m_saveAction, SIGNAL(triggered()), this, SLOT(slotSaveFile()));
+  fileMenu->addAction(m_saveAction);
+
+  m_saveAsAction = new QAction(QIcon(QPixmap(":/icons/file_saveas_16.png")), "Save As...", this);
+  connect(m_saveAsAction, SIGNAL(triggered()), this, SLOT(slotSaveAsFile()));
+  fileMenu->addAction(m_saveAsAction);
 
   // Quit
   fileMenu->addSeparator();
@@ -90,6 +96,8 @@ CWMain::CWMain(QWidget *parent) :
 
   m_toolBar = new QToolBar(this);
   m_toolBar->addAction(openAct);
+  m_toolBar->addAction(m_saveAction);
+  m_toolBar->addAction(m_saveAsAction);
 
   QHBoxLayout *tbLayout = new QHBoxLayout;
 
@@ -98,6 +106,12 @@ CWMain::CWMain(QWidget *parent) :
   mainLayout->addLayout(tbLayout, 0);
   
   //------------------------------
+
+  m_saveAction->setEnabled(false);
+  m_saveAsAction->setEnabled(false);
+
+  //------------------------------
+
 
   m_activeContext = new CWActiveContext;
 
@@ -164,6 +178,14 @@ CWMain::CWMain(QWidget *parent) :
 	  navPanelRecords, SLOT(slotSetMaxIndex(int)));
   connect(m_controller, SIGNAL(signalCurrentRecordChanged(int)),
 	  navPanelRecords, SLOT(slotSetCurrentIndex(int)));
+  connect(m_controller, SIGNAL(signalFileListChanged(const QStringList&)),
+	  navPanelRecords, SLOT(slotSetFileList(const QStringList&)));
+  connect(m_controller, SIGNAL(signalCurrentFileChanged(int)),
+	  navPanelRecords, SLOT(slotSetCurrentFile(int)));
+  connect(m_controller, SIGNAL(signalSessionRunning(bool)),
+	  navPanelRecords, SLOT(slotSetEnabled(bool))); 
+  connect(m_controller, SIGNAL(signalSessionRunning(bool)),
+	  m_projTree, SLOT(slotSessionRunning(bool))); 
 
   connect(navPanelRecords, SIGNAL(signalFirstClicked()),
 	  m_controller, SLOT(slotFirstRecord()));
@@ -175,27 +197,10 @@ CWMain::CWMain(QWidget *parent) :
 	  m_controller, SLOT(slotLastRecord()));
   connect(navPanelRecords, SIGNAL(signalIndexChanged(int)),
 	  m_controller, SLOT(slotGotoRecord(int)));
-
-  m_toolBar->addSeparator();
-
-  CNavigationPanel *navPanelFiles = new CNavigationPanel(m_toolBar);
-  
-  // connections
-  connect(m_controller, SIGNAL(signalNumberOfFilesChanged(int)),
-	  navPanelFiles, SLOT(slotSetMaxIndex(int)));
-  connect(m_controller, SIGNAL(signalCurrentFileChanged(int)),
-	  navPanelFiles, SLOT(slotSetCurrentIndex(int)));
-
-  connect(navPanelFiles, SIGNAL(signalFirstClicked()),
-	  m_controller, SLOT(slotFirstFile()));
-  connect(navPanelFiles, SIGNAL(signalPreviousClicked()),
-	  m_controller, SLOT(slotPreviousFile()));
-  connect(navPanelFiles, SIGNAL(signalNextClicked()),
-	  m_controller, SLOT(slotNextFile()));
-  connect(navPanelFiles, SIGNAL(signalLastClicked()),
-	  m_controller, SLOT(slotLastFile()));
-  connect(navPanelFiles, SIGNAL(signalIndexChanged(int)),
+  connect(navPanelRecords, SIGNAL(signalSelectedFileChanged(int)),
 	  m_controller, SLOT(slotGotoFile(int)));
+  connect(navPanelRecords, SIGNAL(signalStopClicked()),
+	  m_controller, SLOT(slotStopSession()));
 
 
   // plot data transfer
@@ -280,7 +285,6 @@ void CWMain::slotOpenFile()
       else
 	ws->addPath(i, path);
     }
-
     
     // sites
     const QList<const CSiteConfigItem*> &siteItems = handler->siteItems();
@@ -292,11 +296,21 @@ void CWMain::slotOpenFile()
       ++siteIt;
     }
     
-    // symbols ... TODO
+    // symbols
+    const QList<const CSymbolConfigItem*> &symbolItems = handler->symbolItems();
+    QList<const CSymbolConfigItem*>::const_iterator symIt = symbolItems.begin();
+    while (symIt != symbolItems.end()) {
+
+      ws->createSymbol((*symIt)->symbolName(), (*symIt)->symbolDescription());
+      ++symIt;
+    }
 
     // projects
     errMsg += m_projTree->loadConfiguration(handler->projectItems());
 
+    m_projectFile = fileName;
+    m_saveAction->setEnabled(true);
+    m_saveAsAction->setEnabled(true);
   }
   else {
     errMsg = handler->messages();
@@ -332,8 +346,25 @@ void CWMain::slotSaveAsFile()
 					   QMessageBox::Retry | QMessageBox::Cancel,
 					   QMessageBox::Retry);
       }
+      else {
+	// wrote the file ... change the project filename
+	m_projectFile = fileName;
+      }
     }
   }
+}
+
+void CWMain::slotSaveFile()
+{
+  if (m_projectFile.isEmpty())
+    return;
+
+  CConfigurationWriter writer(m_projTree);
+
+  QString msg = writer.write(m_projectFile);
+  if (!msg.isNull())
+    QMessageBox::critical(this, "Project File Write Failure", msg, QMessageBox::Ok);
+  
 }
 
 void CWMain::slotErrorMessages(int highestLevel, const QString &messages)

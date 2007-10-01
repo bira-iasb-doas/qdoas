@@ -92,6 +92,19 @@ class CSiteConfigItem
   double m_longitude, m_latitude, m_altitude;
 };
 
+class CSymbolConfigItem
+{
+ public:
+  CSymbolConfigItem(const QString &name, const QString &description);
+  ~CSymbolConfigItem();
+
+  const QString& symbolName(void) const;
+  const QString& symbolDescription(void) const;
+
+ private:
+  QString m_name, m_description;
+};
+
 inline void CSiteConfigItem::setSiteName(const QString &siteName) { m_siteName = siteName; }
 inline void CSiteConfigItem::setAbbreviation(const QString &abbreviation) { m_abbreviation = abbreviation; }
 inline void CSiteConfigItem::setLongitude(double longitude) { m_longitude = longitude; }
@@ -103,5 +116,8 @@ inline const QString& CSiteConfigItem::abbreviation(void) const { return m_abbre
 inline double CSiteConfigItem::longitude(void) const { return m_longitude; }
 inline double CSiteConfigItem::latitude(void) const { return m_latitude; }
 inline double CSiteConfigItem::altitude(void) const { return m_altitude; }
+
+inline const QString& CSymbolConfigItem::symbolName(void) const { return m_name; }
+inline const QString& CSymbolConfigItem::symbolDescription(void) const { return m_description; }
 
 #endif

@@ -190,7 +190,9 @@ bool CWorkSpace::createSite(const QString &newSiteName, const QString &abbr,
 
 bool CWorkSpace::createSymbol(const QString &newSymbolName, const QString &description)
 {
-  if (newSymbolName.isEmpty())
+  mediate_symbol_t *tmp; // just for size checking ....
+
+  if (newSymbolName.isEmpty() || newSymbolName.length() >= (int)sizeof(tmp->name) || description.length() >= (int)sizeof(tmp->description))
     return false;
 
   std::map<QString,QString>::iterator it = m_symbolMap.find(newSymbolName);
@@ -341,6 +343,34 @@ mediate_site_t* CWorkSpace::siteList(int &listLength) const
     listLength = (int)n;
     
     return siteList;
+  }
+  
+  listLength = 0;
+  return NULL;
+}
+
+// data returned must be freed by the client with 'opeator delete []'
+
+mediate_symbol_t* CWorkSpace::symbolList(int &listLength) const
+{
+  size_t n = m_symbolMap.size();
+  
+  if (n > 0) {
+    mediate_symbol_t *symbolList = new mediate_symbol_t[n];
+    mediate_symbol_t *tmp = symbolList;
+    
+    // walk the list and copy
+    std::map<QString,QString>::const_iterator it = m_symbolMap.begin();
+    while (it != m_symbolMap.end()) {
+      strcpy(tmp->name, (it->first).toAscii().data());
+      strcpy(tmp->description, (it->second).toAscii().data());
+      ++tmp;
+      ++it;
+    }
+    
+    listLength = (int)n;
+    
+    return symbolList;
   }
   
   listLength = 0;

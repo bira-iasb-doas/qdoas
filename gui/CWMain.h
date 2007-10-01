@@ -30,6 +30,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QStatusBar>
 #include <QTabWidget>
 #include <QTableView>
+#include <QAction>
 
 class CWProjectTree;
 class CWSiteTree;
@@ -54,6 +55,7 @@ Q_OBJECT
 
  public slots:
   void slotOpenFile();
+  void slotSaveFile();
   void slotSaveAsFile();
   void slotErrorMessages(int highestLevel, const QString &messages);
 
@@ -76,6 +78,11 @@ Q_OBJECT
 
   CEngineController *m_controller;
   
+  QString m_projectFile;
+  
+  // actions ...
+  QAction *m_saveAction;
+  QAction *m_saveAsAction;
 };
 
 #endif

@@ -39,24 +39,47 @@ CNavigationPanel::CNavigationPanel(QToolBar *toolBar) :
   m_nextBtn = toolBar->addAction(QIcon(":/icons/nav_next_22.png"), "next");
   m_lastBtn = toolBar->addAction(QIcon(":/icons/nav_last_22.png"), "last");
 
+  m_stopBtn = toolBar->addAction(QIcon(":/icons/nav_stop_22.png"), "stop");
+
+  m_fileCombo = new QComboBox;
+  m_fileCombo->setSizeAdjustPolicy(QComboBox::AdjustToContents);
+  toolBar->addWidget(m_fileCombo);
+
   // initially disabled
   m_firstBtn->setEnabled(false);
   m_prevBtn->setEnabled(false);
   m_indexEdit->setEnabled(false);
   m_nextBtn->setEnabled(false);
   m_lastBtn->setEnabled(false);
-  
+  m_stopBtn->setEnabled(false);
+  m_fileCombo->setEnabled(false);
+
   // connections for the actions ... TODO
 
   connect(m_firstBtn, SIGNAL(triggered()), this, SLOT(slotFirstClicked()));
   connect(m_prevBtn, SIGNAL(triggered()), this, SLOT(slotPreviousClicked()));
   connect(m_nextBtn, SIGNAL(triggered()), this, SLOT(slotNextClicked()));
   connect(m_lastBtn, SIGNAL(triggered()), this, SLOT(slotLastClicked()));
+  connect(m_stopBtn, SIGNAL(triggered()), this, SLOT(slotStopClicked()));
   connect(m_indexEdit, SIGNAL(returnPressed()), this, SLOT(slotIndexEditChanged()));
+
+  connect(m_fileCombo, SIGNAL(activated(int)), this, SLOT(slotFileSelected(int)));
 }
 
 CNavigationPanel::~CNavigationPanel()
 {  
+}
+
+void CNavigationPanel::slotSetFileList(const QStringList &fileList)
+{
+  // set the list of files in the combobox
+  m_fileCombo->clear();
+  m_fileCombo->addItems(fileList);
+}
+
+void CNavigationPanel::slotSetCurrentFile(int index)
+{
+  m_fileCombo->setCurrentIndex(index);
 }
 
 void CNavigationPanel::slotSetMaxIndex(int maxIndex)
@@ -69,22 +92,36 @@ void CNavigationPanel::slotSetMaxIndex(int maxIndex)
   // current index implicitly reset to 0
   m_currentIndex = 0;
 
-  // enable/disable state of buttons
-
-  m_firstBtn->setEnabled(false);
-  m_prevBtn->setEnabled(false);
-  
   m_indexEdit->setText(QString());
+}
 
-  if (m_maxIndex == 0) {
+void CNavigationPanel::slotSetEnabled(bool enable)
+{
+  // enable/disable state of buttons
+  if (enable) {
+    
+    m_firstBtn->setEnabled(m_currentIndex != 0);
+    m_prevBtn->setEnabled(m_currentIndex != 0);
+  
+    bool active = (m_maxIndex != 0);
+
+    m_indexEdit->setEnabled(active);
+    m_nextBtn->setEnabled(active);
+    m_lastBtn->setEnabled(active);
+
+    m_fileCombo->setEnabled(active);
+
+    m_stopBtn->setEnabled(active);
+  }
+  else {
+    // all disabled ...
+    m_firstBtn->setEnabled(false);
+    m_prevBtn->setEnabled(false);
     m_indexEdit->setEnabled(false);
     m_nextBtn->setEnabled(false);
     m_lastBtn->setEnabled(false);
-  }
-  else {
-    m_indexEdit->setEnabled(true);
-    m_nextBtn->setEnabled(true);
-    m_lastBtn->setEnabled(true);
+    m_fileCombo->setEnabled(false);
+    m_stopBtn->setEnabled(false);
   }
 }
 
@@ -144,6 +181,11 @@ void CNavigationPanel::slotLastClicked()
   emit signalLastClicked();
 }
 
+void CNavigationPanel::slotStopClicked()
+{
+  emit signalStopClicked();
+}
+
 void CNavigationPanel::slotIndexEditChanged()
 {
   // on a 'return presss'
@@ -160,4 +202,9 @@ void CNavigationPanel::slotIndexEditChanged()
       tmpStr.setNum(m_currentIndex);
     m_indexEdit->setText(tmpStr);
   } 
+}
+
+void CNavigationPanel::slotFileSelected(int index)
+{
+  emit signalSelectedFileChanged(index);
 }

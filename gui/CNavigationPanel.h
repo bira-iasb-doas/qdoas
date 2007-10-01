@@ -24,6 +24,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QAction>
 #include <QToolBar>
 #include <QLineEdit>
+#include <QComboBox>
+#include <QStringList>
 
 // provide a set of tool-bar actions for navigation
 
@@ -39,25 +41,33 @@ Q_OBJECT
  public slots:
   void slotSetMaxIndex(int maxIndex);
   void slotSetCurrentIndex(int index);
+  void slotSetFileList(const QStringList &fileList);
+  void slotSetCurrentFile(int index);
+  void slotSetEnabled(bool enabled); 
 
  private slots:
   void slotFirstClicked();
   void slotPreviousClicked();
   void slotNextClicked();
   void slotLastClicked();
+  void slotStopClicked();
   void slotIndexEditChanged();
+  void slotFileSelected(int);
 
  signals:
   void signalFirstClicked();
   void signalPreviousClicked();
   void signalNextClicked();
   void signalLastClicked();
+  void signalStopClicked();
   void signalIndexChanged(int);
+  void signalSelectedFileChanged(int);
 
  private:
-  QAction *m_firstBtn, *m_prevBtn, *m_nextBtn, *m_lastBtn;
+  QAction *m_firstBtn, *m_prevBtn, *m_nextBtn, *m_lastBtn, *m_stopBtn;
   QLineEdit *m_indexEdit;
-  
+  QComboBox *m_fileCombo;
+
   int m_maxIndex, m_currentIndex;
 };
 
