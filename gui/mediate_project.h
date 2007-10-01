@@ -21,15 +21,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #ifndef _MEDIATE_PROJECT_H_GUARD
 #define _MEDIATE_PROJECT_H_GUARD
 
+#include "mediate_limits.h"
+
 #if defined(_cplusplus) || defined(__cplusplus)
 extern "C" {
 #endif
 
 
-#define FILENAME_BUFFER_LENGTH      256
-#define SITE_NAME_BUFFER_LENGTH     128
-#define SYMBOL_NAME_BUFFER_LENGTH    64
-#define SYMBOL_DESCR_BUFFER_LENGTH  256
 
   /****************************************************/
   /* Geolocation */
@@ -427,7 +425,7 @@ extern "C" {
 
   typedef struct mediate_project
   {
-    // TODO - Coupled to the control offered by the GUI Project Tabs.
+    // Coupled to the control offered by the GUI Project Tabs.
     mediate_project_spectra_t spectra;
     mediate_project_analysis_t analysis;
     mediate_project_filtering_t lowpass;

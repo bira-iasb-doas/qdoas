@@ -25,6 +25,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 // Structures for mediateRequest*
 //----------------------------------------------------------
 
+#include "mediate_limits.h"
 #include "mediate_project.h"
 #include "mediate_analysis_window.h"
 
@@ -52,7 +53,7 @@ typedef struct mediate_symbol
 typedef struct mediate_site
 {
   char name[SITE_NAME_BUFFER_LENGTH];
-  char abbreviation[8];
+  char abbreviation[SITE_ABBREV_BUFFER_LENGTH];
   double longitude;
   double latitude;
   double altitude;

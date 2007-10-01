@@ -21,8 +21,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QContextMenuEvent>
 #include <QDialogButtonBox>
 #include <QVBoxLayout>
+#include <QFileDialog>
 
 #include "CWAnalysisWindowDoasTables.h"
+#include "CWorkSpace.h"
 
 #include "debugutil.h"
 
@@ -272,14 +274,53 @@ void CWMoleculesDoasTable::contextMenuEvent(QContextMenuEvent *e)
  
 void CWMoleculesDoasTable::slotInsertRow()
 {
-  static int junk = 0;
+  QStringList allSymbols = CWorkSpace::instance()->symbolList();
+  QStringList freeSymbols;
+  QString filter;
+  int index;
 
-  QList<QVariant> initialValues;
-  
-  QString tmp;
-  tmp.sprintf("Label %d", ++junk); // TODO
-  
-  addRow(24, tmp, initialValues);
+  // build a list of free symbol and a file filter string
+  QStringList::const_iterator it = allSymbols.begin();
+  while (it != allSymbols.end()) {
+    index = m_symbols.indexOf(*it);
+    if (index == -1) {
+      // a free symbol ...
+      freeSymbols << *it;
+      filter.append(*it).append(" (").append(*it).append("_*.xs*);;");
+    }
+    ++it;
+  }
+
+  // check that the selected file is appropriate ...
+  if (!filter.isEmpty()) {    
+    filter.append("All files (*.*)");
+
+    QString fileName = QFileDialog::getOpenFileName(this, "Select Cross Section File", QString(), filter);
+
+    if (!fileName.isEmpty()) {
+      // need to compare 'symbol'_ with the start of the bsaename of the file ...
+      QString baseName = fileName;
+      index = baseName.lastIndexOf('/');
+      if (index == -1)
+	index = baseName.lastIndexOf('\\');
+      if (index > 0)
+	baseName.remove(0, index+1);
+
+      // the start of the filename MUST match a free symbol ...
+      it = freeSymbols.begin();
+      while (it != freeSymbols.end()) {
+	QString tmp(*it);
+	tmp.append('_');
+	if (baseName.startsWith(tmp)) {
+	  // a match to a symbol ... OK to add the row ...
+	  QList<QVariant> initialValues;
+	  addRow(24, *it, initialValues);
+	  return;
+	}
+	++it;
+      }
+    }
+  }
 }
 
 void CWMoleculesDoasTable::slotRemoveRow()

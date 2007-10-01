@@ -25,7 +25,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 CNavigationPanel::CNavigationPanel(QToolBar *toolBar) :
   QObject(toolBar),
   m_maxIndex(0),
-  m_currentIndex(0)
+  m_currentIndex(0),
+  m_playing(false)
 {
   // Add the actions to the tool-bar
   m_firstBtn = toolBar->addAction(QIcon(":/icons/nav_first_22.png"), "first");
@@ -41,6 +42,8 @@ CNavigationPanel::CNavigationPanel(QToolBar *toolBar) :
 
   m_stopBtn = toolBar->addAction(QIcon(":/icons/nav_stop_22.png"), "stop");
 
+  m_playBtn = toolBar->addAction(QIcon(":/icons/nav_next_22.png"), "play");
+
   m_fileCombo = new QComboBox;
   m_fileCombo->setSizeAdjustPolicy(QComboBox::AdjustToContents);
   toolBar->addWidget(m_fileCombo);
@@ -52,6 +55,7 @@ CNavigationPanel::CNavigationPanel(QToolBar *toolBar) :
   m_nextBtn->setEnabled(false);
   m_lastBtn->setEnabled(false);
   m_stopBtn->setEnabled(false);
+  m_playBtn->setEnabled(false);
   m_fileCombo->setEnabled(false);
 
   // connections for the actions ... TODO
@@ -61,6 +65,7 @@ CNavigationPanel::CNavigationPanel(QToolBar *toolBar) :
   connect(m_nextBtn, SIGNAL(triggered()), this, SLOT(slotNextClicked()));
   connect(m_lastBtn, SIGNAL(triggered()), this, SLOT(slotLastClicked()));
   connect(m_stopBtn, SIGNAL(triggered()), this, SLOT(slotStopClicked()));
+  connect(m_playBtn, SIGNAL(triggered()), this, SLOT(slotPlayPauseClicked()));
   connect(m_indexEdit, SIGNAL(returnPressed()), this, SLOT(slotIndexEditChanged()));
 
   connect(m_fileCombo, SIGNAL(activated(int)), this, SLOT(slotFileSelected(int)));
@@ -111,16 +116,20 @@ void CNavigationPanel::slotSetEnabled(bool enable)
 
     m_fileCombo->setEnabled(active);
 
+    m_playBtn->setEnabled(active);
     m_stopBtn->setEnabled(active);
   }
   else {
     // all disabled ...
+    m_playing = false;
+
     m_firstBtn->setEnabled(false);
     m_prevBtn->setEnabled(false);
     m_indexEdit->setEnabled(false);
     m_nextBtn->setEnabled(false);
     m_lastBtn->setEnabled(false);
     m_fileCombo->setEnabled(false);
+    m_playBtn->setEnabled(false);
     m_stopBtn->setEnabled(false);
   }
 }
@@ -131,6 +140,11 @@ void CNavigationPanel::slotSetCurrentIndex(int index)
   
   if (!m_maxIndex)
     return;
+
+  if (m_playing) {
+    emit signalStep();
+    return;
+  }
 
   if (m_currentIndex == 0) {
     m_firstBtn->setEnabled(false);
@@ -184,6 +198,20 @@ void CNavigationPanel::slotLastClicked()
 void CNavigationPanel::slotStopClicked()
 {
   emit signalStopClicked();
+}
+
+void CNavigationPanel::slotPlayPauseClicked()
+{
+  if (m_playing) {
+    // pause ...
+    m_playing = false;
+  }
+  else {
+    // play
+    m_playing = true;
+    // start the timer ...
+    emit signalStep();
+  }
 }
 
 void CNavigationPanel::slotIndexEditChanged()

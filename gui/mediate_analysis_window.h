@@ -21,11 +21,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #ifndef _MEDIATE_ANALYSIS_WINDOW_H_GUARD
 #define _MEDIATE_ANALYSIS_WINDOW_H_GUARD
 
+#include "mediate_limits.h"
+
 #if defined(_cplusplus) || defined(__cplusplus)
 extern "C" {
 #endif
-
-#define REF_FILENAME_BUFFER_LENGTH  256
 
   /* TODO
   struct anlyswin_molecule
@@ -43,9 +43,9 @@ extern "C" {
   {
     int kuruczMode;
     int refSpectrumSelection;
-    char refOneFile[REF_FILENAME_BUFFER_LENGTH];
-    char refTwoFile[REF_FILENAME_BUFFER_LENGTH];
-    char residualFile[REF_FILENAME_BUFFER_LENGTH];
+    char refOneFile[FILENAME_BUFFER_LENGTH];
+    char refTwoFile[FILENAME_BUFFER_LENGTH];
+    char residualFile[FILENAME_BUFFER_LENGTH];
     double refSzaCenter;
     double refSzaDelta;
     int fitMinWavelength;

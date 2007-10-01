@@ -378,6 +378,54 @@ void CEngineController::slotGotoRecord(int recordNumber)
   }
 }
 
+void CEngineController::slotStep()
+{
+  if (m_currentRecord >= 0 && m_currentRecord < m_numberOfRecords) {
+    // step record
+    switch (m_mode) {
+    case cBrowseMode:
+      m_thread->request(new CEngineRequestBrowseNextRecord);
+      break;
+    case cAnalyseMode:
+      break;
+    }
+  }
+  else if (m_currentRecord == m_numberOfRecords && !m_currentIt.atEnd()) {
+
+    CEngineRequestCompound *req = new CEngineRequestCompound;
+  
+    // done with the current file
+    if (m_numberOfRecords >= 0) {
+      switch (m_mode) {
+      case cBrowseMode:
+	req->addRequest(new CEngineRequestEndBrowseFile);
+	break;
+      case cAnalyseMode:
+	break;
+      }
+    }
+
+    ++m_currentIt;
+    if (!m_currentIt.atEnd()) {
+      // check for a change in project
+      if (m_currentProject != m_currentIt.project()) {
+	m_currentProject = m_currentIt.project();
+	req->addRequest(new CEngineRequestSetProject(m_currentProject));
+      }
+
+      switch (m_mode) {
+      case cBrowseMode:
+	req->addRequest(new CEngineRequestBeginBrowseFile(m_currentIt.file().filePath()));
+	break;
+      case cAnalyseMode:
+	break;
+      }
+    }
+
+    m_thread->request(req);
+  }
+}
+
 void CEngineController::slotStartBrowseSession(const RefCountPtr<CSession> &session)
 {
   // make a compound request

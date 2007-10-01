@@ -79,6 +79,9 @@ Q_OBJECT
   void slotNextRecord();
   void slotLastRecord();
   void slotGotoRecord(int recNumber);
+  // toolbar auto-stepping navigation interface
+  void slotStep();
+
   // end a session
   void slotStopSession();
  

@@ -322,7 +322,7 @@ void CWorkSpace::modifiedProjectProperties(const QString &projectName)
   }
 }
 
-// data returned must be freed by the client with 'opeator delete []'
+// data returned must be freed by the client with 'operator delete []'
 
 mediate_site_t* CWorkSpace::siteList(int &listLength) const
 {
@@ -349,7 +349,7 @@ mediate_site_t* CWorkSpace::siteList(int &listLength) const
   return NULL;
 }
 
-// data returned must be freed by the client with 'opeator delete []'
+// data returned must be freed by the client with 'operator delete []'
 
 mediate_symbol_t* CWorkSpace::symbolList(int &listLength) const
 {
@@ -375,6 +375,19 @@ mediate_symbol_t* CWorkSpace::symbolList(int &listLength) const
   
   listLength = 0;
   return NULL;
+}
+
+QStringList CWorkSpace::symbolList(void) const
+{
+  QStringList symbolList;
+
+  std::map<QString,QString>::const_iterator it = m_symbolMap.begin();
+  while (it != m_symbolMap.end()) {
+    symbolList << (it->first);
+    ++it;
+  }
+
+  return symbolList;
 }
 
 bool CWorkSpace::destroyProject(const QString &projectName)

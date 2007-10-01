@@ -23,7 +23,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <map>
 #include <list>
 #include <set>
+
 #include <QString>
+#include <QStringList>
 
 #include "mediate.h"
 
@@ -79,6 +81,8 @@ class CWorkSpace
 
   mediate_site_t* siteList(int &listLength) const;
   mediate_symbol_t* symbolList(int &listLength) const;
+
+  QStringList symbolList(void) const;
 
   bool destroyProject(const QString &projectName);
   bool destroyAnalysisWindow(const QString &projectName, const QString &newWindowName);

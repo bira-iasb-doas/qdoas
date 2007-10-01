@@ -53,6 +53,7 @@ Q_OBJECT
   void slotStopClicked();
   void slotIndexEditChanged();
   void slotFileSelected(int);
+  void slotPlayPauseClicked();
 
  signals:
   void signalFirstClicked();
@@ -60,15 +61,17 @@ Q_OBJECT
   void signalNextClicked();
   void signalLastClicked();
   void signalStopClicked();
+  void signalStep();
   void signalIndexChanged(int);
   void signalSelectedFileChanged(int);
 
  private:
-  QAction *m_firstBtn, *m_prevBtn, *m_nextBtn, *m_lastBtn, *m_stopBtn;
+  QAction *m_firstBtn, *m_prevBtn, *m_nextBtn, *m_lastBtn, *m_stopBtn, *m_playBtn;
   QLineEdit *m_indexEdit;
   QComboBox *m_fileCombo;
 
   int m_maxIndex, m_currentIndex;
+  bool m_playing;
 };
 
 #endif

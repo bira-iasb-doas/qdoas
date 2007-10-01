@@ -201,6 +201,8 @@ CWMain::CWMain(QWidget *parent) :
 	  m_controller, SLOT(slotGotoFile(int)));
   connect(navPanelRecords, SIGNAL(signalStopClicked()),
 	  m_controller, SLOT(slotStopSession()));
+  connect(navPanelRecords, SIGNAL(signalStep()),
+	  m_controller, SLOT(slotStep()));
 
 
   // plot data transfer
