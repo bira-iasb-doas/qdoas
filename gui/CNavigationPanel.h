@@ -26,6 +26,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QLineEdit>
 #include <QComboBox>
 #include <QStringList>
+#include <QTimer>
+#include <QColor>
 
 // provide a set of tool-bar actions for navigation
 
@@ -38,12 +40,16 @@ Q_OBJECT
   CNavigationPanel(QToolBar *toolBar);
   virtual ~CNavigationPanel();
 
+ private:
+  QWidget* helperBuildRecordEdit(void);
+  QWidget* helperBuildDelayEdit(void);
+  void changeBackground(QWidget *widget, const QColor &c);
+
  public slots:
-  void slotSetMaxIndex(int maxIndex);
-  void slotSetCurrentIndex(int index);
   void slotSetFileList(const QStringList &fileList);
-  void slotSetCurrentFile(int index);
-  void slotSetEnabled(bool enabled); 
+  void slotSetCurrentFile(int fileIndex, int nRecords);
+  void slotSetCurrentRecord(int record);
+  void slotSetEnabled(bool enabled);
 
  private slots:
   void slotFirstClicked();
@@ -51,9 +57,13 @@ Q_OBJECT
   void slotNextClicked();
   void slotLastClicked();
   void slotStopClicked();
-  void slotIndexEditChanged();
+  void slotRecordEditChanged();
+  void slotRecordTextEdited(const QString &text);
+  void slotDelayEditChanged();
+  void slotDelayTextEdited(const QString &text);
   void slotFileSelected(int);
   void slotPlayPauseClicked();
+  void slotTimeout();
 
  signals:
   void signalFirstClicked();
@@ -62,16 +72,19 @@ Q_OBJECT
   void signalLastClicked();
   void signalStopClicked();
   void signalStep();
-  void signalIndexChanged(int);
+  void signalRecordChanged(int);
   void signalSelectedFileChanged(int);
 
  private:
   QAction *m_firstBtn, *m_prevBtn, *m_nextBtn, *m_lastBtn, *m_stopBtn, *m_playBtn;
-  QLineEdit *m_indexEdit;
+  QLineEdit *m_recordEdit, *m_delayEdit;
   QComboBox *m_fileCombo;
 
-  int m_maxIndex, m_currentIndex;
+  int m_maxRecord, m_currentRecord;
   bool m_playing;
+  bool m_recordTextTouched, m_delayTextTouched;
+  QTimer *m_playTimer;
+  QIcon m_playIcon, m_pauseIcon;
 };
 
 #endif

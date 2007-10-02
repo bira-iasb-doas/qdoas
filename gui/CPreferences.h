@@ -54,8 +54,11 @@ class CPreferences
   // for general stuff just get a handle to the settings
   QSettings& settings(void);
 
+  static QString baseName(const QString &fileName);
+  static QString dirName(const QString &fileName);
+
  private:
-  // controlled creation and prevent NO copying
+  // controlled creation and prevent copying
   CPreferences();
   CPreferences(const CPreferences &) {}
   CPreferences& operator=(const CPreferences &) { return *this; }

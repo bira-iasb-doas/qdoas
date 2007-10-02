@@ -89,9 +89,8 @@ Q_OBJECT
 
  signals:
   void signalFileListChanged(const QStringList &fileList);
-  void signalCurrentFileChanged(int fileNumber);
+  void signalCurrentFileChanged(int fileIndex, int nRecords);
   void signalCurrentFileChanged(const QString &filename);
-  void signalNumberOfRecordsChanged(int nRecords);
   void signalCurrentRecordChanged(int recordNumber);
 
   void signalPlotPages(const QList< RefCountConstPtr<CPlotPageData> > &pageList);

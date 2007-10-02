@@ -73,12 +73,8 @@ void CEngineController::notifyReadyToNavigateRecords(const QString &filename, in
   m_currentRecord = 0;
 
   // signals for navigation control
-  // records
-  emit signalNumberOfRecordsChanged(m_numberOfRecords);
-  emit signalCurrentRecordChanged(m_currentRecord);
-
+  emit signalCurrentFileChanged(m_currentIt.index(), m_numberOfRecords);
   // files
-  emit signalCurrentFileChanged(m_currentIt.index());
   emit signalCurrentFileChanged(filename);
 
   // session is up and running

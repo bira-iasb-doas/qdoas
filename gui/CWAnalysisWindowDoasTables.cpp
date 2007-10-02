@@ -25,6 +25,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "CWAnalysisWindowDoasTables.h"
 #include "CWorkSpace.h"
+#include "CPreferences.h"
 
 #include "debugutil.h"
 
@@ -295,16 +296,17 @@ void CWMoleculesDoasTable::slotInsertRow()
   if (!filter.isEmpty()) {    
     filter.append("All files (*.*)");
 
-    QString fileName = QFileDialog::getOpenFileName(this, "Select Cross Section File", QString(), filter);
+    CPreferences *prefs = CPreferences::instance();
+
+    QString fileName = QFileDialog::getOpenFileName(this, "Select Cross Section File",
+						    prefs->directoryName("CrossSection"), filter);
 
     if (!fileName.isEmpty()) {
+
+      prefs->setDirectoryNameGivenFile("CrossSection", fileName);
+
       // need to compare 'symbol'_ with the start of the bsaename of the file ...
-      QString baseName = fileName;
-      index = baseName.lastIndexOf('/');
-      if (index == -1)
-	index = baseName.lastIndexOf('\\');
-      if (index > 0)
-	baseName.remove(0, index+1);
+      QString baseName = CPreferences::baseName(fileName);
 
       // the start of the filename MUST match a free symbol ...
       it = freeSymbols.begin();

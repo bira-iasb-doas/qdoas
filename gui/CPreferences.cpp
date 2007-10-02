@@ -90,11 +90,7 @@ void CPreferences::setDirectoryName(const QString &key, const QString &directory
 void CPreferences::setDirectoryNameGivenFile(const QString &key, const QString &fileName)
 {
   // trim the file from the directory
-  int index = fileName.lastIndexOf('/');
-  if (index == -1) index = fileName.lastIndexOf('\\');
-  if (index != -1) {
-    setDirectoryName(key, fileName.left(index));
-  }
+  setDirectoryName(key, CPreferences::dirName(fileName));
 }
 
 QString CPreferences::fileExtension(const QString &key, int index, const QString &fallback) const
@@ -182,5 +178,26 @@ void CPreferences::setColumnWidthList(const QString &key, const QList<int> &widt
   
   m_settings->endArray();
   m_settings->endGroup();
+}
+
+QString CPreferences::baseName(const QString &fileName)
+{
+  QString result = fileName;
+  int index = result.lastIndexOf('/');
+  if (index == -1) index = result.lastIndexOf('\\');
+  if (index != -1)
+    result.remove(0,index+1);
+
+  return result;
+}
+
+QString CPreferences::dirName(const QString &fileName)
+{
+  int index = fileName.lastIndexOf('/');
+  if (index == -1) index = fileName.lastIndexOf('\\');
+  if (index != -1)
+    return fileName.left(index);
+
+  return fileName;
 }
 

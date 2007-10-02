@@ -174,14 +174,12 @@ CWMain::CWMain(QWidget *parent) :
   CNavigationPanel *navPanelRecords = new CNavigationPanel(m_toolBar);
   
   // connections
-  connect(m_controller, SIGNAL(signalNumberOfRecordsChanged(int)),
-	  navPanelRecords, SLOT(slotSetMaxIndex(int)));
   connect(m_controller, SIGNAL(signalCurrentRecordChanged(int)),
-	  navPanelRecords, SLOT(slotSetCurrentIndex(int)));
+	  navPanelRecords, SLOT(slotSetCurrentRecord(int)));
   connect(m_controller, SIGNAL(signalFileListChanged(const QStringList&)),
 	  navPanelRecords, SLOT(slotSetFileList(const QStringList&)));
-  connect(m_controller, SIGNAL(signalCurrentFileChanged(int)),
-	  navPanelRecords, SLOT(slotSetCurrentFile(int)));
+  connect(m_controller, SIGNAL(signalCurrentFileChanged(int,int)),
+	  navPanelRecords, SLOT(slotSetCurrentFile(int,int)));
   connect(m_controller, SIGNAL(signalSessionRunning(bool)),
 	  navPanelRecords, SLOT(slotSetEnabled(bool))); 
   connect(m_controller, SIGNAL(signalSessionRunning(bool)),
@@ -195,7 +193,7 @@ CWMain::CWMain(QWidget *parent) :
 	  m_controller, SLOT(slotNextRecord()));
   connect(navPanelRecords, SIGNAL(signalLastClicked()),
 	  m_controller, SLOT(slotLastRecord()));
-  connect(navPanelRecords, SIGNAL(signalIndexChanged(int)),
+  connect(navPanelRecords, SIGNAL(signalRecordChanged(int)),
 	  m_controller, SLOT(slotGotoRecord(int)));
   connect(navPanelRecords, SIGNAL(signalSelectedFileChanged(int)),
 	  m_controller, SLOT(slotGotoFile(int)));

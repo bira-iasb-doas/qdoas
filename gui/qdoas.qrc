@@ -19,5 +19,8 @@
     <file>icons/nav_next_22.png</file>
     <file>icons/nav_last_22.png</file>
     <file>icons/nav_stop_22.png</file>
+    <file>icons/nav_play_22.png</file>
+    <file>icons/nav_pause_22.png</file>
+    <file>icons/nav_timer_16.png</file>
 </qresource>
 </RCC>
