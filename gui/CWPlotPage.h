@@ -25,6 +25,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QSize>
 
 #include <qwt_plot.h>
+#include <qwt_plot_zoomer.h>
 
 #include "CPlotDataSet.h"
 #include "CPlotPageData.h"
@@ -36,8 +37,12 @@ class CWPlot : public QwtPlot
   CWPlot(const RefCountConstPtr<CPlotDataSet> &dataSet, QWidget *parent = 0);
   virtual ~CWPlot();
 
+ protected:
+  virtual void mousePressEvent(QMouseEvent *e);
+
  private:
   RefCountConstPtr<CPlotDataSet> m_dataSet;
+  QwtPlotZoomer *m_zoomer;
 };
 
 class CWPlotPage : public QFrame

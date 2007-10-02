@@ -19,6 +19,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
 #include <QColor>
+#include <QMouseEvent>
 
 #include <qwt_plot_curve.h>
 #include <qwt_symbol.h>
@@ -27,7 +28,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 CWPlot::CWPlot(const RefCountConstPtr<CPlotDataSet> &dataSet, QWidget *parent) :
   QwtPlot(parent),
-  m_dataSet(dataSet)
+  m_dataSet(dataSet),
+  m_zoomer(NULL)
 {
   setTitle(m_dataSet->plotTitle());
   setAxisTitle(QwtPlot::xBottom, m_dataSet->xAxisLabel());
@@ -57,8 +59,21 @@ CWPlot::CWPlot(const RefCountConstPtr<CPlotDataSet> &dataSet, QWidget *parent) :
   replot();
 }
 
+
 CWPlot::~CWPlot()
 {
+}
+
+void CWPlot::mousePressEvent(QMouseEvent *e)
+{
+  // lazy instanciate the zoomer ...
+  if (!m_zoomer) {
+    QwtPlotCanvas *c = canvas();
+    m_zoomer = new QwtPlotZoomer(c);
+    c->setCursor(Qt::ArrowCursor); // change the cursor in indicate the zooming is active
+  }
+
+  QwtPlot::mousePressEvent(e);
 }
 
 CWPlotPage::CWPlotPage(int columns, QWidget *parent) :
