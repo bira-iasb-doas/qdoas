@@ -313,7 +313,7 @@ void CWMoleculesDoasTable::slotInsertRow()
       while (it != freeSymbols.end()) {
 	QString tmp(*it);
 	tmp.append('_');
-	if (baseName.startsWith(tmp)) {
+	if (baseName.startsWith(tmp, Qt::CaseInsensitive)) {
 	  // a match to a symbol ... OK to add the row ...
 	  QList<QVariant> initialValues;
 	  addRow(24, *it, initialValues);

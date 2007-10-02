@@ -209,37 +209,21 @@ CWAnalysisWindowPropertyEditor::CWAnalysisWindowPropertyEditor(const QString &pr
 
   m_tabs = new QTabWidget(this);
 
-  QStringList junk;
-  junk << "One" << "Two" << "Three" << "Four";
-
-  CDoasTable *dummy = new CDoasTable("Cross Section", 100, 24);
-  dummy->createColumnCheck("test", 85);
-  dummy->createColumnEdit("this", 185);
-  dummy->createColumnCombo("thing", 120, junk);
-  dummy->createColumnEdit("for", 220);
-  dummy->createColumnEdit("horizontal", 200);
-  dummy->createColumnCheck("scrolling", 120);
- 
-  QList<QVariant> knuj;
-  knuj << true << "text" << "Two" << "1.234" << "comment" << false;
-  dummy->addRow(24, "BrO", knuj);
-  dummy->addRow(24, "o3727", knuj);
-
-  m_tabs->addTab(dummy, "Molecules");
-
-  m_tabs->addTab(new CWLinearParametersDoasTable("Linear Parameters", 120), "Linear Parameters");
-  m_tabs->addTab(new CWNonlinearParametersDoasTable("NL Parameters", 120), "Non-Linear Parameters");
-  CWShiftAndStretchDoasTable *shiftAndStretch = new CWShiftAndStretchDoasTable("Cross sections and spectrum", 180);
-  m_tabs->addTab(shiftAndStretch, "Shift and Stretch");
-  CWMoleculesDoasTable *molecules = new CWMoleculesDoasTable("M2", 120);
-  m_tabs->addTab(molecules, "M2");
-
-  connect(shiftAndStretch, SIGNAL(signalLockSymbol(const QString &, const QObject *)),
-	  molecules, SLOT(slotLockSymbol(const QString &, const QObject *)));
-  connect(shiftAndStretch, SIGNAL(signalUnlockSymbol(const QString &, const QObject *)),
-	  molecules, SLOT(slotUnlockSymbol(const QString &, const QObject *)));
-  connect(molecules, SIGNAL(signalSymbolListChanged(const QStringList&)),
-	  shiftAndStretch, SLOT(slotSymbolListChanged(const QStringList&)));
+  CWMoleculesDoasTable *moleculesTab = new CWMoleculesDoasTable("Molecules", 120);
+  m_tabs->addTab(moleculesTab, "Molecules");
+  CWLinearParametersDoasTable *linearTab = new CWLinearParametersDoasTable("Linear Parameters", 120);
+  m_tabs->addTab(linearTab, "Linear Parameters");
+  CWNonlinearParametersDoasTable *nonLinearTab = new CWNonlinearParametersDoasTable("NL Parameters", 120);
+  m_tabs->addTab(nonLinearTab, "Non-Linear Parameters");
+  CWShiftAndStretchDoasTable *shiftAndStretchTab = new CWShiftAndStretchDoasTable("Cross sections and spectrum", 180);
+  m_tabs->addTab(shiftAndStretchTab, "Shift and Stretch");
+  
+  connect(shiftAndStretchTab, SIGNAL(signalLockSymbol(const QString &, const QObject *)),
+	  moleculesTab, SLOT(slotLockSymbol(const QString &, const QObject *)));
+  connect(shiftAndStretchTab, SIGNAL(signalUnlockSymbol(const QString &, const QObject *)),
+	  moleculesTab, SLOT(slotUnlockSymbol(const QString &, const QObject *)));
+  connect(moleculesTab, SIGNAL(signalSymbolListChanged(const QStringList&)),
+	  shiftAndStretchTab, SLOT(slotSymbolListChanged(const QStringList&)));
 
   mainLayout->addWidget(m_tabs, 1);
 

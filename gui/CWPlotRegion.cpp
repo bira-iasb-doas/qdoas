@@ -37,7 +37,7 @@ CWPlotRegion::CWPlotRegion(QWidget *parent) :
 
   QLabel *splash = new QLabel;
   splash->setPixmap(QPixmap(":/images/splash.png"));
-
+  splash->setAlignment(Qt::AlignCenter);
 
   setWidget(splash);
 }
@@ -108,7 +108,13 @@ void CWPlotRegion::resizeEvent(QResizeEvent *e)
 {
   m_visibleSize = e->size();
 
-  if (m_plotPage)
+  if (m_plotPage) {
     m_plotPage->layoutPlots(m_visibleSize);
+  }
+  else {
+    QWidget *w = widget();
+    if (w)
+      w->resize(m_visibleSize);
+  }
 }
 

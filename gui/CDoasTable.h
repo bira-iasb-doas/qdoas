@@ -248,14 +248,5 @@ class CDoasTableColumnCheck : public CDoasTableColumn
   virtual QWidget* createCellWidget(const QVariant &cellData);
 };
 
-class Dummy : public CDoasTable
-{
- public:
-  Dummy(const QString &label, QWidget *parent = 0);
-  virtual ~Dummy();
-
-  virtual void cellDataChanged(int row, int column, const QVariant &cellData);  
-};
-
 #endif
 
