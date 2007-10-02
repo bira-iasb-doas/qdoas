@@ -72,7 +72,7 @@ Q_OBJECT
   void setHeaderLabel(int rowIndex, const QString &label);
 
   virtual void resizeEvent(QResizeEvent *e);
-  virtual void contextMenuEvent(QContextMenuEvent *e);
+  //  virtual void contextMenuEvent(QContextMenuEvent *e);
   //  virtual void keyPressEvent(QKeyEvent *e);
 
   void calcHorizontalScrollRange(void);

@@ -308,41 +308,6 @@ void CDoasTable::resizeEvent(QResizeEvent *e)
   calcVerticalScrollRange();
 }
 
-void CDoasTable::contextMenuEvent(QContextMenuEvent *e)
-{
-  static int junk = 0;
-
-  if ((2 * e->x()) < width()) {
-    std::cout << "adding row" << std::endl;
-
-    QList<QVariant> initialValues;
-
-    initialValues.push_back(QVariant("dummy"));
-    initialValues.push_back(QVariant("Joe"));
-    initialValues.push_back(QVariant(false));
-
-    QString tmp;
-    tmp.sprintf("Label %d", ++junk);
-
-    addRow(24, tmp, initialValues);
-  }
-  else if (m_rowHeightList.count()) {
-    int rowIndex = e->y() % m_rowHeightList.count();
-
-    std::cout << "removing row " << rowIndex << std::endl;
-
-    QList<QVariant> data = getCellData(rowIndex);
-    QList<QVariant>::iterator it = data.begin();
-    while (it != data.end()) {
-      std::cout << "   " << it->toString().toStdString();
-      ++it;
-    }
-    std::cout << std::endl;
-    
-    removeRow(rowIndex);
-  }
-}
-
 void CDoasTable::calcHorizontalScrollRange(void)
 {
   int sum = 0;
