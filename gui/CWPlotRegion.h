@@ -17,6 +17,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
+
 #ifndef _CWPLOTREGION_H_GUARD
 #define _CWPLOTREGION_H_GUARD
 
@@ -24,6 +25,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QString>
 #include <QSize>
 
+#include "CPlotProperties.h"
 #include "CPlotPageData.h"
 #include "RefCountPtr.h"
 
@@ -44,10 +46,16 @@ class CWPlotRegion : public QScrollArea
   QString pageTitle(int pageNumber) const;
   QString pageTag(int pageNumber) const;
 
+  const CPlotProperties& properties(void) const;
+  void setProperties(const CPlotProperties &properties);
+
+  void savePreferences(void) const;
+
  protected:
   void resizeEvent(QResizeEvent *e);
 
  private:
+  CPlotProperties m_properties;
   CWPlotPage *m_plotPage;
   std::map< int,RefCountConstPtr<CPlotPageData> > m_pageMap;
   int m_activePageNumber;

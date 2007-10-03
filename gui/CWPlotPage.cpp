@@ -26,7 +26,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "CWPlotPage.h"
 
-CWPlot::CWPlot(const RefCountConstPtr<CPlotDataSet> &dataSet, QWidget *parent) :
+CWPlot::CWPlot(const RefCountConstPtr<CPlotDataSet> &dataSet,
+	       const CPlotProperties &plotProperties, QWidget *parent) :
   QwtPlot(parent),
   m_dataSet(dataSet),
   m_zoomer(NULL)
@@ -41,7 +42,11 @@ CWPlot::CWPlot(const RefCountConstPtr<CPlotDataSet> &dataSet, QWidget *parent) :
   int i = 0;
   while (i < n) {
     QwtPlotCurve *curve = new QwtPlotCurve();
+
     curve->setData(m_dataSet->curve(i));
+
+    // configure curve's pen color based on type
+    curve->setPen(plotProperties.pen(m_dataSet->type(i)));
 
     if (m_dataSet->type(i) == PlotDataType_Points) {
       curve->setStyle(QwtPlotCurve::NoCurve);
@@ -54,7 +59,7 @@ CWPlot::CWPlot(const RefCountConstPtr<CPlotDataSet> &dataSet, QWidget *parent) :
     ++i;
   }
     
-  setCanvasBackground(QColor(0xffffffff));
+  setCanvasBackground(plotProperties.backgroundColour());
 
   replot();
 }
@@ -71,20 +76,25 @@ void CWPlot::mousePressEvent(QMouseEvent *e)
     QwtPlotCanvas *c = canvas();
     m_zoomer = new QwtPlotZoomer(c);
     c->setCursor(Qt::ArrowCursor); // change the cursor in indicate the zooming is active
+    // contrasting colour ...
+    m_zoomer->setRubberBandPen(QPen((canvasBackground().value() < 128) ? Qt::white : Qt::black));
   }
 
   QwtPlot::mousePressEvent(e);
 }
 
-CWPlotPage::CWPlotPage(int columns, QWidget *parent) :
+CWPlotPage::CWPlotPage(const CPlotProperties &plotProperties, int columns, QWidget *parent) :
   QFrame(parent),
+  m_plotProperties(plotProperties),
   m_columns(columns)
 {
   if (m_columns < 1) m_columns = 1;
 }
 
-CWPlotPage::CWPlotPage(int columns, const RefCountConstPtr<CPlotPageData> &page, QWidget *parent) :
+CWPlotPage::CWPlotPage(const CPlotProperties &plotProperties, int columns,
+		       const RefCountConstPtr<CPlotPageData> &page, QWidget *parent) :
   QFrame(parent),
+  m_plotProperties(plotProperties),
   m_columns(columns)
 {
   if (m_columns < 1) m_columns = 1;
@@ -94,7 +104,7 @@ CWPlotPage::CWPlotPage(int columns, const RefCountConstPtr<CPlotPageData> &page,
     int nPlots = page->size();
     int i = 0;
     while (i < nPlots) {
-      CWPlot *tmp = new CWPlot(page->dataSet(i), this);
+      CWPlot *tmp = new CWPlot(page->dataSet(i), m_plotProperties, this);
       tmp->hide();
       m_plots.push_back(tmp);
       ++i;
@@ -108,7 +118,7 @@ CWPlotPage::~CWPlotPage()
 
 void CWPlotPage::addPlot(const RefCountConstPtr<CPlotDataSet> &dataSet)
 {
-  CWPlot *tmp = new CWPlot(dataSet, this);
+  CWPlot *tmp = new CWPlot(dataSet, m_plotProperties, this);
   tmp->hide();
   m_plots.push_back(tmp);
 }

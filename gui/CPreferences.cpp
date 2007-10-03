@@ -20,6 +20,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include <QCoreApplication>
 #include <QTextStream>
+#include <QVariant>
 
 #include "CPreferences.h"
 
@@ -179,6 +180,57 @@ void CPreferences::setColumnWidthList(const QString &key, const QList<int> &widt
   m_settings->endArray();
   m_settings->endGroup();
 }
+
+QPen CPreferences::plotPen(const QString &key, const QPen &fallback) const
+{
+  QPen result(fallback);
+
+  m_settings->beginGroup("PlotProperties");
+  
+  QVariant v = m_settings->value(key);
+  if (v.canConvert(QVariant::Pen))
+    result = v.value<QPen>();
+    
+  m_settings->endGroup();
+
+  return result;
+}
+
+void CPreferences::setPlotPen(const QString &key, const QPen &pen)
+{
+  m_settings->beginGroup("PlotProperties");
+  
+  QVariant v = pen;
+  m_settings->setValue(key, v);
+
+  m_settings->endGroup();  
+}
+
+QColor CPreferences::plotColour(const QString &key, const QColor &fallback) const
+{
+  QColor result(fallback);
+
+  m_settings->beginGroup("PlotProperties");
+  
+  QVariant v = m_settings->value(key);
+  if (v.canConvert(QVariant::Color))
+    result = v.value<QColor>();
+    
+  m_settings->endGroup();
+
+  return result;
+}
+
+void CPreferences::setPlotColour(const QString &key, const QColor &colour)
+{
+  m_settings->beginGroup("PlotProperties");
+  
+  QVariant v = colour;
+  m_settings->setValue(key, v);
+
+  m_settings->endGroup();  
+}
+
 
 QString CPreferences::baseName(const QString &fileName)
 {

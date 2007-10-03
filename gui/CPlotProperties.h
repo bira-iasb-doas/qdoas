@@ -18,31 +18,37 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
 
-#ifndef _CWSYMBOLEDITOR_H_GUARD
-#define _CWSYMBOLEDITOR_H_GUARD
+#ifndef _CPLOTPROPERTIES_H_GUARD
+#define _CPLOTPROPERTIES_H_GUARD
 
-#include <QLineEdit>
+#include <vector>
+#include <QPen>
+#include <QColor>
 
-#include "CWEditor.h"
+#include "mediate_types.h"
 
-class CWSymbolEditor : public CWEditor
+class CPlotProperties
 {
-Q_OBJECT
  public:
-  CWSymbolEditor(QWidget *parent = 0);
-  virtual ~CWSymbolEditor();
+  CPlotProperties();
+  CPlotProperties(const CPlotProperties &other);
+  ~CPlotProperties();
 
-  virtual bool actionOk(void);
-  virtual void actionHelp(void);
+  CPlotProperties& operator=(const CPlotProperties &rhs);
 
-  virtual void takeFocus(void);
+  const QPen& pen(enum ePlotDataType plotType) const;
+  void setPen(enum ePlotDataType plotType, const QPen &pen);
 
- public slots:
-  void slotNameChanged(const QString &text);
-  void slotReturnPressed();
+  const QColor& backgroundColour(void) const;
+  void setBackgroundColour(const QColor &c);
 
  private:
-  QLineEdit *m_symbolName, *m_description;
+  QPen m_defaultPen;
+  std::vector<QPen> m_pens;
+  QColor m_bgColour;
 };
+
+inline const QColor& CPlotProperties::backgroundColour(void) const { return m_bgColour; }
+inline void CPlotProperties::setBackgroundColour(const QColor &c) { m_bgColour = c; }
 
 #endif

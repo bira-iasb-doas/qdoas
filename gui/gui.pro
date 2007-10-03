@@ -6,7 +6,7 @@ TEMPLATE = app
 TARGET   = qdoas
 
 unix {
-  CONFIG += qt thread debug
+  CONFIG += qt thread release
   QT = core gui xml
 
   # for trace-write debugging ...
@@ -44,6 +44,7 @@ SOURCES += CEngineResponse.cpp
 SOURCES += CEngineError.cpp
 SOURCES += CEngineThread.cpp
 SOURCES += CNavigationPanel.cpp
+SOURCES += CPlotProperties.cpp
 SOURCES += CPlotDataSet.cpp
 SOURCES += CPlotPageData.cpp
 SOURCES += CTablePageData.cpp
@@ -82,6 +83,7 @@ SOURCES += CWProjectTree.cpp
 SOURCES += CWAnalysisWindowPropertyEditor.cpp
 SOURCES += CWSiteEditor.cpp
 SOURCES += CWSiteTree.cpp
+SOURCES += CWPlotPropertiesEditor.cpp
 SOURCES += CWSplitter.cpp
 SOURCES += CWSymbolEditor.cpp
 SOURCES += CWUserSymbolTree.cpp
@@ -104,6 +106,7 @@ HEADERS += CEngineResponse.h
 HEADERS += CENgineError.h
 HEADERS += CEngineThread.h
 HEADERS += CNavigationPanel.h
+HEADERS += CPlotProperties.h
 HEADERS += CPlotDataSet.h
 HEADERS += CPlotPageData.h
 HEADERS += CTablePageData.h
@@ -142,6 +145,7 @@ HEADERS += CWProjectTree.h
 HEADERS += CWAnalysisWindowPropertyEditor.h
 HEADERS += CWSiteEditor.h
 HEADERS += CWSiteTree.h
+HEADERS += CWPlotPropertiesEditor.h
 HEADERS += CWSplitter.h
 HEADERS += CWSymbolEditor.h
 HEADERS += CWUserSymbolTree.h

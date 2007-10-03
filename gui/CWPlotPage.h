@@ -27,6 +27,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <qwt_plot.h>
 #include <qwt_plot_zoomer.h>
 
+#include "CPlotProperties.h"
 #include "CPlotDataSet.h"
 #include "CPlotPageData.h"
 #include "RefCountPtr.h"
@@ -34,7 +35,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 class CWPlot : public QwtPlot
 {
  public:
-  CWPlot(const RefCountConstPtr<CPlotDataSet> &dataSet, QWidget *parent = 0);
+  CWPlot(const RefCountConstPtr<CPlotDataSet> &dataSet, const CPlotProperties &plotProperties, QWidget *parent = 0);
   virtual ~CWPlot();
 
  protected:
@@ -48,8 +49,9 @@ class CWPlot : public QwtPlot
 class CWPlotPage : public QFrame
 {
  public:
-  CWPlotPage(int columns, QWidget *parent = 0);
-  CWPlotPage(int columns, const RefCountConstPtr<CPlotPageData> &page, QWidget *parent = 0);
+  CWPlotPage(const CPlotProperties &plotProperties, int columns, QWidget *parent = 0);
+  CWPlotPage(const CPlotProperties &plotProperties, int columns,
+	     const RefCountConstPtr<CPlotPageData> &page, QWidget *parent = 0);
   virtual ~CWPlotPage();
 
   void addPlot(const RefCountConstPtr<CPlotDataSet> &dataSet);
@@ -59,6 +61,7 @@ class CWPlotPage : public QFrame
   //  virtual void resizeEvent(QResizeEvent *e);
 
  private:
+  const CPlotProperties &m_plotProperties;
   int m_columns;
   QList<CWPlot*> m_plots;
 };

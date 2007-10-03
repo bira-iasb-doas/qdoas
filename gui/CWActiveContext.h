@@ -41,6 +41,8 @@ Q_OBJECT
 
   void addEditor(CWEditor *editor); // reparents and takes ownership of editor.
   
+  void savePreferences(void) const;
+
  protected:
   virtual bool event(QEvent *e);
   virtual void resizeEvent(QResizeEvent *e);
@@ -59,6 +61,7 @@ Q_OBJECT
   void slotCurrentGraphTabChanged(int index);
   void slotCurrentActiveTabChanged(int index);
 
+  void slotEditPlotProperties();
 
  private:
   void discardCurrentEditor(void);

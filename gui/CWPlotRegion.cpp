@@ -27,6 +27,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "CWPlotRegion.h"
 #include "CWPlotPage.h"
+#include "CPreferences.h"
 
 CWPlotRegion::CWPlotRegion(QWidget *parent) :
   QScrollArea(parent),
@@ -40,6 +41,20 @@ CWPlotRegion::CWPlotRegion(QWidget *parent) :
   splash->setAlignment(Qt::AlignCenter);
 
   setWidget(splash);
+
+  // restore the plot properties from preferences
+  QPen pen(Qt::black);
+  QColor colour(Qt::white);
+
+  CPreferences *pref = CPreferences::instance();
+
+  m_properties.setPen(PlotDataType_Spectrum, pref->plotPen("Spectrum", pen));
+  m_properties.setPen(PlotDataType_Fit, pref->plotPen("Fit", pen));
+  m_properties.setPen(PlotDataType_Shift, pref->plotPen("Shift", pen));
+  m_properties.setPen(PlotDataType_Fwhm, pref->plotPen("Fwhm", pen));
+  m_properties.setPen(PlotDataType_Points, pref->plotPen("Points", pen));
+
+  m_properties.setBackgroundColour(pref->plotColour("Background", colour));
 }
 
 CWPlotRegion::~CWPlotRegion()
@@ -52,7 +67,7 @@ void CWPlotRegion::removeAllPages()
   m_pageMap.clear();
 
   m_plotPage = NULL;
-  setWidget(m_plotPage); // deletes the current 'viewport widget'
+  //setWidget(m_plotPage); // deletes the current 'viewport widget'
 }
 
 void CWPlotRegion::addPage(const RefCountConstPtr<CPlotPageData> &page)
@@ -70,14 +85,15 @@ void CWPlotRegion::displayPage(int pageNumber, int columns)
   std::map< int,RefCountConstPtr<CPlotPageData> >::iterator it = m_pageMap.find(pageNumber);
   if (it != m_pageMap.end()) {
     m_activePageNumber = pageNumber;
-    m_plotPage = new CWPlotPage(columns, it->second);
+    m_plotPage = new CWPlotPage(m_properties, columns, it->second);
     setWidget(m_plotPage); // takes care of deleting the old widget
     m_plotPage->layoutPlots(m_visibleSize);
     m_plotPage->show();
   }
   else {
     m_activePageNumber = -1; // invalid page number
-    setWidget((m_plotPage = NULL));
+    m_plotPage = NULL;
+    setWidget(m_plotPage);
   }
 }
 
@@ -102,6 +118,29 @@ QString CWPlotRegion::pageTag(int pageNumber) const
     return (it->second)->tag();
 
   return QString();
+}
+
+const CPlotProperties& CWPlotRegion::properties(void) const
+{
+  return m_properties;
+}
+
+void CWPlotRegion::setProperties(const CPlotProperties &properties)
+{
+  m_properties = properties;
+}
+
+void CWPlotRegion::savePreferences(void) const
+{
+  CPreferences *pref = CPreferences::instance();
+
+  pref->setPlotPen("Spectrum", m_properties.pen(PlotDataType_Spectrum));
+  pref->setPlotPen("Fit", m_properties.pen(PlotDataType_Fit));
+  pref->setPlotPen("Shift", m_properties.pen(PlotDataType_Shift));
+  pref->setPlotPen("Fwhm", m_properties.pen(PlotDataType_Fwhm));
+  pref->setPlotPen("Points", m_properties.pen(PlotDataType_Points));
+
+  pref->setPlotColour("Background", m_properties.backgroundColour());
 }
 
 void CWPlotRegion::resizeEvent(QResizeEvent *e)

@@ -28,6 +28,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "CWActiveContext.h"
 #include "CWPlotPage.h"
 #include "CWPlotRegion.h"
+#include "CWPlotPropertiesEditor.h"
 
 #include "debugutil.h"
 
@@ -235,6 +236,11 @@ void CWActiveContext::addEditor(CWEditor *editor)
   }
 }
   
+void CWActiveContext::savePreferences(void) const
+{
+  m_plotRegion->savePreferences();
+}
+
 QSize CWActiveContext::minimumSizeHint() const
 {
   return QSize(m_minGeneralSize.width() + 30, m_minGeneralSize.height());
@@ -566,3 +572,7 @@ void CWActiveContext::slotCurrentActiveTabChanged(int index)
   }
 }
 
+void CWActiveContext::slotEditPlotProperties()
+{
+  addEditor(new CWPlotPropertiesEditor(m_plotRegion));
+}

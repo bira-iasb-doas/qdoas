@@ -95,6 +95,7 @@ CWMain::CWMain(QWidget *parent) :
   // Tool Bar
 
   m_toolBar = new QToolBar(this);
+
   m_toolBar->addAction(openAct);
   m_toolBar->addAction(m_saveAction);
   m_toolBar->addAction(m_saveAsAction);
@@ -173,6 +174,13 @@ CWMain::CWMain(QWidget *parent) :
 
   CNavigationPanel *navPanelRecords = new CNavigationPanel(m_toolBar);
   
+  m_toolBar->addSeparator();
+
+  // plot properties
+  QAction *plotPropAction = new QAction(QIcon(QPixmap(":/icons/plot_prop_22.png")), "Plot Prop.", this);
+  connect(plotPropAction, SIGNAL(triggered()), m_activeContext, SLOT(slotEditPlotProperties()));
+  m_toolBar->addAction(plotPropAction);
+
   // connections
   connect(m_controller, SIGNAL(signalCurrentRecordChanged(int)),
 	  navPanelRecords, SLOT(slotSetCurrentRecord(int)));
@@ -220,6 +228,7 @@ CWMain::CWMain(QWidget *parent) :
   connect(m_activeContext, SIGNAL(signalActivePageChanged(int)),
 	  m_tableRegion, SLOT(slotDisplayPage(int)));
 
+
   // icon
   setWindowIcon(QIcon(QPixmap(":/icons/logo.png")));
 
@@ -239,6 +248,7 @@ void CWMain::closeEvent(QCloseEvent *e)
   m_siteTree->savePreferences();
   m_userSymbolTree->savePreferences();
   m_subSplitter->savePreferences();
+  m_activeContext->savePreferences();
 
   // flush write and close ...
   delete CPreferences::instance();

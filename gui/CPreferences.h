@@ -25,6 +25,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QSize>
 #include <QString>
 #include <QList>
+#include <QPen>
+#include <QColor>
 
 // WARNING - This class is NOT thread safe. ONLY use this in the main thread of the GUI.
 
@@ -50,6 +52,12 @@ class CPreferences
 
   QList<int> columnWidthList(const QString &key, const QList<int> &fallback = QList<int>()) const;
   void setColumnWidthList(const QString &key, const QList<int> &widthList);
+
+  QPen plotPen(const QString &key, const QPen &fallback = QPen()) const;
+  void setPlotPen(const QString &key, const QPen &pen);
+
+  QColor plotColour(const QString &key, const QColor &fallback = QColor()) const;
+  void setPlotColour(const QString &key, const QColor &colour);
 
   // for general stuff just get a handle to the settings
   QSettings& settings(void);
