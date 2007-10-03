@@ -87,6 +87,7 @@ SOURCES += CWPlotPropertiesEditor.cpp
 SOURCES += CWSplitter.cpp
 SOURCES += CWSymbolEditor.cpp
 SOURCES += CWUserSymbolTree.cpp
+SOURCES += CWAboutDialog.cpp
 SOURCES += CPreferences.cpp
 SOURCES += qdoas.cpp
 #----------------------------------------------
@@ -149,6 +150,7 @@ HEADERS += CWPlotPropertiesEditor.h
 HEADERS += CWSplitter.h
 HEADERS += CWSymbolEditor.h
 HEADERS += CWUserSymbolTree.h
+HEADERS += CWAboutDialog.h
 HEADERS += debugutil.h
 HEADERS += RefCountPtr.h
 HEADERS += CPreferences.h

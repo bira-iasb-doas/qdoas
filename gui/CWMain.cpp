@@ -28,6 +28,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QFileDialog>
 #include <QSettings> // TODO
 #include <QCloseEvent>
+#include <QApplication>
 
 #include "CWMain.h"
 #include "CWProjectTree.h"
@@ -36,6 +37,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "CWActiveContext.h"
 #include "CWSplitter.h"
 #include "CWTableRegion.h"
+#include "CWAboutDialog.h"
 
 #include "CEngineController.h"
 #include "CNavigationPanel.h"
@@ -56,50 +58,15 @@ CWMain::CWMain(QWidget *parent) :
   mainLayout->setSpacing(0);
 
   //------------------------------
-  // Meuu Bar
+  // Menu Bar
 
   m_menuBar = new QMenuBar(this);
-
-  // File Menu
-  QMenu *fileMenu = new QMenu("File");
-
-  // Open...
-  QAction *openAct = new QAction(QIcon(QPixmap(":/icons/file_open_16.png")), "Open...", this);
-  connect(openAct, SIGNAL(triggered()), this, SLOT(slotOpenFile()));
-  fileMenu->addAction(openAct);
-
-  fileMenu->addSeparator();
-
-  // Save + Save As ...
-  m_saveAction = new QAction(QIcon(QPixmap(":/icons/file_save_16.png")), "Save", this);
-  connect(m_saveAction, SIGNAL(triggered()), this, SLOT(slotSaveFile()));
-  fileMenu->addAction(m_saveAction);
-
-  m_saveAsAction = new QAction(QIcon(QPixmap(":/icons/file_saveas_16.png")), "Save As...", this);
-  connect(m_saveAsAction, SIGNAL(triggered()), this, SLOT(slotSaveAsFile()));
-  fileMenu->addAction(m_saveAsAction);
-
-  // Quit
-  fileMenu->addSeparator();
-  QAction *exitAct = new QAction(QIcon(QPixmap(":/icons/file_exit_16.png")), "Quit", this);
-  connect(exitAct, SIGNAL(triggered()), this, SLOT(close()));
-  fileMenu->addAction(exitAct);
-
-  m_menuBar->addMenu(fileMenu);
-
   mainLayout->addWidget(m_menuBar, 0);
-
-  // XXX Menu
 
   //------------------------------
   // Tool Bar
 
   m_toolBar = new QToolBar(this);
-
-  m_toolBar->addAction(openAct);
-  m_toolBar->addAction(m_saveAction);
-  m_toolBar->addAction(m_saveAsAction);
-
   QHBoxLayout *tbLayout = new QHBoxLayout;
 
   tbLayout->addWidget(m_toolBar, 0);
@@ -107,12 +74,6 @@ CWMain::CWMain(QWidget *parent) :
   mainLayout->addLayout(tbLayout, 0);
   
   //------------------------------
-
-  m_saveAction->setEnabled(false);
-  m_saveAsAction->setEnabled(false);
-
-  //------------------------------
-
 
   m_activeContext = new CWActiveContext;
 
@@ -170,16 +131,67 @@ CWMain::CWMain(QWidget *parent) :
           m_controller,
 	  SLOT(slotStartBrowseSession(const RefCountPtr<CSession>&)));
 
+  // Menu and toolbar actions
+
+  // File Menu
+  QMenu *fileMenu = new QMenu("File");
+
+  // Open...
+  QAction *openAct = new QAction(QIcon(QPixmap(":/icons/file_open_16.png")), "Open...", this);
+  connect(openAct, SIGNAL(triggered()), this, SLOT(slotOpenFile()));
+  fileMenu->addAction(openAct);
+  m_toolBar->addAction(openAct);
+
+  fileMenu->addSeparator();
+
+  // Save + Save As ...
+  m_saveAction = new QAction(QIcon(QPixmap(":/icons/file_save_16.png")), "Save", this);
+  m_saveAction->setEnabled(false);
+  connect(m_saveAction, SIGNAL(triggered()), this, SLOT(slotSaveFile()));
+  fileMenu->addAction(m_saveAction);
+  m_toolBar->addAction(m_saveAction);
+
+  m_saveAsAction = new QAction(QIcon(QPixmap(":/icons/file_saveas_16.png")), "Save As...", this);
+  m_saveAsAction->setEnabled(false);
+  connect(m_saveAsAction, SIGNAL(triggered()), this, SLOT(slotSaveAsFile()));
+  fileMenu->addAction(m_saveAsAction);
+  m_toolBar->addAction(m_saveAsAction);
+
+  // Quit
+  fileMenu->addSeparator();
+  QAction *exitAct = new QAction(QIcon(QPixmap(":/icons/file_exit_16.png")), "Quit", this);
+  connect(exitAct, SIGNAL(triggered()), this, SLOT(close()));
+  fileMenu->addAction(exitAct);
+
+  m_menuBar->addMenu(fileMenu);
+
+  // navigation panel
+  m_toolBar->addSeparator();
+  CNavigationPanel *navPanelRecords = new CNavigationPanel(m_toolBar);
   m_toolBar->addSeparator();
 
-  CNavigationPanel *navPanelRecords = new CNavigationPanel(m_toolBar);
-  
-  m_toolBar->addSeparator();
+  // Plot menu
+  QMenu *plotMenu = new QMenu("Plot");
 
   // plot properties
-  QAction *plotPropAction = new QAction(QIcon(QPixmap(":/icons/plot_prop_22.png")), "Plot Prop.", this);
+  QAction *plotPropAction = new QAction(QIcon(QPixmap(":/icons/plot_prop_22.png")), "Plot Properties...", this);
   connect(plotPropAction, SIGNAL(triggered()), m_activeContext, SLOT(slotEditPlotProperties()));
+  plotMenu->addAction(plotPropAction);
   m_toolBar->addAction(plotPropAction);
+
+  m_menuBar->addMenu(plotMenu);
+
+  // Help Menu
+  QMenu *helpMenu = new QMenu("Help");
+
+  // About
+  helpMenu->addAction("About Qdoas", this, SLOT(slotAboutQdoas()));
+  helpMenu->addSeparator();
+  helpMenu->addAction("About Qt", this, SLOT(slotAboutQt()));
+
+  m_menuBar->addMenu(helpMenu);
+
+
 
   // connections
   connect(m_controller, SIGNAL(signalCurrentRecordChanged(int)),
@@ -375,6 +387,17 @@ void CWMain::slotSaveFile()
   if (!msg.isNull())
     QMessageBox::critical(this, "Project File Write Failure", msg, QMessageBox::Ok);
   
+}
+
+void CWMain::slotAboutQdoas()
+{
+  CWAboutDialog dialog(this);
+  dialog.exec();
+}
+
+void CWMain::slotAboutQt()
+{
+  QApplication::aboutQt();
 }
 
 void CWMain::slotErrorMessages(int highestLevel, const QString &messages)

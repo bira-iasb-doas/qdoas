@@ -57,8 +57,10 @@ Q_OBJECT
   void slotOpenFile();
   void slotSaveFile();
   void slotSaveAsFile();
+  void slotAboutQdoas();
+  void slotAboutQt();
   void slotErrorMessages(int highestLevel, const QString &messages);
-
+  
  private:
   QMenuBar *m_menuBar;
   QToolBar *m_toolBar;
