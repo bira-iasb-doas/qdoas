@@ -84,6 +84,7 @@ Q_OBJECT
   static QList<QTreeWidgetItem*> directoryItems(const QList<QTreeWidgetItem*> &items);
   static QTreeWidgetItem* locateChildByName(QTreeWidgetItem *parent, const QString &childName);
   static void buildSession(CSession *session, CProjectTreeItem *item);
+  static void collateErrorMessage(QString &errStr, const QString &msg);
 
  private:
   QString buildRawSpectraTree(QTreeWidgetItem *parent, const CProjectConfigTreeNode *childConfigItem);

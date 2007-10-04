@@ -18,8 +18,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
 
-#include <assert.h>
-
 #include <QMenu>
 #include <QDateTime>
 #include <QKeyEvent>
@@ -32,29 +30,26 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QMessageBox>
 
 #include "CWorkSpace.h"
-
 #include "CWProjectTree.h"
-
 #include "CWProjectNameEditor.h"
 #include "CWProjectFolderNameEditor.h"
 #include "CWProjectDirectoryEditor.h"
 #include "CWProjectAnalysisWindowNameEditor.h"
 #include "CWProjectPropertyEditor.h"
 #include "CWAnalysisWindowPropertyEditor.h"
-
 #include "CWActiveContext.h"
-
 #include "CSession.h"
 #include "RefCountPtr.h"
-
 #include "CPreferences.h"
 
 #include "debugutil.h"
 
-
+// Somewhat arbitrary constants that need to be unique for all widgets coupled to the
+// CWSplitter widget.
 const int cProjectTreeHideDetailMode   = 27;
 const int cProjectTreeShowDetailMode   = 28;
 
+// Title bar (Plot/Edit) colours (0xAARRGGBB)
 const QRgb cDisabledTextColour         = 0xFFAAAAAA;
 const QRgb cProjectTextColour          = 0xFFA93F26;
 
@@ -141,7 +136,7 @@ void CWProjectTree::contextMenuEvent(QContextMenuEvent *e)
   // Insert ...
   // Refresh
   //------------------------------
-  // Run Analysis + Browse Spectra
+  // Run Analysis + Browse Spectra + Calibration (disabled if session is active)
   //------------------------------
   // Cut/Copy/Paste/Delete
   //------------------------------
@@ -154,8 +149,8 @@ void CWProjectTree::contextMenuEvent(QContextMenuEvent *e)
     menu.addAction("Disable", this, SLOT(slotDisable()));
     menu.addAction("Enable/Disable", this, SLOT(slotToggleEnable()));
     menu.addSeparator();
-    menu.addAction("Run Analysis", this, SLOT(slotRunAnalysis()));
-    menu.addAction("Browse Spectra", this, SLOT(slotBrowseSpectra()));
+    menu.addAction("Run Analysis", this, SLOT(slotRunAnalysis()))->setEnabled(!m_sessionActive);
+    menu.addAction("Browse Spectra", this, SLOT(slotBrowseSpectra()))->setEnabled(!m_sessionActive);
     menu.addSeparator();
     menu.addAction("Delete", this, SLOT(slotDeleteSelection()));
   }
@@ -171,8 +166,8 @@ void CWProjectTree::contextMenuEvent(QContextMenuEvent *e)
                      SLOT(slotToggleEnable()));
       menu.addAction("Refresh", this, SLOT(slotRefreshDirectories()));
       menu.addSeparator();
-      menu.addAction("Run Analysis", this, SLOT(slotRunAnalysis()));
-      menu.addAction("Browse Spectra", this, SLOT(slotBrowseSpectra()));
+      menu.addAction("Run Analysis", this, SLOT(slotRunAnalysis()))->setEnabled(!m_sessionActive);
+      menu.addAction("Browse Spectra", this, SLOT(slotBrowseSpectra()))->setEnabled(!m_sessionActive);
       if (projItem->parent() && projItem->parent()->type() != cSpectraDirectoryItemType) {
         // Cant delete an item that is a child of a directory item
         menu.addSeparator();
@@ -190,8 +185,8 @@ void CWProjectTree::contextMenuEvent(QContextMenuEvent *e)
       menu.addAction("Insert Directory...", this, SLOT(slotInsertDirectory()));
       menu.addAction("Insert File...", this, SLOT(slotInsertFile()));
       menu.addSeparator();
-      menu.addAction("Run Analysis", this, SLOT(slotRunAnalysis()));
-      menu.addAction("Browse Spectra", this, SLOT(slotBrowseSpectra()));
+      menu.addAction("Run Analysis", this, SLOT(slotRunAnalysis()))->setEnabled(!m_sessionActive);
+      menu.addAction("Browse Spectra", this, SLOT(slotBrowseSpectra()))->setEnabled(!m_sessionActive);
       menu.addSeparator();
       menu.addAction("Delete", this, SLOT(slotDeleteSelection()));
     }
@@ -202,8 +197,8 @@ void CWProjectTree::contextMenuEvent(QContextMenuEvent *e)
       menu.addAction(projItem->isEnabled() ? "Disable" : "Enable", this,
                      SLOT(slotToggleEnable()));
       menu.addSeparator();
-      menu.addAction("Run Analysis", this, SLOT(slotRunAnalysis()));
-      menu.addAction("Browse Spectra", this, SLOT(slotBrowseSpectra()));
+      menu.addAction("Run Analysis", this, SLOT(slotRunAnalysis()))->setEnabled(!m_sessionActive);
+      menu.addAction("Browse Spectra", this, SLOT(slotBrowseSpectra()))->setEnabled(!m_sessionActive);
       if (projItem->parent() && projItem->parent()->type() != cSpectraDirectoryItemType) {
         // Cant delete an item that is a child of a directory item
         menu.addSeparator();
@@ -216,8 +211,8 @@ void CWProjectTree::contextMenuEvent(QContextMenuEvent *e)
       menu.addAction("Insert Directory...", this, SLOT(slotInsertDirectory()));
       menu.addAction("Insert File...", this, SLOT(slotInsertFile()));
       menu.addSeparator();
-      menu.addAction("Run Analysis", this, SLOT(slotRunAnalysis()));
-      menu.addAction("Browse Spectra", this, SLOT(slotBrowseSpectra()));
+      menu.addAction("Run Analysis", this, SLOT(slotRunAnalysis()))->setEnabled(!m_sessionActive);
+      menu.addAction("Browse Spectra", this, SLOT(slotBrowseSpectra()))->setEnabled(!m_sessionActive);
       menu.addSeparator();
       // cant remove this item - refers to all children
       menu.addAction("Delete All", this, SLOT(slotDeleteAllSpectra()));
@@ -250,8 +245,8 @@ void CWProjectTree::contextMenuEvent(QContextMenuEvent *e)
       menu.addAction("New Project...", this, SLOT(slotCreateProject()));
       menu.addAction("Properties...", this, SLOT(slotEditProject()));
       menu.addSeparator();
-      menu.addAction("Run Analysis", this, SLOT(slotRunAnalysis()));
-      menu.addAction("Browse Spectra", this, SLOT(slotBrowseSpectra()));
+      menu.addAction("Run Analysis", this, SLOT(slotRunAnalysis()))->setEnabled(!m_sessionActive);
+      menu.addAction("Browse Spectra", this, SLOT(slotBrowseSpectra()))->setEnabled(!m_sessionActive);
       menu.addSeparator();
       menu.addAction("Delete", this, SLOT(slotDeleteSelection()));
     }
@@ -639,24 +634,34 @@ QString CWProjectTree::buildRawSpectraTree(QTreeWidgetItem *parent, const CProje
     switch (childConfigItem->type()) {
     case CProjectConfigTreeNode::eFile:
       {
-	CSpectraFileItem *fileItem = new CSpectraFileItem(parent, QFileInfo(childConfigItem->name()));
-	fileItem->setEnabled(childConfigItem->isEnabled());
-
-	// should not have children ...
+	QFileInfo fileInfo(childConfigItem->name());
+	// make sure it exists ...
+	if (fileInfo.exists()) {
+	  CSpectraFileItem *fileItem = new CSpectraFileItem(parent, fileInfo);
+	  fileItem->setEnabled(childConfigItem->isEnabled());
+	  // should not have children ...
+	}
+	else {
+	  QString msg("File ");
+	  msg += fileInfo.filePath();
+	  msg += " does not exist.";
+	  collateErrorMessage(errStr, msg);
+	}
       }
       break;
     case CProjectConfigTreeNode::eFolder:
       {
 	CSpectraFolderItem *folderItem = NULL;
 
-	errStr += editInsertNewFolder(parent, childConfigItem->name(), &folderItem);
+	collateErrorMessage(errStr, editInsertNewFolder(parent, childConfigItem->name(), &folderItem));
+
 	if (folderItem != NULL) {
 	  folderItem->setEnabled(childConfigItem->isEnabled());
 
 	  // can have children ...
 	  const CProjectConfigTreeNode *firstChild = childConfigItem->firstChild();
 	  if (firstChild != NULL) {
-	    errStr += CWProjectTree::buildRawSpectraTree(folderItem, firstChild);
+	    collateErrorMessage(errStr, CWProjectTree::buildRawSpectraTree(folderItem, firstChild));
 	  }
 	}
       }
@@ -665,8 +670,8 @@ QString CWProjectTree::buildRawSpectraTree(QTreeWidgetItem *parent, const CProje
       {
 	CSpectraDirectoryItem *dirItem = NULL;
 
-	errStr += editInsertDirectory(parent, childConfigItem->name(), childConfigItem->filter(),
-				      childConfigItem->recursive(), &dirItem);
+	collateErrorMessage(errStr, editInsertDirectory(parent, childConfigItem->name(), childConfigItem->filter(),
+							childConfigItem->recursive(), &dirItem));
 	if (dirItem != NULL)
 	  dirItem->setEnabled(childConfigItem->isEnabled());
 
@@ -889,7 +894,7 @@ void CWProjectTree::slotInsertFile()
       QStringList files = QFileDialog::getOpenFileNames(0, "Select one or more spectra files",
 							prefs->directoryName("Spectra"), filter);
       
-      // Documentations says copy ??
+      // Qt Documentation says copy ??
       if (!files.isEmpty()) {
 	QStringList copy = files;
 	QList<QString>::iterator it = copy.begin();
@@ -900,7 +905,9 @@ void CWProjectTree::slotInsertFile()
 	}
 	while (it != copy.end()) {
 	  // create the items
-	  new CSpectraFileItem(parent, QFileInfo(*it));
+	  QFileInfo fileInfo(*it);
+	  if (fileInfo.exists())
+	    new CSpectraFileItem(parent, fileInfo);
 	  ++it;
 	}
       }
@@ -1225,10 +1232,8 @@ int CSpectraDirectoryItem::loadBranch(void)
       if (it->isDir() && !it->fileName().startsWith('.')) {
         int tmpFileCount;
 
-        TRACE3("Load sub dir " << it->filePath().toStdString());
-
         CSpectraDirectoryItem *dItem = new CSpectraDirectoryItem(NULL, it->filePath(),
-                                                                   m_fileFilters, true, &tmpFileCount);
+								 m_fileFilters, true, &tmpFileCount);
         // were there any matching files in this branch?
         if (tmpFileCount) {
           addChild(dItem);
@@ -1529,3 +1534,15 @@ void CWProjectTree::buildSession(CSession *session, CProjectTreeItem *item)
   }
 }
 
+void CWProjectTree::collateErrorMessage(QString &errStr, const QString &msg)
+{
+  if (msg.isNull()) return;
+
+  if (errStr.isEmpty()) {
+    errStr = msg;
+  }
+  else {
+    errStr += '\n';
+    errStr += msg;
+  }
+}
