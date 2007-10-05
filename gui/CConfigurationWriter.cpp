@@ -26,6 +26,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "constants.h"
 
+#include "debugutil.h"
+
 const char sTrue[] = "true";
 const char sFalse[] = "false";
 
@@ -967,7 +969,12 @@ void CConfigurationWriter::writePropertiesInstrumental(FILE *fp, const mediate_p
 
 void CConfigurationWriter::writePropertiesSlit(FILE *fp, const mediate_project_slit_t *d)
 {
-  fprintf(fp, "    <slit ref=\"%s\" fwhmcor=\"%s\" type=", d->solarRefFile, (d->applyFwhmCorrection ? sTrue : sFalse));
+  QString tmpStr;
+  CWorkSpace *ws = CWorkSpace::instance();
+
+  tmpStr = ws->simplifyPath(QString(d->solarRefFile));
+  fprintf(fp, "    <slit ref=\"%s\" fwhmcor=\"%s\" type=", tmpStr.toAscii().data(),
+	  (d->applyFwhmCorrection ? sTrue : sFalse));
   switch (d->slitType) {
   case SLIT_TYPE_FILE:
     fprintf(fp, "\"file\"");
@@ -1112,8 +1119,11 @@ void CConfigurationWriter::writeAnalysisWindows(FILE *fp, const QString &project
 {
   const CAnalysisWindowItem *awItem;
   const mediate_analysis_window_t *properties;
-  QString awName;
+  QString awName, tmpStr;
 
+  CWorkSpace *ws = CWorkSpace::instance();
+
+  int j, k;
   int n = item->childCount();
   int i = 0;
 
@@ -1153,16 +1163,147 @@ void CConfigurationWriter::writeAnalysisWindows(FILE *fp, const QString &project
 		(properties->requirePredefined ? sTrue : sFalse),
 		(properties->requireRefRatio ? sTrue : sFalse));
 
-	fprintf(fp, "      <files refone=\"%s\" reftwo=\"%s\" residual=\"%s\" szacenter=\"%.3f\" szadelta=\"%.3f\" />\n",
-		properties->refOneFile, properties->refTwoFile, properties->residualFile,
+	tmpStr = ws->simplifyPath(QString(properties->refOneFile));	
+	fprintf(fp, "      <files refone=\"%s\"", tmpStr.toAscii().data());
+	tmpStr = ws->simplifyPath(QString(properties->refTwoFile));		
+	fprintf(fp, " reftwo=\"%s\"", tmpStr.toAscii().data());
+	tmpStr = ws->simplifyPath(QString(properties->residualFile));	
+	fprintf(fp, " residual=\"%s\" szacenter=\"%.3f\" szadelta=\"%.3f\" />\n", tmpStr.toAscii().data(),
 		properties->refSzaCenter , properties->refSzaDelta);
 
-	// write tabs ...
+	// linear
+	fprintf(fp, "      <linear");
+	writePolyType(fp, "xpoly", properties->linear.xPolyOrder);
+	writePolyType(fp, "xbase", properties->linear.xBaseOrder);
+	fprintf(fp, " xfit=\"%s\" xerr=\"%s\"",
+		(properties->linear.xFlagFitStore ? sTrue : sFalse),
+		(properties->linear.xFlagErrStore ? sTrue : sFalse));
+	writePolyType(fp, "xinvpoly", properties->linear.xinvPolyOrder);
+	writePolyType(fp, "xinvbase", properties->linear.xinvBaseOrder);
+	fprintf(fp, " xinvfit=\"%s\" xinverr=\"%s\"",
+		(properties->linear.xinvFlagFitStore ? sTrue : sFalse),
+		(properties->linear.xinvFlagErrStore ? sTrue : sFalse));
+	writePolyType(fp, "offpoly", properties->linear.offsetPolyOrder);
+	writePolyType(fp, "offbase", properties->linear.offsetBaseOrder);
+	fprintf(fp, " offfit=\"%s\" offerr=\"%s\"",
+		(properties->linear.offsetFlagFitStore ? sTrue : sFalse),
+		(properties->linear.offsetFlagErrStore ? sTrue : sFalse));
+	fprintf(fp, " />\n");
+
+	// cross sections ....
+	fprintf(fp, "      <cross_sections>\n");
+
+	j = 0;
+	while (j < properties->nCrossSection) {
+	  fprintf(fp, "        <cross_section sym=\"%s\" ortho=\"%s\" cstype=",
+		  properties->crossSection[j].symbol,
+		  properties->crossSection[j].orthogonal);
+
+	  switch (properties->crossSection[j].crossType) {
+	  case ANLYS_CROSS_ACTION_INTERPOLATE:
+	    fprintf(fp, "\"interp\""); break;
+	  case ANLYS_CROSS_ACTION_CONVOLUTE:
+	    fprintf(fp, "\"std\""); break;
+	  case ANLYS_CROSS_ACTION_CONVOLUTE_I0:
+	    fprintf(fp, "\"io\""); break;
+	  case ANLYS_CROSS_ACTION_CONVOLUTE_RING:
+	    fprintf(fp, "\"ring\""); break;
+	  default:
+	    fprintf(fp, "\"none\"");
+	  }
+	  fprintf(fp, " amftype=");
+	  switch (properties->crossSection[j].amfType) {
+	  case ANLYS_AMF_TYPE_SZA:
+	    fprintf(fp, "\"sza\""); break;
+	  case ANLYS_AMF_TYPE_CLIMATOLOGY:
+	    fprintf(fp, "\"climate\""); break;
+	  case ANLYS_AMF_TYPE_WAVELENGTH1:
+	    fprintf(fp, "\"wave1\""); break;
+	  case ANLYS_AMF_TYPE_WAVELENGTH2:
+	    fprintf(fp, "\"wave2\""); break;
+	  case ANLYS_AMF_TYPE_WAVELENGTH3:
+	    fprintf(fp, "\"wave3\""); break;
+	  default:
+	    fprintf(fp, "\"none\"");
+	  }
+
+	  fprintf(fp, " fit=\"%s\" filter=\"%s\" ccfit=\"%s\" icc=\"%.3f\" dcc=\"%.3f\" ccio=\"%s\"",
+		  (properties->crossSection[j].requireFit ? sTrue : sFalse),
+		  (properties->crossSection[j].requireFilter ? sTrue : sFalse),
+		  (properties->crossSection[j].requireCcFit ? sTrue : sFalse),
+		  properties->crossSection[j].initialCc, properties->crossSection[j].deltaCc, 
+		  (properties->crossSection[j].requireCcFit ? sTrue : sFalse));
+	  tmpStr = ws->simplifyPath(QString(properties->crossSection[j].crossSectionFile));
+	  fprintf(fp, " csfile=\"%s\"", tmpStr.toAscii().data());
+	  tmpStr = ws->simplifyPath(QString(properties->crossSection[j].amfFile));
+	  fprintf(fp, " amffile=\"%s\" />\n", tmpStr.toAscii().data());
+
+	  ++j;
+	}
+	fprintf(fp, "      </cross_sections>\n");
+
+	// shift and stretch
+	fprintf(fp, "      <shift_stretches>\n");
+	j = 0;
+	while (j < properties->nShiftStretch) {
+	  fprintf(fp, "        <shift_stretch shfit=\"%s\" stfit=",
+		  (properties->shiftStretch[j].shFit ? sTrue : sFalse));
+	  switch (properties->shiftStretch[j].stFit) {
+	  case ANLYS_STRETCH_TYPE_FIRST_ORDER: fprintf(fp, "\"1st\""); break;
+	  case ANLYS_STRETCH_TYPE_SECOND_ORDER: fprintf(fp, "\"2nd\""); break;
+	  default: fprintf(fp, "\"none\"");
+	  }
+	  fprintf(fp, " scfit=");
+	  switch (properties->shiftStretch[j].scFit) {
+	  case ANLYS_STRETCH_TYPE_FIRST_ORDER: fprintf(fp, "\"1st\""); break;
+	  case ANLYS_STRETCH_TYPE_SECOND_ORDER: fprintf(fp, "\"2nd\""); break;
+	  default: fprintf(fp, "\"none\"");
+	  }
+	  fprintf(fp, " shstr=\"%s\" ststr=\"%s\" scstr=\"%s\" errstr=\"%s\"",
+		  (properties->shiftStretch[j].shStore ? sTrue : sFalse),
+		  (properties->shiftStretch[j].stStore ? sTrue : sFalse),
+		  (properties->shiftStretch[j].scStore ? sTrue : sFalse),
+		  (properties->shiftStretch[j].errStore ? sTrue : sFalse));
+	  fprintf(fp, " shini=\"%d\" stini=\"%.3f\" stini2=\"%.3f\" scini=\"%.3f\" scini2=\"%.3f\"",
+		  properties->shiftStretch[j].shInit,
+		  properties->shiftStretch[j].stInit, properties->shiftStretch[j].stInit2,
+		  properties->shiftStretch[j].scInit, properties->shiftStretch[j].scInit2);
+	  fprintf(fp, " shdel=\"%d\" stdel=\"%.3f\" stdel2=\"%.3f\" scdel=\"%.3f\" scdel2=\"%.3f\"",
+		  properties->shiftStretch[j].shDelta,
+		  properties->shiftStretch[j].stDelta, properties->shiftStretch[j].stDelta2,
+		  properties->shiftStretch[j].scDelta, properties->shiftStretch[j].scDelta2);
+	  fprintf(fp, " shmin=\"%d\" shmax=\"%d\" >\n",
+		  properties->shiftStretch[j].shMin, properties->shiftStretch[j].shMax);
+	  
+	  k = 0;
+	  while (k < properties->shiftStretch[j].nSymbol) {
+	    fprintf(fp, "          <symbol name=\"%s\" />\n", properties->shiftStretch[j].symbol[k]);
+	    ++k;
+	  }
+	  
+	  ++j;
+	}
+
+	fprintf(fp, "      </shift_stretches>\n");
+
 
 	fprintf(fp, "    </analysis_window>\n");
       }
     }
 
     ++i;
+  }
+}
+
+void CConfigurationWriter::writePolyType(FILE *fp, const char *attr, int type)
+{
+  switch (type) {
+  case ANLYS_POLY_TYPE_0: fprintf(fp, " %s=\"0\"", attr); break;
+  case ANLYS_POLY_TYPE_1: fprintf(fp, " %s=\"1\"", attr); break;
+  case ANLYS_POLY_TYPE_2: fprintf(fp, " %s=\"2\"", attr); break;
+  case ANLYS_POLY_TYPE_3: fprintf(fp, " %s=\"3\"", attr); break;
+  case ANLYS_POLY_TYPE_4: fprintf(fp, " %s=\"4\"", attr); break;
+  case ANLYS_POLY_TYPE_5: fprintf(fp, " %s=\"5\"", attr); break;
+  default: fprintf(fp, " %s=\"none\"", attr);
   }
 }

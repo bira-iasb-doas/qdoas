@@ -17,6 +17,9 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
+
+// The Qdoas version string is maintained in CWAboutBox.cpp
+
 #include <QApplication>
 
 #include "CWMain.h"
@@ -26,6 +29,7 @@ int main(int argc, char *argv[])
   QApplication app(argc, argv);
 
   CWMain main;
+  main.setWindowTitle("Qdoas");
 
   main.show();
 

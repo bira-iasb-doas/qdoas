@@ -30,7 +30,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QStackedLayout>
 
 #include "CWEditor.h"
-
+#include "CWAnalysisWindowDoasTables.h"
 
 class CWAnalysisWindowPropertyEditor : public CWEditor
 {
@@ -63,6 +63,9 @@ Q_OBJECT
 
   QTabWidget *m_tabs;
   // specialized DoasTables for each tab ...
+  CWMoleculesDoasTable *m_moleculesTab;
+  CWLinearParametersDoasTable *m_linearTab;
+  CWShiftAndStretchDoasTable *m_shiftAndStretchTab;
 
   QString m_projectName, m_analysisWindowName;
 };

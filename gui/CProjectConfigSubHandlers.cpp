@@ -208,7 +208,7 @@ bool CProjectSubHandler::start(const QString &element, const QXmlAttributes &att
     // allocate a new item in the project for this AW
     CAnalysisWindowConfigItem *awItem = m_project->issueNewAnalysisWindowItem();
     if (awItem)
-      return m_master->installSubHandler(new CProjectAnalysisWindowSubHandler(m_master, awItem), atts);
+      return m_master->installSubHandler(new CAnalysisWindowSubHandler(m_master, awItem), atts);
 
     return false; // fall through failure
   }

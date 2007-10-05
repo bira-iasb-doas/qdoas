@@ -24,18 +24,49 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "CQdoasProjectConfigHandler.h"
 
 
-class CProjectAnalysisWindowSubHandler : public CConfigSubHandler
+class CAnalysisWindowSubHandler : public CConfigSubHandler
 {
  public:
-  CProjectAnalysisWindowSubHandler(CQdoasProjectConfigHandler *master,
-				   CAnalysisWindowConfigItem *item);
-  virtual ~CProjectAnalysisWindowSubHandler();
+  CAnalysisWindowSubHandler(CQdoasProjectConfigHandler *master,
+			    CAnalysisWindowConfigItem *item);
+  virtual ~CAnalysisWindowSubHandler();
 
   virtual bool start(const QXmlAttributes &atts);
   virtual bool start(const QString &element, const QXmlAttributes &atts);
 
+  static int mapToPolyType(const QString &str);
+
  private:
   CAnalysisWindowConfigItem *m_item; // does not own this item
 };
+
+class CAnalysisWindowCrossSectionSubHandler : public CConfigSubHandler
+{
+ public:
+  CAnalysisWindowCrossSectionSubHandler(CQdoasProjectConfigHandler *master,
+					mediate_analysis_window_t *d);
+  virtual ~CAnalysisWindowCrossSectionSubHandler();
+
+  virtual bool start(const QXmlAttributes &atts);
+
+ private:
+  mediate_analysis_window_t *m_d;
+};
+
+class CAnalysisWindowShiftStretchSubHandler : public CConfigSubHandler
+{
+ public:
+  CAnalysisWindowShiftStretchSubHandler(CQdoasProjectConfigHandler *master,
+					mediate_analysis_window_t *d);
+  virtual ~CAnalysisWindowShiftStretchSubHandler();
+
+  virtual bool start(const QXmlAttributes &atts);
+  virtual bool start(const QString &element, const QXmlAttributes &atts);
+  virtual bool end(void);
+
+ private:
+  mediate_analysis_window_t *m_d;
+};
+
 
 #endif

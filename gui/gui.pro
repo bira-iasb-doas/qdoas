@@ -6,7 +6,7 @@ TEMPLATE = app
 TARGET   = qdoas
 
 unix {
-  CONFIG += qt thread release
+  CONFIG += qt thread debug
   QT = core gui xml
 
   # for trace-write debugging ...

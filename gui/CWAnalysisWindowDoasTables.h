@@ -27,12 +27,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QListWidget>
 #include <QDialog>
 
+#include "mediate_analysis_window.h"
 #include "CDoasTable.h"
 
 // variable rows
 
 //----------------------------------------------------------------------
-// specialised columns for molecules ...
+// specialised columns for molecules (Cross Sections) ...
 
 class CWMoleculesDiffOrthoCombo : public CDoasTableColumnComboBox
 {
@@ -69,6 +70,12 @@ Q_OBJECT
   CWMoleculesDoasTable(const QString &label, int columnWidth, int headerHeight = 24, QWidget *parent = 0);
   virtual ~CWMoleculesDoasTable();
 
+  void populate(const struct anlyswin_cross_section *d, int nElements);
+  void apply(struct anlyswin_cross_section *d, int &nElements) const;
+
+  void addRow(int height, const QString &label, QList<QVariant> &cellData,
+	      const QString &csFilename, const QString &amfFilename);
+
   virtual void addRow(int height, const QString &label, QList<QVariant> &cellData);
   virtual void removeRow(int rowIndex);
   virtual void cellDataChanged(int row, int column, const QVariant &cellData);
@@ -81,6 +88,11 @@ Q_OBJECT
  private:
   bool isRowLocked(int rowIndex) const;
 
+  static QString mapCrossTypeToComboString(int type);
+  static int mapComboStringToCrossType(const QString &str);
+  static QString mapAmfTypeToComboString(int type);
+  static int mapComboStringToAmfType(const QString &str);
+
  public slots:
   void slotLockSymbol(const QString &symbol, const QObject *holder);
   void slotUnlockSymbol(const QString &symbol, const QObject *holder);
@@ -88,13 +100,15 @@ Q_OBJECT
   void slotInsertRow();
   void slotRemoveRow();
 
+  void slotFitColumnCheckable(int state);
+
  signals:
   void signalSymbolListChanged(const QStringList &symbols);
 
  private:
   typedef std::multimap<QString,const QObject*> symlockmap_t;
 
-  QStringList m_symbols;
+  QStringList m_symbols, m_csFilename, m_amfFilename;
   QList<int> m_rowLocks; // internal locks ...
   symlockmap_t m_symbolLocks; // external locks ...
   int m_selectedRow;
@@ -110,6 +124,13 @@ class CWLinearParametersDoasTable : public CDoasTable
   virtual ~CWLinearParametersDoasTable();
 
   // virtual void cellDataChanged(int row, int column, const QVariant &cellData); // no cell-coupling required
+
+  void populate(const struct anlys_linear *data);
+  void apply(struct anlys_linear *data) const;
+
+ private:
+  static QString mapOrderToComboString(int order);
+  static int mapComboStringToOrder(const QString &str);
 };
 
 
@@ -146,6 +167,9 @@ Q_OBJECT
  public:
   CWShiftAndStretchDoasTable(const QString &label, int columnWidth, int headerHeight = 24, QWidget *parent = 0);
   virtual ~CWShiftAndStretchDoasTable();
+
+  void populate(const struct anlyswin_shift_stretch *d, int nElements);
+  void apply(struct anlyswin_shift_stretch *d, int &nElements) const;
 
   virtual void addRow(int height, const QString &label, QList<QVariant> &cellData);
   virtual void removeRow(int rowIndex);

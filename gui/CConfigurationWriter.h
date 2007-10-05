@@ -54,6 +54,8 @@ class CConfigurationWriter
 
   void writeAnalysisWindows(FILE *fp, const QString &projectName, const QTreeWidgetItem *item);
 
+  void writePolyType(FILE *fp, const char *attr, int type);
+
  private:
   const CWProjectTree *m_projectTree;
 };

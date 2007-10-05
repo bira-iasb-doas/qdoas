@@ -31,9 +31,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "CWAnalysisWindowPropertyEditor.h"
 #include "CValidator.h"
 
-#include "CDoasTable.h"
-#include "CWAnalysisWindowDoasTables.h"
-
 #include "constants.h"
 
 CWAnalysisWindowPropertyEditor::CWAnalysisWindowPropertyEditor(const QString &projectName,
@@ -209,21 +206,22 @@ CWAnalysisWindowPropertyEditor::CWAnalysisWindowPropertyEditor(const QString &pr
 
   m_tabs = new QTabWidget(this);
 
-  CWMoleculesDoasTable *moleculesTab = new CWMoleculesDoasTable("Molecules", 120);
-  m_tabs->addTab(moleculesTab, "Molecules");
-  CWLinearParametersDoasTable *linearTab = new CWLinearParametersDoasTable("Linear Parameters", 120);
-  m_tabs->addTab(linearTab, "Linear Parameters");
+  m_moleculesTab = new CWMoleculesDoasTable("Molecules", 120);
+  m_tabs->addTab(m_moleculesTab, "Molecules");
+  m_linearTab = new CWLinearParametersDoasTable("Linear Parameters", 120);
+  m_tabs->addTab(m_linearTab, "Linear Parameters");
   CWNonlinearParametersDoasTable *nonLinearTab = new CWNonlinearParametersDoasTable("NL Parameters", 120);
   m_tabs->addTab(nonLinearTab, "Non-Linear Parameters");
-  CWShiftAndStretchDoasTable *shiftAndStretchTab = new CWShiftAndStretchDoasTable("Cross sections and spectrum", 180);
-  m_tabs->addTab(shiftAndStretchTab, "Shift and Stretch");
+  m_shiftAndStretchTab = new CWShiftAndStretchDoasTable("Cross sections and spectrum", 180);
+  m_tabs->addTab(m_shiftAndStretchTab, "Shift and Stretch");
   
-  connect(shiftAndStretchTab, SIGNAL(signalLockSymbol(const QString &, const QObject *)),
-	  moleculesTab, SLOT(slotLockSymbol(const QString &, const QObject *)));
-  connect(shiftAndStretchTab, SIGNAL(signalUnlockSymbol(const QString &, const QObject *)),
-	  moleculesTab, SLOT(slotUnlockSymbol(const QString &, const QObject *)));
-  connect(moleculesTab, SIGNAL(signalSymbolListChanged(const QStringList&)),
-	  shiftAndStretchTab, SLOT(slotSymbolListChanged(const QStringList&)));
+  connect(m_fitsCheck, SIGNAL(stateChanged(int)),  m_moleculesTab, SLOT(slotFitColumnCheckable(int)));
+  connect(m_shiftAndStretchTab, SIGNAL(signalLockSymbol(const QString &, const QObject *)),
+	  m_moleculesTab, SLOT(slotLockSymbol(const QString &, const QObject *)));
+  connect(m_shiftAndStretchTab, SIGNAL(signalUnlockSymbol(const QString &, const QObject *)),
+	  m_moleculesTab, SLOT(slotUnlockSymbol(const QString &, const QObject *)));
+  connect(m_moleculesTab, SIGNAL(signalSymbolListChanged(const QStringList&)),
+	  m_shiftAndStretchTab, SLOT(slotSymbolListChanged(const QStringList&)));
 
   mainLayout->addWidget(m_tabs, 1);
 
@@ -270,6 +268,12 @@ CWAnalysisWindowPropertyEditor::CWAnalysisWindowPropertyEditor(const QString &pr
   m_szaDeltaEdit->validator()->fixup(tmpStr.setNum(d->refSzaDelta));
   m_szaDeltaEdit->setText(tmpStr);
 
+  m_moleculesTab->populate(&(d->crossSection[0]), d->nCrossSection);
+  m_linearTab->populate(&(d->linear));
+  m_shiftAndStretchTab->populate(&(d->shiftStretch[0]), d->nShiftStretch);
+
+  m_moleculesTab->slotFitColumnCheckable(m_fitsCheck->checkState());
+
   // slot on automatic button is sufficient
   connect(autoButton, SIGNAL(toggled(bool)), this, SLOT(slotRefSelectionChanged(bool)));
   connect(m_calibrationCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(slotWavelengthCalibrationChanged(int)));
@@ -311,6 +315,8 @@ bool CWAnalysisWindowPropertyEditor::actionOk(void)
     d->refSzaDelta = m_szaDeltaEdit->text().toDouble();
 
     // call apply for all tabs ...
+    m_moleculesTab->apply(&(d->crossSection[0]), d->nCrossSection);
+    m_linearTab->apply(&(d->linear));
 
     return true;
   }

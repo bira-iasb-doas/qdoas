@@ -28,7 +28,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "debugutil.h"
 
 CWAboutDialog::CWAboutDialog(QWidget *parent) :
-  QDialog(parent, Qt::MSWindowsFixedSizeDialogHint|Qt::WindowTitleHint) //|Qt::WindowSystemMenuHint)
+  QDialog(parent, Qt::MSWindowsFixedSizeDialogHint|Qt::WindowTitleHint|Qt::WindowSystemMenuHint)
 {
   setWindowTitle("About Qdoas");
 
@@ -43,11 +43,21 @@ CWAboutDialog::CWAboutDialog(QWidget *parent) :
 
   mainLayout->addSpacing(10);
 
-  QString blurb("Qdoas is copyright ");
+  QLabel *mainLabel = new QLabel("Qdoas version 0.1");
+  QFont font = mainLabel->font();
+  font.setPointSize(font.pointSize() + 2);
+  font.setBold(true);
+  mainLabel->setFont(font);
+  mainLabel->setAlignment(Qt::AlignCenter);
+  mainLayout->addWidget(mainLabel, 0, Qt::AlignCenter);
+
+  mainLayout->addSpacing(20);
+
+  QString blurb("is copyright ");
   blurb.append(Qt::Key_copyright);
-  blurb += " 2007\n\nBelgian Institute for Space Aeronomy (BIRA-IASB)\n"
-    "Avenue Circulaire, 3\n1180     Uccle\nBelgium\n\nand\n\n"
-    "Science [&] Technology BV,\nDelft, Netherlands.";
+  blurb.append(" 2007\n\nBelgian Institute for Space Aeronomy (BIRA-IASB)\n"
+	       "Avenue Circulaire 3,  1180 Uccle,  Belgium\n\nand\n\n"
+	       "Science [&] Technology BV,\nDelft, Netherlands.");
 
   QLabel *blurbLabel = new QLabel(blurb);
   blurbLabel->setAlignment(Qt::AlignCenter);

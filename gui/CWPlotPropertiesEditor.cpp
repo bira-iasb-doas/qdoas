@@ -25,6 +25,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QPainter>
 #include <QColorDialog>
 #include <QPushButton>
+#include <QSpinBox>
 
 #include "CWPlotPropertiesEditor.h"
 #include "CWPlotRegion.h"
@@ -89,11 +90,18 @@ void CWPlotPropertySample::mousePressEvent(QMouseEvent *e)
   e->accept();
 }
 
+void CWPlotPropertySample::slotSetPenWidth(int penWidth)
+{
+  m_pen.setWidth(penWidth);
+  update();
+}
 
 CWPlotPropertiesEditor::CWPlotPropertiesEditor(CWPlotRegion *plotRegion, QWidget *parent) :
   CWEditor(parent),
   m_plotRegion(plotRegion)
 {
+  QSpinBox *spinBox;
+
   int row = 0;
 
   QGridLayout *mainLayout = new QGridLayout(this);
@@ -106,37 +114,62 @@ CWPlotPropertiesEditor::CWPlotPropertiesEditor(CWPlotRegion *plotRegion, QWidget
   mainLayout->addWidget(new QLabel("Spectrum", this), row, 1);
   m_spectrumSample = new CWPlotPropertySample(prop.pen(PlotDataType_Spectrum), m_bgColour, this);
   mainLayout->addWidget(m_spectrumSample, row, 2);
+  spinBox = new QSpinBox(this);
+  spinBox->setRange(0, 5);
+  spinBox->setValue(prop.pen(PlotDataType_Spectrum).width());
+  mainLayout->addWidget(spinBox, row, 3);
+  connect(spinBox, SIGNAL(valueChanged(int)), m_spectrumSample, SLOT(slotSetPenWidth(int)));
   ++row;
 
   // row 1 - Fits
   mainLayout->addWidget(new QLabel("Fits", this), row, 1);
   m_fitSample = new CWPlotPropertySample(prop.pen(PlotDataType_Fit), m_bgColour, this);
   mainLayout->addWidget(m_fitSample, row, 2);
+  spinBox = new QSpinBox(this);
+  spinBox->setRange(0, 5);
+  spinBox->setValue(prop.pen(PlotDataType_Fit).width());
+  mainLayout->addWidget(spinBox, row, 3);
+  connect(spinBox, SIGNAL(valueChanged(int)), m_fitSample, SLOT(slotSetPenWidth(int)));
   ++row;
 
   // row 2 - Shift
   mainLayout->addWidget(new QLabel("Shift", this), row, 1);
   m_shiftSample = new CWPlotPropertySample(prop.pen(PlotDataType_Shift), m_bgColour, this);
   mainLayout->addWidget(m_shiftSample, row, 2);
+  spinBox = new QSpinBox(this);
+  spinBox->setRange(0, 5);
+  spinBox->setValue(prop.pen(PlotDataType_Shift).width());
+  mainLayout->addWidget(spinBox, row, 3);
+  connect(spinBox, SIGNAL(valueChanged(int)), m_shiftSample, SLOT(slotSetPenWidth(int)));
   ++row;
 
   // row 3 - FWHM
   mainLayout->addWidget(new QLabel("FWHM", this), row, 1);
   m_fwhmSample = new CWPlotPropertySample(prop.pen(PlotDataType_Fwhm), m_bgColour, this);
   mainLayout->addWidget(m_fwhmSample, row, 2);
+  spinBox = new QSpinBox(this);
+  spinBox->setRange(0, 5);
+  spinBox->setValue(prop.pen(PlotDataType_Fwhm).width());
+  mainLayout->addWidget(spinBox, row, 3);
+  connect(spinBox, SIGNAL(valueChanged(int)), m_fwhmSample, SLOT(slotSetPenWidth(int)));
   ++row;
 
   // row 4 - Points
   mainLayout->addWidget(new QLabel("Points", this), row, 1);
   m_pointsSample = new CWPlotPropertySample(prop.pen(PlotDataType_Points), m_bgColour, this);
   mainLayout->addWidget(m_pointsSample, row, 2);
+  spinBox = new QSpinBox(this);
+  spinBox->setRange(0, 5);
+  spinBox->setValue(prop.pen(PlotDataType_Points).width());
+  mainLayout->addWidget(spinBox, row, 3);
+  connect(spinBox, SIGNAL(valueChanged(int)), m_pointsSample, SLOT(slotSetPenWidth(int)));
   ++row;
 
   QPushButton *bgColourBtn = new QPushButton("Background Colour", this);
-  mainLayout->addWidget(bgColourBtn, row, 1, 1, 2);
+  mainLayout->addWidget(bgColourBtn, row, 1, 1, 3);
 
   mainLayout->setColumnStretch(0, 1);
-  mainLayout->setColumnStretch(3, 1);
+  mainLayout->setColumnStretch(4, 1);
   
   mainLayout->setRowStretch(row, 1);
 

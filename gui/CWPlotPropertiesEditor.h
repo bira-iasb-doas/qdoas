@@ -30,6 +30,7 @@ class CWPlotRegion;
 
 class CWPlotPropertySample : public QFrame
 {
+Q_OBJECT
  public:
   CWPlotPropertySample(const QPen &pen, const QColor &bgColour, QWidget *parent = 0);
   virtual ~CWPlotPropertySample();
@@ -41,6 +42,9 @@ class CWPlotPropertySample : public QFrame
  protected:
   virtual void paintEvent(QPaintEvent *e);
   virtual void mousePressEvent(QMouseEvent *e);
+
+ public slots:
+  void slotSetPenWidth(int penWidth);
 
  private:
   QPen m_pen;

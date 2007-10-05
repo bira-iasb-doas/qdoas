@@ -23,6 +23,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include <qwt_plot_curve.h>
 #include <qwt_symbol.h>
+#include <qwt_legend_item.h>
 
 #include "CWPlotPage.h"
 
@@ -36,12 +37,18 @@ CWPlot::CWPlot(const RefCountConstPtr<CPlotDataSet> &dataSet,
   setAxisTitle(QwtPlot::xBottom, m_dataSet->xAxisLabel());
   setAxisTitle(QwtPlot::yLeft, m_dataSet->yAxisLabel());
 
-  // curves ...
+    // curves ...
   
   int n = m_dataSet->count();
   int i = 0;
+
+  // add a legend if more than 1 curve plotted ...
+  if (n > 1) {
+    insertLegend(new QwtLegend, QwtPlot::BottomLegend);
+  }
+
   while (i < n) {
-    QwtPlotCurve *curve = new QwtPlotCurve();
+    QwtPlotCurve *curve = new QwtPlotCurve(m_dataSet->legend(i));
 
     curve->setData(m_dataSet->curve(i));
 
