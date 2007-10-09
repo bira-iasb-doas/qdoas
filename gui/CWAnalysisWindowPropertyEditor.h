@@ -30,9 +30,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QStackedLayout>
 
 #include "CWEditor.h"
+#include "CWorkSpace.h"
 #include "CWAnalysisWindowDoasTables.h"
 
-class CWAnalysisWindowPropertyEditor : public CWEditor
+class CWAnalysisWindowPropertyEditor : public CWEditor, public CProjectObserver
 {
 Q_OBJECT
  public:
@@ -41,6 +42,11 @@ Q_OBJECT
 
   virtual bool actionOk();
   virtual void actionHelp();
+
+  virtual void updateModifyProject(const QString &projectName);
+
+ private:
+  void projectPropertiesChanged();
 
  public slots:
   void slotRefSelectionChanged(bool checked);
@@ -66,6 +72,9 @@ Q_OBJECT
   CWMoleculesDoasTable *m_moleculesTab;
   CWLinearParametersDoasTable *m_linearTab;
   CWShiftAndStretchDoasTable *m_shiftAndStretchTab;
+  CWGapDoasTable *m_gapTab;
+  CWOutputDoasTable *m_outputTab;
+
 
   QString m_projectName, m_analysisWindowName;
 };

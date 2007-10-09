@@ -106,29 +106,20 @@ bool CAnalysisWindowSubHandler::start(const QString &element, const QXmlAttribut
     d->refSzaDelta = atts.value("szadelta").toDouble();
 
   }
-  else if (element == "linear") {
-
-    d->linear.xPolyOrder = mapToPolyType(atts.value("xpoly"));
-    d->linear.xBaseOrder = mapToPolyType(atts.value("xbase"));
-    d->linear.xFlagFitStore = (atts.value("xfit") == "true") ? 1 : 0;
-    d->linear.xFlagErrStore = (atts.value("xerr") == "true") ? 1 : 0;
-
-    d->linear.xinvPolyOrder = mapToPolyType(atts.value("xinvpoly"));
-    d->linear.xinvBaseOrder = mapToPolyType(atts.value("xinvbase"));
-    d->linear.xinvFlagFitStore = (atts.value("xinvfit") == "true") ? 1 : 0;
-    d->linear.xinvFlagErrStore = (atts.value("xinverr") == "true") ? 1 : 0;
-    
-    d->linear.offsetPolyOrder = mapToPolyType(atts.value("offpoly"));
-    d->linear.offsetBaseOrder = mapToPolyType(atts.value("offbase"));
-    d->linear.offsetFlagFitStore = (atts.value("offfit") == "true") ? 1 : 0;
-    d->linear.offsetFlagErrStore = (atts.value("offerr") == "true") ? 1 : 0;
-    
-  }
   else if (element == "cross_section") {
-    return m_master->installSubHandler(new CAnalysisWindowCrossSectionSubHandler(m_master, d), atts);
+    return m_master->installSubHandler(new CAnalysisWindowCrossSectionSubHandler(m_master, &(d->crossSectionList)), atts);
+  }
+  else if (element == "linear") {
+    return m_master->installSubHandler(new CAnalysisWindowLinearSubHandler(m_master, &(d->linear)), atts);    
   }
   else if (element == "shift_stretch") {
-    return m_master->installSubHandler(new CAnalysisWindowShiftStretchSubHandler(m_master, d), atts);
+    return m_master->installSubHandler(new CAnalysisWindowShiftStretchSubHandler(m_master, &(d->shiftStretchList)), atts);
+  }
+  else if (element == "gap") {
+    return m_master->installSubHandler(new CAnalysisWindowGapSubHandler(m_master, &(d->gapList)), atts);
+  }
+  else if (element == "output") {
+    return m_master->installSubHandler(new CAnalysisWindowOutputSubHandler(m_master, &(d->outputList)), atts);
   }
 
   return true;
@@ -149,7 +140,7 @@ int CAnalysisWindowSubHandler::mapToPolyType(const QString &str)
 }
 
 CAnalysisWindowCrossSectionSubHandler::CAnalysisWindowCrossSectionSubHandler(CQdoasProjectConfigHandler *master,
-									     mediate_analysis_window_t *d) :
+									     cross_section_list_t *d) :
   CConfigSubHandler(master),
   m_d(d)
 {
@@ -229,9 +220,43 @@ bool CAnalysisWindowCrossSectionSubHandler::start(const QXmlAttributes &atts)
   return postErrorMessage("Too many cross sections in analysis window");
 }
 
+//------------------------------------------------------------
+
+CAnalysisWindowLinearSubHandler::CAnalysisWindowLinearSubHandler(CQdoasProjectConfigHandler *master,
+								 struct anlyswin_linear *d) :
+  CConfigSubHandler(master),
+  m_d(d)
+{
+}
+
+CAnalysisWindowLinearSubHandler::~CAnalysisWindowLinearSubHandler()
+{
+}
+
+bool CAnalysisWindowLinearSubHandler::start(const QXmlAttributes &atts)
+{
+  m_d->xPolyOrder = CAnalysisWindowSubHandler::mapToPolyType(atts.value("xpoly"));
+  m_d->xBaseOrder = CAnalysisWindowSubHandler::mapToPolyType(atts.value("xbase"));
+  m_d->xFlagFitStore = (atts.value("xfit") == "true") ? 1 : 0;
+  m_d->xFlagErrStore = (atts.value("xerr") == "true") ? 1 : 0;
+  
+  m_d->xinvPolyOrder = CAnalysisWindowSubHandler::mapToPolyType(atts.value("xinvpoly"));
+  m_d->xinvBaseOrder = CAnalysisWindowSubHandler::mapToPolyType(atts.value("xinvbase"));
+  m_d->xinvFlagFitStore = (atts.value("xinvfit") == "true") ? 1 : 0;
+  m_d->xinvFlagErrStore = (atts.value("xinverr") == "true") ? 1 : 0;
+  
+  m_d->offsetPolyOrder = CAnalysisWindowSubHandler::mapToPolyType(atts.value("offpoly"));
+  m_d->offsetBaseOrder = CAnalysisWindowSubHandler::mapToPolyType(atts.value("offbase"));
+  m_d->offsetFlagFitStore = (atts.value("offfit") == "true") ? 1 : 0;
+  m_d->offsetFlagErrStore = (atts.value("offerr") == "true") ? 1 : 0;
+
+  return true;
+}
+
+//------------------------------------------------------------
 
 CAnalysisWindowShiftStretchSubHandler::CAnalysisWindowShiftStretchSubHandler(CQdoasProjectConfigHandler *master,
-									     mediate_analysis_window_t *d) :
+									     shift_stretch_list_t *d) :
   CConfigSubHandler(master),
   m_d(d)
 {
@@ -265,20 +290,20 @@ bool CAnalysisWindowShiftStretchSubHandler::start(const QXmlAttributes &atts)
     d->scStore = (atts.value("scstr") == "true") ? 1 : 0;    
     d->errStore = (atts.value("errstr") == "true") ? 1 : 0;    
     
-    d->shInit = atts.value("shini").toInt();
+    d->shInit = atts.value("shini").toDouble();
     d->stInit = atts.value("stini").toDouble();
     d->stInit2 = atts.value("stini2").toDouble();
     d->scInit = atts.value("scini").toDouble();
     d->scInit2 = atts.value("scini2").toDouble();
     
-    d->shDelta = atts.value("shdel").toInt();
+    d->shDelta = atts.value("shdel").toDouble();
     d->stDelta = atts.value("stdel").toDouble();
     d->stDelta2 = atts.value("stdel2").toDouble();
     d->scDelta = atts.value("scdel").toDouble();
     d->scDelta2 = atts.value("scdel2").toDouble();
     
-    d->shMin = atts.value("shmin").toInt();
-    d->shMax = atts.value("shmax").toInt();
+    d->shMin = atts.value("shmin").toDouble();
+    d->shMax = atts.value("shmax").toDouble();
     
     return true;
   }
@@ -314,3 +339,77 @@ bool CAnalysisWindowShiftStretchSubHandler::end(void)
 
   return true;
 }
+
+//------------------------------------------------------------
+
+CAnalysisWindowGapSubHandler::CAnalysisWindowGapSubHandler(CQdoasProjectConfigHandler *master,
+							   gap_list_t *d) :
+  CConfigSubHandler(master),
+  m_d(d)
+{
+}
+
+CAnalysisWindowGapSubHandler::~CAnalysisWindowGapSubHandler()
+{
+}
+
+bool CAnalysisWindowGapSubHandler::start(const QXmlAttributes &atts)
+{
+  if (m_d->nGap < MAX_AW_GAP) {
+    m_d->gap[m_d->nGap].minimum = atts.value("min").toDouble();
+    m_d->gap[m_d->nGap].maximum = atts.value("max").toDouble();
+    if (m_d->gap[m_d->nGap].minimum < m_d->gap[m_d->nGap].maximum) {
+      ++(m_d->nGap);
+      return true;
+    }
+    else
+      return postErrorMessage("Invalid gap definition");
+  }
+
+  return postErrorMessage("Too many gaps defined");
+}
+
+//------------------------------------------------------------
+
+CAnalysisWindowOutputSubHandler::CAnalysisWindowOutputSubHandler(CQdoasProjectConfigHandler *master,
+								 output_list_t *d) :
+  CConfigSubHandler(master),
+  m_d(d)
+{
+}
+
+CAnalysisWindowOutputSubHandler::~CAnalysisWindowOutputSubHandler()
+{
+}
+
+bool CAnalysisWindowOutputSubHandler::start(const QXmlAttributes &atts)
+{
+  if (m_d->nOutput < MAX_AW_CROSS_SECTION) {
+
+    QString str;
+    struct anlyswin_output *d = &(m_d->output[m_d->nOutput]);
+    
+    str = atts.value("sym");
+    if (!str.isEmpty() && str.length() < (int)sizeof(d->symbol))
+      strcpy(d->symbol, str.toAscii().data());
+    else
+      return postErrorMessage("missing symbol (or name too long)");
+
+    d->amf = (atts.value("amf") == "true") ? 1 : 0;
+    // residual TODO
+    d->slantCol = (atts.value("scol") == "true") ? 1 : 0;
+    d->slantErr = (atts.value("serr") == "true") ? 1 : 0;
+    d->slantFactor = atts.value("sfact").toDouble();
+    d->vertCol = (atts.value("vcol") == "true") ? 1 : 0;
+    d->vertErr = (atts.value("verr") == "true") ? 1 : 0;
+    d->vertFactor = atts.value("vfact").toDouble();
+
+    // All OK
+    ++(m_d->nOutput);
+    
+    return true;
+  }
+
+  return postErrorMessage("Too many outputs in analysis window");
+}
+

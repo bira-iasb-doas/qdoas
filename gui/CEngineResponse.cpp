@@ -71,18 +71,18 @@ void CEngineResponseMessage::process(CEngineController *engineController)
 
 //------------------------------------------------------------
 
-CEngineResponseBeginBrowseFile::CEngineResponseBeginBrowseFile(const QString &fileName) :
-  CEngineResponse(cEngineResponseBeginBrowseFileType),
+CEngineResponseBeginAccessFile::CEngineResponseBeginAccessFile(const QString &fileName) :
+  CEngineResponse(cEngineResponseBeginAccessFileType),
   m_fileName(fileName),
   m_numberOfRecords(-1)
 {
 }
 
-CEngineResponseBeginBrowseFile::~CEngineResponseBeginBrowseFile()
+CEngineResponseBeginAccessFile::~CEngineResponseBeginAccessFile()
 {
 }
 
-void CEngineResponseBeginBrowseFile::process(CEngineController *engineController)
+void CEngineResponseBeginAccessFile::process(CEngineController *engineController)
 {
   // consider the error messages first - if fatal stop here
   if (processErrors(engineController))
@@ -96,7 +96,7 @@ void CEngineResponseBeginBrowseFile::process(CEngineController *engineController
   }
 }
 
-void CEngineResponseBeginBrowseFile::setNumberOfRecords(int numberOfRecords)
+void CEngineResponseBeginAccessFile::setNumberOfRecords(int numberOfRecords)
 {
   m_numberOfRecords = numberOfRecords;
 }
@@ -166,34 +166,34 @@ void CEngineResponseSpecificRecord::addPageTitleAndTag(int pageNumber, const QSt
 
 //------------------------------------------------------------
 
-CEngineResponseBrowseRecord::CEngineResponseBrowseRecord() :
-  CEngineResponseSpecificRecord(cEngineResponseBrowseRecordType)
+CEngineResponseAccessRecord::CEngineResponseAccessRecord() :
+  CEngineResponseSpecificRecord(cEngineResponseAccessRecordType)
 {
 }
 
-CEngineResponseBrowseRecord::~CEngineResponseBrowseRecord()
+CEngineResponseAccessRecord::~CEngineResponseAccessRecord()
 {
 }
 
 //------------------------------------------------------------
 
-CEngineResponseEndBrowseFile::CEngineResponseEndBrowseFile() :
-  CEngineResponse(cEngineResponseEndBrowseFileType)
+CEngineResponseEndAccessFile::CEngineResponseEndAccessFile() :
+  CEngineResponse(cEngineResponseEndAccessFileType)
 {
 }
 
-CEngineResponseEndBrowseFile::~CEngineResponseEndBrowseFile()
+CEngineResponseEndAccessFile::~CEngineResponseEndAccessFile()
 {
 }
 
-void CEngineResponseEndBrowseFile::process(CEngineController *engineController)
+void CEngineResponseEndAccessFile::process(CEngineController *engineController)
 {
   // consider the error messages first - if fatal stop here
   if (processErrors(engineController))
     return;
 
   // notify the engine controller
-  engineController->notifyEndBrowseFile();
+  engineController->notifyEndAccessFile();
 }
 
 //------------------------------------------------------------

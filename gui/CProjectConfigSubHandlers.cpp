@@ -589,6 +589,21 @@ bool CProjectCalibrationSubHandler::start(const QString &element, const QXmlAttr
     m_calibration->wavelengthMax = atts.value("max").toDouble();
     m_calibration->subWindows = atts.value("intervals").toInt();
   }
+  else if (element == "cross_section") {
+    return m_master->installSubHandler(new CAnalysisWindowCrossSectionSubHandler(m_master, &(m_calibration->crossSectionList)), atts);
+  }
+  else if (element == "linear") {
+    return m_master->installSubHandler(new CAnalysisWindowLinearSubHandler(m_master, &(m_calibration->linear)), atts);    
+  }
+  else if (element == "shift_stretch") {
+    return m_master->installSubHandler(new CAnalysisWindowShiftStretchSubHandler(m_master, &(m_calibration->shiftStretchList)), atts);
+  }
+  else if (element == "gap") {
+    return m_master->installSubHandler(new CAnalysisWindowGapSubHandler(m_master, &(m_calibration->gapList)), atts);
+  }
+  else if (element == "output") {
+    return m_master->installSubHandler(new CAnalysisWindowOutputSubHandler(m_master, &(m_calibration->outputList)), atts);
+  }
 
   return true;
 }

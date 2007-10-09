@@ -102,7 +102,41 @@ bool CEngineRequestSetProject::process(CEngineThread *engineThread)
 
 //------------------------------------------------------------
 
-CEngineRequestSetSites::CEngineRequestSetSites(const mediate_site_t *siteList, int nSites) :
+CEngineRequestSetSymbols::CEngineRequestSetSymbols(mediate_symbol_t *symbolList, int nSymbols) :
+  CEngineRequest(cEngineRequestSetSymbolsType),
+  m_symbolList(symbolList),
+  m_nSymbols(nSymbols)
+{
+  // takes ownership of the symbolList
+}
+
+CEngineRequestSetSymbols::~CEngineRequestSetSymbols()
+{
+  delete [] m_symbolList;
+}
+
+bool CEngineRequestSetSymbols::process(CEngineThread *engineThread)
+{
+  // process is called from the thread and drives the engine through the
+  // mediator interface.
+
+  CEngineResponse *resp = new CEngineResponseMessage;
+
+  int rc = mediateRequestSetSymbols(engineThread->engineContext(),
+				    m_nSymbols, m_symbolList, resp);
+  
+  // no response unless there was an error
+  if (rc == -1)
+    engineThread->respond(resp);
+  else
+    delete resp;
+  
+  return (rc == 0);
+}
+
+//------------------------------------------------------------
+
+CEngineRequestSetSites::CEngineRequestSetSites(mediate_site_t *siteList, int nSites) :
   CEngineRequest(cEngineRequestSetSitesType),
   m_siteList(siteList),
   m_nSites(nSites)
@@ -151,7 +185,7 @@ bool CEngineRequestBeginBrowseFile::process(CEngineThread *engineThread)
   // open the file and get back the number of records (and calibration data?)
 
   // create a response as the handle
-  CEngineResponseBeginBrowseFile *resp = new CEngineResponseBeginBrowseFile(m_fileName);
+  CEngineResponseBeginAccessFile *resp = new CEngineResponseBeginAccessFile(m_fileName);
 
   int rc = mediateRequestBeginBrowseSpectra(engineThread->engineContext(),
 					    m_fileName.toAscii().constData(), resp);
@@ -178,7 +212,7 @@ CEngineRequestBrowseNextRecord::~CEngineRequestBrowseNextRecord()
 bool CEngineRequestBrowseNextRecord::process(CEngineThread *engineThread)
 {
   // create a response as the handle
-  CEngineResponseBrowseRecord *resp = new CEngineResponseBrowseRecord;
+  CEngineResponseAccessRecord *resp = new CEngineResponseAccessRecord;
 
   int rc = mediateRequestNextMatchingBrowseSpectrum(engineThread->engineContext(),
 						    resp);
@@ -206,7 +240,7 @@ CEngineRequestBrowseSpecificRecord::~CEngineRequestBrowseSpecificRecord()
 bool CEngineRequestBrowseSpecificRecord::process(CEngineThread *engineThread)
 {
   // create a response as the handle
-  CEngineResponseBrowseRecord *resp = new CEngineResponseBrowseRecord;
+  CEngineResponseAccessRecord *resp = new CEngineResponseAccessRecord;
 
   int rc = mediateRequestGotoSpectrum(engineThread->engineContext(),
 				      m_recordNumber, resp);
@@ -238,10 +272,237 @@ CEngineRequestEndBrowseFile::~CEngineRequestEndBrowseFile()
 
 bool CEngineRequestEndBrowseFile::process(CEngineThread *engineThread)
 {
-  // create a response as the handle - TODO
-  CEngineResponseEndBrowseFile *resp = new CEngineResponseEndBrowseFile;
+  CEngineResponseEndAccessFile *resp = new CEngineResponseEndAccessFile;
 
   int rc = mediateRequestEndBrowseSpectra(engineThread->engineContext(), resp);
+
+  // post the response
+  engineThread->respond(resp);
+
+  return (rc != -1);
+}
+
+//------------------------------------------------------------
+
+CEngineRequestBeginAnalyseFile::CEngineRequestBeginAnalyseFile(const QString &fileName) :
+  CEngineRequest(cEngineRequestBeginAnalyseFileType),
+  m_fileName(fileName)
+{
+}
+
+CEngineRequestBeginAnalyseFile::~CEngineRequestBeginAnalyseFile()
+{
+}
+
+bool CEngineRequestBeginAnalyseFile::process(CEngineThread *engineThread)
+{
+  // open the file and get back the number of records (and calibration data?)
+
+  // create a response as the handle
+  CEngineResponseBeginAccessFile *resp = new CEngineResponseBeginAccessFile(m_fileName);
+
+  int rc = mediateRequestBeginAnalyseSpectra(engineThread->engineContext(),
+					    m_fileName.toAscii().constData(), resp);
+
+  resp->setNumberOfRecords(rc); // -1 if an error occurred
+
+  // post the response
+  engineThread->respond(resp);
+
+  return (rc != -1);
+}
+
+//------------------------------------------------------------
+
+CEngineRequestAnalyseNextRecord::CEngineRequestAnalyseNextRecord() :
+  CEngineRequest(cEngineRequestAnalyseNextRecordType)
+{
+}
+
+CEngineRequestAnalyseNextRecord::~CEngineRequestAnalyseNextRecord()
+{
+}
+
+bool CEngineRequestAnalyseNextRecord::process(CEngineThread *engineThread)
+{
+  // create a response as the handle
+  CEngineResponseAccessRecord *resp = new CEngineResponseAccessRecord;
+
+  int rc = mediateRequestNextMatchingAnalyseSpectrum(engineThread->engineContext(),
+						    resp);
+
+  resp->setRecordNumber(rc); // -1 if an error occurred
+
+  // post the response
+  engineThread->respond(resp);
+
+  return (rc != -1);
+}
+
+//------------------------------------------------------------
+
+CEngineRequestAnalyseSpecificRecord::CEngineRequestAnalyseSpecificRecord(int recordNumber) :
+  CEngineRequest(cEngineRequestAnalyseSpecificRecordType),
+  m_recordNumber(recordNumber)
+{
+}
+
+CEngineRequestAnalyseSpecificRecord::~CEngineRequestAnalyseSpecificRecord()
+{
+}
+
+bool CEngineRequestAnalyseSpecificRecord::process(CEngineThread *engineThread)
+{
+  // create a response as the handle
+  CEngineResponseAccessRecord *resp = new CEngineResponseAccessRecord;
+
+  int rc = mediateRequestGotoSpectrum(engineThread->engineContext(),
+				      m_recordNumber, resp);
+  
+  if (rc > 0) {
+    // successfully positioned .. now analyse
+    rc = mediateRequestNextMatchingAnalyseSpectrum(engineThread->engineContext(),
+						   resp);
+
+    resp->setRecordNumber(rc); // -1 if an error occurred
+  }
+
+  // post the response
+  engineThread->respond(resp);
+
+  return (rc != -1);
+}
+
+//------------------------------------------------------------
+
+CEngineRequestEndAnalyseFile::CEngineRequestEndAnalyseFile() :
+  CEngineRequest(cEngineRequestEndAnalyseFileType)
+{
+}
+
+CEngineRequestEndAnalyseFile::~CEngineRequestEndAnalyseFile()
+{
+}
+
+bool CEngineRequestEndAnalyseFile::process(CEngineThread *engineThread)
+{
+  CEngineResponseEndAccessFile *resp = new CEngineResponseEndAccessFile;
+
+  int rc = mediateRequestEndAnalyseSpectra(engineThread->engineContext(), resp);
+
+  // post the response
+  engineThread->respond(resp);
+
+  return (rc != -1);
+}
+
+//------------------------------------------------------------
+
+CEngineRequestBeginCalibrateFile::CEngineRequestBeginCalibrateFile(const QString &fileName) :
+  CEngineRequest(cEngineRequestBeginCalibrateFileType),
+  m_fileName(fileName)
+{
+}
+
+CEngineRequestBeginCalibrateFile::~CEngineRequestBeginCalibrateFile()
+{
+}
+
+bool CEngineRequestBeginCalibrateFile::process(CEngineThread *engineThread)
+{
+  // open the file and get back the number of records (and calibration data?)
+
+  // create a response as the handle
+  CEngineResponseBeginAccessFile *resp = new CEngineResponseBeginAccessFile(m_fileName);
+
+  int rc = mediateRequestBeginCalibrateSpectra(engineThread->engineContext(),
+					    m_fileName.toAscii().constData(), resp);
+
+  resp->setNumberOfRecords(rc); // -1 if an error occurred
+
+  // post the response
+  engineThread->respond(resp);
+
+  return (rc != -1);
+}
+
+//------------------------------------------------------------
+
+CEngineRequestCalibrateNextRecord::CEngineRequestCalibrateNextRecord() :
+  CEngineRequest(cEngineRequestCalibrateNextRecordType)
+{
+}
+
+CEngineRequestCalibrateNextRecord::~CEngineRequestCalibrateNextRecord()
+{
+}
+
+bool CEngineRequestCalibrateNextRecord::process(CEngineThread *engineThread)
+{
+  // create a response as the handle
+  CEngineResponseAccessRecord *resp = new CEngineResponseAccessRecord;
+
+  int rc = mediateRequestNextMatchingCalibrateSpectrum(engineThread->engineContext(),
+						    resp);
+
+  resp->setRecordNumber(rc); // -1 if an error occurred
+
+  // post the response
+  engineThread->respond(resp);
+
+  return (rc != -1);
+}
+
+//------------------------------------------------------------
+
+CEngineRequestCalibrateSpecificRecord::CEngineRequestCalibrateSpecificRecord(int recordNumber) :
+  CEngineRequest(cEngineRequestCalibrateSpecificRecordType),
+  m_recordNumber(recordNumber)
+{
+}
+
+CEngineRequestCalibrateSpecificRecord::~CEngineRequestCalibrateSpecificRecord()
+{
+}
+
+bool CEngineRequestCalibrateSpecificRecord::process(CEngineThread *engineThread)
+{
+  // create a response as the handle
+  CEngineResponseAccessRecord *resp = new CEngineResponseAccessRecord;
+
+  int rc = mediateRequestGotoSpectrum(engineThread->engineContext(),
+				      m_recordNumber, resp);
+  
+  if (rc > 0) {
+    // successfully positioned .. now analyse
+    rc = mediateRequestNextMatchingCalibrateSpectrum(engineThread->engineContext(),
+						   resp);
+
+    resp->setRecordNumber(rc); // -1 if an error occurred
+  }
+
+  // post the response
+  engineThread->respond(resp);
+
+  return (rc != -1);
+}
+
+//------------------------------------------------------------
+
+CEngineRequestEndCalibrateFile::CEngineRequestEndCalibrateFile() :
+  CEngineRequest(cEngineRequestEndCalibrateFileType)
+{
+}
+
+CEngineRequestEndCalibrateFile::~CEngineRequestEndCalibrateFile()
+{
+}
+
+bool CEngineRequestEndCalibrateFile::process(CEngineThread *engineThread)
+{
+  CEngineResponseEndAccessFile *resp = new CEngineResponseEndAccessFile;
+
+  int rc = mediateRequestEndCalibrateSpectra(engineThread->engineContext(), resp);
 
   // post the response
   engineThread->respond(resp);

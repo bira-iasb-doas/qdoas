@@ -44,20 +44,33 @@ class CAnalysisWindowCrossSectionSubHandler : public CConfigSubHandler
 {
  public:
   CAnalysisWindowCrossSectionSubHandler(CQdoasProjectConfigHandler *master,
-					mediate_analysis_window_t *d);
+					cross_section_list_t *d);
   virtual ~CAnalysisWindowCrossSectionSubHandler();
 
   virtual bool start(const QXmlAttributes &atts);
 
  private:
-  mediate_analysis_window_t *m_d;
+  cross_section_list_t *m_d;
+};
+
+class CAnalysisWindowLinearSubHandler : public CConfigSubHandler
+{
+ public:
+  CAnalysisWindowLinearSubHandler(CQdoasProjectConfigHandler *master,
+				  struct anlyswin_linear *d);
+  virtual ~CAnalysisWindowLinearSubHandler();
+
+  virtual bool start(const QXmlAttributes &atts);
+
+ private:
+  struct anlyswin_linear *m_d;
 };
 
 class CAnalysisWindowShiftStretchSubHandler : public CConfigSubHandler
 {
  public:
   CAnalysisWindowShiftStretchSubHandler(CQdoasProjectConfigHandler *master,
-					mediate_analysis_window_t *d);
+					shift_stretch_list_t *d);
   virtual ~CAnalysisWindowShiftStretchSubHandler();
 
   virtual bool start(const QXmlAttributes &atts);
@@ -65,7 +78,33 @@ class CAnalysisWindowShiftStretchSubHandler : public CConfigSubHandler
   virtual bool end(void);
 
  private:
-  mediate_analysis_window_t *m_d;
+  shift_stretch_list_t *m_d;
+};
+
+class CAnalysisWindowGapSubHandler : public CConfigSubHandler
+{
+ public:
+  CAnalysisWindowGapSubHandler(CQdoasProjectConfigHandler *master,
+			       gap_list_t *d);
+  virtual ~CAnalysisWindowGapSubHandler();
+
+  virtual bool start(const QXmlAttributes &atts);
+
+ private:
+  gap_list_t *m_d;
+};
+
+class CAnalysisWindowOutputSubHandler : public CConfigSubHandler
+{
+ public:
+  CAnalysisWindowOutputSubHandler(CQdoasProjectConfigHandler *master,
+				  output_list_t *d);
+  virtual ~CAnalysisWindowOutputSubHandler();
+
+  virtual bool start(const QXmlAttributes &atts);
+
+ private:
+  output_list_t *m_d;
 };
 
 

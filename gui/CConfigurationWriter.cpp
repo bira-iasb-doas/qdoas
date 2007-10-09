@@ -325,6 +325,14 @@ void CConfigurationWriter::writePropertiesCalibration(FILE *fp, const mediate_pr
   fprintf(fp, "      <polynomial shift=\"%d\" sfp=\"%d\" />\n", d->shiftDegree, d->sfpDegree);
   fprintf(fp, "      <window min=\"%.1f\" max=\"%.1f\" intervals=\"%d\" />\n",
 	  d->wavelengthMin, d->wavelengthMax, d->subWindows);
+
+  writeCrossSectionList(fp, &(d->crossSectionList));
+  writeLinear(fp, &(d->linear));
+  writeCrossSectionList(fp, &(d->crossSectionList));
+  writeShiftStretchList(fp, &(d->shiftStretchList));
+  writeGapList(fp, &(d->gapList));
+  writeOutputList(fp, &(d->outputList));
+
   fprintf(fp, "    </calibration>\n");
 }
 
@@ -1123,7 +1131,6 @@ void CConfigurationWriter::writeAnalysisWindows(FILE *fp, const QString &project
 
   CWorkSpace *ws = CWorkSpace::instance();
 
-  int j, k;
   int n = item->childCount();
   int i = 0;
 
@@ -1172,120 +1179,19 @@ void CConfigurationWriter::writeAnalysisWindows(FILE *fp, const QString &project
 		properties->refSzaCenter , properties->refSzaDelta);
 
 	// linear
-	fprintf(fp, "      <linear");
-	writePolyType(fp, "xpoly", properties->linear.xPolyOrder);
-	writePolyType(fp, "xbase", properties->linear.xBaseOrder);
-	fprintf(fp, " xfit=\"%s\" xerr=\"%s\"",
-		(properties->linear.xFlagFitStore ? sTrue : sFalse),
-		(properties->linear.xFlagErrStore ? sTrue : sFalse));
-	writePolyType(fp, "xinvpoly", properties->linear.xinvPolyOrder);
-	writePolyType(fp, "xinvbase", properties->linear.xinvBaseOrder);
-	fprintf(fp, " xinvfit=\"%s\" xinverr=\"%s\"",
-		(properties->linear.xinvFlagFitStore ? sTrue : sFalse),
-		(properties->linear.xinvFlagErrStore ? sTrue : sFalse));
-	writePolyType(fp, "offpoly", properties->linear.offsetPolyOrder);
-	writePolyType(fp, "offbase", properties->linear.offsetBaseOrder);
-	fprintf(fp, " offfit=\"%s\" offerr=\"%s\"",
-		(properties->linear.offsetFlagFitStore ? sTrue : sFalse),
-		(properties->linear.offsetFlagErrStore ? sTrue : sFalse));
-	fprintf(fp, " />\n");
+	writeLinear(fp, &(properties->linear));
 
 	// cross sections ....
-	fprintf(fp, "      <cross_sections>\n");
-
-	j = 0;
-	while (j < properties->nCrossSection) {
-	  fprintf(fp, "        <cross_section sym=\"%s\" ortho=\"%s\" cstype=",
-		  properties->crossSection[j].symbol,
-		  properties->crossSection[j].orthogonal);
-
-	  switch (properties->crossSection[j].crossType) {
-	  case ANLYS_CROSS_ACTION_INTERPOLATE:
-	    fprintf(fp, "\"interp\""); break;
-	  case ANLYS_CROSS_ACTION_CONVOLUTE:
-	    fprintf(fp, "\"std\""); break;
-	  case ANLYS_CROSS_ACTION_CONVOLUTE_I0:
-	    fprintf(fp, "\"io\""); break;
-	  case ANLYS_CROSS_ACTION_CONVOLUTE_RING:
-	    fprintf(fp, "\"ring\""); break;
-	  default:
-	    fprintf(fp, "\"none\"");
-	  }
-	  fprintf(fp, " amftype=");
-	  switch (properties->crossSection[j].amfType) {
-	  case ANLYS_AMF_TYPE_SZA:
-	    fprintf(fp, "\"sza\""); break;
-	  case ANLYS_AMF_TYPE_CLIMATOLOGY:
-	    fprintf(fp, "\"climate\""); break;
-	  case ANLYS_AMF_TYPE_WAVELENGTH1:
-	    fprintf(fp, "\"wave1\""); break;
-	  case ANLYS_AMF_TYPE_WAVELENGTH2:
-	    fprintf(fp, "\"wave2\""); break;
-	  case ANLYS_AMF_TYPE_WAVELENGTH3:
-	    fprintf(fp, "\"wave3\""); break;
-	  default:
-	    fprintf(fp, "\"none\"");
-	  }
-
-	  fprintf(fp, " fit=\"%s\" filter=\"%s\" ccfit=\"%s\" icc=\"%.3f\" dcc=\"%.3f\" ccio=\"%s\"",
-		  (properties->crossSection[j].requireFit ? sTrue : sFalse),
-		  (properties->crossSection[j].requireFilter ? sTrue : sFalse),
-		  (properties->crossSection[j].requireCcFit ? sTrue : sFalse),
-		  properties->crossSection[j].initialCc, properties->crossSection[j].deltaCc, 
-		  (properties->crossSection[j].requireCcFit ? sTrue : sFalse));
-	  tmpStr = ws->simplifyPath(QString(properties->crossSection[j].crossSectionFile));
-	  fprintf(fp, " csfile=\"%s\"", tmpStr.toAscii().data());
-	  tmpStr = ws->simplifyPath(QString(properties->crossSection[j].amfFile));
-	  fprintf(fp, " amffile=\"%s\" />\n", tmpStr.toAscii().data());
-
-	  ++j;
-	}
-	fprintf(fp, "      </cross_sections>\n");
+	writeCrossSectionList(fp, &(properties->crossSectionList));
 
 	// shift and stretch
-	fprintf(fp, "      <shift_stretches>\n");
-	j = 0;
-	while (j < properties->nShiftStretch) {
-	  fprintf(fp, "        <shift_stretch shfit=\"%s\" stfit=",
-		  (properties->shiftStretch[j].shFit ? sTrue : sFalse));
-	  switch (properties->shiftStretch[j].stFit) {
-	  case ANLYS_STRETCH_TYPE_FIRST_ORDER: fprintf(fp, "\"1st\""); break;
-	  case ANLYS_STRETCH_TYPE_SECOND_ORDER: fprintf(fp, "\"2nd\""); break;
-	  default: fprintf(fp, "\"none\"");
-	  }
-	  fprintf(fp, " scfit=");
-	  switch (properties->shiftStretch[j].scFit) {
-	  case ANLYS_STRETCH_TYPE_FIRST_ORDER: fprintf(fp, "\"1st\""); break;
-	  case ANLYS_STRETCH_TYPE_SECOND_ORDER: fprintf(fp, "\"2nd\""); break;
-	  default: fprintf(fp, "\"none\"");
-	  }
-	  fprintf(fp, " shstr=\"%s\" ststr=\"%s\" scstr=\"%s\" errstr=\"%s\"",
-		  (properties->shiftStretch[j].shStore ? sTrue : sFalse),
-		  (properties->shiftStretch[j].stStore ? sTrue : sFalse),
-		  (properties->shiftStretch[j].scStore ? sTrue : sFalse),
-		  (properties->shiftStretch[j].errStore ? sTrue : sFalse));
-	  fprintf(fp, " shini=\"%d\" stini=\"%.3f\" stini2=\"%.3f\" scini=\"%.3f\" scini2=\"%.3f\"",
-		  properties->shiftStretch[j].shInit,
-		  properties->shiftStretch[j].stInit, properties->shiftStretch[j].stInit2,
-		  properties->shiftStretch[j].scInit, properties->shiftStretch[j].scInit2);
-	  fprintf(fp, " shdel=\"%d\" stdel=\"%.3f\" stdel2=\"%.3f\" scdel=\"%.3f\" scdel2=\"%.3f\"",
-		  properties->shiftStretch[j].shDelta,
-		  properties->shiftStretch[j].stDelta, properties->shiftStretch[j].stDelta2,
-		  properties->shiftStretch[j].scDelta, properties->shiftStretch[j].scDelta2);
-	  fprintf(fp, " shmin=\"%d\" shmax=\"%d\" >\n",
-		  properties->shiftStretch[j].shMin, properties->shiftStretch[j].shMax);
-	  
-	  k = 0;
-	  while (k < properties->shiftStretch[j].nSymbol) {
-	    fprintf(fp, "          <symbol name=\"%s\" />\n", properties->shiftStretch[j].symbol[k]);
-	    ++k;
-	  }
-	  
-	  ++j;
-	}
+	writeShiftStretchList(fp, &(properties->shiftStretchList));
 
-	fprintf(fp, "      </shift_stretches>\n");
+	// gaps...
+	writeGapList(fp, &(properties->gapList));
 
+	// output...
+	writeOutputList(fp, &(properties->outputList));
 
 	fprintf(fp, "    </analysis_window>\n");
       }
@@ -1306,4 +1212,172 @@ void CConfigurationWriter::writePolyType(FILE *fp, const char *attr, int type)
   case ANLYS_POLY_TYPE_5: fprintf(fp, " %s=\"5\"", attr); break;
   default: fprintf(fp, " %s=\"none\"", attr);
   }
+}
+
+void CConfigurationWriter::writeCrossSectionList(FILE *fp, const cross_section_list_t *data)
+{
+  QString tmpStr;
+  CWorkSpace *ws = CWorkSpace::instance();
+  const struct anlyswin_cross_section *d = &(data->crossSection[0]);
+  int j = 0;
+
+  fprintf(fp, "      <cross_sections>\n");
+
+  while (j < data->nCrossSection) {
+    fprintf(fp, "        <cross_section sym=\"%s\" ortho=\"%s\" cstype=",
+	    d->symbol,
+	    d->orthogonal);
+    
+    switch (d->crossType) {
+    case ANLYS_CROSS_ACTION_INTERPOLATE:
+      fprintf(fp, "\"interp\""); break;
+    case ANLYS_CROSS_ACTION_CONVOLUTE:
+      fprintf(fp, "\"std\""); break;
+    case ANLYS_CROSS_ACTION_CONVOLUTE_I0:
+      fprintf(fp, "\"io\""); break;
+    case ANLYS_CROSS_ACTION_CONVOLUTE_RING:
+      fprintf(fp, "\"ring\""); break;
+    default:
+      fprintf(fp, "\"none\"");
+    }
+    fprintf(fp, " amftype=");
+    switch (d->amfType) {
+    case ANLYS_AMF_TYPE_SZA:
+      fprintf(fp, "\"sza\""); break;
+    case ANLYS_AMF_TYPE_CLIMATOLOGY:
+      fprintf(fp, "\"climate\""); break;
+    case ANLYS_AMF_TYPE_WAVELENGTH1:
+      fprintf(fp, "\"wave1\""); break;
+    case ANLYS_AMF_TYPE_WAVELENGTH2:
+      fprintf(fp, "\"wave2\""); break;
+    case ANLYS_AMF_TYPE_WAVELENGTH3:
+      fprintf(fp, "\"wave3\""); break;
+    default:
+      fprintf(fp, "\"none\"");
+    }
+    
+    fprintf(fp, " fit=\"%s\" filter=\"%s\" ccfit=\"%s\" icc=\"%.3f\" dcc=\"%.3f\" ccio=\"%s\"",
+	    (d->requireFit ? sTrue : sFalse),
+	    (d->requireFilter ? sTrue : sFalse),
+	    (d->requireCcFit ? sTrue : sFalse),
+	    d->initialCc, d->deltaCc, 
+	    (d->requireCcFit ? sTrue : sFalse));
+    tmpStr = ws->simplifyPath(QString(d->crossSectionFile));
+    fprintf(fp, " csfile=\"%s\"", tmpStr.toAscii().data());
+    tmpStr = ws->simplifyPath(QString(d->amfFile));
+    fprintf(fp, " amffile=\"%s\" />\n", tmpStr.toAscii().data());
+    
+    ++d;
+    ++j;
+  }
+  fprintf(fp, "      </cross_sections>\n");
+}
+
+void CConfigurationWriter::writeLinear(FILE *fp, const struct anlyswin_linear *d)
+{
+  fprintf(fp, "      <linear");
+  writePolyType(fp, "xpoly", d->xPolyOrder);
+  writePolyType(fp, "xbase", d->xBaseOrder);
+  fprintf(fp, " xfit=\"%s\" xerr=\"%s\"",
+	  (d->xFlagFitStore ? sTrue : sFalse),
+	  (d->xFlagErrStore ? sTrue : sFalse));
+  writePolyType(fp, "xinvpoly", d->xinvPolyOrder);
+  writePolyType(fp, "xinvbase", d->xinvBaseOrder);
+  fprintf(fp, " xinvfit=\"%s\" xinverr=\"%s\"",
+	  (d->xinvFlagFitStore ? sTrue : sFalse),
+	  (d->xinvFlagErrStore ? sTrue : sFalse));
+  writePolyType(fp, "offpoly", d->offsetPolyOrder);
+  writePolyType(fp, "offbase", d->offsetBaseOrder);
+  fprintf(fp, " offfit=\"%s\" offerr=\"%s\"",
+	  (d->offsetFlagFitStore ? sTrue : sFalse),
+	  (d->offsetFlagErrStore ? sTrue : sFalse));
+  fprintf(fp, " />\n");
+}
+
+void CConfigurationWriter::writeShiftStretchList(FILE *fp, const shift_stretch_list_t *data)
+{
+  int k, j;
+  const struct anlyswin_shift_stretch *d = &(data->shiftStretch[0]);
+ 
+  fprintf(fp, "      <shift_stretches>\n");
+
+  j = 0;
+  while (j < data->nShiftStretch) {
+    fprintf(fp, "        <shift_stretch shfit=\"%s\" stfit=",
+	    (d->shFit ? sTrue : sFalse));
+    switch (d->stFit) {
+    case ANLYS_STRETCH_TYPE_FIRST_ORDER: fprintf(fp, "\"1st\""); break;
+    case ANLYS_STRETCH_TYPE_SECOND_ORDER: fprintf(fp, "\"2nd\""); break;
+    default: fprintf(fp, "\"none\"");
+    }
+    fprintf(fp, " scfit=");
+    switch (d->scFit) {
+    case ANLYS_STRETCH_TYPE_FIRST_ORDER: fprintf(fp, "\"1st\""); break;
+    case ANLYS_STRETCH_TYPE_SECOND_ORDER: fprintf(fp, "\"2nd\""); break;
+    default: fprintf(fp, "\"none\"");
+    }
+    fprintf(fp, " shstr=\"%s\" ststr=\"%s\" scstr=\"%s\" errstr=\"%s\"",
+	    (d->shStore ? sTrue : sFalse),
+	    (d->stStore ? sTrue : sFalse),
+	    (d->scStore ? sTrue : sFalse),
+	    (d->errStore ? sTrue : sFalse));
+    fprintf(fp, " shini=\"%.3f\" stini=\"%.3f\" stini2=\"%.3f\" scini=\"%.3f\" scini2=\"%.3f\"",
+	    d->shInit,
+	    d->stInit, d->stInit2,
+	    d->scInit, d->scInit2);
+    fprintf(fp, " shdel=\"%.4f\" stdel=\"%.4f\" stdel2=\"%.4f\" scdel=\"%.4f\" scdel2=\"%.4f\"",
+	    d->shDelta,
+	    d->stDelta, d->stDelta2,
+	    d->scDelta, d->scDelta2);
+    fprintf(fp, " shmin=\"%.3f\" shmax=\"%.3f\" >\n",
+	    d->shMin, d->shMax);
+    
+    k = 0;
+    while (k < d->nSymbol) {
+      fprintf(fp, "          <symbol name=\"%s\" />\n", d->symbol[k]);
+      ++k;
+    }
+  
+    ++d;
+    ++j;
+  }
+  
+  fprintf(fp, "      </shift_stretches>\n");
+}
+
+void CConfigurationWriter::writeGapList(FILE *fp, const gap_list_t *d)
+{
+  int j = 0;
+
+  fprintf(fp, "      <gaps>\n");
+
+  while (j < d->nGap) {
+    fprintf(fp, "        <gap min=\"%.2f\" max=\"%.2f\" />\n",
+	    d->gap[j].minimum, d->gap[j].maximum);
+    ++j;
+  }
+  fprintf(fp, "      </gaps>\n");
+}
+
+void CConfigurationWriter::writeOutputList(FILE *fp, const output_list_t *d)
+{
+  int j = 0;
+
+  fprintf(fp, "      <outputs>\n");
+  
+  while (j < d->nOutput) {
+    fprintf(fp, "        <output sym=\"%s\" amf=\"%s\" scol=\"%s\" serr=\"%s\" sfact=\"%.3f\"",
+	    d->output[j].symbol,
+	    (d->output[j].amf ? sTrue : sFalse),
+	    (d->output[j].slantCol ? sTrue : sFalse),
+	    (d->output[j].slantErr ? sTrue : sFalse),
+	    d->output[j].slantFactor);
+    fprintf(fp, " vcol=\"%s\" verr=\"%s\" vfact=\"%.3f\" />\n",
+	    (d->output[j].vertCol ? sTrue : sFalse),
+	    (d->output[j].vertErr ? sTrue : sFalse),
+	    d->output[j].vertFactor);
+    
+    ++j;
+  }
+  fprintf(fp, "      </outputs>\n");
 }

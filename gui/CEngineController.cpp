@@ -26,14 +26,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "debugutil.h"
 
-static const int cBrowseMode   = 0x1;
-static const int cAnalyseMode  = 0x2;
-static const int cRequestBit = 0x8;
-
-
 CEngineController::CEngineController(QObject *parent) :
   QObject(parent),
-  m_mode(0),
+  m_state(Idle),
   m_currentProject(NULL),
   m_currentRecord(-1),
   m_numberOfRecords(0),
@@ -61,13 +56,10 @@ void CEngineController::notifyCurrentFile(int fileNumber)
 
 void CEngineController::notifyReadyToNavigateRecords(const QString &filename, int numberOfRecords)
 {
-  // successfully started browsing a file
-  // TODO signals for buttons
+  // successfully started accessing a file
 
   // sanity check - currentIt and filename must be consistent
   assert(m_currentIt.file().filePath() == filename);
-
-  m_mode &= ~cRequestBit; // clear the request bit 
 
   m_numberOfRecords = numberOfRecords;
   m_currentRecord = 0;
@@ -78,6 +70,7 @@ void CEngineController::notifyReadyToNavigateRecords(const QString &filename, in
   emit signalCurrentFileChanged(filename);
 
   // session is up and running
+  m_state = Running;
   emit signalSessionRunning(isSessionRunning());
 }
 
@@ -201,13 +194,13 @@ void CEngineController::notifyErrorMessages(int highestErrorLevel, const QList<C
   while (it != errorMessages.end()) {
     // one message per line
     switch (it->errorLevel()) {
-    case eInformationEngineError:
+    case InformationEngineError:
       stream << "INFO    (";
       break;
-    case eWarningEngineError:
+    case WarningEngineError:
       stream << "WARNING (";
       break;
-    case eFatalEngineError:
+    case FatalEngineError:
       stream << "FATAL   (";
       break;
     }
@@ -220,11 +213,10 @@ void CEngineController::notifyErrorMessages(int highestErrorLevel, const QList<C
   emit signalErrorMessages(highestErrorLevel, msg);
 }
 
-void CEngineController::notifyEndBrowseFile(void)
+void CEngineController::notifyEndAccessFile(void)
 {
-  // nothing to do unless the request bit is set (a stop request).
-  if (m_mode & cRequestBit) {
-    m_mode = 0; // definitely stopped
+  if (m_state == Stopping) {
+    m_state = Idle;
     
     emit signalSessionRunning(isSessionRunning());
   }
@@ -258,15 +250,21 @@ bool CEngineController::event(QEvent *e)
 
 void CEngineController::slotNextFile()
 {
+  if (m_state != Running) return;
+
   CEngineRequestCompound *req = new CEngineRequestCompound;
   
   // done with the current file
   if (m_numberOfRecords >= 0) {
-    switch (m_mode) {
-    case cBrowseMode:
+    switch (m_session->mode()) {
+    case CSession::Browse:
       req->addRequest(new CEngineRequestEndBrowseFile);
       break;
-    case cAnalyseMode:
+    case CSession::Calibrate:
+      req->addRequest(new CEngineRequestEndCalibrateFile);
+      break;
+    case CSession::Analyse:
+      req->addRequest(new CEngineRequestEndAnalyseFile);
       break;
     }
   }
@@ -280,11 +278,15 @@ void CEngineController::slotNextFile()
 	req->addRequest(new CEngineRequestSetProject(m_currentProject));
       }
 
-      switch (m_mode) {
-      case cBrowseMode:
+      switch (m_session->mode()) {
+      case CSession::Browse:
 	req->addRequest(new CEngineRequestBeginBrowseFile(m_currentIt.file().filePath()));
 	break;
-      case cAnalyseMode:
+      case CSession::Calibrate:
+	req->addRequest(new CEngineRequestBeginCalibrateFile(m_currentIt.file().filePath()));
+	break;
+      case CSession::Analyse:
+	req->addRequest(new CEngineRequestBeginAnalyseFile(m_currentIt.file().filePath()));
 	break;
       }
     }
@@ -296,15 +298,21 @@ void CEngineController::slotNextFile()
 
 void CEngineController::slotGotoFile(int number)
 {
+  if (m_state != Running) return;
+
   CEngineRequestCompound *req = new CEngineRequestCompound;
   
   // done with the current file
   if (m_numberOfRecords >= 0) {
-    switch (m_mode) {
-    case cBrowseMode:
+    switch (m_session->mode()) {
+    case CSession::Browse:
       req->addRequest(new CEngineRequestEndBrowseFile);
       break;
-    case cAnalyseMode:
+    case CSession::Calibrate:
+      req->addRequest(new CEngineRequestEndCalibrateFile);
+      break;
+    case CSession::Analyse:
+      req->addRequest(new CEngineRequestEndAnalyseFile);
       break;
     }
   }
@@ -318,11 +326,15 @@ void CEngineController::slotGotoFile(int number)
       req->addRequest(new CEngineRequestSetProject(m_currentProject));
     }
     
-    switch (m_mode) {
-    case cBrowseMode:
+    switch (m_session->mode()) {
+    case CSession::Browse:
       req->addRequest(new CEngineRequestBeginBrowseFile(m_currentIt.file().filePath()));
       break;
-    case cAnalyseMode:
+    case CSession::Calibrate:
+      req->addRequest(new CEngineRequestBeginCalibrateFile(m_currentIt.file().filePath()));
+      break;
+    case CSession::Analyse:
+      req->addRequest(new CEngineRequestBeginAnalyseFile(m_currentIt.file().filePath()));
       break;
     }
   }
@@ -343,13 +355,19 @@ void CEngineController::slotPreviousRecord()
 
 void CEngineController::slotNextRecord()
 {
+  if (m_state != Running) return;
+
   if (m_currentRecord != -1) {
     
-    switch (m_mode) {
-    case cBrowseMode:
+    switch (m_session->mode()) {
+    case CSession::Browse:
       m_thread->request(new CEngineRequestBrowseNextRecord);
       break;
-    case cAnalyseMode:
+    case CSession::Calibrate:
+      m_thread->request(new CEngineRequestCalibrateNextRecord);
+      break;
+    case CSession::Analyse:
+      m_thread->request(new CEngineRequestAnalyseNextRecord);
       break;
     }
   }
@@ -362,13 +380,19 @@ void CEngineController::slotLastRecord()
 
 void CEngineController::slotGotoRecord(int recordNumber)
 {
+  if (m_state != Running) return;
+
   if (m_currentRecord != -1 && recordNumber > 0 && recordNumber <= m_numberOfRecords) {
 
-    switch (m_mode) {
-    case cBrowseMode:
+    switch (m_session->mode()) {
+    case CSession::Browse:
       m_thread->request(new CEngineRequestBrowseSpecificRecord(recordNumber));
       break;
-    case cAnalyseMode:
+    case CSession::Calibrate:
+      m_thread->request(new CEngineRequestCalibrateSpecificRecord(recordNumber));
+      break;
+    case CSession::Analyse:
+      m_thread->request(new CEngineRequestAnalyseSpecificRecord(recordNumber));
       break;
     }
   }
@@ -376,13 +400,19 @@ void CEngineController::slotGotoRecord(int recordNumber)
 
 void CEngineController::slotStep()
 {
+  if (m_state != Running) return;
+
   if (m_currentRecord >= 0 && m_currentRecord < m_numberOfRecords) {
     // step record
-    switch (m_mode) {
-    case cBrowseMode:
+    switch (m_session->mode()) {
+    case CSession::Browse:
       m_thread->request(new CEngineRequestBrowseNextRecord);
       break;
-    case cAnalyseMode:
+    case CSession::Calibrate:
+      m_thread->request(new CEngineRequestCalibrateNextRecord);
+      break;
+    case CSession::Analyse:
+      m_thread->request(new CEngineRequestAnalyseNextRecord);
       break;
     }
   }
@@ -392,11 +422,15 @@ void CEngineController::slotStep()
   
     // done with the current file
     if (m_numberOfRecords >= 0) {
-      switch (m_mode) {
-      case cBrowseMode:
+      switch (m_session->mode()) {
+      case CSession::Browse:
 	req->addRequest(new CEngineRequestEndBrowseFile);
 	break;
-      case cAnalyseMode:
+      case CSession::Calibrate:
+	req->addRequest(new CEngineRequestEndCalibrateFile);
+	break;
+      case CSession::Analyse:
+	req->addRequest(new CEngineRequestEndAnalyseFile);
 	break;
       }
     }
@@ -409,11 +443,15 @@ void CEngineController::slotStep()
 	req->addRequest(new CEngineRequestSetProject(m_currentProject));
       }
 
-      switch (m_mode) {
-      case cBrowseMode:
+      switch (m_session->mode()) {
+      case CSession::Browse:
 	req->addRequest(new CEngineRequestBeginBrowseFile(m_currentIt.file().filePath()));
 	break;
-      case cAnalyseMode:
+      case CSession::Calibrate:
+	req->addRequest(new CEngineRequestBeginCalibrateFile(m_currentIt.file().filePath()));
+	break;
+      case CSession::Analyse:
+	req->addRequest(new CEngineRequestBeginAnalyseFile(m_currentIt.file().filePath()));
 	break;
       }
     }
@@ -422,19 +460,13 @@ void CEngineController::slotStep()
   }
 }
 
-void CEngineController::slotStartBrowseSession(const RefCountPtr<CSession> &session)
+void CEngineController::slotStartSession(const RefCountPtr<CSession> &session)
 {
-  // make a compound request
-  CEngineRequestCompound *req = new CEngineRequestCompound;
+  // the controller must be idle to start a session ...
+  if (m_state != Idle) return;
 
-  // tidy up from the previous(current) session
-  switch (m_mode) {
-  case cBrowseMode:
-    req->addRequest(new CEngineRequestEndBrowseFile); 
-    break;
-  case cAnalyseMode:
-    break;
-  }
+  // need a compound request
+  CEngineRequestCompound *req = new CEngineRequestCompound;
 
   // change session and reset current markers
   m_session = session;
@@ -447,13 +479,36 @@ void CEngineController::slotStartBrowseSession(const RefCountPtr<CSession> &sess
   m_currentProject = NULL;
 
   if (!m_currentIt.atEnd()) {
-
-    m_mode = cBrowseMode | cRequestBit;
-
     m_currentProject = m_currentIt.project();
 
-    req->addRequest(new CEngineRequestSetProject(m_currentProject));
-    req->addRequest(new CEngineRequestBeginBrowseFile(m_currentIt.file().filePath()));
+    // mode dependent parts of the request
+    if (m_session->mode() == CSession::Browse) {
+      req->addRequest(new CEngineRequestSetProject(m_currentProject));
+      req->addRequest(new CEngineRequestBeginBrowseFile(m_currentIt.file().filePath()));
+    }
+    else {
+      // take the site and symbol lists from the session ... and hand responsibility over to request objects.
+      int nSymbols, nSites;
+      mediate_symbol_t *symbols = m_session->takeSymbolList(nSymbols);
+      mediate_site_t *sites = m_session->takeSiteList(nSites);
+      
+      if (symbols)
+	req->addRequest(new CEngineRequestSetSymbols(symbols, nSymbols));
+      if (sites)
+	req->addRequest(new CEngineRequestSetSites(sites, nSites));
+
+      req->addRequest(new CEngineRequestSetProject(m_currentProject));
+
+      if (m_session->mode() == CSession::Analyse) {
+	req->addRequest(new CEngineRequestBeginAnalyseFile(m_currentIt.file().filePath()));
+      }
+      else if (m_session->mode() == CSession::Calibrate) {
+	req->addRequest(new CEngineRequestBeginCalibrateFile(m_currentIt.file().filePath()));
+      }
+    }
+
+    // change state
+    m_state = Pending;
   }
 
   emit signalFileListChanged(sessionFileList);
@@ -461,19 +516,22 @@ void CEngineController::slotStartBrowseSession(const RefCountPtr<CSession> &sess
   m_thread->request(req);
 }
 
-// end a session
 void CEngineController::slotStopSession()
 {
-  int oldMode = m_mode;
+  if (m_state != Running) return;
 
-  m_mode |= cRequestBit;
+  m_state = Stopping;
 
   // tidy up and wait for the response
-  switch (oldMode) {
-  case cBrowseMode:
+  switch (m_session->mode()) {
+  case CSession::Browse:
     m_thread->request(new CEngineRequestEndBrowseFile); 
     break;
-  case cAnalyseMode:
+  case CSession::Calibrate:
+    m_thread->request(new CEngineRequestEndCalibrateFile); 
+    break;
+  case CSession::Analyse:
+    m_thread->request(new CEngineRequestEndAnalyseFile); 
     break;
   }
 }

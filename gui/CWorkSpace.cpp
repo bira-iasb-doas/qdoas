@@ -377,6 +377,31 @@ mediate_symbol_t* CWorkSpace::symbolList(int &listLength) const
   return NULL;
 }
 
+mediate_analysis_window_t* CWorkSpace::analysisWindowList(const QString &projectName, int &listLength) const
+{ 
+  std::map<QString,SProjBucket>::const_iterator pIt = m_projMap.find(projectName);
+  if (pIt != m_projMap.end()) {
+    // project exists
+    size_t n = (pIt->second).window.size();
+    if (n > 0) {
+      mediate_analysis_window_t *data = new mediate_analysis_window_t[n];
+      mediate_analysis_window_t *p = data;
+
+      // walk the map and copy ... TODO - is the order important ???
+      std::map<QString,mediate_analysis_window_t*>::const_iterator wIt = (pIt->second).window.begin();
+      while (wIt != (pIt->second).window.end()) {
+	*p = *(wIt->second); // blot copy
+	++wIt;
+      }
+      listLength = (int)n;
+      return data;
+    }
+  }
+  
+  listLength = 0;
+  return NULL;
+}
+
 QStringList CWorkSpace::symbolList(void) const
 {
   QStringList symbolList;

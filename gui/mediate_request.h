@@ -26,39 +26,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //----------------------------------------------------------
 
 #include "mediate_limits.h"
+#include "mediate_general.h"
 #include "mediate_project.h"
 #include "mediate_analysis_window.h"
 
 #if defined(_cplusplus) || defined(__cplusplus)
 extern "C" {
 #endif
-
-// mediate_symbol_t
-//
-// Contains all information about a single symbol. It allows the GUI to provide
-// information to the engine.
-
-typedef struct mediate_symbol
-{
-  char name[SYMBOL_NAME_BUFFER_LENGTH];
-  char description[SYMBOL_DESCR_BUFFER_LENGTH];
-} mediate_symbol_t;
-
-
-// mediate_site_t
-//
-// Contains all information about a single site. It allows the GUI to provide
-// information to the engine.
-
-typedef struct mediate_site
-{
-  char name[SITE_NAME_BUFFER_LENGTH];
-  char abbreviation[SITE_ABBREV_BUFFER_LENGTH];
-  double longitude;
-  double latitude;
-  double altitude;
-} mediate_site_t;
-
 
 //----------------------------------------------------------
 // mediateRequest interface
@@ -120,12 +94,10 @@ int mediateRequestSetProject(void *engineContext, const mediate_project_t *proje
 
 int mediateRequestSetAnalysisWindows(void *engineContext, int numberOfWindows, const mediate_analysis_window_t *analysisWindows, void *responseHandle);
 
-
 // TODO
-
 int mediateRequestSetSymbols(void *engineContext, int numberOfSymbols, const mediate_symbol_t *symbols, void *responseHandle);
 
-  // TODO
+// TODO
 int mediateRequestSetSites(void *engineContext, int numberOfSites, const mediate_site_t *sites, void *responseHandle);
 
 //----------------------------------------------------------

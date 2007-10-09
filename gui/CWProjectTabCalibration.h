@@ -29,6 +29,12 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "mediate_project.h"
 
+#include <QTabWidget>
+
+#include "mediate_project.h"
+
+#include "CWAnalysisWindowDoasTables.h"
+
 
 class CWProjectTabCalibration : public QFrame
 {
@@ -42,7 +48,6 @@ Q_OBJECT
  public slots:
   void slotLineShapeSelectionChanged(int index);
   void slotBrowseSolarRefFile();
-  void slotFitParameters();
 
  private:
   QLineEdit *m_refFileEdit;
@@ -53,6 +58,14 @@ Q_OBJECT
   QSpinBox *m_degreeSpinBox, *m_shiftDegreeSpinBox, *m_sfpDegreeSpinBox;
   QLineEdit *m_lambdaMinEdit, *m_lambdaMaxEdit;
   QSpinBox *m_subWindowsSpinBox;
+
+  QTabWidget *m_tabs;
+
+  CWMoleculesDoasTable *m_moleculesTab;
+  CWLinearParametersDoasTable *m_linearTab;
+  CWShiftAndStretchDoasTable *m_shiftAndStretchTab;
+  CWGapDoasTable *m_gapTab;
+  CWOutputDoasTable *m_outputTab;
 };
 
 #endif

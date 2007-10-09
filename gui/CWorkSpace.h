@@ -17,6 +17,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
+
 #ifndef _CWORKSPACE_H_GUARD
 #define _CWORKSPACE_H_GUARD
 
@@ -79,8 +80,10 @@ class CWorkSpace
   bool modifySite(const QString &siteName, const QString &abbr, double longitude, double latitude, double altitude);
   void modifiedProjectProperties(const QString &projectName);
 
+  // return arrays ( allocated with new [] ).
   mediate_site_t* siteList(int &listLength) const;
   mediate_symbol_t* symbolList(int &listLength) const;
+  mediate_analysis_window_t* analysisWindowList(const QString &projectName, int &listLength) const;
 
   QStringList symbolList(void) const;
 

@@ -70,8 +70,8 @@ Q_OBJECT
   CWMoleculesDoasTable(const QString &label, int columnWidth, int headerHeight = 24, QWidget *parent = 0);
   virtual ~CWMoleculesDoasTable();
 
-  void populate(const struct anlyswin_cross_section *d, int nElements);
-  void apply(struct anlyswin_cross_section *d, int &nElements) const;
+  void populate(const cross_section_list_t *d);
+  void apply(cross_section_list_t *d) const;
 
   void addRow(int height, const QString &label, QList<QVariant> &cellData,
 	      const QString &csFilename, const QString &amfFilename);
@@ -125,8 +125,8 @@ class CWLinearParametersDoasTable : public CDoasTable
 
   // virtual void cellDataChanged(int row, int column, const QVariant &cellData); // no cell-coupling required
 
-  void populate(const struct anlys_linear *data);
-  void apply(struct anlys_linear *data) const;
+  void populate(const struct anlyswin_linear *data);
+  void apply(struct anlyswin_linear *data) const;
 
  private:
   static QString mapOrderToComboString(int order);
@@ -168,8 +168,8 @@ Q_OBJECT
   CWShiftAndStretchDoasTable(const QString &label, int columnWidth, int headerHeight = 24, QWidget *parent = 0);
   virtual ~CWShiftAndStretchDoasTable();
 
-  void populate(const struct anlyswin_shift_stretch *d, int nElements);
-  void apply(struct anlyswin_shift_stretch *d, int &nElements) const;
+  void populate(const shift_stretch_list_t *d);
+  void apply(shift_stretch_list_t *d) const;
 
   virtual void addRow(int height, const QString &label, QList<QVariant> &cellData);
   virtual void removeRow(int rowIndex);
@@ -177,6 +177,10 @@ Q_OBJECT
 
  protected:
   virtual void contextMenuEvent(QContextMenuEvent *e);
+
+ private:
+  static QString mapOrderToComboString(int order);
+  static int mapComboStringToOrder(const QString &str);
 
  public slots:
   void slotSymbolListChanged(const QStringList &symbols);
@@ -192,6 +196,53 @@ Q_OBJECT
   QStringList m_specialSymbols, m_freeSymbols;
   QList<QStringList> m_selectedSymbolList;
   int m_selectedRow;
+};
+
+class CWGapDoasTable : public CDoasTable
+{
+Q_OBJECT
+ public:
+  CWGapDoasTable(const QString &label, int columnWidth, int headerHeight = 24, QWidget *parent = 0);
+  virtual ~CWGapDoasTable();
+
+  void populate(const gap_list_t *d);
+  void apply(gap_list_t *d) const;
+
+  virtual void cellDataChanged(int row, int column, const QVariant &cellData);
+
+ protected:
+  virtual void contextMenuEvent(QContextMenuEvent *e);
+
+ public slots:
+  void slotInsertRow();
+  void slotRemoveRow();
+
+ private:
+  int m_selectedRow;
+};
+
+class CWOutputDoasTable : public CDoasTable
+{
+Q_OBJECT
+ public:
+  CWOutputDoasTable(const QString &label, int columnWidth, int headerHeight = 24, QWidget *parent = 0);
+  virtual ~CWOutputDoasTable();
+
+  void populate(const output_list_t *d);
+  void apply(output_list_t *d) const;
+
+  virtual void cellDataChanged(int row, int column, const QVariant &cellData);
+
+ private:
+  // prevent manual add/remove
+  virtual void addRow(int height, const QString &label, QList<QVariant> &cellData);
+  virtual void removeRow(int rowIndex);
+  
+ public slots:
+  void slotSymbolListChanged(const QStringList &symbols);
+
+ private:
+  QStringList m_symbols;
 };
 
 #endif

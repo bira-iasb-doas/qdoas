@@ -321,6 +321,30 @@ void CWProjectTree::savePreferences(void)
     CPreferences::instance()->setColumnWidthList("ProjectTree", m_colWidthList);
 }
 
+void CWProjectTree::buildAndStartSession(CSession::eMode sessionType)
+{ 
+  CSession *session = new CSession(sessionType);
+
+  // normalise the selection and then traverse to build session
+  QList<QTreeWidgetItem*> items = CWProjectTree::normalize(selectedItems());
+
+  QList<QTreeWidgetItem*>::iterator it = items.begin();
+  while (it != items.end()) {
+    // only consider enabled items
+    CProjectTreeItem *tmp = dynamic_cast<CProjectTreeItem*>(*it);
+    if (tmp && tmp->isEnabled())
+      CWProjectTree::buildSession(session, tmp);
+    ++it;
+  }
+
+  // safely dispatch the session to attached slots by wrapping in a reference
+  // counting pointer.
+
+  RefCountPtr<CSession> ptr(session);
+
+  emit signalStartSession(ptr);
+}
+
 //------------------------------------------------------------------------------
 // Interface for editors
 //------------------------------------------------------------------------------
@@ -963,36 +987,19 @@ void CWProjectTree::slotRenameAnalysisWindow()
 
 void CWProjectTree::slotRunAnalysis()
 {
-  // TODO
+  if (m_sessionActive)
+    QMessageBox::information(this, "Run Analysis", "A session is currently active.");
+  else
+    buildAndStartSession(CSession::Analyse);
 }
+
 
 void CWProjectTree::slotBrowseSpectra()
 {
-  if (m_sessionActive) {
+  if (m_sessionActive)
     QMessageBox::information(this, "Browse Spectra", "A session is currently active.");
-    return;
-  }
-
-  CSession *session = new CSession(false);
-
-  // normalise the selection and then traverse to build session
-  QList<QTreeWidgetItem*> items = CWProjectTree::normalize(selectedItems());
-
-  QList<QTreeWidgetItem*>::iterator it = items.begin();
-  while (it != items.end()) {
-    // only consider enabled items
-    CProjectTreeItem *tmp = dynamic_cast<CProjectTreeItem*>(*it);
-    if (tmp && tmp->isEnabled())
-      CWProjectTree::buildSession(session, tmp);
-    ++it;
-  }
-
-  // safely dispatch the session to attached slots by wrapping in a reference
-  // counting pointer.
-
-  RefCountPtr<CSession> ptr(session);
-
-  emit signalStartBrowseSession(ptr);
+  else
+    buildAndStartSession(CSession::Browse);  
 }
 
 void CWProjectTree::slotDeleteSelection()

@@ -55,6 +55,13 @@ class CConfigurationWriter
   void writeAnalysisWindows(FILE *fp, const QString &projectName, const QTreeWidgetItem *item);
 
   void writePolyType(FILE *fp, const char *attr, int type);
+  
+  void writeCrossSectionList(FILE *fp, const cross_section_list_t *d);
+  void writeLinear(FILE *fp, const struct anlyswin_linear *d);
+  void writeShiftStretchList(FILE *fp, const shift_stretch_list_t *d);
+  void writeGapList(FILE *fp, const gap_list_t *d);
+  void writeOutputList(FILE *fp, const output_list_t *d);
+
 
  private:
   const CWProjectTree *m_projectTree;

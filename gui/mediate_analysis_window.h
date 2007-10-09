@@ -22,69 +22,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #define _MEDIATE_ANALYSIS_WINDOW_H_GUARD
 
 #include "mediate_limits.h"
+#include "mediate_general.h"
 
 #if defined(_cplusplus) || defined(__cplusplus)
 extern "C" {
 #endif
-
-  struct anlyswin_cross_section
-  {
-    char symbol[SYMBOL_NAME_BUFFER_LENGTH];
-    char crossSectionFile[FILENAME_BUFFER_LENGTH];    // the cross section filename
-    char orthogonal[SYMBOL_NAME_BUFFER_LENGTH];       // a symbol or predefined constant
-    int crossType;
-    int amfType;
-    char amfFile[FILENAME_BUFFER_LENGTH];
-    int requireFit;
-    int requireFilter;
-    int requireCcFit;
-    double initialCc;
-    double deltaCc;
-    int requireCcIo;
-  };
-
-  struct anlys_linear
-  {
-    int xPolyOrder;
-    int xBaseOrder;
-    int xFlagFitStore;
-    int xFlagErrStore;
-
-    int xinvPolyOrder;
-    int xinvBaseOrder;
-    int xinvFlagFitStore;
-    int xinvFlagErrStore;
-
-    int offsetPolyOrder;
-    int offsetBaseOrder;
-    int offsetFlagFitStore;
-    int offsetFlagErrStore;
-  };
-
-  struct anlyswin_shift_stretch
-  {
-    int nSymbol;
-    char symbol[MAX_AW_SHIFT_STRETCH][SYMBOL_NAME_BUFFER_LENGTH];
-    int shFit;
-    int stFit;
-    int scFit;
-    int shStore;
-    int stStore;
-    int scStore;
-    int errStore;
-    int shInit;
-    double stInit;
-    double stInit2;
-    double scInit;
-    double scInit2;
-    int shDelta;
-    double stDelta;
-    double stDelta2;
-    double scDelta;
-    double scDelta2;
-    int shMin;
-    int shMax;
-  };
 
   // mediate_analysis_window_t
   //
@@ -109,13 +51,12 @@ extern "C" {
     int requirePredefined;
     int requireRefRatio;
     /* table data ... */
-    int nCrossSection;      /* number of valid elements in the following array */
-    struct anlyswin_cross_section crossSection[MAX_AW_CROSS_SECTION];
-
-    struct anlys_linear linear;
-    
-    int nShiftStretch;
-    struct anlyswin_shift_stretch shiftStretch[MAX_AW_SHIFT_STRETCH];
+    cross_section_list_t crossSectionList;
+    struct anlyswin_linear linear;
+    /* non linear ... TODO */
+    shift_stretch_list_t shiftStretchList;
+    gap_list_t gapList;
+    output_list_t outputList;
 
   } mediate_analysis_window_t;
   

@@ -17,10 +17,10 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
+
 #include <stdlib.h>
 
 #include "mediate.h"
-#include "mediate_response.h"
 #include "engine.h"
 
 int mediateRequestCreateEngineContext(void **engineContext, void *responseHandle)

@@ -58,6 +58,8 @@ Q_OBJECT
   QTreeWidgetItem *locateProjectByName(const QString &projectName);
   QTreeWidgetItem *locateByPath(const QStringList &path);
 
+  void buildAndStartSession(CSession::eMode sessionType);
+
   void savePreferences(void);
 
   QString loadConfiguration(const QList<const CProjectConfigItem*> &itemList);
@@ -118,7 +120,7 @@ Q_OBJECT
 
  signals:
   void signalWidthModeChanged(int newMode);
-  void signalStartBrowseSession(const RefCountPtr<CSession> &session);
+  void signalStartSession(const RefCountPtr<CSession> &session);
 
  private:
   QList<int> m_colWidthList;

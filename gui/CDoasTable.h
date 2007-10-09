@@ -46,7 +46,9 @@ Q_OBJECT
   
   int headerHeight(void) const;
 
-  void createColumnEdit(const QString &label, int columnWidth);
+  void createColumnEdit(const QString &label, int columnWidth);                                 // strings
+  void createColumnEdit(int minimum, int maximum, const QString &label, int columnWidth);       // integers
+  void createColumnEdit(double minimum, double maximum, int decimals, const QString &label, int columnWidth); // doubles
   void createColumnCombo(const QString &label, int columnWidth, const QStringList &tags);
   void createColumnCheck(const QString &label, int columnWidth);
 
@@ -61,6 +63,7 @@ Q_OBJECT
   void setCellEnabled(int rowIndex, int columnIndex, bool enabled);
 
   QList<QVariant> getCellData(int rowIndex) const;
+  QVariant getCellData(int rowIndex, int columnIndex) const;
 
   virtual void cellDataChanged(int row, int column, const QVariant &cellData);
 
@@ -70,6 +73,8 @@ Q_OBJECT
   void addColumn(CDoasTableColumn *column); // for adding custon columns in derived tables
   int rowIndexAtPosition(int yPixel) const;
   void setHeaderLabel(int rowIndex, const QString &label);
+
+  void setCellData(int rowIndex, int columnIndex, const QVariant &cellData);
 
   virtual void resizeEvent(QResizeEvent *e);
   //  virtual void contextMenuEvent(QContextMenuEvent *e);
@@ -121,7 +126,10 @@ Q_OBJECT
 
   virtual QVariant getCellData(int rowIndex) const = 0;
 
+  void setCellDataWrapper(int rowIndex, const QVariant &cellData);
+
  protected:
+  virtual void setCellData(int rowIndex, const QVariant &cellData);
   virtual QWidget* createCellWidget(const QVariant &cellData) = 0;
   
   void setViewportBackgroundColour(const QColor &c);
@@ -151,6 +159,7 @@ Q_OBJECT
 
 inline CDoasTable* CDoasTableColumn::owner(void) const { return m_owner; }
 inline int CDoasTableColumn::rowOffset(void) const { return m_rowOffset; }
+inline void CDoasTableColumn::setCellDataWrapper(int rowIndex, const QVariant &cellData) { setCellData(rowIndex, cellData); }
 
 
 class CDoasTableColumnHeader : public CDoasTableColumn
@@ -164,6 +173,7 @@ class CDoasTableColumnHeader : public CDoasTableColumn
   void setLabel(int rowIndex, const QString &label);
 
  protected:
+  virtual void setCellData(int rowIndex, const QVariant &cellData);
   virtual QWidget* createCellWidget(const QVariant &cellData);  
 };
 
@@ -190,7 +200,40 @@ class CDoasTableColumnEdit : public CDoasTableColumn
   virtual QVariant getCellData(int rowIndex) const;
 
  protected:
+  virtual void setCellData(int rowIndex, const QVariant &cellData);
   virtual QWidget* createCellWidget(const QVariant &cellData);
+};
+
+class CDoasTableColumnIntEdit : public CDoasTableColumnEdit
+{
+ public:
+  CDoasTableColumnIntEdit(int minimum, int maximum, const QString &label, CDoasTable *owner, int width);
+  virtual ~CDoasTableColumnIntEdit();
+
+  virtual QVariant getCellData(int rowIndex) const;
+
+ protected:
+  virtual QWidget* createCellWidget(const QVariant &cellData);
+  
+ private:
+  int m_minimum, m_maximum;
+};
+
+class CDoasTableColumnDoubleEdit : public CDoasTableColumnEdit
+{
+ public:
+  CDoasTableColumnDoubleEdit(double minimum, double maximum, int decimals,
+			     const QString &label, CDoasTable *owner, int width);
+  virtual ~CDoasTableColumnDoubleEdit();
+
+  virtual QVariant getCellData(int rowIndex) const;
+
+ protected:
+  virtual QWidget* createCellWidget(const QVariant &cellData);
+  
+ private:
+  double m_minimum, m_maximum;
+  int m_decimals;
 };
 
 class CDoasTableColumnComboBox : public QComboBox
@@ -216,6 +259,7 @@ class CDoasTableColumnCombo : public CDoasTableColumn
   virtual QVariant getCellData(int rowIndex) const;
 
  protected:
+  virtual void setCellData(int rowIndex, const QVariant &cellData);
   virtual QWidget* createCellWidget(const QVariant &cellData);
 
 private:
@@ -245,6 +289,7 @@ class CDoasTableColumnCheck : public CDoasTableColumn
   virtual QVariant getCellData(int rowIndex) const;
 
  protected:
+  virtual void setCellData(int rowIndex, const QVariant &cellData);
   virtual QWidget* createCellWidget(const QVariant &cellData);
 };
 

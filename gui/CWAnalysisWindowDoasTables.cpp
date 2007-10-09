@@ -22,6 +22,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QDialogButtonBox>
 #include <QVBoxLayout>
 #include <QFileDialog>
+#include <QTextStream>
 
 #include "CWAnalysisWindowDoasTables.h"
 #include "CWorkSpace.h"
@@ -168,11 +169,12 @@ CWMoleculesDoasTable::~CWMoleculesDoasTable()
 {
 }
 
-void CWMoleculesDoasTable::populate(const struct anlyswin_cross_section *d, int nElements)
+void CWMoleculesDoasTable::populate(const cross_section_list_t *data)
 {
   int row = 0;
+  const struct anlyswin_cross_section *d = &(data->crossSection[0]);
 
-  while (row < nElements) {
+  while (row < data->nCrossSection) {
     QList<QVariant> initialValues;
 
     initialValues.push_back(QString(d->orthogonal));
@@ -194,13 +196,14 @@ void CWMoleculesDoasTable::populate(const struct anlyswin_cross_section *d, int 
   }
 }
 
-void CWMoleculesDoasTable::apply(struct anlyswin_cross_section *d, int &nElements) const
+void CWMoleculesDoasTable::apply(cross_section_list_t *data) const
 {
   int row = 0;
-  
-  nElements = rowCount();
+  struct anlyswin_cross_section *d = &(data->crossSection[0]);
 
-  while (row < nElements) {
+  data->nCrossSection = rowCount();
+
+  while (row < data->nCrossSection) {
 
     QList<QVariant> state = getCellData(row);
 
@@ -498,7 +501,7 @@ CWLinearParametersDoasTable::CWLinearParametersDoasTable(const QString &label, i
   createColumnCheck("Err store", 60);
 }
 
-void CWLinearParametersDoasTable::populate(const struct anlys_linear *data)
+void CWLinearParametersDoasTable::populate(const struct anlyswin_linear *data)
 {						 
   // predefined rows
   QList<QVariant> initialValues;
@@ -530,7 +533,7 @@ CWLinearParametersDoasTable::~CWLinearParametersDoasTable()
 {
 }
 
-void CWLinearParametersDoasTable::apply(struct anlys_linear *data) const
+void CWLinearParametersDoasTable::apply(struct anlyswin_linear *data) const
 {
   QList<QVariant> state;
 
@@ -667,6 +670,7 @@ QStringList CWShiftAndStretchDialog::selectedSymbols(void) const
   return selection;
 }
 
+//------------------------------------------------------------
 
 CWShiftAndStretchDoasTable::CWShiftAndStretchDoasTable(const QString &label, int columnWidth,
 						       int headerHeight, QWidget *parent) :
@@ -689,37 +693,38 @@ CWShiftAndStretchDoasTable::CWShiftAndStretchDoasTable(const QString &label, int
   createColumnCheck("Sc store", 60);
   createColumnCheck("Err store", 60);
   
-  createColumnEdit("Sh Init (px)", 80);
-  createColumnEdit("St Init", 80);
-  createColumnEdit("St Init (2)", 80);
-  createColumnEdit("Sc Init", 80);
-  createColumnEdit("Sc Init (2)", 80);
+  createColumnEdit(-100.0, 100.0, 3, "Sh Init (px)", 80);
+  createColumnEdit(-100.0, 100.0, 3, "St Init", 80);
+  createColumnEdit(-100.0, 100.0, 3, "St Init (2)", 80);
+  createColumnEdit(-100.0, 100.0, 3, "Sc Init", 80);
+  createColumnEdit(-100.0, 100.0, 3, "Sc Init (2)", 80);
 
-  createColumnEdit("Sh Delta (px)", 80);
-  createColumnEdit("St Delta", 80);
-  createColumnEdit("St Delta (2)", 80);
-  createColumnEdit("Sc Delta", 80);
-  createColumnEdit("Sc Delta (2)", 80);
+  createColumnEdit(0.0001, 0.9999, 4, "Sh Delta (px)", 80);
+  createColumnEdit(0.0001, 0.9999, 4, "St Delta", 80);
+  createColumnEdit(0.0001, 0.9999, 4, "St Delta (2)", 80);
+  createColumnEdit(0.0001, 0.9999, 4, "Sc Delta", 80);
+  createColumnEdit(0.0001, 0.9999, 4, "Sc Delta (2)", 80);
 
-  createColumnEdit("Sh min (px)", 80);
-  createColumnEdit("Sh max (px)", 80);
+  createColumnEdit(-100.0, 100.0, 3, "Sh min (px)", 80);
+  createColumnEdit(-100.0, 100.0, 3, "Sh max (px)", 80);
 }
 
 CWShiftAndStretchDoasTable::~CWShiftAndStretchDoasTable()
 {
 }
 
-void CWShiftAndStretchDoasTable::populate(const struct anlyswin_shift_stretch *d, int nElements)
+void CWShiftAndStretchDoasTable::populate(const shift_stretch_list_t *data)
 {
-  int row;
-  
-  while (row < nElements) {
+  int row = 0;
+  const struct anlyswin_shift_stretch *d = &(data->shiftStretch[0]);
+
+  while (row < data->nShiftStretch) {
     QString label;
     QList<QVariant> initialValues;
 
     initialValues.push_back(d->shFit);
-    initialValues.push_back(QString("None")); //d->stFit);
-    initialValues.push_back(QString("None")); //d->scFit);
+    initialValues.push_back(mapOrderToComboString(d->stFit));
+    initialValues.push_back(mapOrderToComboString(d->scFit));
 
     initialValues.push_back(d->shStore);
     initialValues.push_back(d->stStore);
@@ -760,9 +765,54 @@ void CWShiftAndStretchDoasTable::populate(const struct anlyswin_shift_stretch *d
   }
 }
 
-void CWShiftAndStretchDoasTable::apply(struct anlyswin_shift_stretch *d, int &nElements) const
+void CWShiftAndStretchDoasTable::apply(shift_stretch_list_t *data) const
 {
-  // TODO TODO TODO
+  int row = 0;
+  struct anlyswin_shift_stretch *d = &(data->shiftStretch[0]);
+  
+  data->nShiftStretch = rowCount();
+
+  while (row < data->nShiftStretch && row < MAX_AW_SHIFT_STRETCH) {
+
+    const QStringList &tmp = m_selectedSymbolList.at(row);
+
+    d->nSymbol = tmp.count();
+    int nSym = 0;
+    while (nSym < d->nSymbol && nSym < MAX_AW_SHIFT_STRETCH) {
+      // certain that the length of the symbol is below the limit ...
+      strcpy(&(d->symbol[nSym][0]), tmp.at(nSym).toAscii().data());
+      ++nSym;
+    }
+
+    QList<QVariant> state = getCellData(row);
+
+    d->shFit = state.at(0).toBool() ? 1 : 0;
+    d->stFit = mapComboStringToOrder(state.at(1).toString());
+    d->scFit = mapComboStringToOrder(state.at(2).toString());
+
+    d->shStore = state.at(3).toBool() ? 1 : 0;
+    d->stStore = state.at(4).toBool() ? 1 : 0;
+    d->scStore = state.at(5).toBool() ? 1 : 0;
+    d->errStore = state.at(6).toBool() ? 1 : 0;
+
+    d->shInit = state.at(7).toDouble();
+    d->stInit = state.at(8).toDouble();
+    d->stInit2 = state.at(9).toDouble();
+    d->scInit = state.at(10).toDouble();
+    d->scInit2 = state.at(11).toDouble();
+
+    d->shDelta = state.at(12).toDouble();
+    d->stDelta = state.at(13).toDouble();
+    d->stDelta2 = state.at(14).toDouble();
+    d->scDelta = state.at(15).toDouble();
+    d->scDelta2 = state.at(16).toDouble();
+
+    d->shMin = state.at(17).toDouble();
+    d->shMax = state.at(18).toDouble();
+
+    ++d;
+    ++row;
+  }
 }
 
 void CWShiftAndStretchDoasTable::addRow(int height, const QString &label, QList<QVariant> &cellData)
@@ -831,6 +881,24 @@ void CWShiftAndStretchDoasTable::contextMenuEvent(QContextMenuEvent *e)
   menu.exec(e->globalPos()); // a slot will do the rest  
 }
 
+QString CWShiftAndStretchDoasTable::mapOrderToComboString(int order)
+{
+  switch (order) {
+  case ANLYS_STRETCH_TYPE_FIRST_ORDER: return QString("1st Order"); break;
+  case ANLYS_STRETCH_TYPE_SECOND_ORDER: return QString("2nd Order"); break;
+  }
+
+  return QString("None");
+}
+
+int CWShiftAndStretchDoasTable::mapComboStringToOrder(const QString &str)
+{
+  if (str == "1st Order") return ANLYS_STRETCH_TYPE_FIRST_ORDER;
+  if (str == "2nd Order") return ANLYS_STRETCH_TYPE_SECOND_ORDER;
+  
+  return ANLYS_STRETCH_TYPE_NONE;
+}
+
 void CWShiftAndStretchDoasTable::slotSymbolListChanged(const QStringList &symbols)
 {
   bool found;
@@ -890,6 +958,27 @@ void CWShiftAndStretchDoasTable::slotInsertRow()
       }
 
       QList<QVariant> initialValues;
+      // defaults ...
+      initialValues.push_back(QVariant(false));
+      initialValues.push_back(QVariant("None"));
+      initialValues.push_back(QVariant("None"));
+      initialValues.push_back(QVariant(false));
+      initialValues.push_back(QVariant(false));
+      initialValues.push_back(QVariant(false));
+      initialValues.push_back(QVariant(false));
+      initialValues.push_back(QVariant(0.0));
+      initialValues.push_back(QVariant(0.0));
+      initialValues.push_back(QVariant(0.0));
+      initialValues.push_back(QVariant(0.0));
+      initialValues.push_back(QVariant(0.0));
+      initialValues.push_back(QVariant(0.001));
+      initialValues.push_back(QVariant(0.001));
+      initialValues.push_back(QVariant(0.001));
+      initialValues.push_back(QVariant(0.001));
+      initialValues.push_back(QVariant(0.001));
+      initialValues.push_back(QVariant(0.0));
+      initialValues.push_back(QVariant(0.0));
+
       addRow(cStandardRowHeight, tmp, initialValues);
     }
   }
@@ -958,3 +1047,245 @@ void CWShiftAndStretchDoasTable::slotModifyRow()
   }
 }
 
+//------------------------------------------------------------
+
+CWGapDoasTable::CWGapDoasTable(const QString &label, int columnWidth, int headerHeight, QWidget *parent) :
+  CDoasTable(label, columnWidth, headerHeight, parent),
+  m_selectedRow(-1)
+{
+  // two columns
+  createColumnEdit(100.00, 999.99, 2, "Min (nm)", 80);
+  createColumnEdit(100.00, 999.99, 2, "Max (nm)", 80);
+}
+
+CWGapDoasTable::~CWGapDoasTable()
+{
+}
+
+void CWGapDoasTable::populate(const gap_list_t *data)
+{
+  int row = 0;
+  const struct anlyswin_gap *d = &(data->gap[0]);
+
+  while (row < data->nGap && row < MAX_AW_GAP) {
+
+    QList<QVariant> initialValues;
+    initialValues.push_back(QVariant(d->minimum));
+    initialValues.push_back(QVariant(d->maximum));
+    
+    addRow(cStandardRowHeight, "Gap-Invalid", initialValues);
+
+    ++d;
+    ++row;
+  }
+}
+
+void CWGapDoasTable::apply(gap_list_t *data) const
+{
+  int validRows = 0;
+  int row = 0;
+  struct anlyswin_gap *d = &(data->gap[0]);
+
+  while (row < rowCount() && validRows < MAX_AW_GAP) {
+
+    QList<QVariant> state = getCellData(row);
+
+    d->minimum = state.at(0).toDouble();
+    d->maximum = state.at(1).toDouble();
+    // only store rows that are valid
+    if (d->minimum > 0.0 && d->maximum > d->minimum) {
+      ++validRows;
+      ++d;
+    }
+    ++row;
+  }
+  data->nGap = validRows;
+}
+
+void CWGapDoasTable::cellDataChanged(int row, int column, const QVariant &cellData)
+{
+  // the label is defined by the contents of the row cells
+  double minimum = 0.0;
+  double maximum = 0.0;
+
+  if (column == 0) {
+    minimum = cellData.toDouble();
+    maximum = getCellData(row, 1).toDouble();
+  }
+  else if (column == 1) {
+    maximum = cellData.toDouble();
+    minimum = getCellData(row, 0).toDouble();
+  }
+
+  if (minimum > 0.0 && maximum > minimum) {
+    QString tmp;
+    QTextStream stream(&tmp);
+    stream << "Gap-" << minimum << "-" << maximum;
+
+    setHeaderLabel(row, tmp);
+  }
+  else {
+    setHeaderLabel(row, "Gap-Invalid");
+  }
+}
+
+void CWGapDoasTable::contextMenuEvent(QContextMenuEvent *e)
+{
+  // create a popup menu
+  QMenu menu;
+  
+  QAction *insertAction = menu.addAction("Insert", this, SLOT(slotInsertRow()));
+  QAction *removeAction = menu.addAction("Remove", this, SLOT(slotRemoveRow()));
+
+  insertAction->setEnabled(rowCount() < MAX_AW_GAP);
+  m_selectedRow = rowIndexAtPosition(e->y());
+
+  removeAction->setEnabled(m_selectedRow != -1);
+
+  menu.exec(e->globalPos()); // a slot will do the rest  
+}
+
+void CWGapDoasTable::slotInsertRow()
+{
+  QList<QVariant> initialValues;
+
+  addRow(cStandardRowHeight, "Gap-Invalid", initialValues);
+}
+
+void CWGapDoasTable::slotRemoveRow()
+{
+  if (m_selectedRow >= 0 && m_selectedRow < rowCount()) {
+
+    removeRow(m_selectedRow);
+    m_selectedRow = -1;
+  }
+}
+
+//------------------------------------------------------------
+
+
+CWOutputDoasTable::CWOutputDoasTable(const QString &label, int columnWidth, int headerHeight, QWidget *parent) :
+  CDoasTable(label, columnWidth, headerHeight, parent)
+{
+  // columns
+  createColumnCheck("AMFs", 60);                          // col 0
+  createColumnEdit("Residials", 60);
+  createColumnCheck("Slnt Col", 60);                      // col 2
+  createColumnCheck("Slnt Err", 60);
+  createColumnEdit(0.0, 10.0, 3, "Slnt Fact", 80);  // col 4
+  createColumnCheck("Vrt Col", 60);
+  createColumnCheck("Vrt Err", 60);                       // col 6
+  createColumnEdit(0.0, 10.0, 3, "Vrt Fact", 80);
+}
+
+CWOutputDoasTable::~CWOutputDoasTable()
+{
+}
+
+void CWOutputDoasTable::populate(const output_list_t *data)
+{
+  // rows should already exist for these elements.
+  int index;
+  int row = 0;
+  const struct anlyswin_output *d = &(data->output[0]);
+
+  while (row < data->nOutput && row < MAX_AW_CROSS_SECTION) {
+    index = m_symbols.indexOf(QString(d->symbol));
+    if (index != -1) {
+      // set data
+      setCellData(index, 0, QVariant(d->amf));
+      // setCellData(row, 1, Residual);
+      setCellData(index, 2, QVariant(d->slantCol));
+      setCellData(index, 3, QVariant(d->slantErr));
+      setCellData(index, 4, QVariant(d->slantFactor));
+
+      setCellData(index, 5, QVariant(d->vertCol));
+      setCellData(index, 6, QVariant(d->vertErr));
+      setCellData(index, 7, QVariant(d->vertFactor));
+    }
+    ++row;
+  }
+}
+
+void CWOutputDoasTable::apply(output_list_t *data) const
+{
+  int row = 0;
+  struct anlyswin_output *d = &(data->output[0]);
+
+  data->nOutput = rowCount();
+
+  while (row < data->nOutput && row < MAX_AW_CROSS_SECTION) {
+
+    strcpy(d->symbol, m_symbols.at(row).toAscii().data());
+
+    QList<QVariant> state = getCellData(row);
+
+    d->amf = state.at(0).toBool() ? 1 : 0;
+    d->slantCol = state.at(2).toBool() ? 1 : 0;
+    d->slantErr = state.at(3).toBool() ? 1 : 0;
+    d->slantFactor = state.at(4).toDouble();
+    d->vertCol = state.at(5).toBool() ? 1 : 0;
+    d->vertErr = state.at(6).toBool() ? 1 : 0;
+    d->vertFactor = state.at(7).toDouble();
+
+    ++d;
+    ++row;
+  }  
+}
+
+void CWOutputDoasTable::cellDataChanged(int row, int column, const QVariant &cellData)
+{
+  
+}
+
+// prevent manual add/remove
+void CWOutputDoasTable::addRow(int height, const QString &label, QList<QVariant> &cellData)
+{
+  CDoasTable::addRow(height, label, cellData);
+}
+
+void CWOutputDoasTable::removeRow(int rowIndex)
+{
+  CDoasTable::removeRow(rowIndex);
+}
+  
+void CWOutputDoasTable::slotSymbolListChanged(const QStringList &symbols)
+{
+  int index;
+  QList<QVariant> initialValues;
+
+  // must be a row for every entry in the list ... and ONLY those in the list.
+  QStringList::const_iterator it = symbols.begin();
+  while (it != symbols.end()) {
+    index = m_symbols.indexOf(*it);
+    if (index == -1) {
+      // not found => no row for this exists yet, so add one.
+      if (initialValues.isEmpty()) {
+	initialValues.push_back(QVariant(false));
+	initialValues.push_back(QVariant());
+	initialValues.push_back(QVariant(false));
+	initialValues.push_back(QVariant(false));
+	initialValues.push_back(QVariant(1.0));
+	initialValues.push_back(QVariant(false));
+	initialValues.push_back(QVariant(false));
+	initialValues.push_back(QVariant(1.0));
+      }
+      m_symbols << *it;
+      CDoasTable::addRow(cStandardRowHeight, *it, initialValues);
+    }    
+    ++it;
+  }
+  // now make sure that only these rows exist ...
+  int row = 0;
+  while (row < m_symbols.count()) {
+    index = symbols.indexOf(m_symbols.at(row));
+    if (index == -1) {
+      // this row should not exist, so remove it
+      m_symbols.removeAt(row);
+      CDoasTable::removeRow(row);
+    }
+    else {
+      ++row;
+    }
+  }
+}

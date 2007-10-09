@@ -21,14 +21,12 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #ifndef _MEDIATE_TYPES_H_GUARD
 #define _MEDIATE_TYPES_H_GUARD
 
-
 enum eEngineErrorType {
-  eNoEngineError,
-  eInformationEngineError,
-  eWarningEngineError,
-  eFatalEngineError
+  NoEngineError,
+  InformationEngineError,
+  WarningEngineError,
+  FatalEngineError
 };
-
 
 enum ePlotDataType {
   PlotDataType_Spectrum,

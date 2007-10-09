@@ -27,13 +27,22 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 class CEngineThread;
 
-const int cEngineRequestCompoundType             = 1000;
-const int cEngineRequestSetProjectType           = 1001;
-const int cEngineRequestBeginBrowseFileType      = 1002;
-const int cEngineRequestBrowseNextRecordType     = 1003;
-const int cEngineRequestBrowseSpecificRecordType = 1004;
-const int cEngineRequestEndBrowseFileType        = 1005;
-const int cEngineRequestSetSitesType             = 1006;
+const int cEngineRequestCompoundType                 = 1000;
+const int cEngineRequestSetSymbolsType               = 1001;
+const int cEngineRequestSetSitesType                 = 1002;
+const int cEngineRequestSetProjectType               = 1003;
+const int cEngineRequestBeginBrowseFileType          = 1004;
+const int cEngineRequestBrowseNextRecordType         = 1005;
+const int cEngineRequestBrowseSpecificRecordType     = 1006;
+const int cEngineRequestEndBrowseFileType            = 1007;
+const int cEngineRequestBeginAnalyseFileType         = 1008;
+const int cEngineRequestAnalyseNextRecordType        = 1009;
+const int cEngineRequestAnalyseSpecificRecordType    = 1010;
+const int cEngineRequestEndAnalyseFileType           = 1011;
+const int cEngineRequestBeginCalibrateFileType       = 1012;
+const int cEngineRequestCalibrateNextRecordType      = 1013;
+const int cEngineRequestCalibrateSpecificRecordType  = 1014;
+const int cEngineRequestEndCalibrateFileType         = 1015;
 
 //------------------------------------------------------------
 
@@ -85,16 +94,31 @@ class CEngineRequestSetProject : public CEngineRequest
 
 //------------------------------------------------------------
 
+class CEngineRequestSetSymbols : public CEngineRequest
+{
+ public:
+  CEngineRequestSetSymbols(mediate_symbol_t *symbolList, int nSymbols);
+  virtual ~CEngineRequestSetSymbols();
+
+  virtual bool process(CEngineThread *engineThread);
+
+ private:
+  mediate_symbol_t *m_symbolList;
+  int m_nSymbols;
+};
+
+//------------------------------------------------------------
+
 class CEngineRequestSetSites : public CEngineRequest
 {
  public:
-  CEngineRequestSetSites(const mediate_site_t *siteList, int nSites);
+  CEngineRequestSetSites(mediate_site_t *siteList, int nSites);
   virtual ~CEngineRequestSetSites();
 
   virtual bool process(CEngineThread *engineThread);
 
  private:
-  const mediate_site_t *m_siteList;
+  mediate_site_t *m_siteList;
   int m_nSites;
 };
 
@@ -144,6 +168,108 @@ class CEngineRequestEndBrowseFile : public CEngineRequest
  public:
   CEngineRequestEndBrowseFile();
   virtual ~CEngineRequestEndBrowseFile();
+
+  virtual bool process(CEngineThread *engineThread);
+
+};
+
+//------------------------------------------------------------
+
+class CEngineRequestBeginAnalyseFile : public CEngineRequest
+{
+ public:
+  CEngineRequestBeginAnalyseFile(const QString &fileName);
+  virtual ~CEngineRequestBeginAnalyseFile();
+
+  virtual bool process(CEngineThread *engineThread);
+
+ private:
+  QString m_fileName;
+};
+
+//------------------------------------------------------------
+
+class CEngineRequestAnalyseNextRecord : public CEngineRequest
+{
+ public:
+  CEngineRequestAnalyseNextRecord();
+  virtual ~CEngineRequestAnalyseNextRecord();
+
+  virtual bool process(CEngineThread *engineThread);
+};
+
+//------------------------------------------------------------
+
+class CEngineRequestAnalyseSpecificRecord : public CEngineRequest
+{
+ public:
+  CEngineRequestAnalyseSpecificRecord(int recordNumber);
+  virtual ~CEngineRequestAnalyseSpecificRecord();
+
+  virtual bool process(CEngineThread *engineThread);
+
+ private:
+  int m_recordNumber;
+};
+
+//------------------------------------------------------------
+
+class CEngineRequestEndAnalyseFile : public CEngineRequest
+{
+ public:
+  CEngineRequestEndAnalyseFile();
+  virtual ~CEngineRequestEndAnalyseFile();
+
+  virtual bool process(CEngineThread *engineThread);
+
+};
+
+//------------------------------------------------------------
+
+class CEngineRequestBeginCalibrateFile : public CEngineRequest
+{
+ public:
+  CEngineRequestBeginCalibrateFile(const QString &fileName);
+  virtual ~CEngineRequestBeginCalibrateFile();
+
+  virtual bool process(CEngineThread *engineThread);
+
+ private:
+  QString m_fileName;
+};
+
+//------------------------------------------------------------
+
+class CEngineRequestCalibrateNextRecord : public CEngineRequest
+{
+ public:
+  CEngineRequestCalibrateNextRecord();
+  virtual ~CEngineRequestCalibrateNextRecord();
+
+  virtual bool process(CEngineThread *engineThread);
+};
+
+//------------------------------------------------------------
+
+class CEngineRequestCalibrateSpecificRecord : public CEngineRequest
+{
+ public:
+  CEngineRequestCalibrateSpecificRecord(int recordNumber);
+  virtual ~CEngineRequestCalibrateSpecificRecord();
+
+  virtual bool process(CEngineThread *engineThread);
+
+ private:
+  int m_recordNumber;
+};
+
+//------------------------------------------------------------
+
+class CEngineRequestEndCalibrateFile : public CEngineRequest
+{
+ public:
+  CEngineRequestEndCalibrateFile();
+  virtual ~CEngineRequestEndCalibrateFile();
 
   virtual bool process(CEngineThread *engineThread);
 

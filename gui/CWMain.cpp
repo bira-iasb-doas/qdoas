@@ -126,10 +126,8 @@ CWMain::CWMain(QWidget *parent) :
   m_controller = new CEngineController(this);
 
   // connections to the controller
-  connect(m_projTree,
-	  SIGNAL(signalStartBrowseSession(const RefCountPtr<CSession>&)),
-          m_controller,
-	  SLOT(slotStartBrowseSession(const RefCountPtr<CSession>&)));
+  connect(m_projTree, SIGNAL(signalStartSession(const RefCountPtr<CSession>&)),
+          m_controller, SLOT(slotStartSession(const RefCountPtr<CSession>&)));
 
   // Menu and toolbar actions
 
@@ -403,15 +401,16 @@ void CWMain::slotAboutQt()
 void CWMain::slotErrorMessages(int highestLevel, const QString &messages)
 {
   switch (highestLevel) {
-    case eInformationEngineError:
-      QMessageBox::information(this, "Engine Information", messages);
-      break;
-    case eWarningEngineError:
-      QMessageBox::warning(this, "Engine Warning", messages);
-      break;
-    case eFatalEngineError:
-      QMessageBox::critical(this, "Engine Fatal Error", messages);
-      break;
+  case InformationEngineError:
+    QMessageBox::information(this, "Engine Information", messages);
+    break;
+  case WarningEngineError:
+    QMessageBox::warning(this, "Engine Warning", messages);
+    break;
+  case FatalEngineError:
+  default:
+    QMessageBox::critical(this, "Engine Fatal Error", messages);
+    break;
   }
 }
 

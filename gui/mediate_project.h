@@ -22,6 +22,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #define _MEDIATE_PROJECT_H_GUARD
 
 #include "mediate_limits.h"
+#include "mediate_general.h"
 
 #if defined(_cplusplus) || defined(__cplusplus)
 extern "C" {
@@ -179,6 +180,14 @@ extern "C" {
     int requireFits;
     int requireResidual;
     int requireShiftSfp;
+    /* table data ... */
+    cross_section_list_t crossSectionList;
+    struct anlyswin_linear linear;
+    /* non linear ... TODO */
+    shift_stretch_list_t shiftStretchList;
+    gap_list_t gapList;
+    output_list_t outputList;
+
   } mediate_project_calibration_t;
 
 

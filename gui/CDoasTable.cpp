@@ -25,8 +25,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QKeyEvent>
 #include <QPalette>
 #include <QApplication>
+#include <QIntValidator>
 
 #include "CDoasTable.h"
+#include "CValidator.h"
 
 #include "debugutil.h"
 
@@ -102,6 +104,26 @@ void CDoasTable::createColumnEdit(const QString &label, int columnWidth)
   if (m_rowHeightList.count() == 0) {
 
     CDoasTableColumn *tmp = new CDoasTableColumnEdit(label, this, columnWidth);
+    m_columnList.push_back(tmp);
+    calcHorizontalScrollRange();
+  }
+}
+
+void CDoasTable::createColumnEdit(int minimum, int maximum, const QString &label, int columnWidth)
+{
+  if (m_rowHeightList.count() == 0) {
+
+    CDoasTableColumn *tmp = new CDoasTableColumnIntEdit(minimum, maximum, label, this, columnWidth);
+    m_columnList.push_back(tmp);
+    calcHorizontalScrollRange();
+  }
+}
+
+void CDoasTable::createColumnEdit(double minimum, double maximum, int decimals, const QString &label, int columnWidth)
+{
+  if (m_rowHeightList.count() == 0) {
+
+    CDoasTableColumn *tmp = new CDoasTableColumnDoubleEdit(minimum, maximum, decimals, label, this, columnWidth);
     m_columnList.push_back(tmp);
     calcHorizontalScrollRange();
   }
@@ -245,9 +267,23 @@ QList<QVariant> CDoasTable::getCellData(int rowIndex) const
   return cellData;
 }
 
+QVariant CDoasTable::getCellData(int rowIndex, int columnIndex) const
+{
+  if (columnIndex >= 0 && columnIndex < m_columnList.count())
+    return m_columnList.at(columnIndex)->getCellData(rowIndex);
+
+  return QVariant();
+}
+
 void CDoasTable::setHeaderLabel(int rowIndex, const QString &label)
 {
   m_header->setLabel(rowIndex, label);
+}
+
+void CDoasTable::setCellData(int rowIndex, int columnIndex, const QVariant &cellData)
+{
+  if (columnIndex >= 0 && columnIndex < m_columnList.count())
+    m_columnList.at(columnIndex)->setCellDataWrapper(rowIndex, cellData);
 }
 
 void CDoasTable::cellDataChanged(int row, int column, const QVariant &cellData)
@@ -566,6 +602,11 @@ void CDoasTableColumn::slotCellDataChanged(const QWidget *src, const QVariant &c
   }
 }
 
+void CDoasTableColumn::setCellData(int rowIndex, const QVariant &cellData)
+{
+  // by default do nothing ...
+}
+
 //-------------------------------------
 
 CDoasTableColumnHeader::CDoasTableColumnHeader(const QString &label, CDoasTable *owner, int columnWidth) :
@@ -606,6 +647,11 @@ void CDoasTableColumnHeader::setLabel(int rowIndex, const QString &label)
     if (tmp)
       tmp->setText(label);
   }
+}
+   
+void CDoasTableColumnHeader::setCellData(int rowIndex, const QVariant &cellData)
+{
+  setLabel(rowIndex, cellData.toString());
 }
    
 
@@ -664,12 +710,104 @@ QVariant CDoasTableColumnEdit::getCellData(int rowIndex) const
   return QVariant();
 }
 
+void CDoasTableColumnEdit::setCellData(int rowIndex, const QVariant &cellData)
+{
+  QWidget *p = getWidgetNonConst(rowIndex);
+  if (p) {
+    QLineEdit *tmp = dynamic_cast<QLineEdit*>(p);
+    if (tmp)
+      tmp->setText(cellData.toString());
+  }
+}
+
+//-------------------------------------
+
+CDoasTableColumnIntEdit::CDoasTableColumnIntEdit(int minimum, int maximum,
+						 const QString &label, CDoasTable *owner, int columnWidth) :
+  CDoasTableColumnEdit(label, owner, columnWidth),
+  m_minimum(minimum),
+  m_maximum(maximum)
+{
+}
+
+CDoasTableColumnIntEdit::~CDoasTableColumnIntEdit()
+{
+}
+
+QWidget* CDoasTableColumnIntEdit::createCellWidget(const QVariant &cellData)
+{
+  QLineEdit *tmp = dynamic_cast<QLineEdit*>(CDoasTableColumnEdit::createCellWidget(cellData));
+
+  assert (tmp != NULL);
+
+  tmp->setValidator(new QIntValidator(m_minimum, m_maximum, tmp));
+
+  return tmp;
+}
+
+QVariant CDoasTableColumnIntEdit::getCellData(int rowIndex) const
+{
+  const QWidget *p = getWidget(rowIndex);
+  if (p) {
+    const QLineEdit *tmp = dynamic_cast<const QLineEdit*>(p);
+    if (tmp) {
+      // ensure the data is valid ... use the validator (essential for cells that are not initialized with a valid value)
+      QString tmpStr = tmp->text();
+      tmp->validator()->fixup(tmpStr);
+      return QVariant(tmpStr.toInt());
+    }
+  }
+
+  return QVariant();
+}
+
+//-------------------------------------
+
+CDoasTableColumnDoubleEdit::CDoasTableColumnDoubleEdit(double minimum, double maximum, int decimals,
+						       const QString &label, CDoasTable *owner, int columnWidth) :
+  CDoasTableColumnEdit(label, owner, columnWidth),
+  m_minimum(minimum),
+  m_maximum(maximum),
+  m_decimals(decimals)
+{
+}
+
+CDoasTableColumnDoubleEdit::~CDoasTableColumnDoubleEdit()
+{
+}
+
+QWidget* CDoasTableColumnDoubleEdit::createCellWidget(const QVariant &cellData)
+{
+  QLineEdit *tmp = dynamic_cast<QLineEdit*>(CDoasTableColumnEdit::createCellWidget(cellData));
+
+  assert (tmp != NULL);
+
+  tmp->setValidator(new CDoubleFixedFmtValidator(m_minimum, m_maximum, m_decimals, tmp));
+
+  return tmp;
+}
+
+QVariant CDoasTableColumnDoubleEdit::getCellData(int rowIndex) const
+{
+  const QWidget *p = getWidget(rowIndex);
+  if (p) {
+    const QLineEdit *tmp = dynamic_cast<const QLineEdit*>(p);
+    if (tmp) {
+      // ensure the data is valid ... use the validator (essential for cells that are not initialized with a valid value)
+      QString tmpStr = tmp->text();
+      tmp->validator()->fixup(tmpStr);
+      return QVariant(tmpStr.toDouble());
+    }
+  }
+
+  return QVariant();
+}
+
 //-------------------------------------
 
 CDoasTableColumnComboBox::CDoasTableColumnComboBox(QWidget *parent) :
   QComboBox(parent)
 {
-  //setFrame(false);
 }
 
 CDoasTableColumnComboBox::~CDoasTableColumnComboBox()
@@ -729,6 +867,19 @@ QVariant CDoasTableColumnCombo::getCellData(int rowIndex) const
   return QVariant();
 }
 
+void CDoasTableColumnCombo::setCellData(int rowIndex, const QVariant &cellData)
+{
+  QWidget *p = getWidgetNonConst(rowIndex);
+  if (p) {
+    QComboBox *tmp = dynamic_cast<QComboBox*>(p);
+    if (tmp) {
+      int index = tmp->findText(cellData.toString());
+      if (index != -1)
+	tmp->setCurrentIndex(index);
+    }
+  }
+}
+
 //-------------------------------------
 
 CDoasTableColumnCheckBox::CDoasTableColumnCheckBox(QWidget *parent) :
@@ -780,4 +931,14 @@ QVariant CDoasTableColumnCheck::getCellData(int rowIndex) const
   }
 
   return QVariant();
+}
+
+void CDoasTableColumnCheck::setCellData(int rowIndex, const QVariant &cellData)
+{
+  QWidget *p = getWidgetNonConst(rowIndex);
+  if (p) {
+    QCheckBox *tmp = dynamic_cast<QCheckBox*>(p);
+    if (tmp)
+      tmp->setCheckState(cellData.toBool() ? Qt::Checked : Qt::Unchecked);
+  }
 }

@@ -161,6 +161,7 @@ HEADERS += CPreferences.h
 HEADERS += mediate.h
 HEADERS += mediate_types.h
 HEADERS += mediate_limits.h
+HEADERS += mediate_general.h
 HEADERS += mediate_response.h
 HEADERS += mediate_request.h
 HEADERS += mediate_project.h

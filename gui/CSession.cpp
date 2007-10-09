@@ -23,7 +23,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "CWorkSpace.h"
 
-CSessionItem::CSessionItem(const mediate_project_t *project)
+CSessionItem::CSessionItem(const mediate_project_t *project) :
+  m_windows(NULL),
+  m_nWindows(0)
 {
   // copy the project data
   m_project = *project;
@@ -31,6 +33,7 @@ CSessionItem::CSessionItem(const mediate_project_t *project)
 
 CSessionItem::~CSessionItem()
 {
+  delete [] m_windows;
 }
 
 void CSessionItem::addFile(const QFileInfo &file)
@@ -38,10 +41,31 @@ void CSessionItem::addFile(const QFileInfo &file)
   m_files.push_back(file);
 }
 
-CSession::CSession(bool forAnalysis) :
-  m_forAnalysis(forAnalysis)
+void CSessionItem::giveAnalysisWindowList(mediate_analysis_window_t *windows, int nWindows)
 {
+  // ditch the current data ...
+  delete [] m_windows;
 
+  // takes ownership of windows (array)
+  m_windows = windows;
+  m_nWindows = nWindows;
+}
+
+//--------------------------------------------------------
+
+CSession::CSession(eMode mode) :
+  m_symbols(NULL),
+  m_sites(NULL),
+  m_nSymbols(0),
+  m_nSites(0),
+  m_mode(mode)
+{
+  // get a snap-shot of the symbol and site lists from the workspace if needed
+  
+  if (m_mode == CSession::Analyse || m_mode == CSession::Calibrate) {
+    m_symbols = CWorkSpace::instance()->symbolList(m_nSymbols);
+    m_sites = CWorkSpace::instance()->siteList(m_nSites);
+  }
 }
 
 CSession::~CSession()
@@ -52,6 +76,14 @@ CSession::~CSession()
     ++it;
   }
   m_map.clear();
+
+  delete [] m_symbols;
+  delete [] m_sites;
+}
+
+CSession::eMode CSession::mode(void) const
+{
+  return m_mode;
 }
 
 void CSession::addFile(const QFileInfo &file, const QString &projectName)
@@ -65,8 +97,12 @@ void CSession::addFile(const QFileInfo &file, const QString &projectName)
       CSessionItem *item = new CSessionItem(proj);
       item->addFile(file);
 
-      if (m_forAnalysis) {
-	assert(false); // TODO also get the analysis windows ...
+      if (m_mode == CSession::Analyse) {
+	int nWindows;
+	mediate_analysis_window_t *d = CWorkSpace::instance()->analysisWindowList(projectName, nWindows);
+	if (d != NULL) {
+	  item->giveAnalysisWindowList(d, nWindows);
+	}
       }
  
       m_map.insert(sessionmap_t::value_type(projectName,item));
@@ -116,6 +152,32 @@ QStringList CSession::fileList(void) const
 
   return fileList;
 }
+
+mediate_symbol_t* CSession::takeSymbolList(int &nSymbols)
+{
+  mediate_symbol_t *result = m_symbols;
+
+  nSymbols = m_nSymbols;
+  // released from memory management responsibility
+  m_symbols = NULL;
+  m_nSymbols = 0;
+
+  return result;
+}
+
+mediate_site_t* CSession::takeSiteList(int &nSites)
+{
+  mediate_site_t *result = m_sites;
+
+  nSites = m_nSites;
+  // released from memory management responsibility
+  m_sites = NULL;
+  m_nSites = 0;
+
+  return result;
+}
+
+//-----------------------------------------------------------------------
 
 CSessionIterator::CSessionIterator() :
   m_fileIndex(0),

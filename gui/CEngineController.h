@@ -45,6 +45,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 class CEngineController : public QObject
 {
 Q_OBJECT
+ private:
+  enum eState { Idle, Pending, Running, Stopping };
+
  public:
   CEngineController(QObject *parent = 0);
   virtual ~CEngineController();
@@ -64,7 +67,7 @@ Q_OBJECT
   void notifyTableData(QList<SCell> &cellList);
 
   void notifyErrorMessages(int highestErrorLevel, const QList<CEngineError> &errorMessages);
-  void notifyEndBrowseFile(void);
+  void notifyEndAccessFile(void);
 
  protected:
   virtual bool event(QEvent *e);
@@ -82,10 +85,9 @@ Q_OBJECT
   // toolbar auto-stepping navigation interface
   void slotStep();
 
-  // end a session
-  void slotStopSession();
- 
-  void slotStartBrowseSession(const RefCountPtr<CSession> &session);
+  // session control
+  void slotStartSession(const RefCountPtr<CSession> &session);
+  void slotStopSession(); 
 
  signals:
   void signalFileListChanged(const QStringList &fileList);
@@ -104,15 +106,15 @@ Q_OBJECT
   CEngineThread *m_thread;
   QList<QFileInfo> m_fileList;
 
-  int m_mode;
+  eState m_state;
 
   const mediate_project_t *m_currentProject;
   int m_currentRecord, m_numberOfRecords, m_numberOfFiles;
 
-  RefCountConstPtr<CSession> m_session;
+  RefCountPtr<CSession> m_session;
   CSessionIterator m_currentIt;
 };
 
-inline bool CEngineController::isSessionRunning(void) const { return (m_mode != 0); }
+inline bool CEngineController::isSessionRunning(void) const { return (m_state == Running); }
 
 #endif

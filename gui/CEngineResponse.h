@@ -32,10 +32,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 class CEngineController;
 
 static const int cEngineResponseMessageType              = 0;
-static const int cEngineResponseBeginBrowseFileType      = 2;
-static const int cEngineResponseBrowseRecordType         = 3;
+static const int cEngineResponseBeginAccessFileType      = 2;
+static const int cEngineResponseAccessRecordType         = 3;
 static const int cEngineResponseGotoRecordType           = 4;
-static const int cEngineResponseEndBrowseFileType        = 5;
+static const int cEngineResponseEndAccessFileType        = 5;
 
 //------------------------------------------------------------
 
@@ -63,7 +63,7 @@ class CEngineResponse
 
 inline int CEngineResponse::type(void) const { return m_type; }
 inline bool CEngineResponse::hasErrors(void) const { return !m_errorMessages.isEmpty(); }
-inline bool CEngineResponse::hasFatalError(void) const { return (m_highestErrorLevel == eFatalEngineError); }
+inline bool CEngineResponse::hasFatalError(void) const { return (m_highestErrorLevel == FatalEngineError); }
 
 //------------------------------------------------------------
 
@@ -78,11 +78,11 @@ class CEngineResponseMessage : public CEngineResponse
 
 //------------------------------------------------------------
 
-class CEngineResponseBeginBrowseFile : public CEngineResponse
+class CEngineResponseBeginAccessFile : public CEngineResponse
 {
  public:
-  CEngineResponseBeginBrowseFile(const QString &fileName);
-  virtual ~CEngineResponseBeginBrowseFile();
+  CEngineResponseBeginAccessFile(const QString &fileName);
+  virtual ~CEngineResponseBeginAccessFile();
 
   virtual void process(CEngineController *engineController);
 
@@ -117,25 +117,26 @@ class CEngineResponseSpecificRecord : public CEngineResponse
 
 //------------------------------------------------------------
 
-class CEngineResponseBrowseRecord : public CEngineResponseSpecificRecord
+class CEngineResponseAccessRecord : public CEngineResponseSpecificRecord
 {
  public:
-  CEngineResponseBrowseRecord();
-  virtual ~CEngineResponseBrowseRecord();
+  CEngineResponseAccessRecord();
+  virtual ~CEngineResponseAccessRecord();
 };
 
 //------------------------------------------------------------
 
-class CEngineResponseEndBrowseFile : public CEngineResponse
+class CEngineResponseEndAccessFile : public CEngineResponse
 {
  public:
-  CEngineResponseEndBrowseFile();
-  virtual ~CEngineResponseEndBrowseFile();
+  CEngineResponseEndAccessFile();
+  virtual ~CEngineResponseEndAccessFile();
 
   virtual void process(CEngineController *engineController);
 };
 
 //------------------------------------------------------------
+
 
 
 #endif

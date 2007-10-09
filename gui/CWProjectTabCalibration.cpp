@@ -27,6 +27,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "CWProjectTabCalibration.h"
 #include "CValidator.h"
+#include "CWCalibrationFitParametersDialog.h"
 
 #include "constants.h"
 
@@ -42,7 +43,7 @@ CWProjectTabCalibration::CWProjectTabCalibration(const mediate_project_calibrati
 
   QGridLayout *topLayout = new QGridLayout;
 
-  mainLayout->addSpacing(25);
+  mainLayout->addSpacing(5);
 
   // ref file
   topLayout->addWidget(new QLabel("Solar Ref. File", this), 0, 0);
@@ -72,7 +73,9 @@ CWProjectTabCalibration::CWProjectTabCalibration(const mediate_project_calibrati
  
   // degree of 2n-Lorentz
   m_degreeWidget = new QFrame(this);
+  m_degreeWidget->setFrameStyle(QFrame::NoFrame);
   QHBoxLayout *degreeLayout = new QHBoxLayout(m_degreeWidget);
+  degreeLayout->setMargin(0);
   degreeLayout->addWidget(new QLabel("Degree", this));
   m_degreeSpinBox = new QSpinBox(this);
   m_degreeSpinBox->setRange(0, 10);
@@ -80,9 +83,13 @@ CWProjectTabCalibration::CWProjectTabCalibration(const mediate_project_calibrati
   topLayout->addWidget(m_degreeWidget, 2, 2);
   m_degreeWidget->hide(); // show when lineshape combo is cSpectralLineShapeLorentz
 
+  // force some sizes to prevent 'jumpy' display.
+  m_degreeSpinBox->setFixedHeight(m_lineShapeCombo->sizeHint().height());
+  browseBtn->setFixedWidth(m_degreeWidget->sizeHint().width());
+
   mainLayout->addLayout(topLayout);
 
-  mainLayout->addSpacing(25);
+  mainLayout->addSpacing(5);
 
   // middle
   QHBoxLayout *groupLayout = new QHBoxLayout;
@@ -119,43 +126,65 @@ CWProjectTabCalibration::CWProjectTabCalibration(const mediate_project_calibrati
   groupLayout->addWidget(polyGroup);
 
   // window limts
-  QGroupBox *windowGroup = new QGroupBox("Window Limts (nm)", this);
+  QGroupBox *windowGroup = new QGroupBox("Window Limits (nm)", this);
   QGridLayout *windowLayout = new QGridLayout(windowGroup);
-
+  windowLayout->setMargin(5);
+  windowLayout->setSpacing(3);
+  
   windowLayout->addWidget(new QLabel("Min", windowGroup), 0, 0);
   m_lambdaMinEdit = new QLineEdit(windowGroup);
+  m_lambdaMinEdit->setFixedWidth(50);
   m_lambdaMinEdit->setValidator(new CDoubleFixedFmtValidator(100.0, 900.0, 2, m_lambdaMinEdit));
   windowLayout->addWidget(m_lambdaMinEdit, 0, 1);
 
   windowLayout->addWidget(new QLabel("Max", windowGroup), 1, 0);
   m_lambdaMaxEdit = new QLineEdit(windowGroup);
+  m_lambdaMaxEdit->setFixedWidth(50);
   m_lambdaMaxEdit->setValidator(new CDoubleFixedFmtValidator(100.0, 900.0, 2, m_lambdaMaxEdit));
   windowLayout->addWidget(m_lambdaMaxEdit, 1, 1);
  
+  windowLayout->addWidget(new QLabel("Sub-windows", windowGroup), 2, 0);
+  m_subWindowsSpinBox = new QSpinBox(this);
+  m_subWindowsSpinBox->setFixedWidth(50);
+  m_subWindowsSpinBox->setRange(1, 50);
+  windowLayout->addWidget(m_subWindowsSpinBox, 2, 1);
+
   groupLayout->addWidget(windowGroup);
 
   mainLayout->addLayout(groupLayout);
   
-  mainLayout->addSpacing(25);
+  mainLayout->addSpacing(5);
 
-  // bottom
-  QHBoxLayout *subWindowLayout = new QHBoxLayout;
-  
-  subWindowLayout->addWidget(new QLabel("Number of sub-windows", this));
-  m_subWindowsSpinBox = new QSpinBox(this);
-  m_subWindowsSpinBox->setRange(1, 50);
-  subWindowLayout->addWidget(m_subWindowsSpinBox);
-  subWindowLayout->addStretch(1);
+  // fit paramters tables
+  m_tabs = new QTabWidget(this);
 
-  QPushButton *fitBtn = new QPushButton("Fit Parameters", this);
-  subWindowLayout->addWidget(fitBtn);
+  m_moleculesTab = new CWMoleculesDoasTable("Molecules", 120);
+  m_tabs->addTab(m_moleculesTab, "Molecules");
+  m_linearTab = new CWLinearParametersDoasTable("Linear Parameters", 120);
+  m_tabs->addTab(m_linearTab, "Linear Parameters");
+  // non-linear TODO
+  //m_tabs->addTab(nonLinearTab, "Non-Linear Parameters");
+  m_shiftAndStretchTab = new CWShiftAndStretchDoasTable("Cross sections and spectrum", 180);
+  m_tabs->addTab(m_shiftAndStretchTab, "Shift and Stretch");
+  m_gapTab = new CWGapDoasTable("Gaps", 240);
+  m_tabs->addTab(m_gapTab, "Gaps");
+  m_outputTab = new CWOutputDoasTable("Output", 120);
+  m_tabs->addTab(m_outputTab, "Output");
 
-  mainLayout->addLayout(subWindowLayout);
-  
-  mainLayout->addStretch(1);
+  mainLayout->addWidget(m_tabs, 1);
 
-  // set initial values
+  // tabel interconnections - MUST be connected before populating the tables ....
+  connect(m_fitsCheck, SIGNAL(stateChanged(int)),  m_moleculesTab, SLOT(slotFitColumnCheckable(int)));
+  connect(m_shiftAndStretchTab, SIGNAL(signalLockSymbol(const QString &, const QObject *)),
+	  m_moleculesTab, SLOT(slotLockSymbol(const QString &, const QObject *)));
+  connect(m_shiftAndStretchTab, SIGNAL(signalUnlockSymbol(const QString &, const QObject *)),
+	  m_moleculesTab, SLOT(slotUnlockSymbol(const QString &, const QObject *)));
+  connect(m_moleculesTab, SIGNAL(signalSymbolListChanged(const QStringList&)),
+	  m_shiftAndStretchTab, SLOT(slotSymbolListChanged(const QStringList&)));
+  connect(m_moleculesTab, SIGNAL(signalSymbolListChanged(const QStringList&)),
+	  m_outputTab, SLOT(slotSymbolListChanged(const QStringList&)));
 
+  // set the current values
   m_refFileEdit->setText(QString(properties->solarRefFile));
 
   index = m_methodCombo->findData(QVariant(properties->methodType));
@@ -185,11 +214,27 @@ CWProjectTabCalibration::CWProjectTabCalibration(const mediate_project_calibrati
 
   m_subWindowsSpinBox->setValue(properties->subWindows);
 
+  m_moleculesTab->populate(&(properties->crossSectionList));
+  m_linearTab->populate(&(properties->linear));
+  m_shiftAndStretchTab->populate(&(properties->shiftStretchList));
+  m_gapTab->populate(&(properties->gapList));
+  m_outputTab->populate(&(properties->outputList));
+
+  m_moleculesTab->slotFitColumnCheckable(m_fitsCheck->checkState());
+  // disable the AMF tab
+  m_moleculesTab->setColumnEnabled(2, false);
+
+  // no AMF, residual or vertical output
+  m_outputTab->setColumnEnabled(0, false);
+  m_outputTab->setColumnEnabled(1, false);
+  m_outputTab->setColumnEnabled(5, false);
+  m_outputTab->setColumnEnabled(6, false);
+  m_outputTab->setColumnEnabled(7, false);
+
   // connections
   connect(m_lineShapeCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(slotLineShapeSelectionChanged(int)));
   connect(browseBtn, SIGNAL(clicked()), this, SLOT(slotBrowseSolarRefFile()));
-  connect(fitBtn, SIGNAL(clicked()), this, SLOT(slotFitParameters()));
-  
+
 }
 
 CWProjectTabCalibration::~CWProjectTabCalibration()
@@ -217,15 +262,26 @@ void CWProjectTabCalibration::apply(mediate_project_calibration_t *properties) c
   properties->wavelengthMin = m_lambdaMinEdit->text().toDouble();
   properties->wavelengthMax = m_lambdaMaxEdit->text().toDouble();
 
-  properties->subWindows = m_subWindowsSpinBox->value(); 
+  properties->subWindows = m_subWindowsSpinBox->value();
+
+  m_moleculesTab->apply(&(properties->crossSectionList));
+  m_linearTab->apply(&(properties->linear));
+  m_shiftAndStretchTab->apply(&(properties->shiftStretchList));
+  m_gapTab->apply(&(properties->gapList));
+  m_outputTab->apply(&(properties->outputList));
 }
 
 void CWProjectTabCalibration::slotLineShapeSelectionChanged(int index)
 {
-  if (m_lineShapeCombo->itemData(index).toInt() == PRJCT_CALIB_FWHM_TYPE_INVPOLY)
+  int tmp = m_lineShapeCombo->itemData(index).toInt();
+
+  if (tmp == PRJCT_CALIB_FWHM_TYPE_INVPOLY)
     m_degreeWidget->show();
   else
     m_degreeWidget->hide();
+
+  m_sfpDegreeSpinBox->setEnabled(tmp != PRJCT_CALIB_FWHM_TYPE_NONE);
+    
 }
 
 void CWProjectTabCalibration::slotBrowseSolarRefFile()
@@ -237,7 +293,3 @@ void CWProjectTabCalibration::slotBrowseSolarRefFile()
     m_refFileEdit->setText(filename);
 }
 
-void CWProjectTabCalibration::slotFitParameters()
-{
-  TRACE("CWProjectTabCalibration::slotFitParameters : TODO");
-}

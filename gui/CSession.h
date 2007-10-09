@@ -17,10 +17,11 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
+
 #ifndef _CSESSION_H_GUARD
 #define _CSESSION_H_GUARD
 
-// A ata bucket for holding a snap-shot of the state
+// A data bucket for holding a snap-shot of the state
 // requirede for a browse or analysis session
 #include <map>
 
@@ -30,6 +31,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "RefCountPtr.h"
 
+#include "mediate_general.h"
 #include "mediate_project.h"
 #include "mediate_analysis_window.h"
 
@@ -43,10 +45,13 @@ class CSessionItem
   ~CSessionItem();
 
   void addFile(const QFileInfo &file);
+  void giveAnalysisWindowList(mediate_analysis_window_t *windows, int nWindows); // takes ownership of windows (array)
 
  private:
   mediate_project_t m_project;
-  QList<mediate_analysis_window_t> m_windows;
+  mediate_analysis_window_t *m_windows;
+  int m_nWindows;
+
   QList<QFileInfo> m_files;
 
   friend class CSession;
@@ -56,14 +61,21 @@ class CSessionItem
 class CSession
 {
  public:
-  CSession(bool forAnalysis = false);
+  enum eMode { Browse = 0x1, Calibrate = 0x2, Analyse = 0x4 };
+
+  CSession(CSession::eMode mode);
   ~CSession();
+
+  CSession::eMode mode(void) const;
 
   void addFile(const QFileInfo &file, const QString &projectName);
 
   int size(void) const;
   QStringList fileList(void) const;
 
+  mediate_symbol_t* takeSymbolList(int &nSymbols);
+  mediate_site_t* takeSiteList(int &nSites);
+  
  private:
   CSession(const CSession &);
   CSession& operator=(const CSession&);
@@ -73,7 +85,12 @@ class CSession
 
   sessionmap_t m_map;
 
-  bool m_forAnalysis; // indicates if analysis windows are required ...
+  mediate_symbol_t *m_symbols;
+  mediate_site_t *m_sites;
+  int m_nSymbols;
+  int m_nSites;
+
+  eMode m_mode;
 
   friend class CSessionIterator;
 };
