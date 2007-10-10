@@ -59,6 +59,7 @@ CWProjectPropertyEditor::CWProjectPropertyEditor(const QString &projectName, QWi
 
   // Calibration Tab
   m_calibrationTab = new CWProjectTabCalibration(&(projectData->calibration));
+  m_calibrationTab->slotOutputCalibration(projectData->output.calibrationFlag != 0);
   m_tabs->addTab(m_calibrationTab, "Calibration");
 
   // Undersampling Tab
@@ -97,7 +98,8 @@ CWProjectPropertyEditor::CWProjectPropertyEditor(const QString &projectName, QWi
 
   // connections
   connect(m_instrumentalTab, SIGNAL(signalInstrumentChanged(int)), m_outputTab, SLOT(slotInstrumentChanged(int)));
-  
+  connect(m_outputTab, SIGNAL(signalOutputCalibration(bool)), m_calibrationTab, SLOT(slotOutputCalibration(bool)));
+
   notifyAcceptActionOk(true);
 }
 

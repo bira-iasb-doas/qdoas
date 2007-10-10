@@ -161,6 +161,8 @@ void CWProjectTabOutput::slotAnalysisCheckChanged(int state)
 void CWProjectTabOutput::slotCalibrationCheckChanged(int state)
 {
   setComponentsEnabled((m_analysisCheck->checkState() == Qt::Checked), (state == Qt::Checked));
+
+  emit signalOutputCalibration((state == Qt::Checked));
 }
 
 void CWProjectTabOutput::setComponentsEnabled(bool analysisEnabled, bool calibrationEnabled)

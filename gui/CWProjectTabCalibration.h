@@ -48,6 +48,7 @@ Q_OBJECT
  public slots:
   void slotLineShapeSelectionChanged(int index);
   void slotBrowseSolarRefFile();
+  void slotOutputCalibration(bool enabled);
 
  private:
   QLineEdit *m_refFileEdit;

@@ -49,6 +49,8 @@ Q_OBJECT
   void slotAnalysisCheckChanged(int state);
   void slotCalibrationCheckChanged(int state);
 
+ signals:
+  void signalOutputCalibration(bool enabled);
 
  private:
   QFrame *m_pathFrame;

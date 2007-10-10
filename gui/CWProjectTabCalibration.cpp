@@ -292,3 +292,7 @@ void CWProjectTabCalibration::slotBrowseSolarRefFile()
     m_refFileEdit->setText(filename);
 }
 
+void CWProjectTabCalibration::slotOutputCalibration(bool enabled)
+{
+  m_outputTab->setEnabled(enabled);
+}
