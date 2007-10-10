@@ -426,6 +426,23 @@ extern "C" {
   } mediate_project_slit_t;
 
 
+  /****************************************************/
+  /* Project Output */
+
+  typedef struct mediate_project_output
+  {
+    int analysisFlag;
+    int calibrationFlag;
+    int configurationFlag;
+    int binaryFormatFlag;
+    int directoryFlag;
+    char flux[FLUX_BUFFER_LENGTH];
+    char colourIndex[COLOUR_INDEX_BUFFER_LENGTH];
+    char path[FILENAME_BUFFER_LENGTH];
+    /* result field flags. A list of PRJCT_RESULTS_ASCII_*** ... */
+    int nSelected;
+    unsigned char selected[256];
+  } mediate_project_output_t;
 
   // mediate_project_t
   //
@@ -443,6 +460,7 @@ extern "C" {
     mediate_project_undersampling_t undersampling;
     mediate_project_instrumental_t instrumental;
     mediate_project_slit_t slit;
+    mediate_project_output_t output;
 
   } mediate_project_t;
 

@@ -684,13 +684,13 @@ CWShiftAndStretchDoasTable::CWShiftAndStretchDoasTable(const QString &label, int
   comboItems << "None" << "1st Order" << "2nd Order";
 
   // columns  
-  createColumnCheck("Shift fit", 60);
+  createColumnCheck("Shift fit", 60);                 // column 0
   createColumnCombo("Stretch fit", 90, comboItems);
-  createColumnCombo("Scaling fit", 90, comboItems);
+  createColumnCombo("Scaling fit", 90, comboItems);   // column 2
 
-  createColumnCheck("Sh store", 60);
+  createColumnCheck("Sh store", 60);   // column 3
   createColumnCheck("St store", 60);
-  createColumnCheck("Sc store", 60);
+  createColumnCheck("Sc store", 60);   // column 5
   createColumnCheck("Err store", 60);
   
   createColumnEdit(-100.0, 100.0, 3, "Sh Init (px)", 80);

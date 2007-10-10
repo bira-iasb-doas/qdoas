@@ -356,10 +356,21 @@ void CWAnalysisWindowPropertyEditor::projectPropertiesChanged()
   const mediate_project_t *d = CWorkSpace::instance()->findProject(m_projectName);
 
   if (d) {
-    // eneble/disable filtering
+    // enable/disable filtering
     m_moleculesTab->setColumnEnabled(4, (d->lowpass.mode != PRJCT_FILTER_TYPE_NONE));
     
-    // TODO - Analysis results ...
+    bool analysisEnabled = (d->output.analysisFlag != 0);
+
+    // non-linear ... TODO
+
+    // enable/disable shift+stretch store columns 
+    m_shiftAndStretchTab->setColumnEnabled(3, analysisEnabled);
+    m_shiftAndStretchTab->setColumnEnabled(4, analysisEnabled);
+    m_shiftAndStretchTab->setColumnEnabled(5, analysisEnabled);
+    m_shiftAndStretchTab->setColumnEnabled(6, analysisEnabled);
+
+    // enable/disable the output table
+    m_outputTab->setEnabled(analysisEnabled);
   }
 }
 

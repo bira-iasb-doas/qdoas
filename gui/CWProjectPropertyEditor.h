@@ -31,6 +31,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "CWProjectTabUndersampling.h"
 #include "CWProjectTabInstrumental.h"
 #include "CWProjectTabSlit.h"
+#include "CWProjectTabOutput.h"
 
 
 class CWProjectPropertyEditor : public CWEditor
@@ -51,6 +52,7 @@ class CWProjectPropertyEditor : public CWEditor
   CWProjectTabUndersampling *m_undersamplingTab;
   CWProjectTabInstrumental *m_instrumentalTab;
   CWProjectTabSlit *m_slitTab;
+  CWProjectTabOutput *m_outputTab;
 
   QString m_projectName;
 };

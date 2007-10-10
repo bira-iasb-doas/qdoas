@@ -196,9 +196,8 @@ CWProjectTabInstrumental::CWProjectTabInstrumental(const mediate_project_instrum
   mainLayout->addWidget(m_formatStack);
   mainLayout->addStretch(1);
 
-
   // connections
-  connect(m_formatCombo, SIGNAL(currentIndexChanged(int)), m_formatStack, SLOT(setCurrentIndex(int)));
+  connect(m_formatCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(slotFormatChanged(int)));
 
   // set the current format - stack will follow
   int index;
@@ -254,6 +253,16 @@ void CWProjectTabInstrumental::apply(mediate_project_instrumental_t *instr) cons
   m_omiEdit->apply(&(instr->omi));
 }
 
+void CWProjectTabInstrumental::slotFormatChanged(int index)
+{
+  if (index != -1) {
+    int instrument = m_formatCombo->itemData(index).toInt();
+
+    m_formatStack->setCurrentIndex(index);
+
+    emit signalInstrumentChanged(instrument);
+  }
+}
 
 //--------------------------------------------------------
 // Specific Instrument Editors... TODO

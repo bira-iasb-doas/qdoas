@@ -51,11 +51,18 @@ class CWInstrMfcStdEdit;
 //--------------------------------------------------------------------------
 class CWProjectTabInstrumental : public QFrame
 {
+Q_OBJECT
  public:
   CWProjectTabInstrumental(const mediate_project_instrumental_t *instr, QWidget *parent = 0);
   virtual ~CWProjectTabInstrumental();
 
   void apply(mediate_project_instrumental_t *instr) const;
+
+ public slots:
+  void slotFormatChanged(int index);
+
+ signals:
+ void signalInstrumentChanged(int instrument);
 
  private:
   QComboBox *m_formatCombo, *m_siteCombo;

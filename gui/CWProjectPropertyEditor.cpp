@@ -73,6 +73,11 @@ CWProjectPropertyEditor::CWProjectPropertyEditor(const QString &projectName, QWi
   m_slitTab = new CWProjectTabSlit(&(projectData->slit));
   m_tabs->addTab(m_slitTab, "Slit");
 
+  // Output Tab
+  m_outputTab = new CWProjectTabOutput(&(projectData->output));
+  m_outputTab->slotInstrumentChanged(projectData->instrumental.format);
+  m_tabs->addTab(m_outputTab, "Output");
+
   // try and keep the complete tab widget set at the smallest possible size.
   mainLayout->setColumnMinimumWidth(0, 0);
   mainLayout->addWidget(m_tabs, 0, 1);
@@ -88,6 +93,10 @@ CWProjectPropertyEditor::CWProjectPropertyEditor(const QString &projectName, QWi
 
   m_contextTag = m_projectName;
   m_contextTag += " Prop";
+
+
+  // connections
+  connect(m_instrumentalTab, SIGNAL(signalInstrumentChanged(int)), m_outputTab, SLOT(slotInstrumentChanged(int)));
   
   notifyAcceptActionOk(true);
 }
@@ -109,6 +118,7 @@ bool CWProjectPropertyEditor::actionOk(void)
     m_undersamplingTab->apply(&(projectData->undersampling));
     m_instrumentalTab->apply(&(projectData->instrumental));
     m_slitTab->apply(&(projectData->slit));
+    m_outputTab->apply(&(projectData->output));
 
     CWorkSpace::instance()->modifiedProjectProperties(m_projectName);
 
