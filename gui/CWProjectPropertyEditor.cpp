@@ -113,10 +113,22 @@ bool CWProjectPropertyEditor::actionOk(void)
   mediate_project_t *projectData = CWorkSpace::instance()->findProject(m_projectName);
   
   if (projectData) {
+
     m_spectraTab->apply(&(projectData->spectra));
     m_analysisTab->apply(&(projectData->analysis));
     m_filteringTab->apply(&(projectData->lowpass), &(projectData->highpass));
+
+    // consider changes to the symbols used by calibration
+    CWorkSpace *ws = CWorkSpace::instance();
+
+    for (int i=0; i < projectData->calibration.crossSectionList.nCrossSection; ++i)
+      ws->decrementUseCount(projectData->calibration.crossSectionList.crossSection[i].symbol);
+
     m_calibrationTab->apply(&(projectData->calibration));
+
+    for (int i=0; i < projectData->calibration.crossSectionList.nCrossSection; ++i)
+      ws->incrementUseCount(projectData->calibration.crossSectionList.crossSection[i].symbol);
+
     m_undersamplingTab->apply(&(projectData->undersampling));
     m_instrumentalTab->apply(&(projectData->instrumental));
     m_slitTab->apply(&(projectData->slit));

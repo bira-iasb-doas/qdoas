@@ -355,6 +355,7 @@ QString CWProjectTree::editInsertNewProject(const QString &projectName, CProject
     // created the project
     CProjectItem *item = new CProjectItem(projectName);
     addTopLevelItem(item);
+    item->setExpanded(true);
 
     if (itemCreated != NULL) *itemCreated = item;
   }
@@ -574,6 +575,15 @@ const QIcon& CWProjectTree::getIcon(int type)
 // Loading from configuration file
 //------------------------------------------------------------------------------
 
+void CWProjectTree::removeAllContent(void)
+{
+  // clear the current projects - bottom up - this delete all projects from the workspace
+  int i = topLevelItemCount();
+  while (i > 0) {
+    delete takeTopLevelItem(--i);
+  }
+}
+
 QString CWProjectTree::loadConfiguration(const QList<const CProjectConfigItem*> &itemList)
 {
   // walk the list and create ...
@@ -582,13 +592,11 @@ QString CWProjectTree::loadConfiguration(const QList<const CProjectConfigItem*> 
   CProjectItem *projItem;
   mediate_project_t *projProp;
   mediate_analysis_window_t *awProp;
-  int i;
 
-  // clear the current projects - bottom up
-  i = topLevelItemCount();
-  while (i > 0) {
-    delete takeTopLevelItem(--i);
-  }
+  CWorkSpace *ws = CWorkSpace::instance();
+
+  // first make sure it is clear ...
+  removeAllContent();
 
   // use the edit* interface to get reasonable error messages.
 
@@ -609,7 +617,11 @@ QString CWProjectTree::loadConfiguration(const QList<const CProjectConfigItem*> 
     projProp = CWorkSpace::instance()->findProject(projName);
     assert(projProp != NULL);
     *projProp = *((*it)->properties()); // blot copy
-    CWorkSpace::instance()->modifiedProjectProperties(projName); // notification to any observers
+    // update useCount for count the symbols used in the calibration
+    for (int i=0; i < projProp->calibration.crossSectionList.nCrossSection; ++i)
+      ws->incrementUseCount(projProp->calibration.crossSectionList.crossSection[i].symbol);
+
+    ws->modifiedProjectProperties(projName); // notification to any observers
 
     item = projItem->child(0); // raw spectra node for the project
 
@@ -637,6 +649,9 @@ QString CWProjectTree::loadConfiguration(const QList<const CProjectConfigItem*> 
       awProp = CWorkSpace::instance()->findAnalysisWindow(projName, awName);
       assert(awProp != NULL);
       *awProp = *((*awIt)->properties()); // blot copy
+      // update useCount for count the symbols used in the molecules - TODO
+      for (int i=0; i < awProp->crossSectionList.nCrossSection; ++i)
+	ws->incrementUseCount(awProp->crossSectionList.crossSection[i].symbol);
 
       ++awIt;
     }

@@ -47,6 +47,7 @@ class CConfigurationWriter
   void writePropertiesUndersampling(FILE *fp, const mediate_project_undersampling_t *d);
   void writePropertiesInstrumental(FILE *fp, const mediate_project_instrumental_t *d);
   void writePropertiesSlit(FILE *fp, const mediate_project_slit_t *d);
+  void writePropertiesOutput(FILE *fp, const mediate_project_output_t *d);
 
   
   void writeRawSpectraTree(FILE *fp, const QTreeWidgetItem *rawSpectraItem);

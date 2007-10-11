@@ -327,7 +327,18 @@ bool CWAnalysisWindowPropertyEditor::actionOk(void)
     d->refSzaDelta = m_szaDeltaEdit->text().toDouble();
 
     // call apply for all tabs ...
+
+    // consider changes to the symbols used by calibration
+    CWorkSpace *ws = CWorkSpace::instance();
+
+    for (int i=0; i < d->crossSectionList.nCrossSection; ++i)
+      ws->decrementUseCount(d->crossSectionList.crossSection[i].symbol);
+
     m_moleculesTab->apply(&(d->crossSectionList));
+
+    for (int i=0; i < d->crossSectionList.nCrossSection; ++i)
+      ws->incrementUseCount(d->crossSectionList.crossSection[i].symbol);
+
     m_linearTab->apply(&(d->linear));
     m_shiftAndStretchTab->apply(&(d->shiftStretchList));
     m_gapTab->apply(&(d->gapList));

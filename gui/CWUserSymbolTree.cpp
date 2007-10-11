@@ -22,6 +22,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QShowEvent>
 #include <QContextMenuEvent>
 #include <QList>
+#include <QStringList>
+#include <QMessageBox>
 
 #include "CWUserSymbolTree.h"
 #include "CPreferences.h"
@@ -50,6 +52,9 @@ CWUserSymbolTree::CWUserSymbolTree(CWActiveContext *activeContext, QWidget *pare
   for (int i=0; i<2; ++i) {
     setColumnWidth(i, widthList.at(i));
   }
+
+  // multi-selection ....
+  setSelectionMode(QAbstractItemView::ExtendedSelection);
 }
 
 CWUserSymbolTree::~CWUserSymbolTree()
@@ -83,7 +88,17 @@ void CWUserSymbolTree::updateNewSymbol(const QString &newSymbolName)
 
 void CWUserSymbolTree::updateModifySymbol(const QString &symbolName)
 {
-  TRACE("TODO");
+  QString description = CWorkSpace::instance()->findSymbol(symbolName);
+
+  if (!description.isNull()) {
+
+    QTreeWidgetItem *symbolItem;
+    int i = 0;
+
+    while ((symbolItem = topLevelItem(i)) != NULL && symbolItem->text(0) != symbolName) ++i;
+    if (symbolItem != NULL)
+      symbolItem->setText(1, description);
+  }
 }
 
 void CWUserSymbolTree::updateDeleteSymbol(const QString &symbolName)
@@ -113,13 +128,14 @@ void CWUserSymbolTree::contextMenuEvent(QContextMenuEvent *e)
 {
   // create a popup menu
   QMenu menu;
+  QAction *action;
 
   menu.addAction("Insert...", this, SLOT(slotAddNewSymbol()));
-  if (!selectedItems().isEmpty()) {
-    menu.addAction("Edit...", this, SLOT(slotEditSymbol()));
-    menu.addSeparator();
-    menu.addAction("Delete", this, SLOT(slotDeleteSymbol()));
-  }
+  action = menu.addAction("Edit...", this, SLOT(slotEditSymbol()));
+  action->setEnabled(selectedItems().count() == 1);
+  menu.addSeparator();
+  action = menu.addAction("Delete", this, SLOT(slotDeleteSymbol()));
+  action->setEnabled(!selectedItems().isEmpty());
 
   menu.exec(e->globalPos()); // a slot will do the rest if appropriate
 }
@@ -137,14 +153,16 @@ void CWUserSymbolTree::slotEditSymbol()
 
   QList<QTreeWidgetItem*>::iterator it = selection.begin();
   while (it != selection.end()) {
-    //CWSymbolEditor *symbolEdit = new CWSymbolEditor(*it);
-    //m_activeContext->addEditor(symbolEdit);
+    CWSymbolEditor *symbolEdit = new CWSymbolEditor((*it)->text(0), (*it)->text(1));
+    m_activeContext->addEditor(symbolEdit);
     ++it;
   }
 }
 
 void CWUserSymbolTree::slotDeleteSymbol()
 {
+  QStringList lockedSymbols;
+
   QTreeWidgetItem *item;
 
   // Ok for single, multi and no selection
@@ -161,7 +179,23 @@ void CWUserSymbolTree::slotDeleteSymbol()
     QString symbolName = item->text(0);
     ++it;
 
-    CWorkSpace::instance()->destroySymbol(symbolName);
+    if (!CWorkSpace::instance()->destroySymbol(symbolName))
+      lockedSymbols << symbolName;
+  }
+
+  // report and failures
+  if (!lockedSymbols.isEmpty()) {
+    QString msg = "Cannot remove the following symbol(s) because they\nare referenced by a project or analysis window.\n";
+    QStringList::const_iterator it = lockedSymbols.begin();
+    msg.append(*it);
+    ++it;
+    while (it != lockedSymbols.end()) {
+      msg.append(", ");
+      msg.append(*it);
+      ++it;
+    }
+
+    QMessageBox::information(this, "Delete Symbol", msg);
   }
 }
 

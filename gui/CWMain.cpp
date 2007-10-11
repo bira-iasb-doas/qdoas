@@ -295,9 +295,16 @@ void CWMain::slotOpenFile()
   bool ok = xmlReader.parse(source);
   
   if (ok) {
-    // store the paths in the workspace for simplification when saving ...
+
     CWorkSpace *ws = CWorkSpace::instance();
-    
+
+    // start with a clear workspace ... clear the project tree, then the workspace
+    m_projTree->removeAllContent();
+    ws->removeAllContent();
+
+    // repopulate the workspace and the project tree
+
+    // store the paths in the workspace for simplification when saving ...
     for (int i = 0; i<10; ++i) {
       QString path = handler->getPath(i);
       if (path.isEmpty())

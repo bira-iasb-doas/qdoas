@@ -158,6 +158,7 @@ void CConfigurationWriter::writeProperties(FILE *fp, const mediate_project_t *d)
   writePropertiesUndersampling(fp, &(d->undersampling));
   writePropertiesInstrumental(fp, &(d->instrumental));
   writePropertiesSlit(fp, &(d->slit));
+  writePropertiesOutput(fp, &(d->output));
 }
 
 void CConfigurationWriter::writePropertiesSpectra(FILE *fp, const mediate_project_spectra_t *d)
@@ -1042,6 +1043,76 @@ void CConfigurationWriter::writePropertiesSlit(FILE *fp, const mediate_project_s
   fprintf(fp, "      <errortempfile file=\"%s\" width=\"%.3f\" />\n", d->errortempfile.filename, d->errortempfile.width);
   
   fprintf(fp, "    </slit>\n");
+}
+
+void CConfigurationWriter::writePropertiesOutput(FILE *fp, const mediate_project_output_t *d)
+{
+  QString tmpStr;
+  CWorkSpace *ws = CWorkSpace::instance();
+
+  tmpStr = ws->simplifyPath(QString(d->path));
+  fprintf(fp, "    <output path=\"%s\" anlys=\"%s\" calib=\"%s\" conf=\"%s\" bin=\"%s\" dirs=\"%s\" flux=\"%s\" cic=\"%s\" >\n",
+	  tmpStr.toAscii().data(), (d->analysisFlag ? sTrue : sFalse),
+	  (d->calibrationFlag ? sTrue : sFalse), (d->configurationFlag ? sTrue : sFalse),
+	  (d->binaryFormatFlag ? sTrue : sFalse), (d->directoryFlag ? sTrue : sFalse),
+	  d->flux, d->colourIndex);
+
+  int i = 0;
+  while (i < d->nSelected) {
+
+    fprintf(fp, "      <field name=\"");
+    switch (d->selected[i]) {
+    case PRJCT_RESULTS_ASCII_SPECNO:           fprintf(fp, "specno"); break;        
+    case PRJCT_RESULTS_ASCII_NAME:             fprintf(fp, "name"); break;        
+    case PRJCT_RESULTS_ASCII_DATE_TIME:        fprintf(fp, "date_time"); break;
+    case PRJCT_RESULTS_ASCII_DATE:             fprintf(fp, "date"); break;
+    case PRJCT_RESULTS_ASCII_TIME:             fprintf(fp, "time"); break;
+    case PRJCT_RESULTS_ASCII_YEAR:             fprintf(fp, "year"); break;
+    case PRJCT_RESULTS_ASCII_JULIAN:           fprintf(fp, "julian"); break;
+    case PRJCT_RESULTS_ASCII_JDFRAC:           fprintf(fp, "jdfrac"); break;
+    case PRJCT_RESULTS_ASCII_TIFRAC:           fprintf(fp, "tifrac"); break;
+    case PRJCT_RESULTS_ASCII_SCANS:            fprintf(fp, "scans"); break;
+    case PRJCT_RESULTS_ASCII_TINT:             fprintf(fp, "tint"); break;
+    case PRJCT_RESULTS_ASCII_SZA:              fprintf(fp, "sza"); break;
+    case PRJCT_RESULTS_ASCII_CHI:              fprintf(fp, "chi"); break;
+    case PRJCT_RESULTS_ASCII_RMS:              fprintf(fp, "rms"); break;
+    case PRJCT_RESULTS_ASCII_AZIM:             fprintf(fp, "azim"); break;
+    case PRJCT_RESULTS_ASCII_TDET:             fprintf(fp, "tdet"); break;
+    case PRJCT_RESULTS_ASCII_SKY:              fprintf(fp, "sky"); break;
+    case PRJCT_RESULTS_ASCII_BESTSHIFT:        fprintf(fp, "bestshift"); break;
+    case PRJCT_RESULTS_ASCII_REFZM:            fprintf(fp, "refzm"); break;
+    case PRJCT_RESULTS_ASCII_REFSHIFT:         fprintf(fp, "refshift"); break;
+    case PRJCT_RESULTS_ASCII_PIXEL:            fprintf(fp, "pixel"); break;
+    case PRJCT_RESULTS_ASCII_PIXEL_TYPE:       fprintf(fp, "pixel_type"); break;
+    case PRJCT_RESULTS_ASCII_ORBIT:            fprintf(fp, "orbit"); break;
+    case PRJCT_RESULTS_ASCII_LONGIT:           fprintf(fp, "longit"); break;
+    case PRJCT_RESULTS_ASCII_LATIT:            fprintf(fp, "latit"); break;
+    case PRJCT_RESULTS_ASCII_ALTIT:            fprintf(fp, "altit"); break;
+    case PRJCT_RESULTS_ASCII_COVAR:            fprintf(fp, "covar"); break;
+    case PRJCT_RESULTS_ASCII_CORR:             fprintf(fp, "corr"); break;
+    case PRJCT_RESULTS_ASCII_CLOUD:            fprintf(fp, "cloud"); break;
+    case PRJCT_RESULTS_ASCII_COEFF:            fprintf(fp, "coeff"); break;
+    case PRJCT_RESULTS_ASCII_O3:               fprintf(fp, "o3"); break;
+    case PRJCT_RESULTS_ASCII_NO2:              fprintf(fp, "no2"); break;
+    case PRJCT_RESULTS_ASCII_CLOUDTOPP:        fprintf(fp, "cloudtopp"); break;
+    case PRJCT_RESULTS_ASCII_LOS_ZA:           fprintf(fp, "los_za"); break;
+    case PRJCT_RESULTS_ASCII_LOS_AZIMUTH:      fprintf(fp, "los_azimuth"); break;
+    case PRJCT_RESULTS_ASCII_SAT_HEIGHT:       fprintf(fp, "sat_height"); break;
+    case PRJCT_RESULTS_ASCII_EARTH_RADIUS:     fprintf(fp, "earth_radius"); break;
+    case PRJCT_RESULTS_ASCII_VIEW_ELEVATION:   fprintf(fp, "view_elevation"); break;
+    case PRJCT_RESULTS_ASCII_VIEW_AZIMUTH:     fprintf(fp, "view_azimuth"); break;
+    case PRJCT_RESULTS_ASCII_SCIA_QUALITY:     fprintf(fp, "scia_quality"); break;
+    case PRJCT_RESULTS_ASCII_SCIA_STATE_INDEX: fprintf(fp, "scia_state_index"); break;
+    case PRJCT_RESULTS_ASCII_SCIA_STATE_ID:    fprintf(fp, "scia_state_id"); break;
+    case PRJCT_RESULTS_ASCII_MFC_STARTTIME:    fprintf(fp, "mfc_starttime"); break;
+    case PRJCT_RESULTS_ASCII_MFC_ENDTIME:      fprintf(fp, "mfc_endtime"); break;
+    default: fprintf(fp, "Invalid");
+    }
+    fprintf(fp, "\" />\n");
+    ++i;
+  }
+
+  fprintf(fp, "    </output>\n");
 }
 
 void CConfigurationWriter::writeRawSpectraTree(FILE *fp, const QTreeWidgetItem *rawSpectraItem)

@@ -203,5 +203,20 @@ class CProjectSlitSubHandler : public CConfigSubHandler
   mediate_project_slit_t *m_slit;
 };
 
+class CProjectOutputSubHandler : public CConfigSubHandler
+{
+ public:
+  CProjectOutputSubHandler(CQdoasProjectConfigHandler *master,
+			   mediate_project_output_t *output);
+  virtual ~CProjectOutputSubHandler();
+
+  virtual bool start(const QXmlAttributes &atts);
+  virtual bool start(const QString &element, const QXmlAttributes &atts);
+
+ private:
+  mediate_project_output_t *m_output;
+};
+
+
 #endif
 

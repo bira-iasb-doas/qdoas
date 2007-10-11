@@ -34,6 +34,7 @@ void initializeMediateProject(mediate_project_t *d)
   initializeMediateProjectUndersampling(&(d->undersampling));
   initializeMediateProjectInstrumental(&(d->instrumental));
   initializeMediateProjectSlit(&(d->slit));
+  initializeMediateProjectOutput(&(d->output));
 }
 
 void initializeMediateProjectSpectra(mediate_project_spectra_t *d)
@@ -91,6 +92,13 @@ void initializeMediateProjectInstrumental(mediate_project_instrumental_t *d)
 void initializeMediateProjectSlit(mediate_project_slit_t *d)
 {
   memset(d, 0, sizeof(mediate_project_slit_t));
+
+  // any non-zero defaults...
+}
+
+void initializeMediateProjectOutput(mediate_project_output_t *d)
+{
+  memset(d, 0, sizeof(mediate_project_output_t));
 
   // any non-zero defaults...
 }

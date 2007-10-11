@@ -55,6 +55,13 @@ struct SPathBucket
   bool operator<(const SPathBucket &rhs) const { return ((path.length() > rhs.path.length()) || (path.length() == rhs.path.length() && path < rhs.path)); }
 };
 
+struct SSymbolBucket
+{
+  QString description;
+  int useCount;
+  
+  SSymbolBucket(const QString &descr) : description(descr), useCount(0) {}
+};
 
 class CWorkSpace
 {
@@ -63,11 +70,16 @@ class CWorkSpace
 
   ~CWorkSpace();
 
+  void removeAllContent(void);
+
   mediate_project_t* findProject(const QString &projectName) const;
   mediate_analysis_window_t* findAnalysisWindow(const QString &projectName, const QString &windowName) const;
 
   const mediate_site_t* findSite(const QString &siteName) const;
   QString findSymbol(const QString &symbolName) const;
+
+  void incrementUseCount(const QString &symbolName);
+  void decrementUseCount(const QString &symbolName);
 
   bool createProject(const QString &newProjectName);
   bool createAnalysisWindow(const QString &projectName, const QString &newWindowName);
@@ -78,6 +90,7 @@ class CWorkSpace
   bool renameAnalysisWindow(const QString &projectName, const QString &oldWindowName, const QString &newWindowName);
 
   bool modifySite(const QString &siteName, const QString &abbr, double longitude, double latitude, double altitude);
+  bool modifySymbol(const QString &symbolName, const QString &description);
   void modifiedProjectProperties(const QString &projectName);
 
   // return arrays ( allocated with new [] ).
@@ -122,7 +135,7 @@ class CWorkSpace
   std::map<QString,SProjBucket> m_projMap;
   std::set<SPathBucket> m_pathSet;
   std::map<QString,mediate_site_t*> m_siteMap;
-  std::map<QString,QString> m_symbolMap;
+  std::map<QString,SSymbolBucket> m_symbolMap;
   std::list<CSitesObserver*> m_sitesObserverList;
   std::list<CSymbolObserver*> m_symbolObserverList;
   std::list<CProjectObserver*> m_projectObserverList;

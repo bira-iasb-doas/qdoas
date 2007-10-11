@@ -22,6 +22,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "CWorkSpace.h"
 
+#include "debugutil.h"
+
 CWorkSpace *CWorkSpace::m_instance = NULL;
 
 CWorkSpace* CWorkSpace::instance(void)
@@ -60,6 +62,61 @@ CWorkSpace::~CWorkSpace()
   m_instance = NULL;
 }
 
+void CWorkSpace::removeAllContent(void)
+{
+  // Projects ...  Dont worry about reference count handling because
+  // the symbol list will be cleared as well.
+
+  std::map<QString,SProjBucket>::iterator pIt = m_projMap.begin();
+  while (pIt != m_projMap.end()) {    
+    // notify the observers
+    std::list<CProjectObserver*>::iterator obs = m_projectObserverList.begin();
+    while (obs != m_projectObserverList.end()) {
+      (*obs)->updateDeleteProject(pIt->first);
+      ++obs;
+    }
+
+    std::map<QString,mediate_analysis_window_t*>::iterator wIt = (pIt->second).window.begin();
+    while (wIt != (pIt->second).window.end()) {
+      delete wIt->second; // delete the analysis window data
+      ++wIt;
+    }
+    delete (pIt->second).project; // delete the project data
+    ++pIt;
+  }
+  m_projMap.clear();
+
+  // sites
+  std::map<QString,mediate_site_t*>::iterator sIt = m_siteMap.begin();
+  while (sIt != m_siteMap.end()) {
+    // notify the observers
+    std::list<CSitesObserver*>::iterator obs = m_sitesObserverList.begin();
+    while (obs != m_sitesObserverList.end()) {
+      (*obs)->updateDeleteSite(sIt->first);
+      ++obs;
+    }
+
+    delete sIt->second;
+    ++sIt;
+  }
+  m_siteMap.clear();
+
+  // symbols
+  std::map<QString,SSymbolBucket>::iterator mIt = m_symbolMap.begin();
+  while (mIt != m_symbolMap.end()) {
+    // notify the observers
+    std::list<CSymbolObserver*>::iterator obs = m_symbolObserverList.begin();
+    while (obs != m_symbolObserverList.end()) {
+      (*obs)->updateDeleteSymbol(mIt->first);
+      ++obs;
+    }
+    ++mIt;
+  }
+  m_symbolMap.clear();
+
+  m_pathSet.clear();
+}
+
 mediate_project_t* CWorkSpace::findProject(const QString &projectName) const
 {
   std::map<QString,SProjBucket>::const_iterator pIt = m_projMap.find(projectName);
@@ -95,13 +152,27 @@ const mediate_site_t* CWorkSpace::findSite(const QString &siteName) const
 
 QString CWorkSpace::findSymbol(const QString &symbolName) const
 {
-  std::map<QString,QString>::const_iterator it = m_symbolMap.find(symbolName);
+  std::map<QString,SSymbolBucket>::const_iterator it = m_symbolMap.find(symbolName);
   if (it != m_symbolMap.end()) {
     // symbol exists
-    return it->second; // The string returned may be empty, but is not null.
+    return (it->second).description; // The string returned may be empty, but is not null.
   }
 
   return QString(); // a NULL string
+}
+
+void CWorkSpace::incrementUseCount(const QString &symbolName)
+{
+  std::map<QString,SSymbolBucket>::iterator it = m_symbolMap.find(symbolName);
+  if (it != m_symbolMap.end())
+    ++((it->second).useCount);
+}
+
+void CWorkSpace::decrementUseCount(const QString &symbolName)
+{
+  std::map<QString,SSymbolBucket>::iterator it = m_symbolMap.find(symbolName);
+  if (it != m_symbolMap.end() && (it->second).useCount)
+    --((it->second).useCount);
 }
 
 bool CWorkSpace::createProject(const QString &newProjectName)
@@ -195,15 +266,15 @@ bool CWorkSpace::createSymbol(const QString &newSymbolName, const QString &descr
   if (newSymbolName.isEmpty() || newSymbolName.length() >= (int)sizeof(tmp->name) || description.length() >= (int)sizeof(tmp->description))
     return false;
 
-  std::map<QString,QString>::iterator it = m_symbolMap.find(newSymbolName);
+  std::map<QString,SSymbolBucket>::iterator it = m_symbolMap.find(newSymbolName);
   if (it == m_symbolMap.end()) {
     if (description.isNull()) {
       // make an empty description
       QString emptyStr = "";
-      m_symbolMap.insert(std::map<QString,QString>::value_type(newSymbolName, emptyStr));
+      m_symbolMap.insert(std::map<QString,SSymbolBucket>::value_type(newSymbolName, SSymbolBucket(emptyStr)));
     }
     else
-      m_symbolMap.insert(std::map<QString,QString>::value_type(newSymbolName, description));
+      m_symbolMap.insert(std::map<QString,SSymbolBucket>::value_type(newSymbolName, SSymbolBucket(description)));
 
     // notify the observers
     std::list<CSymbolObserver*>::iterator obs = m_symbolObserverList.begin();
@@ -312,6 +383,29 @@ bool CWorkSpace::modifySite(const QString &siteName, const QString &abbr,
   return false;
 }
 
+bool CWorkSpace::modifySymbol(const QString &symbolName, const QString &description)
+{
+  std::map<QString,SSymbolBucket>::iterator it = m_symbolMap.find(symbolName);
+  if (it != m_symbolMap.end()) {
+    // symbol exists - and should
+    if (description.isNull())
+      (it->second).description = ""; // empty
+    else
+      (it->second).description = description;
+
+    // notify the observers
+    std::list<CSymbolObserver*>::iterator obs = m_symbolObserverList.begin();
+    while (obs != m_symbolObserverList.end()) {
+      (*obs)->updateModifySymbol(symbolName);
+      ++obs;
+    }    
+
+    return true;
+  }
+
+  return false;
+}
+
 void CWorkSpace::modifiedProjectProperties(const QString &projectName)
 {
   // notify the observers of the modification
@@ -360,10 +454,10 @@ mediate_symbol_t* CWorkSpace::symbolList(int &listLength) const
     mediate_symbol_t *tmp = symbolList;
     
     // walk the list and copy
-    std::map<QString,QString>::const_iterator it = m_symbolMap.begin();
+    std::map<QString,SSymbolBucket>::const_iterator it = m_symbolMap.begin();
     while (it != m_symbolMap.end()) {
       strcpy(tmp->name, (it->first).toAscii().data());
-      strcpy(tmp->description, (it->second).toAscii().data());
+      strcpy(tmp->description, (it->second).description.toAscii().data());
       ++tmp;
       ++it;
     }
@@ -406,7 +500,7 @@ QStringList CWorkSpace::symbolList(void) const
 {
   QStringList symbolList;
 
-  std::map<QString,QString>::const_iterator it = m_symbolMap.begin();
+  std::map<QString,SSymbolBucket>::const_iterator it = m_symbolMap.begin();
   while (it != m_symbolMap.end()) {
     symbolList << (it->first);
     ++it;
@@ -430,10 +524,19 @@ bool CWorkSpace::destroyProject(const QString &projectName)
 
     // delete all analysis windows ...
     std::map<QString,mediate_analysis_window_t*>::iterator wIt = (pIt->second).window.begin();
-    while (wIt != (pIt->second).window.end()) {
+    while (wIt != (pIt->second).window.end()) {      
+      // update the useCount for symbols
+      for (int i=0; i < (wIt->second)->crossSectionList.nCrossSection; ++i)
+	decrementUseCount((wIt->second)->crossSectionList.crossSection[i].symbol);
+
       delete wIt->second;
       ++wIt;
     }
+
+    // update the useCount for symbols
+    for (int i=0; i < (pIt->second).project->calibration.crossSectionList.nCrossSection; ++i)
+      decrementUseCount((pIt->second).project->calibration.crossSectionList.crossSection[i].symbol);
+
     (pIt->second).window.clear();
     delete (pIt->second).project;
 
@@ -450,6 +553,11 @@ bool CWorkSpace::destroyAnalysisWindow(const QString &projectName, const QString
   if (pIt != m_projMap.end()) {
     std::map<QString,mediate_analysis_window_t*>::iterator wIt = (pIt->second).window.find(windowName);
     if (wIt != (pIt->second).window.end()) {
+
+      // update the useCount for symbols
+      for (int i=0; i < (wIt->second)->crossSectionList.nCrossSection; ++i)
+	decrementUseCount((wIt->second)->crossSectionList.crossSection[i].symbol);
+
       delete wIt->second;
       (pIt->second).window.erase(wIt);
       return true;
@@ -479,17 +587,19 @@ bool CWorkSpace::destroySite(const QString &siteName)
 
 bool CWorkSpace::destroySymbol(const QString &symbolName)
 {
-  std::map<QString,QString>::iterator it = m_symbolMap.find(symbolName);
+  std::map<QString,SSymbolBucket>::iterator it = m_symbolMap.find(symbolName);
   if (it != m_symbolMap.end()) {
-
-    // notify the observers
-    std::list<CSymbolObserver*>::iterator obs = m_symbolObserverList.begin();
-    while (obs != m_symbolObserverList.end()) {
-      (*obs)->updateDeleteSymbol(symbolName);
-      ++obs;
+    // Only permitted if the useCount is zero ...
+    if ((it->second).useCount == 0) {
+      // notify the observers
+      std::list<CSymbolObserver*>::iterator obs = m_symbolObserverList.begin();
+      while (obs != m_symbolObserverList.end()) {
+	(*obs)->updateDeleteSymbol(symbolName);
+	++obs;
+      }
+      m_symbolMap.erase(it);
+      return true;
     }
-    m_symbolMap.erase(it);
-    return true;
   }
   return false;
 }

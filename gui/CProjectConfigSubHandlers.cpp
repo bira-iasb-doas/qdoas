@@ -204,6 +204,9 @@ bool CProjectSubHandler::start(const QString &element, const QXmlAttributes &att
   else if (element == "slit") {
     return m_master->installSubHandler(new CProjectSlitSubHandler(m_master, &(prop->slit)), atts);
   }
+  else if (element == "output") {
+    return m_master->installSubHandler(new CProjectOutputSubHandler(m_master, &(prop->output)), atts);
+  }
   else if (element == "analysis_window") {
     // allocate a new item in the project for this AW
     CAnalysisWindowConfigItem *awItem = m_project->issueNewAnalysisWindowItem();
@@ -215,7 +218,7 @@ bool CProjectSubHandler::start(const QString &element, const QXmlAttributes &att
 
   TRACE2("proj Handler : " << element.toStdString());
 
-  return true;
+  return true; // TODO - false unknown element ...
 }
 
 bool CProjectSubHandler::end(const QString &element)
@@ -1590,6 +1593,164 @@ bool CProjectSlitSubHandler::start(const QString &element, const QXmlAttributes 
 
     m_slit->errortempfile.width = atts.value("width").toDouble();
   }
+
+  return true;
+}
+
+//------------------------------------------------------------------------
+// handler for <output> (child of project)
+
+CProjectOutputSubHandler::CProjectOutputSubHandler(CQdoasProjectConfigHandler *master,
+						   mediate_project_output_t *output) :
+  CConfigSubHandler(master),
+  m_output(output)
+{
+}
+
+CProjectOutputSubHandler::~CProjectOutputSubHandler()
+{
+}
+
+bool CProjectOutputSubHandler::start(const QXmlAttributes &atts)
+{
+  QString str;
+
+  str = atts.value("path");
+  if (!str.isEmpty()) {
+    str = m_master->pathExpand(str);
+    if (str.length() < (int)sizeof(m_output->path))
+      strcpy(m_output->path, str.toAscii().data());
+    else
+      return postErrorMessage("Output path too long");
+  }
+
+  m_output->analysisFlag = (atts.value("anlys") == "true") ? 1 : 0;
+  m_output->calibrationFlag = (atts.value("calib") == "true") ? 1 : 0;
+  m_output->configurationFlag = (atts.value("conf") == "true") ? 1 : 0;
+  m_output->binaryFormatFlag = (atts.value("bin") == "true") ? 1 : 0;
+  m_output->directoryFlag = (atts.value("dirs") == "true") ? 1 : 0;
+
+  str = atts.value("flux");
+  if (!str.isEmpty()) {
+    if (str.length() < (int)sizeof(m_output->flux))
+      strcpy(m_output->flux, str.toAscii().data());
+    else
+      return postErrorMessage("Output flux too long");
+  }
+
+  str = atts.value("cic");
+  if (!str.isEmpty()) {
+    if (str.length() < (int)sizeof(m_output->colourIndex))
+      strcpy(m_output->colourIndex, str.toAscii().data());
+    else
+      return postErrorMessage("Output colour index too long");
+  }
+
+  return true;
+}
+
+bool CProjectOutputSubHandler::start(const QString &element, const QXmlAttributes &atts)
+{
+  if (element != "field")
+    return postErrorMessage("Invalid XML element");
+
+  if (m_output->nSelected >= PRJCT_RESULTS_ASCII_MAX)
+    return postErrorMessage("Too many output fields");
+
+  QString str = atts.value("name");
+  if (str == "specno")
+    m_output->selected[m_output->nSelected] = PRJCT_RESULTS_ASCII_SPECNO;
+  else if (str == "name")
+    m_output->selected[m_output->nSelected] = PRJCT_RESULTS_ASCII_NAME;           
+  else if (str == "date_time")
+    m_output->selected[m_output->nSelected] = PRJCT_RESULTS_ASCII_DATE_TIME;      
+  else if (str == "date")
+    m_output->selected[m_output->nSelected] = PRJCT_RESULTS_ASCII_DATE;           
+  else if (str == "time")
+    m_output->selected[m_output->nSelected] = PRJCT_RESULTS_ASCII_TIME;           
+  else if (str == "year")
+    m_output->selected[m_output->nSelected] = PRJCT_RESULTS_ASCII_YEAR;           
+  else if (str == "julian")
+    m_output->selected[m_output->nSelected] = PRJCT_RESULTS_ASCII_JULIAN;         
+  else if (str == "jdfrac")
+    m_output->selected[m_output->nSelected] = PRJCT_RESULTS_ASCII_JDFRAC;         
+  else if (str == "tifrac")
+    m_output->selected[m_output->nSelected] = PRJCT_RESULTS_ASCII_TIFRAC;         
+  else if (str == "scans")
+    m_output->selected[m_output->nSelected] = PRJCT_RESULTS_ASCII_SCANS;          
+  else if (str == "tint")
+    m_output->selected[m_output->nSelected] = PRJCT_RESULTS_ASCII_TINT;           
+  else if (str == "sza")
+    m_output->selected[m_output->nSelected] = PRJCT_RESULTS_ASCII_SZA;            
+  else if (str == "chi")
+    m_output->selected[m_output->nSelected] = PRJCT_RESULTS_ASCII_CHI;            
+  else if (str == "rms")
+    m_output->selected[m_output->nSelected] = PRJCT_RESULTS_ASCII_RMS;            
+  else if (str == "azim")
+    m_output->selected[m_output->nSelected] = PRJCT_RESULTS_ASCII_AZIM;           
+  else if (str == "tdet")
+    m_output->selected[m_output->nSelected] = PRJCT_RESULTS_ASCII_TDET;           
+  else if (str == "sky")
+    m_output->selected[m_output->nSelected] = PRJCT_RESULTS_ASCII_SKY;            
+  else if (str == "bestshift")
+    m_output->selected[m_output->nSelected] = PRJCT_RESULTS_ASCII_BESTSHIFT;      
+  else if (str == "refzm")
+    m_output->selected[m_output->nSelected] = PRJCT_RESULTS_ASCII_REFZM;          
+  else if (str == "refshift")
+    m_output->selected[m_output->nSelected] = PRJCT_RESULTS_ASCII_REFSHIFT;       
+  else if (str == "pixel")
+    m_output->selected[m_output->nSelected] = PRJCT_RESULTS_ASCII_PIXEL;          
+  else if (str == "pixel_type")
+    m_output->selected[m_output->nSelected] = PRJCT_RESULTS_ASCII_PIXEL_TYPE;     
+  else if (str == "orbit")
+    m_output->selected[m_output->nSelected] = PRJCT_RESULTS_ASCII_ORBIT;          
+  else if (str == "longit")
+    m_output->selected[m_output->nSelected] = PRJCT_RESULTS_ASCII_LONGIT;         
+  else if (str == "latit")
+    m_output->selected[m_output->nSelected] = PRJCT_RESULTS_ASCII_LATIT;          
+  else if (str == "altit")
+    m_output->selected[m_output->nSelected] = PRJCT_RESULTS_ASCII_ALTIT;          
+  else if (str == "covar")
+    m_output->selected[m_output->nSelected] = PRJCT_RESULTS_ASCII_COVAR;          
+  else if (str == "corr")
+    m_output->selected[m_output->nSelected] = PRJCT_RESULTS_ASCII_CORR;           
+  else if (str == "cloud")
+    m_output->selected[m_output->nSelected] = PRJCT_RESULTS_ASCII_CLOUD;          
+  else if (str == "coeff")
+    m_output->selected[m_output->nSelected] = PRJCT_RESULTS_ASCII_COEFF;          
+  else if (str == "o3")
+    m_output->selected[m_output->nSelected] = PRJCT_RESULTS_ASCII_O3;             
+  else if (str == "no2")
+    m_output->selected[m_output->nSelected] = PRJCT_RESULTS_ASCII_NO2;            
+  else if (str == "cloudtopp")
+    m_output->selected[m_output->nSelected] = PRJCT_RESULTS_ASCII_CLOUDTOPP;      
+  else if (str == "los_za")
+    m_output->selected[m_output->nSelected] = PRJCT_RESULTS_ASCII_LOS_ZA;         
+  else if (str == "los_azimuth")
+    m_output->selected[m_output->nSelected] = PRJCT_RESULTS_ASCII_LOS_AZIMUTH;    
+  else if (str == "sat_height")
+    m_output->selected[m_output->nSelected] = PRJCT_RESULTS_ASCII_SAT_HEIGHT;     
+  else if (str == "earth_radius")
+    m_output->selected[m_output->nSelected] = PRJCT_RESULTS_ASCII_EARTH_RADIUS;   
+  else if (str == "view_elevation")
+    m_output->selected[m_output->nSelected] = PRJCT_RESULTS_ASCII_VIEW_ELEVATION; 
+  else if (str == "view_azimuth")
+    m_output->selected[m_output->nSelected] = PRJCT_RESULTS_ASCII_VIEW_AZIMUTH;   
+  else if (str == "scia_quality")
+    m_output->selected[m_output->nSelected] = PRJCT_RESULTS_ASCII_SCIA_QUALITY;   
+  else if (str == "scia_state_index")
+    m_output->selected[m_output->nSelected] = PRJCT_RESULTS_ASCII_SCIA_STATE_INDEX;
+  else if (str == "scia_state_id")
+    m_output->selected[m_output->nSelected] = PRJCT_RESULTS_ASCII_SCIA_STATE_ID;  
+  else if (str == "mfc_starttime")
+    m_output->selected[m_output->nSelected] = PRJCT_RESULTS_ASCII_MFC_STARTTIME;  
+  else if (str == "mfc_endtime")
+    m_output->selected[m_output->nSelected] = PRJCT_RESULTS_ASCII_MFC_ENDTIME;    
+  else
+    return postErrorMessage("Invalid output field " + str);
+
+  // MUST be ok ...
+  ++(m_output->nSelected);
 
   return true;
 }

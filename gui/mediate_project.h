@@ -476,6 +476,7 @@ extern "C" {
   void initializeMediateProjectUndersampling(mediate_project_undersampling_t *d);
   void initializeMediateProjectInstrumental(mediate_project_instrumental_t *d);
   void initializeMediateProjectSlit(mediate_project_slit_t *d);
+  void initializeMediateProjectOutput(mediate_project_output_t *d);
 
 #if defined(_cplusplus) || defined(__cplusplus)
 }
