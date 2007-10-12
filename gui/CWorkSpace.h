@@ -99,6 +99,7 @@ class CWorkSpace
   mediate_analysis_window_t* analysisWindowList(const QString &projectName, int &listLength) const;
 
   QStringList symbolList(void) const;
+  QStringList analysisWindowsWithSymbol(const QString &projectName, const QString &symbol) const;
 
   bool destroyProject(const QString &projectName);
   bool destroyAnalysisWindow(const QString &projectName, const QString &newWindowName);

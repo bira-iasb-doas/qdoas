@@ -28,13 +28,15 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 extern "C" {
 #endif
 
-  // mediate_analysis_window_t
-  //
-  // Contains all user-specified information about a single spectral analysis window.
-  // It allows the GUI to provide information to the engine.
-  
+  /* mediate_analysis_window_t
+   *
+   * Contains all user-specified information about a single spectral analysis window.
+   * It allows the GUI to provide information to the engine.
+   */
+
   typedef struct mediate_analysis_window
   {
+    char name[ANLYSWIN_NAME_BUFFER_LENGTH];
     int kuruczMode;
     int refSpectrumSelection;
     char refOneFile[FILENAME_BUFFER_LENGTH];

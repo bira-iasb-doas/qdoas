@@ -159,6 +159,7 @@ void CConfigurationWriter::writeProperties(FILE *fp, const mediate_project_t *d)
   writePropertiesInstrumental(fp, &(d->instrumental));
   writePropertiesSlit(fp, &(d->slit));
   writePropertiesOutput(fp, &(d->output));
+  writePropertiesNasaAmes(fp, &(d->nasaames));
 }
 
 void CConfigurationWriter::writePropertiesSpectra(FILE *fp, const mediate_project_spectra_t *d)
@@ -1047,10 +1048,8 @@ void CConfigurationWriter::writePropertiesSlit(FILE *fp, const mediate_project_s
 
 void CConfigurationWriter::writePropertiesOutput(FILE *fp, const mediate_project_output_t *d)
 {
-  QString tmpStr;
-  CWorkSpace *ws = CWorkSpace::instance();
+  QString tmpStr = CWorkSpace::instance()->simplifyPath(QString(d->path));
 
-  tmpStr = ws->simplifyPath(QString(d->path));
   fprintf(fp, "    <output path=\"%s\" anlys=\"%s\" calib=\"%s\" conf=\"%s\" bin=\"%s\" dirs=\"%s\" flux=\"%s\" cic=\"%s\" >\n",
 	  tmpStr.toAscii().data(), (d->analysisFlag ? sTrue : sFalse),
 	  (d->calibrationFlag ? sTrue : sFalse), (d->configurationFlag ? sTrue : sFalse),
@@ -1113,6 +1112,15 @@ void CConfigurationWriter::writePropertiesOutput(FILE *fp, const mediate_project
   }
 
   fprintf(fp, "    </output>\n");
+}
+
+void CConfigurationWriter::writePropertiesNasaAmes(FILE *fp, const mediate_project_nasa_ames_t *d)
+{
+  QString tmpStr = CWorkSpace::instance()->simplifyPath(QString(d->path));
+
+  fprintf(fp, "    <nasa_ames path=\"%s\" save=\"%s\" reject=\"%s\" instr=\"%s\" exp=\"%s\" no2=\"%s\" o3=\"%s\" bro=\"%s\" oclo=\"%s\" />\n",
+	  tmpStr.toAscii().data(), (d->saveFlag ? sTrue : sFalse), (d->rejectTestFlag ? sTrue : sFalse),
+	  d->instrument, d->experiment, d->anlysWinNO2, d->anlysWinO3, d->anlysWinBrO, d->anlysWinOClO);
 }
 
 void CConfigurationWriter::writeRawSpectraTree(FILE *fp, const QTreeWidgetItem *rawSpectraItem)

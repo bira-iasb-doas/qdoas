@@ -38,7 +38,8 @@ bool CAnalysisWindowSubHandler::start(const QXmlAttributes &atts)
 {
   mediate_analysis_window_t *d = m_item->properties();
 
-  m_item->setName(atts.value("name"));
+  if (!m_item->setName(atts.value("name")))
+    return postErrorMessage("Analysis window name too long.");
 
   QString str = atts.value("kurucz");
   if (str == "ref")

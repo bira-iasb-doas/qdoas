@@ -25,8 +25,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QHBoxLayout>
 #include <QPushButton>
 #include <QLabel>
+#include <QFileDialog>
 
 #include "CWProjectTabOutput.h"
+#include "CPreferences.h"
 
 #include "constants.h"
 
@@ -123,6 +125,7 @@ CWProjectTabOutput::CWProjectTabOutput(const mediate_project_output_t *propertie
   // connections
   connect(m_analysisCheck, SIGNAL(stateChanged(int)), this, SLOT(slotAnalysisCheckChanged(int)));
   connect(m_calibrationCheck, SIGNAL(stateChanged(int)), this, SLOT(slotCalibrationCheckChanged(int)));
+  connect(browseBtn, SIGNAL(clicked()), this, SLOT(slotBrowsePath()));
 }
 
 CWProjectTabOutput::~CWProjectTabOutput()
@@ -146,6 +149,16 @@ void CWProjectTabOutput::apply(mediate_project_output_t *properties) const
 
 void CWProjectTabOutput::slotBrowsePath()
 {
+  CPreferences *pref = CPreferences::instance();
+
+  QString dirName = QFileDialog::getExistingDirectory(this, "Select Output Path", pref->directoryName("Output"));
+
+  if (!dirName.isEmpty()) {
+    // save it again
+    pref->setDirectoryName("Output", dirName);
+
+    m_pathEdit->setText(dirName);
+  }
 }
 
 void CWProjectTabOutput::slotInstrumentChanged(int instrument)

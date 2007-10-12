@@ -33,7 +33,7 @@ class CAnalysisWindowConfigItem
   CAnalysisWindowConfigItem();
   ~CAnalysisWindowConfigItem();
 
-  void setName(const QString &name);
+  bool setName(const QString &name);
   const QString& name(void) const;
 
   mediate_analysis_window_t* properties(void); // WARNING : allows (by design) poking at the internals ...

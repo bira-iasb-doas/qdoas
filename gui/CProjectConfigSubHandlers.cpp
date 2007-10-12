@@ -207,6 +207,9 @@ bool CProjectSubHandler::start(const QString &element, const QXmlAttributes &att
   else if (element == "output") {
     return m_master->installSubHandler(new CProjectOutputSubHandler(m_master, &(prop->output)), atts);
   }
+  else if (element == "nasa_ames") {
+    return m_master->installSubHandler(new CProjectNasaAmesSubHandler(m_master, &(prop->nasaames)), atts);
+  }
   else if (element == "analysis_window") {
     // allocate a new item in the project for this AW
     CAnalysisWindowConfigItem *awItem = m_project->issueNewAnalysisWindowItem();
@@ -1755,3 +1758,83 @@ bool CProjectOutputSubHandler::start(const QString &element, const QXmlAttribute
   return true;
 }
 
+//------------------------------------------------------------------------
+// handler for <nasa_ames> (child of project)
+
+CProjectNasaAmesSubHandler::CProjectNasaAmesSubHandler(CQdoasProjectConfigHandler *master,
+						       mediate_project_nasa_ames_t *nasaames) :
+  CConfigSubHandler(master),
+  m_nasaames(nasaames)
+{
+}
+
+CProjectNasaAmesSubHandler::~CProjectNasaAmesSubHandler()
+{
+}
+
+bool CProjectNasaAmesSubHandler::start(const QXmlAttributes &atts)
+{
+  QString str;
+
+  str = atts.value("path");
+  if (!str.isEmpty()) {
+    str = m_master->pathExpand(str);
+    if (str.length() < (int)sizeof(m_nasaames->path))
+      strcpy(m_nasaames->path, str.toAscii().data());
+    else
+      return postErrorMessage("NasaAmes path too long");
+  }
+
+  m_nasaames->saveFlag = (atts.value("save") == "true") ? 1 : 0;
+  m_nasaames->rejectTestFlag = (atts.value("reject") == "true") ? 1 : 0;
+
+  str = atts.value("instr");
+  if (!str.isEmpty()) {
+    if (str.length() < (int)sizeof(m_nasaames->instrument))
+      strcpy(m_nasaames->instrument, str.toAscii().data());
+    else
+      return postErrorMessage("NASA-AMES instrument too long");
+  }
+
+  str = atts.value("exp");
+  if (!str.isEmpty()) {
+    if (str.length() < (int)sizeof(m_nasaames->experiment))
+      strcpy(m_nasaames->experiment, str.toAscii().data());
+    else
+      return postErrorMessage("NASA-AMES experiment too long");
+  }
+
+  str = atts.value("no2");
+  if (!str.isEmpty()) {
+    if (str.length() < (int)sizeof(m_nasaames->anlysWinNO2))
+      strcpy(m_nasaames->anlysWinNO2, str.toAscii().data());
+    else
+      return postErrorMessage("NASA-AMES NO2 window name too long");
+  }
+
+  str = atts.value("o3");
+  if (!str.isEmpty()) {
+    if (str.length() < (int)sizeof(m_nasaames->anlysWinO3))
+      strcpy(m_nasaames->anlysWinO3, str.toAscii().data());
+    else
+      return postErrorMessage("NASA-AMES O3 window name too long");
+  }
+
+  str = atts.value("bro");
+  if (!str.isEmpty()) {
+    if (str.length() < (int)sizeof(m_nasaames->anlysWinBrO))
+      strcpy(m_nasaames->anlysWinBrO, str.toAscii().data());
+    else
+      return postErrorMessage("NASA-AMES BrO window name too long");
+  }
+
+  str = atts.value("oclo");
+  if (!str.isEmpty()) {
+    if (str.length() < (int)sizeof(m_nasaames->anlysWinOClO))
+      strcpy(m_nasaames->anlysWinOClO, str.toAscii().data());
+    else
+      return postErrorMessage("NASA-AMES OClO window name too long");
+  }
+
+  return true;
+}

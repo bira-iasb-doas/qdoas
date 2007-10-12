@@ -217,6 +217,19 @@ class CProjectOutputSubHandler : public CConfigSubHandler
   mediate_project_output_t *m_output;
 };
 
+class CProjectNasaAmesSubHandler : public CConfigSubHandler
+{
+ public:
+  CProjectNasaAmesSubHandler(CQdoasProjectConfigHandler *master,
+			   mediate_project_nasa_ames_t *nasaames);
+  virtual ~CProjectNasaAmesSubHandler();
+
+  virtual bool start(const QXmlAttributes &atts);
+
+ private:
+  mediate_project_nasa_ames_t *m_nasaames;
+};
+
 
 #endif
 

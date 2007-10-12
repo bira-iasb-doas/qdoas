@@ -444,14 +444,32 @@ extern "C" {
     unsigned char selected[256];
   } mediate_project_output_t;
 
-  // mediate_project_t
-  //
-  // Contains all user-specified information about a project. It allows the GUI to
-  // provide information to the engine.
+  /****************************************************/
+  /* Project NASA AMES */
+
+  typedef struct mediate_project_nasa_ames
+  {
+    int saveFlag;
+    int rejectTestFlag;
+    char anlysWinNO2[ANLYSWIN_NAME_BUFFER_LENGTH];
+    char anlysWinO3[ANLYSWIN_NAME_BUFFER_LENGTH];
+    char anlysWinBrO[ANLYSWIN_NAME_BUFFER_LENGTH];
+    char anlysWinOClO[ANLYSWIN_NAME_BUFFER_LENGTH];
+    char path[FILENAME_BUFFER_LENGTH];
+    char instrument[NASA_AMES_VAR_BUFFER_LENGTH];
+    char experiment[NASA_AMES_VAR_BUFFER_LENGTH];
+  } mediate_project_nasa_ames_t;
+
+
+  /* mediate_project_t
+   *
+   * Contains all user-specified information about a project. It allows the GUI to
+   * provide information to the engine.
+   */
 
   typedef struct mediate_project
   {
-    // Coupled to the control offered by the GUI Project Tabs.
+    /* Coupled to the control offered by the GUI Project Tabs. */
     mediate_project_spectra_t spectra;
     mediate_project_analysis_t analysis;
     mediate_project_filtering_t lowpass;
@@ -461,6 +479,7 @@ extern "C" {
     mediate_project_instrumental_t instrumental;
     mediate_project_slit_t slit;
     mediate_project_output_t output;
+    mediate_project_nasa_ames_t nasaames;
 
   } mediate_project_t;
 
@@ -477,6 +496,7 @@ extern "C" {
   void initializeMediateProjectInstrumental(mediate_project_instrumental_t *d);
   void initializeMediateProjectSlit(mediate_project_slit_t *d);
   void initializeMediateProjectOutput(mediate_project_output_t *d);
+  void initializeMediateProjectNasaAmes(mediate_project_nasa_ames_t *d);
 
 #if defined(_cplusplus) || defined(__cplusplus)
 }

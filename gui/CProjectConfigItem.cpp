@@ -11,9 +11,17 @@ CAnalysisWindowConfigItem::~CAnalysisWindowConfigItem()
 {
 }
 
-void CAnalysisWindowConfigItem::setName(const QString &name)
+bool CAnalysisWindowConfigItem::setName(const QString &name)
 {
-  m_name = name;
+  if (name.length() < (int)sizeof(m_awProp.name)) {
+
+    strcpy(m_awProp.name, name.toAscii().data());
+    m_name = name;
+
+    return true;
+  }
+  
+  return false;
 }
 
 const QString& CAnalysisWindowConfigItem::name(void) const

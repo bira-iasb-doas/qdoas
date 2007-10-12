@@ -217,11 +217,17 @@ bool CWorkSpace::createAnalysisWindow(const QString &projectName, const QString 
       // analysis window does not already exist
       mediate_analysis_window_t *tmp = new mediate_analysis_window_t;
 
-      initializeMediateAnalysisWindow(tmp);
+      if (newWindowName.length() < (int)sizeof(tmp->name)) {
+	initializeMediateAnalysisWindow(tmp);
+	// set its name ...
+	strcpy(tmp->name, newWindowName.toAscii().data());
 
-      // insert the window into the map
-      (pIt->second).window.insert(std::map<QString,mediate_analysis_window_t*>::value_type(newWindowName,tmp));
-      return true;
+	// insert the window into the map
+	(pIt->second).window.insert(std::map<QString,mediate_analysis_window_t*>::value_type(newWindowName,tmp));
+	return true;
+      }
+      else
+	delete tmp; // name too long
     }
   }
   return false;
@@ -334,13 +340,14 @@ bool CWorkSpace::renameAnalysisWindow(const QString &projectName, const QString 
   if (pIt != m_projMap.end()) {
     // locate the window by the old name - must exist
     std::map<QString,mediate_analysis_window_t*>::iterator oldIt = (pIt->second).window.find(oldWindowName);
-    if (oldIt != (pIt->second).window.end()) {
+    if (oldIt != (pIt->second).window.end() && newWindowName.length() < (int)sizeof((oldIt->second)->name)) {
       // no change in the name is ok
       if (oldWindowName == newWindowName)
 	return true;
 
       std::map<QString,mediate_analysis_window_t*>::iterator newIt = (pIt->second).window.find(newWindowName);
       if (newIt == (pIt->second).window.end()) {
+	strcpy((oldIt->second)->name, newWindowName.toAscii().data());
 	// ok to rename - change of key so insert for the new key then remove the old entry
 	(pIt->second).window.insert(std::map<QString,mediate_analysis_window_t*>::value_type(newWindowName, oldIt->second));
 	(pIt->second).window.erase(oldIt);
@@ -507,6 +514,32 @@ QStringList CWorkSpace::symbolList(void) const
   }
 
   return symbolList;
+}
+
+QStringList CWorkSpace::analysisWindowsWithSymbol(const QString &projectName, const QString &symbol) const
+{
+  // buld a list of names of analysis windows that contains 'symbol' in the crossSectionList...
+  QStringList result;
+
+  std::map<QString,SProjBucket>::const_iterator pIt = m_projMap.find(projectName);
+  if (pIt != m_projMap.end()) {
+    // project exists
+    std::map<QString,mediate_analysis_window_t*>::const_iterator wIt = (pIt->second).window.begin();
+    while (wIt != (pIt->second).window.end()) {
+      const cross_section_list_t *d = &((wIt->second)->crossSectionList);
+      int i = 0;
+      while (i < d->nCrossSection) {
+	if (symbol == QString(d->crossSection[i].symbol)) {
+	  result << (wIt->first); // this AW contains the symbol as a cross section
+	  break;
+	}
+	++i;
+      }
+      ++wIt;
+    }
+  }
+
+  return result;
 }
 
 bool CWorkSpace::destroyProject(const QString &projectName)
