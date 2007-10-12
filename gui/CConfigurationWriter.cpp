@@ -329,8 +329,8 @@ void CConfigurationWriter::writePropertiesCalibration(FILE *fp, const mediate_pr
 	  d->wavelengthMin, d->wavelengthMax, d->subWindows);
 
   writeCrossSectionList(fp, &(d->crossSectionList));
+  writeSfps(fp, &(d->sfp[0]));
   writeLinear(fp, &(d->linear));
-  writeCrossSectionList(fp, &(d->crossSectionList));
   writeShiftStretchList(fp, &(d->shiftStretchList));
   writeGapList(fp, &(d->gapList));
   writeOutputList(fp, &(d->outputList));
@@ -1459,4 +1459,19 @@ void CConfigurationWriter::writeOutputList(FILE *fp, const output_list_t *d)
     ++j;
   }
   fprintf(fp, "      </outputs>\n");
+}
+
+void CConfigurationWriter::writeSfps(FILE *fp, const struct calibration_sfp *d)
+{
+  fprintf(fp, "      <sfps>\n");
+
+  for (int i=0; i<4; ++i) {
+    fprintf(fp, "        <sfp index=\"%d\" fit=\"%s\" init=\"%.3f\" delta=\"%.3f\" fstr=\"%s\" estr=\"%s\" />\n",
+	    i+1, (d->fitFlag ? sTrue : sFalse),
+	    d->initialValue, d->deltaValue,
+	    (d->fitStore ? sTrue : sFalse), (d->errStore ? sTrue : sFalse));
+    ++d;
+  }
+
+  fprintf(fp, "      </sfps>\n");
 }

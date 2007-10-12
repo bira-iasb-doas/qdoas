@@ -161,8 +161,8 @@ CWProjectTabCalibration::CWProjectTabCalibration(const mediate_project_calibrati
   m_tabs->addTab(m_moleculesTab, "Molecules");
   m_linearTab = new CWLinearParametersDoasTable("Linear Parameters", 120);
   m_tabs->addTab(m_linearTab, "Linear Parameters");
-  // non-linear TODO
-  //m_tabs->addTab(nonLinearTab, "Non-Linear Parameters");
+  m_sfpTab = new CWSfpParametersDoasTable("SFP Parameters", 120);
+  m_tabs->addTab(m_sfpTab, "SFP Parameters");
   m_shiftAndStretchTab = new CWShiftAndStretchDoasTable("Cross sections and spectrum", 180);
   m_tabs->addTab(m_shiftAndStretchTab, "Shift and Stretch");
   m_gapTab = new CWGapDoasTable("Gaps", 240);
@@ -215,6 +215,7 @@ CWProjectTabCalibration::CWProjectTabCalibration(const mediate_project_calibrati
 
   m_moleculesTab->populate(&(properties->crossSectionList));
   m_linearTab->populate(&(properties->linear));
+  m_sfpTab->populate(&(properties->sfp[0]));
   m_shiftAndStretchTab->populate(&(properties->shiftStretchList));
   m_gapTab->populate(&(properties->gapList));
   m_outputTab->populate(&(properties->outputList));
@@ -265,6 +266,7 @@ void CWProjectTabCalibration::apply(mediate_project_calibration_t *properties) c
 
   m_moleculesTab->apply(&(properties->crossSectionList));
   m_linearTab->apply(&(properties->linear));
+  m_sfpTab->apply(&(properties->sfp[0]));
   m_shiftAndStretchTab->apply(&(properties->shiftStretchList));
   m_gapTab->apply(&(properties->gapList));
   m_outputTab->apply(&(properties->outputList));
@@ -296,3 +298,4 @@ void CWProjectTabCalibration::slotOutputCalibration(bool enabled)
 {
   m_outputTab->setEnabled(enabled);
 }
+

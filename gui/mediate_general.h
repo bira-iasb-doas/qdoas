@@ -134,6 +134,15 @@ extern "C" {
     double vertFactor;
   };
 
+  struct calibration_sfp
+  {
+    int fitFlag;
+    double initialValue;
+    double deltaValue;
+    int fitStore;
+    int errStore;
+  };
+
   // struct array wrappers ...
 
   typedef struct cross_section_list

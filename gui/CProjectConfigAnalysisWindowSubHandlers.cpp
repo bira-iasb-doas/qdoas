@@ -414,3 +414,35 @@ bool CAnalysisWindowOutputSubHandler::start(const QXmlAttributes &atts)
   return postErrorMessage("Too many outputs in analysis window");
 }
 
+//------------------------------------------------------------
+
+CAnalysisWindowSfpSubHandler::CAnalysisWindowSfpSubHandler(CQdoasProjectConfigHandler *master,
+							   struct calibration_sfp *d) :
+  CConfigSubHandler(master),
+  m_d(d)
+{
+}
+
+CAnalysisWindowSfpSubHandler::~CAnalysisWindowSfpSubHandler()
+{
+}
+
+bool CAnalysisWindowSfpSubHandler::start(const QXmlAttributes &atts)
+{
+  int index = atts.value("index").toInt();
+  
+  if (index > 0 && index <= 4) {
+    struct calibration_sfp *p = (m_d + index - 1);
+
+    p->fitFlag = (atts.value("fit") == "true") ? 1 : 0;
+    p->initialValue = atts.value("init").toDouble();
+    p->deltaValue = atts.value("delta").toDouble();
+    p->fitStore = (atts.value("fstr") == "true") ? 1 : 0;
+    p->errStore = (atts.value("estr") == "true") ? 1 : 0;
+    
+    return true;
+  }
+
+  return postErrorMessage("Invalid SFP index");
+}
+

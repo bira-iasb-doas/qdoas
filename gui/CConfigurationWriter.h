@@ -63,6 +63,7 @@ class CConfigurationWriter
   void writeShiftStretchList(FILE *fp, const shift_stretch_list_t *d);
   void writeGapList(FILE *fp, const gap_list_t *d);
   void writeOutputList(FILE *fp, const output_list_t *d);
+  void writeSfps(FILE *fp, const struct calibration_sfp *d);
 
 
  private:

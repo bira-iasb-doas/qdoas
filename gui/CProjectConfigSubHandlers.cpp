@@ -601,6 +601,9 @@ bool CProjectCalibrationSubHandler::start(const QString &element, const QXmlAttr
   else if (element == "linear") {
     return m_master->installSubHandler(new CAnalysisWindowLinearSubHandler(m_master, &(m_calibration->linear)), atts);    
   }
+  else if (element == "sfp") {
+    return m_master->installSubHandler(new CAnalysisWindowSfpSubHandler(m_master, &(m_calibration->sfp[0])), atts); 
+  }
   else if (element == "shift_stretch") {
     return m_master->installSubHandler(new CAnalysisWindowShiftStretchSubHandler(m_master, &(m_calibration->shiftStretchList)), atts);
   }

@@ -107,5 +107,18 @@ class CAnalysisWindowOutputSubHandler : public CConfigSubHandler
   output_list_t *m_d;
 };
 
+class CAnalysisWindowSfpSubHandler : public CConfigSubHandler
+{
+ public:
+  CAnalysisWindowSfpSubHandler(CQdoasProjectConfigHandler *master,
+			       struct calibration_sfp *d);
+  virtual ~CAnalysisWindowSfpSubHandler();
+
+  virtual bool start(const QXmlAttributes &atts);
+
+ private:
+  struct calibration_sfp *m_d;
+};
+
 
 #endif

@@ -17,6 +17,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
+
 #include <QMenu>
 #include <QContextMenuEvent>
 #include <QDialogButtonBox>
@@ -1161,8 +1162,8 @@ void CWGapDoasTable::slotRemoveRow()
   }
 }
 
-//------------------------------------------------------------
 
+//------------------------------------------------------------
 
 CWOutputDoasTable::CWOutputDoasTable(const QString &label, int columnWidth, int headerHeight, QWidget *parent) :
   CDoasTable(label, columnWidth, headerHeight, parent)
@@ -1289,3 +1290,58 @@ void CWOutputDoasTable::slotSymbolListChanged(const QStringList &symbols)
     }
   }
 }
+
+
+//------------------------------------------------------------
+CWSfpParametersDoasTable::CWSfpParametersDoasTable(const QString &label, int columnWidth, int headerHeight, QWidget *parent) :
+  CDoasTable(label, columnWidth, headerHeight, parent)
+{
+  // 4 fixed row
+  createColumnCheck("Fit", 60);
+  createColumnEdit(-10.0, 10.0, 3, "Init. Val.", 80);
+  createColumnEdit(-1.0, 1.0, 3, "delta Val.", 80);
+  createColumnCheck("Fit store", 60);
+  createColumnCheck("Err store", 60);
+}
+
+CWSfpParametersDoasTable::~CWSfpParametersDoasTable()
+{
+}
+
+// virtual void cellDataChanged(int row, int column, const QVariant &cellData); // no cell-coupling required
+
+void CWSfpParametersDoasTable::populate(const struct calibration_sfp *data)
+{
+  for (int i = 0; i<4; ++i) {
+    QList<QVariant> initialValues;
+    initialValues.push_back(QVariant(data->fitFlag));
+    initialValues.push_back(QVariant(data->initialValue));
+    initialValues.push_back(QVariant(data->deltaValue));
+    initialValues.push_back(QVariant(data->fitStore));
+    initialValues.push_back(QVariant(data->errStore));
+
+    QString label("SFP");
+    label.append('1' + i);
+    
+    addRow(cStandardRowHeight, label, initialValues);
+    ++data;
+  }
+}
+
+void CWSfpParametersDoasTable::apply(struct calibration_sfp *data) const
+{
+  for (int i = 0; i<4; ++i) {
+    QList<QVariant> state = getCellData(i);
+
+    data->fitFlag = (state.at(0).toBool() ? 1 : 0);
+
+    data->initialValue = state.at(1).toDouble();
+    data->deltaValue = state.at(2).toDouble();
+
+    data->fitStore = (state.at(3).toBool() ? 1 : 0);
+    data->errStore = (state.at(4).toBool() ? 1 : 0);
+
+    ++data;
+  }
+}
+

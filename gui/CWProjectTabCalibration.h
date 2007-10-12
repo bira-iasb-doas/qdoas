@@ -35,7 +35,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "CWAnalysisWindowDoasTables.h"
 
-
 class CWProjectTabCalibration : public QFrame
 {
 Q_OBJECT
@@ -64,6 +63,7 @@ Q_OBJECT
 
   CWMoleculesDoasTable *m_moleculesTab;
   CWLinearParametersDoasTable *m_linearTab;
+  CWSfpParametersDoasTable *m_sfpTab;
   CWShiftAndStretchDoasTable *m_shiftAndStretchTab;
   CWGapDoasTable *m_gapTab;
   CWOutputDoasTable *m_outputTab;

@@ -183,7 +183,7 @@ extern "C" {
     /* table data ... */
     cross_section_list_t crossSectionList;
     struct anlyswin_linear linear;
-    /* non linear ... TODO */
+    struct calibration_sfp sfp[4]; // SFP1 .. SFP4
     shift_stretch_list_t shiftStretchList;
     gap_list_t gapList;
     output_list_t outputList;

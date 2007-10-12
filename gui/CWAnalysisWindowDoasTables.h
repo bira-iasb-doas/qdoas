@@ -198,6 +198,9 @@ Q_OBJECT
   int m_selectedRow;
 };
 
+//----------------------------------------------------------------------
+// Gap
+
 class CWGapDoasTable : public CDoasTable
 {
 Q_OBJECT
@@ -221,6 +224,9 @@ Q_OBJECT
   int m_selectedRow;
 };
 
+//----------------------------------------------------------------------
+// Output
+
 class CWOutputDoasTable : public CDoasTable
 {
 Q_OBJECT
@@ -243,6 +249,22 @@ Q_OBJECT
 
  private:
   QStringList m_symbols;
+};
+
+//----------------------------------------------------------------------
+// SFP
+
+class CWSfpParametersDoasTable : public CDoasTable
+{
+ public:
+  CWSfpParametersDoasTable(const QString &label, int columnWidth, int headerHeight = 24, QWidget *parent = 0);
+  virtual ~CWSfpParametersDoasTable();
+
+  // virtual void cellDataChanged(int row, int column, const QVariant &cellData); // no cell-coupling required
+
+  void populate(const struct calibration_sfp *data);
+  void apply(struct calibration_sfp *data) const;
+
 };
 
 #endif
