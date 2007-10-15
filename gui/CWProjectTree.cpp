@@ -31,6 +31,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "CWorkSpace.h"
 #include "CWProjectTree.h"
+#include "CProjectTreeClipboard.h"
 #include "CWProjectNameEditor.h"
 #include "CWProjectFolderNameEditor.h"
 #include "CWProjectDirectoryEditor.h"
@@ -81,10 +82,14 @@ CWProjectTree::CWProjectTree(CWActiveContext *activeContext, QWidget *parent) :
   setSelectionMode(QAbstractItemView::ExtendedSelection);
 
   slotToggleDisplayDetails();
+
+  m_clipboard = new CProjectTreeClipboard;
 }
 
 CWProjectTree::~CWProjectTree()
 {
+  delete m_clipboard;
+
   if (m_windowIcon) {
     delete m_windowIcon;
     m_windowIcon = NULL;
@@ -152,6 +157,7 @@ void CWProjectTree::contextMenuEvent(QContextMenuEvent *e)
     menu.addAction("Run Analysis", this, SLOT(slotRunAnalysis()))->setEnabled(!m_sessionActive);
     menu.addAction("Browse Spectra", this, SLOT(slotBrowseSpectra()))->setEnabled(!m_sessionActive);
     menu.addSeparator();
+    menu.addAction("Cut", this, SLOT(slotCutSelection()));
     menu.addAction("Delete", this, SLOT(slotDeleteSelection()));
   }
   else if (items.count()) {
@@ -171,6 +177,7 @@ void CWProjectTree::contextMenuEvent(QContextMenuEvent *e)
       if (projItem->parent() && projItem->parent()->type() != cSpectraDirectoryItemType) {
         // Cant delete an item that is a child of a directory item
         menu.addSeparator();
+	menu.addAction("Cut", this, SLOT(slotCutSelection()));
         menu.addAction("Delete", this, SLOT(slotDeleteSelection()));
       }
     }
@@ -188,6 +195,7 @@ void CWProjectTree::contextMenuEvent(QContextMenuEvent *e)
       menu.addAction("Run Analysis", this, SLOT(slotRunAnalysis()))->setEnabled(!m_sessionActive);
       menu.addAction("Browse Spectra", this, SLOT(slotBrowseSpectra()))->setEnabled(!m_sessionActive);
       menu.addSeparator();
+      menu.addAction("Cut", this, SLOT(slotCutSelection()));
       menu.addAction("Delete", this, SLOT(slotDeleteSelection()));
     }
     else if (itemType == cSpectraFileItemType) {
@@ -202,6 +210,7 @@ void CWProjectTree::contextMenuEvent(QContextMenuEvent *e)
       if (projItem->parent() && projItem->parent()->type() != cSpectraDirectoryItemType) {
         // Cant delete an item that is a child of a directory item
         menu.addSeparator();
+	menu.addAction("Cut", this, SLOT(slotCutSelection()));
         menu.addAction("Delete", this, SLOT(slotDeleteSelection()));
       }
     }
@@ -215,6 +224,7 @@ void CWProjectTree::contextMenuEvent(QContextMenuEvent *e)
       menu.addAction("Browse Spectra", this, SLOT(slotBrowseSpectra()))->setEnabled(!m_sessionActive);
       menu.addSeparator();
       // cant remove this item - refers to all children
+      menu.addAction("Cut", this, SLOT(slotCutSelection()));
       menu.addAction("Delete All", this, SLOT(slotDeleteAllSpectra()));
     }
     else if (itemType == cAnalysisWindowBranchItemType) {
@@ -222,6 +232,7 @@ void CWProjectTree::contextMenuEvent(QContextMenuEvent *e)
       menu.addAction("New Analysis Window...", this, SLOT(slotCreateAnalysisWindow()));
       menu.addSeparator();
       // cant remove this item - refers to all children
+      menu.addAction("Cut", this, SLOT(slotCutSelection()));
       menu.addAction("Delete All", this, SLOT(slotDeleteSelection()));
     }
     else if (itemType == cAnalysisWindowItemType) {
@@ -234,6 +245,7 @@ void CWProjectTree::contextMenuEvent(QContextMenuEvent *e)
       menu.addAction("Rename...", this, SLOT(slotRenameAnalysisWindow()));
       menu.addAction("Properties...", this, SLOT(slotEditAnalysisWindow()));
       menu.addSeparator();
+      menu.addAction("Cut", this, SLOT(slotCutSelection()));
       menu.addAction("Delete", this, SLOT(slotDeleteSelection()));
     }
     else if (itemType == cProjectItemType) {
@@ -249,6 +261,7 @@ void CWProjectTree::contextMenuEvent(QContextMenuEvent *e)
       menu.addAction("Run Analysis", this, SLOT(slotRunAnalysis()))->setEnabled(!m_sessionActive);
       menu.addAction("Browse Spectra", this, SLOT(slotBrowseSpectra()))->setEnabled(!m_sessionActive);
       menu.addSeparator();
+      menu.addAction("Cut", this, SLOT(slotCutSelection()));
       menu.addAction("Delete", this, SLOT(slotDeleteSelection()));
     }
       
@@ -1060,20 +1073,22 @@ void CWProjectTree::slotDeleteSelection()
       // delete all children
       QList<QTreeWidgetItem*> kids = (*it)->takeChildren();
       QList<QTreeWidgetItem*>::iterator kIt = kids.begin();
-      while (kIt != kids.end())
-        delete *kIt++;
+      while (kIt != kids.end()) {
+	CAnalysisWindowItem::destroyItem(*kIt);
+	++kIt;
+      }
     }
     else if (type == cAnalysisWindowItemType) {
 
       CAnalysisWindowItem::destroyItem(*it);
     }
     else if ((*it)->parent() == NULL) {
-      // top level item (a project)
-      delete takeTopLevelItem(indexOfTopLevelItem(*it));
+      // a project item
+      CProjectItem::destroyItem(this, *it);
     }
     else {
       QTreeWidgetItem *p = (*it)->parent();
-      // can remove the children of directory items
+      // cant remove the children of directory items
       if (p->type() !=  cSpectraDirectoryItemType)
         delete p->takeChild(p->indexOfChild(*it));
     }
@@ -1085,6 +1100,93 @@ void CWProjectTree::slotDeleteSelection()
 void CWProjectTree::slotDeleteAllSpectra()
 {
   // TODO
+}
+
+void CWProjectTree::slotCutSelection()
+{
+  // normalize the selection
+  QList<QTreeWidgetItem*> items = CWProjectTree::normalize(selectedItems());
+  
+  //mark the clipboard, ready for adding items
+  m_clipboard->beginInsertItems();
+
+  CWorkSpace *ws = CWorkSpace::instance();
+
+  int type;
+  QList<QTreeWidgetItem*>::iterator it = items.begin();
+  while (it != items.end()) {
+    type = (*it)->type();
+
+    if (type == cSpectraBranchItemType) {
+      // cant cut the Raw Spectra - cut its children instead.
+      QList<QTreeWidgetItem*> kids = (*it)->takeChildren();
+      m_clipboard->insertRawSpectraItems(kids);
+    }
+    else if (type == cAnalysisWindowBranchItemType) {
+      // cant cut the Analysis Window branches - cut its children instead.
+      // CAREFULL - the items MUST destroyed while in the tree ...
+      QString projectName = (*it)->parent()->text(0);
+
+      mediate_analysis_window_t *awProp;
+
+      while ((*it)->childCount()) {
+	QTreeWidgetItem *awItem = (*it)->child(0);
+	awProp = ws->findAnalysisWindow(projectName, awItem->text(0));
+	assert(awProp);
+	// make a deep copy of the data to hand over to the clipboard
+	mediate_analysis_window_t *awData = new mediate_analysis_window_t;
+	*awData = *awProp; // blot copy
+	m_clipboard->insertAnalysisWindow(awData); // hand over the copy
+	
+	CAnalysisWindowItem::destroyItem(awItem); // destroy the item (and removes the data from the workspace)
+      }
+    }
+    else if (type == cAnalysisWindowItemType) {
+
+      QTreeWidgetItem *projItem = CWProjectTree::projectItem(*it);
+      assert(projItem);
+      mediate_analysis_window_t *awProp = ws->findAnalysisWindow(projItem->text(0), (*it)->text(0));
+      assert(awProp);
+      // make a deep copy of the data to hand over to the clipboard
+      mediate_analysis_window_t *awData = new mediate_analysis_window_t;
+      *awData = *awProp; // blot copy
+      m_clipboard->insertAnalysisWindow(awData); // hand over the copy
+
+      CAnalysisWindowItem::destroyItem(*it);
+    }
+    else if ((*it)->parent() == NULL) {
+      // a project item ... Collect all the bits and pieces for the project
+      QString projectName = (*it)->text(0);
+      mediate_project_t *projProp = ws->findProject(projectName);
+      assert(projProp);
+      // make a deep copy of the data to hand over to the clipboard
+      mediate_project_t *projData = new mediate_project_t;
+      *projData = *projProp;
+      // get a deep copy of the analysis windows for this project
+      QList<mediate_analysis_window_t*> awList = ws->analysisWindowList(projectName);
+      // steal the raw spectra items from the tree
+      QTreeWidgetItem *rawSpectraItem = (*it)->child(0);
+      assert(rawSpectraItem);
+      QList<QTreeWidgetItem*> rawSpectraList = rawSpectraItem->takeChildren();
+
+      // now have all of the components required for a the clipboard
+      m_clipboard->insertProject(projectName, projData, awList, rawSpectraList);
+
+      CProjectItem::destroyItem(this, *it);
+    }
+    else {
+      // must be a raw spectra item (directory, folder or file)
+      QTreeWidgetItem *p = (*it)->parent();
+      // cant remove the children of directory items .. just ignore them
+      if (p->type() !=  cSpectraDirectoryItemType) {
+	m_clipboard->insertRawSpectraItem(p->takeChild(p->indexOfChild(*it)));
+      }
+    }
+
+    ++it;
+  }
+
+  m_clipboard->endInsertItems();
 }
 
 void CWProjectTree::slotSessionRunning(bool running)
@@ -1158,12 +1260,19 @@ CProjectItem::CProjectItem(const QString &projectName) :
   new CAnalysisWindowBranchItem(this);
 }
 
-CProjectItem::~CProjectItem()
+void CProjectItem::destroyItem(QTreeWidget *tree, QTreeWidgetItem *projItem)
 {
+  assert(tree && projItem && !projItem->parent());
+
   // there should be a corresponding project in the workspace ... this implicitly
   // destroys the analysis associated windows 
-  CWorkSpace::instance()->destroyProject(text(0));
+  CWorkSpace::instance()->destroyProject(projItem->text(0));
 
+  delete tree->takeTopLevelItem(tree->indexOfTopLevelItem(projItem));
+}
+
+CProjectItem::~CProjectItem()
+{
   // This will recursively destroy all child items, including any analysis window items.
   // Since destroyProject has removed the items in the workspace, it is OK that
   // the CAnalysisWindowItem destructor is called, and not the destroyItem function.

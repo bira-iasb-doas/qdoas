@@ -39,6 +39,7 @@ class CSpectraFileItem;
 class CSpectraFolderItem;
 class CSpectraDirectoryItem;
 class CAnalysisWindowItem;
+class CProjectTreeClipboard;
 
 const int cProjectItemType              = QTreeWidgetItem::UserType + 91;
 const int cSpectraBranchItemType        = QTreeWidgetItem::UserType + 92;
@@ -118,6 +119,7 @@ Q_OBJECT
   void slotBrowseSpectra();
   void slotDeleteSelection();
   void slotDeleteAllSpectra();
+  void slotCutSelection();
   void slotSessionRunning(bool running);
 
  signals:
@@ -128,6 +130,7 @@ Q_OBJECT
   QList<int> m_colWidthList;
   CWActiveContext *m_activeContext;
   bool m_sessionActive;
+  CProjectTreeClipboard *m_clipboard;
 
   // icons for the tree
   static QIcon *m_windowIcon, *m_folderIcon, *m_directoryIcon, *m_fileIcon;
@@ -163,6 +166,8 @@ class CProjectItem : public CProjectTreeItem
   virtual ~CProjectItem();
 
   virtual QVariant data(int column, int role) const;
+
+  static void destroyItem(QTreeWidget *tree, QTreeWidgetItem *projItem);
 };
 
 class CAnalysisWindowBranchItem : public CProjectTreeItem

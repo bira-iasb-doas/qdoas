@@ -26,6 +26,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <set>
 #include <vector>
 
+#include <QList>
 #include <QString>
 #include <QStringList>
 
@@ -98,6 +99,9 @@ class CWorkSpace
   mediate_site_t* siteList(int &listLength) const;
   mediate_symbol_t* symbolList(int &listLength) const;
   mediate_analysis_window_t* analysisWindowList(const QString &projectName, int &listLength) const;
+  
+  // return deep-copied list of analysis window properties
+  QList<mediate_analysis_window_t*> analysisWindowList(const QString &projectName) const;
 
   QStringList symbolList(void) const;
   QStringList analysisWindowsWithSymbol(const QString &projectName, const QString &symbol) const;

@@ -241,15 +241,6 @@ bool CWorkSpace::createAnalysisWindow(const QString &projectName, const QString 
 	else
 	  (pIt->second).window.insert(nextIt, tmp);
 
-	// temp - check order ....
-	int index = 0;
-	wIt = (pIt->second).window.begin();
-	while (wIt != (pIt->second).window.end()) {
-	  TRACE2("Index " << index << " = " << (*wIt)->name);
-	  ++index;
-	  ++wIt;
-	}
-
 	return true;
       }
       else
@@ -530,6 +521,25 @@ mediate_analysis_window_t* CWorkSpace::analysisWindowList(const QString &project
   return NULL;
 }
 
+QList<mediate_analysis_window_t*> CWorkSpace::analysisWindowList(const QString &projectName) const
+{
+  QList<mediate_analysis_window_t*> result;
+
+  std::map<QString,SProjBucket>::const_iterator pIt = m_projMap.find(projectName);
+  if (pIt != m_projMap.end()) {
+    // project exists
+    std::vector<mediate_analysis_window_t*>::const_iterator wIt = (pIt->second).window.begin();
+    while (wIt != (pIt->second).window.end()) {
+      mediate_analysis_window_t *data = new mediate_analysis_window_t;
+      *data = *(*wIt); // blot copy
+      result.push_back(data);
+      ++wIt;
+    }
+  }
+
+  return result;
+}
+
 QStringList CWorkSpace::symbolList(void) const
 {
   QStringList symbolList;
@@ -608,19 +618,12 @@ bool CWorkSpace::destroyProject(const QString &projectName)
 
 bool CWorkSpace::destroyAnalysisWindow(const QString &projectName, const QString &windowName)
 {
-  TRACE3("Destroy " << windowName.toStdString() << " in project " << projectName.toStdString());
   // project must exist
   std::map<QString,SProjBucket>::iterator pIt = m_projMap.find(projectName);
   if (pIt != m_projMap.end()) {
     std::vector<mediate_analysis_window_t*>::iterator wIt = (pIt->second).window.begin();
-    while (wIt != (pIt->second).window.end() && windowName != (*wIt)->name) {
-      TRACE4("  tried to match against " << (*wIt)->name);
-      ++wIt;
-    }
-
+    while (wIt != (pIt->second).window.end() && windowName != (*wIt)->name) ++wIt;
     if (wIt != (pIt->second).window.end()) {
-
-      TRACE3("   found");
 
       // update the useCount for symbols
       for (int i=0; i < (*wIt)->crossSectionList.nCrossSection; ++i)
@@ -631,7 +634,7 @@ bool CWorkSpace::destroyAnalysisWindow(const QString &projectName, const QString
       return true;
     }
   }
-  TRACE("Did not delete"); 
+
   return false;
 }
 
