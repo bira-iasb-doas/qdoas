@@ -137,11 +137,14 @@ class CWLinearParametersDoasTable : public CDoasTable
 //----------------------------------------------------------------------
 // fixed size (8 row x 5 column) table ...
 
-class CWNonlinearParametersDoasTable : public CDoasTable
+class CWNonLinearParametersDoasTable : public CDoasTable
 {
  public:
-  CWNonlinearParametersDoasTable(const QString &label, int columnWidth, int headerHeight = 24, QWidget *parent = 0);
-  virtual ~CWNonlinearParametersDoasTable();
+  CWNonLinearParametersDoasTable(const QString &label, int columnWidth, int headerHeight = 24, QWidget *parent = 0);
+  virtual ~CWNonLinearParametersDoasTable();
+
+  void populate(const struct anlyswin_nonlinear *data);
+  void apply(struct anlyswin_nonlinear *data) const;
 
   // virtual void cellDataChanged(int row, int column, const QVariant &cellData); // no cell-coupling required
 };

@@ -66,6 +66,19 @@ class CAnalysisWindowLinearSubHandler : public CConfigSubHandler
   struct anlyswin_linear *m_d;
 };
 
+class CAnalysisWindowNonLinearSubHandler : public CConfigSubHandler
+{
+ public:
+  CAnalysisWindowNonLinearSubHandler(CQdoasProjectConfigHandler *master,
+				     struct anlyswin_nonlinear *d);
+  virtual ~CAnalysisWindowNonLinearSubHandler();
+
+  virtual bool start(const QXmlAttributes &atts);
+
+ private:
+  struct anlyswin_nonlinear *m_d;
+};
+
 class CAnalysisWindowShiftStretchSubHandler : public CConfigSubHandler
 {
  public:

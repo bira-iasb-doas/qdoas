@@ -76,6 +76,8 @@ Q_OBJECT
 
   void setCellData(int rowIndex, int columnIndex, const QVariant &cellData);
 
+  QWidget* directAccessToCellWidget(int rowIndex, int columnIndex); // Try NOT to use this
+
   virtual void resizeEvent(QResizeEvent *e);
   //  virtual void contextMenuEvent(QContextMenuEvent *e);
   //  virtual void keyPressEvent(QKeyEvent *e);
@@ -127,6 +129,7 @@ Q_OBJECT
   virtual QVariant getCellData(int rowIndex) const = 0;
 
   void setCellDataWrapper(int rowIndex, const QVariant &cellData);
+  QWidget* directAccessToCellWidget(int rowIndex); // do NOT use this
 
  protected:
   virtual void setCellData(int rowIndex, const QVariant &cellData);
@@ -160,6 +163,7 @@ Q_OBJECT
 inline CDoasTable* CDoasTableColumn::owner(void) const { return m_owner; }
 inline int CDoasTableColumn::rowOffset(void) const { return m_rowOffset; }
 inline void CDoasTableColumn::setCellDataWrapper(int rowIndex, const QVariant &cellData) { setCellData(rowIndex, cellData); }
+inline QWidget* CDoasTableColumn::directAccessToCellWidget(int rowIndex) { return getWidgetNonConst(rowIndex); }
 
 
 class CDoasTableColumnHeader : public CDoasTableColumn

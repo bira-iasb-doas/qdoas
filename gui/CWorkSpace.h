@@ -24,6 +24,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <map>
 #include <list>
 #include <set>
+#include <vector>
 
 #include <QString>
 #include <QStringList>
@@ -37,7 +38,7 @@ class CProjectObserver;
 struct SProjBucket
 {
   mediate_project_t *project;
-  std::map<QString,mediate_analysis_window_t*> window;
+  std::vector<mediate_analysis_window_t*> window;
 
   // takes ownership of projectData
   SProjBucket(mediate_project_t *projectData) : project(projectData) {}

@@ -212,8 +212,8 @@ CWAnalysisWindowPropertyEditor::CWAnalysisWindowPropertyEditor(const QString &pr
   m_tabs->addTab(m_moleculesTab, "Molecules");
   m_linearTab = new CWLinearParametersDoasTable("Linear Parameters", 120);
   m_tabs->addTab(m_linearTab, "Linear Parameters");
-  CWNonlinearParametersDoasTable *nonLinearTab = new CWNonlinearParametersDoasTable("NL Parameters", 120);
-  m_tabs->addTab(nonLinearTab, "Non-Linear Parameters");
+  m_nonLinearTab = new CWNonLinearParametersDoasTable("NL Parameters", 120);
+  m_tabs->addTab(m_nonLinearTab, "Non-Linear Parameters");
   m_shiftAndStretchTab = new CWShiftAndStretchDoasTable("Cross sections and spectrum", 180);
   m_tabs->addTab(m_shiftAndStretchTab, "Shift and Stretch");
   m_gapTab = new CWGapDoasTable("Gaps", 240);
@@ -278,6 +278,7 @@ CWAnalysisWindowPropertyEditor::CWAnalysisWindowPropertyEditor(const QString &pr
 
   m_moleculesTab->populate(&(d->crossSectionList));
   m_linearTab->populate(&(d->linear));
+  m_nonLinearTab->populate(&(d->nonlinear));
   m_shiftAndStretchTab->populate(&(d->shiftStretchList));
   m_gapTab->populate(&(d->gapList));
   m_outputTab->populate(&(d->outputList));
@@ -340,6 +341,7 @@ bool CWAnalysisWindowPropertyEditor::actionOk(void)
       ws->incrementUseCount(d->crossSectionList.crossSection[i].symbol);
 
     m_linearTab->apply(&(d->linear));
+    m_nonLinearTab->apply(&(d->nonlinear));
     m_shiftAndStretchTab->apply(&(d->shiftStretchList));
     m_gapTab->apply(&(d->gapList));
     m_outputTab->apply(&(d->outputList));

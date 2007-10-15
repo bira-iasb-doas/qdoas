@@ -90,6 +90,57 @@ extern "C" {
     int offsetFlagErrStore;
   };
 
+  struct anlyswin_nonlinear
+  {
+    int solFlagFit;
+    double solInitial;
+    double solDelta;
+    int solFlagFitStore;
+    int solFlagErrStore;
+
+    int off0FlagFit;
+    double off0Initial;
+    double off0Delta;
+    int off0FlagFitStore;
+    int off0FlagErrStore;
+
+    int off1FlagFit;
+    double off1Initial;
+    double off1Delta;
+    int off1FlagFitStore;
+    int off1FlagErrStore;
+
+    int off2FlagFit;
+    double off2Initial;
+    double off2Delta;
+    int off2FlagFitStore;
+    int off2FlagErrStore;
+
+    int comFlagFit;
+    double comInitial;
+    double comDelta;
+    int comFlagFitStore;
+    int comFlagErrStore;
+
+    int usamp1FlagFit;
+    double usamp1Initial;
+    double usamp1Delta;
+    int usamp1FlagFitStore;
+    int usamp1FlagErrStore;
+
+    int usamp2FlagFit;
+    double usamp2Initial;
+    double usamp2Delta;
+    int usamp2FlagFitStore;
+    int usamp2FlagErrStore;
+
+    int ramanFlagFit;
+    double ramanInitial;
+    double ramanDelta;
+    int ramanFlagFitStore;
+    int ramanFlagErrStore;
+  };
+
   struct anlyswin_shift_stretch
   {
     int nSymbol;

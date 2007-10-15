@@ -41,11 +41,12 @@ CWorkSpace::~CWorkSpace()
   // Project ... 
   std::map<QString,SProjBucket>::iterator pIt = m_projMap.begin();
   while (pIt != m_projMap.end()) {    
-    std::map<QString,mediate_analysis_window_t*>::iterator wIt = (pIt->second).window.begin();
+    std::vector<mediate_analysis_window_t*>::iterator wIt = (pIt->second).window.begin();
     while (wIt != (pIt->second).window.end()) {
-      delete wIt->second; // delete the analysis window data
+      delete *wIt; // delete the analysis window data
       ++wIt;
     }
+    (pIt->second).window.clear();
     delete (pIt->second).project; // delete the project data
     ++pIt;
   }
@@ -76,11 +77,13 @@ void CWorkSpace::removeAllContent(void)
       ++obs;
     }
 
-    std::map<QString,mediate_analysis_window_t*>::iterator wIt = (pIt->second).window.begin();
+    std::vector<mediate_analysis_window_t*>::iterator wIt = (pIt->second).window.begin();
     while (wIt != (pIt->second).window.end()) {
-      delete wIt->second; // delete the analysis window data
+      delete *wIt; // delete the analysis window data
       ++wIt;
     }
+    (pIt->second).window.clear();
+
     delete (pIt->second).project; // delete the project data
     ++pIt;
   }
@@ -132,9 +135,10 @@ mediate_analysis_window_t* CWorkSpace::findAnalysisWindow(const QString &project
   std::map<QString,SProjBucket>::const_iterator pIt = m_projMap.find(projectName);
   if (pIt != m_projMap.end()) {
     // project exists
-    std::map<QString,mediate_analysis_window_t*>::const_iterator wIt = (pIt->second).window.find(windowName);
+    std::vector<mediate_analysis_window_t*>::const_iterator wIt = (pIt->second).window.begin();
+    while (wIt != (pIt->second).window.end() && windowName != (*wIt)->name) ++wIt;
     if (wIt != (pIt->second).window.end())
-      return wIt->second;
+      return *wIt;
   }
   
   return NULL; // not found
@@ -212,7 +216,8 @@ bool CWorkSpace::createAnalysisWindow(const QString &projectName, const QString 
   // project must exist
   std::map<QString,SProjBucket>::iterator pIt = m_projMap.find(projectName);
   if (pIt != m_projMap.end()) {
-    std::map<QString,mediate_analysis_window_t*>::iterator wIt = (pIt->second).window.find(newWindowName);
+    std::vector<mediate_analysis_window_t*>::iterator wIt = (pIt->second).window.begin();
+    while (wIt != (pIt->second).window.end() && newWindowName != (*wIt)->name) ++wIt;
     if (wIt == (pIt->second).window.end()) {
       // analysis window does not already exist
       mediate_analysis_window_t *tmp = new mediate_analysis_window_t;
@@ -222,8 +227,8 @@ bool CWorkSpace::createAnalysisWindow(const QString &projectName, const QString 
 	// set its name ...
 	strcpy(tmp->name, newWindowName.toAscii().data());
 
-	// insert the window into the map
-	(pIt->second).window.insert(std::map<QString,mediate_analysis_window_t*>::value_type(newWindowName,tmp));
+	// insert at the end ...
+	(pIt->second).window.push_back(tmp);
 	return true;
       }
       else
@@ -339,18 +344,18 @@ bool CWorkSpace::renameAnalysisWindow(const QString &projectName, const QString 
   std::map<QString,SProjBucket>::iterator pIt = m_projMap.find(projectName);
   if (pIt != m_projMap.end()) {
     // locate the window by the old name - must exist
-    std::map<QString,mediate_analysis_window_t*>::iterator oldIt = (pIt->second).window.find(oldWindowName);
-    if (oldIt != (pIt->second).window.end() && newWindowName.length() < (int)sizeof((oldIt->second)->name)) {
+    std::vector<mediate_analysis_window_t*>::iterator oldIt = (pIt->second).window.begin();
+    while (oldIt != (pIt->second).window.end() && oldWindowName != (*oldIt)->name) ++oldIt;
+    if (oldIt != (pIt->second).window.end() && newWindowName.length() < (int)sizeof((*oldIt)->name)) {
       // no change in the name is ok
       if (oldWindowName == newWindowName)
 	return true;
 
-      std::map<QString,mediate_analysis_window_t*>::iterator newIt = (pIt->second).window.find(newWindowName);
+      std::vector<mediate_analysis_window_t*>::iterator newIt = (pIt->second).window.begin();
+      while (newIt != (pIt->second).window.end() && newWindowName != (*newIt)->name) ++ newIt;
       if (newIt == (pIt->second).window.end()) {
-	strcpy((oldIt->second)->name, newWindowName.toAscii().data());
-	// ok to rename - change of key so insert for the new key then remove the old entry
-	(pIt->second).window.insert(std::map<QString,mediate_analysis_window_t*>::value_type(newWindowName, oldIt->second));
-	(pIt->second).window.erase(oldIt);
+	// new name is not in use .. ok to change the name
+	strcpy((*oldIt)->name, newWindowName.toAscii().data());
 	return true;
       }
     }
@@ -488,10 +493,11 @@ mediate_analysis_window_t* CWorkSpace::analysisWindowList(const QString &project
       mediate_analysis_window_t *data = new mediate_analysis_window_t[n];
       mediate_analysis_window_t *p = data;
 
-      // walk the map and copy ... TODO - is the order important ???
-      std::map<QString,mediate_analysis_window_t*>::const_iterator wIt = (pIt->second).window.begin();
+      // walk the vector and copy ... order is important
+      std::vector<mediate_analysis_window_t*>::const_iterator wIt = (pIt->second).window.begin();
       while (wIt != (pIt->second).window.end()) {
-	*p = *(wIt->second); // blot copy
+	*p = *(*wIt); // blot copy
+	++p;
 	++wIt;
       }
       listLength = (int)n;
@@ -524,13 +530,13 @@ QStringList CWorkSpace::analysisWindowsWithSymbol(const QString &projectName, co
   std::map<QString,SProjBucket>::const_iterator pIt = m_projMap.find(projectName);
   if (pIt != m_projMap.end()) {
     // project exists
-    std::map<QString,mediate_analysis_window_t*>::const_iterator wIt = (pIt->second).window.begin();
+    std::vector<mediate_analysis_window_t*>::const_iterator wIt = (pIt->second).window.begin();
     while (wIt != (pIt->second).window.end()) {
-      const cross_section_list_t *d = &((wIt->second)->crossSectionList);
+      const cross_section_list_t *d = &((*wIt)->crossSectionList);
       int i = 0;
       while (i < d->nCrossSection) {
 	if (symbol == QString(d->crossSection[i].symbol)) {
-	  result << (wIt->first); // this AW contains the symbol as a cross section
+	  result << QString((*wIt)->name); // this AW contains the symbol as a cross section
 	  break;
 	}
 	++i;
@@ -556,21 +562,21 @@ bool CWorkSpace::destroyProject(const QString &projectName)
     }
 
     // delete all analysis windows ...
-    std::map<QString,mediate_analysis_window_t*>::iterator wIt = (pIt->second).window.begin();
+    std::vector<mediate_analysis_window_t*>::iterator wIt = (pIt->second).window.begin();
     while (wIt != (pIt->second).window.end()) {      
       // update the useCount for symbols
-      for (int i=0; i < (wIt->second)->crossSectionList.nCrossSection; ++i)
-	decrementUseCount((wIt->second)->crossSectionList.crossSection[i].symbol);
+      for (int i=0; i < (*wIt)->crossSectionList.nCrossSection; ++i)
+	decrementUseCount((*wIt)->crossSectionList.crossSection[i].symbol);
 
-      delete wIt->second;
+      delete *wIt;
       ++wIt;
     }
+    (pIt->second).window.clear(); // would happen when the project bucket is erased from the map...
 
     // update the useCount for symbols
     for (int i=0; i < (pIt->second).project->calibration.crossSectionList.nCrossSection; ++i)
       decrementUseCount((pIt->second).project->calibration.crossSectionList.crossSection[i].symbol);
 
-    (pIt->second).window.clear();
     delete (pIt->second).project;
 
     m_projMap.erase(pIt);
@@ -584,14 +590,15 @@ bool CWorkSpace::destroyAnalysisWindow(const QString &projectName, const QString
   // project must exist
   std::map<QString,SProjBucket>::iterator pIt = m_projMap.find(projectName);
   if (pIt != m_projMap.end()) {
-    std::map<QString,mediate_analysis_window_t*>::iterator wIt = (pIt->second).window.find(windowName);
+    std::vector<mediate_analysis_window_t*>::iterator wIt = (pIt->second).window.begin();
+    while (wIt != (pIt->second).window.end() && windowName != (*wIt)->name) ++wIt;
     if (wIt != (pIt->second).window.end()) {
 
       // update the useCount for symbols
-      for (int i=0; i < (wIt->second)->crossSectionList.nCrossSection; ++i)
-	decrementUseCount((wIt->second)->crossSectionList.crossSection[i].symbol);
+      for (int i=0; i < (*wIt)->crossSectionList.nCrossSection; ++i)
+	decrementUseCount((*wIt)->crossSectionList.crossSection[i].symbol);
 
-      delete wIt->second;
+      delete *wIt;
       (pIt->second).window.erase(wIt);
       return true;
     }

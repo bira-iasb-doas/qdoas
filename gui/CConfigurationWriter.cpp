@@ -1257,11 +1257,14 @@ void CConfigurationWriter::writeAnalysisWindows(FILE *fp, const QString &project
 	fprintf(fp, " residual=\"%s\" szacenter=\"%.3f\" szadelta=\"%.3f\" />\n", tmpStr.toAscii().data(),
 		properties->refSzaCenter , properties->refSzaDelta);
 
+	// cross sections ....
+	writeCrossSectionList(fp, &(properties->crossSectionList));
+
 	// linear
 	writeLinear(fp, &(properties->linear));
 
-	// cross sections ....
-	writeCrossSectionList(fp, &(properties->crossSectionList));
+	// nonlinear
+	writeNonLinear(fp, &(properties->nonlinear));
 
 	// shift and stretch
 	writeShiftStretchList(fp, &(properties->shiftStretchList));
@@ -1371,6 +1374,42 @@ void CConfigurationWriter::writeLinear(FILE *fp, const struct anlyswin_linear *d
 	  (d->offsetFlagFitStore ? sTrue : sFalse),
 	  (d->offsetFlagErrStore ? sTrue : sFalse));
   fprintf(fp, " />\n");
+}
+
+void CConfigurationWriter::writeNonLinear(FILE *fp, const struct anlyswin_nonlinear *d)
+{
+  fprintf(fp, "      <nonlinear solfit=\"%s\" solinit=\"%.3f\" soldelt=\"%.3f\" solfstr=\"%s\" solestr=\"%s\"",
+	  (d->solFlagFit ? sTrue : sFalse), d->solInitial, d->solDelta,
+	  (d->solFlagErrStore ? sTrue : sFalse), (d->solFlagErrStore ? sTrue : sFalse));
+
+  fprintf(fp, " o0fit=\"%s\" o0init=\"%.3f\" o0delt=\"%.3f\" o0str=\"%s\" o0estr=\"%s\"",
+	  (d->off0FlagFit ? sTrue : sFalse), d->off0Initial, d->off0Delta,
+	  (d->off0FlagErrStore ? sTrue : sFalse), (d->off0FlagErrStore ? sTrue : sFalse));
+
+  fprintf(fp, " o1fit=\"%s\" o1init=\"%.3f\" o1delt=\"%.3f\" o1str=\"%s\" o1estr=\"%s\"",
+	  (d->off1FlagFit ? sTrue : sFalse), d->off1Initial, d->off1Delta,
+	  (d->off1FlagErrStore ? sTrue : sFalse), (d->off1FlagErrStore ? sTrue : sFalse));
+
+  fprintf(fp, " o2fit=\"%s\" o2init=\"%.3f\" o2delt=\"%.3f\" o2str=\"%s\" o2estr=\"%s\"",
+	  (d->off2FlagFit ? sTrue : sFalse), d->off2Initial, d->off2Delta,
+	  (d->off2FlagErrStore ? sTrue : sFalse), (d->off2FlagErrStore ? sTrue : sFalse));
+
+  fprintf(fp, " comfit=\"%s\" cominit=\"%.3f\" comdelt=\"%.3f\" comstr=\"%s\" comestr=\"%s\"",
+	  (d->comFlagFit ? sTrue : sFalse), d->comInitial, d->comDelta,
+	  (d->comFlagErrStore ? sTrue : sFalse), (d->comFlagErrStore ? sTrue : sFalse));
+
+  fprintf(fp, " u1fit=\"%s\" u1init=\"%.3f\" u1delt=\"%.3f\" u1str=\"%s\" u1estr=\"%s\"",
+	  (d->usamp1FlagFit ? sTrue : sFalse), d->usamp1Initial, d->usamp1Delta,
+	  (d->usamp1FlagErrStore ? sTrue : sFalse), (d->usamp1FlagErrStore ? sTrue : sFalse));
+
+  fprintf(fp, " u2fit=\"%s\" u2init=\"%.3f\" u2delt=\"%.3f\" u2str=\"%s\" u2estr=\"%s\"",
+	  (d->usamp2FlagFit ? sTrue : sFalse), d->usamp2Initial, d->usamp2Delta,
+	  (d->usamp2FlagErrStore ? sTrue : sFalse), (d->usamp2FlagErrStore ? sTrue : sFalse));
+
+  fprintf(fp, " ramfit=\"%s\" raminit=\"%.3f\" ramdelt=\"%.3f\" ramstr=\"%s\" ramestr=\"%s\" />\n",
+	  (d->ramanFlagFit ? sTrue : sFalse), d->ramanInitial, d->ramanDelta,
+	  (d->ramanFlagErrStore ? sTrue : sFalse), (d->ramanFlagErrStore ? sTrue : sFalse));
+
 }
 
 void CConfigurationWriter::writeShiftStretchList(FILE *fp, const shift_stretch_list_t *data)

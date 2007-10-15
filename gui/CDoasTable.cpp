@@ -286,6 +286,15 @@ void CDoasTable::setCellData(int rowIndex, int columnIndex, const QVariant &cell
     m_columnList.at(columnIndex)->setCellDataWrapper(rowIndex, cellData);
 }
 
+QWidget* CDoasTable::directAccessToCellWidget(int rowIndex, int columnIndex)
+{
+  // Try NOT to use this
+  if (columnIndex >= 0 && columnIndex < m_columnList.count())
+    return m_columnList.at(columnIndex)->directAccessToCellWidget(rowIndex);
+
+  return NULL;
+}
+
 void CDoasTable::cellDataChanged(int row, int column, const QVariant &cellData)
 {
   // do nothing ... default

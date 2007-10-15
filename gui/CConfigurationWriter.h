@@ -60,6 +60,7 @@ class CConfigurationWriter
   
   void writeCrossSectionList(FILE *fp, const cross_section_list_t *d);
   void writeLinear(FILE *fp, const struct anlyswin_linear *d);
+  void writeNonLinear(FILE *fp, const struct anlyswin_nonlinear *d);
   void writeShiftStretchList(FILE *fp, const shift_stretch_list_t *d);
   void writeGapList(FILE *fp, const gap_list_t *d);
   void writeOutputList(FILE *fp, const output_list_t *d);

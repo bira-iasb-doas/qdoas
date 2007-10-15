@@ -502,6 +502,10 @@ CWLinearParametersDoasTable::CWLinearParametersDoasTable(const QString &label, i
   createColumnCheck("Err store", 60);
 }
 
+CWLinearParametersDoasTable::~CWLinearParametersDoasTable()
+{
+}
+
 void CWLinearParametersDoasTable::populate(const struct anlyswin_linear *data)
 {						 
   // predefined rows
@@ -528,12 +532,21 @@ void CWLinearParametersDoasTable::populate(const struct anlyswin_linear *data)
   initialValues.push_back(data->offsetFlagFitStore); // bool
   initialValues.push_back(data->offsetFlagErrStore); // bool 
   addRow(cStandardRowHeight, "Offset", initialValues);
-}
 
-CWLinearParametersDoasTable::~CWLinearParametersDoasTable()
-{
-}
+  // remove the orders
+  QWidget *tmp;
+  QComboBox *p;
 
+  // TODO
+  if ((tmp = directAccessToCellWidget(2, 0)) != NULL) {
+    p = dynamic_cast<QComboBox*>(tmp);
+  }
+
+  if ((tmp = directAccessToCellWidget(2, 1)) != NULL) {
+    p = dynamic_cast<QComboBox*>(tmp);
+  }
+}
+  
 void CWLinearParametersDoasTable::apply(struct anlyswin_linear *data) const
 {
   QList<QVariant> state;
@@ -585,7 +598,7 @@ int CWLinearParametersDoasTable::mapComboStringToOrder(const QString &str)
 
 //------------------------------------------------------------
 
-CWNonlinearParametersDoasTable::CWNonlinearParametersDoasTable(const QString &label, int columnWidth,
+CWNonLinearParametersDoasTable::CWNonLinearParametersDoasTable(const QString &label, int columnWidth,
 							       int headerHeight, QWidget *parent) :
   CDoasTable(label, columnWidth, headerHeight, parent)
 {
@@ -596,24 +609,158 @@ CWNonlinearParametersDoasTable::CWNonlinearParametersDoasTable(const QString &la
   createColumnEdit("Val. Init", 80);
   createColumnEdit("Val. Delta", 80);
   createColumnCheck("Fit store", 60);
-  createColumnCheck("Err store", 60);
-  
-  // predefined rows
-  QList<QVariant> defaults;
-  defaults << false << 0.0 << 0.001 << false << false;
-
-  addRow(cStandardRowHeight, "Sol", defaults);
-  addRow(cStandardRowHeight, "Offset (Constant)", defaults);
-  addRow(cStandardRowHeight, "Offset (Order 1)", defaults);
-  addRow(cStandardRowHeight, "Offset (Order 2)", defaults);
-  addRow(cStandardRowHeight, "Com", defaults);
-  addRow(cStandardRowHeight, "Usamp 1", defaults);
-  addRow(cStandardRowHeight, "Usamp 2", defaults);
-  addRow(cStandardRowHeight, "Raman", defaults);
+  createColumnCheck("Err store", 60); 
 }
 
-CWNonlinearParametersDoasTable::~CWNonlinearParametersDoasTable()
+CWNonLinearParametersDoasTable::~CWNonLinearParametersDoasTable()
 {
+}
+
+void CWNonLinearParametersDoasTable::populate(const struct anlyswin_nonlinear *data)
+{						 
+  // predefined rows
+  QList<QVariant> initialValues;
+
+  // Sol
+  initialValues.push_back(data->solFlagFit);
+  initialValues.push_back(data->solInitial);
+  initialValues.push_back(data->solDelta);
+  initialValues.push_back(data->solFlagFitStore);
+  initialValues.push_back(data->solFlagErrStore);  
+  addRow(cStandardRowHeight, "Sol", initialValues);
+
+  initialValues.clear();
+
+  // Off0
+  initialValues.push_back(data->off0FlagFit);
+  initialValues.push_back(data->off0Initial);
+  initialValues.push_back(data->off0Delta);
+  initialValues.push_back(data->off0FlagFitStore);
+  initialValues.push_back(data->off0FlagErrStore);  
+  addRow(cStandardRowHeight, "Offset (Constant)", initialValues);
+
+  initialValues.clear();
+
+  // Off1
+  initialValues.push_back(data->off1FlagFit);
+  initialValues.push_back(data->off1Initial);
+  initialValues.push_back(data->off1Delta);
+  initialValues.push_back(data->off1FlagFitStore);
+  initialValues.push_back(data->off1FlagErrStore);  
+  addRow(cStandardRowHeight, "Offset (Order 1)", initialValues);
+
+  initialValues.clear();
+
+  // Off2
+  initialValues.push_back(data->off2FlagFit);
+  initialValues.push_back(data->off2Initial);
+  initialValues.push_back(data->off2Delta);
+  initialValues.push_back(data->off2FlagFitStore);
+  initialValues.push_back(data->off2FlagErrStore);  
+  addRow(cStandardRowHeight, "Offset (Order 2)", initialValues);
+
+  initialValues.clear();
+
+  // Com
+  initialValues.push_back(data->comFlagFit);
+  initialValues.push_back(data->comInitial);
+  initialValues.push_back(data->comDelta);
+  initialValues.push_back(data->comFlagFitStore);
+  initialValues.push_back(data->comFlagErrStore);  
+  addRow(cStandardRowHeight, "Com", initialValues);
+
+  initialValues.clear();
+
+  // Usamp1
+  initialValues.push_back(data->usamp1FlagFit);
+  initialValues.push_back(data->usamp1Initial);
+  initialValues.push_back(data->usamp1Delta);
+  initialValues.push_back(data->usamp1FlagFitStore);
+  initialValues.push_back(data->usamp1FlagErrStore);  
+  addRow(cStandardRowHeight, "Usamp 1", initialValues);
+
+  initialValues.clear();
+
+  // Usamp2
+  initialValues.push_back(data->usamp2FlagFit);
+  initialValues.push_back(data->usamp2Initial);
+  initialValues.push_back(data->usamp2Delta);
+  initialValues.push_back(data->usamp2FlagFitStore);
+  initialValues.push_back(data->usamp2FlagErrStore);  
+  addRow(cStandardRowHeight, "Usamp 2", initialValues);
+
+  initialValues.clear();
+
+  // Usamp2
+  initialValues.push_back(data->ramanFlagFit);
+  initialValues.push_back(data->ramanInitial);
+  initialValues.push_back(data->ramanDelta);
+  initialValues.push_back(data->ramanFlagFitStore);
+  initialValues.push_back(data->ramanFlagErrStore);  
+  addRow(cStandardRowHeight, "Raman", initialValues);
+
+}
+
+void CWNonLinearParametersDoasTable::apply(struct anlyswin_nonlinear *data) const
+{
+  QList<QVariant> state;
+
+  state = getCellData(0); // Sol
+  data->solFlagFit = state.at(0).toBool() ? 1 : 0;
+  data->solInitial = state.at(1).toDouble();
+  data->solDelta = state.at(2).toDouble();
+  data->solFlagFitStore = state.at(3).toBool() ? 1 : 0;
+  data->solFlagErrStore = state.at(4).toBool() ? 1 : 0;
+  
+  state = getCellData(1); // Offset Constant
+  data->off0FlagFit = state.at(0).toBool() ? 1 : 0;
+  data->off0Initial = state.at(1).toDouble();
+  data->off0Delta = state.at(2).toDouble();
+  data->off0FlagFitStore = state.at(3).toBool() ? 1 : 0;
+  data->off0FlagErrStore = state.at(4).toBool() ? 1 : 0;
+  
+  state = getCellData(2); // Offset Order 1
+  data->off1FlagFit = state.at(0).toBool() ? 1 : 0;
+  data->off1Initial = state.at(1).toDouble();
+  data->off1Delta = state.at(2).toDouble();
+  data->off1FlagFitStore = state.at(3).toBool() ? 1 : 0;
+  data->off1FlagErrStore = state.at(4).toBool() ? 1 : 0;
+  
+  state = getCellData(3); // Offset Order 2
+  data->off2FlagFit = state.at(0).toBool() ? 1 : 0;
+  data->off2Initial = state.at(1).toDouble();
+  data->off2Delta = state.at(2).toDouble();
+  data->off2FlagFitStore = state.at(3).toBool() ? 1 : 0;
+  data->off2FlagErrStore = state.at(4).toBool() ? 1 : 0;
+  
+  state = getCellData(4); // Com
+  data->comFlagFit = state.at(0).toBool() ? 1 : 0;
+  data->comInitial = state.at(1).toDouble();
+  data->comDelta = state.at(2).toDouble();
+  data->comFlagFitStore = state.at(3).toBool() ? 1 : 0;
+  data->comFlagErrStore = state.at(4).toBool() ? 1 : 0;
+  
+  state = getCellData(5); // Usamp1
+  data->usamp1FlagFit = state.at(0).toBool() ? 1 : 0;
+  data->usamp1Initial = state.at(1).toDouble();
+  data->usamp1Delta = state.at(2).toDouble();
+  data->usamp1FlagFitStore = state.at(3).toBool() ? 1 : 0;
+  data->usamp1FlagErrStore = state.at(4).toBool() ? 1 : 0;
+  
+  state = getCellData(6); // Usamp2
+  data->usamp2FlagFit = state.at(0).toBool() ? 1 : 0;
+  data->usamp2Initial = state.at(1).toDouble();
+  data->usamp2Delta = state.at(2).toDouble();
+  data->usamp2FlagFitStore = state.at(3).toBool() ? 1 : 0;
+  data->usamp2FlagErrStore = state.at(4).toBool() ? 1 : 0;
+  
+  state = getCellData(7); // Raman
+  data->ramanFlagFit = state.at(0).toBool() ? 1 : 0;
+  data->ramanInitial = state.at(1).toDouble();
+  data->ramanDelta = state.at(2).toDouble();
+  data->ramanFlagFitStore = state.at(3).toBool() ? 1 : 0;
+  data->ramanFlagErrStore = state.at(4).toBool() ? 1 : 0;
+
 }
 
 //------------------------------------------------------------

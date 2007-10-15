@@ -71,6 +71,7 @@ Q_OBJECT
   // specialized DoasTables for each tab ...
   CWMoleculesDoasTable *m_moleculesTab;
   CWLinearParametersDoasTable *m_linearTab;
+  CWNonLinearParametersDoasTable *m_nonLinearTab;
   CWShiftAndStretchDoasTable *m_shiftAndStretchTab;
   CWGapDoasTable *m_gapTab;
   CWOutputDoasTable *m_outputTab;

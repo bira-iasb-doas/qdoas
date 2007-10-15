@@ -113,6 +113,9 @@ bool CAnalysisWindowSubHandler::start(const QString &element, const QXmlAttribut
   else if (element == "linear") {
     return m_master->installSubHandler(new CAnalysisWindowLinearSubHandler(m_master, &(d->linear)), atts);    
   }
+  else if (element == "nonlinear") {
+    return m_master->installSubHandler(new CAnalysisWindowNonLinearSubHandler(m_master, &(d->nonlinear)), atts);    
+  }
   else if (element == "shift_stretch") {
     return m_master->installSubHandler(new CAnalysisWindowShiftStretchSubHandler(m_master, &(d->shiftStretchList)), atts);
   }
@@ -250,6 +253,72 @@ bool CAnalysisWindowLinearSubHandler::start(const QXmlAttributes &atts)
   m_d->offsetBaseOrder = CAnalysisWindowSubHandler::mapToPolyType(atts.value("offbase"));
   m_d->offsetFlagFitStore = (atts.value("offfit") == "true") ? 1 : 0;
   m_d->offsetFlagErrStore = (atts.value("offerr") == "true") ? 1 : 0;
+
+  return true;
+}
+
+//------------------------------------------------------------
+
+CAnalysisWindowNonLinearSubHandler::CAnalysisWindowNonLinearSubHandler(CQdoasProjectConfigHandler *master,
+								       struct anlyswin_nonlinear *d) :
+  CConfigSubHandler(master),
+  m_d(d)
+{
+}
+
+CAnalysisWindowNonLinearSubHandler::~CAnalysisWindowNonLinearSubHandler()
+{
+}
+
+bool CAnalysisWindowNonLinearSubHandler::start(const QXmlAttributes &atts)
+{
+  m_d->solFlagFit = (atts.value("solfit") == "true") ? 1 : 0;
+  m_d->solInitial = atts.value("solinit").toDouble();
+  m_d->solDelta = atts.value("soldelt").toDouble();
+  m_d->solFlagFitStore = (atts.value("solfstr") == "true") ? 1 : 0;
+  m_d->solFlagErrStore = (atts.value("solestr") == "true") ? 1 : 0;
+
+  m_d->off0FlagFit = (atts.value("o0fit") == "true") ? 1 : 0;
+  m_d->off0Initial = atts.value("o0init").toDouble();
+  m_d->off0Delta = atts.value("o0delt").toDouble();
+  m_d->off0FlagFitStore = (atts.value("o0fstr") == "true") ? 1 : 0;
+  m_d->off0FlagErrStore = (atts.value("o0estr") == "true") ? 1 : 0;
+
+  m_d->off1FlagFit = (atts.value("o1fit") == "true") ? 1 : 0;
+  m_d->off1Initial = atts.value("o1init").toDouble();
+  m_d->off1Delta = atts.value("o1delt").toDouble();
+  m_d->off1FlagFitStore = (atts.value("o1fstr") == "true") ? 1 : 0;
+  m_d->off1FlagErrStore = (atts.value("o1estr") == "true") ? 1 : 0;
+
+  m_d->off2FlagFit = (atts.value("o2fit") == "true") ? 1 : 0;
+  m_d->off2Initial = atts.value("o2init").toDouble();
+  m_d->off2Delta = atts.value("o2delt").toDouble();
+  m_d->off2FlagFitStore = (atts.value("o2fstr") == "true") ? 1 : 0;
+  m_d->off2FlagErrStore = (atts.value("o2estr") == "true") ? 1 : 0;
+
+  m_d->comFlagFit = (atts.value("comfit") == "true") ? 1 : 0;
+  m_d->comInitial = atts.value("cominit").toDouble();
+  m_d->comDelta = atts.value("comdelt").toDouble();
+  m_d->comFlagFitStore = (atts.value("comfstr") == "true") ? 1 : 0;
+  m_d->comFlagErrStore = (atts.value("comestr") == "true") ? 1 : 0;
+
+  m_d->usamp1FlagFit = (atts.value("u1fit") == "true") ? 1 : 0;
+  m_d->usamp1Initial = atts.value("u1init").toDouble();
+  m_d->usamp1Delta = atts.value("u1delt").toDouble();
+  m_d->usamp1FlagFitStore = (atts.value("u1fstr") == "true") ? 1 : 0;
+  m_d->usamp1FlagErrStore = (atts.value("u1estr") == "true") ? 1 : 0;
+
+  m_d->usamp2FlagFit = (atts.value("u2fit") == "true") ? 1 : 0;
+  m_d->usamp2Initial = atts.value("u2init").toDouble();
+  m_d->usamp2Delta = atts.value("u2delt").toDouble();
+  m_d->usamp2FlagFitStore = (atts.value("u2fstr") == "true") ? 1 : 0;
+  m_d->usamp2FlagErrStore = (atts.value("u2estr") == "true") ? 1 : 0;
+
+  m_d->ramanFlagFit = (atts.value("ramfit") == "true") ? 1 : 0;
+  m_d->ramanInitial = atts.value("raminit").toDouble();
+  m_d->ramanDelta = atts.value("ramdelt").toDouble();
+  m_d->ramanFlagFitStore = (atts.value("ramfstr") == "true") ? 1 : 0;
+  m_d->ramanFlagErrStore = (atts.value("ramestr") == "true") ? 1 : 0;
 
   return true;
 }

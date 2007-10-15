@@ -55,7 +55,7 @@ extern "C" {
     /* table data ... */
     cross_section_list_t crossSectionList;
     struct anlyswin_linear linear;
-    /* non linear ... TODO */
+    struct anlyswin_nonlinear nonlinear;
     shift_stretch_list_t shiftStretchList;
     gap_list_t gapList;
     output_list_t outputList;
