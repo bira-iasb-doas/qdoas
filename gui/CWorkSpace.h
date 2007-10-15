@@ -83,7 +83,7 @@ class CWorkSpace
   void decrementUseCount(const QString &symbolName);
 
   bool createProject(const QString &newProjectName);
-  bool createAnalysisWindow(const QString &projectName, const QString &newWindowName);
+  bool createAnalysisWindow(const QString &projectName, const QString &newWindowName, const QString &preceedingWindowName = QString());
   bool createSite(const QString &newSiteName, const QString &abbr, double longitude, double latitude, double altitude);
   bool createSymbol(const QString &newSymbolName, const QString &description);
 

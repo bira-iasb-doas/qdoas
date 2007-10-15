@@ -32,7 +32,8 @@ class CWProjectAnalysisWindowNameEditor : public CWEditor
 {
 Q_OBJECT
  public:
-  CWProjectAnalysisWindowNameEditor(CWProjectTree *projectTree, QTreeWidgetItem *item, bool newAnalysisWindow,
+  CWProjectAnalysisWindowNameEditor(CWProjectTree *projectTree, QTreeWidgetItem *item,
+				    const QString &preceedingWindowName, bool newAnalysisWindow,
                                     QWidget *parent = 0);
   virtual ~CWProjectAnalysisWindowNameEditor();
 
@@ -48,6 +49,7 @@ Q_OBJECT
  private:
   QLineEdit *m_analysisWindowName;
   CWProjectTree *m_projectTree;
+  QString m_preceedingWindowName;
   QStringList m_path;
   bool m_newAnalysisWindow;
 };

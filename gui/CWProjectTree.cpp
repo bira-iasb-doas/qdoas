@@ -230,6 +230,7 @@ void CWProjectTree::contextMenuEvent(QContextMenuEvent *e)
 
       menu.addAction(projItem->isEnabled() ? "Disable" : "Enable", this,
                      SLOT(slotToggleEnable()));
+      menu.addAction("New Analysis Window...", this, SLOT(slotCreateAnalysisWindow()));
       menu.addAction("Rename...", this, SLOT(slotRenameAnalysisWindow()));
       menu.addAction("Properties...", this, SLOT(slotEditAnalysisWindow()));
       menu.addSeparator();
@@ -429,8 +430,11 @@ QString CWProjectTree::editRenameFolder(QTreeWidgetItem *item, const QString &ne
 }
 
 QString CWProjectTree::editInsertNewAnalysisWindow(QTreeWidgetItem *parent, const QString &windowName,
+						   const QString &preceedingWindowName,
 						   CAnalysisWindowItem **itemCreated)
 {
+  // Window Order is important
+
   if (parent && parent->type() == cAnalysisWindowBranchItemType) {
     
     QTreeWidgetItem *projItem = CWProjectTree::projectItem(parent);
@@ -438,9 +442,25 @@ QString CWProjectTree::editInsertNewAnalysisWindow(QTreeWidgetItem *parent, cons
       // corrupt system
       return QString("The project tree is corrupt.");
     }
-    if (CWorkSpace::instance()->createAnalysisWindow(projItem->text(0), windowName)) {
+    // locate the preceeding window
+    QTreeWidgetItem *preceeding = NULL;
+    int index = 0;
+    if (!preceedingWindowName.isEmpty()) {
+      // try and locate the preceeding item
+      while (index < parent->childCount()) {
+	preceeding = parent->child(index);
+	if (preceeding->text(0) == preceedingWindowName)
+	  break;
+	++index;
+      }
+    }
+    if (CWorkSpace::instance()->createAnalysisWindow(projItem->text(0), windowName, preceedingWindowName)) {
 
-      CAnalysisWindowItem *tmp = new CAnalysisWindowItem(parent, windowName);
+      CAnalysisWindowItem *tmp;
+      if (preceeding)
+	tmp = new CAnalysisWindowItem(parent, preceeding, windowName);
+      else
+	tmp = new CAnalysisWindowItem(parent, NULL, windowName);
 
       if (itemCreated != NULL) *itemCreated = tmp;
     }
@@ -635,13 +655,14 @@ QString CWProjectTree::loadConfiguration(const QList<const CProjectConfigItem*> 
     // add any analysis windows
     item = projItem->child(1); // the analysis window branch node
 
+    QString preceedingWindowName;
     const QList<const CAnalysisWindowConfigItem*> &awList = (*it)->analysisWindowItems();
     QList<const CAnalysisWindowConfigItem*>::const_iterator awIt = awList.begin();
     while (awIt != awList.end()) {
       QString awName = (*awIt)->name();
 
       // create the item with the edit iterface
-      errStr = editInsertNewAnalysisWindow(item, awName);
+      errStr = editInsertNewAnalysisWindow(item, awName, preceedingWindowName);
       if (!errStr.isNull())
 	return errStr;
 
@@ -653,6 +674,7 @@ QString CWProjectTree::loadConfiguration(const QList<const CProjectConfigItem*> 
       for (int i=0; i < awProp->crossSectionList.nCrossSection; ++i)
 	ws->incrementUseCount(awProp->crossSectionList.crossSection[i].symbol);
 
+      preceedingWindowName = awName;
       ++awIt;
     }
 
@@ -972,14 +994,21 @@ void CWProjectTree::slotInsertDirectory()
 
 void CWProjectTree::slotCreateAnalysisWindow()
 {  
-  // expect selection has one item and is an Anaylsis Window Branch
+  // expect selection has one item and is an Anaylsis Window Branch or An analysis Window Item
 
   QList<QTreeWidgetItem*> items = selectedItems();
   if (items.count() == 1) {
-    QTreeWidgetItem *parent = items.front();
-    if (parent->type() == cAnalysisWindowBranchItemType) {
+    QString preceedingWindowName;
 
-      CWEditor *nameEditor = new  CWProjectAnalysisWindowNameEditor(this, parent, true);
+    QTreeWidgetItem *item = items.front();
+    if (item && item->type() == cAnalysisWindowItemType) {
+      preceedingWindowName = item->text(0);
+      item = item->parent();
+    }
+    // item MUST be of type Analysis Window Branch
+    if (item && item->type() == cAnalysisWindowBranchItemType) {
+
+      CWEditor *nameEditor = new  CWProjectAnalysisWindowNameEditor(this, item, preceedingWindowName, true);
       m_activeContext->addEditor(nameEditor);
     }
   }
@@ -994,7 +1023,7 @@ void CWProjectTree::slotRenameAnalysisWindow()
     QTreeWidgetItem *item = items.front();
     if (item->type() == cAnalysisWindowItemType) {
 
-      CWEditor *nameEditor = new  CWProjectAnalysisWindowNameEditor(this, item, false);
+      CWEditor *nameEditor = new  CWProjectAnalysisWindowNameEditor(this, item, QString(), false);
       m_activeContext->addEditor(nameEditor);
     }
   }
@@ -1025,7 +1054,7 @@ void CWProjectTree::slotDeleteSelection()
   int type;
   QList<QTreeWidgetItem*>::iterator it = items.begin();
   while (it != items.end()) {
-    // cant delete the Raw Spectra or Analysis Window branches (instead delete all of there children)
+    // cant delete the Raw Spectra or Analysis Window branches (instead delete all of their children)
     type = (*it)->type();
     if (type == cSpectraBranchItemType || type == cAnalysisWindowBranchItemType) {
       // delete all children
@@ -1033,6 +1062,10 @@ void CWProjectTree::slotDeleteSelection()
       QList<QTreeWidgetItem*>::iterator kIt = kids.begin();
       while (kIt != kids.end())
         delete *kIt++;
+    }
+    else if (type == cAnalysisWindowItemType) {
+
+      CAnalysisWindowItem::destroyItem(*it);
     }
     else if ((*it)->parent() == NULL) {
       // top level item (a project)
@@ -1093,6 +1126,19 @@ CProjectTreeItem::CProjectTreeItem(QTreeWidgetItem *parent, const QStringList &s
 {
 }
 
+CProjectTreeItem::CProjectTreeItem(QTreeWidgetItem *parent, QTreeWidgetItem *preceedingSibling, const QStringList &strings, int type) :
+  QTreeWidgetItem(parent, preceedingSibling, type),
+  m_enabled(true)
+{
+  // set the labels  ... there isn't a contructor with a preceeding item & string labels!!
+
+  int index = 0;
+  while (index < strings.size()) {
+    setText(index, strings.at(index));
+    ++index;
+  }
+}
+
 CProjectTreeItem::~CProjectTreeItem()
 {
 }
@@ -1114,8 +1160,13 @@ CProjectItem::CProjectItem(const QString &projectName) :
 
 CProjectItem::~CProjectItem()
 {
-  // there should be a corresponding project in the workspace ...
+  // there should be a corresponding project in the workspace ... this implicitly
+  // destroys the analysis associated windows 
   CWorkSpace::instance()->destroyProject(text(0));
+
+  // This will recursively destroy all child items, including any analysis window items.
+  // Since destroyProject has removed the items in the workspace, it is OK that
+  // the CAnalysisWindowItem destructor is called, and not the destroyItem function.
 }
 
 QVariant CProjectItem::data(int column, int role) const
@@ -1371,20 +1422,30 @@ CAnalysisWindowItem::CAnalysisWindowItem(QTreeWidgetItem *parent, const QString 
   setIcon(0, CWProjectTree::getIcon(cAnalysisWindowItemType));
 }
 
+CAnalysisWindowItem::CAnalysisWindowItem(QTreeWidgetItem *parent, QTreeWidgetItem *preceedingSibling, const QString &windowName) :
+  CProjectTreeItem(parent, preceedingSibling, QStringList(windowName), cAnalysisWindowItemType)
+{
+  setIcon(0, CWProjectTree::getIcon(cAnalysisWindowItemType));
+}
+
+void CAnalysisWindowItem::destroyItem(QTreeWidgetItem *awItem)
+{
+  // this must be used to delete items WHILE THEY ARE STILL IN THE TREE.
+  // This is essential, because the tree must be used to determine the
+  // parent project name.
+
+  QTreeWidgetItem *projItem = CWProjectTree::projectItem(awItem);
+  
+  assert(projItem && projItem != awItem);
+  
+  CWorkSpace::instance()->destroyAnalysisWindow(projItem->text(0), awItem->text(0));
+  // remove the item from the tree and delete it.
+  QTreeWidgetItem *p = awItem->parent();
+  delete p->takeChild(p->indexOfChild(awItem));
+}
+
 CAnalysisWindowItem::~CAnalysisWindowItem()
 {
-  // there should be a corresponding project in the workspace ...
-
-  // NOTE: We require that the toplevel item of the tree (project item) can be
-  // found. This must be the case for any 'delete' operation (it assumes the
-  // parent item does NOT invalidate the childs 'parent' pointer before the
-  // child is destroyed...
-
-  QTreeWidgetItem *projItem = CWProjectTree::projectItem(this);
-  if (projItem)
-    CWorkSpace::instance()->destroyAnalysisWindow(projItem->text(0), text(0));
-  else
-    assert(false);
 }
 
 QVariant CAnalysisWindowItem::data(int column, int role) const

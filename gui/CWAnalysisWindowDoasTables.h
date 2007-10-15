@@ -176,7 +176,7 @@ Q_OBJECT
 
   virtual void addRow(int height, const QString &label, QList<QVariant> &cellData);
   virtual void removeRow(int rowIndex);
-  virtual void cellDataChanged(int row, int column, const QVariant &cellData); // no cell-coupling required
+  //  virtual void cellDataChanged(int row, int column, const QVariant &cellData); // no cell-coupling required
 
  protected:
   virtual void contextMenuEvent(QContextMenuEvent *e);
@@ -240,7 +240,7 @@ Q_OBJECT
   void populate(const output_list_t *d);
   void apply(output_list_t *d) const;
 
-  virtual void cellDataChanged(int row, int column, const QVariant &cellData);
+  //  virtual void cellDataChanged(int row, int column, const QVariant &cellData);
 
  private:
   // prevent manual add/remove

@@ -27,11 +27,17 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
 CWProjectAnalysisWindowNameEditor::CWProjectAnalysisWindowNameEditor(CWProjectTree *projectTree, QTreeWidgetItem *item,
+								     const QString &preceedingWindowName,
                                                                      bool newAnalysisWindow, QWidget *parent) :
   CWEditor(parent),
   m_projectTree(projectTree),
+  m_preceedingWindowName(preceedingWindowName),
   m_newAnalysisWindow(newAnalysisWindow)
 {
+  // item will be either an analysis window item, or a branch.
+  // preceeding item is null if the item is a branch or if
+  // newAnalysisWindow is false (rename).
+
   QGridLayout *mainLayout = new QGridLayout(this);
   mainLayout->setMargin(50);
   
@@ -95,7 +101,7 @@ bool CWProjectAnalysisWindowNameEditor::actionOk()
   if (item) {
     // still a valid point in the tree
     if (m_newAnalysisWindow)
-      msg = m_projectTree->editInsertNewAnalysisWindow(item, m_analysisWindowName->text());
+      msg = m_projectTree->editInsertNewAnalysisWindow(item, m_analysisWindowName->text(), m_preceedingWindowName);
     else
       msg = m_projectTree->editRenameAnalysisWindow(item, m_analysisWindowName->text());
     

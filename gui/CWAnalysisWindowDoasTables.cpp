@@ -533,17 +533,27 @@ void CWLinearParametersDoasTable::populate(const struct anlyswin_linear *data)
   initialValues.push_back(data->offsetFlagErrStore); // bool 
   addRow(cStandardRowHeight, "Offset", initialValues);
 
-  // remove the orders
+  // WARNING ... The following is a hack that requires access to the cell widgets in
+  // a way that was not really intended. This is a result of these two columns
+  // NOT being homogeneous.
+
   QWidget *tmp;
   QComboBox *p;
 
-  // TODO
   if ((tmp = directAccessToCellWidget(2, 0)) != NULL) {
     p = dynamic_cast<QComboBox*>(tmp);
+    if (p) {
+      for (int index=6; index>3; --index)
+	p->removeItem(index);
+    }
   }
 
   if ((tmp = directAccessToCellWidget(2, 1)) != NULL) {
     p = dynamic_cast<QComboBox*>(tmp);
+    if (p) {
+      for (int index=6; index>3; --index)
+	p->removeItem(index);
+    }
   }
 }
   
@@ -1007,9 +1017,9 @@ void CWShiftAndStretchDoasTable::removeRow(int rowIndex)
   }
 }
 
-void CWShiftAndStretchDoasTable::cellDataChanged(int row, int column, const QVariant &cellData)
-{
-}
+//void CWShiftAndStretchDoasTable::cellDataChanged(int row, int column, const QVariant &cellData)
+//{
+//}
 
 void CWShiftAndStretchDoasTable::contextMenuEvent(QContextMenuEvent *e)
 {
@@ -1381,10 +1391,9 @@ void CWOutputDoasTable::apply(output_list_t *data) const
   }  
 }
 
-void CWOutputDoasTable::cellDataChanged(int row, int column, const QVariant &cellData)
-{
-  
-}
+//void CWOutputDoasTable::cellDataChanged(int row, int column, const QVariant &cellData)
+//{
+//}
 
 // prevent manual add/remove
 void CWOutputDoasTable::addRow(int height, const QString &label, QList<QVariant> &cellData)

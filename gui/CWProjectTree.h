@@ -71,7 +71,8 @@ Q_OBJECT
   QString editRenameProject(QTreeWidgetItem *item, const QString &projectName);
   QString editInsertNewFolder(QTreeWidgetItem *parent, const QString &folderName, CSpectraFolderItem **itemCreated = NULL);
   QString editRenameFolder(QTreeWidgetItem *item, const QString &folderName);
-  QString editInsertNewAnalysisWindow(QTreeWidgetItem *parent, const QString &windowName, CAnalysisWindowItem **itemCreated = NULL);
+  QString editInsertNewAnalysisWindow(QTreeWidgetItem *parent, const QString &windowName,
+				      const QString &preceedingWindowName, CAnalysisWindowItem **itemCreated = NULL);
   QString editRenameAnalysisWindow(QTreeWidgetItem *item, const QString &windowName);
   QString editInsertDirectory(QTreeWidgetItem *parent, const QString &directoryPath,
 			      const QString &fileFilters, bool includeSubDirs, CSpectraDirectoryItem **itemCreated = NULL);
@@ -143,6 +144,7 @@ class CProjectTreeItem : public QTreeWidgetItem
   CProjectTreeItem(CWProjectTree *parent, const QStringList &strings, int type);
   CProjectTreeItem(QTreeWidgetItem *parent, int type);
   CProjectTreeItem(QTreeWidgetItem *parent, const QStringList &strings, int type);
+  CProjectTreeItem(QTreeWidgetItem *parent, QTreeWidgetItem *preceedingSibling, const QStringList &strings, int type);
   virtual ~CProjectTreeItem();
 
   virtual void setEnabled(bool enable);
@@ -238,9 +240,13 @@ class CAnalysisWindowItem : public CProjectTreeItem
 {
  public:
   CAnalysisWindowItem(QTreeWidgetItem *parent, const QString &windowName);
-  virtual ~CAnalysisWindowItem();
+  CAnalysisWindowItem(QTreeWidgetItem *parent, QTreeWidgetItem *preceedingSibling, const QString &windowName);
+  virtual ~CAnalysisWindowItem(); // DO NOT USE THIS - use destroyItem instead.
 
   virtual QVariant data(int column, int role) const;
+
+  static void destroyItem(QTreeWidgetItem *awItem);
+
 };
 
 #endif
