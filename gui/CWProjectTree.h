@@ -121,6 +121,7 @@ Q_OBJECT
   void slotDeleteAllSpectra();
   void slotCutSelection();
   void slotCopySelection();
+  void slotPaste();
   void slotPasteProjects();
   void slotPasteAnalysisWindows();
   void slotPasteSpectraAsSiblings();

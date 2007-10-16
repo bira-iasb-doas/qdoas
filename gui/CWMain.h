@@ -57,6 +57,10 @@ Q_OBJECT
   void slotOpenFile();
   void slotSaveFile();
   void slotSaveAsFile();
+  void slotCutButtonClicked();
+  void slotCopyButtonClicked();
+  void slotPasteButtonClicked();
+  void slotDeleteButtonClicked();
   void slotAboutQdoas();
   void slotAboutQt();
   void slotErrorMessages(int highestLevel, const QString &messages);

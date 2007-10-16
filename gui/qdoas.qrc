@@ -5,15 +5,20 @@
     <file>images/splash.png</file>
     <file>images/about_logo.png</file>
 
+    <file>icons/project_directory_16.png</file>
+    <file>icons/project_file_16.png</file>
+    <file>icons/project_folder_16.png</file>
+    <file>icons/project_window_16.png</file>
+
     <file>icons/file_open_16.png</file>
     <file>icons/file_save_16.png</file>
     <file>icons/file_saveas_16.png</file>
     <file>icons/file_exit_16.png</file>
 
-    <file>icons/project_directory_16.png</file>
-    <file>icons/project_file_16.png</file>
-    <file>icons/project_folder_16.png</file>
-    <file>icons/project_window_16.png</file>
+    <file>icons/edit_cut_16.png</file>
+    <file>icons/edit_copy_16.png</file>
+    <file>icons/edit_paste_16.png</file>
+    <file>icons/edit_delete_16.png</file>
 
     <file>icons/nav_first_22.png</file>
     <file>icons/nav_prev_22.png</file>

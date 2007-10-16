@@ -218,11 +218,6 @@ const mediate_analysis_window_t* CProjectTreeClipboard::analysisWindowGroupItemP
   return NULL;
 }
 
-bool CProjectTreeClipboard::spectraGroupIsEmpty(void) const
-{
-  return m_spectraGroup.isEmpty();
-}
-
 QList<QTreeWidgetItem*> CProjectTreeClipboard::spectraGroupList(void) const
 {
   QList<QTreeWidgetItem*> result;

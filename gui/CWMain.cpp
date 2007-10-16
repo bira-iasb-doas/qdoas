@@ -163,6 +163,13 @@ CWMain::CWMain(QWidget *parent) :
 
   m_menuBar->addMenu(fileMenu);
 
+  // edit (cut/copy/paste/delete)
+  m_toolBar->addSeparator();
+  m_toolBar->addAction(QIcon(QPixmap(":/icons/edit_cut_16.png")), "Cut", this, SLOT(slotCutButtonClicked()));
+  m_toolBar->addAction(QIcon(QPixmap(":/icons/edit_copy_16.png")), "Copy", this, SLOT(slotCopyButtonClicked()));
+  m_toolBar->addAction(QIcon(QPixmap(":/icons/edit_paste_16.png")), "Paste", this, SLOT(slotPasteButtonClicked()));
+  m_toolBar->addAction(QIcon(QPixmap(":/icons/edit_delete_16.png")), "Delete", this, SLOT(slotDeleteButtonClicked()));
+
   // navigation panel
   m_toolBar->addSeparator();
   CNavigationPanel *navPanelRecords = new CNavigationPanel(m_toolBar);
@@ -392,6 +399,50 @@ void CWMain::slotSaveFile()
   if (!msg.isNull())
     QMessageBox::critical(this, "Project File Write Failure", msg, QMessageBox::Ok);
   
+}
+
+void CWMain::slotCutButtonClicked()
+{
+  // redirect to the visible tab ...
+  switch(m_projEnvTab->currentIndex()) {
+  case 0: // project
+    m_projTree->slotCutSelection();
+    break;
+    // TODO
+  }
+}
+
+void CWMain::slotCopyButtonClicked()
+{
+  // redirect to the visible tab ...
+  switch(m_projEnvTab->currentIndex()) {
+  case 0: // project
+    m_projTree->slotCopySelection();
+    break;
+    // TODO
+  }
+}
+
+void CWMain::slotPasteButtonClicked()
+{
+  // redirect to the visible tab ...
+  switch(m_projEnvTab->currentIndex()) {
+  case 0: // project
+    m_projTree->slotPaste();
+    break;
+    // TODO
+  }
+}
+
+void CWMain::slotDeleteButtonClicked()
+{
+  // redirect to the visible tab ...
+  switch(m_projEnvTab->currentIndex()) {
+  case 0: // project
+    m_projTree->slotDeleteSelection();
+    break;
+    // TODO
+  }
 }
 
 void CWMain::slotAboutQdoas()

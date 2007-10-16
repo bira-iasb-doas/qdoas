@@ -133,7 +133,8 @@ void CWProjectTree::contextMenuEvent(QContextMenuEvent *e)
   // always have at least 1 item selected ...
   QList<QTreeWidgetItem*> items = selectedItems();
 
-  // Try and keep the order the same for all cases
+  // Try and keep the order the same for all cases. Use a consistent layout for each
+  // selected item type, and disable unavailble options.
 
   //------------------------------
   // Enable/Disable
@@ -159,37 +160,39 @@ void CWProjectTree::contextMenuEvent(QContextMenuEvent *e)
     menu.addSeparator();
     menu.addAction("Cut", this, SLOT(slotCutSelection()));
     menu.addAction("Copy", this, SLOT(slotCopySelection()));
+    // Can paste when multiple items are selected.
     menu.addAction("Delete", this, SLOT(slotDeleteSelection()));
   }
   else if (items.count()) {
-    // one item selected - what type is it?
-    int itemType = items.front()->type();
+    // one item selected - The type determines the menu content
+    QTreeWidgetItem *item = items.front();
+    int itemType = item->type();
 
     if (itemType == cSpectraDirectoryItemType) {
       // A Directory item
-      CProjectTreeItem *projItem = static_cast<CProjectTreeItem*>(items.front());
+      CProjectTreeItem *projItem = static_cast<CProjectTreeItem*>(item);
 
       menu.addAction(projItem->isEnabled() ? "Disable" : "Enable", this,
                      SLOT(slotToggleEnable()));
       menu.addAction("Refresh", this, SLOT(slotRefreshDirectories()));
+
       menu.addSeparator();
       menu.addAction("Run Analysis", this, SLOT(slotRunAnalysis()))->setEnabled(!m_sessionActive);
       menu.addAction("Browse Spectra", this, SLOT(slotBrowseSpectra()))->setEnabled(!m_sessionActive);
-      if (projItem->parent() && projItem->parent()->type() != cSpectraDirectoryItemType) {
-        // Cant cut, delete or paste below an item that is a child of a directory item
-        menu.addSeparator();
-	menu.addAction("Cut", this, SLOT(slotCutSelection()));
-	menu.addAction("Copy", this, SLOT(slotCopySelection()));
-	menu.addAction("Paste Below", this, SLOT(slotPasteSpectraAsSiblings()));
-        menu.addAction("Delete", this, SLOT(slotDeleteSelection()));
-      }
-      else
-	menu.addAction("Copy", this, SLOT(slotCopySelection()));
+      menu.addSeparator();
 
+      // Can't cut, delete or paste below an item that is a child of a directory item
+      bool enableCutDel = (projItem->parent() && projItem->parent()->type() != cSpectraDirectoryItemType);
+      bool enablePaste = enableCutDel && !m_clipboard->spectraGroupIsEmpty();
+
+      menu.addAction("Cut", this, SLOT(slotCutSelection()))->setEnabled(enableCutDel);
+      menu.addAction("Copy", this, SLOT(slotCopySelection()));
+      menu.addAction("Paste Below", this, SLOT(slotPasteSpectraAsSiblings()))->setEnabled(enablePaste);
+      menu.addAction("Delete", this, SLOT(slotDeleteSelection()))->setEnabled(enableCutDel);
     }
     else if (itemType == cSpectraFolderItemType) {
       // A Folder Item
-      CProjectTreeItem *projItem = static_cast<CProjectTreeItem*>(items.front());
+      CProjectTreeItem *projItem = static_cast<CProjectTreeItem*>(item);
 	  
       menu.addAction(projItem->isEnabled() ? "Disable" : "Enable", this,
                      SLOT(slotToggleEnable()));
@@ -197,65 +200,78 @@ void CWProjectTree::contextMenuEvent(QContextMenuEvent *e)
       menu.addAction("New Sub-Folder...", this, SLOT(slotCreateFolder()));
       menu.addAction("Insert Directory...", this, SLOT(slotInsertDirectory()));
       menu.addAction("Insert File...", this, SLOT(slotInsertFile()));
+
       menu.addSeparator();
       menu.addAction("Run Analysis", this, SLOT(slotRunAnalysis()))->setEnabled(!m_sessionActive);
       menu.addAction("Browse Spectra", this, SLOT(slotBrowseSpectra()))->setEnabled(!m_sessionActive);
       menu.addSeparator();
+
+      bool enablePaste = !m_clipboard->spectraGroupIsEmpty();
+
       menu.addAction("Cut", this, SLOT(slotCutSelection()));
       menu.addAction("Copy", this, SLOT(slotCopySelection()));
-      menu.addAction("Paste In", this, SLOT(slotPasteSpectraAsChildren()));
-      menu.addAction("Paste Below", this, SLOT(slotPasteSpectraAsSiblings()));
+      menu.addAction("Paste In", this, SLOT(slotPasteSpectraAsChildren()))->setEnabled(enablePaste);
+      menu.addAction("Paste Below", this, SLOT(slotPasteSpectraAsSiblings()))->setEnabled(enablePaste);
       menu.addAction("Delete", this, SLOT(slotDeleteSelection()));
     }
     else if (itemType == cSpectraFileItemType) {
       // A File Item
-      CProjectTreeItem *projItem = static_cast<CProjectTreeItem*>(items.front());
+      CProjectTreeItem *projItem = static_cast<CProjectTreeItem*>(item);
 
       menu.addAction(projItem->isEnabled() ? "Disable" : "Enable", this,
                      SLOT(slotToggleEnable()));
+
       menu.addSeparator();
       menu.addAction("Run Analysis", this, SLOT(slotRunAnalysis()))->setEnabled(!m_sessionActive);
       menu.addAction("Browse Spectra", this, SLOT(slotBrowseSpectra()))->setEnabled(!m_sessionActive);
-      if (projItem->parent() && projItem->parent()->type() != cSpectraDirectoryItemType) {
-        // Cant cut, delete or paste below an item that is a child of a directory item
-        menu.addSeparator();
-	menu.addAction("Cut", this, SLOT(slotCutSelection()));
-	menu.addAction("Copy", this, SLOT(slotCopySelection()));
-	menu.addAction("Paste Below", this, SLOT(slotPasteSpectraAsSiblings()));
-        menu.addAction("Delete", this, SLOT(slotDeleteSelection()));
-      }
-      else
-	menu.addAction("Copy", this, SLOT(slotCopySelection()));
-      
+      menu.addSeparator();
+
+      // Can't cut, delete or paste below an item that is a child of a directory item
+      bool enableCutDel = (projItem->parent() && projItem->parent()->type() != cSpectraDirectoryItemType);
+      bool enablePaste = enableCutDel && !m_clipboard->spectraGroupIsEmpty();
+
+      menu.addAction("Cut", this, SLOT(slotCutSelection()))->setEnabled(enableCutDel);
+      menu.addAction("Copy", this, SLOT(slotCopySelection()));
+      menu.addAction("Paste Below", this, SLOT(slotPasteSpectraAsSiblings()))->setEnabled(enablePaste);
+      menu.addAction("Delete", this, SLOT(slotDeleteSelection()))->setEnabled(enableCutDel);
     }
     else if (itemType == cSpectraBranchItemType) {
       // A Spectra Branch (Raw Spectra)
       menu.addAction("New Folder...", this, SLOT(slotCreateFolder()));
       menu.addAction("Insert Directory...", this, SLOT(slotInsertDirectory()));
       menu.addAction("Insert File...", this, SLOT(slotInsertFile()));
+
       menu.addSeparator();
       menu.addAction("Run Analysis", this, SLOT(slotRunAnalysis()))->setEnabled(!m_sessionActive);
       menu.addAction("Browse Spectra", this, SLOT(slotBrowseSpectra()))->setEnabled(!m_sessionActive);
       menu.addSeparator();
+
       // cant remove this item - refers to all children
-      menu.addAction("Cut", this, SLOT(slotCutSelection()));
-      menu.addAction("Copy", this, SLOT(slotCopySelection()));
-      menu.addAction("Paste In", this, SLOT(slotPasteSpectraAsChildren()));
-      menu.addAction("Delete All", this, SLOT(slotDeleteAllSpectra()));
+      bool enableCutCopyDel = item->childCount();
+      bool enablePaste = !m_clipboard->spectraGroupIsEmpty();
+
+      menu.addAction("Cut", this, SLOT(slotCutSelection()))->setEnabled(enableCutCopyDel);
+      menu.addAction("Copy", this, SLOT(slotCopySelection()))->setEnabled(enableCutCopyDel);
+      menu.addAction("Paste In", this, SLOT(slotPasteSpectraAsChildren()))->setEnabled(enablePaste);
+      menu.addAction("Delete", this, SLOT(slotDeleteAllSpectra()))->setEnabled(enableCutCopyDel);
     }
     else if (itemType == cAnalysisWindowBranchItemType) {
       // Analysis Window Branch
       menu.addAction("New Analysis Window...", this, SLOT(slotCreateAnalysisWindow()));
       menu.addSeparator();
+
       // cant remove this item - refers to all children
-      menu.addAction("Cut", this, SLOT(slotCutSelection()));
-      menu.addAction("Copy", this, SLOT(slotCopySelection()));
-      menu.addAction("Paste", this, SLOT(slotPasteAnalysisWindows()));
-      menu.addAction("Delete All", this, SLOT(slotDeleteSelection()));
+      bool enableCutCopyDel = item->childCount();
+      bool enablePaste = !m_clipboard->analysisWindowGroupIsEmpty();
+
+      menu.addAction("Cut", this, SLOT(slotCutSelection()))->setEnabled(enableCutCopyDel);
+      menu.addAction("Copy", this, SLOT(slotCopySelection()))->setEnabled(enableCutCopyDel);
+      menu.addAction("Paste In", this, SLOT(slotPasteAnalysisWindows()))->setEnabled(enablePaste);
+      menu.addAction("Delete", this, SLOT(slotDeleteSelection()))->setEnabled(enableCutCopyDel);
     }
     else if (itemType == cAnalysisWindowItemType) {
       // Analysis Window
-      CProjectTreeItem *projItem = static_cast<CProjectTreeItem*>(items.front());
+      CProjectTreeItem *projItem = static_cast<CProjectTreeItem*>(item);
 
       menu.addAction(projItem->isEnabled() ? "Disable" : "Enable", this,
                      SLOT(slotToggleEnable()));
@@ -263,35 +279,45 @@ void CWProjectTree::contextMenuEvent(QContextMenuEvent *e)
       menu.addAction("Rename...", this, SLOT(slotRenameAnalysisWindow()));
       menu.addAction("Properties...", this, SLOT(slotEditAnalysisWindow()));
       menu.addSeparator();
+
+      bool enablePaste = !m_clipboard->analysisWindowGroupIsEmpty();
+
       menu.addAction("Cut", this, SLOT(slotCutSelection()));
       menu.addAction("Copy", this, SLOT(slotCopySelection()));
-      menu.addAction("Paste", this, SLOT(slotPasteAnalysisWindows()));
+      menu.addAction("Paste", this, SLOT(slotPasteAnalysisWindows()))->setEnabled(enablePaste);
       menu.addAction("Delete", this, SLOT(slotDeleteSelection()));
     }
     else if (itemType == cProjectItemType) {
       // Project
-      CProjectTreeItem *projItem = static_cast<CProjectTreeItem*>(items.front());
+      CProjectTreeItem *projItem = static_cast<CProjectTreeItem*>(item);
 
       menu.addAction(projItem->isEnabled() ? "Disable" : "Enable", this,
                      SLOT(slotToggleEnable()));
       menu.addAction("Rename...", this, SLOT(slotRenameProject()));
       menu.addAction("New Project...", this, SLOT(slotCreateProject()));
       menu.addAction("Properties...", this, SLOT(slotEditProject()));
+
       menu.addSeparator();
       menu.addAction("Run Analysis", this, SLOT(slotRunAnalysis()))->setEnabled(!m_sessionActive);
       menu.addAction("Browse Spectra", this, SLOT(slotBrowseSpectra()))->setEnabled(!m_sessionActive);
       menu.addSeparator();
+
+      bool enablePaste = !m_clipboard->projectGroupIsEmpty();
+
       menu.addAction("Cut", this, SLOT(slotCutSelection()));
       menu.addAction("Copy", this, SLOT(slotCopySelection()));
-      menu.addAction("Paste", this, SLOT(slotPasteProjects()));
+      menu.addAction("Paste", this, SLOT(slotPasteProjects()))->setEnabled(enablePaste);
       menu.addAction("Delete", this, SLOT(slotDeleteSelection()));
     }
       
   }
   else {
     // must be an empty tree
+    bool enablePaste = !m_clipboard->projectGroupIsEmpty();
+
     menu.addAction("New Project...", this, SLOT(slotCreateProject()));
-    menu.addAction("Paste", this, SLOT(slotPasteProjects()));
+    menu.addSeparator();
+    menu.addAction("Paste", this, SLOT(slotPasteProjects()))->setEnabled(enablePaste);
   }
 
 
@@ -1292,6 +1318,31 @@ void CWProjectTree::slotCopySelection()
   }
 
   m_clipboard->endInsertItems();
+}
+
+void CWProjectTree::slotPaste()
+{
+  // non-specialized paste ... MUST have a single item selected ...
+  // redirects to a specialized paste slot. Chooses PasteAsSiblings if both
+  // AsSiblings and AsChildren options are valid...
+
+  QList<QTreeWidgetItem*> items = selectedItems();
+  if (items.count() != 1) return;
+
+  int itemType = items.front()->type();
+
+  if (itemType == cSpectraDirectoryItemType || itemType == cSpectraFileItemType || itemType == cSpectraFolderItemType) {
+    slotPasteSpectraAsSiblings();
+  }
+  else if (itemType == cSpectraBranchItemType) {
+    slotPasteSpectraAsChildren();
+  }
+  else if (itemType == cAnalysisWindowItemType || itemType == cAnalysisWindowBranchItemType) {
+    slotPasteAnalysisWindows();
+  }
+  else if (itemType == cProjectItemType) {
+    slotPasteProjects();
+  }
 }
 
 void CWProjectTree::slotPasteProjects()

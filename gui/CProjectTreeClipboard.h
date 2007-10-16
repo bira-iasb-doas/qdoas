@@ -56,6 +56,10 @@ class CProjectTreeClipboard
   void beginInsertItems(void); // Call ONCE before a series of insert*
   void endInsertItems(void);   // Call ONCE after the series of insert*
 
+  bool projectGroupIsEmpty(void) const;
+  bool analysisWindowGroupIsEmpty(void) const;
+  bool spectraGroupIsEmpty(void) const;
+
   // a complete project ... takes ownershift responsibility of data referenced
   // by pointer (ie. properties, AWs, tree items)
   void insertProject(const QString &projectName, mediate_project_t *properties,
@@ -82,7 +86,6 @@ class CProjectTreeClipboard
   const mediate_analysis_window_t* analysisWindowGroupItemProperties(int anlysWinIndex) const;
 
   // cloned contents of the clipboard spectra group.
-  bool spectraGroupIsEmpty(void) const;
   QList<QTreeWidgetItem*> spectraGroupList(void) const;
 
  private:
@@ -100,5 +103,8 @@ class CProjectTreeClipboard
   bool m_markedSpectraGroup;
 };
 
+inline bool CProjectTreeClipboard::projectGroupIsEmpty(void) const { return m_projectGroup.isEmpty(); }
+inline bool CProjectTreeClipboard::analysisWindowGroupIsEmpty(void) const { return m_anlysWinGroup.isEmpty(); }
+inline bool CProjectTreeClipboard::spectraGroupIsEmpty(void) const { return m_spectraGroup.isEmpty(); }
 
 #endif
