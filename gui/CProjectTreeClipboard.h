@@ -68,6 +68,17 @@ class CProjectTreeClipboard
   void insertRawSpectraItem(QTreeWidgetItem *rawSpectraItem);
   void insertRawSpectraItems(QList<QTreeWidgetItem*> &rawSpectraItems);
 
+  // retrieve data for project items - NOTE the 'const mediate_..._t* ...Properties(...) const'
+  // methods provide a handle to internal data that the caller MUST copy. The pointer MUST NOT
+  // be copied.
+  int projectGroupSize(void) const;
+  QString projectGroupItemName(int projIndex) const;
+  const mediate_project_t* projectGroupItemProperties(int projIndex) const;
+  int projectGroupItemAnalysisWindowSize(int projIndex) const;
+  const mediate_analysis_window_t* projectGroupItemAnalysisWindowProperties(int projIndex, int anlysWinIndex) const;
+
+  int analysisWindowGroupSize(void) const;
+  const mediate_analysis_window_t* analysisWindowGroupItemProperties(int anlysWinIndex) const;
 
  private:
   void clearProjectGroup(void);

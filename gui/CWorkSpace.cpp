@@ -179,16 +179,18 @@ void CWorkSpace::decrementUseCount(const QString &symbolName)
     --((it->second).useCount);
 }
 
-bool CWorkSpace::createProject(const QString &newProjectName)
+mediate_project_t* CWorkSpace::createProject(const QString &newProjectName)
 {
   if (newProjectName.isEmpty())
-    return false;
+    return NULL;
 
+  mediate_project_t *tmp = NULL;
+  
   // does it already exist?
   std::map<QString,SProjBucket>::iterator pIt = m_projMap.find(newProjectName);
   if (pIt == m_projMap.end()) {
     // does not exist
-    mediate_project_t *tmp = new mediate_project_t;
+    tmp = new mediate_project_t;
 
     initializeMediateProject(tmp);
     
@@ -201,18 +203,19 @@ bool CWorkSpace::createProject(const QString &newProjectName)
       (*obs)->updateNewProject(newProjectName);
       ++obs;
     }
-
-    return true;
   }
 
-  return false;
+  return tmp;
 }
 
-bool CWorkSpace::createAnalysisWindow(const QString &projectName, const QString &newWindowName, const QString &preceedingWindowName)
+mediate_analysis_window_t*  CWorkSpace::createAnalysisWindow(const QString &projectName, const QString &newWindowName,
+							     const QString &preceedingWindowName)
 {
   if (newWindowName.isEmpty())
-    return false;
+    return NULL;
 
+  mediate_analysis_window_t *tmp = NULL;
+ 
   // project must exist
   std::map<QString,SProjBucket>::iterator pIt = m_projMap.find(projectName);
   if (pIt != m_projMap.end()) {
@@ -228,7 +231,7 @@ bool CWorkSpace::createAnalysisWindow(const QString &projectName, const QString 
     }
     if (wIt == (pIt->second).window.end()) {
       // analysis window does not already exist
-      mediate_analysis_window_t *tmp = new mediate_analysis_window_t;
+      tmp = new mediate_analysis_window_t;
 
       if (newWindowName.length() < (int)sizeof(tmp->name)) {
 	initializeMediateAnalysisWindow(tmp);
@@ -240,14 +243,15 @@ bool CWorkSpace::createAnalysisWindow(const QString &projectName, const QString 
 	  (pIt->second).window.push_back(tmp);
 	else
 	  (pIt->second).window.insert(nextIt, tmp);
-
-	return true;
       }
-      else
+      else {
 	delete tmp; // name too long
+	tmp = NULL;
+      }
     }
   }
-  return false;
+
+  return tmp;
 }
 
 bool CWorkSpace::createSite(const QString &newSiteName, const QString &abbr,

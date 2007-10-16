@@ -144,3 +144,58 @@ void CProjectTreeClipboard::clearSpectraGroup(void)
     delete m_spectraGroup.takeFirst();
 }
 
+// extracting items
+
+int CProjectTreeClipboard::projectGroupSize(void) const
+{
+  return m_projectGroup.size();
+}
+
+// index based access to parts of the project bucket data
+QString CProjectTreeClipboard::projectGroupItemName(int projIndex) const
+{
+  if (projIndex >= 0 && projIndex < m_projectGroup.size())
+    return m_projectGroup.at(projIndex)->name;
+
+  return QString();
+}
+
+const mediate_project_t* CProjectTreeClipboard::projectGroupItemProperties(int projIndex) const
+{
+  if (projIndex >= 0 && projIndex < m_projectGroup.size())
+    return m_projectGroup.at(projIndex)->properties;
+  
+  return NULL;
+}
+
+int CProjectTreeClipboard::projectGroupItemAnalysisWindowSize(int projIndex) const
+{
+  if (projIndex >= 0 && projIndex < m_projectGroup.size())
+    return m_projectGroup.at(projIndex)->windows.size();
+
+  return 0;
+}
+
+const mediate_analysis_window_t* CProjectTreeClipboard::projectGroupItemAnalysisWindowProperties(int projIndex, int anlysWinIndex) const
+{
+  if (projIndex >= 0 && projIndex < m_projectGroup.size()) {
+    const CProjClipBucket *tmp = m_projectGroup.at(projIndex);
+    if (anlysWinIndex >= 0 && anlysWinIndex < tmp->windows.size())
+      return tmp->windows.at(anlysWinIndex);
+  }
+
+  return NULL;
+}
+
+int CProjectTreeClipboard::analysisWindowGroupSize(void) const
+{
+  return m_anlysWinGroup.size();
+}
+
+const mediate_analysis_window_t* CProjectTreeClipboard::analysisWindowGroupItemProperties(int anlysWinIndex) const
+{
+  if (anlysWinIndex >= 0 && anlysWinIndex < m_anlysWinGroup.size())
+    return m_anlysWinGroup.at(anlysWinIndex);
+
+  return NULL;
+}

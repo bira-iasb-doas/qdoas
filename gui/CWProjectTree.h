@@ -120,6 +120,8 @@ Q_OBJECT
   void slotDeleteSelection();
   void slotDeleteAllSpectra();
   void slotCutSelection();
+  void slotPasteProjects();
+  void slotPasteAnalysisWindows();
   void slotSessionRunning(bool running);
 
  signals:
@@ -145,6 +147,7 @@ class CProjectTreeItem : public QTreeWidgetItem
   CProjectTreeItem(const QStringList &strings, int type);
   CProjectTreeItem(CWProjectTree *parent, int type);
   CProjectTreeItem(CWProjectTree *parent, const QStringList &strings, int type);
+  CProjectTreeItem(CWProjectTree *parent, QTreeWidgetItem *preceedingSibling, const QStringList &strings, int type);
   CProjectTreeItem(QTreeWidgetItem *parent, int type);
   CProjectTreeItem(QTreeWidgetItem *parent, const QStringList &strings, int type);
   CProjectTreeItem(QTreeWidgetItem *parent, QTreeWidgetItem *preceedingSibling, const QStringList &strings, int type);
@@ -163,6 +166,7 @@ class CProjectItem : public CProjectTreeItem
 {
  public:
   CProjectItem(const QString &projectName);
+  CProjectItem(CWProjectTree *parent, QTreeWidgetItem *preceedingSibling, const QString &projectName);
   virtual ~CProjectItem();
 
   virtual QVariant data(int column, int role) const;

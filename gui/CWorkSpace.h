@@ -83,8 +83,10 @@ class CWorkSpace
   void incrementUseCount(const QString &symbolName);
   void decrementUseCount(const QString &symbolName);
 
-  bool createProject(const QString &newProjectName);
-  bool createAnalysisWindow(const QString &projectName, const QString &newWindowName, const QString &preceedingWindowName = QString());
+  // create item and return pointer the storage allocated (and managed) by the workspace. NULL is returned on failure.
+  mediate_project_t* createProject(const QString &newProjectName);
+  mediate_analysis_window_t* createAnalysisWindow(const QString &projectName, const QString &newWindowName,
+						  const QString &preceedingWindowName = QString());
   bool createSite(const QString &newSiteName, const QString &abbr, double longitude, double latitude, double altitude);
   bool createSymbol(const QString &newSymbolName, const QString &description);
 

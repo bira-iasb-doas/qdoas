@@ -149,7 +149,7 @@ void CWProjectTree::contextMenuEvent(QContextMenuEvent *e)
   //------------------------------
 
   if (items.count() > 1) {
-    // multiple selection - run analysis - enable/disable/toggle - delete
+    // multiple selection - run analysis - enable/disable/toggle - cut/copy/delete
     menu.addAction("Enable", this, SLOT(slotEnable()));
     menu.addAction("Disable", this, SLOT(slotDisable()));
     menu.addAction("Enable/Disable", this, SLOT(slotToggleEnable()));
@@ -233,6 +233,7 @@ void CWProjectTree::contextMenuEvent(QContextMenuEvent *e)
       menu.addSeparator();
       // cant remove this item - refers to all children
       menu.addAction("Cut", this, SLOT(slotCutSelection()));
+      menu.addAction("Paste", this, SLOT(slotPasteAnalysisWindows()));
       menu.addAction("Delete All", this, SLOT(slotDeleteSelection()));
     }
     else if (itemType == cAnalysisWindowItemType) {
@@ -246,6 +247,7 @@ void CWProjectTree::contextMenuEvent(QContextMenuEvent *e)
       menu.addAction("Properties...", this, SLOT(slotEditAnalysisWindow()));
       menu.addSeparator();
       menu.addAction("Cut", this, SLOT(slotCutSelection()));
+      menu.addAction("Paste", this, SLOT(slotPasteAnalysisWindows()));
       menu.addAction("Delete", this, SLOT(slotDeleteSelection()));
     }
     else if (itemType == cProjectItemType) {
@@ -262,6 +264,7 @@ void CWProjectTree::contextMenuEvent(QContextMenuEvent *e)
       menu.addAction("Browse Spectra", this, SLOT(slotBrowseSpectra()))->setEnabled(!m_sessionActive);
       menu.addSeparator();
       menu.addAction("Cut", this, SLOT(slotCutSelection()));
+      menu.addAction("Paste", this, SLOT(slotPasteProjects()));
       menu.addAction("Delete", this, SLOT(slotDeleteSelection()));
     }
       
@@ -269,6 +272,7 @@ void CWProjectTree::contextMenuEvent(QContextMenuEvent *e)
   else {
     // must be an empty tree
     menu.addAction("New Project...", this, SLOT(slotCreateProject()));
+    menu.addAction("Paste", this, SLOT(slotPasteProjects()));
   }
 
 
@@ -469,11 +473,7 @@ QString CWProjectTree::editInsertNewAnalysisWindow(QTreeWidgetItem *parent, cons
     }
     if (CWorkSpace::instance()->createAnalysisWindow(projItem->text(0), windowName, preceedingWindowName)) {
 
-      CAnalysisWindowItem *tmp;
-      if (preceeding)
-	tmp = new CAnalysisWindowItem(parent, preceeding, windowName);
-      else
-	tmp = new CAnalysisWindowItem(parent, NULL, windowName);
+      CAnalysisWindowItem *tmp = new CAnalysisWindowItem(parent, preceeding, windowName);
 
       if (itemCreated != NULL) *itemCreated = tmp;
     }
@@ -502,9 +502,9 @@ QString CWProjectTree::editRenameAnalysisWindow(QTreeWidgetItem *item, const QSt
     else {
       // see why it failed
       if (CWorkSpace::instance()->findAnalysisWindow(projItem->text(0), item->text(0)))
-	return QString("The project or analysis window no longer exists.");
-      else
 	return QString("The project already has an analysis window with that name.");
+      else
+	return QString("The project or analysis window no longer exists.");
     }
   }
   else
@@ -1189,6 +1189,134 @@ void CWProjectTree::slotCutSelection()
   m_clipboard->endInsertItems();
 }
 
+void CWProjectTree::slotPasteProjects()
+{
+  int nProjects = m_clipboard->projectGroupSize();
+
+  if (nProjects == 0) return; // nothing to do
+
+  // A single project item selected or no selection
+  QList<QTreeWidgetItem*> items = selectedItems();
+  
+  QTreeWidgetItem *preceedingProj = NULL;
+
+  if (!items.isEmpty()) {
+    // selection MUST be a project item, and will be the preceeding item
+    preceedingProj = items.front();
+    if (preceedingProj->type() != cProjectItemType)
+      return; // silent bailout ...
+  }
+
+  CWorkSpace *ws = CWorkSpace::instance();
+
+  // walk the list of projects, check the name is OK, then create items. NOTE, there is
+  // no need to notify observers of the changes made to properties after the creation.
+  // (BUT this is ONLY because no current observers distinguish these updates).
+  // A potential ToDo ...
+
+  int projIndex = 0;
+  while (projIndex < nProjects) {
+    QString projName = m_clipboard->projectGroupItemName(projIndex);
+    const mediate_project_t *existingProj = ws->findProject(projName);
+    while (existingProj != NULL) {
+      projName += ".Copy";
+      existingProj = ws->findProject(projName);
+    }
+    // safe to create a new project in the workspace
+    mediate_project_t *projData = ws->createProject(projName);
+    if (projData) {
+      // copy the property data from the clipboard
+      *projData = *(m_clipboard->projectGroupItemProperties(projIndex)); // blot copy
+      // create a tree item for this
+      preceedingProj = new CProjectItem(this, preceedingProj, projName);
+      
+      // now create analysis windows ... (no checks required)
+      QString preceedingWindowName;
+      QTreeWidgetItem *preceedingWindow = NULL;
+      QTreeWidgetItem *awBranchItem = preceedingProj->child(1);
+
+      int nWindows = m_clipboard->projectGroupItemAnalysisWindowSize(projIndex);
+      int awIndex = 0;
+      while (awIndex < nWindows) {
+	const mediate_analysis_window_t *awDataHandle = m_clipboard->projectGroupItemAnalysisWindowProperties(projIndex, awIndex);
+	QString awName(awDataHandle->name);
+
+	mediate_analysis_window_t *awData = ws->createAnalysisWindow(projName, awName, preceedingWindowName);
+	// could assert that awData != NULL because this creation MUST work
+	if (awData) {
+	  // copy the properties data
+	  *awData = *awDataHandle;
+	  // create the tree item ... 
+	  preceedingWindow = new CAnalysisWindowItem(awBranchItem, preceedingWindow, awName);
+
+	  preceedingWindowName = awName; // ensure ordered insertion
+	}
+
+	++awIndex;
+      }
+
+    }
+ 
+    ++projIndex;
+  }
+
+}
+
+void CWProjectTree::slotPasteAnalysisWindows()
+{
+  int nWindows = m_clipboard->analysisWindowGroupSize();
+
+  if (nWindows == 0) return; // nothing to do
+
+  // A single item must be selected (either an Analysis Window or an Analysis Window Branch)
+
+  QList<QTreeWidgetItem*> items = selectedItems();
+  
+  if (items.isEmpty()) return;
+
+  QString preceedingWindowName;
+  QTreeWidgetItem *preceedingWindow = NULL;
+  QTreeWidgetItem *parent = items.front();
+  if (parent->type() == cAnalysisWindowItemType) {
+    preceedingWindow = parent;
+    preceedingWindowName = preceedingWindow->text(0);
+    parent = parent->parent();
+  }
+  else if (parent->type() != cAnalysisWindowBranchItemType) {
+    // invalid item type selected ... silent bailout
+    return;
+  }
+
+  CWorkSpace *ws = CWorkSpace::instance();
+
+  QString projName = CWProjectTree::projectItem(parent)->text(0);
+
+  int awIndex = 0;
+  while (awIndex < nWindows) {
+    const mediate_analysis_window_t *awDataHandle = m_clipboard->analysisWindowGroupItemProperties(awIndex);
+    QString awName(awDataHandle->name);
+
+    // must be uniquely named ... because window names are size limited ... only make one ".Copy" attempt...
+    mediate_analysis_window_t *awData = ws->createAnalysisWindow(projName, awName, preceedingWindowName);
+    if (awData == NULL) {
+      awName += ".Copy";
+      awData = ws->createAnalysisWindow(projName, awName, preceedingWindowName);
+    }
+    // Is it OK to proceed ... silently skip this window if not OK ...
+    if (awData) {
+      // copy the properties data
+      *awData = *awDataHandle;
+      // NOTE, because the window name could have been changed, it MUST be reset. (no length check required)
+      strcpy(awData->name, awName.toAscii().data());
+      // create the tree item ... 
+      preceedingWindow = new CAnalysisWindowItem(parent, preceedingWindow, awName);
+      preceedingWindowName = awName; // ensure ordered insertion
+    }
+
+    ++awIndex;
+  }
+}
+
 void CWProjectTree::slotSessionRunning(bool running)
 {
   m_sessionActive = running;
@@ -1214,6 +1342,19 @@ CProjectTreeItem::CProjectTreeItem(CWProjectTree *parent, const QStringList &str
   QTreeWidgetItem(parent, strings, type),
   m_enabled(true)
 {
+}
+
+CProjectTreeItem::CProjectTreeItem(CWProjectTree *parent, QTreeWidgetItem *preceedingSibling, const QStringList &strings, int type) :
+  QTreeWidgetItem(parent, preceedingSibling, type),
+  m_enabled(true)
+{
+  // set the labels  ... there isn't a contructor with a preceeding item & string labels!!
+
+  int index = 0;
+  while (index < strings.size()) {
+    setText(index, strings.at(index));
+    ++index;
+  }
 }
 
 CProjectTreeItem::CProjectTreeItem(QTreeWidgetItem *parent, int type) :
@@ -1254,6 +1395,14 @@ void CProjectTreeItem::setEnabled(bool enable)
 
 CProjectItem::CProjectItem(const QString &projectName) :
   CProjectTreeItem(QStringList(projectName), cProjectItemType)
+{
+  // add Children for Raw Spectra and Analysis Windows
+  new CSpectraBranchItem(this);
+  new CAnalysisWindowBranchItem(this);
+}
+
+CProjectItem::CProjectItem(CWProjectTree *parent, QTreeWidgetItem *preceedingSibling, const QString &projectName) :
+  CProjectTreeItem(parent, preceedingSibling, QStringList(projectName), cProjectItemType)
 {
   // add Children for Raw Spectra and Analysis Windows
   new CSpectraBranchItem(this);
