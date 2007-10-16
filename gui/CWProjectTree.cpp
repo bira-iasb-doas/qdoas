@@ -1114,13 +1114,21 @@ void CWProjectTree::slotDeleteSelection()
   while (it != items.end()) {
     // cant delete the Raw Spectra or Analysis Window branches (instead delete all of their children)
     type = (*it)->type();
-    if (type == cSpectraBranchItemType || type == cAnalysisWindowBranchItemType) {
+    if (type == cSpectraBranchItemType) {
       // delete all children
       QList<QTreeWidgetItem*> kids = (*it)->takeChildren();
       QList<QTreeWidgetItem*>::iterator kIt = kids.begin();
       while (kIt != kids.end()) {
-	CAnalysisWindowItem::destroyItem(*kIt);
+	delete *kIt;
 	++kIt;
+      }
+    }
+    else if (type == cAnalysisWindowBranchItemType) {
+      // delete all children - while still in the tree ... delete in reverse order
+      int index;
+      while ((index = (*it)->childCount()) > 0) {
+	QTreeWidgetItem *awItem = (*it)->child(--index);
+	CAnalysisWindowItem::destroyItem(awItem);
       }
     }
     else if (type == cAnalysisWindowItemType) {
