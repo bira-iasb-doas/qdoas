@@ -187,6 +187,24 @@ const mediate_analysis_window_t* CProjectTreeClipboard::projectGroupItemAnalysis
   return NULL;
 }
 
+QList<QTreeWidgetItem*> CProjectTreeClipboard::projectGroupItemSpectraList(int projIndex) const
+{
+  QList<QTreeWidgetItem*> result;
+  
+  if (projIndex >= 0 && projIndex < m_projectGroup.size()) {
+    const QList<QTreeWidgetItem*> &tmp = m_projectGroup.at(projIndex)->spectra;
+
+    // clone the current list
+    QList<QTreeWidgetItem*>::const_iterator it = tmp.begin();
+    while (it != tmp.end()) {
+      result.push_back((*it)->clone());
+      ++it;
+    }
+  }
+
+  return result;
+}
+
 int CProjectTreeClipboard::analysisWindowGroupSize(void) const
 {
   return m_anlysWinGroup.size();
@@ -198,4 +216,23 @@ const mediate_analysis_window_t* CProjectTreeClipboard::analysisWindowGroupItemP
     return m_anlysWinGroup.at(anlysWinIndex);
 
   return NULL;
+}
+
+bool CProjectTreeClipboard::spectraGroupIsEmpty(void) const
+{
+  return m_spectraGroup.isEmpty();
+}
+
+QList<QTreeWidgetItem*> CProjectTreeClipboard::spectraGroupList(void) const
+{
+  QList<QTreeWidgetItem*> result;
+
+  // clone the current list
+  QList<QTreeWidgetItem*>::const_iterator it = m_spectraGroup.begin();
+  while (it != m_spectraGroup.end()) {
+    result.push_back((*it)->clone());
+    ++it;
+  }
+
+  return result;
 }

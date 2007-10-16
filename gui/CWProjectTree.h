@@ -120,8 +120,11 @@ Q_OBJECT
   void slotDeleteSelection();
   void slotDeleteAllSpectra();
   void slotCutSelection();
+  void slotCopySelection();
   void slotPasteProjects();
   void slotPasteAnalysisWindows();
+  void slotPasteSpectraAsSiblings();
+  void slotPasteSpectraAsChildren();
   void slotSessionRunning(bool running);
 
  signals:
@@ -151,6 +154,7 @@ class CProjectTreeItem : public QTreeWidgetItem
   CProjectTreeItem(QTreeWidgetItem *parent, int type);
   CProjectTreeItem(QTreeWidgetItem *parent, const QStringList &strings, int type);
   CProjectTreeItem(QTreeWidgetItem *parent, QTreeWidgetItem *preceedingSibling, const QStringList &strings, int type);
+  CProjectTreeItem(const CProjectTreeItem &other); // for cloning the family of raw spectra items
   virtual ~CProjectTreeItem();
 
   virtual void setEnabled(bool enable);
@@ -194,9 +198,11 @@ class CSpectraFolderItem : public CProjectTreeItem
 {
  public:
   CSpectraFolderItem(QTreeWidgetItem *parent, const QString &folderName);
+  CSpectraFolderItem(const CSpectraFolderItem &other); // used by clone
   virtual ~CSpectraFolderItem();
 
   virtual QVariant data(int column, int role) const;
+  virtual QTreeWidgetItem* clone() const;
 };
 
 // Directory can have files and directories as children, but is driven by the filesystem
@@ -207,9 +213,11 @@ class CSpectraDirectoryItem : public CProjectTreeItem
   CSpectraDirectoryItem(QTreeWidgetItem *parent, const QDir &directory,
                         const QStringList &fileFilters, bool includesSubDirectories,
                         int *fileCount = 0);
+  CSpectraDirectoryItem(const CSpectraDirectoryItem &other); // used by clone
   virtual ~CSpectraDirectoryItem();
 
   virtual QVariant data(int column, int role) const;
+  virtual QTreeWidgetItem* clone() const;
 
   void refreshBranch(void);
 
@@ -233,9 +241,11 @@ class CSpectraFileItem : public CProjectTreeItem
 {
  public:
   CSpectraFileItem(QTreeWidgetItem *parent, const QFileInfo &fileInfo);
+  CSpectraFileItem(const CSpectraFileItem &other);
   virtual ~CSpectraFileItem();
 
   virtual QVariant data(int column, int role) const;
+  virtual QTreeWidgetItem* clone() const;
 
   const QFileInfo& file(void) const;
 

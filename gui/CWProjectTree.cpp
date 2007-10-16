@@ -158,6 +158,7 @@ void CWProjectTree::contextMenuEvent(QContextMenuEvent *e)
     menu.addAction("Browse Spectra", this, SLOT(slotBrowseSpectra()))->setEnabled(!m_sessionActive);
     menu.addSeparator();
     menu.addAction("Cut", this, SLOT(slotCutSelection()));
+    menu.addAction("Copy", this, SLOT(slotCopySelection()));
     menu.addAction("Delete", this, SLOT(slotDeleteSelection()));
   }
   else if (items.count()) {
@@ -175,11 +176,16 @@ void CWProjectTree::contextMenuEvent(QContextMenuEvent *e)
       menu.addAction("Run Analysis", this, SLOT(slotRunAnalysis()))->setEnabled(!m_sessionActive);
       menu.addAction("Browse Spectra", this, SLOT(slotBrowseSpectra()))->setEnabled(!m_sessionActive);
       if (projItem->parent() && projItem->parent()->type() != cSpectraDirectoryItemType) {
-        // Cant delete an item that is a child of a directory item
+        // Cant cut, delete or paste below an item that is a child of a directory item
         menu.addSeparator();
 	menu.addAction("Cut", this, SLOT(slotCutSelection()));
+	menu.addAction("Copy", this, SLOT(slotCopySelection()));
+	menu.addAction("Paste Below", this, SLOT(slotPasteSpectraAsSiblings()));
         menu.addAction("Delete", this, SLOT(slotDeleteSelection()));
       }
+      else
+	menu.addAction("Copy", this, SLOT(slotCopySelection()));
+
     }
     else if (itemType == cSpectraFolderItemType) {
       // A Folder Item
@@ -196,6 +202,9 @@ void CWProjectTree::contextMenuEvent(QContextMenuEvent *e)
       menu.addAction("Browse Spectra", this, SLOT(slotBrowseSpectra()))->setEnabled(!m_sessionActive);
       menu.addSeparator();
       menu.addAction("Cut", this, SLOT(slotCutSelection()));
+      menu.addAction("Copy", this, SLOT(slotCopySelection()));
+      menu.addAction("Paste In", this, SLOT(slotPasteSpectraAsChildren()));
+      menu.addAction("Paste Below", this, SLOT(slotPasteSpectraAsSiblings()));
       menu.addAction("Delete", this, SLOT(slotDeleteSelection()));
     }
     else if (itemType == cSpectraFileItemType) {
@@ -208,11 +217,16 @@ void CWProjectTree::contextMenuEvent(QContextMenuEvent *e)
       menu.addAction("Run Analysis", this, SLOT(slotRunAnalysis()))->setEnabled(!m_sessionActive);
       menu.addAction("Browse Spectra", this, SLOT(slotBrowseSpectra()))->setEnabled(!m_sessionActive);
       if (projItem->parent() && projItem->parent()->type() != cSpectraDirectoryItemType) {
-        // Cant delete an item that is a child of a directory item
+        // Cant cut, delete or paste below an item that is a child of a directory item
         menu.addSeparator();
 	menu.addAction("Cut", this, SLOT(slotCutSelection()));
+	menu.addAction("Copy", this, SLOT(slotCopySelection()));
+	menu.addAction("Paste Below", this, SLOT(slotPasteSpectraAsSiblings()));
         menu.addAction("Delete", this, SLOT(slotDeleteSelection()));
       }
+      else
+	menu.addAction("Copy", this, SLOT(slotCopySelection()));
+      
     }
     else if (itemType == cSpectraBranchItemType) {
       // A Spectra Branch (Raw Spectra)
@@ -225,6 +239,8 @@ void CWProjectTree::contextMenuEvent(QContextMenuEvent *e)
       menu.addSeparator();
       // cant remove this item - refers to all children
       menu.addAction("Cut", this, SLOT(slotCutSelection()));
+      menu.addAction("Copy", this, SLOT(slotCopySelection()));
+      menu.addAction("Paste In", this, SLOT(slotPasteSpectraAsChildren()));
       menu.addAction("Delete All", this, SLOT(slotDeleteAllSpectra()));
     }
     else if (itemType == cAnalysisWindowBranchItemType) {
@@ -233,6 +249,7 @@ void CWProjectTree::contextMenuEvent(QContextMenuEvent *e)
       menu.addSeparator();
       // cant remove this item - refers to all children
       menu.addAction("Cut", this, SLOT(slotCutSelection()));
+      menu.addAction("Copy", this, SLOT(slotCopySelection()));
       menu.addAction("Paste", this, SLOT(slotPasteAnalysisWindows()));
       menu.addAction("Delete All", this, SLOT(slotDeleteSelection()));
     }
@@ -247,6 +264,7 @@ void CWProjectTree::contextMenuEvent(QContextMenuEvent *e)
       menu.addAction("Properties...", this, SLOT(slotEditAnalysisWindow()));
       menu.addSeparator();
       menu.addAction("Cut", this, SLOT(slotCutSelection()));
+      menu.addAction("Copy", this, SLOT(slotCopySelection()));
       menu.addAction("Paste", this, SLOT(slotPasteAnalysisWindows()));
       menu.addAction("Delete", this, SLOT(slotDeleteSelection()));
     }
@@ -264,6 +282,7 @@ void CWProjectTree::contextMenuEvent(QContextMenuEvent *e)
       menu.addAction("Browse Spectra", this, SLOT(slotBrowseSpectra()))->setEnabled(!m_sessionActive);
       menu.addSeparator();
       menu.addAction("Cut", this, SLOT(slotCutSelection()));
+      menu.addAction("Copy", this, SLOT(slotCopySelection()));
       menu.addAction("Paste", this, SLOT(slotPasteProjects()));
       menu.addAction("Delete", this, SLOT(slotDeleteSelection()));
     }
@@ -1189,6 +1208,92 @@ void CWProjectTree::slotCutSelection()
   m_clipboard->endInsertItems();
 }
 
+void CWProjectTree::slotCopySelection()
+{
+  // normalize the selection
+  QList<QTreeWidgetItem*> items = CWProjectTree::normalize(selectedItems());
+  
+  //mark the clipboard, ready for adding items
+  m_clipboard->beginInsertItems();
+  
+  CWorkSpace *ws = CWorkSpace::instance();
+  
+  int type;
+  QList<QTreeWidgetItem*>::iterator it = items.begin();
+  while (it != items.end()) {
+    type = (*it)->type();
+    
+    if (type == cSpectraBranchItemType) {
+      // cant copy the Raw Spectra - copy (clone) its children instead.
+      int index = 0;
+      while (index < (*it)->childCount()) {
+	m_clipboard->insertRawSpectraItem((*it)->child(index)->clone());
+	++index;
+      }
+    }
+    else if (type == cAnalysisWindowBranchItemType) {
+      // cant copy the Analysis Window branch - copy its children instead.
+      
+      QString projectName = (*it)->parent()->text(0);
+      
+      mediate_analysis_window_t *awProp;
+      
+      while ((*it)->childCount()) {
+	QTreeWidgetItem *awItem = (*it)->child(0);
+	awProp = ws->findAnalysisWindow(projectName, awItem->text(0));
+	assert(awProp);
+	// make a deep copy of the data to hand over to the clipboard
+	mediate_analysis_window_t *awData = new mediate_analysis_window_t;
+	*awData = *awProp; // blot copy
+	m_clipboard->insertAnalysisWindow(awData); // hand over the copy
+      }
+    }
+    else if (type == cAnalysisWindowItemType) {
+      
+      QTreeWidgetItem *projItem = CWProjectTree::projectItem(*it);
+      assert(projItem);
+      mediate_analysis_window_t *awProp = ws->findAnalysisWindow(projItem->text(0), (*it)->text(0));
+      assert(awProp);
+      // make a deep copy of the data to hand over to the clipboard
+      mediate_analysis_window_t *awData = new mediate_analysis_window_t;
+      *awData = *awProp; // blot copy
+      m_clipboard->insertAnalysisWindow(awData); // hand over the copy
+    }
+    else if ((*it)->parent() == NULL) {
+      // a project item ... Collect all the bits and pieces for the project
+      QString projectName = (*it)->text(0);
+      mediate_project_t *projProp = ws->findProject(projectName);
+      assert(projProp);
+      // make a deep copy of the data to hand over to the clipboard
+      mediate_project_t *projData = new mediate_project_t;
+      *projData = *projProp;
+      // get a deep copy of the analysis windows for this project
+      QList<mediate_analysis_window_t*> awList = ws->analysisWindowList(projectName);
+      // steal the raw spectra items from the tree
+      QTreeWidgetItem *rawSpectraItem = (*it)->child(0);
+      assert(rawSpectraItem);
+      
+      QList<QTreeWidgetItem*> rawSpectraList;
+      int index = 0;
+      while (index < rawSpectraItem->childCount()) {
+	rawSpectraList.push_back(rawSpectraItem->child(index)->clone());
+	++index;
+      }
+      
+      // now have all of the components required for a the clipboard
+      m_clipboard->insertProject(projectName, projData, awList, rawSpectraList);
+    }
+    else {
+      // must be a raw spectra item (directory, folder or file) - just copy (clone) it
+      m_clipboard->insertRawSpectraItem((*it)->clone());
+    }
+
+    ++it;
+  }
+
+  m_clipboard->endInsertItems();
+}
+
 void CWProjectTree::slotPasteProjects()
 {
   int nProjects = m_clipboard->projectGroupSize();
@@ -1230,10 +1335,16 @@ void CWProjectTree::slotPasteProjects()
       // create a tree item for this
       preceedingProj = new CProjectItem(this, preceedingProj, projName);
       
+      QTreeWidgetItem *branchItem = preceedingProj->child(0);
+
+      // the spectra
+      QList<QTreeWidgetItem*> spectra = m_clipboard->projectGroupItemSpectraList(projIndex);
+      branchItem->addChildren(spectra); // the responsibility for the items is transferred to branchItem
+
       // now create analysis windows ... (no checks required)
+      branchItem = preceedingProj->child(1);
       QString preceedingWindowName;
       QTreeWidgetItem *preceedingWindow = NULL;
-      QTreeWidgetItem *awBranchItem = preceedingProj->child(1);
 
       int nWindows = m_clipboard->projectGroupItemAnalysisWindowSize(projIndex);
       int awIndex = 0;
@@ -1247,7 +1358,7 @@ void CWProjectTree::slotPasteProjects()
 	  // copy the properties data
 	  *awData = *awDataHandle;
 	  // create the tree item ... 
-	  preceedingWindow = new CAnalysisWindowItem(awBranchItem, preceedingWindow, awName);
+	  preceedingWindow = new CAnalysisWindowItem(branchItem, preceedingWindow, awName);
 
 	  preceedingWindowName = awName; // ensure ordered insertion
 	}
@@ -1317,6 +1428,47 @@ void CWProjectTree::slotPasteAnalysisWindows()
   }
 }
 
+void CWProjectTree::slotPasteSpectraAsSiblings()
+{
+  if (m_clipboard->spectraGroupIsEmpty()) return;
+
+  // A single item must be selected and it MUST have a SpectraFolderItem or SpectraBranchItem as parent.
+
+  QList<QTreeWidgetItem*> items = selectedItems();
+  
+  if (items.isEmpty()) return;
+
+  QTreeWidgetItem *preceedingItem = items.front();
+  QTreeWidgetItem *parent = preceedingItem->parent();
+
+  // check the parent type is appropriate
+  if (parent->type() != cSpectraFolderItemType && parent->type() != cSpectraBranchItemType) return;
+    
+  int index = parent->indexOfChild(preceedingItem);
+  QList<QTreeWidgetItem*> spectra = m_clipboard->spectraGroupList();
+  parent->insertChildren(++index, spectra); // the responsibility for the items is transferred to parent
+}
+
+void CWProjectTree::slotPasteSpectraAsChildren()
+{
+  if (m_clipboard->spectraGroupIsEmpty()) return;
+
+  // A single item must be selected and it MUST be SpectraFolderItem or SpectraBranchItem.
+
+  QList<QTreeWidgetItem*> items = selectedItems();
+  
+  if (items.isEmpty()) return;
+
+  QTreeWidgetItem *parent = items.front();
+
+  // check the parent type is appropriate
+  if (parent->type() != cSpectraFolderItemType && parent->type() != cSpectraBranchItemType) return;
+
+  // insert at the beginning
+  QList<QTreeWidgetItem*> spectra = m_clipboard->spectraGroupList();
+  parent->insertChildren(0, spectra); // the responsibility for the items is transferred to parent
+}
+
 void CWProjectTree::slotSessionRunning(bool running)
 {
   m_sessionActive = running;
@@ -1380,6 +1532,13 @@ CProjectTreeItem::CProjectTreeItem(QTreeWidgetItem *parent, QTreeWidgetItem *pre
     setText(index, strings.at(index));
     ++index;
   }
+}
+
+// creates an isolated item (no parent, no children)
+CProjectTreeItem::CProjectTreeItem(const CProjectTreeItem &other) :
+  QTreeWidgetItem(other.type()),
+  m_enabled(other.m_enabled)
+{
 }
 
 CProjectTreeItem::~CProjectTreeItem()
@@ -1467,6 +1626,13 @@ CSpectraFolderItem::CSpectraFolderItem(QTreeWidgetItem *parent, const QString &f
   setIcon(0, CWProjectTree::getIcon(cSpectraFolderItemType));
 }
 
+CSpectraFolderItem::CSpectraFolderItem(const CSpectraFolderItem &other) :
+  CProjectTreeItem(other)
+{
+  setText(0, other.text(0)); // copy the folder name
+  setIcon(0, CWProjectTree::getIcon(cSpectraFolderItemType));
+}
+
 CSpectraFolderItem::~CSpectraFolderItem()
 {
 }
@@ -1479,6 +1645,21 @@ QVariant CSpectraFolderItem::data(int column, int role) const
   
   // for other roles use the base class
   return QTreeWidgetItem::data(column, role);
+}
+
+QTreeWidgetItem* CSpectraFolderItem::clone() const
+{
+  // copy constructor makes a childless and parentless item
+  CSpectraFolderItem *tmp = new CSpectraFolderItem(*this);
+  
+  // clone and insert all children
+  int index = 0;
+  while (index < childCount()) {
+    tmp->addChild(child(index)->clone());
+    ++index;
+  }
+
+  return tmp;
 }
 
 //------------------------------------------------------------------------------
@@ -1499,6 +1680,18 @@ CSpectraDirectoryItem::CSpectraDirectoryItem(QTreeWidgetItem *parent, const QDir
   // set the fileCount for the entire branch if requested
   if (fileCount)
     *fileCount = nFiles;
+}
+
+CSpectraDirectoryItem::CSpectraDirectoryItem(const CSpectraDirectoryItem &other) :
+  CProjectTreeItem(other),
+  m_directory(other.m_directory),
+  m_fileFilters(other.m_fileFilters),
+  m_includeSubDirectories(other.m_includeSubDirectories)
+{  
+  setIcon(0, CWProjectTree::getIcon(cSpectraDirectoryItemType));
+
+  // build the file and directory tree for this directory (recursive)
+  loadBranch();
 }
 
 CSpectraDirectoryItem::~CSpectraDirectoryItem()
@@ -1524,6 +1717,13 @@ QVariant CSpectraDirectoryItem::data(int column, int role) const
 
   // for other roles use the base class
   return QTreeWidgetItem::data(column, role);
+}
+
+QTreeWidgetItem* CSpectraDirectoryItem::clone() const
+{
+  CSpectraDirectoryItem *tmp = new CSpectraDirectoryItem(*this);
+  // the copy contrstuctor has already recursively build the sub tree ...
+  return tmp;
 }
 
 void CSpectraDirectoryItem::refreshBranch(void)
@@ -1616,6 +1816,13 @@ CSpectraFileItem::CSpectraFileItem(QTreeWidgetItem *parent, const QFileInfo &fil
   setIcon(0, CWProjectTree::getIcon(cSpectraFileItemType));
 }
 
+CSpectraFileItem::CSpectraFileItem(const CSpectraFileItem &other) :
+  CProjectTreeItem(other),
+  m_fileInfo(other.m_fileInfo)
+{
+  setIcon(0, CWProjectTree::getIcon(cSpectraFileItemType));  
+}
+
 CSpectraFileItem::~CSpectraFileItem()
 {
 }
@@ -1670,6 +1877,13 @@ QVariant CSpectraFileItem::data(int column, int role) const
 
   // for other roles use the base class
   return QTreeWidgetItem::data(column, role);
+}
+
+QTreeWidgetItem* CSpectraFileItem::clone() const
+{
+  CSpectraFileItem *tmp = new CSpectraFileItem(*this);
+  
+  return tmp;
 }
 
 //------------------------------------------------------------------------------

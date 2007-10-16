@@ -76,9 +76,14 @@ class CProjectTreeClipboard
   const mediate_project_t* projectGroupItemProperties(int projIndex) const;
   int projectGroupItemAnalysisWindowSize(int projIndex) const;
   const mediate_analysis_window_t* projectGroupItemAnalysisWindowProperties(int projIndex, int anlysWinIndex) const;
+  QList<QTreeWidgetItem*> projectGroupItemSpectraList(int projIndex) const;
 
   int analysisWindowGroupSize(void) const;
   const mediate_analysis_window_t* analysisWindowGroupItemProperties(int anlysWinIndex) const;
+
+  // cloned contents of the clipboard spectra group.
+  bool spectraGroupIsEmpty(void) const;
+  QList<QTreeWidgetItem*> spectraGroupList(void) const;
 
  private:
   void clearProjectGroup(void);
