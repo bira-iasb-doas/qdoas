@@ -460,6 +460,7 @@ QString CWProjectTree::editInsertNewFolder(QTreeWidgetItem *parent, const QStrin
       CSpectraFolderItem *tmp = new CSpectraFolderItem(parent, folderName);
 
       if (itemCreated != NULL) *itemCreated = tmp;
+      emit signalSpectraTreeChanged();
     }
     else
       return QString("The parent already contains a folder or file with that name.");
@@ -482,8 +483,10 @@ QString CWProjectTree::editRenameFolder(QTreeWidgetItem *item, const QString &ne
 	return QString("The parent already has a folder, file or directory with that name.");
       // do nothing if nothing changed (and consider it a successful rename)
     }
-    else
+    else {
       item->setText(0, newFolderName);
+      emit signalSpectraTreeChanged();
+    }
   }
   else
     return QString("The item is not a folder.");
@@ -592,6 +595,7 @@ QString CWProjectTree::editInsertDirectory(QTreeWidgetItem *parent, const QStrin
 	parent->addChild(dirItem);
 
 	if (itemCreated != NULL) *itemCreated = dirItem;
+	emit signalSpectraTreeChanged();
       }
       else {
 	// empty file count ...
@@ -660,6 +664,8 @@ void CWProjectTree::removeAllContent(void)
   while (i > 0) {
     delete takeTopLevelItem(--i);
   }
+
+  emit signalSpectraTreeChanged();
 }
 
 QString CWProjectTree::loadConfiguration(const QList<const CProjectConfigItem*> &itemList)
@@ -822,7 +828,8 @@ void CWProjectTree::slotEnable()
     
     ++it;
   }
-  
+
+  emit signalSpectraTreeChanged();
 }
 
 void CWProjectTree::slotDisable()
@@ -839,6 +846,7 @@ void CWProjectTree::slotDisable()
     ++it;
   }
   
+  emit signalSpectraTreeChanged();
 }
 
 void CWProjectTree::slotToggleEnable()
@@ -855,6 +863,7 @@ void CWProjectTree::slotToggleEnable()
     ++it;
   }
   
+  emit signalSpectraTreeChanged();
 }
 
 void CWProjectTree::slotToggleDisplayDetails()
@@ -1029,6 +1038,8 @@ void CWProjectTree::slotInsertFile()
 	    new CSpectraFileItem(parent, fileInfo);
 	  ++it;
 	}
+
+	emit signalSpectraTreeChanged();
       }
     }
   }
@@ -1148,6 +1159,8 @@ void CWProjectTree::slotDeleteSelection()
 
     ++it;
   }
+
+  emit signalSpectraTreeChanged();
 }
 
 void CWProjectTree::slotDeleteAllSpectra()
@@ -1240,6 +1253,8 @@ void CWProjectTree::slotCutSelection()
   }
 
   m_clipboard->endInsertItems();
+
+  emit signalSpectraTreeChanged();
 }
 
 void CWProjectTree::slotCopySelection()
@@ -1429,7 +1444,6 @@ void CWProjectTree::slotPasteProjects()
  
     ++projIndex;
   }
-
 }
 
 void CWProjectTree::slotPasteAnalysisWindows()
@@ -1506,6 +1520,8 @@ void CWProjectTree::slotPasteSpectraAsSiblings()
   int index = parent->indexOfChild(preceedingItem);
   QList<QTreeWidgetItem*> spectra = m_clipboard->spectraGroupList();
   parent->insertChildren(++index, spectra); // the responsibility for the items is transferred to parent
+
+  emit signalSpectraTreeChanged();
 }
 
 void CWProjectTree::slotPasteSpectraAsChildren()
@@ -1526,6 +1542,8 @@ void CWProjectTree::slotPasteSpectraAsChildren()
   // insert at the beginning
   QList<QTreeWidgetItem*> spectra = m_clipboard->spectraGroupList();
   parent->insertChildren(0, spectra); // the responsibility for the items is transferred to parent
+
+  emit signalSpectraTreeChanged();
 }
 
 void CWProjectTree::slotSessionRunning(bool running)

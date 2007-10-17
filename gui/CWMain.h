@@ -39,6 +39,7 @@ class CWActiveContext;
 class CEngineController;
 class CWTableRegion;
 class CWSplitter;
+class CConfigStateMonitor;
 
 class CWMain : public QFrame
 {
@@ -52,15 +53,19 @@ Q_OBJECT
  
  protected:
   void writeConfiguration(FILE *fp);
+  bool checkStateAndConsiderSaveFile(void);
+  void setProjectFileName(const QString &fileName);
 
  public slots:
   void slotOpenFile();
+  void slotNewFile();
   void slotSaveFile();
   void slotSaveAsFile();
   void slotCutButtonClicked();
   void slotCopyButtonClicked();
   void slotPasteButtonClicked();
   void slotDeleteButtonClicked();
+  void slotStateMonitorChanged(bool valid);
   void slotAboutQdoas();
   void slotAboutQt();
   void slotErrorMessages(int highestLevel, const QString &messages);
@@ -84,6 +89,8 @@ Q_OBJECT
 
   CEngineController *m_controller;
   
+  CConfigStateMonitor *m_stateMonitor;
+
   QString m_projectFile;
   
   // actions ...

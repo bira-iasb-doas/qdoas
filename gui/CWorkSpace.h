@@ -133,6 +133,8 @@ class CWorkSpace
   void attach(CProjectObserver *observer);
   void detach(CProjectObserver *observer);
 
+  void notifyProjectObserversModified(const QString &projectName);
+
   friend class CSitesObserver;
   friend class CSymbolObserver;
   friend class CProjectObserver;
@@ -148,6 +150,11 @@ class CWorkSpace
   std::list<CSymbolObserver*> m_symbolObserverList;
   std::list<CProjectObserver*> m_projectObserverList;
 };
+
+inline void CWorkSpace::modifiedProjectProperties(const QString &projectName) {
+  notifyProjectObserversModified(projectName);
+}
+
 
 class CSitesObserver {
  public:

@@ -29,7 +29,6 @@ int main(int argc, char *argv[])
   QApplication app(argc, argv);
 
   CWMain main;
-  main.setWindowTitle("Qdoas");
 
   main.show();
 

@@ -346,6 +346,12 @@ bool CWAnalysisWindowPropertyEditor::actionOk(void)
     m_gapTab->apply(&(d->gapList));
     m_outputTab->apply(&(d->outputList));
 
+    // this is a change to the project properties (indirectly).
+    QString updateBlock = m_projectName;
+    m_projectName.clear();
+    ws->modifiedProjectProperties(updateBlock);
+    m_projectName = updateBlock;
+
     return true;
   }
 

@@ -243,6 +243,9 @@ mediate_analysis_window_t*  CWorkSpace::createAnalysisWindow(const QString &proj
 	  (pIt->second).window.push_back(tmp);
 	else
 	  (pIt->second).window.insert(nextIt, tmp);
+
+	// notify the observers - Treated as a modification to the project
+	notifyProjectObserversModified(projectName);
       }
       else {
 	delete tmp; // name too long
@@ -372,6 +375,9 @@ bool CWorkSpace::renameAnalysisWindow(const QString &projectName, const QString 
       if (newIt == (pIt->second).window.end()) {
 	// new name is not in use .. ok to change the name
 	strcpy((*oldIt)->name, newWindowName.toAscii().data());
+
+	// notify the observers - Treated as a modification to the project
+	notifyProjectObserversModified(projectName);	
 	return true;
       }
     }
@@ -434,15 +440,6 @@ bool CWorkSpace::modifySymbol(const QString &symbolName, const QString &descript
   return false;
 }
 
-void CWorkSpace::modifiedProjectProperties(const QString &projectName)
-{
-  // notify the observers of the modification
-  std::list<CProjectObserver*>::iterator obs = m_projectObserverList.begin();
-  while (obs != m_projectObserverList.end()) {
-    (*obs)->updateModifyProject(projectName);
-    ++obs;
-  }
-}
 
 // data returned must be freed by the client with 'operator delete []'
 
@@ -635,6 +632,9 @@ bool CWorkSpace::destroyAnalysisWindow(const QString &projectName, const QString
 
       delete *wIt;
       (pIt->second).window.erase(wIt);
+
+      // notify observers - treated as a modification to the project
+      notifyProjectObserversModified(projectName);
       return true;
     }
   }
@@ -792,6 +792,16 @@ void CWorkSpace::attach(CProjectObserver *observer)
 void CWorkSpace::detach(CProjectObserver *observer)
 {
   m_projectObserverList.remove(observer);
+}
+
+void CWorkSpace::notifyProjectObserversModified(const QString &projectName)
+{
+  // notify the observers - Treated as a modification to the project
+  std::list<CProjectObserver*>::iterator obs = m_projectObserverList.begin();
+  while (obs != m_projectObserverList.end()) {
+    (*obs)->updateModifyProject(projectName);
+    ++obs;
+  }
 }
 
 //-----------------------------------------------------------------------

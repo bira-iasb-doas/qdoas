@@ -91,6 +91,7 @@ SOURCES += CWSplitter.cpp
 SOURCES += CWSymbolEditor.cpp
 SOURCES += CWUserSymbolTree.cpp
 SOURCES += CWAboutDialog.cpp
+SOURCES += CConfigStateMonitor.cpp
 SOURCES += CPreferences.cpp
 SOURCES += qdoas.cpp
 #----------------------------------------------
@@ -157,6 +158,7 @@ HEADERS += CWSplitter.h
 HEADERS += CWSymbolEditor.h
 HEADERS += CWUserSymbolTree.h
 HEADERS += CWAboutDialog.h
+HEADERS += CConfigStateMonitor.h
 HEADERS += debugutil.h
 HEADERS += RefCountPtr.h
 HEADERS += CPreferences.h

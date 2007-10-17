@@ -40,6 +40,7 @@ class CWPlot : public QwtPlot
 
  protected:
   virtual void mousePressEvent(QMouseEvent *e);
+  virtual void keyPressEvent(QKeyEvent *e);
 
  private:
   RefCountConstPtr<CPlotDataSet> m_dataSet;

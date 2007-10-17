@@ -131,6 +131,7 @@ Q_OBJECT
  signals:
   void signalWidthModeChanged(int newMode);
   void signalStartSession(const RefCountPtr<CSession> &session);
+  void signalSpectraTreeChanged();
 
  private:
   QList<int> m_colWidthList;

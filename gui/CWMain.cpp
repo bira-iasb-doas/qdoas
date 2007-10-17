@@ -45,6 +45,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "CWorkSpace.h"
 #include "CPreferences.h"
 #include "CConfigurationWriter.h"
+#include "CConfigStateMonitor.h"
 
 #include "mediate_types.h"
 
@@ -53,6 +54,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 CWMain::CWMain(QWidget *parent) :
   QFrame(parent)
 {
+  setProjectFileName(QString());
+
   QVBoxLayout *mainLayout = new QVBoxLayout(this);
   mainLayout->setMargin(0);
   mainLayout->setSpacing(0);
@@ -140,6 +143,12 @@ CWMain::CWMain(QWidget *parent) :
   fileMenu->addAction(openAct);
   m_toolBar->addAction(openAct);
 
+  // New
+  QAction *newProjAction = new QAction(QIcon(QPixmap(":/icons/file_new_16.png")), "New", this);
+  connect(newProjAction, SIGNAL(triggered()), this, SLOT(slotNewFile()));
+  fileMenu->addAction(newProjAction);
+  m_toolBar->addAction(newProjAction);
+
   fileMenu->addSeparator();
 
   // Save + Save As ...
@@ -196,7 +205,8 @@ CWMain::CWMain(QWidget *parent) :
 
   m_menuBar->addMenu(helpMenu);
 
-
+  // state monitor
+  m_stateMonitor = new CConfigStateMonitor(this);
 
   // connections
   connect(m_controller, SIGNAL(signalCurrentRecordChanged(int)),
@@ -227,7 +237,6 @@ CWMain::CWMain(QWidget *parent) :
   connect(navPanelRecords, SIGNAL(signalStep()),
 	  m_controller, SLOT(slotStep()));
 
-
   // plot data transfer
   connect(m_controller, SIGNAL(signalPlotPages(const QList< RefCountConstPtr<CPlotPageData> >&)),
           m_activeContext, SLOT(slotPlotPages(const QList< RefCountConstPtr<CPlotPageData> >&)));
@@ -245,6 +254,9 @@ CWMain::CWMain(QWidget *parent) :
   connect(m_activeContext, SIGNAL(signalActivePageChanged(int)),
 	  m_tableRegion, SLOT(slotDisplayPage(int)));
 
+  // state invalidation driven by the project tree
+  connect(m_projTree, SIGNAL(signalSpectraTreeChanged()), m_stateMonitor, SLOT(slotInvalidate()));
+  connect(m_stateMonitor, SIGNAL(signalStateChanged(bool)), this, SLOT(slotStateMonitorChanged(bool)));
 
   // icon
   setWindowIcon(QIcon(QPixmap(":/icons/logo.png")));
@@ -270,11 +282,66 @@ void CWMain::closeEvent(QCloseEvent *e)
   // flush write and close ...
   delete CPreferences::instance();
 
-  e->accept();
+  if (checkStateAndConsiderSaveFile())
+    e->accept();
 }
 
+bool CWMain::checkStateAndConsiderSaveFile(void)
+{
+  // if the state is valid there is nothing to do - return TRUE
+  if (m_stateMonitor->isValid())
+    return true;
+
+  // prompt to choose to save changes or cancel
+  QString msg;
+
+  if (m_projectFile.isEmpty()) {
+    msg = "Save the current project file?";
+  }
+  else {
+    msg = "Save changes to the project file\n";
+    msg += m_projectFile;
+    msg += " ?";
+  }
+
+  QMessageBox::StandardButton choice = QMessageBox::question(this, "Save Changes", msg,
+							     QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel,
+							     QMessageBox::Save);
+  
+  if (choice == QMessageBox::Discard)
+    return true; // discard changes
+  else if (choice != QMessageBox::Save)
+    return false; // cancel (or any other action that was not save)
+
+  // save of saveAs (as appropriate).
+  slotSaveFile();
+
+  // a SaveAs could have been cancelled (for some reason). The stateMonitor provides that indicator.
+  return m_stateMonitor->isValid();
+}
+
+void CWMain::setProjectFileName(const QString &fileName)
+{
+  QString str("Qdoas - ");
+  
+  m_projectFile = fileName;
+
+  if (m_projectFile.isEmpty()) {
+    str += "Unnamed[*]";
+  }
+  else {
+    str += m_projectFile;
+    str += "[*]";
+  }
+
+  setWindowTitle(str);
+}
+ 
 void CWMain::slotOpenFile()
 {
+  if (!checkStateAndConsiderSaveFile())
+    return;
+
   CPreferences *prefs = CPreferences::instance();
 
   QString fileName = QFileDialog::getOpenFileName(this, "Open Project File",
@@ -342,8 +409,9 @@ void CWMain::slotOpenFile()
     // projects
     errMsg += m_projTree->loadConfiguration(handler->projectItems());
 
-    m_projectFile = fileName;
-    m_saveAction->setEnabled(true);
+    setProjectFileName(fileName);
+    m_stateMonitor->slotValidate();
+    m_saveAction->setEnabled(false);
     m_saveAsAction->setEnabled(true);
   }
   else {
@@ -355,6 +423,22 @@ void CWMain::slotOpenFile()
   if (!errMsg.isNull())
     QMessageBox::critical(this, "File Open", errMsg);
 
+}
+
+void CWMain::slotNewFile()
+{
+  if (!checkStateAndConsiderSaveFile())
+    return;
+  
+  // clear the project tree, then the workspace
+  m_projTree->removeAllContent();
+  CWorkSpace::instance()->removeAllContent();
+
+  setProjectFileName(QString()); // no project file name
+  m_stateMonitor->slotValidate();
+
+  m_saveAction->setEnabled(false);
+  m_saveAsAction->setEnabled(false);
 }
 
 void CWMain::slotSaveAsFile()
@@ -371,6 +455,7 @@ void CWMain::slotSaveAsFile()
 						    CPreferences::instance()->directoryName("Project"),
 						    "Qdoas Project Config (*.xml);;All Files (*)");
 
+    // empty fileName implies cancel
     if (!fileName.isEmpty()) {
       // write the file
       QString msg = writer.write(fileName);
@@ -381,8 +466,9 @@ void CWMain::slotSaveAsFile()
 					   QMessageBox::Retry);
       }
       else {
-	// wrote the file ... change the project filename
-	m_projectFile = fileName;
+	// wrote the file ... change the project filename and validate
+	setProjectFileName(fileName);
+	m_stateMonitor->slotValidate();
       }
     }
   }
@@ -390,15 +476,18 @@ void CWMain::slotSaveAsFile()
 
 void CWMain::slotSaveFile()
 {
-  if (m_projectFile.isEmpty())
-    return;
-
-  CConfigurationWriter writer(m_projTree);
-
-  QString msg = writer.write(m_projectFile);
-  if (!msg.isNull())
-    QMessageBox::critical(this, "Project File Write Failure", msg, QMessageBox::Ok);
-  
+  if (m_projectFile.isEmpty()) {
+    slotSaveAsFile();
+  }
+  else {
+    CConfigurationWriter writer(m_projTree);
+    
+    QString msg = writer.write(m_projectFile);
+    if (!msg.isNull())
+      QMessageBox::critical(this, "Project File Write Failure", msg, QMessageBox::Ok);
+    else
+      m_stateMonitor->slotValidate();
+  }
 }
 
 void CWMain::slotCutButtonClicked()
@@ -445,6 +534,15 @@ void CWMain::slotDeleteButtonClicked()
   }
 }
 
+void CWMain::slotStateMonitorChanged(bool valid)
+{
+  bool modified = !valid;
+
+  m_saveAction->setEnabled(modified);
+  m_saveAsAction->setEnabled(true);
+  setWindowModified(modified);
+}
+
 void CWMain::slotAboutQdoas()
 {
   CWAboutDialog dialog(this);
@@ -471,5 +569,4 @@ void CWMain::slotErrorMessages(int highestLevel, const QString &messages)
     break;
   }
 }
-
 

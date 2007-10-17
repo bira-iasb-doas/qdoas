@@ -20,6 +20,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include <QColor>
 #include <QMouseEvent>
+#include <QKeyEvent>
+#include <QPainter>
+#include <QPrinter>
+#include <QPrintDialog>
 
 #include <qwt_plot_curve.h>
 #include <qwt_symbol.h>
@@ -27,12 +31,16 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "CWPlotPage.h"
 
+#include "debugutil.h"
+
 CWPlot::CWPlot(const RefCountConstPtr<CPlotDataSet> &dataSet,
 	       const CPlotProperties &plotProperties, QWidget *parent) :
   QwtPlot(parent),
   m_dataSet(dataSet),
   m_zoomer(NULL)
 {
+  // setFocusPolicy(Qt::ClickFocus); // TODO - prevents keyPressEvent
+
   setTitle(m_dataSet->plotTitle());
   setAxisTitle(QwtPlot::xBottom, m_dataSet->xAxisLabel());
   setAxisTitle(QwtPlot::yLeft, m_dataSet->yAxisLabel());
@@ -88,6 +96,83 @@ void CWPlot::mousePressEvent(QMouseEvent *e)
   }
 
   QwtPlot::mousePressEvent(e);
+}
+
+void CWPlot::keyPressEvent(QKeyEvent *e)
+{
+  TRACE4("enter key event");
+
+  if (e->key() == Qt::Key_P) {
+    QPrinter printer(QPrinter::HighResolution);
+
+
+    //QPrintDialog dialog(&printer, this);
+    
+    TRACE4("printing");
+
+    //if (dialog.exec() == QDialog::Accepted) {
+    if (true) {
+      TRACE("A " << printer.pageRect().isValid());
+      printer.setOutputFormat(QPrinter::PostScriptFormat);
+      TRACE("B " << printer.pageRect().isValid());
+      printer.setPageSize(QPrinter::A4);
+      TRACE("C " << printer.pageRect().isValid());
+      printer.setFullPage(false);
+      TRACE("D " << printer.pageRect().isValid());
+      printer.setNumCopies(1);
+      TRACE("E " << printer.pageRect().isValid());
+      printer.setPrintRange(QPrinter::AllPages);
+      TRACE("F " << printer.pageRect().isValid());
+      printer.setOutputFileName("/home/ian/svnproj/Qdoas/Src/gui/print.ps");
+      TRACE("G " << printer.pageRect().isValid());
+
+      // print ...
+      //printer.setOutputFormat(QPrinter::PostScriptFormat);
+
+      QRect rect;
+
+      QPainter p(&printer); // calls begin
+
+      TRACE("Page size = " << printer.pageSize());
+      
+      rect = printer.paperRect();
+      if (rect.isValid()) {
+	TRACE("Paper " << rect.x() << "," << rect.y() << "   " << rect.width() << " x " << rect.height());
+      }
+      else {
+	TRACE("Invalid Paper Rectangle");
+      }
+
+      rect = printer.pageRect();
+      if (rect.isValid()) {
+	TRACE("Page  " << rect.x() << "," << rect.y() << "   " << rect.width() << " x " << rect.height());
+      }
+      else {
+	TRACE("Invalid Page Rectangle");
+	rect.setWidth(72 * 7);
+	rect.setHeight(72 * 9);
+      }
+
+      QPen pen = p.pen();
+      pen.setColor(QColor(0XFF001122));
+      pen.setWidth(1);
+      p.setPen(pen);
+
+      int w = rect.width();
+      int h = rect.height();
+
+      p.drawLine(0,0,w,h);
+      p.drawLine(0,h,w,0);
+      p.drawEllipse(rect);
+
+      //print(&p, rect);
+    }
+
+    e->accept();
+  }
+  else {
+    TRACE4("CWPlot : Invalid keystroke");
+  }
 }
 
 CWPlotPage::CWPlotPage(const CPlotProperties &plotProperties, int columns, QWidget *parent) :
