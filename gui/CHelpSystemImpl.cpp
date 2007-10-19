@@ -126,7 +126,17 @@ CHelpImplTextBrowser::CHelpImplTextBrowser(const QString &helpDir, const QString
   m_helpDir(helpDir),
   m_startPage(startPage)
 {
-  m_helpDir = QDir::toNativeSeparators(m_helpDir);
+  m_helpDir.prepend("file:///");
+
+  int len = m_helpDir.length();
+  int i = 0;
+  while (i < len) {
+    if (m_helpDir[i] == '\\') m_helpDir[i] = '/';
+    ++i;
+  }
+  if (m_helpDir[len-1] != '/')
+    m_helpDir += '/';
+
   // lazy evaluate the browser ...
 }
 
@@ -140,11 +150,11 @@ CHelpImplTextBrowser::~CHelpImplTextBrowser()
 void CHelpImplTextBrowser::display(const QString &url)
 {
   if (!m_browser) {
-    m_browser = new CBasicHelpBrowser(m_helpDir + QDir::separator() + m_startPage, this); // no  parent
+    m_browser = new CBasicHelpBrowser(m_helpDir + m_startPage, this); // no  parent
   }
 
   if (m_browser) {
-    m_browser->displayDocument(m_helpDir + QDir::separator() + url);
+    m_browser->displayDocument(m_helpDir + url);
     if (m_browser->isMinimized())
       m_browser->showNormal();
     else
@@ -202,10 +212,6 @@ CBasicHelpBrowser::~CBasicHelpBrowser()
 
 void CBasicHelpBrowser::displayDocument(const QString &url)
 {
-  QString msg(url);
-  msg += QFile::exists(url) ? " exists" : "does not exist";
-  QMessageBox::information(this, "Url", msg);
-
   m_browser->setSource(url);
 }
 
