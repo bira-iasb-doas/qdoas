@@ -25,6 +25,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QAction>
 #include <QDir>
 
+#include <QMessageBox> // temp
+
 #include "CHelpSystemImpl.h"
 #include "CPreferences.h"
 
@@ -158,7 +160,7 @@ void CHelpImplTextBrowser::browserClosed(void)
 }
 
 CBasicHelpBrowser::CBasicHelpBrowser(const QString &homeUrl, CHelpImplTextBrowser *owner, QWidget *parent) :
-  QFrame(parent, Qt::SubWindow),
+  QFrame(parent, Qt::Window|Qt::WindowMinMaxButtonsHint|Qt::WindowSystemMenuHint),
   m_homeUrl(homeUrl),
   m_owner(owner)
 {
@@ -199,6 +201,7 @@ CBasicHelpBrowser::~CBasicHelpBrowser()
 
 void CBasicHelpBrowser::displayDocument(const QString &url)
 {
+  QMessageBox::information(this, "Url", url);
   m_browser->setSource(url);
 }
 

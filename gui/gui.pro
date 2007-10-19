@@ -16,6 +16,7 @@ unix {
 }
 win32 {
   CONFIG += qt thread release
+  CONFIG += assistant
   QT = core gui xml
 }
 
