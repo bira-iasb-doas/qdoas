@@ -250,6 +250,7 @@ QString CPreferences::dirName(const QString &fileName)
   if (index != -1)
     return fileName.left(index);
 
-  return fileName;
+  // no '/' or '\' characters - dirname is empty.
+  return QString();
 }
 

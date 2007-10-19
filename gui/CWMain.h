@@ -40,6 +40,7 @@ class CEngineController;
 class CWTableRegion;
 class CWSplitter;
 class CConfigStateMonitor;
+class CHelpSystem;
 
 class CWMain : public QFrame
 {
@@ -66,6 +67,8 @@ Q_OBJECT
   void slotPasteButtonClicked();
   void slotDeleteButtonClicked();
   void slotStateMonitorChanged(bool valid);
+  void slotQdoasHelp();
+  void slotHelpBrowserPreference(bool light);
   void slotAboutQdoas();
   void slotAboutQt();
   void slotErrorMessages(int highestLevel, const QString &messages);
@@ -96,6 +99,9 @@ Q_OBJECT
   // actions ...
   QAction *m_saveAction;
   QAction *m_saveAsAction;
+
+  // help interface ...
+  CHelpSystem *m_helpInterface;
 };
 
 #endif

@@ -25,6 +25,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "CWProjectTree.h"
 #include "CWProjectFolderNameEditor.h"
 
+#include "CHelpSystem.h"
+
 
 CWProjectFolderNameEditor::CWProjectFolderNameEditor(CWProjectTree *projectTree, QTreeWidgetItem *item,
                                                      bool newFolder, QWidget *parent) :
@@ -114,6 +116,7 @@ bool CWProjectFolderNameEditor::actionOk(void)
 
 void CWProjectFolderNameEditor::actionHelp(void)
 {
+  CHelpSystem::showHelpTopic("project", "FolderName");
 }
 
 void CWProjectFolderNameEditor::takeFocus(void)

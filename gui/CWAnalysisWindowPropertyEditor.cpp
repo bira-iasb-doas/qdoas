@@ -31,6 +31,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "CWAnalysisWindowPropertyEditor.h"
 #include "CValidator.h"
 
+#include "CHelpSystem.h"
+
 #include "constants.h"
 
 #include "debugutil.h"
@@ -362,6 +364,7 @@ bool CWAnalysisWindowPropertyEditor::actionOk(void)
 
 void CWAnalysisWindowPropertyEditor::actionHelp(void)
 {
+  CHelpSystem::showHelpTopic("project", "AnlysWin");
 }
 
 void CWAnalysisWindowPropertyEditor::updateModifyProject(const QString &projectName)

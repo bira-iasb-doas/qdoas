@@ -30,6 +30,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "CWPlotPropertiesEditor.h"
 #include "CWPlotRegion.h"
 
+#include "CHelpSystem.h"
+
 #include "debugutil.h"
 
 CWPlotPropertySample::CWPlotPropertySample(const QPen &pen, const QColor &bgColour, QWidget *parent) :
@@ -208,6 +210,7 @@ bool CWPlotPropertiesEditor::actionOk(void)
 
 void CWPlotPropertiesEditor::actionHelp(void)
 {
+  CHelpSystem::showHelpTopic("plotconf", "Properties");
 }
 
 void CWPlotPropertiesEditor::slotSelectBackgroundColour()

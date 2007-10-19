@@ -24,6 +24,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "CWSymbolEditor.h"
 #include "CWorkSpace.h"
+#include "CHelpSystem.h"
 
 #include "mediate_limits.h"
 
@@ -110,6 +111,7 @@ bool CWSymbolEditor::actionOk(void)
 
 void CWSymbolEditor::actionHelp(void)
 {
+  CHelpSystem::showHelpTopic("symbol", "Symbols");
 }
 
 void CWSymbolEditor::takeFocus(void)

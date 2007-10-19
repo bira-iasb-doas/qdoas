@@ -23,6 +23,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QMessageBox>
 
 #include "CWorkSpace.h"
+#include "CHelpSystem.h"
 
 #include "CWProjectTree.h"
 #include "CWProjectPropertyEditor.h"
@@ -153,5 +154,6 @@ bool CWProjectPropertyEditor::actionOk(void)
 
 void CWProjectPropertyEditor::actionHelp(void)
 {
+  CHelpSystem::showHelpTopic("project", "Projects");
 }
 

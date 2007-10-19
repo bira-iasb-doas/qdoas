@@ -35,5 +35,10 @@
     <file>icons/to_arrow.png</file>
     <file>icons/from_arrow.png</file>
 
+    <file>icons/help_back_32.png</file>
+    <file>icons/help_forward_32.png</file>
+    <file>icons/help_home_32.png</file>
+    <file>icons/help_exit_32.png</file>
+
 </qresource>
 </RCC>

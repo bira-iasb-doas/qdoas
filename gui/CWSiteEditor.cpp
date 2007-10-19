@@ -26,6 +26,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "CWSiteEditor.h"
 #include "CWorkSpace.h"
 
+#include "CHelpSystem.h"
+
 #include "debugutil.h"
 
 const unsigned int  BIT_EDIT_EXISTING_ITEM  = 0x10;
@@ -157,6 +159,7 @@ bool CWSiteEditor::actionOk(void)
 
 void CWSiteEditor::actionHelp(void)
 {
+  CHelpSystem::showHelpTopic("site");
 }
 
 void CWSiteEditor::takeFocus(void)

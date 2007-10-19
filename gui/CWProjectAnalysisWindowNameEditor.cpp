@@ -25,6 +25,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "CWProjectTree.h"
 #include "CWProjectAnalysisWindowNameEditor.h"
 
+#include "CHelpSystem.h"
 
 CWProjectAnalysisWindowNameEditor::CWProjectAnalysisWindowNameEditor(CWProjectTree *projectTree, QTreeWidgetItem *item,
 								     const QString &preceedingWindowName,
@@ -123,6 +124,7 @@ bool CWProjectAnalysisWindowNameEditor::actionOk()
 
 void CWProjectAnalysisWindowNameEditor::actionHelp(void)
 {
+  CHelpSystem::showHelpTopic("project", "AnlysWinName");
 }
 
 void CWProjectAnalysisWindowNameEditor::takeFocus(void)

@@ -27,6 +27,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "CWProjectTree.h"
 #include "CWProjectDirectoryEditor.h"
 
+#include "CHelpSystem.h"
+
 CWProjectDirectoryEditor::CWProjectDirectoryEditor(CWProjectTree *projectTree, QTreeWidgetItem *item,
                                                    QWidget *parent) :
   CWEditor(parent),
@@ -119,6 +121,7 @@ bool CWProjectDirectoryEditor::actionOk(void)
 
 void CWProjectDirectoryEditor::actionHelp(void)
 {
+  CHelpSystem::showHelpTopic("project", "DirName");
 }
 
 void CWProjectDirectoryEditor::takeFocus(void)

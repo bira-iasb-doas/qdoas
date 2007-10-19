@@ -46,6 +46,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "CPreferences.h"
 #include "CConfigurationWriter.h"
 #include "CConfigStateMonitor.h"
+#include "CHelpSystem.h"
 
 #include "mediate_types.h"
 
@@ -132,6 +133,9 @@ CWMain::CWMain(QWidget *parent) :
   connect(m_projTree, SIGNAL(signalStartSession(const RefCountPtr<CSession>&)),
           m_controller, SLOT(slotStartSession(const RefCountPtr<CSession>&)));
 
+  // Help system
+  m_helpInterface = CHelpSystem::establishHelpSystem(this); // this is the 'controller'
+
   // Menu and toolbar actions
 
   // File Menu
@@ -199,9 +203,22 @@ CWMain::CWMain(QWidget *parent) :
   QMenu *helpMenu = new QMenu("Help");
 
   // About
+  helpMenu->addAction("Qdoas Manual", this, SLOT(slotQdoasHelp()));
+  // dual help systems ...
+  QSettings &settings = CPreferences::instance()->settings();
+  m_helpInterface->preferLightBrowser(settings.value("LightHelpSys", false).toBool());
+
+  QAction *helpCheck = new QAction("Use lightweight help", this);
+  helpCheck->setCheckable(true);
+  helpCheck->setChecked(m_helpInterface->isLightBrowserPreferred());
+  helpCheck->setEnabled(m_helpInterface->supportsQtAssistant());
+  helpMenu->addAction(helpCheck);
+
   helpMenu->addAction("About Qdoas", this, SLOT(slotAboutQdoas()));
   helpMenu->addSeparator();
   helpMenu->addAction("About Qt", this, SLOT(slotAboutQt()));
+
+  connect(helpCheck, SIGNAL(triggered(bool)), this, SLOT(slotHelpBrowserPreference(bool)));
 
   m_menuBar->addMenu(helpMenu);
 
@@ -267,6 +284,7 @@ CWMain::CWMain(QWidget *parent) :
 
 CWMain::~CWMain()
 {
+  delete m_helpInterface;
 }
 
 void CWMain::closeEvent(QCloseEvent *e)
@@ -282,8 +300,13 @@ void CWMain::closeEvent(QCloseEvent *e)
   // flush write and close ...
   delete CPreferences::instance();
 
-  if (checkStateAndConsiderSaveFile())
+  if (checkStateAndConsiderSaveFile()) {
+    // shutdown the help system
+    delete m_helpInterface;
+    m_helpInterface = NULL;
+
     e->accept();
+  }
 }
 
 bool CWMain::checkStateAndConsiderSaveFile(void)
@@ -541,6 +564,19 @@ void CWMain::slotStateMonitorChanged(bool valid)
   m_saveAction->setEnabled(modified);
   m_saveAsAction->setEnabled(true);
   setWindowModified(modified);
+}
+
+void CWMain::slotQdoasHelp()
+{
+  m_helpInterface->openBrowser();
+}
+
+void CWMain::slotHelpBrowserPreference(bool light)
+{
+  m_helpInterface->preferLightBrowser(light);
+
+  QSettings &settings = CPreferences::instance()->settings();
+  settings.setValue("LightHelpSys", light);
 }
 
 void CWMain::slotAboutQdoas()

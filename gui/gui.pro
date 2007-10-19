@@ -7,6 +7,7 @@ TARGET   = qdoas
 
 unix {
   CONFIG += qt thread debug
+  CONFIG += assistant
   QT = core gui xml
 
   # for trace-write debugging ...
@@ -18,6 +19,10 @@ win32 {
   QT = core gui xml
 }
 
+# Help system to use...
+contains( CONFIG, assistant ) {
+  DEFINES += HELP_QT_ASSISTANT
+}
 #----------------------------------------------
 # Platform dependency ...
 #----------------------------------------------
@@ -93,6 +98,8 @@ SOURCES += CWUserSymbolTree.cpp
 SOURCES += CWAboutDialog.cpp
 SOURCES += CConfigStateMonitor.cpp
 SOURCES += CPreferences.cpp
+SOURCES += CHelpSystem.cpp
+SOURCES += CHelpSystemImpl.cpp
 SOURCES += qdoas.cpp
 #----------------------------------------------
 # Mediator Source files
@@ -162,6 +169,8 @@ HEADERS += CConfigStateMonitor.h
 HEADERS += debugutil.h
 HEADERS += RefCountPtr.h
 HEADERS += CPreferences.h
+HEADERS += CHelpSystem.h
+HEADERS += CHelpSystemImpl.h
 
 #----------------------------------------------
 # Mediator Header files
