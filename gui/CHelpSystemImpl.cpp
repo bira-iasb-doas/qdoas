@@ -126,6 +126,7 @@ CHelpImplTextBrowser::CHelpImplTextBrowser(const QString &helpDir, const QString
   m_helpDir(helpDir),
   m_startPage(startPage)
 {
+  m_helpDir = QDir::toNativeSeparators(m_helpDir);
   // lazy evaluate the browser ...
 }
 
@@ -201,7 +202,10 @@ CBasicHelpBrowser::~CBasicHelpBrowser()
 
 void CBasicHelpBrowser::displayDocument(const QString &url)
 {
-  QMessageBox::information(this, "Url", url);
+  QString msg(url);
+  msg += QFile::exists(url) ? " exists" : "does not exist";
+  QMessageBox::information(this, "Url", msg);
+
   m_browser->setSource(url);
 }
 
