@@ -265,7 +265,7 @@ void CWProjectTabInstrumental::slotFormatChanged(int index)
 }
 
 //--------------------------------------------------------
-// Specific Instrument Editors... TODO
+// Specific Instrument Editors...
 
 static const int cSuggestedColumnZeroWidth = 120; // try and keep editor layout
 static const int cSuggestedColumnTwoWidth  = 100; // consistent
