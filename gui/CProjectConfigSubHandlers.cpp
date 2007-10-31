@@ -417,7 +417,7 @@ bool CProjectRawSpectraSubHandler::start(const QString &element, const QXmlAttri
 
     // expand the name (the directory name)
     name = m_master->pathExpand(name);
-    m_node->addChild(new CProjectConfigDirectory(name, atts.value("filter"),
+    m_node->addChild(new CProjectConfigDirectory(name, atts.value("filters"),
 						 (atts.value("recursive") == "true"), enabled));
   }
   else if (element == "folder") {

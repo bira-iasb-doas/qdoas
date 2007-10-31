@@ -586,6 +586,8 @@ QString CWProjectTree::editInsertDirectory(QTreeWidgetItem *parent, const QStrin
       
     if (directory.exists()) {
       // create a new directory item
+      TRACE("editInsertDirectory " << filters.join(";").toStdString());
+
       int fileCount;
       CSpectraDirectoryItem *dirItem = new CSpectraDirectoryItem(0, directory, filters,
 								 includeSubDirs,
@@ -1816,7 +1818,7 @@ QString CSpectraDirectoryItem::directoryName(void) const
 
 QString CSpectraDirectoryItem::fileFilters(void) const
 {
-  return m_directory.nameFilters().join(";");
+  return m_fileFilters.join(";");
 }
 
 bool CSpectraDirectoryItem::isRecursive(void) const
