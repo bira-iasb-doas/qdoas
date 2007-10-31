@@ -26,6 +26,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "CWProjectTree.h"
 #include "CWProjectDirectoryEditor.h"
+#include "CPreferences.h"
 
 #include "CHelpSystem.h"
 
@@ -136,11 +137,14 @@ void CWProjectDirectoryEditor::slotDirectoryChanged(const QString &text)
 
 void CWProjectDirectoryEditor::slotBrowseButtonClicked()
 {
+  QString dir = CPreferences::instance()->directoryName("RawSpecDir", ".");
+  
   // modal dialog
+  dir = QFileDialog::getExistingDirectory(0, "Select a directory containing spectra files", dir);
 
-  QString dir = QFileDialog::getExistingDirectory(0, "Select a directory containing spectra files",
-                                                  "/home"); // TODO home
-  if (!dir.isEmpty())
+  if (!dir.isEmpty()) {
+    CPreferences::instance()->setDirectoryName("RawSpecDir", dir);
     m_directoryName->setText(dir);
+  }
 }
 
