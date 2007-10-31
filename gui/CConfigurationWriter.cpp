@@ -1456,6 +1456,8 @@ void CConfigurationWriter::writeShiftStretchList(FILE *fp, const shift_stretch_l
       ++k;
     }
   
+    fprintf(fp, "        </shift_stretch>\n");
+
     ++d;
     ++j;
   }
