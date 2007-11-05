@@ -213,8 +213,8 @@ void CNavigationPanel::slotSetEnabled(bool enable)
     // continue playing ... or step to first record
     if (m_playing)
       m_playTimer->start();
-//    else
-//      slotNextClicked();
+    else
+      slotNextClicked();
   }
   else {
     // stop playing ...
