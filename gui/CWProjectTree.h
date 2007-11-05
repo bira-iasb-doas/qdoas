@@ -77,7 +77,8 @@ Q_OBJECT
   QString editRenameAnalysisWindow(QTreeWidgetItem *item, const QString &windowName);
   QString editInsertDirectory(QTreeWidgetItem *parent, const QString &directoryPath,
 			      const QString &fileFilters, bool includeSubDirs, CSpectraDirectoryItem **itemCreated = NULL);
-
+  QString editChangeDirectoryProperties(QTreeWidgetItem *item, const QString &fileFilters, bool includeSubDirs);
+  
   // static methods
 
   static const QIcon& getIcon(int type);
@@ -113,6 +114,7 @@ Q_OBJECT
   void slotRenameFolder();
   void slotInsertFile();
   void slotInsertDirectory();
+  void slotEditDirectory();
   void slotCreateAnalysisWindow();
   void slotRenameAnalysisWindow();
   void slotRunAnalysis();
@@ -223,6 +225,7 @@ class CSpectraDirectoryItem : public CProjectTreeItem
   virtual QTreeWidgetItem* clone() const;
 
   void refreshBranch(void);
+  void changeProperties(const QStringList &fileFilters, bool includeSubDirectories);
 
   QString directoryName(void) const;
   QString fileFilters(void) const;

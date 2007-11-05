@@ -35,6 +35,12 @@ CWProjectDirectoryEditor::CWProjectDirectoryEditor(CWProjectTree *projectTree, Q
   CWEditor(parent),
   m_projectTree(projectTree)
 {
+  CSpectraDirectoryItem *dirItem = NULL;
+  if (item->type() == cSpectraDirectoryItemType) {
+    // editing an existing item ...
+    dirItem = dynamic_cast<CSpectraDirectoryItem*>(item);
+  }
+
   QGridLayout *mainLayout = new QGridLayout(this);
   mainLayout->setMargin(50);
 
@@ -62,7 +68,19 @@ CWProjectDirectoryEditor::CWProjectDirectoryEditor(CWProjectTree *projectTree, Q
   mainLayout->setColumnStretch(4, 1);
   mainLayout->setRowStretch(3, 1);
 
-  m_captionStr = "Insert new directory in ";
+  if (dirItem != NULL) {
+    // editing an existing item ...
+    m_directoryName->setText(dirItem->directoryName());
+    m_directoryName->setReadOnly(true); // readonly state is the indactor for edit (as opposed to add) mode.
+    m_directoryName->setEnabled(false);
+    browseButton->setEnabled(false);
+    m_fileFilters->setText(dirItem->fileFilters());
+    m_recursiveCheckBox->setCheckState(dirItem->isRecursive() ? Qt::Checked : Qt::Unchecked);
+
+    m_captionStr = "Edit directory ";
+  }
+  else
+    m_captionStr = "Insert new directory in ";
 
   m_contextTag.clear();
 
@@ -84,6 +102,8 @@ CWProjectDirectoryEditor::CWProjectDirectoryEditor(CWProjectTree *projectTree, Q
   connect(m_directoryName, SIGNAL(textChanged(const QString &)),
           this, SLOT(slotDirectoryChanged(const QString &)));
 
+
+  notifyAcceptActionOk(dirItem != NULL);
 }
 
 CWProjectDirectoryEditor::~CWProjectDirectoryEditor()
@@ -102,10 +122,16 @@ bool CWProjectDirectoryEditor::actionOk(void)
   QTreeWidgetItem *item = m_projectTree->locateByPath(m_path);
   if (item) {
     // still a valid point in the tree
-
-    msg = m_projectTree->editInsertDirectory(item, m_directoryName->text(),
-					     m_fileFilters->text(),
-					     (m_recursiveCheckBox->checkState() == Qt::Checked));
+    if (m_directoryName->isReadOnly()) {
+      msg = m_projectTree->editChangeDirectoryProperties(item, m_fileFilters->text(),
+							 (m_recursiveCheckBox->checkState() == Qt::Checked));
+    }
+    else {
+      msg = m_projectTree->editInsertDirectory(item, m_directoryName->text(),
+					       m_fileFilters->text(),
+					       (m_recursiveCheckBox->checkState() == Qt::Checked));
+    }
+    
     if (msg.isNull())
       return true;
 

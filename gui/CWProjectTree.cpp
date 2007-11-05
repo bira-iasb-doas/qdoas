@@ -176,6 +176,7 @@ void CWProjectTree::contextMenuEvent(QContextMenuEvent *e)
 
       menu.addAction(projItem->isEnabled() ? "Disable" : "Enable", this,
                      SLOT(slotToggleEnable()));
+      menu.addAction("Edit...", this, SLOT(slotEditDirectory()));
       menu.addAction("Refresh", this, SLOT(slotRefreshDirectories()));
 
       menu.addSeparator();
@@ -624,6 +625,36 @@ QString CWProjectTree::editInsertDirectory(QTreeWidgetItem *parent, const QStrin
   return QString();
 }
 
+QString CWProjectTree::editChangeDirectoryProperties(QTreeWidgetItem *item,
+						     const QString &fileFilters, bool includeSubDirs)
+{
+  if (item && item->type() == cSpectraDirectoryItemType) {
+    // split the filter text into a list of file filter strings - an empty list means the filter is '*'
+    QStringList filters;
+    
+    if (!fileFilters.isEmpty()) {
+      if (fileFilters.contains(';')) {
+	// split on ';' - NOTE whitespace is significant
+	filters = fileFilters.split(';', QString::SkipEmptyParts);
+      }
+      else {
+	// split on whitespace
+	filters = fileFilters.split(QRegExp("\\s+"));
+      }
+    }
+
+    CSpectraDirectoryItem *dirItem = dynamic_cast<CSpectraDirectoryItem*>(item);
+    if (dirItem != NULL) {
+      dirItem->changeProperties(filters, includeSubDirs);
+      emit signalSpectraTreeChanged();
+      return QString(); // success
+    }
+
+  }
+    
+  return QString("Not a directory item");
+}
+
 const QIcon& CWProjectTree::getIcon(int type)
 {
   switch (type) {
@@ -1063,6 +1094,21 @@ void CWProjectTree::slotInsertDirectory()
       CWEditor *nameEditor = new  CWProjectDirectoryEditor(this, parent);
       m_activeContext->addEditor(nameEditor);
       
+    }
+  }
+}
+
+void CWProjectTree::slotEditDirectory()
+{
+  // expect selection has one item and it is a
+  // a CSpectraDirectoryItem
+  QList<QTreeWidgetItem*> items = selectedItems();
+  if (items.count() == 1) {
+    QTreeWidgetItem *dirItem = items.front();
+    if (dirItem->type() == cSpectraDirectoryItemType) {
+      
+      CWEditor *nameEditor = new  CWProjectDirectoryEditor(this, dirItem);
+      m_activeContext->addEditor(nameEditor);
     }
   }
 }
@@ -1851,6 +1897,17 @@ void CSpectraDirectoryItem::refreshBranch(void)
   discardBranch();
   loadBranch();
 }
+
+void CSpectraDirectoryItem::changeProperties(const QStringList &fileFilters, bool includeSubDirectories)
+{
+  // change the properties
+  m_fileFilters = fileFilters;
+  m_includeSubDirectories = includeSubDirectories;
+
+  // reload ...
+  discardBranch();
+  loadBranch();
+}  
 
 QString CSpectraDirectoryItem::directoryName(void) const
 {
