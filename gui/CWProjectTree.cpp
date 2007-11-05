@@ -146,6 +146,8 @@ void CWProjectTree::contextMenuEvent(QContextMenuEvent *e)
   //------------------------------
   // Cut/Copy/Paste/Delete
   //------------------------------
+  // properties
+  //------------------------------
   // Hide/Show Details
   //------------------------------
 
@@ -189,6 +191,8 @@ void CWProjectTree::contextMenuEvent(QContextMenuEvent *e)
       menu.addAction("Copy", this, SLOT(slotCopySelection()));
       menu.addAction("Paste Below", this, SLOT(slotPasteSpectraAsSiblings()))->setEnabled(enablePaste);
       menu.addAction("Delete", this, SLOT(slotDeleteSelection()))->setEnabled(enableCutDel);
+      menu.addSeparator();
+      menu.addAction("Properties", this, SLOT(slotShowPropertiesSelection()));
     }
     else if (itemType == cSpectraFolderItemType) {
       // A Folder Item
@@ -234,6 +238,8 @@ void CWProjectTree::contextMenuEvent(QContextMenuEvent *e)
       menu.addAction("Copy", this, SLOT(slotCopySelection()));
       menu.addAction("Paste Below", this, SLOT(slotPasteSpectraAsSiblings()))->setEnabled(enablePaste);
       menu.addAction("Delete", this, SLOT(slotDeleteSelection()))->setEnabled(enableCutDel);
+      menu.addSeparator();
+      menu.addAction("Properties", this, SLOT(slotShowPropertiesSelection()));
     }
     else if (itemType == cSpectraBranchItemType) {
       // A Spectra Branch (Raw Spectra)
@@ -1546,6 +1552,43 @@ void CWProjectTree::slotPasteSpectraAsChildren()
   emit signalSpectraTreeChanged();
 }
 
+void CWProjectTree::slotShowPropertiesSelection()
+{
+  QList<QTreeWidgetItem*> items = selectedItems();
+  if (items.count() != 1) return;
+  
+  int itemType = items.front()->type();
+  
+  if (itemType == cSpectraDirectoryItemType) {
+    CSpectraDirectoryItem *dirItem = dynamic_cast<CSpectraDirectoryItem*>(items.front());
+    if (dirItem) {
+      // format the information into a message string
+      QString msg = dirItem->directoryName();
+      msg += "\nFile Filters\t: ";
+      msg += dirItem->fileFilters();
+      msg += "\nIncl. SubDirs\t: ";
+      if (dirItem->isRecursive())
+	msg += "Yes";
+      else
+	msg += "No";
+      
+      QMessageBox::information(this, "Directory Properties", msg);
+    }
+  }
+  else if (itemType == cSpectraFileItemType) {
+    CSpectraFileItem *fileItem = dynamic_cast<CSpectraFileItem*>(items.front());
+    if (fileItem) {
+      QString msg = fileItem->fullFileName();
+      msg +=      "\nSize\t: ";
+      msg += fileItem->fileSizeInBytes();
+      msg +=      " bytes\nModified\t: ";
+      msg += fileItem->dateLastModified();
+      
+      QMessageBox::information(this, "File Properties", msg);
+    }
+  }
+}
+
 void CWProjectTree::slotSessionRunning(bool running)
 {
   m_sessionActive = running;
@@ -1902,6 +1945,23 @@ CSpectraFileItem::CSpectraFileItem(const CSpectraFileItem &other) :
 
 CSpectraFileItem::~CSpectraFileItem()
 {
+}
+
+QString CSpectraFileItem::fullFileName(void) const
+{
+  return m_fileInfo.absoluteFilePath();
+}
+
+QString CSpectraFileItem::dateLastModified(void) const
+{
+  return m_fileInfo.lastModified().toString();
+}
+
+QString CSpectraFileItem::fileSizeInBytes(void) const
+{
+  QString tmp;
+  tmp.setNum(m_fileInfo.size());
+  return tmp;
 }
 
 QVariant CSpectraFileItem::data(int column, int role) const

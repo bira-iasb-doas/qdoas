@@ -126,6 +126,7 @@ Q_OBJECT
   void slotPasteAnalysisWindows();
   void slotPasteSpectraAsSiblings();
   void slotPasteSpectraAsChildren();
+  void slotShowPropertiesSelection();
   void slotSessionRunning(bool running);
 
  signals:
@@ -245,6 +246,10 @@ class CSpectraFileItem : public CProjectTreeItem
   CSpectraFileItem(QTreeWidgetItem *parent, const QFileInfo &fileInfo);
   CSpectraFileItem(const CSpectraFileItem &other);
   virtual ~CSpectraFileItem();
+
+  QString fullFileName(void) const;
+  QString dateLastModified(void) const;
+  QString fileSizeInBytes(void) const;
 
   virtual QVariant data(int column, int role) const;
   virtual QTreeWidgetItem* clone() const;
