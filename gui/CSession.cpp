@@ -289,6 +289,12 @@ const mediate_project_t* CSessionIterator::project(void) const
   return &((m_mapIt->second)->m_project);
 }
 
+const mediate_analysis_window_t* CSessionIterator::analysisWindowList(int &nWindows) const
+{
+  nWindows = (m_mapIt->second)->m_nWindows;
+  return ((m_mapIt->second)->m_windows);
+}
+
 bool CSessionIterator::operator==(const CSessionIterator &rhs) const
 {
   return (m_session == rhs.m_session && m_mapIt == rhs.m_mapIt && m_fileIndex == rhs.m_fileIndex);

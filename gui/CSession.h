@@ -117,6 +117,7 @@ class CSessionIterator
 
   const QFileInfo& file(void) const;
   const mediate_project_t* project(void) const;
+  const mediate_analysis_window_t* analysisWindowList(int &nWindows) const;
 
   bool operator==(const CSessionIterator &rhs) const;
   bool operator!=(const CSessionIterator &rhs) const;

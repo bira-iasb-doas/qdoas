@@ -27,40 +27,42 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 class CEngineThread;
 
-const int cEngineRequestCompoundType                 = 1000;
-const int cEngineRequestSetSymbolsType               = 1001;
-const int cEngineRequestSetSitesType                 = 1002;
-const int cEngineRequestSetProjectType               = 1003;
-const int cEngineRequestBeginBrowseFileType          = 1004;
-const int cEngineRequestBrowseNextRecordType         = 1005;
-const int cEngineRequestBrowseSpecificRecordType     = 1006;
-const int cEngineRequestEndBrowseFileType            = 1007;
-const int cEngineRequestBeginAnalyseFileType         = 1008;
-const int cEngineRequestAnalyseNextRecordType        = 1009;
-const int cEngineRequestAnalyseSpecificRecordType    = 1010;
-const int cEngineRequestEndAnalyseFileType           = 1011;
-const int cEngineRequestBeginCalibrateFileType       = 1012;
-const int cEngineRequestCalibrateNextRecordType      = 1013;
-const int cEngineRequestCalibrateSpecificRecordType  = 1014;
-const int cEngineRequestEndCalibrateFileType         = 1015;
+enum eRequestType {
+  cEngineRequestCompoundType,
+  cEngineRequestSetSymbolsType,
+  cEngineRequestSetSitesType,
+  cEngineRequestSetProjectType,
+  cEngineRequestSetAnalysisWindowType,
+  cEngineRequestBeginBrowseFileType,
+  cEngineRequestBrowseNextRecordType,
+  cEngineRequestBrowseSpecificRecordType,
+  cEngineRequestEndBrowseFileType,
+  cEngineRequestBeginAnalyseFileType,
+  cEngineRequestAnalyseNextRecordType,
+  cEngineRequestAnalyseSpecificRecordType,
+  cEngineRequestEndAnalyseFileType,
+  cEngineRequestBeginCalibrateFileType,
+  cEngineRequestCalibrateNextRecordType,
+  cEngineRequestCalibrateSpecificRecordType,
+  cEngineRequestEndCalibrateFileType };
 
 //------------------------------------------------------------
 
 class CEngineRequest
 {
  public:
-  CEngineRequest(int type);
+  CEngineRequest(enum eRequestType type);
   virtual ~CEngineRequest();
 
   virtual bool process(CEngineThread *engineThread) = 0;
 
-  int type(void) const;
+  enum eRequestType type(void) const;
 
  protected:
-  int m_type;
+  enum eRequestType m_type;
 };
 
-inline int CEngineRequest::type(void) const { return m_type; }
+inline enum eRequestType CEngineRequest::type(void) const { return m_type; }
 
 //------------------------------------------------------------
 
@@ -90,6 +92,21 @@ class CEngineRequestSetProject : public CEngineRequest
 
  private:
   mediate_project_t m_project;
+};
+
+//------------------------------------------------------------
+
+class CEngineRequestSetAnalysisWindows : public CEngineRequest
+{
+ public:
+  CEngineRequestSetAnalysisWindows(const mediate_analysis_window_t *windowList, int nWindows);
+  virtual ~CEngineRequestSetAnalysisWindows();
+
+  virtual bool process(CEngineThread *engineThread);
+
+ private:
+  mediate_analysis_window_t *m_windowList;
+  int m_nWindows;
 };
 
 //------------------------------------------------------------

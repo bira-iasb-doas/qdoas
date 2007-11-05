@@ -26,7 +26,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 //------------------------------------------------------------
 
-CEngineRequest::CEngineRequest(int type) :
+CEngineRequest::CEngineRequest(enum eRequestType type) :
   m_type(type)
 {
 }
@@ -97,6 +97,45 @@ bool CEngineRequestSetProject::process(CEngineThread *engineThread)
   else
     delete resp;
 
+  return (rc == 0);
+}
+
+//------------------------------------------------------------
+
+CEngineRequestSetAnalysisWindows::CEngineRequestSetAnalysisWindows(const mediate_analysis_window_t *windowList, int nWindows) :
+  CEngineRequest(cEngineRequestSetAnalysisWindowType),
+  m_windowList(NULL),
+  m_nWindows(0)
+{
+  // deep copy the data from windowList
+  if (windowList != NULL && nWindows > 0) {
+    m_nWindows = nWindows;
+    m_windowList = new mediate_analysis_window_t[m_nWindows];
+    memcpy(m_windowList, windowList, m_nWindows * sizeof(mediate_analysis_window_t));
+  }
+}
+
+CEngineRequestSetAnalysisWindows::~CEngineRequestSetAnalysisWindows()
+{
+  delete [] m_windowList;
+}
+
+bool CEngineRequestSetAnalysisWindows::process(CEngineThread *engineThread)
+{
+  // process is called from the thread and drives the engine through the
+  // mediator interface.
+
+  CEngineResponse *resp = new CEngineResponseMessage;
+
+  int rc = mediateRequestSetAnalysisWindows(engineThread->engineContext(),
+					    m_nWindows, m_windowList, resp);
+  
+  // no response unless there was an error
+  if (rc == -1)
+    engineThread->respond(resp);
+  else
+    delete resp;
+  
   return (rc == 0);
 }
 

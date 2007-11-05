@@ -276,6 +276,12 @@ void CEngineController::slotNextFile()
       if (m_currentProject != m_currentIt.project()) {
 	m_currentProject = m_currentIt.project();
 	req->addRequest(new CEngineRequestSetProject(m_currentProject));
+	// might alos need to replace the analysis windows
+	if (m_session->mode() == CSession::Calibrate || m_session->mode() == CSession::Analyse) {
+	  int nWindows;
+	  const mediate_analysis_window_t *anlysWinList = m_currentIt.analysisWindowList(nWindows);
+	  req->addRequest(new CEngineRequestSetAnalysisWindows(anlysWinList, nWindows));
+	}
       }
 
       switch (m_session->mode()) {
@@ -488,17 +494,19 @@ void CEngineController::slotStartSession(const RefCountPtr<CSession> &session)
     }
     else {
       // take the site and symbol lists from the session ... and hand responsibility over to request objects.
-      int nSymbols, nSites;
+      int nSymbols, nSites, nWindows;
       mediate_symbol_t *symbols = m_session->takeSymbolList(nSymbols);
       mediate_site_t *sites = m_session->takeSiteList(nSites);
-      
+      const mediate_analysis_window_t *anlysWinList = m_currentIt.analysisWindowList(nWindows);
+
       if (symbols)
 	req->addRequest(new CEngineRequestSetSymbols(symbols, nSymbols));
       if (sites)
 	req->addRequest(new CEngineRequestSetSites(sites, nSites));
 
       req->addRequest(new CEngineRequestSetProject(m_currentProject));
-
+      req->addRequest(new CEngineRequestSetAnalysisWindows(anlysWinList, nWindows));
+      
       if (m_session->mode() == CSession::Analyse) {
 	req->addRequest(new CEngineRequestBeginAnalyseFile(m_currentIt.file().filePath()));
       }
