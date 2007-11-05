@@ -551,6 +551,7 @@ RC ASCII_Read(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,INT localDay,FILE *
       day,mon,year;                                                             // decomposition of the measurement date
   INDEX i;                                                                      // browse items to read
   RC rc;                                                                        // return code
+  int count;
 
   // Initializations
 
@@ -605,52 +606,65 @@ RC ASCII_Read(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,INT localDay,FILE *
        	 {
           pRecord=lineRecord;
 
+	  // locate the start of first value
           for (;(pRecord!=NULL) && (*pRecord==' ');pRecord++);
+	  if (pRecord == NULL) rc = ERROR_ID_FILE_END;
 
           // Read the solar zenith angle
 
-          if (zmFlag)
-           {
+          if (!rc && zmFlag)
+          {
             sscanf(pRecord,"%lf",&pSpecInfo->Zm);
             for (pRecord=strchr(pRecord,' ');(pRecord!=NULL) && (*pRecord==' ');pRecord++);
+	    if (pRecord == NULL) rc = ERROR_ID_FILE_END;
            }
 
-          if (azimFlag)
+          if (!rc && azimFlag)
            {
             sscanf(pRecord,"%f",&pSpecInfo->azimuthViewAngle);
             for (pRecord=strchr(pRecord,' ');(pRecord!=NULL) && (*pRecord==' ');pRecord++);
+	    if (pRecord == NULL) rc = ERROR_ID_FILE_END;
            }
 
-          if (elevFlag)
+          if (!rc && elevFlag)
            {
             sscanf(pRecord,"%f",&pSpecInfo->elevationViewAngle);
             for (pRecord=strchr(pRecord,' ');(pRecord!=NULL) && (*pRecord==' ');pRecord++);
+	    if (pRecord == NULL) rc = ERROR_ID_FILE_END;
            }
 
           // Read the measurement date
 
-          if (dateSaveFlag)
+          if (!rc && dateSaveFlag)
            {
             sscanf(pRecord,"%d/%d/%d",&day,&mon,&year);
             for (pRecord=strchr(pRecord,' ');(pRecord!=NULL) && (*pRecord==' ');pRecord++);
+	    if (pRecord == NULL) rc = ERROR_ID_FILE_END;
            }
 
           // Read the measurement time
 
-          if (timeFlag)
+          if (!rc && timeFlag)
            {
             sscanf(pRecord,"%lf",&pSpecInfo->TimeDec);
             for (pRecord=strchr(pRecord,' ');(pRecord!=NULL) && (*pRecord==' ');pRecord++);
+	    if (pRecord == NULL) rc = ERROR_ID_FILE_END;
            }
 
           // Read the spectrum
-
-          for (i=0;(i<NDET) && !rc && (pRecord-lineRecord<MAX_LINE_LENGTH);i++)
-           {
-            sscanf(pRecord,"%lf",&spectrum[i]);
-            for (pRecord=strchr(pRecord,' ');(pRecord!=NULL) && (*pRecord==' ');pRecord++);
-           }
-       	 }
+	  
+	  if (!rc)
+	   {
+	    for (i=0;(i<NDET) && (pRecord != NULL); ++i)
+	     {
+              sscanf(pRecord,"%lf",&spectrum[i]);
+	      for (pRecord=strchr(pRecord,' ');(pRecord!=NULL) && (*pRecord==' ');pRecord++);
+	     }
+	    // the value of pRecord must be NULL and i is NDET if all data in the line was read
+	    if (pRecord != NULL || i != NDET)
+	      rc = ERROR_ID_FILE_END;
+	   }
+	 }
        }
      }
 
@@ -662,62 +676,90 @@ RC ASCII_Read(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,INT localDay,FILE *
      {
       // Read the solar zenith angle
 
+      count = 0;
+      if (zmFlag) ++count;
+      if (azimFlag) ++count;
+      if (elevFlag) ++count;
 
-      if (zmFlag || azimFlag || elevFlag)
+      if (count)
        {
         while (fgets(line,MAX_ITEM_TEXT_LEN,specFp) && ((strchr(line,';')!=NULL) || (strchr(line,'*')!=NULL)));
         pRecord=line;
+	// locate the start of the first value
+	for (;(pRecord!=NULL) && (*pRecord==' ');pRecord++);
 
-        if (zmFlag)
+        if (zmFlag && (pRecord != NULL))
          {
-          sscanf(pRecord,"%lf",&pSpecInfo->Zm);
-          for (pRecord=strchr(pRecord,' ');(pRecord!=NULL) && (*pRecord==' ');pRecord++);
+	   if (sscanf(pRecord,"%lf",&pSpecInfo->Zm) == 1) --count;
+	   for (pRecord=strchr(pRecord,' ');(pRecord!=NULL) && (*pRecord==' ');pRecord++);
          }
 
-        if (azimFlag && (pRecord!=NULL))
+        if (azimFlag && (pRecord != NULL))
          {
-          sscanf(pRecord,"%f",&pSpecInfo->azimuthViewAngle);
-          for (pRecord=strchr(pRecord,' ');(pRecord!=NULL) && (*pRecord==' ');pRecord++);
+	   if (sscanf(pRecord,"%f",&pSpecInfo->azimuthViewAngle) == 1) --count;
+	   for (pRecord=strchr(pRecord,' ');(pRecord!=NULL) && (*pRecord==' ');pRecord++);
          }
 
-        if (elevFlag && (pRecord!=NULL))
+        if (elevFlag && (pRecord != NULL))
          {
-          sscanf(pRecord,"%f",&pSpecInfo->elevationViewAngle);
-          for (pRecord=strchr(pRecord,' ');(pRecord!=NULL) && (*pRecord==' ');pRecord++);
+	   if (sscanf(pRecord,"%f",&pSpecInfo->elevationViewAngle) == 1) --count;
+	   for (pRecord=strchr(pRecord,' ');(pRecord!=NULL) && (*pRecord==' ');pRecord++);
          }
+
+	// should be at the end of the line and read ALL of the data
+	if (pRecord != NULL || count) rc = ERROR_ID_FILE_END;
        }
 
       // Read the measurement date
 
-      if (dateSaveFlag)
+      if (!rc && dateSaveFlag)
        {
         while (fgets(line,MAX_ITEM_TEXT_LEN,specFp) && ((strchr(line,';')!=NULL) || (strchr(line,'*')!=NULL)));
-        sscanf(line,"%d/%d/%d",&day,&mon,&year);
+        if (sscanf(line,"%d/%d/%d",&day,&mon,&year) != 3) rc = ERROR_ID_FILE_END;
        }
 
       // Read the measurement time
 
-      if (timeFlag)
+      if (!rc && timeFlag)
        {
         while (fgets(line,MAX_ITEM_TEXT_LEN,specFp) && ((strchr(line,';')!=NULL) || (strchr(line,'*')!=NULL)));
-        sscanf(line,"%lf",&pSpecInfo->TimeDec);
+        if (sscanf(line,"%lf",&pSpecInfo->TimeDec) != 1) rc = ERROR_ID_FILE_END;
        }
 
       // Read the spectrum and if selected, the wavelength calibration
-
-      for (i=0;(i<NDET) && !rc;)
-       if (!fgets(line,MAX_ITEM_TEXT_LEN,specFp))
-        rc=ERROR_SetLast("ASCII_Read",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pSpecInfo->fileName);
-       else if ((strchr(line,';')==NULL) && (strchr(line,'*')==NULL))
-        {
-         if (lembdaFlag)
-          sscanf(line,"%lf %lf",&lembda[i],&spectrum[i]);
-         else
-          sscanf(line,"%lf",&spectrum[i]);
-
-         i++;
-        }
-
+      if (!rc)
+      {
+	if (lembdaFlag) // wavelength and spectrum
+	{
+	  for (i=0;(i<NDET) && !rc; )
+	  {
+	    if (!fgets(line,MAX_ITEM_TEXT_LEN,specFp))
+	    {
+	      rc=ERROR_SetLast("ASCII_Read",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pSpecInfo->fileName);
+	    }
+	    else if ((strchr(line,';')==NULL) && (strchr(line,'*')==NULL))
+	    {
+	      if (sscanf(line,"%lf %lf",&lembda[i],&spectrum[i]) != 2) rc = ERROR_ID_FILE_END;
+	      ++i;
+	    }
+	  }
+	}
+	else // just spectrum
+	{
+	  for (i=0;(i<NDET) && !rc; )
+	  {
+	    if (!fgets(line,MAX_ITEM_TEXT_LEN,specFp))
+	    {
+	      rc=ERROR_SetLast("ASCII_Read",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pSpecInfo->fileName);
+	    }
+	    else if ((strchr(line,';')==NULL) && (strchr(line,'*')==NULL))
+	      {
+	      if (sscanf(line,"%lf",&spectrum[i]) != 1) rc = ERROR_ID_FILE_END;
+	      ++i;
+	    }
+	  }
+	}
+      }
 
       // TEST NOVAC !!!
 

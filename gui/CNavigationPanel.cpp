@@ -210,9 +210,11 @@ void CNavigationPanel::slotSetEnabled(bool enable)
   m_stopBtn->setEnabled(groupActive);
 
   if (enable) {
-    // continue playing ...
+    // continue playing ... or step to first record
     if (m_playing)
       m_playTimer->start();
+//    else
+//      slotNextClicked();
   }
   else {
     // stop playing ...
