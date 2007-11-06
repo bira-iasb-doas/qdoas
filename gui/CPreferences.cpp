@@ -231,6 +231,29 @@ void CPreferences::setPlotColour(const QString &key, const QColor &colour)
   m_settings->endGroup();  
 }
 
+int CPreferences::plotLayout(const QString &key, int fallback) const
+{
+  m_settings->beginGroup("PlotProperties");
+  
+  QVariant v = m_settings->value(key);
+  if (v.isValid())
+    fallback = v.toInt();
+    
+  m_settings->endGroup();
+
+  return fallback;
+}
+
+void CPreferences::setPlotLayout(const QString &key, int layoutValue)
+{
+  m_settings->beginGroup("PlotProperties");
+  
+  QVariant v(layoutValue);
+  m_settings->setValue(key, v);
+
+  m_settings->endGroup();  
+}
+
 
 QString CPreferences::baseName(const QString &fileName)
 {

@@ -59,6 +59,9 @@ class CPreferences
   QColor plotColour(const QString &key, const QColor &fallback = QColor()) const;
   void setPlotColour(const QString &key, const QColor &colour);
 
+  int plotLayout(const QString &key, int fallback) const;
+  void setPlotLayout(const QString &key, int layoutValue);
+
   // for general stuff just get a handle to the settings
   QSettings& settings(void);
 

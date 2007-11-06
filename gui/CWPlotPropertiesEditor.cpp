@@ -26,6 +26,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QColorDialog>
 #include <QPushButton>
 #include <QSpinBox>
+#include <QGroupBox>
 
 #include "CWPlotPropertiesEditor.h"
 #include "CWPlotRegion.h"
@@ -103,77 +104,102 @@ CWPlotPropertiesEditor::CWPlotPropertiesEditor(CWPlotRegion *plotRegion, QWidget
   m_plotRegion(plotRegion)
 {
   QSpinBox *spinBox;
-
-  int row = 0;
+  int row;
 
   QGridLayout *mainLayout = new QGridLayout(this);
   mainLayout->setMargin(50);
+
+  QGroupBox *colourGroup = new QGroupBox("Colour/Line Width", this);
+
+  QGridLayout *colourLayout = new QGridLayout(colourGroup);
+
+  row = 0;
 
   const CPlotProperties &prop = m_plotRegion->properties();
   m_bgColour = prop.backgroundColour();
 
   // row 0 - Spectrum
-  mainLayout->addWidget(new QLabel("Spectrum", this), row, 1);
-  m_spectrumSample = new CWPlotPropertySample(prop.pen(PlotDataType_Spectrum), m_bgColour, this);
-  mainLayout->addWidget(m_spectrumSample, row, 2);
-  spinBox = new QSpinBox(this);
+  colourLayout->addWidget(new QLabel("Spectrum"), row, 0);
+  m_spectrumSample = new CWPlotPropertySample(prop.pen(PlotDataType_Spectrum), m_bgColour);
+  colourLayout->addWidget(m_spectrumSample, row, 1);
+  spinBox = new QSpinBox;
   spinBox->setRange(0, 5);
   spinBox->setValue(prop.pen(PlotDataType_Spectrum).width());
-  mainLayout->addWidget(spinBox, row, 3);
+  colourLayout->addWidget(spinBox, row, 2);
   connect(spinBox, SIGNAL(valueChanged(int)), m_spectrumSample, SLOT(slotSetPenWidth(int)));
   ++row;
 
   // row 1 - Fits
-  mainLayout->addWidget(new QLabel("Fits", this), row, 1);
-  m_fitSample = new CWPlotPropertySample(prop.pen(PlotDataType_Fit), m_bgColour, this);
-  mainLayout->addWidget(m_fitSample, row, 2);
-  spinBox = new QSpinBox(this);
+  colourLayout->addWidget(new QLabel("Fits"), row, 0);
+  m_fitSample = new CWPlotPropertySample(prop.pen(PlotDataType_Fit), m_bgColour);
+  colourLayout->addWidget(m_fitSample, row, 1);
+  spinBox = new QSpinBox;
   spinBox->setRange(0, 5);
   spinBox->setValue(prop.pen(PlotDataType_Fit).width());
-  mainLayout->addWidget(spinBox, row, 3);
+  colourLayout->addWidget(spinBox, row, 2);
   connect(spinBox, SIGNAL(valueChanged(int)), m_fitSample, SLOT(slotSetPenWidth(int)));
   ++row;
 
   // row 2 - Shift
-  mainLayout->addWidget(new QLabel("Shift", this), row, 1);
-  m_shiftSample = new CWPlotPropertySample(prop.pen(PlotDataType_Shift), m_bgColour, this);
-  mainLayout->addWidget(m_shiftSample, row, 2);
-  spinBox = new QSpinBox(this);
+  colourLayout->addWidget(new QLabel("Shift"), row, 0);
+  m_shiftSample = new CWPlotPropertySample(prop.pen(PlotDataType_Shift), m_bgColour);
+  colourLayout->addWidget(m_shiftSample, row, 1);
+  spinBox = new QSpinBox;
   spinBox->setRange(0, 5);
   spinBox->setValue(prop.pen(PlotDataType_Shift).width());
-  mainLayout->addWidget(spinBox, row, 3);
+  colourLayout->addWidget(spinBox, row, 2);
   connect(spinBox, SIGNAL(valueChanged(int)), m_shiftSample, SLOT(slotSetPenWidth(int)));
   ++row;
 
   // row 3 - FWHM
-  mainLayout->addWidget(new QLabel("FWHM", this), row, 1);
-  m_fwhmSample = new CWPlotPropertySample(prop.pen(PlotDataType_Fwhm), m_bgColour, this);
-  mainLayout->addWidget(m_fwhmSample, row, 2);
-  spinBox = new QSpinBox(this);
+  colourLayout->addWidget(new QLabel("FWHM"), row, 0);
+  m_fwhmSample = new CWPlotPropertySample(prop.pen(PlotDataType_Fwhm), m_bgColour);
+  colourLayout->addWidget(m_fwhmSample, row, 1);
+  spinBox = new QSpinBox;
   spinBox->setRange(0, 5);
   spinBox->setValue(prop.pen(PlotDataType_Fwhm).width());
-  mainLayout->addWidget(spinBox, row, 3);
+  colourLayout->addWidget(spinBox, row, 2);
   connect(spinBox, SIGNAL(valueChanged(int)), m_fwhmSample, SLOT(slotSetPenWidth(int)));
   ++row;
 
   // row 4 - Points
-  mainLayout->addWidget(new QLabel("Points", this), row, 1);
-  m_pointsSample = new CWPlotPropertySample(prop.pen(PlotDataType_Points), m_bgColour, this);
-  mainLayout->addWidget(m_pointsSample, row, 2);
-  spinBox = new QSpinBox(this);
+  colourLayout->addWidget(new QLabel("Points"), row, 0);
+  m_pointsSample = new CWPlotPropertySample(prop.pen(PlotDataType_Points), m_bgColour);
+  colourLayout->addWidget(m_pointsSample, row, 1);
+  spinBox = new QSpinBox;
   spinBox->setRange(0, 5);
   spinBox->setValue(prop.pen(PlotDataType_Points).width());
-  mainLayout->addWidget(spinBox, row, 3);
+  colourLayout->addWidget(spinBox, row, 2);
   connect(spinBox, SIGNAL(valueChanged(int)), m_pointsSample, SLOT(slotSetPenWidth(int)));
   ++row;
 
-  QPushButton *bgColourBtn = new QPushButton("Background Colour", this);
-  mainLayout->addWidget(bgColourBtn, row, 1, 1, 3);
+  // row 5 - background colour
+  QPushButton *bgColourBtn = new QPushButton("Background Colour");
+  colourLayout->addWidget(bgColourBtn, row, 0, 1, 3);
+
+  mainLayout->addWidget(colourGroup, 0, 1);
+
+  // Layout group ...
+  
+  QGroupBox *layoutGroup = new QGroupBox("Layout", this);
+
+  QGridLayout *layoutLayout = new QGridLayout(layoutGroup);
+
+  row = 0;
+
+  layoutLayout->addWidget(new QLabel("Plot Columns\n(Max. per page)"), row, 0);
+  m_plotColumnsSpin = new QSpinBox;
+  m_plotColumnsSpin->setRange(1, 6);
+  m_plotColumnsSpin->setValue(prop.columns());
+  layoutLayout->addWidget(m_plotColumnsSpin, row, 1);
+  ++row;
+
+  layoutLayout->setRowStretch(row, 1);
+
+  mainLayout->addWidget(layoutGroup, 0, 2);
 
   mainLayout->setColumnStretch(0, 1);
-  mainLayout->setColumnStretch(4, 1);
-  
-  mainLayout->setRowStretch(row, 1);
+  mainLayout->setColumnStretch(3, 1);
 
   // Update the caption and create a context tag 
   m_captionStr = "Edit Plot Properties";
@@ -191,7 +217,7 @@ CWPlotPropertiesEditor::~CWPlotPropertiesEditor()
 
 bool CWPlotPropertiesEditor::actionOk(void)
 {
-  // set the properties in the plot region .... TODO
+  // set the properties in the plot region.
   CPlotProperties prop = m_plotRegion->properties();
 
   // get pens from the samples ...
@@ -202,6 +228,8 @@ bool CWPlotPropertiesEditor::actionOk(void)
   prop.setPen(PlotDataType_Points, m_pointsSample->pen());
 
   prop.setBackgroundColour(m_bgColour);
+
+  prop.setColumns(m_plotColumnsSpin->value());
 
   m_plotRegion->setProperties(prop);
 

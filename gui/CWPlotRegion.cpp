@@ -55,6 +55,8 @@ CWPlotRegion::CWPlotRegion(QWidget *parent) :
   m_properties.setPen(PlotDataType_Points, pref->plotPen("Points", pen));
 
   m_properties.setBackgroundColour(pref->plotColour("Background", colour));
+
+  m_properties.setColumns(pref->plotLayout("Columns", 1));
 }
 
 CWPlotRegion::~CWPlotRegion()
@@ -80,12 +82,12 @@ void CWPlotRegion::addPage(const RefCountConstPtr<CPlotPageData> &page)
   // else just quietly allow page to be discarded
 }
 
-void CWPlotRegion::displayPage(int pageNumber, int columns)
+void CWPlotRegion::displayPage(int pageNumber)
 {
   std::map< int,RefCountConstPtr<CPlotPageData> >::iterator it = m_pageMap.find(pageNumber);
   if (it != m_pageMap.end()) {
     m_activePageNumber = pageNumber;
-    m_plotPage = new CWPlotPage(m_properties, columns, it->second);
+    m_plotPage = new CWPlotPage(m_properties, it->second);
     setWidget(m_plotPage); // takes care of deleting the old widget
     m_plotPage->layoutPlots(m_visibleSize);
     m_plotPage->show();
@@ -141,6 +143,8 @@ void CWPlotRegion::savePreferences(void) const
   pref->setPlotPen("Points", m_properties.pen(PlotDataType_Points));
 
   pref->setPlotColour("Background", m_properties.backgroundColour());
+
+  pref->setPlotLayout("Columns", m_properties.columns());
 }
 
 void CWPlotRegion::resizeEvent(QResizeEvent *e)

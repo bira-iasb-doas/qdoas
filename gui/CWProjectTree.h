@@ -120,7 +120,6 @@ Q_OBJECT
   void slotRunAnalysis();
   void slotBrowseSpectra();
   void slotDeleteSelection();
-  void slotDeleteAllSpectra();
   void slotCutSelection();
   void slotCopySelection();
   void slotPaste();

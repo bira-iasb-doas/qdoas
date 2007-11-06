@@ -50,8 +50,8 @@ class CWPlot : public QwtPlot
 class CWPlotPage : public QFrame
 {
  public:
-  CWPlotPage(const CPlotProperties &plotProperties, int columns, QWidget *parent = 0);
-  CWPlotPage(const CPlotProperties &plotProperties, int columns,
+  CWPlotPage(const CPlotProperties &plotProperties, QWidget *parent = 0);
+  CWPlotPage(const CPlotProperties &plotProperties,
 	     const RefCountConstPtr<CPlotPageData> &page, QWidget *parent = 0);
   virtual ~CWPlotPage();
 
@@ -63,7 +63,6 @@ class CWPlotPage : public QFrame
 
  private:
   const CPlotProperties &m_plotProperties;
-  int m_columns;
   QList<CWPlot*> m_plots;
 };
 

@@ -175,22 +175,17 @@ void CWPlot::keyPressEvent(QKeyEvent *e)
   }
 }
 
-CWPlotPage::CWPlotPage(const CPlotProperties &plotProperties, int columns, QWidget *parent) :
+CWPlotPage::CWPlotPage(const CPlotProperties &plotProperties, QWidget *parent) :
   QFrame(parent),
-  m_plotProperties(plotProperties),
-  m_columns(columns)
+  m_plotProperties(plotProperties)
 {
-  if (m_columns < 1) m_columns = 1;
 }
 
-CWPlotPage::CWPlotPage(const CPlotProperties &plotProperties, int columns,
+CWPlotPage::CWPlotPage(const CPlotProperties &plotProperties,
 		       const RefCountConstPtr<CPlotPageData> &page, QWidget *parent) :
   QFrame(parent),
-  m_plotProperties(plotProperties),
-  m_columns(columns)
+  m_plotProperties(plotProperties)
 {
-  if (m_columns < 1) m_columns = 1;
-
   if (page != 0) {
 
     int nPlots = page->size();
@@ -243,7 +238,7 @@ void CWPlotPage::layoutPlots(const QSize &visibleSize)
   else {
     // calculate the size that fits nicely to the full width
     // make a local change to columns if too few plots to fill them...
-    columns = (m_plots.size() < m_columns) ? m_plots.size() : m_columns;
+    columns = (m_plots.size() < m_plotProperties.columns()) ? m_plots.size() : m_plotProperties.columns();
     
 
     unitSize.setWidth((visibleSize.width() - cBorderSize * (columns+1)) / columns);
@@ -270,7 +265,7 @@ void CWPlotPage::layoutPlots(const QSize &visibleSize)
     (*it)->move(col * fitWidth + cBorderSize, row * fitHeight + cBorderSize);
     (*it)->resize(unitSize);
     (*it)->show();
-    if (++col == m_columns) {
+    if (++col == m_plotProperties.columns()) {
       col = 0;
       ++row;
     }

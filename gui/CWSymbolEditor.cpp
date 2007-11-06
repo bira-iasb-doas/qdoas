@@ -21,6 +21,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QGridLayout>
 #include <QLabel>
 #include <QMessageBox>
+#include <QRegExpValidator>
 
 #include "CWSymbolEditor.h"
 #include "CWorkSpace.h"
@@ -42,6 +43,10 @@ CWSymbolEditor::CWSymbolEditor(const QString &symbolName, const QString &descrip
   mainLayout->addWidget(new QLabel("Symbol Name", this), 0, 1);
   m_symbolName = new QLineEdit(this);
   m_symbolName->setMaxLength(SYMBOL_NAME_BUFFER_LENGTH - 1);
+  
+  // limit the possible input
+  m_symbolName->setValidator(new QRegExpValidator(QRegExp("[A-Za-z][A-Za-z0-9\\-_]*"), m_symbolName));
+
   if (modifying) {
     // can modify only the description - the enabled state of the symbolName edit is
     // used in the actionOk method to see if the action will create or modify the symbol  

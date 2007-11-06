@@ -17,7 +17,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#include <cstdio> // TODO
 
 #include <QGridLayout>
 #include <QDoubleValidator>
@@ -90,7 +89,7 @@ CWSiteEditor::CWSiteEditor(QTreeWidgetItem *editItem, QWidget *parent) :
     QString obsSiteStr = editItem->text(0);
 
     m_siteName->setText(obsSiteStr);
-    m_siteName->setReadOnly(true); // cant change the site name ...
+    m_siteName->setEnabled(false); // cant change the site name ...
 
     // Update the caption and create a context tag 
     m_captionStr = "Modifying properties of observation site ";

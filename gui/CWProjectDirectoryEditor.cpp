@@ -71,8 +71,7 @@ CWProjectDirectoryEditor::CWProjectDirectoryEditor(CWProjectTree *projectTree, Q
   if (dirItem != NULL) {
     // editing an existing item ...
     m_directoryName->setText(dirItem->directoryName());
-    m_directoryName->setReadOnly(true); // readonly state is the indactor for edit (as opposed to add) mode.
-    m_directoryName->setEnabled(false);
+    m_directoryName->setEnabled(false); // enabled state is the indactor for edit (as opposed to add) mode.
     browseButton->setEnabled(false);
     m_fileFilters->setText(dirItem->fileFilters());
     m_recursiveCheckBox->setCheckState(dirItem->isRecursive() ? Qt::Checked : Qt::Unchecked);
@@ -122,14 +121,14 @@ bool CWProjectDirectoryEditor::actionOk(void)
   QTreeWidgetItem *item = m_projectTree->locateByPath(m_path);
   if (item) {
     // still a valid point in the tree
-    if (m_directoryName->isReadOnly()) {
-      msg = m_projectTree->editChangeDirectoryProperties(item, m_fileFilters->text(),
-							 (m_recursiveCheckBox->checkState() == Qt::Checked));
-    }
-    else {
+    if (m_directoryName->isEnabled()) {
       msg = m_projectTree->editInsertDirectory(item, m_directoryName->text(),
 					       m_fileFilters->text(),
 					       (m_recursiveCheckBox->checkState() == Qt::Checked));
+    }
+    else {
+      msg = m_projectTree->editChangeDirectoryProperties(item, m_fileFilters->text(),
+							 (m_recursiveCheckBox->checkState() == Qt::Checked));
     }
     
     if (msg.isNull())

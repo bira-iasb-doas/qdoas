@@ -260,7 +260,6 @@ void CWProjectTree::contextMenuEvent(QContextMenuEvent *e)
       menu.addAction("Cut", this, SLOT(slotCutSelection()))->setEnabled(enableCutCopyDel);
       menu.addAction("Copy", this, SLOT(slotCopySelection()))->setEnabled(enableCutCopyDel);
       menu.addAction("Paste In", this, SLOT(slotPasteSpectraAsChildren()))->setEnabled(enablePaste);
-      menu.addAction("Delete", this, SLOT(slotDeleteAllSpectra()))->setEnabled(enableCutCopyDel);
     }
     else if (itemType == cAnalysisWindowBranchItemType) {
       // Analysis Window Branch
@@ -771,7 +770,7 @@ QString CWProjectTree::loadConfiguration(const QList<const CProjectConfigItem*> 
       awProp = CWorkSpace::instance()->findAnalysisWindow(projName, awName);
       assert(awProp != NULL);
       *awProp = *((*awIt)->properties()); // blot copy
-      // update useCount for count the symbols used in the molecules - TODO
+      // update useCount for the symbols used in the molecules
       for (int i=0; i < awProp->crossSectionList.nCrossSection; ++i)
 	ws->incrementUseCount(awProp->crossSectionList.crossSection[i].symbol);
 
@@ -1213,11 +1212,6 @@ void CWProjectTree::slotDeleteSelection()
   }
 
   emit signalSpectraTreeChanged();
-}
-
-void CWProjectTree::slotDeleteAllSpectra()
-{
-  // TODO
 }
 
 void CWProjectTree::slotCutSelection()

@@ -65,6 +65,13 @@ struct SSymbolBucket
   SSymbolBucket(const QString &descr) : description(descr), useCount(0) {}
 };
 
+// The symbol map forces unqiueness of symbols at the case-insensive level.
+  
+struct SymbolCmp
+{
+  bool operator()(const QString &lhs, const QString &rhs) const { return (QString::compare(lhs, rhs, Qt::CaseInsensitive) < 0); }
+};
+
 class CWorkSpace
 {
  public:
@@ -145,7 +152,7 @@ class CWorkSpace
   std::map<QString,SProjBucket> m_projMap;
   std::set<SPathBucket> m_pathSet;
   std::map<QString,mediate_site_t*> m_siteMap;
-  std::map<QString,SSymbolBucket> m_symbolMap;
+  std::map<QString,SSymbolBucket,SymbolCmp> m_symbolMap;
   std::list<CSitesObserver*> m_sitesObserverList;
   std::list<CSymbolObserver*> m_symbolObserverList;
   std::list<CProjectObserver*> m_projectObserverList;

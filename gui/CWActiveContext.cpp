@@ -478,7 +478,7 @@ void CWActiveContext::slotCurrentGraphTabChanged(int index)
 {
   int pageNumber = (index == -1) ? -1 : m_graphTab->tabData(index).toInt();
   
-  m_plotRegion->displayPage(pageNumber, 2); // TODO - columns
+  m_plotRegion->displayPage(pageNumber);
 
   // set the graph title
   m_graphTitleStr = m_plotRegion->pageTitle(pageNumber);

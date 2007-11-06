@@ -22,6 +22,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #define _CWPLOTPROPERTIESEDITOR_H_GUARD
 
 #include <QFrame>
+#include <QSpinBox>
 
 #include "CWEditor.h"
 #include "CPlotProperties.h"
@@ -70,6 +71,7 @@ Q_OBJECT
   CWPlotPropertySample *m_shiftSample;
   CWPlotPropertySample *m_fwhmSample;
   CWPlotPropertySample *m_pointsSample;
+  QSpinBox *m_plotColumnsSpin;
   QColor m_bgColour;
 };
 

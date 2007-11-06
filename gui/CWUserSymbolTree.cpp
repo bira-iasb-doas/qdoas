@@ -32,6 +32,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "debugutil.h"
 
+// NOTE: Symbols in the list MUST be unique, as defined by case-insensitive
+// string comparison. Also, they can only include the AlphaNumeric characters
+// dash and underscore.
+
 const int cUserSymbolTreeGeneralMode = 47;
 
 CWUserSymbolTree::CWUserSymbolTree(CWActiveContext *activeContext, QWidget *parent) :

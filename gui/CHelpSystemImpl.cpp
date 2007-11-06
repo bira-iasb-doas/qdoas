@@ -185,7 +185,6 @@ CBasicHelpBrowser::CBasicHelpBrowser(const QString &homeUrl, CHelpImplTextBrowse
   m_browser = new QTextBrowser(this);
 
   QToolBar *toolBar = new QToolBar(this);
-  // TODO - buttons ...
   QAction *backAction = toolBar->addAction(QIcon(":/icons/help_back_32.png"), "Back", m_browser, SLOT(backward()));
   QAction *forwardAction = toolBar->addAction(QIcon(":/icons/help_forward_32.png"),"Forward", m_browser, SLOT(forward()));
   toolBar->addAction(QIcon(":/icons/help_home_32.png"), "Home", this, SLOT(slotHome()));
