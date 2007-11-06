@@ -2108,6 +2108,17 @@ CAnalysisWindowItem::~CAnalysisWindowItem()
 {
 }
 
+void CAnalysisWindowItem::setEnabled(bool enable)
+{
+  QTreeWidgetItem *projItem = CWProjectTree::projectItem(this);
+  
+  assert(projItem);
+
+  // this is NOT state that is saved to the configuration file ...
+  if (CWorkSpace::instance()->setAnalysisWindowEnabled(projItem->text(0), text(0), enable))
+    m_enabled = enable;
+}
+
 QVariant CAnalysisWindowItem::data(int column, int role) const
 {
   if (role == Qt::ForegroundRole && !m_enabled) {

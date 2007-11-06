@@ -36,10 +36,19 @@ class CSitesObserver;
 class CSymbolObserver;
 class CProjectObserver;
 
+struct SAnlysWinBucket
+{
+  mediate_analysis_window_t *aw;
+  bool enabled;
+
+  SAnlysWinBucket(mediate_analysis_window_t *anlyswin) : aw(anlyswin), enabled(true) {}
+  SAnlysWinBucket(const SAnlysWinBucket &c) : aw(c.aw), enabled(c.enabled) {}
+};
+
 struct SProjBucket
 {
   mediate_project_t *project;
-  std::vector<mediate_analysis_window_t*> window;
+  std::vector<SAnlysWinBucket> window;
 
   // takes ownership of projectData
   SProjBucket(mediate_project_t *projectData) : project(projectData) {}
@@ -114,6 +123,8 @@ class CWorkSpace
 
   QStringList symbolList(void) const;
   QStringList analysisWindowsWithSymbol(const QString &projectName, const QString &symbol) const;
+  bool setAnalysisWindowEnabled(const QString &projectName,
+				const QString &windowName, bool enabled); 
 
   bool destroyProject(const QString &projectName);
   bool destroyAnalysisWindow(const QString &projectName, const QString &newWindowName);

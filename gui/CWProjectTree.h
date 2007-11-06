@@ -271,6 +271,8 @@ class CAnalysisWindowItem : public CProjectTreeItem
   CAnalysisWindowItem(QTreeWidgetItem *parent, QTreeWidgetItem *preceedingSibling, const QString &windowName);
   virtual ~CAnalysisWindowItem(); // DO NOT USE THIS - use destroyItem instead.
 
+  virtual void setEnabled(bool enable);
+
   virtual QVariant data(int column, int role) const;
 
   static void destroyItem(QTreeWidgetItem *awItem);

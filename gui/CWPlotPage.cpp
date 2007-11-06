@@ -19,11 +19,12 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
 #include <QColor>
-#include <QMouseEvent>
-#include <QKeyEvent>
+#include <QContextMenuEvent>
 #include <QPainter>
 #include <QPrinter>
 #include <QPrintDialog>
+#include <QFileDialog>
+#include <QMenu>
 
 #include <qwt_plot_curve.h>
 #include <qwt_symbol.h>
@@ -39,7 +40,7 @@ CWPlot::CWPlot(const RefCountConstPtr<CPlotDataSet> &dataSet,
   m_dataSet(dataSet),
   m_zoomer(NULL)
 {
-  // setFocusPolicy(Qt::ClickFocus); // TODO - prevents keyPressEvent
+  setFocusPolicy(Qt::ClickFocus); // TODO - prevents keyPressEvent
 
   setTitle(m_dataSet->plotTitle());
   setAxisTitle(QwtPlot::xBottom, m_dataSet->xAxisLabel());
@@ -84,94 +85,71 @@ CWPlot::~CWPlot()
 {
 }
 
-void CWPlot::mousePressEvent(QMouseEvent *e)
+void CWPlot::contextMenuEvent(QContextMenuEvent *e)
 {
-  // lazy instanciate the zoomer ...
-  if (!m_zoomer) {
-    QwtPlotCanvas *c = canvas();
-    m_zoomer = new QwtPlotZoomer(c);
-    c->setCursor(Qt::ArrowCursor); // change the cursor in indicate the zooming is active
-    // contrasting colour ...
-    m_zoomer->setRubberBandPen(QPen((canvasBackground().value() < 128) ? Qt::white : Qt::black));
-  }
+  // position dependent
+  if (childAt(e->pos()) != canvas()) {
 
-  QwtPlot::mousePressEvent(e);
-}
-
-void CWPlot::keyPressEvent(QKeyEvent *e)
-{
-  TRACE4("enter key event");
-
-  if (e->key() == Qt::Key_P) {
-    QPrinter printer(QPrinter::HighResolution);
-
-
-    //QPrintDialog dialog(&printer, this);
+    QMenu menu;
     
-    TRACE4("printing");
-
-    //if (dialog.exec() == QDialog::Accepted) {
-    if (true) {
-      TRACE("A " << printer.pageRect().isValid());
-      printer.setOutputFormat(QPrinter::PostScriptFormat);
-      TRACE("B " << printer.pageRect().isValid());
-      printer.setPageSize(QPrinter::A4);
-      TRACE("C " << printer.pageRect().isValid());
-      printer.setFullPage(false);
-      TRACE("D " << printer.pageRect().isValid());
-      printer.setNumCopies(1);
-      TRACE("E " << printer.pageRect().isValid());
-      printer.setPrintRange(QPrinter::AllPages);
-      TRACE("F " << printer.pageRect().isValid());
-      printer.setOutputFileName("/home/ian/svnproj/Qdoas/Src/gui/print.ps");
-      TRACE("G " << printer.pageRect().isValid());
-
-      // print ...
-      //printer.setOutputFormat(QPrinter::PostScriptFormat);
-
-      QRect rect;
-
-      QPainter p(&printer); // calls begin
-
-      TRACE("Page size = " << printer.pageSize());
-      
-      rect = printer.paperRect();
-      if (rect.isValid()) {
-	TRACE("Paper " << rect.x() << "," << rect.y() << "   " << rect.width() << " x " << rect.height());
-      }
-      else {
-	TRACE("Invalid Paper Rectangle");
-      }
-
-      rect = printer.pageRect();
-      if (rect.isValid()) {
-	TRACE("Page  " << rect.x() << "," << rect.y() << "   " << rect.width() << " x " << rect.height());
-      }
-      else {
-	TRACE("Invalid Page Rectangle");
-	rect.setWidth(72 * 7);
-	rect.setHeight(72 * 9);
-      }
-
-      QPen pen = p.pen();
-      pen.setColor(QColor(0XFF001122));
-      pen.setWidth(1);
-      p.setPen(pen);
-
-      int w = rect.width();
-      int h = rect.height();
-
-      p.drawLine(0,0,w,h);
-      p.drawLine(0,h,w,0);
-      p.drawEllipse(rect);
-
-      //print(&p, rect);
-    }
-
+    if (m_zoomer)
+      menu.addAction("Non-Interactive", this, SLOT(slotToggleInteraction()));
+    else
+      menu.addAction("Interactive", this, SLOT(slotToggleInteraction()));
+    menu.addSeparator();
+    menu.addAction("Overlay...", this, SLOT(slotOverlay()));
+    menu.addAction("Save As...", this, SLOT(slotSaveAs()));
+    menu.addAction("Print...", this, SLOT(slotPrint()));
+    
+    menu.exec(e->globalPos()); // slot will do the rest
+    
     e->accept();
   }
+  else
+    e->ignore();
+}
+
+void CWPlot::slotOverlay()
+{
+  TRACE("TODO");
+}
+
+void CWPlot::slotSaveAs()
+{
+  QString filename = QFileDialog::getSaveFileName(this, "Save Plot", ".", "*.spe");
+  
+  if (!filename.isEmpty()) {
+    TRACE("Save As " << filename.toStdString());
+  }
+}
+
+void CWPlot::slotPrint()
+{
+  TRACE4("Print");
+
+  QPrinter printer(QPrinter::HighResolution);
+
+  QPrintDialog dialog(&printer, this);
+    
+  if (dialog.exec() == QDialog::Accepted) {
+    print(printer);
+  }
+}
+
+void CWPlot::slotToggleInteraction()
+{
+  QwtPlotCanvas *c = canvas();
+
+  if (m_zoomer) {
+    c->setCursor(Qt::CrossCursor);
+    delete m_zoomer;
+    m_zoomer = NULL;
+  }
   else {
-    TRACE4("CWPlot : Invalid keystroke");
+    m_zoomer = new QwtPlotZoomer(c);
+    c->setCursor(Qt::PointingHandCursor); // change the cursor to indicate that zooming is active
+    // contrasting colour ...
+    m_zoomer->setRubberBandPen(QPen((canvasBackground().value() < 128) ? Qt::white : Qt::black));
   }
 }
 

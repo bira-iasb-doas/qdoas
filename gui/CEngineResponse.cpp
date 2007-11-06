@@ -111,7 +111,7 @@ CEngineResponseSpecificRecord::CEngineResponseSpecificRecord(int type) :
 
 CEngineResponseSpecificRecord::~CEngineResponseSpecificRecord()
 {
-  // should have been emptied in the trasfer to the controller
+  // should have been emptied in the transfer to the controller
 
   while (!m_plotDataList.isEmpty()) {
     delete m_plotDataList.front().data;

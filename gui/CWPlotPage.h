@@ -34,13 +34,19 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 class CWPlot : public QwtPlot
 {
+Q_OBJECT
  public:
   CWPlot(const RefCountConstPtr<CPlotDataSet> &dataSet, const CPlotProperties &plotProperties, QWidget *parent = 0);
   virtual ~CWPlot();
 
  protected:
-  virtual void mousePressEvent(QMouseEvent *e);
-  virtual void keyPressEvent(QKeyEvent *e);
+  virtual void contextMenuEvent(QContextMenuEvent *e);
+
+ public slots:
+  void slotOverlay();
+  void slotSaveAs();
+  void slotPrint();
+  void slotToggleInteraction();
 
  private:
   RefCountConstPtr<CPlotDataSet> m_dataSet;

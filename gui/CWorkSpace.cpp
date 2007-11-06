@@ -41,9 +41,9 @@ CWorkSpace::~CWorkSpace()
   // Project ... 
   std::map<QString,SProjBucket>::iterator pIt = m_projMap.begin();
   while (pIt != m_projMap.end()) {    
-    std::vector<mediate_analysis_window_t*>::iterator wIt = (pIt->second).window.begin();
+    std::vector<SAnlysWinBucket>::iterator wIt = (pIt->second).window.begin();
     while (wIt != (pIt->second).window.end()) {
-      delete *wIt; // delete the analysis window data
+      delete wIt->aw; // delete the analysis window data
       ++wIt;
     }
     (pIt->second).window.clear();
@@ -77,9 +77,9 @@ void CWorkSpace::removeAllContent(void)
       ++obs;
     }
 
-    std::vector<mediate_analysis_window_t*>::iterator wIt = (pIt->second).window.begin();
+    std::vector<SAnlysWinBucket>::iterator wIt = (pIt->second).window.begin();
     while (wIt != (pIt->second).window.end()) {
-      delete *wIt; // delete the analysis window data
+      delete wIt->aw; // delete the analysis window data
       ++wIt;
     }
     (pIt->second).window.clear();
@@ -135,10 +135,10 @@ mediate_analysis_window_t* CWorkSpace::findAnalysisWindow(const QString &project
   std::map<QString,SProjBucket>::const_iterator pIt = m_projMap.find(projectName);
   if (pIt != m_projMap.end()) {
     // project exists
-    std::vector<mediate_analysis_window_t*>::const_iterator wIt = (pIt->second).window.begin();
-    while (wIt != (pIt->second).window.end() && windowName != (*wIt)->name) ++wIt;
+    std::vector<SAnlysWinBucket>::const_iterator wIt = (pIt->second).window.begin();
+    while (wIt != (pIt->second).window.end() && windowName != wIt->aw->name) ++wIt;
     if (wIt != (pIt->second).window.end())
-      return *wIt;
+      return wIt->aw;
   }
   
   return NULL; // not found
@@ -219,12 +219,12 @@ mediate_analysis_window_t*  CWorkSpace::createAnalysisWindow(const QString &proj
   // project must exist
   std::map<QString,SProjBucket>::iterator pIt = m_projMap.find(projectName);
   if (pIt != m_projMap.end()) {
-    std::vector<mediate_analysis_window_t*>::iterator nextIt = (pIt->second).window.begin();
-    std::vector<mediate_analysis_window_t*>::iterator wIt = (pIt->second).window.begin();
+    std::vector<SAnlysWinBucket>::iterator nextIt = (pIt->second).window.begin();
+    std::vector<SAnlysWinBucket>::iterator wIt = (pIt->second).window.begin();
     // check that the new window does not already exist and locate the preceeding window
     // (and set nextIt to the element after the preceeding window)
-    while (wIt != (pIt->second).window.end() && newWindowName != (*wIt)->name) {
-      if (preceedingWindowName == (*wIt)->name)
+    while (wIt != (pIt->second).window.end() && newWindowName != wIt->aw->name) {
+      if (preceedingWindowName == wIt->aw->name)
 	nextIt = ++wIt;
       else
 	++wIt;
@@ -363,18 +363,18 @@ bool CWorkSpace::renameAnalysisWindow(const QString &projectName, const QString 
   std::map<QString,SProjBucket>::iterator pIt = m_projMap.find(projectName);
   if (pIt != m_projMap.end()) {
     // locate the window by the old name - must exist
-    std::vector<mediate_analysis_window_t*>::iterator oldIt = (pIt->second).window.begin();
-    while (oldIt != (pIt->second).window.end() && oldWindowName != (*oldIt)->name) ++oldIt;
-    if (oldIt != (pIt->second).window.end() && newWindowName.length() < (int)sizeof((*oldIt)->name)) {
+    std::vector<SAnlysWinBucket>::iterator oldIt = (pIt->second).window.begin();
+    while (oldIt != (pIt->second).window.end() && oldWindowName != oldIt->aw->name) ++oldIt;
+    if (oldIt != (pIt->second).window.end() && newWindowName.length() < (int)sizeof(oldIt->aw->name)) {
       // no change in the name is ok
       if (oldWindowName == newWindowName)
 	return true;
 
-      std::vector<mediate_analysis_window_t*>::iterator newIt = (pIt->second).window.begin();
-      while (newIt != (pIt->second).window.end() && newWindowName != (*newIt)->name) ++ newIt;
+      std::vector<SAnlysWinBucket>::iterator newIt = (pIt->second).window.begin();
+      while (newIt != (pIt->second).window.end() && newWindowName != newIt->aw->name) ++ newIt;
       if (newIt == (pIt->second).window.end()) {
 	// new name is not in use .. ok to change the name
-	strcpy((*oldIt)->name, newWindowName.toAscii().data());
+	strcpy(oldIt->aw->name, newWindowName.toAscii().data());
 
 	// notify the observers - Treated as a modification to the project
 	notifyProjectObserversModified(projectName);	
@@ -496,6 +496,8 @@ mediate_symbol_t* CWorkSpace::symbolList(int &listLength) const
   return NULL;
 }
 
+// Should this be 'enabled windows only' ??? - TODO
+
 mediate_analysis_window_t* CWorkSpace::analysisWindowList(const QString &projectName, int &listLength) const
 { 
   std::map<QString,SProjBucket>::const_iterator pIt = m_projMap.find(projectName);
@@ -507,9 +509,9 @@ mediate_analysis_window_t* CWorkSpace::analysisWindowList(const QString &project
       mediate_analysis_window_t *p = data;
 
       // walk the vector and copy ... order is important
-      std::vector<mediate_analysis_window_t*>::const_iterator wIt = (pIt->second).window.begin();
+      std::vector<SAnlysWinBucket>::const_iterator wIt = (pIt->second).window.begin();
       while (wIt != (pIt->second).window.end()) {
-	*p = *(*wIt); // blot copy
+	*p = *(wIt->aw); // blot copy
 	++p;
 	++wIt;
       }
@@ -529,10 +531,10 @@ QList<mediate_analysis_window_t*> CWorkSpace::analysisWindowList(const QString &
   std::map<QString,SProjBucket>::const_iterator pIt = m_projMap.find(projectName);
   if (pIt != m_projMap.end()) {
     // project exists
-    std::vector<mediate_analysis_window_t*>::const_iterator wIt = (pIt->second).window.begin();
+    std::vector<SAnlysWinBucket>::const_iterator wIt = (pIt->second).window.begin();
     while (wIt != (pIt->second).window.end()) {
       mediate_analysis_window_t *data = new mediate_analysis_window_t;
-      *data = *(*wIt); // blot copy
+      *data = *(wIt->aw); // blot copy
       result.push_back(data);
       ++wIt;
     }
@@ -562,13 +564,13 @@ QStringList CWorkSpace::analysisWindowsWithSymbol(const QString &projectName, co
   std::map<QString,SProjBucket>::const_iterator pIt = m_projMap.find(projectName);
   if (pIt != m_projMap.end()) {
     // project exists
-    std::vector<mediate_analysis_window_t*>::const_iterator wIt = (pIt->second).window.begin();
+    std::vector<SAnlysWinBucket>::const_iterator wIt = (pIt->second).window.begin();
     while (wIt != (pIt->second).window.end()) {
-      const cross_section_list_t *d = &((*wIt)->crossSectionList);
+      const cross_section_list_t *d = &(wIt->aw->crossSectionList);
       int i = 0;
       while (i < d->nCrossSection) {
 	if (symbol == QString(d->crossSection[i].symbol)) {
-	  result << QString((*wIt)->name); // this AW contains the symbol as a cross section
+	  result << QString(wIt->aw->name); // this AW contains the symbol as a cross section
 	  break;
 	}
 	++i;
@@ -594,13 +596,13 @@ bool CWorkSpace::destroyProject(const QString &projectName)
     }
 
     // delete all analysis windows ...
-    std::vector<mediate_analysis_window_t*>::iterator wIt = (pIt->second).window.begin();
+    std::vector<SAnlysWinBucket>::iterator wIt = (pIt->second).window.begin();
     while (wIt != (pIt->second).window.end()) {      
       // update the useCount for symbols
-      for (int i=0; i < (*wIt)->crossSectionList.nCrossSection; ++i)
-	decrementUseCount((*wIt)->crossSectionList.crossSection[i].symbol);
+      for (int i=0; i < wIt->aw->crossSectionList.nCrossSection; ++i)
+	decrementUseCount(wIt->aw->crossSectionList.crossSection[i].symbol);
 
-      delete *wIt;
+      delete wIt->aw;
       ++wIt;
     }
     (pIt->second).window.clear(); // would happen when the project bucket is erased from the map...
@@ -622,15 +624,15 @@ bool CWorkSpace::destroyAnalysisWindow(const QString &projectName, const QString
   // project must exist
   std::map<QString,SProjBucket>::iterator pIt = m_projMap.find(projectName);
   if (pIt != m_projMap.end()) {
-    std::vector<mediate_analysis_window_t*>::iterator wIt = (pIt->second).window.begin();
-    while (wIt != (pIt->second).window.end() && windowName != (*wIt)->name) ++wIt;
+    std::vector<SAnlysWinBucket>::iterator wIt = (pIt->second).window.begin();
+    while (wIt != (pIt->second).window.end() && windowName != wIt->aw->name) ++wIt;
     if (wIt != (pIt->second).window.end()) {
 
       // update the useCount for symbols
-      for (int i=0; i < (*wIt)->crossSectionList.nCrossSection; ++i)
-	decrementUseCount((*wIt)->crossSectionList.crossSection[i].symbol);
+      for (int i=0; i < wIt->aw->crossSectionList.nCrossSection; ++i)
+	decrementUseCount(wIt->aw->crossSectionList.crossSection[i].symbol);
 
-      delete *wIt;
+      delete wIt->aw;
       (pIt->second).window.erase(wIt);
 
       // notify observers - treated as a modification to the project
@@ -677,6 +679,23 @@ bool CWorkSpace::destroySymbol(const QString &symbolName)
       return true;
     }
   }
+  return false;
+}
+
+bool CWorkSpace::setAnalysisWindowEnabled(const QString &projectName,
+					  const QString &windowName, bool enabled)
+{
+  std::map<QString,SProjBucket>::iterator pIt = m_projMap.find(projectName);
+  if (pIt != m_projMap.end()) {
+    // project exists
+    std::vector<SAnlysWinBucket>::iterator wIt = (pIt->second).window.begin();
+    while (wIt != (pIt->second).window.end() && windowName != wIt->aw->name) ++wIt;
+    if (wIt != (pIt->second).window.end()) {
+      wIt->enabled = enabled;
+      return true;
+    }
+  }
+
   return false;
 }
 
