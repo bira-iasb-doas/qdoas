@@ -17,6 +17,7 @@ unix {
 win32 {
   CONFIG += qt thread release
   CONFIG += assistant
+  CONFIG += qwtdll # qwtstatic or qwtdll
   QT = core gui xml
 }
 
@@ -37,7 +38,13 @@ unix {
 win32 {
   INCLUDEPATH += C:\Qwt\include
   INCLUDEPATH += ..\engine
-  LIBS        += -L"C:\Qwt\lib" -lqwt5
+  contains( CONFIG, qwtstatic ) {
+    LIBS        += -L"C:\Qwt\lib" -lqwt
+  }
+  contains( CONFIG, qwtdll ) {
+    LIBS        += -L"C:\Qwt\lib" -lqwt5
+    DEFINES     += QWT_DLL
+  }
   CONFIG      += windows
 }
 
