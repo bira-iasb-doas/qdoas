@@ -132,7 +132,24 @@ void CWPlot::slotPrint()
   QPrintDialog dialog(&printer, this);
     
   if (dialog.exec() == QDialog::Accepted) {
-    print(printer);
+
+    QPainter p(&printer);
+    p.setPen(QPen(QColor(Qt::black)));
+
+    QRect page = printer.pageRect();
+
+    p.drawRect(page);
+
+    page.setWidth(page.width() - 10);
+    page.setHeight(page.height() - 10);
+    page.translate(5,5);
+
+    p.drawRect(page);
+
+    page.setWidth(page.width()/2);
+    page.setHeight(page.height()/2);
+
+    print(&p, page);
   }
 }
 
