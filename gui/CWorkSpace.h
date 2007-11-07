@@ -158,12 +158,14 @@ class CWorkSpace
   friend class CProjectObserver;
 
  private:
+  typedef std::map<QString,SSymbolBucket,SymbolCmp> symbolmap_t;
+
   static CWorkSpace *m_instance;
 
   std::map<QString,SProjBucket> m_projMap;
   std::set<SPathBucket> m_pathSet;
   std::map<QString,mediate_site_t*> m_siteMap;
-  std::map<QString,SSymbolBucket,SymbolCmp> m_symbolMap;
+  symbolmap_t m_symbolMap;
   std::list<CSitesObserver*> m_sitesObserverList;
   std::list<CSymbolObserver*> m_symbolObserverList;
   std::list<CProjectObserver*> m_projectObserverList;

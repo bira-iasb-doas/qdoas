@@ -105,7 +105,7 @@ void CWorkSpace::removeAllContent(void)
   m_siteMap.clear();
 
   // symbols
-  std::map<QString,SSymbolBucket,SymbolCmp>::iterator mIt = m_symbolMap.begin();
+  symbolmap_t::iterator mIt = m_symbolMap.begin();
   while (mIt != m_symbolMap.end()) {
     // notify the observers
     std::list<CSymbolObserver*>::iterator obs = m_symbolObserverList.begin();
@@ -156,7 +156,7 @@ const mediate_site_t* CWorkSpace::findSite(const QString &siteName) const
 
 QString CWorkSpace::findSymbol(const QString &symbolName) const
 {
-  std::map<QString,SSymbolBucket,SymbolCmp>::const_iterator it = m_symbolMap.find(symbolName);
+  symbolmap_t::const_iterator it = m_symbolMap.find(symbolName);
   if (it != m_symbolMap.end()) {
     // symbol exists
     return (it->second).description; // The string returned may be empty, but is not null.
@@ -167,14 +167,14 @@ QString CWorkSpace::findSymbol(const QString &symbolName) const
 
 void CWorkSpace::incrementUseCount(const QString &symbolName)
 {
-  std::map<QString,SSymbolBucket,SymbolCmp>::iterator it = m_symbolMap.find(symbolName);
+  symbolmap_t::iterator it = m_symbolMap.find(symbolName);
   if (it != m_symbolMap.end())
     ++((it->second).useCount);
 }
 
 void CWorkSpace::decrementUseCount(const QString &symbolName)
 {
-  std::map<QString,SSymbolBucket,SymbolCmp>::iterator it = m_symbolMap.find(symbolName);
+  symbolmap_t::iterator it = m_symbolMap.find(symbolName);
   if (it != m_symbolMap.end() && (it->second).useCount)
     --((it->second).useCount);
 }
@@ -296,15 +296,15 @@ bool CWorkSpace::createSymbol(const QString &newSymbolName, const QString &descr
   if (newSymbolName.isEmpty() || newSymbolName.length() >= (int)sizeof(tmp->name) || description.length() >= (int)sizeof(tmp->description) || newSymbolName.contains(';'))
     return false;
 
-  std::map<QString,SSymbolBucket,SymbolCmp>::iterator it = m_symbolMap.find(newSymbolName);
+  symbolmap_t::iterator it = m_symbolMap.find(newSymbolName);
   if (it == m_symbolMap.end()) {
     if (description.isNull()) {
       // make an empty description
       QString emptyStr = "";
-      m_symbolMap.insert(std::map<QString,SSymbolBucket,SymbolCmp>::value_type(newSymbolName, SSymbolBucket(emptyStr)));
+      m_symbolMap.insert(symbolmap_t::value_type(newSymbolName, SSymbolBucket(emptyStr)));
     }
     else
-      m_symbolMap.insert(std::map<QString,SSymbolBucket,SymbolCmp>::value_type(newSymbolName, SSymbolBucket(description)));
+      m_symbolMap.insert(symbolmap_t::value_type(newSymbolName, SSymbolBucket(description)));
 
     // notify the observers
     std::list<CSymbolObserver*>::iterator obs = m_symbolObserverList.begin();
@@ -419,7 +419,7 @@ bool CWorkSpace::modifySite(const QString &siteName, const QString &abbr,
 
 bool CWorkSpace::modifySymbol(const QString &symbolName, const QString &description)
 {
-  std::map<QString,SSymbolBucket,SymbolCmp>::iterator it = m_symbolMap.find(symbolName);
+  symbolmap_t::iterator it = m_symbolMap.find(symbolName);
   if (it != m_symbolMap.end()) {
     // symbol exists - and should - only the description can be modified.
     if (description.isNull())
@@ -479,7 +479,7 @@ mediate_symbol_t* CWorkSpace::symbolList(int &listLength) const
     mediate_symbol_t *tmp = symbolList;
     
     // walk the list and copy
-    std::map<QString,SSymbolBucket,SymbolCmp>::const_iterator it = m_symbolMap.begin();
+    symbolmap_t::const_iterator it = m_symbolMap.begin();
     while (it != m_symbolMap.end()) {
       strcpy(tmp->name, (it->first).toAscii().data());
       strcpy(tmp->description, (it->second).description.toAscii().data());
@@ -547,7 +547,7 @@ QStringList CWorkSpace::symbolList(void) const
 {
   QStringList symbolList;
 
-  std::map<QString,SSymbolBucket,SymbolCmp>::const_iterator it = m_symbolMap.begin();
+  symbolmap_t::const_iterator it = m_symbolMap.begin();
   while (it != m_symbolMap.end()) {
     symbolList << (it->first);
     ++it;
@@ -665,7 +665,7 @@ bool CWorkSpace::destroySite(const QString &siteName)
 
 bool CWorkSpace::destroySymbol(const QString &symbolName)
 {
-  std::map<QString,SSymbolBucket,SymbolCmp>::iterator it = m_symbolMap.find(symbolName);
+  symbolmap_t::iterator it = m_symbolMap.find(symbolName);
   if (it != m_symbolMap.end()) {
     // Only permitted if the useCount is zero ...
     if ((it->second).useCount == 0) {
