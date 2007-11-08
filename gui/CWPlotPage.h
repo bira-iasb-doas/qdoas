@@ -55,6 +55,7 @@ Q_OBJECT
 
 class CWPlotPage : public QFrame
 {
+Q_OBJECT
  public:
   CWPlotPage(const CPlotProperties &plotProperties, QWidget *parent = 0);
   CWPlotPage(const CPlotProperties &plotProperties,
@@ -65,7 +66,12 @@ class CWPlotPage : public QFrame
   void layoutPlots(const QSize &visibleSize);
 
  protected:
+  void contextMenuEvent(QContextMenuEvent *e);
+
   //  virtual void resizeEvent(QResizeEvent *e);
+
+ public slots:
+  void slotPrintAllPlots();
 
  private:
   const CPlotProperties &m_plotProperties;
