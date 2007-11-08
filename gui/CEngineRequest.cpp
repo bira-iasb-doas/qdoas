@@ -26,7 +26,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 //------------------------------------------------------------
 
-CEngineRequest::CEngineRequest(enum eRequestType type) :
+CEngineRequest::CEngineRequest(CEngineRequest::RequestType type) :
   m_type(type)
 {
 }
@@ -38,7 +38,7 @@ CEngineRequest::~CEngineRequest()
 //------------------------------------------------------------
 
 CEngineRequestCompound::CEngineRequestCompound() :
-  CEngineRequest(cEngineRequestCompoundType)
+  CEngineRequest(eEngineRequestCompoundType)
 {
 }
 
@@ -71,7 +71,7 @@ void CEngineRequestCompound::addRequest(CEngineRequest *req)
 //------------------------------------------------------------
 
 CEngineRequestSetProject::CEngineRequestSetProject(const mediate_project_t *project) :
-  CEngineRequest(cEngineRequestSetProjectType)
+  CEngineRequest(eEngineRequestSetProjectType)
 {
   // deep copy the data from project.
   m_project = *project;
@@ -103,7 +103,7 @@ bool CEngineRequestSetProject::process(CEngineThread *engineThread)
 //------------------------------------------------------------
 
 CEngineRequestSetAnalysisWindows::CEngineRequestSetAnalysisWindows(const mediate_analysis_window_t *windowList, int nWindows) :
-  CEngineRequest(cEngineRequestSetAnalysisWindowType),
+  CEngineRequest(eEngineRequestSetAnalysisWindowType),
   m_windowList(NULL),
   m_nWindows(0)
 {
@@ -142,7 +142,7 @@ bool CEngineRequestSetAnalysisWindows::process(CEngineThread *engineThread)
 //------------------------------------------------------------
 
 CEngineRequestSetSymbols::CEngineRequestSetSymbols(mediate_symbol_t *symbolList, int nSymbols) :
-  CEngineRequest(cEngineRequestSetSymbolsType),
+  CEngineRequest(eEngineRequestSetSymbolsType),
   m_symbolList(symbolList),
   m_nSymbols(nSymbols)
 {
@@ -176,7 +176,7 @@ bool CEngineRequestSetSymbols::process(CEngineThread *engineThread)
 //------------------------------------------------------------
 
 CEngineRequestSetSites::CEngineRequestSetSites(mediate_site_t *siteList, int nSites) :
-  CEngineRequest(cEngineRequestSetSitesType),
+  CEngineRequest(eEngineRequestSetSitesType),
   m_siteList(siteList),
   m_nSites(nSites)
 {
@@ -210,7 +210,7 @@ bool CEngineRequestSetSites::process(CEngineThread *engineThread)
 //------------------------------------------------------------
 
 CEngineRequestBeginBrowseFile::CEngineRequestBeginBrowseFile(const QString &fileName) :
-  CEngineRequest(cEngineRequestBeginBrowseFileType),
+  CEngineRequest(eEngineRequestBeginBrowseFileType),
   m_fileName(fileName)
 {
 }
@@ -240,7 +240,7 @@ bool CEngineRequestBeginBrowseFile::process(CEngineThread *engineThread)
 //------------------------------------------------------------
 
 CEngineRequestBrowseNextRecord::CEngineRequestBrowseNextRecord() :
-  CEngineRequest(cEngineRequestBrowseNextRecordType)
+  CEngineRequest(eEngineRequestBrowseNextRecordType)
 {
 }
 
@@ -267,7 +267,7 @@ bool CEngineRequestBrowseNextRecord::process(CEngineThread *engineThread)
 //------------------------------------------------------------
 
 CEngineRequestBrowseSpecificRecord::CEngineRequestBrowseSpecificRecord(int recordNumber) :
-  CEngineRequest(cEngineRequestBrowseSpecificRecordType),
+  CEngineRequest(eEngineRequestBrowseSpecificRecordType),
   m_recordNumber(recordNumber)
 {
 }
@@ -301,7 +301,7 @@ bool CEngineRequestBrowseSpecificRecord::process(CEngineThread *engineThread)
 //------------------------------------------------------------
 
 CEngineRequestEndBrowseFile::CEngineRequestEndBrowseFile() :
-  CEngineRequest(cEngineRequestEndBrowseFileType)
+  CEngineRequest(eEngineRequestEndBrowseFileType)
 {
 }
 
@@ -324,7 +324,7 @@ bool CEngineRequestEndBrowseFile::process(CEngineThread *engineThread)
 //------------------------------------------------------------
 
 CEngineRequestBeginAnalyseFile::CEngineRequestBeginAnalyseFile(const QString &fileName) :
-  CEngineRequest(cEngineRequestBeginAnalyseFileType),
+  CEngineRequest(eEngineRequestBeginAnalyseFileType),
   m_fileName(fileName)
 {
 }
@@ -354,7 +354,7 @@ bool CEngineRequestBeginAnalyseFile::process(CEngineThread *engineThread)
 //------------------------------------------------------------
 
 CEngineRequestAnalyseNextRecord::CEngineRequestAnalyseNextRecord() :
-  CEngineRequest(cEngineRequestAnalyseNextRecordType)
+  CEngineRequest(eEngineRequestAnalyseNextRecordType)
 {
 }
 
@@ -381,7 +381,7 @@ bool CEngineRequestAnalyseNextRecord::process(CEngineThread *engineThread)
 //------------------------------------------------------------
 
 CEngineRequestAnalyseSpecificRecord::CEngineRequestAnalyseSpecificRecord(int recordNumber) :
-  CEngineRequest(cEngineRequestAnalyseSpecificRecordType),
+  CEngineRequest(eEngineRequestAnalyseSpecificRecordType),
   m_recordNumber(recordNumber)
 {
 }
@@ -415,7 +415,7 @@ bool CEngineRequestAnalyseSpecificRecord::process(CEngineThread *engineThread)
 //------------------------------------------------------------
 
 CEngineRequestEndAnalyseFile::CEngineRequestEndAnalyseFile() :
-  CEngineRequest(cEngineRequestEndAnalyseFileType)
+  CEngineRequest(eEngineRequestEndAnalyseFileType)
 {
 }
 
@@ -438,7 +438,7 @@ bool CEngineRequestEndAnalyseFile::process(CEngineThread *engineThread)
 //------------------------------------------------------------
 
 CEngineRequestBeginCalibrateFile::CEngineRequestBeginCalibrateFile(const QString &fileName) :
-  CEngineRequest(cEngineRequestBeginCalibrateFileType),
+  CEngineRequest(eEngineRequestBeginCalibrateFileType),
   m_fileName(fileName)
 {
 }
@@ -468,7 +468,7 @@ bool CEngineRequestBeginCalibrateFile::process(CEngineThread *engineThread)
 //------------------------------------------------------------
 
 CEngineRequestCalibrateNextRecord::CEngineRequestCalibrateNextRecord() :
-  CEngineRequest(cEngineRequestCalibrateNextRecordType)
+  CEngineRequest(eEngineRequestCalibrateNextRecordType)
 {
 }
 
@@ -495,7 +495,7 @@ bool CEngineRequestCalibrateNextRecord::process(CEngineThread *engineThread)
 //------------------------------------------------------------
 
 CEngineRequestCalibrateSpecificRecord::CEngineRequestCalibrateSpecificRecord(int recordNumber) :
-  CEngineRequest(cEngineRequestCalibrateSpecificRecordType),
+  CEngineRequest(eEngineRequestCalibrateSpecificRecordType),
   m_recordNumber(recordNumber)
 {
 }
@@ -529,7 +529,7 @@ bool CEngineRequestCalibrateSpecificRecord::process(CEngineThread *engineThread)
 //------------------------------------------------------------
 
 CEngineRequestEndCalibrateFile::CEngineRequestEndCalibrateFile() :
-  CEngineRequest(cEngineRequestEndCalibrateFileType)
+  CEngineRequest(eEngineRequestEndCalibrateFileType)
 {
 }
 

@@ -188,11 +188,11 @@ void CHelpSystem::createImplementation(CHelpImpl **impl)
       // allow at most 10 seconds...
       QTime monitor;
       monitor.start();
-      CHelpImpl::eStatus status = tmp->status();
+      CHelpImpl::Status status = tmp->status();
       
       QApplication::setOverrideCursor(Qt::WaitCursor);
 
-      while (status == CHelpImpl::Uncertain && monitor.elapsed() < 10000) {
+      while (status == CHelpImpl::eUncertain && monitor.elapsed() < 10000) {
 	// wait for 100ms, even if there are no events.
 	QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
 	status = tmp->status();
@@ -200,7 +200,7 @@ void CHelpSystem::createImplementation(CHelpImpl **impl)
 
       QApplication::restoreOverrideCursor();
 
-      if (status == CHelpImpl::Open) {
+      if (status == CHelpImpl::eOpen) {
 	// started -> set *impl, release the recursion block and return 
 	*impl = tmp;
 	m_block = false;

@@ -23,7 +23,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 //------------------------------------------------------------
 
-CEngineResponse::CEngineResponse(int type) :
+CEngineResponse::CEngineResponse(CEngineResponse::ResponseType type) :
   m_type(type),
   m_highestErrorLevel(0)
 {
@@ -56,7 +56,7 @@ bool CEngineResponse::processErrors(CEngineController *engineController)
 //------------------------------------------------------------
 
 CEngineResponseMessage::CEngineResponseMessage() :
-  CEngineResponse(cEngineResponseMessageType)
+  CEngineResponse(eEngineResponseMessageType)
 {
 }
 
@@ -72,7 +72,7 @@ void CEngineResponseMessage::process(CEngineController *engineController)
 //------------------------------------------------------------
 
 CEngineResponseBeginAccessFile::CEngineResponseBeginAccessFile(const QString &fileName) :
-  CEngineResponse(cEngineResponseBeginAccessFileType),
+  CEngineResponse(eEngineResponseBeginAccessFileType),
   m_fileName(fileName),
   m_numberOfRecords(-1)
 {
@@ -103,7 +103,7 @@ void CEngineResponseBeginAccessFile::setNumberOfRecords(int numberOfRecords)
 
 //------------------------------------------------------------
 
-CEngineResponseSpecificRecord::CEngineResponseSpecificRecord(int type) :
+CEngineResponseSpecificRecord::CEngineResponseSpecificRecord(CEngineResponse::ResponseType type) :
   CEngineResponse(type),
   m_recordNumber(-1)
 {
@@ -153,13 +153,13 @@ void CEngineResponseSpecificRecord::addDataSet(int pageNumber, const CPlotDataSe
 }
 
 void CEngineResponseSpecificRecord::addCell(int pageNumber, int row, int col,
-					  const QVariant &data)
+					    const QVariant &data)
 {
   m_cellList.push_back(SCell(pageNumber, row, col, data));
 }
 
 void CEngineResponseSpecificRecord::addPageTitleAndTag(int pageNumber, const QString &title,
-						     const QString &tag)
+						       const QString &tag)
 {
   m_titleList.push_back(STitleTag(pageNumber, title, tag));
 }
@@ -167,7 +167,7 @@ void CEngineResponseSpecificRecord::addPageTitleAndTag(int pageNumber, const QSt
 //------------------------------------------------------------
 
 CEngineResponseAccessRecord::CEngineResponseAccessRecord() :
-  CEngineResponseSpecificRecord(cEngineResponseAccessRecordType)
+  CEngineResponseSpecificRecord(eEngineResponseAccessRecordType)
 {
 }
 
@@ -178,7 +178,7 @@ CEngineResponseAccessRecord::~CEngineResponseAccessRecord()
 //------------------------------------------------------------
 
 CEngineResponseEndAccessFile::CEngineResponseEndAccessFile() :
-  CEngineResponse(cEngineResponseEndAccessFileType)
+  CEngineResponse(eEngineResponseEndAccessFileType)
 {
 }
 

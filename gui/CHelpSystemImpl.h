@@ -30,7 +30,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 class CHelpImpl : public QObject
 {
  public:
-  enum eStatus { Uncertain, Open, Closed, Error };
+  enum Status { eUncertain, eOpen, eClosed, eError };
 
   CHelpImpl();
   virtual ~CHelpImpl();
@@ -54,7 +54,7 @@ Q_OBJECT
   
   void display(const QString &url);
 
-  CHelpImpl::eStatus status(void) const;
+  CHelpImpl::Status status(void) const;
 
  private slots:
   void slotAssistantOpened();
@@ -64,7 +64,7 @@ Q_OBJECT
  private:
   QAssistantClient *m_client;
   QString m_helpDir;
-  CHelpImpl::eStatus m_status;
+  CHelpImpl::Status m_status;
 };
 
 #endif

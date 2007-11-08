@@ -27,42 +27,43 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 class CEngineThread;
 
-enum eRequestType {
-  cEngineRequestCompoundType,
-  cEngineRequestSetSymbolsType,
-  cEngineRequestSetSitesType,
-  cEngineRequestSetProjectType,
-  cEngineRequestSetAnalysisWindowType,
-  cEngineRequestBeginBrowseFileType,
-  cEngineRequestBrowseNextRecordType,
-  cEngineRequestBrowseSpecificRecordType,
-  cEngineRequestEndBrowseFileType,
-  cEngineRequestBeginAnalyseFileType,
-  cEngineRequestAnalyseNextRecordType,
-  cEngineRequestAnalyseSpecificRecordType,
-  cEngineRequestEndAnalyseFileType,
-  cEngineRequestBeginCalibrateFileType,
-  cEngineRequestCalibrateNextRecordType,
-  cEngineRequestCalibrateSpecificRecordType,
-  cEngineRequestEndCalibrateFileType };
-
 //------------------------------------------------------------
 
 class CEngineRequest
 {
  public:
-  CEngineRequest(enum eRequestType type);
+  enum RequestType {
+    eEngineRequestCompoundType,
+    eEngineRequestSetSymbolsType,
+    eEngineRequestSetSitesType,
+    eEngineRequestSetProjectType,
+    eEngineRequestSetAnalysisWindowType,
+    eEngineRequestBeginBrowseFileType,
+    eEngineRequestBrowseNextRecordType,
+    eEngineRequestBrowseSpecificRecordType,
+    eEngineRequestEndBrowseFileType,
+    eEngineRequestBeginAnalyseFileType,
+    eEngineRequestAnalyseNextRecordType,
+    eEngineRequestAnalyseSpecificRecordType,
+    eEngineRequestEndAnalyseFileType,
+    eEngineRequestBeginCalibrateFileType,
+    eEngineRequestCalibrateNextRecordType,
+    eEngineRequestCalibrateSpecificRecordType,
+    eEngineRequestEndCalibrateFileType
+  };
+
+  CEngineRequest(enum RequestType type);
   virtual ~CEngineRequest();
 
   virtual bool process(CEngineThread *engineThread) = 0;
 
-  enum eRequestType type(void) const;
+  enum RequestType type(void) const;
 
  protected:
-  enum eRequestType m_type;
+  enum RequestType m_type;
 };
 
-inline enum eRequestType CEngineRequest::type(void) const { return m_type; }
+inline CEngineRequest::RequestType CEngineRequest::type(void) const { return m_type; }
 
 //------------------------------------------------------------
 

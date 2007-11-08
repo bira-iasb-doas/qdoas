@@ -31,21 +31,23 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 class CEngineController;
 
-static const int cEngineResponseMessageType              = 0;
-static const int cEngineResponseBeginAccessFileType      = 2;
-static const int cEngineResponseAccessRecordType         = 3;
-static const int cEngineResponseGotoRecordType           = 4;
-static const int cEngineResponseEndAccessFileType        = 5;
-
 //------------------------------------------------------------
 
 class CEngineResponse
 {
  public:
-  CEngineResponse(int type);
+  enum ResponseType {
+    eEngineResponseMessageType,
+    eEngineResponseBeginAccessFileType,
+    eEngineResponseAccessRecordType,
+    eEngineResponseGotoRecordType,
+    eEngineResponseEndAccessFileType    
+  };  
+
+  CEngineResponse(enum ResponseType type);
   virtual ~CEngineResponse();
 
-  int type(void) const;
+  enum ResponseType type(void) const;
   void addErrorMessage(const QString &tag, const QString &msg, int errorLevel);
   
   virtual void process(CEngineController *engineController) = 0;
@@ -56,12 +58,12 @@ class CEngineResponse
   bool hasFatalError(void) const;
 
  protected:
-  int m_type;
+  enum ResponseType m_type;
   int m_highestErrorLevel;
   QList<CEngineError> m_errorMessages;
 };
 
-inline int CEngineResponse::type(void) const { return m_type; }
+inline CEngineResponse::ResponseType CEngineResponse::type(void) const { return m_type; }
 inline bool CEngineResponse::hasErrors(void) const { return !m_errorMessages.isEmpty(); }
 inline bool CEngineResponse::hasFatalError(void) const { return (m_highestErrorLevel == FatalEngineError); }
 
@@ -98,7 +100,7 @@ class CEngineResponseBeginAccessFile : public CEngineResponse
 class CEngineResponseSpecificRecord : public CEngineResponse
 {
  public:
-  CEngineResponseSpecificRecord(int type);
+  CEngineResponseSpecificRecord(CEngineResponse::ResponseType type);
   virtual ~CEngineResponseSpecificRecord();
 
   virtual void process(CEngineController *engineController);

@@ -49,7 +49,7 @@ CHelpImpl::~CHelpImpl()
 CHelpImplAssistant::CHelpImplAssistant(const QString &profile, const QString &helpDir, QObject *parent) :
   CHelpImpl(),
   m_helpDir(helpDir),
-  m_status(CHelpImpl::Uncertain)
+  m_status(CHelpImpl::eUncertain)
 {
   // need the ... location of the assistant binary
   QString path = CPreferences::instance()->directoryName("Assistant");
@@ -80,31 +80,33 @@ CHelpImplAssistant::~CHelpImplAssistant()
   
 void CHelpImplAssistant::display(const QString &url)
 {
-  if (m_status == CHelpImpl::Open) {
+  switch (m_status) {
+  case CHelpImpl::eOpen:
     m_client->showPage(m_helpDir + QDir::separator() + url);
-  }
-  else if (m_status == CHelpImpl::Closed) {
+    break;
+  case CHelpImpl::eClosed:
     m_client->openAssistant();
     if (!url.isEmpty())    
       m_client->showPage(m_helpDir + QDir::separator() + url);
+    break;
+  default:
+    break;
   }
 }
 
-CHelpImpl::eStatus CHelpImplAssistant::status(void) const
+CHelpImpl::Status CHelpImplAssistant::status(void) const
 {
   return m_status;
 }
 
 void CHelpImplAssistant::slotAssistantOpened()
 {
-  TRACE("Assistant Opened");
-  m_status = CHelpImpl::Open;
+  m_status = CHelpImpl::eOpen;
 }
 
 void CHelpImplAssistant::slotAssistantClosed()
 {
-  TRACE("Assistant Closed");
-  m_status = CHelpImpl::Closed;
+  m_status = CHelpImpl::eClosed;
 }
 
 void CHelpImplAssistant::slotAssistantError(const QString &msg)
@@ -113,7 +115,7 @@ void CHelpImplAssistant::slotAssistantError(const QString &msg)
   
   // parse the error to determine how serious this is ...
   if (msg.startsWith("Failed to start"))
-    m_status = CHelpImpl::Error;
+    m_status = CHelpImpl::eError;
 }
 
 #endif
