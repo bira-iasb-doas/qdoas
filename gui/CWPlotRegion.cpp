@@ -59,6 +59,8 @@ CWPlotRegion::CWPlotRegion(QWidget *parent) :
   m_properties.setBackgroundColour(pref->plotColour("Background", colour));
 
   m_properties.setColumns(pref->plotLayout("Columns", 1));
+  m_properties.setPrintPaperSize(QPrinter::PageSize(pref->plotLayout("PaperSize", 0)));
+  m_properties.setPrintPaperOrientation(QPrinter::Orientation(pref->plotLayout("PaperOrientation", 0)));
 }
 
 CWPlotRegion::~CWPlotRegion()
@@ -99,6 +101,12 @@ void CWPlotRegion::displayPage(int pageNumber)
     m_plotPage = NULL;
     setWidget(m_plotPage);
   }
+}
+
+void CWPlotRegion::printVisiblePage(void)
+{
+  if (m_plotPage)
+    m_plotPage->slotPrintAllPlots();
 }
 
 int CWPlotRegion::pageDisplayed(void) const
@@ -147,6 +155,8 @@ void CWPlotRegion::savePreferences(void) const
   pref->setPlotColour("Background", m_properties.backgroundColour());
 
   pref->setPlotLayout("Columns", m_properties.columns());
+  pref->setPlotLayout("PaperSize", m_properties.printPaperSize());
+  pref->setPlotLayout("PaperOrientation", m_properties.printPaperOrientation());
 }
 
 void CWPlotRegion::resizeEvent(QResizeEvent *e)

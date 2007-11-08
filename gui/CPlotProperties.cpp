@@ -23,7 +23,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 CPlotProperties::CPlotProperties() :
   m_defaultPen(Qt::black),
-  m_bgColour(Qt::white)
+  m_bgColour(Qt::white),
+  m_columns(1),
+  m_printPaperSize(QPrinter::A4),
+  m_printPaperOrientation(QPrinter::Portrait)
 {
   // a pen for every valid plot type
   m_pens.push_back(m_defaultPen); // Spectrum
@@ -37,7 +40,9 @@ CPlotProperties::CPlotProperties(const CPlotProperties &other) :
   m_defaultPen(Qt::black),
   m_pens(other.m_pens),
   m_bgColour(other.m_bgColour),
-  m_columns(other.m_columns)
+  m_columns(other.m_columns),
+  m_printPaperSize(other.m_printPaperSize),
+  m_printPaperOrientation(other.m_printPaperOrientation)
 {
 }
 
@@ -47,6 +52,8 @@ CPlotProperties& CPlotProperties::operator=(const CPlotProperties &rhs)
     m_pens = rhs.m_pens;
     m_bgColour = rhs.m_bgColour;
     m_columns = rhs.m_columns;
+    m_printPaperSize = rhs.m_printPaperSize;
+    m_printPaperOrientation = rhs.m_printPaperOrientation;
   }
 
   return *this;

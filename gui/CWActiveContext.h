@@ -62,6 +62,7 @@ Q_OBJECT
   void slotCurrentActiveTabChanged(int index);
 
   void slotEditPlotProperties();
+  void slotPrintPlots();
 
  private:
   void discardCurrentEditor(void);

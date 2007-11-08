@@ -17,6 +17,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
+
 #ifndef _CWPLOTPAGE_H_GUARD
 #define _CWPLOTPAGE_H_GUARD
 
@@ -32,11 +33,18 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "CPlotPageData.h"
 #include "RefCountPtr.h"
 
+// NOTE. The plotProperties references held by these classes allows them to
+// poke at the internals of the CWPlotRegion (the owner of the plotProperties
+// instance). In general, the properties is used to READ user preferences
+// on plot style and layout, but it is NON CONST so that options selected
+// when printing can be saved and restored (without needed to call on the
+// CPreferences class directly).
+
 class CWPlot : public QwtPlot
 {
 Q_OBJECT
  public:
-  CWPlot(const RefCountConstPtr<CPlotDataSet> &dataSet, const CPlotProperties &plotProperties, QWidget *parent = 0);
+  CWPlot(const RefCountConstPtr<CPlotDataSet> &dataSet, CPlotProperties &plotProperties, QWidget *parent = 0);
   virtual ~CWPlot();
 
  protected:
@@ -50,6 +58,7 @@ Q_OBJECT
 
  private:
   RefCountConstPtr<CPlotDataSet> m_dataSet;
+  mutable CPlotProperties &m_plotProperties;
   QwtPlotZoomer *m_zoomer;
 };
 
@@ -57,24 +66,19 @@ class CWPlotPage : public QFrame
 {
 Q_OBJECT
  public:
-  CWPlotPage(const CPlotProperties &plotProperties, QWidget *parent = 0);
-  CWPlotPage(const CPlotProperties &plotProperties,
+  CWPlotPage(CPlotProperties &plotProperties, QWidget *parent = 0);
+  CWPlotPage(CPlotProperties &plotProperties,
 	     const RefCountConstPtr<CPlotPageData> &page, QWidget *parent = 0);
   virtual ~CWPlotPage();
 
   void addPlot(const RefCountConstPtr<CPlotDataSet> &dataSet);
   void layoutPlots(const QSize &visibleSize);
 
- protected:
-  void contextMenuEvent(QContextMenuEvent *e);
-
-  //  virtual void resizeEvent(QResizeEvent *e);
-
  public slots:
   void slotPrintAllPlots();
 
  private:
-  const CPlotProperties &m_plotProperties;
+  mutable CPlotProperties &m_plotProperties;
   QList<CWPlot*> m_plots;
 };
 

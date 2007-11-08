@@ -24,6 +24,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <vector>
 #include <QPen>
 #include <QColor>
+#include <QPrinter>
 
 #include "mediate_types.h"
 
@@ -45,16 +46,27 @@ class CPlotProperties
   int columns(void) const;
   void setColumns(int nColumns);
 
+  QPrinter::PageSize printPaperSize(void) const;
+  void setPrintPaperSize(QPrinter::PageSize paperSize);
+  QPrinter::Orientation printPaperOrientation(void) const;
+  void setPrintPaperOrientation(QPrinter::Orientation orientation);
+
  private:
   QPen m_defaultPen;
   std::vector<QPen> m_pens;
   QColor m_bgColour;
   int m_columns;
+  QPrinter::PageSize m_printPaperSize;
+  QPrinter::Orientation m_printPaperOrientation;
 };
 
 inline const QColor& CPlotProperties::backgroundColour(void) const { return m_bgColour; }
 inline void CPlotProperties::setBackgroundColour(const QColor &c) { m_bgColour = c; }
 inline int CPlotProperties::columns(void) const { return m_columns; }
 inline void CPlotProperties::setColumns(int nColumns) { m_columns = (nColumns < 1) ? 1 : nColumns; }
+inline QPrinter::PageSize CPlotProperties::printPaperSize(void) const { return m_printPaperSize; }
+inline void CPlotProperties::setPrintPaperSize(QPrinter::PageSize paperSize) { m_printPaperSize = paperSize; }
+inline QPrinter::Orientation CPlotProperties::printPaperOrientation(void) const { return m_printPaperOrientation; }
+inline void CPlotProperties::setPrintPaperOrientation(QPrinter::Orientation orientation) { m_printPaperOrientation = orientation; }
 
 #endif

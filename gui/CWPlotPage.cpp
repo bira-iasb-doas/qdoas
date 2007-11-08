@@ -38,9 +38,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "debugutil.h"
 
 CWPlot::CWPlot(const RefCountConstPtr<CPlotDataSet> &dataSet,
-	       const CPlotProperties &plotProperties, QWidget *parent) :
+	       CPlotProperties &plotProperties, QWidget *parent) :
   QwtPlot(parent),
   m_dataSet(dataSet),
+  m_plotProperties(plotProperties),
   m_zoomer(NULL)
 {
   setFocusPolicy(Qt::ClickFocus); // TODO - prevents keyPressEvent
@@ -122,45 +123,41 @@ void CWPlot::slotSaveAs()
   QString filename = QFileDialog::getSaveFileName(this, "Save Plot", ".", "*.spe");
   
   if (!filename.isEmpty()) {
-    TRACE("Save As " << filename.toStdString());
+    TRACE("TODO : Save As " << filename.toStdString());
   }
 }
 
 void CWPlot::slotPrint()
 {
-  TRACE4("Print");
-
   QPrinter printer(QPrinter::HighResolution);
 
-  printer.setPageSize(QPrinter::A4); // make it a property. TODO
-  printer.setOrientation(QPrinter::Landscape);
+  printer.setPageSize(m_plotProperties.printPaperSize());
+  printer.setOrientation(QPrinter::Landscape); // single plot ALWAYS defaults to landscape
   printer.setNumCopies(1);
 
   QPrintDialog dialog(&printer, this);
     
   if (dialog.exec() == QDialog::Accepted) {
 
+    // store printer preference
+    m_plotProperties.setPrintPaperSize(printer.pageSize());
+
     QPainter p(&printer);
     p.setPen(QPen(QColor(Qt::black)));
 
     QRect paper = printer.paperRect();
     QRect page = printer.pageRect();
-
-	QString msg;
-	QTextStream str(&msg);
-
-	str << "paper " << paper.x() << "," << paper.y() << " - " << paper.width() << " x " << paper.height() << "\n";
-	str << "page " << page.x() << "," << page.y() << " - " << page.width() << " x " << page.height() << "\n";
-
-	QMessageBox::information(this, "blob", msg);
-	
-	const int border = 150;
-
-	QRect tmp(border, border, page.width() - 2 * border, page.height() - 2 * border);
-
-	p.drawRect(tmp);
-
-	tmp.adjust(20, 20, -20, -20);
+    
+    QString msg;
+    QTextStream str(&msg);
+    
+    const int cPageBorder = 150;
+    
+    QRect tmp(cPageBorder, cPageBorder, page.width() - 2 * cPageBorder, page.height() - 2 * cPageBorder);
+    
+    p.drawRect(tmp);
+    
+    tmp.adjust(20, 20, -20, -20);
     print(&p, tmp);
   }
 }
@@ -182,13 +179,13 @@ void CWPlot::slotToggleInteraction()
   }
 }
 
-CWPlotPage::CWPlotPage(const CPlotProperties &plotProperties, QWidget *parent) :
+CWPlotPage::CWPlotPage(CPlotProperties &plotProperties, QWidget *parent) :
   QFrame(parent),
   m_plotProperties(plotProperties)
 {
 }
 
-CWPlotPage::CWPlotPage(const CPlotProperties &plotProperties,
+CWPlotPage::CWPlotPage(CPlotProperties &plotProperties,
 		       const RefCountConstPtr<CPlotPageData> &page, QWidget *parent) :
   QFrame(parent),
   m_plotProperties(plotProperties)
@@ -282,76 +279,65 @@ void CWPlotPage::layoutPlots(const QSize &visibleSize)
   resize(columns*fitWidth + cBorderSize, (row + (col?1:0)) * fitHeight + cBorderSize);
 }
 
-
-void CWPlotPage::contextMenuEvent(QContextMenuEvent *e)
-{
-  // position dependent
-  QMenu menu;
-    
-  menu.addAction("Print All...", this, SLOT(slotPrintAllPlots()));
-    
-  menu.exec(e->globalPos()); // slot will do the rest
-    
-  e->accept();
-}
-
-
 void CWPlotPage::slotPrintAllPlots()
 {
-  TRACE4("Print All");
-
   // MUST have at least one plot for this to be meaningful
   if (m_plots.size() == 0)
     return;
-
+  
   QPrinter printer(QPrinter::HighResolution);
-
-  printer.setPageSize(QPrinter::A4); // make it a property. TODO
+  
+  printer.setPageSize(m_plotProperties.printPaperSize());
+  printer.setOrientation(m_plotProperties.printPaperOrientation());
   printer.setNumCopies(1);
-
+  
   QPrintDialog dialog(&printer, this);
-    
+  
   if (dialog.exec() == QDialog::Accepted) {
+    
+    // store print preferences
+    m_plotProperties.setPrintPaperSize(printer.pageSize());
+    m_plotProperties.setPrintPaperOrientation(printer.orientation());
 
     QPainter p(&printer);
     p.setPen(QPen(QColor(Qt::black)));
-
+    
     QRect page = printer.pageRect();
-
-	// configure the plot rectangle
-	const int cPageBorder = 150;
-	const int cBorderSize = 20;  // around each plot
-
-	QRect tmp(cPageBorder, cPageBorder, page.width() - 2 * cPageBorder, page.height() - 2 * cPageBorder);
-
-	p.drawRect(tmp);
-
-
+    
+    // configure the plot rectangle
+    const int cPageBorder = 150; // offset inside the drawable region of the page.
+    const int cPlotBorder = 20;  // space between page border and plots, and between two plots.
+    
+    QRect tmp(cPageBorder, cPageBorder, page.width() - 2 * cPageBorder, page.height() - 2 * cPageBorder);
+    
+    p.drawRect(tmp);
+    
+    
     // work out the layout ... and size ...
-
+    
     if (m_plots.size() == 1) {
       // only one plot ...
-	  tmp.adjust(cBorderSize, cBorderSize, -cBorderSize, -cBorderSize);
-	  m_plots.front()->print(&p, tmp);
-	}
+      tmp.adjust(cPlotBorder, cPlotBorder, -cPlotBorder, -cPlotBorder);
+      m_plots.front()->print(&p, tmp);
+    }
     else {
-
+      
       // calculate the size that fits nicely to the full width
       // make a local change to columns if too few plots to fill them...
       int columns = (m_plots.size() < m_plotProperties.columns()) ? m_plots.size() : m_plotProperties.columns();
-	  int rows = m_plots.size() / columns + ((m_plots.size() % columns) ? 1 : 0);
-
-      int unitWidth = (tmp.width() - cBorderSize * (columns+1)) / columns;
-      int unitHeight = (tmp.height() - cBorderSize * (rows+1)) / rows;
-
+      int rows = m_plots.size() / columns + ((m_plots.size() % columns) ? 1 : 0);
+      
+      int unitWidth = (tmp.width() - cPlotBorder * (columns+1)) / columns;
+      int unitHeight = (tmp.height() - cPlotBorder * (rows+1)) / rows;
+      
       int col = 0;
       int row = 0;
       QList<CWPlot*>::iterator it = m_plots.begin();
       while (it != m_plots.end()) {
-         tmp = QRect(cPageBorder + cBorderSize + col * (cBorderSize + unitWidth),
-			         cPageBorder + cBorderSize + row * (cBorderSize + unitHeight),
-					 unitWidth, unitHeight);
-
+	tmp = QRect(cPageBorder + cPlotBorder + col * (cPlotBorder + unitWidth),
+		    cPageBorder + cPlotBorder + row * (cPlotBorder + unitHeight),
+		    unitWidth, unitHeight);
+	
         (*it)->print(&p, tmp);
         if (++col == columns) {
           col = 0;
@@ -359,6 +345,6 @@ void CWPlotPage::slotPrintAllPlots()
         }
         ++it;
       }
-	}
+    }
   }
 }

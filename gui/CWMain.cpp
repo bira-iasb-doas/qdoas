@@ -190,11 +190,16 @@ CWMain::CWMain(QWidget *parent) :
   // Plot menu
   QMenu *plotMenu = new QMenu("Plot");
 
-  // plot properties
+  // plot properties and printing
   QAction *plotPropAction = new QAction(QIcon(QPixmap(":/icons/plot_prop_22.png")), "Plot Properties...", this);
   connect(plotPropAction, SIGNAL(triggered()), m_activeContext, SLOT(slotEditPlotProperties()));
   plotMenu->addAction(plotPropAction);
   m_toolBar->addAction(plotPropAction);
+
+  QAction *plotPrintAction = new QAction(QIcon(QPixmap(":/icons/plot_print_22.png")), "Print Plots...", this);
+  connect(plotPrintAction, SIGNAL(triggered()), m_activeContext, SLOT(slotPrintPlots()));
+  plotMenu->addAction(plotPrintAction);
+  m_toolBar->addAction(plotPrintAction);
 
   m_menuBar->addMenu(plotMenu);
 

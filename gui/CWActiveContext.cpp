@@ -576,3 +576,8 @@ void CWActiveContext::slotEditPlotProperties()
 {
   addEditor(new CWPlotPropertiesEditor(m_plotRegion));
 }
+
+void CWActiveContext::slotPrintPlots()
+{
+  m_plotRegion->printVisiblePage();
+}
