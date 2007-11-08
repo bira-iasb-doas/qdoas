@@ -36,7 +36,8 @@ CPlotProperties::CPlotProperties() :
 CPlotProperties::CPlotProperties(const CPlotProperties &other) :
   m_defaultPen(Qt::black),
   m_pens(other.m_pens),
-  m_bgColour(other.m_bgColour)
+  m_bgColour(other.m_bgColour),
+  m_columns(other.m_columns)
 {
 }
 
@@ -45,6 +46,7 @@ CPlotProperties& CPlotProperties::operator=(const CPlotProperties &rhs)
   if (&rhs != this) {
     m_pens = rhs.m_pens;
     m_bgColour = rhs.m_bgColour;
+    m_columns = rhs.m_columns;
   }
 
   return *this;

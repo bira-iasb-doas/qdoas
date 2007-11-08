@@ -29,6 +29,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "CWPlotPage.h"
 #include "CPreferences.h"
 
+#include "debugutil.h"
+
 CWPlotRegion::CWPlotRegion(QWidget *parent) :
   QScrollArea(parent),
   m_plotPage(NULL),
