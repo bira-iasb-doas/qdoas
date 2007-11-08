@@ -246,6 +246,14 @@ void CDoasTable::setCellEnabled(int rowIndex, int columnIndex, bool enabled)
     m_columnList.at(columnIndex)->setRowEnabled(rowIndex, enabled);
 }
 
+bool CDoasTable::isColumnEnabled(int columnIndex) const
+{
+  if (columnIndex >=0 && columnIndex < m_columnList.count())
+    return m_columnList.at(columnIndex)->isEnabled();
+
+  return false;
+}
+
 int CDoasTable::columnCount(void) const
 {
   return m_columnList.count();
@@ -479,6 +487,11 @@ void CDoasTableColumn::setEnabled(bool enabled)
 {
   m_header->setEnabled(enabled);
   m_viewport->setEnabled(enabled);
+}
+
+bool CDoasTableColumn::isEnabled(void) const
+{
+  return m_viewport->isEnabled();
 }
 
 void CDoasTableColumn::setRowEnabled(int rowIndex, bool enabled)

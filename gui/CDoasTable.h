@@ -62,6 +62,8 @@ Q_OBJECT
   void setColumnEnabled(int columnIndex, bool enabled);
   void setCellEnabled(int rowIndex, int columnIndex, bool enabled);
 
+  bool isColumnEnabled(int columnIndex) const;
+
   QList<QVariant> getCellData(int rowIndex) const;
   QVariant getCellData(int rowIndex, int columnIndex) const;
 
@@ -117,6 +119,8 @@ Q_OBJECT
   void hide(void);
   void setEnabled(bool enabled);
   void setRowEnabled(int rowIndex, bool enabled);
+
+  bool isEnabled(void) const;
 
   void setRowOffset(int offset);
   int rowOffset(void) const;

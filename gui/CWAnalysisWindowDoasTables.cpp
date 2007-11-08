@@ -395,6 +395,8 @@ void CWMoleculesDoasTable::cellDataChanged(int row, int column, const QVariant &
 
 void CWMoleculesDoasTable::contextMenuEvent(QContextMenuEvent *e)
 {
+  const int amfColumn = 2;
+
   // create a popup menu
   QMenu menu;
   
@@ -404,6 +406,13 @@ void CWMoleculesDoasTable::contextMenuEvent(QContextMenuEvent *e)
   
   QAction *removeAction = menu.addAction("Remove", this, SLOT(slotRemoveRow()));
   removeAction->setEnabled(m_selectedRow != -1 && !isRowLocked(m_selectedRow));
+
+  // AMF filename ... only of enabled and value != NULL
+  if (isColumnEnabled(amfColumn)) {
+    menu.addSeparator();
+    QAction *amfAction = menu.addAction("AMF Filename", this, SLOT(slotAmfFileName()));
+    amfAction->setEnabled(m_selectedRow != -1 && getCellData(m_selectedRow, amfColumn).toString() != "None");   
+  }
 
   menu.exec(e->globalPos()); // a slot will do the rest
 }
@@ -477,6 +486,18 @@ void CWMoleculesDoasTable::slotRemoveRow()
 
     removeRow(m_selectedRow);
     m_selectedRow = -1;
+  }
+}
+
+void CWMoleculesDoasTable::slotAmfFileName()
+{
+  if (m_selectedRow >= 0 && m_selectedRow < rowCount()) {
+
+    // file dialog to set the AMF filename - TODO (file filter?)
+    QString filename = QFileDialog::getOpenFileName(this, "AMF Filename", m_amfFilename.at(m_selectedRow));
+    if (!filename.isEmpty()) {
+      m_amfFilename[m_selectedRow] = filename; // change the filename
+    }
   }
 }
 
