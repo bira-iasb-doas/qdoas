@@ -95,7 +95,7 @@ INDEX pdaLastRecord=ITEM_NONE;   // Record number of the last record read out.
 //
 // INPUT         specFp      pointer to the spectra file
 //
-// OUTPUT        pSpecInfo   pointer to a structure whose some fields are filled
+// OUTPUT        pEngineContext   pointer to a structure whose some fields are filled
 //                           with general data on the file
 //
 // RETURN        ERROR_ID_ALLOC           buffers allocation failed
@@ -106,7 +106,7 @@ INDEX pdaLastRecord=ITEM_NONE;   // Record number of the last record read out.
 #if defined(__BC32_) && __BC32_
 #pragma argsused
 #endif
-RC SetPDA_EGG_Logger(SPEC_INFO *pSpecInfo,FILE *specFp)
+RC SetPDA_EGG_Logger(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
  {
   // Declarations
 
@@ -116,7 +116,7 @@ RC SetPDA_EGG_Logger(SPEC_INFO *pSpecInfo,FILE *specFp)
   // Initializations
 
   pdaLastRecord=ITEM_NONE;
-  pSpecInfo->recordNumber=0;
+  pEngineContext->recordNumber=0;
   rc=ERROR_ID_NO;
 
   // Buffer allocation
@@ -124,7 +124,7 @@ RC SetPDA_EGG_Logger(SPEC_INFO *pSpecInfo,FILE *specFp)
   if ((record=(char *)MEMORY_AllocBuffer("SetPDA_EGG_Logger ","record",8001,sizeof(CHAR),0,MEMORY_TYPE_STRING))==NULL)
    rc=ERROR_ID_ALLOC;
   else if (specFp==NULL)
-   rc=ERROR_SetLast("SetPDA_EGG_Logger",ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pSpecInfo->fileName);
+   rc=ERROR_SetLast("SetPDA_EGG_Logger",ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pEngineContext->fileInfo.fileName);
   else
    {
     // Count the number of records in the file
@@ -132,9 +132,9 @@ RC SetPDA_EGG_Logger(SPEC_INFO *pSpecInfo,FILE *specFp)
 //    fseek(specFp,0L,SEEK_SET);
 
 //    while ((fgets(record,8000,specFp)!=0))
-//     pSpecInfo->recordNumber++;
+//     pEngineContext->recordNumber++;
 
-    pSpecInfo->recordNumber=STD_FileLength(specFp)/LOG_LENGTH;
+    pEngineContext->recordNumber=STD_FileLength(specFp)/LOG_LENGTH;
    }
 
   // Release the allocated buffer
@@ -212,7 +212,7 @@ RC GotoPDA_EGG_Logger(FILE *specFp,int recordNo)
 //               dateFlag     0 no date constraint; 1 a date selection is applied
 //               specFp       pointer to the spectra file
 //
-// OUTPUT        pSpecInfo  : pointer to a structure whose some fields are filled
+// OUTPUT        pEngineContext  : pointer to a structure whose some fields are filled
 //                            with data on the current spectrum
 //
 // RETURN        ERROR_ID_ALLOC          : a buffer allocation failed;
@@ -224,31 +224,34 @@ RC GotoPDA_EGG_Logger(FILE *specFp,int recordNo)
 #if defined(__BC32_) && __BC32_
 #pragma argsused
 #endif
-RC ReliPDA_EGG_Logger(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *specFp)
+RC ReliPDA_EGG_Logger(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp)
  {
   // Declarations
 
-  char       *record,                                   // string buffer for record read out
-             *p;                                        // pointer to characters in the previous string buffer
-  double     *spectrum,tmLocal,                         // current spectrum
-              Max;                                      // maximum value used for normalizing spectra during safe keeping
-  SHORT_DATE  day;                                      // date of the current spectrum
-  INT         iday,imonth,iyear,ihour,imin,isec,        // substitution variable for current measurement date and time read out
-              ccdFlag;                                  // 0 for RETICON detector, 1 for CCD detector
-  INDEX       i;                                        // index for browsing pixels in spectrum
+  RECORD_INFO *pRecord;                                                         // pointer to the record part of the engine context
+
+  char       *record,                                                           // string buffer for record read out
+             *p;                                                                // pointer to characters in the previous string buffer
+  double     *spectrum,tmLocal,                                                 // current spectrum
+              Max;                                                              // maximum value used for normalizing spectra during safe keeping
+  SHORT_DATE  day;                                                              // date of the current spectrum
+  INT         iday,imonth,iyear,ihour,imin,isec,                                // substitution variable for current measurement date and time read out
+              ccdFlag;                                                          // 0 for RETICON detector, 1 for CCD detector
+  INDEX       i;                                                                // index for browsing pixels in spectrum
   SZ_LEN      nameLen;
-  RC          rc;                                       // return code
+  RC          rc;                                                               // return code
 
   // Initializations
 
-  spectrum=pSpecInfo->spectrum;
+  pRecord=&pEngineContext->recordInfo;
+  spectrum=pEngineContext->buffers.spectrum;
   rc=ERROR_ID_NO;
 
   // Buffer allocation
 
   if ((record=(char *)MEMORY_AllocBuffer("ReliPDA_EGG_Logger ","record",8001,sizeof(char),0,MEMORY_TYPE_STRING))==NULL)
    rc=ERROR_ID_ALLOC;
-  else if ((recordNo<=0) || (recordNo>pSpecInfo->recordNumber))
+  else if ((recordNo<=0) || (recordNo>pEngineContext->recordNumber))
    rc=ERROR_ID_FILE_END;
 
   // Set file pointer
@@ -278,30 +281,30 @@ RC ReliPDA_EGG_Logger(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDa
 
       sscanf(p," %[^' '] %d/%d/%d %d:%d:%d %d %d %lf %lf %lf %f %f",
 
-                 pSpecInfo->Nom,                              // record name
+                 pRecord->Nom,                              // record name
                 &iday,&imonth,&iyear,&ihour,&imin,&isec,      // date and time
-                &pSpecInfo->NSomme,                           // number of saved scans
-                &pSpecInfo->rejected,                         // number of rejected scans
-                &pSpecInfo->Tint,                             // integration time
-                &pSpecInfo->Zm,                               // zenith angle
+                &pRecord->NSomme,                           // number of saved scans
+                &pRecord->rejected,                         // number of rejected scans
+                &pRecord->Tint,                             // integration time
+                &pRecord->Zm,                               // zenith angle
                 &Max,                                         // scaling factor
-                &pSpecInfo->azimuthViewAngle,
-                &pSpecInfo->elevationViewAngle);
+                &pRecord->azimuthViewAngle,
+                &pRecord->elevationViewAngle);
 
-      if (!pSpecInfo->project.instrumental.azimuthFlag || (pSpecInfo->Azimuth==99999.))
+      if (!pEngineContext->project.instrumental.azimuthFlag || (pRecord->Azimuth==99999.))
        {
-        pSpecInfo->Azimuth=(double)-1.;
-        pSpecInfo->azimuthViewAngle=-1.;
-        pSpecInfo->elevationViewAngle=-1.;
+        pRecord->Azimuth=(double)-1.;
+        pRecord->azimuthViewAngle=-1.;
+        pRecord->elevationViewAngle=-1.;
        }
       else
        {
-        if (pSpecInfo->elevationViewAngle==99999.)
-         pSpecInfo->elevationViewAngle=-1.;
-        if (pSpecInfo->azimuthViewAngle==99999.)
-         pSpecInfo->azimuthViewAngle=-1.;
+        if (pRecord->elevationViewAngle==99999.)
+         pRecord->elevationViewAngle=-1.;
+        if (pRecord->azimuthViewAngle==99999.)
+         pRecord->azimuthViewAngle=-1.;
         else
-         pSpecInfo->azimuthViewAngle-=90.;                                        // mirror is perpendicular to the direction of the sun
+         pRecord->azimuthViewAngle-=90.;                                        // mirror is perpendicular to the direction of the sun
        }
 
       // Build date and time of the current measurement
@@ -344,30 +347,30 @@ RC ReliPDA_EGG_Logger(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDa
       else if (day.da_year<1930)
        day.da_year+=(short)100;
 
-      pSpecInfo->present_time.ti_hour=(UCHAR)ihour;
-      pSpecInfo->present_time.ti_min=(UCHAR)imin;
-      pSpecInfo->present_time.ti_sec=(UCHAR)isec;
-//      pSpecInfo->Azimuth=(double)-1.;
+      pRecord->present_time.ti_hour=(UCHAR)ihour;
+      pRecord->present_time.ti_min=(UCHAR)imin;
+      pRecord->present_time.ti_sec=(UCHAR)isec;
+//      pRecord->Azimuth=(double)-1.;
 
-      memcpy(&pSpecInfo->present_day,&day,sizeof(SHORT_DATE));
+      memcpy(&pRecord->present_day,&day,sizeof(SHORT_DATE));
 
       // Available data on the current spectrum
 
-      pSpecInfo->Tm=(double)ZEN_NbSec(&pSpecInfo->present_day,&pSpecInfo->present_time,0);
-      pSpecInfo->TotalExpTime=(double)0.;
-      pSpecInfo->TimeDec=(double)pSpecInfo->present_time.ti_hour+pSpecInfo->present_time.ti_min/60.+pSpecInfo->present_time.ti_sec/3600.;
+      pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_day,&pRecord->present_time,0);
+      pRecord->TotalExpTime=(double)0.;
+      pRecord->TimeDec=(double)pRecord->present_time.ti_hour+pRecord->present_time.ti_min/60.+pRecord->present_time.ti_sec/3600.;
 
-      tmLocal=pSpecInfo->Tm+THRD_localShift*3600.;
+      tmLocal=pRecord->Tm+THRD_localShift*3600.;
 
-      pSpecInfo->localCalDay=ZEN_FNCaljda(&tmLocal);
-      pSpecInfo->localTimeDec=fmod(pSpecInfo->TimeDec+24.+THRD_localShift,(double)24.);
+      pRecord->localCalDay=ZEN_FNCaljda(&tmLocal);
+      pRecord->localTimeDec=fmod(pRecord->TimeDec+24.+THRD_localShift,(double)24.);
 
-      nameLen=strlen(pSpecInfo->Nom);
+      nameLen=strlen(pRecord->Nom);
 
-      if (!pSpecInfo->NSomme || // (pSpecInfo->rejected>=pSpecInfo->NSomme) ||
-         ((pSpecInfo->project.instrumental.user==PRJCT_INSTR_IASB_TYPE_ZENITHAL) && (pSpecInfo->Nom[nameLen-4]!='Z')) ||
-         ((pSpecInfo->project.instrumental.user==PRJCT_INSTR_IASB_TYPE_OFFAXIS) && (pSpecInfo->Nom[nameLen-4]!='o')) ||
-         (dateFlag && (pSpecInfo->localCalDay!=localDay)))
+      if (!pRecord->NSomme || // (pRecord->rejected>=pRecord->NSomme) ||
+         ((pEngineContext->project.instrumental.user==PRJCT_INSTR_IASB_TYPE_ZENITHAL) && (pRecord->Nom[nameLen-4]!='Z')) ||
+         ((pEngineContext->project.instrumental.user==PRJCT_INSTR_IASB_TYPE_OFFAXIS) && (pRecord->Nom[nameLen-4]!='o')) ||
+         (dateFlag && (pRecord->localCalDay!=localDay)))
 
        rc=ERROR_ID_FILE_RECORD;
 
@@ -376,12 +379,12 @@ RC ReliPDA_EGG_Logger(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDa
         // Spectrum read out
 
         p += 142;
-        Max*=(double)pSpecInfo->NSomme/65000.;
+        Max*=(double)pRecord->NSomme/65000.;
 
         for (i=0;i<NDET;i++)
          {
           sscanf(p,"%lf",&spectrum[i]);
-          spectrum[i]*=(double)Max/pSpecInfo->NSomme;  // test pSpecInfo->NSomme==0 is made before
+          spectrum[i]*=(double)Max/pRecord->NSomme;  // test pRecord->NSomme==0 is made before
           p+=6;
          }
 
@@ -452,7 +455,7 @@ float Tps2[MAXTPS2] =
 //               newFlag     0 format used during intercomparison campaign at Camborne, ENGLAND, 94
 //                           1 format used from spring 94 until now
 //
-// OUTPUT        pSpecInfo   pointer to a structure whose some fields are filled
+// OUTPUT        pEngineContext   pointer to a structure whose some fields are filled
 //                           with general data on the file
 //
 // RETURN        ERROR_ID_ALLOC           buffers allocation failed
@@ -464,44 +467,47 @@ float Tps2[MAXTPS2] =
 #if defined(__BC32_) && __BC32_
 #pragma argsused
 #endif
-RC SetPDA_EGG(SPEC_INFO *pSpecInfo,FILE *specFp)
+RC SetPDA_EGG(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
  {
   // Declarations
 
-  PDA1453A header;                         // record header
-  SHORT *indexes,                          // size of SpecMax arrays
-         curvenum;                         // number of spectra in the file
-  ULONG  recordSize,                       // size of a record without SpecMax
-        *recordIndexes;                    // save the position of each record in the file
-  INDEX i;                                 // browse spectra in the file
-  RC rc;                                   // return code
+  BUFFERS *pBuffers;                                                            // pointer to the buffers part of the engine context
+  PDA1453A header;                                                              // record header
+  SHORT *indexes,                                                               // size of SpecMax arrays
+         curvenum;                                                              // number of spectra in the file
+  ULONG  recordSize,                                                            // size of a record without SpecMax
+        *recordIndexes;                                                         // save the position of each record in the file
+  INDEX i;                                                                      // browse spectra in the file
+  RC rc;                                                                        // return code
   INT newFlag;
 
   // Initializations
 
-  pSpecInfo->recordIndexesSize=2001;
-  recordIndexes=pSpecInfo->recordIndexes;
+  pBuffers=&pEngineContext->buffers;
+
+  pEngineContext->recordIndexesSize=2001;
+  recordIndexes=pBuffers->recordIndexes;
   newFlag=1;                                                                    // QDOAS !!! To change
   rc=ERROR_ID_NO;
 
   // Buffers allocation
 
-  if (((indexes=(SHORT *)MEMORY_AllocBuffer("SetPDA_EGG ","indexes",pSpecInfo->recordIndexesSize,sizeof(SHORT),0,MEMORY_TYPE_SHORT))==NULL) ||
-      ((pSpecInfo->specMax=MEMORY_AllocDVector("SetPDA_EGG ","specMax",0,NDET-1))==NULL) ||
-      ((pSpecInfo->specMaxx=MEMORY_AllocDVector("SetPDA_EGG ","specMaxx",0,NDET-1))==NULL))
+  if (((indexes=(SHORT *)MEMORY_AllocBuffer("SetPDA_EGG ","indexes",pEngineContext->recordIndexesSize,sizeof(SHORT),0,MEMORY_TYPE_SHORT))==NULL) ||
+      ((pBuffers->specMax=MEMORY_AllocDVector("SetPDA_EGG ","specMax",0,NDET-1))==NULL) ||
+      ((pBuffers->specMaxx=MEMORY_AllocDVector("SetPDA_EGG ","specMaxx",0,NDET-1))==NULL))
 
    rc=ERROR_ID_ALLOC;
 
   // Open spectra file
 
   else if (specFp==NULL)
-   rc=ERROR_SetLast("SetPDA_EGG",ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pSpecInfo->fileName);
+   rc=ERROR_SetLast("SetPDA_EGG",ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pEngineContext->fileInfo.fileName);
   else
    {
    	// Initializations
 
    	for (i=0;i<NDET;i++)
-   	 pSpecInfo->specMaxx[i]=(double)i+1.;
+   	 pBuffers->specMaxx[i]=(double)i+1.;
 
 // !!! */    UCHAR *ptr,fileout[MAX_ITEM_TEXT_LEN+1];
 // !!! */    FILE *fp;
@@ -515,42 +521,42 @@ RC SetPDA_EGG(SPEC_INFO *pSpecInfo,FILE *specFp)
     fseek(specFp,0L,SEEK_SET);
 
     if (!fread(&curvenum,sizeof(SHORT),1,specFp) ||
-        !fread(indexes,pSpecInfo->recordIndexesSize*sizeof(SHORT),1,specFp) ||
+        !fread(indexes,pEngineContext->recordIndexesSize*sizeof(SHORT),1,specFp) ||
         (curvenum<=0))
 
-     rc=ERROR_SetLast("SetPDA_EGG",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pSpecInfo->fileName);
+     rc=ERROR_SetLast("SetPDA_EGG",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pEngineContext->fileInfo.fileName);
 
     else
      {
       // Save the position of each record in the file
 
 // !!! */      fwrite(&curvenum,sizeof(SHORT),1,fp);
-// !!! */      fwrite(indexes,pSpecInfo->recordIndexesSize*sizeof(SHORT),1,fp);
+// !!! */      fwrite(indexes,pEngineContext->recordIndexesSize*sizeof(SHORT),1,fp);
 // !!! */      fclose(fp);
 
-      pSpecInfo->recordNumber=curvenum;
+      pEngineContext->recordNumber=curvenum;
 
-      pSpecInfo->recordSize=recordSize=(LONG)sizeof(PDA1453A)-
+      pEngineContext->recordSize=recordSize=(LONG)sizeof(PDA1453A)-
                                              sizeof(double)-                    // azimuth (only since dec 2000)
                                              sizeof(float);                     // elevation (only since 2003)
 
       fread(&header,recordSize,1,specFp);
 
-      if (pSpecInfo->project.instrumental.azimuthFlag)
+      if (pEngineContext->project.instrumental.azimuthFlag)
        {
-        pSpecInfo->recordSize+=sizeof(double);
+        pEngineContext->recordSize+=sizeof(double);
         if ((header.today.da_year>=2003) || (header.today.da_year==1993))
-         pSpecInfo->recordSize+=sizeof(float);
+         pEngineContext->recordSize+=sizeof(float);
        }
 
       fseek(specFp,-((LONG)recordSize),SEEK_CUR);
 
-      recordSize=pSpecInfo->recordSize+(LONG)sizeof(USHORT)*NDET+(300L*(sizeof(SHORT)+sizeof(float))+8L)*newFlag;
+      recordSize=pEngineContext->recordSize+(LONG)sizeof(USHORT)*NDET+(300L*(sizeof(SHORT)+sizeof(float))+8L)*newFlag;
 
-//      recordSize=(LONG)sizeof(PDA1453A)-((!pSpecInfo->project.instrumental.azimuthFlag)?
+//      recordSize=(LONG)sizeof(PDA1453A)-((!pEngineContext->project.instrumental.azimuthFlag)?
 //                       sizeof(double):0)+(LONG)sizeof(USHORT)*NDET+(300L*(sizeof(SHORT)+sizeof(float))+8L)*newFlag;
 
-      recordIndexes[0]=(LONG)(pSpecInfo->recordIndexesSize+1)*sizeof(SHORT);      // file header : size of indexes table + curvenum
+      recordIndexes[0]=(LONG)(pEngineContext->recordIndexesSize+1)*sizeof(SHORT);      // file header : size of indexes table + curvenum
 
       for (i=1;i<curvenum;i++)
        recordIndexes[i]=recordIndexes[i-1]+recordSize+indexes[i]*sizeof(USHORT);  // take size of SpecMax arrays into account
@@ -580,7 +586,7 @@ RC SetPDA_EGG(SPEC_INFO *pSpecInfo,FILE *specFp)
 //               newFlag      0 format used during intercomparison campaign at Camborne, ENGLAND, 94
 //                            1 format used from spring 94 until now;
 //
-// OUTPUT        pSpecInfo  : pointer to a structure whose some fields are filled
+// OUTPUT        pEngineContext  : pointer to a structure whose some fields are filled
 //                            with data on the current spectrum
 //
 // RETURN        ERROR_ID_ALLOC          : a buffer allocation failed;
@@ -593,30 +599,33 @@ RC SetPDA_EGG(SPEC_INFO *pSpecInfo,FILE *specFp)
 #if defined(__BC32_) && __BC32_
 #pragma argsused
 #endif
-RC ReliPDA_EGG(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *specFp,FILE *namesFp,FILE *darkFp)
+RC ReliPDA_EGG(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp,FILE *namesFp,FILE *darkFp)
  {
   // Declarations
 
-  PDA1453A          header;                             // file header
-  OBSERVATION_SITE *pSite;                              // pointer to the observation sites data
-  UCHAR             fileNameShort[MAX_STR_SHORT_LEN+1], // temporary file name
-                   *ptr,                                // pointer to part of the previous string
-                    names[20];                          // name of the current spectrum
-  USHORT           *ISpectre,                           // spectrum in the original format
-                   *ISpecMax,                           // maximum values for each scan
-                   *TabNSomme;                          // scans number for each integration time
-  double            SMax,                               // maximum value of the current not normalized spectrum
-                    Max,                                // scaling factor used for normalizing spectrum before safe keeping in the file
-                   *ObsScan,                            // dark current spectrum
-                    longit,latit,azimuth,Tm,tmLocal;    // temporary data
-  INT               azimuthFlag,                        // 1 if format with azimuth angle; 0 otherwise
-                    MAXTPS,                             // size of the integration time array to use
-                    indexSite;                          // index of the observation site in the sites list
-  float            *TabTint,*Tps;                       // integration time arrays
-  INDEX             i,j,k;                              // indexes for loops and arrays
-  FILE             *fp;                                 // file pointer
+  BUFFERS *pBuffers;                                                            // pointer to the buffers part of the engine context
+  RECORD_INFO *pRecord;                                                         // pointer to the record part of the engine context
+
+  PDA1453A          header;                                                     // file header
+  OBSERVATION_SITE *pSite;                                                      // pointer to the observation sites data
+  UCHAR             fileNameShort[MAX_STR_SHORT_LEN+1],                         // temporary file name
+                   *ptr,                                                        // pointer to part of the previous string
+                    names[20];                                                  // name of the current spectrum
+  USHORT           *ISpectre,                                                   // spectrum in the original format
+                   *ISpecMax,                                                   // maximum values for each scan
+                   *TabNSomme;                                                  // scans number for each integration time
+  double            SMax,                                                       // maximum value of the current not normalized spectrum
+                    Max,                                                        // scaling factor used for normalizing spectrum before safe keeping in the file
+                   *ObsScan,                                                    // dark current spectrum
+                    longit,latit,azimuth,Tm,tmLocal;                            // temporary data
+  INT               azimuthFlag,                                                // 1 if format with azimuth angle; 0 otherwise
+                    MAXTPS,                                                     // size of the integration time array to use
+                    indexSite;                                                  // index of the observation site in the sites list
+  float            *TabTint,*Tps;                                               // integration time arrays
+  INDEX             i,j,k;                                                      // indexes for loops and arrays
+  FILE             *fp;                                                         // file pointer
   SZ_LEN            nameLen;
-  RC                rc;                                 // return code
+  RC                rc;                                                         // return code
   INT               newFlag;
 
 // !!! */    FILE *gp;
@@ -624,13 +633,16 @@ RC ReliPDA_EGG(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE 
 
   // Initializations
 
+  pRecord=&pEngineContext->recordInfo;
+  pBuffers=&pEngineContext->buffers;
+
   newFlag=1;
 
   memset(fileNameShort,0,MAX_STR_SHORT_LEN+1);
-  strncpy(fileNameShort,pSpecInfo->fileName,MAX_STR_SHORT_LEN);
+  strncpy(fileNameShort,pEngineContext->fileInfo.fileName,MAX_STR_SHORT_LEN);
 
   ISpectre=ISpecMax=TabNSomme=NULL;
-  azimuthFlag=pSpecInfo->project.instrumental.azimuthFlag;
+  azimuthFlag=pEngineContext->project.instrumental.azimuthFlag;
   memset(names,0,20);
   TabTint=NULL;
   ObsScan=NULL;
@@ -647,7 +659,7 @@ RC ReliPDA_EGG(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE 
 
   if (specFp==NULL)
    rc=ERROR_ID_FILE_NOT_FOUND;
-  else if ((recordNo<=0) || (recordNo>pSpecInfo->recordNumber))
+  else if ((recordNo<=0) || (recordNo>pEngineContext->recordNumber))
    rc=ERROR_ID_FILE_END;
 
   // Buffers allocation
@@ -667,12 +679,12 @@ RC ReliPDA_EGG(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE 
     if (namesFp!=NULL)
      fseek(namesFp,(LONG)20L*((recordNo-1)*(1+!newFlag)+!newFlag),SEEK_SET);
 
-    fseek(specFp,(LONG)pSpecInfo->recordIndexes[recordNo-1],SEEK_SET);
+    fseek(specFp,(LONG)pBuffers->recordIndexes[recordNo-1],SEEK_SET);
 
     // Complete record read out
 
     if (((namesFp!=NULL) && !fread(names,20,1,namesFp)) ||
-         !fread(&header,pSpecInfo->recordSize,1,specFp) ||
+         !fread(&header,pEngineContext->recordSize,1,specFp) ||
          !fread(ISpectre,sizeof(USHORT)*NDET,1,specFp) ||
          (newFlag &&
         (!fread(TabTint,sizeof(float)*300,1,specFp) ||
@@ -686,8 +698,8 @@ RC ReliPDA_EGG(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE 
      {
       nameLen=strlen(names);
 
-      if (((pSpecInfo->project.instrumental.user==PRJCT_INSTR_IASB_TYPE_ZENITHAL) && (names[nameLen-4]!='Z')) ||
-          ((pSpecInfo->project.instrumental.user==PRJCT_INSTR_IASB_TYPE_OFFAXIS) && (names[nameLen-4]!='o')))
+      if (((pEngineContext->project.instrumental.user==PRJCT_INSTR_IASB_TYPE_ZENITHAL) && (names[nameLen-4]!='Z')) ||
+          ((pEngineContext->project.instrumental.user==PRJCT_INSTR_IASB_TYPE_OFFAXIS) && (names[nameLen-4]!='o')))
 
        rc=ERROR_ID_FILE_RECORD;
 
@@ -744,7 +756,7 @@ RC ReliPDA_EGG(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE 
 
                  Tm = (double) ZEN_NbSec ( &header.today, &header.now, 0 );
 
-                 if ((indexSite=SITES_GetIndex(pSpecInfo->project.instrumental.observationSite))!=ITEM_NONE)
+                 if ((indexSite=SITES_GetIndex(pEngineContext->project.instrumental.observationSite))!=ITEM_NONE)
                   {
                    pSite=&SITES_itemList[indexSite];
 
@@ -767,23 +779,23 @@ RC ReliPDA_EGG(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE 
 // ! ***/           fwrite(ISpecMax,sizeof(USHORT)*(header.Rejected+header.ScansNumber),1,gp);
 // ! ***/           fclose(gp);
 
-        memcpy((char *)&pSpecInfo->present_day,(char *)&header.today,sizeof(SHORT_DATE));
-        memcpy((char *)&pSpecInfo->present_time,(char *)&header.now,sizeof(struct time));
+        memcpy((char *)&pRecord->present_day,(char *)&header.today,sizeof(SHORT_DATE));
+        memcpy((char *)&pRecord->present_time,(char *)&header.now,sizeof(struct time));
 
-        pSpecInfo->Tm=(double)ZEN_NbSec(&pSpecInfo->present_day,&pSpecInfo->present_time,0);
-        pSpecInfo->TotalExpTime=(double)0.;
-        pSpecInfo->TimeDec=(double)header.now.ti_hour+header.now.ti_min/60.+header.now.ti_sec/3600.;
+        pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_day,&pRecord->present_time,0);
+        pRecord->TotalExpTime=(double)0.;
+        pRecord->TimeDec=(double)header.now.ti_hour+header.now.ti_min/60.+header.now.ti_sec/3600.;
 
-        tmLocal=pSpecInfo->Tm+THRD_localShift*3600.;
+        tmLocal=pRecord->Tm+THRD_localShift*3600.;
 
-        pSpecInfo->localCalDay=ZEN_FNCaljda(&tmLocal);
-        pSpecInfo->localTimeDec=fmod(pSpecInfo->TimeDec+24.+THRD_localShift,(double)24.);
-        pSpecInfo->elevationViewAngle=(pSpecInfo->present_day.da_year>=2003)?header.mirrorElv:(float)-1.;
+        pRecord->localCalDay=ZEN_FNCaljda(&tmLocal);
+        pRecord->localTimeDec=fmod(pRecord->TimeDec+24.+THRD_localShift,(double)24.);
+        pRecord->elevationViewAngle=(pRecord->present_day.da_year>=2003)?header.mirrorElv:(float)-1.;
 
         // User constraints
 
         if ((SMax==(double)0.) || (header.ScansNumber<=0) ||
-            (dateFlag && (pSpecInfo->localCalDay!=localDay)))
+            (dateFlag && (pRecord->localCalDay!=localDay)))
 
          rc=ERROR_ID_FILE_RECORD;
 
@@ -793,45 +805,45 @@ RC ReliPDA_EGG(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE 
 
           if (newFlag)
            {
-            if (pSpecInfo->specMax!=NULL)
+            if (pBuffers->specMax!=NULL)
              for (i=0;i<(header.Rejected+header.ScansNumber);i++)
-              pSpecInfo->specMax[i]=(double)ISpecMax[i]; // *0.5;
+              pBuffers->specMax[i]=(double)ISpecMax[i]; // *0.5;
 
             for (i=0;i<NDET;i++)
-             pSpecInfo->spectrum[i]=(double)ISpectre[i]*Max/65000.; //SMax;
+             pBuffers->spectrum[i]=(double)ISpectre[i]*Max/65000.; //SMax;
            }
           else
            {
-            if (pSpecInfo->specMax!=NULL)
+            if (pBuffers->specMax!=NULL)
              for (i=0,Max=(double)0.;i<(header.Rejected+header.ScansNumber);i++)
               {
                Max+=(double)ISpecMax[i];
-               pSpecInfo->specMax[i]=(double)ISpecMax[i];
+               pBuffers->specMax[i]=(double)ISpecMax[i];
               }
 
             for (i=0,Max/=(double)header.ScansNumber;i<NDET;i++ )
-             pSpecInfo->spectrum[i]=(double)ISpectre[i]*Max/(SMax*2);
+             pBuffers->spectrum[i]=(double)ISpectre[i]*Max/(SMax*2);
            }
 
           // Data on the current record
 
-          pSpecInfo->TDet     = header.Detector_Temp;
-          pSpecInfo->Tint     = header.Exposure_time;
-          pSpecInfo->NSomme   = header.ScansNumber;
-          pSpecInfo->Zm       = header.Zm;
-          pSpecInfo->SkyObs   = header.SkyObs;
-          pSpecInfo->rejected = header.Rejected;
-          pSpecInfo->ReguTemp = header.ReguTemp;
+          pRecord->TDet     = header.Detector_Temp;
+          pRecord->Tint     = header.Exposure_time;
+          pRecord->NSomme   = header.ScansNumber;
+          pRecord->Zm       = header.Zm;
+          pRecord->SkyObs   = header.SkyObs;
+          pRecord->rejected = header.Rejected;
+          pRecord->ReguTemp = header.ReguTemp;
 
-          pSpecInfo->azimuthViewAngle  = (azimuthFlag)?(float)header.azimuth:(float)-1.;
+          pRecord->azimuthViewAngle  = (azimuthFlag)?(float)header.azimuth:(float)-1.;
 
-          memcpy(pSpecInfo->Nom,names,20);
+          memcpy(pRecord->Nom,names,20);
 
           // Dark current correction
 
-          if (pSpecInfo->darkCurrent!=NULL)
+          if (pBuffers->darkCurrent!=NULL)
            for (i=0;i<NDET;i++)
-            pSpecInfo->darkCurrent[i]=(double)0.;
+            pBuffers->darkCurrent[i]=(double)0.;
 
           if (newFlag)
            {
@@ -839,45 +851,45 @@ RC ReliPDA_EGG(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE 
 
             while (TabNSomme[k]!=0)
              {
-              pSpecInfo->TotalExpTime+=(double)TabNSomme[k]*TabTint[k];
+              pRecord->TotalExpTime+=(double)TabNSomme[k]*TabTint[k];
 
               for (j=0;j<MAXTPS;j++)
                if (TabTint[k]==Tps[j])
                 break;
 
-              if ((j!=MAXTPS) && (pSpecInfo->darkCurrent!=NULL) && (darkFp!=NULL) &&
+              if ((j!=MAXTPS) && (pBuffers->darkCurrent!=NULL) && (darkFp!=NULL) &&
                   ((int)STD_FileLength(darkFp)>=(int)((j+1)*sizeof(double)*NDET)))
                {
                 fseek(darkFp,(LONG)j*NDET*sizeof(double),SEEK_SET);
                 fread(ObsScan,sizeof(double)*NDET,1,darkFp);
 
                 for (i=0;i<NDET;i++)
-                 pSpecInfo->darkCurrent[i]+=(double)ObsScan[i]*TabNSomme[k];
+                 pBuffers->darkCurrent[i]+=(double)ObsScan[i]*TabNSomme[k];
                }
 
               k++;
              }
            }
-          else if (pSpecInfo->darkCurrent!=NULL)
+          else if (pBuffers->darkCurrent!=NULL)
            {
-            fseek(darkFp,(LONG)(pSpecInfo->recordIndexesSize+1)*sizeof(SHORT)+(pSpecInfo->recordSize+(LONG)sizeof(USHORT)*NDET)*(recordNo-1),SEEK_SET);
+            fseek(darkFp,(LONG)(pEngineContext->recordIndexesSize+1)*sizeof(SHORT)+(pEngineContext->recordSize+(LONG)sizeof(USHORT)*NDET)*(recordNo-1),SEEK_SET);
 
-            fread(&header,pSpecInfo->recordSize,1,darkFp);
+            fread(&header,pEngineContext->recordSize,1,darkFp);
             fread(ISpectre,sizeof(USHORT)*NDET,1,darkFp);
 
             for (i=0;i<NDET;i++)
-             pSpecInfo->darkCurrent[i]=(double)ISpectre[i];
+             pBuffers->darkCurrent[i]=(double)ISpectre[i];
            }
 
           // Dark current subtraction
 
-          if (pSpecInfo->NSomme!=0)
+          if (pRecord->NSomme!=0)
            for (i=0;i<NDET;i++)
             {
-             pSpecInfo->spectrum[i]/=(double)pSpecInfo->NSomme;
-             if (pSpecInfo->darkCurrent!=NULL)
-              pSpecInfo->darkCurrent[i]/=(double)pSpecInfo->NSomme;
-             pSpecInfo->spectrum[i]-=pSpecInfo->darkCurrent[i];
+             pBuffers->spectrum[i]/=(double)pRecord->NSomme;
+             if (pBuffers->darkCurrent!=NULL)
+              pBuffers->darkCurrent[i]/=(double)pRecord->NSomme;
+             pBuffers->spectrum[i]-=pBuffers->darkCurrent[i];
             }
          }
        }
@@ -893,45 +905,45 @@ RC ReliPDA_EGG(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE 
 //    FILE *logFp;
 //    char fileName[40];
 
-//    sprintf(fileName,"zard%03d.%02du",ZEN_FNCaljda(&pSpecInfo->Tm),pSpecInfo->present_day.da_year%100);
+//    sprintf(fileName,"zard%03d.%02du",ZEN_FNCaljda(&pRecord->Tm),pRecord->present_day.da_year%100);
 
 //    if ((logFp=fopen(fileName,"a+t"))!=NULL)
 //     {
-//      Max=(double)pSpecInfo->spectrum[0]-pSpecInfo->darkCurrent[0];
+//      Max=(double)pBuffers->spectrum[0]-pBuffers->darkCurrent[0];
 
 //      for (i=0;i<NDET;i++)
-//       if ((double)pSpecInfo->spectrum[i]-pSpecInfo->darkCurrent[i]>Max)
-//        Max=(double)pSpecInfo->spectrum[i]-pSpecInfo->darkCurrent[i];
+//       if ((double)pBuffers->spectrum[i]-pBuffers->darkCurrent[i]>Max)
+//        Max=(double)pBuffers->spectrum[i]-pBuffers->darkCurrent[i];
 
-//      sprintf(pSpecInfo->Nom,"%#3d%02dHA%02d%02dZ%03d    ",ZEN_FNCaljda(&pSpecInfo->Tm),pSpecInfo->present_day.da_year%100,
-//                      pSpecInfo->present_time.ti_hour,
-//                      pSpecInfo->present_time.ti_min,
-//                (int)(pSpecInfo->Zm*10.));
+//      sprintf(pRecord->Nom,"%#3d%02dHA%02d%02dZ%03d    ",ZEN_FNCaljda(&pRecord->Tm),pRecord->present_day.da_year%100,
+//                      pRecord->present_time.ti_hour,
+//                      pRecord->present_time.ti_min,
+//                (int)(pRecord->Zm*10.));
 
 //      fprintf(logFp,"%04d/%02d/%02d %02d:%02d H %-20s %02d/%02d/%02d %02d:%02d:%02d %05d %05d %07.3f %4.1f %05d ",
-//                      pSpecInfo->present_day.da_year,
-//                      pSpecInfo->present_day.da_mon,
-//                      pSpecInfo->present_day.da_day,
-//                      pSpecInfo->present_time.ti_hour,
-//                      pSpecInfo->present_time.ti_min,
-//                      pSpecInfo->Nom,
-//                      pSpecInfo->present_day.da_day,
-//                      pSpecInfo->present_day.da_mon,
-//                      pSpecInfo->present_day.da_year%100,
-//                      pSpecInfo->present_time.ti_hour,
-//                      pSpecInfo->present_time.ti_min,
-//                      pSpecInfo->present_time.ti_sec,
-//                      pSpecInfo->NSomme,                           // number of saved scans
-//                      pSpecInfo->rejected,                         // number of rejected scans
-//                      pSpecInfo->Tint,                             // integration time
-//                      pSpecInfo->Zm,                               // zenith angle
+//                      pRecord->present_day.da_year,
+//                      pRecord->present_day.da_mon,
+//                      pRecord->present_day.da_day,
+//                      pRecord->present_time.ti_hour,
+//                      pRecord->present_time.ti_min,
+//                      pRecord->Nom,
+//                      pRecord->present_day.da_day,
+//                      pRecord->present_day.da_mon,
+//                      pRecord->present_day.da_year%100,
+//                      pRecord->present_time.ti_hour,
+//                      pRecord->present_time.ti_min,
+//                      pRecord->present_time.ti_sec,
+//                      pRecord->NSomme,                           // number of saved scans
+//                      pRecord->rejected,                         // number of rejected scans
+//                      pRecord->Tint,                             // integration time
+//                      pRecord->Zm,                               // zenith angle
 //                      (int)(Max+0.5));                             // scaling factor
 
 //      fprintf(logFp,"99999 99999 99999 99999 99999 99999 99999 99999 99999 99999 99999 99999 " );
 
 //      for (i=0;i<NDET;i++)
-//       fprintf(logFp,"%05d ",(pSpecInfo->spectrum[i]-pSpecInfo->darkCurrent[i])<=(double)0.?0:
-//                       (int)((pSpecInfo->spectrum[i]-pSpecInfo->darkCurrent[i])*65000./Max));
+//       fprintf(logFp,"%05d ",(pBuffers->spectrum[i]-pBuffers->darkCurrent[i])<=(double)0.?0:
+//                       (int)((pBuffers->spectrum[i]-pBuffers->darkCurrent[i])*65000./Max));
 
 //      fprintf(logFp,"\n");
 //     }
@@ -950,7 +962,7 @@ RC ReliPDA_EGG(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE 
 /*        {
          FILE *fp;
          fp=fopen("C:\\My Data\\Stations\\OHP\\Analysis\\ohp_Tint.dat","a+t");
-         fprintf(fp,"%#5d %#3d %.3f %.2f %.2f\n",pSpecInfo->present_day.da_year,ZEN_FNCaljda(&pSpecInfo->Tm),pSpecInfo->TimeDec,pSpecInfo->Zm,pSpecInfo->Tint);
+         fprintf(fp,"%#5d %#3d %.3f %.2f %.2f\n",pRecord->present_day.da_year,ZEN_FNCaljda(&pRecord->Tm),pRecord->TimeDec,pRecord->Zm,pRecord->Tint);
          fclose(fp);
         }    */
 

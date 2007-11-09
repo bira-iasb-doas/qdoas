@@ -138,21 +138,24 @@ static ULONG ccdDarkCurrentOffset[MAXTPS];                                      
 // -----------------------------------------------------------------------------
 // PURPOSE       set file pointers and get the number of records (1340x400/1340x100)
 //
-// INPUT         pSpecInfo : information on the file to read
+// INPUT         pEngineContext : information on the file to read
 //               specFp    : pointer to the current spectra file
 //
-// OUTPUT        pSpecInfo->recordNumber, the number of records
+// OUTPUT        pEngineContext->recordNumber, the number of records
 //
 // RETURN        ERROR_ID_FILE_NOT_FOUND if the input file pointer is NULL;
 //               ERROR_ID_ALLOC if the allocation of a buffer failed;
 //               ERROR_ID_NO in case of success.
 // -----------------------------------------------------------------------------
 
-RC SetCCD_EEV(SPEC_INFO *pSpecInfo,FILE *specFp,FILE *darkFp)
+RC SetCCD_EEV(ENGINE_CONTEXT *pEngineContext,FILE *specFp,FILE *darkFp)
  {
   // Declarations
 
+  BUFFERS *pBuffers;                                                            // pointer to the buffers part of the engine context
+
   CCD_DATA header;                                                              // header of a record
+  ULONG   *recordIndexes;                                                       // indexes of records for direct access
   INT      ccdX,ccdY;                                                           // size of the detector
   int      specMaxFlag;                                                         // 1 to use specMax, the vector of maxima of the scans
   INDEX    indexTps;                                                            // browse the predefined integration time
@@ -167,39 +170,43 @@ RC SetCCD_EEV(SPEC_INFO *pSpecInfo,FILE *specFp,FILE *darkFp)
 
   // Initializations
 
+  pBuffers=&pEngineContext->buffers;
+
+  recordIndexes=pEngineContext->buffers.recordIndexes;
+
   memset(ccdDarkCurrentOffset,-1L,sizeof(ULONG)*MAXTPS);
-  pSpecInfo->recordIndexesSize=2001;
-  pSpecInfo->recordNumber=0;
+  pEngineContext->recordIndexesSize=2001;
+  pEngineContext->recordNumber=0;
   specMaxFlag=0;
-//  NDET=1340;
+
   rc=ERROR_ID_NO;
 
   // Release specMax buffer
 
-  if (pSpecInfo->specMax!=NULL)
-   MEMORY_ReleaseDVector("SetCCD_EEV","specMax",pSpecInfo->specMax,0);
-  pSpecInfo->specMax=NULL;
+  if (pBuffers->specMax!=NULL)
+   MEMORY_ReleaseDVector("SetCCD_EEV","specMax",pBuffers->specMax,0);
+  pBuffers->specMax=NULL;
 
   // Check the input file pointer
 
   if (specFp==NULL)
-   rc=ERROR_SetLast("SetCCD_EEV",ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pSpecInfo->fileName);
+   rc=ERROR_SetLast("SetCCD_EEV",ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pEngineContext->fileInfo.fileName);
   else
    {
     // Read the header of the first record
 
     fseek(specFp,0L,SEEK_SET);
-    memset(pSpecInfo->recordIndexes,0L,sizeof(ULONG)*pSpecInfo->recordIndexesSize);
+    memset(recordIndexes,0L,sizeof(ULONG)*pEngineContext->recordIndexesSize);
 
     while (!feof(specFp) && fread(&header,sizeof(CCD_DATA),1,specFp))
      {
       ccdX=(header.roiWveEnd-header.roiWveStart+1)/header.roiWveGroup;
       ccdY=(header.roiSlitEnd-header.roiSlitStart+1)/header.roiSlitGroup;
 
-      pSpecInfo->recordNumber++;
+      pEngineContext->recordNumber++;
 
-      pSpecInfo->recordIndexes[pSpecInfo->recordNumber]=(ULONG)
-        pSpecInfo->recordIndexes[pSpecInfo->recordNumber-1]+
+      recordIndexes[pEngineContext->recordNumber]=(ULONG)
+        recordIndexes[pEngineContext->recordNumber-1]+
         sizeof(CCD_DATA)+((header.saveTracks)?ccdX*ccdY*sizeof(USHORT):ccdX*sizeof(USHORT));
 
       // 15/02/2003 : dark current acquisition
@@ -209,18 +216,18 @@ RC SetCCD_EEV(SPEC_INFO *pSpecInfo,FILE *specFp,FILE *darkFp)
          ((header.today.da_year==2003) && (header.today.da_mon>2)) ||
          ((header.today.da_year==2003) && (header.today.da_mon==2) && (header.today.da_day>14))))
        {
-        pSpecInfo->recordIndexes[pSpecInfo->recordNumber]+=
+        recordIndexes[pEngineContext->recordNumber]+=
          (sizeof(double)+sizeof(SHORT))*header.nTint+sizeof(double)*(header.nrej+header.nacc);
 
         specMaxFlag++;
        }
 
-      fseek(specFp,pSpecInfo->recordIndexes[pSpecInfo->recordNumber],SEEK_SET);
+      fseek(specFp,recordIndexes[pEngineContext->recordNumber],SEEK_SET);
      }
 
     // Dark currents
 
-    if ((darkFp!=NULL) && (pSpecInfo->darkCurrent!=NULL))
+    if ((darkFp!=NULL) && (pEngineContext->buffers.darkCurrent!=NULL))
      {
       fseek(darkFp,0L,SEEK_SET);
       offset=0L;
@@ -244,21 +251,21 @@ RC SetCCD_EEV(SPEC_INFO *pSpecInfo,FILE *specFp,FILE *darkFp)
 
     // Allocate a buffer to display the variation of the signal along the acquisitions
 
-    if (specMaxFlag && ((pSpecInfo->specMax=MEMORY_AllocDVector("SetCCD_EEV","specMax",0,NDET-1))==NULL))
+    if (specMaxFlag && ((pBuffers->specMax=MEMORY_AllocDVector("SetCCD_EEV","specMax",0,NDET-1))==NULL))
      rc=ERROR_ID_ALLOC;
 
     // Eclipse 99
 
 /*  if (!(fileLength=filelength(fileno(specFp))) || !fread(&header,sizeof(CCD_DATA),1,specFp))
-     THRD_Error(ERROR_TYPE_WARNING,(rc=ERROR_ID_FILE_EMPTY),"SetCCD_EVV1340x400 ",pSpecInfo->fileName);
+     THRD_Error(ERROR_TYPE_WARNING,(rc=ERROR_ID_FILE_EMPTY),"SetCCD_EVV1340x400 ",pEngineContext->fileInfo.fileName);
     else
      {
       // Retrieve the really used size of the detector
 
       NDET=(header.roiWveEnd-header.roiWveStart+1)/header.roiWveGroup;
       ccdSizeY=(header.roiSlitEnd-header.roiSlitStart+1)/header.roiSlitGroup;
-      pSpecInfo->recordSize=sizeof(CCD_DATA)+sizeof(USHORT)*NDET*ccdSizeY;
-      pSpecInfo->recordNumber=fileLength/pSpecInfo->recordSize;
+      pEngineContext->recordSize=sizeof(CCD_DATA)+sizeof(USHORT)*NDET*ccdSizeY;
+      pEngineContext->recordNumber=fileLength/pEngineContext->recordSize;
      }  */
    }
 
@@ -278,7 +285,7 @@ RC SetCCD_EEV(SPEC_INFO *pSpecInfo,FILE *specFp,FILE *darkFp)
 // -----------------------------------------------------------------------------
 // PURPOSE       1340x400/1340x100 format read out
 //
-// INPUT         pSpecInfo : information on the current file
+// INPUT         pEngineContext : information on the current file
 //               recordNo  : the index of the record to read
 //               dateFlag  : 1 to search for a reference spectrum
 //               localDay  : if dateFlag is 1, the calendar day for the
@@ -296,12 +303,15 @@ RC SetCCD_EEV(SPEC_INFO *pSpecInfo,FILE *specFp,FILE *darkFp)
 //               ERROR_ID_NO             : otherwise.
 // -----------------------------------------------------------------------------
 
-RC ReliCCD_EEV(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *specFp,FILE *darkFp)
+RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp,FILE *darkFp)
  {
   // Declarations
 
+  BUFFERS *pBuffers;                                                            // pointer to the buffers part of the engine context
+  RECORD_INFO *pRecord;                                                         // pointer to the record part of the engine context
+
   CCD_DATA header;                                                              // header of the current record
-  double *dspectrum,*tmpSpectrum;                                               // pointer to the vector in 'pSpecInfo' to fill with the current spectrum
+  double *dspectrum,*tmpSpectrum;                                               // pointer to the vector in 'pEngineContext' to fill with the current spectrum
   USHORT *spectrum;                                                             // spectrum to retrieve from the current record in the original format
   INT ccdX,ccdY,spSize;                                                         // dimensions of the CCD detector
   USHORT *ccdTabNTint;                                                          // number of scans per different integration times
@@ -320,7 +330,10 @@ RC ReliCCD_EEV(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE 
 
   // Initializations
 
-  dspectrum=pSpecInfo->spectrum;
+  pRecord=&pEngineContext->recordInfo;
+  pBuffers=&pEngineContext->buffers;
+
+  dspectrum=pBuffers->spectrum;
   tmpSpectrum=NULL;
   ccdTabNTint=NULL;
   ccdTabTint=NULL;
@@ -331,19 +344,19 @@ RC ReliCCD_EEV(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE 
   // Verify input
 
   if (specFp==NULL)
-   rc=ERROR_SetLast("ReliCCD_EEV",ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pSpecInfo->fileName);
-  else if ((recordNo<=0) || (recordNo>pSpecInfo->recordNumber))
+   rc=ERROR_SetLast("ReliCCD_EEV",ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pEngineContext->fileInfo.fileName);
+  else if ((recordNo<=0) || (recordNo>pEngineContext->recordNumber))
    rc=ERROR_ID_FILE_END;
   else
    {
     // Set file pointers
 
-    fseek(specFp,(LONG)pSpecInfo->recordIndexes[recordNo-1],SEEK_SET);
+    fseek(specFp,(LONG)pBuffers->recordIndexes[recordNo-1],SEEK_SET);
 
     // Complete record read out
 
     if (!fread(&header,sizeof(CCD_DATA),1,specFp))
-     rc=ERROR_SetLast("ReliCCD_EEV",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pSpecInfo->fileName);
+     rc=ERROR_SetLast("ReliCCD_EEV",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pEngineContext->fileInfo.fileName);
     else
      {
       // get the size of the CCD
@@ -373,9 +386,9 @@ RC ReliCCD_EEV(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE 
            ((header.nTint>0) &&
            (!fread(ccdTabTint,sizeof(double)*header.nTint,1,specFp) ||
             !fread(ccdTabNTint,sizeof(SHORT)*header.nTint,1,specFp) ||
-            !fread(pSpecInfo->specMax,sizeof(double)*(header.nacc+header.nrej),1,specFp))))
+            !fread(pBuffers->specMax,sizeof(double)*(header.nacc+header.nrej),1,specFp))))
 
-         rc=ERROR_SetLast("ReliCCD_EEV",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pSpecInfo->fileName);
+         rc=ERROR_SetLast("ReliCCD_EEV",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pEngineContext->fileInfo.fileName);
         else if (!header.saveTracks)
          for (i=0;i<spSize;i++)
           dspectrum[i]=(double)spectrum[i];
@@ -396,48 +409,48 @@ RC ReliCCD_EEV(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE 
          {
           // Data on the current spectrum
 
-          pSpecInfo->Tint      = (double)header.exposureTime;
-          pSpecInfo->NSomme    = header.nacc;
-          pSpecInfo->Zm        = header.Zm;
-          pSpecInfo->Tm        = header.Tm;
-          pSpecInfo->NTracks   = (header.roiSlitEnd-header.roiSlitStart+1)/header.roiSlitGroup;
-          pSpecInfo->rejected  = header.nrej;
-          pSpecInfo->SkyObs    = 8;
-          pSpecInfo->TDet      = (double)header.currentTemperature;
-          pSpecInfo->ReguTemp  = (double)0.;
+          pRecord->Tint      = (double)header.exposureTime;
+          pRecord->NSomme    = header.nacc;
+          pRecord->Zm        = header.Zm;
+          pRecord->Tm        = header.Tm;
+          pRecord->NTracks   = (header.roiSlitEnd-header.roiSlitStart+1)/header.roiSlitGroup;
+          pRecord->rejected  = header.nrej;
+          pRecord->SkyObs    = 8;
+          pRecord->TDet      = (double)header.currentTemperature;
+          pRecord->ReguTemp  = (double)0.;
 
-          memcpy(&pSpecInfo->present_day,&header.today,sizeof(SHORT_DATE));
-          memcpy(&pSpecInfo->present_time,&header.now,sizeof(struct time));
+          memcpy(&pRecord->present_day,&header.today,sizeof(SHORT_DATE));
+          memcpy(&pRecord->present_time,&header.now,sizeof(struct time));
 
-          pSpecInfo->elevationViewAngle=
-               ((pSpecInfo->present_day.da_year>2003) ||
-               ((pSpecInfo->present_day.da_year==2003) && (pSpecInfo->present_day.da_mon>2)) ||
-               ((pSpecInfo->present_day.da_year==2003) && (pSpecInfo->present_day.da_mon==2) && (pSpecInfo->present_day.da_day>20)))?
+          pRecord->elevationViewAngle=
+               ((pRecord->present_day.da_year>2003) ||
+               ((pRecord->present_day.da_year==2003) && (pRecord->present_day.da_mon>2)) ||
+               ((pRecord->present_day.da_year==2003) && (pRecord->present_day.da_mon==2) && (pRecord->present_day.da_day>20)))?
                 (float)header.brusagElevation:(float)-1.;
 
-          pSpecInfo->TimeDec=(double)header.now.ti_hour+header.now.ti_min/60.+header.now.ti_sec/3600.;
+          pRecord->TimeDec=(double)header.now.ti_hour+header.now.ti_min/60.+header.now.ti_sec/3600.;
           if (strlen(header.filterName)>0)
            {
-           	memset(pSpecInfo->Nom,' ',20);
-           	pSpecInfo->Nom[20]='\0';
-            strcpy(pSpecInfo->Nom,header.filterName);
-            pSpecInfo->Nom[strlen(header.filterName)]=' ';
+           	memset(pRecord->Nom,' ',20);
+           	pRecord->Nom[20]='\0';
+            strcpy(pRecord->Nom,header.filterName);
+            pRecord->Nom[strlen(header.filterName)]=' ';
            }
           else
-           memset(pSpecInfo->Nom,0,20);
+           memset(pRecord->Nom,0,20);
 
           // Build dark current
 
-          if (pSpecInfo->NSomme==0)
+          if (pRecord->NSomme==0)
            rc=ERROR_SetLast("ReliCCD_EEV",ERROR_TYPE_WARNING,ERROR_ID_DIVISION_BY_0,"number of accumulations");
-          else if ((pSpecInfo->darkCurrent!=NULL) && (darkFp!=NULL))
+          else if ((pBuffers->darkCurrent!=NULL) && (darkFp!=NULL))
            {
             for (i=0;i<NDET;i++)
-             pSpecInfo->darkCurrent[i]=(double)0.;
+             pBuffers->darkCurrent[i]=(double)0.;
 
             for (k=0;k<nTint;k++)
              {
-              pSpecInfo->TotalExpTime+=(double)ccdTabNTint[k]*ccdTabTint[k];
+              pRecord->TotalExpTime+=(double)ccdTabNTint[k]*ccdTabTint[k];
 
               for (j=0;j<MAXTPS;j++)
                if (ccdTabTint[k]<=predTint[j])
@@ -451,7 +464,7 @@ RC ReliCCD_EEV(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE 
                 fseek(darkFp,ccdDarkCurrentOffset[j],SEEK_SET);
 
                 if (!fread(&header,sizeof(CCD_DATA),1,darkFp))
-                 rc=ERROR_SetLast("ReliCCD_EEV",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pSpecInfo->fileName);
+                 rc=ERROR_SetLast("ReliCCD_EEV",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pEngineContext->fileInfo.fileName);
                 else if (!header.roiWveGroup || !header.roiSlitGroup)
                  rc=ERROR_SetLast("ReliCCD_EEV",ERROR_TYPE_WARNING,ERROR_ID_DIVISION_BY_0,"header is corrupted");
                 else
@@ -466,12 +479,12 @@ RC ReliCCD_EEV(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE 
                   for (i=0;i<NDET;i++)
                    {
                     if (!header.saveTracks)
-                     pSpecInfo->darkCurrent[i]+=darkCurrent[i]*ccdTabNTint[k];
+                     pBuffers->darkCurrent[i]+=darkCurrent[i]*ccdTabNTint[k];
                     else
                      {
                       for (j=0;j<ccdY;j++)
-                       pSpecInfo->darkCurrent[i]+=(double)darkCurrent[NDET*j+i]*ccdTabNTint[k];
-                      pSpecInfo->darkCurrent[i]/=ccdY;
+                       pBuffers->darkCurrent[i]+=(double)darkCurrent[NDET*j+i]*ccdTabNTint[k];
+                      pBuffers->darkCurrent[i]/=ccdY;
                      }
                    }
                  }
@@ -479,10 +492,10 @@ RC ReliCCD_EEV(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE 
              }
 
             for (i=0;i<NDET;i++)
-             pSpecInfo->darkCurrent[i]=pSpecInfo->darkCurrent[i]/pSpecInfo->NSomme;
+             pBuffers->darkCurrent[i]=pBuffers->darkCurrent[i]/pRecord->NSomme;
            }
 
-          if (rc || (dateFlag && (pSpecInfo->elevationViewAngle>(double)-0.5) && (pSpecInfo->elevationViewAngle<88.)))                  // reference spectra are zenith only
+          if (rc || (dateFlag && (pRecord->elevationViewAngle>(double)-0.5) && (pRecord->elevationViewAngle<88.)))                  // reference spectra are zenith only
            rc=ERROR_ID_FILE_RECORD;
          }
        }
@@ -491,23 +504,23 @@ RC ReliCCD_EEV(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE 
 
   // Straylight correction
 
-  if (!rc && (pSpecInfo->ccd.vip.matrix!=NULL) && (THRD_browseType==THREAD_BROWSE_SPECTRA))
+  if (!rc && (pRecord->ccd.vip.matrix!=NULL) && (THRD_browseType==THREAD_BROWSE_SPECTRA))
    {
    	memcpy(tmpSpectrum,dspectrum,sizeof(double)*NDET);
 
    	// Dark current correction
 
    	for (i=0;i<NDET;i++)
-   	 tmpSpectrum[i]-=pSpecInfo->darkCurrent[i];
+   	 tmpSpectrum[i]-=pBuffers->darkCurrent[i];
 
    	for (i=0;i<NDET;i++)
    	 {
    	 	dspectrum[i]=(double)0.;
 
    	 	for (j=0;j<NDET;j++)
-  	 	  dspectrum[i]+=pSpecInfo->ccd.vip.matrix[j%NCURVE][(j/NCURVE)*NDET+i]*tmpSpectrum[j];
+  	 	  dspectrum[i]+=pRecord->ccd.vip.matrix[j%NCURVE][(j/NCURVE)*NDET+i]*tmpSpectrum[j];
 
-  	 	 dspectrum[i]+=pSpecInfo->darkCurrent[i];    // the dark current is still subtracted in winthrd.c
+  	 	 dspectrum[i]+=pBuffers->darkCurrent[i];    // the dark current is still subtracted in winthrd.c
    	 }
    }
 
@@ -515,14 +528,14 @@ RC ReliCCD_EEV(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE 
 
 /*  if (!rc)
    {
-    if ((pSpecInfo->elevationViewAngle<80.) && (pSpecInfo->lembda[0]>=290) && (pSpecInfo->lembda[0]<=300))
+    if ((pRecord->elevationViewAngle<80.) && (pBuffers->lembda[0]>=290) && (pBuffers->lembda[0]<=300))
      {
      	int npoints;
 
      	npoints=50;
 
       for (offset=(double)0.,i=1;i<=npoints;i++)
-       offset+=(dspectrum[i]-((pSpecInfo->darkCurrent!=NULL)?pSpecInfo->darkCurrent[i]:(double)0.));
+       offset+=(dspectrum[i]-((pBuffers->darkCurrent!=NULL)?pBuffers->darkCurrent[i]:(double)0.));
       offset=(double)offset/npoints;
 
       for (i=0;i<NDET;i++)
@@ -597,18 +610,18 @@ CCD_1024;
 // -----------------------------------------------------------------------------
 // PURPOSE       set file pointers and get the number of records (1024x512 detectors,94-96)
 //
-// INPUT         pSpecInfo : information on the file to read
+// INPUT         pEngineContext : information on the file to read
 //               specFp    : pointer to the current spectra file
 //               flag      : 0 for OHP 96, 1 for Harestua 94
 //
-// OUTPUT        pSpecInfo->recordNumber, the number of records
+// OUTPUT        pEngineContext->recordNumber, the number of records
 //
 // RETURN        ERROR_ID_FILE_NOT_FOUND if the input file pointer is NULL;
 //               ERROR_ID_ALLOC if the allocation of a buffer failed;
 //               ERROR_ID_NO in case of success.
 // -----------------------------------------------------------------------------
 
-RC SetCCD (SPEC_INFO *pSpecInfo,FILE *specFp,INT flag)
+RC SetCCD (ENGINE_CONTEXT *pEngineContext,FILE *specFp,INT flag)
  {
   // Declarations
 
@@ -622,24 +635,24 @@ RC SetCCD (SPEC_INFO *pSpecInfo,FILE *specFp,INT flag)
 
   // Initializations
 
-  pSpecInfo->recordIndexesSize=2001;
-  pSpecInfo->recordNumber=0;
+  pEngineContext->recordIndexesSize=2001;
+  pEngineContext->recordNumber=0;
   recordSize=0L;
   rc=ERROR_ID_NO;
 
   // Buffers allocation
 
-  recordIndexes=pSpecInfo->recordIndexes;
+  recordIndexes=pEngineContext->buffers.recordIndexes;
 
-  if (((indexes=(SHORT *)MEMORY_AllocBuffer("SetCCD","indexes",pSpecInfo->recordIndexesSize,sizeof(SHORT),0,MEMORY_TYPE_SHORT))==NULL) ||
-      ((pSpecInfo->specMax=MEMORY_AllocDVector("SetCCD","specMax",0,NDET-1))==NULL))
+  if (((indexes=(SHORT *)MEMORY_AllocBuffer("SetCCD","indexes",pEngineContext->recordIndexesSize,sizeof(SHORT),0,MEMORY_TYPE_SHORT))==NULL) ||
+      ((pEngineContext->buffers.specMax=MEMORY_AllocDVector("SetCCD","specMax",0,NDET-1))==NULL))
 
    rc=ERROR_ID_ALLOC;
 
   // Check the input file pointer
 
   else if (specFp==NULL)
-   rc=ERROR_SetLast("SetCCD",ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pSpecInfo->fileName);
+   rc=ERROR_SetLast("SetCCD",ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pEngineContext->fileInfo.fileName);
   else
    {
     // Headers read out
@@ -647,10 +660,10 @@ RC SetCCD (SPEC_INFO *pSpecInfo,FILE *specFp,INT flag)
     fseek(specFp,0L,SEEK_SET);
 
     if (fread(&curvenum,sizeof(SHORT),1,specFp) &&                              // number of spectra in the file
-        fread(indexes,pSpecInfo->recordIndexesSize*sizeof(SHORT),1,specFp) &&   // number of accumulations (size of SpecMax vectors) per measurement
+        fread(indexes,pEngineContext->recordIndexesSize*sizeof(SHORT),1,specFp) &&   // number of accumulations (size of SpecMax vectors) per measurement
         (curvenum>0))
      {
-      pSpecInfo->recordNumber=curvenum;
+      pEngineContext->recordNumber=curvenum;
 
       // Calculate the size of a record (without SpecMax)
 
@@ -661,7 +674,7 @@ RC SetCCD (SPEC_INFO *pSpecInfo,FILE *specFp,INT flag)
 
       // Calculate the position in bytes from the beginning of the file for each spectra
 
-      recordIndexes[0]=(LONG)(pSpecInfo->recordIndexesSize+1)*sizeof(SHORT);    // file header : size of indexes table + curvenum
+      recordIndexes[0]=(LONG)(pEngineContext->recordIndexesSize+1)*sizeof(SHORT);    // file header : size of indexes table + curvenum
 
       for (i=1;i<curvenum;i++)
        recordIndexes[i]=recordIndexes[i-1]+                                     // position of the previous record
@@ -685,7 +698,7 @@ RC SetCCD (SPEC_INFO *pSpecInfo,FILE *specFp,INT flag)
 // -----------------------------------------------------------------------------
 // PURPOSE       1024x512 format read out (Harestua 94)
 //
-// INPUT         pSpecInfo : information on the file to read
+// INPUT         pEngineContext : information on the file to read
 //               recordNo  : the index of the record to read
 //               dateFlag  : 1 to search for a reference spectrum
 //               localDay  : if dateFlag is 1, the calendar day for the
@@ -703,9 +716,12 @@ RC SetCCD (SPEC_INFO *pSpecInfo,FILE *specFp,INT flag)
 //               ERROR_ID_NO             : otherwise.
 // -----------------------------------------------------------------------------
 
-RC ReliCCD(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *specFp,FILE *namesFp,FILE *darkFp)
+RC ReliCCD(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp,FILE *namesFp,FILE *darkFp)
  {
   // Declarations
+
+  BUFFERS *pBuffers;                                                            // pointer to the buffers part of the engine context
+  RECORD_INFO *pRecord;                                                         // pointer to the record part of the engine context
 
   CCD_1024 DetInfo;                                                             // data on the current record retrieved from the spectra file
   UCHAR names[20];                                                              // name of the current spectrum
@@ -716,14 +732,16 @@ RC ReliCCD(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *spe
 
   // Initializations
 
+  pRecord=&pEngineContext->recordInfo;
+  pBuffers=&pEngineContext->buffers;
   ISpectre=ISpecMax=NULL;
   rc=ERROR_ID_NO;
 
   // Verify input
 
   if (specFp==NULL)
-   rc=ERROR_SetLast("ReliCCD",ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pSpecInfo->fileName);
-  else if ((recordNo<=0) || (recordNo>pSpecInfo->recordNumber))
+   rc=ERROR_SetLast("ReliCCD",ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pEngineContext->fileInfo.fileName);
+  else if ((recordNo<=0) || (recordNo>pEngineContext->recordNumber))
    rc=ERROR_ID_FILE_END;
 
   // Buffers allocation
@@ -739,7 +757,7 @@ RC ReliCCD(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *spe
     if (namesFp!=NULL)
      fseek(namesFp,(LONG)20L*(recordNo-1),SEEK_SET);
 
-    fseek(specFp,(LONG)pSpecInfo->recordIndexes[recordNo-1],SEEK_SET);
+    fseek(specFp,(LONG)pBuffers->recordIndexes[recordNo-1],SEEK_SET);
 
     // Complete record read out
 
@@ -756,47 +774,47 @@ RC ReliCCD(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *spe
      {
       // Data on the current spectrum
 
-      pSpecInfo->Tint      = (double)DetInfo.Exposure_Time;
-      pSpecInfo->NSomme    = DetInfo.Scans;
-      pSpecInfo->Zm        = DetInfo.Zm;
-      pSpecInfo->NTracks   = DetInfo.Tracks;
-      pSpecInfo->rejected  = DetInfo.rejected;
-      pSpecInfo->SkyObs    = DetInfo.SkyObs;
-      pSpecInfo->TDet      = (double)-40.;
-      pSpecInfo->ReguTemp  = (float)DetInfo.ReguTemp;
+      pRecord->Tint      = (double)DetInfo.Exposure_Time;
+      pRecord->NSomme    = DetInfo.Scans;
+      pRecord->Zm        = DetInfo.Zm;
+      pRecord->NTracks   = DetInfo.Tracks;
+      pRecord->rejected  = DetInfo.rejected;
+      pRecord->SkyObs    = DetInfo.SkyObs;
+      pRecord->TDet      = (double)-40.;
+      pRecord->ReguTemp  = (float)DetInfo.ReguTemp;
 
-      pSpecInfo->TotalExpTime=(double)0.;
-      pSpecInfo->TimeDec=(double)DetInfo.Hour.ti_hour+DetInfo.Hour.ti_min/60.;
+      pRecord->TotalExpTime=(double)0.;
+      pRecord->TimeDec=(double)DetInfo.Hour.ti_hour+DetInfo.Hour.ti_min/60.;
 
-      pSpecInfo->present_day.da_year  = DetInfo.Day.da_year;
-      pSpecInfo->present_day.da_mon   = DetInfo.Day.da_mon;
-      pSpecInfo->present_day.da_day   = DetInfo.Day.da_day;
+      pRecord->present_day.da_year  = DetInfo.Day.da_year;
+      pRecord->present_day.da_mon   = DetInfo.Day.da_mon;
+      pRecord->present_day.da_day   = DetInfo.Day.da_day;
 
-      pSpecInfo->present_time.ti_hour = DetInfo.Hour.ti_hour;
-      pSpecInfo->present_time.ti_min  = DetInfo.Hour.ti_min;
-      pSpecInfo->present_time.ti_sec  = DetInfo.Hour.ti_sec;
+      pRecord->present_time.ti_hour = DetInfo.Hour.ti_hour;
+      pRecord->present_time.ti_min  = DetInfo.Hour.ti_min;
+      pRecord->present_time.ti_sec  = DetInfo.Hour.ti_sec;
 
-      pSpecInfo->Tm = (double) ZEN_NbSec(&pSpecInfo->present_day,&pSpecInfo->present_time,0);
+      pRecord->Tm = (double) ZEN_NbSec(&pRecord->present_day,&pRecord->present_time,0);
 
-      tmLocal=pSpecInfo->Tm+THRD_localShift*3600.;
+      tmLocal=pRecord->Tm+THRD_localShift*3600.;
 
-      pSpecInfo->localCalDay=ZEN_FNCaljda(&tmLocal);
-      pSpecInfo->localTimeDec=fmod(pSpecInfo->TimeDec+24.+THRD_localShift,(double)24.);
+      pRecord->localCalDay=ZEN_FNCaljda(&tmLocal);
+      pRecord->localTimeDec=fmod(pRecord->TimeDec+24.+THRD_localShift,(double)24.);
 
-      memcpy(pSpecInfo->Nom,names,20);
+      memcpy(pRecord->Nom,names,20);
 
       // SpecMax (maxima per accumulation)
 
       for (i=0,Max=(double)ISpecMax[0];i<(DetInfo.Scans+DetInfo.rejected);i++)
-       if ((pSpecInfo->specMax[i]=(double)ISpecMax[i])>Max)
-        Max=(double)pSpecInfo->specMax[i];
+       if ((pBuffers->specMax[i]=(double)ISpecMax[i])>Max)
+        Max=(double)pBuffers->specMax[i];
 
       // Rebuild spectrum
 
       for (i=0;i<NDET;i++)
-       pSpecInfo->spectrum[NDET-i-1]=(double)ISpectre[i]*Max/65000.*176.-908.25*44.;
+       pBuffers->spectrum[NDET-i-1]=(double)ISpectre[i]*Max/65000.*176.-908.25*44.;
 
-      if (dateFlag && (pSpecInfo->localCalDay!=localDay))
+      if (dateFlag && (pRecord->localCalDay!=localDay))
        rc=ERROR_ID_FILE_RECORD;
      }
    }
@@ -818,7 +836,7 @@ RC ReliCCD(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *spe
 // -----------------------------------------------------------------------------
 // PURPOSE       1024x512 format read out (OHP 96)
 //
-// INPUT         pSpecInfo : information on the file to read
+// INPUT         pEngineContext : information on the file to read
 //               recordNo  : the index of the record to read
 //               dateFlag  : 1 to search for a reference spectrum
 //               localDay  : if dateFlag is 1, the calendar day for the
@@ -836,9 +854,12 @@ RC ReliCCD(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *spe
 //               ERROR_ID_NO             : otherwise.
 // -----------------------------------------------------------------------------
 
-RC ReliCCDTrack(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *specFp,FILE *namesFp,FILE *darkFp)
+RC ReliCCDTrack(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp,FILE *namesFp,FILE *darkFp)
  {
   // Declarations
+
+  BUFFERS *pBuffers;                                                            // pointer to the buffers part of the engine context
+  RECORD_INFO *pRecord;                                                         // pointer to the record part of the engine context
 
   CCD_1024 DetInfo;                                                             // data on the current spectra retrieved from the spectra file
   UCHAR names[20],                                                              // name of the current spectrum
@@ -853,6 +874,9 @@ RC ReliCCDTrack(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE
 
   // Initializations
 
+  pRecord=&pEngineContext->recordInfo;
+  pBuffers=&pEngineContext->buffers;
+
   ISpectre=ISpecMax=NULL;
   TabTint=MaxTrk=NULL;
   varPix=NULL;
@@ -863,8 +887,8 @@ RC ReliCCDTrack(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE
   // Verify input
 
   if (specFp==NULL)
-   rc=ERROR_SetLast("ReliCCD_EEV",ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pSpecInfo->fileName);
-  else if ((recordNo<=0) || (recordNo>pSpecInfo->recordNumber))
+   rc=ERROR_SetLast("ReliCCD_EEV",ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pEngineContext->fileInfo.fileName);
+  else if ((recordNo<=0) || (recordNo>pEngineContext->recordNumber))
    rc=ERROR_ID_FILE_END;
 
   // Buffers allocation
@@ -885,7 +909,7 @@ RC ReliCCDTrack(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE
     if (namesFp!=NULL)
      fseek(namesFp,(LONG)20L*(recordNo-1),SEEK_SET);
 
-    fseek(specFp,(LONG)pSpecInfo->recordIndexes[recordNo-1],SEEK_SET);
+    fseek(specFp,(LONG)pBuffers->recordIndexes[recordNo-1],SEEK_SET);
 
     // Complete record read out
 
@@ -899,15 +923,15 @@ RC ReliCCDTrack(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE
      {
       // Read out the instrumental function for the interpixel variability correction
 
-      if (strlen(pSpecInfo->project.instrumental.vipFile)>0)
+      if (strlen(pEngineContext->project.instrumental.vipFile)>0)
        {
-        FILES_RebuildFileName(fileName,pSpecInfo->project.instrumental.vipFile,1);
+        FILES_RebuildFileName(fileName,pEngineContext->project.instrumental.vipFile,1);
         varFp=fopen(fileName,"rb");
        }
 
       for (j=0;j<NDET;j++)
        {
-        pSpecInfo->spectrum[j]=(double)0.;
+        pBuffers->spectrum[j]=(double)0.;
         varPix[j]=(double)1.;
        }
 
@@ -916,14 +940,14 @@ RC ReliCCDTrack(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE
       for (i=0;(i<DetInfo.Tracks) && !rc;i++)
        {
         if (!fread(ISpectre,sizeof(USHORT)*NDET,1,specFp))
-         rc=ERROR_SetLast("ReliCCD_EEV",ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pSpecInfo->fileName);
+         rc=ERROR_SetLast("ReliCCD_EEV",ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pEngineContext->fileInfo.fileName);
         else
          {
           if (varFp!=NULL)
            fread(varPix,sizeof(double)*NDET,1,varFp);
 
           for (j=0;j<NDET;j++)
-           pSpecInfo->spectrum[j]+=(double)ISpectre[j]*MaxTrk[i]/varPix[j];
+           pBuffers->spectrum[j]+=(double)ISpectre[j]*MaxTrk[i]/varPix[j];
          }
        }
 
@@ -940,52 +964,52 @@ RC ReliCCDTrack(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE
          {
           // Data on the current spectrum
 
-          pSpecInfo->TotalExpTime=(double)0.;
+          pRecord->TotalExpTime=(double)0.;
 
           for (i=0;TabNSomme[i]>0;i++)
-           pSpecInfo->TotalExpTime+=(double)TabNSomme[i]*TabTint[i];
+           pRecord->TotalExpTime+=(double)TabNSomme[i]*TabTint[i];
 
           for (i=0;i<(DetInfo.Scans+DetInfo.rejected);i++)
-           pSpecInfo->specMax[i]=(double)ISpecMax[i]*4.;
+           pBuffers->specMax[i]=(double)ISpecMax[i]*4.;
 
-          pSpecInfo->Tint      = (double)DetInfo.Exposure_Time;
-          pSpecInfo->NSomme    = DetInfo.Scans;
-          pSpecInfo->Zm        = DetInfo.Zm;
-          pSpecInfo->NTracks   = DetInfo.Tracks;
-          pSpecInfo->rejected  = DetInfo.rejected;
-          pSpecInfo->SkyObs    = DetInfo.SkyObs;
-          pSpecInfo->TDet      = (double)-40.;
-          pSpecInfo->ReguTemp  = (float)DetInfo.ReguTemp;
+          pRecord->Tint      = (double)DetInfo.Exposure_Time;
+          pRecord->NSomme    = DetInfo.Scans;
+          pRecord->Zm        = DetInfo.Zm;
+          pRecord->NTracks   = DetInfo.Tracks;
+          pRecord->rejected  = DetInfo.rejected;
+          pRecord->SkyObs    = DetInfo.SkyObs;
+          pRecord->TDet      = (double)-40.;
+          pRecord->ReguTemp  = (float)DetInfo.ReguTemp;
 
-          pSpecInfo->TotalExpTime=(double)0.;
-          pSpecInfo->TimeDec=(double)DetInfo.Hour.ti_hour+DetInfo.Hour.ti_min/60.;
+          pRecord->TotalExpTime=(double)0.;
+          pRecord->TimeDec=(double)DetInfo.Hour.ti_hour+DetInfo.Hour.ti_min/60.;
 
-          pSpecInfo->present_day.da_year  = DetInfo.Day.da_year;
-          pSpecInfo->present_day.da_mon   = DetInfo.Day.da_mon;
-          pSpecInfo->present_day.da_day   = DetInfo.Day.da_day;
+          pRecord->present_day.da_year  = DetInfo.Day.da_year;
+          pRecord->present_day.da_mon   = DetInfo.Day.da_mon;
+          pRecord->present_day.da_day   = DetInfo.Day.da_day;
 
-          pSpecInfo->present_time.ti_hour = DetInfo.Hour.ti_hour;
-          pSpecInfo->present_time.ti_min  = DetInfo.Hour.ti_min;
-          pSpecInfo->present_time.ti_sec  = DetInfo.Hour.ti_sec;
+          pRecord->present_time.ti_hour = DetInfo.Hour.ti_hour;
+          pRecord->present_time.ti_min  = DetInfo.Hour.ti_min;
+          pRecord->present_time.ti_sec  = DetInfo.Hour.ti_sec;
 
-          pSpecInfo->Tm = (double) ZEN_NbSec(&pSpecInfo->present_day,&pSpecInfo->present_time,0);
+          pRecord->Tm = (double) ZEN_NbSec(&pRecord->present_day,&pRecord->present_time,0);
 
-          tmLocal=pSpecInfo->Tm+THRD_localShift*3600.;
+          tmLocal=pRecord->Tm+THRD_localShift*3600.;
 
-          pSpecInfo->localCalDay=ZEN_FNCaljda(&tmLocal);
-          pSpecInfo->localTimeDec=fmod(pSpecInfo->TimeDec+24.+THRD_localShift,(double)24.);
+          pRecord->localCalDay=ZEN_FNCaljda(&tmLocal);
+          pRecord->localTimeDec=fmod(pRecord->TimeDec+24.+THRD_localShift,(double)24.);
 
-          memcpy(pSpecInfo->Nom,names,20);
+          memcpy(pRecord->Nom,names,20);
 
-          VECTOR_Invert(pSpecInfo->spectrum,NDET);
+          VECTOR_Invert(pBuffers->spectrum,NDET);
 
           // spectra mean calculation
 
-          if (pSpecInfo->NSomme)
+          if (pRecord->NSomme)
            for (i=0;i<NDET;i++)
-            pSpecInfo->spectrum[i]/=(double)(44.*pSpecInfo->NSomme);
+            pBuffers->spectrum[i]/=(double)(44.*pRecord->NSomme);
 
-          if (dateFlag && (pSpecInfo->localCalDay!=localDay))
+          if (dateFlag && (pRecord->localCalDay!=localDay))
            rc=ERROR_ID_FILE_RECORD;
          }
        }
@@ -1022,26 +1046,38 @@ RC ReliCCDTrack(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE
 // -----------------------------------------------------------------------------
 // PURPOSE       Load instrumental functions needed to correct measurements
 //
-// INPUT         pSpecInfo   information on the current file
+// INPUT         pEngineContext   information on the current file
 //
 // RETURN        the code returned by MATRIX_Load if the load of a file failed
 //               ERROR_ID_NO, otherwise.
 // -----------------------------------------------------------------------------
 
-RC CCD_LoadInstrumental(SPEC_INFO *pSpecInfo)
+RC CCD_LoadInstrumental(ENGINE_CONTEXT *pEngineContext)
  {
  	// Declarations
 
+  PROJECT *pProject;                                                            // pointer to the project part of the engine context
+  PRJCT_INSTRUMENTAL *pInstrumental;                                            // pointer to the instrumental part of the project
+  BUFFERS *pBuffers;                                                            // pointer to the buffers part of the engine context
+  RECORD_INFO *pRecord;                                                         // pointer to the record part of the engine context
+
   UCHAR fileName[MAX_STR_LEN+1];                                                // the complete name (including path) of the file to load
   RC rc;                                                                        // the return code
+
+  // Initializations
+
+  pRecord=&pEngineContext->recordInfo;
+  pBuffers=&pEngineContext->buffers;
+  pProject=&pEngineContext->project;
+  pInstrumental=&pProject->instrumental;
 
   rc=ERROR_ID_NO;
 
   // Offset
 
-  if ((strlen(pSpecInfo->project.instrumental.instrFunction)>0) && (pSpecInfo->ccd.drk.matrix==NULL) &&
-     ((rc=MATRIX_Load(FILES_RebuildFileName(fileName,pSpecInfo->project.instrumental.instrFunction,1),
-                     &pSpecInfo->ccd.drk,
+  if ((strlen(pInstrumental->instrFunction)>0) && (pRecord->ccd.drk.matrix==NULL) &&
+     ((rc=MATRIX_Load(FILES_RebuildFileName(fileName,pInstrumental->instrFunction,1),
+                     &pRecord->ccd.drk,
                       0 /* line base */,0 /* column base */,NDET,NCURVE,
                       0.,0.,
                       0,0,"CCD_LoadInstrumental (offset)"))!=ERROR_ID_NO))
@@ -1050,9 +1086,9 @@ RC CCD_LoadInstrumental(SPEC_INFO *pSpecInfo)
 
   // Interpixel variability
 
-  if ((strlen(pSpecInfo->project.instrumental.vipFile)>0) && (pSpecInfo->ccd.vip.matrix==NULL) &&
-     ((rc=MATRIX_Load(FILES_RebuildFileName(fileName,pSpecInfo->project.instrumental.vipFile,1),
-                     &pSpecInfo->ccd.vip,
+  if ((strlen(pInstrumental->vipFile)>0) && (pRecord->ccd.vip.matrix==NULL) &&
+     ((rc=MATRIX_Load(FILES_RebuildFileName(fileName,pInstrumental->vipFile,1),
+                     &pRecord->ccd.vip,
                       0 /* line base */,0 /* column base */,0,NCURVE,
                       0.,0.,
                       0,0,"CCD_LoadInstrumental (vip)"))!=ERROR_ID_NO))
@@ -1061,9 +1097,9 @@ RC CCD_LoadInstrumental(SPEC_INFO *pSpecInfo)
 
   // Non linearity of the detector
 
-  if ((strlen(pSpecInfo->project.instrumental.dnlFile)>0) && (pSpecInfo->ccd.dnl.matrix==NULL) &&
-     ((rc=MATRIX_Load(FILES_RebuildFileName(fileName,pSpecInfo->project.instrumental.dnlFile,1),
-                     &pSpecInfo->ccd.dnl,
+  if ((strlen(pInstrumental->dnlFile)>0) && (pRecord->ccd.dnl.matrix==NULL) &&
+     ((rc=MATRIX_Load(FILES_RebuildFileName(fileName,pInstrumental->dnlFile,1),
+                     &pRecord->ccd.dnl,
                       0 /* line base */,0 /* column base */,0,0,
                       0.,0.,
                       1,0,"CCD_LoadInstrumental (dnl)"))!=ERROR_ID_NO))

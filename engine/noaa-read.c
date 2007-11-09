@@ -345,17 +345,17 @@ NOAA_InputDataRecordType;
 // -----------------------------------------------------------------------------
 // PURPOSE       calculate the number of spectra measured the current day
 //
-// INPUT         pSpecInfo : information on the file to read
+// INPUT         pEngineContext : information on the file to read
 //               specFp    : pointer to the current spectra file
 //
-// OUTPUT        pSpecInfo->recordNumber, the number of records
+// OUTPUT        pEngineContext->recordNumber, the number of records
 //
 // RETURN        ERROR_ID_FILE_NOT_FOUND if the input file pointer is NULL;
 //               ERROR_ID_FILE_EMPTY if the file is empty;
 //               ERROR_ID_NO in case of success.
 // -----------------------------------------------------------------------------
 
-RC SetNOAA(SPEC_INFO *pSpecInfo,FILE *specFp)
+RC SetNOAA(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
  {
   // Declarations
 
@@ -375,24 +375,24 @@ RC SetNOAA(SPEC_INFO *pSpecInfo,FILE *specFp)
   rc=ERROR_ID_NO;
 
   if (specFp==NULL)
-   rc=ERROR_SetLast("SetNOAA",ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pSpecInfo->fileName);
+   rc=ERROR_SetLast("SetNOAA",ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pEngineContext->fileInfo.fileName);
 
   // Get an approximation of the number of spectra
 
   else if (!(fileLength=STD_FileLength(specFp)))
-   rc=ERROR_SetLast("SetNOAA",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pSpecInfo->fileName);
-  else if ((pSpecInfo->recordIndexes=(ULONG *)MEMORY_AllocBuffer("SetNOAA","recordIndexes",
-           (pSpecInfo->recordIndexesSize=(int)(fileLength/NOAA_OFFSET+2L)),sizeof(ULONG),0,MEMORY_TYPE_LONG))==NULL)
+   rc=ERROR_SetLast("SetNOAA",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pEngineContext->fileInfo.fileName);
+  else if ((pEngineContext->buffers.recordIndexes=(ULONG *)MEMORY_AllocBuffer("SetNOAA","recordIndexes",
+           (pEngineContext->recordIndexesSize=(int)(fileLength/NOAA_OFFSET+2L)),sizeof(ULONG),0,MEMORY_TYPE_LONG))==NULL)
    rc=ERROR_ID_ALLOC;
   else
    {
    	// Get the number of records (the size of records depend on the observation type)
 
-   	for (pSpecInfo->recordNumber=0,offset=0L;
-   	    (pSpecInfo->recordNumber<pSpecInfo->recordIndexesSize) && (offset<fileLength);
-   	     pSpecInfo->recordNumber++)
+   	for (pEngineContext->recordNumber=0,offset=0L;
+   	    (pEngineContext->recordNumber<pEngineContext->recordIndexesSize) && (offset<fileLength);
+   	     pEngineContext->recordNumber++)
    	 {
-   	 	pSpecInfo->recordIndexes[pSpecInfo->recordNumber]=offset;
+   	 	pEngineContext->buffers.recordIndexes[pEngineContext->recordNumber]=offset;
 
    	 	fseek(specFp,offset+NOAA_OFFSET,0L);
    	 	fread(&observationType,sizeof(short),1,specFp);
@@ -417,10 +417,10 @@ RC SetNOAA(SPEC_INFO *pSpecInfo,FILE *specFp)
    	 	 }
    	 }
 
-   	pSpecInfo->recordIndexes[pSpecInfo->recordNumber]=offset;
+   	pEngineContext->buffers.recordIndexes[pEngineContext->recordNumber]=offset;
 
-   	if (!pSpecInfo->recordNumber)
-   	 rc=ERROR_SetLast("SetNOAA",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pSpecInfo->fileName);
+   	if (!pEngineContext->recordNumber)
+   	 rc=ERROR_SetLast("SetNOAA",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pEngineContext->fileInfo.fileName);
    }
 
   // Debugging
@@ -487,7 +487,7 @@ void NOAA_Date(double sec,SHORT_DATE *pDate,struct time *pTime)
 // -----------------------------------------------------------------------------
 // PURPOSE       Read a record in the NOAA format
 //
-// INPUT         pSpecInfo : information on the file to read
+// INPUT         pEngineContext : information on the file to read
 //               recordNo  : the index of the record to read
 //               dateFlag  : 1 to search for a reference spectrum
 //               localDay  : if dateFlag is 1, the calendar day for the
@@ -502,170 +502,176 @@ void NOAA_Date(double sec,SHORT_DATE *pDate,struct time *pTime)
 //               ERROR_ID_NO otherwise.
 // -----------------------------------------------------------------------------
 
-RC ReliNOAA(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,INT localDay,FILE *specFp)
+RC ReliNOAA(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,INT localDay,FILE *specFp)
  {
   // Declarations
 
-  NOAA_InputDataRecordType *pRecord;                                            // pointer to the current record
+  BUFFERS *pBuffers;                                                            // pointer to the buffers part of the engine context
+  RECORD_INFO *pRecord;                                                         // pointer to the record part of the engine context
+
+  NOAA_InputDataRecordType *pRecordNoaa;                                        // pointer to the current record
   INT obsType;                                                                  // observation type
   INDEX   i;
   RC      rc;                                                                   // return code
   double  tmLocal;                                                              // local time
 
-  // Initialization
+  // Initializations
 
-  pRecord=NULL;
+  pRecord=&pEngineContext->recordInfo;
+  pBuffers=&pEngineContext->buffers;
+
+  pRecordNoaa=NULL;
   rc=ERROR_ID_NO;
 
   // Read the record
 
-  if ((recordNo<=0) || (recordNo>pSpecInfo->recordNumber))
+  if ((recordNo<=0) || (recordNo>pEngineContext->recordNumber))
    rc=ERROR_ID_FILE_END;
-  else if ((pRecord=(NOAA_InputDataRecordType *)MEMORY_AllocBuffer("ReliNOAA","pRecord",sizeof(NOAA_InputDataRecordType),1,0,MEMORY_TYPE_STRUCT))==NULL)
+  else if ((pRecordNoaa=(NOAA_InputDataRecordType *)MEMORY_AllocBuffer("ReliNOAA","pRecordNoaa",sizeof(NOAA_InputDataRecordType),1,0,MEMORY_TYPE_STRUCT))==NULL)
    rc=ERROR_ID_ALLOC;
    {
-   	fseek(specFp,pSpecInfo->recordIndexes[recordNo-1],SEEK_SET);
-   	fread(pRecord,pSpecInfo->recordIndexes[recordNo]-pSpecInfo->recordIndexes[recordNo-1],1,specFp);
+   	fseek(specFp,pBuffers->recordIndexes[recordNo-1],SEEK_SET);
+   	fread(pRecordNoaa,pBuffers->recordIndexes[recordNo]-pBuffers->recordIndexes[recordNo-1],1,specFp);
 
-   	obsType=pRecord->observationType;
+   	obsType=pRecordNoaa->observationType;
 
     // swap bytes
 
-    swap_bytes_float((unsigned char *)&pRecord->timeRecord.macTime);
-		  swap_bytes_short((unsigned char *)&pRecord->timeRecord.zone);
+    swap_bytes_float((unsigned char *)&pRecordNoaa->timeRecord.macTime);
+		  swap_bytes_short((unsigned char *)&pRecordNoaa->timeRecord.zone);
 
-    swap_bytes_short((unsigned char *)&pRecord->foreOpticsRecord.filterNumber);
-		  swap_bytes_float((unsigned char *)&pRecord->foreOpticsRecord.dialSetting);
-		  swap_bytes_float((unsigned char *)&pRecord->foreOpticsRecord.lambdaMax);
-		  swap_bytes_float((unsigned char *)&pRecord->foreOpticsRecord.lambdaMin);
-		  swap_bytes_short((unsigned char *)&pRecord->foreOpticsRecord.polarizerAngle);
+    swap_bytes_short((unsigned char *)&pRecordNoaa->foreOpticsRecord.filterNumber);
+		  swap_bytes_float((unsigned char *)&pRecordNoaa->foreOpticsRecord.dialSetting);
+		  swap_bytes_float((unsigned char *)&pRecordNoaa->foreOpticsRecord.lambdaMax);
+		  swap_bytes_float((unsigned char *)&pRecordNoaa->foreOpticsRecord.lambdaMin);
+		  swap_bytes_short((unsigned char *)&pRecordNoaa->foreOpticsRecord.polarizerAngle);
 
-		  swap_bytes_short((unsigned char *)&pRecord->spectrometerRecord.spectrometerNumber);
-		  swap_bytes_short((unsigned char *)&pRecord->spectrometerRecord.orderNumber);
-		  swap_bytes_float((unsigned char *)&pRecord->spectrometerRecord.dialSetting);
-		  swap_bytes_float((unsigned char *)&pRecord->spectrometerRecord.gratingLinesPerMM);
-		  swap_bytes_float((unsigned char *)&pRecord->spectrometerRecord.gratingInputAngle);
-		  swap_bytes_float((unsigned char *)&pRecord->spectrometerRecord.gratingOutputAngle);
-		  swap_bytes_float((unsigned char *)&pRecord->spectrometerRecord.cameraFocalLength);
-		  swap_bytes_short((unsigned char *)&pRecord->spectrometerRecord.spacer);
-		  swap_bytes_short((unsigned char *)&pRecord->spectrometerRecord.band);
-		  swap_bytes_float((unsigned char *)&pRecord->spectrometerRecord.wavelengthAtDetCenter);
-		  swap_bytes_float((unsigned char *)&pRecord->spectrometerRecord.dispersion);
-		  swap_bytes_float((unsigned char *)&pRecord->spectrometerRecord.entranceSlitWidth);
-		  swap_bytes_float((unsigned char *)&pRecord->spectrometerRecord.spectrometerTempTop);
-		  swap_bytes_float((unsigned char *)&pRecord->spectrometerRecord.spectrometerTempBot);
+		  swap_bytes_short((unsigned char *)&pRecordNoaa->spectrometerRecord.spectrometerNumber);
+		  swap_bytes_short((unsigned char *)&pRecordNoaa->spectrometerRecord.orderNumber);
+		  swap_bytes_float((unsigned char *)&pRecordNoaa->spectrometerRecord.dialSetting);
+		  swap_bytes_float((unsigned char *)&pRecordNoaa->spectrometerRecord.gratingLinesPerMM);
+		  swap_bytes_float((unsigned char *)&pRecordNoaa->spectrometerRecord.gratingInputAngle);
+		  swap_bytes_float((unsigned char *)&pRecordNoaa->spectrometerRecord.gratingOutputAngle);
+		  swap_bytes_float((unsigned char *)&pRecordNoaa->spectrometerRecord.cameraFocalLength);
+		  swap_bytes_short((unsigned char *)&pRecordNoaa->spectrometerRecord.spacer);
+		  swap_bytes_short((unsigned char *)&pRecordNoaa->spectrometerRecord.band);
+		  swap_bytes_float((unsigned char *)&pRecordNoaa->spectrometerRecord.wavelengthAtDetCenter);
+		  swap_bytes_float((unsigned char *)&pRecordNoaa->spectrometerRecord.dispersion);
+		  swap_bytes_float((unsigned char *)&pRecordNoaa->spectrometerRecord.entranceSlitWidth);
+		  swap_bytes_float((unsigned char *)&pRecordNoaa->spectrometerRecord.spectrometerTempTop);
+		  swap_bytes_float((unsigned char *)&pRecordNoaa->spectrometerRecord.spectrometerTempBot);
 
-  		swap_bytes_short((unsigned char *)&pRecord->detectorRecord.detectorNumber);
-  		swap_bytes_short((unsigned char *)&pRecord->detectorRecord.numberOfDiodes);
-  		swap_bytes_float((unsigned char *)&pRecord->detectorRecord.diodeWidth);
-  		swap_bytes_float((unsigned char *)&pRecord->detectorRecord.detectorTemperature);
+  		swap_bytes_short((unsigned char *)&pRecordNoaa->detectorRecord.detectorNumber);
+  		swap_bytes_short((unsigned char *)&pRecordNoaa->detectorRecord.numberOfDiodes);
+  		swap_bytes_float((unsigned char *)&pRecordNoaa->detectorRecord.diodeWidth);
+  		swap_bytes_float((unsigned char *)&pRecordNoaa->detectorRecord.detectorTemperature);
 
-  		swap_bytes_float((unsigned char *)&pRecord->dataRecord.dcOffset);
-  		swap_bytes_float((unsigned char *)&pRecord->dataRecord.f2);
-  		swap_bytes_float((unsigned char *)&pRecord->dataRecord.f4Sin);
-  		swap_bytes_float((unsigned char *)&pRecord->dataRecord.f4Cos);
-  		swap_bytes_short((unsigned char *)&pRecord->dataRecord.patternRecNum);
-  		swap_bytes_short((unsigned char *)&pRecord->dataRecord.detResponseRecNum);
-  		swap_bytes_short((unsigned char *)&pRecord->dataRecord.sgResponseRecNum);
-  		swap_bytes_short((unsigned char *)&pRecord->dataRecord.numberOfReads);
-  		swap_bytes_short((unsigned char *)&pRecord->dataRecord.strayLightRecNum);
-  		swap_bytes_short((unsigned char *)&pRecord->dataRecord.firstSaturated);
-  		swap_bytes_short((unsigned char *)&pRecord->dataRecord.lastSaturated);
-  		swap_bytes_short((unsigned char *)&pRecord->dataRecord.externalMod);
-  		swap_bytes_short((unsigned char *)&pRecord->dataRecord.internalMod);
-  		swap_bytes_float((unsigned char *)&pRecord->dataRecord.exposureDiodeRecord.xdDarkCountRate);
-  		swap_bytes_float((unsigned char *)&pRecord->dataRecord.exposureDiodeRecord.xdTerminalCount);
-  		swap_bytes_float((unsigned char *)&pRecord->dataRecord.wavelengthRecord.wlDispToCenter);
+  		swap_bytes_float((unsigned char *)&pRecordNoaa->dataRecord.dcOffset);
+  		swap_bytes_float((unsigned char *)&pRecordNoaa->dataRecord.f2);
+  		swap_bytes_float((unsigned char *)&pRecordNoaa->dataRecord.f4Sin);
+  		swap_bytes_float((unsigned char *)&pRecordNoaa->dataRecord.f4Cos);
+  		swap_bytes_short((unsigned char *)&pRecordNoaa->dataRecord.patternRecNum);
+  		swap_bytes_short((unsigned char *)&pRecordNoaa->dataRecord.detResponseRecNum);
+  		swap_bytes_short((unsigned char *)&pRecordNoaa->dataRecord.sgResponseRecNum);
+  		swap_bytes_short((unsigned char *)&pRecordNoaa->dataRecord.numberOfReads);
+  		swap_bytes_short((unsigned char *)&pRecordNoaa->dataRecord.strayLightRecNum);
+  		swap_bytes_short((unsigned char *)&pRecordNoaa->dataRecord.firstSaturated);
+  		swap_bytes_short((unsigned char *)&pRecordNoaa->dataRecord.lastSaturated);
+  		swap_bytes_short((unsigned char *)&pRecordNoaa->dataRecord.externalMod);
+  		swap_bytes_short((unsigned char *)&pRecordNoaa->dataRecord.internalMod);
+  		swap_bytes_float((unsigned char *)&pRecordNoaa->dataRecord.exposureDiodeRecord.xdDarkCountRate);
+  		swap_bytes_float((unsigned char *)&pRecordNoaa->dataRecord.exposureDiodeRecord.xdTerminalCount);
+  		swap_bytes_float((unsigned char *)&pRecordNoaa->dataRecord.wavelengthRecord.wlDispToCenter);
 
   		for (i=0;i<4;i++)
-  		 swap_bytes_float((unsigned char *)&pRecord->dataRecord.wavelengthRecord.wlCoeff[i]);
+  		 swap_bytes_float((unsigned char *)&pRecordNoaa->dataRecord.wavelengthRecord.wlCoeff[i]);
 
-   	swap_bytes_float((unsigned char *)&pRecord->dataRecord.wavelengthRecord.wlID0);
-  		swap_bytes_float((unsigned char *)&pRecord->dataRecord.wavelengthRecord.wlID1);
-  		swap_bytes_short((unsigned char *)&pRecord->dataRecord.exposureTime);
-  		swap_bytes_float((unsigned char *)&pRecord->dataRecord.aveDeviation);
+   	swap_bytes_float((unsigned char *)&pRecordNoaa->dataRecord.wavelengthRecord.wlID0);
+  		swap_bytes_float((unsigned char *)&pRecordNoaa->dataRecord.wavelengthRecord.wlID1);
+  		swap_bytes_short((unsigned char *)&pRecordNoaa->dataRecord.exposureTime);
+  		swap_bytes_float((unsigned char *)&pRecordNoaa->dataRecord.aveDeviation);
 
   		for (i=0;i<73;i++)
-  		 swap_bytes_short((unsigned char *)&pRecord->dataRecord.spare[i]);
+  		 swap_bytes_short((unsigned char *)&pRecordNoaa->dataRecord.spare[i]);
 
-  		swap_bytes_short((unsigned char *)&pRecord->dataRecord.integrationCycles);
-  		swap_bytes_float((unsigned char *)&pRecord->dataRecord.integrationTime);
-  		swap_bytes_float((unsigned char *)&pRecord->dataRecord.centerOfBrightness);
-  		swap_bytes_float((unsigned char *)&pRecord->dataRecord.shift);
-  		swap_bytes_float((unsigned char *)&pRecord->dataRecord.stretch);
-  		swap_bytes_float((unsigned char *)&pRecord->dataRecord.diodesInExitSlit);
-  		swap_bytes_float((unsigned char *)&pRecord->dataRecord.maxData);
-  		swap_bytes_float((unsigned char *)&pRecord->dataRecord.minData);
-  		swap_bytes_float((unsigned char *)&pRecord->dataRecord.aveData);
-  		swap_bytes_short((unsigned char *)&pRecord->dataRecord.numberOfGapsInteger);
+  		swap_bytes_short((unsigned char *)&pRecordNoaa->dataRecord.integrationCycles);
+  		swap_bytes_float((unsigned char *)&pRecordNoaa->dataRecord.integrationTime);
+  		swap_bytes_float((unsigned char *)&pRecordNoaa->dataRecord.centerOfBrightness);
+  		swap_bytes_float((unsigned char *)&pRecordNoaa->dataRecord.shift);
+  		swap_bytes_float((unsigned char *)&pRecordNoaa->dataRecord.stretch);
+  		swap_bytes_float((unsigned char *)&pRecordNoaa->dataRecord.diodesInExitSlit);
+  		swap_bytes_float((unsigned char *)&pRecordNoaa->dataRecord.maxData);
+  		swap_bytes_float((unsigned char *)&pRecordNoaa->dataRecord.minData);
+  		swap_bytes_float((unsigned char *)&pRecordNoaa->dataRecord.aveData);
+  		swap_bytes_short((unsigned char *)&pRecordNoaa->dataRecord.numberOfGapsInteger);
 
   		for (i=0;i<MaxNumGaps;i++)
-  		 swap_bytes_short((unsigned char *)&pRecord->dataRecord.startGap[i]);
+  		 swap_bytes_short((unsigned char *)&pRecordNoaa->dataRecord.startGap[i]);
   		for (i=0;i<MaxNumGaps;i++)
-  		 swap_bytes_short((unsigned char *)&pRecord->dataRecord.endGap[i]);
+  		 swap_bytes_short((unsigned char *)&pRecordNoaa->dataRecord.endGap[i]);
   		for (i=0;i<MaxNumPnt;i++)
-  		 swap_bytes_float((unsigned char *)&pRecord->dataRecord.spectralData[i]);
+  		 swap_bytes_float((unsigned char *)&pRecordNoaa->dataRecord.spectralData[i]);
 
   		switch(obsType)
   		 {
 	 	// --------------------------------------------------------------------------
  	 	 	case Field :
 
-   	   swap_bytes_float((unsigned char *)&pRecord->observationCase.Field.placeRecord.latitude);
-   	   swap_bytes_float((unsigned char *)&pRecord->observationCase.Field.placeRecord.longitude);
-	 	    swap_bytes_float((unsigned char *)&pRecord->observationCase.Field.placeRecord.height);
-  	    swap_bytes_float((unsigned char *)&pRecord->observationCase.Field.placeRecord.zone);
+   	   swap_bytes_float((unsigned char *)&pRecordNoaa->observationCase.Field.placeRecord.latitude);
+   	   swap_bytes_float((unsigned char *)&pRecordNoaa->observationCase.Field.placeRecord.longitude);
+	 	    swap_bytes_float((unsigned char *)&pRecordNoaa->observationCase.Field.placeRecord.height);
+  	    swap_bytes_float((unsigned char *)&pRecordNoaa->observationCase.Field.placeRecord.zone);
 
-		     swap_bytes_float((unsigned char *)&pRecord->observationCase.Field.pressure);
-		     swap_bytes_float((unsigned char *)&pRecord->observationCase.Field.temperature);
-		     swap_bytes_float((unsigned char *)&pRecord->observationCase.Field.humidity);
-		     swap_bytes_float((unsigned char *)&pRecord->observationCase.Field.windSpeed);
-		     swap_bytes_float((unsigned char *)&pRecord->observationCase.Field.windDirection);
-		     swap_bytes_float((unsigned char *)&pRecord->observationCase.Field.sunAzimuth);
-		     swap_bytes_float((unsigned char *)&pRecord->observationCase.Field.sunZenith);
-		     swap_bytes_float((unsigned char *)&pRecord->observationCase.Field.moonAzimuth);
-		     swap_bytes_float((unsigned char *)&pRecord->observationCase.Field.moonZenith);
-		     swap_bytes_float((unsigned char *)&pRecord->observationCase.Field.viewAzimuth);
-		     swap_bytes_float((unsigned char *)&pRecord->observationCase.Field.viewZenith);
-		     swap_bytes_float((unsigned char *)&pRecord->observationCase.Field.spare1);
-		     swap_bytes_float((unsigned char *)&pRecord->observationCase.Field.spare2);
-		     swap_bytes_float((unsigned char *)&pRecord->observationCase.Field.spare3);
-		     swap_bytes_float((unsigned char *)&pRecord->observationCase.Field.spare4);
+		     swap_bytes_float((unsigned char *)&pRecordNoaa->observationCase.Field.pressure);
+		     swap_bytes_float((unsigned char *)&pRecordNoaa->observationCase.Field.temperature);
+		     swap_bytes_float((unsigned char *)&pRecordNoaa->observationCase.Field.humidity);
+		     swap_bytes_float((unsigned char *)&pRecordNoaa->observationCase.Field.windSpeed);
+		     swap_bytes_float((unsigned char *)&pRecordNoaa->observationCase.Field.windDirection);
+		     swap_bytes_float((unsigned char *)&pRecordNoaa->observationCase.Field.sunAzimuth);
+		     swap_bytes_float((unsigned char *)&pRecordNoaa->observationCase.Field.sunZenith);
+		     swap_bytes_float((unsigned char *)&pRecordNoaa->observationCase.Field.moonAzimuth);
+		     swap_bytes_float((unsigned char *)&pRecordNoaa->observationCase.Field.moonZenith);
+		     swap_bytes_float((unsigned char *)&pRecordNoaa->observationCase.Field.viewAzimuth);
+		     swap_bytes_float((unsigned char *)&pRecordNoaa->observationCase.Field.viewZenith);
+		     swap_bytes_float((unsigned char *)&pRecordNoaa->observationCase.Field.spare1);
+		     swap_bytes_float((unsigned char *)&pRecordNoaa->observationCase.Field.spare2);
+		     swap_bytes_float((unsigned char *)&pRecordNoaa->observationCase.Field.spare3);
+		     swap_bytes_float((unsigned char *)&pRecordNoaa->observationCase.Field.spare4);
 
  	 	 	break;
 	 	// --------------------------------------------------------------------------
  	 	 	case Air :
 
-		     swap_bytes_float((unsigned char *)&pRecord->observationCase.Air.latitude);
-		     swap_bytes_float((unsigned char *)&pRecord->observationCase.Air.longitude);
-		     swap_bytes_float((unsigned char *)&pRecord->observationCase.Air.heading);
-		     swap_bytes_float((unsigned char *)&pRecord->observationCase.Air.pitch);
-		     swap_bytes_float((unsigned char *)&pRecord->observationCase.Air.roll);
-		     swap_bytes_float((unsigned char *)&pRecord->observationCase.Air.yaw);
-		     swap_bytes_float((unsigned char *)&pRecord->observationCase.Air.trueAirSpeed);
-		     swap_bytes_float((unsigned char *)&pRecord->observationCase.Air.altitude);
-		     swap_bytes_float((unsigned char *)&pRecord->observationCase.Air.pressure);
-		     swap_bytes_float((unsigned char *)&pRecord->observationCase.Air.temperature);
-		     swap_bytes_float((unsigned char *)&pRecord->observationCase.Air.humidity);
-		     swap_bytes_float((unsigned char *)&pRecord->observationCase.Air.windSpeed);
-		     swap_bytes_float((unsigned char *)&pRecord->observationCase.Air.windDirection);
-		     swap_bytes_float((unsigned char *)&pRecord->observationCase.Air.sunAzimuth);
-		     swap_bytes_float((unsigned char *)&pRecord->observationCase.Air.sunZenith);
-		     swap_bytes_float((unsigned char *)&pRecord->observationCase.Air.moonAzimuth);
-		     swap_bytes_float((unsigned char *)&pRecord->observationCase.Air.moonZenith);
-		     swap_bytes_float((unsigned char *)&pRecord->observationCase.Air.viewAzimuth);
-		     swap_bytes_float((unsigned char *)&pRecord->observationCase.Air.viewZenith);
+		     swap_bytes_float((unsigned char *)&pRecordNoaa->observationCase.Air.latitude);
+		     swap_bytes_float((unsigned char *)&pRecordNoaa->observationCase.Air.longitude);
+		     swap_bytes_float((unsigned char *)&pRecordNoaa->observationCase.Air.heading);
+		     swap_bytes_float((unsigned char *)&pRecordNoaa->observationCase.Air.pitch);
+		     swap_bytes_float((unsigned char *)&pRecordNoaa->observationCase.Air.roll);
+		     swap_bytes_float((unsigned char *)&pRecordNoaa->observationCase.Air.yaw);
+		     swap_bytes_float((unsigned char *)&pRecordNoaa->observationCase.Air.trueAirSpeed);
+		     swap_bytes_float((unsigned char *)&pRecordNoaa->observationCase.Air.altitude);
+		     swap_bytes_float((unsigned char *)&pRecordNoaa->observationCase.Air.pressure);
+		     swap_bytes_float((unsigned char *)&pRecordNoaa->observationCase.Air.temperature);
+		     swap_bytes_float((unsigned char *)&pRecordNoaa->observationCase.Air.humidity);
+		     swap_bytes_float((unsigned char *)&pRecordNoaa->observationCase.Air.windSpeed);
+		     swap_bytes_float((unsigned char *)&pRecordNoaa->observationCase.Air.windDirection);
+		     swap_bytes_float((unsigned char *)&pRecordNoaa->observationCase.Air.sunAzimuth);
+		     swap_bytes_float((unsigned char *)&pRecordNoaa->observationCase.Air.sunZenith);
+		     swap_bytes_float((unsigned char *)&pRecordNoaa->observationCase.Air.moonAzimuth);
+		     swap_bytes_float((unsigned char *)&pRecordNoaa->observationCase.Air.moonZenith);
+		     swap_bytes_float((unsigned char *)&pRecordNoaa->observationCase.Air.viewAzimuth);
+		     swap_bytes_float((unsigned char *)&pRecordNoaa->observationCase.Air.viewZenith);
 
  	 	 	break;
 	 	// --------------------------------------------------------------------------
  	 	 	case Lab :
 
-		     swap_bytes_float((unsigned char *)&pRecord->observationCase.Lab.concentration);
-		     swap_bytes_float((unsigned char *)&pRecord->observationCase.Lab.pathLength);
-		     swap_bytes_float((unsigned char *)&pRecord->observationCase.Lab.pressure);
-		     swap_bytes_float((unsigned char *)&pRecord->observationCase.Lab.temperature);
-		     swap_bytes_float((unsigned char *)&pRecord->observationCase.Lab.flow);
-		     swap_bytes_float((unsigned char *)&pRecord->observationCase.Lab.crossectScaleFactor);
+		     swap_bytes_float((unsigned char *)&pRecordNoaa->observationCase.Lab.concentration);
+		     swap_bytes_float((unsigned char *)&pRecordNoaa->observationCase.Lab.pathLength);
+		     swap_bytes_float((unsigned char *)&pRecordNoaa->observationCase.Lab.pressure);
+		     swap_bytes_float((unsigned char *)&pRecordNoaa->observationCase.Lab.temperature);
+		     swap_bytes_float((unsigned char *)&pRecordNoaa->observationCase.Lab.flow);
+		     swap_bytes_float((unsigned char *)&pRecordNoaa->observationCase.Lab.crossectScaleFactor);
 
  	 	 	break;
    // --------------------------------------------------------------------------
@@ -676,66 +682,66 @@ RC ReliNOAA(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,INT localDay,FILE *sp
   	 	// ------------------------------------------------------------------------
    	 	 	case Field :
 
-   	 	 	 pSpecInfo->Zm=(double)pRecord->observationCase.Field.sunZenith;
-   	 	 	 pSpecInfo->Azimuth=(double)pRecord->observationCase.Field.sunAzimuth;
-   	 	 	 pSpecInfo->elevationViewAngle=(float)pRecord->observationCase.Field.viewZenith;
-   	 	 	 pSpecInfo->azimuthViewAngle=(float)pRecord->observationCase.Field.viewAzimuth;
-   	 	 	 pSpecInfo->latitude=(float)pRecord->observationCase.Field.placeRecord.latitude;
-   	 	 	 pSpecInfo->longitude=(float)pRecord->observationCase.Field.placeRecord.longitude;
+   	 	 	 pRecord->Zm=(double)pRecordNoaa->observationCase.Field.sunZenith;
+   	 	 	 pRecord->Azimuth=(double)pRecordNoaa->observationCase.Field.sunAzimuth;
+   	 	 	 pRecord->elevationViewAngle=(float)pRecordNoaa->observationCase.Field.viewZenith;
+   	 	 	 pRecord->azimuthViewAngle=(float)pRecordNoaa->observationCase.Field.viewAzimuth;
+   	 	 	 pRecord->latitude=(float)pRecordNoaa->observationCase.Field.placeRecord.latitude;
+   	 	 	 pRecord->longitude=(float)pRecordNoaa->observationCase.Field.placeRecord.longitude;
 
    	 	 	break;
    	 // ------------------------------------------------------------------------
    	 	 	case Air :
 
-   	 	 	 pSpecInfo->Zm=(double)pRecord->observationCase.Air.sunZenith;
-   	 	 	 pSpecInfo->Azimuth=(double)pRecord->observationCase.Air.sunAzimuth;
-   	 	 	 pSpecInfo->elevationViewAngle=(float)90.-pRecord->observationCase.Air.viewZenith;
-   	 	 	 pSpecInfo->azimuthViewAngle=(float)pRecord->observationCase.Air.viewAzimuth;
+   	 	 	 pRecord->Zm=(double)pRecordNoaa->observationCase.Air.sunZenith;
+   	 	 	 pRecord->Azimuth=(double)pRecordNoaa->observationCase.Air.sunAzimuth;
+   	 	 	 pRecord->elevationViewAngle=(float)90.-pRecordNoaa->observationCase.Air.viewZenith;
+   	 	 	 pRecord->azimuthViewAngle=(float)pRecordNoaa->observationCase.Air.viewAzimuth;
 
-   	 	 	 pSpecInfo->latitude=(float)pRecord->observationCase.Air.latitude;
-   	 	 	 pSpecInfo->longitude=(float)pRecord->observationCase.Air.longitude;
+   	 	 	 pRecord->latitude=(float)pRecordNoaa->observationCase.Air.latitude;
+   	 	 	 pRecord->longitude=(float)pRecordNoaa->observationCase.Air.longitude;
 
    	 	 	break;
    	 // ------------------------------------------------------------------------
    	 	 	case Lab :
 
-   	 	 	 pSpecInfo->Zm=pSpecInfo->Azimuth=(double)-1.;
-   	 	 	 pSpecInfo->elevationViewAngle=pSpecInfo->azimuthViewAngle=-1.;
+   	 	 	 pRecord->Zm=pRecord->Azimuth=(double)-1.;
+   	 	 	 pRecord->elevationViewAngle=pRecord->azimuthViewAngle=-1.;
 
    	 	 	break;
      // ------------------------------------------------------------------------
    	 }
 
-   	NOAA_Date(pRecord->timeRecord.macTime+pRecord->timeRecord.zone*3600.,&pSpecInfo->present_day,&pSpecInfo->present_time);
+   	NOAA_Date(pRecordNoaa->timeRecord.macTime+pRecordNoaa->timeRecord.zone*3600.,&pRecord->present_day,&pRecord->present_time);
 
     // Get information on the current record
 
-    pSpecInfo->NSomme=(int)pRecord->dataRecord.integrationCycles;               // number of accumulations
-    pSpecInfo->Tint=(double)pRecord->dataRecord.integrationTime;                // integration time
-    pSpecInfo->TDet=(double)pRecord->detectorRecord.detectorTemperature;        // detector temperature
-    pSpecInfo->Tm=(double)ZEN_NbSec(&pSpecInfo->present_day,&pSpecInfo->present_time,0);
-    pSpecInfo->TotalExpTime=(double)pRecord->dataRecord.exposureTime;
-    pSpecInfo->TimeDec=(double)pSpecInfo->present_time.ti_hour+pSpecInfo->present_time.ti_min/60.+pSpecInfo->present_time.ti_sec/3600.;
+    pRecord->NSomme=(int)pRecordNoaa->dataRecord.integrationCycles;               // number of accumulations
+    pRecord->Tint=(double)pRecordNoaa->dataRecord.integrationTime;                // integration time
+    pRecord->TDet=(double)pRecordNoaa->detectorRecord.detectorTemperature;        // detector temperature
+    pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_day,&pRecord->present_time,0);
+    pRecord->TotalExpTime=(double)pRecordNoaa->dataRecord.exposureTime;
+    pRecord->TimeDec=(double)pRecord->present_time.ti_hour+pRecord->present_time.ti_min/60.+pRecord->present_time.ti_sec/3600.;
 
     // The spectrum
 
     for (i=0;i<NDET;i++)
-     pSpecInfo->spectrum[i]=(double)pRecord->dataRecord.spectralData[i];
+     pBuffers->spectrum[i]=(double)pRecordNoaa->dataRecord.spectralData[i];
 
     // Determine the local time
 
-    tmLocal=pSpecInfo->Tm+THRD_localShift*3600.;
+    tmLocal=pRecord->Tm+THRD_localShift*3600.;
 
-    pSpecInfo->localCalDay=ZEN_FNCaljda(&tmLocal);
-    pSpecInfo->localTimeDec=fmod(pSpecInfo->TimeDec+24.+THRD_localShift,(double)24.);
+    pRecord->localCalDay=ZEN_FNCaljda(&tmLocal);
+    pRecord->localTimeDec=fmod(pRecord->TimeDec+24.+THRD_localShift,(double)24.);
 
     // Search for a reference spectrum
 
-    if (dateFlag && (pSpecInfo->localCalDay>localDay))
+    if (dateFlag && (pRecord->localCalDay>localDay))
      rc=ERROR_ID_FILE_END;
 
-    else if ((pSpecInfo->NSomme<=0) ||
-             (dateFlag && (pSpecInfo->localCalDay!=localDay)))
+    else if ((pRecord->NSomme<=0) ||
+             (dateFlag && (pRecord->localCalDay!=localDay)))
 
      rc=ERROR_ID_FILE_RECORD;
 
@@ -743,8 +749,8 @@ RC ReliNOAA(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,INT localDay,FILE *sp
      THRD_lastRefRecord=recordNo;
    }
 
-  if (pRecord!=NULL)
-   MEMORY_ReleaseBuffer("ReliNOAA","pRecord",pRecord);
+  if (pRecordNoaa!=NULL)
+   MEMORY_ReleaseBuffer("ReliNOAA","pRecord",pRecordNoaa);
 
   // Return
 

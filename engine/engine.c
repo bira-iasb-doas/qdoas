@@ -3,6 +3,7 @@
 #include "engine.h"
 
 ENGINE_CONTEXT engineContext;
+UCHAR DOAS_dbgFile[MAX_PATH_LEN+1];
 
 // -----------------------------------------------------------------------------
 // FUNCTION      EngineCreateContext
@@ -12,13 +13,109 @@ ENGINE_CONTEXT engineContext;
 
 ENGINE_CONTEXT *EngineCreateContext(void)
  {
- 	memset(&engineContext,0,sizeof(ENGINE_CONTEXT));
+ 	// Declaration
 
- 	// Initializations
+ 	ENGINE_CONTEXT *pEngineContext=&engineContext;
 
- 	engineContext.TDet=(double)0.;
+  // Initializations
 
- 	return &engineContext;
+ 	strcpy(DOAS_dbgFile,"QDOAS.dbg");
+ 	memset(pEngineContext,0,sizeof(ENGINE_CONTEXT));
+
+ 	if (RESOURCE_Alloc()!=ERROR_ID_NO)
+   pEngineContext=NULL;
+
+  // Return
+
+ 	return pEngineContext;
+ }
+
+// -----------------------------------------------------------------------------
+// FUNCTION      EngineResetContext
+// -----------------------------------------------------------------------------
+// PURPOSE       Destroy the context of the current engine
+//
+// INPUT         pEngineContext     pointer to the engine context
+// -----------------------------------------------------------------------------
+
+void EngineResetContext(ENGINE_CONTEXT *pEngineContext)
+ {
+ 	// Declarations
+
+  BUFFERS *pBuffers;                                                            // pointer to the buffers part of the engine context
+  RECORD_INFO *pRecord;                                                         // pointer to the record part of the engine context
+  FILE_INFO *pFile;
+
+  #if defined(__DEBUG_) && __DEBUG_
+  DEBUG_FunctionBegin("EngineResetContext",DEBUG_FCTTYPE_FILE);
+  #endif
+
+  // Initializations
+
+  pRecord=&pEngineContext->recordInfo;
+  pBuffers=&pEngineContext->buffers;
+  pFile=&pEngineContext->fileInfo;
+
+  // Close files
+
+  if (pFile->specFp!=NULL)
+   fclose(pFile->specFp);
+  if (pFile->darkFp!=NULL)
+   fclose(pFile->darkFp);
+  if (pFile->namesFp!=NULL)
+   fclose(pFile->namesFp);
+
+  // Release buffers
+
+  if (pBuffers->lembda!=NULL)
+   MEMORY_ReleaseDVector("EngineResetContext ","lembda",pBuffers->lembda,0);
+  if (pBuffers->instrFunction!=NULL)
+   MEMORY_ReleaseDVector("EngineResetContext ","instrFunction",pBuffers->instrFunction,0);
+  if (pBuffers->spectrum!=NULL)
+   MEMORY_ReleaseDVector("EngineResetContext ","spectrum",pBuffers->spectrum,0);
+  if (pBuffers->sigmaSpec!=NULL)
+   MEMORY_ReleaseDVector("EngineResetContext ","sigmaSpec",pBuffers->sigmaSpec,0);
+  if (pBuffers->irrad!=NULL)
+   MEMORY_ReleaseDVector("EngineResetContext ","irrad",pBuffers->irrad,0);
+  if (pBuffers->darkCurrent!=NULL)
+   MEMORY_ReleaseDVector("EngineResetContext ","darkCurrent",pBuffers->darkCurrent,0);
+  if (pBuffers->specMaxx!=NULL)
+   MEMORY_ReleaseDVector("EngineResetContext ","specMaxx",pBuffers->specMaxx,0);
+  if (pBuffers->specMax!=NULL)
+   MEMORY_ReleaseDVector("EngineResetContext ","specMax",pBuffers->specMax,0);
+  if (pBuffers->varPix!=NULL)
+   MEMORY_ReleaseDVector("EngineResetContext ","varPix",pBuffers->varPix,0);
+  if (pBuffers->dnl!=NULL)
+   MEMORY_ReleaseDVector("EngineResetContext ","dnl",pBuffers->dnl,0);
+  if (pBuffers->recordIndexes!=NULL)
+   MEMORY_ReleaseBuffer("EngineResetContext ","recordIndexes",pBuffers->recordIndexes);
+
+  CCD_ResetInstrumental(&pRecord->ccd);
+
+  GDP_ASC_ReleaseBuffers();
+  GDP_BIN_ReleaseBuffers();
+
+//  GOME2_ReleaseBuffers(GOME2_BEAT_CLOSE);
+//  OMI_ReleaseBuffers();
+
+  SCIA_ReleaseBuffers(pEngineContext->project.instrumental.readOutFormat);
+
+  if ((THRD_id!=THREAD_TYPE_NONE) && (THRD_id!=THREAD_TYPE_SPECTRA))
+   ANALYSE_ResetData();
+
+  THRD_id=THREAD_TYPE_NONE;
+
+  // Reset structure
+
+  memset(pEngineContext,0,sizeof(ENGINE_CONTEXT));
+
+  // Reset other buffers
+
+  SYMB_itemCrossN=SYMBOL_PREDEFINED_MAX;
+
+  #if defined(__DEBUG_) && __DEBUG_
+  DEBUG_FunctionStop("EngineResetContext",0);
+  #endif
  }
 
 // -----------------------------------------------------------------------------
@@ -31,51 +128,13 @@ ENGINE_CONTEXT *EngineCreateContext(void)
 
 void EngineDestroyContext(ENGINE_CONTEXT *pEngineContext)
  {
-  #if defined(__DEBUG_) && __DEBUG_
-  DEBUG_FunctionBegin("EngineDestroyContext",DEBUG_FCTTYPE_FILE);
-  #endif
+ 	// Reset the context of the engine
 
-  // Close files
+ 	EngineResetContext(pEngineContext);
 
-  if (pEngineContext->specFp!=NULL)
-   fclose(pEngineContext->specFp);
-  if (pEngineContext->darkFp!=NULL)
-   fclose(pEngineContext->darkFp);
-  if (pEngineContext->namesFp!=NULL)
-   fclose(pEngineContext->namesFp);
+ 	// Release other allocated buffers
 
-  // Release buffers
-
-  if (pEngineContext->lembda!=NULL)
-   MEMORY_ReleaseDVector("EngineDestroyContext ","lembda",pEngineContext->lembda,0);
-  if (pEngineContext->instrFunction!=NULL)
-   MEMORY_ReleaseDVector("EngineDestroyContext ","instrFunction",pEngineContext->instrFunction,0);
-  if (pEngineContext->spectrum!=NULL)
-   MEMORY_ReleaseDVector("EngineDestroyContext ","spectrum",pEngineContext->spectrum,0);
-  if (pEngineContext->sigmaSpec!=NULL)
-   MEMORY_ReleaseDVector("EngineDestroyContext ","sigmaSpec",pEngineContext->sigmaSpec,0);
-  if (pEngineContext->irrad!=NULL)
-   MEMORY_ReleaseDVector("EngineDestroyContext ","irrad",pEngineContext->irrad,0);
-  if (pEngineContext->darkCurrent!=NULL)
-   MEMORY_ReleaseDVector("EngineDestroyContext ","darkCurrent",pEngineContext->darkCurrent,0);
-  if (pEngineContext->specMax!=NULL)
-   MEMORY_ReleaseDVector("EngineDestroyContext ","specMax",pEngineContext->specMax,0);
-  if (pEngineContext->varPix!=NULL)
-   MEMORY_ReleaseDVector("EngineDestroyContext ","varPix",pEngineContext->varPix,0);
-  if (pEngineContext->dnl!=NULL)
-   MEMORY_ReleaseDVector("EngineDestroyContext ","dnl",pEngineContext->dnl,0);
-  if (pEngineContext->recordIndexes!=NULL)
-   MEMORY_ReleaseBuffer("EngineDestroyContext ","recordIndexes",pEngineContext->recordIndexes);
-
-  CCD_ResetInstrumental(&pEngineContext->ccd);
-
-  // Reset structure
-
-  memset(pEngineContext,0,sizeof(ENGINE_CONTEXT));
-
-  #if defined(__DEBUG_) && __DEBUG_
-  DEBUG_FunctionStop("EngineDestroyContext",0);
-  #endif
+ 	RESOURCE_Free();
  }
 
 // -----------------------------------------------------------------------------
@@ -91,6 +150,9 @@ void EngineSetProject(ENGINE_CONTEXT *pEngineContext)
  	// Declarations
 
  	PROJECT *pProject;                                                            // pointer to the current project
+  PRJCT_INSTRUMENTAL *pInstrumental;                                            // pointer to the instrumental part of the project
+  BUFFERS *pBuffers;                                                            // pointer to the buffers part of the engine context
+
  	double *lembdaInstr;                                                          // wavelength calibration of the instrument function
  	double *instrFunction;                                                        // instrumental function
  	double *instrDeriv2;                                                          // second derivative for the instrument function
@@ -101,41 +163,40 @@ void EngineSetProject(ENGINE_CONTEXT *pEngineContext)
 
  	// Initializations
 
- 	pProject=&pEngineContext->project;
+  pBuffers=&pEngineContext->buffers;
+  pProject=&pEngineContext->project;
+  pInstrumental=&pProject->instrumental;
+
  	lembdaInstr=instrFunction=instrDeriv2=NULL;
  	rc=ERROR_ID_NO;
 
-  // Fill global variables
-
-  NDET=pEngineContext->NDET;
-
   // Allocate buffers
 
-  if (((pEngineContext->lembda=MEMORY_AllocDVector("EngineSetProject ","lembda",0,NDET-1))==NULL) ||
-      ((pEngineContext->spectrum=MEMORY_AllocDVector("EngineSetProject ","spectrum",0,NDET-1))==NULL) ||
+  if (((pBuffers->lembda=MEMORY_AllocDVector("EngineSetProject ","lembda",0,NDET-1))==NULL) ||
+      ((pBuffers->spectrum=MEMORY_AllocDVector("EngineSetProject ","spectrum",0,NDET-1))==NULL) ||
 
-     (((pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_CCD_EEV) ||
-       (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_CCD_OHP_96) ||
-       (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_CCD_HA_94) ||
-       (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_PDAEGG) ||
-       (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_PDAEGG_OLD) ||
-       (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_PDASI_EASOE)) &&
+     (((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_CCD_EEV) ||
+       (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_CCD_OHP_96) ||
+       (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_CCD_HA_94) ||
+       (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_PDAEGG) ||
+       (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_PDAEGG_OLD) ||
+       (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_PDASI_EASOE)) &&
 
-      ((pEngineContext->recordIndexes=(ULONG *)MEMORY_AllocBuffer("EngineSetProject ","recordIndexes",2001,sizeof(ULONG),0,MEMORY_TYPE_LONG))==NULL)) ||
+      ((pBuffers->recordIndexes=(ULONG *)MEMORY_AllocBuffer("EngineSetProject ","recordIndexes",2001,sizeof(ULONG),0,MEMORY_TYPE_LONG))==NULL)) ||
 
-     (((pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_ASCII) ||
-       (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN) ||
-       (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS) ||
-       (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_OMI) ||
-       (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GOME2)) &&
+     (((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_GDP_ASCII) ||
+       (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN) ||
+       (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS) ||
+       (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_OMI) ||
+       (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_GOME2)) &&
 
-     (((pEngineContext->sigmaSpec=MEMORY_AllocDVector("EngineSetProject ","sigmaSpec",0,NDET-1))==NULL) ||
-      ((pEngineContext->irrad=MEMORY_AllocDVector("EngineSetProject ","irrad",0,NDET-1))==NULL))) ||
+     (((pBuffers->sigmaSpec=MEMORY_AllocDVector("EngineSetProject ","sigmaSpec",0,NDET-1))==NULL) ||
+      ((pBuffers->irrad=MEMORY_AllocDVector("EngineSetProject ","irrad",0,NDET-1))==NULL))) ||
 
-     (((pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_ACTON) ||
-       (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_PDAEGG) ||
-       (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_PDASI_EASOE)) &&
-       ((pEngineContext->darkCurrent=MEMORY_AllocDVector("EngineSetProject ","darkCurrent",0,NDET-1))==NULL)))
+     (((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_ACTON) ||
+       (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_PDAEGG) ||
+       (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_PDASI_EASOE)) &&
+       ((pBuffers->darkCurrent=MEMORY_AllocDVector("EngineSetProject ","darkCurrent",0,NDET-1))==NULL)))
 
    rc=ERROR_ID_ALLOC;
 
@@ -143,57 +204,60 @@ void EngineSetProject(ENGINE_CONTEXT *pEngineContext)
    {
     // Load the wavelength calibration
 
-    if ((fp=fopen(pProject->instrumental.calibrationFile,"rt"))!=NULL)
+    if ((fp=fopen(pInstrumental->calibrationFile,"rt"))!=NULL)
      {
       for (i=0;i<NDET;)
        if (!fgets(str,MAX_ITEM_TEXT_LEN,fp))
         break;
        else if ((strchr(str,';')==NULL) && (strchr(str,'*')==NULL))
         {
-         sscanf(str,"%lf",&pEngineContext->lembda[i]);
+         sscanf(str,"%lf",&pBuffers->lembda[i]);
          i++;
         }
 
       if (i!=NDET)
-       rc=ERROR_SetLast("EngineSetProject",ERROR_TYPE_FATAL,ERROR_ID_FILE_EMPTY,pProject->instrumental.calibrationFile);
+       rc=ERROR_SetLast("EngineSetProject",ERROR_TYPE_FATAL,ERROR_ID_FILE_EMPTY,pInstrumental->calibrationFile);
 
       fclose(fp);
      }
     else
      for (i=0;i<NDET;i++)
-      pEngineContext->lembda[i]=i+1;
+      pBuffers->lembda[i]=i+1;
 
     // Load the instrumental function
 
-    if ((fp=fopen(pProject->instrumental.instrFunction,"rt"))==NULL)
-     rc=ERROR_SetLast("EngineSetProject",ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pProject->instrumental.instrFunction);
-    else if (((pEngineContext->instrFunction=MEMORY_AllocDVector("EngineSetProject","instrFunction",0,NDET-1))==NULL) ||
-             ((lembdaInstr=MEMORY_AllocDVector("EngineSetProject","lembdaInstr",0,NDET-1))==NULL) ||
-             ((instrFunction=MEMORY_AllocDVector("EngineSetProject","instrFunction",0,NDET-1))==NULL) ||
-             ((instrDeriv2=MEMORY_AllocDVector("EngineSetProject","instrDeriv2",0,NDET-1))==NULL))
-
-     rc=ERROR_ID_ALLOC;
-
-    else
+    if (strlen(pInstrumental->instrFunction))
      {
-      for (i=0;(i<NDET) && fgets(str,MAX_ITEM_TEXT_LEN,fp);)
-       if ((strchr(str,';')==NULL) && (strchr(str,'*')==NULL))
-        {
-         sscanf(str,"%lf %lf",&lembdaInstr[i],&instrFunction[i]);
-         i++;
-        }
+      if ((fp=fopen(pInstrumental->instrFunction,"rt"))==NULL)
+       rc=ERROR_SetLast("EngineSetProject",ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pInstrumental->instrFunction);
+      else if (((pBuffers->instrFunction=MEMORY_AllocDVector("EngineSetProject","instrFunction",0,NDET-1))==NULL) ||
+               ((lembdaInstr=MEMORY_AllocDVector("EngineSetProject","lembdaInstr",0,NDET-1))==NULL) ||
+               ((instrFunction=MEMORY_AllocDVector("EngineSetProject","instrFunction",0,NDET-1))==NULL) ||
+               ((instrDeriv2=MEMORY_AllocDVector("EngineSetProject","instrDeriv2",0,NDET-1))==NULL))
 
-      if (!SPLINE_Deriv2(lembdaInstr,instrFunction,instrDeriv2,NDET,"EngineSetProject"))
-       rc=SPLINE_Vector(lembdaInstr,instrFunction,instrDeriv2,NDET,pEngineContext->lembda,pEngineContext->instrFunction,NDET,SPLINE_CUBIC,"EngineSetProject");
+       rc=ERROR_ID_ALLOC;
+
+      else
+       {
+        for (i=0;(i<NDET) && fgets(str,MAX_ITEM_TEXT_LEN,fp);)
+         if ((strchr(str,';')==NULL) && (strchr(str,'*')==NULL))
+          {
+           sscanf(str,"%lf %lf",&lembdaInstr[i],&instrFunction[i]);
+           i++;
+          }
+
+        if (!SPLINE_Deriv2(lembdaInstr,instrFunction,instrDeriv2,NDET,"EngineSetProject"))
+         rc=SPLINE_Vector(lembdaInstr,instrFunction,instrDeriv2,NDET,pBuffers->lembda,pBuffers->instrFunction,NDET,SPLINE_CUBIC,"EngineSetProject");
+       }
+
+      if (fp!=NULL)
+       fclose(fp);
      }
-
-    if (fp!=NULL)
-     fclose(fp);
 
     // Initialize buffers
 
-    if (pEngineContext->darkCurrent!=NULL)
-     VECTOR_Init(pEngineContext->darkCurrent,(double)0.,NDET);                  // To check the initialization of the ANALYSE_zeros vector ...
+    if (pBuffers->darkCurrent!=NULL)
+     VECTOR_Init(pBuffers->darkCurrent,(double)0.,NDET);                  // To check the initialization of the ANALYSE_zeros vector ...
    }
 
   // Release the allocated buffers
@@ -206,30 +270,44 @@ void EngineSetProject(ENGINE_CONTEXT *pEngineContext)
    MEMORY_ReleaseDVector("EngineSetProject","instrDeriv2",instrDeriv2,0);
  }
 
-int EngineSetFile(ENGINE_CONTEXT *pEngineContext,const char *fileName)
+// -----------------------------------------------------------------------------
+// FUNCTION      EngineSetFile
+// -----------------------------------------------------------------------------
+// PURPOSE       Initialize file pointers
+//
+// INPUT         pEngineContext     pointer to the engine context
+//               fileName           the name of the file to browse
+//
+// RETURN        0 in case of success; the code of the error otherwise
+// -----------------------------------------------------------------------------
+
+RC EngineSetFile(ENGINE_CONTEXT *pEngineContext,const char *fileName)
  {
  	// Declarations
 
+  FILE_INFO *pFile;
   UCHAR fileTmp[MAX_STR_LEN+1];
  	RC rc;
 
  	// Initializations
 
+ 	pFile=&pEngineContext->fileInfo;
+
  	rc=ERROR_ID_NO;
 
-  strcpy(pEngineContext->fileName,fileName);
+  strcpy(pFile->fileName,fileName);
   strcpy(fileTmp,fileName);
 
   // Close previous files
 
-  if (pEngineContext->specFp!=NULL)
-   fclose(pEngineContext->specFp);
-  if (pEngineContext->darkFp!=NULL)
-   fclose(pEngineContext->darkFp);
-  if (pEngineContext->namesFp!=NULL)
-   fclose(pEngineContext->namesFp);
+  if (pFile->specFp!=NULL)
+   fclose(pFile->specFp);
+  if (pFile->darkFp!=NULL)
+   fclose(pFile->darkFp);
+  if (pFile->namesFp!=NULL)
+   fclose(pFile->namesFp);
 
-  pEngineContext->specFp=pEngineContext->darkFp=pEngineContext->namesFp=NULL;
+  pFile->specFp=pFile->darkFp=pFile->namesFp=NULL;
 
   // About names of record
 
@@ -241,7 +319,7 @@ int EngineSetFile(ENGINE_CONTEXT *pEngineContext,const char *fileName)
   if ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SAOZ_PCDNMOS) ||
       (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_PDASI_EASOE))
 
-   pEngineContext->namesFp=fopen(FILES_BuildFileName(fileTmp,FILE_TYPE_NAMES),"rb");
+   pFile->namesFp=fopen(FILES_BuildFileName(fileTmp,FILE_TYPE_NAMES),"rb");
 
   // Dark current files : the file name is automatically built from the spectra file name
 
@@ -249,16 +327,16 @@ int EngineSetFile(ENGINE_CONTEXT *pEngineContext,const char *fileName)
       (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_ACTON) ||
       (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_PDASI_EASOE))
 
-   pEngineContext->darkFp=fopen(FILES_BuildFileName(fileTmp,FILE_TYPE_DARK),"rb");
+   pFile->darkFp=fopen(FILES_BuildFileName(fileTmp,FILE_TYPE_DARK),"rb");
 
   // Some satellite measurements have their own functions to open the file
 
   if ((pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_OMI) &&
       (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_SCIA_PDS) &&
       (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_GOME2) &&
-     ((pEngineContext->specFp=fopen(engineContext.fileName,"rb"))==NULL))
+     ((pFile->specFp=fopen(pEngineContext->fileInfo.fileName,"rb"))==NULL))
 
-   rc=ERROR_SetLast("EngineSetFile",ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pEngineContext->fileName);
+   rc=ERROR_SetLast("EngineSetFile",ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pFile->fileName);
 
   else
 
@@ -266,49 +344,49 @@ int EngineSetFile(ENGINE_CONTEXT *pEngineContext,const char *fileName)
     {
   // ---------------------------------------------------------------------------
      case PRJCT_INSTR_FORMAT_ASCII :
-      rc=ASCII_Set(pEngineContext,pEngineContext->specFp);
+      rc=ASCII_Set(pEngineContext,pFile->specFp);
      break;
   // ---------------------------------------------------------------------------
      case PRJCT_INSTR_FORMAT_ACTON :
-      rc=SetActon_Logger(pEngineContext,pEngineContext->specFp);
+      rc=SetActon_Logger(pEngineContext,pFile->specFp);
      break;
   // ---------------------------------------------------------------------------
      case PRJCT_INSTR_FORMAT_PDASI_EASOE :
-      rc=SetEASOE(pEngineContext,pEngineContext->specFp,pEngineContext->namesFp);
+      rc=SetEASOE(pEngineContext,pFile->specFp,pFile->namesFp);
      break;
   // ---------------------------------------------------------------------------
      case PRJCT_INSTR_FORMAT_PDAEGG :
-      rc=SetPDA_EGG(pEngineContext,pEngineContext->specFp);
+      rc=SetPDA_EGG(pEngineContext,pFile->specFp);
      break;
   // ---------------------------------------------------------------------------
      case PRJCT_INSTR_FORMAT_LOGGER :
-      rc=SetPDA_EGG_Logger(pEngineContext,pEngineContext->specFp);
+      rc=SetPDA_EGG_Logger(pEngineContext,pFile->specFp);
      break;
   // ---------------------------------------------------------------------------
      case PRJCT_INSTR_FORMAT_SAOZ_PCDNMOS :
-      rc=SetSAOZ(pEngineContext,pEngineContext->specFp);
+      rc=SetSAOZ(pEngineContext,pFile->specFp);
      break;
   // ---------------------------------------------------------------------------
      case PRJCT_INSTR_FORMAT_SAOZ_EFM :
-      rc=SetSAOZEfm(pEngineContext,pEngineContext->specFp);
+      rc=SetSAOZEfm(pEngineContext,pFile->specFp);
      break;
   // ---------------------------------------------------------------------------
      case PRJCT_INSTR_FORMAT_MFC :
      case PRJCT_INSTR_FORMAT_MFC_STD :
-      if (!(rc=SetMFC(pEngineContext,pEngineContext->specFp)) && (THRD_id!=THREAD_TYPE_SPECTRA) && (THRD_id!=THREAD_TYPE_NONE))
+      if (!(rc=SetMFC(pEngineContext,pFile->specFp)) && (THRD_id!=THREAD_TYPE_SPECTRA) && (THRD_id!=THREAD_TYPE_NONE))
        rc=MFC_LoadAnalysis(pEngineContext);
      break;
   // ---------------------------------------------------------------------------
      case PRJCT_INSTR_FORMAT_RASAS :
-      rc=SetRAS(pEngineContext,pEngineContext->specFp);
+      rc=SetRAS(pEngineContext,pFile->specFp);
      break;
   // ---------------------------------------------------------------------------
      case PRJCT_INSTR_FORMAT_UOFT :
-      rc=SetUofT(pEngineContext,pEngineContext->specFp);
+      rc=SetUofT(pEngineContext,pFile->specFp);
      break;
   // ---------------------------------------------------------------------------
      case PRJCT_INSTR_FORMAT_NOAA :
-      rc=SetNOAA(pEngineContext,pEngineContext->specFp);
+      rc=SetNOAA(pEngineContext,pFile->specFp);
      break;
   // ---------------------------------------------------------------------------
      #if defined (__INCLUDE_HDF_) && __INCLUDE_HDF_
@@ -318,25 +396,25 @@ int EngineSetFile(ENGINE_CONTEXT *pEngineContext,const char *fileName)
      #endif
   // ---------------------------------------------------------------------------
      case PRJCT_INSTR_FORMAT_CCD_EEV :
-      rc=SetCCD_EEV(pEngineContext,pEngineContext->specFp,pEngineContext->darkFp);
+      rc=SetCCD_EEV(pEngineContext,pFile->specFp,pFile->darkFp);
      break;
   // ---------------------------------------------------------------------------
      case PRJCT_INSTR_FORMAT_CCD_OHP_96 :
-      rc=SetCCD(pEngineContext,pEngineContext->specFp,0);
+      rc=SetCCD(pEngineContext,pFile->specFp,0);
      break;
   // ---------------------------------------------------------------------------
      case PRJCT_INSTR_FORMAT_CCD_HA_94 :
-      rc=SetCCD(pEngineContext,pEngineContext->specFp,1);
+      rc=SetCCD(pEngineContext,pFile->specFp,1);
      break;
   // ---------------------------------------------------------------------------
      case PRJCT_INSTR_FORMAT_GDP_ASCII :
-      if (!(rc=GDP_ASC_Set(pEngineContext,pEngineContext->specFp)) && (THRD_id!=THREAD_TYPE_SPECTRA) && (THRD_id!=THREAD_TYPE_NONE))
-       rc=GDP_ASC_LoadAnalysis(pEngineContext,pEngineContext->specFp);
+      if (!(rc=GDP_ASC_Set(pEngineContext,pFile->specFp)) && (THRD_id!=THREAD_TYPE_SPECTRA) && (THRD_id!=THREAD_TYPE_NONE))
+       rc=GDP_ASC_LoadAnalysis(pEngineContext,pFile->specFp);
      break;
   // ---------------------------------------------------------------------------
      case PRJCT_INSTR_FORMAT_GDP_BIN :
-      if (!(rc=GDP_BIN_Set(pEngineContext,pEngineContext->specFp)) && (THRD_id!=THREAD_TYPE_SPECTRA) && (THRD_id!=THREAD_TYPE_NONE))
-       rc=GDP_BIN_LoadAnalysis(pEngineContext,pEngineContext->specFp);
+      if (!(rc=GDP_BIN_Set(pEngineContext,pFile->specFp)) && (THRD_id!=THREAD_TYPE_SPECTRA) && (THRD_id!=THREAD_TYPE_NONE))
+       rc=GDP_BIN_LoadAnalysis(pEngineContext,pFile->specFp);
 
      break;
   // ---------------------------------------------------------------------------
@@ -356,77 +434,88 @@ int EngineSetFile(ENGINE_CONTEXT *pEngineContext,const char *fileName)
   // ---------------------------------------------------------------------------
    }
 
+  // Return
+
   return pEngineContext->recordNumber;
  }
+
+// -----------------------------------------------------------------------------
+// FUNCTION      EngineReadFile
+// -----------------------------------------------------------------------------
+// PURPOSE       Dispatch the reading command according to the file format
+//
+// INPUT         pEngineContext     pointer to the engine context
+//               indexRecord        index of the record to read
+//               dateFlag           1 to search for a reference spectrum (GB)
+//               localDay           if dateFlag is 1, the calendar day for the
+//                                  reference spectrum to search for
+// -----------------------------------------------------------------------------
 
 void EngineReadFile(ENGINE_CONTEXT *pEngineContext,int indexRecord,INT dateFlag,INT localCalDay)
  {
  	// Declarations
 
+  RECORD_INFO *pRecord;                                                         // pointer to the record part of the engine context
+  FILE_INFO *pFile;                                                             // pointer to the file part of the engine context
  	INDEX i;
  	int rc;                                                                       // Return code
 
  	// Initializations
 
-  memset(pEngineContext->Nom,0,20);
+ 	pFile=&pEngineContext->fileInfo;
+ 	pRecord=&pEngineContext->recordInfo;
 
-  pEngineContext->Zm=-1.;
-  pEngineContext->Azimuth=-1.;
-  pEngineContext->SkyObs=8;
-  pEngineContext->ReguTemp=0.;
-  pEngineContext->TDet=0.;
-  pEngineContext->BestShift=0.;
-  pEngineContext->rejected=0;
-  pEngineContext->NTracks=0;
-  pEngineContext->Cic=0.;
-  pEngineContext->elevationViewAngle=-1.;
-  pEngineContext->azimuthViewAngle=-1.;
+  memset(pRecord->Nom,0,20);
 
-  pEngineContext->longitude=0.;
-  pEngineContext->latitude=0.;
-  pEngineContext->altitude=0.;
+  pRecord->Zm=-1.;
+  pRecord->Azimuth=-1.;
+  pRecord->SkyObs=8;
+  pRecord->ReguTemp=0.;
+  pRecord->TDet=0.;
+  pRecord->BestShift=0.;
+  pRecord->rejected=0;
+  pRecord->NTracks=0;
+  pRecord->Cic=0.;
+  pRecord->elevationViewAngle=-1.;
+  pRecord->azimuthViewAngle=-1.;
 
-  pEngineContext->aMoon=0.;
-  pEngineContext->hMoon=0.;
-  pEngineContext->fracMoon=0.;
+  pRecord->longitude=0.;
+  pRecord->latitude=0.;
+  pRecord->altitude=0.;
 
-  {
-  	FILE *fp;
-  	fp=fopen("toto.dat","a+t");
-  	fprintf(fp,"Format %d\n",pEngineContext->project.instrumental.readOutFormat);
-  	fclose(fp);
-  }
-
+  pRecord->aMoon=0.;
+  pRecord->hMoon=0.;
+  pRecord->fracMoon=0.;
 
   switch((INT)pEngineContext->project.instrumental.readOutFormat)
    {
  // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_ASCII :
-     rc=ASCII_Read(pEngineContext,indexRecord,dateFlag,localCalDay,engineContext.specFp);
+     rc=ASCII_Read(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp);
     break;
  // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_ACTON :
-     rc=ReliActon_Logger(pEngineContext,indexRecord,dateFlag,localCalDay,engineContext.specFp,engineContext.namesFp,engineContext.darkFp);
+     rc=ReliActon_Logger(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp,pFile->namesFp,pFile->darkFp);
     break;
  // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_PDASI_EASOE :
-     rc=ReliEASOE(pEngineContext,indexRecord,dateFlag,localCalDay,engineContext.specFp,engineContext.namesFp,engineContext.darkFp);
+     rc=ReliEASOE(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp,pFile->namesFp,pFile->darkFp);
     break;
  // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_PDAEGG :
-     rc=ReliPDA_EGG(pEngineContext,indexRecord,dateFlag,localCalDay,engineContext.specFp,engineContext.namesFp,engineContext.darkFp);
+     rc=ReliPDA_EGG(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp,pFile->namesFp,pFile->darkFp);
     break;
  // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_LOGGER :
-     rc=ReliPDA_EGG_Logger(pEngineContext,indexRecord,dateFlag,localCalDay,engineContext.specFp);
+     rc=ReliPDA_EGG_Logger(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp);
     break;
  // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_SAOZ_PCDNMOS :
-     rc=ReliSAOZ(pEngineContext,indexRecord,dateFlag,localCalDay,engineContext.specFp,engineContext.namesFp);
+     rc=ReliSAOZ(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp,pFile->namesFp);
     break;
  // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_SAOZ_EFM :
-     rc=ReliSAOZEfm(pEngineContext,indexRecord,dateFlag,localCalDay,engineContext.specFp);
+     rc=ReliSAOZEfm(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp);
     break;
  // ---------------------------------------------------------------------------
 // QDOAS ???    case PRJCT_INSTR_FORMAT_MFC :
@@ -452,24 +541,24 @@ void EngineReadFile(ENGINE_CONTEXT *pEngineContext,int indexRecord,INT dateFlag,
 // QDOAS ???    // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // QDOAS ???     }
 // QDOAS ???
-// QDOAS ???     rc=ReliMFC(pEngineContext,indexRecord,dateFlag,localCalDay,engineContext.specFp,mfcMask);
+// QDOAS ???     rc=ReliMFC(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp,mfcMask);
 // QDOAS ???
 // QDOAS ???    break;
  // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_MFC_STD :
-     rc=ReliMFCStd(pEngineContext,indexRecord,dateFlag,localCalDay,engineContext.specFp);
+     rc=ReliMFCStd(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp);
     break;
  // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_RASAS :
-     rc=ReliRAS(pEngineContext,indexRecord,dateFlag,localCalDay,engineContext.specFp);
+     rc=ReliRAS(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp);
     break;
  // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_UOFT :
-     rc=ReliUofT(pEngineContext,indexRecord,dateFlag,localCalDay,engineContext.specFp);
+     rc=ReliUofT(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp);
     break;
  // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_NOAA :
-     rc=ReliNOAA(pEngineContext,indexRecord,dateFlag,localCalDay,engineContext.specFp);
+     rc=ReliNOAA(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp);
     break;
  // ---------------------------------------------------------------------------
     #if defined (__INCLUDE_HDF_) && __INCLUDE_HDF_
@@ -479,23 +568,23 @@ void EngineReadFile(ENGINE_CONTEXT *pEngineContext,int indexRecord,INT dateFlag,
     #endif
  // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_CCD_EEV :
-     rc=ReliCCD_EEV(pEngineContext,indexRecord,dateFlag,localCalDay,engineContext.specFp,engineContext.darkFp);
+     rc=ReliCCD_EEV(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp,pFile->darkFp);
     break;
  // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_CCD_HA_94 :
-     rc=ReliCCD(pEngineContext,indexRecord,dateFlag,localCalDay,engineContext.specFp,engineContext.namesFp,engineContext.darkFp);
+     rc=ReliCCD(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp,pFile->namesFp,pFile->darkFp);
     break;
  // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_CCD_OHP_96 :
-     rc=ReliCCDTrack(pEngineContext,indexRecord,dateFlag,localCalDay,engineContext.specFp,engineContext.namesFp,engineContext.darkFp);
+     rc=ReliCCDTrack(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp,pFile->namesFp,pFile->darkFp);
     break;
  // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_GDP_ASCII :
-     rc=GDP_ASC_Read(pEngineContext,indexRecord,dateFlag,engineContext.specFp);
+     rc=GDP_ASC_Read(pEngineContext,indexRecord,dateFlag,pFile->specFp);
     break;
  // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_GDP_BIN :
-     rc=GDP_BIN_Read(pEngineContext,indexRecord,engineContext.specFp,GDP_BIN_currentFileIndex);
+     rc=GDP_BIN_Read(pEngineContext,indexRecord,pFile->specFp,GDP_BIN_currentFileIndex);
     break;
  // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_SCIA_PDS :
@@ -512,12 +601,47 @@ void EngineReadFile(ENGINE_CONTEXT *pEngineContext,int indexRecord,INT dateFlag,
  // ---------------------------------------------------------------------------
    }
 
-  if (pEngineContext->instrFunction!=NULL)
+  if (pEngineContext->buffers.instrFunction!=NULL)
    {
     for (i=0;(i<NDET) && !rc;i++)
-     if (pEngineContext->instrFunction[i]==(double)0.)
+     if (pEngineContext->buffers.instrFunction[i]==(double)0.)
       rc=ERROR_SetLast("EngineReadFile",ERROR_TYPE_FATAL,ERROR_ID_DIVISION_BY_0,"Instrumental function");
      else
-      pEngineContext->spectrum[i]/=pEngineContext->instrFunction[i];
+      pEngineContext->buffers.spectrum[i]/=pEngineContext->buffers.instrFunction[i];
    }
+ }
+
+// -----------------------------------------------------------------------------
+// FUNCTION      EngineRequestBeginBrowseSpectra
+// -----------------------------------------------------------------------------
+// PURPOSE       Dispatch the reading command according to the file format
+//
+// INPUT         pEngineContext     pointer to the engine context
+//               spectraFileName    the name of the file to process
+//               threadType         type of thread action
+//
+// RETURN        0 in case of success; the code of the error otherwise
+// -----------------------------------------------------------------------------
+
+RC EngineRequestBeginBrowseSpectra(ENGINE_CONTEXT *pEngineContext,const char *spectraFileName,unsigned int action)
+ {
+ 	// Declaration
+
+ 	RC rc;
+
+ 	// Initialize
+
+  THRD_id=action;
+  THRD_browseType=THREAD_BROWSE_SPECTRA;
+
+  // Set file pointers
+
+  if (!(rc=EngineSetFile(pEngineContext,spectraFileName)) && !pEngineContext->recordNumber)
+   rc=ERROR_SetLast("EngineRequestBeginBrowseSpectra",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,spectraFileName);
+  else
+   pEngineContext->indexRecord = 1;
+
+  // Return
+
+  return rc;
  }

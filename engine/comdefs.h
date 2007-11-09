@@ -184,7 +184,7 @@ typedef UINT        MASK,SZ_LEN;
 #define MAX_VAR_LEN                              63                             // maximum length for the names of variables
 #define MAX_ITEM_TEXT_LEN                      1023     // Before 511           // item text length
 #define MAX_ITEM_NAME_LEN                        63                             // name of a symbol
-#define MAX_ITEM_DESC_LEN                       127                             // description of a symbol
+#define MAX_ITEM_DESC_LEN                       255                             // description of a symbol
 
 // Other constants definitions
 
@@ -322,13 +322,14 @@ SHORT_DATE;
 // them from the compilation as far as debug calls are included in a
 // #if defined(__DEBUG_) / #endif block.
 
-#define __DEBUG_                   0                                            // 1 to enable the debug mode, 0 to disable the debug mode
+#define __DEBUG_                   1                                            // 1 to enable the debug mode, 0 to disable the debug mode
 
 #define __DEBUG_DOAS_SVD_          0                                            // SVD decomposition
 #define __DEBUG_DOAS_SHIFT_        0                                            // interpolation of vectors
 #define __DEBUG_DOAS_DATA_         0                                            // load data
 #define __DEBUG_DOAS_OUTPUT_       0                                            // output
-#define __DEBUG_DOAS_FILE_         1                                            // file
+#define __DEBUG_DOAS_FILE_         0                                            // file
+#define __DEBUG_DOAS_CONFIG_       1                                            // config
 
 // Types of functions to debug
 
@@ -339,6 +340,7 @@ SHORT_DATE;
 #define  DEBUG_FCTTYPE_APPL   0x08                                              // application related
 #define  DEBUG_FCTTYPE_UTIL   0x10                                              // utility function
 #define  DEBUG_FCTTYPE_FILE   0x20                                              // file management
+#define  DEBUG_FCTTYPE_CONFIG 0x40                                              // check the config
 
 // Authorize the debugging double type variables allocated by MEMORY_AllocDVector or MEMORY_AllocDMatrix
 
@@ -390,13 +392,13 @@ RC   DEBUG_Stop(UCHAR *callingFct);
 // ERRORS HANDLING
 // ===============
 
-// Error types
+// Error types (November 2007 : modify the values for QDoas compatibility, see mediate_types.h)
 
 #define ERROR_TYPE_UNKNOWN    (int)-1
-#define ERROR_TYPE_WARNING          1
-#define ERROR_TYPE_FATAL            2
-#define ERROR_TYPE_DEBUG            3
-#define ERROR_TYPE_FILE             4
+#define ERROR_TYPE_WARNING          2                                           // WarningEngineError
+#define ERROR_TYPE_FATAL            3                                           // FatalEngineError
+#define ERROR_TYPE_DEBUG            1                                           // InformationEngineError
+#define ERROR_TYPE_FILE             1                                           // InformationEngineError
 
 // Description of an error
 

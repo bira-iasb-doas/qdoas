@@ -6,7 +6,7 @@
 //  Name of module    :  UofT-read.c
 //  Creation date     :  12 November 2003
 //
-//  QDOAS is a cross-platform application developed in QT for DOAS retrieval 
+//  QDOAS is a cross-platform application developed in QT for DOAS retrieval
 //  (Differential Optical Absorption Spectroscopy).
 //
 //  The QT version of the program has been developed jointly by the Belgian
@@ -15,21 +15,21 @@
 //
 //      BIRA-IASB                                   S[&]T
 //      Belgian Institute for Space Aeronomy        Science [&] Technology
-//      Avenue Circulaire, 3                        Postbus 608                   
-//      1180     UCCLE                              2600 AP Delft                 
-//      BELGIUM                                     THE NETHERLANDS               
-//      caroline.fayt@aeronomie.be                  info@stcorp.nl                
+//      Avenue Circulaire, 3                        Postbus 608
+//      1180     UCCLE                              2600 AP Delft
+//      BELGIUM                                     THE NETHERLANDS
+//      caroline.fayt@aeronomie.be                  info@stcorp.nl
 //
 //  This program is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU General Public License
 //  as published by the Free Software Foundation; either version 2
 //  of the License, or (at your option) any later version.
-//  
+//
 //  This program is distributed in the hope that it will be useful,
 //  but WITHOUT ANY WARRANTY; without even the implied warranty of
 //  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //  GNU General Public License for more details.
-//  
+//
 //  You should have received a copy of the GNU General Public License
 //  along with this program; if not, write to the Free Software Foundation,
 //  Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
@@ -133,17 +133,17 @@ static INT UofT_recordList[MAX_UOFT_RECORD];                                    
 //               according to the file format : several spectra in one file or
 //               individual spectra in several files
 //
-// INPUT         pSpecInfo : information on the file to read
+// INPUT         pEngineContext : information on the file to read
 //               specFp    : pointer to the current spectra file
 //
-// OUTPUT        pSpecInfo->recordNumber, the number of records
+// OUTPUT        pEngineContext->recordNumber, the number of records
 //
 // RETURN        ERROR_ID_FILE_NOT_FOUND if the input file pointer is NULL;
 //               ERROR_ID_FILE_BAD_FORMAT if the format of the file is unknown;
 //               ERROR_ID_NO in case of success.
 // -----------------------------------------------------------------------------
 
-RC SetUofT(SPEC_INFO *pSpecInfo,FILE *specFp)
+RC SetUofT(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
  {
   // Declarations
 
@@ -175,18 +175,18 @@ RC SetUofT(SPEC_INFO *pSpecInfo,FILE *specFp)
   hDir=NULL;
   memset(&UofT_data,0,sizeof(UOFT_FORMAT));                                     // information on the current record
   memset(fileFilter,0,MAX_PATH_LEN+1);                                          // file filter
-  pSpecInfo->recordNumber=0;                                                    // number of records for the whole day
+  pEngineContext->recordNumber=0;                                                    // number of records for the whole day
   THRD_lastRefRecord=0;                                                         // last reference record
   UofT_csvLastRecord=ITEM_NONE;                                                 // in CSV format (several records in ASCII) : index of the last record
   UofT_csvFlag=0;                                                               // flag : 1 if CSV format is used
   rc=ERROR_ID_NO;
 
-  strncpy(fileFilter,pSpecInfo->fileName,MAX_PATH_LEN);                         // copy the file name into the file filter
+  strncpy(fileFilter,pEngineContext->fileInfo.fileName,MAX_PATH_LEN);                         // copy the file name into the file filter
   ptr2=strrchr(fileFilter,'.');                                                 // get the file extension (day number)
   ptr=strrchr(fileFilter,PATH_SEP);                                             // search for the path separator
 
   if ((ptr2==NULL) || (strlen(ptr2)!=4))
-   rc=ERROR_SetLast("SetUofT",ERROR_TYPE_WARNING,ERROR_ID_FILE_BAD_FORMAT,pSpecInfo->fileName);
+   rc=ERROR_SetLast("SetUofT",ERROR_TYPE_WARNING,ERROR_ID_FILE_BAD_FORMAT,pEngineContext->fileInfo.fileName);
 
   // CSV FORMAT
 
@@ -199,7 +199,7 @@ RC SetUofT(SPEC_INFO *pSpecInfo,FILE *specFp)
     // Can't open file
 
     if (specFp==NULL)
-     rc=ERROR_SetLast("SetUofT",ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pSpecInfo->fileName);
+     rc=ERROR_SetLast("SetUofT",ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pEngineContext->fileInfo.fileName);
     else
      {
       // Don't use the first line with the description of records headers
@@ -224,7 +224,7 @@ RC SetUofT(SPEC_INFO *pSpecInfo,FILE *specFp)
         // Increment the number of records
 
         if (recordNumber==NDET)
-         pSpecInfo->recordNumber++;
+         pEngineContext->recordNumber++;
        }
       while (!feof(specFp));
      }
@@ -241,7 +241,7 @@ RC SetUofT(SPEC_INFO *pSpecInfo,FILE *specFp)
    	// Search for individual files with spectrum measured the same day
 
     for (hDir=FindFirstFile(fileFilter,&fileInfo),rc=1;
-        (hDir!=INVALID_HANDLE_VALUE) && (rc!=0) && (pSpecInfo->recordNumber<MAX_UOFT_RECORD);rc=FindNextFile(hDir,&fileInfo))
+        (hDir!=INVALID_HANDLE_VALUE) && (rc!=0) && (pEngineContext->recordNumber<MAX_UOFT_RECORD);rc=FindNextFile(hDir,&fileInfo))
      {
       if (((fileInfo.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY)==0) &&          // this is not a directory
           ((ptr3=strrchr(fileInfo.cFileName,'.'))!=NULL) &&                     // there is a file extension
@@ -255,11 +255,11 @@ RC SetUofT(SPEC_INFO *pSpecInfo,FILE *specFp)
 
         // Attribute a record number and calculate the total number of records
 
-        for (recordNumber=pSpecInfo->recordNumber;(recordNumber>0) && (UofT_recordList[recordNumber-1]>uofTrecordNo);recordNumber--)
+        for (recordNumber=pEngineContext->recordNumber;(recordNumber>0) && (UofT_recordList[recordNumber-1]>uofTrecordNo);recordNumber--)
          UofT_recordList[recordNumber]=UofT_recordList[recordNumber-1];
 
         UofT_recordList[recordNumber]=uofTrecordNo;
-        pSpecInfo->recordNumber++;
+        pEngineContext->recordNumber++;
        }
      }
 
@@ -274,7 +274,7 @@ RC SetUofT(SPEC_INFO *pSpecInfo,FILE *specFp)
 
     for (hDir=opendir(fileFilter);                                              // get the list of files in the directory
         (hDir!=NULL) && ((fileInfo=readdir(hDir))!=NULL) &&                     // get the next file in the directory
-        (pSpecInfo->recordNumber<MAX_UOFT_RECORD);)
+        (pEngineContext->recordNumber<MAX_UOFT_RECORD);)
      {
      	// Build the complete file name
 
@@ -294,11 +294,11 @@ RC SetUofT(SPEC_INFO *pSpecInfo,FILE *specFp)
 
         // Attribute a record number and calculate the total number of records
 
-        for (recordNumber=pSpecInfo->recordNumber;(recordNumber>0) && (UofT_recordList[recordNumber-1]>uofTrecordNo);recordNumber--)
+        for (recordNumber=pEngineContext->recordNumber;(recordNumber>0) && (UofT_recordList[recordNumber-1]>uofTrecordNo);recordNumber--)
          UofT_recordList[recordNumber]=UofT_recordList[recordNumber-1];
 
         UofT_recordList[recordNumber]=uofTrecordNo;
-        pSpecInfo->recordNumber++;
+        pEngineContext->recordNumber++;
        }
      }
 
@@ -526,7 +526,7 @@ RC UofTSkipCsvRecord(FILE *specFp,int nSkip)
 // -----------------------------------------------------------------------------
 // PURPOSE       read out a record in the case of CSV format (several spectra in the same file)
 //
-// INPUT         pSpecInfo   information on the current file
+// INPUT         pEngineContext   information on the current file
 //               specFp      pointer to the current CSV file
 //               recordNo    the index of the record to read
 //
@@ -536,7 +536,7 @@ RC UofTSkipCsvRecord(FILE *specFp,int nSkip)
 //               ERROR_ID_NO           otherwise.
 // -----------------------------------------------------------------------------
 
-RC UofTReadRecordCsv(SPEC_INFO *pSpecInfo,FILE *specFp,INT recordNo,double *spe)
+RC UofTReadRecordCsv(ENGINE_CONTEXT *pEngineContext,FILE *specFp,INT recordNo,double *spe)
  {
   // Declarations
 
@@ -561,7 +561,7 @@ RC UofTReadRecordCsv(SPEC_INFO *pSpecInfo,FILE *specFp,INT recordNo,double *spe)
   // Can't open file
 
   if (specFp==NULL)
-   rc=ERROR_SetLast("UofTReadRecordCsv",ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pSpecInfo->fileName);
+   rc=ERROR_SetLast("UofTReadRecordCsv",ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pEngineContext->fileInfo.fileName);
 
   // Goto the specified record
 
@@ -658,7 +658,7 @@ RC UofTReadRecordCsv(SPEC_INFO *pSpecInfo,FILE *specFp,INT recordNo,double *spe)
 // -----------------------------------------------------------------------------
 // PURPOSE       Read a record in the UofT format
 //
-// INPUT         pSpecInfo : information on the file to read
+// INPUT         pEngineContext : information on the file to read
 //               recordNo  : the index of the record to read
 //               dateFlag  : 1 to search for a reference spectrum
 //               localDay  : if dateFlag is 1, the calendar day for the
@@ -672,52 +672,54 @@ RC UofTReadRecordCsv(SPEC_INFO *pSpecInfo,FILE *specFp,INT recordNo,double *spe)
 //               ERROR_ID_NO otherwise.
 // -----------------------------------------------------------------------------
 
-RC ReliUofT(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,INT localDay,FILE *specFp)
+RC ReliUofT(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,INT localDay,FILE *specFp)
  {
   // Declarations
 
+  RECORD_INFO *pRecord;                                                         // pointer to the record part of the engine context
   RC      rc;                                                                   // return code
   double  tmLocal;                                                              // local time
 
-  // Initialization
+  // Initializations
 
+  pRecord=&pEngineContext->recordInfo;
   rc=ERROR_ID_NO;
 
   // Read the record
 
-  if ((recordNo>0) && (recordNo<=pSpecInfo->recordNumber) &&
-     !(rc=(UofT_csvFlag)?UofTReadRecordCsv(pSpecInfo,specFp,recordNo,pSpecInfo->spectrum):
-                         UofTReadRecord(pSpecInfo->fileName,recordNo,pSpecInfo->spectrum,pSpecInfo->Nom)))
+  if ((recordNo>0) && (recordNo<=pEngineContext->recordNumber) &&
+     !(rc=(UofT_csvFlag)?UofTReadRecordCsv(pEngineContext,specFp,recordNo,pEngineContext->buffers.spectrum):
+                         UofTReadRecord(pEngineContext->fileInfo.fileName,recordNo,pEngineContext->buffers.spectrum,pRecord->Nom)))
    {
-    memcpy(&pSpecInfo->present_day,&UofT_data.meanDate,sizeof(SHORT_DATE));
-    memcpy(&pSpecInfo->present_time,&UofT_data.meanTime,sizeof(struct time));
+    memcpy(&pRecord->present_day,&UofT_data.meanDate,sizeof(SHORT_DATE));
+    memcpy(&pRecord->present_time,&UofT_data.meanTime,sizeof(struct time));
 
     // Get information on the current record
 
-    pSpecInfo->NSomme=(int)UofT_data.numAcc;                                    // number of accumulations
-    pSpecInfo->Tint=(double)UofT_data.intTime*0.001;                            // integration time
-    pSpecInfo->Zm=(UofT_csvFlag)?-1.:(double)90.-UofT_data.meanElev;            // solar zenith angle
-    pSpecInfo->ReguTemp=UofT_data.meanBoxT;                                     // box temperature
-    pSpecInfo->TDet=(double)UofT_data.meanCCDT;                                 // detector temperature
+    pRecord->NSomme=(int)UofT_data.numAcc;                                    // number of accumulations
+    pRecord->Tint=(double)UofT_data.intTime*0.001;                            // integration time
+    pRecord->Zm=(UofT_csvFlag)?-1.:(double)90.-UofT_data.meanElev;            // solar zenith angle
+    pRecord->ReguTemp=UofT_data.meanBoxT;                                     // box temperature
+    pRecord->TDet=(double)UofT_data.meanCCDT;                                 // detector temperature
 
-    pSpecInfo->Tm=(double)ZEN_NbSec(&pSpecInfo->present_day,&pSpecInfo->present_time,0);
-    pSpecInfo->TotalExpTime=(double)0.;
-    pSpecInfo->TimeDec=(double)pSpecInfo->present_time.ti_hour+pSpecInfo->present_time.ti_min/60.+pSpecInfo->present_time.ti_sec/3600.;
+    pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_day,&pRecord->present_time,0);
+    pRecord->TotalExpTime=(double)0.;
+    pRecord->TimeDec=(double)pRecord->present_time.ti_hour+pRecord->present_time.ti_min/60.+pRecord->present_time.ti_sec/3600.;
 
     // Determine the local time
 
-    tmLocal=pSpecInfo->Tm+THRD_localShift*3600.;
+    tmLocal=pRecord->Tm+THRD_localShift*3600.;
 
-    pSpecInfo->localCalDay=ZEN_FNCaljda(&tmLocal);
-    pSpecInfo->localTimeDec=fmod(pSpecInfo->TimeDec+24.+THRD_localShift,(double)24.);
+    pRecord->localCalDay=ZEN_FNCaljda(&tmLocal);
+    pRecord->localTimeDec=fmod(pRecord->TimeDec+24.+THRD_localShift,(double)24.);
 
     // Search for a reference spectrum
 
-    if (dateFlag && (pSpecInfo->localCalDay>localDay))
+    if (dateFlag && (pRecord->localCalDay>localDay))
      rc=ERROR_ID_FILE_END;
 
-    else if ((pSpecInfo->NSomme<=0) ||
-             (dateFlag && (pSpecInfo->localCalDay!=localDay)))
+    else if ((pRecord->NSomme<=0) ||
+             (dateFlag && (pRecord->localCalDay!=localDay)))
 
      rc=ERROR_ID_FILE_RECORD;
 

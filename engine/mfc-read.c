@@ -88,7 +88,7 @@ INT mfcLastSpectrum=0;
 //
 // INPUT         specFp      pointer to the spectra file
 //
-// OUTPUT        pSpecInfo   pointer to a structure whose some fields are filled
+// OUTPUT        pEngineContext   pointer to a structure whose some fields are filled
 //                           with general data on the file
 //
 // RETURN        ERROR_ID_NO  no error;
@@ -97,11 +97,12 @@ INT mfcLastSpectrum=0;
 #if defined(__BC32_) && __BC32_
 #pragma argsused
 #endif
-RC SetMFC(SPEC_INFO *pSpecInfo,FILE *specFp)
+RC SetMFC(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
  {
   // Declarations
 
   PRJCT_INSTRUMENTAL *pInstrumental;
+  BUFFERS *pBuffers;                                                            // pointer to the buffers part of the engine context
 
   UCHAR  fileName[MAX_STR_SHORT_LEN+1],                                         // name of the current file
          format[20],                                                            // format string
@@ -113,9 +114,11 @@ RC SetMFC(SPEC_INFO *pSpecInfo,FILE *specFp)
 
   // Initializations
 
+  pBuffers=&pEngineContext->buffers;
+
   memset(fileName,0,MAX_STR_SHORT_LEN+1);
-  strncpy(fileName,pSpecInfo->fileName,MAX_STR_SHORT_LEN);
-  pInstrumental=&pSpecInfo->project.instrumental;
+  strncpy(fileName,pEngineContext->fileInfo.fileName,MAX_STR_SHORT_LEN);
+  pInstrumental=&pEngineContext->project.instrumental;
   THRD_lastRefRecord=0;
   mfcLastSpectrum=0;
   rc=ERROR_ID_NO;
@@ -136,27 +139,27 @@ RC SetMFC(SPEC_INFO *pSpecInfo,FILE *specFp)
       sscanf(ptr3,"%d",&firstFile);
       sscanf(PATH_fileMax+(ptr3-ptr-1),"%d",&lastFile);
 
-      pSpecInfo->recordNumber=(lastFile-firstFile+1);
+      pEngineContext->recordNumber=(lastFile-firstFile+1);
 
       // Refresh dark current and offset
 
       if (strlen(pInstrumental->dnlFile) &&                                       // dnl file specified
          !strrchr(pInstrumental->dnlFile,PATH_SEP) &&                             // no path separator
-         (pSpecInfo->dnl!=NULL))                                                  // allocated vector
+         (pBuffers->dnl!=NULL))                                                  // allocated vector
        {
-       	strcpy(fileName,pSpecInfo->fileName);
+       	strcpy(fileName,pEngineContext->fileInfo.fileName);
        	if ((ptr=strrchr(fileName,PATH_SEP))!=NULL)
        	 {
        	 	FILES_RebuildFileName(ptr+1,pInstrumental->dnlFile,0);
 
        	 	if (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC)
            MFC_ReadRecord(fileName,
-                         &MFC_headerOff,pSpecInfo->dnl,
+                         &MFC_headerOff,pBuffers->dnl,
                          &MFC_headerDrk,NULL,
                          &MFC_headerOff,NULL,
                           pInstrumental->mfcMaskOffset,pInstrumental->mfcMaskSpec,pInstrumental->mfcRevert);
        	 	else
-           MFC_ReadRecordStd(pSpecInfo,fileName,&MFC_headerOff,pSpecInfo->dnl,
+           MFC_ReadRecordStd(pEngineContext,fileName,&MFC_headerOff,pBuffers->dnl,
                             &MFC_headerDrk,NULL,
                             &MFC_headerOff,NULL);
          }
@@ -164,9 +167,9 @@ RC SetMFC(SPEC_INFO *pSpecInfo,FILE *specFp)
 
       if (strlen(pInstrumental->vipFile) &&                      // vip file specified
          !strrchr(pInstrumental->vipFile,PATH_SEP) &&            // no path separator
-         (pSpecInfo->varPix!=NULL))                                               // allocated vector
+         (pBuffers->varPix!=NULL))                                               // allocated vector
        {
-       	strcpy(fileName,pSpecInfo->fileName);
+       	strcpy(fileName,pEngineContext->fileInfo.fileName);
 
        	if ((ptr=strrchr(fileName,PATH_SEP))!=NULL)
        	 {
@@ -174,14 +177,14 @@ RC SetMFC(SPEC_INFO *pSpecInfo,FILE *specFp)
 
        	 	if (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC)
            MFC_ReadRecord(fileName,
-                         &MFC_headerOff,pSpecInfo->dnl,
+                         &MFC_headerOff,pBuffers->dnl,
                          &MFC_headerDrk,NULL,
                          &MFC_headerOff,NULL,
                           pInstrumental->mfcMaskDark,pInstrumental->mfcMaskSpec,pInstrumental->mfcRevert);
        	 	else
-           MFC_ReadRecordStd(pSpecInfo,fileName,&MFC_headerDrk,pSpecInfo->varPix,
+           MFC_ReadRecordStd(pEngineContext,fileName,&MFC_headerDrk,pBuffers->varPix,
                             &MFC_headerDrk,NULL,
-                            &MFC_headerOff,pSpecInfo->dnl);
+                            &MFC_headerOff,pBuffers->dnl);
          }
        }
 
@@ -204,14 +207,14 @@ RC SetMFC(SPEC_INFO *pSpecInfo,FILE *specFp)
       // in this format, there's one record per file and a directory
       // is seen as a set of records.
 
-//      pSpecInfo->recordNumber=indexFile-firstFile+1;
-//      pSpecInfo->recordNumber=pInstrumental->mfcMaxSpectra;
+//      pEngineContext->recordNumber=indexFile-firstFile+1;
+//      pEngineContext->recordNumber=pInstrumental->mfcMaxSpectra;
      }
     else
-     rc=ERROR_SetLast("SetMFC",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pSpecInfo->fileName);
+     rc=ERROR_SetLast("SetMFC",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pEngineContext->fileInfo.fileName);
    }
   else
-   pSpecInfo->recordNumber=1;
+   pEngineContext->recordNumber=1;
 
   // Return
 
@@ -347,7 +350,7 @@ RC MFC_ReadRecord(UCHAR *fileName,
 //               specFp       pointer to the spectra file;
 //               mfcMask      mask for spectra selection;
 //
-// OUTPUT        pSpecInfo  : pointer to a structure whose some fields are filled
+// OUTPUT        pEngineContext  : pointer to a structure whose some fields are filled
 //                            with data on the current spectrum
 //
 // RETURN        ERROR_ID_FILE_END       : the end of the file is reached;
@@ -358,30 +361,36 @@ RC MFC_ReadRecord(UCHAR *fileName,
 #if defined(__BC32_) && __BC32_
 #pragma argsused
 #endif
-RC ReliMFC(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *specFp,UINT mfcMask)
+RC ReliMFC(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp,UINT mfcMask)
  {
   // Declarations
 
-  INT                  day,mon,year,hour,min,sec,nsec,        // date and time fields
-                       firstFile;                             // number of the first file in the current directory
-  UCHAR                fileName[MAX_STR_SHORT_LEN+1],         // name of the current file (the current record)
+  BUFFERS *pBuffers;                                                            // pointer to the buffers part of the engine context
+  RECORD_INFO *pRecord;                                                         // pointer to the record part of the engine context
+
+  INT                  day,mon,year,hour,min,sec,nsec,                          // date and time fields
+                       firstFile;                                               // number of the first file in the current directory
+  UCHAR                fileName[MAX_STR_SHORT_LEN+1],                           // name of the current file (the current record)
                        format[20],
-                      *ptr,*ptr2;                             // pointers to parts in the previous string
-  SHORT_DATE           today;                                 // date of the current record
-  PRJCT_INSTRUMENTAL  *pInstrumental;                         // pointer to the instrumental part of the project
-  RC                   rc;                                    // return code
+                      *ptr,*ptr2;                                               // pointers to parts in the previous string
+  SHORT_DATE           today;                                                   // date of the current record
+  PRJCT_INSTRUMENTAL  *pInstrumental;                                           // pointer to the instrumental part of the project
+  RC                   rc;                                                      // return code
   double tmLocal;
 
   // Initializations
 
+  pRecord=&pEngineContext->recordInfo;
+  pBuffers=&pEngineContext->buffers;
+
   memset(fileName,0,MAX_STR_SHORT_LEN+1);
-  strncpy(fileName,pSpecInfo->fileName,MAX_STR_SHORT_LEN);
-  pInstrumental=&pSpecInfo->project.instrumental;
+  strncpy(fileName,pEngineContext->fileInfo.fileName,MAX_STR_SHORT_LEN);
+  pInstrumental=&pEngineContext->project.instrumental;
   rc=ERROR_ID_NO;
 
   if ((ptr=strrchr(fileName,PATH_SEP))==NULL)
    rc=ERROR_ID_FILE_RECORD;
-  else if ((recordNo>0) && (recordNo<=pSpecInfo->recordNumber))
+  else if ((recordNo>0) && (recordNo<=pEngineContext->recordNumber))
    {
     // Build the right file name
 
@@ -401,7 +410,7 @@ RC ReliMFC(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *spe
 
     // Record read out
 
-    if (!(rc=MFC_ReadRecord(fileName,&MFC_header,pSpecInfo->spectrum,&MFC_headerDrk,pSpecInfo->varPix,&MFC_headerOff,pSpecInfo->dnl,mfcMask,pInstrumental->mfcMaskSpec,pInstrumental->mfcRevert)))
+    if (!(rc=MFC_ReadRecord(fileName,&MFC_header,pBuffers->spectrum,&MFC_headerDrk,pBuffers->varPix,&MFC_headerOff,pBuffers->dnl,mfcMask,pInstrumental->mfcMaskSpec,pInstrumental->mfcRevert)))
      {
       if ((mfcMask==pInstrumental->mfcMaskSpec) &&
          (((pInstrumental->mfcMaskSpec!=(UINT)0) && ((UINT)MFC_header.ty==mfcMask)) ||
@@ -417,30 +426,30 @@ RC ReliMFC(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *spe
        {
         if (pInstrumental->mfcMaskUse)
          {
-          if ((((MFC_header.ty&pInstrumental->mfcMaskInstr)!=0) || (MFC_header.wavelength1==pInstrumental->mfcMaskInstr)) && (pSpecInfo->instrFunction!=NULL))
+          if ((((MFC_header.ty&pInstrumental->mfcMaskInstr)!=0) || (MFC_header.wavelength1==pInstrumental->mfcMaskInstr)) && (pBuffers->instrFunction!=NULL))
            {
             MFC_ReadRecord(fileName,
-                          &MFC_headerInstr,pSpecInfo->instrFunction,
-                          &MFC_headerDrk,pSpecInfo->varPix,               // instrument function should be corrected for dark current
-                          &MFC_headerOff,pSpecInfo->dnl,                  // instrument function should be corrected for offset
+                          &MFC_headerInstr,pBuffers->instrFunction,
+                          &MFC_headerDrk,pBuffers->varPix,               // instrument function should be corrected for dark current
+                          &MFC_headerOff,pBuffers->dnl,                  // instrument function should be corrected for offset
                           pInstrumental->mfcMaskInstr,pInstrumental->mfcMaskSpec,pInstrumental->mfcRevert);
 
             FILES_CompactPath(MFC_fileInstr,fileName,1,1);
            }
-          else if ((((MFC_header.ty&pInstrumental->mfcMaskDark)!=0) || (MFC_header.wavelength1==pInstrumental->mfcMaskDark)) && (pSpecInfo->varPix!=NULL))
+          else if ((((MFC_header.ty&pInstrumental->mfcMaskDark)!=0) || (MFC_header.wavelength1==pInstrumental->mfcMaskDark)) && (pBuffers->varPix!=NULL))
            {
             MFC_ReadRecord(fileName,
-                          &MFC_headerInstr,pSpecInfo->varPix,
+                          &MFC_headerInstr,pBuffers->varPix,
                           &MFC_headerDrk,NULL,                            // no correction for dark current
-                          &MFC_headerOff,pSpecInfo->dnl,                  // dark current should be corrected for offset
+                          &MFC_headerOff,pBuffers->dnl,                  // dark current should be corrected for offset
                           pInstrumental->mfcMaskDark,pInstrumental->mfcMaskSpec,0);
 
             FILES_CompactPath(MFC_fileDark,fileName,1,1);
            }
-          else if ((((MFC_header.ty&pInstrumental->mfcMaskOffset)!=0) || (MFC_header.wavelength1==pInstrumental->mfcMaskOffset)) &&  (pSpecInfo->dnl!=NULL))
+          else if ((((MFC_header.ty&pInstrumental->mfcMaskOffset)!=0) || (MFC_header.wavelength1==pInstrumental->mfcMaskOffset)) &&  (pBuffers->dnl!=NULL))
            {
             MFC_ReadRecord(fileName,
-                          &MFC_headerOff,pSpecInfo->dnl,
+                          &MFC_headerOff,pBuffers->dnl,
                           &MFC_headerDrk,NULL,                            // no correction for dark current
                           &MFC_headerOff,NULL,                            // no correction for offset
                           pInstrumental->mfcMaskOffset,pInstrumental->mfcMaskSpec,0);
@@ -475,73 +484,73 @@ RC ReliMFC(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *spe
         else if (today.da_year<1930)
          today.da_year+=(short)100;
 
-        pSpecInfo->startTime.ti_hour=(UCHAR)hour;
-        pSpecInfo->startTime.ti_min=(UCHAR)min;
-        pSpecInfo->startTime.ti_sec=(UCHAR)sec;
+        pRecord->startTime.ti_hour=(UCHAR)hour;
+        pRecord->startTime.ti_min=(UCHAR)min;
+        pRecord->startTime.ti_sec=(UCHAR)sec;
 
         sscanf(&MFC_header.dateAndTime[18],"%d:%d:%d",&hour,&min,&sec);
 
-        pSpecInfo->endTime.ti_hour=(UCHAR)hour;
-        pSpecInfo->endTime.ti_min=(UCHAR)min;
-        pSpecInfo->endTime.ti_sec=(UCHAR)sec;
+        pRecord->endTime.ti_hour=(UCHAR)hour;
+        pRecord->endTime.ti_min=(UCHAR)min;
+        pRecord->endTime.ti_sec=(UCHAR)sec;
 
         // Data on the current spectrum
 
-        nsec=(pSpecInfo->startTime.ti_hour*3600+pSpecInfo->startTime.ti_min*60+pSpecInfo->startTime.ti_sec+
-              pSpecInfo->endTime.ti_hour*3600+pSpecInfo->endTime.ti_min*60+pSpecInfo->endTime.ti_sec)/2;
+        nsec=(pRecord->startTime.ti_hour*3600+pRecord->startTime.ti_min*60+pRecord->startTime.ti_sec+
+              pRecord->endTime.ti_hour*3600+pRecord->endTime.ti_min*60+pRecord->endTime.ti_sec)/2;
 
-        pSpecInfo->present_day.da_day=(UCHAR)day;
-        pSpecInfo->present_day.da_mon=(UCHAR)mon;
-        pSpecInfo->present_day.da_year=(SHORT)year;
+        pRecord->present_day.da_day=(UCHAR)day;
+        pRecord->present_day.da_mon=(UCHAR)mon;
+        pRecord->present_day.da_year=(SHORT)year;
 
-        if (pSpecInfo->present_day.da_year<30)
-         pSpecInfo->present_day.da_year+=(short)2000;
-        else if (pSpecInfo->present_day.da_year<130)
-         pSpecInfo->present_day.da_year+=(short)1900;
-        else if (pSpecInfo->present_day.da_year<1930)
-         pSpecInfo->present_day.da_year+=(short)100;
+        if (pRecord->present_day.da_year<30)
+         pRecord->present_day.da_year+=(short)2000;
+        else if (pRecord->present_day.da_year<130)
+         pRecord->present_day.da_year+=(short)1900;
+        else if (pRecord->present_day.da_year<1930)
+         pRecord->present_day.da_year+=(short)100;
 
-        pSpecInfo->present_time.ti_hour=(UCHAR)(nsec/3600);
-        pSpecInfo->present_time.ti_min=(UCHAR)((nsec%3600)/60);
-        pSpecInfo->present_time.ti_sec=(UCHAR)((nsec%3600)%60);
+        pRecord->present_time.ti_hour=(UCHAR)(nsec/3600);
+        pRecord->present_time.ti_min=(UCHAR)((nsec%3600)/60);
+        pRecord->present_time.ti_sec=(UCHAR)((nsec%3600)%60);
 
-        pSpecInfo->TDet     = 0;
-        pSpecInfo->Tint     = MFC_header.int_time*0.001;
-        pSpecInfo->NSomme   = MFC_header.noscans;
+        pRecord->TDet     = 0;
+        pRecord->Tint     = MFC_header.int_time*0.001;
+        pRecord->NSomme   = MFC_header.noscans;
 
-        pSpecInfo->wavelength1=MFC_header.wavelength1;
-        memcpy(pSpecInfo->dispersion,MFC_header.dispersion,sizeof(float)*3);
-        memcpy(pSpecInfo->Nom,MFC_header.specname,20);
+        pRecord->wavelength1=MFC_header.wavelength1;
+        memcpy(pRecord->dispersion,MFC_header.dispersion,sizeof(float)*3);
+        memcpy(pRecord->Nom,MFC_header.specname,20);
 
-        pSpecInfo->Tm=(double)ZEN_NbSec(&pSpecInfo->present_day,&pSpecInfo->present_time,0);
-        pSpecInfo->TotalExpTime=(double)0.;
-        pSpecInfo->TimeDec=(double)pSpecInfo->present_time.ti_hour+pSpecInfo->present_time.ti_min/60.+pSpecInfo->present_time.ti_sec/3600.;
+        pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_day,&pRecord->present_time,0);
+        pRecord->TotalExpTime=(double)0.;
+        pRecord->TimeDec=(double)pRecord->present_time.ti_hour+pRecord->present_time.ti_min/60.+pRecord->present_time.ti_sec/3600.;
 
-        pSpecInfo->longitude=-MFC_header.longitude;  // !!!
-        pSpecInfo->latitude=MFC_header.latitude;
-        pSpecInfo->altitude=(double)0.;
-        pSpecInfo->elevationViewAngle=(float)MFC_header.elevation;
+        pRecord->longitude=-MFC_header.longitude;  // !!!
+        pRecord->latitude=MFC_header.latitude;
+        pRecord->altitude=(double)0.;
+        pRecord->elevationViewAngle=(float)MFC_header.elevation;
 
         MFC_header.longitude=-MFC_header.longitude;
 
-        pSpecInfo->Tm=(double)ZEN_NbSec(&pSpecInfo->present_day,&pSpecInfo->present_time,0);
-        pSpecInfo->Zm=ZEN_FNTdiz(ZEN_FNCrtjul(&pSpecInfo->Tm),&pSpecInfo->longitude,&pSpecInfo->latitude,&pSpecInfo->Azimuth);
-        tmLocal=pSpecInfo->Tm+THRD_localShift*3600.;
+        pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_day,&pRecord->present_time,0);
+        pRecord->Zm=ZEN_FNTdiz(ZEN_FNCrtjul(&pRecord->Tm),&pRecord->longitude,&pRecord->latitude,&pRecord->Azimuth);
+        tmLocal=pRecord->Tm+THRD_localShift*3600.;
 
-        pSpecInfo->localCalDay=ZEN_FNCaljda(&tmLocal);
-        pSpecInfo->localTimeDec=fmod(pSpecInfo->TimeDec+24.+THRD_localShift,(double)24.);
+        pRecord->localCalDay=ZEN_FNCaljda(&tmLocal);
+        pRecord->localTimeDec=fmod(pRecord->TimeDec+24.+THRD_localShift,(double)24.);
 
-        pSpecInfo->longitude=-MFC_header.longitude;  // !!!
+        pRecord->longitude=-MFC_header.longitude;  // !!!
 
         // User constraints
 
-//        if (dateFlag && (pSpecInfo->localCalDay>localDay))
+//        if (dateFlag && (pRecord->localCalDay>localDay))
 //         rc=ERROR_ID_FILE_END;
 
-        if (rc || (dateFlag && ((pSpecInfo->localCalDay!=localDay) || (pSpecInfo->elevationViewAngle<88.))))                  // reference spectra are zenith only
+        if (rc || (dateFlag && ((pRecord->localCalDay!=localDay) || (pRecord->elevationViewAngle<88.))))                  // reference spectra are zenith only
            rc=ERROR_ID_FILE_RECORD;
 //        else if (pInstrumental->mfcRevert)
-//         VECTOR_Invert(pSpecInfo->spectrum,NDET);
+//         VECTOR_Invert(pBuffers->spectrum,NDET);
 //        else if (dateFlag)
 //         THRD_lastRefRecord=recordNo;
        }
@@ -580,12 +589,14 @@ RC ReliMFC(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *spe
 //               ERROR_ID_NO              otherwise.
 // -----------------------------------------------------------------------------
 
-RC MFC_ReadRecordStd(SPEC_INFO *pSpecInfo,UCHAR *fileName,
+RC MFC_ReadRecordStd(ENGINE_CONTEXT *pEngineContext,UCHAR *fileName,
                      TBinaryMFC *pHeaderSpe,double *spe,
                      TBinaryMFC *pHeaderDrk,double *drk,
                      TBinaryMFC *pHeaderOff,double *off)
  {
   // Declarations
+
+  RECORD_INFO *pRecord;                                                         // pointer to the record part of the engine context
 
   FILE *fp;         // pointer to the current file
   INT  pixFin,day,mon,year,hour,min,sec,nsec;        // date and time fields
@@ -598,6 +609,8 @@ RC MFC_ReadRecordStd(SPEC_INFO *pSpecInfo,UCHAR *fileName,
   RC rc;            // return code
 
   // Initializations
+
+  pRecord=&pEngineContext->recordInfo;
 
   memset(line,0,MAX_STR_SHORT_LEN+1);
   rc=ERROR_ID_NO;
@@ -634,7 +647,7 @@ RC MFC_ReadRecordStd(SPEC_INFO *pSpecInfo,UCHAR *fileName,
     fgets(line,MAX_STR_SHORT_LEN,fp);
     sscanf(line,"%[^'\n']",pHeaderSpe->scan_dev);                               // Name of the scanning device
 
-    memcpy(pSpecInfo->Nom,pHeaderSpe->specname,20);
+    memcpy(pRecord->Nom,pHeaderSpe->specname,20);
 
     if (fgets(line,MAX_STR_SHORT_LEN,fp))
      sscanf(line,"%2d%c%2d%c%d",&mon,&ctmp,&day,&ctmp,&year);
@@ -652,45 +665,45 @@ RC MFC_ReadRecordStd(SPEC_INFO *pSpecInfo,UCHAR *fileName,
     else if (today.da_year<1930)
      today.da_year+=(short)100;
 
-    pSpecInfo->startTime.ti_hour=(UCHAR)hour;
-    pSpecInfo->startTime.ti_min=(UCHAR)min;
-    pSpecInfo->startTime.ti_sec=(UCHAR)sec;
+    pRecord->startTime.ti_hour=(UCHAR)hour;
+    pRecord->startTime.ti_min=(UCHAR)min;
+    pRecord->startTime.ti_sec=(UCHAR)sec;
 
     fscanf(fp,"%d:%d:%d\n",&hour,&min,&sec);
 
-    pSpecInfo->endTime.ti_hour=(UCHAR)hour;
-    pSpecInfo->endTime.ti_min=(UCHAR)min;
-    pSpecInfo->endTime.ti_sec=(UCHAR)sec;
+    pRecord->endTime.ti_hour=(UCHAR)hour;
+    pRecord->endTime.ti_min=(UCHAR)min;
+    pRecord->endTime.ti_sec=(UCHAR)sec;
 
-    nsec=(pSpecInfo->startTime.ti_hour*3600+pSpecInfo->startTime.ti_min*60+pSpecInfo->startTime.ti_sec+
-          pSpecInfo->endTime.ti_hour*3600+pSpecInfo->endTime.ti_min*60+pSpecInfo->endTime.ti_sec)/2;
+    nsec=(pRecord->startTime.ti_hour*3600+pRecord->startTime.ti_min*60+pRecord->startTime.ti_sec+
+          pRecord->endTime.ti_hour*3600+pRecord->endTime.ti_min*60+pRecord->endTime.ti_sec)/2;
 
-    pSpecInfo->present_day.da_day=(UCHAR)day;
-    pSpecInfo->present_day.da_mon=(UCHAR)mon;
-    pSpecInfo->present_day.da_year=(USHORT)year;
+    pRecord->present_day.da_day=(UCHAR)day;
+    pRecord->present_day.da_mon=(UCHAR)mon;
+    pRecord->present_day.da_year=(USHORT)year;
 
-    if (pSpecInfo->present_day.da_year<30)
-     pSpecInfo->present_day.da_year+=(short)2000;
-    else if (pSpecInfo->present_day.da_year<130)
-     pSpecInfo->present_day.da_year+=(short)1900;
-    else if (pSpecInfo->present_day.da_year<1930)
-     pSpecInfo->present_day.da_year+=(short)100;
+    if (pRecord->present_day.da_year<30)
+     pRecord->present_day.da_year+=(short)2000;
+    else if (pRecord->present_day.da_year<130)
+     pRecord->present_day.da_year+=(short)1900;
+    else if (pRecord->present_day.da_year<1930)
+     pRecord->present_day.da_year+=(short)100;
 
-    pSpecInfo->present_time.ti_hour=(UCHAR)(nsec/3600);
-    pSpecInfo->present_time.ti_min=(UCHAR)((nsec%3600)/60);
-    pSpecInfo->present_time.ti_sec=(UCHAR)((nsec%3600)%60);
+    pRecord->present_time.ti_hour=(UCHAR)(nsec/3600);
+    pRecord->present_time.ti_min=(UCHAR)((nsec%3600)/60);
+    pRecord->present_time.ti_sec=(UCHAR)((nsec%3600)%60);
 
-    pSpecInfo->TDet     = 0;
+    pRecord->TDet     = 0;
 
     fscanf(fp,"%f\n",&tmp);
     fscanf(fp,"%f\n",&tmp);
-    fscanf(fp,"SCANS %d\n",&pSpecInfo->NSomme);
-    fscanf(fp,"INT_TIME %lf\n",&pSpecInfo->TotalExpTime);
+    fscanf(fp,"SCANS %d\n",&pRecord->NSomme);
+    fscanf(fp,"INT_TIME %lf\n",&pRecord->TotalExpTime);
     fgets(line,MAX_STR_SHORT_LEN,fp);
-    fscanf(fp,"LONGITUDE %lf\n",&pSpecInfo->longitude);
-    fscanf(fp,"LATITUDE %lf\n",&pSpecInfo->latitude);
+    fscanf(fp,"LONGITUDE %lf\n",&pRecord->longitude);
+    fscanf(fp,"LATITUDE %lf\n",&pRecord->latitude);
 
-    pSpecInfo->TotalExpTime*=0.001;
+    pRecord->TotalExpTime*=0.001;
 
     while (fgets(line,MAX_STR_SHORT_LEN,fp))
      {
@@ -698,25 +711,25 @@ RC MFC_ReadRecordStd(SPEC_INFO *pSpecInfo,UCHAR *fileName,
      	 {
      	 	sscanf(line,"%s = %s",keyWord,keyValue);
      	 	if (!STD_Stricmp(keyWord,"AzimuthAngle"))
-     	 	 pSpecInfo->azimuthViewAngle=(float)atof(keyValue);
+     	 	 pRecord->azimuthViewAngle=(float)atof(keyValue);
      	 	else if (!STD_Stricmp(keyWord,"ElevationAngle"))
-     	 	 pSpecInfo->elevationViewAngle=(float)atof(keyValue);
+     	 	 pRecord->elevationViewAngle=(float)atof(keyValue);
      	 	else if (!STD_Stricmp(keyWord,"ExposureTime"))
-     	 	 pSpecInfo->Tint=(double)atof(keyValue)*0.001;
+     	 	 pRecord->Tint=(double)atof(keyValue)*0.001;
      	 	else if (!STD_Stricmp(keyWord,"Latitude"))
-     	 	 pSpecInfo->latitude=(double)atof(keyValue);
+     	 	 pRecord->latitude=(double)atof(keyValue);
      	 	else if (!STD_Stricmp(keyWord,"Longitude"))
-     	 	 pSpecInfo->longitude=(double)atof(keyValue);
+     	 	 pRecord->longitude=(double)atof(keyValue);
      	 	else if (!STD_Stricmp(keyWord,"NumScans"))
-     	 	 pSpecInfo->NSomme=(int)atoi(keyValue);
+     	 	 pRecord->NSomme=(int)atoi(keyValue);
      	 }
      }
 
-    if ((pSpecInfo->Tint<(double)1.e-3) && (pSpecInfo->TotalExpTime>(double)1.e-3))
-     pSpecInfo->Tint=pSpecInfo->TotalExpTime;
+    if ((pRecord->Tint<(double)1.e-3) && (pRecord->TotalExpTime>(double)1.e-3))
+     pRecord->Tint=pRecord->TotalExpTime;
 
-    pHeaderSpe->int_time=(float)pSpecInfo->Tint;
-    pHeaderSpe->noscans=pSpecInfo->NSomme;
+    pHeaderSpe->int_time=(float)pRecord->Tint;
+    pHeaderSpe->noscans=pRecord->NSomme;
 
     // Offset correction if any
 
@@ -755,7 +768,7 @@ RC MFC_ReadRecordStd(SPEC_INFO *pSpecInfo,UCHAR *fileName,
 //               dateFlag     0 no date constraint; 1 a date selection is applied
 //               specFp       pointer to the spectra file
 //
-// OUTPUT        pSpecInfo  : pointer to a structure whose some fields are filled
+// OUTPUT        pEngineContext  : pointer to a structure whose some fields are filled
 //                            with data on the current spectrum
 //
 // RETURN        ERROR_ID_FILE_NOT_FOUND : the input file pointer 'specFp' is NULL;
@@ -767,31 +780,37 @@ RC MFC_ReadRecordStd(SPEC_INFO *pSpecInfo,UCHAR *fileName,
 #if defined(__BC32_) && __BC32_
 #pragma argsused
 #endif
-RC ReliMFCStd(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *specFp)
+RC ReliMFCStd(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp)
  {
   // Declarations
 
-  INT                  firstFile;                             // number of the first file in the current directory
-  UCHAR                fileName[MAX_STR_SHORT_LEN+1],         // name of the current file (the current record)
-                       format[20],
-                      *ptr,*ptr2;                             // pointers to parts in the previous string
+  RECORD_INFO *pRecord;                                                         // pointer to the record part of the engine context
+  BUFFERS *pBuffers;                                                            // pointer to the buffers part of the engine context
 
-  double               longit;                                // longitude of the current record
-  FILE                *fp;                                    // pointer to the current file
-  RC                   rc;                                    // return code
+  INT                  firstFile;                                               // number of the first file in the current directory
+  UCHAR                fileName[MAX_STR_SHORT_LEN+1],                           // name of the current file (the current record)
+                       format[20],
+                      *ptr,*ptr2;                                               // pointers to parts in the previous string
+
+  double               longit;                                                  // longitude of the current record
+  FILE                *fp;                                                      // pointer to the current file
+  RC                   rc;                                                      // return code
   double               tmLocal;
 
   // Initializations
 
+  pRecord=&pEngineContext->recordInfo;
+  pBuffers=&pEngineContext->buffers;
+
   memset(fileName,0,MAX_STR_SHORT_LEN+1);
-  strncpy(fileName,pSpecInfo->fileName,MAX_STR_SHORT_LEN);
+  strncpy(fileName,pEngineContext->fileInfo.fileName,MAX_STR_SHORT_LEN);
   fp=NULL;
 
   rc=ERROR_ID_NO;
 
   if ((ptr=strrchr(fileName,PATH_SEP))==NULL)
    rc=ERROR_ID_FILE_RECORD;
-  else if ((recordNo>0) && (recordNo<=pSpecInfo->recordNumber))
+  else if ((recordNo>0) && (recordNo<=pEngineContext->recordNumber))
    {
     // Build the right file name
 
@@ -811,37 +830,37 @@ RC ReliMFCStd(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *
 
     // open the file
 
-    if (!(rc=MFC_ReadRecordStd(pSpecInfo,fileName,&MFC_header,pSpecInfo->spectrum,&MFC_headerDrk,pSpecInfo->varPix,&MFC_headerOff,pSpecInfo->dnl)))
+    if (!(rc=MFC_ReadRecordStd(pEngineContext,fileName,&MFC_header,pBuffers->spectrum,&MFC_headerDrk,pBuffers->varPix,&MFC_headerOff,pBuffers->dnl)))
      {
       memset(PATH_fileSpectra,0,MAX_STR_SHORT_LEN+1);
       strncpy(PATH_fileSpectra,fileName,MAX_STR_SHORT_LEN);
 
-      pSpecInfo->SkyObs   = 0;
-      pSpecInfo->rejected = 0;
-      pSpecInfo->ReguTemp = 0;
+      pRecord->SkyObs   = 0;
+      pRecord->rejected = 0;
+      pRecord->ReguTemp = 0;
 
-      pSpecInfo->Azimuth  = 0;
-      pSpecInfo->BestShift=(double)0.;
-      pSpecInfo->NTracks=0;
+      pRecord->Azimuth  = 0;
+      pRecord->BestShift=(double)0.;
+      pRecord->NTracks=0;
 
-      pSpecInfo->Tm=(double)ZEN_NbSec(&pSpecInfo->present_day,&pSpecInfo->present_time,0);
-      pSpecInfo->Zm=ZEN_FNTdiz(ZEN_FNCrtjul(&pSpecInfo->Tm),&longit,&pSpecInfo->latitude,NULL);
-      pSpecInfo->TimeDec=(double)pSpecInfo->present_time.ti_hour+pSpecInfo->present_time.ti_min/60.+pSpecInfo->present_time.ti_sec/3600.;
+      pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_day,&pRecord->present_time,0);
+      pRecord->Zm=ZEN_FNTdiz(ZEN_FNCrtjul(&pRecord->Tm),&longit,&pRecord->latitude,NULL);
+      pRecord->TimeDec=(double)pRecord->present_time.ti_hour+pRecord->present_time.ti_min/60.+pRecord->present_time.ti_sec/3600.;
 
-      pSpecInfo->altitude=(double)0.;
-      longit=-pSpecInfo->longitude;
+      pRecord->altitude=(double)0.;
+      longit=-pRecord->longitude;
 
-      tmLocal=pSpecInfo->Tm+THRD_localShift*3600.;
+      tmLocal=pRecord->Tm+THRD_localShift*3600.;
 
-      pSpecInfo->localCalDay=ZEN_FNCaljda(&tmLocal);
-      pSpecInfo->localTimeDec=fmod(pSpecInfo->TimeDec+24.+THRD_localShift,(double)24.);
+      pRecord->localCalDay=ZEN_FNCaljda(&tmLocal);
+      pRecord->localTimeDec=fmod(pRecord->TimeDec+24.+THRD_localShift,(double)24.);
 
       // User constraints
 
-      if (rc || (dateFlag && ((pSpecInfo->localCalDay!=localDay) || (pSpecInfo->elevationViewAngle<88.))))                  // reference spectra are zenith only
+      if (rc || (dateFlag && ((pRecord->localCalDay!=localDay) || (pRecord->elevationViewAngle<88.))))                  // reference spectra are zenith only
        rc=ERROR_ID_FILE_RECORD;
-      else if (pSpecInfo->project.instrumental.mfcRevert)
-       VECTOR_Invert(pSpecInfo->spectrum,NDET);
+      else if (pEngineContext->project.instrumental.mfcRevert)
+       VECTOR_Invert(pBuffers->spectrum,NDET);
 
       // for NOVAC tests, straylight correction
 
@@ -852,12 +871,12 @@ RC ReliMFCStd(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *
       	offset=(double)0.;
 
       	for (i=50;i<200;i++)
-        offset+=pSpecInfo->spectrum[i];
+        offset+=pBuffers->spectrum[i];
 
        offset/=(double)150.;
 
        for (i=0;i<NDET;i++)
-        pSpecInfo->spectrum[i]-=offset;
+        pBuffers->spectrum[i]-=offset;
       }  */
      }
    }
@@ -879,14 +898,16 @@ RC ReliMFCStd(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *
 // -----------------------------------------------------------------------------
 // PURPOSE       Load analysis parameters depending on the reference spectrum
 //
-// INPUT         pSpecInfo    data on the current file
+// INPUT         pEngineContext    data on the current file
 //
 // RETURN        0 for success
 // -----------------------------------------------------------------------------
 
-RC MFC_LoadAnalysis(SPEC_INFO *pSpecInfo)
+RC MFC_LoadAnalysis(ENGINE_CONTEXT *pEngineContext)
  {
   // Declarations
+
+  BUFFERS *pBuffers;                                                            // pointer to the buffers part of the engine context
 
   PRJCT_INSTRUMENTAL *pInstrumental;
   UCHAR fileName[MAX_STR_SHORT_LEN+1],*ptr;
@@ -901,10 +922,12 @@ RC MFC_LoadAnalysis(SPEC_INFO *pSpecInfo)
 
   // Initializations
 
-  saveFlag=(INT)pSpecInfo->project.spectra.displayDataFlag;
-  pInstrumental=&pSpecInfo->project.instrumental;
+  pBuffers=&pEngineContext->buffers;
+
+  saveFlag=(INT)pEngineContext->project.spectra.displayDataFlag;
+  pInstrumental=&pEngineContext->project.instrumental;
   memset(fileName,0,MAX_STR_SHORT_LEN+1);
-  strncpy(fileName,pSpecInfo->fileName,MAX_STR_SHORT_LEN);
+  strncpy(fileName,pEngineContext->fileInfo.fileName,MAX_STR_SHORT_LEN);
   rc=ERROR_ID_NO;
 
   if ((THRD_id==THREAD_TYPE_ANALYSIS) && MFC_refFlag && ((ptr=strrchr(fileName,PATH_SEP))!=NULL))
@@ -923,14 +946,14 @@ RC MFC_LoadAnalysis(SPEC_INFO *pSpecInfo)
        if (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC)
         rc=MFC_ReadRecord(fileName,
                          &tbinaryRef,pTabFeno->Sref,
-                         &MFC_headerDrk,pSpecInfo->varPix,
-                         &MFC_headerOff,pSpecInfo->dnl,
+                         &MFC_headerDrk,pBuffers->varPix,
+                         &MFC_headerOff,pBuffers->dnl,
                          pInstrumental->mfcMaskSpec,pInstrumental->mfcMaskSpec,pInstrumental->mfcRevert);
     	 	else
-        rc=MFC_ReadRecordStd(pSpecInfo,fileName,
+        rc=MFC_ReadRecordStd(pEngineContext,fileName,
                             &tbinaryRef,pTabFeno->Sref,
-                            &MFC_headerDrk,pSpecInfo->varPix,
-                            &MFC_headerOff,pSpecInfo->dnl);
+                            &MFC_headerDrk,pBuffers->varPix,
+                            &MFC_headerOff,pBuffers->dnl);
 
        if (!rc && !(rc=ANALYSE_NormalizeVector(pTabFeno->Sref-1,pTabFeno->NDET,&factTemp,"MFC_LoadAnalysis (Reference) ")))
         {

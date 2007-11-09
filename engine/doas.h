@@ -56,6 +56,126 @@
 #define PI2         (double) 6.28318530717958647692
 #define PIDEMI      (double) 1.57079632679489661923
 
+// ===================================================
+// VECTOR.C : UTILITY FUNCTIONS FOR VECTORS AND MATRIX
+// ===================================================
+
+void   VECTOR_Init(double *vector,double value,int dim);
+int    VECTOR_Equal(double *vector1,double *vector2,int dim,double error);
+double VECTOR_Max(double *vector,int dim);
+double VECTOR_Min(double *vector,int dim);
+RC     VECTOR_Log(double *out,double *in,int dim,UCHAR *callingFunction);
+int    VECTOR_LocGt(double *vector,double value,int dim);
+void   VECTOR_Invert(double *vector,int dim);
+double VECTOR_Table1(double *X0,int Nx,double *Y0,int Ny,double **Table,double X,double Y);
+double VECTOR_Table2(double **Table,INT Nx,INT Ny,double X,double Y);
+
+// =================================
+// FVOIGT.C : Voigt profile function
+// =================================
+
+double Voigtx(double x,double y);
+
+// ======================
+// ERF.C : error function
+// ======================
+
+double erf ( double x );
+
+double ERF_GetValue(double newX);
+RC     ERF_Alloc(void);
+void   ERF_Free(void);
+
+// ===========================
+// FILTER.C : Filter functions
+// ===========================
+
+// ----------
+// PROTOTYPES
+// ----------
+
+void realft(double *source,double *buffer,int nn,int sens);
+
+RC   FILTER_Vector(PRJCT_FILTER *pFilter,double *Input,double *Output,int Size,INT outputType);
+RC   FILTER_Build(PRJCT_FILTER *pFilter,double param1,double param2,double param3);
+
+// =========================================
+// SPLINE.C : linear and cubic interpolation
+// =========================================
+
+enum _spline
+ {
+  SPLINE_LINEAR,                                                             // linear interpolation
+  SPLINE_CUBIC,                                                             // spline interpolation
+  SPLINE_MAX
+ };
+
+RC SPLINE_Deriv2(double *X,double *Y,double *Y2,int n,UCHAR *callingFunction);
+RC SPLINE_Vector(double *xa,double *ya,double *y2a,int na,double *xb,double *yb,int nb,int type,UCHAR *callingFunction);
+
+// ====================================
+// SVD.C : Singular value decomposition
+// ====================================
+
+RC SVD_Bksb(double **u,double *w,double **v,int m,int n,double *b,double *x);
+RC SVD_Dcmp(double **a,int m,int n,double *w,double **v,double *SigmaSqr,double **covar);
+
+// ============================================================
+// CURFIT.C : Least-square fit applied to a non linear function
+// ============================================================
+
+double Fchisq(int mode,int nFree,double *Y,double *Yfit,double *sigmay,int nY);
+
+RC Curfit(int     mode,                                                         // I   method of weighting least-squares fit
+          int     nFree,                                                        // I   the number of degrees of freedom
+          double *X,                                                            // I   data points for independent variable
+          double *specX,                                                        // I   the spectrum to evaluate
+          double *srefX,                                                        // I   the control spectrum (also called reference spectrum)
+          int     nX,                                                           // I   the size of previous vectors (depending on the size of the detector)
+          double *Y,                                                            // I   the data to fit (vector of zeros to fit the residual)
+          double *sigmaY,                                                       // I   standard deviations for Y data points
+          int     nY,                                                           // I   number of data points in Y
+          double *P,                                                            // I/O parameters fitted linearly in the fitting function (ANALYSE_Function)
+          double *A,                                                            // I/O parameters to fit non linearly in this function
+          double *deltaA,                                                       // I   increments for non linear parameters in A
+          double *sigmaA,                                                       // O   standard deviations for non linear parameters in A
+          double *minA,                                                         // I   lower limit for fitted parameters in A
+          double *maxA,                                                         // I   upper limit for fitted parameters in A
+          int     nA,                                                           // I   number of parameters in A
+          double *Yfit,                                                         // O   vector of calculated values of Y
+          double *pLambda,                                                      // O   proportion of gradient search included
+          double *pChisqr,                                                      // O   reduced Chi square for fit ( output )
+          int    *pNiter);                                                      // O   number of iterations
+
+// ---------------------------------------------------------------------
+// MOON.C : Get moon positions in terms of azimuthal angle and elevation
+// ---------------------------------------------------------------------
+
+void MOON_GetPosition(UCHAR  *inputDate,   // input date and time for moon positions calculation
+                      double  longitude,   // longitude of the observation site
+                      double  latitude,    // latitude of the observation site
+                      double  altitude,    // altitude of the observation site
+                      double *pA,          // azimuth, measured westward from the south
+                      double *ph,          // altitude above the horizon
+                      double *pFrac);       // illuminated fraction of the moon
+
+// ==========================================================
+// ZENITHAL.C : CALCULATION OF ZENITHAL ANGLES AND JULIAN DAY
+// ==========================================================
+
+// Prototypes
+// ----------
+
+double  ZEN_NbSec     ( SHORT_DATE *today, struct time *now, int flag);
+double  ZEN_FNTdiz    ( double NbreJours, double *ObsLong, double *ObsLat,double *pAzimuth );
+double  ZEN_FNCrtjul  ( double *NbreSec );
+double  ZEN_FNCaldti  ( double *Tm );
+char   *ZEN_FNCaljti  ( double *Tm, char *str );
+int     ZEN_FNCaljda  ( double *Tm );
+int     ZEN_FNCaljday ( int Year, int Julian );
+int     ZEN_FNCaljye  ( double *Tm );
+int     ZEN_FNCaljmon ( int Year, int Julian );
+
 // ==================================
 // ANALYSE.C : main analysis function
 // ==================================
@@ -209,91 +329,93 @@ CROSS_RESULTS;
 
 enum _analysisType
  {
-  ANALYSIS_TYPE_FWHM_NONE,                                 //  no fwhm fit
-  ANALYSIS_TYPE_FWHM_CORRECTION,                           //  fwhm correction between spectrum and reference based on their temperature
-  ANALYSIS_TYPE_FWHM_KURUCZ,                               //  fwhm fit in Kurucz procedure
-  ANALYSIS_TYPE_FWHM_NLFIT                                 //  fit the difference of resolution between spectrum and reference
+  ANALYSIS_TYPE_FWHM_NONE,                                                      //  no fwhm fit
+  ANALYSIS_TYPE_FWHM_CORRECTION,                                                //  fwhm correction between spectrum and reference based on their temperature
+  ANALYSIS_TYPE_FWHM_KURUCZ,                                                    //  fwhm fit in Kurucz procedure
+  ANALYSIS_TYPE_FWHM_NLFIT                                                      //  fit the difference of resolution between spectrum and reference
  };
 
 typedef struct _feno
  {
-                                                           //  copy of data from analysis window panel
+                                                                                //  copy of data from analysis window panel
 
-  UCHAR           windowName[MAX_ITEM_NAME_LEN+1];         //  name of analysis window
-  UCHAR           refFile[MAX_ITEM_TEXT_LEN+1],            //  reference file in reference file selection mode
+  UCHAR           windowName[MAX_ITEM_NAME_LEN+1];                              //  name of analysis window
+  UCHAR           refFile[MAX_ITEM_TEXT_LEN+1],                                 //  reference file in reference file selection mode
+                  ref1[MAX_ITEM_TEXT_LEN+1],                                    //  first reference spectrum (in order to replace the SrefEtalon in the old ANALYSIS_WINDOWS structure)
+                  ref2[MAX_ITEM_TEXT_LEN+1],                                    //  second reference spectrum (in order to replace the SrefEtalon in the old ANALYSIS_WINDOWS structure)
                   residualsFile[MAX_ITEM_TEXT_LEN+1];
-  double          refSZA,refSZADelta;                      //  in automatic reference selection mode, SZA constraints
-  INT             refSpectrumSelectionMode;                //  reference spectrum selection mode
-  INDEX           indexRefMorning,indexRefAfternoon,       //  in automatic reference selection mode, index of selected records
-                  indexRef;                                //  in automatic reference selection mode, index of current selected record
-  double          ZmRefMorning,ZmRefAfternoon,Zm,          //  in automatic reference selection mode, zenithal angles of selected records
-                  oldZmRefMorning,oldZmRefAfternoon,       //  make a copy of previous zenithal angles
-                  TimeDec,Tm,                              //  in automatic reference selection mode, measurement time of selected record
-                  TDet;                                    //  temperature of reference
+  double          refSZA,refSZADelta;                                           //  in automatic reference selection mode, SZA constraints
+  INT             refSpectrumSelectionMode;                                     //  reference spectrum selection mode
+  INDEX           indexRefMorning,indexRefAfternoon,                            //  in automatic reference selection mode, index of selected records
+                  indexRef;                                                     //  in automatic reference selection mode, index of current selected record
+  double          ZmRefMorning,ZmRefAfternoon,Zm,                               //  in automatic reference selection mode, zenithal angles of selected records
+                  oldZmRefMorning,oldZmRefAfternoon,                            //  make a copy of previous zenithal angles
+                  TimeDec,Tm,                                                   //  in automatic reference selection mode, measurement time of selected record
+                  TDet;                                                         //  temperature of reference
 
-  SHORT_DATE      refDate;                                 //  in automatic reference selection mode, date of selected record
-  INT             displaySpectrum;                         //  force display spectrum
-  INT             displayResidue;                          //  force display residue
-  INT             displayTrend;                            //  force display trend
-  INT             displayRefEtalon;                        //  force display alignment of reference on etalon
-  INT             displayFits;                             //  force display fits
-  INT             displayPredefined;                       //  force display predefined parameters
+  SHORT_DATE      refDate;                                                      //  in automatic reference selection mode, date of selected record
+  INT             displaySpectrum;                                              //  force display spectrum
+  INT             displayResidue;                                               //  force display residue
+  INT             displayTrend;                                                 //  force display trend
+  INT             displayRefEtalon;                                             //  force display alignment of reference on etalon
+  INT             displayFits;                                                  //  force display fits
+  INT             displayPredefined;                                            //  force display predefined parameters
   INT             displayRef;
-  INT             hidden;                                  //  flag set if window is hidden e.g. for Kurucz calibration
-  INT             useKurucz;                               //  flag set if Kurucz calibration is to be used for a new wavelength scale
-  INT             useUsamp;                                //  flag set if undersampling correction is requested
-  INT             amfFlag;                                 //  flag set if there is a wavelength dependence of AMF for one or several cross sections
-  INT             useEtalon;                               //  flag set if etalon reference is used
-  INT             xsToConvolute;                           //  flag set if high resolution cross sections to convolute real time
+  INT             hidden;                                                       //  flag set if window is hidden e.g. for Kurucz calibration
+  INT             useKurucz;                                                    //  flag set if Kurucz calibration is to be used for a new wavelength scale
+  INT             useUsamp;                                                     //  flag set if undersampling correction is requested
+  INT             amfFlag;                                                      //  flag set if there is a wavelength dependence of AMF for one or several cross sections
+  INT             useEtalon;                                                    //  flag set if etalon reference is used
+  INT             xsToConvolute;                                                //  flag set if high resolution cross sections to convolute real time
   INT             xsToConvoluteI0;
 
-  double         *LembdaRef,                               //  absolute reference wavelength scale
-                 *LembdaK,                                 //  new wavelength scale after Kurucz
-                 *Lembda,                                  //  wavelength scale to use for analysis
-                 *Sref,                                    //  reference spectrum
-                 *SrefSigma,                               //  error on reference spectrum
-                 *SrefEtalon,                              //  etalon reference spectrum
+  double         *LembdaRef,                                                    //  absolute reference wavelength scale
+                 *LembdaK,                                                      //  new wavelength scale after Kurucz
+                 *Lembda,                                                       //  wavelength scale to use for analysis
+                 *Sref,                                                         //  reference spectrum
+                 *SrefSigma,                                                    //  error on reference spectrum
+                 *SrefEtalon,                                                   //  etalon reference spectrum
                  *LembdaN,*LembdaS,
                  *SrefN,*SrefS,
-                  Shift,                                   //  shift found when aligning etalon on reference
-                  Stretch,                                 //  stretch order 1 found when aligning etalon on reference
-                  Stretch2,                                //  stretch order 2 found when aligning etalon on reference
-                  ShiftN,                                  //  shift found when aligning etalon on reference
-                  StretchN,                                //  stretch order 1 found when aligning etalon on reference
-                  Stretch2N,                               //  stretch order 2 found when aligning etalon on reference
-                  ShiftS,                                  //  shift found when aligning etalon on reference
-                  StretchS,                                //  stretch order 1 found when aligning etalon on reference
-                  Stretch2S,                               //  stretch order 2 found when aligning etalon on reference
-                  chiSquare,                               //  chi square
+                  Shift,                                                        //  shift found when aligning etalon on reference
+                  Stretch,                                                      //  stretch order 1 found when aligning etalon on reference
+                  Stretch2,                                                     //  stretch order 2 found when aligning etalon on reference
+                  ShiftN,                                                       //  shift found when aligning etalon on reference
+                  StretchN,                                                     //  stretch order 1 found when aligning etalon on reference
+                  Stretch2N,                                                    //  stretch order 2 found when aligning etalon on reference
+                  ShiftS,                                                       //  shift found when aligning etalon on reference
+                  StretchS,                                                     //  stretch order 1 found when aligning etalon on reference
+                  Stretch2S,                                                    //  stretch order 2 found when aligning etalon on reference
+                  chiSquare,                                                    //  chi square
                   RMS;
 
-  INT             Decomp;                                  //  force SVD decomposition
-  SVD             svd;                                     //  SVD decomposition data
-  CROSS_REFERENCE TabCross[MAX_FIT];                       //  symbol cross reference
-  CROSS_RESULTS   TabCrossResults[MAX_FIT];                //  results stored per symbol in previous list
-  INT             NTabCross;                               //  number of elements in the two previous lists
-  INDEX           indexSpectrum,                           //  index of raw spectrum in symbol cross reference
-                  indexReference,                          //  index of reference spectrum in symbol cross reference
-                  indexFwhmParam[MAX_KURUCZ_FWHM_PARAM],   //  index of 1st predefined parameter when fitting fwhm with Kurucz
-                  indexFwhmConst,                      //  index of 'fwhm (constant)' predefined parameter in symbol cross reference
-                  indexFwhmOrder1,                     //  index of 'fwhm (order 1)' predefined parameter in symbol cross reference
-                  indexFwhmOrder2,                     //  index of 'fwhm (order 2)' predefined parameter in symbol cross reference
-                  indexSol,                            //  index of 'Sol' predefined parameter in symbol cross reference
-                  indexOffsetConst,                    //  index of 'offset (constant)' predefined parameter in symbol cross reference
-                  indexOffsetOrder1,                   //  index of 'offset (order 1)' predefined parameter in symbol cross reference
-                  indexOffsetOrder2,                   //  index of 'offset (order 2)' predefined parameter in symbol cross reference
-                  indexCommonResidual,                 //  index of 'Common residual' predefined parameter in symbol cross reference
-                  indexUsamp1,                         //  index of 'Undersampling (phase 1)' predefined parameter in symbol cross reference
-                  indexUsamp2,                         //  index of 'Undersampling (phase 2)' predefined parameter in symbol cross reference
+  INT             Decomp;                                                       //  force SVD decomposition
+  SVD             svd;                                                          //  SVD decomposition data
+  CROSS_REFERENCE TabCross[MAX_FIT];                                            //  symbol cross reference
+  CROSS_RESULTS   TabCrossResults[MAX_FIT];                                     //  results stored per symbol in previous list
+  INT             NTabCross;                                                    //  number of elements in the two previous lists
+  INDEX           indexSpectrum,                                                //  index of raw spectrum in symbol cross reference
+                  indexReference,                                               //  index of reference spectrum in symbol cross reference
+                  indexFwhmParam[MAX_KURUCZ_FWHM_PARAM],                        //  index of 1st predefined parameter when fitting fwhm with Kurucz
+                  indexFwhmConst,                                               //  index of 'fwhm (constant)' predefined parameter in symbol cross reference
+                  indexFwhmOrder1,                                              //  index of 'fwhm (order 1)' predefined parameter in symbol cross reference
+                  indexFwhmOrder2,                                              //  index of 'fwhm (order 2)' predefined parameter in symbol cross reference
+                  indexSol,                                                     //  index of 'Sol' predefined parameter in symbol cross reference
+                  indexOffsetConst,                                             //  index of 'offset (constant)' predefined parameter in symbol cross reference
+                  indexOffsetOrder1,                                            //  index of 'offset (order 1)' predefined parameter in symbol cross reference
+                  indexOffsetOrder2,                                            //  index of 'offset (order 2)' predefined parameter in symbol cross reference
+                  indexCommonResidual,                                          //  index of 'Common residual' predefined parameter in symbol cross reference
+                  indexUsamp1,                                                  //  index of 'Undersampling (phase 1)' predefined parameter in symbol cross reference
+                  indexUsamp2,                                                  //  index of 'Undersampling (phase 2)' predefined parameter in symbol cross reference
                   indexRing1;
 
-  int             OrthoSet[MAX_FIT];                   /*  Vecteurs candidats à une orthogonalisation             */
+  int             OrthoSet[MAX_FIT];                                            //  Vecteurs candidats à une orthogonalisation
   int             NOrtho;
-  int             DifRLis;                             /*  Nombre de points pour le lissage du log du sp. de ref  */
-  double         *fwhmPolyRef[MAX_KURUCZ_FWHM_PARAM],  //  polynomial coefficients for building wavelength dependence of fwhm for reference
+  int             DifRLis;                                                      //  Nombre de points pour le lissage du log du sp. de ref
+  double         *fwhmPolyRef[MAX_KURUCZ_FWHM_PARAM],                           //  polynomial coefficients for building wavelength dependence of fwhm for reference
                  *fwhmVector[MAX_KURUCZ_FWHM_PARAM],
                  *fwhmDeriv2[MAX_KURUCZ_FWHM_PARAM],
-                  xmean,ymean;                         // resp. the spectrum and reference averaged on the fitting window
+                  xmean,ymean;                                                  // resp. the spectrum and reference averaged on the fitting window
   int             analysisType;
   int             analysisMethod;
   int             bandType;
@@ -312,12 +434,390 @@ typedef struct _feno
  }
 FENO;
 
+// =================
+// THREAD PROCESSING
+// =================
+
+// ---------------------
+// CONSTANTS DEFINITIONS
+// ---------------------
+
+enum _thrdId
+ {
+  THREAD_TYPE_NONE,
+  THREAD_TYPE_SPECTRA,
+  THREAD_TYPE_ANALYSIS,
+  THREAD_TYPE_KURUCZ
+ };
+
+enum _thrdBrowse
+ {
+  THREAD_BROWSE_SPECTRA,
+  THREAD_BROWSE_DARK,
+  THREAD_BROWSE_ERROR,
+  THREAD_BROWSE_EXPORT,
+  THREAD_BROWSE_MFC_OFFSET,
+  THREAD_BROWSE_MFC_DARK,
+  THREAD_BROWSE_MFC_INSTR,
+  THREAD_BROWSE_MFC_LAMP
+ };
+
+enum _thrdLevels
+ {
+  THREAD_LEVEL_RECORD,
+  THREAD_LEVEL_FILE,
+  THREAD_LEVEL_PROJECT,
+  THREAD_LEVEL_MAX
+ };
+
+enum _threadEvents
+ {
+  THREAD_EVENT_FIRST,
+  THREAD_EVENT_PREVIOUS,
+  THREAD_EVENT_NEXT,
+  THREAD_EVENT_LAST,
+  THREAD_EVENT_GOTO,
+  THREAD_EVENT_PLAY,
+  THREAD_EVENT_PAUSE,
+  THREAD_EVENT_STOP,
+  THREAD_EVENT_STOP_PROGRAM,
+  THREAD_EVENT_MAX
+ };
+
+enum _thrdGoto
+ {
+  THREAD_GOTO_RECORD,
+  THREAD_GOTO_PIXEL
+ };
+
+// ----------------------
+// STRUCTURES DEFINITIONS
+// ----------------------
+
+// Data on current spectrum
+// ------------------------
+
+// Geolocations and angles for satellite measurements
+
+typedef struct _satelliteGeoloc
+ {
+  // Geolocations
+
+  double lonCorners[4],
+         latCorners[4],
+         lonCenter,
+         latCenter;
+
+  // Angles
+
+  float  solZen[3],
+         solAzi[3],
+         losZen[3],
+         losAzi[3];
+
+  // Miscellaneous
+
+  float earthRadius,satHeight;
+  float cloudTopPressure,cloudFraction;                                         // information on clouds
+ }
+SATELLITE_GEOLOC;
+
+// ==============
+// ENGINE CONTEXT
+// ==============
+
+// Buffers specific to CCD
+
+typedef struct _ccd
+ {
+  MATRIX_OBJECT drk;
+  MATRIX_OBJECT vip;
+  MATRIX_OBJECT dnl;
+ }
+CCD;
+
+// Record information specific to the GOME format
+
+typedef struct _gomeData                                                        // data on the current GOME pixel
+ {
+  INT   orbitNumber;                                                            // orbit number
+  INT   pixelNumber;                                                            // pixel number
+  INT   pixelType;                                                              // pixel type
+
+  SHORT_DATE irradDate;                                                         // date of measurement for the irradiance spectrum
+  struct time irradTime;                                                        // time of measurement for the irradiance spectrum
+
+  int     nRef;                                                                 // size of irradiance vectors
+
+  float longit[5];                                                              // longitudes (four corners of the GOME pixel + pixel centre)
+  float latit[5];                                                               // latitudes (four corners of the GOME pixel + pixel centre)
+  float sza[3];                                                                 // solar zenith angles (East, center and west points of the GOME pixel)
+  float azim[3];                                                                // solar azimuth angles (East, center and west points of the GOME pixel)
+ }
+GOME_DATA;
+
+// Record information specific to SCIAMACHY
+
+typedef struct _sciamachy
+ {
+  INT    orbitNumber;                                                           // orbit number
+  double longitudes[4],latitudes[4];                                            // geolocations at the 4 corners of the pixels
+  float  solZen[3],solAzi[3],losZen[3],losAzi[3];                               // resp. solar and line of sight zenith and azimuth angles
+  float  earthRadius,satHeight;                                                 // for satellite to TOA angles correction
+  INDEX  stateIndex,stateId;                                                    // information on the state
+  INT    qualityFlag;
+ }
+SCIA_DATA;
+
+// Record information specific to GOME2
+
+typedef struct _gome2
+ {
+  INT    orbitNumber;                                                           // orbit number
+  double longitudes[4],latitudes[4];                                            // geolocations at the 4 corners of the pixels
+  float  solZen[3],solAzi[3],losZen[3],losAzi[3];                               // resp. solar and line of sight zenith and azimuth angles
+  float  earthRadius,satHeight;                                                 // for satellite to TOA angles correction
+  float  cloudTopPressure,cloudFraction;                                        // information on clouds
+ }
+GOME2_DATA;
+
+// Record information specific to OMI
+
+typedef struct _omi
+ {
+ 	INDEX omiTrackIndex;                                                          // index of the track record
+ 	INDEX omiSpecIndex;                                                           // index of the current spectrum in the current track
+ 	int   omiNumberOfTracks,                                                      // total number of tracks
+ 	      omiNumberOfSpectraPerTrack;                                             // total number of spectra in tracks
+ }
+OMI_DATA;
+
+// Buffers needed to load spectra
+
+typedef struct _engineBuffers
+ {
+  // spectra buffers
+
+  double *lembda,                                                               // wavelengths
+         *spectrum,                                                             // raw spectrum
+         *sigmaSpec,                                                            // error on raw spectrum if any
+         *irrad,                                                                // irradiance spectrum (for satellites measurements)
+         *darkCurrent,                                                          // dark current
+         *specMaxx,                                                             // scans number for SpecMax
+         *specMax,                                                              // maxima of signal over scans
+         *instrFunction,                                                        // instrumental function
+         *varPix,                                                               // variability interpixel
+         *dnl;                                                                  // non linearity of detector
+
+  ULONG  *recordIndexes;                                                        // indexes of records for direct access (specific to BIRA-IASB spectra file format)
+ }
+BUFFERS;
+
+// Information related to the file
+
+typedef struct _engineFileInfo
+ {
+ 	UCHAR   fileName[MAX_STR_LEN+1];                                              // the name of the file
+ 	FILE   *specFp,*darkFp,*namesFp;                                              // file pointers for the engine
+ }
+FILE_INFO;
+
+// Information on the record
+
+typedef struct _engineRecordInfo
+ {
+  // Measurement data common to any format
+
+  char   Nom[21];                                                               // name of the spectrum
+  int    NSomme;                                                                // total number of scans
+  int    rejected;                                                              // number of rejected scans
+  double Tint,                                                                  // integration time
+         Zm,                                                                    // solar zenith angle
+         Azimuth,                                                               // solar azimut angle
+         Tm;                                                                    // date and time in seconds since ...
+  char   SkyObs;                                                                // observation of the sky (obsolete)
+  float  ReguTemp;                                                              // temperature regulation
+  double TotalExpTime;                                                          // total experiment time
+
+  SHORT_DATE present_day;                                                       // measurement date
+  struct time present_time;                                                     // measurement time
+
+  double TimeDec;                                                               // decimal time
+  double localTimeDec;                                                          // local decimal time
+  INT    localCalDay;                                                           // local calendar day
+  double Cic;                                                                   // color index
+
+  double aMoon,hMoon,fracMoon;                                                  // moon information
+
+  float  zenithViewAngle;                                                       // zenith viewing angle
+  float  elevationViewAngle;                                                    // elevation viewing angle
+  float  azimuthViewAngle;                                                      // azimuth viewing angle
+
+  // Data related to specific formats
+
+                                                                                // SATELLITES MEASUREMENTS
+
+  int    useErrors;                                                             // 1 if errors are present in the files (GOME)
+  INDEX  indexBand;                                                             // index of the band
+
+  GOME_DATA gome;                                                               // GOME format
+  SCIA_DATA scia;                                                               // SCIAMACHY format
+  GOME2_DATA gome2;                                                             // GOME2 format
+  OMI_DATA omi;
+
+  double longitude;                                                             // longitude
+  double latitude;                                                              // latitude
+  double altitude;                                                              // altitude
+
+                                                                                // SAOZ
+
+  double TDet,                                                                  // temperature of the detector
+         BestShift;                                                             // best shift
+
+                                                                                // CCD
+
+  CCD    ccd;
+  int NTracks;                                                                  // Nbre de tracks retenus
+
+                                                                                // MFC format
+
+  struct time startTime;                                                        // starting time
+  struct time endTime;                                                          // ending time
+  float wavelength1;                                                            // first wavelength
+  float dispersion[3];                                                          // dispersion parameters
+
+  // Reference data
+
+  UCHAR  refFileName[MAX_PATH_LEN+1];
+  INT    refRecord;
+ }
+RECORD_INFO;
+
+// Analysis part of the engine
+
+// QDOAS engine
+
+typedef struct _engineContext
+ {
+  BUFFERS           buffers;                                                    // buffers needed to load spectra
+  FILE_INFO         fileInfo;                                                   // the name of the file to load and file pointers
+  RECORD_INFO       recordInfo;                                                 // data on the current record
+  PROJECT           project;                                                    // data from the current project
+
+  // record information
+
+  INT     recordNumber;                                                         // total number of record in file
+  INT     recordIndexesSize;                                                    // size of 'recordIndexes' buffer
+  INT     recordSize;                                                           // size of record if length fixed
+  INDEX   indexRecord,indexFile,indexProject;
+  INT     lastSavedRecord;
+ }
+ENGINE_CONTEXT;
+
+typedef struct _goto
+ {
+  INDEX indexOld;
+  INDEX indexRecord;
+  INDEX indexPixel;
+  INT   indexType;
+  INDEX indexMin;
+  INDEX indexMax;
+  INDEX increment;
+  INDEX flag;
+ }
+THRD_GOTO;
+
+typedef struct _thrdRef
+ {
+  INDEX  indexRecord;
+  double dist;
+  double sza;
+ }
+THRD_REF;
+
+// ----------------
+// GLOBAL VARIABLES
+// ----------------
+
+EXTERN UCHAR     THRD_asciiFile[];             // ASCII file for exporting spectra
+EXTERN HANDLE    THRD_hEvents[];               // list of events
+EXTERN ENGINE_CONTEXT THRD_specInfo,THRD_refInfo;   // data on current spectra and reference
+EXTERN UINT      THRD_id;                      // thread identification number
+EXTERN INT       THRD_levelMax;                // level of thread
+EXTERN INT       THRD_lastEvent;               // last event
+EXTERN DWORD     THRD_delay;                   // wait for next event
+EXTERN double    THRD_localNoon;               // local noon
+EXTERN INT       THRD_localShift;
+EXTERN INT       THRD_correction;
+EXTERN INT       THRD_browseType;
+EXTERN THRD_GOTO THRD_goto;
+EXTERN INT       THRD_treeCallFlag;
+EXTERN INT       THRD_lastRefRecord;
+EXTERN INT       THRD_increment;
+EXTERN INT       THRD_isFolder;
+EXTERN INT       THRD_recordLast;
+
+// QDOAS ??? // ----------
+// QDOAS ??? // PROTOTYPES
+// QDOAS ??? // ----------
+// QDOAS ???
+// QDOAS ??? RC               THRD_OddEvenCorrection(double *lembdaData,double *specData,double *output,INT vectorSize);
+double           THRD_GetDist(double longit, double latit, double longitRef, double latitRef);
+// QDOAS ??? #if defined(__WINDOAS_GUI_) && __WINDOAS_GUI_
+// QDOAS ??? LRESULT CALLBACK THRD_GotoWndProc(HWND hwndThrdGoto,UINT msg,WPARAM mp1,LPARAM mp2);
+// QDOAS ??? #endif
+// QDOAS ??? BOOL             THRD_Context(INDEX indexItem,INT menuId);
+// QDOAS ??? BOOL             THRD_SetIndexes(INDEX indexItem,INT treeCallFlag);
+// QDOAS ??? RC               THRD_ProcessLastError(void);
+// QDOAS ??? RC               THRD_Error(INT errorType,INT errorId,UCHAR *function,...);
+// QDOAS ??? INDEX            THRD_WaitEvent(DWORD delay,INT moveFlag,INT incrementFlag);
+// QDOAS ??? void             THRD_ResetSpecInfo(ENGINE_CONTEXT *pEngineContext);
+// QDOAS ??? void             THRD_LoadData(void);
+RC               THRD_SpectrumCorrection(ENGINE_CONTEXT *pEngineContext,double *spectrum);
+// QDOAS ??? void             THRD_BrowseSpectra(void *);
+// QDOAS ??? RC               THRD_Alloc(void);
+// QDOAS ??? void             THRD_Free(void);
+RC               THRD_CopySpecInfo(ENGINE_CONTEXT *pSpecInfoTarget,ENGINE_CONTEXT *pSpecInfoSource);
+// QDOAS ???
+
+// =====================
+// STRUCTURES DEFINITION
+// =====================
+
+typedef struct _AnalyseLinearParameters
+ {
+ 	UCHAR symbolName[MAX_ITEM_TEXT_LEN+1];
+ 	int polyOrder;
+ 	int baseOrder;
+ 	int storeFit;
+ 	int storeError;
+ }
+ANALYSE_LINEAR_PARAMETERS;
+
+typedef struct _AnalyseNonLinearParameters
+ {
+ 	UCHAR symbolName[MAX_ITEM_TEXT_LEN+1];
+ 	UCHAR crossFileName[MAX_ITEM_TEXT_LEN+1];
+ 	int fitFlag;
+ 	double initialValue;
+ 	double deltaValue;
+ 	double minValue;
+ 	double maxValue;
+ 	int storeFit;
+ 	int storeError;
+ }
+ANALYSE_NON_LINEAR_PARAMETERS;
+
 // -------------------
 // GLOBAL DECLARATIONS
 // -------------------
 
+EXTERN UCHAR *ANLYS_crossAction[ANLYS_CROSS_ACTION_MAX];
+EXTERN UCHAR *ANLYS_amf[ANLYS_AMF_TYPE_MAX];
+
 EXTERN PRJCT_FILTER *ANALYSE_plFilter,*ANALYSE_phFilter;
 EXTERN WRK_SYMBOL   *WorkSpace;
+EXTERN INT NWorkSpace;
 EXTERN INT           NDET,DimC,DimL,DimP,Z,NFeno,(*Fenetre)[2],ANALYSE_refSelectionFlag,ANALYSE_lonSelectionFlag,
                      SvdPDeb,SvdPFin;
 EXTERN PRJCT_ANLYS  *pAnalysisOptions;             // analysis options
@@ -325,7 +825,7 @@ EXTERN PRJCT_KURUCZ *pKuruczOptions;               // Kurucz options
 EXTERN PRJCT_SLIT   *pSlitOptions;                 // slit function options
 EXTERN PRJCT_USAMP  *pUsamp;
 EXTERN FENO         *TabFeno,*Feno;
-EXTERN MATRIX_OBJECT ANALYSIS_slit;
+EXTERN MATRIX_OBJECT ANALYSIS_slit,O3TD;
 EXTERN double      **U,*x,*Lembda,
                     *ANALYSE_pixels,
                     *ANALYSE_splineX,              // abscissa used for spectra, in the units selected by user
@@ -368,10 +868,15 @@ RC   ANALYSE_SvdInit(SVD *pSvd);
 RC   ANALYSE_CurFitMethod(double *Spectre,double *SigmaSpec,double *Sref,double *Chisqr,INT *pNiter);
 void ANALYSE_ResetData(void);
 RC   ANALYSE_LoadFilter(PRJCT_FILTER *pFilter);
-RC   ANALYSE_LoadData(SPEC_INFO *pSpecInfo,INDEX indexProject);
+RC   ANALYSE_SetInit(ENGINE_CONTEXT *pEngineContext);
 RC   ANALYSE_AlignReference(INT refFlag,INT saveFlag);
-RC ANALYSE_AlignRef(FENO *pFeno,double *lembda,double *ref1,double *ref2,double *pShift,double *pStretch,double *pStretch2,int dispFlag);
-RC   ANALYSE_Spectrum(SPEC_INFO *pSpecInfo);
+RC   ANALYSE_AlignRef(FENO *pFeno,double *lembda,double *ref1,double *ref2,double *pShift,double *pStretch,double *pStretch2,int dispFlag);
+RC   ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext);
+
+RC   ANALYSE_LoadRef(FENO *pTabFeno,ENGINE_CONTEXT *pEngineContext);
+RC   ANALYSE_LoadLinear(ANALYSE_LINEAR_PARAMETERS *linearList,INT nLinear);
+RC   ANALYSE_LoadNonLinear(ANALYSE_NON_LINEAR_PARAMETERS *nonLinearList,INT nNonLinear,double *lembda);
+
 RC   ANALYSE_Alloc(void);
 void ANALYSE_Free(void);
 
@@ -561,16 +1066,206 @@ EXTERN AMF_SYMBOL *OUTPUT_AmfSpace;                         // list of cross sec
 RC   OUTPUT_GetWveAmf(CROSS_RESULTS *pResults,double Zm,double *lembda,double *xs,double *deriv2);
 
 void OUTPUT_ResetData(void);
-RC   OUTPUT_RegisterData(SPEC_INFO *pSpecInfo);
-RC   OUTPUT_FlushBuffers(SPEC_INFO *pSpecInfo);
+RC   OUTPUT_RegisterData(ENGINE_CONTEXT *pEngineContext);
+RC   OUTPUT_FlushBuffers(ENGINE_CONTEXT *pEngineContext);
 
 RC   OUTPUT_LoadCross(LIST_ITEM *pList,CROSS_RESULTS *pResults,INT *pAmfFlag,INT hidden);
 RC   OUTPUT_SaveNasaAmes(void);
-RC   OUTPUT_SaveResults(SPEC_INFO *pSpecInfo);
+RC   OUTPUT_SaveResults(ENGINE_CONTEXT *pEngineContext);
 
-RC   OUTPUT_LocalAlloc(SPEC_INFO *pSpecInfo);
+RC   OUTPUT_LocalAlloc(ENGINE_CONTEXT *pEngineContext);
 RC   OUTPUT_Alloc(void);
 void OUTPUT_Free(void);
+
+// =======================
+// GOME SPECTRA PROCESSING
+// =======================
+
+// --------------------
+// CONSTANTS DEFINITION
+// --------------------
+
+#define BAND_NUMBER                    6                                        // number of bands to display
+#define SCIENCE_DATA_DEFINED          10                                        // number of bands
+#define SPECTRAL_FITT_ORDER            5                                        // degree of polynomial used for building wavelength scale
+#define	MAX_FITT_ORDER	                6
+#define GDP_BIN_ERROR_ID_MASK       0x01
+
+enum _gomeGetCommand
+ {
+  GOME_GET_LEMBDA,
+  GOME_GET_SPECTRUM,
+  GOME_GET_REFERENCE
+ };
+
+// --------------------
+// STRUCTURE DEFINITION
+// --------------------
+
+// Date in short format
+
+typedef struct _shortDateTime
+ {
+  char  da_year;        /* Year - 1980      */
+  char  da_day;         /* Day of the month */
+  char  da_mon;         /* Month (1 = Jan)  */
+  char  ti_hour;
+  char  ti_min;
+  char  ti_sec;
+ }
+SHORT_DATETIME;
+
+// File header
+
+typedef struct _gomeFileHeader
+ {
+  unsigned short nspectra;                    // total number of spectra in file
+  char           version;
+  char           mask;
+  int            headerSize;                  // number of bytes before first record
+  int            recordSize;                  // size of a record
+  int            orbitNumber;                 // orbit number
+  short          nbands;                      // number of available bands
+  char           nSpectralParam;              // number of set of spectral parameters
+  char           indexSpectralParam;          // index of set of spectral parameters for irradiance spectra
+  SHORT_DATETIME dateAndTime;                 // measurement date and time in UT
+ }
+GDP_BIN_FILE_HEADER;
+
+// For each available band, provide header with band and reference general info
+
+typedef struct _gomeBandHeader
+ {
+  // Band info
+
+  char       bandType;                        // band type
+  short      bandSize;                        // band size
+
+  // Reference info
+
+  short      startDetector;                   // index of first pixel used on detector for this ban
+  float      scalingFactor;
+  float      scalingError;
+ }
+GDP_BIN_BAND_HEADER;
+
+// Spectrum record structure
+
+typedef struct                            // geolocation coordinates version 1
+ {
+  float           lonArray[5];            // longitude array
+  float           latArray[5];            // latitude array
+  float           szaArray[3];            // zenithal array
+ }
+GEO_1;
+
+typedef struct                            // geolocation coordinates version 2
+ {
+  USHORT          lonArray[5];            // longitude array
+  SHORT           latArray[5];            // latitude array
+  float           szaArray[3];            // zenithal array
+  float           azim;                   // azimuth
+  float           losZa;                  // line of sight zenith angle
+  float           losAzim;                // line of sight azimuth angle
+  USHORT          unused[4];              // unused bytes
+ }
+GEO_2;
+
+typedef struct                            // geolocation coordinates version 3
+ {
+  USHORT          lonArray[5];            // longitude array
+  SHORT           latArray[5];            // latitude array
+  float           szaArray[3];            // zenithal array
+  USHORT          losZa[3];               // line of sight zenithal array
+  USHORT          losAzim[3];             // line of sight azimuthal array
+  float           satHeight;              // satellite geodetic height at point B
+  float           radiusCurve;            // Earth radius curvatur at point B
+ }
+GEO_3;
+
+typedef struct
+ {
+  // From Level 1 data
+
+  SHORT_DATETIME  dateAndTime;                // measurement date and time in UT
+  short           groundPixelID;              // ground pixel order
+  char            groundPixelType;            // ground pixel type
+  char            indexSpectralParam;         // index of set of spectral parameters in reference record to use for building calibration
+  union _geo
+   {
+    GEO_1 geo1;
+    GEO_2 geo2;
+    GEO_3 geo3;
+   }
+  geo;
+
+  // From Level 2 data
+
+  unsigned short  o3;                     // O3 VCD
+  unsigned short  no2;                    // NO2 VCD
+  unsigned short  cloudFraction;          // Cloud fraction
+  unsigned short  cloudTopPressure;       // Cloud top pressure
+  float           aziArray[3];
+  unsigned short  unused[4];             // for later new data ?
+ }
+SPECTRUM_RECORD;
+
+// Keep useful information for fast access to a record
+
+typedef struct _gome_recordInfo
+ {
+  INDEX  pixelNumber;                                                           // pixel number
+  INDEX  pixelType;                                                             // pixel type
+  double lat;                                                                   // latitude
+  double lon;                                                                   // longitude
+  double sza;                                                                   // solar zenith angle
+ }
+GDP_BIN_INFO;
+
+typedef struct _GOMEOrbitFiles                                                  // description of an orbit
+ {
+ 	UCHAR gdpBinFileName[MAX_STR_LEN+1];                                            // the name of the file with a part of the orbit
+ 	UCHAR gdpBinFileNumber[9];
+  GDP_BIN_INFO *gdpBinInfo;                                                     // useful information on records for fast access
+  INDEX gdpBinBandIndex;                                                        // indexes of bands present in the current file
+  INDEX *gdpBinLatIndex,*gdpBinLonIndex,*gdpBinSzaIndex,*gdpBinPixIndex;        // indexes of records sorted resp. by latitudes, by SZA or by pixel number
+  GDP_BIN_FILE_HEADER gdpBinHeader;
+  GDP_BIN_BAND_HEADER gdpBinBandInfo[SCIENCE_DATA_DEFINED];
+  SPECTRUM_RECORD     gdpBinSpectrum;
+  int                 gdpBinSpectraSize,                                        // total size of spectra vector GDP_BIN_coeff
+                      gdpBinCoeffSize,                                          // number of polynomial coefficients in vector
+                      gdpBinStartPixel[SCIENCE_DATA_DEFINED];                   // starting pixels for bands present in the file
+  double             *gdpBinCoeff;                                              // coefficients for reconstructing wavelength calibrations
+  float               gdpBinScalingFactor[SCIENCE_DATA_DEFINED],                // scaling factors for spectra band per band
+                      gdpBinScalingError[SCIENCE_DATA_DEFINED];                 // scaling factors for errors band per band
+  USHORT             *gdpBinReference,                                          // buffer for irradiance spectra
+                     *gdpBinRefError;                                           // errors on irradiance spectra
+  INT                 specNumber;
+  RC rc;
+ }
+GOME_ORBIT_FILE;
+
+// ---------------------
+// VARIABLES DECLARATION
+// ---------------------
+
+#define MAX_GOME_FILES 50 // maximum number of files per orbit
+
+EXTERN GOME_ORBIT_FILE GDP_BIN_orbitFiles[MAX_GOME_FILES];                      // list of files for an orbit
+EXTERN INDEX GDP_BIN_currentFileIndex;                                          // index of the current file in the list
+EXTERN UCHAR *GDP_BIN_BandStrTab[];
+
+// ----------
+// PROTOTYPES
+// ----------
+
+INDEX            GDP_BIN_GetRecordNumber(INT pixelNumber);
+#if defined(__WINDOAS_GUI_) && __WINDOAS_GUI_
+LRESULT CALLBACK GDP_BIN_WndProc(HWND hwndGome,UINT msg,WPARAM mp1,LPARAM mp2);
+#endif
+RC               GDP_BIN_GetBand(ENGINE_CONTEXT *pEngineContext,INT bandNo);
+void             GDP_BIN_GetReferenceInfo(ENGINE_CONTEXT *pEngineContext);
+RC               GDP_BIN_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,FILE *specFp);
 
 // ==============
 // FILES READ OUT
@@ -581,41 +1276,41 @@ void OUTPUT_Free(void);
 
 EXTERN UCHAR UOFT_figures[UOFT_BASE+1];
 
-RC   SetUofT(SPEC_INFO *pSpecInfo,FILE *specFp);
-RC   ReliUofT(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,INT localDay,FILE *specFp);
-RC   SetNOAA(SPEC_INFO *pSpecInfo,FILE *specFp);
-RC   ReliNOAA(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,INT localDay,FILE *specFp);
-RC   SetCCD_EEV(SPEC_INFO *pSpecInfo,FILE *specFp,FILE *darkFp);
-RC   ReliCCD_EEV(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *specFp,FILE *darkFp);
-RC   SetCCD (SPEC_INFO *pSpecInfo,FILE *specFp,INT flag);
-RC   ReliCCD(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *specFp,FILE *namesFp,FILE *darkFp);
-RC   ReliCCDTrack(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *specFp,FILE *namesFp,FILE *darkFp);
-RC   SetPDA_EGG(SPEC_INFO *pSpecInfo,FILE *specFp);
-RC   ReliPDA_EGG(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *specFp,FILE *namesFp,FILE *darkFp);
-RC   SetPDA_EGG_Logger(SPEC_INFO *pSpecInfo,FILE *specFp);
-RC   ReliPDA_EGG_Logger(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *specFp);
+RC   SetUofT(ENGINE_CONTEXT *pEngineContext,FILE *specFp);
+RC   ReliUofT(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,INT localDay,FILE *specFp);
+RC   SetNOAA(ENGINE_CONTEXT *pEngineContext,FILE *specFp);
+RC   ReliNOAA(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,INT localDay,FILE *specFp);
+RC   SetCCD_EEV(ENGINE_CONTEXT *pEngineContext,FILE *specFp,FILE *darkFp);
+RC   ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp,FILE *darkFp);
+RC   SetCCD (ENGINE_CONTEXT *pEngineContext,FILE *specFp,INT flag);
+RC   ReliCCD(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp,FILE *namesFp,FILE *darkFp);
+RC   ReliCCDTrack(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp,FILE *namesFp,FILE *darkFp);
+RC   SetPDA_EGG(ENGINE_CONTEXT *pEngineContext,FILE *specFp);
+RC   ReliPDA_EGG(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp,FILE *namesFp,FILE *darkFp);
+RC   SetPDA_EGG_Logger(ENGINE_CONTEXT *pEngineContext,FILE *specFp);
+RC   ReliPDA_EGG_Logger(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp);
 
-RC   SetEASOE(SPEC_INFO *pSpecInfo,FILE *specFp,FILE *namesFp);
-RC   ReliEASOE(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *specFp,FILE *namesFp,FILE *darkFp);
+RC   SetEASOE(ENGINE_CONTEXT *pEngineContext,FILE *specFp,FILE *namesFp);
+RC   ReliEASOE(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp,FILE *namesFp,FILE *darkFp);
 
 // SAOZ (CNRS, France)
 
-RC   SetSAOZ(SPEC_INFO *pSpecInfo,FILE *specFp);
-RC   ReliSAOZ(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *specFp,FILE *namesFp);
-RC   SetSAOZEfm(SPEC_INFO *pSpecInfo,FILE *specFp);
-RC   ReliSAOZEfm(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *specFp);
-RC   SetActon_Logger(SPEC_INFO *pSpecInfo,FILE *specFp);
-RC   ReliActon_Logger(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *specFp,FILE *namesFp,FILE *darkFp);
-RC   ASCII_Set(SPEC_INFO *pSpecInfo,FILE *specFp);
-RC   ASCII_Read(SPEC_INFO *pSpecInfo,INT recordNo,INT dateFlag,int localDay,FILE *specFp);
-RC   SetRAS(SPEC_INFO *pSpecInfo,FILE *specFp);
-RC   ReliRAS(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *specFp);
+RC   SetSAOZ(ENGINE_CONTEXT *pEngineContext,FILE *specFp);
+RC   ReliSAOZ(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp,FILE *namesFp);
+RC   SetSAOZEfm(ENGINE_CONTEXT *pEngineContext,FILE *specFp);
+RC   ReliSAOZEfm(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp);
+RC   SetActon_Logger(ENGINE_CONTEXT *pEngineContext,FILE *specFp);
+RC   ReliActon_Logger(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp,FILE *namesFp,FILE *darkFp);
+RC   ASCII_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp);
+RC   ASCII_Read(ENGINE_CONTEXT *pEngineContext,INT recordNo,INT dateFlag,int localDay,FILE *specFp);
+RC   SetRAS(ENGINE_CONTEXT *pEngineContext,FILE *specFp);
+RC   ReliRAS(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp);
 
 void SCIA_ReleaseBuffers(UCHAR format);
-RC   SCIA_SetPDS(SPEC_INFO *pSpecInfo);
-RC   SCIA_ReadPDS(SPEC_INFO *pSpecInfo,int recordNo);
+RC   SCIA_SetPDS(ENGINE_CONTEXT *pEngineContext);
+RC   SCIA_ReadPDS(ENGINE_CONTEXT *pEngineContext,int recordNo);
 INDEX SCIA_GetRecordNumber(INT hdfRecord,INT obsNumber);
-RC SCIA_LoadAnalysis(SPEC_INFO *pSpecInfo);
+RC SCIA_LoadAnalysis(ENGINE_CONTEXT *pEngineContext);
 
 enum _omiSwathType { OMI_SWATH_UV1, OMI_SWATH_UV2, OMI_SWATH_VIS, OMI_SWATH_MAX };
 enum _omiVdataType { OMI_VDATA_GEO, OMI_VDATA_DATA, OMI_VDATA_ATTR, OMI_VDATA_MAX };
@@ -720,10 +1415,10 @@ extern UCHAR *OMI_swaths[OMI_SWATH_MAX];
 
 RC   OMI_GetEarthSwath(OMI_SWATH *pSwath,UCHAR *omiFileName,int omiFileId,int earthSwath,int swathType);
 void OMI_ReleaseBuffers(void);
-RC   OMI_SetHDF(SPEC_INFO *pSpecInfo);
-RC   OMI_ReadHDF(SPEC_INFO *pSpecInfo,int recordNo);
+RC   OMI_SetHDF(ENGINE_CONTEXT *pEngineContext);
+RC   OMI_ReadHDF(ENGINE_CONTEXT *pEngineContext,int recordNo);
 
-RC   CCD_LoadInstrumental(SPEC_INFO *pSpecInfo);
+RC   CCD_LoadInstrumental(ENGINE_CONTEXT *pEngineContext);
 void CCD_ResetInstrumental(CCD *pCCD);
 
 typedef struct _TOldFlags
@@ -797,157 +1492,35 @@ extern UCHAR MFC_fileInstr[MAX_STR_SHORT_LEN+1],
              MFC_fileMin[MAX_STR_SHORT_LEN+1];
 
 RC   MFC_ReadRecord(UCHAR *fileName,TBinaryMFC *pHeaderSpe,double *spe,TBinaryMFC *pHeaderDrk,double *drk,TBinaryMFC *pHeaderOff,double *off,UINT mask,UINT maskSpec,UINT revertFlag);
-RC MFC_ReadRecordStd(SPEC_INFO *pSpecInfo,UCHAR *fileName,
+RC MFC_ReadRecordStd(ENGINE_CONTEXT *pEngineContext,UCHAR *fileName,
                      TBinaryMFC *pHeaderSpe,double *spe,
                      TBinaryMFC *pHeaderDrk,double *drk,
                      TBinaryMFC *pHeaderOff,double *off);
-RC   SetMFC(SPEC_INFO *pSpecInfo,FILE *specFp);
-RC   ReliMFC(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *specFp,UINT mfcMask);
-RC   ReliMFCStd(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *specFp);
-RC MFC_LoadAnalysis(SPEC_INFO *pSpecInfo);
+RC   SetMFC(ENGINE_CONTEXT *pEngineContext,FILE *specFp);
+RC   ReliMFC(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp,UINT mfcMask);
+RC   ReliMFCStd(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp);
+RC MFC_LoadAnalysis(ENGINE_CONTEXT *pEngineContext);
 
 double EvalPolynom_d(double X, const double *Coefficient, short Grad);
 
 extern double *GDP_refL,*GDP_ref,*GDP_refE;
 
 void GDP_ASC_ReleaseBuffers(void);
-RC   GDP_ASC_Set(SPEC_INFO *pSpecInfo,FILE *specFp);
-RC   GDP_ASC_Read(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,FILE *specFp);
-RC   GDP_ASC_LoadAnalysis(SPEC_INFO *pSpecInfo,FILE *specFp);
+RC   GDP_ASC_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp);
+RC   GDP_ASC_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,FILE *specFp);
+RC   GDP_ASC_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,FILE *specFp);
 
 void GDP_BIN_ReleaseBuffers(void);
-RC   GDP_BIN_Set(SPEC_INFO *pSpecInfo,FILE *specFp);
-RC   GDP_BIN_Read(SPEC_INFO *pSpecInfo,int recordNo,FILE *specFp,INDEX indexFile);
+RC   GDP_BIN_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp);
+RC   GDP_BIN_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,FILE *specFp,INDEX indexFile);
 
 // GOME2
 
 enum { GOME2_BEAT_NO, GOME2_BEAT_INIT, GOME2_BEAT_CLOSE };
 
 void GOME2_ReleaseBuffers(int action);
-RC GOME2_Set(SPEC_INFO *pSpecInfo);
-RC GOME2_Read(SPEC_INFO *pSpecInfo,int recordNo);
-RC GOME2_LoadAnalysis(SPEC_INFO *pSpecInfo);
-
-// ===================================================
-// VECTOR.C : UTILITY FUNCTIONS FOR VECTORS AND MATRIX
-// ===================================================
-
-void   VECTOR_Init(double *vector,double value,int dim);
-int    VECTOR_Equal(double *vector1,double *vector2,int dim,double error);
-double VECTOR_Max(double *vector,int dim);
-double VECTOR_Min(double *vector,int dim);
-RC     VECTOR_Log(double *out,double *in,int dim,UCHAR *callingFunction);
-int    VECTOR_LocGt(double *vector,double value,int dim);
-void   VECTOR_Invert(double *vector,int dim);
-double VECTOR_Table1(double *X0,int Nx,double *Y0,int Ny,double **Table,double X,double Y);
-double VECTOR_Table2(double **Table,INT Nx,INT Ny,double X,double Y);
-
-// =================================
-// FVOIGT.C : Voigt profile function
-// =================================
-
-double Voigtx(double x,double y);
-
-// ======================
-// ERF.C : error function
-// ======================
-
-double erf ( double x );
-
-double ERF_GetValue(double newX);
-RC     ERF_Alloc(void);
-void   ERF_Free(void);
-
-// ===========================
-// FILTER.C : Filter functions
-// ===========================
-
-// ----------
-// PROTOTYPES
-// ----------
-
-void realft(double *source,double *buffer,int nn,int sens);
-
-RC   FILTER_Vector(PRJCT_FILTER *pFilter,double *Input,double *Output,int Size,INT outputType);
-RC   FILTER_Build(PRJCT_FILTER *pFilter,double param1,double param2,double param3);
-
-// =========================================
-// SPLINE.C : linear and cubic interpolation
-// =========================================
-
-enum _spline
- {
-  SPLINE_LINEAR,                                                             // linear interpolation
-  SPLINE_CUBIC,                                                             // spline interpolation
-  SPLINE_MAX
- };
-
-RC SPLINE_Deriv2(double *X,double *Y,double *Y2,int n,UCHAR *callingFunction);
-RC SPLINE_Vector(double *xa,double *ya,double *y2a,int na,double *xb,double *yb,int nb,int type,UCHAR *callingFunction);
-
-// ====================================
-// SVD.C : Singular value decomposition
-// ====================================
-
-RC SVD_Bksb(double **u,double *w,double **v,int m,int n,double *b,double *x);
-RC SVD_Dcmp(double **a,int m,int n,double *w,double **v,double *SigmaSqr,double **covar);
-
-// ============================================================
-// CURFIT.C : Least-square fit applied to a non linear function
-// ============================================================
-
-double Fchisq(int mode,int nFree,double *Y,double *Yfit,double *sigmay,int nY);
-
-RC Curfit(int     mode,                                                         // I   method of weighting least-squares fit
-          int     nFree,                                                        // I   the number of degrees of freedom
-          double *X,                                                            // I   data points for independent variable
-          double *specX,                                                        // I   the spectrum to evaluate
-          double *srefX,                                                        // I   the control spectrum (also called reference spectrum)
-          int     nX,                                                           // I   the size of previous vectors (depending on the size of the detector)
-          double *Y,                                                            // I   the data to fit (vector of zeros to fit the residual)
-          double *sigmaY,                                                       // I   standard deviations for Y data points
-          int     nY,                                                           // I   number of data points in Y
-          double *P,                                                            // I/O parameters fitted linearly in the fitting function (ANALYSE_Function)
-          double *A,                                                            // I/O parameters to fit non linearly in this function
-          double *deltaA,                                                       // I   increments for non linear parameters in A
-          double *sigmaA,                                                       // O   standard deviations for non linear parameters in A
-          double *minA,                                                         // I   lower limit for fitted parameters in A
-          double *maxA,                                                         // I   upper limit for fitted parameters in A
-          int     nA,                                                           // I   number of parameters in A
-          double *Yfit,                                                         // O   vector of calculated values of Y
-          double *pLambda,                                                      // O   proportion of gradient search included
-          double *pChisqr,                                                      // O   reduced Chi square for fit ( output )
-          int    *pNiter);                                                      // O   number of iterations
-
-// ---------------------------------------------------------------------
-// MOON.C : Get moon positions in terms of azimuthal angle and elevation
-// ---------------------------------------------------------------------
-
-void MOON_GetPosition(UCHAR  *inputDate,   // input date and time for moon positions calculation
-                      double  longitude,   // longitude of the observation site
-                      double  latitude,    // latitude of the observation site
-                      double  altitude,    // altitude of the observation site
-                      double *pA,          // azimuth, measured westward from the south
-                      double *ph,          // altitude above the horizon
-                      double *pFrac);       // illuminated fraction of the moon
-
-// ==========================================================
-// ZENITHAL.C : CALCULATION OF ZENITHAL ANGLES AND JULIAN DAY
-// ==========================================================
-
-// Prototypes
-// ----------
-
-double  ZEN_NbSec     ( SHORT_DATE *today, struct time *now, int flag);
-double  ZEN_FNTdiz    ( double NbreJours, double *ObsLong, double *ObsLat,double *pAzimuth );
-double  ZEN_FNCrtjul  ( double *NbreSec );
-double  ZEN_FNCaldti  ( double *Tm );
-char   *ZEN_FNCaljti  ( double *Tm, char *str );
-int     ZEN_FNCaljda  ( double *Tm );
-int     ZEN_FNCaljday ( int Year, int Julian );
-int     ZEN_FNCaljye  ( double *Tm );
-int     ZEN_FNCaljmon ( int Year, int Julian );
-
-
+RC GOME2_Set(ENGINE_CONTEXT *pEngineContext);
+RC GOME2_Read(ENGINE_CONTEXT *pEngineContext,int recordNo);
+RC GOME2_LoadAnalysis(ENGINE_CONTEXT *pEngineContext);
 
 #endif

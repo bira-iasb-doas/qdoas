@@ -433,6 +433,8 @@ RC DEBUG_FunctionBegin(UCHAR *fctName,MASK fctType)
              fprintf(fp,"%s",(nFctTypes++)?"/UTIL":"UTIL");
        	    if ((fctType&DEBUG_FCTTYPE_FILE)!=0)
   	          fprintf(fp,"%s",(nFctTypes++)?"/FILE":"FILE");
+       	    if ((fctType&DEBUG_FCTTYPE_CONFIG)!=0)
+  	          fprintf(fp,"%s",(nFctTypes++)?"/CONFIG":"CONFIG");
 
   	         fprintf(fp,")");
   	        }
@@ -568,6 +570,7 @@ RC DEBUG_Start(UCHAR *fileName,UCHAR *callingFct,MASK fctMask,int nLevels,int va
                      DEBUG_FCTTYPE_MATH|                                        // math functions
                      DEBUG_FCTTYPE_APPL|                                        // application functions
                      DEBUG_FCTTYPE_UTIL|                                        // utility functions
+                     DEBUG_FCTTYPE_CONFIG|                                      // configuration
                      DEBUG_FCTTYPE_FILE))==0)                                   // file management
 
    rc=ERROR_SetLast("DEBUG_Start",ERROR_TYPE_DEBUG,ERROR_ID_DEBUG_FCTTYPE,fctMask);
@@ -600,6 +603,8 @@ RC DEBUG_Start(UCHAR *fileName,UCHAR *callingFct,MASK fctMask,int nLevels,int va
      fprintf(fp,"%s",(nFctTypes++)?"/UTIL":"UTIL");
    	if ((fctMask&DEBUG_FCTTYPE_FILE)!=0)
   	  fprintf(fp,"%s",(nFctTypes++)?"/FILE":"FILE");
+   	if ((fctMask&DEBUG_FCTTYPE_CONFIG)!=0)
+  	  fprintf(fp,"%s",(nFctTypes++)?"/CONFIG":"CONFIG");
 
    	fprintf(fp," fctLevels %d\n",min(nLevels,DEBUG_MAX_LEVELS));
    	fprintf(fp,"--------------------------------------------------------------------------------\n");

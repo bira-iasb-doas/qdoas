@@ -81,157 +81,8 @@
 // =================
 
 SYMBOL_CROSS *SYMB_itemCrossList=NULL;                                          // pointer to the list of user-defined symbols
-SYMBOL_CROSS *symbToPaste=NULL;                                                 // pointer to the list of symbols to paste
-INDEX SYMB_crossTreeEntryPoint;                                                 // entry point in the 'environment space' for cross section symbols
+INT SYMB_itemCrossN;                                                            // the number of items in the previous list
 
-// QDOAS ??? // ================
-// QDOAS ??? // STATIC VARIABLES
-// QDOAS ??? // ================
-// QDOAS ???
-// QDOAS ??? static SYMBOL *pSYMB_selected;                                                         // pointer to the selected symbol
-// QDOAS ???
-// QDOAS ??? // ==================
-// QDOAS ??? // SYMBOLS PROPERTIES
-// QDOAS ??? // ==================
-// QDOAS ???
-// QDOAS ??? #if defined(__WINDOAS_GUI_) && (__WINDOAS_GUI_)
-// QDOAS ???
-// QDOAS ??? // -----------------------------------------------------------------------------
-// QDOAS ??? // FUNCTION        SymbolsDlgInit
-// QDOAS ??? // -----------------------------------------------------------------------------
-// QDOAS ??? // PURPOSE         Initialize the symbols dialog box with the description of
-// QDOAS ??? //                 the selected item in the 'environment space' tree
-// QDOAS ??? //
-// QDOAS ??? // INPUT           hwndSymbols : the handle of the symbols dialog box
-// QDOAS ??? //                 indexTree   : the index of the selected item in the tree
-// QDOAS ??? // -----------------------------------------------------------------------------
-// QDOAS ???
-// QDOAS ??? void SymbolsDlgInit(HWND hwndSymbols,INDEX indexTree)
-// QDOAS ???  {
-// QDOAS ???   // Declarations
-// QDOAS ???
-// QDOAS ???   SYMBOL *pSymbol;                                                              // pointer to the selected symbol
-// QDOAS ???   INDEX indexSymbol;                                                            // index of the selected symbol in the list of symbols
-// QDOAS ???   UCHAR textTitle[MAX_ITEM_TEXT_LEN+1],                                         // complete title of the dialog box
-// QDOAS ???         textMsg[MAX_ITEM_TEXT_LEN+1];                                           // title of the dialog box retrieved from the resource file
-// QDOAS ???   HWND hwndDesc;                                                                // handle of the description field in the dialog box
-// QDOAS ???
-// QDOAS ???   // Center dialog box on parent windows
-// QDOAS ???
-// QDOAS ???   DOAS_CenterWindow(hwndSymbols,GetWindow(hwndSymbols,GW_OWNER));
-// QDOAS ???
-// QDOAS ???   // Get the selected symbol
-// QDOAS ???
-// QDOAS ???   if ((indexTree!=ITEM_NONE) &&
-// QDOAS ???      ((pSymbol=(SYMBOL *)TREE_itemType[TREE_itemList[indexTree].dataType].dataList)!=NULL) &&
-// QDOAS ???      ((indexSymbol=TREE_itemList[indexTree].dataIndex)!=ITEM_NONE))
-// QDOAS ???    {
-// QDOAS ???     pSymbol=pSYMB_selected=&pSymbol[indexSymbol];
-// QDOAS ???
-// QDOAS ???     // Set window title
-// QDOAS ???
-// QDOAS ???     LoadString(DOAS_hInst,IDS_TITLE_SYMBOLS,textMsg,MAX_ITEM_TEXT_LEN);
-// QDOAS ???     sprintf(textTitle,"%s : %s",textMsg,pSymbol->name);
-// QDOAS ???     SetWindowText(hwndSymbols,textTitle);
-// QDOAS ???
-// QDOAS ???     // Description of the symbol
-// QDOAS ???
-// QDOAS ???     SendMessage((hwndDesc=GetDlgItem(hwndSymbols,SYMBOL_DESCRIPTION)),          // handle of the edit control
-// QDOAS ???                  EM_LIMITTEXT,                                                  // limit the number of characters that the user can enter
-// QDOAS ???                  MAX_ITEM_DESC_LEN,                                             // maximum number of characters authorized
-// QDOAS ???                  0);                                                            // not used
-// QDOAS ???
-// QDOAS ???     SetWindowText(hwndDesc,pSymbol->description);
-// QDOAS ???    }
-// QDOAS ???  }
-// QDOAS ???
-// QDOAS ??? // -----------------------------------------------------------------------------
-// QDOAS ??? // FUNCTION        SymbolsSet
-// QDOAS ??? // -----------------------------------------------------------------------------
-// QDOAS ??? // PURPOSE         Update the properties of the selected symbol
-// QDOAS ??? //
-// QDOAS ??? // INPUT           hwndSymbols : the handle of the symbols dialog box
-// QDOAS ??? //                 pSymbol     : pointer to the new options
-// QDOAS ??? //
-// QDOAS ??? // OUTPUT          the selected item in the 'environment space' tree is modified
-// QDOAS ??? //
-// QDOAS ??? // RETURN          ERROR_ID_NO
-// QDOAS ??? // -----------------------------------------------------------------------------
-// QDOAS ???
-// QDOAS ??? RC SymbolsSet(HWND hwndSymbols,SYMBOL *pSymbol)
-// QDOAS ???  {
-// QDOAS ???   // Declarations
-// QDOAS ???
-// QDOAS ???   UCHAR description[MAX_ITEM_DESC_LEN+1];                                       // the description of the symbol
-// QDOAS ???   RC rc;                                                                        // return code
-// QDOAS ???
-// QDOAS ???   // Initializations
-// QDOAS ???
-// QDOAS ???   memset(description,0,MAX_ITEM_DESC_LEN);
-// QDOAS ???   rc=ERROR_ID_NO;
-// QDOAS ???
-// QDOAS ???   if (pSymbol!=NULL)
-// QDOAS ???    {
-// QDOAS ???    	// Update the properties of the symbol in the 'Environment space' tree
-// QDOAS ???
-// QDOAS ???     GetWindowText(GetDlgItem(hwndSymbols,SYMBOL_DESCRIPTION),description,MAX_ITEM_DESC_LEN);
-// QDOAS ???     strcpy(pSymbol->description,description);
-// QDOAS ???
-// QDOAS ???     // Activate the 'Save' button in the toolbar
-// QDOAS ???
-// QDOAS ???     if (!TLBAR_bSaveFlag)
-// QDOAS ???      TLBAR_Enable(TRUE);
-// QDOAS ???    }
-// QDOAS ???
-// QDOAS ???   // Return
-// QDOAS ???
-// QDOAS ???   return rc;
-// QDOAS ???  }
-// QDOAS ???
-// QDOAS ??? // -----------------------------------------------------------------------------
-// QDOAS ??? // FUNCTION        SYMB_WndProc
-// QDOAS ??? // -----------------------------------------------------------------------------
-// QDOAS ??? // PURPOSE         dispatch messages from the symbols dialog box
-// QDOAS ??? //
-// QDOAS ??? // INPUT           usual syntax for windows messages routines
-// QDOAS ??? // -----------------------------------------------------------------------------
-// QDOAS ???
-// QDOAS ??? LRESULT CALLBACK SYMB_WndProc(HWND hwndSymbols,UINT msg,WPARAM mp1,LPARAM mp2)
-// QDOAS ???  {
-// QDOAS ???   switch (msg)
-// QDOAS ???    {
-// QDOAS ???  // ----------------------------------------------------------------------------
-// QDOAS ???     case WM_INITDIALOG :
-// QDOAS ???      SymbolsDlgInit(hwndSymbols,(INDEX)mp2);
-// QDOAS ???     break;
-// QDOAS ???  // ----------------------------------------------------------------------------
-// QDOAS ???     case WM_COMMAND :
-// QDOAS ???      {
-// QDOAS ???       ULONG commandID;
-// QDOAS ???
-// QDOAS ???       if ((((commandID=(ULONG)GET_WM_COMMAND_ID(mp1,mp2))==IDOK) &&             // close dialog box on OK button command
-// QDOAS ???             !SymbolsSet(hwndSymbols,pSYMB_selected)) ||
-// QDOAS ???             (commandID==IDCANCEL))                                              // close dialog on Cancel button command
-// QDOAS ???
-// QDOAS ???        EndDialog(hwndSymbols,0);
-// QDOAS ???
-// QDOAS ???       else if (commandID==IDHELP)
-// QDOAS ???
-// QDOAS ???        WinHelp(hwndSymbols,DOAS_HelpPath,HELP_CONTEXT,HLP_WORKSPACE_SYMBOLS);
-// QDOAS ???      }
-// QDOAS ???
-// QDOAS ???     break;
-// QDOAS ???  // ---------------------------------------------------------------------------
-// QDOAS ???     case WM_DESTROY :
-// QDOAS ???      pSYMB_selected=NULL;
-// QDOAS ???     break;
-// QDOAS ???  // ---------------------------------------------------------------------------
-// QDOAS ???    }
-// QDOAS ???
-// QDOAS ???   return 0;
-// QDOAS ???  }
-// QDOAS ???
-// QDOAS ??? #endif
 // QDOAS ???
 // QDOAS ??? // ===================
 // QDOAS ??? // SEARCH FOR A SYMBOL
@@ -301,174 +152,102 @@ INDEX SYMB_crossTreeEntryPoint;                                                 
 // QDOAS ???   return (indexSymbol<symbolNumber) ? indexSymbol : ITEM_NONE;
 // QDOAS ???  }
 // QDOAS ???
-// QDOAS ??? // ====================
-// QDOAS ??? // RESOURCES MANAGEMENT
-// QDOAS ??? // ====================
-// QDOAS ???
-// QDOAS ??? // -----------------------------------------------------------------------------
-// QDOAS ??? // FUNCTION        SYMB_Alloc
-// QDOAS ??? // -----------------------------------------------------------------------------
-// QDOAS ??? // PURPOSE         allocate and initialize buffers for the symbols
-// QDOAS ??? //
-// QDOAS ??? // RETURN          ERROR_ID_ALLOC if one of the buffer allocation failed
-// QDOAS ??? //                 ERROR_ID_NO in case of success
-// QDOAS ??? // -----------------------------------------------------------------------------
-// QDOAS ???
-// QDOAS ??? RC SYMB_Alloc(void)
-// QDOAS ???  {
-// QDOAS ???   // Declaration
-// QDOAS ???
-// QDOAS ???   RC rc;
-// QDOAS ???
-// QDOAS ???   // Initialization
-// QDOAS ???
-// QDOAS ???   rc=ERROR_ID_NO;
-// QDOAS ???
-// QDOAS ???   // Memory allocation for cross sections symbols
-// QDOAS ???
-// QDOAS ???   if (((TREE_itemType[TREE_ITEM_TYPE_CROSS_CHILDREN].dataList=(SYMBOL_CROSS *)
-// QDOAS ???         MEMORY_AllocBuffer("SYMB_Alloc","SYMB_itemCrossList",MAX_SYMBOL_CROSS,sizeof(SYMBOL_CROSS),0,MEMORY_TYPE_STRUCT))==NULL) ||
-// QDOAS ???
-// QDOAS ???       ((TREE_itemType[TREE_ITEM_TYPE_CROSS_CHILDREN].data2Paste=(SYMBOL_CROSS *)
-// QDOAS ???         MEMORY_AllocBuffer("SYMB_Alloc","symbToPaste",MAX_SYMBOL_CROSS,sizeof(SYMBOL_CROSS),0,MEMORY_TYPE_STRUCT))==NULL))
-// QDOAS ???
-// QDOAS ???    rc=ERROR_ID_ALLOC;
-// QDOAS ???
-// QDOAS ???   else
-// QDOAS ???    {
-// QDOAS ???     SYMB_itemCrossList=(SYMBOL_CROSS *)TREE_itemType[TREE_ITEM_TYPE_CROSS_CHILDREN].dataList;
-// QDOAS ???     symbToPaste=(SYMBOL_CROSS *)TREE_itemType[TREE_ITEM_TYPE_CROSS_CHILDREN].data2Paste;
-// QDOAS ???
-// QDOAS ???     memset(SYMB_itemCrossList,0,sizeof(SYMBOL_CROSS)*MAX_SYMBOL_CROSS);
-// QDOAS ???
-// QDOAS ???     // Add predefined symbols
-// QDOAS ???
-// QDOAS ???     strcpy(SYMB_itemCrossList[SYMBOL_PREDEFINED_SPECTRUM].name,"Spectrum");
-// QDOAS ???     strcpy(SYMB_itemCrossList[SYMBOL_PREDEFINED_REF].name,"Ref");
-// QDOAS ???     strcpy(SYMB_itemCrossList[SYMBOL_PREDEFINED_COM].name,"Com");
-// QDOAS ???     strcpy(SYMB_itemCrossList[SYMBOL_PREDEFINED_USAMP1].name,"Usamp1");
-// QDOAS ???     strcpy(SYMB_itemCrossList[SYMBOL_PREDEFINED_USAMP2].name,"Usamp2");
-// QDOAS ???     strcpy(SYMB_itemCrossList[SYMBOL_PREDEFINED_RING1].name,"Raman");
-// QDOAS ???    }
-// QDOAS ???
-// QDOAS ???   // Return
-// QDOAS ???
-// QDOAS ???   return rc;
-// QDOAS ???  }
-// QDOAS ???
-// QDOAS ??? // -----------------------------------------------------------------------------
-// QDOAS ??? // FUNCTION        SYMB_Free
-// QDOAS ??? // -----------------------------------------------------------------------------
-// QDOAS ??? // PURPOSE         Release the buffers allocated for the symbols
-// QDOAS ??? // -----------------------------------------------------------------------------
-// QDOAS ???
-// QDOAS ??? void SYMB_Free(void)
-// QDOAS ???  {
-// QDOAS ???   if (SYMB_itemCrossList)
-// QDOAS ???    MEMORY_ReleaseBuffer("SYMB_Free","SYMB_itemCrossList",SYMB_itemCrossList);
-// QDOAS ???   if (symbToPaste!=NULL)
-// QDOAS ???    MEMORY_ReleaseBuffer("SYMB_Free","symbToPaste",symbToPaste);
-// QDOAS ???  }
-// QDOAS ???
-// QDOAS ??? // =============================
-// QDOAS ??? // CONFIGURATION FILE MANAGEMENT
-// QDOAS ??? // =============================
-// QDOAS ???
-// QDOAS ??? // -----------------------------------------------------------------------------
-// QDOAS ??? // FUNCTION        SYMB_ResetConfiguration
-// QDOAS ??? // -----------------------------------------------------------------------------
-// QDOAS ??? // PURPOSE         Remove the current list of symbols from the environment space tree
-// QDOAS ??? // -----------------------------------------------------------------------------
-// QDOAS ???
-// QDOAS ??? void SYMB_ResetConfiguration(void)
-// QDOAS ???  {
-// QDOAS ???   // Declaration
-// QDOAS ???
-// QDOAS ???   CHILD_WINDOWS *pChild;
-// QDOAS ???
-// QDOAS ???   // Initialization
-// QDOAS ???
-// QDOAS ???   pChild=&CHILD_list[CHILD_WINDOW_ENVIRONMENT];
-// QDOAS ???
-// QDOAS ???   // Remove the list from the tree
-// QDOAS ???
-// QDOAS ???   TREE_DeleteChildList(SYMB_crossTreeEntryPoint);
-// QDOAS ???
-// QDOAS ???   #if defined(__WINDOAS_GUI_) && (__WINDOAS_GUI_)
-// QDOAS ???   TREE_UpdateItem(pChild->hwndTree,SYMB_crossTreeEntryPoint);
-// QDOAS ???   #endif
-// QDOAS ???  }
-// QDOAS ???
-// QDOAS ??? // -----------------------------------------------------------------------------
-// QDOAS ??? // FUNCTION        SYMB_LoadConfiguration
-// QDOAS ??? // -----------------------------------------------------------------------------
-// QDOAS ??? // PURPOSE         Load symbols from the wds configuration file
-// QDOAS ??? //
-// QDOAS ??? // INPUT           fileLine : a line from the 'symbols' section in the wds
-// QDOAS ??? //                            configuration file
-// QDOAS ??? //
-// QDOAS ??? // OUTPUT          the 'environment space' tree is completed with the new symbol
-// QDOAS ??? // -----------------------------------------------------------------------------
-// QDOAS ???
-// QDOAS ??? void SYMB_LoadConfiguration(UCHAR *fileLine)
-// QDOAS ???  {
-// QDOAS ???   // Declarations
-// QDOAS ???
-// QDOAS ???   UCHAR keyName[MAX_ITEM_TEXT_LEN+1];                                           // the name of the symbol
-// QDOAS ???   CHILD_WINDOWS *pChild;                                                        // entry point for symbols in the 'environment space' tree
-// QDOAS ???   SYMBOL symbol;                                                                // information on the new symbol
-// QDOAS ???   INDEX indexItem,indexData;                                                    // indexes resp. in the tree and in the symbols list
-// QDOAS ???
-// QDOAS ???   // Initializations
-// QDOAS ???
-// QDOAS ???   pChild=&CHILD_list[CHILD_WINDOW_ENVIRONMENT];
-// QDOAS ???   memset(&symbol,0,sizeof(symbol));
-// QDOAS ???
-// QDOAS ???   // Retrieve the information on the symbol from the configuration file line
-// QDOAS ???
-// QDOAS ???   if ((((FILES_version>=HELP_VERSION_1_04) && (STD_Sscanf(fileLine,"%[^'=']=%[^',\n']",symbol.name,symbol.description)>=1)) ||
-// QDOAS ???        ((STD_Sscanf(fileLine,"%[^'=']=%[^','],%[^'\n']",keyName,symbol.name,symbol.description)>=2) &&
-// QDOAS ???         (STD_Stricmp(keyName,"Number")!=0))) &&
-// QDOAS ???
-// QDOAS ???   // Add the new item in the 'Environment space' tree
-// QDOAS ???
-// QDOAS ???        ((indexItem=TREE_InsertOneItem(pChild->hwndTree,symbol.name,SYMB_crossTreeEntryPoint,TREE_ITEM_TYPE_CROSS_CHILDREN,0,0,0))!=ITEM_NONE) &&
-// QDOAS ???        ((indexData=TREE_itemList[indexItem].dataIndex)!=ITEM_NONE))
-// QDOAS ???
-// QDOAS ???    memcpy(&SYMB_itemCrossList[indexData],&symbol,sizeof(SYMBOL));
-// QDOAS ???  }
-// QDOAS ???
-// QDOAS ??? // -----------------------------------------------------------------------------
-// QDOAS ??? // FUNCTION        SYMB_SaveConfiguration
-// QDOAS ??? // -----------------------------------------------------------------------------
-// QDOAS ??? // PURPOSE         Save the list of symbols in the wds in the configuration file
-// QDOAS ??? //
-// QDOAS ??? // INPUT           fp          : pointer to the current wds configuration file
-// QDOAS ??? //                 sectionName : the name of the section for symbols
-// QDOAS ??? // -----------------------------------------------------------------------------
-// QDOAS ???
-// QDOAS ??? void SYMB_SaveConfiguration(FILE *fp,UCHAR *sectionName)
-// QDOAS ???  {
-// QDOAS ???   // Declarations
-// QDOAS ???
-// QDOAS ???   INT symbolsNumber;                                                            // the number of symbols in the list
-// QDOAS ???   INDEX indexSymbol;                                                            // browse symbols in the list
-// QDOAS ???
-// QDOAS ???   // Print out the section name
-// QDOAS ???
-// QDOAS ???   fprintf(fp,"[%s]\n\n",sectionName);
-// QDOAS ???
-// QDOAS ???   // Get the number of symbols in the 'Environment space' tree
-// QDOAS ???
-// QDOAS ???   symbolsNumber=TREE_itemType[TREE_ITEM_TYPE_CROSS_CHILDREN].dataNumber;
-// QDOAS ???
-// QDOAS ???   // Save the symbols in the configuration file
-// QDOAS ???
-// QDOAS ???   for (indexSymbol=SYMBOL_PREDEFINED_MAX;indexSymbol<symbolsNumber;indexSymbol++)
-// QDOAS ???
-// QDOAS ???    fprintf(fp,"%s=%s,\n",
-// QDOAS ???                SYMB_itemCrossList[indexSymbol].name,
-// QDOAS ???                SYMB_itemCrossList[indexSymbol].description);
-// QDOAS ???
-// QDOAS ???   fprintf(fp,"\n");
-// QDOAS ???  }
+
+// -----------------------------------------------------------------------------
+// FUNCTION        SYMB_Add
+// -----------------------------------------------------------------------------
+// PURPOSE         Add a symbol in the list
+//
+// INPUT           symbolName         the name of the symbol
+//                 symbolDescription  the description of the symbol
+//
+// RETURN          ERROR_ID_BUFFER_FULL if the maximum number of symbols is reached
+//                 ERROR_ID_NO otherwise
+// -----------------------------------------------------------------------------
+
+RC SYMB_Add(UCHAR *symbolName,UCHAR *symbolDescription)
+ {
+ 	// Declaration
+
+ 	RC rc;
+
+ 	// Initialization
+
+ 	rc=ERROR_ID_NO;
+
+ 	// Check for the buffer limits
+
+  if (SYMB_itemCrossN==MAX_SYMBOL_CROSS)
+   rc=ERROR_SetLast("SYMB_Add",ERROR_TYPE_FATAL,ERROR_ID_BUFFER_FULL,"symbols");
+  else
+   {
+   	strcpy(SYMB_itemCrossList[SYMB_itemCrossN].name,symbolName);
+   	strcpy(SYMB_itemCrossList[SYMB_itemCrossN].description,symbolDescription);
+
+   	SYMB_itemCrossN++;
+   }
+
+  // Return
+
+  return rc;
+ }
+
+// -----------------------------------------------------------------------------
+// FUNCTION        SYMB_Alloc
+// -----------------------------------------------------------------------------
+// PURPOSE         allocate and initialize buffers for the symbols
+//
+// RETURN          ERROR_ID_ALLOC if one of the buffer allocation failed
+//                 ERROR_ID_NO in case of success
+// -----------------------------------------------------------------------------
+
+RC SYMB_Alloc(void)
+ {
+  // Declaration
+
+  RC rc;
+
+  // Initialization
+
+  rc=ERROR_ID_NO;
+
+  // Memory allocation for cross sections symbols
+
+  if ((SYMB_itemCrossList=(SYMBOL_CROSS *)MEMORY_AllocBuffer("SYMB_Alloc","SYMB_itemCrossList",MAX_SYMBOL_CROSS,sizeof(SYMBOL_CROSS),0,MEMORY_TYPE_STRUCT))==NULL)
+   rc=ERROR_ID_ALLOC;
+  else
+   {
+    memset(SYMB_itemCrossList,0,sizeof(SYMBOL_CROSS)*MAX_SYMBOL_CROSS);
+
+    // Add already predefined symbols
+
+    strcpy(SYMB_itemCrossList[SYMBOL_PREDEFINED_SPECTRUM].name,"Spectrum");
+    strcpy(SYMB_itemCrossList[SYMBOL_PREDEFINED_REF].name,"Ref");
+    strcpy(SYMB_itemCrossList[SYMBOL_PREDEFINED_COM].name,"Com");
+    strcpy(SYMB_itemCrossList[SYMBOL_PREDEFINED_USAMP1].name,"Usamp1");
+    strcpy(SYMB_itemCrossList[SYMBOL_PREDEFINED_USAMP2].name,"Usamp2");
+    strcpy(SYMB_itemCrossList[SYMBOL_PREDEFINED_RING1].name,"Raman");
+
+    SYMB_itemCrossN=SYMBOL_PREDEFINED_MAX;
+   }
+
+  // Return
+
+  return rc;
+ }
+
+// -----------------------------------------------------------------------------
+// FUNCTION        SYMB_Free
+// -----------------------------------------------------------------------------
+// PURPOSE         Release the buffers allocated for the symbols
+// -----------------------------------------------------------------------------
+
+void SYMB_Free(void)
+ {
+  if (SYMB_itemCrossList)
+   MEMORY_ReleaseBuffer("SYMB_Free","SYMB_itemCrossList",SYMB_itemCrossList);
+
+  SYMB_itemCrossList=NULL;
+  SYMB_itemCrossN=0;
+ }
+

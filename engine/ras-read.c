@@ -68,16 +68,16 @@ static INT rasDirFlag;                                                          
 // -----------------------------------------------------------------------------
 // PURPOSE       calculate the number of files in a directory in RAS format
 //
-// INPUT         pSpecInfo : information on the file to read out
+// INPUT         pEngineContext : information on the file to read out
 //               specFp    : pointer to the current spectra file
 //
-// OUTPUT        pSpecInfo->recordNumber, the number of records
+// OUTPUT        pEngineContext->recordNumber, the number of records
 //
 // RETURN        ERROR_ID_FILE_NOT_FOUND if the input file pointer is NULL;
 //               ERROR_ID_NO in case of success.
 // -----------------------------------------------------------------------------
 
-RC SetRAS(SPEC_INFO *pSpecInfo,FILE *specFp)
+RC SetRAS(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
  {
   // Declarations
 
@@ -89,7 +89,7 @@ RC SetRAS(SPEC_INFO *pSpecInfo,FILE *specFp)
   // Initializations
 
   memset(fileName,0,MAX_PATH_LEN+1);
-  strncpy(fileName,pSpecInfo->fileName,MAX_PATH_LEN);
+  strncpy(fileName,pEngineContext->fileInfo.fileName,MAX_PATH_LEN);
   THRD_lastRefRecord=0;
   rasDirFlag=0;
   rc=ERROR_ID_NO;
@@ -97,7 +97,7 @@ RC SetRAS(SPEC_INFO *pSpecInfo,FILE *specFp)
   // Check the input file pointer
 
   if (specFp==NULL)
-   rc=ERROR_SetLast("SetRAS",ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pSpecInfo->fileName);
+   rc=ERROR_SetLast("SetRAS",ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pEngineContext->fileInfo.fileName);
 
   // According to the file extension, process a directory or a file
 
@@ -107,14 +107,14 @@ RC SetRAS(SPEC_INFO *pSpecInfo,FILE *specFp)
    {
     if ((fileLength=STD_FileLength(specFp))>0)
      {
-      pSpecInfo->recordNumber=fileLength/12;
+      pEngineContext->recordNumber=fileLength/12;
       rasDirFlag=1;
      }
     else
-     pSpecInfo->recordNumber=0;
+     pEngineContext->recordNumber=0;
    }
   else
-   pSpecInfo->recordNumber=1;
+   pEngineContext->recordNumber=1;
 
   // Return
 
@@ -130,16 +130,18 @@ RC SetRAS(SPEC_INFO *pSpecInfo,FILE *specFp)
 //
 // OUTPUT        spe               the spectrum;
 //               drk               the dark current;
-//               pSpecInfo         data on the current spectrum;
+//               pEngineContext         data on the current spectrum;
 //
 // RETURN        ERROR_ID_FILE_NOT_FOUND  the input file can't be found;
 //               ERROR_ID_FILE_EMPTY      the file is empty;
 //               ERROR_ID_NO              otherwise.
 // -----------------------------------------------------------------------------
 
-RC RasReadRecord(UCHAR *fileName,double *spe,double *drk,SPEC_INFO *pSpecInfo)
+RC RasReadRecord(UCHAR *fileName,double *spe,double *drk,ENGINE_CONTEXT *pEngineContext)
  {
   // Declarations
+
+  RECORD_INFO *pRecord;                                                         // pointer to the record part of the engine context
 
   UCHAR fileLine[MAX_STR_SHORT_LEN+1],                                          // line of file
         keyName[MAX_STR_SHORT_LEN+1],                                           // key name for commented lines
@@ -151,6 +153,8 @@ RC RasReadRecord(UCHAR *fileName,double *spe,double *drk,SPEC_INFO *pSpecInfo)
   RC rc;                                                                        // return code
 
   // Initializations
+
+  pRecord=&pEngineContext->recordInfo;
 
   memset(fileLine,0,MAX_STR_SHORT_LEN+1);
   memset(keyName,0,MAX_STR_SHORT_LEN+1);
@@ -165,7 +169,7 @@ RC RasReadRecord(UCHAR *fileName,double *spe,double *drk,SPEC_INFO *pSpecInfo)
 
   else if (!STD_FileLength(fp) ||                                               // file length is zero
            !fgets(fileLine,MAX_STR_SHORT_LEN,fp) ||                             // no file line anymore
-           !sscanf(fileLine,"%lf",&pSpecInfo->Zm))                              // no zenith angle
+           !sscanf(fileLine,"%lf",&pRecord->Zm))                              // no zenith angle
 
    rc=ERROR_SetLast("RasReadRecord",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,fileName);
 
@@ -182,7 +186,7 @@ RC RasReadRecord(UCHAR *fileName,double *spe,double *drk,SPEC_INFO *pSpecInfo)
      rc=ERROR_SetLast("RasReadRecord",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,fileName);
     else
 
-     // Fill pSpecInfo with data on current spectrum
+     // Fill pEngineContext with data on current spectrum
 
      while (fgets(fileLine,MAX_STR_SHORT_LEN,fp))
       {
@@ -194,9 +198,9 @@ RC RasReadRecord(UCHAR *fileName,double *spe,double *drk,SPEC_INFO *pSpecInfo)
         {
          sscanf(strBuffer,"%d:%d:%d",&field1,&field2,&field3);
 
-         pSpecInfo->present_time.ti_hour=(UCHAR)field1;
-         pSpecInfo->present_time.ti_min=(UCHAR)field2;
-         pSpecInfo->present_time.ti_sec=(UCHAR)field3;
+         pRecord->present_time.ti_hour=(UCHAR)field1;
+         pRecord->present_time.ti_min=(UCHAR)field2;
+         pRecord->present_time.ti_sec=(UCHAR)field3;
         }
 
        // Date
@@ -212,39 +216,39 @@ RC RasReadRecord(UCHAR *fileName,double *spe,double *drk,SPEC_INFO *pSpecInfo)
          else if (field3<1930)
           field3+=(short)100;
 
-         pSpecInfo->present_day.da_day=(UCHAR)field1;
-         pSpecInfo->present_day.da_mon=(UCHAR)field2;
-         pSpecInfo->present_day.da_year=(USHORT)field3;
+         pRecord->present_day.da_day=(UCHAR)field1;
+         pRecord->present_day.da_mon=(UCHAR)field2;
+         pRecord->present_day.da_year=(USHORT)field3;
         }
 
        // Exposure time
 
        else if (!strnicmp(keyName,"Tiempo Exposicion",17))
-        sscanf(strBuffer,"%lf",&pSpecInfo->Tint);
+        sscanf(strBuffer,"%lf",&pRecord->Tint);
 
        // Temperature of the detector
 
        else if (!strnicmp(keyName,"T.Detector",10))
-        sscanf(strBuffer,"%lf",&pSpecInfo->TDet);
+        sscanf(strBuffer,"%lf",&pRecord->TDet);
 
        // Geolocation coordinates
 
        else if (!strnicmp(keyName,"Latitud",7))
         {
          sscanf(strBuffer,"%d° %d' %d",&field1,&field2,&field3);
-         pSpecInfo->latitude=(double)field1+1.*field2/60.+1.*field3/3600.;
+         pRecord->latitude=(double)field1+1.*field2/60.+1.*field3/3600.;
         }
        else if (!strnicmp(keyName,"Longitud",8))
         {
          sscanf(strBuffer,"%d° %d' %d",&field1,&field2,&field3);
-         pSpecInfo->longitude=(double)field1+1.*field2/60.+1.*field3/3600.;
+         pRecord->longitude=(double)field1+1.*field2/60.+1.*field3/3600.;
         }
        else if (!strnicmp(keyName,"Altura",6))
-        sscanf(strBuffer,"%lf",&pSpecInfo->altitude);
+        sscanf(strBuffer,"%lf",&pRecord->altitude);
        else if (!strnicmp(keyName,"Barridos solicitados",20))
-        sscanf(strBuffer,"%d",&pSpecInfo->rejected);
+        sscanf(strBuffer,"%d",&pRecord->rejected);
        else if (!strnicmp(keyName,"Barridos sin saturar",20))
-        sscanf(strBuffer,"%d",&pSpecInfo->NSomme);
+        sscanf(strBuffer,"%d",&pRecord->NSomme);
       }
    }
 
@@ -263,7 +267,7 @@ RC RasReadRecord(UCHAR *fileName,double *spe,double *drk,SPEC_INFO *pSpecInfo)
 // -----------------------------------------------------------------------------
 // PURPOSE       RAS format read out
 //
-// INPUT         pSpecInfo    information on the file to read
+// INPUT         pEngineContext    information on the file to read
 //               recordNo     index of the record to read;
 //               dateFlag     0 no date constraint; 1 a date selection is applied;
 //               localDay     if dateFlag is 1, the calendar day for the
@@ -277,9 +281,11 @@ RC RasReadRecord(UCHAR *fileName,double *spe,double *drk,SPEC_INFO *pSpecInfo)
 //               ERROR_ID_NO             : otherwise.
 // -----------------------------------------------------------------------------
 
-RC ReliRAS(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,INT localDay,FILE *specFp)
+RC ReliRAS(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,INT localDay,FILE *specFp)
  {
   // Declarations
+
+  RECORD_INFO *pRecord;                                                         // pointer to the record part of the engine context
 
   UCHAR                fileName[MAX_PATH_LEN+1],                                // name of the current file (the current record)
                       *ptr;                                                     // pointers to parts in the previous string
@@ -288,13 +294,15 @@ RC ReliRAS(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,INT localDay,FILE *spe
 
   // Initializations
 
+  pRecord=&pEngineContext->recordInfo;
+
   memset(fileName,0,MAX_PATH_LEN+1);
-  strncpy(fileName,pSpecInfo->fileName,MAX_PATH_LEN);
+  strncpy(fileName,pEngineContext->fileInfo.fileName,MAX_PATH_LEN);
   rc=ERROR_ID_NO;
 
   if ((ptr=strrchr(fileName,PATH_SEP))==NULL)
    rc=ERROR_ID_FILE_RECORD;
-  else if ((recordNo>0) && (recordNo<=pSpecInfo->recordNumber))
+  else if ((recordNo>0) && (recordNo<=pEngineContext->recordNumber))
    {
     // Build the right file name
 
@@ -307,33 +315,33 @@ RC ReliRAS(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,INT localDay,FILE *spe
 
     // Record read out
 
-    if (!(rc=RasReadRecord(fileName,pSpecInfo->spectrum,pSpecInfo->darkCurrent,pSpecInfo)))
+    if (!(rc=RasReadRecord(fileName,pEngineContext->buffers.spectrum,pEngineContext->buffers.darkCurrent,pEngineContext)))
      {
-      pSpecInfo->rejected-=pSpecInfo->NSomme;
+      pRecord->rejected-=pRecord->NSomme;
 
-      pSpecInfo->TotalExpTime=(double)0.;
-      pSpecInfo->TimeDec=(double)pSpecInfo->present_time.ti_hour+pSpecInfo->present_time.ti_min/60.+pSpecInfo->present_time.ti_sec/3600.;
-      pSpecInfo->Tm=(double)ZEN_NbSec(&pSpecInfo->present_day,&pSpecInfo->present_time,0);
-//      pSpecInfo->Zm=ZEN_FNTdiz(ZEN_FNCrtjul(&pSpecInfo->Tm),&pSpecInfo->longitude,&pSpecInfo->latitude,&pSpecInfo->Azimuth);
+      pRecord->TotalExpTime=(double)0.;
+      pRecord->TimeDec=(double)pRecord->present_time.ti_hour+pRecord->present_time.ti_min/60.+pRecord->present_time.ti_sec/3600.;
+      pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_day,&pRecord->present_time,0);
+//      pRecord->Zm=ZEN_FNTdiz(ZEN_FNCrtjul(&pRecord->Tm),&pRecord->longitude,&pRecord->latitude,&pRecord->Azimuth);
 
-      tmLocal=pSpecInfo->Tm+THRD_localShift*3600.;
+      tmLocal=pRecord->Tm+THRD_localShift*3600.;
 
-      pSpecInfo->localCalDay=ZEN_FNCaljda(&tmLocal);
-      pSpecInfo->localTimeDec=fmod(pSpecInfo->TimeDec+24.+THRD_localShift,(double)24.);
+      pRecord->localCalDay=ZEN_FNCaljda(&tmLocal);
+      pRecord->localTimeDec=fmod(pRecord->TimeDec+24.+THRD_localShift,(double)24.);
 
       // User constraints
 
-      if (dateFlag && (pSpecInfo->localCalDay>localDay))
+      if (dateFlag && (pRecord->localCalDay>localDay))
        rc=ERROR_ID_FILE_END;
 
-      else if ((pSpecInfo->NSomme<=0) ||
-               (dateFlag && (pSpecInfo->localCalDay!=localDay)))
+      else if ((pRecord->NSomme<=0) ||
+               (dateFlag && (pRecord->localCalDay!=localDay)))
 
        rc=ERROR_ID_FILE_RECORD;
 
       else
        {
-        pSpecInfo->longitude=-pSpecInfo->longitude;
+        pRecord->longitude=-pRecord->longitude;
 
         if (dateFlag)
          THRD_lastRefRecord=recordNo;

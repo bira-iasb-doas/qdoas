@@ -476,14 +476,16 @@ RC GotoSpectraNumber(FILE *fp,INT band,INT recordNo)
 //
 // INPUT         fp        : pointer to the GOME level-1 file to read out
 //
-// OUTPUT        pSpecInfo : data on the current GOME pixel;
+// OUTPUT        pEngineContext : data on the current GOME pixel;
 //
 // RETURN        1 if read out operation failed; 0 if success.
 // -----------------------------------------------------------------------------
 
-RC ReadPixelInfo(FILE *fp,SPEC_INFO *pSpecInfo)
+RC ReadPixelInfo(FILE *fp,ENGINE_CONTEXT *pEngineContext)
  {
   // Declarations
+
+  RECORD_INFO *pRecord;                                                         // pointer to the record part of the engine context
 
   UCHAR  fileLine[STRING_LENGTH+1],                                             // file line
          month[16];                                                             // measurement month
@@ -494,6 +496,8 @@ RC ReadPixelInfo(FILE *fp,SPEC_INFO *pSpecInfo)
   RC     rc;                                                                    // return code
 
   // Initializations
+
+  pRecord=&pEngineContext->recordInfo;
 
   memset(fileLine,0,STRING_LENGTH+1);
   memset(month,0,16);
@@ -516,13 +520,13 @@ RC ReadPixelInfo(FILE *fp,SPEC_INFO *pSpecInfo)
 
     // Fill measurement date and time fields
 
-    pSpecInfo->present_day.da_day=(UCHAR)day;
-    pSpecInfo->present_day.da_mon=(CHAR)(indexMonth+1);
-    pSpecInfo->present_day.da_year=(SHORT)year;
+    pRecord->present_day.da_day=(UCHAR)day;
+    pRecord->present_day.da_mon=(CHAR)(indexMonth+1);
+    pRecord->present_day.da_year=(SHORT)year;
 
-    pSpecInfo->present_time.ti_hour=(CHAR)hour;
-    pSpecInfo->present_time.ti_min=(CHAR)min;
-    pSpecInfo->present_time.ti_sec=(CHAR)(INT)(sec+0.5);
+    pRecord->present_time.ti_hour=(CHAR)hour;
+    pRecord->present_time.ti_min=(CHAR)min;
+    pRecord->present_time.ti_sec=(CHAR)(INT)(sec+0.5);
 
     nLines++;
    }
@@ -532,9 +536,9 @@ RC ReadPixelInfo(FILE *fp,SPEC_INFO *pSpecInfo)
   if (fgets(fileLine,STRING_LENGTH,fp))
    {
     sscanf(fileLine,"%f %f %f %f %f %f",
-          &pSpecInfo->gome.sza[0],&pSpecInfo->gome.azim[0],
-          &pSpecInfo->gome.sza[1],&pSpecInfo->gome.azim[1],
-          &pSpecInfo->gome.sza[2],&pSpecInfo->gome.azim[2]);
+          &pRecord->gome.sza[0],&pRecord->gome.azim[0],
+          &pRecord->gome.sza[1],&pRecord->gome.azim[1],
+          &pRecord->gome.sza[2],&pRecord->gome.azim[2]);
 
     nLines++;
    }
@@ -555,11 +559,11 @@ RC ReadPixelInfo(FILE *fp,SPEC_INFO *pSpecInfo)
   if (fgets(fileLine,STRING_LENGTH,fp))
    {
     sscanf(fileLine,"%f %f %f %f %f %f %f %f %f %f",
-          &pSpecInfo->gome.latit[0],&pSpecInfo->gome.longit[0],
-          &pSpecInfo->gome.latit[1],&pSpecInfo->gome.longit[1],
-          &pSpecInfo->gome.latit[2],&pSpecInfo->gome.longit[2],
-          &pSpecInfo->gome.latit[3],&pSpecInfo->gome.longit[3],
-          &pSpecInfo->gome.latit[4],&pSpecInfo->gome.longit[4]);
+          &pRecord->gome.latit[0],&pRecord->gome.longit[0],
+          &pRecord->gome.latit[1],&pRecord->gome.longit[1],
+          &pRecord->gome.latit[2],&pRecord->gome.longit[2],
+          &pRecord->gome.latit[3],&pRecord->gome.longit[3],
+          &pRecord->gome.latit[4],&pRecord->gome.longit[4]);
 
     nLines++;
    }
@@ -580,7 +584,7 @@ RC ReadPixelInfo(FILE *fp,SPEC_INFO *pSpecInfo)
 // INPUT         fp        : pointer to the GOME level-1 file to read out
 //               band      : band of the earthshine spectrum to return
 //
-// OUTPUT        pSpecInfo : data on the current GOME pixel;
+// OUTPUT        pEngineContext : data on the current GOME pixel;
 //               lembda    : wavelength calibration of the returned irradiance spectrum;
 //               earth     : the earthshine spectrum measured at the requested band;
 //               earthE    : the absolute errors on the returned earthshine spectrum;
@@ -589,9 +593,11 @@ RC ReadPixelInfo(FILE *fp,SPEC_INFO *pSpecInfo)
 // RETURN        1 if read out operation failed; 0 if success.
 // -----------------------------------------------------------------------------
 
-RC ReadSpectrum(FILE *fp,INT band,SPEC_INFO *pSpecInfo,double *lembda,double *earth,double *earthE,INT *pNpts)
+RC ReadSpectrum(FILE *fp,INT band,ENGINE_CONTEXT *pEngineContext,double *lembda,double *earth,double *earthE,INT *pNpts)
  {
   // Declarations
+
+  RECORD_INFO *pRecord;                                                         // pointer to the record part of the engine context
 
   UCHAR  fileLine[STRING_LENGTH+1],                                             // file line
          bandStr[3];                                                            // current band type
@@ -601,6 +607,8 @@ RC ReadSpectrum(FILE *fp,INT band,SPEC_INFO *pSpecInfo,double *lembda,double *ea
   RC     rc;                                                                    // return code
 
   // Initializations
+
+  pRecord=&pEngineContext->recordInfo;
 
   memset(fileLine,0,STRING_LENGTH+1);
  *pNpts=0;
@@ -614,9 +622,9 @@ RC ReadSpectrum(FILE *fp,INT band,SPEC_INFO *pSpecInfo,double *lembda,double *ea
 
     if (!strnicmp(fileLine,"Ground Pixel",12))
      {
-      sscanf(fileLine,"Ground Pixel %d %d %d",&pSpecInfo->gome.pixelNumber,&nBands,&pSpecInfo->gome.pixelType);
+      sscanf(fileLine,"Ground Pixel %d %d %d",&pRecord->gome.pixelNumber,&nBands,&pRecord->gome.pixelType);
 
-      if (ReadPixelInfo(fp,pSpecInfo))
+      if (ReadPixelInfo(fp,pEngineContext))
        break;
      }
 
@@ -624,9 +632,9 @@ RC ReadSpectrum(FILE *fp,INT band,SPEC_INFO *pSpecInfo,double *lembda,double *ea
 
     if (!strnicmp(fileLine,"Band",4))
      {
-      sscanf(fileLine,"Band %[^' '] %lf %f %f %d",bandStr,&pSpecInfo->Tint,&wavelStart,&wavelEnd,&npts);
+      sscanf(fileLine,"Band %[^' '] %lf %f %f %d",bandStr,&pRecord->Tint,&wavelStart,&wavelEnd,&npts);
 
-      if ((pSpecInfo->gome.pixelNumber>0) && !strnicmp(bandStr,bands[band],strlen(bands[band])))
+      if ((pRecord->gome.pixelNumber>0) && !strnicmp(bandStr,bands[band],strlen(bands[band])))
        {
         if ((lembda==NULL) || (earth==NULL) || (earthE==NULL))
          rc=0;
@@ -670,7 +678,7 @@ RC ReadSpectrum(FILE *fp,INT band,SPEC_INFO *pSpecInfo,double *lembda,double *ea
 //
 // INPUT         specFp      pointer to the GOME orbit file
 //
-// OUTPUT        pSpecInfo   pointer to a structure whose some fields are filled
+// OUTPUT        pEngineContext   pointer to a structure whose some fields are filled
 //                           with general data on the file
 //
 // RETURN        ERROR_ID_FILE_NOT_FOUND  the input file pointer 'specFp' is NULL;
@@ -681,10 +689,11 @@ RC ReadSpectrum(FILE *fp,INT band,SPEC_INFO *pSpecInfo,double *lembda,double *ea
 #pragma argsused
 #endif
 
-RC GDP_ASC_Set(SPEC_INFO *pSpecInfo,FILE *specFp)
+RC GDP_ASC_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
  {
   // Declarations
 
+  RECORD_INFO *pRecord;                                                         // pointer to the record part of the engine context
   UCHAR bandStr[10];                                                            // band string
   GOME_DATA *pGome;                                                             // data specific to GOME
   INT band,                                                                     // the user-requested band for spectra
@@ -695,23 +704,23 @@ RC GDP_ASC_Set(SPEC_INFO *pSpecInfo,FILE *specFp)
   // Initializations
 
   gdpLastRecord=ITEM_NONE;
-  sprintf(bandStr,"Band %s",bands[pSpecInfo->project.instrumental.user]);
-  pGome=&pSpecInfo->gome;
+  sprintf(bandStr,"Band %s",bands[pEngineContext->project.instrumental.user]);
+  pGome=&pRecord->gome;
 
-  pSpecInfo->recordNumber=0;
-  pSpecInfo->longitude=
-  pSpecInfo->latitude=
-  pSpecInfo->altitude=(double)0.;
-  pSpecInfo->useErrors=1;                                                       // this format includes errors
+  pEngineContext->recordNumber=0;
+  pEngineContext->recordInfo.longitude=
+  pEngineContext->recordInfo.latitude=
+  pEngineContext->recordInfo.altitude=(double)0.;
+  pEngineContext->recordInfo.useErrors=1;                                                       // this format includes errors
 
-  band=pSpecInfo->project.instrumental.user;
+  band=pEngineContext->project.instrumental.user;
 
   GDP_ASC_ReleaseBuffers();
 
   rc=ERROR_ID_NO;
 
   if (specFp==NULL)
-   rc=ERROR_SetLast("SetGDP",ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pSpecInfo->fileName);
+   rc=ERROR_SetLast("SetGDP",ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pEngineContext->fileInfo.fileName);
   else
    {
     fseek(specFp,0L,SEEK_SET);
@@ -732,17 +741,17 @@ RC GDP_ASC_Set(SPEC_INFO *pSpecInfo,FILE *specFp)
              !GotoSpectra(specFp))
      {
       if ((THRD_id==THREAD_TYPE_SPECTRA) && (THRD_browseType==THREAD_BROWSE_DARK))
-       pSpecInfo->recordNumber=1;
+       pEngineContext->recordNumber=1;
       else
        {
         // Get the number of records
 
-        while (!ReadSpectrum(specFp,band,pSpecInfo,NULL,NULL,NULL,&npts))
-         pSpecInfo->recordNumber++;
+        while (!ReadSpectrum(specFp,band,pEngineContext,NULL,NULL,NULL,&npts))
+         pEngineContext->recordNumber++;
        }
 
-      if (!pSpecInfo->recordNumber)
-       rc=ERROR_SetLast("SetGDP",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pSpecInfo->fileName);
+      if (!pEngineContext->recordNumber)
+       rc=ERROR_SetLast("SetGDP",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pEngineContext->fileInfo.fileName);
 
       NDET=pGome->nRef;
      }
@@ -762,7 +771,7 @@ RC GDP_ASC_Set(SPEC_INFO *pSpecInfo,FILE *specFp)
 //               dateFlag     0 no date constraint; 1 a date selection is applied
 //               specFp       pointer to the spectra file
 //
-// OUTPUT        pSpecInfo  : data on the current record
+// OUTPUT        pEngineContext  : data on the current record
 //
 // RETURN        ERROR_ID_ALLOC          : a buffer allocation failed;
 //               ERROR_ID_FILE_END       : the end of the file is reached;
@@ -774,30 +783,33 @@ RC GDP_ASC_Set(SPEC_INFO *pSpecInfo,FILE *specFp)
 #pragma argsused
 #endif
 
-RC GDP_ASC_Read(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,FILE *specFp)
+RC GDP_ASC_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,FILE *specFp)
  {
   // Declarations
 
+  RECORD_INFO *pRecord;                                                         // pointer to the record part of the engine context
   double *lembda,*spectrum,*errors,                                             // use substitution variables
          *spectrum2,*specInt;                                                   // temporary buffers
-  GOME_DATA *pGome;                                                             // pointer to the GOME part of the pSpecInfo structure
+  GOME_DATA *pGome;                                                             // pointer to the GOME part of the pEngineContext structure
   INT band;                                                                     // the band to read out
   INT npts;                                                                     // the size of returned vectors
   RC rc;                                                                        // return code
 
   // Initializations
 
-  lembda=pSpecInfo->lembda;
-  spectrum=pSpecInfo->spectrum;
-  errors=pSpecInfo->sigmaSpec;
+  pRecord=&pEngineContext->recordInfo;
+
+  lembda=pEngineContext->buffers.lembda;
+  spectrum=pEngineContext->buffers.spectrum;
+  errors=pEngineContext->buffers.sigmaSpec;
   spectrum2=specInt=NULL;
-  band=pSpecInfo->project.instrumental.user;
-  pGome=&pSpecInfo->gome;
+  band=pEngineContext->project.instrumental.user;
+  pGome=&pRecord->gome;
   rc=ERROR_ID_NO;
 
   // Goto the requested record
 
-  if ((recordNo<=0) || (recordNo>pSpecInfo->recordNumber))
+  if ((recordNo<=0) || (recordNo>pEngineContext->recordNumber))
    rc=ERROR_ID_FILE_END;
 
   else if ((THRD_id==THREAD_TYPE_SPECTRA) && (THRD_browseType==THREAD_BROWSE_DARK))
@@ -813,7 +825,7 @@ RC GDP_ASC_Read(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,FILE *specFp)
 
     // Read out the spectrum
 
-    if (ReadSpectrum(specFp,band,pSpecInfo,lembda,spectrum,errors,&npts))
+    if (ReadSpectrum(specFp,band,pEngineContext,lembda,spectrum,errors,&npts))
      rc=ERROR_ID_FILE_END;
 
     // Interpolate the earthshine spectrum on the irradiance grid
@@ -827,19 +839,19 @@ RC GDP_ASC_Read(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,FILE *specFp)
     // Get information on the current GOME pixel
 
      {
-      pSpecInfo->TDet         = (double)0.;
-      pSpecInfo->NSomme       = 1;
-      pSpecInfo->Zm           = (double)pGome->sza[1];
-      pSpecInfo->Azimuth      = (double)pGome->azim[1];
-      pSpecInfo->SkyObs       = 0;
-      pSpecInfo->rejected     = 0;
-      pSpecInfo->ReguTemp     = 0.;
-      pSpecInfo->TotalExpTime = pSpecInfo->Tint*pSpecInfo->NSomme;
-      pSpecInfo->Tm           =(double)ZEN_NbSec(&pSpecInfo->present_day,&pSpecInfo->present_time,0);
-      pSpecInfo->TimeDec      =(double)pSpecInfo->present_time.ti_hour+pSpecInfo->present_time.ti_min/60.;
-      pSpecInfo->longitude    = pGome->longit[4];
-      pSpecInfo->latitude     = pGome->latit[4];
-      pSpecInfo->altitude     = (double) 0.;
+      pRecord->TDet         = (double)0.;
+      pRecord->NSomme       = 1;
+      pRecord->Zm           = (double)pGome->sza[1];
+      pRecord->Azimuth      = (double)pGome->azim[1];
+      pRecord->SkyObs       = 0;
+      pRecord->rejected     = 0;
+      pRecord->ReguTemp     = 0.;
+      pRecord->TotalExpTime = pRecord->Tint*pRecord->NSomme;
+      pRecord->Tm           =(double)ZEN_NbSec(&pRecord->present_day,&pRecord->present_time,0);
+      pRecord->TimeDec      =(double)pRecord->present_time.ti_hour+pRecord->present_time.ti_min/60.;
+      pRecord->longitude    = pGome->longit[4];
+      pRecord->latitude     = pGome->latit[4];
+      pRecord->altitude     = (double) 0.;
 
       memcpy(lembda,GDP_ASC_refL,sizeof(double)*NDET);
       memcpy(spectrum,specInt,sizeof(double)*NDET);
@@ -867,13 +879,13 @@ RC GDP_ASC_Read(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,FILE *specFp)
 // -----------------------------------------------------------------------------
 // PURPOSE       Load analysis parameters depending on the irradiance spectrum
 //
-// INPUT         pSpecInfo    data on the current file
+// INPUT         pEngineContext    data on the current file
 //               specFp       pointer to the current file
 //
 // RETURN        0 for success
 // -----------------------------------------------------------------------------
 
-RC GDP_ASC_LoadAnalysis(SPEC_INFO *pSpecInfo,FILE *specFp)
+RC GDP_ASC_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
  {
   // Declarations
 
@@ -887,7 +899,7 @@ RC GDP_ASC_LoadAnalysis(SPEC_INFO *pSpecInfo,FILE *specFp)
 
   // Initializations
 
-  saveFlag=(INT)pSpecInfo->project.spectra.displayDataFlag;
+  saveFlag=(INT)pEngineContext->project.spectra.displayDataFlag;
   refSelectionFlag=0;
 
   lembdaMin=(double)9999.;

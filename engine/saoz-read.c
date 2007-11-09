@@ -182,18 +182,18 @@ int Ht_Reli(FILE *fp,char *Ptr,unsigned int Size,int Byte)
 // PURPOSE       calculate the size and the number of records for a new file
 //               in SAOZ 512 format
 //
-// INPUT         pSpecInfo : information on the file to read
+// INPUT         pEngineContext : information on the file to read
 //               specFp    : pointer to the spectra file to read;
 //
-// OUTPUT        pSpecInfo->recordNumber, the number of records
-//               pSpecInfo->recordSize, the size of records
+// OUTPUT        pEngineContext->recordNumber, the number of records
+//               pEngineContext->recordSize, the size of records
 //
 // RETURN        ERROR_ID_FILE_NOT_FOUND  the input file pointer 'specFp' is NULL;
 //               ERROR_ID_FILE_EMPTY      the file is empty;
 //               ERROR_ID_NO              otherwise.
 // -----------------------------------------------------------------------------
 
-RC SetSAOZ (SPEC_INFO *pSpecInfo,FILE *specFp)
+RC SetSAOZ (ENGINE_CONTEXT *pEngineContext,FILE *specFp)
  {
   // Declarations
 
@@ -204,16 +204,16 @@ RC SetSAOZ (SPEC_INFO *pSpecInfo,FILE *specFp)
 
   // Initializations
 
-  domain=pSpecInfo->project.instrumental.saoz.spectralRegion;
+  domain=pEngineContext->project.instrumental.saoz.spectralRegion;
 
   recordSize=(domain==PRJCT_INSTR_SAOZ_REGION_VIS)?sizeof(SAOZ_V):sizeof(SAOZ_UV);
-  pSpecInfo->recordNumber=pSpecInfo->recordSize=0;
+  pEngineContext->recordNumber=pEngineContext->recordSize=0;
   rc=ERROR_ID_NO;
 
   // Verify the input pointer
 
   if (specFp==NULL)
-   rc=ERROR_SetLast("SetSAOZ",ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pSpecInfo->fileName);
+   rc=ERROR_SetLast("SetSAOZ",ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pEngineContext->fileInfo.fileName);
   else
    {
     // Header read out
@@ -221,7 +221,7 @@ RC SetSAOZ (SPEC_INFO *pSpecInfo,FILE *specFp)
     fseek(specFp,256L,SEEK_SET);
 
     if (!Ht_Reli(specFp,(char *)&saoz,recordSize,2))
-     rc=ERROR_SetLast("SetSAOZ",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pSpecInfo->fileName);
+     rc=ERROR_SetLast("SetSAOZ",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pEngineContext->fileInfo.fileName);
     else
      {
       // Calculate the size of records
@@ -231,16 +231,16 @@ RC SetSAOZ (SPEC_INFO *pSpecInfo,FILE *specFp)
      // -----------------------------------------------------------------------
         case 1990 :
         case 1991 :
-         pSpecInfo->recordSize = recordSize-6L;
+         pEngineContext->recordSize = recordSize-6L;
         break;
      // -----------------------------------------------------------------------
         default :
-         pSpecInfo->recordSize = recordSize;
+         pEngineContext->recordSize = recordSize;
         break;
      // -----------------------------------------------------------------------
        }
 
-      pSpecInfo->recordNumber=(int)((LONG)STD_FileLength(specFp)-256L)/pSpecInfo->recordSize;
+      pEngineContext->recordNumber=(int)((LONG)STD_FileLength(specFp)-256L)/pEngineContext->recordSize;
      }
    }
 
@@ -254,7 +254,7 @@ RC SetSAOZ (SPEC_INFO *pSpecInfo,FILE *specFp)
 // -----------------------------------------------------------------------------
 // PURPOSE       Read SAOZ spectra in 512 format
 //
-// INPUT         pSpecInfo : information on the file to read out
+// INPUT         pEngineContext : information on the file to read out
 //               recordNo  : the index of the record to read out
 //               dateFlag  : 1 to search for a reference spectrum
 //               localDay  : if dateFlag is 1, the calendar day for the
@@ -271,9 +271,12 @@ RC SetSAOZ (SPEC_INFO *pSpecInfo,FILE *specFp)
 //               ERROR_ID_NO             : otherwise.
 // -----------------------------------------------------------------------------
 
-RC ReliSAOZ(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *specFp,FILE *namesFp)
+RC ReliSAOZ(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp,FILE *namesFp)
  {
   // Declarations
+
+  BUFFERS *pBuffers;                                                            // pointer to the buffers part of the engine context
+  RECORD_INFO *pRecord;                                                         // pointer to the record part of the engine context
 
   SAOZ              saoz;                                                       // current record
   int               IndSec[100], N, IndMin, Base, Co1, Co2,                     // data read out from the input file
@@ -296,7 +299,10 @@ RC ReliSAOZ(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *sp
 
   // Initializations
 
-  domain=pSpecInfo->project.instrumental.saoz.spectralRegion;
+  pRecord=&pEngineContext->recordInfo;
+  pBuffers=&pEngineContext->buffers;
+
+  domain=pEngineContext->project.instrumental.saoz.spectralRegion;
 
   if (domain==PRJCT_INSTR_SAOZ_REGION_VIS)
    {
@@ -316,14 +322,14 @@ RC ReliSAOZ(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *sp
    }
 
   memset(names,0,20);
-  spectrum=pSpecInfo->spectrum;
+  spectrum=pBuffers->spectrum;
   rc=ERROR_ID_NO;
 
   // Verify input
 
   if (specFp==NULL)
-   rc=ERROR_SetLast("ReliSAOZ",ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pSpecInfo->fileName);
-  else if ((recordNo<=0) || (recordNo>pSpecInfo->recordNumber))
+   rc=ERROR_SetLast("ReliSAOZ",ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pEngineContext->fileInfo.fileName);
+  else if ((recordNo<=0) || (recordNo>pEngineContext->recordNumber))
    rc=ERROR_ID_FILE_END;
 
   // Set file pointers
@@ -333,7 +339,7 @@ RC ReliSAOZ(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *sp
     if (namesFp!=NULL)
      fseek(namesFp,(LONG)20L*(recordNo-1)+260L,SEEK_SET);
 
-    fseek(specFp,(LONG)pSpecInfo->recordSize*(recordNo-1)+256L,SEEK_SET);
+    fseek(specFp,(LONG)pEngineContext->recordSize*(recordNo-1)+256L,SEEK_SET);
 
     // Record read out
 
@@ -341,8 +347,8 @@ RC ReliSAOZ(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *sp
          !Ht_Reli(specFp,pSaoz,((domain==PRJCT_INSTR_SAOZ_REGION_VIS)?sizeof(SAOZ_V):sizeof(SAOZ_UV))-16,2))
      rc=ERROR_ID_FILE_END;
     else if ((strlen(names)>0) &&
-            (((pSpecInfo->project.instrumental.saoz.spectralType==PRJCT_INSTR_SAOZ_TYPE_ZENITHAL) && (names[11]!='Z')) ||
-             ((pSpecInfo->project.instrumental.saoz.spectralType==PRJCT_INSTR_SAOZ_TYPE_POINTED) && (names[11]!='P'))))
+            (((pEngineContext->project.instrumental.saoz.spectralType==PRJCT_INSTR_SAOZ_TYPE_ZENITHAL) && (names[11]!='Z')) ||
+             ((pEngineContext->project.instrumental.saoz.spectralType==PRJCT_INSTR_SAOZ_TYPE_POINTED) && (names[11]!='P'))))
      rc=ERROR_ID_FILE_RECORD;
     else
      {
@@ -355,15 +361,15 @@ RC ReliSAOZ(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *sp
 
          Ht_Reli ( specFp, (char *)coef, 10, 2 );
 
-         pSpecInfo->BestShift = (double) param[8];
-         pSpecInfo->NSomme    = (int) param[7];
-         pSpecInfo->Tint      = (double) param[6]*0.01;
+         pRecord->BestShift = (double) param[8];
+         pRecord->NSomme    = (int) param[7];
+         pRecord->Tint      = (double) param[6]*0.01;
 
-         pSpecInfo->Tm   =
+         pRecord->Tm   =
 
               ( (double) coef[4] + 32768. ) +
               ( (double) coef[3] + 32768. ) * 65536. + 2.107123407E11 -
-              ( (double) pSpecInfo->NSomme * pSpecInfo->Tint * 0.5 );
+              ( (double) pRecord->NSomme * pRecord->Tint * 0.5 );
 
         break;
      // -----------------------------------------------------------------------
@@ -371,15 +377,15 @@ RC ReliSAOZ(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *sp
 
          Ht_Reli ( specFp, (char *)coef, 10, 2 );
 
-         pSpecInfo->BestShift = (double) param[8];
-         pSpecInfo->NSomme    = (int) param[7];
-         pSpecInfo->Tint      = (double) Tps[param[6]];
+         pRecord->BestShift = (double) param[8];
+         pRecord->NSomme    = (int) param[7];
+         pRecord->Tint      = (double) Tps[param[6]];
 
-         pSpecInfo->Tm   =
+         pRecord->Tm   =
 
               ( (double) coef[4] + 32768. ) +
               ( (double) coef[3] + 32768. ) * 65536. + 2.107123407E11 -
-              ( (double) pSpecInfo->NSomme * pSpecInfo->Tint * 0.5 );
+              ( (double) pRecord->NSomme * pRecord->Tint * 0.5 );
 
         break;
      // -----------------------------------------------------------------------
@@ -387,15 +393,15 @@ RC ReliSAOZ(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *sp
 
          Ht_Reli ( specFp, (char *)coef, 16, 2 );
 
-         pSpecInfo->BestShift = (double)coef[7];
-         pSpecInfo->NSomme    = (int)coef[4];
-         pSpecInfo->Tint      = (double)coef[3]*0.01;
+         pRecord->BestShift = (double)coef[7];
+         pRecord->NSomme    = (int)coef[4];
+         pRecord->Tint      = (double)coef[3]*0.01;
 
-         pSpecInfo->Tm   =
+         pRecord->Tm   =
 
               ( (double) coef[6] + 32768. ) +
               ( (double) coef[5] + 32768. ) * 65536. + 2.107123407E11 -
-              ( (double) pSpecInfo->NSomme * pSpecInfo->Tint * 0.5 );
+              ( (double) pRecord->NSomme * pRecord->Tint * 0.5 );
 
         break;
      // -----------------------------------------------------------------------
@@ -404,48 +410,48 @@ RC ReliSAOZ(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *sp
       if (namesFp!=NULL)
        names[15]=0;
 
-      strncpy(pSpecInfo->Nom,names,20);
+      strncpy(pRecord->Nom,names,20);
 
       // Geolocation coordinates
 
-      if ((indexSite=SITES_GetIndex(pSpecInfo->project.instrumental.observationSite))!=ITEM_NONE)
+      if ((indexSite=SITES_GetIndex(pEngineContext->project.instrumental.observationSite))!=ITEM_NONE)
        {
         pSite=&SITES_itemList[indexSite];
 
         longit=-pSite->longitude;  // sign is inverted
         latit=pSite->latitude;
 
-        pSpecInfo->Zm = ZEN_FNTdiz(ZEN_FNCrtjul(&pSpecInfo->Tm),&longit,&latit,&azimuth);
+        pRecord->Zm = ZEN_FNTdiz(ZEN_FNCrtjul(&pRecord->Tm),&longit,&latit,&azimuth);
        }
       else
-       pSpecInfo->Zm=(double)atof(pSpecInfo->Nom+12)*0.1;
+       pRecord->Zm=(double)atof(pRecord->Nom+12)*0.1;
 
-      pSpecInfo->Azimuth  = (double)-1;
+      pRecord->Azimuth  = (double)-1;
 
       // Date and time of the current measurement
 
-      day.da_year  = (SHORT) ZEN_FNCaljye (&pSpecInfo->Tm);
-      day.da_mon   = (CHAR) ZEN_FNCaljmon (ZEN_FNCaljye(&pSpecInfo->Tm),ZEN_FNCaljda(&pSpecInfo->Tm));
-      day.da_day   = (CHAR) ZEN_FNCaljday (ZEN_FNCaljye(&pSpecInfo->Tm),ZEN_FNCaljda(&pSpecInfo->Tm));
+      day.da_year  = (SHORT) ZEN_FNCaljye (&pRecord->Tm);
+      day.da_mon   = (CHAR) ZEN_FNCaljmon (ZEN_FNCaljye(&pRecord->Tm),ZEN_FNCaljda(&pRecord->Tm));
+      day.da_day   = (CHAR) ZEN_FNCaljday (ZEN_FNCaljye(&pRecord->Tm),ZEN_FNCaljda(&pRecord->Tm));
 
       // Fill data
 
-      string = ZEN_FNCaljti ( &pSpecInfo->Tm, str );
+      string = ZEN_FNCaljti ( &pRecord->Tm, str );
 
-      memcpy(&pSpecInfo->present_day,&day,sizeof(SHORT_DATE));
+      memcpy(&pRecord->present_day,&day,sizeof(SHORT_DATE));
 
-      pSpecInfo->present_time.ti_hour = (UCHAR)( ( strchr(DIGITS,string[0]) - DIGITS ) * 10 + ( strchr(DIGITS,string[1]) - DIGITS ) );
-      pSpecInfo->present_time.ti_min  = (UCHAR)( ( strchr(DIGITS,string[3]) - DIGITS ) * 10 + ( strchr(DIGITS,string[4]) - DIGITS ) );
-      pSpecInfo->present_time.ti_sec  = (UCHAR)0;
+      pRecord->present_time.ti_hour = (UCHAR)( ( strchr(DIGITS,string[0]) - DIGITS ) * 10 + ( strchr(DIGITS,string[1]) - DIGITS ) );
+      pRecord->present_time.ti_min  = (UCHAR)( ( strchr(DIGITS,string[3]) - DIGITS ) * 10 + ( strchr(DIGITS,string[4]) - DIGITS ) );
+      pRecord->present_time.ti_sec  = (UCHAR)0;
 
-      pSpecInfo->TDet = (double) param[0] * 0.08138 - 273.1;
-      pSpecInfo->TotalExpTime = (double) pSpecInfo->NSomme*pSpecInfo->Tint;
-      pSpecInfo->TimeDec=(double)pSpecInfo->present_time.ti_hour+pSpecInfo->present_time.ti_min/60.;
+      pRecord->TDet = (double) param[0] * 0.08138 - 273.1;
+      pRecord->TotalExpTime = (double) pRecord->NSomme*pRecord->Tint;
+      pRecord->TimeDec=(double)pRecord->present_time.ti_hour+pRecord->present_time.ti_min/60.;
 
-      tmLocal=pSpecInfo->Tm+THRD_localShift*3600.;
+      tmLocal=pRecord->Tm+THRD_localShift*3600.;
 
-      pSpecInfo->localCalDay=ZEN_FNCaljda(&tmLocal);
-      pSpecInfo->localTimeDec=fmod(pSpecInfo->TimeDec+24.+THRD_localShift,(double)24.);
+      pRecord->localCalDay=ZEN_FNCaljda(&tmLocal);
+      pRecord->localTimeDec=fmod(pRecord->TimeDec+24.+THRD_localShift,(double)24.);
 
       Base = (int)coef[0];
       Co1  = (int)coef[1];
@@ -461,7 +467,7 @@ RC ReliSAOZ(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *sp
       if ((Co1<(int)1) ||
          ((Coef1=(double)Co2*log((double)2.)+log((double)Co1))>(double)709.) ||
          ((Coeff=(double)exp((double)Coef1))==(double)0.) ||
-          (dateFlag && (pSpecInfo->localCalDay!=localDay)))
+          (dateFlag && (pRecord->localCalDay!=localDay)))
 
        rc=ERROR_ID_FILE_RECORD;
 
@@ -492,7 +498,7 @@ RC ReliSAOZ(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *sp
           i++;
          }
 
-        for (i=0,invSum=(double)1./pSpecInfo->NSomme;i<NDET;i++)
+        for (i=0,invSum=(double)1./pRecord->NSomme;i<NDET;i++)
          {
           spectrum[i]*=invSum;
           if ( spectrum[i] < (double) 1. )
@@ -556,16 +562,16 @@ static double Texpos[] =
 // PURPOSE       calculate the number of records for a new file
 //               in SAOZ 1024 EFM format
 //
-// INPUT         pSpecInfo : information on the file to read
+// INPUT         pEngineContext : information on the file to read
 //               specFp    : pointer to the spectra file to read;
 //
-// OUTPUT        pSpecInfo->recordNumber, the number of records
+// OUTPUT        pEngineContext->recordNumber, the number of records
 //
 // RETURN        ERROR_ID_FILE_NOT_FOUND  the input file pointer 'specFp' is NULL;
 //               ERROR_ID_NO              otherwise.
 // -----------------------------------------------------------------------------
 
-RC SetSAOZEfm(SPEC_INFO *pSpecInfo,FILE *specFp)
+RC SetSAOZEfm(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
  {
   // Declarations
 
@@ -575,14 +581,14 @@ RC SetSAOZEfm(SPEC_INFO *pSpecInfo,FILE *specFp)
   // Initializations
 
   rc=ERROR_ID_NO;
-  pSpecInfo->recordNumber=0;
+  pEngineContext->recordNumber=0;
 
   // Get the number of spectra in the file
 
   if (specFp==NULL)
-   rc=ERROR_SetLast("SetSAOZEfm",ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pSpecInfo->fileName);
+   rc=ERROR_SetLast("SetSAOZEfm",ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pEngineContext->fileInfo.fileName);
   else if (fread(&curvenum,sizeof(int),1,specFp) && (curvenum>0))
-   pSpecInfo->recordNumber=curvenum;
+   pEngineContext->recordNumber=curvenum;
 
   // Return
 
@@ -594,7 +600,7 @@ RC SetSAOZEfm(SPEC_INFO *pSpecInfo,FILE *specFp)
 // -----------------------------------------------------------------------------
 // PURPOSE       Read SAOZ spectra in 1024 EFM format
 //
-// INPUT         pSpecInfo : information on the file to read
+// INPUT         pEngineContext : information on the file to read
 //               recordNo  : the index of the record to read
 //               dateFlag  : 1 to search for a reference spectrum
 //               localDay  : if dateFlag is 1, the calendar day for the
@@ -609,28 +615,30 @@ RC SetSAOZEfm(SPEC_INFO *pSpecInfo,FILE *specFp)
 //               ERROR_ID_NO             : otherwise.
 // -----------------------------------------------------------------------------
 
-RC ReliSAOZEfm(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,INT localDay,FILE *specFp)
+RC ReliSAOZEfm(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,INT localDay,FILE *specFp)
  {
   // Declarations
 
-  RCHEADER   header;                                                            // record header
-  double    *spectrum,SMax;                                                     // the current spectrum and its maximum value
-  double     tmLocal;                                                           // measurement local time
-  SHORT_DATE today;                                                             // date of the current measurement
-  INDEX      i;                                                                 // browse pixels in the spectrum
-  RC         rc;                                                                // return code
+  RECORD_INFO *pRecord;                                                         // pointer to the record part of the engine context
+  RCHEADER     header;                                                          // record header
+  double      *spectrum,SMax;                                                   // the current spectrum and its maximum value
+  double       tmLocal;                                                         // measurement local time
+  SHORT_DATE   today;                                                           // date of the current measurement
+  INDEX        i;                                                               // browse pixels in the spectrum
+  RC           rc;                                                              // return code
 
   // Initializations
 
-  spectrum=(double *)pSpecInfo->spectrum;
+  pRecord=&pEngineContext->recordInfo;
+  spectrum=(double *)pEngineContext->buffers.spectrum;
   SMax=(double)0.;
   rc=ERROR_ID_NO;
 
   // Verify input
 
   if (specFp==NULL)
-   rc=ERROR_SetLast("ReliSAOZEfm",ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pSpecInfo->fileName);
-  else if ((recordNo<=0) || (recordNo>pSpecInfo->recordNumber))
+   rc=ERROR_SetLast("ReliSAOZEfm",ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pEngineContext->fileInfo.fileName);
+  else if ((recordNo<=0) || (recordNo>pEngineContext->recordNumber))
    rc=ERROR_ID_FILE_END;
   else
    {
@@ -638,7 +646,7 @@ RC ReliSAOZEfm(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,INT localDay,FILE 
 
     fseek(specFp,(LONG)sizeof(UINT)+(recordNo-1)*sizeof(RCHEADER),SEEK_SET);
     fread(&header,sizeof(RCHEADER),1,specFp);
-    fseek(specFp,(LONG)sizeof(UINT)+(recordNo-1)*sizeof(double)*NDET+pSpecInfo->recordNumber*sizeof(RCHEADER),SEEK_SET);
+    fseek(specFp,(LONG)sizeof(UINT)+(recordNo-1)*sizeof(double)*NDET+pEngineContext->recordNumber*sizeof(RCHEADER),SEEK_SET);
     fread(spectrum,sizeof(double)*NDET,1,specFp);
 
     if ((today.da_year=header.M_An)<30)
@@ -671,31 +679,31 @@ RC ReliSAOZEfm(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,INT localDay,FILE 
      {
       // Data on the current spectrum
 
-      pSpecInfo->TDet = (double)header.T_det*0.01;
-      pSpecInfo->Tint = (double)Texpos[header.iT_int];
-      pSpecInfo->NSomme = header.N_somm;
-      pSpecInfo->Zm = (double)header.Dizen*0.01;
+      pRecord->TDet = (double)header.T_det*0.01;
+      pRecord->Tint = (double)Texpos[header.iT_int];
+      pRecord->NSomme = header.N_somm;
+      pRecord->Zm = (double)header.Dizen*0.01;
 
-      pSpecInfo->present_time.ti_hour=header.M_Heur;
-      pSpecInfo->present_time.ti_min=header.M_Min;
-      pSpecInfo->present_time.ti_sec=header.M_Sec;
+      pRecord->present_time.ti_hour=header.M_Heur;
+      pRecord->present_time.ti_min=header.M_Min;
+      pRecord->present_time.ti_sec=header.M_Sec;
 
-      memcpy((char *)&pSpecInfo->present_day,(char *)&today,sizeof(SHORT_DATE));
+      memcpy((char *)&pRecord->present_day,(char *)&today,sizeof(SHORT_DATE));
 
-      pSpecInfo->Tm=(double)ZEN_NbSec(&pSpecInfo->present_day,&pSpecInfo->present_time,0);
-      pSpecInfo->TotalExpTime=(double)0.;
-      pSpecInfo->TimeDec=(double)header.M_Heur+header.M_Min/60.+header.M_Sec/3600.;
+      pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_day,&pRecord->present_time,0);
+      pRecord->TotalExpTime=(double)0.;
+      pRecord->TimeDec=(double)header.M_Heur+header.M_Min/60.+header.M_Sec/3600.;
 
-      pSpecInfo->longitude=(double)-header.Longi/100.;
-      pSpecInfo->latitude=(double)header.Latid/100.;
-      pSpecInfo->altitude=(double)header.Altit/100.;
+      pRecord->longitude=(double)-header.Longi/100.;
+      pRecord->latitude=(double)header.Latid/100.;
+      pRecord->altitude=(double)header.Altit/100.;
 
-      tmLocal=pSpecInfo->Tm+THRD_localShift*3600.;
+      tmLocal=pRecord->Tm+THRD_localShift*3600.;
 
-      pSpecInfo->localCalDay=ZEN_FNCaljda(&tmLocal);
-      pSpecInfo->localTimeDec=fmod(pSpecInfo->TimeDec+24.+THRD_localShift,(double)24.);
+      pRecord->localCalDay=ZEN_FNCaljda(&tmLocal);
+      pRecord->localTimeDec=fmod(pRecord->TimeDec+24.+THRD_localShift,(double)24.);
 
-      if (dateFlag && (pSpecInfo->localCalDay!=localDay))
+      if (dateFlag && (pRecord->localCalDay!=localDay))
        rc=ERROR_ID_FILE_RECORD;
      }
    }

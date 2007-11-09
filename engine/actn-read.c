@@ -75,17 +75,17 @@ static INDEX actonLastRecord=ITEM_NONE;                                         
 // -----------------------------------------------------------------------------
 // PURPOSE       set file pointers and get the number of records of the current file
 //
-// INPUT         pSpecInfo : information on the file to read
+// INPUT         pEngineContext : information on the file to read
 //               specFp    : pointer to the current spectra file
 //
-// OUTPUT        pSpecInfo->recordNumber, the number of records
+// OUTPUT        pEngineContext->recordNumber, the number of records
 //
 // RETURN        ERROR_ID_FILE_NOT_FOUND if the input file pointer is NULL;
 //               ERROR_ID_ALLOC if the allocation of a buffer failed;
 //               ERROR_ID_NO in case of success.
 // -----------------------------------------------------------------------------
 
-RC SetActon_Logger(SPEC_INFO *pSpecInfo,FILE *specFp)
+RC SetActon_Logger(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
  {
   // Declarations
 
@@ -96,10 +96,10 @@ RC SetActon_Logger(SPEC_INFO *pSpecInfo,FILE *specFp)
 
   actonLastRecord=ITEM_NONE;
 
-  pSpecInfo->recordNumber=0;
-  pSpecInfo->longitude=
-  pSpecInfo->latitude=
-  pSpecInfo->altitude=(double)0.;
+  pEngineContext->recordNumber=0;
+  pEngineContext->recordInfo.longitude=
+  pEngineContext->recordInfo.latitude=
+  pEngineContext->recordInfo.altitude=(double)0.;
 
   rc=ERROR_ID_NO;
 
@@ -111,7 +111,7 @@ RC SetActon_Logger(SPEC_INFO *pSpecInfo,FILE *specFp)
   // Calculate the number of spectra in the file
 
   else if (specFp==NULL)
-   rc=ERROR_SetLast("SetActon_Logger",ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pSpecInfo->fileName);
+   rc=ERROR_SetLast("SetActon_Logger",ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pEngineContext->fileInfo.fileName);
   else
    {
     fseek(specFp,0L,SEEK_SET);
@@ -120,7 +120,7 @@ RC SetActon_Logger(SPEC_INFO *pSpecInfo,FILE *specFp)
            (fgets(Record,16000,specFp)!=0) &&
            (fgets(Record,16000,specFp)!=0))
 
-     pSpecInfo->recordNumber++;
+     pEngineContext->recordNumber++;
    }
 
   // Release the allocated buffer
@@ -197,7 +197,7 @@ RC GotoActon_Logger(FILE *specFp,int recordNo)
 // -----------------------------------------------------------------------------
 // PURPOSE       ACTON spectra read out and dark current correction
 //
-// INPUT         pSpecInfo : information on the file to read
+// INPUT         pEngineContext : information on the file to read
 //               recordNo  : the index of the record to read
 //               dateFlag  : 1 to search for a reference spectrum
 //               localDay  : if dateFlag is 1, the calendar day for the
@@ -215,9 +215,14 @@ RC GotoActon_Logger(FILE *specFp,int recordNo)
 //               ERROR_ID_NO             : otherwise.
 // -----------------------------------------------------------------------------
 
-RC ReliActon_Logger(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *specFp,FILE *namesFp,FILE *darkFp)
+RC ReliActon_Logger(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp,FILE *namesFp,FILE *darkFp)
  {
   // Declarations
+
+  PROJECT *pProject;                                                            // pointer to the project part of the engine context
+  PRJCT_INSTRUMENTAL *pInstrumental;                                            // pointer to the instrumental part of the project
+  RECORD_INFO *pRecordInfo;                                                     // pointer to the record part of the engine context
+  BUFFERS *pBuffers;                                                            // pointer to the buffers part of the engine context
 
   char       *Record1,*Record2,*Record3,*Temp,                                  // string buffers for file lines read out
              *pRecord,*pTemp;                                                   // pointers to part of previous strings
@@ -234,13 +239,17 @@ RC ReliActon_Logger(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,
 
   // Initializations
 
+  pRecordInfo=&pEngineContext->recordInfo;
+  pBuffers=&pEngineContext->buffers;
+  pProject=&pEngineContext->project;
+  pInstrumental=&pProject->instrumental;
   Record1=Record2=Record3=Temp=NULL;
-  spectrum=pSpecInfo->spectrum;
+  spectrum=pBuffers->spectrum;
   rc=ERROR_ID_NO;
 
   if (specFp==NULL)
-   rc=ERROR_SetLast("ReliActon_Logger",ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pSpecInfo->fileName);
-  else if ((recordNo<=0) || (recordNo>pSpecInfo->recordNumber))
+   rc=ERROR_SetLast("ReliActon_Logger",ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pEngineContext->fileInfo.fileName);
+  else if ((recordNo<=0) || (recordNo>pEngineContext->recordNumber))
    rc=ERROR_ID_FILE_END;
 
   // Buffers allocation
@@ -290,44 +299,44 @@ RC ReliActon_Logger(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,
       day.da_day=(CHAR)atoi(pTemp);
 
       pRecord=pRecord+3;
-      strncpy(pSpecInfo->Nom,pRecord,19);
-      pSpecInfo->Nom[(pSpecInfo->project.instrumental.user==PRJCT_INSTR_NILU_FORMAT_OLD)?18:19]='\0';
+      strncpy(pRecordInfo->Nom,pRecord,19);
+      pRecordInfo->Nom[(pInstrumental->user==PRJCT_INSTR_NILU_FORMAT_OLD)?18:19]='\0';
       pTemp=strcpy(pTemp,"                          \0");
-      pTemp=strcpy(pTemp,pSpecInfo->Nom);
+      pTemp=strcpy(pTemp,pRecordInfo->Nom);
 
-      pTemp=(pSpecInfo->project.instrumental.user==PRJCT_INSTR_NILU_FORMAT_OLD)?pTemp+12:pTemp+15;
-      pSpecInfo->Zm=(double)atof(pTemp)/((pSpecInfo->project.instrumental.user==PRJCT_INSTR_NILU_FORMAT_OLD)?10.:100.); /* changed from 10 to 100 when two decimals in the SZA, 14.08.98 kjk*/
-      pSpecInfo->Azimuth=(double)-1;
+      pTemp=(pInstrumental->user==PRJCT_INSTR_NILU_FORMAT_OLD)?pTemp+12:pTemp+15;
+      pRecordInfo->Zm=(double)atof(pTemp)/((pInstrumental->user==PRJCT_INSTR_NILU_FORMAT_OLD)?10.:100.); /* changed from 10 to 100 when two decimals in the SZA, 14.08.98 kjk*/
+      pRecordInfo->Azimuth=(double)-1;
 
       pRecord=pRecord+20;
       pTemp=strcpy(pTemp,"                    \0");
       strncpy(pTemp,pRecord,2);
-      pSpecInfo->present_time.ti_hour=(UCHAR)atoi(pTemp);
+      pRecordInfo->present_time.ti_hour=(UCHAR)atoi(pTemp);
       pRecord=pRecord+3;
       pTemp=strcpy(pTemp,"                    \0");
       strncpy(pTemp,pRecord,2);
-      pSpecInfo->present_time.ti_min=(UCHAR)atoi(pTemp);
+      pRecordInfo->present_time.ti_min=(UCHAR)atoi(pTemp);
       pRecord=pRecord+3;
       pTemp=strcpy(pTemp,"                    \0");
       strncpy(pTemp,pRecord,2);
-      pSpecInfo->present_time.ti_sec=(UCHAR)atoi(pTemp);
+      pRecordInfo->present_time.ti_sec=(UCHAR)atoi(pTemp);
       pRecord=pRecord+3;
       pTemp=strcpy(pTemp,"                    \0");
-      pSpecInfo->ReguTemp=(float)atof(pRecord);
+      pRecordInfo->ReguTemp=(float)atof(pRecord);
       pRecord=pRecord+6;
 
-      pSpecInfo->Tint=atof(pRecord);
+      pRecordInfo->Tint=atof(pRecord);
       pRecord=pRecord+5;
-      pSpecInfo->NSomme=atoi(pRecord);
+      pRecordInfo->NSomme=atoi(pRecord);
       pRecord=pRecord+4;
-      pSpecInfo->rejected=atoi(pRecord);
+      pRecordInfo->rejected=atoi(pRecord);
 
-      memcpy(&pSpecInfo->present_day,&day,sizeof(SHORT_DATE));
+      memcpy(&pRecordInfo->present_day,&day,sizeof(SHORT_DATE));
 
-      pSpecInfo->Tm=(double)ZEN_NbSec(&pSpecInfo->present_day,&pSpecInfo->present_time,0);
+      pRecordInfo->Tm=(double)ZEN_NbSec(&pRecordInfo->present_day,&pRecordInfo->present_time,0);
 
-      pSpecInfo->TotalExpTime         = (double)pSpecInfo->NSomme*pSpecInfo->Tint;
-      pSpecInfo->TimeDec              = (double)pSpecInfo->present_time.ti_hour+pSpecInfo->present_time.ti_min/60.;
+      pRecordInfo->TotalExpTime         = (double)pRecordInfo->NSomme*pRecordInfo->Tint;
+      pRecordInfo->TimeDec              = (double)pRecordInfo->present_time.ti_hour+pRecordInfo->present_time.ti_min/60.;
 
       // Spectrum read out
 
@@ -345,7 +354,7 @@ RC ReliActon_Logger(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,
 
       // Dark current read out
 
-      if ((darkFp!=NULL) && (pSpecInfo->NSomme>0))
+      if ((darkFp!=NULL) && (pRecordInfo->NSomme>0))
        {
         fseek(darkFp,0L,SEEK_SET);
         found=0;
@@ -356,15 +365,15 @@ RC ReliActon_Logger(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,
 
           dark_Tint=(double) atof(pRecord);
 
-          if (dark_Tint==pSpecInfo->Tint)
+          if (dark_Tint==pRecordInfo->Tint)
            {
             found=1;
             pRecord=Record2;
 
             for (i=0;i<NDET;i++)
              {
-              sscanf(pRecord,"%lf",&pSpecInfo->darkCurrent[i]);
-              help=(unsigned int)pSpecInfo->darkCurrent[i];
+              sscanf(pRecord,"%lf",&pBuffers->darkCurrent[i]);
+              help=(unsigned int)pBuffers->darkCurrent[i];
               pTemp=strcpy(pTemp,"                    \0"); /*ny*/
               sprintf(pTemp,"%u",help);
               length=strlen(pTemp);
@@ -376,18 +385,18 @@ RC ReliActon_Logger(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,
         // Dark current subtraction
 
         for (i=0;i<NDET;i++)
-         pSpecInfo->spectrum[i]-=pSpecInfo->darkCurrent[i];
+         pBuffers->spectrum[i]-=pBuffers->darkCurrent[i];
        }
 
       // Daily automatic reference spectrum
 
-      tmLocal=pSpecInfo->Tm+THRD_localShift*3600.;
+      tmLocal=pRecordInfo->Tm+THRD_localShift*3600.;
 
-      pSpecInfo->localCalDay=ZEN_FNCaljda(&tmLocal);
-      pSpecInfo->localTimeDec=fmod(pSpecInfo->TimeDec+24.+THRD_localShift,(double)24.);
+      pRecordInfo->localCalDay=ZEN_FNCaljda(&tmLocal);
+      pRecordInfo->localTimeDec=fmod(pRecordInfo->TimeDec+24.+THRD_localShift,(double)24.);
 
-      if (!pSpecInfo->NSomme || (pSpecInfo->rejected>=pSpecInfo->NSomme) ||
-          (dateFlag && (pSpecInfo->localCalDay!=localDay)))
+      if (!pRecordInfo->NSomme || (pRecordInfo->rejected>=pRecordInfo->NSomme) ||
+          (dateFlag && (pRecordInfo->localCalDay!=localDay)))
 
        rc=ERROR_ID_FILE_RECORD;
      }

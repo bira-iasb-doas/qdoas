@@ -106,7 +106,7 @@
 
 UCHAR     THRD_asciiFile[MAX_ITEM_TEXT_LEN+1],*THRD_asciiPtr;        // ascii file for exporting spectra
 HANDLE    THRD_hEvents[THREAD_EVENT_MAX];      // list of events
-SPEC_INFO THRD_specInfo,THRD_refInfo;          // data on current spectra and reference
+ENGINE_CONTEXT THRD_specInfo,THRD_refInfo;          // data on current spectra and reference
 UINT      THRD_id=THREAD_TYPE_NONE;            // thread identification number
 double    THRD_localNoon;                      // local noon
 INT       THRD_localShift;
@@ -931,42 +931,48 @@ THRD_GOTO THRD_goto={ 1, ITEM_NONE, 1, 0, ITEM_NONE, ITEM_NONE };
 // THRD_ResetSpecInfo : Release or reset data hold by the last thread
 // ------------------------------------------------------------------
 
-void THRD_ResetSpecInfo(SPEC_INFO *pSpecInfo)
+void THRD_ResetSpecInfo(ENGINE_CONTEXT *pEngineContext)
  {
+ 	BUFFERS *pBuffers;                                                            // pointer to the buffers part of the engine context
+
   #if defined(__DEBUG_) && __DEBUG_
   DEBUG_FunctionBegin("THRD_ResetSpecInfo",DEBUG_FCTTYPE_FILE);
   #endif
 
+  // Initialization
+
+  pBuffers=&pEngineContext->buffers;
+
   // Release buffers
 
-  if (pSpecInfo->lembda!=NULL)
-   MEMORY_ReleaseDVector("THRD_ResetSpecInfo ","lembda",pSpecInfo->lembda,0);
-  if (pSpecInfo->instrFunction!=NULL)
-   MEMORY_ReleaseDVector("THRD_ResetSpecInfo ","instrFunction",pSpecInfo->instrFunction,0);
-  if (pSpecInfo->spectrum!=NULL)
-   MEMORY_ReleaseDVector("THRD_ResetSpecInfo ","spectrum",pSpecInfo->spectrum,0);
-  if (pSpecInfo->sigmaSpec!=NULL)
-   MEMORY_ReleaseDVector("THRD_ResetSpecInfo ","sigmaSpec",pSpecInfo->sigmaSpec,0);
-  if (pSpecInfo->darkCurrent!=NULL)
-   MEMORY_ReleaseDVector("THRD_ResetSpecInfo ","darkCurrent",pSpecInfo->darkCurrent,0);
-  if (pSpecInfo->specMax!=NULL)
-   MEMORY_ReleaseDVector("THRD_ResetSpecInfo ","specMax",pSpecInfo->specMax,0);
-  if (pSpecInfo->varPix!=NULL)
-   MEMORY_ReleaseDVector("THRD_ResetSpecInfo ","varPix",pSpecInfo->varPix,0);
-  if (pSpecInfo->dnl!=NULL)
-   MEMORY_ReleaseDVector("THRD_ResetSpecInfo ","dnl",pSpecInfo->dnl,0);
-  if (pSpecInfo->recordIndexes!=NULL)
-   MEMORY_ReleaseBuffer("THRD_ResetSpecInfo ","recordIndexes",pSpecInfo->recordIndexes);
+  if (pBuffers->lembda!=NULL)
+   MEMORY_ReleaseDVector("THRD_ResetSpecInfo ","lembda",pBuffers->lembda,0);
+  if (pBuffers->instrFunction!=NULL)
+   MEMORY_ReleaseDVector("THRD_ResetSpecInfo ","instrFunction",pBuffers->instrFunction,0);
+  if (pBuffers->spectrum!=NULL)
+   MEMORY_ReleaseDVector("THRD_ResetSpecInfo ","spectrum",pBuffers->spectrum,0);
+  if (pBuffers->sigmaSpec!=NULL)
+   MEMORY_ReleaseDVector("THRD_ResetSpecInfo ","sigmaSpec",pBuffers->sigmaSpec,0);
+  if (pBuffers->darkCurrent!=NULL)
+   MEMORY_ReleaseDVector("THRD_ResetSpecInfo ","darkCurrent",pBuffers->darkCurrent,0);
+  if (pBuffers->specMax!=NULL)
+   MEMORY_ReleaseDVector("THRD_ResetSpecInfo ","specMax",pBuffers->specMax,0);
+  if (pBuffers->varPix!=NULL)
+   MEMORY_ReleaseDVector("THRD_ResetSpecInfo ","varPix",pBuffers->varPix,0);
+  if (pBuffers->dnl!=NULL)
+   MEMORY_ReleaseDVector("THRD_ResetSpecInfo ","dnl",pBuffers->dnl,0);
+  if (pBuffers->recordIndexes!=NULL)
+   MEMORY_ReleaseBuffer("THRD_ResetSpecInfo ","recordIndexes",pBuffers->recordIndexes);
 
-  CCD_ResetInstrumental(&pSpecInfo->ccd);
+  CCD_ResetInstrumental(&pEngineContext->recordInfo.ccd);
 
   // Reset structure
 
-  memset(pSpecInfo,0,sizeof(SPEC_INFO));
+  memset(pEngineContext,0,sizeof(ENGINE_CONTEXT));
 
-  pSpecInfo->indexRecord=
-  pSpecInfo->indexFile=
-  pSpecInfo->indexProject=ITEM_NONE;
+  pEngineContext->indexRecord=
+  pEngineContext->indexFile=
+  pEngineContext->indexProject=ITEM_NONE;
 
   #if defined(__DEBUG_) && __DEBUG_
   DEBUG_FunctionStop("THRD_ResetSpecInfo",0);
@@ -977,10 +983,12 @@ void THRD_ResetSpecInfo(SPEC_INFO *pSpecInfo)
 // ThrdInitSpecInfo : Allocate buffers for a new project
 // -----------------------------------------------------
 
-RC ThrdInitSpecInfo(SPEC_INFO *pSpecInfo,PROJECT *pProject)
+RC ThrdInitSpecInfo(ENGINE_CONTEXT *pEngineContext,PROJECT *pProject)
  {
   // Declarations
 
+  PRJCT_INSTRUMENTAL *pInstrumental;                                            // pointer to the instrumental part of the project
+  BUFFERS *pBuffers;                                                            // pointer to the buffers part of the engine context
   INT detectorSize;
   RC rc=ERROR_ID_NO;
 
@@ -988,47 +996,52 @@ RC ThrdInitSpecInfo(SPEC_INFO *pSpecInfo,PROJECT *pProject)
   DEBUG_FunctionBegin("ThrdInitSpecInfo",DEBUG_FCTTYPE_FILE);
   #endif
 
+  // Initializations
+
+  pInstrumental=&pEngineContext->project.instrumental;
+  pBuffers=&pEngineContext->buffers;
+
   // Initialize structure
 
-  THRD_ResetSpecInfo(pSpecInfo);
+  THRD_ResetSpecInfo(pEngineContext);
 
-  memcpy(&pSpecInfo->project,pProject,sizeof(PROJECT));
+  memcpy(&pEngineContext->project,pProject,sizeof(PROJECT));
 
   // Spectra buffers allocation
 
-  if (!(detectorSize=pProject->instrumental.detectorSize))
+  if (!(detectorSize=pInstrumental->detectorSize))
    rc=ERROR_SetLast("ThrdInitSpecInfo",ERROR_TYPE_WARNING,ERROR_ID_OUT_OF_RANGE,"Detector size",1,65535);
 
-  else if (((pSpecInfo->lembda=MEMORY_AllocDVector("ThrdInitSpecInfo ","lembda",0,detectorSize-1))==NULL) ||
-           ((pSpecInfo->spectrum=MEMORY_AllocDVector("ThrdInitSpecInfo ","spectrum",0,detectorSize-1))==NULL) ||
+  else if (((pBuffers->lembda=MEMORY_AllocDVector("ThrdInitSpecInfo ","lembda",0,detectorSize-1))==NULL) ||
+           ((pBuffers->spectrum=MEMORY_AllocDVector("ThrdInitSpecInfo ","spectrum",0,detectorSize-1))==NULL) ||
 
-          (((pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_CCD_EEV) ||
-            (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_CCD_OHP_96) ||
-            (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_CCD_HA_94) ||
-            (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_PDAEGG) ||
-            (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_PDAEGG_OLD) ||
-            (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_PDAEGG_ULB) ||
-            (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_PDASI_EASOE)) &&
+          (((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_CCD_EEV) ||
+            (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_CCD_OHP_96) ||
+            (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_CCD_HA_94) ||
+            (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_PDAEGG) ||
+            (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_PDAEGG_OLD) ||
+            (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_PDAEGG_ULB) ||
+            (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_PDASI_EASOE)) &&
 
-           ((pSpecInfo->recordIndexes=(ULONG *)MEMORY_AllocBuffer("ThrdInitSpecInfo ","recordIndexes",2001,sizeof(ULONG),0,MEMORY_TYPE_LONG))==NULL)) ||
+           ((pBuffers->recordIndexes=(ULONG *)MEMORY_AllocBuffer("ThrdInitSpecInfo ","recordIndexes",2001,sizeof(ULONG),0,MEMORY_TYPE_LONG))==NULL)) ||
 
-          (((pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_ASCII) ||
-            (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN) ||
-            (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_HDF) ||
-            (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS) ||
-            (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_OMI) ||
-            (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GOME2)) &&
+          (((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_GDP_ASCII) ||
+            (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN) ||
+            (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_SCIA_HDF) ||
+            (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS) ||
+            (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_OMI) ||
+            (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_GOME2)) &&
 
-           ((pSpecInfo->sigmaSpec=MEMORY_AllocDVector("ThrdInitSpecInfo ","sigmaSpec",0,detectorSize-1))==NULL)) ||
+           ((pBuffers->sigmaSpec=MEMORY_AllocDVector("ThrdInitSpecInfo ","sigmaSpec",0,detectorSize-1))==NULL)) ||
            ((pProject->spectra.darkFlag!=0) &&
-           ((pSpecInfo->darkCurrent=MEMORY_AllocDVector("ThrdInitSpecInfo ","darkCurrent",0,detectorSize-1))==NULL)))
+           ((pBuffers->darkCurrent=MEMORY_AllocDVector("ThrdInitSpecInfo ","darkCurrent",0,detectorSize-1))==NULL)))
 
    rc=ERROR_ID_ALLOC;
 
   else
 
-   if (pSpecInfo->darkCurrent!=NULL)
-    VECTOR_Init(pSpecInfo->darkCurrent,(double)0.,detectorSize);
+   if (pBuffers->darkCurrent!=NULL)
+    VECTOR_Init(pBuffers->darkCurrent,(double)0.,detectorSize);
 
   // Return
 
@@ -1043,69 +1056,74 @@ RC ThrdInitSpecInfo(SPEC_INFO *pSpecInfo,PROJECT *pProject)
 // THRD_CopySpecInfo : Make a copy of data on the current spectra file into another structure
 // -----------------------------------------------------------------------------------------
 
-RC THRD_CopySpecInfo(SPEC_INFO *pSpecInfoTarget,SPEC_INFO *pSpecInfoSource)
+RC THRD_CopySpecInfo(ENGINE_CONTEXT *pEngineContextTarget,ENGINE_CONTEXT *pEngineContextSource)
  {
-  // Declaration
+  // Declarations
 
+  BUFFERS *pBuffersTarget,*pBuffersSource;
   RC rc;
 
-  // Initialization
+  // Initializations
 
+  pBuffersTarget=&pEngineContextTarget->buffers;
+  pBuffersSource=&pEngineContextSource->buffers;
   rc=ERROR_ID_NO;
 
   // Buffer allocation for instrumental functions
 
-  if (((pSpecInfoSource->instrFunction!=NULL) && (pSpecInfoTarget->instrFunction==NULL) &&
-      ((pSpecInfoTarget->instrFunction=(double *)MEMORY_AllocDVector("THRD_CopySpecInfo ","instrFunction",0,NDET-1))==NULL)) ||
-      ((pSpecInfoSource->varPix!=NULL) && (pSpecInfoTarget->varPix==NULL) &&
-      ((pSpecInfoTarget->varPix=(double *)MEMORY_AllocDVector("THRD_CopySpecInfo ","varPix",0,NDET-1))==NULL)) ||
-      ((pSpecInfoSource->dnl!=NULL) && (pSpecInfoTarget->dnl==NULL) &&
-      ((pSpecInfoTarget->dnl=(double *)MEMORY_AllocDVector("THRD_CopySpecInfo ","dnl",0,NDET-1))==NULL)) ||
-      ((pSpecInfoSource->specMax!=NULL) && (pSpecInfoTarget->specMax==NULL) &&
-      ((pSpecInfoTarget->specMax=(double *)MEMORY_AllocDVector("THRD_CopySpecInfo ","specMax",0,NDET-1))==NULL)) ||
-      ((pSpecInfoSource->recordIndexes!=NULL) && (pSpecInfoTarget->recordIndexes==NULL) &&
-      ((pSpecInfoTarget->recordIndexes=(ULONG *)MEMORY_AllocBuffer("THRD_CopySpecInfo","recordIndexes",
-       (pSpecInfoTarget->recordIndexesSize=pSpecInfoSource->recordIndexesSize),sizeof(ULONG),0,MEMORY_TYPE_LONG))==NULL)) ||
-      ((pSpecInfoSource->ccd.vip.matrix!=NULL) && (pSpecInfoTarget->ccd.vip.matrix==NULL) &&
-      ((rc=MATRIX_Copy(&pSpecInfoTarget->ccd.vip,&pSpecInfoSource->ccd.vip,"THRD_CopySpecInfo "))!=ERROR_ID_NO)))
+  if (((pBuffersSource->instrFunction!=NULL) && (pBuffersTarget->instrFunction==NULL) &&
+      ((pBuffersTarget->instrFunction=(double *)MEMORY_AllocDVector("THRD_CopySpecInfo ","instrFunction",0,NDET-1))==NULL)) ||
+      ((pBuffersSource->varPix!=NULL) && (pBuffersTarget->varPix==NULL) &&
+      ((pBuffersTarget->varPix=(double *)MEMORY_AllocDVector("THRD_CopySpecInfo ","varPix",0,NDET-1))==NULL)) ||
+      ((pBuffersSource->dnl!=NULL) && (pBuffersTarget->dnl==NULL) &&
+      ((pBuffersTarget->dnl=(double *)MEMORY_AllocDVector("THRD_CopySpecInfo ","dnl",0,NDET-1))==NULL)) ||
+      ((pBuffersSource->specMax!=NULL) && (pBuffersTarget->specMax==NULL) &&
+      ((pBuffersTarget->specMax=(double *)MEMORY_AllocDVector("THRD_CopySpecInfo ","specMax",0,NDET-1))==NULL)) ||
+      ((pBuffersSource->recordIndexes!=NULL) && (pBuffersTarget->recordIndexes==NULL) &&
+      ((pBuffersTarget->recordIndexes=(ULONG *)MEMORY_AllocBuffer("THRD_CopySpecInfo","recordIndexes",
+       (pEngineContextTarget->recordIndexesSize=pEngineContextSource->recordIndexesSize),sizeof(ULONG),0,MEMORY_TYPE_LONG))==NULL)) ||
+      ((pEngineContextTarget->recordInfo.ccd.vip.matrix!=NULL) && (pEngineContextTarget->recordInfo.ccd.vip.matrix==NULL) &&
+      ((rc=MATRIX_Copy(&pEngineContextTarget->recordInfo.ccd.vip,&pEngineContextSource->recordInfo.ccd.vip,"THRD_CopySpecInfo "))!=ERROR_ID_NO)))
 
    rc=ERROR_ID_ALLOC;
 
   else
    {
-    // File name
-
-    strcpy(pSpecInfoTarget->fileName,pSpecInfoSource->fileName);
-
     // Spectra vectors
 
-    if ((pSpecInfoTarget->lembda!=NULL) && (pSpecInfoSource->lembda!=NULL))
-     memcpy(pSpecInfoTarget->lembda,pSpecInfoSource->lembda,sizeof(double)*NDET);
-    if ((pSpecInfoTarget->instrFunction!=NULL) && (pSpecInfoSource->instrFunction!=NULL))
-     memcpy(pSpecInfoTarget->instrFunction,pSpecInfoSource->instrFunction,sizeof(double)*NDET);
-    if ((pSpecInfoTarget->spectrum!=NULL) && (pSpecInfoSource->spectrum!=NULL))
-     memcpy(pSpecInfoTarget->spectrum,pSpecInfoSource->spectrum,sizeof(double)*NDET);
-    if ((pSpecInfoTarget->sigmaSpec!=NULL) && (pSpecInfoSource->sigmaSpec!=NULL))
-     memcpy(pSpecInfoTarget->sigmaSpec,pSpecInfoSource->sigmaSpec,sizeof(double)*NDET);
-    if ((pSpecInfoTarget->darkCurrent!=NULL) && (pSpecInfoSource->darkCurrent!=NULL))
-     memcpy(pSpecInfoTarget->darkCurrent,pSpecInfoSource->darkCurrent,sizeof(double)*NDET);
-    if ((pSpecInfoTarget->varPix!=NULL) && (pSpecInfoSource->varPix!=NULL))
-     memcpy(pSpecInfoTarget->varPix,pSpecInfoSource->varPix,sizeof(double)*NDET);
-    if ((pSpecInfoTarget->dnl!=NULL) && (pSpecInfoSource->dnl!=NULL))
-     memcpy(pSpecInfoTarget->dnl,pSpecInfoSource->dnl,sizeof(double)*NDET);
-    if ((pSpecInfoTarget->specMax!=NULL) && (pSpecInfoSource->specMax!=NULL))
-     memcpy(pSpecInfoTarget->specMax,pSpecInfoSource->specMax,sizeof(double)*NDET);
-    if ((pSpecInfoTarget->recordIndexes!=NULL) && (pSpecInfoSource->recordIndexes!=NULL))
-     memcpy(pSpecInfoTarget->recordIndexes,pSpecInfoSource->recordIndexes,sizeof(ULONG)*pSpecInfoSource->recordIndexesSize);
+    if ((pBuffersTarget->lembda!=NULL) && (pBuffersSource->lembda!=NULL))
+     memcpy(pBuffersTarget->lembda,pBuffersSource->lembda,sizeof(double)*NDET);
+    if ((pBuffersTarget->instrFunction!=NULL) && (pBuffersSource->instrFunction!=NULL))
+     memcpy(pBuffersTarget->instrFunction,pBuffersSource->instrFunction,sizeof(double)*NDET);
+    if ((pBuffersTarget->spectrum!=NULL) && (pBuffersSource->spectrum!=NULL))
+     memcpy(pBuffersTarget->spectrum,pBuffersSource->spectrum,sizeof(double)*NDET);
+    if ((pBuffersTarget->sigmaSpec!=NULL) && (pBuffersSource->sigmaSpec!=NULL))
+     memcpy(pBuffersTarget->sigmaSpec,pBuffersSource->sigmaSpec,sizeof(double)*NDET);
+    if ((pBuffersTarget->darkCurrent!=NULL) && (pBuffersSource->darkCurrent!=NULL))
+     memcpy(pBuffersTarget->darkCurrent,pBuffersSource->darkCurrent,sizeof(double)*NDET);
+    if ((pBuffersTarget->varPix!=NULL) && (pBuffersSource->varPix!=NULL))
+     memcpy(pBuffersTarget->varPix,pBuffersSource->varPix,sizeof(double)*NDET);
+    if ((pBuffersTarget->dnl!=NULL) && (pBuffersSource->dnl!=NULL))
+     memcpy(pBuffersTarget->dnl,pBuffersSource->dnl,sizeof(double)*NDET);
+    if ((pBuffersTarget->specMax!=NULL) && (pBuffersSource->specMax!=NULL))
+     memcpy(pBuffersTarget->specMax,pBuffersSource->specMax,sizeof(double)*NDET);
+    if ((pBuffersTarget->recordIndexes!=NULL) && (pBuffersSource->recordIndexes!=NULL))
+     memcpy(pBuffersTarget->recordIndexes,pBuffersSource->recordIndexes,sizeof(ULONG)*pEngineContextSource->recordIndexesSize);
 
     // Other fields
 
-    memcpy(&pSpecInfoTarget->recordNumber,&pSpecInfoSource->recordNumber,
-           sizeof(SPEC_INFO)-
-           sizeof(PROJECT)-                      // project
-           (MAX_STR_LEN+1)-                      // file name
-           8*sizeof(double *)-sizeof(ULONG *)-   // spectra buffers+record indexes
-           sizeof(CCD));
+    memcpy(&pEngineContextTarget->fileInfo,&pEngineContextSource->fileInfo,sizeof(FILE_INFO));  // the name of the file to load and file pointers
+    memcpy(&pEngineContextTarget->recordInfo,&pEngineContextSource->recordInfo,sizeof(RECORD_INFO));
+
+    // record information
+
+    pEngineContextTarget->recordNumber=pEngineContextSource->recordNumber;                                                  // total number of record in file
+    pEngineContextTarget->recordIndexesSize=pEngineContextSource->recordIndexesSize;                                        // size of 'recordIndexes' buffer
+    pEngineContextTarget->recordSize=pEngineContextSource->recordSize;                                                      // size of record if length fixed
+    pEngineContextTarget->indexRecord=pEngineContextSource->indexRecord;
+    pEngineContextTarget->indexFile=pEngineContextSource->indexFile;
+    pEngineContextTarget->indexProject=pEngineContextSource->indexProject;
+    pEngineContextTarget->lastSavedRecord=pEngineContextSource->lastSavedRecord;
    }
 
   // Return
@@ -1119,7 +1137,7 @@ RC THRD_CopySpecInfo(SPEC_INFO *pSpecInfoTarget,SPEC_INFO *pSpecInfoSource)
 // QDOAS ???
 // QDOAS ??? #if defined (__WINDOAS_GUI_) && __WINDOAS_GUI_
 // QDOAS ???
-// QDOAS ??? RC ThrdWriteSpecInfo(SPEC_INFO *pSpecInfo)
+// QDOAS ??? RC ThrdWriteSpecInfo(ENGINE_CONTEXT *pEngineContext)
 // QDOAS ???  {
 // QDOAS ???   // Declarations
 // QDOAS ???
@@ -1135,7 +1153,7 @@ RC THRD_CopySpecInfo(SPEC_INFO *pSpecInfoTarget,SPEC_INFO *pSpecInfoSource)
 // QDOAS ???
 // QDOAS ???   // Initialization
 // QDOAS ???
-// QDOAS ???   pProject=&pSpecInfo->project;
+// QDOAS ???   pProject=&pEngineContext->project;
 // QDOAS ???   pInstrumental=&pProject->instrumental;
 // QDOAS ???   rc=0;
 // QDOAS ???
@@ -1143,8 +1161,8 @@ RC THRD_CopySpecInfo(SPEC_INFO *pSpecInfoTarget,SPEC_INFO *pSpecInfoSource)
 // QDOAS ???    {
 // QDOAS ???     // Initializations
 // QDOAS ???
-// QDOAS ???     pDay=&pSpecInfo->present_day;
-// QDOAS ???     pTime=&pSpecInfo->present_time;
+// QDOAS ???     pDay=&pEngineContext->present_day;
+// QDOAS ???     pTime=&pEngineContext->present_time;
 // QDOAS ???
 // QDOAS ???     // Output data on current spectrum
 // QDOAS ???
@@ -1156,7 +1174,7 @@ RC THRD_CopySpecInfo(SPEC_INFO *pSpecInfoTarget,SPEC_INFO *pSpecInfoSource)
 // QDOAS ???
 // QDOAS ???         if (!pTabFeno->hidden)
 // QDOAS ???          fprintf(fp,"Reference for %s analysis window : %d/%d SZA : %g\n",pTabFeno->windowName,pTabFeno->indexRef,
-// QDOAS ???                 (pTabFeno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_AUTOMATIC)?pSpecInfo->recordNumber:ITEM_NONE,pTabFeno->Zm);
+// QDOAS ???                 (pTabFeno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_AUTOMATIC)?pEngineContext->recordNumber:ITEM_NONE,pTabFeno->Zm);
 // QDOAS ???        }
 // QDOAS ???
 // QDOAS ???       fprintf(fp,"\n");
@@ -1167,7 +1185,7 @@ RC THRD_CopySpecInfo(SPEC_INFO *pSpecInfoTarget,SPEC_INFO *pSpecInfoSource)
 // QDOAS ???     fprintf(fp,"File\t\t\t%s\n",
 // QDOAS ???           ((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC)||
 // QDOAS ???            (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC_STD)||
-// QDOAS ???            (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_OPUS))?PATH_fileSpectra:pSpecInfo->fileName);
+// QDOAS ???            (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_OPUS))?PATH_fileSpectra:pEngineContext->fileName);
 // QDOAS ???
 // QDOAS ???     if (strlen(pInstrumental->instrFunction))
 // QDOAS ???      {
@@ -1223,36 +1241,36 @@ RC THRD_CopySpecInfo(SPEC_INFO *pSpecInfoTarget,SPEC_INFO *pSpecInfoSource)
 // QDOAS ???      fprintf(fp,"Date and Time\t\t%02d/%02d/%d %02d:%02d:%02d.%06d\n",
 // QDOAS ???                  pDay->da_day,pDay->da_mon,pDay->da_year,pTime->ti_hour,pTime->ti_min,pTime->ti_sec,GOME2_ms);
 // QDOAS ???
-// QDOAS ??? //    fprintf(fp,"%.3f -> %.3f \n",pSpecInfo->TimeDec,pSpecInfo->localTimeDec);
+// QDOAS ??? //    fprintf(fp,"%.3f -> %.3f \n",pEngineContext->TimeDec,pEngineContext->localTimeDec);
 // QDOAS ???
 // QDOAS ???     if ((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC) ||
 // QDOAS ???         (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC_STD))
 // QDOAS ???      {
-// QDOAS ???       pTime=&pSpecInfo->startTime;
+// QDOAS ???       pTime=&pEngineContext->startTime;
 // QDOAS ???       fprintf(fp,"Start time\t\t\t%02d:%02d:%02d\n",pTime->ti_hour,pTime->ti_min,pTime->ti_sec);
-// QDOAS ???       pTime=&pSpecInfo->endTime;
+// QDOAS ???       pTime=&pEngineContext->endTime;
 // QDOAS ???       fprintf(fp,"End time\t\t\t%02d:%02d:%02d\n",pTime->ti_hour,pTime->ti_min,pTime->ti_sec);
 // QDOAS ???      }
 // QDOAS ???
 // QDOAS ???     if ((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS) ||
 // QDOAS ???         (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_SCIA_HDF))
-// QDOAS ???      fprintf(fp,"Record\t\t\t%d/%d\n",pSpecInfo->indexRecord,pSpecInfo->recordNumber);
+// QDOAS ???      fprintf(fp,"Record\t\t\t%d/%d\n",pEngineContext->indexRecord,pEngineContext->recordNumber);
 // QDOAS ???     else if (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_OMI)
 // QDOAS ???      {
-// QDOAS ???      	if (pSpecInfo->project.instrumental.averageFlag)
+// QDOAS ???      	if (pEngineContext->project.instrumental.averageFlag)
 // QDOAS ???        fprintf(fp,"Record\t\t\t%d/%d (%d spectra averaged)\n",
-// QDOAS ???                pSpecInfo->indexRecord,pSpecInfo->recordNumber,pSpecInfo->omi.omiNumberOfSpectraPerTrack);
+// QDOAS ???                pEngineContext->indexRecord,pEngineContext->recordNumber,pEngineContext->omi.omiNumberOfSpectraPerTrack);
 // QDOAS ???      	else
 // QDOAS ???        fprintf(fp,"Record\t\t\t%d/%d (track %d/%d, spectrum %d/%d)\n",
-// QDOAS ???                pSpecInfo->indexRecord,pSpecInfo->recordNumber,
-// QDOAS ???                pSpecInfo->omi.omiTrackIndex,pSpecInfo->omi.omiNumberOfTracks,
-// QDOAS ???                pSpecInfo->omi.omiSpecIndex,pSpecInfo->omi.omiNumberOfSpectraPerTrack);
+// QDOAS ???                pEngineContext->indexRecord,pEngineContext->recordNumber,
+// QDOAS ???                pEngineContext->omi.omiTrackIndex,pEngineContext->omi.omiNumberOfTracks,
+// QDOAS ???                pEngineContext->omi.omiSpecIndex,pEngineContext->omi.omiNumberOfSpectraPerTrack);
 // QDOAS ???      }
 // QDOAS ???     else
-// QDOAS ???      fprintf(fp,"Record\t\t\t%d/%d\n",pSpecInfo->indexRecord,pSpecInfo->recordNumber);
+// QDOAS ???      fprintf(fp,"Record\t\t\t%d/%d\n",pEngineContext->indexRecord,pEngineContext->recordNumber);
 // QDOAS ???
-// QDOAS ???     if (strlen(pSpecInfo->Nom))
-// QDOAS ???      fprintf(fp,"Record name\t\t%s\n",pSpecInfo->Nom);
+// QDOAS ???     if (strlen(pEngineContext->Nom))
+// QDOAS ???      fprintf(fp,"Record name\t\t%s\n",pEngineContext->Nom);
 // QDOAS ???
 // QDOAS ???     if (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC)
 // QDOAS ???      {
@@ -1280,18 +1298,18 @@ RC THRD_CopySpecInfo(SPEC_INFO *pSpecInfoTarget,SPEC_INFO *pSpecInfoSource)
 // QDOAS ???     if ((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_GDP_ASCII) ||
 // QDOAS ???         (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN))
 // QDOAS ???      {
-// QDOAS ???       fprintf(fp,"Orbit Number\t\t%d\n",pSpecInfo->gome.orbitNumber+1);
-// QDOAS ???       fprintf(fp,"Pixel Number\t\t%d\n",pSpecInfo->gome.pixelNumber);
-// QDOAS ???       fprintf(fp,"Pixel Type\t\t%d\n",pSpecInfo->gome.pixelType);
+// QDOAS ???       fprintf(fp,"Orbit Number\t\t%d\n",pEngineContext->gome.orbitNumber+1);
+// QDOAS ???       fprintf(fp,"Pixel Number\t\t%d\n",pEngineContext->gome.pixelNumber);
+// QDOAS ???       fprintf(fp,"Pixel Type\t\t%d\n",pEngineContext->gome.pixelType);
 // QDOAS ???      }
 // QDOAS ???     else if (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS)
-// QDOAS ???      fprintf(fp,"Orbit Number\t\t%d\n",pSpecInfo->scia.orbitNumber);
+// QDOAS ???      fprintf(fp,"Orbit Number\t\t%d\n",pEngineContext->scia.orbitNumber);
 // QDOAS ???
 // QDOAS ???     if (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC)
-// QDOAS ???      fprintf(fp,"Calibration parameters\t%.2f %.3e %.3e %.3e\n",pSpecInfo->wavelength1,pSpecInfo->dispersion[0],
-// QDOAS ???                  pSpecInfo->dispersion[1],pSpecInfo->dispersion[2]);
+// QDOAS ???      fprintf(fp,"Calibration parameters\t%.2f %.3e %.3e %.3e\n",pEngineContext->wavelength1,pEngineContext->dispersion[0],
+// QDOAS ???                  pEngineContext->dispersion[1],pEngineContext->dispersion[2]);
 // QDOAS ???
-// QDOAS ???     fprintf(fp,"Solar Zenith angle\t\t%#.3f °\n",pSpecInfo->Zm);
+// QDOAS ???     fprintf(fp,"Solar Zenith angle\t\t%#.3f °\n",pEngineContext->Zm);
 // QDOAS ???
 // QDOAS ???     if ((pInstrumental->readOutFormat!=PRJCT_INSTR_FORMAT_GDP_ASCII) &&
 // QDOAS ???         (pInstrumental->readOutFormat!=PRJCT_INSTR_FORMAT_GDP_BIN) &&
@@ -1300,44 +1318,44 @@ RC THRD_CopySpecInfo(SPEC_INFO *pSpecInfoTarget,SPEC_INFO *pSpecInfoSource)
 // QDOAS ???         (pInstrumental->readOutFormat!=PRJCT_INSTR_FORMAT_OMI) &&
 // QDOAS ???         (pInstrumental->readOutFormat!=PRJCT_INSTR_FORMAT_GOME2))
 // QDOAS ???      {
-// QDOAS ???       fprintf(fp,"Exposure time\t\t%.3f sec\n",pSpecInfo->Tint);
-// QDOAS ???       fprintf(fp,"Scans taken into account\t%d\n",pSpecInfo->NSomme);
-// QDOAS ???       fprintf(fp,"Elevation viewing angle\t%.3f °\n",pSpecInfo->elevationViewAngle);
-// QDOAS ???       fprintf(fp,"Azimuth viewing angle\t%.3f °\n",pSpecInfo->azimuthViewAngle);
+// QDOAS ???       fprintf(fp,"Exposure time\t\t%.3f sec\n",pEngineContext->Tint);
+// QDOAS ???       fprintf(fp,"Scans taken into account\t%d\n",pEngineContext->NSomme);
+// QDOAS ???       fprintf(fp,"Elevation viewing angle\t%.3f °\n",pEngineContext->elevationViewAngle);
+// QDOAS ???       fprintf(fp,"Azimuth viewing angle\t%.3f °\n",pEngineContext->azimuthViewAngle);
 // QDOAS ???      }
 // QDOAS ???     else
 // QDOAS ???      {
-// QDOAS ???      	fprintf(fp,"Solar Azimuth angle\t%.3f °\n",pSpecInfo->Azimuth);
-// QDOAS ???      	fprintf(fp,"Viewing Zenith angle\t%.3f °\n",pSpecInfo->zenithViewAngle);
-// QDOAS ???      	fprintf(fp,"Viewing Azimuth angle\t%.3f °\n",pSpecInfo->azimuthViewAngle);
+// QDOAS ???      	fprintf(fp,"Solar Azimuth angle\t%.3f °\n",pEngineContext->Azimuth);
+// QDOAS ???      	fprintf(fp,"Viewing Zenith angle\t%.3f °\n",pEngineContext->zenithViewAngle);
+// QDOAS ???      	fprintf(fp,"Viewing Azimuth angle\t%.3f °\n",pEngineContext->azimuthViewAngle);
 // QDOAS ???      }
 // QDOAS ???
-// QDOAS ???     if (pSpecInfo->rejected>0)
-// QDOAS ???      fprintf(fp,"Rejected scans\t\t%d\n",pSpecInfo->rejected);
-// QDOAS ???     if (pSpecInfo->TDet!=(double)0.)
-// QDOAS ???      fprintf(fp,"Detector temperature\t%.3f °\n",pSpecInfo->TDet);
+// QDOAS ???     if (pEngineContext->rejected>0)
+// QDOAS ???      fprintf(fp,"Rejected scans\t\t%d\n",pEngineContext->rejected);
+// QDOAS ???     if (pEngineContext->TDet!=(double)0.)
+// QDOAS ???      fprintf(fp,"Detector temperature\t%.3f °\n",pEngineContext->TDet);
 // QDOAS ???
 // QDOAS ???     if (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_CCD_ULB)
 // QDOAS ???      {
-// QDOAS ???       fprintf(fp,"NTracks\t\t\t%d \n",pSpecInfo->NTracks);
-// QDOAS ???       fprintf(fp,"Grating\t\t\t%d \n",pSpecInfo->NGrating);
-// QDOAS ???       fprintf(fp,"Centre Wavelength\t\t%.1f nm\n",pSpecInfo->Nanometers);
+// QDOAS ???       fprintf(fp,"NTracks\t\t\t%d \n",pEngineContext->NTracks);
+// QDOAS ???       fprintf(fp,"Grating\t\t\t%d \n",pEngineContext->NGrating);
+// QDOAS ???       fprintf(fp,"Centre Wavelength\t\t%.1f nm\n",pEngineContext->Nanometers);
 // QDOAS ???      }
 // QDOAS ???
-// QDOAS ???     if (pSpecInfo->longitude!=(double)0.)
-// QDOAS ???      fprintf(fp,"Longitude\t\t%.3f °\n",pSpecInfo->longitude);
-// QDOAS ???     if (pSpecInfo->latitude!=(double)0.)
-// QDOAS ???      fprintf(fp,"Latitude\t\t\t%.3f °\n",pSpecInfo->latitude);
-// QDOAS ???     if (pSpecInfo->altitude!=(double)0.)
-// QDOAS ???      fprintf(fp,"Altitude\t\t\t%.3f km\n",pSpecInfo->altitude);
+// QDOAS ???     if (pEngineContext->longitude!=(double)0.)
+// QDOAS ???      fprintf(fp,"Longitude\t\t%.3f °\n",pEngineContext->longitude);
+// QDOAS ???     if (pEngineContext->latitude!=(double)0.)
+// QDOAS ???      fprintf(fp,"Latitude\t\t\t%.3f °\n",pEngineContext->latitude);
+// QDOAS ???     if (pEngineContext->altitude!=(double)0.)
+// QDOAS ???      fprintf(fp,"Altitude\t\t\t%.3f km\n",pEngineContext->altitude);
 // QDOAS ???
 // QDOAS ???     if (((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC) ||
 // QDOAS ???          (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC_STD)) &&
-// QDOAS ???         ((pSpecInfo->aMoon!=(double)0.) || (pSpecInfo->hMoon!=(double)0.) || (pSpecInfo->fracMoon!=(double)0.)))
+// QDOAS ???         ((pEngineContext->aMoon!=(double)0.) || (pEngineContext->hMoon!=(double)0.) || (pEngineContext->fracMoon!=(double)0.)))
 // QDOAS ???      {
-// QDOAS ???       fprintf(fp,"Moon azimuthal angle\t%.3f °\n",pSpecInfo->aMoon);
-// QDOAS ???       fprintf(fp,"Moon elevation\t\t%.3f °\n",pSpecInfo->hMoon);
-// QDOAS ???       fprintf(fp,"Moon illuminated fraction\t%.3f °\n",pSpecInfo->fracMoon);
+// QDOAS ???       fprintf(fp,"Moon azimuthal angle\t%.3f °\n",pEngineContext->aMoon);
+// QDOAS ???       fprintf(fp,"Moon elevation\t\t%.3f °\n",pEngineContext->hMoon);
+// QDOAS ???       fprintf(fp,"Moon illuminated fraction\t%.3f °\n",pEngineContext->fracMoon);
 // QDOAS ???      }
 // QDOAS ???     else if (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN)
 // QDOAS ???      {
@@ -1360,10 +1378,10 @@ RC THRD_CopySpecInfo(SPEC_INFO *pSpecInfoTarget,SPEC_INFO *pSpecInfoSource)
 // QDOAS ???
 // QDOAS ???   // Make a copy of data on current spectra for display processing
 // QDOAS ???
-// QDOAS ???   if ((pSpecInfo->indexProject==THRD_specInfo.indexProject) ||
-// QDOAS ???      !(rc=ThrdInitSpecInfo(&THRD_specInfo,&pSpecInfo->project)))
+// QDOAS ???   if ((pEngineContext->indexProject==THRD_specInfo.indexProject) ||
+// QDOAS ???      !(rc=ThrdInitSpecInfo(&THRD_specInfo,&pEngineContext->project)))
 // QDOAS ???
-// QDOAS ???    rc=THRD_CopySpecInfo(&THRD_specInfo,pSpecInfo);
+// QDOAS ???    rc=THRD_CopySpecInfo(&THRD_specInfo,pEngineContext);
 // QDOAS ???
 // QDOAS ???   // Return
 // QDOAS ???
@@ -1376,10 +1394,11 @@ RC THRD_CopySpecInfo(SPEC_INFO *pSpecInfoTarget,SPEC_INFO *pSpecInfoSource)
 // ThrdLoadInstrumental : Load instrumental functions
 // --------------------------------------------------
 
-RC ThrdLoadInstrumental(SPEC_INFO *pSpecInfo,UCHAR *instrFile,INT fileType)
+RC ThrdLoadInstrumental(ENGINE_CONTEXT *pEngineContext,UCHAR *instrFile,INT fileType)
  {
   // Declarations
 
+  BUFFERS *pBuffers;                                                            // pointer to the buffers part of the engine context
   double *lembda,*instrFunction,*instrDeriv2,*function;
   UCHAR str[MAX_ITEM_TEXT_LEN+1],fileName[MAX_ITEM_TEXT_LEN+1],*ptr;
   PRJCT_INSTRUMENTAL *pInstrumental;
@@ -1389,7 +1408,8 @@ RC ThrdLoadInstrumental(SPEC_INFO *pSpecInfo,UCHAR *instrFile,INT fileType)
 
   // Initializations
 
-  pInstrumental=&pSpecInfo->project.instrumental;
+  pBuffers=&pEngineContext->buffers;
+  pInstrumental=&pEngineContext->project.instrumental;
   FILES_RebuildFileName(fileName,instrFile,1);
 
   lembda=instrFunction=instrDeriv2=function=NULL;
@@ -1401,7 +1421,7 @@ RC ThrdLoadInstrumental(SPEC_INFO *pSpecInfo,UCHAR *instrFile,INT fileType)
       (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_CCD_ULB) ||
       (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_CCD_EEV))
 
-   rc=CCD_LoadInstrumental(pSpecInfo);
+   rc=CCD_LoadInstrumental(pEngineContext);
 
   // Allocate buffers
 
@@ -1433,7 +1453,7 @@ RC ThrdLoadInstrumental(SPEC_INFO *pSpecInfo,UCHAR *instrFile,INT fileType)
 
       if (!SPLINE_Deriv2(lembda,instrFunction,instrDeriv2,NDET,"ThrdLoadInstrumental "))
 
-       rc=SPLINE_Vector(lembda,instrFunction,instrDeriv2,NDET,pSpecInfo->lembda,function,NDET,SPLINE_CUBIC,"ThrdLoadInstrumental ");
+       rc=SPLINE_Vector(lembda,instrFunction,instrDeriv2,NDET,pBuffers->lembda,function,NDET,SPLINE_CUBIC,"ThrdLoadInstrumental ");
      }
     else if ((pInstrumental->readOutFormat!=PRJCT_INSTR_FORMAT_MFC) && (pInstrumental->readOutFormat!=PRJCT_INSTR_FORMAT_MFC_STD))
      {
@@ -1478,11 +1498,11 @@ RC ThrdLoadInstrumental(SPEC_INFO *pSpecInfo,UCHAR *instrFile,INT fileType)
 
       if (((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC) &&
           !(rc=MFC_ReadRecord(fileName,pMfc,function,
-           &MFC_headerDrk,(fileType==FILE_TYPE_INSTR)?pSpecInfo->varPix:NULL,
-           &MFC_headerOff,(fileType!=FILE_TYPE_NOT_LINEARITY)?pSpecInfo->dnl:NULL,mask,pInstrumental->mfcMaskSpec,pInstrumental->mfcRevert))) || // remove offset from dark current and instrumental function
-          ((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC_STD) && !(rc=MFC_ReadRecordStd(pSpecInfo,fileName,pMfc,function,
-           &MFC_headerDrk,(fileType==FILE_TYPE_INSTR)?pSpecInfo->varPix:NULL,
-           &MFC_headerOff,(fileType!=FILE_TYPE_NOT_LINEARITY)?pSpecInfo->dnl:NULL))))
+           &MFC_headerDrk,(fileType==FILE_TYPE_INSTR)?pBuffers->varPix:NULL,
+           &MFC_headerOff,(fileType!=FILE_TYPE_NOT_LINEARITY)?pBuffers->dnl:NULL,mask,pInstrumental->mfcMaskSpec,pInstrumental->mfcRevert))) || // remove offset from dark current and instrumental function
+          ((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC_STD) && !(rc=MFC_ReadRecordStd(pEngineContext,fileName,pMfc,function,
+           &MFC_headerDrk,(fileType==FILE_TYPE_INSTR)?pBuffers->varPix:NULL,
+           &MFC_headerOff,(fileType!=FILE_TYPE_NOT_LINEARITY)?pBuffers->dnl:NULL))))
 
        FILES_CompactPath(ptr,fileName,1,1);
       else
@@ -1498,15 +1518,15 @@ RC ThrdLoadInstrumental(SPEC_INFO *pSpecInfo,UCHAR *instrFile,INT fileType)
        {
      // ---------------------------------------------------------------------------
         case FILE_TYPE_INSTR :
-         pSpecInfo->instrFunction=function;
+         pBuffers->instrFunction=function;
         break;
      // ---------------------------------------------------------------------------
         case FILE_TYPE_INTERPIXEL :
-         pSpecInfo->varPix=function;
+         pBuffers->varPix=function;
         break;
      // ---------------------------------------------------------------------------
         case FILE_TYPE_NOT_LINEARITY :
-         pSpecInfo->dnl=function;
+         pBuffers->dnl=function;
         break;
      // ---------------------------------------------------------------------------
         default :
@@ -1542,110 +1562,110 @@ RC ThrdLoadInstrumental(SPEC_INFO *pSpecInfo,UCHAR *instrFile,INT fileType)
 // ThrdLoadProject : Load a project
 // --------------------------------
 
-RC ThrdLoadProject(SPEC_INFO *pSpecInfo,PROJECT *projectList,INDEX indexProject)
- {
-  // Declarations
-
-  UCHAR str[MAX_ITEM_TEXT_LEN+1],calibrationFile[MAX_ITEM_TEXT_LEN+1];
-  PROJECT *pProject;
-  FILE *fp;
-  INDEX i,indexSite;
-  RC rc;
-
-  #if defined(__DEBUG_) && __DEBUG_
-  DEBUG_FunctionBegin("ThrdLoadProject",DEBUG_FCTTYPE_FILE);
-  #endif
-
-  // Initializations
-
-  PATH_mfcFlag=PATH_UofTFlag=0;
-  THRD_lastRefRecord=0;
-  fp=NULL;
-
-  // Allocate new buffers for project
-
-  if (!(rc=ThrdInitSpecInfo(pSpecInfo,&projectList[indexProject])) &&
-      !(rc=ThrdInitSpecInfo(&THRD_specInfo,&projectList[indexProject])) &&
-      !(rc=ThrdInitSpecInfo(&THRD_refInfo,&projectList[indexProject])))
-   {
-    pProject=&pSpecInfo->project;
-    NDET=pProject->instrumental.detectorSize;
-
-    if (THRD_browseType==THREAD_BROWSE_EXPORT)
-     {
-      pProject->spectra.displayPause=0;
-      pProject->spectra.displayDelay=0;
-      pProject->spectra.displaySpectraFlag=0;
-     }
-
-    #if defined (__WINDOAS_GUI_) && __WINDOAS_GUI_
-    THRD_delay=(pProject->spectra.displayPause==0)?pProject->spectra.displayDelay*1000:INFINITE;
-    #endif
-
-    THRD_localNoon=12.;
-    THRD_localShift=(int)(((indexSite=SITES_GetIndex(pProject->instrumental.observationSite))!=ITEM_NONE)?
-                            floor(SITES_itemList[indexSite].longitude/15.):0); // 24./360.
-
-//    THRD_localShift=((indexSite=SITES_GetIndex(pProject->instrumental.observationSite))!=ITEM_NONE)?
-//                      SITES_itemList[indexSite].gmtShift:0;
-
-    // Load calibration file
-
-    FILES_RebuildFileName(calibrationFile,pProject->instrumental.calibrationFile,1);
-
-    if ((fp=fopen(calibrationFile,"rt"))!=NULL)
-     {
-      for (i=0;i<NDET;)
-       if (!fgets(str,MAX_ITEM_TEXT_LEN,fp))
-        break;
-       else if ((strchr(str,';')==NULL) && (strchr(str,'*')==NULL))
-        {
-         sscanf(str,"%lf",&pSpecInfo->lembda[i]);
-         i++;
-        }
-
-      if (i!=NDET)
-       rc=ERROR_SetLast("ThrdLoadProject",ERROR_TYPE_FATAL,ERROR_ID_FILE_EMPTY,calibrationFile);
-     }
-    else
-     for (i=0;i<NDET;i++)
-      pSpecInfo->lembda[i]=i+1;
-
-    // Load instrumental functions
-
-    if (!rc &&
-       ((!strlen(pProject->instrumental.dnlFile) || !(rc=ThrdLoadInstrumental(pSpecInfo,pProject->instrumental.dnlFile,FILE_TYPE_NOT_LINEARITY))) &&
-        (!strlen(pProject->instrumental.vipFile) || ((pProject->instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_CCD_OHP_96) && !(rc=ThrdLoadInstrumental(pSpecInfo,pProject->instrumental.vipFile,FILE_TYPE_INTERPIXEL)))) &&
-        (!strlen(pProject->instrumental.instrFunction) || !(rc=ThrdLoadInstrumental(pSpecInfo,pProject->instrumental.instrFunction,FILE_TYPE_INSTR)))) &&
-
-      // Load analysis and output data from project and analysis windows panels
-
-        ((THRD_id==THREAD_TYPE_ANALYSIS) || (THRD_id==THREAD_TYPE_KURUCZ)) && !(rc=ANALYSE_LoadData(pSpecInfo,indexProject)))
-     {
-      #if defined(__DEBUG_) && __DEBUG_ && __DEBUG_DOAS_OUTPUT_
-      DEBUG_Start(DOAS_dbgFile,"OUTPUT_RegisterData",DEBUG_FCTTYPE_FILE,5,DEBUG_DVAR_YES,1);
-      #endif
-
-      rc=OUTPUT_RegisterData(pSpecInfo);
-
-      #if defined(__DEBUG_) && __DEBUG_ && __DEBUG_DOAS_OUTPUT_
-      DEBUG_Stop("OUTPUT_RegisterData");
-      THRD_ProcessLastError();
-      #endif
-     }
-   }
-
-  // Return
-
-  if (fp!=NULL)
-   fclose(fp);
-
-  #if defined(__DEBUG_) && __DEBUG_
-  DEBUG_FunctionStop("ThrdLoadProject",(RC)rc);
-  #endif
-
-  return rc;
- }
+// QDOAS ??? RC ThrdLoadProject(ENGINE_CONTEXT *pEngineContext,PROJECT *projectList,INDEX indexProject)
+// QDOAS ???  {
+// QDOAS ???   // Declarations
+// QDOAS ???
+// QDOAS ???   UCHAR str[MAX_ITEM_TEXT_LEN+1],calibrationFile[MAX_ITEM_TEXT_LEN+1];
+// QDOAS ???   PROJECT *pProject;
+// QDOAS ???   FILE *fp;
+// QDOAS ???   INDEX i,indexSite;
+// QDOAS ???   RC rc;
+// QDOAS ???
+// QDOAS ???   #if defined(__DEBUG_) && __DEBUG_
+// QDOAS ???   DEBUG_FunctionBegin("ThrdLoadProject",DEBUG_FCTTYPE_FILE);
+// QDOAS ???   #endif
+// QDOAS ???
+// QDOAS ???   // Initializations
+// QDOAS ???
+// QDOAS ???   PATH_mfcFlag=PATH_UofTFlag=0;
+// QDOAS ???   THRD_lastRefRecord=0;
+// QDOAS ???   fp=NULL;
+// QDOAS ???
+// QDOAS ???   // Allocate new buffers for project
+// QDOAS ???
+// QDOAS ???   if (!(rc=ThrdInitSpecInfo(pEngineContext,&projectList[indexProject])) &&
+// QDOAS ???       !(rc=ThrdInitSpecInfo(&THRD_specInfo,&projectList[indexProject])) &&
+// QDOAS ???       !(rc=ThrdInitSpecInfo(&THRD_refInfo,&projectList[indexProject])))
+// QDOAS ???    {
+// QDOAS ???     pProject=&pEngineContext->project;
+// QDOAS ???     NDET=pProject->instrumental.detectorSize;
+// QDOAS ???
+// QDOAS ???     if (THRD_browseType==THREAD_BROWSE_EXPORT)
+// QDOAS ???      {
+// QDOAS ???       pProject->spectra.displayPause=0;
+// QDOAS ???       pProject->spectra.displayDelay=0;
+// QDOAS ???       pProject->spectra.displaySpectraFlag=0;
+// QDOAS ???      }
+// QDOAS ???
+// QDOAS ???     #if defined (__WINDOAS_GUI_) && __WINDOAS_GUI_
+// QDOAS ???     THRD_delay=(pProject->spectra.displayPause==0)?pProject->spectra.displayDelay*1000:INFINITE;
+// QDOAS ???     #endif
+// QDOAS ???
+// QDOAS ???     THRD_localNoon=12.;
+// QDOAS ???     THRD_localShift=(int)(((indexSite=SITES_GetIndex(pProject->instrumental.observationSite))!=ITEM_NONE)?
+// QDOAS ???                             floor(SITES_itemList[indexSite].longitude/15.):0); // 24./360.
+// QDOAS ???
+// QDOAS ??? //    THRD_localShift=((indexSite=SITES_GetIndex(pProject->instrumental.observationSite))!=ITEM_NONE)?
+// QDOAS ??? //                      SITES_itemList[indexSite].gmtShift:0;
+// QDOAS ???
+// QDOAS ???     // Load calibration file
+// QDOAS ???
+// QDOAS ???     FILES_RebuildFileName(calibrationFile,pProject->instrumental.calibrationFile,1);
+// QDOAS ???
+// QDOAS ???     if ((fp=fopen(calibrationFile,"rt"))!=NULL)
+// QDOAS ???      {
+// QDOAS ???       for (i=0;i<NDET;)
+// QDOAS ???        if (!fgets(str,MAX_ITEM_TEXT_LEN,fp))
+// QDOAS ???         break;
+// QDOAS ???        else if ((strchr(str,';')==NULL) && (strchr(str,'*')==NULL))
+// QDOAS ???         {
+// QDOAS ???          sscanf(str,"%lf",&pEngineContext->buffers.lembda[i]);
+// QDOAS ???          i++;
+// QDOAS ???         }
+// QDOAS ???
+// QDOAS ???       if (i!=NDET)
+// QDOAS ???        rc=ERROR_SetLast("ThrdLoadProject",ERROR_TYPE_FATAL,ERROR_ID_FILE_EMPTY,calibrationFile);
+// QDOAS ???      }
+// QDOAS ???     else
+// QDOAS ???      for (i=0;i<NDET;i++)
+// QDOAS ???       pEngineContext->buffers.lembda[i]=i+1;
+// QDOAS ???
+// QDOAS ???     // Load instrumental functions
+// QDOAS ???
+// QDOAS ???     if (!rc &&
+// QDOAS ???        ((!strlen(pProject->instrumental.dnlFile) || !(rc=ThrdLoadInstrumental(pEngineContext,pProject->instrumental.dnlFile,FILE_TYPE_NOT_LINEARITY))) &&
+// QDOAS ???         (!strlen(pProject->instrumental.vipFile) || ((pProject->instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_CCD_OHP_96) && !(rc=ThrdLoadInstrumental(pEngineContext,pProject->instrumental.vipFile,FILE_TYPE_INTERPIXEL)))) &&
+// QDOAS ???         (!strlen(pProject->instrumental.instrFunction) || !(rc=ThrdLoadInstrumental(pEngineContext,pProject->instrumental.instrFunction,FILE_TYPE_INSTR)))) &&
+// QDOAS ???
+// QDOAS ???       // Load analysis and output data from project and analysis windows panels
+// QDOAS ???
+// QDOAS ???         ((THRD_id==THREAD_TYPE_ANALYSIS) || (THRD_id==THREAD_TYPE_KURUCZ)) && !(rc=ANALYSE_LoadData(pEngineContext,indexProject)))
+// QDOAS ???      {
+// QDOAS ???       #if defined(__DEBUG_) && __DEBUG_ && __DEBUG_DOAS_OUTPUT_
+// QDOAS ???       DEBUG_Start(DOAS_dbgFile,"OUTPUT_RegisterData",DEBUG_FCTTYPE_FILE,5,DEBUG_DVAR_YES,1);
+// QDOAS ???       #endif
+// QDOAS ???
+// QDOAS ???       rc=OUTPUT_RegisterData(pEngineContext);
+// QDOAS ???
+// QDOAS ???       #if defined(__DEBUG_) && __DEBUG_ && __DEBUG_DOAS_OUTPUT_
+// QDOAS ???       DEBUG_Stop("OUTPUT_RegisterData");
+// QDOAS ???       THRD_ProcessLastError();
+// QDOAS ???       #endif
+// QDOAS ???      }
+// QDOAS ???    }
+// QDOAS ???
+// QDOAS ???   // Return
+// QDOAS ???
+// QDOAS ???   if (fp!=NULL)
+// QDOAS ???    fclose(fp);
+// QDOAS ???
+// QDOAS ???   #if defined(__DEBUG_) && __DEBUG_
+// QDOAS ???   DEBUG_FunctionStop("ThrdLoadProject",(RC)rc);
+// QDOAS ???   #endif
+// QDOAS ???
+// QDOAS ???   return rc;
+// QDOAS ???  }
 
 // QDOAS ??? // -----------------------------------------------------------------------------------------------------
 // QDOAS ??? // THRD_LoadData : Load data on spectra and analysis from temporary file to informative MDI child window
@@ -1777,7 +1797,7 @@ RC THRD_OddEvenCorrection(double *lembdaData,double *specData,double *output,INT
 // THRD_SpectrumCorrection : Apply instrumental correction to spectra
 // ------------------------------------------------------------------
 
-RC THRD_SpectrumCorrection(SPEC_INFO *pSpecInfo,double *spectrum)
+RC THRD_SpectrumCorrection(ENGINE_CONTEXT *pEngineContext,double *spectrum)
  {
   // Declaration
 
@@ -1789,8 +1809,8 @@ RC THRD_SpectrumCorrection(SPEC_INFO *pSpecInfo,double *spectrum)
 
   // Odd even pixel correction
 
-  if (pSpecInfo->project.lfilter.type==PRJCT_FILTER_TYPE_ODDEVEN)
-   rc=THRD_OddEvenCorrection(pSpecInfo->lembda,spectrum,spectrum,NDET);
+  if (pEngineContext->project.lfilter.type==PRJCT_FILTER_TYPE_ODDEVEN)
+   rc=THRD_OddEvenCorrection(pEngineContext->buffers.lembda,spectrum,spectrum,NDET);
 
   // Return
 
@@ -1804,7 +1824,7 @@ RC THRD_SpectrumCorrection(SPEC_INFO *pSpecInfo,double *spectrum)
 // QDOAS ??? #if defined(__BC32_) && __BC32_
 // QDOAS ??? #pragma argsused
 // QDOAS ??? #endif
-// QDOAS ??? RC ThrdFileSetPointers(SPEC_INFO *pSpecInfo,UCHAR *newFileName,FILE *specFp,FILE *namesFp,FILE *darkFp)
+// QDOAS ??? RC ThrdFileSetPointers(ENGINE_CONTEXT *pEngineContext,UCHAR *newFileName,FILE *specFp,FILE *namesFp,FILE *darkFp)
 // QDOAS ???  {
 // QDOAS ???   // Declarations
 // QDOAS ???
@@ -1820,7 +1840,7 @@ RC THRD_SpectrumCorrection(SPEC_INFO *pSpecInfo,double *spectrum)
 // QDOAS ???
 // QDOAS ???   // Initializations
 // QDOAS ???
-// QDOAS ???   pProject=&pSpecInfo->project;
+// QDOAS ???   pProject=&pEngineContext->project;
 // QDOAS ???   #if defined (__WINDOAS_GUI_) && __WINDOAS_GUI_
 // QDOAS ???   THRD_delay=(pProject->spectra.displayPause==0)?pProject->spectra.displayDelay*1000:INFINITE;
 // QDOAS ???   #endif
@@ -1834,9 +1854,9 @@ RC THRD_SpectrumCorrection(SPEC_INFO *pSpecInfo,double *spectrum)
 // QDOAS ???    rc=ERROR_ID_FILE_EMPTY;
 // QDOAS ???   else
 // QDOAS ???    {
-// QDOAS ???     sprintf(string,"%s : Spectra No",pSpecInfo->fileName);
-// QDOAS ???     pSpecInfo->recordNumber=0;
-// QDOAS ???     pSpecInfo->lastSavedRecord=-1;
+// QDOAS ???     sprintf(string,"%s : Spectra No",pEngineContext->fileName);
+// QDOAS ???     pEngineContext->recordNumber=0;
+// QDOAS ???     pEngineContext->lastSavedRecord=-1;
 // QDOAS ???     THRD_refInfo.localCalDay=-1;
 // QDOAS ???
 // QDOAS ???     // Set spectra read out function
@@ -1845,116 +1865,116 @@ RC THRD_SpectrumCorrection(SPEC_INFO *pSpecInfo,double *spectrum)
 // QDOAS ???      {
 // QDOAS ???    // ---------------------------------------------------------------------------
 // QDOAS ???       case PRJCT_INSTR_FORMAT_ASCII :
-// QDOAS ???        rc=ASCII_Set(pSpecInfo,specFp);
+// QDOAS ???        rc=ASCII_Set(pEngineContext,specFp);
 // QDOAS ???       break;
 // QDOAS ???    // ---------------------------------------------------------------------------
 // QDOAS ???       case PRJCT_INSTR_FORMAT_ACTON :
-// QDOAS ???        rc=SetActon_Logger(pSpecInfo,specFp);
+// QDOAS ???        rc=SetActon_Logger(pEngineContext,specFp);
 // QDOAS ???       break;
 // QDOAS ???    // ---------------------------------------------------------------------------
 // QDOAS ???       case PRJCT_INSTR_FORMAT_PDASI_EASOE :
-// QDOAS ???        rc=SetEASOE(pSpecInfo,specFp,namesFp);
+// QDOAS ???        rc=SetEASOE(pEngineContext,specFp,namesFp);
 // QDOAS ???       break;
 // QDOAS ???    // ---------------------------------------------------------------------------
 // QDOAS ???       case PRJCT_INSTR_FORMAT_PDAEGG :
-// QDOAS ???        rc=SetPDA_EGG(pSpecInfo,specFp,1);
+// QDOAS ???        rc=SetPDA_EGG(pEngineContext,specFp,1);
 // QDOAS ???       break;
 // QDOAS ???    // ---------------------------------------------------------------------------
 // QDOAS ???       case PRJCT_INSTR_FORMAT_PDAEGG_OLD :
-// QDOAS ???        rc=SetPDA_EGG(pSpecInfo,specFp,0);
+// QDOAS ???        rc=SetPDA_EGG(pEngineContext,specFp,0);
 // QDOAS ???       break;
 // QDOAS ???    // ---------------------------------------------------------------------------
 // QDOAS ???       case PRJCT_INSTR_FORMAT_LOGGER :
-// QDOAS ???        rc=SetPDA_EGG_Logger(pSpecInfo,specFp);
+// QDOAS ???        rc=SetPDA_EGG_Logger(pEngineContext,specFp);
 // QDOAS ???       break;
 // QDOAS ???    // ---------------------------------------------------------------------------
 // QDOAS ???       case PRJCT_INSTR_FORMAT_PDAEGG_ULB :
-// QDOAS ???        rc=SetPDA_EGG_Ulb(pSpecInfo,specFp);
+// QDOAS ???        rc=SetPDA_EGG_Ulb(pEngineContext,specFp);
 // QDOAS ???       break;
 // QDOAS ???    // ---------------------------------------------------------------------------
 // QDOAS ???       case PRJCT_INSTR_FORMAT_SAOZ_VIS :
-// QDOAS ???        rc=SetSAOZ(pSpecInfo,specFp,VIS);
+// QDOAS ???        rc=SetSAOZ(pEngineContext,specFp,VIS);
 // QDOAS ???       break;
 // QDOAS ???    // ---------------------------------------------------------------------------
 // QDOAS ???       case PRJCT_INSTR_FORMAT_SAOZ_UV :
-// QDOAS ???        rc=SetSAOZ(pSpecInfo,specFp,UV);
+// QDOAS ???        rc=SetSAOZ(pEngineContext,specFp,UV);
 // QDOAS ???       break;
 // QDOAS ???    // ---------------------------------------------------------------------------
 // QDOAS ???       case PRJCT_INSTR_FORMAT_SAOZ_EFM :
-// QDOAS ???        rc=SetSAOZEfm(pSpecInfo,specFp);
+// QDOAS ???        rc=SetSAOZEfm(pEngineContext,specFp);
 // QDOAS ???       break;
 // QDOAS ???    // ---------------------------------------------------------------------------
 // QDOAS ???       case PRJCT_INSTR_FORMAT_MFC :
 // QDOAS ???       case PRJCT_INSTR_FORMAT_MFC_STD :
-// QDOAS ???        rc=SetMFC(pSpecInfo,specFp);
-// QDOAS ???        if (!(rc=SetMFC(pSpecInfo,specFp)) && (THRD_id!=THREAD_TYPE_SPECTRA) && (THRD_id!=THREAD_TYPE_NONE))
-// QDOAS ???         rc=MFC_LoadAnalysis(pSpecInfo);
+// QDOAS ???        rc=SetMFC(pEngineContext,specFp);
+// QDOAS ???        if (!(rc=SetMFC(pEngineContext,specFp)) && (THRD_id!=THREAD_TYPE_SPECTRA) && (THRD_id!=THREAD_TYPE_NONE))
+// QDOAS ???         rc=MFC_LoadAnalysis(pEngineContext);
 // QDOAS ???       break;
 // QDOAS ???    // ---------------------------------------------------------------------------
 // QDOAS ???       case PRJCT_INSTR_FORMAT_RASAS :
-// QDOAS ???        rc=SetRAS(pSpecInfo,specFp);
+// QDOAS ???        rc=SetRAS(pEngineContext,specFp);
 // QDOAS ???       break;
 // QDOAS ???    // ---------------------------------------------------------------------------
 // QDOAS ???       case PRJCT_INSTR_FORMAT_UOFT :
-// QDOAS ???        rc=SetUofT(pSpecInfo,specFp);
+// QDOAS ???        rc=SetUofT(pEngineContext,specFp);
 // QDOAS ???       break;
 // QDOAS ???    // ---------------------------------------------------------------------------
 // QDOAS ???       case PRJCT_INSTR_FORMAT_NOAA :
-// QDOAS ???        rc=SetNOAA(pSpecInfo,specFp);
+// QDOAS ???        rc=SetNOAA(pEngineContext,specFp);
 // QDOAS ???       break;
 // QDOAS ???    // ---------------------------------------------------------------------------
 // QDOAS ???       #if defined (__INCLUDE_HDF_) && __INCLUDE_HDF_
 // QDOAS ???       case PRJCT_INSTR_FORMAT_OMI :
-// QDOAS ???        rc=OMI_SetHDF(pSpecInfo);
+// QDOAS ???        rc=OMI_SetHDF(pEngineContext);
 // QDOAS ???       break;
 // QDOAS ???       #endif
 // QDOAS ???    // ---------------------------------------------------------------------------
 // QDOAS ???       case PRJCT_INSTR_FORMAT_CCD_EEV :
-// QDOAS ???        rc=SetCCD_EEV(pSpecInfo,specFp,darkFp);
+// QDOAS ???        rc=SetCCD_EEV(pEngineContext,specFp,darkFp);
 // QDOAS ???       break;
 // QDOAS ???    // ---------------------------------------------------------------------------
 // QDOAS ???       case PRJCT_INSTR_FORMAT_CCD_OHP_96 :
-// QDOAS ???        rc=SetCCD(pSpecInfo,specFp,0);
+// QDOAS ???        rc=SetCCD(pEngineContext,specFp,0);
 // QDOAS ???       break;
 // QDOAS ???    // ---------------------------------------------------------------------------
 // QDOAS ???       case PRJCT_INSTR_FORMAT_CCD_HA_94 :
-// QDOAS ???        rc=SetCCD(pSpecInfo,specFp,1);
+// QDOAS ???        rc=SetCCD(pEngineContext,specFp,1);
 // QDOAS ???       break;
 // QDOAS ???    // ---------------------------------------------------------------------------
 // QDOAS ???       case PRJCT_INSTR_FORMAT_CCD_ULB :
-// QDOAS ???        rc=SetCCD_Ulb(pSpecInfo,specFp);
+// QDOAS ???        rc=SetCCD_Ulb(pEngineContext,specFp);
 // QDOAS ???       break;
 // QDOAS ???    // ---------------------------------------------------------------------------
 // QDOAS ???       case PRJCT_INSTR_FORMAT_OPUS :
-// QDOAS ???        rc=OPUS_Set(pSpecInfo,specFp);
+// QDOAS ???        rc=OPUS_Set(pEngineContext,specFp);
 // QDOAS ???       break;
 // QDOAS ???    // ---------------------------------------------------------------------------
 // QDOAS ???       case PRJCT_INSTR_FORMAT_GDP_ASCII :
-// QDOAS ???        if (!(rc=GDP_ASC_Set(pSpecInfo,specFp)) && (THRD_id!=THREAD_TYPE_SPECTRA) && (THRD_id!=THREAD_TYPE_NONE))
-// QDOAS ???         rc=GDP_ASC_LoadAnalysis(pSpecInfo,specFp);
+// QDOAS ???        if (!(rc=GDP_ASC_Set(pEngineContext,specFp)) && (THRD_id!=THREAD_TYPE_SPECTRA) && (THRD_id!=THREAD_TYPE_NONE))
+// QDOAS ???         rc=GDP_ASC_LoadAnalysis(pEngineContext,specFp);
 // QDOAS ???       break;
 // QDOAS ???    // ---------------------------------------------------------------------------
 // QDOAS ???       case PRJCT_INSTR_FORMAT_GDP_BIN :
-// QDOAS ???        if (!(rc=GDP_BIN_Set(pSpecInfo,specFp)) && (THRD_id!=THREAD_TYPE_SPECTRA) && (THRD_id!=THREAD_TYPE_NONE))
-// QDOAS ???         rc=GDP_BIN_LoadAnalysis(pSpecInfo,specFp);
+// QDOAS ???        if (!(rc=GDP_BIN_Set(pEngineContext,specFp)) && (THRD_id!=THREAD_TYPE_SPECTRA) && (THRD_id!=THREAD_TYPE_NONE))
+// QDOAS ???         rc=GDP_BIN_LoadAnalysis(pEngineContext,specFp);
 // QDOAS ???
 // QDOAS ???       break;
 // QDOAS ???    // ---------------------------------------------------------------------------
 // QDOAS ???       #if defined (__INCLUDE_HDF_) && __INCLUDE_HDF_
 // QDOAS ???       case PRJCT_INSTR_FORMAT_SCIA_HDF :
-// QDOAS ???        if (!(rc=SCIA_SetHDF(pSpecInfo)) && (THRD_id!=THREAD_TYPE_SPECTRA) && (THRD_id!=THREAD_TYPE_NONE))
-// QDOAS ???         rc=SCIA_LoadAnalysis(pSpecInfo);
+// QDOAS ???        if (!(rc=SCIA_SetHDF(pEngineContext)) && (THRD_id!=THREAD_TYPE_SPECTRA) && (THRD_id!=THREAD_TYPE_NONE))
+// QDOAS ???         rc=SCIA_LoadAnalysis(pEngineContext);
 // QDOAS ???       break;
 // QDOAS ???       #endif
 // QDOAS ???    // ---------------------------------------------------------------------------
 // QDOAS ???       case PRJCT_INSTR_FORMAT_SCIA_PDS :
-// QDOAS ???        if (!(rc=SCIA_SetPDS(pSpecInfo)) && (THRD_id!=THREAD_TYPE_SPECTRA) && (THRD_id!=THREAD_TYPE_NONE))
-// QDOAS ???         rc=SCIA_LoadAnalysis(pSpecInfo);
+// QDOAS ???        if (!(rc=SCIA_SetPDS(pEngineContext)) && (THRD_id!=THREAD_TYPE_SPECTRA) && (THRD_id!=THREAD_TYPE_NONE))
+// QDOAS ???         rc=SCIA_LoadAnalysis(pEngineContext);
 // QDOAS ???       break;
 // QDOAS ???    // ---------------------------------------------------------------------------
 // QDOAS ???       case PRJCT_INSTR_FORMAT_GOME2 :
-// QDOAS ???        if (!(rc=GOME2_Set(pSpecInfo)) && (THRD_id!=THREAD_TYPE_SPECTRA) && (THRD_id!=THREAD_TYPE_NONE))
-// QDOAS ???         rc=GOME2_LoadAnalysis(pSpecInfo);
+// QDOAS ???        if (!(rc=GOME2_Set(pEngineContext)) && (THRD_id!=THREAD_TYPE_SPECTRA) && (THRD_id!=THREAD_TYPE_NONE))
+// QDOAS ???         rc=GOME2_LoadAnalysis(pEngineContext);
 // QDOAS ???       break;
 // QDOAS ???    // ---------------------------------------------------------------------------
 // QDOAS ???       default :
@@ -1977,15 +1997,15 @@ RC THRD_SpectrumCorrection(SPEC_INFO *pSpecInfo,double *spectrum)
 // QDOAS ???
 // QDOAS ???       // Prepare records read out
 // QDOAS ???
-// QDOAS ???       if (!(THRD_recordFirst=max(1,pSpecInfo->project.spectra.noMin)))
+// QDOAS ???       if (!(THRD_recordFirst=max(1,pEngineContext->project.spectra.noMin)))
 // QDOAS ???        THRD_recordFirst=1;
-// QDOAS ???       if (!(THRD_recordLast=min(pSpecInfo->recordNumber,pSpecInfo->project.spectra.noMax)))
-// QDOAS ???        THRD_recordLast=pSpecInfo->recordNumber;
+// QDOAS ???       if (!(THRD_recordLast=min(pEngineContext->recordNumber,pEngineContext->project.spectra.noMax)))
+// QDOAS ???        THRD_recordLast=pEngineContext->recordNumber;
 // QDOAS ???
-// QDOAS ???       if (!pSpecInfo->recordNumber)
-// QDOAS ???        rc=ERROR_SetLast("ThrdFileSetPointers",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pSpecInfo->fileName);
-// QDOAS ???       else if ((THRD_recordFirst>pSpecInfo->recordNumber) || (THRD_recordLast<0))
-// QDOAS ???        THRD_Error(ERROR_TYPE_WARNING,(rc=ERROR_ID_OUT_OF_RANGE),"ThrdFileSetPointers ",string,1,pSpecInfo->recordNumber);
+// QDOAS ???       if (!pEngineContext->recordNumber)
+// QDOAS ???        rc=ERROR_SetLast("ThrdFileSetPointers",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pEngineContext->fileName);
+// QDOAS ???       else if ((THRD_recordFirst>pEngineContext->recordNumber) || (THRD_recordLast<0))
+// QDOAS ???        THRD_Error(ERROR_TYPE_WARNING,(rc=ERROR_ID_OUT_OF_RANGE),"ThrdFileSetPointers ",string,1,pEngineContext->recordNumber);
 // QDOAS ???       else if (THRD_increment>=0)
 // QDOAS ???        THRD_indexRecordCurrent=THRD_recordFirst;
 // QDOAS ???       else if (THRD_lastEvent!=THREAD_EVENT_FIRST)
@@ -1999,7 +2019,7 @@ RC THRD_SpectrumCorrection(SPEC_INFO *pSpecInfo,double *spectrum)
 // QDOAS ???       #if defined (__WINDOAS_WIN_) && __WINDOAS_WIN_
 // QDOAS ???       SendMessage(TLBAR_hwndGoto,UDM_SETRANGE,0L,MAKELONG(THRD_recordLast,THRD_recordFirst));
 // QDOAS ???       SendMessage(TLBAR_hwndGoto,UDM_SETPOS,0L,MAKELONG(THRD_indexRecordCurrent,0));
-// QDOAS ???      	EnableWindow(TLBAR_hwndGoto,(pSpecInfo->recordNumber<32768L)?TRUE:FALSE);
+// QDOAS ???      	EnableWindow(TLBAR_hwndGoto,(pEngineContext->recordNumber<32768L)?TRUE:FALSE);
 // QDOAS ???      	#endif
 // QDOAS ???      }
 // QDOAS ???
@@ -2053,11 +2073,12 @@ double THRD_GetDist(double longit, double latit, double longitRef, double latitR
 #if defined(__BC32_) && __BC32_
 #pragma argsused
 #endif
-RC ThrdReadFile(SPEC_INFO *pSpecInfo,INT recordNo,INT dateFlag,INT localCalDay,FILE *specFp,FILE *namesFp,FILE *darkFp,INT specInfoFlag)
+RC ThrdReadFile(ENGINE_CONTEXT *pEngineContext,INT recordNo,INT dateFlag,INT localCalDay,FILE *specFp,FILE *namesFp,FILE *darkFp,INT specInfoFlag)
  {
   // Declarations
 
 // QDOAS ???   UCHAR windowTitle[MAX_ITEM_TEXT_LEN+1];
+  RECORD_INFO *pRecord;                                                         // pointer to the record part of the engine context
   PROJECT *pProject;
   PRJCT_INSTRUMENTAL *pInstrumental;
   double *spectrum,degToRad;
@@ -2068,8 +2089,9 @@ RC ThrdReadFile(SPEC_INFO *pSpecInfo,INT recordNo,INT dateFlag,INT localCalDay,F
 
   // Initializations
 
-  THRD_correction=((pSpecInfo->project.lfilter.type==PRJCT_FILTER_TYPE_ODDEVEN)||(pSpecInfo->instrFunction!=NULL))?1:0;
-  pProject=&pSpecInfo->project;
+  pRecord=&pEngineContext->recordInfo;
+  THRD_correction=((pEngineContext->project.lfilter.type==PRJCT_FILTER_TYPE_ODDEVEN)||(pEngineContext->buffers.instrFunction!=NULL))?1:0;
+  pProject=&pEngineContext->project;
   pInstrumental=&pProject->instrumental;
   degToRad=(double)PI2/360.;
   oldNDET=NDET;
@@ -2079,26 +2101,26 @@ RC ThrdReadFile(SPEC_INFO *pSpecInfo,INT recordNo,INT dateFlag,INT localCalDay,F
 
   // Fields initialization
 
-  memset(pSpecInfo->Nom,0,20);
+  memset(pRecord->Nom,0,20);
 
-  pSpecInfo->Zm=-1.;
-  pSpecInfo->Azimuth=-1.;
-  pSpecInfo->SkyObs=8;
-  pSpecInfo->ReguTemp=0.;
-  pSpecInfo->TDet=0.;
-  pSpecInfo->BestShift=0.;
-  pSpecInfo->rejected=0;
-  pSpecInfo->NTracks=0;
-  pSpecInfo->Cic=0.;
-  pSpecInfo->elevationViewAngle=-1.;
+  pRecord->Zm=-1.;
+  pRecord->Azimuth=-1.;
+  pRecord->SkyObs=8;
+  pRecord->ReguTemp=0.;
+  pRecord->TDet=0.;
+  pRecord->BestShift=0.;
+  pRecord->rejected=0;
+  pRecord->NTracks=0;
+  pRecord->Cic=0.;
+  pRecord->elevationViewAngle=-1.;
 
-  pSpecInfo->longitude=0.;
-  pSpecInfo->latitude=0.;
-  pSpecInfo->altitude=0.;
+  pRecord->longitude=0.;
+  pRecord->latitude=0.;
+  pRecord->altitude=0.;
 
-  pSpecInfo->aMoon=0.;
-  pSpecInfo->hMoon=0.;
-  pSpecInfo->fracMoon=0.;
+  pRecord->aMoon=0.;
+  pRecord->hMoon=0.;
+  pRecord->fracMoon=0.;
 
 // QDOAS ???  if ((spectrum=(double *)MEMORY_AllocDVector("ThrdReadFile ","spectrum",0,NDET-1))==NULL)
 // QDOAS ???   rc=ERROR_ID_ALLOC;
@@ -2110,43 +2132,43 @@ RC ThrdReadFile(SPEC_INFO *pSpecInfo,INT recordNo,INT dateFlag,INT localCalDay,F
 // QDOAS ???    {
 // QDOAS ???  // ---------------------------------------------------------------------------
 // QDOAS ???     case PRJCT_INSTR_FORMAT_ASCII :
-// QDOAS ???      rc=ASCII_Read(pSpecInfo,recordNo,dateFlag,localCalDay,specFp);
+// QDOAS ???      rc=ASCII_Read(pEngineContext,recordNo,dateFlag,localCalDay,specFp);
 // QDOAS ???     break;
 // QDOAS ???  // ---------------------------------------------------------------------------
 // QDOAS ???     case PRJCT_INSTR_FORMAT_ACTON :
-// QDOAS ???      rc=ReliActon_Logger(pSpecInfo,recordNo,dateFlag,localCalDay,specFp,namesFp,darkFp);
+// QDOAS ???      rc=ReliActon_Logger(pEngineContext,recordNo,dateFlag,localCalDay,specFp,namesFp,darkFp);
 // QDOAS ???     break;
 // QDOAS ???  // ---------------------------------------------------------------------------
 // QDOAS ???     case PRJCT_INSTR_FORMAT_PDASI_EASOE :
-// QDOAS ???      rc=ReliEASOE(pSpecInfo,recordNo,dateFlag,localCalDay,specFp,namesFp,darkFp);
+// QDOAS ???      rc=ReliEASOE(pEngineContext,recordNo,dateFlag,localCalDay,specFp,namesFp,darkFp);
 // QDOAS ???     break;
 // QDOAS ???  // ---------------------------------------------------------------------------
 // QDOAS ???     case PRJCT_INSTR_FORMAT_PDAEGG :
-// QDOAS ???      rc=ReliPDA_EGG(pSpecInfo,recordNo,dateFlag,localCalDay,specFp,namesFp,darkFp,1);
+// QDOAS ???      rc=ReliPDA_EGG(pEngineContext,recordNo,dateFlag,localCalDay,specFp,namesFp,darkFp,1);
 // QDOAS ???     break;
 // QDOAS ???  // ---------------------------------------------------------------------------
 // QDOAS ???     case PRJCT_INSTR_FORMAT_PDAEGG_OLD :
-// QDOAS ???      rc=ReliPDA_EGG(pSpecInfo,recordNo,dateFlag,localCalDay,specFp,namesFp,darkFp,0);
+// QDOAS ???      rc=ReliPDA_EGG(pEngineContext,recordNo,dateFlag,localCalDay,specFp,namesFp,darkFp,0);
 // QDOAS ???     break;
 // QDOAS ???  // ---------------------------------------------------------------------------
 // QDOAS ???     case PRJCT_INSTR_FORMAT_LOGGER :
-// QDOAS ???      rc=ReliPDA_EGG_Logger(pSpecInfo,recordNo,dateFlag,localCalDay,specFp);
+// QDOAS ???      rc=ReliPDA_EGG_Logger(pEngineContext,recordNo,dateFlag,localCalDay,specFp);
 // QDOAS ???     break;
 // QDOAS ???  // ---------------------------------------------------------------------------
 // QDOAS ???     case PRJCT_INSTR_FORMAT_PDAEGG_ULB :
-// QDOAS ???      rc=ReliPDA_EGG_Ulb(pSpecInfo,recordNo,dateFlag,localCalDay,specFp,namesFp,darkFp);
+// QDOAS ???      rc=ReliPDA_EGG_Ulb(pEngineContext,recordNo,dateFlag,localCalDay,specFp,namesFp,darkFp);
 // QDOAS ???     break;
 // QDOAS ???  // ---------------------------------------------------------------------------
 // QDOAS ???     case PRJCT_INSTR_FORMAT_SAOZ_VIS :
-// QDOAS ???      rc=ReliSAOZ(pSpecInfo,recordNo,dateFlag,localCalDay,specFp,namesFp,darkFp,VIS);
+// QDOAS ???      rc=ReliSAOZ(pEngineContext,recordNo,dateFlag,localCalDay,specFp,namesFp,darkFp,VIS);
 // QDOAS ???     break;
 // QDOAS ???  // ---------------------------------------------------------------------------
 // QDOAS ???     case PRJCT_INSTR_FORMAT_SAOZ_UV :
-// QDOAS ???      rc=ReliSAOZ(pSpecInfo,recordNo,dateFlag,localCalDay,specFp,namesFp,darkFp,UV);
+// QDOAS ???      rc=ReliSAOZ(pEngineContext,recordNo,dateFlag,localCalDay,specFp,namesFp,darkFp,UV);
 // QDOAS ???     break;
 // QDOAS ???  // ---------------------------------------------------------------------------
 // QDOAS ???     case PRJCT_INSTR_FORMAT_SAOZ_EFM :
-// QDOAS ???      rc=ReliSAOZEfm(pSpecInfo,recordNo,dateFlag,localCalDay,specFp);
+// QDOAS ???      rc=ReliSAOZEfm(pEngineContext,recordNo,dateFlag,localCalDay,specFp);
 // QDOAS ???     break;
 // QDOAS ???  // ---------------------------------------------------------------------------
 // QDOAS ???     case PRJCT_INSTR_FORMAT_MFC :
@@ -2172,72 +2194,72 @@ RC ThrdReadFile(SPEC_INFO *pSpecInfo,INT recordNo,INT dateFlag,INT localCalDay,F
 // QDOAS ???     // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // QDOAS ???      }
 // QDOAS ???
-// QDOAS ???      rc=ReliMFC(pSpecInfo,recordNo,dateFlag,localCalDay,specFp,mfcMask);
+// QDOAS ???      rc=ReliMFC(pEngineContext,recordNo,dateFlag,localCalDay,specFp,mfcMask);
 // QDOAS ???
 // QDOAS ???     break;
 // QDOAS ???  // ---------------------------------------------------------------------------
 // QDOAS ???     case PRJCT_INSTR_FORMAT_MFC_STD :
-// QDOAS ???      rc=ReliMFCStd(pSpecInfo,recordNo,dateFlag,localCalDay,specFp);
+// QDOAS ???      rc=ReliMFCStd(pEngineContext,recordNo,dateFlag,localCalDay,specFp);
 // QDOAS ???     break;
 // QDOAS ???  // ---------------------------------------------------------------------------
 // QDOAS ???     case PRJCT_INSTR_FORMAT_RASAS :
-// QDOAS ???      rc=ReliRAS(pSpecInfo,recordNo,dateFlag,localCalDay,specFp);
+// QDOAS ???      rc=ReliRAS(pEngineContext,recordNo,dateFlag,localCalDay,specFp);
 // QDOAS ???     break;
 // QDOAS ???  // ---------------------------------------------------------------------------
 // QDOAS ???     case PRJCT_INSTR_FORMAT_UOFT :
-// QDOAS ???      rc=ReliUofT(pSpecInfo,recordNo,dateFlag,localCalDay,specFp);
+// QDOAS ???      rc=ReliUofT(pEngineContext,recordNo,dateFlag,localCalDay,specFp);
 // QDOAS ???     break;
 // QDOAS ???  // ---------------------------------------------------------------------------
 // QDOAS ???     case PRJCT_INSTR_FORMAT_NOAA :
-// QDOAS ???      rc=ReliNOAA(pSpecInfo,recordNo,dateFlag,localCalDay,specFp);
+// QDOAS ???      rc=ReliNOAA(pEngineContext,recordNo,dateFlag,localCalDay,specFp);
 // QDOAS ???     break;
 // QDOAS ???  // ---------------------------------------------------------------------------
 // QDOAS ???     #if defined (__INCLUDE_HDF_) && __INCLUDE_HDF_
 // QDOAS ???     case PRJCT_INSTR_FORMAT_OMI :
-// QDOAS ???      rc=OMI_ReadHDF(pSpecInfo,recordNo);
+// QDOAS ???      rc=OMI_ReadHDF(pEngineContext,recordNo);
 // QDOAS ???     break;
 // QDOAS ???     #endif
 // QDOAS ???  // ---------------------------------------------------------------------------
 // QDOAS ???     case PRJCT_INSTR_FORMAT_CCD_EEV :
-// QDOAS ???      rc=ReliCCD_EEV(pSpecInfo,recordNo,dateFlag,localCalDay,specFp,darkFp);
+// QDOAS ???      rc=ReliCCD_EEV(pEngineContext,recordNo,dateFlag,localCalDay,specFp,darkFp);
 // QDOAS ???     break;
 // QDOAS ???  // ---------------------------------------------------------------------------
 // QDOAS ???     case PRJCT_INSTR_FORMAT_CCD_HA_94 :
-// QDOAS ???      rc=ReliCCD(pSpecInfo,recordNo,dateFlag,localCalDay,specFp,namesFp,darkFp);
+// QDOAS ???      rc=ReliCCD(pEngineContext,recordNo,dateFlag,localCalDay,specFp,namesFp,darkFp);
 // QDOAS ???     break;
 // QDOAS ???  // ---------------------------------------------------------------------------
 // QDOAS ???     case PRJCT_INSTR_FORMAT_CCD_ULB :
-// QDOAS ???      rc=ReliCCD_Ulb(pSpecInfo,recordNo,dateFlag,localCalDay,specFp,darkFp);
+// QDOAS ???      rc=ReliCCD_Ulb(pEngineContext,recordNo,dateFlag,localCalDay,specFp,darkFp);
 // QDOAS ???     break;
 // QDOAS ???  // ---------------------------------------------------------------------------
 // QDOAS ???     case PRJCT_INSTR_FORMAT_CCD_OHP_96 :
-// QDOAS ???      rc=ReliCCDTrack(pSpecInfo,recordNo,dateFlag,localCalDay,specFp,namesFp,darkFp);
+// QDOAS ???      rc=ReliCCDTrack(pEngineContext,recordNo,dateFlag,localCalDay,specFp,namesFp,darkFp);
 // QDOAS ???     break;
 // QDOAS ???  // ---------------------------------------------------------------------------
 // QDOAS ???     case PRJCT_INSTR_FORMAT_OPUS :
-// QDOAS ???      rc=OPUS_Read(pSpecInfo,recordNo,dateFlag,localCalDay,specFp);
+// QDOAS ???      rc=OPUS_Read(pEngineContext,recordNo,dateFlag,localCalDay,specFp);
 // QDOAS ???     break;
 // QDOAS ???  // ---------------------------------------------------------------------------
 // QDOAS ???     case PRJCT_INSTR_FORMAT_GDP_ASCII :
-// QDOAS ???      rc=GDP_ASC_Read(pSpecInfo,recordNo,dateFlag,specFp);
+// QDOAS ???      rc=GDP_ASC_Read(pEngineContext,recordNo,dateFlag,specFp);
 // QDOAS ???     break;
 // QDOAS ???  // ---------------------------------------------------------------------------
 // QDOAS ???     case PRJCT_INSTR_FORMAT_GDP_BIN :
-// QDOAS ???      rc=GDP_BIN_Read(pSpecInfo,recordNo,specFp,GDP_BIN_currentFileIndex);
+// QDOAS ???      rc=GDP_BIN_Read(pEngineContext,recordNo,specFp,GDP_BIN_currentFileIndex);
 // QDOAS ???     break;
 // QDOAS ???  // ---------------------------------------------------------------------------
 // QDOAS ???     #if defined (__INCLUDE_HDF_) && __INCLUDE_HDF_
 // QDOAS ???     case PRJCT_INSTR_FORMAT_SCIA_HDF :
-// QDOAS ???      rc=SCIA_ReadHDF(pSpecInfo,recordNo);
+// QDOAS ???      rc=SCIA_ReadHDF(pEngineContext,recordNo);
 // QDOAS ???     break;
 // QDOAS ???     #endif
 // QDOAS ???  // ---------------------------------------------------------------------------
 // QDOAS ???     case PRJCT_INSTR_FORMAT_SCIA_PDS :
-// QDOAS ???      rc=SCIA_ReadPDS(pSpecInfo,recordNo);
+// QDOAS ???      rc=SCIA_ReadPDS(pEngineContext,recordNo);
 // QDOAS ???     break;
 // QDOAS ???  // ---------------------------------------------------------------------------
 // QDOAS ???     case PRJCT_INSTR_FORMAT_GOME2 :
-// QDOAS ???      rc=GOME2_Read(pSpecInfo,recordNo);
+// QDOAS ???      rc=GOME2_Read(pEngineContext,recordNo);
 // QDOAS ???     break;
 // QDOAS ???  // ---------------------------------------------------------------------------
 // QDOAS ???     default :
@@ -2265,66 +2287,66 @@ RC ThrdReadFile(SPEC_INFO *pSpecInfo,INT recordNo,INT dateFlag,INT localCalDay,F
 
     // Zenith angle correction from observation site geolocations
 
-    if ((indexSite=SITES_GetIndex(pSpecInfo->project.instrumental.observationSite))!=ITEM_NONE)
+    if ((indexSite=SITES_GetIndex(pEngineContext->project.instrumental.observationSite))!=ITEM_NONE)
      {
       pSite=&SITES_itemList[indexSite];
 
       longit=-pSite->longitude;   // !!! sign is inverted
 
-      pSpecInfo->longitude=-longit;
-      pSpecInfo->latitude=latit=(double)pSite->latitude;
+      pRecord->longitude=-longit;
+      pRecord->latitude=latit=(double)pSite->latitude;
 
       if (pSite->altitude>(double)0.)
-       pSpecInfo->altitude=pSite->altitude*0.001;
+       pRecord->altitude=pSite->altitude*0.001;
 
-      pSpecInfo->Zm=(pSpecInfo->Tm!=(double)0.)?ZEN_FNTdiz(ZEN_FNCrtjul(&pSpecInfo->Tm),&longit,&latit,&pSpecInfo->Azimuth):(double)-1.;
+      pRecord->Zm=(pRecord->Tm!=(double)0.)?ZEN_FNTdiz(ZEN_FNCrtjul(&pRecord->Tm),&longit,&latit,&pRecord->Azimuth):(double)-1.;
      }
 
-    if ((pSpecInfo->longitude!=(double)0.) && (pSpecInfo->latitude!=(double)0.) &&
+    if ((pRecord->longitude!=(double)0.) && (pRecord->latitude!=(double)0.) &&
        ((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC) ||
         (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC_STD)))
      {
       UCHAR string[30];
       sprintf(string,"%02d/%02d/%d %02d:%02d:%02d",
-                      pSpecInfo->present_day.da_day,pSpecInfo->present_day.da_mon,pSpecInfo->present_day.da_year,
-                      pSpecInfo->present_time.ti_hour,pSpecInfo->present_time.ti_min,pSpecInfo->present_time.ti_sec);
+                      pRecord->present_day.da_day,pRecord->present_day.da_mon,pRecord->present_day.da_year,
+                      pRecord->present_time.ti_hour,pRecord->present_time.ti_min,pRecord->present_time.ti_sec);
 
       MOON_GetPosition(string,                      // input date and time for moon positions calculation
-                      -pSpecInfo->longitude,        // longitude of the observation site
-                       pSpecInfo->latitude,         // latitude of the observation site
-                       pSpecInfo->altitude,         // altitude of the observation site
-                       &pSpecInfo->aMoon,           // azimuth, measured westward from the south
-                       &pSpecInfo->hMoon,           // altitude above the horizon
-                       &pSpecInfo->fracMoon);       // illuminated fraction of the moon
+                      -pRecord->longitude,        // longitude of the observation site
+                       pRecord->latitude,         // latitude of the observation site
+                       pRecord->altitude,         // altitude of the observation site
+                       &pRecord->aMoon,           // azimuth, measured westward from the south
+                       &pRecord->hMoon,           // altitude above the horizon
+                       &pRecord->fracMoon);       // illuminated fraction of the moon
      }
 
     // Dark current subtraction
 
-    if (pSpecInfo->darkCurrent!=NULL)
+    if (pEngineContext->buffers.darkCurrent!=NULL)
      {
-      if (pSpecInfo->project.instrumental.averageFlag)
+      if (pEngineContext->project.instrumental.averageFlag)
        {
         for (i=20,darkSum=(double)0.;i<NDET-20;i++)
-         darkSum+=(double)pSpecInfo->darkCurrent[i];
+         darkSum+=(double)pEngineContext->buffers.darkCurrent[i];
 
         for (i=0;i<NDET;i++)
-         pSpecInfo->darkCurrent[i]=darkSum/(NDET-40+1);
+         pEngineContext->buffers.darkCurrent[i]=darkSum/(NDET-40+1);
        }
 
       for (i=0;i<NDET;i++)
-       pSpecInfo->spectrum[i]-=pSpecInfo->darkCurrent[i];
+       pEngineContext->buffers.spectrum[i]-=pEngineContext->buffers.darkCurrent[i];
      }
 
-    SMax=VECTOR_Max(pSpecInfo->spectrum,NDET);
-    pSpecInfo->indexRecord=recordNo;
-    memcpy(spectrum,pSpecInfo->spectrum,sizeof(double)*NDET);
+    SMax=VECTOR_Max(pEngineContext->buffers.spectrum,NDET);
+    pEngineContext->indexRecord=recordNo;
+    memcpy(spectrum,pEngineContext->buffers.spectrum,sizeof(double)*NDET);
 
     if ((rc<THREAD_EVENT_STOP) &&
       (((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC) && (mfcMask!=pInstrumental->mfcMaskSpec)) ||
-       !(rc=THRD_SpectrumCorrection(pSpecInfo,spectrum))))    // Apply odd/even pixel correction on temporary buffer
+       !(rc=THRD_SpectrumCorrection(pEngineContext,spectrum))))    // Apply odd/even pixel correction on temporary buffer
      {  // BEGIN 1
-      longit=pSpecInfo->longitude;
-      latit=pSpecInfo->latitude;
+      longit=pRecord->longitude;
+      latit=pRecord->latitude;
       geoFlag=1;
 
       // Geolocation constraints
@@ -2365,9 +2387,9 @@ RC ThrdReadFile(SPEC_INFO *pSpecInfo,INT recordNo,INT dateFlag,INT localCalDay,F
 
          (((pProject->instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_ASCII) || pProject->instrumental.ascii.szaSaveFlag) &&
           ((pProject->instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_MFC) || (mfcMask==pProject->instrumental.mfcMaskSpec)) &&
-         (((pProject->spectra.SZAMin>(float)0.) && ((float)pSpecInfo->Zm<pProject->spectra.SZAMin)) ||
-          ((pProject->spectra.SZAMax>(float)0.) && ((float)pSpecInfo->Zm>pProject->spectra.SZAMax)) ||
-          ((pProject->spectra.SZADelta>(float)0.) && (fabs(pSpecInfo->Zm-THRD_specInfo.Zm)<pProject->spectra.SZADelta))))))
+         (((pProject->spectra.SZAMin>(float)0.) && ((float)pRecord->Zm<pProject->spectra.SZAMin)) ||
+          ((pProject->spectra.SZAMax>(float)0.) && ((float)pRecord->Zm>pProject->spectra.SZAMax)) ||
+          ((pProject->spectra.SZADelta>(float)0.) && (fabs(pRecord->Zm-THRD_specInfo.recordInfo.Zm)<pProject->spectra.SZADelta))))))
 
       /*    ||
 
@@ -2375,14 +2397,14 @@ RC ThrdReadFile(SPEC_INFO *pSpecInfo,INT recordNo,INT dateFlag,INT localCalDay,F
 
           ((THRD_goto.indexType==THREAD_GOTO_RECORD) &&
            (THRD_goto.indexRecord>0) &&
-           (pSpecInfo->indexRecord!=THRD_goto.indexRecord))*/
+           (pRecord->indexRecord!=THRD_goto.indexRecord))*/
        {
        rc=ERROR_ID_FILE_RECORD;
       }
 
       else if (!specInfoFlag
 // QDOAS ???   #if defined (__WINDOAS_GUI_) && __WINDOAS_GUI_
-// QDOAS ???           || !(rc=ThrdWriteSpecInfo(pSpecInfo))
+// QDOAS ???           || !(rc=ThrdWriteSpecInfo(pEngineContext))
 // QDOAS ???   #endif
               )
        {  // BEGIN 2
@@ -2398,13 +2420,13 @@ RC ThrdReadFile(SPEC_INFO *pSpecInfo,INT recordNo,INT dateFlag,INT localCalDay,F
         if ((THRD_browseType==THREAD_BROWSE_EXPORT) && (THRD_asciiFp!=NULL))
          {
           if (ASCII_options.szaSaveFlag)
-           fprintf(THRD_asciiFp,"%lf ",pSpecInfo->Zm);
+           fprintf(THRD_asciiFp,"%lf ",pRecord->Zm);
 
           if (ASCII_options.azimSaveFlag)
-           fprintf(THRD_asciiFp,"%f ",pSpecInfo->azimuthViewAngle);
+           fprintf(THRD_asciiFp,"%f ",pRecord->azimuthViewAngle);
 
           if (ASCII_options.elevSaveFlag)
-           fprintf(THRD_asciiFp,"%lf ",pSpecInfo->elevationViewAngle);
+           fprintf(THRD_asciiFp,"%lf ",pRecord->elevationViewAngle);
 
           if (ASCII_options.format==PRJCT_INSTR_ASCII_FORMAT_COLUMN &&
              (ASCII_options.szaSaveFlag || ASCII_options.azimSaveFlag || ASCII_options.elevSaveFlag))
@@ -2413,14 +2435,14 @@ RC ThrdReadFile(SPEC_INFO *pSpecInfo,INT recordNo,INT dateFlag,INT localCalDay,F
 
           if (ASCII_options.dateSaveFlag)
            {
-            fprintf(THRD_asciiFp,"%02d/%02d/%d ",pSpecInfo->present_day.da_day,pSpecInfo->present_day.da_mon,pSpecInfo->present_day.da_year);
+            fprintf(THRD_asciiFp,"%02d/%02d/%d ",pRecord->present_day.da_day,pRecord->present_day.da_mon,pRecord->present_day.da_year);
             if (ASCII_options.format==PRJCT_INSTR_ASCII_FORMAT_COLUMN)
              fprintf(THRD_asciiFp,"\n");
            }
 
           if (ASCII_options.timeSaveFlag)
            {
-            fprintf(THRD_asciiFp,"%lf ",pSpecInfo->TimeDec);
+            fprintf(THRD_asciiFp,"%lf ",pRecord->TimeDec);
             if (ASCII_options.format==PRJCT_INSTR_ASCII_FORMAT_COLUMN)
              fprintf(THRD_asciiFp,"\n");
            }
@@ -2428,9 +2450,9 @@ RC ThrdReadFile(SPEC_INFO *pSpecInfo,INT recordNo,INT dateFlag,INT localCalDay,F
           for (i=0;i<NDET;i++)
            {
             if ((ASCII_options.format==PRJCT_INSTR_ASCII_FORMAT_COLUMN) && ASCII_options.lembdaSaveFlag)
-             fprintf(THRD_asciiFp,"%lf ",pSpecInfo->lembda[i]);
+             fprintf(THRD_asciiFp,"%lf ",pEngineContext->buffers.lembda[i]);
 
-            fprintf(THRD_asciiFp,"%lf ",pSpecInfo->spectrum[i]);
+            fprintf(THRD_asciiFp,"%lf ",pEngineContext->buffers.spectrum[i]);
 
             if (ASCII_options.format==PRJCT_INSTR_ASCII_FORMAT_COLUMN)
              fprintf(THRD_asciiFp,"\n");
@@ -2442,11 +2464,11 @@ RC ThrdReadFile(SPEC_INFO *pSpecInfo,INT recordNo,INT dateFlag,INT localCalDay,F
 
         else if ((THRD_id==THREAD_TYPE_SPECTRA) || (pProject->spectra.displaySpectraFlag==(UCHAR)1))
          {
-          if ((pSpecInfo->instrFunction!=NULL) && ((THRD_browseType==THREAD_BROWSE_SPECTRA) || (THRD_browseType==THREAD_BROWSE_EXPORT)))
+          if ((pEngineContext->buffers.instrFunction!=NULL) && ((THRD_browseType==THREAD_BROWSE_SPECTRA) || (THRD_browseType==THREAD_BROWSE_EXPORT)))
            {
             for (i=0;i<NDET;i++)
-             if (fabs(pSpecInfo->instrFunction[i])>(double)1.e-5)
-              spectrum[i]/=pSpecInfo->instrFunction[i];
+             if (fabs(pEngineContext->buffers.instrFunction[i])>(double)1.e-5)
+              spectrum[i]/=pEngineContext->buffers.instrFunction[i];
              else
               spectrum[i]=(double)0.;
            }
@@ -2456,24 +2478,24 @@ RC ThrdReadFile(SPEC_INFO *pSpecInfo,INT recordNo,INT dateFlag,INT localCalDay,F
 // QDOAS ???           // Graph display
 // QDOAS ???
 // QDOAS ???           sprintf(windowTitle,"Spectra - %s (# %d/%d SZA %g)",
-// QDOAS ???                   pSpecInfo->fileName,recordNo,pSpecInfo->recordNumber,pSpecInfo->Zm);
+// QDOAS ???                   pEngineContext->fileName,recordNo,pEngineContext->recordNumber,pEngineContext->Zm);
 // QDOAS ???
 // QDOAS ???
-// QDOAS ???           if ((THRD_browseType==THREAD_BROWSE_DARK) && (pSpecInfo->darkCurrent!=NULL) && (VECTOR_Max(pSpecInfo->darkCurrent,NDET)>(double)0.))
+// QDOAS ???           if ((THRD_browseType==THREAD_BROWSE_DARK) && (pEngineContext->darkCurrent!=NULL) && (VECTOR_Max(pEngineContext->darkCurrent,NDET)>(double)0.))
 // QDOAS ???
 // QDOAS ???            DRAW_Spectra(CHILD_WINDOW_SPECTRA,windowTitle,graphTitle,"Wavelength (nm)","Intensity",NULL,0,
 // QDOAS ???                        (double)0.,(double)0.,(double)0.,(double)0.,
-// QDOAS ???                         pSpecInfo->lembda,pSpecInfo->darkCurrent,NDET,DRAW_COLOR1,0,NDET-1,PS_SOLID,NULL,
-// QDOAS ??? //                        pSpecInfo->lembda,(THRD_dark && (pSpecInfo->darkCurrent!=NULL) && (VECTOR_Max(pSpecInfo->darkCurrent,NDET)>(double)0.))?pSpecInfo->darkCurrent:spectrum,NDET,DRAW_COLOR2,0,NDET-1,PS_DOT,
+// QDOAS ???                         pEngineContext->lembda,pEngineContext->darkCurrent,NDET,DRAW_COLOR1,0,NDET-1,PS_SOLID,NULL,
+// QDOAS ??? //                        pEngineContext->lembda,(THRD_dark && (pEngineContext->darkCurrent!=NULL) && (VECTOR_Max(pEngineContext->darkCurrent,NDET)>(double)0.))?pEngineContext->darkCurrent:spectrum,NDET,DRAW_COLOR2,0,NDET-1,PS_DOT,
 // QDOAS ???                         NULL,NULL,0,0,0,0,PS_SOLID,NULL,
 // QDOAS ???                         indexBand,maxV,maxH,(indexBand==maxBand-1)?1:0);
 // QDOAS ???
-// QDOAS ???           else if ((THRD_browseType==THREAD_BROWSE_ERROR) && (pSpecInfo->sigmaSpec!=NULL) && (VECTOR_Max(pSpecInfo->sigmaSpec,NDET)>(double)0.))
+// QDOAS ???           else if ((THRD_browseType==THREAD_BROWSE_ERROR) && (pEngineContext->sigmaSpec!=NULL) && (VECTOR_Max(pEngineContext->sigmaSpec,NDET)>(double)0.))
 // QDOAS ???
 // QDOAS ???            DRAW_Spectra(CHILD_WINDOW_SPECTRA,windowTitle,graphTitle,"Wavelength (nm)","Intensity",NULL,0,
 // QDOAS ???                        (double)0.,(double)0.,(double)0.,(double)0.,
-// QDOAS ???                         pSpecInfo->lembda,pSpecInfo->sigmaSpec,NDET,DRAW_COLOR1,0,NDET-1,PS_SOLID,NULL,
-// QDOAS ??? //                        pSpecInfo->lembda,(THRD_dark && (pSpecInfo->darkCurrent!=NULL) && (VECTOR_Max(pSpecInfo->darkCurrent,NDET)>(double)0.))?pSpecInfo->darkCurrent:spectrum,NDET,DRAW_COLOR2,0,NDET-1,PS_DOT,
+// QDOAS ???                         pEngineContext->lembda,pEngineContext->sigmaSpec,NDET,DRAW_COLOR1,0,NDET-1,PS_SOLID,NULL,
+// QDOAS ??? //                        pEngineContext->lembda,(THRD_dark && (pEngineContext->darkCurrent!=NULL) && (VECTOR_Max(pEngineContext->darkCurrent,NDET)>(double)0.))?pEngineContext->darkCurrent:spectrum,NDET,DRAW_COLOR2,0,NDET-1,PS_DOT,
 // QDOAS ???                         NULL,NULL,0,0,0,0,PS_SOLID,NULL,
 // QDOAS ???                         indexBand,maxV,maxH,(indexBand==maxBand-1)?1:0);
 // QDOAS ???
@@ -2481,14 +2503,14 @@ RC ThrdReadFile(SPEC_INFO *pSpecInfo,INT recordNo,INT dateFlag,INT localCalDay,F
 // QDOAS ???            {
 // QDOAS ???             DRAW_Spectra(CHILD_WINDOW_SPECTRA,windowTitle,graphTitle,"Wavelength (nm)","Intensity",NULL,0,
 // QDOAS ???                         (double)0.,(double)0.,(double)0.,(double)0.,
-// QDOAS ???                          pSpecInfo->lembda,spectrum,NDET,DRAW_COLOR1,0,NDET-1,PS_SOLID,NULL,
-// QDOAS ??? //                         pSpecInfo->lembda,(THRD_dark && (pSpecInfo->darkCurrent!=NULL) && (VECTOR_Max(pSpecInfo->darkCurrent,NDET)>(double)0.))?pSpecInfo->darkCurrent:spectrum,NDET,DRAW_COLOR2,0,NDET-1,PS_DOT,
+// QDOAS ???                          pEngineContext->lembda,spectrum,NDET,DRAW_COLOR1,0,NDET-1,PS_SOLID,NULL,
+// QDOAS ??? //                         pEngineContext->lembda,(THRD_dark && (pEngineContext->darkCurrent!=NULL) && (VECTOR_Max(pEngineContext->darkCurrent,NDET)>(double)0.))?pEngineContext->darkCurrent:spectrum,NDET,DRAW_COLOR2,0,NDET-1,PS_DOT,
 // QDOAS ???                          NULL,NULL,0,0,0,0,PS_SOLID,NULL,
 // QDOAS ???                          indexBand,maxV,maxH,(indexBand==maxBand-1)?1:0);
 // QDOAS ???
 // QDOAS ???            }
 // QDOAS ???
-// QDOAS ???           DRAW_SpecMax(pSpecInfo->specMax,pSpecInfo->rejected+pSpecInfo->NSomme,DRAW_COLOR2);
+// QDOAS ???           DRAW_SpecMax(pEngineContext->specMax,pEngineContext->rejected+pEngineContext->NSomme,DRAW_COLOR2);
 // QDOAS ???           #endif
          }
        }    // END 2
@@ -2506,9 +2528,9 @@ RC ThrdReadFile(SPEC_INFO *pSpecInfo,INT recordNo,INT dateFlag,INT localCalDay,F
 // QDOAS ???    if (rc<THREAD_EVENT_STOP)
 // QDOAS ???     {
 // QDOAS ???      if (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC)
-// QDOAS ???       memcpy(pSpecInfo->spectrum,spectrum,sizeof(double)*NDET);
+// QDOAS ???       memcpy(pEngineContext->spectrum,spectrum,sizeof(double)*NDET);
 // QDOAS ???      else
-// QDOAS ???       rc=THRD_SpectrumCorrection(pSpecInfo,pSpecInfo->spectrum);
+// QDOAS ???       rc=THRD_SpectrumCorrection(pEngineContext,pEngineContext->spectrum);
 // QDOAS ???     }
 // QDOAS ???    else if (!dateFlag && (rc>THREAD_EVENT_STOP))
 // QDOAS ???     {
@@ -2519,7 +2541,7 @@ RC ThrdReadFile(SPEC_INFO *pSpecInfo,INT recordNo,INT dateFlag,INT localCalDay,F
 // QDOAS ???     }
    }   // END 0
   else if (rc==ERROR_ID_FILE_BAD_FORMAT)
-   rc=ERROR_SetLast("ThrdReadFile",ERROR_TYPE_WARNING,ERROR_ID_FILE_BAD_FORMAT,pSpecInfo->fileName);
+   rc=ERROR_SetLast("ThrdReadFile",ERROR_TYPE_WARNING,ERROR_ID_FILE_BAD_FORMAT,pEngineContext->fileInfo.fileName);
 
   // Return
 
@@ -2540,7 +2562,7 @@ RC ThrdReadFile(SPEC_INFO *pSpecInfo,INT recordNo,INT dateFlag,INT localCalDay,F
 // ThrdSetRefIndexes : Set indexes of spectra selected as reference for analysis
 // -----------------------------------------------------------------------------
 
-RC ThrdSetRefIndexes(SPEC_INFO *pSpecInfo,FILE *specFp,FILE *namesFp,FILE *darkFp)
+RC ThrdSetRefIndexes(ENGINE_CONTEXT *pEngineContext,FILE *specFp,FILE *namesFp,FILE *darkFp)
  {
   // Declarations
 
@@ -2568,9 +2590,9 @@ RC ThrdSetRefIndexes(SPEC_INFO *pSpecInfo,FILE *specFp,FILE *namesFp,FILE *darkF
   ZmMin=360.;
   ZmMax=0.;
 
-  rc=THRD_CopySpecInfo(&THRD_refInfo,pSpecInfo);       // make a copy of general data
+  rc=THRD_CopySpecInfo(&THRD_refInfo,pEngineContext);       // make a copy of general data
   pSpectra=&THRD_refInfo.project.spectra;             // pointer to project part of data
-  localCalDay=THRD_refInfo.localCalDay;
+  localCalDay=THRD_refInfo.recordInfo.localCalDay;
 
   if ((THRD_refInfo.project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_LOGGER) ||
       (THRD_refInfo.project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_PDAEGG))
@@ -2600,27 +2622,27 @@ RC ThrdSetRefIndexes(SPEC_INFO *pSpecInfo,FILE *specFp,FILE *namesFp,FILE *darkF
 
       for (indexRecord=THRD_lastRefRecord+1;indexRecord<=THRD_refInfo.recordNumber;indexRecord++)
        if (((rc=ThrdReadFile(&THRD_refInfo,indexRecord,1,localCalDay,specFp,namesFp,darkFp,0))<THREAD_EVENT_STOP) &&
-           (THRD_refInfo.Zm>(double)0.))
+           (THRD_refInfo.recordInfo.Zm>(double)0.))
         {
          if (rc==ITEM_NONE)
           rc=0;
 
          // Data on record
 
-         indexList[NRecord]=indexRecord;             // index of record
-         ZmList[NRecord]=THRD_refInfo.Zm;                 // zenith angle
-         TimeDec[NRecord]=THRD_refInfo.localTimeDec;      // decimal time for determining when the measurement has occured
+         indexList[NRecord]=indexRecord;                             // index of record
+         ZmList[NRecord]=THRD_refInfo.recordInfo.Zm;                 // zenith angle
+         TimeDec[NRecord]=THRD_refInfo.recordInfo.localTimeDec;      // decimal time for determining when the measurement has occured
 
          // Minimum and maximum zenith angle
 
-         if (THRD_refInfo.Zm<ZmMin)
+         if (THRD_refInfo.recordInfo.Zm<ZmMin)
           {
-           ZmMin=THRD_refInfo.Zm;
+           ZmMin=THRD_refInfo.recordInfo.Zm;
            indexZmMin=NRecord;
           }
 
-         if (THRD_refInfo.Zm>ZmMax)
-          ZmMax=THRD_refInfo.Zm;
+         if (THRD_refInfo.recordInfo.Zm>ZmMax)
+          ZmMax=THRD_refInfo.recordInfo.Zm;
 
          NRecord++;
         }
@@ -2648,7 +2670,7 @@ RC ThrdSetRefIndexes(SPEC_INFO *pSpecInfo,FILE *specFp,FILE *namesFp,FILE *darkF
           // No reference spectrum found in SZA range
 
           if (ZmMax<pTabFeno->refSZA-pTabFeno->refSZADelta)
-           rc=ERROR_SetLast("ThrdSetRefIndexes",ERROR_TYPE_WARNING,ERROR_ID_NO_REF,"all the day",THRD_refInfo.fileName);
+           rc=ERROR_SetLast("ThrdSetRefIndexes",ERROR_TYPE_WARNING,ERROR_ID_NO_REF,"all the day",THRD_refInfo.fileInfo.fileName);
 
           // Select record with SZA minimum
 
@@ -2683,17 +2705,17 @@ RC ThrdSetRefIndexes(SPEC_INFO *pSpecInfo,FILE *specFp,FILE *namesFp,FILE *darkF
             // No record found for the morning OR the afternoon
 
             if ((pTabFeno->indexRefMorning==ITEM_NONE) && (pTabFeno->indexRefAfternoon==ITEM_NONE))
-             rc=ERROR_SetLast("ThrdSetRefIndexes",ERROR_TYPE_WARNING,ERROR_ID_NO_REF,"all the day",THRD_refInfo.fileName);
-            else if (pSpecInfo->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_ASCII)
+             rc=ERROR_SetLast("ThrdSetRefIndexes",ERROR_TYPE_WARNING,ERROR_ID_NO_REF,"all the day",THRD_refInfo.fileInfo.fileName);
+            else if (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_ASCII)
              {
               if (pTabFeno->indexRefMorning==ITEM_NONE)
                {
-               	rc=ERROR_SetLast("ThrdSetRefIndexes",ERROR_TYPE_WARNING,ERROR_ID_NO_REF,"the morning",THRD_refInfo.fileName);
+               	rc=ERROR_SetLast("ThrdSetRefIndexes",ERROR_TYPE_WARNING,ERROR_ID_NO_REF,"the morning",THRD_refInfo.fileInfo.fileName);
                 pTabFeno->indexRefMorning=pTabFeno->indexRefAfternoon;
                }
               else if (pTabFeno->indexRefAfternoon==ITEM_NONE)
                {
-               	rc=ERROR_SetLast("ThrdSetRefIndexes",ERROR_TYPE_WARNING,ERROR_ID_NO_REF,"the afternoon",THRD_refInfo.fileName);
+               	rc=ERROR_SetLast("ThrdSetRefIndexes",ERROR_TYPE_WARNING,ERROR_ID_NO_REF,"the afternoon",THRD_refInfo.fileInfo.fileName);
                 pTabFeno->indexRefAfternoon=pTabFeno->indexRefMorning;
                }
              }
@@ -2728,9 +2750,11 @@ RC ThrdSetRefIndexes(SPEC_INFO *pSpecInfo,FILE *specFp,FILE *namesFp,FILE *darkF
 // ThrdNewRef : Load new reference spectra
 // ---------------------------------------
 
-RC ThrdNewRef(SPEC_INFO *pSpecInfo,FILE *specFp,FILE *namesFp,FILE *darkFp)
+RC ThrdNewRef(ENGINE_CONTEXT *pEngineContext,FILE *specFp,FILE *namesFp,FILE *darkFp)
  {
   // Declarations
+
+  RECORD_INFO *pRecord;                                                         // pointer to the record part of the engine context
 
   double *Sref,*lembdaRef;
 
@@ -2745,19 +2769,20 @@ RC ThrdNewRef(SPEC_INFO *pSpecInfo,FILE *specFp,FILE *namesFp,FILE *darkFp)
 
   // Initializations
 
+  pRecord=&pEngineContext->recordInfo;
   rc=ERROR_ID_NO;
-  saveFlag=(INT)pSpecInfo->project.spectra.displayDataFlag;
+  saveFlag=(INT)pEngineContext->project.spectra.displayDataFlag;
   useKurucz=alignRef=useUsamp=0;
   Sref=lembdaRef=NULL;
 
   // Select spectra records as reference
 
-  if ((pSpecInfo->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_ASCII) && !pSpecInfo->project.instrumental.ascii.szaSaveFlag)
+  if ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_ASCII) && !pEngineContext->project.instrumental.ascii.szaSaveFlag)
    rc=ERROR_SetLast("ASCII_Read",ERROR_TYPE_WARNING,ERROR_ID_FILE_AUTOMATIC);
 
-  else if (pSpecInfo->localCalDay!=THRD_refInfo.localCalDay)
-//  else if (memcmp((char *)&pSpecInfo->present_day,(char *)&THRD_refInfo.present_day,sizeof(SHORT_DATE))!=0)  // ref and spectrum are not of the same day
-   rc=ThrdSetRefIndexes(pSpecInfo,specFp,namesFp,darkFp);
+  else if (pRecord->localCalDay!=THRD_refInfo.recordInfo.localCalDay)
+//  else if (memcmp((char *)&pRecord->present_day,(char *)&THRD_refInfo.present_day,sizeof(SHORT_DATE))!=0)  // ref and spectrum are not of the same day
+   rc=ThrdSetRefIndexes(pEngineContext,specFp,namesFp,darkFp);
 
   for (indexTabFeno=0;(indexTabFeno<NFeno) && (rc<THREAD_EVENT_STOP);indexTabFeno++)
    {
@@ -2768,9 +2793,9 @@ RC ThrdNewRef(SPEC_INFO *pSpecInfo,FILE *specFp,FILE *namesFp,FILE *darkFp)
      {
       pTabFeno->displayRef=0;
 
-      if ((indexRefRecord=(pSpecInfo->localTimeDec<=THRD_localNoon)?pTabFeno->indexRefMorning:pTabFeno->indexRefAfternoon)==ITEM_NONE)
+      if ((indexRefRecord=(pRecord->localTimeDec<=THRD_localNoon)?pTabFeno->indexRefMorning:pTabFeno->indexRefAfternoon)==ITEM_NONE)
        {
-        memcpy((char *)&THRD_specInfo.present_day,(char *)&pSpecInfo->present_day,sizeof(SHORT_DATE));
+        memcpy((char *)&THRD_specInfo.recordInfo.present_day,(char *)&pRecord->present_day,sizeof(SHORT_DATE));
         rc=ERROR_ID_FILE_RECORD;
        }
 
@@ -2783,13 +2808,13 @@ RC ThrdNewRef(SPEC_INFO *pSpecInfo,FILE *specFp,FILE *namesFp,FILE *darkFp)
 
         if (!pTabFeno->useEtalon)
          {
-          memcpy(pTabFeno->LembdaK,THRD_refInfo.lembda,sizeof(double)*NDET);
-          memcpy(pTabFeno->LembdaRef,THRD_refInfo.lembda,sizeof(double)*NDET);
+          memcpy(pTabFeno->LembdaK,THRD_refInfo.buffers.lembda,sizeof(double)*NDET);
+          memcpy(pTabFeno->LembdaRef,THRD_refInfo.buffers.lembda,sizeof(double)*NDET);
 
           for (indexWindow=0,newDimL=0;indexWindow<pTabFeno->svd.Z;indexWindow++)
            {
-            pTabFeno->svd.Fenetre[indexWindow][0]=FNPixel(THRD_refInfo.lembda,pTabFeno->svd.LFenetre[indexWindow][0],pTabFeno->NDET,PIXEL_AFTER);
-            pTabFeno->svd.Fenetre[indexWindow][1]=FNPixel(THRD_refInfo.lembda,pTabFeno->svd.LFenetre[indexWindow][1],pTabFeno->NDET,PIXEL_BEFORE);
+            pTabFeno->svd.Fenetre[indexWindow][0]=FNPixel(THRD_refInfo.buffers.lembda,pTabFeno->svd.LFenetre[indexWindow][0],pTabFeno->NDET,PIXEL_AFTER);
+            pTabFeno->svd.Fenetre[indexWindow][1]=FNPixel(THRD_refInfo.buffers.lembda,pTabFeno->svd.LFenetre[indexWindow][1],pTabFeno->NDET,PIXEL_BEFORE);
 
             newDimL+=(pTabFeno->svd.Fenetre[indexWindow][1]-pTabFeno->svd.Fenetre[indexWindow][0]+1);
            }
@@ -2814,18 +2839,18 @@ RC ThrdNewRef(SPEC_INFO *pSpecInfo,FILE *specFp,FILE *namesFp,FILE *darkFp)
         if (pTabFeno->useUsamp)
          useUsamp++;
 
-        memcpy(pTabFeno->Sref,THRD_refInfo.spectrum,sizeof(double)*NDET);
+        memcpy(pTabFeno->Sref,THRD_refInfo.buffers.spectrum,sizeof(double)*NDET);
 
         if ((rc=ANALYSE_NormalizeVector(pTabFeno->Sref-1,NDET,&factTemp,"ThrdNewRef "))!=ERROR_ID_NO)
          break;
 
         pTabFeno->indexRef=indexRefRecord;
-        pTabFeno->Zm=THRD_refInfo.Zm;
-        pTabFeno->Tm=THRD_refInfo.Tm;
-        pTabFeno->TimeDec=THRD_refInfo.TimeDec;
+        pTabFeno->Zm=THRD_refInfo.recordInfo.Zm;
+        pTabFeno->Tm=THRD_refInfo.recordInfo.Tm;
+        pTabFeno->TimeDec=THRD_refInfo.recordInfo.TimeDec;
         pTabFeno->displayRef=1;
 
-        memcpy(&pTabFeno->refDate,&THRD_refInfo.present_day,sizeof(SHORT_DATE));
+        memcpy(&pTabFeno->refDate,&THRD_refInfo.recordInfo.present_day,sizeof(SHORT_DATE));
 
 //        if (pTabFeno->useEtalon)
 //         rc=ANALYSE_AlignRef(pTabFeno,pTabFeno->Lembda,pTabFeno->SrefEtalon,pTabFeno->Sref,&pTabFeno->Shift,&pTabFeno->Stretch,&pTabFeno->Stretch2,saveFlag);
@@ -2836,13 +2861,13 @@ RC ThrdNewRef(SPEC_INFO *pSpecInfo,FILE *specFp,FILE *namesFp,FILE *darkFp)
    }
 
 // QDOAS ???   #if defined (__WINDOAS_GUI_) && __WINDOAS_GUI_
-// QDOAS ???   ThrdWriteSpecInfo(pSpecInfo);
+// QDOAS ???   ThrdWriteSpecInfo(pEngineContext);
 // QDOAS ???   #endif
 
   // Reference alignment
 
   if ((rc<THREAD_EVENT_STOP) && useKurucz)
-   rc=KURUCZ_Reference(THRD_refInfo.instrFunction,1,saveFlag,1);
+   rc=KURUCZ_Reference(THRD_refInfo.buffers.instrFunction,1,saveFlag,1);
 
   if ((rc<THREAD_EVENT_STOP) && alignRef)
     rc=ANALYSE_AlignReference(1,saveFlag);
@@ -2881,7 +2906,7 @@ RC ThrdNewRef(SPEC_INFO *pSpecInfo,FILE *specFp,FILE *namesFp,FILE *darkFp)
 // QDOAS ???   UCHAR fileName[MAX_ITEM_TEXT_LEN+1],fileTmp[MAX_ITEM_TEXT_LEN+1],      // make a copy of current file name
 // QDOAS ???         waitEventFlag,
 // QDOAS ???         *ptr,asciiFile[MAX_ITEM_TEXT_LEN+1];
-// QDOAS ???   SPEC_INFO specInfo;                                                    // data on current spectra and reference
+// QDOAS ???   ENGINE_CONTEXT specInfo;                                                    // data on current spectra and reference
 // QDOAS ???   INT endAnalysis;
 // QDOAS ???   HWND hwndEdit;
 // QDOAS ???   RC rc;                                                                 // return code
@@ -2898,8 +2923,8 @@ RC ThrdNewRef(SPEC_INFO *pSpecInfo,FILE *specFp,FILE *namesFp,FILE *darkFp)
 // QDOAS ???
 // QDOAS ???   THRD_asciiFp=specFp=namesFp=darkFp=NULL;                    // file pointers
 // QDOAS ???
-// QDOAS ???   memset(&specInfo,0,sizeof(SPEC_INFO));         // data on current spectra
-// QDOAS ???   memset(&THRD_refInfo,0,sizeof(SPEC_INFO));     // data on reference spectrum (automatic selection)
+// QDOAS ???   memset(&specInfo,0,sizeof(ENGINE_CONTEXT));         // data on current spectra
+// QDOAS ???   memset(&THRD_refInfo,0,sizeof(ENGINE_CONTEXT));     // data on reference spectrum (automatic selection)
 // QDOAS ???
 // QDOAS ???   THRD_specInfo.indexProject=                    // index of current project
 // QDOAS ???   THRD_specInfo.indexFile=                       // index of current file

@@ -91,7 +91,7 @@ EASOE;
 //
 // INPUT         specFp    pointer to the spectra file
 //
-// OUTPUT        pSpecInfo->recordNumber, the number of records
+// OUTPUT        pEngineContext->recordNumber, the number of records
 //
 // RETURN        ERROR_ID_ALLOC           buffers allocation failed
 //               ERROR_ID_FILE_NOT_FOUND  the input file pointer 'specFp' is NULL;
@@ -99,7 +99,7 @@ EASOE;
 //               ERROR_ID_NO              otherwise.
 // -----------------------------------------------------------------------------
 
-RC SetEASOE(SPEC_INFO *pSpecInfo,FILE *specFp,FILE *namesFp)
+RC SetEASOE(ENGINE_CONTEXT *pEngineContext,FILE *specFp,FILE *namesFp)
  {
   // Declarations
 
@@ -112,21 +112,21 @@ RC SetEASOE(SPEC_INFO *pSpecInfo,FILE *specFp,FILE *namesFp)
 
   // Initializations
 
-  pSpecInfo->recordIndexesSize=2001;
-  recordIndexes=pSpecInfo->recordIndexes;
+  pEngineContext->recordIndexesSize=2001;
+  recordIndexes=pEngineContext->buffers.recordIndexes;
   rc=ERROR_ID_NO;
 
   // Buffers allocation
 
-  if (((indexes=(SHORT *)MEMORY_AllocBuffer("SetEASOE","indexes",pSpecInfo->recordIndexesSize,sizeof(SHORT),0,MEMORY_TYPE_SHORT))==NULL) ||
-      ((pSpecInfo->specMax=MEMORY_AllocDVector("SetEASOE","specMax",0,NDET-1))==NULL))
+  if (((indexes=(SHORT *)MEMORY_AllocBuffer("SetEASOE","indexes",pEngineContext->recordIndexesSize,sizeof(SHORT),0,MEMORY_TYPE_SHORT))==NULL) ||
+      ((pEngineContext->buffers.specMax=MEMORY_AllocDVector("SetEASOE","specMax",0,NDET-1))==NULL))
 
    rc=ERROR_ID_ALLOC;
 
   // Open spectra file
 
   else if ((specFp==NULL) || (namesFp==NULL))
-   rc=ERROR_SetLast("SetEASOE",ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pSpecInfo->fileName);
+   rc=ERROR_SetLast("SetEASOE",ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pEngineContext->fileInfo.fileName);
   else
    {
     // Headers read out
@@ -135,15 +135,15 @@ RC SetEASOE(SPEC_INFO *pSpecInfo,FILE *specFp,FILE *namesFp)
     fseek(namesFp,0L,SEEK_SET);
 
     if (!fread(&curvenum,sizeof(SHORT),1,specFp) ||
-        !fread(indexes,pSpecInfo->recordIndexesSize*sizeof(SHORT),1,specFp) ||
+        !fread(indexes,pEngineContext->recordIndexesSize*sizeof(SHORT),1,specFp) ||
         (curvenum<=0))
 
-     rc=ERROR_SetLast("SetEASOE",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pSpecInfo->fileName);
+     rc=ERROR_SetLast("SetEASOE",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pEngineContext->fileInfo.fileName);
 
     else
      {
       i=0;
-      recordIndexes[0]=(LONG)(pSpecInfo->recordIndexesSize+1)*sizeof(SHORT);    // file header : size of indexes table + curvenum
+      recordIndexes[0]=(LONG)(pEngineContext->recordIndexesSize+1)*sizeof(SHORT);    // file header : size of indexes table + curvenum
 
       if (namesFp!=NULL )
        {
@@ -156,16 +156,16 @@ RC SetEASOE(SPEC_INFO *pSpecInfo,FILE *specFp,FILE *namesFp)
           if (names[11]=='Z')                                                   // name of a zenith spectrum
            {
             i++;
-            recordIndexes[i]=recordIndexes[i-1]+pSpecInfo->recordSize;
+            recordIndexes[i]=recordIndexes[i-1]+pEngineContext->recordSize;
            }
          }
        }
 
-      pSpecInfo->recordNumber=curvenum;
-      pSpecInfo->recordSize=(LONG)sizeof(EASOE);
+      pEngineContext->recordNumber=curvenum;
+      pEngineContext->recordSize=(LONG)sizeof(EASOE);
 
       for (i=1;i<curvenum;i++)
-       recordIndexes[i]=recordIndexes[i-1]+pSpecInfo->recordSize+indexes[i];    // take size of SpecMax arrays into account
+       recordIndexes[i]=recordIndexes[i-1]+pEngineContext->recordSize+indexes[i];    // take size of SpecMax arrays into account
      }
    }
 
@@ -201,9 +201,11 @@ RC SetEASOE(SPEC_INFO *pSpecInfo,FILE *specFp,FILE *namesFp)
 //               ERROR_ID_NO             : otherwise.
 // -----------------------------------------------------------------------------
 
-RC ReliEASOE(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *specFp,FILE *namesFp,FILE *darkFp)
+RC ReliEASOE(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp,FILE *namesFp,FILE *darkFp)
  {
   // Declarations
+
+  RECORD_INFO *pRecord;                                                         // pointer to the record part of the engine context
 
   EASOE             speRecord,drkRecord;                                        // resp. spectrum and dark current records
   UCHAR             names[20];                                                  // name of the current spectrum
@@ -213,6 +215,8 @@ RC ReliEASOE(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *s
   RC                rc;                                                         // return code
 
   // Initializations
+
+  pRecord=&pEngineContext->recordInfo;
 
   ISpecMax=NULL;
   memset(names,0,20);
@@ -226,8 +230,8 @@ RC ReliEASOE(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *s
    speRecord.spectre[i]=drkRecord.spectre[i]=(float)0.;
 
   if (specFp==NULL)
-   rc=ERROR_SetLast("ReliEASOE",ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pSpecInfo->fileName);
-  else if ((recordNo<=0) || (recordNo>pSpecInfo->recordNumber))
+   rc=ERROR_SetLast("ReliEASOE",ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pEngineContext->fileInfo.fileName);
+  else if ((recordNo<=0) || (recordNo>pEngineContext->recordNumber))
    rc=ERROR_ID_FILE_END;
 
   // Buffers allocation
@@ -256,16 +260,16 @@ RC ReliEASOE(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *s
        }
      }
 
-    fseek(specFp,(LONG)pSpecInfo->recordIndexes[recordNo-1],SEEK_SET);
+    fseek(specFp,(LONG)pEngineContext->buffers.recordIndexes[recordNo-1],SEEK_SET);
 
     // Complete record read out
 
-    fread(&speRecord,pSpecInfo->recordSize,1,specFp);                           // read out the zenith spectrum
+    fread(&speRecord,pEngineContext->recordSize,1,specFp);                           // read out the zenith spectrum
 
     if ((darkFp!=NULL) && (j>0))
      {
       fseek(darkFp,(LONG)sizeof(EASOE)*(j-1),SEEK_SET);
-      fread(&drkRecord,pSpecInfo->recordSize,1,darkFp);                         // read out the dark current
+      fread(&drkRecord,pEngineContext->recordSize,1,darkFp);                         // read out the dark current
      }
 
     if (speRecord.n_somm>0)
@@ -275,34 +279,34 @@ RC ReliEASOE(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *s
 
     for (i=0;i<NDET;i++)
      {
-      pSpecInfo->spectrum[i]=(double)speRecord.spectre[NDET-i-1];
-      pSpecInfo->darkCurrent[i]=(double)drkRecord.spectre[NDET-i-1];
+      pEngineContext->buffers.spectrum[i]=(double)speRecord.spectre[NDET-i-1];
+      pEngineContext->buffers.darkCurrent[i]=(double)drkRecord.spectre[NDET-i-1];
      }
 
     if (speRecord.n_somm>0)
      for (i=0;i<speRecord.n_somm;i++)
-      pSpecInfo->specMax[i]=(double)ISpecMax[i];
+      pEngineContext->buffers.specMax[i]=(double)ISpecMax[i];
 
     // Data on the current record
 
-    memcpy(pSpecInfo->Nom,names,20);
-    memcpy((char *)&pSpecInfo->present_day,(char *)&speRecord.present_day,sizeof(SHORT_DATE));
-    memcpy((char *)&pSpecInfo->present_time,(char *)&drkRecord.present_time,sizeof(struct time));
+    memcpy(pRecord->Nom,names,20);
+    memcpy((char *)&pRecord->present_day,(char *)&speRecord.present_day,sizeof(SHORT_DATE));
+    memcpy((char *)&pRecord->present_time,(char *)&drkRecord.present_time,sizeof(struct time));
 
-    pSpecInfo->Tm=(double)ZEN_NbSec(&pSpecInfo->present_day,&pSpecInfo->present_time,0);
-    pSpecInfo->TotalExpTime=(double)0.;
-    pSpecInfo->TimeDec=(double)speRecord.present_time.ti_hour+speRecord.present_time.ti_min/60.+speRecord.present_time.ti_sec/3600.;
+    pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_day,&pRecord->present_time,0);
+    pRecord->TotalExpTime=(double)0.;
+    pRecord->TimeDec=(double)speRecord.present_time.ti_hour+speRecord.present_time.ti_min/60.+speRecord.present_time.ti_sec/3600.;
 
-    tmLocal=pSpecInfo->Tm+THRD_localShift*3600.;
+    tmLocal=pRecord->Tm+THRD_localShift*3600.;
 
-    pSpecInfo->localCalDay=ZEN_FNCaljda(&tmLocal);
-    pSpecInfo->localTimeDec=fmod(pSpecInfo->TimeDec+24.+THRD_localShift,(double)24.);
+    pRecord->localCalDay=ZEN_FNCaljda(&tmLocal);
+    pRecord->localTimeDec=fmod(pRecord->TimeDec+24.+THRD_localShift,(double)24.);
 
-    pSpecInfo->Tint     = (double)0.001*speRecord.t_int;
-    pSpecInfo->NSomme   = speRecord.n_somm;
-    pSpecInfo->SkyObs   = speRecord.SkyObs;
+    pRecord->Tint     = (double)0.001*speRecord.t_int;
+    pRecord->NSomme   = speRecord.n_somm;
+    pRecord->SkyObs   = speRecord.SkyObs;
 
-    if (dateFlag && (pSpecInfo->localCalDay!=localDay))
+    if (dateFlag && (pRecord->localCalDay!=localDay))
      rc=ERROR_ID_FILE_RECORD;
    }
 

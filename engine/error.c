@@ -270,7 +270,7 @@ RC ERROR_SetLast(UCHAR *callingFunction,int errorType,RC errorId,...)
 
 RC ERROR_GetLast(ERROR_DESCRIPTION *pError)
  {
- 	// Tranmit the information about the last error
+ 	// Transmit the information about the last error
 
   if (pError!=NULL)
    {

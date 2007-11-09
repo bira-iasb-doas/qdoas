@@ -33,7 +33,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #define ANLYSWIN_NAME_BUFFER_LENGTH  64
 
 #define MAX_AW_CROSS_SECTION         16
-#define MAX_AW_SHIFT_STRETCH         18
-#define MAX_AW_GAP                   16
+#define MAX_AW_SHIFT_STRETCH         MAX_AW_CROSS_SECTION+2                     // the total number of cross sections + spectrum + ref (note that practically, it will never possible to shift all cross sections separately !)
+#define MAX_AW_GAP                   8                                          // usually max 1 or 2 gaps
 
 #endif

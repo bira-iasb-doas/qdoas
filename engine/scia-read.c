@@ -284,7 +284,7 @@ void SCIA_ReleaseBuffers(UCHAR format)
 // -----------------------------------------------------------------------------
 // PURPOSE       Allocate buffers for the definition of clusters
 //
-// INPUT/OUTPUT  pSpecInfo    interface for file operations
+// INPUT/OUTPUT  pEngineContext    interface for file operations
 // INPUT         clustersList the list of clusters present in the file
 //               nClusters    the number of clusters present in the file
 //               nStates      the number of states
@@ -294,7 +294,7 @@ void SCIA_ReleaseBuffers(UCHAR format)
 //               ERROR_ID_NO    otherwise.
 // -----------------------------------------------------------------------------
 
-RC SciaAllocateClusters(SPEC_INFO *pSpecInfo,int *clustersList,int nClusters,int nStates,INDEX fileIndex)
+RC SciaAllocateClusters(ENGINE_CONTEXT *pEngineContext,int *clustersList,int nClusters,int nStates,INDEX fileIndex)
  {
   // Declarations
 
@@ -310,7 +310,7 @@ RC SciaAllocateClusters(SPEC_INFO *pSpecInfo,int *clustersList,int nClusters,int
 //  DEBUG_Print(DOAS_logFile,"Enter SciaAllocateClusters\n");
 
   pOrbitFile=&sciaOrbitFiles[fileIndex];
-  pInstr=&pSpecInfo->project.instrumental;
+  pInstr=&pEngineContext->project.instrumental;
   memset(userCluster,0,sizeof(int)*MAX_CLUSTER);
   memset(pOrbitFile->sciaNadirClustersIdx,ITEM_NONE,sizeof(int)*MAX_CLUSTER);   // !!!
   rc=ERROR_ID_NO;
@@ -347,7 +347,7 @@ RC SciaAllocateClusters(SPEC_INFO *pSpecInfo,int *clustersList,int nClusters,int
     // If requested clusters are not in the file, display error
 
     if (!rc && !pOrbitFile->sciaNadirClustersN)
-     rc=ERROR_SetLast("SciaAllocateClusters",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pSpecInfo->fileName);
+     rc=ERROR_SetLast("SciaAllocateClusters",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pEngineContext->fileInfo.fileName);
    }
 
   // Return
@@ -488,14 +488,14 @@ INDEX SciaGetStateIndex(int recordNo,INT *pObs,INDEX fileIndex)
 // PURPOSE       Analyze information on NADIR states
 //
 // INPUT         fileIndex    index of the current file
-// INPUT/OUTPUT  pSpecInfo    interface for file operations
+// INPUT/OUTPUT  pEngineContext    interface for file operations
 //
 // RETURN        ERROR_ID_ALLOC if the allocation of a buffer failed;
 //               ERROR_ID_FILE_EMPTY if no record is found in the file;
 //               ERROR_ID_NO    otherwise.
 // -----------------------------------------------------------------------------
 
-RC SciaNadirStates(SPEC_INFO *pSpecInfo,INDEX fileIndex)
+RC SciaNadirStates(ENGINE_CONTEXT *pEngineContext,INDEX fileIndex)
  {
   // Declarations
 
@@ -600,7 +600,7 @@ RC SciaNadirStates(SPEC_INFO *pSpecInfo,INDEX fileIndex)
      }
 
     if (!pOrbitFile->specNumber)
-     rc=ERROR_SetLast("SciaNadirStates",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pSpecInfo->fileName);
+     rc=ERROR_SetLast("SciaNadirStates",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pEngineContext->fileInfo.fileName);
    }
 
   // DEBUG
@@ -620,13 +620,13 @@ RC SciaNadirStates(SPEC_INFO *pSpecInfo,INDEX fileIndex)
 // PURPOSE       Retrieve geolocation data
 //
 // INPUT         fileIndex    index of the current file
-// INPUT/OUTPUT  pSpecInfo    interface for file operations
+// INPUT/OUTPUT  pEngineContext    interface for file operations
 //
 // RETURN        ERROR_ID_ALLOC if the allocation of a buffer failed;
 //               ERROR_ID_NO    otherwise.
 // -----------------------------------------------------------------------------
 
-RC SciaNadirGeolocations(SPEC_INFO *pSpecInfo,INDEX fileIndex)
+RC SciaNadirGeolocations(ENGINE_CONTEXT *pEngineContext,INDEX fileIndex)
  {
   // Declarations
 
@@ -748,13 +748,13 @@ RC SciaNadirGeolocations(SPEC_INFO *pSpecInfo,INDEX fileIndex)
 // PURPOSE       Read the sun reference spectrum from the PDS file
 //
 // INPUT         fileIndex    index of the current file
-// INPUT/OUTPUT  pSpecInfo    interface for file operations
+// INPUT/OUTPUT  pEngineContext    interface for file operations
 //
 // RETURN        ERROR_ID_ALLOC if the allocation of a buffer failed
 //               ERROR_ID_NO    otherwise.
 // -----------------------------------------------------------------------------
 
-RC SciaReadSunRefPDS(SPEC_INFO *pSpecInfo,INDEX fileIndex)
+RC SciaReadSunRefPDS(ENGINE_CONTEXT *pEngineContext,INDEX fileIndex)
  {
   // Declarations
 
@@ -806,16 +806,16 @@ RC SciaReadSunRefPDS(SPEC_INFO *pSpecInfo,INDEX fileIndex)
         dlrFlag=1;
        }
 
-      if ((refId[0]==toupper(pSpecInfo->project.instrumental.scia.sciaReference[0])) && (refId[1]==pSpecInfo->project.instrumental.scia.sciaReference[1]))
+      if ((refId[0]==toupper(pEngineContext->project.instrumental.scia.sciaReference[0])) && (refId[1]==pEngineContext->project.instrumental.scia.sciaReference[1]))
        {
         // Read the wavelength calibration
 
-        fseek(fp,offset+2+(pSpecInfo->project.instrumental.scia.sciaChannel)*NDET*sizeof(float),SEEK_SET);
+        fseek(fp,offset+2+(pEngineContext->project.instrumental.scia.sciaChannel)*NDET*sizeof(float),SEEK_SET);
         fread(pOrbitFile->sciaSunWve,sizeof(float)*NDET,1,fp);
 
         // Read the reference spectrum
 
-        fseek(fp,offset+2+(pSpecInfo->project.instrumental.scia.sciaChannel+8)*NDET*sizeof(float),SEEK_SET); /* 8*NDET + (channel-1)*NDET = (channel+7)*NDET */
+        fseek(fp,offset+2+(pEngineContext->project.instrumental.scia.sciaChannel+8)*NDET*sizeof(float),SEEK_SET); /* 8*NDET + (channel-1)*NDET = (channel+7)*NDET */
         fread(pOrbitFile->sciaSunRef,sizeof(float)*NDET,1,fp);
 
         #if defined(__LITTLE_ENDIAN__)
@@ -832,14 +832,14 @@ RC SciaReadSunRefPDS(SPEC_INFO *pSpecInfo,INDEX fileIndex)
 
     if ((indexRef>=(int)pOrbitFile->sciaPDSInfo.sun_ref.num_dsr) ||
        ((fabs(pOrbitFile->sciaSunWve[0]-999.)<(double)1.) && (fabs(pOrbitFile->sciaSunRef[0]-999.)<(double)1.)))
-     rc=ERROR_SetLast("SciaReadSunRefPDS",ERROR_TYPE_WARNING,ERROR_ID_PDS,"NO_SUN_REF (2)",pSpecInfo->fileName);
+     rc=ERROR_SetLast("SciaReadSunRefPDS",ERROR_TYPE_WARNING,ERROR_ID_PDS,"NO_SUN_REF (2)",pEngineContext->fileInfo.fileName);
     else
      {
       for (i=0;i<NDET;i++)
-       pSpecInfo->lembda[i]=(double)(((float *)pOrbitFile->sciaSunWve)[i]);
+       pEngineContext->buffers.lembda[i]=(double)(((float *)pOrbitFile->sciaSunWve)[i]);
 
       for (i=0;i<NDET;i++)
-       pSpecInfo->irrad[i]=(double)(((float *)pOrbitFile->sciaSunRef)[i]);
+       pEngineContext->buffers.irrad[i]=(double)(((float *)pOrbitFile->sciaSunRef)[i]);
      }
    }
 
@@ -856,7 +856,7 @@ RC SciaReadSunRefPDS(SPEC_INFO *pSpecInfo,INDEX fileIndex)
 // PURPOSE       Read information on Nadir measurement data set
 //
 // INPUT         fileIndex    index of the current file
-// INPUT/OUTPUT  pSpecInfo    interface for file operations
+// INPUT/OUTPUT  pEngineContext    interface for file operations
 //
 // RETURN        ERROR_ID_ALLOC if the allocation of a buffer failed
 //               ERROR_ID_NO    otherwise.
@@ -865,7 +865,7 @@ RC SciaReadSunRefPDS(SPEC_INFO *pSpecInfo,INDEX fileIndex)
 #if defined(__BC32_) && __BC32_
 #pragma argsused
 #endif
-RC SciaReadNadirMDSInfo(SPEC_INFO *pSpecInfo,INDEX fileIndex)
+RC SciaReadNadirMDSInfo(ENGINE_CONTEXT *pEngineContext,INDEX fileIndex)
  {
   // Declarations
 
@@ -921,7 +921,7 @@ RC SciaReadNadirMDSInfo(SPEC_INFO *pSpecInfo,INDEX fileIndex)
         pClusDef->npixels=mds.npixels;
         pClusDef->mdsOffset=offset;
 
-        pSpecInfo->scia.qualityFlag=mds.quality;
+        pEngineContext->recordInfo.scia.qualityFlag=mds.quality;
        }
 
       offset+=mds.length;
@@ -944,16 +944,18 @@ RC SciaReadNadirMDSInfo(SPEC_INFO *pSpecInfo,INDEX fileIndex)
 // -----------------------------------------------------------------------------
 // PURPOSE       Read a NADIR measurement data set
 //
-// INPUT/OUTPUT  pSpecInfo    interface for file operations
+// INPUT/OUTPUT  pEngineContext    interface for file operations
 //
 // INPUT         indexState   index of state for the NADIR measurement data set to read out
 //               indexRecord  index of record in the current state
 //               fileIndex    index of the current file
 // -----------------------------------------------------------------------------
 
-RC SciaReadNadirMDS(SPEC_INFO *pSpecInfo,INDEX indexState,INDEX indexRecord,INDEX fileIndex)
+RC SciaReadNadirMDS(ENGINE_CONTEXT *pEngineContext,INDEX indexState,INDEX indexRecord,INDEX fileIndex)
  {
   // Declarations
+
+  BUFFERS *pBuffers;                                                            // pointer to the buffers part of the engine context
 
   SCIA_ORBIT_FILE *pOrbitFile;                                                  // pointer to the current orbit
   ULONG offset;                                                                 // offset from the beginning of file for data to read
@@ -965,11 +967,12 @@ RC SciaReadNadirMDS(SPEC_INFO *pSpecInfo,INDEX indexState,INDEX indexRecord,INDE
 
   // Initializations
 
+  pBuffers=&pEngineContext->buffers;
   pOrbitFile=&sciaOrbitFiles[fileIndex];
   fp=pOrbitFile->sciaPDSInfo.FILE_l1c;
 
   for (i=0;i<NDET;i++)
-   pSpecInfo->spectrum[i]=pSpecInfo->sigmaSpec[i]=(double)0.;
+   pBuffers->spectrum[i]=pBuffers->sigmaSpec[i]=(double)0.;
 
   for (indexCluster=0;indexCluster<pOrbitFile->sciaNadirClustersN;indexCluster++)
    {
@@ -1016,16 +1019,16 @@ RC SciaReadNadirMDS(SPEC_INFO *pSpecInfo,INDEX indexState,INDEX indexRecord,INDE
     for (j=0;j<pClusDef->coadd;j++)
      for (i=0;i<pClusDef->npixels;i++)
       {
-       pSpecInfo->spectrum[i+pClusDef->startPix]+=(double)pCluster->spe[pClusDef->npixels*j+i];
-       pSpecInfo->sigmaSpec[i+pClusDef->startPix]+=(double)pCluster->err[pClusDef->npixels*j+i]*pCluster->err[pClusDef->npixels*j+i];
+       pBuffers->spectrum[i+pClusDef->startPix]+=(double)pCluster->spe[pClusDef->npixels*j+i];
+       pBuffers->sigmaSpec[i+pClusDef->startPix]+=(double)pCluster->err[pClusDef->npixels*j+i]*pCluster->err[pClusDef->npixels*j+i];
       }
 
     if (pClusDef->coadd!=0)
      for (i=0;i<pClusDef->npixels;i++)
       {
-       pSpecInfo->spectrum[i+pClusDef->startPix]/=(double)pClusDef->coadd;
-       if (fabs(pSpecInfo->sigmaSpec[i+pClusDef->startPix])>(double)1.e-15)
-        pSpecInfo->sigmaSpec[i+pClusDef->startPix]=(double)sqrt(pSpecInfo->sigmaSpec[i+pClusDef->startPix])/(double)pClusDef->coadd;
+       pBuffers->spectrum[i+pClusDef->startPix]/=(double)pClusDef->coadd;
+       if (fabs(pBuffers->sigmaSpec[i+pClusDef->startPix])>(double)1.e-15)
+        pBuffers->sigmaSpec[i+pClusDef->startPix]=(double)sqrt(pBuffers->sigmaSpec[i+pClusDef->startPix])/(double)pClusDef->coadd;
       }
    }
 
@@ -1038,7 +1041,7 @@ RC SciaReadNadirMDS(SPEC_INFO *pSpecInfo,INDEX indexState,INDEX indexRecord,INDE
 // PURPOSE       Retrieve information on useful data sets from the PDS file and
 //               load the irradiance spectrum measured at the specified channel
 //
-// INPUT/OUTPUT  pSpecInfo interface for file operations
+// INPUT/OUTPUT  pEngineContext interface for file operations
 //
 // RETURN        ERROR_ID_FILE_NOT_FOUND  if the file is not found;
 //               ERROR_ID_FILE_EMPTY      if the file is empty;
@@ -1050,7 +1053,7 @@ RC SciaReadNadirMDS(SPEC_INFO *pSpecInfo,INDEX indexState,INDEX indexRecord,INDE
 #if defined(__BC32_) && __BC32_
 #pragma argsused
 #endif
-RC SCIA_SetPDS(SPEC_INFO *pSpecInfo)
+RC SCIA_SetPDS(ENGINE_CONTEXT *pEngineContext)
  {
   // Declarations
 
@@ -1082,9 +1085,10 @@ RC SCIA_SetPDS(SPEC_INFO *pSpecInfo)
   _n=0;
   sciaLoadReferenceFlag=0;
   ANALYSE_oldLatitude=(double)99999.;
-  pSpecInfo->recordNumber=0;
+  pEngineContext->recordNumber=0;
   oldCurrentIndex=sciaCurrentFileIndex;
   sciaCurrentFileIndex=ITEM_NONE;
+  pOrbitFile=NULL;
   rc=ERROR_ID_NO;
 
   // In automatic reference selection, the file has maybe already loaded
@@ -1100,8 +1104,8 @@ RC SCIA_SetPDS(SPEC_INFO *pSpecInfo)
      }
 
     for (indexFile=0;indexFile<sciaOrbitFilesN;indexFile++)
-     if ((strlen(pSpecInfo->fileName)==strlen(sciaOrbitFiles[indexFile].sciaFileName)) &&
-         !STD_Stricmp(pSpecInfo->fileName,sciaOrbitFiles[indexFile].sciaFileName))
+     if ((strlen(pEngineContext->fileInfo.fileName)==strlen(sciaOrbitFiles[indexFile].sciaFileName)) &&
+         !STD_Stricmp(pEngineContext->fileInfo.fileName,sciaOrbitFiles[indexFile].sciaFileName))
       break;
 
     if (indexFile<sciaOrbitFilesN)
@@ -1112,7 +1116,7 @@ RC SCIA_SetPDS(SPEC_INFO *pSpecInfo)
    {
    	// Release old buffers
 
-   	SCIA_ReleaseBuffers(pSpecInfo->project.instrumental.readOutFormat);
+   	SCIA_ReleaseBuffers(pEngineContext->project.instrumental.readOutFormat);
 
    	// Get the number of files to load
 
@@ -1122,7 +1126,7 @@ RC SCIA_SetPDS(SPEC_INFO *pSpecInfo)
 
     		// Get file path
 
-     	strcpy(filePath,pSpecInfo->fileName);
+     	strcpy(filePath,pEngineContext->fileInfo.fileName);
 
      	if ((ptr=strrchr(filePath,PATH_SEP))==NULL)
     	 	strcpy(filePath,".");
@@ -1131,7 +1135,7 @@ RC SCIA_SetPDS(SPEC_INFO *pSpecInfo)
 
    	 	// Build file filter
 
-   	 	strcpy(fileFilter,pSpecInfo->fileName);
+   	 	strcpy(fileFilter,pEngineContext->fileInfo.fileName);
    	 	if ((ptr=strrchr(fileFilter,PATH_SEP))==NULL)
    	 	 ptr=fileFilter;
 
@@ -1140,24 +1144,24 @@ RC SCIA_SetPDS(SPEC_INFO *pSpecInfo)
    	 	if (_n<8) // it's a SCIAMACHY file
        {
      	  sciaOrbitFilesN=1;
-     	  strcpy(sciaOrbitFiles[0].sciaFileName,pSpecInfo->fileName);
+     	  strcpy(sciaOrbitFiles[0].sciaFileName,pEngineContext->fileInfo.fileName);
        }
       else
        {
         if (ANALYSE_lonSelectionFlag)
          {
-          if (!strlen(pSpecInfo->project.instrumental.fileExt))
+          if (!strlen(pEngineContext->project.instrumental.fileExt))
            strcpy(ptr+1,"*.N1.child");
           else
-           sprintf(ptr+1,"*.%s",pSpecInfo->project.instrumental.fileExt);
+           sprintf(ptr+1,"*.%s",pEngineContext->project.instrumental.fileExt);
          }
         else
          {
           memset(ptr+1,'?',(_nList[5]-ptr)-1);
-          if (!strlen(pSpecInfo->project.instrumental.fileExt))
+          if (!strlen(pEngineContext->project.instrumental.fileExt))
    	 	     sprintf(_nList[7]+1,"*.N1.child");
    	 	    else
-   	 	     sprintf(_nList[7]+1,"*.%s",pSpecInfo->project.instrumental.fileExt);
+   	 	     sprintf(_nList[7]+1,"*.%s",pEngineContext->project.instrumental.fileExt);
    	 	   }
 
         // Search for files of the same orbit
@@ -1197,7 +1201,7 @@ RC SCIA_SetPDS(SPEC_INFO *pSpecInfo)
    	else
      {
      	sciaOrbitFilesN=1;
-     	strcpy(sciaOrbitFiles[0].sciaFileName,pSpecInfo->fileName);
+     	strcpy(sciaOrbitFiles[0].sciaFileName,pEngineContext->fileInfo.fileName);
      }
 
     // Load files
@@ -1217,20 +1221,20 @@ RC SCIA_SetPDS(SPEC_INFO *pSpecInfo)
 
       // Read the irradiance data set to get the wavelength calibration
 
-      else if (!(rc=SciaReadSunRefPDS(pSpecInfo,indexFile)) &&
+      else if (!(rc=SciaReadSunRefPDS(pEngineContext,indexFile)) &&
                ((THRD_id!=THREAD_TYPE_SPECTRA) || (THRD_browseType!=THREAD_BROWSE_DARK)))
        {
         // Read information on radiances spectra
 
         if (!pOrbitFile->sciaPDSInfo.n_states[NADIR])
          rc=ERROR_ID_FILE_EMPTY;
-        else if (!(rc=SciaAllocateClusters(pSpecInfo,pOrbitFile->sciaPDSInfo.cluster_ids,     // Allocate buffers for clusters
+        else if (!(rc=SciaAllocateClusters(pEngineContext,pOrbitFile->sciaPDSInfo.cluster_ids,     // Allocate buffers for clusters
                  pOrbitFile->sciaPDSInfo.max_cluster_ids,pOrbitFile->sciaPDSInfo.n_states[NADIR],indexFile)) &&
-                 !(rc=SciaReadNadirMDSInfo(pSpecInfo,indexFile)) &&                           // get offset of NADIR measurement data set
-                 !(rc=SciaNadirStates(pSpecInfo,indexFile)) &&                                // determine the number of records from the cluster with highest integration time in the different states
-                 !(rc=SciaNadirGeolocations(pSpecInfo,indexFile)))                            // Read geolocations
+                 !(rc=SciaReadNadirMDSInfo(pEngineContext,indexFile)) &&                           // get offset of NADIR measurement data set
+                 !(rc=SciaNadirStates(pEngineContext,indexFile)) &&                                // determine the number of records from the cluster with highest integration time in the different states
+                 !(rc=SciaNadirGeolocations(pEngineContext,indexFile)))                            // Read geolocations
 
-         pSpecInfo->scia.orbitNumber=atoi(pOrbitFile->sciaPDSInfo.mph.abs_orbit);
+         pEngineContext->recordInfo.scia.orbitNumber=atoi(pOrbitFile->sciaPDSInfo.mph.abs_orbit);
        }
 
       if (pOrbitFile->sciaPDSInfo.FILE_l1c!=NULL)
@@ -1239,8 +1243,8 @@ RC SCIA_SetPDS(SPEC_INFO *pSpecInfo)
         pOrbitFile->sciaPDSInfo.FILE_l1c=NULL;
        }
 
-      if ((strlen(pSpecInfo->fileName)==strlen(pOrbitFile->sciaFileName)) &&
-          !STD_Stricmp(pSpecInfo->fileName,pOrbitFile->sciaFileName))
+      if ((strlen(pEngineContext->fileInfo.fileName)==strlen(pOrbitFile->sciaFileName)) &&
+          !STD_Stricmp(pEngineContext->fileInfo.fileName,pOrbitFile->sciaFileName))
        sciaCurrentFileIndex=indexFile;
 
       sciaTotalRecordNumber+=pOrbitFile->specNumber;
@@ -1252,11 +1256,11 @@ RC SCIA_SetPDS(SPEC_INFO *pSpecInfo)
      }
    }
 
-  if ((sciaCurrentFileIndex==ITEM_NONE) || !(pSpecInfo->recordNumber=(pOrbitFile=&sciaOrbitFiles[sciaCurrentFileIndex])->specNumber))
+  if ((sciaCurrentFileIndex==ITEM_NONE) || !(pEngineContext->recordNumber=(pOrbitFile=&sciaOrbitFiles[sciaCurrentFileIndex])->specNumber))
    rc=ERROR_SetLast("SCIA_SetPDS",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pOrbitFile->sciaFileName);
   else
    {
-    pSpecInfo->scia.orbitNumber=atoi(pOrbitFile->sciaPDSInfo.mph.abs_orbit);
+    pEngineContext->recordInfo.scia.orbitNumber=atoi(pOrbitFile->sciaPDSInfo.mph.abs_orbit);
     if (!(rc=pOrbitFile->rc) && (pOrbitFile->sciaPDSInfo.FILE_l1c==NULL))
      pOrbitFile->sciaPDSInfo.FILE_l1c=fopen(pOrbitFile->sciaFileName,"rb");
    }
@@ -1279,7 +1283,7 @@ RC SCIA_SetPDS(SPEC_INFO *pSpecInfo)
 //
 // INPUT         recordNo     index of the record to read
 //
-// INPUT/OUTPUT  pSpecInfo    interface for file operations
+// INPUT/OUTPUT  pEngineContext    interface for file operations
 //
 // RETURN        ERROR_ID_FILE_END        the end of the file is reached;
 //               ERROR_ID_FILE_RECORD     the record doesn't satisfy user constraints
@@ -1289,10 +1293,11 @@ RC SCIA_SetPDS(SPEC_INFO *pSpecInfo)
 #if defined(__BC32_) && __BC32_
 #pragma argsused
 #endif
-RC SCIA_ReadPDS(SPEC_INFO *pSpecInfo,int recordNo)
+RC SCIA_ReadPDS(ENGINE_CONTEXT *pEngineContext,int recordNo)
  {
   // Declarations
 
+  RECORD_INFO *pRecord;                                                         // pointer to the record part of the engine context
   SCIA_ORBIT_FILE *pOrbitFile;                                                  // pointer to the current orbit
   SATELLITE_GEOLOC *pSciaData;                                                  // data (geolocation+angles) of the current record
   INT stateObs;                                                                 // total number of observations covered by previous states
@@ -1304,6 +1309,7 @@ RC SCIA_ReadPDS(SPEC_INFO *pSpecInfo,int recordNo)
 
 //  DEBUG_Print(DOAS_logFile,"Enter SCIA_ReadPDS %d\n",recordNo);
 
+  pRecord=&pEngineContext->recordInfo;
   pOrbitFile=&sciaOrbitFiles[sciaCurrentFileIndex];
   rc=ERROR_ID_NO;
 
@@ -1319,51 +1325,51 @@ RC SCIA_ReadPDS(SPEC_INFO *pSpecInfo,int recordNo)
      rc=ERROR_ID_FILE_RECORD;
     else
      {
-      SciaReadNadirMDS(pSpecInfo,indexState,recordNo-stateObs-1,sciaCurrentFileIndex);
+      SciaReadNadirMDS(pEngineContext,indexState,recordNo-stateObs-1,sciaCurrentFileIndex);
 
       // Geolocation and angles data
 
       pSciaData=&pOrbitFile->sciaGeolocations[recordNo-1];
 
-      memcpy(pSpecInfo->scia.latitudes,pSciaData->latCorners,sizeof(double)*4);
-      memcpy(pSpecInfo->scia.longitudes,pSciaData->lonCorners,sizeof(double)*4);
-      memcpy(pSpecInfo->scia.solZen,pSciaData->solZen,sizeof(float)*3);
-      memcpy(pSpecInfo->scia.solAzi,pSciaData->solAzi,sizeof(float)*3);
-      memcpy(pSpecInfo->scia.losZen,pSciaData->losZen,sizeof(float)*3);
-      memcpy(pSpecInfo->scia.losAzi,pSciaData->losAzi,sizeof(float)*3);
+      memcpy(pRecord->scia.latitudes,pSciaData->latCorners,sizeof(double)*4);
+      memcpy(pRecord->scia.longitudes,pSciaData->lonCorners,sizeof(double)*4);
+      memcpy(pRecord->scia.solZen,pSciaData->solZen,sizeof(float)*3);
+      memcpy(pRecord->scia.solAzi,pSciaData->solAzi,sizeof(float)*3);
+      memcpy(pRecord->scia.losZen,pSciaData->losZen,sizeof(float)*3);
+      memcpy(pRecord->scia.losAzi,pSciaData->losAzi,sizeof(float)*3);
 
       // Misecellaneous data (for TEMIS)
 
-      pSpecInfo->scia.earthRadius=pSciaData->earthRadius;
-      pSpecInfo->scia.satHeight=pSciaData->satHeight;
-      pSpecInfo->scia.stateIndex=indexState;
-      pSpecInfo->scia.stateId=pOrbitFile->sciaNadirStates[indexState].stateId;
+      pRecord->scia.earthRadius=pSciaData->earthRadius;
+      pRecord->scia.satHeight=pSciaData->satHeight;
+      pRecord->scia.stateIndex=indexState;
+      pRecord->scia.stateId=pOrbitFile->sciaNadirStates[indexState].stateId;
 
-      pSpecInfo->latitude=pSciaData->latCenter;
-      pSpecInfo->longitude=pSciaData->lonCenter;
+      pRecord->latitude=pSciaData->latCenter;
+      pRecord->longitude=pSciaData->lonCenter;
 
-      pSpecInfo->Zm=pSciaData->solZen[1];
-      pSpecInfo->Azimuth=pSciaData->solAzi[1];
-      pSpecInfo->zenithViewAngle=pSciaData->losZen[1];
-      pSpecInfo->azimuthViewAngle=pSciaData->losAzi[1];
+      pRecord->Zm=pSciaData->solZen[1];
+      pRecord->Azimuth=pSciaData->solAzi[1];
+      pRecord->zenithViewAngle=pSciaData->losZen[1];
+      pRecord->azimuthViewAngle=pSciaData->losAzi[1];
 
-      pSpecInfo->Tint=pOrbitFile->sciaNadirStates[indexState].int_time/16.;
+      pRecord->Tint=pOrbitFile->sciaNadirStates[indexState].int_time/16.;
 
-      pSpecInfo->TimeDec=(double)pOrbitFile->sciaNadirStates[indexState].dsrTime+(recordNo-stateObs-1)*pOrbitFile->sciaNadirStates[indexState].int_time/16./86400.;
-      pSpecInfo->TimeDec=(double)(pSpecInfo->TimeDec-floor(pSpecInfo->TimeDec))*24.;
+      pRecord->TimeDec=(double)pOrbitFile->sciaNadirStates[indexState].dsrTime+(recordNo-stateObs-1)*pOrbitFile->sciaNadirStates[indexState].int_time/16./86400.;
+      pRecord->TimeDec=(double)(pRecord->TimeDec-floor(pRecord->TimeDec))*24.;
 
       // Get date and time
 
       SCIA_FromMJD2000ToYMD((double)pOrbitFile->sciaNadirStates[indexState].dsrTime+
-                            (double)(recordNo-stateObs-1)*pOrbitFile->sciaNadirStates[indexState].int_time/16./86400.,&pSpecInfo->present_day,&pSpecInfo->present_time);
+                            (double)(recordNo-stateObs-1)*pOrbitFile->sciaNadirStates[indexState].int_time/16./86400.,&pRecord->present_day,&pRecord->present_time);
 
-//      tmp=(pSpecInfo->TimeDec-floor(pSpecInfo->TimeDec))*60.;                   // fractional minutes
+//      tmp=(pRecord->TimeDec-floor(pRecord->TimeDec))*60.;                   // fractional minutes
 //      tmp=(tmp-floor(tmp))*60.;                                                 // fractional seconds
 //      tmp=(tmp-floor(tmp))*1000.;                                               // fractional ms
 
 //      SCIA_ms=(int)floor(tmp+0.5);
 
-      pSpecInfo->Tm=(double)ZEN_NbSec(&pSpecInfo->present_day,&pSpecInfo->present_time,0);  // !!!
+      pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_day,&pRecord->present_time,0);  // !!!
      }
    }
 
@@ -1403,6 +1409,8 @@ INDEX SciaSortGetIndex(double value,int flag,int listSize,INDEX fileIndex)
   // Initializations
 
   pOrbitFile=&sciaOrbitFiles[fileIndex];
+
+  curValue=curMinValue=curMaxValue=(double)0.;
 
   imin=icur=0;
   imax=listSize;
@@ -1499,6 +1507,8 @@ void SciaSort(INDEX indexRecord,int flag,int listSize,INDEX fileIndex)
   // Initializations
 
   pOrbitFile=&sciaOrbitFiles[fileIndex];
+  value=(double)0.;
+  sortedList=NULL;
 
   switch(flag)
    {
@@ -1744,7 +1754,7 @@ INT SciaRefSza(SCIA_REF *refList,INT maxRefSize,double sza,double szaDelta)
 //               nRef         the number of elements in the previous list
 //               nSpectra     the maximum number of spectra to average to build the reference spectrum;
 //               lembda       the grid of the irradiance spectrum
-//               pSpecInfo    interface for file operations
+//               pEngineContext    interface for file operations
 //               fp           pointer to the file dedicated to the display of information on selected spectra
 //
 // OUTPUT        ref          the new reference spectrum
@@ -1753,10 +1763,11 @@ INT SciaRefSza(SCIA_REF *refList,INT maxRefSize,double sza,double szaDelta)
 //               ERROR_ID_NO otherwise.
 // -----------------------------------------------------------------------------
 
-RC SciaBuildRef(SCIA_REF *refList,INT nRef,INT nSpectra,double *lembda,double *ref,SPEC_INFO *pSpecInfo,FILE *fp)
+RC SciaBuildRef(SCIA_REF *refList,INT nRef,INT nSpectra,double *lembda,double *ref,ENGINE_CONTEXT *pEngineContext,FILE *fp)
  {
   // Declarations
 
+  RECORD_INFO *pRecord;                                                         // pointer to the record part of the engine context
   SCIA_ORBIT_FILE *pOrbitFile;                                                  // pointer to the current orbit
   SCIA_REF *pRef;                                                               // pointer to the current reference spectrum
   INDEX     indexRef,                                                           // browse reference in the list
@@ -1768,6 +1779,8 @@ RC SciaBuildRef(SCIA_REF *refList,INT nRef,INT nSpectra,double *lembda,double *r
   RC        rc;                                                                 // return code
 
   // Initialization
+
+  pRecord=&pEngineContext->recordInfo;
 
   for (i=0;i<NDET;i++)
    ref[i]=(double)0.;
@@ -1783,8 +1796,8 @@ RC SciaBuildRef(SCIA_REF *refList,INT nRef,INT nSpectra,double *lembda,double *r
       fprintf(fp,"Rec\t  SZA\t  Lat\t  Lon\n");
      }
 
-    strcpy(pSpecInfo->refFileName,sciaOrbitFiles[refList[0].indexFile].sciaFileName);
-    pSpecInfo->refRecord=refList[0].indexRecord+1;
+    strcpy(pRecord->refFileName,sciaOrbitFiles[refList[0].indexFile].sciaFileName);
+    pRecord->refRecord=refList[0].indexRecord+1;
    }
 
   // Search for spectra matching latitudes and SZA conditions in the selected record
@@ -1808,14 +1821,14 @@ RC SciaBuildRef(SCIA_REF *refList,INT nRef,INT nSpectra,double *lembda,double *r
 
       // Read and accumulate selected radiances
 
-      else if (((pSpecInfo->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS) && !(rc=SciaReadNadirMDS(pSpecInfo,indexState,pRef->indexRecord-indexObs,pRef->indexFile))))
+      else if (((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS) && !(rc=SciaReadNadirMDS(pEngineContext,indexState,pRef->indexRecord-indexObs,pRef->indexFile))))
        {
         if (fp!=NULL)
          fprintf(fp,"%-5d\t%-6.2lf\t%-6.2lf\t%-6.2lf\n",
                     pRef->indexRecord+1,pRef->sza,pRef->latitude,pRef->longitude);
 
         for (i=0;i<NDET;i++)
-         ref[i]+=(double)pSpecInfo->spectrum[i];
+         ref[i]+=(double)pEngineContext->buffers.spectrum[i];
 
         nRec++;
         indexFile=pRef->indexFile;
@@ -1850,7 +1863,7 @@ RC SciaBuildRef(SCIA_REF *refList,INT nRef,INT nSpectra,double *lembda,double *r
 // -----------------------------------------------------------------------------
 // PURPOSE       Selection of a reference spectrum in the current orbit
 //
-// INPUT         pSpecInfo    collect information on the current spectrum;
+// INPUT         pEngineContext    collect information on the current spectrum;
 //               latMin,latMax determine the range of latitudes;
 //               lonMin,lonMax determine the range of longitudes;
 //               sza,szaDelta determine the range of SZA;
@@ -1865,7 +1878,7 @@ RC SciaBuildRef(SCIA_REF *refList,INT nRef,INT nSpectra,double *lembda,double *r
 //               ERROR_ID_NO otherwise.
 // -----------------------------------------------------------------------------
 
-RC SciaRefSelection(SPEC_INFO *pSpecInfo,
+RC SciaRefSelection(ENGINE_CONTEXT *pEngineContext,
                     double latMin,double latMax,
                     double lonMin,double lonMax,
                     double sza,double szaDelta,
@@ -1885,7 +1898,7 @@ RC SciaRefSelection(SPEC_INFO *pSpecInfo,
 
   // Initializations
 
-// QDOAS ???  fp=(pSpecInfo->project.spectra.displayDataFlag)?fopen(DOAS_tmpFile,"w+t"):NULL;
+// QDOAS ???  fp=(pEngineContext->project.spectra.displayDataFlag)?fopen(DOAS_tmpFile,"w+t"):NULL;
   fp=NULL;    // QDOAS ???
 
   if (latMin>latMax)
@@ -1929,7 +1942,7 @@ RC SciaRefSelection(SPEC_INFO *pSpecInfo,
       // search for potential reference spectra in northern hemisphere
 
       if ((nRefN=nRefS=SciaRefLat(refList,sciaTotalRecordNumber,latMin,latMax,lonMin,lonMax,sza,szaDelta))>0)
-       rc=SciaBuildRef(refList,nRefN,nSpectra,lembdaN,refN,pSpecInfo,fp);
+       rc=SciaBuildRef(refList,nRefN,nSpectra,lembdaN,refN,pEngineContext,fp);
 
       if (!rc)
        memcpy(refS,refN,sizeof(double)*NDET);
@@ -1940,7 +1953,7 @@ RC SciaRefSelection(SPEC_INFO *pSpecInfo,
     else
      {
       if ((nRefN=nRefS=SciaRefSza(refList,sciaTotalRecordNumber,sza,szaDelta))>0)
-       rc=SciaBuildRef(refList,nRefN,nSpectra,lembdaN,refN,pSpecInfo,fp);
+       rc=SciaBuildRef(refList,nRefN,nSpectra,lembdaN,refN,pEngineContext,fp);
 
       if (!rc)
        memcpy(refS,refN,sizeof(double)*NDET);
@@ -1951,7 +1964,7 @@ RC SciaRefSelection(SPEC_INFO *pSpecInfo,
       // No reference spectrum is found for both hemispheres -> error message
 
       if (!nRefN && !nRefS)
-       rc=ERROR_SetLast("SciaRefSelection",ERROR_TYPE_WARNING,ERROR_ID_NO_REF,"the orbit",pSpecInfo->fileName);
+       rc=ERROR_SetLast("SciaRefSelection",ERROR_TYPE_WARNING,ERROR_ID_NO_REF,"the orbit",pEngineContext->fileInfo.fileName);
 
       // No reference spectrum found for Northern hemisphere -> use the reference found for Southern hemisphere
 
@@ -2004,16 +2017,17 @@ RC SciaRefSelection(SPEC_INFO *pSpecInfo,
 // -----------------------------------------------------------------------------
 // PURPOSE       In automatic reference selection, search for reference spectra
 //
-// INPUT         pSpecInfo    hold the configuration of the current project
+// INPUT         pEngineContext    hold the configuration of the current project
 //
 // RETURN        ERROR_ID_ALLOC if something failed;
 //               ERROR_ID_NO otherwise.
 // -----------------------------------------------------------------------------
 
-RC SciaNewRef(SPEC_INFO *pSpecInfo)
+RC SciaNewRef(ENGINE_CONTEXT *pEngineContext)
  {
   // Declarations
 
+  RECORD_INFO *pRecord;                                                         // pointer to the record part of the engine context
   INDEX indexFeno;                                                              // browse analysis windows
   FENO *pTabFeno;                                                               // current analysis window
   RC rc;                                                                        // return code
@@ -2022,13 +2036,14 @@ RC SciaNewRef(SPEC_INFO *pSpecInfo)
 
 //  DEBUG_Print(DOAS_logFile,"Enter SciaNewRef\n");
 
+  pRecord=&pEngineContext->recordInfo;
   memset(OUTPUT_refFile,0,MAX_PATH_LEN+1);
   OUTPUT_nRec=0;
 
-  memset(pSpecInfo->refFileName,0,MAX_PATH_LEN+1);
-  pSpecInfo->refRecord=ITEM_NONE;
+  memset(pRecord->refFileName,0,MAX_PATH_LEN+1);
+  pRecord->refRecord=ITEM_NONE;
 
-  rc=THRD_CopySpecInfo(&THRD_refInfo,pSpecInfo);                                // perform a backup of the pSpecInfo structure
+  rc=THRD_CopySpecInfo(&THRD_refInfo,pEngineContext);                                // perform a backup of the pEngineContext structure
 
   if (THRD_refInfo.recordNumber==0)
    rc=ERROR_ID_ALLOC;
@@ -2062,8 +2077,8 @@ RC SciaNewRef(SPEC_INFO *pSpecInfo)
 
 //  DEBUG_Print(DOAS_logFile,"End SciaNewRef %d\n",rc);
 
-  strcpy(pSpecInfo->refFileName,THRD_refInfo.refFileName);
-  pSpecInfo->refRecord=THRD_refInfo.refRecord;
+  strcpy(pRecord->refFileName,THRD_refInfo.recordInfo.refFileName);
+  pRecord->refRecord=THRD_refInfo.recordInfo.refRecord;
 
   return rc;
  }
@@ -2077,12 +2092,12 @@ RC SciaNewRef(SPEC_INFO *pSpecInfo)
 // -----------------------------------------------------------------------------
 // PURPOSE       Load analysis parameters depending on the irradiance spectrum
 //
-// INPUT         pSpecInfo    data on the current file
+// INPUT         pEngineContext    data on the current file
 //
 // RETURN        0 for success
 // -----------------------------------------------------------------------------
 
-RC SCIA_LoadAnalysis(SPEC_INFO *pSpecInfo)
+RC SCIA_LoadAnalysis(ENGINE_CONTEXT *pEngineContext)
  {
   // Declarations
 
@@ -2100,7 +2115,7 @@ RC SCIA_LoadAnalysis(SPEC_INFO *pSpecInfo)
 //  DEBUG_Print(DOAS_logFile,"Enter SCIA_LoadAnalysis\n");
 
   pOrbitFile=&sciaOrbitFiles[sciaCurrentFileIndex];
-  saveFlag=(INT)pSpecInfo->project.spectra.displayDataFlag;
+  saveFlag=(INT)pEngineContext->project.spectra.displayDataFlag;
 
   if (!(rc=pOrbitFile->rc) && (THRD_id==THREAD_TYPE_ANALYSIS) && (sciaLoadReferenceFlag || !ANALYSE_refSelectionFlag))
    {
@@ -2221,9 +2236,9 @@ RC SCIA_LoadAnalysis(SPEC_INFO *pSpecInfo)
 
     // Automatic reference selection
 
-    if (sciaLoadReferenceFlag && !(rc=SciaNewRef(pSpecInfo)) &&
-      !(rc=ANALYSE_AlignReference(2,pSpecInfo->project.spectra.displayDataFlag))) // automatic ref selection for Northern hemisphere
-     rc=ANALYSE_AlignReference(3,pSpecInfo->project.spectra.displayDataFlag);     // automatic ref selection for Southern hemisphere
+    if (sciaLoadReferenceFlag && !(rc=SciaNewRef(pEngineContext)) &&
+      !(rc=ANALYSE_AlignReference(2,pEngineContext->project.spectra.displayDataFlag))) // automatic ref selection for Northern hemisphere
+     rc=ANALYSE_AlignReference(3,pEngineContext->project.spectra.displayDataFlag);     // automatic ref selection for Southern hemisphere
    }
 
   // Return

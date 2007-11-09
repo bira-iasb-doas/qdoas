@@ -149,14 +149,14 @@ INT    outputNasaFlag;
 UCHAR  OUTPUT_currentSpeFile[MAX_ITEM_TEXT_LEN+1],                                      // complete results file name
        OUTPUT_currentAscFile[MAX_ITEM_TEXT_LEN+1];
 
-RC OUTPUT_RegisterData(SPEC_INFO *pSpecInfo)
+RC OUTPUT_RegisterData(ENGINE_CONTEXT *pEngineContext)
  {
  	return 0;
  }
 void OUTPUT_ResetData(void)
  {
  }
-RC OUTPUT_SaveResults(SPEC_INFO *pSpecInfo)
+RC OUTPUT_SaveResults(ENGINE_CONTEXT *pEngineContext)
  {
  	return 0;
  }
@@ -671,13 +671,13 @@ RC OUTPUT_LoadCross(LIST_ITEM *pList,CROSS_RESULTS *pResults,INT *pAmfFlag,INT h
 // QDOAS ??? // -----------------------------------------------------------------------------
 // QDOAS ??? // PURPOSE       return the flux at a specified wavelength
 // QDOAS ??? //
-// QDOAS ??? // INPUT         pSpecInfo    information on the current spectrum
+// QDOAS ??? // INPUT         pEngineContext    information on the current spectrum
 // QDOAS ??? //               waveLength   the wavelength
 // QDOAS ??? //
 // QDOAS ??? // RETURN        the flux calculated at the input wavelength
 // QDOAS ??? // -----------------------------------------------------------------------------
 // QDOAS ???
-// QDOAS ??? double OutputFlux(SPEC_INFO *pSpecInfo,double waveLength)
+// QDOAS ??? double OutputFlux(ENGINE_CONTEXT *pEngineContext,double waveLength)
 // QDOAS ???  {
 // QDOAS ???   // Declarations
 // QDOAS ???
@@ -685,13 +685,13 @@ RC OUTPUT_LoadCross(LIST_ITEM *pList,CROSS_RESULTS *pResults,INT *pAmfFlag,INT h
 // QDOAS ???   INDEX i,imin,imax;
 // QDOAS ???   INT pixel;
 // QDOAS ???
-// QDOAS ???   if ((waveLength<pSpecInfo->lembda[0]) || (waveLength>pSpecInfo->lembda[NDET-1]))
+// QDOAS ???   if ((waveLength<pEngineContext->lembda[0]) || (waveLength>pEngineContext->lembda[NDET-1]))
 // QDOAS ???    flux=(double)0.;
 // QDOAS ???   else
 // QDOAS ???    {
 // QDOAS ???     // Initialization
 // QDOAS ???
-// QDOAS ???     pixel=FNPixel(pSpecInfo->lembda,waveLength,NDET,PIXEL_CLOSEST);
+// QDOAS ???     pixel=FNPixel(pEngineContext->lembda,waveLength,NDET,PIXEL_CLOSEST);
 // QDOAS ???
 // QDOAS ???     imin=max(pixel-3,0);
 // QDOAS ???     imax=min(pixel+3,NDET-1);
@@ -699,7 +699,7 @@ RC OUTPUT_LoadCross(LIST_ITEM *pList,CROSS_RESULTS *pResults,INT *pAmfFlag,INT h
 // QDOAS ???     // Flux calculation
 // QDOAS ???
 // QDOAS ???     for (i=imin,flux=(double)0.;i<=imax;i++)
-// QDOAS ???      flux+=pSpecInfo->spectrum[i];
+// QDOAS ???      flux+=pEngineContext->spectrum[i];
 // QDOAS ???
 // QDOAS ???     flux/=(double)(imax-imin+1);
 // QDOAS ???    }
@@ -969,10 +969,10 @@ RC OUTPUT_LoadCross(LIST_ITEM *pList,CROSS_RESULTS *pResults,INT *pAmfFlag,INT h
 // QDOAS ??? // -----------------------------------------------------------------------------
 // QDOAS ??? // PURPOSE       Register fluxes
 // QDOAS ??? //
-// QDOAS ??? // INPUT         pSpecInfo   structure including information on project options
+// QDOAS ??? // INPUT         pEngineContext   structure including information on project options
 // QDOAS ??? // -----------------------------------------------------------------------------
 // QDOAS ???
-// QDOAS ??? void OutputRegisterFluxes(SPEC_INFO *pSpecInfo)
+// QDOAS ??? void OutputRegisterFluxes(ENGINE_CONTEXT *pEngineContext)
 // QDOAS ???  {
 // QDOAS ???   // Declarations
 // QDOAS ???
@@ -985,7 +985,7 @@ RC OUTPUT_LoadCross(LIST_ITEM *pList,CROSS_RESULTS *pResults,INT *pAmfFlag,INT h
 // QDOAS ???
 // QDOAS ???   // Fluxes
 // QDOAS ???
-// QDOAS ???   for (ptrOld=pSpecInfo->project.asciiResults.fluxes;(ptrOld!=NULL) && (strlen(ptrOld)!=0);ptrOld=ptrNew)
+// QDOAS ???   for (ptrOld=pEngineContext->project.asciiResults.fluxes;(ptrOld!=NULL) && (strlen(ptrOld)!=0);ptrOld=ptrNew)
 // QDOAS ???    {
 // QDOAS ???     if (OUTPUT_NFluxes>=MAX_FLUXES)
 // QDOAS ???      break;
@@ -1003,7 +1003,7 @@ RC OUTPUT_LoadCross(LIST_ITEM *pList,CROSS_RESULTS *pResults,INT *pAmfFlag,INT h
 // QDOAS ???
 // QDOAS ???   // Color indexes
 // QDOAS ???
-// QDOAS ???   for (ptrOld=pSpecInfo->project.asciiResults.cic;(ptrOld!=NULL) && (strlen(ptrOld)!=0);ptrOld=ptrNew)
+// QDOAS ???   for (ptrOld=pEngineContext->project.asciiResults.cic;(ptrOld!=NULL) && (strlen(ptrOld)!=0);ptrOld=ptrNew)
 // QDOAS ???    {
 // QDOAS ???     if (OUTPUT_NCic>=MAX_CIC)
 // QDOAS ???      break;
@@ -1025,10 +1025,10 @@ RC OUTPUT_LoadCross(LIST_ITEM *pList,CROSS_RESULTS *pResults,INT *pAmfFlag,INT h
 // QDOAS ??? // -----------------------------------------------------------------------------
 // QDOAS ??? // PURPOSE       Register all the fields that are not parameters of the fit
 // QDOAS ??? //
-// QDOAS ??? // INPUT         pSpecInfo   structure including information on project options
+// QDOAS ??? // INPUT         pEngineContext   structure including information on project options
 // QDOAS ??? // -----------------------------------------------------------------------------
 // QDOAS ???
-// QDOAS ??? void OutputRegisterFields(SPEC_INFO *pSpecInfo)
+// QDOAS ??? void OutputRegisterFields(ENGINE_CONTEXT *pEngineContext)
 // QDOAS ???  {
 // QDOAS ???   // Declarations
 // QDOAS ???
@@ -1041,7 +1041,7 @@ RC OUTPUT_LoadCross(LIST_ITEM *pList,CROSS_RESULTS *pResults,INT *pAmfFlag,INT h
 // QDOAS ???
 // QDOAS ???   // Initializations
 // QDOAS ???
-// QDOAS ???   pProject=(PROJECT *)&pSpecInfo->project;
+// QDOAS ???   pProject=(PROJECT *)&pEngineContext->project;
 // QDOAS ???   pResults=(PRJCT_RESULTS_ASCII *)&pProject->asciiResults;
 // QDOAS ???
 // QDOAS ???   satelliteFlag=((pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN) ||
@@ -1191,11 +1191,11 @@ RC OUTPUT_LoadCross(LIST_ITEM *pList,CROSS_RESULTS *pResults,INT *pAmfFlag,INT h
 // QDOAS ??? // -----------------------------------------------------------------------------
 // QDOAS ??? // PURPOSE       Register all the parameters of the fit
 // QDOAS ??? //
-// QDOAS ??? // INPUT         pSpecInfo   structure including information on project options
+// QDOAS ??? // INPUT         pEngineContext   structure including information on project options
 // QDOAS ??? //               hiddenFlag  indicates if the calling windows is hidden in the projects tree
 // QDOAS ??? // -----------------------------------------------------------------------------
 // QDOAS ???
-// QDOAS ??? void OutputRegisterParam(SPEC_INFO *pSpecInfo,INT hiddenFlag)
+// QDOAS ??? void OutputRegisterParam(ENGINE_CONTEXT *pEngineContext,INT hiddenFlag)
 // QDOAS ???  {
 // QDOAS ???   // Declarations
 // QDOAS ???
@@ -1332,10 +1332,10 @@ RC OUTPUT_LoadCross(LIST_ITEM *pList,CROSS_RESULTS *pResults,INT *pAmfFlag,INT h
 // QDOAS ??? // -----------------------------------------------------------------------------
 // QDOAS ??? // PURPOSE       Register all the NASA-AMES fields
 // QDOAS ??? //
-// QDOAS ??? // INPUT         pSpecInfo   structure including information on project options
+// QDOAS ??? // INPUT         pEngineContext   structure including information on project options
 // QDOAS ??? // -----------------------------------------------------------------------------
 // QDOAS ???
-// QDOAS ??? RC OutputRegisterNasaAmes(SPEC_INFO *pSpecInfo)
+// QDOAS ??? RC OutputRegisterNasaAmes(ENGINE_CONTEXT *pEngineContext)
 // QDOAS ???  {
 // QDOAS ???   // Declarations
 // QDOAS ???
@@ -1350,7 +1350,7 @@ RC OUTPUT_LoadCross(LIST_ITEM *pList,CROSS_RESULTS *pResults,INT *pAmfFlag,INT h
 // QDOAS ???
 // QDOAS ???   // Initializations
 // QDOAS ???
-// QDOAS ???   pResults=&pSpecInfo->project.nasaResults;
+// QDOAS ???   pResults=&pEngineContext->project.nasaResults;
 // QDOAS ???   rc=ERROR_ID_NO;
 // QDOAS ???
 // QDOAS ???   // Allocate buffers for data on analyzed records
@@ -1420,10 +1420,10 @@ RC OUTPUT_LoadCross(LIST_ITEM *pList,CROSS_RESULTS *pResults,INT *pAmfFlag,INT h
 // QDOAS ??? // -----------------------------------------------------------------------------
 // QDOAS ??? // PURPOSE       Register all the data to output
 // QDOAS ??? //
-// QDOAS ??? // INPUT         pSpecInfo   structure including information on project options
+// QDOAS ??? // INPUT         pEngineContext   structure including information on project options
 // QDOAS ??? // -----------------------------------------------------------------------------
 // QDOAS ???
-// QDOAS ??? RC OUTPUT_RegisterData(SPEC_INFO *pSpecInfo)
+// QDOAS ??? RC OUTPUT_RegisterData(ENGINE_CONTEXT *pEngineContext)
 // QDOAS ???  {
 // QDOAS ???  	// Declarations
 // QDOAS ???
@@ -1438,7 +1438,7 @@ RC OUTPUT_LoadCross(LIST_ITEM *pList,CROSS_RESULTS *pResults,INT *pAmfFlag,INT h
 // QDOAS ???
 // QDOAS ???  	// Initializations
 // QDOAS ???
-// QDOAS ???   pProject=&pSpecInfo->project;
+// QDOAS ???   pProject=&pEngineContext->project;
 // QDOAS ???   pResults=(PRJCT_RESULTS_ASCII *)&pProject->asciiResults;
 // QDOAS ???   outputCalibFlag=outputRunCalib=0;
 // QDOAS ???   indexFenoK=indexFeno1=ITEM_NONE;
@@ -1491,13 +1491,13 @@ RC OUTPUT_LoadCross(LIST_ITEM *pList,CROSS_RESULTS *pResults,INT *pAmfFlag,INT h
 // QDOAS ???     else if (THRD_id==THREAD_TYPE_KURUCZ)
 // QDOAS ???      outputRunCalib++;
 // QDOAS ???
-// QDOAS ???     OutputRegisterFields(pSpecInfo);
-// QDOAS ???     OutputRegisterParam(pSpecInfo,(THRD_id==THREAD_TYPE_ANALYSIS)?0:1);
-// QDOAS ???     OutputRegisterFluxes(pSpecInfo);
+// QDOAS ???     OutputRegisterFields(pEngineContext);
+// QDOAS ???     OutputRegisterParam(pEngineContext,(THRD_id==THREAD_TYPE_ANALYSIS)?0:1);
+// QDOAS ???     OutputRegisterFluxes(pEngineContext);
 // QDOAS ???    }
 // QDOAS ???
 // QDOAS ???   if (pProject->nasaResults.nasaFlag)
-// QDOAS ???    rc=OutputRegisterNasaAmes(pSpecInfo);
+// QDOAS ???    rc=OutputRegisterNasaAmes(pEngineContext);
 // QDOAS ???
 // QDOAS ???   #if defined(__DEBUG_) && __DEBUG_
 // QDOAS ???   DEBUG_FunctionStop("OUTPUT_RegisterData",rc);
@@ -1515,10 +1515,10 @@ RC OUTPUT_LoadCross(LIST_ITEM *pList,CROSS_RESULTS *pResults,INT *pAmfFlag,INT h
 // QDOAS ??? // -----------------------------------------------------------------------------
 // QDOAS ??? // PURPOSE       Save data related to the wavelength calibration
 // QDOAS ??? //
-// QDOAS ??? // INPUT         pSpecInfo   structure including information on project options
+// QDOAS ??? // INPUT         pEngineContext   structure including information on project options
 // QDOAS ??? // -----------------------------------------------------------------------------
 // QDOAS ???
-// QDOAS ??? void OutputCalib(SPEC_INFO *pSpecInfo)
+// QDOAS ??? void OutputCalib(ENGINE_CONTEXT *pEngineContext)
 // QDOAS ???  {
 // QDOAS ???   // Declarations
 // QDOAS ???
@@ -1536,7 +1536,7 @@ RC OUTPUT_LoadCross(LIST_ITEM *pList,CROSS_RESULTS *pResults,INT *pAmfFlag,INT h
 // QDOAS ???
 // QDOAS ???   defaultValue=(double)9999.;
 // QDOAS ???
-// QDOAS ???   pProject=(PROJECT *)&pSpecInfo->project;
+// QDOAS ???   pProject=(PROJECT *)&pEngineContext->project;
 // QDOAS ???   pResults=(PRJCT_RESULTS_ASCII *)&pProject->asciiResults;
 // QDOAS ???
 // QDOAS ???   nbWin=KURUCZ_buffers.Nb_Win;
@@ -1626,11 +1626,11 @@ RC OUTPUT_LoadCross(LIST_ITEM *pList,CROSS_RESULTS *pResults,INT *pAmfFlag,INT h
 // QDOAS ??? // -----------------------------------------------------------------------------
 // QDOAS ??? // PURPOSE       Save all the data on the current record (including fitted parameters)
 // QDOAS ??? //
-// QDOAS ??? // INPUT         pSpecInfo   structure including information on project options
+// QDOAS ??? // INPUT         pEngineContext   structure including information on project options
 // QDOAS ??? //               hiddenFlag  0 to save analysis results, 1 to save calibration results
 // QDOAS ??? // -----------------------------------------------------------------------------
 // QDOAS ???
-// QDOAS ??? void OutputSaveRecord(SPEC_INFO *pSpecInfo,INT hiddenFlag)
+// QDOAS ??? void OutputSaveRecord(ENGINE_CONTEXT *pEngineContext,INT hiddenFlag)
 // QDOAS ???  {
 // QDOAS ???   // Declarations
 // QDOAS ???
@@ -1658,7 +1658,7 @@ RC OUTPUT_LoadCross(LIST_ITEM *pList,CROSS_RESULTS *pResults,INT *pAmfFlag,INT h
 // QDOAS ???
 // QDOAS ???   // Initializations
 // QDOAS ???
-// QDOAS ???   pProject=(PROJECT *)&pSpecInfo->project;
+// QDOAS ???   pProject=(PROJECT *)&pEngineContext->project;
 // QDOAS ???   pResults=(PRJCT_RESULTS_ASCII *)&pProject->asciiResults;
 // QDOAS ???
 // QDOAS ???   if (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN)
@@ -1684,33 +1684,33 @@ RC OUTPUT_LoadCross(LIST_ITEM *pList,CROSS_RESULTS *pResults,INT *pAmfFlag,INT h
 // QDOAS ???        {
 // QDOAS ???      // ----------------------------------------------------------------------
 // QDOAS ???         case PRJCT_RESULTS_ASCII_SPECNO :
-// QDOAS ???          ((USHORT *)outputColumns[indexColumn++])[indexRecord]=(USHORT)pSpecInfo->indexRecord;
+// QDOAS ???          ((USHORT *)outputColumns[indexColumn++])[indexRecord]=(USHORT)pEngineContext->indexRecord;
 // QDOAS ???         break;
 // QDOAS ???      // ----------------------------------------------------------------------
 // QDOAS ???         case PRJCT_RESULTS_ASCII_NAME :
-// QDOAS ???          strncpy(&outputColumns[indexColumn++][indexRecord*pField->fieldSize],pSpecInfo->Nom,pField->fieldSize);
+// QDOAS ???          strncpy(&outputColumns[indexColumn++][indexRecord*pField->fieldSize],pEngineContext->Nom,pField->fieldSize);
 // QDOAS ???         break;
 // QDOAS ???      // ----------------------------------------------------------------------
 // QDOAS ???         case PRJCT_RESULTS_ASCII_DATE :
 // QDOAS ???
 // QDOAS ???          sprintf(&outputColumns[indexColumn++][indexRecord*pField->fieldSize],"%02d/%02d/%d",
-// QDOAS ???                 (INT) pSpecInfo->present_day.da_day,
-// QDOAS ???                 (INT) pSpecInfo->present_day.da_mon,
-// QDOAS ???                 (INT) pSpecInfo->present_day.da_year);
+// QDOAS ???                 (INT) pEngineContext->present_day.da_day,
+// QDOAS ???                 (INT) pEngineContext->present_day.da_mon,
+// QDOAS ???                 (INT) pEngineContext->present_day.da_year);
 // QDOAS ???
 // QDOAS ???         break;
 // QDOAS ???      // ----------------------------------------------------------------------
 // QDOAS ???         case PRJCT_RESULTS_ASCII_TIME :
 // QDOAS ???
 // QDOAS ???          sprintf(&outputColumns[indexColumn++][indexRecord*pField->fieldSize],"%02d:%02d:%02d",
-// QDOAS ???                 (INT) pSpecInfo->present_time.ti_hour,
-// QDOAS ???                 (INT) pSpecInfo->present_time.ti_min,
-// QDOAS ???                 (INT) pSpecInfo->present_time.ti_sec);
+// QDOAS ???                 (INT) pEngineContext->present_time.ti_hour,
+// QDOAS ???                 (INT) pEngineContext->present_time.ti_min,
+// QDOAS ???                 (INT) pEngineContext->present_time.ti_sec);
 // QDOAS ???
 // QDOAS ???         break;
 // QDOAS ???      // ----------------------------------------------------------------------
 // QDOAS ???         case PRJCT_RESULTS_ASCII_YEAR :
-// QDOAS ???          ((USHORT *)outputColumns[indexColumn++])[indexRecord]=(USHORT)pSpecInfo->present_day.da_year;
+// QDOAS ???          ((USHORT *)outputColumns[indexColumn++])[indexRecord]=(USHORT)pEngineContext->present_day.da_year;
 // QDOAS ???         break;
 // QDOAS ???      // ----------------------------------------------------------------------
 // QDOAS ???         case PRJCT_RESULTS_ASCII_DATE_TIME :
@@ -1718,12 +1718,12 @@ RC OUTPUT_LoadCross(LIST_ITEM *pList,CROSS_RESULTS *pResults,INT *pAmfFlag,INT h
 // QDOAS ???          memset(&outputColumns[indexColumn][indexRecord*pField->fieldSize],0,pField->fieldSize);
 // QDOAS ???
 // QDOAS ???          sprintf(&outputColumns[indexColumn][indexRecord*pField->fieldSize],"%4d%02d%02d%02d%02d%02d",
-// QDOAS ???                 (INT) pSpecInfo->present_day.da_year,
-// QDOAS ???                 (INT) pSpecInfo->present_day.da_mon,
-// QDOAS ???                 (INT) pSpecInfo->present_day.da_day,
-// QDOAS ???                 (INT) pSpecInfo->present_time.ti_hour,
-// QDOAS ???                 (INT) pSpecInfo->present_time.ti_min,
-// QDOAS ???                 (INT) pSpecInfo->present_time.ti_sec);
+// QDOAS ???                 (INT) pEngineContext->present_day.da_year,
+// QDOAS ???                 (INT) pEngineContext->present_day.da_mon,
+// QDOAS ???                 (INT) pEngineContext->present_day.da_day,
+// QDOAS ???                 (INT) pEngineContext->present_time.ti_hour,
+// QDOAS ???                 (INT) pEngineContext->present_time.ti_min,
+// QDOAS ???                 (INT) pEngineContext->present_time.ti_sec);
 // QDOAS ???
 // QDOAS ???          if (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS)
 // QDOAS ???           sprintf(&outputColumns[indexColumn][indexRecord*pField->fieldSize+14],".%03d",(INT)SCIA_ms);
@@ -1739,9 +1739,9 @@ RC OUTPUT_LoadCross(LIST_ITEM *pList,CROSS_RESULTS *pResults,INT *pAmfFlag,INT h
 // QDOAS ???          memset(&outputColumns[indexColumn][indexRecord*pField->fieldSize],0,pField->fieldSize);
 // QDOAS ???
 // QDOAS ???          sprintf(&outputColumns[indexColumn][indexRecord*pField->fieldSize],"%02d%02d%02d",
-// QDOAS ???                 (INT) pSpecInfo->startTime.ti_hour,
-// QDOAS ???                 (INT) pSpecInfo->startTime.ti_min,
-// QDOAS ???                 (INT) pSpecInfo->startTime.ti_sec);
+// QDOAS ???                 (INT) pEngineContext->startTime.ti_hour,
+// QDOAS ???                 (INT) pEngineContext->startTime.ti_min,
+// QDOAS ???                 (INT) pEngineContext->startTime.ti_sec);
 // QDOAS ???
 // QDOAS ???          indexColumn++;
 // QDOAS ???
@@ -1752,53 +1752,53 @@ RC OUTPUT_LoadCross(LIST_ITEM *pList,CROSS_RESULTS *pResults,INT *pAmfFlag,INT h
 // QDOAS ???          memset(&outputColumns[indexColumn][indexRecord*pField->fieldSize],0,pField->fieldSize);
 // QDOAS ???
 // QDOAS ???          sprintf(&outputColumns[indexColumn][indexRecord*pField->fieldSize],"%02d%02d%02d",
-// QDOAS ???                 (INT) pSpecInfo->endTime.ti_hour,
-// QDOAS ???                 (INT) pSpecInfo->endTime.ti_min,
-// QDOAS ???                 (INT) pSpecInfo->endTime.ti_sec);
+// QDOAS ???                 (INT) pEngineContext->endTime.ti_hour,
+// QDOAS ???                 (INT) pEngineContext->endTime.ti_min,
+// QDOAS ???                 (INT) pEngineContext->endTime.ti_sec);
 // QDOAS ???
 // QDOAS ???          indexColumn++;
 // QDOAS ???
 // QDOAS ???         break;
 // QDOAS ???      // ----------------------------------------------------------------------
 // QDOAS ???         case PRJCT_RESULTS_ASCII_JULIAN :
-// QDOAS ???          ((USHORT *)outputColumns[indexColumn++])[indexRecord]=(USHORT)ZEN_FNCaljda(&pSpecInfo->Tm);
+// QDOAS ???          ((USHORT *)outputColumns[indexColumn++])[indexRecord]=(USHORT)ZEN_FNCaljda(&pEngineContext->Tm);
 // QDOAS ???         break;
 // QDOAS ???      // ----------------------------------------------------------------------
 // QDOAS ???         case PRJCT_RESULTS_ASCII_JDFRAC :
-// QDOAS ???          ((double *)outputColumns[indexColumn++])[indexRecord]=(double)ZEN_FNCaljda(&pSpecInfo->Tm)+ZEN_FNCaldti(&pSpecInfo->Tm)/24.;
+// QDOAS ???          ((double *)outputColumns[indexColumn++])[indexRecord]=(double)ZEN_FNCaljda(&pEngineContext->Tm)+ZEN_FNCaldti(&pEngineContext->Tm)/24.;
 // QDOAS ???         break;
 // QDOAS ???      // ----------------------------------------------------------------------
 // QDOAS ???         case PRJCT_RESULTS_ASCII_TIFRAC :
 // QDOAS ???
 // QDOAS ???          if ((pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS) ||
 // QDOAS ???              (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GOME2))
-// QDOAS ???           ((double *)outputColumns[indexColumn++])[indexRecord]=(double)pSpecInfo->TimeDec;
+// QDOAS ???           ((double *)outputColumns[indexColumn++])[indexRecord]=(double)pEngineContext->TimeDec;
 // QDOAS ???          else
-// QDOAS ???           ((double *)outputColumns[indexColumn++])[indexRecord]=(double)ZEN_FNCaldti(&pSpecInfo->Tm);
+// QDOAS ???           ((double *)outputColumns[indexColumn++])[indexRecord]=(double)ZEN_FNCaldti(&pEngineContext->Tm);
 // QDOAS ???
 // QDOAS ???         break;
 // QDOAS ???      // ----------------------------------------------------------------------
 // QDOAS ???         case PRJCT_RESULTS_ASCII_SCANS :
-// QDOAS ???          ((USHORT *)outputColumns[indexColumn++])[indexRecord]=(USHORT)pSpecInfo->NSomme;
+// QDOAS ???          ((USHORT *)outputColumns[indexColumn++])[indexRecord]=(USHORT)pEngineContext->NSomme;
 // QDOAS ???         break;
 // QDOAS ???      // ----------------------------------------------------------------------
 // QDOAS ???         case PRJCT_RESULTS_ASCII_TINT :
-// QDOAS ???          ((double *)outputColumns[indexColumn++])[indexRecord]=(double)pSpecInfo->Tint;
+// QDOAS ???          ((double *)outputColumns[indexColumn++])[indexRecord]=(double)pEngineContext->Tint;
 // QDOAS ???         break;
 // QDOAS ???      // ----------------------------------------------------------------------
 // QDOAS ???         case PRJCT_RESULTS_ASCII_SZA :
 // QDOAS ???
 // QDOAS ???          if ((pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_HDF) || (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS))
 // QDOAS ???           {
-// QDOAS ???            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pSpecInfo->scia.solZen[0];k++;
-// QDOAS ???            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pSpecInfo->scia.solZen[1];k++;
-// QDOAS ???            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pSpecInfo->scia.solZen[2];
+// QDOAS ???            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pEngineContext->scia.solZen[0];k++;
+// QDOAS ???            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pEngineContext->scia.solZen[1];k++;
+// QDOAS ???            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pEngineContext->scia.solZen[2];
 // QDOAS ???           }
 // QDOAS ???          else if (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GOME2)
 // QDOAS ???           {
-// QDOAS ???            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pSpecInfo->gome2.solZen[0];k++;
-// QDOAS ???            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pSpecInfo->gome2.solZen[1];k++;
-// QDOAS ???            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pSpecInfo->gome2.solZen[2];
+// QDOAS ???            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pEngineContext->gome2.solZen[0];k++;
+// QDOAS ???            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pEngineContext->gome2.solZen[1];k++;
+// QDOAS ???            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pEngineContext->gome2.solZen[2];
 // QDOAS ???           }
 // QDOAS ???          else if (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN)
 // QDOAS ???           {
@@ -1823,12 +1823,12 @@ RC OUTPUT_LoadCross(LIST_ITEM *pList,CROSS_RESULTS *pResults,INT *pAmfFlag,INT h
 // QDOAS ???           }
 // QDOAS ???          else if (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_ASCII)
 // QDOAS ???           {
-// QDOAS ???            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pSpecInfo->gome.sza[0];k++;
-// QDOAS ???            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pSpecInfo->gome.sza[1];k++;
-// QDOAS ???            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pSpecInfo->gome.sza[2];
+// QDOAS ???            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pEngineContext->gome.sza[0];k++;
+// QDOAS ???            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pEngineContext->gome.sza[1];k++;
+// QDOAS ???            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pEngineContext->gome.sza[2];
 // QDOAS ???           }
 // QDOAS ???          else
-// QDOAS ???           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pSpecInfo->Zm;
+// QDOAS ???           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pEngineContext->Zm;
 // QDOAS ???
 // QDOAS ???         break;
 // QDOAS ???      // ----------------------------------------------------------------------
@@ -1837,27 +1837,27 @@ RC OUTPUT_LoadCross(LIST_ITEM *pList,CROSS_RESULTS *pResults,INT *pAmfFlag,INT h
 // QDOAS ???          if ((pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_HDF) ||
 // QDOAS ???              (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS))
 // QDOAS ???           {
-// QDOAS ???            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pSpecInfo->scia.solAzi[0];k++;
-// QDOAS ???            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pSpecInfo->scia.solAzi[1];k++;
-// QDOAS ???            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pSpecInfo->scia.solAzi[2];
+// QDOAS ???            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pEngineContext->scia.solAzi[0];k++;
+// QDOAS ???            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pEngineContext->scia.solAzi[1];k++;
+// QDOAS ???            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pEngineContext->scia.solAzi[2];
 // QDOAS ???           }
 // QDOAS ???          else if (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GOME2)
 // QDOAS ???           {
-// QDOAS ???            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pSpecInfo->gome2.solAzi[0];k++;
-// QDOAS ???            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pSpecInfo->gome2.solAzi[1];k++;
-// QDOAS ???            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pSpecInfo->gome2.solAzi[2];
+// QDOAS ???            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pEngineContext->gome2.solAzi[0];k++;
+// QDOAS ???            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pEngineContext->gome2.solAzi[1];k++;
+// QDOAS ???            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pEngineContext->gome2.solAzi[2];
 // QDOAS ???           }
 // QDOAS ???          else if (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_ASCII)
 // QDOAS ???           {
-// QDOAS ???            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pSpecInfo->gome.azim[0];k++;
-// QDOAS ???            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pSpecInfo->gome.azim[1];k++;
-// QDOAS ???            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pSpecInfo->gome.azim[2];
+// QDOAS ???            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pEngineContext->gome.azim[0];k++;
+// QDOAS ???            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pEngineContext->gome.azim[1];k++;
+// QDOAS ???            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pEngineContext->gome.azim[2];
 // QDOAS ???           }
 // QDOAS ???          else if ((pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN) && (pOrbitFile->gdpBinHeader.version<5))
 // QDOAS ???           {
-// QDOAS ???            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pSpecInfo->Azimuth;k++;
-// QDOAS ???            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pSpecInfo->Azimuth;k++;
-// QDOAS ???            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pSpecInfo->Azimuth;
+// QDOAS ???            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pEngineContext->Azimuth;k++;
+// QDOAS ???            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pEngineContext->Azimuth;k++;
+// QDOAS ???            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pEngineContext->Azimuth;
 // QDOAS ???           }
 // QDOAS ???          else if ((pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN) && (pOrbitFile->gdpBinHeader.version>=5))
 // QDOAS ???           {
@@ -1866,43 +1866,43 @@ RC OUTPUT_LoadCross(LIST_ITEM *pList,CROSS_RESULTS *pResults,INT *pAmfFlag,INT h
 // QDOAS ???            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pOrbitFile->gdpBinSpectrum.aziArray[2];
 // QDOAS ???           }
 // QDOAS ???          else
-// QDOAS ???           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pSpecInfo->Azimuth;
+// QDOAS ???           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pEngineContext->Azimuth;
 // QDOAS ???         break;
 // QDOAS ???      // ----------------------------------------------------------------------
 // QDOAS ???         case PRJCT_RESULTS_ASCII_TDET :
-// QDOAS ???          ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pSpecInfo->TDet;
+// QDOAS ???          ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pEngineContext->TDet;
 // QDOAS ???         break;
 // QDOAS ???      // ---------------------------------------------------------------------
 // QDOAS ???         case PRJCT_RESULTS_ASCII_SKY :
-// QDOAS ???          ((USHORT *)outputColumns[indexColumn++])[indexRecord]=(USHORT)pSpecInfo->SkyObs;
+// QDOAS ???          ((USHORT *)outputColumns[indexColumn++])[indexRecord]=(USHORT)pEngineContext->SkyObs;
 // QDOAS ???         break;
 // QDOAS ???      // ----------------------------------------------------------------------
 // QDOAS ???         case PRJCT_RESULTS_ASCII_BESTSHIFT :
-// QDOAS ???          ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pSpecInfo->BestShift;
+// QDOAS ???          ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pEngineContext->BestShift;
 // QDOAS ???         break;
 // QDOAS ???      // ----------------------------------------------------------------------
 // QDOAS ???         case PRJCT_RESULTS_ASCII_PIXEL :
 // QDOAS ???          ((USHORT *)outputColumns[indexColumn++])[indexRecord]=
-// QDOAS ???          ((pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN) || (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN))?(USHORT)pSpecInfo->gome.pixelNumber:0;
+// QDOAS ???          ((pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN) || (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN))?(USHORT)pEngineContext->gome.pixelNumber:0;
 // QDOAS ???         break;
 // QDOAS ???      // ----------------------------------------------------------------------
 // QDOAS ???         case PRJCT_RESULTS_ASCII_PIXEL_TYPE :
 // QDOAS ???          ((USHORT *)outputColumns[indexColumn++])[indexRecord]=
-// QDOAS ???          ((pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN) || (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN))?(USHORT)pSpecInfo->gome.pixelType:0;
+// QDOAS ???          ((pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN) || (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN))?(USHORT)pEngineContext->gome.pixelType:0;
 // QDOAS ???         break;
 // QDOAS ???      // ----------------------------------------------------------------------
 // QDOAS ???         case PRJCT_RESULTS_ASCII_ORBIT :
 // QDOAS ???
 // QDOAS ???          if ((pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN) || (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN))
-// QDOAS ???           ((INT *)outputColumns[indexColumn++])[indexRecord]=(INT)pSpecInfo->gome.orbitNumber+1;
+// QDOAS ???           ((INT *)outputColumns[indexColumn++])[indexRecord]=(INT)pEngineContext->gome.orbitNumber+1;
 // QDOAS ???          else if (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS)
-// QDOAS ???           ((INT *)outputColumns[indexColumn++])[indexRecord]=pSpecInfo->scia.orbitNumber;
+// QDOAS ???           ((INT *)outputColumns[indexColumn++])[indexRecord]=pEngineContext->scia.orbitNumber;
 // QDOAS ???          else if (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GOME2)
-// QDOAS ???           ((INT *)outputColumns[indexColumn++])[indexRecord]=pSpecInfo->gome2.orbitNumber;
+// QDOAS ???           ((INT *)outputColumns[indexColumn++])[indexRecord]=pEngineContext->gome2.orbitNumber;
 // QDOAS ???
 // QDOAS ???
 // QDOAS ???          ((pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN) || (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN))?
-// QDOAS ???           (INT)pSpecInfo->gome.orbitNumber+1:pSpecInfo->scia.orbitNumber;
+// QDOAS ???           (INT)pEngineContext->gome.orbitNumber+1:pEngineContext->scia.orbitNumber;
 // QDOAS ???
 // QDOAS ???         break;
 // QDOAS ???      // ----------------------------------------------------------------------
@@ -1911,7 +1911,7 @@ RC OUTPUT_LoadCross(LIST_ITEM *pList,CROSS_RESULTS *pResults,INT *pAmfFlag,INT h
 // QDOAS ???          if (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN)
 // QDOAS ???           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pOrbitFile->gdpBinSpectrum.cloudFraction*0.01;
 // QDOAS ???          else if (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GOME2)
-// QDOAS ???           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pSpecInfo->gome2.cloudFraction;
+// QDOAS ???           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pEngineContext->gome2.cloudFraction;
 // QDOAS ???          else
 // QDOAS ???           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)defaultValue;
 // QDOAS ???
@@ -1938,7 +1938,7 @@ RC OUTPUT_LoadCross(LIST_ITEM *pList,CROSS_RESULTS *pResults,INT *pAmfFlag,INT h
 // QDOAS ???          if (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN)
 // QDOAS ???           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pOrbitFile->gdpBinSpectrum.cloudTopPressure;
 // QDOAS ???          else if (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GOME2)
-// QDOAS ???           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pSpecInfo->gome2.cloudTopPressure;
+// QDOAS ???           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pEngineContext->gome2.cloudTopPressure;
 // QDOAS ???          else
 // QDOAS ???           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)defaultValue;
 // QDOAS ???
@@ -1956,7 +1956,7 @@ RC OUTPUT_LoadCross(LIST_ITEM *pList,CROSS_RESULTS *pResults,INT *pAmfFlag,INT h
 // QDOAS ???
 // QDOAS ???          ((USHORT *)outputColumns[indexColumn++])[indexRecord]=
 // QDOAS ???           (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS)?
-// QDOAS ???           (USHORT)pSpecInfo->scia.stateIndex:(USHORT)defaultValue;
+// QDOAS ???           (USHORT)pEngineContext->scia.stateIndex:(USHORT)defaultValue;
 // QDOAS ???
 // QDOAS ???         break;
 // QDOAS ???      // ----------------------------------------------------------------------
@@ -1964,7 +1964,7 @@ RC OUTPUT_LoadCross(LIST_ITEM *pList,CROSS_RESULTS *pResults,INT *pAmfFlag,INT h
 // QDOAS ???
 // QDOAS ???          ((USHORT *)outputColumns[indexColumn++])[indexRecord]=
 // QDOAS ???           (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS)?
-// QDOAS ???           (USHORT)pSpecInfo->scia.stateId:(USHORT)defaultValue;
+// QDOAS ???           (USHORT)pEngineContext->scia.stateId:(USHORT)defaultValue;
 // QDOAS ???
 // QDOAS ???         break;
 // QDOAS ???      // ----------------------------------------------------------------------
@@ -1972,7 +1972,7 @@ RC OUTPUT_LoadCross(LIST_ITEM *pList,CROSS_RESULTS *pResults,INT *pAmfFlag,INT h
 // QDOAS ???
 // QDOAS ???          ((USHORT *)outputColumns[indexColumn++])[indexRecord]=
 // QDOAS ???           (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS)?
-// QDOAS ???           (USHORT)pSpecInfo->scia.qualityFlag:(USHORT)defaultValue;
+// QDOAS ???           (USHORT)pEngineContext->scia.qualityFlag:(USHORT)defaultValue;
 // QDOAS ???
 // QDOAS ???         break;
 // QDOAS ???      // ----------------------------------------------------------------------
@@ -1981,9 +1981,9 @@ RC OUTPUT_LoadCross(LIST_ITEM *pList,CROSS_RESULTS *pResults,INT *pAmfFlag,INT h
 // QDOAS ???          if ((pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN) && (pOrbitFile->gdpBinHeader.version>=3))
 // QDOAS ???            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pOrbitFile->gdpBinSpectrum.geo.geo3.satHeight;
 // QDOAS ???          else if (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS)
-// QDOAS ???           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pSpecInfo->scia.satHeight;
+// QDOAS ???           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pEngineContext->scia.satHeight;
 // QDOAS ???          else if (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GOME2)
-// QDOAS ???           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pSpecInfo->gome2.satHeight;
+// QDOAS ???           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pEngineContext->gome2.satHeight;
 // QDOAS ???          else
 // QDOAS ???           indexColumn++;
 // QDOAS ???
@@ -1994,35 +1994,35 @@ RC OUTPUT_LoadCross(LIST_ITEM *pList,CROSS_RESULTS *pResults,INT *pAmfFlag,INT h
 // QDOAS ???          if ((pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN) && (pOrbitFile->gdpBinHeader.version>=3))
 // QDOAS ???           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pOrbitFile->gdpBinSpectrum.geo.geo3.radiusCurve;
 // QDOAS ???          else if (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS)
-// QDOAS ???           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pSpecInfo->scia.earthRadius;
+// QDOAS ???           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pEngineContext->scia.earthRadius;
 // QDOAS ???          else if (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GOME2)
-// QDOAS ???           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pSpecInfo->gome2.earthRadius;
+// QDOAS ???           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pEngineContext->gome2.earthRadius;
 // QDOAS ???          else
 // QDOAS ???           indexColumn++;
 // QDOAS ???
 // QDOAS ???         break;
 // QDOAS ???      // ----------------------------------------------------------------------
 // QDOAS ???         case PRJCT_RESULTS_ASCII_VIEW_ELEVATION :
-// QDOAS ???          ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pSpecInfo->elevationViewAngle;
+// QDOAS ???          ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pEngineContext->elevationViewAngle;
 // QDOAS ???         break;
 // QDOAS ???      // ----------------------------------------------------------------------
 // QDOAS ???         case PRJCT_RESULTS_ASCII_VIEW_AZIMUTH :
-// QDOAS ???          ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pSpecInfo->azimuthViewAngle;
+// QDOAS ???          ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pEngineContext->azimuthViewAngle;
 // QDOAS ???         break;
 // QDOAS ???      // ----------------------------------------------------------------------
 // QDOAS ???         case PRJCT_RESULTS_ASCII_LOS_ZA :
 // QDOAS ???
 // QDOAS ???          if ((pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_HDF) || (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS))
 // QDOAS ???           {
-// QDOAS ???            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pSpecInfo->scia.losZen[0];k++;
-// QDOAS ???            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pSpecInfo->scia.losZen[1];k++;
-// QDOAS ???            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pSpecInfo->scia.losZen[2];
+// QDOAS ???            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pEngineContext->scia.losZen[0];k++;
+// QDOAS ???            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pEngineContext->scia.losZen[1];k++;
+// QDOAS ???            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pEngineContext->scia.losZen[2];
 // QDOAS ???           }
 // QDOAS ???          else if (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GOME2)
 // QDOAS ???           {
-// QDOAS ???            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pSpecInfo->gome2.losZen[0];k++;
-// QDOAS ???            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pSpecInfo->gome2.losZen[1];k++;
-// QDOAS ???            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pSpecInfo->gome2.losZen[2];
+// QDOAS ???            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pEngineContext->gome2.losZen[0];k++;
+// QDOAS ???            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pEngineContext->gome2.losZen[1];k++;
+// QDOAS ???            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pEngineContext->gome2.losZen[2];
 // QDOAS ???           }
 // QDOAS ???          else if (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN)
 // QDOAS ???           {
@@ -2052,16 +2052,16 @@ RC OUTPUT_LoadCross(LIST_ITEM *pList,CROSS_RESULTS *pResults,INT *pAmfFlag,INT h
 // QDOAS ???
 // QDOAS ???          if (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GOME2)
 // QDOAS ???           {
-// QDOAS ???            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pSpecInfo->gome2.losAzi[0];k++;
-// QDOAS ???            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pSpecInfo->gome2.losAzi[1];k++;
-// QDOAS ???            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pSpecInfo->gome2.losAzi[2];
+// QDOAS ???            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pEngineContext->gome2.losAzi[0];k++;
+// QDOAS ???            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pEngineContext->gome2.losAzi[1];k++;
+// QDOAS ???            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pEngineContext->gome2.losAzi[2];
 // QDOAS ???           }
 // QDOAS ???          else if ((pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_HDF) ||
 // QDOAS ???                   (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS))
 // QDOAS ???           {
-// QDOAS ???            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pSpecInfo->scia.losAzi[0];k++;
-// QDOAS ???            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pSpecInfo->scia.losAzi[1];k++;
-// QDOAS ???            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pSpecInfo->scia.losAzi[2];
+// QDOAS ???            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pEngineContext->scia.losAzi[0];k++;
+// QDOAS ???            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pEngineContext->scia.losAzi[1];k++;
+// QDOAS ???            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pEngineContext->scia.losAzi[2];
 // QDOAS ???           }
 // QDOAS ???          else if (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN)
 // QDOAS ???           {
@@ -2092,10 +2092,10 @@ RC OUTPUT_LoadCross(LIST_ITEM *pList,CROSS_RESULTS *pResults,INT *pAmfFlag,INT h
 // QDOAS ???          if ((pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_HDF) ||
 // QDOAS ???              (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS))
 // QDOAS ???           for (i=0;i<4;i++,k++)
-// QDOAS ???            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pSpecInfo->scia.longitudes[i];
+// QDOAS ???            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pEngineContext->scia.longitudes[i];
 // QDOAS ???          else if (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GOME2)
 // QDOAS ???           for (i=0;i<4;i++,k++)
-// QDOAS ???            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pSpecInfo->gome2.longitudes[i];
+// QDOAS ???            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pEngineContext->gome2.longitudes[i];
 // QDOAS ???          else if (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN)
 // QDOAS ???           {
 // QDOAS ???            if (pOrbitFile->gdpBinHeader.version<2)
@@ -2110,9 +2110,9 @@ RC OUTPUT_LoadCross(LIST_ITEM *pList,CROSS_RESULTS *pResults,INT *pAmfFlag,INT h
 // QDOAS ???           }
 // QDOAS ???          else if (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_ASCII)
 // QDOAS ???           for (i=0;i<4;i++,k++)
-// QDOAS ???            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pSpecInfo->gome.longit[i];
+// QDOAS ???            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pEngineContext->gome.longit[i];
 // QDOAS ???
-// QDOAS ???          ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pSpecInfo->longitude;
+// QDOAS ???          ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pEngineContext->longitude;
 // QDOAS ???
 // QDOAS ???         break;
 // QDOAS ???      // ----------------------------------------------------------------------
@@ -2121,10 +2121,10 @@ RC OUTPUT_LoadCross(LIST_ITEM *pList,CROSS_RESULTS *pResults,INT *pAmfFlag,INT h
 // QDOAS ???          if ((pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_HDF) ||
 // QDOAS ???              (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS))
 // QDOAS ???           for (i=0;i<4;i++,k++)
-// QDOAS ???            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pSpecInfo->scia.latitudes[i];
+// QDOAS ???            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pEngineContext->scia.latitudes[i];
 // QDOAS ???          else if (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GOME2)
 // QDOAS ???           for (i=0;i<4;i++,k++)
-// QDOAS ???            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pSpecInfo->gome2.latitudes[i];
+// QDOAS ???            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pEngineContext->gome2.latitudes[i];
 // QDOAS ???          else if (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN)
 // QDOAS ???           {
 // QDOAS ???            if (pOrbitFile->gdpBinHeader.version<2)
@@ -2139,14 +2139,14 @@ RC OUTPUT_LoadCross(LIST_ITEM *pList,CROSS_RESULTS *pResults,INT *pAmfFlag,INT h
 // QDOAS ???           }
 // QDOAS ???          else if (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_ASCII)
 // QDOAS ???           for (i=0;i<4;i++,k++)
-// QDOAS ???            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pSpecInfo->gome.latit[i];
+// QDOAS ???            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pEngineContext->gome.latit[i];
 // QDOAS ???
-// QDOAS ???          ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pSpecInfo->latitude;
+// QDOAS ???          ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pEngineContext->latitude;
 // QDOAS ???
 // QDOAS ???         break;
 // QDOAS ???      // ----------------------------------------------------------------------
 // QDOAS ???         case PRJCT_RESULTS_ASCII_ALTIT :
-// QDOAS ???          ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pSpecInfo->altitude;
+// QDOAS ???          ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pEngineContext->altitude;
 // QDOAS ???         break;
 // QDOAS ???      // ----------------------------------------------------------------------
 // QDOAS ???         default :
@@ -2278,17 +2278,17 @@ RC OUTPUT_LoadCross(LIST_ITEM *pList,CROSS_RESULTS *pResults,INT *pAmfFlag,INT h
 // QDOAS ???     // Color indexes and fluxes
 // QDOAS ???
 // QDOAS ???     for (indexFluxes=0;indexFluxes<OUTPUT_NFluxes;indexFluxes++)
-// QDOAS ???      ((double *)outputColumns[indexColumn++])[indexRecord]=(double)OutputFlux(pSpecInfo,OUTPUT_fluxes[indexFluxes]);
+// QDOAS ???      ((double *)outputColumns[indexColumn++])[indexRecord]=(double)OutputFlux(pEngineContext,OUTPUT_fluxes[indexFluxes]);
 // QDOAS ???     for (indexCic=0;indexCic<OUTPUT_NCic;indexCic++)
-// QDOAS ???      ((double *)outputColumns[indexColumn++])[indexRecord]=((flux=OutputFlux(pSpecInfo,OUTPUT_cic[indexCic][1]))!=(double)0.)?
-// QDOAS ???       (double)OutputFlux(pSpecInfo,OUTPUT_cic[indexCic][0])/flux:(double)defaultValue;
+// QDOAS ???      ((double *)outputColumns[indexColumn++])[indexRecord]=((flux=OutputFlux(pEngineContext,OUTPUT_cic[indexCic][1]))!=(double)0.)?
+// QDOAS ???       (double)OutputFlux(pEngineContext,OUTPUT_cic[indexCic][0])/flux:(double)defaultValue;
 // QDOAS ???
 // QDOAS ???     outputRecords[indexRecord].nbColumns=indexColumn;
-// QDOAS ???     outputRecords[indexRecord].year=(int)pSpecInfo->present_day.da_year;
-// QDOAS ???     outputRecords[indexRecord].month=(int)pSpecInfo->present_day.da_mon;
-// QDOAS ???     outputRecords[indexRecord].day=(int)pSpecInfo->present_day.da_day;
-// QDOAS ???     outputRecords[indexRecord].longit=(float)pSpecInfo->longitude;
-// QDOAS ???     outputRecords[indexRecord].latit=(float)pSpecInfo->latitude;
+// QDOAS ???     outputRecords[indexRecord].year=(int)pEngineContext->present_day.da_year;
+// QDOAS ???     outputRecords[indexRecord].month=(int)pEngineContext->present_day.da_mon;
+// QDOAS ???     outputRecords[indexRecord].day=(int)pEngineContext->present_day.da_day;
+// QDOAS ???     outputRecords[indexRecord].longit=(float)pEngineContext->longitude;
+// QDOAS ???     outputRecords[indexRecord].latit=(float)pEngineContext->latitude;
 // QDOAS ???    }
 // QDOAS ???  }
 // QDOAS ???
@@ -2301,7 +2301,7 @@ RC OUTPUT_LoadCross(LIST_ITEM *pList,CROSS_RESULTS *pResults,INT *pAmfFlag,INT h
 // QDOAS ??? // -----------------------------------------------------------------------------
 // QDOAS ??? // PURPOSE       Build the output file name using the selected observation site
 // QDOAS ??? //
-// QDOAS ??? // INPUT         pSpecInfo   structure including information on project options
+// QDOAS ??? // INPUT         pEngineContext   structure including information on project options
 // QDOAS ??? //               year,month  current date to process (monthly files are created)
 // QDOAS ??? //               indexSite   index of the observation site
 // QDOAS ??? //               ascFlag     0 to add BIN extension, 1 to add ASC extension
@@ -2309,7 +2309,7 @@ RC OUTPUT_LoadCross(LIST_ITEM *pList,CROSS_RESULTS *pResults,INT *pAmfFlag,INT h
 // QDOAS ??? // OUTPUT        outputFileName, the name of the output file
 // QDOAS ??? // -----------------------------------------------------------------------------
 // QDOAS ???
-// QDOAS ??? void OutputBuildSiteFileName(SPEC_INFO *pSpecInfo,UCHAR *outputFileName,INT year,INT month,INDEX indexSite,INT ascFlag)
+// QDOAS ??? void OutputBuildSiteFileName(ENGINE_CONTEXT *pEngineContext,UCHAR *outputFileName,INT year,INT month,INDEX indexSite,INT ascFlag)
 // QDOAS ???  {
 // QDOAS ???   // Declarations
 // QDOAS ???
@@ -2319,7 +2319,7 @@ RC OUTPUT_LoadCross(LIST_ITEM *pList,CROSS_RESULTS *pResults,INT *pAmfFlag,INT h
 // QDOAS ???
 // QDOAS ???   // Initializations
 // QDOAS ???
-// QDOAS ???   pProject=(PROJECT *)&pSpecInfo->project;
+// QDOAS ???   pProject=(PROJECT *)&pEngineContext->project;
 // QDOAS ???   pResults=(PRJCT_RESULTS_ASCII *)&pProject->asciiResults;
 // QDOAS ???
 // QDOAS ???   // Build the complete output path
@@ -2342,7 +2342,7 @@ RC OUTPUT_LoadCross(LIST_ITEM *pList,CROSS_RESULTS *pResults,INT *pAmfFlag,INT h
 // QDOAS ??? // PURPOSE       For satellites measurements, build automatically a file name
 // QDOAS ??? //               for output and create a directory structure
 // QDOAS ??? //
-// QDOAS ??? // INPUT         pSpecInfo       structure including information on project options
+// QDOAS ??? // INPUT         pEngineContext       structure including information on project options
 // QDOAS ??? // INPUT/OUTPUT  outputFileName  the original output file name to complete
 // QDOAS ??? //               ascFlag         0 to add BIN extension, 1 to add ASC extension
 // QDOAS ??? //
@@ -2350,7 +2350,7 @@ RC OUTPUT_LoadCross(LIST_ITEM *pList,CROSS_RESULTS *pResults,INT *pAmfFlag,INT h
 // QDOAS ??? //               ERROR_ID_NO otherwise
 // QDOAS ??? // -----------------------------------------------------------------------------
 // QDOAS ???
-// QDOAS ??? RC OutputBuildFileName(SPEC_INFO *pSpecInfo,UCHAR *outputFileName,INT ascFlag)
+// QDOAS ??? RC OutputBuildFileName(ENGINE_CONTEXT *pEngineContext,UCHAR *outputFileName,INT ascFlag)
 // QDOAS ???  {
 // QDOAS ???   // Declarations
 // QDOAS ???
@@ -2364,13 +2364,13 @@ RC OUTPUT_LoadCross(LIST_ITEM *pList,CROSS_RESULTS *pResults,INT *pAmfFlag,INT h
 // QDOAS ???
 // QDOAS ???   // Initializations
 // QDOAS ???
-// QDOAS ???   pProject=(PROJECT *)&pSpecInfo->project;
+// QDOAS ???   pProject=(PROJECT *)&pEngineContext->project;
 // QDOAS ???   pResults=(PRJCT_RESULTS_ASCII *)&pProject->asciiResults;
 // QDOAS ???
 // QDOAS ???   rc=ERROR_ID_NO;
 // QDOAS ???
 // QDOAS ???   if (!outputNbRecords)
-// QDOAS ???    THRD_Error(ERROR_TYPE_WARNING,(rc=ERROR_ID_NOTHING_TO_SAVE),"OutputBuildFileName",pSpecInfo->fileName);
+// QDOAS ???    THRD_Error(ERROR_TYPE_WARNING,(rc=ERROR_ID_NOTHING_TO_SAVE),"OutputBuildFileName",pEngineContext->fileName);
 // QDOAS ???   else
 // QDOAS ???    {
 // QDOAS ???     pOutput=&outputRecords[0];
@@ -2392,8 +2392,8 @@ RC OUTPUT_LoadCross(LIST_ITEM *pList,CROSS_RESULTS *pResults,INT *pAmfFlag,INT h
 // QDOAS ???         (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GOME2)) &&
 // QDOAS ???        ((pProject->spectra.mode!=PRJCT_SPECTRA_MODES_OBSLIST) || (pProject->spectra.radius<=1.)))
 // QDOAS ???      {
-// QDOAS ???       if ((ptr=strrchr(pSpecInfo->fileName,PATH_SEP))==NULL)
-// QDOAS ???        ptr=pSpecInfo->fileName;
+// QDOAS ???       if ((ptr=strrchr(pEngineContext->fileName,PATH_SEP))==NULL)
+// QDOAS ???        ptr=pEngineContext->fileName;
 // QDOAS ???       else
 // QDOAS ???        ptr++;
 // QDOAS ???
@@ -2455,11 +2455,11 @@ RC OUTPUT_LoadCross(LIST_ITEM *pList,CROSS_RESULTS *pResults,INT *pAmfFlag,INT h
 // QDOAS ??? // -----------------------------------------------------------------------------
 // QDOAS ??? // PURPOSE       Print titles of columns in the output ASCII file
 // QDOAS ??? //
-// QDOAS ??? // INPUT         pSpecInfo       structure including information on project options
+// QDOAS ??? // INPUT         pEngineContext       structure including information on project options
 // QDOAS ??? //               fp              pointer to the output file
 // QDOAS ??? // -----------------------------------------------------------------------------
 // QDOAS ???
-// QDOAS ??? void OutputAscPrintTitles(SPEC_INFO *pSpecInfo,FILE *fp)
+// QDOAS ??? void OutputAscPrintTitles(ENGINE_CONTEXT *pEngineContext,FILE *fp)
 // QDOAS ???  {
 // QDOAS ???   // Declarations
 // QDOAS ???
@@ -2921,7 +2921,7 @@ RC OUTPUT_LoadCross(LIST_ITEM *pList,CROSS_RESULTS *pResults,INT *pAmfFlag,INT h
 // QDOAS ??? // -----------------------------------------------------------------------------
 // QDOAS ??? // PURPOSE       Open the outputFile and save the preliminary information
 // QDOAS ??? //
-// QDOAS ??? // INPUT         pSpecInfo       structure including information on project options
+// QDOAS ??? // INPUT         pEngineContext       structure including information on project options
 // QDOAS ??? //               outputFileName  the name of the outputFile
 // QDOAS ??? //               ascFlag         0 to output to a binary file,
 // QDOAS ??? //                               1 to output data to an ASCII file
@@ -2929,7 +2929,7 @@ RC OUTPUT_LoadCross(LIST_ITEM *pList,CROSS_RESULTS *pResults,INT *pAmfFlag,INT h
 // QDOAS ??? // RETURN        pointer to the output file
 // QDOAS ??? // -----------------------------------------------------------------------------
 // QDOAS ???
-// QDOAS ??? FILE *OutputFileOpen(SPEC_INFO *pSpecInfo,UCHAR *outputFileName,INT ascFlag)
+// QDOAS ??? FILE *OutputFileOpen(ENGINE_CONTEXT *pEngineContext,UCHAR *outputFileName,INT ascFlag)
 // QDOAS ???  {
 // QDOAS ???   // Declarations
 // QDOAS ???
@@ -2943,7 +2943,7 @@ RC OUTPUT_LoadCross(LIST_ITEM *pList,CROSS_RESULTS *pResults,INT *pAmfFlag,INT h
 // QDOAS ???
 // QDOAS ???   // Initializations
 // QDOAS ???
-// QDOAS ???   pProject=(PROJECT *)&pSpecInfo->project;
+// QDOAS ???   pProject=(PROJECT *)&pEngineContext->project;
 // QDOAS ???   pResults=(PRJCT_RESULTS_ASCII *)&pProject->asciiResults;
 // QDOAS ???
 // QDOAS ???   // Initializations
@@ -2987,10 +2987,10 @@ RC OUTPUT_LoadCross(LIST_ITEM *pList,CROSS_RESULTS *pResults,INT *pAmfFlag,INT h
 // QDOAS ???    	// Save information on the calibration
 // QDOAS ???
 // QDOAS ???    	if (pResults->calibFlag)
-// QDOAS ???      OutputCalib(pSpecInfo);
+// QDOAS ???      OutputCalib(pEngineContext);
 // QDOAS ???
 // QDOAS ???     if (ascFlag)
-// QDOAS ???      OutputAscPrintTitles(pSpecInfo,fp);
+// QDOAS ???      OutputAscPrintTitles(pEngineContext,fp);
 // QDOAS ???     else
 // QDOAS ???      OutputBinWriteFields(fp,outputColumns);
 // QDOAS ???    }
@@ -3005,12 +3005,12 @@ RC OUTPUT_LoadCross(LIST_ITEM *pList,CROSS_RESULTS *pResults,INT *pAmfFlag,INT h
 // QDOAS ??? // -----------------------------------------------------------------------------
 // QDOAS ??? // PURPOSE       Flusth the buffers in a one shot
 // QDOAS ??? //
-// QDOAS ??? // INPUT         pSpecInfo       structure including information on project options
+// QDOAS ??? // INPUT         pEngineContext       structure including information on project options
 // QDOAS ??? //
 // QDOAS ??? // RETURN        Non zero value return code if the output failed
 // QDOAS ??? // -----------------------------------------------------------------------------
 // QDOAS ???
-// QDOAS ??? RC OUTPUT_FlushBuffers(SPEC_INFO *pSpecInfo)
+// QDOAS ??? RC OUTPUT_FlushBuffers(ENGINE_CONTEXT *pEngineContext)
 // QDOAS ???  {
 // QDOAS ???   // Declarations
 // QDOAS ???
@@ -3031,7 +3031,7 @@ RC OUTPUT_LoadCross(LIST_ITEM *pList,CROSS_RESULTS *pResults,INT *pAmfFlag,INT h
 // QDOAS ???
 // QDOAS ???   // Initializations
 // QDOAS ???
-// QDOAS ???   pProject=(PROJECT *)&pSpecInfo->project;
+// QDOAS ???   pProject=(PROJECT *)&pEngineContext->project;
 // QDOAS ???   pResults=(PRJCT_RESULTS_ASCII *)&pProject->asciiResults;
 // QDOAS ???
 // QDOAS ???   memset(outputFileName,0,MAX_ITEM_TEXT_LEN+1);
@@ -3044,7 +3044,7 @@ RC OUTPUT_LoadCross(LIST_ITEM *pList,CROSS_RESULTS *pResults,INT *pAmfFlag,INT h
 // QDOAS ???
 // QDOAS ???   rc=ERROR_ID_NO;
 // QDOAS ???
-// QDOAS ???   if ((pResults->analysisFlag || pResults->calibFlag) && outputNbRecords && !(rc=OutputBuildFileName(pSpecInfo,outputFileName,!pResults->binaryFlag)))
+// QDOAS ???   if ((pResults->analysisFlag || pResults->calibFlag) && outputNbRecords && !(rc=OutputBuildFileName(pEngineContext,outputFileName,!pResults->binaryFlag)))
 // QDOAS ???    {
 // QDOAS ???     if ((ptr=strrchr(outputFileName,PATH_SEP))==NULL)
 // QDOAS ???      ptr=outputFileName;
@@ -3059,7 +3059,7 @@ RC OUTPUT_LoadCross(LIST_ITEM *pList,CROSS_RESULTS *pResults,INT *pAmfFlag,INT h
 // QDOAS ???
 // QDOAS ???     if (!automatic)
 // QDOAS ???      {
-// QDOAS ???       if ((outputFp=OutputFileOpen(pSpecInfo,outputFileName,!pResults->binaryFlag))==NULL)
+// QDOAS ???       if ((outputFp=OutputFileOpen(pEngineContext,outputFileName,!pResults->binaryFlag))==NULL)
 // QDOAS ???        rc=ERROR_SetLast("OUTPUT_FlushBuffers",ERROR_TYPE_FATAL,ERROR_ID_FILE_OPEN,"outputFileName");
 // QDOAS ???       else if (pResults->binaryFlag)
 // QDOAS ???        rc=OutputBinWriteDataSet(outputFp,outputColumns,outputNbRecords);
@@ -3129,9 +3129,9 @@ RC OUTPUT_LoadCross(LIST_ITEM *pList,CROSS_RESULTS *pResults,INT *pAmfFlag,INT h
 // QDOAS ???
 // QDOAS ???      	 	 	  	if (nbRecords)
 // QDOAS ???      	 	 	  	 {
-// QDOAS ???      	 	 	  	 	OutputBuildSiteFileName(pSpecInfo,outputAutomaticFileName,oldYear,oldMonth,indexSite,!pResults->binaryFlag);
+// QDOAS ???      	 	 	  	 	OutputBuildSiteFileName(pEngineContext,outputAutomaticFileName,oldYear,oldMonth,indexSite,!pResults->binaryFlag);
 // QDOAS ???
-// QDOAS ???                if ((outputFp=OutputFileOpen(pSpecInfo,outputAutomaticFileName,!pResults->binaryFlag))==NULL)
+// QDOAS ???                if ((outputFp=OutputFileOpen(pEngineContext,outputAutomaticFileName,!pResults->binaryFlag))==NULL)
 // QDOAS ???                 ERROR_SetLast("OutputFlushBuffers",ERROR_TYPE_FATAL,ERROR_ID_FILE_OPEN,"outputFileName");
 // QDOAS ???              //   THRD_Error(ERROR_TYPE_FATAL,(rc=ERROR_ID_FILE_OPEN),"OutputFlushBuffers",outputFileName);
 // QDOAS ???                else if (pResults->binaryFlag)
@@ -3177,9 +3177,9 @@ RC OUTPUT_LoadCross(LIST_ITEM *pList,CROSS_RESULTS *pResults,INT *pAmfFlag,INT h
 // QDOAS ???     	   	 	 	   memcpy(&outputData[indexField][0],&outputColumns[indexField][oldRecord*pField->fieldSize],nbRecords*pField->fieldSize);
 // QDOAS ???      	 	   	 	 }
 // QDOAS ???
-// QDOAS ???      	 	 	 	 	OutputBuildSiteFileName(pSpecInfo,outputAutomaticFileName,oldYear,oldMonth,indexSite,!pResults->binaryFlag);
+// QDOAS ???      	 	 	 	 	OutputBuildSiteFileName(pEngineContext,outputAutomaticFileName,oldYear,oldMonth,indexSite,!pResults->binaryFlag);
 // QDOAS ???
-// QDOAS ???               if ((outputFp=OutputFileOpen(pSpecInfo,outputAutomaticFileName,!pResults->binaryFlag))==NULL)
+// QDOAS ???               if ((outputFp=OutputFileOpen(pEngineContext,outputAutomaticFileName,!pResults->binaryFlag))==NULL)
 // QDOAS ???                ERROR_SetLast("OutputFlushBuffers",ERROR_TYPE_FATAL,ERROR_ID_FILE_OPEN,"outputFileName");
 // QDOAS ???               else if (pResults->binaryFlag)
 // QDOAS ???                rc=OutputBinWriteDataSet(outputFp,outputData,nbRecords);
@@ -3459,13 +3459,13 @@ RC OUTPUT_LoadCross(LIST_ITEM *pList,CROSS_RESULTS *pResults,INT *pAmfFlag,INT h
 // QDOAS ??? // -----------------------------------------------------------------------------
 // QDOAS ??? // PURPOSE       Store results for further calculation of NASA-AMES AM/PM means
 // QDOAS ??? //
-// QDOAS ??? // INPUT         pSpecInfo       structure including information on project options
+// QDOAS ??? // INPUT         pEngineContext       structure including information on project options
 // QDOAS ??? //
 // QDOAS ??? // RETURN        ERROR_ID_MEMORY if the buffer is full
 // QDOAS ??? //               ERROR_ID_NO on success
 // QDOAS ??? // -----------------------------------------------------------------------------
 // QDOAS ???
-// QDOAS ??? RC OutputStoreNasaAmes(SPEC_INFO *pSpecInfo)
+// QDOAS ??? RC OutputStoreNasaAmes(ENGINE_CONTEXT *pEngineContext)
 // QDOAS ???  {
 // QDOAS ???   // Declarations
 // QDOAS ???
@@ -3478,20 +3478,20 @@ RC OUTPUT_LoadCross(LIST_ITEM *pList,CROSS_RESULTS *pResults,INT *pAmfFlag,INT h
 // QDOAS ???
 // QDOAS ???   rc=ERROR_ID_NO;
 // QDOAS ???
-// QDOAS ???   if (pSpecInfo->project.nasaResults.nasaFlag && (OUTPUT_AmfSpace!=NULL))
+// QDOAS ???   if (pEngineContext->project.nasaResults.nasaFlag && (OUTPUT_AmfSpace!=NULL))
 // QDOAS ???    {
-// QDOAS ???     if ((OUTPUT_nasaResults.julianDay=ZEN_FNCaljda(&pSpecInfo->Tm))!=OUTPUT_nasaResults.oldJulianDay)
+// QDOAS ???     if ((OUTPUT_nasaResults.julianDay=ZEN_FNCaljda(&pEngineContext->Tm))!=OUTPUT_nasaResults.oldJulianDay)
 // QDOAS ???      {
 // QDOAS ???       // Save previous results in NASA-AMES format
 // QDOAS ???
 // QDOAS ???       OUTPUT_SaveNasaAmes();
 // QDOAS ???
-// QDOAS ???       memcpy(&OUTPUT_nasaResults.project,&pSpecInfo->project,sizeof(PROJECT));
+// QDOAS ???       memcpy(&OUTPUT_nasaResults.project,&pEngineContext->project,sizeof(PROJECT));
 // QDOAS ???       OUTPUT_nasaResults.oldJulianDay=OUTPUT_nasaResults.julianDay;
 // QDOAS ???       OUTPUT_nasaNResults=0;
 // QDOAS ???      }
 // QDOAS ???
-// QDOAS ???     if ((pSpecInfo->Zm>=(double)77.) && (pSpecInfo->Zm<=(double)95.))
+// QDOAS ???     if ((pEngineContext->Zm>=(double)77.) && (pEngineContext->Zm<=(double)95.))
 // QDOAS ???      {
 // QDOAS ???       // Not enough memory for storing all results
 // QDOAS ???
@@ -3501,12 +3501,12 @@ RC OUTPUT_LoadCross(LIST_ITEM *pList,CROSS_RESULTS *pResults,INT *pAmfFlag,INT h
 // QDOAS ???        {
 // QDOAS ???         // Auxiliary results safe keeping
 // QDOAS ???
-// QDOAS ???         OUTPUT_nasaResults.Zm[OUTPUT_nasaNResults]=pSpecInfo->Zm;           // zenith angle
-// QDOAS ???         OUTPUT_nasaResults.Tm[OUTPUT_nasaNResults]=pSpecInfo->Tm;           // measurement time in sec
-// QDOAS ???         OUTPUT_nasaResults.TDet[OUTPUT_nasaNResults]=pSpecInfo->TDet;       // detector temperature
-// QDOAS ???         OUTPUT_nasaResults.TimeDec[OUTPUT_nasaNResults]=pSpecInfo->localTimeDec; // decimal measurement time
-// QDOAS ???         OUTPUT_nasaResults.Cic[OUTPUT_nasaNResults]=pSpecInfo->Cic;         // color index
-// QDOAS ???         OUTPUT_nasaResults.SkyObs=pSpecInfo->SkyObs;                        // the last sky state indication
+// QDOAS ???         OUTPUT_nasaResults.Zm[OUTPUT_nasaNResults]=pEngineContext->Zm;           // zenith angle
+// QDOAS ???         OUTPUT_nasaResults.Tm[OUTPUT_nasaNResults]=pEngineContext->Tm;           // measurement time in sec
+// QDOAS ???         OUTPUT_nasaResults.TDet[OUTPUT_nasaNResults]=pEngineContext->TDet;       // detector temperature
+// QDOAS ???         OUTPUT_nasaResults.TimeDec[OUTPUT_nasaNResults]=pEngineContext->localTimeDec; // decimal measurement time
+// QDOAS ???         OUTPUT_nasaResults.Cic[OUTPUT_nasaNResults]=pEngineContext->Cic;         // color index
+// QDOAS ???         OUTPUT_nasaResults.SkyObs=pEngineContext->SkyObs;                        // the last sky state indication
 // QDOAS ???
 // QDOAS ???         // Primary results safe keeping
 // QDOAS ???
@@ -4034,13 +4034,13 @@ RC OUTPUT_LoadCross(LIST_ITEM *pList,CROSS_RESULTS *pResults,INT *pAmfFlag,INT h
 // QDOAS ??? // -----------------------------------------------------------------------------
 // QDOAS ??? // PURPOSE       save all results (ASC/BIN and NASA-AMES formats)
 // QDOAS ??? //
-// QDOAS ??? // INPUT         pSpecInfo   structure including information on the current record
+// QDOAS ??? // INPUT         pEngineContext   structure including information on the current record
 // QDOAS ??? //
 // QDOAS ??? // RETURN        Non zero value return code if the function failed
 // QDOAS ??? //               ERROR_ID_NO on success
 // QDOAS ??? // -----------------------------------------------------------------------------
 // QDOAS ???
-// QDOAS ??? RC OUTPUT_SaveResults(SPEC_INFO *pSpecInfo)
+// QDOAS ??? RC OUTPUT_SaveResults(ENGINE_CONTEXT *pEngineContext)
 // QDOAS ???  {
 // QDOAS ???   // Declarations
 // QDOAS ???
@@ -4066,8 +4066,8 @@ RC OUTPUT_LoadCross(LIST_ITEM *pList,CROSS_RESULTS *pResults,INT *pAmfFlag,INT h
 // QDOAS ???
 // QDOAS ???          if (pTabCrossResults->indexAmf!=ITEM_NONE)
 // QDOAS ???           {
-// QDOAS ???            if (OutputGetAmf(pTabCrossResults,pSpecInfo->Zm,pSpecInfo->Tm,&pTabCrossResults->Amf))
-// QDOAS ???             THRD_Error(ERROR_TYPE_WARNING,ERROR_ID_AMF,"OutputSaveResults ",pSpecInfo->Zm,OUTPUT_AmfSpace[pTabCrossResults->indexAmf].amfFileName);
+// QDOAS ???            if (OutputGetAmf(pTabCrossResults,pEngineContext->Zm,pEngineContext->Tm,&pTabCrossResults->Amf))
+// QDOAS ???             THRD_Error(ERROR_TYPE_WARNING,ERROR_ID_AMF,"OutputSaveResults ",pEngineContext->Zm,OUTPUT_AmfSpace[pTabCrossResults->indexAmf].amfFileName);
 // QDOAS ???            else if (pTabCrossResults->Amf!=(double)0.)
 // QDOAS ???             {
 // QDOAS ???              pTabCrossResults->VrtCol=(pTabCrossResults->SlntCol+pTabCrossResults->ResCol)/pTabCrossResults->Amf;
@@ -4080,23 +4080,23 @@ RC OUTPUT_LoadCross(LIST_ITEM *pList,CROSS_RESULTS *pResults,INT *pAmfFlag,INT h
 // QDOAS ???
 // QDOAS ???   // Rebuild spectrum for fluxes and color indexes computation
 // QDOAS ???
-// QDOAS ???   if ((pSpecInfo->NSomme!=0) && (pSpecInfo->TotalExpTime!=(double)0.))
+// QDOAS ???   if ((pEngineContext->NSomme!=0) && (pEngineContext->TotalExpTime!=(double)0.))
 // QDOAS ???    {
-// QDOAS ???     Spectrum=(double *)pSpecInfo->spectrum;
+// QDOAS ???     Spectrum=(double *)pEngineContext->spectrum;
 // QDOAS ???
 // QDOAS ???     for (i=0;i<NDET;i++)
-// QDOAS ???      Spectrum[i]*=(double)pSpecInfo->NSomme/pSpecInfo->TotalExpTime;
+// QDOAS ???      Spectrum[i]*=(double)pEngineContext->NSomme/pEngineContext->TotalExpTime;
 // QDOAS ???    }
 // QDOAS ???
-// QDOAS ???   if (outputNbRecords<pSpecInfo->recordNumber)
-// QDOAS ???    OutputSaveRecord(pSpecInfo,(THRD_id==THREAD_TYPE_ANALYSIS)?0:1);
+// QDOAS ???   if (outputNbRecords<pEngineContext->recordNumber)
+// QDOAS ???    OutputSaveRecord(pEngineContext,(THRD_id==THREAD_TYPE_ANALYSIS)?0:1);
 // QDOAS ???
 // QDOAS ???   // Results safe keeping
 // QDOAS ???
 // QDOAS ???   if (outputNasaFlag)                                                           // SAVE results in ASCII format
-// QDOAS ???    rc=OutputStoreNasaAmes(pSpecInfo);                                           // STORE results for future NASA-AMES means computation
+// QDOAS ???    rc=OutputStoreNasaAmes(pEngineContext);                                           // STORE results for future NASA-AMES means computation
 // QDOAS ???
-// QDOAS ???   pSpecInfo->lastSavedRecord=pSpecInfo->indexRecord;
+// QDOAS ???   pEngineContext->lastSavedRecord=pEngineContext->indexRecord;
 // QDOAS ???
 // QDOAS ???   // Return
 // QDOAS ???
@@ -4112,13 +4112,13 @@ RC OUTPUT_LoadCross(LIST_ITEM *pList,CROSS_RESULTS *pResults,INT *pAmfFlag,INT h
 // QDOAS ??? // -----------------------------------------------------------------------------
 // QDOAS ??? // PURPOSE         Allocate and initialize buffers for the records to output
 // QDOAS ??? //
-// QDOAS ??? // INPUT           pSpecInfo   structure including information on the current project
+// QDOAS ??? // INPUT           pEngineContext   structure including information on the current project
 // QDOAS ??? //
 // QDOAS ??? // RETURN          ERROR_ID_ALLOC if one of the buffer allocation failed
 // QDOAS ??? //                 ERROR_ID_NO in case of success
 // QDOAS ??? // -----------------------------------------------------------------------------
 // QDOAS ???
-// QDOAS ??? RC OUTPUT_LocalAlloc(SPEC_INFO *pSpecInfo)
+// QDOAS ??? RC OUTPUT_LocalAlloc(ENGINE_CONTEXT *pEngineContext)
 // QDOAS ???  {
 // QDOAS ???   // Declarations
 // QDOAS ???
@@ -4133,9 +4133,9 @@ RC OUTPUT_LoadCross(LIST_ITEM *pList,CROSS_RESULTS *pResults,INT *pAmfFlag,INT h
 // QDOAS ???
 // QDOAS ???   rc=ERROR_ID_NO;
 // QDOAS ???
-// QDOAS ???   newRecordNumber=pSpecInfo->recordNumber;
+// QDOAS ???   newRecordNumber=pEngineContext->recordNumber;
 // QDOAS ???
-// QDOAS ???   pProject=(PROJECT *)&pSpecInfo->project;
+// QDOAS ???   pProject=(PROJECT *)&pEngineContext->project;
 // QDOAS ???   pResults=(PRJCT_RESULTS_ASCII *)&pProject->asciiResults;
 // QDOAS ???
 // QDOAS ???   if (pResults->analysisFlag || pResults->calibFlag)

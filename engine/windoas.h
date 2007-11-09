@@ -69,11 +69,11 @@
 
 // Files names
 
-#define WINDOAS_HLP                 "WINDOAS.HLP"       // help file
-#define WINDOAS_LOG                 "WINDOAS.LOG"       // log file
-#define WINDOAS_DBG                 "WINDOAS.DBG"       // debug file
-#define WINDOAS_TMP                 "WINDOAS.TMP"       // temporary file
-#define WINDOAS_SYS                 "WINDOAS.SYS"       // system file
+#define WINDOAS_HLP                 "QDOAS.HLP"       // help file
+#define WINDOAS_LOG                 "QDOAS.LOG"       // log file
+#define WINDOAS_DBG                 "QDOAS.DBG"       // debug file
+#define WINDOAS_TMP                 "QDOAS.TMP"       // temporary file
+#define WINDOAS_SYS                 "QDOAS.SYS"       // system file
 
 #define BRO_AMF_FILE                "bro_coef352-369nm.dat"
 
@@ -125,77 +125,14 @@ NEWTIME;
 // QDOAS ??? TAB_PAGE;
 // QDOAS ???
 // QDOAS ??? #endif
-// QDOAS ???
-// QDOAS ??? // ====================
-// QDOAS ??? // RESOURCES MANAGEMENT
-// QDOAS ??? // ====================
-// QDOAS ???
-// QDOAS ??? RC      RESOURCE_Alloc(void);
-// QDOAS ??? void    RESOURCE_Free(void);
-// QDOAS ???
-// QDOAS ??? #if defined(__WINDOAS_WIN_) && __WINDOAS_WIN_
-// QDOAS ???
-// QDOAS ??? // ===================
-// QDOAS ??? // TOOL BAR PROCESSING
-// QDOAS ??? // ===================
-// QDOAS ???
-// QDOAS ??? // Constant
-// QDOAS ??? // --------
-// QDOAS ???
-// QDOAS ??? #define TLBAR_ID               90001L             // toolbar id
-// QDOAS ??? #define TLBAR_TIMER_ID         90002L             // toolbar timer id
-// QDOAS ??? #define TLBAR_TIMER_VALUE        100L             // accuracy in ms of the toolbar timer
-// QDOAS ???
-// QDOAS ??? // Global variables
-// QDOAS ??? // ----------------
-// QDOAS ???
-// QDOAS ??? EXTERN HWND TLBAR_hwnd;             // toolbar handle for windows messages processing
-// QDOAS ??? EXTERN HWND TLBAR_hwndGoto;
-// QDOAS ??? EXTERN BOOL TLBAR_bSaveFlag;        // "change status", indicates at any time if the current configuration should be saved
-// QDOAS ??? EXTERN BOOL TLBAR_bThreadFlag;      // "change status", indicates at any time if the program is in thread
-// QDOAS ???
-// QDOAS ??? // Prototypes
-// QDOAS ??? // ----------
-// QDOAS ???
-// QDOAS ??? void    TLBAR_Init(void);
-// QDOAS ??? void    TLBAR_Close(void);
-// QDOAS ??? BOOL    TLBAR_Create(HWND hwndParent);
-// QDOAS ??? LRESULT TLBAR_ReSize(HWND hwnd,UINT msg,WPARAM mp1,LPARAM mp2);
-// QDOAS ??? LRESULT TLBAR_Notify(HWND hwnd,UINT msg,WPARAM mp1,LPARAM mp2);
-// QDOAS ??? void    TLBAR_EnableThreadButtons(BOOL bFlag);
-// QDOAS ??? void    TLBAR_Enable(BOOL bFlag);
-// QDOAS ??? RC      TLBAR_Check(HWND hwndParent);
-// QDOAS ??? void    TLBAR_Message(UINT msg);
-// QDOAS ???
-// QDOAS ??? // =====================
-// QDOAS ??? // STATUS BAR PROCESSING
-// QDOAS ??? // =====================
-// QDOAS ???
-// QDOAS ??? // Constants definitions
-// QDOAS ??? // ---------------------
-// QDOAS ???
-// QDOAS ??? #define STBAR_TIMER_VALUE        60000L           // accuracy in ms for updating time in status bar
-// QDOAS ??? #define STBAR_MSG_ID             90011L           // status bar id
-// QDOAS ??? #define STBAR_TIMER_ID           90012L           // id of the timer called for updating time in status bar
-// QDOAS ???
-// QDOAS ??? #define STBAR_SECTION_TEXT       0                // section of the status bar for contextual help
-// QDOAS ??? #define STBAR_SECTION_MOUSEPOS   1                // section of the status bar for graph coordinates
-// QDOAS ??? #define STBAR_SECTION_TIME       2                // section of the status bar for time
-// QDOAS ???
-// QDOAS ??? // Global variable
-// QDOAS ??? // ---------------
-// QDOAS ???
-// QDOAS ??? EXTERN  HWND STBAR_hwnd;            // status bar handle for Windows messages processing
-// QDOAS ???
-// QDOAS ??? // Prototypes
-// QDOAS ??? // ----------
-// QDOAS ???
-// QDOAS ??? BOOL    STBAR_Create(HWND hwndParent);
-// QDOAS ??? LRESULT STBAR_Timer (HWND hwnd,UINT msg,WPARAM mp1,LPARAM mp2);
-// QDOAS ??? LRESULT STBAR_ReSize(HWND hwnd,UINT msg,WPARAM mp1,LPARAM mp2);
-// QDOAS ??? LRESULT STBAR_Update(HWND hwnd,UINT msg,WPARAM mp1,LPARAM mp2);
-// QDOAS ???
-// QDOAS ??? #endif
+
+// ====================
+// RESOURCES MANAGEMENT
+// ====================
+
+RC      RESOURCE_Alloc(void);
+void    RESOURCE_Free(void);
+
 // QDOAS ???
 // QDOAS ??? // ===============
 // QDOAS ??? // HDF file format
@@ -451,26 +388,15 @@ UCHAR  *FILES_BuildFileName(UCHAR *fileName,MASK fileType);
    // Global variables
    // ----------------
 
-   EXTERN SYMBOL_CROSS *SYMB_itemCrossList;                    // pointer to list of cross sections symbols
-   EXTERN INDEX SYMB_crossTreeEntryPoint;                      // entry point in tree for cross sections symbols objects
+   EXTERN SYMBOL_CROSS *SYMB_itemCrossList;                                     // pointer to list of cross sections symbols
+   EXTERN INT SYMB_itemCrossN;
 
-// QDOAS ???
-// QDOAS ???    // Prototypes
-// QDOAS ???    // ----------
-// QDOAS ???
-// QDOAS ???    #if defined(__WINDOAS_GUI_) && (__WINDOAS_GUI_)
-// QDOAS ???        LRESULT CALLBACK SYMB_WndProc(HWND hwndSites,UINT msg,WPARAM mp1,LPARAM mp2);
-// QDOAS ???    #endif
-// QDOAS ???
    INDEX SYMB_GetListIndex(SYMBOL *symbolList,INT symbolNumber,UCHAR *symbolName);
-// QDOAS ???
-// QDOAS ???    RC    SYMB_Alloc(void);
-// QDOAS ???    void  SYMB_Free(void);
-// QDOAS ???
-// QDOAS ???    void  SYMB_ResetConfiguration(void);
-// QDOAS ???    void  SYMB_LoadConfiguration(UCHAR *fileName);
-// QDOAS ???    void  SYMB_SaveConfiguration(FILE *fp,UCHAR *sectionName);
-// QDOAS ???
+   RC SYMB_Add(UCHAR *symbolName,UCHAR *symbolDescription);
+
+   RC    SYMB_Alloc(void);
+   void  SYMB_Free(void);
+
 // QDOAS ??? // ============================
 // QDOAS ??? // RAW SPECTRA FILES PROPERTIES
 // QDOAS ??? // ============================
@@ -876,18 +802,6 @@ typedef struct _analysis
  }
 ANALYSIS_WINDOWS;
 
-// ------------------
-// GLOBAL DEFINITIONS
-// ------------------
-
-EXTERN ANLYS_TAB_PAGE     ANLYS_tabPages[];        // tab pages description
-EXTERN ANALYSIS_WINDOWS  *ANLYS_windowsList,       // analysis windows list
-                         *ANLYS_toPaste;
-EXTERN LIST_ITEM         *ANLYS_itemList;          // list of items in ListView control owned by tab pages
-EXTERN UCHAR             *ANLYS_amf[];             // types of air mass factors files used for output
-EXTERN UCHAR             *ANLYS_crossAction[];     // types of cross sections files
-EXTERN INT                ANLYS_nItemsToPaste;
-
 // ----------
 // PROTOTYPES
 // ----------
@@ -931,8 +845,7 @@ enum _prjctSpectraModes
 
 typedef struct _prjctSpectra
  {
-  INT noMin,noMax,                                     // spectra numbers range
-      pixMin,pixMax;                                   // pixels numbers range
+  INT noMin,noMax;                                     // spectra numbers range
   float SZAMin,SZAMax,SZADelta;                        // SZA range
   float longMin,longMax,latMin,latMax,                 // resp. longitude and latitude ranges
         radius;                                        // radius if circle mode is used
@@ -941,12 +854,11 @@ typedef struct _prjctSpectra
         displaySpectraFlag,                            // display complete spectra
         displayDataFlag,                               // display data on spectra
         displayFitFlag,                                // display fits
-        displayPause,                                  // force pause between two graph display
-        displayDelay,                                  // calculated delay for display pause
-        maxGraphV,                                     // maximum number of graphs in height a graphic page can hold
-        maxGraphH,                                     // maximum number of graphs in width a graphic page can hold
-        mode,
-        indexBand;
+        displayPause,                                  // QDOAS obsolete field !!! : force pause between two graph display
+        displayDelay,                                  // QDOAS obsolete field !!! : calculated delay for display pause
+        maxGraphV,                                     // QDOAS obsolete field !!! : maximum number of graphs in height a graphic page can hold
+        maxGraphH,                                     // QDOAS obsolete field !!! : maximum number of graphs in width a graphic page can hold
+        mode;
  }
 PRJCT_SPECTRA;
 
@@ -1703,519 +1615,6 @@ void PRJCT_SaveConfiguration(FILE *fp,UCHAR *sectionName);
 // QDOAS ???
 // QDOAS ???    #endif
 // QDOAS ???
-// =================
-// THREAD PROCESSING
-// =================
-
-// ---------------------
-// CONSTANTS DEFINITIONS
-// ---------------------
-
-enum _thrdId
- {
-  THREAD_TYPE_NONE,
-  THREAD_TYPE_SPECTRA,
-  THREAD_TYPE_ANALYSIS,
-  THREAD_TYPE_KURUCZ
- };
-
-enum _thrdBrowse
- {
-  THREAD_BROWSE_SPECTRA,
-  THREAD_BROWSE_DARK,
-  THREAD_BROWSE_ERROR,
-  THREAD_BROWSE_EXPORT,
-  THREAD_BROWSE_MFC_OFFSET,
-  THREAD_BROWSE_MFC_DARK,
-  THREAD_BROWSE_MFC_INSTR,
-  THREAD_BROWSE_MFC_LAMP
- };
-
-enum _thrdLevels
- {
-  THREAD_LEVEL_RECORD,
-  THREAD_LEVEL_FILE,
-  THREAD_LEVEL_PROJECT,
-  THREAD_LEVEL_MAX
- };
-
-enum _threadEvents
- {
-  THREAD_EVENT_FIRST,
-  THREAD_EVENT_PREVIOUS,
-  THREAD_EVENT_NEXT,
-  THREAD_EVENT_LAST,
-  THREAD_EVENT_GOTO,
-  THREAD_EVENT_PLAY,
-  THREAD_EVENT_PAUSE,
-  THREAD_EVENT_STOP,
-  THREAD_EVENT_STOP_PROGRAM,
-  THREAD_EVENT_MAX
- };
-
-enum _thrdGoto
- {
-  THREAD_GOTO_RECORD,
-  THREAD_GOTO_PIXEL
- };
-
-// ----------------------
-// STRUCTURES DEFINITIONS
-// ----------------------
-
-// Data on current spectrum
-// ------------------------
-
-// Geolocations and angles for satellite measurements
-
-typedef struct _satelliteGeoloc
- {
-  // Geolocations
-
-  double lonCorners[4],
-         latCorners[4],
-         lonCenter,
-         latCenter;
-
-  // Angles
-
-  float  solZen[3],
-         solAzi[3],
-         losZen[3],
-         losAzi[3];
-
-  // Miscellaneous
-
-  float earthRadius,satHeight;
-  float cloudTopPressure,cloudFraction;                                         // information on clouds
- }
-SATELLITE_GEOLOC;
-
-//
-// GOME format
-//
-
-typedef struct _gomeData                                                        // data on the current GOME pixel
- {
-  INT   orbitNumber;                                                            // orbit number
-  INT   pixelNumber;                                                            // pixel number
-  INT   pixelType;                                                              // pixel type
-
-  SHORT_DATE irradDate;                                                         // date of measurement for the irradiance spectrum
-  struct time irradTime;                                                        // time of measurement for the irradiance spectrum
-
-  int     nRef;                                                                 // size of irradiance vectors
-
-  float longit[5];                                                              // longitudes (four corners of the GOME pixel + pixel centre)
-  float latit[5];                                                               // latitudes (four corners of the GOME pixel + pixel centre)
-  float sza[3];                                                                 // solar zenith angles (East, center and west points of the GOME pixel)
-  float azim[3];                                                                // solar azimuth angles (East, center and west points of the GOME pixel)
- }
-GOME_DATA;
-
-typedef struct _ccd
- {
-  MATRIX_OBJECT drk;
-  MATRIX_OBJECT vip;
-  MATRIX_OBJECT dnl;
- }
-CCD;
-
-//
-
-typedef struct _sciamachy
- {
-  INT    orbitNumber;                                                           // orbit number
-  double longitudes[4],latitudes[4];                                            // geolocations at the 4 corners of the pixels
-  float  solZen[3],solAzi[3],losZen[3],losAzi[3];                               // resp. solar and line of sight zenith and azimuth angles
-  float  earthRadius,satHeight;                                                 // for satellite to TOA angles correction
-  INDEX  stateIndex,stateId;                                                    // information on the state
-  INT    qualityFlag;
- }
-SCIA_DATA;
-
-typedef struct _gome2
- {
-  INT    orbitNumber;                                                           // orbit number
-  double longitudes[4],latitudes[4];                                            // geolocations at the 4 corners of the pixels
-  float  solZen[3],solAzi[3],losZen[3],losAzi[3];                               // resp. solar and line of sight zenith and azimuth angles
-  float  earthRadius,satHeight;                                                 // for satellite to TOA angles correction
-  float  cloudTopPressure,cloudFraction;                                        // information on clouds
- }
-GOME2_DATA;
-
-typedef struct _omi
- {
- 	INDEX omiTrackIndex;                                                          // index of the track record
- 	INDEX omiSpecIndex;                                                           // index of the current spectrum in the current track
- 	int   omiNumberOfTracks,                                                      // total number of tracks
- 	      omiNumberOfSpectraPerTrack;                                             // total number of spectra in tracks
- }
-OMI_DATA;
-
-typedef struct _specInfo                                                        // QDOAS : future engine
- {
-  // Data on the current project
-
-  PROJECT project;
-
-  // spectra buffers
-
-  double *lembda,                                                               // wavelengths
-         *spectrum,                                                             // raw spectrum
-         *sigmaSpec,                                                            // error on raw spectrum if any
-         *irrad,                                                                // irradiance spectrum (for satellites measurements)
-         *darkCurrent,                                                          // dark current
-         *specMaxx,                                                             // scans number for SpecMax
-         *specMax,                                                              // maxima of signal over scans
-         *instrFunction,                                                        // instrumental function
-         *varPix,                                                               // variability interpixel
-         *dnl;                                                                  // non linearity of detector
-
-  // file information
-
-  UCHAR   fileName[MAX_STR_LEN+1];                                              // the name of the current file
-  FILE   *specFp,*namesFp,*darkFp;                                              // pointers to the current files
-
-  // record information
-
-  ULONG  *recordIndexes;                                                        // indexes of records for direct access (specific to BIRA-IASB spectra file format)
-  int     recordNumber;                                                         // the total number of records
-  int     indexRecord;                                                          // index of the current record
-
-  // data information
-
-  int     NDET;                                                                 // size of the detector
-
-  // information specific to a file format
-
-  CCD     ccd;
-
-  // QDOAS ---> include information
-
-  int     recordIndexesSize;
-  INT     recordSize;                                          // size of record if length fixed
-  INDEX   indexFile,indexProject;
-  INT     lastSavedRecord;
-
-  // experiment data
-
-  char   Nom[21];                                              // Nom du spectre
-  int    NSomme;                                               // Nombre de sommations
-  double Tint,                                                 // Temps d'int‚gration
-         Zm,                                                   // Angle z‚nithal
-         Azimuth,                                              // angle azimutal
-         Tm;                                                   // Conv date & heure en sec
-  char   SkyObs;                                               // Etat du ciel
-  float  ReguTemp;                                             // R‚gulation de temp‚rature
-  double TotalExpTime;                                         // Dur‚e totale pour une exp
-                                                               // SAOZ
-
-  double TDet,                                                 // Temp‚rature du D‚tecteur
-         BestShift;                                            // Meilleur D‚calage
-
-                                                               // CCD
-
-  int rejected;                                                // Nbre de spectres rejet‚s
-  int NTracks;                                                 // Nbre de tracks retenus
-  SHORT_DATE present_day;                                      // Date de la mesure
-  struct time present_time;                                    // Heure de la mesure
-
-  double TimeDec;                                              // decimal time
-  double localTimeDec;                                         // local decimal time
-  INT    localCalDay;                                          // local calendar day
-  double Cic;                                                  // color index
-  int    useErrors;
-
-  // only used for balloons measurements and GOME
-
-  double longitude;
-  double latitude;
-  double altitude;
-
-  double aMoon,hMoon,fracMoon;
-
-  float  elevationViewAngle;                                                    // elevation viewing angle
-  float  azimuthViewAngle;                                                      // azimuth viewing angle
-  float  zenithViewAngle;
-
-  // only used for MFC format
-
-  struct time startTime;
-  struct time endTime;
-  float wavelength1;
-  float dispersion[3];
-
-  INDEX indexBand;
-
-  // information specific to a format
-
-  GOME_DATA gome;                                                               // GOME format
-  SCIA_DATA scia;                                                               // SCIAMACHY format
-  GOME2_DATA gome2;                                                             // GOME2 format
-  OMI_DATA omi;
-
-  // satellite data
-
-  UCHAR  refFileName[MAX_PATH_LEN+1];
-  INT    refRecord;
- }
-SPEC_INFO;
-
-typedef struct _goto
- {
-  INDEX indexOld;
-  INDEX indexRecord;
-  INDEX indexPixel;
-  INT   indexType;
-  INDEX indexMin;
-  INDEX indexMax;
-  INDEX increment;
-  INDEX flag;
- }
-THRD_GOTO;
-
-typedef struct _thrdRef
- {
-  INDEX  indexRecord;
-  double dist;
-  double sza;
- }
-THRD_REF;
-
-// ----------------
-// GLOBAL VARIABLES
-// ----------------
-
-EXTERN UCHAR     THRD_asciiFile[];             // ASCII file for exporting spectra
-EXTERN HANDLE    THRD_hEvents[];               // list of events
-EXTERN SPEC_INFO THRD_specInfo,THRD_refInfo;   // data on current spectra and reference
-EXTERN UINT      THRD_id;                      // thread identification number
-EXTERN INT       THRD_levelMax;                // level of thread
-EXTERN INT       THRD_lastEvent;               // last event
-EXTERN DWORD     THRD_delay;                   // wait for next event
-EXTERN double    THRD_localNoon;               // local noon
-EXTERN INT       THRD_localShift;
-EXTERN INT       THRD_correction;
-EXTERN INT       THRD_browseType;
-EXTERN THRD_GOTO THRD_goto;
-EXTERN INT       THRD_treeCallFlag;
-EXTERN INT       THRD_lastRefRecord;
-EXTERN INT       THRD_increment;
-EXTERN INT       THRD_isFolder;
-EXTERN INT       THRD_recordLast;
-
-// QDOAS ??? // ----------
-// QDOAS ??? // PROTOTYPES
-// QDOAS ??? // ----------
-// QDOAS ???
-// QDOAS ??? RC               THRD_OddEvenCorrection(double *lembdaData,double *specData,double *output,INT vectorSize);
-double           THRD_GetDist(double longit, double latit, double longitRef, double latitRef);
-// QDOAS ??? #if defined(__WINDOAS_GUI_) && __WINDOAS_GUI_
-// QDOAS ??? LRESULT CALLBACK THRD_GotoWndProc(HWND hwndThrdGoto,UINT msg,WPARAM mp1,LPARAM mp2);
-// QDOAS ??? #endif
-// QDOAS ??? BOOL             THRD_Context(INDEX indexItem,INT menuId);
-// QDOAS ??? BOOL             THRD_SetIndexes(INDEX indexItem,INT treeCallFlag);
-// QDOAS ??? RC               THRD_ProcessLastError(void);
-// QDOAS ??? RC               THRD_Error(INT errorType,INT errorId,UCHAR *function,...);
-// QDOAS ??? INDEX            THRD_WaitEvent(DWORD delay,INT moveFlag,INT incrementFlag);
-// QDOAS ??? void             THRD_ResetSpecInfo(SPEC_INFO *pSpecInfo);
-// QDOAS ??? void             THRD_LoadData(void);
-RC               THRD_SpectrumCorrection(SPEC_INFO *pSpecInfo,double *spectrum);
-// QDOAS ??? void             THRD_BrowseSpectra(void *);
-// QDOAS ??? RC               THRD_Alloc(void);
-// QDOAS ??? void             THRD_Free(void);
-RC               THRD_CopySpecInfo(SPEC_INFO *pSpecInfoTarget,SPEC_INFO *pSpecInfoSource);
-// QDOAS ???
-// =======================
-// GOME SPECTRA PROCESSING
-// =======================
-
-// --------------------
-// CONSTANTS DEFINITION
-// --------------------
-
-#define BAND_NUMBER                    6                                        // number of bands to display
-#define SCIENCE_DATA_DEFINED          10                                        // number of bands
-#define SPECTRAL_FITT_ORDER            5                                        // degree of polynomial used for building wavelength scale
-#define	MAX_FITT_ORDER	                6
-#define GDP_BIN_ERROR_ID_MASK       0x01
-
-enum _gomeGetCommand
- {
-  GOME_GET_LEMBDA,
-  GOME_GET_SPECTRUM,
-  GOME_GET_REFERENCE
- };
-
-// --------------------
-// STRUCTURE DEFINITION
-// --------------------
-
-// Date in short format
-
-typedef struct _shortDateTime
- {
-  char  da_year;        /* Year - 1980      */
-  char  da_day;         /* Day of the month */
-  char  da_mon;         /* Month (1 = Jan)  */
-  char  ti_hour;
-  char  ti_min;
-  char  ti_sec;
- }
-SHORT_DATETIME;
-
-// File header
-
-typedef struct _gomeFileHeader
- {
-  unsigned short nspectra;                    // total number of spectra in file
-  char           version;
-  char           mask;
-  int            headerSize;                  // number of bytes before first record
-  int            recordSize;                  // size of a record
-  int            orbitNumber;                 // orbit number
-  short          nbands;                      // number of available bands
-  char           nSpectralParam;              // number of set of spectral parameters
-  char           indexSpectralParam;          // index of set of spectral parameters for irradiance spectra
-  SHORT_DATETIME dateAndTime;                 // measurement date and time in UT
- }
-GDP_BIN_FILE_HEADER;
-
-// For each available band, provide header with band and reference general info
-
-typedef struct _gomeBandHeader
- {
-  // Band info
-
-  char       bandType;                        // band type
-  short      bandSize;                        // band size
-
-  // Reference info
-
-  short      startDetector;                   // index of first pixel used on detector for this ban
-  float      scalingFactor;
-  float      scalingError;
- }
-GDP_BIN_BAND_HEADER;
-
-// Spectrum record structure
-
-typedef struct                            // geolocation coordinates version 1
- {
-  float           lonArray[5];            // longitude array
-  float           latArray[5];            // latitude array
-  float           szaArray[3];            // zenithal array
- }
-GEO_1;
-
-typedef struct                            // geolocation coordinates version 2
- {
-  USHORT          lonArray[5];            // longitude array
-  SHORT           latArray[5];            // latitude array
-  float           szaArray[3];            // zenithal array
-  float           azim;                   // azimuth
-  float           losZa;                  // line of sight zenith angle
-  float           losAzim;                // line of sight azimuth angle
-  USHORT          unused[4];              // unused bytes
- }
-GEO_2;
-
-typedef struct                            // geolocation coordinates version 3
- {
-  USHORT          lonArray[5];            // longitude array
-  SHORT           latArray[5];            // latitude array
-  float           szaArray[3];            // zenithal array
-  USHORT          losZa[3];               // line of sight zenithal array
-  USHORT          losAzim[3];             // line of sight azimuthal array
-  float           satHeight;              // satellite geodetic height at point B
-  float           radiusCurve;            // Earth radius curvatur at point B
- }
-GEO_3;
-
-typedef struct
- {
-  // From Level 1 data
-
-  SHORT_DATETIME  dateAndTime;                // measurement date and time in UT
-  short           groundPixelID;              // ground pixel order
-  char            groundPixelType;            // ground pixel type
-  char            indexSpectralParam;         // index of set of spectral parameters in reference record to use for building calibration
-  union _geo
-   {
-    GEO_1 geo1;
-    GEO_2 geo2;
-    GEO_3 geo3;
-   }
-  geo;
-
-  // From Level 2 data
-
-  unsigned short  o3;                     // O3 VCD
-  unsigned short  no2;                    // NO2 VCD
-  unsigned short  cloudFraction;          // Cloud fraction
-  unsigned short  cloudTopPressure;       // Cloud top pressure
-  float           aziArray[3];
-  unsigned short  unused[4];             // for later new data ?
- }
-SPECTRUM_RECORD;
-
-// Keep useful information for fast access to a record
-
-typedef struct _gome_recordInfo
- {
-  INDEX  pixelNumber;                                                           // pixel number
-  INDEX  pixelType;                                                             // pixel type
-  double lat;                                                                   // latitude
-  double lon;                                                                   // longitude
-  double sza;                                                                   // solar zenith angle
- }
-GDP_BIN_INFO;
-
-typedef struct _GOMEOrbitFiles                                                  // description of an orbit
- {
- 	UCHAR gdpBinFileName[MAX_STR_LEN+1];                                            // the name of the file with a part of the orbit
- 	UCHAR gdpBinFileNumber[9];
-  GDP_BIN_INFO *gdpBinInfo;                                                     // useful information on records for fast access
-  INDEX gdpBinBandIndex;                                                        // indexes of bands present in the current file
-  INDEX *gdpBinLatIndex,*gdpBinLonIndex,*gdpBinSzaIndex,*gdpBinPixIndex;        // indexes of records sorted resp. by latitudes, by SZA or by pixel number
-  GDP_BIN_FILE_HEADER gdpBinHeader;
-  GDP_BIN_BAND_HEADER gdpBinBandInfo[SCIENCE_DATA_DEFINED];
-  SPECTRUM_RECORD     gdpBinSpectrum;
-  int                 gdpBinSpectraSize,                                        // total size of spectra vector GDP_BIN_coeff
-                      gdpBinCoeffSize,                                          // number of polynomial coefficients in vector
-                      gdpBinStartPixel[SCIENCE_DATA_DEFINED];                   // starting pixels for bands present in the file
-  double             *gdpBinCoeff;                                              // coefficients for reconstructing wavelength calibrations
-  float               gdpBinScalingFactor[SCIENCE_DATA_DEFINED],                // scaling factors for spectra band per band
-                      gdpBinScalingError[SCIENCE_DATA_DEFINED];                 // scaling factors for errors band per band
-  USHORT             *gdpBinReference,                                          // buffer for irradiance spectra
-                     *gdpBinRefError;                                           // errors on irradiance spectra
-  INT                 specNumber;
-  RC rc;
- }
-GOME_ORBIT_FILE;
-
-// ---------------------
-// VARIABLES DECLARATION
-// ---------------------
-
-#define MAX_GOME_FILES 50 // maximum number of files per orbit
-
-EXTERN GOME_ORBIT_FILE GDP_BIN_orbitFiles[MAX_GOME_FILES];                      // list of files for an orbit
-EXTERN INDEX GDP_BIN_currentFileIndex;                                          // index of the current file in the list
-EXTERN UCHAR *GDP_BIN_BandStrTab[];
-
-// ----------
-// PROTOTYPES
-// ----------
-
-INDEX            GDP_BIN_GetRecordNumber(INT pixelNumber);
-#if defined(__WINDOAS_GUI_) && __WINDOAS_GUI_
-LRESULT CALLBACK GDP_BIN_WndProc(HWND hwndGome,UINT msg,WPARAM mp1,LPARAM mp2);
-#endif
-RC               GDP_BIN_GetBand(SPEC_INFO *pSpecInfo,INT bandNo);
-void             GDP_BIN_GetReferenceInfo(SPEC_INFO *pSpecInfo);
-RC               GDP_BIN_LoadAnalysis(SPEC_INFO *pSpecInfo,FILE *specFp);
 
 // ============================
 // TREEVIEW CONTROLS PROCESSING
@@ -2770,5 +2169,8 @@ EXTERN INT PATH_mfcFlag,PATH_UofTFlag;
 // QDOAS ???
 // QDOAS ??? void SYS_Load(void);
 // QDOAS ??? void SYS_Save(void);
+
+EXTERN ANALYSIS_WINDOWS  *ANLYS_windowsList;       // analysis windows list
+EXTERN LIST_ITEM         *ANLYS_itemList;          // list of items in ListView control owned by tab pages
 
 #endif

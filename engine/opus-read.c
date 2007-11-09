@@ -12,7 +12,7 @@
 //  Author            :  routines provided by Ann Carine VANDAELE (ULB)
 //  Adaptations       :  Caroline FAYT
 //
-//  QDOAS is a cross-platform application developed in QT for DOAS retrieval 
+//  QDOAS is a cross-platform application developed in QT for DOAS retrieval
 //  (Differential Optical Absorption Spectroscopy).
 //
 //  The QT version of the program has been developed jointly by the Belgian
@@ -21,21 +21,21 @@
 //
 //      BIRA-IASB                                   S[&]T
 //      Belgian Institute for Space Aeronomy        Science [&] Technology
-//      Avenue Circulaire, 3                        Postbus 608                   
-//      1180     UCCLE                              2600 AP Delft                 
-//      BELGIUM                                     THE NETHERLANDS               
-//      caroline.fayt@aeronomie.be                  info@stcorp.nl                
+//      Avenue Circulaire, 3                        Postbus 608
+//      1180     UCCLE                              2600 AP Delft
+//      BELGIUM                                     THE NETHERLANDS
+//      caroline.fayt@aeronomie.be                  info@stcorp.nl
 //
 //  This program is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU General Public License
 //  as published by the Free Software Foundation; either version 2
 //  of the License, or (at your option) any later version.
-//  
+//
 //  This program is distributed in the hope that it will be useful,
 //  but WITHOUT ANY WARRANTY; without even the implied warranty of
 //  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //  GNU General Public License for more details.
-//  
+//
 //  You should have received a copy of the GNU General Public License
 //  along with this program; if not, write to the Free Software Foundation,
 //  Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
@@ -99,7 +99,7 @@ static int dayMonth[]={0,31,28,31,30,31,30,31,31,30,31,30,31};
 //
 // INPUT         specFp      pointer to the spectra file
 //
-// OUTPUT        pSpecInfo   pointer to a structure whose some fields are filled
+// OUTPUT        pEngineContext   pointer to a structure whose some fields are filled
 //                           with general data on the file
 //
 // RETURN        ERROR_ID_ALLOC           buffers allocation failed
@@ -111,7 +111,7 @@ static int dayMonth[]={0,31,28,31,30,31,30,31,31,30,31,30,31};
 #if defined(__BC32_) && __BC32_
 #pragma argsused
 #endif
-RC OPUS_Set(SPEC_INFO *pSpecInfo,FILE *specFp)
+RC OPUS_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
  {
   // Declarations
 
@@ -134,37 +134,37 @@ RC OPUS_Set(SPEC_INFO *pSpecInfo,FILE *specFp)
 
   // Initializations
 
-  pInstr=&pSpecInfo->project.instrumental;
+  pInstr=&pEngineContext->project.instrumental;
   found=0;
 
-  pSpecInfo->opus.NumberPoints = (ULONG) 0;            // Number of Data Points
-  pSpecInfo->opus.WaveLow = (double) 0.;               // First X Value
-  pSpecInfo->opus.WaveHigh = (double) 0.;              // Last X Value
-  pSpecInfo->opus.Dispersion = (double) 0.;            // Dispersion
-  pSpecInfo->opus.Resolution = (double) 0.;            // Resolution
-  pSpecInfo->opus.ScaleFactor = (double) 1.;           // Common Y Scaling Factor
-  pSpecInfo->opus.IrisDiameter = (float) 0.;           // Aperture Setting
-  pSpecInfo->opus.Scantime = (float) 0.;               // Scan Time
+  pEngineContext->opus.NumberPoints = (ULONG) 0;            // Number of Data Points
+  pEngineContext->opus.WaveLow = (double) 0.;               // First X Value
+  pEngineContext->opus.WaveHigh = (double) 0.;              // Last X Value
+  pEngineContext->opus.Dispersion = (double) 0.;            // Dispersion
+  pEngineContext->opus.Resolution = (double) 0.;            // Resolution
+  pEngineContext->opus.ScaleFactor = (double) 1.;           // Common Y Scaling Factor
+  pEngineContext->opus.IrisDiameter = (float) 0.;           // Aperture Setting
+  pEngineContext->opus.Scantime = (float) 0.;               // Scan Time
 
-  pSpecInfo->opus.Apodization[0]=
-  pSpecInfo->opus.ChemistName[0]=
-  pSpecInfo->opus.SampleName[0]=
-  pSpecInfo->opus.SampleForm[0]=
-  pSpecInfo->opus.Date[0]=
-  pSpecInfo->opus.Time[0]=0;
+  pEngineContext->opus.Apodization[0]=
+  pEngineContext->opus.ChemistName[0]=
+  pEngineContext->opus.SampleName[0]=
+  pEngineContext->opus.SampleForm[0]=
+  pEngineContext->opus.Date[0]=
+  pEngineContext->opus.Time[0]=0;
 
   rc=ERROR_ID_NO;
 
   // Header read out
 
   if (specFp==NULL)
-   rc=ERROR_SetLast("OPUS_Set",ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pSpecInfo->fileName);
+   rc=ERROR_SetLast("OPUS_Set",ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pEngineContext->fileName);
   else if (!fread(&MagicNumber,sizeof(ULONG),1,specFp))
-   rc=ERROR_SetLast("OPUS_Set",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pSpecInfo->fileName);
+   rc=ERROR_SetLast("OPUS_Set",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pEngineContext->fileName);
   else if (MagicNumber!=0XFEFE0A0AL)                                            // OPUS signature ?
-   rc=ERROR_SetLast("OPUS_Set",ERROR_TYPE_WARNING,ERROR_ID_FILE_BAD_FORMAT,pSpecInfo->fileName);
+   rc=ERROR_SetLast("OPUS_Set",ERROR_TYPE_WARNING,ERROR_ID_FILE_BAD_FORMAT,pEngineContext->fileName);
   else if (!fread(&Header,sizeof(OPUS_HEADER),1,specFp))                        // Header Read out
-   rc=ERROR_SetLast("OPUS_Set",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pSpecInfo->fileName);
+   rc=ERROR_SetLast("OPUS_Set",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pEngineContext->fileName);
   else
    {
     // Directory Blocks Read Out
@@ -195,17 +195,17 @@ RC OPUS_Set(SPEC_INFO *pSpecInfo,FILE *specFp)
              fread(&ParBlock,sizeof(PAR_BLOCK),1,specFp);
 
              if (!strcmp(ParBlock.Name,"NPT"))
-              fread(&pSpecInfo->opus.NumberPoints,4,1,specFp);
+              fread(&pEngineContext->opus.NumberPoints,4,1,specFp);
              else if (!strcmp(ParBlock.Name,"FXV"))
-              fread(&pSpecInfo->opus.WaveLow,8,1,specFp);
+              fread(&pEngineContext->opus.WaveLow,8,1,specFp);
              else if (!strcmp(ParBlock.Name,"LXV"))
-              fread(&pSpecInfo->opus.WaveHigh,8,1,specFp);
+              fread(&pEngineContext->opus.WaveHigh,8,1,specFp);
              else if (!strcmp(ParBlock.Name,"CSF"))
-              fread(&pSpecInfo->opus.ScaleFactor,8,1,specFp);
+              fread(&pEngineContext->opus.ScaleFactor,8,1,specFp);
              else if (!strcmp(ParBlock.Name,"DAT"))
-              fread(&pSpecInfo->opus.Date,ParBlock.Rs<<1,1,specFp);
+              fread(&pEngineContext->opus.Date,ParBlock.Rs<<1,1,specFp);
              else if (!strcmp(ParBlock.Name,"TIM"))
-              fread(&pSpecInfo->opus.Time,ParBlock.Rs<<1,1,specFp);
+              fread(&pEngineContext->opus.Time,ParBlock.Rs<<1,1,specFp);
              else if (!strcmp(ParBlock.Name,"END"))
               break;
              else
@@ -215,25 +215,25 @@ RC OPUS_Set(SPEC_INFO *pSpecInfo,FILE *specFp)
 
             //  WaveLength Range
 
-            if (pSpecInfo->opus.WaveHigh>pSpecInfo->opus.WaveLow)
-             pSpecInfo->opus.Ascending=TRUE;
+            if (pEngineContext->opus.WaveHigh>pEngineContext->opus.WaveLow)
+             pEngineContext->opus.Ascending=TRUE;
             else
              {
-              pSpecInfo->opus.Ascending=FALSE;
+              pEngineContext->opus.Ascending=FALSE;
 
-              Dtemp=pSpecInfo->opus.WaveHigh;
-              pSpecInfo->opus.WaveHigh=pSpecInfo->opus.WaveLow;
-              pSpecInfo->opus.WaveLow=Dtemp;
+              Dtemp=pEngineContext->opus.WaveHigh;
+              pEngineContext->opus.WaveHigh=pEngineContext->opus.WaveLow;
+              pEngineContext->opus.WaveLow=Dtemp;
              }
 
-            if (pSpecInfo->opus.NumberPoints>(ULONG)NDET)
-             rc=ERROR_SetLast("OPUS_Set",ERROR_TYPE_WARNING,ERROR_ID_FILE_BAD_LENGTH,pSpecInfo->fileName,pSpecInfo->opus.NumberPoints);
-            else if (pSpecInfo->opus.NumberPoints>1L)
-             pSpecInfo->opus.Dispersion=(pSpecInfo->opus.WaveHigh-pSpecInfo->opus.WaveLow)/(double)(pSpecInfo->opus.NumberPoints-1L);
+            if (pEngineContext->opus.NumberPoints>(ULONG)NDET)
+             rc=ERROR_SetLast("OPUS_Set",ERROR_TYPE_WARNING,ERROR_ID_FILE_BAD_LENGTH,pEngineContext->fileName,pEngineContext->opus.NumberPoints);
+            else if (pEngineContext->opus.NumberPoints>1L)
+             pEngineContext->opus.Dispersion=(pEngineContext->opus.WaveHigh-pEngineContext->opus.WaveLow)/(double)(pEngineContext->opus.NumberPoints-1L);
 
             //  Date and Time
 
-            pSpecInfo->opus.Date[11]='\0';
+            pEngineContext->opus.Date[11]='\0';
            }
 
           break;
@@ -256,7 +256,7 @@ RC OPUS_Set(SPEC_INFO *pSpecInfo,FILE *specFp)
           }
           while (1);
 
-          pSpecInfo->opus.IrisDiameter=(float)atof(DateTemp);
+          pEngineContext->opus.IrisDiameter=(float)atof(DateTemp);
 
           break;
 
@@ -271,37 +271,37 @@ RC OPUS_Set(SPEC_INFO *pSpecInfo,FILE *specFp)
 
 
     if (!found)
-     rc=ERROR_SetLast("OPUS_Set",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pSpecInfo->fileName);
+     rc=ERROR_SetLast("OPUS_Set",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pEngineContext->fileName);
     else if (!rc)
      {
-      NDET=(INT)pSpecInfo->opus.NumberPoints;
+      NDET=(INT)pEngineContext->opus.NumberPoints;
 
       // Build the wavelength calibration
 
-      pas=(pSpecInfo->opus.WaveHigh-pSpecInfo->opus.WaveLow)/(pSpecInfo->opus.NumberPoints-1);
-      fact=(double)6329.915/6328.173*(1+pSpecInfo->opus.IrisDiameter*pSpecInfo->opus.IrisDiameter/16/220/220);
+      pas=(pEngineContext->opus.WaveHigh-pEngineContext->opus.WaveLow)/(pEngineContext->opus.NumberPoints-1);
+      fact=(double)6329.915/6328.173*(1+pEngineContext->opus.IrisDiameter*pEngineContext->opus.IrisDiameter/16/220/220);
 
-      if (pSpecInfo->opus.Ascending)
-       for (i=0;i<(INT)pSpecInfo->opus.NumberPoints;i++)
-        pSpecInfo->lembda[i]=(pSpecInfo->opus.WaveLow+pas*i)*fact;
+      if (pEngineContext->opus.Ascending)
+       for (i=0;i<(INT)pEngineContext->opus.NumberPoints;i++)
+        pEngineContext->lembda[i]=(pEngineContext->opus.WaveLow+pas*i)*fact;
       else
-       for (i=0;i<(INT)pSpecInfo->opus.NumberPoints;i++)
-        pSpecInfo->lembda[pSpecInfo->opus.NumberPoints-i-1]=(pSpecInfo->opus.WaveLow+pas*(pSpecInfo->opus.NumberPoints-i-1))*fact;
+       for (i=0;i<(INT)pEngineContext->opus.NumberPoints;i++)
+        pEngineContext->lembda[pEngineContext->opus.NumberPoints-i-1]=(pEngineContext->opus.WaveLow+pas*(pEngineContext->opus.NumberPoints-i-1))*fact;
 
       // Get the number of records (one record per file but a directory can be considered as only one file with several records)
 
       memset(fileName,0,MAX_STR_SHORT_LEN+1);
-      strncpy(fileName,pSpecInfo->fileName,MAX_STR_SHORT_LEN);
+      strncpy(fileName,pEngineContext->fileName,MAX_STR_SHORT_LEN);
 
       if (THRD_treeCallFlag && ((ptr1=strrchr(fileName,'.'))!=NULL) && ((ptr2=strrchr(PATH_fileMax+1,'.'))!=NULL))
        {
         sscanf(ptr1+1,"%d",&firstFile);
         sscanf(ptr2+1,"%d",&lastFile);
 
-        pSpecInfo->recordNumber=(lastFile-firstFile+1);
+        pEngineContext->recordNumber=(lastFile-firstFile+1);
        }
       else
-       pSpecInfo->recordNumber=1;
+       pEngineContext->recordNumber=1;
      }
    }
 
@@ -319,7 +319,7 @@ RC OPUS_Set(SPEC_INFO *pSpecInfo,FILE *specFp)
 //               dateFlag     flag for automatic reference selection
 //               specFp       pointer to the spectra file
 //
-// OUTPUT        pSpecInfo  : pointer to a structure whose some fields are filled
+// OUTPUT        pEngineContext  : pointer to a structure whose some fields are filled
 //                            with data on the current spectrum
 //
 // RETURN        ERROR_ID_ALLOC          : a buffer allocation failed;
@@ -331,7 +331,7 @@ RC OPUS_Set(SPEC_INFO *pSpecInfo,FILE *specFp)
 #if defined(__BC32_) && __BC32_
 #pragma argsused
 #endif
-RC OPUS_Read(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *specFp)
+RC OPUS_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp)
  {
   // Declarations
 
@@ -360,19 +360,19 @@ RC OPUS_Read(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *s
 
   // Initializations
 
-  pInstr=&pSpecInfo->project.instrumental;
+  pInstr=&pEngineContext->project.instrumental;
   fp=specFp;
   fSpectrum=NULL;
-  memcpy(fileName,pSpecInfo->fileName,MAX_STR_SHORT_LEN);
+  memcpy(fileName,pEngineContext->fileName,MAX_STR_SHORT_LEN);
   rc=ERROR_ID_NO;
   found=0;
 
-  if ((recordNo>0) && (recordNo<=pSpecInfo->recordNumber))
+  if ((recordNo>0) && (recordNo<=pEngineContext->recordNumber))
    {
-    if (THRD_treeCallFlag && ((ptr1=strrchr(pSpecInfo->fileName,'.'))!=NULL))
+    if (THRD_treeCallFlag && ((ptr1=strrchr(pEngineContext->fileName,'.'))!=NULL))
      {
       sscanf(ptr1+1,"%d",&firstFile);
-      ptr2=fileName+(ptr1-pSpecInfo->fileName);
+      ptr2=fileName+(ptr1-pEngineContext->fileName);
       sprintf(ptr2+1,"%03d",firstFile+recordNo-1);
 
       fp=fopen(fileName,"rb");
@@ -382,7 +382,7 @@ RC OPUS_Read(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *s
 
     if (fp==NULL)
      rc=ERROR_ID_FILE_RECORD;
-    else if ((recordNo<=0) || (recordNo>pSpecInfo->recordNumber))
+    else if ((recordNo<=0) || (recordNo>pEngineContext->recordNumber))
      rc=ERROR_ID_FILE_END;
     else
      {
@@ -391,11 +391,11 @@ RC OPUS_Read(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *s
       // Header read out
 
       if (!fread(&MagicNumber,sizeof(ULONG),1,fp))
-       rc=ERROR_SetLast("OPUS_Read",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pSpecInfo->fileName);
+       rc=ERROR_SetLast("OPUS_Read",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pEngineContext->fileName);
       else if (MagicNumber!=0XFEFE0A0AL)                                        // OPUS signature ?
-       rc=ERROR_SetLast("OPUS_Read",ERROR_TYPE_WARNING,ERROR_ID_FILE_BAD_FORMAT,pSpecInfo->fileName);
+       rc=ERROR_SetLast("OPUS_Read",ERROR_TYPE_WARNING,ERROR_ID_FILE_BAD_FORMAT,pEngineContext->fileName);
       else if (!fread(&Header,sizeof(OPUS_HEADER),1,fp))                        // Header Read out
-       rc=ERROR_SetLast("OPUS_Read",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pSpecInfo->fileName);
+       rc=ERROR_SetLast("OPUS_Read",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pEngineContext->fileName);
       else
        {
         // Directory Blocks Read Out
@@ -449,11 +449,11 @@ RC OPUS_Read(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *s
                  else if (!strcmp(ParBlock.Name,"LXV"))
                   fread(&WaveHigh,8,1,fp);
                  else if (!strcmp(ParBlock.Name,"CSF"))
-                  fread(&pSpecInfo->opus.ScaleFactor,8,1,fp);
+                  fread(&pEngineContext->opus.ScaleFactor,8,1,fp);
                  else if (!strcmp(ParBlock.Name,"DAT"))
-                  fread(&pSpecInfo->opus.Date,ParBlock.Rs<<1,1,fp);
+                  fread(&pEngineContext->opus.Date,ParBlock.Rs<<1,1,fp);
                  else if (!strcmp(ParBlock.Name,"TIM"))
-                  fread(&pSpecInfo->opus.Time,ParBlock.Rs<<1,1,fp);
+                  fread(&pEngineContext->opus.Time,ParBlock.Rs<<1,1,fp);
                  else if (!strcmp(ParBlock.Name,"END"))
                   break;
                  else
@@ -463,13 +463,13 @@ RC OPUS_Read(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *s
 
                 //  Date and Time
 
-//                if ((pSpecInfo->opus.Ascending && ((WaveLow!=pSpecInfo->opus.WaveLow) || (WaveHigh!=pSpecInfo->opus.WaveHigh))) ||
-//                   (!pSpecInfo->opus.Ascending && ((WaveLow!=pSpecInfo->opus.WaveHigh) || (WaveHigh!=pSpecInfo->opus.WaveLow))))
+//                if ((pEngineContext->opus.Ascending && ((WaveLow!=pEngineContext->opus.WaveLow) || (WaveHigh!=pEngineContext->opus.WaveHigh))) ||
+//                   (!pEngineContext->opus.Ascending && ((WaveLow!=pEngineContext->opus.WaveHigh) || (WaveHigh!=pEngineContext->opus.WaveLow))))
 
 //                 rc=ERROR_ID_FILE_RECORD;
 
 //                else
-                 pSpecInfo->opus.Date[11]='\0';
+                 pEngineContext->opus.Date[11]='\0';
                }
 
               break;
@@ -483,7 +483,7 @@ RC OPUS_Read(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *s
                fread(&ParBlock,sizeof(PAR_BLOCK),1,fp);
 
                if (!strcmp(ParBlock.Name,"DUR"))
-                fread(&pSpecInfo->opus.Scantime,8,1,fp);
+                fread(&pEngineContext->opus.Scantime,8,1,fp);
                else if (!strcmp(ParBlock.Name,"END"))
                 break;
                else
@@ -502,7 +502,7 @@ RC OPUS_Read(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *s
                fread(&ParBlock,sizeof(PAR_BLOCK),1,fp);
 
                if (!strcmp(ParBlock.Name,"RES"))
-                fread(&pSpecInfo->opus.Resolution,8,1,fp);
+                fread(&pEngineContext->opus.Resolution,8,1,fp);
                else if (!strcmp(ParBlock.Name,"END"))
                 break;
 
@@ -522,7 +522,7 @@ RC OPUS_Read(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *s
                fread(&ParBlock,sizeof(PAR_BLOCK),1,fp);
 
                if (!strcmp(ParBlock.Name,"APF"))
-                fread(&pSpecInfo->opus.Apodization,ParBlock.Rs<<1,1,fp);
+                fread(&pEngineContext->opus.Apodization,ParBlock.Rs<<1,1,fp);
                else if (!strcmp(ParBlock.Name,"END"))
                 break;
 
@@ -551,7 +551,7 @@ RC OPUS_Read(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *s
               }
               while (1);
 
-              pSpecInfo->opus.IrisDiameter=(float)atof(DateTemp);
+              pEngineContext->opus.IrisDiameter=(float)atof(DateTemp);
 
               break;
 
@@ -564,11 +564,11 @@ RC OPUS_Read(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *s
                fread(&ParBlock,sizeof(PAR_BLOCK),1,fp);
 
                if (!strcmp(ParBlock.Name,"SNM"))
-                fread(&pSpecInfo->opus.SampleName,ParBlock.Rs<<1,1,fp);
+                fread(&pEngineContext->opus.SampleName,ParBlock.Rs<<1,1,fp);
                else if (!strcmp(ParBlock.Name,"SFM"))
-                fread(&pSpecInfo->opus.SampleForm,ParBlock.Rs<<1,1,fp);
+                fread(&pEngineContext->opus.SampleForm,ParBlock.Rs<<1,1,fp);
                else if (!strcmp(ParBlock.Name,"CNM"))
-                fread(&pSpecInfo->opus.ChemistName,ParBlock.Rs<<1,1,fp);
+                fread(&pEngineContext->opus.ChemistName,ParBlock.Rs<<1,1,fp);
 
                else if (!strcmp(ParBlock.Name,"END"))
                 break;
@@ -598,36 +598,36 @@ RC OPUS_Read(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *s
        {
         strcpy(PATH_fileSpectra,fileName);
 
-        Dtemp=(pSpecInfo->opus.ScaleFactor==0.)?(double)1.:(double)pSpecInfo->opus.ScaleFactor;
+        Dtemp=(pEngineContext->opus.ScaleFactor==0.)?(double)1.:(double)pEngineContext->opus.ScaleFactor;
 
-        for (i=0;i<(INT)pSpecInfo->opus.NumberPoints;i++)
-         pSpecInfo->spectrum[i]=(double)fSpectrum[i]*Dtemp;
+        for (i=0;i<(INT)pEngineContext->opus.NumberPoints;i++)
+         pEngineContext->spectrum[i]=(double)fSpectrum[i]*Dtemp;
 
         // Revert spectrum
 
         if (WaveLow>WaveHigh)
 
-         for (i=0;i<(INT)pSpecInfo->opus.NumberPoints/2;i++)
+         for (i=0;i<(INT)pEngineContext->opus.NumberPoints/2;i++)
           {
-           Dtemp=pSpecInfo->spectrum[i];
-           pSpecInfo->spectrum[i]=pSpecInfo->spectrum[(INT)pSpecInfo->opus.NumberPoints-i-1];
-           pSpecInfo->spectrum[(INT)pSpecInfo->opus.NumberPoints-i-1]=Dtemp;
+           Dtemp=pEngineContext->spectrum[i];
+           pEngineContext->spectrum[i]=pEngineContext->spectrum[(INT)pEngineContext->opus.NumberPoints-i-1];
+           pEngineContext->spectrum[(INT)pEngineContext->opus.NumberPoints-i-1]=Dtemp;
           }
 
         // Fill in SpecInfo fields
 
-        pSpecInfo->NSomme=1;
-        pSpecInfo->Tint=
-        pSpecInfo->TotalExpTime=pSpecInfo->opus.Scantime;
+        pEngineContext->NSomme=1;
+        pEngineContext->Tint=
+        pEngineContext->TotalExpTime=pEngineContext->opus.Scantime;
 
-        sscanf(pSpecInfo->opus.Date,"%02d/%02d/%d",&day,&mon,&year);
-        sscanf(pSpecInfo->opus.Time,"%02d:%02d:%02d",&hour,&min,&sec);
+        sscanf(pEngineContext->opus.Date,"%02d/%02d/%d",&day,&mon,&year);
+        sscanf(pEngineContext->opus.Time,"%02d:%02d:%02d",&hour,&min,&sec);
 
         nday=dayMonth[mon];
         if ((mon==2) && ((year%4)==0))
          nday++;
 
-        newHour=(float)hour+min/60.+sec/3600.+pSpecInfo->project.instrumental.opusTimeShift;
+        newHour=(float)hour+min/60.+sec/3600.+pEngineContext->project.instrumental.opusTimeShift;
 
         if (newHour>24.)
          {
@@ -668,27 +668,27 @@ RC OPUS_Read(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,int localDay,FILE *s
         min=(INT)((newHour-hour)*60.);
         sec=(INT)((newHour-hour-min/60.)*3600.);
 
-        pSpecInfo->present_day.da_year=(SHORT)year;
-        pSpecInfo->present_day.da_mon=(UCHAR)mon;
-        pSpecInfo->present_day.da_day=(UCHAR)day;
+        pEngineContext->present_day.da_year=(SHORT)year;
+        pEngineContext->present_day.da_mon=(UCHAR)mon;
+        pEngineContext->present_day.da_day=(UCHAR)day;
 
-        pSpecInfo->present_time.ti_hour=(UCHAR)hour;
-        pSpecInfo->present_time.ti_min=(UCHAR)min;
-        pSpecInfo->present_time.ti_sec=(UCHAR)sec;
+        pEngineContext->present_time.ti_hour=(UCHAR)hour;
+        pEngineContext->present_time.ti_min=(UCHAR)min;
+        pEngineContext->present_time.ti_sec=(UCHAR)sec;
 
-        pSpecInfo->Tm=(double)ZEN_NbSec(&pSpecInfo->present_day,&pSpecInfo->present_time,0);
-        pSpecInfo->TimeDec=(double)pSpecInfo->present_time.ti_hour+pSpecInfo->present_time.ti_min/60.+pSpecInfo->present_time.ti_sec/3600.;
+        pEngineContext->Tm=(double)ZEN_NbSec(&pEngineContext->present_day,&pEngineContext->present_time,0);
+        pEngineContext->TimeDec=(double)pEngineContext->present_time.ti_hour+pEngineContext->present_time.ti_min/60.+pEngineContext->present_time.ti_sec/3600.;
 
-        tmLocal=pSpecInfo->Tm+THRD_localShift*3600.;
+        tmLocal=pEngineContext->Tm+THRD_localShift*3600.;
 
-        pSpecInfo->localCalDay=ZEN_FNCaljda(&tmLocal);
-        pSpecInfo->localTimeDec=fmod(pSpecInfo->TimeDec+24.+THRD_localShift,(double)24.);
+        pEngineContext->localCalDay=ZEN_FNCaljda(&tmLocal);
+        pEngineContext->localTimeDec=fmod(pEngineContext->TimeDec+24.+THRD_localShift,(double)24.);
 
         if ((ptr1=strrchr(fileName,PATH_SEP))==NULL)
          ptr1=fileName;
-        strncpy(pSpecInfo->Nom,ptr1+1,19);
+        strncpy(pEngineContext->Nom,ptr1+1,19);
 
-        if (dateFlag && (pSpecInfo->localCalDay!=localDay))
+        if (dateFlag && (pEngineContext->localCalDay!=localDay))
          rc=ERROR_ID_FILE_RECORD;
        }
      }
