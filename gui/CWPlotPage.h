@@ -47,6 +47,8 @@ Q_OBJECT
   CWPlot(const RefCountConstPtr<CPlotDataSet> &dataSet, CPlotProperties &plotProperties, QWidget *parent = 0);
   virtual ~CWPlot();
 
+  static bool getImageSaveNameAndFormat(QWidget *parent, QString &fileName, QString &saveFormat);
+
  protected:
   virtual void contextMenuEvent(QContextMenuEvent *e);
 
@@ -54,6 +56,7 @@ Q_OBJECT
   void slotOverlay();
   void slotSaveAs();
   void slotPrint();
+  void slotExportAsImage();
   void slotToggleInteraction();
 
  private:

@@ -1251,7 +1251,7 @@ int mediateRequestNextMatchingSpectrum(ENGINE_CONTEXT *pEngineContext,void *resp
   BUFFERS *pBuffers;                                                            // pointer to the buffers part of the engine context
   RECORD_INFO *pRecord;                                                         // pointer to the record part of the engine context
   SHORT_DATE  *pDay;                                                            // pointer to measurement date
-  struct time *pTime;                                                           // pointer to measurement date<<<<<<< .mine
+  struct time *pTime;                                                           // pointer to measurement date
   char tmpString[80];                                                           // buffer for formatted strings
   int rec = (pEngineContext->indexRecord)++;
   int indexLine,indexColumn,pageData,pageGraph;

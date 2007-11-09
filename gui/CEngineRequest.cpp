@@ -341,7 +341,7 @@ bool CEngineRequestBeginAnalyseFile::process(CEngineThread *engineThread)
   CEngineResponseBeginAccessFile *resp = new CEngineResponseBeginAccessFile(m_fileName);
 
   int rc = mediateRequestBeginAnalyseSpectra(engineThread->engineContext(),
-					    m_fileName.toAscii().constData(), resp);
+					     m_fileName.toAscii().constData(), resp);
 
   resp->setNumberOfRecords(rc); // -1 if an error occurred
 
@@ -368,7 +368,7 @@ bool CEngineRequestAnalyseNextRecord::process(CEngineThread *engineThread)
   CEngineResponseAccessRecord *resp = new CEngineResponseAccessRecord;
 
   int rc = mediateRequestNextMatchingAnalyseSpectrum(engineThread->engineContext(),
-						    resp);
+						     resp);
 
   resp->setRecordNumber(rc); // -1 if an error occurred
 

@@ -22,20 +22,81 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QContextMenuEvent>
 #include <QPainter>
 #include <QPrinter>
+#include <QImage>
 #include <QPrintDialog>
 #include <QFileDialog>
 #include <QMenu>
 
-#include <QMessageBox>
-#include <QTextStream>
 
 #include <qwt_plot_curve.h>
 #include <qwt_symbol.h>
 #include <qwt_legend_item.h>
 
 #include "CWPlotPage.h"
+#include "CPreferences.h"
 
 #include "debugutil.h"
+
+// static helper function
+
+bool CWPlot::getImageSaveNameAndFormat(QWidget *parent, QString &fileName, QString &saveFormat)
+{
+  CPreferences *pref = CPreferences::instance();
+
+  QFileDialog dialog(parent);
+  
+  dialog.setFileMode(QFileDialog::AnyFile);
+  dialog.setWindowTitle("Export as Image");;
+  dialog.setDirectory(pref->directoryName("ExportPlot"));
+  dialog.setAcceptMode(QFileDialog::AcceptSave);
+  dialog.setConfirmOverwrite(true);
+  QStringList filters;
+  filters << "PNG (*.png)" << "BMP (*.bmp)" << "JPEG (*.jpg)";
+  dialog.setFilters(filters);
+
+  if (dialog.exec()) {
+
+    QStringList fileList = dialog.selectedFiles();
+    if (!fileList.isEmpty()) {
+
+      QString format = dialog.selectedFilter();
+      fileName = fileList.first();
+
+      // update the preference
+      pref->setDirectoryNameGivenFile("ExportPlot", fileName);
+
+      // attempt to determine the format from the tail of the filename - otherwise the filter selected.
+      if (fileName.endsWith(".jpg", Qt::CaseInsensitive) || fileName.endsWith(".jpeg", Qt::CaseInsensitive)) {
+	saveFormat = "JPEG";
+      }
+      else if (fileName.endsWith(".bmp", Qt::CaseInsensitive)) {
+	saveFormat = "BMP";
+      }
+      else if (fileName.endsWith(".png", Qt::CaseInsensitive)) {
+	saveFormat = "PNG";
+      }
+      else {
+	// not a known extension ... append based on the filter
+	if (format.startsWith("BMP")) {
+	  saveFormat = "BMP";
+	  fileName += ".bmp";
+	}
+	else if (format.startsWith("JPEG")) {
+	  saveFormat = "JPEG";
+	  fileName += ".jpeg";
+	}
+	else { // default to PNG
+	  saveFormat = "PNG";
+	  fileName += ".png";
+	}
+      }
+
+      return true;
+    }
+  }
+
+  return false;
+}
 
 CWPlot::CWPlot(const RefCountConstPtr<CPlotDataSet> &dataSet,
 	       CPlotProperties &plotProperties, QWidget *parent) :
@@ -103,6 +164,7 @@ void CWPlot::contextMenuEvent(QContextMenuEvent *e)
     menu.addSeparator();
     menu.addAction("Overlay...", this, SLOT(slotOverlay()));
     menu.addAction("Save As...", this, SLOT(slotSaveAs()));
+    menu.addAction("Export As Image...", this, SLOT(slotExportAsImage()));
     menu.addAction("Print...", this, SLOT(slotPrint()));
     
     menu.exec(e->globalPos()); // slot will do the rest
@@ -148,9 +210,6 @@ void CWPlot::slotPrint()
     QRect paper = printer.paperRect();
     QRect page = printer.pageRect();
     
-    QString msg;
-    QTextStream str(&msg);
-    
     const int cPageBorder = 150;
     
     QRect tmp(cPageBorder, cPageBorder, page.width() - 2 * cPageBorder, page.height() - 2 * cPageBorder);
@@ -159,6 +218,22 @@ void CWPlot::slotPrint()
     
     tmp.adjust(20, 20, -20, -20);
     print(&p, tmp);
+  }
+}
+
+void CWPlot::slotExportAsImage()
+{
+  QString fileName;
+  QString format;
+
+  if (CWPlot::getImageSaveNameAndFormat(this, fileName, format)) {
+
+    QImage img(size(), QImage::Format_RGB32); // image the same size as the plot widget.
+    img.fill(0xffffffff);
+    
+    print(img);
+    
+    img.save(fileName, format.toAscii().constData());
   }
 }
 
