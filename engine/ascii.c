@@ -5,7 +5,7 @@
 //  Module purpose    :  ASCII FILES OPERATIONS
 //  Name of module    :  ASCII.C
 //
-//  QDOAS is a cross-platform application developed in QT for DOAS retrieval 
+//  QDOAS is a cross-platform application developed in QT for DOAS retrieval
 //  (Differential Optical Absorption Spectroscopy).
 //
 //  The QT version of the program has been developed jointly by the Belgian
@@ -14,21 +14,21 @@
 //
 //      BIRA-IASB                                   S[&]T
 //      Belgian Institute for Space Aeronomy        Science [&] Technology
-//      Avenue Circulaire, 3                        Postbus 608                   
-//      1180     UCCLE                              2600 AP Delft                 
-//      BELGIUM                                     THE NETHERLANDS               
-//      caroline.fayt@aeronomie.be                  info@stcorp.nl                
+//      Avenue Circulaire, 3                        Postbus 608
+//      1180     UCCLE                              2600 AP Delft
+//      BELGIUM                                     THE NETHERLANDS
+//      caroline.fayt@aeronomie.be                  info@stcorp.nl
 //
 //  This program is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU General Public License
 //  as published by the Free Software Foundation; either version 2
 //  of the License, or (at your option) any later version.
-//  
+//
 //  This program is distributed in the hope that it will be useful,
 //  but WITHOUT ANY WARRANTY; without even the implied warranty of
 //  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //  GNU General Public License for more details.
-//  
+//
 //  You should have received a copy of the GNU General Public License
 //  along with this program; if not, write to the Free Software Foundation,
 //  Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
@@ -89,13 +89,13 @@ PRJCT_ASCII ASCII_options;                                                      
 static INDEX asciiLastRecord=ITEM_NONE;                                         // keep the index of the last record
 
 // QDOAS ??? #if defined(__WINDOAS_GUI_) && __WINDOAS_GUI_
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ??? static INT initConfig=1;
 // QDOAS ???
 // QDOAS ??? // =======================
 // QDOAS ??? // ASCII EXPORT DIALOG BOX
 // QDOAS ??? // =======================
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ??? // -----------------------------------------------------------------------------
 // QDOAS ??? // FUNCTION        AsciiDlgInit
 // QDOAS ??? // -----------------------------------------------------------------------------
@@ -104,37 +104,37 @@ static INDEX asciiLastRecord=ITEM_NONE;                                         
 // QDOAS ??? // INPUT           hwndAscii : the handle of the parent indow
 // QDOAS ??? //                 file      : the name of the file to export
 // QDOAS ??? // -----------------------------------------------------------------------------
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ??? void AsciiDlgInit(HWND hwndAscii,UCHAR *file)
 // QDOAS ???  {
 // QDOAS ???   // Declarations
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???   UCHAR textTitle[MAX_ITEM_TEXT_LEN+1],                                         // title of the dialog box
 // QDOAS ???         textMsg[MAX_ITEM_TEXT_LEN+1];                                           // message string loaded from the resource file
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???   if (initConfig)
 // QDOAS ???    {
 // QDOAS ???    	memset(&ASCII_options,0,sizeof(PRJCT_ASCII));
 // QDOAS ???     initConfig=0;
 // QDOAS ???    }
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???   // Center dialog box on parent windows
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???   DOAS_CenterWindow(hwndAscii,GetWindow(hwndAscii,GW_OWNER));
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???   // Set window title
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???   LoadString(DOAS_hInst,IDS_TITLE_ASCII,textMsg,MAX_ITEM_TEXT_LEN);
 // QDOAS ???   sprintf(textTitle,textMsg,file);
 // QDOAS ???   SetWindowText(hwndAscii,textTitle);
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???   // Set radio and check buttons
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???   CheckRadioButton(hwndAscii,
 // QDOAS ???                    ASCII_FORMAT_LINE,
 // QDOAS ???                    ASCII_FORMAT_COLUMN,
 // QDOAS ???                    ASCII_FORMAT_LINE+ASCII_options.format);
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???   CheckDlgButton(hwndAscii,ASCII_DATA_SZA,(ASCII_options.szaSaveFlag!=0)?BST_CHECKED:BST_UNCHECKED);
 // QDOAS ???   CheckDlgButton(hwndAscii,ASCII_DATA_AZIM,(ASCII_options.azimSaveFlag!=0)?BST_CHECKED:BST_UNCHECKED);
 // QDOAS ???   CheckDlgButton(hwndAscii,ASCII_DATA_ELEV,(ASCII_options.elevSaveFlag!=0)?BST_CHECKED:BST_UNCHECKED);
@@ -142,7 +142,7 @@ static INDEX asciiLastRecord=ITEM_NONE;                                         
 // QDOAS ???   CheckDlgButton(hwndAscii,ASCII_DATA_DATE,(ASCII_options.dateSaveFlag!=0)?BST_CHECKED:BST_UNCHECKED);
 // QDOAS ???   CheckDlgButton(hwndAscii,ASCII_DATA_LEMBDA,(ASCII_options.lembdaSaveFlag!=0)?BST_CHECKED:BST_UNCHECKED);
 // QDOAS ???  }
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ??? // -----------------------------------------------------------------------------
 // QDOAS ??? // FUNCTION        AsciiSet
 // QDOAS ??? // -----------------------------------------------------------------------------
@@ -150,7 +150,7 @@ static INDEX asciiLastRecord=ITEM_NONE;                                         
 // QDOAS ??? //
 // QDOAS ??? // INPUT           hwndAscii : the handle of the parent indow
 // QDOAS ??? // -----------------------------------------------------------------------------
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ??? void AsciiSet(HWND hwndAscii)
 // QDOAS ???  {
 // QDOAS ???   ASCII_options.szaSaveFlag=(UCHAR)(IsDlgButtonChecked(hwndAscii,ASCII_DATA_SZA)==BST_CHECKED)?(UCHAR)1:(UCHAR)0;
@@ -159,10 +159,10 @@ static INDEX asciiLastRecord=ITEM_NONE;                                         
 // QDOAS ???   ASCII_options.timeSaveFlag=(UCHAR)(IsDlgButtonChecked(hwndAscii,ASCII_DATA_TIME)==BST_CHECKED)?(UCHAR)1:(UCHAR)0;
 // QDOAS ???   ASCII_options.dateSaveFlag=(UCHAR)(IsDlgButtonChecked(hwndAscii,ASCII_DATA_DATE)==BST_CHECKED)?(UCHAR)1:(UCHAR)0;
 // QDOAS ???   ASCII_options.lembdaSaveFlag=(UCHAR)(IsDlgButtonChecked(hwndAscii,ASCII_DATA_LEMBDA)==BST_CHECKED)?(UCHAR)1:(UCHAR)0;
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???   ASCII_options.format=(IsDlgButtonChecked(hwndAscii,ASCII_FORMAT_LINE))?PRJCT_INSTR_ASCII_FORMAT_LINE:PRJCT_INSTR_ASCII_FORMAT_COLUMN;
 // QDOAS ???  }
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ??? // -----------------------------------------------------------------------------
 // QDOAS ??? // FUNCTION        ASCII_WndProc
 // QDOAS ??? // -----------------------------------------------------------------------------
@@ -170,7 +170,7 @@ static INDEX asciiLastRecord=ITEM_NONE;                                         
 // QDOAS ??? //
 // QDOAS ??? // INPUT           usual syntax for windows messages routines
 // QDOAS ??? // -----------------------------------------------------------------------------
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ??? LRESULT CALLBACK ASCII_WndProc(HWND hwndAscii,UINT msg,WPARAM mp1,LPARAM mp2)
 // QDOAS ???  {
 // QDOAS ???   switch (msg)
@@ -183,7 +183,7 @@ static INDEX asciiLastRecord=ITEM_NONE;                                         
 // QDOAS ???     case WM_COMMAND :
 // QDOAS ???      {
 // QDOAS ???       ULONG commandID;
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???       if ((commandID=(ULONG)GET_WM_COMMAND_ID(mp1,mp2))==IDOK)                  // Close dialog box on OK button command
 // QDOAS ???        {
 // QDOAS ???         AsciiSet(hwndAscii);
@@ -192,14 +192,14 @@ static INDEX asciiLastRecord=ITEM_NONE;                                         
 // QDOAS ???       else if (commandID==IDCANCEL)                                             // Close dialog on Cancel button command
 // QDOAS ???        EndDialog(hwndAscii,FALSE);
 // QDOAS ???      }
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???     break;
 // QDOAS ???  // ---------------------------------------------------------------------------
 // QDOAS ???    }
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???   return 0;
 // QDOAS ???  }
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ??? #endif
 
 // ===============
@@ -359,7 +359,7 @@ void ASCII_SaveSpectra(INDEX indexWindow)
 // -----------------------------------------------------------------------------
 // PURPOSE         skip a given number of records in ASCII files
 //
-// INPUT           pSpecInfo : information on the file to read out
+// INPUT           pEngineContext : information on the file to read out
 //                 specFp    : pointer to the ASCII file
 //                 nSkip     : number of records to skip
 //
@@ -369,18 +369,18 @@ void ASCII_SaveSpectra(INDEX indexWindow)
 //                 ERROR_ID_NO in case of success.
 // -----------------------------------------------------------------------------
 
-RC AsciiSkip(SPEC_INFO *pSpecInfo,FILE *specFp,int nSkip)
+RC AsciiSkip(ENGINE_CONTEXT *pEngineContext,FILE *specFp,int nSkip)
  {
   // Declarations
 
   UCHAR *lineRecord,line[MAX_ITEM_TEXT_LEN+1];                                  // read the lines from the ASCII file
   int itemCount,recordCount,maxCount;                                           // counters
-  PRJCT_INSTRUMENTAL *pInstr;                                                   // pointer to the instrumental part of the pSpecInfo structure
+  PRJCT_INSTRUMENTAL *pInstr;                                                   // pointer to the instrumental part of the pEngineContext structure
   RC rc;                                                                        // return code
 
   // Initializations
 
-  pInstr=&pSpecInfo->project.instrumental;
+  pInstr=&pEngineContext->project.instrumental;
   maxCount=NDET+pInstr->ascii.szaSaveFlag+pInstr->ascii.timeSaveFlag+pInstr->ascii.dateSaveFlag;
   lineRecord=NULL;
   rc=ERROR_ID_NO;
@@ -389,7 +389,7 @@ RC AsciiSkip(SPEC_INFO *pSpecInfo,FILE *specFp,int nSkip)
 
   if (specFp==NULL)
    rc=ERROR_ID_FILE_NOT_FOUND;
-  else if (nSkip>=pSpecInfo->recordNumber)
+  else if (nSkip>=pEngineContext->recordNumber)
    rc=ERROR_ID_FILE_END;
   else
 
@@ -444,38 +444,38 @@ RC AsciiSkip(SPEC_INFO *pSpecInfo,FILE *specFp,int nSkip)
 // -----------------------------------------------------------------------------
 // PURPOSE         Set file pointers for ASCII files and get the number of records
 //
-// INPUT           pSpecInfo : information on the file to read
+// INPUT           pEngineContext : information on the file to read
 //                 specFp    : pointer to the ASCII file
 //
-// OUTPUT          pSpecInfo->recordNumber, the number of records
+// OUTPUT          pEngineContext->recordNumber, the number of records
 //
 // RETURN          ERROR_ID_FILE_NOT_FOUND if the input file pointer is NULL;
 //                 ERROR_ID_ALLOC if the allocation of a buffer failed;
 //                 ERROR_ID_NO in case of success.
 // -----------------------------------------------------------------------------
 
-RC ASCII_Set(SPEC_INFO *pSpecInfo,FILE *specFp)
+RC ASCII_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
  {
   // Declarations
 
   UCHAR *lineRecord,line[MAX_ITEM_TEXT_LEN+1];                                  // get lines from the ASCII file
   INT itemCount,maxCount;                                                       // counters
-  PRJCT_INSTRUMENTAL *pInstr;                                                   // pointer to the instrumental part of the pSpecInfo structure
+  PRJCT_INSTRUMENTAL *pInstr;                                                   // pointer to the instrumental part of the pEngineContext structure
   RC rc;                                                                        // return code
 
   // Initializations
 
   asciiLastRecord=ITEM_NONE;                                                    // reset the index of the last record
-  pSpecInfo->recordNumber=0;
+  pEngineContext->recordNumber=0;
   lineRecord=NULL;
-  pInstr=&pSpecInfo->project.instrumental;
+  pInstr=&pEngineContext->project.instrumental;
   maxCount=NDET+pInstr->ascii.szaSaveFlag+pInstr->ascii.timeSaveFlag+pInstr->ascii.dateSaveFlag;
   rc=ERROR_ID_NO;
 
   // Check the file pointer
 
   if (specFp==NULL)
-   rc=ERROR_SetLast("ASCII_Set",ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pSpecInfo->fileName);
+   rc=ERROR_SetLast("ASCII_Set",ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pEngineContext->fileInfo.fileName);
   else
    {
    	// Get the number of records in the file
@@ -492,7 +492,7 @@ RC ASCII_Set(SPEC_INFO *pSpecInfo,FILE *specFp)
       else
        while (fgets(lineRecord,MAX_LINE_LENGTH,specFp))
         if ((strchr(lineRecord,';')==NULL) && (strchr(lineRecord,'*')==NULL))
-         pSpecInfo->recordNumber++;
+         pEngineContext->recordNumber++;
      }
     else
 
@@ -502,7 +502,7 @@ RC ASCII_Set(SPEC_INFO *pSpecInfo,FILE *specFp)
 
       if ((strchr(line,';')==NULL) && (strchr(line,'*')==NULL) && (++itemCount==maxCount))
        {
-        pSpecInfo->recordNumber++;
+        pEngineContext->recordNumber++;
         itemCount=0;
        }
    }
@@ -522,7 +522,7 @@ RC ASCII_Set(SPEC_INFO *pSpecInfo,FILE *specFp)
 // -----------------------------------------------------------------------------
 // PURPOSE         Read a record from the ASCII file
 //
-// INPUT           pSpecInfo : information on the file to read
+// INPUT           pEngineContext : information on the file to read
 //                 recordNo  : the index of the record to read
 //                 dateFlag  : 1 to search for a reference spectrum
 //                 localDay  : if dateFlag is 1, the calendar day for the
@@ -539,11 +539,12 @@ RC ASCII_Set(SPEC_INFO *pSpecInfo,FILE *specFp)
 //                 ERROR_ID_NO in case of success.
 // -----------------------------------------------------------------------------
 
-RC ASCII_Read(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,INT localDay,FILE *specFp)
+RC ASCII_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,INT localDay,FILE *specFp)
  {
   // Declarations
 
-  PRJCT_INSTRUMENTAL *pInstr;                                                   // pointer to the instrumental part of the pSpecInfo structure
+  RECORD_INFO *pRecordInfo;                                                         // pointer to the record part of the engine context
+  PRJCT_INSTRUMENTAL *pInstr;                                                   // pointer to the instrumental part of the pEngineContext structure
   UCHAR *lineRecord,*pRecord,line[MAX_ITEM_TEXT_LEN+1];                         // get lines from the ASCII file
   double *spectrum,*lembda,                                                     // the spectrum and the wavelength calibration to read
           tmLocal;                                                              // the measurement time in seconds
@@ -555,9 +556,10 @@ RC ASCII_Read(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,INT localDay,FILE *
 
   // Initializations
 
-  spectrum=pSpecInfo->spectrum;
-  lembda=pSpecInfo->lembda;
-  pInstr=&pSpecInfo->project.instrumental;
+  pRecordInfo=&pEngineContext->recordInfo;
+  spectrum=pEngineContext->buffers.spectrum;
+  lembda=pEngineContext->buffers.lembda;
+  pInstr=&pEngineContext->project.instrumental;
   zmFlag=pInstr->ascii.szaSaveFlag;
   azimFlag=pInstr->ascii.azimSaveFlag;
   elevFlag=pInstr->ascii.elevSaveFlag;
@@ -567,18 +569,18 @@ RC ASCII_Read(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,INT localDay,FILE *
   lineRecord=NULL;
   rc=ERROR_ID_NO;
 
-  memset(&pSpecInfo->present_day,0,sizeof(SHORT_DATE));
-  memset(&pSpecInfo->present_time,0,sizeof(struct time));
+  memset(&pRecordInfo->present_day,0,sizeof(SHORT_DATE));
+  memset(&pRecordInfo->present_time,0,sizeof(struct time));
 
   VECTOR_Init(spectrum,(double)0.,NDET);
 
   // Set file pointers
 
   if (specFp==NULL)
-   rc=ERROR_SetLast("ASCII_Read",ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pSpecInfo->fileName);
-  else if ((recordNo<=0) || (recordNo>pSpecInfo->recordNumber))
+   rc=ERROR_SetLast("ASCII_Read",ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pEngineContext->fileInfo.fileName);
+  else if ((recordNo<=0) || (recordNo>pEngineContext->recordNumber))
    rc=ERROR_ID_FILE_END;
-  else if ((recordNo-asciiLastRecord==1) || !(rc=AsciiSkip(pSpecInfo,specFp,recordNo-1)))
+  else if ((recordNo-asciiLastRecord==1) || !(rc=AsciiSkip(pEngineContext,specFp,recordNo-1)))
    {
     asciiLastRecord=recordNo;
 
@@ -598,7 +600,7 @@ RC ASCII_Read(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,INT localDay,FILE *
        	do
        	 {
           if (!fgets(lineRecord,MAX_LINE_LENGTH,specFp))
-           rc=ERROR_SetLast("ASCII_Read",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pSpecInfo->fileName);
+           rc=ERROR_SetLast("ASCII_Read",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pEngineContext->fileInfo.fileName);
        	 }
        	while (!rc && ((strchr(lineRecord,';')!=NULL) || (strchr(lineRecord,'*')!=NULL)));
 
@@ -608,29 +610,33 @@ RC ASCII_Read(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,INT localDay,FILE *
 
 	  // locate the start of first value
           for (;(pRecord!=NULL) && (*pRecord==' ');pRecord++);
-	  if (pRecord == NULL) rc = ERROR_ID_FILE_END;
+	         if (pRecord == NULL)
+	          rc = ERROR_ID_FILE_END;
 
           // Read the solar zenith angle
 
           if (!rc && zmFlag)
-          {
-            sscanf(pRecord,"%lf",&pSpecInfo->Zm);
+           {
+            sscanf(pRecord,"%lf",&pRecordInfo->Zm);
             for (pRecord=strchr(pRecord,' ');(pRecord!=NULL) && (*pRecord==' ');pRecord++);
-	    if (pRecord == NULL) rc = ERROR_ID_FILE_END;
+	           if (pRecord == NULL)
+	            rc = ERROR_ID_FILE_END;
            }
 
           if (!rc && azimFlag)
            {
-            sscanf(pRecord,"%f",&pSpecInfo->azimuthViewAngle);
+            sscanf(pRecord,"%f",&pRecordInfo->azimuthViewAngle);
             for (pRecord=strchr(pRecord,' ');(pRecord!=NULL) && (*pRecord==' ');pRecord++);
-	    if (pRecord == NULL) rc = ERROR_ID_FILE_END;
+	           if (pRecord == NULL)
+	            rc = ERROR_ID_FILE_END;
            }
 
           if (!rc && elevFlag)
            {
-            sscanf(pRecord,"%f",&pSpecInfo->elevationViewAngle);
+            sscanf(pRecord,"%f",&pRecordInfo->elevationViewAngle);
             for (pRecord=strchr(pRecord,' ');(pRecord!=NULL) && (*pRecord==' ');pRecord++);
-	    if (pRecord == NULL) rc = ERROR_ID_FILE_END;
+	           if (pRecord == NULL)
+	            rc = ERROR_ID_FILE_END;
            }
 
           // Read the measurement date
@@ -639,20 +645,21 @@ RC ASCII_Read(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,INT localDay,FILE *
            {
             sscanf(pRecord,"%d/%d/%d",&day,&mon,&year);
             for (pRecord=strchr(pRecord,' ');(pRecord!=NULL) && (*pRecord==' ');pRecord++);
-	    if (pRecord == NULL) rc = ERROR_ID_FILE_END;
+	           if (pRecord == NULL)
+	            rc = ERROR_ID_FILE_END;
            }
 
           // Read the measurement time
 
           if (!rc && timeFlag)
            {
-            sscanf(pRecord,"%lf",&pSpecInfo->TimeDec);
+            sscanf(pRecord,"%lf",&pRecordInfo->TimeDec);
             for (pRecord=strchr(pRecord,' ');(pRecord!=NULL) && (*pRecord==' ');pRecord++);
 	    if (pRecord == NULL) rc = ERROR_ID_FILE_END;
            }
 
           // Read the spectrum
-	  
+
 	  if (!rc)
 	   {
 	    for (i=0;(i<NDET) && (pRecord != NULL); ++i)
@@ -660,8 +667,8 @@ RC ASCII_Read(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,INT localDay,FILE *
               sscanf(pRecord,"%lf",&spectrum[i]);
 	      for (pRecord=strchr(pRecord,' ');(pRecord!=NULL) && (*pRecord==' ');pRecord++);
 	     }
-	    // the value of pRecord must be NULL and i is NDET if all data in the line was read
-	    if (pRecord != NULL || i != NDET)
+	    // i is NDET if all data in the line was read
+	    if (i != NDET)                            // Caro 08/11/2007 maybe there are extra characters after the spectrum so do not check the pRecord here
 	      rc = ERROR_ID_FILE_END;
 	   }
 	 }
@@ -690,20 +697,35 @@ RC ASCII_Read(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,INT localDay,FILE *
 
         if (zmFlag && (pRecord != NULL))
          {
-	   if (sscanf(pRecord,"%lf",&pSpecInfo->Zm) == 1) --count;
-	   for (pRecord=strchr(pRecord,' ');(pRecord!=NULL) && (*pRecord==' ');pRecord++);
+// Ian's version
+          sscanf(pRecord,"%lf",&pRecordInfo->Zm);
+          for (pRecord=strchr(pRecord,' ');(pRecord!=NULL) && (*pRecord==' ');pRecord++);
+// =======
+// 	   if (sscanf(pRecord,"%lf",&pSpecInfo->Zm) == 1) --count;
+// 	   for (pRecord=strchr(pRecord,' ');(pRecord!=NULL) && (*pRecord==' ');pRecord++);
+// >>>>>>> .r12586
          }
 
         if (azimFlag && (pRecord != NULL))
          {
-	   if (sscanf(pRecord,"%f",&pSpecInfo->azimuthViewAngle) == 1) --count;
-	   for (pRecord=strchr(pRecord,' ');(pRecord!=NULL) && (*pRecord==' ');pRecord++);
+// Ian's version
+          sscanf(pRecord,"%f",&pRecordInfo->azimuthViewAngle);
+          for (pRecord=strchr(pRecord,' ');(pRecord!=NULL) && (*pRecord==' ');pRecord++);
+// =======
+// 	   if (sscanf(pRecord,"%f",&pSpecInfo->azimuthViewAngle) == 1) --count;
+// 	   for (pRecord=strchr(pRecord,' ');(pRecord!=NULL) && (*pRecord==' ');pRecord++);
+// >>>>>>> .r12586
          }
 
         if (elevFlag && (pRecord != NULL))
          {
-	   if (sscanf(pRecord,"%f",&pSpecInfo->elevationViewAngle) == 1) --count;
-	   for (pRecord=strchr(pRecord,' ');(pRecord!=NULL) && (*pRecord==' ');pRecord++);
+// Ian's version
+          sscanf(pRecord,"%f",&pRecordInfo->elevationViewAngle);
+          for (pRecord=strchr(pRecord,' ');(pRecord!=NULL) && (*pRecord==' ');pRecord++);
+// =======
+// 	   if (sscanf(pRecord,"%f",&pSpecInfo->elevationViewAngle) == 1) --count;
+// 	   for (pRecord=strchr(pRecord,' ');(pRecord!=NULL) && (*pRecord==' ');pRecord++);
+// >>>>>>> .r12586
          }
 
 	// should be at the end of the line and read ALL of the data
@@ -723,7 +745,11 @@ RC ASCII_Read(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,INT localDay,FILE *
       if (!rc && timeFlag)
        {
         while (fgets(line,MAX_ITEM_TEXT_LEN,specFp) && ((strchr(line,';')!=NULL) || (strchr(line,'*')!=NULL)));
-        if (sscanf(line,"%lf",&pSpecInfo->TimeDec) != 1) rc = ERROR_ID_FILE_END;
+// Ian's version
+        sscanf(line,"%lf",&pRecordInfo->TimeDec);
+// =======
+//         if (sscanf(line,"%lf",&pSpecInfo->TimeDec) != 1) rc = ERROR_ID_FILE_END;
+// >>>>>>> .r12586
        }
 
       // Read the spectrum and if selected, the wavelength calibration
@@ -735,7 +761,7 @@ RC ASCII_Read(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,INT localDay,FILE *
 	  {
 	    if (!fgets(line,MAX_ITEM_TEXT_LEN,specFp))
 	    {
-	      rc=ERROR_SetLast("ASCII_Read",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pSpecInfo->fileName);
+	      rc=ERROR_SetLast("ASCII_Read",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pEngineContext->fileInfo.fileName);
 	    }
 	    else if ((strchr(line,';')==NULL) && (strchr(line,'*')==NULL))
 	    {
@@ -750,7 +776,7 @@ RC ASCII_Read(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,INT localDay,FILE *
 	  {
 	    if (!fgets(line,MAX_ITEM_TEXT_LEN,specFp))
 	    {
-	      rc=ERROR_SetLast("ASCII_Read",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pSpecInfo->fileName);
+	      rc=ERROR_SetLast("ASCII_Read",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pEngineContext->fileInfo.fileName);
 	    }
 	    else if ((strchr(line,';')==NULL) && (strchr(line,'*')==NULL))
 	      {
@@ -761,19 +787,19 @@ RC ASCII_Read(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,INT localDay,FILE *
 	}
       }
 
-      // TEST NOVAC !!!
+// Ian's version
+      for (i=0;(i<NDET) && !rc;)
+       if (!fgets(line,MAX_ITEM_TEXT_LEN,specFp))
+        rc=ERROR_SetLast("ASCII_Read",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pEngineContext->fileInfo.fileName);
+       else if ((strchr(line,';')==NULL) && (strchr(line,'*')==NULL))
+        {
+         if (lembdaFlag)
+          sscanf(line,"%lf %lf",&lembda[i],&spectrum[i]);
+         else
+          sscanf(line,"%lf",&spectrum[i]);
 
-/*      {
-      	double offset=(double)0.;
-
-      	for (i=0;i<10;i++)
-      	 offset+=(double)spectrum[i];
-
-      	offset/=(double)10.;
-
-      	for (i=0;i<NDET;i++)
-      	 spectrum[i]-=offset;
-      } */
+         i++;
+        }
      }
 
     if (!rc)
@@ -782,33 +808,33 @@ RC ASCII_Read(SPEC_INFO *pSpecInfo,int recordNo,int dateFlag,INT localDay,FILE *
 
       if (timeFlag)
        {
-        pSpecInfo->present_time.ti_hour=(UCHAR)pSpecInfo->TimeDec;
-        pSpecInfo->present_time.ti_min=(UCHAR)((pSpecInfo->TimeDec-pSpecInfo->present_time.ti_hour)*60.);
-        pSpecInfo->present_time.ti_sec=(UCHAR)(((pSpecInfo->TimeDec-pSpecInfo->present_time.ti_hour)*60.-pSpecInfo->present_time.ti_min)*60.);
+        pRecordInfo->present_time.ti_hour=(UCHAR)pRecordInfo->TimeDec;
+        pRecordInfo->present_time.ti_min=(UCHAR)((pRecordInfo->TimeDec-pRecordInfo->present_time.ti_hour)*60.);
+        pRecordInfo->present_time.ti_sec=(UCHAR)(((pRecordInfo->TimeDec-pRecordInfo->present_time.ti_hour)*60.-pRecordInfo->present_time.ti_min)*60.);
        }
 
       if (dateSaveFlag)
        {
-        pSpecInfo->present_day.da_day=(UCHAR)day;
-        pSpecInfo->present_day.da_mon=(UCHAR)mon;
-        pSpecInfo->present_day.da_year=(SHORT)year;
+        pRecordInfo->present_day.da_day=(UCHAR)day;
+        pRecordInfo->present_day.da_mon=(UCHAR)mon;
+        pRecordInfo->present_day.da_year=(SHORT)year;
        }
 
       // Daily automatic reference spectrum
 
       if (!rc && dateSaveFlag)
        {
-        pSpecInfo->Tm=(double)ZEN_NbSec(&pSpecInfo->present_day,&pSpecInfo->present_time,0);
+        pRecordInfo->Tm=(double)ZEN_NbSec(&pRecordInfo->present_day,&pRecordInfo->present_time,0);
 
-        tmLocal=pSpecInfo->Tm+THRD_localShift*3600.;
+        tmLocal=pRecordInfo->Tm+THRD_localShift*3600.;
 
-        pSpecInfo->localCalDay=ZEN_FNCaljda(&tmLocal);
-        pSpecInfo->localTimeDec=fmod(pSpecInfo->TimeDec+24.+THRD_localShift,(double)24.);
+        pRecordInfo->localCalDay=ZEN_FNCaljda(&tmLocal);
+        pRecordInfo->localTimeDec=fmod(pRecordInfo->TimeDec+24.+THRD_localShift,(double)24.);
        }
       else
-       pSpecInfo->Tm=(double)0.;
+       pRecordInfo->Tm=(double)0.;
 
-      if (dateFlag && dateSaveFlag && (pSpecInfo->localCalDay!=localDay))
+      if (dateFlag && dateSaveFlag && (pRecordInfo->localCalDay!=localDay))
        rc=ERROR_ID_FILE_RECORD;
      }
    }
