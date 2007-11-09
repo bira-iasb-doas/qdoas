@@ -697,35 +697,20 @@ RC ASCII_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,INT local
 
         if (zmFlag && (pRecord != NULL))
          {
-// Ian's version
-          sscanf(pRecord,"%lf",&pRecordInfo->Zm);
-          for (pRecord=strchr(pRecord,' ');(pRecord!=NULL) && (*pRecord==' ');pRecord++);
-// =======
-// 	   if (sscanf(pRecord,"%lf",&pSpecInfo->Zm) == 1) --count;
-// 	   for (pRecord=strchr(pRecord,' ');(pRecord!=NULL) && (*pRecord==' ');pRecord++);
-// >>>>>>> .r12586
+ 	   if (sscanf(pRecord,"%lf",&pRecordInfo->Zm) == 1) --count;
+ 	   for (pRecord=strchr(pRecord,' ');(pRecord!=NULL) && (*pRecord==' ');pRecord++);
          }
 
         if (azimFlag && (pRecord != NULL))
          {
-// Ian's version
-          sscanf(pRecord,"%f",&pRecordInfo->azimuthViewAngle);
-          for (pRecord=strchr(pRecord,' ');(pRecord!=NULL) && (*pRecord==' ');pRecord++);
-// =======
-// 	   if (sscanf(pRecord,"%f",&pSpecInfo->azimuthViewAngle) == 1) --count;
-// 	   for (pRecord=strchr(pRecord,' ');(pRecord!=NULL) && (*pRecord==' ');pRecord++);
-// >>>>>>> .r12586
+ 	   if (sscanf(pRecord,"%f",&pRecordInfo->azimuthViewAngle) == 1) --count;
+ 	   for (pRecord=strchr(pRecord,' ');(pRecord!=NULL) && (*pRecord==' ');pRecord++);
          }
 
         if (elevFlag && (pRecord != NULL))
          {
-// Ian's version
-          sscanf(pRecord,"%f",&pRecordInfo->elevationViewAngle);
-          for (pRecord=strchr(pRecord,' ');(pRecord!=NULL) && (*pRecord==' ');pRecord++);
-// =======
-// 	   if (sscanf(pRecord,"%f",&pSpecInfo->elevationViewAngle) == 1) --count;
-// 	   for (pRecord=strchr(pRecord,' ');(pRecord!=NULL) && (*pRecord==' ');pRecord++);
-// >>>>>>> .r12586
+ 	   if (sscanf(pRecord,"%f",&pRecordInfo->elevationViewAngle) == 1) --count;
+ 	   for (pRecord=strchr(pRecord,' ');(pRecord!=NULL) && (*pRecord==' ');pRecord++);
          }
 
 	// should be at the end of the line and read ALL of the data
@@ -745,11 +730,7 @@ RC ASCII_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,INT local
       if (!rc && timeFlag)
        {
         while (fgets(line,MAX_ITEM_TEXT_LEN,specFp) && ((strchr(line,';')!=NULL) || (strchr(line,'*')!=NULL)));
-// Ian's version
-        sscanf(line,"%lf",&pRecordInfo->TimeDec);
-// =======
-//         if (sscanf(line,"%lf",&pSpecInfo->TimeDec) != 1) rc = ERROR_ID_FILE_END;
-// >>>>>>> .r12586
+         if (sscanf(line,"%lf",&pRecordInfo->TimeDec) != 1) rc = ERROR_ID_FILE_END;
        }
 
       // Read the spectrum and if selected, the wavelength calibration
@@ -786,20 +767,6 @@ RC ASCII_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,INT local
 	  }
 	}
       }
-
-// Ian's version
-      for (i=0;(i<NDET) && !rc;)
-       if (!fgets(line,MAX_ITEM_TEXT_LEN,specFp))
-        rc=ERROR_SetLast("ASCII_Read",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pEngineContext->fileInfo.fileName);
-       else if ((strchr(line,';')==NULL) && (strchr(line,'*')==NULL))
-        {
-         if (lembdaFlag)
-          sscanf(line,"%lf %lf",&lembda[i],&spectrum[i]);
-         else
-          sscanf(line,"%lf",&spectrum[i]);
-
-         i++;
-        }
      }
 
     if (!rc)

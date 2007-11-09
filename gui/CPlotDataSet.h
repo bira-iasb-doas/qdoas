@@ -26,6 +26,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "mediate_types.h"
 
+
+// a set of (increasing x ordered) x,y points that define a single 'curve' on a plot.
+ 
 class CXYPlotData
 {
  public:
@@ -46,6 +49,8 @@ inline enum ePlotDataType CXYPlotData::type(void) const { return m_curveType; }
 inline const QwtArrayData& CXYPlotData::curve(void) const { return m_curve; }
 inline const QString& CXYPlotData::legend(void) const { return m_legend; }
 
+
+// A collection of curves for one plot and plot labels/titles
 
 class CPlotDataSet
 {
@@ -76,6 +81,10 @@ inline enum ePlotDataType CPlotDataSet::type(int index) const { return m_dataLis
 inline const QString& CPlotDataSet::plotTitle(void) const { return m_title; }
 inline const QString& CPlotDataSet::xAxisLabel(void) const { return m_xLabel; }
 inline const QString& CPlotDataSet::yAxisLabel(void) const { return m_yLabel; }
+
+
+// structures to assist in the collation of data bundled in a response from the engine.
+// specifically for control of the page distribution of plot.
 
 struct SPlotData
 {
