@@ -40,7 +40,8 @@ class CConfigurationWriter
  private:
   void writeProjects(FILE *fp);
   void writeProperties(FILE *fp, const mediate_project_t *properties);
-  void writePropertiesSpectra(FILE *fp, const mediate_project_spectra_t *d);
+  void writePropertiesDisplay(FILE *fp, const mediate_project_display_t *d);
+  void writePropertiesSelection(FILE *fp, const mediate_project_selection_t *d);
   void writePropertiesAnalysis(FILE *fp, const mediate_project_analysis_t *d);
   void writePropertiesFilter(FILE *fp, const char *passband, const mediate_project_filtering_t *d);
   void writePropertiesCalibration(FILE *fp, const mediate_project_calibration_t *d);
@@ -65,7 +66,8 @@ class CConfigurationWriter
   void writeGapList(FILE *fp, const gap_list_t *d);
   void writeOutputList(FILE *fp, const output_list_t *d);
   void writeSfps(FILE *fp, const struct calibration_sfp *d);
-
+  void writeDataSelectList(FILE *fp, const data_select_list_t *d);
+  
 
  private:
   const CWProjectTree *m_projectTree;

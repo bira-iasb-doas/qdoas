@@ -8,83 +8,208 @@
 #include "debugutil.h"
 
 //------------------------------------------------------------------------
-// handler for <spectra> (child of project)
 
-CProjectSpectraSubHandler::CProjectSpectraSubHandler(CConfigHandler *master, mediate_project_spectra_t *spectra) :
+CSelectorSubHandler::CSelectorSubHandler(CConfigHandler *master, data_select_list_t *selectList) :
   CBasicConfigSubHandler(master),
-  m_spectra(spectra)
+  m_selectList(selectList)
 {
 }
 
-CProjectSpectraSubHandler::~CProjectSpectraSubHandler()
+CSelectorSubHandler::~CSelectorSubHandler()
 {
 }
 
-bool CProjectSpectraSubHandler::start(const QString &element, const QXmlAttributes &atts)
+bool CSelectorSubHandler::start(const QString &element, const QXmlAttributes &atts)
 {
-  if (element == "display") {
+  if (element != "field")
+    return postErrorMessage("Invalid XML element");
 
-    // default to false if attributes are not present
-    m_spectra->requireSpectra = (atts.value("spectra") == "true") ? 1 : 0;
-    m_spectra->requireData = (atts.value("data") == "true") ? 1 : 0;
-    m_spectra->requireFits = (atts.value("fits") == "true") ? 1 : 0;
-  }
-  else if (element == "sza") {
+  data_select_list_t *d = m_selectList;
+
+  if (d->nSelected >= PRJCT_RESULTS_ASCII_MAX)
+    return postErrorMessage("Too many output fields");
+
+  QString str = atts.value("name");
+  if (str == "specno")
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_SPECNO;
+  else if (str == "name")
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_NAME;           
+  else if (str == "date_time")
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_DATE_TIME;      
+  else if (str == "date")
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_DATE;           
+  else if (str == "time")
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_TIME;           
+  else if (str == "year")
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_YEAR;           
+  else if (str == "julian")
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_JULIAN;         
+  else if (str == "jdfrac")
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_JDFRAC;         
+  else if (str == "tifrac")
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_TIFRAC;         
+  else if (str == "scans")
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_SCANS;          
+  else if (str == "tint")
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_TINT;           
+  else if (str == "sza")
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_SZA;            
+  else if (str == "chi")
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_CHI;            
+  else if (str == "rms")
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_RMS;            
+  else if (str == "azim")
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_AZIM;           
+  else if (str == "tdet")
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_TDET;           
+  else if (str == "sky")
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_SKY;            
+  else if (str == "bestshift")
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_BESTSHIFT;      
+  else if (str == "refzm")
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_REFZM;          
+  else if (str == "refshift")
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_REFSHIFT;       
+  else if (str == "pixel")
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_PIXEL;          
+  else if (str == "pixel_type")
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_PIXEL_TYPE;     
+  else if (str == "orbit")
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_ORBIT;          
+  else if (str == "longit")
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_LONGIT;         
+  else if (str == "latit")
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_LATIT;          
+  else if (str == "altit")
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_ALTIT;          
+  else if (str == "covar")
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_COVAR;          
+  else if (str == "corr")
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_CORR;           
+  else if (str == "cloud")
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_CLOUD;          
+  else if (str == "coeff")
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_COEFF;          
+  else if (str == "o3")
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_O3;             
+  else if (str == "no2")
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_NO2;            
+  else if (str == "cloudtopp")
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_CLOUDTOPP;      
+  else if (str == "los_za")
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_LOS_ZA;         
+  else if (str == "los_azimuth")
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_LOS_AZIMUTH;    
+  else if (str == "sat_height")
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_SAT_HEIGHT;     
+  else if (str == "earth_radius")
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_EARTH_RADIUS;   
+  else if (str == "view_elevation")
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_VIEW_ELEVATION; 
+  else if (str == "view_azimuth")
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_VIEW_AZIMUTH;   
+  else if (str == "scia_quality")
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_SCIA_QUALITY;   
+  else if (str == "scia_state_index")
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_SCIA_STATE_INDEX;
+  else if (str == "scia_state_id")
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_SCIA_STATE_ID;  
+  else if (str == "mfc_starttime")
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_MFC_STARTTIME;  
+  else if (str == "mfc_endtime")
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_MFC_ENDTIME;    
+  else
+    return postErrorMessage("Invalid output field " + str);
+
+  // MUST be ok ...
+  ++(d->nSelected);
+
+  return true;
+}
+
+
+//------------------------------------------------------------------------
+// handler for <display> (child of project)
+
+CProjectDisplaySubHandler::CProjectDisplaySubHandler(CConfigHandler *master, mediate_project_display_t *display) :
+  CSelectorSubHandler(master, &(display->selection)),
+  m_display(display)
+{
+}
+
+CProjectDisplaySubHandler::~CProjectDisplaySubHandler()
+{
+}
+
+bool CProjectDisplaySubHandler::start(const QXmlAttributes &atts)
+{
+  m_display->requireSpectra = (atts.value("spectra") == "true") ? 1 : 0;
+  m_display->requireData = (atts.value("data") == "true") ? 1 : 0;
+  m_display->requireFits = (atts.value("fits") == "true") ? 1 : 0;
+
+  return true;
+}
+
+//------------------------------------------------------------------------
+// handler for <selection> (child of project)
+
+CProjectSelectionSubHandler::CProjectSelectionSubHandler(CConfigHandler *master, mediate_project_selection_t *selection) :
+  CBasicConfigSubHandler(master),
+  m_selection(selection)
+{
+}
+
+CProjectSelectionSubHandler::~CProjectSelectionSubHandler()
+{
+}
+
+bool CProjectSelectionSubHandler::start(const QString &element, const QXmlAttributes &atts)
+{
+  if (element == "sza") {
 
     // defaults from mediateInitializeProject() are ok if attributes are not present
-    m_spectra->szaMinimum = atts.value("min").toDouble();
-    m_spectra->szaMaximum = atts.value("max").toDouble();
-    m_spectra->szaDelta = atts.value("delta").toDouble();
+    m_selection->szaMinimum = atts.value("min").toDouble();
+    m_selection->szaMaximum = atts.value("max").toDouble();
+    m_selection->szaDelta = atts.value("delta").toDouble();
 
   }
   else if (element == "record") {
 
     // defaults from mediateInitializeProject() are ok if attributes are not present
-    m_spectra->recordNumberMinimum = atts.value("min").toInt();
-    m_spectra->recordNumberMaximum = atts.value("max").toInt();
-  }
-  else if (element == "files") {
-
-    // defaults to false if attributes are no present
-    m_spectra->useDarkFile = (atts.value("dark") == "true") ? 1 : 0;
-    m_spectra->useNameFile = (atts.value("name") == "true") ? 1 : 0;
+    m_selection->recordNumberMinimum = atts.value("min").toInt();
+    m_selection->recordNumberMaximum = atts.value("max").toInt();
   }
   else if (element == "circle") {
 
-    m_spectra->geo.circle.radius = atts.value("radius").toDouble();
-    m_spectra->geo.circle.centerLongitude = atts.value("long").toDouble();
-    m_spectra->geo.circle.centerLatitude = atts.value("lat").toDouble();
+    m_selection->geo.circle.radius = atts.value("radius").toDouble();
+    m_selection->geo.circle.centerLongitude = atts.value("long").toDouble();
+    m_selection->geo.circle.centerLatitude = atts.value("lat").toDouble();
   }
   else if (element == "rectangle") {
 
-    m_spectra->geo.rectangle.easternLongitude = atts.value("east").toDouble();
-    m_spectra->geo.rectangle.westernLongitude = atts.value("west").toDouble();
-    m_spectra->geo.rectangle.northernLatitude = atts.value("north").toDouble();
-    m_spectra->geo.rectangle.southernLatitude = atts.value("south").toDouble();
+    m_selection->geo.rectangle.easternLongitude = atts.value("east").toDouble();
+    m_selection->geo.rectangle.westernLongitude = atts.value("west").toDouble();
+    m_selection->geo.rectangle.northernLatitude = atts.value("north").toDouble();
+    m_selection->geo.rectangle.southernLatitude = atts.value("south").toDouble();
   }
   else if (element == "sites") {
 
-    m_spectra->geo.sites.radius = atts.value("radius").toDouble();
+    m_selection->geo.sites.radius = atts.value("radius").toDouble();
   }
   else if (element == "geolocation") {
 
     QString selected = atts.value("selected");
 
     if (selected == "circle")
-      m_spectra->geo.mode = PRJCT_SPECTRA_MODES_CIRCLE;
+      m_selection->geo.mode = PRJCT_SPECTRA_MODES_CIRCLE;
     else if (selected == "rectangle")
-      m_spectra->geo.mode = PRJCT_SPECTRA_MODES_RECTANGLE;
+      m_selection->geo.mode = PRJCT_SPECTRA_MODES_RECTANGLE;
     else if (selected == "sites")
-      m_spectra->geo.mode = PRJCT_SPECTRA_MODES_OBSLIST;
+      m_selection->geo.mode = PRJCT_SPECTRA_MODES_OBSLIST;
     else
-      m_spectra->geo.mode = PRJCT_SPECTRA_MODES_NONE; // default and "none"
+      m_selection->geo.mode = PRJCT_SPECTRA_MODES_NONE; // default and "none"
   }
 
-  return true;
-}
-
-bool CProjectSpectraSubHandler::end(const QString &element)
-{
   return true;
 }
 
@@ -1373,7 +1498,7 @@ bool CProjectSlitSubHandler::start(const QString &element, const QXmlAttributes 
 
 CProjectOutputSubHandler::CProjectOutputSubHandler(CConfigHandler *master,
 						   mediate_project_output_t *output) :
-  CBasicConfigSubHandler(master),
+  CSelectorSubHandler(master, &(output->selection)),
   m_output(output)
 {
 }
@@ -1420,113 +1545,6 @@ bool CProjectOutputSubHandler::start(const QXmlAttributes &atts)
   return true;
 }
 
-bool CProjectOutputSubHandler::start(const QString &element, const QXmlAttributes &atts)
-{
-  if (element != "field")
-    return postErrorMessage("Invalid XML element");
-
-  data_select_list_t *d = &(m_output->selection);
-
-  if (d->nSelected >= PRJCT_RESULTS_ASCII_MAX)
-    return postErrorMessage("Too many output fields");
-
-  QString str = atts.value("name");
-  if (str == "specno")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_SPECNO;
-  else if (str == "name")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_NAME;           
-  else if (str == "date_time")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_DATE_TIME;      
-  else if (str == "date")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_DATE;           
-  else if (str == "time")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_TIME;           
-  else if (str == "year")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_YEAR;           
-  else if (str == "julian")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_JULIAN;         
-  else if (str == "jdfrac")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_JDFRAC;         
-  else if (str == "tifrac")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_TIFRAC;         
-  else if (str == "scans")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_SCANS;          
-  else if (str == "tint")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_TINT;           
-  else if (str == "sza")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_SZA;            
-  else if (str == "chi")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_CHI;            
-  else if (str == "rms")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_RMS;            
-  else if (str == "azim")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_AZIM;           
-  else if (str == "tdet")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_TDET;           
-  else if (str == "sky")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_SKY;            
-  else if (str == "bestshift")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_BESTSHIFT;      
-  else if (str == "refzm")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_REFZM;          
-  else if (str == "refshift")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_REFSHIFT;       
-  else if (str == "pixel")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_PIXEL;          
-  else if (str == "pixel_type")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_PIXEL_TYPE;     
-  else if (str == "orbit")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_ORBIT;          
-  else if (str == "longit")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_LONGIT;         
-  else if (str == "latit")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_LATIT;          
-  else if (str == "altit")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_ALTIT;          
-  else if (str == "covar")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_COVAR;          
-  else if (str == "corr")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_CORR;           
-  else if (str == "cloud")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_CLOUD;          
-  else if (str == "coeff")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_COEFF;          
-  else if (str == "o3")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_O3;             
-  else if (str == "no2")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_NO2;            
-  else if (str == "cloudtopp")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_CLOUDTOPP;      
-  else if (str == "los_za")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_LOS_ZA;         
-  else if (str == "los_azimuth")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_LOS_AZIMUTH;    
-  else if (str == "sat_height")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_SAT_HEIGHT;     
-  else if (str == "earth_radius")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_EARTH_RADIUS;   
-  else if (str == "view_elevation")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_VIEW_ELEVATION; 
-  else if (str == "view_azimuth")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_VIEW_AZIMUTH;   
-  else if (str == "scia_quality")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_SCIA_QUALITY;   
-  else if (str == "scia_state_index")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_SCIA_STATE_INDEX;
-  else if (str == "scia_state_id")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_SCIA_STATE_ID;  
-  else if (str == "mfc_starttime")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_MFC_STARTTIME;  
-  else if (str == "mfc_endtime")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_MFC_ENDTIME;    
-  else
-    return postErrorMessage("Invalid output field " + str);
-
-  // MUST be ok ...
-  ++(d->nSelected);
-
-  return true;
-}
 
 //------------------------------------------------------------------------
 // handler for <nasa_ames> (child of project)

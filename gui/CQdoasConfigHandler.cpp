@@ -242,8 +242,11 @@ bool CProjectSubHandler::start(const QString &element, const QXmlAttributes &att
   // a sub element of project ... create a specialized handler and delegate
   mediate_project_t *prop = m_project->properties();
 
-  if (element == "spectra") {
-    return m_master->installSubHandler(new CProjectSpectraSubHandler(m_master, &(prop->spectra)), atts);
+  if (element == "display") {
+    return m_master->installSubHandler(new CProjectDisplaySubHandler(m_master, &(prop->display)), atts);
+  }
+  else if (element == "selection") {
+    return m_master->installSubHandler(new CProjectSelectionSubHandler(m_master, &(prop->selection)), atts);
   }
   else if (element == "analysis") {
     return m_master->installSubHandler(new CProjectAnalysisSubHandler(m_master, &(prop->analysis)), atts);

@@ -27,18 +27,46 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 class CProjectConfigTreeNode;
 
 //-------------------------------------------------------------------
+// base class for display and output handlers
 
-class CProjectSpectraSubHandler : public CBasicConfigSubHandler
+class CSelectorSubHandler : public CBasicConfigSubHandler
 {
  public:
-  CProjectSpectraSubHandler(CConfigHandler *master, mediate_project_spectra_t *spectra);
-  virtual ~CProjectSpectraSubHandler();
+  CSelectorSubHandler(CConfigHandler *master, data_select_list_t *selectList);
+  virtual ~CSelectorSubHandler();
 
   virtual bool start(const QString &element, const QXmlAttributes &atts);
-  virtual bool end(const QString &element);
 
  private:
-  mediate_project_spectra_t *m_spectra;
+  data_select_list_t *m_selectList;
+};
+
+//-------------------------------------------------------------------
+
+class CProjectDisplaySubHandler : public CSelectorSubHandler
+{
+ public:
+  CProjectDisplaySubHandler(CConfigHandler *master, mediate_project_display_t *display);
+  virtual ~CProjectDisplaySubHandler();
+
+  virtual bool start(const QXmlAttributes &atts);
+
+ private:
+  mediate_project_display_t *m_display;
+};
+
+//-------------------------------------------------------------------
+
+class CProjectSelectionSubHandler : public CBasicConfigSubHandler
+{
+ public:
+  CProjectSelectionSubHandler(CConfigHandler *master, mediate_project_selection_t *selection);
+  virtual ~CProjectSelectionSubHandler();
+
+  virtual bool start(const QString &element, const QXmlAttributes &atts);
+
+ private:
+  mediate_project_selection_t *m_selection;
 };
 
 //-------------------------------------------------------------------
@@ -56,6 +84,7 @@ class CProjectAnalysisSubHandler : public CBasicConfigSubHandler
   mediate_project_analysis_t *m_analysis;
 };
 
+//-------------------------------------------------------------------
 
 class CProjectRawSpectraSubHandler : public CBasicConfigSubHandler
 {
@@ -69,6 +98,8 @@ class CProjectRawSpectraSubHandler : public CBasicConfigSubHandler
  private:
   CProjectConfigTreeNode *m_node;
 };
+
+//-------------------------------------------------------------------
 
 class CProjectFilteringSubHandler : public CBasicConfigSubHandler
 {
@@ -84,6 +115,8 @@ class CProjectFilteringSubHandler : public CBasicConfigSubHandler
   mediate_project_filtering_t *m_filter;
 };
 
+//-------------------------------------------------------------------
+
 class CProjectCalibrationSubHandler : public CBasicConfigSubHandler
 {
  public:
@@ -98,6 +131,8 @@ class CProjectCalibrationSubHandler : public CBasicConfigSubHandler
   mediate_project_calibration_t *m_calibration;
 };
 
+//-------------------------------------------------------------------
+
 class CProjectUndersamplingSubHandler : public CBasicConfigSubHandler
 {
  public:
@@ -110,6 +145,8 @@ class CProjectUndersamplingSubHandler : public CBasicConfigSubHandler
  private:
   mediate_project_undersampling_t *m_undersampling;
 };
+
+//-------------------------------------------------------------------
 
 class CProjectInstrumentalSubHandler : public CBasicConfigSubHandler
 {
@@ -134,6 +171,8 @@ class CProjectInstrumentalSubHandler : public CBasicConfigSubHandler
   mediate_project_instrumental_t *m_instrumental;
 };
 
+//-------------------------------------------------------------------
+
 class CProjectSlitSubHandler : public CBasicConfigSubHandler
 {
  public:
@@ -148,7 +187,9 @@ class CProjectSlitSubHandler : public CBasicConfigSubHandler
   mediate_project_slit_t *m_slit;
 };
 
-class CProjectOutputSubHandler : public CBasicConfigSubHandler
+//-------------------------------------------------------------------
+
+class CProjectOutputSubHandler : public CSelectorSubHandler
 {
  public:
   CProjectOutputSubHandler(CConfigHandler *master,
@@ -156,11 +197,12 @@ class CProjectOutputSubHandler : public CBasicConfigSubHandler
   virtual ~CProjectOutputSubHandler();
 
   virtual bool start(const QXmlAttributes &atts);
-  virtual bool start(const QString &element, const QXmlAttributes &atts);
 
  private:
   mediate_project_output_t *m_output;
 };
+
+//-------------------------------------------------------------------
 
 class CProjectNasaAmesSubHandler : public CBasicConfigSubHandler
 {
@@ -174,6 +216,9 @@ class CProjectNasaAmesSubHandler : public CBasicConfigSubHandler
  private:
   mediate_project_nasa_ames_t *m_nasaames;
 };
+
+//-------------------------------------------------------------------
+
 
 
 #endif
