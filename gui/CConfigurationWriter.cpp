@@ -1338,12 +1338,11 @@ void CConfigurationWriter::writeCrossSectionList(FILE *fp, const cross_section_l
       fprintf(fp, "\"none\"");
     }
     
-    fprintf(fp, " fit=\"%s\" filter=\"%s\" ccfit=\"%s\" icc=\"%.3f\" dcc=\"%.3f\" ccio=\"%s\"",
+    fprintf(fp, " fit=\"%s\" filter=\"%s\" ccfit=\"%s\" icc=\"%.3f\" dcc=\"%.3f\" ccio=\"%.3f\"",
 	    (d->requireFit ? sTrue : sFalse),
 	    (d->requireFilter ? sTrue : sFalse),
 	    (d->requireCcFit ? sTrue : sFalse),
-	    d->initialCc, d->deltaCc, 
-	    (d->requireCcFit ? sTrue : sFalse));
+	    d->initialCc, d->deltaCc, d->ccIo);
     tmpStr = ws->simplifyPath(QString(d->crossSectionFile));
     fprintf(fp, " csfile=\"%s\"", tmpStr.toAscii().data());
     tmpStr = ws->simplifyPath(QString(d->amfFile));

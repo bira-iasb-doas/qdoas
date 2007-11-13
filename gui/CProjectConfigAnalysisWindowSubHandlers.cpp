@@ -194,7 +194,7 @@ bool CAnalysisWindowCrossSectionSubHandler::start(const QXmlAttributes &atts)
     d->requireCcFit = (atts.value("ccfit") == "true") ? 1 : 0;
     d->initialCc = atts.value("icc").toDouble();
     d->deltaCc = atts.value("dcc").toDouble();
-    d->requireCcIo = (atts.value("ccio") == "true") ? 1 : 0;
+    d->ccIo = atts.value("ccio").toDouble();
 
     str = atts.value("csfile");
     if (!str.isEmpty()) {

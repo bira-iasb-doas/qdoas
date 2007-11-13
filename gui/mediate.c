@@ -679,7 +679,7 @@ RC mediateRequestSetAnalysisCross(cross_section_list_t *pCrossSectionList,INT hi
             pEngineCross->FitConc=pMediateCross->requireCcFit;                  // modify concentration
 
             pEngineCross->DeltaConc=(pEngineCross->FitConc)?pMediateCross->deltaCc:(double)0.;   // delta on concentration
-            pEngineCross->I0Conc=(pEngineCross->crossAction==ANLYS_CROSS_ACTION_CONVOLUTE_I0)?pMediateCross->requireCcIo:(double)0.; // QDOAS !!! requireCcIo should be a double
+            pEngineCross->I0Conc=(pEngineCross->crossAction==ANLYS_CROSS_ACTION_CONVOLUTE_I0)?pMediateCross->ccIo:(double)0.;
            }
 
  // QDOAS !!! FOR LATER         rc=OUTPUT_LoadCross(pList,&pTabFeno->TabCrossResults[pTabFeno->NTabCross],&pTabFeno->amfFlag,hidden);

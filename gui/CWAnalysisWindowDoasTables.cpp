@@ -163,7 +163,7 @@ CWMoleculesDoasTable::CWMoleculesDoasTable(const QString &label, int columnWidth
   createColumnCheck("CC fit", 60);
   createColumnEdit("CC Init", 80);           // columnIndex = 6
   createColumnEdit("CC Delta", 80);
-  createColumnCheck("CC Io", 60);            // columnIndex = 8
+  createColumnEdit("CC Io", 80);            // columnIndex = 8
 }
   
 CWMoleculesDoasTable::~CWMoleculesDoasTable()
@@ -186,7 +186,7 @@ void CWMoleculesDoasTable::populate(const cross_section_list_t *data)
     initialValues.push_back(d->requireCcFit);
     initialValues.push_back(d->initialCc);
     initialValues.push_back(d->deltaCc);
-    initialValues.push_back(d->requireCcIo);
+    initialValues.push_back(d->ccIo);
 
     // add the row (with filenames)
     addRow(cStandardRowHeight, QString(d->symbol), initialValues,
@@ -224,7 +224,7 @@ void CWMoleculesDoasTable::apply(cross_section_list_t *data) const
     d->requireCcFit = state.at(5).toBool() ? 1 : 0;
     d->initialCc = state.at(6).toDouble();
     d->deltaCc = state.at(7).toDouble();
-    d->requireCcIo = state.at(8).toBool() ? 1 : 0;
+    d->ccIo = state.at(8).toDouble();
 
     ++d;
     ++row;

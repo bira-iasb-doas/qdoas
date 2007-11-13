@@ -69,7 +69,7 @@ extern "C" {
     int requireCcFit;
     double initialCc;
     double deltaCc;
-    int requireCcIo;
+    double ccIo;
   };
 
   struct anlyswin_linear
