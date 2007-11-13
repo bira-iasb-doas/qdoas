@@ -460,6 +460,17 @@ void CWMoleculesDoasTable::slotInsertRow()
 	if (baseName.startsWith(tmp, Qt::CaseInsensitive)) {
 	  // a match to a symbol ... OK to add the row ...
 	  QList<QVariant> initialValues;
+	  // NOTE: initialized with default values here ...
+	  initialValues.push_back(QString("None"));
+	  initialValues.push_back(QString("None"));
+	  initialValues.push_back(QString("None"));
+	  initialValues.push_back(true);
+	  initialValues.push_back(false);
+	  initialValues.push_back(true);
+	  initialValues.push_back(0.0);
+	  initialValues.push_back(1.0e-3);
+	  initialValues.push_back(0.0);
+
 	  addRow(cStandardRowHeight, *it, initialValues, fileName, QString());
 	  return;
 	}

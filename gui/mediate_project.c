@@ -38,6 +38,26 @@ void initializeMediateProjectSpectra(mediate_project_spectra_t *d)
   d->szaMaximum = 96.0;
 }
 
+void initializeMediateProjectDisplay(mediate_project_display_t *d)
+{
+  memset(d, 0, sizeof(mediate_project_display_t));
+
+  // any non-zero defaults...
+
+  d->requireSpectra = 1;
+  d->requireData = 1;
+  d->requireFits = 1;
+}
+
+void initializeMediateProjectSelection(mediate_project_selection_t *d)
+{
+  memset(d, 0, sizeof(mediate_project_selection_t));
+
+  // any non-zero defaults...
+
+  d->szaMaximum = 96.0;
+}
+
 void initializeMediateProjectAnalysis(mediate_project_analysis_t *d)
 {
   memset(d, 0, sizeof(mediate_project_analysis_t));
@@ -102,8 +122,9 @@ void initializeMediateProjectNasaAmes(mediate_project_nasa_ames_t *d)
 void initializeMediateProject(mediate_project_t *d)
 {
   /* delegate to sub component initialization functions */
-
-  initializeMediateProjectSpectra(&(d->spectra));
+  initializeMediateProjectSpectra(&(d->spectra)); // TODO - remove
+  initializeMediateProjectDisplay(&(d->display));
+  initializeMediateProjectSelection(&(d->selection));
   initializeMediateProjectAnalysis(&(d->analysis));
   initializeMediateProjectFiltering(&(d->lowpass));
   initializeMediateProjectFiltering(&(d->highpass));

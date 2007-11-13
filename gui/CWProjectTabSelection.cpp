@@ -26,12 +26,12 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QFontMetrics>
 #include <QRegExpValidator>
 
-#include "CWProjectTabSpectra.h"
+#include "CWProjectTabSelection.h"
 #include "CValidator.h"
 
 #include "constants.h"
 
-CWProjectTabSpectra::CWProjectTabSpectra(const mediate_project_spectra_t *properties, QWidget *parent) :
+CWProjectTabSelection::CWProjectTabSelection(const mediate_project_selection_t *properties, QWidget *parent) :
   QFrame(parent)
 {
   // construct the GUI and use properties (not NULL) to set the state of the edit widgets.
@@ -42,46 +42,10 @@ CWProjectTabSpectra::CWProjectTabSpectra(const mediate_project_spectra_t *proper
   int pixels;
   QString tmpStr;
 
-  QHBoxLayout *mainLayout = new QHBoxLayout(this);
+  QVBoxLayout *mainLayout = new QVBoxLayout(this);
   
-  QVBoxLayout *leftLayout = new QVBoxLayout;
-
-  // left side
-  
-  // Display (require data) group
-  QGroupBox *displayGroup = new QGroupBox("Display", this);
-  QVBoxLayout *displayGroupLayout = new QVBoxLayout;
-
-  m_reqSpectraCheck = new QCheckBox("Spectra");
-  displayGroupLayout->addWidget(m_reqSpectraCheck);
-  m_reqDataCheck = new QCheckBox("Data");
-  displayGroupLayout->addWidget(m_reqDataCheck);
-  m_reqFitsCheck = new QCheckBox("Fits");
-  displayGroupLayout->addWidget(m_reqFitsCheck);
-  displayGroup->setLayout(displayGroupLayout);
-
-  m_reqSpectraCheck->setCheckState(properties->requireSpectra ? Qt::Checked : Qt::Unchecked);
-  m_reqDataCheck->setCheckState(properties->requireData ? Qt::Checked : Qt::Unchecked);
-  m_reqFitsCheck->setCheckState(properties->requireFits ? Qt::Checked : Qt::Unchecked);
-
-  leftLayout->addWidget(displayGroup);
-
-  // Gelocation selection - also in a group box
-  QGroupBox *geoGroup = new QGroupBox("Geolocations", this);
-  QVBoxLayout *geoGroupLayout = new QVBoxLayout;
-  m_geolocationEdit = new CWGeolocation(&(properties->geo));
-  geoGroupLayout->addWidget(m_geolocationEdit);
-  geoGroup->setLayout(geoGroupLayout);
-
-  leftLayout->addWidget(geoGroup);
-
-  leftLayout->addStretch(1);
-
-  mainLayout->addLayout(leftLayout, 1);
-
-  // right side
-
-  QVBoxLayout *rightLayout = new QVBoxLayout;
+  QHBoxLayout *topLayout = new QHBoxLayout;
+  topLayout->setMargin(0);
 
    // SZA group
   QGroupBox *szaGroup = new QGroupBox("SZA", this);
@@ -103,6 +67,7 @@ CWProjectTabSpectra::CWProjectTabSpectra(const mediate_project_spectra_t *proper
   m_szaDeltaEdit->setFixedWidth(pixels);
   m_szaDeltaEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 180.0, 3, m_szaDeltaEdit));
   szaGroupLayout->addWidget(m_szaDeltaEdit, 2, 1);
+  szaGroupLayout->setColumnStretch(2, 1);
   szaGroup->setLayout(szaGroupLayout);
  
   // use the validators to input-check the initial values
@@ -113,7 +78,7 @@ CWProjectTabSpectra::CWProjectTabSpectra(const mediate_project_spectra_t *proper
   m_szaDeltaEdit->validator()->fixup(tmpStr.setNum(properties->szaDelta));
   m_szaDeltaEdit->setText(tmpStr);
 
-  rightLayout->addWidget(szaGroup);
+  topLayout->addWidget(szaGroup);
 
   // Record group
   QGroupBox *recordGroup = new QGroupBox("Spectra No. Range", this);
@@ -130,6 +95,7 @@ CWProjectTabSpectra::CWProjectTabSpectra(const mediate_project_spectra_t *proper
   m_recordMaxEdit->setFixedWidth(pixels);
   m_recordMaxEdit->setValidator(new QIntValidator(0, 99999, m_recordMaxEdit));
   recordGroupLayout->addWidget(m_recordMaxEdit, 1, 1);
+  recordGroupLayout->setColumnStretch(2, 1);
   recordGroup->setLayout(recordGroupLayout);
 
   m_recordMinEdit->validator()->fixup(tmpStr.setNum(properties->recordNumberMinimum));
@@ -137,40 +103,31 @@ CWProjectTabSpectra::CWProjectTabSpectra(const mediate_project_spectra_t *proper
   m_recordMaxEdit->validator()->fixup(tmpStr.setNum(properties->recordNumberMaximum));
   m_recordMaxEdit->setText(tmpStr);
 
-  rightLayout->addWidget(recordGroup);
+  topLayout->addWidget(recordGroup);
 
-  // Dark + Name group
-  QGroupBox *fileGroup = new QGroupBox("Files", this);
-  QVBoxLayout *fileGroupLayout = new QVBoxLayout;
+  mainLayout->addLayout(topLayout);
+  
+  // Gelocation selection - also in a group box
+  QGroupBox *geoGroup = new QGroupBox("Geolocations", this);
+  QVBoxLayout *geoGroupLayout = new QVBoxLayout;
+  m_geolocationEdit = new CWGeolocation(&(properties->geo));
+  geoGroupLayout->addWidget(m_geolocationEdit);
+  geoGroup->setLayout(geoGroupLayout);
 
-  m_useNameCheck = new QCheckBox("Names", this);
-  fileGroupLayout->addWidget(m_useNameCheck);
-  m_useDarkCheck = new QCheckBox("Dark current", this);
-  fileGroupLayout->addWidget(m_useDarkCheck);
-  fileGroup->setLayout(fileGroupLayout);
+  mainLayout->addWidget(geoGroup);
 
-  m_useNameCheck->setCheckState(properties->useNameFile ? Qt::Checked : Qt::Unchecked);
-  m_useDarkCheck->setCheckState(properties->useDarkFile ? Qt::Checked : Qt::Unchecked);
-
-  rightLayout->addWidget(fileGroup);
-
-  mainLayout->addLayout(rightLayout, 0);
+  mainLayout->addStretch(1);
 }
 
-CWProjectTabSpectra::~CWProjectTabSpectra()
+CWProjectTabSelection::~CWProjectTabSelection()
 {
 }
 
-void CWProjectTabSpectra::apply(mediate_project_spectra_t *properties) const
+void CWProjectTabSelection::apply(mediate_project_selection_t *properties) const
 {
   // extract state from the GUI and set properties
   QString tmpStr;
 
-  // Display
-  properties->requireSpectra = (m_reqSpectraCheck->checkState() == Qt::Checked);
-  properties->requireData = (m_reqDataCheck->checkState() == Qt::Checked);
-  properties->requireFits = (m_reqFitsCheck->checkState() == Qt::Checked);
-  
   // SZA
   tmpStr = m_szaMinEdit->text();
   properties->szaMinimum = tmpStr.isEmpty() ? 0.0 : tmpStr.toDouble();
@@ -185,10 +142,6 @@ void CWProjectTabSpectra::apply(mediate_project_spectra_t *properties) const
   tmpStr = m_recordMaxEdit->text();
   properties->recordNumberMaximum = tmpStr.isEmpty() ? 0 : tmpStr.toInt();
   
-  // Files
-  properties->useNameFile = (m_useNameCheck->checkState() == Qt::Checked);
-  properties->useDarkFile = (m_useDarkCheck->checkState() == Qt::Checked);
-
   // Geolocation
   m_geolocationEdit->apply(&(properties->geo));
 }

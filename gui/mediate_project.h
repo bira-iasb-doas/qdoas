@@ -95,6 +95,43 @@ extern "C" {
 
 
   /****************************************************/
+  /* Project Display */
+
+  typedef struct mediate_project_display
+  {
+    /* Data required from engine for Display purposes */
+    int requireSpectra;
+    int requireData;
+    int requireFits;
+    data_select_list_t selection;
+  } mediate_project_display_t;
+
+
+  /****************************************************/
+  /* Project Selection */
+
+  typedef struct mediate_project_selection
+  {
+    /* SZA (Solar Zenith Angle) range of interest */
+    double szaMinimum;
+    double szaMaximum;
+    double szaDelta;
+
+    /* Spectral record range */
+    int recordNumberMinimum;
+    int recordNumberMaximum;
+
+    /* boolean flags for separate dark and name files */
+    int useDarkFile;
+    int useNameFile;
+
+    /* geolocation limits */
+    struct geolocation geo;
+
+  } mediate_project_selection_t;
+
+
+  /****************************************************/
   /* Project Analysis */
 
   typedef struct mediate_project_analysis
@@ -440,8 +477,7 @@ extern "C" {
     char colourIndex[COLOUR_INDEX_BUFFER_LENGTH];
     char path[FILENAME_BUFFER_LENGTH];
     /* result field flags. A list of PRJCT_RESULTS_ASCII_*** ... */
-    int nSelected;
-    unsigned char selected[256];
+    data_select_list_t selection;
   } mediate_project_output_t;
 
   /****************************************************/
@@ -471,6 +507,8 @@ extern "C" {
   {
     /* Coupled to the control offered by the GUI Project Tabs. */
     mediate_project_spectra_t spectra;
+    mediate_project_display_t display;
+    mediate_project_selection_t selection;
     mediate_project_analysis_t analysis;
     mediate_project_filtering_t lowpass;
     mediate_project_filtering_t highpass;
@@ -488,6 +526,8 @@ extern "C" {
   /* Helper functions */
 
   void initializeMediateProject(mediate_project_t *d);
+  void initializeMediateProjectDisplay(mediate_project_display_t *d);
+  void initializeMediateProjectSelection(mediate_project_selection_t *d);
   void initializeMediateProjectSpectra(mediate_project_spectra_t *d);
   void initializeMediateProjectAnalysis(mediate_project_analysis_t *d);
   void initializeMediateProjectFiltering(mediate_project_filtering_t *d);

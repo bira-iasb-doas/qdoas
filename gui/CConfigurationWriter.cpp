@@ -1057,10 +1057,10 @@ void CConfigurationWriter::writePropertiesOutput(FILE *fp, const mediate_project
 	  d->flux, d->colourIndex);
 
   int i = 0;
-  while (i < d->nSelected) {
+  while (i < d->selection.nSelected) {
 
     fprintf(fp, "      <field name=\"");
-    switch (d->selected[i]) {
+    switch (d->selection.selected[i]) {
     case PRJCT_RESULTS_ASCII_SPECNO:           fprintf(fp, "specno"); break;        
     case PRJCT_RESULTS_ASCII_NAME:             fprintf(fp, "name"); break;        
     case PRJCT_RESULTS_ASCII_DATE_TIME:        fprintf(fp, "date_time"); break;

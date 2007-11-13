@@ -17,8 +17,9 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#ifndef _CWPROJECTTABSPECTRA_H_GUARD
-#define _CWPROJECTTABSPECTRA_H_GUARD
+
+#ifndef _CWPROJECTTABSELECTION_H_GUARD
+#define _CWPROJECTTABSELECTION_H_GUARD
 
 #include <QFrame>
 #include <QCheckBox>
@@ -30,18 +31,17 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 class CWGeolocation;
 
-class CWProjectTabSpectra : public QFrame
+class CWProjectTabSelection : public QFrame
 {
  public:
-  CWProjectTabSpectra(const mediate_project_spectra_t *properties, QWidget *parent = 0);
-  virtual ~CWProjectTabSpectra();
+  CWProjectTabSelection(const mediate_project_selection_t *properties, QWidget *parent = 0);
+  virtual ~CWProjectTabSelection();
 
-  void apply(mediate_project_spectra_t *properties) const;
+  void apply(mediate_project_selection_t *properties) const;
 
  private:
   QLineEdit *m_szaMinEdit, *m_szaMaxEdit, *m_szaDeltaEdit;
   QLineEdit *m_recordMinEdit, *m_recordMaxEdit;
-  QCheckBox *m_reqSpectraCheck, *m_reqDataCheck, *m_reqFitsCheck, *m_useNameCheck, *m_useDarkCheck;
   CWGeolocation *m_geolocationEdit;
 };
 

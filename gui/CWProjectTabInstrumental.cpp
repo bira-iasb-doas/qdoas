@@ -39,149 +39,145 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 CWProjectTabInstrumental::CWProjectTabInstrumental(const mediate_project_instrumental_t *instr, QWidget *parent) :
   QFrame(parent)
 {
+  int index;
   QVBoxLayout *mainLayout = new QVBoxLayout(this);
 
   mainLayout->addSpacing(25);
 
   QGridLayout *topLayout = new QGridLayout;
 
-  // Format
-  m_formatCombo = new QComboBox(this);
   m_formatStack = new QStackedWidget(this);
-  // insert widgets into the stack and items into the combo in lock-step.
+  // insert widgets into the stack, and store their index in the map - keyed by the instrument format
 
   // ascii
   m_asciiEdit = new CWInstrAsciiEdit(&(instr->ascii));
-  m_formatStack->addWidget(m_asciiEdit);
-  m_formatCombo->addItem("ASCII", QVariant(PRJCT_INSTR_FORMAT_ASCII));
+  index = m_formatStack->addWidget(m_asciiEdit);
+  m_instrumentToStackIndexMap.insert(std::map<int,int>::value_type(PRJCT_INSTR_FORMAT_ASCII, index));
 
   // logger
   m_loggerEdit = new CWInstrLoggerEdit(&(instr->logger));
-  m_formatStack->addWidget(m_loggerEdit);
-  m_formatCombo->addItem("Logger (PDA, CCD or HAMAMATSU)", QVariant(PRJCT_INSTR_FORMAT_LOGGER));
+  index = m_formatStack->addWidget(m_loggerEdit);
+  m_instrumentToStackIndexMap.insert(std::map<int,int>::value_type(PRJCT_INSTR_FORMAT_LOGGER, index));
 
   // acton
   m_actonEdit = new CWInstrActonEdit(&(instr->acton));
-  m_formatStack->addWidget(m_actonEdit);
-  m_formatCombo->addItem("Acton (NILU)", QVariant(PRJCT_INSTR_FORMAT_ACTON));
+  index = m_formatStack->addWidget(m_actonEdit);
+  m_instrumentToStackIndexMap.insert(std::map<int,int>::value_type(PRJCT_INSTR_FORMAT_ACTON, index));
 
   // pdaegg
   m_pdaEggEdit = new CWInstrLoggerEdit(&(instr->pdaegg));
-  m_formatStack->addWidget(m_pdaEggEdit);
-  m_formatCombo->addItem("PDA EG&G (Sept. 94 until now)", QVariant(PRJCT_INSTR_FORMAT_PDAEGG));
+  index = m_formatStack->addWidget(m_pdaEggEdit);
+  m_instrumentToStackIndexMap.insert(std::map<int,int>::value_type(PRJCT_INSTR_FORMAT_PDAEGG, index));
 
   // pdaeggold
   m_pdaEggOldEdit = new CWInstrLoggerEdit(&(instr->pdaeggold));
-  m_formatStack->addWidget(m_pdaEggOldEdit);
-  m_formatCombo->addItem("PDA EG&G (Spring 94)", QVariant(PRJCT_INSTR_FORMAT_PDAEGG_OLD));
+  index = m_formatStack->addWidget(m_pdaEggOldEdit);
+  m_instrumentToStackIndexMap.insert(std::map<int,int>::value_type(PRJCT_INSTR_FORMAT_PDAEGG_OLD, index));
 
   // pdaeggulb
   m_pdaEggUlbEdit = new CWInstrPdaEggUlbEdit(&(instr->pdaeggulb));
-  m_formatStack->addWidget(m_pdaEggUlbEdit);
-  m_formatCombo->addItem("PDA EG&G (ULB)", QVariant(PRJCT_INSTR_FORMAT_PDAEGG_ULB));
+  index = m_formatStack->addWidget(m_pdaEggUlbEdit);
+  m_instrumentToStackIndexMap.insert(std::map<int,int>::value_type(PRJCT_INSTR_FORMAT_PDAEGG_ULB, index));
 
   // ccdohp96
   m_ccdOhp96Edit = new CWInstrCcdEdit(&(instr->ccdohp96));
-  m_formatStack->addWidget(m_ccdOhp96Edit);
-  m_formatCombo->addItem("CCD all tracks", QVariant(PRJCT_INSTR_FORMAT_CCD_OHP_96));
+  index = m_formatStack->addWidget(m_ccdOhp96Edit);
+  m_instrumentToStackIndexMap.insert(std::map<int,int>::value_type(PRJCT_INSTR_FORMAT_CCD_OHP_96, index));
 
   // ccdha94
   m_ccdHa94Edit = new CWInstrCcdEdit(&(instr->ccdha94));
-  m_formatStack->addWidget(m_ccdHa94Edit);
-  m_formatCombo->addItem("CCD Sesame I", QVariant(PRJCT_INSTR_FORMAT_CCD_HA_94));
+  index = m_formatStack->addWidget(m_ccdHa94Edit);
+  m_instrumentToStackIndexMap.insert(std::map<int,int>::value_type(PRJCT_INSTR_FORMAT_CCD_HA_94, index));
 
   // ccdulb
   m_ccdUlbEdit = new CWInstrCcdUlbEdit(&(instr->ccdulb));
-  m_formatStack->addWidget(m_ccdUlbEdit);
-  m_formatCombo->addItem("CCD (ULB)", QVariant(PRJCT_INSTR_FORMAT_CCD_ULB));
+  index = m_formatStack->addWidget(m_ccdUlbEdit);
+  m_instrumentToStackIndexMap.insert(std::map<int,int>::value_type(PRJCT_INSTR_FORMAT_CCD_ULB, index));
 
   // saozvis
   m_saozVisEdit = new CWInstrSaozEdit(&(instr->saozvis));
-  m_formatStack->addWidget(m_saozVisEdit);
-  m_formatCombo->addItem("SAOZ PCD/NMOS (512)", QVariant(PRJCT_INSTR_FORMAT_SAOZ_VIS));
+  index = m_formatStack->addWidget(m_saozVisEdit);
+  m_instrumentToStackIndexMap.insert(std::map<int,int>::value_type(PRJCT_INSTR_FORMAT_SAOZ_VIS, index));
 
   // saozuv
   m_saozUvEdit = new CWInstrSaozEdit(&(instr->saozuv));
-  m_formatStack->addWidget(m_saozUvEdit);
-  m_formatCombo->addItem("SAOZ UV", QVariant(PRJCT_INSTR_FORMAT_SAOZ_UV));
+  index = m_formatStack->addWidget(m_saozUvEdit);
+  m_instrumentToStackIndexMap.insert(std::map<int,int>::value_type(PRJCT_INSTR_FORMAT_SAOZ_UV, index));
 
   // saozefm
   m_saozEfmEdit = new CWInstrMinimumEdit(&(instr->saozefm));
-  m_formatStack->addWidget(m_saozEfmEdit);
-  m_formatCombo->addItem("SAOZ EFM (1024)", QVariant(PRJCT_INSTR_FORMAT_SAOZ_EFM));
+  index = m_formatStack->addWidget(m_saozEfmEdit);
+  m_instrumentToStackIndexMap.insert(std::map<int,int>::value_type(PRJCT_INSTR_FORMAT_SAOZ_EFM, index));
 
   // mfc
   m_mfcEdit = new CWInstrMfcEdit(&(instr->mfc));
-  m_formatStack->addWidget(m_mfcEdit);
-  m_formatCombo->addItem("MFC (Heidelberg)", QVariant(PRJCT_INSTR_FORMAT_MFC));
+  index = m_formatStack->addWidget(m_mfcEdit);
+  m_instrumentToStackIndexMap.insert(std::map<int,int>::value_type(PRJCT_INSTR_FORMAT_MFC, index));
 
   // mfcstd
   m_mfcStdEdit = new CWInstrMfcStdEdit(&(instr->mfcstd));
-  m_formatStack->addWidget(m_mfcStdEdit);
-  m_formatCombo->addItem("MFC Std (Heidelberg)", QVariant(PRJCT_INSTR_FORMAT_MFC_STD));
+  index = m_formatStack->addWidget(m_mfcStdEdit);
+  m_instrumentToStackIndexMap.insert(std::map<int,int>::value_type(PRJCT_INSTR_FORMAT_MFC_STD, index));
 
   // rasas
   m_rasasEdit = new CWInstrMinimumEdit(&(instr->rasas));
-  m_formatStack->addWidget(m_rasasEdit);
-  m_formatCombo->addItem("RASAS (INTA)", QVariant(PRJCT_INSTR_FORMAT_RASAS));
+  index = m_formatStack->addWidget(m_rasasEdit);
+  m_instrumentToStackIndexMap.insert(std::map<int,int>::value_type(PRJCT_INSTR_FORMAT_RASAS, index));
 
    // pdasieasoe
   m_pdasiEasoeEdit = new CWInstrMinimumEdit(&(instr->pdasieasoe));
-  m_formatStack->addWidget(m_pdasiEasoeEdit);
-  m_formatCombo->addItem("EASOE", QVariant(PRJCT_INSTR_FORMAT_PDASI_EASOE));
+  index = m_formatStack->addWidget(m_pdasiEasoeEdit);
+  m_instrumentToStackIndexMap.insert(std::map<int,int>::value_type(PRJCT_INSTR_FORMAT_PDASI_EASOE, index));
 
   // pdasiosma
   m_pdasiOsmaEdit = new CWInstrLoggerEdit(&(instr->pdasiosma));
-  m_formatStack->addWidget(m_pdasiOsmaEdit);
-  m_formatCombo->addItem("PDA SI (OSMA)", QVariant(PRJCT_INSTR_FORMAT_PDASI_OSMA));
+  index = m_formatStack->addWidget(m_pdasiOsmaEdit);
+  m_instrumentToStackIndexMap.insert(std::map<int,int>::value_type(PRJCT_INSTR_FORMAT_PDASI_OSMA, index));
 
   // ccdeev
   m_ccdEevEdit = new CWInstrCcdEevEdit(&(instr->ccdeev));
-  m_formatStack->addWidget(m_ccdEevEdit);
-  m_formatCombo->addItem("CCD EEV (BIRA-IASB, NILU)", QVariant(PRJCT_INSTR_FORMAT_CCD_EEV));
+  index = m_formatStack->addWidget(m_ccdEevEdit);
+  m_instrumentToStackIndexMap.insert(std::map<int,int>::value_type(PRJCT_INSTR_FORMAT_CCD_EEV, index));
 
   // opus
   m_opusEdit = new CWInstrOpusEdit(&(instr->opus));
-  m_formatStack->addWidget(m_opusEdit);
-  m_formatCombo->addItem("OPUS", QVariant(PRJCT_INSTR_FORMAT_OPUS));
+  index = m_formatStack->addWidget(m_opusEdit);
+  m_instrumentToStackIndexMap.insert(std::map<int,int>::value_type(PRJCT_INSTR_FORMAT_OPUS, index));
 
   // gdpascii
   m_gdpAsciiEdit = new CWInstrGdpEdit(&(instr->gdpascii));
-  m_formatStack->addWidget(m_gdpAsciiEdit);
-  m_formatCombo->addItem("GDP (ASCII)", QVariant(PRJCT_INSTR_FORMAT_GDP_ASCII));
+  index = m_formatStack->addWidget(m_gdpAsciiEdit);
+  m_instrumentToStackIndexMap.insert(std::map<int,int>::value_type(PRJCT_INSTR_FORMAT_GDP_ASCII, index));
 
   // gdpbin
   m_gdpBinEdit = new CWInstrGdpEdit(&(instr->gdpbin));
-  m_formatStack->addWidget(m_gdpBinEdit);
-  m_formatCombo->addItem("GDP (Binary)", QVariant(PRJCT_INSTR_FORMAT_GDP_BIN));
+  index = m_formatStack->addWidget(m_gdpBinEdit);
+  m_instrumentToStackIndexMap.insert(std::map<int,int>::value_type(PRJCT_INSTR_FORMAT_GDP_BIN, index));
 
   // sciahds
   m_sciaHdfEdit = new CWInstrSciaEdit(&(instr->sciahdf));
-  m_formatStack->addWidget(m_sciaHdfEdit);
-  m_formatCombo->addItem("SCIAMACHY L1C (HDF format)", QVariant(PRJCT_INSTR_FORMAT_SCIA_HDF));
+  index = m_formatStack->addWidget(m_sciaHdfEdit);
+  m_instrumentToStackIndexMap.insert(std::map<int,int>::value_type(PRJCT_INSTR_FORMAT_SCIA_HDF, index));
 
   // sciapds
   m_sciaPdsEdit = new CWInstrSciaEdit(&(instr->sciapds));
-  m_formatStack->addWidget(m_sciaPdsEdit);
-  m_formatCombo->addItem("SCIAMACHY L1C (PDS format)", QVariant(PRJCT_INSTR_FORMAT_SCIA_PDS));
+  index = m_formatStack->addWidget(m_sciaPdsEdit);
+  m_instrumentToStackIndexMap.insert(std::map<int,int>::value_type(PRJCT_INSTR_FORMAT_SCIA_PDS, index));
 
   // uoft
   m_uoftEdit = new CWInstrMinimumEdit(&(instr->uoft));
-  m_formatStack->addWidget(m_uoftEdit);
-  m_formatCombo->addItem("CCD (University of Toronto)", QVariant(PRJCT_INSTR_FORMAT_UOFT));
+  index = m_formatStack->addWidget(m_uoftEdit);
+  m_instrumentToStackIndexMap.insert(std::map<int,int>::value_type(PRJCT_INSTR_FORMAT_UOFT, index));
 
   // noaa
   m_noaaEdit = new CWInstrMinimumEdit(&(instr->noaa));
-  m_formatStack->addWidget(m_noaaEdit);
-  m_formatCombo->addItem("NOAA", QVariant(PRJCT_INSTR_FORMAT_NOAA));
+  index = m_formatStack->addWidget(m_noaaEdit);
+  m_instrumentToStackIndexMap.insert(std::map<int,int>::value_type(PRJCT_INSTR_FORMAT_NOAA, index));
 
   // omi
   m_omiEdit = new CWInstrOmiEdit(&(instr->omi));
-  m_formatStack->addWidget(m_omiEdit);
-  m_formatCombo->addItem("OMI", QVariant(PRJCT_INSTR_FORMAT_OMI));
-
-  topLayout->addWidget(new QLabel("Format", this), 0, 0);
-  topLayout->addWidget(m_formatCombo, 0, 1);
+  index = m_formatStack->addWidget(m_omiEdit);
+  m_instrumentToStackIndexMap.insert(std::map<int,int>::value_type(PRJCT_INSTR_FORMAT_OMI, index));
 
   // Site
   m_siteCombo = new CWSiteListCombo(this); // automatically populated
@@ -196,16 +192,9 @@ CWProjectTabInstrumental::CWProjectTabInstrumental(const mediate_project_instrum
   mainLayout->addWidget(m_formatStack);
   mainLayout->addStretch(1);
 
-  // connections
-  connect(m_formatCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(slotFormatChanged(int)));
-
   // set the current format - stack will follow
-  int index;
-
-  index = m_formatCombo->findData(QVariant(instr->format));
-  if (index != -1)
-    m_formatCombo->setCurrentIndex(index);
-
+  slotInstrumentChanged(instr->format);
+  
   index = m_siteCombo->findText(QString(instr->siteName));
   if (index != -1)
     m_siteCombo->setCurrentIndex(index);
@@ -218,9 +207,7 @@ CWProjectTabInstrumental::~CWProjectTabInstrumental()
 
 void CWProjectTabInstrumental::apply(mediate_project_instrumental_t *instr) const
 {
-  // set values for ALL instruments ... and the selected mode
-
-  instr->format = m_formatCombo->itemData(m_formatCombo->currentIndex()).toInt();
+  // set values for ALL instruments ... the selected mode is handled elsewhere (by the parent).
 
   QString siteName = m_siteCombo->currentText();
   if (siteName != "No Site Specified" && siteName.length() < (int)sizeof(instr->siteName))
@@ -253,15 +240,18 @@ void CWProjectTabInstrumental::apply(mediate_project_instrumental_t *instr) cons
   m_omiEdit->apply(&(instr->omi));
 }
 
-void CWProjectTabInstrumental::slotFormatChanged(int index)
+void CWProjectTabInstrumental::slotInstrumentChanged(int instrument)
 {
-  if (index != -1) {
-    int instrument = m_formatCombo->itemData(index).toInt();
-
-    m_formatStack->setCurrentIndex(index);
-
-    emit signalInstrumentChanged(instrument);
+  std::map<int,int>::const_iterator it = m_instrumentToStackIndexMap.find(instrument);
+  if (it != m_instrumentToStackIndexMap.end()) {
+    
+    m_formatStack->setCurrentIndex(it->second);
   }
+}
+
+void CWProjectTabInstrumental::slotInstrumentTypeChanged(int instrumentType)
+{
+  m_siteCombo->setEnabled(instrumentType == PRJCT_INSTR_TYPE_SATELLITE);
 }
 
 //--------------------------------------------------------

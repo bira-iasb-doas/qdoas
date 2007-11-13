@@ -18,49 +18,31 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
 
-#ifndef _CWPROJECTTABOUTPUT_H_GUARD
-#define _CWPROJECTTABOUTPUT_H_GUARD
+#ifndef _CWPROJECTTABDISPLAY_H_GUARD
+#define _CWPROJECTTABDISPLAY_H_GUARD
 
 #include <QFrame>
-#include <QLineEdit>
 #include <QCheckBox>
-#include <QGroupBox>
-#include <QListWidget>
-#include <QListWidgetItem>
 
 #include "mediate_project.h"
 
 class CWOutputSelector;
 
-class CWProjectTabOutput : public QFrame
+class CWProjectTabDisplay : public QFrame
 {
 Q_OBJECT
  public:
-  CWProjectTabOutput(const mediate_project_output_t *properties, QWidget *parent = 0);
-  virtual ~CWProjectTabOutput();
+  CWProjectTabDisplay(const mediate_project_display_t *properties, QWidget *parent = 0);
+  virtual ~CWProjectTabDisplay();
 
-  void apply(mediate_project_output_t *properties) const;
-
-  void setComponentsEnabled(bool analysisEnabled, bool calibrationEnabled);
+  void apply(mediate_project_display_t *properties) const;
 
  public slots:
-  void slotBrowsePath();
   void slotInstrumentChanged(int instrument);
-  void slotAnalysisCheckChanged(int state);
-  void slotCalibrationCheckChanged(int state);
-
- signals:
-  void signalOutputCalibration(bool enabled);
 
  private:
-  QFrame *m_pathFrame;
-  QLineEdit *m_pathEdit;
-  QCheckBox *m_analysisCheck, *m_calibrationCheck;
-  QCheckBox *m_configurationCheck, *m_binaryCheck, *m_directoryCheck;
-  QGroupBox *m_editGroup;
-  QLineEdit *m_fluxEdit, *m_colourIndexEdit;
+  QCheckBox *m_reqSpectraCheck, *m_reqDataCheck, *m_reqFitsCheck;
   CWOutputSelector *m_selector;
-  
 };
 
 #endif

@@ -220,6 +220,11 @@ extern "C" {
     struct anlyswin_output output[MAX_AW_CROSS_SECTION];
   } output_list_t;
 
+  typedef struct data_select_list
+  {
+    int nSelected;
+    unsigned char selected[256];
+  } data_select_list_t;
 
 #if defined(_cplusplus) || defined(__cplusplus)
 }

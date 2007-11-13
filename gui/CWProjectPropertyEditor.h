@@ -22,9 +22,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #define _CWPROJECTPROPERTYEDITOR_H_GUARD
 
 #include <QString>
+#include <QComboBox>
 
 #include "CWEditor.h"
-#include "CWProjectTabSpectra.h"
+#include "CWProjectTabDisplay.h"
+#include "CWProjectTabSelection.h"
 #include "CWProjectTabAnalysis.h"
 #include "CWProjectTabFiltering.h"
 #include "CWProjectTabCalibration.h"
@@ -34,9 +36,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "CWProjectTabOutput.h"
 #include "CWProjectTabNasaAmes.h"
 
+#include "constants.h"
 
 class CWProjectPropertyEditor : public CWEditor
 {
+Q_OBJECT
  public:
   CWProjectPropertyEditor(const QString &projectName, QWidget *parent = 0);
   virtual ~CWProjectPropertyEditor();
@@ -44,9 +48,20 @@ class CWProjectPropertyEditor : public CWEditor
   virtual bool actionOk();
   virtual void actionHelp();
 
+ private slots:
+   void slotInstrumentTypeChanged(int index);
+   void slotGroundInstrumentChanged(int index);
+   void slotSatelliteInstrumentChanged(int index);
+
+ signals:
+   void signalInstrumentChanged(int);
+   void signalInstrumentTypeChanged(int);
+
  private:
+  QComboBox *m_instrTypeCombo, *m_groundFormatCombo, *m_satelliteFormatCombo;
   QTabWidget *m_tabs;
-  CWProjectTabSpectra *m_spectraTab;
+  CWProjectTabDisplay *m_displayTab;
+  CWProjectTabSelection *m_selectionTab;
   CWProjectTabAnalysis *m_analysisTab;
   CWProjectTabFiltering *m_filteringTab;
   CWProjectTabCalibration *m_calibrationTab;
@@ -57,6 +72,7 @@ class CWProjectPropertyEditor : public CWEditor
   CWProjectTabNasaAmes *m_nasaAmesTab;
 
   QString m_projectName;
+  int m_selectedInstrument;
 };
 
 #endif

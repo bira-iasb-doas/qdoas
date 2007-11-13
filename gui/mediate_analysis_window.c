@@ -24,14 +24,14 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 void initializeMediateAnalysisWindow(mediate_analysis_window_t *d)
  {
-	 // Declarations
-
-	 int i;
-
-	 // Initializations
-
+  // Declarations
+  
+  int i;
+  
+  // Initializations
+  
   memset(d, 0, sizeof(mediate_analysis_window_t));
-
+  
   d->requireSpectrum=
   d->requirePolynomial=
   d->requireFit=
@@ -48,10 +48,10 @@ void initializeMediateAnalysisWindow(mediate_analysis_window_t *d)
 
   for (i=0;i<MAX_AW_CROSS_SECTION;i++)
    {
-   	d->crossSectionList.crossSection[i].requireFit=1;
-   	d->crossSectionList.crossSection[i].requireCcFit=1;
-    d->crossSectionList.crossSection[i].initialCc=(double)0.;
-    d->crossSectionList.crossSection[i].deltaCc=(double)1.e-3;
+     d->crossSectionList.crossSection[i].requireFit=1;
+     d->crossSectionList.crossSection[i].requireCcFit=1;
+     d->crossSectionList.crossSection[i].initialCc=(double)0.;
+     d->crossSectionList.crossSection[i].deltaCc=(double)1.e-3;
    }
 
   // Non-linear parameters
@@ -98,8 +98,6 @@ void initializeMediateAnalysisWindow(mediate_analysis_window_t *d)
 
   for (i=0;i<MAX_AW_GAP;i++)
    d->gapList.gap[i].minimum=d->gapList.gap[i].maximum=(double)0.;
-
-    gap_list_t gapList;
 
   // Output
 

@@ -21,6 +21,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #ifndef _CWPROJECTTABINSTRUMENTAL_H_GUARD
 #define _CWPROJECTTABINSTRUMENTAL_H_GUARD
 
+#include <map>
+
 #include <QFrame>
 #include <QComboBox>
 #include <QStackedWidget>
@@ -59,13 +61,11 @@ Q_OBJECT
   void apply(mediate_project_instrumental_t *instr) const;
 
  public slots:
-  void slotFormatChanged(int index);
-
- signals:
- void signalInstrumentChanged(int instrument);
+  void slotInstrumentChanged(int instrument);
+  void slotInstrumentTypeChanged(int instrumentType);
 
  private:
-  QComboBox *m_formatCombo, *m_siteCombo;
+  QComboBox *m_siteCombo;
   QStackedWidget *m_formatStack;
   // widgets for the configuration of each instrument file format
   CWInstrAsciiEdit *m_asciiEdit;
@@ -95,6 +95,7 @@ Q_OBJECT
   CWInstrMinimumEdit *m_noaaEdit;
   CWInstrOmiEdit *m_omiEdit;
 
+  std::map<int,int> m_instrumentToStackIndexMap;
 };
 
 //--------------------------------------------------------------------------
