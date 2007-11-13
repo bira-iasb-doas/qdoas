@@ -18,22 +18,20 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
 
-#ifndef _CQDOASPROJECTCONFIGHANDLER_H_GUARD
-#define _CQDOASPROJECTCONFIGHANDLER_H_GUARD
+#ifndef _CCONFIGHANDLER_H_GUARD
+#define _CCONFIGHANDLER_H_GUARD
 
 #include <QXmlDefaultHandler>
 #include <QList>
 #include <QString>
 #include <QVector>
 
-#include "CProjectConfigItem.h"
-
-class CQdoasProjectConfigHandler;
+class CConfigHandler;
 
 class CConfigSubHandler
 {
  public:
-  CConfigSubHandler(CQdoasProjectConfigHandler *master);
+  CConfigSubHandler();
   virtual ~CConfigSubHandler() = 0;
 
   virtual bool start(const QXmlAttributes &atts);
@@ -42,11 +40,22 @@ class CConfigSubHandler
   virtual bool end(const QString &element);
   virtual bool end(void);
 
- protected:
-  bool postErrorMessage(const QString &msg); // always returns false
+  virtual CConfigHandler* master(void) = 0;
 
  protected:
-  CQdoasProjectConfigHandler *m_master;
+  bool postErrorMessage(const QString &msg); // always returns false
+};
+
+class CBasicConfigSubHandler : public CConfigSubHandler
+{
+ public:
+  CBasicConfigSubHandler(CConfigHandler *master);
+  virtual ~CBasicConfigSubHandler();
+
+  virtual CConfigHandler* master(void);
+
+ protected:
+  CConfigHandler *m_master;
 };
 
 
@@ -58,11 +67,11 @@ struct SSubHandlerItem
   SSubHandlerItem(CConfigSubHandler *h, int d) : handler(h), depth(d) {}
 };
 
-class CQdoasProjectConfigHandler : public QXmlDefaultHandler
+class CConfigHandler : public QXmlDefaultHandler
 {
  public:
-  CQdoasProjectConfigHandler();
-  virtual ~CQdoasProjectConfigHandler();
+  CConfigHandler();
+  virtual ~CConfigHandler();
 
   // error handling
   virtual bool error(const QXmlParseException &exception);
@@ -86,16 +95,10 @@ class CQdoasProjectConfigHandler : public QXmlDefaultHandler
   QString getPath(int index) const;
   QString pathExpand(const QString &name);
  
-  void addProjectItem(CProjectConfigItem *item); // takes ownership of item
-  QList<const CProjectConfigItem*> projectItems(void) const; // items in returned list have the same lifetime as 'this'
-
-  void addSiteItem(CSiteConfigItem *item); // takes ownership of item
-  QList<const CSiteConfigItem*> siteItems(void) const; // items in returned list have the same lifetime as 'this'
-
-  void addSymbol(const QString &symbolName, const QString &symbolDescription);
-  QList<const CSymbolConfigItem*> symbolItems(void) const; // items in returned list have the same lifetime as 'this'
-
   QString messages(void) const; // messages collected during parsing 
+
+ protected:
+  bool delegateStartElement(const QString &qName, const QXmlAttributes &atts, bool &result);
 
  private:
   friend class CConfigSubHandler;
@@ -106,15 +109,12 @@ class CQdoasProjectConfigHandler : public QXmlDefaultHandler
   QList<QString> m_elementStack;
   CConfigSubHandler *m_activeSubHandler;
   QList<SSubHandlerItem> m_subHandlerStack;
+  QVector<QString> m_paths;
   QString m_subErrorMessage;
   QString m_errorMessages;
   QString m_collatedStr;
-  QList<const CProjectConfigItem*> m_projectItemList;
-  QList<const CSiteConfigItem*> m_siteItemList;
-  QList<const CSymbolConfigItem*> m_symbolList;
-  QVector<QString> m_paths;
 };
 
-inline void CQdoasProjectConfigHandler::setSubErrorMessage(const QString &msg) { m_subErrorMessage = msg; }
+inline void CConfigHandler::setSubErrorMessage(const QString &msg) { m_subErrorMessage = msg; }
 
 #endif

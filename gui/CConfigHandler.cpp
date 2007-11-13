@@ -17,42 +17,30 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
+
 #include <QTextStream>
 
-#include "CQdoasProjectConfigHandler.h"
-#include "CProjectConfigSubHandlers.h"
+#include "CConfigHandler.h"
 
 #include "debugutil.h"
 
-CQdoasProjectConfigHandler::CQdoasProjectConfigHandler() :
+CConfigHandler::CConfigHandler() :
   QXmlDefaultHandler(),
   m_activeSubHandler(NULL),
   m_paths(10)
 {
 }
 
-CQdoasProjectConfigHandler::~CQdoasProjectConfigHandler()
+CConfigHandler::~CConfigHandler()
 {
   // delete any sub handlers ...
   while (!m_subHandlerStack.isEmpty()) {
     delete m_subHandlerStack.back().handler;
     m_subHandlerStack.pop_back();
   }
-  
-  while (!m_projectItemList.isEmpty()) {
-    delete m_projectItemList.takeFirst();
-  }
-
-  while (!m_siteItemList.isEmpty()) {
-    delete m_siteItemList.takeFirst();
-  }
-
-  while (!m_symbolList.isEmpty()) {
-    delete m_symbolList.takeFirst();
-  }
 }
 
-bool CQdoasProjectConfigHandler::error(const QXmlParseException &exception)
+bool CConfigHandler::error(const QXmlParseException &exception)
 {
   QTextStream stream(&m_errorMessages);
   stream << "Error on line " << exception.lineNumber() << " : " << exception.message() << "\n";
@@ -60,7 +48,7 @@ bool CQdoasProjectConfigHandler::error(const QXmlParseException &exception)
   return true;
 }
 
-bool CQdoasProjectConfigHandler::warning(const QXmlParseException &exception)
+bool CConfigHandler::warning(const QXmlParseException &exception)
 {
   QTextStream stream(&m_errorMessages);
   stream << "Warning on line " << exception.lineNumber() << " : " << exception.message() << "\n";
@@ -68,7 +56,7 @@ bool CQdoasProjectConfigHandler::warning(const QXmlParseException &exception)
   return true;
 }
 
-bool CQdoasProjectConfigHandler::fatalError(const QXmlParseException &exception)
+bool CConfigHandler::fatalError(const QXmlParseException &exception)
 {
   QTextStream stream(&m_errorMessages);
   stream << "Fatal Error on line " << exception.lineNumber() << " : " << exception.message() << "\n";
@@ -76,12 +64,12 @@ bool CQdoasProjectConfigHandler::fatalError(const QXmlParseException &exception)
   return false;
 }
 
-QString CQdoasProjectConfigHandler::messages(void) const
+QString CConfigHandler::messages(void) const
 {
   return m_errorMessages;
 }
 
-bool CQdoasProjectConfigHandler::characters(const QString &ch)
+bool CConfigHandler::characters(const QString &ch)
 {
   // collects all character data into a single string. This is
   // passed to sub handlers IFF the trimmed result is not empty.
@@ -94,14 +82,12 @@ bool CQdoasProjectConfigHandler::characters(const QString &ch)
   return true;
 }
 
-bool CQdoasProjectConfigHandler::endDocument()
+bool CConfigHandler::endDocument()
 {
   return true;
 }
 
-bool CQdoasProjectConfigHandler::endElement(const QString &namespaceURI,
-					    const QString &localName,
-					    const QString &qName)
+bool CConfigHandler::endElement(const QString &namespaceURI, const QString &localName, const QString &qName)
 {
   bool status = true;
 
@@ -140,60 +126,33 @@ bool CQdoasProjectConfigHandler::endElement(const QString &namespaceURI,
   return status;
 }
 
-QString CQdoasProjectConfigHandler::errorString() const
+QString CConfigHandler::errorString() const
 {
   return m_subErrorMessage;
 }
 
-bool CQdoasProjectConfigHandler::ignorableWhitespace(const QString &ch)
+bool CConfigHandler::ignorableWhitespace(const QString &ch)
 {
   return true;
 } 
 
-bool CQdoasProjectConfigHandler::startDocument()
+bool CConfigHandler::startDocument()
 {
   return true;
 }
 
-bool CQdoasProjectConfigHandler::startElement(const QString &namespaceURI,
-					      const QString &localName,
-					      const QString &qName,
-					      const QXmlAttributes &atts)
+bool CConfigHandler::startElement(const QString &namespaceURI, const QString &localName,
+				  const QString &qName, const QXmlAttributes &atts)
 {
-  // always track the stack - also provides the depth
-  m_elementStack.push_back(qName);
+  bool result;
 
-  if (m_activeSubHandler) {
-    // prepare for collation of character data
-    m_collatedStr.clear();
+  if (delegateStartElement(qName, atts, result))
+    return result;
 
-    // delegate to the sub handler
-    return m_activeSubHandler->start(qName, atts);
-  }
-  else {
-    // no sub handler yet ...
-
-    if (qName == "project") {
-      // new Project handler
-      return installSubHandler(new CProjectSubHandler(this), atts);
-    }
-    else if (qName == "paths") {
-      // new Path handler
-      return installSubHandler(new CPathSubHandler(this), atts);
-    }
-    else if (qName == "sites") {
-      // new Site handler
-      return installSubHandler(new CSiteSubHandler(this), atts);
-    }
-    else if (qName == "symbols") {
-      // new symbol handler
-      return installSubHandler(new CSymbolSubHandler(this), atts);
-    }
-  }
-  return true;
+  return false;
 }
 
-bool CQdoasProjectConfigHandler::installSubHandler(CConfigSubHandler *newHandler,
+bool CConfigHandler::installSubHandler(CConfigSubHandler *newHandler,
 						   const QXmlAttributes &atts)
 {
   m_subHandlerStack.push_back(SSubHandlerItem(newHandler, m_elementStack.count()));
@@ -202,38 +161,7 @@ bool CQdoasProjectConfigHandler::installSubHandler(CConfigSubHandler *newHandler
   return m_activeSubHandler->start(atts);
 }
 
-void CQdoasProjectConfigHandler::addProjectItem(CProjectConfigItem *item)
-{
-  m_projectItemList.push_back(item);
-}
-
-QList<const CProjectConfigItem*> CQdoasProjectConfigHandler::projectItems(void) const
-{
-  return m_projectItemList;
-}
-
-void CQdoasProjectConfigHandler::addSiteItem(CSiteConfigItem *item)
-{
-  m_siteItemList.push_back(item);
-}
-
-QList<const CSiteConfigItem*> CQdoasProjectConfigHandler::siteItems(void) const
-{
-  return m_siteItemList;
-}
-
-void CQdoasProjectConfigHandler::addSymbol(const QString &symbolName, const QString &symbolDescription)
-{
-  m_symbolList.push_back(new CSymbolConfigItem(symbolName, symbolDescription));
-}
-
-QList<const CSymbolConfigItem*> CQdoasProjectConfigHandler::symbolItems(void) const
-{
-  return m_symbolList;
-}
-
-
-void CQdoasProjectConfigHandler::setPath(int index, const QString &pathPrefix)
+void CConfigHandler::setPath(int index, const QString &pathPrefix)
 {
   // index MUST be in the range 0-9
   if (index < 0 || index > 9)
@@ -248,7 +176,7 @@ void CQdoasProjectConfigHandler::setPath(int index, const QString &pathPrefix)
   m_paths[index] = tmp;
 }
 
-QString CQdoasProjectConfigHandler::getPath(int index) const
+QString CConfigHandler::getPath(int index) const
 {
   if (index < 0 || index > 9)
     return QString();
@@ -256,7 +184,7 @@ QString CQdoasProjectConfigHandler::getPath(int index) const
   return m_paths[index];
 }
 
-QString CQdoasProjectConfigHandler::pathExpand(const QString &name)
+QString CConfigHandler::pathExpand(const QString &name)
 {
   // replace a '%?' prefix with a path (? must be a digit).
 
@@ -277,10 +205,27 @@ QString CQdoasProjectConfigHandler::pathExpand(const QString &name)
   return name;
 }
 
+bool CConfigHandler::delegateStartElement(const QString &qName, const QXmlAttributes &atts, bool &result)
+{
+  // always track the stack - also provides the depth
+  m_elementStack.push_back(qName);
+
+  if (m_activeSubHandler) {
+    // prepare for collation of character data
+    m_collatedStr.clear();
+
+    // delegate to the sub handler
+    result = m_activeSubHandler->start(qName, atts);
+
+    return true; // delegated
+  }
+
+  return false; // not delegated to a sub handler
+}
+
 //------------------------------------------------------------------------
 
-CConfigSubHandler::CConfigSubHandler(CQdoasProjectConfigHandler *master) :
-  m_master(master)
+CConfigSubHandler::CConfigSubHandler()
 {
 }
 
@@ -315,7 +260,23 @@ bool CConfigSubHandler::end()
 
 bool CConfigSubHandler::postErrorMessage(const QString &msg)
 {
-  m_master->setSubErrorMessage(msg);
+  master()->setSubErrorMessage(msg);
   return false;
+}
+
+//------------------------------------------------------------------------
+
+CBasicConfigSubHandler::CBasicConfigSubHandler(CConfigHandler *master) :
+  m_master(master)
+{
+}
+
+CBasicConfigSubHandler::~CBasicConfigSubHandler()
+{
+}
+
+CConfigHandler* CBasicConfigSubHandler::master(void)
+{
+  return m_master;
 }
 

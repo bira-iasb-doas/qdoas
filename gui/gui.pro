@@ -64,7 +64,9 @@ SOURCES += CTablePageData.cpp
 SOURCES += CMultiPageTableModel.cpp
 SOURCES += CSession.cpp
 SOURCES += CValidator.cpp
-SOURCES += CQdoasProjectConfigHandler.cpp
+SOURCES += CConfigHandler.cpp
+SOURCES += CQdoasConfigHandler.cpp
+SOURCES += CPathSubHandler.cpp
 SOURCES += CProjectConfigSubHandlers.cpp
 SOURCES += CProjectConfigAnalysisWindowSubHandlers.cpp
 SOURCES += CProjectConfigTreeNode.cpp
@@ -109,7 +111,8 @@ SOURCES += CPreferences.cpp
 SOURCES += CHelpSystem.cpp
 SOURCES += CHelpSystemImpl.cpp
 SOURCES += qdoas.cpp
-#----------------------------------------------
+
+#----------------------------------------------
 # Mediator Source files
 #----------------------------------------------
 SOURCES += mediate_response.cpp
@@ -133,7 +136,9 @@ HEADERS += CTablePageData.h
 HEADERS += CMultiPageTableModel.h
 HEADERS += CSession.h
 HEADERS += CValidator.h
-HEADERS += CQdoasProjectConfigHandler.h
+HEADERS += CConfigHandler.h
+HEADERS += CQdoasConfigHandler.h
+HEADERS += CPathSubHandler.h
 HEADERS += CProjectConfigSubHandlers.h
 HEADERS += CProjectConfigAnalysisWindowSubHandlers.h
 HEADERS += CProjectConfigTreeNode.h

@@ -24,6 +24,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "mediate.h"
 
+#include "debugutil.h"
+
 //------------------------------------------------------------
 
 CEngineRequest::CEngineRequest(CEngineRequest::RequestType type) :
@@ -221,6 +223,8 @@ CEngineRequestBeginBrowseFile::~CEngineRequestBeginBrowseFile()
 
 bool CEngineRequestBeginBrowseFile::process(CEngineThread *engineThread)
 {
+  TRACE("CEngineRequestBeginBrowseFile" << m_fileName.toStdString());
+
   // open the file and get back the number of records (and calibration data?)
 
   // create a response as the handle
@@ -311,6 +315,8 @@ CEngineRequestEndBrowseFile::~CEngineRequestEndBrowseFile()
 
 bool CEngineRequestEndBrowseFile::process(CEngineThread *engineThread)
 {
+  TRACE("CEngineRequestEndBrowseFile");
+
   CEngineResponseEndAccessFile *resp = new CEngineResponseEndAccessFile;
 
   int rc = mediateRequestEndBrowseSpectra(engineThread->engineContext(), resp);

@@ -147,20 +147,7 @@ CWAnalysisWindowPropertyEditor::CWAnalysisWindowPropertyEditor(const QString &pr
   filesLayout->addWidget(m_refOneFrame);
 
   // row 1 - Ref2
-  m_refTwoEditFrame = new QFrame(filesGroup);
-  m_refTwoEditFrame->setFrameStyle(QFrame::NoFrame);
-  QHBoxLayout *refTwoEditFrameLayout = new QHBoxLayout(m_refTwoEditFrame);
-  refTwoEditFrameLayout->setMargin(0);
-  QLabel *labelTwoEdit = new QLabel(" Reference 2 ", m_refTwoEditFrame);
-  labelTwoEdit->setFixedWidth(85);
-  m_refTwoEdit = new QLineEdit(m_refTwoEditFrame);
-  m_refTwoEdit->setMaxLength(sizeof(d->refTwoFile)-1);
-  QPushButton *refTwoBrowseBtn = new QPushButton("Browse", m_refTwoEditFrame);
-  refTwoBrowseBtn->setFixedWidth(70);
-  refTwoEditFrameLayout->addWidget(labelTwoEdit);
-  refTwoEditFrameLayout->addWidget(m_refTwoEdit, 1);
-  refTwoEditFrameLayout->addWidget(refTwoBrowseBtn);
-
+  // Option for automatic
   m_refTwoSzaFrame = new QFrame(filesGroup);
   m_refTwoSzaFrame->setFrameStyle(QFrame::NoFrame);
   QHBoxLayout *szaLayout = new QHBoxLayout(m_refTwoSzaFrame);
@@ -179,11 +166,27 @@ CWAnalysisWindowPropertyEditor::CWAnalysisWindowPropertyEditor(const QString &pr
   szaLayout->addWidget(m_szaDeltaEdit);
   szaLayout->addStretch(1);
 
+  // Option for Files
+  m_refTwoEditFrame = new QFrame(filesGroup);
+  m_refTwoEditFrame->setFrameStyle(QFrame::NoFrame);
+  QHBoxLayout *refTwoEditFrameLayout = new QHBoxLayout(m_refTwoEditFrame);
+  refTwoEditFrameLayout->setMargin(0);
+  QLabel *labelTwoEdit = new QLabel(" Reference 2 ", m_refTwoEditFrame);
+  labelTwoEdit->setFixedWidth(85);
+  m_refTwoEdit = new QLineEdit(m_refTwoEditFrame);
+  m_refTwoEdit->setMaxLength(sizeof(d->refTwoFile)-1);
+  QPushButton *refTwoBrowseBtn = new QPushButton("Browse", m_refTwoEditFrame);
+  refTwoBrowseBtn->setFixedWidth(70);
+  refTwoEditFrameLayout->addWidget(labelTwoEdit);
+  refTwoEditFrameLayout->addWidget(m_refTwoEdit, 1);
+  refTwoEditFrameLayout->addWidget(refTwoBrowseBtn);
+
+
   // stack for ref 2 switching ...
   m_refTwoStack = new QStackedLayout;
   m_refTwoStack->setMargin(0);
-  m_refTwoStack->addWidget(m_refTwoEditFrame); // takes index 0
-  m_refTwoStack->addWidget(m_refTwoSzaFrame);  // takes index 1
+  m_refTwoStack->addWidget(m_refTwoSzaFrame);  // autoamtaic - takes index 0
+  m_refTwoStack->addWidget(m_refTwoEditFrame); // file       - takes index 1
   filesLayout->addLayout(m_refTwoStack);
 
   // row 2 - residual
@@ -250,8 +253,12 @@ CWAnalysisWindowPropertyEditor::CWAnalysisWindowPropertyEditor(const QString &pr
   int index;
   QString tmpStr;
 
-  autoButton->setChecked(d->refSpectrumSelection == ANLYS_REF_SELECTION_MODE_AUTOMATIC);
-  slotRefSelectionChanged(d->refSpectrumSelection == ANLYS_REF_SELECTION_MODE_AUTOMATIC);
+  bool refAuto = (d->refSpectrumSelection == ANLYS_REF_SELECTION_MODE_AUTOMATIC);
+  if (refAuto)
+    autoButton->setChecked(true);
+  else
+    fileButton->setChecked(true);
+  slotRefSelectionChanged(refAuto);
 
   index = m_calibrationCombo->findData(d->kuruczMode);
   if (index != -1) {
@@ -305,6 +312,10 @@ CWAnalysisWindowPropertyEditor::~CWAnalysisWindowPropertyEditor()
 
 bool CWAnalysisWindowPropertyEditor::actionOk(void)
 {
+  
+  // NOTE: can perform and validation checks here .. if NOT ok, return false, otherwise proceed to set data ...
+
+
   mediate_analysis_window_t *d = CWorkSpace::instance()->findAnalysisWindow(m_projectName, m_analysisWindowName);
   
   if (d) {
@@ -398,7 +409,8 @@ void CWAnalysisWindowPropertyEditor::projectPropertiesChanged()
 
 void CWAnalysisWindowPropertyEditor::slotRefSelectionChanged(bool checked)
 {
-  m_refTwoStack->setCurrentIndex(checked ? 1 : 0);
+  // checked is true for auto selection
+  m_refTwoStack->setCurrentIndex(checked ? 0 : 1);
 }
 
 void CWAnalysisWindowPropertyEditor::slotWavelengthCalibrationChanged(int index)

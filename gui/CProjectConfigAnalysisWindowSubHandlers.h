@@ -21,13 +21,15 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #ifndef _CPROJECTCONFIGANALYSISWINDOWSUBHANDLERS_H_GUARD
 #define _CPROJECTCONFIGANALYSISWINDOWSUBHANDLERS_H_GUARD
 
-#include "CQdoasProjectConfigHandler.h"
+#include "CConfigHandler.h"
+#include "mediate_analysis_window.h"
 
+class CAnalysisWindowConfigItem;
 
-class CAnalysisWindowSubHandler : public CConfigSubHandler
+class CAnalysisWindowSubHandler : public CBasicConfigSubHandler
 {
  public:
-  CAnalysisWindowSubHandler(CQdoasProjectConfigHandler *master,
+  CAnalysisWindowSubHandler(CConfigHandler *master,
 			    CAnalysisWindowConfigItem *item);
   virtual ~CAnalysisWindowSubHandler();
 
@@ -40,10 +42,10 @@ class CAnalysisWindowSubHandler : public CConfigSubHandler
   CAnalysisWindowConfigItem *m_item; // does not own this item
 };
 
-class CAnalysisWindowCrossSectionSubHandler : public CConfigSubHandler
+class CAnalysisWindowCrossSectionSubHandler : public CBasicConfigSubHandler
 {
  public:
-  CAnalysisWindowCrossSectionSubHandler(CQdoasProjectConfigHandler *master,
+  CAnalysisWindowCrossSectionSubHandler(CConfigHandler *master,
 					cross_section_list_t *d);
   virtual ~CAnalysisWindowCrossSectionSubHandler();
 
@@ -53,10 +55,10 @@ class CAnalysisWindowCrossSectionSubHandler : public CConfigSubHandler
   cross_section_list_t *m_d;
 };
 
-class CAnalysisWindowLinearSubHandler : public CConfigSubHandler
+class CAnalysisWindowLinearSubHandler : public CBasicConfigSubHandler
 {
  public:
-  CAnalysisWindowLinearSubHandler(CQdoasProjectConfigHandler *master,
+  CAnalysisWindowLinearSubHandler(CConfigHandler *master,
 				  struct anlyswin_linear *d);
   virtual ~CAnalysisWindowLinearSubHandler();
 
@@ -66,10 +68,10 @@ class CAnalysisWindowLinearSubHandler : public CConfigSubHandler
   struct anlyswin_linear *m_d;
 };
 
-class CAnalysisWindowNonLinearSubHandler : public CConfigSubHandler
+class CAnalysisWindowNonLinearSubHandler : public CBasicConfigSubHandler
 {
  public:
-  CAnalysisWindowNonLinearSubHandler(CQdoasProjectConfigHandler *master,
+  CAnalysisWindowNonLinearSubHandler(CConfigHandler *master,
 				     struct anlyswin_nonlinear *d);
   virtual ~CAnalysisWindowNonLinearSubHandler();
 
@@ -79,10 +81,10 @@ class CAnalysisWindowNonLinearSubHandler : public CConfigSubHandler
   struct anlyswin_nonlinear *m_d;
 };
 
-class CAnalysisWindowShiftStretchSubHandler : public CConfigSubHandler
+class CAnalysisWindowShiftStretchSubHandler : public CBasicConfigSubHandler
 {
  public:
-  CAnalysisWindowShiftStretchSubHandler(CQdoasProjectConfigHandler *master,
+  CAnalysisWindowShiftStretchSubHandler(CConfigHandler *master,
 					shift_stretch_list_t *d);
   virtual ~CAnalysisWindowShiftStretchSubHandler();
 
@@ -94,10 +96,10 @@ class CAnalysisWindowShiftStretchSubHandler : public CConfigSubHandler
   shift_stretch_list_t *m_d;
 };
 
-class CAnalysisWindowGapSubHandler : public CConfigSubHandler
+class CAnalysisWindowGapSubHandler : public CBasicConfigSubHandler
 {
  public:
-  CAnalysisWindowGapSubHandler(CQdoasProjectConfigHandler *master,
+  CAnalysisWindowGapSubHandler(CConfigHandler *master,
 			       gap_list_t *d);
   virtual ~CAnalysisWindowGapSubHandler();
 
@@ -107,10 +109,10 @@ class CAnalysisWindowGapSubHandler : public CConfigSubHandler
   gap_list_t *m_d;
 };
 
-class CAnalysisWindowOutputSubHandler : public CConfigSubHandler
+class CAnalysisWindowOutputSubHandler : public CBasicConfigSubHandler
 {
  public:
-  CAnalysisWindowOutputSubHandler(CQdoasProjectConfigHandler *master,
+  CAnalysisWindowOutputSubHandler(CConfigHandler *master,
 				  output_list_t *d);
   virtual ~CAnalysisWindowOutputSubHandler();
 
@@ -120,10 +122,10 @@ class CAnalysisWindowOutputSubHandler : public CConfigSubHandler
   output_list_t *m_d;
 };
 
-class CAnalysisWindowSfpSubHandler : public CConfigSubHandler
+class CAnalysisWindowSfpSubHandler : public CBasicConfigSubHandler
 {
  public:
-  CAnalysisWindowSfpSubHandler(CQdoasProjectConfigHandler *master,
+  CAnalysisWindowSfpSubHandler(CConfigHandler *master,
 			       struct calibration_sfp *d);
   virtual ~CAnalysisWindowSfpSubHandler();
 

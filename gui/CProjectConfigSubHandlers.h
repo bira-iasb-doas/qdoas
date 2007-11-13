@@ -21,72 +21,17 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #ifndef _CPROJECTCONFIGSUBHANDLERS_H_GUARD
 #define _CPROJECTCONFIGSUBHANDLERS_H_GUARD
 
-#include "CQdoasProjectConfigHandler.h"
+#include "CConfigHandler.h"
+#include "mediate_project.h"
 
-
-//-------------------------------------------------------------------
-
-class CPathSubHandler : public CConfigSubHandler
-{
- public:
-  CPathSubHandler(CQdoasProjectConfigHandler *master);
-  virtual ~CPathSubHandler();
-
-  virtual bool start(const QString &element, const QXmlAttributes &atts);
-  virtual bool character(const QString &ch);
-  virtual bool end(const QString &element);
-
- private:
-  int m_index;
-  QString m_path;
-};
+class CProjectConfigTreeNode;
 
 //-------------------------------------------------------------------
 
-class CSiteSubHandler : public CConfigSubHandler
+class CProjectSpectraSubHandler : public CBasicConfigSubHandler
 {
  public:
-  CSiteSubHandler(CQdoasProjectConfigHandler *master);
-  virtual ~CSiteSubHandler();
-
-  virtual bool start(const QString &element, const QXmlAttributes &atts);
-};
-
-//-------------------------------------------------------------------
-
-class CSymbolSubHandler : public CConfigSubHandler
-{
- public:
-  CSymbolSubHandler(CQdoasProjectConfigHandler *master);
-  virtual ~CSymbolSubHandler();
-
-  virtual bool start(const QString &element, const QXmlAttributes &atts);
-};
-
-//-------------------------------------------------------------------
-
-class CProjectSubHandler : public CConfigSubHandler
-{
- public:
-  CProjectSubHandler(CQdoasProjectConfigHandler *master);
-  virtual ~CProjectSubHandler();
-
-  virtual bool start(const QXmlAttributes &atts);
-  virtual bool start(const QString &element, const QXmlAttributes &atts);
-  virtual bool end(const QString &element);
-  virtual bool end(void);
-
- private:
-  CProjectConfigItem *m_project;
-};
-
-//-------------------------------------------------------------------
-
-class CProjectSpectraSubHandler : public CConfigSubHandler
-{
- public:
-  CProjectSpectraSubHandler(CQdoasProjectConfigHandler *master,
-			    mediate_project_spectra_t *spectra);
+  CProjectSpectraSubHandler(CConfigHandler *master, mediate_project_spectra_t *spectra);
   virtual ~CProjectSpectraSubHandler();
 
   virtual bool start(const QString &element, const QXmlAttributes &atts);
@@ -98,10 +43,10 @@ class CProjectSpectraSubHandler : public CConfigSubHandler
 
 //-------------------------------------------------------------------
 
-class CProjectAnalysisSubHandler : public CConfigSubHandler
+class CProjectAnalysisSubHandler : public CBasicConfigSubHandler
 {
  public:
-  CProjectAnalysisSubHandler(CQdoasProjectConfigHandler *master,
+  CProjectAnalysisSubHandler(CConfigHandler *master,
 			    mediate_project_analysis_t *analysis);
   virtual ~CProjectAnalysisSubHandler();
 
@@ -112,10 +57,10 @@ class CProjectAnalysisSubHandler : public CConfigSubHandler
 };
 
 
-class CProjectRawSpectraSubHandler : public CConfigSubHandler
+class CProjectRawSpectraSubHandler : public CBasicConfigSubHandler
 {
  public:
-  CProjectRawSpectraSubHandler(CQdoasProjectConfigHandler *master,
+  CProjectRawSpectraSubHandler(CConfigHandler *master,
 			      CProjectConfigTreeNode *node);
   virtual ~CProjectRawSpectraSubHandler();
 
@@ -125,10 +70,10 @@ class CProjectRawSpectraSubHandler : public CConfigSubHandler
   CProjectConfigTreeNode *m_node;
 };
 
-class CProjectFilteringSubHandler : public CConfigSubHandler
+class CProjectFilteringSubHandler : public CBasicConfigSubHandler
 {
  public:
-  CProjectFilteringSubHandler(CQdoasProjectConfigHandler *master,
+  CProjectFilteringSubHandler(CConfigHandler *master,
 			   mediate_project_filtering_t *filter);
   virtual ~CProjectFilteringSubHandler();
 
@@ -139,10 +84,10 @@ class CProjectFilteringSubHandler : public CConfigSubHandler
   mediate_project_filtering_t *m_filter;
 };
 
-class CProjectCalibrationSubHandler : public CConfigSubHandler
+class CProjectCalibrationSubHandler : public CBasicConfigSubHandler
 {
  public:
-  CProjectCalibrationSubHandler(CQdoasProjectConfigHandler *master,
+  CProjectCalibrationSubHandler(CConfigHandler *master,
 			   mediate_project_calibration_t *calibration);
   virtual ~CProjectCalibrationSubHandler();
 
@@ -153,10 +98,10 @@ class CProjectCalibrationSubHandler : public CConfigSubHandler
   mediate_project_calibration_t *m_calibration;
 };
 
-class CProjectUndersamplingSubHandler : public CConfigSubHandler
+class CProjectUndersamplingSubHandler : public CBasicConfigSubHandler
 {
  public:
-  CProjectUndersamplingSubHandler(CQdoasProjectConfigHandler *master,
+  CProjectUndersamplingSubHandler(CConfigHandler *master,
 			   mediate_project_undersampling_t *undersampling);
   virtual ~CProjectUndersamplingSubHandler();
 
@@ -166,10 +111,10 @@ class CProjectUndersamplingSubHandler : public CConfigSubHandler
   mediate_project_undersampling_t *m_undersampling;
 };
 
-class CProjectInstrumentalSubHandler : public CConfigSubHandler
+class CProjectInstrumentalSubHandler : public CBasicConfigSubHandler
 {
  public:
-  CProjectInstrumentalSubHandler(CQdoasProjectConfigHandler *master,
+  CProjectInstrumentalSubHandler(CConfigHandler *master,
 			   mediate_project_instrumental_t *instrumental);
   virtual ~CProjectInstrumentalSubHandler();
 
@@ -189,10 +134,10 @@ class CProjectInstrumentalSubHandler : public CConfigSubHandler
   mediate_project_instrumental_t *m_instrumental;
 };
 
-class CProjectSlitSubHandler : public CConfigSubHandler
+class CProjectSlitSubHandler : public CBasicConfigSubHandler
 {
  public:
-  CProjectSlitSubHandler(CQdoasProjectConfigHandler *master,
+  CProjectSlitSubHandler(CConfigHandler *master,
 			 mediate_project_slit_t *slit);
   virtual ~CProjectSlitSubHandler();
 
@@ -203,10 +148,10 @@ class CProjectSlitSubHandler : public CConfigSubHandler
   mediate_project_slit_t *m_slit;
 };
 
-class CProjectOutputSubHandler : public CConfigSubHandler
+class CProjectOutputSubHandler : public CBasicConfigSubHandler
 {
  public:
-  CProjectOutputSubHandler(CQdoasProjectConfigHandler *master,
+  CProjectOutputSubHandler(CConfigHandler *master,
 			   mediate_project_output_t *output);
   virtual ~CProjectOutputSubHandler();
 
@@ -217,10 +162,10 @@ class CProjectOutputSubHandler : public CConfigSubHandler
   mediate_project_output_t *m_output;
 };
 
-class CProjectNasaAmesSubHandler : public CConfigSubHandler
+class CProjectNasaAmesSubHandler : public CBasicConfigSubHandler
 {
  public:
-  CProjectNasaAmesSubHandler(CQdoasProjectConfigHandler *master,
+  CProjectNasaAmesSubHandler(CConfigHandler *master,
 			   mediate_project_nasa_ames_t *nasaames);
   virtual ~CProjectNasaAmesSubHandler();
 

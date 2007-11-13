@@ -19,12 +19,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
 #include "CProjectConfigAnalysisWindowSubHandlers.h"
+#include "CProjectConfigItem.h"
 
 #include "constants.h"
 
-CAnalysisWindowSubHandler::CAnalysisWindowSubHandler(CQdoasProjectConfigHandler *master,
+CAnalysisWindowSubHandler::CAnalysisWindowSubHandler(CConfigHandler *master,
 						     CAnalysisWindowConfigItem *item) :
-  CConfigSubHandler(master),
+  CBasicConfigSubHandler(master),
   m_item(item)
 {
 }
@@ -143,9 +144,9 @@ int CAnalysisWindowSubHandler::mapToPolyType(const QString &str)
   return result;
 }
 
-CAnalysisWindowCrossSectionSubHandler::CAnalysisWindowCrossSectionSubHandler(CQdoasProjectConfigHandler *master,
+CAnalysisWindowCrossSectionSubHandler::CAnalysisWindowCrossSectionSubHandler(CConfigHandler *master,
 									     cross_section_list_t *d) :
-  CConfigSubHandler(master),
+  CBasicConfigSubHandler(master),
   m_d(d)
 {
 }
@@ -226,9 +227,9 @@ bool CAnalysisWindowCrossSectionSubHandler::start(const QXmlAttributes &atts)
 
 //------------------------------------------------------------
 
-CAnalysisWindowLinearSubHandler::CAnalysisWindowLinearSubHandler(CQdoasProjectConfigHandler *master,
+CAnalysisWindowLinearSubHandler::CAnalysisWindowLinearSubHandler(CConfigHandler *master,
 								 struct anlyswin_linear *d) :
-  CConfigSubHandler(master),
+  CBasicConfigSubHandler(master),
   m_d(d)
 {
 }
@@ -259,9 +260,9 @@ bool CAnalysisWindowLinearSubHandler::start(const QXmlAttributes &atts)
 
 //------------------------------------------------------------
 
-CAnalysisWindowNonLinearSubHandler::CAnalysisWindowNonLinearSubHandler(CQdoasProjectConfigHandler *master,
+CAnalysisWindowNonLinearSubHandler::CAnalysisWindowNonLinearSubHandler(CConfigHandler *master,
 								       struct anlyswin_nonlinear *d) :
-  CConfigSubHandler(master),
+  CBasicConfigSubHandler(master),
   m_d(d)
 {
 }
@@ -325,9 +326,9 @@ bool CAnalysisWindowNonLinearSubHandler::start(const QXmlAttributes &atts)
 
 //------------------------------------------------------------
 
-CAnalysisWindowShiftStretchSubHandler::CAnalysisWindowShiftStretchSubHandler(CQdoasProjectConfigHandler *master,
+CAnalysisWindowShiftStretchSubHandler::CAnalysisWindowShiftStretchSubHandler(CConfigHandler *master,
 									     shift_stretch_list_t *d) :
-  CConfigSubHandler(master),
+  CBasicConfigSubHandler(master),
   m_d(d)
 {
 }
@@ -412,9 +413,9 @@ bool CAnalysisWindowShiftStretchSubHandler::end(void)
 
 //------------------------------------------------------------
 
-CAnalysisWindowGapSubHandler::CAnalysisWindowGapSubHandler(CQdoasProjectConfigHandler *master,
+CAnalysisWindowGapSubHandler::CAnalysisWindowGapSubHandler(CConfigHandler *master,
 							   gap_list_t *d) :
-  CConfigSubHandler(master),
+  CBasicConfigSubHandler(master),
   m_d(d)
 {
 }
@@ -441,9 +442,9 @@ bool CAnalysisWindowGapSubHandler::start(const QXmlAttributes &atts)
 
 //------------------------------------------------------------
 
-CAnalysisWindowOutputSubHandler::CAnalysisWindowOutputSubHandler(CQdoasProjectConfigHandler *master,
+CAnalysisWindowOutputSubHandler::CAnalysisWindowOutputSubHandler(CConfigHandler *master,
 								 output_list_t *d) :
-  CConfigSubHandler(master),
+  CBasicConfigSubHandler(master),
   m_d(d)
 {
 }
@@ -485,9 +486,9 @@ bool CAnalysisWindowOutputSubHandler::start(const QXmlAttributes &atts)
 
 //------------------------------------------------------------
 
-CAnalysisWindowSfpSubHandler::CAnalysisWindowSfpSubHandler(CQdoasProjectConfigHandler *master,
+CAnalysisWindowSfpSubHandler::CAnalysisWindowSfpSubHandler(CConfigHandler *master,
 							   struct calibration_sfp *d) :
-  CConfigSubHandler(master),
+  CBasicConfigSubHandler(master),
   m_d(d)
 {
 }

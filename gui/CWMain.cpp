@@ -40,7 +40,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "CEngineController.h"
 #include "CNavigationPanel.h"
-#include "CQdoasProjectConfigHandler.h"
+#include "CQdoasConfigHandler.h"
 #include "CWorkSpace.h"
 #include "CPreferences.h"
 #include "CConfigurationWriter.h"
@@ -389,7 +389,7 @@ void CWMain::slotOpenFile()
   QXmlSimpleReader xmlReader;
   QXmlInputSource *source = new QXmlInputSource(file);
 
-  CQdoasProjectConfigHandler *handler = new CQdoasProjectConfigHandler;
+  CQdoasConfigHandler *handler = new CQdoasConfigHandler;
   xmlReader.setContentHandler(handler);
   xmlReader.setErrorHandler(handler);
 

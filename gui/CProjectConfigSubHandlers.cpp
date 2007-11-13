@@ -1,252 +1,17 @@
 
 #include "CProjectConfigSubHandlers.h"
 #include "CProjectConfigAnalysisWindowSubHandlers.h"
+#include "CProjectConfigTreeNode.h"
 
 #include "constants.h"
 
 #include "debugutil.h"
 
-
-//------------------------------------------------------------------------
-//
-// Handler for <paths> element (and sub elements)
-
-CPathSubHandler::CPathSubHandler(CQdoasProjectConfigHandler *master) :
-  CConfigSubHandler(master),
-  m_index(-1)
-{
-}
-
-CPathSubHandler::~CPathSubHandler()
-{
-}
-
-bool CPathSubHandler::start(const QString &element, const QXmlAttributes &atts)
-{
-  // should be a path element <path index="?">/this/is/the/path</path>
-
-
-  if (element == "path") {
-    bool ok;
-    m_index = atts.value("index").toInt(&ok);
-    if (!ok || m_index < 0 || m_index > 9) {
-      m_index = -1;
-      return postErrorMessage("Invalid path index");
-    }
-  }
-  else {
-    m_index = -1;
-    return postErrorMessage("Invalid child element of paths");
-  }
-
-  m_path.clear();
-
-  return true;
-}
-
-bool CPathSubHandler::character(const QString &ch)
-{
-  // collect all path characters
-  m_path += ch;
-
-  return true;
-}
-
-bool CPathSubHandler::end(const QString &element)
-{
-  if (m_index != -1)
-    m_master->setPath(m_index, m_path);
-
-  return true;
-}
-
-
-//------------------------------------------------------------------------
-//
-// Handler for <sites> element (and sub elements)
-
-CSiteSubHandler::CSiteSubHandler(CQdoasProjectConfigHandler *master) :
-  CConfigSubHandler(master)
-{
-}
-
-CSiteSubHandler::~CSiteSubHandler()
-{
-}
-
-bool CSiteSubHandler::start(const QString &element, const QXmlAttributes &atts)
-{
-  if (element == "site") {
-    QString str;
-    bool ok;
-    double tmpDouble;
-
-    // create a new config item for the site
-    CSiteConfigItem *item = new CSiteConfigItem;
-
-    str = atts.value("name");
-    if (str.isEmpty()) {
-      delete item;
-      return postErrorMessage("Missing site name");
-    }
-    else
-      item->setSiteName(str);
-
-    str = atts.value("abbrev");
-    if (!str.isEmpty())
-      item->setAbbreviation(str);
-
-    tmpDouble = atts.value("long").toDouble(&ok);
-    if (ok)
-      item->setLongitude(tmpDouble);
-
-    tmpDouble = atts.value("lat").toDouble(&ok);
-    if (ok)
-      item->setLatitude(tmpDouble);
-
-    tmpDouble = atts.value("alt").toDouble(&ok);
-    if (ok)
-      item->setAltitude(tmpDouble);
-
-    m_master->addSiteItem(item);
-
-    return true;
-  }
-
-  return false;
-}
-
-//------------------------------------------------------------------------
-//
-// Handler for <symbol> element
-
-CSymbolSubHandler::CSymbolSubHandler(CQdoasProjectConfigHandler *master) :
-  CConfigSubHandler(master)
-{
-}
-
-CSymbolSubHandler::~CSymbolSubHandler()
-{
-}
-
-bool CSymbolSubHandler::start(const QString &element, const QXmlAttributes &atts)
-{
-  if (element == "symbol") {
-    QString name;
-
-    name = atts.value("name");
-    if (name.isEmpty()) {
-      return postErrorMessage("Missing symbol name");
-    }
-
-    m_master->addSymbol(name, atts.value("descr"));
-
-    return true;
-  }
-
-  return false;
-}
-
-//------------------------------------------------------------------------
-//
-// Handler for <project> element
-
-
-CProjectSubHandler::CProjectSubHandler(CQdoasProjectConfigHandler *master) :
-  CConfigSubHandler(master)
-{
-  m_project = new CProjectConfigItem;
-}
-
-CProjectSubHandler::~CProjectSubHandler()
-{
-  delete m_project;
-}
-
-bool CProjectSubHandler::start(const QXmlAttributes &atts)
-{
-  // the project element - must have a name
-
-  m_project->setName(atts.value("name"));
-
-  return !m_project->name().isEmpty();
-}
-
-bool CProjectSubHandler::start(const QString &element, const QXmlAttributes &atts)
-{
-  // a sub element of project ... create a specialized handler and delegate
-  mediate_project_t *prop = m_project->properties();
-
-  if (element == "spectra") {
-    return m_master->installSubHandler(new CProjectSpectraSubHandler(m_master, &(prop->spectra)), atts);
-  }
-  else if (element == "analysis") {
-    return m_master->installSubHandler(new CProjectAnalysisSubHandler(m_master, &(prop->analysis)), atts);
-  }
-  else if (element == "raw_spectra") {
-    return m_master->installSubHandler(new CProjectRawSpectraSubHandler(m_master, m_project->rootNode()), atts);
-  }
-  else if (element == "lowpass_filter") {
-    return m_master->installSubHandler(new CProjectFilteringSubHandler(m_master, &(prop->lowpass)), atts);
-  }
-  else if (element == "highpass_filter") {
-    return m_master->installSubHandler(new CProjectFilteringSubHandler(m_master, &(prop->highpass)), atts);
-  }
-  else if (element == "calibration") {
-    return m_master->installSubHandler(new CProjectCalibrationSubHandler(m_master, &(prop->calibration)), atts);
-  }
-  else if (element == "undersampling") {
-    return m_master->installSubHandler(new CProjectUndersamplingSubHandler(m_master, &(prop->undersampling)), atts);
-  }
-  else if (element == "instrumental") {
-    return m_master->installSubHandler(new CProjectInstrumentalSubHandler(m_master, &(prop->instrumental)), atts);
-  }
-  else if (element == "slit") {
-    return m_master->installSubHandler(new CProjectSlitSubHandler(m_master, &(prop->slit)), atts);
-  }
-  else if (element == "output") {
-    return m_master->installSubHandler(new CProjectOutputSubHandler(m_master, &(prop->output)), atts);
-  }
-  else if (element == "nasa_ames") {
-    return m_master->installSubHandler(new CProjectNasaAmesSubHandler(m_master, &(prop->nasaames)), atts);
-  }
-  else if (element == "analysis_window") {
-    // allocate a new item in the project for this AW
-    CAnalysisWindowConfigItem *awItem = m_project->issueNewAnalysisWindowItem();
-    if (awItem)
-      return m_master->installSubHandler(new CAnalysisWindowSubHandler(m_master, awItem), atts);
-
-    return false; // fall through failure
-  }
-
-  TRACE2("proj Handler : " << element.toStdString());
-
-  return true; // TODO - false unknown element ...
-}
-
-bool CProjectSubHandler::end(const QString &element)
-{
-  // TODO - remove this ...
-  // end of sub element ... all sub elements are managed by sub handlers.
-  return true;
-}
-
-bool CProjectSubHandler::end()
-{
-  // end of project ... hand project data over to the master handler
-
-  m_master->addProjectItem(m_project);
-  m_project = NULL; // releases ownership responsibility
-
-  return true;
-}
-
 //------------------------------------------------------------------------
 // handler for <spectra> (child of project)
 
-CProjectSpectraSubHandler::CProjectSpectraSubHandler(CQdoasProjectConfigHandler *master,
-						     mediate_project_spectra_t *spectra) :
-  CConfigSubHandler(master),
+CProjectSpectraSubHandler::CProjectSpectraSubHandler(CConfigHandler *master, mediate_project_spectra_t *spectra) :
+  CBasicConfigSubHandler(master),
   m_spectra(spectra)
 {
 }
@@ -327,9 +92,9 @@ bool CProjectSpectraSubHandler::end(const QString &element)
 //------------------------------------------------------------------------
 // handler for <analysis> (child of project)
 
-CProjectAnalysisSubHandler::CProjectAnalysisSubHandler(CQdoasProjectConfigHandler *master,
+CProjectAnalysisSubHandler::CProjectAnalysisSubHandler(CConfigHandler *master,
 						       mediate_project_analysis_t *analysis) :
-  CConfigSubHandler(master),
+  CBasicConfigSubHandler(master),
   m_analysis(analysis)
 {
 }
@@ -386,9 +151,9 @@ bool CProjectAnalysisSubHandler::start(const QXmlAttributes &atts)
 //------------------------------------------------------------------------
 // handler for <raw_spectra> (child of project)
 
-CProjectRawSpectraSubHandler::CProjectRawSpectraSubHandler(CQdoasProjectConfigHandler *master,
+CProjectRawSpectraSubHandler::CProjectRawSpectraSubHandler(CConfigHandler *master,
 							   CProjectConfigTreeNode *node) :
-  CConfigSubHandler(master),
+  CBasicConfigSubHandler(master),
   m_node(node)
 {
 }
@@ -436,9 +201,9 @@ bool CProjectRawSpectraSubHandler::start(const QString &element, const QXmlAttri
 //------------------------------------------------------------------------
 // handler for <lowpass_filter> and <highpass_filter> (children of project)
 
-CProjectFilteringSubHandler::CProjectFilteringSubHandler(CQdoasProjectConfigHandler *master,
-						       mediate_project_filtering_t *filter) :
-  CConfigSubHandler(master),
+CProjectFilteringSubHandler::CProjectFilteringSubHandler(CConfigHandler *master,
+							 mediate_project_filtering_t *filter) :
+  CBasicConfigSubHandler(master),
   m_filter(filter)
 {
 }
@@ -519,9 +284,9 @@ bool CProjectFilteringSubHandler::start(const QString &element, const QXmlAttrib
 //------------------------------------------------------------------------
 // handler for <calibration> (child of project)
 
-CProjectCalibrationSubHandler::CProjectCalibrationSubHandler(CQdoasProjectConfigHandler *master,
-						       mediate_project_calibration_t *calibration) :
-  CConfigSubHandler(master),
+CProjectCalibrationSubHandler::CProjectCalibrationSubHandler(CConfigHandler *master,
+							     mediate_project_calibration_t *calibration) :
+  CBasicConfigSubHandler(master),
   m_calibration(calibration)
 {
 }
@@ -620,9 +385,9 @@ bool CProjectCalibrationSubHandler::start(const QString &element, const QXmlAttr
 //------------------------------------------------------------------------
 // handler for <undersampling> (child of project)
 
-CProjectUndersamplingSubHandler::CProjectUndersamplingSubHandler(CQdoasProjectConfigHandler *master,
+CProjectUndersamplingSubHandler::CProjectUndersamplingSubHandler(CConfigHandler *master,
 								 mediate_project_undersampling_t *undersampling) :
-  CConfigSubHandler(master),
+  CBasicConfigSubHandler(master),
   m_undersampling(undersampling)
 {
 }
@@ -662,9 +427,9 @@ bool CProjectUndersamplingSubHandler::start(const QXmlAttributes &atts)
 //------------------------------------------------------------------------
 // handler for <instrumental> (child of project)
 
-CProjectInstrumentalSubHandler::CProjectInstrumentalSubHandler(CQdoasProjectConfigHandler *master,
+CProjectInstrumentalSubHandler::CProjectInstrumentalSubHandler(CConfigHandler *master,
 							       mediate_project_instrumental_t *instrumental) :
-  CConfigSubHandler(master),
+  CBasicConfigSubHandler(master),
   m_instrumental(instrumental)
 {
 }
@@ -1437,9 +1202,9 @@ bool CProjectInstrumentalSubHandler::helperLoadScia(const QXmlAttributes &atts, 
 //------------------------------------------------------------------------
 // handler for <slit> (child of project)
 
-CProjectSlitSubHandler::CProjectSlitSubHandler(CQdoasProjectConfigHandler *master,
+CProjectSlitSubHandler::CProjectSlitSubHandler(CConfigHandler *master,
 					       mediate_project_slit_t *slit) :
-  CConfigSubHandler(master),
+  CBasicConfigSubHandler(master),
   m_slit(slit)
 {
 }
@@ -1606,9 +1371,9 @@ bool CProjectSlitSubHandler::start(const QString &element, const QXmlAttributes 
 //------------------------------------------------------------------------
 // handler for <output> (child of project)
 
-CProjectOutputSubHandler::CProjectOutputSubHandler(CQdoasProjectConfigHandler *master,
+CProjectOutputSubHandler::CProjectOutputSubHandler(CConfigHandler *master,
 						   mediate_project_output_t *output) :
-  CConfigSubHandler(master),
+  CBasicConfigSubHandler(master),
   m_output(output)
 {
 }
@@ -1764,9 +1529,9 @@ bool CProjectOutputSubHandler::start(const QString &element, const QXmlAttribute
 //------------------------------------------------------------------------
 // handler for <nasa_ames> (child of project)
 
-CProjectNasaAmesSubHandler::CProjectNasaAmesSubHandler(CQdoasProjectConfigHandler *master,
+CProjectNasaAmesSubHandler::CProjectNasaAmesSubHandler(CConfigHandler *master,
 						       mediate_project_nasa_ames_t *nasaames) :
-  CConfigSubHandler(master),
+  CBasicConfigSubHandler(master),
   m_nasaames(nasaames)
 {
 }
