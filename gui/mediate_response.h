@@ -49,7 +49,7 @@ extern "C" {
 // mediateResponsePlotData
 //
 // provide the GUI with plots data. The data is contained in an array
-// of plot_data of length arrayLength. 
+// of plot_data of length arrayLength.
 
 void mediateResponsePlotData(int page, plot_data_t *plotDataArray, int arrayLength,
 			     const char *title, const char *xLabel,
@@ -92,6 +92,7 @@ void mediateResponseCellDataString(int page, int row, int column, const char *st
 // but both row and column index from 0.
 
 void mediateResponseCellInfo(int page, int row, int column, void *responseHandle, const char *label,const char *stringFormat, ...);
+void mediateResponseCellInfoNoLabel(int page,int row,int column,void *responseHandle,const char *stringFormat,...);
 
 //----------------------------------------------------------
 // Data window oriented interface

@@ -2750,140 +2750,140 @@ RC ThrdSetRefIndexes(ENGINE_CONTEXT *pEngineContext,FILE *specFp,FILE *namesFp,F
 // ThrdNewRef : Load new reference spectra
 // ---------------------------------------
 
-RC ThrdNewRef(ENGINE_CONTEXT *pEngineContext,FILE *specFp,FILE *namesFp,FILE *darkFp)
- {
-  // Declarations
-
-  RECORD_INFO *pRecord;                                                         // pointer to the record part of the engine context
-
-  double *Sref,*lembdaRef;
-
-  INDEX indexRefRecord,        // index of best record in file for reference selection
-        indexTabFeno,          // browse analysis windows list
-        indexWindow;
-
-  FENO *pTabFeno;
-  INT useKurucz,alignRef,useUsamp,saveFlag,newDimL;
-  double factTemp;
-  RC rc;
-
-  // Initializations
-
-  pRecord=&pEngineContext->recordInfo;
-  rc=ERROR_ID_NO;
-  saveFlag=(INT)pEngineContext->project.spectra.displayDataFlag;
-  useKurucz=alignRef=useUsamp=0;
-  Sref=lembdaRef=NULL;
-
-  // Select spectra records as reference
-
-  if ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_ASCII) && !pEngineContext->project.instrumental.ascii.szaSaveFlag)
-   rc=ERROR_SetLast("ASCII_Read",ERROR_TYPE_WARNING,ERROR_ID_FILE_AUTOMATIC);
-
-  else if (pRecord->localCalDay!=THRD_refInfo.recordInfo.localCalDay)
-//  else if (memcmp((char *)&pRecord->present_day,(char *)&THRD_refInfo.present_day,sizeof(SHORT_DATE))!=0)  // ref and spectrum are not of the same day
-   rc=ThrdSetRefIndexes(pEngineContext,specFp,namesFp,darkFp);
-
-  for (indexTabFeno=0;(indexTabFeno<NFeno) && (rc<THREAD_EVENT_STOP);indexTabFeno++)
-   {
-    pTabFeno=&TabFeno[indexTabFeno];
-
-    if ((pTabFeno->hidden!=1) &&                                                   // not the definition of the window for the wavelength calibration
-        (pTabFeno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_AUTOMATIC))  // automatic reference selection only
-     {
-      pTabFeno->displayRef=0;
-
-      if ((indexRefRecord=(pRecord->localTimeDec<=THRD_localNoon)?pTabFeno->indexRefMorning:pTabFeno->indexRefAfternoon)==ITEM_NONE)
-       {
-        memcpy((char *)&THRD_specInfo.recordInfo.present_day,(char *)&pRecord->present_day,sizeof(SHORT_DATE));
-        rc=ERROR_ID_FILE_RECORD;
-       }
-
-      // Read out reference from file
-
-      else if ((indexRefRecord!=pTabFeno->indexRef) &&
-              ((rc=ThrdReadFile(&THRD_refInfo,indexRefRecord,0,0,specFp,namesFp,darkFp,0))<THREAD_EVENT_STOP))
-       {
-        alignRef++;
-
-        if (!pTabFeno->useEtalon)
-         {
-          memcpy(pTabFeno->LembdaK,THRD_refInfo.buffers.lembda,sizeof(double)*NDET);
-          memcpy(pTabFeno->LembdaRef,THRD_refInfo.buffers.lembda,sizeof(double)*NDET);
-
-          for (indexWindow=0,newDimL=0;indexWindow<pTabFeno->svd.Z;indexWindow++)
-           {
-            pTabFeno->svd.Fenetre[indexWindow][0]=FNPixel(THRD_refInfo.buffers.lembda,pTabFeno->svd.LFenetre[indexWindow][0],pTabFeno->NDET,PIXEL_AFTER);
-            pTabFeno->svd.Fenetre[indexWindow][1]=FNPixel(THRD_refInfo.buffers.lembda,pTabFeno->svd.LFenetre[indexWindow][1],pTabFeno->NDET,PIXEL_BEFORE);
-
-            newDimL+=(pTabFeno->svd.Fenetre[indexWindow][1]-pTabFeno->svd.Fenetre[indexWindow][0]+1);
-           }
-
-          if (newDimL!=pTabFeno->svd.DimL)
-           {
-            ANALYSE_SvdFree("THRD_NewRef",&pTabFeno->svd);
-            pTabFeno->svd.DimL=newDimL;
-            ANALYSE_SvdLocalAlloc("THRD_NewRef",&pTabFeno->svd);
-           }
-
-          if (pTabFeno->useKurucz)
-           {
-            KURUCZ_Init(0);
-            useKurucz++;
-           }
-          else if (((rc=ANALYSE_XsInterpolation(pTabFeno,pTabFeno->LembdaRef))!=ERROR_ID_NO) ||
-                   ((rc=ANALYSE_XsConvolution(pTabFeno,pTabFeno->LembdaRef,&ANALYSIS_slit,pSlitOptions->slitFunction.slitType,&pSlitOptions->slitFunction.slitParam,&pSlitOptions->slitFunction.slitParam2,&pSlitOptions->slitFunction.slitParam3,&pSlitOptions->slitFunction.slitParam4))!=ERROR_ID_NO))
-           break;
-         }
-
-        if (pTabFeno->useUsamp)
-         useUsamp++;
-
-        memcpy(pTabFeno->Sref,THRD_refInfo.buffers.spectrum,sizeof(double)*NDET);
-
-        if ((rc=ANALYSE_NormalizeVector(pTabFeno->Sref-1,NDET,&factTemp,"ThrdNewRef "))!=ERROR_ID_NO)
-         break;
-
-        pTabFeno->indexRef=indexRefRecord;
-        pTabFeno->Zm=THRD_refInfo.recordInfo.Zm;
-        pTabFeno->Tm=THRD_refInfo.recordInfo.Tm;
-        pTabFeno->TimeDec=THRD_refInfo.recordInfo.TimeDec;
-        pTabFeno->displayRef=1;
-
-        memcpy(&pTabFeno->refDate,&THRD_refInfo.recordInfo.present_day,sizeof(SHORT_DATE));
-
-//        if (pTabFeno->useEtalon)
-//         rc=ANALYSE_AlignRef(pTabFeno,pTabFeno->Lembda,pTabFeno->SrefEtalon,pTabFeno->Sref,&pTabFeno->Shift,&pTabFeno->Stretch,&pTabFeno->Stretch2,saveFlag);
-       }
-      else if (indexRefRecord==pTabFeno->indexRef)
-       pTabFeno->displayRef=1;
-     }
-   }
-
-// QDOAS ???   #if defined (__WINDOAS_GUI_) && __WINDOAS_GUI_
-// QDOAS ???   ThrdWriteSpecInfo(pEngineContext);
-// QDOAS ???   #endif
-
-  // Reference alignment
-
-  if ((rc<THREAD_EVENT_STOP) && useKurucz)
-   rc=KURUCZ_Reference(THRD_refInfo.buffers.instrFunction,1,saveFlag,1);
-
-  if ((rc<THREAD_EVENT_STOP) && alignRef)
-    rc=ANALYSE_AlignReference(1,saveFlag);
-
-  if ((rc<THREAD_EVENT_STOP) && useUsamp)
-   rc=USAMP_BuildFromAnalysis(1,ITEM_NONE);
-
-  // Return
-
-  if (Sref!=NULL)
-   MEMORY_ReleaseDVector("ThrdNewRef ","Sref",Sref,0);
-  if (lembdaRef!=NULL)
-   MEMORY_ReleaseDVector("ThrdNewRef ","lembdaRef",lembdaRef,0);
-
-  return rc;
- }
+// QDOAS ??? RC THRD_NewRef(ENGINE_CONTEXT *pEngineContext)
+// QDOAS ???  {
+// QDOAS ???   // Declarations
+// QDOAS ???
+// QDOAS ???   RECORD_INFO *pRecord;                                                         // pointer to the record part of the engine context
+// QDOAS ???
+// QDOAS ???   double *Sref,*lembdaRef;
+// QDOAS ???
+// QDOAS ???   INDEX indexRefRecord,        // index of best record in file for reference selection
+// QDOAS ???         indexTabFeno,          // browse analysis windows list
+// QDOAS ???         indexWindow;
+// QDOAS ???
+// QDOAS ???   FENO *pTabFeno;
+// QDOAS ???   INT useKurucz,alignRef,useUsamp,saveFlag,newDimL;
+// QDOAS ???   double factTemp;
+// QDOAS ???   RC rc;
+// QDOAS ???
+// QDOAS ???   // Initializations
+// QDOAS ???
+// QDOAS ???   pRecord=&pEngineContext->recordInfo;
+// QDOAS ???   rc=ERROR_ID_NO;
+// QDOAS ???   saveFlag=(INT)pEngineContext->project.spectra.displayDataFlag;
+// QDOAS ???   useKurucz=alignRef=useUsamp=0;
+// QDOAS ???   Sref=lembdaRef=NULL;
+// QDOAS ???
+// QDOAS ???   // Select spectra records as reference
+// QDOAS ???
+// QDOAS ???   if ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_ASCII) && !pEngineContext->project.instrumental.ascii.szaSaveFlag)
+// QDOAS ???    rc=ERROR_SetLast("ASCII_Read",ERROR_TYPE_WARNING,ERROR_ID_FILE_AUTOMATIC);
+// QDOAS ???
+// QDOAS ???   else if (pRecord->localCalDay!=THRD_refInfo.recordInfo.localCalDay)
+// QDOAS ??? //  else if (memcmp((char *)&pRecord->present_day,(char *)&THRD_refInfo.present_day,sizeof(SHORT_DATE))!=0)  // ref and spectrum are not of the same day
+// QDOAS ???    rc=ThrdSetRefIndexes(pEngineContext,specFp,namesFp,darkFp);
+// QDOAS ???
+// QDOAS ???   for (indexTabFeno=0;(indexTabFeno<NFeno) && (rc<THREAD_EVENT_STOP);indexTabFeno++)
+// QDOAS ???    {
+// QDOAS ???     pTabFeno=&TabFeno[indexTabFeno];
+// QDOAS ???
+// QDOAS ???     if ((pTabFeno->hidden!=1) &&                                                   // not the definition of the window for the wavelength calibration
+// QDOAS ???         (pTabFeno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_AUTOMATIC))  // automatic reference selection only
+// QDOAS ???      {
+// QDOAS ???       pTabFeno->displayRef=0;
+// QDOAS ???
+// QDOAS ???       if ((indexRefRecord=(pRecord->localTimeDec<=THRD_localNoon)?pTabFeno->indexRefMorning:pTabFeno->indexRefAfternoon)==ITEM_NONE)
+// QDOAS ???        {
+// QDOAS ???         memcpy((char *)&THRD_specInfo.recordInfo.present_day,(char *)&pRecord->present_day,sizeof(SHORT_DATE));
+// QDOAS ???         rc=ERROR_ID_FILE_RECORD;
+// QDOAS ???        }
+// QDOAS ???
+// QDOAS ???       // Read out reference from file
+// QDOAS ???
+// QDOAS ???       else if ((indexRefRecord!=pTabFeno->indexRef) &&
+// QDOAS ???               ((rc=ThrdReadFile(&THRD_refInfo,indexRefRecord,0,0,specFp,namesFp,darkFp,0))<THREAD_EVENT_STOP))
+// QDOAS ???        {
+// QDOAS ???         alignRef++;
+// QDOAS ???
+// QDOAS ???         if (!pTabFeno->useEtalon)
+// QDOAS ???          {
+// QDOAS ???           memcpy(pTabFeno->LembdaK,THRD_refInfo.buffers.lembda,sizeof(double)*NDET);
+// QDOAS ???           memcpy(pTabFeno->LembdaRef,THRD_refInfo.buffers.lembda,sizeof(double)*NDET);
+// QDOAS ???
+// QDOAS ???           for (indexWindow=0,newDimL=0;indexWindow<pTabFeno->svd.Z;indexWindow++)
+// QDOAS ???            {
+// QDOAS ???             pTabFeno->svd.Fenetre[indexWindow][0]=FNPixel(THRD_refInfo.buffers.lembda,pTabFeno->svd.LFenetre[indexWindow][0],pTabFeno->NDET,PIXEL_AFTER);
+// QDOAS ???             pTabFeno->svd.Fenetre[indexWindow][1]=FNPixel(THRD_refInfo.buffers.lembda,pTabFeno->svd.LFenetre[indexWindow][1],pTabFeno->NDET,PIXEL_BEFORE);
+// QDOAS ???
+// QDOAS ???             newDimL+=(pTabFeno->svd.Fenetre[indexWindow][1]-pTabFeno->svd.Fenetre[indexWindow][0]+1);
+// QDOAS ???            }
+// QDOAS ???
+// QDOAS ???           if (newDimL!=pTabFeno->svd.DimL)
+// QDOAS ???            {
+// QDOAS ???             ANALYSE_SvdFree("THRD_NewRef",&pTabFeno->svd);
+// QDOAS ???             pTabFeno->svd.DimL=newDimL;
+// QDOAS ???             ANALYSE_SvdLocalAlloc("THRD_NewRef",&pTabFeno->svd);
+// QDOAS ???            }
+// QDOAS ???
+// QDOAS ???           if (pTabFeno->useKurucz)
+// QDOAS ???            {
+// QDOAS ???             KURUCZ_Init(0);
+// QDOAS ???             useKurucz++;
+// QDOAS ???            }
+// QDOAS ???           else if (((rc=ANALYSE_XsInterpolation(pTabFeno,pTabFeno->LembdaRef))!=ERROR_ID_NO) ||
+// QDOAS ???                    ((rc=ANALYSE_XsConvolution(pTabFeno,pTabFeno->LembdaRef,&ANALYSIS_slit,pSlitOptions->slitFunction.slitType,&pSlitOptions->slitFunction.slitParam,&pSlitOptions->slitFunction.slitParam2,&pSlitOptions->slitFunction.slitParam3,&pSlitOptions->slitFunction.slitParam4))!=ERROR_ID_NO))
+// QDOAS ???            break;
+// QDOAS ???          }
+// QDOAS ???
+// QDOAS ???         if (pTabFeno->useUsamp)
+// QDOAS ???          useUsamp++;
+// QDOAS ???
+// QDOAS ???         memcpy(pTabFeno->Sref,THRD_refInfo.buffers.spectrum,sizeof(double)*NDET);
+// QDOAS ???
+// QDOAS ???         if ((rc=ANALYSE_NormalizeVector(pTabFeno->Sref-1,NDET,&factTemp,"THRD_NewRef "))!=ERROR_ID_NO)
+// QDOAS ???          break;
+// QDOAS ???
+// QDOAS ???         pTabFeno->indexRef=indexRefRecord;
+// QDOAS ???         pTabFeno->Zm=THRD_refInfo.recordInfo.Zm;
+// QDOAS ???         pTabFeno->Tm=THRD_refInfo.recordInfo.Tm;
+// QDOAS ???         pTabFeno->TimeDec=THRD_refInfo.recordInfo.TimeDec;
+// QDOAS ???         pTabFeno->displayRef=1;
+// QDOAS ???
+// QDOAS ???         memcpy(&pTabFeno->refDate,&THRD_refInfo.recordInfo.present_day,sizeof(SHORT_DATE));
+// QDOAS ???
+// QDOAS ??? //        if (pTabFeno->useEtalon)
+// QDOAS ??? //         rc=ANALYSE_AlignRef(pTabFeno,pTabFeno->Lembda,pTabFeno->SrefEtalon,pTabFeno->Sref,&pTabFeno->Shift,&pTabFeno->Stretch,&pTabFeno->Stretch2,saveFlag);
+// QDOAS ???        }
+// QDOAS ???       else if (indexRefRecord==pTabFeno->indexRef)
+// QDOAS ???        pTabFeno->displayRef=1;
+// QDOAS ???      }
+// QDOAS ???    }
+// QDOAS ???
+// QDOAS ??? // QDOAS ???   #if defined (__WINDOAS_GUI_) && __WINDOAS_GUI_
+// QDOAS ??? // QDOAS ???   ThrdWriteSpecInfo(pEngineContext);
+// QDOAS ??? // QDOAS ???   #endif
+// QDOAS ???
+// QDOAS ???   // Reference alignment
+// QDOAS ???
+// QDOAS ???   if ((rc<THREAD_EVENT_STOP) && useKurucz)
+// QDOAS ???    rc=KURUCZ_Reference(THRD_refInfo.buffers.instrFunction,1,saveFlag,1);
+// QDOAS ???
+// QDOAS ???   if ((rc<THREAD_EVENT_STOP) && alignRef)
+// QDOAS ???     rc=ANALYSE_AlignReference(1,saveFlag);
+// QDOAS ???
+// QDOAS ???   if ((rc<THREAD_EVENT_STOP) && useUsamp)
+// QDOAS ???    rc=USAMP_BuildFromAnalysis(1,ITEM_NONE);
+// QDOAS ???
+// QDOAS ???   // Return
+// QDOAS ???
+// QDOAS ???   if (Sref!=NULL)
+// QDOAS ???    MEMORY_ReleaseDVector("THRD_NewRef ","Sref",Sref,0);
+// QDOAS ???   if (lembdaRef!=NULL)
+// QDOAS ???    MEMORY_ReleaseDVector("THRD_NewRef ","lembdaRef",lembdaRef,0);
+// QDOAS ???
+// QDOAS ???   return rc;
+// QDOAS ???  }
 
 // ===================
 // COMMANDS PROCESSING
@@ -3167,7 +3167,7 @@ RC ThrdNewRef(ENGINE_CONTEXT *pEngineContext,FILE *specFp,FILE *namesFp,FILE *da
 // QDOAS ???                 (specInfo.project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_SCIA_PDS) &&
 // QDOAS ???                 (specInfo.project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_GDP_BIN) &&
 // QDOAS ???                 (specInfo.project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_GOME2) &&
-// QDOAS ???                ((rc=ThrdNewRef(&specInfo,specFp,namesFp,darkFp))>=THREAD_EVENT_STOP))
+// QDOAS ???                ((rc=THRD_NewRef(&specInfo,specFp,namesFp,darkFp))>=THREAD_EVENT_STOP))
 // QDOAS ???
 // QDOAS ???              THRD_delay=0;
 // QDOAS ???

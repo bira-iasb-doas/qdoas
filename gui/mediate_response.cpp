@@ -128,6 +128,23 @@ void mediateResponseCellInfo(int page,
  	resp->addCell(page,row,column+1,QVariant(QString(stringValue)));
  }
 
+void mediateResponseCellInfoNoLabel(int page,
+				   int row,
+				   int column,
+				   void *responseHandle,
+				   const char *stringFormat,...)
+ {
+ 	va_list argList;
+ 	char stringValue[1024];
+
+  va_start(argList,stringFormat);
+  vsprintf(stringValue,stringFormat,argList);
+  va_end(argList);
+
+ 	CEngineResponseSpecificRecord *resp = static_cast<CEngineResponseSpecificRecord*>(responseHandle);
+ 	resp->addCell(page,row,column,QVariant(QString(stringValue)));
+ }
+
 void mediateResponseLabelPage(int page,
 			      const char *title,
 			      const char *tag,

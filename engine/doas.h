@@ -51,6 +51,7 @@
 // ==================
 
 #include "windoas.h"
+#include "mediate_general.h"
 
 #define PI          (double) 3.14159265358979323846
 #define PI2         (double) 6.28318530717958647692
@@ -778,6 +779,7 @@ RC               THRD_SpectrumCorrection(ENGINE_CONTEXT *pEngineContext,double *
 // QDOAS ??? RC               THRD_Alloc(void);
 // QDOAS ??? void             THRD_Free(void);
 RC               THRD_CopySpecInfo(ENGINE_CONTEXT *pSpecInfoTarget,ENGINE_CONTEXT *pSpecInfoSource);
+RC               THRD_NewRef(ENGINE_CONTEXT *pEngineContext);
 // QDOAS ???
 
 // =====================
@@ -807,6 +809,9 @@ typedef struct _AnalyseNonLinearParameters
  	int storeError;
  }
 ANALYSE_NON_LINEAR_PARAMETERS;
+
+typedef struct anlyswin_shift_stretch ANALYSIS_SHIFT_STRETCH;
+typedef struct anlyswin_gap ANALYSIS_GAP;
 
 // -------------------
 // GLOBAL DECLARATIONS
@@ -871,11 +876,14 @@ RC   ANALYSE_LoadFilter(PRJCT_FILTER *pFilter);
 RC   ANALYSE_SetInit(ENGINE_CONTEXT *pEngineContext);
 RC   ANALYSE_AlignReference(INT refFlag,INT saveFlag);
 RC   ANALYSE_AlignRef(FENO *pFeno,double *lembda,double *ref1,double *ref2,double *pShift,double *pStretch,double *pStretch2,int dispFlag);
-RC   ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext);
+RC   ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle);
 
-RC   ANALYSE_LoadRef(FENO *pTabFeno,ENGINE_CONTEXT *pEngineContext);
+void ANALYSE_SetAnalysisType(void);
+RC   ANALYSE_LoadRef(ENGINE_CONTEXT *pEngineContext);
 RC   ANALYSE_LoadLinear(ANALYSE_LINEAR_PARAMETERS *linearList,INT nLinear);
 RC   ANALYSE_LoadNonLinear(ANALYSE_NON_LINEAR_PARAMETERS *nonLinearList,INT nNonLinear,double *lembda);
+RC   ANALYSE_LoadShiftStretch(ANALYSIS_SHIFT_STRETCH *shiftStretchList,INT nShiftStretch);
+RC   ANALYSE_LoadGaps(ANALYSIS_GAP *gapList,INT nGaps,double *lembda,double lembdaMin,double lembdaMax);
 
 RC   ANALYSE_Alloc(void);
 void ANALYSE_Free(void);

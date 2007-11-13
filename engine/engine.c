@@ -436,7 +436,7 @@ RC EngineSetFile(ENGINE_CONTEXT *pEngineContext,const char *fileName)
 
   // Return
 
-  return pEngineContext->recordNumber;
+  return rc;
  }
 
 // -----------------------------------------------------------------------------
@@ -451,7 +451,7 @@ RC EngineSetFile(ENGINE_CONTEXT *pEngineContext,const char *fileName)
 //                                  reference spectrum to search for
 // -----------------------------------------------------------------------------
 
-void EngineReadFile(ENGINE_CONTEXT *pEngineContext,int indexRecord,INT dateFlag,INT localCalDay)
+RC EngineReadFile(ENGINE_CONTEXT *pEngineContext,int indexRecord,INT dateFlag,INT localCalDay)
  {
  	// Declarations
 
@@ -609,6 +609,8 @@ void EngineReadFile(ENGINE_CONTEXT *pEngineContext,int indexRecord,INT dateFlag,
      else
       pEngineContext->buffers.spectrum[i]/=pEngineContext->buffers.instrFunction[i];
    }
+
+  return rc;
  }
 
 // -----------------------------------------------------------------------------
@@ -645,3 +647,204 @@ RC EngineRequestBeginBrowseSpectra(ENGINE_CONTEXT *pEngineContext,const char *sp
 
   return rc;
  }
+
+// -----------------------------------------------------------------------------
+// FUNCTION      EngineSetRefIndexes
+// -----------------------------------------------------------------------------
+// PURPOSE       Browse spectra and search for a reference spectrum
+//
+// INPUT         pEngineContext     pointer to the engine context
+//
+// RETURN        0 in case of success; the code of the error otherwise
+// -----------------------------------------------------------------------------
+/*
+RC EngineSetRefIndexes(ENGINE_CONTEXT *pEngineContext)
+ {
+  // Declarations
+
+  ENGINE_CONTEXT      engineCopy;                                               // backup of the engine context
+  INDEX              *indexList,                                                // indexes of records
+                      indexTabFeno,                                             // browse analysis windows list
+                      indexRecord,                                              // browse spectra records in file
+                      indexZmMin;                                               // index of record with SZA minimum
+
+  PROJECT            *pProject;                                                 // pointer to the project part of the engine
+  PRJCT_SPECTRA      *pSpectra;                                                 // pointer to spectra part of the project
+  PRJCT_INSTRUMENTAL *pInstr;                                                   // pointer to the instrumental part of the project
+  FENO               *pTabFeno;                                                 // pointer to analysis windows
+  double             *ZmList,*TimeDec,                                          // zenith angles and decimal time of records
+                      ZmMin,ZmMax,                                              // extrema zenith angles found in file
+                      deltaZmMorning,                                           // select record in the morning with SZA the closest by SZA base
+                      deltaZmAfternoon;                                         // select record in the afternoon with SZA the closest by SZA base
+  INT                 NRecord;                                                  // number of hold record
+  INT                 localCalDay;
+  RC                  rc;                                                       // return code
+
+  // Initializations
+
+  indexList=NULL;
+  indexZmMin=ITEM_NONE;
+  ZmList=TimeDec=NULL;
+  NRecord=0;
+  ZmMin=360.;
+  ZmMax=0.;
+
+  // Make a backup of the spectra part of the engine context
+
+  memcpy(&engineCopy,pEngineContext,sizeof(ENGINE_CONTEXT));
+
+  pProject=&engineCopy.project;
+  pSpectra=&engineCopy.project.spectra;
+  pInstr=&engineCopy.project.instrumental;
+
+  localCalDay=pEngineContext->recordInfo.localCalDay;
+
+  if ((pInstr->readOutFormat==PRJCT_INSTR_FORMAT_LOGGER) ||
+      (pInstr->readOutFormat==PRJCT_INSTR_FORMAT_PDAEGG))
+
+   pInstr->user=PRJCT_INSTR_IASB_TYPE_ZENITHAL;
+
+  if (pEngineContext->recordNumber>0)
+   {
+    // Memory allocation
+
+    if (((indexList=(INDEX *)MEMORY_AllocBuffer("ThrdSetRefIndexes ","",pEngineContext->recordNumber,sizeof(INDEX),0,MEMORY_TYPE_INDEX))==NULL) ||
+        ((ZmList=(double *)MEMORY_AllocDVector("ThrdSetRefIndexes ","",0,pEngineContext->recordNumber-1))==NULL) ||
+        ((TimeDec=(double *)MEMORY_AllocDVector("ThrdSetRefIndexes ","",0,pEngineContext->recordNumber-1))==NULL))
+
+     rc=ERROR_ID_ALLOC;
+
+    else
+     {
+      // Browse records in file
+
+      for (indexRecord=THRD_lastRefRecord+1;indexRecord<=pEngineContext->recordNumber;indexRecord++)
+       if (!(rc=EngineReadFile(&THRD_refInfo,indexRecord,1,localCalDay)) &&
+           (pEngineContext->recordInfo.Zm>(double)0.))
+        {
+         if (rc==ITEM_NONE)
+          rc=0;
+
+         // Data on record
+
+         indexList[NRecord]=indexRecord;                             // index of record
+         ZmList[NRecord]=pEngineContext->recordInfo.Zm;                 // zenith angle
+         TimeDec[NRecord]=pEngineContext->recordInfo.localTimeDec;      // decimal time for determining when the measurement has occured
+
+         // Minimum and maximum zenith angle
+
+         if (pEngineContext->recordInfo.Zm<ZmMin)
+          {
+           ZmMin=pEngineContext->recordInfo.Zm;
+           indexZmMin=NRecord;
+          }
+
+         if (pEngineContext->recordInfo.Zm>ZmMax)
+          ZmMax=pEngineContext->recordInfo.Zm;
+
+         NRecord++;
+        }
+       else if (rc==ERROR_ID_FILE_END)
+        {
+         rc=ERROR_ID_NO;
+         break;
+        }
+
+      if (rc==ERROR_ID_FILE_RECORD)
+       rc=ERROR_ID_NO;
+
+      // Browse analysis windows
+
+      for (indexTabFeno=0;(indexTabFeno<NFeno) && (rc<THREAD_EVENT_STOP);indexTabFeno++)
+       {
+        pTabFeno=&TabFeno[indexTabFeno];
+
+        if (!pTabFeno->hidden && (pTabFeno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_AUTOMATIC))
+         {
+          // Indexes reinitialization
+
+          pTabFeno->indexRefMorning=pTabFeno->indexRefAfternoon=pTabFeno->indexRef=ITEM_NONE;
+
+          // No reference spectrum found in SZA range
+
+          if (ZmMax<pTabFeno->refSZA-pTabFeno->refSZADelta)
+           rc=ERROR_SetLast("ThrdSetRefIndexes",ERROR_TYPE_WARNING,ERROR_ID_NO_REF,"all the day",pEngineContext->fileInfo.fileName);
+
+          // Select record with SZA minimum
+
+          else if (ZmMin>=pTabFeno->refSZA+pTabFeno->refSZADelta)
+           pTabFeno->indexRefMorning=pTabFeno->indexRefAfternoon=indexZmMin;
+
+          // Select a record for the morning and the afternoon
+
+          else
+           {
+            deltaZmMorning=deltaZmAfternoon=360.;
+
+            for (indexRecord=0;indexRecord<NRecord;indexRecord++)
+             {
+              if ((ZmList[indexRecord]>=pTabFeno->refSZA-pTabFeno->refSZADelta) &&
+                  (ZmList[indexRecord]<=pTabFeno->refSZA+pTabFeno->refSZADelta))
+               {
+                if ((TimeDec[indexRecord]<=THRD_localNoon) && (fabs(pTabFeno->refSZA-ZmList[indexRecord])<deltaZmMorning))
+                 {
+                  pTabFeno->indexRefMorning=indexRecord;
+                  deltaZmMorning=fabs(pTabFeno->refSZA-ZmList[indexRecord]);
+                 }
+
+                if ((TimeDec[indexRecord]>THRD_localNoon) && (fabs(pTabFeno->refSZA-ZmList[indexRecord])<deltaZmAfternoon))
+                 {
+                  pTabFeno->indexRefAfternoon=indexRecord;
+                  deltaZmAfternoon=fabs(pTabFeno->refSZA-ZmList[indexRecord]);
+                 }
+               }
+             }
+
+            // No record found for the morning OR the afternoon
+
+            if ((pTabFeno->indexRefMorning==ITEM_NONE) && (pTabFeno->indexRefAfternoon==ITEM_NONE))
+             rc=ERROR_SetLast("ThrdSetRefIndexes",ERROR_TYPE_WARNING,ERROR_ID_NO_REF,"all the day",pEngineContext->fileInfo.fileName);
+            else if (pInstr->readOutFormat!=PRJCT_INSTR_FORMAT_ASCII)
+             {
+              if (pTabFeno->indexRefMorning==ITEM_NONE)
+               {
+               	rc=ERROR_SetLast("ThrdSetRefIndexes",ERROR_TYPE_WARNING,ERROR_ID_NO_REF,"the morning",pEngineContext->fileInfo.fileName);
+                pTabFeno->indexRefMorning=pTabFeno->indexRefAfternoon;
+               }
+              else if (pTabFeno->indexRefAfternoon==ITEM_NONE)
+               {
+               	rc=ERROR_SetLast("ThrdSetRefIndexes",ERROR_TYPE_WARNING,ERROR_ID_NO_REF,"the afternoon",pEngineContext->fileInfo.fileName);
+                pTabFeno->indexRefAfternoon=pTabFeno->indexRefMorning;
+               }
+             }
+           }
+
+          pTabFeno->oldZmRefMorning=pTabFeno->ZmRefMorning;
+          pTabFeno->oldZmRefAfternoon=pTabFeno->ZmRefAfternoon;
+          pTabFeno->ZmRefMorning=(pTabFeno->indexRefMorning!=ITEM_NONE)?ZmList[pTabFeno->indexRefMorning]:(double)-1.;
+          pTabFeno->ZmRefAfternoon=(pTabFeno->indexRefAfternoon!=ITEM_NONE)?ZmList[pTabFeno->indexRefAfternoon]:(double)-1.;
+          pTabFeno->indexRefMorning=(pTabFeno->indexRefMorning!=ITEM_NONE)?indexList[pTabFeno->indexRefMorning]:ITEM_NONE;
+          pTabFeno->indexRefAfternoon=(pTabFeno->indexRefAfternoon!=ITEM_NONE)?indexList[pTabFeno->indexRefAfternoon]:ITEM_NONE;
+         }
+       }
+     }
+   }
+
+  // Restore the backup of the spectra part of the engine context
+
+  memcpy(pEngineContext,&engineCopy,sizeof(ENGINE_CONTEXT));
+
+  // Release buffers
+
+  if (indexList!=NULL)
+   MEMORY_ReleaseBuffer("ThrdSetRefIndexes ","indexList",indexList);
+  if (ZmList!=NULL)
+   MEMORY_ReleaseDVector("ThrdSetRefIndexes ","ZmList",ZmList,0);
+  if (TimeDec!=NULL)
+   MEMORY_ReleaseDVector("ThrdSetRefIndexes ","TimeDec",TimeDec,0);
+
+  // Return
+
+  return rc;
+ }
+*/
