@@ -585,6 +585,13 @@ enum _prjctInstrFormat
   PRJCT_INSTR_FORMAT_MAX
  };
 
+enum _prjctInstrType
+  {
+    PRJCT_INSTR_TYPE_GROUND_BASED,
+    PRJCT_INSTR_TYPE_SATELLITE,
+    PRJCT_INSTR_TYPE_MAX
+  };
+
 enum _ulbCurveTypes
  {
   PRJCT_INSTR_ULB_TYPE_MANUAL,
