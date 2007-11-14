@@ -26,4 +26,4 @@ win32 {
   QWT_LIB        = qwt
 
   CODE_GENERATION = release # Override because debug is broken
- }
+}
