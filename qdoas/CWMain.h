@@ -36,7 +36,7 @@ class CWProjectTree;
 class CWSiteTree;
 class CWUserSymbolTree;
 class CWActiveContext;
-class CEngineController;
+class CQdoasEngineController;
 class CWTableRegion;
 class CWSplitter;
 class CConfigStateMonitor;
@@ -90,7 +90,7 @@ Q_OBJECT
 
   QStatusBar *m_statusBar;
 
-  CEngineController *m_controller;
+  CQdoasEngineController *m_controller;
   
   CConfigStateMonitor *m_stateMonitor;
 

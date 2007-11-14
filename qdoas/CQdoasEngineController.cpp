@@ -20,14 +20,15 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include <QTextStream>
 
-#include "CEngineController.h"
+#include "CQdoasEngineController.h"
 #include "CEngineRequest.h"
 #include "CEngineResponse.h"
 
 #include "debugutil.h"
 
-CEngineController::CEngineController(QObject *parent) :
+CQdoasEngineController::CQdoasEngineController(QObject *parent) :
   QObject(parent),
+  CEngineController(),
   m_state(Idle),
   m_currentProject(NULL),
   m_currentRecord(-1),
@@ -41,20 +42,20 @@ CEngineController::CEngineController(QObject *parent) :
   m_thread->setRunState(true);
 }
 
-CEngineController::~CEngineController()
+CQdoasEngineController::~CQdoasEngineController()
 {
 }
 
-void CEngineController::notifyNumberOfFiles(int nFiles)
+void CQdoasEngineController::notifyNumberOfFiles(int nFiles)
 {
   
 }
 
-void CEngineController::notifyCurrentFile(int fileNumber)
+void CQdoasEngineController::notifyCurrentFile(int fileNumber)
 {
 }
 
-void CEngineController::notifyReadyToNavigateRecords(const QString &filename, int numberOfRecords)
+void CQdoasEngineController::notifyReadyToNavigateRecords(const QString &filename, int numberOfRecords)
 {
   // successfully started accessing a file
 
@@ -74,21 +75,21 @@ void CEngineController::notifyReadyToNavigateRecords(const QString &filename, in
   emit signalSessionRunning(isSessionRunning());
 }
 
-void CEngineController::notifyCurrentRecord(int recordNumber)
+void CQdoasEngineController::notifyCurrentRecord(int recordNumber)
 {
   m_currentRecord = recordNumber;
   
   emit signalCurrentRecordChanged(m_currentRecord);
 }
 
-void CEngineController::notifyEndOfRecords(void)
+void CQdoasEngineController::notifyEndOfRecords(void)
 {
   m_currentRecord = m_numberOfRecords + 1;
   
   emit signalCurrentRecordChanged(m_currentRecord);
 }
 
-void CEngineController::notifyPlotData(QList<SPlotData> &plotDataList, QList<STitleTag> &titleList)
+void CQdoasEngineController::notifyPlotData(QList<SPlotData> &plotDataList, QList<STitleTag> &titleList)
 {
   // the controller takes the data in plotDataList and titleList
   // and organises the data-sets into a set of pages. Each page is
@@ -142,7 +143,7 @@ void CEngineController::notifyPlotData(QList<SPlotData> &plotDataList, QList<STi
   emit signalPlotPages(pageList);
 }
 
-void CEngineController::notifyTableData(QList<SCell> &cellList)
+void CQdoasEngineController::notifyTableData(QList<SCell> &cellList)
 {
   // the controller takes the cells and organises the data into
   // pages. Each page is then (safely) dispatched.
@@ -184,7 +185,7 @@ void CEngineController::notifyTableData(QList<SCell> &cellList)
   emit signalTablePages(pageList);
 }
 
-void CEngineController::notifyErrorMessages(int highestErrorLevel, const QList<CEngineError> &errorMessages)
+void CQdoasEngineController::notifyErrorMessages(int highestErrorLevel, const QList<CEngineError> &errorMessages)
 {
   // format each into a message text and put in a single string for posting ...
   QString msg;
@@ -213,7 +214,7 @@ void CEngineController::notifyErrorMessages(int highestErrorLevel, const QList<C
   emit signalErrorMessages(highestErrorLevel, msg);
 }
 
-void CEngineController::notifyEndAccessFile(void)
+void CQdoasEngineController::notifyEndAccessFile(void)
 {
   if (m_state == Stopping) {
     m_state = Idle;
@@ -222,7 +223,7 @@ void CEngineController::notifyEndAccessFile(void)
   }
 }
 
-bool CEngineController::event(QEvent *e)
+bool CQdoasEngineController::event(QEvent *e)
 {
   if (e->type() == cEngineResponseType) {
 
@@ -248,7 +249,7 @@ bool CEngineController::event(QEvent *e)
   return QObject::event(e);
 }
 
-void CEngineController::slotNextFile()
+void CQdoasEngineController::slotNextFile()
 {
   if (m_state != Running) return;
 
@@ -302,7 +303,7 @@ void CEngineController::slotNextFile()
   m_thread->request(req);
 }
 
-void CEngineController::slotGotoFile(int number)
+void CQdoasEngineController::slotGotoFile(int number)
 {
   if (m_state != Running) return;
 
@@ -349,17 +350,17 @@ void CEngineController::slotGotoFile(int number)
 }
 
 
-void CEngineController::slotFirstRecord()
+void CQdoasEngineController::slotFirstRecord()
 {
   slotGotoRecord(1);
 }
 
-void CEngineController::slotPreviousRecord()
+void CQdoasEngineController::slotPreviousRecord()
 {
   slotGotoRecord(m_currentRecord - 1);
 }
 
-void CEngineController::slotNextRecord()
+void CQdoasEngineController::slotNextRecord()
 {
   if (m_state != Running) return;
 
@@ -379,12 +380,12 @@ void CEngineController::slotNextRecord()
   }
 }
 
-void CEngineController::slotLastRecord()
+void CQdoasEngineController::slotLastRecord()
 {
   slotGotoRecord(m_numberOfRecords);
 }
 
-void CEngineController::slotGotoRecord(int recordNumber)
+void CQdoasEngineController::slotGotoRecord(int recordNumber)
 {
   if (m_state != Running) return;
 
@@ -404,7 +405,7 @@ void CEngineController::slotGotoRecord(int recordNumber)
   }
 }
 
-void CEngineController::slotStep()
+void CQdoasEngineController::slotStep()
 {
   if (m_state != Running) return;
 
@@ -466,7 +467,7 @@ void CEngineController::slotStep()
   }
 }
 
-void CEngineController::slotStartSession(const RefCountPtr<CSession> &session)
+void CQdoasEngineController::slotStartSession(const RefCountPtr<CSession> &session)
 {
   // the controller must be idle to start a session ...
   if (m_state != Idle) return;
@@ -524,7 +525,7 @@ void CEngineController::slotStartSession(const RefCountPtr<CSession> &session)
   m_thread->request(req);
 }
 
-void CEngineController::slotStopSession()
+void CQdoasEngineController::slotStopSession()
 {
   if (m_state != Running) return;
 

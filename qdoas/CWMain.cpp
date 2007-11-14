@@ -38,7 +38,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "CWTableRegion.h"
 #include "CWAboutDialog.h"
 
-#include "CEngineController.h"
+#include "CQdoasEngineController.h"
 #include "CNavigationPanel.h"
 #include "CQdoasConfigHandler.h"
 #include "CWorkSpace.h"
@@ -126,7 +126,7 @@ CWMain::CWMain(QWidget *parent) :
   //------------------------------
   // Controller
 
-  m_controller = new CEngineController(this);
+  m_controller = new CQdoasEngineController(this);
 
   // connections to the controller
   connect(m_projTree, SIGNAL(signalStartSession(const RefCountPtr<CSession>&)),

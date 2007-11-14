@@ -24,13 +24,13 @@ contains ( $$HELP_SYSTEM, assistant ) {
 INCLUDEPATH  += $$QWT_INC_PATH
 
 unix {
-  INCLUDEPATH  += ../engine
+  INCLUDEPATH  += ../mediator ../common ../engine
   LIBS         += -L$$QWT_LIB_PATH -l$$QWT_LIB -lm
   QMAKE_LFLAGS += -Wl,-rpath=$$QWT_LIB_PATH
 }
 
 win32 {
-  INCLUDEPATH  += ..\engine
+  INCLUDEPATH  += ..\mediator ..\common ..\engine
 
   contains( $$QWT_LINKAGE, qwtstatic ) {
     LIBS        += -L$$QWT_LIB_PATH -l$$QWT_LIB
@@ -45,16 +45,22 @@ win32 {
 #----------------------------------------------
 # GUI Source files
 #----------------------------------------------
-SOURCES += CEngineController.cpp
+
+SOURCES += ../common/CPreferences.cpp
+SOURCES += ../common/CPlotDataSet.cpp
+SOURCES += ../common/CPlotPageData.cpp
+SOURCES += ../common/CTablePageData.cpp
+SOURCES += ../common/CEngineError.cpp
+SOURCES += ../common/CEngineController.cpp
+
+SOURCES += ../common/CWAboutDialog.cpp
+
+SOURCES += CQdoasEngineController.cpp
 SOURCES += CEngineRequest.cpp
 SOURCES += CEngineResponse.cpp
-SOURCES += CEngineError.cpp
 SOURCES += CEngineThread.cpp
 SOURCES += CNavigationPanel.cpp
 SOURCES += CPlotProperties.cpp
-SOURCES += CPlotDataSet.cpp
-SOURCES += CPlotPageData.cpp
-SOURCES += CTablePageData.cpp
 SOURCES += CMultiPageTableModel.cpp
 SOURCES += CSession.cpp
 SOURCES += CValidator.cpp
@@ -101,9 +107,7 @@ SOURCES += CWPlotPropertiesEditor.cpp
 SOURCES += CWSplitter.cpp
 SOURCES += CWSymbolEditor.cpp
 SOURCES += CWUserSymbolTree.cpp
-SOURCES += CWAboutDialog.cpp
 SOURCES += CConfigStateMonitor.cpp
-SOURCES += CPreferences.cpp
 SOURCES += CHelpSystem.cpp
 SOURCES += CHelpSystemImpl.cpp
 SOURCES += qdoas.cpp
@@ -111,24 +115,31 @@ SOURCES += qdoas.cpp
 #----------------------------------------------
 # Mediator Source files
 #----------------------------------------------
-SOURCES += mediate_response.cpp
-SOURCES += mediate.c
-SOURCES += mediate_project.c
-SOURCES += mediate_analysis_window.c
+SOURCES += ../mediator/mediate_response.cpp
+SOURCES += ../mediator/mediate.c
+SOURCES += ../mediator/mediate_project.c
+SOURCES += ../mediator/mediate_analysis_window.c
 
 #----------------------------------------------
 # GUI Header files
 #----------------------------------------------
-HEADERS += CEngineController.h
+HEADERS += ../common/debugutil.h
+HEADERS += ../common/RefCountPtr.h
+HEADERS += ../common/CPreferences.h
+HEADERS += ../common/CPlotDataSet.h
+HEADERS += ../common/CPlotPageData.h
+HEADERS += ../common/CTablePageData.h
+HEADERS += ../common/CEngineError.h
+HEADERS += ../common/CEngineController.h
+
+HEADERS += ../common/CWAboutDialog.h
+
+HEADERS += CQdoasEngineController.h
 HEADERS += CEngineRequest.h
 HEADERS += CEngineResponse.h
-HEADERS += CENgineError.h
 HEADERS += CEngineThread.h
 HEADERS += CNavigationPanel.h
 HEADERS += CPlotProperties.h
-HEADERS += CPlotDataSet.h
-HEADERS += CPlotPageData.h
-HEADERS += CTablePageData.h
 HEADERS += CMultiPageTableModel.h
 HEADERS += CSession.h
 HEADERS += CValidator.h
@@ -175,25 +186,21 @@ HEADERS += CWPlotPropertiesEditor.h
 HEADERS += CWSplitter.h
 HEADERS += CWSymbolEditor.h
 HEADERS += CWUserSymbolTree.h
-HEADERS += CWAboutDialog.h
 HEADERS += CConfigStateMonitor.h
-HEADERS += debugutil.h
-HEADERS += RefCountPtr.h
-HEADERS += CPreferences.h
 HEADERS += CHelpSystem.h
 HEADERS += CHelpSystemImpl.h
 
 #----------------------------------------------
 # Mediator Header files
 #----------------------------------------------
-HEADERS += mediate.h
-HEADERS += mediate_types.h
-HEADERS += mediate_limits.h
-HEADERS += mediate_general.h
-HEADERS += mediate_response.h
-HEADERS += mediate_request.h
-HEADERS += mediate_project.h
-HEADERS += mediate_analysis_window.h
+HEADERS += ../mediator/mediate.h
+HEADERS += ../mediator/mediate_types.h
+HEADERS += ../mediator/mediate_limits.h
+HEADERS += ../mediator/mediate_general.h
+HEADERS += ../mediator/mediate_response.h
+HEADERS += ../mediator/mediate_request.h
+HEADERS += ../mediator/mediate_project.h
+HEADERS += ../mediator/mediate_analysis_window.h
 
 #----------------------------------------------
 # Reasource files

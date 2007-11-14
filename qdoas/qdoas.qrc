@@ -1,45 +1,45 @@
 <!DOCTYPE RCC>
 <RCC version="1.0">
 <qresource>
-    <file>icons/logo.png</file>
-    <file>images/splash.png</file>
-    <file>images/about_logo.png</file>
+    <file>../resources/icons/logo.png</file>
+    <file>../resources/images/splash.png</file>
+    <file>../resources/images/about_logo.png</file>
 
-    <file>icons/project_directory_16.png</file>
-    <file>icons/project_file_16.png</file>
-    <file>icons/project_folder_16.png</file>
-    <file>icons/project_window_16.png</file>
+    <file>../resources/icons/project_directory_16.png</file>
+    <file>../resources/icons/project_file_16.png</file>
+    <file>../resources/icons/project_folder_16.png</file>
+    <file>../resources/icons/project_window_16.png</file>
 
-    <file>icons/file_open_16.png</file>
-    <file>icons/file_new_16.png</file>
-    <file>icons/file_save_16.png</file>
-    <file>icons/file_saveas_16.png</file>
-    <file>icons/file_exit_16.png</file>
+    <file>../resources/icons/file_open_16.png</file>
+    <file>../resources/icons/file_new_16.png</file>
+    <file>../resources/icons/file_save_16.png</file>
+    <file>../resources/icons/file_saveas_16.png</file>
+    <file>../resources/icons/file_exit_16.png</file>
 
-    <file>icons/edit_cut_16.png</file>
-    <file>icons/edit_copy_16.png</file>
-    <file>icons/edit_paste_16.png</file>
-    <file>icons/edit_delete_16.png</file>
+    <file>../resources/icons/edit_cut_16.png</file>
+    <file>../resources/icons/edit_copy_16.png</file>
+    <file>../resources/icons/edit_paste_16.png</file>
+    <file>../resources/icons/edit_delete_16.png</file>
 
-    <file>icons/nav_first_22.png</file>
-    <file>icons/nav_prev_22.png</file>
-    <file>icons/nav_next_22.png</file>
-    <file>icons/nav_last_22.png</file>
-    <file>icons/nav_stop_22.png</file>
-    <file>icons/nav_play_22.png</file>
-    <file>icons/nav_pause_22.png</file>
-    <file>icons/nav_timer_16.png</file>
+    <file>../resources/icons/nav_first_22.png</file>
+    <file>../resources/icons/nav_prev_22.png</file>
+    <file>../resources/icons/nav_next_22.png</file>
+    <file>../resources/icons/nav_last_22.png</file>
+    <file>../resources/icons/nav_stop_22.png</file>
+    <file>../resources/icons/nav_play_22.png</file>
+    <file>../resources/icons/nav_pause_22.png</file>
+    <file>../resources/icons/nav_timer_16.png</file>
 
-    <file>icons/plot_prop_22.png</file>
-    <file>icons/plot_print_22.png</file>
+    <file>../resources/icons/plot_prop_22.png</file>
+    <file>../resources/icons/plot_print_22.png</file>
 
-    <file>icons/to_arrow.png</file>
-    <file>icons/from_arrow.png</file>
+    <file>../resources/icons/to_arrow.png</file>
+    <file>../resources/icons/from_arrow.png</file>
 
-    <file>icons/help_back_32.png</file>
-    <file>icons/help_forward_32.png</file>
-    <file>icons/help_home_32.png</file>
-    <file>icons/help_exit_32.png</file>
+    <file>../resources/icons/help_back_32.png</file>
+    <file>../resources/icons/help_forward_32.png</file>
+    <file>../resources/icons/help_home_32.png</file>
+    <file>../resources/icons/help_exit_32.png</file>
 
 </qresource>
 </RCC>

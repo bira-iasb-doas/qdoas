@@ -17,57 +17,47 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#ifndef _CENGINECONTROLLER_H_GUARD
-#define _CENGINECONTROLLER_H_GUARD
+#ifndef _CQDOASENGINECONTROLLER_H_GUARD
+#define _CQDOASENGINECONTROLLER_H_GUARD
 
 #include <QObject>
-#include <QList>
 #include <QFileInfo>
 #include <QStringList>
 
+#include "CEngineController.h"
 #include "CEngineThread.h"
-#include "CEngineError.h"
 
-#include "CPlotDataSet.h"
-#include "CPlotPageData.h"
-#include "CTablePageData.h"
 #include "CSession.h"
 #include "RefCountPtr.h"
 
 #include "mediate_project.h"
 
-// CEngineController is a mediator. It is the interface for the GUI
-// to control the activities of the engine, and to access any data
-// provided by the engine.
-//
-//
 
-class CEngineController : public QObject
+class CQdoasEngineController : public QObject, public CEngineController
 {
 Q_OBJECT
  private:
   enum eState { Idle, Pending, Running, Stopping };
 
  public:
-  CEngineController(QObject *parent = 0);
-  virtual ~CEngineController();
+  CQdoasEngineController(QObject *parent = 0);
+  virtual ~CQdoasEngineController();
 
   // query interface
   bool isSessionRunning(void) const;
 
   // notify interface is for use by response classes
+  virtual void notifyNumberOfFiles(int nFiles);
+  virtual void notifyCurrentFile(int fileNumber);
+  virtual void notifyReadyToNavigateRecords(const QString &filename, int numberOfRecords);
+  virtual void notifyCurrentRecord(int recordNumber);
+  virtual void notifyEndOfRecords(void);
+  virtual void notifyGotoRecord(int recordNumber);
+  virtual void notifyPlotData(QList<SPlotData> &plotDataList, QList<STitleTag> &titleList);
+  virtual void notifyTableData(QList<SCell> &cellList);
 
-  void notifyNumberOfFiles(int nFiles);
-  void notifyCurrentFile(int fileNumber);
-  void notifyReadyToNavigateRecords(const QString &filename, int numberOfRecords);
-  void notifyCurrentRecord(int recordNumber);
-  void notifyEndOfRecords(void);
-  void notifyGotoRecord(int recordNumber);
-  void notifyPlotData(QList<SPlotData> &plotDataList, QList<STitleTag> &titleList);
-  void notifyTableData(QList<SCell> &cellList);
-
-  void notifyErrorMessages(int highestErrorLevel, const QList<CEngineError> &errorMessages);
-  void notifyEndAccessFile(void);
+  virtual void notifyErrorMessages(int highestErrorLevel, const QList<CEngineError> &errorMessages);
+  virtual void notifyEndAccessFile(void);
 
  protected:
   virtual bool event(QEvent *e);
