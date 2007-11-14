@@ -33,6 +33,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QAction>
 
 #include "CWConvTabGeneral.h"
+#include "CWConvTabSlit.h"
 
 class CConvEngineController;
 class CHelpSystem;
@@ -69,6 +70,7 @@ Q_OBJECT
   QTabWidget *m_pageTab;
 
   CWConvTabGeneral *m_generalTab;
+  CWConvTabSlit *m_slitTab;
 
   QString m_configFile;
   

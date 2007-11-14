@@ -18,37 +18,43 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
 
-#ifndef _CWPROJECTTABSLIT_H_GUARD
-#define _CWPROJECTTABSLIT_H_GUARD
+#ifndef _CWCONVTABSLIT_H_GUARD
+#define _CWCONVTABSLIT_H_GUARD
 
 #include <QFrame>
-#include <QComboBox>
-#include <QStackedWidget>
 #include <QLineEdit>
-#include <QCheckBox>
-#include <QSpinBox>
-#include <QGridLayout>
+#include <QComboBox>
+#include <QGroupBox>
 
-#include "mediate_project.h"
+#include "mediate_convolution.h"
 
 #include "CWSlitEditors.h"
 
-//--------------------------------------------------------------------------
-class CWProjectTabSlit : public QFrame
+class CWSlitSelector;
+
+class CWConvTabSlit : public QFrame
 {
 Q_OBJECT
  public:
-  CWProjectTabSlit(const mediate_project_slit_t *instr, QWidget *parent = 0);
-  virtual ~CWProjectTabSlit();
+  CWConvTabSlit(const mediate_conv_slit_t *conv, const mediate_conv_slit_t *deconv, QWidget *parent = 0);
+  virtual ~CWConvTabSlit();
 
-  void apply(mediate_project_slit_t *slit) const;
-
- public slots:
-  void slotSolarRefFileBrowse();
+  void apply(mediate_conv_slit_t *conv, mediate_conv_slit_t *deconv) const;
 
  private:
-  QLineEdit *m_solarRefFileEdit;
-  QCheckBox *m_fwhmCorrectionCheck;
+  CWSlitSelector *m_convEdit, *m_deconvEdit;
+};
+
+
+class CWSlitSelector : public QGroupBox
+{
+ public:
+  CWSlitSelector(const mediate_conv_slit_t *slit, const QString &title, QWidget *parent = 0);
+  virtual ~CWSlitSelector();
+
+  void apply(mediate_conv_slit_t *slit) const;
+
+ private:
   QComboBox *m_slitCombo;
   QStackedWidget *m_slitStack;
   // widgets for the configuration of each slit
@@ -66,4 +72,3 @@ Q_OBJECT
 };
 
 #endif
-

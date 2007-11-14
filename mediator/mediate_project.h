@@ -405,44 +405,6 @@ extern "C" {
   /****************************************************/
   /* Project Slit */
 
-  struct slit_file {
-    char filename[FILENAME_BUFFER_LENGTH];
-  };
-
-  struct slit_gaussian {
-    double fwhm;
-  };
-
-  struct slit_lorentz {
-    double width;
-    int degree;
-  };
-
-  struct slit_voigt {
-    double fwhmL, fwhmR;
-    double glRatioL, glRatioR;
-  };
-
-  struct slit_error {
-    double fwhm;
-    double width;
-  };
-
-  struct slit_apod {
-    double resolution;
-    double phase;
-  };
-
-  struct slit_lorentz_file {
-    char filename[FILENAME_BUFFER_LENGTH];
-    int degree;
-  };
-
-  struct slit_error_file {
-    char filename[FILENAME_BUFFER_LENGTH];
-    double width;
-  };
-
   typedef struct mediate_project_slit
   {
     char solarRefFile[FILENAME_BUFFER_LENGTH];

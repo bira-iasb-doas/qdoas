@@ -4,7 +4,7 @@
 
 TEMPLATE = subdirs
 
-SUBDIRS = qdoas
+SUBDIRS = qdoas convolution
 
 CONFIG += ordered
 

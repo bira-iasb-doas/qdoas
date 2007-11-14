@@ -21,45 +21,49 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QGridLayout>
+#include <QGroupBox>
 #include <QLabel>
 #include <QPushButton>
-#include <QFontMetrics>
 #include <QFileDialog>
 
-#include "CWProjectTabSlit.h"
+#include "CWConvTabSlit.h"
+#include "CValidator.h"
 
 #include "constants.h"
 
-#include "debugutil.h"
 
-//--------------------------------------------------------
-
-static const int cSuggestedColumnZeroWidth = 120; // try and keep editor layout
-static const int cSuggestedColumnTwoWidth  = 100; // consistent
-static const int cStandardEditWidth         = 70;
-
-//--------------------------------------------------------
-
-CWProjectTabSlit::CWProjectTabSlit(const mediate_project_slit_t *slit, QWidget *parent) :
+CWConvTabSlit::CWConvTabSlit(const mediate_conv_slit_t *conv, const mediate_conv_slit_t *deconv, QWidget *parent) :
   QFrame(parent)
 {
   QVBoxLayout *mainLayout = new QVBoxLayout(this);
+  mainLayout->setMargin(25);
+  mainLayout->setSpacing(15);
 
-  mainLayout->addSpacing(25);
+  m_convEdit = new CWSlitSelector(conv, "Convolution", this);
+  mainLayout->addWidget(m_convEdit);
 
-  QGridLayout *topLayout = new QGridLayout;
+  m_deconvEdit = new CWSlitSelector(deconv, "Deconvolution", this);
+  mainLayout->addWidget(m_deconvEdit);
+}
 
-  // solar reference
-  topLayout->addWidget(new QLabel("Solar Ref. File", this), 0, 0);
-  m_solarRefFileEdit = new QLineEdit(this);
-  m_solarRefFileEdit->setMaxLength(sizeof(slit->solarRefFile)-1);
-  topLayout->addWidget(m_solarRefFileEdit, 0, 1);
-  QPushButton *refBrowseBtn = new QPushButton("Browse", this);
-  topLayout->addWidget(refBrowseBtn, 0, 2);
+CWConvTabSlit::~CWConvTabSlit()
+{
+}
 
-  // fhwm correction checkbox
-  m_fwhmCorrectionCheck = new QCheckBox("Apply FWHM correction", this);
-  topLayout->addWidget(m_fwhmCorrectionCheck, 1, 1, 1, 2);
+void CWConvTabSlit::apply(mediate_conv_slit_t *conv, mediate_conv_slit_t *deconv) const
+{
+  m_convEdit->apply(conv);
+  m_deconvEdit->apply(deconv);
+}
+
+
+
+
+CWSlitSelector::CWSlitSelector(const mediate_conv_slit_t *slit, const QString &title, QWidget *parent) :
+  QGroupBox(title, parent)
+{
+
+  QGridLayout *mainLayout = new QGridLayout(this);
 
   // slit type
   m_slitCombo = new QComboBox(this);
@@ -115,42 +119,32 @@ CWProjectTabSlit::CWProjectTabSlit(const mediate_project_slit_t *slit, QWidget *
   m_slitCombo->addItem("Error Function, wavelength + Temp. dependent", QVariant(SLIT_TYPE_ERF_T_FILE));
 
 
-  topLayout->addWidget(new QLabel("Slit Function Type", this), 2, 0);
-  topLayout->addWidget(m_slitCombo, 2, 1, 1, 2);
+  mainLayout->addWidget(new QLabel("Slit Function Type", this), 0, 0);
+  mainLayout->addWidget(m_slitCombo, 0, 1);
 
-  topLayout->setColumnMinimumWidth(0, cSuggestedColumnZeroWidth);
-  topLayout->setColumnMinimumWidth(2, cSuggestedColumnTwoWidth);
-  topLayout->setColumnStretch(1, 1);
+  mainLayout->addWidget(m_slitStack, 1, 0, 1, 2);
+  mainLayout->setRowStretch(2, 1);
 
-  mainLayout->addLayout(topLayout);
-  mainLayout->addWidget(m_slitStack);
-  mainLayout->addStretch(1);
+  // initialize set the current slit - stack will follow
+  int index = m_slitCombo->findData(QVariant(slit->slitType));
+  if (index != -1) {
+    m_slitCombo->setCurrentIndex(index);
+    m_slitStack->setCurrentIndex(index);
+  }
 
   // connections
-  connect(refBrowseBtn, SIGNAL(clicked()), this, SLOT(slotSolarRefFileBrowse()));
   connect(m_slitCombo, SIGNAL(currentIndexChanged(int)), m_slitStack, SLOT(setCurrentIndex(int)));
+}
 
-  // initialize
-  m_solarRefFileEdit->setText(slit->solarRefFile);
-  m_fwhmCorrectionCheck->setCheckState(slit->applyFwhmCorrection ? Qt::Checked : Qt::Unchecked);
-  // set the current slit - stack will follow
-  int index = m_slitCombo->findData(QVariant(slit->slitType));
-  if (index != -1)
-    m_slitCombo->setCurrentIndex(index);
-
- }
-
-CWProjectTabSlit::~CWProjectTabSlit()
+CWSlitSelector::~CWSlitSelector()
 {
 }
 
-void CWProjectTabSlit::apply(mediate_project_slit_t *slit) const
+void CWSlitSelector::apply(mediate_conv_slit_t *slit) const
 {
   // set values for ALL slits ... and the selected slit type
 
   slit->slitType = m_slitCombo->itemData(m_slitCombo->currentIndex()).toInt();
-  slit->applyFwhmCorrection = m_fwhmCorrectionCheck->isChecked() ? 1 : 0;
-  strcpy(slit->solarRefFile, m_solarRefFileEdit->text().toAscii().data());
   
   m_fileEdit->apply(&(slit->file));
   m_gaussianEdit->apply(&(slit->gaussian));
@@ -165,13 +159,3 @@ void CWProjectTabSlit::apply(mediate_project_slit_t *slit) const
   m_gaussianTempFileEdit->apply(&(slit->gaussiantempfile));
   m_errorTempFileEdit->apply(&(slit->errortempfile));
 }
-
-void CWProjectTabSlit::slotSolarRefFileBrowse()
-{
-  QString file = QFileDialog::getOpenFileName(this, "Select Solar Reference File", QString(),
-					      "Kurucz File(*.ktz);;All Files (*)");
-
-  if (!file.isEmpty())
-    m_solarRefFileEdit->setText(file);
-}
-   

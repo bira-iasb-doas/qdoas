@@ -134,6 +134,9 @@ CWMain::CWMain(QWidget *parent) :
   m_generalTab = new CWConvTabGeneral(&(m_properties.general));
   m_pageTab->addTab(m_generalTab, "General");
 
+  m_slitTab = new CWConvTabSlit(&(m_properties.conslit), &(m_properties.decslit));
+  m_pageTab->addTab(m_slitTab, "Slit");
+
   mainLayout->addWidget(m_pageTab, 1);
 
   // buttons

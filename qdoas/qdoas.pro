@@ -59,6 +59,7 @@ SOURCES += ../common/CConfigHandler.cpp
 SOURCES += ../common/CWAboutDialog.cpp
 SOURCES += ../common/CHelpSystem.cpp
 SOURCES += ../common/CHelpSystemImpl.cpp
+SOURCES += ../common/CWSlitEditors.cpp
 
 SOURCES += CQdoasEngineController.cpp
 SOURCES += CEngineRequest.cpp
@@ -138,6 +139,7 @@ HEADERS += ../common/CConfigHandler.h
 HEADERS += ../common/CWAboutDialog.h
 HEADERS += ../common/CHelpSystem.h
 HEADERS += ../common/CHelpSystemImpl.h
+HEADERS += ../common/CWSlitEditors.h
 
 HEADERS += CQdoasEngineController.h
 HEADERS += CEngineRequest.h

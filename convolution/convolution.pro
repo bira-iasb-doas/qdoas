@@ -56,9 +56,11 @@ SOURCES += ../common/CEngineController.cpp
 SOURCES += ../common/CWAboutDialog.cpp
 SOURCES += ../common/CHelpSystem.cpp
 SOURCES += ../common/CHelpSystemImpl.cpp
+SOURCES += ../common/CWSlitEditors.cpp
 
 SOURCES += CWMain.cpp
 SOURCES += CWConvTabGeneral.cpp
+SOURCES += CWConvTabSlit.cpp
 SOURCES += CConvEngineController.cpp
 SOURCES += convolution.cpp
 
@@ -77,9 +79,11 @@ HEADERS += ../common/CEngineController.h
 HEADERS += ../common/CWAboutDialog.h
 HEADERS += ../common/CHelpSystem.h
 HEADERS += ../common/CHelpSystemImpl.h
+HEADERS += ../common/CWSlitEditors.h
 
 HEADERS += CWMain.h
 HEADERS += CWConvTabGeneral.h
+HEADERS += CWConvTabSlit.h
 HEADERS += CConvEngineController.h
 
 #----------------------------------------------

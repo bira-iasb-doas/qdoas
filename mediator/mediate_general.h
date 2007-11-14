@@ -56,6 +56,45 @@ extern "C" {
   
   // components of both mediate_analysis_window and mediate_project structs
   
+  struct slit_file {
+    char filename[FILENAME_BUFFER_LENGTH];
+  };
+
+  struct slit_gaussian {
+    double fwhm;
+  };
+
+  struct slit_lorentz {
+    double width;
+    int degree;
+  };
+
+  struct slit_voigt {
+    double fwhmL, fwhmR;
+    double glRatioL, glRatioR;
+  };
+
+  struct slit_error {
+    double fwhm;
+    double width;
+  };
+
+  struct slit_apod {
+    double resolution;
+    double phase;
+  };
+
+  struct slit_lorentz_file {
+    char filename[FILENAME_BUFFER_LENGTH];
+    int degree;
+  };
+
+  struct slit_error_file {
+    char filename[FILENAME_BUFFER_LENGTH];
+    double width;
+  };
+
+
   struct anlyswin_cross_section
   {
     char symbol[SYMBOL_NAME_BUFFER_LENGTH];
