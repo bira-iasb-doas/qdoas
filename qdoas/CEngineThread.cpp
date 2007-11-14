@@ -23,13 +23,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QCoreApplication>
 
 #include "CEngineThread.h"
-#include "CEngineController.h"
+#include "CQdoasEngineController.h"
 #include "CEngineRequest.h"
 #include "CEngineResponse.h"
 
 #include "mediate.h"
 
-CEngineThread::CEngineThread(CEngineController *parent) :
+CEngineThread::CEngineThread(CQdoasEngineController *parent) :
   QThread(parent),
   m_activeRequest(NULL),
   m_terminated(false)

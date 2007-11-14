@@ -205,7 +205,7 @@ HEADERS += ../mediator/mediate_analysis_window.h
 #----------------------------------------------
 # Reasource files
 #----------------------------------------------
-RESOURCES = qdoas.qrc
+RESOURCES = ../resources/qdoas.qrc
 
 
 #----------------------------------------------

@@ -5,6 +5,10 @@ CEngineController::CEngineController()
 {
 }
 
+CEngineController::~CEngineController()
+{
+}
+
 void CEngineController::notifyNumberOfFiles(int nFiles)
 {
 }
@@ -22,10 +26,6 @@ void CEngineController::notifyCurrentRecord(int recordNumber)
 }
 
 void CEngineController::notifyEndOfRecords(void)
-{
-}
-
-void CEngineController::notifyGotoRecord(int recordNumber)
 {
 }
 

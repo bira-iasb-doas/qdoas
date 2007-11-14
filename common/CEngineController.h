@@ -45,7 +45,6 @@ class CEngineController
   virtual void notifyReadyToNavigateRecords(const QString &filename, int numberOfRecords);
   virtual void notifyCurrentRecord(int recordNumber);
   virtual void notifyEndOfRecords(void);
-  virtual void notifyGotoRecord(int recordNumber);
   virtual void notifyPlotData(QList<SPlotData> &plotDataList, QList<STitleTag> &titleList);
   virtual void notifyTableData(QList<SCell> &cellList);
 

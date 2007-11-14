@@ -32,12 +32,12 @@ const QEvent::Type cEngineResponseType = QEvent::Type(QEvent::User + 127);
 
 class CEngineRequest;
 class CEngineResponse;
-class CEngineController;
+class CQdoasEngineController;
 
 class CEngineThread : public QThread
 {
  public:
-  CEngineThread(CEngineController *parent);
+  CEngineThread(CQdoasEngineController *parent);
   virtual ~CEngineThread();
 
   // thread-safe interface for the controller

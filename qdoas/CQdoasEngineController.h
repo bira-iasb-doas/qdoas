@@ -52,7 +52,6 @@ Q_OBJECT
   virtual void notifyReadyToNavigateRecords(const QString &filename, int numberOfRecords);
   virtual void notifyCurrentRecord(int recordNumber);
   virtual void notifyEndOfRecords(void);
-  virtual void notifyGotoRecord(int recordNumber);
   virtual void notifyPlotData(QList<SPlotData> &plotDataList, QList<STitleTag> &titleList);
   virtual void notifyTableData(QList<SCell> &cellList);
 
@@ -105,6 +104,6 @@ Q_OBJECT
   CSessionIterator m_currentIt;
 };
 
-inline bool CEngineController::isSessionRunning(void) const { return (m_state == Running); }
+inline bool CQdoasEngineController::isSessionRunning(void) const { return (m_state == Running); }
 
 #endif
