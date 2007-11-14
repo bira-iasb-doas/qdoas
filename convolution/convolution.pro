@@ -3,13 +3,12 @@
 #----------------------------------------------
 
 TEMPLATE = app
-TARGET   = qdoas
+TARGET   = convolution
 
 include( ../config.pri )
 
 CONFIG += qt thread $$CODE_GENERATION
 QT = core gui xml
-
 
 # Help system to use...
 contains ( $$HELP_SYSTEM, assistant ) {
@@ -18,7 +17,7 @@ contains ( $$HELP_SYSTEM, assistant ) {
 }
 
 #----------------------------------------------
-# Platform dependency ... based on ../config.pri
+# Platform dependency ...
 #----------------------------------------------
 
 INCLUDEPATH  += $$QWT_INC_PATH
@@ -45,168 +44,66 @@ win32 {
 #----------------------------------------------
 # GUI Source files
 #----------------------------------------------
-
-SOURCES += ../common/CValidator.cpp
 SOURCES += ../common/CPreferences.cpp
+SOURCES += ../common/CValidator.cpp
 SOURCES += ../common/CPlotDataSet.cpp
 SOURCES += ../common/CPlotPageData.cpp
 SOURCES += ../common/CTablePageData.cpp
 SOURCES += ../common/CEngineError.cpp
-SOURCES += ../common/CEngineController.cpp
 SOURCES += ../common/CEngineResponse.cpp
-SOURCES += ../common/CConfigHandler.cpp
+SOURCES += ../common/CEngineController.cpp
 
 SOURCES += ../common/CWAboutDialog.cpp
 SOURCES += ../common/CHelpSystem.cpp
 SOURCES += ../common/CHelpSystemImpl.cpp
 
-SOURCES += CQdoasEngineController.cpp
-SOURCES += CEngineRequest.cpp
-SOURCES += CEngineThread.cpp
-SOURCES += CNavigationPanel.cpp
-SOURCES += CPlotProperties.cpp
-SOURCES += CMultiPageTableModel.cpp
-SOURCES += CSession.cpp
-SOURCES += CQdoasConfigHandler.cpp
-SOURCES += CPathSubHandler.cpp
-SOURCES += CProjectConfigSubHandlers.cpp
-SOURCES += CProjectConfigAnalysisWindowSubHandlers.cpp
-SOURCES += CProjectConfigTreeNode.cpp
-SOURCES += CProjectConfigItem.cpp
-SOURCES += CConfigurationWriter.cpp
-SOURCES += CWActiveContext.cpp
-SOURCES += CDoasTable.cpp
-SOURCES += CWAnalysisWindowDoasTables.cpp
-SOURCES += CWEditor.cpp
 SOURCES += CWMain.cpp
-SOURCES += CWorkSpace.cpp
-SOURCES += CWPlotPage.cpp
-SOURCES += CWPlotRegion.cpp
-SOURCES += CWTableRegion.cpp
-SOURCES += CWSiteListCombo.cpp
-SOURCES += CWProjectAnalysisWindowNameEditor.cpp
-SOURCES += CWProjectDirectoryEditor.cpp
-SOURCES += CWProjectFolderNameEditor.cpp
-SOURCES += CWProjectNameEditor.cpp
-SOURCES += CWProjectPropertyEditor.cpp
-SOURCES += CWProjectTabDisplay.cpp
-SOURCES += CWProjectTabSelection.cpp
-SOURCES += CWProjectTabAnalysis.cpp
-SOURCES += CWProjectTabFiltering.cpp
-SOURCES += CWProjectTabCalibration.cpp
-SOURCES += CWProjectTabUndersampling.cpp
-SOURCES += CWProjectTabInstrumental.cpp
-SOURCES += CWProjectTabSlit.cpp
-SOURCES += CWProjectTabOutput.cpp
-SOURCES += CWProjectTabNasaAmes.cpp
-SOURCES += CWOutputSelector.cpp
-SOURCES += CWProjectTree.cpp
-SOURCES += CProjectTreeClipboard.cpp
-SOURCES += CWAnalysisWindowPropertyEditor.cpp
-SOURCES += CWSiteEditor.cpp
-SOURCES += CWSiteTree.cpp
-SOURCES += CWPlotPropertiesEditor.cpp
-SOURCES += CWSplitter.cpp
-SOURCES += CWSymbolEditor.cpp
-SOURCES += CWUserSymbolTree.cpp
-SOURCES += CConfigStateMonitor.cpp
-SOURCES += qdoas.cpp
-
-#----------------------------------------------
-# Mediator Source files
-#----------------------------------------------
-SOURCES += ../mediator/mediate_response.cpp
-SOURCES += ../mediator/mediate.c
-SOURCES += ../mediator/mediate_project.c
-SOURCES += ../mediator/mediate_analysis_window.c
+SOURCES += CWConvTabGeneral.cpp
+SOURCES += CConvEngineController.cpp
+SOURCES += convolution.cpp
 
 #----------------------------------------------
 # GUI Header files
 #----------------------------------------------
-HEADERS += ../common/debugutil.h
-HEADERS += ../common/RefCountPtr.h
-HEADERS += ../common/CValidator.h
 HEADERS += ../common/CPreferences.h
+HEADERS += ../common/CValidator.h
 HEADERS += ../common/CPlotDataSet.h
 HEADERS += ../common/CPlotPageData.h
 HEADERS += ../common/CTablePageData.h
 HEADERS += ../common/CEngineError.h
-HEADERS += ../common/CEngineController.h
 HEADERS += ../common/CEngineResponse.h
-HEADERS += ../common/CConfigHandler.h
+HEADERS += ../common/CEngineController.h
 
 HEADERS += ../common/CWAboutDialog.h
 HEADERS += ../common/CHelpSystem.h
 HEADERS += ../common/CHelpSystemImpl.h
 
-HEADERS += CQdoasEngineController.h
-HEADERS += CEngineRequest.h
-HEADERS += CEngineThread.h
-HEADERS += CNavigationPanel.h
-HEADERS += CPlotProperties.h
-HEADERS += CMultiPageTableModel.h
-HEADERS += CSession.h
-HEADERS += CQdoasConfigHandler.h
-HEADERS += CPathSubHandler.h
-HEADERS += CProjectConfigSubHandlers.h
-HEADERS += CProjectConfigAnalysisWindowSubHandlers.h
-HEADERS += CProjectConfigTreeNode.h
-HEADERS += CProjectConfigItem.h
-HEADERS += CConfigurationWriter.h
-HEADERS += CWActiveContext.h
-HEADERS += CDoasTable.h
-HEADERS += CWAnalysisWindowDoasTables.h
-HEADERS += CWEditor.h
 HEADERS += CWMain.h
-HEADERS += CWorkSpace.h
-HEADERS += CWPlotPage.h
-HEADERS += CWPlotRegion.h
-HEADERS += CWTableRegion.h
-HEADERS += CWSiteListCombo.h
-HEADERS += CWProjectAnalysisWindowNameEditor.h
-HEADERS += CWProjectDirectoryEditor.h
-HEADERS += CWProjectFolderNameEditor.h
-HEADERS += CWProjectNameEditor.h
-HEADERS += CWProjectPropertyEditor.h
-HEADERS += CWProjectTabAnalysis.h
-HEADERS += CWProjectTabDisplay.h
-HEADERS += CWProjectTabSelection.h
-HEADERS += CWProjectTabFiltering.h
-HEADERS += CWProjectTabCalibration.h
-HEADERS += CWProjectTabUndersampling.h
-HEADERS += CWProjectTabInstrumental.h
-HEADERS += CWProjectTabSlit.h
-HEADERS += CWProjectTabOutput.h
-HEADERS += CWProjectTabNasaAmes.h
-HEADERS += CWOutputSelector.h
-HEADERS += CWProjectTree.h
-HEADERS += CProjectTreeClipboard.h
-HEADERS += CWAnalysisWindowPropertyEditor.h
-HEADERS += CWSiteEditor.h
-HEADERS += CWSiteTree.h
-HEADERS += CWPlotPropertiesEditor.h
-HEADERS += CWSplitter.h
-HEADERS += CWSymbolEditor.h
-HEADERS += CWUserSymbolTree.h
-HEADERS += CConfigStateMonitor.h
+HEADERS += CWConvTabGeneral.h
+HEADERS += CConvEngineController.h
+
+#----------------------------------------------
+# Mediator Source files
+#----------------------------------------------
+SOURCES += ../mediator/mediate_convolution.c
+SOURCES += ../mediator/mediate.c
+SOURCES += ../mediator/mediate_response.cpp
 
 #----------------------------------------------
 # Mediator Header files
 #----------------------------------------------
-HEADERS += ../mediator/mediate.h
-HEADERS += ../mediator/mediate_types.h
 HEADERS += ../mediator/mediate_limits.h
 HEADERS += ../mediator/mediate_general.h
+HEADERS += ../mediator/mediate_convolution.h
 HEADERS += ../mediator/mediate_response.h
 HEADERS += ../mediator/mediate_request.h
 HEADERS += ../mediator/mediate_project.h
 HEADERS += ../mediator/mediate_analysis_window.h
 
 #----------------------------------------------
-# Reasource files
+# Resource files
 #----------------------------------------------
-RESOURCES = ../resources/qdoas.qrc
-
+RESOURCES = ../resources/convolution.qrc
 
 #----------------------------------------------
 # Engine Source files

@@ -44,7 +44,7 @@ void CEngineResponse::addErrorMessage(const QString &tag, const QString &msg, in
 bool CEngineResponse::processErrors(CEngineController *engineController)
 {
   if (hasErrors()) {
-    // send the set of messages to the GUI
+    // send the set of messages to the controller 
     engineController->notifyErrorMessages(m_highestErrorLevel, m_errorMessages);
 
     return hasFatalError();

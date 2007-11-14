@@ -270,7 +270,7 @@ extern "C" {
   };
 
   struct instrumental_saoz {
-  	 int spectralRegion;
+    int spectralRegion;
     int spectralType;
     char calibrationFile[FILENAME_BUFFER_LENGTH];
     char instrFunctionFile[FILENAME_BUFFER_LENGTH];
