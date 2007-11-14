@@ -108,7 +108,7 @@ CWPlot::CWPlot(const RefCountConstPtr<CPlotDataSet> &dataSet,
   setFocusPolicy(Qt::ClickFocus); // TODO - prevents keyPressEvent
 
   setTitle(m_dataSet->plotTitle());
-  setAxisTitle(QwtPlot::xBottom, m_dataSet->xAxisLabel());
+  //setAxisTitle(QwtPlot::xBottom, m_dataSet->xAxisLabel());
   setAxisTitle(QwtPlot::yLeft, m_dataSet->yAxisLabel());
 
     // curves ...
@@ -116,13 +116,8 @@ CWPlot::CWPlot(const RefCountConstPtr<CPlotDataSet> &dataSet,
   int n = m_dataSet->count();
   int i = 0;
 
-  // add a legend if more than 1 curve plotted ...
-  if (n > 1) {
-    insertLegend(new QwtLegend, QwtPlot::BottomLegend);
-  }
-
   while (i < n) {
-    QwtPlotCurve *curve = new QwtPlotCurve(m_dataSet->legend(i));
+    QwtPlotCurve *curve = new QwtPlotCurve();
 
     curve->setData(m_dataSet->curve(i));
 
