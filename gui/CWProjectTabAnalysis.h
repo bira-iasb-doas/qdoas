@@ -36,7 +36,7 @@ class CWProjectTabAnalysis : public QFrame
   void apply(mediate_project_analysis_t *properties) const;
 
  private:
-  QComboBox *m_methodCombo, *m_fitCombo, *m_unitCombo, *m_interpCombo;
+  QComboBox *m_methodCombo, *m_fitCombo, *m_interpCombo;
   QSpinBox *m_interpolationSecuritySpinBox;
   QLineEdit *m_convergenceCriterionEdit;
 };

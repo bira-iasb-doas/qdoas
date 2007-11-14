@@ -34,60 +34,62 @@ CWProjectTabAnalysis::CWProjectTabAnalysis(const mediate_project_analysis_t *pro
   int index;
   QString tmpStr;
 
-  QVBoxLayout *mainLayout = new QVBoxLayout(this);
+  QGridLayout *mainLayout = new QGridLayout(this);
+  mainLayout->setSpacing(15);
 
-  mainLayout->addStretch(1);
   
-  QGridLayout *gridLayout = new QGridLayout;
-  gridLayout->setSpacing(15);
+  int row = 0;
+  mainLayout->setRowStretch(row, 1);
+  ++row;
 
-  // row 0
-  gridLayout->addWidget(new QLabel("Analysis Method", this), 0 , 0);
+  // Method
+  mainLayout->addWidget(new QLabel("Analysis Method", this), row , 1);
   m_methodCombo = new QComboBox(this);
   m_methodCombo->addItem("Optical density fitting",
 			 QVariant(PRJCT_ANLYS_METHOD_SVD));
   m_methodCombo->addItem("Intensity fitting (Marquardt-Levenberg+SVD)",
 			 QVariant(PRJCT_ANLYS_METHOD_SVDMARQUARDT));
-  gridLayout->addWidget(m_methodCombo, 0, 1);
-  
-  // row 1
-  gridLayout->addWidget(new QLabel("Least Squares Fit", this), 1, 0);
+  mainLayout->addWidget(m_methodCombo, row, 2);
+  ++row;
+
+  // Fit
+  mainLayout->addWidget(new QLabel("Least Squares Fit", this), row, 1);
   m_fitCombo = new QComboBox(this);
   m_fitCombo->addItem("No Weighting", QVariant(PRJCT_ANLYS_FIT_WEIGHTING_NONE));
   m_fitCombo->addItem("Instrumental", QVariant(PRJCT_ANLYS_FIT_WEIGHTING_INSTRUMENTAL));
   //m_fitCombo->addItem("Statistical", QVariant(PRJCT_ANLYS_FIT_WEIGHTING_STATISTICAL));
-  gridLayout->addWidget(m_fitCombo, 1, 1);
+  mainLayout->addWidget(m_fitCombo, row, 2);
+  ++row;
 
-  // row 2
-  gridLayout->addWidget(new QLabel("Shift and Stretch Units", this), 2, 0);
-  m_unitCombo = new QComboBox(this);
-  m_unitCombo->addItem("Pixel", QVariant(PRJCT_ANLYS_UNITS_PIXELS));
-  m_unitCombo->addItem("nm", QVariant(PRJCT_ANLYS_UNITS_NANOMETERS));
-  gridLayout->addWidget(m_unitCombo, 2, 1);
+  // Units - only PRJCT_ANLYS_UNITS_NANOMETERS
 
-  // row 3
-  gridLayout->addWidget(new QLabel("Interpolation", this), 3, 0);
+  // Interpolation
+  mainLayout->addWidget(new QLabel("Interpolation", this), row, 1);
   m_interpCombo = new QComboBox(this);
   m_interpCombo->addItem("Linear", QVariant(PRJCT_ANLYS_INTERPOL_LINEAR));
   m_interpCombo->addItem("Spline", QVariant(PRJCT_ANLYS_INTERPOL_SPLINE));
-  gridLayout->addWidget(m_interpCombo, 3, 1);
+  mainLayout->addWidget(m_interpCombo, row, 2);
+  ++row;
 
-  // row 4
-  gridLayout->addWidget(new QLabel("Interpolation security gap", this), 4, 0);
+  // gap
+  mainLayout->addWidget(new QLabel("Interpolation security gap", this), row, 1);
   m_interpolationSecuritySpinBox = new QSpinBox(this);
   m_interpolationSecuritySpinBox->setRange(1, 50);
   m_interpolationSecuritySpinBox->setFixedWidth(75);
-  gridLayout->addWidget(m_interpolationSecuritySpinBox, 4, 1);
+  mainLayout->addWidget(m_interpolationSecuritySpinBox, row, 2);
+  ++row;
 
-  // row 5
-  gridLayout->addWidget(new QLabel("Convergence criterion", this), 5, 0);
+  // convergence
+  mainLayout->addWidget(new QLabel("Convergence criterion", this), row, 1);
   m_convergenceCriterionEdit = new QLineEdit(this);
   m_convergenceCriterionEdit->setValidator(new CDoubleExpFmtValidator(1.0e-30, 1.0, 4, m_convergenceCriterionEdit));
   m_convergenceCriterionEdit->setFixedWidth(75);
-  gridLayout->addWidget(m_convergenceCriterionEdit, 5, 1);
+  mainLayout->addWidget(m_convergenceCriterionEdit, row, 2);
+  ++row;
 
-  mainLayout->addLayout(gridLayout);
-  mainLayout->addStretch(4);
+  mainLayout->setRowStretch(row, 4);
+  mainLayout->setColumnStretch(0, 1);
+  mainLayout->setColumnStretch(3, 1);
 
   // set initial values
   
@@ -98,10 +100,6 @@ CWProjectTabAnalysis::CWProjectTabAnalysis(const mediate_project_analysis_t *pro
   index = m_fitCombo->findData(QVariant(properties->fitType));
   if (index != -1)
     m_fitCombo->setCurrentIndex(index);
-
-  index = m_unitCombo->findData(QVariant(properties->unitType));
-  if (index != -1)
-    m_unitCombo->setCurrentIndex(index);
 
   index = m_interpCombo->findData(QVariant(properties->interpolationType));
   if (index != -1)
@@ -133,8 +131,7 @@ void CWProjectTabAnalysis::apply(mediate_project_analysis_t *properties) const
   index = m_fitCombo->currentIndex();
   properties->fitType = m_fitCombo->itemData(index).toInt();
 
-  index = m_unitCombo->currentIndex();
-  properties->unitType = m_unitCombo->itemData(index).toInt();
+  properties->unitType = PRJCT_ANLYS_UNITS_NANOMETERS; // Always nanometers
 
   index = m_interpCombo->currentIndex();
   properties->interpolationType = m_interpCombo->itemData(index).toInt();
