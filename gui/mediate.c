@@ -168,6 +168,118 @@ void setMediateProjectSpectra(PRJCT_SPECTRA *pEngineSpectra,const mediate_projec
  }
 
 // -----------------------------------------------------------------------------
+// FUNCTION      setMediateProjectDisplay
+// -----------------------------------------------------------------------------
+// PURPOSE       Spectra part of the project properties
+// -----------------------------------------------------------------------------
+
+void setMediateProjectDisplay(PRJCT_SPECTRA *pEngineSpectra,const mediate_project_display_t *pMediateDisplay)
+ {
+  #if defined(__DEBUG_) && __DEBUG_ && defined(__DEBUG_DOAS_CONFIG_) && __DEBUG_DOAS_CONFIG_
+  DEBUG_FunctionBegin("setMediateProjectDisplay",DEBUG_FCTTYPE_CONFIG);
+  #endif
+
+ 	// Control of what to display
+
+  pEngineSpectra->displaySpectraFlag=pMediateDisplay->requireSpectra;
+  pEngineSpectra->displayDataFlag=pMediateDisplay->requireData;
+  pEngineSpectra->displayFitFlag=pMediateDisplay->requireFits;
+
+  // the list of selected display data (same as output fields) - TODO
+
+  #if defined(__DEBUG_) && __DEBUG_ && defined(__DEBUG_DOAS_CONFIG_) && __DEBUG_DOAS_CONFIG_
+
+  DEBUG_Print("displaySpectraFlag : %d\n",pEngineSpectra->displaySpectraFlag);
+  DEBUG_Print("displayDataFlag : %d\n",pEngineSpectra->displayDataFlag);
+  DEBUG_Print("displayFitFlag : %d\n",pEngineSpectra->displayFitFlag);
+
+  DEBUG_FunctionStop("setMediateProjectDisplay",0);
+  #endif
+ }
+
+// -----------------------------------------------------------------------------
+// FUNCTION      setMediateProjectSelection
+// -----------------------------------------------------------------------------
+// PURPOSE       Spectra part of the project properties
+// -----------------------------------------------------------------------------
+
+void setMediateProjectSelection(PRJCT_SPECTRA *pEngineSpectra,const mediate_project_selection_t *pMediateSelection)
+ {
+  #if defined(__DEBUG_) && __DEBUG_ && defined(__DEBUG_DOAS_CONFIG_) && __DEBUG_DOAS_CONFIG_
+  DEBUG_FunctionBegin("setMediateProjectSelection",DEBUG_FCTTYPE_CONFIG);
+  #endif
+
+  // Spectral record range
+
+  pEngineSpectra->noMin=pMediateSelection->recordNumberMinimum;
+  pEngineSpectra->noMax=pMediateSelection->recordNumberMaximum;
+
+  // SZA (Solar Zenith Angle) range of interest
+
+  pEngineSpectra->SZAMin=(float)pMediateSelection->szaMinimum;
+  pEngineSpectra->SZAMax=(float)pMediateSelection->szaMaximum;
+  pEngineSpectra->SZADelta=(float)pMediateSelection->szaDelta;
+
+  // Geolocation
+
+  pEngineSpectra->mode=pMediateSelection->geo.mode;
+
+  switch (pEngineSpectra->mode)
+   {
+ // ----------------------------------------------------------------------------
+    case PRJCT_SPECTRA_MODES_CIRCLE :
+
+     pEngineSpectra->radius=pMediateSelection->geo.circle.radius;
+     pEngineSpectra->longMin=(float)pMediateSelection->geo.circle.centerLongitude;
+     pEngineSpectra->latMin=(float)pMediateSelection->geo.circle.centerLatitude;
+
+    break;
+ // ----------------------------------------------------------------------------
+    case PRJCT_SPECTRA_MODES_RECTANGLE :
+
+     pEngineSpectra->longMin=pMediateSelection->geo.rectangle.westernLongitude;
+     pEngineSpectra->longMax=pMediateSelection->geo.rectangle.easternLongitude;
+     pEngineSpectra->latMin=pMediateSelection->geo.rectangle.southernLatitude;
+     pEngineSpectra->latMax=pMediateSelection->geo.rectangle.northernLatitude;
+
+    break;
+ // ----------------------------------------------------------------------------
+    case PRJCT_SPECTRA_MODES_OBSLIST :
+     pEngineSpectra->radius=pMediateSelection->geo.sites.radius;
+    break;
+ // ----------------------------------------------------------------------------
+   }
+
+  #if defined(__DEBUG_) && __DEBUG_ && defined(__DEBUG_DOAS_CONFIG_) && __DEBUG_DOAS_CONFIG_
+
+  DEBUG_Print("noMin - noMax : %d - %d\n",pEngineSpectra->noMin,pEngineSpectra->noMax);
+  DEBUG_Print("SZAMin - SZAMax - SZADelta : %.3f %.3f %.3f\n",pEngineSpectra->SZAMin,pEngineSpectra->SZAMax,pEngineSpectra->SZADelta);
+  DEBUG_Print("namesFlag : REMOVED : %d\n",pEngineSpectra->namesFlag);
+  DEBUG_Print("darkFlag : REMOVED : %d\n",pEngineSpectra->darkFlag);
+
+  switch (pEngineSpectra->mode)
+   {
+ // ----------------------------------------------------------------------------
+    case PRJCT_SPECTRA_MODES_CIRCLE :
+     DEBUG_Print("Geo mode circle (radius,long,lat) : %.3f, %.3f, %.3f\n",pEngineSpectra->radius,pEngineSpectra->longMin,pEngineSpectra->longMax);
+    break;
+ // ----------------------------------------------------------------------------
+    case PRJCT_SPECTRA_MODES_RECTANGLE :
+     DEBUG_Print("Geo mode rectangle (long range, lat range) : %.3f - %.3f, %.3f - %.3f\n",
+                  pEngineSpectra->longMin,pEngineSpectra->longMax,pEngineSpectra->latMin,pEngineSpectra->latMax);
+    break;
+ // ----------------------------------------------------------------------------
+    case PRJCT_SPECTRA_MODES_OBSLIST :
+     DEBUG_Print("Geo mode sites : %.3f\n",pEngineSpectra->radius);
+    break;
+ // ----------------------------------------------------------------------------
+   }
+
+  DEBUG_FunctionStop("setMediateProjectSelection",0);
+  #endif
+ }
+
+// -----------------------------------------------------------------------------
 // FUNCTION      setMediateProjectAnalysis
 // -----------------------------------------------------------------------------
 // PURPOSE       Analysis part of the project properties
@@ -528,7 +640,9 @@ int mediateRequestSetProject(void *engineContext,
   DEBUG_Start(DOAS_dbgFile,"Project",DEBUG_FCTTYPE_CONFIG,5,DEBUG_DVAR_YES,0);
   #endif
 
-	 setMediateProjectSpectra(&pEngineProject->spectra,&project->spectra);
+  //  setMediateProjectSpectra(&pEngineProject->spectra,&project->spectra); REMOVE - TODO
+  setMediateProjectDisplay(&pEngineProject->spectra,&project->display);
+  setMediateProjectSelection(&pEngineProject->spectra,&project->selection);
   setMediateProjectAnalysis(&pEngineProject->analysis,&project->analysis);
   setMediateProjectFiltering(&pEngineProject->lfilter,&project->lowpass);
   setMediateProjectFiltering(&pEngineProject->hfilter,&project->highpass);
