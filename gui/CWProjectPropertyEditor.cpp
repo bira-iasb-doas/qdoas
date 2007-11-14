@@ -137,9 +137,11 @@ CWProjectPropertyEditor::CWProjectPropertyEditor(const QString &projectName, QWi
   m_outputTab->slotInstrumentChanged(projectData->instrumental.format);
   m_tabs->addTab(m_outputTab, "Output");
 
+  /* TODO JUST REMOVE
   // NASA AMES Tab
   m_nasaAmesTab = new CWProjectTabNasaAmes(projectName, &(projectData->nasaames));
   m_tabs->addTab(m_nasaAmesTab, "NASA-AMES Results");
+  */
 
   // try and keep the complete tab widget set at the smallest possible size.
   mainLayout->setColumnMinimumWidth(0, 0);
@@ -234,7 +236,7 @@ bool CWProjectPropertyEditor::actionOk(void)
 
     projectData->instrumental.format = m_selectedInstrument;
 
-    m_nasaAmesTab->apply(&(projectData->nasaames));
+    // m_nasaAmesTab->apply(&(projectData->nasaames)); TODO JUST REMOVE
 
     CWorkSpace::instance()->modifiedProjectProperties(m_projectName);
 

@@ -112,6 +112,7 @@ void initializeMediateProjectOutput(mediate_project_output_t *d)
   // any non-zero defaults...
 }
 
+/* TODO JUST REMOVE */
 void initializeMediateProjectNasaAmes(mediate_project_nasa_ames_t *d)
 {
   memset(d, 0, sizeof(mediate_project_nasa_ames_t));
@@ -133,5 +134,5 @@ void initializeMediateProject(mediate_project_t *d)
   initializeMediateProjectInstrumental(&(d->instrumental));
   initializeMediateProjectSlit(&(d->slit));
   initializeMediateProjectOutput(&(d->output));
-  initializeMediateProjectNasaAmes(&(d->nasaames));
+  initializeMediateProjectNasaAmes(&(d->nasaames)); /* TODO JUST REMOVE */
 }

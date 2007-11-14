@@ -482,6 +482,7 @@ extern "C" {
 
   /****************************************************/
   /* Project NASA AMES */
+  /* TODO JUST REMOVE */
 
   typedef struct mediate_project_nasa_ames
   {
@@ -517,7 +518,7 @@ extern "C" {
     mediate_project_instrumental_t instrumental;
     mediate_project_slit_t slit;
     mediate_project_output_t output;
-    mediate_project_nasa_ames_t nasaames;
+    mediate_project_nasa_ames_t nasaames; /* TODO JUST REMOVE */
 
   } mediate_project_t;
 
@@ -536,7 +537,7 @@ extern "C" {
   void initializeMediateProjectInstrumental(mediate_project_instrumental_t *d);
   void initializeMediateProjectSlit(mediate_project_slit_t *d);
   void initializeMediateProjectOutput(mediate_project_output_t *d);
-  void initializeMediateProjectNasaAmes(mediate_project_nasa_ames_t *d);
+  void initializeMediateProjectNasaAmes(mediate_project_nasa_ames_t *d); /* TODO JUST REMOVE */
 
 #if defined(_cplusplus) || defined(__cplusplus)
 }

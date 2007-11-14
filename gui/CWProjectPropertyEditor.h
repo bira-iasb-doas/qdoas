@@ -34,7 +34,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "CWProjectTabInstrumental.h"
 #include "CWProjectTabSlit.h"
 #include "CWProjectTabOutput.h"
-#include "CWProjectTabNasaAmes.h"
+//#include "CWProjectTabNasaAmes.h" - TODO JUST REMOVE
 
 #include "constants.h"
 
@@ -69,7 +69,7 @@ Q_OBJECT
   CWProjectTabInstrumental *m_instrumentalTab;
   CWProjectTabSlit *m_slitTab;
   CWProjectTabOutput *m_outputTab;
-  CWProjectTabNasaAmes *m_nasaAmesTab;
+  //  CWProjectTabNasaAmes *m_nasaAmesTab;
 
   QString m_projectName;
   int m_selectedInstrument;
