@@ -375,32 +375,50 @@ bool CProjectFilteringSubHandler::start(const QString &element, const QXmlAttrib
     m_filter->kaiser.tolerance = atts.value("tolerance").toDouble();
     m_filter->kaiser.passband = atts.value("passband").toDouble();
     m_filter->kaiser.iterations = atts.value("iterations").toInt();
+    m_filter->kaiser.usage.calibrationFlag = (atts.value("cal") == "true") ? 1 : 0;
+    m_filter->kaiser.usage.fittingFlag = (atts.value("fit") == "true") ? 1 : 0;
+    m_filter->kaiser.usage.divide = (atts.value("div") == "true") ? 1 : 0;
   }
   else if (element == "boxcar") {
 
     m_filter->boxcar.width = atts.value("width").toInt();
     m_filter->boxcar.iterations = atts.value("iterations").toInt();
+    m_filter->boxcar.usage.calibrationFlag = (atts.value("cal") == "true") ? 1 : 0;
+    m_filter->boxcar.usage.fittingFlag = (atts.value("fit") == "true") ? 1 : 0;
+    m_filter->boxcar.usage.divide = (atts.value("div") == "true") ? 1 : 0;
   }
   else if (element == "gaussian") {
 
     m_filter->gaussian.fwhm = atts.value("fwhm").toDouble();
     m_filter->gaussian.iterations = atts.value("iterations").toInt();
+    m_filter->gaussian.usage.calibrationFlag = (atts.value("cal") == "true") ? 1 : 0;
+    m_filter->gaussian.usage.fittingFlag = (atts.value("fit") == "true") ? 1 : 0;
+    m_filter->gaussian.usage.divide = (atts.value("div") == "true") ? 1 : 0;
   }
   else if (element == "triangular") {
 
     m_filter->triangular.width = atts.value("width").toInt();
     m_filter->triangular.iterations = atts.value("iterations").toInt();
+    m_filter->triangular.usage.calibrationFlag = (atts.value("cal") == "true") ? 1 : 0;
+    m_filter->triangular.usage.fittingFlag = (atts.value("fit") == "true") ? 1 : 0;
+    m_filter->triangular.usage.divide = (atts.value("div") == "true") ? 1 : 0;
   }
   else if (element == "savitzky") {
 
     m_filter->savitzky.width = atts.value("width").toInt();
     m_filter->savitzky.order = atts.value("order").toInt();
     m_filter->savitzky.iterations = atts.value("iterations").toInt();
+    m_filter->savitzky.usage.calibrationFlag = (atts.value("cal") == "true") ? 1 : 0;
+    m_filter->savitzky.usage.fittingFlag = (atts.value("fit") == "true") ? 1 : 0;
+    m_filter->savitzky.usage.divide = (atts.value("div") == "true") ? 1 : 0;
   }
   else if (element == "binomial") {
 
     m_filter->binomial.width = atts.value("width").toInt();
     m_filter->binomial.iterations = atts.value("iterations").toInt();
+    m_filter->binomial.usage.calibrationFlag = (atts.value("cal") == "true") ? 1 : 0;
+    m_filter->binomial.usage.fittingFlag = (atts.value("fit") == "true") ? 1 : 0;
+    m_filter->binomial.usage.divide = (atts.value("div") == "true") ? 1 : 0;
   }
 
   return true;

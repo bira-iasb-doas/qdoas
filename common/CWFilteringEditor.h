@@ -37,8 +37,12 @@ class CWSavitzkyGolayEdit;
 class CWFilteringEditor : public QFrame
 {
  public:
+  enum UsageType { None, CalFitCheck, SubDivSwitch };
+
   CWFilteringEditor(const mediate_filter_t *lowpass,
-		    const mediate_filter_t *highpass, QWidget *parent = 0);
+		    const mediate_filter_t *highpass,
+		    enum UsageType highPassUsage,
+		    QWidget *parent = 0);
   virtual ~CWFilteringEditor();
 
   void apply(mediate_filter_t *lowpass, mediate_filter_t *highpass) const;
@@ -58,10 +62,33 @@ class CWFilteringEditor : public QFrame
 
 //--------------------------------------------------------------------------
 
+class CWFilterUsageEdit : public QFrame
+{
+Q_OBJECT
+ public:
+  CWFilterUsageEdit(const struct filter_usage *d, CWFilteringEditor::UsageType type,
+		  QWidget *parent = 0);
+  virtual ~CWFilterUsageEdit();
+
+  void apply(struct filter_usage *d);
+
+  public slots:
+    void slotCalibrationStateChanged(int state);
+    void slotFittingStateChanged(int state);
+    void slotSubtractToggled(bool checked);
+    void slotDivideToggled(bool checked);
+
+ private:
+    struct filter_usage m_state;
+};
+
+//--------------------------------------------------------------------------
+
 class CWKaiserEdit : public QFrame
 {
  public:
-  CWKaiserEdit(const struct filter_kaiser *d, QWidget *parent = 0);
+  CWKaiserEdit(const struct filter_kaiser *d, CWFilteringEditor::UsageType type,
+	       QWidget *parent = 0);
   virtual ~CWKaiserEdit();
 
   void apply(struct filter_kaiser *d) const;
@@ -69,6 +96,7 @@ class CWKaiserEdit : public QFrame
  private:
   QLineEdit *m_cutoffEdit, *m_toleranceEdit, *m_passbandEdit;
   QSpinBox *m_iterationsSpinBox;
+  CWFilterUsageEdit *m_usageEdit;
 };
 
 //--------------------------------------------------------------------------
@@ -76,9 +104,12 @@ class CWKaiserEdit : public QFrame
 class CWBoxcarTriangularBinomialEdit : public QFrame
 {
  public:
-  CWBoxcarTriangularBinomialEdit(const struct filter_boxcar *d, QWidget *parent = 0);
-  CWBoxcarTriangularBinomialEdit(const struct filter_triangular *d, QWidget *parent = 0);
-  CWBoxcarTriangularBinomialEdit(const struct filter_binomial *d, QWidget *parent = 0);
+  CWBoxcarTriangularBinomialEdit(const struct filter_boxcar *d, CWFilteringEditor::UsageType type,
+				 QWidget *parent = 0);
+  CWBoxcarTriangularBinomialEdit(const struct filter_triangular *d, CWFilteringEditor::UsageType type,
+				 QWidget *parent = 0);
+  CWBoxcarTriangularBinomialEdit(const struct filter_binomial *d, CWFilteringEditor::UsageType type,
+				 QWidget *parent = 0);
   virtual ~CWBoxcarTriangularBinomialEdit();
 
   void apply(struct filter_boxcar *d) const;
@@ -86,11 +117,12 @@ class CWBoxcarTriangularBinomialEdit : public QFrame
   void apply(struct filter_binomial *d) const;
 
  protected:
-  void init(int filterWidth, int nIterations);
+  void init(int filterWidth, int nIterations, const struct filter_usage *d, CWFilteringEditor::UsageType type);
 
  private:
   QSpinBox *m_widthSpinBox;
   QSpinBox *m_iterationsSpinBox;
+  CWFilterUsageEdit *m_usageEdit;
 };
 
 //--------------------------------------------------------------------------
@@ -98,7 +130,8 @@ class CWBoxcarTriangularBinomialEdit : public QFrame
 class CWGaussianEdit : public QFrame
 {
  public:
-  CWGaussianEdit(const struct filter_gaussian *d, QWidget *parent = 0);
+  CWGaussianEdit(const struct filter_gaussian *d, CWFilteringEditor::UsageType type,
+		 QWidget *parent = 0);
   virtual ~CWGaussianEdit();
 
   void apply(struct filter_gaussian *d) const;
@@ -106,6 +139,7 @@ class CWGaussianEdit : public QFrame
  private:
   QLineEdit *m_fwhmEdit;
   QSpinBox *m_iterationsSpinBox;
+  CWFilterUsageEdit *m_usageEdit;
 };
 
 //--------------------------------------------------------------------------
@@ -113,7 +147,8 @@ class CWGaussianEdit : public QFrame
 class CWSavitzkyGolayEdit : public QFrame
 {
  public:
-  CWSavitzkyGolayEdit(const struct filter_savitzky_golay *d, QWidget *parent = 0);
+  CWSavitzkyGolayEdit(const struct filter_savitzky_golay *d, CWFilteringEditor::UsageType type,
+		      QWidget *parent = 0);
   virtual ~CWSavitzkyGolayEdit();
 
   void apply(struct filter_savitzky_golay *d) const;
@@ -122,6 +157,7 @@ class CWSavitzkyGolayEdit : public QFrame
   QSpinBox *m_widthSpinBox;
   QSpinBox *m_orderSpinBox;
   QSpinBox *m_iterationsSpinBox;
+  CWFilterUsageEdit *m_usageEdit;
 };
 
 #endif

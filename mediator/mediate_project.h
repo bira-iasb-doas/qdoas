@@ -359,19 +359,7 @@ extern "C" {
   {
     char solarRefFile[FILENAME_BUFFER_LENGTH];
     int applyFwhmCorrection;
-    int slitType;
-    struct slit_file file;
-    struct slit_gaussian gaussian;
-    struct slit_lorentz lorentz;
-    struct slit_voigt voigt;
-    struct slit_error error;
-    struct slit_apod boxcarapod;
-    struct slit_apod nbsapod;
-    struct slit_file gaussianfile;
-    struct slit_lorentz_file lorentzfile;
-    struct slit_error_file errorfile;
-    struct slit_file gaussiantempfile;
-    struct slit_error_file errortempfile;
+    mediate_slit_function_t function;      /* the selected slit and properties for all slit types */
   } mediate_project_slit_t;
 
 

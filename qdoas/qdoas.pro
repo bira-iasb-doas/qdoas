@@ -55,6 +55,7 @@ SOURCES += ../common/CEngineError.cpp
 SOURCES += ../common/CEngineController.cpp
 SOURCES += ../common/CEngineResponse.cpp
 SOURCES += ../common/CConfigHandler.cpp
+SOURCES += ../common/ConfigWriterUtils.cpp
 
 SOURCES += ../common/CWAboutDialog.cpp
 SOURCES += ../common/CHelpSystem.cpp
@@ -135,6 +136,7 @@ HEADERS += ../common/CEngineError.h
 HEADERS += ../common/CEngineController.h
 HEADERS += ../common/CEngineResponse.h
 HEADERS += ../common/CConfigHandler.h
+HEADERS += ../common/ConfigWriterUtils.h
 
 HEADERS += ../common/CWAboutDialog.h
 HEADERS += ../common/CHelpSystem.h

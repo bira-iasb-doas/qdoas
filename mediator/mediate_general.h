@@ -92,9 +92,32 @@ extern "C" {
     double width;
   };
 
-
+  typedef struct mediate_slit_function
+  {
+    int type;
+    struct slit_file file;
+    struct slit_gaussian gaussian;
+    struct slit_lorentz lorentz;
+    struct slit_voigt voigt;
+    struct slit_error error;
+    struct slit_apod boxcarapod;
+    struct slit_apod nbsapod;
+    struct slit_file gaussianfile;
+    struct slit_lorentz_file lorentzfile;
+    struct slit_error_file errorfile;
+    struct slit_file gaussiantempfile;
+    struct slit_error_file errortempfile;
+  } mediate_slit_function_t;
+  
   /*************************************************************************/
   /* Filters */
+
+  struct filter_usage
+  {
+    int calibrationFlag;
+    int fittingFlag;
+    int divide;
+  };
 
   struct filter_kaiser
   {
@@ -102,24 +125,28 @@ extern "C" {
     double tolerance;
     double passband;
     int iterations;
+    struct filter_usage usage;
   };
 
   struct filter_boxcar
   {
     int width;            /* odd number of pixels */
     int iterations;
+    struct filter_usage usage;
   };
 
   struct filter_gaussian
   {
     double fwhm;          /* pixels */
     int iterations;
+    struct filter_usage usage;
   };
 
   struct filter_triangular
   {
     int width;            /* odd number of pixels */
     int iterations;
+    struct filter_usage usage;
   };
 
   struct filter_savitzky_golay
@@ -127,12 +154,14 @@ extern "C" {
     int width;            /* odd number of pixels */
     int order;            /* even number */
     int iterations;
+    struct filter_usage usage;
   };
 
   struct filter_binomial
   {
     int width;            /* odd number of pixels */
     int iterations;
+    struct filter_usage usage;
   };
 
   typedef struct mediate_filter

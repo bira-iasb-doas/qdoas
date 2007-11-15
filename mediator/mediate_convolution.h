@@ -75,7 +75,8 @@ extern "C" {
     mediate_conv_general_t general;
     mediate_conv_slit_t conslit;
     mediate_conv_slit_t decslit;
-        
+    mediate_filter_t lowpass;
+    mediate_filter_t highpass;
   } mediate_convolution_t;
 
 

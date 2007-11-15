@@ -23,6 +23,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QGridLayout>
 #include <QGroupBox>
 #include <QLabel>
+#include <QCheckBox>
+#include <QRadioButton>
 #include <QFontMetrics>
 
 #include "CWFilteringEditor.h"
@@ -33,7 +35,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "debugutil.h"
 
 CWFilteringEditor::CWFilteringEditor(const mediate_filter_t *lowpass,
-				     const mediate_filter_t *highpass, QWidget *parent) :
+				     const mediate_filter_t *highpass,
+				     enum UsageType highPassUsage,
+				     QWidget *parent) :
   QFrame(parent)
 {
   QVBoxLayout *mainLayout = new QVBoxLayout(this);
@@ -50,27 +54,27 @@ CWFilteringEditor::CWFilteringEditor(const mediate_filter_t *lowpass,
   m_lowCombo->addItem("No Filter", QVariant(PRJCT_FILTER_TYPE_NONE));
 
   // kaiser
-  m_lowKaiser = new CWKaiserEdit(&(lowpass->kaiser));
+  m_lowKaiser = new CWKaiserEdit(&(lowpass->kaiser), CWFilteringEditor::None);
   m_lowStack->addWidget(m_lowKaiser);
   m_lowCombo->addItem("Kaiser Filter", QVariant(PRJCT_FILTER_TYPE_KAISER));
   
   // boxcar
-  m_lowBoxcar = new CWBoxcarTriangularBinomialEdit(&(lowpass->boxcar));
+  m_lowBoxcar = new CWBoxcarTriangularBinomialEdit(&(lowpass->boxcar), CWFilteringEditor::None);
   m_lowStack->addWidget(m_lowBoxcar);
   m_lowCombo->addItem("Boxcar Filter", QVariant(PRJCT_FILTER_TYPE_BOXCAR));
   
   // gaussian
-  m_lowGaussian = new CWGaussianEdit(&(lowpass->gaussian));
+  m_lowGaussian = new CWGaussianEdit(&(lowpass->gaussian), CWFilteringEditor::None);
   m_lowStack->addWidget(m_lowGaussian);
   m_lowCombo->addItem("Gaussian Filter", QVariant(PRJCT_FILTER_TYPE_GAUSSIAN));
   
   // triangular
-  m_lowTriangular = new CWBoxcarTriangularBinomialEdit(&(lowpass->triangular));
+  m_lowTriangular = new CWBoxcarTriangularBinomialEdit(&(lowpass->triangular), CWFilteringEditor::None);
   m_lowStack->addWidget(m_lowTriangular);
   m_lowCombo->addItem("Triangular Filter", QVariant(PRJCT_FILTER_TYPE_TRIANGLE));
   
   // savitzky-golay
-  m_lowSavitzky = new CWSavitzkyGolayEdit(&(lowpass->savitzky));
+  m_lowSavitzky = new CWSavitzkyGolayEdit(&(lowpass->savitzky), CWFilteringEditor::None);
   m_lowStack->addWidget(m_lowSavitzky);
   m_lowCombo->addItem("Savitzky-Golay Filter", QVariant(PRJCT_FILTER_TYPE_SG));
   
@@ -79,7 +83,7 @@ CWFilteringEditor::CWFilteringEditor(const mediate_filter_t *lowpass,
   m_lowCombo->addItem("Odd-Even Correction", QVariant(PRJCT_FILTER_TYPE_ODDEVEN));
 
   // binomial
-  m_lowBinomial = new CWBoxcarTriangularBinomialEdit(&(lowpass->binomial));
+  m_lowBinomial = new CWBoxcarTriangularBinomialEdit(&(lowpass->binomial), CWFilteringEditor::None);
   m_lowStack->addWidget(m_lowBinomial);
   m_lowCombo->addItem("Binomial Filter", QVariant(PRJCT_FILTER_TYPE_BINOMIAL));
   
@@ -102,36 +106,36 @@ CWFilteringEditor::CWFilteringEditor(const mediate_filter_t *lowpass,
   m_highCombo->addItem("No Filter", QVariant(PRJCT_FILTER_TYPE_NONE));
 
   // kaiser
-  m_highKaiser = new CWKaiserEdit(&(highpass->kaiser));
+  m_highKaiser = new CWKaiserEdit(&(highpass->kaiser), highPassUsage);
   m_highStack->addWidget(m_highKaiser);
   m_highCombo->addItem("Kaiser Filter", QVariant(PRJCT_FILTER_TYPE_KAISER));
   
   // boxcar
-  m_highBoxcar = new CWBoxcarTriangularBinomialEdit(&(highpass->boxcar));
+  m_highBoxcar = new CWBoxcarTriangularBinomialEdit(&(highpass->boxcar), highPassUsage);
   m_highStack->addWidget(m_highBoxcar);
   m_highCombo->addItem("Boxcar Filter", QVariant(PRJCT_FILTER_TYPE_BOXCAR));
   
   // gaussian
-  m_highGaussian = new CWGaussianEdit(&(highpass->gaussian));
+  m_highGaussian = new CWGaussianEdit(&(highpass->gaussian), highPassUsage);
   m_highStack->addWidget(m_highGaussian);
   m_highCombo->addItem("Gaussian Filter", QVariant(PRJCT_FILTER_TYPE_GAUSSIAN));
   
   // triangular
-  m_highTriangular = new CWBoxcarTriangularBinomialEdit(&(highpass->triangular));
+  m_highTriangular = new CWBoxcarTriangularBinomialEdit(&(highpass->triangular), highPassUsage);
   m_highStack->addWidget(m_highTriangular);
   m_highCombo->addItem("Triangular Filter", QVariant(PRJCT_FILTER_TYPE_TRIANGLE));
   
   // savitzky-golay
-  m_highSavitzky = new CWSavitzkyGolayEdit(&(highpass->savitzky));
+  m_highSavitzky = new CWSavitzkyGolayEdit(&(highpass->savitzky), highPassUsage);
   m_highStack->addWidget(m_highSavitzky);
   m_highCombo->addItem("Savitzky-Golay Filter", QVariant(PRJCT_FILTER_TYPE_SG));
   
-  // none
+  // odd-even
   m_highStack->addWidget(new QFrame);
   m_highCombo->addItem("Odd-Even Correction", QVariant(PRJCT_FILTER_TYPE_ODDEVEN));
 
   // binomial
-  m_highBinomial = new CWBoxcarTriangularBinomialEdit(&(highpass->binomial));
+  m_highBinomial = new CWBoxcarTriangularBinomialEdit(&(highpass->binomial), highPassUsage);
   m_highStack->addWidget(m_highBinomial);
   m_highCombo->addItem("Binomial Filter", QVariant(PRJCT_FILTER_TYPE_BINOMIAL));
   
@@ -192,6 +196,88 @@ void CWFilteringEditor::apply(mediate_filter_t *lowpass, mediate_filter_t *highp
 
 
 //--------------------------------------------------------
+// FilterUsage helper ...
+
+CWFilterUsageEdit::CWFilterUsageEdit(const struct filter_usage *d, CWFilteringEditor::UsageType type,
+				     QWidget *parent) :
+  QFrame(parent)
+{
+  m_state = *d; // blot copy state
+
+  // look and function dependes on the UsageType
+  switch (type) {
+  case CWFilteringEditor::CalFitCheck:
+    {
+      QHBoxLayout *layout = new QHBoxLayout(this);
+      layout->setMargin(0);
+      layout->addStretch(1); // push right
+      QCheckBox *calCheck = new QCheckBox("Calibration", this);
+      layout->addWidget(calCheck);
+      QCheckBox *fitCheck = new QCheckBox("Fitting Window", this);
+      layout->addWidget(fitCheck);
+      calCheck->setCheckState(m_state.calibrationFlag ? Qt::Checked : Qt::Unchecked); 
+      fitCheck->setCheckState(m_state.fittingFlag ? Qt::Checked : Qt::Unchecked);
+      // connections ...
+      connect(calCheck, SIGNAL(stateChanged(int)), this, SLOT(slotCalibrationStateChanged(int)));
+      connect(fitCheck, SIGNAL(stateChanged(int)), this, SLOT(slotFittingStateChanged(int)));
+    }
+    break;
+  case CWFilteringEditor::SubDivSwitch:
+    {
+      QHBoxLayout *layout = new QHBoxLayout(this);
+      layout->setMargin(0);
+      layout->addStretch(1); // push right
+      QRadioButton *subBtn = new QRadioButton("Subtract", this);
+      layout->addWidget(subBtn);
+      QRadioButton *divBtn = new QRadioButton("Divide", this);
+      layout->addWidget(divBtn);
+      if (m_state.divide)
+	divBtn->setChecked(true);
+      else
+	subBtn->setChecked(true);
+      // connections ...
+      connect(subBtn, SIGNAL(toggled(bool)), this, SLOT(slotSubtractToggled(bool)));
+      connect(divBtn, SIGNAL(toggled(bool)), this, SLOT(slotDivideToggled(bool)));
+    }
+    break;
+  case CWFilteringEditor::None:
+    break; // an empty widget ...
+  }
+}
+
+CWFilterUsageEdit::~CWFilterUsageEdit()
+{
+}
+
+void CWFilterUsageEdit::apply(struct filter_usage *d)
+{
+  *d = m_state;
+}
+
+void CWFilterUsageEdit::slotCalibrationStateChanged(int state)
+{
+  m_state.calibrationFlag = (state == Qt::Checked) ? 1 : 0;
+}
+
+void CWFilterUsageEdit::slotFittingStateChanged(int state)
+{
+  m_state.fittingFlag = (state == Qt::Checked) ? 1 : 0;
+}
+
+void CWFilterUsageEdit::slotSubtractToggled(bool checked)
+{
+  if (checked)
+    m_state.divide = 0;
+}
+
+void CWFilterUsageEdit::slotDivideToggled(bool checked)
+{
+  if (checked)
+    m_state.divide = 1;
+}
+
+
+//--------------------------------------------------------
 // Specific Filter Editors...
 
 static const int cSuggestedColumnZeroWidth = 120; // try and keep editor layout
@@ -200,7 +286,7 @@ static const Qt::Alignment cLabelAlign     = Qt::AlignRight;
 
 //--------------------------------------------------------
 
-CWKaiserEdit::CWKaiserEdit(const struct filter_kaiser *d, QWidget *parent) :
+CWKaiserEdit::CWKaiserEdit(const struct filter_kaiser *d, CWFilteringEditor::UsageType type, QWidget *parent) :
   QFrame(parent)
 {
   QString tmpStr;
@@ -260,6 +346,9 @@ CWKaiserEdit::CWKaiserEdit(const struct filter_kaiser *d, QWidget *parent) :
   mainLayout->addWidget(m_iterationsSpinBox, row, 3, Qt::AlignLeft);
   ++row;
 
+  m_usageEdit = new CWFilterUsageEdit(&(d->usage), type, this);
+  mainLayout->addWidget(m_usageEdit, row, 2, 1, 2);
+
   // layout control
   mainLayout->setColumnMinimumWidth(0, cSuggestedColumnZeroWidth);
   mainLayout->setColumnStretch(1, 1);
@@ -284,29 +373,31 @@ void CWKaiserEdit::apply(struct filter_kaiser *d) const
   d->passband = ok ? tmp : 0.0;
 
   d->iterations = m_iterationsSpinBox->value();
+
+  m_usageEdit->apply(&(d->usage));
 }
 
 //--------------------------------------------------------
 
-CWBoxcarTriangularBinomialEdit::CWBoxcarTriangularBinomialEdit(const struct filter_boxcar *d, QWidget *parent) :
+CWBoxcarTriangularBinomialEdit::CWBoxcarTriangularBinomialEdit(const struct filter_boxcar *d, CWFilteringEditor::UsageType type, QWidget *parent) :
   QFrame(parent)
 {
-  init(d->width, d->iterations);
+  init(d->width, d->iterations, &(d->usage), type);
 }
 
-CWBoxcarTriangularBinomialEdit::CWBoxcarTriangularBinomialEdit(const struct filter_triangular *d, QWidget *parent) :
+CWBoxcarTriangularBinomialEdit::CWBoxcarTriangularBinomialEdit(const struct filter_triangular *d, CWFilteringEditor::UsageType type, QWidget *parent) :
   QFrame(parent)
 {
-  init(d->width, d->iterations);
+  init(d->width, d->iterations, &(d->usage), type);
 }
 
-CWBoxcarTriangularBinomialEdit::CWBoxcarTriangularBinomialEdit(const struct filter_binomial *d, QWidget *parent) :
+CWBoxcarTriangularBinomialEdit::CWBoxcarTriangularBinomialEdit(const struct filter_binomial *d, CWFilteringEditor::UsageType type, QWidget *parent) :
   QFrame(parent)
 {
-  init(d->width, d->iterations);
+  init(d->width, d->iterations, &(d->usage), type);
 }
 
-void CWBoxcarTriangularBinomialEdit::init(int filterWidth, int nIterations)
+void CWBoxcarTriangularBinomialEdit::init(int filterWidth, int nIterations, const struct filter_usage *d, CWFilteringEditor::UsageType type)
 {
   int row = 0;
   QGridLayout *mainLayout = new QGridLayout(this);
@@ -336,6 +427,9 @@ void CWBoxcarTriangularBinomialEdit::init(int filterWidth, int nIterations)
   mainLayout->addWidget(m_iterationsSpinBox, row, 1, Qt::AlignLeft);
   ++row;
 
+  m_usageEdit = new CWFilterUsageEdit(d, type, this);
+  mainLayout->addWidget(m_usageEdit, row, 1);
+
   // layout control
   mainLayout->setColumnMinimumWidth(0, cSuggestedColumnZeroWidth);
   mainLayout->setColumnStretch(1, 1);
@@ -349,23 +443,26 @@ void CWBoxcarTriangularBinomialEdit::apply(struct filter_boxcar *d) const
 {
   d->width = m_widthSpinBox->value();
   d->iterations = m_iterationsSpinBox->value();
+  m_usageEdit->apply(&(d->usage));
 }
 
 void CWBoxcarTriangularBinomialEdit::apply(struct filter_triangular *d) const
 {
   d->width = m_widthSpinBox->value();
   d->iterations = m_iterationsSpinBox->value();
+  m_usageEdit->apply(&(d->usage));
 }
 
 void CWBoxcarTriangularBinomialEdit::apply(struct filter_binomial *d) const
 {
   d->width = m_widthSpinBox->value();
   d->iterations = m_iterationsSpinBox->value();
+  m_usageEdit->apply(&(d->usage));
 }
 
 //--------------------------------------------------------
 
-CWGaussianEdit::CWGaussianEdit(const struct filter_gaussian *d, QWidget *parent) :
+CWGaussianEdit::CWGaussianEdit(const struct filter_gaussian *d, CWFilteringEditor::UsageType type, QWidget *parent) :
   QFrame(parent)
 {
   QString tmpStr;
@@ -398,6 +495,9 @@ CWGaussianEdit::CWGaussianEdit(const struct filter_gaussian *d, QWidget *parent)
   mainLayout->addWidget(m_iterationsSpinBox, row, 1, Qt::AlignLeft);
   ++row;
 
+  m_usageEdit = new CWFilterUsageEdit(&(d->usage), type, this);
+  mainLayout->addWidget(m_usageEdit, row, 1);
+
   // layout control
   mainLayout->setColumnMinimumWidth(0, cSuggestedColumnZeroWidth);
   mainLayout->setColumnStretch(1, 1);
@@ -416,11 +516,12 @@ void CWGaussianEdit::apply(struct filter_gaussian *d) const
   d->fwhm = ok ? tmp : 0.0;
 
   d->iterations = m_iterationsSpinBox->value();
+  m_usageEdit->apply(&(d->usage));
 }
 
 //--------------------------------------------------------
 
-CWSavitzkyGolayEdit::CWSavitzkyGolayEdit(const struct filter_savitzky_golay *d, QWidget *parent) :
+CWSavitzkyGolayEdit::CWSavitzkyGolayEdit(const struct filter_savitzky_golay *d, CWFilteringEditor::UsageType type, QWidget *parent) :
   QFrame(parent)
 {
   int row = 0;
@@ -464,6 +565,9 @@ CWSavitzkyGolayEdit::CWSavitzkyGolayEdit(const struct filter_savitzky_golay *d, 
   mainLayout->addWidget(m_iterationsSpinBox, row, 1, Qt::AlignLeft);
   ++row;
 
+  m_usageEdit = new CWFilterUsageEdit(&(d->usage), type, this);
+  mainLayout->addWidget(m_usageEdit, row, 1);
+
   // layout control
   mainLayout->setColumnMinimumWidth(0, cSuggestedColumnZeroWidth);
   mainLayout->setColumnStretch(1, 1);
@@ -478,5 +582,6 @@ void CWSavitzkyGolayEdit::apply(struct filter_savitzky_golay *d) const
   d->width = m_widthSpinBox->value();
   d->order = m_orderSpinBox->value();
   d->iterations = m_iterationsSpinBox->value();
+  m_usageEdit->apply(&(d->usage));
 }
 

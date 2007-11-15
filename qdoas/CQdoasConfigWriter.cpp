@@ -23,6 +23,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "CWorkSpace.h"
 #include "CWProjectTree.h"
 #include "CQdoasConfigWriter.h"
+#include "ConfigWriterUtils.h"
 
 #include "constants.h"
 
@@ -153,8 +154,8 @@ void CQdoasConfigWriter::writeProperties(FILE *fp, const mediate_project_t *d)
   writePropertiesDisplay(fp, &(d->display));
   writePropertiesSelection(fp, &(d->selection));
   writePropertiesAnalysis(fp, &(d->analysis));
-  writePropertiesFilter(fp, "low", &(d->lowpass));
-  writePropertiesFilter(fp, "high", &(d->highpass));
+  writeFilter(fp, 4, "low", &(d->lowpass));
+  writeFilter(fp, 4, "high", &(d->highpass));
   writePropertiesCalibration(fp, &(d->calibration));
   writePropertiesUndersampling(fp, &(d->undersampling));
   writePropertiesInstrumental(fp, &(d->instrumental));
@@ -251,51 +252,6 @@ void CQdoasConfigWriter::writePropertiesAnalysis(FILE *fp, const mediate_project
 	  "      <!-- unit          : pixel nm -->\n"
 	  "      <!-- interpolation : linear spline -->\n"
 	  "    </analysis>\n");
-}
-
-void CQdoasConfigWriter::writePropertiesFilter(FILE *fp, const char *passband, const mediate_filter_t *d)
-{
-  fprintf(fp, "    <%spass_filter selected=", passband); // low or high
-  switch (d->mode) {
-  case PRJCT_FILTER_TYPE_KAISER:
-    fprintf(fp, "\"kaiser\"");
-    break;
-  case PRJCT_FILTER_TYPE_BOXCAR:
-    fprintf(fp, "\"boxcar\"");
-    break;
-  case PRJCT_FILTER_TYPE_GAUSSIAN:
-    fprintf(fp, "\"gaussian\"");
-    break;
-  case PRJCT_FILTER_TYPE_TRIANGLE:
-    fprintf(fp, "\"triangular\"");
-    break;
-  case PRJCT_FILTER_TYPE_SG:
-    fprintf(fp, "\"savitzky\"");
-    break;
-  case PRJCT_FILTER_TYPE_ODDEVEN:
-    fprintf(fp, "\"oddeven\"");
-    break;
-  case PRJCT_FILTER_TYPE_BINOMIAL:
-    fprintf(fp, "\"binomial\"");
-    break;
-  default:
-    fprintf(fp, "\"none\"");
-  }
-  fprintf(fp, ">\n");
-
-  fprintf(fp, "      <kaiser cutoff=\"%f\" tolerance=\"%f\" passband=\"%f\" iterations=\"%d\" />\n",
-	  d->kaiser.cutoffFrequency, d->kaiser.tolerance, d->kaiser.passband, d->kaiser.iterations);
-  fprintf(fp, "      <boxcar width=\"%d\" iterations=\"%d\" />\n",
-	  d->boxcar.width, d->boxcar.iterations);
-  fprintf(fp, "      <gaussian fwhm=\"%f\" iterations=\"%d\" />\n",
-	  d->gaussian.fwhm, d->gaussian.iterations);
-  fprintf(fp, "      <triangular width=\"%d\" iterations=\"%d\" />\n",
-	  d->triangular.width, d->triangular.iterations);
-  fprintf(fp, "      <savitzky_golay width=\"%d\" order=\"%d\" iterations=\"%d\" />\n",
-	  d->savitzky.width, d->savitzky.order, d->savitzky.iterations);
-  fprintf(fp, "      <binomial width=\"%d\" iterations=\"%d\" />\n",
-	  d->binomial.width, d->binomial.iterations);
-  fprintf(fp, "    </%spass_filter>\n", passband);
 }
 
 void CQdoasConfigWriter::writePropertiesCalibration(FILE *fp, const mediate_project_calibration_t *d)
@@ -994,91 +950,10 @@ void CQdoasConfigWriter::writePropertiesSlit(FILE *fp, const mediate_project_sli
   fprintf(fp, "    <slit ref=\"%s\" fwhmcor=\"%s\">\n", tmpStr.toAscii().data(),
 	  (d->applyFwhmCorrection ? sTrue : sFalse));
 
-  writeSlitFunction(fp, &(d->function));
+  writeSlitFunction(fp, 6, &(d->function));
   
   fprintf(fp, "    </slit>\n");
 }
-
-void CQdoasConfigWriter::writeSlitFunction(FILE *fp, const mediate_slit_function_t *d)
-{
-  QString tmpStr;
-  CWorkSpace *ws = CWorkSpace::instance();
-
-  fprintf(fp, "      <slit_func type=");
-
-  switch (d->type) {
-  case SLIT_TYPE_FILE:
-    fprintf(fp, "\"file\"");
-    break;
-  case SLIT_TYPE_GAUSS:
-    fprintf(fp, "\"gaussian\"");
-    break;
-  case SLIT_TYPE_INVPOLY:
-    fprintf(fp, "\"lorentz\"");
-    break;
-  case SLIT_TYPE_VOIGT:
-    fprintf(fp, "\"voigt\"");
-    break;
-  case SLIT_TYPE_ERF:
-    fprintf(fp, "\"error\"");
-    break;
-  case SLIT_TYPE_APOD:
-    fprintf(fp, "\"boxcarapod\"");
-    break;
-  case SLIT_TYPE_APODNBS:
-    fprintf(fp, "\"nbsapod\"");
-    break;
-  case SLIT_TYPE_GAUSS_FILE:
-    fprintf(fp, "\"gaussianfile\"");
-    break;
-  case SLIT_TYPE_INVPOLY_FILE:
-    fprintf(fp, "\"lorentzfile\"");
-    break;
-  case SLIT_TYPE_ERF_FILE:
-    fprintf(fp, "\"errorfile\"");
-    break;
-  case SLIT_TYPE_GAUSS_T_FILE:
-    fprintf(fp, "\"gaussiantempfile\"");
-    break;
-  case SLIT_TYPE_ERF_T_FILE:
-    fprintf(fp, "\"errortempfile\"");
-    break;
-  default:
-    fprintf(fp, "\"invalid\"");
-  }
-  fprintf(fp, ">\n");
-
-  tmpStr = ws->simplifyPath(QString(d->file.filename));
-  fprintf(fp, "        <file file=\"%s\" />\n", tmpStr.toAscii().data());
-
-  fprintf(fp, "        <gaussian fwhm=\"%.3f\" />\n", d->gaussian.fwhm);
-  fprintf(fp, "        <lorentz width=\"%.3f\" degree=\"%d\" />\n", d->lorentz.width, d->lorentz.degree);
-  fprintf(fp, "        <voigt fwhmleft=\"%.3f\" fwhmright=\"%.3f\" glrleft=\"%.3f\" glrright=\"%.3f\" />\n",
-	  d->voigt.fwhmL, d->voigt.fwhmR, d->voigt.glRatioL, d->voigt.glRatioR);
-  fprintf(fp, "        <error fwhm=\"%.3f\" width=\"%.3f\" />\n", d->error.fwhm, d->error.width);
-  fprintf(fp, "        <boxcarapod resolution=\"%.3f\" phase=\"%.3f\" />\n",
-	  d->boxcarapod.resolution, d->boxcarapod.phase);
-  fprintf(fp, "        <nbsapod resolution=\"%.3f\" phase=\"%.3f\" />\n",
-	  d->nbsapod.resolution, d->nbsapod.phase);
-
-  tmpStr = ws->simplifyPath(QString(d->gaussianfile.filename));
-  fprintf(fp, "        <gaussianfile file=\"%s\" />\n", tmpStr.toAscii().data());
-
-  tmpStr = ws->simplifyPath(QString(d->lorentzfile.filename));
-  fprintf(fp, "        <lorentzfile file=\"%s\" degree=\"%d\" />\n", tmpStr.toAscii().data(), d->lorentzfile.degree);
-
-  tmpStr = ws->simplifyPath(QString(d->errorfile.filename));
-  fprintf(fp, "        <errorfile file=\"%s\" width=\"%.3f\" />\n", tmpStr.toAscii().data(), d->errorfile.width);
-
-  tmpStr = ws->simplifyPath(QString(d->gaussiantempfile.filename));
-  fprintf(fp, "        <gaussiantempfile file=\"%s\" />\n", tmpStr.toAscii().data());
-
-  tmpStr = ws->simplifyPath(QString(d->errortempfile.filename));
-  fprintf(fp, "        <errortempfile file=\"%s\" width=\"%.3f\" />\n", tmpStr.toAscii().data(), d->errortempfile.width);
-  
-  fprintf(fp, "      </slit_func>\n");
-}
-
 
 void CQdoasConfigWriter::writePropertiesOutput(FILE *fp, const mediate_project_output_t *d)
 {

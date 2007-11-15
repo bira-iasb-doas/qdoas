@@ -137,6 +137,9 @@ CWMain::CWMain(QWidget *parent) :
   m_slitTab = new CWConvTabSlit(&(m_properties.conslit), &(m_properties.decslit));
   m_pageTab->addTab(m_slitTab, "Slit");
 
+  m_filteringTab = new CWFilteringEditor(&(m_properties.lowpass), &(m_properties.highpass), CWFilteringEditor::SubDivSwitch);
+  m_pageTab->addTab(m_filteringTab, "Filtering");
+
   mainLayout->addWidget(m_pageTab, 1);
 
   // buttons

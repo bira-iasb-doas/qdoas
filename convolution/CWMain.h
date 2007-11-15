@@ -30,6 +30,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "CWConvTabGeneral.h"
 #include "CWConvTabSlit.h"
+#include "CWFilteringEditor.h"
 
 class CConvEngineController;
 class CHelpSystem;
@@ -67,6 +68,7 @@ Q_OBJECT
 
   CWConvTabGeneral *m_generalTab;
   CWConvTabSlit *m_slitTab;
+  CWFilteringEditor *m_filteringTab;
 
   QString m_configFile;
   

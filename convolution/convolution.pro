@@ -57,6 +57,7 @@ SOURCES += ../common/CWAboutDialog.cpp
 SOURCES += ../common/CHelpSystem.cpp
 SOURCES += ../common/CHelpSystemImpl.cpp
 SOURCES += ../common/CWSlitEditors.cpp
+SOURCES += ../common/CWFilteringEditor.cpp
 
 SOURCES += CWMain.cpp
 SOURCES += CWConvTabGeneral.cpp
@@ -80,6 +81,7 @@ HEADERS += ../common/CWAboutDialog.h
 HEADERS += ../common/CHelpSystem.h
 HEADERS += ../common/CHelpSystemImpl.h
 HEADERS += ../common/CWSlitEditors.h
+HEADERS += ../common/CWFilteringEditor.h
 
 HEADERS += CWMain.h
 HEADERS += CWConvTabGeneral.h
