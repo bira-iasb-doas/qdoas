@@ -50,6 +50,9 @@ Q_OBJECT
   bool checkStateAndConsiderSaveFile(void);
   void setConfigFileName(const QString &fileName);
 
+  void fetchGuiProperties(void);
+  bool compareProperties(void);
+
  public slots:
   void slotOpenFile();
   void slotNewFile();
@@ -60,7 +63,7 @@ Q_OBJECT
   void slotAboutQdoas();
   void slotAboutQt();
   void slotErrorMessages(int highestLevel, const QString &messages);
-  void slotOk();
+  void slotRunConvolution();
   
  private:
   QMenuBar *m_menuBar;
@@ -78,8 +81,7 @@ Q_OBJECT
   QAction *m_saveAction;
   QAction *m_saveAsAction;
 
-  bool m_stateValid;
-  mediate_convolution_t m_properties;
+  mediate_convolution_t m_properties, m_guiProperties;
 
   // help interface ...
   CHelpSystem *m_helpInterface;

@@ -101,22 +101,6 @@ class CProjectRawSpectraSubHandler : public CBasicConfigSubHandler
 
 //-------------------------------------------------------------------
 
-class CProjectFilteringSubHandler : public CBasicConfigSubHandler
-{
- public:
-  CProjectFilteringSubHandler(CConfigHandler *master,
-			   mediate_filter_t *filter);
-  virtual ~CProjectFilteringSubHandler();
-
-  virtual bool start(const QXmlAttributes &atts);
-  virtual bool start(const QString &element, const QXmlAttributes &atts);
-
- private:
-  mediate_filter_t *m_filter;
-};
-
-//-------------------------------------------------------------------
-
 class CProjectCalibrationSubHandler : public CBasicConfigSubHandler
 {
  public:
@@ -185,22 +169,6 @@ class CProjectSlitSubHandler : public CBasicConfigSubHandler
 
  private:
   mediate_project_slit_t *m_slit;
-};
-
-//-------------------------------------------------------------------
-
-class CSlitFunctionSubHandler : public CBasicConfigSubHandler
-{
- public:
-  CSlitFunctionSubHandler(CConfigHandler *master,
-			  mediate_slit_function_t *function);
-  virtual ~CSlitFunctionSubHandler();
-
-  virtual bool start(const QXmlAttributes &atts);
-  virtual bool start(const QString &element, const QXmlAttributes &atts);
-
- private:
-  mediate_slit_function_t *m_function;
 };
 
 //-------------------------------------------------------------------

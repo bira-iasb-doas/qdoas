@@ -36,10 +36,11 @@ class CWConvTabSlit : public QFrame
 {
 Q_OBJECT
  public:
-  CWConvTabSlit(const mediate_conv_slit_t *conv, const mediate_conv_slit_t *deconv, QWidget *parent = 0);
+  CWConvTabSlit(const mediate_slit_function_t *conv, const mediate_slit_function_t *deconv, QWidget *parent = 0);
   virtual ~CWConvTabSlit();
 
-  void apply(mediate_conv_slit_t *conv, mediate_conv_slit_t *deconv) const;
+  void reset(const mediate_slit_function_t *conv, const mediate_slit_function_t *deconv);
+  void apply(mediate_slit_function_t *conv, mediate_slit_function_t *deconv) const;
 
  private:
   CWSlitSelector *m_convEdit, *m_deconvEdit;
@@ -49,10 +50,11 @@ Q_OBJECT
 class CWSlitSelector : public QGroupBox
 {
  public:
-  CWSlitSelector(const mediate_conv_slit_t *slit, const QString &title, QWidget *parent = 0);
+  CWSlitSelector(const mediate_slit_function_t *slit, const QString &title, QWidget *parent = 0);
   virtual ~CWSlitSelector();
 
-  void apply(mediate_conv_slit_t *slit) const;
+  void reset(const mediate_slit_function_t *slit);
+  void apply(mediate_slit_function_t *slit) const;
 
  private:
   QComboBox *m_slitCombo;

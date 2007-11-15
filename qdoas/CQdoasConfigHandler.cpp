@@ -23,6 +23,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "CPathSubHandler.h"
 #include "CProjectConfigSubHandlers.h"
 #include "CProjectConfigAnalysisWindowSubHandlers.h"
+#include "CConfigSubHandlerUtils.h"
 
 #include "debugutil.h"
 
@@ -255,10 +256,10 @@ bool CProjectSubHandler::start(const QString &element, const QXmlAttributes &att
     return m_master->installSubHandler(new CProjectRawSpectraSubHandler(m_master, m_project->rootNode()), atts);
   }
   else if (element == "lowpass_filter") {
-    return m_master->installSubHandler(new CProjectFilteringSubHandler(m_master, &(prop->lowpass)), atts);
+    return m_master->installSubHandler(new CFilteringSubHandler(m_master, &(prop->lowpass)), atts);
   }
   else if (element == "highpass_filter") {
-    return m_master->installSubHandler(new CProjectFilteringSubHandler(m_master, &(prop->highpass)), atts);
+    return m_master->installSubHandler(new CFilteringSubHandler(m_master, &(prop->highpass)), atts);
   }
   else if (element == "calibration") {
     return m_master->installSubHandler(new CProjectCalibrationSubHandler(m_master, &(prop->calibration)), atts);

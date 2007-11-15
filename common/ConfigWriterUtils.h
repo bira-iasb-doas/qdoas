@@ -25,6 +25,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "mediate_general.h"
 
+void writePaths(FILE *fp);
 void writeFilter(FILE *fp, size_t nIndent, const char *passband, const mediate_filter_t *d);
 void writeSlitFunction(FILE *fp, size_t nIndex, const mediate_slit_function_t *d);
 

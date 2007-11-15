@@ -99,6 +99,11 @@ CWSlitFileEdit::~CWSlitFileEdit()
 {
 }
 
+void CWSlitFileEdit::reset(const struct slit_file *d)
+{
+  m_filenameEdit->setText(d->filename);
+}
+
 void CWSlitFileEdit::apply(struct slit_file *d) const
 {
   strcpy(d->filename, m_filenameEdit->text().toAscii().data());
@@ -119,9 +124,7 @@ CWSlitGaussianEdit::CWSlitGaussianEdit(const struct slit_gaussian *d, QWidget *p
   gridLayout->addWidget(m_fwhmEdit, 0, 1, Qt::AlignLeft);
 
   // initialise
-  QString tmpStr;
-  m_fwhmEdit->validator()->fixup(tmpStr.setNum(d->fwhm));
-  m_fwhmEdit->setText(tmpStr);
+  reset(d);
 
   gridLayout->setColumnMinimumWidth(0, cSuggestedColumnZeroWidth);
   gridLayout->setColumnStretch(1, 1);
@@ -132,6 +135,13 @@ CWSlitGaussianEdit::CWSlitGaussianEdit(const struct slit_gaussian *d, QWidget *p
 
 CWSlitGaussianEdit::~CWSlitGaussianEdit()
 {
+}
+
+void CWSlitGaussianEdit::reset(const struct slit_gaussian *d)
+{
+  QString tmpStr;
+  m_fwhmEdit->validator()->fixup(tmpStr.setNum(d->fwhm));
+  m_fwhmEdit->setText(tmpStr);  
 }
 
 void CWSlitGaussianEdit::apply(struct slit_gaussian *d) const
@@ -166,10 +176,7 @@ CWSlitLorentzEdit::CWSlitLorentzEdit(const struct slit_lorentz *d, QWidget *pare
   ++row;
   
   // initialise
-  QString tmpStr;
-  m_widthEdit->validator()->fixup(tmpStr.setNum(d->width));
-  m_widthEdit->setText(tmpStr);
-  m_degreeSpin->setValue(d->degree);
+  reset(d);
 
   gridLayout->setColumnMinimumWidth(0, cSuggestedColumnZeroWidth);
   gridLayout->setColumnStretch(1, 1);
@@ -180,6 +187,14 @@ CWSlitLorentzEdit::CWSlitLorentzEdit(const struct slit_lorentz *d, QWidget *pare
 
 CWSlitLorentzEdit::~CWSlitLorentzEdit()
 {
+}
+
+void CWSlitLorentzEdit::reset(const struct slit_lorentz *d)
+{
+  QString tmpStr;
+  m_widthEdit->validator()->fixup(tmpStr.setNum(d->width));
+  m_widthEdit->setText(tmpStr);
+  m_degreeSpin->setValue(d->degree);  
 }
 
 void CWSlitLorentzEdit::apply(struct slit_lorentz *d) const
@@ -229,15 +244,7 @@ CWSlitVoigtEdit::CWSlitVoigtEdit(const struct slit_voigt *d, QWidget *parent) :
   ++row;
 
   // initialise
-  QString tmpStr;
-  m_fwhmLeftEdit->validator()->fixup(tmpStr.setNum(d->fwhmL));
-  m_fwhmLeftEdit->setText(tmpStr);
-  m_fwhmRightEdit->validator()->fixup(tmpStr.setNum(d->fwhmR));
-  m_fwhmRightEdit->setText(tmpStr);
-  m_ratioLeftEdit->validator()->fixup(tmpStr.setNum(d->glRatioL));
-  m_ratioLeftEdit->setText(tmpStr);
-  m_ratioRightEdit->validator()->fixup(tmpStr.setNum(d->glRatioR));
-  m_ratioRightEdit->setText(tmpStr);
+  reset(d);
 
   gridLayout->setColumnMinimumWidth(0, cSuggestedColumnZeroWidth);
   gridLayout->setColumnStretch(2, 1);
@@ -248,6 +255,19 @@ CWSlitVoigtEdit::CWSlitVoigtEdit(const struct slit_voigt *d, QWidget *parent) :
 
 CWSlitVoigtEdit::~CWSlitVoigtEdit()
 {
+}
+
+void CWSlitVoigtEdit::reset(const struct slit_voigt *d)
+{
+  QString tmpStr;
+  m_fwhmLeftEdit->validator()->fixup(tmpStr.setNum(d->fwhmL));
+  m_fwhmLeftEdit->setText(tmpStr);
+  m_fwhmRightEdit->validator()->fixup(tmpStr.setNum(d->fwhmR));
+  m_fwhmRightEdit->setText(tmpStr);
+  m_ratioLeftEdit->validator()->fixup(tmpStr.setNum(d->glRatioL));
+  m_ratioLeftEdit->setText(tmpStr);
+  m_ratioRightEdit->validator()->fixup(tmpStr.setNum(d->glRatioR));
+  m_ratioRightEdit->setText(tmpStr);
 }
 
 void CWSlitVoigtEdit::apply(struct slit_voigt *d) const
@@ -284,12 +304,7 @@ CWSlitErrorEdit::CWSlitErrorEdit(const struct slit_error *d, QWidget *parent) :
   ++row;
   
   // initialise
-  QString tmpStr;
-  m_fwhmEdit->validator()->fixup(tmpStr.setNum(d->fwhm));
-  m_fwhmEdit->setText(tmpStr);
-  m_widthEdit->validator()->fixup(tmpStr.setNum(d->width));
-  m_widthEdit->setText(tmpStr);
-
+  reset(d);
 
   gridLayout->setColumnMinimumWidth(0, cSuggestedColumnZeroWidth);
   gridLayout->setColumnStretch(1, 1);
@@ -300,6 +315,15 @@ CWSlitErrorEdit::CWSlitErrorEdit(const struct slit_error *d, QWidget *parent) :
 
 CWSlitErrorEdit::~CWSlitErrorEdit()
 {
+}
+
+void CWSlitErrorEdit::reset(const struct slit_error *d)
+{
+  QString tmpStr;
+  m_fwhmEdit->validator()->fixup(tmpStr.setNum(d->fwhm));
+  m_fwhmEdit->setText(tmpStr);
+  m_widthEdit->validator()->fixup(tmpStr.setNum(d->width));
+  m_widthEdit->setText(tmpStr);  
 }
 
 void CWSlitErrorEdit::apply(struct slit_error *d) const
@@ -334,12 +358,7 @@ CWSlitApodEdit::CWSlitApodEdit(const struct slit_apod *d, QWidget *parent) :
   ++row;
   
   // initialise
-  QString tmpStr;
-  m_resolutionEdit->validator()->fixup(tmpStr.setNum(d->resolution));
-  m_resolutionEdit->setText(tmpStr);
-  m_phaseEdit->validator()->fixup(tmpStr.setNum(d->phase));
-  m_phaseEdit->setText(tmpStr);
-
+  reset(d);
 
   gridLayout->setColumnMinimumWidth(0, cSuggestedColumnZeroWidth);
   gridLayout->setColumnStretch(1, 1);
@@ -350,6 +369,15 @@ CWSlitApodEdit::CWSlitApodEdit(const struct slit_apod *d, QWidget *parent) :
 
 CWSlitApodEdit::~CWSlitApodEdit()
 {
+}
+
+void CWSlitApodEdit::reset(const struct slit_apod *d)
+{
+  QString tmpStr;
+  m_resolutionEdit->validator()->fixup(tmpStr.setNum(d->resolution));
+  m_resolutionEdit->setText(tmpStr);
+  m_phaseEdit->validator()->fixup(tmpStr.setNum(d->phase));
+  m_phaseEdit->setText(tmpStr);
 }
 
 void CWSlitApodEdit::apply(struct slit_apod *d) const
@@ -394,6 +422,13 @@ CWSlitLorentzFileEdit::~CWSlitLorentzFileEdit()
 {
 }
 
+void CWSlitLorentzFileEdit::reset(const struct slit_lorentz_file *d)
+{
+  m_degreeSpin->setValue(d->degree);
+
+  m_filenameEdit->setText(d->filename);
+}
+
 void CWSlitLorentzFileEdit::apply(struct slit_lorentz_file *d) const
 {
   strcpy(d->filename, m_filenameEdit->text().toAscii().data());
@@ -435,6 +470,15 @@ CWSlitErrorFileEdit::CWSlitErrorFileEdit(const struct slit_error_file *d, QWidge
 
 CWSlitErrorFileEdit::~CWSlitErrorFileEdit()
 {
+}
+
+void CWSlitErrorFileEdit::reset(const struct slit_error_file *d)
+{
+  QString tmpStr;
+  m_widthEdit->validator()->fixup(tmpStr.setNum(d->width));
+  m_widthEdit->setText(tmpStr);
+
+  m_filenameEdit->setText(d->filename);
 }
 
 void CWSlitErrorFileEdit::apply(struct slit_error_file *d) const

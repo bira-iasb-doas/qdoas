@@ -7,6 +7,25 @@
 const char sTrue[] = "true";
 const char sFalse[] = "false";
 
+void writePaths(FILE *fp)
+{
+  CPathMgr *pathMgr = CPathMgr::instance();
+
+  // paths
+  fprintf(fp, "  <paths>\n"
+	  "    <!-- upto 10 paths can be specified (index 0 to 9). Any file or directory name in the  -->\n"
+	  "    <!-- raw_spectra tree that begins with %%? (where ? is a single digit) is expanded with -->\n"
+	  "    <!-- the correponding path.                                                            -->\n\n");
+  
+  for (int i=0; i<10; ++i) {
+    QString path = pathMgr->path(i);
+    if (!path.isNull()) {
+      fprintf(fp, "    <path index=\"%d\">%s</path>\n", i, path.toAscii().constData());
+    }
+  }
+  fprintf(fp, "  </paths>\n");
+}
+
 void writeFilter(FILE *fp, size_t nIndent, const char *passband, const mediate_filter_t *d)
 {
   size_t i;

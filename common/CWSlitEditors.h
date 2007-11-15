@@ -59,6 +59,7 @@ class CWSlitFileEdit : public CWSlitFileBase
   CWSlitFileEdit(const struct slit_file *d, QWidget *parent = 0);
   virtual ~CWSlitFileEdit();
 
+  void reset(const struct slit_file *d);
   void apply(struct slit_file *d) const;
 };
 
@@ -68,6 +69,7 @@ class CWSlitGaussianEdit : public QFrame
   CWSlitGaussianEdit(const struct slit_gaussian *d, QWidget *parent = 0);
   virtual ~CWSlitGaussianEdit();
 
+  void reset(const struct slit_gaussian *d);
   void apply(struct slit_gaussian *d) const;
 
  private:
@@ -80,6 +82,7 @@ class CWSlitLorentzEdit : public QFrame
   CWSlitLorentzEdit(const struct slit_lorentz *d, QWidget *parent = 0);
   virtual ~CWSlitLorentzEdit();
 
+  void reset(const struct slit_lorentz *d);
   void apply(struct slit_lorentz *d) const;
 
  private:
@@ -93,6 +96,7 @@ class CWSlitVoigtEdit : public QFrame
   CWSlitVoigtEdit(const struct slit_voigt *d, QWidget *parent = 0);
   virtual ~CWSlitVoigtEdit();
 
+  void reset(const struct slit_voigt *d);
   void apply(struct slit_voigt *d) const;
 
  private:
@@ -106,6 +110,7 @@ class CWSlitErrorEdit : public QFrame
   CWSlitErrorEdit(const struct slit_error *d, QWidget *parent = 0);
   virtual ~CWSlitErrorEdit();
 
+  void reset(const struct slit_error *d);
   void apply(struct slit_error *d) const;
 
  private:
@@ -119,6 +124,7 @@ class CWSlitApodEdit : public QFrame
   CWSlitApodEdit(const struct slit_apod *d, QWidget *parent = 0);
   virtual ~CWSlitApodEdit();
 
+  void reset(const struct slit_apod *d);
   void apply(struct slit_apod *d) const;
 
  private:
@@ -132,6 +138,7 @@ class CWSlitLorentzFileEdit : public CWSlitFileBase
   CWSlitLorentzFileEdit(const struct slit_lorentz_file *d, QWidget *parent = 0);
   virtual ~CWSlitLorentzFileEdit();
 
+  void reset(const struct slit_lorentz_file *d);
   void apply(struct slit_lorentz_file *d) const;
 
  private:
@@ -144,6 +151,7 @@ class CWSlitErrorFileEdit : public CWSlitFileBase
   CWSlitErrorFileEdit(const struct slit_error_file *d, QWidget *parent = 0);
   virtual ~CWSlitErrorFileEdit();
 
+  void reset(const struct slit_error_file *d);
   void apply(struct slit_error_file *d) const;
 
  private:

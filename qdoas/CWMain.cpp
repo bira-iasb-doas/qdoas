@@ -311,7 +311,10 @@ void CWMain::closeEvent(QCloseEvent *e)
     m_helpInterface = NULL;
 
     e->accept();
+    return;
   }
+
+  e->ignore();
 }
 
 bool CWMain::checkStateAndConsiderSaveFile(void)

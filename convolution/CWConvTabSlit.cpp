@@ -32,7 +32,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "constants.h"
 
 
-CWConvTabSlit::CWConvTabSlit(const mediate_conv_slit_t *conv, const mediate_conv_slit_t *deconv, QWidget *parent) :
+CWConvTabSlit::CWConvTabSlit(const mediate_slit_function_t *conv, const mediate_slit_function_t *deconv, QWidget *parent) :
   QFrame(parent)
 {
   QVBoxLayout *mainLayout = new QVBoxLayout(this);
@@ -50,7 +50,13 @@ CWConvTabSlit::~CWConvTabSlit()
 {
 }
 
-void CWConvTabSlit::apply(mediate_conv_slit_t *conv, mediate_conv_slit_t *deconv) const
+void CWConvTabSlit::reset(const mediate_slit_function_t *conv, const mediate_slit_function_t *deconv)
+{
+  m_convEdit->reset(conv);
+  m_deconvEdit->reset(deconv);
+}
+
+void CWConvTabSlit::apply(mediate_slit_function_t *conv, mediate_slit_function_t *deconv) const
 {
   m_convEdit->apply(conv);
   m_deconvEdit->apply(deconv);
@@ -58,8 +64,7 @@ void CWConvTabSlit::apply(mediate_conv_slit_t *conv, mediate_conv_slit_t *deconv
 
 
 
-
-CWSlitSelector::CWSlitSelector(const mediate_conv_slit_t *slit, const QString &title, QWidget *parent) :
+CWSlitSelector::CWSlitSelector(const mediate_slit_function_t *slit, const QString &title, QWidget *parent) :
   QGroupBox(title, parent)
 {
 
@@ -126,7 +131,7 @@ CWSlitSelector::CWSlitSelector(const mediate_conv_slit_t *slit, const QString &t
   mainLayout->setRowStretch(2, 1);
 
   // initialize set the current slit - stack will follow
-  int index = m_slitCombo->findData(QVariant(slit->slitType));
+  int index = m_slitCombo->findData(QVariant(slit->type));
   if (index != -1) {
     m_slitCombo->setCurrentIndex(index);
     m_slitStack->setCurrentIndex(index);
@@ -140,11 +145,33 @@ CWSlitSelector::~CWSlitSelector()
 {
 }
 
-void CWSlitSelector::apply(mediate_conv_slit_t *slit) const
+void CWSlitSelector::reset(const mediate_slit_function_t *slit)
+{
+  int index = m_slitCombo->findData(QVariant(slit->type));
+  if (index != -1) {
+    m_slitCombo->setCurrentIndex(index);
+    // stack will follow ...
+  }
+  
+  m_fileEdit->reset(&(slit->file));
+  m_gaussianEdit->reset(&(slit->gaussian));
+  m_lorentzEdit->reset(&(slit->lorentz));
+  m_voigtEdit->reset(&(slit->voigt));
+  m_errorEdit->reset(&(slit->error));
+  m_boxcarApodEdit->reset(&(slit->boxcarapod));
+  m_nbsApodEdit->reset(&(slit->nbsapod));
+  m_gaussianFileEdit->reset(&(slit->gaussianfile));
+  m_lorentzFileEdit->reset(&(slit->lorentzfile));
+  m_errorFileEdit->reset(&(slit->errorfile));
+  m_gaussianTempFileEdit->reset(&(slit->gaussiantempfile));
+  m_errorTempFileEdit->reset(&(slit->errortempfile));
+}
+
+void CWSlitSelector::apply(mediate_slit_function_t *slit) const
 {
   // set values for ALL slits ... and the selected slit type
 
-  slit->slitType = m_slitCombo->itemData(m_slitCombo->currentIndex()).toInt();
+  slit->type = m_slitCombo->itemData(m_slitCombo->currentIndex()).toInt();
   
   m_fileEdit->apply(&(slit->file));
   m_gaussianEdit->apply(&(slit->gaussian));

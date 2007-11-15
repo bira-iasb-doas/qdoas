@@ -73,7 +73,7 @@ CWConvTabGeneral::CWConvTabGeneral(const mediate_conv_general_t *properties, QWi
 
   valueLayout->addWidget(new QLabel("Conc.", this), 1, 0);
   m_concEdit = new QLineEdit(this);
-  m_concEdit->setValidator(new CDoubleExpFmtValidator(-100.0, 100.0, 3, m_concEdit));
+  m_concEdit->setValidator(new CDoubleExpFmtValidator(0.0, 1.0e30, 3, m_concEdit));
   valueLayout->addWidget(m_concEdit, 1, 1);
 
   valueLayout->setColumnStretch(2, 1);
@@ -88,7 +88,6 @@ CWConvTabGeneral::CWConvTabGeneral(const mediate_conv_general_t *properties, QWi
   fileLayout->addWidget(new QLabel("Input", this), row, 0);
   m_inputFileEdit = new QLineEdit(this);
   m_inputFileEdit->setMaxLength(sizeof(properties->inputFile)-1);
-  m_inputFileEdit->setText(properties->inputFile);
   fileLayout->addWidget(m_inputFileEdit, row, 1);
   QPushButton *inputBtn = new QPushButton("Browse", this);
   fileLayout->addWidget(inputBtn, row, 2);
@@ -98,7 +97,6 @@ CWConvTabGeneral::CWConvTabGeneral(const mediate_conv_general_t *properties, QWi
   fileLayout->addWidget(new QLabel("Output", this), row, 0);
   m_outputFileEdit = new QLineEdit(this);
   m_outputFileEdit->setMaxLength(sizeof(properties->outputFile)-1);
-  m_outputFileEdit->setText(properties->outputFile);
   fileLayout->addWidget(m_outputFileEdit, row, 1);
   QPushButton *outputBtn = new QPushButton("Browse", this);
   fileLayout->addWidget(outputBtn, row, 2);
@@ -108,7 +106,6 @@ CWConvTabGeneral::CWConvTabGeneral(const mediate_conv_general_t *properties, QWi
   fileLayout->addWidget(new QLabel("Calibration", this), row, 0);
   m_calibFileEdit = new QLineEdit(this);
   m_calibFileEdit->setMaxLength(sizeof(properties->calibrationFile)-1);
-  m_calibFileEdit->setText(properties->calibrationFile);
   fileLayout->addWidget(m_calibFileEdit, row, 1);
   QPushButton *calibBtn = new QPushButton("Browse", this);
   fileLayout->addWidget(calibBtn, row, 2);
@@ -118,7 +115,6 @@ CWConvTabGeneral::CWConvTabGeneral(const mediate_conv_general_t *properties, QWi
   fileLayout->addWidget(new QLabel("Solar Ref.", this), row, 0);
   m_refFileEdit = new QLineEdit(this);
   m_refFileEdit->setMaxLength(sizeof(properties->solarRefFile)-1);
-  m_refFileEdit->setText(properties->solarRefFile);
   fileLayout->addWidget(m_refFileEdit, row, 1);
   QPushButton *refBtn = new QPushButton("Browse", this);
   fileLayout->addWidget(refBtn, row, 2);
@@ -127,9 +123,32 @@ CWConvTabGeneral::CWConvTabGeneral(const mediate_conv_general_t *properties, QWi
   mainLayout->addLayout(fileLayout);
   mainLayout->addStretch(1);
 
-  // initialize - files are done
+  // initialize
+  reset(properties);
+
+  // connections
+  connect(inputBtn, SIGNAL(clicked()), this, SLOT(slotBrowseInput()));
+  connect(outputBtn, SIGNAL(clicked()), this, SLOT(slotBrowseOutput()));
+  connect(calibBtn, SIGNAL(clicked()), this, SLOT(slotBrowseCalibration()));
+  connect(refBtn, SIGNAL(clicked()), this, SLOT(slotBrowseSolarReference()));
+
+}
+
+CWConvTabGeneral::~CWConvTabGeneral()
+{
+}
+
+void CWConvTabGeneral::reset(const mediate_conv_general_t *properties)
+{
+  // set/reset gui state from properties
+
   int index;
   QString tmpStr;
+
+  m_inputFileEdit->setText(properties->inputFile);
+  m_outputFileEdit->setText(properties->outputFile);
+  m_calibFileEdit->setText(properties->calibrationFile);
+  m_refFileEdit->setText(properties->solarRefFile);
 
   // convolution type
   index = m_convolutionCombo->findData(QVariant(properties->convolutionType));
@@ -148,18 +167,7 @@ CWConvTabGeneral::CWConvTabGeneral(const mediate_conv_general_t *properties, QWi
   // conc
   tmpStr.setNum(properties->conc);
   m_concEdit->validator()->fixup(tmpStr);
-  m_concEdit->setText(tmpStr);
-
-  // connections
-  connect(inputBtn, SIGNAL(clicked()), this, SLOT(slotBrowseInput()));
-  connect(outputBtn, SIGNAL(clicked()), this, SLOT(slotBrowseOutput()));
-  connect(calibBtn, SIGNAL(clicked()), this, SLOT(slotBrowseCalibration()));
-  connect(refBtn, SIGNAL(clicked()), this, SLOT(slotBrowseSolarReference()));
-
-}
-
-CWConvTabGeneral::~CWConvTabGeneral()
-{
+  m_concEdit->setText(tmpStr);  
 }
 
 void CWConvTabGeneral::apply(mediate_conv_general_t *properties) const

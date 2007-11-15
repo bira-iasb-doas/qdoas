@@ -34,6 +34,7 @@ Q_OBJECT
   CWConvTabGeneral(const mediate_conv_general_t *properties, QWidget *parent = 0);
   virtual ~CWConvTabGeneral();
 
+  void reset(const mediate_conv_general_t *properties);
   void apply(mediate_conv_general_t *properties) const;
 
   public slots:

@@ -18,6 +18,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
 
+#include <cstring>
+
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QMenu>
@@ -37,9 +39,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "CConvEngineController.h"
 
-//#include "CQdoasConfigHandler.h"
+#include "CPathMgr.h"
+#include "CConvConfigHandler.h"
 #include "CPreferences.h"
-//#include "CConfigurationWriter.h"
+#include "CConvConfigWriter.h"
 #include "CEngineResponse.h"
 
 #include "mediate_types.h"
@@ -48,10 +51,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "debugutil.h"
 
 CWMain::CWMain(QWidget *parent) :
-  QFrame(parent),
-  m_stateValid(true)
+  QFrame(parent)
 {
-  initializeMediateConvolution(&m_properties);
+  initializeMediateConvolution(&m_guiProperties);
 
   setConfigFileName(QString());
 
@@ -88,12 +90,10 @@ CWMain::CWMain(QWidget *parent) :
 
   // Save + Save As ...
   m_saveAction = new QAction(QIcon(QPixmap(":/icons/file_save_16.png")), "Save", this);
-  m_saveAction->setEnabled(false);
   connect(m_saveAction, SIGNAL(triggered()), this, SLOT(slotSaveFile()));
   fileMenu->addAction(m_saveAction);
 
   m_saveAsAction = new QAction(QIcon(QPixmap(":/icons/file_saveas_16.png")), "Save As...", this);
-  m_saveAsAction->setEnabled(false);
   connect(m_saveAsAction, SIGNAL(triggered()), this, SLOT(slotSaveAsFile()));
   fileMenu->addAction(m_saveAsAction);
 
@@ -104,6 +104,14 @@ CWMain::CWMain(QWidget *parent) :
   fileMenu->addAction(exitAct);
 
   m_menuBar->addMenu(fileMenu);
+
+  // Calculate menu
+  QMenu *calcMenu = new QMenu("Calculate");
+  QAction *convAct = new QAction("Run Convolution", this);
+  connect(convAct, SIGNAL(triggered()), this, SLOT(slotRunConvolution()));
+  calcMenu->addAction(convAct);
+
+  m_menuBar->addMenu(calcMenu);
 
   // Help Menu
   QMenu *helpMenu = new QMenu("Help");
@@ -131,33 +139,20 @@ CWMain::CWMain(QWidget *parent) :
   // tab page
   m_pageTab = new QTabWidget(this);
 
-  m_generalTab = new CWConvTabGeneral(&(m_properties.general));
+  m_generalTab = new CWConvTabGeneral(&(m_guiProperties.general));
   m_pageTab->addTab(m_generalTab, "General");
 
-  m_slitTab = new CWConvTabSlit(&(m_properties.conslit), &(m_properties.decslit));
+  m_slitTab = new CWConvTabSlit(&(m_guiProperties.conslit), &(m_guiProperties.decslit));
   m_pageTab->addTab(m_slitTab, "Slit");
 
-  m_filteringTab = new CWFilteringEditor(&(m_properties.lowpass), &(m_properties.highpass), CWFilteringEditor::SubDivSwitch);
+  m_filteringTab = new CWFilteringEditor(&(m_guiProperties.lowpass), &(m_guiProperties.highpass), CWFilteringEditor::SubDivSwitch);
   m_pageTab->addTab(m_filteringTab, "Filtering");
 
   mainLayout->addWidget(m_pageTab, 1);
 
-  // buttons
-  QHBoxLayout *buttonLayout = new QHBoxLayout;
-  buttonLayout->setMargin(10);
-
-  QPushButton *helpBtn = new QPushButton("Help", this);
-  buttonLayout->addWidget(helpBtn);
-
-  buttonLayout->addStretch(1);
-
-  QPushButton *okBtn = new QPushButton("Ok", this);
-  buttonLayout->addWidget(okBtn);
-  
-  QPushButton *cancelBtn = new QPushButton("Cancel", this);
-  buttonLayout->addWidget(cancelBtn);
-  
-  mainLayout->addLayout(buttonLayout, 0);
+  // re-read the guiProperties and synchronize ... limits on the widgets can change the initialized state.
+  fetchGuiProperties();
+  m_properties = m_guiProperties;
 
   // icon
   setWindowIcon(QIcon(QPixmap(":/icons/logo.png")));
@@ -166,7 +161,6 @@ CWMain::CWMain(QWidget *parent) :
   resize(CPreferences::instance()->windowSize("Conv", QSize(450,350)));
 
   // connections
-  connect(okBtn, SIGNAL(clicked()), this, SLOT(slotOk()));
   connect(m_controller, SIGNAL(signalErrorMessages(int, const QString &)),
 	  this, SLOT(slotErrorMessages(int, const QString &)));
 }
@@ -186,14 +180,19 @@ void CWMain::closeEvent(QCloseEvent *e)
   if (checkStateAndConsiderSaveFile()) {
 
     e->accept();
+    return;
   }
+  
+  e->ignore();
 }
 
 bool CWMain::checkStateAndConsiderSaveFile(void)
 {
-  // if the state is valid there is nothing to do - return TRUE
-  if (m_stateValid)
-    return true;
+  
+  fetchGuiProperties();
+
+  if (compareProperties())
+    return true; // state unchanged
 
   // prompt to choose to save changes or cancel
   QString msg;
@@ -220,7 +219,7 @@ bool CWMain::checkStateAndConsiderSaveFile(void)
   slotSaveFile();
 
   // a SaveAs could have been cancelled (for some reason).
-  return m_stateValid;
+  return compareProperties();
 }
 
 void CWMain::setConfigFileName(const QString &fileName)
@@ -240,6 +239,25 @@ void CWMain::setConfigFileName(const QString &fileName)
   setWindowTitle(str);
 }
  
+void CWMain::fetchGuiProperties(void)
+{
+  // get the state of the GUI and store it in m_guiProperties. Initialize first so that
+  // strings are null padded (and memcmp) can be used to test for state changes.
+  initializeMediateConvolution(&m_guiProperties);
+
+  m_generalTab->apply(&(m_guiProperties.general));
+  m_slitTab->apply(&(m_guiProperties.conslit), &(m_guiProperties.decslit));
+  m_filteringTab->apply(&(m_guiProperties.lowpass), &(m_guiProperties.highpass));
+}
+
+bool CWMain::compareProperties(void)
+{
+  // see if the properties (last saved/read) and last fetched from the GUI are
+  // the same. returns true if they are equivalent.
+
+  return (memcmp(&m_properties, &m_guiProperties, sizeof(mediate_convolution_t)) == 0);
+}
+
 void CWMain::slotOpenFile()
 {
   if (!checkStateAndConsiderSaveFile())
@@ -248,7 +266,7 @@ void CWMain::slotOpenFile()
   CPreferences *prefs = CPreferences::instance();
 
   QString fileName = QFileDialog::getOpenFileName(this, "Open Project File",
-						  prefs->directoryName("Project"),
+						  prefs->directoryName("ConvConf"),
 						  "Qdoas Project Config (*.xml);;All Files (*)");
 
   if (fileName.isEmpty()) {
@@ -258,7 +276,6 @@ void CWMain::slotOpenFile()
   // save the last directory
   prefs->setDirectoryNameGivenFile("ConvConf", fileName);
 
-  /*
   QString errMsg;
   QFile *file = new QFile(fileName);
 
@@ -266,29 +283,48 @@ void CWMain::slotOpenFile()
   QXmlSimpleReader xmlReader;
   QXmlInputSource *source = new QXmlInputSource(file);
 
-  CQdoasConfigHandler *handler = new CQdoasConfigHandler;
+  CConvConfigHandler *handler = new CConvConfigHandler;
   xmlReader.setContentHandler(handler);
   xmlReader.setErrorHandler(handler);
 
   bool ok = xmlReader.parse(source);
   
   if (ok) {
-    // start with a clear workspace ... clear the project tree, then the workspace
+    // start with a clear configuration
+    CPathMgr *pathMgr = CPathMgr::instance();
 
-    // repopulate the workspace and the project tree
+    pathMgr->removeAll();
 
-    // store the paths in the workspace for simplification when saving ...
+    // store the paths in the pathMgr for simplification when saving ...
+    for (int i = 0; i<10; ++i) {
+      QString path = handler->getPath(i);
+      if (path.isEmpty())
+	pathMgr->removePath(i);
+      else
+	pathMgr->addPath(i, path);
+    }
+    
+    // copy the properties data ...
+    m_guiProperties = *(handler->properties());
+
+    // update the GUI - TODO
+    m_generalTab->reset(&(m_guiProperties.general));
+    m_slitTab->reset(&(m_guiProperties.conslit), &(m_guiProperties.decslit));
+
+    fetchGuiProperties(); // see note above about synchronization ...
+    m_properties = m_guiProperties;
+    
+    setConfigFileName(fileName);
   }
   else {
     errMsg = handler->messages();
   }
   delete handler;
+  delete source;
   delete file;
 
   if (!errMsg.isNull())
     QMessageBox::critical(this, "File Open", errMsg);
-  */
-
 }
 
 void CWMain::slotNewFile()
@@ -296,21 +332,25 @@ void CWMain::slotNewFile()
   if (!checkStateAndConsiderSaveFile())
     return;
   
-  // clear the project tree, then the workspace
+  initializeMediateConvolution(&m_guiProperties);
 
-  setConfigFileName(QString()); // no project file name
-  m_stateValid = true;
+  // update the GUI - TODO
+  m_generalTab->reset(&(m_guiProperties.general));
+  m_slitTab->reset(&(m_guiProperties.conslit), &(m_guiProperties.decslit));
 
-  m_saveAction->setEnabled(false);
-  m_saveAsAction->setEnabled(false);
+  fetchGuiProperties(); // see note above about synchronization ...
+  m_properties = m_guiProperties;
+
+  setConfigFileName(QString()); // no config file name
 }
 
 void CWMain::slotSaveAsFile()
 {
-  /*
   QMessageBox::StandardButton returnCode = QMessageBox::Retry;
 
-  CConvConfigurationWriter writer;
+  fetchGuiProperties();
+
+  CConvConfigWriter writer(&m_guiProperties);
 
   while (returnCode == QMessageBox::Retry) {
 
@@ -331,31 +371,34 @@ void CWMain::slotSaveAsFile()
 					   QMessageBox::Retry);
       }
       else {
-	// wrote the file ... change the project filename and validate
+	// wrote the file ... change the project filename and store the properties
 	setConfigFileName(fileName);
-	m_stateValid = true;
+	m_properties = m_guiProperties;
       }
     }
   }
-  */
+
 }
 
 void CWMain::slotSaveFile()
 {
-  /*
+
   if (m_configFile.isEmpty()) {
     slotSaveAsFile();
   }
   else {
-    CConvConfigurationWriter writer;
+    
+    fetchGuiProperties();
+    CConvConfigWriter writer(&m_guiProperties);
     
     QString msg = writer.write(m_configFile);
     if (!msg.isNull())
       QMessageBox::critical(this, "Configuration File Write Failure", msg, QMessageBox::Ok);
     else
-      m_stateValid = true;
+      m_properties = m_guiProperties;
+      
   }
-  */
+
 }
 
 void CWMain::slotQdoasHelp()
@@ -399,8 +442,11 @@ void CWMain::slotErrorMessages(int highestLevel, const QString &messages)
   }
 }
 
-void CWMain::slotOk()
+void CWMain::slotRunConvolution()
 {
+  // uses a snapshot of the guiProperties ...
+  fetchGuiProperties();
+
   // get an engine context
   void *engineContext;
   CEngineResponse *resp = new CEngineResponseMessage; // TODO ...
@@ -410,10 +456,14 @@ void CWMain::slotOk()
     return;
   }
 
-  //mediateRequestConvolution(&engineContext, &m_properties, resp);
+  QApplication::setOverrideCursor(Qt::WaitCursor);
+
+  //mediateRequestConvolution(&engineContext, &m_guiProperties, resp);
 
   // process the response - the controller will dispatch ...
   //resp->process(m_controller);
+
+  QApplication::restoreOverrideCursor();
 
   if (mediateRequestDestroyEngineContext(engineContext, resp) != 0) {
     delete resp;

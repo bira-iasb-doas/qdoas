@@ -52,6 +52,11 @@ SOURCES += ../common/CTablePageData.cpp
 SOURCES += ../common/CEngineError.cpp
 SOURCES += ../common/CEngineResponse.cpp
 SOURCES += ../common/CEngineController.cpp
+SOURCES += ../common/CConfigHandler.cpp
+SOURCES += ../common/CPathSubHandler.cpp
+SOURCES += ../common/CConfigSubHandlerUtils.cpp
+SOURCES += ../common/ConfigWriterUtils.cpp
+SOURCES += ../common/CPathMgr.cpp
 
 SOURCES += ../common/CWAboutDialog.cpp
 SOURCES += ../common/CHelpSystem.cpp
@@ -63,6 +68,8 @@ SOURCES += CWMain.cpp
 SOURCES += CWConvTabGeneral.cpp
 SOURCES += CWConvTabSlit.cpp
 SOURCES += CConvEngineController.cpp
+SOURCES += CConvConfigHandler.cpp
+SOURCES += CConvConfigWriter.cpp
 SOURCES += convolution.cpp
 
 #----------------------------------------------
@@ -76,6 +83,11 @@ HEADERS += ../common/CTablePageData.h
 HEADERS += ../common/CEngineError.h
 HEADERS += ../common/CEngineResponse.h
 HEADERS += ../common/CEngineController.h
+HEADERS += ../common/CConfigHandler.h
+HEADERS += ../common/CPathSubHandler.h
+HEADERS += ../common/CConfigSubHandlerUtils.h
+HEADERS += ../common/ConfigWriterUtils.h
+HEADERS += ../common/CPathMgr.h
 
 HEADERS += ../common/CWAboutDialog.h
 HEADERS += ../common/CHelpSystem.h
@@ -87,6 +99,8 @@ HEADERS += CWMain.h
 HEADERS += CWConvTabGeneral.h
 HEADERS += CWConvTabSlit.h
 HEADERS += CConvEngineController.h
+HEADERS += CConvConfigHandler.h
+HEADERS += CConvConfigWriter.h
 
 #----------------------------------------------
 # Mediator Source files
