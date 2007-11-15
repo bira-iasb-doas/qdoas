@@ -327,7 +327,7 @@ bool CProjectRawSpectraSubHandler::start(const QString &element, const QXmlAttri
 // handler for <lowpass_filter> and <highpass_filter> (children of project)
 
 CProjectFilteringSubHandler::CProjectFilteringSubHandler(CConfigHandler *master,
-							 mediate_project_filtering_t *filter) :
+							 mediate_filter_t *filter) :
   CBasicConfigSubHandler(master),
   m_filter(filter)
 {

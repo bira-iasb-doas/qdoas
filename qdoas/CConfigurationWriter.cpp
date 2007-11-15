@@ -253,7 +253,7 @@ void CConfigurationWriter::writePropertiesAnalysis(FILE *fp, const mediate_proje
 	  "    </analysis>\n");
 }
 
-void CConfigurationWriter::writePropertiesFilter(FILE *fp, const char *passband, const mediate_project_filtering_t *d)
+void CConfigurationWriter::writePropertiesFilter(FILE *fp, const char *passband, const mediate_filter_t *d)
 {
   fprintf(fp, "    <%spass_filter selected=", passband); // low or high
   switch (d->mode) {

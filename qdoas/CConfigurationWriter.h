@@ -43,7 +43,7 @@ class CConfigurationWriter
   void writePropertiesDisplay(FILE *fp, const mediate_project_display_t *d);
   void writePropertiesSelection(FILE *fp, const mediate_project_selection_t *d);
   void writePropertiesAnalysis(FILE *fp, const mediate_project_analysis_t *d);
-  void writePropertiesFilter(FILE *fp, const char *passband, const mediate_project_filtering_t *d);
+  void writePropertiesFilter(FILE *fp, const char *passband, const mediate_filter_t *d);
   void writePropertiesCalibration(FILE *fp, const mediate_project_calibration_t *d);
   void writePropertiesUndersampling(FILE *fp, const mediate_project_undersampling_t *d);
   void writePropertiesInstrumental(FILE *fp, const mediate_project_instrumental_t *d);

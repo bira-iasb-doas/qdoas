@@ -105,14 +105,14 @@ class CProjectFilteringSubHandler : public CBasicConfigSubHandler
 {
  public:
   CProjectFilteringSubHandler(CConfigHandler *master,
-			   mediate_project_filtering_t *filter);
+			   mediate_filter_t *filter);
   virtual ~CProjectFilteringSubHandler();
 
   virtual bool start(const QXmlAttributes &atts);
   virtual bool start(const QString &element, const QXmlAttributes &atts);
 
  private:
-  mediate_project_filtering_t *m_filter;
+  mediate_filter_t *m_filter;
 };
 
 //-------------------------------------------------------------------
