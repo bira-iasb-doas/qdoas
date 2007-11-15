@@ -18,8 +18,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
 
-#ifndef _CCONFIGURATIONWRITER_H_GUARD
-#define _CCONFIGURATIONWRITER_H_GUARD
+#ifndef _CQDOASCONFIGWRITER_H_GUARD
+#define _CQDOASCONFIGWRITER_H_GUARD
 
 #include <cstdio>
 
@@ -29,11 +29,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 class CWProjectTree;
 
-class CConfigurationWriter
+class CQdoasConfigWriter
 {
  public:
-  CConfigurationWriter(const CWProjectTree *projectTree);
-  ~CConfigurationWriter();
+  CQdoasConfigWriter(const CWProjectTree *projectTree);
+  ~CQdoasConfigWriter();
 
   QString write(const QString &fileName);
 

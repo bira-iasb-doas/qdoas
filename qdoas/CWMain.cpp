@@ -43,7 +43,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "CQdoasConfigHandler.h"
 #include "CWorkSpace.h"
 #include "CPreferences.h"
-#include "CConfigurationWriter.h"
+#include "CQdoasConfigWriter.h"
 #include "CConfigStateMonitor.h"
 #include "CHelpSystem.h"
 
@@ -472,7 +472,7 @@ void CWMain::slotSaveAsFile()
 {
   QMessageBox::StandardButton returnCode = QMessageBox::Retry;
 
-  CConfigurationWriter writer(m_projTree);
+  CQdoasConfigWriter writer(m_projTree);
 
   while (returnCode == QMessageBox::Retry) {
 
@@ -507,7 +507,7 @@ void CWMain::slotSaveFile()
     slotSaveAsFile();
   }
   else {
-    CConfigurationWriter writer(m_projTree);
+    CQdoasConfigWriter writer(m_projTree);
     
     QString msg = writer.write(m_projectFile);
     if (!msg.isNull())

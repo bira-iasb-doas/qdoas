@@ -22,7 +22,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "CWorkSpace.h"
 #include "CWProjectTree.h"
-#include "CConfigurationWriter.h"
+#include "CQdoasConfigWriter.h"
 
 #include "constants.h"
 
@@ -31,16 +31,16 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 const char sTrue[] = "true";
 const char sFalse[] = "false";
 
-CConfigurationWriter::CConfigurationWriter(const CWProjectTree *projectTree) :
+CQdoasConfigWriter::CQdoasConfigWriter(const CWProjectTree *projectTree) :
   m_projectTree(projectTree)
 {
 }
 
-CConfigurationWriter::~CConfigurationWriter()
+CQdoasConfigWriter::~CQdoasConfigWriter()
 {
 }
 
-QString CConfigurationWriter::write(const QString &fileName)
+QString CQdoasConfigWriter::write(const QString &fileName)
 {
   QString msg;
   FILE *fp = fopen(fileName.toAscii().constData(), "w");
@@ -111,7 +111,7 @@ QString CConfigurationWriter::write(const QString &fileName)
   return msg;
 }
 
-void CConfigurationWriter::writeProjects(FILE *fp)
+void CQdoasConfigWriter::writeProjects(FILE *fp)
 {
   const QTreeWidgetItem *item;
   const CProjectItem *projItem;
@@ -148,7 +148,7 @@ void CConfigurationWriter::writeProjects(FILE *fp)
   }
 }
 
-void CConfigurationWriter::writeProperties(FILE *fp, const mediate_project_t *d)
+void CQdoasConfigWriter::writeProperties(FILE *fp, const mediate_project_t *d)
 {
   writePropertiesDisplay(fp, &(d->display));
   writePropertiesSelection(fp, &(d->selection));
@@ -163,7 +163,7 @@ void CConfigurationWriter::writeProperties(FILE *fp, const mediate_project_t *d)
   writePropertiesNasaAmes(fp, &(d->nasaames));
 }
 
-void CConfigurationWriter::writePropertiesDisplay(FILE *fp, const mediate_project_display_t *d)
+void CQdoasConfigWriter::writePropertiesDisplay(FILE *fp, const mediate_project_display_t *d)
 {
   fprintf(fp, "    <display spectra=\"%s\" data=\"%s\" fits=\"%s\">\n",
 	  (d->requireSpectra ? sTrue : sFalse), (d->requireData ? sTrue : sFalse), (d->requireFits ? sTrue : sFalse));
@@ -174,7 +174,7 @@ void CConfigurationWriter::writePropertiesDisplay(FILE *fp, const mediate_projec
 
 }
 
-void CConfigurationWriter::writePropertiesSelection(FILE *fp, const mediate_project_selection_t *d)
+void CQdoasConfigWriter::writePropertiesSelection(FILE *fp, const mediate_project_selection_t *d)
 {
   fprintf(fp, "    <selection>\n");
   fprintf(fp, "      <sza min=\"%.3f\" max=\"%.3f\" delta=\"%.3f\" />\n", d->szaMinimum, d->szaMaximum, d->szaDelta);
@@ -202,7 +202,7 @@ void CConfigurationWriter::writePropertiesSelection(FILE *fp, const mediate_proj
 
 }
 
-void CConfigurationWriter::writePropertiesAnalysis(FILE *fp, const mediate_project_analysis_t *d)
+void CQdoasConfigWriter::writePropertiesAnalysis(FILE *fp, const mediate_project_analysis_t *d)
 {
   fprintf(fp, "    <analysis method=");
   switch (d->methodType) {
@@ -253,7 +253,7 @@ void CConfigurationWriter::writePropertiesAnalysis(FILE *fp, const mediate_proje
 	  "    </analysis>\n");
 }
 
-void CConfigurationWriter::writePropertiesFilter(FILE *fp, const char *passband, const mediate_filter_t *d)
+void CQdoasConfigWriter::writePropertiesFilter(FILE *fp, const char *passband, const mediate_filter_t *d)
 {
   fprintf(fp, "    <%spass_filter selected=", passband); // low or high
   switch (d->mode) {
@@ -298,7 +298,7 @@ void CConfigurationWriter::writePropertiesFilter(FILE *fp, const char *passband,
   fprintf(fp, "    </%spass_filter>\n", passband);
 }
 
-void CConfigurationWriter::writePropertiesCalibration(FILE *fp, const mediate_project_calibration_t *d)
+void CQdoasConfigWriter::writePropertiesCalibration(FILE *fp, const mediate_project_calibration_t *d)
 {
   fprintf(fp, "    <calibration ref=\"%s\" method=", d->solarRefFile);
   switch (d->methodType) {
@@ -346,7 +346,7 @@ void CConfigurationWriter::writePropertiesCalibration(FILE *fp, const mediate_pr
   fprintf(fp, "    </calibration>\n");
 }
 
-void CConfigurationWriter::writePropertiesUndersampling(FILE *fp, const mediate_project_undersampling_t *d)
+void CQdoasConfigWriter::writePropertiesUndersampling(FILE *fp, const mediate_project_undersampling_t *d)
 {
   fprintf(fp, "    <undersampling ref=\"%s\" method=", d->solarRefFile);
   switch (d->method) {
@@ -365,7 +365,7 @@ void CConfigurationWriter::writePropertiesUndersampling(FILE *fp, const mediate_
   fprintf(fp, " shift=\"%f\" />\n", d->shift);
 }
 
-void CConfigurationWriter::writePropertiesInstrumental(FILE *fp, const mediate_project_instrumental_t *d)
+void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_project_instrumental_t *d)
 {
   int i;
   QString tmpStr;
@@ -985,7 +985,7 @@ void CConfigurationWriter::writePropertiesInstrumental(FILE *fp, const mediate_p
   fprintf(fp, "    </instrumental>\n");
 }
 
-void CConfigurationWriter::writePropertiesSlit(FILE *fp, const mediate_project_slit_t *d)
+void CQdoasConfigWriter::writePropertiesSlit(FILE *fp, const mediate_project_slit_t *d)
 {
   QString tmpStr;
   CWorkSpace *ws = CWorkSpace::instance();
@@ -999,7 +999,7 @@ void CConfigurationWriter::writePropertiesSlit(FILE *fp, const mediate_project_s
   fprintf(fp, "    </slit>\n");
 }
 
-void CConfigurationWriter::writeSlitFunction(FILE *fp, const mediate_slit_function_t *d)
+void CQdoasConfigWriter::writeSlitFunction(FILE *fp, const mediate_slit_function_t *d)
 {
   QString tmpStr;
   CWorkSpace *ws = CWorkSpace::instance();
@@ -1080,7 +1080,7 @@ void CConfigurationWriter::writeSlitFunction(FILE *fp, const mediate_slit_functi
 }
 
 
-void CConfigurationWriter::writePropertiesOutput(FILE *fp, const mediate_project_output_t *d)
+void CQdoasConfigWriter::writePropertiesOutput(FILE *fp, const mediate_project_output_t *d)
 {
   QString tmpStr = CWorkSpace::instance()->simplifyPath(QString(d->path));
 
@@ -1095,7 +1095,7 @@ void CConfigurationWriter::writePropertiesOutput(FILE *fp, const mediate_project
   fprintf(fp, "    </output>\n");
 }
 
-void CConfigurationWriter::writePropertiesNasaAmes(FILE *fp, const mediate_project_nasa_ames_t *d)
+void CQdoasConfigWriter::writePropertiesNasaAmes(FILE *fp, const mediate_project_nasa_ames_t *d)
 {
   QString tmpStr = CWorkSpace::instance()->simplifyPath(QString(d->path));
 
@@ -1104,7 +1104,7 @@ void CConfigurationWriter::writePropertiesNasaAmes(FILE *fp, const mediate_proje
 	  d->instrument, d->experiment, d->anlysWinNO2, d->anlysWinO3, d->anlysWinBrO, d->anlysWinOClO);
 }
 
-void CConfigurationWriter::writeRawSpectraTree(FILE *fp, const QTreeWidgetItem *rawSpectraItem)
+void CQdoasConfigWriter::writeRawSpectraTree(FILE *fp, const QTreeWidgetItem *rawSpectraItem)
 {
   fprintf(fp, "    <raw_spectra>\n"
 	  "      <!-- Disable file, folder and directory items with the disable set equal to \"true\". -->\n"
@@ -1123,7 +1123,7 @@ void CConfigurationWriter::writeRawSpectraTree(FILE *fp, const QTreeWidgetItem *
   fprintf(fp, "    </raw_spectra>\n");
 }
 
-void CConfigurationWriter::writeSpectraTreeNode(FILE *fp, const QTreeWidgetItem *item, int depth)
+void CQdoasConfigWriter::writeSpectraTreeNode(FILE *fp, const QTreeWidgetItem *item, int depth)
 {
   int i;
 
@@ -1183,7 +1183,7 @@ void CConfigurationWriter::writeSpectraTreeNode(FILE *fp, const QTreeWidgetItem 
   }
 }
 
-void CConfigurationWriter::writeAnalysisWindows(FILE *fp, const QString &projectName, const QTreeWidgetItem *item)
+void CQdoasConfigWriter::writeAnalysisWindows(FILE *fp, const QString &projectName, const QTreeWidgetItem *item)
 {
   const CAnalysisWindowItem *awItem;
   const mediate_analysis_window_t *properties;
@@ -1264,7 +1264,7 @@ void CConfigurationWriter::writeAnalysisWindows(FILE *fp, const QString &project
   }
 }
 
-void CConfigurationWriter::writePolyType(FILE *fp, const char *attr, int type)
+void CQdoasConfigWriter::writePolyType(FILE *fp, const char *attr, int type)
 {
   switch (type) {
   case ANLYS_POLY_TYPE_0: fprintf(fp, " %s=\"0\"", attr); break;
@@ -1277,7 +1277,7 @@ void CConfigurationWriter::writePolyType(FILE *fp, const char *attr, int type)
   }
 }
 
-void CConfigurationWriter::writeCrossSectionList(FILE *fp, const cross_section_list_t *data)
+void CQdoasConfigWriter::writeCrossSectionList(FILE *fp, const cross_section_list_t *data)
 {
   QString tmpStr;
   CWorkSpace *ws = CWorkSpace::instance();
@@ -1335,7 +1335,7 @@ void CConfigurationWriter::writeCrossSectionList(FILE *fp, const cross_section_l
   fprintf(fp, "      </cross_sections>\n");
 }
 
-void CConfigurationWriter::writeLinear(FILE *fp, const struct anlyswin_linear *d)
+void CQdoasConfigWriter::writeLinear(FILE *fp, const struct anlyswin_linear *d)
 {
   fprintf(fp, "      <linear");
   writePolyType(fp, "xpoly", d->xPolyOrder);
@@ -1356,7 +1356,7 @@ void CConfigurationWriter::writeLinear(FILE *fp, const struct anlyswin_linear *d
   fprintf(fp, " />\n");
 }
 
-void CConfigurationWriter::writeNonLinear(FILE *fp, const struct anlyswin_nonlinear *d)
+void CQdoasConfigWriter::writeNonLinear(FILE *fp, const struct anlyswin_nonlinear *d)
 {
   fprintf(fp, "      <nonlinear solfit=\"%s\" solinit=\"%.3f\" soldelt=\"%.3f\" solfstr=\"%s\" solestr=\"%s\"",
 	  (d->solFlagFit ? sTrue : sFalse), d->solInitial, d->solDelta,
@@ -1392,7 +1392,7 @@ void CConfigurationWriter::writeNonLinear(FILE *fp, const struct anlyswin_nonlin
 
 }
 
-void CConfigurationWriter::writeShiftStretchList(FILE *fp, const shift_stretch_list_t *data)
+void CQdoasConfigWriter::writeShiftStretchList(FILE *fp, const shift_stretch_list_t *data)
 {
   int k, j;
   const struct anlyswin_shift_stretch *d = &(data->shiftStretch[0]);
@@ -1445,7 +1445,7 @@ void CConfigurationWriter::writeShiftStretchList(FILE *fp, const shift_stretch_l
   fprintf(fp, "      </shift_stretches>\n");
 }
 
-void CConfigurationWriter::writeGapList(FILE *fp, const gap_list_t *d)
+void CQdoasConfigWriter::writeGapList(FILE *fp, const gap_list_t *d)
 {
   int j = 0;
 
@@ -1459,7 +1459,7 @@ void CConfigurationWriter::writeGapList(FILE *fp, const gap_list_t *d)
   fprintf(fp, "      </gaps>\n");
 }
 
-void CConfigurationWriter::writeOutputList(FILE *fp, const output_list_t *d)
+void CQdoasConfigWriter::writeOutputList(FILE *fp, const output_list_t *d)
 {
   int j = 0;
 
@@ -1482,7 +1482,7 @@ void CConfigurationWriter::writeOutputList(FILE *fp, const output_list_t *d)
   fprintf(fp, "      </outputs>\n");
 }
 
-void CConfigurationWriter::writeSfps(FILE *fp, const struct calibration_sfp *d)
+void CQdoasConfigWriter::writeSfps(FILE *fp, const struct calibration_sfp *d)
 {
   fprintf(fp, "      <sfps>\n");
 
@@ -1498,7 +1498,7 @@ void CConfigurationWriter::writeSfps(FILE *fp, const struct calibration_sfp *d)
 }
 
 
-void CConfigurationWriter::writeDataSelectList(FILE *fp, const data_select_list_t *d)
+void CQdoasConfigWriter::writeDataSelectList(FILE *fp, const data_select_list_t *d)
 {
   int i = 0;
   while (i < d->nSelected) {
