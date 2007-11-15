@@ -25,15 +25,15 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QLabel>
 #include <QFontMetrics>
 
-#include "CWProjectTabFiltering.h"
+#include "CWFilteringEditor.h"
 #include "CValidator.h"
 
 #include "constants.h"
 
 #include "debugutil.h"
 
-CWProjectTabFiltering::CWProjectTabFiltering(const mediate_project_filtering_t *lowpass,
-					     const mediate_project_filtering_t *highpass, QWidget *parent) :
+CWFilteringEditor::CWFilteringEditor(const mediate_filter_t *lowpass,
+				     const mediate_filter_t *highpass, QWidget *parent) :
   QFrame(parent)
 {
   QVBoxLayout *mainLayout = new QVBoxLayout(this);
@@ -162,11 +162,11 @@ CWProjectTabFiltering::CWProjectTabFiltering(const mediate_project_filtering_t *
 
  }
 
-CWProjectTabFiltering::~CWProjectTabFiltering()
+CWFilteringEditor::~CWFilteringEditor()
 {
 }
 
-void CWProjectTabFiltering::apply(mediate_project_filtering_t *lowpass, mediate_project_filtering_t *highpass) const
+void CWFilteringEditor::apply(mediate_filter_t *lowpass, mediate_filter_t *highpass) const
 {
   // set values for ALL filters ... and the selected mode
 

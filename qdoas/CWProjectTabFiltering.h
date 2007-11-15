@@ -17,8 +17,8 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#ifndef _CWPROJECTTABFILTERING_H_GUARD
-#define _CWPROJECTTABFILTERING_H_GUARD
+#ifndef _CWFILTERINGEDITOR_H_GUARD
+#define _CWFILTERINGEDITOR_H_GUARD
 
 #include <QFrame>
 #include <QComboBox>
@@ -26,7 +26,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QLineEdit>
 #include <QSpinBox>
 
-#include "mediate_project.h"
+#include "mediate_general.h"
 
 class CWKaiserEdit;
 class CWBoxcarTriangularBinomialEdit;
@@ -34,14 +34,14 @@ class CWGaussianEdit;
 class CWSavitzkyGolayEdit;
 
 //--------------------------------------------------------------------------
-class CWProjectTabFiltering : public QFrame
+class CWFilteringEditor : public QFrame
 {
  public:
-  CWProjectTabFiltering(const mediate_project_filtering_t *lowpass,
-			const mediate_project_filtering_t *highpass, QWidget *parent = 0);
-  virtual ~CWProjectTabFiltering();
+  CWFilteringEditor(const mediate_filter_t *lowpass,
+		    const mediate_filter_t *highpass, QWidget *parent = 0);
+  virtual ~CWFilteringEditor();
 
-  void apply(mediate_project_filtering_t *lowpass, mediate_project_filtering_t *highpass) const;
+  void apply(mediate_filter_t *lowpass, mediate_filter_t *highpass) const;
 
  private:
   QComboBox *m_lowCombo, *m_highCombo;
