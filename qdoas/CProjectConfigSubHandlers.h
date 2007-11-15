@@ -189,6 +189,22 @@ class CProjectSlitSubHandler : public CBasicConfigSubHandler
 
 //-------------------------------------------------------------------
 
+class CSlitFunctionSubHandler : public CBasicConfigSubHandler
+{
+ public:
+  CSlitFunctionSubHandler(CConfigHandler *master,
+			  mediate_slit_function_t *function);
+  virtual ~CSlitFunctionSubHandler();
+
+  virtual bool start(const QXmlAttributes &atts);
+  virtual bool start(const QString &element, const QXmlAttributes &atts);
+
+ private:
+  mediate_slit_function_t *m_function;
+};
+
+//-------------------------------------------------------------------
+
 class CProjectOutputSubHandler : public CSelectorSubHandler
 {
  public:

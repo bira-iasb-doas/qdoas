@@ -68,6 +68,8 @@ class CConfigurationWriter
   void writeSfps(FILE *fp, const struct calibration_sfp *d);
   void writeDataSelectList(FILE *fp, const data_select_list_t *d);
   
+  // TODO - move to common file
+  void writeSlitFunction(FILE *fp, const mediate_slit_function_t *d);
 
  private:
   const CWProjectTree *m_projectTree;

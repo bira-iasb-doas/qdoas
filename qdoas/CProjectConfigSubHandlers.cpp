@@ -1351,34 +1351,6 @@ bool CProjectSlitSubHandler::start(const QXmlAttributes &atts)
       return postErrorMessage("Solar Reference Filename too long");
   }
 
-  str = atts.value("type");
-  if (str == "file")
-    m_slit->slitType = SLIT_TYPE_FILE;
-  else if (str == "gaussian")
-    m_slit->slitType = SLIT_TYPE_GAUSS;
-  else if (str == "lorentz")
-    m_slit->slitType = SLIT_TYPE_INVPOLY;
-  else if (str == "voigt")
-    m_slit->slitType = SLIT_TYPE_VOIGT;
-  else if (str == "error")
-    m_slit->slitType = SLIT_TYPE_ERF;
-  else if (str == "boxcarapod")
-    m_slit->slitType = SLIT_TYPE_APOD;
-  else if (str == "nbsapod")
-    m_slit->slitType = SLIT_TYPE_APODNBS;
-  else if (str == "gaussianfile")
-    m_slit->slitType = SLIT_TYPE_GAUSS_FILE;
-  else if (str == "lorentzfile")
-    m_slit->slitType = SLIT_TYPE_INVPOLY_FILE;
-  else if (str == "errorfile")
-    m_slit->slitType = SLIT_TYPE_ERF_FILE;
-  else if (str == "gaussiantempfile")
-    m_slit->slitType = SLIT_TYPE_GAUSS_T_FILE;
-  else if (str == "errortempfile")
-    m_slit->slitType = SLIT_TYPE_ERF_T_FILE;
-  else
-    return postErrorMessage("Invalid slit type");
-
   m_slit->applyFwhmCorrection = (atts.value("fwhmcor") == "true") ? 1 : 0;
 
   return true;
@@ -1386,55 +1358,113 @@ bool CProjectSlitSubHandler::start(const QXmlAttributes &atts)
 
 bool CProjectSlitSubHandler::start(const QString &element, const QXmlAttributes &atts)
 {
+  if (element == "slit_func") {
+    
+    return m_master->installSubHandler(new CSlitFunctionSubHandler(m_master, &(m_slit->function)), atts);
+  }
+
+  return true;
+}
+
+//------------------------------------------------------------------------
+// handler for <slit> (child of project)
+
+CSlitFunctionSubHandler::CSlitFunctionSubHandler(CConfigHandler *master,
+						 mediate_slit_function_t *function) :
+  CBasicConfigSubHandler(master),
+  m_function(function)
+{
+}
+
+CSlitFunctionSubHandler::~CSlitFunctionSubHandler()
+{
+}
+
+bool CSlitFunctionSubHandler::start(const QXmlAttributes &atts)
+{
+  QString str = atts.value("type");
+
+  if (str == "file")
+    m_function->type = SLIT_TYPE_FILE;
+  else if (str == "gaussian")
+    m_function->type = SLIT_TYPE_GAUSS;
+  else if (str == "lorentz")
+    m_function->type = SLIT_TYPE_INVPOLY;
+  else if (str == "voigt")
+    m_function->type = SLIT_TYPE_VOIGT;
+  else if (str == "error")
+    m_function->type = SLIT_TYPE_ERF;
+  else if (str == "boxcarapod")
+    m_function->type = SLIT_TYPE_APOD;
+  else if (str == "nbsapod")
+    m_function->type = SLIT_TYPE_APODNBS;
+  else if (str == "gaussianfile")
+    m_function->type = SLIT_TYPE_GAUSS_FILE;
+  else if (str == "lorentzfile")
+    m_function->type = SLIT_TYPE_INVPOLY_FILE;
+  else if (str == "errorfile")
+    m_function->type = SLIT_TYPE_ERF_FILE;
+  else if (str == "gaussiantempfile")
+    m_function->type = SLIT_TYPE_GAUSS_T_FILE;
+  else if (str == "errortempfile")
+    m_function->type = SLIT_TYPE_ERF_T_FILE;
+  else
+    return postErrorMessage("Invalid slit type");
+
+  return true;
+}
+
+bool CSlitFunctionSubHandler::start(const QString &element, const QXmlAttributes &atts)
+{
   if (element == "file") {
 
     QString str = atts.value("file");
     if (!str.isEmpty()) {
       str = m_master->pathExpand(str);
-      if (str.length() < (int)sizeof(m_slit->file.filename))
-	strcpy(m_slit->file.filename, str.toAscii().data());
+      if (str.length() < (int)sizeof(m_function->file.filename))
+	strcpy(m_function->file.filename, str.toAscii().data());
       else
 	return postErrorMessage("Slit Function Filename too long");
     }
   }
   else if (element == "gaussian") {
 
-    m_slit->gaussian.fwhm = atts.value("fwhm").toDouble();
+    m_function->gaussian.fwhm = atts.value("fwhm").toDouble();
   }
   else if (element == "lorentz") {
 
-    m_slit->lorentz.width = atts.value("width").toDouble();
-    m_slit->lorentz.degree = atts.value("degree").toInt();
+    m_function->lorentz.width = atts.value("width").toDouble();
+    m_function->lorentz.degree = atts.value("degree").toInt();
   }
   else if (element == "voigt") {
 
-    m_slit->voigt.fwhmL = atts.value("fwhmleft").toDouble();
-    m_slit->voigt.fwhmR = atts.value("fwhmright").toDouble();
-    m_slit->voigt.glRatioL = atts.value("glrleft").toDouble();
-    m_slit->voigt.fwhmL = atts.value("glrright").toDouble();
+    m_function->voigt.fwhmL = atts.value("fwhmleft").toDouble();
+    m_function->voigt.fwhmR = atts.value("fwhmright").toDouble();
+    m_function->voigt.glRatioL = atts.value("glrleft").toDouble();
+    m_function->voigt.fwhmL = atts.value("glrright").toDouble();
   }
   else if (element == "error") {
 
-    m_slit->error.fwhm = atts.value("fwhm").toDouble();
-    m_slit->error.width = atts.value("width").toDouble();
+    m_function->error.fwhm = atts.value("fwhm").toDouble();
+    m_function->error.width = atts.value("width").toDouble();
   }
   else if (element == "boxcarapod") {
 
-    m_slit->boxcarapod.resolution = atts.value("resolution").toDouble();
-    m_slit->boxcarapod.phase = atts.value("phase").toDouble();
+    m_function->boxcarapod.resolution = atts.value("resolution").toDouble();
+    m_function->boxcarapod.phase = atts.value("phase").toDouble();
   }
   else if (element == "nbsapod") {
 
-    m_slit->nbsapod.resolution = atts.value("resolution").toDouble();
-    m_slit->nbsapod.phase = atts.value("phase").toDouble();
+    m_function->nbsapod.resolution = atts.value("resolution").toDouble();
+    m_function->nbsapod.phase = atts.value("phase").toDouble();
   }
   else if (element == "gaussianfile") {
 
     QString str = atts.value("file");
     if (!str.isEmpty()) {
       str = m_master->pathExpand(str);
-      if (str.length() < (int)sizeof(m_slit->gaussianfile.filename))
-	strcpy(m_slit->gaussianfile.filename, str.toAscii().data());
+      if (str.length() < (int)sizeof(m_function->gaussianfile.filename))
+	strcpy(m_function->gaussianfile.filename, str.toAscii().data());
       else
 	return postErrorMessage("Slit Function Filename too long");
     }
@@ -1444,34 +1474,34 @@ bool CProjectSlitSubHandler::start(const QString &element, const QXmlAttributes 
     QString str = atts.value("file");
     if (!str.isEmpty()) {
       str = m_master->pathExpand(str);
-      if (str.length() < (int)sizeof(m_slit->lorentzfile.filename))
-	strcpy(m_slit->lorentzfile.filename, str.toAscii().data());
+      if (str.length() < (int)sizeof(m_function->lorentzfile.filename))
+	strcpy(m_function->lorentzfile.filename, str.toAscii().data());
       else
 	return postErrorMessage("Slit Function Filename too long");
     }
 
-    m_slit->lorentzfile.degree = atts.value("degree").toInt();
+    m_function->lorentzfile.degree = atts.value("degree").toInt();
   }
   else if (element == "errorfile") {
 
     QString str = atts.value("file");
     if (!str.isEmpty()) {
       str = m_master->pathExpand(str);
-      if (str.length() < (int)sizeof(m_slit->errorfile.filename))
-	strcpy(m_slit->errorfile.filename, str.toAscii().data());
+      if (str.length() < (int)sizeof(m_function->errorfile.filename))
+	strcpy(m_function->errorfile.filename, str.toAscii().data());
       else
 	return postErrorMessage("Slit Function Filename too long");
     }
 
-    m_slit->errorfile.width = atts.value("width").toDouble();
+    m_function->errorfile.width = atts.value("width").toDouble();
   }
   else if (element == "gaussiantempfile") {
 
     QString str = atts.value("file");
     if (!str.isEmpty()) {
       str = m_master->pathExpand(str);
-      if (str.length() < (int)sizeof(m_slit->gaussiantempfile.filename))
-	strcpy(m_slit->gaussiantempfile.filename, str.toAscii().data());
+      if (str.length() < (int)sizeof(m_function->gaussiantempfile.filename))
+	strcpy(m_function->gaussiantempfile.filename, str.toAscii().data());
       else
 	return postErrorMessage("Slit Function Filename too long");
     }
@@ -1481,13 +1511,13 @@ bool CProjectSlitSubHandler::start(const QString &element, const QXmlAttributes 
     QString str = atts.value("file");
     if (!str.isEmpty()) {
       str = m_master->pathExpand(str);
-      if (str.length() < (int)sizeof(m_slit->errortempfile.filename))
-	strcpy(m_slit->errortempfile.filename, str.toAscii().data());
+      if (str.length() < (int)sizeof(m_function->errortempfile.filename))
+	strcpy(m_function->errortempfile.filename, str.toAscii().data());
       else
 	return postErrorMessage("Slit Function Filename too long");
     }
 
-    m_slit->errortempfile.width = atts.value("width").toDouble();
+    m_function->errortempfile.width = atts.value("width").toDouble();
   }
 
   return true;
