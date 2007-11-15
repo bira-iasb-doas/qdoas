@@ -25,11 +25,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include <QFrame>
 #include <QMenuBar>
-#include <QToolBar>
-#include <QSplitter>
-#include <QStatusBar>
 #include <QTabWidget>
-#include <QTableView>
 #include <QAction>
 
 #include "CWConvTabGeneral.h"

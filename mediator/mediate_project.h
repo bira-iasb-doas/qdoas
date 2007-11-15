@@ -146,57 +146,7 @@ extern "C" {
 
 
   /****************************************************/
-  /* Project Filtering */
-
-  struct filter_kaiser
-  {
-    double cutoffFrequency;
-    double tolerance;
-    double passband;
-    int iterations;
-  };
-
-  struct filter_boxcar
-  {
-    int width;            /* odd number of pixels */
-    int iterations;
-  };
-
-  struct filter_gaussian
-  {
-    double fwhm;          /* pixels */
-    int iterations;
-  };
-
-  struct filter_triangular
-  {
-    int width;            /* odd number of pixels */
-    int iterations;
-  };
-
-  struct filter_savitzky_golay
-  {
-    int width;            /* odd number of pixels */
-    int order;            /* even number */
-    int iterations;
-  };
-
-  struct filter_binomial
-  {
-    int width;            /* odd number of pixels */
-    int iterations;
-  };
-
-  typedef struct mediate_project_filtering
-  {
-    int mode;
-    struct filter_kaiser kaiser;
-    struct filter_boxcar boxcar;
-    struct filter_gaussian gaussian;
-    struct filter_triangular triangular;
-    struct filter_savitzky_golay savitzky;
-    struct filter_binomial binomial;
-  } mediate_project_filtering_t;
+  /* Project Filtering - mediate_filter_t */
 
 
   /****************************************************/
@@ -473,8 +423,8 @@ extern "C" {
     mediate_project_display_t display;
     mediate_project_selection_t selection;
     mediate_project_analysis_t analysis;
-    mediate_project_filtering_t lowpass;
-    mediate_project_filtering_t highpass;
+    mediate_filter_t lowpass;
+    mediate_filter_t highpass;
     mediate_project_calibration_t calibration;
     mediate_project_undersampling_t undersampling;
     mediate_project_instrumental_t instrumental;
@@ -493,7 +443,7 @@ extern "C" {
   void initializeMediateProjectSelection(mediate_project_selection_t *d);
   void initializeMediateProjectSpectra(mediate_project_spectra_t *d);
   void initializeMediateProjectAnalysis(mediate_project_analysis_t *d);
-  void initializeMediateProjectFiltering(mediate_project_filtering_t *d);
+  void initializeMediateProjectFiltering(mediate_filter_t *d);
   void initializeMediateProjectCalibration(mediate_project_calibration_t *d);
   void initializeMediateProjectUndersampling(mediate_project_undersampling_t *d);
   void initializeMediateProjectInstrumental(mediate_project_instrumental_t *d);

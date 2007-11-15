@@ -27,11 +27,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 extern "C" {
 #endif
 
-  // mediate_symbol_t
-  //
-  // Contains all information about a single symbol. It allows the GUI to provide
-  // information to the engine.
   
+  /*************************************************************************/
+  /* Symbol */
+
   typedef struct mediate_symbol
   {
     char name[SYMBOL_NAME_BUFFER_LENGTH];
@@ -39,10 +38,8 @@ extern "C" {
   } mediate_symbol_t;
   
   
-  // mediate_site_t
-  //
-  // Contains all information about a single site. It allows the GUI to provide
-  // information to the engine.
+  /*************************************************************************/
+  /* Site */
   
   typedef struct mediate_site
   {
@@ -54,8 +51,9 @@ extern "C" {
   } mediate_site_t;
   
   
-  // components of both mediate_analysis_window and mediate_project structs
-  
+  /*************************************************************************/
+  /* Slits */
+
   struct slit_file {
     char filename[FILENAME_BUFFER_LENGTH];
   };
@@ -95,11 +93,68 @@ extern "C" {
   };
 
 
+  /*************************************************************************/
+  /* Filters */
+
+  struct filter_kaiser
+  {
+    double cutoffFrequency;
+    double tolerance;
+    double passband;
+    int iterations;
+  };
+
+  struct filter_boxcar
+  {
+    int width;            /* odd number of pixels */
+    int iterations;
+  };
+
+  struct filter_gaussian
+  {
+    double fwhm;          /* pixels */
+    int iterations;
+  };
+
+  struct filter_triangular
+  {
+    int width;            /* odd number of pixels */
+    int iterations;
+  };
+
+  struct filter_savitzky_golay
+  {
+    int width;            /* odd number of pixels */
+    int order;            /* even number */
+    int iterations;
+  };
+
+  struct filter_binomial
+  {
+    int width;            /* odd number of pixels */
+    int iterations;
+  };
+
+  typedef struct mediate_filter
+  {
+    int mode;
+    struct filter_kaiser kaiser;
+    struct filter_boxcar boxcar;
+    struct filter_gaussian gaussian;
+    struct filter_triangular triangular;
+    struct filter_savitzky_golay savitzky;
+    struct filter_binomial binomial;
+  } mediate_filter_t;
+
+
+  /*************************************************************************/
+  /* Components shared by project and analysis window */
+
   struct anlyswin_cross_section
   {
     char symbol[SYMBOL_NAME_BUFFER_LENGTH];
-    char crossSectionFile[FILENAME_BUFFER_LENGTH];    // the cross section filename
-    char orthogonal[SYMBOL_NAME_BUFFER_LENGTH];       // a symbol or predefined constant
+    char crossSectionFile[FILENAME_BUFFER_LENGTH];    /* the cross section filename */
+    char orthogonal[SYMBOL_NAME_BUFFER_LENGTH];       /* a symbol or predefined constant */
     int crossType;
     int amfType;
     char amfFile[FILENAME_BUFFER_LENGTH];
@@ -233,7 +288,9 @@ extern "C" {
     int errStore;
   };
 
-  // struct array wrappers ...
+
+  /*************************************************************************/
+  /* struct array wrappers ... */
 
   typedef struct cross_section_list
   {

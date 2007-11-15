@@ -28,7 +28,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "CWProjectTabDisplay.h"
 #include "CWProjectTabSelection.h"
 #include "CWProjectTabAnalysis.h"
-#include "CWProjectTabFiltering.h"
+#include "CWFilteringEditor.h"
 #include "CWProjectTabCalibration.h"
 #include "CWProjectTabUndersampling.h"
 #include "CWProjectTabInstrumental.h"
@@ -63,7 +63,7 @@ Q_OBJECT
   CWProjectTabDisplay *m_displayTab;
   CWProjectTabSelection *m_selectionTab;
   CWProjectTabAnalysis *m_analysisTab;
-  CWProjectTabFiltering *m_filteringTab;
+  CWFilteringEditor *m_filteringTab;
   CWProjectTabCalibration *m_calibrationTab;
   CWProjectTabUndersampling *m_undersamplingTab;
   CWProjectTabInstrumental *m_instrumentalTab;

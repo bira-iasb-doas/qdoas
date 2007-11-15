@@ -68,9 +68,9 @@ void initializeMediateProjectAnalysis(mediate_project_analysis_t *d)
   d->convergenceCriterion = 1.0e-4;
 }
 
-void initializeMediateProjectFiltering(mediate_project_filtering_t *d)
+void initializeMediateProjectFiltering(mediate_filter_t *d)
 {
-  memset(d, 0, sizeof(mediate_project_filtering_t));
+  memset(d, 0, sizeof(mediate_filter_t));
 
   // any non-zero defaults...
 }

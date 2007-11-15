@@ -112,7 +112,7 @@ CWProjectPropertyEditor::CWProjectPropertyEditor(const QString &projectName, QWi
   m_tabs->addTab(m_analysisTab, "Analysis");
 
   // Filtering Tab
-  m_filteringTab = new CWProjectTabFiltering(&(projectData->lowpass), &(projectData->highpass));
+  m_filteringTab = new CWFilteringEditor(&(projectData->lowpass), &(projectData->highpass));
   m_tabs->addTab(m_filteringTab, "Filtering");
 
   // Calibration Tab

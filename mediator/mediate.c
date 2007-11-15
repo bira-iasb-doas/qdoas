@@ -322,7 +322,7 @@ void setMediateProjectAnalysis(PRJCT_ANLYS *pEngineAnalysis,const mediate_projec
 // PURPOSE       Filtering part of the project properties
 // -----------------------------------------------------------------------------
 
-void setMediateProjectFiltering(PRJCT_FILTER *pEngineFilter,const mediate_project_filtering_t *pMediateFilter)
+void setMediateProjectFiltering(PRJCT_FILTER *pEngineFilter,const mediate_filter_t *pMediateFilter)
  {
  	#if defined(__DEBUG_) && __DEBUG_ && defined(__DEBUG_DOAS_CONFIG_) && __DEBUG_DOAS_CONFIG_
   DEBUG_FunctionBegin("setMediateProjectFiltering",DEBUG_FCTTYPE_CONFIG);
