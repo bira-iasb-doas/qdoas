@@ -1,6 +1,6 @@
 
 #include "ConfigWriterUtils.h"
-#include "CWorkSpace.h" // TODO - Make a path manager ...
+#include "CPathMgr.h"
 
 #include "constants.h"
 
@@ -83,7 +83,7 @@ void writeSlitFunction(FILE *fp, size_t nIndent, const mediate_slit_function_t *
   size_t i;
   char buf[32]; // max index is sizeof(buf)-1
   QString tmpStr;
-  CWorkSpace *ws = CWorkSpace::instance();
+  CPathMgr *pathMgr = CPathMgr::instance();
 
   // make a space padding string - robust against nIndex < 0.
   if (nIndent >= sizeof(buf)) nIndent = sizeof(buf) - 1;
@@ -134,7 +134,7 @@ void writeSlitFunction(FILE *fp, size_t nIndent, const mediate_slit_function_t *
   }
   fprintf(fp, ">\n");
 
-  tmpStr = ws->simplifyPath(QString(d->file.filename));
+  tmpStr = pathMgr->simplifyPath(QString(d->file.filename));
   fprintf(fp, "%s  <file file=\"%s\" />\n", buf, tmpStr.toAscii().data());
 
   fprintf(fp, "%s  <gaussian fwhm=\"%.3f\" />\n", buf, d->gaussian.fwhm);
@@ -147,19 +147,19 @@ void writeSlitFunction(FILE *fp, size_t nIndent, const mediate_slit_function_t *
   fprintf(fp, "%s  <nbsapod resolution=\"%.3f\" phase=\"%.3f\" />\n", buf,
 	  d->nbsapod.resolution, d->nbsapod.phase);
 
-  tmpStr = ws->simplifyPath(QString(d->gaussianfile.filename));
+  tmpStr = pathMgr->simplifyPath(QString(d->gaussianfile.filename));
   fprintf(fp, "%s  <gaussianfile file=\"%s\" />\n", buf, tmpStr.toAscii().data());
 
-  tmpStr = ws->simplifyPath(QString(d->lorentzfile.filename));
+  tmpStr = pathMgr->simplifyPath(QString(d->lorentzfile.filename));
   fprintf(fp, "%s  <lorentzfile file=\"%s\" degree=\"%d\" />\n", buf, tmpStr.toAscii().data(), d->lorentzfile.degree);
 
-  tmpStr = ws->simplifyPath(QString(d->errorfile.filename));
+  tmpStr = pathMgr->simplifyPath(QString(d->errorfile.filename));
   fprintf(fp, "%s  <errorfile file=\"%s\" width=\"%.3f\" />\n", buf, tmpStr.toAscii().data(), d->errorfile.width);
 
-  tmpStr = ws->simplifyPath(QString(d->gaussiantempfile.filename));
+  tmpStr = pathMgr->simplifyPath(QString(d->gaussiantempfile.filename));
   fprintf(fp, "%s  <gaussiantempfile file=\"%s\" />\n", buf, tmpStr.toAscii().data());
 
-  tmpStr = ws->simplifyPath(QString(d->errortempfile.filename));
+  tmpStr = pathMgr->simplifyPath(QString(d->errortempfile.filename));
   fprintf(fp, "%s  <errortempfile file=\"%s\" width=\"%.3f\" />\n", buf, tmpStr.toAscii().data(), d->errortempfile.width);
   
   fprintf(fp, "%s</slit_func>\n", buf);

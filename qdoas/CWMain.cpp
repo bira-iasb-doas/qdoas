@@ -41,6 +41,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "CQdoasEngineController.h"
 #include "CNavigationPanel.h"
 #include "CQdoasConfigHandler.h"
+#include "CPathMgr.h"
 #include "CWorkSpace.h"
 #include "CPreferences.h"
 #include "CQdoasConfigWriter.h"
@@ -397,21 +398,23 @@ void CWMain::slotOpenFile()
   
   if (ok) {
 
+    CPathMgr *pathMgr = CPathMgr::instance();
     CWorkSpace *ws = CWorkSpace::instance();
 
     // start with a clear workspace ... clear the project tree, then the workspace
     m_projTree->removeAllContent();
     ws->removeAllContent();
+    pathMgr->removeAll();
 
     // repopulate the workspace and the project tree
 
-    // store the paths in the workspace for simplification when saving ...
+    // store the paths in the pathMgr for simplification when saving ...
     for (int i = 0; i<10; ++i) {
       QString path = handler->getPath(i);
       if (path.isEmpty())
-	ws->removePath(i);
+	pathMgr->removePath(i);
       else
-	ws->addPath(i, path);
+	pathMgr->addPath(i, path);
     }
     
     // sites

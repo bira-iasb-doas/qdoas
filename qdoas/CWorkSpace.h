@@ -23,7 +23,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include <map>
 #include <list>
-#include <set>
 #include <vector>
 
 #include <QList>
@@ -54,16 +53,6 @@ struct SProjBucket
   SProjBucket(mediate_project_t *projectData) : project(projectData) {}
   // NOTE: shallow copy of dynamic memory. Use for std::map<>::insert operations ONLY.
   SProjBucket(const SProjBucket &c) : project(c.project), window(c.window) {}
-};
-
-struct SPathBucket
-{
-  int index;
-  QString path;
-
-  SPathBucket(int i, const QString &p) : index(i), path(p) {}
-  // sort with longest path first ... if equal then string compare with operator<()
-  bool operator<(const SPathBucket &rhs) const { return ((path.length() > rhs.path.length()) || (path.length() == rhs.path.length() && path < rhs.path)); }
 };
 
 struct SSymbolBucket
@@ -131,11 +120,6 @@ class CWorkSpace
   bool destroySite(const QString &siteName);
   bool destroySymbol(const QString &symbolName);
 
-  void removePath(int index);
-  void addPath(int index, const QString &path);
-  QString simplifyPath(const QString &name) const;
-  QString path(int index) const;
-
  private:
   // singleton => no copies permitted
   CWorkSpace() {}
@@ -163,7 +147,6 @@ class CWorkSpace
   static CWorkSpace *m_instance;
 
   std::map<QString,SProjBucket> m_projMap;
-  std::set<SPathBucket> m_pathSet;
   std::map<QString,mediate_site_t*> m_siteMap;
   symbolmap_t m_symbolMap;
   std::list<CSitesObserver*> m_sitesObserverList;

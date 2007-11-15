@@ -117,7 +117,6 @@ void CWorkSpace::removeAllContent(void)
   }
   m_symbolMap.clear();
 
-  m_pathSet.clear();
 }
 
 mediate_project_t* CWorkSpace::findProject(const QString &projectName) const
@@ -697,88 +696,6 @@ bool CWorkSpace::setAnalysisWindowEnabled(const QString &projectName,
   }
 
   return false;
-}
-
-void CWorkSpace::removePath(int index)
-{
-  // locate by index - walk the set
-
-  std::set<SPathBucket>::iterator it = m_pathSet.begin();
-  while (it != m_pathSet.end()) {
-    if (it->index == index) {
-      m_pathSet.erase(it);
-      break;
-    }
-    ++it;
-  }
-}
-
-void CWorkSpace::addPath(int index, const QString &path)
-{
-  // DO NOT allow empty paths to be stored.
-  // DO NOT allow duplicate indexes
-
-  // check for this index - just remove it if it exists
-  std::set<SPathBucket>::iterator it = m_pathSet.begin();
-  while (it != m_pathSet.end()) {
-    if (it->index == index) {
-      m_pathSet.erase(it);
-      break;
-    }
-    ++it;
-  }
-
-  if (path.isEmpty())
-    return;
-
-  m_pathSet.insert(SPathBucket(index, path));
-}
-
-QString CWorkSpace::simplifyPath(const QString &name) const
-{
-  // walk in search of a matching path. set is sorted so that
-  // a longer path will match first.
-
-  std::set<SPathBucket>::const_iterator it = m_pathSet.begin();
-  while (it != m_pathSet.end()) {
-    
-    if (name.startsWith(it->path)) {
-      // matches ... but must match either perfectly or on a path separator boundary
-      int len = it->path.length();  // certain that name.length() > path.length()
-      if (name.length() == len) {
-	// one-to-one match
-	QString tmp;
-	QTextStream stream(&tmp);
-	
-	stream << '%' << it->index;
-
-	return tmp;
-      }
-      else if (name.at(len) == '/' || name.at(len) == '\\') {
-	// matches on separator boundary
-	QString tmp;
-	QTextStream stream(&tmp);
-	
-	stream << '%' << it->index << name.right(name.length() - len);
-
-	return tmp;
-	
-      }
-    }
-    ++it;
-  }
-  // no matches
-  return name;
-}
-
-QString CWorkSpace::path(int index) const
-{
-  std::set<SPathBucket>::const_iterator it = m_pathSet.begin();
-  while (it != m_pathSet.end() && it->index != index) ++it;
-  if (it != m_pathSet.end())
-    return it->path;
-
-  return QString();
 }
 
 void CWorkSpace::attach(CSitesObserver *observer)
