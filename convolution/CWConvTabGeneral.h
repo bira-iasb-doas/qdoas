@@ -24,6 +24,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QFrame>
 #include <QLineEdit>
 #include <QComboBox>
+#include <QCheckBox>
 
 #include "mediate_convolution.h"
 
@@ -47,6 +48,7 @@ Q_OBJECT
   QComboBox *m_convolutionCombo, *m_conversionCombo;
   QLineEdit *m_shiftEdit, *m_concEdit;
   QLineEdit *m_inputFileEdit, *m_outputFileEdit, *m_calibFileEdit, *m_refFileEdit;
+  QCheckBox *m_headerCheck;
 };
 
 #endif

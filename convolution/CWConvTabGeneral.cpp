@@ -42,7 +42,7 @@ CWConvTabGeneral::CWConvTabGeneral(const mediate_conv_general_t *properties, QWi
   QHBoxLayout *topLayout = new QHBoxLayout;
 
   // type group
-  QGroupBox *typeGroup = new QGroupBox("Type", this);
+  QGroupBox *typeGroup = new QGroupBox(this);
   QGridLayout *typeLayout = new QGridLayout(typeGroup);
 
   typeLayout->addWidget(new QLabel("Convolution", this), 0, 0);
@@ -121,7 +121,11 @@ CWConvTabGeneral::CWConvTabGeneral(const mediate_conv_general_t *properties, QWi
   ++row;
 
   mainLayout->addLayout(fileLayout);
+
   mainLayout->addStretch(1);
+
+  m_headerCheck = new QCheckBox("Remove Header", this);
+  mainLayout->addWidget(m_headerCheck, 0, Qt::AlignLeft);
 
   // initialize
   reset(properties);
@@ -167,7 +171,9 @@ void CWConvTabGeneral::reset(const mediate_conv_general_t *properties)
   // conc
   tmpStr.setNum(properties->conc);
   m_concEdit->validator()->fixup(tmpStr);
-  m_concEdit->setText(tmpStr);  
+  m_concEdit->setText(tmpStr);
+
+  m_headerCheck->setCheckState(properties->noheader ? Qt::Checked : Qt::Unchecked);
 }
 
 void CWConvTabGeneral::apply(mediate_conv_general_t *properties) const
@@ -182,6 +188,8 @@ void CWConvTabGeneral::apply(mediate_conv_general_t *properties) const
   strcpy(properties->outputFile, m_outputFileEdit->text().toAscii().constData());
   strcpy(properties->calibrationFile, m_calibFileEdit->text().toAscii().constData());
   strcpy(properties->solarRefFile, m_refFileEdit->text().toAscii().constData());
+
+  properties->noheader = (m_headerCheck->checkState() == Qt::Checked) ? 1 : 0;
 }
 
 void CWConvTabGeneral::slotBrowseInput()

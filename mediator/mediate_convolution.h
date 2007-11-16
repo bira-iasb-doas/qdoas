@@ -39,6 +39,7 @@ extern "C" {
     int conversionType;
     double shift;
     double conc;
+    int noheader;
     char inputFile[FILENAME_BUFFER_LENGTH];
     char outputFile[FILENAME_BUFFER_LENGTH];
     char calibrationFile[FILENAME_BUFFER_LENGTH];

@@ -112,6 +112,8 @@ bool CConvGeneralSubHandler::start(const QXmlAttributes &atts)
   m_d->shift = atts.value("shift").toDouble();
   m_d->conc = atts.value("conc").toDouble();
 
+  m_d->noheader = (atts.value("rmhdr") == "true") ? 1 : 0;
+
   str = atts.value("input");
   if (!str.isEmpty()) {
     str = m_master->pathExpand(str);

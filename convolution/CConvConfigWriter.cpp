@@ -105,7 +105,8 @@ void CConvConfigWriter::writeGeneral(FILE *fp, const mediate_conv_general_t *d)
     fprintf(fp, "\"none\""); break;
   }
 
-  fprintf(fp, " shift=\"%.3f\" conc=\"%.3g\"", d->shift, d->conc);
+  fprintf(fp, " shift=\"%.3f\" conc=\"%.3g\" rmhdr=\"%s\"",
+	  d->shift, d->conc, (d->noheader ? sTrue : sFalse));
 
   tmpStr = pathMgr->simplifyPath(QString(d->inputFile));
   fprintf(fp, " input=\"%s\"", tmpStr.toAscii().data());
