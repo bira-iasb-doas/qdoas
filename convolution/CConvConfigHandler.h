@@ -28,6 +28,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "mediate_convolution.h"
 
+//------------------------------------------------------------------
+
 class CConvConfigHandler : public CConfigHandler
 {
  public:
@@ -45,6 +47,8 @@ class CConvConfigHandler : public CConfigHandler
 
 inline const mediate_convolution_t* CConvConfigHandler::properties(void) const { return &m_properties; }
 
+//------------------------------------------------------------------
+
 class CConvGeneralSubHandler : public CBasicConfigSubHandler
 {
  public:
@@ -55,6 +59,20 @@ class CConvGeneralSubHandler : public CBasicConfigSubHandler
 
  private:
   mediate_conv_general_t *m_d;
+};
+
+//------------------------------------------------------------------
+
+class CConvSlitSubHandler : public CBasicConfigSubHandler
+{
+ public:
+  CConvSlitSubHandler(CConfigHandler *master, mediate_slit_function_t *d);
+  virtual ~CConvSlitSubHandler();
+
+  virtual bool start(const QString &element, const QXmlAttributes &atts);
+
+ private:
+  mediate_slit_function_t *m_d;
 };
 
 #endif

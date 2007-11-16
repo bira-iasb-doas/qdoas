@@ -170,6 +170,34 @@ CWFilteringEditor::~CWFilteringEditor()
 {
 }
 
+void CWFilteringEditor::reset(const mediate_filter_t *lowpass, const mediate_filter_t *highpass)
+{
+  int index;
+
+  index = m_lowCombo->findData(QVariant(lowpass->mode));
+  if (index != -1)
+    m_lowCombo->setCurrentIndex(index);
+
+  index = m_highCombo->findData(QVariant(highpass->mode));
+  if (index != -1)
+    m_highCombo->setCurrentIndex(index);
+
+  m_lowKaiser->reset(&(lowpass->kaiser));
+  m_highKaiser->reset(&(highpass->kaiser));
+
+  m_lowBoxcar->reset(&(lowpass->boxcar));
+  m_highBoxcar->reset(&(highpass->boxcar));
+
+  m_lowGaussian->reset(&(lowpass->gaussian));
+  m_highGaussian->reset(&(highpass->gaussian));
+
+  m_lowTriangular->reset(&(lowpass->triangular));
+  m_highTriangular->reset(&(highpass->triangular));
+
+  m_lowBinomial->reset(&(lowpass->binomial));
+  m_highBinomial->reset(&(highpass->binomial));
+}
+
 void CWFilteringEditor::apply(mediate_filter_t *lowpass, mediate_filter_t *highpass) const
 {
   // set values for ALL filters ... and the selected mode
@@ -249,7 +277,18 @@ CWFilterUsageEdit::~CWFilterUsageEdit()
 {
 }
 
-void CWFilterUsageEdit::apply(struct filter_usage *d)
+void CWFilterUsageEdit::reset(const struct filter_usage *d)
+{
+  slotCalibrationStateChanged(d->calibrationFlag ? Qt::Checked : Qt::Unchecked);
+  slotFittingStateChanged(d->fittingFlag ? Qt::Checked : Qt::Unchecked);
+
+  bool checkDiv = (d->divide != 0);
+
+  slotDivideToggled(checkDiv);
+  slotSubtractToggled(!checkDiv);
+}
+
+void CWFilterUsageEdit::apply(struct filter_usage *d) const
 {
   *d = m_state;
 }
@@ -289,7 +328,6 @@ static const Qt::Alignment cLabelAlign     = Qt::AlignRight;
 CWKaiserEdit::CWKaiserEdit(const struct filter_kaiser *d, CWFilteringEditor::UsageType type, QWidget *parent) :
   QFrame(parent)
 {
-  QString tmpStr;
   int row = 0;
 
   QGridLayout *mainLayout = new QGridLayout(this);
@@ -301,9 +339,6 @@ CWKaiserEdit::CWKaiserEdit(const struct filter_kaiser *d, CWFilteringEditor::Usa
   m_cutoffEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 100.0, 4, m_cutoffEdit));
   m_cutoffEdit->setFixedWidth(60);
 
-  m_cutoffEdit->validator()->fixup(tmpStr.setNum(d->cutoffFrequency));
-  m_cutoffEdit->setText(tmpStr);
-
   mainLayout->addWidget(m_cutoffEdit, row, 1, Qt::AlignLeft);
   ++row;
 
@@ -313,9 +348,6 @@ CWKaiserEdit::CWKaiserEdit(const struct filter_kaiser *d, CWFilteringEditor::Usa
   m_toleranceEdit = new QLineEdit(this);
   m_toleranceEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 100.0, 4, m_toleranceEdit));
   m_toleranceEdit->setFixedWidth(60);
-
-  m_toleranceEdit->validator()->fixup(tmpStr.setNum(d->tolerance));
-  m_toleranceEdit->setText(tmpStr);
 
   mainLayout->addWidget(m_toleranceEdit, row, 1, Qt::AlignLeft);
   ++row;
@@ -328,9 +360,6 @@ CWKaiserEdit::CWKaiserEdit(const struct filter_kaiser *d, CWFilteringEditor::Usa
   m_passbandEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 100.0, 4, m_passbandEdit));
   m_passbandEdit->setFixedWidth(60);
 
-  m_passbandEdit->validator()->fixup(tmpStr.setNum(d->passband));
-  m_passbandEdit->setText(tmpStr);
-
   mainLayout->addWidget(m_passbandEdit, row, 3, Qt::AlignLeft);
   ++row;
 
@@ -340,8 +369,6 @@ CWKaiserEdit::CWKaiserEdit(const struct filter_kaiser *d, CWFilteringEditor::Usa
   m_iterationsSpinBox = new QSpinBox(this);
   m_iterationsSpinBox->setRange(1, cMaxIterations);
   m_iterationsSpinBox->setFixedWidth(60);
-
-  m_iterationsSpinBox->setValue(d->iterations);
 
   mainLayout->addWidget(m_iterationsSpinBox, row, 3, Qt::AlignLeft);
   ++row;
@@ -354,10 +381,31 @@ CWKaiserEdit::CWKaiserEdit(const struct filter_kaiser *d, CWFilteringEditor::Usa
   mainLayout->setColumnStretch(1, 1);
   mainLayout->setColumnMinimumWidth(2, cSuggestedColumnZeroWidth);
   mainLayout->setColumnStretch(3, 1);
+
+  // initialize
+  reset(d);
 }
 
 CWKaiserEdit::~CWKaiserEdit()
 {
+}
+
+void CWKaiserEdit::reset(const struct filter_kaiser *d)
+{
+  QString tmpStr;
+
+  m_cutoffEdit->validator()->fixup(tmpStr.setNum(d->cutoffFrequency));
+  m_cutoffEdit->setText(tmpStr);
+
+  m_toleranceEdit->validator()->fixup(tmpStr.setNum(d->tolerance));
+  m_toleranceEdit->setText(tmpStr);
+
+  m_passbandEdit->validator()->fixup(tmpStr.setNum(d->passband));
+  m_passbandEdit->setText(tmpStr);
+
+  m_iterationsSpinBox->setValue(d->iterations);
+
+  m_usageEdit->reset(&(d->usage));
 }
 
 void CWKaiserEdit::apply(struct filter_kaiser *d) const
@@ -410,8 +458,6 @@ void CWBoxcarTriangularBinomialEdit::init(int filterWidth, int nIterations, cons
   m_widthSpinBox->setSingleStep(2);
   m_widthSpinBox->setFixedWidth(60);
 
-  m_widthSpinBox->setValue(filterWidth);
-
   mainLayout->addWidget(m_widthSpinBox, row, 1, Qt::AlignLeft);
   ++row;
 
@@ -422,8 +468,6 @@ void CWBoxcarTriangularBinomialEdit::init(int filterWidth, int nIterations, cons
   m_iterationsSpinBox->setRange(1, cMaxIterations);
   m_iterationsSpinBox->setFixedWidth(60);
 
-  m_iterationsSpinBox->setValue(nIterations);
-
   mainLayout->addWidget(m_iterationsSpinBox, row, 1, Qt::AlignLeft);
   ++row;
 
@@ -433,10 +477,21 @@ void CWBoxcarTriangularBinomialEdit::init(int filterWidth, int nIterations, cons
   // layout control
   mainLayout->setColumnMinimumWidth(0, cSuggestedColumnZeroWidth);
   mainLayout->setColumnStretch(1, 1);
+
+  // initialize
+  m_widthSpinBox->setValue(filterWidth);
+  m_iterationsSpinBox->setValue(nIterations);
 }
 
 CWBoxcarTriangularBinomialEdit::~CWBoxcarTriangularBinomialEdit()
 {
+}
+
+void CWBoxcarTriangularBinomialEdit::reset(const struct filter_boxcar *d)
+{
+  m_widthSpinBox->setValue(d->width);
+  m_iterationsSpinBox->setValue(d->iterations);
+  m_usageEdit->reset(&(d->usage));
 }
 
 void CWBoxcarTriangularBinomialEdit::apply(struct filter_boxcar *d) const
@@ -446,11 +501,25 @@ void CWBoxcarTriangularBinomialEdit::apply(struct filter_boxcar *d) const
   m_usageEdit->apply(&(d->usage));
 }
 
+void CWBoxcarTriangularBinomialEdit::reset(const struct filter_triangular *d)
+{
+  m_widthSpinBox->setValue(d->width);
+  m_iterationsSpinBox->setValue(d->iterations);
+  m_usageEdit->reset(&(d->usage));  
+}
+
 void CWBoxcarTriangularBinomialEdit::apply(struct filter_triangular *d) const
 {
   d->width = m_widthSpinBox->value();
   d->iterations = m_iterationsSpinBox->value();
   m_usageEdit->apply(&(d->usage));
+}
+
+void CWBoxcarTriangularBinomialEdit::reset(const struct filter_binomial *d)
+{
+  m_widthSpinBox->setValue(d->width);
+  m_iterationsSpinBox->setValue(d->iterations);
+  m_usageEdit->reset(&(d->usage));  
 }
 
 void CWBoxcarTriangularBinomialEdit::apply(struct filter_binomial *d) const
@@ -477,9 +546,6 @@ CWGaussianEdit::CWGaussianEdit(const struct filter_gaussian *d, CWFilteringEdito
   m_fwhmEdit->setValidator(new CDoubleFixedFmtValidator(0.0001, 100.0, 4, m_fwhmEdit));
   m_fwhmEdit->setFixedWidth(60);
 
-  m_fwhmEdit->validator()->fixup(tmpStr.setNum(d->fwhm));
-  m_fwhmEdit->setText(tmpStr);
-
   mainLayout->addWidget(m_fwhmEdit, row, 1, Qt::AlignLeft);
   ++row;
 
@@ -490,8 +556,6 @@ CWGaussianEdit::CWGaussianEdit(const struct filter_gaussian *d, CWFilteringEdito
   m_iterationsSpinBox->setRange(1, cMaxIterations);
   m_iterationsSpinBox->setFixedWidth(60);
 
-  m_iterationsSpinBox->setValue(d->iterations);
-
   mainLayout->addWidget(m_iterationsSpinBox, row, 1, Qt::AlignLeft);
   ++row;
 
@@ -501,10 +565,24 @@ CWGaussianEdit::CWGaussianEdit(const struct filter_gaussian *d, CWFilteringEdito
   // layout control
   mainLayout->setColumnMinimumWidth(0, cSuggestedColumnZeroWidth);
   mainLayout->setColumnStretch(1, 1);
+
+  // initialize
+  reset(d);
 }
 
 CWGaussianEdit::~CWGaussianEdit()
 {
+}
+
+void CWGaussianEdit::reset(const struct filter_gaussian *d)
+{
+  QString tmpStr;
+
+  m_fwhmEdit->validator()->fixup(tmpStr.setNum(d->fwhm));
+  m_fwhmEdit->setText(tmpStr);
+  m_iterationsSpinBox->setValue(d->iterations);
+
+  m_usageEdit->reset(&(d->usage));
 }
 
 void CWGaussianEdit::apply(struct filter_gaussian *d) const
@@ -535,8 +613,6 @@ CWSavitzkyGolayEdit::CWSavitzkyGolayEdit(const struct filter_savitzky_golay *d, 
   m_widthSpinBox->setSingleStep(2);
   m_widthSpinBox->setFixedWidth(60);
 
-  m_widthSpinBox->setValue(d->width);
-
   mainLayout->addWidget(m_widthSpinBox, row, 1, Qt::AlignLeft);
   ++row;
 
@@ -548,8 +624,6 @@ CWSavitzkyGolayEdit::CWSavitzkyGolayEdit(const struct filter_savitzky_golay *d, 
   m_orderSpinBox->setSingleStep(2);
   m_orderSpinBox->setFixedWidth(60);
 
-  m_orderSpinBox->setValue(d->order);
-
   mainLayout->addWidget(m_orderSpinBox, row, 1, Qt::AlignLeft);
   ++row;
 
@@ -560,8 +634,6 @@ CWSavitzkyGolayEdit::CWSavitzkyGolayEdit(const struct filter_savitzky_golay *d, 
   m_iterationsSpinBox->setRange(1, cMaxIterations);
   m_iterationsSpinBox->setFixedWidth(60);
 
-  m_iterationsSpinBox->setValue(d->iterations);
-
   mainLayout->addWidget(m_iterationsSpinBox, row, 1, Qt::AlignLeft);
   ++row;
 
@@ -571,10 +643,22 @@ CWSavitzkyGolayEdit::CWSavitzkyGolayEdit(const struct filter_savitzky_golay *d, 
   // layout control
   mainLayout->setColumnMinimumWidth(0, cSuggestedColumnZeroWidth);
   mainLayout->setColumnStretch(1, 1);
+
+  // initialize
+  reset(d);
 }
 
 CWSavitzkyGolayEdit::~CWSavitzkyGolayEdit()
 {
+}
+
+void CWSavitzkyGolayEdit::reset(const struct filter_savitzky_golay *d)
+{
+  m_widthSpinBox->setValue(d->width);
+  m_orderSpinBox->setValue(d->order);
+  m_iterationsSpinBox->setValue(d->iterations);
+
+  m_usageEdit->reset(&(d->usage));
 }
 
 void CWSavitzkyGolayEdit::apply(struct filter_savitzky_golay *d) const

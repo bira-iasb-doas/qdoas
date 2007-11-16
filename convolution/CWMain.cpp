@@ -307,9 +307,10 @@ void CWMain::slotOpenFile()
     // copy the properties data ...
     m_guiProperties = *(handler->properties());
 
-    // update the GUI - TODO
+    // update the GUI
     m_generalTab->reset(&(m_guiProperties.general));
     m_slitTab->reset(&(m_guiProperties.conslit), &(m_guiProperties.decslit));
+    m_filteringTab->reset(&(m_guiProperties.lowpass), &(m_guiProperties.highpass));
 
     fetchGuiProperties(); // see note above about synchronization ...
     m_properties = m_guiProperties;
@@ -334,9 +335,10 @@ void CWMain::slotNewFile()
   
   initializeMediateConvolution(&m_guiProperties);
 
-  // update the GUI - TODO
+  // update the GUI
   m_generalTab->reset(&(m_guiProperties.general));
   m_slitTab->reset(&(m_guiProperties.conslit), &(m_guiProperties.decslit));
+  m_filteringTab->reset(&(m_guiProperties.lowpass), &(m_guiProperties.highpass));
 
   fetchGuiProperties(); // see note above about synchronization ...
   m_properties = m_guiProperties;

@@ -45,6 +45,7 @@ class CWFilteringEditor : public QFrame
 		    QWidget *parent = 0);
   virtual ~CWFilteringEditor();
 
+  void reset(const mediate_filter_t *lowpass, const mediate_filter_t *highpass);
   void apply(mediate_filter_t *lowpass, mediate_filter_t *highpass) const;
 
  private:
@@ -70,7 +71,8 @@ Q_OBJECT
 		  QWidget *parent = 0);
   virtual ~CWFilterUsageEdit();
 
-  void apply(struct filter_usage *d);
+  void reset(const struct filter_usage *d);
+  void apply(struct filter_usage *d) const;
 
   public slots:
     void slotCalibrationStateChanged(int state);
@@ -91,6 +93,7 @@ class CWKaiserEdit : public QFrame
 	       QWidget *parent = 0);
   virtual ~CWKaiserEdit();
 
+  void reset(const struct filter_kaiser *d);
   void apply(struct filter_kaiser *d) const;
 
  private:
@@ -112,8 +115,11 @@ class CWBoxcarTriangularBinomialEdit : public QFrame
 				 QWidget *parent = 0);
   virtual ~CWBoxcarTriangularBinomialEdit();
 
+  void reset(const struct filter_boxcar *d);
   void apply(struct filter_boxcar *d) const;
+  void reset(const struct filter_triangular *d);
   void apply(struct filter_triangular *d) const;
+  void reset(const struct filter_binomial *d);
   void apply(struct filter_binomial *d) const;
 
  protected:
@@ -134,6 +140,7 @@ class CWGaussianEdit : public QFrame
 		 QWidget *parent = 0);
   virtual ~CWGaussianEdit();
 
+  void reset(const struct filter_gaussian *d);
   void apply(struct filter_gaussian *d) const;
 
  private:
@@ -151,6 +158,7 @@ class CWSavitzkyGolayEdit : public QFrame
 		      QWidget *parent = 0);
   virtual ~CWSavitzkyGolayEdit();
 
+  void reset(const struct filter_savitzky_golay *d);
   void apply(struct filter_savitzky_golay *d) const;
 
  private:

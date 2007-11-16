@@ -62,6 +62,12 @@ bool CConvConfigHandler::startElement(const QString &namespaceURI, const QString
     else if (qName == "highpass_filter") {
       return installSubHandler(new CFilteringSubHandler(this, &(m_properties.highpass)), atts);
     }
+    else if (qName == "con_slit") {
+      return installSubHandler(new CConvSlitSubHandler(this, &(m_properties.conslit)), atts);
+    }
+    else if (qName == "dec_slit") {
+      return installSubHandler(new CConvSlitSubHandler(this, &(m_properties.decslit)), atts);
+    }
   }
 
   return true;
@@ -142,3 +148,24 @@ bool CConvGeneralSubHandler::start(const QXmlAttributes &atts)
   return true;
 }
 
+//------------------------------------------------------------------------
+//
+// Handler for <con_slit> and <dec_slit> elements.
+
+CConvSlitSubHandler::CConvSlitSubHandler(CConfigHandler *master, mediate_slit_function_t *d) :
+  CBasicConfigSubHandler(master),
+  m_d(d)
+{
+}
+
+CConvSlitSubHandler::~CConvSlitSubHandler()
+{
+}
+
+bool CConvSlitSubHandler::start(const QString &element, const QXmlAttributes &atts)
+{
+  if (element == "slit_func")
+    return m_master->installSubHandler(new CSlitFunctionSubHandler(m_master, m_d), atts);
+
+  return true;
+}
