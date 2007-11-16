@@ -18,30 +18,38 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
 
-#ifndef _CWCONVTABSLIT_H_GUARD
-#define _CWCONVTABSLIT_H_GUARD
+#ifndef _CWRINGTABGENERAL_H_GUARD
+#define _CWRINGTABGENERAL_H_GUARD
 
 #include <QFrame>
 #include <QLineEdit>
 #include <QComboBox>
-#include <QGroupBox>
+#include <QCheckBox>
 
-#include "mediate_convolution.h"
+#include "mediate_ring.h"
 
 #include "CWSlitEditors.h"
 
-class CWConvTabSlit : public QFrame
+class CWRingTabGeneral : public QFrame
 {
 Q_OBJECT
  public:
-  CWConvTabSlit(const mediate_slit_function_t *conv, const mediate_slit_function_t *deconv, QWidget *parent = 0);
-  virtual ~CWConvTabSlit();
+  CWRingTabGeneral(const mediate_ring_t *properties, QWidget *parent = 0);
+  virtual ~CWRingTabGeneral();
 
-  void reset(const mediate_slit_function_t *conv, const mediate_slit_function_t *deconv);
-  void apply(mediate_slit_function_t *conv, mediate_slit_function_t *deconv) const;
+  void reset(const mediate_ring_t *properties);
+  void apply(mediate_ring_t *properties) const;
+
+  public slots:
+    void slotBrowseOutput(void);
+    void slotBrowseCalibration(void);
+    void slotBrowseSolarReference(void);
 
  private:
-  CWSlitSelector *m_convEdit, *m_deconvEdit;
+  QLineEdit *m_inputFileEdit, *m_outputFileEdit, *m_calibFileEdit, *m_refFileEdit;
+  CWSlitSelector *m_slitEdit;
+  QLineEdit *m_tempEdit;
+  QCheckBox *m_headerCheck;
 };
 
 #endif

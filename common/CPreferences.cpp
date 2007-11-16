@@ -31,6 +31,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #define PREF_KEY "Qdoas"
 #elif defined(APP_CONV)
 #define PREF_KEY "Conv"
+#elif defined(APP_RING)
+#define PREF_KEY "Ring"
 #else
 #error "An APPLICATION preference key is not defined"
 #endif

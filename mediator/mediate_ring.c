@@ -18,30 +18,16 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
 
-#ifndef _CWCONVTABSLIT_H_GUARD
-#define _CWCONVTABSLIT_H_GUARD
+#include <string.h>
 
-#include <QFrame>
-#include <QLineEdit>
-#include <QComboBox>
-#include <QGroupBox>
+#include "mediate_ring.h"
+#include "constants.h"
 
-#include "mediate_convolution.h"
-
-#include "CWSlitEditors.h"
-
-class CWConvTabSlit : public QFrame
+void initializeMediateRing(mediate_ring_t *d)
 {
-Q_OBJECT
- public:
-  CWConvTabSlit(const mediate_slit_function_t *conv, const mediate_slit_function_t *deconv, QWidget *parent = 0);
-  virtual ~CWConvTabSlit();
-
-  void reset(const mediate_slit_function_t *conv, const mediate_slit_function_t *deconv);
-  void apply(mediate_slit_function_t *conv, mediate_slit_function_t *deconv) const;
-
- private:
-  CWSlitSelector *m_convEdit, *m_deconvEdit;
-};
-
-#endif
+  // Initializations
+  
+  memset(d, 0, sizeof(mediate_ring_t));
+  
+  d->temperature = 250.0;
+}

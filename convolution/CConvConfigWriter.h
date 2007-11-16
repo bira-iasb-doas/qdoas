@@ -18,8 +18,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
 
-#ifndef _CQDOASCONFIGWRITER_H_GUARD
-#define _CQDOASCONFIGWRITER_H_GUARD
+#ifndef _CCONVCONFIGWRITER_H_GUARD
+#define _CCONVCONFIGWRITER_H_GUARD
 
 #include <cstdio>
 

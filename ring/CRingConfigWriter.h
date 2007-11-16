@@ -18,30 +18,23 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
 
-#ifndef _CWCONVTABSLIT_H_GUARD
-#define _CWCONVTABSLIT_H_GUARD
+#ifndef _CRINGCONFIGWRITER_H_GUARD
+#define _CRINGCONFIGWRITER_H_GUARD
 
-#include <QFrame>
-#include <QLineEdit>
-#include <QComboBox>
-#include <QGroupBox>
+#include <cstdio>
 
-#include "mediate_convolution.h"
+#include "mediate_ring.h"
 
-#include "CWSlitEditors.h"
-
-class CWConvTabSlit : public QFrame
+class CRingConfigWriter
 {
-Q_OBJECT
  public:
-  CWConvTabSlit(const mediate_slit_function_t *conv, const mediate_slit_function_t *deconv, QWidget *parent = 0);
-  virtual ~CWConvTabSlit();
+  CRingConfigWriter(const mediate_ring_t *properties);
+  ~CRingConfigWriter();
 
-  void reset(const mediate_slit_function_t *conv, const mediate_slit_function_t *deconv);
-  void apply(mediate_slit_function_t *conv, mediate_slit_function_t *deconv) const;
-
+  QString write(const QString &fileName);
+  
  private:
-  CWSlitSelector *m_convEdit, *m_deconvEdit;
+  const mediate_ring_t *m_properties;
 };
 
 #endif

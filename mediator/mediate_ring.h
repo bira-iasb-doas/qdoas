@@ -18,30 +18,39 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
 
-#ifndef _CWCONVTABSLIT_H_GUARD
-#define _CWCONVTABSLIT_H_GUARD
+#ifndef _MEDIATE_RING_H_GUARD
+#define _MEDIATE_RING_H_GUARD
 
-#include <QFrame>
-#include <QLineEdit>
-#include <QComboBox>
-#include <QGroupBox>
+#include "mediate_limits.h"
+#include "mediate_general.h"
 
-#include "mediate_convolution.h"
+#if defined(_cplusplus) || defined(__cplusplus)
+extern "C" {
+#endif
 
-#include "CWSlitEditors.h"
 
-class CWConvTabSlit : public QFrame
-{
-Q_OBJECT
- public:
-  CWConvTabSlit(const mediate_slit_function_t *conv, const mediate_slit_function_t *deconv, QWidget *parent = 0);
-  virtual ~CWConvTabSlit();
+  /****************************************************/
+  /* Slit - mediate_slit_function_t */
 
-  void reset(const mediate_slit_function_t *conv, const mediate_slit_function_t *deconv);
-  void apply(mediate_slit_function_t *conv, mediate_slit_function_t *deconv) const;
 
- private:
-  CWSlitSelector *m_convEdit, *m_deconvEdit;
-};
+  /****************************************************/
+  /* Ring */
+
+  typedef struct mediate_ring
+  {
+    double temperature;
+    int noheader;
+    char outputFile[FILENAME_BUFFER_LENGTH];
+    char calibrationFile[FILENAME_BUFFER_LENGTH];
+    char solarRefFile[FILENAME_BUFFER_LENGTH];
+    mediate_slit_function_t slit;
+  } mediate_ring_t;
+
+
+  void initializeMediateRing(mediate_ring_t *d);
+
+#if defined(_cplusplus) || defined(__cplusplus)
+}
+#endif
 
 #endif

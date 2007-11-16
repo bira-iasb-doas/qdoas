@@ -27,6 +27,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QLineEdit>
 #include <QCheckBox>
 #include <QSpinBox>
+#include <QGroupBox>
 #include <QGridLayout>
 
 #include "mediate_general.h"
@@ -156,6 +157,34 @@ class CWSlitErrorFileEdit : public CWSlitFileBase
 
  private:
   QLineEdit *m_widthEdit;
+};
+
+//-----------------------------------------------
+
+class CWSlitSelector : public QGroupBox
+{
+ public:
+  CWSlitSelector(const mediate_slit_function_t *slit, const QString &title, QWidget *parent = 0);
+  virtual ~CWSlitSelector();
+
+  void reset(const mediate_slit_function_t *slit);
+  void apply(mediate_slit_function_t *slit) const;
+
+ private:
+  QComboBox *m_slitCombo;
+  QStackedWidget *m_slitStack;
+  // widgets for the configuration of each slit
+  CWSlitFileEdit *m_fileEdit;
+  CWSlitGaussianEdit *m_gaussianEdit;
+  CWSlitLorentzEdit *m_lorentzEdit;
+  CWSlitVoigtEdit *m_voigtEdit;
+  CWSlitErrorEdit *m_errorEdit;
+  CWSlitApodEdit *m_boxcarApodEdit, *m_nbsApodEdit;
+  CWSlitFileEdit *m_gaussianFileEdit;
+  CWSlitLorentzFileEdit *m_lorentzFileEdit;
+  CWSlitErrorFileEdit *m_errorFileEdit;
+  CWSlitFileEdit *m_gaussianTempFileEdit;
+  CWSlitErrorFileEdit *m_errorTempFileEdit;
 };
 
 #endif

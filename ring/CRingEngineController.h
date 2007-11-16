@@ -18,30 +18,28 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
 
-#ifndef _CWCONVTABSLIT_H_GUARD
-#define _CWCONVTABSLIT_H_GUARD
+#ifndef _CRINGENGINECONTROLLER_H_GUARD
+#define _CRINGENGINECONTROLLER_H_GUARD
 
-#include <QFrame>
-#include <QLineEdit>
-#include <QComboBox>
-#include <QGroupBox>
+#include <QObject>
 
-#include "mediate_convolution.h"
+#include "CEngineController.h"
 
-#include "CWSlitEditors.h"
-
-class CWConvTabSlit : public QFrame
+class CRingEngineController : public QObject, public CEngineController
 {
 Q_OBJECT
  public:
-  CWConvTabSlit(const mediate_slit_function_t *conv, const mediate_slit_function_t *deconv, QWidget *parent = 0);
-  virtual ~CWConvTabSlit();
+  CRingEngineController(QObject *parent);
+  virtual ~CRingEngineController();
 
-  void reset(const mediate_slit_function_t *conv, const mediate_slit_function_t *deconv);
-  void apply(mediate_slit_function_t *conv, mediate_slit_function_t *deconv) const;
+  // only need to worry about plot data and erro messages
+ 
+  virtual void notifyPlotData(QList<SPlotData> &plotDataList, QList<STitleTag> &titleList);
+  virtual void notifyErrorMessages(int highestErrorLevel, const QList<CEngineError> &errorMessages);
 
- private:
-  CWSlitSelector *m_convEdit, *m_deconvEdit;
+ signals:
+  void signalPlotPage(const RefCountConstPtr<CPlotPageData> &page);
+  void signalErrorMessages(int highestErrorLevel, const QString &message);
 };
 
 #endif
