@@ -1,5 +1,5 @@
 #----------------------------------------------
-# General Configuration
+# Convolution Tool General Configuration
 #----------------------------------------------
 
 TEMPLATE = app
@@ -9,6 +9,8 @@ include( ../config.pri )
 
 CONFIG += qt thread $$CODE_GENERATION
 QT = core gui xml
+
+DEFINES += APP_CONV
 
 # Help system to use...
 contains ( $$HELP_SYSTEM, assistant ) {
@@ -57,12 +59,17 @@ SOURCES += ../common/CPathSubHandler.cpp
 SOURCES += ../common/CConfigSubHandlerUtils.cpp
 SOURCES += ../common/ConfigWriterUtils.cpp
 SOURCES += ../common/CPathMgr.cpp
+SOURCES += ../common/CPlotProperties.cpp
 
 SOURCES += ../common/CWAboutDialog.cpp
 SOURCES += ../common/CHelpSystem.cpp
 SOURCES += ../common/CHelpSystemImpl.cpp
 SOURCES += ../common/CWSlitEditors.cpp
 SOURCES += ../common/CWFilteringEditor.cpp
+SOURCES += ../common/CWPlotPage.cpp
+SOURCES += ../common/CWPlotArea.cpp
+SOURCES += ../common/CWPlotPropertiesConfig.cpp
+SOURCES += ../common/CWPlotPropertiesDialog.cpp
 
 SOURCES += CWMain.cpp
 SOURCES += CWConvTabGeneral.cpp
@@ -88,12 +95,17 @@ HEADERS += ../common/CPathSubHandler.h
 HEADERS += ../common/CConfigSubHandlerUtils.h
 HEADERS += ../common/ConfigWriterUtils.h
 HEADERS += ../common/CPathMgr.h
+HEADERS += ../common/CPlotProperties.h
 
 HEADERS += ../common/CWAboutDialog.h
 HEADERS += ../common/CHelpSystem.h
 HEADERS += ../common/CHelpSystemImpl.h
 HEADERS += ../common/CWSlitEditors.h
 HEADERS += ../common/CWFilteringEditor.h
+HEADERS += ../common/CWPlotPage.h
+HEADERS += ../common/CWPlotArea.h
+HEADERS += ../common/CWPlotPropertiesConfig.h
+HEADERS += ../common/CWPlotPropertiesDialog.h
 
 HEADERS += CWMain.h
 HEADERS += CWConvTabGeneral.h

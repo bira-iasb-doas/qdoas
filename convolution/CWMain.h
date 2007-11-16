@@ -31,6 +31,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "CWConvTabGeneral.h"
 #include "CWConvTabSlit.h"
 #include "CWFilteringEditor.h"
+#include "CWPlotArea.h"
 
 class CConvEngineController;
 class CHelpSystem;
@@ -58,6 +59,8 @@ Q_OBJECT
   void slotNewFile();
   void slotSaveFile();
   void slotSaveAsFile();
+  void slotEditPlotProperties();
+  void slotPrintPlots();
   void slotQdoasHelp();
   void slotHelpBrowserPreference(bool light);
   void slotAboutQdoas();
@@ -65,13 +68,17 @@ Q_OBJECT
   void slotErrorMessages(int highestLevel, const QString &messages);
   void slotRunConvolution();
   
+  void slotPlotPage(const RefCountConstPtr<CPlotPageData> &page);
+
  private:
   QMenuBar *m_menuBar;
-  QTabWidget *m_pageTab;
+  QTabWidget *m_tab;
 
   CWConvTabGeneral *m_generalTab;
   CWConvTabSlit *m_slitTab;
   CWFilteringEditor *m_filteringTab;
+
+  CWPlotArea *m_plotArea;
 
   QString m_configFile;
   

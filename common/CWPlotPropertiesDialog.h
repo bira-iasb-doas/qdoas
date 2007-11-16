@@ -18,28 +18,28 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
 
-#ifndef _CCONVENGINECONTROLLER_H_GUARD
-#define _CCONVENGINECONTROLLER_H_GUARD
+#include <QDialog>
 
-#include <QObject>
+#include "CWPlotPropertiesConfig.h"
 
-#include "CEngineController.h"
+#include "debugutil.h"
 
-class CConvEngineController : public QObject, public CEngineController
+#ifndef _CWPLOTPROPERTIESDIALOG_H_GUARD
+#define _CWPLOTPROPERTIESDIALOG_H_GUARD
+
+class CWPlotPropertiesDialog : public QDialog
 {
-Q_OBJECT
  public:
-  CConvEngineController(QObject *parent);
-  virtual ~CConvEngineController();
+  CWPlotPropertiesDialog(CPlotProperties &prop, QWidget *parent = 0);
+  virtual ~CWPlotPropertiesDialog();
 
-  // only need to worry about plot data and erro messages
- 
-  virtual void notifyPlotData(QList<SPlotData> &plotDataList, QList<STitleTag> &titleList);
-  virtual void notifyErrorMessages(int highestErrorLevel, const QList<CEngineError> &errorMessages);
+  virtual void accept(); 
 
- signals:
-  void signalPlotPage(const RefCountConstPtr<CPlotPageData> &page);
-  void signalErrorMessages(int highestErrorLevel, const QString &message);
+ private:
+  CPlotProperties &m_properties;
+  CWPlotPropertiesConfig *m_config;
 };
 
+
 #endif
+

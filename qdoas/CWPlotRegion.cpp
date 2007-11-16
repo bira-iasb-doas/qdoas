@@ -27,7 +27,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "CWPlotRegion.h"
 #include "CWPlotPage.h"
-#include "CPreferences.h"
 
 #include "debugutil.h"
 
@@ -43,24 +42,6 @@ CWPlotRegion::CWPlotRegion(QWidget *parent) :
   splash->setAlignment(Qt::AlignCenter);
 
   setWidget(splash);
-
-  // restore the plot properties from preferences
-  QPen pen(Qt::black);
-  QColor colour(Qt::white);
-
-  CPreferences *pref = CPreferences::instance();
-
-  m_properties.setPen(PlotDataType_Spectrum, pref->plotPen("Spectrum", pen));
-  m_properties.setPen(PlotDataType_Fit, pref->plotPen("Fit", pen));
-  m_properties.setPen(PlotDataType_Shift, pref->plotPen("Shift", pen));
-  m_properties.setPen(PlotDataType_Fwhm, pref->plotPen("Fwhm", pen));
-  m_properties.setPen(PlotDataType_Points, pref->plotPen("Points", pen));
-
-  m_properties.setBackgroundColour(pref->plotColour("Background", colour));
-
-  m_properties.setColumns(pref->plotLayout("Columns", 1));
-  m_properties.setPrintPaperSize(QPrinter::PageSize(pref->plotLayout("PaperSize", 0)));
-  m_properties.setPrintPaperOrientation(QPrinter::Orientation(pref->plotLayout("PaperOrientation", 0)));
 }
 
 CWPlotRegion::~CWPlotRegion()
@@ -140,23 +121,6 @@ const CPlotProperties& CWPlotRegion::properties(void) const
 void CWPlotRegion::setProperties(const CPlotProperties &properties)
 {
   m_properties = properties;
-}
-
-void CWPlotRegion::savePreferences(void) const
-{
-  CPreferences *pref = CPreferences::instance();
-
-  pref->setPlotPen("Spectrum", m_properties.pen(PlotDataType_Spectrum));
-  pref->setPlotPen("Fit", m_properties.pen(PlotDataType_Fit));
-  pref->setPlotPen("Shift", m_properties.pen(PlotDataType_Shift));
-  pref->setPlotPen("Fwhm", m_properties.pen(PlotDataType_Fwhm));
-  pref->setPlotPen("Points", m_properties.pen(PlotDataType_Points));
-
-  pref->setPlotColour("Background", m_properties.backgroundColour());
-
-  pref->setPlotLayout("Columns", m_properties.columns());
-  pref->setPlotLayout("PaperSize", m_properties.printPaperSize());
-  pref->setPlotLayout("PaperOrientation", m_properties.printPaperOrientation());
 }
 
 void CWPlotRegion::resizeEvent(QResizeEvent *e)

@@ -18,28 +18,45 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
 
-#ifndef _CCONVENGINECONTROLLER_H_GUARD
-#define _CCONVENGINECONTROLLER_H_GUARD
+#ifndef _CWPLOTAREA_H_GUARD
+#define _CWPLOTAREA_H_GUARD
 
-#include <QObject>
+#include <QScrollArea>
+#include <QString>
+#include <QSize>
 
-#include "CEngineController.h"
+#include "CPlotProperties.h"
+#include "CPlotPageData.h"
+#include "RefCountPtr.h"
 
-class CConvEngineController : public QObject, public CEngineController
+class CWPlotPage;
+
+class CWPlotArea : public QScrollArea
 {
-Q_OBJECT
  public:
-  CConvEngineController(QObject *parent);
-  virtual ~CConvEngineController();
+  CWPlotArea(QWidget *parent = 0);
+  virtual ~CWPlotArea();
 
-  // only need to worry about plot data and erro messages
- 
-  virtual void notifyPlotData(QList<SPlotData> &plotDataList, QList<STitleTag> &titleList);
-  virtual void notifyErrorMessages(int highestErrorLevel, const QList<CEngineError> &errorMessages);
+  void setPage(const RefCountConstPtr<CPlotPageData> &page);
+  
+  void printPage(void);
 
- signals:
-  void signalPlotPage(const RefCountConstPtr<CPlotPageData> &page);
-  void signalErrorMessages(int highestErrorLevel, const QString &message);
+  QString pageTitle(void) const;
+  QString pageTag(void) const;
+
+  const CPlotProperties& properties(void) const;
+  void setProperties(const CPlotProperties &properties);
+
+  void savePreferences(void) const;
+
+ protected:
+  void resizeEvent(QResizeEvent *e);
+
+ private:
+  CPlotProperties m_properties;
+  CWPlotPage *m_plotPage;
+  RefCountConstPtr<CPlotPageData> m_pageData;
+  QSize m_visibleSize;
 };
 
 #endif

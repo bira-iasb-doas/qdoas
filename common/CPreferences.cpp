@@ -26,6 +26,16 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "debugutil.h"
 
+
+#if defined(APP_QDOAS)
+#define PREF_KEY "Qdoas"
+#elif defined(APP_CONV)
+#define PREF_KEY "Conv"
+#else
+#error "An APPLICATION preference key is not defined"
+#endif
+
+
 // initialise static data
 
 CPreferences *CPreferences::m_instance = NULL;
@@ -51,7 +61,7 @@ CPreferences::CPreferences()
 {
   QCoreApplication::setOrganizationDomain("www.oma.be");
 
-  m_settings = new QSettings("BIRA-IASB", "Qdoas");
+  m_settings = new QSettings("BIRA-IASB", PREF_KEY);
 }
 
 // interface for saving/restoring preferences...

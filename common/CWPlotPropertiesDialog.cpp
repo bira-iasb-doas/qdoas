@@ -18,28 +18,35 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
 
-#ifndef _CCONVENGINECONTROLLER_H_GUARD
-#define _CCONVENGINECONTROLLER_H_GUARD
+#include <QVBoxLayout>
+#include <QDialogButtonBox>
 
-#include <QObject>
+#include "CWPlotPropertiesDialog.h"
 
-#include "CEngineController.h"
-
-class CConvEngineController : public QObject, public CEngineController
+CWPlotPropertiesDialog::CWPlotPropertiesDialog(CPlotProperties &prop, QWidget *parent) :
+  QDialog(parent),
+  m_properties(prop)
 {
-Q_OBJECT
- public:
-  CConvEngineController(QObject *parent);
-  virtual ~CConvEngineController();
+  QVBoxLayout *mainLayout = new QVBoxLayout(this);
 
-  // only need to worry about plot data and erro messages
- 
-  virtual void notifyPlotData(QList<SPlotData> &plotDataList, QList<STitleTag> &titleList);
-  virtual void notifyErrorMessages(int highestErrorLevel, const QList<CEngineError> &errorMessages);
+  m_config = new CWPlotPropertiesConfig(m_properties, this);
+  mainLayout->addWidget(m_config);
 
- signals:
-  void signalPlotPage(const RefCountConstPtr<CPlotPageData> &page);
-  void signalErrorMessages(int highestErrorLevel, const QString &message);
-};
+  QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
+  mainLayout->addWidget(buttonBox);
 
-#endif
+  connect(buttonBox, SIGNAL(accepted()), this, SLOT(accept()));
+  connect(buttonBox, SIGNAL(rejected()), this, SLOT(reject()));
+}
+
+CWPlotPropertiesDialog::~CWPlotPropertiesDialog()
+{
+}
+
+void CWPlotPropertiesDialog::accept()
+{
+  m_config->apply(m_properties);
+
+  QDialog::accept();
+}
+

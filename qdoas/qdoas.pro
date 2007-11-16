@@ -1,5 +1,5 @@
 #----------------------------------------------
-# General Configuration
+# Qdoas General Configuration
 #----------------------------------------------
 
 TEMPLATE = app
@@ -10,6 +10,7 @@ include( ../config.pri )
 CONFIG += qt thread $$CODE_GENERATION
 QT = core gui xml
 
+DEFINES += APP_QDOAS
 
 # Help system to use...
 contains ( $$HELP_SYSTEM, assistant ) {
@@ -59,18 +60,20 @@ SOURCES += ../common/CPathSubHandler.cpp
 SOURCES += ../common/CConfigSubHandlerUtils.cpp
 SOURCES += ../common/ConfigWriterUtils.cpp
 SOURCES += ../common/CPathMgr.cpp
+SOURCES += ../common/CPlotProperties.cpp
 
 SOURCES += ../common/CWAboutDialog.cpp
 SOURCES += ../common/CHelpSystem.cpp
 SOURCES += ../common/CHelpSystemImpl.cpp
 SOURCES += ../common/CWSlitEditors.cpp
 SOURCES += ../common/CWFilteringEditor.cpp
+SOURCES += ../common/CWPlotPage.cpp
+SOURCES += ../common/CWPlotPropertiesConfig.cpp
 
 SOURCES += CQdoasEngineController.cpp
 SOURCES += CEngineRequest.cpp
 SOURCES += CEngineThread.cpp
 SOURCES += CNavigationPanel.cpp
-SOURCES += CPlotProperties.cpp
 SOURCES += CMultiPageTableModel.cpp
 SOURCES += CSession.cpp
 SOURCES += CQdoasConfigHandler.cpp
@@ -85,7 +88,6 @@ SOURCES += CWAnalysisWindowDoasTables.cpp
 SOURCES += CWEditor.cpp
 SOURCES += CWMain.cpp
 SOURCES += CWorkSpace.cpp
-SOURCES += CWPlotPage.cpp
 SOURCES += CWPlotRegion.cpp
 SOURCES += CWTableRegion.cpp
 SOURCES += CWSiteListCombo.cpp
@@ -142,18 +144,20 @@ HEADERS += ../common/CPathSubHandler.h
 HEADERS += ../common/CConfigSubHandlerUtils.h
 HEADERS += ../common/ConfigWriterUtils.h
 HEADERS += ../common/CPathMgr.h
+HEADERS += ../common/CPlotProperties.h
 
 HEADERS += ../common/CWAboutDialog.h
 HEADERS += ../common/CHelpSystem.h
 HEADERS += ../common/CHelpSystemImpl.h
 HEADERS += ../common/CWSlitEditors.h
 HEADERS += ../common/CWFilteringEditor.h
+HEADERS += ../common/CWPlotPage.h
+HEADERS += ../common/CWPlotPropertiesConfig.h
 
 HEADERS += CQdoasEngineController.h
 HEADERS += CEngineRequest.h
 HEADERS += CEngineThread.h
 HEADERS += CNavigationPanel.h
-HEADERS += CPlotProperties.h
 HEADERS += CMultiPageTableModel.h
 HEADERS += CSession.h
 HEADERS += CQdoasConfigHandler.h
@@ -168,7 +172,6 @@ HEADERS += CWAnalysisWindowDoasTables.h
 HEADERS += CWEditor.h
 HEADERS += CWMain.h
 HEADERS += CWorkSpace.h
-HEADERS += CWPlotPage.h
 HEADERS += CWPlotRegion.h
 HEADERS += CWTableRegion.h
 HEADERS += CWSiteListCombo.h

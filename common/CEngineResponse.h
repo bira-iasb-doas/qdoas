@@ -41,7 +41,8 @@ class CEngineResponse
     eEngineResponseBeginAccessFileType,
     eEngineResponseAccessRecordType,
     eEngineResponseGotoRecordType,
-    eEngineResponseEndAccessFileType    
+    eEngineResponseEndAccessFileType,
+    eEngineResponseToolType
   };  
 
   CEngineResponse(enum ResponseType type);
@@ -97,7 +98,25 @@ class CEngineResponseBeginAccessFile : public CEngineResponse
 
 //------------------------------------------------------------
 
-class CEngineResponseSpecificRecord : public CEngineResponse
+class CEngineResponsePlot : public CEngineResponse
+{
+ public:
+  CEngineResponsePlot(CEngineResponse::ResponseType type);
+  virtual ~CEngineResponsePlot();
+
+  virtual void process(CEngineController *engineController);
+
+  void addDataSet(int pageNumber, const CPlotDataSet *dataSet);
+  void addPageTitleAndTag(int pageNumber, const QString &title, const QString &tag);
+
+ protected:
+  QList<SPlotData> m_plotDataList;
+  QList<STitleTag> m_titleList;
+};
+
+//------------------------------------------------------------
+
+class CEngineResponseSpecificRecord : public CEngineResponsePlot
 {
  public:
   CEngineResponseSpecificRecord(CEngineResponse::ResponseType type);
@@ -105,16 +124,15 @@ class CEngineResponseSpecificRecord : public CEngineResponse
 
   virtual void process(CEngineController *engineController);
 
-  void setRecordNumber(int recordNumber);
   void addDataSet(int pageNumber, const CPlotDataSet *dataSet);
-  void addCell(int pageNumber, int row, int col, const QVariant &data);
   void addPageTitleAndTag(int page, const QString &title, const QString &tag);
+
+  void setRecordNumber(int recordNumber);
+  void addCell(int pageNumber, int row, int col, const QVariant &data);
 
  private:
   int m_recordNumber;
-  QList<SPlotData> m_plotDataList;
   QList<SCell> m_cellList;
-  QList<STitleTag> m_titleList;
 };
 
 //------------------------------------------------------------
@@ -135,6 +153,15 @@ class CEngineResponseEndAccessFile : public CEngineResponse
   virtual ~CEngineResponseEndAccessFile();
 
   virtual void process(CEngineController *engineController);
+};
+
+//------------------------------------------------------------
+
+class CEngineResponseTool : public CEngineResponsePlot
+{
+ public:
+  CEngineResponseTool();
+  virtual ~CEngineResponseTool();
 };
 
 //------------------------------------------------------------

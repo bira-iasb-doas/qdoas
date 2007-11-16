@@ -103,13 +103,12 @@ void CEngineResponseBeginAccessFile::setNumberOfRecords(int numberOfRecords)
 
 //------------------------------------------------------------
 
-CEngineResponseSpecificRecord::CEngineResponseSpecificRecord(CEngineResponse::ResponseType type) :
-  CEngineResponse(type),
-  m_recordNumber(-1)
+CEngineResponsePlot::CEngineResponsePlot(CEngineResponse::ResponseType type) :
+  CEngineResponse(type)
 {
 }
 
-CEngineResponseSpecificRecord::~CEngineResponseSpecificRecord()
+CEngineResponsePlot::~CEngineResponsePlot()
 {
   // should have been emptied in the transfer to the controller
 
@@ -117,6 +116,37 @@ CEngineResponseSpecificRecord::~CEngineResponseSpecificRecord()
     delete m_plotDataList.front().data;
     m_plotDataList.pop_front();
   }
+}
+
+void CEngineResponsePlot::process(CEngineController *engineController)
+{
+  // consider the error messages first - if fatal stop here
+  if (processErrors(engineController))
+    return;
+
+  engineController->notifyPlotData(m_plotDataList, m_titleList);
+}
+
+void CEngineResponsePlot::addDataSet(int pageNumber, const CPlotDataSet *dataSet)
+{
+  m_plotDataList.push_back(SPlotData(pageNumber, dataSet));
+}
+
+void CEngineResponsePlot::addPageTitleAndTag(int pageNumber, const QString &title, const QString &tag)
+{
+  m_titleList.push_back(STitleTag(pageNumber, title, tag));
+}
+
+//------------------------------------------------------------
+
+CEngineResponseSpecificRecord::CEngineResponseSpecificRecord(CEngineResponse::ResponseType type) :
+  CEngineResponsePlot(type),
+  m_recordNumber(-1)
+{
+}
+
+CEngineResponseSpecificRecord::~CEngineResponseSpecificRecord()
+{
 }
 
 void CEngineResponseSpecificRecord::process(CEngineController *engineController)
@@ -147,21 +177,10 @@ void CEngineResponseSpecificRecord::setRecordNumber(int recordNumber)
   m_recordNumber = recordNumber;
 }
 
-void CEngineResponseSpecificRecord::addDataSet(int pageNumber, const CPlotDataSet *dataSet)
-{
-  m_plotDataList.push_back(SPlotData(pageNumber, dataSet));
-}
-
 void CEngineResponseSpecificRecord::addCell(int pageNumber, int row, int col,
 					    const QVariant &data)
 {
   m_cellList.push_back(SCell(pageNumber, row, col, data));
-}
-
-void CEngineResponseSpecificRecord::addPageTitleAndTag(int pageNumber, const QString &title,
-						       const QString &tag)
-{
-  m_titleList.push_back(STitleTag(pageNumber, title, tag));
 }
 
 //------------------------------------------------------------
@@ -194,6 +213,17 @@ void CEngineResponseEndAccessFile::process(CEngineController *engineController)
 
   // notify the engine controller
   engineController->notifyEndAccessFile();
+}
+
+//------------------------------------------------------------
+
+CEngineResponseTool::CEngineResponseTool() :
+  CEngineResponsePlot(eEngineResponseToolType)
+{
+}
+
+CEngineResponseTool::~CEngineResponseTool()
+{
 }
 
 //------------------------------------------------------------

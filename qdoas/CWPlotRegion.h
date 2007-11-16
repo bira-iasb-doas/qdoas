@@ -50,8 +50,6 @@ class CWPlotRegion : public QScrollArea
   const CPlotProperties& properties(void) const;
   void setProperties(const CPlotProperties &properties);
 
-  void savePreferences(void) const;
-
  protected:
   void resizeEvent(QResizeEvent *e);
 

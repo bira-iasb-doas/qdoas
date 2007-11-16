@@ -29,6 +29,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "CWPlotPage.h"
 #include "CWPlotRegion.h"
 #include "CWPlotPropertiesEditor.h"
+#include "CWPlotPropertiesConfig.h"
 
 #include "debugutil.h"
 
@@ -149,7 +150,12 @@ CWActiveContext::CWActiveContext(QWidget *parent) :
     m_activeTabRegionWidth = 20;
   }
 
-  m_plotRegion = new CWPlotRegion(this);
+  // plt region and properties
+  CPlotProperties prop;
+  CWPlotPropertiesConfig::loadFromPreferences(prop);
+  
+  m_plotRegion = new CWPlotRegion(this);  
+  m_plotRegion->setProperties(prop);
 
   // this might be adjusted in edit mode ...
   m_minGeneralSize = QSize(minWidth, m_titleRegionHeight + m_graphTabRegionHeight + 50);
@@ -238,7 +244,7 @@ void CWActiveContext::addEditor(CWEditor *editor)
   
 void CWActiveContext::savePreferences(void) const
 {
-  m_plotRegion->savePreferences();
+  CWPlotPropertiesConfig::saveToPreferences(m_plotRegion->properties());
 }
 
 QSize CWActiveContext::minimumSizeHint() const

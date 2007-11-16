@@ -65,7 +65,7 @@ void mediateResponsePlotData(int page,
 			     const char *yLabel,
 			     void *responseHandle)
 {
-  CEngineResponseSpecificRecord *resp = static_cast<CEngineResponseSpecificRecord*>(responseHandle);
+  CEngineResponsePlot *resp = static_cast<CEngineResponsePlot*>(responseHandle);
 
   CPlotDataSet *dataSet = new CPlotDataSet(title, xLabel, yLabel);
 
@@ -150,7 +150,7 @@ void mediateResponseLabelPage(int page,
 			      const char *tag,
 			      void *responseHandle)
 {
-  CEngineResponseSpecificRecord *resp = static_cast<CEngineResponseSpecificRecord*>(responseHandle);
+  CEngineResponsePlot *resp = static_cast<CEngineResponsePlot*>(responseHandle);
   resp->addPageTitleAndTag(page, title, tag);
 }
 

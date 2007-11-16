@@ -36,6 +36,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "CWMain.h"
 #include "CWAboutDialog.h"
 #include "CHelpSystem.h"
+#include "CWPlotPropertiesDialog.h"
 
 #include "CConvEngineController.h"
 
@@ -50,8 +51,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "debugutil.h"
 
+void TODO_Junk_Test(void *engineContext, void *resp); // TODO
+
 CWMain::CWMain(QWidget *parent) :
-  QFrame(parent)
+  QFrame(parent),
+  m_plotArea(NULL)
 {
   initializeMediateConvolution(&m_guiProperties);
 
@@ -113,6 +117,20 @@ CWMain::CWMain(QWidget *parent) :
 
   m_menuBar->addMenu(calcMenu);
 
+  // Plot menu
+  QMenu *plotMenu = new QMenu("Plot");
+
+  // plot properties and printing
+  QAction *plotPropAction = new QAction(QIcon(QPixmap(":/icons/plot_prop_22.png")), "Plot Properties...", this);
+  connect(plotPropAction, SIGNAL(triggered()), this, SLOT(slotEditPlotProperties()));
+  plotMenu->addAction(plotPropAction);
+
+  QAction *plotPrintAction = new QAction(QIcon(QPixmap(":/icons/plot_print_22.png")), "Print Plots...", this);
+  connect(plotPrintAction, SIGNAL(triggered()), this, SLOT(slotPrintPlots()));
+  plotMenu->addAction(plotPrintAction);
+
+  m_menuBar->addMenu(plotMenu);
+
   // Help Menu
   QMenu *helpMenu = new QMenu("Help");
 
@@ -136,19 +154,19 @@ CWMain::CWMain(QWidget *parent) :
 
   m_menuBar->addMenu(helpMenu);
 
-  // tab page
-  m_pageTab = new QTabWidget(this);
+  // tab - config pages and eventually the plot.
+  m_tab = new QTabWidget(this);
 
   m_generalTab = new CWConvTabGeneral(&(m_guiProperties.general));
-  m_pageTab->addTab(m_generalTab, "General");
+  m_tab->addTab(m_generalTab, "General");
 
   m_slitTab = new CWConvTabSlit(&(m_guiProperties.conslit), &(m_guiProperties.decslit));
-  m_pageTab->addTab(m_slitTab, "Slit");
+  m_tab->addTab(m_slitTab, "Slit");
 
   m_filteringTab = new CWFilteringEditor(&(m_guiProperties.lowpass), &(m_guiProperties.highpass), CWFilteringEditor::SubDivSwitch);
-  m_pageTab->addTab(m_filteringTab, "Filtering");
+  m_tab->addTab(m_filteringTab, "Filtering");
 
-  mainLayout->addWidget(m_pageTab, 1);
+  mainLayout->addWidget(m_tab, 1);
 
   // re-read the guiProperties and synchronize ... limits on the widgets can change the initialized state.
   fetchGuiProperties();
@@ -158,9 +176,11 @@ CWMain::CWMain(QWidget *parent) :
   setWindowIcon(QIcon(QPixmap(":/icons/logo.png")));
 
   // get the window size from the settings
-  resize(CPreferences::instance()->windowSize("Conv", QSize(450,350)));
+  resize(CPreferences::instance()->windowSize("ConvTool", QSize(450,350)));
 
   // connections
+  connect(m_controller, SIGNAL(signalPlotPage(const RefCountConstPtr<CPlotPageData> &)),
+	  this, SLOT(slotPlotPage(const RefCountConstPtr<CPlotPageData> &)));
   connect(m_controller, SIGNAL(signalErrorMessages(int, const QString &)),
 	  this, SLOT(slotErrorMessages(int, const QString &)));
 }
@@ -172,8 +192,11 @@ CWMain::~CWMain()
 void CWMain::closeEvent(QCloseEvent *e)
 {
   // save preferences ...
-  CPreferences::instance()->setWindowSize("Conv", size());
+  CPreferences::instance()->setWindowSize("ConvTool", size());
 
+  if (m_plotArea != NULL)
+    CWPlotPropertiesConfig::saveToPreferences(m_plotArea->properties());
+  
   // flush write and close ...
   delete CPreferences::instance();
 
@@ -224,7 +247,7 @@ bool CWMain::checkStateAndConsiderSaveFile(void)
 
 void CWMain::setConfigFileName(const QString &fileName)
 {
-  QString str("Qdoas - ");
+  QString str("Convolution - ");
   
   m_configFile = fileName;
 
@@ -403,6 +426,33 @@ void CWMain::slotSaveFile()
 
 }
 
+void CWMain::slotEditPlotProperties()
+{
+  CPlotProperties prop;
+
+  if (m_plotArea != NULL)
+    prop = m_plotArea->properties();
+  else
+    CWPlotPropertiesConfig::loadFromPreferences(prop);
+
+  CWPlotPropertiesDialog dialog(prop, this);
+
+  if (dialog.exec() == QDialog::Accepted) {
+
+    if (m_plotArea != NULL)
+      m_plotArea->setProperties(prop);
+    else
+      CWPlotPropertiesConfig::saveToPreferences(prop);
+    
+  }
+}
+
+void CWMain::slotPrintPlots()
+{
+  if (m_plotArea != NULL)
+    m_plotArea->printPage();
+}
+
 void CWMain::slotQdoasHelp()
 {
   m_helpInterface->openBrowser();
@@ -451,7 +501,7 @@ void CWMain::slotRunConvolution()
 
   // get an engine context
   void *engineContext;
-  CEngineResponse *resp = new CEngineResponseMessage; // TODO ...
+  CEngineResponseTool *resp = new CEngineResponseTool;
 
   if (mediateRequestCreateEngineContext(&engineContext, resp) != 0) {
     delete resp;
@@ -462,8 +512,10 @@ void CWMain::slotRunConvolution()
 
   //mediateRequestConvolution(&engineContext, &m_guiProperties, resp);
 
+  TODO_Junk_Test(&engineContext, resp);
+
   // process the response - the controller will dispatch ...
-  //resp->process(m_controller);
+  resp->process(m_controller);
 
   QApplication::restoreOverrideCursor();
 
@@ -473,4 +525,39 @@ void CWMain::slotRunConvolution()
   }
 
   delete resp;
+}
+
+void CWMain::slotPlotPage(const RefCountConstPtr<CPlotPageData> &page)
+{
+  if (page != 0) {
+    // lazy creation of the plot tab ...
+    if (!m_plotArea) {
+      CPlotProperties prop;
+      CWPlotPropertiesConfig::loadFromPreferences(prop);
+
+      m_plotArea = new CWPlotArea;
+      m_plotArea->setProperties(prop);
+      
+      m_tab->addTab(m_plotArea, "Plot");
+    }
+
+    m_plotArea->setPage(page);
+    m_plotArea->show();
+
+    m_tab->setCurrentWidget(m_plotArea);
+  }
+}
+
+
+void TODO_Junk_Test(void *engineContext, void *resp)
+{
+  plot_data_t dummy;
+  double xData[] = { 0.0, 1.1, 2.2, 3.3, 4.4, 5.5 };
+  double yData[] = { 3.0, 4.0, 3.5, 1.1, 1.4, 3.0 };
+
+  mediateAllocateAndSetPlotData(&dummy, xData, yData, 6, PlotDataType_Spectrum, "legend");
+
+  mediateResponsePlotData(0, &dummy, 1, "Title", "X-Label", "Y-label", resp);
+
+  mediateReleasePlotData(&dummy);
 }
