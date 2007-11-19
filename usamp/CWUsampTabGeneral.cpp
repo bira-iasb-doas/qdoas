@@ -26,14 +26,14 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QPushButton>
 #include <QFileDialog>
 
-#include "CWRingTabGeneral.h"
+#include "CWUsampTabGeneral.h"
 #include "CValidator.h"
 #include "CPreferences.h"
 
 #include "constants.h"
 
 
-CWRingTabGeneral::CWRingTabGeneral(const mediate_ring_t *properties, QWidget *parent) :
+CWUsampTabGeneral::CWUsampTabGeneral(const mediate_usamp_t *properties, QWidget *parent) :
   QFrame(parent)
 {
   QVBoxLayout *mainLayout = new QVBoxLayout(this);
@@ -45,13 +45,22 @@ CWRingTabGeneral::CWRingTabGeneral(const mediate_ring_t *properties, QWidget *pa
 
   fileLayout->setSpacing(3);
 
-  // output
-  fileLayout->addWidget(new QLabel("Output", this), row, 0);
-  m_outputFileEdit = new QLineEdit(this);
-  m_outputFileEdit->setMaxLength(sizeof(properties->outputFile)-1);
-  fileLayout->addWidget(m_outputFileEdit, row, 1);
-  QPushButton *outputBtn = new QPushButton("Browse", this);
-  fileLayout->addWidget(outputBtn, row, 2);
+  // output phase 1
+  fileLayout->addWidget(new QLabel("Output (Phase 1)", this), row, 0);
+  m_outputPhaseOneFileEdit = new QLineEdit(this);
+  m_outputPhaseOneFileEdit->setMaxLength(sizeof(properties->outputPhaseOneFile)-1);
+  fileLayout->addWidget(m_outputPhaseOneFileEdit, row, 1);
+  QPushButton *outputPhaseOneBtn = new QPushButton("Browse", this);
+  fileLayout->addWidget(outputPhaseOneBtn, row, 2);
+  ++row;
+
+  // output phase 2
+  fileLayout->addWidget(new QLabel("Output (Phase 2)", this), row, 0);
+  m_outputPhaseTwoFileEdit = new QLineEdit(this);
+  m_outputPhaseTwoFileEdit->setMaxLength(sizeof(properties->outputPhaseTwoFile)-1);
+  fileLayout->addWidget(m_outputPhaseTwoFileEdit, row, 1);
+  QPushButton *outputPhaseTwoBtn = new QPushButton("Browse", this);
+  fileLayout->addWidget(outputPhaseTwoBtn, row, 2);
   ++row;
 
   // calibration
@@ -77,15 +86,23 @@ CWRingTabGeneral::CWRingTabGeneral(const mediate_ring_t *properties, QWidget *pa
   m_slitEdit = new CWSlitSelector(&(properties->slit), "Slit Function", this);
   mainLayout->addWidget(m_slitEdit);
 
-  QHBoxLayout *tempLayout = new QHBoxLayout;
-  tempLayout->setMargin(0);
-  tempLayout->addWidget(new QLabel("Temperature (K)", this));
-  m_tempEdit = new QLineEdit(this);
-  m_tempEdit->setValidator(new CDoubleFixedFmtValidator(0, 999, 1, m_tempEdit));
-  tempLayout->addWidget(m_tempEdit);
-  tempLayout->addStretch(1);
+  // analysis
+  QGroupBox *analysisGroup = new QGroupBox("Analysis", this);
+  QGridLayout *analysisLayout = new QGridLayout(analysisGroup);
+  analysisLayout->addWidget(new QLabel("Anylsis Method", analysisGroup), 0, 0);
+  m_analysisCombo = new QComboBox(analysisGroup);
+  m_analysisCombo->addItem("Optical density fitting", QVariant(PRJCT_ANLYS_METHOD_SVD));
+  m_analysisCombo->addItem("Intensity fitting (Marquardt-Levenberg)", QVariant(PRJCT_ANLYS_METHOD_SVDMARQUARDT));
+  analysisLayout->addWidget(m_analysisCombo, 0, 1);
 
-  mainLayout->addLayout(tempLayout);
+  analysisLayout->addWidget(new QLabel("Shift (nm)", this), 1, 0);
+  m_shiftEdit = new QLineEdit(this);
+  m_shiftEdit->setFixedWidth(100);
+  m_shiftEdit->setValidator(new CDoubleFixedFmtValidator(-100.0, 100.0, 3, m_shiftEdit));
+  analysisLayout->addWidget(m_shiftEdit, 1, 1);
+  
+
+  mainLayout->addWidget(analysisGroup);
 
   mainLayout->addStretch(1);
 
@@ -96,31 +113,37 @@ CWRingTabGeneral::CWRingTabGeneral(const mediate_ring_t *properties, QWidget *pa
   reset(properties);
 
   // connections
-  connect(outputBtn, SIGNAL(clicked()), this, SLOT(slotBrowseOutput()));
+  connect(outputPhaseOneBtn, SIGNAL(clicked()), this, SLOT(slotBrowseOutputPhaseOne()));
+  connect(outputPhaseTwoBtn, SIGNAL(clicked()), this, SLOT(slotBrowseOutputPhaseTwo()));
   connect(calibBtn, SIGNAL(clicked()), this, SLOT(slotBrowseCalibration()));
   connect(refBtn, SIGNAL(clicked()), this, SLOT(slotBrowseSolarReference()));
 
 }
 
-CWRingTabGeneral::~CWRingTabGeneral()
+CWUsampTabGeneral::~CWUsampTabGeneral()
 {
 }
 
-void CWRingTabGeneral::reset(const mediate_ring_t *properties)
+void CWUsampTabGeneral::reset(const mediate_usamp_t *properties)
 {
   // set/reset gui state from properties
 
-  // temp
+  int index;
   QString tmpStr;
   
-  tmpStr.setNum(properties->temperature);
-  m_tempEdit->validator()->fixup(tmpStr);
-  m_tempEdit->setText(tmpStr);
+  index = m_analysisCombo->findData(QVariant(properties->methodType));
+  if (index != -1)
+    m_analysisCombo->setCurrentIndex(index);
+
+  tmpStr.setNum(properties->shift);
+  m_shiftEdit->validator()->fixup(tmpStr);
+  m_shiftEdit->setText(tmpStr);
 
   m_headerCheck->setCheckState(properties->noheader ? Qt::Checked : Qt::Unchecked);
 
   // files
-  m_outputFileEdit->setText(properties->outputFile);
+  m_outputPhaseOneFileEdit->setText(properties->outputPhaseOneFile);
+  m_outputPhaseTwoFileEdit->setText(properties->outputPhaseTwoFile);
   m_calibFileEdit->setText(properties->calibrationFile);
   m_refFileEdit->setText(properties->solarRefFile);
 
@@ -128,32 +151,47 @@ void CWRingTabGeneral::reset(const mediate_ring_t *properties)
   m_slitEdit->reset(&(properties->slit));
 }
 
-void CWRingTabGeneral::apply(mediate_ring_t *properties) const
+void CWUsampTabGeneral::apply(mediate_usamp_t *properties) const
 {
   properties->noheader = (m_headerCheck->checkState() == Qt::Checked) ? 1 : 0;
-  properties->temperature = m_tempEdit->text().toDouble();  
+  properties->methodType = m_analysisCombo->itemData(m_analysisCombo->currentIndex()).toInt();
+  properties->shift = m_shiftEdit->text().toDouble();  
 
-  strcpy(properties->outputFile, m_outputFileEdit->text().toAscii().constData());
+  strcpy(properties->outputPhaseOneFile, m_outputPhaseOneFileEdit->text().toAscii().constData());
+  strcpy(properties->outputPhaseTwoFile, m_outputPhaseTwoFileEdit->text().toAscii().constData());
   strcpy(properties->calibrationFile, m_calibFileEdit->text().toAscii().constData());
   strcpy(properties->solarRefFile, m_refFileEdit->text().toAscii().constData());
 
   m_slitEdit->apply(&(properties->slit));
 }
 
-void CWRingTabGeneral::slotBrowseOutput()
+void CWUsampTabGeneral::slotBrowseOutputPhaseOne()
 {
   CPreferences *pref = CPreferences::instance();
 
   QString dirName = pref->directoryName("Output");
-  QString fileName = QFileDialog::getSaveFileName(this, "Output File", dirName, "*");
+  QString fileName = QFileDialog::getSaveFileName(this, "Output File (Phase 1)", dirName, "*");
   
   if (!fileName.isEmpty()) {
-    m_outputFileEdit->setText(fileName);
+    m_outputPhaseOneFileEdit->setText(fileName);
     pref->setDirectoryNameGivenFile("Output", fileName);
   }
 }
 
-void CWRingTabGeneral::slotBrowseCalibration()
+void CWUsampTabGeneral::slotBrowseOutputPhaseTwo()
+{
+  CPreferences *pref = CPreferences::instance();
+
+  QString dirName = pref->directoryName("Output");
+  QString fileName = QFileDialog::getSaveFileName(this, "Output File (Phase 2)", dirName, "*");
+  
+  if (!fileName.isEmpty()) {
+    m_outputPhaseTwoFileEdit->setText(fileName);
+    pref->setDirectoryNameGivenFile("Output", fileName);
+  }
+}
+
+void CWUsampTabGeneral::slotBrowseCalibration()
 {
   CPreferences *pref = CPreferences::instance();
 
@@ -166,10 +204,10 @@ void CWRingTabGeneral::slotBrowseCalibration()
   }
 }
 
-void CWRingTabGeneral::slotBrowseSolarReference()
+void CWUsampTabGeneral::slotBrowseSolarReference()
 {
   CPreferences *pref = CPreferences::instance();
-  
+
   QString dirName = pref->directoryName("Ref");
   QString fileName = QFileDialog::getOpenFileName(this, "reference File", dirName, "*.ktz");
   

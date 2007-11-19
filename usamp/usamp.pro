@@ -1,9 +1,9 @@
 #----------------------------------------------
-# Ring Tool General Configuration
+# Usamp Tool General Configuration
 #----------------------------------------------
 
 TEMPLATE = app
-TARGET   = ring
+TARGET   = usamp
 
 include( ../config.pri )
 
@@ -72,11 +72,11 @@ SOURCES += ../common/CWPlotPropertiesConfig.cpp
 SOURCES += ../common/CWPlotPropertiesDialog.cpp
 
 SOURCES += CWMain.cpp
-SOURCES += CWRingTabGeneral.cpp
-SOURCES += CRingEngineController.cpp
-SOURCES += CRingConfigHandler.cpp
-SOURCES += CRingConfigWriter.cpp
-SOURCES += ringtool.cpp
+SOURCES += CWUsampTabGeneral.cpp
+SOURCES += CUsampEngineController.cpp
+SOURCES += CUsampConfigHandler.cpp
+SOURCES += CUsampConfigWriter.cpp
+SOURCES += usamptool.cpp
 
 #----------------------------------------------
 # GUI Header files
@@ -107,15 +107,15 @@ HEADERS += ../common/CWPlotPropertiesConfig.h
 HEADERS += ../common/CWPlotPropertiesDialog.h
 
 HEADERS += CWMain.h
-HEADERS += CWRingTabGeneral.h
-HEADERS += CRingEngineController.h
-HEADERS += CRingConfigHandler.h
-HEADERS += CRingConfigWriter.h
+HEADERS += CWUsampTabGeneral.h
+HEADERS += CUsampEngineController.h
+HEADERS += CUsampConfigHandler.h
+HEADERS += CUsampConfigWriter.h
 
 #----------------------------------------------
 # Mediator Source files
 #----------------------------------------------
-SOURCES += ../mediator/mediate_ring.c
+SOURCES += ../mediator/mediate_usamp.c
 SOURCES += ../mediator/mediate.c
 SOURCES += ../mediator/mediate_response.cpp
 
@@ -124,7 +124,7 @@ SOURCES += ../mediator/mediate_response.cpp
 #----------------------------------------------
 HEADERS += ../mediator/mediate_limits.h
 HEADERS += ../mediator/mediate_general.h
-HEADERS += ../mediator/mediate_ring.h
+HEADERS += ../mediator/mediate_usamp.h
 HEADERS += ../mediator/mediate_response.h
 HEADERS += ../mediator/mediate_request.h
 HEADERS += ../mediator/mediate_project.h
@@ -133,7 +133,7 @@ HEADERS += ../mediator/mediate_analysis_window.h
 #----------------------------------------------
 # Resource files
 #----------------------------------------------
-RESOURCES = ../resources/ring.qrc
+RESOURCES = ../resources/usamp.qrc
 
 #----------------------------------------------
 # Engine Source files

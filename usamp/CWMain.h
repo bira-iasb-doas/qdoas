@@ -25,21 +25,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include <QFrame>
 #include <QMenuBar>
-#include <QToolBar>
-#include <QSplitter>
-#include <QStatusBar>
 #include <QTabWidget>
-#include <QTableView>
 #include <QAction>
 
-class CWProjectTree;
-class CWSiteTree;
-class CWUserSymbolTree;
-class CWActiveContext;
-class CQdoasEngineController;
-class CWTableRegion;
-class CWSplitter;
-class CConfigStateMonitor;
+#include "CWUsampTabGeneral.h"
+#include "CWPlotArea.h"
+
+class CUsampEngineController;
 class CHelpSystem;
 
 class CWMain : public QFrame
@@ -55,53 +47,44 @@ Q_OBJECT
  protected:
   void writeConfiguration(FILE *fp);
   bool checkStateAndConsiderSaveFile(void);
-  void setProjectFileName(const QString &fileName);
+  void setConfigFileName(const QString &fileName);
+
+  void fetchGuiProperties(void);
+  bool compareProperties(void);
 
  public slots:
   void slotOpenFile();
   void slotNewFile();
   void slotSaveFile();
   void slotSaveAsFile();
-  void slotCutButtonClicked();
-  void slotCopyButtonClicked();
-  void slotPasteButtonClicked();
-  void slotDeleteButtonClicked();
-  void slotStateMonitorChanged(bool valid);
-  void slotConvolutionTool();
-  void slotRingTool();
-  void slotUndersamplingTool();
+  void slotEditPlotProperties();
+  void slotPrintPlots();
   void slotQdoasHelp();
   void slotHelpBrowserPreference(bool light);
   void slotAboutQdoas();
   void slotAboutQt();
   void slotErrorMessages(int highestLevel, const QString &messages);
+  void slotRunUsamp();
   
+  void slotPlotPage(const RefCountConstPtr<CPlotPageData> &page);
+
  private:
   QMenuBar *m_menuBar;
-  QToolBar *m_toolBar;
-  QTabWidget *m_projEnvTab;
+  QTabWidget *m_tab;
 
-  CWProjectTree *m_projTree;
-  CWSiteTree *m_siteTree;
-  CWUserSymbolTree *m_userSymbolTree;
+  CWUsampTabGeneral *m_generalTab;
 
-  CWSplitter *m_subSplitter;
+  CWPlotArea *m_plotArea;
 
-  CWTableRegion *m_tableRegion;
-
-  CWActiveContext *m_activeContext;
-
-  QStatusBar *m_statusBar;
-
-  CQdoasEngineController *m_controller;
+  QString m_configFile;
   
-  CConfigStateMonitor *m_stateMonitor;
+  CUsampEngineController *m_controller;
 
-  QString m_projectFile;
-  
   // actions ...
   QAction *m_saveAction;
   QAction *m_saveAsAction;
+
+  mediate_usamp_t m_properties, m_guiProperties;
 
   // help interface ...
   CHelpSystem *m_helpInterface;

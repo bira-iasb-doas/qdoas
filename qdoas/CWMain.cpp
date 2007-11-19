@@ -17,13 +17,15 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-
+#include <QCoreApplication>
 #include <QVBoxLayout>
 #include <QMenu>
 #include <QAction>
 #include <QXmlInputSource>
 #include <QXmlSimpleReader>
 #include <QFile>
+#include <QDir>
+#include <QProcess>
 #include <QMessageBox>
 #include <QFileDialog>
 #include <QCloseEvent>
@@ -203,6 +205,14 @@ CWMain::CWMain(QWidget *parent) :
   m_toolBar->addAction(plotPrintAction);
 
   m_menuBar->addMenu(plotMenu);
+
+  // Tools menu
+  QMenu *toolsMenu = new QMenu("Tools");
+  toolsMenu->addAction("Convolution", this, SLOT(slotConvolutionTool()));
+  toolsMenu->addAction("Ring", this, SLOT(slotRingTool()));
+  toolsMenu->addAction("Undersampling", this, SLOT(slotUndersamplingTool()));
+
+  m_menuBar->addMenu(toolsMenu);
 
   // Help Menu
   QMenu *helpMenu = new QMenu("Help");
@@ -575,6 +585,52 @@ void CWMain::slotStateMonitorChanged(bool valid)
   m_saveAsAction->setEnabled(true);
   setWindowModified(modified);
 }
+
+void CWMain::slotConvolutionTool()
+{
+  QString name = QCoreApplication::applicationDirPath();
+
+  name += QDir::separator();
+  name += "convolution";
+
+  if (!QProcess::startDetached(name)) {
+    QString msg = "Failed to start convolution tool.\n(";
+    msg += name;
+    msg += " )";
+    QMessageBox::information(this, "Convolution", msg);
+  }
+}
+
+void CWMain::slotRingTool()
+{
+  QString name = QCoreApplication::applicationDirPath();
+
+  name += QDir::separator();
+  name += "ring";
+
+  if (!QProcess::startDetached(name)) {    
+    QString msg = "Failed to start ring tool.\n(";
+    msg += name;
+    msg += " )";
+    QMessageBox::information(this, "Convolution", msg);
+  }
+}
+
+void CWMain::slotUndersamplingTool()
+{
+  QString name = QCoreApplication::applicationDirPath();
+
+  name += QDir::separator();
+  name += "usamp";
+
+  if (!QProcess::startDetached(name)) {
+    QString msg = "Failed to start undersampling tool.\n( ";
+    msg += name;
+    msg += " )";
+    QMessageBox::information(this, "Undersampling", msg);
+  }
+}
+
 
 void CWMain::slotQdoasHelp()
 {

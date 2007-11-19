@@ -18,38 +18,28 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
 
-#ifndef _CWRINGTABGENERAL_H_GUARD
-#define _CWRINGTABGENERAL_H_GUARD
+#ifndef _CUSAMPENGINECONTROLLER_H_GUARD
+#define _CUSAMPENGINECONTROLLER_H_GUARD
 
-#include <QFrame>
-#include <QLineEdit>
-#include <QComboBox>
-#include <QCheckBox>
+#include <QObject>
 
-#include "mediate_ring.h"
+#include "CEngineController.h"
 
-#include "CWSlitEditors.h"
-
-class CWRingTabGeneral : public QFrame
+class CUsampEngineController : public QObject, public CEngineController
 {
 Q_OBJECT
  public:
-  CWRingTabGeneral(const mediate_ring_t *properties, QWidget *parent = 0);
-  virtual ~CWRingTabGeneral();
+  CUsampEngineController(QObject *parent);
+  virtual ~CUsampEngineController();
 
-  void reset(const mediate_ring_t *properties);
-  void apply(mediate_ring_t *properties) const;
+  // only need to worry about plot data and erro messages
+ 
+  virtual void notifyPlotData(QList<SPlotData> &plotDataList, QList<STitleTag> &titleList);
+  virtual void notifyErrorMessages(int highestErrorLevel, const QList<CEngineError> &errorMessages);
 
-  public slots:
-    void slotBrowseOutput(void);
-    void slotBrowseCalibration(void);
-    void slotBrowseSolarReference(void);
-
- private:
-  QLineEdit *m_outputFileEdit, *m_calibFileEdit, *m_refFileEdit;
-  CWSlitSelector *m_slitEdit;
-  QLineEdit *m_tempEdit;
-  QCheckBox *m_headerCheck;
+ signals:
+  void signalPlotPage(const RefCountConstPtr<CPlotPageData> &page);
+  void signalErrorMessages(int highestErrorLevel, const QString &message);
 };
 
 #endif

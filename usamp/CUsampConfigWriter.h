@@ -18,38 +18,23 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
 
-#ifndef _CWRINGTABGENERAL_H_GUARD
-#define _CWRINGTABGENERAL_H_GUARD
+#ifndef _CUSAMPCONFIGWRITER_H_GUARD
+#define _CUSAMPCONFIGWRITER_H_GUARD
 
-#include <QFrame>
-#include <QLineEdit>
-#include <QComboBox>
-#include <QCheckBox>
+#include <cstdio>
 
-#include "mediate_ring.h"
+#include "mediate_usamp.h"
 
-#include "CWSlitEditors.h"
-
-class CWRingTabGeneral : public QFrame
+class CUsampConfigWriter
 {
-Q_OBJECT
  public:
-  CWRingTabGeneral(const mediate_ring_t *properties, QWidget *parent = 0);
-  virtual ~CWRingTabGeneral();
+  CUsampConfigWriter(const mediate_usamp_t *properties);
+  ~CUsampConfigWriter();
 
-  void reset(const mediate_ring_t *properties);
-  void apply(mediate_ring_t *properties) const;
-
-  public slots:
-    void slotBrowseOutput(void);
-    void slotBrowseCalibration(void);
-    void slotBrowseSolarReference(void);
-
+  QString write(const QString &fileName);
+  
  private:
-  QLineEdit *m_outputFileEdit, *m_calibFileEdit, *m_refFileEdit;
-  CWSlitSelector *m_slitEdit;
-  QLineEdit *m_tempEdit;
-  QCheckBox *m_headerCheck;
+  const mediate_usamp_t *m_properties;
 };
 
 #endif

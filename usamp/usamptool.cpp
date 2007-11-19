@@ -18,38 +18,20 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
 
-#ifndef _CWRINGTABGENERAL_H_GUARD
-#define _CWRINGTABGENERAL_H_GUARD
+// The Qdoas version string is maintained in CWAboutBox.cpp
 
-#include <QFrame>
-#include <QLineEdit>
-#include <QComboBox>
-#include <QCheckBox>
+#include <QApplication>
 
-#include "mediate_ring.h"
+#include "CWMain.h"
 
-#include "CWSlitEditors.h"
-
-class CWRingTabGeneral : public QFrame
+int main(int argc, char *argv[])
 {
-Q_OBJECT
- public:
-  CWRingTabGeneral(const mediate_ring_t *properties, QWidget *parent = 0);
-  virtual ~CWRingTabGeneral();
+  QApplication app(argc, argv);
 
-  void reset(const mediate_ring_t *properties);
-  void apply(mediate_ring_t *properties) const;
+  CWMain main;
 
-  public slots:
-    void slotBrowseOutput(void);
-    void slotBrowseCalibration(void);
-    void slotBrowseSolarReference(void);
+  main.show();
 
- private:
-  QLineEdit *m_outputFileEdit, *m_calibFileEdit, *m_refFileEdit;
-  CWSlitSelector *m_slitEdit;
-  QLineEdit *m_tempEdit;
-  QCheckBox *m_headerCheck;
-};
+  return app.exec();
+}
 
-#endif
