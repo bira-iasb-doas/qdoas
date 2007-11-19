@@ -121,10 +121,10 @@ CWPlot::CWPlot(const RefCountConstPtr<CPlotDataSet> &dataSet,
 
     curve->setData(m_dataSet->curve(i));
 
-    // configure curve's pen color based on type
-    curve->setPen(plotProperties.pen(m_dataSet->type(i)));
+    // configure curve's pen color based on index
+    curve->setPen(plotProperties.pen((i%4) + 1));
 
-    if (m_dataSet->type(i) == PlotDataType_Points) {
+    if (m_dataSet->curveType(i) == Point) {
       curve->setStyle(QwtPlotCurve::NoCurve);
       QwtSymbol sym = curve->symbol();
       sym.setStyle(QwtSymbol::Ellipse);
@@ -135,6 +135,17 @@ CWPlot::CWPlot(const RefCountConstPtr<CPlotDataSet> &dataSet,
     ++i;
   }
     
+  // possibly apply fixed scaling
+  if (!m_dataSet->forceAutoScaling()) {
+    
+    if (plotProperties.scaleControl(m_dataSet->scaleType()).isFixedScale()) {
+      setAxisScale(QwtPlot::yLeft,
+		   plotProperties.scaleControl(m_dataSet->scaleType()).minimum(),
+		   plotProperties.scaleControl(m_dataSet->scaleType()).maximum());
+
+    }
+  }
+
   setCanvasBackground(plotProperties.backgroundColour());
 
   replot();

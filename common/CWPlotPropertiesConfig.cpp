@@ -27,6 +27,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QPushButton>
 #include <QSpinBox>
 #include <QGroupBox>
+#include <QTextStream>
 
 #include "CWPlotPropertiesConfig.h"
 #include "CPreferences.h"
@@ -99,6 +100,73 @@ void CWPlotPropertySample::slotSetPenWidth(int penWidth)
 
 //--------------------------------------------------------------------
 
+CWPlotPropertyScale::CWPlotPropertyScale(const CScaleControl &scaleControl, const QString &name, QWidget *parent) :
+  QFrame(parent),
+  m_scale(scaleControl)
+{
+  QGridLayout *mainLayout = new QGridLayout(this);
+  mainLayout->setMargin(0);
+  mainLayout->setSpacing(3);
+
+  m_fixedCheck = new QCheckBox(name, this);
+  m_fixedCheck->setCheckState(m_scale.isFixedScale() ? Qt::Checked : Qt::Unchecked);
+  mainLayout->addWidget(m_fixedCheck, 0, 0);
+
+  mainLayout->addWidget(new QLabel("Min", this), 0, 1, Qt::AlignRight);
+
+  m_minEdit = new QLineEdit(this);
+  m_minEdit->setFixedWidth(70);
+  mainLayout->addWidget(m_minEdit, 0, 2);
+
+  mainLayout->addWidget(new QLabel("Max", this), 0, 3, Qt::AlignRight);
+
+  m_maxEdit = new QLineEdit(this);
+  m_maxEdit->setFixedWidth(70);
+  mainLayout->addWidget(m_maxEdit, 0, 4);
+
+  mainLayout->setColumnStretch(0, 1);
+
+  // initialize
+  QString tmpStr;
+  m_minEdit->setText(tmpStr.setNum(scaleControl.minimum()));
+  m_maxEdit->setText(tmpStr.setNum(scaleControl.maximum()));
+  slotFixedCheckChanged(m_fixedCheck->checkState());
+  
+  // connections
+  connect(m_fixedCheck, SIGNAL(stateChanged(int)), this, SLOT(slotFixedCheckChanged(int)));
+}
+
+CWPlotPropertyScale::~CWPlotPropertyScale()
+{
+}
+
+const CScaleControl& CWPlotPropertyScale::scaleControl(void) const
+{
+  bool okMin, okMax, fixed;
+  double tmpMin, tmpMax;
+
+  tmpMin = m_minEdit->text().toDouble(&okMin);
+  tmpMax = m_maxEdit->text().toDouble(&okMax);
+  
+  fixed = (m_fixedCheck->checkState() == Qt::Checked);
+
+  if (!fixed || (okMin && okMax && tmpMin != tmpMax)) {
+    m_scale = CScaleControl(fixed, tmpMin, tmpMax);
+  }
+
+  return m_scale;
+}
+
+void CWPlotPropertyScale::slotFixedCheckChanged(int checkState)
+{
+  bool fixed = (checkState == Qt::Checked);
+
+  m_minEdit->setEnabled(fixed);
+  m_maxEdit->setEnabled(fixed);
+}
+
+//--------------------------------------------------------------------
+
 void CWPlotPropertiesConfig::loadFromPreferences(CPlotProperties &prop)
 {
   // restore the plot properties from preferences
@@ -107,11 +175,14 @@ void CWPlotPropertiesConfig::loadFromPreferences(CPlotProperties &prop)
 
   CPreferences *pref = CPreferences::instance();
 
-  prop.setPen(PlotDataType_Spectrum, pref->plotPen("Spectrum", pen));
-  prop.setPen(PlotDataType_Fit, pref->plotPen("Fit", pen));
-  prop.setPen(PlotDataType_Shift, pref->plotPen("Shift", pen));
-  prop.setPen(PlotDataType_Fwhm, pref->plotPen("Fwhm", pen));
-  prop.setPen(PlotDataType_Points, pref->plotPen("Points", pen));
+  prop.setPen(1, pref->plotPen("Curve1", pen));
+  prop.setPen(2, pref->plotPen("Curve2", pen));
+  prop.setPen(3, pref->plotPen("Curve3", pen));
+  prop.setPen(4, pref->plotPen("Curve4", pen));
+
+  prop.setScaleControl(Spectrum, pref->plotScale("SpectrumScale"));
+  prop.setScaleControl(SpecMax, pref->plotScale("SpecMaxScale"));
+  prop.setScaleControl(Residual, pref->plotScale("ResidualScale"));
 
   prop.setBackgroundColour(pref->plotColour("Background", colour));
 
@@ -125,11 +196,14 @@ void CWPlotPropertiesConfig::saveToPreferences(const CPlotProperties &prop)
 {
   CPreferences *pref = CPreferences::instance();
 
-  pref->setPlotPen("Spectrum", prop.pen(PlotDataType_Spectrum));
-  pref->setPlotPen("Fit", prop.pen(PlotDataType_Fit));
-  pref->setPlotPen("Shift", prop.pen(PlotDataType_Shift));
-  pref->setPlotPen("Fwhm", prop.pen(PlotDataType_Fwhm));
-  pref->setPlotPen("Points", prop.pen(PlotDataType_Points));
+  pref->setPlotPen("Curve1", prop.pen(1));
+  pref->setPlotPen("Curve2", prop.pen(2));
+  pref->setPlotPen("Curve3", prop.pen(3));
+  pref->setPlotPen("Curve4", prop.pen(4));
+
+  pref->setPlotScale("SpectrumScale", prop.scaleControl(Spectrum));
+  pref->setPlotScale("SpecMaxScale", prop.scaleControl(SpecMax));
+  pref->setPlotScale("ResidualScale", prop.scaleControl(Residual));
 
   pref->setPlotColour("Background", prop.backgroundColour());
 
@@ -142,7 +216,6 @@ void CWPlotPropertiesConfig::saveToPreferences(const CPlotProperties &prop)
 CWPlotPropertiesConfig::CWPlotPropertiesConfig(const CPlotProperties &prop, QWidget *parent) :
   QFrame(parent)
 {
-  QSpinBox *spinBox;
   int row;
 
   QGridLayout *mainLayout = new QGridLayout(this);
@@ -156,68 +229,46 @@ CWPlotPropertiesConfig::CWPlotPropertiesConfig(const CPlotProperties &prop, QWid
 
   m_bgColour = prop.backgroundColour();
 
-  // row 0 - Spectrum
-  colourLayout->addWidget(new QLabel("Spectrum"), row, 0);
-  m_spectrumSample = new CWPlotPropertySample(prop.pen(PlotDataType_Spectrum), m_bgColour);
-  colourLayout->addWidget(m_spectrumSample, row, 1);
-  spinBox = new QSpinBox;
-  spinBox->setRange(0, 5);
-  spinBox->setValue(prop.pen(PlotDataType_Spectrum).width());
-  colourLayout->addWidget(spinBox, row, 2);
-  connect(spinBox, SIGNAL(valueChanged(int)), m_spectrumSample, SLOT(slotSetPenWidth(int)));
-  ++row;
+  // 4 curves
+  for (int i=0; i<4; ++i) {
+    QString name;
+    QTextStream stream(&name);
 
-  // row 1 - Fits
-  colourLayout->addWidget(new QLabel("Fits"), row, 0);
-  m_fitSample = new CWPlotPropertySample(prop.pen(PlotDataType_Fit), m_bgColour);
-  colourLayout->addWidget(m_fitSample, row, 1);
-  spinBox = new QSpinBox;
-  spinBox->setRange(0, 5);
-  spinBox->setValue(prop.pen(PlotDataType_Fit).width());
-  colourLayout->addWidget(spinBox, row, 2);
-  connect(spinBox, SIGNAL(valueChanged(int)), m_fitSample, SLOT(slotSetPenWidth(int)));
-  ++row;
+    stream << "Curve " << i+1;
 
-  // row 2 - Shift
-  colourLayout->addWidget(new QLabel("Shift"), row, 0);
-  m_shiftSample = new CWPlotPropertySample(prop.pen(PlotDataType_Shift), m_bgColour);
-  colourLayout->addWidget(m_shiftSample, row, 1);
-  spinBox = new QSpinBox;
-  spinBox->setRange(0, 5);
-  spinBox->setValue(prop.pen(PlotDataType_Shift).width());
-  colourLayout->addWidget(spinBox, row, 2);
-  connect(spinBox, SIGNAL(valueChanged(int)), m_shiftSample, SLOT(slotSetPenWidth(int)));
-  ++row;
+    colourLayout->addWidget(new QLabel(name), row, 0);
+    m_curveSample[i] = new CWPlotPropertySample(prop.pen(i+1), m_bgColour);
+    colourLayout->addWidget(m_curveSample[i], row, 1);
+    QSpinBox *spinBox = new QSpinBox;
+    spinBox->setRange(0, 5);
+    spinBox->setValue(prop.pen(i+1).width());
+    colourLayout->addWidget(spinBox, row, 2);
+    connect(spinBox, SIGNAL(valueChanged(int)), m_curveSample[i], SLOT(slotSetPenWidth(int)));
+    ++row;
+  }
 
-  // row 3 - FWHM
-  colourLayout->addWidget(new QLabel("FWHM"), row, 0);
-  m_fwhmSample = new CWPlotPropertySample(prop.pen(PlotDataType_Fwhm), m_bgColour);
-  colourLayout->addWidget(m_fwhmSample, row, 1);
-  spinBox = new QSpinBox;
-  spinBox->setRange(0, 5);
-  spinBox->setValue(prop.pen(PlotDataType_Fwhm).width());
-  colourLayout->addWidget(spinBox, row, 2);
-  connect(spinBox, SIGNAL(valueChanged(int)), m_fwhmSample, SLOT(slotSetPenWidth(int)));
-  ++row;
-
-  // row 4 - Points
-  colourLayout->addWidget(new QLabel("Points"), row, 0);
-  m_pointsSample = new CWPlotPropertySample(prop.pen(PlotDataType_Points), m_bgColour);
-  colourLayout->addWidget(m_pointsSample, row, 1);
-  spinBox = new QSpinBox;
-  spinBox->setRange(0, 5);
-  spinBox->setValue(prop.pen(PlotDataType_Points).width());
-  colourLayout->addWidget(spinBox, row, 2);
-  connect(spinBox, SIGNAL(valueChanged(int)), m_pointsSample, SLOT(slotSetPenWidth(int)));
-  ++row;
-
-  // row 5 - background colour
+  // background colour
   QPushButton *bgColourBtn = new QPushButton("Background Colour");
   colourLayout->addWidget(bgColourBtn, row, 0, 1, 3);
 
   colourLayout->setRowStretch(row, 1);
 
-  mainLayout->addWidget(colourGroup, 0, 0);
+  mainLayout->addWidget(colourGroup, 0, 0, 2, 1);
+
+  // scale group ...
+
+  QGroupBox *scaleGroup = new QGroupBox("Fixed Scale", this);
+  
+  QVBoxLayout *scaleLayout = new QVBoxLayout(scaleGroup);
+  m_scaleEdit[0] = new CWPlotPropertyScale(prop.scaleControl(Spectrum), "Spectrum", scaleGroup);
+  scaleLayout->addWidget(m_scaleEdit[0]);
+  m_scaleEdit[1] = new CWPlotPropertyScale(prop.scaleControl(SpecMax), "SpecMax", scaleGroup);
+  scaleLayout->addWidget(m_scaleEdit[1]);
+  m_scaleEdit[2] = new CWPlotPropertyScale(prop.scaleControl(Residual), "Residual", scaleGroup);
+  scaleLayout->addWidget(m_scaleEdit[2]);
+
+  mainLayout->addWidget(scaleGroup, 0, 1);
+  
 
   // Layout group ...
   
@@ -231,12 +282,13 @@ CWPlotPropertiesConfig::CWPlotPropertiesConfig(const CPlotProperties &prop, QWid
   m_plotColumnsSpin = new QSpinBox;
   m_plotColumnsSpin->setRange(1, 6);
   m_plotColumnsSpin->setValue(prop.columns());
+  m_plotColumnsSpin->setFixedWidth(50);
   layoutLayout->addWidget(m_plotColumnsSpin, row, 1);
   ++row;
 
   layoutLayout->setRowStretch(row, 1);
 
-  mainLayout->addWidget(layoutGroup, 0, 1);
+  mainLayout->addWidget(layoutGroup, 1, 1);
 
   // connections
   connect(bgColourBtn, SIGNAL(clicked()), this, SLOT(slotSelectBackgroundColour()));
@@ -249,11 +301,13 @@ CWPlotPropertiesConfig::~CWPlotPropertiesConfig()
 void CWPlotPropertiesConfig::apply(CPlotProperties &prop) const
 {
   // get pens from the samples ...
-  prop.setPen(PlotDataType_Spectrum, m_spectrumSample->pen());
-  prop.setPen(PlotDataType_Fit, m_fitSample->pen());
-  prop.setPen(PlotDataType_Shift, m_shiftSample->pen());
-  prop.setPen(PlotDataType_Fwhm, m_fwhmSample->pen());
-  prop.setPen(PlotDataType_Points, m_pointsSample->pen());
+  for (int i=0; i<4; ++i) {
+    prop.setPen(i+1, m_curveSample[i]->pen());
+  }
+
+  prop.setScaleControl(Spectrum, m_scaleEdit[0]->scaleControl());
+  prop.setScaleControl(SpecMax,  m_scaleEdit[1]->scaleControl());
+  prop.setScaleControl(Residual, m_scaleEdit[2]->scaleControl());
 
   prop.setBackgroundColour(m_bgColour);
 
@@ -268,10 +322,8 @@ void CWPlotPropertiesConfig::slotSelectBackgroundColour()
   if (result.isValid()) {
     m_bgColour = result;
 
-    m_spectrumSample->setBackgroundColour(m_bgColour);
-    m_fitSample->setBackgroundColour(m_bgColour);
-    m_shiftSample->setBackgroundColour(m_bgColour);
-    m_fwhmSample->setBackgroundColour(m_bgColour);
-    m_pointsSample->setBackgroundColour(m_bgColour);
+    for (int i=0; i<4; ++i) {
+      m_curveSample[i]->setBackgroundColour(m_bgColour);
+    }
   }
 }

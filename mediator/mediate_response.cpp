@@ -24,28 +24,25 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "CEngineResponse.h"
 #include "CPlotDataSet.h"
 
-void mediateAllocateAndSetPlotData(plot_data_t *d, double *xData, double *yData, int len, enum ePlotDataType type, const char *legend)
+void mediateAllocateAndSetPlotData(plot_data_t *d, double *xData, double *yData, int len, enum eCurveStyleType type)
 {
   int byteLen = len * sizeof(double);
 
   d->x = (double*)malloc(byteLen);
   d->y = (double*)malloc(byteLen);
-  d->legendStr = (char*)malloc(strlen(legend)+1);
 
-  if (d->x == NULL || d->y == NULL || d->legendStr == NULL) {
+  if (d->x == NULL || d->y == NULL) {
     // bail out ...
     mediateReleasePlotData(d);
     d->x = d->y = NULL;
-    d->legendStr = NULL;
     d->length = 0;
-    d->plotType = type;
+    d->curveType = type;
   }
   else {
     memcpy(d->x, xData, byteLen);
     memcpy(d->y, yData, byteLen);
-    strcpy(d->legendStr, legend);
     d->length = len;
-    d->plotType = type;
+    d->curveType = type;
   }
 }
 
@@ -53,29 +50,30 @@ void mediateReleasePlotData(plot_data_t *d)
 {
   if (d->x) free(d->x);
   if (d->y) free(d->y);
-  if (d->legendStr) free(d->legendStr);
 }
 
 
 void mediateResponsePlotData(int page,
 			     plot_data_t *plotDataArray,
 			     int arrayLength,
+			     enum ePlotScaleType type,
+			     int forceAutoScaling,
 			     const char *title,
 			     const char *xLabel,
 			     const char *yLabel,
 			     void *responseHandle)
 {
   CEngineResponsePlot *resp = static_cast<CEngineResponsePlot*>(responseHandle);
-
-  CPlotDataSet *dataSet = new CPlotDataSet(title, xLabel, yLabel);
-
+  
+  CPlotDataSet *dataSet = new CPlotDataSet(type, forceAutoScaling, title, xLabel, yLabel);
+  
   int i = 0;
   while (i < arrayLength) {
     dataSet->addPlotData(plotDataArray[i].x, plotDataArray[i].y, plotDataArray[i].length,
-			 plotDataArray[i].plotType, plotDataArray[i].legendStr);
+			 plotDataArray[i].curveType);
     ++i;
   }
-
+  
   resp->addDataSet(page, dataSet);
 }
 

@@ -555,9 +555,9 @@ void TODO_Junk_Test(void *engineContext, void *resp)
   double xData[] = { 0.0, 1.1, 2.2, 3.3, 4.4, 5.5 };
   double yData[] = { 3.0, 4.0, 3.5, 1.1, 1.4, 3.0 };
 
-  mediateAllocateAndSetPlotData(&dummy, xData, yData, 6, PlotDataType_Spectrum, "legend");
+  mediateAllocateAndSetPlotData(&dummy, xData, yData, 6, Line);
 
-  mediateResponsePlotData(0, &dummy, 1, "Title", "X-Label", "Y-label", resp);
+  mediateResponsePlotData(0, &dummy, 1, Spectrum, 0, "Title", "X-Label", "Y-label", resp);
 
   mediateReleasePlotData(&dummy);
 }

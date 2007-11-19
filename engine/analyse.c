@@ -3818,9 +3818,9 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
           if (Feno->displaySpectrum)
            {
-            mediateAllocateAndSetPlotData(&spectrumData[0],&Feno->LembdaK[SvdPDeb],&Spectre[SvdPDeb],SvdPFin-SvdPDeb+1,PlotDataType_Spectrum, "Spectrum");
-            mediateAllocateAndSetPlotData(&spectrumData[1],&Feno->LembdaK[SvdPDeb],&Sref[SvdPDeb],SvdPFin-SvdPDeb+1,PlotDataType_Fit, "Reference");
-            mediateResponsePlotData(indexPage,spectrumData,(Feno->displayRef)?2:1,"Spectrum","Wavelength (nm)","", responseHandle);
+            mediateAllocateAndSetPlotData(&spectrumData[0],&Feno->LembdaK[SvdPDeb],&Spectre[SvdPDeb],SvdPFin-SvdPDeb+1,Line);
+            mediateAllocateAndSetPlotData(&spectrumData[1],&Feno->LembdaK[SvdPDeb],&Sref[SvdPDeb],SvdPFin-SvdPDeb+1,Line);
+            mediateResponsePlotData(indexPage,spectrumData,(Feno->displayRef)?2:1,Spectrum,0,"Spectrum","Wavelength (nm)","", responseHandle);
             mediateReleasePlotData(spectrumData);
            }
 
@@ -3877,8 +3877,8 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
            	sprintf(graphTitle,"%s (%.2le)",(Feno->analysisMethod!=PRJCT_ANLYS_METHOD_SVD)?"Normalized Residual":"Residual",Feno->RMS);
 
-            mediateAllocateAndSetPlotData(&spectrumData[0],&Feno->LembdaK[SvdPDeb],&ANALYSE_absolu[SvdPDeb],SvdPFin-SvdPDeb+1,PlotDataType_Spectrum, "Residual");
-            mediateResponsePlotData(indexPage,spectrumData,1,graphTitle,"Wavelength (nm)","", responseHandle);
+            mediateAllocateAndSetPlotData(&spectrumData[0],&Feno->LembdaK[SvdPDeb],&ANALYSE_absolu[SvdPDeb],SvdPFin-SvdPDeb+1,Line);
+            mediateResponsePlotData(indexPage,spectrumData,1,Residual,0,graphTitle,"Wavelength (nm)","", responseHandle);
             mediateReleasePlotData(spectrumData);
            }
 
@@ -3893,8 +3893,8 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
           if  (Feno->displayResidue && (Feno->analysisMethod!=PRJCT_ANLYS_METHOD_SVD))
            {
-            mediateAllocateAndSetPlotData(&spectrumData[0],&Feno->LembdaK[SvdPDeb],&ANALYSE_absolu[SvdPDeb],SvdPFin-SvdPDeb+1,PlotDataType_Spectrum, "Residual");
-            mediateResponsePlotData(indexPage,spectrumData,1,"OD residual","Wavelength (nm)","", responseHandle);
+            mediateAllocateAndSetPlotData(&spectrumData[0],&Feno->LembdaK[SvdPDeb],&ANALYSE_absolu[SvdPDeb],SvdPFin-SvdPDeb+1,Line);
+            mediateResponsePlotData(indexPage,spectrumData,1,Residual,0,"OD residual","Wavelength (nm)","", responseHandle);
             mediateReleasePlotData(spectrumData);
            }
 
@@ -3930,9 +3930,9 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
                ANALYSE_secX[l]=((newVal>(double)0.)?log(newVal):(double)0.);
               }
 
-            mediateAllocateAndSetPlotData(&spectrumData[0],&Feno->LembdaK[SvdPDeb],&ANALYSE_absolu[SvdPDeb],SvdPFin-SvdPDeb+1,PlotDataType_Spectrum, "Measured");
-            mediateAllocateAndSetPlotData(&spectrumData[1],&Feno->LembdaK[SvdPDeb],&ANALYSE_secX[SvdPDeb],SvdPFin-SvdPDeb+1,PlotDataType_Fit, "Calculated");
-            mediateResponsePlotData(indexPage,spectrumData,2,"Offset","Wavelength (nm)","", responseHandle);
+            mediateAllocateAndSetPlotData(&spectrumData[0],&Feno->LembdaK[SvdPDeb],&ANALYSE_absolu[SvdPDeb],SvdPFin-SvdPDeb+1,Line);
+            mediateAllocateAndSetPlotData(&spectrumData[1],&Feno->LembdaK[SvdPDeb],&ANALYSE_secX[SvdPDeb],SvdPFin-SvdPDeb+1,Line);
+            mediateResponsePlotData(indexPage,spectrumData,2,Spectrum,0,"Offset","Wavelength (nm)","", responseHandle);
             mediateReleasePlotData(spectrumData);
            }
 
@@ -3975,9 +3975,9 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
                  sprintf(graphTitle,"%s (%.2le)",WorkSpace[TabCross[i].Comp].symbolName,Results[i].SlntCol);
                 }
 
-               mediateAllocateAndSetPlotData(&spectrumData[0],&Feno->LembdaK[SvdPDeb],&ANALYSE_absolu[SvdPDeb],SvdPFin-SvdPDeb+1,PlotDataType_Spectrum, "Measured");
-               mediateAllocateAndSetPlotData(&spectrumData[1],&Feno->LembdaK[SvdPDeb],&ANALYSE_secX[SvdPDeb],SvdPFin-SvdPDeb+1,PlotDataType_Fit, "Calculated");
-               mediateResponsePlotData(indexPage,spectrumData,2,graphTitle,"Wavelength (nm)","", responseHandle);
+               mediateAllocateAndSetPlotData(&spectrumData[0],&Feno->LembdaK[SvdPDeb],&ANALYSE_absolu[SvdPDeb],SvdPFin-SvdPDeb+1,Line);
+               mediateAllocateAndSetPlotData(&spectrumData[1],&Feno->LembdaK[SvdPDeb],&ANALYSE_secX[SvdPDeb],SvdPFin-SvdPDeb+1,Line);
+               mediateResponsePlotData(indexPage,spectrumData,2,Residual,0,graphTitle,"Wavelength (nm)","", responseHandle);
                mediateReleasePlotData(spectrumData);
               }
              else if ((WorkSpace[TabCross[i].Comp].type==WRK_SYMBOL_CONTINUOUS) && Feno->displayTrend)
@@ -4014,9 +4014,9 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
              for (l=Fenetre[j][0];l<=Fenetre[j][1];l++,k++)
               ANALYSE_absolu[l]+=Trend[l]-ANALYSE_secX[l];
 
-            mediateAllocateAndSetPlotData(&spectrumData[0],&Feno->LembdaK[SvdPDeb],&ANALYSE_absolu[SvdPDeb],SvdPFin-SvdPDeb+1,PlotDataType_Spectrum, "Measured");
-            mediateAllocateAndSetPlotData(&spectrumData[1],&Feno->LembdaK[SvdPDeb],&Trend[SvdPDeb],SvdPFin-SvdPDeb+1,PlotDataType_Fit, "Calculated");
-            mediateResponsePlotData(indexPage,spectrumData,2,"Polynomial","Wavelength (nm)","", responseHandle);
+            mediateAllocateAndSetPlotData(&spectrumData[0],&Feno->LembdaK[SvdPDeb],&ANALYSE_absolu[SvdPDeb],SvdPFin-SvdPDeb+1,Line);
+            mediateAllocateAndSetPlotData(&spectrumData[1],&Feno->LembdaK[SvdPDeb],&Trend[SvdPDeb],SvdPFin-SvdPDeb+1,Line);
+            mediateResponsePlotData(indexPage,spectrumData,2,Spectrum,0,"Polynomial","Wavelength (nm)","", responseHandle);
             mediateReleasePlotData(spectrumData);
 
             if (maxOffset>(double)0.)
@@ -4030,9 +4030,9 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
                for (l=Fenetre[j][0];l<=Fenetre[j][1];l++,k++)
                 ANALYSE_absolu[l]+=offset[l]-Trend[l];
 
-              mediateAllocateAndSetPlotData(&spectrumData[0],&Feno->LembdaK[SvdPDeb],&ANALYSE_absolu[SvdPDeb],SvdPFin-SvdPDeb+1,PlotDataType_Spectrum, "Measured");
-              mediateAllocateAndSetPlotData(&spectrumData[1],&Feno->LembdaK[SvdPDeb],&offset[SvdPDeb],SvdPFin-SvdPDeb+1,PlotDataType_Fit, "Calculated");
-              mediateResponsePlotData(indexPage,spectrumData,2,"Linear offset","Wavelength (nm)","", responseHandle);
+              mediateAllocateAndSetPlotData(&spectrumData[0],&Feno->LembdaK[SvdPDeb],&ANALYSE_absolu[SvdPDeb],SvdPFin-SvdPDeb+1,Line);
+              mediateAllocateAndSetPlotData(&spectrumData[1],&Feno->LembdaK[SvdPDeb],&offset[SvdPDeb],SvdPFin-SvdPDeb+1,Line);
+              mediateResponsePlotData(indexPage,spectrumData,2,Spectrum,0,"Linear offset","Wavelength (nm)","", responseHandle);
               mediateReleasePlotData(spectrumData);
              }
            }  // end displayTrend

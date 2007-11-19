@@ -28,6 +28,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QPen>
 #include <QColor>
 
+#include "CScaleControl.h"
+
 // WARNING - This class is NOT thread safe. ONLY use this in the main thread of the GUI.
 
 class CPreferences
@@ -58,6 +60,9 @@ class CPreferences
 
   QColor plotColour(const QString &key, const QColor &fallback = QColor()) const;
   void setPlotColour(const QString &key, const QColor &colour);
+
+  CScaleControl plotScale(const QString &key, const CScaleControl &fallback = CScaleControl()) const;
+  void setPlotScale(const QString &key, const CScaleControl &scaleControl);
 
   int plotLayout(const QString &key, int fallback) const;
   void setPlotLayout(const QString &key, int layoutValue);

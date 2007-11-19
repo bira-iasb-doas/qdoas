@@ -38,12 +38,11 @@ extern "C" {
   typedef struct plot_data {
     double *x, *y;
     int length;
-    enum ePlotDataType plotType;
-    char *legendStr;
+    enum eCurveStyleType curveType;
   } plot_data_t;
 
 
-  void mediateAllocateAndSetPlotData(plot_data_t *d, double *xData, double *yData, int len, enum ePlotDataType type, const char *legend);
+  void mediateAllocateAndSetPlotData(plot_data_t *d, double *xData, double *yData, int len, enum eCurveStyleType type);
   void mediateReleasePlotData(plot_data_t *d);
 
 // mediateResponsePlotData
@@ -52,6 +51,7 @@ extern "C" {
 // of plot_data of length arrayLength.
 
 void mediateResponsePlotData(int page, plot_data_t *plotDataArray, int arrayLength,
+			     enum ePlotScaleType type, int forceAutoScaling,
 			     const char *title, const char *xLabel,
 			     const char *yLabel, void *responseHandle);
 

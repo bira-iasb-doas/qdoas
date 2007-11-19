@@ -23,6 +23,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include <QFrame>
 #include <QSpinBox>
+#include <QLineEdit>
+#include <QCheckBox>
 
 #include "CPlotProperties.h"
 
@@ -48,6 +50,24 @@ Q_OBJECT
   QPen m_pen;
 };
 
+class CWPlotPropertyScale : public QFrame
+{
+Q_OBJECT
+ public:
+  CWPlotPropertyScale(const CScaleControl &scaleControl, const QString &name, QWidget *parent = 0);
+  virtual ~CWPlotPropertyScale();
+
+  const CScaleControl& scaleControl(void) const;
+
+ public slots:
+   void slotFixedCheckChanged(int checkState);
+
+ private:
+  QCheckBox *m_fixedCheck;
+  QLineEdit *m_minEdit, *m_maxEdit;
+  mutable CScaleControl m_scale;
+};
+
 class CWPlotPropertiesConfig : public QFrame
 {
 Q_OBJECT
@@ -65,11 +85,8 @@ Q_OBJECT
   void slotSelectBackgroundColour();
 
  private:
-  CWPlotPropertySample *m_spectrumSample;
-  CWPlotPropertySample *m_fitSample;
-  CWPlotPropertySample *m_shiftSample;
-  CWPlotPropertySample *m_fwhmSample;
-  CWPlotPropertySample *m_pointsSample;
+  CWPlotPropertySample *m_curveSample[4];
+  CWPlotPropertyScale *m_scaleEdit[3];
   QSpinBox *m_plotColumnsSpin;
   QColor m_bgColour;
 };

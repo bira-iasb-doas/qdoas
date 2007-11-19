@@ -121,6 +121,9 @@ const CPlotProperties& CWPlotRegion::properties(void) const
 void CWPlotRegion::setProperties(const CPlotProperties &properties)
 {
   m_properties = properties;
+  if (m_plotPage != NULL) {
+    displayPage(m_activePageNumber);
+  }
 }
 
 void CWPlotRegion::resizeEvent(QResizeEvent *e)

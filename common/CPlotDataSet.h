@@ -32,22 +32,19 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 class CXYPlotData
 {
  public:
-  CXYPlotData(const double *x, const double *y, int n, enum ePlotDataType type, const char *legend);
+  CXYPlotData(const double *x, const double *y, int n, enum eCurveStyleType type);
   ~CXYPlotData();
 
-  enum ePlotDataType type(void) const;
+  enum eCurveStyleType curveType(void) const;
   const QwtArrayData& curve(void) const;
-  const QString& legend(void) const;
 
  private:
   QwtArrayData m_curve;
-  enum ePlotDataType m_curveType;
-  QString m_legend;
+  enum eCurveStyleType m_curveType;
 };
 
-inline enum ePlotDataType CXYPlotData::type(void) const { return m_curveType; }
+inline enum eCurveStyleType CXYPlotData::curveType(void) const { return m_curveType; }
 inline const QwtArrayData& CXYPlotData::curve(void) const { return m_curve; }
-inline const QString& CXYPlotData::legend(void) const { return m_legend; }
 
 
 // A collection of curves for one plot and plot labels/titles
@@ -55,29 +52,33 @@ inline const QString& CXYPlotData::legend(void) const { return m_legend; }
 class CPlotDataSet
 {
  public:
-  CPlotDataSet(const char *title, const char *xlabel, const char *ylabel);
+  CPlotDataSet(enum ePlotScaleType type, bool forceAutoScaling, const char *title, const char *xlabel, const char *ylabel);
   ~CPlotDataSet();
-
-  void addPlotData(const double *x, const double *y, int n, enum ePlotDataType type, const char *legend);
+  
+  void addPlotData(const double *x, const double *y, int n, enum eCurveStyleType type);
                
   int count(void) const;
   const QwtArrayData& curve(int index) const;
-  const QString& legend(int index) const;
-  enum ePlotDataType type(int index) const;
+  enum eCurveStyleType curveType(int index) const;
 
+  enum ePlotScaleType scaleType(void) const;
+  bool forceAutoScaling(void) const;
   const QString& plotTitle(void) const;
   const QString& xAxisLabel(void) const;
   const QString& yAxisLabel(void) const;
 
  private:
   QList<CXYPlotData*> m_dataList;
+  enum ePlotScaleType m_scaleType;
+  bool m_forceAutoScaling;
   QString m_title, m_xLabel, m_yLabel;
 };
 
 inline int CPlotDataSet::count(void) const { return m_dataList.count(); }
 inline const QwtArrayData& CPlotDataSet::curve(int index) const { return m_dataList.at(index)->curve(); }
-inline const QString& CPlotDataSet::legend(int index) const { return m_dataList.at(index)->legend(); }
-inline enum ePlotDataType CPlotDataSet::type(int index) const { return m_dataList.at(index)->type(); }
+inline enum eCurveStyleType CPlotDataSet::curveType(int index) const { return m_dataList.at(index)->curveType(); }
+inline enum ePlotScaleType CPlotDataSet::scaleType(void) const { return m_scaleType; }
+inline bool CPlotDataSet::forceAutoScaling(void) const { return m_forceAutoScaling; }
 inline const QString& CPlotDataSet::plotTitle(void) const { return m_title; }
 inline const QString& CPlotDataSet::xAxisLabel(void) const { return m_xLabel; }
 inline const QString& CPlotDataSet::yAxisLabel(void) const { return m_yLabel; }

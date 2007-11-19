@@ -243,6 +243,43 @@ void CPreferences::setPlotColour(const QString &key, const QColor &colour)
   m_settings->endGroup();  
 }
 
+CScaleControl CPreferences::plotScale(const QString &key, const CScaleControl &fallback) const
+{
+  CScaleControl retValue;
+
+  m_settings->beginGroup("PlotProperties");
+  
+  QVariant v = m_settings->value(key);
+  if (v.isValid()) {
+    QString str = v.toString();
+    QTextStream stream(&str, QIODevice::ReadOnly);
+    int tmpFixed;
+    double tmpMin, tmpMax;
+    
+    stream >> tmpFixed >> tmpMin >> tmpMax;
+
+    retValue = CScaleControl(tmpFixed, tmpMin, tmpMax); 
+  }
+  
+  m_settings->endGroup();
+  
+  return retValue;
+}
+
+void CPreferences::setPlotScale(const QString &key, const CScaleControl &scaleControl)
+{
+  m_settings->beginGroup("PlotProperties");
+  
+  QString str;
+  QTextStream stream(&str);
+
+  stream << (int)(scaleControl.isFixedScale() ? 1 : 0) << " " << scaleControl.minimum() << " " << scaleControl.maximum();
+
+  m_settings->setValue(key, QVariant(str));
+
+  m_settings->endGroup();  
+}
+
 int CPreferences::plotLayout(const QString &key, int fallback) const
 {
   m_settings->beginGroup("PlotProperties");

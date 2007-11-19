@@ -20,10 +20,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "CPlotDataSet.h"
 
-CXYPlotData::CXYPlotData(const double *x, const double *y, int n, enum ePlotDataType type, const char *legend) :
+CXYPlotData::CXYPlotData(const double *x, const double *y, int n, enum eCurveStyleType curveType) :
   m_curve(x, y, n),
-  m_curveType(type),
-  m_legend(legend)
+  m_curveType(curveType)
 {
 }
 
@@ -31,18 +30,21 @@ CXYPlotData::~CXYPlotData()
 {
 }
 
+//----------------------------------------------------
 
-
-CPlotDataSet::CPlotDataSet(const char *title, const char *xlabel, const char *ylabel) :
+CPlotDataSet::CPlotDataSet(enum ePlotScaleType scaleType, bool forceAutoScaling,
+			   const char *title, const char *xlabel, const char *ylabel) :
+  m_scaleType(scaleType),
+  m_forceAutoScaling(forceAutoScaling),
   m_title(title),
   m_xLabel(xlabel),
   m_yLabel(ylabel)
 {
 }
 
-void CPlotDataSet::addPlotData(const double *x, const double *y, int n, enum ePlotDataType type, const char *legend)
+void CPlotDataSet::addPlotData(const double *x, const double *y, int n, enum eCurveStyleType curveType)
 {
-  m_dataList.push_back(new CXYPlotData(x, y, n, type, legend));
+  m_dataList.push_back(new CXYPlotData(x, y, n, curveType));
 }
                
 

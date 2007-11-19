@@ -18,35 +18,29 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
 
-#ifndef _MEDIATE_TYPES_H_GUARD
-#define _MEDIATE_TYPES_H_GUARD
+#ifndef _CSCALECONTROL_H_GUARD
+#define _CSCALECONTROL_H_GUARD
 
-enum eEngineErrorType {
-  NoEngineError,
-  InformationEngineError,
-  WarningEngineError,
-  FatalEngineError
+class CScaleControl
+{
+ public:
+  CScaleControl();
+  CScaleControl(bool fixedScale, double minimum, double maximum);
+  CScaleControl(const CScaleControl &other);
+  
+  CScaleControl& operator=(const CScaleControl &rhs);
+
+  bool isFixedScale(void) const;
+  double minimum(void) const;
+  double maximum(void) const;
+
+ private:
+  bool m_fixedScale;
+  double m_minimum, m_maximum;
 };
 
-//* TODO - remove ePlotDataType */ 
-enum ePlotDataType {
-  PlotDataType_Spectrum,
-  PlotDataType_Fit,
-  PlotDataType_Shift,
-  PlotDataType_Fwhm,
-  PlotDataType_Points
-};
-
-enum eCurveStyleType {
-  Line,
-  Point
-};
-
-enum ePlotScaleType {
-  Spectrum,
-  SpecMax,
-  Residual
-};
+inline bool CScaleControl::isFixedScale(void) const { return m_fixedScale; }
+inline double CScaleControl::minimum(void) const { return m_minimum; }
+inline double CScaleControl::maximum(void) const { return m_maximum; }
 
 #endif
-

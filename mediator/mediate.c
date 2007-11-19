@@ -1401,6 +1401,9 @@ int mediateRequestNextMatchingSpectrum(ENGINE_CONTEXT *pEngineContext,void *resp
   plot_data_t spectrumData;
   RC rc;
 
+  int allowFixedScale = 0;
+  int forceAutoScale = 1;
+
   // Initializations
 
   pRecord=&pEngineContext->recordInfo;
@@ -1447,8 +1450,8 @@ int mediateRequestNextMatchingSpectrum(ENGINE_CONTEXT *pEngineContext,void *resp
      {
       sprintf(tmpString,"Spectrum (%d/%d)",pEngineContext->indexRecord-1,pEngineContext->recordNumber);
 
-      mediateAllocateAndSetPlotData(&spectrumData, pBuffers->lembda, pBuffers->spectrum, NDET, PlotDataType_Spectrum, "legend string");
-      mediateResponsePlotData(pageGraph, &spectrumData, 1, "Spectrum", "Wavelength (nm)", "Counts", responseHandle);
+      mediateAllocateAndSetPlotData(&spectrumData, pBuffers->lembda, pBuffers->spectrum, NDET, Line);
+      mediateResponsePlotData(pageGraph, &spectrumData, 1, Spectrum, allowFixedScale, "Spectrum", "Wavelength (nm)", "Counts", responseHandle);
       mediateReleasePlotData(&spectrumData);
       mediateResponseLabelPage(pageGraph, fileName, tmpString, responseHandle);
       pageGraph++;
@@ -1459,8 +1462,8 @@ int mediateRequestNextMatchingSpectrum(ENGINE_CONTEXT *pEngineContext,void *resp
            (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_PDASI_EASOE)) &&
            (pBuffers->darkCurrent!=NULL))
        {
-        mediateAllocateAndSetPlotData(&spectrumData, pBuffers->lembda, pBuffers->darkCurrent,NDET, PlotDataType_Spectrum, "legend string");
-        mediateResponsePlotData(pageGraph, &spectrumData, 1, "Dark current", "Wavelength (nm)", "Counts", responseHandle);
+        mediateAllocateAndSetPlotData(&spectrumData, pBuffers->lembda, pBuffers->darkCurrent, NDET, Line);
+        mediateResponsePlotData(pageGraph, &spectrumData, 1, Spectrum, allowFixedScale, "Dark current", "Wavelength (nm)", "Counts", responseHandle);
         mediateReleasePlotData(&spectrumData);
         mediateResponseLabelPage(pageGraph, fileName, "Dark current", responseHandle);
         pageGraph++;
@@ -1470,8 +1473,8 @@ int mediateRequestNextMatchingSpectrum(ENGINE_CONTEXT *pEngineContext,void *resp
        {
        	sprintf(tmpString,"Error (%d/%d)",pEngineContext->indexRecord-1,pEngineContext->recordNumber);
 
-        mediateAllocateAndSetPlotData(&spectrumData, pBuffers->lembda, pBuffers->sigmaSpec,NDET, PlotDataType_Spectrum, "legend string");
-        mediateResponsePlotData(pageGraph, &spectrumData, 1, "Error", "Wavelength (nm)", "Counts", responseHandle);
+        mediateAllocateAndSetPlotData(&spectrumData, pBuffers->lembda, pBuffers->sigmaSpec, NDET, Line);
+        mediateResponsePlotData(pageGraph, &spectrumData, 1, Residual, allowFixedScale, "Error", "Wavelength (nm)", "Counts", responseHandle);
         mediateReleasePlotData(&spectrumData);
         mediateResponseLabelPage(pageGraph, fileName, tmpString, responseHandle);
         pageGraph++;
@@ -1479,8 +1482,8 @@ int mediateRequestNextMatchingSpectrum(ENGINE_CONTEXT *pEngineContext,void *resp
 
       if (pBuffers->irrad!=NULL)
        {
-        mediateAllocateAndSetPlotData(&spectrumData, pBuffers->lembda, pBuffers->irrad,NDET, PlotDataType_Spectrum, "legend string");
-        mediateResponsePlotData(pageGraph, &spectrumData, 1, "Irradiance spectrum", "Wavelength (nm)", "Counts", responseHandle);
+        mediateAllocateAndSetPlotData(&spectrumData, pBuffers->lembda, pBuffers->irrad, NDET, Line);
+        mediateResponsePlotData(pageGraph, &spectrumData, 1, Spectrum, allowFixedScale, "Irradiance spectrum", "Wavelength (nm)", "Counts", responseHandle);
         mediateReleasePlotData(&spectrumData);
         mediateResponseLabelPage(pageGraph, fileName, "Irradiance", responseHandle);
         pageGraph++;
@@ -1490,8 +1493,8 @@ int mediateRequestNextMatchingSpectrum(ENGINE_CONTEXT *pEngineContext,void *resp
           (pBuffers->specMax!=NULL) &&
           (pRecord->NSomme>1))
        {
-        mediateAllocateAndSetPlotData(&spectrumData, pBuffers->specMaxx, pBuffers->specMax,pRecord->rejected+pRecord->NSomme, PlotDataType_Spectrum, "legend string");
-        mediateResponsePlotData(pageGraph, &spectrumData, 1, "SpecMax", "Scans number", "Signal Maximum", responseHandle);
+        mediateAllocateAndSetPlotData(&spectrumData, pBuffers->specMaxx, pBuffers->specMax,pRecord->rejected+pRecord->NSomme, Line);
+        mediateResponsePlotData(pageGraph, &spectrumData, 1, Spectrum, allowFixedScale, "SpecMax", "Scans number", "Signal Maximum", responseHandle);
         mediateReleasePlotData(&spectrumData);
         mediateResponseLabelPage(pageGraph, fileName, "SpecMax", responseHandle);
         pageGraph++;

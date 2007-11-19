@@ -18,35 +18,42 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
 
-#ifndef _MEDIATE_TYPES_H_GUARD
-#define _MEDIATE_TYPES_H_GUARD
+#include "CScaleControl.h"
 
-enum eEngineErrorType {
-  NoEngineError,
-  InformationEngineError,
-  WarningEngineError,
-  FatalEngineError
-};
+CScaleControl::CScaleControl() :
+  m_fixedScale(false),
+  m_minimum(-1.0),
+  m_maximum(1.0)
+{
+}
 
-//* TODO - remove ePlotDataType */ 
-enum ePlotDataType {
-  PlotDataType_Spectrum,
-  PlotDataType_Fit,
-  PlotDataType_Shift,
-  PlotDataType_Fwhm,
-  PlotDataType_Points
-};
+CScaleControl::CScaleControl(bool fixedScale, double minimum, double maximum) :
+  m_fixedScale(fixedScale),
+  m_minimum(minimum),
+  m_maximum(maximum)
+{
+  // ensure sensible ordering ...
+  if (m_maximum < m_minimum) {
+    m_minimum = maximum;
+    m_maximum = minimum;
+  } 
+}
 
-enum eCurveStyleType {
-  Line,
-  Point
-};
+CScaleControl::CScaleControl(const CScaleControl &other) :
+  m_fixedScale(other.m_fixedScale),
+  m_minimum(other.m_minimum),
+  m_maximum(other.m_maximum)
+{
+}  
 
-enum ePlotScaleType {
-  Spectrum,
-  SpecMax,
-  Residual
-};
+CScaleControl& CScaleControl::operator=(const CScaleControl &rhs)
+{
+  if (&rhs != this) {
+    m_fixedScale = rhs.m_fixedScale;
+    m_minimum = rhs.m_minimum;
+    m_maximum = rhs.m_maximum;
+  }
 
-#endif
+  return *this;
+}
 

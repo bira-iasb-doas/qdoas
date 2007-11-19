@@ -28,6 +28,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "mediate_types.h"
 
+#include "CScaleControl.h"
+
 class CPlotProperties
 {
  public:
@@ -37,11 +39,15 @@ class CPlotProperties
 
   CPlotProperties& operator=(const CPlotProperties &rhs);
 
-  const QPen& pen(enum ePlotDataType plotType) const;
-  void setPen(enum ePlotDataType plotType, const QPen &pen);
+  // curve number ranges from 1 to 4
+  const QPen& pen(int curveNumber) const;
+  void setPen(int curveNumber, const QPen &pen);
 
   const QColor& backgroundColour(void) const;
   void setBackgroundColour(const QColor &c);
+
+  const CScaleControl& scaleControl(enum ePlotScaleType scaleType) const;
+  void setScaleControl(enum ePlotScaleType scaleType, const CScaleControl &scaleControl);
 
   int columns(void) const;
   void setColumns(int nColumns);
@@ -54,6 +60,7 @@ class CPlotProperties
  private:
   QPen m_defaultPen;
   std::vector<QPen> m_pens;
+  std::vector<CScaleControl> m_scales;
   QColor m_bgColour;
   int m_columns;
   QPrinter::PageSize m_printPaperSize;

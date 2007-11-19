@@ -59,6 +59,7 @@ SOURCES += ../common/CPathSubHandler.cpp
 SOURCES += ../common/CConfigSubHandlerUtils.cpp
 SOURCES += ../common/ConfigWriterUtils.cpp
 SOURCES += ../common/CPathMgr.cpp
+SOURCES += ../common/CScaleControl.cpp
 SOURCES += ../common/CPlotProperties.cpp
 
 SOURCES += ../common/CWAboutDialog.cpp
@@ -95,6 +96,7 @@ HEADERS += ../common/CPathSubHandler.h
 HEADERS += ../common/CConfigSubHandlerUtils.h
 HEADERS += ../common/ConfigWriterUtils.h
 HEADERS += ../common/CPathMgr.h
+HEADERS += ../common/CScaleControl.h
 HEADERS += ../common/CPlotProperties.h
 
 HEADERS += ../common/CWAboutDialog.h
