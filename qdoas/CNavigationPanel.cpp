@@ -210,11 +210,9 @@ void CNavigationPanel::slotSetEnabled(bool enable)
   m_stopBtn->setEnabled(groupActive);
 
   if (enable) {
-    // continue playing ... or step to first record
+    // continue playing ...
     if (m_playing)
       m_playTimer->start();
-    else
-      slotNextClicked();
   }
   else {
     // stop playing ...
@@ -284,7 +282,10 @@ void CNavigationPanel::slotStopClicked()
 
 void CNavigationPanel::slotPlayPauseClicked()
 {
+  TRACE2("slotPlayPauseClicked");
+
   if (m_playing) {
+    TRACE2("pause");
     // pause ...
     m_playTimer->stop();
     m_playing = false;
@@ -293,6 +294,7 @@ void CNavigationPanel::slotPlayPauseClicked()
     slotSetEnabled(true);
   }
   else {
+    TRACE2("play ");
     // play
     m_playing = true;
     m_playBtn->setIcon(m_pauseIcon);

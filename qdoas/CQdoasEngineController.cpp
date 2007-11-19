@@ -73,6 +73,8 @@ void CQdoasEngineController::notifyReadyToNavigateRecords(const QString &filenam
   // session is up and running
   m_state = Running;
   emit signalSessionRunning(isSessionRunning());
+
+  slotNextRecord(); // goto the first spectrum ...
 }
 
 void CQdoasEngineController::notifyCurrentRecord(int recordNumber)
@@ -425,31 +427,38 @@ void CQdoasEngineController::slotStep()
   }
   else if (m_currentRecord == m_numberOfRecords && !m_currentIt.atEnd()) {
 
-    CEngineRequestCompound *req = new CEngineRequestCompound;
-  
-    // done with the current file
-    if (m_numberOfRecords >= 0) {
-      switch (m_session->mode()) {
-      case CSession::Browse:
-	req->addRequest(new CEngineRequestEndBrowseFile);
-	break;
-      case CSession::Calibrate:
-	req->addRequest(new CEngineRequestEndCalibrateFile);
-	break;
-      case CSession::Analyse:
-	req->addRequest(new CEngineRequestEndAnalyseFile);
-	break;
-      }
-    }
+    CSessionIterator tmpIt = m_currentIt;
 
-    ++m_currentIt;
-    if (!m_currentIt.atEnd()) {
+    // only move if there IS a next file ... this leaves the last file 'active'.
+
+    ++tmpIt;
+    if (!tmpIt.atEnd()) {
+      m_currentIt = tmpIt;
+      
+      // move to the next file
+      CEngineRequestCompound *req = new CEngineRequestCompound;
+      
+      // done with the current file
+      if (m_numberOfRecords >= 0) {
+	switch (m_session->mode()) {
+	case CSession::Browse:
+	  req->addRequest(new CEngineRequestEndBrowseFile);
+	  break;
+	case CSession::Calibrate:
+	  req->addRequest(new CEngineRequestEndCalibrateFile);
+	  break;
+	case CSession::Analyse:
+	  req->addRequest(new CEngineRequestEndAnalyseFile);
+	  break;
+	}
+      }
+
       // check for a change in project
       if (m_currentProject != m_currentIt.project()) {
 	m_currentProject = m_currentIt.project();
 	req->addRequest(new CEngineRequestSetProject(m_currentProject));
       }
-
+      
       switch (m_session->mode()) {
       case CSession::Browse:
 	req->addRequest(new CEngineRequestBeginBrowseFile(m_currentIt.file().filePath()));
@@ -461,9 +470,9 @@ void CQdoasEngineController::slotStep()
 	req->addRequest(new CEngineRequestBeginAnalyseFile(m_currentIt.file().filePath()));
 	break;
       }
-    }
 
-    m_thread->request(req);
+      m_thread->request(req);
+    }
   }
 }
 
