@@ -211,13 +211,19 @@ void CWMoleculesDoasTable::apply(cross_section_list_t *data) const
     // certain that the length of the symbol is below the limit ...
     strcpy(d->symbol, m_symbols.at(row).toAscii().data());
 
-    strcpy(d->crossSectionFile, m_csFilename.at(row).toAscii().data());
+    if (m_csFilename.at(row).length() < (int)sizeof(d->crossSectionFile))
+      strcpy(d->crossSectionFile, m_csFilename.at(row).toAscii().data());
+    else
+      *(d->crossSectionFile) = '\0';
 
     strcpy(d->orthogonal, state.at(0).toString().toAscii().data());
     d->crossType = mapComboStringToCrossType(state.at(1).toString());
     d->amfType = mapComboStringToAmfType(state.at(2).toString());
 
-    strcpy(d->amfFile, m_amfFilename.at(row).toAscii().data());
+    if (m_amfFilename.at(row).length() < (int)sizeof(d->amfFile))
+      strcpy(d->amfFile, m_amfFilename.at(row).toAscii().data());
+    else
+      *(d->amfFile) = '\0';
 
     d->requireFit = state.at(3).toBool() ? 1 : 0;
     d->requireFilter = state.at(4).toBool() ? 1 : 0;
@@ -642,7 +648,8 @@ int CWLinearParametersDoasTable::mapComboStringToOrder(const QString &str)
 
 CWNonLinearParametersDoasTable::CWNonLinearParametersDoasTable(const QString &label, int columnWidth,
 							       int headerHeight, QWidget *parent) :
-  CDoasTable(label, columnWidth, headerHeight, parent)
+  CDoasTable(label, columnWidth, headerHeight, parent),
+  m_selectedRow(-1)
 {
   // construct and populate the table
 
@@ -741,6 +748,11 @@ void CWNonLinearParametersDoasTable::populate(const struct anlyswin_nonlinear *d
   initialValues.push_back(data->ramanFlagErrStore);  
   addRow(cStandardRowHeight, "Raman", initialValues);
 
+  m_comFilename = data->comFile;
+  m_usamp1Filename = data->usamp1File;
+  m_usamp2Filename = data->usamp2File;
+  m_ramanFilename = data->ramanFile;
+
 }
 
 void CWNonLinearParametersDoasTable::apply(struct anlyswin_nonlinear *data) const
@@ -803,6 +815,82 @@ void CWNonLinearParametersDoasTable::apply(struct anlyswin_nonlinear *data) cons
   data->ramanFlagFitStore = state.at(3).toBool() ? 1 : 0;
   data->ramanFlagErrStore = state.at(4).toBool() ? 1 : 0;
 
+  // filenames
+  
+  if (m_comFilename.length() < (int)sizeof(data->comFile))
+    strcpy(data->comFile, m_comFilename.toAscii().data());
+  else
+    *(data->comFile) = '\0';
+  
+  if (m_usamp1Filename.length() < (int)sizeof(data->usamp1File))
+    strcpy(data->usamp1File, m_usamp1Filename.toAscii().data());
+  else
+    *(data->usamp1File) = '\0';
+  
+  if (m_usamp2Filename.length() < (int)sizeof(data->usamp2File))
+    strcpy(data->usamp2File, m_usamp2Filename.toAscii().data());
+  else
+    *(data->usamp2File) = '\0';
+  
+  if (m_ramanFilename.length() < (int)sizeof(data->ramanFile))
+    strcpy(data->ramanFile, m_ramanFilename.toAscii().data());
+  else
+    *(data->ramanFile) = '\0';
+  
+}
+
+void CWNonLinearParametersDoasTable::contextMenuEvent(QContextMenuEvent *e)
+{
+  
+  m_selectedRow = rowIndexAtPosition(e->y());
+
+  if (m_selectedRow >= 4 && m_selectedRow <= 7) {
+
+    // create a popup menu
+    QMenu menu;
+    
+    menu.addAction("Select File", this, SLOT(slotSelectFile()));
+
+    menu.exec(e->globalPos()); // a slot will do the rest
+  }
+}
+ 
+void CWNonLinearParametersDoasTable::slotSelectFile()
+{
+  switch (m_selectedRow) {
+  case 4: // Com
+    {
+      QString filename = QFileDialog::getOpenFileName(this, "Com Filename", m_comFilename);
+      if (!filename.isEmpty()) {
+	m_comFilename = filename; // change the filename
+      }
+    }
+    break;
+  case 5: // Usamp1
+    {
+      QString filename = QFileDialog::getOpenFileName(this, "Usamp1 Filename", m_usamp1Filename);
+      if (!filename.isEmpty()) {
+	m_usamp1Filename = filename; // change the filename
+      }
+    }
+    break;
+  case 6: // Usamp2
+    {
+      QString filename = QFileDialog::getOpenFileName(this, "Usamp2 Filename", m_usamp2Filename);
+      if (!filename.isEmpty()) {
+	m_usamp2Filename = filename; // change the filename
+      }
+    }
+    break;
+  case 7: // Raman
+    {
+      QString filename = QFileDialog::getOpenFileName(this, "Raman Filename", m_ramanFilename);
+      if (!filename.isEmpty()) {
+	m_ramanFilename = filename; // change the filename
+      }
+    }
+    break;
+  }
 }
 
 //------------------------------------------------------------

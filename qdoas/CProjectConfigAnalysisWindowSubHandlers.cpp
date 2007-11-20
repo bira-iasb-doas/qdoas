@@ -273,6 +273,8 @@ CAnalysisWindowNonLinearSubHandler::~CAnalysisWindowNonLinearSubHandler()
 
 bool CAnalysisWindowNonLinearSubHandler::start(const QXmlAttributes &atts)
 {
+  QString str;
+
   m_d->solFlagFit = (atts.value("solfit") == "true") ? 1 : 0;
   m_d->solInitial = atts.value("solinit").toDouble();
   m_d->solDelta = atts.value("soldelt").toDouble();
@@ -320,6 +322,42 @@ bool CAnalysisWindowNonLinearSubHandler::start(const QXmlAttributes &atts)
   m_d->ramanDelta = atts.value("ramdelt").toDouble();
   m_d->ramanFlagFitStore = (atts.value("ramfstr") == "true") ? 1 : 0;
   m_d->ramanFlagErrStore = (atts.value("ramestr") == "true") ? 1 : 0;
+
+  str = atts.value("comfile");
+  if (!str.isEmpty()) {
+    str = m_master->pathExpand(str);
+    if (str.length() < (int)sizeof(m_d->comFile))
+      strcpy(m_d->comFile, str.toAscii().data());
+    else
+      return postErrorMessage("Com filename too long");
+  }
+
+  str = atts.value("u1file");
+  if (!str.isEmpty()) {
+    str = m_master->pathExpand(str);
+    if (str.length() < (int)sizeof(m_d->usamp1File))
+      strcpy(m_d->usamp1File, str.toAscii().data());
+    else
+      return postErrorMessage("Usamp1 filename too long");
+  }
+
+  str = atts.value("u2file");
+  if (!str.isEmpty()) {
+    str = m_master->pathExpand(str);
+    if (str.length() < (int)sizeof(m_d->usamp2File))
+      strcpy(m_d->usamp2File, str.toAscii().data());
+    else
+      return postErrorMessage("Usamp2 filename too long");
+  }
+
+  str = atts.value("ramfile");
+  if (!str.isEmpty()) {
+    str = m_master->pathExpand(str);
+    if (str.length() < (int)sizeof(m_d->ramanFile))
+      strcpy(m_d->ramanFile, str.toAscii().data());
+    else
+      return postErrorMessage("Raman filename too long");
+  }
 
   return true;
 }

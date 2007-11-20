@@ -262,6 +262,11 @@ extern "C" {
     double ramanDelta;
     int ramanFlagFitStore;
     int ramanFlagErrStore;
+
+    char comFile[FILENAME_BUFFER_LENGTH];
+    char usamp1File[FILENAME_BUFFER_LENGTH];
+    char usamp2File[FILENAME_BUFFER_LENGTH];
+    char ramanFile[FILENAME_BUFFER_LENGTH];
   };
 
   struct anlyswin_shift_stretch

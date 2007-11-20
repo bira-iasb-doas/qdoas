@@ -140,6 +140,7 @@ class CWLinearParametersDoasTable : public CDoasTable
 
 class CWNonLinearParametersDoasTable : public CDoasTable
 {
+Q_OBJECT
  public:
   CWNonLinearParametersDoasTable(const QString &label, int columnWidth, int headerHeight = 24, QWidget *parent = 0);
   virtual ~CWNonLinearParametersDoasTable();
@@ -148,6 +149,16 @@ class CWNonLinearParametersDoasTable : public CDoasTable
   void apply(struct anlyswin_nonlinear *data) const;
 
   // virtual void cellDataChanged(int row, int column, const QVariant &cellData); // no cell-coupling required
+
+ protected:
+  void contextMenuEvent(QContextMenuEvent *e);
+
+ public slots:
+   void slotSelectFile();
+
+ private:
+  int m_selectedRow;
+  QString m_comFilename, m_usamp1Filename, m_usamp2Filename, m_ramanFilename;
 };
 
 //----------------------------------------------------------------------
