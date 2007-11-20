@@ -560,3 +560,24 @@ bool CEngineRequestEndCalibrateFile::process(CEngineThread *engineThread)
   return (rc != -1);
 }
 
+CEngineRequestViewCrossSections::CEngineRequestViewCrossSections() :
+  CEngineRequest(eEngineRequestViewCrossSectionsType)
+{
+}
+
+CEngineRequestViewCrossSections::~CEngineRequestViewCrossSections()
+{
+}
+
+bool CEngineRequestViewCrossSections::process(CEngineThread *engineThread)
+{
+  CEngineResponseTool *resp = new CEngineResponseTool;
+
+  int rc = mediateRequestViewCrossSections(engineThread->engineContext(), resp);
+  
+  // post the response
+  engineThread->respond(resp);
+  
+  return (rc != -1);
+}
+

@@ -28,6 +28,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "CEngineThread.h"
 
 #include "CSession.h"
+#include "CViewCrossSectionData.h"
 #include "RefCountPtr.h"
 
 #include "mediate_project.h"
@@ -77,6 +78,8 @@ Q_OBJECT
   // session control
   void slotStartSession(const RefCountPtr<CSession> &session);
   void slotStopSession(); 
+
+  void slotViewCrossSections(const RefCountPtr<CViewCrossSectionData> &awData);
 
  signals:
   void signalFileListChanged(const QStringList &fileList);

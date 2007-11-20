@@ -30,6 +30,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "RefCountPtr.h"
 #include "CSession.h"
+#include "CViewCrossSectionData.h"
 #include "CProjectConfigItem.h"
 
 class CWActiveContext;
@@ -119,6 +120,7 @@ Q_OBJECT
   void slotRenameAnalysisWindow();
   void slotRunAnalysis();
   void slotBrowseSpectra();
+  void slotViewCrossSections();
   void slotDeleteSelection();
   void slotCutSelection();
   void slotCopySelection();
@@ -133,6 +135,7 @@ Q_OBJECT
  signals:
   void signalWidthModeChanged(int newMode);
   void signalStartSession(const RefCountPtr<CSession> &session);
+  void signalViewCrossSections(const RefCountPtr<CViewCrossSectionData> &awData);
   void signalSpectraTreeChanged();
 
  private:

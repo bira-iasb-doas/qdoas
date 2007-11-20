@@ -352,6 +352,16 @@ int mediateRequestPrevMatchingCalibrateSpectrum(void *engineContext, void *respo
 int mediateRequestEndCalibrateSpectra(void *engineContext, void *responseHandle);
 
 
+// mediateRequestViewCrossSections
+//
+// request the engine to extract cross section data (spectrumm) from all analysis windows
+// (set by mediateSetAnalysisWindows) and return a plot for each cross section.
+//
+// On success, 0 is returned, -1 otherwise and an error message should be posted with
+//    mediateResponseErrorMessage(functionName, messageString, errorLevel, responseHandle);
+
+int mediateRequestViewCrossSections(void *engineContext, void *responseHandle);
+
 
 #if defined(_cplusplus) || defined(__cplusplus)
 }

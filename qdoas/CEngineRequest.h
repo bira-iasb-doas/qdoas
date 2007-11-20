@@ -49,7 +49,8 @@ class CEngineRequest
     eEngineRequestBeginCalibrateFileType,
     eEngineRequestCalibrateNextRecordType,
     eEngineRequestCalibrateSpecificRecordType,
-    eEngineRequestEndCalibrateFileType
+    eEngineRequestEndCalibrateFileType,
+    eEngineRequestViewCrossSectionsType
   };
 
   CEngineRequest(enum RequestType type);
@@ -288,6 +289,18 @@ class CEngineRequestEndCalibrateFile : public CEngineRequest
  public:
   CEngineRequestEndCalibrateFile();
   virtual ~CEngineRequestEndCalibrateFile();
+
+  virtual bool process(CEngineThread *engineThread);
+
+};
+
+//------------------------------------------------------------
+
+class CEngineRequestViewCrossSections : public CEngineRequest
+{
+ public:
+  CEngineRequestViewCrossSections();
+  virtual ~CEngineRequestViewCrossSections();
 
   virtual bool process(CEngineThread *engineThread);
 

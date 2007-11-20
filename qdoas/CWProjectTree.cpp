@@ -283,6 +283,7 @@ void CWProjectTree::contextMenuEvent(QContextMenuEvent *e)
                      SLOT(slotToggleEnable()));
       menu.addAction("New Analysis Window...", this, SLOT(slotCreateAnalysisWindow()));
       menu.addAction("Rename...", this, SLOT(slotRenameAnalysisWindow()));
+      menu.addAction("View Cross Sections", this, SLOT(slotViewCrossSections()))->setEnabled(!m_sessionActive);
       menu.addAction("Properties...", this, SLOT(slotEditAnalysisWindow()));
       menu.addSeparator();
 
@@ -1157,13 +1158,46 @@ void CWProjectTree::slotRunAnalysis()
     buildAndStartSession(CSession::Analyse);
 }
 
-
 void CWProjectTree::slotBrowseSpectra()
 {
   if (m_sessionActive)
     QMessageBox::information(this, "Browse Spectra", "A session is currently active.");
   else
     buildAndStartSession(CSession::Browse);  
+}
+
+void CWProjectTree::slotViewCrossSections()
+{
+  TRACE("CWProjectTree::slotViewCrossSections");
+
+  if (m_sessionActive)
+    QMessageBox::information(this, "View Cross Sections", "A session is currently active.");
+  else {
+
+    TRACE("1");
+
+    QList<QTreeWidgetItem*> items = selectedItems();
+    if (items.count() == 1) {
+      TRACE("2");
+      QTreeWidgetItem *item = items.front();
+      if (item->type() == cAnalysisWindowItemType) {
+
+	TRACE("3");
+	QTreeWidgetItem *projItem = CWProjectTree::projectItem(item);
+	if (projItem != NULL) {
+	  TRACE("4");
+	  const mediate_analysis_window_t *aw = CWorkSpace::instance()->findAnalysisWindow(projItem->text(0), item->text(0));
+
+	  if (aw != NULL) {
+	    TRACE("5");
+	    RefCountPtr<CViewCrossSectionData> ptr(new CViewCrossSectionData(aw));
+	    emit signalViewCrossSections(ptr);
+	  }
+	}
+      }
+    }
+
+  }
 }
 
 void CWProjectTree::slotDeleteSelection()

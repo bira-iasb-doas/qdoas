@@ -553,3 +553,23 @@ void CQdoasEngineController::slotStopSession()
     break;
   }
 }
+
+void CQdoasEngineController::slotViewCrossSections(const RefCountPtr<CViewCrossSectionData> &awData)
+{
+  TRACE("CQdoasEngineController::slotViewCrossSections");
+
+  if (m_state != Idle) return;
+
+  TRACE("6");
+
+  // need a compound request
+  CEngineRequestCompound *req = new CEngineRequestCompound;
+
+  // take the site and symbol lists from the session ... and hand responsibility over to request objects.
+
+  req->addRequest(new CEngineRequestSetAnalysisWindows(awData->analysisWindow(), 1));
+  req->addRequest(new CEngineRequestViewCrossSections);
+
+  // send the request
+  m_thread->request(req);
+}

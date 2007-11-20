@@ -134,6 +134,9 @@ CWMain::CWMain(QWidget *parent) :
   // connections to the controller
   connect(m_projTree, SIGNAL(signalStartSession(const RefCountPtr<CSession>&)),
           m_controller, SLOT(slotStartSession(const RefCountPtr<CSession>&)));
+  connect(m_projTree, SIGNAL(signalViewCrossSections(const RefCountPtr<CViewCrossSectionData>&)),
+	  m_controller, SLOT(slotViewCrossSections(const RefCountPtr<CViewCrossSectionData>&)));
+
 
   // Help system
   m_helpInterface = CHelpSystem::establishHelpSystem(this); // this is the 'controller'
