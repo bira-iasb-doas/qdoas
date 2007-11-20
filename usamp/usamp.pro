@@ -13,7 +13,7 @@ QT = core gui xml
 DEFINES += APP_USAMP
 
 # Help system to use...
-contains ( $$HELP_SYSTEM, assistant ) {
+contains ( HELP_SYSTEM, assistant ) {
     CONFIG  += assistant
     DEFINES += HELP_QT_ASSISTANT
 }
@@ -33,10 +33,10 @@ unix {
 win32 {
   INCLUDEPATH  += ..\mediator ..\common ..\engine
 
-  contains( $$QWT_LINKAGE, qwtstatic ) {
+  contains( QWT_LINKAGE, qwtstatic ) {
     LIBS        += -L$$QWT_LIB_PATH -l$$QWT_LIB
   }
-  contains( $$QWT_LINKAGE, qwtdll ) {
+  contains( QWT_LINKAGE, qwtdll ) {
     LIBS        += -L$$QWT_LIB_PATH -l$$QWT_LIB$$QWT_LIB_VERSION
     DEFINES     += QWT_DLL
   }
