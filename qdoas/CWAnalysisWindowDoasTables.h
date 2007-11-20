@@ -99,6 +99,7 @@ Q_OBJECT
   
   void slotInsertRow();
   void slotRemoveRow();
+  void slotChangeCrossSectionFileName();
   void slotAmfFileName();
 
   void slotFitColumnCheckable(int state);

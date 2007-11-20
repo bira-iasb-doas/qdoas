@@ -21,6 +21,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QMenu>
 #include <QContextMenuEvent>
 #include <QDialogButtonBox>
+#include <QMessageBox>
 #include <QVBoxLayout>
 #include <QFileDialog>
 #include <QTextStream>
@@ -413,6 +414,8 @@ void CWMoleculesDoasTable::contextMenuEvent(QContextMenuEvent *e)
   QAction *removeAction = menu.addAction("Remove", this, SLOT(slotRemoveRow()));
   removeAction->setEnabled(m_selectedRow != -1 && !isRowLocked(m_selectedRow));
 
+  menu.addAction("XS Filename", this, SLOT(slotChangeCrossSectionFileName()));
+
   // AMF filename ... only of enabled and value != NULL
   if (isColumnEnabled(amfColumn)) {
     menu.addSeparator();
@@ -490,20 +493,35 @@ void CWMoleculesDoasTable::slotRemoveRow()
 {
   if (m_selectedRow >= 0 && m_selectedRow < rowCount()) {
 
-    // TODO
-    /*
-    QList<QVariant> data = getCellData(m_selectedRow);
-    QList<QVariant>::iterator it = data.begin();
-    while (it != data.end()) {
-      std::cout << "   " << it->toString().toStdString();
-      ++it;
-    }
-    std::cout << std::endl;
-    */
-
     removeRow(m_selectedRow);
     m_selectedRow = -1;
   }
+}
+
+void CWMoleculesDoasTable::slotChangeCrossSectionFileName()
+{
+  if (m_selectedRow >= 0 && m_selectedRow < rowCount()) {
+
+    QString prefix = rowLabel(m_selectedRow);
+
+    QString filter = prefix;
+    filter.append(" (").append(prefix).append("_*.xs*);;All files (*)");
+
+    // file dialog to change the cross section
+    QString filename = QFileDialog::getOpenFileName(this, "AMF Filename", m_csFilename.at(m_selectedRow), filter);
+    if (!filename.isEmpty()) {
+      // the file MUST match the prefix 
+      prefix.append('_');
+
+      if (filename.startsWith(prefix, Qt::CaseInsensitive)) {
+	m_csFilename[m_selectedRow] = filename; // change the filename
+      }
+      else {
+	QMessageBox::warning(this, "Invalid XS Filename", "The filename was NOT changed because the selected filename\ndid not correspond with the selected symbol.");   
+      }
+    }
+  }
+  
 }
 
 void CWMoleculesDoasTable::slotAmfFileName()
