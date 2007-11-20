@@ -36,8 +36,8 @@ win32 {
   contains( $$QWT_LINKAGE, qwtstatic ) {
     LIBS        += -L$$QWT_LIB_PATH -l$$QWT_LIB
   }
-  contains( CONFIG, qwtdll ) {
-    LIBS        += -L$$QWT_LIB_PATH -l$$QWT_LIB
+  contains( $$QWT_LINKAGE, qwtdll ) {
+    LIBS        += -L$$QWT_LIB_PATH -l$$QWT_LIB$$QWT_LIB_VERSION
     DEFINES     += QWT_DLL
   }
   CONFIG      += windows

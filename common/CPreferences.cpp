@@ -33,6 +33,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #define PREF_KEY "Conv"
 #elif defined(APP_RING)
 #define PREF_KEY "Ring"
+#elif defined(APP_USAMP)
+#define PREF_KEY "Usamp"
 #else
 #error "An APPLICATION preference key is not defined"
 #endif

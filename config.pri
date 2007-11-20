@@ -21,9 +21,10 @@ unix {
 }
 
 win32 {
-  QWT_INC_PATH   = C:\Qwt\include
-  QWT_LIB_PATH   = C:\Qwt\lib
-  QWT_LIB        = qwt
+  QWT_INC_PATH    = C:\Qwt\include
+  QWT_LIB_PATH    = C:\Qwt\lib
+  QWT_LIB         = qwt
+  QWT_LIB_VERSION = 5
 
   CODE_GENERATION = release # Override because debug is broken
 }
