@@ -44,8 +44,8 @@ extern "C" {
     char residualFile[FILENAME_BUFFER_LENGTH];
     double refSzaCenter;
     double refSzaDelta;
-    int fitMinWavelength;
-    int fitMaxWavelength;
+    double fitMinWavelength;
+    double fitMaxWavelength;
     int requireSpectrum;
     int requirePolynomial;
     int requireFit;

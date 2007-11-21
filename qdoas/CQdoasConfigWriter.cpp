@@ -1095,7 +1095,7 @@ void CQdoasConfigWriter::writeAnalysisWindows(FILE *fp, const QString &projectNa
 	else
 	  fprintf(fp, " refsel=\"file\"");
 
-	fprintf(fp, " min=\"%d\" max=\"%d\" >\n", properties->fitMinWavelength, properties->fitMaxWavelength);
+	fprintf(fp, " min=\"%.3f\" max=\"%.3f\" >\n", properties->fitMinWavelength, properties->fitMaxWavelength);
 
 	fprintf(fp, "      <display spectrum=\"%s\" poly=\"%s\" fits=\"%s\" residual=\"%s\" predef=\"%s\" ratio=\"%s\" />\n",
 		(properties->requireSpectrum ? sTrue : sFalse),

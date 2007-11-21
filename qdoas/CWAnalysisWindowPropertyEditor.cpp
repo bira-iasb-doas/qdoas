@@ -90,12 +90,12 @@ CWAnalysisWindowPropertyEditor::CWAnalysisWindowPropertyEditor(const QString &pr
   fitIntervalLayout->addWidget(new QLabel("Min", fitIntervalGroup), 0, 0);
   m_fitMinEdit = new QLineEdit(fitIntervalGroup);
   m_fitMinEdit->setFixedWidth(50);
-  m_fitMinEdit->setValidator(new QIntValidator(100, 999, m_fitMinEdit));
+  m_fitMinEdit->setValidator(new CDoubleFixedFmtValidator(100.0, 999.0, 3, m_fitMinEdit));
   fitIntervalLayout->addWidget(m_fitMinEdit, 0, 1);
   fitIntervalLayout->addWidget(new QLabel("Max", fitIntervalGroup), 1, 0);
   m_fitMaxEdit = new QLineEdit(fitIntervalGroup);
   m_fitMaxEdit->setFixedWidth(50);
-  m_fitMaxEdit->setValidator(new QIntValidator(100, 999, m_fitMaxEdit));
+  m_fitMaxEdit->setValidator(new CDoubleFixedFmtValidator(100.0, 999.0, 3, m_fitMaxEdit));
   fitIntervalLayout->addWidget(m_fitMaxEdit, 1, 1);
 
   topLayout->addWidget(fitIntervalGroup);
@@ -323,8 +323,8 @@ bool CWAnalysisWindowPropertyEditor::actionOk(void)
     d->kuruczMode = m_calibrationCombo->itemData(m_calibrationCombo->currentIndex()).toInt();
     d->refSpectrumSelection = m_refTwoStack->currentIndex() ? ANLYS_REF_SELECTION_MODE_FILE : ANLYS_REF_SELECTION_MODE_AUTOMATIC;
 
-    d->fitMinWavelength = m_fitMinEdit->text().toInt();
-    d->fitMaxWavelength = m_fitMaxEdit->text().toInt();
+    d->fitMinWavelength = m_fitMinEdit->text().toDouble();
+    d->fitMaxWavelength = m_fitMaxEdit->text().toDouble();
 
     d->requireSpectrum = (m_spectrumCheck->checkState() == Qt::Checked) ? 1 : 0;
     d->requirePolynomial = (m_polyCheck->checkState() == Qt::Checked) ? 1 : 0;

@@ -54,8 +54,8 @@ bool CAnalysisWindowSubHandler::start(const QXmlAttributes &atts)
 
   d->refSpectrumSelection = (atts.value("refsel") == "auto") ? ANLYS_REF_SELECTION_MODE_AUTOMATIC :  ANLYS_REF_SELECTION_MODE_FILE;
 
-  d->fitMinWavelength = atts.value("min").toInt();
-  d->fitMaxWavelength = atts.value("max").toInt();
+  d->fitMinWavelength = atts.value("min").toDouble();
+  d->fitMaxWavelength = atts.value("max").toDouble();
 
   // MUST have a valid name
   return !m_item->name().isEmpty();
