@@ -42,10 +42,13 @@ extern "C" {
     char refOneFile[FILENAME_BUFFER_LENGTH];
     char refTwoFile[FILENAME_BUFFER_LENGTH];
     char residualFile[FILENAME_BUFFER_LENGTH];
-    double refSzaCenter;
-    double refSzaDelta;
     double fitMinWavelength;
     double fitMaxWavelength;
+    double refSzaCenter;
+    double refSzaDelta;
+    double refLongitude;
+    double refLatitude;
+    int refNs;
     int requireSpectrum;
     int requirePolynomial;
     int requireFit;
