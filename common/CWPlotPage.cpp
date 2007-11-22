@@ -429,3 +429,57 @@ void CWPlotPage::slotPrintAllPlots()
     }
   }
 }
+
+void CWPlotPage::slotExportAsImageAllPlots()
+{
+  if (m_plots.size() == 0)
+    return;
+  
+  QString fileName;
+  QString format;
+
+  if (CWPlot::getImageSaveNameAndFormat(this, fileName, format)) {
+
+    // determine the required image size ...
+
+    const int cPlotBorder = 20;
+
+    QSize plotSize;
+
+    int columns = (m_plots.size() < m_plotProperties.columns()) ? m_plots.size() : m_plotProperties.columns();
+    int rows = m_plots.size() / columns + ((m_plots.size() % columns) ? 1 : 0);
+      
+    QList<CWPlot*>::iterator it = m_plots.begin();
+    while (it != m_plots.end()) {
+      plotSize = plotSize.expandedTo((*it)->size());
+      ++it;
+    }
+
+    // the size of the final image
+    QSize imgSize(plotSize.width() * columns + (columns+1) * cPlotBorder,
+                  plotSize.height() * rows + (rows+1) * cPlotBorder);
+
+    QImage img(imgSize, QImage::Format_RGB32); // image the same size as the plot widget.
+    img.fill(0xffffffff);
+    
+    QPainter p(&img);
+
+    int col = 0;
+    int row = 0;
+    it = m_plots.begin();
+    while (it != m_plots.end()) {
+      QRect tmp(cPlotBorder + col * (cPlotBorder + plotSize.width()),
+                cPlotBorder + row * (cPlotBorder + plotSize.height()),
+                plotSize.width(), plotSize.height());
+	
+      (*it)->print(&p, tmp);
+      if (++col == columns) {
+        col = 0;
+        ++row;
+      }
+      ++it;
+    }
+    
+    img.save(fileName, format.toAscii().constData());
+  }
+}

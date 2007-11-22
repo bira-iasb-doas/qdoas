@@ -595,3 +595,8 @@ void CWActiveContext::slotPrintPlots()
 {
   m_plotRegion->printVisiblePage();
 }
+
+void CWActiveContext::slotExportPlots()
+{
+  m_plotRegion->exportVisiblePage();
+}

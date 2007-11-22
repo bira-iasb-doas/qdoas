@@ -129,6 +129,10 @@ CWMain::CWMain(QWidget *parent) :
   connect(plotPrintAction, SIGNAL(triggered()), this, SLOT(slotPrintPlots()));
   plotMenu->addAction(plotPrintAction);
 
+  QAction *plotExportAction = new QAction(QIcon(QPixmap(":/icons/plot_export_22.png")), "Export Plots...", this);
+  connect(plotExportAction, SIGNAL(triggered()), this, SLOT(slotExportPlots()));
+  plotMenu->addAction(plotExportAction);
+
   m_menuBar->addMenu(plotMenu);
 
   // Help Menu
@@ -439,6 +443,12 @@ void CWMain::slotPrintPlots()
 {
   if (m_plotArea != NULL)
     m_plotArea->printPage();
+}
+
+void CWMain::slotExportPlots()
+{
+  if (m_plotArea != NULL)
+    m_plotArea->exportPage();
 }
 
 void CWMain::slotQdoasHelp()

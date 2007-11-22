@@ -40,6 +40,7 @@ class CWPlotArea : public QScrollArea
   void setPage(const RefCountConstPtr<CPlotPageData> &page);
   
   void printPage(void);
+  void exportPage(void);
 
   QString pageTitle(void) const;
   QString pageTag(void) const;

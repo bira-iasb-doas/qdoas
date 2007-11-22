@@ -63,6 +63,7 @@ Q_OBJECT
 
   void slotEditPlotProperties();
   void slotPrintPlots();
+  void slotExportPlots();
 
  private:
   void discardCurrentEditor(void);

@@ -207,6 +207,11 @@ CWMain::CWMain(QWidget *parent) :
   plotMenu->addAction(plotPrintAction);
   m_toolBar->addAction(plotPrintAction);
 
+  QAction *plotExportAction = new QAction(QIcon(QPixmap(":/icons/plot_export_22.png")), "Export Plots...", this);
+  connect(plotExportAction, SIGNAL(triggered()), m_activeContext, SLOT(slotExportPlots()));
+  plotMenu->addAction(plotExportAction);
+  m_toolBar->addAction(plotExportAction);
+
   m_menuBar->addMenu(plotMenu);
 
   // Tools menu

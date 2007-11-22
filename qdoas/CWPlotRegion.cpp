@@ -90,6 +90,12 @@ void CWPlotRegion::printVisiblePage(void)
     m_plotPage->slotPrintAllPlots();
 }
 
+void CWPlotRegion::exportVisiblePage(void)
+{
+  if (m_plotPage)
+    m_plotPage->slotExportAsImageAllPlots();
+}
+
 int CWPlotRegion::pageDisplayed(void) const
 {
   return m_activePageNumber;

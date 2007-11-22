@@ -18,6 +18,7 @@
 
     <file>icons/plot_prop_22.png</file>
     <file>icons/plot_print_22.png</file>
+    <file>icons/plot_export_22.png</file>
 
 </qresource>
 </RCC>

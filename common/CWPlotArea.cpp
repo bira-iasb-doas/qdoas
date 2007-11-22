@@ -65,6 +65,12 @@ void CWPlotArea::printPage(void)
     m_plotPage->slotPrintAllPlots();
 }
 
+void CWPlotArea::exportPage(void)
+{
+  if (m_plotPage)
+    m_plotPage->slotExportAsImageAllPlots();
+}
+
 QString CWPlotArea::pageTitle(void) const
 {
   if (m_pageData != 0)

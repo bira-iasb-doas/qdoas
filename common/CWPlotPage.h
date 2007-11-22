@@ -79,6 +79,7 @@ Q_OBJECT
 
  public slots:
   void slotPrintAllPlots();
+  void slotExportAsImageAllPlots();
 
  private:
   mutable CPlotProperties &m_plotProperties;

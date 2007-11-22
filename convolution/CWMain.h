@@ -61,6 +61,7 @@ Q_OBJECT
   void slotSaveAsFile();
   void slotEditPlotProperties();
   void slotPrintPlots();
+  void slotExportPlots();
   void slotQdoasHelp();
   void slotHelpBrowserPreference(bool light);
   void slotAboutQdoas();

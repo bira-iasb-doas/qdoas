@@ -42,6 +42,7 @@ class CWPlotRegion : public QScrollArea
   
   void displayPage(int pageNumber);
   void printVisiblePage(void);
+  void exportVisiblePage(void);
 
   int pageDisplayed(void) const;
   QString pageTitle(int pageNumber) const;
