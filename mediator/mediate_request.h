@@ -354,13 +354,14 @@ int mediateRequestEndCalibrateSpectra(void *engineContext, void *responseHandle)
 
 // mediateRequestViewCrossSections
 //
-// request the engine to extract cross section data (spectrumm) from all analysis windows
-// (set by mediateSetAnalysisWindows) and return a plot for each cross section.
+// request the engine to extract cross section data (spectrum) from the specified files
+// and return a plot for each cross section (in the range [minWavlength,maxWavelength]
 //
 // On success, 0 is returned, -1 otherwise and an error message should be posted with
 //    mediateResponseErrorMessage(functionName, messageString, errorLevel, responseHandle);
 
-int mediateRequestViewCrossSections(void *engineContext, void *responseHandle);
+int mediateRequestViewCrossSections(void *engineContext, double minWavelength, double maxWavelength,
+                                    int nFiles, const char *filenames[], void *responseHandle);
 
 
 #if defined(_cplusplus) || defined(__cplusplus)

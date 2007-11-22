@@ -299,10 +299,16 @@ class CEngineRequestEndCalibrateFile : public CEngineRequest
 class CEngineRequestViewCrossSections : public CEngineRequest
 {
  public:
-  CEngineRequestViewCrossSections();
+  CEngineRequestViewCrossSections(double minWavelength, double maxWavelength,
+                                  int nFiles, char **filenames);
   virtual ~CEngineRequestViewCrossSections();
 
   virtual bool process(CEngineThread *engineThread);
+
+ private:
+  double m_minWavelength, m_maxWavelength;
+  int m_nFiles;
+  char **m_filenames;
 
 };
 

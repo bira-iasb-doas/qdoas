@@ -560,15 +560,25 @@ void CQdoasEngineController::slotViewCrossSections(const RefCountPtr<CViewCrossS
 
   if (m_state != Idle) return;
 
-  TRACE("6");
+  const mediate_analysis_window_t *d = awData->analysisWindow();
 
-  // need a compound request
-  CEngineRequestCompound *req = new CEngineRequestCompound;
+  int nFiles = d->crossSectionList.nCrossSection;
 
-  // take the site and symbol lists from the session ... and hand responsibility over to request objects.
+  char **filenames = new char*[nFiles];
 
-  req->addRequest(new CEngineRequestSetAnalysisWindows(awData->analysisWindow(), 1));
-  req->addRequest(new CEngineRequestViewCrossSections);
+  for (int i=0; i<nFiles; ++i) {
+    int len = strlen(d->crossSectionList.crossSection[i].crossSectionFile);
+    char *tmp = new char[len + 1];
+    strcpy(tmp, d->crossSectionList.crossSection[i].crossSectionFile);
+    filenames[i] = tmp;
+  }
+
+  // request takes responsibility for the char** and char* memory.
+
+  CEngineRequestViewCrossSections *req = new CEngineRequestViewCrossSections(d->fitMinWavelength,
+                                                                             d->fitMaxWavelength,
+                                                                             nFiles, filenames);
+                                                                             
 
   // send the request
   m_thread->request(req);

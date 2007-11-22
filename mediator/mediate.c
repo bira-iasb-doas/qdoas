@@ -1798,8 +1798,8 @@ int mediateRequestEndCalibrateSpectra(void *engineContext,
 
 #include <stdio.h>
 
-int mediateRequestViewCrossSections(void *engineContext,
-				    void *responseHandle)
+int mediateRequestViewCrossSections(void *engineContext, double minWavelength, double maxWavelength,
+                                    int nFiles, const char *filenames[], void *responseHandle)
 {
 
   // Extract spectral (plot only) data and pass it back via the response handle.
@@ -1823,7 +1823,9 @@ int mediateRequestViewCrossSections(void *engineContext,
   mediateResponsePlotData(0, &dummy, 1, Spectrum, 0, "Second XS", "X-Label", "Y-label", responseHandle);
   mediateReleasePlotData(&dummy);
 
-  printf("mediateRequestViewCrossSections\n");
+  for (i=0; i<nFiles; ++i) {
+    printf("XS File '%s'\n", filenames[i]);
+  }
 
   return 0;
 }

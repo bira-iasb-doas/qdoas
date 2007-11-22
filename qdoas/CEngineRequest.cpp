@@ -560,20 +560,32 @@ bool CEngineRequestEndCalibrateFile::process(CEngineThread *engineThread)
   return (rc != -1);
 }
 
-CEngineRequestViewCrossSections::CEngineRequestViewCrossSections() :
-  CEngineRequest(eEngineRequestViewCrossSectionsType)
+
+CEngineRequestViewCrossSections::CEngineRequestViewCrossSections(double minWavelength, double maxWavelength,
+                                                                 int nFiles, char **filenames) :
+  CEngineRequest(eEngineRequestViewCrossSectionsType),
+  m_minWavelength(minWavelength),
+  m_maxWavelength(maxWavelength),
+  m_nFiles(nFiles),
+  m_filenames(filenames)
 {
 }
 
 CEngineRequestViewCrossSections::~CEngineRequestViewCrossSections()
 {
+  for (int i=0; i<m_nFiles; ++i) {
+    delete [] m_filenames[i];
+  }
+  delete [] m_filenames;
 }
 
 bool CEngineRequestViewCrossSections::process(CEngineThread *engineThread)
 {
   CEngineResponseTool *resp = new CEngineResponseTool;
-
-  int rc = mediateRequestViewCrossSections(engineThread->engineContext(), resp);
+  
+  int rc = mediateRequestViewCrossSections(engineThread->engineContext(),
+                                           m_minWavelength, m_maxWavelength,
+                                           m_nFiles, m_filenames, resp);
   
   // post the response
   engineThread->respond(resp);
