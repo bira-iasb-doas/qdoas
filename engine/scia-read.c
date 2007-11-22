@@ -1,10 +1,9 @@
 
 //  ----------------------------------------------------------------------------
 //
-//  Product/Project   :  DOAS ANALYSIS PROGRAM FOR WINDOWS
+//  Product/Project   :  QDOAS
 //  Module purpose    :  SCIAMACHY interface
 //  Name of module    :  SCIA_Read.C
-//  Program Language  :  Borland C++ 5.0 for Windows 95/NT
 //  Creation date     :  19 September 2002 (HDF version)
 //  Modified          :  08 December 2002 (PDS version)
 //
@@ -96,7 +95,7 @@
 // INCLUDE HEADERS
 // ===============
 
-#include "doas.h"
+#include "engine.h"
 
 #include "bin_read.h"
 #include "lv1c_struct.h"
@@ -836,7 +835,7 @@ RC SciaReadSunRefPDS(ENGINE_CONTEXT *pEngineContext,INDEX fileIndex)
     else
      {
       for (i=0;i<NDET;i++)
-       pEngineContext->buffers.lembda[i]=(double)(((float *)pOrbitFile->sciaSunWve)[i]);
+       pEngineContext->buffers.lambda[i]=(double)(((float *)pOrbitFile->sciaSunWve)[i]);
 
       for (i=0;i<NDET;i++)
        pEngineContext->buffers.irrad[i]=(double)(((float *)pOrbitFile->sciaSunRef)[i]);
@@ -1753,7 +1752,7 @@ INT SciaRefSza(SCIA_REF *refList,INT maxRefSize,double sza,double szaDelta)
 // INPUT         refList      the list of potential reference spectra
 //               nRef         the number of elements in the previous list
 //               nSpectra     the maximum number of spectra to average to build the reference spectrum;
-//               lembda       the grid of the irradiance spectrum
+//               lambda       the grid of the irradiance spectrum
 //               pEngineContext    interface for file operations
 //               fp           pointer to the file dedicated to the display of information on selected spectra
 //
@@ -1763,7 +1762,7 @@ INT SciaRefSza(SCIA_REF *refList,INT maxRefSize,double sza,double szaDelta)
 //               ERROR_ID_NO otherwise.
 // -----------------------------------------------------------------------------
 
-RC SciaBuildRef(SCIA_REF *refList,INT nRef,INT nSpectra,double *lembda,double *ref,ENGINE_CONTEXT *pEngineContext,FILE *fp)
+RC SciaBuildRef(SCIA_REF *refList,INT nRef,INT nSpectra,double *lambda,double *ref,ENGINE_CONTEXT *pEngineContext,FILE *fp)
  {
   // Declarations
 
@@ -1869,10 +1868,10 @@ RC SciaBuildRef(SCIA_REF *refList,INT nRef,INT nSpectra,double *lembda,double *r
 //               sza,szaDelta determine the range of SZA;
 //
 //               nSpectra     the number of spectra to average to build the reference spectrum;
-//               lembdaK,ref  reference spectrum to use if no spectrum in the orbit matches the sza and latitudes conditions;
+//               lambdaK,ref  reference spectrum to use if no spectrum in the orbit matches the sza and latitudes conditions;
 //
-// OUTPUT        lembdaN,refN reference spectrum for northern hemisphere;
-//               lembdaS,refS reference spectrum for southern hemisphere.
+// OUTPUT        lambdaN,refN reference spectrum for northern hemisphere;
+//               lambdaS,refS reference spectrum for southern hemisphere.
 //
 // RETURN        ERROR_ID_ALLOC if the allocation of buffers failed;
 //               ERROR_ID_NO otherwise.
@@ -1883,9 +1882,9 @@ RC SciaRefSelection(ENGINE_CONTEXT *pEngineContext,
                     double lonMin,double lonMax,
                     double sza,double szaDelta,
                     int nSpectra,
-                    double *lembdaK,double *ref,
-                    double *lembdaN,double *refN,
-                    double *lembdaS,double *refS)
+                    double *lambdaK,double *ref,
+                    double *lambdaN,double *refN,
+                    double *lambdaS,double *refS)
  {
   // Declarations
 
@@ -1921,8 +1920,8 @@ RC SciaRefSelection(ENGINE_CONTEXT *pEngineContext,
 
   rc=ERROR_ID_NO;
 
-  memcpy(lembdaN,lembdaK,sizeof(double)*NDET);
-  memcpy(lembdaS,lembdaK,sizeof(double)*NDET);
+  memcpy(lambdaN,lambdaK,sizeof(double)*NDET);
+  memcpy(lambdaS,lambdaK,sizeof(double)*NDET);
 
   memcpy(refN,ref,sizeof(double)*NDET);
   memcpy(refS,ref,sizeof(double)*NDET);
@@ -1942,7 +1941,7 @@ RC SciaRefSelection(ENGINE_CONTEXT *pEngineContext,
       // search for potential reference spectra in northern hemisphere
 
       if ((nRefN=nRefS=SciaRefLat(refList,sciaTotalRecordNumber,latMin,latMax,lonMin,lonMax,sza,szaDelta))>0)
-       rc=SciaBuildRef(refList,nRefN,nSpectra,lembdaN,refN,pEngineContext,fp);
+       rc=SciaBuildRef(refList,nRefN,nSpectra,lambdaN,refN,pEngineContext,fp);
 
       if (!rc)
        memcpy(refS,refN,sizeof(double)*NDET);
@@ -1953,7 +1952,7 @@ RC SciaRefSelection(ENGINE_CONTEXT *pEngineContext,
     else
      {
       if ((nRefN=nRefS=SciaRefSza(refList,sciaTotalRecordNumber,sza,szaDelta))>0)
-       rc=SciaBuildRef(refList,nRefN,nSpectra,lembdaN,refN,pEngineContext,fp);
+       rc=SciaBuildRef(refList,nRefN,nSpectra,lambdaN,refN,pEngineContext,fp);
 
       if (!rc)
        memcpy(refS,refN,sizeof(double)*NDET);
@@ -2043,9 +2042,9 @@ RC SciaNewRef(ENGINE_CONTEXT *pEngineContext)
   memset(pRecord->refFileName,0,MAX_PATH_LEN+1);
   pRecord->refRecord=ITEM_NONE;
 
-  rc=THRD_CopySpecInfo(&THRD_refInfo,pEngineContext);                                // perform a backup of the pEngineContext structure
+  rc=EngineCopyContext(&ENGINE_contextRef,pEngineContext);                                // perform a backup of the pEngineContext structure
 
-  if (THRD_refInfo.recordNumber==0)
+  if (ENGINE_contextRef.recordNumber==0)
    rc=ERROR_ID_ALLOC;
   else
 
@@ -2061,14 +2060,14 @@ RC SciaNewRef(ENGINE_CONTEXT *pEngineContext)
 
       // Build reference spectra according to latitudes and SZA conditions
 
-      rc=SciaRefSelection(&THRD_refInfo,
+      rc=SciaRefSelection(&ENGINE_contextRef,
                           pTabFeno->refLatMin,pTabFeno->refLatMax,
                           pTabFeno->refLonMin,pTabFeno->refLonMax,
                           pTabFeno->refSZA,pTabFeno->refSZADelta,
                           pTabFeno->nspectra,
-                          pTabFeno->LembdaK,pTabFeno->Sref,
-                          pTabFeno->LembdaN,pTabFeno->SrefN,
-                          pTabFeno->LembdaS,pTabFeno->SrefS);
+                          pTabFeno->LambdaK,pTabFeno->Sref,
+                          pTabFeno->LambdaN,pTabFeno->SrefN,
+                          pTabFeno->LambdaS,pTabFeno->SrefS);
     }
 
   THRD_goto.indexMin=THRD_goto.indexMax=ITEM_NONE;
@@ -2077,8 +2076,8 @@ RC SciaNewRef(ENGINE_CONTEXT *pEngineContext)
 
 //  DEBUG_Print(DOAS_logFile,"End SciaNewRef %d\n",rc);
 
-  strcpy(pRecord->refFileName,THRD_refInfo.recordInfo.refFileName);
-  pRecord->refRecord=THRD_refInfo.recordInfo.refRecord;
+  strcpy(pRecord->refFileName,ENGINE_contextRef.recordInfo.refFileName);
+  pRecord->refRecord=ENGINE_contextRef.recordInfo.refRecord;
 
   return rc;
  }
@@ -2106,7 +2105,7 @@ RC SCIA_LoadAnalysis(ENGINE_CONTEXT *pEngineContext)
   CROSS_REFERENCE *pTabCross;                                                   // pointer to the current cross section
   WRK_SYMBOL *pWrkSymbol;                                                       // pointer to a symbol
   FENO *pTabFeno;                                                               // pointer to the current spectral analysis window
-  double factTemp,lembdaMin,lembdaMax;                                          // working variables
+  double factTemp,lambdaMin,lambdaMax;                                          // working variables
   INT DimL,useUsamp,useKurucz,saveFlag;                                         // working variables
   RC rc;                                                                        // return code
 
@@ -2119,8 +2118,8 @@ RC SCIA_LoadAnalysis(ENGINE_CONTEXT *pEngineContext)
 
   if (!(rc=pOrbitFile->rc) && (THRD_id==THREAD_TYPE_ANALYSIS) && (sciaLoadReferenceFlag || !ANALYSE_refSelectionFlag))
    {
-    lembdaMin=(double)9999.;
-    lembdaMax=(double)-9999.;
+    lambdaMin=(double)9999.;
+    lambdaMax=(double)-9999.;
 
     rc=ERROR_ID_NO;
     useKurucz=useUsamp=0;
@@ -2139,7 +2138,7 @@ RC SCIA_LoadAnalysis(ENGINE_CONTEXT *pEngineContext)
         {
          for (i=0;i<pTabFeno->NDET;i++)
           {
-           pTabFeno->LembdaRef[i]=(double)(((float *)pOrbitFile->sciaSunWve)[i]);
+           pTabFeno->LambdaRef[i]=(double)(((float *)pOrbitFile->sciaSunWve)[i]);
            pTabFeno->Sref[i]=(double)(((float *)pOrbitFile->sciaSunRef)[i]);
           }
 
@@ -2164,7 +2163,7 @@ RC SCIA_LoadAnalysis(ENGINE_CONTEXT *pEngineContext)
                   ((pWrkSymbol->type==WRK_SYMBOL_PREDEFINED) &&
                   ((indexTabCross==pTabFeno->indexCommonResidual) ||
                  (((indexTabCross==pTabFeno->indexUsamp1) || (indexTabCross==pTabFeno->indexUsamp2)) && (pUsamp->method==PRJCT_USAMP_FILE))))) &&
-                  ((rc=ANALYSE_CheckLembda(pWrkSymbol,pTabFeno->LembdaRef,"SCIA_LoadAnalysis "))!=ERROR_ID_NO))
+                  ((rc=ANALYSE_CheckLambda(pWrkSymbol,pTabFeno->LambdaRef,"SCIA_LoadAnalysis "))!=ERROR_ID_NO))
 
               goto EndSCIA_LoadAnalysis;
             }
@@ -2173,8 +2172,8 @@ RC SCIA_LoadAnalysis(ENGINE_CONTEXT *pEngineContext)
 
            for (indexWindow=0,DimL=0;indexWindow<pTabFeno->svd.Z;indexWindow++)
             {
-             pTabFeno->svd.Fenetre[indexWindow][0]=FNPixel(pTabFeno->LembdaRef,pTabFeno->svd.LFenetre[indexWindow][0],pTabFeno->NDET,PIXEL_AFTER);
-             pTabFeno->svd.Fenetre[indexWindow][1]=FNPixel(pTabFeno->LembdaRef,pTabFeno->svd.LFenetre[indexWindow][1],pTabFeno->NDET,PIXEL_BEFORE);
+             pTabFeno->svd.Fenetre[indexWindow][0]=FNPixel(pTabFeno->LambdaRef,pTabFeno->svd.LFenetre[indexWindow][0],pTabFeno->NDET,PIXEL_AFTER);
+             pTabFeno->svd.Fenetre[indexWindow][1]=FNPixel(pTabFeno->LambdaRef,pTabFeno->svd.LFenetre[indexWindow][1],pTabFeno->NDET,PIXEL_BEFORE);
 
              DimL+=(pTabFeno->svd.Fenetre[indexWindow][1]-pTabFeno->svd.Fenetre[indexWindow][0]+1);
             }
@@ -2188,25 +2187,25 @@ RC SCIA_LoadAnalysis(ENGINE_CONTEXT *pEngineContext)
 
            pTabFeno->Decomp=1;
 
-           if (((rc=ANALYSE_XsInterpolation(pTabFeno,pTabFeno->LembdaRef))!=ERROR_ID_NO) ||
+           if (((rc=ANALYSE_XsInterpolation(pTabFeno,pTabFeno->LambdaRef))!=ERROR_ID_NO) ||
                (!pKuruczOptions->fwhmFit && pTabFeno->xsToConvolute &&
-               ((rc=ANALYSE_XsConvolution(pTabFeno,pTabFeno->LembdaRef,&ANALYSIS_slit,pSlitOptions->slitFunction.slitType,&pSlitOptions->slitFunction.slitParam,&pSlitOptions->slitFunction.slitParam2,&pSlitOptions->slitFunction.slitParam3,&pSlitOptions->slitFunction.slitParam4))!=ERROR_ID_NO)))
+               ((rc=ANALYSE_XsConvolution(pTabFeno,pTabFeno->LambdaRef,&ANALYSIS_slit,pSlitOptions->slitFunction.slitType,&pSlitOptions->slitFunction.slitParam,&pSlitOptions->slitFunction.slitParam2,&pSlitOptions->slitFunction.slitParam3,&pSlitOptions->slitFunction.slitParam4))!=ERROR_ID_NO)))
 
             goto EndSCIA_LoadAnalysis;
           }
 
-         memcpy(pTabFeno->LembdaK,pTabFeno->LembdaRef,sizeof(double)*pTabFeno->NDET);
-         memcpy(pTabFeno->Lembda,pTabFeno->LembdaRef,sizeof(double)*pTabFeno->NDET);
+         memcpy(pTabFeno->LambdaK,pTabFeno->LambdaRef,sizeof(double)*pTabFeno->NDET);
+         memcpy(pTabFeno->Lambda,pTabFeno->LambdaRef,sizeof(double)*pTabFeno->NDET);
 
          useUsamp+=pTabFeno->useUsamp;
          useKurucz+=pTabFeno->useKurucz;
 
          if (pTabFeno->useUsamp)
           {
-           if (pTabFeno->LembdaRef[0]<lembdaMin)
-            lembdaMin=pTabFeno->LembdaRef[0];
-           if (pTabFeno->LembdaRef[pTabFeno->NDET-1]>lembdaMax)
-            lembdaMax=pTabFeno->LembdaRef[pTabFeno->NDET-1];
+           if (pTabFeno->LambdaRef[0]<lambdaMin)
+            lambdaMin=pTabFeno->LambdaRef[0];
+           if (pTabFeno->LambdaRef[pTabFeno->NDET-1]>lambdaMax)
+            lambdaMax=pTabFeno->LambdaRef[pTabFeno->NDET-1];
           }
         }
       }
@@ -2227,7 +2226,7 @@ RC SCIA_LoadAnalysis(ENGINE_CONTEXT *pEngineContext)
      {
       USAMP_LocalFree();
 
-      if (((rc=USAMP_LocalAlloc(0 /* lembdaMin,lembdaMax,oldNDET */))!=ERROR_ID_NO) ||
+      if (((rc=USAMP_LocalAlloc(0 /* lambdaMin,lambdaMax,oldNDET */))!=ERROR_ID_NO) ||
           ((rc=USAMP_BuildFromAnalysis(0,0))!=ERROR_ID_NO) ||
           ((rc=USAMP_BuildFromAnalysis(1,ITEM_NONE))!=ERROR_ID_NO))
 
@@ -2236,9 +2235,9 @@ RC SCIA_LoadAnalysis(ENGINE_CONTEXT *pEngineContext)
 
     // Automatic reference selection
 
-    if (sciaLoadReferenceFlag && !(rc=SciaNewRef(pEngineContext)) &&
-      !(rc=ANALYSE_AlignReference(2,pEngineContext->project.spectra.displayDataFlag))) // automatic ref selection for Northern hemisphere
-     rc=ANALYSE_AlignReference(3,pEngineContext->project.spectra.displayDataFlag);     // automatic ref selection for Southern hemisphere
+    if (sciaLoadReferenceFlag && !(rc=SciaNewRef(pEngineContext)) &&                       // !!! QDOAS response handle !!!
+      !(rc=ANALYSE_AlignReference(2,pEngineContext->project.spectra.displayDataFlag,NULL))) // automatic ref selection for Northern hemisphere
+     rc=ANALYSE_AlignReference(3,pEngineContext->project.spectra.displayDataFlag,NULL);     // automatic ref selection for Southern hemisphere
    }
 
   // Return

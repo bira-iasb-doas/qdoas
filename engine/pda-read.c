@@ -1,14 +1,11 @@
 
 //  ----------------------------------------------------------------------------
 //
-//  Product/Project   :  DOAS ANALYSIS PROGRAM FOR WINDOWS
+//  Product/Project   :  QDOAS
 //  Module purpose    :  PDA detectors read out routines
 //  Name of module    :  PDA-READ.C
-//  Program Language  :  Borland C++ 5.0 for Windows 95/NT
 //  Creation date     :  This module was already existing in old DOS versions and
 //                       has been added in WinDOAS package in 97
-//
-//  Authors           :  Caroline FAYT
 //
 //  QDOAS is a cross-platform application developed in QT for DOAS retrieval
 //  (Differential Optical Absorption Spectroscopy).

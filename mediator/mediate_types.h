@@ -28,7 +28,7 @@ enum eEngineErrorType {
   FatalEngineError
 };
 
-//* TODO - remove ePlotDataType */ 
+//* TODO - remove ePlotDataType */
 enum ePlotDataType {
   PlotDataType_Spectrum,
   PlotDataType_Fit,
@@ -47,6 +47,28 @@ enum ePlotScaleType {
   SpecMax,
   Residual
 };
+
+// Plot scaling control
+
+enum _spectraAutoscale
+ {
+ 	allowFixedScale,                                                              // allow the scaling if checked in the plot properties
+ 	forceAutoScale                                                                // do not account for the scaling
+ };
+
+// Indexes for the plot pages
+
+enum _plotPageIndex
+ {
+ 	plotPageSpectrum,                                                             // spectra to browse or analyze
+ 	plotPageDarkCurrent,                                                          // dark currents
+ 	plotPageSpecMax,                                                              // specmax (variation of the signal with the scans)
+ 	plotPageIrrad,                                                                // irradiance spectra
+ 	plotPageErrors,                                                               // errors on measurements
+ 	plotPageRef,                                                                  // ref1/ref2
+ 	plotPageCalib,                                                                // kurucz
+ 	plotPageAnalysis                                                              // analysis
+ };
 
 #endif
 

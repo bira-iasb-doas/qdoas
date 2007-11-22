@@ -1,10 +1,9 @@
 
 //  ----------------------------------------------------------------------------
 //
-//  Product/Project   :  DOAS ANALYSIS PROGRAM FOR WINDOWS
+//  Product/Project   :  QDOAS
 //  Module purpose    :  FOURIER read out routines
 //  Name of module    :  OPUS-READ.C
-//  Program Language  :  Borland C++ 5.0 for Windows 95/NT
 //  Creation date     :  Routines have been implemented on 21 november 2000
 //                       from source code provided by Ann-Carine VANDAELE
 //                       (IASB/BIRA and ULB)
@@ -283,10 +282,10 @@ RC OPUS_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
 
       if (pEngineContext->opus.Ascending)
        for (i=0;i<(INT)pEngineContext->opus.NumberPoints;i++)
-        pEngineContext->lembda[i]=(pEngineContext->opus.WaveLow+pas*i)*fact;
+        pEngineContext->lambda[i]=(pEngineContext->opus.WaveLow+pas*i)*fact;
       else
        for (i=0;i<(INT)pEngineContext->opus.NumberPoints;i++)
-        pEngineContext->lembda[pEngineContext->opus.NumberPoints-i-1]=(pEngineContext->opus.WaveLow+pas*(pEngineContext->opus.NumberPoints-i-1))*fact;
+        pEngineContext->lambda[pEngineContext->opus.NumberPoints-i-1]=(pEngineContext->opus.WaveLow+pas*(pEngineContext->opus.NumberPoints-i-1))*fact;
 
       // Get the number of records (one record per file but a directory can be considered as only one file with several records)
 

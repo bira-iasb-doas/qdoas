@@ -1,10 +1,9 @@
 
 //  ----------------------------------------------------------------------------
 //
-//  Product/Project   :  DOAS ANALYSIS PROGRAM FOR WINDOWS
+//  Product/Project   :  QDOAS
 //  Module purpose    :  OUTPUT
 //  Name of module    :  OUTPUT.C
-//  Program Language  :  Borland C++ 5.0 for Windows 95/NT
 //
 //  QDOAS is a cross-platform application developed in QT for DOAS retrieval
 //  (Differential Optical Absorption Spectroscopy).
@@ -160,7 +159,7 @@ RC OUTPUT_SaveResults(ENGINE_CONTEXT *pEngineContext)
  {
  	return 0;
  }
-RC OUTPUT_GetWveAmf(CROSS_RESULTS *pResults,double Zm,double *lembda,double *xs,double *deriv2)
+RC OUTPUT_GetWveAmf(CROSS_RESULTS *pResults,double Zm,double *lambda,double *xs,double *deriv2)
  {
  	return 0;
  }
@@ -221,13 +220,13 @@ RC OUTPUT_LoadCross(LIST_ITEM *pList,CROSS_RESULTS *pResults,INT *pAmfFlag,INT h
 // QDOAS ??? //
 // QDOAS ??? // INPUT         pResults     output options for the selected cross section
 // QDOAS ??? //               Zm           the current solar zenith angle
-// QDOAS ??? //               lembda       the current wavelength calibration
+// QDOAS ??? //               lambda       the current wavelength calibration
 // QDOAS ??? //
 // QDOAS ??? // INPUT/OUTPUT  xs           the cross section to correct by wavelength dependent AMF
 // QDOAS ??? // OUTPUT        deriv2       second derivatives of the new cross section
 // QDOAS ??? // -----------------------------------------------------------------------------
 // QDOAS ???
-// QDOAS ??? RC OUTPUT_GetWveAmf(CROSS_RESULTS *pResults,double Zm,double *lembda,double *xs,double *deriv2)
+// QDOAS ??? RC OUTPUT_GetWveAmf(CROSS_RESULTS *pResults,double Zm,double *lambda,double *xs,double *deriv2)
 // QDOAS ???  {
 // QDOAS ???   // Declarations
 // QDOAS ???
@@ -316,7 +315,7 @@ RC OUTPUT_LoadCross(LIST_ITEM *pList,CROSS_RESULTS *pResults,INT *pAmfFlag,INT h
 // QDOAS ???         rc=SPLINE_Deriv2((double *)pAmfSymbol->xs[0],amfVector,amfDeriv2,pAmfSymbol->xsLines,"OUTPUT_GetWveAmf ");
 // QDOAS ???
 // QDOAS ???         for (i=0;(i<NDET) && !rc;i++)
-// QDOAS ???          if (!(rc=SPLINE_Vector((double *)pAmfSymbol->xs[0],amfVector,amfDeriv2,pAmfSymbol->xsLines,&lembda[i],&amf,1,SPLINE_CUBIC,"OUTPUT_GetWveAmf ")))
+// QDOAS ???          if (!(rc=SPLINE_Vector((double *)pAmfSymbol->xs[0],amfVector,amfDeriv2,pAmfSymbol->xsLines,&lambda[i],&amf,1,SPLINE_CUBIC,"OUTPUT_GetWveAmf ")))
 // QDOAS ???           xs[i]*=amf;
 // QDOAS ???
 // QDOAS ???         if (!rc)
@@ -325,7 +324,7 @@ RC OUTPUT_LoadCross(LIST_ITEM *pList,CROSS_RESULTS *pResults,INT *pAmfFlag,INT h
 // QDOAS ???      }
 // QDOAS ???     else if (pAmfSymbol->type==ANLYS_AMF_TYPE_WAVELENGTH3)
 // QDOAS ???      for (i=0;i<NDET;i++)
-// QDOAS ???       xs[i]*=(double)VECTOR_Table2(pAmfSymbol->Phi,pAmfSymbol->PhiLines,pAmfSymbol->PhiColumns,(double)lembda[i],(double)Zm);
+// QDOAS ???       xs[i]*=(double)VECTOR_Table2(pAmfSymbol->Phi,pAmfSymbol->PhiLines,pAmfSymbol->PhiColumns,(double)lambda[i],(double)Zm);
 // QDOAS ???    }
 // QDOAS ???
 // QDOAS ???   EndOUTPUT_GetWveAmf :
@@ -685,13 +684,13 @@ RC OUTPUT_LoadCross(LIST_ITEM *pList,CROSS_RESULTS *pResults,INT *pAmfFlag,INT h
 // QDOAS ???   INDEX i,imin,imax;
 // QDOAS ???   INT pixel;
 // QDOAS ???
-// QDOAS ???   if ((waveLength<pEngineContext->lembda[0]) || (waveLength>pEngineContext->lembda[NDET-1]))
+// QDOAS ???   if ((waveLength<pEngineContext->lambda[0]) || (waveLength>pEngineContext->lambda[NDET-1]))
 // QDOAS ???    flux=(double)0.;
 // QDOAS ???   else
 // QDOAS ???    {
 // QDOAS ???     // Initialization
 // QDOAS ???
-// QDOAS ???     pixel=FNPixel(pEngineContext->lembda,waveLength,NDET,PIXEL_CLOSEST);
+// QDOAS ???     pixel=FNPixel(pEngineContext->lambda,waveLength,NDET,PIXEL_CLOSEST);
 // QDOAS ???
 // QDOAS ???     imin=max(pixel-3,0);
 // QDOAS ???     imax=min(pixel+3,NDET-1);
@@ -3575,7 +3574,7 @@ RC OUTPUT_LoadCross(LIST_ITEM *pList,CROSS_RESULTS *pResults,INT *pAmfFlag,INT h
 // QDOAS ???
 // QDOAS ???    if ((Zm[indexResults]>=(double)84.) && (Zm[indexResults]<=(double)91.))
 // QDOAS ???     {
-// QDOAS ???      indexAmPm=(OUTPUT_nasaResults.TimeDec[indexResults]<=THRD_localNoon)?0:1;
+// QDOAS ???      indexAmPm=(OUTPUT_nasaResults.TimeDec[indexResults]<=ENGINE_localNoon)?0:1;
 // QDOAS ???
 // QDOAS ???      if (!NResults[indexAmPm])
 // QDOAS ???       firstResults[indexAmPm]=indexResults;
@@ -3713,8 +3712,8 @@ RC OUTPUT_LoadCross(LIST_ITEM *pList,CROSS_RESULTS *pResults,INT *pAmfFlag,INT h
 // QDOAS ???
 // QDOAS ???       // Accumulations
 // QDOAS ???
-// QDOAS ???       if (((!indexAmPm && (TimeDec[i]<=THRD_localNoon)) ||
-// QDOAS ???            (indexAmPm && (TimeDec[i]>THRD_localNoon))) &&
+// QDOAS ???       if (((!indexAmPm && (TimeDec[i]<=ENGINE_localNoon)) ||
+// QDOAS ???            (indexAmPm && (TimeDec[i]>ENGINE_localNoon))) &&
 // QDOAS ???            (tmpAmf>=Phi_min) && (tmpAmf<=Phi_max))
 // QDOAS ???        {
 // QDOAS ???         SumW +=(double) tmpError;
@@ -3823,7 +3822,7 @@ RC OUTPUT_LoadCross(LIST_ITEM *pList,CROSS_RESULTS *pResults,INT *pAmfFlag,INT h
 // QDOAS ???
 // QDOAS ???     for (indexResults=0;indexResults<OUTPUT_nasaNResults;indexResults++)
 // QDOAS ???      {
-// QDOAS ???       indexAmPm=(TimeDec[indexResults]<=THRD_localNoon)?0:1;
+// QDOAS ???       indexAmPm=(TimeDec[indexResults]<=ENGINE_localNoon)?0:1;
 // QDOAS ???
 // QDOAS ???       // Search for indexes of results to use for color indexes calculation
 // QDOAS ???

@@ -1,7 +1,7 @@
 
 //  ----------------------------------------------------------------------------
 //
-//  Product/Project   :  THE BIRA-IASB DOAS SOFTWARE FOR WINDOWS AND LINUX
+//  Product/Project   :  QDOAS
 //  Module purpose    :  CROSS SECTIONS CONVOLUTION TOOLS
 //  Name of module    :  XSCONV.C
 //  Creation date     :  This module was already existing in old DOS versions and
@@ -421,7 +421,7 @@ RC XsconvFctApodNBS(double *pValue,double resolution,double phase,double dispers
 // -----------------------------------------------------------------------------
 // PURPOSE       Build a line shape in a vector
 //
-// INPUT         slitLembda  : the calibration (wavelength, wavenumber or pixel);
+// INPUT         slitLambda  : the calibration (wavelength, wavenumber or pixel);
 //               slitSize    : the size of previous vector;
 //               slitType    : the type of line shape to build;
 //               slitParam   : the list of slit function parameters
@@ -432,7 +432,7 @@ RC XsconvFctApodNBS(double *pValue,double resolution,double phase,double dispers
 // RETURN        rc          : return code
 // -----------------------------------------------------------------------------
 
-RC XsconvFctBuild(double *slitLembda,double *slitVector,INT slitSize,INT slitType,double *slitParam,INT nSlitParam)
+RC XsconvFctBuild(double *slitLambda,double *slitVector,INT slitSize,INT slitType,double *slitParam,INT nSlitParam)
  {
   // Declarations
 
@@ -455,7 +455,7 @@ RC XsconvFctBuild(double *slitLembda,double *slitVector,INT slitSize,INT slitTyp
    {
     // Calculate the resolution of the slit function
 
-    slitStep=(double)(slitLembda[slitSize-1]-slitLembda[0])/(slitSize-1);
+    slitStep=(double)(slitLambda[slitSize-1]-slitLambda[0])/(slitSize-1);
 
     // Build the slit function; the message is dispatched according to the selected type of line shape
 
@@ -471,7 +471,7 @@ RC XsconvFctBuild(double *slitLembda,double *slitVector,INT slitSize,INT slitTyp
          rc=XsconvFctGauss(&slitVector[i],
                              slitParam[0],                                      // FWHM
                              slitStep,                                          // resolution of the line shape
-                             slitLembda[i]);                                    // distance to the centre wavelength
+                             slitLambda[i]);                                    // distance to the centre wavelength
 
       break;
    // --------------------------------------------------------------------------
@@ -487,7 +487,7 @@ RC XsconvFctBuild(double *slitLembda,double *slitVector,INT slitSize,INT slitTyp
                                slitParam[0],                                    // resolution
                                slitParam[1],                                    // phase
                                slitParam[2],                                    // dispersion
-                               slitLembda[i]);                                  // distance to the centre wavelength
+                               slitLambda[i]);                                  // distance to the centre wavelength
 
        else if (slitType==SLIT_TYPE_APODNBS)
         for (i=0;(i<slitSize) && !rc;sum+=slitVector[i],i++)
@@ -495,7 +495,7 @@ RC XsconvFctBuild(double *slitLembda,double *slitVector,INT slitSize,INT slitTyp
                                   slitParam[0],                                 // resolution
                                   slitParam[1],                                 // phase
                                   slitParam[2],                                 // dispersion
-                                  slitLembda[i]);                               // distance to the centre wavelength
+                                  slitLambda[i]);                               // distance to the centre wavelength
 
       break;
    // --------------------------------------------------------------------------
@@ -583,8 +583,8 @@ RC XsconvFctBuild(double *slitLembda,double *slitVector,INT slitSize,INT slitTyp
 
 void XSCONV_Reset(XS *pXsconv)
  {
-  if (pXsconv->lembda!=NULL)
-   MEMORY_ReleaseDVector("XSCONV_Reset","lembda",pXsconv->lembda,0);
+  if (pXsconv->lambda!=NULL)
+   MEMORY_ReleaseDVector("XSCONV_Reset","lambda",pXsconv->lambda,0);
   if (pXsconv->vector!=NULL)
    MEMORY_ReleaseDVector("XSCONV_Reset","vector",pXsconv->vector,0);
   if (pXsconv->deriv2!=NULL)
@@ -610,7 +610,7 @@ RC XSCONV_Alloc(XS *pXsconv,INT npts,INT deriv2Flag)
   // Buffers allocation
 
   if ((npts<=0) ||
-     ((pXsconv->lembda=MEMORY_AllocDVector("XSCONV_Alloc ","lembda",0,npts-1))==NULL) ||
+     ((pXsconv->lambda=MEMORY_AllocDVector("XSCONV_Alloc ","lambda",0,npts-1))==NULL) ||
      ((pXsconv->vector=MEMORY_AllocDVector("XSCONV_Alloc ","vector",0,npts-1))==NULL) ||
       (deriv2Flag && ((pXsconv->deriv2=MEMORY_AllocDVector("XSCONV_Alloc ","deriv2",0,npts-1))==NULL)))
 
@@ -644,17 +644,17 @@ RC XsconvGetFwhm(XS *pSlit,INT slitType,double *slitParam)
    {
     // Get the value of function half way up
 
-    if ((rc=SPLINE_Vector(pSlit->lembda,pSlit->vector,pSlit->deriv2,pSlit->NDET,&x0,&max,1,SPLINE_CUBIC,"XsconvGetFwhm "))!=0)
+    if ((rc=SPLINE_Vector(pSlit->lambda,pSlit->vector,pSlit->deriv2,pSlit->NDET,&x0,&max,1,SPLINE_CUBIC,"XsconvGetFwhm "))!=0)
      goto EndFwhm;
 
     max*=(double)0.5;
 
     // Search for the wavelength in the left part giving the value of function half way up
 
-    for (lmin=pSlit->lembda[0],lmax=(double)0.,l1=lmin*0.5,x=(double)0.;
+    for (lmin=pSlit->lambda[0],lmax=(double)0.,l1=lmin*0.5,x=(double)0.;
         (lmin<lmax) && fabs(x-max)>1.e-5;l1=(lmin+lmax)*0.5)
      {
-      if ((rc=SPLINE_Vector(pSlit->lembda,pSlit->vector,pSlit->deriv2,pSlit->NDET,&l1,&x,1,SPLINE_CUBIC,"XsconvGetFwhm "))!=0)
+      if ((rc=SPLINE_Vector(pSlit->lambda,pSlit->vector,pSlit->deriv2,pSlit->NDET,&l1,&x,1,SPLINE_CUBIC,"XsconvGetFwhm "))!=0)
        goto EndFwhm;
 
       if (x<max)
@@ -665,10 +665,10 @@ RC XsconvGetFwhm(XS *pSlit,INT slitType,double *slitParam)
 
     // Search for the wavelength in the right part giving the value of function half way up
 
-    for (lmin=(double)0.,lmax=pSlit->lembda[pSlit->NDET-1],l2=lmax*0.5,x=(double)0.;
+    for (lmin=(double)0.,lmax=pSlit->lambda[pSlit->NDET-1],l2=lmax*0.5,x=(double)0.;
         (lmin<lmax) && fabs(x-max)>1.e-5;l2=(lmin+lmax)*0.5)
      {
-      if ((rc=SPLINE_Vector(pSlit->lembda,pSlit->vector,pSlit->deriv2,pSlit->NDET,&l2,&x,1,SPLINE_CUBIC,"XsconvGetFwhm "))!=0)
+      if ((rc=SPLINE_Vector(pSlit->lambda,pSlit->vector,pSlit->deriv2,pSlit->NDET,&l2,&x,1,SPLINE_CUBIC,"XsconvGetFwhm "))!=0)
        goto EndFwhm;
 
       if (x<max)
@@ -752,43 +752,43 @@ RC XsconvGetFwhm(XS *pSlit,INT slitType,double *slitParam)
 // XSCONV_LoadCalibrationFile : Final wavelength scale read out
 // ------------------------------------------------------------
 
-RC XSCONV_LoadCalibrationFile(XS *pLembda,UCHAR *lembdaFile,INT nextraPixels)
+RC XSCONV_LoadCalibrationFile(XS *pLambda,UCHAR *lambdaFile,INT nextraPixels)
  {
   // Declarations
 
-  UCHAR  lembdaBuffer[MAX_ITEM_TEXT_LEN+1];
+  UCHAR  lambdaBuffer[MAX_ITEM_TEXT_LEN+1];
   double step;
-  FILE *lembdaFp;
+  FILE *lambdaFp;
   INT npts;
   INDEX i;
   RC rc;
 
   // Initializations
 
-  XSCONV_Reset(pLembda);
+  XSCONV_Reset(pLambda);
   rc=ERROR_ID_NO;
   npts=0;
 
   // Open BINARY file
 
-  FILES_RebuildFileName(lembdaBuffer,lembdaFile,1);
+  FILES_RebuildFileName(lambdaBuffer,lambdaFile,1);
 
-  if ((lembdaFp=fopen(FILES_RebuildFileName(lembdaBuffer,lembdaFile,1),"rt"))==NULL)
-   rc=ERROR_SetLast("XSCONV_LoadCalibrationFile",ERROR_TYPE_FATAL,ERROR_ID_FILE_NOT_FOUND,lembdaBuffer);
+  if ((lambdaFp=fopen(FILES_RebuildFileName(lambdaBuffer,lambdaFile,1),"rt"))==NULL)
+   rc=ERROR_SetLast("XSCONV_LoadCalibrationFile",ERROR_TYPE_FATAL,ERROR_ID_FILE_NOT_FOUND,lambdaBuffer);
   else
    {
     // Get the number of lines
 
-    while (!feof(lembdaFp) && fgets(lembdaBuffer,MAX_ITEM_TEXT_LEN,lembdaFp))
-     if ((strchr(lembdaBuffer,';')==NULL) && (strchr(lembdaBuffer,'*')==NULL))
+    while (!feof(lambdaFp) && fgets(lambdaBuffer,MAX_ITEM_TEXT_LEN,lambdaFp))
+     if ((strchr(lambdaBuffer,';')==NULL) && (strchr(lambdaBuffer,'*')==NULL))
       npts++;
 
     if (!npts)
-     rc=ERROR_SetLast("XSCONV_LoadCalibrationFile",ERROR_TYPE_FATAL,ERROR_ID_FILE_EMPTY,lembdaFile);
+     rc=ERROR_SetLast("XSCONV_LoadCalibrationFile",ERROR_TYPE_FATAL,ERROR_ID_FILE_EMPTY,lambdaFile);
 
     // Buffers allocation
 
-    else if (XSCONV_Alloc(pLembda,npts+2*nextraPixels,0))
+    else if (XSCONV_Alloc(pLambda,npts+2*nextraPixels,0))
      rc=ERROR_ID_ALLOC;
 
     // File read out
@@ -797,30 +797,30 @@ RC XSCONV_LoadCalibrationFile(XS *pLembda,UCHAR *lembdaFile,INT nextraPixels)
      {
       // File read out
 
-      VECTOR_Init(pLembda->lembda,(double)0.,npts+2*nextraPixels);
-      fseek(lembdaFp,0L,SEEK_SET);
+      VECTOR_Init(pLambda->lambda,(double)0.,npts+2*nextraPixels);
+      fseek(lambdaFp,0L,SEEK_SET);
 
-      for (i=0;(i<npts) && !feof(lembdaFp);)
-       if (fgets(lembdaBuffer,MAX_ITEM_TEXT_LEN,lembdaFp) && (strchr(lembdaBuffer,';')==NULL) && (strchr(lembdaBuffer,'*')==NULL))
+      for (i=0;(i<npts) && !feof(lambdaFp);)
+       if (fgets(lambdaBuffer,MAX_ITEM_TEXT_LEN,lambdaFp) && (strchr(lambdaBuffer,';')==NULL) && (strchr(lambdaBuffer,'*')==NULL))
         {
-         sscanf(lembdaBuffer,"%lf ",&pLembda->lembda[i+nextraPixels]);
+         sscanf(lambdaBuffer,"%lf ",&pLambda->lambda[i+nextraPixels]);
          i++;
         }
 
-      step=(pLembda->lembda[nextraPixels+npts-1]-pLembda->lembda[nextraPixels])/npts;
+      step=(pLambda->lambda[nextraPixels+npts-1]-pLambda->lambda[nextraPixels])/npts;
 
       for (i=0;i<nextraPixels;i++)
        {
-        pLembda->lembda[i]=pLembda->lembda[nextraPixels]-step*(nextraPixels-i);
-        pLembda->lembda[nextraPixels+npts+i]=pLembda->lembda[nextraPixels+npts-1]+step*i;
+        pLambda->lambda[i]=pLambda->lambda[nextraPixels]-step*(nextraPixels-i);
+        pLambda->lambda[nextraPixels+npts+i]=pLambda->lambda[nextraPixels+npts-1]+step*i;
        }
      }
    }
 
   // Close file
 
-  if (lembdaFp!=NULL)
-   fclose(lembdaFp);
+  if (lambdaFp!=NULL)
+   fclose(lambdaFp);
 
   // Return
 
@@ -898,9 +898,9 @@ RC XSCONV_LoadSlitFunction(XS *pSlitXs,SLIT *pSlit,double *pGaussWidth,INT *pSli
         for (i=0,sumPoly=(double)0.;(i<nSlit) && !feof(slitFp);)
          if (fgets(slitBuffer,MAX_ITEM_TEXT_LEN,slitFp) && (strchr(slitBuffer,';')==NULL) && (strchr(slitBuffer,'*')==NULL))
           {
-           sscanf(slitBuffer,"%lf %lf",&pSlitXs->lembda[i],&pSlitXs->vector[i]);
+           sscanf(slitBuffer,"%lf %lf",&pSlitXs->lambda[i],&pSlitXs->vector[i]);
            if (i)
-            sumPoly+=(pSlitXs->vector[i]+pSlitXs->vector[i-1])*(pSlitXs->lembda[i]-pSlitXs->lembda[i-1])*0.5;
+            sumPoly+=(pSlitXs->vector[i]+pSlitXs->vector[i-1])*(pSlitXs->lambda[i]-pSlitXs->lambda[i-1])*0.5;
 
            i++;
           }
@@ -916,7 +916,7 @@ RC XSCONV_LoadSlitFunction(XS *pSlitXs,SLIT *pSlit,double *pGaussWidth,INT *pSli
     // Second derivatives calculation for future interpolations
 
     if (!rc &&
-       !(rc=SPLINE_Deriv2(pSlitXs->lembda,pSlitXs->vector,pSlitXs->deriv2,nSlit,"XSCONV_LoadSlitFunction ")))
+       !(rc=SPLINE_Deriv2(pSlitXs->lambda,pSlitXs->vector,pSlitXs->deriv2,nSlit,"XSCONV_LoadSlitFunction ")))
 
      rc=XsconvGetFwhm(pSlitXs,slitType,pGaussWidth);
    }
@@ -963,7 +963,7 @@ RC XSCONV_LoadSlitFunction(XS *pSlitXs,SLIT *pSlit,double *pGaussWidth,INT *pSli
 
       for (i=0,x=(double)-0.5*nFwhm*pSlit->slitParam;(i<slitSize) && !rc;i++,x+=(double)slitStep)
        {
-        pSlitXs->lembda[i]=(double)x;
+        pSlitXs->lambda[i]=(double)x;
 
         if (slitType==SLIT_TYPE_INVPOLY)
          sumPoly+=pSlitXs->vector[i]=(double)pow(sigma,pSlit->slitParam2)/(pow(x,pSlit->slitParam2)+pow(sigma,pSlit->slitParam2));
@@ -983,7 +983,7 @@ RC XSCONV_LoadSlitFunction(XS *pSlitXs,SLIT *pSlit,double *pGaussWidth,INT *pSli
        }
    //   exit(1);
       if (slitType==SLIT_TYPE_GAUSS)
-       rc=XsconvFctBuild(pSlitXs->lembda,pSlitXs->vector,slitSize,pSlit->slitType,slitParam,4);
+       rc=XsconvFctBuild(pSlitXs->lambda,pSlitXs->vector,slitSize,pSlit->slitType,slitParam,4);
 
       if (!rc)
        {
@@ -991,7 +991,7 @@ RC XSCONV_LoadSlitFunction(XS *pSlitXs,SLIT *pSlit,double *pGaussWidth,INT *pSli
          for (i=0;i<slitSize;i++)
           pSlitXs->vector[i]/=sumPoly;
 
-        rc=SPLINE_Deriv2(pSlitXs->lembda,pSlitXs->vector,pSlitXs->deriv2,slitSize,"XSCONV_LoadSlitFunction ");
+        rc=SPLINE_Deriv2(pSlitXs->lambda,pSlitXs->vector,pSlitXs->deriv2,slitSize,"XSCONV_LoadSlitFunction ");
 
         if (pSlitType!=NULL)
          *pSlitType=SLIT_TYPE_FILE;
@@ -1021,11 +1021,11 @@ RC XSCONV_LoadSlitFunction(XS *pSlitXs,SLIT *pSlit,double *pGaussWidth,INT *pSli
 // XSCONV_LoadCrossSectionFile : Load a cross section file
 // -------------------------------------------------------
 
-RC XSCONV_LoadCrossSectionFile(XS *pCross,UCHAR *crossFile,double lembdaMin,double lembdaMax,double shift,INT conversionMode)
+RC XSCONV_LoadCrossSectionFile(XS *pCross,UCHAR *crossFile,double lambdaMin,double lambdaMax,double shift,INT conversionMode)
  {
   // Declarations
 
-  double lembda,crossValue,firstLembda;
+  double lambda,crossValue,firstLambda;
   UCHAR  crossBuffer[MAX_ITEM_TEXT_LEN+1];
   FILE  *crossFp;
   INT    found,npts;
@@ -1034,7 +1034,7 @@ RC XSCONV_LoadCrossSectionFile(XS *pCross,UCHAR *crossFile,double lembdaMin,doub
 
   // Initializations
 
-  firstLembda=lembda=(double)0.;
+  firstLambda=lambda=(double)0.;
   XSCONV_Reset(pCross);
   npts=found=0;
   rc=ERROR_ID_NO;
@@ -1047,14 +1047,14 @@ RC XSCONV_LoadCrossSectionFile(XS *pCross,UCHAR *crossFile,double lembdaMin,doub
    {
     // First, search for data in the specified wavelengths range and determine the correct vector size
 
-    while (!feof(crossFp) && fgets(crossBuffer,MAX_ITEM_TEXT_LEN,crossFp) && (!found || ((lembda>=lembdaMin) && (lembda<=lembdaMax))))
+    while (!feof(crossFp) && fgets(crossBuffer,MAX_ITEM_TEXT_LEN,crossFp) && (!found || ((lambda>=lambdaMin) && (lambda<=lambdaMax))))
 
-     if ((strchr(crossBuffer,';')==NULL) && (strchr(crossBuffer,'*')==NULL) && (sscanf(crossBuffer,"%lf %lf",&lembda,&crossValue)==2))
+     if ((strchr(crossBuffer,';')==NULL) && (strchr(crossBuffer,'*')==NULL) && (sscanf(crossBuffer,"%lf %lf",&lambda,&crossValue)==2))
       {
        if (!found)
-        firstLembda=lembda;
+        firstLambda=lambda;
 
-       if ((lembda>=lembdaMin) && (lembda<=lembdaMax))
+       if ((lambda>=lambdaMin) && (lambda<=lambdaMax))
         {
          npts++;
          found=1;
@@ -1073,7 +1073,7 @@ RC XSCONV_LoadCrossSectionFile(XS *pCross,UCHAR *crossFile,double lembdaMin,doub
      {
       // Set indexes according to wavelength order
 
-      if (firstLembda<=lembda)
+      if (firstLambda<=lambda)
        {
         i0=0;
         iN=npts;
@@ -1093,15 +1093,15 @@ RC XSCONV_LoadCrossSectionFile(XS *pCross,UCHAR *crossFile,double lembdaMin,doub
       for (i=i0;(i!=iN) && !feof(crossFp) && fgets(crossBuffer,MAX_ITEM_TEXT_LEN,crossFp);)
 
        if ((strchr(crossBuffer,';')==NULL) && (strchr(crossBuffer,'*')==NULL) &&
-           (sscanf(crossBuffer,"%lf %lf",&lembda,&crossValue)==2) &&
-           (lembda>=lembdaMin) && (lembda<=lembdaMax))
+           (sscanf(crossBuffer,"%lf %lf",&lambda,&crossValue)==2) &&
+           (lambda>=lambdaMin) && (lambda<=lambdaMax))
         {
          if (conversionMode==CONVOLUTION_CONVERSION_VAC2AIR)
-          lembda=(double)0.1*(9.9972683*lembda+0.0107-(19.625/lembda));
+          lambda=(double)0.1*(9.9972683*lambda+0.0107-(19.625/lambda));
          else if (conversionMode==CONVOLUTION_CONVERSION_AIR2VAC)
-          lembda=(double)0.1*(10.0027325*lembda-0.0107+(19.625/lembda));
+          lambda=(double)0.1*(10.0027325*lambda-0.0107+(19.625/lambda));
 
-         pCross->lembda[i]=lembda+shift;
+         pCross->lambda[i]=lambda+shift;
          pCross->vector[i]=crossValue;
 
          i+=istep;
@@ -1109,7 +1109,7 @@ RC XSCONV_LoadCrossSectionFile(XS *pCross,UCHAR *crossFile,double lembdaMin,doub
 
       // Second derivatives computation
 
-      rc=SPLINE_Deriv2(pCross->lembda,pCross->vector,pCross->deriv2,npts,"XSCONV_LoadCrossSectionFile ");
+      rc=SPLINE_Deriv2(pCross->lambda,pCross->vector,pCross->deriv2,npts,"XSCONV_LoadCrossSectionFile ");
      }
    }
 
@@ -1334,10 +1334,10 @@ RC XSCONV_LoadCrossSectionFile(XS *pCross,UCHAR *crossFile,double lembdaMin,doub
 // QDOAS ???
 // QDOAS ???       if ((pLFilter->type!=PRJCT_FILTER_TYPE_NONE) || (pHFilter->type!=PRJCT_FILTER_TYPE_NONE))
 // QDOAS ???        for (i=nextraPixels;i<nsize;i++)
-// QDOAS ???         fprintf(fp,"%.14le %.14le %.14le\n",pXs->lembda[i],filterVector[i],pXs->vector[i]);
+// QDOAS ???         fprintf(fp,"%.14le %.14le %.14le\n",pXs->lambda[i],filterVector[i],pXs->vector[i]);
 // QDOAS ???       else
 // QDOAS ???        for (i=nextraPixels;i<nsize;i++)
-// QDOAS ???         fprintf(fp,"%.14le %.14le\n",pXs->lembda[i],pXs->vector[i]);
+// QDOAS ???         fprintf(fp,"%.14le %.14le\n",pXs->lambda[i],pXs->vector[i]);
 // QDOAS ???
 // QDOAS ???       fclose(fp);
 // QDOAS ???      }
@@ -1367,7 +1367,7 @@ RC XSCONV_LoadCrossSectionFile(XS *pCross,UCHAR *crossFile,double lembdaMin,doub
 
 RC XSCONV_TypeNone(XS *pXsnew,XS *pXshr)
  {
-  return SPLINE_Vector(pXshr->lembda,pXshr->vector,pXshr->deriv2,pXshr->NDET,pXsnew->lembda,pXsnew->vector,pXsnew->NDET,SPLINE_CUBIC,"XSCONV_TypeNone ");
+  return SPLINE_Vector(pXshr->lambda,pXshr->vector,pXshr->deriv2,pXshr->NDET,pXsnew->lambda,pXsnew->vector,pXsnew->NDET,SPLINE_CUBIC,"XSCONV_TypeNone ");
  }
 
 // -----------------------------------------------------------------------
@@ -1449,7 +1449,7 @@ RC XSCONV_TypeGauss(double *lambda,double *Spec,double *SDeriv2,double lambdaj,
   return rc;
  }
 
-RC XSCONV_TypeStandardFFT(FFT *pFFT,INT fwhmType,double slitParam,double slitParam2,double *lembda,double *target,INT size)
+RC XSCONV_TypeStandardFFT(FFT *pFFT,INT fwhmType,double slitParam,double slitParam2,double *lambda,double *target,INT size)
  {
   // Declarations
 
@@ -1494,7 +1494,7 @@ RC XSCONV_TypeStandardFFT(FFT *pFFT,INT fwhmType,double slitParam,double slitPar
 //     pFFT->invFftOut[i]/=step;
 
     if (!(rc=SPLINE_Deriv2(pFFT->fftIn+1,pFFT->invFftOut+1,pFFT->invFftIn+1,pFFT->oldSize,"XSCONV_TypeStandardFFT ")))
-     rc=SPLINE_Vector(pFFT->fftIn+1,pFFT->invFftOut+1,pFFT->invFftIn+1,pFFT->oldSize,lembda,target,size,SPLINE_CUBIC,"XSCONV_TypeStandardFFT ");
+     rc=SPLINE_Vector(pFFT->fftIn+1,pFFT->invFftOut+1,pFFT->invFftIn+1,pFFT->oldSize,lambda,target,size,SPLINE_CUBIC,"XSCONV_TypeStandardFFT ");
    }
   else
    rc=ERROR_SetLast("XSCONV_TypeStandardFFT",ERROR_TYPE_WARNING,ERROR_ID_BAD_ARGUMENTS);
@@ -1514,7 +1514,7 @@ RC XSCONV_TypeStandardFFT(FFT *pFFT,INT fwhmType,double slitParam,double slitPar
 //
 // with :
 //
-//  - pXsnew->lembda : final wavelength scale (input);
+//  - pXsnew->lambda : final wavelength scale (input);
 //  - pXsnew->vector : pXshr->vector after convolution (output);
 //
 //  - pXshr : cross section high resolution (wavelength scale,slit vector and second derivatives);
@@ -1532,12 +1532,12 @@ RC XSCONV_TypeStandardFFT(FFT *pFFT,INT fwhmType,double slitParam,double slitPar
 //  - slitWidth : slit half base width;
 //  - slitParam : for gaussian slit functions, half way up slit width.
 //
-// NB : pI->lembda==pXshr->lembda.
+// NB : pI->lambda==pXshr->lambda.
 //
 
 RC GetNewF(double *pNewF,
            INT     slitType,
-           double *slitLembda,
+           double *slitLambda,
            double *slitVector,
            double *slitDeriv2,
            INT     slitNDET,
@@ -1587,7 +1587,7 @@ RC GetNewF(double *pNewF,
      newF=(double)Voigtx(dist/a,slitParam2)*norm1;
    }
   else if (slitType==SLIT_TYPE_FILE)
-   rc=SPLINE_Vector(slitLembda,slitVector,slitDeriv2,slitNDET,&dist,&newF,1,SPLINE_CUBIC,"GetNewF ");
+   rc=SPLINE_Vector(slitLambda,slitVector,slitDeriv2,slitNDET,&dist,&newF,1,SPLINE_CUBIC,"GetNewF ");
   else if (slitType==SLIT_TYPE_APOD)
    rc=XsconvFctApod(&newF,slitParam,slitParam2,0.01,dist);
   else if (slitType==SLIT_TYPE_APODNBS)
@@ -1602,18 +1602,18 @@ RC GetNewF(double *pNewF,
   return rc;
  }
 
-RC XSCONV_TypeStandard(XS *pXsnew,INDEX indexLembdaMin,INDEX indexLembdaMax,XS *pXshr,XS *pSlit,XS *pI,double *Ic,INT slitType,double slitWidth,double slitParam,double slitParam2,double slitParam3,double slitParam4)
+RC XSCONV_TypeStandard(XS *pXsnew,INDEX indexLambdaMin,INDEX indexLambdaMax,XS *pXshr,XS *pSlit,XS *pI,double *Ic,INT slitType,double slitWidth,double slitParam,double slitParam2,double slitParam3,double slitParam4)
  {
   // Declarations
 
-  double *xsnewLembda,*xsnewVector,
-         *xshrLembda,*xshrVector,*xshrDeriv2,
-         *slitLembda,*slitVector,*slitDeriv2,dist,
+  double *xsnewLambda,*xsnewVector,
+         *xshrLambda,*xshrVector,*xshrDeriv2,
+         *slitLambda,*slitVector,*slitDeriv2,dist,
          *IVector,*IDeriv2,
           crossFIntegral,IFIntegral,FIntegral,
           oldF,newF,oldIF,newIF,stepF,h,
           slitCenter,c,si,
-          lembda,lembdaMin,lembdaMax,oldXshr,newXshr;
+          lambda,lambdaMin,lambdaMax,oldXshr,newXshr;
   INDEX   xshrPixMin,
           xsnewIndex,indexOld,indexNew,
           klo,khi,i;
@@ -1622,23 +1622,23 @@ RC XSCONV_TypeStandard(XS *pXsnew,INDEX indexLembdaMin,INDEX indexLembdaMax,XS *
 
   // Use substitution variables
 
-  xsnewLembda=pXsnew->lembda;
+  xsnewLambda=pXsnew->lambda;
   xsnewVector=pXsnew->vector;
 
-  xshrLembda=pXshr->lembda;
+  xshrLambda=pXshr->lambda;
   xshrVector=pXshr->vector;
   xshrDeriv2=pXshr->deriv2;
 
   if (pSlit!=NULL)
    {
-    slitLembda=pSlit->lembda;
+    slitLambda=pSlit->lambda;
     slitVector=pSlit->vector;
     slitDeriv2=pSlit->deriv2;
     slitNDET=pSlit->NDET;
    }
   else
    {
-    slitLembda=slitVector=slitDeriv2=NULL;
+    slitLambda=slitVector=slitDeriv2=NULL;
     slitNDET=0;
    }
 
@@ -1651,7 +1651,7 @@ RC XSCONV_TypeStandard(XS *pXsnew,INDEX indexLembdaMin,INDEX indexLembdaMax,XS *
   // Initializations
 
   if (slitType==SLIT_TYPE_FILE)
-   stepF=slitLembda[1]-slitLembda[0];
+   stepF=slitLambda[1]-slitLambda[0];
   else if ((slitType==SLIT_TYPE_APOD) ||(slitType==SLIT_TYPE_APODNBS))
    stepF=slitParam/50.;
   else
@@ -1666,7 +1666,7 @@ RC XSCONV_TypeStandard(XS *pXsnew,INDEX indexLembdaMin,INDEX indexLembdaMax,XS *
 
     for (i=0,c=si=(double)0.;i<slitNDET;i++)
      {
-      c+=(double)slitLembda[i]*slitVector[i];
+      c+=(double)slitLambda[i]*slitVector[i];
       si+=(double)slitVector[i];
      }
 
@@ -1680,16 +1680,16 @@ RC XSCONV_TypeStandard(XS *pXsnew,INDEX indexLembdaMin,INDEX indexLembdaMax,XS *
 
   // Browse wavelengths in the final calibration vector
 
-  for (xsnewIndex=max(0,indexLembdaMin);(xsnewIndex<xsnewNDET) && (xsnewIndex<indexLembdaMax) && !rc;xsnewIndex++)
+  for (xsnewIndex=max(0,indexLambdaMin);(xsnewIndex<xsnewNDET) && (xsnewIndex<indexLambdaMax) && !rc;xsnewIndex++)
    {
-    lembda=xsnewLembda[xsnewIndex];
+    lambda=xsnewLambda[xsnewIndex];
 
     if ((slitType==SLIT_TYPE_GAUSS_FILE) ||
         (slitType==SLIT_TYPE_INVPOLY_FILE) ||
 //        (slitType==SLIT_TYPE_VOIGT_FILE) ||
         (slitType==SLIT_TYPE_ERF_FILE))
      {
-      SPLINE_Vector(slitLembda,slitVector,slitDeriv2,slitNDET,&lembda,&slitParam,1,SPLINE_CUBIC,"XSCONV_TypeStandard ");
+      SPLINE_Vector(slitLambda,slitVector,slitDeriv2,slitNDET,&lambda,&slitParam,1,SPLINE_CUBIC,"XSCONV_TypeStandard ");
 
       stepF=slitParam/6.;            // 6 points/FWHM
       slitWidth=(double)3.*slitParam;
@@ -1697,13 +1697,13 @@ RC XSCONV_TypeStandard(XS *pXsnew,INDEX indexLembdaMin,INDEX indexLembdaMax,XS *
 
     if (slitType!=SLIT_TYPE_FILE)
      {
-      lembdaMin=lembda-slitWidth;
-      lembdaMax=lembda+slitWidth;
+      lambdaMin=lambda-slitWidth;
+      lambdaMax=lambda+slitWidth;
      }
     else
      {
-      lembdaMin=lembda+slitLembda[0];                     // add 1 nm
-      lembdaMax=lembda+slitLembda[slitNDET-1];
+      lambdaMin=lambda+slitLambda[0];                     // add 1 nm
+      lambdaMax=lambda+slitLambda[slitNDET-1];
      }
 
     // Search for first pixel in high resolution cross section in the wavelength range delimited by slit function
@@ -1712,18 +1712,18 @@ RC XSCONV_TypeStandard(XS *pXsnew,INDEX indexLembdaMin,INDEX indexLembdaMax,XS *
      {
       xshrPixMin=(khi+klo)>>1;
 
-      if (xshrLembda[xshrPixMin]>lembdaMin)
+      if (xshrLambda[xshrPixMin]>lambdaMin)
        khi=xshrPixMin;
       else
        klo=xshrPixMin;
      }
 
-    xshrPixMin=(xshrLembda[klo]<lembdaMin)?khi:klo;
+    xshrPixMin=(xshrLambda[klo]<lambdaMin)?khi:klo;
     crossFIntegral=IFIntegral=FIntegral=(double)0.;
 
     // Case 1 : the resolution of cross section is better than the resolution of slit function => slit function interpolation only
 
-    if (xshrLembda[xshrPixMin+1]-xshrLembda[xshrPixMin]<=stepF)
+    if (xshrLambda[xshrPixMin+1]-xshrLambda[xshrPixMin]<=stepF)
      {
       // set indexes to browse wavelengths in the grid of the high resolution cross section
 
@@ -1732,25 +1732,25 @@ RC XSCONV_TypeStandard(XS *pXsnew,INDEX indexLembdaMin,INDEX indexLembdaMax,XS *
 
       // distance to the central wavelength
 
-      dist=(double)slitCenter-(xshrLembda[indexOld]-lembda); // !!! slit function is inversed for convolution
+      dist=(double)slitCenter-(xshrLambda[indexOld]-lambda); // !!! slit function is inversed for convolution
 
-      rc=GetNewF(&newF,slitType,slitLembda,slitVector,slitDeriv2,slitNDET,
-                  dist,slitParam,slitParam2,slitParam3,slitParam4,xshrLembda[xshrPixMin+1]-xshrLembda[xshrPixMin]);
+      rc=GetNewF(&newF,slitType,slitLambda,slitVector,slitDeriv2,slitNDET,
+                  dist,slitParam,slitParam2,slitParam3,slitParam4,xshrLambda[xshrPixMin+1]-xshrLambda[xshrPixMin]);
 
       // browse the grid of the high resolution cross section
 
-      while ((indexNew<xshrNDET) && (xshrLembda[indexNew]<=lembdaMax) && !rc)
+      while ((indexNew<xshrNDET) && (xshrLambda[indexNew]<=lambdaMax) && !rc)
        {
         oldF=newF;
 
-        dist=(double)slitCenter-(xshrLembda[indexNew]-lembda);
+        dist=(double)slitCenter-(xshrLambda[indexNew]-lambda);
 
         // Convolution
 
-        if (!(rc=GetNewF(&newF,slitType,slitLembda,slitVector,slitDeriv2,slitNDET,
-                          dist,slitParam,slitParam2,slitParam3,slitParam4,xshrLembda[indexNew]-xshrLembda[indexOld])))
+        if (!(rc=GetNewF(&newF,slitType,slitLambda,slitVector,slitDeriv2,slitNDET,
+                          dist,slitParam,slitParam2,slitParam3,slitParam4,xshrLambda[indexNew]-xshrLambda[indexOld])))
          {
-          h=(xshrLembda[indexNew]-xshrLembda[indexOld])*0.5;  // use trapezium formula for surface computation (B+b)*H/2
+          h=(xshrLambda[indexNew]-xshrLambda[indexOld])*0.5;  // use trapezium formula for surface computation (B+b)*H/2
           crossFIntegral+=(xshrVector[indexOld]*oldF+xshrVector[indexNew]*newF)*h;
           IFIntegral+=(IVector[indexOld]*oldF+IVector[indexNew]*newF)*h;
           FIntegral+=(oldF+newF)*h;
@@ -1783,15 +1783,15 @@ RC XSCONV_TypeStandard(XS *pXsnew,INDEX indexLembdaMin,INDEX indexLembdaMax,XS *
 
       if (slitType==SLIT_TYPE_FILE)
        {
-        dist=lembda+slitLembda[indexOld];
+        dist=lambda+slitLambda[indexOld];
         oldF=slitVector[indexOld];
        }
       else
        {
-        dist=lembda-slitWidth;
+        dist=lambda-slitWidth;
 
-        if ((rc=GetNewF(&oldF,slitType,slitLembda,slitVector,slitDeriv2,slitNDET,
-                        dist-lembda,slitParam,slitParam2,slitParam3,slitParam4,stepF))!=ERROR_ID_NO)
+        if ((rc=GetNewF(&oldF,slitType,slitLambda,slitVector,slitDeriv2,slitNDET,
+                        dist-lambda,slitParam,slitParam2,slitParam3,slitParam4,stepF))!=ERROR_ID_NO)
 
          goto EndTypeStandard;
        }
@@ -1800,24 +1800,24 @@ RC XSCONV_TypeStandard(XS *pXsnew,INDEX indexLembdaMin,INDEX indexLembdaMax,XS *
 
       oldXshr=(double)0.;
 
-      if ((dist<xshrLembda[0]) || (dist>xshrLembda[xshrNDET-1]))
+      if ((dist<xshrLambda[0]) || (dist>xshrLambda[xshrNDET-1]))
        oldF=oldIF=oldXshr=(double)0.;
-      else if (!(rc=SPLINE_Vector(xshrLembda,xshrVector,xshrDeriv2,xshrNDET,&dist,&oldXshr,1,SPLINE_CUBIC,"XSCONV_TypeStandard ")) && (Ic!=NULL))
-       rc=SPLINE_Vector(xshrLembda,IVector,IDeriv2,xshrNDET,&dist,&oldIF,1,SPLINE_CUBIC,"XSCONV_TypeStandard ");
+      else if (!(rc=SPLINE_Vector(xshrLambda,xshrVector,xshrDeriv2,xshrNDET,&dist,&oldXshr,1,SPLINE_CUBIC,"XSCONV_TypeStandard ")) && (Ic!=NULL))
+       rc=SPLINE_Vector(xshrLambda,IVector,IDeriv2,xshrNDET,&dist,&oldIF,1,SPLINE_CUBIC,"XSCONV_TypeStandard ");
 
       // browse the grid of the slit function
 
       while ((((slitType==SLIT_TYPE_FILE) && (indexNew<slitNDET)) ||
-              ((slitType!=SLIT_TYPE_FILE) && (dist+stepF<=lembda+slitWidth))) && !rc)
+              ((slitType!=SLIT_TYPE_FILE) && (dist+stepF<=lambda+slitWidth))) && !rc)
        {
         // the slit function is pre-calculated
 
         if (slitType==SLIT_TYPE_FILE)
          {
-          dist=lembda+slitLembda[indexNew];
+          dist=lambda+slitLambda[indexNew];
           newF=slitVector[indexNew];
 
-          h=fabs((slitLembda[indexNew]-slitLembda[indexOld])*0.5);
+          h=fabs((slitLambda[indexNew]-slitLambda[indexOld])*0.5);
           indexOld=indexNew++;
          }
 
@@ -1828,17 +1828,17 @@ RC XSCONV_TypeStandard(XS *pXsnew,INDEX indexLembdaMin,INDEX indexLembdaMax,XS *
           dist+=stepF;
           h=stepF*0.5;
 
-          if ((rc=GetNewF(&newF,slitType,slitLembda,slitVector,slitDeriv2,slitNDET,
-                           dist-lembda,slitParam,slitParam2,slitParam3,slitParam4,stepF))!=ERROR_ID_NO)
+          if ((rc=GetNewF(&newF,slitType,slitLambda,slitVector,slitDeriv2,slitNDET,
+                           dist-lambda,slitParam,slitParam2,slitParam3,slitParam4,stepF))!=ERROR_ID_NO)
 
            goto EndTypeStandard;
          }
 
-        if ((dist>=xshrLembda[0]) && (dist<=xshrLembda[xshrNDET-1]))
+        if ((dist>=xshrLambda[0]) && (dist<=xshrLambda[xshrNDET-1]))
          {
           // interpolation of the high resolution cross section
 
-          if ((rc=SPLINE_Vector(xshrLembda,xshrVector,xshrDeriv2,xshrNDET,&dist,&newXshr,1,SPLINE_CUBIC,"XSCONV_TypeStandard "))!=0)
+          if ((rc=SPLINE_Vector(xshrLambda,xshrVector,xshrDeriv2,xshrNDET,&dist,&newXshr,1,SPLINE_CUBIC,"XSCONV_TypeStandard "))!=0)
            goto EndTypeStandard;
 
           // Convolution
@@ -1848,7 +1848,7 @@ RC XSCONV_TypeStandard(XS *pXsnew,INDEX indexLembdaMin,INDEX indexLembdaMax,XS *
 
           // I0 correction
 
-          if ((Ic!=NULL) && !(rc=SPLINE_Vector(xshrLembda,IVector,IDeriv2,xshrNDET,&dist,&newIF,1,SPLINE_CUBIC,"XSCONV_TypeStandard ")))
+          if ((Ic!=NULL) && !(rc=SPLINE_Vector(xshrLambda,IVector,IDeriv2,xshrNDET,&dist,&newIF,1,SPLINE_CUBIC,"XSCONV_TypeStandard ")))
            {
             IFIntegral+=(oldF*oldIF+newF*newIF)*h;
             oldIF=newIF;
@@ -1884,10 +1884,10 @@ RC XsconvTypeI0Correction(XS *pXsnew,XS *pXshr,XS *pI0,XS *pSlit,double conc,INT
   // Declarations
 
   double  sigma,
-         *xshrLembda,*xshrVector,*xshrDeriv2,
-         *xsnewLembda,*xsnewVector,
-         *ILembda,*IVector,*IDeriv2,
-         *I0Lembda,*I0Vector,*I0cVector,*IcVector;
+         *xshrLambda,*xshrVector,*xshrDeriv2,
+         *xsnewLambda,*xsnewVector,
+         *ILambda,*IVector,*IDeriv2,
+         *I0Lambda,*I0Vector,*I0cVector,*IcVector;
 
   INT INDET,xshrNDET,xsnewNDET;
   INDEX i;
@@ -1902,14 +1902,14 @@ RC XsconvTypeI0Correction(XS *pXsnew,XS *pXshr,XS *pI0,XS *pSlit,double conc,INT
 
   // Use substitution variables
 
-  I0Lembda=pI0->lembda;
+  I0Lambda=pI0->lambda;
   I0Vector=pI0->vector;
 
-  xshrLembda=pXshr->lembda;
+  xshrLambda=pXshr->lambda;
   xshrVector=pXshr->vector;
   xshrDeriv2=pXshr->deriv2;
 
-  xsnewLembda=pXsnew->lembda;
+  xsnewLambda=pXsnew->lambda;
   xsnewVector=pXsnew->vector;
 
   xshrNDET=pXshr->NDET;
@@ -1938,11 +1938,11 @@ RC XsconvTypeI0Correction(XS *pXsnew,XS *pXshr,XS *pI0,XS *pSlit,double conc,INT
 
   else
    {
-    memcpy(I0c.lembda,xsnewLembda,sizeof(double)*xsnewNDET);
+    memcpy(I0c.lambda,xsnewLambda,sizeof(double)*xsnewNDET);
 
     // Use substitution variables
 
-    ILembda=I.lembda;
+    ILambda=I.lambda;
     IVector=I.vector;
     IDeriv2=I.deriv2;
 
@@ -1950,13 +1950,13 @@ RC XsconvTypeI0Correction(XS *pXsnew,XS *pXshr,XS *pI0,XS *pSlit,double conc,INT
 
     // Build I from I0 (solar spectrum) with the specified cross section absorption
 
-    memcpy(ILembda,I0Lembda,sizeof(double)*INDET);
+    memcpy(ILambda,I0Lambda,sizeof(double)*INDET);
 
     VECTOR_Init(I0cVector,(double)0.,sizeof(double));
     VECTOR_Init(IcVector,(double)0.,sizeof(double));
 
     for (i=0;(i<INDET) && !rc;i++)
-     if (!(rc=SPLINE_Vector(xshrLembda,xshrVector,xshrDeriv2,xshrNDET,&I0Lembda[i],&sigma,1,SPLINE_CUBIC,"XsconvTypeI0Correction ")))
+     if (!(rc=SPLINE_Vector(xshrLambda,xshrVector,xshrDeriv2,xshrNDET,&I0Lambda[i],&sigma,1,SPLINE_CUBIC,"XsconvTypeI0Correction ")))
       {
        if (-sigma*conc>(double)700.)
         rc=ERROR_SetLast("XsconvTypeI0Correction",ERROR_TYPE_FATAL,ERROR_ID_OVERFLOW);
@@ -1967,7 +1967,7 @@ RC XsconvTypeI0Correction(XS *pXsnew,XS *pXshr,XS *pI0,XS *pSlit,double conc,INT
     // I and I0 convolution
 
     if (!rc &&
-        !(rc=SPLINE_Deriv2(ILembda,IVector,IDeriv2,INDET,"XsconvTypeI0Correction ")) &&               // I second derivatives calculation
+        !(rc=SPLINE_Deriv2(ILambda,IVector,IDeriv2,INDET,"XsconvTypeI0Correction ")) &&               // I second derivatives calculation
         !(rc=XSCONV_TypeStandard(&I0c,0,xsnewNDET,pI0,pSlit,&I,IcVector,slitType,slitWidth,slitParam,slitParam2,slitParam3,slitParam4)))    // I0 and I convolution
      {
       // Cross section convolution
@@ -2001,7 +2001,7 @@ RC XsconvTypeI0Correction(XS *pXsnew,XS *pXshr,XS *pI0,XS *pSlit,double conc,INT
 // --------------------------------------------------------
 
 RC XSCONV_RealTimeXs(XS *pXshr,XS *pXsI0,XS *pSlit,double *IcVector,                         // high resolution cross section
-                     double *lembda,INDEX indexLembdaMin,INDEX indexLembdaMax,               // final calibration wavelength scale
+                     double *lambda,INDEX indexLambdaMin,INDEX indexLambdaMax,               // final calibration wavelength scale
                      double *newXs,                                                          // convoluted cross section
                      INT slitType,double slitParam,double slitParam2,double slitParam3,double slitParam4)      // slit options
  {
@@ -2012,14 +2012,14 @@ RC XSCONV_RealTimeXs(XS *pXshr,XS *pXsI0,XS *pSlit,double *IcVector,            
 
   // Use substitution variables
 
-  xsnew.lembda=lembda;
+  xsnew.lambda=lambda;
   xsnew.vector=newXs;
   xsnew.NDET=NDET;
 
   // process convolution
 
   if ((pSlit==NULL) || !(rc=XsconvGetFwhm(pSlit,slitType,&slitParam)))
-   rc=XSCONV_TypeStandard(&xsnew,indexLembdaMin,indexLembdaMax,pXshr,pSlit,(pXsI0==NULL)?pXshr:pXsI0,IcVector,slitType,(double)3.*slitParam,slitParam,slitParam2,slitParam3,slitParam4);
+   rc=XSCONV_TypeStandard(&xsnew,indexLambdaMin,indexLambdaMax,pXshr,pSlit,(pXsI0==NULL)?pXshr:pXsI0,IcVector,slitType,(double)3.*slitParam,slitParam,slitParam2,slitParam3,slitParam4);
 
   // Return
 
@@ -2030,7 +2030,7 @@ RC XSCONV_RealTimeXs(XS *pXshr,XS *pXsI0,XS *pSlit,double *IcVector,            
 // XsconvRebuildSlitFunction : Rebuild slit function onto a regular wavelength scale
 // ---------------------------------------------------------------------------------
 
-RC XsconvRebuildSlitFunction(double *lembda,double *slit,INT nslit,SLIT *pSlit,XS *pSlitXs)
+RC XsconvRebuildSlitFunction(double *lambda,double *slit,INT nslit,SLIT *pSlit,XS *pSlitXs)
  {
   // Declarations
 
@@ -2046,18 +2046,18 @@ RC XsconvRebuildSlitFunction(double *lembda,double *slit,INT nslit,SLIT *pSlit,X
 
   if (pSlit->slitType==SLIT_TYPE_GAUSS)
    for (i=0,slitParam=pSlit->slitParam*pSlit->slitParam;i<nslit;i++)
-    slit[i]=(double)exp(-4.*log(2.)*(lembda[i]*lembda[i])/slitParam);
+    slit[i]=(double)exp(-4.*log(2.)*(lambda[i]*lambda[i])/slitParam);
 
   else if (pSlit->slitType==SLIT_TYPE_INVPOLY)
    for (i=0,sigma=pSlit->slitParam*0.5,n=(double)pSlit->slitParam2;i<nslit;i++)
-    slit[i]=(double)pow(sigma,n)/(pow(lembda[i],n)+pow(sigma,n));
+    slit[i]=(double)pow(sigma,n)/(pow(lambda[i],n)+pow(sigma,n));
 
   else if (pSlit->slitType==SLIT_TYPE_ERF)
    for (i=0,sigma=pSlit->slitParam*0.5,a=(double)sigma/sqrt(log(2.)),delta=(double)pSlit->slitParam2*0.5;i<nslit;i++)
-    slit[i]=(double)(ERF_GetValue((lembda[i]+delta)/a)-ERF_GetValue((lembda[i]-delta)/a))/(4.*delta);
+    slit[i]=(double)(ERF_GetValue((lambda[i]+delta)/a)-ERF_GetValue((lambda[i]-delta)/a))/(4.*delta);
 
   else // slit type == SLIT_TYPE_FILE
-   rc=SPLINE_Vector(pSlitXs->lembda,pSlitXs->vector,pSlitXs->deriv2,pSlitXs->NDET,lembda,slit,nslit,SPLINE_CUBIC,"XsconvRebuildSlitFunction ");
+   rc=SPLINE_Vector(pSlitXs->lambda,pSlitXs->vector,pSlitXs->deriv2,pSlitXs->NDET,lambda,slit,nslit,SPLINE_CUBIC,"XsconvRebuildSlitFunction ");
 
   // Return
 
@@ -2122,7 +2122,7 @@ RC XsconvNewSlitFunction(HWND hwndXsconv,SLIT *pSlitOptions,XS *pSlit,double sli
  {
   // Declarations
 
-  double *slit,*slit2,*newSlit,*lembda,              // substitution vectors
+  double *slit,*slit2,*newSlit,*lambda,              // substitution vectors
          *slitFFTin,*slit2FFTin,                     // FFT input vectors
          *slitFFTout,*slit2FFTout,                   // FFT output vectors
           slitStep,fc,bp,
@@ -2145,7 +2145,7 @@ RC XsconvNewSlitFunction(HWND hwndXsconv,SLIT *pSlitOptions,XS *pSlit,double sli
 
   // Buffers allocation
 
-  if (((lembda=(double *)MEMORY_AllocDVector("XsconvNewSlitFunction ","lembda",0,nslit))==NULL) ||
+  if (((lambda=(double *)MEMORY_AllocDVector("XsconvNewSlitFunction ","lambda",0,nslit))==NULL) ||
       ((slit=(double *)MEMORY_AllocDVector("XsconvNewSlitFunction ","slit",0,nslit))==NULL) ||
       ((slit2=(double *)MEMORY_AllocDVector("XsconvNewSlitFunction ","slit2",0,nslit))==NULL) ||
       ((newSlit=(double *)MEMORY_AllocDVector("XsconvNewSlitFunction ","newSlit",0,nslit))==NULL) ||
@@ -2167,8 +2167,8 @@ RC XsconvNewSlitFunction(HWND hwndXsconv,SLIT *pSlitOptions,XS *pSlit,double sli
 
      for (i=0,i0=nslit>>1,slitParam=slitParam*slitParam-slitParam2*slitParam2;i<nslit;i++)
       {
-       lembda[i]=(double)slitStep*(i-i0);
-       newSlit[i]=(double)exp(-4.*log(2.)*(lembda[i]*lembda[i])/slitParam);
+       lambda[i]=(double)slitStep*(i-i0);
+       newSlit[i]=(double)exp(-4.*log(2.)*(lambda[i]*lambda[i])/slitParam);
       }
     else
      {
@@ -2185,9 +2185,9 @@ RC XsconvNewSlitFunction(HWND hwndXsconv,SLIT *pSlitOptions,XS *pSlit,double sli
     // Resample deconvolution slit function onto the regular stepped wavelength scale
 
     for (i=0,i0=nslit>>1;i<nslit;i++)
-     lembda[i]=(double)slitStep*(i-i0);
+     lambda[i]=(double)slitStep*(i-i0);
 
-    if ((rc=XsconvRebuildSlitFunction(lembda,slit2,nslit,pSlit2Options,pSlit2))!=0)
+    if ((rc=XsconvRebuildSlitFunction(lambda,slit2,nslit,pSlit2Options,pSlit2))!=0)
      goto EndNewSlit;
 
     // Vector normalization
@@ -2234,8 +2234,8 @@ RC XsconvNewSlitFunction(HWND hwndXsconv,SLIT *pSlitOptions,XS *pSlit,double sli
        {
         // Release allocated buffers
 
-        if (lembda!=NULL)
-         MEMORY_ReleaseDVector("XsconvNewSlitFunction ","lembda",lembda,0);
+        if (lambda!=NULL)
+         MEMORY_ReleaseDVector("XsconvNewSlitFunction ","lambda",lambda,0);
         if (slit!=NULL)
          MEMORY_ReleaseDVector("XsconvNewSlitFunction ","slit",slit,0);
         if (slit2!=NULL)
@@ -2255,7 +2255,7 @@ RC XsconvNewSlitFunction(HWND hwndXsconv,SLIT *pSlitOptions,XS *pSlit,double sli
 
         // Allocate buffers with the new size
 
-        if (((lembda=(double *)MEMORY_AllocDVector("XsconvNewSlitFunction (2) ","lembda",0,nslit))==NULL) ||
+        if (((lambda=(double *)MEMORY_AllocDVector("XsconvNewSlitFunction (2) ","lambda",0,nslit))==NULL) ||
             ((slit=(double *)MEMORY_AllocDVector("XsconvNewSlitFunction (2) ","slit",0,nslit))==NULL) ||
             ((slit2=(double *)MEMORY_AllocDVector("XsconvNewSlitFunction (2) ","slit2",0,nslit))==NULL) ||
             ((newSlit=(double *)MEMORY_AllocDVector("XsconvNewSlitFunction (2) ","newSlit",0,nslit))==NULL) ||
@@ -2279,12 +2279,12 @@ RC XsconvNewSlitFunction(HWND hwndXsconv,SLIT *pSlitOptions,XS *pSlit,double sli
     // Resample convolution and deconvolution slit functions onto the regular stepped wavelength scale
 
     for (i=0,i0=nslit>>1;i<nslit;i++)
-     lembda[i]=(double)slitStep*(i-i0);
+     lambda[i]=(double)slitStep*(i-i0);
 
     // Build deconvolution slit function
 
-    if (((rc=XsconvRebuildSlitFunction(lembda,slit,nslit,pSlitOptions,pSlit))!=0) ||
-        ((rc=XsconvRebuildSlitFunction(lembda,slit2,nslit,pSlit2Options,pSlit2))!=0))
+    if (((rc=XsconvRebuildSlitFunction(lambda,slit,nslit,pSlitOptions,pSlit))!=0) ||
+        ((rc=XsconvRebuildSlitFunction(lambda,slit2,nslit,pSlit2Options,pSlit2))!=0))
 
      goto EndNewSlit;
 
@@ -2397,7 +2397,7 @@ RC XsconvNewSlitFunction(HWND hwndXsconv,SLIT *pSlitOptions,XS *pSlit,double sli
 // QDOAS ???
 // QDOAS ???    DRAW_Spectra(CHILD_WINDOW_SPECTRA,str,"","Wavelength (nm)","",NULL,0,
 // QDOAS ???                 (double)0.,(double)0.,(double)0.,(double)0.,
-// QDOAS ???                 lembda,newSlit,nslit,DRAW_COLOR1,0,nslit-1,PS_SOLID,NULL,
+// QDOAS ???                 lambda,newSlit,nslit,DRAW_COLOR1,0,nslit-1,PS_SOLID,NULL,
 // QDOAS ???                 NULL,NULL,0,0,0,0,0,NULL,
 // QDOAS ???                 0,1,1,1);
 // QDOAS ???
@@ -2420,18 +2420,18 @@ RC XsconvNewSlitFunction(HWND hwndXsconv,SLIT *pSlitOptions,XS *pSlit,double sli
    rc=ERROR_ID_ALLOC;
   else
    {
-    memcpy(pSlit->lembda,lembda,sizeof(double)*nslit);
+    memcpy(pSlit->lambda,lambda,sizeof(double)*nslit);
     memcpy(pSlit->vector,newSlit,sizeof(double)*nslit);
 
-    rc=SPLINE_Deriv2(pSlit->lembda,pSlit->vector,pSlit->deriv2,nslit,"XsconvNewSlitFunction ");
+    rc=SPLINE_Deriv2(pSlit->lambda,pSlit->vector,pSlit->deriv2,nslit,"XsconvNewSlitFunction ");
    }
 
   EndNewSlit :
 
   // Release allocated buffers
 
-  if (lembda!=NULL)
-   MEMORY_ReleaseDVector("XsconvNewSlitFunction ","lembda",lembda,0);
+  if (lambda!=NULL)
+   MEMORY_ReleaseDVector("XsconvNewSlitFunction ","lambda",lambda,0);
   if (slit!=NULL)
    MEMORY_ReleaseDVector("XsconvNewSlitFunction ","slit",slit,0);
   if (slit2!=NULL)
@@ -2461,7 +2461,7 @@ RC XsconvNewSlitFunction(HWND hwndXsconv,SLIT *pSlitOptions,XS *pSlit,double sli
 // QDOAS ???   // Declarations
 // QDOAS ???
 // QDOAS ???   UCHAR windowTitle[MAX_ITEM_TEXT_LEN+1],graphTitle[MAX_ITEM_TEXT_LEN+1],fileName[MAX_ITEM_TEXT_LEN+1];
-// QDOAS ???   double lembdaMin,lembdaMax,slitParam,slitParam2,slitWidth,*filterVector;
+// QDOAS ???   double lambdaMin,lambdaMax,slitParam,slitParam2,slitWidth,*filterVector;
 // QDOAS ???   PRJCT_FILTER *plFilter,*phFilter;
 // QDOAS ???   SLIT *pSlitConv,*pSlitDConv;
 // QDOAS ???   INT slitType,slitType2,deconvFlag,dispConv,dispLFilter,dispHFilter,nGraph,iGraph;
@@ -2535,13 +2535,13 @@ RC XsconvNewSlitFunction(HWND hwndXsconv,SLIT *pSlitOptions,XS *pSlit,double sli
 // QDOAS ???
 // QDOAS ???     if ((slitType!=SLIT_TYPE_FILE) || (XSCONV_options.convolutionType==CONVOLUTION_TYPE_NONE))
 // QDOAS ???      {
-// QDOAS ???       lembdaMin=XSCONV_xsnew.lembda[0]-slitWidth-1.;                     // add 1 nm
-// QDOAS ???       lembdaMax=XSCONV_xsnew.lembda[XSCONV_xsnew.NDET-1]+slitWidth+1.;
+// QDOAS ???       lambdaMin=XSCONV_xsnew.lambda[0]-slitWidth-1.;                     // add 1 nm
+// QDOAS ???       lambdaMax=XSCONV_xsnew.lambda[XSCONV_xsnew.NDET-1]+slitWidth+1.;
 // QDOAS ???      }
 // QDOAS ???     else
 // QDOAS ???      {
-// QDOAS ???       lembdaMin=XSCONV_xsnew.lembda[0]+XSCONV_slitFunction.lembda[0]-1.;                     // add 1 nm
-// QDOAS ???       lembdaMax=XSCONV_xsnew.lembda[XSCONV_xsnew.NDET-1]+XSCONV_slitFunction.lembda[XSCONV_slitFunction.NDET-1]+1.;
+// QDOAS ???       lambdaMin=XSCONV_xsnew.lambda[0]+XSCONV_slitFunction.lambda[0]-1.;                     // add 1 nm
+// QDOAS ???       lambdaMax=XSCONV_xsnew.lambda[XSCONV_xsnew.NDET-1]+XSCONV_slitFunction.lambda[XSCONV_slitFunction.NDET-1]+1.;
 // QDOAS ???      }
 // QDOAS ???
 // QDOAS ???     if (deconvFlag)
@@ -2554,12 +2554,12 @@ RC XsconvNewSlitFunction(HWND hwndXsconv,SLIT *pSlitOptions,XS *pSlit,double sli
 // QDOAS ???     // Load high resolution Kurucz file in convolution with I0 correction method
 // QDOAS ???
 // QDOAS ???         ((XSCONV_options.convolutionType!=CONVOLUTION_TYPE_I0_CORRECTION) ||
-// QDOAS ???         !(rc=XSCONV_LoadCrossSectionFile(&XSCONV_kurucz,XSCONV_options.kuruczFile,lembdaMin,lembdaMax,(double)0.,CONVOLUTION_CONVERSION_NONE))) &&
-// QDOAS ???         !(rc=XSCONV_LoadCrossSectionFile(&XSCONV_xshr,XSCONV_options.crossFile,lembdaMin,lembdaMax,(double)atof(XSCONV_options.shift),XSCONV_options.conversionMode)))
+// QDOAS ???         !(rc=XSCONV_LoadCrossSectionFile(&XSCONV_kurucz,XSCONV_options.kuruczFile,lambdaMin,lambdaMax,(double)0.,CONVOLUTION_CONVERSION_NONE))) &&
+// QDOAS ???         !(rc=XSCONV_LoadCrossSectionFile(&XSCONV_xshr,XSCONV_options.crossFile,lambdaMin,lambdaMax,(double)atof(XSCONV_options.shift),XSCONV_options.conversionMode)))
 // QDOAS ???      {
 // QDOAS ???       dispConv=((XSCONV_options.convolutionType!=CONVOLUTION_TYPE_NONE) ||
 // QDOAS ???             (XSCONV_xshr.NDET!=XSCONV_xsnew.NDET) ||
-// QDOAS ???             !VECTOR_Equal(XSCONV_xshr.lembda,XSCONV_xsnew.lembda,XSCONV_xsnew.NDET,(double)1.e-7))?1:0;
+// QDOAS ???             !VECTOR_Equal(XSCONV_xshr.lambda,XSCONV_xsnew.lambda,XSCONV_xsnew.NDET,(double)1.e-7))?1:0;
 // QDOAS ???
 // QDOAS ???       dispLFilter=(lowFilterType!=PRJCT_FILTER_TYPE_NONE)?1:0;
 // QDOAS ???       dispHFilter=(highFilterType!=PRJCT_FILTER_TYPE_NONE)?1:0;
@@ -2602,8 +2602,8 @@ RC XsconvNewSlitFunction(HWND hwndXsconv,SLIT *pSlitOptions,XS *pSlit,double sli
 // QDOAS ???         DRAW_Spectra(CHILD_WINDOW_SPECTRA,windowTitle,
 // QDOAS ???                     (XSCONV_options.convolutionType!=CONVOLUTION_TYPE_NONE)?"After convolution":"After interpolation","Wavelength (nm)","",NULL,0,
 // QDOAS ???                     (double)0.,(double)0.,(double)0.,(double)0.,
-// QDOAS ???                      XSCONV_xshr.lembda,XSCONV_xshr.vector,XSCONV_xshr.NDET,DRAW_COLOR2,0,XSCONV_xshr.NDET-1,PS_SOLID,"Original",
-// QDOAS ???                      XSCONV_xsnew.lembda+nFilter,XSCONV_xsnew.vector+nFilter,XSCONV_xsnew.NDET-2*nFilter,DRAW_COLOR1,0,XSCONV_xsnew.NDET-2*nFilter-1,PS_SOLID,
+// QDOAS ???                      XSCONV_xshr.lambda,XSCONV_xshr.vector,XSCONV_xshr.NDET,DRAW_COLOR2,0,XSCONV_xshr.NDET-1,PS_SOLID,"Original",
+// QDOAS ???                      XSCONV_xsnew.lambda+nFilter,XSCONV_xsnew.vector+nFilter,XSCONV_xsnew.NDET-2*nFilter,DRAW_COLOR1,0,XSCONV_xsnew.NDET-2*nFilter-1,PS_SOLID,
 // QDOAS ???                     (XSCONV_options.convolutionType!=CONVOLUTION_TYPE_NONE)?"Convoluted":"Interpolated",
 // QDOAS ???                      iGraph,1,nGraph,(iGraph==nGraph-1)?1:1);
 // QDOAS ???
@@ -2620,7 +2620,7 @@ RC XsconvNewSlitFunction(HWND hwndXsconv,SLIT *pSlitOptions,XS *pSlit,double sli
 // QDOAS ???       // ------------------
 // QDOAS ???
 // QDOAS ???       if ((lowFilterType!=PRJCT_FILTER_TYPE_NONE) && (filterVector!=NULL) &&
-// QDOAS ???         (((lowFilterType==PRJCT_FILTER_TYPE_ODDEVEN) && !(rc=THRD_OddEvenCorrection(XSCONV_xsnew.lembda,XSCONV_xsnew.vector,filterVector,XSCONV_xsnew.NDET))) ||
+// QDOAS ???         (((lowFilterType==PRJCT_FILTER_TYPE_ODDEVEN) && !(rc=THRD_OddEvenCorrection(XSCONV_xsnew.lambda,XSCONV_xsnew.vector,filterVector,XSCONV_xsnew.NDET))) ||
 // QDOAS ???          ((lowFilterType!=PRJCT_FILTER_TYPE_ODDEVEN) && !(rc=FILTER_Vector(plFilter,filterVector,filterVector,XSCONV_xsnew.NDET,PRJCT_FILTER_OUTPUT_LOW)))))
 // QDOAS ???        {
 // QDOAS ???        	#if defined (__WINDOAS_GUI_) && __WINDOAS_GUI_
@@ -2631,8 +2631,8 @@ RC XsconvNewSlitFunction(HWND hwndXsconv,SLIT *pSlitOptions,XS *pSlit,double sli
 // QDOAS ???
 // QDOAS ???         DRAW_Spectra(CHILD_WINDOW_SPECTRA,windowTitle,graphTitle,"Wavelength (nm)","",NULL,0,
 // QDOAS ???                     (double)0.,(double)0.,(double)0.,(double)0.,
-// QDOAS ???                      XSCONV_xsnew.lembda+nFilter,XSCONV_xsnew.vector+nFilter,XSCONV_xsnew.NDET-2*nFilter,DRAW_COLOR2,0,XSCONV_xsnew.NDET-2*nFilter-1,PS_SOLID,"Not filtered",
-// QDOAS ???                      XSCONV_xsnew.lembda+nFilter,filterVector+nFilter,XSCONV_xsnew.NDET-2*nFilter,DRAW_COLOR1,0,XSCONV_xsnew.NDET-2*nFilter-1,PS_SOLID,"Filtered",
+// QDOAS ???                      XSCONV_xsnew.lambda+nFilter,XSCONV_xsnew.vector+nFilter,XSCONV_xsnew.NDET-2*nFilter,DRAW_COLOR2,0,XSCONV_xsnew.NDET-2*nFilter-1,PS_SOLID,"Not filtered",
+// QDOAS ???                      XSCONV_xsnew.lambda+nFilter,filterVector+nFilter,XSCONV_xsnew.NDET-2*nFilter,DRAW_COLOR1,0,XSCONV_xsnew.NDET-2*nFilter-1,PS_SOLID,"Filtered",
 // QDOAS ???                      iGraph,1,nGraph,(iGraph==nGraph-1)?1:0);
 // QDOAS ???
 // QDOAS ???         iGraph++;
@@ -2655,7 +2655,7 @@ RC XsconvNewSlitFunction(HWND hwndXsconv,SLIT *pSlitOptions,XS *pSlit,double sli
 // QDOAS ???
 // QDOAS ???         DRAW_Spectra(CHILD_WINDOW_SPECTRA,windowTitle,graphTitle,"Wavelength (nm)","",NULL,0,
 // QDOAS ???                     (double)0.,(double)0.,(double)0.,(double)0.,
-// QDOAS ???                      XSCONV_xsnew.lembda+nFilter,filterVector+nFilter,XSCONV_xsnew.NDET-2*nFilter,DRAW_COLOR2,0,XSCONV_xsnew.NDET-2*nFilter-1,PS_SOLID,"",
+// QDOAS ???                      XSCONV_xsnew.lambda+nFilter,filterVector+nFilter,XSCONV_xsnew.NDET-2*nFilter,DRAW_COLOR2,0,XSCONV_xsnew.NDET-2*nFilter-1,PS_SOLID,"",
 // QDOAS ???                      NULL,NULL,0,DRAW_COLOR1,0,0,PS_SOLID,"",
 // QDOAS ???                      iGraph,1,nGraph,(iGraph==nGraph-1)?1:0);
 // QDOAS ???

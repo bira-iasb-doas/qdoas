@@ -1,10 +1,9 @@
 
 //  ----------------------------------------------------------------------------
 //
-//  Product/Project   :  DOAS ANALYSIS PROGRAM FOR WINDOWS
+//  Product/Project   :  QDOAS
 //  Module purpose    :  GOME interface (calibrated level 1 data files in the original ASCII format)
 //  Name of module    :  GDP_Asc_Read.c
-//  Program Language  :  Borland C++ 5.0 for Windows 95/NT
 //  Creation date     :  10 December 2001 (original program : Gome-Readlvl1.exe)
 //  Modified          :  11 December 2O01 (adapted for WinDOAS)
 //
@@ -250,14 +249,14 @@ RC ReadERS(FILE *fp,INT *pOrbitNumber)
 // INPUT         fp      : pointer to the GOME level-1 file to read out
 //               channel : the channel number
 //
-// OUTPUT        lembda  : the wavelength calibration of the irradiance spectrum;
+// OUTPUT        lambda  : the wavelength calibration of the irradiance spectrum;
 //               solar   : the irradiance spectrum;
 //               solarE  : absolute errors on the irradiance spectrum
 //
 // RETURN        the size of returned vectors
 // -----------------------------------------------------------------------------
 
-INT ReadSolarChannel(FILE *fp,INT channel,double *lembda,double *solar,double *solarE)
+INT ReadSolarChannel(FILE *fp,INT channel,double *lambda,double *solar,double *solarE)
  {
   // Declarations
 
@@ -297,7 +296,7 @@ INT ReadSolarChannel(FILE *fp,INT channel,double *lembda,double *solar,double *s
     // Read out the wavelength calibration, the solar irradiance and the absolute error
 
     for (i=0;(i<npts) && fgets(fileLine,STRING_LENGTH,fp);i++)
-     sscanf(fileLine,"%lf %lf %lf",&lembda[i],&solar[i],&solarE[i]);
+     sscanf(fileLine,"%lf %lf %lf",&lambda[i],&solar[i],&solarE[i]);
    }
 
   // Return
@@ -316,7 +315,7 @@ INT ReadSolarChannel(FILE *fp,INT channel,double *lembda,double *solar,double *s
 //
 // OUTPUT        pDate   : measurement date of the irradiance spectrum;
 //               pTime   : measurement time of the irradiance spectrum;
-//               lembda  : wavelength calibration of the returned irradiance spectrum;
+//               lambda  : wavelength calibration of the returned irradiance spectrum;
 //               solar   : the irradiance spectrum measured at the requested channel;
 //               solarE  : the absolute errors on the returned irradiance spectrum;
 //               pNpts   : size of returned vectors;
@@ -324,7 +323,7 @@ INT ReadSolarChannel(FILE *fp,INT channel,double *lembda,double *solar,double *s
 // RETURN        1 if read out operation failed; 0 if success.
 // -----------------------------------------------------------------------------
 
-RC ReadSolar(FILE *fp,INT channel,SHORT_DATE *pDate,struct time *pTime,double *lembda,double *solar,double *solarE,INT *pNpts)
+RC ReadSolar(FILE *fp,INT channel,SHORT_DATE *pDate,struct time *pTime,double *lambda,double *solar,double *solarE,INT *pNpts)
  {
   // Declarations
 
@@ -375,7 +374,7 @@ RC ReadSolar(FILE *fp,INT channel,SHORT_DATE *pDate,struct time *pTime,double *l
     // Read the irradiance spectrum measured at the requested channel
 
     if ((channel>=CHANNEL_1) && (channel<=CHANNEL_4))
-     *pNpts=ReadSolarChannel(fp,channel,lembda,solar,solarE);
+     *pNpts=ReadSolarChannel(fp,channel,lambda,solar,solarE);
 
     if (*pNpts>0)
      rc=0;
@@ -585,7 +584,7 @@ RC ReadPixelInfo(FILE *fp,ENGINE_CONTEXT *pEngineContext)
 //               band      : band of the earthshine spectrum to return
 //
 // OUTPUT        pEngineContext : data on the current GOME pixel;
-//               lembda    : wavelength calibration of the returned irradiance spectrum;
+//               lambda    : wavelength calibration of the returned irradiance spectrum;
 //               earth     : the earthshine spectrum measured at the requested band;
 //               earthE    : the absolute errors on the returned earthshine spectrum;
 //               pNpts     : size of returned vectors;
@@ -593,7 +592,7 @@ RC ReadPixelInfo(FILE *fp,ENGINE_CONTEXT *pEngineContext)
 // RETURN        1 if read out operation failed; 0 if success.
 // -----------------------------------------------------------------------------
 
-RC ReadSpectrum(FILE *fp,INT band,ENGINE_CONTEXT *pEngineContext,double *lembda,double *earth,double *earthE,INT *pNpts)
+RC ReadSpectrum(FILE *fp,INT band,ENGINE_CONTEXT *pEngineContext,double *lambda,double *earth,double *earthE,INT *pNpts)
  {
   // Declarations
 
@@ -636,7 +635,7 @@ RC ReadSpectrum(FILE *fp,INT band,ENGINE_CONTEXT *pEngineContext,double *lembda,
 
       if ((pRecord->gome.pixelNumber>0) && !strnicmp(bandStr,bands[band],strlen(bands[band])))
        {
-        if ((lembda==NULL) || (earth==NULL) || (earthE==NULL))
+        if ((lambda==NULL) || (earth==NULL) || (earthE==NULL))
          rc=0;
         else
          {
@@ -644,7 +643,7 @@ RC ReadSpectrum(FILE *fp,INT band,ENGINE_CONTEXT *pEngineContext,double *lembda,
            npts=MAX_PIXELS;
 
           for (i=0;(i<npts) && fgets(fileLine,STRING_LENGTH,fp);i++)
-           sscanf(fileLine,"%lf %lf %lf",&lembda[i],&earth[i],&earthE[i]);
+           sscanf(fileLine,"%lf %lf %lf",&lambda[i],&earth[i],&earthE[i]);
 
           if (i==npts)
            {
@@ -788,7 +787,7 @@ RC GDP_ASC_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,FILE *s
   // Declarations
 
   RECORD_INFO *pRecord;                                                         // pointer to the record part of the engine context
-  double *lembda,*spectrum,*errors,                                             // use substitution variables
+  double *lambda,*spectrum,*errors,                                             // use substitution variables
          *spectrum2,*specInt;                                                   // temporary buffers
   GOME_DATA *pGome;                                                             // pointer to the GOME part of the pEngineContext structure
   INT band;                                                                     // the band to read out
@@ -799,7 +798,7 @@ RC GDP_ASC_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,FILE *s
 
   pRecord=&pEngineContext->recordInfo;
 
-  lembda=pEngineContext->buffers.lembda;
+  lambda=pEngineContext->buffers.lambda;
   spectrum=pEngineContext->buffers.spectrum;
   errors=pEngineContext->buffers.sigmaSpec;
   spectrum2=specInt=NULL;
@@ -814,7 +813,7 @@ RC GDP_ASC_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,FILE *s
 
   else if ((THRD_id==THREAD_TYPE_SPECTRA) && (THRD_browseType==THREAD_BROWSE_DARK))
    {
-    memcpy(lembda,GDP_ASC_refL,sizeof(double)*NDET);
+    memcpy(lambda,GDP_ASC_refL,sizeof(double)*NDET);
     memcpy(spectrum,GDP_ASC_ref,sizeof(double)*NDET);
     memcpy(errors,GDP_ASC_refE,sizeof(double)*NDET);
    }
@@ -825,7 +824,7 @@ RC GDP_ASC_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,FILE *s
 
     // Read out the spectrum
 
-    if (ReadSpectrum(specFp,band,pEngineContext,lembda,spectrum,errors,&npts))
+    if (ReadSpectrum(specFp,band,pEngineContext,lambda,spectrum,errors,&npts))
      rc=ERROR_ID_FILE_END;
 
     // Interpolate the earthshine spectrum on the irradiance grid
@@ -833,8 +832,8 @@ RC GDP_ASC_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,FILE *s
     else if (((spectrum2=(double *)MEMORY_AllocDVector("GDP_ASC_Read ","spectrum2",0,MAX_PIXELS-1))==NULL) ||
              ((specInt=(double *)MEMORY_AllocDVector("GDP_ASC_Read ","specInt",0,MAX_PIXELS-1))==NULL))
      rc=ERROR_ID_ALLOC;
-    else if (!(rc=SPLINE_Deriv2(lembda,spectrum,spectrum2,npts,"GDP_ASC_Read ")) &&
-             !(rc=SPLINE_Vector(lembda,spectrum,spectrum2,npts,GDP_ASC_refL,specInt,NDET,SPLINE_CUBIC,"GDP_ASC_Read ")))
+    else if (!(rc=SPLINE_Deriv2(lambda,spectrum,spectrum2,npts,"GDP_ASC_Read ")) &&
+             !(rc=SPLINE_Vector(lambda,spectrum,spectrum2,npts,GDP_ASC_refL,specInt,NDET,SPLINE_CUBIC,"GDP_ASC_Read ")))
 
     // Get information on the current GOME pixel
 
@@ -853,7 +852,7 @@ RC GDP_ASC_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,FILE *s
       pRecord->latitude     = pGome->latit[4];
       pRecord->altitude     = (double) 0.;
 
-      memcpy(lembda,GDP_ASC_refL,sizeof(double)*NDET);
+      memcpy(lambda,GDP_ASC_refL,sizeof(double)*NDET);
       memcpy(spectrum,specInt,sizeof(double)*NDET);
      }
    }
@@ -893,7 +892,7 @@ RC GDP_ASC_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
   CROSS_REFERENCE *pTabCross;
   WRK_SYMBOL *pWrkSymbol;
   FENO *pTabFeno;
-  double factTemp,lembdaMin,lembdaMax;
+  double factTemp,lambdaMin,lambdaMax;
   INT DimL,degree,invFlag,useUsamp,useKurucz,saveFlag,refSelectionFlag;
   RC rc;
 
@@ -902,8 +901,8 @@ RC GDP_ASC_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
   saveFlag=(INT)pEngineContext->project.spectra.displayDataFlag;
   refSelectionFlag=0;
 
-  lembdaMin=(double)9999.;
-  lembdaMax=(double)-9999.;
+  lambdaMin=(double)9999.;
+  lambdaMax=(double)-9999.;
 
   rc=ERROR_ID_NO;
   useKurucz=useUsamp=0;
@@ -920,7 +919,7 @@ RC GDP_ASC_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
 
      if (!pTabFeno->gomeRefFlag)
       {
-       memcpy(pTabFeno->LembdaRef,GDP_ASC_refL,sizeof(double)*NDET);
+       memcpy(pTabFeno->LambdaRef,GDP_ASC_refL,sizeof(double)*NDET);
        memcpy(pTabFeno->Sref,GDP_ASC_ref,sizeof(double)*NDET);
        memcpy(pTabFeno->SrefSigma,GDP_ASC_refE,sizeof(double)*NDET);
 
@@ -943,7 +942,7 @@ RC GDP_ASC_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
                 ((pWrkSymbol->type==WRK_SYMBOL_PREDEFINED) &&
                 ((indexTabCross==pTabFeno->indexCommonResidual) ||
                (((indexTabCross==pTabFeno->indexUsamp1) || (indexTabCross==pTabFeno->indexUsamp2)) && (pUsamp->method==PRJCT_USAMP_FILE))))) &&
-                ((rc=ANALYSE_CheckLembda(pWrkSymbol,pTabFeno->LembdaRef,"GDP_ASC_LoadAnalysis "))!=ERROR_ID_NO))
+                ((rc=ANALYSE_CheckLambda(pWrkSymbol,pTabFeno->LambdaRef,"GDP_ASC_LoadAnalysis "))!=ERROR_ID_NO))
 
             goto EndGDP_ASC_LoadAnalysis;
 
@@ -963,22 +962,22 @@ RC GDP_ASC_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
 
              if (!invFlag)
               for (i=0;i<NDET;i++)
-               pTabCross->vector[i]=(double)pow(pTabFeno->LembdaRef[i],degree);
+               pTabCross->vector[i]=(double)pow(pTabFeno->LambdaRef[i],degree);
              else
               for (i=0;i<NDET;i++)
-               pTabCross->vector[i]=(double)1./pow(pTabFeno->LembdaRef[i],degree);
+               pTabCross->vector[i]=(double)1./pow(pTabFeno->LambdaRef[i],degree);
             }
           }
 
-         if ((rc=ANALYSE_XsInterpolation(pTabFeno,pTabFeno->LembdaRef))!=ERROR_ID_NO)
+         if ((rc=ANALYSE_XsInterpolation(pTabFeno,pTabFeno->LambdaRef))!=ERROR_ID_NO)
           goto EndGDP_ASC_LoadAnalysis;
 
          // Gaps : rebuild subwindows on new wavelength scale
 
          for (indexWindow=0,DimL=0;indexWindow<pTabFeno->svd.Z;indexWindow++)
           {
-           pTabFeno->svd.Fenetre[indexWindow][0]=FNPixel(pTabFeno->LembdaRef,pTabFeno->svd.LFenetre[indexWindow][0],NDET,PIXEL_AFTER);
-           pTabFeno->svd.Fenetre[indexWindow][1]=FNPixel(pTabFeno->LembdaRef,pTabFeno->svd.LFenetre[indexWindow][1],NDET,PIXEL_BEFORE);
+           pTabFeno->svd.Fenetre[indexWindow][0]=FNPixel(pTabFeno->LambdaRef,pTabFeno->svd.LFenetre[indexWindow][0],NDET,PIXEL_AFTER);
+           pTabFeno->svd.Fenetre[indexWindow][1]=FNPixel(pTabFeno->LambdaRef,pTabFeno->svd.LFenetre[indexWindow][1],NDET,PIXEL_BEFORE);
 
            DimL+=(pTabFeno->svd.Fenetre[indexWindow][1]-pTabFeno->svd.Fenetre[indexWindow][0]+1);
           }
@@ -993,8 +992,8 @@ RC GDP_ASC_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
          pTabFeno->Decomp=1;
         }
 
-       memcpy(pTabFeno->LembdaK,pTabFeno->LembdaRef,sizeof(double)*NDET);
-       memcpy(pTabFeno->Lembda,pTabFeno->LembdaRef,sizeof(double)*NDET);
+       memcpy(pTabFeno->LambdaK,pTabFeno->LambdaRef,sizeof(double)*NDET);
+       memcpy(pTabFeno->Lambda,pTabFeno->LambdaRef,sizeof(double)*NDET);
 
        useUsamp+=pTabFeno->useUsamp;
        useKurucz+=pTabFeno->useKurucz;
@@ -1003,10 +1002,10 @@ RC GDP_ASC_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
 
        if (pTabFeno->useUsamp)
         {
-         if (pTabFeno->LembdaRef[0]<lembdaMin)
-          lembdaMin=pTabFeno->LembdaRef[0];
-         if (pTabFeno->LembdaRef[NDET-1]>lembdaMax)
-          lembdaMax=pTabFeno->LembdaRef[NDET-1];
+         if (pTabFeno->LambdaRef[0]<lambdaMin)
+          lambdaMin=pTabFeno->LambdaRef[0];
+         if (pTabFeno->LambdaRef[NDET-1]>lambdaMax)
+          lambdaMax=pTabFeno->LambdaRef[NDET-1];
         }
       }
     }
@@ -1027,7 +1026,7 @@ RC GDP_ASC_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
    {
     USAMP_LocalFree();
 
-    if (((rc=USAMP_LocalAlloc(0 /* lembdaMin,lembdaMax,oldNDET */))!=ERROR_ID_NO) ||
+    if (((rc=USAMP_LocalAlloc(0 /* lambdaMin,lambdaMax,oldNDET */))!=ERROR_ID_NO) ||
         ((rc=USAMP_BuildFromAnalysis(0,0))!=ERROR_ID_NO) ||
         ((rc=USAMP_BuildFromAnalysis(1,ITEM_NONE))!=ERROR_ID_NO))
 

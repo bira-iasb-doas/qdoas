@@ -1,7 +1,7 @@
 
 //  ----------------------------------------------------------------------------
 //
-//  Product/Project   :  THE BIRA-IASB DOAS SOFTWARE FOR WINDOWS AND LINUX
+//  Product/Project   :  QDOAS
 //  Module purpose    :  BUFFERS ALLOCATION AND MEMORY CONTROL
 //  Name of module    :  MEMORY.C
 //  Creation date     :  22 September 1999

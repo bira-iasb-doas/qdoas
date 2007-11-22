@@ -34,91 +34,91 @@ bool CSelectorSubHandler::start(const QString &element, const QXmlAttributes &at
   if (str == "specno")
     d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_SPECNO;
   else if (str == "name")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_NAME;           
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_NAME;
   else if (str == "date_time")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_DATE_TIME;      
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_DATE_TIME;
   else if (str == "date")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_DATE;           
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_DATE;
   else if (str == "time")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_TIME;           
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_TIME;
   else if (str == "year")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_YEAR;           
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_YEAR;
   else if (str == "julian")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_JULIAN;         
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_JULIAN;
   else if (str == "jdfrac")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_JDFRAC;         
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_JDFRAC;
   else if (str == "tifrac")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_TIFRAC;         
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_TIFRAC;
   else if (str == "scans")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_SCANS;          
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_SCANS;
   else if (str == "tint")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_TINT;           
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_TINT;
   else if (str == "sza")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_SZA;            
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_SZA;
   else if (str == "chi")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_CHI;            
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_CHI;
   else if (str == "rms")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_RMS;            
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_RMS;
   else if (str == "azim")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_AZIM;           
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_AZIM;
   else if (str == "tdet")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_TDET;           
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_TDET;
   else if (str == "sky")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_SKY;            
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_SKY;
   else if (str == "bestshift")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_BESTSHIFT;      
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_BESTSHIFT;
   else if (str == "refzm")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_REFZM;          
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_REFZM;
   else if (str == "refshift")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_REFSHIFT;       
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_REFSHIFT;
   else if (str == "pixel")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_PIXEL;          
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_PIXEL;
   else if (str == "pixel_type")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_PIXEL_TYPE;     
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_PIXEL_TYPE;
   else if (str == "orbit")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_ORBIT;          
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_ORBIT;
   else if (str == "longit")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_LONGIT;         
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_LONGIT;
   else if (str == "latit")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_LATIT;          
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_LATIT;
   else if (str == "altit")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_ALTIT;          
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_ALTIT;
   else if (str == "covar")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_COVAR;          
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_COVAR;
   else if (str == "corr")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_CORR;           
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_CORR;
   else if (str == "cloud")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_CLOUD;          
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_CLOUD;
   else if (str == "coeff")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_COEFF;          
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_COEFF;
   else if (str == "o3")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_O3;             
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_O3;
   else if (str == "no2")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_NO2;            
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_NO2;
   else if (str == "cloudtopp")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_CLOUDTOPP;      
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_CLOUDTOPP;
   else if (str == "los_za")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_LOS_ZA;         
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_LOS_ZA;
   else if (str == "los_azimuth")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_LOS_AZIMUTH;    
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_LOS_AZIMUTH;
   else if (str == "sat_height")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_SAT_HEIGHT;     
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_SAT_HEIGHT;
   else if (str == "earth_radius")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_EARTH_RADIUS;   
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_EARTH_RADIUS;
   else if (str == "view_elevation")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_VIEW_ELEVATION; 
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_VIEW_ELEVATION;
   else if (str == "view_azimuth")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_VIEW_AZIMUTH;   
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_VIEW_AZIMUTH;
   else if (str == "scia_quality")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_SCIA_QUALITY;   
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_SCIA_QUALITY;
   else if (str == "scia_state_index")
     d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_SCIA_STATE_INDEX;
   else if (str == "scia_state_id")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_SCIA_STATE_ID;  
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_SCIA_STATE_ID;
   else if (str == "mfc_starttime")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_MFC_STARTTIME;  
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_MFC_STARTTIME;
   else if (str == "mfc_endtime")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_MFC_ENDTIME;    
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_MFC_ENDTIME;
   else
     return postErrorMessage("Invalid output field " + str);
 
@@ -245,25 +245,25 @@ bool CProjectAnalysisSubHandler::start(const QXmlAttributes &atts)
 
   str = atts.value("fit");
   if (str == "none")
-    m_analysis->methodType = PRJCT_ANLYS_FIT_WEIGHTING_NONE;
+    m_analysis->fitType = PRJCT_ANLYS_FIT_WEIGHTING_NONE;
   else if (str == "instr")
-    m_analysis->methodType = PRJCT_ANLYS_FIT_WEIGHTING_INSTRUMENTAL;
+    m_analysis->fitType = PRJCT_ANLYS_FIT_WEIGHTING_INSTRUMENTAL;
   else
     return postErrorMessage("Invalid analysis fit");
 
   str = atts.value("unit");
   if (str == "pixel")
-    m_analysis->methodType = PRJCT_ANLYS_UNITS_PIXELS;
+    m_analysis->unitType = PRJCT_ANLYS_UNITS_PIXELS;
   else if (str == "nm")
-    m_analysis->methodType = PRJCT_ANLYS_UNITS_NANOMETERS;
+    m_analysis->unitType = PRJCT_ANLYS_UNITS_NANOMETERS;
   else
     return postErrorMessage("Invalid analysis unit");
 
   str = atts.value("interpolation");
   if (str == "linear")
-    m_analysis->methodType = PRJCT_ANLYS_INTERPOL_LINEAR;
+    m_analysis->interpolationType = PRJCT_ANLYS_INTERPOL_LINEAR;
   else if (str == "spline")
-    m_analysis->methodType = PRJCT_ANLYS_INTERPOL_SPLINE;
+    m_analysis->interpolationType = PRJCT_ANLYS_INTERPOL_SPLINE;
   else
     return postErrorMessage("Invalid analysis interpolation");
 
@@ -407,10 +407,10 @@ bool CProjectCalibrationSubHandler::start(const QString &element, const QXmlAttr
     return m_master->installSubHandler(new CAnalysisWindowCrossSectionSubHandler(m_master, &(m_calibration->crossSectionList)), atts);
   }
   else if (element == "linear") {
-    return m_master->installSubHandler(new CAnalysisWindowLinearSubHandler(m_master, &(m_calibration->linear)), atts);    
+    return m_master->installSubHandler(new CAnalysisWindowLinearSubHandler(m_master, &(m_calibration->linear)), atts);
   }
   else if (element == "sfp") {
-    return m_master->installSubHandler(new CAnalysisWindowSfpSubHandler(m_master, &(m_calibration->sfp[0])), atts); 
+    return m_master->installSubHandler(new CAnalysisWindowSfpSubHandler(m_master, &(m_calibration->sfp[0])), atts);
   }
   else if (element == "shift_stretch") {
     return m_master->installSubHandler(new CAnalysisWindowShiftStretchSubHandler(m_master, &(m_calibration->shiftStretchList)), atts);
@@ -1277,7 +1277,7 @@ bool CProjectSlitSubHandler::start(const QXmlAttributes &atts)
 bool CProjectSlitSubHandler::start(const QString &element, const QXmlAttributes &atts)
 {
   if (element == "slit_func") {
-    
+
     return m_master->installSubHandler(new CSlitFunctionSubHandler(m_master, &(m_slit->function)), atts);
   }
 

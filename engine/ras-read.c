@@ -1,7 +1,7 @@
 
 //  ----------------------------------------------------------------------------
 //
-//  Product/Project   :  DOAS ANALYSIS PROGRAM FOR WINDOWS
+//  Product/Project   :  QDOAS
 //  Module purpose    :  RASAS read out routines
 //  Name of module    :  RAS-READ.C
 //  Creation date     :  7 January 2000
@@ -90,7 +90,7 @@ RC SetRAS(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
 
   memset(fileName,0,MAX_PATH_LEN+1);
   strncpy(fileName,pEngineContext->fileInfo.fileName,MAX_PATH_LEN);
-  THRD_lastRefRecord=0;
+  pEngineContext->lastRefRecord=0;
   rasDirFlag=0;
   rc=ERROR_ID_NO;
 
@@ -344,7 +344,7 @@ RC ReliRAS(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,INT localDay
         pRecord->longitude=-pRecord->longitude;
 
         if (dateFlag)
-         THRD_lastRefRecord=recordNo;
+         pEngineContext->lastRefRecord=recordNo;
        }
      }
    }

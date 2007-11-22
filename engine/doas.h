@@ -370,13 +370,13 @@ typedef struct _feno
   INT             xsToConvolute;                                                //  flag set if high resolution cross sections to convolute real time
   INT             xsToConvoluteI0;
 
-  double         *LembdaRef,                                                    //  absolute reference wavelength scale
-                 *LembdaK,                                                      //  new wavelength scale after Kurucz
-                 *Lembda,                                                       //  wavelength scale to use for analysis
+  double         *LambdaRef,                                                    //  absolute reference wavelength scale
+                 *LambdaK,                                                      //  new wavelength scale after Kurucz
+                 *Lambda,                                                       //  wavelength scale to use for analysis
                  *Sref,                                                         //  reference spectrum
                  *SrefSigma,                                                    //  error on reference spectrum
                  *SrefEtalon,                                                   //  etalon reference spectrum
-                 *LembdaN,*LembdaS,
+                 *LambdaN,*LambdaS,
                  *SrefN,*SrefS,
                   Shift,                                                        //  shift found when aligning etalon on reference
                   Stretch,                                                      //  stretch order 1 found when aligning etalon on reference
@@ -424,7 +424,7 @@ typedef struct _feno
   double          refLonMin,refLonMax;
   int             nspectra;
   INT             NDET;
-  double          lembdaMinK,lembdaMaxK;
+  double          lambdaMinK,lambdaMaxK;
   INT             gomeRefFlag;
   INT             mfcRefFlag;
   RC              rcKurucz;
@@ -599,7 +599,7 @@ typedef struct _engineBuffers
  {
   // spectra buffers
 
-  double *lembda,                                                               // wavelengths
+  double *lambda,                                                               // wavelengths
          *spectrum,                                                             // raw spectrum
          *sigmaSpec,                                                            // error on raw spectrum if any
          *irrad,                                                                // irradiance spectrum (for satellites measurements)
@@ -675,9 +675,6 @@ typedef struct _engineRecordInfo
   double TDet,                                                                  // temperature of the detector
          BestShift;                                                             // best shift
 
-                                                                                // CCD
-
-  CCD    ccd;
   int NTracks;                                                                  // Nbre de tracks retenus
 
                                                                                 // MFC format
@@ -691,6 +688,10 @@ typedef struct _engineRecordInfo
 
   UCHAR  refFileName[MAX_PATH_LEN+1];
   INT    refRecord;
+
+  // CCD
+
+  CCD    ccd;    // !!! This field should always be the last one -> cfr. ENGINE_CopyContext
  }
 RECORD_INFO;
 
@@ -710,8 +711,10 @@ typedef struct _engineContext
   INT     recordNumber;                                                         // total number of record in file
   INT     recordIndexesSize;                                                    // size of 'recordIndexes' buffer
   INT     recordSize;                                                           // size of record if length fixed
-  INDEX   indexRecord,indexFile,indexProject;
+  INDEX   indexRecord,indexFile;
+  INDEX   lastRefRecord;
   INT     lastSavedRecord;
+  INT     satelliteFlag;
  }
 ENGINE_CONTEXT;
 
@@ -742,18 +745,16 @@ THRD_REF;
 
 EXTERN UCHAR     THRD_asciiFile[];             // ASCII file for exporting spectra
 EXTERN HANDLE    THRD_hEvents[];               // list of events
-EXTERN ENGINE_CONTEXT THRD_specInfo,THRD_refInfo;   // data on current spectra and reference
+EXTERN ENGINE_CONTEXT THRD_specInfo;           // data on current spectra and reference
 EXTERN UINT      THRD_id;                      // thread identification number
 EXTERN INT       THRD_levelMax;                // level of thread
 EXTERN INT       THRD_lastEvent;               // last event
 EXTERN DWORD     THRD_delay;                   // wait for next event
-EXTERN double    THRD_localNoon;               // local noon
 EXTERN INT       THRD_localShift;
 EXTERN INT       THRD_correction;
 EXTERN INT       THRD_browseType;
 EXTERN THRD_GOTO THRD_goto;
 EXTERN INT       THRD_treeCallFlag;
-EXTERN INT       THRD_lastRefRecord;
 EXTERN INT       THRD_increment;
 EXTERN INT       THRD_isFolder;
 EXTERN INT       THRD_recordLast;
@@ -762,7 +763,7 @@ EXTERN INT       THRD_recordLast;
 // QDOAS ??? // PROTOTYPES
 // QDOAS ??? // ----------
 // QDOAS ???
-// QDOAS ??? RC               THRD_OddEvenCorrection(double *lembdaData,double *specData,double *output,INT vectorSize);
+// QDOAS ??? RC               THRD_OddEvenCorrection(double *lambdaData,double *specData,double *output,INT vectorSize);
 double           THRD_GetDist(double longit, double latit, double longitRef, double latitRef);
 // QDOAS ??? #if defined(__WINDOAS_GUI_) && __WINDOAS_GUI_
 // QDOAS ??? LRESULT CALLBACK THRD_GotoWndProc(HWND hwndThrdGoto,UINT msg,WPARAM mp1,LPARAM mp2);
@@ -831,7 +832,7 @@ EXTERN PRJCT_SLIT   *pSlitOptions;                 // slit function options
 EXTERN PRJCT_USAMP  *pUsamp;
 EXTERN FENO         *TabFeno,*Feno;
 EXTERN MATRIX_OBJECT ANALYSIS_slit,O3TD;
-EXTERN double      **U,*x,*Lembda,
+EXTERN double      **U,*x,*Lambda,
                     *ANALYSE_pixels,
                     *ANALYSE_splineX,              // abscissa used for spectra, in the units selected by user
                     *ANALYSE_splineX2,             // in pixels units, second derivatives of corresponding wavelengths
@@ -860,11 +861,11 @@ enum _pixelSelection
  	PIXEL_CLOSEST
  };
 
-RC   FNPixel   ( double *lembdaVector, double lembdaValue, INT npts,INT pixelSelection );
+RC   FNPixel   ( double *lambdaVector, double lambdaValue, INT npts,INT pixelSelection );
 
-RC   ANALYSE_CheckLembda(WRK_SYMBOL *pWrkSymbol,double *lembda,UCHAR *callingFunction);
-RC   ANALYSE_XsInterpolation(FENO *pTabFeno,double *newLembda);
-RC   ANALYSE_XsConvolution(FENO *pTabFeno,double *newLembda,MATRIX_OBJECT *pSlit,INT slitType,double *slitParam1,double *slitParam2,double *slitParam3,double *slitParam4);
+RC   ANALYSE_CheckLambda(WRK_SYMBOL *pWrkSymbol,double *lambda,UCHAR *callingFunction);
+RC   ANALYSE_XsInterpolation(FENO *pTabFeno,double *newLambda);
+RC   ANALYSE_XsConvolution(FENO *pTabFeno,double *newLambda,MATRIX_OBJECT *pSlit,INT slitType,double *slitParam1,double *slitParam2,double *slitParam3,double *slitParam4);
 RC   ANALYSE_NormalizeVector(double *v,INT dim,double *fact,UCHAR *function);
 RC   ANALYSE_LinFit(SVD *pSvd,INT Npts,INT Degree,double *a,double *sigma,double *b,double *x);
 void ANALYSE_SvdFree(UCHAR *callingFunctionShort,SVD *pSvd);
@@ -874,16 +875,15 @@ RC   ANALYSE_CurFitMethod(double *Spectre,double *SigmaSpec,double *Sref,double 
 void ANALYSE_ResetData(void);
 RC   ANALYSE_LoadFilter(PRJCT_FILTER *pFilter);
 RC   ANALYSE_SetInit(ENGINE_CONTEXT *pEngineContext);
-RC   ANALYSE_AlignReference(INT refFlag,INT saveFlag);
-RC   ANALYSE_AlignRef(FENO *pFeno,double *lembda,double *ref1,double *ref2,double *pShift,double *pStretch,double *pStretch2,int dispFlag);
+RC   ANALYSE_AlignReference(INT refFlag,INT saveFlag,void *responseHandle);
 RC   ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle);
 
 void ANALYSE_SetAnalysisType(void);
 RC   ANALYSE_LoadRef(ENGINE_CONTEXT *pEngineContext);
 RC   ANALYSE_LoadLinear(ANALYSE_LINEAR_PARAMETERS *linearList,INT nLinear);
-RC   ANALYSE_LoadNonLinear(ANALYSE_NON_LINEAR_PARAMETERS *nonLinearList,INT nNonLinear,double *lembda);
+RC   ANALYSE_LoadNonLinear(ANALYSE_NON_LINEAR_PARAMETERS *nonLinearList,INT nNonLinear,double *lambda);
 RC   ANALYSE_LoadShiftStretch(ANALYSIS_SHIFT_STRETCH *shiftStretchList,INT nShiftStretch);
-RC   ANALYSE_LoadGaps(ANALYSIS_GAP *gapList,INT nGaps,double *lembda,double lembdaMin,double lembdaMax);
+RC   ANALYSE_LoadGaps(ANALYSIS_GAP *gapList,INT nGaps,double *lambda,double lambdaMin,double lambdaMax);
 
 RC   ANALYSE_Alloc(void);
 void ANALYSE_Free(void);
@@ -913,14 +913,14 @@ typedef struct _Kurucz
   XS      hrSolar;                              // high resolution kurucz spectrum for convolution
   SVD     svdFwhm;                              // svd matrix used for computing coefficients of polynomial fitting fwhm
   double *solar,                                // convoluted kurucz spectrum
-         *lembdaF,
+         *lambdaF,
          *solarF,                               // filtered solar spectrum (high pass filtering)
          *solarF2,                              // second derivatives for the previous vector
          *offset,
          *fwhmVector[MAX_KURUCZ_FWHM_PARAM],    // wavelength dependence of fwhm
          *fwhmDeriv2[MAX_KURUCZ_FWHM_PARAM],    // wavelength dependence of fwhm
          *VPix,*VSig,*Pcalib,                   // polynomial coefficients computation
-         *pixMid,*VLembda,*VShift,              // display
+         *pixMid,*VLambda,*VShift,              // display
          *fwhm[MAX_KURUCZ_FWHM_PARAM],          // fwhm found for each little window
          *fwhmSigma[MAX_KURUCZ_FWHM_PARAM],     // errors on fwhm
          *fwhmPolySpec[MAX_KURUCZ_FWHM_PARAM];  // polynomial coefficients for building wavelength dependence of fwhm for spectra
@@ -955,12 +955,12 @@ EXTERN FFT *pKURUCZ_fft;
 // PROTOTYPES
 // ----------
 
-RC   KURUCZ_Spectrum(double *oldLembda,double *newLembda,double *spectrum,double *reference,double *instrFunction,
+RC   KURUCZ_Spectrum(double *oldLambda,double *newLambda,double *spectrum,double *reference,double *instrFunction,
                      UCHAR displayFlag,UCHAR *windowTitle,double **coeff,double **fwhmVector,double **fwhmDeriv2,INT saveFlag,INDEX indexFeno);
-RC   KURUCZ_ApplyCalibration(FENO *pTabFeno,double *newLembda);
+RC   KURUCZ_ApplyCalibration(FENO *pTabFeno,double *newLambda);
 RC   KURUCZ_Reference(double *instrFunction,INDEX refFlag,INT saveFlag,INT gomeFlag);
 void KURUCZ_Init(INT gomeFlag);
-RC   KURUCZ_Alloc(double *lembda,INDEX indexProject,INDEX indexKurucz,double lembdaMin,double lembdaMax);
+RC   KURUCZ_Alloc(double *lambda,INDEX indexProject,INDEX indexKurucz,double lambdaMin,double lambdaMax);
 void KURUCZ_Free(void);
 
 // ==================================
@@ -970,7 +970,7 @@ void KURUCZ_Free(void);
 typedef struct _usamp
  {
   XS       hrSolar;
-  INT     *lembdaRange[4];                       // for each analysis window, give the lembda range
+  INT     *lambdaRange[4];                       // for each analysis window, give the lambda range
   double **kuruczConvoluted,                     // high resolution kurucz convoluted on its own calibration
          **kuruczConvoluted2,                    // second derivatives of previous vector
          **kuruczInterpolated,                   // high resolution and convoluted kurucz on analysis windows calibrations
@@ -979,7 +979,7 @@ typedef struct _usamp
 USAMP;
 
 void USAMP_GlobalFree(void);
-RC   USAMP_GlobalAlloc(double lembdaMin,double lembdaMax,INT size);
+RC   USAMP_GlobalAlloc(double lambdaMin,double lambdaMax,INT size);
 RC   USAMP_LocalAlloc(INT gomeFlag);
 void USAMP_LocalFree(void);
 RC   USAMP_BuildFromAnalysis(INT analysisFlag,INT gomeFlag);
@@ -1071,7 +1071,7 @@ EXTERN AMF_SYMBOL *OUTPUT_AmfSpace;                         // list of cross sec
 // PROTOTYPES
 // ----------
 
-RC   OUTPUT_GetWveAmf(CROSS_RESULTS *pResults,double Zm,double *lembda,double *xs,double *deriv2);
+RC   OUTPUT_GetWveAmf(CROSS_RESULTS *pResults,double Zm,double *lambda,double *xs,double *deriv2);
 
 void OUTPUT_ResetData(void);
 RC   OUTPUT_RegisterData(ENGINE_CONTEXT *pEngineContext);

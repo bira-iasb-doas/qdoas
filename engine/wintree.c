@@ -1,10 +1,9 @@
 
 //  ----------------------------------------------------------------------------
 //
-//  Product/Project   :  DOAS ANALYSIS PROGRAM FOR WINDOWS
+//  Product/Project   :  QDOAS
 //  Module purpose    :  TREEVIEW CONTROL MODULE
 //  Name of module    :  WINTREE.C
-//  Program Language  :  Borland C++ 5.0 for Windows 95/NT
 //  Creation date     :  January 1997
 //
 //        Copyright  (C) Belgian Institute for Space Aeronomy (BIRA-IASB)

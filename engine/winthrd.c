@@ -1,10 +1,9 @@
 
 //  ----------------------------------------------------------------------------
 //
-//  Product/Project   :  DOAS ANALYSIS PROGRAM FOR WINDOWS
+//  Product/Project   :  QDOAS
 //  Module purpose    :  THREADS PROCESSING
 //  Name of module    :  WINTHRD.C
-//  Program Language  :  Borland C++ 5.0 for Windows 95/NT
 //
 //  QDOAS is a cross-platform application developed in QT for DOAS retrieval
 //  (Differential Optical Absorption Spectroscopy).
@@ -106,7 +105,7 @@
 
 UCHAR     THRD_asciiFile[MAX_ITEM_TEXT_LEN+1],*THRD_asciiPtr;        // ascii file for exporting spectra
 HANDLE    THRD_hEvents[THREAD_EVENT_MAX];      // list of events
-ENGINE_CONTEXT THRD_specInfo,THRD_refInfo;          // data on current spectra and reference
+ENGINE_CONTEXT THRD_specInfo;          // data on current spectra and reference
 UINT      THRD_id=THREAD_TYPE_NONE;            // thread identification number
 double    THRD_localNoon;                      // local noon
 INT       THRD_localShift;
@@ -114,7 +113,6 @@ DWORD     THRD_delay;
 INT       THRD_correction;
 INT       THRD_browseType;
 INT       THRD_treeCallFlag;
-INT       THRD_lastRefRecord;
 INT       THRD_isFolder;
 INT       THRD_recordLast;
 
@@ -945,8 +943,8 @@ void THRD_ResetSpecInfo(ENGINE_CONTEXT *pEngineContext)
 
   // Release buffers
 
-  if (pBuffers->lembda!=NULL)
-   MEMORY_ReleaseDVector("THRD_ResetSpecInfo ","lembda",pBuffers->lembda,0);
+  if (pBuffers->lambda!=NULL)
+   MEMORY_ReleaseDVector("THRD_ResetSpecInfo ","lambda",pBuffers->lambda,0);
   if (pBuffers->instrFunction!=NULL)
    MEMORY_ReleaseDVector("THRD_ResetSpecInfo ","instrFunction",pBuffers->instrFunction,0);
   if (pBuffers->spectrum!=NULL)
@@ -971,8 +969,7 @@ void THRD_ResetSpecInfo(ENGINE_CONTEXT *pEngineContext)
   memset(pEngineContext,0,sizeof(ENGINE_CONTEXT));
 
   pEngineContext->indexRecord=
-  pEngineContext->indexFile=
-  pEngineContext->indexProject=ITEM_NONE;
+  pEngineContext->indexFile=ITEM_NONE;
 
   #if defined(__DEBUG_) && __DEBUG_
   DEBUG_FunctionStop("THRD_ResetSpecInfo",0);
@@ -1012,7 +1009,7 @@ RC ThrdInitSpecInfo(ENGINE_CONTEXT *pEngineContext,PROJECT *pProject)
   if (!(detectorSize=pInstrumental->detectorSize))
    rc=ERROR_SetLast("ThrdInitSpecInfo",ERROR_TYPE_WARNING,ERROR_ID_OUT_OF_RANGE,"Detector size",1,65535);
 
-  else if (((pBuffers->lembda=MEMORY_AllocDVector("ThrdInitSpecInfo ","lembda",0,detectorSize-1))==NULL) ||
+  else if (((pBuffers->lambda=MEMORY_AllocDVector("ThrdInitSpecInfo ","lambda",0,detectorSize-1))==NULL) ||
            ((pBuffers->spectrum=MEMORY_AllocDVector("ThrdInitSpecInfo ","spectrum",0,detectorSize-1))==NULL) ||
 
           (((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_CCD_EEV) ||
@@ -1052,84 +1049,6 @@ RC ThrdInitSpecInfo(ENGINE_CONTEXT *pEngineContext,PROJECT *pProject)
   return rc;
  }
 
-// -----------------------------------------------------------------------------------------
-// THRD_CopySpecInfo : Make a copy of data on the current spectra file into another structure
-// -----------------------------------------------------------------------------------------
-
-RC THRD_CopySpecInfo(ENGINE_CONTEXT *pEngineContextTarget,ENGINE_CONTEXT *pEngineContextSource)
- {
-  // Declarations
-
-  BUFFERS *pBuffersTarget,*pBuffersSource;
-  RC rc;
-
-  // Initializations
-
-  pBuffersTarget=&pEngineContextTarget->buffers;
-  pBuffersSource=&pEngineContextSource->buffers;
-  rc=ERROR_ID_NO;
-
-  // Buffer allocation for instrumental functions
-
-  if (((pBuffersSource->instrFunction!=NULL) && (pBuffersTarget->instrFunction==NULL) &&
-      ((pBuffersTarget->instrFunction=(double *)MEMORY_AllocDVector("THRD_CopySpecInfo ","instrFunction",0,NDET-1))==NULL)) ||
-      ((pBuffersSource->varPix!=NULL) && (pBuffersTarget->varPix==NULL) &&
-      ((pBuffersTarget->varPix=(double *)MEMORY_AllocDVector("THRD_CopySpecInfo ","varPix",0,NDET-1))==NULL)) ||
-      ((pBuffersSource->dnl!=NULL) && (pBuffersTarget->dnl==NULL) &&
-      ((pBuffersTarget->dnl=(double *)MEMORY_AllocDVector("THRD_CopySpecInfo ","dnl",0,NDET-1))==NULL)) ||
-      ((pBuffersSource->specMax!=NULL) && (pBuffersTarget->specMax==NULL) &&
-      ((pBuffersTarget->specMax=(double *)MEMORY_AllocDVector("THRD_CopySpecInfo ","specMax",0,NDET-1))==NULL)) ||
-      ((pBuffersSource->recordIndexes!=NULL) && (pBuffersTarget->recordIndexes==NULL) &&
-      ((pBuffersTarget->recordIndexes=(ULONG *)MEMORY_AllocBuffer("THRD_CopySpecInfo","recordIndexes",
-       (pEngineContextTarget->recordIndexesSize=pEngineContextSource->recordIndexesSize),sizeof(ULONG),0,MEMORY_TYPE_LONG))==NULL)) ||
-      ((pEngineContextTarget->recordInfo.ccd.vip.matrix!=NULL) && (pEngineContextTarget->recordInfo.ccd.vip.matrix==NULL) &&
-      ((rc=MATRIX_Copy(&pEngineContextTarget->recordInfo.ccd.vip,&pEngineContextSource->recordInfo.ccd.vip,"THRD_CopySpecInfo "))!=ERROR_ID_NO)))
-
-   rc=ERROR_ID_ALLOC;
-
-  else
-   {
-    // Spectra vectors
-
-    if ((pBuffersTarget->lembda!=NULL) && (pBuffersSource->lembda!=NULL))
-     memcpy(pBuffersTarget->lembda,pBuffersSource->lembda,sizeof(double)*NDET);
-    if ((pBuffersTarget->instrFunction!=NULL) && (pBuffersSource->instrFunction!=NULL))
-     memcpy(pBuffersTarget->instrFunction,pBuffersSource->instrFunction,sizeof(double)*NDET);
-    if ((pBuffersTarget->spectrum!=NULL) && (pBuffersSource->spectrum!=NULL))
-     memcpy(pBuffersTarget->spectrum,pBuffersSource->spectrum,sizeof(double)*NDET);
-    if ((pBuffersTarget->sigmaSpec!=NULL) && (pBuffersSource->sigmaSpec!=NULL))
-     memcpy(pBuffersTarget->sigmaSpec,pBuffersSource->sigmaSpec,sizeof(double)*NDET);
-    if ((pBuffersTarget->darkCurrent!=NULL) && (pBuffersSource->darkCurrent!=NULL))
-     memcpy(pBuffersTarget->darkCurrent,pBuffersSource->darkCurrent,sizeof(double)*NDET);
-    if ((pBuffersTarget->varPix!=NULL) && (pBuffersSource->varPix!=NULL))
-     memcpy(pBuffersTarget->varPix,pBuffersSource->varPix,sizeof(double)*NDET);
-    if ((pBuffersTarget->dnl!=NULL) && (pBuffersSource->dnl!=NULL))
-     memcpy(pBuffersTarget->dnl,pBuffersSource->dnl,sizeof(double)*NDET);
-    if ((pBuffersTarget->specMax!=NULL) && (pBuffersSource->specMax!=NULL))
-     memcpy(pBuffersTarget->specMax,pBuffersSource->specMax,sizeof(double)*NDET);
-    if ((pBuffersTarget->recordIndexes!=NULL) && (pBuffersSource->recordIndexes!=NULL))
-     memcpy(pBuffersTarget->recordIndexes,pBuffersSource->recordIndexes,sizeof(ULONG)*pEngineContextSource->recordIndexesSize);
-
-    // Other fields
-
-    memcpy(&pEngineContextTarget->fileInfo,&pEngineContextSource->fileInfo,sizeof(FILE_INFO));  // the name of the file to load and file pointers
-    memcpy(&pEngineContextTarget->recordInfo,&pEngineContextSource->recordInfo,sizeof(RECORD_INFO));
-
-    // record information
-
-    pEngineContextTarget->recordNumber=pEngineContextSource->recordNumber;                                                  // total number of record in file
-    pEngineContextTarget->recordIndexesSize=pEngineContextSource->recordIndexesSize;                                        // size of 'recordIndexes' buffer
-    pEngineContextTarget->recordSize=pEngineContextSource->recordSize;                                                      // size of record if length fixed
-    pEngineContextTarget->indexRecord=pEngineContextSource->indexRecord;
-    pEngineContextTarget->indexFile=pEngineContextSource->indexFile;
-    pEngineContextTarget->indexProject=pEngineContextSource->indexProject;
-    pEngineContextTarget->lastSavedRecord=pEngineContextSource->lastSavedRecord;
-   }
-
-  // Return
-
-  return rc;
- }
 
 // QDOAS ??? // ----------------------------------------------------------------------
 // QDOAS ??? // ThrdWriteSpecInfo : Write data on current spectrum in a temporary file
@@ -1399,7 +1318,7 @@ RC ThrdLoadInstrumental(ENGINE_CONTEXT *pEngineContext,UCHAR *instrFile,INT file
   // Declarations
 
   BUFFERS *pBuffers;                                                            // pointer to the buffers part of the engine context
-  double *lembda,*instrFunction,*instrDeriv2,*function;
+  double *lambda,*instrFunction,*instrDeriv2,*function;
   UCHAR str[MAX_ITEM_TEXT_LEN+1],fileName[MAX_ITEM_TEXT_LEN+1],*ptr;
   PRJCT_INSTRUMENTAL *pInstrumental;
   FILE *gp;
@@ -1412,7 +1331,7 @@ RC ThrdLoadInstrumental(ENGINE_CONTEXT *pEngineContext,UCHAR *instrFile,INT file
   pInstrumental=&pEngineContext->project.instrumental;
   FILES_RebuildFileName(fileName,instrFile,1);
 
-  lembda=instrFunction=instrDeriv2=function=NULL;
+  lambda=instrFunction=instrDeriv2=function=NULL;
   rc=ERROR_ID_NO;
   ptr=NULL;
   gp=NULL;
@@ -1426,7 +1345,7 @@ RC ThrdLoadInstrumental(ENGINE_CONTEXT *pEngineContext,UCHAR *instrFile,INT file
   // Allocate buffers
 
   else if (((function=(double *)MEMORY_AllocDVector("ThrdLoadInstrumental ","function",0,NDET-1))==NULL) ||
-           ((lembda=(double *)MEMORY_AllocDVector("ThrdLoadInstrumental ","lembda",0,NDET-1))==NULL) ||
+           ((lambda=(double *)MEMORY_AllocDVector("ThrdLoadInstrumental ","lambda",0,NDET-1))==NULL) ||
            ((instrFunction=(double *)MEMORY_AllocDVector("ThrdLoadInstrumental ","instrFunction",0,NDET-1))==NULL) ||
            ((instrDeriv2=(double *)MEMORY_AllocDVector("ThrdLoadInstrumental ","instrDeriv2",0,NDET-1))==NULL))
 
@@ -1447,13 +1366,13 @@ RC ThrdLoadInstrumental(ENGINE_CONTEXT *pEngineContext,UCHAR *instrFile,INT file
       for (i=0;(i<NDET) && fgets(str,MAX_ITEM_TEXT_LEN,gp);)
        if ((strchr(str,';')==NULL) && (strchr(str,'*')==NULL))
         {
-         sscanf(str,"%lf %lf",&lembda[i],&instrFunction[i]);
+         sscanf(str,"%lf %lf",&lambda[i],&instrFunction[i]);
          i++;
         }
 
-      if (!SPLINE_Deriv2(lembda,instrFunction,instrDeriv2,NDET,"ThrdLoadInstrumental "))
+      if (!SPLINE_Deriv2(lambda,instrFunction,instrDeriv2,NDET,"ThrdLoadInstrumental "))
 
-       rc=SPLINE_Vector(lembda,instrFunction,instrDeriv2,NDET,pBuffers->lembda,function,NDET,SPLINE_CUBIC,"ThrdLoadInstrumental ");
+       rc=SPLINE_Vector(lambda,instrFunction,instrDeriv2,NDET,pBuffers->lambda,function,NDET,SPLINE_CUBIC,"ThrdLoadInstrumental ");
      }
     else if ((pInstrumental->readOutFormat!=PRJCT_INSTR_FORMAT_MFC) && (pInstrumental->readOutFormat!=PRJCT_INSTR_FORMAT_MFC_STD))
      {
@@ -1546,8 +1465,8 @@ RC ThrdLoadInstrumental(ENGINE_CONTEXT *pEngineContext,UCHAR *instrFile,INT file
   if (gp!=NULL)
    fclose(gp);
 
-  if (lembda!=NULL)
-   MEMORY_ReleaseDVector("ThrdLoadInstrumental ","lembda",lembda,0);
+  if (lambda!=NULL)
+   MEMORY_ReleaseDVector("ThrdLoadInstrumental ","lambda",lambda,0);
   if (instrFunction!=NULL)
    MEMORY_ReleaseDVector("ThrdLoadInstrumental ","instrFunction",instrFunction,0);
   if (instrDeriv2!=NULL)
@@ -1620,7 +1539,7 @@ RC ThrdLoadInstrumental(ENGINE_CONTEXT *pEngineContext,UCHAR *instrFile,INT file
 // QDOAS ???         break;
 // QDOAS ???        else if ((strchr(str,';')==NULL) && (strchr(str,'*')==NULL))
 // QDOAS ???         {
-// QDOAS ???          sscanf(str,"%lf",&pEngineContext->buffers.lembda[i]);
+// QDOAS ???          sscanf(str,"%lf",&pEngineContext->buffers.lambda[i]);
 // QDOAS ???          i++;
 // QDOAS ???         }
 // QDOAS ???
@@ -1629,7 +1548,7 @@ RC ThrdLoadInstrumental(ENGINE_CONTEXT *pEngineContext,UCHAR *instrFile,INT file
 // QDOAS ???      }
 // QDOAS ???     else
 // QDOAS ???      for (i=0;i<NDET;i++)
-// QDOAS ???       pEngineContext->buffers.lembda[i]=i+1;
+// QDOAS ???       pEngineContext->buffers.lambda[i]=i+1;
 // QDOAS ???
 // QDOAS ???     // Load instrumental functions
 // QDOAS ???
@@ -1723,11 +1642,11 @@ RC ThrdLoadInstrumental(ENGINE_CONTEXT *pEngineContext,UCHAR *instrFile,INT file
 // ThrdOddEvenCorrection : Odd/Even pixels correction
 // --------------------------------------------------
 
-RC THRD_OddEvenCorrection(double *lembdaData,double *specData,double *output,INT vectorSize)
+RC THRD_OddEvenCorrection(double *lambdaData,double *specData,double *output,INT vectorSize)
  {
   // Declarations
 
-  double *lembda,*spectrum,*spectrum2,*spec1,*spec2;
+  double *lambda,*spectrum,*spectrum2,*spec1,*spec2;
   INDEX i;
   RC rc;
 
@@ -1735,7 +1654,7 @@ RC THRD_OddEvenCorrection(double *lembdaData,double *specData,double *output,INT
 
   spectrum=spectrum2=spec1=spec2=NULL;
 
-  if (((lembda=(double *)MEMORY_AllocDVector("ThrdOddEvenCorrection ","lembda",0,vectorSize-1))==NULL) ||
+  if (((lambda=(double *)MEMORY_AllocDVector("ThrdOddEvenCorrection ","lambda",0,vectorSize-1))==NULL) ||
       ((spectrum=(double *)MEMORY_AllocDVector("ThrdOddEvenCorrection ","spectrum",0,vectorSize-1))==NULL) ||
       ((spectrum2=(double *)MEMORY_AllocDVector("ThrdOddEvenCorrection ","spectrum2",0,vectorSize-1))==NULL) ||
       ((spec1=(double *)MEMORY_AllocDVector("ThrdOddEvenCorrection ","spec1",0,vectorSize-1))==NULL) ||
@@ -1747,23 +1666,23 @@ RC THRD_OddEvenCorrection(double *lembdaData,double *specData,double *output,INT
    {
     for (i=0;i<vectorSize/2;i++)
      {
-      lembda[i]=lembdaData[(i<<1)];                  // odd pixels (0 based)
-      lembda[vectorSize/2+i]=lembdaData[(i<<1)+1];         // even pixels
+      lambda[i]=lambdaData[(i<<1)];                  // odd pixels (0 based)
+      lambda[vectorSize/2+i]=lambdaData[(i<<1)+1];         // even pixels
 
       spectrum[i]=specData[(i<<1)];                         // odd pixels (0 based)
       spectrum[vectorSize/2+i]=specData[(i<<1)+1];                // even pixels
      }
 
-    if (!(rc=SPLINE_Deriv2(lembda,spectrum,spectrum2,vectorSize/2,"PDA_OddEvenCorrection ")) &&
-        !(rc=SPLINE_Deriv2(lembda+(vectorSize/2),spectrum+(vectorSize/2),spectrum2+(vectorSize/2),vectorSize/2,"PDA_OddEvenCorrection (2) ")))
+    if (!(rc=SPLINE_Deriv2(lambda,spectrum,spectrum2,vectorSize/2,"PDA_OddEvenCorrection ")) &&
+        !(rc=SPLINE_Deriv2(lambda+(vectorSize/2),spectrum+(vectorSize/2),spectrum2+(vectorSize/2),vectorSize/2,"PDA_OddEvenCorrection (2) ")))
      {
       memcpy(spec1,specData,sizeof(double)*vectorSize);
       memcpy(spec2,specData,sizeof(double)*vectorSize);
 
       for (i=0;i<vectorSize/2;i++)
 
-       if (((rc=SPLINE_Vector(lembda+(vectorSize/2),spectrum+(vectorSize/2),spectrum2+(vectorSize/2),vectorSize/2,&lembdaData[(i<<1)],&spec1[(i<<1)],1,SPLINE_CUBIC,"THRD_OddEvenCorrection "))!=0) ||
-           ((rc=SPLINE_Vector(lembda,spectrum,spectrum2,vectorSize/2,&lembdaData[(i<<1)+1],&spec2[(i<<1)+1],1,SPLINE_CUBIC,"THRD_OddEvenCorrection "))!=0))
+       if (((rc=SPLINE_Vector(lambda+(vectorSize/2),spectrum+(vectorSize/2),spectrum2+(vectorSize/2),vectorSize/2,&lambdaData[(i<<1)],&spec1[(i<<1)],1,SPLINE_CUBIC,"THRD_OddEvenCorrection "))!=0) ||
+           ((rc=SPLINE_Vector(lambda,spectrum,spectrum2,vectorSize/2,&lambdaData[(i<<1)+1],&spec2[(i<<1)+1],1,SPLINE_CUBIC,"THRD_OddEvenCorrection "))!=0))
 
         break;
 
@@ -1777,8 +1696,8 @@ RC THRD_OddEvenCorrection(double *lembdaData,double *specData,double *output,INT
 
   // Release allocated buffers
 
-  if (lembda!=NULL)
-   MEMORY_ReleaseDVector("ThrdOddEvenCorrection ","lembda",lembda,0);
+  if (lambda!=NULL)
+   MEMORY_ReleaseDVector("ThrdOddEvenCorrection ","lambda",lambda,0);
   if (spectrum!=NULL)
    MEMORY_ReleaseDVector("ThrdOddEvenCorrection ","spectrum",spectrum,0);
   if (spectrum2!=NULL)
@@ -1810,7 +1729,7 @@ RC THRD_SpectrumCorrection(ENGINE_CONTEXT *pEngineContext,double *spectrum)
   // Odd even pixel correction
 
   if (pEngineContext->project.lfilter.type==PRJCT_FILTER_TYPE_ODDEVEN)
-   rc=THRD_OddEvenCorrection(pEngineContext->buffers.lembda,spectrum,spectrum,NDET);
+   rc=THRD_OddEvenCorrection(pEngineContext->buffers.lambda,spectrum,spectrum,NDET);
 
   // Return
 
@@ -2449,8 +2368,8 @@ RC ThrdReadFile(ENGINE_CONTEXT *pEngineContext,INT recordNo,INT dateFlag,INT loc
 
           for (i=0;i<NDET;i++)
            {
-            if ((ASCII_options.format==PRJCT_INSTR_ASCII_FORMAT_COLUMN) && ASCII_options.lembdaSaveFlag)
-             fprintf(THRD_asciiFp,"%lf ",pEngineContext->buffers.lembda[i]);
+            if ((ASCII_options.format==PRJCT_INSTR_ASCII_FORMAT_COLUMN) && ASCII_options.lambdaSaveFlag)
+             fprintf(THRD_asciiFp,"%lf ",pEngineContext->buffers.lambda[i]);
 
             fprintf(THRD_asciiFp,"%lf ",pEngineContext->buffers.spectrum[i]);
 
@@ -2485,8 +2404,8 @@ RC ThrdReadFile(ENGINE_CONTEXT *pEngineContext,INT recordNo,INT dateFlag,INT loc
 // QDOAS ???
 // QDOAS ???            DRAW_Spectra(CHILD_WINDOW_SPECTRA,windowTitle,graphTitle,"Wavelength (nm)","Intensity",NULL,0,
 // QDOAS ???                        (double)0.,(double)0.,(double)0.,(double)0.,
-// QDOAS ???                         pEngineContext->lembda,pEngineContext->darkCurrent,NDET,DRAW_COLOR1,0,NDET-1,PS_SOLID,NULL,
-// QDOAS ??? //                        pEngineContext->lembda,(THRD_dark && (pEngineContext->darkCurrent!=NULL) && (VECTOR_Max(pEngineContext->darkCurrent,NDET)>(double)0.))?pEngineContext->darkCurrent:spectrum,NDET,DRAW_COLOR2,0,NDET-1,PS_DOT,
+// QDOAS ???                         pEngineContext->lambda,pEngineContext->darkCurrent,NDET,DRAW_COLOR1,0,NDET-1,PS_SOLID,NULL,
+// QDOAS ??? //                        pEngineContext->lambda,(THRD_dark && (pEngineContext->darkCurrent!=NULL) && (VECTOR_Max(pEngineContext->darkCurrent,NDET)>(double)0.))?pEngineContext->darkCurrent:spectrum,NDET,DRAW_COLOR2,0,NDET-1,PS_DOT,
 // QDOAS ???                         NULL,NULL,0,0,0,0,PS_SOLID,NULL,
 // QDOAS ???                         indexBand,maxV,maxH,(indexBand==maxBand-1)?1:0);
 // QDOAS ???
@@ -2494,8 +2413,8 @@ RC ThrdReadFile(ENGINE_CONTEXT *pEngineContext,INT recordNo,INT dateFlag,INT loc
 // QDOAS ???
 // QDOAS ???            DRAW_Spectra(CHILD_WINDOW_SPECTRA,windowTitle,graphTitle,"Wavelength (nm)","Intensity",NULL,0,
 // QDOAS ???                        (double)0.,(double)0.,(double)0.,(double)0.,
-// QDOAS ???                         pEngineContext->lembda,pEngineContext->sigmaSpec,NDET,DRAW_COLOR1,0,NDET-1,PS_SOLID,NULL,
-// QDOAS ??? //                        pEngineContext->lembda,(THRD_dark && (pEngineContext->darkCurrent!=NULL) && (VECTOR_Max(pEngineContext->darkCurrent,NDET)>(double)0.))?pEngineContext->darkCurrent:spectrum,NDET,DRAW_COLOR2,0,NDET-1,PS_DOT,
+// QDOAS ???                         pEngineContext->lambda,pEngineContext->sigmaSpec,NDET,DRAW_COLOR1,0,NDET-1,PS_SOLID,NULL,
+// QDOAS ??? //                        pEngineContext->lambda,(THRD_dark && (pEngineContext->darkCurrent!=NULL) && (VECTOR_Max(pEngineContext->darkCurrent,NDET)>(double)0.))?pEngineContext->darkCurrent:spectrum,NDET,DRAW_COLOR2,0,NDET-1,PS_DOT,
 // QDOAS ???                         NULL,NULL,0,0,0,0,PS_SOLID,NULL,
 // QDOAS ???                         indexBand,maxV,maxH,(indexBand==maxBand-1)?1:0);
 // QDOAS ???
@@ -2503,8 +2422,8 @@ RC ThrdReadFile(ENGINE_CONTEXT *pEngineContext,INT recordNo,INT dateFlag,INT loc
 // QDOAS ???            {
 // QDOAS ???             DRAW_Spectra(CHILD_WINDOW_SPECTRA,windowTitle,graphTitle,"Wavelength (nm)","Intensity",NULL,0,
 // QDOAS ???                         (double)0.,(double)0.,(double)0.,(double)0.,
-// QDOAS ???                          pEngineContext->lembda,spectrum,NDET,DRAW_COLOR1,0,NDET-1,PS_SOLID,NULL,
-// QDOAS ??? //                         pEngineContext->lembda,(THRD_dark && (pEngineContext->darkCurrent!=NULL) && (VECTOR_Max(pEngineContext->darkCurrent,NDET)>(double)0.))?pEngineContext->darkCurrent:spectrum,NDET,DRAW_COLOR2,0,NDET-1,PS_DOT,
+// QDOAS ???                          pEngineContext->lambda,spectrum,NDET,DRAW_COLOR1,0,NDET-1,PS_SOLID,NULL,
+// QDOAS ??? //                         pEngineContext->lambda,(THRD_dark && (pEngineContext->darkCurrent!=NULL) && (VECTOR_Max(pEngineContext->darkCurrent,NDET)>(double)0.))?pEngineContext->darkCurrent:spectrum,NDET,DRAW_COLOR2,0,NDET-1,PS_DOT,
 // QDOAS ???                          NULL,NULL,0,0,0,0,PS_SOLID,NULL,
 // QDOAS ???                          indexBand,maxV,maxH,(indexBand==maxBand-1)?1:0);
 // QDOAS ???
@@ -2558,194 +2477,6 @@ RC ThrdReadFile(ENGINE_CONTEXT *pEngineContext,INT recordNo,INT dateFlag,INT loc
 // AUTOMATIC REFERENCE SPECTRUM SELECTION
 // ======================================
 
-// -----------------------------------------------------------------------------
-// ThrdSetRefIndexes : Set indexes of spectra selected as reference for analysis
-// -----------------------------------------------------------------------------
-
-RC ThrdSetRefIndexes(ENGINE_CONTEXT *pEngineContext,FILE *specFp,FILE *namesFp,FILE *darkFp)
- {
-  // Declarations
-
-  INDEX         *indexList,              // indexes of records
-                 indexTabFeno,           // browse analysis windows list
-                 indexRecord,            // browse spectra records in file
-                 indexZmMin;             // index of record with SZA minimum
-
-  PRJCT_SPECTRA *pSpectra;               // pointer to project part of data
-  FENO          *pTabFeno;               // pointer to analysis windows
-  double        *ZmList,*TimeDec,        // zenith angles and decimal time of records
-                 ZmMin,ZmMax,            // extrema zenith angles found in file
-                 deltaZmMorning,         // select record in the morning with SZA the closest by SZA base
-                 deltaZmAfternoon;       // select record in the afternoon with SZA the closest by SZA base
-  INT            NRecord;                // number of hold record
-  INT            localCalDay;
-  RC             rc;                     // return code
-
-  // Initializations
-
-  indexList=NULL;
-  indexZmMin=ITEM_NONE;
-  ZmList=TimeDec=NULL;
-  NRecord=0;
-  ZmMin=360.;
-  ZmMax=0.;
-
-  rc=THRD_CopySpecInfo(&THRD_refInfo,pEngineContext);       // make a copy of general data
-  pSpectra=&THRD_refInfo.project.spectra;             // pointer to project part of data
-  localCalDay=THRD_refInfo.recordInfo.localCalDay;
-
-  if ((THRD_refInfo.project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_LOGGER) ||
-      (THRD_refInfo.project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_PDAEGG))
-
-   THRD_refInfo.project.instrumental.user=PRJCT_INSTR_IASB_TYPE_ZENITHAL;
-
-  if (THRD_refInfo.recordNumber>0)
-   {
-    // Memory allocation
-
-    if (((indexList=(INDEX *)MEMORY_AllocBuffer("ThrdSetRefIndexes ","",THRD_refInfo.recordNumber,sizeof(INDEX),0,MEMORY_TYPE_INDEX))==NULL) ||
-        ((ZmList=(double *)MEMORY_AllocDVector("ThrdSetRefIndexes ","",0,THRD_refInfo.recordNumber-1))==NULL) ||
-        ((TimeDec=(double *)MEMORY_AllocDVector("ThrdSetRefIndexes ","",0,THRD_refInfo.recordNumber-1))==NULL))
-
-     rc=ERROR_ID_ALLOC;
-
-    else
-     {
-      // Keep all record constraints except SZA and display ones
-
-      pSpectra->SZAMin=(double)0.;
-      pSpectra->SZAMax=(double)360.;
-      pSpectra->SZADelta=(double)0.;
-      pSpectra->displaySpectraFlag=0;
-
-      // Browse records in file
-
-      for (indexRecord=THRD_lastRefRecord+1;indexRecord<=THRD_refInfo.recordNumber;indexRecord++)
-       if (((rc=ThrdReadFile(&THRD_refInfo,indexRecord,1,localCalDay,specFp,namesFp,darkFp,0))<THREAD_EVENT_STOP) &&
-           (THRD_refInfo.recordInfo.Zm>(double)0.))
-        {
-         if (rc==ITEM_NONE)
-          rc=0;
-
-         // Data on record
-
-         indexList[NRecord]=indexRecord;                             // index of record
-         ZmList[NRecord]=THRD_refInfo.recordInfo.Zm;                 // zenith angle
-         TimeDec[NRecord]=THRD_refInfo.recordInfo.localTimeDec;      // decimal time for determining when the measurement has occured
-
-         // Minimum and maximum zenith angle
-
-         if (THRD_refInfo.recordInfo.Zm<ZmMin)
-          {
-           ZmMin=THRD_refInfo.recordInfo.Zm;
-           indexZmMin=NRecord;
-          }
-
-         if (THRD_refInfo.recordInfo.Zm>ZmMax)
-          ZmMax=THRD_refInfo.recordInfo.Zm;
-
-         NRecord++;
-        }
-       else if (rc==ERROR_ID_FILE_END)
-        {
-         rc=ERROR_ID_NO;
-         break;
-        }
-
-      if (rc==ERROR_ID_FILE_RECORD)
-       rc=ERROR_ID_NO;
-
-      // Browse analysis windows
-
-      for (indexTabFeno=0;(indexTabFeno<NFeno) && (rc<THREAD_EVENT_STOP);indexTabFeno++)
-       {
-        pTabFeno=&TabFeno[indexTabFeno];
-
-        if (!pTabFeno->hidden && (pTabFeno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_AUTOMATIC))
-         {
-          // Indexes reinitialization
-
-          pTabFeno->indexRefMorning=pTabFeno->indexRefAfternoon=pTabFeno->indexRef=ITEM_NONE;
-
-          // No reference spectrum found in SZA range
-
-          if (ZmMax<pTabFeno->refSZA-pTabFeno->refSZADelta)
-           rc=ERROR_SetLast("ThrdSetRefIndexes",ERROR_TYPE_WARNING,ERROR_ID_NO_REF,"all the day",THRD_refInfo.fileInfo.fileName);
-
-          // Select record with SZA minimum
-
-          else if (ZmMin>=pTabFeno->refSZA+pTabFeno->refSZADelta)
-           pTabFeno->indexRefMorning=pTabFeno->indexRefAfternoon=indexZmMin;
-
-          // Select a record for the morning and the afternoon
-
-          else
-           {
-            deltaZmMorning=deltaZmAfternoon=360.;
-
-            for (indexRecord=0;indexRecord<NRecord;indexRecord++)
-             {
-              if ((ZmList[indexRecord]>=pTabFeno->refSZA-pTabFeno->refSZADelta) &&
-                  (ZmList[indexRecord]<=pTabFeno->refSZA+pTabFeno->refSZADelta))
-               {
-                if ((TimeDec[indexRecord]<=THRD_localNoon) && (fabs(pTabFeno->refSZA-ZmList[indexRecord])<deltaZmMorning))
-                 {
-                  pTabFeno->indexRefMorning=indexRecord;
-                  deltaZmMorning=fabs(pTabFeno->refSZA-ZmList[indexRecord]);
-                 }
-
-                if ((TimeDec[indexRecord]>THRD_localNoon) && (fabs(pTabFeno->refSZA-ZmList[indexRecord])<deltaZmAfternoon))
-                 {
-                  pTabFeno->indexRefAfternoon=indexRecord;
-                  deltaZmAfternoon=fabs(pTabFeno->refSZA-ZmList[indexRecord]);
-                 }
-               }
-             }
-
-            // No record found for the morning OR the afternoon
-
-            if ((pTabFeno->indexRefMorning==ITEM_NONE) && (pTabFeno->indexRefAfternoon==ITEM_NONE))
-             rc=ERROR_SetLast("ThrdSetRefIndexes",ERROR_TYPE_WARNING,ERROR_ID_NO_REF,"all the day",THRD_refInfo.fileInfo.fileName);
-            else if (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_ASCII)
-             {
-              if (pTabFeno->indexRefMorning==ITEM_NONE)
-               {
-               	rc=ERROR_SetLast("ThrdSetRefIndexes",ERROR_TYPE_WARNING,ERROR_ID_NO_REF,"the morning",THRD_refInfo.fileInfo.fileName);
-                pTabFeno->indexRefMorning=pTabFeno->indexRefAfternoon;
-               }
-              else if (pTabFeno->indexRefAfternoon==ITEM_NONE)
-               {
-               	rc=ERROR_SetLast("ThrdSetRefIndexes",ERROR_TYPE_WARNING,ERROR_ID_NO_REF,"the afternoon",THRD_refInfo.fileInfo.fileName);
-                pTabFeno->indexRefAfternoon=pTabFeno->indexRefMorning;
-               }
-             }
-           }
-
-          pTabFeno->oldZmRefMorning=pTabFeno->ZmRefMorning;
-          pTabFeno->oldZmRefAfternoon=pTabFeno->ZmRefAfternoon;
-          pTabFeno->ZmRefMorning=(pTabFeno->indexRefMorning!=ITEM_NONE)?ZmList[pTabFeno->indexRefMorning]:(double)-1.;
-          pTabFeno->ZmRefAfternoon=(pTabFeno->indexRefAfternoon!=ITEM_NONE)?ZmList[pTabFeno->indexRefAfternoon]:(double)-1.;
-          pTabFeno->indexRefMorning=(pTabFeno->indexRefMorning!=ITEM_NONE)?indexList[pTabFeno->indexRefMorning]:ITEM_NONE;
-          pTabFeno->indexRefAfternoon=(pTabFeno->indexRefAfternoon!=ITEM_NONE)?indexList[pTabFeno->indexRefAfternoon]:ITEM_NONE;
-         }
-       }
-     }
-   }
-
-  // Release buffers
-
-  if (indexList!=NULL)
-   MEMORY_ReleaseBuffer("ThrdSetRefIndexes ","indexList",indexList);
-  if (ZmList!=NULL)
-   MEMORY_ReleaseDVector("ThrdSetRefIndexes ","ZmList",ZmList,0);
-  if (TimeDec!=NULL)
-   MEMORY_ReleaseDVector("ThrdSetRefIndexes ","TimeDec",TimeDec,0);
-
-  // Return
-
-  return rc;
- }
-
 // ---------------------------------------
 // ThrdNewRef : Load new reference spectra
 // ---------------------------------------
@@ -2756,7 +2487,7 @@ RC ThrdSetRefIndexes(ENGINE_CONTEXT *pEngineContext,FILE *specFp,FILE *namesFp,F
 // QDOAS ???
 // QDOAS ???   RECORD_INFO *pRecord;                                                         // pointer to the record part of the engine context
 // QDOAS ???
-// QDOAS ???   double *Sref,*lembdaRef;
+// QDOAS ???   double *Sref,*lambdaRef;
 // QDOAS ???
 // QDOAS ???   INDEX indexRefRecord,        // index of best record in file for reference selection
 // QDOAS ???         indexTabFeno,          // browse analysis windows list
@@ -2773,7 +2504,7 @@ RC ThrdSetRefIndexes(ENGINE_CONTEXT *pEngineContext,FILE *specFp,FILE *namesFp,F
 // QDOAS ???   rc=ERROR_ID_NO;
 // QDOAS ???   saveFlag=(INT)pEngineContext->project.spectra.displayDataFlag;
 // QDOAS ???   useKurucz=alignRef=useUsamp=0;
-// QDOAS ???   Sref=lembdaRef=NULL;
+// QDOAS ???   Sref=lambdaRef=NULL;
 // QDOAS ???
 // QDOAS ???   // Select spectra records as reference
 // QDOAS ???
@@ -2808,13 +2539,13 @@ RC ThrdSetRefIndexes(ENGINE_CONTEXT *pEngineContext,FILE *specFp,FILE *namesFp,F
 // QDOAS ???
 // QDOAS ???         if (!pTabFeno->useEtalon)
 // QDOAS ???          {
-// QDOAS ???           memcpy(pTabFeno->LembdaK,THRD_refInfo.buffers.lembda,sizeof(double)*NDET);
-// QDOAS ???           memcpy(pTabFeno->LembdaRef,THRD_refInfo.buffers.lembda,sizeof(double)*NDET);
+// QDOAS ???           memcpy(pTabFeno->LambdaK,THRD_refInfo.buffers.lambda,sizeof(double)*NDET);
+// QDOAS ???           memcpy(pTabFeno->LambdaRef,THRD_refInfo.buffers.lambda,sizeof(double)*NDET);
 // QDOAS ???
 // QDOAS ???           for (indexWindow=0,newDimL=0;indexWindow<pTabFeno->svd.Z;indexWindow++)
 // QDOAS ???            {
-// QDOAS ???             pTabFeno->svd.Fenetre[indexWindow][0]=FNPixel(THRD_refInfo.buffers.lembda,pTabFeno->svd.LFenetre[indexWindow][0],pTabFeno->NDET,PIXEL_AFTER);
-// QDOAS ???             pTabFeno->svd.Fenetre[indexWindow][1]=FNPixel(THRD_refInfo.buffers.lembda,pTabFeno->svd.LFenetre[indexWindow][1],pTabFeno->NDET,PIXEL_BEFORE);
+// QDOAS ???             pTabFeno->svd.Fenetre[indexWindow][0]=FNPixel(THRD_refInfo.buffers.lambda,pTabFeno->svd.LFenetre[indexWindow][0],pTabFeno->NDET,PIXEL_AFTER);
+// QDOAS ???             pTabFeno->svd.Fenetre[indexWindow][1]=FNPixel(THRD_refInfo.buffers.lambda,pTabFeno->svd.LFenetre[indexWindow][1],pTabFeno->NDET,PIXEL_BEFORE);
 // QDOAS ???
 // QDOAS ???             newDimL+=(pTabFeno->svd.Fenetre[indexWindow][1]-pTabFeno->svd.Fenetre[indexWindow][0]+1);
 // QDOAS ???            }
@@ -2831,8 +2562,8 @@ RC ThrdSetRefIndexes(ENGINE_CONTEXT *pEngineContext,FILE *specFp,FILE *namesFp,F
 // QDOAS ???             KURUCZ_Init(0);
 // QDOAS ???             useKurucz++;
 // QDOAS ???            }
-// QDOAS ???           else if (((rc=ANALYSE_XsInterpolation(pTabFeno,pTabFeno->LembdaRef))!=ERROR_ID_NO) ||
-// QDOAS ???                    ((rc=ANALYSE_XsConvolution(pTabFeno,pTabFeno->LembdaRef,&ANALYSIS_slit,pSlitOptions->slitFunction.slitType,&pSlitOptions->slitFunction.slitParam,&pSlitOptions->slitFunction.slitParam2,&pSlitOptions->slitFunction.slitParam3,&pSlitOptions->slitFunction.slitParam4))!=ERROR_ID_NO))
+// QDOAS ???           else if (((rc=ANALYSE_XsInterpolation(pTabFeno,pTabFeno->LambdaRef))!=ERROR_ID_NO) ||
+// QDOAS ???                    ((rc=ANALYSE_XsConvolution(pTabFeno,pTabFeno->LambdaRef,&ANALYSIS_slit,pSlitOptions->slitFunction.slitType,&pSlitOptions->slitFunction.slitParam,&pSlitOptions->slitFunction.slitParam2,&pSlitOptions->slitFunction.slitParam3,&pSlitOptions->slitFunction.slitParam4))!=ERROR_ID_NO))
 // QDOAS ???            break;
 // QDOAS ???          }
 // QDOAS ???
@@ -2853,7 +2584,7 @@ RC ThrdSetRefIndexes(ENGINE_CONTEXT *pEngineContext,FILE *specFp,FILE *namesFp,F
 // QDOAS ???         memcpy(&pTabFeno->refDate,&THRD_refInfo.recordInfo.present_day,sizeof(SHORT_DATE));
 // QDOAS ???
 // QDOAS ??? //        if (pTabFeno->useEtalon)
-// QDOAS ??? //         rc=ANALYSE_AlignRef(pTabFeno,pTabFeno->Lembda,pTabFeno->SrefEtalon,pTabFeno->Sref,&pTabFeno->Shift,&pTabFeno->Stretch,&pTabFeno->Stretch2,saveFlag);
+// QDOAS ??? //         rc=ANALYSE_AlignRef(pTabFeno,pTabFeno->Lambda,pTabFeno->SrefEtalon,pTabFeno->Sref,&pTabFeno->Shift,&pTabFeno->Stretch,&pTabFeno->Stretch2,saveFlag);
 // QDOAS ???        }
 // QDOAS ???       else if (indexRefRecord==pTabFeno->indexRef)
 // QDOAS ???        pTabFeno->displayRef=1;
@@ -2879,8 +2610,8 @@ RC ThrdSetRefIndexes(ENGINE_CONTEXT *pEngineContext,FILE *specFp,FILE *namesFp,F
 // QDOAS ???
 // QDOAS ???   if (Sref!=NULL)
 // QDOAS ???    MEMORY_ReleaseDVector("THRD_NewRef ","Sref",Sref,0);
-// QDOAS ???   if (lembdaRef!=NULL)
-// QDOAS ???    MEMORY_ReleaseDVector("THRD_NewRef ","lembdaRef",lembdaRef,0);
+// QDOAS ???   if (lambdaRef!=NULL)
+// QDOAS ???    MEMORY_ReleaseDVector("THRD_NewRef ","lambdaRef",lambdaRef,0);
 // QDOAS ???
 // QDOAS ???   return rc;
 // QDOAS ???  }

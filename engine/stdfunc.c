@@ -1,12 +1,12 @@
 
 //  ----------------------------------------------------------------------------
 //
-//  Product/Project   :  THE BIRA-IASB DOAS SOFTWARE FOR WINDOWS AND LINUX
+//  Product/Project   :  QDOAS
 //  Module purpose    :  STANDARD UTILITY FUNCTIONS
 //  Name of module    :  STDFUNC.C
 //  Creation date     :  21 October 2004
 //
-//  QDOAS is a cross-platform application developed in QT for DOAS retrieval 
+//  QDOAS is a cross-platform application developed in QT for DOAS retrieval
 //  (Differential Optical Absorption Spectroscopy).
 //
 //  The QT version of the program has been developed jointly by the Belgian
@@ -15,21 +15,21 @@
 //
 //      BIRA-IASB                                   S[&]T
 //      Belgian Institute for Space Aeronomy        Science [&] Technology
-//      Avenue Circulaire, 3                        Postbus 608                   
-//      1180     UCCLE                              2600 AP Delft                 
-//      BELGIUM                                     THE NETHERLANDS               
-//      caroline.fayt@aeronomie.be                  info@stcorp.nl                
+//      Avenue Circulaire, 3                        Postbus 608
+//      1180     UCCLE                              2600 AP Delft
+//      BELGIUM                                     THE NETHERLANDS
+//      caroline.fayt@aeronomie.be                  info@stcorp.nl
 //
 //  This program is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU General Public License
 //  as published by the Free Software Foundation; either version 2
 //  of the License, or (at your option) any later version.
-//  
+//
 //  This program is distributed in the hope that it will be useful,
 //  but WITHOUT ANY WARRANTY; without even the implied warranty of
 //  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //  GNU General Public License for more details.
-//  
+//
 //  You should have received a copy of the GNU General Public License
 //  along with this program; if not, write to the Free Software Foundation,
 //  Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
@@ -243,11 +243,11 @@ UCHAR *StrGetFormat(UCHAR *formatString,UCHAR *formatToken)
 // QTDOAS ??? // REMARK        as this function is dedicated to one application, all the
 // QTDOAS ??? //               possible situations may not to have been explored
 // QTDOAS ??? // -----------------------------------------------------------------------------
-// QTDOAS ??? 
+// QTDOAS ???
 // QTDOAS ??? int STD_Sscanf(UCHAR *line,UCHAR *formatString,...)
 // QTDOAS ???  {
 // QTDOAS ???   // Declarations
-// QTDOAS ??? 
+// QTDOAS ???
 // QTDOAS ???   UCHAR tokenFormat[MAX_FORMAT_LEN+1];                                          // the expected format for the current token
 // QTDOAS ???   UCHAR *tfPtr,*tkOld,*tkNext;                                                  // pointers to substrings
 // QTDOAS ???   INT strFlag,intFlag,doubleFlag;                                               // flag set according to the expected type in the format string
@@ -255,52 +255,52 @@ UCHAR *StrGetFormat(UCHAR *formatString,UCHAR *formatToken)
 // QTDOAS ???   void  *argPtr;                                                                // pointer to the next argument in the previous list
 // QTDOAS ???   int ntoken;                                                                   // the number of tokens read by the function
 // QTDOAS ???   INDEX i;                                                                      // browse characters
-// QTDOAS ??? 
+// QTDOAS ???
 // QTDOAS ???   // Open the variable argument list
-// QTDOAS ??? 
+// QTDOAS ???
 // QTDOAS ???   va_start(argList,formatString);
-// QTDOAS ??? 
+// QTDOAS ???
 // QTDOAS ???   // Use the format string to split the line in tokens
-// QTDOAS ??? 
+// QTDOAS ???
 // QTDOAS ???   for (tfPtr=StrGetFormat(formatString,tokenFormat),tkOld=line,ntoken=0;
 // QTDOAS ???       (tfPtr!=NULL) && strlen(tokenFormat) && (tkOld!=NULL) && *tkOld!='\n';
 // QTDOAS ???        tkOld=tkNext)
 // QTDOAS ???    {
 // QTDOAS ???     strFlag=intFlag=doubleFlag=0;
-// QTDOAS ??? 
+// QTDOAS ???
 // QTDOAS ???     // ================
 // QTDOAS ???     // FORMATTED STRING
 // QTDOAS ???     // ================
-// QTDOAS ??? 
+// QTDOAS ???
 // QTDOAS ???     if (tokenFormat[0]=='%')
 // QTDOAS ???      {
 // QTDOAS ???       // Retrieve the expected type from the format string
-// QTDOAS ??? 
+// QTDOAS ???
 // QTDOAS ???       for (i=1;(tokenFormat[i]!='\0') && !intFlag && !doubleFlag && !strFlag;i++)
-// QTDOAS ??? 
+// QTDOAS ???
 // QTDOAS ???        if (tokenFormat[i]=='d')
 // QTDOAS ???         intFlag=1;
 // QTDOAS ???        else if (tokenFormat[i]=='f')
 // QTDOAS ???         doubleFlag=1;
 // QTDOAS ???        else if ((tokenFormat[i]=='[') || (tokenFormat[i]=='^'))
 // QTDOAS ???         strFlag=1;
-// QTDOAS ??? 
+// QTDOAS ???
 // QTDOAS ???       // Read the token
-// QTDOAS ??? 
+// QTDOAS ???
 // QTDOAS ???       if (!sscanf(tkOld,tokenFormat,(argPtr=(void *)va_arg(argList,void *))))
 // QTDOAS ???        {
 // QTDOAS ???         // In case the expected token doesn't exist, initialize it
-// QTDOAS ??? 
+// QTDOAS ???
 // QTDOAS ???         if (intFlag)
 // QTDOAS ???          *((int *)argPtr)=0;
 // QTDOAS ???         else if (doubleFlag)
 // QTDOAS ???          *((double *)argPtr)=(double)0.;
 // QTDOAS ???         else
 // QTDOAS ???          *((UCHAR *)argPtr)='\0';
-// QTDOAS ??? 
+// QTDOAS ???
 // QTDOAS ???         tkNext=tkOld;
 // QTDOAS ???        }
-// QTDOAS ??? 
+// QTDOAS ???
 // QTDOAS ???       else if ((intFlag || doubleFlag))
 // QTDOAS ???        {
 // QTDOAS ???         if ((tkNext=strchr(tkOld,','))==NULL)
@@ -311,29 +311,29 @@ UCHAR *StrGetFormat(UCHAR *formatString,UCHAR *formatToken)
 // QTDOAS ???         if ((tkNext=strstr(tkOld,(UCHAR *)argPtr))!=NULL)
 // QTDOAS ???          tkNext+=strlen((UCHAR *)argPtr);
 // QTDOAS ???        }
-// QTDOAS ??? 
+// QTDOAS ???
 // QTDOAS ???       ntoken++;
 // QTDOAS ???      }
-// QTDOAS ??? 
+// QTDOAS ???
 // QTDOAS ???     // =================
 // QTDOAS ???     // BYPASS CHARACTERS
 // QTDOAS ???     // =================
-// QTDOAS ??? 
+// QTDOAS ???
 // QTDOAS ???     else if ((tkNext=strstr(tkOld,tokenFormat))!=NULL)
 // QTDOAS ???      tkNext+=strlen(tokenFormat);
-// QTDOAS ??? 
+// QTDOAS ???
 // QTDOAS ???     // Go to the next token
-// QTDOAS ??? 
+// QTDOAS ???
 // QTDOAS ???     if (tfPtr!=NULL)
 // QTDOAS ???      tfPtr=StrGetFormat(tfPtr,tokenFormat);
 // QTDOAS ???    }
-// QTDOAS ??? 
+// QTDOAS ???
 // QTDOAS ???   // Close the argument list
-// QTDOAS ??? 
+// QTDOAS ???
 // QTDOAS ???   va_end(argList);
-// QTDOAS ??? 
+// QTDOAS ???
 // QTDOAS ???   // return
-// QTDOAS ??? 
+// QTDOAS ???
 // QTDOAS ???   return ntoken;
 // QTDOAS ???  }
 

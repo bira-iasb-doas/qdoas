@@ -1,7 +1,7 @@
 
 //  ----------------------------------------------------------------------------
 //
-//  Product/Project   :  THE BIRA-IASB DOAS SOFTWARE FOR WINDOWS AND LINUX
+//  Product/Project   :  QDOAS
 //  Module purpose    :  DEBUG ROUTINES
 //  Name of module    :  DEBUG.C
 //  Creation date     :  29 September 2004

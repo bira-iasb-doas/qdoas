@@ -1,7 +1,7 @@
 
 //  ----------------------------------------------------------------------------
 //
-//  Product/Project   :  THE BIRA-IASB DOAS SOFTWARE FOR WINDOWS AND LINUX
+//  Product/Project   :  QDOAS
 //  Module purpose    :  Read spectra from measurements performed by the University of Toronto
 //  Name of module    :  UofT-read.c
 //  Creation date     :  12 November 2003
@@ -176,7 +176,7 @@ RC SetUofT(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
   memset(&UofT_data,0,sizeof(UOFT_FORMAT));                                     // information on the current record
   memset(fileFilter,0,MAX_PATH_LEN+1);                                          // file filter
   pEngineContext->recordNumber=0;                                                    // number of records for the whole day
-  THRD_lastRefRecord=0;                                                         // last reference record
+  pEngineContext->lastRefRecord=0;                                                         // last reference record
   UofT_csvLastRecord=ITEM_NONE;                                                 // in CSV format (several records in ASCII) : index of the last record
   UofT_csvFlag=0;                                                               // flag : 1 if CSV format is used
   rc=ERROR_ID_NO;
@@ -724,7 +724,7 @@ RC ReliUofT(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,INT localDa
      rc=ERROR_ID_FILE_RECORD;
 
     else if (dateFlag)
-     THRD_lastRefRecord=recordNo;
+     pEngineContext->lastRefRecord=recordNo;
    }
 
   // Return

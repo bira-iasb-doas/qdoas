@@ -1,10 +1,9 @@
 
 //  ----------------------------------------------------------------------------
 //
-//  Product/Project   :  DOAS ANALYSIS PROGRAM FOR WINDOWS
+//  Product/Project   :  QDOAS
 //  Module purpose    :  MFC read out routines
 //  Name of module    :  MFC-READ.C
-//  Program Language  :  Borland C++ 5.0 for Windows 95/NT
 //  Creation date     :  24 April 99
 //  Ref               :  MFC program (see IUP Heidelberg)
 //
@@ -119,7 +118,7 @@ RC SetMFC(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
   memset(fileName,0,MAX_STR_SHORT_LEN+1);
   strncpy(fileName,pEngineContext->fileInfo.fileName,MAX_STR_SHORT_LEN);
   pInstrumental=&pEngineContext->project.instrumental;
-  THRD_lastRefRecord=0;
+  pEngineContext->lastRefRecord=0;
   mfcLastSpectrum=0;
   rc=ERROR_ID_NO;
 
@@ -552,7 +551,7 @@ RC ReliMFC(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay
 //        else if (pInstrumental->mfcRevert)
 //         VECTOR_Invert(pBuffers->spectrum,NDET);
 //        else if (dateFlag)
-//         THRD_lastRefRecord=recordNo;
+//         pEngineContext->lastRefRecord=recordNo;
        }
      }
 
@@ -972,7 +971,7 @@ RC MFC_LoadAnalysis(ENGINE_CONTEXT *pEngineContext)
            if ((((pWrkSymbol->type==WRK_SYMBOL_CROSS) && (pTabCross->crossAction==ANLYS_CROSS_ACTION_NOTHING)) ||
                 ((pWrkSymbol->type==WRK_SYMBOL_PREDEFINED) &&
                  (indexTabCross==pTabFeno->indexCommonResidual))) &&
-                ((rc=ANALYSE_CheckLembda(pWrkSymbol,pTabFeno->LembdaRef,"MFC_LoadAnalysis "))!=ERROR_ID_NO))
+                ((rc=ANALYSE_CheckLambda(pWrkSymbol,pTabFeno->LambdaRef,"MFC_LoadAnalysis "))!=ERROR_ID_NO))
 
             goto EndMFC_LoadAnalysis;
           }
@@ -981,8 +980,8 @@ RC MFC_LoadAnalysis(ENGINE_CONTEXT *pEngineContext)
 
          for (indexWindow=0,DimL=0;indexWindow<pTabFeno->svd.Z;indexWindow++)
           {
-           pTabFeno->svd.Fenetre[indexWindow][0]=FNPixel(pTabFeno->LembdaRef,pTabFeno->svd.LFenetre[indexWindow][0],pTabFeno->NDET,PIXEL_AFTER);
-           pTabFeno->svd.Fenetre[indexWindow][1]=FNPixel(pTabFeno->LembdaRef,pTabFeno->svd.LFenetre[indexWindow][1],pTabFeno->NDET,PIXEL_BEFORE);
+           pTabFeno->svd.Fenetre[indexWindow][0]=FNPixel(pTabFeno->LambdaRef,pTabFeno->svd.LFenetre[indexWindow][0],pTabFeno->NDET,PIXEL_AFTER);
+           pTabFeno->svd.Fenetre[indexWindow][1]=FNPixel(pTabFeno->LambdaRef,pTabFeno->svd.LFenetre[indexWindow][1],pTabFeno->NDET,PIXEL_BEFORE);
 
            DimL+=(pTabFeno->svd.Fenetre[indexWindow][1]-pTabFeno->svd.Fenetre[indexWindow][0]+1);
           }
@@ -996,9 +995,9 @@ RC MFC_LoadAnalysis(ENGINE_CONTEXT *pEngineContext)
 
          pTabFeno->Decomp=1;
 
-         if (((rc=ANALYSE_XsInterpolation(pTabFeno,pTabFeno->LembdaRef))!=ERROR_ID_NO) ||
+         if (((rc=ANALYSE_XsInterpolation(pTabFeno,pTabFeno->LambdaRef))!=ERROR_ID_NO) ||
              (!pKuruczOptions->fwhmFit && pTabFeno->xsToConvolute &&
-             ((rc=ANALYSE_XsConvolution(pTabFeno,pTabFeno->LembdaRef,&ANALYSIS_slit,pSlitOptions->slitFunction.slitType,&pSlitOptions->slitFunction.slitParam,&pSlitOptions->slitFunction.slitParam2,&pSlitOptions->slitFunction.slitParam3,&pSlitOptions->slitFunction.slitParam4))!=ERROR_ID_NO)))
+             ((rc=ANALYSE_XsConvolution(pTabFeno,pTabFeno->LambdaRef,&ANALYSIS_slit,pSlitOptions->slitFunction.slitType,&pSlitOptions->slitFunction.slitParam,&pSlitOptions->slitFunction.slitParam2,&pSlitOptions->slitFunction.slitParam3,&pSlitOptions->slitFunction.slitParam4))!=ERROR_ID_NO)))
 
           goto EndMFC_LoadAnalysis;
         }

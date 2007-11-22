@@ -53,7 +53,7 @@ CWMoleculesDiffOrthoCombo::CWMoleculesDiffOrthoCombo(const QString &excludedSymb
     ++it;
   }
 }
- 
+
 CWMoleculesDiffOrthoCombo::~CWMoleculesDiffOrthoCombo()
 {
 }
@@ -80,7 +80,7 @@ void CWMoleculesDiffOrthoCombo::slotSymbolListChanged(const QStringList &symbols
   if (index != -1) {
     setCurrentIndex(index);
     if (text == m_pendingInitial)
-      m_pendingInitial = QString(); // has been set ... 
+      m_pendingInitial = QString(); // has been set ...
   }
 }
 
@@ -101,7 +101,7 @@ CMoleculeDoasTableColumnDiffOrtho::CMoleculeDoasTableColumnDiffOrtho(const QStri
   CDoasTableColumn(label, owner, columnWidth)
 {
   setViewportBackgroundColour(QColor(0xFFFFFFFF));
-  setCellBorders(1,1);  
+  setCellBorders(1,1);
 }
 
 CMoleculeDoasTableColumnDiffOrtho::~CMoleculeDoasTableColumnDiffOrtho()
@@ -117,7 +117,7 @@ QVariant CMoleculeDoasTableColumnDiffOrtho::getCellData(int rowIndex) const
       return QVariant(tmp->currentText());
   }
 
-  return QVariant();  
+  return QVariant();
 }
 
 QWidget* CMoleculeDoasTableColumnDiffOrtho::createCellWidget(const QVariant &cellData)
@@ -129,7 +129,7 @@ QWidget* CMoleculeDoasTableColumnDiffOrtho::createCellWidget(const QVariant &cel
 
   const QStringList &symbolList = p->symbolList();
   QString excludedSymbol = symbolList.value(rowCount()); // the last entry
-  
+
   CWMoleculesDiffOrthoCombo *tmp = new CWMoleculesDiffOrthoCombo(excludedSymbol, symbolList);
 
   tmp->initialSelection(cellData.toString());
@@ -166,7 +166,7 @@ CWMoleculesDoasTable::CWMoleculesDoasTable(const QString &label, int columnWidth
   createColumnEdit("CC Delta", 80);
   createColumnEdit("CC Io", 80);            // columnIndex = 8
 }
-  
+
 CWMoleculesDoasTable::~CWMoleculesDoasTable()
 {
 }
@@ -242,7 +242,7 @@ void CWMoleculesDoasTable::addRow(int height, const QString &label, QList<QVaria
 				  const QString &csFilename, const QString &amfFilename)
 {
   addRow(height, label, cellData);
-    
+
   // replace the values for the filenames ... at the tail of the list ...
   if (!csFilename.isEmpty()) {
     m_csFilename.pop_back();
@@ -263,7 +263,7 @@ void CWMoleculesDoasTable::addRow(int height, const QString &label, QList<QVaria
 
   m_csFilename << QString();  // add an empty string ...
   m_amfFilename << QString(); // add an empty string ...
-  
+
   emit signalSymbolListChanged(m_symbols);
 
   // really create the new row ...
@@ -282,7 +282,7 @@ void CWMoleculesDoasTable::removeRow(int rowIndex)
     m_symbols.removeAt(rowIndex);
 
     // really remove the row ...
-    CDoasTable::removeRow(rowIndex);  
+    CDoasTable::removeRow(rowIndex);
 
     // notify the remaining diff/ortho combos that the symbol list has changed
     emit signalSymbolListChanged(m_symbols);
@@ -292,7 +292,7 @@ void CWMoleculesDoasTable::removeRow(int rowIndex)
 bool CWMoleculesDoasTable::isRowLocked(int rowIndex) const
 {
   // assumed rowIndex is within the valid range ...
- 
+
   // a row is locked if ...
   //    a) There is an internal lock, which means another row references the symbol for rowIndex.
   //    b) There is an external lock, which means that an external entity is holding a lock on the symbol.
@@ -323,7 +323,7 @@ int CWMoleculesDoasTable::mapComboStringToCrossType(const QString &str)
   if (str == "Convolve Std") return ANLYS_CROSS_ACTION_CONVOLUTE;
   if (str == "Convolve Io") return ANLYS_CROSS_ACTION_CONVOLUTE_I0;
   if (str == "Convolve Ring") return ANLYS_CROSS_ACTION_CONVOLUTE_RING;
-  
+
   return ANLYS_CROSS_ACTION_NOTHING;
 }
 
@@ -374,7 +374,7 @@ void CWMoleculesDoasTable::slotUnlockSymbol(const QString &symbol, const QObject
 
   symlockmap_t::iterator it = pair.first;
   while (it != pair.second) {
-    if (it->second == holder) {      
+    if (it->second == holder) {
       m_symbolLocks.erase(it);
       return; // done
     }
@@ -390,7 +390,7 @@ const QStringList& CWMoleculesDoasTable::symbolList(void) const
 void CWMoleculesDoasTable::cellDataChanged(int row, int column, const QVariant &cellData)
 {
   // TRACE("Changed : " << row << "," << column << " : " << cellData.toString().toStdString());
-  
+
   if (column == 0) {
     // is the selection for row the symbol of another row - if so that symbol is locked.
     m_rowLocks.replace(row, m_symbols.indexOf(cellData.toString())); // sets/releases/clears internal locks
@@ -406,11 +406,11 @@ void CWMoleculesDoasTable::contextMenuEvent(QContextMenuEvent *e)
 
   // create a popup menu
   QMenu menu;
-  
+
   menu.addAction("Insert", this, SLOT(slotInsertRow()));
-  
+
   m_selectedRow = rowIndexAtPosition(e->y());
-  
+
   QAction *removeAction = menu.addAction("Remove", this, SLOT(slotRemoveRow()));
   removeAction->setEnabled(m_selectedRow != -1 && !isRowLocked(m_selectedRow));
 
@@ -420,12 +420,12 @@ void CWMoleculesDoasTable::contextMenuEvent(QContextMenuEvent *e)
   if (isColumnEnabled(amfColumn)) {
     menu.addSeparator();
     QAction *amfAction = menu.addAction("AMF Filename", this, SLOT(slotAmfFileName()));
-    amfAction->setEnabled(m_selectedRow != -1 && getCellData(m_selectedRow, amfColumn).toString() != "None");   
+    amfAction->setEnabled(m_selectedRow != -1 && getCellData(m_selectedRow, amfColumn).toString() != "None");
   }
 
   menu.exec(e->globalPos()); // a slot will do the rest
 }
- 
+
 void CWMoleculesDoasTable::slotInsertRow()
 {
   QStringList allSymbols = CWorkSpace::instance()->symbolList();
@@ -446,7 +446,7 @@ void CWMoleculesDoasTable::slotInsertRow()
   }
 
   // check that the selected file is appropriate ...
-  if (!filter.isEmpty()) {    
+  if (!filter.isEmpty()) {
     filter.append("All files (*.*)");
 
     CPreferences *prefs = CPreferences::instance();
@@ -510,18 +510,18 @@ void CWMoleculesDoasTable::slotChangeCrossSectionFileName()
     // file dialog to change the cross section
     QString filename = QFileDialog::getOpenFileName(this, "AMF Filename", m_csFilename.at(m_selectedRow), filter);
     if (!filename.isEmpty()) {
-      // the file MUST match the prefix 
+      // the file MUST match the prefix
       prefix.append('_');
 
       if (filename.startsWith(prefix, Qt::CaseInsensitive)) {
 	m_csFilename[m_selectedRow] = filename; // change the filename
       }
       else {
-	QMessageBox::warning(this, "Invalid XS Filename", "The filename was NOT changed because the selected filename\ndid not correspond with the selected symbol.");   
+	QMessageBox::warning(this, "Invalid XS Filename", "The filename was NOT changed because the selected filename\ndid not correspond with the selected symbol.");
       }
     }
   }
-  
+
 }
 
 void CWMoleculesDoasTable::slotAmfFileName()
@@ -563,14 +563,14 @@ CWLinearParametersDoasTable::~CWLinearParametersDoasTable()
 }
 
 void CWLinearParametersDoasTable::populate(const struct anlyswin_linear *data)
-{						 
+{
   // predefined rows
   QList<QVariant> initialValues;
 
   initialValues.push_back(mapOrderToComboString(data->xPolyOrder));
   initialValues.push_back(mapOrderToComboString(data->xBaseOrder));
   initialValues.push_back(data->xFlagFitStore); // bool
-  initialValues.push_back(data->xFlagErrStore); // bool 
+  initialValues.push_back(data->xFlagErrStore); // bool
   addRow(cStandardRowHeight, "Polynomial(x)", initialValues);
 
   initialValues.clear();
@@ -578,7 +578,7 @@ void CWLinearParametersDoasTable::populate(const struct anlyswin_linear *data)
   initialValues.push_back(mapOrderToComboString(data->xinvPolyOrder));
   initialValues.push_back(mapOrderToComboString(data->xinvBaseOrder));
   initialValues.push_back(data->xinvFlagFitStore); // bool
-  initialValues.push_back(data->xinvFlagErrStore); // bool 
+  initialValues.push_back(data->xinvFlagErrStore); // bool
   addRow(cStandardRowHeight, "Polynomial(1/x)", initialValues);
 
   initialValues.clear();
@@ -586,7 +586,7 @@ void CWLinearParametersDoasTable::populate(const struct anlyswin_linear *data)
   initialValues.push_back(mapOrderToComboString(data->offsetPolyOrder));
   initialValues.push_back(mapOrderToComboString(data->offsetBaseOrder));
   initialValues.push_back(data->offsetFlagFitStore); // bool
-  initialValues.push_back(data->offsetFlagErrStore); // bool 
+  initialValues.push_back(data->offsetFlagErrStore); // bool
   addRow(cStandardRowHeight, "Offset", initialValues);
 
   // WARNING ... The following is a hack that requires access to the cell widgets in
@@ -612,7 +612,7 @@ void CWLinearParametersDoasTable::populate(const struct anlyswin_linear *data)
     }
   }
 }
-  
+
 void CWLinearParametersDoasTable::apply(struct anlyswin_linear *data) const
 {
   QList<QVariant> state;
@@ -658,7 +658,7 @@ int CWLinearParametersDoasTable::mapComboStringToOrder(const QString &str)
   if (str == "Order 3") return ANLYS_POLY_TYPE_3;
   if (str == "Order 4") return ANLYS_POLY_TYPE_4;
   if (str == "Order 5") return ANLYS_POLY_TYPE_5;
-  
+
   return ANLYS_POLY_TYPE_NONE;
 }
 
@@ -676,7 +676,7 @@ CWNonLinearParametersDoasTable::CWNonLinearParametersDoasTable(const QString &la
   createColumnEdit("Val. Init", 80);
   createColumnEdit("Val. Delta", 80);
   createColumnCheck("Fit store", 60);
-  createColumnCheck("Err store", 60); 
+  createColumnCheck("Err store", 60);
 }
 
 CWNonLinearParametersDoasTable::~CWNonLinearParametersDoasTable()
@@ -684,7 +684,7 @@ CWNonLinearParametersDoasTable::~CWNonLinearParametersDoasTable()
 }
 
 void CWNonLinearParametersDoasTable::populate(const struct anlyswin_nonlinear *data)
-{						 
+{
   // predefined rows
   QList<QVariant> initialValues;
 
@@ -693,7 +693,7 @@ void CWNonLinearParametersDoasTable::populate(const struct anlyswin_nonlinear *d
   initialValues.push_back(data->solInitial);
   initialValues.push_back(data->solDelta);
   initialValues.push_back(data->solFlagFitStore);
-  initialValues.push_back(data->solFlagErrStore);  
+  initialValues.push_back(data->solFlagErrStore);
   addRow(cStandardRowHeight, "Sol", initialValues);
 
   initialValues.clear();
@@ -703,7 +703,7 @@ void CWNonLinearParametersDoasTable::populate(const struct anlyswin_nonlinear *d
   initialValues.push_back(data->off0Initial);
   initialValues.push_back(data->off0Delta);
   initialValues.push_back(data->off0FlagFitStore);
-  initialValues.push_back(data->off0FlagErrStore);  
+  initialValues.push_back(data->off0FlagErrStore);
   addRow(cStandardRowHeight, "Offset (Constant)", initialValues);
 
   initialValues.clear();
@@ -713,7 +713,7 @@ void CWNonLinearParametersDoasTable::populate(const struct anlyswin_nonlinear *d
   initialValues.push_back(data->off1Initial);
   initialValues.push_back(data->off1Delta);
   initialValues.push_back(data->off1FlagFitStore);
-  initialValues.push_back(data->off1FlagErrStore);  
+  initialValues.push_back(data->off1FlagErrStore);
   addRow(cStandardRowHeight, "Offset (Order 1)", initialValues);
 
   initialValues.clear();
@@ -723,7 +723,7 @@ void CWNonLinearParametersDoasTable::populate(const struct anlyswin_nonlinear *d
   initialValues.push_back(data->off2Initial);
   initialValues.push_back(data->off2Delta);
   initialValues.push_back(data->off2FlagFitStore);
-  initialValues.push_back(data->off2FlagErrStore);  
+  initialValues.push_back(data->off2FlagErrStore);
   addRow(cStandardRowHeight, "Offset (Order 2)", initialValues);
 
   initialValues.clear();
@@ -733,7 +733,7 @@ void CWNonLinearParametersDoasTable::populate(const struct anlyswin_nonlinear *d
   initialValues.push_back(data->comInitial);
   initialValues.push_back(data->comDelta);
   initialValues.push_back(data->comFlagFitStore);
-  initialValues.push_back(data->comFlagErrStore);  
+  initialValues.push_back(data->comFlagErrStore);
   addRow(cStandardRowHeight, "Com", initialValues);
 
   initialValues.clear();
@@ -743,7 +743,7 @@ void CWNonLinearParametersDoasTable::populate(const struct anlyswin_nonlinear *d
   initialValues.push_back(data->usamp1Initial);
   initialValues.push_back(data->usamp1Delta);
   initialValues.push_back(data->usamp1FlagFitStore);
-  initialValues.push_back(data->usamp1FlagErrStore);  
+  initialValues.push_back(data->usamp1FlagErrStore);
   addRow(cStandardRowHeight, "Usamp 1", initialValues);
 
   initialValues.clear();
@@ -753,7 +753,7 @@ void CWNonLinearParametersDoasTable::populate(const struct anlyswin_nonlinear *d
   initialValues.push_back(data->usamp2Initial);
   initialValues.push_back(data->usamp2Delta);
   initialValues.push_back(data->usamp2FlagFitStore);
-  initialValues.push_back(data->usamp2FlagErrStore);  
+  initialValues.push_back(data->usamp2FlagErrStore);
   addRow(cStandardRowHeight, "Usamp 2", initialValues);
 
   initialValues.clear();
@@ -763,7 +763,7 @@ void CWNonLinearParametersDoasTable::populate(const struct anlyswin_nonlinear *d
   initialValues.push_back(data->ramanInitial);
   initialValues.push_back(data->ramanDelta);
   initialValues.push_back(data->ramanFlagFitStore);
-  initialValues.push_back(data->ramanFlagErrStore);  
+  initialValues.push_back(data->ramanFlagErrStore);
   addRow(cStandardRowHeight, "Raman", initialValues);
 
   m_comFilename = data->comFile;
@@ -783,49 +783,49 @@ void CWNonLinearParametersDoasTable::apply(struct anlyswin_nonlinear *data) cons
   data->solDelta = state.at(2).toDouble();
   data->solFlagFitStore = state.at(3).toBool() ? 1 : 0;
   data->solFlagErrStore = state.at(4).toBool() ? 1 : 0;
-  
+
   state = getCellData(1); // Offset Constant
   data->off0FlagFit = state.at(0).toBool() ? 1 : 0;
   data->off0Initial = state.at(1).toDouble();
   data->off0Delta = state.at(2).toDouble();
   data->off0FlagFitStore = state.at(3).toBool() ? 1 : 0;
   data->off0FlagErrStore = state.at(4).toBool() ? 1 : 0;
-  
+
   state = getCellData(2); // Offset Order 1
   data->off1FlagFit = state.at(0).toBool() ? 1 : 0;
   data->off1Initial = state.at(1).toDouble();
   data->off1Delta = state.at(2).toDouble();
   data->off1FlagFitStore = state.at(3).toBool() ? 1 : 0;
   data->off1FlagErrStore = state.at(4).toBool() ? 1 : 0;
-  
+
   state = getCellData(3); // Offset Order 2
   data->off2FlagFit = state.at(0).toBool() ? 1 : 0;
   data->off2Initial = state.at(1).toDouble();
   data->off2Delta = state.at(2).toDouble();
   data->off2FlagFitStore = state.at(3).toBool() ? 1 : 0;
   data->off2FlagErrStore = state.at(4).toBool() ? 1 : 0;
-  
+
   state = getCellData(4); // Com
   data->comFlagFit = state.at(0).toBool() ? 1 : 0;
   data->comInitial = state.at(1).toDouble();
   data->comDelta = state.at(2).toDouble();
   data->comFlagFitStore = state.at(3).toBool() ? 1 : 0;
   data->comFlagErrStore = state.at(4).toBool() ? 1 : 0;
-  
+
   state = getCellData(5); // Usamp1
   data->usamp1FlagFit = state.at(0).toBool() ? 1 : 0;
   data->usamp1Initial = state.at(1).toDouble();
   data->usamp1Delta = state.at(2).toDouble();
   data->usamp1FlagFitStore = state.at(3).toBool() ? 1 : 0;
   data->usamp1FlagErrStore = state.at(4).toBool() ? 1 : 0;
-  
+
   state = getCellData(6); // Usamp2
   data->usamp2FlagFit = state.at(0).toBool() ? 1 : 0;
   data->usamp2Initial = state.at(1).toDouble();
   data->usamp2Delta = state.at(2).toDouble();
   data->usamp2FlagFitStore = state.at(3).toBool() ? 1 : 0;
   data->usamp2FlagErrStore = state.at(4).toBool() ? 1 : 0;
-  
+
   state = getCellData(7); // Raman
   data->ramanFlagFit = state.at(0).toBool() ? 1 : 0;
   data->ramanInitial = state.at(1).toDouble();
@@ -834,45 +834,45 @@ void CWNonLinearParametersDoasTable::apply(struct anlyswin_nonlinear *data) cons
   data->ramanFlagErrStore = state.at(4).toBool() ? 1 : 0;
 
   // filenames
-  
+
   if (m_comFilename.length() < (int)sizeof(data->comFile))
     strcpy(data->comFile, m_comFilename.toAscii().data());
   else
     *(data->comFile) = '\0';
-  
+
   if (m_usamp1Filename.length() < (int)sizeof(data->usamp1File))
     strcpy(data->usamp1File, m_usamp1Filename.toAscii().data());
   else
     *(data->usamp1File) = '\0';
-  
+
   if (m_usamp2Filename.length() < (int)sizeof(data->usamp2File))
     strcpy(data->usamp2File, m_usamp2Filename.toAscii().data());
   else
     *(data->usamp2File) = '\0';
-  
+
   if (m_ramanFilename.length() < (int)sizeof(data->ramanFile))
     strcpy(data->ramanFile, m_ramanFilename.toAscii().data());
   else
     *(data->ramanFile) = '\0';
-  
+
 }
 
 void CWNonLinearParametersDoasTable::contextMenuEvent(QContextMenuEvent *e)
 {
-  
+
   m_selectedRow = rowIndexAtPosition(e->y());
 
   if (m_selectedRow >= 4 && m_selectedRow <= 7) {
 
     // create a popup menu
     QMenu menu;
-    
+
     menu.addAction("Select File", this, SLOT(slotSelectFile()));
 
     menu.exec(e->globalPos()); // a slot will do the rest
   }
 }
- 
+
 void CWNonLinearParametersDoasTable::slotSelectFile()
 {
   switch (m_selectedRow) {
@@ -979,7 +979,7 @@ CWShiftAndStretchDoasTable::CWShiftAndStretchDoasTable(const QString &label, int
   QStringList comboItems;
   comboItems << "None" << "1st Order" << "2nd Order";
 
-  // columns  
+  // columns
   createColumnCheck("Shift fit", 60);                 // column 0
   createColumnCombo("Stretch fit", 90, comboItems);
   createColumnCombo("Scaling fit", 90, comboItems);   // column 2
@@ -988,21 +988,21 @@ CWShiftAndStretchDoasTable::CWShiftAndStretchDoasTable(const QString &label, int
   createColumnCheck("St store", 60);
   createColumnCheck("Sc store", 60);   // column 5
   createColumnCheck("Err store", 60);
-  
-  createColumnEdit(-100.0, 100.0, 3, "Sh Init (px)", 80);
+
+  createColumnEdit(-100.0, 100.0, 3, "Sh Init (nm)", 80);
   createColumnEdit(-100.0, 100.0, 3, "St Init", 80);
   createColumnEdit(-100.0, 100.0, 3, "St Init (2)", 80);
   createColumnEdit(-100.0, 100.0, 3, "Sc Init", 80);
   createColumnEdit(-100.0, 100.0, 3, "Sc Init (2)", 80);
 
-  createColumnEdit(0.0001, 0.9999, 4, "Sh Delta (px)", 80);
+  createColumnEdit(0.0001, 0.9999, 4, "Sh Delta (nm)", 80);
   createColumnEdit(0.0001, 0.9999, 4, "St Delta", 80);
   createColumnEdit(0.0001, 0.9999, 4, "St Delta (2)", 80);
   createColumnEdit(0.0001, 0.9999, 4, "Sc Delta", 80);
   createColumnEdit(0.0001, 0.9999, 4, "Sc Delta (2)", 80);
 
-  createColumnEdit(-100.0, 100.0, 3, "Sh min (px)", 80);
-  createColumnEdit(-100.0, 100.0, 3, "Sh max (px)", 80);
+  createColumnEdit(-100.0, 100.0, 3, "Sh min (nm)", 80);
+  createColumnEdit(-100.0, 100.0, 3, "Sh max (nm)", 80);
 }
 
 CWShiftAndStretchDoasTable::~CWShiftAndStretchDoasTable()
@@ -1041,7 +1041,7 @@ void CWShiftAndStretchDoasTable::populate(const shift_stretch_list_t *data)
 
     initialValues.push_back(d->shMin);
     initialValues.push_back(d->shMax);
-    
+
     int i = 0;
     while (i < d->nSymbol) {
       if (i == 0) {
@@ -1065,7 +1065,7 @@ void CWShiftAndStretchDoasTable::apply(shift_stretch_list_t *data) const
 {
   int row = 0;
   struct anlyswin_shift_stretch *d = &(data->shiftStretch[0]);
-  
+
   data->nShiftStretch = rowCount();
 
   while (row < data->nShiftStretch && row < MAX_AW_SHIFT_STRETCH) {
@@ -1163,7 +1163,7 @@ void CWShiftAndStretchDoasTable::contextMenuEvent(QContextMenuEvent *e)
 {
   // create a popup menu
   QMenu menu;
-  
+
   QAction *insertAction = menu.addAction("Insert", this, SLOT(slotInsertRow()));
   QAction *removeAction = menu.addAction("Remove", this, SLOT(slotRemoveRow()));
   QAction *modifyAction = menu.addAction("Modify", this, SLOT(slotModifyRow()));
@@ -1174,7 +1174,7 @@ void CWShiftAndStretchDoasTable::contextMenuEvent(QContextMenuEvent *e)
   removeAction->setEnabled(m_selectedRow != -1);
   modifyAction->setEnabled(m_selectedRow != -1);
 
-  menu.exec(e->globalPos()); // a slot will do the rest  
+  menu.exec(e->globalPos()); // a slot will do the rest
 }
 
 QString CWShiftAndStretchDoasTable::mapOrderToComboString(int order)
@@ -1191,7 +1191,7 @@ int CWShiftAndStretchDoasTable::mapComboStringToOrder(const QString &str)
 {
   if (str == "1st Order") return ANLYS_STRETCH_TYPE_FIRST_ORDER;
   if (str == "2nd Order") return ANLYS_STRETCH_TYPE_SECOND_ORDER;
-  
+
   return ANLYS_STRETCH_TYPE_NONE;
 }
 
@@ -1218,7 +1218,7 @@ void CWShiftAndStretchDoasTable::slotSymbolListChanged(const QStringList &symbol
   }
 
   // and the special symbols ...
-  
+
   it = m_specialSymbols.begin();
   while (it != m_specialSymbols.end()) {
     found = false;
@@ -1231,18 +1231,18 @@ void CWShiftAndStretchDoasTable::slotSymbolListChanged(const QStringList &symbol
       m_freeSymbols << *it;
     ++it;
   }
-  
+
 }
 
 void CWShiftAndStretchDoasTable::slotInsertRow()
 {
   // popup a dialog for selecting a symbol (list) ...
   CWShiftAndStretchDialog dialog(m_freeSymbols, QStringList(), this);
-  
+
   if (dialog.exec() == QDialog::Accepted) {
     QStringList selection = dialog.selectedSymbols();
 
-    if (!selection.isEmpty()) { 
+    if (!selection.isEmpty()) {
 
       QStringList::iterator it = selection.begin();
       QString tmp = *it;
@@ -1295,11 +1295,11 @@ void CWShiftAndStretchDoasTable::slotModifyRow()
 
     // popup a dialog for modyfying a symbol (list) ...
     CWShiftAndStretchDialog dialog(m_freeSymbols, m_selectedSymbolList.at(m_selectedRow), this);
-  
+
     if (dialog.exec() == QDialog::Accepted) {
       QStringList selection = dialog.selectedSymbols();
 
-      if (!selection.isEmpty()) { 
+      if (!selection.isEmpty()) {
 	// OK to change ...
 
 	int index;
@@ -1368,7 +1368,7 @@ void CWGapDoasTable::populate(const gap_list_t *data)
     QList<QVariant> initialValues;
     initialValues.push_back(QVariant(d->minimum));
     initialValues.push_back(QVariant(d->maximum));
-    
+
     addRow(cStandardRowHeight, "Gap-Invalid", initialValues);
 
     ++d;
@@ -1429,7 +1429,7 @@ void CWGapDoasTable::contextMenuEvent(QContextMenuEvent *e)
 {
   // create a popup menu
   QMenu menu;
-  
+
   QAction *insertAction = menu.addAction("Insert", this, SLOT(slotInsertRow()));
   QAction *removeAction = menu.addAction("Remove", this, SLOT(slotRemoveRow()));
 
@@ -1438,7 +1438,7 @@ void CWGapDoasTable::contextMenuEvent(QContextMenuEvent *e)
 
   removeAction->setEnabled(m_selectedRow != -1);
 
-  menu.exec(e->globalPos()); // a slot will do the rest  
+  menu.exec(e->globalPos()); // a slot will do the rest
 }
 
 void CWGapDoasTable::slotInsertRow()
@@ -1526,7 +1526,7 @@ void CWOutputDoasTable::apply(output_list_t *data) const
 
     ++d;
     ++row;
-  }  
+  }
 }
 
 //void CWOutputDoasTable::cellDataChanged(int row, int column, const QVariant &cellData)
@@ -1543,7 +1543,7 @@ void CWOutputDoasTable::removeRow(int rowIndex)
 {
   CDoasTable::removeRow(rowIndex);
 }
-  
+
 void CWOutputDoasTable::slotSymbolListChanged(const QStringList &symbols)
 {
   int index;
@@ -1567,7 +1567,7 @@ void CWOutputDoasTable::slotSymbolListChanged(const QStringList &symbols)
       }
       m_symbols << *it;
       CDoasTable::addRow(cStandardRowHeight, *it, initialValues);
-    }    
+    }
     ++it;
   }
   // now make sure that only these rows exist ...
@@ -1616,7 +1616,7 @@ void CWSfpParametersDoasTable::populate(const struct calibration_sfp *data)
 
     QString label("SFP");
     label.append('1' + i);
-    
+
     addRow(cStandardRowHeight, label, initialValues);
     ++data;
   }

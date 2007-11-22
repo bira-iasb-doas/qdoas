@@ -1,17 +1,10 @@
 
 //  ----------------------------------------------------------------------------
 //
-//  Product/Project   :  THE BIRA-IASB DOAS SOFTWARE FOR WINDOWS AND LINUX
+//  Product/Project   :  QDOAS
 //  Module purpose    :  Read out spectra from the EASOE campaign
 //  Name of module    :  EASOE-READ.C
 //  Creation date     :  2 April 2004
-//
-//  Author            :  Caroline FAYT (caroline.fayt@oma.be)
-//
-//        Copyright  (C) Belgian Institute for Space Aeronomy (BIRA-IASB)
-//                       Avenue Circulaire, 3
-//                       1180     UCCLE
-//                       BELGIUM
 //
 //  QDOAS is a cross-platform application developed in QT for DOAS retrieval
 //  (Differential Optical Absorption Spectroscopy).

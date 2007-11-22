@@ -1,7 +1,7 @@
 
 //  ----------------------------------------------------------------------------
 //
-//  Product/Project   :  THE BIRA-IASB DOAS SOFTWARE FOR WINDOWS AND LINUX
+//  Product/Project   :  QDOAS
 //  Module purpose    :  ACTON read out routines
 //  Name of module    :  ACTN-READ.C
 //  Creation date     :  This module was already existing in old DOS versions and

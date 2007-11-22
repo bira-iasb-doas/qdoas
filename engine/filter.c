@@ -1,7 +1,7 @@
 
 //  ----------------------------------------------------------------------------
 //
-//  Product/Project   :  THE BIRA-IASB DOAS SOFTWARE FOR WINDOWS AND LINUX
+//  Product/Project   :  QDOAS
 //  Module purpose    :  FILTERING FUNCTIONS
 //  Name of module    :  FILTER.C
 //  Creation date     :  This module was already existing in old DOS versions and
@@ -14,7 +14,7 @@
 //      - ...
 //
 //
-//  QDOAS is a cross-platform application developed in QT for DOAS retrieval 
+//  QDOAS is a cross-platform application developed in QT for DOAS retrieval
 //  (Differential Optical Absorption Spectroscopy).
 //
 //  The QT version of the program has been developed jointly by the Belgian
@@ -23,28 +23,28 @@
 //
 //      BIRA-IASB                                   S[&]T
 //      Belgian Institute for Space Aeronomy        Science [&] Technology
-//      Avenue Circulaire, 3                        Postbus 608                   
-//      1180     UCCLE                              2600 AP Delft                 
-//      BELGIUM                                     THE NETHERLANDS               
-//      caroline.fayt@aeronomie.be                  info@stcorp.nl                
+//      Avenue Circulaire, 3                        Postbus 608
+//      1180     UCCLE                              2600 AP Delft
+//      BELGIUM                                     THE NETHERLANDS
+//      caroline.fayt@aeronomie.be                  info@stcorp.nl
 //
 //  This program is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU General Public License
 //  as published by the Free Software Foundation; either version 2
 //  of the License, or (at your option) any later version.
-//  
+//
 //  This program is distributed in the hope that it will be useful,
 //  but WITHOUT ANY WARRANTY; without even the implied warranty of
 //  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //  GNU General Public License for more details.
-//  
+//
 //  You should have received a copy of the GNU General Public License
 //  along with this program; if not, write to the Free Software Foundation,
 //  Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //
 //  ----------------------------------------------------------------------------
 //
-//  MODULE DESCRIPTION       
+//  MODULE DESCRIPTION
 //
 //  Filtering functions from different sources
 //
@@ -52,10 +52,10 @@
 //
 //  FUNCTIONS
 //
-//  Fourier - fast Fourier Transform algorithm   
+//  Fourier - fast Fourier Transform algorithm
 //  realft - fast Fourier Transform of a real vector
-//  ModBessel - modified Bessel function of zeroth order  
-//  Neq_Ripple - build a Kaizer filter    
+//  ModBessel - modified Bessel function of zeroth order
+//  Neq_Ripple - build a Kaizer filter
 //  FilterPinv - pseudoInverse function function
 //  FilterSavitskyGolay - build a Savitsky-Golay filter function
 //  FilterPascalTriangle - build a Pascal binomial filter function
@@ -242,30 +242,30 @@ void realft(double *source,double *buffer,int nn,int is)
      buffer[index]/=ndemi;
    }
  }
- 
+
 // -----------------------------------------------------------------------------
 // FUNCTION      ModBessel
 // -----------------------------------------------------------------------------
-// PURPOSE       Evaluates the modified Bessel function of zeroth order   
-//               at real values of the arguments 
+// PURPOSE       Evaluates the modified Bessel function of zeroth order
+//               at real values of the arguments
 //
 // INPUT         X       input argument
 //
 // RETURN        modified Bessel function calculated at X
-// ----------------------------------------------------------------------------- 
+// -----------------------------------------------------------------------------
 
 double ModBessel(double X)
- {              
+ {
  	// Declarations
- 	
+
   double S, Ds;
   int D;
-  
+
   // Initialization
 
   S=Ds=(double)1.;
-  D=0;     
-  
+  D=0;
+
   // Modified Bessel function
 
   do
@@ -275,10 +275,10 @@ double ModBessel(double X)
     S+=Ds;
    }
   while (Ds>(double)0.2e-8*S);
-  
+
   // Return
 
-  return ((double)S); 
+  return ((double)S);
  }
 
 // -----------------------------------------------------------------------------
@@ -286,56 +286,56 @@ double ModBessel(double X)
 // -----------------------------------------------------------------------------
 // PURPOSE       build a Kaizer filter function
 //
-//               Calculates the coefficients of a nearly equiripple linear   
-//               phase smoothing filter with an odd number of terms and  
+//               Calculates the coefficients of a nearly equiripple linear
+//               phase smoothing filter with an odd number of terms and
 //               even symetry
 //
-// INPUT         Beta        cutoff frequency 
-//               Delta       pass band 
+// INPUT         Beta        cutoff frequency
+//               Delta       pass band
 //               dB          tolerance
 //
 // OUTPUT        pFilter     pointer to the buffer for the calculated filter
 //
-// RETURN        ERROR_ID_ALLOC if buffer allocation failed, 
+// RETURN        ERROR_ID_ALLOC if buffer allocation failed,
 //               ERROR_ID_BAD_ARGUMENTS in case of wrong arguments
-//               0 on success             
+//               0 on success
 //
 // Reference: Kaizer and Reed, Rev. Sci. Instrum., 48, 1447-1457, 1977.
-// ----------------------------------------------------------------------------- 
+// -----------------------------------------------------------------------------
 
 RC FilterNeqRipple (PRJCT_FILTER *pFilter,double *Beta, double *Delta,double *dB)
- { 
+ {
  	// Declarations
- 	
+
   int i, j, k,Nterm;
   double Kf, Eta, Be1, Be2, Gk, Dk, Geta;
   double Lam21, Pow1;
   double DNp;
   RC rc;
-  
+
   // Initializations
-  
- 
+
+
   rc=ERROR_ID_NO;
- 
+
   Kf = (double) 1.8445;
   if ( (*dB) >= (double) 21. ) Kf = (double) 0.13927 * ((*dB)-7.95);
- 
+
   Lam21 = (*dB) - (double) 21.;
   Pow1 = pow ( (double) Lam21, (double) 0.4 );
   Eta = 0.58417 * Pow1 + 0.07886 * Lam21;
- 
+
   if ( (*dB) < (double) 21. ) Eta = (double) 0.;
   if ( (*dB) > (double) 50. ) Eta = 0.1102 * ((*dB) - (double) 8.7 );
- 
+
   Nterm = (int)(Kf/(2.*(*Delta))+0.75);
   pFilter->filterSize = Nterm+1;
- 
+
   DNp = (double) Nterm;
   pFilter->filterFunction=NULL;
- 
+
   // Test Np against dimension limit
- 
+
   if ((Nterm<0) || (Nterm>MAXNP))
    rc=ERROR_SetLast("Neq_Ripple",ERROR_TYPE_WARNING,ERROR_ID_BAD_ARGUMENTS);
   else if ((pFilter->filterFunction=(double *)MEMORY_AllocDVector("Neq_Ripple ","pFilter->filterFunction",1,pFilter->filterSize))==NULL)
@@ -343,31 +343,31 @@ RC FilterNeqRipple (PRJCT_FILTER *pFilter,double *Beta, double *Delta,double *dB
   else
    {
     Be1 = (double) ModBessel ( Eta );
- 
+
     for ( k=1; k<=Nterm; k++ )
        {
            Dk   = (double) k;
            Gk   = (double) PI * Dk;
            Geta = (double) Eta * sqrt ( 1. - pow((double) Dk/DNp, (double) 2.) );
- 
+
            Be2  = (double) ModBessel ( Geta );
            pFilter->filterFunction[k] = (double) (sin( (*Beta) * Gk )) / Gk * (Be2/Be1);
        }
- 
+
     pFilter->filterFunction[Nterm] *= (double) 0.5;
- 
+
     for ( i=2; i<=pFilter->filterSize; i++ )
        {
           k = pFilter->filterSize - i + 2;
           j = k-1;
           pFilter->filterFunction[k] = pFilter->filterFunction[j];
        }
- 
+
     pFilter->filterFunction[1] = (*Beta);
-   }                                
-   
+   }
+
   // Return
- 
+
   return rc;
  }
 
@@ -385,10 +385,10 @@ RC FilterNeqRipple (PRJCT_FILTER *pFilter,double *Beta, double *Delta,double *dB
 //
 // INPUT/OUTPUT  pSvd     pointers to SVD buffers
 //
-// RETURN        return code of the SVD decomposition function             
+// RETURN        return code of the SVD decomposition function
 //
 // Copyright (c) 1984-93 by The MathWorks, Inc.
-// ----------------------------------------------------------------------------- 
+// -----------------------------------------------------------------------------
 
 RC FilterPinv(SVD *pSvd)
  {
@@ -401,15 +401,15 @@ RC FilterPinv(SVD *pSvd)
   // Matrix decomposition
 
   if ((rc=SVD_Dcmp(pSvd->A,pSvd->DimL,pSvd->DimC,pSvd->W,pSvd->V,pSvd->SigmaSqr,NULL))==ERROR_ID_NO)
-   {                                                               
+   {
    	// default tolerance
-   	
-    tolerance=(double)max(pSvd->DimL,pSvd->DimC)*pSvd->W[1]*EPS;   
-    
+
+    tolerance=(double)max(pSvd->DimL,pSvd->DimC)*pSvd->W[1]*EPS;
+
     // singular values less than tolerance are treated as zero
 
-    for (r=1;(r<=pSvd->DimC)&&(pSvd->W[r]>tolerance);r++);    
-    
+    for (r=1;(r<=pSvd->DimC)&&(pSvd->W[r]>tolerance);r++);
+
     // Back substitution
 
     for (j=1;j<=pSvd->DimC;j++)
@@ -427,7 +427,7 @@ RC FilterPinv(SVD *pSvd)
 
   return rc;
  }
- 
+
 // -----------------------------------------------------------------------------
 // FUNCTION      FilterSavitskyGolay
 // -----------------------------------------------------------------------------
@@ -439,7 +439,7 @@ RC FilterPinv(SVD *pSvd)
 // OUTPUT        pFilter     pointer to the buffer for the calculated filter
 //
 // RETURN        ERROR_ID_ALLOC if buffer allocation failed, 0 on success
-// -----------------------------------------------------------------------------  
+// -----------------------------------------------------------------------------
 
 RC FilterSavitskyGolay(PRJCT_FILTER *pFilter,INT filterWidth,INT filterOrder)
  {
@@ -458,7 +458,7 @@ RC FilterSavitskyGolay(PRJCT_FILTER *pFilter,INT filterWidth,INT filterOrder)
   svd.DimC=filterOrder+1;
 
   pFilter->filterSize=lc+1;
-  
+
   // Allocate buffer for filter
 
   if ((pFilter->filterFunction=(double *)MEMORY_AllocDVector("FilterSavitskyGolay ","pFilter->filterFunction",1,pFilter->filterSize))==NULL)
@@ -469,7 +469,7 @@ RC FilterSavitskyGolay(PRJCT_FILTER *pFilter,INT filterWidth,INT filterOrder)
   else if (!(rc=ANALYSE_SvdLocalAlloc("FilterSavitskyGolay",&svd)))
    {
    	// Build the filter function
-   	
+
     for (j=0;j<=filterOrder;j++)
      for (i=-lc;i<=lc;i++)
       svd.A[j+1][i+lc+1]=(j!=0)?pow((double)i,(double)j):(double)1.;
@@ -488,8 +488,8 @@ RC FilterSavitskyGolay(PRJCT_FILTER *pFilter,INT filterWidth,INT filterOrder)
   // Return
 
   return rc;
- }                                                                                
- 
+ }
+
 // -----------------------------------------------------------------------------
 // FUNCTION      FilterPascalTriangle
 // -----------------------------------------------------------------------------
@@ -499,7 +499,7 @@ RC FilterSavitskyGolay(PRJCT_FILTER *pFilter,INT filterWidth,INT filterOrder)
 // OUTPUT        coefficients     the calculated filter
 //
 // RETURN        ERROR_ID_ALLOC if buffer allocation failed, 0 on success
-// -----------------------------------------------------------------------------   
+// -----------------------------------------------------------------------------
 
 RC FilterPascalTriangle(double *coefficients,int power)
  {
@@ -549,7 +549,7 @@ RC FilterPascalTriangle(double *coefficients,int power)
 // INPUT/OUTPUT  pFilter          pointer to user filter options from project properties
 // OUTPUT        fa1,fa2,fa3      filter options
 //
-// RETURN        ERROR_ID_ALLOC if buffer allocation failed,                  
+// RETURN        ERROR_ID_ALLOC if buffer allocation failed,
 //               ERROR_ID_DIVISION_BY_0 if filter is 0 everywhere,
 //               return code of the filtering function if any
 //               0 on success
@@ -608,7 +608,7 @@ RC FILTER_Build(PRJCT_FILTER *pFilter,double fa1,double fa2,double fa3)
     else
      {
       if (filterType==PRJCT_FILTER_TYPE_BINOMIAL)
-       {         
+       {
        	if (!(rc=FilterPascalTriangle(pFilter->filterFunction,pFilter->filterSize-1)))
        	 {
           memcpy(pFilter->filterFunction+1,pFilter->filterFunction+(pFilter->filterSize>>1)+1,sizeof(double)*((pFilter->filterSize+1)>>1));
@@ -632,9 +632,9 @@ RC FILTER_Build(PRJCT_FILTER *pFilter,double fa1,double fa2,double fa3)
        }
 
       // function normalization by its integral
-          
-      if (sum==(double)0.)    
-       rc=ERROR_SetLast("FILTER_Build",ERROR_TYPE_FATAL,ERROR_ID_DIVISION_BY_0);   
+
+      if (sum==(double)0.)
+       rc=ERROR_SetLast("FILTER_Build",ERROR_TYPE_FATAL,ERROR_ID_DIVISION_BY_0);
       else
        for (i=1;i<=pFilter->filterSize;i++)
         pFilter->filterFunction[i]/=sum;
@@ -668,7 +668,7 @@ RC FILTER_Build(PRJCT_FILTER *pFilter,double fa1,double fa2,double fa3)
 //
 // OUTPUT        output           the filtered vector
 //
-// RETURN        ERROR_ID_ALLOC if buffer allocation failed,                  
+// RETURN        ERROR_ID_ALLOC if buffer allocation failed,
 //               0 on success
 // -----------------------------------------------------------------------------
 
@@ -720,23 +720,23 @@ RC FilterConv(PRJCT_FILTER *pFilter,double *Input,double *Output,int Size)
 
   return rc;
  }
- 
+
 // -----------------------------------------------------------------------------
 // FUNCTION      FILTER_Vector
 // -----------------------------------------------------------------------------
 // PURPOSE       Apply a filter function on a vector
 //
 // INPUT         pFilter          filter function and options
-//               Input            vector to filter                    
+//               Input            vector to filter
 //               Size             the size of input vector
 //               outputType       type of filtering to apply (high or low)
 //
 // OUTPUT        output           the filtered vector
 //
-// RETURN        ERROR_ID_ALLOC if buffer allocation failed,                  
+// RETURN        ERROR_ID_ALLOC if buffer allocation failed,
 //               return code of the filtering function if any
 //               0 on success
-// ----------------------------------------------------------------------------- 
+// -----------------------------------------------------------------------------
 
 RC FILTER_Vector(PRJCT_FILTER *pFilter,double *Input,double *Output,int Size,INT outputType)
  {

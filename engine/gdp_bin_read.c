@@ -1,10 +1,9 @@
 
 //  ----------------------------------------------------------------------------
 //
-//  Product/Project   :  DOAS ANALYSIS PROGRAM FOR WINDOWS
+//  Product/Project   :  QDOAS
 //  Module purpose    :  GOME interface (calibrated level 1 data files in the modified IASB-BIRA format)
 //  Name of module    :  GDP_BIN_Read.C
-//  Program Language  :  Borland C++ 5.0 for Windows 95/NT
 //  Creation date     :  First versions exist since 1998 (GWinDOAS)
 //  Modified          :  5 november 2002 (possibility to read GOME binary format with WinDOAS)
 //
@@ -51,7 +50,7 @@
 //
 //  GDP_BIN_GetRecordNumber - get the record number of a GOME record from the pixel number;
 //
-//  GdpBinLembda - build a wavelength calibration (irradiance or
+//  GdpBinLambda - build a wavelength calibration (irradiance or
 //                 earthshine spectra) using a set of coefficients of polynomial;
 //
 //  GDP_BIN_Set - retrieve information on data saved in the file from the header;
@@ -84,7 +83,7 @@
 // INCLUDE USUAL HEADERS
 // =====================
 
-#include "doas.h"
+#include "engine.h"
 
 // ====================
 // CONSTANTS DEFINITION
@@ -207,7 +206,7 @@ INDEX GDP_BIN_GetRecordNumber(INT pixelNumber)
  }
 
 // -----------------------------------------------------------------------------
-// FUNCTION      GdpBinLembda
+// FUNCTION      GdpBinLambda
 // -----------------------------------------------------------------------------
 // PURPOSE       Build a wavelength calibration (irradiance or
 //               earthshine spectra) using a set of coefficients of polynomial
@@ -215,15 +214,15 @@ INDEX GDP_BIN_GetRecordNumber(INT pixelNumber)
 // INPUT         indexParam    index of the set of parameters to use
 //               fileIndex   index of the file for the current orbit
 //
-// OUTPUT        lembda        the wavelength calibration
+// OUTPUT        lambda        the wavelength calibration
 // -----------------------------------------------------------------------------
 
-void GdpBinLembda(double *lembda,INT indexParam,INDEX fileIndex)
+void GdpBinLambda(double *lambda,INT indexParam,INDEX fileIndex)
  {
   // Declarations
 
   INT offset;                                                                   // offset in bytes
-  double lembdax;                                                               // wavelength evaluated by polynomial for a given pixel
+  double lambdax;                                                               // wavelength evaluated by polynomial for a given pixel
   INDEX i,j;
   GOME_ORBIT_FILE *pOrbitFile;
 
@@ -249,11 +248,11 @@ void GdpBinLembda(double *lembda,INT indexParam,INDEX fileIndex)
   for (i=0,j=pOrbitFile->gdpBinStartPixel[pOrbitFile->gdpBinBandIndex];
        j<pOrbitFile->gdpBinStartPixel[pOrbitFile->gdpBinBandIndex]+pOrbitFile->gdpBinBandInfo[pOrbitFile->gdpBinBandIndex].bandSize;i++,j++)
    {
-   	lembdax=(double)EvalPolynom_d((double)i+pOrbitFile->gdpBinBandInfo[pOrbitFile->gdpBinBandIndex].startDetector-offset,
+   	lambdax=(double)EvalPolynom_d((double)i+pOrbitFile->gdpBinBandInfo[pOrbitFile->gdpBinBandIndex].startDetector-offset,
                            &pOrbitFile->gdpBinCoeff[pOrbitFile->gdpBinHeader.nSpectralParam*SPECTRAL_FITT_ORDER*pOrbitFile->gdpBinBandIndex+
                             indexParam*SPECTRAL_FITT_ORDER],SPECTRAL_FITT_ORDER);
 
-    lembda[i]-=(double)EvalPolynom_d((double)(lembdax-OFFSET)/PARAMETER,&pOrbitFile->gdpBinCoeff[pOrbitFile->gdpBinHeader.nSpectralParam*SPECTRAL_FITT_ORDER*pOrbitFile->gdpBinHeader.nbands+MAX_FITT_ORDER*pOrbitFile->gdpBinBandIndex],MAX_FITT_ORDER);
+    lambda[i]-=(double)EvalPolynom_d((double)(lambdax-OFFSET)/PARAMETER,&pOrbitFile->gdpBinCoeff[pOrbitFile->gdpBinHeader.nSpectralParam*SPECTRAL_FITT_ORDER*pOrbitFile->gdpBinHeader.nbands+MAX_FITT_ORDER*pOrbitFile->gdpBinBandIndex],MAX_FITT_ORDER);
 	  }
 	}
 
@@ -549,7 +548,7 @@ RC GDP_BIN_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
     pEngineContext->recordInfo.useErrors=((pOrbitFile->gdpBinHeader.mask&GDP_BIN_ERROR_ID_MASK)==GDP_BIN_ERROR_ID_MASK)?1:0;
     NDET=pOrbitFile->gdpBinBandInfo[pOrbitFile->gdpBinBandIndex].bandSize;
 
-    GdpBinLembda(pEngineContext->buffers.lembda,GDP_BIN_orbitFiles[GDP_BIN_currentFileIndex].gdpBinHeader.indexSpectralParam,GDP_BIN_currentFileIndex);
+    GdpBinLambda(pEngineContext->buffers.lambda,GDP_BIN_orbitFiles[GDP_BIN_currentFileIndex].gdpBinHeader.indexSpectralParam,GDP_BIN_currentFileIndex);
 
     rc=GDP_BIN_orbitFiles[GDP_BIN_currentFileIndex].rc;
    }
@@ -682,7 +681,7 @@ RC GDP_BIN_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,FILE *specFp,INDEX i
 
       // Convert spectrum from short integers to double
 
-      GdpBinLembda(pBuffers->lembda,pOrbitFile->gdpBinSpectrum.indexSpectralParam,GDP_BIN_currentFileIndex);
+      GdpBinLambda(pBuffers->lambda,pOrbitFile->gdpBinSpectrum.indexSpectralParam,GDP_BIN_currentFileIndex);
 
       for (i=0,j=pOrbitFile->gdpBinStartPixel[pOrbitFile->gdpBinBandIndex],Max=(double)0.;
            j<pOrbitFile->gdpBinStartPixel[pOrbitFile->gdpBinBandIndex]+pOrbitFile->gdpBinBandInfo[pOrbitFile->gdpBinBandIndex].bandSize;i++,j++)
@@ -1067,7 +1066,7 @@ INT GdpBinRefSza(GDP_BIN_REF *refList,double sza,double szaDelta,UCHAR *gomePixe
 // INPUT         refList      the list of potential reference spectra
 //               nRef         the number of elements in the previous list
 //               nSpectra     the maximum number of spectra to average to build the reference spectrum;
-//               lembda       the grid of the irradiance spectrum
+//               lambda       the grid of the irradiance spectrum
 //               pEngineContext    interface for file operations
 //               specFp       pointer to the current file;
 //               fp           pointer to the file dedicated to the display of information on selected spectra
@@ -1079,7 +1078,7 @@ INT GdpBinRefSza(GDP_BIN_REF *refList,double sza,double szaDelta,UCHAR *gomePixe
 //               ERROR_ID_NO otherwise.
 // -----------------------------------------------------------------------------
 
-RC GdpBinBuildRef(GDP_BIN_REF *refList,INT nRef,INT nSpectra,double *lembda,double *ref,ENGINE_CONTEXT *pEngineContext,FILE *specFp,FILE *fp)
+RC GdpBinBuildRef(GDP_BIN_REF *refList,INT nRef,INT nSpectra,double *lambda,double *ref,ENGINE_CONTEXT *pEngineContext,FILE *specFp,FILE *fp)
  {
   // Declarations
 
@@ -1095,7 +1094,7 @@ RC GdpBinBuildRef(GDP_BIN_REF *refList,INT nRef,INT nSpectra,double *lembda,doub
   rc=ERROR_ID_NO;
 
   for (i=0;i<NDET;i++)
-   lembda[i]=ref[i]=(double)0.;
+   lambda[i]=ref[i]=(double)0.;
 
   // Search for spectra matching latitudes and SZA conditions
 
@@ -1112,7 +1111,7 @@ RC GdpBinBuildRef(GDP_BIN_REF *refList,INT nRef,INT nSpectra,double *lembda,doub
 
       for (i=0;i<NDET;i++)
        {
-        lembda[i]+=(double)pEngineContext->buffers.lembda[i];
+        lambda[i]+=(double)pEngineContext->buffers.lambda[i];
         ref[i]+=(double)pEngineContext->buffers.spectrum[i];
        }
 
@@ -1130,7 +1129,7 @@ RC GdpBinBuildRef(GDP_BIN_REF *refList,INT nRef,INT nSpectra,double *lembda,doub
 
     for (i=0;i<NDET;i++)
      {
-      lembda[i]/=nRec;
+      lambda[i]/=nRec;
       ref[i]/=nRec;
      }
    }
@@ -1152,10 +1151,10 @@ RC GdpBinBuildRef(GDP_BIN_REF *refList,INT nRef,INT nSpectra,double *lembda,doub
 //               sza,szaDelta   determine the range of SZA;
 //
 //               nSpectra       the number of spectra to average to build the reference spectrum;
-//               lembdaK,ref    reference spectrum to use if no spectrum in the orbit matches the sza and latitudes conditions;
+//               lambdaK,ref    reference spectrum to use if no spectrum in the orbit matches the sza and latitudes conditions;
 //
-// OUTPUT        lembdaN,refN   reference spectrum for northern hemisphere;
-//               lembdaS,refS   reference spectrum for southern hemisphere.
+// OUTPUT        lambdaN,refN   reference spectrum for northern hemisphere;
+//               lambdaS,refS   reference spectrum for southern hemisphere.
 //
 // RETURN        ERROR_ID_ALLOC if the allocation of buffers failed;
 //               ERROR_ID_NO otherwise.
@@ -1167,9 +1166,9 @@ RC GdpBinRefSelection(ENGINE_CONTEXT *pEngineContext,
                       double lonMin,double lonMax,
                       double sza,double szaDelta,
                       int nSpectra,
-                      double *lembdaK,double *ref,
-                      double *lembdaN,double *refN,
-                      double *lembdaS,double *refS,UCHAR *gomePixelType)
+                      double *lambdaK,double *ref,
+                      double *lambdaN,double *refN,
+                      double *lambdaS,double *refS,UCHAR *gomePixelType)
  {
   // Declarations
 
@@ -1205,8 +1204,8 @@ RC GdpBinRefSelection(ENGINE_CONTEXT *pEngineContext,
 
   rc=ERROR_ID_NO;
 
-  memcpy(lembdaN,lembdaK,sizeof(double)*NDET);
-  memcpy(lembdaS,lembdaK,sizeof(double)*NDET);
+  memcpy(lambdaN,lambdaK,sizeof(double)*NDET);
+  memcpy(lambdaS,lambdaK,sizeof(double)*NDET);
 
   memcpy(refN,ref,sizeof(double)*NDET);
   memcpy(refS,ref,sizeof(double)*NDET);
@@ -1232,7 +1231,7 @@ RC GdpBinRefSelection(ENGINE_CONTEXT *pEngineContext,
        }
 
       if ((nRefN=nRefS=GdpBinRefLat(refList,latMin,latMax,lonMin,lonMax,sza,szaDelta,gomePixelType))>0)
-       rc=GdpBinBuildRef(refList,nRefN,nSpectra,lembdaN,refN,pEngineContext,specFp,fp);
+       rc=GdpBinBuildRef(refList,nRefN,nSpectra,lambdaN,refN,pEngineContext,specFp,fp);
 
       if (!rc)
        memcpy(refS,refN,sizeof(double)*NDET);
@@ -1249,7 +1248,7 @@ RC GdpBinRefSelection(ENGINE_CONTEXT *pEngineContext,
        }
 
       if ((nRefN=nRefS=GdpBinRefSza(refList,sza,szaDelta,gomePixelType))>0)
-       rc=GdpBinBuildRef(refList,nRefN,nSpectra,lembdaN,refN,pEngineContext,specFp,fp);
+       rc=GdpBinBuildRef(refList,nRefN,nSpectra,lambdaN,refN,pEngineContext,specFp,fp);
 
       if (!rc)
        memcpy(refS,refN,sizeof(double)*NDET);
@@ -1330,12 +1329,12 @@ RC GdpBinNewRef(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
 
   // Initializations
 
-  rc=THRD_CopySpecInfo(&THRD_refInfo,pEngineContext);                                // perform a backup of the pEngineContext structure
+  rc=EngineCopyContext(&ENGINE_contextRef,pEngineContext);                     // perform a backup of the pEngineContext structure
 
   memset(OUTPUT_refFile,0,MAX_PATH_LEN+1);
   OUTPUT_nRec=0;
 
-  if (THRD_refInfo.recordNumber==0)
+  if (ENGINE_contextRef.recordNumber==0)
    rc=ERROR_ID_ALLOC;
   else
 
@@ -1351,15 +1350,15 @@ RC GdpBinNewRef(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
 
       // Build reference spectra according to latitudes and SZA conditions
 
-      rc=GdpBinRefSelection(&THRD_refInfo,
+      rc=GdpBinRefSelection(&ENGINE_contextRef,
                              specFp,
                              pTabFeno->refLatMin,pTabFeno->refLatMax,
                              pTabFeno->refLonMin,pTabFeno->refLonMax,
                              pTabFeno->refSZA,pTabFeno->refSZADelta,
                              pTabFeno->nspectra,
-                             pTabFeno->LembdaK,pTabFeno->Sref,
-                             pTabFeno->LembdaN,pTabFeno->SrefN,
-                             pTabFeno->LembdaS,pTabFeno->SrefS,
+                             pTabFeno->LambdaK,pTabFeno->Sref,
+                             pTabFeno->LambdaN,pTabFeno->SrefN,
+                             pTabFeno->LambdaS,pTabFeno->SrefS,
                              pTabFeno->gomePixelType);
     }
 
@@ -1396,7 +1395,7 @@ RC GDP_BIN_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
   CROSS_REFERENCE *pTabCross;                                                   // pointer to the current cross section
   WRK_SYMBOL *pWrkSymbol;                                                       // pointer to a symbol
   FENO *pTabFeno;                                                               // pointer to the current spectral analysis window
-  double factTemp,lembdaMin,lembdaMax;                                          // working variables
+  double factTemp,lambdaMin,lambdaMax;                                          // working variables
   INT DimL,useUsamp,useKurucz,saveFlag;                                         // working variables
   RC rc;                                                                        // return code
 
@@ -1409,8 +1408,8 @@ RC GDP_BIN_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
 
   if (!(rc=pOrbitFile->rc) && (THRD_id==THREAD_TYPE_ANALYSIS) && (gdpBinLoadReferenceFlag || !ANALYSE_refSelectionFlag))
    {
-    lembdaMin=(double)9999.;
-    lembdaMax=(double)-9999.;
+    lambdaMin=(double)9999.;
+    lambdaMax=(double)-9999.;
 
     rc=ERROR_ID_NO;
     useKurucz=useUsamp=0;
@@ -1427,7 +1426,7 @@ RC GDP_BIN_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
 
        if (!pTabFeno->gomeRefFlag)
         {
-         memcpy(pTabFeno->LembdaRef,pEngineContext->buffers.lembda,sizeof(double)*NDET);
+         memcpy(pTabFeno->LambdaRef,pEngineContext->buffers.lambda,sizeof(double)*NDET);
 
          for (i=0,j=pOrbitFile->gdpBinStartPixel[pOrbitFile->gdpBinBandIndex];
               j<pOrbitFile->gdpBinStartPixel[pOrbitFile->gdpBinBandIndex]+pOrbitFile->gdpBinBandInfo[pOrbitFile->gdpBinBandIndex].bandSize;i++,j++)
@@ -1456,7 +1455,7 @@ RC GDP_BIN_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
                   ((pWrkSymbol->type==WRK_SYMBOL_PREDEFINED) &&
                   ((indexTabCross==pTabFeno->indexCommonResidual) ||
                  (((indexTabCross==pTabFeno->indexUsamp1) || (indexTabCross==pTabFeno->indexUsamp2)) && (pUsamp->method==PRJCT_USAMP_FILE))))) &&
-                  ((rc=ANALYSE_CheckLembda(pWrkSymbol,pTabFeno->LembdaRef,"GDP_BIN_LoadAnalysis "))!=ERROR_ID_NO))
+                  ((rc=ANALYSE_CheckLambda(pWrkSymbol,pTabFeno->LambdaRef,"GDP_BIN_LoadAnalysis "))!=ERROR_ID_NO))
 
               goto EndGOME_LoadAnalysis;
             }
@@ -1465,8 +1464,8 @@ RC GDP_BIN_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
 
            for (indexWindow=0,DimL=0;indexWindow<pTabFeno->svd.Z;indexWindow++)
             {
-             pTabFeno->svd.Fenetre[indexWindow][0]=FNPixel(pTabFeno->LembdaRef,pTabFeno->svd.LFenetre[indexWindow][0],NDET,PIXEL_AFTER);
-             pTabFeno->svd.Fenetre[indexWindow][1]=FNPixel(pTabFeno->LembdaRef,pTabFeno->svd.LFenetre[indexWindow][1],NDET,PIXEL_BEFORE);
+             pTabFeno->svd.Fenetre[indexWindow][0]=FNPixel(pTabFeno->LambdaRef,pTabFeno->svd.LFenetre[indexWindow][0],NDET,PIXEL_AFTER);
+             pTabFeno->svd.Fenetre[indexWindow][1]=FNPixel(pTabFeno->LambdaRef,pTabFeno->svd.LFenetre[indexWindow][1],NDET,PIXEL_BEFORE);
 
              DimL+=(pTabFeno->svd.Fenetre[indexWindow][1]-pTabFeno->svd.Fenetre[indexWindow][0]+1);
             }
@@ -1478,27 +1477,27 @@ RC GDP_BIN_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
            ANALYSE_SvdFree("GDP_BIN_LoadAnalysis",&pTabFeno->svd);
            ANALYSE_SvdLocalAlloc("GDP_BIN_LoadAnalysis",&pTabFeno->svd);
 
-           if (((rc=ANALYSE_XsInterpolation(pTabFeno,pTabFeno->LembdaRef))!=ERROR_ID_NO) ||
+           if (((rc=ANALYSE_XsInterpolation(pTabFeno,pTabFeno->LambdaRef))!=ERROR_ID_NO) ||
                (!pKuruczOptions->fwhmFit && pTabFeno->xsToConvolute &&
-               ((rc=ANALYSE_XsConvolution(pTabFeno,pTabFeno->LembdaRef,&ANALYSIS_slit,pSlitOptions->slitFunction.slitType,&pSlitOptions->slitFunction.slitParam,&pSlitOptions->slitFunction.slitParam2,&pSlitOptions->slitFunction.slitParam3,&pSlitOptions->slitFunction.slitParam4))!=ERROR_ID_NO)))
+               ((rc=ANALYSE_XsConvolution(pTabFeno,pTabFeno->LambdaRef,&ANALYSIS_slit,pSlitOptions->slitFunction.slitType,&pSlitOptions->slitFunction.slitParam,&pSlitOptions->slitFunction.slitParam2,&pSlitOptions->slitFunction.slitParam3,&pSlitOptions->slitFunction.slitParam4))!=ERROR_ID_NO)))
             goto EndGOME_LoadAnalysis;
 
            pTabFeno->Decomp=1;
           }
         }
 
-       memcpy(pTabFeno->LembdaK,pTabFeno->LembdaRef,sizeof(double)*NDET);
-       memcpy(pTabFeno->Lembda,pTabFeno->LembdaRef,sizeof(double)*NDET);
+       memcpy(pTabFeno->LambdaK,pTabFeno->LambdaRef,sizeof(double)*NDET);
+       memcpy(pTabFeno->Lambda,pTabFeno->LambdaRef,sizeof(double)*NDET);
 
        useUsamp+=pTabFeno->useUsamp;
        useKurucz+=pTabFeno->useKurucz;
 
        if (pTabFeno->useUsamp)
         {
-         if (pTabFeno->LembdaRef[0]<lembdaMin)
-          lembdaMin=pTabFeno->LembdaRef[0];
-         if (pTabFeno->LembdaRef[NDET-1]>lembdaMax)
-          lembdaMax=pTabFeno->LembdaRef[NDET-1];
+         if (pTabFeno->LambdaRef[0]<lambdaMin)
+          lambdaMin=pTabFeno->LambdaRef[0];
+         if (pTabFeno->LambdaRef[NDET-1]>lambdaMax)
+          lambdaMax=pTabFeno->LambdaRef[NDET-1];
         }
       }
 
@@ -1518,7 +1517,7 @@ RC GDP_BIN_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
      {
       USAMP_LocalFree();
 
-      if (((rc=USAMP_LocalAlloc(0 /* lembdaMin,lembdaMax,oldNDET */))!=ERROR_ID_NO) ||
+      if (((rc=USAMP_LocalAlloc(0 /* lambdaMin,lambdaMax,oldNDET */))!=ERROR_ID_NO) ||
           ((rc=USAMP_BuildFromAnalysis(0,0))!=ERROR_ID_NO) ||                     // ((analysisFlag==0) && (pTabFeno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_FILE) && (pUsamp->method==PRJCT_USAMP_FIXED))
           ((rc=USAMP_BuildFromAnalysis(1,ITEM_NONE))!=ERROR_ID_NO))               // ((analysisFlag==1) && (pTabFeno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_AUTOMATIC) && (pUsamp->method==PRJCT_USAMP_FIXED))
 
@@ -1528,8 +1527,8 @@ RC GDP_BIN_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
     // Reference
 
     if ((THRD_id==THREAD_TYPE_ANALYSIS) && gdpBinLoadReferenceFlag && !(rc=GdpBinNewRef(pEngineContext,specFp)) &&
-       !(rc=ANALYSE_AlignReference(2,pEngineContext->project.spectra.displayDataFlag)))  // automatic ref selection for Northern hemisphere
-     rc=ANALYSE_AlignReference(3,pEngineContext->project.spectra.displayDataFlag);       // automatic ref selection for Southern hemisphere
+       !(rc=ANALYSE_AlignReference(2,pEngineContext->project.spectra.displayDataFlag,NULL /* !!! QDOAS responseHandle */)))  // automatic ref selection for Northern hemisphere
+     rc=ANALYSE_AlignReference(3,pEngineContext->project.spectra.displayDataFlag,NULL /* !!! QDOAS responseHandle */);       // automatic ref selection for Southern hemisphere
 
     if (rc==ERROR_ID_NO_REF)
      for (i=GDP_BIN_currentFileIndex+1;i<gdpBinOrbitFilesN;i++)

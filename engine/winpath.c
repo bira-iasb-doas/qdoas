@@ -1,10 +1,9 @@
 
 //  ----------------------------------------------------------------------------
 //
-//  Product/Project   :  DOAS ANALYSIS PROGRAM FOR WINDOWS
+//  Product/Project   :  QDOAS
 //  Module purpose    :  PATHS INSERTION IN PROJECT TREE
 //  Name of module    :  WINPATH.C
-//  Program Language  :  Borland C++ 5.0 for Windows 95/NT
 //  Creation date     :  May 1999
 //
 //  QDOAS is a cross-platform application developed in QT for DOAS retrieval

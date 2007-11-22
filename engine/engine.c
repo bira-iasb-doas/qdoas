@@ -1,9 +1,61 @@
 
 
+//  ----------------------------------------------------------------------------
+//
+//  Product/Project   :  QDOAS
+//  Module purpose    :  ENGINE CONTEXT
+//  Name of module    :  ENGINE.C
+//
+//  QDOAS is a cross-platform application developed in QT for DOAS retrieval
+//  (Differential Optical Absorption Spectroscopy).
+//
+//  The QT version of the program has been developed jointly by the Belgian
+//  Institute for Space Aeronomy (BIRA-IASB) and the Science and Technology
+//  company (S[&]T) - Copyright (C) 2007
+//
+//      BIRA-IASB                                   S[&]T
+//      Belgian Institute for Space Aeronomy        Science [&] Technology
+//      Avenue Circulaire, 3                        Postbus 608
+//      1180     UCCLE                              2600 AP Delft
+//      BELGIUM                                     THE NETHERLANDS
+//      caroline.fayt@aeronomie.be                  info@stcorp.nl
+//
+//  This program is free software; you can redistribute it and/or
+//  modify it under the terms of the GNU General Public License
+//  as published by the Free Software Foundation; either version 2
+//  of the License, or (at your option) any later version.
+//
+//  This program is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//  GNU General Public License for more details.
+//
+//  You should have received a copy of the GNU General Public License
+//  along with this program; if not, write to the Free Software Foundation,
+//  Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+//
+//  ----------------------------------------------------------------------------
+//
+//  MODULE DESCRIPTION
+//
+//
+//  ----------------------------------------------------------------------------
+//
+//  FUNCTIONS
+//
+//
+//  ----------------------------------------------------------------------------
+
 #include "engine.h"
 
-ENGINE_CONTEXT engineContext;
-UCHAR DOAS_dbgFile[MAX_PATH_LEN+1];
+ENGINE_CONTEXT engineContext,                                                   // engine context used to make the interface between the mediator and the engine
+               ENGINE_contextRef;                                               // engine context used for the automatic search of the reference spectrum
+UCHAR ENGINE_dbgFile[MAX_PATH_LEN+1];
+double ENGINE_localNoon;
+
+// ============================
+// THE ENGINE CONTEXT STRUCTURE
+// ============================
 
 // -----------------------------------------------------------------------------
 // FUNCTION      EngineCreateContext
@@ -19,8 +71,9 @@ ENGINE_CONTEXT *EngineCreateContext(void)
 
   // Initializations
 
- 	strcpy(DOAS_dbgFile,"QDOAS.dbg");
+ 	strcpy(ENGINE_dbgFile,"QDOAS.dbg");
  	memset(pEngineContext,0,sizeof(ENGINE_CONTEXT));
+ 	memset(&ENGINE_contextRef,0,sizeof(ENGINE_CONTEXT));
 
  	if (RESOURCE_Alloc()!=ERROR_ID_NO)
    pEngineContext=NULL;
@@ -36,9 +89,10 @@ ENGINE_CONTEXT *EngineCreateContext(void)
 // PURPOSE       Destroy the context of the current engine
 //
 // INPUT         pEngineContext     pointer to the engine context
+//               closeFiles         1 to close files, 0 otherwise (in order not to close files twice)
 // -----------------------------------------------------------------------------
 
-void EngineResetContext(ENGINE_CONTEXT *pEngineContext)
+void EngineResetContext(ENGINE_CONTEXT *pEngineContext,INT closeFiles)
  {
  	// Declarations
 
@@ -58,17 +112,20 @@ void EngineResetContext(ENGINE_CONTEXT *pEngineContext)
 
   // Close files
 
-  if (pFile->specFp!=NULL)
-   fclose(pFile->specFp);
-  if (pFile->darkFp!=NULL)
-   fclose(pFile->darkFp);
-  if (pFile->namesFp!=NULL)
-   fclose(pFile->namesFp);
+  if (closeFiles)
+   {
+    if (pFile->specFp!=NULL)
+     fclose(pFile->specFp);
+    if (pFile->darkFp!=NULL)
+     fclose(pFile->darkFp);
+    if (pFile->namesFp!=NULL)
+     fclose(pFile->namesFp);
+   }
 
   // Release buffers
 
-  if (pBuffers->lembda!=NULL)
-   MEMORY_ReleaseDVector("EngineResetContext ","lembda",pBuffers->lembda,0);
+  if (pBuffers->lambda!=NULL)
+   MEMORY_ReleaseDVector("EngineResetContext ","lambda",pBuffers->lambda,0);
   if (pBuffers->instrFunction!=NULL)
    MEMORY_ReleaseDVector("EngineResetContext ","instrFunction",pBuffers->instrFunction,0);
   if (pBuffers->spectrum!=NULL)
@@ -92,26 +149,9 @@ void EngineResetContext(ENGINE_CONTEXT *pEngineContext)
 
   CCD_ResetInstrumental(&pRecord->ccd);
 
-  GDP_ASC_ReleaseBuffers();
-  GDP_BIN_ReleaseBuffers();
-
-//  GOME2_ReleaseBuffers(GOME2_BEAT_CLOSE);
-//  OMI_ReleaseBuffers();
-
-  SCIA_ReleaseBuffers(pEngineContext->project.instrumental.readOutFormat);
-
-  if ((THRD_id!=THREAD_TYPE_NONE) && (THRD_id!=THREAD_TYPE_SPECTRA))
-   ANALYSE_ResetData();
-
-  THRD_id=THREAD_TYPE_NONE;
-
   // Reset structure
 
   memset(pEngineContext,0,sizeof(ENGINE_CONTEXT));
-
-  // Reset other buffers
-
-  SYMB_itemCrossN=SYMBOL_PREDEFINED_MAX;
 
   #if defined(__DEBUG_) && __DEBUG_
   DEBUG_FunctionStop("EngineResetContext",0);
@@ -130,12 +170,137 @@ void EngineDestroyContext(ENGINE_CONTEXT *pEngineContext)
  {
  	// Reset the context of the engine
 
- 	EngineResetContext(pEngineContext);
+ 	EngineResetContext(pEngineContext,1);
+ 	EngineResetContext(&ENGINE_contextRef,0);
 
  	// Release other allocated buffers
 
+  GDP_ASC_ReleaseBuffers();
+  GDP_BIN_ReleaseBuffers();
+
+//  GOME2_ReleaseBuffers(GOME2_BEAT_CLOSE);
+//  OMI_ReleaseBuffers();
+
+  SCIA_ReleaseBuffers(pEngineContext->project.instrumental.readOutFormat);
+
+  if ((THRD_id!=THREAD_TYPE_NONE) && (THRD_id!=THREAD_TYPE_SPECTRA))
+   ANALYSE_ResetData();
+
+  THRD_id=THREAD_TYPE_NONE;
+
+  SYMB_itemCrossN=SYMBOL_PREDEFINED_MAX;
+
  	RESOURCE_Free();
  }
+
+// -----------------------------------------------------------------------------
+// FUNCTION      EngineCopyContext
+// -----------------------------------------------------------------------------
+// PURPOSE       Duplicate the engine context
+//
+// INPUT         pEngineContextTarget     pointer to the target engine context
+//               pEngineContextSource     pointer to the source engine context
+// -----------------------------------------------------------------------------
+
+RC EngineCopyContext(ENGINE_CONTEXT *pEngineContextTarget,ENGINE_CONTEXT *pEngineContextSource)
+ {
+  // Declarations
+
+  BUFFERS *pBuffersTarget,*pBuffersSource;
+  RC rc;
+
+  // Initializations
+
+  pBuffersTarget=&pEngineContextTarget->buffers;
+  pBuffersSource=&pEngineContextSource->buffers;
+  rc=ERROR_ID_NO;
+
+  // Buffers allocation
+
+  if (((pBuffersSource->lambda!=NULL) && (pBuffersTarget->lambda==NULL) &&
+      ((pBuffersTarget->lambda=(double *)MEMORY_AllocDVector("EngineCopyContext","lambda",0,NDET-1))==NULL)) ||
+      ((pBuffersSource->instrFunction!=NULL) && (pBuffersTarget->instrFunction==NULL) &&
+      ((pBuffersTarget->instrFunction=(double *)MEMORY_AllocDVector("EngineCopyContext","instrFunction",0,NDET-1))==NULL)) ||
+      ((pBuffersSource->spectrum!=NULL) && (pBuffersTarget->spectrum==NULL) &&
+      ((pBuffersTarget->spectrum=(double *)MEMORY_AllocDVector("EngineCopyContext","spectrum",0,NDET-1))==NULL)) ||
+      ((pBuffersSource->sigmaSpec!=NULL) && (pBuffersTarget->sigmaSpec==NULL) &&
+      ((pBuffersTarget->sigmaSpec=(double *)MEMORY_AllocDVector("EngineCopyContext","sigmaSpec",0,NDET-1))==NULL)) ||
+      ((pBuffersSource->irrad!=NULL) && (pBuffersTarget->irrad==NULL) &&
+      ((pBuffersTarget->irrad=(double *)MEMORY_AllocDVector("EngineCopyContext","irrad",0,NDET-1))==NULL)) ||
+      ((pBuffersSource->darkCurrent!=NULL) && (pBuffersTarget->darkCurrent==NULL) &&
+      ((pBuffersTarget->darkCurrent=(double *)MEMORY_AllocDVector("EngineCopyContext","darkCurrent",0,NDET-1))==NULL)) ||
+      ((pBuffersSource->varPix!=NULL) && (pBuffersTarget->varPix==NULL) &&
+      ((pBuffersTarget->varPix=(double *)MEMORY_AllocDVector("EngineCopyContext","varPix",0,NDET-1))==NULL)) ||
+      ((pBuffersSource->dnl!=NULL) && (pBuffersTarget->dnl==NULL) &&
+      ((pBuffersTarget->dnl=(double *)MEMORY_AllocDVector("EngineCopyContext","dnl",0,NDET-1))==NULL)) ||
+      ((pBuffersSource->specMaxx!=NULL) && (pBuffersTarget->specMaxx==NULL) &&
+      ((pBuffersTarget->specMaxx=(double *)MEMORY_AllocDVector("EngineCopyContext","specMaxx",0,NDET-1))==NULL)) ||
+      ((pBuffersSource->specMax!=NULL) && (pBuffersTarget->specMax==NULL) &&
+      ((pBuffersTarget->specMax=(double *)MEMORY_AllocDVector("EngineCopyContext","specMax",0,NDET-1))==NULL)) ||
+      ((pBuffersSource->recordIndexes!=NULL) && (pBuffersTarget->recordIndexes==NULL) &&
+      ((pBuffersTarget->recordIndexes=(ULONG *)MEMORY_AllocBuffer("THRD_CopySpecInfo","recordIndexes",
+       (pEngineContextTarget->recordIndexesSize=pEngineContextSource->recordIndexesSize),sizeof(ULONG),0,MEMORY_TYPE_LONG))==NULL)) ||
+      ((pEngineContextTarget->recordInfo.ccd.vip.matrix!=NULL) && (pEngineContextTarget->recordInfo.ccd.vip.matrix==NULL) &&
+      ((rc=MATRIX_Copy(&pEngineContextTarget->recordInfo.ccd.vip,&pEngineContextSource->recordInfo.ccd.vip,"EngineCopyContext"))!=ERROR_ID_NO)) ||
+      ((pEngineContextTarget->recordInfo.ccd.dnl.matrix!=NULL) && (pEngineContextTarget->recordInfo.ccd.dnl.matrix==NULL) &&
+      ((rc=MATRIX_Copy(&pEngineContextTarget->recordInfo.ccd.dnl,&pEngineContextSource->recordInfo.ccd.dnl,"EngineCopyContext"))!=ERROR_ID_NO)) ||
+      ((pEngineContextTarget->recordInfo.ccd.drk.matrix!=NULL) && (pEngineContextTarget->recordInfo.ccd.drk.matrix==NULL) &&
+      ((rc=MATRIX_Copy(&pEngineContextTarget->recordInfo.ccd.drk,&pEngineContextSource->recordInfo.ccd.drk,"EngineCopyContext"))!=ERROR_ID_NO)))
+
+   rc=ERROR_ID_ALLOC;
+
+  else
+   {
+    // Buffers
+
+    if ((pBuffersTarget->lambda!=NULL) && (pBuffersSource->lambda!=NULL))
+     memcpy(pBuffersTarget->lambda,pBuffersSource->lambda,sizeof(double)*NDET);
+    if ((pBuffersTarget->instrFunction!=NULL) && (pBuffersSource->instrFunction!=NULL))
+     memcpy(pBuffersTarget->instrFunction,pBuffersSource->instrFunction,sizeof(double)*NDET);
+    if ((pBuffersTarget->spectrum!=NULL) && (pBuffersSource->spectrum!=NULL))
+     memcpy(pBuffersTarget->spectrum,pBuffersSource->spectrum,sizeof(double)*NDET);
+    if ((pBuffersTarget->sigmaSpec!=NULL) && (pBuffersSource->sigmaSpec!=NULL))
+     memcpy(pBuffersTarget->sigmaSpec,pBuffersSource->sigmaSpec,sizeof(double)*NDET);
+    if ((pBuffersTarget->irrad!=NULL) && (pBuffersSource->irrad!=NULL))
+     memcpy(pBuffersTarget->irrad,pBuffersSource->irrad,sizeof(double)*NDET);
+    if ((pBuffersTarget->darkCurrent!=NULL) && (pBuffersSource->darkCurrent!=NULL))
+     memcpy(pBuffersTarget->darkCurrent,pBuffersSource->darkCurrent,sizeof(double)*NDET);
+    if ((pBuffersTarget->varPix!=NULL) && (pBuffersSource->varPix!=NULL))
+     memcpy(pBuffersTarget->varPix,pBuffersSource->varPix,sizeof(double)*NDET);
+    if ((pBuffersTarget->dnl!=NULL) && (pBuffersSource->dnl!=NULL))
+     memcpy(pBuffersTarget->dnl,pBuffersSource->dnl,sizeof(double)*NDET);
+    if ((pBuffersTarget->specMaxx!=NULL) && (pBuffersSource->specMaxx!=NULL))
+     memcpy(pBuffersTarget->specMaxx,pBuffersSource->specMaxx,sizeof(double)*NDET);
+    if ((pBuffersTarget->specMax!=NULL) && (pBuffersSource->specMax!=NULL))
+     memcpy(pBuffersTarget->specMax,pBuffersSource->specMax,sizeof(double)*NDET);
+    if ((pBuffersTarget->recordIndexes!=NULL) && (pBuffersSource->recordIndexes!=NULL))
+     memcpy(pBuffersTarget->recordIndexes,pBuffersSource->recordIndexes,sizeof(ULONG)*pEngineContextSource->recordIndexesSize);
+
+    // Other structures
+
+    memcpy(&pEngineContextTarget->project,&pEngineContextSource->project,sizeof(PROJECT));              // project options
+    memcpy(&pEngineContextTarget->fileInfo,&pEngineContextSource->fileInfo,sizeof(FILE_INFO));          // the name of the file to load and file pointers
+    memcpy(&pEngineContextTarget->recordInfo,&pEngineContextSource->recordInfo,sizeof(RECORD_INFO)-sizeof(CCD));
+
+    // Other fields
+
+    pEngineContextTarget->recordNumber=pEngineContextSource->recordNumber;                              // total number of record in file
+    pEngineContextTarget->recordIndexesSize=pEngineContextSource->recordIndexesSize;                    // size of 'recordIndexes' buffer
+    pEngineContextTarget->recordSize=pEngineContextSource->recordSize;                                  // size of record if length fixed
+    pEngineContextTarget->indexRecord=pEngineContextSource->indexRecord;
+    pEngineContextTarget->indexFile=pEngineContextSource->indexFile;
+    pEngineContextTarget->lastRefRecord=pEngineContextSource->lastRefRecord;
+    pEngineContextTarget->lastSavedRecord=pEngineContextSource->lastSavedRecord;
+   }
+
+  // Return
+
+  return rc;
+ }
+
+// =======
+// PROJECT
+// =======
 
 // -----------------------------------------------------------------------------
 // FUNCTION      EngineSetProject
@@ -153,7 +318,7 @@ void EngineSetProject(ENGINE_CONTEXT *pEngineContext)
   PRJCT_INSTRUMENTAL *pInstrumental;                                            // pointer to the instrumental part of the project
   BUFFERS *pBuffers;                                                            // pointer to the buffers part of the engine context
 
- 	double *lembdaInstr;                                                          // wavelength calibration of the instrument function
+ 	double *lambdaInstr;                                                          // wavelength calibration of the instrument function
  	double *instrFunction;                                                        // instrumental function
  	double *instrDeriv2;                                                          // second derivative for the instrument function
  	RC rc;                                                                        // return code
@@ -167,13 +332,23 @@ void EngineSetProject(ENGINE_CONTEXT *pEngineContext)
   pProject=&pEngineContext->project;
   pInstrumental=&pProject->instrumental;
 
- 	lembdaInstr=instrFunction=instrDeriv2=NULL;
+  pEngineContext->lastRefRecord=0;
+  pEngineContext->satelliteFlag=((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_GDP_ASCII) ||
+                                 (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN) ||
+                                 (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS) ||
+                                 (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_OMI) ||
+                                 (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_GOME2))?1:0;
+
+ 	lambdaInstr=instrFunction=instrDeriv2=NULL;
+
+ 	ENGINE_localNoon=(double)12.;
+
  	rc=ERROR_ID_NO;
 
   // Allocate buffers
 
-  if (((pBuffers->lembda=MEMORY_AllocDVector("EngineSetProject ","lembda",0,NDET-1))==NULL) ||
-      ((pBuffers->spectrum=MEMORY_AllocDVector("EngineSetProject ","spectrum",0,NDET-1))==NULL) ||
+  if (((pBuffers->lambda=MEMORY_AllocDVector("EngineSetProject","lambda",0,NDET-1))==NULL) ||
+      ((pBuffers->spectrum=MEMORY_AllocDVector("EngineSetProject","spectrum",0,NDET-1))==NULL) ||
 
      (((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_CCD_EEV) ||
        (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_CCD_OHP_96) ||
@@ -182,7 +357,7 @@ void EngineSetProject(ENGINE_CONTEXT *pEngineContext)
        (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_PDAEGG_OLD) ||
        (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_PDASI_EASOE)) &&
 
-      ((pBuffers->recordIndexes=(ULONG *)MEMORY_AllocBuffer("EngineSetProject ","recordIndexes",2001,sizeof(ULONG),0,MEMORY_TYPE_LONG))==NULL)) ||
+      ((pBuffers->recordIndexes=(ULONG *)MEMORY_AllocBuffer("EngineSetProject","recordIndexes",2001,sizeof(ULONG),0,MEMORY_TYPE_LONG))==NULL)) ||
 
      (((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_GDP_ASCII) ||
        (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN) ||
@@ -190,13 +365,13 @@ void EngineSetProject(ENGINE_CONTEXT *pEngineContext)
        (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_OMI) ||
        (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_GOME2)) &&
 
-     (((pBuffers->sigmaSpec=MEMORY_AllocDVector("EngineSetProject ","sigmaSpec",0,NDET-1))==NULL) ||
-      ((pBuffers->irrad=MEMORY_AllocDVector("EngineSetProject ","irrad",0,NDET-1))==NULL))) ||
+     (((pBuffers->sigmaSpec=MEMORY_AllocDVector("EngineSetProject","sigmaSpec",0,NDET-1))==NULL) ||
+      ((pBuffers->irrad=MEMORY_AllocDVector("EngineSetProject","irrad",0,NDET-1))==NULL))) ||
 
      (((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_ACTON) ||
        (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_PDAEGG) ||
        (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_PDASI_EASOE)) &&
-       ((pBuffers->darkCurrent=MEMORY_AllocDVector("EngineSetProject ","darkCurrent",0,NDET-1))==NULL)))
+       ((pBuffers->darkCurrent=MEMORY_AllocDVector("EngineSetProject","darkCurrent",0,NDET-1))==NULL)))
 
    rc=ERROR_ID_ALLOC;
 
@@ -211,7 +386,7 @@ void EngineSetProject(ENGINE_CONTEXT *pEngineContext)
         break;
        else if ((strchr(str,';')==NULL) && (strchr(str,'*')==NULL))
         {
-         sscanf(str,"%lf",&pBuffers->lembda[i]);
+         sscanf(str,"%lf",&pBuffers->lambda[i]);
          i++;
         }
 
@@ -222,7 +397,7 @@ void EngineSetProject(ENGINE_CONTEXT *pEngineContext)
      }
     else
      for (i=0;i<NDET;i++)
-      pBuffers->lembda[i]=i+1;
+      pBuffers->lambda[i]=i+1;
 
     // Load the instrumental function
 
@@ -231,7 +406,7 @@ void EngineSetProject(ENGINE_CONTEXT *pEngineContext)
       if ((fp=fopen(pInstrumental->instrFunction,"rt"))==NULL)
        rc=ERROR_SetLast("EngineSetProject",ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pInstrumental->instrFunction);
       else if (((pBuffers->instrFunction=MEMORY_AllocDVector("EngineSetProject","instrFunction",0,NDET-1))==NULL) ||
-               ((lembdaInstr=MEMORY_AllocDVector("EngineSetProject","lembdaInstr",0,NDET-1))==NULL) ||
+               ((lambdaInstr=MEMORY_AllocDVector("EngineSetProject","lambdaInstr",0,NDET-1))==NULL) ||
                ((instrFunction=MEMORY_AllocDVector("EngineSetProject","instrFunction",0,NDET-1))==NULL) ||
                ((instrDeriv2=MEMORY_AllocDVector("EngineSetProject","instrDeriv2",0,NDET-1))==NULL))
 
@@ -242,12 +417,12 @@ void EngineSetProject(ENGINE_CONTEXT *pEngineContext)
         for (i=0;(i<NDET) && fgets(str,MAX_ITEM_TEXT_LEN,fp);)
          if ((strchr(str,';')==NULL) && (strchr(str,'*')==NULL))
           {
-           sscanf(str,"%lf %lf",&lembdaInstr[i],&instrFunction[i]);
+           sscanf(str,"%lf %lf",&lambdaInstr[i],&instrFunction[i]);
            i++;
           }
 
-        if (!SPLINE_Deriv2(lembdaInstr,instrFunction,instrDeriv2,NDET,"EngineSetProject"))
-         rc=SPLINE_Vector(lembdaInstr,instrFunction,instrDeriv2,NDET,pBuffers->lembda,pBuffers->instrFunction,NDET,SPLINE_CUBIC,"EngineSetProject");
+        if (!SPLINE_Deriv2(lambdaInstr,instrFunction,instrDeriv2,NDET,"EngineSetProject"))
+         rc=SPLINE_Vector(lambdaInstr,instrFunction,instrDeriv2,NDET,pBuffers->lambda,pBuffers->instrFunction,NDET,SPLINE_CUBIC,"EngineSetProject");
        }
 
       if (fp!=NULL)
@@ -262,8 +437,8 @@ void EngineSetProject(ENGINE_CONTEXT *pEngineContext)
 
   // Release the allocated buffers
 
-  if (lembdaInstr!=NULL)
-   MEMORY_ReleaseDVector("EngineSetProject","lembdaInstr",lembdaInstr,0);
+  if (lambdaInstr!=NULL)
+   MEMORY_ReleaseDVector("EngineSetProject","lambdaInstr",lambdaInstr,0);
   if (instrFunction!=NULL)
    MEMORY_ReleaseDVector("EngineSetProject","instrFunction",instrFunction,0);
   if (instrDeriv2!=NULL)
@@ -648,6 +823,10 @@ RC EngineRequestBeginBrowseSpectra(ENGINE_CONTEXT *pEngineContext,const char *sp
   return rc;
  }
 
+// ==========================================
+// AUTOMATIC SEARCH OF THE REFERENCE SPECTRUM
+// ==========================================
+
 // -----------------------------------------------------------------------------
 // FUNCTION      EngineSetRefIndexes
 // -----------------------------------------------------------------------------
@@ -657,12 +836,11 @@ RC EngineRequestBeginBrowseSpectra(ENGINE_CONTEXT *pEngineContext,const char *sp
 //
 // RETURN        0 in case of success; the code of the error otherwise
 // -----------------------------------------------------------------------------
-/*
+
 RC EngineSetRefIndexes(ENGINE_CONTEXT *pEngineContext)
  {
   // Declarations
 
-  ENGINE_CONTEXT      engineCopy;                                               // backup of the engine context
   INDEX              *indexList,                                                // indexes of records
                       indexTabFeno,                                             // browse analysis windows list
                       indexRecord,                                              // browse spectra records in file
@@ -677,7 +855,8 @@ RC EngineSetRefIndexes(ENGINE_CONTEXT *pEngineContext)
                       deltaZmMorning,                                           // select record in the morning with SZA the closest by SZA base
                       deltaZmAfternoon;                                         // select record in the afternoon with SZA the closest by SZA base
   INT                 NRecord;                                                  // number of hold record
-  INT                 localCalDay;
+  INT                 localCalDay;                                              // local day number
+  INT                 recordNumber;                                             // the current number of records
   RC                  rc;                                                       // return code
 
   // Initializations
@@ -689,28 +868,31 @@ RC EngineSetRefIndexes(ENGINE_CONTEXT *pEngineContext)
   ZmMin=360.;
   ZmMax=0.;
 
+  rc=ERROR_ID_NO;
+
   // Make a backup of the spectra part of the engine context
 
-  memcpy(&engineCopy,pEngineContext,sizeof(ENGINE_CONTEXT));
+  EngineCopyContext(&ENGINE_contextRef,pEngineContext);
 
-  pProject=&engineCopy.project;
-  pSpectra=&engineCopy.project.spectra;
-  pInstr=&engineCopy.project.instrumental;
+  pProject=&ENGINE_contextRef.project;
+  pSpectra=&ENGINE_contextRef.project.spectra;
+  pInstr=&ENGINE_contextRef.project.instrumental;
 
-  localCalDay=pEngineContext->recordInfo.localCalDay;
+  localCalDay=ENGINE_contextRef.recordInfo.localCalDay;
+  recordNumber=ENGINE_contextRef.recordNumber;
 
   if ((pInstr->readOutFormat==PRJCT_INSTR_FORMAT_LOGGER) ||
       (pInstr->readOutFormat==PRJCT_INSTR_FORMAT_PDAEGG))
 
    pInstr->user=PRJCT_INSTR_IASB_TYPE_ZENITHAL;
 
-  if (pEngineContext->recordNumber>0)
+  if (ENGINE_contextRef.recordNumber>0)
    {
     // Memory allocation
 
-    if (((indexList=(INDEX *)MEMORY_AllocBuffer("ThrdSetRefIndexes ","",pEngineContext->recordNumber,sizeof(INDEX),0,MEMORY_TYPE_INDEX))==NULL) ||
-        ((ZmList=(double *)MEMORY_AllocDVector("ThrdSetRefIndexes ","",0,pEngineContext->recordNumber-1))==NULL) ||
-        ((TimeDec=(double *)MEMORY_AllocDVector("ThrdSetRefIndexes ","",0,pEngineContext->recordNumber-1))==NULL))
+    if (((indexList=(INDEX *)MEMORY_AllocBuffer("EngineSetRefIndexes","",recordNumber,sizeof(INDEX),0,MEMORY_TYPE_INDEX))==NULL) ||
+        ((ZmList=(double *)MEMORY_AllocDVector("EngineSetRefIndexes","",0,recordNumber-1))==NULL) ||
+        ((TimeDec=(double *)MEMORY_AllocDVector("EngineSetRefIndexes","",0,recordNumber-1))==NULL))
 
      rc=ERROR_ID_ALLOC;
 
@@ -718,29 +900,29 @@ RC EngineSetRefIndexes(ENGINE_CONTEXT *pEngineContext)
      {
       // Browse records in file
 
-      for (indexRecord=THRD_lastRefRecord+1;indexRecord<=pEngineContext->recordNumber;indexRecord++)
-       if (!(rc=EngineReadFile(&THRD_refInfo,indexRecord,1,localCalDay)) &&
-           (pEngineContext->recordInfo.Zm>(double)0.))
+      for (indexRecord=ENGINE_contextRef.lastRefRecord+1;indexRecord<=recordNumber;indexRecord++)
+       if (!(rc=EngineReadFile(&ENGINE_contextRef,indexRecord,1,localCalDay)) &&
+           (ENGINE_contextRef.recordInfo.Zm>(double)0.))
         {
          if (rc==ITEM_NONE)
           rc=0;
 
          // Data on record
 
-         indexList[NRecord]=indexRecord;                             // index of record
-         ZmList[NRecord]=pEngineContext->recordInfo.Zm;                 // zenith angle
-         TimeDec[NRecord]=pEngineContext->recordInfo.localTimeDec;      // decimal time for determining when the measurement has occured
+         indexList[NRecord]=indexRecord;                                        // index of record
+         ZmList[NRecord]=ENGINE_contextRef.recordInfo.Zm;                       // zenith angle
+         TimeDec[NRecord]=ENGINE_contextRef.recordInfo.localTimeDec;            // decimal time for determining when the measurement has occured
 
          // Minimum and maximum zenith angle
 
-         if (pEngineContext->recordInfo.Zm<ZmMin)
+         if (ENGINE_contextRef.recordInfo.Zm<ZmMin)
           {
-           ZmMin=pEngineContext->recordInfo.Zm;
+           ZmMin=ENGINE_contextRef.recordInfo.Zm;
            indexZmMin=NRecord;
           }
 
-         if (pEngineContext->recordInfo.Zm>ZmMax)
-          ZmMax=pEngineContext->recordInfo.Zm;
+         if (ENGINE_contextRef.recordInfo.Zm>ZmMax)
+          ZmMax=ENGINE_contextRef.recordInfo.Zm;
 
          NRecord++;
         }
@@ -755,7 +937,7 @@ RC EngineSetRefIndexes(ENGINE_CONTEXT *pEngineContext)
 
       // Browse analysis windows
 
-      for (indexTabFeno=0;(indexTabFeno<NFeno) && (rc<THREAD_EVENT_STOP);indexTabFeno++)
+      for (indexTabFeno=0;(indexTabFeno<NFeno) && !rc;indexTabFeno++)
        {
         pTabFeno=&TabFeno[indexTabFeno];
 
@@ -768,7 +950,7 @@ RC EngineSetRefIndexes(ENGINE_CONTEXT *pEngineContext)
           // No reference spectrum found in SZA range
 
           if (ZmMax<pTabFeno->refSZA-pTabFeno->refSZADelta)
-           rc=ERROR_SetLast("ThrdSetRefIndexes",ERROR_TYPE_WARNING,ERROR_ID_NO_REF,"all the day",pEngineContext->fileInfo.fileName);
+           rc=ERROR_SetLast("ThrdSetRefIndexes",ERROR_TYPE_WARNING,ERROR_ID_NO_REF,"all the day",ENGINE_contextRef.fileInfo.fileName);
 
           // Select record with SZA minimum
 
@@ -786,13 +968,13 @@ RC EngineSetRefIndexes(ENGINE_CONTEXT *pEngineContext)
               if ((ZmList[indexRecord]>=pTabFeno->refSZA-pTabFeno->refSZADelta) &&
                   (ZmList[indexRecord]<=pTabFeno->refSZA+pTabFeno->refSZADelta))
                {
-                if ((TimeDec[indexRecord]<=THRD_localNoon) && (fabs(pTabFeno->refSZA-ZmList[indexRecord])<deltaZmMorning))
+                if ((TimeDec[indexRecord]<=ENGINE_localNoon) && (fabs(pTabFeno->refSZA-ZmList[indexRecord])<deltaZmMorning))
                  {
                   pTabFeno->indexRefMorning=indexRecord;
                   deltaZmMorning=fabs(pTabFeno->refSZA-ZmList[indexRecord]);
                  }
 
-                if ((TimeDec[indexRecord]>THRD_localNoon) && (fabs(pTabFeno->refSZA-ZmList[indexRecord])<deltaZmAfternoon))
+                if ((TimeDec[indexRecord]>ENGINE_localNoon) && (fabs(pTabFeno->refSZA-ZmList[indexRecord])<deltaZmAfternoon))
                  {
                   pTabFeno->indexRefAfternoon=indexRecord;
                   deltaZmAfternoon=fabs(pTabFeno->refSZA-ZmList[indexRecord]);
@@ -803,17 +985,17 @@ RC EngineSetRefIndexes(ENGINE_CONTEXT *pEngineContext)
             // No record found for the morning OR the afternoon
 
             if ((pTabFeno->indexRefMorning==ITEM_NONE) && (pTabFeno->indexRefAfternoon==ITEM_NONE))
-             rc=ERROR_SetLast("ThrdSetRefIndexes",ERROR_TYPE_WARNING,ERROR_ID_NO_REF,"all the day",pEngineContext->fileInfo.fileName);
+             rc=ERROR_SetLast("ThrdSetRefIndexes",ERROR_TYPE_WARNING,ERROR_ID_NO_REF,"all the day",ENGINE_contextRef.fileInfo.fileName);
             else if (pInstr->readOutFormat!=PRJCT_INSTR_FORMAT_ASCII)
              {
               if (pTabFeno->indexRefMorning==ITEM_NONE)
                {
-               	rc=ERROR_SetLast("ThrdSetRefIndexes",ERROR_TYPE_WARNING,ERROR_ID_NO_REF,"the morning",pEngineContext->fileInfo.fileName);
+               	rc=ERROR_SetLast("ThrdSetRefIndexes",ERROR_TYPE_WARNING,ERROR_ID_NO_REF,"the morning",ENGINE_contextRef.fileInfo.fileName);
                 pTabFeno->indexRefMorning=pTabFeno->indexRefAfternoon;
                }
               else if (pTabFeno->indexRefAfternoon==ITEM_NONE)
                {
-               	rc=ERROR_SetLast("ThrdSetRefIndexes",ERROR_TYPE_WARNING,ERROR_ID_NO_REF,"the afternoon",pEngineContext->fileInfo.fileName);
+               	rc=ERROR_SetLast("ThrdSetRefIndexes",ERROR_TYPE_WARNING,ERROR_ID_NO_REF,"the afternoon",ENGINE_contextRef.fileInfo.fileName);
                 pTabFeno->indexRefAfternoon=pTabFeno->indexRefMorning;
                }
              }
@@ -830,21 +1012,162 @@ RC EngineSetRefIndexes(ENGINE_CONTEXT *pEngineContext)
      }
    }
 
-  // Restore the backup of the spectra part of the engine context
+  // Copy information from the ref context to the main context
 
-  memcpy(pEngineContext,&engineCopy,sizeof(ENGINE_CONTEXT));
+  pEngineContext->lastRefRecord=ENGINE_contextRef.lastRefRecord;
 
   // Release buffers
 
   if (indexList!=NULL)
-   MEMORY_ReleaseBuffer("ThrdSetRefIndexes ","indexList",indexList);
+   MEMORY_ReleaseBuffer("EngineSetRefIndexes","indexList",indexList);
   if (ZmList!=NULL)
-   MEMORY_ReleaseDVector("ThrdSetRefIndexes ","ZmList",ZmList,0);
+   MEMORY_ReleaseDVector("EngineSetRefIndexes","ZmList",ZmList,0);
   if (TimeDec!=NULL)
-   MEMORY_ReleaseDVector("ThrdSetRefIndexes ","TimeDec",TimeDec,0);
+   MEMORY_ReleaseDVector("EngineSetRefIndexes","TimeDec",TimeDec,0);
 
   // Return
 
   return rc;
  }
-*/
+
+// -----------------------------------------------------------------------------
+// FUNCTION      EngineNewRef
+// -----------------------------------------------------------------------------
+// PURPOSE       Load a new reference spectrum
+//
+// INPUT         pEngineContext     pointer to the engine context
+//
+// RETURN        0 in case of success; the code of the error otherwise
+// -----------------------------------------------------------------------------
+
+RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
+ {
+  // Declarations
+
+  RECORD_INFO *pRecord;                                                         // pointer to the record part of the engine context
+
+  INDEX indexRefRecord,                                                         // index of best record in file for reference selection
+        indexTabFeno,                                                           // browse analysis windows
+        indexWindow;                                                            // avoid gaps
+
+  FENO *pTabFeno;                                                               // pointer to the analysis window
+  INT useKurucz,alignRef,useUsamp,saveFlag,newDimL;
+  double factTemp;
+  RC rc;                                                                        // return code
+
+  // Initializations
+
+  pRecord=&pEngineContext->recordInfo;
+  rc=ERROR_ID_NO;
+  saveFlag=(INT)pEngineContext->project.spectra.displayDataFlag;
+  useKurucz=alignRef=useUsamp=0;
+
+  // Select spectra records as reference
+
+  if ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_ASCII) && !pEngineContext->project.instrumental.ascii.szaSaveFlag)
+   rc=ERROR_SetLast("EngineNewRef",ERROR_TYPE_WARNING,ERROR_ID_FILE_AUTOMATIC);
+
+  else if (pRecord->localCalDay!=ENGINE_contextRef.recordInfo.localCalDay)
+//  else if (memcmp((char *)&pRecord->present_day,(char *)&ENGINE_contextRef.present_day,sizeof(SHORT_DATE))!=0)  // ref and spectrum are not of the same day
+   rc=EngineSetRefIndexes(pEngineContext);
+
+  for (indexTabFeno=0;(indexTabFeno<NFeno) && !rc;indexTabFeno++)
+   {
+    pTabFeno=&TabFeno[indexTabFeno];
+
+    if ((pTabFeno->hidden!=1) &&                                                   // not the definition of the window for the wavelength calibration
+        (pTabFeno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_AUTOMATIC))  // automatic reference selection only
+     {
+      pTabFeno->displayRef=0;
+
+      if ((indexRefRecord=(pRecord->localTimeDec<=ENGINE_localNoon)?pTabFeno->indexRefMorning:pTabFeno->indexRefAfternoon)==ITEM_NONE)
+       {
+// QDOAS ???        memcpy((char *)&THRD_specInfo.recordInfo.present_day,(char *)&pRecord->present_day,sizeof(SHORT_DATE));
+        rc=ERROR_ID_FILE_RECORD;
+       }
+
+      // Read out reference from file
+
+      else if ((indexRefRecord!=pTabFeno->indexRef) &&
+              !(rc=EngineReadFile(&ENGINE_contextRef,indexRefRecord,0,0)))
+       {
+        alignRef++;
+
+        if (!pTabFeno->useEtalon)
+         {
+          memcpy(pTabFeno->LambdaK,ENGINE_contextRef.buffers.lambda,sizeof(double)*NDET);
+          memcpy(pTabFeno->LambdaRef,ENGINE_contextRef.buffers.lambda,sizeof(double)*NDET);
+
+          for (indexWindow=0,newDimL=0;indexWindow<pTabFeno->svd.Z;indexWindow++)
+           {
+            pTabFeno->svd.Fenetre[indexWindow][0]=FNPixel(ENGINE_contextRef.buffers.lambda,pTabFeno->svd.LFenetre[indexWindow][0],pTabFeno->NDET,PIXEL_AFTER);
+            pTabFeno->svd.Fenetre[indexWindow][1]=FNPixel(ENGINE_contextRef.buffers.lambda,pTabFeno->svd.LFenetre[indexWindow][1],pTabFeno->NDET,PIXEL_BEFORE);
+
+            newDimL+=(pTabFeno->svd.Fenetre[indexWindow][1]-pTabFeno->svd.Fenetre[indexWindow][0]+1);
+           }
+
+          if (newDimL!=pTabFeno->svd.DimL)
+           {
+            ANALYSE_SvdFree("EngineNewRef",&pTabFeno->svd);
+            pTabFeno->svd.DimL=newDimL;
+            ANALYSE_SvdLocalAlloc("EngineNewRef",&pTabFeno->svd);
+           }
+
+          if (pTabFeno->useKurucz)
+           {
+            KURUCZ_Init(0);
+            useKurucz++;
+           }
+          else if (((rc=ANALYSE_XsInterpolation(pTabFeno,pTabFeno->LambdaRef))!=ERROR_ID_NO) ||
+                   ((rc=ANALYSE_XsConvolution(pTabFeno,pTabFeno->LambdaRef,&ANALYSIS_slit,pSlitOptions->slitFunction.slitType,&pSlitOptions->slitFunction.slitParam,&pSlitOptions->slitFunction.slitParam2,&pSlitOptions->slitFunction.slitParam3,&pSlitOptions->slitFunction.slitParam4))!=ERROR_ID_NO))
+           break;
+         }
+
+        if (pTabFeno->useUsamp)
+         useUsamp++;
+
+        memcpy(pTabFeno->Sref,ENGINE_contextRef.buffers.spectrum,sizeof(double)*NDET);
+
+        if ((rc=ANALYSE_NormalizeVector(pTabFeno->Sref-1,NDET,&factTemp,"EngineNewRef"))!=ERROR_ID_NO)
+         break;
+
+        pTabFeno->indexRef=indexRefRecord;
+        pTabFeno->Zm=ENGINE_contextRef.recordInfo.Zm;
+        pTabFeno->Tm=ENGINE_contextRef.recordInfo.Tm;
+        pTabFeno->TimeDec=ENGINE_contextRef.recordInfo.TimeDec;
+        pTabFeno->displayRef=1;
+
+        memcpy(&pTabFeno->refDate,&ENGINE_contextRef.recordInfo.present_day,sizeof(SHORT_DATE));
+       }
+      else if (indexRefRecord==pTabFeno->indexRef)
+       pTabFeno->displayRef=1;
+     }
+   }
+
+// QDOAS ???     if ((THRD_id==THREAD_TYPE_ANALYSIS) || (THRD_id==THREAD_TYPE_KURUCZ))
+// QDOAS ???      {
+// QDOAS ???       for (indexTabFeno=0;indexTabFeno<NFeno;indexTabFeno++)
+// QDOAS ???        {
+// QDOAS ???         pTabFeno=&TabFeno[indexTabFeno];
+// QDOAS ???
+// QDOAS ???         if (!pTabFeno->hidden)
+// QDOAS ???          fprintf(fp,"Reference for %s analysis window : %d/%d SZA : %g\n",pTabFeno->windowName,pTabFeno->indexRef,
+// QDOAS ???                 (pTabFeno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_AUTOMATIC)?pEngineContext->recordNumber:ITEM_NONE,pTabFeno->Zm);
+// QDOAS ???        }
+// QDOAS ???      }
+
+  // Reference alignment
+
+// QDOAS ???   if (!rc && useKurucz)
+// QDOAS ???    rc=KURUCZ_Reference(ENGINE_contextRef.buffers.instrFunction,1,saveFlag,1);
+
+  if (!rc && alignRef)
+   rc=ANALYSE_AlignReference(1,saveFlag,responseHandle);
+
+// QDOAS ???   if (!rc && useUsamp)
+// QDOAS ???    rc=USAMP_BuildFromAnalysis(1,ITEM_NONE);
+
+  // Return
+
+  return rc;
+ }

@@ -790,8 +790,8 @@ typedef struct _analysis
   UCHAR  refSpectrumFile[MAX_ITEM_TEXT_LEN+1];              // reference spectrum file in file mode
   UCHAR  refEtalon[MAX_ITEM_TEXT_LEN+1];                    // reference etalon file
   UCHAR  residualsFile[MAX_ITEM_TEXT_LEN+1];                // residuals safe keeping
-  UCHAR  lembdaMin[13],lembdaMax[13];                       // wavelengths or pixels range
-  UCHAR  lembdaMinK[13],lembdaMaxK[13];                     // wavelengths or pixels range
+  UCHAR  lambdaMin[13],lambdaMax[13];                       // wavelengths or pixels range
+  UCHAR  lambdaMinK[13],lambdaMaxK[13];                     // wavelengths or pixels range
   INDEX  listEntryPoint[TAB_TYPE_ANLYS_MAX];                // entry points to list for all tab pages
   INT    hidden;                                            // flag set if window is hidden
   double refSZA,refSZADelta;
@@ -1021,8 +1021,8 @@ typedef struct _prjctKurucz
   INT              displaySpectra;                     // display fwhm in each pixel
   INT              fwhmFit;                            // force fit of fwhm while applying Kurucz
   INT              fwhmType;                           // type of slit function to fit
-  double           lembdaLeft;
-  double           lembdaRight;
+  double           lambdaLeft;
+  double           lambdaRight;
   INT              invPolyDegree;
   INT              analysisMethod;
  }
@@ -1176,7 +1176,7 @@ EXTERN int GOME2_ms;
 
 typedef struct _prjctAsciiFormat
  {
-  INT   format,szaSaveFlag,azimSaveFlag,elevSaveFlag,timeSaveFlag,dateSaveFlag,lembdaSaveFlag;
+  INT   format,szaSaveFlag,azimSaveFlag,elevSaveFlag,timeSaveFlag,dateSaveFlag,lambdaSaveFlag;
  }
 PRJCT_ASCII;
 
@@ -1513,7 +1513,7 @@ void PRJCT_SaveConfiguration(FILE *fp,UCHAR *sectionName);
    typedef struct _xs
     {
      INT     NDET;                                                              // size of vector
-     double *lembda,                                                            // wavelength calibration
+     double *lambda,                                                            // wavelength calibration
             *vector,                                                            // cross section
             *deriv2;                                                            // second derivative for interpolation
     }
@@ -1578,17 +1578,17 @@ void PRJCT_SaveConfiguration(FILE *fp,UCHAR *sectionName);
 
    // Files processing
 
-   RC   XSCONV_LoadCalibrationFile(XS *pLembda,UCHAR *lembdaFile,INT nextraPixels);
+   RC   XSCONV_LoadCalibrationFile(XS *pLambda,UCHAR *lambdaFile,INT nextraPixels);
    RC   XSCONV_LoadSlitFunction(XS *pSlitXs,SLIT *pSlit,double *pGaussWidth,INT *pSlitType);
-   RC   XSCONV_LoadCrossSectionFile(XS *pCross,UCHAR *crossFile,double lembdaMin,double lembdaMax,double shift,INT conversionMode);
+   RC   XSCONV_LoadCrossSectionFile(XS *pCross,UCHAR *crossFile,double lambdaMin,double lambdaMax,double shift,INT conversionMode);
 
    // Convolution functions
 
    RC   XSCONV_TypeNone(XS *pXsnew,XS *pXshr);
    RC   XSCONV_TypeGauss(double *lambda,double *Spec,double *SDeriv2,double lambdaj,double dldj,double *SpecConv,double fwhm,double n,INT slitType);
-   RC   XSCONV_TypeStandardFFT(FFT *pFFT,INT fwhmType,double slitParam,double slitParam2,double *lembda,double *target,INT size);
-   RC   XSCONV_TypeStandard(XS *pXsnew,INDEX indexLembdaMin,INDEX indexLembdaMax,XS *pXshr,XS *pSlit,XS *pI,double *Ic,INT slitType,double slitWidth,double slitParam,double slitParam2,double slitParam3,double slitParam4);
-   RC   XSCONV_RealTimeXs(XS *pXshr,XS *pXsI0,XS *pSlit,double *IcVector,double *lembda,INDEX indexLembdaMin,INDEX indexLembdaMax,double *newXs,INT slitType,double slitParam,double slitParam2,double slitParam3,double slitParam4);
+   RC   XSCONV_TypeStandardFFT(FFT *pFFT,INT fwhmType,double slitParam,double slitParam2,double *lambda,double *target,INT size);
+   RC   XSCONV_TypeStandard(XS *pXsnew,INDEX indexLambdaMin,INDEX indexLambdaMax,XS *pXshr,XS *pSlit,XS *pI,double *Ic,INT slitType,double slitWidth,double slitParam,double slitParam2,double slitParam3,double slitParam4);
+   RC   XSCONV_RealTimeXs(XS *pXshr,XS *pXsI0,XS *pSlit,double *IcVector,double *lambda,INDEX indexLambdaMin,INDEX indexLambdaMax,double *newXs,INT slitType,double slitParam,double slitParam2,double slitParam3,double slitParam4);
 
    // Buffers allocation
 

@@ -1,14 +1,13 @@
 
 //  ----------------------------------------------------------------------------
 //
-//  Product/Project   :  THE BIRA-IASB DOAS SOFTWARE FOR WINDOWS AND LINUX
+//  Product/Project   :  QDOAS
 //  Module purpose    :  CCD read out routines
 //  Name of module    :  CCD-READ.C
 //  Creation date     :  This module was already existing in old DOS versions and
 //                       has been added in the WinDOAS package in 97
 //
-//  Authors           :  Caroline FAYT (caroline.fayt@oma.be)
-//                       Ann-Carine VANDAELE (a-c.vandaele@oma.be)
+//  Author            :  Ann-Carine VANDAELE (a-c.vandaele@oma.be)
 //
 //  QDOAS is a cross-platform application developed in QT for DOAS retrieval
 //  (Differential Optical Absorption Spectroscopy).
@@ -528,7 +527,7 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
 
 /*  if (!rc)
    {
-    if ((pRecord->elevationViewAngle<80.) && (pBuffers->lembda[0]>=290) && (pBuffers->lembda[0]<=300))
+    if ((pRecord->elevationViewAngle<80.) && (pBuffers->lambda[0]>=290) && (pBuffers->lambda[0]<=300))
      {
      	int npoints;
 

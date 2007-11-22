@@ -1,10 +1,9 @@
 
 //  ----------------------------------------------------------------------------
 //
-//  Product/Project   :  DOAS ANALYSIS PROGRAM FOR WINDOWS
+//  Product/Project   :  QDOAS
 //  Module purpose    :  FILES MODULE
 //  Name of module    :  WINFILES.C
-//  Program Language  :  Borland C++ 5.0 for Windows 95/NT
 //  Creation date     :  1997
 //
 //  QDOAS is a cross-platform application developed in QT for DOAS retrieval

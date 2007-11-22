@@ -1,28 +1,38 @@
 
 //  ----------------------------------------------------------------------------
 //
-//  Product/Project   :  DOAS ANALYSIS PROGRAM FOR WINDOWS
+//  Product/Project   :  QDOAS
 //  Module purpose    :  RING EFFECT
 //  Name of module    :  RING.C
-//  Program Language  :  Borland C++ 5.0 for Windows 95/NT
 //  Creation date     :  1998
 //
-//  Authors           :  Caroline FAYT (caroline.fayt@oma.be) - Windows version
-//                       Jos VAN GEFFEN (josv@oma.be) - Linux version
-//                       Michel VAN ROOZENDAEL (michelv@oma.be) - DOAS team leader
+//  QDOAS is a cross-platform application developed in QT for DOAS retrieval
+//  (Differential Optical Absorption Spectroscopy).
 //
-//        Copyright  (C) Belgian Institute for Space Aeronomy (BIRA-IASB)
-//                       Avenue Circulaire, 3
-//                       1180     UCCLE
-//                       BELGIUM
+//  The QT version of the program has been developed jointly by the Belgian
+//  Institute for Space Aeronomy (BIRA-IASB) and the Science and Technology
+//  company (S[&]T) - Copyright (C) 2007
 //
-//  As the WinDOAS software is distributed freely within the DOAS community, it
-//  would be nice if BIRA-IASB Institute and the authors were mentioned at least
-//  in acknowledgements of papers presenting results obtained with this program.
+//      BIRA-IASB                                   S[&]T
+//      Belgian Institute for Space Aeronomy        Science [&] Technology
+//      Avenue Circulaire, 3                        Postbus 608
+//      1180     UCCLE                              2600 AP Delft
+//      BELGIUM                                     THE NETHERLANDS
+//      caroline.fayt@aeronomie.be                  info@stcorp.nl
 //
-//  The source code is also available on request for use, modification and free
-//  distribution but authors are not responsible of unexpected behaviour of the
-//  program if changes have been made on the original code.
+//  This program is free software; you can redistribute it and/or
+//  modify it under the terms of the GNU General Public License
+//  as published by the Free Software Foundation; either version 2
+//  of the License, or (at your option) any later version.
+//
+//  This program is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//  GNU General Public License for more details.
+//
+//  You should have received a copy of the GNU General Public License
+//  along with this program; if not, write to the Free Software Foundation,
+//  Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //
 //  ----------------------------------------------------------------------------
 //  FUNCTIONS
@@ -545,13 +555,13 @@ void Ring(void *ringArg)
   double *n2xref,*o2xref,*n2pos2,                                               // rotational Raman spectra
           gamman2,sigprimen2,sign2,distn2,n2xsec,sign2k,                        // n2 working variables
           gammao2,sigprimeo2,sigo2,disto2,o2xsec,sigo2k,                        // o2 working variables
-          sigsq,lembda1e7,solar,n2posj,o2posj,                                  // other working variables
-          lembda,lembdaMin,lembdaMax,                                           // range of wavelengths covered by slit function
+          sigsq,lambda1e7,solar,n2posj,o2posj,                                  // other working variables
+          lambda,lambdaMin,lambdaMax,                                           // range of wavelengths covered by slit function
           slitWidth,                                                            // width of the slit function
          *raman,*raman2,*ramanint,*ringEnd,                                     // output ring cross section
-         *solarLembda,*solarVector,                                             // substitution vectors for solar spectrum
-         *slitLembda,*slitVector,*slitDeriv2,                                   // substitution vectors for slit function
-         *ringLembda,*ringVector,                                               // substitution vectors for ring cross section
+         *solarLambda,*solarVector,                                             // substitution vectors for solar spectrum
+         *slitLambda,*slitVector,*slitDeriv2,                                   // substitution vectors for slit function
+         *ringLambda,*ringVector,                                               // substitution vectors for ring cross section
           temp,                                                                 // approximate average temperature in °K for scattering
           slitParam,                                                            // gaussian full width at half maximum
           slitParam2,slitParam3,slitParam4,                                     // other slit function parameters
@@ -625,19 +635,19 @@ void Ring(void *ringArg)
 
   // Load solar spectrum in the range of wavelengths covered by the end wavelength scale corrected by the slit function
 
-           !(rc=XSCONV_LoadCrossSectionFile(&xsSolar,RING_options.kuruczFile,(double)xsRing.lembda[0]-slitWidth-1.,
-                                     (double)xsRing.lembda[xsRing.NDET-1]+slitWidth+1.,(double)0.,CONVOLUTION_CONVERSION_NONE)) ) // &&
+           !(rc=XSCONV_LoadCrossSectionFile(&xsSolar,RING_options.kuruczFile,(double)xsRing.lambda[0]-slitWidth-1.,
+                                     (double)xsRing.lambda[xsRing.NDET-1]+slitWidth+1.,(double)0.,CONVOLUTION_CONVERSION_NONE)) ) // &&
 
   /* --- Commented out on 10 November 2004 (do not account for molecular absorption anymore)
 
   // Test : load O3 cross section for correcting solar spectrum
 
            ((RING_options.convolutionType!=RING_TYPE_MOLECULAR) ||
-           !(rc=XSCONV_LoadCrossSectionFile(&xsO3,RING_options.crossFile,(double)xsRing.lembda[0]-slitWidth-1.,
-                                     (double)xsRing.lembda[xsRing.NDET-1]+slitWidth+1.,(double)0.,CONVOLUTION_CONVERSION_NONE))))
+           !(rc=XSCONV_LoadCrossSectionFile(&xsO3,RING_options.crossFile,(double)xsRing.lambda[0]-slitWidth-1.,
+                                     (double)xsRing.lambda[xsRing.NDET-1]+slitWidth+1.,(double)0.,CONVOLUTION_CONVERSION_NONE))))
 
-//           !(rc=XSCONV_LoadCrossSectionFile(&xsO3,"e:\\data\\xs-hr\\o3\\o3_241.air",(double)xsRing.lembda[0]-slitWidth-1.,
-//                                     (double)xsRing.lembda[xsRing.NDET-1]+slitWidth+1.,(double)0.,CONVOLUTION_CONVERSION_NONE)))
+//           !(rc=XSCONV_LoadCrossSectionFile(&xsO3,"e:\\data\\xs-hr\\o3\\o3_241.air",(double)xsRing.lambda[0]-slitWidth-1.,
+//                                     (double)xsRing.lambda[xsRing.NDET-1]+slitWidth+1.,(double)0.,CONVOLUTION_CONVERSION_NONE)))
 
      --- */
    {
@@ -653,16 +663,16 @@ void Ring(void *ringArg)
 
     // Use substitution variables
 
-    solarLembda=xsSolar.lembda;
+    solarLambda=xsSolar.lambda;
     solarVector=xsSolar.vector;
     nsolar=xsSolar.NDET;
 
-    slitLembda=xsSlit.lembda;
+    slitLambda=xsSlit.lambda;
     slitVector=xsSlit.vector;
     slitDeriv2=xsSlit.deriv2;
     nslit=xsSlit.NDET;
 
-    ringLembda=xsRing.lembda;
+    ringLambda=xsRing.lambda;
     ringVector=xsRing.vector;
     nring=xsRing.NDET;
 
@@ -684,7 +694,7 @@ void Ring(void *ringArg)
 
       if ((RING_options.convolutionType==RING_TYPE_MOLECULAR))
        {
-        if ((rc=SPLINE_Vector(xsO3.lembda,xsO3.vector,xsO3.deriv2,xsO3.NDET,solarLembda,raman,nsolar,SPLINE_CUBIC,"Ring "))!=ERROR_ID_NO)
+        if ((rc=SPLINE_Vector(xsO3.lambda,xsO3.vector,xsO3.deriv2,xsO3.NDET,solarLambda,raman,nsolar,SPLINE_CUBIC,"Ring "))!=ERROR_ID_NO)
          goto EndRing;
 
         for (i=0;i<nsolar;i++)
@@ -707,11 +717,11 @@ void Ring(void *ringArg)
         #endif
 
         solar=(double)solarVector[i];
-        lembda=(double)solarLembda[i];
-        lembda1e7=(double)1.e7/lembda;
+        lambda=(double)solarLambda[i];
+        lambda1e7=(double)1.e7/lambda;
 
         if (((slitType==SLIT_TYPE_GAUSS_FILE) || (slitType==SLIT_TYPE_INVPOLY_FILE) || (slitType==SLIT_TYPE_ERF_FILE)) &&
-            ((rc=SPLINE_Vector(slitLembda,slitVector,slitDeriv2,nslit,&lembda,&slitParam,1,SPLINE_CUBIC,"Ring "))!=0))
+            ((rc=SPLINE_Vector(slitLambda,slitVector,slitDeriv2,nslit,&lambda,&slitParam,1,SPLINE_CUBIC,"Ring "))!=0))
          goto EndRing;
 
         sigma=slitParam*0.5;
@@ -719,7 +729,7 @@ void Ring(void *ringArg)
         delta=slitParam2*0.5;
         invapi=(double)1./(a*sqrt(PI));
 
-        sigsq = (double) 1.e6/(lembda*lembda);
+        sigsq = (double) 1.e6/(lambda*lambda);
         gamman2 = (double) -0.601466 + 238.557 / (186.099 - sigsq);
         gammao2 = (double) 0.07149 + 45.9364 / (48.2716 - sigsq);
 
@@ -731,28 +741,28 @@ void Ring(void *ringArg)
           n2posj=n2pos2[j];
           o2posj=o2pos[j];
 
-          sigprimen2=(double) lembda1e7-n2posj;
+          sigprimen2=(double) lambda1e7-n2posj;
           sigprimen2 *= sigprimen2;       // **2
           sigprimen2 *= sigprimen2;       // **4
 
-          sigprimeo2 = (double) lembda1e7-o2posj;
+          sigprimeo2 = (double) lambda1e7-o2posj;
           sigprimeo2 *= sigprimeo2;       // **2
           sigprimeo2 *= sigprimeo2;       // **4
 
           n2xsec=n2xref[j]*sigprimen2*gamman2*solar;
           o2xsec=o2xref[j]*sigprimeo2*gammao2*solar;
 
-          sign2=(double)1.e7/(-n2posj+lembda1e7);
-          sigo2=(double)1.e7/(-o2posj+lembda1e7);
+          sign2=(double)1.e7/(-n2posj+lambda1e7);
+          sigo2=(double)1.e7/(-o2posj+lambda1e7);
 
-          lembdaMin=(double)min(sign2,sigo2)-4.*slitParam; // lembda-slitWidth;
-          lembdaMax=(double)max(sign2,sigo2)+4.*slitParam; // lembda+slitWidth;
+          lambdaMin=(double)min(sign2,sigo2)-4.*slitParam; // lambda-slitWidth;
+          lambdaMax=(double)max(sign2,sigo2)+4.*slitParam; // lambda+slitWidth;
 
           for (indexMin=0,klo=0,khi=nsolar-1;khi-klo>1;)
            {
             indexMin=(khi+klo)>>1;
 
-            if (solarLembda[indexMin]>lembdaMin)
+            if (solarLambda[indexMin]>lambdaMin)
              khi=indexMin;
             else
              klo=indexMin;
@@ -768,10 +778,10 @@ void Ring(void *ringArg)
 
           // Contributions from +- npix pixels away
 
-          for (k=indexMin;(k<nsolar)&&(solarLembda[k]<=lembdaMax);k++)
+          for (k=indexMin;(k<nsolar)&&(solarLambda[k]<=lambdaMax);k++)
            {
-           	sign2k=sign2-solarLembda[k];
-           	sigo2k=sigo2-solarLembda[k];
+           	sign2k=sign2-solarLambda[k];
+           	sigo2k=sigo2-solarLambda[k];
 
             if (slitType==SLIT_TYPE_GAUSS_FILE)
              {
@@ -789,12 +799,12 @@ void Ring(void *ringArg)
               disto2=(double)(ERF_GetValue((sigo2k+delta)/a)-ERF_GetValue((sigo2k-delta)/a))/(4.*delta);
              }
             else if ((slitType==SLIT_TYPE_FILE) &&
-                   (((rc=SPLINE_Vector(slitLembda,slitVector,slitDeriv2,nslit,&sign2k,&distn2,1,SPLINE_CUBIC,"Ring "))!=0) ||
-                    ((rc=SPLINE_Vector(slitLembda,slitVector,slitDeriv2,nslit,&sigo2k,&disto2,1,SPLINE_CUBIC,"Ring "))!=0)))
+                   (((rc=SPLINE_Vector(slitLambda,slitVector,slitDeriv2,nslit,&sign2k,&distn2,1,SPLINE_CUBIC,"Ring "))!=0) ||
+                    ((rc=SPLINE_Vector(slitLambda,slitVector,slitDeriv2,nslit,&sigo2k,&disto2,1,SPLINE_CUBIC,"Ring "))!=0)))
 
              goto EndRing;
 
-             raman[k]+=(n2xsec*distn2+o2xsec*disto2)*(solarLembda[k]-solarLembda[k-1]);
+             raman[k]+=(n2xsec*distn2+o2xsec*disto2)*(solarLambda[k]-solarLambda[k-1]);
            }
          }
        }
@@ -818,11 +828,11 @@ void Ring(void *ringArg)
       #endif
 
       #if defined(__DEBUG_) && __DEBUG_
-      DEBUG_PrintVar("High resolution vectors",solarLembda,0,nsolar-1,solarVector,0,nsolar-1,raman,0,nsolar-1,NULL);
+      DEBUG_PrintVar("High resolution vectors",solarLambda,0,nsolar-1,solarVector,0,nsolar-1,raman,0,nsolar-1,NULL);
       #endif
 
-      if (!rc && !(rc=SPLINE_Deriv2(solarLembda,raman,raman2,nsolar,"Ring ")) &&
-         !(rc=SPLINE_Vector(solarLembda,raman,raman2,nsolar,ringLembda,ramanint,nring,SPLINE_CUBIC,"Ring ")))
+      if (!rc && !(rc=SPLINE_Deriv2(solarLambda,raman,raman2,nsolar,"Ring ")) &&
+         !(rc=SPLINE_Vector(solarLambda,raman,raman2,nsolar,ringLambda,ramanint,nring,SPLINE_CUBIC,"Ring ")))
        {
         if ((fp=fopen(ringFileName,"w+t"))==NULL)
          #if defined(__WINDOAS_GUI_) && __WINDOAS_GUI_
@@ -847,13 +857,13 @@ void Ring(void *ringArg)
           if (!(rc=ANALYSE_NormalizeVector(ringEnd-1,nring,&fact,"Ring")))
            {
             for (i=0;i<nring;i++)
-             fprintf(fp,"%.14le %.14le %.14le %.14le\n",ringLembda[i],ringEnd[i],ramanint[i],ringVector[i]);
+             fprintf(fp,"%.14le %.14le %.14le %.14le\n",ringLambda[i],ringEnd[i],ramanint[i],ringVector[i]);
 
             #if defined(__WINDOAS_GUI_) && __WINDOAS_GUI_
             DRAW_Spectra(CHILD_WINDOW_SPECTRA,"Ring cross section",
                         "","Wavelength (nm)","",NULL,0,
                         (double)0.,(double)0.,(double)0.,(double)0.,
-                         ringLembda,ringEnd,nring,DRAW_COLOR1,0,nring-1,PS_SOLID,"",
+                         ringLambda,ringEnd,nring,DRAW_COLOR1,0,nring-1,PS_SOLID,"",
                          NULL,NULL,0,DRAW_COLOR1,0,0,PS_SOLID,"",
                          0,1,1,1);
             #endif
@@ -895,7 +905,7 @@ void Ring(void *ringArg)
 
                   if (!ANALYSE_NormalizeVector(ringEnd-1,nring,&fact,"Ring"))
                    for (i=0;i<nring;i++)
-                    fprintf(fp,"%.14le %.14le %.14le %.14le\n",ringLembda[i],ringEnd[i],ramanint[i],ringVector[i]);
+                    fprintf(fp,"%.14le %.14le %.14le %.14le\n",ringLambda[i],ringEnd[i],ramanint[i],ringVector[i]);
                  }
                }
              }
@@ -970,9 +980,9 @@ void Ring(void *ringArg)
 // QDOAS ??? // =====================================
 // QDOAS ??? // RING EFFECT PANEL MESSAGES PROCESSING
 // QDOAS ??? // =====================================
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ??? #if defined (__WINDOAS_GUI_) && __WINDOAS_GUI_
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ??? // -----------------------------------------------------------------------------
 // QDOAS ??? // FUNCTION      RingTypeMolecular
 // QDOAS ??? // -----------------------------------------------------------------------------
@@ -981,14 +991,14 @@ void Ring(void *ringArg)
 // QDOAS ??? // INPUT         hwndRing : handle of the parent dialog box
 // QDOAS ??? //               action   : show/hide fields related to a molecular ring cross section
 // QDOAS ??? // -----------------------------------------------------------------------------
-// QDOAS ??? 
-// QDOAS ??? 
+// QDOAS ???
+// QDOAS ???
 // QDOAS ??? void RingTypeMolecular(HWND hwndRing,INT action)
 // QDOAS ???  {
 // QDOAS ???   ShowWindow(GetDlgItem(hwndRing,TOOL_RING_CROSS_BUTTON),action);
 // QDOAS ???   ShowWindow(GetDlgItem(hwndRing,TOOL_RING_CROSS_FILE),action);
 // QDOAS ???  }
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ??? // -----------------------------------------------------------------------------
 // QDOAS ??? // FUNCTION        RingDlgInit
 // QDOAS ??? // -----------------------------------------------------------------------------
@@ -996,61 +1006,61 @@ void Ring(void *ringArg)
 // QDOAS ??? //
 // QDOAS ??? // INPUT           hwndRing : handle of the Ring dialog box
 // QDOAS ??? // -----------------------------------------------------------------------------
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ??? void RingDlgInit(HWND hwndRing)
 // QDOAS ???  {
 // QDOAS ???   // Declarations
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???   UCHAR string[20];
 // QDOAS ???   HWND hwndConv;
 // QDOAS ???   INDEX indexItem;
 // QDOAS ???   SLIT *pSlit;
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???   // Initializations
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???   hwndConv=GetDlgItem(hwndRing,TOOL_RING_TYPE);
 // QDOAS ???   memcpy(&RING_buffer,&RING_options,sizeof(XSCONV));
 // QDOAS ???   pSlit=&RING_buffer.slitConv;
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???   // Center on parent window
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???   DOAS_CenterWindow(hwndRing,GetWindow(hwndRing,GW_OWNER));
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???   // Rebuild files names
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???   FILES_RebuildFileName(RING_buffer.calibrationFile,RING_options.calibrationFile,1);
 // QDOAS ???   FILES_RebuildFileName(RING_buffer.path,RING_options.path,1);
 // QDOAS ???   FILES_RebuildFileName(RING_buffer.path2,RING_options.path2,1);
 // QDOAS ???   FILES_RebuildFileName(RING_buffer.crossFile,RING_options.crossFile,1);
 // QDOAS ???   FILES_RebuildFileName(RING_buffer.kuruczFile,RING_options.kuruczFile,1);
 // QDOAS ???   FILES_RebuildFileName(RING_buffer.slitConv.slitFile,RING_options.slitConv.slitFile,1);
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???   /* --- Commented out on 10 November 2004 (do not account for molecular absorption anymore)
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???   // Set ring type
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???   CheckRadioButton(hwndRing,
 // QDOAS ???                    TOOL_RING_TYPE_SOLAR,
 // QDOAS ???                    TOOL_RING_TYPE_MOLECULAR,
 // QDOAS ???                    TOOL_RING_TYPE_SOLAR+RING_options.convolutionType);
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???      --- */
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???   // Fill edit controls
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???   SetWindowText(GetDlgItem(hwndRing,TOOL_RING_OUTPUT_FILE1),RING_buffer.path);
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???   /* --- Commented out on 10 November 2004 (do not account for molecular absorption anymore)
 // QDOAS ???   SetWindowText(GetDlgItem(hwndRing,TOOL_RING_OUTPUT_FILE2),RING_buffer.path2);
 // QDOAS ???      --- */
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???   SetWindowText(GetDlgItem(hwndRing,TOOL_RING_SOLAR_FILE),RING_buffer.kuruczFile);
 // QDOAS ???   SetWindowText(GetDlgItem(hwndRing,TOOL_RING_CALIBRATION_FILE),RING_buffer.calibrationFile);
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???   /* --- Commented out on 10 November 2004 (do not account for molecular absorption anymore)
 // QDOAS ???   SetWindowText(GetDlgItem(hwndRing,TOOL_RING_CROSS_FILE),RING_buffer.crossFile);
 // QDOAS ???      --- */
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???   SetWindowText(GetDlgItem(hwndRing,TOOL_RING_SLIT_FILE),pSlit->slitFile);
 // QDOAS ???   sprintf(string,"%g",pSlit->slitParam);
 // QDOAS ???   SetWindowText(GetDlgItem(hwndRing,TOOL_RING_GAUSS_WIDTH),string);
@@ -1060,29 +1070,29 @@ void Ring(void *ringArg)
 // QDOAS ???   SetWindowText(GetDlgItem(hwndRing,TOOL_RING_VOIGT_RGAUSS),string);
 // QDOAS ???   sprintf(string,"%g",pSlit->slitParam4);
 // QDOAS ???   SetWindowText(GetDlgItem(hwndRing,TOOL_RING_VOIGT_RRATIO),string);
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???   // Fill combobox
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???   for (indexItem=0;indexItem<SLIT_TYPE_GAUSS_T_FILE;indexItem++)
 // QDOAS ???    SendMessage(hwndConv,CB_ADDSTRING,0,(LPARAM)XSCONV_slitTypes[indexItem]);
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???   SendMessage(hwndConv,CB_SETCURSEL,(WPARAM)pSlit->slitType,0);
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???   // Show/Hide File/Gauss fields
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???   XSCONV_SlitType(hwndRing,TOOL_RING_TYPE,pSlit,&RING_buffer.slitDConv);
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???   // Check boxes
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???   CheckDlgButton(hwndRing,TOOL_RING_NOCOMMENT,(RING_buffer.noComment!=0)?BST_CHECKED:BST_UNCHECKED);
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???   SetDlgItemInt(hwndRing,TOOL_RING_TEMP,RING_buffer.temperature,FALSE);
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???   /* --- Commented out on 10 November 2004 (do not account for molecular absorption anymore)
 // QDOAS ???   RingTypeMolecular(hwndRing,(RING_buffer.convolutionType==RING_TYPE_SOLAR)?SW_HIDE:SW_SHOW);
 // QDOAS ???      --- */
 // QDOAS ???  }
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ??? // -----------------------------------------------------------------------------
 // QDOAS ??? // FUNCTION        RingOK
 // QDOAS ??? // -----------------------------------------------------------------------------
@@ -1090,41 +1100,41 @@ void Ring(void *ringArg)
 // QDOAS ??? //
 // QDOAS ??? // INPUT           hwndRing : handle of the Ring dialog box
 // QDOAS ??? // -----------------------------------------------------------------------------
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ??? void RingOK(HWND hwndRing)
 // QDOAS ???  {
 // QDOAS ???   // Declarations
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???   UCHAR string[MAX_ITEM_TEXT_LEN+1];
 // QDOAS ???   SLIT *pSlit;
 // QDOAS ???   RC rc;
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???   // Initializations
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???   pSlit=&RING_buffer.slitConv;
 // QDOAS ???   rc=ERROR_ID_NO;
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???   // Fields read out
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???   memset(string,0,MAX_ITEM_TEXT_LEN+1);
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???   RING_buffer.temperature=(INT)GetDlgItemInt(hwndRing,TOOL_RING_TEMP,NULL,FALSE);
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???   pSlit->slitType=(UCHAR)SendMessage(GetDlgItem(hwndRing,TOOL_RING_TYPE),CB_GETCURSEL,0,0);
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???   /* --- Commented out on 10 November 2004 (do not account for molecular absorption anymore)
 // QDOAS ???   if (IsDlgButtonChecked(hwndRing,TOOL_RING_TYPE_SOLAR))
 // QDOAS ???    RING_buffer.convolutionType=(INT)RING_TYPE_SOLAR;
 // QDOAS ???   else if (IsDlgButtonChecked(hwndRing,TOOL_RING_TYPE_MOLECULAR))
 // QDOAS ???    RING_buffer.convolutionType=(INT)RING_TYPE_MOLECULAR;
 // QDOAS ???      --- */
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???   GetWindowText(GetDlgItem(hwndRing,TOOL_RING_OUTPUT_FILE1),RING_buffer.path,MAX_ITEM_TEXT_LEN);
 // QDOAS ???   GetWindowText(GetDlgItem(hwndRing,TOOL_RING_OUTPUT_FILE2),RING_buffer.path2,MAX_ITEM_TEXT_LEN);
 // QDOAS ???   GetWindowText(GetDlgItem(hwndRing,TOOL_RING_SOLAR_FILE),RING_buffer.kuruczFile,MAX_ITEM_TEXT_LEN);
 // QDOAS ???   GetWindowText(GetDlgItem(hwndRing,TOOL_RING_CALIBRATION_FILE),RING_buffer.calibrationFile,MAX_ITEM_TEXT_LEN);
 // QDOAS ???   GetWindowText(GetDlgItem(hwndRing,TOOL_RING_CROSS_FILE),RING_buffer.crossFile,MAX_ITEM_TEXT_LEN);
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???   GetWindowText(GetDlgItem(hwndRing,TOOL_RING_GAUSS_WIDTH),string,MAX_ITEM_TEXT_LEN);
 // QDOAS ???   pSlit->slitParam=(double)fabs(atof(string));
 // QDOAS ???   GetWindowText(GetDlgItem(hwndRing,TOOL_RING_INVPOLY),string,MAX_ITEM_TEXT_LEN+1);
@@ -1134,57 +1144,57 @@ void Ring(void *ringArg)
 // QDOAS ???   GetWindowText(GetDlgItem(hwndRing,TOOL_RING_VOIGT_RRATIO),string,MAX_ITEM_TEXT_LEN+1);
 // QDOAS ???   pSlit->slitParam4=fabs(atof(string));
 // QDOAS ???   GetWindowText(GetDlgItem(hwndRing,TOOL_RING_SLIT_FILE),pSlit->slitFile,MAX_ITEM_TEXT_LEN);
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???   RING_buffer.noComment=(UCHAR)(IsDlgButtonChecked(hwndRing,TOOL_RING_NOCOMMENT)==BST_CHECKED)?(UCHAR)1:(UCHAR)0;
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???   // Check validity of fields
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???   if (!strlen(RING_buffer.path))
 // QDOAS ???    MSG_MessageBox(hwndRing,TOOL_RING_OUTPUT_BUTTON1,MENU_WINDOWS_TOOL_RING,(rc=IDS_MSGBOX_FIELDEMPTY),
 // QDOAS ???                    MB_OK|MB_ICONHAND,"Output File");
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???   /* --- Commented out on 10 November 2004 (do not account for molecular absorption anymore)
 // QDOAS ???   else if ((RING_buffer.convolutionType==RING_TYPE_MOLECULAR) && !strlen(RING_buffer.crossFile))
 // QDOAS ???    MSG_MessageBox(hwndRing,TOOL_RING_CROSS_BUTTON,MENU_WINDOWS_TOOL_RING,(rc=IDS_MSGBOX_FIELDEMPTY),
 // QDOAS ???                    MB_OK|MB_ICONHAND,"Cross Section");
 // QDOAS ???      ---*/
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???   else if (!strlen(RING_buffer.kuruczFile))
 // QDOAS ???    MSG_MessageBox(hwndRing,TOOL_RING_SOLAR_BUTTON,MENU_WINDOWS_TOOL_RING,(rc=IDS_MSGBOX_FIELDEMPTY),
 // QDOAS ???                    MB_OK|MB_ICONHAND,"Solar File");
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???   else if (!strlen(RING_buffer.calibrationFile))
 // QDOAS ???    MSG_MessageBox(hwndRing,TOOL_RING_CALIBRATION_BUTTON,MENU_WINDOWS_TOOL_RING,(rc=IDS_MSGBOX_FIELDEMPTY),
 // QDOAS ???                    MB_OK|MB_ICONHAND,"Calibration File");
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???   else if (((pSlit->slitType==SLIT_TYPE_FILE) || (pSlit->slitType==SLIT_TYPE_GAUSS_FILE) || (pSlit->slitType==SLIT_TYPE_INVPOLY_FILE)) &&
 // QDOAS ???             !strlen(pSlit->slitFile))
 // QDOAS ???    MSG_MessageBox(hwndRing,TOOL_RING_SLIT_BUTTON,MENU_WINDOWS_TOOL_RING,(rc=IDS_MSGBOX_FIELDEMPTY),
 // QDOAS ???                    MB_OK|MB_ICONHAND,"Slit Function");
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???   if (!rc)
 // QDOAS ???    {
 // QDOAS ???     if (!TLBAR_bSaveFlag)
 // QDOAS ???      TLBAR_Enable(TRUE);
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???     memcpy(&RING_options,&RING_buffer,sizeof(XSCONV));
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???     FILES_ChangePath(RING_options.calibrationFile,RING_buffer.calibrationFile,1);
 // QDOAS ???     FILES_ChangePath(RING_options.path,RING_buffer.path,1);
 // QDOAS ???     FILES_ChangePath(RING_options.path2,RING_buffer.path2,1);
 // QDOAS ???     FILES_ChangePath(RING_options.crossFile,RING_buffer.crossFile,1);
 // QDOAS ???     FILES_ChangePath(RING_options.kuruczFile,RING_buffer.kuruczFile,1);
 // QDOAS ???     FILES_ChangePath(RING_options.slitConv.slitFile,RING_buffer.slitConv.slitFile,1);
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???     EndDialog(hwndRing,TRUE);
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???     DialogBox(DOAS_hInst,                                                  // current instance
 // QDOAS ???               MAKEINTRESOURCE(DLG_PROGRESS),                               // panel identification
 // QDOAS ???               DOAS_hwndMain,                                               // handle of parent windows
 // QDOAS ???      (DLGPROC)RING_ProgressWndProc);                                       // procedure for messages processing
 // QDOAS ???    }
 // QDOAS ???  }
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ??? // -----------------------------------------------------------------------------
 // QDOAS ??? // FUNCTION        RingCommand
 // QDOAS ??? // -----------------------------------------------------------------------------
@@ -1192,7 +1202,7 @@ void Ring(void *ringArg)
 // QDOAS ??? //
 // QDOAS ??? // SYNTAX          usual syntax for Windows message processing;
 // QDOAS ??? // -----------------------------------------------------------------------------
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ??? LRESULT CALLBACK RingCommand(HWND hwndRing,UINT msg,WPARAM mp1,LPARAM mp2)
 // QDOAS ???  {
 // QDOAS ???   switch((ULONG)GET_WM_COMMAND_ID(mp1,mp2))
@@ -1247,10 +1257,10 @@ void Ring(void *ringArg)
 // QDOAS ???     break;
 // QDOAS ???  // ---------------------------------------------------------------------------
 // QDOAS ???    }
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???   return 0;
 // QDOAS ???  }
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ??? // -----------------------------------------------------------------------------
 // QDOAS ??? // FUNCTION        RING_WndProc
 // QDOAS ??? // -----------------------------------------------------------------------------
@@ -1258,7 +1268,7 @@ void Ring(void *ringArg)
 // QDOAS ??? //
 // QDOAS ??? // SYNTAX          usual syntax for Windows message processing;
 // QDOAS ??? // -----------------------------------------------------------------------------
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ??? LRESULT CALLBACK RING_WndProc(HWND hwndRing,UINT msg,WPARAM mp1,LPARAM mp2)
 // QDOAS ???  {
 // QDOAS ???   switch (msg)
@@ -1277,14 +1287,14 @@ void Ring(void *ringArg)
 // QDOAS ???     break;
 // QDOAS ???  // ---------------------------------------------------------------------------
 // QDOAS ???    }
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???   return 0;
 // QDOAS ???  }
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ??? // =======================
 // QDOAS ??? // PROGRESS BAR PROCESSING
 // QDOAS ??? // =======================
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ??? // -----------------------------------------------------------------------------
 // QDOAS ??? // FUNCTION        RingProgressInit
 // QDOAS ??? // -----------------------------------------------------------------------------
@@ -1292,39 +1302,39 @@ void Ring(void *ringArg)
 // QDOAS ??? //
 // QDOAS ??? // INPUT           hwndProgress : handle of the progress dialog box
 // QDOAS ??? // -----------------------------------------------------------------------------
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ??? void RingProgressInit(HWND hwndProgress)
 // QDOAS ???  {
 // QDOAS ???   // Declaration
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???   SECURITY_ATTRIBUTES securityAttributes;
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???   // Reset progress position
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???   RING_progress=0;
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???   // Center on parent window
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???   DOAS_CenterWindow(hwndProgress,GetWindow(hwndProgress,GW_OWNER));
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???   // Set range and step
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???   SendMessage(GetDlgItem(hwndProgress,PROGRESS_BAR),PBM_SETRANGE,0,MAKELONG(0,100));
 // QDOAS ???   SendMessage(GetDlgItem(hwndProgress,PROGRESS_BAR),PBM_SETSTEP,1,0L);
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???   // Create handle for event
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???   securityAttributes.nLength=sizeof(SECURITY_ATTRIBUTES);    // the size in bytes of this structure
 // QDOAS ???   securityAttributes.lpSecurityDescriptor=NULL;              // use default
 // QDOAS ???   securityAttributes.bInheritHandle=TRUE;
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???   RING_event=CreateEvent(&securityAttributes,FALSE,FALSE,NULL);
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???   // Start ring thread
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???   _beginthread(Ring,0x4000,(void *)hwndProgress);
 // QDOAS ???  }
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ??? // -----------------------------------------------------------------------------
 // QDOAS ??? // FUNCTION        RingProgressUser
 // QDOAS ??? // -----------------------------------------------------------------------------
@@ -1332,13 +1342,13 @@ void Ring(void *ringArg)
 // QDOAS ??? //
 // QDOAS ??? // INPUT           hwndProgress : handle of the progress dialog box
 // QDOAS ??? // -----------------------------------------------------------------------------
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ??? void RingProgressUser(HWND hwndProgress,int mp1)
 // QDOAS ???  {
 // QDOAS ???   // Declarations
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???   UCHAR str[MAX_ITEM_TEXT_LEN+1];
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???   if (mp1>100)
 // QDOAS ???    EndDialog(hwndProgress,FALSE);
 // QDOAS ???   else if (mp1!=RING_progress)
@@ -1346,12 +1356,12 @@ void Ring(void *ringArg)
 // QDOAS ???     sprintf(str,"%d %%",(RING_progress=mp1));
 // QDOAS ???     SendMessage(GetDlgItem(hwndProgress,PROGRESS_BAR),PBM_STEPIT,0,0L);
 // QDOAS ???     SetWindowText(GetDlgItem(hwndProgress,PROGRESS_TEXT),str);
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???     if (RING_progress==100)
 // QDOAS ???      EndDialog(hwndProgress,TRUE);
 // QDOAS ???    }
 // QDOAS ???  }
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ??? // -----------------------------------------------------------------------------
 // QDOAS ??? // FUNCTION        RING_ProgressWndProc
 // QDOAS ??? // -----------------------------------------------------------------------------
@@ -1359,7 +1369,7 @@ void Ring(void *ringArg)
 // QDOAS ??? //
 // QDOAS ??? // SYNTAX          usual syntax for Windows message processing;
 // QDOAS ??? // -----------------------------------------------------------------------------
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ??? LRESULT CALLBACK RING_ProgressWndProc(HWND hwndProgress,UINT msg,WPARAM mp1,LPARAM mp2)
 // QDOAS ???  {
 // QDOAS ???   switch (msg)
@@ -1382,28 +1392,28 @@ void Ring(void *ringArg)
 // QDOAS ???     break;
 // QDOAS ???  // ---------------------------------------------------------------------------
 // QDOAS ???    }
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???   return 0;
 // QDOAS ???  }
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ??? #endif // __WINDOAS_GUI_
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ??? // =============================
 // QDOAS ??? // CONFIGURATION FILE MANAGEMENT
 // QDOAS ??? // =============================
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ??? // -----------------------------------------------------------------------------
 // QDOAS ??? // FUNCTION      RING_ResetConfiguration
 // QDOAS ??? // -----------------------------------------------------------------------------
 // QDOAS ??? // PURPOSE       reset Ring options
 // QDOAS ??? // -----------------------------------------------------------------------------
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ??? void RING_ResetConfiguration(void)
 // QDOAS ???  {
 // QDOAS ???   memset(&RING_options,0,sizeof(XSCONV));
 // QDOAS ???   RING_options.temperature=RING_TEMPERATURE;
 // QDOAS ???  }
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ??? // -----------------------------------------------------------------------------
 // QDOAS ??? // FUNCTION      RING_LoadConfiguration
 // QDOAS ??? // -----------------------------------------------------------------------------
@@ -1411,29 +1421,29 @@ void Ring(void *ringArg)
 // QDOAS ??? //
 // QDOAS ??? // INPUT         fileLine : the line to process
 // QDOAS ??? // -----------------------------------------------------------------------------
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ??? RC RING_LoadConfiguration(UCHAR *fileLine)
 // QDOAS ???  {
 // QDOAS ???   // Declarations
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???   UCHAR keyName[MAX_ITEM_NAME_LEN+1],     // key name for first part of project information
 // QDOAS ???         text[MAX_ITEM_TEXT_LEN+1];
 // QDOAS ???   RC    rc;
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???   // Initializations
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???   memset(keyName,0,MAX_ITEM_NAME_LEN+1);
 // QDOAS ???   memset(text,0,MAX_ITEM_TEXT_LEN+1);
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???   rc=0;
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???   if ((sscanf(fileLine,"%[^'=']=%[^'\n']",keyName,text)>=2) && !STD_Stricmp(keyName,RING_SECTION))
 // QDOAS ???    {
 // QDOAS ???     memset(&RING_options,0,sizeof(XSCONV));
 // QDOAS ???     rc=1;
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???     // Get data part
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???     if (sscanf(text,"%[^','],%[^','],%d,%lf,%lf,%[^','],%[^','],%d,%[^','],%[^','],%d,%lf,%lf,%d",
 // QDOAS ???             (UCHAR *) RING_options.path,
 // QDOAS ???             (UCHAR *) RING_options.calibrationFile,
@@ -1456,17 +1466,17 @@ void Ring(void *ringArg)
 // QDOAS ???       FILES_CompactPath(RING_options.kuruczFile,RING_options.kuruczFile,1,1);
 // QDOAS ???       FILES_CompactPath(RING_options.crossFile,RING_options.crossFile,1,1);
 // QDOAS ???       FILES_CompactPath(RING_options.slitConv.slitFile,RING_options.slitConv.slitFile,1,1);
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???       if (!RING_options.temperature)
 // QDOAS ???        RING_options.temperature=RING_TEMPERATURE;
 // QDOAS ???      }
 // QDOAS ???    }
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???   // Return
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ???   return rc;
 // QDOAS ???  }
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ??? // -----------------------------------------------------------------------------
 // QDOAS ??? // FUNCTION      RING_SaveConfiguration
 // QDOAS ??? // -----------------------------------------------------------------------------
@@ -1474,7 +1484,7 @@ void Ring(void *ringArg)
 // QDOAS ??? //
 // QDOAS ??? // INPUT         fp          : pointer to the current configuration file;
 // QDOAS ??? // -----------------------------------------------------------------------------
-// QDOAS ??? 
+// QDOAS ???
 // QDOAS ??? void RING_SaveConfiguration(FILE *fp)
 // QDOAS ???  {
 // QDOAS ???   fprintf(fp,"%s=%s,%s,%d,%.3f,%.3f,%s,%s,%d,%s,%s,%d,%.3f,%.3f,%d\n",

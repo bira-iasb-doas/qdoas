@@ -1,7 +1,7 @@
 
 //  ----------------------------------------------------------------------------
 //
-//  Product/Project   :  THE BIRA-IASB DOAS SOFTWARE FOR WINDOWS AND LINUX
+//  Product/Project   :  QDOAS
 //  Module purpose    :  ERROR MESSAGES PROCESSING
 //  Name of module    :  ERROR.C
 //  Creation date     :  20 March 2001

@@ -1,12 +1,10 @@
 
 //  ----------------------------------------------------------------------------
 //
-//  Product/Project   :  THE BIRA-IASB DOAS SOFTWARE FOR WINDOWS AND LINUX
+//  Product/Project   :  QDOAS
 //  Module purpose    :  Read spectra from measurements performed by the NOAA
 //  Name of module    :  NOAA-read.c
 //  Creation date     :  13 June 2005
-//
-//  Author            :  Caroline FAYT (caroline.fayt@oma.be)
 //
 //  QDOAS is a cross-platform application developed in QT for DOAS retrieval
 //  (Differential Optical Absorption Spectroscopy).
@@ -746,7 +744,7 @@ RC ReliNOAA(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,INT localDa
      rc=ERROR_ID_FILE_RECORD;
 
     else if (dateFlag)
-     THRD_lastRefRecord=recordNo;
+     pEngineContext->lastRefRecord=recordNo;
    }
 
   if (pRecordNoaa!=NULL)

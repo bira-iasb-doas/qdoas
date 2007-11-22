@@ -1,7 +1,7 @@
 
 //  ----------------------------------------------------------------------------
 //
-//  Product/Project   :  THE BIRA-IASB DOAS SOFTWARE FOR WINDOWS AND LINUX
+//  Product/Project   :  QDOAS
 //  Module purpose    :  ASCII FILES OPERATIONS
 //  Name of module    :  ASCII.C
 //
@@ -140,7 +140,7 @@ static INDEX asciiLastRecord=ITEM_NONE;                                         
 // QDOAS ???   CheckDlgButton(hwndAscii,ASCII_DATA_ELEV,(ASCII_options.elevSaveFlag!=0)?BST_CHECKED:BST_UNCHECKED);
 // QDOAS ???   CheckDlgButton(hwndAscii,ASCII_DATA_TIME,(ASCII_options.timeSaveFlag!=0)?BST_CHECKED:BST_UNCHECKED);
 // QDOAS ???   CheckDlgButton(hwndAscii,ASCII_DATA_DATE,(ASCII_options.dateSaveFlag!=0)?BST_CHECKED:BST_UNCHECKED);
-// QDOAS ???   CheckDlgButton(hwndAscii,ASCII_DATA_LEMBDA,(ASCII_options.lembdaSaveFlag!=0)?BST_CHECKED:BST_UNCHECKED);
+// QDOAS ???   CheckDlgButton(hwndAscii,ASCII_DATA_LEMBDA,(ASCII_options.lambdaSaveFlag!=0)?BST_CHECKED:BST_UNCHECKED);
 // QDOAS ???  }
 // QDOAS ???
 // QDOAS ??? // -----------------------------------------------------------------------------
@@ -158,7 +158,7 @@ static INDEX asciiLastRecord=ITEM_NONE;                                         
 // QDOAS ???   ASCII_options.elevSaveFlag=(UCHAR)(IsDlgButtonChecked(hwndAscii,ASCII_DATA_ELEV)==BST_CHECKED)?(UCHAR)1:(UCHAR)0;
 // QDOAS ???   ASCII_options.timeSaveFlag=(UCHAR)(IsDlgButtonChecked(hwndAscii,ASCII_DATA_TIME)==BST_CHECKED)?(UCHAR)1:(UCHAR)0;
 // QDOAS ???   ASCII_options.dateSaveFlag=(UCHAR)(IsDlgButtonChecked(hwndAscii,ASCII_DATA_DATE)==BST_CHECKED)?(UCHAR)1:(UCHAR)0;
-// QDOAS ???   ASCII_options.lembdaSaveFlag=(UCHAR)(IsDlgButtonChecked(hwndAscii,ASCII_DATA_LEMBDA)==BST_CHECKED)?(UCHAR)1:(UCHAR)0;
+// QDOAS ???   ASCII_options.lambdaSaveFlag=(UCHAR)(IsDlgButtonChecked(hwndAscii,ASCII_DATA_LEMBDA)==BST_CHECKED)?(UCHAR)1:(UCHAR)0;
 // QDOAS ???
 // QDOAS ???   ASCII_options.format=(IsDlgButtonChecked(hwndAscii,ASCII_FORMAT_LINE))?PRJCT_INSTR_ASCII_FORMAT_LINE:PRJCT_INSTR_ASCII_FORMAT_COLUMN;
 // QDOAS ???  }
@@ -289,7 +289,7 @@ void ASCII_SaveSpectra(INDEX indexWindow)
         // In case a correction has been applied on the current spectrum, wait for the
         // user confirmation
 
-        if (THRD_correction && (THRD_specInfo.lembda!=NULL) && (THRD_specInfo.spectrum!=NULL) &&
+        if (THRD_correction && (THRD_specInfo.lambda!=NULL) && (THRD_specInfo.spectrum!=NULL) &&
             ((pInstrumental->readOutFormat!=PRJCT_INSTR_FORMAT_MFC) ||
             ((pInstrumental->mfcMaskSpec!=0) && (pInstrumental->mfcMaskSpec==(MASK)MFC_header.ty)) ||
             ((pInstrumental->mfcMaskSpec==0) &&
@@ -299,7 +299,7 @@ void ASCII_SaveSpectra(INDEX indexWindow)
                 MB_YESNOCANCEL|MB_ICONQUESTION))==IDYES))
 
          for (i=0;i<NDET;i++)                                                              // if a correction is applied, the call comes from
-          fprintf(fp,"%.14le %.14le\n",THRD_specInfo.lembda[i],THRD_specInfo.spectrum[i]); // the 'Spectra window', so only one spectrum/curve to save
+          fprintf(fp,"%.14le %.14le\n",THRD_specInfo.lambda[i],THRD_specInfo.spectrum[i]); // the 'Spectra window', so only one spectrum/curve to save
 
         // No correction, so maybe several curves are plotted in the calling MDI child window
 
@@ -546,9 +546,9 @@ RC ASCII_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,INT local
   RECORD_INFO *pRecordInfo;                                                         // pointer to the record part of the engine context
   PRJCT_INSTRUMENTAL *pInstr;                                                   // pointer to the instrumental part of the pEngineContext structure
   UCHAR *lineRecord,*pRecord,line[MAX_ITEM_TEXT_LEN+1];                         // get lines from the ASCII file
-  double *spectrum,*lembda,                                                     // the spectrum and the wavelength calibration to read
+  double *spectrum,*lambda,                                                     // the spectrum and the wavelength calibration to read
           tmLocal;                                                              // the measurement time in seconds
-  INT lembdaFlag,zmFlag,timeFlag,dateSaveFlag,azimFlag,elevFlag,                // flags to select items to read according to the format options
+  INT lambdaFlag,zmFlag,timeFlag,dateSaveFlag,azimFlag,elevFlag,                // flags to select items to read according to the format options
       day,mon,year;                                                             // decomposition of the measurement date
   INDEX i;                                                                      // browse items to read
   RC rc;                                                                        // return code
@@ -558,14 +558,14 @@ RC ASCII_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,INT local
 
   pRecordInfo=&pEngineContext->recordInfo;
   spectrum=pEngineContext->buffers.spectrum;
-  lembda=pEngineContext->buffers.lembda;
+  lambda=pEngineContext->buffers.lambda;
   pInstr=&pEngineContext->project.instrumental;
   zmFlag=pInstr->ascii.szaSaveFlag;
   azimFlag=pInstr->ascii.azimSaveFlag;
   elevFlag=pInstr->ascii.elevSaveFlag;
   timeFlag=pInstr->ascii.timeSaveFlag;
   dateSaveFlag=pInstr->ascii.dateSaveFlag;
-  lembdaFlag=pInstr->ascii.lembdaSaveFlag;
+  lambdaFlag=pInstr->ascii.lambdaSaveFlag;
   lineRecord=NULL;
   rc=ERROR_ID_NO;
 
@@ -736,7 +736,7 @@ RC ASCII_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,INT local
       // Read the spectrum and if selected, the wavelength calibration
       if (!rc)
       {
-	if (lembdaFlag) // wavelength and spectrum
+	if (lambdaFlag) // wavelength and spectrum
 	{
 	  for (i=0;(i<NDET) && !rc; )
 	  {
@@ -746,7 +746,7 @@ RC ASCII_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,INT local
 	    }
 	    else if ((strchr(line,';')==NULL) && (strchr(line,'*')==NULL))
 	    {
-	      if (sscanf(line,"%lf %lf",&lembda[i],&spectrum[i]) != 2) rc = ERROR_ID_FILE_END;
+	      if (sscanf(line,"%lf %lf",&lambda[i],&spectrum[i]) != 2) rc = ERROR_ID_FILE_END;
 	      ++i;
 	    }
 	  }
