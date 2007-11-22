@@ -179,6 +179,11 @@ CWProjectTabInstrumental::CWProjectTabInstrumental(const mediate_project_instrum
   index = m_formatStack->addWidget(m_omiEdit);
   m_instrumentToStackIndexMap.insert(std::map<int,int>::value_type(PRJCT_INSTR_FORMAT_OMI, index));
 
+  // gome2
+  m_gome2Edit = new CWInstrGdpEdit(&(instr->gome2));
+  index = m_formatStack->addWidget(m_gome2Edit);
+  m_instrumentToStackIndexMap.insert(std::map<int,int>::value_type(PRJCT_INSTR_FORMAT_GOME2, index));
+
   // Site
   m_siteCombo = new CWSiteListCombo(this); // automatically populated
 
@@ -238,6 +243,7 @@ void CWProjectTabInstrumental::apply(mediate_project_instrumental_t *instr) cons
   m_uoftEdit->apply(&(instr->uoft));
   m_noaaEdit->apply(&(instr->noaa));
   m_omiEdit->apply(&(instr->omi));
+  m_gome2Edit->apply(&(instr->gome2));
 }
 
 void CWProjectTabInstrumental::slotInstrumentChanged(int instrument)

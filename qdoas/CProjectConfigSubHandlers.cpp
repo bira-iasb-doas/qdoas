@@ -985,6 +985,10 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
     }
 
   }
+  else if (element == "gome2") { // GOME2
+    helperLoadGdp(atts, &(m_instrumental->gome2));
+
+  }
 
   // ... other formats ...
 

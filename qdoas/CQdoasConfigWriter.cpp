@@ -409,6 +409,9 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   case PRJCT_INSTR_FORMAT_OMI:
     fprintf(fp, "\"omi\"");
     break;
+  case PRJCT_INSTR_FORMAT_GOME2:
+    fprintf(fp, "\"gome2\"");
+    break;
   default:
     fprintf(fp, "\"invalid\"");
   }
@@ -938,6 +941,37 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   fprintf(fp, " calib=\"%s\"", tmpStr.toAscii().constData());
 
   tmpStr = pathMgr->simplifyPath(QString(d->omi.instrFunctionFile));
+  fprintf(fp, " instr=\"%s\" />\n", tmpStr.toAscii().constData());
+
+  // gome2
+  fprintf(fp, "      <gome2 type=");
+  switch (d->gome2.bandType) {
+  case PRJCT_INSTR_GDP_BAND_1A:
+    fprintf(fp, "\"1a\"");
+    break;
+  case PRJCT_INSTR_GDP_BAND_1B:
+    fprintf(fp, "\"1b\"");
+    break;
+  case PRJCT_INSTR_GDP_BAND_2A:
+    fprintf(fp, "\"2a\"");
+    break;
+  case PRJCT_INSTR_GDP_BAND_2B:
+    fprintf(fp, "\"2B\"");
+    break;
+  case PRJCT_INSTR_GDP_BAND_3:
+    fprintf(fp, "\"3\"");
+    break;
+  case PRJCT_INSTR_GDP_BAND_4:
+    fprintf(fp, "\"4\"");
+    break;
+  default:
+    fprintf(fp, "\"invalid\"");
+  }
+
+  tmpStr = pathMgr->simplifyPath(QString(d->gome2.calibrationFile));
+  fprintf(fp, " calib=\"%s\"", tmpStr.toAscii().constData());
+
+  tmpStr = pathMgr->simplifyPath(QString(d->gome2.instrFunctionFile));
   fprintf(fp, " instr=\"%s\" />\n", tmpStr.toAscii().constData());
 
   fprintf(fp, "    </instrumental>\n");

@@ -348,6 +348,7 @@ extern "C" {
     struct instrumental_minimum uoft;
     struct instrumental_minimum noaa;
     struct instrumental_omi omi;
+    struct instrumental_gdp gome2;
 
   } mediate_project_instrumental_t;
 

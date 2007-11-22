@@ -89,6 +89,7 @@ CWProjectPropertyEditor::CWProjectPropertyEditor(const QString &projectName, QWi
   m_satelliteFormatCombo->addItem("SCIAMACHY L1C (HDF format)", QVariant(PRJCT_INSTR_FORMAT_SCIA_HDF));
   m_satelliteFormatCombo->addItem("SCIAMACHY L1C (PDS format)", QVariant(PRJCT_INSTR_FORMAT_SCIA_PDS));
   m_satelliteFormatCombo->addItem("OMI", QVariant(PRJCT_INSTR_FORMAT_OMI));
+  m_satelliteFormatCombo->addItem("GOME2", QVariant(PRJCT_INSTR_FORMAT_GOME2));
 
   // insert both instrument combos ... one will always be hidden ...
   instrLayout->addWidget(m_groundFormatCombo, 1);
