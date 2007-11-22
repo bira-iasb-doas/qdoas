@@ -947,7 +947,7 @@ void CQdoasConfigWriter::writePropertiesSlit(FILE *fp, const mediate_project_sli
 {
   QString tmpStr = CPathMgr::instance()->simplifyPath(QString(d->solarRefFile));
 
-  fprintf(fp, "    <slit ref=\"%s\" fwhmcor=\"%s\">\n", tmpStr.toAscii().data(),
+  fprintf(fp, "    <slit ref=\"%s\" fwhmcor=\"%s\">\n", tmpStr.toAscii().constData(),
 	  (d->applyFwhmCorrection ? sTrue : sFalse));
 
   writeSlitFunction(fp, 6, &(d->function));
@@ -960,7 +960,7 @@ void CQdoasConfigWriter::writePropertiesOutput(FILE *fp, const mediate_project_o
   QString tmpStr = CPathMgr::instance()->simplifyPath(QString(d->path));
 
   fprintf(fp, "    <output path=\"%s\" anlys=\"%s\" calib=\"%s\" conf=\"%s\" bin=\"%s\" dirs=\"%s\" flux=\"%s\" cic=\"%s\" >\n",
-	  tmpStr.toAscii().data(), (d->analysisFlag ? sTrue : sFalse),
+	  tmpStr.toAscii().constData(), (d->analysisFlag ? sTrue : sFalse),
 	  (d->calibrationFlag ? sTrue : sFalse), (d->configurationFlag ? sTrue : sFalse),
 	  (d->binaryFormatFlag ? sTrue : sFalse), (d->directoryFlag ? sTrue : sFalse),
 	  d->flux, d->colourIndex);
@@ -975,7 +975,7 @@ void CQdoasConfigWriter::writePropertiesNasaAmes(FILE *fp, const mediate_project
   QString tmpStr = CPathMgr::instance()->simplifyPath(QString(d->path));
 
   fprintf(fp, "    <nasa_ames path=\"%s\" save=\"%s\" reject=\"%s\" instr=\"%s\" exp=\"%s\" no2=\"%s\" o3=\"%s\" bro=\"%s\" oclo=\"%s\" />\n",
-	  tmpStr.toAscii().data(), (d->saveFlag ? sTrue : sFalse), (d->rejectTestFlag ? sTrue : sFalse),
+	  tmpStr.toAscii().constData(), (d->saveFlag ? sTrue : sFalse), (d->rejectTestFlag ? sTrue : sFalse),
 	  d->instrument, d->experiment, d->anlysWinNO2, d->anlysWinO3, d->anlysWinBrO, d->anlysWinOClO);
 }
 
@@ -1077,7 +1077,7 @@ void CQdoasConfigWriter::writeAnalysisWindows(FILE *fp, const QString &projectNa
       properties = CWorkSpace::instance()->findAnalysisWindow(projectName, awName);
       if (properties != NULL) {
 
-	fprintf(fp, "    <analysis_window name=\"%s\" kurucz=", awName.toAscii().data());
+	fprintf(fp, "    <analysis_window name=\"%s\" kurucz=", awName.toAscii().constData());
 
 	switch (properties->kuruczMode) {
 	case ANLYS_KURUCZ_REF:
@@ -1106,12 +1106,14 @@ void CQdoasConfigWriter::writeAnalysisWindows(FILE *fp, const QString &projectNa
 		(properties->requireRefRatio ? sTrue : sFalse));
 
 	tmpStr = pathMgr->simplifyPath(QString(properties->refOneFile));	
-	fprintf(fp, "      <files refone=\"%s\"", tmpStr.toAscii().data());
+	fprintf(fp, "      <files refone=\"%s\"", tmpStr.toAscii().constData());
 	tmpStr = pathMgr->simplifyPath(QString(properties->refTwoFile));		
-	fprintf(fp, " reftwo=\"%s\"", tmpStr.toAscii().data());
+	fprintf(fp, " reftwo=\"%s\"", tmpStr.toAscii().constData());
 	tmpStr = pathMgr->simplifyPath(QString(properties->residualFile));	
-	fprintf(fp, " residual=\"%s\" szacenter=\"%.3f\" szadelta=\"%.3f\" />\n", tmpStr.toAscii().data(),
-		properties->refSzaCenter , properties->refSzaDelta);
+	fprintf(fp, " residual=\"%s\" szacenter=\"%.3f\" szadelta=\"%.3f\" reflon=\"%.3f\" reflat=\"%.3f\" refns=\"%d\" />\n",
+                tmpStr.toAscii().constData(),
+		properties->refSzaCenter , properties->refSzaDelta,
+                properties->refLongitude, properties->refLatitude, properties->refNs);
 
 	// cross sections ....
 	writeCrossSectionList(fp, &(properties->crossSectionList));
@@ -1200,9 +1202,9 @@ void CQdoasConfigWriter::writeCrossSectionList(FILE *fp, const cross_section_lis
 	    (d->requireCcFit ? sTrue : sFalse),
 	    d->initialCc, d->deltaCc, d->ccIo);
     tmpStr = pathMgr->simplifyPath(QString(d->crossSectionFile));
-    fprintf(fp, " csfile=\"%s\"", tmpStr.toAscii().data());
+    fprintf(fp, " csfile=\"%s\"", tmpStr.toAscii().constData());
     tmpStr = pathMgr->simplifyPath(QString(d->amfFile));
-    fprintf(fp, " amffile=\"%s\" />\n", tmpStr.toAscii().data());
+    fprintf(fp, " amffile=\"%s\" />\n", tmpStr.toAscii().constData());
     
     ++d;
     ++j;
@@ -1269,13 +1271,13 @@ void CQdoasConfigWriter::writeNonLinear(FILE *fp, const struct anlyswin_nonlinea
 	  (d->ramanFlagErrStore ? sTrue : sFalse), (d->ramanFlagErrStore ? sTrue : sFalse));
 
   tmpStr = pathMgr->simplifyPath(QString(d->comFile));
-  fprintf(fp, "                 comfile=\"%s\"\n", tmpStr.toAscii().data());
+  fprintf(fp, "                 comfile=\"%s\"\n", tmpStr.toAscii().constData());
   tmpStr = pathMgr->simplifyPath(QString(d->usamp1File));
-  fprintf(fp, "                 u1file=\"%s\"\n", tmpStr.toAscii().data());
+  fprintf(fp, "                 u1file=\"%s\"\n", tmpStr.toAscii().constData());
   tmpStr = pathMgr->simplifyPath(QString(d->usamp2File));
-  fprintf(fp, "                 u2file=\"%s\"\n", tmpStr.toAscii().data());
+  fprintf(fp, "                 u2file=\"%s\"\n", tmpStr.toAscii().constData());
   tmpStr = pathMgr->simplifyPath(QString(d->ramanFile));
-  fprintf(fp, "                 ramfile=\"%s\" />\n", tmpStr.toAscii().data());
+  fprintf(fp, "                 ramfile=\"%s\" />\n", tmpStr.toAscii().constData());
 
 }
 

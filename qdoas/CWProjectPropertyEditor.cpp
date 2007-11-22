@@ -52,7 +52,7 @@ CWProjectPropertyEditor::CWProjectPropertyEditor(const QString &projectName, QWi
 
   m_instrTypeCombo = new QComboBox(this);
   m_instrTypeCombo->addItem("Ground-Based", QVariant(PRJCT_INSTR_TYPE_GROUND_BASED));
-  m_instrTypeCombo->addItem("Satellie", QVariant(PRJCT_INSTR_TYPE_SATELLITE));
+  m_instrTypeCombo->addItem("Satellites", QVariant(PRJCT_INSTR_TYPE_SATELLITE));
 
   instrLayout->addWidget(m_instrTypeCombo);
   instrLayout->addSpacing(30);
@@ -81,7 +81,6 @@ CWProjectPropertyEditor::CWProjectPropertyEditor(const QString &projectName, QWi
   m_groundFormatCombo->addItem("OPUS", QVariant(PRJCT_INSTR_FORMAT_OPUS));
   m_groundFormatCombo->addItem("CCD (University of Toronto)", QVariant(PRJCT_INSTR_FORMAT_UOFT));
   m_groundFormatCombo->addItem("NOAA", QVariant(PRJCT_INSTR_FORMAT_NOAA));
-  m_groundFormatCombo->addItem("OMI", QVariant(PRJCT_INSTR_FORMAT_OMI));
   m_groundFormatCombo->hide();
   // create and populate satellite
   m_satelliteFormatCombo = new QComboBox(this);
@@ -89,6 +88,7 @@ CWProjectPropertyEditor::CWProjectPropertyEditor(const QString &projectName, QWi
   m_satelliteFormatCombo->addItem("GDP (Binary)", QVariant(PRJCT_INSTR_FORMAT_GDP_BIN));
   m_satelliteFormatCombo->addItem("SCIAMACHY L1C (HDF format)", QVariant(PRJCT_INSTR_FORMAT_SCIA_HDF));
   m_satelliteFormatCombo->addItem("SCIAMACHY L1C (PDS format)", QVariant(PRJCT_INSTR_FORMAT_SCIA_PDS));
+  m_satelliteFormatCombo->addItem("OMI", QVariant(PRJCT_INSTR_FORMAT_OMI));
 
   // insert both instrument combos ... one will always be hidden ...
   instrLayout->addWidget(m_groundFormatCombo, 1);

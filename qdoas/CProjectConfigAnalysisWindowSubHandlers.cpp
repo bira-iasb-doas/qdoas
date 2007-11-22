@@ -106,6 +106,9 @@ bool CAnalysisWindowSubHandler::start(const QString &element, const QXmlAttribut
 
     d->refSzaCenter = atts.value("szacenter").toDouble();
     d->refSzaDelta = atts.value("szadelta").toDouble();
+    d->refLongitude = atts.value("reflon").toDouble();
+    d->refLatitude = atts.value("reflat").toDouble();
+    d->refNs = atts.value("refns").toInt();
 
   }
   else if (element == "cross_section") {

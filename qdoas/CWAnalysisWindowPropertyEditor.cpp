@@ -45,6 +45,9 @@ CWAnalysisWindowPropertyEditor::CWAnalysisWindowPropertyEditor(const QString &pr
   m_projectName(projectName),
   m_analysisWindowName(analysisWindowName)
 {
+  const int cIntEditWidth = 50;
+  const int cDoubleEditWidth = 70;
+
   mediate_analysis_window_t *d = CWorkSpace::instance()->findAnalysisWindow(m_projectName, m_analysisWindowName);
   
   assert(d != NULL);
@@ -89,12 +92,12 @@ CWAnalysisWindowPropertyEditor::CWAnalysisWindowPropertyEditor(const QString &pr
   fitIntervalLayout->setSpacing(0);
   fitIntervalLayout->addWidget(new QLabel("Min", fitIntervalGroup), 0, 0);
   m_fitMinEdit = new QLineEdit(fitIntervalGroup);
-  m_fitMinEdit->setFixedWidth(50);
+  m_fitMinEdit->setFixedWidth(cDoubleEditWidth);
   m_fitMinEdit->setValidator(new CDoubleFixedFmtValidator(100.0, 999.0, 3, m_fitMinEdit));
   fitIntervalLayout->addWidget(m_fitMinEdit, 0, 1);
   fitIntervalLayout->addWidget(new QLabel("Max", fitIntervalGroup), 1, 0);
   m_fitMaxEdit = new QLineEdit(fitIntervalGroup);
-  m_fitMaxEdit->setFixedWidth(50);
+  m_fitMaxEdit->setFixedWidth(cDoubleEditWidth);
   m_fitMaxEdit->setValidator(new CDoubleFixedFmtValidator(100.0, 999.0, 3, m_fitMaxEdit));
   fitIntervalLayout->addWidget(m_fitMaxEdit, 1, 1);
 
@@ -155,15 +158,32 @@ CWAnalysisWindowPropertyEditor::CWAnalysisWindowPropertyEditor(const QString &pr
   QLabel *labelTwoSza = new QLabel(" Reference 2    SZA ", m_refTwoSzaFrame);
   labelTwoSza->setFixedWidth(120);
   m_szaCenterEdit = new QLineEdit(m_refTwoSzaFrame);
-  m_szaCenterEdit->setFixedWidth(50);
+  m_szaCenterEdit->setFixedWidth(cDoubleEditWidth);
   m_szaCenterEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 180.0, 3, m_szaCenterEdit));
   m_szaDeltaEdit = new QLineEdit(m_refTwoSzaFrame);
-  m_szaDeltaEdit->setFixedWidth(50);
+  m_szaDeltaEdit->setFixedWidth(cDoubleEditWidth);
   m_szaDeltaEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 180.0, 3, m_szaDeltaEdit));
   szaLayout->addWidget(labelTwoSza);
   szaLayout->addWidget(m_szaCenterEdit);
   szaLayout->addWidget(new QLabel("+/-", m_refTwoSzaFrame));
   szaLayout->addWidget(m_szaDeltaEdit);
+  szaLayout->addSpacing(10);
+  szaLayout->addWidget(new QLabel("Lon.", m_refTwoSzaFrame));
+  m_refTwoLonEdit = new QLineEdit(m_refTwoSzaFrame);
+  m_refTwoLonEdit->setFixedWidth(cDoubleEditWidth);
+  m_refTwoLonEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 360.0, 3, m_refTwoLonEdit));
+  szaLayout->addWidget(m_refTwoLonEdit);
+  szaLayout->addWidget(new QLabel("Lat.", m_refTwoSzaFrame));
+  m_refTwoLatEdit = new QLineEdit(m_refTwoSzaFrame);
+  m_refTwoLatEdit->setFixedWidth(cDoubleEditWidth);
+  m_refTwoLatEdit->setValidator(new CDoubleFixedFmtValidator(-90.0, 90.0, 3, m_refTwoLatEdit));
+  szaLayout->addWidget(m_refTwoLatEdit);
+  szaLayout->addSpacing(10);
+  szaLayout->addWidget(new QLabel("Ns", m_refTwoSzaFrame));
+  m_refTwoNsSpin = new QSpinBox(m_refTwoSzaFrame);
+  m_refTwoNsSpin->setFixedWidth(cIntEditWidth);
+  m_refTwoNsSpin->setRange(0, 50);
+  szaLayout->addWidget(m_refTwoNsSpin);
   szaLayout->addStretch(1);
 
   // Option for Files
@@ -185,8 +205,8 @@ CWAnalysisWindowPropertyEditor::CWAnalysisWindowPropertyEditor(const QString &pr
   // stack for ref 2 switching ...
   m_refTwoStack = new QStackedLayout;
   m_refTwoStack->setMargin(0);
-  m_refTwoStack->addWidget(m_refTwoSzaFrame);  // autoamtaic - takes index 0
-  m_refTwoStack->addWidget(m_refTwoEditFrame); // file       - takes index 1
+  m_refTwoStack->addWidget(m_refTwoSzaFrame);  // automatic - takes index 0
+  m_refTwoStack->addWidget(m_refTwoEditFrame); // file      - takes index 1
   filesLayout->addLayout(m_refTwoStack);
 
   // row 2 - residual
@@ -284,6 +304,11 @@ CWAnalysisWindowPropertyEditor::CWAnalysisWindowPropertyEditor(const QString &pr
   m_szaCenterEdit->setText(tmpStr);
   m_szaDeltaEdit->validator()->fixup(tmpStr.setNum(d->refSzaDelta));
   m_szaDeltaEdit->setText(tmpStr);
+  m_refTwoLonEdit->validator()->fixup(tmpStr.setNum(d->refLongitude));
+  m_refTwoLonEdit->setText(tmpStr);
+  m_refTwoLatEdit->validator()->fixup(tmpStr.setNum(d->refLatitude));
+  m_refTwoLatEdit->setText(tmpStr);
+  m_refTwoNsSpin->setValue(d->refNs);
 
   m_moleculesTab->populate(&(d->crossSectionList));
   m_linearTab->populate(&(d->linear));
@@ -339,6 +364,9 @@ bool CWAnalysisWindowPropertyEditor::actionOk(void)
 
     d->refSzaCenter = m_szaCenterEdit->text().toDouble();
     d->refSzaDelta = m_szaDeltaEdit->text().toDouble();
+    d->refLongitude = m_refTwoLonEdit->text().toDouble();
+    d->refLatitude = m_refTwoLatEdit->text().toDouble();
+    d->refNs = m_refTwoNsSpin->value();
 
     // call apply for all tabs ...
 

@@ -25,6 +25,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QComboBox>
 #include <QCheckBox>
 #include <QLineEdit>
+#include <QSpinBox>
 #include <QRadioButton>
 #include <QPushButton>
 #include <QStackedLayout>
@@ -64,6 +65,8 @@ Q_OBJECT
   QFrame *m_refOneFrame, *m_refTwoEditFrame, *m_refTwoSzaFrame;
   QLineEdit *m_refOneEdit, *m_refTwoEdit, *m_residualEdit;
   QLineEdit *m_szaCenterEdit, *m_szaDeltaEdit;
+  QLineEdit *m_refTwoLonEdit, *m_refTwoLatEdit;
+  QSpinBox *m_refTwoNsSpin;
   QStackedLayout *m_refTwoStack;
   
 
