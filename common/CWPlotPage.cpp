@@ -17,6 +17,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
+#include <cstdio>
 
 #include <QColor>
 #include <QContextMenuEvent>
@@ -26,7 +27,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QPrintDialog>
 #include <QFileDialog>
 #include <QMenu>
-
+#include <QMessageBox>
 
 #include <qwt_plot_curve.h>
 #include <qwt_symbol.h>
@@ -123,7 +124,7 @@ CWPlot::CWPlot(const RefCountConstPtr<CPlotDataSet> &dataSet,
     curve->setData(m_dataSet->curve(i));
 
     // configure curve's pen color based on index
-    curve->setPen(plotProperties.pen((i%4) + 1));
+    curve->setPen(m_plotProperties.pen((i%4) + 1));
 
     if (m_dataSet->curveType(i) == Point) {
       curve->setStyle(QwtPlotCurve::NoCurve);
@@ -139,17 +140,17 @@ CWPlot::CWPlot(const RefCountConstPtr<CPlotDataSet> &dataSet,
   // grid
   QwtPlotGrid *grid = new QwtPlotGrid;
   QPen pen(Qt::DotLine);
-  pen.setColor((plotProperties.backgroundColour().value() < 128) ? Qt::white : Qt::black);
+  pen.setColor((m_plotProperties.backgroundColour().value() < 128) ? Qt::white : Qt::black);
   grid->setPen(pen);
   grid->attach(this);
     
   // possibly apply fixed scaling
   if (!m_dataSet->forceAutoScaling()) {
     
-    if (plotProperties.scaleControl(m_dataSet->scaleType()).isFixedScale()) {
+    if (m_plotProperties.scaleControl(m_dataSet->scaleType()).isFixedScale()) {
       setAxisScale(QwtPlot::yLeft,
-		   plotProperties.scaleControl(m_dataSet->scaleType()).minimum(),
-		   plotProperties.scaleControl(m_dataSet->scaleType()).maximum());
+		   m_plotProperties.scaleControl(m_dataSet->scaleType()).minimum(),
+		   m_plotProperties.scaleControl(m_dataSet->scaleType()).maximum());
 
     }
   }
@@ -191,15 +192,128 @@ void CWPlot::contextMenuEvent(QContextMenuEvent *e)
 
 void CWPlot::slotOverlay()
 {
-  TRACE("TODO");
+  CPreferences *pref = CPreferences::instance();
+  
+  QString dirName = pref->directoryName("ASCII_Plot");
+
+  QString filename = QFileDialog::getOpenFileName(this, "Overlay Plot(s)", dirName, "*.asc");
+  
+  if (!filename.isEmpty()) {
+    pref->setDirectoryNameGivenFile("ASCII_Plot", filename);
+
+    bool failed = false;
+
+    FILE *fp = fopen(filename.toAscii().constData(), "r");
+    if (fp != NULL) {
+      char buffer[32];
+      int nCurves, nPoints, i, j;
+
+      int curveCount = m_dataSet->count(); // number of 'original' curves ...
+
+      double *xData = NULL;
+      double *yData = NULL;
+      
+      // skip the header
+      fgets(buffer, sizeof(buffer), fp);
+
+      if (fscanf(fp, "%d", &nCurves) == 1 && nCurves > 0) {
+
+	i = 0;
+	while (!failed && i < nCurves) {
+
+	  if (fscanf(fp, "%d", &nPoints) == 1) {
+	    xData = new double[nPoints];
+	    yData = new double[nPoints];
+	    
+	    j = 0;
+	    while (j<nPoints && fscanf(fp, "%lf %lf", (xData+j), (yData+j)) == 2)
+	      ++j;
+	    if (j == nPoints) {
+	      QwtPlotCurve *curve = new QwtPlotCurve();
+	      curve->setData(xData, yData, nPoints);
+	      // configure curve's pen color based on index
+	      curve->setPen(m_plotProperties.pen((curveCount % 4) + 1));
+	      curve->attach(this);
+	      ++curveCount;
+	    }
+	    else
+	      failed = true;
+
+	    delete [] xData;
+	    delete [] yData;
+	    xData = yData = NULL;
+	  }
+	  else
+	    failed  = true;
+
+	  ++i;
+	}
+      }
+      else
+	failed = true;
+
+      fclose(fp);
+    }
+    else
+      failed  = true;
+
+    if (failed) {
+      QString msg = "Failed (correctly) open or parse ASCII data file ";
+      msg += filename;
+
+      QMessageBox::warning(this, "Failed file read", msg);
+    }
+    else
+      replot();
+
+  }
+  
 }
 
 void CWPlot::slotSaveAs()
 {
-  QString filename = QFileDialog::getSaveFileName(this, "Save Plot", ".", "*.spe");
+  CPreferences *pref = CPreferences::instance();
+  
+  QString dirName = pref->directoryName("ASCII_Plot");
+
+  QString filename = QFileDialog::getSaveFileName(this, "Save Plot", dirName, "*.asc");
   
   if (!filename.isEmpty()) {
-    TRACE("TODO : Save As " << filename.toStdString());
+    if (!filename.endsWith(".asc", Qt::CaseInsensitive))
+      filename += ".asc";
+
+    pref->setDirectoryNameGivenFile("ASCII_Plot", filename);
+    
+    FILE *fp = fopen(filename.toAscii().constData(), "w");
+    if (fp != NULL) {
+      int nCurves, nPoints, i, j;
+
+      nCurves = m_dataSet->count();
+      fprintf(fp, ";Qdoas Plot v1.0\n%d\n", nCurves);
+
+      i = 0;
+      while (i < nCurves) {
+	const QwtArrayData &data = m_dataSet->curve(i);
+	
+	nPoints = data.size();
+	fprintf(fp, "%d\n", nPoints);
+
+	j=0;
+	while (j<nPoints) {
+	  fprintf(fp, "%13g  %13g\n", data.x(j), data.y(j));
+	  ++j;
+	}
+
+	++i;
+      }
+      fclose(fp);
+    }
+    else {
+      QString msg = "Failed to create ASCII plot file ";
+      msg += filename;
+
+      QMessageBox::warning(this, "Failed file write", msg);
+    }
   }
 }
 
