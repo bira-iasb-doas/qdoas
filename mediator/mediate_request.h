@@ -361,7 +361,7 @@ int mediateRequestEndCalibrateSpectra(void *engineContext, void *responseHandle)
 //    mediateResponseErrorMessage(functionName, messageString, errorLevel, responseHandle);
 
 int mediateRequestViewCrossSections(void *engineContext, double minWavelength, double maxWavelength,
-                                    int nFiles, const char *filenames[], void *responseHandle);
+                                    int nFiles, char **filenames, void *responseHandle);
 
 
 #if defined(_cplusplus) || defined(__cplusplus)

@@ -106,9 +106,16 @@ bool CAnalysisWindowSubHandler::start(const QString &element, const QXmlAttribut
 
     d->refSzaCenter = atts.value("szacenter").toDouble();
     d->refSzaDelta = atts.value("szadelta").toDouble();
-    d->refLongitude = atts.value("reflon").toDouble();
-    d->refLatitude = atts.value("reflat").toDouble();
+    d->refMinLongitude = atts.value("minlon").toDouble();
+    d->refMaxLongitude = atts.value("maxlon").toDouble();
+    d->refMinLatitude = atts.value("minlat").toDouble();
+    d->refMaxLatitude = atts.value("maxlat").toDouble();
     d->refNs = atts.value("refns").toInt();
+
+    d->pixelTypeEast = (atts.value("east") == "true") ? 1 : 0;
+    d->pixelTypeCenter = (atts.value("center") == "true") ? 1 : 0;
+    d->pixelTypeWest = (atts.value("west") == "true") ? 1 : 0;
+    d->pixelTypeBackscan = (atts.value("backscan") == "true") ? 1 : 0;
 
   }
   else if (element == "cross_section") {

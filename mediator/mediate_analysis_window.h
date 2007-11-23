@@ -46,9 +46,15 @@ extern "C" {
     double fitMaxWavelength;
     double refSzaCenter;
     double refSzaDelta;
-    double refLongitude;
-    double refLatitude;
+    double refMinLongitude;
+    double refMaxLongitude;
+    double refMinLatitude;
+    double refMaxLatitude;
     int refNs;
+    int pixelTypeEast;
+    int pixelTypeCenter;
+    int pixelTypeWest;
+    int pixelTypeBackscan;
     int requireSpectrum;
     int requirePolynomial;
     int requireFit;

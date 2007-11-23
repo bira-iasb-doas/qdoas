@@ -1140,15 +1140,19 @@ void CQdoasConfigWriter::writeAnalysisWindows(FILE *fp, const QString &projectNa
 		(properties->requireRefRatio ? sTrue : sFalse));
 
 	tmpStr = pathMgr->simplifyPath(QString(properties->refOneFile));	
-	fprintf(fp, "      <files refone=\"%s\"", tmpStr.toAscii().constData());
+	fprintf(fp, "      <files refone=\"%s\"\n", tmpStr.toAscii().constData());
 	tmpStr = pathMgr->simplifyPath(QString(properties->refTwoFile));		
-	fprintf(fp, " reftwo=\"%s\"", tmpStr.toAscii().constData());
+	fprintf(fp, "             reftwo=\"%s\"\n", tmpStr.toAscii().constData());
 	tmpStr = pathMgr->simplifyPath(QString(properties->residualFile));	
-	fprintf(fp, " residual=\"%s\" szacenter=\"%.3f\" szadelta=\"%.3f\" reflon=\"%.3f\" reflat=\"%.3f\" refns=\"%d\" />\n",
+	fprintf(fp, "             residual=\"%s\"\nszacenter=\"%.3f\" szadelta=\"%.3f\" minlon=\"%.3f\" maxlon=\"%.3f\" minlat=\"%.3f\" maxlat=\"%.3f\" refns=\"%d\"\n",
                 tmpStr.toAscii().constData(),
 		properties->refSzaCenter , properties->refSzaDelta,
-                properties->refLongitude, properties->refLatitude, properties->refNs);
-
+                properties->refMinLongitude, properties->refMaxLongitude,
+                properties->refMinLatitude, properties->refMaxLatitude, properties->refNs);
+	fprintf(fp, "             east=\"%s\" center=\"%s\" west=\"%s\" backscan=\"%s\" />\n",
+		(properties->pixelTypeEast ? sTrue : sFalse), (properties->pixelTypeCenter ? sTrue : sFalse),
+		(properties->pixelTypeWest ? sTrue : sFalse), (properties->pixelTypeBackscan ? sTrue : sFalse));
+		
 	// cross sections ....
 	writeCrossSectionList(fp, &(properties->crossSectionList));
 

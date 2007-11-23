@@ -62,14 +62,20 @@ Q_OBJECT
   QCheckBox *m_spectrumCheck, *m_polyCheck, *m_fitsCheck;
   QCheckBox *m_residualCheck, *m_predefCheck, *m_ratioCheck;
 
-  QFrame *m_refOneFrame, *m_refTwoEditFrame, *m_refTwoSzaFrame;
+  QFrame *m_refOneFrame;
+  QFrame *m_refTwoEditFrame, *m_refTwoSzaFrame, *m_satelliteFrame;
   QLineEdit *m_refOneEdit, *m_refTwoEdit, *m_residualEdit;
   QLineEdit *m_szaCenterEdit, *m_szaDeltaEdit;
-  QLineEdit *m_refTwoLonEdit, *m_refTwoLatEdit;
+  // satellite only ...
+  QLineEdit *m_refTwoLonMinEdit, *m_refTwoLonMaxEdit;
+  QLineEdit *m_refTwoLatMinEdit, *m_refTwoLatMaxEdit;
   QSpinBox *m_refTwoNsSpin;
-  QStackedLayout *m_refTwoStack;
-  
+  // gome pixel type ...
+  QCheckBox *m_eastCheck, *m_centerCheck, *m_westCheck, *m_backscanCheck;
 
+  QStackedLayout *m_refTwoStack;
+  QStackedLayout *m_residualStack;
+  
   QTabWidget *m_tabs;
   // specialized DoasTables for each tab ...
   CWMoleculesDoasTable *m_moleculesTab;
@@ -81,6 +87,7 @@ Q_OBJECT
 
 
   QString m_projectName, m_analysisWindowName;
+  bool m_autoSelection, m_activePixelType;
 };
 
 #endif

@@ -1799,7 +1799,7 @@ int mediateRequestEndCalibrateSpectra(void *engineContext,
 #include <stdio.h>
 
 int mediateRequestViewCrossSections(void *engineContext, double minWavelength, double maxWavelength,
-                                    int nFiles, const char *filenames[], void *responseHandle)
+                                    int nFiles, char **filenames, void *responseHandle)
 {
 
   // Extract spectral (plot only) data and pass it back via the response handle.
