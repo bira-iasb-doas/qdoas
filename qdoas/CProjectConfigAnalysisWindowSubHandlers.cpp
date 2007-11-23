@@ -201,6 +201,7 @@ bool CAnalysisWindowCrossSectionSubHandler::start(const QXmlAttributes &atts)
 
     d->requireFit = (atts.value("fit") == "true") ? 1 : 0;
     d->requireFilter = (atts.value("filter") == "true") ? 1 : 0;
+    d->constrainedCc = (atts.value("cstrncc") == "true") ? 1 : 0;
     d->requireCcFit = (atts.value("ccfit") == "true") ? 1 : 0;
     d->initialCc = atts.value("icc").toDouble();
     d->deltaCc = atts.value("dcc").toDouble();

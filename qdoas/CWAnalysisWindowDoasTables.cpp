@@ -161,10 +161,11 @@ CWMoleculesDoasTable::CWMoleculesDoasTable(const QString &label, int columnWidth
 
   createColumnCheck("Fit disp.", 60);
   createColumnCheck("Filter", 60);           // columnIndex = 4
-  createColumnCheck("CC fit", 60);
-  createColumnEdit("CC Init", 80);           // columnIndex = 6
-  createColumnEdit("CC Delta", 80);
-  createColumnEdit("CC Io", 80);            // columnIndex = 8
+  createColumnCheck("Cons. CC", 60);
+  createColumnCheck("CC fit", 60);           // columnIndex = 6
+  createColumnEdit("CC Init", 80);
+  createColumnEdit("CC Delta", 80);          // columnIndex = 8
+  createColumnEdit("CC Io", 80);
 }
 
 CWMoleculesDoasTable::~CWMoleculesDoasTable()
@@ -184,6 +185,7 @@ void CWMoleculesDoasTable::populate(const cross_section_list_t *data)
     initialValues.push_back(mapAmfTypeToComboString(d->amfType));
     initialValues.push_back(d->requireFit);
     initialValues.push_back(d->requireFilter);
+    initialValues.push_back(d->constrainedCc);
     initialValues.push_back(d->requireCcFit);
     initialValues.push_back(d->initialCc);
     initialValues.push_back(d->deltaCc);
@@ -228,10 +230,11 @@ void CWMoleculesDoasTable::apply(cross_section_list_t *data) const
 
     d->requireFit = state.at(3).toBool() ? 1 : 0;
     d->requireFilter = state.at(4).toBool() ? 1 : 0;
-    d->requireCcFit = state.at(5).toBool() ? 1 : 0;
-    d->initialCc = state.at(6).toDouble();
-    d->deltaCc = state.at(7).toDouble();
-    d->ccIo = state.at(8).toDouble();
+    d->constrainedCc = state.at(5).toBool() ? 1 : 0;
+    d->requireCcFit = state.at(6).toBool() ? 1 : 0;
+    d->initialCc = state.at(7).toDouble();
+    d->deltaCc = state.at(8).toDouble();
+    d->ccIo = state.at(9).toDouble();
 
     ++d;
     ++row;
@@ -268,6 +271,9 @@ void CWMoleculesDoasTable::addRow(int height, const QString &label, QList<QVaria
 
   // really create the new row ...
   CDoasTable::addRow(height, label, cellData);
+
+  // is the symbol the name of a previous analysis window ??
+  // This is really awkward .... TODO
 }
 
 void CWMoleculesDoasTable::removeRow(int rowIndex)
@@ -396,7 +402,15 @@ void CWMoleculesDoasTable::cellDataChanged(int row, int column, const QVariant &
     m_rowLocks.replace(row, m_symbols.indexOf(cellData.toString())); // sets/releases/clears internal locks
   }
   else if (column == 1) {
-    setCellEnabled(row, 8, (cellData.toString() == "Convolve Io"));
+    setCellEnabled(row, 9, (cellData.toString() == "Convolve Io"));
+  }
+  else if (column == 5) {
+    // contrained CC
+    bool enable = !cellData.toBool();
+
+    setCellEnabled(row, 6, enable); 
+    setCellEnabled(row, 7, enable); 
+    setCellEnabled(row, 8, enable); 
   }
 }
 
@@ -474,6 +488,7 @@ void CWMoleculesDoasTable::slotInsertRow()
 	  initialValues.push_back(QString("None"));
 	  initialValues.push_back(QString("None"));
 	  initialValues.push_back(true);
+	  initialValues.push_back(false);
 	  initialValues.push_back(false);
 	  initialValues.push_back(true);
 	  initialValues.push_back(0.0);

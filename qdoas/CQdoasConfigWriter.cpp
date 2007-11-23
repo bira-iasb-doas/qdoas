@@ -1234,9 +1234,10 @@ void CQdoasConfigWriter::writeCrossSectionList(FILE *fp, const cross_section_lis
       fprintf(fp, "\"none\"");
     }
     
-    fprintf(fp, " fit=\"%s\" filter=\"%s\" ccfit=\"%s\" icc=\"%.3f\" dcc=\"%.3f\" ccio=\"%.3f\"",
+    fprintf(fp, " fit=\"%s\" filter=\"%s\" cstrncc=\%s\" ccfit=\"%s\" icc=\"%.3f\" dcc=\"%.3f\" ccio=\"%.3f\"",
 	    (d->requireFit ? sTrue : sFalse),
 	    (d->requireFilter ? sTrue : sFalse),
+	    (d->constrainedCc ? sTrue : sFalse),
 	    (d->requireCcFit ? sTrue : sFalse),
 	    d->initialCc, d->deltaCc, d->ccIo);
     tmpStr = pathMgr->simplifyPath(QString(d->crossSectionFile));

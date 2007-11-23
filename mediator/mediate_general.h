@@ -189,6 +189,7 @@ extern "C" {
     char amfFile[FILENAME_BUFFER_LENGTH];
     int requireFit;
     int requireFilter;
+    int constrainedCc;
     int requireCcFit;
     double initialCc;
     double deltaCc;
