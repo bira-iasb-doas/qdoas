@@ -31,6 +31,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <qwt_plot_curve.h>
 #include <qwt_symbol.h>
 #include <qwt_legend_item.h>
+#include <qwt_plot_grid.h>
 
 #include "CWPlotPage.h"
 #include "CPreferences.h"
@@ -134,6 +135,13 @@ CWPlot::CWPlot(const RefCountConstPtr<CPlotDataSet> &dataSet,
     curve->attach(this);
     ++i;
   }
+
+  // grid
+  QwtPlotGrid *grid = new QwtPlotGrid;
+  QPen pen(Qt::DotLine);
+  pen.setColor((plotProperties.backgroundColour().value() < 128) ? Qt::white : Qt::black);
+  grid->setPen(pen);
+  grid->attach(this);
     
   // possibly apply fixed scaling
   if (!m_dataSet->forceAutoScaling()) {

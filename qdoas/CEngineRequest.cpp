@@ -223,8 +223,6 @@ CEngineRequestBeginBrowseFile::~CEngineRequestBeginBrowseFile()
 
 bool CEngineRequestBeginBrowseFile::process(CEngineThread *engineThread)
 {
-  TRACE("CEngineRequestBeginBrowseFile" << m_fileName.toStdString());
-
   // open the file and get back the number of records (and calibration data?)
 
   // create a response as the handle
@@ -315,8 +313,6 @@ CEngineRequestEndBrowseFile::~CEngineRequestEndBrowseFile()
 
 bool CEngineRequestEndBrowseFile::process(CEngineThread *engineThread)
 {
-  TRACE("CEngineRequestEndBrowseFile");
-
   CEngineResponseEndAccessFile *resp = new CEngineResponseEndAccessFile;
 
   int rc = mediateRequestEndBrowseSpectra(engineThread->engineContext(), resp);
@@ -342,7 +338,6 @@ CEngineRequestBeginAnalyseFile::~CEngineRequestBeginAnalyseFile()
 bool CEngineRequestBeginAnalyseFile::process(CEngineThread *engineThread)
 {
   // open the file and get back the number of records (and calibration data?)
-  TRACE2("BAF " << m_fileName.toStdString());
 
   // create a response as the handle
   CEngineResponseBeginAccessFile *resp = new CEngineResponseBeginAccessFile(m_fileName);
@@ -372,8 +367,6 @@ CEngineRequestAnalyseNextRecord::~CEngineRequestAnalyseNextRecord()
 bool CEngineRequestAnalyseNextRecord::process(CEngineThread *engineThread)
 {
   // create a response as the handle
-  TRACE2("ANR");
-
   CEngineResponseAccessRecord *resp = new CEngineResponseAccessRecord;
 
   int rc = mediateRequestNextMatchingAnalyseSpectrum(engineThread->engineContext(),
@@ -434,8 +427,6 @@ CEngineRequestEndAnalyseFile::~CEngineRequestEndAnalyseFile()
 
 bool CEngineRequestEndAnalyseFile::process(CEngineThread *engineThread)
 {
-  TRACE2("EAF");
-
   CEngineResponseEndAccessFile *resp = new CEngineResponseEndAccessFile;
 
   int rc = mediateRequestEndAnalyseSpectra(engineThread->engineContext(), resp);

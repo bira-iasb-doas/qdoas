@@ -1168,28 +1168,20 @@ void CWProjectTree::slotBrowseSpectra()
 
 void CWProjectTree::slotViewCrossSections()
 {
-  TRACE("CWProjectTree::slotViewCrossSections");
-
   if (m_sessionActive)
     QMessageBox::information(this, "View Cross Sections", "A session is currently active.");
   else {
 
-    TRACE("1");
-
     QList<QTreeWidgetItem*> items = selectedItems();
     if (items.count() == 1) {
-      TRACE("2");
       QTreeWidgetItem *item = items.front();
       if (item->type() == cAnalysisWindowItemType) {
 
-	TRACE("3");
 	QTreeWidgetItem *projItem = CWProjectTree::projectItem(item);
 	if (projItem != NULL) {
-	  TRACE("4");
 	  const mediate_analysis_window_t *aw = CWorkSpace::instance()->findAnalysisWindow(projItem->text(0), item->text(0));
 
 	  if (aw != NULL) {
-	    TRACE("5");
 	    RefCountPtr<CViewCrossSectionData> ptr(new CViewCrossSectionData(aw));
 	    emit signalViewCrossSections(ptr);
 	  }
