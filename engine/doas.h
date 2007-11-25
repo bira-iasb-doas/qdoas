@@ -695,6 +695,16 @@ typedef struct _engineRecordInfo
  }
 RECORD_INFO;
 
+typedef struct _engineCalibFeno
+ {
+  cross_section_list_t crossSectionList;
+  struct anlyswin_linear linear;
+  struct calibration_sfp sfp[4]; // SFP1 .. SFP4
+  shift_stretch_list_t shiftStretchList;
+  output_list_t outputList;
+ }
+CALIB_FENO;
+
 // Analysis part of the engine
 
 // QDOAS engine
@@ -705,6 +715,7 @@ typedef struct _engineContext
   FILE_INFO         fileInfo;                                                   // the name of the file to load and file pointers
   RECORD_INFO       recordInfo;                                                 // data on the current record
   PROJECT           project;                                                    // data from the current project
+  CALIB_FENO        calibFeno;                                                  // transfer of wavelength calibration options from the project mediator to the analysis mediator
 
   // record information
 
@@ -811,6 +822,7 @@ typedef struct _AnalyseNonLinearParameters
  }
 ANALYSE_NON_LINEAR_PARAMETERS;
 
+typedef struct anlyswin_cross_section ANALYSIS_CROSS;
 typedef struct anlyswin_shift_stretch ANALYSIS_SHIFT_STRETCH;
 typedef struct anlyswin_gap ANALYSIS_GAP;
 
@@ -880,6 +892,7 @@ RC   ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle);
 
 void ANALYSE_SetAnalysisType(void);
 RC   ANALYSE_LoadRef(ENGINE_CONTEXT *pEngineContext);
+RC   ANALYSE_LoadCross(ANALYSIS_CROSS *crossSectionList,INT nCross,INT hidden,double *lambda);
 RC   ANALYSE_LoadLinear(ANALYSE_LINEAR_PARAMETERS *linearList,INT nLinear);
 RC   ANALYSE_LoadNonLinear(ANALYSE_NON_LINEAR_PARAMETERS *nonLinearList,INT nNonLinear,double *lambda);
 RC   ANALYSE_LoadShiftStretch(ANALYSIS_SHIFT_STRETCH *shiftStretchList,INT nShiftStretch);
@@ -932,8 +945,7 @@ typedef struct _Kurucz
           fwhmDegree,                           // degree of the fwhm polynomial
           solarFGap;
 
-  INDEX   indexProject,                         // index of current project in projects list
-          indexKurucz;                          // index of analysis window with Kurucz description
+  INDEX   indexKurucz;                          // index of analysis window with Kurucz description
 
   UCHAR   displayFit;                           // display fit flag
   UCHAR   displayResidual;                      // display new calibration flag
@@ -960,7 +972,7 @@ RC   KURUCZ_Spectrum(double *oldLambda,double *newLambda,double *spectrum,double
 RC   KURUCZ_ApplyCalibration(FENO *pTabFeno,double *newLambda);
 RC   KURUCZ_Reference(double *instrFunction,INDEX refFlag,INT saveFlag,INT gomeFlag);
 void KURUCZ_Init(INT gomeFlag);
-RC   KURUCZ_Alloc(double *lambda,INDEX indexProject,INDEX indexKurucz,double lambdaMin,double lambdaMax);
+RC   KURUCZ_Alloc(PROJECT *pProject,double *lambda,INDEX indexKurucz,double lambdaMin,double lambdaMax);
 void KURUCZ_Free(void);
 
 // ==================================

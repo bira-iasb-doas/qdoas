@@ -180,12 +180,12 @@ RC KURUCZ_Spectrum(double *oldLambda,double *newLambda,double *spectrum,double *
     pResults=&Feno->TabCrossResults[(Feno->indexSpectrum!=ITEM_NONE)?Feno->indexSpectrum:Feno->indexReference];
     rc=ERROR_ID_NO;
 
-    if ((maxGraphV=PRJCT_itemList[KURUCZ_buffers.indexProject].spectra.maxGraphV)<1)
-     maxGraphV=1;
-    if ((maxGraphH=PRJCT_itemList[KURUCZ_buffers.indexProject].spectra.maxGraphH)<1)
-     maxGraphH=1;
-
-    maxGraph=maxGraphV*maxGraphH;
+// QDOAS ???    if ((maxGraphV=PRJCT_itemList[KURUCZ_buffers.indexProject].spectra.maxGraphV)<1)
+// QDOAS ???     maxGraphV=1;
+// QDOAS ???    if ((maxGraphH=PRJCT_itemList[KURUCZ_buffers.indexProject].spectra.maxGraphH)<1)
+// QDOAS ???     maxGraphH=1;
+// QDOAS ???
+// QDOAS ???    maxGraph=maxGraphV*maxGraphH;
 
     indexGraph=0;
 
@@ -915,7 +915,7 @@ RC KURUCZ_Reference(double *instrFunction,INDEX refFlag,INT saveFlag,INT gomeFla
            {
             // Set title of graph
 
-            sprintf(windowTitle,"Calibration applied on project %s, window %s",PRJCT_itemList[KURUCZ_buffers.indexProject].name,pTabFeno->windowName);
+// QDOAS ???            sprintf(windowTitle,"Calibration applied on project %s, window %s",PRJCT_itemList[KURUCZ_buffers.indexProject].name,pTabFeno->windowName);
 
             // Apply Kurucz for building new calibration for reference
 
@@ -1043,8 +1043,8 @@ void KURUCZ_Init(INT gomeFlag)
 // ----------------------------------------------------------------------------
 // PURPOSE         allocate all buffers needed for applying Kurucz procedures to a project
 //
-// INPUT           lambda       original wavelength calibration
-//                 indexProject index of current project in projects list
+// INPUT           pProject     pointer to the current project
+//                 lambda       original wavelength calibration
 //                 indexKurucz  index of analysis window with Kurucz description for the current project;
 //                 lambdaMin    lower limit of the wavelength calibration interval
 //                 lambdaMax    upper limit of the wavelength calibration interval
@@ -1052,13 +1052,12 @@ void KURUCZ_Init(INT gomeFlag)
 // RETURN          return code
 // ----------------------------------------------------------------------------
 
-RC KURUCZ_Alloc(double *lambda,INDEX indexProject,INDEX indexKurucz,double lambdaMin,double lambdaMax)
+RC KURUCZ_Alloc(PROJECT *pProject,double *lambda,INDEX indexKurucz,double lambdaMin,double lambdaMax)
  {
   // Declarations
 
   INT hFilterFlag;
   CROSS_REFERENCE *pTabCross;                                                   // cross sections list
-  PROJECT         *pProject;                                                    // current project
   FENO            *pKuruczFeno,                                                 // analysis window with Kurucz description
                   *pTabFeno;
 
@@ -1075,7 +1074,6 @@ RC KURUCZ_Alloc(double *lambda,INDEX indexProject,INDEX indexKurucz,double lambd
 
   memset(&KURUCZ_buffers.hrSolar,0,sizeof(XS));
 
-  pProject=&PRJCT_itemList[indexProject];
   pKuruczFeno=&TabFeno[indexKurucz];
 
   step=(double)0.;
@@ -1174,7 +1172,6 @@ RC KURUCZ_Alloc(double *lambda,INDEX indexProject,INDEX indexKurucz,double lambd
 
     // Initialize other fields of global structure
 
-    KURUCZ_buffers.indexProject=indexProject;
     KURUCZ_buffers.indexKurucz=indexKurucz;
 
     KURUCZ_buffers.Nb_Win=Nb_Win;

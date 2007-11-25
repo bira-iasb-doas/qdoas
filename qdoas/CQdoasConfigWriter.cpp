@@ -100,7 +100,7 @@ QString CQdoasConfigWriter::write(const QString &fileName)
     delete [] symbolList;
   }
 
-  
+
   writeProjects(fp);
 
   fprintf(fp, "</qdoas>\n");
@@ -163,7 +163,7 @@ void CQdoasConfigWriter::writeProperties(FILE *fp, const mediate_project_t *d)
   writePropertiesInstrumental(fp, &(d->instrumental));
   writePropertiesSlit(fp, &(d->slit));
   writePropertiesOutput(fp, &(d->output));
-  writePropertiesNasaAmes(fp, &(d->nasaames));
+//  writePropertiesNasaAmes(fp, &(d->nasaames));
 }
 
 void CQdoasConfigWriter::writePropertiesDisplay(FILE *fp, const mediate_project_display_t *d)
@@ -172,7 +172,7 @@ void CQdoasConfigWriter::writePropertiesDisplay(FILE *fp, const mediate_project_
 	  (d->requireSpectra ? sTrue : sFalse), (d->requireData ? sTrue : sFalse), (d->requireFits ? sTrue : sFalse));
 
   writeDataSelectList(fp, &(d->selection));
-  
+
   fprintf(fp, "    </display>\n");
 
 }
@@ -287,7 +287,7 @@ void CQdoasConfigWriter::writePropertiesCalibration(FILE *fp, const mediate_proj
     fprintf(fp, "\"none\"");
   }
   fprintf(fp, " lorentzdegree=\"%d\" />\n", d->lorentzDegree);
-  fprintf(fp, "      <display shape=\"%s\" fits=\"%s\" residual=\"%s\" shiftsfp=\"%s\" />\n",
+  fprintf(fp, "      <display spectra=\"%s\" fits=\"%s\" residual=\"%s\" shiftsfp=\"%s\" />\n",
 	  (d->requireSpectra ? sTrue : sFalse), (d->requireFits ? sTrue : sFalse),
 	  (d->requireResidual ? sTrue : sFalse), (d->requireShiftSfp ? sTrue : sFalse));
   fprintf(fp, "      <polynomial shift=\"%d\" sfp=\"%d\" />\n", d->shiftDegree, d->sfpDegree);
@@ -985,7 +985,7 @@ void CQdoasConfigWriter::writePropertiesSlit(FILE *fp, const mediate_project_sli
 	  (d->applyFwhmCorrection ? sTrue : sFalse));
 
   writeSlitFunction(fp, 6, &(d->function));
-  
+
   fprintf(fp, "    </slit>\n");
 }
 
@@ -1139,11 +1139,11 @@ void CQdoasConfigWriter::writeAnalysisWindows(FILE *fp, const QString &projectNa
 		(properties->requirePredefined ? sTrue : sFalse),
 		(properties->requireRefRatio ? sTrue : sFalse));
 
-	tmpStr = pathMgr->simplifyPath(QString(properties->refOneFile));	
+	tmpStr = pathMgr->simplifyPath(QString(properties->refOneFile));
 	fprintf(fp, "      <files refone=\"%s\"\n", tmpStr.toAscii().constData());
-	tmpStr = pathMgr->simplifyPath(QString(properties->refTwoFile));		
+	tmpStr = pathMgr->simplifyPath(QString(properties->refTwoFile));
 	fprintf(fp, "             reftwo=\"%s\"\n", tmpStr.toAscii().constData());
-	tmpStr = pathMgr->simplifyPath(QString(properties->residualFile));	
+	tmpStr = pathMgr->simplifyPath(QString(properties->residualFile));
 	fprintf(fp, "             residual=\"%s\"\nszacenter=\"%.3f\" szadelta=\"%.3f\" minlon=\"%.3f\" maxlon=\"%.3f\" minlat=\"%.3f\" maxlat=\"%.3f\" refns=\"%d\"\n",
                 tmpStr.toAscii().constData(),
 		properties->refSzaCenter , properties->refSzaDelta,
@@ -1205,7 +1205,7 @@ void CQdoasConfigWriter::writeCrossSectionList(FILE *fp, const cross_section_lis
     fprintf(fp, "        <cross_section sym=\"%s\" ortho=\"%s\" cstype=",
 	    d->symbol,
 	    d->orthogonal);
-    
+
     switch (d->crossType) {
     case ANLYS_CROSS_ACTION_INTERPOLATE:
       fprintf(fp, "\"interp\""); break;
@@ -1233,7 +1233,7 @@ void CQdoasConfigWriter::writeCrossSectionList(FILE *fp, const cross_section_lis
     default:
       fprintf(fp, "\"none\"");
     }
-    
+
     fprintf(fp, " fit=\"%s\" filter=\"%s\" cstrncc=\%s\" ccfit=\"%s\" icc=\"%.3f\" dcc=\"%.3f\" ccio=\"%.3f\"",
 	    (d->requireFit ? sTrue : sFalse),
 	    (d->requireFilter ? sTrue : sFalse),
@@ -1244,7 +1244,7 @@ void CQdoasConfigWriter::writeCrossSectionList(FILE *fp, const cross_section_lis
     fprintf(fp, " csfile=\"%s\"", tmpStr.toAscii().constData());
     tmpStr = pathMgr->simplifyPath(QString(d->amfFile));
     fprintf(fp, " amffile=\"%s\" />\n", tmpStr.toAscii().constData());
-    
+
     ++d;
     ++j;
   }
@@ -1324,7 +1324,7 @@ void CQdoasConfigWriter::writeShiftStretchList(FILE *fp, const shift_stretch_lis
 {
   int k, j;
   const struct anlyswin_shift_stretch *d = &(data->shiftStretch[0]);
- 
+
   fprintf(fp, "      <shift_stretches>\n");
 
   j = 0;
@@ -1357,19 +1357,19 @@ void CQdoasConfigWriter::writeShiftStretchList(FILE *fp, const shift_stretch_lis
 	    d->scDelta, d->scDelta2);
     fprintf(fp, " shmin=\"%.3f\" shmax=\"%.3f\" >\n",
 	    d->shMin, d->shMax);
-    
+
     k = 0;
     while (k < d->nSymbol) {
       fprintf(fp, "          <symbol name=\"%s\" />\n", d->symbol[k]);
       ++k;
     }
-  
+
     fprintf(fp, "        </shift_stretch>\n");
 
     ++d;
     ++j;
   }
-  
+
   fprintf(fp, "      </shift_stretches>\n");
 }
 
@@ -1392,7 +1392,7 @@ void CQdoasConfigWriter::writeOutputList(FILE *fp, const output_list_t *d)
   int j = 0;
 
   fprintf(fp, "      <outputs>\n");
-  
+
   while (j < d->nOutput) {
     fprintf(fp, "        <output sym=\"%s\" amf=\"%s\" scol=\"%s\" serr=\"%s\" sfact=\"%.3f\"",
 	    d->output[j].symbol,
@@ -1404,7 +1404,7 @@ void CQdoasConfigWriter::writeOutputList(FILE *fp, const output_list_t *d)
 	    (d->output[j].vertCol ? sTrue : sFalse),
 	    (d->output[j].vertErr ? sTrue : sFalse),
 	    d->output[j].vertFactor);
-    
+
     ++j;
   }
   fprintf(fp, "      </outputs>\n");
@@ -1433,8 +1433,8 @@ void CQdoasConfigWriter::writeDataSelectList(FILE *fp, const data_select_list_t 
 
     fprintf(fp, "      <field name=\"");
     switch (d->selected[i]) {
-    case PRJCT_RESULTS_ASCII_SPECNO:           fprintf(fp, "specno"); break;        
-    case PRJCT_RESULTS_ASCII_NAME:             fprintf(fp, "name"); break;        
+    case PRJCT_RESULTS_ASCII_SPECNO:           fprintf(fp, "specno"); break;
+    case PRJCT_RESULTS_ASCII_NAME:             fprintf(fp, "name"); break;
     case PRJCT_RESULTS_ASCII_DATE_TIME:        fprintf(fp, "date_time"); break;
     case PRJCT_RESULTS_ASCII_DATE:             fprintf(fp, "date"); break;
     case PRJCT_RESULTS_ASCII_TIME:             fprintf(fp, "time"); break;

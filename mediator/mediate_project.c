@@ -26,18 +26,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 // INITIALIZATIONS OF NON-ZERO VALUES AND FLOAT/DOUBLE FIELDS
 // ==========================================================
 
-void initializeMediateProjectSpectra(mediate_project_spectra_t *d)
-{
-  memset(d, 0, sizeof(mediate_project_spectra_t));
-
-  // any non-zero defaults...
-
-  d->requireSpectra = 1;
-  d->requireData = 1;
-  d->requireFits = 1;
-  d->szaMaximum = 96.0;
-}
-
 void initializeMediateProjectDisplay(mediate_project_display_t *d)
 {
   memset(d, 0, sizeof(mediate_project_display_t));
@@ -77,9 +65,25 @@ void initializeMediateProjectFiltering(mediate_filter_t *d)
 
 void initializeMediateProjectCalibration(mediate_project_calibration_t *d)
 {
+	int i;
   memset(d, 0, sizeof(mediate_project_calibration_t));
 
   // any non-zero defaults...
+
+  d->subWindows=0;
+  d->wavelengthMin=(double)0.;
+  d->wavelengthMax=(double)0.;
+  d->requireSpectra=1;
+  d->requireFits=1;
+  d->requireResidual=1;
+  d->requireShiftSfp=1;
+
+  for (i=0;i<4;i++)
+   {
+    d->sfp[i].fitFlag=1;
+    d->sfp[i].initialValue=(double)0.5;
+    d->sfp[i].deltaValue=(double)1.e-3;
+   }
 }
 
 void initializeMediateProjectUndersampling(mediate_project_undersampling_t *d)
@@ -123,7 +127,6 @@ void initializeMediateProjectNasaAmes(mediate_project_nasa_ames_t *d)
 void initializeMediateProject(mediate_project_t *d)
 {
   /* delegate to sub component initialization functions */
-  initializeMediateProjectSpectra(&(d->spectra)); // TODO - remove
   initializeMediateProjectDisplay(&(d->display));
   initializeMediateProjectSelection(&(d->selection));
   initializeMediateProjectAnalysis(&(d->analysis));
@@ -134,5 +137,5 @@ void initializeMediateProject(mediate_project_t *d)
   initializeMediateProjectInstrumental(&(d->instrumental));
   initializeMediateProjectSlit(&(d->slit));
   initializeMediateProjectOutput(&(d->output));
-  initializeMediateProjectNasaAmes(&(d->nasaames)); /* TODO JUST REMOVE */
+//  initializeMediateProjectNasaAmes(&(d->nasaames)); /* TODO JUST REMOVE */
 }

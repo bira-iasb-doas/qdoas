@@ -291,7 +291,6 @@ void setMediateProjectAnalysis(PRJCT_ANLYS *pEngineAnalysis,const mediate_projec
 
   UCHAR *prjctAnlysMethods[PRJCT_ANLYS_METHOD_MAX]={"Optical density fitting","Intensity fitting (Marquardt-Levenberg+SVD)"};
   UCHAR *prjctAnlysFitWeighting[PRJCT_ANLYS_FIT_WEIGHTING_MAX]={"No weighting","Instrumental weighting"};
-  UCHAR *prjctAnlysUnits[PRJCT_ANLYS_UNITS_MAX]={"Pixels","Nanometers"};
   UCHAR *prjctAnlysInterpol[PRJCT_ANLYS_INTERPOL_MAX]={"linear","spline"};
 
   DEBUG_FunctionBegin("setMediateProjectAnalysis",DEBUG_FCTTYPE_CONFIG);
@@ -307,7 +306,6 @@ void setMediateProjectAnalysis(PRJCT_ANLYS *pEngineAnalysis,const mediate_projec
   #if defined(__DEBUG_) && __DEBUG_ && defined(__DEBUG_DOAS_CONFIG_) && __DEBUG_DOAS_CONFIG_
   DEBUG_Print("Analysis method : %s\n",prjctAnlysMethods[pEngineAnalysis->method]);
   DEBUG_Print("Least-squares fit weighting : %s\n",prjctAnlysFitWeighting[pEngineAnalysis->fitWeighting]);
-  DEBUG_Print("Units for shift and stretch : %s\n",prjctAnlysUnits[pEngineAnalysis->units]);
   DEBUG_Print("Interpolation method : %s\n",prjctAnlysInterpol[pEngineAnalysis->interpol]);
   DEBUG_Print("Convergence criteria : %g\n",pEngineAnalysis->convergence);
   DEBUG_Print("Number of security pixels : %d\n",pEngineAnalysis->securityGap);
@@ -341,13 +339,46 @@ void setMediateProjectFiltering(PRJCT_FILTER *pEngineFilter,const mediate_filter
 // PURPOSE       Calibration part of the project properties
 // -----------------------------------------------------------------------------
 
-void setMediateProjectCalibration(PRJCT_KURUCZ *pEngineCalibration,const mediate_project_calibration_t *pMediateCalibration)
+void setMediateProjectCalibration(PRJCT_KURUCZ *pEngineCalibration,CALIB_FENO *pEngineCalibFeno,const mediate_project_calibration_t *pMediateCalibration)
  {
  	#if defined(__DEBUG_) && __DEBUG_ && defined(__DEBUG_DOAS_CONFIG_) && __DEBUG_DOAS_CONFIG_
+ 	UCHAR *prjctAnlysMethods[PRJCT_ANLYS_METHOD_MAX]={"Optical density fitting","Intensity fitting (Marquardt-Levenberg+SVD)"};
   DEBUG_FunctionBegin("setMediateProjectCalibration",DEBUG_FCTTYPE_CONFIG);
   #endif
 
+  strcpy(pEngineCalibration->file,pMediateCalibration->solarRefFile);           // kurucz file
+
+  pEngineCalibration->analysisMethod=pMediateCalibration->methodType;           // analysis method type
+  pEngineCalibration->windowsNumber=pMediateCalibration->subWindows;            // number of windows
+  pEngineCalibration->fwhmPolynomial=pMediateCalibration->sfpDegree;            // security gap in pixels numbers
+  pEngineCalibration->shiftPolynomial=pMediateCalibration->shiftDegree;         // degree of polynomial to use
+
+  pEngineCalibration->displayFit=pMediateCalibration->requireFits;              // display fit flag
+  pEngineCalibration->displayResidual=pMediateCalibration->requireResidual;     // display new calibration flag
+  pEngineCalibration->displayShift=pMediateCalibration->requireShiftSfp;        // display shift/Fwhm in each pixel
+  pEngineCalibration->displaySpectra=pMediateCalibration->requireSpectra;       // display fwhm in each pixel
+  pEngineCalibration->fwhmFit=(pMediateCalibration->lineShape>0)?1:0;           // force fit of fwhm while applying Kurucz
+  pEngineCalibration->fwhmType=pMediateCalibration->lineShape;                  // type of slit function to fit
+  pEngineCalibration->lambdaLeft=pMediateCalibration->wavelengthMin;            // minimum wavelength for the spectral interval
+  pEngineCalibration->lambdaRight=pMediateCalibration->wavelengthMax;           // maximum wavelength for the spectral interval
+  pEngineCalibration->invPolyDegree=pMediateCalibration->lorentzDegree;         // degree of the lorentzian
+
+  // !!! tables will be loaded by mediateRequestSetAnalysisWindows !!!
+
+  memcpy(&pEngineCalibFeno->crossSectionList,&pMediateCalibration->crossSectionList,sizeof(cross_section_list_t));
+  memcpy(&pEngineCalibFeno->linear,&pMediateCalibration->linear,sizeof(struct anlyswin_linear));
+  memcpy(pEngineCalibFeno->sfp,pMediateCalibration->sfp,sizeof(struct calibration_sfp)*4); // SFP1 .. SFP4
+  memcpy(&pEngineCalibFeno->shiftStretchList,&pMediateCalibration->shiftStretchList,sizeof(shift_stretch_list_t));
+  memcpy(&pEngineCalibFeno->outputList,&pMediateCalibration->outputList,sizeof(output_list_t));
+
   #if defined(__DEBUG_) && __DEBUG_ && defined(__DEBUG_DOAS_CONFIG_) && __DEBUG_DOAS_CONFIG_
+  DEBUG_Print("Analysis method : %s\n",prjctAnlysMethods[pMediateCalibration->methodType]);
+  DEBUG_Print("Kurucz file : %s\n",pEngineCalibration->file);
+  DEBUG_Print("Spectral range : %g - %g nm\n",pEngineCalibration->lambdaLeft,pEngineCalibration->lambdaRight);
+  DEBUG_Print("Display %d %d %d %d (Spectra,Residual,Fit,Shift/SFP)\n",pEngineCalibration->displaySpectra,pEngineCalibration->displayResidual,pEngineCalibration->displayFit,pEngineCalibration->displayShift);
+  DEBUG_Print("Number of windows: %d\n",pEngineCalibration->windowsNumber);
+  DEBUG_Print("Degree of polynomials (shift/SFP) : %d - %d\n",pEngineCalibration->shiftPolynomial,pEngineCalibration->fwhmPolynomial);
+  DEBUG_Print("Fit the slit function (slit function type) : %d (%d)\n",pEngineCalibration->fwhmFit,pEngineCalibration->fwhmType);
   DEBUG_FunctionStop("setMediateProjectCalibration",0);
   #endif
  }
@@ -597,25 +628,6 @@ void setMediateProjectOutput(PRJCT_RESULTS_ASCII *pEngineOutput,const mediate_pr
  }
 
 // -----------------------------------------------------------------------------
-// FUNCTION      setMediateProjectNasaAmes
-// -----------------------------------------------------------------------------
-// PURPOSE       Output (Nasa-ames format) part of the project properties
-// -----------------------------------------------------------------------------
-
-void setMediateProjectNasaAmes(PRJCT_RESULTS_NASA *pEngineNasaAmes,const mediate_project_nasa_ames_t *pMediateNasaAmes)
- {
- 	#if defined(__DEBUG_) && __DEBUG_ && defined(__DEBUG_DOAS_CONFIG_) && __DEBUG_DOAS_CONFIG_
-  DEBUG_FunctionBegin("setMediateProjectNasaAmes",DEBUG_FCTTYPE_CONFIG);
-  #endif
-
-  // Still to do by Caro
-
-  #if defined(__DEBUG_) && __DEBUG_ && defined(__DEBUG_DOAS_CONFIG_) && __DEBUG_DOAS_CONFIG_
-  DEBUG_FunctionStop("setMediateProjectNasaAmes",0);
-  #endif
- }
-
-// -----------------------------------------------------------------------------
 // FUNCTION      mediateRequestSetProject
 // -----------------------------------------------------------------------------
 // PURPOSE       Interface between the mediator and the engine for project properties
@@ -646,12 +658,11 @@ int mediateRequestSetProject(void *engineContext,
   setMediateProjectAnalysis(&pEngineProject->analysis,&project->analysis);
   setMediateProjectFiltering(&pEngineProject->lfilter,&project->lowpass);
   setMediateProjectFiltering(&pEngineProject->hfilter,&project->highpass);
-  setMediateProjectCalibration(&pEngineProject->kurucz,&project->calibration);
+  setMediateProjectCalibration(&pEngineProject->kurucz,&pEngineContext->calibFeno,&project->calibration);
   setMediateProjectUndersampling(&pEngineProject->usamp,&project->undersampling);
   setMediateProjectInstrumental(&pEngineProject->instrumental,&project->instrumental);
   setMediateProjectSlit(&pEngineProject->slit,&project->slit);
   setMediateProjectOutput(&pEngineProject->asciiResults,&project->output);
-  setMediateProjectNasaAmes(&pEngineProject->nasaResults,&project->nasaames);
 
 	 // Allocate buffers requested by the project
 
@@ -667,237 +678,6 @@ int mediateRequestSetProject(void *engineContext,
 // =======================================================================
 // TRANSFER OF ANALYSIS WINDOWS PROPERTIES FROM THE MEDIATOR TO THE ENGINE
 // =======================================================================
-
-// -----------------------------------------------------------------------------
-// FUNCTION      mediateRequestSetAnalysisCross
-// -----------------------------------------------------------------------------
-// PURPOSE       Load data from the molecules pages
-// -----------------------------------------------------------------------------
-
-RC mediateRequestSetAnalysisCross(cross_section_list_t *pCrossSectionList,INT hidden,double *lambda)
- {
- 	// Declarations
-
- 	CROSS_REFERENCE *pEngineCross;                                                // pointer of the current cross section in the engine list
- 	struct anlyswin_cross_section *pMediateCross;                                 // pointer of the current cross section in the mediate list
- 	FENO *pTabFeno;                                                               // pointer to the current analysis window
-  UCHAR *pOrthoSymbol[MAX_FIT],                                                 // for each cross section in list, hold cross section to use for orthogonalization
-        *symbolName;
-  INDEX indexSymbol,indexSvd,                                                   // resp. indexes of item in list and of symbol
-        firstTabCross,endTabCross,indexTabCross,i;                              // indexes for browsing list of cross sections symbols
-  SZ_LEN fileLength,symbolLength;                                               // length in characters of file name and symbol name
-  WRK_SYMBOL *pWrkSymbol;                                                       // pointer to a general description of a symbol
- 	RC rc;
-
- 	// Debug
-
-  #if defined(__DEBUG_) && __DEBUG_ && defined(__DEBUG_DOAS_CONFIG_) && __DEBUG_DOAS_CONFIG_
-  DEBUG_FunctionBegin("mediateRequestSetAnalysisCross",DEBUG_FCTTYPE_CONFIG);
-  #endif
-
- 	// Initializations
-
-  pWrkSymbol=NULL;
-  pTabFeno=&TabFeno[NFeno];
-  firstTabCross=pTabFeno->NTabCross;
- 	rc=ERROR_ID_NO;
-
- 	for (indexTabCross=0;
- 	    (indexTabCross<pCrossSectionList->nCrossSection) && (pTabFeno->NTabCross<MAX_FIT) && !rc;
- 	     indexTabCross++)
- 	 {
- 	 	pEngineCross=&pTabFeno->TabCross[pTabFeno->NTabCross];
- 	 	pMediateCross=&pCrossSectionList->crossSection[indexTabCross];
-
-    // Get cross section name from analysis properties dialog box
-
-    symbolName=pMediateCross->symbol;
-    symbolLength=strlen(symbolName);
-    fileLength=strlen(pMediateCross->crossSectionFile);
-
-    // Search for symbol in list
-
-    for (indexSymbol=0;indexSymbol<NWorkSpace;indexSymbol++)
-     {
-      pWrkSymbol=&WorkSpace[indexSymbol];
-
-      if ((pWrkSymbol->type==WRK_SYMBOL_CROSS) &&
-          (strlen(pWrkSymbol->symbolName)==symbolLength) &&
-          (strlen(pWrkSymbol->crossFileName)==fileLength) &&
-          !STD_Stricmp(pWrkSymbol->symbolName,symbolName) &&
-          !STD_Stricmp(pWrkSymbol->crossFileName,pMediateCross->crossSectionFile))
-
-       break;
-     }
-
-    // Add a new cross section
-
-    if ((indexSymbol==NWorkSpace) && (NWorkSpace<MAX_SYMB))
-     {
-      // Allocate a new symbol
-
-      pWrkSymbol=&WorkSpace[indexSymbol];
-
-      pWrkSymbol->type=WRK_SYMBOL_CROSS;
-      strcpy(pWrkSymbol->symbolName,symbolName);
-      strcpy(pWrkSymbol->crossFileName,pMediateCross->crossSectionFile);
-
-      // Load cross section from file
-
-      if (((strlen(pWrkSymbol->symbolName)==strlen("1/Ref")) && !STD_Stricmp(pWrkSymbol->symbolName,"1/Ref")) ||
-          !(rc=MATRIX_Load(pMediateCross->crossSectionFile,&pWrkSymbol->xs,0 /* line base */,0 /* column base */,0,0,
-                          (pMediateCross->crossType==ANLYS_CROSS_ACTION_NOTHING)?(double)0.:lambda[0]-7.,      // max(lambda[0]-7.,(double)290.), - changed on october 2006
-                          (pMediateCross->crossType==ANLYS_CROSS_ACTION_NOTHING)?(double)0.:lambda[NDET-1]+7., // min(lambda[NDET-1]+7.,(double)600.), - changed on october 2006
-                          (pMediateCross->crossType!=ANLYS_CROSS_ACTION_NOTHING)?1:0,1,"mediateRequestSetAnalysisCross ")))
-       {
-        if (!STD_Stricmp(pWrkSymbol->symbolName,"O3TD"))
-         rc=MATRIX_Allocate(&O3TD,NDET,pWrkSymbol->xs.nc,0,0,0,"ANALYSE_LoadCross");
-
-        NWorkSpace++;
-       }
-     }
-
-    if ((rc==ERROR_ID_NO) && (indexSymbol<NWorkSpace) && (pTabFeno->NTabCross<MAX_FIT))
-     {
-      // Allocate vectors for cross section and its second derivative for analysis processing
-
-      if (((pEngineCross->vector=(double *)MEMORY_AllocDVector("mediateRequestSetAnalysisCross ","vector",0,NDET-1))==NULL) ||
-          ((pEngineCross->Deriv2=(double *)MEMORY_AllocDVector("mediateRequestSetAnalysisCross ","Deriv2",1,NDET))==NULL))
-
-       rc=ERROR_ID_ALLOC;
-
-      else
-       {
-        pEngineCross->crossAction=pMediateCross->crossType;
-        pEngineCross->filterFlag=pMediateCross->requireFilter;
-
-        if ((pEngineCross->crossAction==ANLYS_CROSS_ACTION_NOTHING) && (pTabFeno->gomeRefFlag || MFC_refFlag))
-         rc=ANALYSE_CheckLambda(pWrkSymbol,lambda,"mediateRequestSetAnalysisCross ");
-
-        if (rc==ERROR_ID_NO)
-         {
-          pEngineCross->Comp=indexSymbol;
-          pEngineCross->IndSvdA=++pTabFeno->svd.DimC;
-          pTabFeno->xsToConvolute+=((pEngineCross->crossAction==ANLYS_CROSS_ACTION_CONVOLUTE) ||
-                                    (pEngineCross->crossAction==ANLYS_CROSS_ACTION_CONVOLUTE_I0) ||
-                                    (pEngineCross->crossAction==ANLYS_CROSS_ACTION_CONVOLUTE_RING))?1:0;
-
-          pTabFeno->xsToConvoluteI0+=(pEngineCross->crossAction==ANLYS_CROSS_ACTION_CONVOLUTE_I0)?1:0;
-
-          if (!hidden)
-           {
-            pOrthoSymbol[pTabFeno->NTabCross]=pMediateCross->orthogonal;
-
-            pEngineCross->display=pMediateCross->requireFit;                    // fit display
-            pEngineCross->InitConc=pMediateCross->initialCc;                    // initial concentration
-            pEngineCross->FitConc=pMediateCross->requireCcFit;                  // modify concentration
-
-            pEngineCross->DeltaConc=(pEngineCross->FitConc)?pMediateCross->deltaCc:(double)0.;   // delta on concentration
-            pEngineCross->I0Conc=(pEngineCross->crossAction==ANLYS_CROSS_ACTION_CONVOLUTE_I0)?pMediateCross->ccIo:(double)0.;
-           }
-
- // QDOAS !!! FOR LATER         rc=OUTPUT_LoadCross(pList,&pTabFeno->TabCrossResults[pTabFeno->NTabCross],&pTabFeno->amfFlag,hidden);
-
-          // Swap columns of original matrix A in order to have in the end of the matrix, cross sections with fixed concentrations
-
-          if (pEngineCross->FitConc!=0)   // the difference between SVD and Marquardt+SVD hasn't to be done yet but later
-           {
-            for (i=pTabFeno->NTabCross-1;i>=0;i--)
-             if (((indexSvd=pTabFeno->TabCross[i].IndSvdA)!=0) && !pTabFeno->TabCross[i].FitConc)
-              {
-               pTabFeno->TabCross[i].IndSvdA=pEngineCross->IndSvdA;
-               pEngineCross->IndSvdA=indexSvd;
-              }
-
-            if (pTabFeno->analysisMethod!=PRJCT_ANLYS_METHOD_SVD)     // In the intensity fitting method, FitConc is an index
-             pEngineCross->FitConc=pTabFeno->svd.NF++;                   // in the non linear parameters vectors
-
-            pTabFeno->svd.nFit++;
-           }
-          else if (pTabFeno->analysisMethod!=PRJCT_ANLYS_METHOD_SVD)
-           pEngineCross->FitConc=ITEM_NONE;                              // so if the parameter hasn't to be fitted, index is ITEM_NONE
-
-          pTabFeno->NTabCross++;
-         }
-       }
-     }
- 	 }
-
-  // Orthogonalization data
-
-  if (rc==ERROR_ID_NO)
-   {
-    pEngineCross=pTabFeno->TabCross;
-
-    for (indexTabCross=firstTabCross,endTabCross=pTabFeno->NTabCross;indexTabCross<endTabCross;indexTabCross++)
-     {
-      symbolLength=strlen(pOrthoSymbol[indexTabCross]);
-
-      // No orthogonalization
-
-      if ((symbolLength==4) && !STD_Stricmp(pOrthoSymbol[indexTabCross],"None"))
-       pEngineCross[indexTabCross].IndOrthog=ITEM_NONE;
-
-      // Orthogonalization to orthogonal base
-
-      else if ((symbolLength==15) && !STD_Stricmp(pOrthoSymbol[indexTabCross],"Differential XS"))
-       pEngineCross[indexTabCross].IndOrthog=ORTHOGONAL_BASE;
-
-      // Orthogonalization to another cross section
-
-      else
-       {
-        // Search for symbol in list
-
-        for (indexSymbol=firstTabCross;indexSymbol<endTabCross;indexSymbol++)
-         if ((indexTabCross!=indexSymbol) &&
-             (symbolLength==strlen(WorkSpace[pEngineCross[indexSymbol].Comp].symbolName)) &&
-             !STD_Stricmp(pOrthoSymbol[indexTabCross],WorkSpace[pEngineCross[indexSymbol].Comp].symbolName))
-          break;
-
-        pEngineCross[indexTabCross].IndOrthog=(indexSymbol<endTabCross)?indexSymbol:ITEM_NONE;
-       }
-     }
-
-    for (indexTabCross=firstTabCross,endTabCross=pTabFeno->NTabCross;indexTabCross<endTabCross;indexTabCross++)
-     {
-      // Symbol should be set to be orthogonalized to base
-
-      if (pEngineCross[indexTabCross].IndOrthog>=0)
-       {
-        // if orthogonalization in succession, orthogonalization is ignored
-
-/* !!!!!        if (pEngineCross[pEngineCross[indexTabCross].IndOrthog].IndOrthog>=0)  // != ORTHOGONAL_BASE
-         {
-          THRD_Error(ERROR_TYPE_WARNING,ERROR_ID_ORTHOGONAL_CASCADE,"",WorkSpace[pEngineCross[indexTabCross].Comp].symbolName);
-          pEngineCross[indexTabCross].IndOrthog=ITEM_NONE;
-         }
-
-        // Force to be orthogonalized to base
-
-        else  */
-         {
-          if (pEngineCross[pEngineCross[indexTabCross].IndOrthog].IndOrthog==ITEM_NONE)
-           {
-           	rc=ERROR_SetLast("mediateRequestSetAnalysisCross",ERROR_TYPE_WARNING,ERROR_ID_ORTHOGONAL_BASE,
-                              WorkSpace[pEngineCross[pEngineCross[indexTabCross].IndOrthog].Comp].symbolName,
-                              WorkSpace[pEngineCross[indexTabCross].Comp].symbolName);
-
-            pEngineCross[pEngineCross[indexTabCross].IndOrthog].IndOrthog=ORTHOGONAL_BASE;
-           }
-         }
-       }
-     }
-   }
-
-  #if defined(__DEBUG_) && __DEBUG_ && defined(__DEBUG_DOAS_CONFIG_) && __DEBUG_DOAS_CONFIG_
-  DEBUG_FunctionStop("mediateRequestSetAnalysisCross",rc);
-  #endif
-
-  // Return
-
-  return rc;
- }
 
 // -----------------------------------------------------------------------------
 // FUNCTION      mediateRequestSetAnalysisLinear
@@ -958,34 +738,100 @@ RC mediateRequestSetAnalysisLinear(struct anlyswin_linear *pLinear)
   return rc;
  }
 
+// Caro : int the future, replace structures anlyswin_nonlinear and calibration_sfp with the following one more flexible
+
+// typedef struct _AnalyseNonLinearParameters
+//  {
+//  	UCHAR symbolName[MAX_ITEM_TEXT_LEN+1];
+//  	UCHAR crossFileName[MAX_ITEM_TEXT_LEN+1];
+//  	int fitFlag;
+//  	double initialValue;
+//  	double deltaValue;
+//  	double minValue;
+//  	double maxValue;
+//  	int storeFit;
+//  	int storeError;
+//  }
+// ANALYSE_NON_LINEAR_PARAMETERS;
+
 // -----------------------------------------------------------------------------
-// FUNCTION      mediateRequestSetAnalysisLinear
+// FUNCTION      mediateRequestSetAnalysisNonLinearCalib
 // -----------------------------------------------------------------------------
-// PURPOSE       Load linear parameters
+// PURPOSE       Load non linear parameters for the calibration
 // -----------------------------------------------------------------------------
 
-#define NNONLINEAR 8
+#define NNONLINEAR_CALIB 4
 
-RC mediateRequestSetAnalysisNonLinear(struct anlyswin_nonlinear *pNonLinear,double *lambda)
+RC mediateRequestSetAnalysisNonLinearCalib(struct calibration_sfp *nonLinearCalib,double *lambda)
  {
   // Declarations
 
-  ANALYSE_NON_LINEAR_PARAMETERS nonLinear[NNONLINEAR];
+  ANALYSE_NON_LINEAR_PARAMETERS nonLinear[NNONLINEAR_CALIB];
   INDEX indexNonLinear;
   RC rc;
 
  	// Debug
 
   #if defined(__DEBUG_) && __DEBUG_ && defined(__DEBUG_DOAS_CONFIG_) && __DEBUG_DOAS_CONFIG_
-  DEBUG_FunctionBegin("mediateRequestSetAnalysisNonLinear",DEBUG_FCTTYPE_CONFIG);
+  DEBUG_FunctionBegin("mediateRequestSetAnalysisNonLinearCalib",DEBUG_FCTTYPE_CONFIG);
   #endif
 
   // Initialization
 
-  memset(nonLinear,0,sizeof(ANALYSE_NON_LINEAR_PARAMETERS)*NNONLINEAR);                 // this reset cross section file names
-                                                                                // QDOAS MISSING FIELD !!!
+  memset(nonLinear,0,sizeof(ANALYSE_NON_LINEAR_PARAMETERS)*NNONLINEAR_CALIB);
 
-  for (indexNonLinear=0;indexNonLinear<NNONLINEAR;indexNonLinear++)
+  for (indexNonLinear=0;indexNonLinear<NNONLINEAR_CALIB;indexNonLinear++)
+   {
+    nonLinear[indexNonLinear].minValue=nonLinear[indexNonLinear].maxValue=(double)0.;
+    sprintf(nonLinear[indexNonLinear].symbolName,"SFP %d",indexNonLinear);
+
+    nonLinear[indexNonLinear].fitFlag=nonLinearCalib[indexNonLinear].fitFlag;
+    nonLinear[indexNonLinear].initialValue=nonLinearCalib[indexNonLinear].initialValue;
+    nonLinear[indexNonLinear].deltaValue=nonLinearCalib[indexNonLinear].deltaValue;
+    nonLinear[indexNonLinear].storeFit=nonLinearCalib[indexNonLinear].fitStore;
+    nonLinear[indexNonLinear].storeError=nonLinearCalib[indexNonLinear].errStore;
+   }
+
+  rc=ANALYSE_LoadNonLinear(nonLinear,NNONLINEAR_CALIB,lambda);
+
+  // Debug
+
+  #if defined(__DEBUG_) && __DEBUG_ && defined(__DEBUG_DOAS_CONFIG_) && __DEBUG_DOAS_CONFIG_
+  DEBUG_FunctionStop("mediateRequestSetAnalysisNonLinearCalib",rc);
+  #endif
+
+  // Return
+
+  return rc;
+ }
+
+// -----------------------------------------------------------------------------
+// FUNCTION      mediateRequestSetAnalysisNonLinearDoas
+// -----------------------------------------------------------------------------
+// PURPOSE       Load non linear parameters
+// -----------------------------------------------------------------------------
+
+#define NNONLINEAR_DOAS 8
+
+RC mediateRequestSetAnalysisNonLinearDoas(struct anlyswin_nonlinear *pNonLinear,double *lambda)
+ {
+  // Declarations
+
+  ANALYSE_NON_LINEAR_PARAMETERS nonLinear[NNONLINEAR_DOAS];
+  INDEX indexNonLinear;
+  RC rc;
+
+ 	// Debug
+
+  #if defined(__DEBUG_) && __DEBUG_ && defined(__DEBUG_DOAS_CONFIG_) && __DEBUG_DOAS_CONFIG_
+  DEBUG_FunctionBegin("mediateRequestSetAnalysisNonLinearDoas",DEBUG_FCTTYPE_CONFIG);
+  #endif
+
+  // Initialization
+
+  memset(nonLinear,0,sizeof(ANALYSE_NON_LINEAR_PARAMETERS)*NNONLINEAR_DOAS);                 // this reset cross section file names
+                                                                                // QDOAS MISSING FIELD !!!
+  for (indexNonLinear=0;indexNonLinear<NNONLINEAR_DOAS;indexNonLinear++)
    nonLinear[indexNonLinear].minValue=nonLinear[indexNonLinear].maxValue=(double)0.;
 
   // Sol
@@ -1031,6 +877,7 @@ RC mediateRequestSetAnalysisNonLinear(struct anlyswin_nonlinear *pNonLinear,doub
   // Com
 
   strcpy(nonLinear[4].symbolName,"Com");
+  strcpy(nonLinear[4].crossFileName,pNonLinear->comFile);
 
   nonLinear[4].fitFlag=pNonLinear->comFlagFit;
   nonLinear[4].initialValue=pNonLinear->comInitial;
@@ -1041,6 +888,7 @@ RC mediateRequestSetAnalysisNonLinear(struct anlyswin_nonlinear *pNonLinear,doub
   // Usamp1
 
   strcpy(nonLinear[5].symbolName,"Usamp1");
+  strcpy(nonLinear[5].crossFileName,pNonLinear->usamp1File);
 
   nonLinear[5].fitFlag=pNonLinear->usamp1FlagFit;
   nonLinear[5].initialValue=pNonLinear->usamp1Initial;
@@ -1051,6 +899,7 @@ RC mediateRequestSetAnalysisNonLinear(struct anlyswin_nonlinear *pNonLinear,doub
   // Usamp2
 
   strcpy(nonLinear[6].symbolName,"Usamp2");
+  strcpy(nonLinear[6].crossFileName,pNonLinear->usamp2File);
 
   nonLinear[6].fitFlag=pNonLinear->usamp2FlagFit;
   nonLinear[6].initialValue=pNonLinear->usamp2Initial;
@@ -1061,6 +910,7 @@ RC mediateRequestSetAnalysisNonLinear(struct anlyswin_nonlinear *pNonLinear,doub
   // Raman
 
   strcpy(nonLinear[7].symbolName,"Raman");
+  strcpy(nonLinear[7].crossFileName,pNonLinear->ramanFile);
 
   nonLinear[7].fitFlag=pNonLinear->ramanFlagFit;
   nonLinear[7].initialValue=pNonLinear->ramanInitial;
@@ -1068,12 +918,12 @@ RC mediateRequestSetAnalysisNonLinear(struct anlyswin_nonlinear *pNonLinear,doub
   nonLinear[7].storeFit=pNonLinear->ramanFlagFitStore;
   nonLinear[7].storeError=pNonLinear->ramanFlagErrStore;
 
-  rc=ANALYSE_LoadNonLinear(nonLinear,NNONLINEAR,lambda);
+  rc=ANALYSE_LoadNonLinear(nonLinear,NNONLINEAR_DOAS,lambda);
 
   // Debug
 
   #if defined(__DEBUG_) && __DEBUG_ && defined(__DEBUG_DOAS_CONFIG_) && __DEBUG_DOAS_CONFIG_
-  DEBUG_FunctionStop("mediateRequestSetAnalysisNonLinear",rc);
+  DEBUG_FunctionStop("mediateRequestSetAnalysisNonLinearDoas",rc);
   #endif
 
   // Return
@@ -1095,6 +945,7 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
   INDEX indexKurucz;
 	 ENGINE_CONTEXT *pEngineContext;                                               // engine context
 	 mediate_analysis_window_t *pAnalysisWindows;                                  // pointer to the current analysis window from the user interface
+	 mediate_analysis_window_t calibWindows;                                       // pointer to the calibration parameters
 	 FENO *pTabFeno;                                                               // pointer to the description of an analysis window
 	 INT indexFeno,i;                                                              // browse analysis windows
 	 RC rc;                                                                        // return code
@@ -1115,119 +966,149 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
 	 pEngineContext=(ENGINE_CONTEXT *)engineContext;
   saveFlag=(INT)pEngineContext->project.spectra.displayDataFlag;
   useKurucz=useUsamp=0;
+  indexKurucz=ITEM_NONE;
+
+  memset(&calibWindows,0,sizeof(mediate_analysis_window_t));
+
+  memcpy(&calibWindows.crossSectionList,&pEngineContext->calibFeno.crossSectionList,sizeof(cross_section_list_t));
+  memcpy(&calibWindows.linear,&pEngineContext->calibFeno.linear,sizeof(struct anlyswin_linear));
+  memcpy(&calibWindows.shiftStretchList,&pEngineContext->calibFeno.shiftStretchList,sizeof(shift_stretch_list_t));
+  memcpy(&calibWindows.outputList,&pEngineContext->calibFeno.outputList,sizeof(output_list_t));
+
+  // Reinitialize all global variables used for the analysis, release old buffers and allocate new ones
 
 	 rc=ANALYSE_SetInit(pEngineContext);
 
-  for (indexFeno=0;(indexFeno<numberOfWindows) && !rc;indexFeno++)
-   {
+	 // Load analysis windows
+
+  for (indexFeno=0;(indexFeno<numberOfWindows+1) && !rc;indexFeno++)            // if indexFeno==0, load calibration parameters
+   {                                                                            // otherwise, load analysis windows from analysisWindows[indexFeno-1]
    	// Pointers initialization
 
    	pTabFeno=(FENO *)&TabFeno[NFeno];
-   	pAnalysisWindows=(mediate_analysis_window_t *)&analysisWindows[indexFeno];
+
+   	pTabFeno->hidden=!indexFeno;
+   	pAnalysisWindows=(!pTabFeno->hidden)?(mediate_analysis_window_t *)&analysisWindows[indexFeno-1]:(mediate_analysis_window_t *)&calibWindows;
     pTabFeno->NDET=NDET;
 
-    // Load data from analysis windows panels
-
-    strcpy(pTabFeno->windowName,pAnalysisWindows->name);
-    strcpy(pTabFeno->residualsFile,pAnalysisWindows->residualFile);
-    strcpy(pTabFeno->ref1,pAnalysisWindows->refOneFile);
-    strcpy(pTabFeno->ref2,pAnalysisWindows->refTwoFile);
-
-    if (// MISSING FIELD !!! ((pTabFeno->hidden=pAnalysisWindows->hidden)==0) &&
-        ((pTabFeno->refSpectrumSelectionMode=pAnalysisWindows->refSpectrumSelection)==ANLYS_REF_SELECTION_MODE_AUTOMATIC))
+    if ((pTabFeno->hidden<2) && ((THRD_id==THREAD_TYPE_ANALYSIS) || (pTabFeno->hidden==1)))               // QDOAS : avoid the load of disabled analysis windows with hidden==2
      {
-      pTabFeno->refSZA=(double)pAnalysisWindows->refSzaCenter;
-      pTabFeno->refSZADelta=(double)pAnalysisWindows->refSzaDelta;
+     	if (pTabFeno->hidden)
+     	 {
+     	  strcpy(pTabFeno->windowName,"Calibration description");                 // like WinDOAS
+     	  pTabFeno->analysisMethod=pKuruczOptions->analysisMethod;
+     	 }
+     	else
+     	 {
+        // Load data from analysis windows panels
 
-      // MISSING FIELD !!! pTabFeno->refLatMin=pAnalysisWindows->refLatMin;
-      // MISSING FIELD !!! pTabFeno->refLatMax=pAnalysisWindows->refLatMax;
-      // MISSING FIELD !!! pTabFeno->refLonMin=pAnalysisWindows->refLonMin;
-      // MISSING FIELD !!! pTabFeno->refLonMax=pAnalysisWindows->refLonMax;
+        strcpy(pTabFeno->windowName,pAnalysisWindows->name);
+        strcpy(pTabFeno->residualsFile,pAnalysisWindows->residualFile);
+        strcpy(pTabFeno->ref1,pAnalysisWindows->refOneFile);
+        strcpy(pTabFeno->ref2,pAnalysisWindows->refTwoFile);
 
-      // MISSING FIELD !!! if ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_ASCII) ||
-      // MISSING FIELD !!!     (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN))
-      // MISSING FIELD !!!
-      // MISSING FIELD !!!  memcpy(pTabFeno->gomePixelType,pAnalysisWindows->gomePixelType,4);
-      // MISSING FIELD !!!
-      // MISSING FIELD !!! else
-      // MISSING FIELD !!!  memset(pTabFeno->gomePixelType,0,4);
-
-      // MISSING FIELD !!! pTabFeno->nspectra=pAnalysisWindows->nspectra;
-
-      ANALYSE_refSelectionFlag++;
-
-      if ((fabs(pTabFeno->refLonMax-pTabFeno->refLonMin)>1.e-5) ) // && (fabs(pTabFeno->refLonMax-pTabFeno->refLonMin)<359.))
-       ANALYSE_lonSelectionFlag++;
-     }
-
-    if (pEngineContext->project.spectra.displayFitFlag)
-     {
-      pTabFeno->displaySpectrum=pAnalysisWindows->requireSpectrum;
-      pTabFeno->displayResidue=pAnalysisWindows->requireResidual;
-      pTabFeno->displayTrend=pAnalysisWindows->requirePolynomial;
-      pTabFeno->displayRefEtalon=pAnalysisWindows->requireRefRatio;
-      pTabFeno->displayFits=pAnalysisWindows->requireFit;
-      pTabFeno->displayPredefined=pAnalysisWindows->requirePredefined;
-     }
-
-    pTabFeno->useKurucz=pAnalysisWindows->kuruczMode;
-    pTabFeno->analysisMethod=(pTabFeno->hidden==1)?pKuruczOptions->analysisMethod:pAnalysisOptions->method;
-    pTabFeno->Decomp=1;
-
-    useKurucz+=pAnalysisWindows->kuruczMode;
-
-    // Wavelength scales read out
-
-    if (((pTabFeno->Lambda==NULL) && ((pTabFeno->Lambda=MEMORY_AllocDVector("ANALYSE_LoadData ","Lambda",0,NDET-1))==NULL)) ||
-        ((pTabFeno->LambdaK==NULL) && ((pTabFeno->LambdaK=MEMORY_AllocDVector("ANALYSE_LoadData ","LambdaK",0,NDET-1))==NULL)) ||
-        ((pTabFeno->LambdaRef==NULL) && ((pTabFeno->LambdaRef=MEMORY_AllocDVector("ANALYSE_LoadData ","LambdaRef",0,NDET-1))==NULL)))
-     {
-      rc=ERROR_ID_ALLOC;
-      break;
-     }
-
-    for (i=0;i<NDET;i++)
-     pTabFeno->LambdaRef[i]=i;  // NB : for satellites measurements, irradiance is retrieved later from spectra files
-
-//     if ((pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_GDP_ASCII) &&
-//         (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_GDP_BIN) &&
-//         (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_SCIA_HDF) &&
-//         (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_SCIA_PDS))
-
-      memcpy(pTabFeno->LambdaRef,pEngineContext->buffers.lambda,sizeof(double)*NDET);
-
-    if (!(rc=ANALYSE_LoadRef(pEngineContext)) &&   // eventually, modify LambdaRef for continuous functions
-        !(rc=mediateRequestSetAnalysisCross(&pAnalysisWindows->crossSectionList,pTabFeno->hidden,pTabFeno->LambdaRef)) &&
-        !(rc=mediateRequestSetAnalysisLinear(&pAnalysisWindows->linear)) &&
-        !(rc=mediateRequestSetAnalysisNonLinear(&pAnalysisWindows->nonlinear,pTabFeno->LambdaRef))  &&
-        !(rc=ANALYSE_LoadShiftStretch(pAnalysisWindows->shiftStretchList.shiftStretch,pAnalysisWindows->shiftStretchList.nShiftStretch)) &&
-         (pTabFeno->hidden ||
-       (!(rc=ANALYSE_LoadGaps(pAnalysisWindows->gapList.gap,pAnalysisWindows->gapList.nGap,pTabFeno->LambdaRef,pAnalysisWindows->fitMinWavelength,pAnalysisWindows->fitMaxWavelength)) &&
-        (!pTabFeno->gomeRefFlag || !(rc=ANALYSE_SvdLocalAlloc("ANALYSE_LoadData",&pTabFeno->svd)))
-       )))
-     {
-      if (pTabFeno->hidden==1)
-       indexKurucz=NFeno;
-      else
-       {
-        useUsamp+=pTabFeno->useUsamp;
-
-        if (pTabFeno->gomeRefFlag || MFC_refFlag)
+        if ((pTabFeno->refSpectrumSelectionMode=pAnalysisWindows->refSpectrumSelection)==ANLYS_REF_SELECTION_MODE_AUTOMATIC)
          {
-          memcpy(pTabFeno->Lambda,pTabFeno->LambdaRef,sizeof(double)*NDET);
-          memcpy(pTabFeno->LambdaK,pTabFeno->LambdaRef,sizeof(double)*NDET);
+          pTabFeno->refSZA=(double)pAnalysisWindows->refSzaCenter;
+          pTabFeno->refSZADelta=(double)pAnalysisWindows->refSzaDelta;
 
-          if (pTabFeno->LambdaRef[NDET-1]-pTabFeno->Lambda[0]+1!=NDET)
-           rc=ANALYSE_XsInterpolation(pTabFeno,pTabFeno->LambdaRef);
+          // MISSING FIELD !!! pTabFeno->refLatMin=pAnalysisWindows->refLatMin;
+          // MISSING FIELD !!! pTabFeno->refLatMax=pAnalysisWindows->refLatMax;
+          // MISSING FIELD !!! pTabFeno->refLonMin=pAnalysisWindows->refLonMin;
+          // MISSING FIELD !!! pTabFeno->refLonMax=pAnalysisWindows->refLonMax;
+
+          // MISSING FIELD !!! if ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_ASCII) ||
+          // MISSING FIELD !!!     (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN))
+          // MISSING FIELD !!!
+          // MISSING FIELD !!!  memcpy(pTabFeno->gomePixelType,pAnalysisWindows->gomePixelType,4);
+          // MISSING FIELD !!!
+          // MISSING FIELD !!! else
+          // MISSING FIELD !!!  memset(pTabFeno->gomePixelType,0,4);
+
+          // MISSING FIELD !!! pTabFeno->nspectra=pAnalysisWindows->nspectra;
+
+          ANALYSE_refSelectionFlag++;
+
+          if ((fabs(pTabFeno->refLonMax-pTabFeno->refLonMin)>1.e-5) ) // && (fabs(pTabFeno->refLonMax-pTabFeno->refLonMin)<359.))
+           ANALYSE_lonSelectionFlag++;
          }
+
+        if (pEngineContext->project.spectra.displayFitFlag)
+         {
+          pTabFeno->displaySpectrum=pAnalysisWindows->requireSpectrum;
+          pTabFeno->displayResidue=pAnalysisWindows->requireResidual;
+          pTabFeno->displayTrend=pAnalysisWindows->requirePolynomial;
+          pTabFeno->displayRefEtalon=pAnalysisWindows->requireRefRatio;
+          pTabFeno->displayFits=pAnalysisWindows->requireFit;
+          pTabFeno->displayPredefined=pAnalysisWindows->requirePredefined;
+         }
+
+        pTabFeno->useKurucz=pAnalysisWindows->kuruczMode;
+        pTabFeno->analysisMethod=pAnalysisOptions->method;
+        useKurucz+=pAnalysisWindows->kuruczMode;
        }
 
-      ANALYSE_SetAnalysisType();
+      pTabFeno->Decomp=1;
 
-      if (!pTabFeno->hidden)
+      // Wavelength scales read out
+
+      if (((pTabFeno->Lambda==NULL) && ((pTabFeno->Lambda=MEMORY_AllocDVector("ANALYSE_LoadData ","Lambda",0,NDET-1))==NULL)) ||
+          ((pTabFeno->LambdaK==NULL) && ((pTabFeno->LambdaK=MEMORY_AllocDVector("ANALYSE_LoadData ","LambdaK",0,NDET-1))==NULL)) ||
+          ((pTabFeno->LambdaRef==NULL) && ((pTabFeno->LambdaRef=MEMORY_AllocDVector("ANALYSE_LoadData ","LambdaRef",0,NDET-1))==NULL)))
        {
-        lambdaMin=min(lambdaMin,pTabFeno->LambdaRef[0]);
-        lambdaMax=max(lambdaMax,pTabFeno->LambdaRef[NDET-1]);
+        rc=ERROR_ID_ALLOC;
+        break;
+       }
+
+      for (i=0;i<NDET;i++)
+       pTabFeno->LambdaRef[i]=i;  // NB : for satellites measurements, irradiance is retrieved later from spectra files
+
+//       if ((pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_GDP_ASCII) &&
+//           (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_GDP_BIN) &&
+//           (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_SCIA_HDF) &&
+//           (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_SCIA_PDS))
+
+        memcpy(pTabFeno->LambdaRef,pEngineContext->buffers.lambda,sizeof(double)*NDET);
+
+      if (!(rc=ANALYSE_LoadRef(pEngineContext)) &&   // eventually, modify LambdaRef for continuous functions
+          !(rc=ANALYSE_LoadCross(pAnalysisWindows->crossSectionList.crossSection,pAnalysisWindows->crossSectionList.nCrossSection,pTabFeno->hidden,pTabFeno->LambdaRef)) &&
+          !(rc=mediateRequestSetAnalysisLinear(&pAnalysisWindows->linear)) &&
+
+         // Caro : int the future, replace structures anlyswin_nonlinear and calibration_sfp with the following one more flexible
+         //        mediateRequestSetAnalysisNonLinearDoas and mediateRequestSetAnalysisNonLinearCalib would be replaced by only one call to ANALYSE_LoadNonLinear
+
+         ((!pTabFeno->hidden && !(rc=mediateRequestSetAnalysisNonLinearDoas(&pAnalysisWindows->nonlinear,pTabFeno->LambdaRef))) ||
+          (pTabFeno->hidden && !(rc=mediateRequestSetAnalysisNonLinearCalib(pEngineContext->calibFeno.sfp,pTabFeno->LambdaRef)))) &&
+
+          !(rc=ANALYSE_LoadShiftStretch(pAnalysisWindows->shiftStretchList.shiftStretch,pAnalysisWindows->shiftStretchList.nShiftStretch)) &&
+           (pTabFeno->hidden ||
+         (!(rc=ANALYSE_LoadGaps(pAnalysisWindows->gapList.gap,pAnalysisWindows->gapList.nGap,pTabFeno->LambdaRef,pAnalysisWindows->fitMinWavelength,pAnalysisWindows->fitMaxWavelength)) &&
+          (!pTabFeno->gomeRefFlag || !(rc=ANALYSE_SvdLocalAlloc("ANALYSE_LoadData",&pTabFeno->svd)))
+         )))
+       {
+        if (pTabFeno->hidden==1)
+         indexKurucz=NFeno;
+        else
+         {
+          useUsamp+=pTabFeno->useUsamp;
+
+          if (pTabFeno->gomeRefFlag || MFC_refFlag)
+           {
+            memcpy(pTabFeno->Lambda,pTabFeno->LambdaRef,sizeof(double)*NDET);
+            memcpy(pTabFeno->LambdaK,pTabFeno->LambdaRef,sizeof(double)*NDET);
+
+            if (pTabFeno->LambdaRef[NDET-1]-pTabFeno->Lambda[0]+1!=NDET)
+             rc=ANALYSE_XsInterpolation(pTabFeno,pTabFeno->LambdaRef);
+           }
+         }
+
+        ANALYSE_SetAnalysisType();
+
+        if (!pTabFeno->hidden)
+         {
+          lambdaMin=min(lambdaMin,pTabFeno->LambdaRef[0]);
+          lambdaMax=max(lambdaMax,pTabFeno->LambdaRef[NDET-1]);
+         }
        }
 
       #if defined(__DEBUG_) && __DEBUG_
@@ -1273,19 +1154,17 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
 // QDOAS ???         break;
 // QDOAS ???       }
 // QDOAS ???
-// QDOAS ??? // QDOAS ???    if (!rc && ((THRD_id==THREAD_TYPE_KURUCZ) || useKurucz) &&
-// QDOAS ??? // QDOAS ???       !(rc=KURUCZ_Alloc(pEngineContext->buffers.lambda,projectDataIndex,indexKurucz,lambdaMin,lambdaMax)))
-// QDOAS ??? // QDOAS ???     {
-// QDOAS ??? // QDOAS ???      rc=KURUCZ_Reference(pEngineContext->buffers.instrFunction,0,saveFlag,1);
-// QDOAS ??? // QDOAS ???
-// QDOAS ??? // QDOAS ???      if (!rc)
-// QDOAS ??? // QDOAS ???       rc=ANALYSE_AlignReference(0,saveFlag);
-// QDOAS ??? // QDOAS ???     }
-// QDOAS ??? // QDOAS ???
-// QDOAS ??? // QDOAS ???    if (!rc && useUsamp &&
-// QDOAS ??? // QDOAS ???        !(rc=USAMP_GlobalAlloc(lambdaMin,lambdaMax,NDET)) &&
-// QDOAS ??? // QDOAS ???        !(rc=USAMP_LocalAlloc(1)))
-// QDOAS ??? // QDOAS ???     rc=USAMP_BuildFromAnalysis(0,1);
+
+  if (!rc && ((THRD_id==THREAD_TYPE_KURUCZ) || useKurucz) &&
+     !(rc=KURUCZ_Alloc(&pEngineContext->project,pEngineContext->buffers.lambda,indexKurucz,lambdaMin,lambdaMax)) &&
+     !(rc=KURUCZ_Reference(pEngineContext->buffers.instrFunction,0,saveFlag,1)))
+
+   rc=ANALYSE_AlignReference(0,saveFlag,responseHandle);
+
+// QDOAS ???  if (!rc && useUsamp &&
+// QDOAS ???      !(rc=USAMP_GlobalAlloc(lambdaMin,lambdaMax,NDET)) &&
+// QDOAS ???      !(rc=USAMP_LocalAlloc(1)))
+// QDOAS ???   rc=USAMP_BuildFromAnalysis(0,1);
 // QDOAS ???
 // QDOAS ??? // QDOAS ???     {
 // QDOAS ??? // QDOAS ???      FILE *fp;

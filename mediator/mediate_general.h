@@ -27,7 +27,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 extern "C" {
 #endif
 
-  
+
   /*************************************************************************/
   /* Symbol */
 
@@ -36,11 +36,11 @@ extern "C" {
     char name[SYMBOL_NAME_BUFFER_LENGTH];
     char description[SYMBOL_DESCR_BUFFER_LENGTH];
   } mediate_symbol_t;
-  
-  
+
+
   /*************************************************************************/
   /* Site */
-  
+
   typedef struct mediate_site
   {
     char name[SITE_NAME_BUFFER_LENGTH];
@@ -49,8 +49,8 @@ extern "C" {
     double latitude;
     double altitude;
   } mediate_site_t;
-  
-  
+
+
   /*************************************************************************/
   /* Slits */
 
@@ -108,7 +108,7 @@ extern "C" {
     struct slit_file gaussiantempfile;
     struct slit_error_file errortempfile;
   } mediate_slit_function_t;
-  
+
   /*************************************************************************/
   /* Filters */
 
@@ -214,6 +214,23 @@ extern "C" {
     int offsetFlagErrStore;
   };
 
+// Caro : would be nice to replace struct calibration_sfp with an array of structures of this type
+//        more flexible and could be processed as struct calibration_sfp
+
+// typedef struct _AnalyseNonLinearParameters
+//  {
+//  	UCHAR symbolName[MAX_ITEM_TEXT_LEN+1];
+//  	UCHAR crossFileName[MAX_ITEM_TEXT_LEN+1];
+//  	int fitFlag;
+//  	double initialValue;
+//  	double deltaValue;
+//  	double minValue;
+//  	double maxValue;
+//  	int storeFit;
+//  	int storeError;
+//  }
+// ANALYSE_NON_LINEAR_PARAMETERS;
+
   struct anlyswin_nonlinear
   {
     int solFlagFit;
@@ -313,6 +330,23 @@ extern "C" {
     int vertErr;
     double vertFactor;
   };
+
+// Caro : would be nice to replace struct calibration_sfp with an array of structures of this type
+//        more flexible and could be processed as struct anlyswin_nonlinear
+
+// typedef struct _AnalyseNonLinearParameters
+//  {
+//  	UCHAR symbolName[MAX_ITEM_TEXT_LEN+1];
+//  	UCHAR crossFileName[MAX_ITEM_TEXT_LEN+1];
+//  	int fitFlag;
+//  	double initialValue;
+//  	double deltaValue;
+//  	double minValue;
+//  	double maxValue;
+//  	int storeFit;
+//  	int storeError;
+//  }
+// ANALYSE_NON_LINEAR_PARAMETERS;
 
   struct calibration_sfp
   {

@@ -69,7 +69,7 @@ CWProjectTabCalibration::CWProjectTabCalibration(const mediate_project_calibrati
   m_lineShapeCombo->addItem("2n-Lorentz", QVariant(PRJCT_CALIB_FWHM_TYPE_INVPOLY));
   m_lineShapeCombo->addItem("Voigt", QVariant(PRJCT_CALIB_FWHM_TYPE_VOIGT));
   topLayout->addWidget(m_lineShapeCombo, 2, 1);
- 
+
   // degree of 2n-Lorentz
   m_degreeWidget = new QFrame(this);
   m_degreeWidget->setFrameStyle(QFrame::NoFrame);
@@ -105,7 +105,7 @@ CWProjectTabCalibration::CWProjectTabCalibration(const mediate_project_calibrati
   displayLayout->addWidget(m_residualCheck, 1, 0);
   m_shiftSfpCheck = new QCheckBox("Shift/SFP", displayGroup);
   displayLayout->addWidget(m_shiftSfpCheck, 1, 1);
-  
+
   groupLayout->addWidget(displayGroup);
 
   // Polynomial Degree
@@ -114,12 +114,12 @@ CWProjectTabCalibration::CWProjectTabCalibration(const mediate_project_calibrati
 
   polyLayout->addWidget(new QLabel("Shift", polyGroup), 0, 0);
   m_shiftDegreeSpinBox = new QSpinBox(polyGroup);
-  m_shiftDegreeSpinBox->setRange(1,5);
+  m_shiftDegreeSpinBox->setRange(0,5);
   polyLayout->addWidget(m_shiftDegreeSpinBox, 0, 1);
 
   polyLayout->addWidget(new QLabel("SFP", polyGroup), 1, 0);
   m_sfpDegreeSpinBox = new QSpinBox(polyGroup);
-  m_sfpDegreeSpinBox->setRange(1,5);
+  m_sfpDegreeSpinBox->setRange(0,5);
   polyLayout->addWidget(m_sfpDegreeSpinBox, 1, 1);
 
   groupLayout->addWidget(polyGroup);
@@ -129,7 +129,7 @@ CWProjectTabCalibration::CWProjectTabCalibration(const mediate_project_calibrati
   QGridLayout *windowLayout = new QGridLayout(windowGroup);
   windowLayout->setMargin(5);
   windowLayout->setSpacing(3);
-  
+
   windowLayout->addWidget(new QLabel("Min", windowGroup), 0, 0);
   m_lambdaMinEdit = new QLineEdit(windowGroup);
   m_lambdaMinEdit->setFixedWidth(50);
@@ -141,7 +141,7 @@ CWProjectTabCalibration::CWProjectTabCalibration(const mediate_project_calibrati
   m_lambdaMaxEdit->setFixedWidth(50);
   m_lambdaMaxEdit->setValidator(new CDoubleFixedFmtValidator(100.0, 900.0, 2, m_lambdaMaxEdit));
   windowLayout->addWidget(m_lambdaMaxEdit, 1, 1);
- 
+
   windowLayout->addWidget(new QLabel("Sub-windows", windowGroup), 2, 0);
   m_subWindowsSpinBox = new QSpinBox(this);
   m_subWindowsSpinBox->setFixedWidth(50);
@@ -151,7 +151,7 @@ CWProjectTabCalibration::CWProjectTabCalibration(const mediate_project_calibrati
   groupLayout->addWidget(windowGroup);
 
   mainLayout->addLayout(groupLayout);
-  
+
   mainLayout->addSpacing(5);
 
   // fit paramters tables
@@ -202,10 +202,10 @@ CWProjectTabCalibration::CWProjectTabCalibration(const mediate_project_calibrati
   m_fitsCheck->setChecked(properties->requireFits != 0);
   m_residualCheck->setChecked(properties->requireResidual != 0);
   m_shiftSfpCheck->setChecked(properties->requireShiftSfp != 0);
-  
+
   m_shiftDegreeSpinBox->setValue(properties->shiftDegree);
   m_sfpDegreeSpinBox->setValue(properties->sfpDegree);
-  
+
   m_lambdaMinEdit->validator()->fixup(tmpStr.setNum(properties->wavelengthMin));
   m_lambdaMinEdit->setText(tmpStr);
   m_lambdaMaxEdit->validator()->fixup(tmpStr.setNum(properties->wavelengthMax));
@@ -247,7 +247,7 @@ void CWProjectTabCalibration::apply(mediate_project_calibration_t *properties) c
   strcpy(properties->solarRefFile, m_refFileEdit->text().toAscii().data());
 
   properties->methodType = m_methodCombo->itemData(m_methodCombo->currentIndex()).toInt();
-  
+
   properties->lineShape = m_lineShapeCombo->itemData(m_lineShapeCombo->currentIndex()).toInt();
   properties->lorentzDegree = m_degreeSpinBox->value();
 
@@ -255,10 +255,10 @@ void CWProjectTabCalibration::apply(mediate_project_calibration_t *properties) c
   properties->requireFits = (m_fitsCheck->checkState() == Qt::Checked) ? 1 : 0;
   properties->requireResidual = (m_residualCheck->checkState() == Qt::Checked) ? 1 : 0;
   properties->requireShiftSfp = (m_shiftSfpCheck->checkState() == Qt::Checked) ? 1 : 0;
-  
+
   properties->shiftDegree = m_shiftDegreeSpinBox->value();
   properties->sfpDegree = m_sfpDegreeSpinBox->value();
-  
+
   properties->wavelengthMin = m_lambdaMinEdit->text().toDouble();
   properties->wavelengthMax = m_lambdaMaxEdit->text().toDouble();
 
@@ -282,14 +282,14 @@ void CWProjectTabCalibration::slotLineShapeSelectionChanged(int index)
     m_degreeWidget->hide();
 
   m_sfpDegreeSpinBox->setEnabled(tmp != PRJCT_CALIB_FWHM_TYPE_NONE);
-    
+
 }
 
 void CWProjectTabCalibration::slotBrowseSolarRefFile()
 {
   QString filename = QFileDialog::getOpenFileName(this, "Open Solar Reference File", "/home/ian",
                                                   "Kurucz File (*.ktz);;All Files (*)");
-  
+
   if (!filename.isEmpty())
     m_refFileEdit->setText(filename);
 }

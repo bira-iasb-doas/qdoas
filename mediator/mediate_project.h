@@ -419,8 +419,6 @@ extern "C" {
     mediate_project_instrumental_t instrumental;
     mediate_project_slit_t slit;
     mediate_project_output_t output;
-    mediate_project_nasa_ames_t nasaames; /* TODO JUST REMOVE */
-
   } mediate_project_t;
 
 
@@ -430,7 +428,6 @@ extern "C" {
   void initializeMediateProject(mediate_project_t *d);
   void initializeMediateProjectDisplay(mediate_project_display_t *d);
   void initializeMediateProjectSelection(mediate_project_selection_t *d);
-  void initializeMediateProjectSpectra(mediate_project_spectra_t *d);
   void initializeMediateProjectAnalysis(mediate_project_analysis_t *d);
   void initializeMediateProjectFiltering(mediate_filter_t *d);
   void initializeMediateProjectCalibration(mediate_project_calibration_t *d);
@@ -438,7 +435,6 @@ extern "C" {
   void initializeMediateProjectInstrumental(mediate_project_instrumental_t *d);
   void initializeMediateProjectSlit(mediate_project_slit_t *d);
   void initializeMediateProjectOutput(mediate_project_output_t *d);
-  void initializeMediateProjectNasaAmes(mediate_project_nasa_ames_t *d); /* TODO JUST REMOVE */
 
 #if defined(_cplusplus) || defined(__cplusplus)
 }

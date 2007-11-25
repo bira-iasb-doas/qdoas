@@ -4346,251 +4346,236 @@ RC ANALYSE_CheckLambda(WRK_SYMBOL *pWrkSymbol,double *lambda,UCHAR *callingFunct
 // AnalyseLoadCross : Load cross sections data from cross sections type tab page
 // -----------------------------------------------------------------------------
 
-// QDOAS ??? #if defined(__BC32_) && __BC32_
-// QDOAS ??? #pragma argsused
-// QDOAS ??? #endif
-// QDOAS ??? RC AnalyseLoadCross(INDEX entryPoint,INT hidden,double *lambda)
-// QDOAS ???  {
-// QDOAS ???   // Declarations
-// QDOAS ???
-// QDOAS ???   UCHAR *pOrthoSymbol[MAX_FIT],                            // for each cross section in list, hold cross section to use for orthogonalization
-// QDOAS ???         *symbolName;
-// QDOAS ???   INDEX indexItem,indexSymbol,indexSvd,                    // resp. indexes of item in list and of symbol
-// QDOAS ???         firstTabCross,endTabCross,indexTabCross,indexType; // indexes for browsing list of cross sections symbols
-// QDOAS ???   SZ_LEN fileLength,symbolLength;                          // length in characters of file name and symbol name
-// QDOAS ???   CROSS_REFERENCE *pTabCross;                              // pointer to an element of the symbol cross reference table of an analysis window
-// QDOAS ???   WRK_SYMBOL *pWrkSymbol;                                  // pointer to a general description of a symbol
-// QDOAS ???   LIST_ITEM *pList;                                        // pointer to description of an item in list
-// QDOAS ???   FENO *pTabFeno;                                          // pointer to description of the current analysis window
-// QDOAS ???   RC rc;                                                   // return code
-// QDOAS ???
-// QDOAS ???   #if defined(__DEBUG_) && __DEBUG_
-// QDOAS ???   DEBUG_FunctionBegin("AnalyseLoadCross",DEBUG_FCTTYPE_FILE);
-// QDOAS ???   #endif
-// QDOAS ???
-// QDOAS ???   // Initializations
-// QDOAS ???
-// QDOAS ???   pWrkSymbol=NULL;
-// QDOAS ???   pTabFeno=&TabFeno[NFeno];
-// QDOAS ???   firstTabCross=pTabFeno->NTabCross;
-// QDOAS ???   rc=ERROR_ID_NO;
-// QDOAS ???
-// QDOAS ???   for (indexItem=entryPoint;(indexItem!=ITEM_NONE) && !rc;indexItem=pList->indexPrevious)
-// QDOAS ???    {
-// QDOAS ???     // Get cross section name from analysis properties dialog box
-// QDOAS ???
-// QDOAS ???     pList=&ANLYS_itemList[indexItem];
-// QDOAS ???     symbolName=pList->itemText[COLUMN_CROSS_FILE];
-// QDOAS ???     symbolLength=strlen(symbolName);
-// QDOAS ???     fileLength=strlen(pList->crossFileName);
-// QDOAS ???
-// QDOAS ???     // Search for symbol in list
-// QDOAS ???
-// QDOAS ???     for (indexSymbol=0;indexSymbol<NWorkSpace;indexSymbol++)
-// QDOAS ???      {
-// QDOAS ???       pWrkSymbol=&WorkSpace[indexSymbol];
-// QDOAS ???
-// QDOAS ???       if ((pWrkSymbol->type==WRK_SYMBOL_CROSS) &&
-// QDOAS ???           (strlen(pWrkSymbol->symbolName)==symbolLength) &&
-// QDOAS ???           (strlen(pWrkSymbol->crossFileName)==fileLength) &&
-// QDOAS ???           !STD_Stricmp(pWrkSymbol->symbolName,symbolName) &&
-// QDOAS ???           !STD_Stricmp(pWrkSymbol->crossFileName,pList->crossFileName))
-// QDOAS ???
-// QDOAS ???        break;
-// QDOAS ???      }
-// QDOAS ???
-// QDOAS ???     // Get type of cross section
-// QDOAS ???
-// QDOAS ???     for (indexType=0,symbolLength=strlen(pList->itemText[(!hidden)?COLUMN_CROSS_XS_TYPE:COLUMN_CROSS_SVD_XS_TYPE]);indexType<ANLYS_CROSS_ACTION_MAX;indexType++)
-// QDOAS ???      if ((strlen(ANLYS_crossAction[indexType])==symbolLength) &&
-// QDOAS ???          !STD_Stricmp(pList->itemText[(!hidden)?COLUMN_CROSS_XS_TYPE:COLUMN_CROSS_SVD_XS_TYPE],ANLYS_crossAction[indexType]))
-// QDOAS ???       break;
-// QDOAS ???
-// QDOAS ???     if (indexType==ANLYS_CROSS_ACTION_MAX)
-// QDOAS ???      indexType=0;
-// QDOAS ???
-// QDOAS ???     if ((indexSymbol==NWorkSpace) && (NWorkSpace<MAX_SYMB))
-// QDOAS ???      {
-// QDOAS ???       // Allocate a new symbol
-// QDOAS ???
-// QDOAS ???       pWrkSymbol=&WorkSpace[indexSymbol];
-// QDOAS ???
-// QDOAS ???       pWrkSymbol->type=WRK_SYMBOL_CROSS;
-// QDOAS ???       strcpy(pWrkSymbol->symbolName,symbolName);
-// QDOAS ???       strcpy(pWrkSymbol->crossFileName,pList->crossFileName);
-// QDOAS ???
-// QDOAS ???       // Load cross section from file
-// QDOAS ???
-// QDOAS ???       if (((strlen(pWrkSymbol->symbolName)==strlen("1/Ref")) && !STD_Stricmp(pWrkSymbol->symbolName,"1/Ref")) ||
-// QDOAS ???           !(rc=MATRIX_Load(pList->crossFileName,&pWrkSymbol->xs,0 /* line base */,0 /* column base */,0,0,
-// QDOAS ???                           //(indexType!=ANLYS_CROSS_ACTION_CONVOLUTE_RING)?2:4,                                 // TEST 24/01/2002
-// QDOAS ???                           (indexType==ANLYS_CROSS_ACTION_NOTHING)?(double)0.:lambda[0]-7.,      // max(lambda[0]-7.,(double)290.), - changed on october 2006
-// QDOAS ???                           (indexType==ANLYS_CROSS_ACTION_NOTHING)?(double)0.:lambda[NDET-1]+7., // min(lambda[NDET-1]+7.,(double)600.), - changed on october 2006
-// QDOAS ???                           (indexType!=ANLYS_CROSS_ACTION_NOTHING)?1:0,1,"AnalyseLoadCross ")))
-// QDOAS ???        {
-// QDOAS ???         if (!STD_Stricmp(pWrkSymbol->symbolName,"O3TD"))
-// QDOAS ???          rc=MATRIX_Allocate(&O3TD,NDET,pWrkSymbol->xs.nc,0,0,0,"ANALYSE_LoadCross");
-// QDOAS ???
-// QDOAS ???         NWorkSpace++;
-// QDOAS ???        }
-// QDOAS ???      }
-// QDOAS ???
-// QDOAS ???     if ((rc==ERROR_ID_NO) && (indexSymbol<NWorkSpace) && (pTabFeno->NTabCross<MAX_FIT))
-// QDOAS ???      {
-// QDOAS ???       pTabCross=&pTabFeno->TabCross[pTabFeno->NTabCross];
-// QDOAS ???
-// QDOAS ???       // Allocate vectors for cross section and its second derivative for analysis processing
-// QDOAS ???
-// QDOAS ???       if (((pTabCross->vector=(double *)MEMORY_AllocDVector("AnalyseLoadCross ","vector",0,NDET-1))==NULL) ||
-// QDOAS ???           ((pTabCross->Deriv2=(double *)MEMORY_AllocDVector("AnalyseLoadCross ","Deriv2",1,NDET))==NULL))
-// QDOAS ???
-// QDOAS ???        rc=ERROR_ID_ALLOC;
-// QDOAS ???
-// QDOAS ???       else
-// QDOAS ???        {
-// QDOAS ???         pTabCross->crossAction=indexType;
-// QDOAS ???
-// QDOAS ???         pTabCross->filterFlag=(!hidden && (pList->itemText[COLUMN_CROSS_FILTER][0]=='1'))?(UCHAR)1:(UCHAR)0;
-// QDOAS ???
-// QDOAS ???         if ((pTabCross->crossAction==ANLYS_CROSS_ACTION_NOTHING) && (pTabFeno->gomeRefFlag || MFC_refFlag))
-// QDOAS ???          rc=ANALYSE_CheckLambda(pWrkSymbol,lambda,"AnalyseLoadCross ");
-// QDOAS ???
-// QDOAS ???         if (rc==ERROR_ID_NO)
-// QDOAS ???          {
-// QDOAS ???           pTabCross->Comp=indexSymbol;
-// QDOAS ???           pTabCross->IndSvdA=++pTabFeno->svd.DimC;
-// QDOAS ???           pTabFeno->xsToConvolute+=((pTabCross->crossAction==ANLYS_CROSS_ACTION_CONVOLUTE) ||
-// QDOAS ???                                     (pTabCross->crossAction==ANLYS_CROSS_ACTION_CONVOLUTE_I0) ||
-// QDOAS ???                                     (pTabCross->crossAction==ANLYS_CROSS_ACTION_CONVOLUTE_RING))?1:0;
-// QDOAS ???
-// QDOAS ???           pTabFeno->xsToConvoluteI0+=(pTabCross->crossAction==ANLYS_CROSS_ACTION_CONVOLUTE_I0)?1:0;
-// QDOAS ???
-// QDOAS ???           if (!hidden)
-// QDOAS ???            {
-// QDOAS ???             pOrthoSymbol[pTabFeno->NTabCross]=pList->itemText[COLUMN_CROSS_ORTHOGONAL];
-// QDOAS ???
-// QDOAS ???             pTabCross->display=(pList->itemText[COLUMN_CROSS_DISPLAY][0]=='1')?(UCHAR)1:(UCHAR)0;               // fit display
-// QDOAS ???             pTabCross->InitConc=atof(pList->itemText[COLUMN_CROSS_CCINIT]);                                     // initial concentration
-// QDOAS ???             pTabCross->FitConc=(pList->itemText[COLUMN_CROSS_CCFIT][0]=='1')?1:0;                               // modify concentration
-// QDOAS ???             pTabCross->DeltaConc=(pTabCross->FitConc)?atof(pList->itemText[COLUMN_CROSS_CCDELTA]):(double)0.;   // delta on concentration
-// QDOAS ???             pTabCross->I0Conc=(pTabCross->crossAction==ANLYS_CROSS_ACTION_CONVOLUTE_I0)?atof(pList->itemText[COLUMN_CROSS_CCI0]):(double)0.;
-// QDOAS ???            }
-// QDOAS ???           else
-// QDOAS ???            {
-// QDOAS ???             pOrthoSymbol[pTabFeno->NTabCross]=pList->itemText[COLUMN_CROSS_SVD_ORTHOGONAL];
-// QDOAS ???
-// QDOAS ???             pTabCross->display=(pList->itemText[COLUMN_CROSS_SVD_DISPLAY][0]=='1')?(UCHAR)1:(UCHAR)0;           // fit display
-// QDOAS ???             pTabCross->InitConc=atof(pList->itemText[COLUMN_CROSS_SVD_CCINIT]);                                 // initial concentration
-// QDOAS ???             pTabCross->FitConc=(pList->itemText[COLUMN_CROSS_SVD_CCFIT][0]=='1')?1:0;                           // modify concentration
-// QDOAS ???             pTabCross->DeltaConc=(pTabCross->FitConc)?                                                          // delta on concentration
-// QDOAS ???
-// QDOAS ???              atof(pList->itemText[COLUMN_CROSS_SVD_CCDELTA]):(double)0.;
-// QDOAS ???
-// QDOAS ???             pTabCross->I0Conc=(pTabCross->crossAction==ANLYS_CROSS_ACTION_CONVOLUTE_I0)?atof(pList->itemText[COLUMN_CROSS_SVD_CCI0]):(double)0.;
-// QDOAS ???            }
-// QDOAS ???
-// QDOAS ???           rc=OUTPUT_LoadCross(pList,&pTabFeno->TabCrossResults[pTabFeno->NTabCross],&pTabFeno->amfFlag,hidden);
-// QDOAS ???
-// QDOAS ???           // Swap columns of original matrix A in order to have in the end of the matrix, cross sections with fixed concentrations
-// QDOAS ???
-// QDOAS ???           if (pTabCross->FitConc!=0)   // the difference between SVD and Marquardt+SVD hasn't to be done yet but later
-// QDOAS ???            {
-// QDOAS ???             for (indexTabCross=pTabFeno->NTabCross-1;indexTabCross>=0;indexTabCross--)
-// QDOAS ???              if (((indexSvd=pTabFeno->TabCross[indexTabCross].IndSvdA)!=0) && !pTabFeno->TabCross[indexTabCross].FitConc)
-// QDOAS ???               {
-// QDOAS ???                pTabFeno->TabCross[indexTabCross].IndSvdA=pTabCross->IndSvdA;
-// QDOAS ???                pTabCross->IndSvdA=indexSvd;
-// QDOAS ???               }
-// QDOAS ???
-// QDOAS ???             if (pTabFeno->analysisMethod!=PRJCT_ANLYS_METHOD_SVD)     // In the intensity fitting method, FitConc is an index
-// QDOAS ???              pTabCross->FitConc=pTabFeno->svd.NF++;                   // in the non linear parameters vectors
-// QDOAS ???
-// QDOAS ???             pTabFeno->svd.nFit++;
-// QDOAS ???            }
-// QDOAS ???           else if (pTabFeno->analysisMethod!=PRJCT_ANLYS_METHOD_SVD)
-// QDOAS ???            pTabCross->FitConc=ITEM_NONE;                              // so if the parameter hasn't to be fitted, index is ITEM_NONE
-// QDOAS ???
-// QDOAS ???           pTabFeno->NTabCross++;
-// QDOAS ???          }
-// QDOAS ???        }
-// QDOAS ???      }
-// QDOAS ???    }
-// QDOAS ???
-// QDOAS ???   // Orthogonalization data
-// QDOAS ???
-// QDOAS ???   if (rc==ERROR_ID_NO)
-// QDOAS ???    {
-// QDOAS ???     pTabCross=pTabFeno->TabCross;
-// QDOAS ???
-// QDOAS ???     for (indexTabCross=firstTabCross,endTabCross=pTabFeno->NTabCross;indexTabCross<endTabCross;indexTabCross++)
-// QDOAS ???      {
-// QDOAS ???       symbolLength=strlen(pOrthoSymbol[indexTabCross]);
-// QDOAS ???
-// QDOAS ???       // No orthogonalization
-// QDOAS ???
-// QDOAS ???       if ((symbolLength==4) && !STD_Stricmp(pOrthoSymbol[indexTabCross],"None"))
-// QDOAS ???        pTabCross[indexTabCross].IndOrthog=ITEM_NONE;
-// QDOAS ???
-// QDOAS ???       // Orthogonalization to orthogonal base
-// QDOAS ???
-// QDOAS ???       else if ((symbolLength==15) && !STD_Stricmp(pOrthoSymbol[indexTabCross],"Differential XS"))
-// QDOAS ???        pTabCross[indexTabCross].IndOrthog=ORTHOGONAL_BASE;
-// QDOAS ???
-// QDOAS ???       // Orthogonalization to another cross section
-// QDOAS ???
-// QDOAS ???       else
-// QDOAS ???        {
-// QDOAS ???         // Search for symbol in list
-// QDOAS ???
-// QDOAS ???         for (indexSymbol=firstTabCross;indexSymbol<endTabCross;indexSymbol++)
-// QDOAS ???          if ((indexTabCross!=indexSymbol) &&
-// QDOAS ???              (symbolLength==strlen(WorkSpace[pTabCross[indexSymbol].Comp].symbolName)) &&
-// QDOAS ???              !STD_Stricmp(pOrthoSymbol[indexTabCross],WorkSpace[pTabCross[indexSymbol].Comp].symbolName))
-// QDOAS ???           break;
-// QDOAS ???
-// QDOAS ???         pTabCross[indexTabCross].IndOrthog=(indexSymbol<endTabCross)?indexSymbol:ITEM_NONE;
-// QDOAS ???        }
-// QDOAS ???      }
-// QDOAS ???
-// QDOAS ???     for (indexTabCross=firstTabCross,endTabCross=pTabFeno->NTabCross;indexTabCross<endTabCross;indexTabCross++)
-// QDOAS ???      {
-// QDOAS ???       // Symbol should be set to be orthogonalized to base
-// QDOAS ???
-// QDOAS ???       if (pTabCross[indexTabCross].IndOrthog>=0)
-// QDOAS ???        {
-// QDOAS ???         // if orthogonalization in succession, orthogonalization is ignored
-// QDOAS ???
-// QDOAS ??? /* !!!!!        if (pTabCross[pTabCross[indexTabCross].IndOrthog].IndOrthog>=0)  // != ORTHOGONAL_BASE
-// QDOAS ???          {
-// QDOAS ???           THRD_Error(ERROR_TYPE_WARNING,ERROR_ID_ORTHOGONAL_CASCADE,"",WorkSpace[pTabCross[indexTabCross].Comp].symbolName);
-// QDOAS ???           pTabCross[indexTabCross].IndOrthog=ITEM_NONE;
-// QDOAS ???          }
-// QDOAS ???
-// QDOAS ???         // Force to be orthogonalized to base
-// QDOAS ???
-// QDOAS ???         else  */
-// QDOAS ???          {
-// QDOAS ???           if (pTabCross[pTabCross[indexTabCross].IndOrthog].IndOrthog==ITEM_NONE)
-// QDOAS ???            {
-// QDOAS ???            	rc=ERROR_SetLast("AnalyseLoadCross",ERROR_TYPE_WARNING,ERROR_ID_ORTHOGONAL_BASE,
-// QDOAS ???                               WorkSpace[pTabCross[pTabCross[indexTabCross].IndOrthog].Comp].symbolName,
-// QDOAS ???                               WorkSpace[pTabCross[indexTabCross].Comp].symbolName);
-// QDOAS ???
-// QDOAS ???             pTabCross[pTabCross[indexTabCross].IndOrthog].IndOrthog=ORTHOGONAL_BASE;
-// QDOAS ???            }
-// QDOAS ???          }
-// QDOAS ???        }
-// QDOAS ???      }
-// QDOAS ???    }
-// QDOAS ???
-// QDOAS ???   // Return
-// QDOAS ???
-// QDOAS ???   #if defined(__DEBUG_) && __DEBUG_
-// QDOAS ???   DEBUG_FunctionStop("AnalyseLoadCross",(RC)rc);
-// QDOAS ???   #endif
-// QDOAS ???
-// QDOAS ???   return rc;
-// QDOAS ???  }
+// -----------------------------------------------------------------------------
+// FUNCTION      ANALYSE_LoadCross
+// -----------------------------------------------------------------------------
+// PURPOSE       Load data from the molecules pages
+// -----------------------------------------------------------------------------
+
+RC ANALYSE_LoadCross(ANALYSIS_CROSS *crossSectionList,INT nCross,INT hidden,double *lambda)
+ {
+ 	// Declarations
+
+ 	CROSS_REFERENCE *pEngineCross;                                                // pointer of the current cross section in the engine list
+ 	ANALYSIS_CROSS *pCross;                                                       // pointer of the current cross section in the mediate list
+ 	FENO *pTabFeno;                                                               // pointer to the current analysis window
+  UCHAR *pOrthoSymbol[MAX_FIT],                                                 // for each cross section in list, hold cross section to use for orthogonalization
+        *symbolName;
+  INDEX indexSymbol,indexSvd,                                                   // resp. indexes of item in list and of symbol
+        firstTabCross,endTabCross,indexTabCross,i;                              // indexes for browsing list of cross sections symbols
+  SZ_LEN fileLength,symbolLength;                                               // length in characters of file name and symbol name
+  WRK_SYMBOL *pWrkSymbol;                                                       // pointer to a general description of a symbol
+ 	RC rc;
+
+ 	// Debug
+
+  #if defined(__DEBUG_) && __DEBUG_ && defined(__DEBUG_DOAS_CONFIG_) && __DEBUG_DOAS_CONFIG_
+  DEBUG_FunctionBegin("ANALYSE_LoadCross",DEBUG_FCTTYPE_CONFIG);
+  #endif
+
+ 	// Initializations
+
+  pWrkSymbol=NULL;
+  pTabFeno=&TabFeno[NFeno];
+  firstTabCross=pTabFeno->NTabCross;
+ 	rc=ERROR_ID_NO;
+
+ 	for (indexTabCross=0;
+ 	    (indexTabCross<nCross) && (pTabFeno->NTabCross<MAX_FIT) && !rc;
+ 	     indexTabCross++)
+ 	 {
+ 	 	pEngineCross=&pTabFeno->TabCross[pTabFeno->NTabCross];
+ 	 	pCross=&crossSectionList[indexTabCross];
+
+    // Get cross section name from analysis properties dialog box
+
+    symbolName=pCross->symbol;
+    symbolLength=strlen(symbolName);
+    fileLength=strlen(pCross->crossSectionFile);
+
+    // Search for symbol in list
+
+    for (indexSymbol=0;indexSymbol<NWorkSpace;indexSymbol++)
+     {
+      pWrkSymbol=&WorkSpace[indexSymbol];
+
+      if ((pWrkSymbol->type==WRK_SYMBOL_CROSS) &&
+          (strlen(pWrkSymbol->symbolName)==symbolLength) &&
+          (strlen(pWrkSymbol->crossFileName)==fileLength) &&
+          !STD_Stricmp(pWrkSymbol->symbolName,symbolName) &&
+          !STD_Stricmp(pWrkSymbol->crossFileName,pCross->crossSectionFile))
+
+       break;
+     }
+
+    // Add a new cross section
+
+    if ((indexSymbol==NWorkSpace) && (NWorkSpace<MAX_SYMB))
+     {
+      // Allocate a new symbol
+
+      pWrkSymbol=&WorkSpace[indexSymbol];
+
+      pWrkSymbol->type=WRK_SYMBOL_CROSS;
+      strcpy(pWrkSymbol->symbolName,symbolName);
+      strcpy(pWrkSymbol->crossFileName,pCross->crossSectionFile);
+
+      // Load cross section from file
+
+      if (((strlen(pWrkSymbol->symbolName)==strlen("1/Ref")) && !STD_Stricmp(pWrkSymbol->symbolName,"1/Ref")) ||
+          !(rc=MATRIX_Load(pCross->crossSectionFile,&pWrkSymbol->xs,0 /* line base */,0 /* column base */,0,0,
+                          (pCross->crossType==ANLYS_CROSS_ACTION_NOTHING)?(double)0.:lambda[0]-7.,      // max(lambda[0]-7.,(double)290.), - changed on october 2006
+                          (pCross->crossType==ANLYS_CROSS_ACTION_NOTHING)?(double)0.:lambda[NDET-1]+7., // min(lambda[NDET-1]+7.,(double)600.), - changed on october 2006
+                          (pCross->crossType!=ANLYS_CROSS_ACTION_NOTHING)?1:0,1,"ANALYSE_LoadCross ")))
+       {
+        if (!STD_Stricmp(pWrkSymbol->symbolName,"O3TD"))
+         rc=MATRIX_Allocate(&O3TD,NDET,pWrkSymbol->xs.nc,0,0,0,"ANALYSE_LoadCross");
+
+        NWorkSpace++;
+       }
+     }
+
+    if ((rc==ERROR_ID_NO) && (indexSymbol<NWorkSpace) && (pTabFeno->NTabCross<MAX_FIT))
+     {
+      // Allocate vectors for cross section and its second derivative for analysis processing
+
+      if (((pEngineCross->vector=(double *)MEMORY_AllocDVector("ANALYSE_LoadCross ","vector",0,NDET-1))==NULL) ||
+          ((pEngineCross->Deriv2=(double *)MEMORY_AllocDVector("ANALYSE_LoadCross ","Deriv2",1,NDET))==NULL))
+
+       rc=ERROR_ID_ALLOC;
+
+      else
+       {
+        pEngineCross->crossAction=pCross->crossType;
+        pEngineCross->filterFlag=pCross->requireFilter;
+
+        if ((pEngineCross->crossAction==ANLYS_CROSS_ACTION_NOTHING) && (pTabFeno->gomeRefFlag || MFC_refFlag))
+         rc=ANALYSE_CheckLambda(pWrkSymbol,lambda,"ANALYSE_LoadCross ");
+
+        if (rc==ERROR_ID_NO)
+         {
+          pEngineCross->Comp=indexSymbol;
+          pEngineCross->IndSvdA=++pTabFeno->svd.DimC;
+          pTabFeno->xsToConvolute+=((pEngineCross->crossAction==ANLYS_CROSS_ACTION_CONVOLUTE) ||
+                                    (pEngineCross->crossAction==ANLYS_CROSS_ACTION_CONVOLUTE_I0) ||
+                                    (pEngineCross->crossAction==ANLYS_CROSS_ACTION_CONVOLUTE_RING))?1:0;
+
+          pTabFeno->xsToConvoluteI0+=(pEngineCross->crossAction==ANLYS_CROSS_ACTION_CONVOLUTE_I0)?1:0;
+
+          if (!hidden)
+           {
+            pOrthoSymbol[pTabFeno->NTabCross]=pCross->orthogonal;
+
+            pEngineCross->display=pCross->requireFit;                    // fit display
+            pEngineCross->InitConc=pCross->initialCc;                    // initial concentration
+            pEngineCross->FitConc=pCross->requireCcFit;                  // modify concentration
+
+            pEngineCross->DeltaConc=(pEngineCross->FitConc)?pCross->deltaCc:(double)0.;   // delta on concentration
+            pEngineCross->I0Conc=(pEngineCross->crossAction==ANLYS_CROSS_ACTION_CONVOLUTE_I0)?pCross->ccIo:(double)0.;
+           }
+
+ // QDOAS !!! FOR LATER         rc=OUTPUT_LoadCross(pList,&pTabFeno->TabCrossResults[pTabFeno->NTabCross],&pTabFeno->amfFlag,hidden);
+
+          // Swap columns of original matrix A in order to have in the end of the matrix, cross sections with fixed concentrations
+
+          if (pEngineCross->FitConc!=0)   // the difference between SVD and Marquardt+SVD hasn't to be done yet but later
+           {
+            for (i=pTabFeno->NTabCross-1;i>=0;i--)
+             if (((indexSvd=pTabFeno->TabCross[i].IndSvdA)!=0) && !pTabFeno->TabCross[i].FitConc)
+              {
+               pTabFeno->TabCross[i].IndSvdA=pEngineCross->IndSvdA;
+               pEngineCross->IndSvdA=indexSvd;
+              }
+
+            if (pTabFeno->analysisMethod!=PRJCT_ANLYS_METHOD_SVD)     // In the intensity fitting method, FitConc is an index
+             pEngineCross->FitConc=pTabFeno->svd.NF++;                   // in the non linear parameters vectors
+
+            pTabFeno->svd.nFit++;
+           }
+          else if (pTabFeno->analysisMethod!=PRJCT_ANLYS_METHOD_SVD)
+           pEngineCross->FitConc=ITEM_NONE;                              // so if the parameter hasn't to be fitted, index is ITEM_NONE
+
+          pTabFeno->NTabCross++;
+         }
+       }
+     }
+ 	 }
+
+  // Orthogonalization data
+
+  if (rc==ERROR_ID_NO)
+   {
+    pEngineCross=pTabFeno->TabCross;
+
+    for (indexTabCross=firstTabCross,endTabCross=pTabFeno->NTabCross;indexTabCross<endTabCross;indexTabCross++)
+     {
+      symbolLength=strlen(pOrthoSymbol[indexTabCross]);
+
+      // No orthogonalization
+
+      if ((symbolLength==4) && !STD_Stricmp(pOrthoSymbol[indexTabCross],"None"))
+       pEngineCross[indexTabCross].IndOrthog=ITEM_NONE;
+
+      // Orthogonalization to orthogonal base
+
+      else if ((symbolLength==15) && !STD_Stricmp(pOrthoSymbol[indexTabCross],"Differential XS"))
+       pEngineCross[indexTabCross].IndOrthog=ORTHOGONAL_BASE;
+
+      // Orthogonalization to another cross section
+
+      else
+       {
+        // Search for symbol in list
+
+        for (indexSymbol=firstTabCross;indexSymbol<endTabCross;indexSymbol++)
+         if ((indexTabCross!=indexSymbol) &&
+             (symbolLength==strlen(WorkSpace[pEngineCross[indexSymbol].Comp].symbolName)) &&
+             !STD_Stricmp(pOrthoSymbol[indexTabCross],WorkSpace[pEngineCross[indexSymbol].Comp].symbolName))
+          break;
+
+        pEngineCross[indexTabCross].IndOrthog=(indexSymbol<endTabCross)?indexSymbol:ITEM_NONE;
+       }
+     }
+
+    for (indexTabCross=firstTabCross,endTabCross=pTabFeno->NTabCross;indexTabCross<endTabCross;indexTabCross++)
+     {
+      // Symbol should be set to be orthogonalized to base
+
+      if (pEngineCross[indexTabCross].IndOrthog>=0)
+       {
+        // if orthogonalization in succession, orthogonalization is ignored
+
+/* !!!!!        if (pEngineCross[pEngineCross[indexTabCross].IndOrthog].IndOrthog>=0)  // != ORTHOGONAL_BASE
+         {
+          THRD_Error(ERROR_TYPE_WARNING,ERROR_ID_ORTHOGONAL_CASCADE,"",WorkSpace[pEngineCross[indexTabCross].Comp].symbolName);
+          pEngineCross[indexTabCross].IndOrthog=ITEM_NONE;
+         }
+
+        // Force to be orthogonalized to base
+
+        else  */
+         {
+          if (pEngineCross[pEngineCross[indexTabCross].IndOrthog].IndOrthog==ITEM_NONE)
+           {
+           	rc=ERROR_SetLast("ANALYSE_LoadCross",ERROR_TYPE_WARNING,ERROR_ID_ORTHOGONAL_BASE,
+                              WorkSpace[pEngineCross[pEngineCross[indexTabCross].IndOrthog].Comp].symbolName,
+                              WorkSpace[pEngineCross[indexTabCross].Comp].symbolName);
+
+            pEngineCross[pEngineCross[indexTabCross].IndOrthog].IndOrthog=ORTHOGONAL_BASE;
+           }
+         }
+       }
+     }
+   }
+
+  #if defined(__DEBUG_) && __DEBUG_ && defined(__DEBUG_DOAS_CONFIG_) && __DEBUG_DOAS_CONFIG_
+  DEBUG_FunctionStop("ANALYSE_LoadCross",rc);
+  #endif
+
+  // Return
+
+  return rc;
+ }
 
 // -------------------------------------------------
 // ANALYSE_LoadLinear : Load continuous functions
@@ -5565,269 +5550,6 @@ RC ANALYSE_SetInit(ENGINE_CONTEXT *pEngineContext)
 
   return rc;
  }
-
-// QDOAS ??? RC ANALYSE_LoadData(ENGINE_CONTEXT *pEngineContext,INDEX projectDataIndex)
-// QDOAS ???  {
-// QDOAS ???   // Declarations
-// QDOAS ???
-// QDOAS ???   double lambdaMin,lambdaMax;
-// QDOAS ???   ANALYSIS_WINDOWS *pAnlys;        // pointer to the current analysis window
-// QDOAS ???   INDEX indexAnlys,                // index of the current analysis window in list
-// QDOAS ???         indexProject,              // index of project in tree
-// QDOAS ???         indexWindow,               // browse sequentially analysis windows of a project
-// QDOAS ???         indexKurucz;               // index of analysis window used for Kurucz SVD matrix description
-// QDOAS ???   FENO *pTabFeno;                  // pointer to the description of an analysis window
-// QDOAS ???   INT useKurucz,                   // flag set if Kurucz is to be used
-// QDOAS ???       useUsamp,                    // flag set if undersampling correction is requested
-// QDOAS ???       saveFlag;
-// QDOAS ???   INDEX i;
-// QDOAS ???   RC rc;                           // return code
-// QDOAS ???
-// QDOAS ???   #if defined(__DEBUG_) && __DEBUG_
-// QDOAS ???   DEBUG_FunctionBegin("ANALYSE_LoadData",DEBUG_FCTTYPE_FILE);
-// QDOAS ???   #endif
-// QDOAS ???
-// QDOAS ???   #if defined(__DEBUG_) && __DEBUG_ && defined(__DEBUG_DOAS_DATA_) && __DEBUG_DOAS_DATA_
-// QDOAS ???   DEBUG_Start(ENGINE_dbgFile,"Load data",(analyseDebugMask=DEBUG_FCTTYPE_FILE|DEBUG_FCTTYPE_MATH|DEBUG_FCTTYPE_APPL),5,(analyseDebugVar=DEBUG_DVAR_YES),!debugResetFlag++);
-// QDOAS ???   #endif
-// QDOAS ???
-// QDOAS ???   // Initializations
-// QDOAS ???
-// QDOAS ???   lambdaMin=1000;
-// QDOAS ???   lambdaMax=0;
-// QDOAS ???
-// QDOAS ???   saveFlag=(INT)pEngineContext->project.spectra.displayDataFlag;
-// QDOAS ???   ANALYSE_ignoreAll=0;
-// QDOAS ???   ANALYSE_refSelectionFlag=ANALYSE_lonSelectionFlag=0;
-// QDOAS ???   useKurucz=useUsamp=0;
-// QDOAS ???   rc=ERROR_ID_NO;
-// QDOAS ???
-// QDOAS ???   // Search for analysis window list
-// QDOAS ???
-// QDOAS ???   indexProject=0;   // QDOAS ???
-// QDOAS ???   indexWindow=0;    // QDOAS ???
-// QDOAS ???
-// QDOAS ??? // QDOAS ???   if (((indexProject=TREE_GetIndexByDataIndex(projectDataIndex,TREE_ITEM_TYPE_PROJECT,CHILD_list[CHILD_WINDOW_PROJECT].itemTree))==ITEM_NONE) ||
-// QDOAS ??? // QDOAS ???       ((indexWindow=TREE_itemList[indexProject].lastChildItem)==ITEM_NONE) ||
-// QDOAS ??? // QDOAS ???       ((indexWindow=TREE_itemList[indexWindow].firstChildItem)==ITEM_NONE))
-// QDOAS ??? // QDOAS ???
-// QDOAS ??? // QDOAS ???    rc=ITEM_NONE;
-// QDOAS ??? // QDOAS ???
-// QDOAS ??? // QDOAS ???   else
-// QDOAS ???    {
-// QDOAS ???     // Release all previously allocated buffers
-// QDOAS ???
-// QDOAS ???     ANALYSE_plFilter=&pEngineContext->project.lfilter;
-// QDOAS ???     ANALYSE_phFilter=&pEngineContext->project.hfilter;
-// QDOAS ???
-// QDOAS ???     ANALYSE_plFilter->filterFunction=ANALYSE_phFilter->filterFunction=NULL;
-// QDOAS ???     ANALYSE_plFilter->filterSize=ANALYSE_phFilter->filterSize=0;
-// QDOAS ???     ANALYSE_plFilter->filterEffWidth=ANALYSE_phFilter->filterEffWidth=1.;
-// QDOAS ???
-// QDOAS ???     ANALYSE_ResetData();
-// QDOAS ???
-// QDOAS ???     // Allocate buffers for general use
-// QDOAS ???
-// QDOAS ???     pAnalysisOptions=&pEngineContext->project.analysis;
-// QDOAS ???     pSlitOptions=&pEngineContext->project.slit;
-// QDOAS ???     pKuruczOptions=&pEngineContext->project.kurucz;
-// QDOAS ???     pUsamp=&pEngineContext->project.usamp;
-// QDOAS ???
-// QDOAS ???     if (pSlitOptions->fwhmCorrectionFlag && pKuruczOptions->fwhmFit)
-// QDOAS ???      rc=ERROR_SetLast("ANALYSE_LoadData",ERROR_TYPE_FATAL,ERROR_ID_FWHM);
-// QDOAS ???     else if (!(rc=ANALYSE_LoadFilter(&pEngineContext->project.lfilter)) &&   // low pass filtering
-// QDOAS ???              !(rc=ANALYSE_LoadFilter(&pEngineContext->project.hfilter)) &&   // high pass filtering
-// QDOAS ???              !(rc=AnalyseSvdGlobalAlloc(pEngineContext)))
-// QDOAS ???      {
-// QDOAS ???       if (((ANALYSE_zeros=(double *)MEMORY_AllocDVector("ANALYSE_LoadData ","ANALYSE_zeros",0,NDET-1))==NULL) ||
-// QDOAS ???           ((ANALYSE_ones=(double *)MEMORY_AllocDVector("ANALYSE_LoadData ","ANALYSE_ones",0,NDET-1))==NULL))
-// QDOAS ???
-// QDOAS ???        rc=ERROR_ID_ALLOC;
-// QDOAS ???
-// QDOAS ???       else
-// QDOAS ???        {
-// QDOAS ???         VECTOR_Init(ANALYSE_zeros,(double)0.,NDET);
-// QDOAS ???         VECTOR_Init(ANALYSE_ones,(double)1.,NDET);
-// QDOAS ???        }
-// QDOAS ???
-// QDOAS ???       // Browse analysis windows data
-// QDOAS ???
-// QDOAS ???       for (;(indexWindow!=ITEM_NONE) && (NFeno<MAX_FENO) && !rc;
-// QDOAS ???              indexWindow=TREE_itemList[indexWindow].nextItem)
-// QDOAS ???        {
-// QDOAS ???         if (((indexAnlys=TREE_itemList[indexWindow].dataIndex)!=ITEM_NONE) && (TREE_itemList[indexWindow].hidden<2)
-// QDOAS ???             && ((THRD_id==THREAD_TYPE_ANALYSIS) || (TREE_itemList[indexWindow].hidden==1)))
-// QDOAS ???          {
-// QDOAS ???           // Pointers initialization
-// QDOAS ???
-// QDOAS ???           pAnlys=&ANLYS_windowsList[indexAnlys];
-// QDOAS ???           pTabFeno=&TabFeno[NFeno];
-// QDOAS ???           pTabFeno->NDET=NDET;
-// QDOAS ???
-// QDOAS ???           // Load data from analysis windows panels
-// QDOAS ???
-// QDOAS ???           memcpy(pTabFeno->windowName,pAnlys->windowName,MAX_ITEM_NAME_LEN+1);
-// QDOAS ???           memset(pTabFeno->residualsFile,0,MAX_ITEM_TEXT_LEN+1);
-// QDOAS ???
-// QDOAS ???           if (((pTabFeno->hidden=pAnlys->hidden)==0) &&
-// QDOAS ???               ((pTabFeno->refSpectrumSelectionMode=pAnlys->refSpectrumSelectionMode)==ANLYS_REF_SELECTION_MODE_AUTOMATIC))
-// QDOAS ???            {
-// QDOAS ???             pTabFeno->refSZA=(double)pAnlys->refSZA;
-// QDOAS ???             pTabFeno->refSZADelta=(double)pAnlys->refSZADelta;
-// QDOAS ???
-// QDOAS ???             pTabFeno->refLatMin=pAnlys->refLatMin;
-// QDOAS ???             pTabFeno->refLatMax=pAnlys->refLatMax;
-// QDOAS ???             pTabFeno->refLonMin=pAnlys->refLonMin;
-// QDOAS ???             pTabFeno->refLonMax=pAnlys->refLonMax;
-// QDOAS ???
-// QDOAS ???             if ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_ASCII) ||
-// QDOAS ???                 (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN))
-// QDOAS ???
-// QDOAS ???              memcpy(pTabFeno->gomePixelType,pAnlys->gomePixelType,4);
-// QDOAS ???
-// QDOAS ???             else
-// QDOAS ???              memset(pTabFeno->gomePixelType,0,4);
-// QDOAS ???
-// QDOAS ???             pTabFeno->nspectra=pAnlys->nspectra;
-// QDOAS ???
-// QDOAS ???             ANALYSE_refSelectionFlag++;
-// QDOAS ???
-// QDOAS ???             if ((fabs(pTabFeno->refLonMax-pTabFeno->refLonMin)>1.e-5) ) // && (fabs(pTabFeno->refLonMax-pTabFeno->refLonMin)<359.))
-// QDOAS ???              ANALYSE_lonSelectionFlag++;
-// QDOAS ???            }
-// QDOAS ???
-// QDOAS ???           if (pEngineContext->project.spectra.displayFitFlag)
-// QDOAS ???            {
-// QDOAS ???             pTabFeno->displaySpectrum=pAnlys->displaySpectrum;
-// QDOAS ???             pTabFeno->displayResidue=pAnlys->displayResidue;
-// QDOAS ???             pTabFeno->displayTrend=pAnlys->displayTrend;
-// QDOAS ???             pTabFeno->displayRefEtalon=pAnlys->displayRefEtalon;
-// QDOAS ???             pTabFeno->displayFits=pAnlys->displayFits;
-// QDOAS ???             pTabFeno->displayPredefined=pAnlys->displayPredefined;
-// QDOAS ???            }
-// QDOAS ???
-// QDOAS ???           pTabFeno->useKurucz=pAnlys->useKurucz;
-// QDOAS ???           pTabFeno->analysisMethod=(pTabFeno->hidden==1)?pKuruczOptions->analysisMethod:pAnalysisOptions->method;
-// QDOAS ???           pTabFeno->Decomp=1;
-// QDOAS ???
-// QDOAS ???           useKurucz+=pAnlys->useKurucz;
-// QDOAS ???
-// QDOAS ???           // Wavelength scales read out
-// QDOAS ???
-// QDOAS ???           if (((pTabFeno->Lambda==NULL) && ((pTabFeno->Lambda=MEMORY_AllocDVector("ANALYSE_LoadData ","Lambda",0,NDET-1))==NULL)) ||
-// QDOAS ???               ((pTabFeno->LambdaK==NULL) && ((pTabFeno->LambdaK=MEMORY_AllocDVector("ANALYSE_LoadData ","LambdaK",0,NDET-1))==NULL)) ||
-// QDOAS ???               ((pTabFeno->LambdaRef==NULL) && ((pTabFeno->LambdaRef=MEMORY_AllocDVector("ANALYSE_LoadData ","LambdaRef",0,NDET-1))==NULL)))
-// QDOAS ???            {
-// QDOAS ???             rc=ERROR_ID_ALLOC;
-// QDOAS ???             break;
-// QDOAS ???            }
-// QDOAS ???
-// QDOAS ???           for (i=0;i<NDET;i++)
-// QDOAS ???            pTabFeno->LambdaRef[i]=i;  // NB : for GOME, reference spectra will be read out later from spectra files
-// QDOAS ???
-// QDOAS ??? //           if ((pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_GDP_ASCII) &&
-// QDOAS ??? //               (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_GDP_BIN) &&
-// QDOAS ??? //               (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_SCIA_HDF) &&
-// QDOAS ??? //               (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_SCIA_PDS))
-// QDOAS ???
-// QDOAS ???             memcpy(pTabFeno->LambdaRef,pEngineContext->buffers.lambda,sizeof(double)*NDET);
-// QDOAS ???
-// QDOAS ???           if (!(rc=ANALYSE_LoadRef(pTabFeno,pEngineContext)) &&   // eventually, modify LambdaRef for continuous functions
-// QDOAS ???
-// QDOAS ???               !(rc=AnalyseLoadCross(pAnlys->listEntryPoint[TAB_TYPE_ANLYS_CROSS],pAnlys->hidden,pTabFeno->LambdaRef)) &&
-// QDOAS ???               !(rc=ANALYSE_LoadLinear(pAnlys->listEntryPoint[TAB_TYPE_ANLYS_LINEAR])) &&
-// QDOAS ???               !(rc=ANALYSE_LoadNonLinear(pAnlys->listEntryPoint[TAB_TYPE_ANLYS_NOTLINEAR],pTabFeno->LambdaRef)) &&
-// QDOAS ???               !(rc=ANALYSE_LoadShiftStretch(pAnlys->listEntryPoint[TAB_TYPE_ANLYS_SHIFT_AND_STRETCH],pAnlys->listEntryPoint[TAB_TYPE_ANLYS_CROSS])) &&
-// QDOAS ???
-// QDOAS ???                (pTabFeno->hidden ||
-// QDOAS ???
-// QDOAS ???               (!(rc=ANALYSIS_LoadGaps(pTabFeno->LambdaRef,pAnlys,pAnlys->listEntryPoint[TAB_TYPE_ANLYS_GAPS],pTabFeno)) &&
-// QDOAS ???               (!pTabFeno->gomeRefFlag || !(rc=ANALYSE_SvdLocalAlloc("ANALYSE_LoadData",&pTabFeno->svd)))
-// QDOAS ???              )))
-// QDOAS ???            {
-// QDOAS ???             if (pAnlys->hidden==1)
-// QDOAS ???              indexKurucz=NFeno;
-// QDOAS ???             else
-// QDOAS ???              {
-// QDOAS ???               useUsamp+=pTabFeno->useUsamp;
-// QDOAS ???
-// QDOAS ???               if (pTabFeno->gomeRefFlag || MFC_refFlag)
-// QDOAS ???                {
-// QDOAS ???                 memcpy(pTabFeno->Lambda,pTabFeno->LambdaRef,sizeof(double)*NDET);
-// QDOAS ???                 memcpy(pTabFeno->LambdaK,pTabFeno->LambdaRef,sizeof(double)*NDET);
-// QDOAS ???
-// QDOAS ???                 if (pTabFeno->LambdaRef[NDET-1]-pTabFeno->Lambda[0]+1!=NDET)
-// QDOAS ???                  rc=ANALYSE_XsInterpolation(pTabFeno,pTabFeno->LambdaRef);
-// QDOAS ???                }
-// QDOAS ???              }
-// QDOAS ???
-// QDOAS ???             AnalyseSetAnalysisType();
-// QDOAS ???
-// QDOAS ???             strcpy(pTabFeno->residualsFile,pAnlys->residualsFile);
-// QDOAS ???
-// QDOAS ???             if (!pTabFeno->hidden)
-// QDOAS ???              {
-// QDOAS ???               lambdaMin=min(lambdaMin,pTabFeno->LambdaRef[0]);
-// QDOAS ???               lambdaMax=max(lambdaMax,pTabFeno->LambdaRef[NDET-1]);
-// QDOAS ???              }
-// QDOAS ???
-// QDOAS ???             NFeno++;
-// QDOAS ???            }
-// QDOAS ???          }
-// QDOAS ???        }
-// QDOAS ???      }
-// QDOAS ???
-// QDOAS ???     if (lambdaMin>=lambdaMax)
-// QDOAS ???      {
-// QDOAS ???       lambdaMin=pEngineContext->buffers.lambda[0];
-// QDOAS ???       lambdaMax=pEngineContext->buffers.lambda[NDET-1];
-// QDOAS ???      }
-// QDOAS ???
-// QDOAS ???     if (!rc && !(rc=AnalyseLoadSlit(pSlitOptions)) && (!pKuruczOptions->fwhmFit || !useKurucz))
-// QDOAS ???      for (indexWindow=0;indexWindow<NFeno;indexWindow++)
-// QDOAS ???       {
-// QDOAS ???        pTabFeno=&TabFeno[indexWindow];
-// QDOAS ???
-// QDOAS ???        if (pTabFeno->xsToConvolute && /* pTabFeno->useEtalon && */ (pTabFeno->gomeRefFlag || MFC_refFlag) &&
-// QDOAS ???          ((rc=ANALYSE_XsConvolution(pTabFeno,pTabFeno->LambdaRef,&ANALYSIS_slit,pSlitOptions->slitFunction.slitType,&pSlitOptions->slitFunction.slitParam,&pSlitOptions->slitFunction.slitParam2,&pSlitOptions->slitFunction.slitParam3,&pSlitOptions->slitFunction.slitParam4))!=0))
-// QDOAS ???
-// QDOAS ???         break;
-// QDOAS ???       }
-// QDOAS ???
-// QDOAS ??? // QDOAS ???    if (!rc && ((THRD_id==THREAD_TYPE_KURUCZ) || useKurucz) &&
-// QDOAS ??? // QDOAS ???       !(rc=KURUCZ_Alloc(pEngineContext->buffers.lambda,projectDataIndex,indexKurucz,lambdaMin,lambdaMax)))
-// QDOAS ??? // QDOAS ???     {
-// QDOAS ??? // QDOAS ???      rc=KURUCZ_Reference(pEngineContext->buffers.instrFunction,0,saveFlag,1);
-// QDOAS ??? // QDOAS ???
-// QDOAS ??? // QDOAS ???      if (!rc)
-// QDOAS ??? // QDOAS ???       rc=ANALYSE_AlignReference(0,saveFlag);
-// QDOAS ??? // QDOAS ???     }
-// QDOAS ??? // QDOAS ???
-// QDOAS ??? // QDOAS ???    if (!rc && useUsamp &&
-// QDOAS ??? // QDOAS ???        !(rc=USAMP_GlobalAlloc(lambdaMin,lambdaMax,NDET)) &&
-// QDOAS ??? // QDOAS ???        !(rc=USAMP_LocalAlloc(1)))
-// QDOAS ??? // QDOAS ???     rc=USAMP_BuildFromAnalysis(0,1);
-// QDOAS ???
-// QDOAS ??? // QDOAS ???     {
-// QDOAS ??? // QDOAS ???      FILE *fp;
-// QDOAS ??? // QDOAS ???
-// QDOAS ??? // QDOAS ???      if ((fp=fopen(DOAS_broAmfFile,"rt"))!=NULL)
-// QDOAS ??? // QDOAS ???       {
-// QDOAS ??? // QDOAS ???        fclose(fp);
-// QDOAS ??? // QDOAS ???        MATRIX_Load(DOAS_broAmfFile,&ANALYSIS_broAmf,0,0,0,0,-9999.,9999.,1,0,"ANALYSE_LoadData ");
-// QDOAS ??? // QDOAS ???       }
-// QDOAS ??? // QDOAS ???     }
-// QDOAS ???    }
-// QDOAS ???
-// QDOAS ???   // Return
-// QDOAS ???
-// QDOAS ???   #if defined(__DEBUG_) && __DEBUG_
-// QDOAS ???   DEBUG_FunctionStop("ANALYSE_LoadData",(RC)rc);
-// QDOAS ???   analyseDebugMask=0;
-// QDOAS ???   #endif
-// QDOAS ???
-// QDOAS ???   return rc;
-// QDOAS ???  }
 
 // ====================
 // RESOURCES MANAGEMENT
