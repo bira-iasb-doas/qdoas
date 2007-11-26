@@ -102,7 +102,6 @@ class CProjectSubHandler : public CQdoasConfigSubHandler
 
   virtual bool start(const QXmlAttributes &atts);
   virtual bool start(const QString &element, const QXmlAttributes &atts);
-  virtual bool end(const QString &element);
   virtual bool end(void);
 
  private:

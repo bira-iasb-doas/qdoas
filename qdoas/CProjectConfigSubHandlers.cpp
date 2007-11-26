@@ -498,18 +498,12 @@ bool CProjectInstrumentalSubHandler::start(const QXmlAttributes &atts)
     m_instrumental->format = PRJCT_INSTR_FORMAT_PDAEGG;
   else if (str == "pdaegg_old")
     m_instrumental->format = PRJCT_INSTR_FORMAT_PDAEGG_OLD;
-  else if (str == "pdaegg_ulb")
-    m_instrumental->format = PRJCT_INSTR_FORMAT_PDAEGG_ULB;
   else if (str == "ccdohp_96")
     m_instrumental->format = PRJCT_INSTR_FORMAT_CCD_OHP_96;
   else if (str == "ccdha_94")
     m_instrumental->format = PRJCT_INSTR_FORMAT_CCD_HA_94;
-  else if (str == "ccdulb")
-    m_instrumental->format = PRJCT_INSTR_FORMAT_CCD_ULB;
   else if (str == "saozvis")
     m_instrumental->format = PRJCT_INSTR_FORMAT_SAOZ_VIS;
-  else if (str == "saozuv")
-    m_instrumental->format = PRJCT_INSTR_FORMAT_SAOZ_UV;
   else if (str == "saozefm")
     m_instrumental->format = PRJCT_INSTR_FORMAT_SAOZ_EFM;
   else if (str == "mfc")
@@ -520,12 +514,8 @@ bool CProjectInstrumentalSubHandler::start(const QXmlAttributes &atts)
     m_instrumental->format = PRJCT_INSTR_FORMAT_RASAS;
   else if (str == "pdasieasoe")
     m_instrumental->format = PRJCT_INSTR_FORMAT_PDASI_EASOE;
-  else if (str == "pdasiosma")
-    m_instrumental->format = PRJCT_INSTR_FORMAT_PDASI_OSMA;
   else if (str == "ccdeev")
     m_instrumental->format = PRJCT_INSTR_FORMAT_CCD_EEV;
-  else if (str == "opus")
-    m_instrumental->format = PRJCT_INSTR_FORMAT_OPUS;
   else if (str == "gdpascii")
     m_instrumental->format = PRJCT_INSTR_FORMAT_GDP_ASCII;
   else if (str == "gdpbin")
@@ -641,56 +631,6 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
     return helperLoadLogger(atts, &(m_instrumental->pdaeggold));
 
   }
-  else if (element == "pdaeggulb") { // PDA EGG ULB
-    QString str;
-
-    str = atts.value("type");
-    if (str == "manual")
-      m_instrumental->pdaeggulb.curveType = PRJCT_INSTR_ULB_TYPE_MANUAL;
-    else if (str == "high")
-      m_instrumental->pdaeggulb.curveType = PRJCT_INSTR_ULB_TYPE_HIGH;
-    else if (str == "low")
-      m_instrumental->pdaeggulb.curveType = PRJCT_INSTR_ULB_TYPE_LOW;
-    else
-      return postErrorMessage("Invalid pdaeggulb Type");
-
-    str = atts.value("calib");
-    if (!str.isEmpty()) {
-      str = m_master->pathExpand(str);
-      if (str.length() < (int)sizeof(m_instrumental->pdaeggulb.calibrationFile))
-	strcpy(m_instrumental->pdaeggulb.calibrationFile, str.toAscii().data());
-      else
-	return postErrorMessage("Calibration Filename too long");
-    }
-
-    str = atts.value("instr");
-    if (!str.isEmpty()) {
-      str = m_master->pathExpand(str);
-      if (str.length() < (int)sizeof(m_instrumental->pdaeggulb.instrFunctionFile))
-	strcpy(m_instrumental->pdaeggulb.instrFunctionFile, str.toAscii().data());
-      else
-	return postErrorMessage("Instrument Function Filename too long");
-    }
-
-    str = atts.value("ipv");
-    if (!str.isEmpty()) {
-      str = m_master->pathExpand(str);
-      if (str.length() < (int)sizeof(m_instrumental->pdaeggulb.interPixelVariabilityFile))
-	strcpy(m_instrumental->pdaeggulb.interPixelVariabilityFile, str.toAscii().data());
-      else
-	return postErrorMessage("Inter Pixel Variability Filename too long");
-    }
-
-    str = atts.value("dnl");
-    if (!str.isEmpty()) {
-      str = m_master->pathExpand(str);
-      if (str.length() < (int)sizeof(m_instrumental->pdaeggulb.detectorNonLinearityFile))
-	strcpy(m_instrumental->pdaeggulb.detectorNonLinearityFile, str.toAscii().data());
-      else
-	return postErrorMessage("Detector Non-Linearity Filename too long");
-    }
-
-  }
   else if (element == "ccdohp96") { // CCD OHP 96
     return helperLoadCcd(atts, &(m_instrumental->ccdohp96));
 
@@ -699,55 +639,8 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
     return helperLoadCcd(atts, &(m_instrumental->ccdha94));
 
   }
-  else if (element == "ccdulb") { // CCD ULB
-    QString str;
-
-    m_instrumental->ccdulb.grating = atts.value("grating").toInt();
-    m_instrumental->ccdulb.centralWavelength = atts.value("cen").toInt();
-
-    str = atts.value("calib");
-    if (!str.isEmpty()) {
-      str = m_master->pathExpand(str);
-      if (str.length() < (int)sizeof(m_instrumental->ccdulb.calibrationFile))
-	strcpy(m_instrumental->ccdulb.calibrationFile, str.toAscii().data());
-      else
-	return postErrorMessage("Calibration Filename too long");
-    }
-
-    str = atts.value("offset");
-    if (!str.isEmpty()) {
-      str = m_master->pathExpand(str);
-      if (str.length() < (int)sizeof(m_instrumental->ccdulb.offsetFile))
-	strcpy(m_instrumental->ccdulb.offsetFile, str.toAscii().data());
-      else
-	return postErrorMessage("Offset Filename too long");
-    }
-
-    str = atts.value("ipv");
-    if (!str.isEmpty()) {
-      str = m_master->pathExpand(str);
-      if (str.length() < (int)sizeof(m_instrumental->ccdulb.interPixelVariabilityFile))
-	strcpy(m_instrumental->ccdulb.interPixelVariabilityFile, str.toAscii().data());
-      else
-	return postErrorMessage("Inter Pixel Variability Filename too long");
-    }
-
-    str = atts.value("dnl");
-    if (!str.isEmpty()) {
-      str = m_master->pathExpand(str);
-      if (str.length() < (int)sizeof(m_instrumental->ccdulb.detectorNonLinearityFile))
-	strcpy(m_instrumental->ccdulb.detectorNonLinearityFile, str.toAscii().data());
-      else
-	return postErrorMessage("Detector Non-Linearity Filename too long");
-    }
-
-  }
   else if (element == "saozvis") { // SAOZ VIS
     return helperLoadSaoz(atts, &(m_instrumental->saozvis));
-
-  }
-  else if (element == "saozuv") { // SAOZ UV
-    return helperLoadSaoz(atts, &(m_instrumental->saozuv));
 
   }
   else if (element == "saozefm") { // SAOZ EFM
@@ -853,10 +746,6 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
     return helperLoadMinimum(atts, &(m_instrumental->pdasieasoe));
 
   }
-  else if (element == "pdasiosma") { // PDASI OSMA
-    return helperLoadLogger(atts, &(m_instrumental->pdasiosma));
-
-  }
   else if (element == "ccdeev") { // CCD EEV
     QString str;
 
@@ -896,32 +785,6 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
 	strcpy(m_instrumental->ccdeev.detectorNonLinearityFile, str.toAscii().data());
       else
 	return postErrorMessage("Detector Non-Linearity Filename too long");
-    }
-
-  }
-  else if (element == "opus") { // OPUS
-    QString str;
-
-    m_instrumental->opus.detectorSize = atts.value("size").toInt();
-    m_instrumental->opus.timeShift = atts.value("time").toDouble();
-    m_instrumental->opus.flagTransmittance = (atts.value("trans") == "true") ? 1 : 0;
-
-    str = atts.value("calib");
-    if (!str.isEmpty()) {
-      str = m_master->pathExpand(str);
-      if (str.length() < (int)sizeof(m_instrumental->opus.calibrationFile))
-	strcpy(m_instrumental->opus.calibrationFile, str.toAscii().data());
-      else
-	return postErrorMessage("Calibration Filename too long");
-    }
-
-    str = atts.value("instr");
-    if (!str.isEmpty()) {
-      str = m_master->pathExpand(str);
-      if (str.length() < (int)sizeof(m_instrumental->opus.instrFunctionFile))
-	strcpy(m_instrumental->opus.instrFunctionFile, str.toAscii().data());
-      else
-	return postErrorMessage("Instrument Function Filename too long");
     }
 
   }

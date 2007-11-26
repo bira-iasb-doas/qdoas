@@ -276,9 +276,6 @@ bool CProjectSubHandler::start(const QString &element, const QXmlAttributes &att
   else if (element == "output") {
     return m_master->installSubHandler(new CProjectOutputSubHandler(m_master, &(prop->output)), atts);
   }
-//  else if (element == "nasa_ames") {
-//    return m_master->installSubHandler(new CProjectNasaAmesSubHandler(m_master, &(prop->nasaames)), atts);
-//  }
   else if (element == "analysis_window") {
     // allocate a new item in the project for this AW
     CAnalysisWindowConfigItem *awItem = m_project->issueNewAnalysisWindowItem();
@@ -288,16 +285,7 @@ bool CProjectSubHandler::start(const QString &element, const QXmlAttributes &att
     return false; // fall through failure
   }
 
-  TRACE2("proj Handler : " << element.toStdString());
-
-  return true; // TODO - false unknown element ...
-}
-
-bool CProjectSubHandler::end(const QString &element)
-{
-  // TODO - remove this ...
-  // end of sub element ... all sub elements are managed by sub handlers.
-  return true;
+  return true; // TODO - false unknown element ... or just ignore...
 }
 
 bool CProjectSubHandler::end()

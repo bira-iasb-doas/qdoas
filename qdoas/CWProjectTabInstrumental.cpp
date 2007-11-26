@@ -74,11 +74,6 @@ CWProjectTabInstrumental::CWProjectTabInstrumental(const mediate_project_instrum
   index = m_formatStack->addWidget(m_pdaEggOldEdit);
   m_instrumentToStackIndexMap.insert(std::map<int,int>::value_type(PRJCT_INSTR_FORMAT_PDAEGG_OLD, index));
 
-  // pdaeggulb
-  m_pdaEggUlbEdit = new CWInstrPdaEggUlbEdit(&(instr->pdaeggulb));
-  index = m_formatStack->addWidget(m_pdaEggUlbEdit);
-  m_instrumentToStackIndexMap.insert(std::map<int,int>::value_type(PRJCT_INSTR_FORMAT_PDAEGG_ULB, index));
-
   // ccdohp96
   m_ccdOhp96Edit = new CWInstrCcdEdit(&(instr->ccdohp96));
   index = m_formatStack->addWidget(m_ccdOhp96Edit);
@@ -89,20 +84,10 @@ CWProjectTabInstrumental::CWProjectTabInstrumental(const mediate_project_instrum
   index = m_formatStack->addWidget(m_ccdHa94Edit);
   m_instrumentToStackIndexMap.insert(std::map<int,int>::value_type(PRJCT_INSTR_FORMAT_CCD_HA_94, index));
 
-  // ccdulb
-  m_ccdUlbEdit = new CWInstrCcdUlbEdit(&(instr->ccdulb));
-  index = m_formatStack->addWidget(m_ccdUlbEdit);
-  m_instrumentToStackIndexMap.insert(std::map<int,int>::value_type(PRJCT_INSTR_FORMAT_CCD_ULB, index));
-
   // saozvis
   m_saozVisEdit = new CWInstrSaozEdit(&(instr->saozvis));
   index = m_formatStack->addWidget(m_saozVisEdit);
   m_instrumentToStackIndexMap.insert(std::map<int,int>::value_type(PRJCT_INSTR_FORMAT_SAOZ_VIS, index));
-
-  // saozuv
-  m_saozUvEdit = new CWInstrSaozEdit(&(instr->saozuv));
-  index = m_formatStack->addWidget(m_saozUvEdit);
-  m_instrumentToStackIndexMap.insert(std::map<int,int>::value_type(PRJCT_INSTR_FORMAT_SAOZ_UV, index));
 
   // saozefm
   m_saozEfmEdit = new CWInstrMinimumEdit(&(instr->saozefm));
@@ -129,20 +114,10 @@ CWProjectTabInstrumental::CWProjectTabInstrumental(const mediate_project_instrum
   index = m_formatStack->addWidget(m_pdasiEasoeEdit);
   m_instrumentToStackIndexMap.insert(std::map<int,int>::value_type(PRJCT_INSTR_FORMAT_PDASI_EASOE, index));
 
-  // pdasiosma
-  m_pdasiOsmaEdit = new CWInstrLoggerEdit(&(instr->pdasiosma));
-  index = m_formatStack->addWidget(m_pdasiOsmaEdit);
-  m_instrumentToStackIndexMap.insert(std::map<int,int>::value_type(PRJCT_INSTR_FORMAT_PDASI_OSMA, index));
-
   // ccdeev
   m_ccdEevEdit = new CWInstrCcdEevEdit(&(instr->ccdeev));
   index = m_formatStack->addWidget(m_ccdEevEdit);
   m_instrumentToStackIndexMap.insert(std::map<int,int>::value_type(PRJCT_INSTR_FORMAT_CCD_EEV, index));
-
-  // opus
-  m_opusEdit = new CWInstrOpusEdit(&(instr->opus));
-  index = m_formatStack->addWidget(m_opusEdit);
-  m_instrumentToStackIndexMap.insert(std::map<int,int>::value_type(PRJCT_INSTR_FORMAT_OPUS, index));
 
   // gdpascii
   m_gdpAsciiEdit = new CWInstrGdpEdit(&(instr->gdpascii));
@@ -223,18 +198,14 @@ void CWProjectTabInstrumental::apply(mediate_project_instrumental_t *instr) cons
   m_actonEdit->apply(&(instr->acton));
   m_pdaEggEdit->apply(&(instr->pdaegg));
   m_pdaEggOldEdit->apply(&(instr->pdaeggold));
-  m_pdaEggUlbEdit->apply(&(instr->pdaeggulb));
   m_ccdOhp96Edit->apply(&(instr->ccdohp96));
   m_ccdHa94Edit->apply(&(instr->ccdha94));
-  m_ccdUlbEdit->apply(&(instr->ccdulb));
   m_saozVisEdit->apply(&(instr->saozvis));
-  m_saozUvEdit->apply(&(instr->saozuv));
   m_saozEfmEdit->apply(&(instr->saozefm));
   m_mfcEdit->apply(&(instr->mfc));
   m_mfcStdEdit->apply(&(instr->mfcstd));
   m_rasasEdit->apply(&(instr->rasas));
   m_pdasiEasoeEdit->apply(&(instr->pdasieasoe));
-  m_pdasiOsmaEdit->apply(&(instr->pdasiosma));
   m_ccdEevEdit->apply(&(instr->ccdeev));
   m_gdpAsciiEdit->apply(&(instr->gdpascii));
   m_gdpBinEdit->apply(&(instr->gdpbin));

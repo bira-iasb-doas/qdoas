@@ -346,23 +346,14 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   case PRJCT_INSTR_FORMAT_PDAEGG_OLD:
     fprintf(fp, "\"pdaeggold\"");
     break;
-  case PRJCT_INSTR_FORMAT_PDAEGG_ULB:
-    fprintf(fp, "\"pdaeggulb\"");
-    break;
   case PRJCT_INSTR_FORMAT_CCD_OHP_96:
     fprintf(fp, "\"ccdohp96\"");
     break;
   case PRJCT_INSTR_FORMAT_CCD_HA_94:
     fprintf(fp, "\"ccdha94\"");
     break;
-  case PRJCT_INSTR_FORMAT_CCD_ULB:
-    fprintf(fp, "\"ccdulb\"");
-    break;
   case PRJCT_INSTR_FORMAT_SAOZ_VIS:
     fprintf(fp, "\"saozvis\"");
-    break;
-  case PRJCT_INSTR_FORMAT_SAOZ_UV:
-    fprintf(fp, "\"saozuv\"");
     break;
   case PRJCT_INSTR_FORMAT_SAOZ_EFM:
     fprintf(fp, "\"saozefm\"");
@@ -379,14 +370,8 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   case PRJCT_INSTR_FORMAT_PDASI_EASOE:
     fprintf(fp, "\"pdasieasoe\"");
     break;
-  case PRJCT_INSTR_FORMAT_PDASI_OSMA:
-    fprintf(fp, "\"osma\"");
-    break;
   case PRJCT_INSTR_FORMAT_CCD_EEV:
     fprintf(fp, "\"ccdeev\"");
-    break;
-  case PRJCT_INSTR_FORMAT_OPUS:
-    fprintf(fp, "\"opus\"");
     break;
   case PRJCT_INSTR_FORMAT_GDP_ASCII:
     fprintf(fp, "\"gdpascii\"");
@@ -551,34 +536,6 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   tmpStr = pathMgr->simplifyPath(QString(d->pdaeggold.instrFunctionFile));
   fprintf(fp, " instr=\"%s\" />\n", tmpStr.toAscii().constData());
 
-  // pdaeggulb
-  fprintf(fp, "      <pdaeggulb type=");
-  switch (d->pdaeggulb.curveType) {
-  case PRJCT_INSTR_ULB_TYPE_MANUAL:
-    fprintf(fp, "\"manual\"");
-    break;
-  case PRJCT_INSTR_ULB_TYPE_HIGH:
-    fprintf(fp, "\"high\"");
-    break;
-  case PRJCT_INSTR_ULB_TYPE_LOW:
-    fprintf(fp, "\"low\"");
-    break;
-  default:
-    fprintf(fp, "\"invalid\"");
-  }
-
-  tmpStr = pathMgr->simplifyPath(QString(d->pdaeggulb.calibrationFile));
-  fprintf(fp, " calib=\"%s\"", tmpStr.toAscii().constData());
-
-  tmpStr = pathMgr->simplifyPath(QString(d->pdaeggulb.instrFunctionFile));
-  fprintf(fp, " instr=\"%s\"", tmpStr.toAscii().constData());
-
-  tmpStr = pathMgr->simplifyPath(QString(d->pdaeggulb.interPixelVariabilityFile));
-  fprintf(fp, " ipv=\"%s\"", tmpStr.toAscii().constData());
-
-  tmpStr = pathMgr->simplifyPath(QString(d->pdaeggulb.detectorNonLinearityFile));
-  fprintf(fp, " dnl=\"%s\" />\n", tmpStr.toAscii().constData());
-
   // ccdohp96
   tmpStr = pathMgr->simplifyPath(QString(d->ccdohp96.calibrationFile));
   fprintf(fp, "      <ccdohp96 calib=\"%s\"", tmpStr.toAscii().constData());
@@ -604,59 +561,6 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
 
   tmpStr = pathMgr->simplifyPath(QString(d->ccdha94.detectorNonLinearityFile));
   fprintf(fp, " dnl=\"%s\" />\n", tmpStr.toAscii().constData());
-
-  // ccdulb
-  fprintf(fp, "      <ccdulb grating=\"%d\" cen=\"%d\"", d->ccdulb.grating, d->ccdulb.centralWavelength);
-
-  tmpStr = pathMgr->simplifyPath(QString(d->ccdulb.calibrationFile));
-  fprintf(fp, " calib=\"%s\"", tmpStr.toAscii().constData());
-
-  tmpStr = pathMgr->simplifyPath(QString(d->ccdulb.offsetFile));
-  fprintf(fp, " offset=\"%s\"", tmpStr.toAscii().constData());
-
-  tmpStr = pathMgr->simplifyPath(QString(d->ccdulb.interPixelVariabilityFile));
-  fprintf(fp, " ipv=\"%s\"", tmpStr.toAscii().constData());
-
-  tmpStr = pathMgr->simplifyPath(QString(d->ccdulb.detectorNonLinearityFile));
-  fprintf(fp, " dnl=\"%s\" />\n", tmpStr.toAscii().constData());
-
-  // saoz vis
-  fprintf(fp, "      <saozvis type=");
-  switch (d->saozvis.spectralType) {
-  case PRJCT_INSTR_SAOZ_TYPE_ZENITHAL:
-    fprintf(fp, "\"zenithal\"");
-    break;
-  case PRJCT_INSTR_SAOZ_TYPE_POINTED:
-    fprintf(fp, "\"pointed\"");
-    break;
-  default:
-    fprintf(fp, "\"invalid\"");
-  }
-
-  tmpStr = pathMgr->simplifyPath(QString(d->saozvis.calibrationFile));
-  fprintf(fp, " calib=\"%s\"", tmpStr.toAscii().constData());
-
-  tmpStr = pathMgr->simplifyPath(QString(d->saozvis.instrFunctionFile));
-  fprintf(fp, " instr=\"%s\" />\n", tmpStr.toAscii().constData());
-
-  // saoz uv
-  fprintf(fp, "      <saozuv type=");
-  switch (d->saozuv.spectralType) {
-  case PRJCT_INSTR_SAOZ_TYPE_ZENITHAL:
-    fprintf(fp, "\"zenithal\"");
-    break;
-  case PRJCT_INSTR_SAOZ_TYPE_POINTED:
-    fprintf(fp, "\"pointed\"");
-    break;
-  default:
-    fprintf(fp, "\"invalid\"");
-  }
-
-  tmpStr = pathMgr->simplifyPath(QString(d->saozuv.calibrationFile));
-  fprintf(fp, " calib=\"%s\"", tmpStr.toAscii().constData());
-
-  tmpStr = pathMgr->simplifyPath(QString(d->saozuv.instrFunctionFile));
-  fprintf(fp, " instr=\"%s\" />\n", tmpStr.toAscii().constData());
 
   // saozefm
   tmpStr = pathMgr->simplifyPath(QString(d->saozefm.calibrationFile));
@@ -712,29 +616,6 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   tmpStr = pathMgr->simplifyPath(QString(d->pdasieasoe.instrFunctionFile));
   fprintf(fp, " instr=\"%s\" />\n", tmpStr.toAscii().constData());
 
-  // pdasiosma
-  fprintf(fp, "      <pdasiosma type=");
-  switch (d->pdasiosma.spectralType) {
-  case PRJCT_INSTR_IASB_TYPE_ALL:
-    fprintf(fp, "\"all\"");
-    break;
-  case PRJCT_INSTR_IASB_TYPE_ZENITHAL:
-    fprintf(fp, "\"zenithal\"");
-    break;
-  case PRJCT_INSTR_IASB_TYPE_OFFAXIS:
-    fprintf(fp, "\"off-axis\"");
-    break;
-  default:
-    fprintf(fp, "\"invalid\"");
-  }
-  fprintf(fp, " azi=\"%s\"", (d->pdasiosma.flagAzimuthAngle ? sTrue : sFalse));
-
-  tmpStr = pathMgr->simplifyPath(QString(d->pdasiosma.calibrationFile));
-  fprintf(fp, " calib=\"%s\"", tmpStr.toAscii().constData());
-
-  tmpStr = pathMgr->simplifyPath(QString(d->pdasiosma.instrFunctionFile));
-  fprintf(fp, " instr=\"%s\" />\n", tmpStr.toAscii().constData());
-
   // ccdeev
   fprintf(fp, "      <ccdeev size=\"%d\"", d->ccdeev.detectorSize);
 
@@ -749,16 +630,6 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
 
   tmpStr = pathMgr->simplifyPath(QString(d->ccdeev.detectorNonLinearityFile));
   fprintf(fp, " dnl=\"%s\" />\n", tmpStr.toAscii().constData());
-
-  // opus
-  fprintf(fp, "      <opus size=\"%d\" time=\"%.2f\" trans=\"%s\"", d->opus.detectorSize,
-	  d->opus.timeShift, (d->opus.flagTransmittance ? sTrue : sFalse));
-
-  tmpStr = pathMgr->simplifyPath(QString(d->opus.calibrationFile));
-  fprintf(fp, " calib=\"%s\"", tmpStr.toAscii().constData());
-
-  tmpStr = pathMgr->simplifyPath(QString(d->opus.instrFunctionFile));
-  fprintf(fp, " instr=\"%s\" />\n", tmpStr.toAscii().constData());
 
   // gdpascii
   fprintf(fp, "      <gdpascii type=");
