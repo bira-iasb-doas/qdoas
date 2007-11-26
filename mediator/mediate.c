@@ -652,7 +652,6 @@ int mediateRequestSetProject(void *engineContext,
   DEBUG_Start(ENGINE_dbgFile,"Project",DEBUG_FCTTYPE_CONFIG,5,DEBUG_DVAR_YES,0);
   #endif
 
-  //  setMediateProjectSpectra(&pEngineProject->spectra,&project->spectra); REMOVE - TODO
   setMediateProjectDisplay(&pEngineProject->spectra,&project->display);
   setMediateProjectSelection(&pEngineProject->spectra,&project->selection);
   setMediateProjectAnalysis(&pEngineProject->analysis,&project->analysis);
@@ -783,7 +782,7 @@ RC mediateRequestSetAnalysisNonLinearCalib(struct calibration_sfp *nonLinearCali
   for (indexNonLinear=0;indexNonLinear<NNONLINEAR_CALIB;indexNonLinear++)
    {
     nonLinear[indexNonLinear].minValue=nonLinear[indexNonLinear].maxValue=(double)0.;
-    sprintf(nonLinear[indexNonLinear].symbolName,"SFP %d",indexNonLinear);
+    sprintf(nonLinear[indexNonLinear].symbolName,"SFP %d",indexNonLinear+1);
 
     nonLinear[indexNonLinear].fitFlag=nonLinearCalib[indexNonLinear].fitFlag;
     nonLinear[indexNonLinear].initialValue=nonLinearCalib[indexNonLinear].initialValue;
@@ -968,6 +967,8 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
   useKurucz=useUsamp=0;
   indexKurucz=ITEM_NONE;
 
+  THRD_id=THREAD_TYPE_ANALYSIS;  // QDOAS : force the thread type to Run Analysis (currently not the possibility to make the difference between  Run Analysis and Run Calibration)
+
   memset(&calibWindows,0,sizeof(mediate_analysis_window_t));
 
   memcpy(&calibWindows.crossSectionList,&pEngineContext->calibFeno.crossSectionList,sizeof(cross_section_list_t));
@@ -1078,7 +1079,7 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
          //        mediateRequestSetAnalysisNonLinearDoas and mediateRequestSetAnalysisNonLinearCalib would be replaced by only one call to ANALYSE_LoadNonLinear
 
          ((!pTabFeno->hidden && !(rc=mediateRequestSetAnalysisNonLinearDoas(&pAnalysisWindows->nonlinear,pTabFeno->LambdaRef))) ||
-          (pTabFeno->hidden && !(rc=mediateRequestSetAnalysisNonLinearCalib(pEngineContext->calibFeno.sfp,pTabFeno->LambdaRef)))) &&
+           (pTabFeno->hidden && !(rc=mediateRequestSetAnalysisNonLinearCalib(pEngineContext->calibFeno.sfp,pTabFeno->LambdaRef)))) &&
 
           !(rc=ANALYSE_LoadShiftStretch(pAnalysisWindows->shiftStretchList.shiftStretch,pAnalysisWindows->shiftStretchList.nShiftStretch)) &&
            (pTabFeno->hidden ||
@@ -1112,7 +1113,7 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
        }
 
       #if defined(__DEBUG_) && __DEBUG_
-      DEBUG_Print("Cross sections of %s window\n",pTabFeno->windowName);
+      DEBUG_Print("Cross sections of %s window (rc %d)\n",pTabFeno->windowName,rc);
       DEBUG_Print("NAME                      ACTION           A  P    ------------ conc --------------     ----------- param --------------     ----------- shift --------------     --------- stretch --------------     -------- stretch2 --------------\n");
       for (indexTabCross=0;indexTabCross<pTabFeno->NTabCross;indexTabCross++)
        {

@@ -177,6 +177,214 @@ enum _filesTypesSpectra
 // Analysis windows
 // ----------------
 
+// -----------
+// DEFINITIONS
+// -----------
+
+// Description of columns in ListView control
+// ------------------------------------------
+
+#define MAX_LIST_COLUMNS 30
+
+#define COMBOBOX_ITEM_TYPE_NONE           0x0000           // not a combobox control
+#define COMBOBOX_ITEM_TYPE_EXCLUSIVE      0x0001           // combobox to fill with symbols that are not used yet
+#define COMBOBOX_ITEM_TYPE_ORTHOGONAL     0x0002           // combobox to fill with all available symbols except the one selected
+#define COMBOBOX_ITEM_TYPE_POLYNOME       0x0008           // polynomial modes
+#define COMBOBOX_ITEM_TYPE_AMF            0x0010           // types of AMF files
+#define COMBOBOX_ITEM_TYPE_XS             0x0020           // types of AMF files
+
+enum _orthogonalTypes
+ {
+  ANLYS_ORTHOGONAL_TYPE_NONE,
+  ANLYS_ORTHOGONAL_TYPE_BASE,
+  ANLYS_ORTHOGONAL_TYPE_MAX
+ };
+
+enum _polynomeTypes
+ {
+ 	ANLYS_POLY_TYPE_NONE,
+ 	ANLYS_POLY_TYPE_0,
+ 	ANLYS_POLY_TYPE_1,
+ 	ANLYS_POLY_TYPE_2,
+ 	ANLYS_POLY_TYPE_3,
+ 	ANLYS_POLY_TYPE_4,
+ 	ANLYS_POLY_TYPE_5,
+ 	ANLYS_POLY_TYPE_MAX
+ };
+
+enum _stretchTypes
+ {
+  ANLYS_STRETCH_TYPE_NONE,
+  ANLYS_STRETCH_TYPE_FIRST_ORDER,
+  ANLYS_STRETCH_TYPE_SECOND_ORDER,
+  ANLYS_STRETCH_TYPE_MAX
+ };
+
+enum _crossTypes
+ {
+  ANLYS_CROSS_ACTION_NOTHING,
+  ANLYS_CROSS_ACTION_INTERPOLATE,
+  ANLYS_CROSS_ACTION_CONVOLUTE,
+  ANLYS_CROSS_ACTION_CONVOLUTE_I0,
+  ANLYS_CROSS_ACTION_CONVOLUTE_RING,
+  ANLYS_CROSS_ACTION_MAX
+ };
+
+enum _amfTypes
+ {
+  ANLYS_AMF_TYPE_NONE,
+  ANLYS_AMF_TYPE_SZA,
+  ANLYS_AMF_TYPE_CLIMATOLOGY,
+  ANLYS_AMF_TYPE_WAVELENGTH1,
+  ANLYS_AMF_TYPE_WAVELENGTH2,
+  ANLYS_AMF_TYPE_WAVELENGTH3,
+  ANLYS_AMF_TYPE_MAX
+ };
+
+// Columns enumeration per tab page
+// --------------------------------
+
+// Columns description of the ListView in "cross sections" tab page
+
+enum _crossSectionsColumns
+ {
+  // Cross Sections
+
+  COLUMN_CROSS_FILE,              // Cross Sections
+  COLUMN_CROSS_ORTHOGONAL,        // Orthogonalization
+  COLUMN_CROSS_XS_TYPE,           // Cross section type
+  COLUMN_CROSS_AMF_TYPE,          // AMF dependence to use
+  COLUMN_CROSS_DISPLAY,           // Fit display
+  COLUMN_CROSS_FILTER,            // Filter flag
+  COLUMN_CROSS_CCFIT,             // Cc fit
+  COLUMN_CROSS_CCINIT,            // Cc init
+  COLUMN_CROSS_CCDELTA,           // Cc delta
+
+  // Output
+
+  COLUMN_CROSS_AMF_OUTPUT,        // Store AMF
+  COLUMN_CROSS_RESIDUAL,          // Res Col
+  COLUMN_CROSS_SLNTCOL,           // Slnt Col
+  COLUMN_CROSS_SLNTERR,           // Slnt Err
+  COLUMN_CROSS_SLNTFACT,          // Slnt Fact
+  COLUMN_CROSS_VRTCOL,            // Vrt Col
+  COLUMN_CROSS_VRTERR,            // Vrt Err
+  COLUMN_CROSS_VRTFACT,           // Vrt Fact
+
+  // Kurucz SVD matrix composition for reference alignment
+
+  COLUMN_CROSS_SVD_ORTHOGONAL,    // Orthogonalization
+  COLUMN_CROSS_SVD_DISPLAY,       // Fit display
+  COLUMN_CROSS_SVD_XS_TYPE,       // Cross section type
+  COLUMN_CROSS_SVD_CCFIT,         // Cc fit
+  COLUMN_CROSS_SVD_CCINIT,        // Cc init
+  COLUMN_CROSS_SVD_CCDELTA,       // Cc delta
+
+  // Kurucz output
+
+  COLUMN_CROSS_SVD_SLNTCOL,       // Slnt Col
+  COLUMN_CROSS_SVD_SLNTERR,       // Slnt Err
+  COLUMN_CROSS_SVD_SLNTFACT,      // Slnt Fact
+
+  // I0 convolution
+
+  COLUMN_CROSS_CCI0,              // Cc I0 convolution
+  COLUMN_CROSS_SVD_CCI0,          // Cc I0 convolution (calibration)
+
+  COLUMN_CROSS_MAX
+ };
+
+// Columns description of the ListView in "continuous functions" tab page
+
+enum _continuousFunctionsColumns
+ {
+  COLUMN_CONTINUOUS_X0,           // terms in x0 and 1/x0
+  COLUMN_CONTINUOUS_X1,           // terms in x1 and 1/x1
+  COLUMN_CONTINUOUS_X2,           // terms in x2 and 1/x2
+  COLUMN_CONTINUOUS_X3,           // terms in x3 and 1/x3
+  COLUMN_CONTINUOUS_X4,           // terms in x4 and 1/x4
+  COLUMN_CONTINUOUS_X5,           // terms in x5 and 1/x5
+  COLUMN_CONTINUOUS_MAX,          // terms in x0 and 1/x0
+ };
+
+// Columns description of the ListView in "linear parameters" tab page
+
+enum _linearColumns
+ {
+  COLUMN_POLY_PARAMS,        // Linear params
+  COLUMN_POLY_POLYORDER,     // Polynomial order
+  COLUMN_POLY_BASEORDER,     // Orthogonal base order
+  COLUMN_POLY_STORE_FIT,     // Store fit
+  COLUMN_POLY_STORE_ERROR,   // Store error
+  COLUMN_POLY_MAX
+ };
+
+// Columns description of the ListView in "non linear parameters" tab page
+
+enum _notLinearColumns
+ {
+  COLUMN_OTHERS_PARAMS,        // Non linear params
+  COLUMN_OTHERS_FIT,           // Fit flag
+  COLUMN_OTHERS_VALINIT,       // Val init
+  COLUMN_OTHERS_VALDELTA,      // Val del
+  COLUMN_OTHERS_STORE_FIT,     // Store fit
+  COLUMN_OTHERS_STORE_ERROR,   // Store error
+  COLUMN_OTHERS_VALMIN,        // Val min
+  COLUMN_OTHERS_VALMAX,        // Val max
+  COLUMN_OTHERS_MAX
+ };
+
+// Columns description of the ListView in "Shift and Stretch" tab page
+
+enum _shiftStretchColumns
+ {
+  COLUMN_CROSS_TO_FIT,            // Cross Sections and spectrum
+  COLUMN_SH_FIT,                  // Sh fit
+  COLUMN_ST_FIT,                  // St fit
+  COLUMN_SC_FIT,                  // Sc fit
+  COLUMN_SH_STORE,                // Sh store
+  COLUMN_ST_STORE,                // St store
+  COLUMN_SC_STORE,                // Sc store
+  COLUMN_ERR_STORE,               // Err store
+  COLUMN_SH_INIT,                 // Sh init
+  COLUMN_ST_INIT,                 // St init
+  COLUMN_ST_INIT2,                // St init
+  COLUMN_SC_INIT,                 // St init
+  COLUMN_SC_INIT2,                // St init
+  COLUMN_SH_DELTA,                // Sh delta
+  COLUMN_ST_DELTA,                // St delta
+  COLUMN_ST_DELTA2,               // St delta
+  COLUMN_SC_DELTA,                // St delta
+  COLUMN_SC_DELTA2,               // St delta
+  COLUMN_SH_MIN,                  // Sh min
+  COLUMN_SH_MAX,                  // Sh max
+  COLUMN_SHST_MAX
+ };
+
+// Columns description of the ListView in "gaps" tab page
+
+enum _gapsColumns
+ {
+  COLUMN_GAPS_TEXT,
+  COLUMN_GAPS_MINVAL,             // Min Value
+  COLUMN_GAPS_MAXVAL,             // Max Value
+  COLUMN_GAPS_MAX
+ };
+
+// Analysis tab pages description
+// ------------------------------
+
+enum anlysTabPagesTypes
+ {
+  TAB_TYPE_ANLYS_CROSS,
+  TAB_TYPE_ANLYS_LINEAR,
+  TAB_TYPE_ANLYS_NOTLINEAR,
+  TAB_TYPE_ANLYS_SHIFT_AND_STRETCH,
+  TAB_TYPE_ANLYS_GAPS,
+  TAB_TYPE_ANLYS_OUTPUT,
+  TAB_TYPE_ANLYS_MAX
+ };
+
 #define MAX_ANLYS 50
 
 enum _nonLinearParameters

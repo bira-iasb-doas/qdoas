@@ -715,7 +715,6 @@ typedef struct _engineContext
   FILE_INFO         fileInfo;                                                   // the name of the file to load and file pointers
   RECORD_INFO       recordInfo;                                                 // data on the current record
   PROJECT           project;                                                    // data from the current project
-  CALIB_FENO        calibFeno;                                                  // transfer of wavelength calibration options from the project mediator to the analysis mediator
 
   // record information
 
@@ -726,6 +725,8 @@ typedef struct _engineContext
   INDEX   lastRefRecord;
   INT     lastSavedRecord;
   INT     satelliteFlag;
+
+  CALIB_FENO        calibFeno;                                                  // transfer of wavelength calibration options from the project mediator to the analysis mediator
  }
 ENGINE_CONTEXT;
 

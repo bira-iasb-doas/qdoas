@@ -1152,7 +1152,7 @@ void CQdoasConfigWriter::writeAnalysisWindows(FILE *fp, const QString &projectNa
 	fprintf(fp, "             east=\"%s\" center=\"%s\" west=\"%s\" backscan=\"%s\" />\n",
 		(properties->pixelTypeEast ? sTrue : sFalse), (properties->pixelTypeCenter ? sTrue : sFalse),
 		(properties->pixelTypeWest ? sTrue : sFalse), (properties->pixelTypeBackscan ? sTrue : sFalse));
-		
+
 	// cross sections ....
 	writeCrossSectionList(fp, &(properties->crossSectionList));
 
@@ -1234,7 +1234,7 @@ void CQdoasConfigWriter::writeCrossSectionList(FILE *fp, const cross_section_lis
       fprintf(fp, "\"none\"");
     }
 
-    fprintf(fp, " fit=\"%s\" filter=\"%s\" cstrncc=\%s\" ccfit=\"%s\" icc=\"%.3f\" dcc=\"%.3f\" ccio=\"%.3f\"",
+    fprintf(fp, " fit=\"%s\" filter=\"%s\" cstrncc=\"%s\" ccfit=\"%s\" icc=\"%.3f\" dcc=\"%.3f\" ccio=\"%.3f\"",
 	    (d->requireFit ? sTrue : sFalse),
 	    (d->requireFilter ? sTrue : sFalse),
 	    (d->constrainedCc ? sTrue : sFalse),
