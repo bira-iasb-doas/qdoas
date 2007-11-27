@@ -1159,8 +1159,8 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
   // Reference alignment
 
-// QDOAS ???   if (!rc && useKurucz)
-// QDOAS ???    rc=KURUCZ_Reference(ENGINE_contextRef.buffers.instrFunction,1,saveFlag,1);
+  if (!rc && useKurucz)
+   rc=KURUCZ_Reference(ENGINE_contextRef.buffers.instrFunction,1,saveFlag,1);
 
   if (!rc && alignRef)
    rc=ANALYSE_AlignReference(1,saveFlag,responseHandle);

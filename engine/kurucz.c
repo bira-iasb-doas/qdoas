@@ -55,7 +55,8 @@
 //  KURUCZ_Free - release buffers allocated for Kurucz procedures;
 //  ----------------------------------------------------------------------------
 
-#include "doas.h"
+#include "mediate.h"
+#include "engine.h"
 
 // ================
 // GLOBAL VARIABLES
@@ -288,6 +289,10 @@ RC KURUCZ_Spectrum(double *oldLambda,double *newLambda,double *spectrum,double *
 
       // Global initializations
 
+      #if defined(__DEBUG_) && __DEBUG_
+      DEBUG_Start(ENGINE_dbgFile,"Kurucz",DEBUG_FCTTYPE_MATH|DEBUG_FCTTYPE_APPL,5,DEBUG_DVAR_YES,0); // !debugResetFlag++);
+      #endif
+
 
       if (((rc=ANALYSE_SvdInit(&svdFeno[indexWindow]))!=ERROR_ID_NO) ||
 
@@ -300,6 +305,10 @@ RC KURUCZ_Spectrum(double *oldLambda,double *newLambda,double *spectrum,double *
                                    &Niter))>=THREAD_EVENT_STOP))                // number of iterations in Curfit
 
        break;
+
+      #if defined(__DEBUG_) && __DEBUG_
+      DEBUG_Stop("Kurucz");
+      #endif
 
       // Fill A SVD system
 

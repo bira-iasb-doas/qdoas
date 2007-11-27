@@ -358,10 +358,30 @@ void setMediateProjectCalibration(PRJCT_KURUCZ *pEngineCalibration,CALIB_FENO *p
   pEngineCalibration->displayShift=pMediateCalibration->requireShiftSfp;        // display shift/Fwhm in each pixel
   pEngineCalibration->displaySpectra=pMediateCalibration->requireSpectra;       // display fwhm in each pixel
   pEngineCalibration->fwhmFit=(pMediateCalibration->lineShape>0)?1:0;           // force fit of fwhm while applying Kurucz
-  pEngineCalibration->fwhmType=pMediateCalibration->lineShape;                  // type of slit function to fit
   pEngineCalibration->lambdaLeft=pMediateCalibration->wavelengthMin;            // minimum wavelength for the spectral interval
   pEngineCalibration->lambdaRight=pMediateCalibration->wavelengthMax;           // maximum wavelength for the spectral interval
-  pEngineCalibration->invPolyDegree=pMediateCalibration->lorentzDegree;         // degree of the lorentzian
+  pEngineCalibration->invPolyDegree=pMediateCalibration->lorentzDegree;         // degree of the lorentzian  µ
+
+  switch(pMediateCalibration->lineShape)
+   {
+ // ---------------------------------------------------------------------------
+    case PRJCT_CALIB_FWHM_TYPE_ERF :
+     pEngineCalibration->fwhmType=SLIT_TYPE_ERF;
+    break;
+ // ---------------------------------------------------------------------------
+    case PRJCT_CALIB_FWHM_TYPE_INVPOLY :
+     pEngineCalibration->fwhmType=SLIT_TYPE_INVPOLY;
+    break;
+ // ---------------------------------------------------------------------------
+    case PRJCT_CALIB_FWHM_TYPE_VOIGT :
+     pEngineCalibration->fwhmType=SLIT_TYPE_VOIGT;
+    break;
+ // ---------------------------------------------------------------------------
+    default :
+     pEngineCalibration->fwhmType=SLIT_TYPE_GAUSS;
+    break;
+ // ---------------------------------------------------------------------------
+   }
 
   // !!! tables will be loaded by mediateRequestSetAnalysisWindows !!!
 
