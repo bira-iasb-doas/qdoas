@@ -26,6 +26,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "CWProjectTabUndersampling.h"
 #include "CValidator.h"
+#include "CPreferences.h"
 
 #include "constants.h"
 
@@ -103,10 +104,16 @@ void CWProjectTabUndersampling::apply(mediate_project_undersampling_t *propertie
 
 void CWProjectTabUndersampling::slotBrowseSolarRefFile()
 {
-  QString filename = QFileDialog::getOpenFileName(this, "Open Solar Reference File", "/home/ian",
+  CPreferences *pref = CPreferences::instance();
+
+  QString filename = QFileDialog::getOpenFileName(this, "Open Solar Reference File",
+						  pref->directoryName("Ref"),
                                                   "Kurucz File (*.ktz);;All Files (*)");
   
-  if (!filename.isEmpty())
+  if (!filename.isEmpty()) {
+    pref->setDirectoryNameGivenFile("Ref", filename);
+    
     m_refFileEdit->setText(filename);
+  }
 }
 

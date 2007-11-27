@@ -17,6 +17,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
+
 #include <QVBoxLayout>
 #include <QGridLayout>
 #include <QHBoxLayout>
@@ -26,6 +27,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QFileDialog>
 
 #include "CWProjectTabCalibration.h"
+#include "CPreferences.h"
 #include "CValidator.h"
 
 #include "constants.h"
@@ -50,7 +52,7 @@ CWProjectTabCalibration::CWProjectTabCalibration(const mediate_project_calibrati
   m_refFileEdit->setMaxLength(sizeof(properties->solarRefFile) - 1); // limit test length to buffer size
 
   topLayout->addWidget(m_refFileEdit, 0, 1);
-  QPushButton *browseBtn = new QPushButton("Browse...", this);
+  QPushButton *browseBtn = new QPushButton("Browse", this);
   topLayout->addWidget(browseBtn, 0, 2);
 
   // methodType
@@ -287,11 +289,17 @@ void CWProjectTabCalibration::slotLineShapeSelectionChanged(int index)
 
 void CWProjectTabCalibration::slotBrowseSolarRefFile()
 {
-  QString filename = QFileDialog::getOpenFileName(this, "Open Solar Reference File", "/home/ian",
+  CPreferences *pref = CPreferences::instance();
+  
+  QString filename = QFileDialog::getOpenFileName(this, "Open Solar Reference File",
+						  pref->directoryName("Ref"),
                                                   "Kurucz File (*.ktz);;All Files (*)");
 
-  if (!filename.isEmpty())
+  if (!filename.isEmpty()) {
+    pref->setDirectoryNameGivenFile("Ref", filename);
+
     m_refFileEdit->setText(filename);
+  }
 }
 
 void CWProjectTabCalibration::slotOutputCalibration(bool enabled)

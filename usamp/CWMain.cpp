@@ -286,7 +286,7 @@ void CWMain::slotOpenFile()
 
   QString fileName = QFileDialog::getOpenFileName(this, "Open Project File",
 						  prefs->directoryName("UsampConf"),
-						  "Qdoas Project Config (*.xml);;All Files (*)");
+						  "Usamp Config (*.xml);;All Files (*)");
 
   if (fileName.isEmpty()) {
     return;

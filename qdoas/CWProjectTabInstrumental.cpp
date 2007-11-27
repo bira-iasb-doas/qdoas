@@ -31,6 +31,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "CValidator.h"
 #include "CWSiteListCombo.h"
 #include "CWorkSpace.h"
+#include "CPreferences.h"
 
 #include "constants.h"
 
@@ -251,29 +252,47 @@ CWCalibInstrEdit::~CWCalibInstrEdit()
 
 void CWCalibInstrEdit::slotCalibOneBrowse()
 {
-  QString file = QFileDialog::getOpenFileName(this, "Select Calibration File", QString(),
-					      "Calibration File (*.clb);;All Files (*)");
+  CPreferences *pref = CPreferences::instance();
 
-  if (!file.isEmpty())
-    m_fileOneEdit->setText(file);
+  QString filename = QFileDialog::getOpenFileName(this, "Select Calibration File",
+						  pref->directoryName("Calib"),
+						  "Calibration File (*.clb);;All Files (*)");
+
+  if (!filename.isEmpty()) {
+    pref->setDirectoryNameGivenFile("Calib", filename);
+    
+    m_fileOneEdit->setText(filename);
+  }
 }
 
 void CWCalibInstrEdit::slotInstrTwoBrowse()
 {
-  QString file = QFileDialog::getOpenFileName(this, "Select Instrument Function File", QString(),
-					      "Instrument Function File (*.ins);;All Files (*)");
+  CPreferences *pref = CPreferences::instance();
 
-  if (!file.isEmpty())
-    m_fileTwoEdit->setText(file);
+  QString filename = QFileDialog::getOpenFileName(this, "Select Instrument Function File",
+						  pref->directoryName("Instr"),
+						  "Instrument Function File (*.ins);;All Files (*)");
+
+  if (!filename.isEmpty()) {
+    pref->setDirectoryNameGivenFile("Instr", filename);
+
+    m_fileTwoEdit->setText(filename);
+  }
 }
 
 void CWCalibInstrEdit::slotOffsetTwoBrowse()
 {
-  QString file = QFileDialog::getOpenFileName(this, "Select Offset File", QString(),
-					      "Offset File (*.txt);;All Files (*)");
+  CPreferences *pref = CPreferences::instance();
+  
+  QString filename = QFileDialog::getOpenFileName(this, "Select Offset File",
+						  pref->directoryName("Offset"),
+						  "Offset File (*.txt);;All Files (*)");
 
-  if (!file.isEmpty())
-    m_fileTwoEdit->setText(file);
+  if (!filename.isEmpty()) {
+    pref->setDirectoryNameGivenFile("Offset", filename);
+    
+    m_fileTwoEdit->setText(filename);
+  }
 }
 
 void CWCalibInstrEdit::helperConstructFileWidget(QLineEdit **fileEdit, QGridLayout *gridLayout, int &row,
@@ -288,7 +307,7 @@ void CWCalibInstrEdit::helperConstructFileWidget(QLineEdit **fileEdit, QGridLayo
   QLineEdit *edit = new QLineEdit(this);
   edit->setMaxLength(len-1);
   gridLayout->addWidget(edit, row, 1);
-  QPushButton *browseBtn = new QPushButton("Browse...", this);
+  QPushButton *browseBtn = new QPushButton("Browse", this);
   gridLayout->addWidget(browseBtn, row, 2);
   ++row;
 
@@ -329,47 +348,77 @@ CWAllFilesEdit::~CWAllFilesEdit()
 
 void CWAllFilesEdit::slotInterPixelVariabilityThreeBrowse()
 {
-  QString file = QFileDialog::getOpenFileName(this, "Select Inter-Pixel Variability File", QString(),
-					      "Inter-Pixel Variability File (*.ipv);;All Files (*)");
+  CPreferences *pref = CPreferences::instance();
+  
+  QString filename = QFileDialog::getOpenFileName(this, "Select Inter-Pixel Variability File",
+						  pref->directoryName("IntPixVar"),
+						  "Inter-Pixel Variability File (*.ipv);;All Files (*)");
 
-  if (!file.isEmpty())
-    m_fileThreeEdit->setText(file);
+  if (!filename.isEmpty()) {
+    pref->setDirectoryNameGivenFile("IntPixVar", filename);
+    
+    m_fileThreeEdit->setText(filename);
+  }
 }
 
 void CWAllFilesEdit::slotDarkCurrentThreeBrowse()
 {
-  QString file = QFileDialog::getOpenFileName(this, "Select Dark Current File", QString(),
-					      "Dark Current File (*.drk);;All Files (*)");
+  CPreferences *pref = CPreferences::instance();
 
-  if (!file.isEmpty())
-    m_fileThreeEdit->setText(file);
+  QString filename = QFileDialog::getOpenFileName(this, "Select Dark Current File",
+						  pref->directoryName("Dark"),
+						  "Dark Current File (*.drk);;All Files (*)");
+
+  if (!filename.isEmpty()) {
+    pref->setDirectoryNameGivenFile("Dark", filename);
+    
+    m_fileThreeEdit->setText(filename);
+  }
 }
 
 void CWAllFilesEdit::slotStraylightCorrectionThreeBrowse()
 {
-  QString file = QFileDialog::getOpenFileName(this, "Select Stray-Light File", QString(),
-					      "Stray-Light File (*.str);;All Files (*)");
+  CPreferences *pref = CPreferences::instance();
+  
+  QString filename = QFileDialog::getOpenFileName(this, "Select Stray-Light File",
+						  pref->directoryName("Stray"),
+						  "Stray-Light File (*.str);;All Files (*)");
 
-  if (!file.isEmpty())
-    m_fileThreeEdit->setText(file);
+  if (!filename.isEmpty()) {
+    pref->setDirectoryNameGivenFile("Stray", filename);
+    
+    m_fileThreeEdit->setText(filename);
+  }
 }
 
 void CWAllFilesEdit::slotDetectorNonLinearityFourBrowse()
 {
-  QString file = QFileDialog::getOpenFileName(this, "Select Detector Non-Linearity File", QString(),
-					      "Detector Non-Linearity File (*.dnl);;All Files (*)");
-
-  if (!file.isEmpty())
-    m_fileFourEdit->setText(file);
+  CPreferences *pref = CPreferences::instance();
+  
+  QString filename = QFileDialog::getOpenFileName(this, "Select Detector Non-Linearity File",
+						  pref->directoryName("DetNonLin"),
+						  "Detector Non-Linearity File (*.dnl);;All Files (*)");
+  
+  if (!filename.isEmpty()) {
+    pref->setDirectoryNameGivenFile("DetNonLin", filename);
+    
+    m_fileFourEdit->setText(filename);
+  }
 }
 
 void CWAllFilesEdit::slotOffsetFourBrowse()
 {
-  QString file = QFileDialog::getOpenFileName(this, "Select Offset File", QString(),
-					      "Offset File (*.txt);;All Files (*)");
+  CPreferences *pref = CPreferences::instance();
+  
+  QString filename = QFileDialog::getOpenFileName(this, "Select Offset File",
+						  pref->directoryName("Offset"),
+						  "Offset File (*.txt);;All Files (*)");
 
-  if (!file.isEmpty())
-    m_fileFourEdit->setText(file);
+  if (!filename.isEmpty()) {
+    pref->setDirectoryNameGivenFile("Offset", filename);
+
+    m_fileFourEdit->setText(filename);
+  }
 }
 
 void CWAllFilesEdit::helperConstructIpvDnlFileWidgets(QGridLayout *gridLayout, int &row,

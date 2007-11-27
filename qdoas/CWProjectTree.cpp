@@ -1054,7 +1054,7 @@ void CWProjectTree::slotInsertFile()
       QString filter;
       QTextStream stream(&filter);
       
-      stream << "Spectra (*." << extension << ");;All files(*.*)";
+      stream << "Spectra (*." << extension << ");;All files(*)";
       
       QStringList files = QFileDialog::getOpenFileNames(0, "Select one or more spectra files",
 							prefs->directoryName("Spectra"), filter);

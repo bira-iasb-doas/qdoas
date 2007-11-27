@@ -199,12 +199,14 @@ void CWConvTabGeneral::slotBrowseInput()
 {
   CPreferences *pref = CPreferences::instance();
   
-  QString dirName = pref->directoryName("Input");
-  QString fileName = QFileDialog::getOpenFileName(this, "Input File", dirName, "*");
+  QString filename = QFileDialog::getOpenFileName(this, "Input File",
+						  pref->directoryName("Input"),
+						  "All files (*)");
   
-  if (!fileName.isEmpty()) {
-    m_inputFileEdit->setText(fileName);
-    pref->setDirectoryNameGivenFile("Input", fileName);
+  if (!filename.isEmpty()) {
+    pref->setDirectoryNameGivenFile("Input", filename);
+    
+    m_inputFileEdit->setText(filename);
   }
 }
 
@@ -212,12 +214,15 @@ void CWConvTabGeneral::slotBrowseOutput()
 {
   CPreferences *pref = CPreferences::instance();
   
-  QString dirName = pref->directoryName("Output");
-  QString fileName = QFileDialog::getSaveFileName(this, "Output File", dirName, "*");
+  QString filename = QFileDialog::getSaveFileName(this, "Output File",
+						  pref->directoryName("Output"),
+						  "All files (*)");
   
-  if (!fileName.isEmpty()) {
-    m_outputFileEdit->setText(fileName);
-    pref->setDirectoryNameGivenFile("Output", fileName);
+  
+  if (!filename.isEmpty()) {
+    pref->setDirectoryNameGivenFile("Output", filename);
+    
+    m_outputFileEdit->setText(filename);
   }
 }
 
@@ -225,12 +230,13 @@ void CWConvTabGeneral::slotBrowseCalibration()
 {
   CPreferences *pref = CPreferences::instance();
   
-  QString dirName = pref->directoryName("Calib");
-  QString fileName = QFileDialog::getOpenFileName(this, "Calibration File", dirName, "*.clb");
-  
-  if (!fileName.isEmpty()) {
-    m_calibFileEdit->setText(fileName);
-    pref->setDirectoryNameGivenFile("Calib", fileName);
+  QString filename = QFileDialog::getOpenFileName(this, "Calibration File",
+						  pref->directoryName("Calib"),
+						  "Calibration File (*.clb);;All files (*)");
+  if (!filename.isEmpty()) {
+    pref->setDirectoryNameGivenFile("Calib", filename);
+    
+    m_calibFileEdit->setText(filename);
   }
 }
 
@@ -238,12 +244,14 @@ void CWConvTabGeneral::slotBrowseSolarReference()
 {
   CPreferences *pref = CPreferences::instance();
   
-  QString dirName = pref->directoryName("Ref");
-  QString fileName = QFileDialog::getOpenFileName(this, "reference File", dirName, "*.ktz");
+  QString filename = QFileDialog::getOpenFileName(this, "reference File",
+						  pref->directoryName("Ref"),
+						  "Kurucz File (*.ktz);;All files (*)");
   
-  if (!fileName.isEmpty()) {
-    m_refFileEdit->setText(fileName);
-    pref->setDirectoryNameGivenFile("Ref", fileName);
+  if (!filename.isEmpty()) {
+    pref->setDirectoryNameGivenFile("Ref", filename);
+    
+    m_refFileEdit->setText(filename);
   }
 }
 

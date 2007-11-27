@@ -394,7 +394,7 @@ void CWMain::slotOpenFile()
   CPreferences *prefs = CPreferences::instance();
 
   QString fileName = QFileDialog::getOpenFileName(this, "Open Project File",
-						  prefs->directoryName("Project"),
+						  prefs->directoryName("QdoasConf"),
 						  "Qdoas Project Config (*.xml);;All Files (*)");
 
   if (fileName.isEmpty()) {
@@ -402,7 +402,7 @@ void CWMain::slotOpenFile()
   }
 
   // save the last directory
-  prefs->setDirectoryNameGivenFile("Project", fileName);
+  prefs->setDirectoryNameGivenFile("QdoasConf", fileName);
 
   QString errMsg;
   QFile *file = new QFile(fileName);
@@ -503,7 +503,7 @@ void CWMain::slotSaveAsFile()
     returnCode = QMessageBox::Cancel;
     
     QString fileName = QFileDialog::getSaveFileName(this, "SaveAs Project File",
-						    CPreferences::instance()->directoryName("Project"),
+						    CPreferences::instance()->directoryName("QdoasConf"),
 						    "Qdoas Project Config (*.xml);;All Files (*)");
 
     // empty fileName implies cancel

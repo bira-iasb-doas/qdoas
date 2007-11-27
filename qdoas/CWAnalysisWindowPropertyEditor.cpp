@@ -29,6 +29,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "CWorkSpace.h"
 #include "CWAnalysisWindowPropertyEditor.h"
+#include "CPreferences.h"
 #include "CValidator.h"
 
 #include "CHelpSystem.h"
@@ -567,27 +568,45 @@ void CWAnalysisWindowPropertyEditor::slotWavelengthCalibrationChanged(int index)
 
 void CWAnalysisWindowPropertyEditor::slotBrowseRefOne()
 {
-  QString file = QFileDialog::getOpenFileName(this, "Select Reference 1", QString(),
-					      "Kurucz File(*.ktz);;All Files (*)");
+  CPreferences *pref = CPreferences::instance();
 
-  if (!file.isEmpty())
-    m_refOneEdit->setText(file);
+  QString filename = QFileDialog::getOpenFileName(this, "Select Reference 1",
+						  pref->directoryName("Ref"),
+						  "Kurucz File (*.ktz);;All Files (*)");
+  
+  if (!filename.isEmpty()) {
+    pref->setDirectoryNameGivenFile("Ref", filename);
+    
+    m_refOneEdit->setText(filename);
+  }
 }
 
 void CWAnalysisWindowPropertyEditor::slotBrowseRefTwo()
 {
-  QString file = QFileDialog::getOpenFileName(this, "Select Reference 2", QString(),
-					      "Kurucz File(*.ktz);;All Files (*)");
+  CPreferences *pref = CPreferences::instance();
 
-  if (!file.isEmpty())
-    m_refTwoEdit->setText(file);
+  QString filename = QFileDialog::getOpenFileName(this, "Select Reference 2",
+						  pref->directoryName("Ref"),
+						  "Kurucz File (*.ktz);;All Files (*)");
+
+  if (!filename.isEmpty()) {
+    pref->setDirectoryNameGivenFile("Ref", filename);
+    
+    m_refTwoEdit->setText(filename);
+  }
 }
 
 void CWAnalysisWindowPropertyEditor::slotBrowseResidual()
 {
-  QString file = QFileDialog::getOpenFileName(this, "Select Residual", QString(),
-					      "All Files (*)");
+  CPreferences *pref = CPreferences::instance();
   
-  if (!file.isEmpty())
-    m_residualEdit->setText(file);
+  QString filename = QFileDialog::getOpenFileName(this, "Select Residual",
+						  pref->directoryName("Residual"),
+						  "All Files (*)");
+  
+  if (!filename.isEmpty()) {
+    pref->setDirectoryNameGivenFile("Residual", filename);
+    
+    m_residualEdit->setText(filename);
+  }
 }

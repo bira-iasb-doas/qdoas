@@ -27,6 +27,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QFileDialog>
 
 #include "CWProjectTabSlit.h"
+#include "CPreferences.h"
 
 #include "constants.h"
 
@@ -168,10 +169,16 @@ void CWProjectTabSlit::apply(mediate_project_slit_t *slit) const
 
 void CWProjectTabSlit::slotSolarRefFileBrowse()
 {
-  QString file = QFileDialog::getOpenFileName(this, "Select Solar Reference File", QString(),
-					      "Kurucz File(*.ktz);;All Files (*)");
+  CPreferences *pref = CPreferences::instance();
 
-  if (!file.isEmpty())
-    m_solarRefFileEdit->setText(file);
+  QString filename = QFileDialog::getOpenFileName(this, "Select Solar Reference File",
+						  pref->directoryName("Ref"),
+						  "Kurucz File (*.ktz);;All Files (*)");
+  
+  if (!filename.isEmpty()) {
+    pref->setDirectoryNameGivenFile("Ref", filename);
+    
+    m_solarRefFileEdit->setText(filename);
+  }
 }
    

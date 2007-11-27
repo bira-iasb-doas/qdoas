@@ -29,6 +29,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "CWSlitEditors.h"
 #include "CValidator.h"
+#include "CPreferences.h"
 
 #include "constants.h"
 
@@ -69,11 +70,17 @@ void CWSlitFileBase::helperConstructFileEdit(QGridLayout *gridLayout, int &row, 
 
 void CWSlitFileBase::slotBrowseFile()
 {
-  QString file = QFileDialog::getOpenFileName(this, "Select Slit Function File", QString(),
-					      "Slit Function File(*.slf);;All Files (*)");
-
-  if (!file.isEmpty())
-    m_filenameEdit->setText(file);
+  CPreferences *pref = CPreferences::instance();
+  
+  QString filename = QFileDialog::getOpenFileName(this, "Select Slit Function File",
+						  pref->directoryName("Slit"),
+						  "Slit Function File (*.slf);;All Files (*)");
+  
+  if (!filename.isEmpty()) {
+    pref->setDirectoryNameGivenFile("Slit", filename);
+    
+    m_filenameEdit->setText(filename);
+  }
 }
    
 //--------------------------------------------------------
