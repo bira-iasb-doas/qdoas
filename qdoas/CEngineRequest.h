@@ -101,14 +101,14 @@ class CEngineRequestSetProject : public CEngineRequest
 class CEngineRequestSetAnalysisWindows : public CEngineRequest
 {
  public:
-  CEngineRequestSetAnalysisWindows(const mediate_analysis_window_t *windowList, int nWindows);
+  CEngineRequestSetAnalysisWindows(const mediate_analysis_window_t *windowList, int nWindows, int opMode);
   virtual ~CEngineRequestSetAnalysisWindows();
 
   virtual bool process(CEngineThread *engineThread);
 
  private:
   mediate_analysis_window_t *m_windowList;
-  int m_nWindows;
+  int m_nWindows, m_opMode;
 };
 
 //------------------------------------------------------------

@@ -90,9 +90,12 @@ int mediateRequestSetProject(void *engineContext, const mediate_project_t *proje
 // is 0 the engine may release any resources associated DIRECTLY with the current set of analysis
 // windows. The value of analysisWindows is undefined if numberOfWindows is 0.
 //
+// The operatingMode indicates the intended usage (Browsing, Analysis or Calibration). It is
+// a workaround that may ultimately be removed.
+//
 // Zero is returned if the operation succeeded, -1 otherwise.
 
-int mediateRequestSetAnalysisWindows(void *engineContext, int numberOfWindows, const mediate_analysis_window_t *analysisWindows, void *responseHandle);
+int mediateRequestSetAnalysisWindows(void *engineContext, int numberOfWindows, const mediate_analysis_window_t *analysisWindows, int operatingMode, void *responseHandle);
 
 // TODO
 int mediateRequestSetSymbols(void *engineContext, int numberOfSymbols, const mediate_symbol_t *symbols, void *responseHandle);

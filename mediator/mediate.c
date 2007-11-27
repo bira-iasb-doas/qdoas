@@ -933,6 +933,7 @@ RC mediateRequestSetAnalysisNonLinearDoas(struct anlyswin_nonlinear *pNonLinear,
 int mediateRequestSetAnalysisWindows(void *engineContext,
 				     int numberOfWindows,
 				     const mediate_analysis_window_t *analysisWindows,
+				     int operatingMode,
 				     void *responseHandle)
  {
 	 // Declarations

@@ -104,10 +104,12 @@ bool CEngineRequestSetProject::process(CEngineThread *engineThread)
 
 //------------------------------------------------------------
 
-CEngineRequestSetAnalysisWindows::CEngineRequestSetAnalysisWindows(const mediate_analysis_window_t *windowList, int nWindows) :
+CEngineRequestSetAnalysisWindows::CEngineRequestSetAnalysisWindows(const mediate_analysis_window_t *windowList, int nWindows,
+								   int opMode) :
   CEngineRequest(eEngineRequestSetAnalysisWindowType),
   m_windowList(NULL),
-  m_nWindows(0)
+  m_nWindows(0),
+  m_opMode(opMode)
 {
   // deep copy the data from windowList
   if (windowList != NULL && nWindows > 0) {
@@ -130,7 +132,7 @@ bool CEngineRequestSetAnalysisWindows::process(CEngineThread *engineThread)
   CEngineResponse *resp = new CEngineResponseMessage;
 
   int rc = mediateRequestSetAnalysisWindows(engineThread->engineContext(),
-					    m_nWindows, m_windowList, resp);
+					    m_nWindows, m_windowList, m_opMode, resp);
   
   // no response unless there was an error
   if (rc == -1)

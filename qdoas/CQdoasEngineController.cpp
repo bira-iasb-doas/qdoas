@@ -23,6 +23,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "CQdoasEngineController.h"
 #include "CEngineRequest.h"
 #include "CEngineResponse.h"
+#include "constants.h"
 
 #include "debugutil.h"
 
@@ -279,11 +280,16 @@ void CQdoasEngineController::slotNextFile()
       if (m_currentProject != m_currentIt.project()) {
 	m_currentProject = m_currentIt.project();
 	req->addRequest(new CEngineRequestSetProject(m_currentProject));
-	// might alos need to replace the analysis windows
-	if (m_session->mode() == CSession::Calibrate || m_session->mode() == CSession::Analyse) {
+	// might also need to replace the analysis windows
+	if (m_session->mode() == CSession::Calibrate) {
 	  int nWindows;
 	  const mediate_analysis_window_t *anlysWinList = m_currentIt.analysisWindowList(nWindows);
-	  req->addRequest(new CEngineRequestSetAnalysisWindows(anlysWinList, nWindows));
+	  req->addRequest(new CEngineRequestSetAnalysisWindows(anlysWinList, nWindows, THREAD_TYPE_KURUCZ));
+	}
+	else if (m_session->mode() == CSession::Analyse) {
+	  int nWindows;
+	  const mediate_analysis_window_t *anlysWinList = m_currentIt.analysisWindowList(nWindows);
+	  req->addRequest(new CEngineRequestSetAnalysisWindows(anlysWinList, nWindows, THREAD_TYPE_ANALYSIS));
 	}
       }
 
@@ -513,14 +519,15 @@ void CQdoasEngineController::slotStartSession(const RefCountPtr<CSession> &sessi
 	req->addRequest(new CEngineRequestSetSymbols(symbols, nSymbols));
       if (sites)
 	req->addRequest(new CEngineRequestSetSites(sites, nSites));
-
+      
       req->addRequest(new CEngineRequestSetProject(m_currentProject));
-      req->addRequest(new CEngineRequestSetAnalysisWindows(anlysWinList, nWindows));
       
       if (m_session->mode() == CSession::Analyse) {
+	req->addRequest(new CEngineRequestSetAnalysisWindows(anlysWinList, nWindows, THREAD_TYPE_ANALYSIS));
 	req->addRequest(new CEngineRequestBeginAnalyseFile(m_currentIt.file().filePath()));
       }
       else if (m_session->mode() == CSession::Calibrate) {
+	req->addRequest(new CEngineRequestSetAnalysisWindows(anlysWinList, nWindows, THREAD_TYPE_KURUCZ));
 	req->addRequest(new CEngineRequestBeginCalibrateFile(m_currentIt.file().filePath()));
       }
     }

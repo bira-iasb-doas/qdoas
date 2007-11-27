@@ -61,6 +61,20 @@
 #define BUFFER_SIZE   4096                                                      // any buffer allocation
 #define STRING_LENGTH 1023                                                      // maximum size for strings
 
+
+// ================
+// OPERATING MODES
+// ================
+
+enum _thrdId
+  {
+    THREAD_TYPE_NONE,
+    THREAD_TYPE_SPECTRA,     // for browse spectra
+    THREAD_TYPE_ANALYSIS,    // for run analysis
+    THREAD_TYPE_KURUCZ       // for run calibration
+  };
+
+
 // ================
 // FILES PROCESSING
 // ================
