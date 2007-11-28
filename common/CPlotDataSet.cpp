@@ -21,13 +21,27 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "CPlotDataSet.h"
 
 CXYPlotData::CXYPlotData(const double *x, const double *y, int n, enum eCurveStyleType curveType) :
-  m_curve(x, y, n),
+  m_xData(NULL),
+  m_yData(NULL),
+  m_nSamples(0),
   m_curveType(curveType)
 {
+  if (n > 0) {
+    // deep copy the data
+    m_xData = new double [n];
+    m_yData = new double [n];
+
+    memcpy(m_xData, x, n * sizeof(double));
+    memcpy(m_yData, y, n * sizeof(double));
+
+    m_nSamples = n;
+  }
 }
 
 CXYPlotData::~CXYPlotData()
 {
+  delete [] m_xData;
+  delete [] m_yData;
 }
 
 //----------------------------------------------------

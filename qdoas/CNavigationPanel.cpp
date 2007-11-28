@@ -282,10 +282,10 @@ void CNavigationPanel::slotStopClicked()
 
 void CNavigationPanel::slotPlayPauseClicked()
 {
-  TRACE2("slotPlayPauseClicked");
+  TRACE4("slotPlayPauseClicked");
 
   if (m_playing) {
-    TRACE2("pause");
+    TRACE4("pause");
     // pause ...
     m_playTimer->stop();
     m_playing = false;
@@ -294,7 +294,7 @@ void CNavigationPanel::slotPlayPauseClicked()
     slotSetEnabled(true);
   }
   else {
-    TRACE2("play ");
+    TRACE4("play ");
     // play
     m_playing = true;
     m_playBtn->setIcon(m_pauseIcon);

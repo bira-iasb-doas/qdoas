@@ -22,7 +22,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #define _CPLOTDATASET_H_GUARD
 
 #include <QString>
-#include <qwt_data.h>
+#include <QList>
 
 #include "mediate_types.h"
 
@@ -36,15 +36,21 @@ class CXYPlotData
   ~CXYPlotData();
 
   enum eCurveStyleType curveType(void) const;
-  const QwtArrayData& curve(void) const;
+  const double* xRawData(void) const;
+  const double* yRawData(void) const;
+  int size(void) const;
 
  private:
-  QwtArrayData m_curve;
+  double *m_xData, *m_yData;
+  int m_nSamples;
   enum eCurveStyleType m_curveType;
 };
 
 inline enum eCurveStyleType CXYPlotData::curveType(void) const { return m_curveType; }
-inline const QwtArrayData& CXYPlotData::curve(void) const { return m_curve; }
+inline const double* CXYPlotData::xRawData(void) const { return m_xData; }
+inline const double* CXYPlotData::yRawData(void) const { return m_yData; }
+inline int CXYPlotData::size(void) const { return m_nSamples; }
+
 
 
 // A collection of curves for one plot and plot labels/titles
@@ -58,7 +64,7 @@ class CPlotDataSet
   void addPlotData(const double *x, const double *y, int n, enum eCurveStyleType type);
                
   int count(void) const;
-  const QwtArrayData& curve(int index) const;
+  const CXYPlotData& rawData(int index) const;
   enum eCurveStyleType curveType(int index) const;
 
   enum ePlotScaleType scaleType(void) const;
@@ -75,7 +81,7 @@ class CPlotDataSet
 };
 
 inline int CPlotDataSet::count(void) const { return m_dataList.count(); }
-inline const QwtArrayData& CPlotDataSet::curve(int index) const { return m_dataList.at(index)->curve(); }
+inline const CXYPlotData& CPlotDataSet::rawData(int index) const { return *(m_dataList.at(index)); }
 inline enum eCurveStyleType CPlotDataSet::curveType(int index) const { return m_dataList.at(index)->curveType(); }
 inline enum ePlotScaleType CPlotDataSet::scaleType(void) const { return m_scaleType; }
 inline bool CPlotDataSet::forceAutoScaling(void) const { return m_forceAutoScaling; }

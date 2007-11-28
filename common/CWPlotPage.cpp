@@ -119,21 +119,28 @@ CWPlot::CWPlot(const RefCountConstPtr<CPlotDataSet> &dataSet,
   int i = 0;
 
   while (i < n) {
-    QwtPlotCurve *curve = new QwtPlotCurve();
 
-    curve->setData(m_dataSet->curve(i));
+    const CXYPlotData &curveData = m_dataSet->rawData(i);
 
-    // configure curve's pen color based on index
-    curve->setPen(m_plotProperties.pen((i%4) + 1));
+    if (curveData.size() > 0) {
+      QwtPlotCurve *curve = new QwtPlotCurve();
 
-    if (m_dataSet->curveType(i) == Point) {
-      curve->setStyle(QwtPlotCurve::NoCurve);
-      QwtSymbol sym = curve->symbol();
-      sym.setStyle(QwtSymbol::Ellipse);
-      curve->setSymbol(sym);
+      // the data is guaranteed to be valid for the life of this object
+      curve->setRawData(curveData.xRawData(), curveData.yRawData(), curveData.size());
+      
+      // configure curve's pen color based on index
+      curve->setPen(m_plotProperties.pen((i%4) + 1));
+      
+      if (curveData.curveType() == Point) {
+	curve->setStyle(QwtPlotCurve::NoCurve);
+	QwtSymbol sym = curve->symbol();
+	sym.setStyle(QwtSymbol::Ellipse);
+	curve->setSymbol(sym);
+      }
+
+      curve->attach(this);
     }
 
-    curve->attach(this);
     ++i;
   }
 
@@ -293,15 +300,17 @@ void CWPlot::slotSaveAs()
 
       i = 0;
       while (i < nCurves) {
-	const QwtArrayData &data = m_dataSet->curve(i);
-	
-	nPoints = data.size();
-	fprintf(fp, "%d\n", nPoints);
+	const CXYPlotData &curveData = m_dataSet->rawData(i);
 
-	j=0;
-	while (j<nPoints) {
-	  fprintf(fp, "%13g  %13g\n", data.x(j), data.y(j));
-	  ++j;
+	nPoints = curveData.size();
+	if (nPoints > 0) {
+	  fprintf(fp, "%d\n", nPoints);
+	  
+	  j=0;
+	  while (j<nPoints) {
+	    fprintf(fp, "%13g  %13g\n", *(curveData.xRawData() + j), *(curveData.yRawData() + j));
+	    ++j;
+	  }
 	}
 
 	++i;
