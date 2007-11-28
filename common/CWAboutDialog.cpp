@@ -24,6 +24,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QPixmap>
 
 #include "CWAboutDialog.h"
+#include "QdoasVersion.h"
 
 #include "debugutil.h"
 
@@ -43,7 +44,7 @@ CWAboutDialog::CWAboutDialog(QWidget *parent) :
 
   mainLayout->addSpacing(10);
 
-  QLabel *mainLabel = new QLabel("Qdoas version 0.1");
+  QLabel *mainLabel = new QLabel(cQdoasVersionString);
   QFont font = mainLabel->font();
   font.setPointSize(font.pointSize() + 2);
   font.setBold(true);

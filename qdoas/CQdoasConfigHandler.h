@@ -29,6 +29,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "CConfigHandler.h"
 
 class CProjectConfigItem;
+class CSiteConfigItem;
+class CSymbolConfigItem;
 class CQdoasConfigHandler;
 
 class CQdoasConfigSubHandler : public CConfigSubHandler
@@ -55,6 +57,7 @@ class CQdoasConfigHandler : public CConfigHandler
 
   void addProjectItem(CProjectConfigItem *item);             // takes ownership of item
   QList<const CProjectConfigItem*> projectItems(void) const; // items in returned list have the same lifetime as 'this'
+  QList<const CProjectConfigItem*> takeProjectItems(void);   // takes ownership of items (removes them from 'this')
 
   void addSiteItem(CSiteConfigItem *item);             // takes ownership of item
   QList<const CSiteConfigItem*> siteItems(void) const; // items in returned list have the same lifetime as 'this'

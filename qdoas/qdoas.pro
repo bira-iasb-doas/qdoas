@@ -47,6 +47,7 @@ win32 {
 # GUI Source files
 #----------------------------------------------
 
+HEADERS += ../common/QdoasVersion.h
 SOURCES += ../common/CValidator.cpp
 SOURCES += ../common/CPreferences.cpp
 SOURCES += ../common/CPlotDataSet.cpp

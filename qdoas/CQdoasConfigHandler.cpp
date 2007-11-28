@@ -90,6 +90,15 @@ QList<const CProjectConfigItem*> CQdoasConfigHandler::projectItems(void) const
   return m_projectItemList;
 }
 
+QList<const CProjectConfigItem*> CQdoasConfigHandler::takeProjectItems(void)
+{
+  QList<const CProjectConfigItem*> items = m_projectItemList; // copy the pointers...
+
+  m_projectItemList.clear(); // responsibility was passed to 'items' list
+
+  return items;
+}
+
 void CQdoasConfigHandler::addSiteItem(CSiteConfigItem *item)
 {
   m_siteItemList.push_back(item);

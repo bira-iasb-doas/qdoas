@@ -1,143 +1,111 @@
 #----------------------------------------------
-# Ring Tool General Configuration
+# CmdLine General Configuration
 #----------------------------------------------
 
 TEMPLATE = app
-TARGET   = ring
+TARGET   = doas_cl
 
 include( ../config.pri )
 
 CONFIG += qt thread $$CODE_GENERATION
-QT = core gui xml
-
-DEFINES += APP_RING
-
-# Help system to use...
-contains ( HELP_SYSTEM, assistant ) {
-    CONFIG  += assistant
-    DEFINES += HELP_QT_ASSISTANT
-}
+QT = core xml
 
 #----------------------------------------------
-# Platform dependency ...
+# Platform dependency ... based on ../config.pri
 #----------------------------------------------
 
 INCLUDEPATH  += $$QWT_INC_PATH
 
 unix {
-  INCLUDEPATH  += ../mediator ../common ../engine
+  INCLUDEPATH  += ../mediator ../common ../qdoas ../convolution ../ring ../usamp ../engine
   LIBS         += -L$$QWT_LIB_PATH -l$$QWT_LIB -lm
   QMAKE_LFLAGS += -Wl,-rpath=$$QWT_LIB_PATH
 }
 
 win32 {
-  INCLUDEPATH  += ..\mediator ..\common ..\engine
+  INCLUDEPATH  += ..\mediator ..\common ..\qdoas ..\convolution ..\ring ..\usamp ..\engine
 
-  contains( QWT_LINKAGE, qwtstatic ) {
-    LIBS        += -L$$QWT_LIB_PATH -l$$QWT_LIB
-  }
-  contains( QWT_LINKAGE, qwtdll ) {
-    LIBS        += -L$$QWT_LIB_PATH -l$$QWT_LIB$$QWT_LIB_VERSION
-    DEFINES     += QWT_DLL
-  }
   CONFIG      += windows
 }
 
 #----------------------------------------------
-# GUI Source files
+# Source files
 #----------------------------------------------
 
-HEADERS += ../common/QdoasVersion.h
-SOURCES += ../common/CPreferences.cpp
-SOURCES += ../common/CValidator.cpp
 SOURCES += ../common/CPlotDataSet.cpp
 SOURCES += ../common/CPlotPageData.cpp
 SOURCES += ../common/CTablePageData.cpp
 SOURCES += ../common/CEngineError.cpp
-SOURCES += ../common/CEngineResponse.cpp
 SOURCES += ../common/CEngineController.cpp
+SOURCES += ../common/CEngineResponse.cpp
 SOURCES += ../common/CConfigHandler.cpp
 SOURCES += ../common/CPathSubHandler.cpp
 SOURCES += ../common/CConfigSubHandlerUtils.cpp
 SOURCES += ../common/ConfigWriterUtils.cpp
 SOURCES += ../common/CPathMgr.cpp
-SOURCES += ../common/CScaleControl.cpp
-SOURCES += ../common/CPlotProperties.cpp
 
-SOURCES += ../common/CWAboutDialog.cpp
-SOURCES += ../common/CHelpSystem.cpp
-SOURCES += ../common/CHelpSystemImpl.cpp
-SOURCES += ../common/CWSlitEditors.cpp
-SOURCES += ../common/CWFilteringEditor.cpp
-SOURCES += ../common/CWPlotPage.cpp
-SOURCES += ../common/CWPlotArea.cpp
-SOURCES += ../common/CWPlotPropertiesConfig.cpp
-SOURCES += ../common/CWPlotPropertiesDialog.cpp
-
-SOURCES += CWMain.cpp
-SOURCES += CWRingTabGeneral.cpp
-SOURCES += CRingEngineController.cpp
-SOURCES += CRingConfigHandler.cpp
-SOURCES += CRingConfigWriter.cpp
-SOURCES += ringtool.cpp
+SOURCES += CBatchEngineController.cpp
+SOURCES += ../qdoas/CSession.cpp
+SOURCES += ../qdoas/CQdoasConfigHandler.cpp
+SOURCES += ../qdoas/CProjectConfigSubHandlers.cpp
+SOURCES += ../qdoas/CProjectConfigAnalysisWindowSubHandlers.cpp
+SOURCES += ../qdoas/CProjectConfigTreeNode.cpp
+SOURCES += ../qdoas/CProjectConfigItem.cpp
+SOURCES += ../qdoas/CWorkSpace.cpp
+SOURCES += cmdline.cpp
 
 #----------------------------------------------
-# GUI Header files
+# Mediator Source files
 #----------------------------------------------
-HEADERS += ../common/CPreferences.h
-HEADERS += ../common/CValidator.h
+SOURCES += ../mediator/mediate_response.cpp
+SOURCES += ../mediator/mediate.c
+SOURCES += ../mediator/mediate_project.c
+SOURCES += ../mediator/mediate_analysis_window.c
+
+#----------------------------------------------
+# Header files
+#----------------------------------------------
+HEADERS += ../common/debugutil.h
+HEADERS += ../common/QdoasVersion.h
+HEADERS += ../common/RefCountPtr.h
 HEADERS += ../common/CPlotDataSet.h
 HEADERS += ../common/CPlotPageData.h
 HEADERS += ../common/CTablePageData.h
 HEADERS += ../common/CEngineError.h
-HEADERS += ../common/CEngineResponse.h
 HEADERS += ../common/CEngineController.h
+HEADERS += ../common/CEngineResponse.h
 HEADERS += ../common/CConfigHandler.h
 HEADERS += ../common/CPathSubHandler.h
 HEADERS += ../common/CConfigSubHandlerUtils.h
 HEADERS += ../common/ConfigWriterUtils.h
 HEADERS += ../common/CPathMgr.h
-HEADERS += ../common/CScaleControl.h
-HEADERS += ../common/CPlotProperties.h
 
-HEADERS += ../common/CWAboutDialog.h
-HEADERS += ../common/CHelpSystem.h
-HEADERS += ../common/CHelpSystemImpl.h
-HEADERS += ../common/CWSlitEditors.h
-HEADERS += ../common/CWFilteringEditor.h
-HEADERS += ../common/CWPlotPage.h
-HEADERS += ../common/CWPlotArea.h
-HEADERS += ../common/CWPlotPropertiesConfig.h
-HEADERS += ../common/CWPlotPropertiesDialog.h
-
-HEADERS += CWMain.h
-HEADERS += CWRingTabGeneral.h
-HEADERS += CRingEngineController.h
-HEADERS += CRingConfigHandler.h
-HEADERS += CRingConfigWriter.h
-
-#----------------------------------------------
-# Mediator Source files
-#----------------------------------------------
-SOURCES += ../mediator/mediate_ring.c
-SOURCES += ../mediator/mediate.c
-SOURCES += ../mediator/mediate_response.cpp
+HEADERS += CBatchEngineController.h
+HEADERS += ../qdoas/CEngineRequest.h
+HEADERS += ../qdoas/CSession.h
+HEADERS += ../qdoas/CQdoasConfigHandler.h
+HEADERS += ../qdoas/CProjectConfigSubHandlers.h
+HEADERS += ../qdoas/CProjectConfigAnalysisWindowSubHandlers.h
+HEADERS += ../qdoas/CProjectConfigTreeNode.h
+HEADERS += ../qdoas/CProjectConfigItem.h
+HEADERS += ../qdoas/CWorkSpace.h
 
 #----------------------------------------------
 # Mediator Header files
 #----------------------------------------------
+HEADERS += ../mediator/mediate.h
+HEADERS += ../mediator/mediate_types.h
 HEADERS += ../mediator/mediate_limits.h
 HEADERS += ../mediator/mediate_general.h
-HEADERS += ../mediator/mediate_ring.h
 HEADERS += ../mediator/mediate_response.h
 HEADERS += ../mediator/mediate_request.h
 HEADERS += ../mediator/mediate_project.h
 HEADERS += ../mediator/mediate_analysis_window.h
 
 #----------------------------------------------
-# Resource files
+# Reasource files
 #----------------------------------------------
-RESOURCES = ../resources/ring.qrc
+
 
 #----------------------------------------------
 # Engine Source files
