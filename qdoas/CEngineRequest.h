@@ -87,13 +87,14 @@ class CEngineRequestCompound : public CEngineRequest
 class CEngineRequestSetProject : public CEngineRequest
 {
  public:
-  CEngineRequestSetProject(const mediate_project_t *project);
+  CEngineRequestSetProject(const mediate_project_t *project, int opMode);
   virtual ~CEngineRequestSetProject();
 
   virtual bool process(CEngineThread *engineThread);
 
  private:
   mediate_project_t m_project;
+  int m_opMode;
 };
 
 //------------------------------------------------------------

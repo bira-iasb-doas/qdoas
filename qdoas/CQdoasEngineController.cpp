@@ -1,5 +1,4 @@
-/*
-Qdoas is a cross-platform application for spectral analysis with the DOAS
+/* Qdoas is a cross-platform application for spectral analysis with the DOAS
 algorithm.  Copyright (C) 2007  S[&]T and BIRA
 
 This program is free software; you can redistribute it and/or
@@ -278,18 +277,20 @@ void CQdoasEngineController::slotNextFile()
     if (!m_currentIt.atEnd()) {
       // check for a change in project
       if (m_currentProject != m_currentIt.project()) {
-	m_currentProject = m_currentIt.project();
-	req->addRequest(new CEngineRequestSetProject(m_currentProject));
-	// might also need to replace the analysis windows
-	if (m_session->mode() == CSession::Calibrate) {
-	  int nWindows;
-	  const mediate_analysis_window_t *anlysWinList = m_currentIt.analysisWindowList(nWindows);
-	  req->addRequest(new CEngineRequestSetAnalysisWindows(anlysWinList, nWindows, THREAD_TYPE_KURUCZ));
+
+	int opMode = THREAD_TYPE_NONE;
+	switch (m_session->mode()) {
+	case CSession::Browse: opMode = THREAD_TYPE_SPECTRA; break;
+	case CSession::Calibrate: opMode = THREAD_TYPE_KURUCZ; break;
+	case CSession::Analyse: opMode = THREAD_TYPE_ANALYSIS; break;
 	}
-	else if (m_session->mode() == CSession::Analyse) {
+	m_currentProject = m_currentIt.project();	
+	req->addRequest(new CEngineRequestSetProject(m_currentProject, opMode));
+	// might also need to replace the analysis windows
+	if (m_session->mode() == CSession::Calibrate || m_session->mode() == CSession::Analyse) {
 	  int nWindows;
 	  const mediate_analysis_window_t *anlysWinList = m_currentIt.analysisWindowList(nWindows);
-	  req->addRequest(new CEngineRequestSetAnalysisWindows(anlysWinList, nWindows, THREAD_TYPE_ANALYSIS));
+	  req->addRequest(new CEngineRequestSetAnalysisWindows(anlysWinList, nWindows, opMode));
 	}
       }
 
@@ -337,8 +338,14 @@ void CQdoasEngineController::slotGotoFile(int number)
     m_currentIt(number);
     // check for a change in project
     if (m_currentProject != m_currentIt.project()) {
+      int opMode = THREAD_TYPE_NONE;
+      switch (m_session->mode()) {
+      case CSession::Browse: opMode = THREAD_TYPE_SPECTRA; break;
+      case CSession::Calibrate: opMode = THREAD_TYPE_KURUCZ; break;
+      case CSession::Analyse: opMode = THREAD_TYPE_ANALYSIS; break;
+      }
       m_currentProject = m_currentIt.project();
-      req->addRequest(new CEngineRequestSetProject(m_currentProject));
+      req->addRequest(new CEngineRequestSetProject(m_currentProject, opMode));
     }
     
     switch (m_session->mode()) {
@@ -461,8 +468,14 @@ void CQdoasEngineController::slotStep()
 
       // check for a change in project
       if (m_currentProject != m_currentIt.project()) {
+	int opMode = THREAD_TYPE_NONE;
+	switch (m_session->mode()) {
+	case CSession::Browse: opMode = THREAD_TYPE_SPECTRA; break;
+	case CSession::Calibrate: opMode = THREAD_TYPE_KURUCZ; break;
+	case CSession::Analyse: opMode = THREAD_TYPE_ANALYSIS; break;
+	}
 	m_currentProject = m_currentIt.project();
-	req->addRequest(new CEngineRequestSetProject(m_currentProject));
+	req->addRequest(new CEngineRequestSetProject(m_currentProject, opMode));
       }
       
       switch (m_session->mode()) {
@@ -505,7 +518,7 @@ void CQdoasEngineController::slotStartSession(const RefCountPtr<CSession> &sessi
 
     // mode dependent parts of the request
     if (m_session->mode() == CSession::Browse) {
-      req->addRequest(new CEngineRequestSetProject(m_currentProject));
+      req->addRequest(new CEngineRequestSetProject(m_currentProject, THREAD_TYPE_SPECTRA));
       req->addRequest(new CEngineRequestBeginBrowseFile(m_currentIt.file().filePath()));
     }
     else {
@@ -520,13 +533,14 @@ void CQdoasEngineController::slotStartSession(const RefCountPtr<CSession> &sessi
       if (sites)
 	req->addRequest(new CEngineRequestSetSites(sites, nSites));
       
-      req->addRequest(new CEngineRequestSetProject(m_currentProject));
       
       if (m_session->mode() == CSession::Analyse) {
+	req->addRequest(new CEngineRequestSetProject(m_currentProject, THREAD_TYPE_ANALYSIS));
 	req->addRequest(new CEngineRequestSetAnalysisWindows(anlysWinList, nWindows, THREAD_TYPE_ANALYSIS));
 	req->addRequest(new CEngineRequestBeginAnalyseFile(m_currentIt.file().filePath()));
       }
       else if (m_session->mode() == CSession::Calibrate) {
+	req->addRequest(new CEngineRequestSetProject(m_currentProject, THREAD_TYPE_KURUCZ));
 	req->addRequest(new CEngineRequestSetAnalysisWindows(anlysWinList, nWindows, THREAD_TYPE_KURUCZ));
 	req->addRequest(new CEngineRequestBeginCalibrateFile(m_currentIt.file().filePath()));
       }

@@ -675,6 +675,7 @@ void CWMain::slotErrorMessages(int highestLevel, const QString &messages)
     break;
   case FatalEngineError:
   default:
+    TRACE(messages.toStdString());
     QMessageBox::critical(this, "Engine Fatal Error", messages);
     break;
   }

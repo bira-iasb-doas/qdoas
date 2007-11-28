@@ -72,8 +72,9 @@ void CEngineRequestCompound::addRequest(CEngineRequest *req)
 
 //------------------------------------------------------------
 
-CEngineRequestSetProject::CEngineRequestSetProject(const mediate_project_t *project) :
-  CEngineRequest(eEngineRequestSetProjectType)
+CEngineRequestSetProject::CEngineRequestSetProject(const mediate_project_t *project, int opMode) :
+  CEngineRequest(eEngineRequestSetProjectType),
+  m_opMode(opMode)
 {
   // deep copy the data from project.
   m_project = *project;
@@ -91,7 +92,7 @@ bool CEngineRequestSetProject::process(CEngineThread *engineThread)
   CEngineResponseMessage *resp = new CEngineResponseMessage;
 
   int rc = mediateRequestSetProject(engineThread->engineContext(),
-				    &m_project, resp);
+				    &m_project, m_opMode, resp);
 
   // no response unless there was an error
   if (rc == -1)
