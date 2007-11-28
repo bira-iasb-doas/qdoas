@@ -654,7 +654,9 @@ void setMediateProjectOutput(PRJCT_RESULTS_ASCII *pEngineOutput,const mediate_pr
 // -----------------------------------------------------------------------------
 
 int mediateRequestSetProject(void *engineContext,
-			     const mediate_project_t *project, void *responseHandle)
+			     const mediate_project_t *project,
+			     int operatingMode,
+			     void *responseHandle)
  {
  	// Declarations
 

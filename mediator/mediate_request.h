@@ -71,11 +71,14 @@ int mediateRequestDestroyEngineContext(void *engineContext, void *responseHandle
 // project may be the null pointer, in which case the engine may free any
 // resources DIRECTLY associated with the project.
 //
+// The operatingMode indicates the intended usage (Browsing, Analysis or Calibration). It is
+// a workaround that may ultimately be removed.
+//
 // Zero is returned if the operation succeeded, -1 otherwise.
 //
 // On success, project becomes the 'current project'.
 
-int mediateRequestSetProject(void *engineContext, const mediate_project_t *project, void *responseHandle);
+int mediateRequestSetProject(void *engineContext, const mediate_project_t *project, int operatingMode, void *responseHandle);
 
 
 // mediateRequestSetAnalysisWindows
