@@ -677,6 +677,8 @@ int mediateRequestSetProject(void *engineContext,
 	 pEngineContext=(ENGINE_CONTEXT *)engineContext;
 	 pEngineProject=(PROJECT *)&pEngineContext->project;
 
+	 THRD_id=operatingMode;
+
 	 // Transfer projects options from the mediator to the engine
 
 	 #if defined(__DEBUG_) && __DEBUG_
@@ -1000,8 +1002,6 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
   useKurucz=useUsamp=0;
   indexKurucz=ITEM_NONE;
 
-  THRD_id=THREAD_TYPE_ANALYSIS;  // QDOAS : force the thread type to Run Analysis (currently not the possibility to make the difference between  Run Analysis and Run Calibration)
-
   memset(&calibWindows,0,sizeof(mediate_analysis_window_t));
 
   memcpy(&calibWindows.crossSectionList,&pEngineContext->calibFeno.crossSectionList,sizeof(cross_section_list_t));
@@ -1273,7 +1273,7 @@ int mediateRequestBeginBrowseSpectra(void *engineContext,
 				     const char *spectraFileName,
 				     void *responseHandle)
  {
- 	if (EngineRequestBeginBrowseSpectra((ENGINE_CONTEXT *)engineContext,spectraFileName,THREAD_TYPE_SPECTRA)!=0)
+ 	if (EngineRequestBeginBrowseSpectra((ENGINE_CONTEXT *)engineContext,spectraFileName)!=0)
  	 mediateDisplayErrorMessage(responseHandle);
 
   return ((ENGINE_CONTEXT *)engineContext)->recordNumber;
@@ -1634,7 +1634,7 @@ int mediateRequestBeginAnalyseSpectra(void *engineContext,
  {
  	ENGINE_CONTEXT *pEngineContext = (ENGINE_CONTEXT *)engineContext;
 
-  if (EngineRequestBeginBrowseSpectra(pEngineContext,spectraFileName,THREAD_TYPE_ANALYSIS)!=ERROR_ID_NO)
+  if (EngineRequestBeginBrowseSpectra(pEngineContext,spectraFileName)!=ERROR_ID_NO)
    mediateDisplayErrorMessage(responseHandle);
 
   return ((ENGINE_CONTEXT *)engineContext)->recordNumber;
@@ -1685,7 +1685,7 @@ int mediateRequestBeginCalibrateSpectra(void *engineContext,
 					const char *spectraFileName,
 					void *responseHandle)
  {
- 	if (EngineRequestBeginBrowseSpectra((ENGINE_CONTEXT *)engineContext,spectraFileName,THREAD_TYPE_KURUCZ)!=0)
+ 	if (EngineRequestBeginBrowseSpectra((ENGINE_CONTEXT *)engineContext,spectraFileName)!=0)
  	 mediateDisplayErrorMessage(responseHandle);
 
  	return ((ENGINE_CONTEXT *)engineContext)->recordNumber;
@@ -1781,17 +1781,4 @@ int mediateRequestViewCrossSections(void *engineContext, char *awName,double min
   // Return
 
   return 0;
- }
-
-int mediateTest(void *engineContext,void *responseHandle)
- {
- 	double x[10]={1.,2.,3.,4.,5.,6.,7.,8.,9.,10.};
- 	double y[10]={5.,8.,3.,2.,5.,4.,8.,7.,6.,5.};
- 	plot_data_t xs2plot;
-
-      mediateAllocateAndSetPlotData(&xs2plot,x,y,10,Line);
-      mediateResponsePlotData(plotPageCross,&xs2plot,1,Spectrum,0,"test","Wavelength","cm**2 / molec", responseHandle);
-      mediateResponseLabelPage(plotPageCross,"N'importe quoi","Test", responseHandle);
-      mediateReleasePlotData(&xs2plot);
-      mediateResponseCellDataString(plotPageCross,3,2,"[CONC/Param]",responseHandle);
  }

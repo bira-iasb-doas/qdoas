@@ -807,7 +807,7 @@ RC EngineReadFile(ENGINE_CONTEXT *pEngineContext,int indexRecord,INT dateFlag,IN
 // RETURN        0 in case of success; the code of the error otherwise
 // -----------------------------------------------------------------------------
 
-RC EngineRequestBeginBrowseSpectra(ENGINE_CONTEXT *pEngineContext,const char *spectraFileName,unsigned int action)
+RC EngineRequestBeginBrowseSpectra(ENGINE_CONTEXT *pEngineContext,const char *spectraFileName)
  {
  	// Declaration
 
@@ -815,7 +815,6 @@ RC EngineRequestBeginBrowseSpectra(ENGINE_CONTEXT *pEngineContext,const char *sp
 
  	// Initialize
 
-  THRD_id=action;
   THRD_browseType=THREAD_BROWSE_SPECTRA;
 
   // Set file pointers

@@ -26,7 +26,7 @@ RC              EngineCopyContext(ENGINE_CONTEXT *pEngineContextTarget,ENGINE_CO
 RC              EngineSetProject(ENGINE_CONTEXT *pEngineContext);
 RC              EngineSetFile(ENGINE_CONTEXT *pEngineContext,const char *fileName);
 RC              EngineReadFile(ENGINE_CONTEXT *pEngineContext,int indexRecord,INT dateFlag,INT localCalDay);
-RC              EngineRequestBeginBrowseSpectra(ENGINE_CONTEXT *pEngineContext,const char *spectraFileName,unsigned int action);
+RC              EngineRequestBeginBrowseSpectra(ENGINE_CONTEXT *pEngineContext,const char *spectraFileName);
 RC              EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle);
 
 #endif
