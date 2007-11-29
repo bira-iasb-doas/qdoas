@@ -48,7 +48,7 @@ CQdoasEngineController::~CQdoasEngineController()
 
 void CQdoasEngineController::notifyNumberOfFiles(int nFiles)
 {
-  
+
 }
 
 void CQdoasEngineController::notifyCurrentFile(int fileNumber)
@@ -80,14 +80,14 @@ void CQdoasEngineController::notifyReadyToNavigateRecords(const QString &filenam
 void CQdoasEngineController::notifyCurrentRecord(int recordNumber)
 {
   m_currentRecord = recordNumber;
-  
+
   emit signalCurrentRecordChanged(m_currentRecord);
 }
 
 void CQdoasEngineController::notifyEndOfRecords(void)
 {
   m_currentRecord = m_numberOfRecords + 1;
-  
+
   emit signalCurrentRecordChanged(m_currentRecord);
 }
 
@@ -130,7 +130,7 @@ void CQdoasEngineController::notifyPlotData(QList<SPlotData> &plotDataList, QLis
     titleList.pop_front();
   }
 
-  // shift the items in the pageMap to a QList for cheap and safe dispatch. 
+  // shift the items in the pageMap to a QList for cheap and safe dispatch.
 
   QList< RefCountConstPtr<CPlotPageData> > pageList;
 
@@ -172,7 +172,7 @@ void CQdoasEngineController::notifyTableData(QList<SCell> &cellList)
   }
 
   // built a map of pages and emptied cellList (argument).
-  // shift them to a QList for cheap and safe dispatch. 
+  // shift them to a QList for cheap and safe dispatch.
 
   QList< RefCountConstPtr<CTablePageData> > pageList;
 
@@ -220,7 +220,7 @@ void CQdoasEngineController::notifyEndAccessFile(void)
 {
   if (m_state == Stopping) {
     m_state = Idle;
-    
+
     emit signalSessionRunning(isSessionRunning());
   }
 }
@@ -256,7 +256,7 @@ void CQdoasEngineController::slotNextFile()
   if (m_state != Running) return;
 
   CEngineRequestCompound *req = new CEngineRequestCompound;
-  
+
   // done with the current file
   if (m_numberOfRecords >= 0) {
     switch (m_session->mode()) {
@@ -284,7 +284,7 @@ void CQdoasEngineController::slotNextFile()
 	case CSession::Calibrate: opMode = THREAD_TYPE_KURUCZ; break;
 	case CSession::Analyse: opMode = THREAD_TYPE_ANALYSIS; break;
 	}
-	m_currentProject = m_currentIt.project();	
+	m_currentProject = m_currentIt.project();
 	req->addRequest(new CEngineRequestSetProject(m_currentProject, opMode));
 	// might also need to replace the analysis windows
 	if (m_session->mode() == CSession::Calibrate || m_session->mode() == CSession::Analyse) {
@@ -317,7 +317,7 @@ void CQdoasEngineController::slotGotoFile(int number)
   if (m_state != Running) return;
 
   CEngineRequestCompound *req = new CEngineRequestCompound;
-  
+
   // done with the current file
   if (m_numberOfRecords >= 0) {
     switch (m_session->mode()) {
@@ -347,7 +347,7 @@ void CQdoasEngineController::slotGotoFile(int number)
       m_currentProject = m_currentIt.project();
       req->addRequest(new CEngineRequestSetProject(m_currentProject, opMode));
     }
-    
+
     switch (m_session->mode()) {
     case CSession::Browse:
       req->addRequest(new CEngineRequestBeginBrowseFile(m_currentIt.file().filePath()));
@@ -380,7 +380,7 @@ void CQdoasEngineController::slotNextRecord()
   if (m_state != Running) return;
 
   if (m_currentRecord != -1) {
-    
+
     switch (m_session->mode()) {
     case CSession::Browse:
       m_thread->request(new CEngineRequestBrowseNextRecord);
@@ -447,10 +447,10 @@ void CQdoasEngineController::slotStep()
     ++tmpIt;
     if (!tmpIt.atEnd()) {
       m_currentIt = tmpIt;
-      
+
       // move to the next file
       CEngineRequestCompound *req = new CEngineRequestCompound;
-      
+
       // done with the current file
       if (m_numberOfRecords >= 0) {
 	switch (m_session->mode()) {
@@ -477,7 +477,7 @@ void CQdoasEngineController::slotStep()
 	m_currentProject = m_currentIt.project();
 	req->addRequest(new CEngineRequestSetProject(m_currentProject, opMode));
       }
-      
+
       switch (m_session->mode()) {
       case CSession::Browse:
 	req->addRequest(new CEngineRequestBeginBrowseFile(m_currentIt.file().filePath()));
@@ -532,8 +532,8 @@ void CQdoasEngineController::slotStartSession(const RefCountPtr<CSession> &sessi
 	req->addRequest(new CEngineRequestSetSymbols(symbols, nSymbols));
       if (sites)
 	req->addRequest(new CEngineRequestSetSites(sites, nSites));
-      
-      
+
+
       if (m_session->mode() == CSession::Analyse) {
 	req->addRequest(new CEngineRequestSetProject(m_currentProject, THREAD_TYPE_ANALYSIS));
 	req->addRequest(new CEngineRequestSetAnalysisWindows(anlysWinList, nWindows, THREAD_TYPE_ANALYSIS));
@@ -564,13 +564,13 @@ void CQdoasEngineController::slotStopSession()
   // tidy up and wait for the response
   switch (m_session->mode()) {
   case CSession::Browse:
-    m_thread->request(new CEngineRequestEndBrowseFile); 
+    m_thread->request(new CEngineRequestEndBrowseFile);
     break;
   case CSession::Calibrate:
-    m_thread->request(new CEngineRequestEndCalibrateFile); 
+    m_thread->request(new CEngineRequestEndCalibrateFile);
     break;
   case CSession::Analyse:
-    m_thread->request(new CEngineRequestEndAnalyseFile); 
+    m_thread->request(new CEngineRequestEndAnalyseFile);
     break;
   }
 }
@@ -586,6 +586,9 @@ void CQdoasEngineController::slotViewCrossSections(const RefCountPtr<CViewCrossS
   int nFiles = d->crossSectionList.nCrossSection;
 
   char **filenames = new char*[nFiles];
+  char *awName=new char[strlen(d->name)];
+
+  strcpy(awName,d->name);
 
   for (int i=0; i<nFiles; ++i) {
     int len = strlen(d->crossSectionList.crossSection[i].crossSectionFile);
@@ -596,10 +599,11 @@ void CQdoasEngineController::slotViewCrossSections(const RefCountPtr<CViewCrossS
 
   // request takes responsibility for the char** and char* memory.
 
-  CEngineRequestViewCrossSections *req = new CEngineRequestViewCrossSections(d->fitMinWavelength,
+  CEngineRequestViewCrossSections *req = new CEngineRequestViewCrossSections(awName,
+                                                                             d->fitMinWavelength,
                                                                              d->fitMaxWavelength,
                                                                              nFiles, filenames);
-                                                                             
+
 
   // send the request
   m_thread->request(req);
