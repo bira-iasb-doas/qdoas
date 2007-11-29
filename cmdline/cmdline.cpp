@@ -15,6 +15,7 @@
 #include "CProjectConfigItem.h"
 #include "CBatchEngineController.h"
 #include "CEngineResponse.h"
+#include "CProjectConfigTreeNode.h"
 #include "constants.h"
 
 #include "QdoasVersion.h"
@@ -55,11 +56,15 @@ enum BatchTool requiredBatchTool(const QString &filename);
 void showUsage();
 void showHelp();
 int batchProcess(commands_t *cmd);
+
 int batchProcessQdoas(commands_t *cmd);
 int readConfigQdoas(commands_t *cmd, QList<const CProjectConfigItem*> &projectItems);
 int analyseProjectQdoas(const CProjectConfigItem *projItem, const QList<QString> &filenames);
 int analyseProjectQdoas(const CProjectConfigItem *projItem);
-int analyseProjectQdoasPrepare(void **engineContext, const CProjectConfigItem *projItem, CEngineController *controller);
+int analyseProjectQdoasPrepare(void **engineContext, const CProjectConfigItem *projItem, CBatchEngineController *controller);
+int analyseProjectQdoasFile(void *engineContext, CBatchEngineController *controller, const QString &filename);
+int analyseProjectQdoasTreeNode(void *engineContext, CBatchEngineController *controller, const CProjectConfigTreeNode *node);
+
 int batchProcessConvolution(commands_t *cmd);
 int batchProcessRing(commands_t *cmd);
 int batchProcessUsamp(commands_t *cmd);
@@ -369,6 +374,8 @@ int readConfigQdoas(commands_t *cmd, QList<const CProjectConfigItem*> &projectIt
 
 int analyseProjectQdoas(const CProjectConfigItem *projItem, const QList<QString> &filenames)
 {
+  TRACE("analyseProjectQdoas(p, files)");
+
   void *engineContext;
   int retCode;
 
@@ -376,54 +383,18 @@ int analyseProjectQdoas(const CProjectConfigItem *projItem, const QList<QString>
 
   retCode = analyseProjectQdoasPrepare(&engineContext, projItem, controller);
 
-  if (!retCode)
+  if (retCode)
     return retCode;
 
   // loop over files ...
   QList<QString>::const_iterator it = filenames.begin();
   while (it != filenames.end()) {
     
-    int result;
-    
-    CEngineResponseBeginAccessFile *beginFileResp = new CEngineResponseBeginAccessFile(*it);
-    
-    result = mediateRequestBeginAnalyseSpectra(engineContext, it->toAscii().constData(), beginFileResp);
-    beginFileResp->setNumberOfRecords(result);
-    
-    if (result == -1)
-      retCode = 1;
-    
-    beginFileResp->process(controller);
-    delete beginFileResp;
-    
-    // loop based on the controller ... 
-    while (!retCode && controller->active()) { 
-      
-      CEngineResponseAccessRecord *resp = new CEngineResponseAccessRecord;
-      
-      result = mediateRequestNextMatchingAnalyseSpectrum(engineContext, resp);
-      resp->setRecordNumber(result);
-      
-      if (result == -1)
-	retCode = 1;
-      
-      resp->process(controller);
-      delete resp;
-    }
-    
-    CEngineResponseEndAccessFile *endFileResp = new CEngineResponseEndAccessFile;
-    
-    result = mediateRequestEndAnalyseSpectra(engineContext, endFileResp);
-    
-    if (result == -1)
-      retCode = 1;
-    
-    endFileResp->process(controller);
-    delete endFileResp;
+    retCode = analyseProjectQdoasFile(engineContext, controller, *it);
     
     ++it;
   }
-
+  
   // destroy engine
   CEngineResponseMessage *msgResp = new CEngineResponseMessage;
   
@@ -431,19 +402,47 @@ int analyseProjectQdoas(const CProjectConfigItem *projItem, const QList<QString>
     msgResp->process(controller);
     retCode = 1;
   }
-
+  
   delete msgResp;
-
+  
   return retCode;
 }
 
 int analyseProjectQdoas(const CProjectConfigItem *projItem)
 {
-  return 1;
+  TRACE("analyseProjectQdoas(p)");
+
+  void *engineContext;
+  int retCode;
+
+  CBatchEngineController *controller = new CBatchEngineController;
+
+  retCode = analyseProjectQdoasPrepare(&engineContext, projItem, controller);
+
+  if (retCode)
+    return retCode;
+
+  // recursive walk of the files in the config
+
+  retCode = analyseProjectQdoasTreeNode(engineContext, controller, projItem->rootNode());
+  
+  // destroy engine
+  CEngineResponseMessage *msgResp = new CEngineResponseMessage;
+  
+  if (mediateRequestDestroyEngineContext(engineContext, msgResp) != 0) {
+    msgResp->process(controller);
+    retCode = 1;
+  }
+  
+  delete msgResp;
+  
+  return retCode;
 }
 
-int analyseProjectQdoasPrepare(void **engineContext, const CProjectConfigItem *projItem, CEngineController *controller)
+int analyseProjectQdoasPrepare(void **engineContext, const CProjectConfigItem *projItem, CBatchEngineController *controller)
 {
+  TRACE("analyseProjectQdoasPrepare");
+
   int retCode = 0;
   CEngineResponseMessage *msgResp = new CEngineResponseMessage;
 
@@ -498,11 +497,81 @@ int analyseProjectQdoasPrepare(void **engineContext, const CProjectConfigItem *p
       retCode = 1;
     }
 
-    *engine = NULL;
+    *engineContext = NULL;
   }
 
   return retCode;
 }
+
+int analyseProjectQdoasFile(void *engineContext, CBatchEngineController *controller, const QString &filename)
+{
+  int retCode = 0;
+  int result;
+  
+  TRACE("analyseProjectQdoasFile");
+
+  CEngineResponseBeginAccessFile *beginFileResp = new CEngineResponseBeginAccessFile(filename);
+  
+  result = mediateRequestBeginAnalyseSpectra(engineContext, filename.toAscii().constData(), beginFileResp);
+  beginFileResp->setNumberOfRecords(result);
+    
+  beginFileResp->process(controller);
+  delete beginFileResp;
+  
+  if (result == -1)
+    return 1;
+  
+  // loop based on the controller ... 
+  while (!retCode && controller->active()) { 
+      
+    CEngineResponseAccessRecord *resp = new CEngineResponseAccessRecord;
+      
+    result = mediateRequestNextMatchingAnalyseSpectrum(engineContext, resp);
+    resp->setRecordNumber(result);
+      
+    if (result == -1)
+      retCode = 1;
+    
+    resp->process(controller);
+    delete resp;
+  }
+  
+  CEngineResponseEndAccessFile *endFileResp = new CEngineResponseEndAccessFile;
+  result = mediateRequestEndAnalyseSpectra(engineContext, endFileResp);
+  
+  if (result == -1)
+    retCode = 1;
+  
+  endFileResp->process(controller);
+  delete endFileResp;
+  
+  return retCode;
+}
+
+int analyseProjectQdoasTreeNode(void *engineContext, CBatchEngineController *controller, const CProjectConfigTreeNode *node)
+{
+  int retCode = 0;
+
+  while (!retCode && node != NULL) {
+
+    switch (node->type()) {
+    case CProjectConfigTreeNode::eFile:
+      retCode = analyseProjectQdoasFile(engineContext, controller, node->name());
+      break;
+    case CProjectConfigTreeNode::eFolder:
+      retCode = analyseProjectQdoasTreeNode(engineContext, controller, node->firstChild());
+      break;
+    case CProjectConfigTreeNode::eDirectory:
+      // TODO
+      break;
+    }
+
+    node = node->nextSibling();
+  }
+
+  return retCode;
+}
+    
 
 int batchProcessConvolution(commands_t *cmd)
 {
