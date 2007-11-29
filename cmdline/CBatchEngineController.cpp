@@ -28,7 +28,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 CBatchEngineController::CBatchEngineController() :
   CEngineController(),
-  m_atEnd(true)
+  m_active(false)
 {
 }
 
@@ -38,12 +38,12 @@ CBatchEngineController::~CBatchEngineController()
   
 void CBatchEngineController::notifyReadyToNavigateRecords(const QString &filename, int numberOfRecords)
 {
-  m_atEnd = false;
+  m_active = (numberOfRecords > 0);
 }
 
 void CBatchEngineController::notifyEndOfRecords(void)
 {
-  m_atEnd = true;
+  m_active = false;
 }
   
 void CBatchEngineController::notifyErrorMessages(int highestErrorLevel, const QList<CEngineError> &errorMessages)
@@ -68,5 +68,9 @@ void CBatchEngineController::notifyErrorMessages(int highestErrorLevel, const QL
     std::cout << it->message().toStdString() << std::endl;
     ++it;
   }
+  
+  // abort if an error occurred
+  if (highestErrorLevel == FatalEngineError)
+    m_active = false;
 }
 

@@ -38,7 +38,7 @@ class CBatchEngineController : public CEngineController
   virtual ~CBatchEngineController();
   
   // query interface
-  bool atEndOfRecords(void) const;
+  bool active(void) const;
 
   // notify interface is for use by response classes
   virtual void notifyReadyToNavigateRecords(const QString &filename, int numberOfRecords);
@@ -47,10 +47,10 @@ class CBatchEngineController : public CEngineController
   virtual void notifyErrorMessages(int highestErrorLevel, const QList<CEngineError> &errorMessages);
 
  private:
-  bool m_atEnd;
+  bool m_active;
 
 };
 
-inline bool CBatchEngineController::atEndOfRecords(void) const { return m_atEnd; }
+inline bool CBatchEngineController::active(void) const { return m_active; }
 
 #endif

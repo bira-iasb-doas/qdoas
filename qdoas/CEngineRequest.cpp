@@ -89,17 +89,15 @@ bool CEngineRequestSetProject::process(CEngineThread *engineThread)
   // process is called from the thread and drives the engine through the
   // mediator interface.
 
-  CEngineResponseMessage *resp = new CEngineResponseMessage;
+  CEngineResponse *resp = new CEngineResponseSet;
 
   int rc = mediateRequestSetProject(engineThread->engineContext(),
 				    &m_project, m_opMode, resp);
 
-  // no response unless there was an error
-  if (rc == -1)
-    engineThread->respond(resp);
-  else
-    delete resp;
 
+  // post the response
+  engineThread->respond(resp);
+  
   return (rc == 0);
 }
 
@@ -130,16 +128,13 @@ bool CEngineRequestSetAnalysisWindows::process(CEngineThread *engineThread)
   // process is called from the thread and drives the engine through the
   // mediator interface.
 
-  CEngineResponse *resp = new CEngineResponseMessage;
+  CEngineResponse *resp = new CEngineResponseSet;
 
   int rc = mediateRequestSetAnalysisWindows(engineThread->engineContext(),
 					    m_nWindows, m_windowList, m_opMode, resp);
 
-  // no response unless there was an error
-  if (rc == -1)
-    engineThread->respond(resp);
-  else
-    delete resp;
+  // post the response
+  engineThread->respond(resp);
 
   return (rc == 0);
 }
@@ -164,16 +159,13 @@ bool CEngineRequestSetSymbols::process(CEngineThread *engineThread)
   // process is called from the thread and drives the engine through the
   // mediator interface.
 
-  CEngineResponse *resp = new CEngineResponseMessage;
+  CEngineResponse *resp = new CEngineResponseSet;
 
   int rc = mediateRequestSetSymbols(engineThread->engineContext(),
 				    m_nSymbols, m_symbolList, resp);
 
-  // no response unless there was an error
-  if (rc == -1)
-    engineThread->respond(resp);
-  else
-    delete resp;
+  // post the response
+  engineThread->respond(resp);
 
   return (rc == 0);
 }
@@ -198,16 +190,13 @@ bool CEngineRequestSetSites::process(CEngineThread *engineThread)
   // process is called from the thread and drives the engine through the
   // mediator interface.
 
-  CEngineResponse *resp = new CEngineResponseMessage;
+  CEngineResponse *resp = new CEngineResponseSet;
 
   int rc = mediateRequestSetSites(engineThread->engineContext(),
 				  m_nSites, m_siteList, resp);
 
-  // no response unless there was an error
-  if (rc == -1)
-    engineThread->respond(resp);
-  else
-    delete resp;
+  // post the response
+  engineThread->respond(resp);
 
   return (rc == 0);
 }
@@ -581,7 +570,7 @@ bool CEngineRequestViewCrossSections::process(CEngineThread *engineThread)
   CEngineResponseTool *resp = new CEngineResponseTool;
 
   int rc = mediateRequestViewCrossSections(engineThread->engineContext(),
-                                           m_awName,m_minWavelength, m_maxWavelength,
+                                           m_awName, m_minWavelength, m_maxWavelength,
                                            m_nFiles, m_filenames, resp);
 
   // post the response

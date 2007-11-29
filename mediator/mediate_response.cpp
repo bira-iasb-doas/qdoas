@@ -63,7 +63,7 @@ void mediateResponsePlotData(int page,
 			     const char *yLabel,
 			     void *responseHandle)
 {
-  CEngineResponsePlot *resp = static_cast<CEngineResponsePlot*>(responseHandle);
+  CEngineResponseVisual *resp = static_cast<CEngineResponseVisual*>(responseHandle);
 
   CPlotDataSet *dataSet = new CPlotDataSet(type, forceAutoScaling, title, xLabel, yLabel);
 
@@ -83,7 +83,7 @@ void mediateResponseCellDataDouble(int page,
 				   double doubleValue,
 				   void *responseHandle)
 {
-  CEngineResponseSpecificRecord *resp = static_cast<CEngineResponseSpecificRecord*>(responseHandle);
+  CEngineResponseVisual *resp = static_cast<CEngineResponseVisual*>(responseHandle);
   resp->addCell(page, row, column, QVariant(doubleValue));
 }
 
@@ -93,7 +93,7 @@ void mediateResponseCellDataInteger(int page,
 				    int integerValue,
 				    void *responseHandle)
 {
-  CEngineResponseSpecificRecord *resp = static_cast<CEngineResponseSpecificRecord*>(responseHandle);
+  CEngineResponseVisual *resp = static_cast<CEngineResponseVisual*>(responseHandle);
   resp->addCell(page, row, column, QVariant(integerValue));
 }
 
@@ -103,7 +103,7 @@ void mediateResponseCellDataString(int page,
 				   const char *stringValue,
 				   void *responseHandle)
 {
-  CEngineResponseSpecificRecord *resp = static_cast<CEngineResponseSpecificRecord*>(responseHandle);
+  CEngineResponseVisual *resp = static_cast<CEngineResponseVisual*>(responseHandle);
   resp->addCell(page, row, column, QVariant(QString(stringValue)));
 }
 
@@ -114,16 +114,17 @@ void mediateResponseCellInfo(int page,
 				   const char *label,
 				   const char *stringFormat,...)
  {
- 	va_list argList;
- 	char stringValue[1024];
-
+   va_list argList;
+   char stringValue[1024];
+   
   va_start(argList,stringFormat);
   vsprintf(stringValue,stringFormat,argList);
   va_end(argList);
 
- 	CEngineResponseSpecificRecord *resp = static_cast<CEngineResponseSpecificRecord*>(responseHandle);
- 	resp->addCell(page,row,column,QVariant(QString(label)));
- 	resp->addCell(page,row,column+1,QVariant(QString(stringValue)));
+  CEngineResponseVisual *resp = static_cast<CEngineResponseVisual*>(responseHandle);
+  
+  resp->addCell(page,row,column,QVariant(QString(label)));
+  resp->addCell(page,row,column+1,QVariant(QString(stringValue)));
  }
 
 void mediateResponseCellInfoNoLabel(int page,
@@ -132,15 +133,15 @@ void mediateResponseCellInfoNoLabel(int page,
 				   void *responseHandle,
 				   const char *stringFormat,...)
  {
- 	va_list argList;
- 	char stringValue[1024];
-
-  va_start(argList,stringFormat);
-  vsprintf(stringValue,stringFormat,argList);
-  va_end(argList);
-
- 	CEngineResponseSpecificRecord *resp = static_cast<CEngineResponseSpecificRecord*>(responseHandle);
- 	resp->addCell(page,row,column,QVariant(QString(stringValue)));
+   va_list argList;
+   char stringValue[1024];
+   
+   va_start(argList,stringFormat);
+   vsprintf(stringValue,stringFormat,argList);
+   va_end(argList);
+   
+   CEngineResponseVisual *resp = static_cast<CEngineResponseVisual*>(responseHandle);
+   resp->addCell(page,row,column,QVariant(QString(stringValue)));
  }
 
 void mediateResponseLabelPage(int page,
@@ -148,7 +149,7 @@ void mediateResponseLabelPage(int page,
 			      const char *tag,
 			      void *responseHandle)
 {
-  CEngineResponsePlot *resp = static_cast<CEngineResponsePlot*>(responseHandle);
+  CEngineResponseVisual *resp = static_cast<CEngineResponseVisual*>(responseHandle);
   resp->addPageTitleAndTag(page, title, tag);
 }
 

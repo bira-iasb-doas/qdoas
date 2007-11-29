@@ -71,6 +71,48 @@ void CEngineResponseMessage::process(CEngineController *engineController)
 
 //------------------------------------------------------------
 
+CEngineResponseVisual::CEngineResponseVisual(CEngineResponse::ResponseType type) :
+  CEngineResponse(type)
+{
+}
+
+CEngineResponseVisual::~CEngineResponseVisual()
+{
+  while (!m_plotDataList.isEmpty()) {
+    delete m_plotDataList.front().data;
+    m_plotDataList.pop_front();
+  }
+}
+
+void CEngineResponseVisual::process(CEngineController *engineController)
+{
+  // consider the error messages first - if fatal stop here
+  if (processErrors(engineController))
+    return;
+
+  if (!m_cellList.isEmpty() || !m_plotDataList.isEmpty()) {
+    engineController->notifyTableData(m_cellList);
+    engineController->notifyPlotData(m_plotDataList, m_titleList);
+  }
+}
+
+void CEngineResponseVisual::addDataSet(int pageNumber, const CPlotDataSet *dataSet)
+{
+  m_plotDataList.push_back(SPlotData(pageNumber, dataSet));
+}
+
+void CEngineResponseVisual::addPageTitleAndTag(int pageNumber, const QString &title, const QString &tag)
+{
+  m_titleList.push_back(STitleTag(pageNumber, title, tag));
+}
+
+void CEngineResponseVisual::addCell(int pageNumber, int row, int col, const QVariant &data)
+{
+  m_cellList.push_back(SCell(pageNumber, row, col, data));
+}
+
+//------------------------------------------------------------
+
 CEngineResponseBeginAccessFile::CEngineResponseBeginAccessFile(const QString &fileName) :
   CEngineResponse(eEngineResponseBeginAccessFileType),
   m_fileName(fileName),
@@ -103,44 +145,8 @@ void CEngineResponseBeginAccessFile::setNumberOfRecords(int numberOfRecords)
 
 //------------------------------------------------------------
 
-CEngineResponsePlot::CEngineResponsePlot(CEngineResponse::ResponseType type) :
-  CEngineResponse(type)
-{
-}
-
-CEngineResponsePlot::~CEngineResponsePlot()
-{
-  // should have been emptied in the transfer to the controller
-
-  while (!m_plotDataList.isEmpty()) {
-    delete m_plotDataList.front().data;
-    m_plotDataList.pop_front();
-  }
-}
-
-void CEngineResponsePlot::process(CEngineController *engineController)
-{
-  // consider the error messages first - if fatal stop here
-  if (processErrors(engineController))
-    return;
-
-  engineController->notifyPlotData(m_plotDataList, m_titleList);
-}
-
-void CEngineResponsePlot::addDataSet(int pageNumber, const CPlotDataSet *dataSet)
-{
-  m_plotDataList.push_back(SPlotData(pageNumber, dataSet));
-}
-
-void CEngineResponsePlot::addPageTitleAndTag(int pageNumber, const QString &title, const QString &tag)
-{
-  m_titleList.push_back(STitleTag(pageNumber, title, tag));
-}
-
-//------------------------------------------------------------
-
 CEngineResponseSpecificRecord::CEngineResponseSpecificRecord(CEngineResponse::ResponseType type) :
-  CEngineResponsePlot(type),
+  CEngineResponseVisual(type),
   m_recordNumber(-1)
 {
 }
@@ -177,12 +183,6 @@ void CEngineResponseSpecificRecord::setRecordNumber(int recordNumber)
   m_recordNumber = recordNumber;
 }
 
-void CEngineResponseSpecificRecord::addCell(int pageNumber, int row, int col,
-					    const QVariant &data)
-{
-  m_cellList.push_back(SCell(pageNumber, row, col, data));
-}
-
 //------------------------------------------------------------
 
 CEngineResponseAccessRecord::CEngineResponseAccessRecord() :
@@ -217,8 +217,19 @@ void CEngineResponseEndAccessFile::process(CEngineController *engineController)
 
 //------------------------------------------------------------
 
+CEngineResponseSet::CEngineResponseSet() :
+  CEngineResponseVisual(eEngineResponseSetType)
+{
+}
+
+CEngineResponseSet::~CEngineResponseSet()
+{
+}
+
+//------------------------------------------------------------
+
 CEngineResponseTool::CEngineResponseTool() :
-  CEngineResponsePlot(eEngineResponseToolType)
+  CEngineResponseVisual(eEngineResponseToolType)
 {
 }
 

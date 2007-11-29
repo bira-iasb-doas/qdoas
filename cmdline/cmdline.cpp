@@ -59,6 +59,7 @@ int batchProcessQdoas(commands_t *cmd);
 int readConfigQdoas(commands_t *cmd, QList<const CProjectConfigItem*> &projectItems);
 int analyseProjectQdoas(const CProjectConfigItem *projItem, const QList<QString> &filenames);
 int analyseProjectQdoas(const CProjectConfigItem *projItem);
+int analyseProjectQdoasPrepare(void **engineContext, const CProjectConfigItem *projItem, CEngineController *controller);
 int batchProcessConvolution(commands_t *cmd);
 int batchProcessRing(commands_t *cmd);
 int batchProcessUsamp(commands_t *cmd);
@@ -369,8 +370,81 @@ int readConfigQdoas(commands_t *cmd, QList<const CProjectConfigItem*> &projectIt
 int analyseProjectQdoas(const CProjectConfigItem *projItem, const QList<QString> &filenames)
 {
   void *engineContext;
-  int retCode = 0;
+  int retCode;
+
   CBatchEngineController *controller = new CBatchEngineController;
+
+  retCode = analyseProjectQdoasPrepare(&engineContext, projItem, controller);
+
+  if (!retCode)
+    return retCode;
+
+  // loop over files ...
+  QList<QString>::const_iterator it = filenames.begin();
+  while (it != filenames.end()) {
+    
+    int result;
+    
+    CEngineResponseBeginAccessFile *beginFileResp = new CEngineResponseBeginAccessFile(*it);
+    
+    result = mediateRequestBeginAnalyseSpectra(engineContext, it->toAscii().constData(), beginFileResp);
+    beginFileResp->setNumberOfRecords(result);
+    
+    if (result == -1)
+      retCode = 1;
+    
+    beginFileResp->process(controller);
+    delete beginFileResp;
+    
+    // loop based on the controller ... 
+    while (!retCode && controller->active()) { 
+      
+      CEngineResponseAccessRecord *resp = new CEngineResponseAccessRecord;
+      
+      result = mediateRequestNextMatchingAnalyseSpectrum(engineContext, resp);
+      resp->setRecordNumber(result);
+      
+      if (result == -1)
+	retCode = 1;
+      
+      resp->process(controller);
+      delete resp;
+    }
+    
+    CEngineResponseEndAccessFile *endFileResp = new CEngineResponseEndAccessFile;
+    
+    result = mediateRequestEndAnalyseSpectra(engineContext, endFileResp);
+    
+    if (result == -1)
+      retCode = 1;
+    
+    endFileResp->process(controller);
+    delete endFileResp;
+    
+    ++it;
+  }
+
+  // destroy engine
+  CEngineResponseMessage *msgResp = new CEngineResponseMessage;
+  
+  if (mediateRequestDestroyEngineContext(engineContext, msgResp) != 0) {
+    msgResp->process(controller);
+    retCode = 1;
+  }
+
+  delete msgResp;
+
+  return retCode;
+}
+
+int analyseProjectQdoas(const CProjectConfigItem *projItem)
+{
+  return 1;
+}
+
+int analyseProjectQdoasPrepare(void **engineContext, const CProjectConfigItem *projItem, CEngineController *controller)
+{
+  int retCode = 0;
   CEngineResponseMessage *msgResp = new CEngineResponseMessage;
 
   // copy the project data and mask out any display flags (do not want
@@ -380,14 +454,14 @@ int analyseProjectQdoas(const CProjectConfigItem *projItem, const QList<QString>
   // TODO projectData.display.
 
   // create engine
-  if (mediateRequestCreateEngineContext(&engineContext, msgResp) != 0) {
+  if (mediateRequestCreateEngineContext(engineContext, msgResp) != 0) {
     msgResp->process(controller);
     delete msgResp;
     return 1;
   }
 
   // set project
-  if (!retCode && mediateRequestSetProject(engineContext, &projectData, THREAD_TYPE_ANALYSIS, msgResp) != 0) {
+  if (!retCode && mediateRequestSetProject(*engineContext, &projectData, THREAD_TYPE_ANALYSIS, msgResp) != 0) {
     msgResp->process(controller);
     delete msgResp;
     msgResp = new CEngineResponseMessage;
@@ -409,7 +483,7 @@ int analyseProjectQdoas(const CProjectConfigItem *projItem, const QList<QString>
       ++awIt;
     }
     
-    if (mediateRequestSetAnalysisWindows(engineContext, nWindows, awDataList, THREAD_TYPE_ANALYSIS, msgResp) != 0) {
+    if (mediateRequestSetAnalysisWindows(*engineContext, nWindows, awDataList, THREAD_TYPE_ANALYSIS, msgResp) != 0) {
       msgResp->process(controller);
       delete msgResp;
       msgResp = new CEngineResponseMessage;
@@ -417,57 +491,17 @@ int analyseProjectQdoas(const CProjectConfigItem *projItem, const QList<QString>
     }
   }
 
-  if (!retCode) {
-    // loop over files ...
-    QList<QString>::const_iterator it = filenames.begin();
-    while (it != filenames.end()) {
-
-      CEngineResponseBeginAccessFile *beginFileResp = new CEngineResponseBeginAccessFile(*it);
-      int nRecords = mediateRequestBeginAnalyseSpectra(engineContext, it->toAscii().constData(), beginFileResp);
-      beginFileResp->setNumberOfRecords(nRecords);
-
-      beginFileResp->process(controller);
-      delete beginFileResp;
-
-      // loop based on the controller ...
-      if (nRecords > 0) {
-	while (!retCode && !controller->atEndOfRecords()) { 
-	  
-	  CEngineResponseAccessRecord *resp = new CEngineResponseAccessRecord;
-	  int record = mediateRequestNextMatchingAnalyseSpectrum(engineContext, resp);
-	  if (record == -1)
-	    retCode = 1;
-	  else
-	    resp->setRecordNumber(record);
-
-	  resp->process(controller);
-	  delete resp;
-	  
-	}
-      }
-
-      CEngineResponseEndAccessFile *endFileResp = new CEngineResponseEndAccessFile;
-      mediateRequestEndAnalyseSpectra(engineContext, endFileResp);
-      
-      endFileResp->process(controller);
-      delete endFileResp;
-
-      ++it;
+  if (retCode) {
+    // cleanup ... destroy the engine
+    if (mediateRequestDestroyEngineContext(*engineContext, msgResp) != 0) {
+      msgResp->process(controller);
+      retCode = 1;
     }
+
+    *engine = NULL;
   }
 
-  // destroy engine
-  if (mediateRequestDestroyEngineContext(engineContext, msgResp) != 0) {
-    msgResp->process(controller);
-    retCode = 1;
-  }
-
-  delete msgResp;
-}
-
-int analyseProjectQdoas(const CProjectConfigItem *projItem)
-{
-  return 1;
+  return retCode;
 }
 
 int batchProcessConvolution(commands_t *cmd)

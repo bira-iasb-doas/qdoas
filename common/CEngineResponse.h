@@ -42,6 +42,7 @@ class CEngineResponse
     eEngineResponseAccessRecordType,
     eEngineResponseGotoRecordType,
     eEngineResponseEndAccessFileType,
+    eEngineResponseSetType,
     eEngineResponseToolType
   };
 
@@ -81,6 +82,26 @@ class CEngineResponseMessage : public CEngineResponse
 
 //------------------------------------------------------------
 
+class CEngineResponseVisual : public CEngineResponse
+{
+ public:
+  CEngineResponseVisual(CEngineResponse::ResponseType type);
+  virtual ~CEngineResponseVisual();
+
+  virtual void process(CEngineController *engineController);
+
+  void addDataSet(int pageNumber, const CPlotDataSet *dataSet);
+  void addPageTitleAndTag(int pageNumber, const QString &title, const QString &tag);
+  void addCell(int pageNumber, int row, int col, const QVariant &data);
+
+ protected:
+  QList<SPlotData> m_plotDataList;
+  QList<STitleTag> m_titleList;
+  QList<SCell> m_cellList;
+};
+
+//------------------------------------------------------------
+
 class CEngineResponseBeginAccessFile : public CEngineResponse
 {
  public:
@@ -98,25 +119,7 @@ class CEngineResponseBeginAccessFile : public CEngineResponse
 
 //------------------------------------------------------------
 
-class CEngineResponsePlot : public CEngineResponse
-{
- public:
-  CEngineResponsePlot(CEngineResponse::ResponseType type);
-  virtual ~CEngineResponsePlot();
-
-  virtual void process(CEngineController *engineController);
-
-  void addDataSet(int pageNumber, const CPlotDataSet *dataSet);
-  void addPageTitleAndTag(int pageNumber, const QString &title, const QString &tag);
-
- protected:
-  QList<SPlotData> m_plotDataList;
-  QList<STitleTag> m_titleList;
-};
-
-//------------------------------------------------------------
-
-class CEngineResponseSpecificRecord : public CEngineResponsePlot
+class CEngineResponseSpecificRecord : public CEngineResponseVisual
 {
  public:
   CEngineResponseSpecificRecord(CEngineResponse::ResponseType type);
@@ -124,15 +127,10 @@ class CEngineResponseSpecificRecord : public CEngineResponsePlot
 
   virtual void process(CEngineController *engineController);
 
-  void addDataSet(int pageNumber, const CPlotDataSet *dataSet);
-  void addPageTitleAndTag(int page, const QString &title, const QString &tag);
-
   void setRecordNumber(int recordNumber);
-  void addCell(int pageNumber, int row, int col, const QVariant &data);
 
  private:
   int m_recordNumber;
-  QList<SCell> m_cellList;
 };
 
 //------------------------------------------------------------
@@ -157,7 +155,16 @@ class CEngineResponseEndAccessFile : public CEngineResponse
 
 //------------------------------------------------------------
 
-class CEngineResponseTool : public CEngineResponsePlot
+class CEngineResponseSet : public CEngineResponseVisual
+{
+ public:
+  CEngineResponseSet();
+  virtual ~CEngineResponseSet();
+};
+
+//------------------------------------------------------------
+
+class CEngineResponseTool : public CEngineResponseVisual
 {
  public:
   CEngineResponseTool();
