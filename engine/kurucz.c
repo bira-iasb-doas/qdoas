@@ -129,7 +129,7 @@ INDEX KuruczSearchReference(INDEX indexRefFeno)
 // ----------------------------------------------------------------------------
 
 RC KURUCZ_Spectrum(double *oldLambda,double *newLambda,double *spectrum,double *reference,double *instrFunction,
-                   UCHAR displayFlag,UCHAR *windowTitle,double **coeff,double **fwhmVector,double **fwhmDeriv2,INT saveFlag,INDEX indexFeno)
+                   UCHAR displayFlag,UCHAR *windowTitle,double **coeff,double **fwhmVector,double **fwhmDeriv2,INT saveFlag,INDEX indexFeno,void *responseHandle)
  {
   // Declarations
 
@@ -146,8 +146,6 @@ RC KURUCZ_Spectrum(double *oldLambda,double *newLambda,double *spectrum,double *
                    newPix,
                    Square;                                                      // Chi square returned by 'CurFitMethod'
   INT              Nb_Win,maxParam,                                             // number of little windows
-                   maxGraph,
-                   maxGraphV,maxGraphH,
                    Niter,                                                       // number of iterations
                    oldNDET;
   INDEX            indexWindow,                                                 // browse little windows
@@ -157,7 +155,7 @@ RC KURUCZ_Spectrum(double *oldLambda,double *newLambda,double *spectrum,double *
                    indexGraph,
                    i,j,j0,k;                                                    // temporary indexes
   RC               rc;                                                          // return code
-// QDOAS ???   FILE            *fp;                                                          // file pointer
+  plot_data_t      spectrumData[2];
 
   // Initializations
 
@@ -480,256 +478,137 @@ RC KURUCZ_Spectrum(double *oldLambda,double *newLambda,double *spectrum,double *
          Lambda[i]=shiftPoly[i];
        }
 
-// QDOAS ???       #if defined (__WINDOAS_GUI_) && __WINDOAS_GUI_
-// QDOAS ???       if (displayFlag)
-// QDOAS ???        {
-// QDOAS ???         // Display complete fit
-// QDOAS ???
-// QDOAS ???         if (KURUCZ_buffers.displaySpectra)
-// QDOAS ???          {
-// QDOAS ???           DRAW_Spectra(CHILD_WINDOW_SPECTRA,windowTitle,"Complete fit","Wavelengths (nm)","Intensity",Grid,Nb_Win-1,
-// QDOAS ???                       (double)0.,(double)0.,(double)0.,(double)0.,
-// QDOAS ???                        &Lambda[0],&spectrum[0],NDET,DRAW_COLOR1,SvdPDeb,SvdPFin,PS_SOLID,"Spectrum",
-// QDOAS ???                        &Lambda[0],&ANALYSE_secX[0],NDET,DRAW_COLOR2,SvdPDeb,SvdPFin,PS_SOLID,"Adjusted Kurucz",
-// QDOAS ???                        indexGraph,maxGraphV,maxGraphH,1);
-// QDOAS ???
-// QDOAS ???           if (++indexGraph==maxGraph)
-// QDOAS ???            {
-// QDOAS ???             indexGraph=0;
-// QDOAS ???
-// QDOAS ???             if (((rc=THRD_WaitEvent(THRD_delay,0,0))==THREAD_EVENT_STOP) ||
-// QDOAS ???                 ((rc==THREAD_EVENT_PAUSE) && ((rc=THRD_WaitEvent(INFINITE,0,0))==THREAD_EVENT_STOP)))
-// QDOAS ???
-// QDOAS ???              goto EndKuruczSpectrum;
-// QDOAS ???            }
-// QDOAS ???          }
-// QDOAS ???
-// QDOAS ???         // Display residual
-// QDOAS ???
-// QDOAS ???         if (KURUCZ_buffers.displayResidual)
-// QDOAS ???          {
-// QDOAS ???           if (KURUCZ_buffers.method!=PRJCT_ANLYS_METHOD_SVD)
-// QDOAS ???            for (j=SvdPDeb;j<=SvdPFin;j++)
-// QDOAS ???             ANALYSE_absolu[j]=(ANALYSE_tc[j]!=(double)0.)?ANALYSE_absolu[j]/ANALYSE_tc[j]:(double)0.;
-// QDOAS ???
-// QDOAS ???           DRAW_Spectra(CHILD_WINDOW_SPECTRA,windowTitle,
-// QDOAS ???                       (KURUCZ_buffers.method!=PRJCT_ANLYS_METHOD_SVD)?"Normalized Residual":"Residual","Wavelengths (nm)","",Grid,Nb_Win-1,
-// QDOAS ???                       (double)0.,(double)0.,(double)0.,(double)0.,
-// QDOAS ???                        &Lambda[0],&ANALYSE_absolu[0],NDET,DRAW_COLOR1,SvdPDeb,SvdPFin,PS_SOLID,NULL,
-// QDOAS ???                        NULL,NULL,0,DRAW_COLOR2,0,0,PS_SOLID,NULL,
-// QDOAS ???                        indexGraph,maxGraphV,maxGraphH,1);
-// QDOAS ???
-// QDOAS ???           if (++indexGraph==maxGraph)
-// QDOAS ???            {
-// QDOAS ???             indexGraph=0;
-// QDOAS ???
-// QDOAS ???             if (((rc=THRD_WaitEvent(THRD_delay,0,0))==THREAD_EVENT_STOP) ||
-// QDOAS ???                 ((rc==THREAD_EVENT_PAUSE) && ((rc=THRD_WaitEvent(INFINITE,0,0))==THREAD_EVENT_STOP)))
-// QDOAS ???
-// QDOAS ???              goto EndKuruczSpectrum;
-// QDOAS ???            }
-// QDOAS ???          }
-// QDOAS ???
-// QDOAS ???         memcpy(ANALYSE_secX,ANALYSE_zeros,sizeof(double)*NDET);
-// QDOAS ???
-// QDOAS ???         // Display Offset
-// QDOAS ???
-// QDOAS ???         if  (// Feno->displayOffset &&
-// QDOAS ???             (Feno->indexOffsetConst!=ITEM_NONE) &&
-// QDOAS ???             (Feno->indexOffsetOrder1!=ITEM_NONE) &&
-// QDOAS ???             (Feno->indexOffsetOrder2!=ITEM_NONE) &&
-// QDOAS ???
-// QDOAS ???            ((TabCross[Feno->indexOffsetConst].FitParam!=ITEM_NONE) ||
-// QDOAS ???             (TabCross[Feno->indexOffsetOrder1].FitParam!=ITEM_NONE) ||
-// QDOAS ???             (TabCross[Feno->indexOffsetOrder2].FitParam!=ITEM_NONE) ||
-// QDOAS ???             (TabCross[Feno->indexOffsetConst].InitParam!=(double)0.) ||
-// QDOAS ???             (TabCross[Feno->indexOffsetOrder1].InitParam!=(double)0.) ||
-// QDOAS ???             (TabCross[Feno->indexOffsetOrder2].InitParam!=(double)0.)))
-// QDOAS ???          {
-// QDOAS ???           for (j=SvdPDeb;j<=SvdPFin;j++)
-// QDOAS ???            {
-// QDOAS ???             ANALYSE_absolu[j]+=offset[j]-ANALYSE_secX[j];
-// QDOAS ???             ANALYSE_secX[j]=offset[j];
-// QDOAS ???            }
-// QDOAS ???
-// QDOAS ???           if (KURUCZ_buffers.displayFit)
-// QDOAS ???            {
-// QDOAS ???             DRAW_Spectra(CHILD_WINDOW_SPECTRA,windowTitle,"Offset",
-// QDOAS ???                         "Wavelength (nm)","",Grid,Nb_Win-1,
-// QDOAS ???                         (double)0.,(double)0.,(double)0.,(double)0.,
-// QDOAS ???                         &Lambda[0],&ANALYSE_absolu[0],NDET,DRAW_COLOR1,SvdPDeb,SvdPFin,PS_SOLID,"Measured",
-// QDOAS ???                         &Lambda[0],&ANALYSE_secX[0],NDET,DRAW_COLOR2,SvdPDeb,SvdPFin,PS_SOLID,"Calculated",
-// QDOAS ???                          indexGraph,maxGraphV,maxGraphH,1);
-// QDOAS ???
-// QDOAS ???             if (++indexGraph==maxGraph)
-// QDOAS ???              {
-// QDOAS ???               indexGraph=0;
-// QDOAS ??? //              currentWindow=ITEM_NONE;
-// QDOAS ???
-// QDOAS ???               if (((rc=THRD_WaitEvent(THRD_delay,0,0))==THREAD_EVENT_STOP) ||
-// QDOAS ???                   ((rc==THREAD_EVENT_PAUSE) && ((rc=THRD_WaitEvent(INFINITE,0,0))==THREAD_EVENT_STOP)))
-// QDOAS ???
-// QDOAS ???                goto EndKuruczSpectrum;
-// QDOAS ???              }
-// QDOAS ???            }
-// QDOAS ???          }
-// QDOAS ???
-// QDOAS ???         // Display fits
-// QDOAS ???
-// QDOAS ???         if (KURUCZ_buffers.crossFits.matrix!=NULL)
-// QDOAS ???          {
-// QDOAS ???           for (indexTabCross=indexCrossFit=0;(indexTabCross<Feno->NTabCross) && (indexCrossFit<KURUCZ_buffers.crossFits.nc);indexTabCross++)
-// QDOAS ???            {
-// QDOAS ???             pTabCross=&TabCross[indexTabCross];
-// QDOAS ???
-// QDOAS ???             if (pTabCross->IndSvdA && (WorkSpace[pTabCross->Comp].type==WRK_SYMBOL_CROSS) && pTabCross->display)
-// QDOAS ???              {
-// QDOAS ???                for (j=SvdPDeb;j<=SvdPFin;j++)
-// QDOAS ???                 {
-// QDOAS ???                  ANALYSE_absolu[j]+=KURUCZ_buffers.crossFits.matrix[indexCrossFit][j]-ANALYSE_secX[j];
-// QDOAS ???                  ANALYSE_secX[j]=KURUCZ_buffers.crossFits.matrix[indexCrossFit][j];
-// QDOAS ???                 }
-// QDOAS ???
-// QDOAS ???               sprintf(string,"%s fit",WorkSpace[pTabCross->Comp].symbolName);
-// QDOAS ???
-// QDOAS ???               DRAW_Spectra(CHILD_WINDOW_SPECTRA,windowTitle,string,
-// QDOAS ???                           "Wavelength (nm)","",Grid,Nb_Win-1,
-// QDOAS ???                           (double)0.,(double)0.,(double)0.,(double)0.,
-// QDOAS ???                           &Lambda[0],&ANALYSE_absolu[0],NDET,DRAW_COLOR1,SvdPDeb,SvdPFin,PS_SOLID,"Measured",
-// QDOAS ???                           &Lambda[0],&ANALYSE_secX[0],NDET,DRAW_COLOR2,SvdPDeb,SvdPFin,PS_SOLID,"Calculated",
-// QDOAS ???                            indexGraph,maxGraphV,maxGraphH,1);
-// QDOAS ???
-// QDOAS ???               if (++indexGraph==maxGraph)
-// QDOAS ???                {
-// QDOAS ???                 indexGraph=0;
-// QDOAS ???
-// QDOAS ???                 if (((rc=THRD_WaitEvent(THRD_delay,0,0))==THREAD_EVENT_STOP) ||
-// QDOAS ???                     ((rc==THREAD_EVENT_PAUSE) && ((rc=THRD_WaitEvent(INFINITE,0,0))==THREAD_EVENT_STOP)))
-// QDOAS ???
-// QDOAS ???                  goto EndKuruczSpectrum;
-// QDOAS ???                }
-// QDOAS ???
-// QDOAS ???               indexCrossFit++;
-// QDOAS ???              }
-// QDOAS ???            }
-// QDOAS ???          }
-// QDOAS ???
-// QDOAS ???         // Display error on calibration
-// QDOAS ???
-// QDOAS ???         if (KURUCZ_buffers.displayShift)
-// QDOAS ???          {
-// QDOAS ???          	if (KURUCZ_buffers.units==PRJCT_ANLYS_UNITS_NANOMETERS)
-// QDOAS ???
-// QDOAS ???            DRAW_Spectra(CHILD_WINDOW_SPECTRA,windowTitle,"Shift applied","WaveLengths (nm)",
-// QDOAS ???                        (KURUCZ_buffers.units==PRJCT_ANLYS_UNITS_PIXELS)?"Shift (pixels)":"Shift (nm)",Grid,Nb_Win-1,
-// QDOAS ???                         Lambda[SvdPDeb],Lambda[SvdPFin],(double)0.,(double)0.,
-// QDOAS ???                        &Lambda[SvdPDeb],&shiftPoly[SvdPDeb],(SvdPFin-SvdPDeb+1),DRAW_COLOR2,0,(SvdPFin-SvdPDeb+1),PS_SOLID,"Polynomial",
-// QDOAS ???                         VLambda+1,VShift+1,Nb_Win,DRAW_COLOR1,0,Nb_Win-1,PS_DOT,"Fitted shift",
-// QDOAS ???                         indexGraph,maxGraphV,maxGraphH,1);
-// QDOAS ???
-// QDOAS ???           else
-// QDOAS ???
-// QDOAS ???            DRAW_Spectra(CHILD_WINDOW_SPECTRA,windowTitle,"Shift applied","WaveLengths (nm)",
-// QDOAS ???                        (KURUCZ_buffers.units==PRJCT_ANLYS_UNITS_PIXELS)?"Shift (pixels)":"Shift (nm)",Grid,Nb_Win-1,
-// QDOAS ???                         Lambda[SvdPDeb],Lambda[SvdPFin],(double)0.,(double)0.,
-// QDOAS ???                         VLambda+1,VShift+1,Nb_Win,DRAW_COLOR1,0,Nb_Win-1,PS_DOT,"Fitted shift",
-// QDOAS ???                         NULL,NULL,0,DRAW_COLOR2,0,0,PS_SOLID,NULL,
-// QDOAS ???                         indexGraph,maxGraphV,maxGraphH,1);
-// QDOAS ???
-// QDOAS ???           if (++indexGraph==maxGraph)
-// QDOAS ???            {
-// QDOAS ???             indexGraph=0;
-// QDOAS ???
-// QDOAS ???             if (((rc=THRD_WaitEvent(THRD_delay,0,0))==THREAD_EVENT_STOP) ||
-// QDOAS ???                 ((rc==THREAD_EVENT_PAUSE) && ((rc=THRD_WaitEvent(INFINITE,0,0))==THREAD_EVENT_STOP)))
-// QDOAS ???
-// QDOAS ???              goto EndKuruczSpectrum;
-// QDOAS ???            }
-// QDOAS ???          }
-// QDOAS ???
-// QDOAS ???         // Display wavelength dependence of fwhm
-// QDOAS ???
-// QDOAS ???         if (pKuruczOptions->fwhmFit)
-// QDOAS ???
-// QDOAS ???          for (indexParam=0;(indexParam<maxParam) && (rc<THREAD_EVENT_STOP);indexParam++)
-// QDOAS ???           {
-// QDOAS ???            sprintf(string,"SFP %d applied",indexParam+1);
-// QDOAS ???
-// QDOAS ???            if (TabCross[Feno->indexFwhmParam[indexParam]].FitParam!=ITEM_NONE)
-// QDOAS ???             {
-// QDOAS ???              for (i=0;i<NDET;i++)
-// QDOAS ???               {
-// QDOAS ???                fwhmVector[indexParam][i]=(double)coeff[indexParam][KURUCZ_buffers.fwhmDegree];
-// QDOAS ???                for (j=KURUCZ_buffers.fwhmDegree-1;j>=0;j--)
-// QDOAS ???                 fwhmVector[indexParam][i]=fwhmVector[indexParam][i]*(double)Lambda[i]+coeff[indexParam][j];
-// QDOAS ???               }
-// QDOAS ???
-// QDOAS ???              if ((rc=SPLINE_Deriv2(Lambda,fwhmVector[indexParam],fwhmDeriv2[indexParam],NDET,"KURUCZ_Spectrum "))!=0)
-// QDOAS ???               goto EndKuruczSpectrum;
-// QDOAS ???             }
-// QDOAS ???
-// QDOAS ???            if (KURUCZ_buffers.displayShift)
-// QDOAS ???             {
-// QDOAS ???              DRAW_Spectra(CHILD_WINDOW_SPECTRA,windowTitle,string,"Wavelengths (nm)","Fwhm",
-// QDOAS ???                           Grid,Nb_Win-1,
-// QDOAS ???                           Lambda[SvdPDeb],Lambda[SvdPFin],(double)0.,(double)0.,
-// QDOAS ???                          &Lambda[SvdPDeb],&fwhmVector[indexParam][SvdPDeb],(SvdPFin-SvdPDeb+1),DRAW_COLOR2,0,(SvdPFin-SvdPDeb+1),PS_SOLID,"Polynomial",
-// QDOAS ???                          VLambda+1,fwhm[indexParam],Nb_Win,DRAW_COLOR1,0,Nb_Win-1,PS_DOT,"Fitted parameter",
-// QDOAS ???                           indexGraph,maxGraphV,maxGraphH,1);
-// QDOAS ???
-// QDOAS ???              if (++indexGraph==maxGraph)
-// QDOAS ???               {
-// QDOAS ???                indexGraph=0;
-// QDOAS ???
-// QDOAS ???                if (((rc=THRD_WaitEvent(THRD_delay,0,0))==THREAD_EVENT_STOP) ||
-// QDOAS ???                    ((rc==THREAD_EVENT_PAUSE) && ((rc=THRD_WaitEvent(INFINITE,0,0))==THREAD_EVENT_STOP)))
-// QDOAS ???
-// QDOAS ???                 goto EndKuruczSpectrum;
-// QDOAS ???               }
-// QDOAS ???             }
-// QDOAS ???           }
-// QDOAS ???
-// QDOAS ???         if ((indexGraph!=0) && (indexGraph<maxGraph) &&
-// QDOAS ???           (((rc=THRD_WaitEvent(THRD_delay,0,0))==THREAD_EVENT_STOP) ||
-// QDOAS ???            ((rc==THREAD_EVENT_PAUSE) && ((rc=THRD_WaitEvent(INFINITE,0,0))==THREAD_EVENT_STOP))))
-// QDOAS ???
-// QDOAS ???          goto EndKuruczSpectrum;
-// QDOAS ???        }
-// QDOAS ???       #else
-      if (pKuruczOptions->fwhmFit)
+      if (displayFlag)
+       {
+        // Display complete fit
 
-       for (indexParam=0;(indexParam<maxParam) && (rc<THREAD_EVENT_STOP);indexParam++)
-        {
-         sprintf(string,"SFP %d applied",indexParam+1);
+      //  if (KURUCZ_buffers.displaySpectra)
+      //   {
+      //    mediateAllocateAndSetPlotData(&spectrumData[0],&Lambda[SvdPDeb],&spectrum[SvdPDeb],SvdPFin-SvdPDeb+1,Line);
+      //    mediateAllocateAndSetPlotData(&spectrumData[1],&Lambda[SvdPDeb],&ANALYSE_secX[SvdPDeb],SvdPFin-SvdPDeb+1,Line);
+      //    mediateResponsePlotData(plotPageCalib,spectrumData,2,Spectrum,forceAutoScale,"Complete fit","Wavelength (nm)","Intensity", responseHandle);
+      //    mediateResponseLabelPage(plotPageCalib, "", "", responseHandle);
+      //    mediateReleasePlotData(spectrumData);
+      //   }
 
-         if (TabCross[Feno->indexFwhmParam[indexParam]].FitParam!=ITEM_NONE)
+        // Display residual
+
+        if (KURUCZ_buffers.displayResidual)
+         {
+          if (KURUCZ_buffers.method!=PRJCT_ANLYS_METHOD_SVD)
+           for (j=SvdPDeb;j<=SvdPFin;j++)
+            ANALYSE_absolu[j]=(ANALYSE_tc[j]!=(double)0.)?ANALYSE_absolu[j]/ANALYSE_tc[j]:(double)0.;
+
+          mediateAllocateAndSetPlotData(&spectrumData[0],&Lambda[SvdPDeb],&ANALYSE_absolu[SvdPDeb],SvdPFin-SvdPDeb+1,Line);
+          mediateResponsePlotData(plotPageCalib,spectrumData,1,Spectrum,forceAutoScale,"Residual","Wavelength (nm)","", responseHandle);
+          mediateResponseLabelPage(plotPageCalib, "", "Kurucz", responseHandle);
+          mediateReleasePlotData(spectrumData);
+         }
+
+     //   memcpy(ANALYSE_secX,ANALYSE_zeros,sizeof(double)*NDET);
+     //
+     //   // Display Offset
+     //
+     //   if  (// Feno->displayOffset &&
+     //       (Feno->indexOffsetConst!=ITEM_NONE) &&
+     //       (Feno->indexOffsetOrder1!=ITEM_NONE) &&
+     //       (Feno->indexOffsetOrder2!=ITEM_NONE) &&
+     //
+     //      ((TabCross[Feno->indexOffsetConst].FitParam!=ITEM_NONE) ||
+     //       (TabCross[Feno->indexOffsetOrder1].FitParam!=ITEM_NONE) ||
+     //       (TabCross[Feno->indexOffsetOrder2].FitParam!=ITEM_NONE) ||
+     //       (TabCross[Feno->indexOffsetConst].InitParam!=(double)0.) ||
+     //       (TabCross[Feno->indexOffsetOrder1].InitParam!=(double)0.) ||
+     //       (TabCross[Feno->indexOffsetOrder2].InitParam!=(double)0.)))
+     //    {
+     //     for (j=SvdPDeb;j<=SvdPFin;j++)
+     //      {
+     //       ANALYSE_absolu[j]+=offset[j]-ANALYSE_secX[j];
+     //       ANALYSE_secX[j]=offset[j];
+     //      }
+     //
+     //     if (KURUCZ_buffers.displayFit)
+     //      {
+     //       mediateAllocateAndSetPlotData(&spectrumData[0],&Lambda[SvdPDeb],&ANALYSE_absolu[SvdPDeb],SvdPFin-SvdPDeb+1,Line);
+     //       mediateAllocateAndSetPlotData(&spectrumData[1],&Lambda[SvdPDeb],&ANALYSE_secX[SvdPDeb],SvdPFin-SvdPDeb+1,Line);
+     //       mediateResponsePlotData(plotPageCalib,spectrumData,2,Spectrum,forceAutoScale,"Offset","Wavelength (nm)","", responseHandle);
+     //       mediateResponseLabelPage(plotPageCalib, "", windowTitle, responseHandle);
+     //       mediateReleasePlotData(spectrumData);
+     //      }
+     //    }
+     //
+     //   // Display fits
+     //
+     //   if (KURUCZ_buffers.crossFits.matrix!=NULL)
+     //    {
+     //     for (indexTabCross=indexCrossFit=0;(indexTabCross<Feno->NTabCross) && (indexCrossFit<KURUCZ_buffers.crossFits.nc);indexTabCross++)
+     //      {
+     //       pTabCross=&TabCross[indexTabCross];
+     //
+     //       if (pTabCross->IndSvdA && (WorkSpace[pTabCross->Comp].type==WRK_SYMBOL_CROSS) && pTabCross->display)
+     //        {
+     //          for (j=SvdPDeb;j<=SvdPFin;j++)
+     //           {
+     //            ANALYSE_absolu[j]+=KURUCZ_buffers.crossFits.matrix[indexCrossFit][j]-ANALYSE_secX[j];
+     //            ANALYSE_secX[j]=KURUCZ_buffers.crossFits.matrix[indexCrossFit][j];
+     //           }
+     //
+     //         sprintf(string,"%s fit",WorkSpace[pTabCross->Comp].symbolName);
+     //
+     //         mediateAllocateAndSetPlotData(&spectrumData[0],&Lambda[SvdPDeb],&ANALYSE_absolu[SvdPDeb],SvdPFin-SvdPDeb+1,Line);
+     //         mediateAllocateAndSetPlotData(&spectrumData[1],&Lambda[SvdPDeb],&ANALYSE_secX[SvdPDeb],SvdPFin-SvdPDeb+1,Line);
+     //         mediateResponsePlotData(plotPageCalib,spectrumData,2,Spectrum,forceAutoScale,string,"Wavelength (nm)","", responseHandle);
+     //         mediateResponseLabelPage(plotPageCalib, "", windowTitle, responseHandle);
+     //         mediateReleasePlotData(spectrumData);
+     //
+     //         indexCrossFit++;
+     //        }
+     //      }
+     //    }
+     //
+     //   // Display error on calibration
+     //
+     //   if (KURUCZ_buffers.displayShift)
+     //    {
+     //     mediateAllocateAndSetPlotData(&spectrumData[0],&Lambda[SvdPDeb],&ANALYSE_absolu[SvdPDeb],SvdPFin-SvdPDeb+1,Line);
+     //     mediateAllocateAndSetPlotData(&spectrumData[1],&Lambda[SvdPDeb],&shiftPoly[SvdPDeb],SvdPFin-SvdPDeb+1,Point);
+     //     mediateResponsePlotData(plotPageCalib,spectrumData,2,Spectrum,forceAutoScale,"Shift applied","Wavelength (nm)","Shift (nm)", responseHandle);
+     //     mediateResponseLabelPage(plotPageCalib, "", windowTitle, responseHandle);
+     //     mediateReleasePlotData(spectrumData);
+     //    }
+
+        // Display wavelength dependence of fwhm
+
+        if (pKuruczOptions->fwhmFit)
+
+         for (indexParam=0;(indexParam<maxParam) && (rc<THREAD_EVENT_STOP);indexParam++)
           {
-           for (i=0;i<NDET;i++)
+           sprintf(string,"SFP %d applied",indexParam+1);
+
+           if (TabCross[Feno->indexFwhmParam[indexParam]].FitParam!=ITEM_NONE)
             {
-             fwhmVector[indexParam][i]=(double)coeff[indexParam][KURUCZ_buffers.fwhmDegree];
-             for (j=KURUCZ_buffers.fwhmDegree-1;j>=0;j--)
-              fwhmVector[indexParam][i]=fwhmVector[indexParam][i]*(double)Lambda[i]+coeff[indexParam][j];
+             for (i=0;i<NDET;i++)
+              {
+               fwhmVector[indexParam][i]=(double)coeff[indexParam][KURUCZ_buffers.fwhmDegree];
+               for (j=KURUCZ_buffers.fwhmDegree-1;j>=0;j--)
+                fwhmVector[indexParam][i]=fwhmVector[indexParam][i]*(double)Lambda[i]+coeff[indexParam][j];
+              }
+
+             if ((rc=SPLINE_Deriv2(Lambda,fwhmVector[indexParam],fwhmDeriv2[indexParam],NDET,"KURUCZ_Spectrum "))!=0)
+              goto EndKuruczSpectrum;
             }
 
-           if ((rc=SPLINE_Deriv2(Lambda,fwhmVector[indexParam],fwhmDeriv2[indexParam],NDET,"KURUCZ_Spectrum "))!=0)
-            goto EndKuruczSpectrum;
+           if (KURUCZ_buffers.displayShift)
+            {
+             mediateAllocateAndSetPlotData(&spectrumData[0],&Lambda[SvdPDeb],&fwhmVector[indexParam][SvdPDeb],SvdPFin-SvdPDeb+1,Line);
+             mediateAllocateAndSetPlotData(&spectrumData[1],VLambda+1,fwhm[indexParam],Nb_Win,Point);
+             mediateResponsePlotData(plotPageCalib,spectrumData,2,Spectrum,forceAutoScale,"FWHM","Wavelength (nm)","FWHM (nm)", responseHandle);
+             mediateResponseLabelPage(plotPageCalib, "", windowTitle, responseHandle);
+             mediateReleasePlotData(spectrumData);
+            }
           }
-        }
-// QDOAS ???       #endif
+       }
      }
-
-
-/*     {
-     		FILE *fp;
-     		fp=fopen("toto.dat","a+t");
-     		for (i=0;i<NDET;i++)
-     		 {
-     	  	for (indexParam=0;(indexParam<maxParam) && (rc<THREAD_EVENT_STOP);indexParam++)
-     	   	fprintf(fp,"%.8le ",fwhmVector[indexParam][i]);
-     	   fprintf(fp,"\n");
-     	  }
-     		fclose(fp);
-     	}   */
    }
 
   EndKuruczSpectrum :
@@ -739,8 +618,6 @@ RC KURUCZ_Spectrum(double *oldLambda,double *newLambda,double *spectrum,double *
 
   if (shiftPoly!=NULL)
    MEMORY_ReleaseDVector("KURUCZ_Spectrum ","shiftPoly",shiftPoly,0);
-
-// QDOAS ???   rc=THRD_ProcessLastError();
 
   // Return
 
@@ -829,7 +706,7 @@ RC KURUCZ_ApplyCalibration(FENO *pTabFeno,double *newLambda)
 #if defined(__BC32_) && __BC32_
 #pragma argsused
 #endif
-RC KURUCZ_Reference(double *instrFunction,INDEX refFlag,INT saveFlag,INT gomeFlag)
+RC KURUCZ_Reference(double *instrFunction,INDEX refFlag,INT saveFlag,INT gomeFlag,void *responseHandle)
  {
   // Declarations
 
@@ -929,7 +806,7 @@ RC KURUCZ_Reference(double *instrFunction,INDEX refFlag,INT saveFlag,INT gomeFla
             // Apply Kurucz for building new calibration for reference
 
             if ((pTabFeno->rcKurucz=KURUCZ_Spectrum(pTabFeno->LambdaRef,pTabFeno->LambdaK,reference,KURUCZ_buffers.solar,instrFunction,
-                 1,windowTitle,pTabFeno->fwhmPolyRef,pTabFeno->fwhmVector,pTabFeno->fwhmDeriv2,saveFlag,indexFeno))!=ERROR_ID_NO)
+                 1,pTabFeno->windowName,pTabFeno->fwhmPolyRef,pTabFeno->fwhmVector,pTabFeno->fwhmDeriv2,saveFlag,indexFeno,responseHandle))!=ERROR_ID_NO)
 
              goto EndKuruczReference;
            }

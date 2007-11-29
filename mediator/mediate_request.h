@@ -116,7 +116,7 @@ int mediateRequestSetSites(void *engineContext, int numberOfSites, const mediate
 // spectral data. spectraFileName is the file that contains the spectral data. This file is
 // implicitly associated with the current project. On exit (and success), it is expected
 // that a subsequent call to mediateRequestNextMatchingBrowseSpectrum will retrieve the first
-// record (if it matched the filter conditions in the current project). 
+// record (if it matched the filter conditions in the current project).
 //
 // The number of spectral records in the spectraFileName is returned on success, -1 otherwise.
 // An error message should be posted with
@@ -132,7 +132,7 @@ int mediateRequestBeginBrowseSpectra(void *engineContext, const char *spectraFil
 // attempt to set the current position in the current spectra file to recordNumber
 // (indexed from 1 ??). A subsequent call to mediateRequestNextMatchingBrowseSpectrum will
 // retrieve the data for record recordNumber (if it matched the filter conditions in the
-// current project). 
+// current project).
 //
 // On success, recordNumber is returned. If recordNumber is greater than the number of
 // record in the file (or <= 0), 0 is returned. -1 is returned for all other errors
@@ -153,7 +153,7 @@ int mediateRequestGotoSpectrum(void *engineContext, int recordNumber, void *resp
 //
 // On success, the actual record number of the matching spectrum is returned. Zero is returned
 // if a matching spectrum is not found. -1 is returned for all other errors and an error message
-// should be posted with 
+// should be posted with
 //    mediateResponseErrorMessage(functionName, messageString, errorLevel, responseHandle);
 
 int mediateRequestNextMatchingBrowseSpectrum(void *engineContext, void *responseHandle);
@@ -170,7 +170,7 @@ int mediateRequestNextMatchingBrowseSpectrum(void *engineContext, void *response
 //
 // On success, the actual record number of the matching spectrum is returned. Zero is returned
 // if a matching spectrum is not found. -1 is returned for all other errors and an error message
-// should be posted with 
+// should be posted with
 //    mediateResponseErrorMessage(functionName, messageString, errorLevel, responseHandle);
 
 int mediateRequestPrevMatchingBrowseSpectrum(void *engineContext, void *responseHandle);
@@ -223,16 +223,16 @@ int mediateRequestBeginAnalyseSpectra(void *engineContext, const char *spectraFi
 // The spectral windows are processed in the order they were defined. Graphical result data is
 // passed to the GUI with calls to mediateResponsePlotData(...). Numerical and String result
 // data can be passed to the GUI in a free-format tabular-based maner with calls to
-// mediateResponseCellDataDouble(page, row, column, doubleValue, responseHandle), and 
+// mediateResponseCellDataDouble(page, row, column, doubleValue, responseHandle), and
 // mediateResponseCellDataInteger(page, row, column, integerValue, responseHandle), and
 // mediateResponseCellDataString(page, row, column, stringValue, responseHandle). Note that
 // page, row and column index from 0 and have no formal upper limit (be sensible). Repeat writes to
 // the same cell will overwrite any existing data. The table is initially empty and cells/pages may
 // be left blank (it is the expectation that a separate page be used for each analysis window.
-// 
+//
 // On success, the actual record number of the matching spectrum is returned. Zero is returned
 // if a matching spectrum is not found. -1 is returned for all other errors and an error message
-// should be posted with 
+// should be posted with
 //    mediateResponseErrorMessage(functionName, messageString, errorLevel, responseHandle);
 
 int mediateRequestNextMatchingAnalyseSpectrum(void *engineContext, void *responseHandle);
@@ -247,16 +247,16 @@ int mediateRequestNextMatchingAnalyseSpectrum(void *engineContext, void *respons
 // The spectral windows are processed in the order they were defined. Graphical result data is
 // passed to the GUI with calls to mediateResponsePlotData(...). Numerical and String result
 // data can be passed to the GUI in a free-format tabular-based maner with calls to
-// mediateResponseCellDataDouble(page, row, column, doubleValue, responseHandle), and 
+// mediateResponseCellDataDouble(page, row, column, doubleValue, responseHandle), and
 // mediateResponseCellDataInteger(page, row, column, integerValue, responseHandle), and
 // mediateResponseCellDataString(page, row, column, stringValue, responseHandle). Note that
 // page, row and column index from 0 and have no formal upper limit (be sensible). Repeat writes to
 // the same cell will overwrite any existing data. The table is initially empty and cells/pages may
 // be left blank (it is the expectation that a separate page be used for each analysis window.
-// 
+//
 // On success, the actual record number of the matching spectrum is returned. Zero is returned
 // if a matching spectrum is not found. -1 is returned for all other errors and an error message
-// should be posted with 
+// should be posted with
 //    mediateResponseErrorMessage(functionName, messageString, errorLevel, responseHandle);
 
 int mediateRequestPrevMatchingAnalyseSpectrum(void *engineContext, void *responseHandle);
@@ -308,16 +308,16 @@ int mediateRequestBeginCalibrateSpectra(void *engineContext, const char *spectra
 // The spectral windows are processed in the order they were defined. Graphical result data is
 // passed to the GUI with calls to mediateResponsePlotData(...). Numerical and String result
 // data can be passed to the GUI in a free-format tabular-based maner with calls to
-// mediateResponseCellDataDouble(page, row, column, doubleValue, responseHandle), and 
+// mediateResponseCellDataDouble(page, row, column, doubleValue, responseHandle), and
 // mediateResponseCellDataInteger(page, row, column, integerValue, responseHandle), and
 // mediateResponseCellDataString(page, row, column, stringValue, responseHandle). Note that
 // page, row and column index from 0 and have no formal upper limit (be sensible). Repeat writes to
 // the same cell will overwrite any existing data. The table is initially empty and cells/pages may
 // be left blank (it is the expectation that a separate page be used for each analysis window.
-// 
+//
 // On success, the actual record number of the matching spectrum is returned. Zero is returned
 // if a matching spectrum is not found. -1 is returned for all other errors and an error message
-// should be posted with 
+// should be posted with
 //    mediateResponseErrorMessage(functionName, messageString, errorLevel, responseHandle);
 
 int mediateRequestNextMatchingCalibrateSpectrum(void *engineContext, void *responseHandle);
@@ -332,16 +332,16 @@ int mediateRequestNextMatchingCalibrateSpectrum(void *engineContext, void *respo
 // The spectral windows are processed in the order they were defined. Graphical result data is
 // passed to the GUI with calls to mediateResponsePlotData(...). Numerical and String result
 // data can be passed to the GUI in a free-format tabular-based maner with calls to
-// mediateResponseCellDataDouble(page, row, column, doubleValue, responseHandle), and 
+// mediateResponseCellDataDouble(page, row, column, doubleValue, responseHandle), and
 // mediateResponseCellDataInteger(page, row, column, integerValue, responseHandle), and
 // mediateResponseCellDataString(page, row, column, stringValue, responseHandle). Note that
 // page, row and column index from 0 and have no formal upper limit (be sensible). Repeat writes to
 // the same cell will overwrite any existing data. The table is initially empty and cells/pages may
 // be left blank (it is the expectation that a separate page be used for each analysis window.
-// 
+//
 // On success, the actual record number of the matching spectrum is returned. Zero is returned
 // if a matching spectrum is not found. -1 is returned for all other errors and an error message
-// should be posted with 
+// should be posted with
 //    mediateResponseErrorMessage(functionName, messageString, errorLevel, responseHandle);
 
 int mediateRequestPrevMatchingCalibrateSpectrum(void *engineContext, void *responseHandle);
@@ -366,9 +366,8 @@ int mediateRequestEndCalibrateSpectra(void *engineContext, void *responseHandle)
 // On success, 0 is returned, -1 otherwise and an error message should be posted with
 //    mediateResponseErrorMessage(functionName, messageString, errorLevel, responseHandle);
 
-int mediateRequestViewCrossSections(void *engineContext, double minWavelength, double maxWavelength,
+int mediateRequestViewCrossSections(void *engineContext, char *awName,double minWavelength, double maxWavelength,
                                     int nFiles, char **filenames, void *responseHandle);
-
 
 #if defined(_cplusplus) || defined(__cplusplus)
 }

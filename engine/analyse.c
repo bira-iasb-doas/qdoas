@@ -1982,6 +1982,7 @@ RC ANALYSE_AlignReference(INT refFlag,INT saveFlag,void *responseHandle)
   SVD *pSvd;                                                                    // pointer to svd environment of an analysis window
   CROSS_RESULTS *pResults;                                                      // pointer to the set of results relative to a symbol
   INDEX WrkFeno,                                                                // index on analysis windows
+        indexLine,indexColumn,                                                  // position in the spreadsheet for information to write
         i,j;                                                                    // indexes for loops and arrays
 
   double *Spectre,*Sref,                                                        // raw spectrum
@@ -1998,6 +1999,8 @@ RC ANALYSE_AlignReference(INT refFlag,INT saveFlag,void *responseHandle)
 
   // Initializations
 
+  indexLine=1;
+  indexColumn=2;
   rc=ERROR_ID_NO;
 
   // Buffers allocation
@@ -2090,24 +2093,6 @@ RC ANALYSE_AlignReference(INT refFlag,INT saveFlag,void *responseHandle)
           TabFeno[WrkFeno].Stretch2=pResults->Stretch2;
          }
 
-        // Output analysis results in temporary file
-
-// QDOAS ???        #if defined (__WINDOAS_GUI_) && __WINDOAS_GUI_
-// QDOAS ???
-// QDOAS ???        if (saveFlag && ((fp=fopen(DOAS_tmpFile,"a+t"))!=NULL))
-// QDOAS ???         {
-// QDOAS ???          fprintf(fp,"ALIGNMENT OF REFERENCE 1 ON REFERENCE 2\n\n");
-// QDOAS ???          fprintf(fp,"Analysis window : %s (%d)\n\n",Feno->windowName,refFlag);
-// QDOAS ???          fprintf(fp,"Shift\t%#10.3e +/-%#10.3e\n",pResults->Shift,pResults->SigmaShift);
-// QDOAS ???          fprintf(fp,"Stretch\t%#10.3e +/-%#10.3e\n",pResults->Stretch,pResults->SigmaStretch);
-// QDOAS ???          fprintf(fp,"Stretch2\t%#10.3e +/-%#10.3e\n\n",pResults->Stretch2,pResults->SigmaStretch2);
-// QDOAS ???          fclose(fp);
-// QDOAS ???
-// QDOAS ???          THRD_LoadData();
-// QDOAS ???         }
-// QDOAS ???
-// QDOAS ???        #endif
-
         // Display fit
 
         if (Feno->displayRefEtalon)
@@ -2120,34 +2105,21 @@ RC ANALYSE_AlignReference(INT refFlag,INT saveFlag,void *responseHandle)
           mediateAllocateAndSetPlotData(&spectrumData[0],&Lambda[SvdPDeb],&Spectre[SvdPDeb],SvdPFin-SvdPDeb+1,Line);
           mediateAllocateAndSetPlotData(&spectrumData[1],&Lambda[SvdPDeb],&ANALYSE_secX[SvdPDeb],SvdPFin-SvdPDeb+1,Line);
           mediateResponsePlotData(plotPageRef,spectrumData,2,Spectrum,forceAutoScale,Feno->windowName,"Wavelength (nm)","Intensity", responseHandle);
+          mediateResponseLabelPage(plotPageRef, "", "Ref1/Ref2", responseHandle);
           mediateReleasePlotData(spectrumData);
 
-// QDOAS ???          #if defined (__WINDOAS_GUI_) && __WINDOAS_GUI_
-// QDOAS ???
-// QDOAS ???          sprintf(windowTitle,"Reference 2 alignment on reference 1 in %s analysis window (%g)",Feno->windowName,-pResults->Shift);
-// QDOAS ???          DRAW_Spectra(CHILD_WINDOW_SPECTRA,windowTitle,"","Wavelength (nm)","Intensity",NULL,0,
-// QDOAS ???                       (double)0.,(double)0.,(double)0.,(double)0.,
-// QDOAS ???                      &Lambda[SvdPDeb],&Spectre[SvdPDeb],SvdPFin-SvdPDeb,DRAW_COLOR1,0,SvdPFin-SvdPDeb-1,PS_SOLID,"Measured",
-// QDOAS ???                      &Lambda[SvdPDeb],&ANALYSE_secX[SvdPDeb],SvdPFin-SvdPDeb,DRAW_COLOR2,0,SvdPFin-SvdPDeb-1,PS_SOLID,"Calculated",
-// QDOAS ???                       0,1,1,1);
-// QDOAS ???
-// QDOAS ???          if (((rc=THRD_WaitEvent(THRD_delay,0,0))==THREAD_EVENT_STOP) ||
-// QDOAS ???              ((rc==THREAD_EVENT_PAUSE) && ((rc=THRD_WaitEvent(INFINITE,0,0))==THREAD_EVENT_STOP)))
-// QDOAS ???
-// QDOAS ???           goto EndAlignReference;
-// QDOAS ???
-// QDOAS ???          #endif
+          mediateResponseCellInfo(plotPageRef,indexLine++,indexColumn,responseHandle,"ALIGNMENT REF1/REF2 IN","%s",Feno->windowName);
+          mediateResponseCellInfo(plotPageRef,indexLine++,indexColumn,responseHandle,"Shift","%#10.3e +/-%#10.3e",pResults->Shift,pResults->SigmaShift);
+          mediateResponseCellInfo(plotPageRef,indexLine++,indexColumn,responseHandle,"Stretch","%#10.3e +/-%#10.3e",pResults->Stretch,pResults->SigmaStretch);
+          mediateResponseCellInfo(plotPageRef,indexLine++,indexColumn,responseHandle,"Stretch2","%#10.3e +/-%#10.3e",pResults->Stretch2,pResults->SigmaStretch2);
+
+          indexLine+=2;
          }
 
         TabFeno[WrkFeno].Decomp=1;
        }
      }
    }
-
-  // Go to the next record
-
-  if (rc<THREAD_EVENT_STOP)
-   rc=ERROR_ID_NO;
 
   // Return
 
@@ -3449,7 +3421,7 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
           if (!(rc=KURUCZ_Spectrum(pBuffers->lambda,LambdaK,SpectreK,KURUCZ_buffers.solar,pBuffers->instrFunction,
                                    1,"Calibration applied on spectrum",KURUCZ_buffers.fwhmPolySpec,KURUCZ_buffers.fwhmVector,KURUCZ_buffers.fwhmDeriv2,saveFlag,
-                                   KURUCZ_buffers.indexKurucz)))
+                                   KURUCZ_buffers.indexKurucz,responseHandle)))
 
            for (WrkFeno=0,pTabFeno=&TabFeno[WrkFeno];WrkFeno<NFeno;pTabFeno=&TabFeno[++WrkFeno])
             if (!pTabFeno->hidden && (pTabFeno->useKurucz==ANLYS_KURUCZ_SPEC))

@@ -153,7 +153,7 @@ void GDP_BIN_ReleaseBuffers(void)
   GOME_ORBIT_FILE *pOrbitFile;
   INDEX gomeOrbitFileIndex;
 
-  for (gomeOrbitFileIndex=0;gomeOrbitFileIndex<gdpBinOrbitFilesN;gomeOrbitFileIndex++)
+  for (gomeOrbitFileIndex=0;gomeOrbitFileIndex<MAX_GOME_FILES;gomeOrbitFileIndex++)
    {
     pOrbitFile=&GDP_BIN_orbitFiles[gomeOrbitFileIndex];
 
@@ -248,6 +248,10 @@ void GdpBinLambda(double *lambda,INT indexParam,INDEX fileIndex)
   for (i=0,j=pOrbitFile->gdpBinStartPixel[pOrbitFile->gdpBinBandIndex];
        j<pOrbitFile->gdpBinStartPixel[pOrbitFile->gdpBinBandIndex]+pOrbitFile->gdpBinBandInfo[pOrbitFile->gdpBinBandIndex].bandSize;i++,j++)
    {
+    lambda[i]=(double)EvalPolynom_d((double)i+pOrbitFile->gdpBinBandInfo[pOrbitFile->gdpBinBandIndex].startDetector,
+                     &pOrbitFile->gdpBinCoeff[pOrbitFile->gdpBinHeader.nSpectralParam*SPECTRAL_FITT_ORDER*pOrbitFile->gdpBinBandIndex+
+                      indexParam*SPECTRAL_FITT_ORDER],SPECTRAL_FITT_ORDER);
+
    	lambdax=(double)EvalPolynom_d((double)i+pOrbitFile->gdpBinBandInfo[pOrbitFile->gdpBinBandIndex].startDetector-offset,
                            &pOrbitFile->gdpBinCoeff[pOrbitFile->gdpBinHeader.nSpectralParam*SPECTRAL_FITT_ORDER*pOrbitFile->gdpBinBandIndex+
                             indexParam*SPECTRAL_FITT_ORDER],SPECTRAL_FITT_ORDER);
@@ -457,14 +461,14 @@ RC GDP_BIN_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
          }
 
         for (i=0;(i<pOrbitFile->gdpBinHeader.nbands);i++)
-         {
          if (pOrbitFile->gdpBinBandInfo[i].bandType==pEngineContext->project.instrumental.user)
            pOrbitFile->gdpBinBandIndex=i;
-         }
 
         // Buffers allocation
 
-        if ((pOrbitFile->gdpBinBandIndex==ITEM_NONE) || !pOrbitFile->gdpBinCoeffSize || !pOrbitFile->gdpBinSpectraSize || !pOrbitFile->gdpBinHeader.nspectra)
+        if (pOrbitFile->gdpBinBandIndex==ITEM_NONE)
+         rc=ERROR_SetLast("GDP_Bin_Set",ERROR_TYPE_WARNING,ERROR_ID_GDP_BANDINDEX,fileName);
+        else if (!pOrbitFile->gdpBinCoeffSize || !pOrbitFile->gdpBinSpectraSize || !pOrbitFile->gdpBinHeader.nspectra)
          rc=ERROR_SetLast("GDP_Bin_Set (1)",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,fileName);
 
         else if (((pOrbitFile->gdpBinCoeff=(double *)MEMORY_AllocDVector("GDP_BIN_Set ","pOrbitFile->gdpBinCoeff",0,pOrbitFile->gdpBinCoeffSize-1))==NULL) ||
@@ -1507,7 +1511,7 @@ RC GDP_BIN_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
      {
       KURUCZ_Init(0);
 
-      if ((THRD_id!=THREAD_TYPE_KURUCZ) && ((rc=KURUCZ_Reference(NULL,0,saveFlag,0))!=ERROR_ID_NO))
+      if ((THRD_id!=THREAD_TYPE_KURUCZ) && ((rc=KURUCZ_Reference(NULL,0,saveFlag,0,NULL /* QDOAS !!! responseHandle */))!=ERROR_ID_NO))
        goto EndGOME_LoadAnalysis;
      }
 

@@ -790,7 +790,6 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
   }
   else if (element == "gdpascii") { // GDP ASCII
     helperLoadGdp(atts, &(m_instrumental->gdpascii));
-
   }
   else if (element == "gdpbin") { // GDP BIN
     helperLoadGdp(atts, &(m_instrumental->gdpbin));

@@ -311,7 +311,7 @@ RC EngineCopyContext(ENGINE_CONTEXT *pEngineContextTarget,ENGINE_CONTEXT *pEngin
 // INPUT         pEngineContext     pointer to the engine context
 // -----------------------------------------------------------------------------
 
-void EngineSetProject(ENGINE_CONTEXT *pEngineContext)
+RC EngineSetProject(ENGINE_CONTEXT *pEngineContext)
  {
  	// Declarations
 
@@ -371,7 +371,8 @@ void EngineSetProject(ENGINE_CONTEXT *pEngineContext)
 
      (((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_ACTON) ||
        (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_PDAEGG) ||
-       (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_PDASI_EASOE)) &&
+       (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_PDASI_EASOE) ||
+       (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_CCD_EEV)) &&
        ((pBuffers->darkCurrent=MEMORY_AllocDVector("EngineSetProject","darkCurrent",0,NDET-1))==NULL)))
 
    rc=ERROR_ID_ALLOC;
@@ -444,6 +445,10 @@ void EngineSetProject(ENGINE_CONTEXT *pEngineContext)
    MEMORY_ReleaseDVector("EngineSetProject","instrFunction",instrFunction,0);
   if (instrDeriv2!=NULL)
    MEMORY_ReleaseDVector("EngineSetProject","instrDeriv2",instrDeriv2,0);
+
+  // Return
+
+  return rc;
  }
 
 // -----------------------------------------------------------------------------
@@ -501,6 +506,7 @@ RC EngineSetFile(ENGINE_CONTEXT *pEngineContext,const char *fileName)
 
   if ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_PDAEGG) ||
       (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_ACTON) ||
+      (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_CCD_EEV) ||
       (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_PDASI_EASOE))
 
    pFile->darkFp=fopen(FILES_BuildFileName(fileTmp,FILE_TYPE_DARK),"rb");
@@ -1160,7 +1166,7 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
   // Reference alignment
 
   if (!rc && useKurucz)
-   rc=KURUCZ_Reference(ENGINE_contextRef.buffers.instrFunction,1,saveFlag,1);
+   rc=KURUCZ_Reference(ENGINE_contextRef.buffers.instrFunction,1,saveFlag,1,responseHandle);
 
   if (!rc && alignRef)
    rc=ANALYSE_AlignReference(1,saveFlag,responseHandle);

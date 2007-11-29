@@ -58,17 +58,15 @@ enum _spectraAutoscale
 
 // Indexes for the plot pages
 
-enum _plotPageIndex
- {
- 	plotPageSpectrum,                                                             // spectra to browse or analyze
- 	plotPageDarkCurrent,                                                          // dark currents
- 	plotPageSpecMax,                                                              // specmax (variation of the signal with the scans)
- 	plotPageIrrad,                                                                // irradiance spectra
- 	plotPageErrors,                                                               // errors on measurements
- 	plotPageRef,                                                                  // ref1/ref2
- 	plotPageCalib,                                                                // kurucz
- 	plotPageAnalysis                                                              // analysis
- };
+#define plotPageSpectrum        0                                               // spectra to browse or analyze
+#define plotPageDarkCurrent     1                                               // dark currents
+#define plotPageSpecMax         2                                               // specmax (variation of the signal with the scans)
+#define plotPageErrors          3                                               // errors on measurements
+#define plotPageIrrad           4                                               // irradiance spectra
+#define plotPageRef             5                                               // ref1/ref2
+#define plotPageCross           6                                               // cross sections
+#define plotPageCalib          10                                               // kurucz
+#define plotPageAnalysis       20                                               // analysis
 
 #endif
 

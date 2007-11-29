@@ -23,7 +23,7 @@ ENGINE_CONTEXT *EngineCreateContext(void);
 void            EngineResetContext(ENGINE_CONTEXT *pEngineContext,INT closeFiles);
 void            EngineDestroyContext(ENGINE_CONTEXT *pEngineContext);
 RC              EngineCopyContext(ENGINE_CONTEXT *pEngineContextTarget,ENGINE_CONTEXT *pEngineContextSource);
-void            EngineSetProject(ENGINE_CONTEXT *pEngineContext);
+RC              EngineSetProject(ENGINE_CONTEXT *pEngineContext);
 RC              EngineSetFile(ENGINE_CONTEXT *pEngineContext,const char *fileName);
 RC              EngineReadFile(ENGINE_CONTEXT *pEngineContext,int indexRecord,INT dateFlag,INT localCalDay);
 RC              EngineRequestBeginBrowseSpectra(ENGINE_CONTEXT *pEngineContext,const char *spectraFileName,unsigned int action);

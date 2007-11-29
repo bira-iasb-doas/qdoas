@@ -64,16 +64,16 @@ void mediateResponsePlotData(int page,
 			     void *responseHandle)
 {
   CEngineResponsePlot *resp = static_cast<CEngineResponsePlot*>(responseHandle);
-  
+
   CPlotDataSet *dataSet = new CPlotDataSet(type, forceAutoScaling, title, xLabel, yLabel);
-  
+
   int i = 0;
   while (i < arrayLength) {
     dataSet->addPlotData(plotDataArray[i].x, plotDataArray[i].y, plotDataArray[i].length,
 			 plotDataArray[i].curveType);
     ++i;
   }
-  
+
   resp->addDataSet(page, dataSet);
 }
 

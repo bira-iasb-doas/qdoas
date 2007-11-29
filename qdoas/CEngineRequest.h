@@ -102,7 +102,7 @@ class CEngineRequestSetProject : public CEngineRequest
 class CEngineRequestSetAnalysisWindows : public CEngineRequest
 {
  public:
-  CEngineRequestSetAnalysisWindows(const mediate_analysis_window_t *windowList, int nWindows, int opMode);
+  CEngineRequestSetAnalysisWindows(const mediate_analysis_window_t *windowList, int nWindows,int opMode);
   virtual ~CEngineRequestSetAnalysisWindows();
 
   virtual bool process(CEngineThread *engineThread);
@@ -300,13 +300,14 @@ class CEngineRequestEndCalibrateFile : public CEngineRequest
 class CEngineRequestViewCrossSections : public CEngineRequest
 {
  public:
-  CEngineRequestViewCrossSections(double minWavelength, double maxWavelength,
+  CEngineRequestViewCrossSections(char *awName,double minWavelength, double maxWavelength,
                                   int nFiles, char **filenames);
   virtual ~CEngineRequestViewCrossSections();
 
   virtual bool process(CEngineThread *engineThread);
 
  private:
+  char *m_awName;
   double m_minWavelength, m_maxWavelength;
   int m_nFiles;
   char **m_filenames;

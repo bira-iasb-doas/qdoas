@@ -17,9 +17,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-
-#include <stdlib.h>
-
 #include "mediate.h"
 #include "engine.h"
 
@@ -456,7 +453,7 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
 	// ----------------------------------------------------------------------------
 	  	case PRJCT_INSTR_FORMAT_LOGGER :                                                                // Logger (PDA,CCD or HAMAMATSU)
 
-	  	 NDET=1024;                                                                     // size of the detector
+	  	 NDET=1024;                                                                                     // size of the detector
 	  	 pEngineInstrumental->azimuthFlag=(int)pMediateInstrumental->logger.flagAzimuthAngle;           // format including or not the azimuth angle
 	  	 pEngineInstrumental->user=pMediateInstrumental->logger.spectralType;                           // spectrum type (offaxis or zenith)
 
@@ -467,7 +464,7 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
 	// ----------------------------------------------------------------------------
 	  	case PRJCT_INSTR_FORMAT_ASCII :                                                                 // Format ASCII
 
-	  	 NDET=pMediateInstrumental->ascii.detectorSize;                                 // size of the detector
+	  	 NDET=pMediateInstrumental->ascii.detectorSize;                                                 // size of the detector
 
      pEngineInstrumental->ascii.format=pMediateInstrumental->ascii.format;                          // format line or column
      pEngineInstrumental->ascii.szaSaveFlag=pMediateInstrumental->ascii.flagZenithAngle;            // 1 if the solar zenith angle information is saved in the file
@@ -484,7 +481,7 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
 	// ----------------------------------------------------------------------------
 	  	case PRJCT_INSTR_FORMAT_PDAEGG :                                                                // PDA EG&G (sept. 94 until now)
 
-	  	 NDET=1024;                                                                     // size of the detector
+	  	 NDET=1024;                                                                                     // size of the detector
 
 	  	 pEngineInstrumental->azimuthFlag=(int)pMediateInstrumental->pdaegg.flagAzimuthAngle;           // format including or not the azimuth angle
 	  	 pEngineInstrumental->user=pMediateInstrumental->pdaegg.spectralType;                           // spectrum type (offaxis or zenith)
@@ -496,16 +493,16 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
 	// ----------------------------------------------------------------------------
 	   case PRJCT_INSTR_FORMAT_PDASI_EASOE :                                                           // PDA SI (IASB)
 
-	  	 NDET=1024;                                                                     // size of the detector
+	  	 NDET=1024;                                                                                     // size of the detector
 
-	  	 strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->pdasieasoe.calibrationFile);      // calibration file
-	  	 strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->pdasieasoe.instrFunctionFile);      // instrumental function file
+	  	 strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->pdasieasoe.calibrationFile); // calibration file
+	  	 strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->pdasieasoe.instrFunctionFile); // instrumental function file
 
 	  	break;
 	// ----------------------------------------------------------------------------
 	  	case PRJCT_INSTR_FORMAT_SAOZ_PCDNMOS :                                                          // SAOZ PCD/NMOS 512
 
-	  	 NDET=512;                                                                      // size of the detector
+	  	 NDET=512;                                                                                      // size of the detector
 
      pEngineInstrumental->saoz.spectralRegion=pMediateInstrumental->saozvis.spectralRegion;         // spectral region (UV or visible)
      pEngineInstrumental->saoz.spectralType=pMediateInstrumental->saozvis.spectralType;             // spectral type (zenith sky or pointed measuremets
@@ -517,7 +514,7 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
 	// ----------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_SAOZ_EFM :                                                              // SAOZ EFM 1024
 
-     NDET=1024;                                                                     // size of the detector
+     NDET=1024;                                                                                     // size of the detector
 
 	  	 strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->saozefm.calibrationFile);    // calibration file
 	  	 strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->saozefm.instrFunctionFile);    // instrumental function file
@@ -526,7 +523,7 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
 	// ----------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_RASAS :                                                                 // Format RASAS (INTA)
 
-     NDET=1024;                                                                     // size of the detector
+     NDET=1024;                                                                                     // size of the detector
 
 	  	 strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->rasas.calibrationFile);      // calibration file
 	  	 strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->rasas.instrFunctionFile);      // instrumental function file
@@ -535,7 +532,7 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
 	// ----------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_NOAA :                                                                  // NOAA
 
-     NDET=1024;                                                                     // size of the detector
+     NDET=1024;                                                                                     // size of the detector
 
 	  	 strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->noaa.calibrationFile);       // calibration file
 	  	 strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->noaa.instrFunctionFile);       // instrumental function file
@@ -564,17 +561,28 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
 	// ----------------------------------------------------------------------------
 	   case PRJCT_INSTR_FORMAT_GDP_BIN :                                                               // GOME WinDOAS BINARY format
 
-	    NDET=1024;                                                                     // Could be reduced by Set function
+	    NDET=1024;                                                                                     // Could be reduced by Set function
 
-	  	 strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->gdpbin.calibrationFile);    // calibration file
-	  	 strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->gdpbin.instrFunctionFile);    // instrumental function file
+	  	 strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->gdpbin.calibrationFile);     // calibration file
+	  	 strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->gdpbin.instrFunctionFile);     // instrumental function file
 
 	  	 pEngineInstrumental->user=pMediateInstrumental->gdpbin.bandType;
 
     break;
-	  }
+ // ---------------------------------------------------------------------------
+    case PRJCT_INSTR_FORMAT_CCD_EEV :                                                               // CCD EEV 1340x400
 
-	 // ------------------------
+     NDET=(pMediateInstrumental->ccdeev.detectorSize)?pMediateInstrumental->ccdeev.detectorSize:1340;
+
+	  	 strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->ccdeev.calibrationFile);     // calibration file
+	  	 strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->ccdeev.instrFunctionFile);     // instrumental function file
+
+     // ---> not used for the moment : pMediateInstrumental->ccdeev.straylightCorrectionFile;
+     // ---> not used for the moment : pMediateInstrumental->ccdeev.detectorNonLinearityFile;
+
+    break;
+ // ---------------------------------------------------------------------------
+   }
 
 	 // Set the detector size (implicit to the selection of the file format)
 
@@ -662,6 +670,7 @@ int mediateRequestSetProject(void *engineContext,
 
 	 ENGINE_CONTEXT *pEngineContext;                                               // engine context
 	 PROJECT *pEngineProject;                                                      // project part of the engine
+	 RC rc;                                                                        // return code
 
 	 // Initializations
 
@@ -687,13 +696,14 @@ int mediateRequestSetProject(void *engineContext,
 
 	 // Allocate buffers requested by the project
 
-  EngineSetProject(pEngineContext);
+  if ((rc=EngineSetProject(pEngineContext))!=ERROR_ID_NO)
+   mediateDisplayErrorMessage(responseHandle);
 
 	 #if defined(__DEBUG_) && __DEBUG_
   DEBUG_Stop("Project");
   #endif
 
-  return 0;
+  return (rc)?-1:0;
  }
 
 // =======================================================================
@@ -1181,7 +1191,7 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
 
   if (!rc && ((THRD_id==THREAD_TYPE_KURUCZ) || useKurucz) &&
      !(rc=KURUCZ_Alloc(&pEngineContext->project,pEngineContext->buffers.lambda,indexKurucz,lambdaMin,lambdaMax)) &&
-     !(rc=KURUCZ_Reference(pEngineContext->buffers.instrFunction,0,saveFlag,1)))
+     !(rc=KURUCZ_Reference(pEngineContext->buffers.instrFunction,0,saveFlag,1,responseHandle)))
 
    rc=ANALYSE_AlignReference(0,saveFlag,responseHandle);
 
@@ -1317,8 +1327,8 @@ int mediateRequestNextMatchingSpectrum(ENGINE_CONTEXT *pEngineContext,void *resp
   indexLine=1;
   indexColumn=2;
 
-  if (rec > pEngineContext->recordNumber) {
-    return 0;
+  if (!pEngineContext->recordNumber || (rec>pEngineContext->recordNumber)) {
+    return -1;
   }
   else {
     //-----------------
@@ -1357,13 +1367,16 @@ int mediateRequestNextMatchingSpectrum(ENGINE_CONTEXT *pEngineContext,void *resp
 
         if (((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_PDAEGG) ||
              (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_ACTON) ||
-             (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_PDASI_EASOE)) &&
-             (pBuffers->darkCurrent!=NULL))
+             (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_PDASI_EASOE) ||
+             (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_CCD_EEV)) &&
+             (pEngineContext->fileInfo.darkFp!=NULL) && (pBuffers->darkCurrent!=NULL))
          {
+         	sprintf(tmpString,"Dark current (%d/%d)",pEngineContext->indexRecord-1,pEngineContext->recordNumber);
+
           mediateAllocateAndSetPlotData(&spectrumData, pBuffers->lambda, pBuffers->darkCurrent, NDET, Line);
           mediateResponsePlotData(plotPageDarkCurrent, &spectrumData, 1, Spectrum, forceAutoScale, "Dark current", "Wavelength (nm)", "Counts", responseHandle);
           mediateReleasePlotData(&spectrumData);
-          mediateResponseLabelPage(plotPageDarkCurrent, fileName, "Dark current", responseHandle);
+          mediateResponseLabelPage(plotPageDarkCurrent, fileName, tmpString, responseHandle);
          }
 
         if (pBuffers->sigmaSpec!=NULL)
@@ -1591,6 +1604,9 @@ int mediateRequestNextMatchingSpectrum(ENGINE_CONTEXT *pEngineContext,void *resp
      rec=oldRec;
    }
 
+  if (rc)
+   mediateDisplayErrorMessage(responseHandle);
+
   return rec;
  }
 
@@ -1699,36 +1715,83 @@ int mediateRequestEndCalibrateSpectra(void *engineContext,
   return 0;
  }
 
-#include <stdio.h>
-
-int mediateRequestViewCrossSections(void *engineContext, double minWavelength, double maxWavelength,
+int mediateRequestViewCrossSections(void *engineContext, char *awName,double minWavelength, double maxWavelength,
                                     int nFiles, char **filenames, void *responseHandle)
-{
+ {
+	 // Declarations
 
-  // Extract spectral (plot only) data and pass it back via the response handle.
-  // This should be for ALL analysis windows that have been set, but in practice,
-  // there will only be one...
+  UCHAR symbolName[MAX_ITEM_NAME_LEN+1],*ptr,                                   // the symbol name
+        windowTitle[MAX_ITEM_TEXT_LEN+1],                                       // title to display at the top of the page
+        tabTitle[MAX_ITEM_TEXT_LEN+1];                                          // title to display on the tab of the page
+  MATRIX_OBJECT xs;                                                             // matrix to load the cross section
+  INDEX indexFile;                                                              // browse files
+  int   indexLine,indexColumn;                                                  // browse lines and column in the data page
+  plot_data_t xs2plot;                                                          // cross  section to plot
 
-  // TODO - temp for testing
-  int i;
-  plot_data_t dummy;
-  double xData[] = { 0.0, 1.1, 2.2, 3.3, 4.4, 5.5 };
-  double yData[] = { 3.0, 4.0, 3.5, 1.1, 1.4, 3.0 };
+  // Initializations
 
-  mediateAllocateAndSetPlotData(&dummy, xData, yData, 6, Line);
-  mediateResponsePlotData(0, &dummy, 1, Spectrum, 0, "First XS", "X-Label", "Y-label", responseHandle);
-  mediateReleasePlotData(&dummy);
+  sprintf(windowTitle,"Cross sections used in %s analysis window",awName);      // !!! it would be nice to add also the project name
+  sprintf(tabTitle,"%s (XS)",awName);
+  indexLine=indexColumn=2;
 
-  for (i=0; i<6; ++i)
-    yData[i] = yData[i] * yData[i];
+  // Get index of selected analysis window in list
 
-  mediateAllocateAndSetPlotData(&dummy, xData, yData, 6, Line);
-  mediateResponsePlotData(0, &dummy, 1, Spectrum, 0, "Second XS", "X-Label", "Y-label", responseHandle);
-  mediateReleasePlotData(&dummy);
+  for (indexFile=0;indexFile<nFiles;indexFile++,indexLine++)
+   {
+   	// Reinitialize the matrix object
 
-  for (i=0; i<nFiles; ++i) {
-    printf("XS File '%s'\n", filenames[i]);
-  }
+   	memset(&xs,0,sizeof(MATRIX_OBJECT));
+
+    // Retrieve the symbol name from the file
+
+    if ((ptr=strrchr(filenames[indexFile],'/'))!=NULL)
+     {
+      strcpy(symbolName,ptr+1);
+      if ((ptr=strchr(symbolName,'_'))!=NULL)
+       *ptr=0;
+     }
+    else
+     symbolName[0]='\0';
+
+   	// Load the file
+
+    if (!MATRIX_Load(filenames[indexFile],&xs,0 /* line base */,0 /* column base */,0,0,
+                     minWavelength,maxWavelength,
+                     0,   // no derivatives
+                     1,   // reverse vectors if needed
+                    "mediateRequestViewCrossSections") && (xs.nl>1) && (xs.nc>1))
+     {
+     	// Plot the cross section
+
+      mediateAllocateAndSetPlotData(&xs2plot,xs.matrix[0],xs.matrix[1],xs.nl,Line);
+      mediateResponsePlotData(plotPageCross,&xs2plot,1,Spectrum,0,symbolName,"Wavelength","cm**2 / molec", responseHandle);
+      mediateResponseLabelPage(plotPageCross,windowTitle,tabTitle, responseHandle);
+      mediateReleasePlotData(&xs2plot);
+    //  mediateResponseCellDataString(plotPageCross,indexLine,indexColumn+1,"[CONC/Param]",responseHandle);
+    //  mediateResponseCellInfo(plotPageCross,indexLine,indexColumn,responseHandle,filenames[indexFile],"%s","Loaded");
+     }
+    //else
+    // mediateResponseCellInfo(plotPageCross,indexLine,indexColumn,responseHandle,filenames[indexFile],"%s","Not found !!!");
+
+    // Release the allocated buffers
+
+    MATRIX_Free(&xs,"mediateRequestViewCrossSections");
+   }
+
+  // Return
 
   return 0;
-}
+ }
+
+int mediateTest(void *engineContext,void *responseHandle)
+ {
+ 	double x[10]={1.,2.,3.,4.,5.,6.,7.,8.,9.,10.};
+ 	double y[10]={5.,8.,3.,2.,5.,4.,8.,7.,6.,5.};
+ 	plot_data_t xs2plot;
+
+      mediateAllocateAndSetPlotData(&xs2plot,x,y,10,Line);
+      mediateResponsePlotData(plotPageCross,&xs2plot,1,Spectrum,0,"test","Wavelength","cm**2 / molec", responseHandle);
+      mediateResponseLabelPage(plotPageCross,"N'importe quoi","Test", responseHandle);
+      mediateReleasePlotData(&xs2plot);
+      mediateResponseCellDataString(plotPageCross,3,2,"[CONC/Param]",responseHandle);
+ }

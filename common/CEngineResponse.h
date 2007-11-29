@@ -43,14 +43,14 @@ class CEngineResponse
     eEngineResponseGotoRecordType,
     eEngineResponseEndAccessFileType,
     eEngineResponseToolType
-  };  
+  };
 
   CEngineResponse(enum ResponseType type);
   virtual ~CEngineResponse();
 
   enum ResponseType type(void) const;
   void addErrorMessage(const QString &tag, const QString &msg, int errorLevel);
-  
+
   virtual void process(CEngineController *engineController) = 0;
 
   bool processErrors(CEngineController *engineController);

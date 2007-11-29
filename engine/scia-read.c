@@ -2216,7 +2216,7 @@ RC SCIA_LoadAnalysis(ENGINE_CONTEXT *pEngineContext)
      {
       KURUCZ_Init(0);
 
-      if ((THRD_id!=THREAD_TYPE_KURUCZ) && ((rc=KURUCZ_Reference(NULL,0,saveFlag,0))!=ERROR_ID_NO))
+      if ((THRD_id!=THREAD_TYPE_KURUCZ) && ((rc=KURUCZ_Reference(NULL,0,saveFlag,0,NULL /* QDOAS !!! responseHandle */))!=ERROR_ID_NO))
        goto EndSCIA_LoadAnalysis;
      }
 

@@ -134,13 +134,13 @@ bool CEngineRequestSetAnalysisWindows::process(CEngineThread *engineThread)
 
   int rc = mediateRequestSetAnalysisWindows(engineThread->engineContext(),
 					    m_nWindows, m_windowList, m_opMode, resp);
-  
+
   // no response unless there was an error
   if (rc == -1)
     engineThread->respond(resp);
   else
     delete resp;
-  
+
   return (rc == 0);
 }
 
@@ -168,13 +168,13 @@ bool CEngineRequestSetSymbols::process(CEngineThread *engineThread)
 
   int rc = mediateRequestSetSymbols(engineThread->engineContext(),
 				    m_nSymbols, m_symbolList, resp);
-  
+
   // no response unless there was an error
   if (rc == -1)
     engineThread->respond(resp);
   else
     delete resp;
-  
+
   return (rc == 0);
 }
 
@@ -208,7 +208,7 @@ bool CEngineRequestSetSites::process(CEngineThread *engineThread)
     engineThread->respond(resp);
   else
     delete resp;
-  
+
   return (rc == 0);
 }
 
@@ -288,7 +288,7 @@ bool CEngineRequestBrowseSpecificRecord::process(CEngineThread *engineThread)
 
   int rc = mediateRequestGotoSpectrum(engineThread->engineContext(),
 				      m_recordNumber, resp);
-  
+
   if (rc > 0) {
     // successfully positioned .. now browse
     rc = mediateRequestNextMatchingBrowseSpectrum(engineThread->engineContext(),
@@ -402,7 +402,7 @@ bool CEngineRequestAnalyseSpecificRecord::process(CEngineThread *engineThread)
 
   int rc = mediateRequestGotoSpectrum(engineThread->engineContext(),
 				      m_recordNumber, resp);
-  
+
   if (rc > 0) {
     // successfully positioned .. now analyse
     rc = mediateRequestNextMatchingAnalyseSpectrum(engineThread->engineContext(),
@@ -516,7 +516,7 @@ bool CEngineRequestCalibrateSpecificRecord::process(CEngineThread *engineThread)
 
   int rc = mediateRequestGotoSpectrum(engineThread->engineContext(),
 				      m_recordNumber, resp);
-  
+
   if (rc > 0) {
     // successfully positioned .. now analyse
     rc = mediateRequestNextMatchingCalibrateSpectrum(engineThread->engineContext(),
@@ -555,9 +555,10 @@ bool CEngineRequestEndCalibrateFile::process(CEngineThread *engineThread)
 }
 
 
-CEngineRequestViewCrossSections::CEngineRequestViewCrossSections(double minWavelength, double maxWavelength,
+CEngineRequestViewCrossSections::CEngineRequestViewCrossSections(char *awName,double minWavelength, double maxWavelength,
                                                                  int nFiles, char **filenames) :
   CEngineRequest(eEngineRequestViewCrossSectionsType),
+  m_awName(awName),
   m_minWavelength(minWavelength),
   m_maxWavelength(maxWavelength),
   m_nFiles(nFiles),
@@ -571,19 +572,21 @@ CEngineRequestViewCrossSections::~CEngineRequestViewCrossSections()
     delete [] m_filenames[i];
   }
   delete [] m_filenames;
+
+  delete [] m_awName;
 }
 
 bool CEngineRequestViewCrossSections::process(CEngineThread *engineThread)
 {
   CEngineResponseTool *resp = new CEngineResponseTool;
-  
+
   int rc = mediateRequestViewCrossSections(engineThread->engineContext(),
-                                           m_minWavelength, m_maxWavelength,
+                                           m_awName,m_minWavelength, m_maxWavelength,
                                            m_nFiles, m_filenames, resp);
-  
+
   // post the response
   engineThread->respond(resp);
-  
+
   return (rc != -1);
 }
 
