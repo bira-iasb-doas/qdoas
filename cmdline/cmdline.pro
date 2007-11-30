@@ -45,7 +45,6 @@ SOURCES += ../common/ConfigWriterUtils.cpp
 SOURCES += ../common/CPathMgr.cpp
 
 SOURCES += CBatchEngineController.cpp
-SOURCES += ../qdoas/CSession.cpp
 SOURCES += ../qdoas/CQdoasConfigHandler.cpp
 SOURCES += ../qdoas/CProjectConfigSubHandlers.cpp
 SOURCES += ../qdoas/CProjectConfigAnalysisWindowSubHandlers.cpp
@@ -82,7 +81,6 @@ HEADERS += ../common/CPathMgr.h
 
 HEADERS += CBatchEngineController.h
 HEADERS += ../qdoas/CEngineRequest.h
-HEADERS += ../qdoas/CSession.h
 HEADERS += ../qdoas/CQdoasConfigHandler.h
 HEADERS += ../qdoas/CProjectConfigSubHandlers.h
 HEADERS += ../qdoas/CProjectConfigAnalysisWindowSubHandlers.h

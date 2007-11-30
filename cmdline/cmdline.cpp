@@ -9,6 +9,8 @@
 #include <QFile>
 #include <QString>
 #include <QList>
+#include <QDir>
+#include <QFileInfo>
 
 #include "CWorkSpace.h"
 #include "CQdoasConfigHandler.h"
@@ -64,6 +66,8 @@ int analyseProjectQdoas(const CProjectConfigItem *projItem);
 int analyseProjectQdoasPrepare(void **engineContext, const CProjectConfigItem *projItem, CBatchEngineController *controller);
 int analyseProjectQdoasFile(void *engineContext, CBatchEngineController *controller, const QString &filename);
 int analyseProjectQdoasTreeNode(void *engineContext, CBatchEngineController *controller, const CProjectConfigTreeNode *node);
+int analyseProjectQdoasDirectory(void *engineContext, CBatchEngineController *controller, const QString &dir,
+				 const QString &filters, bool recursive);
 
 int batchProcessConvolution(commands_t *cmd);
 int batchProcessRing(commands_t *cmd);
@@ -508,7 +512,7 @@ int analyseProjectQdoasFile(void *engineContext, CBatchEngineController *control
   int retCode = 0;
   int result;
   
-  TRACE("analyseProjectQdoasFile");
+  TRACE("analyseProjectQdoasFile " << filename.toStdString());
 
   CEngineResponseBeginAccessFile *beginFileResp = new CEngineResponseBeginAccessFile(filename);
   
@@ -529,6 +533,8 @@ int analyseProjectQdoasFile(void *engineContext, CBatchEngineController *control
     result = mediateRequestNextMatchingAnalyseSpectrum(engineContext, resp);
     resp->setRecordNumber(result);
       
+    TRACE("   record : " << result);
+
     if (result == -1)
       retCode = 1;
     
@@ -545,6 +551,8 @@ int analyseProjectQdoasFile(void *engineContext, CBatchEngineController *control
   endFileResp->process(controller);
   delete endFileResp;
   
+  TRACE("   end file " << retCode);
+
   return retCode;
 }
 
@@ -552,18 +560,24 @@ int analyseProjectQdoasTreeNode(void *engineContext, CBatchEngineController *con
 {
   int retCode = 0;
 
+
+
   while (!retCode && node != NULL) {
 
-    switch (node->type()) {
-    case CProjectConfigTreeNode::eFile:
-      retCode = analyseProjectQdoasFile(engineContext, controller, node->name());
-      break;
-    case CProjectConfigTreeNode::eFolder:
-      retCode = analyseProjectQdoasTreeNode(engineContext, controller, node->firstChild());
-      break;
-    case CProjectConfigTreeNode::eDirectory:
-      // TODO
-      break;
+    TRACE("analyseProjectQdoasTreeNode : " << node->name().toStdString());
+
+    if (node->isEnabled()) {
+      switch (node->type()) {
+      case CProjectConfigTreeNode::eFile:
+	retCode = analyseProjectQdoasFile(engineContext, controller, node->name());
+	break;
+      case CProjectConfigTreeNode::eFolder:
+	retCode = analyseProjectQdoasTreeNode(engineContext, controller, node->firstChild());
+	break;
+      case CProjectConfigTreeNode::eDirectory:
+	retCode = analyseProjectQdoasDirectory(engineContext, controller, node->name(), node->filter(), node->recursive());
+	break;
+      }
     }
 
     node = node->nextSibling();
@@ -592,4 +606,48 @@ int batchProcessUsamp(commands_t *cmd)
   TRACE("batchProcessUsamp");
 
   return 0;
+}
+
+
+int analyseProjectQdoasDirectory(void *engineContext, CBatchEngineController *controller,
+				 const QString &dir, const QString &filter, bool recursive)
+{
+  TRACE("analyseProjectQdoasDirectory " << dir.toStdString());
+
+  int retCode = 0;
+  QFileInfoList entries;
+  QFileInfoList::iterator it;
+
+  QDir directory(dir);
+
+  // first consder sub directories ...
+  if (recursive) {
+    entries = directory.entryInfoList(); // all entries ... but only take directories on this pass
+
+    it = entries.begin();
+    while (!retCode && it != entries.end()) {
+      if (it->isDir() && !it->fileName().startsWith('.')) {
+	
+        retCode = analyseProjectQdoasDirectory(engineContext, controller, it->filePath(), filter, true);
+      }
+      ++it;
+    }
+  }
+
+  // now the files that match the filters
+  if (filter.isEmpty())
+    entries = directory.entryInfoList();
+  else
+    entries = directory.entryInfoList(QStringList(filter));
+  
+  it = entries.begin();
+  while (!retCode && it != entries.end()) {
+    if (it->isFile()) {
+      
+      retCode = analyseProjectQdoasFile(engineContext, controller, it->filePath());
+    }
+    ++it;
+  }
+
+  return retCode;
 }
