@@ -39,29 +39,36 @@ void mediateDisplayErrorMessage(void *responseHandle)
 // -----------------------------------------------------------------------------
 // FUNCTION      mediateRequestCreateEngineContext
 // -----------------------------------------------------------------------------
-// PURPOSE       This function is called once the first time the engine context
-//               is requested.  The engine context is never destroyed before
-//               the user exits the program.
+// PURPOSE       This function is called on program start.  It creates a single
+//               context for safely accessing its features through the mediator
+//               layer.  The engine context is never destroyed before the user
+//               exits the program.
+//
+// RETURN        On success 0 is returned and the value of handleEngine is set,
+//               otherwise -1 is retured and the value of handleEngine is undefined.
 // -----------------------------------------------------------------------------
 
 int mediateRequestCreateEngineContext(void **engineContext, void *responseHandle)
  {
-  if ((*engineContext=(void *)EngineCreateContext())==NULL)
+ 	ENGINE_CONTEXT *pEngineContext;
+
+  if ((pEngineContext=*engineContext=(void *)EngineCreateContext())==NULL)
    mediateDisplayErrorMessage(responseHandle);
 
-  return 0;
+  return (pEngineContext!=NULL)?0:-1;
  }
 
 // -----------------------------------------------------------------------------
 // FUNCTION      mediateRequestDestroyEngineContext
 // -----------------------------------------------------------------------------
 // PURPOSE       Destroy the engine context when the user exits the program.
+//
+// RETURN        Zero is returned on success, -1 otherwise.
 // -----------------------------------------------------------------------------
 
 int mediateRequestDestroyEngineContext(void *engineContext, void *responseHandle)
  {
-  EngineDestroyContext(engineContext);
-  return 0;
+  return (!EngineDestroyContext(engineContext))?0:-1;
  }
 
 // ==============================================================
@@ -644,13 +651,34 @@ void setMediateProjectSlit(PRJCT_SLIT *pEngineSlit,const mediate_project_slit_t 
 
 void setMediateProjectOutput(PRJCT_RESULTS_ASCII *pEngineOutput,const mediate_project_output_t *pMediateOutput)
  {
+ 	// Declarations
+
  	#if defined(__DEBUG_) && __DEBUG_ && defined(__DEBUG_DOAS_CONFIG_) && __DEBUG_DOAS_CONFIG_
+ 	int i;
   DEBUG_FunctionBegin("setMediateProjectOutput",DEBUG_FCTTYPE_CONFIG);
   #endif
 
-  // Still to do by Caro
+  strcpy(pEngineOutput->path,pMediateOutput->path);                             // path for results and fits files
+  strcpy(pEngineOutput->fluxes,pMediateOutput->flux);                           // fluxes
+  strcpy(pEngineOutput->cic,pMediateOutput->colourIndex);                       // color indexes
+
+  pEngineOutput->analysisFlag=pMediateOutput->analysisFlag;
+  pEngineOutput->calibFlag=pMediateOutput->calibrationFlag;
+  pEngineOutput->dirFlag=pMediateOutput->directoryFlag;
+  pEngineOutput->configFlag=pMediateOutput->configurationFlag;
+  pEngineOutput->binaryFlag=pMediateOutput->binaryFormatFlag;
+
+  if (!(pEngineOutput->fieldsNumber=pMediateOutput->selection.nSelected))
+   memset(pEngineOutput->fieldsFlag,0,PRJCT_RESULTS_ASCII_MAX);
+  else
+   memcpy(pEngineOutput->fieldsFlag,pMediateOutput->selection.selected,pEngineOutput->fieldsNumber);
 
   #if defined(__DEBUG_) && __DEBUG_ && defined(__DEBUG_DOAS_CONFIG_) && __DEBUG_DOAS_CONFIG_
+  DEBUG_Print("Path %s",pEngineOutput->path);
+  DEBUG_Print("Fluxes %s",pEngineOutput->fluxes);
+  DEBUG_Print("Cic %s",pEngineOutput->cic);
+  for (i=0;i<pEngineOutput->fieldsNumber;i++)
+   DEBUG_Print("Output field %s\n",PRJCT_resultsAscii[pEngineOutput->fieldsFlag[i]].fieldName);
   DEBUG_FunctionStop("setMediateProjectOutput",0);
   #endif
  }
@@ -659,6 +687,18 @@ void setMediateProjectOutput(PRJCT_RESULTS_ASCII *pEngineOutput,const mediate_pr
 // FUNCTION      mediateRequestSetProject
 // -----------------------------------------------------------------------------
 // PURPOSE       Interface between the mediator and the engine for project properties
+//
+//               Project will be defined by the GUI. The engine is responsible for copying
+//               any required data from project. The project details will remain valid
+//               for the engine until the next call to mediateRequestSetProject.
+//               project may be the null pointer, in which case the engine may free any
+//               resources DIRECTLY associated with the project.
+//
+//               The operatingMode indicates the intended usage (Browsing, Analysis or Calibration).
+//               It is a workaround that may ultimately be removed.
+//
+// RETURN        Zero is returned if the operation succeeded, -1 otherwise.
+//               On success, project becomes the 'current project'.
 // -----------------------------------------------------------------------------
 
 int mediateRequestSetProject(void *engineContext,
@@ -677,6 +717,10 @@ int mediateRequestSetProject(void *engineContext,
 	 pEngineContext=(ENGINE_CONTEXT *)engineContext;
 	 pEngineProject=(PROJECT *)&pEngineContext->project;
 
+	 // Release buffers allocated at the previous session
+
+	 EngineEndCurrentSession(pEngineContext);
+
 	 THRD_id=operatingMode;
 
 	 // Transfer projects options from the mediator to the engine
@@ -691,21 +735,21 @@ int mediateRequestSetProject(void *engineContext,
   setMediateProjectFiltering(&pEngineProject->lfilter,&project->lowpass);
   setMediateProjectFiltering(&pEngineProject->hfilter,&project->highpass);
   setMediateProjectCalibration(&pEngineProject->kurucz,&pEngineContext->calibFeno,&project->calibration);
-  setMediateProjectUndersampling(&pEngineProject->usamp,&project->undersampling);
   setMediateProjectInstrumental(&pEngineProject->instrumental,&project->instrumental);
+  setMediateProjectUndersampling(&pEngineProject->usamp,&project->undersampling);
   setMediateProjectSlit(&pEngineProject->slit,&project->slit);
   setMediateProjectOutput(&pEngineProject->asciiResults,&project->output);
 
 	 // Allocate buffers requested by the project
 
-  if ((rc=EngineSetProject(pEngineContext))!=ERROR_ID_NO)
-   mediateDisplayErrorMessage(responseHandle);
+  if ((rc=EngineSetProject(pEngineContext))!=ERROR_ID_NO)          // how to manage errors ???
+   mediateDisplayErrorMessage(responseHandle);                     // how to manage errors ???
 
 	 #if defined(__DEBUG_) && __DEBUG_
   DEBUG_Stop("Project");
   #endif
 
-  return (rc)?-1:0;
+  return (rc!=ERROR_ID_NO)?-1:0;                                   // how to manage errors ???
  }
 
 // =======================================================================
@@ -1115,8 +1159,10 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
            (pTabFeno->hidden && !(rc=mediateRequestSetAnalysisNonLinearCalib(pEngineContext->calibFeno.sfp,pTabFeno->LambdaRef)))) &&
 
           !(rc=ANALYSE_LoadShiftStretch(pAnalysisWindows->shiftStretchList.shiftStretch,pAnalysisWindows->shiftStretchList.nShiftStretch)) &&
+          !(rc=ANALYSE_LoadOutput(pAnalysisWindows->outputList.output,pAnalysisWindows->outputList.nOutput)) &&
            (pTabFeno->hidden ||
          (!(rc=ANALYSE_LoadGaps(pAnalysisWindows->gapList.gap,pAnalysisWindows->gapList.nGap,pTabFeno->LambdaRef,pAnalysisWindows->fitMinWavelength,pAnalysisWindows->fitMaxWavelength)) &&
+
           (!pTabFeno->gomeRefFlag || !(rc=ANALYSE_SvdLocalAlloc("ANALYSE_LoadData",&pTabFeno->svd)))
          )))
        {
@@ -1191,9 +1237,10 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
 
   if (!rc && ((THRD_id==THREAD_TYPE_KURUCZ) || useKurucz) &&
      !(rc=KURUCZ_Alloc(&pEngineContext->project,pEngineContext->buffers.lambda,indexKurucz,lambdaMin,lambdaMax)) &&
-     !(rc=KURUCZ_Reference(pEngineContext->buffers.instrFunction,0,saveFlag,1,responseHandle)))
+     !(rc=KURUCZ_Reference(pEngineContext->buffers.instrFunction,0,saveFlag,1,responseHandle)) &&
+     !(rc=ANALYSE_AlignReference(0,saveFlag,responseHandle)))
 
-   rc=ANALYSE_AlignReference(0,saveFlag,responseHandle);
+   rc=OUTPUT_RegisterData(pEngineContext);
 
 // QDOAS ???  if (!rc && useUsamp &&
 // QDOAS ???      !(rc=USAMP_GlobalAlloc(lambdaMin,lambdaMax,NDET)) &&
@@ -1619,13 +1666,14 @@ int mediateRequestNextMatchingBrowseSpectrum(void *engineContext,
 int mediateRequestEndBrowseSpectra(void *engineContext,
 				   void *responseHandle)
  {
+ 	RC rc;
+
+ 	if ((rc=EngineRequestEndBrowseSpectra((ENGINE_CONTEXT *)engineContext))!=0)
+ 	 mediateDisplayErrorMessage(responseHandle);
+
   // Close open files and release allocated buffers to reset the engine context
 
-  EngineResetContext((ENGINE_CONTEXT *)engineContext,1);
-
-  // Return
-
-  return 0;
+  return (!rc)?0:-1;
  }
 
 int mediateRequestBeginAnalyseSpectra(void *engineContext,
@@ -1634,7 +1682,9 @@ int mediateRequestBeginAnalyseSpectra(void *engineContext,
  {
  	ENGINE_CONTEXT *pEngineContext = (ENGINE_CONTEXT *)engineContext;
 
-  if (EngineRequestBeginBrowseSpectra(pEngineContext,spectraFileName)!=ERROR_ID_NO)
+  if ((EngineRequestBeginBrowseSpectra(pEngineContext,spectraFileName)!=ERROR_ID_NO) ||
+     ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS) && (SCIA_LoadAnalysis(pEngineContext,responseHandle)!=ERROR_ID_NO)))
+
    mediateDisplayErrorMessage(responseHandle);
 
   return ((ENGINE_CONTEXT *)engineContext)->recordNumber;
@@ -1666,18 +1716,18 @@ int mediateRequestPrevMatchingAnalyseSpectrum(void *engineContext,
 int mediateRequestEndAnalyseSpectra(void *engineContext,
 				    void *responseHandle)
  {
- 	// Release all the buffers allocated for the analysis
+ 	// Declarations
 
-  if (ANALYSE_refSelectionFlag)
-   EngineResetContext((ENGINE_CONTEXT *)&ENGINE_contextRef,0);
+  RC rc;
 
   // Close open files and release allocated buffers to reset the engine context
 
-  EngineResetContext((ENGINE_CONTEXT *)engineContext,1);
+ 	if ((rc=EngineRequestEndBrowseSpectra((ENGINE_CONTEXT *)engineContext))!=0)
+ 	 mediateDisplayErrorMessage(responseHandle);
 
   // Return
 
-  return 0;
+  return (!rc)?0:-1;
  }
 
 
@@ -1706,13 +1756,16 @@ int mediateRequestPrevMatchingCalibrateSpectrum(void *engineContext,
 int mediateRequestEndCalibrateSpectra(void *engineContext,
 				      void *responseHandle)
  {
+ 	RC rc;
+
   // Close open files and release allocated buffers to reset the engine context
 
-  EngineResetContext((ENGINE_CONTEXT *)engineContext,1);
+ 	if ((rc=EngineRequestEndBrowseSpectra((ENGINE_CONTEXT *)engineContext))!=0)
+ 	 mediateDisplayErrorMessage(responseHandle);
 
   // Return
 
-  return 0;
+  return (!rc)?0:-1;
  }
 
 int mediateRequestViewCrossSections(void *engineContext, char *awName,double minWavelength, double maxWavelength,
@@ -1720,6 +1773,7 @@ int mediateRequestViewCrossSections(void *engineContext, char *awName,double min
  {
 	 // Declarations
 
+  ENGINE_CONTEXT *pEngineContext = (ENGINE_CONTEXT *)engineContext;
   UCHAR symbolName[MAX_ITEM_NAME_LEN+1],*ptr,                                   // the symbol name
         windowTitle[MAX_ITEM_TEXT_LEN+1],                                       // title to display at the top of the page
         tabTitle[MAX_ITEM_TEXT_LEN+1];                                          // title to display on the tab of the page
@@ -1730,8 +1784,8 @@ int mediateRequestViewCrossSections(void *engineContext, char *awName,double min
 
   // Initializations
 
-  sprintf(windowTitle,"Cross sections used in %s analysis window",awName);      // !!! it would be nice to add also the project name
-  sprintf(tabTitle,"%s (XS)",awName);
+  sprintf(windowTitle,"Cross sections used in %s analysis window of project %s",awName,pEngineContext->project.name);   // !!! it would be nice to add also the project name
+  sprintf(tabTitle,"%s.%s (XS)",pEngineContext->project.name,awName);
   indexLine=indexColumn=2;
 
   // Get index of selected analysis window in list
@@ -1767,11 +1821,10 @@ int mediateRequestViewCrossSections(void *engineContext, char *awName,double min
       mediateResponsePlotData(plotPageCross,&xs2plot,1,Spectrum,0,symbolName,"Wavelength","cm**2 / molec", responseHandle);
       mediateResponseLabelPage(plotPageCross,windowTitle,tabTitle, responseHandle);
       mediateReleasePlotData(&xs2plot);
-    //  mediateResponseCellDataString(plotPageCross,indexLine,indexColumn+1,"[CONC/Param]",responseHandle);
-    //  mediateResponseCellInfo(plotPageCross,indexLine,indexColumn,responseHandle,filenames[indexFile],"%s","Loaded");
+      mediateResponseCellInfo(plotPageCross,indexLine,indexColumn,responseHandle,filenames[indexFile],"%s","Loaded");
      }
-    //else
-    // mediateResponseCellInfo(plotPageCross,indexLine,indexColumn,responseHandle,filenames[indexFile],"%s","Not found !!!");
+    else
+     mediateResponseCellInfo(plotPageCross,indexLine,indexColumn,responseHandle,filenames[indexFile],"%s","Not found !!!");
 
     // Release the allocated buffers
 

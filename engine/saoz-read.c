@@ -696,7 +696,7 @@ RC ReliSAOZEfm(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,INT loca
 
       pRecord->longitude=(double)-header.Longi/100.;
       pRecord->latitude=(double)header.Latid/100.;
-      pRecord->altitude=(double)header.Altit/100.;
+      pRecord->altitude=(double)header.Altit;
 
       tmLocal=pRecord->Tm+THRD_localShift*3600.;
 

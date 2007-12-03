@@ -826,6 +826,7 @@ ANALYSE_NON_LINEAR_PARAMETERS;
 typedef struct anlyswin_cross_section ANALYSIS_CROSS;
 typedef struct anlyswin_shift_stretch ANALYSIS_SHIFT_STRETCH;
 typedef struct anlyswin_gap ANALYSIS_GAP;
+typedef struct anlyswin_output ANALYSIS_OUTPUT;
 
 // -------------------
 // GLOBAL DECLARATIONS
@@ -898,6 +899,7 @@ RC   ANALYSE_LoadLinear(ANALYSE_LINEAR_PARAMETERS *linearList,INT nLinear);
 RC   ANALYSE_LoadNonLinear(ANALYSE_NON_LINEAR_PARAMETERS *nonLinearList,INT nNonLinear,double *lambda);
 RC   ANALYSE_LoadShiftStretch(ANALYSIS_SHIFT_STRETCH *shiftStretchList,INT nShiftStretch);
 RC   ANALYSE_LoadGaps(ANALYSIS_GAP *gapList,INT nGaps,double *lambda,double lambdaMin,double lambdaMax);
+RC   ANALYSE_LoadOutput(ANALYSIS_OUTPUT *outputList,INT nOutput);
 
 RC   ANALYSE_Alloc(void);
 void ANALYSE_Free(void);
@@ -938,6 +940,7 @@ typedef struct _Kurucz
          *fwhm[MAX_KURUCZ_FWHM_PARAM],          // fwhm found for each little window
          *fwhmSigma[MAX_KURUCZ_FWHM_PARAM],     // errors on fwhm
          *fwhmPolySpec[MAX_KURUCZ_FWHM_PARAM];  // polynomial coefficients for building wavelength dependence of fwhm for spectra
+  INT    *NIter;                                // number of iterations
 
   MATRIX_OBJECT crossFits;                      // cross sections fits to display
 
@@ -1090,7 +1093,6 @@ void OUTPUT_ResetData(void);
 RC   OUTPUT_RegisterData(ENGINE_CONTEXT *pEngineContext);
 RC   OUTPUT_FlushBuffers(ENGINE_CONTEXT *pEngineContext);
 
-RC   OUTPUT_LoadCross(LIST_ITEM *pList,CROSS_RESULTS *pResults,INT *pAmfFlag,INT hidden);
 RC   OUTPUT_SaveNasaAmes(void);
 RC   OUTPUT_SaveResults(ENGINE_CONTEXT *pEngineContext);
 
@@ -1331,7 +1333,7 @@ void SCIA_ReleaseBuffers(UCHAR format);
 RC   SCIA_SetPDS(ENGINE_CONTEXT *pEngineContext);
 RC   SCIA_ReadPDS(ENGINE_CONTEXT *pEngineContext,int recordNo);
 INDEX SCIA_GetRecordNumber(INT hdfRecord,INT obsNumber);
-RC SCIA_LoadAnalysis(ENGINE_CONTEXT *pEngineContext);
+RC SCIA_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle);
 
 enum _omiSwathType { OMI_SWATH_UV1, OMI_SWATH_UV2, OMI_SWATH_VIS, OMI_SWATH_MAX };
 enum _omiVdataType { OMI_VDATA_GEO, OMI_VDATA_DATA, OMI_VDATA_ATTR, OMI_VDATA_MAX };

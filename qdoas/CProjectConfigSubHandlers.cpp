@@ -372,7 +372,7 @@ bool CProjectCalibrationSubHandler::start(const QString &element, const QXmlAttr
     str = atts.value("shape");
     if (str == "none")
       m_calibration->lineShape = PRJCT_CALIB_FWHM_TYPE_NONE;
-    else if (str == "gaussian")
+    else if (str == "gauss")
       m_calibration->lineShape = PRJCT_CALIB_FWHM_TYPE_GAUSS;
     else if (str == "error")
       m_calibration->lineShape = PRJCT_CALIB_FWHM_TYPE_ERF;

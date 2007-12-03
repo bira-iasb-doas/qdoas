@@ -126,6 +126,12 @@ ERROR_TABLE errorTable[]=
   { ERROR_ID_MEMORY_DEFMATRIX          , "the definition of the matrix %s is uncompleted"                                                                     },
   { ERROR_ID_MEMORY_RELEASE            , "try to release an object not in the stack (%s,0x%08X)"                                                              },
 
+  // Output
+
+  { ERROR_ID_AMF                       , "Zenith angle %.2f not found in file %s; AMF not calculated"                                                         },
+  { ERROR_ID_NOTHING_TO_SAVE           , "%s : nothing to save "                                                                                              },
+  { ERROR_ID_OUTPUT                    , "Output file %s already exists but doesn't have the same configuration"                                              },
+
   // Low-level math operations
 
   { ERROR_ID_DIVISION_BY_0             , "division by 0 (%s)"                                                                                                 },

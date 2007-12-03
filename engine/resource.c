@@ -78,8 +78,8 @@ RC RESOURCE_Alloc(void)
 // QDOAS ???       !(rc=ANLYS_Alloc()) &&       // Analysis windows
 // QDOAS ???       !(rc=PRJCT_Alloc()) &&       // Projects
 // QDOAS ???       !(rc=RAW_Alloc()) &&         // Raw spectra files
-      !(rc=ANALYSE_Alloc()))      // Analysis
-// QDOAS ???       !(rc=OUTPUT_Alloc()) &&        // Output
+      !(rc=ANALYSE_Alloc()) &&     // Analysis
+      !(rc=OUTPUT_Alloc()))        // Output
 // QDOAS ???       !(rc=PATH_Alloc()))          // Path
 
   // Initializations
@@ -106,7 +106,7 @@ void RESOURCE_Free(void)
 // QDOAS ???   PRJCT_Free();               // Projects
 // QDOAS ???   RAW_Free();                 // Raw spectra files
   ANALYSE_Free();             // Analysis
-// QDOAS ???   OUTPUT_Free();              // Output
+  OUTPUT_Free();              // Output
 // QDOAS ???   PATH_Free();                // Path
 
   #if defined(__DEBUG_) && __DEBUG_

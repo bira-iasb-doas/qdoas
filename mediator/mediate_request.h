@@ -53,7 +53,7 @@ extern "C" {
 int mediateRequestCreateEngineContext(void **engineContext, void *responseHandle);
 
 
-// mediateRequestDestroyEngineHandle
+// mediateRequestDestroyEngineContext
 //
 // asks the engine to release any resourse associated with an engineContext.
 // Zero is returned on success, -1 otherwise.

@@ -285,6 +285,12 @@ SHORT_DATE;
 #define ERROR_ID_SQRT_ARG                       506                             // sqrt argument error
 #define ERROR_ID_POW                            507                             // pow overflow
 
+// Output
+
+#define ERROR_ID_AMF                            801                             // AMF not calculated
+#define ERROR_ID_NOTHING_TO_SAVE                802                             // nothing to save
+#define ERROR_ID_OUTPUT                         803
+
 // High-level math functions
 
 #define ERROR_ID_SVD_ILLCONDITIONNED           1101                             // ill-conditionned matrix
@@ -334,7 +340,7 @@ SHORT_DATE;
 #define __DEBUG_DOAS_DATA_         0                                            // load data
 #define __DEBUG_DOAS_OUTPUT_       0                                            // output
 #define __DEBUG_DOAS_FILE_         0                                            // file
-#define __DEBUG_DOAS_CONFIG_       1                                            // config
+#define __DEBUG_DOAS_CONFIG_       0                                            // config
 
 // Types of functions to debug
 

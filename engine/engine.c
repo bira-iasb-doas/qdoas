@@ -53,36 +53,6 @@ ENGINE_CONTEXT engineContext,                                                   
 UCHAR ENGINE_dbgFile[MAX_PATH_LEN+1];
 double ENGINE_localNoon;
 
-// ============================
-// THE ENGINE CONTEXT STRUCTURE
-// ============================
-
-// -----------------------------------------------------------------------------
-// FUNCTION      EngineCreateContext
-// -----------------------------------------------------------------------------
-// PURPOSE       Create a context for the engine
-// -----------------------------------------------------------------------------
-
-ENGINE_CONTEXT *EngineCreateContext(void)
- {
- 	// Declaration
-
- 	ENGINE_CONTEXT *pEngineContext=&engineContext;
-
-  // Initializations
-
- 	strcpy(ENGINE_dbgFile,"QDOAS.dbg");
- 	memset(pEngineContext,0,sizeof(ENGINE_CONTEXT));
- 	memset(&ENGINE_contextRef,0,sizeof(ENGINE_CONTEXT));
-
- 	if (RESOURCE_Alloc()!=ERROR_ID_NO)
-   pEngineContext=NULL;
-
-  // Return
-
- 	return pEngineContext;
- }
-
 // -----------------------------------------------------------------------------
 // FUNCTION      EngineResetContext
 // -----------------------------------------------------------------------------
@@ -92,13 +62,12 @@ ENGINE_CONTEXT *EngineCreateContext(void)
 //               closeFiles         1 to close files, 0 otherwise (in order not to close files twice)
 // -----------------------------------------------------------------------------
 
-void EngineResetContext(ENGINE_CONTEXT *pEngineContext,INT closeFiles)
+void EngineResetContext(ENGINE_CONTEXT *pEngineContext)
  {
  	// Declarations
 
   BUFFERS *pBuffers;                                                            // pointer to the buffers part of the engine context
   RECORD_INFO *pRecord;                                                         // pointer to the record part of the engine context
-  FILE_INFO *pFile;
 
   #if defined(__DEBUG_) && __DEBUG_
   DEBUG_FunctionBegin("EngineResetContext",DEBUG_FCTTYPE_FILE);
@@ -108,19 +77,6 @@ void EngineResetContext(ENGINE_CONTEXT *pEngineContext,INT closeFiles)
 
   pRecord=&pEngineContext->recordInfo;
   pBuffers=&pEngineContext->buffers;
-  pFile=&pEngineContext->fileInfo;
-
-  // Close files
-
-  if (closeFiles)
-   {
-    if (pFile->specFp!=NULL)
-     fclose(pFile->specFp);
-    if (pFile->darkFp!=NULL)
-     fclose(pFile->darkFp);
-    if (pFile->namesFp!=NULL)
-     fclose(pFile->namesFp);
-   }
 
   // Release buffers
 
@@ -156,41 +112,6 @@ void EngineResetContext(ENGINE_CONTEXT *pEngineContext,INT closeFiles)
   #if defined(__DEBUG_) && __DEBUG_
   DEBUG_FunctionStop("EngineResetContext",0);
   #endif
- }
-
-// -----------------------------------------------------------------------------
-// FUNCTION      EngineDestroyContext
-// -----------------------------------------------------------------------------
-// PURPOSE       Destroy the context of the current engine
-//
-// INPUT         pEngineContext     pointer to the engine context
-// -----------------------------------------------------------------------------
-
-void EngineDestroyContext(ENGINE_CONTEXT *pEngineContext)
- {
- 	// Reset the context of the engine
-
- 	EngineResetContext(pEngineContext,1);
- 	EngineResetContext(&ENGINE_contextRef,0);
-
- 	// Release other allocated buffers
-
-  GDP_ASC_ReleaseBuffers();
-  GDP_BIN_ReleaseBuffers();
-
-//  GOME2_ReleaseBuffers(GOME2_BEAT_CLOSE);
-//  OMI_ReleaseBuffers();
-
-  SCIA_ReleaseBuffers(pEngineContext->project.instrumental.readOutFormat);
-
-  if ((THRD_id!=THREAD_TYPE_NONE) && (THRD_id!=THREAD_TYPE_SPECTRA))
-   ANALYSE_ResetData();
-
-  THRD_id=THREAD_TYPE_NONE;
-
-  SYMB_itemCrossN=SYMBOL_PREDEFINED_MAX;
-
- 	RESOURCE_Free();
  }
 
 // -----------------------------------------------------------------------------
@@ -308,7 +229,11 @@ RC EngineCopyContext(ENGINE_CONTEXT *pEngineContextTarget,ENGINE_CONTEXT *pEngin
 // -----------------------------------------------------------------------------
 // PURPOSE       Allocate buffers requested by the project
 //
-// INPUT         pEngineContext     pointer to the engine context
+// INPUT         pEngineContext           pointer to the engine context
+//
+// RETURN        ERROR_ID_ALLOC           if the allocation of a buffer fails
+//               ERROR_ID_FILE_EMPTY      if the calibration file is not large enough
+//               ERROR_ID_FILE_NOT_FOUND  if a file (calibration or instrument) doesn't exist
 // -----------------------------------------------------------------------------
 
 RC EngineSetProject(ENGINE_CONTEXT *pEngineContext)
@@ -381,7 +306,12 @@ RC EngineSetProject(ENGINE_CONTEXT *pEngineContext)
    {
     // Load the wavelength calibration
 
-    if ((fp=fopen(pInstrumental->calibrationFile,"rt"))!=NULL)
+    if (!strlen(pInstrumental->calibrationFile))
+     for (i=0;i<NDET;i++)
+      pBuffers->lambda[i]=i+1;
+    else if ((fp=fopen(pInstrumental->calibrationFile,"rt"))==NULL)
+     rc=ERROR_SetLast("EngineSetProject",ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pInstrumental->calibrationFile);
+    else
      {
       for (i=0;i<NDET;)
        if (!fgets(str,MAX_ITEM_TEXT_LEN,fp))
@@ -397,11 +327,8 @@ RC EngineSetProject(ENGINE_CONTEXT *pEngineContext)
 
       fclose(fp);
      }
-    else
-     for (i=0;i<NDET;i++)
-      pBuffers->lambda[i]=i+1;
 
-    // Load the instrumental function
+    // Load the instrumental function                                           // QDOAS !!! LOAD vip + dnl
 
     if (strlen(pInstrumental->instrFunction))
      {
@@ -451,6 +378,32 @@ RC EngineSetProject(ENGINE_CONTEXT *pEngineContext)
   return rc;
  }
 
+// =====
+// FILES
+// =====
+
+// -----------------------------------------------------------------------------
+// FUNCTION      EngineCloseFile
+// -----------------------------------------------------------------------------
+// PURPOSE       Close the files on end browsing spectra or session exit
+//
+// INPUT         pFile     pointer to the file part of the engine context
+// -----------------------------------------------------------------------------
+
+void EngineCloseFile(FILE_INFO *pFile)
+ {
+  // Close previous files
+
+  if (pFile->specFp!=NULL)
+   fclose(pFile->specFp);
+  if (pFile->darkFp!=NULL)
+   fclose(pFile->darkFp);
+  if (pFile->namesFp!=NULL)
+   fclose(pFile->namesFp);
+
+  pFile->specFp=pFile->darkFp=pFile->namesFp=NULL;
+ }
+
 // -----------------------------------------------------------------------------
 // FUNCTION      EngineSetFile
 // -----------------------------------------------------------------------------
@@ -478,17 +431,6 @@ RC EngineSetFile(ENGINE_CONTEXT *pEngineContext,const char *fileName)
 
   strcpy(pFile->fileName,fileName);
   strcpy(fileTmp,fileName);
-
-  // Close previous files
-
-  if (pFile->specFp!=NULL)
-   fclose(pFile->specFp);
-  if (pFile->darkFp!=NULL)
-   fclose(pFile->darkFp);
-  if (pFile->namesFp!=NULL)
-   fclose(pFile->namesFp);
-
-  pFile->specFp=pFile->darkFp=pFile->namesFp=NULL;
 
   // About names of record
 
@@ -590,19 +532,22 @@ RC EngineSetFile(ENGINE_CONTEXT *pEngineContext,const char *fileName)
      break;
   // ---------------------------------------------------------------------------
      case PRJCT_INSTR_FORMAT_GDP_ASCII :
-      if (!(rc=GDP_ASC_Set(pEngineContext,pFile->specFp)) && (THRD_id!=THREAD_TYPE_SPECTRA) && (THRD_id!=THREAD_TYPE_NONE))
-       rc=GDP_ASC_LoadAnalysis(pEngineContext,pFile->specFp);
+      rc=GDP_ASC_Set(pEngineContext,pFile->specFp);
+// QDOAS ???      if (!(rc=GDP_ASC_Set(pEngineContext,pFile->specFp)) && (THRD_id!=THREAD_TYPE_SPECTRA) && (THRD_id!=THREAD_TYPE_NONE))
+// QDOAS ???       rc=GDP_ASC_LoadAnalysis(pEngineContext,pFile->specFp);
      break;
   // ---------------------------------------------------------------------------
      case PRJCT_INSTR_FORMAT_GDP_BIN :
-      if (!(rc=GDP_BIN_Set(pEngineContext,pFile->specFp)) && (THRD_id!=THREAD_TYPE_SPECTRA) && (THRD_id!=THREAD_TYPE_NONE))
-       rc=GDP_BIN_LoadAnalysis(pEngineContext,pFile->specFp);
+      rc=GDP_BIN_Set(pEngineContext,pFile->specFp);
+// QDOAS ???      if (!(rc=GDP_BIN_Set(pEngineContext,pFile->specFp)) && (THRD_id!=THREAD_TYPE_SPECTRA) && (THRD_id!=THREAD_TYPE_NONE))
+// QDOAS ???       rc=GDP_BIN_LoadAnalysis(pEngineContext,pFile->specFp);
 
      break;
   // ---------------------------------------------------------------------------
      case PRJCT_INSTR_FORMAT_SCIA_PDS :
-      if (!(rc=SCIA_SetPDS(pEngineContext)) && (THRD_id!=THREAD_TYPE_SPECTRA) && (THRD_id!=THREAD_TYPE_NONE))
-       rc=SCIA_LoadAnalysis(pEngineContext);
+      rc=SCIA_SetPDS(pEngineContext);
+// QDOAS ???       if (!(rc=SCIA_SetPDS(pEngineContext)) && (THRD_id!=THREAD_TYPE_SPECTRA) && (THRD_id!=THREAD_TYPE_NONE))
+// QDOAS ???        rc=SCIA_LoadAnalysis(pEngineContext,responseHandle);
      break;
   // ---------------------------------------------------------------------------
 // GOME2     case PRJCT_INSTR_FORMAT_GOME2 :
@@ -813,20 +758,152 @@ RC EngineRequestBeginBrowseSpectra(ENGINE_CONTEXT *pEngineContext,const char *sp
 
  	RC rc;
 
- 	// Initialize
-
-  THRD_browseType=THREAD_BROWSE_SPECTRA;
-
   // Set file pointers
 
   if (!(rc=EngineSetFile(pEngineContext,spectraFileName)) && !pEngineContext->recordNumber)
    rc=ERROR_SetLast("EngineRequestBeginBrowseSpectra",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,spectraFileName);
-  else
+  else if ((THRD_id==THREAD_TYPE_SPECTRA) || !(rc=OUTPUT_LocalAlloc(pEngineContext)))
    pEngineContext->indexRecord = 1;
 
   // Return
 
   return rc;
+ }
+
+// -----------------------------------------------------------------------------
+// FUNCTION      EngineRequestEndBrowseSpectra
+// -----------------------------------------------------------------------------
+// PURPOSE       End the spectra browsing thread
+//
+// INPUT         pEngineContext     pointer to the engine context
+//
+// RETURN        0 in case of success; the code of the error otherwise
+// -----------------------------------------------------------------------------
+
+RC EngineRequestEndBrowseSpectra(ENGINE_CONTEXT *pEngineContext)
+ {
+ 	// Declaration
+
+ 	RC rc;
+
+ 	rc=ERROR_ID_NO;
+
+ 	if ((THRD_id!=THREAD_TYPE_NONE) && (THRD_id!=THREAD_TYPE_SPECTRA))
+ 	 rc=OUTPUT_FlushBuffers(pEngineContext);
+
+ 	// Close the files
+
+ 	EngineCloseFile(&pEngineContext->fileInfo);
+
+ 	// Retrun
+
+ 	return rc;
+ }
+
+// =======
+// SESSION
+// =======
+
+// -----------------------------------------------------------------------------
+// FUNCTION      EngineEndCurrentSession
+// -----------------------------------------------------------------------------
+// PURPOSE       Release buffers allocated by the current session
+//
+// INPUT         pEngineContext     pointer to the engine context
+// -----------------------------------------------------------------------------
+
+RC EngineEndCurrentSession(ENGINE_CONTEXT *pEngineContext)
+ {
+ 	RC rc;
+
+ 	rc=ERROR_ID_NO;
+
+ 	if (THRD_id!=THREAD_TYPE_NONE)
+ 	 {
+   	// Flush buffers
+
+    rc=EngineRequestEndBrowseSpectra(pEngineContext);
+
+   	// Reset the context of the engine
+
+   	EngineResetContext(pEngineContext);
+   	EngineResetContext(&ENGINE_contextRef);
+
+   	// Release other allocated buffers
+
+    GDP_ASC_ReleaseBuffers();
+    GDP_BIN_ReleaseBuffers();
+
+  //  GOME2_ReleaseBuffers(GOME2_BEAT_CLOSE);
+  //  OMI_ReleaseBuffers();
+
+    SCIA_ReleaseBuffers(pEngineContext->project.instrumental.readOutFormat);
+
+    if ((THRD_id!=THREAD_TYPE_NONE) && (THRD_id!=THREAD_TYPE_SPECTRA))
+     ANALYSE_ResetData();
+
+    THRD_id=THREAD_TYPE_NONE;
+    SYMB_itemCrossN=SYMBOL_PREDEFINED_MAX;
+   }
+
+  // Return
+
+  return rc;
+ }
+
+// ===================================================
+// CREATE/DESTROY ENGINE CONTEXT ON PROGRAM START/EXIT
+// ===================================================
+
+// -----------------------------------------------------------------------------
+// FUNCTION      EngineCreateContext
+// -----------------------------------------------------------------------------
+// PURPOSE       Create a context for the engine
+// -----------------------------------------------------------------------------
+
+ENGINE_CONTEXT *EngineCreateContext(void)
+ {
+ 	// Declaration
+
+ 	ENGINE_CONTEXT *pEngineContext=&engineContext;                                // pointer to the engine context
+
+  // Initializations
+
+ 	strcpy(ENGINE_dbgFile,"QDOAS.dbg");
+
+ 	memset(pEngineContext,0,sizeof(ENGINE_CONTEXT));                              // main engine context
+ 	memset(&ENGINE_contextRef,0,sizeof(ENGINE_CONTEXT));                          // copy of the engine context for the automatic search of the reference spectrum
+
+ 	THRD_id=THREAD_TYPE_NONE;
+
+ 	if (RESOURCE_Alloc()!=ERROR_ID_NO)
+   pEngineContext=NULL;
+
+  // Return
+
+ 	return pEngineContext;
+ }
+
+// -----------------------------------------------------------------------------
+// FUNCTION      EngineDestroyContext
+// -----------------------------------------------------------------------------
+// PURPOSE       Destroy the context of the current engine on program exit
+//
+//                -> release buffers allocated by EngineCreateContext
+//                -> close open files and release buffers allocated by the current session
+//
+// INPUT         pEngineContext     pointer to the engine context
+// -----------------------------------------------------------------------------
+
+RC EngineDestroyContext(ENGINE_CONTEXT *pEngineContext)
+ {
+ 	RC rc;
+
+ 	rc=EngineEndCurrentSession(pEngineContext);
+
+ 	RESOURCE_Free();
+
+ 	return rc;
  }
 
 // ==========================================
@@ -1177,3 +1254,4 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
   return rc;
  }
+

@@ -122,10 +122,10 @@ bool CAnalysisWindowSubHandler::start(const QString &element, const QXmlAttribut
     return m_master->installSubHandler(new CAnalysisWindowCrossSectionSubHandler(m_master, &(d->crossSectionList)), atts);
   }
   else if (element == "linear") {
-    return m_master->installSubHandler(new CAnalysisWindowLinearSubHandler(m_master, &(d->linear)), atts);    
+    return m_master->installSubHandler(new CAnalysisWindowLinearSubHandler(m_master, &(d->linear)), atts);
   }
   else if (element == "nonlinear") {
-    return m_master->installSubHandler(new CAnalysisWindowNonLinearSubHandler(m_master, &(d->nonlinear)), atts);    
+    return m_master->installSubHandler(new CAnalysisWindowNonLinearSubHandler(m_master, &(d->nonlinear)), atts);
   }
   else if (element == "shift_stretch") {
     return m_master->installSubHandler(new CAnalysisWindowShiftStretchSubHandler(m_master, &(d->shiftStretchList)), atts);
@@ -171,7 +171,7 @@ bool CAnalysisWindowCrossSectionSubHandler::start(const QXmlAttributes &atts)
 
     QString str;
     struct anlyswin_cross_section *d = &(m_d->crossSection[m_d->nCrossSection]);
-    
+
     str = atts.value("sym");
     if (!str.isEmpty() && str.length() < (int)sizeof(d->symbol))
       strcpy(d->symbol, str.toAscii().data());
@@ -229,7 +229,7 @@ bool CAnalysisWindowCrossSectionSubHandler::start(const QXmlAttributes &atts)
 
     // All OK
     ++(m_d->nCrossSection);
-    
+
     return true;
   }
 
@@ -255,12 +255,12 @@ bool CAnalysisWindowLinearSubHandler::start(const QXmlAttributes &atts)
   m_d->xBaseOrder = CAnalysisWindowSubHandler::mapToPolyType(atts.value("xbase"));
   m_d->xFlagFitStore = (atts.value("xfit") == "true") ? 1 : 0;
   m_d->xFlagErrStore = (atts.value("xerr") == "true") ? 1 : 0;
-  
+
   m_d->xinvPolyOrder = CAnalysisWindowSubHandler::mapToPolyType(atts.value("xinvpoly"));
   m_d->xinvBaseOrder = CAnalysisWindowSubHandler::mapToPolyType(atts.value("xinvbase"));
   m_d->xinvFlagFitStore = (atts.value("xinvfit") == "true") ? 1 : 0;
   m_d->xinvFlagErrStore = (atts.value("xinverr") == "true") ? 1 : 0;
-  
+
   m_d->offsetPolyOrder = CAnalysisWindowSubHandler::mapToPolyType(atts.value("offpoly"));
   m_d->offsetBaseOrder = CAnalysisWindowSubHandler::mapToPolyType(atts.value("offbase"));
   m_d->offsetFlagFitStore = (atts.value("offfit") == "true") ? 1 : 0;
@@ -392,8 +392,8 @@ bool CAnalysisWindowShiftStretchSubHandler::start(const QXmlAttributes &atts)
 
     QString str;
     struct anlyswin_shift_stretch *d = &(m_d->shiftStretch[m_d->nShiftStretch]);
-    
-    d->shFit = (atts.value("shfit") == "true") ? 1 : 0;    
+
+    d->shFit = (atts.value("shfit") == "true") ? 1 : 0;
 
     str = atts.value("stfit");
     if (str == "1st") d->stFit = ANLYS_STRETCH_TYPE_FIRST_ORDER;
@@ -405,26 +405,26 @@ bool CAnalysisWindowShiftStretchSubHandler::start(const QXmlAttributes &atts)
     else if (str == "2nd") d->scFit = ANLYS_STRETCH_TYPE_SECOND_ORDER;
     else d->scFit = ANLYS_STRETCH_TYPE_NONE;
 
-    d->shStore = (atts.value("shstr") == "true") ? 1 : 0;    
-    d->stStore = (atts.value("ststr") == "true") ? 1 : 0;    
-    d->scStore = (atts.value("scstr") == "true") ? 1 : 0;    
-    d->errStore = (atts.value("errstr") == "true") ? 1 : 0;    
-    
+    d->shStore = (atts.value("shstr") == "true") ? 1 : 0;
+    d->stStore = (atts.value("ststr") == "true") ? 1 : 0;
+    d->scStore = (atts.value("scstr") == "true") ? 1 : 0;
+    d->errStore = (atts.value("errstr") == "true") ? 1 : 0;
+
     d->shInit = atts.value("shini").toDouble();
     d->stInit = atts.value("stini").toDouble();
     d->stInit2 = atts.value("stini2").toDouble();
     d->scInit = atts.value("scini").toDouble();
     d->scInit2 = atts.value("scini2").toDouble();
-    
+
     d->shDelta = atts.value("shdel").toDouble();
     d->stDelta = atts.value("stdel").toDouble();
     d->stDelta2 = atts.value("stdel2").toDouble();
     d->scDelta = atts.value("scdel").toDouble();
     d->scDelta2 = atts.value("scdel2").toDouble();
-    
+
     d->shMin = atts.value("shmin").toDouble();
     d->shMax = atts.value("shmax").toDouble();
-    
+
     return true;
   }
 
@@ -438,7 +438,7 @@ bool CAnalysisWindowShiftStretchSubHandler::start(const QString &element, const 
     struct anlyswin_shift_stretch *d = &(m_d->shiftStretch[m_d->nShiftStretch]);
 
     if (d->nSymbol < MAX_AW_SHIFT_STRETCH) {
-      
+
       QString str = atts.value("name");
       if (!str.isEmpty() && str.length() < (int)SYMBOL_NAME_BUFFER_LENGTH) {
 	strcpy(&(d->symbol[d->nSymbol][0]), str.toAscii().data());
@@ -508,7 +508,7 @@ bool CAnalysisWindowOutputSubHandler::start(const QXmlAttributes &atts)
 
     QString str;
     struct anlyswin_output *d = &(m_d->output[m_d->nOutput]);
-    
+
     str = atts.value("sym");
     if (!str.isEmpty() && str.length() < (int)sizeof(d->symbol))
       strcpy(d->symbol, str.toAscii().data());
@@ -526,7 +526,7 @@ bool CAnalysisWindowOutputSubHandler::start(const QXmlAttributes &atts)
 
     // All OK
     ++(m_d->nOutput);
-    
+
     return true;
   }
 
@@ -549,7 +549,7 @@ CAnalysisWindowSfpSubHandler::~CAnalysisWindowSfpSubHandler()
 bool CAnalysisWindowSfpSubHandler::start(const QXmlAttributes &atts)
 {
   int index = atts.value("index").toInt();
-  
+
   if (index > 0 && index <= 4) {
     struct calibration_sfp *p = (m_d + index - 1);
 
@@ -558,7 +558,7 @@ bool CAnalysisWindowSfpSubHandler::start(const QXmlAttributes &atts)
     p->deltaValue = atts.value("delta").toDouble();
     p->fitStore = (atts.value("fstr") == "true") ? 1 : 0;
     p->errStore = (atts.value("estr") == "true") ? 1 : 0;
-    
+
     return true;
   }
 

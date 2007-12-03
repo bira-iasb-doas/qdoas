@@ -25,13 +25,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 void initializeMediateAnalysisWindow(mediate_analysis_window_t *d)
  {
   // Declarations
-  
+
   int i;
-  
+
   // Initializations
-  
+
   memset(d, 0, sizeof(mediate_analysis_window_t));
-  
+
   d->requireSpectrum=
   d->requirePolynomial=
   d->requireFit=
@@ -102,5 +102,5 @@ void initializeMediateAnalysisWindow(mediate_analysis_window_t *d)
   // Output
 
   for (i=0;i<MAX_AW_CROSS_SECTION;i++)
-   d->outputList.output[i].slantFactor=d->outputList.output[i].vertFactor=(double)1.;
+   d->outputList.output[i].slantFactor=(double)1.;
  }

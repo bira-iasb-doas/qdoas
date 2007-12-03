@@ -408,9 +408,9 @@ void CWMoleculesDoasTable::cellDataChanged(int row, int column, const QVariant &
     // contrained CC
     bool enable = !cellData.toBool();
 
-    setCellEnabled(row, 6, enable); 
-    setCellEnabled(row, 7, enable); 
-    setCellEnabled(row, 8, enable); 
+    setCellEnabled(row, 6, enable);
+    setCellEnabled(row, 7, enable);
+    setCellEnabled(row, 8, enable);
   }
 }
 
@@ -1480,7 +1480,7 @@ CWOutputDoasTable::CWOutputDoasTable(const QString &label, int columnWidth, int 
 {
   // columns
   createColumnCheck("AMFs", 60);                          // col 0
-  createColumnEdit("Residials", 60);
+  createColumnEdit("Residuals", 60);
   createColumnCheck("Slnt Col", 60);                      // col 2
   createColumnCheck("Slnt Err", 60);
   createColumnEdit(0.0, 10.0, 3, "Slnt Fact", 80);  // col 4
@@ -1514,6 +1514,7 @@ void CWOutputDoasTable::populate(const output_list_t *data)
       setCellData(index, 6, QVariant(d->vertErr));
       setCellData(index, 7, QVariant(d->vertFactor));
     }
+    ++d;
     ++row;
   }
 }

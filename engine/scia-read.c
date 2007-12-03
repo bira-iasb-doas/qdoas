@@ -2022,7 +2022,7 @@ RC SciaRefSelection(ENGINE_CONTEXT *pEngineContext,
 //               ERROR_ID_NO otherwise.
 // -----------------------------------------------------------------------------
 
-RC SciaNewRef(ENGINE_CONTEXT *pEngineContext)
+RC SciaNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
  {
   // Declarations
 
@@ -2055,6 +2055,7 @@ RC SciaNewRef(ENGINE_CONTEXT *pEngineContext)
      pTabFeno=&TabFeno[indexFeno];
 
      if ((pTabFeno->hidden!=1) &&
+         (pTabFeno->useKurucz!=ANLYS_KURUCZ_NONE) &&
          (pTabFeno->useKurucz!=ANLYS_KURUCZ_SPEC) &&
          (pTabFeno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_AUTOMATIC))
 
@@ -2096,7 +2097,7 @@ RC SciaNewRef(ENGINE_CONTEXT *pEngineContext)
 // RETURN        0 for success
 // -----------------------------------------------------------------------------
 
-RC SCIA_LoadAnalysis(ENGINE_CONTEXT *pEngineContext)
+RC SCIA_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
  {
   // Declarations
 
@@ -2216,7 +2217,7 @@ RC SCIA_LoadAnalysis(ENGINE_CONTEXT *pEngineContext)
      {
       KURUCZ_Init(0);
 
-      if ((THRD_id!=THREAD_TYPE_KURUCZ) && ((rc=KURUCZ_Reference(NULL,0,saveFlag,0,NULL /* QDOAS !!! responseHandle */))!=ERROR_ID_NO))
+      if ((THRD_id!=THREAD_TYPE_KURUCZ) && ((rc=KURUCZ_Reference(NULL,0,saveFlag,0,responseHandle))!=ERROR_ID_NO))
        goto EndSCIA_LoadAnalysis;
      }
 
@@ -2235,9 +2236,9 @@ RC SCIA_LoadAnalysis(ENGINE_CONTEXT *pEngineContext)
 
     // Automatic reference selection
 
-    if (sciaLoadReferenceFlag && !(rc=SciaNewRef(pEngineContext)) &&                       // !!! QDOAS response handle !!!
-      !(rc=ANALYSE_AlignReference(2,pEngineContext->project.spectra.displayDataFlag,NULL))) // automatic ref selection for Northern hemisphere
-     rc=ANALYSE_AlignReference(3,pEngineContext->project.spectra.displayDataFlag,NULL);     // automatic ref selection for Southern hemisphere
+    if (sciaLoadReferenceFlag && !(rc=SciaNewRef(pEngineContext,responseHandle)) &&
+      !(rc=ANALYSE_AlignReference(2,pEngineContext->project.spectra.displayDataFlag,responseHandle))) // automatic ref selection for Northern hemisphere
+     rc=ANALYSE_AlignReference(3,pEngineContext->project.spectra.displayDataFlag,responseHandle);     // automatic ref selection for Southern hemisphere
    }
 
   // Return

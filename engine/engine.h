@@ -19,14 +19,17 @@ EXTERN double         ENGINE_localNoon;                                         
 // PROTOTYPES
 // ==========
 
-ENGINE_CONTEXT *EngineCreateContext(void);
-void            EngineResetContext(ENGINE_CONTEXT *pEngineContext,INT closeFiles);
-void            EngineDestroyContext(ENGINE_CONTEXT *pEngineContext);
 RC              EngineCopyContext(ENGINE_CONTEXT *pEngineContextTarget,ENGINE_CONTEXT *pEngineContextSource);
 RC              EngineSetProject(ENGINE_CONTEXT *pEngineContext);
 RC              EngineSetFile(ENGINE_CONTEXT *pEngineContext,const char *fileName);
 RC              EngineReadFile(ENGINE_CONTEXT *pEngineContext,int indexRecord,INT dateFlag,INT localCalDay);
 RC              EngineRequestBeginBrowseSpectra(ENGINE_CONTEXT *pEngineContext,const char *spectraFileName);
+RC              EngineRequestEndBrowseSpectra(ENGINE_CONTEXT *pEngineContext);
 RC              EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle);
+
+RC              EngineEndCurrentSession(ENGINE_CONTEXT *pEngineContext);
+ENGINE_CONTEXT *EngineCreateContext(void);
+RC              EngineDestroyContext(ENGINE_CONTEXT *pEngineContext);
+
 
 #endif
