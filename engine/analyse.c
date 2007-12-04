@@ -5313,7 +5313,7 @@ RC ANALYSE_LoadOutput(ANALYSIS_OUTPUT *outputList,INT nOutput)
 
    	for (indexTabCross=0;indexTabCross<pTabFeno->NTabCross;indexTabCross++)
   	 	if ((strlen(pOutput->symbol)==strlen(WorkSpace[TabCross[indexTabCross].Comp].symbolName)) &&
-  	 	    !stricmp(pOutput->symbol,WorkSpace[TabCross[indexTabCross].Comp].symbolName))
+  	 	    !STD_Stricmp(pOutput->symbol,WorkSpace[TabCross[indexTabCross].Comp].symbolName))
   	 	 break;
 
   	 // Symbol found
