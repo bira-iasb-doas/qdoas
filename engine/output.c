@@ -2195,31 +2195,31 @@ RC OutputBuildFileName(ENGINE_CONTEXT *pEngineContext,UCHAR *outputFileName,INT 
 
         strcpy(tmpBuffer,outputFileName);
         sprintf(outputFileName,"%s%c%d",tmpBuffer,PATH_SEP,(int)pOutput->year);
-#if defined (__WINDOAS_WIN_) && __WINDOAS_WIN_
+        #if defined WIN32
         mkdir(outputFileName);
-#else
+        #else
         mkdir(outputFileName,0755);
-#endif
+        #endif
 
         // Create 'month' directory
 
         strcpy(tmpBuffer,outputFileName);
         sprintf(outputFileName,"%s%c%02d",tmpBuffer,PATH_SEP,(int)pOutput->month);
-#if defined (__WINDOAS_WIN_) && __WINDOAS_WIN_
+        #if defined WIN32
         mkdir(outputFileName);
-#else
+        #else
         mkdir(outputFileName,0755);
-#endif
+        #endif
 
         // Create 'day' directory
 
         strcpy(tmpBuffer,outputFileName);
         sprintf(outputFileName,"%s%c%02d",tmpBuffer,PATH_SEP,(int)pOutput->day);
-#if defined (__WINDOAS_WIN_) && __WINDOAS_WIN_
+        #if defined WIN32
         mkdir(outputFileName);
-#else
+        #else
         mkdir(outputFileName,0755);
-#endif
+        #endif
        }
 
       // Build output file name

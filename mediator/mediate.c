@@ -712,6 +712,24 @@ int mediateRequestSetProject(void *engineContext,
 	 PROJECT *pEngineProject;                                                      // project part of the engine
 	 RC rc;                                                                        // return code
 
+	 #ifdef WIN32
+	 {
+	 	FILE *fp;
+	 	fp=fopen("toto.dat","a+t");
+	 	fprintf(fp,"On est sous Windows\n");
+	 	fclose(fp);
+	 }
+	#else
+	{
+		FILE *fp;
+		fp=fopen("toto.dat","a+t");
+		fprintf(fp,"On est sous linux\n");
+		fclose(fp);
+	}
+	#endif
+
+
+
 	 // Initializations
 
 	 pEngineContext=(ENGINE_CONTEXT *)engineContext;
@@ -1683,7 +1701,7 @@ int mediateRequestBeginAnalyseSpectra(void *engineContext,
  	ENGINE_CONTEXT *pEngineContext = (ENGINE_CONTEXT *)engineContext;
 
   if ((EngineRequestBeginBrowseSpectra(pEngineContext,spectraFileName)!=ERROR_ID_NO) ||
-     ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS) && (SCIA_LoadAnalysis(pEngineContext,responseHandle)!=ERROR_ID_NO)))
+      (ANALYSE_refSelectionFlag && (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS) && (SCIA_LoadAnalysis(pEngineContext,responseHandle)!=ERROR_ID_NO)))
 
    mediateDisplayErrorMessage(responseHandle);
 
