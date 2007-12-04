@@ -158,6 +158,7 @@ void CWProjectTree::contextMenuEvent(QContextMenuEvent *e)
     menu.addAction("Enable/Disable", this, SLOT(slotToggleEnable()));
     menu.addSeparator();
     menu.addAction("Run Analysis", this, SLOT(slotRunAnalysis()))->setEnabled(!m_sessionActive);
+    menu.addAction("Run Calibration", this, SLOT(slotRunCalibration()))->setEnabled(!m_sessionActive);
     menu.addAction("Browse Spectra", this, SLOT(slotBrowseSpectra()))->setEnabled(!m_sessionActive);
     menu.addSeparator();
     menu.addAction("Cut", this, SLOT(slotCutSelection()));
@@ -181,6 +182,7 @@ void CWProjectTree::contextMenuEvent(QContextMenuEvent *e)
 
       menu.addSeparator();
       menu.addAction("Run Analysis", this, SLOT(slotRunAnalysis()))->setEnabled(!m_sessionActive);
+      menu.addAction("Run Calibration", this, SLOT(slotRunCalibration()))->setEnabled(!m_sessionActive);
       menu.addAction("Browse Spectra", this, SLOT(slotBrowseSpectra()))->setEnabled(!m_sessionActive);
       menu.addSeparator();
 
@@ -208,6 +210,7 @@ void CWProjectTree::contextMenuEvent(QContextMenuEvent *e)
 
       menu.addSeparator();
       menu.addAction("Run Analysis", this, SLOT(slotRunAnalysis()))->setEnabled(!m_sessionActive);
+      menu.addAction("Run Calibration", this, SLOT(slotRunCalibration()))->setEnabled(!m_sessionActive);
       menu.addAction("Browse Spectra", this, SLOT(slotBrowseSpectra()))->setEnabled(!m_sessionActive);
       menu.addSeparator();
 
@@ -228,6 +231,7 @@ void CWProjectTree::contextMenuEvent(QContextMenuEvent *e)
 
       menu.addSeparator();
       menu.addAction("Run Analysis", this, SLOT(slotRunAnalysis()))->setEnabled(!m_sessionActive);
+      menu.addAction("Run Calibration", this, SLOT(slotRunCalibration()))->setEnabled(!m_sessionActive);
       menu.addAction("Browse Spectra", this, SLOT(slotBrowseSpectra()))->setEnabled(!m_sessionActive);
       menu.addSeparator();
 
@@ -250,6 +254,7 @@ void CWProjectTree::contextMenuEvent(QContextMenuEvent *e)
 
       menu.addSeparator();
       menu.addAction("Run Analysis", this, SLOT(slotRunAnalysis()))->setEnabled(!m_sessionActive);
+      menu.addAction("Run Calibration", this, SLOT(slotRunCalibration()))->setEnabled(!m_sessionActive);
       menu.addAction("Browse Spectra", this, SLOT(slotBrowseSpectra()))->setEnabled(!m_sessionActive);
       menu.addSeparator();
 
@@ -306,6 +311,7 @@ void CWProjectTree::contextMenuEvent(QContextMenuEvent *e)
 
       menu.addSeparator();
       menu.addAction("Run Analysis", this, SLOT(slotRunAnalysis()))->setEnabled(!m_sessionActive);
+      menu.addAction("Run Calibration", this, SLOT(slotRunCalibration()))->setEnabled(!m_sessionActive);
       menu.addAction("Browse Spectra", this, SLOT(slotBrowseSpectra()))->setEnabled(!m_sessionActive);
       menu.addSeparator();
 
@@ -1156,6 +1162,14 @@ void CWProjectTree::slotRunAnalysis()
     QMessageBox::information(this, "Run Analysis", "A session is currently active.");
   else
     buildAndStartSession(CSession::Analyse);
+}
+
+void CWProjectTree::slotRunCalibration()
+{
+  if (m_sessionActive)
+    QMessageBox::information(this, "Run Calibration", "A session is currently active.");
+  else
+    buildAndStartSession(CSession::Calibrate);
 }
 
 void CWProjectTree::slotBrowseSpectra()

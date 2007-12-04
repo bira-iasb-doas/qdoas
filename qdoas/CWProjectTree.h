@@ -119,6 +119,7 @@ Q_OBJECT
   void slotCreateAnalysisWindow();
   void slotRenameAnalysisWindow();
   void slotRunAnalysis();
+  void slotRunCalibration();
   void slotBrowseSpectra();
   void slotViewCrossSections();
   void slotDeleteSelection();
