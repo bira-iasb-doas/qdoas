@@ -1925,7 +1925,11 @@ int mediateRequestEndCalibrateSpectra(void *engineContext,
 int mediateRequestStop(void *engineContext,
 		       void *responseHandle)
  {
-  
+  // Close open files and release allocated buffers to reset the engine context
+
+ 	if (EngineRequestEndBrowseSpectra((ENGINE_CONTEXT *)engineContext)!=0)
+ 	 mediateDisplayErrorMessage(responseHandle);
+
   return 0;
  }
 
