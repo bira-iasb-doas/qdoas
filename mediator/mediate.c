@@ -83,6 +83,11 @@ void mediateRequestPlotSpectra(ENGINE_CONTEXT *pEngineContext,void *responseHand
  	pEngineContext->currentRecord=pEngineContext->indexRecord+1;
  	pRecord->oldZm=pRecord->Zm;
 
+  if (ANALYSE_plotRef)
+   mediateResponseRetainPage(plotPageRef,responseHandle);
+  if (ANALYSE_plotKurucz)
+   mediateResponseRetainPage(plotPageCalib,responseHandle);
+
   sprintf(tmpString,"Spectrum (%d/%d)",pEngineContext->indexRecord,pEngineContext->recordNumber);
 
   if (pProject->spectra.displaySpectraFlag)
@@ -1601,8 +1606,10 @@ int mediateRequestBeginBrowseSpectra(void *engineContext,
 				     const char *spectraFileName,
 				     void *responseHandle)
  {
+ 	INT rc;
+
  	if (EngineRequestBeginBrowseSpectra((ENGINE_CONTEXT *)engineContext,spectraFileName)!=0)
- 	 mediateDisplayErrorMessage(responseHandle);
+ 	 rc=mediateDisplayErrorMessage(responseHandle);
 
   return ((ENGINE_CONTEXT *)engineContext)->recordNumber;
  }

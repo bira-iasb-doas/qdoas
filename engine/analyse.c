@@ -131,6 +131,8 @@ UCHAR *AnlysPolynome[ANLYS_POLY_TYPE_MAX]={"None","order 0","order 1","order 2",
 UCHAR *ANLYS_crossAction[ANLYS_CROSS_ACTION_MAX]={"None","Interpolate","Convolute Std","Convolute I0","Convolute Ring"}; /* "Detector t° dependent","Strato t° dependent",*/
 UCHAR *ANLYS_amf[ANLYS_AMF_TYPE_MAX]={"None","SZA only","Climatology","Wavelength 1","Wavelength 2","Wavelength 3"};
 
+INT    ANALYSE_plotKurucz,ANALYSE_plotRef;
+
 INT NDET,                              // detector size
     NFeno,                             // number of analysis windows
     DimC,                              // number of columns in SVD matrix == number of symbols to take into account for SVD decomposition
@@ -2161,6 +2163,8 @@ RC ANALYSE_AlignReference(INT refFlag,INT saveFlag,void *responseHandle)
 
         if (Feno->displayRefEtalon)
          {
+         	ANALYSE_plotRef=1;
+
           memcpy(ANALYSE_secX,ANALYSE_zeros,sizeof(double)*NDET);
 
           for (i=SvdPDeb;i<SvdPFin;i++)
@@ -5628,6 +5632,7 @@ RC ANALYSE_SetInit(ENGINE_CONTEXT *pEngineContext)
 
   // Initializations
 
+  ANALYSE_plotKurucz=ANALYSE_plotRef=0;
   ANALYSE_ignoreAll=0;
   ANALYSE_refSelectionFlag=ANALYSE_lonSelectionFlag=0;
   analyseIndexRecord=pEngineContext->indexRecord;

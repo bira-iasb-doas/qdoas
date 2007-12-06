@@ -411,6 +411,9 @@ RC KURUCZ_Spectrum(double *oldLambda,double *newLambda,double *spectrum,double *
 
       if (displayFlag)
        {
+       	if (KURUCZ_buffers.displaySpectra || KURUCZ_buffers.displayResidual || KURUCZ_buffers.displayFit || KURUCZ_buffers.displayShift)
+       	 ANALYSE_plotKurucz=1;
+
         // Display complete fit
 
         if (KURUCZ_buffers.displaySpectra)

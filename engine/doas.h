@@ -834,6 +834,8 @@ typedef struct anlyswin_output ANALYSIS_OUTPUT;
 // GLOBAL DECLARATIONS
 // -------------------
 
+EXTERN INT    ANALYSE_plotKurucz,ANALYSE_plotRef;
+
 EXTERN UCHAR *ANLYS_crossAction[ANLYS_CROSS_ACTION_MAX];
 EXTERN UCHAR *ANLYS_amf[ANLYS_AMF_TYPE_MAX];
 

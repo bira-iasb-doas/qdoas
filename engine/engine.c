@@ -259,6 +259,7 @@ RC EngineSetProject(ENGINE_CONTEXT *pEngineContext)
   pInstrumental=&pProject->instrumental;
 
   pEngineContext->lastRefRecord=0;
+
   pEngineContext->satelliteFlag=((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_GDP_ASCII) ||
                                  (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN) ||
                                  (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS) ||
