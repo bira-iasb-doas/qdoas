@@ -1922,6 +1922,14 @@ int mediateRequestEndCalibrateSpectra(void *engineContext,
   return (!rc)?0:-1;
  }
 
+int mediateRequestStop(void *engineContext,
+		       void *responseHandle)
+ {
+  
+  return 0;
+ }
+
+
 int mediateRequestViewCrossSections(void *engineContext, char *awName,double minWavelength, double maxWavelength,
                                     int nFiles, char **filenames, void *responseHandle)
  {
