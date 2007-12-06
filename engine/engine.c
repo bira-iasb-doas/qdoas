@@ -426,6 +426,7 @@ RC EngineSetFile(ENGINE_CONTEXT *pEngineContext,const char *fileName)
  	// Initializations
 
  	pFile=&pEngineContext->fileInfo;
+ 	pEngineContext->recordInfo.oldZm=(double)-1;
 
  	rc=ERROR_ID_NO;
 
@@ -728,13 +729,20 @@ RC EngineReadFile(ENGINE_CONTEXT *pEngineContext,int indexRecord,INT dateFlag,IN
  // ---------------------------------------------------------------------------
    }
 
-  if (pEngineContext->buffers.instrFunction!=NULL)
+  if (!rc)
    {
-    for (i=0;(i<NDET) && !rc;i++)
-     if (pEngineContext->buffers.instrFunction[i]==(double)0.)
-      rc=ERROR_SetLast("EngineReadFile",ERROR_TYPE_FATAL,ERROR_ID_DIVISION_BY_0,"Instrumental function");
-     else
-      pEngineContext->buffers.spectrum[i]/=pEngineContext->buffers.instrFunction[i];
+   	pEngineContext->indexRecord=indexRecord;
+   	if (pEngineContext->recordInfo.oldZm<(double)0.)
+   	 pEngineContext->recordInfo.oldZm=pEngineContext->recordInfo.Zm;
+
+    if (pEngineContext->buffers.instrFunction!=NULL)
+     {
+      for (i=0;(i<NDET) && !rc;i++)
+       if (pEngineContext->buffers.instrFunction[i]==(double)0.)
+        rc=ERROR_SetLast("EngineReadFile",ERROR_TYPE_FATAL,ERROR_ID_DIVISION_BY_0,"Instrumental function");
+       else
+        pEngineContext->buffers.spectrum[i]/=pEngineContext->buffers.instrFunction[i];
+     }
    }
 
   return rc;

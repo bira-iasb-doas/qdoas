@@ -2190,7 +2190,7 @@ RC SCIA_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
            pTabFeno->Decomp=1;
 
            if (((rc=ANALYSE_XsInterpolation(pTabFeno,pTabFeno->LambdaRef))!=ERROR_ID_NO) ||
-               (!pKuruczOptions->fwhmFit && pTabFeno->xsToConvolute &&
+               ((!pKuruczOptions->fwhmFit || !pTabFeno->useKurucz) && pTabFeno->xsToConvolute &&
                ((rc=ANALYSE_XsConvolution(pTabFeno,pTabFeno->LambdaRef,&ANALYSIS_slit,pSlitOptions->slitFunction.slitType,&pSlitOptions->slitFunction.slitParam,&pSlitOptions->slitFunction.slitParam2,&pSlitOptions->slitFunction.slitParam3,&pSlitOptions->slitFunction.slitParam4))!=ERROR_ID_NO)))
 
             goto EndSCIA_LoadAnalysis;
@@ -2212,34 +2212,34 @@ RC SCIA_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
         }
       }
 
-    // Wavelength calibration alignment
+     // Wavelength calibration alignment
 
-   if (useKurucz || (THRD_id==THREAD_TYPE_KURUCZ))
-    {
-     KURUCZ_Init(0);
+    if (useKurucz || (THRD_id==THREAD_TYPE_KURUCZ))
+     {
+      KURUCZ_Init(0);
 
-     if ((THRD_id!=THREAD_TYPE_KURUCZ) && ((rc=KURUCZ_Reference(NULL,0,saveFlag,0,responseHandle))!=ERROR_ID_NO))
-      goto EndSCIA_LoadAnalysis;
-    }
+      if ((THRD_id!=THREAD_TYPE_KURUCZ) && ((rc=KURUCZ_Reference(NULL,0,saveFlag,0,responseHandle))!=ERROR_ID_NO))
+       goto EndSCIA_LoadAnalysis;
+     }
 
-   // Build undersampling cross sections
+    // Build undersampling cross sections
 
-   if (useUsamp && (THRD_id!=THREAD_TYPE_KURUCZ))
-    {
-     USAMP_LocalFree();
+    if (useUsamp && (THRD_id!=THREAD_TYPE_KURUCZ))
+     {
+      USAMP_LocalFree();
 
-     if (((rc=USAMP_LocalAlloc(0 /* lambdaMin,lambdaMax,oldNDET */))!=ERROR_ID_NO) ||
-         ((rc=USAMP_BuildFromAnalysis(0,0))!=ERROR_ID_NO) ||
-         ((rc=USAMP_BuildFromAnalysis(1,ITEM_NONE))!=ERROR_ID_NO))
+      if (((rc=USAMP_LocalAlloc(0 /* lambdaMin,lambdaMax,oldNDET */))!=ERROR_ID_NO) ||
+          ((rc=USAMP_BuildFromAnalysis(0,0))!=ERROR_ID_NO) ||
+          ((rc=USAMP_BuildFromAnalysis(1,ITEM_NONE))!=ERROR_ID_NO))
 
-      goto EndSCIA_LoadAnalysis;
-    }
+       goto EndSCIA_LoadAnalysis;
+     }
 
-   // Automatic reference selection
+    // Automatic reference selection
 
-   if (sciaLoadReferenceFlag && !(rc=SciaNewRef(pEngineContext,responseHandle)) &&
-     !(rc=ANALYSE_AlignReference(2,pEngineContext->project.spectra.displayDataFlag,responseHandle))) // automatic ref selection for Northern hemisphere
-    rc=ANALYSE_AlignReference(3,pEngineContext->project.spectra.displayDataFlag,responseHandle);     // automatic ref selection for Southern hemisphere
+    if (sciaLoadReferenceFlag && !(rc=SciaNewRef(pEngineContext,responseHandle)) &&
+      !(rc=ANALYSE_AlignReference(2,pEngineContext->project.spectra.displayDataFlag,responseHandle))) // automatic ref selection for Northern hemisphere
+     rc=ANALYSE_AlignReference(3,pEngineContext->project.spectra.displayDataFlag,responseHandle);     // automatic ref selection for Southern hemisphere
    }
 
   // Return

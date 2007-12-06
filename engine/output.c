@@ -1475,7 +1475,7 @@ void OutputSaveRecord(ENGINE_CONTEXT *pEngineContext,INT hiddenFlag)
        {
      // ----------------------------------------------------------------------
         case PRJCT_RESULTS_ASCII_SPECNO :
-         ((USHORT *)outputColumns[indexColumn++])[indexRecord]=(USHORT)pEngineContext->indexRecord-1;
+         ((USHORT *)outputColumns[indexColumn++])[indexRecord]=(USHORT)pEngineContext->indexRecord;
         break;
      // ----------------------------------------------------------------------
         case PRJCT_RESULTS_ASCII_NAME :

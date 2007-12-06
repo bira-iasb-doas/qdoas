@@ -523,12 +523,15 @@ void CWMoleculesDoasTable::slotChangeCrossSectionFileName()
     filter.append(" (").append(prefix).append("_*.xs*);;All files (*)");
 
     // file dialog to change the cross section
-    QString filename = QFileDialog::getOpenFileName(this, "AMF Filename", m_csFilename.at(m_selectedRow), filter);
-    if (!filename.isEmpty()) {
+    QString filename = QFileDialog::getOpenFileName(this, "Cross section Filename", m_csFilename.at(m_selectedRow), filter);
+    QFileInfo fi(filename);                                                     // Done by Caroline (05/12/2007)
+    QString base = fi.baseName();                                               // The file name includes the path, so filename.startsWith couldn't be compared with the prefix
+
+    if (!base.isEmpty()) {
       // the file MUST match the prefix
       prefix.append('_');
 
-      if (filename.startsWith(prefix, Qt::CaseInsensitive)) {
+      if (base.startsWith(prefix, Qt::CaseInsensitive)) {
 	m_csFilename[m_selectedRow] = filename; // change the filename
       }
       else {
@@ -542,11 +545,28 @@ void CWMoleculesDoasTable::slotChangeCrossSectionFileName()
 void CWMoleculesDoasTable::slotAmfFileName()
 {
   if (m_selectedRow >= 0 && m_selectedRow < rowCount()) {
+    QString prefix = rowLabel(m_selectedRow);
 
-    // file dialog to set the AMF filename - TODO (file filter?)
-    QString filename = QFileDialog::getOpenFileName(this, "AMF Filename", m_amfFilename.at(m_selectedRow));
-    if (!filename.isEmpty()) {
-      m_amfFilename[m_selectedRow] = filename; // change the filename
+    QString filter = prefix;
+    filter.append(" (").append(prefix).append("_*.AMF_*);;All files (*)");      // file filter depends on the selected SZA type
+                                                                                // AMF_SZA for SZA dependent AMF
+                                                                                // AMF_CLI for SZA and climatology dependent AMF
+                                                                                // AMF_WVE for SZA and wavelength dependent AMF
+    // file dialog to change the cross section
+    QString filename = QFileDialog::getOpenFileName(this, "AMF Filename", m_amfFilename.at(m_selectedRow), filter);
+    QFileInfo fi(filename);                                                     // Done by Caroline (05/12/2007)
+    QString base = fi.baseName();                                               // The file name includes the path, so filename.startsWith couldn't be compared with the prefix
+
+    if (!base.isEmpty()) {
+      // the file MUST match the prefix
+      prefix.append('_');
+
+      if (base.startsWith(prefix, Qt::CaseInsensitive)) {
+	m_amfFilename[m_selectedRow] = filename; // change the filename
+      }
+      else {
+	QMessageBox::warning(this, "Invalid AMF Filename", "The filename was NOT changed because the selected filename\ndid not correspond with the selected symbol.");
+      }
     }
   }
 }

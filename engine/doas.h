@@ -634,6 +634,7 @@ typedef struct _engineRecordInfo
   int    rejected;                                                              // number of rejected scans
   double Tint,                                                                  // integration time
          Zm,                                                                    // solar zenith angle
+         oldZm,
          Azimuth,                                                               // solar azimut angle
          Tm;                                                                    // date and time in seconds since ...
   char   SkyObs;                                                                // observation of the sky (obsolete)
@@ -722,6 +723,7 @@ typedef struct _engineContext
   INT     recordIndexesSize;                                                    // size of 'recordIndexes' buffer
   INT     recordSize;                                                           // size of record if length fixed
   INDEX   indexRecord,indexFile;
+  INDEX   currentRecord;
   INDEX   lastRefRecord;
   INT     lastSavedRecord;
   INT     satelliteFlag;
@@ -900,6 +902,7 @@ RC   ANALYSE_LoadNonLinear(ANALYSE_NON_LINEAR_PARAMETERS *nonLinearList,INT nNon
 RC   ANALYSE_LoadShiftStretch(ANALYSIS_SHIFT_STRETCH *shiftStretchList,INT nShiftStretch);
 RC   ANALYSE_LoadGaps(ANALYSIS_GAP *gapList,INT nGaps,double *lambda,double lambdaMin,double lambdaMax);
 RC   ANALYSE_LoadOutput(ANALYSIS_OUTPUT *outputList,INT nOutput);
+RC   ANALYSE_LoadSlit(PRJCT_SLIT *pSlit);
 
 RC   ANALYSE_Alloc(void);
 void ANALYSE_Free(void);

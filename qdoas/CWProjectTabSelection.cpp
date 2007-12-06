@@ -43,7 +43,7 @@ CWProjectTabSelection::CWProjectTabSelection(const mediate_project_selection_t *
   QString tmpStr;
 
   QVBoxLayout *mainLayout = new QVBoxLayout(this);
-  
+
   QHBoxLayout *topLayout = new QHBoxLayout;
   topLayout->setMargin(0);
 
@@ -69,7 +69,7 @@ CWProjectTabSelection::CWProjectTabSelection(const mediate_project_selection_t *
   szaGroupLayout->addWidget(m_szaDeltaEdit, 2, 1);
   szaGroupLayout->setColumnStretch(2, 1);
   szaGroup->setLayout(szaGroupLayout);
- 
+
   // use the validators to input-check the initial values
   m_szaMinEdit->validator()->fixup(tmpStr.setNum(properties->szaMinimum));
   m_szaMinEdit->setText(tmpStr);
@@ -106,7 +106,7 @@ CWProjectTabSelection::CWProjectTabSelection(const mediate_project_selection_t *
   topLayout->addWidget(recordGroup);
 
   mainLayout->addLayout(topLayout);
-  
+
   // Gelocation selection - also in a group box
   QGroupBox *geoGroup = new QGroupBox("Geolocations", this);
   QVBoxLayout *geoGroupLayout = new QVBoxLayout;
@@ -141,7 +141,7 @@ void CWProjectTabSelection::apply(mediate_project_selection_t *properties) const
   properties->recordNumberMinimum = tmpStr.isEmpty() ? 0 : tmpStr.toInt();
   tmpStr = m_recordMaxEdit->text();
   properties->recordNumberMaximum = tmpStr.isEmpty() ? 0 : tmpStr.toInt();
-  
+
   // Geolocation
   m_geolocationEdit->apply(&(properties->geo));
 }
@@ -154,7 +154,7 @@ CWGeolocation::CWGeolocation(const struct geolocation *geo, QWidget *parent) :
   int pixels = fm.width("00000000"); // same for all lineedits
 
   QVBoxLayout *mainLayout = new QVBoxLayout(this);
-   
+
   m_modeStack = new QStackedWidget(this);
 
   m_modeCombo = new QComboBox(this);
@@ -171,7 +171,7 @@ CWGeolocation::CWGeolocation(const struct geolocation *geo, QWidget *parent) :
   QGridLayout *circleLayout = new QGridLayout;
 
   // row 0
-  circleLayout->addWidget(new QLabel("Radius (degrees)", circleFrame), 0, 0);
+  circleLayout->addWidget(new QLabel("Radius (km)", circleFrame), 0, 0);
   m_radiusEdit = new QLineEdit(this);
   m_radiusEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 6500.0, 3, m_radiusEdit));
   m_radiusEdit->setFixedWidth(pixels);
@@ -188,7 +188,7 @@ CWGeolocation::CWGeolocation(const struct geolocation *geo, QWidget *parent) :
   circleLayout->addWidget(new QLabel("Center Latitude (degrees)", circleFrame) , 2, 0);
   m_cenLatEdit = new QLineEdit(this);
   m_cenLatEdit->setValidator(new CDoubleFixedFmtValidator(-180.0, 180.0, 3, m_cenLatEdit));
-  m_cenLatEdit->setFixedWidth(pixels);  
+  m_cenLatEdit->setFixedWidth(pixels);
   circleLayout->addWidget(m_cenLatEdit, 2, 1);
 
   circleFrame->setLayout(circleLayout);
@@ -212,15 +212,15 @@ CWGeolocation::CWGeolocation(const struct geolocation *geo, QWidget *parent) :
   m_eastEdit->setValidator(new CDoubleFixedFmtValidator(-180.0, 180.0, 3, m_eastEdit));
   m_eastEdit->setFixedWidth(pixels);
   rectangleLayout->addWidget(m_eastEdit, 1, 1);
-  
+
   // row 2
   rectangleLayout->addWidget(new QLabel("Southern Limit (lat. degrees)", rectangleFrame) , 2, 0);
   m_southEdit = new QLineEdit(this);
   m_southEdit->setValidator(new CDoubleFixedFmtValidator(-90.0, 90.0, 3, m_southEdit));
   m_southEdit->setFixedWidth(pixels);
   rectangleLayout->addWidget(m_southEdit, 2, 1);
-  
-  // row 3 
+
+  // row 3
   rectangleLayout->addWidget( new QLabel("Northern Limit (lat. degrees)", rectangleFrame), 3, 0);
   m_northEdit = new QLineEdit(this);
   m_northEdit->setValidator(new CDoubleFixedFmtValidator(-90.0, 90.0, 3, m_northEdit));
@@ -235,7 +235,7 @@ CWGeolocation::CWGeolocation(const struct geolocation *geo, QWidget *parent) :
   QFrame *sitesFrame = new QFrame;
   QGridLayout *sitesLayout = new QGridLayout;
 
-  sitesLayout->addWidget(new QLabel("Radius (degrees)", sitesFrame), 0, 0);
+  sitesLayout->addWidget(new QLabel("Radius (km)", sitesFrame), 0, 0);
   m_sitesRadiusEdit = new QLineEdit(this);
   m_sitesRadiusEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 6500.0, 3, m_sitesRadiusEdit));
   m_sitesRadiusEdit->setFixedWidth(pixels);
@@ -256,7 +256,7 @@ CWGeolocation::CWGeolocation(const struct geolocation *geo, QWidget *parent) :
 
   QString tmpStr;
   int index = m_modeCombo->findData(QVariant(geo->mode));
-  
+
   // rectangle
   m_westEdit->validator()->fixup(tmpStr.setNum(geo->rectangle.westernLongitude));
   m_westEdit->setText(tmpStr);
@@ -290,10 +290,10 @@ CWGeolocation::~CWGeolocation()
 void CWGeolocation::apply(struct geolocation *geo) const
 {
   int index = m_modeCombo->currentIndex();
-  
+
   geo->mode = (index == -1) ? PRJCT_SPECTRA_MODES_NONE : m_modeCombo->itemData(index).toInt();
 
-  // set data for all modes 
+  // set data for all modes
   QString tmpStr;
 
   tmpStr = m_westEdit->text();
