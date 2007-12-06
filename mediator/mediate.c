@@ -1029,7 +1029,7 @@ int mediateRequestSetProject(void *engineContext,
   DEBUG_Stop("Project");
   #endif
 
-  return (rc!=ERROR_ID_NO)?0:-1;    // supposed that an error at the level of the load of projects stops the current session
+  return (rc!=ERROR_ID_NO)?-1:0;    // supposed that an error at the level of the load of projects stops the current session
  }
 
 // =======================================================================
@@ -1545,7 +1545,7 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
   DEBUG_Stop("Analysis windows");
   #endif
 
-  return (rc!=ERROR_ID_NO)?0:-1;      // supposed that an error at the level of the load of projects stops the current session
+  return (rc!=ERROR_ID_NO)?-1:0;    // supposed that an error at the level of the load of projects stops the current session
  }
 
 // ===============================================================
