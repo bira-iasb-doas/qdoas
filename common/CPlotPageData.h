@@ -33,6 +33,7 @@ class CPlotPageData
   CPlotPageData(int pageNumber);
   ~CPlotPageData();
 
+  bool isEmpty(void) const;
   int pageNumber(void) const;
   int size(void) const;
   const QString& title(void) const;
@@ -48,6 +49,8 @@ class CPlotPageData
   QString m_title, m_tag;
   QList< RefCountConstPtr<CPlotDataSet> > m_dataSets;
 };
+
+inline bool CPlotPageData::isEmpty(void) const { return m_dataSets.isEmpty(); }
 
 #endif
 

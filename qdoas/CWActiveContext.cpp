@@ -455,25 +455,48 @@ void CWActiveContext::slotPlotPages(const QList< RefCountConstPtr<CPlotPageData>
   while (nPages > index)
     index = m_graphTab->addTab(QString()) + 1;
 
-  // replace all pages of the plot list and create new tabs
-  m_plotRegion->removeAllPages();
+  // build a list of pages that are to be retained (those in pageList that are 'empty')
+  // and reset the tabs...
   index = 0;
+  QList<int> retainedList;
   QList< RefCountConstPtr<CPlotPageData> >::const_iterator it = pageList.begin();
-  while (it != pageList.end()) {
+  while (it !=  pageList.end()) {
     pageNumber = (*it)->pageNumber();
-    m_plotRegion->addPage(*it);
-    // Set the tab label and store the page number as TabData
-    m_graphTab->setTabText(index, (*it)->tag());
+
+    if ((*it)->isEmpty()) {
+      // if must already exist for this to be meaningful ...
+      QString tmpTag;
+      if (m_plotRegion->pageExists(pageNumber, tmpTag)) {
+	retainedList.push_back(pageNumber);
+      }
+      m_graphTab->setTabText(index, tmpTag);
+    }
+    else {
+      // Set the tab label and store the page number as TabData
+      m_graphTab->setTabText(index, (*it)->tag());
+    }
     m_graphTab->setTabData(index, QVariant(pageNumber));
 
     // try and reselect the same active page as before ...
     if (pageNumber == activePageNumber)
       activeTabIndex = index;
-
+    
     ++index;
     ++it;
   }
 
+  m_plotRegion->removePagesExcept(retainedList);
+
+  // add the additional pages (non empty)
+  it = pageList.begin();
+  while (it != pageList.end()) {
+    pageNumber = (*it)->pageNumber();
+    if (!(*it)->isEmpty()) {
+      m_plotRegion->addPage(*it);
+    }
+    ++it;
+  }
+  
   if (m_graphTab->count()) {
     if (!m_activeEditor)
       m_graphTab->show();

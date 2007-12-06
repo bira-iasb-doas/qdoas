@@ -108,12 +108,14 @@ void CQdoasEngineController::notifyPlotData(QList<SPlotData> &plotDataList, QLis
     if (mIt == pageMap.end()) {
       // need a new page
       CPlotPageData *newPage = new CPlotPageData(pageNo);
-      newPage->addPlotDataSet(plotDataList.front().data);
+      if (plotDataList.front().data != NULL)
+	newPage->addPlotDataSet(plotDataList.front().data);
       pageMap.insert(std::map<int,CPlotPageData*>::value_type(pageNo, newPage));
     }
     else {
       // exists
-      (mIt->second)->addPlotDataSet(plotDataList.front().data);
+      if (plotDataList.front().data != NULL)
+	(mIt->second)->addPlotDataSet(plotDataList.front().data);
     }
     plotDataList.pop_front();
   }

@@ -102,7 +102,7 @@ class CEngineResponseVisual : public CEngineResponse
 
 //------------------------------------------------------------
 
-class CEngineResponseBeginAccessFile : public CEngineResponse
+class CEngineResponseBeginAccessFile : public CEngineResponseVisual
 {
  public:
   CEngineResponseBeginAccessFile(const QString &fileName);

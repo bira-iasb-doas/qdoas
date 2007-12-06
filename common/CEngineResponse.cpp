@@ -114,7 +114,7 @@ void CEngineResponseVisual::addCell(int pageNumber, int row, int col, const QVar
 //------------------------------------------------------------
 
 CEngineResponseBeginAccessFile::CEngineResponseBeginAccessFile(const QString &fileName) :
-  CEngineResponse(eEngineResponseBeginAccessFileType),
+  CEngineResponseVisual(eEngineResponseBeginAccessFileType),
   m_fileName(fileName),
   m_numberOfRecords(-1)
 {
@@ -129,6 +129,11 @@ void CEngineResponseBeginAccessFile::process(CEngineController *engineController
   // consider the error messages first - if fatal stop here
   if (processErrors(engineController))
     return;
+
+  if (!m_cellList.isEmpty() || !m_plotDataList.isEmpty()) {
+    engineController->notifyTableData(m_cellList);
+    engineController->notifyPlotData(m_plotDataList, m_titleList);
+  }
 
   if (m_numberOfRecords > 0) {
     // calibration data ... TODO ...

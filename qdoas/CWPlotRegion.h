@@ -21,6 +21,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #ifndef _CWPLOTREGION_H_GUARD
 #define _CWPLOTREGION_H_GUARD
 
+#include <QList>
 #include <QScrollArea>
 #include <QString>
 #include <QSize>
@@ -38,6 +39,7 @@ class CWPlotRegion : public QScrollArea
   virtual ~CWPlotRegion();
 
   void removeAllPages();
+  void removePagesExcept(const QList<int> pageNumberList);
   void addPage(const RefCountConstPtr<CPlotPageData> &page);
   
   void displayPage(int pageNumber);
@@ -47,6 +49,7 @@ class CWPlotRegion : public QScrollArea
   int pageDisplayed(void) const;
   QString pageTitle(int pageNumber) const;
   QString pageTag(int pageNumber) const;
+  bool pageExists(int pageNumber, QString &tag) const;
 
   const CPlotProperties& properties(void) const;
   void setProperties(const CPlotProperties &properties);

@@ -59,6 +59,47 @@ void CMultiPageTableModel::removeAllPages(void)
   }
 } 
 
+void CMultiPageTableModel::removePagesExcept(const QList<int> pageNumberList)
+{
+  QList< RefCountConstPtr<CTablePageData> > retained;
+  std::map< int,RefCountConstPtr<CTablePageData> >::iterator it;
+
+  // create a list of the pages to be retained
+  QList<int>::const_iterator pIt = pageNumberList.begin();
+  while (pIt != pageNumberList.end()) {
+
+    it = m_pageMap.find(*pIt);
+    if (it != m_pageMap.end()) {
+      // keep this page ...
+      retained.push_back(it->second);
+    }
+
+    ++pIt;
+  }
+
+  if (m_currentPage != 0 && !pageNumberList.contains(m_currentPage->pageNumber())) {
+    // notify that the active page is going to disapear ...
+    int lastRow = m_currentPage->rowCount() - 1;
+    int lastCol = m_currentPage->columnCount() - 1;
+    beginRemoveRows(QModelIndex(), 0, lastRow);
+    m_pageMap.clear();
+    m_currentPage = RefCountConstPtr<CTablePageData>();
+    endRemoveRows();
+    beginRemoveColumns(QModelIndex(), 0, lastCol);
+    endRemoveColumns();
+  }
+  else {
+    m_pageMap.clear();
+  }
+
+  // now put the retained pages back
+  while (!retained.isEmpty()) {
+    RefCountConstPtr<CTablePageData> page(retained.takeFirst());
+    
+    m_pageMap.insert(std::map< int,RefCountConstPtr<CTablePageData> >::value_type(page->pageNumber(), page));
+  }
+} 
+
 void CMultiPageTableModel::setActivePage(int pageNumber)
 {
   int lastRow, lastCol;
@@ -126,11 +167,28 @@ void CMultiPageTableModel::slotTablePages(const QList< RefCountConstPtr<CTablePa
 {
   int activePage = (m_currentPage != 0) ? m_currentPage->pageNumber() : -1;
 
-  removeAllPages();
+  QList<int> retainedList;
 
+  // build a list of the pages to be retained (empty pages)
   QList< RefCountConstPtr<CTablePageData> >::const_iterator it = pageList.begin();
   while (it != pageList.end()) {
-    addPage(*it);
+    
+    if ((*it)->isEmpty()) {
+      retainedList.push_back((*it)->pageNumber());
+    }
+
+    ++it;
+  }
+
+  removePagesExcept(retainedList);
+
+  // add the additional pages (non empty)
+  it = pageList.begin();
+  while (it != pageList.end()) {
+
+    if (!(*it)->isEmpty()) {
+      addPage(*it);
+    }
     ++it;
   }
 

@@ -37,6 +37,7 @@ Q_OBJECT
 
   void addPage(const RefCountConstPtr<CTablePageData> &page);
   void removeAllPages(void);
+  void removePagesExcept(const QList<int> pageNumberList);
 
   void setActivePage(int pageNumber);
 

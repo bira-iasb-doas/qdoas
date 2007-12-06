@@ -153,6 +153,14 @@ void mediateResponseLabelPage(int page,
   resp->addPageTitleAndTag(page, title, tag);
 }
 
+void mediateResponseRetainPage(int page, void * responseHandle)
+{
+  CEngineResponseVisual *resp = static_cast<CEngineResponseVisual*>(responseHandle);
+  // an invalid cell position
+  resp->addCell(page, -1, -1, QVariant());
+  // a NULL data set
+  resp->addDataSet(page, NULL);
+}
 
 void mediateResponseErrorMessage(const char *function,
 				 const char *messageString,

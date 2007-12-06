@@ -57,6 +57,35 @@ void CWPlotRegion::removeAllPages()
   //setWidget(m_plotPage); // deletes the current 'viewport widget'
 }
 
+void CWPlotRegion::removePagesExcept(const QList<int> pageNumberList)
+{
+  QList< RefCountConstPtr<CPlotPageData> > retained;
+  std::map< int,RefCountConstPtr<CPlotPageData> >::iterator it;
+
+  // create a list of the pages to be retained
+  QList<int>::const_iterator pIt = pageNumberList.begin();
+  while (pIt != pageNumberList.end()) {
+
+    it = m_pageMap.find(*pIt);
+    if (it != m_pageMap.end()) {
+      // keep this page ...
+      retained.push_back(it->second);
+    }
+
+    ++pIt;
+  }
+
+  m_pageMap.clear();
+  
+  // now put the retained pages back
+  while (!retained.isEmpty()) {
+    RefCountConstPtr<CPlotPageData> page(retained.takeFirst());
+
+    m_pageMap.insert(std::map< int,RefCountConstPtr<CPlotPageData> >::value_type(page->pageNumber(), page));
+  }
+
+}
+
 void CWPlotRegion::addPage(const RefCountConstPtr<CPlotPageData> &page)
 {
   // the page must not already exist
@@ -117,6 +146,18 @@ QString CWPlotRegion::pageTag(int pageNumber) const
     return (it->second)->tag();
 
   return QString();
+}
+
+bool CWPlotRegion::pageExists(int pageNumber, QString &tag) const
+{
+  std::map< int,RefCountConstPtr<CPlotPageData> >::const_iterator it = m_pageMap.find(pageNumber);
+  if (it != m_pageMap.end()) {
+    tag = (it->second)->tag();
+    return true;
+  }
+
+  tag = QString();
+  return false;
 }
 
 const CPlotProperties& CWPlotRegion::properties(void) const

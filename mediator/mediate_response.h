@@ -106,6 +106,17 @@ void mediateResponseLabelPage(int page, const char *title, const char *tag, void
 
 
 //----------------------------------------------------------
+// Page retention interface
+//----------------------------------------------------------
+
+// mediateResponseRetainPage
+//
+// instruct the GUI to retain a page set by a previous request.
+
+void mediateResponseRetainPage(int page, void * responseHandle);
+
+
+//----------------------------------------------------------
 // Error message handling
 //----------------------------------------------------------
 
