@@ -19,8 +19,12 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
 #include <QHeaderView>
+#include <QContextMenuEvent>
+#include <QMenu>
 
 #include "CWTableRegion.h"
+
+#include "debugutil.h"
 
 CWTableRegion::CWTableRegion(QWidget *parent) :
   QTableView(parent)
@@ -50,4 +54,19 @@ void CWTableRegion::slotDisplayPage(int pageNumber)
 
   resizeRowsToContents();
   resizeColumnsToContents();
+}
+
+void CWTableRegion::contextMenuEvent(QContextMenuEvent *e)
+{
+  // create a popup menu
+  QMenu menu;
+
+  menu.addAction("Save As...", this, SLOT(slotSaveAs()));
+
+  menu.exec(e->globalPos());
+}
+
+void CWTableRegion::slotSaveAs()
+{
+  TRACE("Save As ... ");
 }

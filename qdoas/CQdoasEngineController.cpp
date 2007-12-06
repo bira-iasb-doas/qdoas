@@ -29,7 +29,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 CQdoasEngineController::CQdoasEngineController(QObject *parent) :
   QObject(parent),
   CEngineController(),
-  m_state(Idle),
   m_currentProject(NULL),
   m_currentRecord(-1),
   m_numberOfRecords(0),
@@ -71,8 +70,7 @@ void CQdoasEngineController::notifyReadyToNavigateRecords(const QString &filenam
   emit signalCurrentFileChanged(filename);
 
   // session is up and running
-  m_state = Running;
-  emit signalSessionRunning(isSessionRunning());
+  emit signalSessionRunning(true);
 
   slotNextRecord(); // goto the first spectrum ...
 }
@@ -195,6 +193,11 @@ void CQdoasEngineController::notifyErrorMessages(int highestErrorLevel, const QL
   QString msg;
   QTextStream stream(&msg);
 
+  if (highestErrorLevel == FatalEngineError) {
+    // abort the session
+    emit signalSessionRunning(false);
+  }
+    
   QList<CEngineError>::const_iterator it = errorMessages.begin();
   while (it != errorMessages.end()) {
     // one message per line
@@ -220,11 +223,6 @@ void CQdoasEngineController::notifyErrorMessages(int highestErrorLevel, const QL
 
 void CQdoasEngineController::notifyEndAccessFile(void)
 {
-  if (m_state == Stopping) {
-    m_state = Idle;
-
-    emit signalSessionRunning(isSessionRunning());
-  }
 }
 
 bool CQdoasEngineController::event(QEvent *e)
@@ -255,8 +253,6 @@ bool CQdoasEngineController::event(QEvent *e)
 
 void CQdoasEngineController::slotNextFile()
 {
-  if (m_state != Running) return;
-
   CEngineRequestCompound *req = new CEngineRequestCompound;
 
   // done with the current file
@@ -316,8 +312,6 @@ void CQdoasEngineController::slotNextFile()
 
 void CQdoasEngineController::slotGotoFile(int number)
 {
-  if (m_state != Running) return;
-
   CEngineRequestCompound *req = new CEngineRequestCompound;
 
   // done with the current file
@@ -379,8 +373,6 @@ void CQdoasEngineController::slotPreviousRecord()
 
 void CQdoasEngineController::slotNextRecord()
 {
-  if (m_state != Running) return;
-
   if (m_currentRecord != -1) {
 
     switch (m_session->mode()) {
@@ -404,8 +396,6 @@ void CQdoasEngineController::slotLastRecord()
 
 void CQdoasEngineController::slotGotoRecord(int recordNumber)
 {
-  if (m_state != Running) return;
-
   if (m_currentRecord != -1 && recordNumber > 0 && recordNumber <= m_numberOfRecords) {
 
     switch (m_session->mode()) {
@@ -424,8 +414,6 @@ void CQdoasEngineController::slotGotoRecord(int recordNumber)
 
 void CQdoasEngineController::slotStep()
 {
-  if (m_state != Running) return;
-
   if (m_currentRecord >= 0 && m_currentRecord < m_numberOfRecords) {
     // step record
     switch (m_session->mode()) {
@@ -499,9 +487,6 @@ void CQdoasEngineController::slotStep()
 
 void CQdoasEngineController::slotStartSession(const RefCountPtr<CSession> &session)
 {
-  // the controller must be idle to start a session ...
-  if (m_state != Idle) return;
-
   // need a compound request
   CEngineRequestCompound *req = new CEngineRequestCompound;
 
@@ -548,8 +533,6 @@ void CQdoasEngineController::slotStartSession(const RefCountPtr<CSession> &sessi
       }
     }
 
-    // change state
-    m_state = Pending;
   }
 
   emit signalFileListChanged(sessionFileList);
@@ -559,9 +542,8 @@ void CQdoasEngineController::slotStartSession(const RefCountPtr<CSession> &sessi
 
 void CQdoasEngineController::slotStopSession()
 {
-  if (m_state != Running) return;
-
-  m_state = Stopping;
+  // session is stop(ping)
+  emit signalSessionRunning(false);
 
   // tidy up and wait for the response
   switch (m_session->mode()) {
@@ -575,13 +557,14 @@ void CQdoasEngineController::slotStopSession()
     m_thread->request(new CEngineRequestEndAnalyseFile);
     break;
   }
+
+  // Assuming that the end functions will be removed soon ...
+  m_thread->request(new CEngineRequestStop);
 }
 
 void CQdoasEngineController::slotViewCrossSections(const RefCountPtr<CViewCrossSectionData> &awData)
 {
   TRACE("CQdoasEngineController::slotViewCrossSections");
-
-  if (m_state != Idle) return;
 
   const mediate_analysis_window_t *d = awData->analysisWindow();
 

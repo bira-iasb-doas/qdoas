@@ -32,9 +32,12 @@ Q_OBJECT
   CWTableRegion(QWidget *parent = 0);
   virtual ~CWTableRegion();
 
+  void contextMenuEvent(QContextMenuEvent *e);
+
  public slots:
   void slotTablePages(const QList< RefCountConstPtr<CTablePageData> > &pageList);
   void slotDisplayPage(int pageNumber);
+  void slotSaveAs();
 
  private:
   CMultiPageTableModel *m_model;

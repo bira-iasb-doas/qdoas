@@ -50,6 +50,7 @@ class CEngineRequest
     eEngineRequestCalibrateNextRecordType,
     eEngineRequestCalibrateSpecificRecordType,
     eEngineRequestEndCalibrateFileType,
+    eEngineRequestStop,
     eEngineRequestViewCrossSectionsType
   };
 
@@ -290,6 +291,18 @@ class CEngineRequestEndCalibrateFile : public CEngineRequest
  public:
   CEngineRequestEndCalibrateFile();
   virtual ~CEngineRequestEndCalibrateFile();
+
+  virtual bool process(CEngineThread *engineThread);
+
+};
+
+//------------------------------------------------------------
+
+class CEngineRequestStop : public CEngineRequest
+{
+ public:
+  CEngineRequestStop();
+  virtual ~CEngineRequestStop();
 
   virtual bool process(CEngineThread *engineThread);
 

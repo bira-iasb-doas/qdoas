@@ -543,6 +543,31 @@ bool CEngineRequestEndCalibrateFile::process(CEngineThread *engineThread)
   return (rc != -1);
 }
 
+//------------------------------------------------------------
+
+CEngineRequestStop::CEngineRequestStop() :
+  CEngineRequest(eEngineRequestStop)
+{
+}
+
+CEngineRequestStop::~CEngineRequestStop()
+{
+}
+
+bool CEngineRequestStop::process(CEngineThread *engineThread)
+{
+  // create a response as the handle
+  CEngineResponseMessage *resp = new CEngineResponseMessage;
+  
+  int rc = mediateRequestStop(engineThread->engineContext(), resp);
+  
+  // post the response
+  engineThread->respond(resp);
+  
+  return (rc != -1);
+}
+
+//------------------------------------------------------------
 
 CEngineRequestViewCrossSections::CEngineRequestViewCrossSections(char *awName,double minWavelength, double maxWavelength,
                                                                  int nFiles, char **filenames) :

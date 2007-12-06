@@ -37,9 +37,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 class CQdoasEngineController : public QObject, public CEngineController
 {
 Q_OBJECT
- private:
-  enum eState { Idle, Pending, Running, Stopping };
-
  public:
   CQdoasEngineController(QObject *parent = 0);
   virtual ~CQdoasEngineController();
@@ -98,15 +95,11 @@ Q_OBJECT
   CEngineThread *m_thread;
   QList<QFileInfo> m_fileList;
 
-  eState m_state;
-
   const mediate_project_t *m_currentProject;
   int m_currentRecord, m_numberOfRecords, m_numberOfFiles;
 
   RefCountPtr<CSession> m_session;
   CSessionIterator m_currentIt;
 };
-
-inline bool CQdoasEngineController::isSessionRunning(void) const { return (m_state == Running); }
 
 #endif
