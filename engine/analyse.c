@@ -3520,7 +3520,7 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
         Feno->rc=(!Feno->hidden && VECTOR_Equal(Spectre,Feno->Sref,NDET,(double)1.e-7))?-1:ERROR_ID_NO;
 
         sprintf(windowTitle,"Analysis results for %s window",Feno->windowName);
-        sprintf(tabTitle,"%s results (%d/%d)",Feno->windowName,pEngineContext->indexRecord-1,pEngineContext->recordNumber);
+        sprintf(tabTitle,"%s results (%d/%d)",Feno->windowName,pEngineContext->indexRecord,pEngineContext->recordNumber);
 
         displayFlag=Feno->displaySpectrum+                                      //  force display spectrum
                     Feno->displayResidue+                                       //  force display residue
