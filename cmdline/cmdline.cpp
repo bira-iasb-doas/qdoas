@@ -542,15 +542,6 @@ int analyseProjectQdoasFile(void *engineContext, CBatchEngineController *control
     delete resp;
   }
   
-  CEngineResponseEndAccessFile *endFileResp = new CEngineResponseEndAccessFile;
-  result = mediateRequestEndAnalyseSpectra(engineContext, endFileResp);
-  
-  if (result == -1)
-    retCode = 1;
-  
-  endFileResp->process(controller);
-  delete endFileResp;
-  
   TRACE("   end file " << retCode);
 
   return retCode;

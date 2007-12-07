@@ -45,8 +45,6 @@ Q_OBJECT
   bool isSessionRunning(void) const;
 
   // notify interface is for use by response classes
-  virtual void notifyNumberOfFiles(int nFiles);
-  virtual void notifyCurrentFile(int fileNumber);
   virtual void notifyReadyToNavigateRecords(const QString &filename, int numberOfRecords);
   virtual void notifyCurrentRecord(int recordNumber);
   virtual void notifyEndOfRecords(void);

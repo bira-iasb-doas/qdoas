@@ -181,12 +181,12 @@ void CNavigationPanel::slotSetEnabled(bool enable)
   if (enable && m_maxRecord != 0 && m_fileCombo->count() != 0) {
 
     // down + first
-    groupActive = (m_currentRecord != 0);
+    groupActive = (m_currentRecord != 0) && !m_playing;
     m_firstBtn->setEnabled(groupActive);
     m_prevBtn->setEnabled(groupActive);
   
     // up + last
-    groupActive = (m_currentRecord != m_maxRecord);
+    groupActive = (m_currentRecord != m_maxRecord) && !m_playing;
     m_nextBtn->setEnabled(groupActive);
     m_lastBtn->setEnabled(groupActive);
 
@@ -204,8 +204,8 @@ void CNavigationPanel::slotSetEnabled(bool enable)
   }
 
   // groupActive is set appropriately for the rest of the buttons/widgets
-  m_recordEdit->setEnabled(groupActive);
-  m_fileCombo->setEnabled(groupActive);
+  m_recordEdit->setEnabled(groupActive && !m_playing);
+  m_fileCombo->setEnabled(groupActive && !m_playing);
   m_playBtn->setEnabled(groupActive);
   m_stopBtn->setEnabled(groupActive);
 
@@ -213,6 +213,7 @@ void CNavigationPanel::slotSetEnabled(bool enable)
     // continue playing ...
     if (m_playing)
       m_playTimer->start();
+
   }
   else {
     // stop playing ...

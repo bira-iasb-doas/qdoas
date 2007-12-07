@@ -45,15 +45,6 @@ CQdoasEngineController::~CQdoasEngineController()
 {
 }
 
-void CQdoasEngineController::notifyNumberOfFiles(int nFiles)
-{
-
-}
-
-void CQdoasEngineController::notifyCurrentFile(int fileNumber)
-{
-}
-
 void CQdoasEngineController::notifyReadyToNavigateRecords(const QString &filename, int numberOfRecords)
 {
   // successfully started accessing a file
