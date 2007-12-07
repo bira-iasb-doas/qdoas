@@ -432,6 +432,12 @@ void setMediateProjectSelection(PRJCT_SPECTRA *pEngineSpectra,const mediate_proj
   // Geolocation
 
   pEngineSpectra->mode=pMediateSpectra->geo.mode;
+  pEngineSpectra->radius=
+  pEngineSpectra->longMin=
+  pEngineSpectra->longMax=
+  pEngineSpectra->latMin=
+  pEngineSpectra->latMax=(double)0.;
+
 
   switch (pEngineSpectra->mode)
    {
@@ -710,7 +716,7 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
 
 	  	break;
 	// ----------------------------------------------------------------------------
-	  	case PRJCT_INSTR_FORMAT_SAOZ_PCDNMOS :                                                          // SAOZ PCD/NMOS 512
+	  	case PRJCT_INSTR_FORMAT_SAOZ_VIS :                                                              // SAOZ PCD/NMOS 512
 
 	  	 NDET=512;                                                                                      // size of the detector
 
@@ -1007,6 +1013,13 @@ int mediateRequestSetProject(void *engineContext,
 	 EngineEndCurrentSession(pEngineContext);
 
 	 THRD_id=operatingMode;
+	 {
+	 	FILE *fp;
+	 	fp=fopen("toto.dat","a+t");
+	 	fprintf(fp,"Operating mode %d\n",THRD_id);
+	 	fclose(fp);
+	 }
+
 
 	 // Transfer projects options from the mediator to the engine
 
@@ -1754,7 +1767,6 @@ int mediateRequestNextMatchingSpectrum(ENGINE_CONTEXT *pEngineContext,void *resp
     if ((rc=EngineReadFile(pEngineContext,rec,0,0))!=ERROR_ID_NO)
      mediateDisplayErrorMessage(responseHandle);
    }
-
 
   return (rc || (rec>pEngineContext->recordNumber))?0:rec;
  }

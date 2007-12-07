@@ -443,14 +443,6 @@ FENO;
 // CONSTANTS DEFINITIONS
 // ---------------------
 
-enum _thrdId
- {
-  THREAD_TYPE_NONE,
-  THREAD_TYPE_SPECTRA,
-  THREAD_TYPE_ANALYSIS,
-  THREAD_TYPE_KURUCZ
- };
-
 enum _thrdBrowse
  {
   THREAD_BROWSE_SPECTRA,

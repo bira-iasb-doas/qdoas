@@ -254,6 +254,8 @@ RC EngineSetProject(ENGINE_CONTEXT *pEngineContext)
 
  	// Initializations
 
+ 	ANALYSE_plotKurucz=ANALYSE_plotRef=0;
+
   pBuffers=&pEngineContext->buffers;
   pProject=&pEngineContext->project;
   pInstrumental=&pProject->instrumental;
@@ -441,7 +443,7 @@ RC EngineSetFile(ENGINE_CONTEXT *pEngineContext,const char *fileName)
   //        For the moment, I suppose that the file exists and if not, the selection of the
   //        measurement is ignored.  To improve ???
 
-  if ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SAOZ_PCDNMOS) ||
+  if ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SAOZ_VIS) ||
       (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_PDASI_EASOE))
 
    pFile->namesFp=fopen(FILES_BuildFileName(fileTmp,FILE_TYPE_NAMES),"rb");
@@ -489,7 +491,7 @@ RC EngineSetFile(ENGINE_CONTEXT *pEngineContext,const char *fileName)
       rc=SetPDA_EGG_Logger(pEngineContext,pFile->specFp);
      break;
   // ---------------------------------------------------------------------------
-     case PRJCT_INSTR_FORMAT_SAOZ_PCDNMOS :
+     case PRJCT_INSTR_FORMAT_SAOZ_VIS :
       rc=SetSAOZ(pEngineContext,pFile->specFp);
      break;
   // ---------------------------------------------------------------------------
@@ -639,7 +641,7 @@ RC EngineReadFile(ENGINE_CONTEXT *pEngineContext,int indexRecord,INT dateFlag,IN
      rc=ReliPDA_EGG_Logger(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp);
     break;
  // ---------------------------------------------------------------------------
-    case PRJCT_INSTR_FORMAT_SAOZ_PCDNMOS :
+    case PRJCT_INSTR_FORMAT_SAOZ_VIS :
      rc=ReliSAOZ(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp,pFile->namesFp);
     break;
  // ---------------------------------------------------------------------------
@@ -772,7 +774,10 @@ RC EngineRequestBeginBrowseSpectra(ENGINE_CONTEXT *pEngineContext,const char *sp
   if (!(rc=EngineSetFile(pEngineContext,spectraFileName)) && !pEngineContext->recordNumber)
    rc=ERROR_SetLast("EngineRequestBeginBrowseSpectra",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,spectraFileName);
   else if ((THRD_id==THREAD_TYPE_SPECTRA) || !(rc=OUTPUT_LocalAlloc(pEngineContext)))
-   pEngineContext->indexRecord = 1;
+   {
+    pEngineContext->indexRecord=0;
+    pEngineContext->currentRecord=1;
+   }
 
   // Return
 

@@ -5632,7 +5632,6 @@ RC ANALYSE_SetInit(ENGINE_CONTEXT *pEngineContext)
 
   // Initializations
 
-  ANALYSE_plotKurucz=ANALYSE_plotRef=0;
   ANALYSE_ignoreAll=0;
   ANALYSE_refSelectionFlag=ANALYSE_lonSelectionFlag=0;
   analyseIndexRecord=pEngineContext->indexRecord;

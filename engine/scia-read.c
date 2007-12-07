@@ -1091,6 +1091,14 @@ RC SCIA_SetPDS(ENGINE_CONTEXT *pEngineContext)
   pOrbitFile=NULL;
   rc=ERROR_ID_NO;
 
+  {
+  	FILE *fp;
+  	fp=fopen("toto.dat","a+t");
+  	fprintf(fp,"Begin SetPDS\n");
+  	fclose(fp);
+  }
+
+
   // In automatic reference selection, the file has maybe already loaded
 
   if ((THRD_id==THREAD_TYPE_ANALYSIS) && ANALYSE_refSelectionFlag)
@@ -1145,9 +1153,24 @@ RC SCIA_SetPDS(ENGINE_CONTEXT *pEngineContext)
        {
      	  sciaOrbitFilesN=1;
      	  strcpy(sciaOrbitFiles[0].sciaFileName,pEngineContext->fileInfo.fileName);
+
+     	  {
+     	  	FILE *fp;
+     	  	fp=fopen("toto.dat","a+t");
+     	  	fprintf(fp,"Case 1\n");
+     	  	fclose(fp);
+     	  }
+
        }
       else
        {
+       	{
+       		FILE *fp;
+       		fp=fopen("toto.dat","a+t");
+       		fprintf(fp,"Case 2\n");
+       		fclose(fp);
+       	}
+
         if (ANALYSE_lonSelectionFlag)
          {
           if (!strlen(pEngineContext->project.instrumental.fileExt))
@@ -1184,8 +1207,23 @@ RC SCIA_SetPDS(ENGINE_CONTEXT *pEngineContext)
 
         #else
 
+        {
+        	FILE *fp;
+        	fp=fopen("toto.dat","a+t");
+        	fprintf(fp,"filefilter %s\n",fileFilter);
+        	fclose(fp);
+        }
+
+
         for (hDir=opendir(fileFilter);(hDir!=NULL) && ((fileInfo=readdir(hDir))!=NULL);)
           {
+          	{
+          		FILE *fp;
+          		fp=fopen("toto.dat","a+t");
+          		fprintf(fp,"--- %s/%s\n",filePath,fileInfo->d_name);
+          		fclose(fp);
+          	}
+
             sprintf(sciaOrbitFiles[sciaOrbitFilesN].sciaFileName,"%s/%s",filePath,fileInfo->d_name);
             if ( STD_IsDir(sciaOrbitFiles[sciaOrbitFilesN].sciaFileName) == 1 )
                sciaOrbitFilesN++;
@@ -1264,6 +1302,14 @@ RC SCIA_SetPDS(ENGINE_CONTEXT *pEngineContext)
     if (!(rc=pOrbitFile->rc) && (pOrbitFile->sciaPDSInfo.FILE_l1c==NULL))
      pOrbitFile->sciaPDSInfo.FILE_l1c=fopen(pOrbitFile->sciaFileName,"rb");
    }
+
+   {
+   	FILE *fp;
+   	fp=fopen("toto.dat","a+t");
+   	fprintf(fp,"End  SetPDS %d\n",sciaOrbitFilesN);
+   	fclose(fp);
+   }
+
 
   // DEBUG
 
@@ -1755,7 +1801,7 @@ INT SciaRefSza(SCIA_REF *refList,INT maxRefSize,double sza,double szaDelta)
 //               nSpectra     the maximum number of spectra to average to build the reference spectrum;
 //               lambda       the grid of the irradiance spectrum
 //               pEngineContext    interface for file operations
-//               fp           pointer to the file dedicated to the display of information on selected spectra
+//               pIndexRefLine     index of the current line in the cell page associated to the ref plot page
 //
 // OUTPUT        ref          the new reference spectrum
 //
@@ -1763,7 +1809,7 @@ INT SciaRefSza(SCIA_REF *refList,INT maxRefSize,double sza,double szaDelta)
 //               ERROR_ID_NO otherwise.
 // -----------------------------------------------------------------------------
 
-RC SciaBuildRef(SCIA_REF *refList,INT nRef,INT nSpectra,double *lambda,double *ref,ENGINE_CONTEXT *pEngineContext,FILE *fp)
+RC SciaBuildRef(SCIA_REF *refList,INT nRef,INT nSpectra,double *lambda,double *ref,ENGINE_CONTEXT *pEngineContext,INDEX *pIndexLine,void *responseHandle)
  {
   // Declarations
 
@@ -1773,14 +1819,16 @@ RC SciaBuildRef(SCIA_REF *refList,INT nRef,INT nSpectra,double *lambda,double *r
   INDEX     indexRef,                                                           // browse reference in the list
             indexFile,                                                          // browse files
             indexState,indexObs,                                                // state index and observation number of the current record
+            indexColumn,                                                        // index of the current column in the cell page associated to the ref plot page
             i;                                                                  // index for loop and arrays
   INT       nRec;                                                               // number of records use for the average
   INT       alreadyOpen;
   RC        rc;                                                                 // return code
 
-  // Initialization
+  // Initializations
 
   pRecord=&pEngineContext->recordInfo;
+  indexColumn=2;
 
   for (i=0;i<NDET;i++)
    ref[i]=(double)0.;
@@ -1789,12 +1837,14 @@ RC SciaBuildRef(SCIA_REF *refList,INT nRef,INT nSpectra,double *lambda,double *r
 
   if (nRef)
    {
-    if (fp!=NULL)
-     {
-      fprintf(fp,"Ref Selection :\n");
-      fprintf(fp,"%s\n",sciaOrbitFiles[refList[0].indexFile].sciaFileName);
-      fprintf(fp,"Rec\t  SZA\t  Lat\t  Lon\n");
-     }
+    mediateResponseCellDataString(plotPageRef,(*pIndexLine)++,indexColumn,"Ref Selection",responseHandle);
+    mediateResponseCellInfo(plotPageRef,(*pIndexLine)++,indexColumn,responseHandle,"File","%s",sciaOrbitFiles[refList[0].indexFile].sciaFileName);
+    mediateResponseCellDataString(plotPageRef,(*pIndexLine),indexColumn,"Record",responseHandle);
+    mediateResponseCellDataString(plotPageRef,(*pIndexLine),indexColumn+1,"SZA",responseHandle);
+    mediateResponseCellDataString(plotPageRef,(*pIndexLine),indexColumn+2,"Lat",responseHandle);
+    mediateResponseCellDataString(plotPageRef,(*pIndexLine),indexColumn+3,"Lon",responseHandle);
+
+    (*pIndexLine)++;
 
     strcpy(pRecord->refFileName,sciaOrbitFiles[refList[0].indexFile].sciaFileName);
     pRecord->refRecord=refList[0].indexRecord+1;
@@ -1823,9 +1873,12 @@ RC SciaBuildRef(SCIA_REF *refList,INT nRef,INT nSpectra,double *lambda,double *r
 
       else if (((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS) && !(rc=SciaReadNadirMDS(pEngineContext,indexState,pRef->indexRecord-indexObs,pRef->indexFile))))
        {
-        if (fp!=NULL)
-         fprintf(fp,"%-5d\t%-6.2lf\t%-6.2lf\t%-6.2lf\n",
-                    pRef->indexRecord+1,pRef->sza,pRef->latitude,pRef->longitude);
+       	mediateResponseCellDataInteger(plotPageRef,(*pIndexLine),indexColumn,pRef->indexRecord+1,responseHandle);
+       	mediateResponseCellDataDouble(plotPageRef,(*pIndexLine),indexColumn+1,pRef->sza,responseHandle);
+       	mediateResponseCellDataDouble(plotPageRef,(*pIndexLine),indexColumn+2,pRef->latitude,responseHandle);
+       	mediateResponseCellDataDouble(plotPageRef,(*pIndexLine),indexColumn+3,pRef->longitude,responseHandle);
+
+       	(*pIndexLine)++;
 
         for (i=0;i<NDET;i++)
          ref[i]+=(double)pEngineContext->buffers.spectrum[i];
@@ -1885,7 +1938,8 @@ RC SciaRefSelection(ENGINE_CONTEXT *pEngineContext,
                     int nSpectra,
                     double *lambdaK,double *ref,
                     double *lambdaN,double *refN,
-                    double *lambdaS,double *refS)
+                    double *lambdaS,double *refS,
+                    void *responseHandle)
  {
   // Declarations
 
@@ -1893,13 +1947,14 @@ RC SciaRefSelection(ENGINE_CONTEXT *pEngineContext,
   double latDelta,tmp;
   INT nRefN,nRefS;                                                              // number of reference spectra in the previous list resp. for Northern and Southern hemisphere
   double normFact;                                                              // normalisation factor
-  FILE *fp;                                                                     // pointer to the temporary file with information to display
+  INDEX indexLine,indexColumn;                                                  // current position in the cell page associated to the ref page
   RC rc;                                                                        // return code
 
   // Initializations
 
-// QDOAS ???  fp=(pEngineContext->project.spectra.displayDataFlag)?fopen(DOAS_tmpFile,"w+t"):NULL;
-  fp=NULL;    // QDOAS ???
+  mediateResponseRetainPage(plotPageRef,responseHandle);
+  indexLine=3;
+  indexColumn=2;
 
   if (latMin>latMax)
    {
@@ -1942,7 +1997,7 @@ RC SciaRefSelection(ENGINE_CONTEXT *pEngineContext,
       // search for potential reference spectra in northern hemisphere
 
       if ((nRefN=nRefS=SciaRefLat(refList,sciaTotalRecordNumber,latMin,latMax,lonMin,lonMax,sza,szaDelta))>0)
-       rc=SciaBuildRef(refList,nRefN,nSpectra,lambdaN,refN,pEngineContext,fp);
+       rc=SciaBuildRef(refList,nRefN,nSpectra,lambdaN,refN,pEngineContext,&indexLine,responseHandle);
 
       if (!rc)
        memcpy(refS,refN,sizeof(double)*NDET);
@@ -1953,7 +2008,7 @@ RC SciaRefSelection(ENGINE_CONTEXT *pEngineContext,
     else
      {
       if ((nRefN=nRefS=SciaRefSza(refList,sciaTotalRecordNumber,sza,szaDelta))>0)
-       rc=SciaBuildRef(refList,nRefN,nSpectra,lambdaN,refN,pEngineContext,fp);
+       rc=SciaBuildRef(refList,nRefN,nSpectra,lambdaN,refN,pEngineContext,&indexLine,responseHandle);
 
       if (!rc)
        memcpy(refS,refN,sizeof(double)*NDET);
@@ -1970,9 +2025,7 @@ RC SciaRefSelection(ENGINE_CONTEXT *pEngineContext,
 
       else if (!nRefN)
        {
-        if (fp!=NULL)
-         fprintf(fp,"No record selected for the northern hemisphere, use reference of the southern hemisphere\n");
-
+        mediateResponseCellDataString(plotPageRef,indexLine++,indexColumn,"No record selected for the northern hemisphere, use reference of the southern hemisphere",responseHandle);
         memcpy(refN,refS,sizeof(double)*NDET);
        }
 
@@ -1980,9 +2033,7 @@ RC SciaRefSelection(ENGINE_CONTEXT *pEngineContext,
 
       else if (!nRefS)
        {
-        if (fp!=NULL)
-         fprintf(fp,"No record selected for the southern hemisphere, use reference of the northern hemisphere\n");
-
+       	mediateResponseCellDataString(plotPageRef,indexLine++,indexColumn,"No record selected for the southern hemisphere, use reference of the northern hemisphere",responseHandle);
         memcpy(refS,refN,sizeof(double)*NDET);
        }
 
@@ -1992,14 +2043,6 @@ RC SciaRefSelection(ENGINE_CONTEXT *pEngineContext,
         ANALYSE_NormalizeVector(refS-1,NDET,&normFact,"SciaRefSelection (refS) ");
        }
      }
-   }
-
-  // Close file
-
-  if (fp!=NULL)
-   {
-    fprintf(fp,"\n");
-    fclose(fp);
    }
 
   // Release allocated buffers
@@ -2051,7 +2094,7 @@ RC SciaNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
    // Browse analysis windows
 
-   for (indexFeno=0;(indexFeno<NFeno) && (rc<THREAD_EVENT_STOP);indexFeno++)
+   for (indexFeno=0;(indexFeno<NFeno) && !rc;indexFeno++)
     {
      pTabFeno=&TabFeno[indexFeno];
 
@@ -2069,7 +2112,8 @@ RC SciaNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
                           pTabFeno->nspectra,
                           pTabFeno->LambdaK,pTabFeno->Sref,
                           pTabFeno->LambdaN,pTabFeno->SrefN,
-                          pTabFeno->LambdaS,pTabFeno->SrefS);
+                          pTabFeno->LambdaS,pTabFeno->SrefS,
+                          responseHandle);
     }
 
   THRD_goto.indexMin=THRD_goto.indexMax=ITEM_NONE;

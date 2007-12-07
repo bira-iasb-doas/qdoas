@@ -575,10 +575,10 @@ RC KURUCZ_Spectrum(double *oldLambda,double *newLambda,double *spectrum,double *
           mediateResponseCellDataDouble(plotPageCalib,indexLine,indexColumn++,pixMid[indexWindow+1],responseHandle);
           mediateResponseCellDataDouble(plotPageCalib,indexLine,indexColumn++,VLambda[indexWindow+1],responseHandle);
           mediateResponseCellDataInteger(plotPageCalib,indexLine,indexColumn++,NIter[indexWindow],responseHandle);
-          mediateResponseCellInfoNoLabel(plotPageCalib,indexLine,indexColumn++,responseHandle,"%10.3e+/-%10.3e",pResults->Shift,pResults->SigmaShift);
+          mediateResponseCellInfoNoLabel(plotPageCalib,indexLine,indexColumn++,responseHandle,"%10.3e+/-%10.3e",VShift[indexWindow+1],VSig[indexWindow+1]);
 
           for (indexParam=0;indexParam<maxParam;indexParam++)
-           mediateResponseCellInfoNoLabel(plotPageCalib,indexLine,indexColumn++,responseHandle,"%10.3e+/-%10.3e",Feno->TabCrossResults[Feno->indexFwhmParam[indexParam]].Param,Feno->TabCrossResults[Feno->indexFwhmParam[indexParam]].SigmaParam);
+           mediateResponseCellInfoNoLabel(plotPageCalib,indexLine,indexColumn++,responseHandle,"%10.3e+/-%10.3e",fwhm[indexParam][indexWindow],fwhmSigma[indexParam][indexWindow]);
 
           if ((Feno->indexOffsetConst!=ITEM_NONE) && (Feno->TabCross[Feno->indexOffsetConst].FitParam!=ITEM_NONE))
            mediateResponseCellInfoNoLabel(plotPageCalib,indexLine,indexColumn++,responseHandle,"%10.3e+/-%10.3e",Feno->TabCrossResults[Feno->indexOffsetConst].Param,Feno->TabCrossResults[Feno->indexOffsetConst].SigmaParam);
@@ -872,8 +872,7 @@ void KURUCZ_Init(INT gomeFlag)
    {
     pTabFeno=&TabFeno[indexFeno];
 
-    if (
-        (pTabFeno->gomeRefFlag==gomeFlag) &&
+    if ((pTabFeno->gomeRefFlag==gomeFlag) &&
         (KURUCZ_buffers.KuruczFeno[indexFeno].svdFeno!=NULL))
      {
       Lambda_min=pKuruczOptions->lambdaLeft;
