@@ -201,4 +201,11 @@ HEADERS += ../engine/lv1_struct.h
 HEADERS += ../engine/lv1c_struct.h
 HEADERS += ../engine/read1c_defs.h
 HEADERS += ../engine/utc_string.h
-HEADERS += ../engine/windoas.h  
+HEADERS += ../engine/windoas.h
+
+#----------------------------------------------
+# Install
+#----------------------------------------------
+
+target.path = $${INSTALL_PREFIX}/bin
+INSTALLS += target

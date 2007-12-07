@@ -15,6 +15,8 @@ unix {
   QWT_LIB_PATH   = /usr/local/qwt/lib
   QWT_LIB        = qwt
 
+  INSTALL_PREFIX = /usr/local/Qdoas
+
   # for trace-write debugging ...
   DEFINES += DEBUG
   DEFINES += LVL4
@@ -25,6 +27,8 @@ win32 {
   QWT_LIB_PATH    = C:\Qwt\lib
   QWT_LIB         = qwt
   QWT_LIB_VERSION = 5
+
+  INSTALL_PREFIX = C:\Qdoas
 
   CODE_GENERATION = release # Override because debug is broken
 }
