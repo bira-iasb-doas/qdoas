@@ -41,8 +41,5 @@ void CEngineController::notifyErrorMessages(int highestErrorLevel, const QList<C
 {
 }
 
-void CEngineController::notifyEndAccessFile(void)
-{
-}
 
 

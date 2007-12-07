@@ -201,27 +201,6 @@ CEngineResponseAccessRecord::~CEngineResponseAccessRecord()
 
 //------------------------------------------------------------
 
-CEngineResponseEndAccessFile::CEngineResponseEndAccessFile() :
-  CEngineResponse(eEngineResponseEndAccessFileType)
-{
-}
-
-CEngineResponseEndAccessFile::~CEngineResponseEndAccessFile()
-{
-}
-
-void CEngineResponseEndAccessFile::process(CEngineController *engineController)
-{
-  // consider the error messages first - if fatal stop here
-  if (processErrors(engineController))
-    return;
-
-  // notify the engine controller
-  engineController->notifyEndAccessFile();
-}
-
-//------------------------------------------------------------
-
 CEngineResponseSet::CEngineResponseSet() :
   CEngineResponseVisual(eEngineResponseSetType)
 {

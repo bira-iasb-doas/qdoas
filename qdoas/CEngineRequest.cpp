@@ -294,29 +294,6 @@ bool CEngineRequestBrowseSpecificRecord::process(CEngineThread *engineThread)
 
 //------------------------------------------------------------
 
-CEngineRequestEndBrowseFile::CEngineRequestEndBrowseFile() :
-  CEngineRequest(eEngineRequestEndBrowseFileType)
-{
-}
-
-CEngineRequestEndBrowseFile::~CEngineRequestEndBrowseFile()
-{
-}
-
-bool CEngineRequestEndBrowseFile::process(CEngineThread *engineThread)
-{
-  CEngineResponseEndAccessFile *resp = new CEngineResponseEndAccessFile;
-
-  int rc = mediateRequestEndBrowseSpectra(engineThread->engineContext(), resp);
-
-  // post the response
-  engineThread->respond(resp);
-
-  return (rc != -1);
-}
-
-//------------------------------------------------------------
-
 CEngineRequestBeginAnalyseFile::CEngineRequestBeginAnalyseFile(const QString &fileName) :
   CEngineRequest(eEngineRequestBeginAnalyseFileType),
   m_fileName(fileName)
@@ -408,29 +385,6 @@ bool CEngineRequestAnalyseSpecificRecord::process(CEngineThread *engineThread)
 
 //------------------------------------------------------------
 
-CEngineRequestEndAnalyseFile::CEngineRequestEndAnalyseFile() :
-  CEngineRequest(eEngineRequestEndAnalyseFileType)
-{
-}
-
-CEngineRequestEndAnalyseFile::~CEngineRequestEndAnalyseFile()
-{
-}
-
-bool CEngineRequestEndAnalyseFile::process(CEngineThread *engineThread)
-{
-  CEngineResponseEndAccessFile *resp = new CEngineResponseEndAccessFile;
-
-  int rc = mediateRequestEndAnalyseSpectra(engineThread->engineContext(), resp);
-
-  // post the response
-  engineThread->respond(resp);
-
-  return (rc != -1);
-}
-
-//------------------------------------------------------------
-
 CEngineRequestBeginCalibrateFile::CEngineRequestBeginCalibrateFile(const QString &fileName) :
   CEngineRequest(eEngineRequestBeginCalibrateFileType),
   m_fileName(fileName)
@@ -513,29 +467,6 @@ bool CEngineRequestCalibrateSpecificRecord::process(CEngineThread *engineThread)
 
     resp->setRecordNumber(rc); // -1 if an error occurred
   }
-
-  // post the response
-  engineThread->respond(resp);
-
-  return (rc != -1);
-}
-
-//------------------------------------------------------------
-
-CEngineRequestEndCalibrateFile::CEngineRequestEndCalibrateFile() :
-  CEngineRequest(eEngineRequestEndCalibrateFileType)
-{
-}
-
-CEngineRequestEndCalibrateFile::~CEngineRequestEndCalibrateFile()
-{
-}
-
-bool CEngineRequestEndCalibrateFile::process(CEngineThread *engineThread)
-{
-  CEngineResponseEndAccessFile *resp = new CEngineResponseEndAccessFile;
-
-  int rc = mediateRequestEndCalibrateSpectra(engineThread->engineContext(), resp);
 
   // post the response
   engineThread->respond(resp);

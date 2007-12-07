@@ -41,15 +41,12 @@ class CEngineRequest
     eEngineRequestBeginBrowseFileType,
     eEngineRequestBrowseNextRecordType,
     eEngineRequestBrowseSpecificRecordType,
-    eEngineRequestEndBrowseFileType,
     eEngineRequestBeginAnalyseFileType,
     eEngineRequestAnalyseNextRecordType,
     eEngineRequestAnalyseSpecificRecordType,
-    eEngineRequestEndAnalyseFileType,
     eEngineRequestBeginCalibrateFileType,
     eEngineRequestCalibrateNextRecordType,
     eEngineRequestCalibrateSpecificRecordType,
-    eEngineRequestEndCalibrateFileType,
     eEngineRequestStop,
     eEngineRequestViewCrossSectionsType
   };
@@ -184,18 +181,6 @@ class CEngineRequestBrowseSpecificRecord : public CEngineRequest
 
 //------------------------------------------------------------
 
-class CEngineRequestEndBrowseFile : public CEngineRequest
-{
- public:
-  CEngineRequestEndBrowseFile();
-  virtual ~CEngineRequestEndBrowseFile();
-
-  virtual bool process(CEngineThread *engineThread);
-
-};
-
-//------------------------------------------------------------
-
 class CEngineRequestBeginAnalyseFile : public CEngineRequest
 {
  public:
@@ -235,18 +220,6 @@ class CEngineRequestAnalyseSpecificRecord : public CEngineRequest
 
 //------------------------------------------------------------
 
-class CEngineRequestEndAnalyseFile : public CEngineRequest
-{
- public:
-  CEngineRequestEndAnalyseFile();
-  virtual ~CEngineRequestEndAnalyseFile();
-
-  virtual bool process(CEngineThread *engineThread);
-
-};
-
-//------------------------------------------------------------
-
 class CEngineRequestBeginCalibrateFile : public CEngineRequest
 {
  public:
@@ -282,18 +255,6 @@ class CEngineRequestCalibrateSpecificRecord : public CEngineRequest
 
  private:
   int m_recordNumber;
-};
-
-//------------------------------------------------------------
-
-class CEngineRequestEndCalibrateFile : public CEngineRequest
-{
- public:
-  CEngineRequestEndCalibrateFile();
-  virtual ~CEngineRequestEndCalibrateFile();
-
-  virtual bool process(CEngineThread *engineThread);
-
 };
 
 //------------------------------------------------------------

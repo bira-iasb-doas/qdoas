@@ -49,7 +49,6 @@ class CEngineController
   virtual void notifyTableData(QList<SCell> &cellList);
 
   virtual void notifyErrorMessages(int highestErrorLevel, const QList<CEngineError> &errorMessages);
-  virtual void notifyEndAccessFile(void);
 };
 
 #endif

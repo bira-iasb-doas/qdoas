@@ -221,10 +221,6 @@ void CQdoasEngineController::notifyErrorMessages(int highestErrorLevel, const QL
   emit signalErrorMessages(highestErrorLevel, msg);
 }
 
-void CQdoasEngineController::notifyEndAccessFile(void)
-{
-}
-
 bool CQdoasEngineController::event(QEvent *e)
 {
   if (e->type() == cEngineResponseType) {
@@ -254,21 +250,6 @@ bool CQdoasEngineController::event(QEvent *e)
 void CQdoasEngineController::slotNextFile()
 {
   CEngineRequestCompound *req = new CEngineRequestCompound;
-
-  // done with the current file
-  if (m_numberOfRecords >= 0) {
-    switch (m_session->mode()) {
-    case CSession::Browse:
-      req->addRequest(new CEngineRequestEndBrowseFile);
-      break;
-    case CSession::Calibrate:
-      req->addRequest(new CEngineRequestEndCalibrateFile);
-      break;
-    case CSession::Analyse:
-      req->addRequest(new CEngineRequestEndAnalyseFile);
-      break;
-    }
-  }
 
   if (!m_currentIt.atEnd()) {
     ++m_currentIt;
@@ -314,21 +295,6 @@ void CQdoasEngineController::slotGotoFile(int number)
 {
   CEngineRequestCompound *req = new CEngineRequestCompound;
 
-  // done with the current file
-  if (m_numberOfRecords >= 0) {
-    switch (m_session->mode()) {
-    case CSession::Browse:
-      req->addRequest(new CEngineRequestEndBrowseFile);
-      break;
-    case CSession::Calibrate:
-      req->addRequest(new CEngineRequestEndCalibrateFile);
-      break;
-    case CSession::Analyse:
-      req->addRequest(new CEngineRequestEndAnalyseFile);
-      break;
-    }
-  }
-
   if (number >= 0 && number < m_numberOfFiles) {
     // implicitly checks that that m_numberOfFiles > 0
     m_currentIt(number);
@@ -342,6 +308,12 @@ void CQdoasEngineController::slotGotoFile(int number)
       }
       m_currentProject = m_currentIt.project();
       req->addRequest(new CEngineRequestSetProject(m_currentProject, opMode));
+      // might also need to replace the analysis windows
+      if (m_session->mode() == CSession::Calibrate || m_session->mode() == CSession::Analyse) {
+	int nWindows;
+	const mediate_analysis_window_t *anlysWinList = m_currentIt.analysisWindowList(nWindows);
+	req->addRequest(new CEngineRequestSetAnalysisWindows(anlysWinList, nWindows, opMode));
+      }
     }
 
     switch (m_session->mode()) {
@@ -441,21 +413,6 @@ void CQdoasEngineController::slotStep()
       // move to the next file
       CEngineRequestCompound *req = new CEngineRequestCompound;
 
-      // done with the current file
-      if (m_numberOfRecords >= 0) {
-	switch (m_session->mode()) {
-	case CSession::Browse:
-	  req->addRequest(new CEngineRequestEndBrowseFile);
-	  break;
-	case CSession::Calibrate:
-	  req->addRequest(new CEngineRequestEndCalibrateFile);
-	  break;
-	case CSession::Analyse:
-	  req->addRequest(new CEngineRequestEndAnalyseFile);
-	  break;
-	}
-      }
-
       // check for a change in project
       if (m_currentProject != m_currentIt.project()) {
 	int opMode = THREAD_TYPE_NONE;
@@ -545,20 +502,6 @@ void CQdoasEngineController::slotStopSession()
   // session is stop(ping)
   emit signalSessionRunning(false);
 
-  // tidy up and wait for the response
-  switch (m_session->mode()) {
-  case CSession::Browse:
-    m_thread->request(new CEngineRequestEndBrowseFile);
-    break;
-  case CSession::Calibrate:
-    m_thread->request(new CEngineRequestEndCalibrateFile);
-    break;
-  case CSession::Analyse:
-    m_thread->request(new CEngineRequestEndAnalyseFile);
-    break;
-  }
-
-  // Assuming that the end functions will be removed soon ...
   m_thread->request(new CEngineRequestStop);
 }
 

@@ -41,7 +41,6 @@ class CEngineResponse
     eEngineResponseBeginAccessFileType,
     eEngineResponseAccessRecordType,
     eEngineResponseGotoRecordType,
-    eEngineResponseEndAccessFileType,
     eEngineResponseSetType,
     eEngineResponseToolType
   };
@@ -140,17 +139,6 @@ class CEngineResponseAccessRecord : public CEngineResponseSpecificRecord
  public:
   CEngineResponseAccessRecord();
   virtual ~CEngineResponseAccessRecord();
-};
-
-//------------------------------------------------------------
-
-class CEngineResponseEndAccessFile : public CEngineResponse
-{
- public:
-  CEngineResponseEndAccessFile();
-  virtual ~CEngineResponseEndAccessFile();
-
-  virtual void process(CEngineController *engineController);
 };
 
 //------------------------------------------------------------

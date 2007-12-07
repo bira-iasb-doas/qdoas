@@ -54,7 +54,6 @@ Q_OBJECT
   virtual void notifyTableData(QList<SCell> &cellList);
 
   virtual void notifyErrorMessages(int highestErrorLevel, const QList<CEngineError> &errorMessages);
-  virtual void notifyEndAccessFile(void);
 
  protected:
   virtual bool event(QEvent *e);

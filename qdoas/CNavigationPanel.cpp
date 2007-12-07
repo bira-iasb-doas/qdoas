@@ -45,7 +45,7 @@ QWidget* CNavigationPanel::helperBuildRecordEdit(void)
   QFontMetrics fm(m_recordEdit->font());
 
   m_recordEdit->setFixedWidth(fm.width("00000")); // for a 4 digit line-edit
-  m_recordEdit->setToolTip("goto record");
+  m_recordEdit->setToolTip("Goto record");
 
   QFrame *frame = new QFrame;
   frame->setFrameStyle(QFrame::NoFrame);
@@ -64,7 +64,7 @@ QWidget* CNavigationPanel::helperBuildDelayEdit(void)
   QFontMetrics fm(m_delayEdit->font());
 
   m_delayEdit->setFixedWidth(fm.width("0000000")); // XX.XXX seconds [0,60]
-  m_delayEdit->setToolTip("play time delay (s)");
+  m_delayEdit->setToolTip("Play time delay (s)");
   m_delayEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 60.0, 3, m_delayEdit));
   m_delayEdit->setText("2.000");
 
@@ -98,13 +98,13 @@ CNavigationPanel::CNavigationPanel(QToolBar *toolBar) :
 {
 
   // Add the actions to the tool-bar
-  m_firstBtn = toolBar->addAction(QIcon(":/icons/nav_first_22.png"), "first record");
-  m_prevBtn = toolBar->addAction(QIcon(":/icons/nav_prev_22.png"), "previous record");
+  m_firstBtn = toolBar->addAction(QIcon(":/icons/nav_first_22.png"), "First record");
+  m_prevBtn = toolBar->addAction(QIcon(":/icons/nav_prev_22.png"), "Previous record");
   toolBar->addWidget(helperBuildRecordEdit());
-  m_nextBtn = toolBar->addAction(QIcon(":/icons/nav_next_22.png"), "next record");
-  m_lastBtn = toolBar->addAction(QIcon(":/icons/nav_last_22.png"), "last record");
-  m_stopBtn = toolBar->addAction(QIcon(":/icons/nav_stop_22.png"), "end session");
-  m_playBtn = toolBar->addAction(m_playIcon, "play/pause");
+  m_nextBtn = toolBar->addAction(QIcon(":/icons/nav_next_22.png"), "Next record");
+  m_lastBtn = toolBar->addAction(QIcon(":/icons/nav_last_22.png"), "Last record");
+  m_stopBtn = toolBar->addAction(QIcon(":/icons/nav_stop_22.png"), "End session");
+  m_playBtn = toolBar->addAction(m_playIcon, "Play/Pause");
   toolBar->addWidget(helperBuildDelayEdit()); // always enabled ...
 
   m_fileCombo = new QComboBox;
