@@ -283,10 +283,10 @@ void CWPlot::slotSaveAs()
   
   QString dirName = pref->directoryName("ASCII_Plot");
 
-  QString filename = QFileDialog::getSaveFileName(this, "Save Plot", dirName, "*.asc");
+  QString filename = QFileDialog::getSaveFileName(this, "Save Plot", dirName, " Ascii file (*.asc)");
   
   if (!filename.isEmpty()) {
-    if (!filename.endsWith(".asc", Qt::CaseInsensitive))
+    if (!filename.contains('.'))
       filename += ".asc";
 
     pref->setDirectoryNameGivenFile("ASCII_Plot", filename);

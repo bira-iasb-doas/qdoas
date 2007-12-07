@@ -21,8 +21,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QHeaderView>
 #include <QContextMenuEvent>
 #include <QMenu>
+#include <QFileDialog>
 
 #include "CWTableRegion.h"
+#include "CPreferences.h"
 
 #include "debugutil.h"
 
@@ -68,5 +70,40 @@ void CWTableRegion::contextMenuEvent(QContextMenuEvent *e)
 
 void CWTableRegion::slotSaveAs()
 {
-  TRACE("Save As ... ");
+  // here - filename - also remember about dir -> file in output
+
+  CPreferences *prefs = CPreferences::instance();
+
+  QString fileName = QFileDialog::getSaveFileName(this, "SaveAs Table",
+						  prefs->directoryName("Table"),
+						  "Text file (*.txt)");
+
+  if (!fileName.isEmpty()) {
+
+    // add a .txt extension if there is no extension set
+    if (!fileName.contains('.'))
+      fileName += ".txt";
+    
+    prefs->setDirectoryNameGivenFile("Table", fileName);
+   
+    FILE *fp = fopen(fileName.toAscii().constData(), "w");
+
+    if (fp != NULL) {
+      int rows = m_model->rowCount();
+      int cols = m_model->columnCount();
+      
+      for (int j=0; j<rows; ++j) {
+	for (int i=0; i<cols; ++i) {
+	  QString tmp(m_model->index(j, i, QModelIndex()).data().toString());
+	
+	  if (i != 0)
+	    fputc('\t', fp);
+	  fprintf(fp, "%s", tmp.toAscii().constData());
+	}
+	fputc('\n', fp);
+      }
+
+      fclose(fp);
+    }
+  }
 }

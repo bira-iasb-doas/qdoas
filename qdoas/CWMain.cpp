@@ -508,6 +508,10 @@ void CWMain::slotSaveAsFile()
 
     // empty fileName implies cancel
     if (!fileName.isEmpty()) {
+
+      if (!fileName.contains('.'))
+	fileName += ".xml";
+
       // write the file
       QString msg = writer.write(fileName);
       if (!msg.isNull()) {

@@ -151,13 +151,14 @@ void CWProjectTabOutput::slotBrowsePath()
 {
   CPreferences *pref = CPreferences::instance();
 
-  QString dirName = QFileDialog::getExistingDirectory(this, "Select Output Path", pref->directoryName("Output"));
+  QString fileName = QFileDialog::getSaveFileName(this, "Select Output Path", pref->directoryName("Output"),
+						  "All Files (*)");
 
-  if (!dirName.isEmpty()) {
+  if (!fileName.isEmpty()) {
     // save it again
-    pref->setDirectoryName("Output", dirName);
-
-    m_pathEdit->setText(dirName);
+    pref->setDirectoryNameGivenFile("Output", fileName);
+    
+    m_pathEdit->setText(fileName);
   }
 }
 
