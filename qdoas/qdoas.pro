@@ -22,11 +22,11 @@ contains ( HELP_SYSTEM, assistant ) {
 # Platform dependency ... based on ../config.pri
 #----------------------------------------------
 
-INCLUDEPATH  += $$QWT_INC_PATH
+INCLUDEPATH  += $$QWT_INC_PATH $$BEAT_INC_PATH
 
 unix {
   INCLUDEPATH  += ../mediator ../common ../engine
-  LIBS         += -L$$QWT_LIB_PATH -l$$QWT_LIB -lm
+  LIBS         += -L$$QWT_LIB_PATH -l$$QWT_LIB -L$$BEAT_LIB_PATH -lbeat -lm
   QMAKE_LFLAGS += -Wl,-rpath=$$QWT_LIB_PATH
 }
 
@@ -40,6 +40,10 @@ win32 {
     LIBS        += -L$$QWT_LIB_PATH -l$$QWT_LIB$$QWT_LIB_VERSION
     DEFINES     += QWT_DLL
   }
+
+  LIBS         += -L$$BEAT_LIB_PATH -lbeat
+  DEFINES      += LIBBEATDLL
+
   CONFIG      += windows
 }
 
