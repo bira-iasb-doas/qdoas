@@ -826,7 +826,7 @@ typedef struct anlyswin_output ANALYSIS_OUTPUT;
 // GLOBAL DECLARATIONS
 // -------------------
 
-EXTERN INT    ANALYSE_plotKurucz,ANALYSE_plotRef;
+EXTERN INT    ANALYSE_plotKurucz,ANALYSE_plotRef,ANALYSE_indexLine;
 
 EXTERN UCHAR *ANLYS_crossAction[ANLYS_CROSS_ACTION_MAX];
 EXTERN UCHAR *ANLYS_amf[ANLYS_AMF_TYPE_MAX];
@@ -1285,7 +1285,7 @@ LRESULT CALLBACK GDP_BIN_WndProc(HWND hwndGome,UINT msg,WPARAM mp1,LPARAM mp2);
 #endif
 RC               GDP_BIN_GetBand(ENGINE_CONTEXT *pEngineContext,INT bandNo);
 void             GDP_BIN_GetReferenceInfo(ENGINE_CONTEXT *pEngineContext);
-RC               GDP_BIN_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,FILE *specFp);
+RC               GDP_BIN_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,FILE *specFp,void *responseHandle);
 
 // ==============
 // FILES READ OUT

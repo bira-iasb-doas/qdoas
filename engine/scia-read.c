@@ -1060,13 +1060,10 @@ RC SCIA_SetPDS(ENGINE_CONTEXT *pEngineContext)
   SCIA_ORBIT_FILE *pOrbitFile;                                                  // pointer to the current orbit
   UCHAR filePath[MAX_STR_SHORT_LEN+1];
   UCHAR fileFilter[MAX_STR_SHORT_LEN+1];
-  #if defined(__WINDOAS_WIN_) && __WINDOAS_WIN_
-  WIN32_FIND_DATA fileInfo;                                                     // structure returned by FindFirstFile and FindNextFile APIs
-  HANDLE hDir;                                                                  // handle to use with by FindFirstFile and FindNextFile APIs
-  #else
+  UCHAR fileExt[MAX_STR_SHORT_LEN+1];
+  UCHAR filePrefix[MAX_STR_SHORT_LEN+1];
   struct dirent *fileInfo;
   DIR *hDir;
-  #endif
   INDEX indexFile;
   UCHAR *ptr,*ptrOld;
   INT oldCurrentIndex;
@@ -1090,14 +1087,6 @@ RC SCIA_SetPDS(ENGINE_CONTEXT *pEngineContext)
   sciaCurrentFileIndex=ITEM_NONE;
   pOrbitFile=NULL;
   rc=ERROR_ID_NO;
-
-  {
-  	FILE *fp;
-  	fp=fopen("toto.dat","a+t");
-  	fprintf(fp,"Begin SetPDS\n");
-  	fclose(fp);
-  }
-
 
   // In automatic reference selection, the file has maybe already loaded
 
@@ -1138,102 +1127,63 @@ RC SCIA_SetPDS(ENGINE_CONTEXT *pEngineContext)
 
      	if ((ptr=strrchr(filePath,PATH_SEP))==NULL)
     	 	strcpy(filePath,".");
-   	 else
-    	  *ptr=0;
+   	  else
+    	  *ptr++=0;
 
    	 	// Build file filter
 
-   	 	strcpy(fileFilter,pEngineContext->fileInfo.fileName);
-   	 	if ((ptr=strrchr(fileFilter,PATH_SEP))==NULL)
-   	 	 ptr=fileFilter;
+   	 	strcpy(fileFilter,ptr);
 
    	 	for (ptrOld=ptr,_n=0;(((_nList[_n]=strchr(ptrOld+1,'_'))!=NULL) && (_n<10));ptrOld=_nList[_n],_n++);
 
-   	 	if (_n<8) // it's a SCIAMACHY file
+   	 	if (_n<8 || !ANALYSE_lonSelectionFlag) // it's not a standard SCIAMACHY file name, so just use this file
        {
      	  sciaOrbitFilesN=1;
      	  strcpy(sciaOrbitFiles[0].sciaFileName,pEngineContext->fileInfo.fileName);
-
-     	  {
-     	  	FILE *fp;
-     	  	fp=fopen("toto.dat","a+t");
-     	  	fprintf(fp,"Case 1\n");
-     	  	fclose(fp);
-     	  }
-
        }
       else
        {
-       	{
-       		FILE *fp;
-       		fp=fopen("toto.dat","a+t");
-       		fprintf(fp,"Case 2\n");
-       		fclose(fp);
-       	}
+        for (ptrOld=fileFilter,_n=0;((ptr=strchr(ptrOld,'_'))!=NULL) && ++_n<4;ptrOld=ptr+1);
+        if ((ptr!=NULL) && (_n==4))
+         *ptr='\0';
 
-        if (ANALYSE_lonSelectionFlag)
-         {
-          if (!strlen(pEngineContext->project.instrumental.fileExt))
-           strcpy(ptr+1,"*.N1.child");
-          else
-           sprintf(ptr+1,"*.%s",pEngineContext->project.instrumental.fileExt);
-         }
+       	// Get the file extension of the original file name
+
+        memset(fileExt,0,MAX_STR_SHORT_LEN);
+
+        if ((ptrOld=strrchr(pEngineContext->fileInfo.fileName,'.'))!=NULL)
+         strcpy(fileExt,ptrOld+1);
+        else if (strlen(pEngineContext->project.instrumental.fileExt))
+         strcpy(fileExt,pEngineContext->project.instrumental.fileExt);
         else
-         {
-          memset(ptr+1,'?',(_nList[5]-ptr)-1);
-          if (!strlen(pEngineContext->project.instrumental.fileExt))
-   	 	     sprintf(_nList[7]+1,"*.N1.child");
-   	 	    else
-   	 	     sprintf(_nList[7]+1,"*.%s",pEngineContext->project.instrumental.fileExt);
-   	 	   }
+         strcpy(fileExt,"child");
 
         // Search for files of the same orbit
 
-        #if defined(__WINDOAS_WIN_) && __WINDOAS_WIN_
+        for (hDir=opendir(filePath);(hDir!=NULL) && ((fileInfo=readdir(hDir))!=NULL);)
+         {
+          sprintf(sciaOrbitFiles[sciaOrbitFilesN].sciaFileName,"%s/%s",filePath,fileInfo->d_name);
+          if (!STD_IsDir(sciaOrbitFiles[sciaOrbitFilesN].sciaFileName))
+           {
+           	strcpy(filePrefix,fileInfo->d_name);
+           	for (ptrOld=filePrefix,_n=0;((ptr=strchr(ptrOld,'_'))!=NULL) && ++_n<4;ptrOld=ptr+1);
+           	if ((ptr!=NULL) && (_n==4))
+           	 *ptr='\0';
 
-        for (hDir=FindFirstFile(fileFilter,&fileInfo),rc=1;
-            (hDir!=INVALID_HANDLE_VALUE) && (rc!=0) && (sciaOrbitFilesN<MAX_SCIA_FILES);rc=FindNextFile(hDir,&fileInfo))
+            if (((ptr=strrchr(fileInfo->d_name,'.'))!=NULL) && (strlen(ptr+1)==strlen(fileExt)) && !STD_Stricmp(ptr+1,fileExt) &&
+                 (strlen(filePrefix)==strlen(fileFilter)) && !STD_Stricmp(filePrefix,fileFilter))
 
-         if ((fileInfo.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY)==0)
-          {
-          	sprintf(sciaOrbitFiles[sciaOrbitFilesN].sciaFileName,"%s%c%s",filePath,PATH_SEP,fileInfo.cFileName);
-           sciaOrbitFilesN++;
-          }
-
-        // Close handle
-
-        if (hDir!=NULL)
-         FindClose(hDir);
-
-        #else
-
-        {
-        	FILE *fp;
-        	fp=fopen("toto.dat","a+t");
-        	fprintf(fp,"filefilter %s\n",fileFilter);
-        	fclose(fp);
-        }
-
-
-        for (hDir=opendir(fileFilter);(hDir!=NULL) && ((fileInfo=readdir(hDir))!=NULL);)
-          {
-          	{
-          		FILE *fp;
-          		fp=fopen("toto.dat","a+t");
-          		fprintf(fp,"--- %s/%s\n",filePath,fileInfo->d_name);
-          		fclose(fp);
-          	}
-
-            sprintf(sciaOrbitFiles[sciaOrbitFilesN].sciaFileName,"%s/%s",filePath,fileInfo->d_name);
-            if ( STD_IsDir(sciaOrbitFiles[sciaOrbitFilesN].sciaFileName) == 1 )
-               sciaOrbitFilesN++;
-          }
+             sciaOrbitFilesN++;
+           }
+         }
 
         if ( hDir != NULL ) closedir(hDir);
 
-        #endif
-
-        rc=ERROR_ID_NO;
+        if (!sciaOrbitFilesN)
+         {
+     	    sciaOrbitFilesN=1;
+     	    strcpy(sciaOrbitFiles[0].sciaFileName,pEngineContext->fileInfo.fileName);
+     	   }
        }
    	 }
    	else
@@ -1303,18 +1253,10 @@ RC SCIA_SetPDS(ENGINE_CONTEXT *pEngineContext)
      pOrbitFile->sciaPDSInfo.FILE_l1c=fopen(pOrbitFile->sciaFileName,"rb");
    }
 
-   {
-   	FILE *fp;
-   	fp=fopen("toto.dat","a+t");
-   	fprintf(fp,"End  SetPDS %d\n",sciaOrbitFilesN);
-   	fclose(fp);
-   }
-
-
   // DEBUG
 
   #if defined(__DEBUG_) && __DEBUG_
-  DEBUG_FunctionStop("SetSCIAPDS",rc);
+  DEBUG_FunctionStop("SCIA_SetPDS",rc);
   #endif
 
   // Return
@@ -1775,6 +1717,7 @@ INT SciaRefSza(SCIA_REF *refList,INT maxRefSize,double sza,double szaDelta)
            refList[indexRef].indexFile=fileIndex;
            refList[indexRef].indexRecord=pOrbitFile->sciaSzaIndex[iszaIndex];
            refList[indexRef].latitude=pRecord->latCenter;
+           refList[indexRef].longitude=pRecord->lonCenter;
            refList[indexRef].sza=pRecord->solZen[1];
            refList[indexRef].szaDist=szaDist;
            refList[indexRef].latDist=(double)0.;
@@ -1835,21 +1778,6 @@ RC SciaBuildRef(SCIA_REF *refList,INT nRef,INT nSpectra,double *lambda,double *r
 
   rc=ERROR_ID_NO;
 
-  if (nRef)
-   {
-    mediateResponseCellDataString(plotPageRef,(*pIndexLine)++,indexColumn,"Ref Selection",responseHandle);
-    mediateResponseCellInfo(plotPageRef,(*pIndexLine)++,indexColumn,responseHandle,"File","%s",sciaOrbitFiles[refList[0].indexFile].sciaFileName);
-    mediateResponseCellDataString(plotPageRef,(*pIndexLine),indexColumn,"Record",responseHandle);
-    mediateResponseCellDataString(plotPageRef,(*pIndexLine),indexColumn+1,"SZA",responseHandle);
-    mediateResponseCellDataString(plotPageRef,(*pIndexLine),indexColumn+2,"Lat",responseHandle);
-    mediateResponseCellDataString(plotPageRef,(*pIndexLine),indexColumn+3,"Lon",responseHandle);
-
-    (*pIndexLine)++;
-
-    strcpy(pRecord->refFileName,sciaOrbitFiles[refList[0].indexFile].sciaFileName);
-    pRecord->refRecord=refList[0].indexRecord+1;
-   }
-
   // Search for spectra matching latitudes and SZA conditions in the selected record
 
   for (nRec=0,indexRef=0,indexFile=ITEM_NONE;
@@ -1873,6 +1801,21 @@ RC SciaBuildRef(SCIA_REF *refList,INT nRef,INT nSpectra,double *lambda,double *r
 
       else if (((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS) && !(rc=SciaReadNadirMDS(pEngineContext,indexState,pRef->indexRecord-indexObs,pRef->indexFile))))
        {
+        if (indexFile==ITEM_NONE)
+         {
+          mediateResponseCellDataString(plotPageRef,(*pIndexLine)++,indexColumn,"Ref Selection",responseHandle);
+          mediateResponseCellInfo(plotPageRef,(*pIndexLine)++,indexColumn,responseHandle,"Ref File","%s",sciaOrbitFiles[refList[0].indexFile].sciaFileName);
+          mediateResponseCellDataString(plotPageRef,(*pIndexLine),indexColumn,"Record",responseHandle);
+          mediateResponseCellDataString(plotPageRef,(*pIndexLine),indexColumn+1,"SZA",responseHandle);
+          mediateResponseCellDataString(plotPageRef,(*pIndexLine),indexColumn+2,"Lat",responseHandle);
+          mediateResponseCellDataString(plotPageRef,(*pIndexLine),indexColumn+3,"Lon",responseHandle);
+
+          (*pIndexLine)++;
+
+          strcpy(pRecord->refFileName,sciaOrbitFiles[pRef->indexFile].sciaFileName);
+          pRecord->refRecord=pRef->indexRecord+1;
+         }
+
        	mediateResponseCellDataInteger(plotPageRef,(*pIndexLine),indexColumn,pRef->indexRecord+1,responseHandle);
        	mediateResponseCellDataDouble(plotPageRef,(*pIndexLine),indexColumn+1,pRef->sza,responseHandle);
        	mediateResponseCellDataDouble(plotPageRef,(*pIndexLine),indexColumn+2,pRef->latitude,responseHandle);
@@ -1953,7 +1896,7 @@ RC SciaRefSelection(ENGINE_CONTEXT *pEngineContext,
   // Initializations
 
   mediateResponseRetainPage(plotPageRef,responseHandle);
-  indexLine=3;
+  indexLine=1;
   indexColumn=2;
 
   if (latMin>latMax)
@@ -2044,6 +1987,8 @@ RC SciaRefSelection(ENGINE_CONTEXT *pEngineContext,
        }
      }
    }
+
+  ANALYSE_indexLine=indexLine+1;
 
   // Release allocated buffers
 

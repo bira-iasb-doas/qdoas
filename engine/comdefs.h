@@ -110,9 +110,9 @@
 
 #define strnicmp strncasecmp
 
-// QDOAS ???
-// QDOAS ??? #pragma pack(1)
-// QDOAS ???
+
+#pragma pack(1)
+
 // QDOAS ??? // ===========
 // QDOAS ??? // DEFINITIONS
 // QDOAS ??? // ===========
@@ -127,9 +127,7 @@
     typedef int            int32;
     typedef unsigned long  uint32;
 #endif
-// QDOAS ???
-// QDOAS ??? #if !defined(__WINDOAS_WIN_) || !(__WINDOAS_WIN_)
-// QDOAS ???
+
 typedef int            INT;
 typedef char           CHAR;
 typedef char           UCHAR;
@@ -154,9 +152,6 @@ typedef void *         HANDLE;
 #define FALSE 0
 #endif
 
-// QDOAS ???
-// QDOAS ??? #endif
-// QDOAS ???
 #define EXTERN      extern
 typedef int         INDEX,RC;                                            // RC holds for return code
 typedef UINT        MASK,SZ_LEN;
@@ -191,7 +186,7 @@ typedef UINT        MASK,SZ_LEN;
 #define ITEM_NONE                              (int)-1                          // default value for an index or a return code out of range
 
 #if defined(WIN32) && WIN32
-    #define PATH_SEP '/'                                                       // path separator is different according to the OS (Windows or Unix/Linux)
+    #define PATH_SEP '/'                                                        // path separator is different according to the OS (Windows or Unix/Linux)
     #define COMMENT_CHAR ';'                                                    // characters to use for commented lines
 #else
     #define PATH_SEP '/'

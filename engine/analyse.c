@@ -131,7 +131,7 @@ UCHAR *AnlysPolynome[ANLYS_POLY_TYPE_MAX]={"None","order 0","order 1","order 2",
 UCHAR *ANLYS_crossAction[ANLYS_CROSS_ACTION_MAX]={"None","Interpolate","Convolute Std","Convolute I0","Convolute Ring"}; /* "Detector t° dependent","Strato t° dependent",*/
 UCHAR *ANLYS_amf[ANLYS_AMF_TYPE_MAX]={"None","SZA only","Climatology","Wavelength 1","Wavelength 2","Wavelength 3"};
 
-INT    ANALYSE_plotKurucz,ANALYSE_plotRef;
+INT    ANALYSE_plotKurucz,ANALYSE_plotRef,ANALYSE_indexLine;
 
 INT NDET,                              // detector size
     NFeno,                             // number of analysis windows
@@ -2065,7 +2065,7 @@ RC ANALYSE_AlignReference(INT refFlag,INT saveFlag,void *responseHandle)
 
   // Initializations
 
-  indexLine=1;
+  indexLine=ANALYSE_indexLine;
   indexColumn=2;
   rc=ERROR_ID_NO;
 
@@ -4502,17 +4502,14 @@ RC ANALYSE_LoadCross(ANALYSIS_CROSS *crossSectionList,INT nCross,INT hidden,doub
 
           pTabFeno->xsToConvoluteI0+=(pEngineCross->crossAction==ANLYS_CROSS_ACTION_CONVOLUTE_I0)?1:0;
 
-          if (!hidden)
-           {
-            pOrthoSymbol[pTabFeno->NTabCross]=pCross->orthogonal;
+          pOrthoSymbol[pTabFeno->NTabCross]=pCross->orthogonal;
 
-            pEngineCross->display=pCross->requireFit;                    // fit display
-            pEngineCross->InitConc=pCross->initialCc;                    // initial concentration
-            pEngineCross->FitConc=pCross->requireCcFit;                  // modify concentration
+          pEngineCross->display=pCross->requireFit;                    // fit display
+          pEngineCross->InitConc=pCross->initialCc;                    // initial concentration
+          pEngineCross->FitConc=pCross->requireCcFit;                  // modify concentration
 
-            pEngineCross->DeltaConc=(pEngineCross->FitConc)?pCross->deltaCc:(double)0.;   // delta on concentration
-            pEngineCross->I0Conc=(pEngineCross->crossAction==ANLYS_CROSS_ACTION_CONVOLUTE_I0)?pCross->ccIo:(double)0.;
-           }
+          pEngineCross->DeltaConc=(pEngineCross->FitConc)?pCross->deltaCc:(double)0.;   // delta on concentration
+          pEngineCross->I0Conc=(pEngineCross->crossAction==ANLYS_CROSS_ACTION_CONVOLUTE_I0)?pCross->ccIo:(double)0.;
 
  // QDOAS !!! FOR LATER         rc=OUTPUT_LoadCross(pList,&pTabFeno->TabCrossResults[pTabFeno->NTabCross],&pTabFeno->amfFlag,hidden);
 

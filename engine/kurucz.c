@@ -245,6 +245,40 @@ RC KURUCZ_Spectrum(double *oldLambda,double *newLambda,double *spectrum,double *
     memcpy(ANALYSE_t,ANALYSE_zeros,sizeof(double)*NDET);
     memcpy(ANALYSE_tc,ANALYSE_zeros,sizeof(double)*NDET);
 
+    ANALYSE_plotKurucz=(KURUCZ_buffers.displaySpectra || KURUCZ_buffers.displayResidual || KURUCZ_buffers.displayFit || KURUCZ_buffers.displayShift)?1:0;
+
+    if (ANALYSE_plotKurucz)
+     {
+      if (!TabFeno[indexFeno].hidden)
+       mediateResponseCellInfo(plotPageCalib,indexLine++,indexColumn,responseHandle,"KURUCZ alignment for window ","%s",TabFeno[indexFeno].windowName);
+      else
+       mediateResponseCellDataString(plotPageCalib,indexLine++,indexColumn,"Kurucz",responseHandle);
+
+      mediateResponseCellDataString(plotPageCalib,indexLine,indexColumn++,"Window",responseHandle);
+      mediateResponseCellDataString(plotPageCalib,indexLine,indexColumn++,"Pixel",responseHandle);
+      mediateResponseCellDataString(plotPageCalib,indexLine,indexColumn++,"Wavelength",responseHandle);
+      mediateResponseCellDataString(plotPageCalib,indexLine,indexColumn++,"Niter",responseHandle);
+      mediateResponseCellDataString(plotPageCalib,indexLine,indexColumn++,"Shift",responseHandle);
+
+      if (pKuruczOptions->fwhmFit)
+       for (indexParam=0;indexParam<maxParam;indexParam++)
+        {
+         sprintf(string,"SFP %d",indexParam+1);
+         mediateResponseCellDataString(plotPageCalib,indexLine,indexColumn++,string,responseHandle);
+        }
+
+      if ((Feno->indexOffsetConst!=ITEM_NONE) && (Feno->TabCross[Feno->indexOffsetConst].FitParam!=ITEM_NONE))
+       mediateResponseCellDataString(plotPageCalib,indexLine,indexColumn++,"Offset",responseHandle);
+
+      for (indexTabCross=0;indexTabCross<Feno->NTabCross;indexTabCross++)
+       {
+        pTabCross=&TabCross[indexTabCross];
+
+        if (pTabCross->IndSvdA && (WorkSpace[pTabCross->Comp].type==WRK_SYMBOL_CROSS))
+         mediateResponseCellDataString(plotPageCalib,indexLine,indexColumn++,WorkSpace[pTabCross->Comp].symbolName,responseHandle);
+       }
+     }
+
     // Browse little windows
 
     for (indexWindow=0,Square=(double)0.;(indexWindow<Nb_Win) && (rc<THREAD_EVENT_STOP);indexWindow++)
@@ -411,9 +445,6 @@ RC KURUCZ_Spectrum(double *oldLambda,double *newLambda,double *spectrum,double *
 
       if (displayFlag)
        {
-       	if (KURUCZ_buffers.displaySpectra || KURUCZ_buffers.displayResidual || KURUCZ_buffers.displayFit || KURUCZ_buffers.displayShift)
-       	 ANALYSE_plotKurucz=1;
-
         // Display complete fit
 
         if (KURUCZ_buffers.displaySpectra)
@@ -538,36 +569,7 @@ RC KURUCZ_Spectrum(double *oldLambda,double *newLambda,double *spectrum,double *
 
         mediateResponseLabelPage(plotPageCalib, "", pageTitle, responseHandle);
 
-        if (!TabFeno[indexFeno].hidden)
-         mediateResponseCellInfo(plotPageCalib,indexLine++,indexColumn,responseHandle,"KURUCZ alignment for window ","%s",TabFeno[indexFeno].windowName);
-        else
-         mediateResponseCellDataString(plotPageCalib,indexLine++,indexColumn,"Kurucz",responseHandle);
-
-        mediateResponseCellDataString(plotPageCalib,indexLine,indexColumn++,"Window",responseHandle);
-        mediateResponseCellDataString(plotPageCalib,indexLine,indexColumn++,"Pixel",responseHandle);
-        mediateResponseCellDataString(plotPageCalib,indexLine,indexColumn++,"Wavelength",responseHandle);
-        mediateResponseCellDataString(plotPageCalib,indexLine,indexColumn++,"Niter",responseHandle);
-        mediateResponseCellDataString(plotPageCalib,indexLine,indexColumn++,"Shift",responseHandle);
-
-        if (pKuruczOptions->fwhmFit)
-         for (indexParam=0;indexParam<maxParam;indexParam++)
-          {
-           sprintf(string,"SFP %d",indexParam+1);
-           mediateResponseCellDataString(plotPageCalib,indexLine,indexColumn++,string,responseHandle);
-          }
-
-        if ((Feno->indexOffsetConst!=ITEM_NONE) && (Feno->TabCross[Feno->indexOffsetConst].FitParam!=ITEM_NONE))
-         mediateResponseCellDataString(plotPageCalib,indexLine,indexColumn++,"Offset",responseHandle);
-
-        for (indexTabCross=0;indexTabCross<Feno->NTabCross;indexTabCross++)
-         {
-          pTabCross=&TabCross[indexTabCross];
-
-          if (pTabCross->IndSvdA && (WorkSpace[pTabCross->Comp].type==WRK_SYMBOL_CROSS))
-           mediateResponseCellDataString(plotPageCalib,indexLine,indexColumn++,WorkSpace[pTabCross->Comp].symbolName,responseHandle);
-         }
-
-        for (indexWindow=0,indexLine+=2;indexWindow<Nb_Win;indexWindow++,indexLine++)
+        for (indexWindow=0,indexLine+=1;indexWindow<Nb_Win;indexWindow++,indexLine++)
          {
           indexColumn=2;
 
@@ -588,7 +590,9 @@ RC KURUCZ_Spectrum(double *oldLambda,double *newLambda,double *spectrum,double *
             pTabCross=&TabCross[indexTabCross];
 
             if (pTabCross->IndSvdA && (WorkSpace[pTabCross->Comp].type==WRK_SYMBOL_CROSS))
-             mediateResponseCellInfoNoLabel(plotPageCalib,indexLine,indexColumn++,responseHandle,"%10.3e+/-%10.3e",Feno->TabCrossResults[indexTabCross].SlntCol,Feno->TabCrossResults[indexTabCross].SlntErr);
+             mediateResponseCellInfoNoLabel(plotPageCalib,indexLine,indexColumn++,responseHandle,"%10.3e+/-%10.3e",
+             KURUCZ_buffers.KuruczFeno[indexFeno].results[indexWindow][indexTabCross].SlntCol,KURUCZ_buffers.KuruczFeno[indexFeno].results[indexWindow][indexTabCross].SlntErr);
+             //Feno->TabCrossResults[indexTabCross].SlntCol,Feno->TabCrossResults[indexTabCross].SlntErr);
            }
          }
        }

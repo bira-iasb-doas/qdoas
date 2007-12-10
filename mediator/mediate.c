@@ -628,7 +628,10 @@ void setMediateProjectUndersampling(PRJCT_USAMP *pEngineUsamp,const mediate_proj
   DEBUG_FunctionBegin("setMediateProjectUndersampling",DEBUG_FCTTYPE_CONFIG);
   #endif
 
-  // Still to do by Caro
+  strcpy(pEngineUsamp->kuruczFile,pMediateUsamp->solarRefFile);
+
+  pEngineUsamp->method=pMediateUsamp->method;
+  pEngineUsamp->phase=pMediateUsamp->shift;
 
   #if defined(__DEBUG_) && __DEBUG_ && defined(__DEBUG_DOAS_CONFIG_) && __DEBUG_DOAS_CONFIG_
   DEBUG_FunctionStop("setMediateProjectUndersampling",0);
@@ -1388,20 +1391,25 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
           pTabFeno->refSZA=(double)pAnalysisWindows->refSzaCenter;
           pTabFeno->refSZADelta=(double)pAnalysisWindows->refSzaDelta;
 
-          // MISSING FIELD !!! pTabFeno->refLatMin=pAnalysisWindows->refLatMin;
-          // MISSING FIELD !!! pTabFeno->refLatMax=pAnalysisWindows->refLatMax;
-          // MISSING FIELD !!! pTabFeno->refLonMin=pAnalysisWindows->refLonMin;
-          // MISSING FIELD !!! pTabFeno->refLonMax=pAnalysisWindows->refLonMax;
+          pTabFeno->refLatMin=pAnalysisWindows->refMinLatitude;
+          pTabFeno->refLatMax=pAnalysisWindows->refMaxLatitude;
+          pTabFeno->refLonMin=pAnalysisWindows->refMinLongitude;
+          pTabFeno->refLonMax=pAnalysisWindows->refMaxLongitude;
 
-          // MISSING FIELD !!! if ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_ASCII) ||
-          // MISSING FIELD !!!     (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN))
-          // MISSING FIELD !!!
-          // MISSING FIELD !!!  memcpy(pTabFeno->gomePixelType,pAnalysisWindows->gomePixelType,4);
-          // MISSING FIELD !!!
-          // MISSING FIELD !!! else
-          // MISSING FIELD !!!  memset(pTabFeno->gomePixelType,0,4);
+          pTabFeno->gomePixelType[0]=pTabFeno->gomePixelType[1]=pTabFeno->gomePixelType[2]=pTabFeno->gomePixelType[3]=0;
 
-          // MISSING FIELD !!! pTabFeno->nspectra=pAnalysisWindows->nspectra;
+          // GOME Pixel type : probably will be replaced later by a maximum value for LOS angle
+
+          if ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_ASCII) ||
+              (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN))
+           {
+            pTabFeno->gomePixelType[0]=pAnalysisWindows->pixelTypeEast;
+            pTabFeno->gomePixelType[1]=pAnalysisWindows->pixelTypeCenter;
+            pTabFeno->gomePixelType[2]=pAnalysisWindows->pixelTypeWest;
+            pTabFeno->gomePixelType[3]=pAnalysisWindows->pixelTypeBackscan;
+           }
+
+          pTabFeno->nspectra=pAnalysisWindows->refNs;
 
           ANALYSE_refSelectionFlag++;
 
@@ -1533,7 +1541,6 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
       break;
     }
 
-
   if (!rc && ((THRD_id==THREAD_TYPE_KURUCZ) || useKurucz) &&
      !(rc=KURUCZ_Alloc(&pEngineContext->project,pEngineContext->buffers.lambda,indexKurucz,lambdaMin,lambdaMax)) &&
      !(rc=KURUCZ_Reference(pEngineContext->buffers.instrFunction,0,saveFlag,1,responseHandle)) &&
@@ -1541,20 +1548,20 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
 
    rc=OUTPUT_RegisterData(pEngineContext);
 
-// QDOAS ???  if (!rc && useUsamp &&
-// QDOAS ???      !(rc=USAMP_GlobalAlloc(lambdaMin,lambdaMax,NDET)) &&
-// QDOAS ???      !(rc=USAMP_LocalAlloc(1)))
-// QDOAS ???   rc=USAMP_BuildFromAnalysis(0,1);
-// QDOAS ???
-// QDOAS ??? // QDOAS ???     {
-// QDOAS ??? // QDOAS ???      FILE *fp;
-// QDOAS ??? // QDOAS ???
-// QDOAS ??? // QDOAS ???      if ((fp=fopen(DOAS_broAmfFile,"rt"))!=NULL)
-// QDOAS ??? // QDOAS ???       {
-// QDOAS ??? // QDOAS ???        fclose(fp);
-// QDOAS ??? // QDOAS ???        MATRIX_Load(DOAS_broAmfFile,&ANALYSIS_broAmf,0,0,0,0,-9999.,9999.,1,0,"ANALYSE_LoadData ");
-// QDOAS ??? // QDOAS ???       }
-// QDOAS ??? // QDOAS ???     }
+  if (!rc && useUsamp &&
+      !(rc=USAMP_GlobalAlloc(lambdaMin,lambdaMax,NDET)) &&
+      !(rc=USAMP_LocalAlloc(1)))
+   rc=USAMP_BuildFromAnalysis(0,1);
+
+ // QDOAS ???     {
+ // QDOAS ???      FILE *fp;
+ // QDOAS ???
+ // QDOAS ???      if ((fp=fopen(DOAS_broAmfFile,"rt"))!=NULL)
+ // QDOAS ???       {
+ // QDOAS ???        fclose(fp);
+ // QDOAS ???        MATRIX_Load(DOAS_broAmfFile,&ANALYSIS_broAmf,0,0,0,0,-9999.,9999.,1,0,"ANALYSE_LoadData ");
+ // QDOAS ???       }
+ // QDOAS ???     }
 
 	 if (rc!=ERROR_ID_NO)
 	  mediateDisplayErrorMessage(responseHandle);
@@ -1823,6 +1830,7 @@ int mediateRequestBeginAnalyseSpectra(void *engineContext,
  	rc=ERROR_ID_NO;
 
   if ((EngineRequestBeginBrowseSpectra(pEngineContext,spectraFileName)!=ERROR_ID_NO) ||
+     ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN) && (GDP_BIN_LoadAnalysis(pEngineContext,pEngineContext->fileInfo.specFp,responseHandle)!=ERROR_ID_NO)) ||
      ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS) && (SCIA_LoadAnalysis(pEngineContext,responseHandle)!=ERROR_ID_NO)))
 
    mediateDisplayErrorMessage(responseHandle);
@@ -1885,6 +1893,7 @@ int mediateRequestBeginCalibrateSpectra(void *engineContext,
  	rc=ERROR_ID_NO;
 
   if ((EngineRequestBeginBrowseSpectra(pEngineContext,spectraFileName)!=ERROR_ID_NO) ||
+     ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN) && (GDP_BIN_LoadAnalysis(pEngineContext,pEngineContext->fileInfo.specFp,responseHandle)!=ERROR_ID_NO)) ||
      ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS) && (SCIA_LoadAnalysis(pEngineContext,responseHandle)!=ERROR_ID_NO)))
 
    mediateDisplayErrorMessage(responseHandle);

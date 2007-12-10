@@ -83,6 +83,7 @@
 // INCLUDE USUAL HEADERS
 // =====================
 
+#include "mediate.h"
 #include "engine.h"
 
 // ====================
@@ -285,13 +286,10 @@ RC GDP_BIN_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
   GOME_ORBIT_FILE *pOrbitFile;                                                  // pointer to the current orbit
   UCHAR filePath[MAX_STR_SHORT_LEN+1];
   UCHAR fileFilter[MAX_STR_SHORT_LEN+1];
-  #if defined(__WINDOAS_WIN_) && __WINDOAS_WIN_
-  WIN32_FIND_DATA fileInfo;                                                     // structure returned by FindFirstFile and FindNextFile APIs
-  HANDLE hDir;                                                                  // handle to use with by FindFirstFile and FindNextFile APIs
-  #else
+  UCHAR filePrefix[MAX_STR_SHORT_LEN+1];
+  UCHAR fileExt[MAX_STR_SHORT_LEN+1];
   struct dirent *fileInfo;
   DIR *hDir;
-  #endif
   INDEX indexFile;
   UCHAR *ptr;
   UCHAR fileName[MAX_ITEM_TEXT_LEN+1];                                          // file name
@@ -349,52 +347,50 @@ RC GDP_BIN_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
      	  strcpy(filePath,pEngineContext->fileInfo.fileName);
 
      	  if ((ptr=strrchr(filePath,PATH_SEP))==NULL)
-    	   	strcpy(filePath,".");
+     	   {
+    	   	 strcpy(filePath,".");
+    	   	 strcpy(fileFilter,pEngineContext->fileInfo.fileName);
+    	   	}
     	   else
-    	    *ptr=0;
+    	    {
+    	     *ptr++=0;
+    	     strcpy(fileFilter,ptr);
+    	    }
 
-   	 	  // Build file filter
+    	   fileFilter[6]='\0';
 
-   	 	  strcpy(fileFilter,pEngineContext->fileInfo.fileName);
-   	 	  if ((ptr=strrchr(fileFilter,PATH_SEP))==NULL)
-   	 	   ptr=fileFilter;
-   	 	  else
-   	 	   ptr=ptr+1;
+       	// Get the file extension of the original file name
 
-        strcpy(ptr,"*.*");
+        memset(fileExt,0,MAX_STR_SHORT_LEN);
 
-        // Search for files of the same orbit
+        if ((ptr=strrchr(pEngineContext->fileInfo.fileName,'.'))!=NULL)
+         strcpy(fileExt,ptr+1);
+        else if (strlen(pEngineContext->project.instrumental.fileExt))
+         strcpy(fileExt,pEngineContext->project.instrumental.fileExt);
+        else
+         strcpy(fileExt,"spe");
 
-        #if defined(__WINDOAS_WIN_) && __WINDOAS_WIN_
+        for (hDir=opendir(filePath);(hDir!=NULL) && ((fileInfo=readdir(hDir))!=NULL);)
+         {
+          sprintf(GDP_BIN_orbitFiles[gdpBinOrbitFilesN].gdpBinFileName,"%s/%s",filePath,fileInfo->d_name);
+          if (!STD_IsDir(GDP_BIN_orbitFiles[gdpBinOrbitFilesN].gdpBinFileName))
+           {
+           	strcpy(filePrefix,fileInfo->d_name);
+           	filePrefix[6]='\0';
 
-        for (hDir=FindFirstFile(fileFilter,&fileInfo),rc=1;
-            (hDir!=INVALID_HANDLE_VALUE) && (rc!=0) && (gdpBinOrbitFilesN<MAX_GOME_FILES);rc=FindNextFile(hDir,&fileInfo))
-
-         if ((fileInfo.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY)==0)
-          {
-          	sprintf(GDP_BIN_orbitFiles[gdpBinOrbitFilesN].gdpBinFileName,"%s%c%s",filePath,PATH_SEP,fileInfo.cFileName);
-           gdpBinOrbitFilesN++;
-          }
-
-        // Close handle
-
-        if (hDir!=NULL)
-         FindClose(hDir);
-
-        #else
-
-        for (hDir=opendir(fileFilter);(hDir!=NULL) && ((fileInfo=readdir(hDir))!=NULL);)
-          {
-            sprintf(GDP_BIN_orbitFiles[gdpBinOrbitFilesN].gdpBinFileName,"%s/%s",filePath,fileInfo->d_name);
-            if ( STD_IsDir(GDP_BIN_orbitFiles[gdpBinOrbitFilesN].gdpBinFileName) == 1 )
-               gdpBinOrbitFilesN++;
-          }
+            if (((ptr=strrchr(fileInfo->d_name,'.'))!=NULL) && (strlen(ptr+1)==strlen(fileExt)) && !STD_Stricmp(ptr+1,fileExt) &&
+                 (strlen(filePrefix)==strlen(fileFilter)) && !STD_Stricmp(filePrefix,fileFilter))
+             gdpBinOrbitFilesN++;
+           }
+         }
 
         if ( hDir != NULL ) closedir(hDir);
 
-        #endif
-
-        rc=ERROR_ID_NO;
+        if (!gdpBinOrbitFilesN)
+         {
+     	    gdpBinOrbitFilesN=1;
+     	    strcpy(GDP_BIN_orbitFiles[0].gdpBinFileName,pEngineContext->fileInfo.fileName);
+     	   }
        }
       else
        {
@@ -998,7 +994,6 @@ INT GdpBinRefSza(GDP_BIN_REF *refList,double sza,double szaDelta,UCHAR *gomePixe
   for (fileIndex=0;fileIndex<gdpBinOrbitFilesN;fileIndex++)
    {
    	pOrbitFile=&GDP_BIN_orbitFiles[fileIndex];
-
    	if (pOrbitFile->specNumber)
    	 {
       // Determine the set of records in the orbit file matching SZA conditions
@@ -1073,7 +1068,6 @@ INT GdpBinRefSza(GDP_BIN_REF *refList,double sza,double szaDelta,UCHAR *gomePixe
 //               lambda       the grid of the irradiance spectrum
 //               pEngineContext    interface for file operations
 //               specFp       pointer to the current file;
-//               fp           pointer to the file dedicated to the display of information on selected spectra
 //
 // OUTPUT        ref          the new reference spectrum
 //
@@ -1082,20 +1076,25 @@ INT GdpBinRefSza(GDP_BIN_REF *refList,double sza,double szaDelta,UCHAR *gomePixe
 //               ERROR_ID_NO otherwise.
 // -----------------------------------------------------------------------------
 
-RC GdpBinBuildRef(GDP_BIN_REF *refList,INT nRef,INT nSpectra,double *lambda,double *ref,ENGINE_CONTEXT *pEngineContext,FILE *specFp,FILE *fp)
+RC GdpBinBuildRef(GDP_BIN_REF *refList,INT nRef,INT nSpectra,double *lambda,double *ref,ENGINE_CONTEXT *pEngineContext,FILE *specFp,INDEX *pIndexLine,void *responseHandle)
  {
   // Declarations
 
+  RECORD_INFO *pRecord;                                                         // pointer to the record part of the engine context
   GDP_BIN_REF *pRef;                                                            // pointer to the current reference spectrum
   INDEX     indexRef,                                                           // browse reference in the list
             indexFile,                                                          // browse files
+            indexColumn,                                                        // index of the current column in the cell page associated to the ref plot page
             i;                                                                  // index for loop and arrays
+
   INT       nRec;                                                               // number of records used for the average
   RC        rc;                                                                 // return code
 
   // Initializations
 
+  pRecord=&pEngineContext->recordInfo;
   rc=ERROR_ID_NO;
+  indexColumn=2;
 
   for (i=0;i<NDET;i++)
    lambda[i]=ref[i]=(double)0.;
@@ -1110,8 +1109,31 @@ RC GdpBinBuildRef(GDP_BIN_REF *refList,INT nRef,INT nSpectra,double *lambda,doub
     if (((indexFile==ITEM_NONE) || (pRef->indexFile==indexFile)) &&
        !(rc=GDP_BIN_Read(pEngineContext,pRef->indexRecord+1,specFp,pRef->indexFile)))    // Read and accumulate selected radiances
      {
-      if (fp!=NULL)
-       fprintf(fp,"%s %-5d\t%-5d\t%-5d\t%-6.2lf\t%-6.2lf\t%-6.2lf\n",GDP_BIN_orbitFiles[pRef->indexFile].gdpBinFileNumber,pRef->indexRecord+1,pRef->pixelNumber,pRef->pixelType,pRef->sza,pRef->latitude,pRef->longitude);
+      if (indexFile==ITEM_NONE)
+       {
+        mediateResponseCellDataString(plotPageRef,(*pIndexLine)++,indexColumn,"Ref Selection",responseHandle);
+        mediateResponseCellInfo(plotPageRef,(*pIndexLine)++,indexColumn,responseHandle,"Ref File","%s",GDP_BIN_orbitFiles[refList[0].indexFile].gdpBinFileName);
+        mediateResponseCellDataString(plotPageRef,(*pIndexLine),indexColumn,"Record",responseHandle);
+        mediateResponseCellDataString(plotPageRef,(*pIndexLine),indexColumn+1,"Pixel number",responseHandle);
+        mediateResponseCellDataString(plotPageRef,(*pIndexLine),indexColumn+2,"Pixel type",responseHandle);
+        mediateResponseCellDataString(plotPageRef,(*pIndexLine),indexColumn+3,"SZA",responseHandle);
+        mediateResponseCellDataString(plotPageRef,(*pIndexLine),indexColumn+4,"Lat",responseHandle);
+        mediateResponseCellDataString(plotPageRef,(*pIndexLine),indexColumn+5,"Lon",responseHandle);
+
+        (*pIndexLine)++;
+
+        strcpy(pRecord->refFileName,GDP_BIN_orbitFiles[pRef->indexFile].gdpBinFileName);
+        pRecord->refRecord=pRef->indexRecord+1;
+       }
+
+      mediateResponseCellDataInteger(plotPageRef,(*pIndexLine),indexColumn,pRef->indexRecord+1,responseHandle);
+      mediateResponseCellDataInteger(plotPageRef,(*pIndexLine),indexColumn+1,pRef->pixelNumber,responseHandle);
+      mediateResponseCellDataInteger(plotPageRef,(*pIndexLine),indexColumn+2,pRef->pixelType,responseHandle);
+      mediateResponseCellDataDouble(plotPageRef,(*pIndexLine),indexColumn+3,pRef->sza,responseHandle);
+      mediateResponseCellDataDouble(plotPageRef,(*pIndexLine),indexColumn+4,pRef->latitude,responseHandle);
+      mediateResponseCellDataDouble(plotPageRef,(*pIndexLine),indexColumn+5,pRef->longitude,responseHandle);
+
+      (*pIndexLine)++;
 
       for (i=0;i<NDET;i++)
        {
@@ -1172,21 +1194,23 @@ RC GdpBinRefSelection(ENGINE_CONTEXT *pEngineContext,
                       int nSpectra,
                       double *lambdaK,double *ref,
                       double *lambdaN,double *refN,
-                      double *lambdaS,double *refS,UCHAR *gomePixelType)
+                      double *lambdaS,double *refS,
+                      UCHAR *gomePixelType,
+                      void *responseHandle)
  {
   // Declarations
 
   GDP_BIN_REF *refList;                                                         // list of potential reference spectra
   INT nRefN,nRefS;                                                              // number of reference spectra in the previous list resp. for Northern and Southern hemisphere
+  INDEX indexLine,indexColumn;
   double normFact;                                                              // normalisation factor
   double latDelta,tmp;
-  FILE *fp;                                                                     // pointer to the temporary file with information to display
   RC rc;                                                                        // return code
 
   // Initializations
 
-// QDOAS ???  fp=(pEngineContext->project.spectra.displayDataFlag)?fopen(DOAS_tmpFile,"w+t"):NULL;
-  fp=NULL;   // QDOAS ???
+  indexLine=1;
+  indexColumn=2;
 
   if (latMin>latMax)
    {
@@ -1228,14 +1252,8 @@ RC GdpBinRefSelection(ENGINE_CONTEXT *pEngineContext,
      {
       // search for potential reference spectra in northern hemisphere
 
-      if (fp!=NULL)
-       {
-        fprintf(fp,"Ref Selection :\n");
-        fprintf(fp,"File       Rec\t  PixN\t  PixT\t  SZA\t  Lat\t  Lon\n");
-       }
-
       if ((nRefN=nRefS=GdpBinRefLat(refList,latMin,latMax,lonMin,lonMax,sza,szaDelta,gomePixelType))>0)
-       rc=GdpBinBuildRef(refList,nRefN,nSpectra,lambdaN,refN,pEngineContext,specFp,fp);
+       rc=GdpBinBuildRef(refList,nRefN,nSpectra,lambdaN,refN,pEngineContext,specFp,&indexLine,responseHandle);
 
       if (!rc)
        memcpy(refS,refN,sizeof(double)*NDET);
@@ -1245,14 +1263,8 @@ RC GdpBinRefSelection(ENGINE_CONTEXT *pEngineContext,
 
     else
      {
-      if (fp!=NULL)
-       {
-        fprintf(fp,"Ref Selection :\n");
-        fprintf(fp,"File       Rec\t  PixN\t  PixT\t  SZA\t  Lat\t  Lon\n");
-       }
-
       if ((nRefN=nRefS=GdpBinRefSza(refList,sza,szaDelta,gomePixelType))>0)
-       rc=GdpBinBuildRef(refList,nRefN,nSpectra,lambdaN,refN,pEngineContext,specFp,fp);
+       rc=GdpBinBuildRef(refList,nRefN,nSpectra,lambdaN,refN,pEngineContext,specFp,&indexLine,responseHandle);
 
       if (!rc)
        memcpy(refS,refN,sizeof(double)*NDET);
@@ -1269,9 +1281,7 @@ RC GdpBinRefSelection(ENGINE_CONTEXT *pEngineContext,
 
       else if (!nRefN)
        {
-        if (fp!=NULL)
-         fprintf(fp,"No record selected for the northern hemisphere, use reference of the southern hemisphere\n");
-
+       	mediateResponseCellDataString(plotPageRef,indexLine++,indexColumn,"No record selected for the northern hemisphere, use reference of the southern hemisphere",responseHandle);
         memcpy(refN,refS,sizeof(double)*NDET);
        }
 
@@ -1279,9 +1289,7 @@ RC GdpBinRefSelection(ENGINE_CONTEXT *pEngineContext,
 
       else if (!nRefS)
        {
-        if (fp!=NULL)
-         fprintf(fp,"No record selected for the southern hemisphere, use reference of the northern hemisphere\n");
-
+        mediateResponseCellDataString(plotPageRef,indexLine++,indexColumn,"No record selected for the southern hemisphere, use reference of the northern hemisphere",responseHandle);
         memcpy(refS,refN,sizeof(double)*NDET);
        }
 
@@ -1293,13 +1301,7 @@ RC GdpBinRefSelection(ENGINE_CONTEXT *pEngineContext,
      }
    }
 
-  // Close file
-
-  if (fp!=NULL)
-   {
-    fprintf(fp,"\n");
-    fclose(fp);
-   }
+  ANALYSE_indexLine=indexLine+1;
 
   // Release allocated buffer
 
@@ -1323,7 +1325,7 @@ RC GdpBinRefSelection(ENGINE_CONTEXT *pEngineContext,
 //               ERROR_ID_NO otherwise.
 // -----------------------------------------------------------------------------
 
-RC GdpBinNewRef(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
+RC GdpBinNewRef(ENGINE_CONTEXT *pEngineContext,FILE *specFp,void *responseHandle)
  {
   // Declarations
 
@@ -1363,7 +1365,8 @@ RC GdpBinNewRef(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
                              pTabFeno->LambdaK,pTabFeno->Sref,
                              pTabFeno->LambdaN,pTabFeno->SrefN,
                              pTabFeno->LambdaS,pTabFeno->SrefS,
-                             pTabFeno->gomePixelType);
+                             pTabFeno->gomePixelType,
+                             responseHandle);
     }
 
   THRD_goto.indexMin=THRD_goto.indexMax=ITEM_NONE;
@@ -1388,7 +1391,7 @@ RC GdpBinNewRef(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
 // RETURN        0 for success
 // -----------------------------------------------------------------------------
 
-RC GDP_BIN_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
+RC GDP_BIN_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,FILE *specFp,void *responseHandle)
  {
   // Declarations
 
@@ -1482,7 +1485,7 @@ RC GDP_BIN_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
            ANALYSE_SvdLocalAlloc("GDP_BIN_LoadAnalysis",&pTabFeno->svd);
 
            if (((rc=ANALYSE_XsInterpolation(pTabFeno,pTabFeno->LambdaRef))!=ERROR_ID_NO) ||
-               (!pKuruczOptions->fwhmFit && pTabFeno->xsToConvolute &&
+               ((!pKuruczOptions->fwhmFit || !pTabFeno->useKurucz) && pTabFeno->xsToConvolute &&
                ((rc=ANALYSE_XsConvolution(pTabFeno,pTabFeno->LambdaRef,&ANALYSIS_slit,pSlitOptions->slitFunction.slitType,&pSlitOptions->slitFunction.slitParam,&pSlitOptions->slitFunction.slitParam2,&pSlitOptions->slitFunction.slitParam3,&pSlitOptions->slitFunction.slitParam4))!=ERROR_ID_NO)))
             goto EndGOME_LoadAnalysis;
 
@@ -1511,7 +1514,7 @@ RC GDP_BIN_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
      {
       KURUCZ_Init(0);
 
-      if ((THRD_id!=THREAD_TYPE_KURUCZ) && ((rc=KURUCZ_Reference(NULL,0,saveFlag,0,NULL /* QDOAS !!! responseHandle */))!=ERROR_ID_NO))
+      if ((THRD_id!=THREAD_TYPE_KURUCZ) && ((rc=KURUCZ_Reference(NULL,0,saveFlag,0,responseHandle))!=ERROR_ID_NO))
        goto EndGOME_LoadAnalysis;
      }
 
@@ -1530,9 +1533,9 @@ RC GDP_BIN_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
 
     // Reference
 
-    if ((THRD_id==THREAD_TYPE_ANALYSIS) && gdpBinLoadReferenceFlag && !(rc=GdpBinNewRef(pEngineContext,specFp)) &&
-       !(rc=ANALYSE_AlignReference(2,pEngineContext->project.spectra.displayDataFlag,NULL /* !!! QDOAS responseHandle */)))  // automatic ref selection for Northern hemisphere
-     rc=ANALYSE_AlignReference(3,pEngineContext->project.spectra.displayDataFlag,NULL /* !!! QDOAS responseHandle */);       // automatic ref selection for Southern hemisphere
+    if ((THRD_id==THREAD_TYPE_ANALYSIS) && gdpBinLoadReferenceFlag && !(rc=GdpBinNewRef(pEngineContext,specFp,responseHandle)) &&
+       !(rc=ANALYSE_AlignReference(2,pEngineContext->project.spectra.displayDataFlag,responseHandle)))  // automatic ref selection for Northern hemisphere
+     rc=ANALYSE_AlignReference(3,pEngineContext->project.spectra.displayDataFlag,responseHandle);       // automatic ref selection for Southern hemisphere
 
     if (rc==ERROR_ID_NO_REF)
      for (i=GDP_BIN_currentFileIndex+1;i<gdpBinOrbitFilesN;i++)
