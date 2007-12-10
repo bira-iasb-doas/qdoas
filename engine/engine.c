@@ -254,14 +254,8 @@ RC EngineSetProject(ENGINE_CONTEXT *pEngineContext)
 
  	// Initializations
 
-<<<<<<< .mine
  	ANALYSE_plotKurucz=ANALYSE_plotRef=0;
  	ANALYSE_indexLine=1;
-
-=======
- 	ANALYSE_plotKurucz=ANALYSE_plotRef=0;
-
->>>>>>> .r13036
   pBuffers=&pEngineContext->buffers;
   pProject=&pEngineContext->project;
   pInstrumental=&pProject->instrumental;
