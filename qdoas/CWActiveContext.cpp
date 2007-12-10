@@ -445,7 +445,7 @@ void CWActiveContext::slotPlotPages(const QList< RefCountConstPtr<CPlotPageData>
   int pageNumber;
   
   int activePageNumber = m_plotRegion->pageDisplayed();
-  bool activeTabIndex = 0;
+  int activeTabIndex = 0;
 
   // adjust the number of tabs
   int nPages = pageList.count();
