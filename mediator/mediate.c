@@ -274,7 +274,7 @@ void mediateRequestPlotSpectra(ENGINE_CONTEXT *pEngineContext,void *responseHand
 //   QDOAS ???      sprintf(tmpString,"Calibration parameters\t%.2f %.3e %.3e %.3e\n",pRecord->wavelength1,pRecord->dispersion[0],
 //   QDOAS ???                  pRecord->dispersion[1],pRecord->dispersion[2]);
 //  QDOAS ???
-      mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"Solar Zenith angle","%-.3f °",pRecord->Zm);
+      mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"Solar Zenith angle","%-.3f",pRecord->Zm);
 //  QDOAS ???
     if ((pInstrumental->readOutFormat!=PRJCT_INSTR_FORMAT_GDP_ASCII) &&
         (pInstrumental->readOutFormat!=PRJCT_INSTR_FORMAT_GDP_BIN) &&
@@ -284,20 +284,20 @@ void mediateRequestPlotSpectra(ENGINE_CONTEXT *pEngineContext,void *responseHand
      {
       mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"Exposure time","%.3f sec",pRecord->Tint);
       mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"Scans taken into account","%d",pRecord->NSomme);
-      mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"Elevation viewing angle","%.3f °",pRecord->elevationViewAngle);
-      mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"Azimuth viewing angle","%.3f °",pRecord->azimuthViewAngle);
+      mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"Elevation viewing angle","%.3f",pRecord->elevationViewAngle);
+      mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"Azimuth viewing angle","%.3f",pRecord->azimuthViewAngle);
      }
     else
      {
-     	mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"Solar Azimuth angle","%.3f °",pRecord->Azimuth);
-     	mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"Viewing Zenith angle","%.3f °",pRecord->zenithViewAngle);
-     	mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"Viewing Azimuth angle","%.3f °",pRecord->azimuthViewAngle);
+     	mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"Solar Azimuth angle","%.3f",pRecord->Azimuth);
+     	mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"Viewing Zenith angle","%.3f",pRecord->zenithViewAngle);
+     	mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"Viewing Azimuth angle","%.3f",pRecord->azimuthViewAngle);
      }
 
     if (pRecord->rejected>0)
      mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"Rejected scans","%d",pRecord->rejected);
     if (pRecord->TDet!=(double)0.)
-     mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"Detector temperature","%.3f °",pRecord->TDet);
+     mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"Detector temperature","%.3f",pRecord->TDet);
 
     if (pRecord->longitude!=(double)0.)
      mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"Longitude","%.3f",pRecord->longitude);
@@ -311,9 +311,9 @@ void mediateRequestPlotSpectra(ENGINE_CONTEXT *pEngineContext,void *responseHand
 //   QDOAS ???          (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC_STD)) &&
 //   QDOAS ???         ((pRecord->aMoon!=(double)0.) || (pRecord->hMoon!=(double)0.) || (pRecord->fracMoon!=(double)0.)))
 //   QDOAS ???      {
-//   QDOAS ???       sprintf(tmpString,"Moon azimuthal angle\t%.3f °\n",pRecord->aMoon);
-//   QDOAS ???       sprintf(tmpString,"Moon elevation\t\t%.3f °\n",pRecord->hMoon);
-//   QDOAS ???       sprintf(tmpString,"Moon illuminated fraction\t%.3f °\n",pRecord->fracMoon);
+//   QDOAS ???       sprintf(tmpString,"Moon azimuthal angle\t%.3f\n",pRecord->aMoon);
+//   QDOAS ???       sprintf(tmpString,"Moon elevation\t\t%.3f\n",pRecord->hMoon);
+//   QDOAS ???       sprintf(tmpString,"Moon illuminated fraction\t%.3f\n",pRecord->fracMoon);
 //   QDOAS ???      }
 //   QDOAS ???     else if (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN)
 //   QDOAS ???      {
@@ -801,6 +801,16 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
 
     break;
  // ---------------------------------------------------------------------------
+	   case PRJCT_INSTR_FORMAT_GOME2 :                            // GOME2
+
+	  	 strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->gome2.calibrationFile);     // calibration file
+	  	 strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->gome2.instrFunctionFile);     // instrumental function file
+
+	  	 pEngineInstrumental->user=pMediateInstrumental->gome2.bandType;
+
+     NDET=1024;
+    break;
+ // ---------------------------------------------------------------------------
    }
 
 	 // Set the detector size (implicit to the selection of the file format)
@@ -1016,13 +1026,6 @@ int mediateRequestSetProject(void *engineContext,
 	 EngineEndCurrentSession(pEngineContext);
 
 	 THRD_id=operatingMode;
-	 {
-	 	FILE *fp;
-	 	fp=fopen("toto.dat","a+t");
-	 	fprintf(fp,"Operating mode %d\n",THRD_id);
-	 	fclose(fp);
-	 }
-
 
 	 // Transfer projects options from the mediator to the engine
 
@@ -1831,7 +1834,8 @@ int mediateRequestBeginAnalyseSpectra(void *engineContext,
 
   if ((EngineRequestBeginBrowseSpectra(pEngineContext,spectraFileName)!=ERROR_ID_NO) ||
      ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN) && (GDP_BIN_LoadAnalysis(pEngineContext,pEngineContext->fileInfo.specFp,responseHandle)!=ERROR_ID_NO)) ||
-     ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS) && (SCIA_LoadAnalysis(pEngineContext,responseHandle)!=ERROR_ID_NO)))
+     ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS) && (SCIA_LoadAnalysis(pEngineContext,responseHandle)!=ERROR_ID_NO)) ||
+     ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GOME2) && (GOME2_LoadAnalysis(pEngineContext,responseHandle)!=ERROR_ID_NO)))
 
    mediateDisplayErrorMessage(responseHandle);
 

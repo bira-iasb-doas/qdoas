@@ -52,7 +52,7 @@ CWAnalysisWindowPropertyEditor::CWAnalysisWindowPropertyEditor(const QString &pr
   const int cDoubleEditWidth = 70;
 
   mediate_analysis_window_t *d = CWorkSpace::instance()->findAnalysisWindow(m_projectName, m_analysisWindowName);
-  
+
   assert(d != NULL);
 
   QVBoxLayout *mainLayout = new QVBoxLayout(this);
@@ -85,7 +85,7 @@ CWAnalysisWindowPropertyEditor::CWAnalysisWindowPropertyEditor(const QString &pr
   refSelectLayout->addWidget(autoButton);
   QRadioButton *fileButton = new QRadioButton("File",  refSelectGroup);
   refSelectLayout->addWidget(fileButton);
-  
+
   topLayout->addWidget(refSelectGroup);
 
   // fitting interval
@@ -105,7 +105,7 @@ CWAnalysisWindowPropertyEditor::CWAnalysisWindowPropertyEditor(const QString &pr
   fitIntervalLayout->addWidget(m_fitMaxEdit, 1, 1);
 
   topLayout->addWidget(fitIntervalGroup);
-  
+
   // display
   QGroupBox *displayGroup = new QGroupBox("Display", this);
   QGridLayout *displayLayout = new QGridLayout(displayGroup);
@@ -123,7 +123,7 @@ CWAnalysisWindowPropertyEditor::CWAnalysisWindowPropertyEditor(const QString &pr
   displayLayout->addWidget(m_predefCheck, 1, 1);
   m_ratioCheck = new QCheckBox("Ref1/Ref2", displayGroup);
   displayLayout->addWidget(m_ratioCheck, 1, 2);
-  
+
   topLayout->addWidget(displayGroup);
   topLayout->addStretch(1);
 
@@ -273,9 +273,9 @@ CWAnalysisWindowPropertyEditor::CWAnalysisWindowPropertyEditor(const QString &pr
   m_residualStack->addWidget(pixelTypeFrame);  // takes index 1
 
   filesLayout->addLayout(m_residualStack);
-  
+
   mainLayout->addWidget(filesGroup);
-  
+
   // table tabs. NOTE that the *DoasTables are dependent of the list of
   // user symbol list and the ASCII output setting of the project properties...
 
@@ -311,7 +311,7 @@ CWAnalysisWindowPropertyEditor::CWAnalysisWindowPropertyEditor(const QString &pr
   m_captionStr += m_projectName;
   m_captionStr += " / ";
   m_captionStr += m_analysisWindowName;
-  
+
   m_contextTag = m_projectName;
   m_contextTag += ":";
   m_contextTag += m_analysisWindowName;
@@ -394,12 +394,12 @@ CWAnalysisWindowPropertyEditor::~CWAnalysisWindowPropertyEditor()
 
 bool CWAnalysisWindowPropertyEditor::actionOk(void)
 {
-  
+
   // NOTE: can perform and validation checks here .. if NOT ok, return false, otherwise proceed to set data ...
 
 
   mediate_analysis_window_t *d = CWorkSpace::instance()->findAnalysisWindow(m_projectName, m_analysisWindowName);
-  
+
   if (d) {
 
     d->kuruczMode = m_calibrationCombo->itemData(m_calibrationCombo->currentIndex()).toInt();
@@ -414,7 +414,7 @@ bool CWAnalysisWindowPropertyEditor::actionOk(void)
     d->requireResidual = (m_residualCheck->checkState() == Qt::Checked) ? 1 : 0;
     d->requirePredefined = (m_predefCheck->checkState() == Qt::Checked) ? 1 : 0;
     d->requireRefRatio = (m_ratioCheck->checkState() == Qt::Checked) ? 1 : 0;
-    
+
     strcpy(d->refOneFile, m_refOneEdit->text().toAscii().data());
     strcpy(d->refTwoFile, m_refTwoEdit->text().toAscii().data());
     strcpy(d->residualFile, m_residualEdit->text().toAscii().data());
@@ -483,12 +483,12 @@ void CWAnalysisWindowPropertyEditor::projectPropertiesChanged()
   if (d) {
     // enable/disable filtering
     m_moleculesTab->setColumnEnabled(4, (d->lowpass.mode != PRJCT_FILTER_TYPE_NONE));
-    
+
     bool analysisEnabled = (d->output.analysisFlag != 0);
 
     // non-linear ... TODO
 
-    // enable/disable shift+stretch store columns 
+    // enable/disable shift+stretch store columns
     m_shiftAndStretchTab->setColumnEnabled(3, analysisEnabled);
     m_shiftAndStretchTab->setColumnEnabled(4, analysisEnabled);
     m_shiftAndStretchTab->setColumnEnabled(5, analysisEnabled);
@@ -521,9 +521,9 @@ void CWAnalysisWindowPropertyEditor::projectPropertiesChanged()
       }
       break;
     }
-    
-    m_residualStack->setCurrentIndex((m_autoSelection && m_activePixelType) ? 1 : 0); 
-    
+
+    m_residualStack->setCurrentIndex((m_autoSelection && m_activePixelType) ? 1 : 0);
+
   }
 }
 
@@ -533,7 +533,7 @@ void CWAnalysisWindowPropertyEditor::slotRefSelectionChanged(bool checked)
   m_autoSelection = checked;
 
   m_refTwoStack->setCurrentIndex(m_autoSelection ? 0 : 1);
-  m_residualStack->setCurrentIndex((m_autoSelection && m_activePixelType) ? 1 : 0); 
+  m_residualStack->setCurrentIndex((m_autoSelection && m_activePixelType) ? 1 : 0);
 }
 
 void CWAnalysisWindowPropertyEditor::slotWavelengthCalibrationChanged(int index)
@@ -558,7 +558,7 @@ void CWAnalysisWindowPropertyEditor::slotWavelengthCalibrationChanged(int index)
     break;
   case ANLYS_KURUCZ_REF_AND_SPEC:
     {
-      m_refOneFrame->setEnabled(false);      
+      m_refOneFrame->setEnabled(false);
       m_refTwoEditFrame->setEnabled(true);
       m_refTwoSzaFrame->setEnabled(true);
     }
@@ -572,11 +572,11 @@ void CWAnalysisWindowPropertyEditor::slotBrowseRefOne()
 
   QString filename = QFileDialog::getOpenFileName(this, "Select Reference 1",
 						  pref->directoryName("Ref"),
-						  "Kurucz File (*.ktz);;All Files (*)");
-  
+						  "Reference File (*.ref);;All Files (*)");
+
   if (!filename.isEmpty()) {
     pref->setDirectoryNameGivenFile("Ref", filename);
-    
+
     m_refOneEdit->setText(filename);
   }
 }
@@ -587,11 +587,11 @@ void CWAnalysisWindowPropertyEditor::slotBrowseRefTwo()
 
   QString filename = QFileDialog::getOpenFileName(this, "Select Reference 2",
 						  pref->directoryName("Ref"),
-						  "Kurucz File (*.ktz);;All Files (*)");
+						  "Reference File (*.ref);;All Files (*)");
 
   if (!filename.isEmpty()) {
     pref->setDirectoryNameGivenFile("Ref", filename);
-    
+
     m_refTwoEdit->setText(filename);
   }
 }
@@ -599,14 +599,14 @@ void CWAnalysisWindowPropertyEditor::slotBrowseRefTwo()
 void CWAnalysisWindowPropertyEditor::slotBrowseResidual()
 {
   CPreferences *pref = CPreferences::instance();
-  
+
   QString filename = QFileDialog::getOpenFileName(this, "Select Residual",
 						  pref->directoryName("Residual"),
 						  "All Files (*)");
-  
+
   if (!filename.isEmpty()) {
     pref->setDirectoryNameGivenFile("Residual", filename);
-    
+
     m_residualEdit->setText(filename);
   }
 }

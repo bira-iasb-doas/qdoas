@@ -46,6 +46,7 @@
 //
 //  ----------------------------------------------------------------------------
 
+#include "mediate.h"
 #include "engine.h"
 
 ENGINE_CONTEXT engineContext,                                                   // engine context used to make the interface between the mediator and the engine
@@ -537,27 +538,20 @@ RC EngineSetFile(ENGINE_CONTEXT *pEngineContext,const char *fileName)
   // ---------------------------------------------------------------------------
      case PRJCT_INSTR_FORMAT_GDP_ASCII :
       rc=GDP_ASC_Set(pEngineContext,pFile->specFp);
-// QDOAS ???      if (!(rc=GDP_ASC_Set(pEngineContext,pFile->specFp)) && (THRD_id!=THREAD_TYPE_SPECTRA) && (THRD_id!=THREAD_TYPE_NONE))
-// QDOAS ???       rc=GDP_ASC_LoadAnalysis(pEngineContext,pFile->specFp);
      break;
   // ---------------------------------------------------------------------------
      case PRJCT_INSTR_FORMAT_GDP_BIN :
       rc=GDP_BIN_Set(pEngineContext,pFile->specFp);
-// QDOAS ???      if (!(rc=GDP_BIN_Set(pEngineContext,pFile->specFp)) && (THRD_id!=THREAD_TYPE_SPECTRA) && (THRD_id!=THREAD_TYPE_NONE))
-// QDOAS ???       rc=GDP_BIN_LoadAnalysis(pEngineContext,pFile->specFp);
-
      break;
   // ---------------------------------------------------------------------------
      case PRJCT_INSTR_FORMAT_SCIA_PDS :
       rc=SCIA_SetPDS(pEngineContext);
-// QDOAS ???       if (!(rc=SCIA_SetPDS(pEngineContext)) && (THRD_id!=THREAD_TYPE_SPECTRA) && (THRD_id!=THREAD_TYPE_NONE))
-// QDOAS ???        rc=SCIA_LoadAnalysis(pEngineContext,responseHandle);
      break;
   // ---------------------------------------------------------------------------
-// GOME2     case PRJCT_INSTR_FORMAT_GOME2 :
-// GOME2      if (!(rc=GOME2_Set(pEngineContext)) && (THRD_id!=THREAD_TYPE_SPECTRA) && (THRD_id!=THREAD_TYPE_NONE))
-// GOME2       rc=GOME2_LoadAnalysis(pEngineContext);
-// GOME2     break;
+     case PRJCT_INSTR_FORMAT_GOME2 :
+      rc=GOME2_Set(pEngineContext);
+       // rc=GOME2_LoadAnalysis(pEngineContext);
+     break;
   // ---------------------------------------------------------------------------
      default :
       rc=ERROR_ID_FILE_FORMAT;
@@ -722,9 +716,9 @@ RC EngineReadFile(ENGINE_CONTEXT *pEngineContext,int indexRecord,INT dateFlag,IN
      rc=SCIA_ReadPDS(pEngineContext,indexRecord);
     break;
  // ---------------------------------------------------------------------------
-// QDOAS ???     case PRJCT_INSTR_FORMAT_GOME2 :
-// QDOAS ???      rc=GOME2_Read(pEngineContext,indexRecord);
-// QDOAS ???     break;
+    case PRJCT_INSTR_FORMAT_GOME2 :
+     rc=GOME2_Read(pEngineContext,indexRecord,ITEM_NONE);
+    break;
  // ---------------------------------------------------------------------------
     default :
      rc=ERROR_ID_FILE_BAD_FORMAT;
@@ -848,7 +842,7 @@ RC EngineEndCurrentSession(ENGINE_CONTEXT *pEngineContext)
     GDP_ASC_ReleaseBuffers();
     GDP_BIN_ReleaseBuffers();
 
-  //  GOME2_ReleaseBuffers(GOME2_BEAT_CLOSE);
+    GOME2_ReleaseBuffers(GOME2_BEAT_CLOSE);
   //  OMI_ReleaseBuffers();
 
     SCIA_ReleaseBuffers(pEngineContext->project.instrumental.readOutFormat);
@@ -998,6 +992,7 @@ RC EngineSetRefIndexes(ENGINE_CONTEXT *pEngineContext)
       // Browse records in file
 
       for (indexRecord=ENGINE_contextRef.lastRefRecord+1;indexRecord<=recordNumber;indexRecord++)
+
        if (!(rc=EngineReadFile(&ENGINE_contextRef,indexRecord,1,localCalDay)) &&
            (ENGINE_contextRef.recordInfo.Zm>(double)0.))
         {
@@ -1047,7 +1042,7 @@ RC EngineSetRefIndexes(ENGINE_CONTEXT *pEngineContext)
           // No reference spectrum found in SZA range
 
           if (ZmMax<pTabFeno->refSZA-pTabFeno->refSZADelta)
-           rc=ERROR_SetLast("ThrdSetRefIndexes",ERROR_TYPE_WARNING,ERROR_ID_NO_REF,"all the day",ENGINE_contextRef.fileInfo.fileName);
+           rc=ERROR_SetLast("EngineSetRefIndexes",ERROR_TYPE_WARNING,ERROR_ID_NO_REF,"all the day",ENGINE_contextRef.fileInfo.fileName);
 
           // Select record with SZA minimum
 
@@ -1082,17 +1077,17 @@ RC EngineSetRefIndexes(ENGINE_CONTEXT *pEngineContext)
             // No record found for the morning OR the afternoon
 
             if ((pTabFeno->indexRefMorning==ITEM_NONE) && (pTabFeno->indexRefAfternoon==ITEM_NONE))
-             rc=ERROR_SetLast("ThrdSetRefIndexes",ERROR_TYPE_WARNING,ERROR_ID_NO_REF,"all the day",ENGINE_contextRef.fileInfo.fileName);
+             rc=ERROR_SetLast("EngineSetRefIndexes",ERROR_TYPE_WARNING,ERROR_ID_NO_REF,"all the day",ENGINE_contextRef.fileInfo.fileName);
             else if (pInstr->readOutFormat!=PRJCT_INSTR_FORMAT_ASCII)
              {
               if (pTabFeno->indexRefMorning==ITEM_NONE)
                {
-               	rc=ERROR_SetLast("ThrdSetRefIndexes",ERROR_TYPE_WARNING,ERROR_ID_NO_REF,"the morning",ENGINE_contextRef.fileInfo.fileName);
+               	rc=ERROR_SetLast("EngineSetRefIndexes",ERROR_TYPE_WARNING,ERROR_ID_NO_REF,"the morning",ENGINE_contextRef.fileInfo.fileName);
                 pTabFeno->indexRefMorning=pTabFeno->indexRefAfternoon;
                }
               else if (pTabFeno->indexRefAfternoon==ITEM_NONE)
                {
-               	rc=ERROR_SetLast("ThrdSetRefIndexes",ERROR_TYPE_WARNING,ERROR_ID_NO_REF,"the afternoon",ENGINE_contextRef.fileInfo.fileName);
+               	rc=ERROR_SetLast("EngineSetRefIndexes",ERROR_TYPE_WARNING,ERROR_ID_NO_REF,"the afternoon",ENGINE_contextRef.fileInfo.fileName);
                 pTabFeno->indexRefAfternoon=pTabFeno->indexRefMorning;
                }
              }
@@ -1145,12 +1140,14 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
   INDEX indexRefRecord,                                                         // index of best record in file for reference selection
         indexTabFeno,                                                           // browse analysis windows
-        indexWindow;                                                            // avoid gaps
+        indexWindow,                                                            // avoid gaps
+        indexPage;
 
   FENO *pTabFeno;                                                               // pointer to the analysis window
   INT useKurucz,alignRef,useUsamp,saveFlag,newDimL;
   double factTemp;
-  RC rc;                                                                        // return code
+  RC rc;
+  UCHAR string[80];                                                              // return code
 
   // Initializations
 
@@ -1172,14 +1169,14 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
    {
     pTabFeno=&TabFeno[indexTabFeno];
 
-    if ((pTabFeno->hidden!=1) &&                                                   // not the definition of the window for the wavelength calibration
-        (pTabFeno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_AUTOMATIC))  // automatic reference selection only
+    if (!(pTabFeno->hidden) &&                                                      // not the definition of the window for the wavelength calibration
+         (pTabFeno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_AUTOMATIC))  // automatic reference selection only
      {
       pTabFeno->displayRef=0;
 
       if ((indexRefRecord=(pRecord->localTimeDec<=ENGINE_localNoon)?pTabFeno->indexRefMorning:pTabFeno->indexRefAfternoon)==ITEM_NONE)
        {
-// QDOAS ???        memcpy((char *)&THRD_specInfo.recordInfo.present_day,(char *)&pRecord->present_day,sizeof(SHORT_DATE));
+        memcpy((char *)&ENGINE_contextRef.recordInfo.present_day,(char *)&pRecord->present_day,sizeof(SHORT_DATE));
         rc=ERROR_ID_FILE_RECORD;
        }
 
@@ -1241,17 +1238,23 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
      }
    }
 
-// QDOAS ???     if ((THRD_id==THREAD_TYPE_ANALYSIS) || (THRD_id==THREAD_TYPE_KURUCZ))
-// QDOAS ???      {
-// QDOAS ???       for (indexTabFeno=0;indexTabFeno<NFeno;indexTabFeno++)
-// QDOAS ???        {
-// QDOAS ???         pTabFeno=&TabFeno[indexTabFeno];
-// QDOAS ???
-// QDOAS ???         if (!pTabFeno->hidden)
-// QDOAS ???          fprintf(fp,"Reference for %s analysis window : %d/%d SZA : %g\n",pTabFeno->windowName,pTabFeno->indexRef,
-// QDOAS ???                 (pTabFeno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_AUTOMATIC)?pEngineContext->recordNumber:ITEM_NONE,pTabFeno->Zm);
-// QDOAS ???        }
-// QDOAS ???      }
+  if ((THRD_id==THREAD_TYPE_ANALYSIS) || (THRD_id==THREAD_TYPE_KURUCZ))
+   {
+    for (indexTabFeno=0,indexPage=plotPageAnalysis;indexTabFeno<NFeno;indexTabFeno++)
+     {
+      pTabFeno=&TabFeno[indexTabFeno];
+
+      if (!pTabFeno->hidden)
+       {
+        sprintf(string,"Reference : %d/%d",pTabFeno->indexRef,
+               (pTabFeno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_AUTOMATIC)?pEngineContext->recordNumber:ITEM_NONE);
+       	mediateResponseCellDataString(indexPage,1,2,string,responseHandle);
+       	sprintf(string,"SZA : %g",pTabFeno->Zm);
+       	mediateResponseCellDataString(indexPage,1,3,string,responseHandle);
+       	indexPage++;
+       }
+     }
+   }
 
   // Reference alignment
 
@@ -1261,8 +1264,8 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
   if (!rc && alignRef)
    rc=ANALYSE_AlignReference(1,saveFlag,responseHandle);
 
-// QDOAS ???   if (!rc && useUsamp)
-// QDOAS ???    rc=USAMP_BuildFromAnalysis(1,ITEM_NONE);
+  if (!rc && useUsamp)
+   rc=USAMP_BuildFromAnalysis(1,ITEM_NONE);
 
   // Return
 

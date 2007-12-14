@@ -34,12 +34,16 @@ win32 {
   INCLUDEPATH  += ..\mediator ..\common ..\engine
 
   contains( QWT_LINKAGE, qwtstatic ) {
-    LIBS        += -L$$QWT_LIB_PATH -l$$QWT_LIB
+    LIBS        += -L$$QWT_LIB_PATH -l$$QWT_LIB -L$$BEAT_LIB_PATH -l$$BEAT_LIB
   }
   contains( QWT_LINKAGE, qwtdll ) {
-    LIBS        += -L$$QWT_LIB_PATH -l$$QWT_LIB$$QWT_LIB_VERSION
-    DEFINES     += QWT_DLL
+    LIBS        += -L$$QWT_LIB_PATH -l$$QWT_LIB$$QWT_LIB_VERSION -L$$BEAT_LIB_PATH -l$$BEAT_LIB
+    DEFINES     += QWT_DLL LIBBEATDLL
   }
+
+  LIBS         += -L$$BEAT_LIB_PATH -lbeat
+  DEFINES      += LIBBEATDLL
+
   CONFIG      += windows
 }
 
@@ -160,6 +164,7 @@ SOURCES += ../engine/filter.c
 SOURCES += ../engine/fvoigt.c
 SOURCES += ../engine/gdp_asc_read.c
 SOURCES += ../engine/gdp_bin_read.c
+SOURCES += ../engine/gome2_read.c
 SOURCES += ../engine/kurucz.c
 SOURCES += ../engine/matrix.c
 SOURCES += ../engine/memory.c
@@ -194,6 +199,8 @@ SOURCES += ../engine/zenithal.c
 #----------------------------------------------
 # Engine Header files
 #----------------------------------------------
+HEADERS += ../engine/beat.h
+HEADERS += ../engine/beatl2.h
 HEADERS += ../engine/bin_read.h
 HEADERS += ../engine/comdefs.h
 HEADERS += ../engine/doas.h
@@ -203,7 +210,7 @@ HEADERS += ../engine/lv1_struct.h
 HEADERS += ../engine/lv1c_struct.h
 HEADERS += ../engine/read1c_defs.h
 HEADERS += ../engine/utc_string.h
-HEADERS += ../engine/windoas.h  
+HEADERS += ../engine/windoas.h
 
 #----------------------------------------------
 # Install

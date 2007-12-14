@@ -644,7 +644,7 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
     fprintf(fp, "\"2a\"");
     break;
   case PRJCT_INSTR_GDP_BAND_2B:
-    fprintf(fp, "\"2B\"");
+    fprintf(fp, "\"2b\"");
     break;
   case PRJCT_INSTR_GDP_BAND_3:
     fprintf(fp, "\"3\"");
@@ -827,7 +827,7 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
     fprintf(fp, "\"2a\"");
     break;
   case PRJCT_INSTR_GDP_BAND_2B:
-    fprintf(fp, "\"2B\"");
+    fprintf(fp, "\"2b\"");
     break;
   case PRJCT_INSTR_GDP_BAND_3:
     fprintf(fp, "\"3\"");

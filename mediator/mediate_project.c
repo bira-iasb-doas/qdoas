@@ -52,6 +52,7 @@ void initializeMediateProjectAnalysis(mediate_project_analysis_t *d)
 
   // any non-zero defaults...
 
+  d->interpolationType = PRJCT_ANLYS_INTERPOL_SPLINE;
   d->interpolationSecurityGap = 10;
   d->convergenceCriterion = 1.0e-4;
 }

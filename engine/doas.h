@@ -1540,7 +1540,7 @@ enum { GOME2_BEAT_NO, GOME2_BEAT_INIT, GOME2_BEAT_CLOSE };
 
 void GOME2_ReleaseBuffers(int action);
 RC GOME2_Set(ENGINE_CONTEXT *pEngineContext);
-RC GOME2_Read(ENGINE_CONTEXT *pEngineContext,int recordNo);
-RC GOME2_LoadAnalysis(ENGINE_CONTEXT *pEngineContext);
+RC GOME2_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,INDEX fileIndex);
+RC GOME2_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle);
 
 #endif

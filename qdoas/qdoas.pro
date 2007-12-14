@@ -34,11 +34,11 @@ win32 {
   INCLUDEPATH  += ..\mediator ..\common ..\engine
 
   contains( QWT_LINKAGE, qwtstatic ) {
-    LIBS        += -L$$QWT_LIB_PATH -l$$QWT_LIB
+    LIBS        += -L$$QWT_LIB_PATH -l$$QWT_LIB -L$$BEAT_LIB_PATH -l$$BEAT_LIB
   }
   contains( QWT_LINKAGE, qwtdll ) {
-    LIBS        += -L$$QWT_LIB_PATH -l$$QWT_LIB$$QWT_LIB_VERSION
-    DEFINES     += QWT_DLL
+    LIBS        += -L$$QWT_LIB_PATH -l$$QWT_LIB$$QWT_LIB_VERSION -L$$BEAT_LIB_PATH -l$$BEAT_LIB
+    DEFINES     += QWT_DLL LIBBEATDLL
   }
 
   LIBS         += -L$$BEAT_LIB_PATH -lbeat
@@ -247,6 +247,7 @@ SOURCES += ../engine/filter.c
 SOURCES += ../engine/fvoigt.c
 SOURCES += ../engine/gdp_asc_read.c
 SOURCES += ../engine/gdp_bin_read.c
+SOURCES += ../engine/gome2_read.c
 SOURCES += ../engine/kurucz.c
 SOURCES += ../engine/matrix.c
 SOURCES += ../engine/memory.c
@@ -281,6 +282,8 @@ SOURCES += ../engine/zenithal.c
 #----------------------------------------------
 # Engine Header files
 #----------------------------------------------
+HEADERS += ../engine/beat.h
+HEADERS += ../engine/beatl2.h
 HEADERS += ../engine/bin_read.h
 HEADERS += ../engine/comdefs.h
 HEADERS += ../engine/doas.h
@@ -300,5 +303,5 @@ target.path = $${INSTALL_PREFIX}/bin
 doc.path    = $${INSTALL_PREFIX}/doc
 
 doc.files = ../../Doc/html ../../Doc/RELEASENOTES ../../LICENSE
-  
+
 INSTALLS += target doc

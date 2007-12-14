@@ -317,6 +317,7 @@ SHORT_DATE;
 #define ERROR_ID_GDP_BANDINDEX                 1300                             // band is not present in the GDP file
 
 #define ERROR_ID_PDS                           1400                             // error in the SCIA PDS file
+#define ERROR_ID_BEAT                          1401                             // error in the GOME2 format
 #define ERROR_ID_FILE_FORMAT                   2000                             // bad file format
 
 // =========

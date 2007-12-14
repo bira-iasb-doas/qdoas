@@ -318,6 +318,7 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
   USHORT *darkCurrent;                                                          // the dark current
   int nTint;                                                                    // the number of different integration times
   double offset;                                                                // offset correction
+  double tmLocal;
   INDEX i,j,k;                                                                  // indexes to browse vectors
   RC rc;                                                                        // return code
 
@@ -428,6 +429,8 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
                 (float)header.brusagElevation:(float)-1.;
 
           pRecord->TimeDec=(double)header.now.ti_hour+header.now.ti_min/60.+header.now.ti_sec/3600.;
+          pRecord->localTimeDec=fmod(pRecord->TimeDec+24.+THRD_localShift,(double)24.);
+
           if (strlen(header.filterName)>0)
            {
            	memset(pRecord->Nom,' ',20);
@@ -494,7 +497,10 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
              pBuffers->darkCurrent[i]=pBuffers->darkCurrent[i]/pRecord->NSomme;
            }
 
-          if (rc || (dateFlag && (pRecord->elevationViewAngle>(double)-0.5) && (pRecord->elevationViewAngle<88.)))                  // reference spectra are zenith only
+          tmLocal=pRecord->Tm+THRD_localShift*3600.;
+          pRecord->localCalDay=ZEN_FNCaljda(&tmLocal);
+
+          if (rc || (dateFlag && (((pRecord->elevationViewAngle>(double)-0.5) && (pRecord->elevationViewAngle<88.)) || (pRecord->localCalDay!=localDay))))                  // reference spectra are zenith only
            rc=ERROR_ID_FILE_RECORD;
          }
        }

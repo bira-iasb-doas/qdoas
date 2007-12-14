@@ -3871,7 +3871,7 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
           if (saveFlag)
            {
-           	indexLine=1;
+           	indexLine=2;
             indexColumn=2;
 
            	mediateResponseCellDataString(indexPage,indexLine,indexColumn,tabTitle,responseHandle);
