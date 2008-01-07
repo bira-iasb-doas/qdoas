@@ -282,8 +282,8 @@ SOURCES += ../engine/zenithal.c
 #----------------------------------------------
 # Engine Header files
 #----------------------------------------------
-HEADERS += ../engine/beat.h
-HEADERS += ../engine/beatl2.h
+#HEADERS += ../engine/beat.h
+#HEADERS += ../engine/beatl2.h
 HEADERS += ../engine/bin_read.h
 HEADERS += ../engine/comdefs.h
 HEADERS += ../engine/doas.h

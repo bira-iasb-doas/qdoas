@@ -97,7 +97,7 @@ void CSession::addFile(const QFileInfo &file, const QString &projectName)
       CSessionItem *item = new CSessionItem(proj);
       item->addFile(file);
 
-      if (m_mode == CSession::Analyse) {
+      if (m_mode == CSession::Analyse || m_mode == CSession::Calibrate) {
 	int nWindows;
 	mediate_analysis_window_t *d = CWorkSpace::instance()->analysisWindowList(projectName, nWindows);
 	if (d != NULL) {

@@ -14,6 +14,7 @@ unix {
   QWT_INC_PATH   = /usr/local/qwt/include
   QWT_LIB_PATH   = /usr/local/qwt/lib
   QWT_LIB        = qwt
+  BEAT_LIB_PATH  = /home/ian/local/lib
 
   INSTALL_PREFIX = /usr/local/Qdoas
 

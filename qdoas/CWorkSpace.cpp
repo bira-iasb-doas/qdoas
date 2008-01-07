@@ -495,7 +495,7 @@ mediate_symbol_t* CWorkSpace::symbolList(int &listLength) const
   return NULL;
 }
 
-// Should this be 'enabled windows only' ??? - TODO
+// Only provides 'enabled' windows. Will return NULL if no windows are enabled.
 
 mediate_analysis_window_t* CWorkSpace::analysisWindowList(const QString &projectName, int &listLength) const
 { 
@@ -507,14 +507,22 @@ mediate_analysis_window_t* CWorkSpace::analysisWindowList(const QString &project
       mediate_analysis_window_t *data = new mediate_analysis_window_t[n];
       mediate_analysis_window_t *p = data;
 
+      listLength = 0;
+
       // walk the vector and copy ... order is important
       std::vector<SAnlysWinBucket>::const_iterator wIt = (pIt->second).window.begin();
       while (wIt != (pIt->second).window.end()) {
-	*p = *(wIt->aw); // blot copy
-	++p;
+	if (wIt->enabled) {
+	  *p = *(wIt->aw); // blot copy
+	  ++p;
+	  ++listLength;
+	}
 	++wIt;
       }
-      listLength = (int)n;
+      if (listLength == 0) {
+	delete [] data;
+	data = NULL;
+      }
       return data;
     }
   }
