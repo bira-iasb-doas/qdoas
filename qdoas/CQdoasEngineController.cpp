@@ -188,7 +188,7 @@ void CQdoasEngineController::notifyErrorMessages(int highestErrorLevel, const QL
     // abort the session
     emit signalSessionRunning(false);
   }
-    
+
   QList<CEngineError>::const_iterator it = errorMessages.begin();
   while (it != errorMessages.end()) {
     // one message per line
@@ -453,6 +453,13 @@ void CQdoasEngineController::slotStartSession(const RefCountPtr<CSession> &sessi
 
     // mode dependent parts of the request
     if (m_session->mode() == CSession::Browse) {
+
+    	 int nSites;
+    	 mediate_site_t *sites = m_session->takeSiteList(nSites);                  // Added by Caroline : need observation sites for spectra selection (overpasses)
+
+    	 if (sites)
+	req->addRequest(new CEngineRequestSetSites(sites, nSites));
+
       req->addRequest(new CEngineRequestSetProject(m_currentProject, THREAD_TYPE_SPECTRA));
       req->addRequest(new CEngineRequestBeginBrowseFile(m_currentIt.file().filePath()));
     }

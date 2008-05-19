@@ -175,7 +175,7 @@ CWProjectTabInstrumental::CWProjectTabInstrumental(const mediate_project_instrum
 
   // set the current format - stack will follow
   slotInstrumentChanged(instr->format);
-  
+
   index = m_siteCombo->findText(QString(instr->siteName));
   if (index != -1)
     m_siteCombo->setCurrentIndex(index);
@@ -222,14 +222,14 @@ void CWProjectTabInstrumental::slotInstrumentChanged(int instrument)
 {
   std::map<int,int>::const_iterator it = m_instrumentToStackIndexMap.find(instrument);
   if (it != m_instrumentToStackIndexMap.end()) {
-    
+
     m_formatStack->setCurrentIndex(it->second);
   }
 }
 
 void CWProjectTabInstrumental::slotInstrumentTypeChanged(int instrumentType)
 {
-  m_siteCombo->setEnabled(instrumentType == PRJCT_INSTR_TYPE_SATELLITE);
+ m_siteCombo->setEnabled((instrumentType==PRJCT_INSTR_TYPE_SATELLITE)?0:1);
 }
 
 //--------------------------------------------------------
@@ -260,7 +260,7 @@ void CWCalibInstrEdit::slotCalibOneBrowse()
 
   if (!filename.isEmpty()) {
     pref->setDirectoryNameGivenFile("Calib", filename);
-    
+
     m_fileOneEdit->setText(filename);
   }
 }
@@ -283,14 +283,14 @@ void CWCalibInstrEdit::slotInstrTwoBrowse()
 void CWCalibInstrEdit::slotOffsetTwoBrowse()
 {
   CPreferences *pref = CPreferences::instance();
-  
+
   QString filename = QFileDialog::getOpenFileName(this, "Select Offset File",
 						  pref->directoryName("Offset"),
 						  "Offset File (*.txt);;All Files (*)");
 
   if (!filename.isEmpty()) {
     pref->setDirectoryNameGivenFile("Offset", filename);
-    
+
     m_fileTwoEdit->setText(filename);
   }
 }
@@ -349,14 +349,14 @@ CWAllFilesEdit::~CWAllFilesEdit()
 void CWAllFilesEdit::slotInterPixelVariabilityThreeBrowse()
 {
   CPreferences *pref = CPreferences::instance();
-  
+
   QString filename = QFileDialog::getOpenFileName(this, "Select Inter-Pixel Variability File",
 						  pref->directoryName("IntPixVar"),
 						  "Inter-Pixel Variability File (*.ipv);;All Files (*)");
 
   if (!filename.isEmpty()) {
     pref->setDirectoryNameGivenFile("IntPixVar", filename);
-    
+
     m_fileThreeEdit->setText(filename);
   }
 }
@@ -371,7 +371,7 @@ void CWAllFilesEdit::slotDarkCurrentThreeBrowse()
 
   if (!filename.isEmpty()) {
     pref->setDirectoryNameGivenFile("Dark", filename);
-    
+
     m_fileThreeEdit->setText(filename);
   }
 }
@@ -379,14 +379,14 @@ void CWAllFilesEdit::slotDarkCurrentThreeBrowse()
 void CWAllFilesEdit::slotStraylightCorrectionThreeBrowse()
 {
   CPreferences *pref = CPreferences::instance();
-  
+
   QString filename = QFileDialog::getOpenFileName(this, "Select Stray-Light File",
 						  pref->directoryName("Stray"),
 						  "Stray-Light File (*.str);;All Files (*)");
 
   if (!filename.isEmpty()) {
     pref->setDirectoryNameGivenFile("Stray", filename);
-    
+
     m_fileThreeEdit->setText(filename);
   }
 }
@@ -394,14 +394,14 @@ void CWAllFilesEdit::slotStraylightCorrectionThreeBrowse()
 void CWAllFilesEdit::slotDetectorNonLinearityFourBrowse()
 {
   CPreferences *pref = CPreferences::instance();
-  
+
   QString filename = QFileDialog::getOpenFileName(this, "Select Detector Non-Linearity File",
 						  pref->directoryName("DetNonLin"),
 						  "Detector Non-Linearity File (*.dnl);;All Files (*)");
-  
+
   if (!filename.isEmpty()) {
     pref->setDirectoryNameGivenFile("DetNonLin", filename);
-    
+
     m_fileFourEdit->setText(filename);
   }
 }
@@ -409,7 +409,7 @@ void CWAllFilesEdit::slotDetectorNonLinearityFourBrowse()
 void CWAllFilesEdit::slotOffsetFourBrowse()
 {
   CPreferences *pref = CPreferences::instance();
-  
+
   QString filename = QFileDialog::getOpenFileName(this, "Select Offset File",
 						  pref->directoryName("Offset"),
 						  "Offset File (*.txt);;All Files (*)");

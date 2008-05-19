@@ -180,14 +180,14 @@ CWGeolocation::CWGeolocation(const struct geolocation *geo, QWidget *parent) :
   // row 1
   circleLayout->addWidget(new QLabel("Center Longitude (degrees)", circleFrame), 1, 0);
   m_cenLongEdit = new QLineEdit(this);
-  m_cenLongEdit->setValidator(new CDoubleFixedFmtValidator(-180.0, 180.0, 3, m_cenLongEdit));
+  m_cenLongEdit->setValidator(new CDoubleFixedFmtValidator(-360, 360.0, 3, m_cenLongEdit));
   m_cenLongEdit->setFixedWidth(pixels);
   circleLayout->addWidget(m_cenLongEdit, 1, 1);
 
   // row 2
   circleLayout->addWidget(new QLabel("Center Latitude (degrees)", circleFrame) , 2, 0);
   m_cenLatEdit = new QLineEdit(this);
-  m_cenLatEdit->setValidator(new CDoubleFixedFmtValidator(-180.0, 180.0, 3, m_cenLatEdit));
+  m_cenLatEdit->setValidator(new CDoubleFixedFmtValidator(-90.0, 90.0, 3, m_cenLatEdit));
   m_cenLatEdit->setFixedWidth(pixels);
   circleLayout->addWidget(m_cenLatEdit, 2, 1);
 

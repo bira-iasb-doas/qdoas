@@ -61,11 +61,13 @@ CSession::CSession(eMode mode) :
   m_mode(mode)
 {
   // get a snap-shot of the symbol and site lists from the workspace if needed
-  
+
   if (m_mode == CSession::Analyse || m_mode == CSession::Calibrate) {
     m_symbols = CWorkSpace::instance()->symbolList(m_nSymbols);
     m_sites = CWorkSpace::instance()->siteList(m_nSites);
   }
+  else if (m_mode == CSession::Browse)
+   m_sites = CWorkSpace::instance()->siteList(m_nSites);
 }
 
 CSession::~CSession()
@@ -89,7 +91,7 @@ CSession::eMode CSession::mode(void) const
 void CSession::addFile(const QFileInfo &file, const QString &projectName)
 {
   sessionmap_t::iterator it = m_map.find(projectName);
-  
+
   if (it == m_map.end()) {
     // dont have this project yet ... grab it from the workspace
     mediate_project_t *proj = CWorkSpace::instance()->findProject(projectName);
@@ -104,7 +106,7 @@ void CSession::addFile(const QFileInfo &file, const QString &projectName)
 	  item->giveAnalysisWindowList(d, nWindows);
 	}
       }
- 
+
       m_map.insert(sessionmap_t::value_type(projectName,item));
     }
     else {
@@ -128,7 +130,7 @@ int CSession::size(void) const
     count += (it->second)->m_files.size();
     ++it;
   }
-      
+
   return count;
 }
 

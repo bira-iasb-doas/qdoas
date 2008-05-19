@@ -78,7 +78,7 @@ CWMain::CWMain(QWidget *parent) :
   tbLayout->addWidget(m_toolBar, 0);
   tbLayout->addStretch(1);
   mainLayout->addLayout(tbLayout, 0);
-  
+
   //------------------------------
 
   m_activeContext = new CWActiveContext;
@@ -95,7 +95,7 @@ CWMain::CWMain(QWidget *parent) :
   m_projEnvTab->addTab(m_userSymbolTree, "Symbols");
 
   // data table
-  
+
   m_tableRegion = new CWTableRegion;
 
   // Splitters
@@ -114,7 +114,7 @@ CWMain::CWMain(QWidget *parent) :
   QSplitter *mainSplitter = new QSplitter(Qt::Vertical);
   mainSplitter->addWidget(m_subSplitter);
   mainSplitter->addWidget(m_tableRegion);
-  
+
   mainLayout->addWidget(mainSplitter, 1); // takes all stretch
 
   //------------------------------
@@ -256,9 +256,9 @@ CWMain::CWMain(QWidget *parent) :
   connect(m_controller, SIGNAL(signalCurrentFileChanged(int,int)),
 	  navPanelRecords, SLOT(slotSetCurrentFile(int,int)));
   connect(m_controller, SIGNAL(signalSessionRunning(bool)),
-	  navPanelRecords, SLOT(slotSetEnabled(bool))); 
+	  navPanelRecords, SLOT(slotSetEnabled(bool)));
   connect(m_controller, SIGNAL(signalSessionRunning(bool)),
-	  m_projTree, SLOT(slotSessionRunning(bool))); 
+	  m_projTree, SLOT(slotSessionRunning(bool)));
 
   connect(navPanelRecords, SIGNAL(signalFirstClicked()),
 	  m_controller, SLOT(slotFirstRecord()));
@@ -356,7 +356,7 @@ bool CWMain::checkStateAndConsiderSaveFile(void)
   QMessageBox::StandardButton choice = QMessageBox::question(this, "Save Changes", msg,
 							     QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel,
 							     QMessageBox::Save);
-  
+
   if (choice == QMessageBox::Discard)
     return true; // discard changes
   else if (choice != QMessageBox::Save)
@@ -372,7 +372,7 @@ bool CWMain::checkStateAndConsiderSaveFile(void)
 void CWMain::setProjectFileName(const QString &fileName)
 {
   QString str("Qdoas - ");
-  
+
   m_projectFile = fileName;
 
   if (m_projectFile.isEmpty()) {
@@ -385,7 +385,7 @@ void CWMain::setProjectFileName(const QString &fileName)
 
   setWindowTitle(str);
 }
- 
+
 void CWMain::slotOpenFile()
 {
   if (!checkStateAndConsiderSaveFile())
@@ -416,7 +416,7 @@ void CWMain::slotOpenFile()
   xmlReader.setErrorHandler(handler);
 
   bool ok = xmlReader.parse(source);
-  
+
   if (ok) {
 
     CPathMgr *pathMgr = CPathMgr::instance();
@@ -437,7 +437,7 @@ void CWMain::slotOpenFile()
       else
 	pathMgr->addPath(i, path);
     }
-    
+
     // sites
     const QList<const CSiteConfigItem*> &siteItems = handler->siteItems();
     QList<const CSiteConfigItem*>::const_iterator siteIt = siteItems.begin();
@@ -447,7 +447,7 @@ void CWMain::slotOpenFile()
 		     (*siteIt)->longitude(), (*siteIt)->latitude(), (*siteIt)->altitude());
       ++siteIt;
     }
-    
+
     // symbols
     const QList<const CSymbolConfigItem*> &symbolItems = handler->symbolItems();
     QList<const CSymbolConfigItem*>::const_iterator symIt = symbolItems.begin();
@@ -480,7 +480,7 @@ void CWMain::slotNewFile()
 {
   if (!checkStateAndConsiderSaveFile())
     return;
-  
+
   // clear the project tree, then the workspace
   m_projTree->removeAllContent();
   CWorkSpace::instance()->removeAllContent();
@@ -501,7 +501,7 @@ void CWMain::slotSaveAsFile()
   while (returnCode == QMessageBox::Retry) {
 
     returnCode = QMessageBox::Cancel;
-    
+
     QString fileName = QFileDialog::getSaveFileName(this, "SaveAs Project File",
 						    CPreferences::instance()->directoryName("QdoasConf"),
 						    "Qdoas Project Config (*.xml);;All Files (*)");
@@ -536,7 +536,7 @@ void CWMain::slotSaveFile()
   }
   else {
     CQdoasConfigWriter writer(m_projTree);
-    
+
     QString msg = writer.write(m_projectFile);
     if (!msg.isNull())
       QMessageBox::critical(this, "Project File Write Failure", msg, QMessageBox::Ok);
@@ -600,10 +600,7 @@ void CWMain::slotStateMonitorChanged(bool valid)
 
 void CWMain::slotConvolutionTool()
 {
-  QString name = QCoreApplication::applicationDirPath();
-
-  name += QDir::separator();
-  name += "convolution";
+  QString name = "convolution";
 
   if (!QProcess::startDetached(name)) {
     QString msg = "Failed to start convolution tool.\n(";
@@ -615,12 +612,9 @@ void CWMain::slotConvolutionTool()
 
 void CWMain::slotRingTool()
 {
-  QString name = QCoreApplication::applicationDirPath();
+  QString name = "ring";
 
-  name += QDir::separator();
-  name += "ring";
-
-  if (!QProcess::startDetached(name)) {    
+  if (!QProcess::startDetached(name)) {
     QString msg = "Failed to start ring tool.\n(";
     msg += name;
     msg += " )";
@@ -630,10 +624,7 @@ void CWMain::slotRingTool()
 
 void CWMain::slotUndersamplingTool()
 {
-  QString name = QCoreApplication::applicationDirPath();
-
-  name += QDir::separator();
-  name += "usamp";
+  QString name = "usamp";
 
   if (!QProcess::startDetached(name)) {
     QString msg = "Failed to start undersampling tool.\n( ";
