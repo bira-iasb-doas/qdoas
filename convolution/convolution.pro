@@ -3,7 +3,7 @@
 #----------------------------------------------
 
 TEMPLATE = app
-TARGET   = convolution
+TARGET   = ../../qdoas/release/convolution
 
 include( ../config.pri )
 
@@ -126,7 +126,8 @@ HEADERS += CConvConfigWriter.h
 # Mediator Source files
 #----------------------------------------------
 SOURCES += ../mediator/mediate_convolution.c
-SOURCES += ../mediator/mediate.c
+SOURCES += ../mediator/mediate_xsconv.c
+SOURCES += ../mediator/mediate_common.c
 SOURCES += ../mediator/mediate_response.cpp
 
 #----------------------------------------------
@@ -136,7 +137,8 @@ HEADERS += ../mediator/mediate_limits.h
 HEADERS += ../mediator/mediate_general.h
 HEADERS += ../mediator/mediate_convolution.h
 HEADERS += ../mediator/mediate_response.h
-HEADERS += ../mediator/mediate_request.h
+HEADERS += ../mediator/mediate_xsconv.h
+HEADERS += ../mediator/mediate_common.h
 HEADERS += ../mediator/mediate_project.h
 HEADERS += ../mediator/mediate_analysis_window.h
 
@@ -148,53 +150,21 @@ RESOURCES = ../resources/convolution.qrc
 #----------------------------------------------
 # Engine Source files
 #----------------------------------------------
-SOURCES += ../engine/actn-read.c
-SOURCES += ../engine/analyse.c
-SOURCES += ../engine/ascii.c
-SOURCES += ../engine/bin_read.c
-SOURCES += ../engine/ccd-read.c
-SOURCES += ../engine/curfit.c
 SOURCES += ../engine/debug.c
-SOURCES += ../engine/easoeread.c
-SOURCES += ../engine/engine.c
+SOURCES += ../engine/engine_xsconv.c
 SOURCES += ../engine/erf.c
 SOURCES += ../engine/error.c
 SOURCES += ../engine/evalpoly.c
 SOURCES += ../engine/filter.c
 SOURCES += ../engine/fvoigt.c
-SOURCES += ../engine/gdp_asc_read.c
-SOURCES += ../engine/gdp_bin_read.c
-SOURCES += ../engine/gome2_read.c
-SOURCES += ../engine/kurucz.c
 SOURCES += ../engine/matrix.c
 SOURCES += ../engine/memory.c
-SOURCES += ../engine/mfc-read.c
-SOURCES += ../engine/moon.c
-SOURCES += ../engine/noaa-read.c
-SOURCES += ../engine/output.c
-SOURCES += ../engine/pda-read.c
-SOURCES += ../engine/ras-read.c
-SOURCES += ../engine/read1c_subs.c
-SOURCES += ../engine/resource.c
-SOURCES += ../engine/ring.c
-SOURCES += ../engine/saoz-read.c
-SOURCES += ../engine/scia-read.c
 SOURCES += ../engine/spline.c
 SOURCES += ../engine/stdfunc.c
 SOURCES += ../engine/svd.c
-SOURCES += ../engine/uoft-read.c
-SOURCES += ../engine/usamp.c
-SOURCES += ../engine/utc_string.c
 SOURCES += ../engine/vector.c
 SOURCES += ../engine/winfiles.c
-SOURCES += ../engine/winpath.c
-SOURCES += ../engine/winsites.c
-SOURCES += ../engine/winsymb.c
-SOURCES += ../engine/winthrd.c
-SOURCES += ../engine/wintree.c
-SOURCES += ../engine/wvlen_det_pix.c
 SOURCES += ../engine/xsconv.c
-SOURCES += ../engine/zenithal.c
 
 #----------------------------------------------
 # Engine Header files
@@ -204,7 +174,7 @@ HEADERS += ../engine/beatl2.h
 HEADERS += ../engine/bin_read.h
 HEADERS += ../engine/comdefs.h
 HEADERS += ../engine/doas.h
-HEADERS += ../engine/engine.h
+HEADERS += ../engine/engine_xsconv.h
 HEADERS += ../engine/lv1_defs.h
 HEADERS += ../engine/lv1_struct.h
 HEADERS += ../engine/lv1c_struct.h

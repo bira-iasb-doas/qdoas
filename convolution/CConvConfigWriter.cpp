@@ -59,7 +59,7 @@ QString CConvConfigWriter::write(const QString &fileName)
   writePaths(fp);
 
   writeGeneral(fp, &(m_properties->general));
-  
+
   fprintf(fp, "  <con_slit>\n");
   writeSlitFunction(fp, 4, &(m_properties->conslit));
   fprintf(fp, "  </con_slit>\n  <dec_slit>\n");
@@ -72,7 +72,7 @@ QString CConvConfigWriter::write(const QString &fileName)
 
   if (fclose(fp)) {
     QTextStream stream(&msg);
-    
+
     stream << "Error writing to the project file '" << fileName << "'";
   }
 
@@ -96,7 +96,7 @@ void CConvConfigWriter::writeGeneral(FILE *fp, const mediate_conv_general_t *d)
   }
 
   fprintf(fp, " conver=");
-  switch (d->convolutionType) {
+  switch (d->conversionType) {
   case CONVOLUTION_CONVERSION_AIR2VAC:
     fprintf(fp, "\"air2vac\""); break;
   case CONVOLUTION_CONVERSION_VAC2AIR:
