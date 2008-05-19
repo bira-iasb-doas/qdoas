@@ -44,7 +44,7 @@ extern "C" {
     char outputFile[FILENAME_BUFFER_LENGTH];
     char calibrationFile[FILENAME_BUFFER_LENGTH];
     char solarRefFile[FILENAME_BUFFER_LENGTH];
-    
+
   } mediate_conv_general_t;
 
 
@@ -63,7 +63,6 @@ extern "C" {
     mediate_filter_t lowpass;
     mediate_filter_t highpass;
   } mediate_convolution_t;
-
 
   void initializeMediateConvolution(mediate_convolution_t *d);
 

@@ -25,6 +25,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 void initializeMediateConvolution(mediate_convolution_t *d)
 {
   // Initializations
-  
-  memset(d, 0, sizeof(mediate_convolution_t));  
+
+  memset(d, 0, sizeof(mediate_convolution_t));
 }

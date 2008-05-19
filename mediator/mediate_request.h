@@ -78,7 +78,7 @@ int mediateRequestDestroyEngineContext(void *engineContext, void *responseHandle
 //
 // On success, project becomes the 'current project'.
 
-int mediateRequestSetProject(void *engineContext, const mediate_project_t *project, int operatingMode, void *responseHandle);
+int  mediateRequestSetProject(void *engineContext, const mediate_project_t *project, int operatingMode, void *responseHandle);
 
 
 // mediateRequestSetAnalysisWindows

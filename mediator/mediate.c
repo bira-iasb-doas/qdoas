@@ -20,29 +20,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "mediate.h"
 #include "engine.h"
 
-RC mediateDisplayErrorMessage(void *responseHandle)
- {
- 	// Declarations
-
- 	ERROR_DESCRIPTION errorDescription;
- 	RC rc;
-
- 	rc=0;
-
- 	// Get the last error message
-
- 	while (ERROR_GetLast(&errorDescription)!=0)
- 	 {
- 	  mediateResponseErrorMessage(errorDescription.errorFunction,errorDescription.errorString,errorDescription.errorType, responseHandle);
- 	  if (errorDescription.errorType==ERROR_TYPE_FATAL)
- 	   rc=-1;
- 	 }
-
- 	return rc;    // 0 on success, -1 on fatal error
- }
-
 // -----------------------------------------------------------------------------
-// FUNCTION      EngineRequestPlotSpectra
+// FUNCTION      MediateRequestPlotSpectra
 // -----------------------------------------------------------------------------
 // PURPOSE       End the spectra browsing thread
 //
@@ -353,7 +332,7 @@ int mediateRequestCreateEngineContext(void **engineContext, void *responseHandle
  	ENGINE_CONTEXT *pEngineContext;
 
   if ((pEngineContext=*engineContext=(void *)EngineCreateContext())==NULL)
-   mediateDisplayErrorMessage(responseHandle);
+   ERROR_DisplayMessage(responseHandle);
 
   return (pEngineContext!=NULL)?0:-1;
  }
@@ -524,25 +503,6 @@ void setMediateProjectAnalysis(PRJCT_ANLYS *pEngineAnalysis,const mediate_projec
   DEBUG_Print("Number of security pixels : %d\n",pEngineAnalysis->securityGap);
 
   DEBUG_FunctionStop("setMediateProjectAnalysis",0);
-  #endif
- }
-
-// -----------------------------------------------------------------------------
-// FUNCTION      setMediateProjectFiltering
-// -----------------------------------------------------------------------------
-// PURPOSE       Filtering part of the project properties
-// -----------------------------------------------------------------------------
-
-void setMediateProjectFiltering(PRJCT_FILTER *pEngineFilter,const mediate_filter_t *pMediateFilter)
- {
- 	#if defined(__DEBUG_) && __DEBUG_ && defined(__DEBUG_DOAS_CONFIG_) && __DEBUG_DOAS_CONFIG_
-  DEBUG_FunctionBegin("setMediateProjectFiltering",DEBUG_FCTTYPE_CONFIG);
-  #endif
-
-  // Still to do by Caro
-
-  #if defined(__DEBUG_) && __DEBUG_ && defined(__DEBUG_DOAS_CONFIG_) && __DEBUG_DOAS_CONFIG_
-  DEBUG_FunctionStop("setMediateProjectFiltering",0);
   #endif
  }
 
@@ -852,93 +812,16 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
 
 void setMediateProjectSlit(PRJCT_SLIT *pEngineSlit,const mediate_project_slit_t *pMediateSlit)
  {
- 	// Declarations
-
- 	mediate_slit_function_t *pMediateSlitParam;
- 	SLIT *pEngineSlitParam;
-
  	#if defined(__DEBUG_) && __DEBUG_ && defined(__DEBUG_DOAS_CONFIG_) && __DEBUG_DOAS_CONFIG_
   DEBUG_FunctionBegin("setMediateProjectSlit",DEBUG_FCTTYPE_CONFIG);
   #endif
 
-  // Initializations
-
-  pEngineSlitParam=(SLIT *)&pEngineSlit->slitFunction;
-  pMediateSlitParam=(mediate_slit_function_t *)&pMediateSlit->function;
-
   // Fields
 
   pEngineSlit->fwhmCorrectionFlag=pMediateSlit->applyFwhmCorrection;
-  pEngineSlitParam->slitType=pMediateSlitParam->type;
-
-  pEngineSlitParam->slitParam=
-  pEngineSlitParam->slitParam2=
-  pEngineSlitParam->slitParam3=
-  pEngineSlitParam->slitParam4=(double)0.;
-
   strcpy(pEngineSlit->kuruczFile,pMediateSlit->solarRefFile);
 
-  switch(pEngineSlitParam->slitType)
-   {
- // ----------------------------------------------------------------------------
-    case SLIT_TYPE_GAUSS :                                                      // Gaussian line shape
-     pEngineSlitParam->slitParam=pMediateSlitParam->gaussian.fwhm;
-    break;
- // ----------------------------------------------------------------------------
-    case SLIT_TYPE_INVPOLY :                                                    // 2n-Lorentz (generalisation of the Lorentzian function
-     pEngineSlitParam->slitParam=pMediateSlitParam->lorentz.width;
-     pEngineSlitParam->slitParam2=pMediateSlitParam->lorentz.degree;
-    break;
- // ----------------------------------------------------------------------------
-    case SLIT_TYPE_VOIGT :                                                      // Voigt profile function
-     pEngineSlitParam->slitParam=pMediateSlitParam->voigt.fwhmL;
-     pEngineSlitParam->slitParam2=pMediateSlitParam->voigt.glRatioL;
-     pEngineSlitParam->slitParam3=pMediateSlitParam->voigt.fwhmR;
-     pEngineSlitParam->slitParam4=pMediateSlitParam->voigt.glRatioR;
-    break;
- // ----------------------------------------------------------------------------
-    case SLIT_TYPE_ERF :                                                        // error function (convolution of a Gaussian and a boxcar)
-     pEngineSlitParam->slitParam=pMediateSlitParam->error.fwhm;
-     pEngineSlitParam->slitParam2=pMediateSlitParam->error.width;
-    break;
- // ----------------------------------------------------------------------------
-    case SLIT_TYPE_APOD :                                                       // apodisation function (used with FTS)
-     pEngineSlitParam->slitParam=pMediateSlitParam->boxcarapod.resolution;
-     pEngineSlitParam->slitParam2=pMediateSlitParam->boxcarapod.phase;
-    break;
- // ----------------------------------------------------------------------------
-    case SLIT_TYPE_APODNBS :                                                    // apodisation function (Norton Beer Strong function)
-     pEngineSlitParam->slitParam=pMediateSlitParam->nbsapod.resolution;
-     pEngineSlitParam->slitParam2=pMediateSlitParam->nbsapod.phase;
-    break;
- // ----------------------------------------------------------------------------
-    case SLIT_TYPE_GAUSS_FILE :
-     strcpy(pEngineSlitParam->slitFile,pMediateSlitParam->gaussianfile.filename);
-    break;
- // ----------------------------------------------------------------------------
-    case SLIT_TYPE_INVPOLY_FILE :                                               // 2n-Lorentz line shape, wavelength dependent (file)
-     strcpy(pEngineSlitParam->slitFile,pMediateSlitParam->lorentzfile.filename);
-     pEngineSlitParam->slitParam2=pMediateSlitParam->lorentzfile.degree;
-    break;
- // ----------------------------------------------------------------------------
-    case SLIT_TYPE_ERF_FILE :                                                   // error function, wavelength dependent (file)
-     strcpy(pEngineSlitParam->slitFile,pMediateSlitParam->errorfile.filename);
-     pEngineSlitParam->slitParam2=pMediateSlitParam->errorfile.width;
-    break;
- // ----------------------------------------------------------------------------
-    case SLIT_TYPE_GAUSS_T_FILE :
-     strcpy(pEngineSlitParam->slitFile,pMediateSlitParam->gaussiantempfile.filename);
-    break;
- // ----------------------------------------------------------------------------
-    case SLIT_TYPE_ERF_T_FILE :
-     strcpy(pEngineSlitParam->slitFile,pMediateSlitParam->errortempfile.filename);
-    break;
- // ----------------------------------------------------------------------------
-    default :
-     strcpy(pEngineSlitParam->slitFile,pMediateSlitParam->file.filename);
-    break;
- // ----------------------------------------------------------------------------
-   }
+  setMediateSlit(&pEngineSlit->slitFunction,&pMediateSlit->function);
 
   #if defined(__DEBUG_) && __DEBUG_ && defined(__DEBUG_DOAS_CONFIG_) && __DEBUG_DOAS_CONFIG_
   DEBUG_FunctionStop("setMediateProjectSlit",0);
@@ -1036,8 +919,8 @@ int mediateRequestSetProject(void *engineContext,
   setMediateProjectDisplay(&pEngineProject->spectra,&project->display);
   setMediateProjectSelection(&pEngineProject->spectra,&project->selection);
   setMediateProjectAnalysis(&pEngineProject->analysis,&project->analysis);
-  setMediateProjectFiltering(&pEngineProject->lfilter,&project->lowpass);
-  setMediateProjectFiltering(&pEngineProject->hfilter,&project->highpass);
+  setMediateFilter(&pEngineProject->lfilter,&project->lowpass);
+  setMediateFilter(&pEngineProject->hfilter,&project->highpass);
   setMediateProjectCalibration(&pEngineProject->kurucz,&pEngineContext->calibFeno,&project->calibration);
   setMediateProjectInstrumental(&pEngineProject->instrumental,&project->instrumental);
   setMediateProjectUndersampling(&pEngineProject->usamp,&project->undersampling);
@@ -1047,7 +930,7 @@ int mediateRequestSetProject(void *engineContext,
 	 // Allocate buffers requested by the project
 
   if (EngineSetProject(pEngineContext)!=ERROR_ID_NO)
-   rc=mediateDisplayErrorMessage(responseHandle);
+   rc=ERROR_DisplayMessage(responseHandle);
 
 	 #if defined(__DEBUG_) && __DEBUG_
   DEBUG_Stop("Project");
@@ -1473,7 +1356,7 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
            (pTabFeno->hidden ||
          (!(rc=ANALYSE_LoadGaps(pAnalysisWindows->gapList.gap,pAnalysisWindows->gapList.nGap,pTabFeno->LambdaRef,pAnalysisWindows->fitMinWavelength,pAnalysisWindows->fitMaxWavelength)) &&
 
-          (!pTabFeno->gomeRefFlag || !(rc=ANALYSE_SvdLocalAlloc("ANALYSE_LoadData",&pTabFeno->svd)))
+          (!pTabFeno->gomeRefFlag || !(rc=SVD_LocalAlloc("ANALYSE_LoadData",&pTabFeno->svd)))
          )))
        {
         if (pTabFeno->hidden==1)
@@ -1567,7 +1450,7 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
  // QDOAS ???     }
 
 	 if (rc!=ERROR_ID_NO)
-	  mediateDisplayErrorMessage(responseHandle);
+	  ERROR_DisplayMessage(responseHandle);
 
 	 #if defined(__DEBUG_) && __DEBUG_
   DEBUG_Stop("Analysis windows");
@@ -1590,8 +1473,9 @@ int mediateRequestSetSymbols(void *engineContext,
  	int indexSymbol;
  	RC rc;
 
- 	// Initialization
+ 	// Initializations
 
+ 	SYMB_itemCrossN=SYMBOL_PREDEFINED_MAX;
  	rc=ERROR_ID_NO;
 
  	// Add symbols in the list
@@ -1602,7 +1486,7 @@ int mediateRequestSetSymbols(void *engineContext,
  	// Check for error
 
  	if (rc)
- 	 mediateDisplayErrorMessage(responseHandle);
+ 	 ERROR_DisplayMessage(responseHandle);
 
  	// Return
 
@@ -1618,7 +1502,29 @@ int mediateRequestSetSites(void *engineContext,
 			   const mediate_site_t *sites,
 			   void *responseHandle)
 {
-  return 0;
+ 	// Declarations
+
+ 	int indexSite;
+ 	RC rc;
+
+ 	// Initializations
+
+ 	SITES_itemN=0;
+ 	rc=ERROR_ID_NO;
+
+ 	// Add the observation site in the list
+
+	 for (indexSite=0;(indexSite<numberOfSites) && !rc;indexSite++)
+	  rc=SITES_Add((OBSERVATION_SITE *)&sites[indexSite]);
+
+ 	// Check for error
+
+ 	if (rc)
+ 	 ERROR_DisplayMessage(responseHandle);
+
+ 	// Return
+
+ 	return rc;
 }
 
 // ==================
@@ -1632,7 +1538,7 @@ int mediateRequestBeginBrowseSpectra(void *engineContext,
  	INT rc;
 
  	if (EngineRequestBeginBrowseSpectra((ENGINE_CONTEXT *)engineContext,spectraFileName)!=0)
- 	 rc=mediateDisplayErrorMessage(responseHandle);
+ 	 rc=ERROR_DisplayMessage(responseHandle);
 
   return ((ENGINE_CONTEXT *)engineContext)->recordNumber;
  }
@@ -1665,6 +1571,8 @@ int mediateRequestNextMatchingSpectrum(ENGINE_CONTEXT *pEngineContext,void *resp
   int rec=pEngineContext->currentRecord;
   int inc,geoFlag;
   double longit,latit;
+  INDEX indexSite;
+  OBSERVATION_SITE *pSite;
   RC rc;
 
   // Initializations
@@ -1706,7 +1614,7 @@ int mediateRequestNextMatchingSpectrum(ENGINE_CONTEXT *pEngineContext,void *resp
    	  // Read the file
 
       if ((rc=EngineReadFile(pEngineContext,rec,0,0))!=ERROR_ID_NO)
-      	mediateDisplayErrorMessage(responseHandle);
+      	ERROR_DisplayMessage(responseHandle);
 
       longit=pRecord->longitude;
       latit=pRecord->latitude;
@@ -1715,21 +1623,21 @@ int mediateRequestNextMatchingSpectrum(ENGINE_CONTEXT *pEngineContext,void *resp
       if ((pProject->spectra.mode==PRJCT_SPECTRA_MODES_CIRCLE) && (pProject->spectra.radius>1.) &&
           (THRD_GetDist(longit,latit,pProject->spectra.longMin,pProject->spectra.latMin)>(double)pProject->spectra.radius))
        geoFlag=0;
-    //  else if ((pProject->spectra.mode==PRJCT_SPECTRA_MODES_OBSLIST) && (pProject->spectra.radius>1.))
-    //   {
-    //    for (indexSite=0,sitesNumber=TREE_itemType[TREE_ITEM_TYPE_SITE_CHILDREN].dataNumber;indexSite<sitesNumber;indexSite++)
-    //     {
-    //      pSite=&SITES_itemList[indexSite];
-    //
-    //      if (!pSite->hidden)
-    //       {
-    //        if (THRD_GetDist(longit,latit,pSite->longitude,pSite->latitude)<=(double)pProject->spectra.radius)
-    //         break;
-    //       }
-    //     }
-    //    if (indexSite==sitesNumber)
-    //     geoFlag=0;
-    //   }
+      else if ((pProject->spectra.mode==PRJCT_SPECTRA_MODES_OBSLIST) && (pProject->spectra.radius>1.))
+       {
+        for (indexSite=0;indexSite<SITES_itemN;indexSite++)
+         {
+          pSite=&SITES_itemList[indexSite];
+
+// QDOAS ???           if (!pSite->hidden)
+           {
+            if (THRD_GetDist(longit,latit,pSite->longitude,pSite->latitude)<=(double)pProject->spectra.radius)
+             break;
+           }
+         }
+        if (indexSite==SITES_itemN)
+         geoFlag=0;
+       }
       else if ((pProject->spectra.mode==PRJCT_SPECTRA_MODES_RECTANGLE) &&
 
              (((pProject->spectra.longMin!=pProject->spectra.longMax) &&
@@ -1775,7 +1683,7 @@ int mediateRequestNextMatchingSpectrum(ENGINE_CONTEXT *pEngineContext,void *resp
    {
    	rec=pEngineContext->indexRecord;
     if ((rc=EngineReadFile(pEngineContext,rec,0,0))!=ERROR_ID_NO)
-     mediateDisplayErrorMessage(responseHandle);
+     ERROR_DisplayMessage(responseHandle);
    }
 
   return (rc || (rec>pEngineContext->recordNumber))?0:rec;
@@ -1816,7 +1724,7 @@ int mediateRequestEndBrowseSpectra(void *engineContext,
  	RC rc;
 
  	if ((rc=EngineRequestEndBrowseSpectra((ENGINE_CONTEXT *)engineContext))!=0)
- 	 mediateDisplayErrorMessage(responseHandle);
+ 	 ERROR_DisplayMessage(responseHandle);
 
   // Close open files and release allocated buffers to reset the engine context
 
@@ -1837,7 +1745,7 @@ int mediateRequestBeginAnalyseSpectra(void *engineContext,
      ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS) && (SCIA_LoadAnalysis(pEngineContext,responseHandle)!=ERROR_ID_NO)) ||
      ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GOME2) && (GOME2_LoadAnalysis(pEngineContext,responseHandle)!=ERROR_ID_NO)))
 
-   mediateDisplayErrorMessage(responseHandle);
+   ERROR_DisplayMessage(responseHandle);
 
   return ((ENGINE_CONTEXT *)engineContext)->recordNumber;
  }
@@ -1857,7 +1765,7 @@ int mediateRequestNextMatchingAnalyseSpectrum(void *engineContext,
  	  if ((ANALYSE_refSelectionFlag && !pEngineContext->satelliteFlag && (EngineNewRef(pEngineContext,responseHandle)!=ERROR_ID_NO)) ||
         (ANALYSE_Spectrum(pEngineContext,responseHandle)!=ERROR_ID_NO))
 
-     mediateDisplayErrorMessage(responseHandle);
+     ERROR_DisplayMessage(responseHandle);
    }
 
   return pEngineContext->indexRecord;
@@ -1879,7 +1787,7 @@ int mediateRequestEndAnalyseSpectra(void *engineContext,
   // Close open files and release allocated buffers to reset the engine context
 
  	if ((rc=EngineRequestEndBrowseSpectra((ENGINE_CONTEXT *)engineContext))!=0)
- 	 mediateDisplayErrorMessage(responseHandle);
+ 	 ERROR_DisplayMessage(responseHandle);
 
   // Return
 
@@ -1900,7 +1808,7 @@ int mediateRequestBeginCalibrateSpectra(void *engineContext,
      ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN) && (GDP_BIN_LoadAnalysis(pEngineContext,pEngineContext->fileInfo.specFp,responseHandle)!=ERROR_ID_NO)) ||
      ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS) && (SCIA_LoadAnalysis(pEngineContext,responseHandle)!=ERROR_ID_NO)))
 
-   mediateDisplayErrorMessage(responseHandle);
+   ERROR_DisplayMessage(responseHandle);
 
   return ((ENGINE_CONTEXT *)engineContext)->recordNumber;
  }
@@ -1920,7 +1828,7 @@ int mediateRequestNextMatchingCalibrateSpectrum(void *engineContext,
  	  if ((ANALYSE_refSelectionFlag && !pEngineContext->satelliteFlag && (EngineNewRef(pEngineContext,responseHandle)!=ERROR_ID_NO)) ||
         (ANALYSE_Spectrum(pEngineContext,responseHandle)!=ERROR_ID_NO))
 
-     mediateDisplayErrorMessage(responseHandle);
+     ERROR_DisplayMessage(responseHandle);
    }
 
   return pEngineContext->indexRecord;
@@ -1940,7 +1848,7 @@ int mediateRequestEndCalibrateSpectra(void *engineContext,
   // Close open files and release allocated buffers to reset the engine context
 
  	if ((rc=EngineRequestEndBrowseSpectra((ENGINE_CONTEXT *)engineContext))!=0)
- 	 mediateDisplayErrorMessage(responseHandle);
+ 	 ERROR_DisplayMessage(responseHandle);
 
   // Return
 
@@ -1953,7 +1861,7 @@ int mediateRequestStop(void *engineContext,
   // Close open files and release allocated buffers to reset the engine context
 
  	if (EngineRequestEndBrowseSpectra((ENGINE_CONTEXT *)engineContext)!=0)
- 	 mediateDisplayErrorMessage(responseHandle);
+ 	 ERROR_DisplayMessage(responseHandle);
 
   return 0;
  }
