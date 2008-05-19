@@ -73,7 +73,7 @@ RC RESOURCE_Alloc(void)
   #endif
 
   if (!(rc=ERF_Alloc()) &&         // Error function
-// QDOAS ???       !(rc=SITES_Alloc()) &&       // Observation sites
+      !(rc=SITES_Alloc()) &&       // Observation sites
       !(rc=SYMB_Alloc()) &&        // Symbols
 // QDOAS ???       !(rc=ANLYS_Alloc()) &&       // Analysis windows
 // QDOAS ???       !(rc=PRJCT_Alloc()) &&       // Projects
@@ -100,7 +100,7 @@ void RESOURCE_Free(void)
  {
   ERF_Free();                 // Error function
 // QDOAS ???   FILES_Free();               // Paths
-// QDOAS ???   SITES_Free();               // Observation sites
+  SITES_Free();               // Observation sites
   SYMB_Free();                // Symbols
 // QDOAS ???   ANLYS_Free();               // Analysis windows
 // QDOAS ???   PRJCT_Free();               // Projects

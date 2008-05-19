@@ -990,8 +990,8 @@ RC MFC_LoadAnalysis(ENGINE_CONTEXT *pEngineContext)
 
          // Buffers allocation
 
-         ANALYSE_SvdFree("MFC_LoadAnalysis",&pTabFeno->svd);
-         ANALYSE_SvdLocalAlloc("MFC_LoadAnalysis",&pTabFeno->svd);
+         SVD_Free("MFC_LoadAnalysis",&pTabFeno->svd);
+         SVD_LocalAlloc("MFC_LoadAnalysis",&pTabFeno->svd);
 
          pTabFeno->Decomp=1;
 

@@ -466,7 +466,7 @@ RC FilterSavitskyGolay(PRJCT_FILTER *pFilter,INT filterWidth,INT filterOrder)
 
   // Allocate buffers for SVD
 
-  else if (!(rc=ANALYSE_SvdLocalAlloc("FilterSavitskyGolay",&svd)))
+  else if (!(rc=SVD_LocalAlloc("FilterSavitskyGolay",&svd)))
    {
    	// Build the filter function
 
@@ -483,7 +483,7 @@ RC FilterSavitskyGolay(PRJCT_FILTER *pFilter,INT filterWidth,INT filterOrder)
 
   // Release allocated buffers
 
-  ANALYSE_SvdFree("FilterSavitskyGolay",&svd);
+  SVD_Free("FilterSavitskyGolay",&svd);
 
   // Return
 

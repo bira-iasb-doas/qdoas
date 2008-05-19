@@ -2173,8 +2173,8 @@ RC SCIA_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
            // Buffers allocation
 
-           ANALYSE_SvdFree("SCIA_LoadAnalysis",&pTabFeno->svd);
-           ANALYSE_SvdLocalAlloc("SCIA_LoadAnalysis",&pTabFeno->svd);
+           SVD_Free("SCIA_LoadAnalysis",&pTabFeno->svd);
+           SVD_LocalAlloc("SCIA_LoadAnalysis",&pTabFeno->svd);
 
            pTabFeno->Decomp=1;
 

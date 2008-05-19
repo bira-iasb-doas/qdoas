@@ -2173,13 +2173,13 @@ RC OutputBuildFileName(ENGINE_CONTEXT *pEngineContext,UCHAR *outputFileName,INT 
     else
      fileNamePtr++;
 
-    if (!strlen(fileNamePtr) &&
-       ((pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN) ||
-        (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_ASCII) ||
-        (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_HDF) ||
-        (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS) ||
-        (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GOME2)) &&
-       ((pProject->spectra.mode!=PRJCT_SPECTRA_MODES_OBSLIST) || (pProject->spectra.radius<=1.)))
+    if ((!strlen(fileNamePtr) || !stricmp(fileNamePtr,"automatic")) &&
+        ((pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN) ||
+         (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_ASCII) ||
+         (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_HDF) ||
+         (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS) ||
+         (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GOME2)) &&
+        ((pProject->spectra.mode!=PRJCT_SPECTRA_MODES_OBSLIST) || (pProject->spectra.radius<=1.)))
      {
       if ((ptr=strrchr(pEngineContext->fileInfo.fileName,PATH_SEP))==NULL)
        ptr=pEngineContext->fileInfo.fileName;
@@ -2815,7 +2815,7 @@ RC OUTPUT_FlushBuffers(ENGINE_CONTEXT *pEngineContext)
   PRJCT_RESULTS_ASCII *pResults;                     // pointer to results part of project
   UCHAR               *ptr;
   INDEX indexSite,indexField,firstRecordField,indexRecord,oldYear,oldMonth,oldRecord;
-  INT sitesNumber,fieldDim2;
+  INT fieldDim2;
   INT automatic,nbRecords;
   RC rc;
 
@@ -2827,7 +2827,6 @@ RC OUTPUT_FlushBuffers(ENGINE_CONTEXT *pEngineContext)
   memset(outputFileName,0,MAX_ITEM_TEXT_LEN+1);
   memset(outputAutomaticFileName,0,MAX_ITEM_TEXT_LEN+1);
 
-  sitesNumber=TREE_itemType[TREE_ITEM_TYPE_SITE_CHILDREN].dataNumber;
   outputFp=NULL;
   outputData=NULL;
   firstRecordField=0;
@@ -2840,6 +2839,9 @@ RC OUTPUT_FlushBuffers(ENGINE_CONTEXT *pEngineContext)
      ptr=outputFileName;
     else
      ptr++;
+
+    if ((strlen(ptr)==9) && !stricmp(ptr,"automatic"))
+     *ptr='\0';
 
     automatic=!strlen(ptr);
 
@@ -2889,7 +2891,7 @@ RC OUTPUT_FlushBuffers(ENGINE_CONTEXT *pEngineContext)
 
      	 	if ((pProject->spectra.mode==PRJCT_SPECTRA_MODES_OBSLIST) && (pProject->spectra.radius>1.))
 
-         for (indexSite=0;indexSite<sitesNumber;indexSite++)
+         for (indexSite=0;indexSite<SITES_itemN;indexSite++)
           {
      	 	 	 indexRecord=0;
      	 	 	 pSite=&SITES_itemList[indexSite];
@@ -2994,6 +2996,9 @@ RC OUTPUT_FlushBuffers(ENGINE_CONTEXT *pEngineContext)
 
     if (outputFp!=NULL)
      fclose(outputFp);
+
+    if (!rc)
+     outputNbRecords=0;
    }
 
   // Release the allocated buffers

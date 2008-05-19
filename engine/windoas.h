@@ -19,6 +19,8 @@
 //  Main constants and global definitions
 //  ----------------------------------------------------------------------------
 
+#include "../mediator/mediate_common.h"
+
 #if !defined(__WDOAS_)
 #define __WDOAS_
 
@@ -28,8 +30,6 @@
 
 // Resources IDs
 
-#include "comdefs.h"
-#include "constants.h"
 // QDOAS ??? #include "windoas.rch"
 // QDOAS ???
 // QDOAS ??? #if defined(__WINDOAS_WIN_) && __WINDOAS_WIN_
@@ -259,8 +259,9 @@ UCHAR  *FILES_BuildFileName(UCHAR *fileName,MASK fileType);
 // OBSERVATION SITES
 // =================
 
-   #define MAX_SITES              60
-   #define MAX_SITES_ABBREVIATION  2
+   #define MAX_SITES                    60
+   #define SITE_NAME_BUFFER_LENGTH     128
+   #define SITE_ABBREV_BUFFER_LENGTH     8
 
    // Structures definitions
    // ----------------------
@@ -269,37 +270,30 @@ UCHAR  *FILES_BuildFileName(UCHAR *fileName,MASK fileType);
 
    typedef struct _observationSites
     {
-     UCHAR name[MAX_ITEM_NAME_LEN+1];
-     UCHAR abbrev[MAX_SITES_ABBREVIATION+1];
+     UCHAR name[SITE_NAME_BUFFER_LENGTH];
+     UCHAR abbrev[SITE_ABBREV_BUFFER_LENGTH];
      double longitude;
      double latitude;
      double altitude;
-     INT gmtShift;
-     INT hidden;
+     // QDOAS ??? INT gmtShift;
+     // QDOAS ??? INT hidden;
     }
    OBSERVATION_SITE;
 
    // Global variables
    // ----------------
 
-   EXTERN OBSERVATION_SITE  *SITES_itemList,                                    // pointer to the list of sites objects
-                            *SITES_toPaste;                                     // the list of observation sites to paste
-   EXTERN INDEX              SITES_treeEntryPoint;                              // entry point in the 'environment space' tree for sites objects
+   EXTERN OBSERVATION_SITE  *SITES_itemList;                                    // pointer to the list of sites objects
+   EXTERN INT SITES_itemN;                                                      // the number of items in the previous list
 
    // Prototypes
    // ----------
 
-// QDOAS ???   #if defined(__WINDOAS_GUI_) && (__WINDOAS_GUI_)
-// QDOAS ???       LRESULT CALLBACK SITES_WndProc(HWND hwndSites,UINT msg,WPARAM mp1,LPARAM mp2);
-// QDOAS ???   #endif
-// QDOAS ???
-// QDOAS ???   RC      SITES_Alloc(void);
-// QDOAS ???   void    SITES_Free(void);
+   RC      SITES_Add(OBSERVATION_SITE *pNewSite);
+   RC      SITES_Alloc(void);
+   void    SITES_Free(void);
 
    INDEX   SITES_GetIndex(UCHAR *siteName);
-// QDOAS ???   void    SITES_ResetConfiguration(void);
-// QDOAS ???   void    SITES_LoadConfiguration(UCHAR *fileLine);
-// QDOAS ???   void    SITES_SaveConfiguration(FILE *fp,UCHAR *sectionName);
 
 // =======
 // SYMBOLS
@@ -421,16 +415,6 @@ RC   MATRIX_Load(UCHAR *fileName,MATRIX_OBJECT *pMatrix,INT basel,INT basec,INT 
 // DEFINITIONS
 // -----------
 
-// Image of the visible lines in ListView
-// --------------------------------------
-
-typedef struct _visibleLinesImage
- {
-  HWND  *hwnd;                                             // list of controls associated to items in the specified line of ListView control
-  INT    indexItem;                                        // index of item in list
- }
-VISIBLE_LINES_IMAGE;
-
 // Description of columns in ListView control
 // ------------------------------------------
 
@@ -478,8 +462,7 @@ typedef struct _anlysTabPages
   #if defined(__WINDOAS_GUI_) && (__WINDOAS_GUI_)
       LIST_COLUMN *columnList;                             // list of columns to create in ListView control
   #endif
-  INT columnNumber;                                        // number of columns in previous list
-  VISIBLE_LINES_IMAGE *visibleLinesImage;                  // description of lines in ListView
+  INT columnNumber;
   UCHAR symbolType;                                        // type of symbol to use
   SYMBOL *symbolList;                                      // list of symbols to use
   INT symbolNumber;                                        // number of symbols in previous list
@@ -611,25 +594,6 @@ PRJCT_ANLYS;
 // Filter tab page description
 // ---------------------------
 
-typedef struct _prjctFilter
- {
-  INT     type;                                          // type of filter
-  FLOAT   fwhmWidth;                                     // fwhm width for gaussian
-  FLOAT   kaiserCutoff;                                  // cutoff frequency for kaiser filter type
-  FLOAT   kaiserPassBand;                                // pass band for kaiser filter type
-  FLOAT   kaiserTolerance;                               // tolerance for kaiser filter type
-  INT     filterOrder;                                   // filter order
-  INT     filterWidth;                                   // filter width for boxcar, triangle or Savitsky-Golay filters
-  INT     filterNTimes;                                  // the number of times to apply the filter
-  INT     filterAction;
-  double *filterFunction;
-  INT     filterSize;
-  double  filterEffWidth;
-  INT     hpFilterCalib;
-  INT     hpFilterAnalysis;
- }
-PRJCT_FILTER;
-
 // --------------------
 // CALIBRATION TAB PAGE
 // --------------------
@@ -760,19 +724,6 @@ PRJCT_INSTRUMENTAL;
 // SLIT FUNCTION TAB PAGE
 // ----------------------
 
-// Description of the slit function
-
-typedef struct _slit
- {
-  INT    slitType;                                                              // type of line shape (see above)
-  UCHAR  slitFile[MAX_STR_LEN+1];                                                // for line shapes provided in file, name of the file
-  double slitParam;                                                             // up to 4 parameters can be provided for the line shape
-  double slitParam2;                                                            //       usually, the first one is the FWHM
-  double slitParam3;                                                            //       the Voigt profile function uses the 4 parameters
-  double slitParam4;
- }
-SLIT;
-
 typedef struct _prjctSlit
  {
   SLIT  slitFunction;                                  // slit function
@@ -868,8 +819,6 @@ void  PRJCT_ReleaseSite(INDEX indexProject);
 void  PRJCT_New(void);
 void  PRJCT_DeleteAll(void);
 void  PRJCT_ExpandAll(void);
-void  PRJCT_Copy(INDEX indexParent,PROJECT *pProjectToPaste,PROJECT *pProjectToCopy);
-void  PRJCT_Paste(HWND hwndTree,INDEX indexParent,PROJECT *pProjectNew,PROJECT *pProjectOld);
 
 // QDOAS ??? #if defined(__WINDOAS_GUI_) && (__WINDOAS_GUI_)
 // QDOAS ??? LRESULT CALLBACK PRJCT_SpectraWndProc(HWND hwndSpectra,UINT msg,WPARAM mp1,LPARAM mp2);
@@ -930,7 +879,7 @@ void PRJCT_SaveConfiguration(FILE *fp,UCHAR *sectionName);
     {                                                                           // GENERAL OPTIONS
      INT    convolutionType;                                                    // type of convolution
      INT    conversionMode;                                                     // conversion mode
-     UCHAR  shift[MAX_ITEM_TEXT_LEN+1];                                         // shift to apply to the original high resolution cross section
+     double shift;                                                              // shift to apply to the original high resolution cross section
      UCHAR  crossFile[MAX_PATH_LEN+1];                                          // high resolution cross section file
      UCHAR  path[MAX_PATH_LEN+1];                                               // output path
      UCHAR  calibrationFile[MAX_PATH_LEN+1];                                    // calibration file
@@ -981,7 +930,7 @@ void PRJCT_SaveConfiguration(FILE *fp,UCHAR *sectionName);
    RC   XSCONV_TypeGauss(double *lambda,double *Spec,double *SDeriv2,double lambdaj,double dldj,double *SpecConv,double fwhm,double n,INT slitType);
    RC   XSCONV_TypeStandardFFT(FFT *pFFT,INT fwhmType,double slitParam,double slitParam2,double *lambda,double *target,INT size);
    RC   XSCONV_TypeStandard(XS *pXsnew,INDEX indexLambdaMin,INDEX indexLambdaMax,XS *pXshr,XS *pSlit,XS *pI,double *Ic,INT slitType,double slitWidth,double slitParam,double slitParam2,double slitParam3,double slitParam4);
-   RC   XSCONV_RealTimeXs(XS *pXshr,XS *pXsI0,XS *pSlit,double *IcVector,double *lambda,INDEX indexLambdaMin,INDEX indexLambdaMax,double *newXs,INT slitType,double slitParam,double slitParam2,double slitParam3,double slitParam4);
+   RC   XSCONV_RealTimeXs(XS *pXshr,XS *pXsI0,XS *pSlit,double *IcVector,double *lambda,INT NDET,INDEX indexLambdaMin,INDEX indexLambdaMax,double *newXs,INT slitType,double slitParam,double slitParam2,double slitParam3,double slitParam4);
 
    // Buffers allocation
 

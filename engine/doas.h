@@ -43,6 +43,8 @@
 //
 //  ----------------------------------------------------------------------------
 
+#include "windoas.h"
+
 #if !defined(__DOAS_)
 #define __DOAS_
 
@@ -50,8 +52,20 @@
 // HEADERS TO INCLUDE
 // ==================
 
-#include "windoas.h"
-#include "mediate_general.h"
+// =====================
+// CONSTANTS DEFINITIONS
+// =====================
+
+#define MAX_FEN                20    // maximum number of gaps in a analysis window
+#define MAX_FIT                50    // maximum number of parameters to fit
+#define MAX_FENO               25    // maximum number of analysis windows in a project
+#define MAX_SYMB              150    // maximum number of different symbols in a project
+
+#define DIM                    10    // default number of security pixels for border effects
+
+#define MAX_KURUCZ_FWHM_PARAM   4    // maximum number of non linear parameters for fitting fwhm with Kurucz
+
+#define STOP      ITEM_NONE
 
 #define PI          (double) 3.14159265358979323846
 #define PI2         (double) 6.28318530717958647692
@@ -118,8 +132,26 @@ RC SPLINE_Vector(double *xa,double *ya,double *y2a,int na,double *xb,double *yb,
 // SVD.C : Singular value decomposition
 // ====================================
 
+// SVD decomposition on an analysis window
+// ---------------------------------------
+
+typedef struct _svd
+ {
+  INT DimC,DimL,DimP,NF,NP,Z,nFit,                     // gaps and analysis window limits in pixels units
+      Fenetre[MAX_FEN][2];
+
+  double   LFenetre[MAX_FEN][2],                       // gaps and analysis window limits in wavelength units (nm)
+         **A,**U,**V,*W,**P,                           // SVD matrices
+         **covar,
+          *SigmaSqr;
+ }
+SVD;
+
 RC SVD_Bksb(double **u,double *w,double **v,int m,int n,double *b,double *x);
 RC SVD_Dcmp(double **a,int m,int n,double *w,double **v,double *SigmaSqr,double **covar);
+
+void SVD_Free(UCHAR *callingFunctionShort,SVD *pSvd);
+RC   SVD_LocalAlloc(UCHAR *callingFunctionShort,SVD *pSvd);
 
 // ============================================================
 // CURFIT.C : Least-square fit applied to a non linear function
@@ -182,21 +214,6 @@ int     ZEN_FNCaljmon ( int Year, int Julian );
 // ==================================
 
 // ---------------------
-// CONSTANTS DEFINITIONS
-// ---------------------
-
-#define MAX_FEN                20    // maximum number of gaps in a analysis window
-#define MAX_FIT                50    // maximum number of parameters to fit
-#define MAX_FENO               25    // maximum number of analysis windows in a project
-#define MAX_SYMB              150    // maximum number of different symbols in a project
-
-#define DIM                    10    // default number of security pixels for border effects
-
-#define MAX_KURUCZ_FWHM_PARAM   4    // maximum number of non linear parameters for fitting fwhm with Kurucz
-
-#define STOP      ITEM_NONE
-
-// ---------------------
 // STRUCTURE DEFINITIONS
 // ---------------------
 
@@ -219,21 +236,6 @@ typedef struct _wrkSymbol
   MATRIX_OBJECT xs;                            // cross sections (wavelength+cross section(s))
  }
 WRK_SYMBOL;
-
-// SVD decomposition on an analysis window
-// ---------------------------------------
-
-typedef struct _svd
- {
-  INT DimC,DimL,DimP,NF,NP,Z,nFit,                     // gaps and analysis window limits in pixels units
-      Fenetre[MAX_FEN][2];
-
-  double   LFenetre[MAX_FEN][2],                       // gaps and analysis window limits in wavelength units (nm)
-         **A,**U,**V,*W,**P,                           // SVD matrices
-         **covar,
-          *SigmaSqr;
- }
-SVD;
 
 // Symbol cross reference
 // ----------------------
@@ -834,7 +836,7 @@ EXTERN UCHAR *ANLYS_amf[ANLYS_AMF_TYPE_MAX];
 EXTERN PRJCT_FILTER *ANALYSE_plFilter,*ANALYSE_phFilter;
 EXTERN WRK_SYMBOL   *WorkSpace;
 EXTERN INT NWorkSpace;
-EXTERN INT           NDET,DimC,DimL,DimP,Z,NFeno,(*Fenetre)[2],ANALYSE_refSelectionFlag,ANALYSE_lonSelectionFlag,
+EXTERN INT           DimC,DimL,DimP,Z,NFeno,(*Fenetre)[2],ANALYSE_refSelectionFlag,ANALYSE_lonSelectionFlag,
                      SvdPDeb,SvdPFin;
 EXTERN PRJCT_ANLYS  *pAnalysisOptions;             // analysis options
 EXTERN PRJCT_KURUCZ *pKuruczOptions;               // Kurucz options
@@ -878,8 +880,6 @@ RC   ANALYSE_XsInterpolation(FENO *pTabFeno,double *newLambda);
 RC   ANALYSE_XsConvolution(FENO *pTabFeno,double *newLambda,MATRIX_OBJECT *pSlit,INT slitType,double *slitParam1,double *slitParam2,double *slitParam3,double *slitParam4);
 RC   ANALYSE_NormalizeVector(double *v,INT dim,double *fact,UCHAR *function);
 RC   ANALYSE_LinFit(SVD *pSvd,INT Npts,INT Degree,double *a,double *sigma,double *b,double *x);
-void ANALYSE_SvdFree(UCHAR *callingFunctionShort,SVD *pSvd);
-RC   ANALYSE_SvdLocalAlloc(UCHAR *callingFunctionShort,SVD *pSvd);
 RC   ANALYSE_SvdInit(SVD *pSvd);
 RC   ANALYSE_CurFitMethod(double *Spectre,double *SigmaSpec,double *Sref,double *Chisqr,INT *pNiter);
 void ANALYSE_ResetData(void);

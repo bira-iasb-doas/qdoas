@@ -986,8 +986,8 @@ RC GDP_ASC_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
 
          // Buffers allocation
 
-         ANALYSE_SvdFree("GDP_ASC_LoadAnalysis",&pTabFeno->svd);
-         ANALYSE_SvdLocalAlloc("GDP_ASC_LoadAnalysis",&pTabFeno->svd);
+         SVD_Free("GDP_ASC_LoadAnalysis",&pTabFeno->svd);
+         SVD_LocalAlloc("GDP_ASC_LoadAnalysis",&pTabFeno->svd);
 
          pTabFeno->Decomp=1;
         }

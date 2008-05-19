@@ -140,7 +140,7 @@ typedef int32          LONG;
 typedef void           VOID;
 typedef unsigned char  BYTE;
 typedef unsigned int   UINT;
-typedef unsigned long  HWND;
+//typedef unsigned long  HWND;
 typedef unsigned long  DWORD;
 typedef void *         HANDLE;
 
@@ -178,7 +178,7 @@ typedef UINT        MASK,SZ_LEN;
 #define MAX_FCT_LEN                              63                             // maximum length for the names of functions
 #define MAX_VAR_LEN                              63                             // maximum length for the names of variables
 #define MAX_ITEM_TEXT_LEN                      1023     // Before 511           // item text length
-#define MAX_ITEM_NAME_LEN                        63                             // name of a symbol
+#define MAX_ITEM_NAME_LEN                       127                             // name of a symbol
 #define MAX_ITEM_DESC_LEN                       255                             // description of a symbol
 
 // Other constants definitions
@@ -420,6 +420,7 @@ ERROR_DESCRIPTION;
 
 // Prototypes
 
+RC ERROR_DisplayMessage(void *responseHandle);
 RC ERROR_SetLast(UCHAR *callingFunction,int errorType,RC errorId,...);
 RC ERROR_GetLast(ERROR_DESCRIPTION *pError);
 

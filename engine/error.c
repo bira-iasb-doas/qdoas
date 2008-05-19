@@ -61,6 +61,7 @@
 // =======
 
 #include "doas.h"
+#include "mediate_response.h"
 
 // ====================
 // CONSTANTS DEFINITION
@@ -181,6 +182,27 @@ ERROR_TABLE errorTable[]=
 
 static ERROR_DESCRIPTION errorStack[ERROR_MAX_ERRORS+1];                        // the error stack
 static int errorStackN=0;                                                       // the number of errors in the stack
+
+RC ERROR_DisplayMessage(void *responseHandle)
+ {
+ 	// Declarations
+
+ 	ERROR_DESCRIPTION errorDescription;
+ 	RC rc;
+
+ 	rc=0;
+
+ 	// Get the last error message
+
+ 	while (ERROR_GetLast(&errorDescription)!=0)
+ 	 {
+ 	  mediateResponseErrorMessage(errorDescription.errorFunction,errorDescription.errorString,errorDescription.errorType, responseHandle);
+ 	  if (errorDescription.errorType==ERROR_TYPE_FATAL)
+ 	   rc=-1;
+ 	 }
+
+ 	return rc;    // 0 on success, -1 on fatal error
+ }
 
 // -----------------------------------------------------------------------------
 // FUNCTION      ERROR_SetLast

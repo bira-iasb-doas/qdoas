@@ -659,9 +659,9 @@ RC KURUCZ_ApplyCalibration(FENO *pTabFeno,double *newLambda)
 
     if (newDimL!=pTabFeno->svd.DimL)
      {
-      ANALYSE_SvdFree("KURUCZ_ApplyCalibration ",&pTabFeno->svd);
+      SVD_Free("KURUCZ_ApplyCalibration ",&pTabFeno->svd);
       pTabFeno->svd.DimL=newDimL;
-      ANALYSE_SvdLocalAlloc("KURUCZ_ApplyCalibration ",&pTabFeno->svd);
+      SVD_LocalAlloc("KURUCZ_ApplyCalibration ",&pTabFeno->svd);
      }
 
     // Force decomposition
@@ -1104,7 +1104,7 @@ RC KURUCZ_Alloc(PROJECT *pProject,double *lambda,INDEX indexKurucz,double lambda
             rc=ERROR_ID_ALLOC;
             goto EndKuruczAlloc;
            }
-          else if ((rc=ANALYSE_SvdLocalAlloc("KURUCZ_Alloc (1)",pSvd))!=ERROR_ID_NO)
+          else if ((rc=SVD_LocalAlloc("KURUCZ_Alloc (1)",pSvd))!=ERROR_ID_NO)
            goto EndKuruczAlloc;
           else if (pKuruczOptions->fwhmFit)
            {
@@ -1158,7 +1158,7 @@ RC KURUCZ_Alloc(PROJECT *pProject,double *lambda,INDEX indexKurucz,double lambda
     pSvd->DimL=Nb_Win;
     pSvd->DimC=shiftDegree+1;
 
-    if ((rc=ANALYSE_SvdLocalAlloc("KURUCZ_Alloc (2)",pSvd))!=ERROR_ID_NO)
+    if ((rc=SVD_LocalAlloc("KURUCZ_Alloc (2)",pSvd))!=ERROR_ID_NO)
      goto EndKuruczAlloc;
 
     // Allocate buffers for cross sections fits
@@ -1186,7 +1186,7 @@ RC KURUCZ_Alloc(PROJECT *pProject,double *lambda,INDEX indexKurucz,double lambda
       pSvdFwhm->DimL=Nb_Win;
       pSvdFwhm->DimC=KURUCZ_buffers.fwhmDegree+1;
 
-      if ((rc=ANALYSE_SvdLocalAlloc("KURUCZ_Alloc (3)",pSvdFwhm))!=ERROR_ID_NO)
+      if ((rc=SVD_LocalAlloc("KURUCZ_Alloc (3)",pSvdFwhm))!=ERROR_ID_NO)
        goto EndKuruczAlloc;
 
       for (indexParam=0;(indexParam<MAX_KURUCZ_FWHM_PARAM) && !rc;indexParam++)
@@ -1295,7 +1295,7 @@ void KURUCZ_Free(void)
      MEMORY_ReleaseDVector("KURUCZ_Free ","fwhmDeriv2",KURUCZ_buffers.fwhmDeriv2[indexParam],0);
    }
 
-  ANALYSE_SvdFree("KURUCZ_Free (3)",&KURUCZ_buffers.svdFwhm);
+  SVD_Free("KURUCZ_Free (3)",&KURUCZ_buffers.svdFwhm);
   MATRIX_Free(&KURUCZ_buffers.crossFits,"KURUCZ_Free");
 
   if (KURUCZ_buffers.KuruczFeno!=NULL)
@@ -1314,7 +1314,7 @@ void KURUCZ_Free(void)
       if (pKFeno->svdFeno!=NULL)
        {
         for (indexWindow=0;indexWindow<KURUCZ_buffers.Nb_Win;indexWindow++)
-         ANALYSE_SvdFree("KURUCZ_Free (1)",&pKFeno->svdFeno[indexWindow]);
+         SVD_Free("KURUCZ_Free (1)",&pKFeno->svdFeno[indexWindow]);
 
         MEMORY_ReleaseBuffer("KURUCZ_Free ","svdFeno",pKFeno->svdFeno);
        }

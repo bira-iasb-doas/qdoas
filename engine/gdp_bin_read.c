@@ -1481,8 +1481,8 @@ RC GDP_BIN_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,FILE *specFp,void *respon
 
            // Buffers allocation
 
-           ANALYSE_SvdFree("GDP_BIN_LoadAnalysis",&pTabFeno->svd);
-           ANALYSE_SvdLocalAlloc("GDP_BIN_LoadAnalysis",&pTabFeno->svd);
+           SVD_Free("GDP_BIN_LoadAnalysis",&pTabFeno->svd);
+           SVD_LocalAlloc("GDP_BIN_LoadAnalysis",&pTabFeno->svd);
 
            if (((rc=ANALYSE_XsInterpolation(pTabFeno,pTabFeno->LambdaRef))!=ERROR_ID_NO) ||
                ((!pKuruczOptions->fwhmFit || !pTabFeno->useKurucz) && pTabFeno->xsToConvolute &&

@@ -328,33 +328,47 @@ void FILES_RemoveOnePath(UCHAR *path)
 
 UCHAR *FILES_RebuildFileName(UCHAR *newPath,UCHAR *path,INT useFileName)
  {
-  // Declarations
+ 	UCHAR pathTmp[MAX_PATH_LEN+1],*ptr;
 
-  UCHAR pathTmp[MAX_PATH_LEN+1],*ptr;
-  INDEX indexPath;
+ 	strcpy(pathTmp,path);
 
-  // Initialization
+ 	if (!useFileName)
+ 	 {
+ 	 	if ((ptr=strrchr(pathTmp,PATH_SEP))==NULL)
+ 	 	 pathTmp[0]='\0';
+ 	 	else
+ 	 	 *ptr='\0';
+ 	 }
 
-  if (path[0]=='%')
-   {
-    strcpy(pathTmp,path);
-    ptr=NULL;
+ 	strcpy(newPath,pathTmp);
 
-    // Extract file name
-
-    if (useFileName && ((ptr=strrchr(pathTmp,PATH_SEP))!=NULL))
-     *ptr++=0;
-
-    if ((sscanf(path,"%%%d",&indexPath)>0) && (indexPath>=0) && (indexPath<FILES_nPaths))
-     {
-      if (useFileName && (ptr!=NULL))
-       sprintf(newPath,"%s%c%s",FILES_paths[indexPath].path,PATH_SEP,ptr);
-      else
-       strcpy(newPath,FILES_paths[indexPath].path);
-     }
-   }
-  else if (path!=newPath)
-   strcpy(newPath,path);
+// QDOAS ???  // Declarations
+// QDOAS ???
+// QDOAS ???  UCHAR pathTmp[MAX_PATH_LEN+1],*ptr;
+// QDOAS ???  INDEX indexPath;
+// QDOAS ???
+// QDOAS ???  // Initialization
+// QDOAS ???
+// QDOAS ???  if (path[0]=='%')
+// QDOAS ???   {
+// QDOAS ???    strcpy(pathTmp,path);
+// QDOAS ???    ptr=NULL;
+// QDOAS ???
+// QDOAS ???    // Extract file name
+// QDOAS ???
+// QDOAS ???    if (useFileName && ((ptr=strrchr(pathTmp,PATH_SEP))!=NULL))
+// QDOAS ???     *ptr++=0;
+// QDOAS ???
+// QDOAS ???    if ((sscanf(path,"%%%d",&indexPath)>0) && (indexPath>=0) && (indexPath<FILES_nPaths))
+// QDOAS ???     {
+// QDOAS ???      if (useFileName && (ptr!=NULL))
+// QDOAS ???       sprintf(newPath,"%s%c%s",FILES_paths[indexPath].path,PATH_SEP,ptr);
+// QDOAS ???      else
+// QDOAS ???       strcpy(newPath,FILES_paths[indexPath].path);
+// QDOAS ???     }
+// QDOAS ???   }
+// QDOAS ???  else if (path!=newPath)
+// QDOAS ???   strcpy(newPath,path);
 
   // Return
 
@@ -766,138 +780,138 @@ RC FILES_LoadMatrix(FILE *fp,UCHAR *fileName,double **matrix,INT base,INT nl,INT
 // OPEN/SAVE COMMON DIALOG BOX FOR SELECTING A FILE
 // ================================================
 
-// -----------------------------------------------------------------------------
-// FUNCTION      FilesBuildFilter
-// -----------------------------------------------------------------------------
-// PURPOSE       Build a filter string
-//
-// INPUT         fileType               the of file to load or to save;
-//               symbolReferenceNumber  for cross sections, number of times symbols are referenced to
-//               indexSymbol            index of the symbol in the list
-//
-// OUTPUT        fileFilter       the output filter string
-//
-// RETURN        a pointer to the output filter string
-// -----------------------------------------------------------------------------
-
-UCHAR *FilesBuildFilter(UCHAR *fileFilter,MASK fileType,INT *symbolReferenceNumber,INDEX indexSymbol)
- {
-  // Declarations
-
-  FILE_TYPE *pFileType,*fileList;                                               // pointer to a file type
-  UCHAR extension[10];                                                          // extension according to type of file
-  SYMBOL *crossList,*pCross;                                                    // list of cross sections
-  INT crossNumber;                                                              // number of cross sections in previous list
-  SZ_LEN len,extLength;                                                         // string length
-  INDEX i,j,ideb,ifin;                                                          // indexes for loop and arrays
-
-  // Reset buffer
-
-  memset(fileFilter,0,MAX_PATH_LEN+1);
-
-  // Fill files filter string for cross sections
-
-  if (((fileType==FILE_TYPE_CROSS) ||                                           // Cross sections files
-       (fileType==FILE_TYPE_AMF_SZA) ||                                         // SZA dependent AMF files
-       (fileType==FILE_TYPE_AMF_CLI) ||                                         // Climatology dependent AMF files
-       (fileType==FILE_TYPE_AMF_WVE)) &&                                        // Wavelength dependent AMF files
-
-     ((crossList=(SYMBOL *)TREE_itemType[TREE_ITEM_TYPE_CROSS_CHILDREN].dataList)!=NULL) &&
-     ((crossNumber=(INT)TREE_itemType[TREE_ITEM_TYPE_CROSS_CHILDREN].dataNumber)>0) &&
-      (symbolReferenceNumber!=NULL))
-   {
-    sprintf(extension,"_*.%s",FILES_types[fileType].fileExt);
-    extLength=strlen(extension);
-
-    if ((indexSymbol>ITEM_NONE) && (indexSymbol<SYMBOL_PREDEFINED_MAX))
-     {
-      pCross=&crossList[indexSymbol];
-      j=0;
-
-      len=strlen(pCross->name);
-
-      memcpy(&fileFilter[j],pCross->name,len);                                  // <XS name>
-      memcpy(&fileFilter[(j+=len)]," Cross Sections (",17);                     // <XS name> Cross Sections (
-      memcpy(&fileFilter[(j+=17)],pCross->name,len);                            // <XS name> Cross Sections (<XS name>
-      memcpy(&fileFilter[(j+=len)],extension,extLength);                        // <XS name> Cross Sections (<XS name>_*.<XS ext>
-      fileFilter[(j+=extLength)]=')';                                           // <XS name> Cross Sections (<XS name>_*.<XS ext>)
-      fileFilter[(j+=1)]=0;                                                     // <XS name> Cross Sections (<XS name>_*.<XS ext>)\0
-      memcpy(&fileFilter[(j+=1)],pCross->name,len);                             // <XS name> Cross Sections (<XS name>_*.<XS ext>)\0<XS name>
-      memcpy(&fileFilter[(j+=len)],extension,extLength);                        // <XS name> Cross Sections (<XS name>_*.<XS ext>)\0<XS name>_*.<XS ext>
-      fileFilter[(j+=extLength)]=0;                                             // <XS name> Cross Sections (<XS name>_*.<XS ext>)\0<XS name>_*.<XS ext>\0
-      j++;
-     }
-    else
-
-     for (i=SYMBOL_PREDEFINED_COM,j=0;i<crossNumber;i++)
-      {
-       if (((indexSymbol==ITEM_NONE) && !((symbolReferenceNumber[i]>>8)&SYMBOL_ALREADY_USED)) ||
-           ((indexSymbol==i) && ((fileType!=FILE_TYPE_CROSS) || (((symbolReferenceNumber[i]>>8)&SYMBOL_ALREADY_USED)!=0))))
-        {
-         pCross=&crossList[i];
-
-         len=strlen(pCross->name);
-
-         memcpy(&fileFilter[j],pCross->name,len);                               // <XS name>
-         memcpy(&fileFilter[(j+=len)]," Cross Sections (",17);                  // <XS name> Cross Sections (
-         memcpy(&fileFilter[(j+=17)],pCross->name,len);                         // <XS name> Cross Sections (<XS name>
-         memcpy(&fileFilter[(j+=len)],extension,extLength);                     // <XS name> Cross Sections (<XS name>_*.<XS ext>
-         fileFilter[(j+=extLength)]=')';                                        // <XS name> Cross Sections (<XS name>_*.<XS ext>)
-         fileFilter[(j+=1)]=0;                                                  // <XS name> Cross Sections (<XS name>_*.<XS ext>)\0
-         memcpy(&fileFilter[(j+=1)],pCross->name,len);                          // <XS name> Cross Sections (<XS name>_*.<XS ext>)\0<XS name>
-         memcpy(&fileFilter[(j+=len)],extension,extLength);                     // <XS name> Cross Sections (<XS name>_*.<XS ext>)\0<XS name>_*.<XS ext>
-         fileFilter[(j+=extLength)]=0;                                          // <XS name> Cross Sections (<XS name>_*.<XS ext>)\0<XS name>_*.<XS ext>\0
-         j++;
-
-         if (indexSymbol==i)
-          break;
-        }
-      }
-   }
-  else
-
-  // Fill files filter string for any other type of files
-
-   {
-    if (fileType==FILE_TYPE_ASCII_SPECTRA)
-     {
-      fileList=FILES_typeSpectra;
-      ideb=0;
-      ifin=FILE_TYPE_SPECTRA_MAX;
-     }
-    else
-     {
-      fileList=FILES_types;
-      ideb=fileType;
-      ifin=ideb+1;
-     }
-
-    for (i=ideb,j=0;i<ifin;i++)
-     {
-      pFileType=&fileList[i];
-
-      memcpy(&fileFilter[j],pFileType->fileType,(len=strlen(pFileType->fileType)));      // <file type>
-      memcpy(&fileFilter[(j+=len)]," (*.",4);                                            // <file type> (*.
-      memcpy(&fileFilter[(j+=4)],pFileType->fileExt,(len=strlen(pFileType->fileExt)));   // <file type> (*.<file ext>
-      fileFilter[(j+=len)]=')';                                                          // <file type> (*.<file ext>)
-      fileFilter[(j+=1)]=0;                                                              // <file type> (*.<file ext>)\0
-      memcpy(&fileFilter[(j+=1)],"*.",2);                                                // <file type> (*.<file ext>)\0*.
-      memcpy(&fileFilter[(j+=2)],pFileType->fileExt,len);                                // <file type> (*.<file ext>)\0*.<file ext>
-      fileFilter[(j+=len)]=0;                                                            // <file type> (*.<file ext>)\0*.<file ext>\0
-      j++;
-     }
-   }
-
-  if (fileType!=FILE_TYPE_ASCII_SPECTRA)
-   {
-    strcpy(&fileFilter[j],"All files (*.*)");
-    strcpy(&fileFilter[j+16],"*.*");
-   }
-
-  // Return
-
-  return fileFilter;
- }
+// QDOAS ??? // -----------------------------------------------------------------------------
+// QDOAS ??? // FUNCTION      FilesBuildFilter
+// QDOAS ??? // -----------------------------------------------------------------------------
+// QDOAS ??? // PURPOSE       Build a filter string
+// QDOAS ??? //
+// QDOAS ??? // INPUT         fileType               the of file to load or to save;
+// QDOAS ??? //               symbolReferenceNumber  for cross sections, number of times symbols are referenced to
+// QDOAS ??? //               indexSymbol            index of the symbol in the list
+// QDOAS ??? //
+// QDOAS ??? // OUTPUT        fileFilter       the output filter string
+// QDOAS ??? //
+// QDOAS ??? // RETURN        a pointer to the output filter string
+// QDOAS ??? // -----------------------------------------------------------------------------
+// QDOAS ???
+// QDOAS ??? UCHAR *FilesBuildFilter(UCHAR *fileFilter,MASK fileType,INT *symbolReferenceNumber,INDEX indexSymbol)
+// QDOAS ???  {
+// QDOAS ???   // Declarations
+// QDOAS ???
+// QDOAS ???   FILE_TYPE *pFileType,*fileList;                                               // pointer to a file type
+// QDOAS ???   UCHAR extension[10];                                                          // extension according to type of file
+// QDOAS ???   SYMBOL *crossList,*pCross;                                                    // list of cross sections
+// QDOAS ???   INT crossNumber;                                                              // number of cross sections in previous list
+// QDOAS ???   SZ_LEN len,extLength;                                                         // string length
+// QDOAS ???   INDEX i,j,ideb,ifin;                                                          // indexes for loop and arrays
+// QDOAS ???
+// QDOAS ???   // Reset buffer
+// QDOAS ???
+// QDOAS ???   memset(fileFilter,0,MAX_PATH_LEN+1);
+// QDOAS ???
+// QDOAS ???   // Fill files filter string for cross sections
+// QDOAS ???
+// QDOAS ???   if (((fileType==FILE_TYPE_CROSS) ||                                           // Cross sections files
+// QDOAS ???        (fileType==FILE_TYPE_AMF_SZA) ||                                         // SZA dependent AMF files
+// QDOAS ???        (fileType==FILE_TYPE_AMF_CLI) ||                                         // Climatology dependent AMF files
+// QDOAS ???        (fileType==FILE_TYPE_AMF_WVE)) &&                                        // Wavelength dependent AMF files
+// QDOAS ???
+// QDOAS ???      ((crossList=(SYMBOL *)TREE_itemType[TREE_ITEM_TYPE_CROSS_CHILDREN].dataList)!=NULL) &&
+// QDOAS ???      ((crossNumber=(INT)TREE_itemType[TREE_ITEM_TYPE_CROSS_CHILDREN].dataNumber)>0) &&
+// QDOAS ???       (symbolReferenceNumber!=NULL))
+// QDOAS ???    {
+// QDOAS ???     sprintf(extension,"_*.%s",FILES_types[fileType].fileExt);
+// QDOAS ???     extLength=strlen(extension);
+// QDOAS ???
+// QDOAS ???     if ((indexSymbol>ITEM_NONE) && (indexSymbol<SYMBOL_PREDEFINED_MAX))
+// QDOAS ???      {
+// QDOAS ???       pCross=&crossList[indexSymbol];
+// QDOAS ???       j=0;
+// QDOAS ???
+// QDOAS ???       len=strlen(pCross->name);
+// QDOAS ???
+// QDOAS ???       memcpy(&fileFilter[j],pCross->name,len);                                  // <XS name>
+// QDOAS ???       memcpy(&fileFilter[(j+=len)]," Cross Sections (",17);                     // <XS name> Cross Sections (
+// QDOAS ???       memcpy(&fileFilter[(j+=17)],pCross->name,len);                            // <XS name> Cross Sections (<XS name>
+// QDOAS ???       memcpy(&fileFilter[(j+=len)],extension,extLength);                        // <XS name> Cross Sections (<XS name>_*.<XS ext>
+// QDOAS ???       fileFilter[(j+=extLength)]=')';                                           // <XS name> Cross Sections (<XS name>_*.<XS ext>)
+// QDOAS ???       fileFilter[(j+=1)]=0;                                                     // <XS name> Cross Sections (<XS name>_*.<XS ext>)\0
+// QDOAS ???       memcpy(&fileFilter[(j+=1)],pCross->name,len);                             // <XS name> Cross Sections (<XS name>_*.<XS ext>)\0<XS name>
+// QDOAS ???       memcpy(&fileFilter[(j+=len)],extension,extLength);                        // <XS name> Cross Sections (<XS name>_*.<XS ext>)\0<XS name>_*.<XS ext>
+// QDOAS ???       fileFilter[(j+=extLength)]=0;                                             // <XS name> Cross Sections (<XS name>_*.<XS ext>)\0<XS name>_*.<XS ext>\0
+// QDOAS ???       j++;
+// QDOAS ???      }
+// QDOAS ???     else
+// QDOAS ???
+// QDOAS ???      for (i=SYMBOL_PREDEFINED_COM,j=0;i<crossNumber;i++)
+// QDOAS ???       {
+// QDOAS ???        if (((indexSymbol==ITEM_NONE) && !((symbolReferenceNumber[i]>>8)&SYMBOL_ALREADY_USED)) ||
+// QDOAS ???            ((indexSymbol==i) && ((fileType!=FILE_TYPE_CROSS) || (((symbolReferenceNumber[i]>>8)&SYMBOL_ALREADY_USED)!=0))))
+// QDOAS ???         {
+// QDOAS ???          pCross=&crossList[i];
+// QDOAS ???
+// QDOAS ???          len=strlen(pCross->name);
+// QDOAS ???
+// QDOAS ???          memcpy(&fileFilter[j],pCross->name,len);                               // <XS name>
+// QDOAS ???          memcpy(&fileFilter[(j+=len)]," Cross Sections (",17);                  // <XS name> Cross Sections (
+// QDOAS ???          memcpy(&fileFilter[(j+=17)],pCross->name,len);                         // <XS name> Cross Sections (<XS name>
+// QDOAS ???          memcpy(&fileFilter[(j+=len)],extension,extLength);                     // <XS name> Cross Sections (<XS name>_*.<XS ext>
+// QDOAS ???          fileFilter[(j+=extLength)]=')';                                        // <XS name> Cross Sections (<XS name>_*.<XS ext>)
+// QDOAS ???          fileFilter[(j+=1)]=0;                                                  // <XS name> Cross Sections (<XS name>_*.<XS ext>)\0
+// QDOAS ???          memcpy(&fileFilter[(j+=1)],pCross->name,len);                          // <XS name> Cross Sections (<XS name>_*.<XS ext>)\0<XS name>
+// QDOAS ???          memcpy(&fileFilter[(j+=len)],extension,extLength);                     // <XS name> Cross Sections (<XS name>_*.<XS ext>)\0<XS name>_*.<XS ext>
+// QDOAS ???          fileFilter[(j+=extLength)]=0;                                          // <XS name> Cross Sections (<XS name>_*.<XS ext>)\0<XS name>_*.<XS ext>\0
+// QDOAS ???          j++;
+// QDOAS ???
+// QDOAS ???          if (indexSymbol==i)
+// QDOAS ???           break;
+// QDOAS ???         }
+// QDOAS ???       }
+// QDOAS ???    }
+// QDOAS ???   else
+// QDOAS ???
+// QDOAS ???   // Fill files filter string for any other type of files
+// QDOAS ???
+// QDOAS ???    {
+// QDOAS ???     if (fileType==FILE_TYPE_ASCII_SPECTRA)
+// QDOAS ???      {
+// QDOAS ???       fileList=FILES_typeSpectra;
+// QDOAS ???       ideb=0;
+// QDOAS ???       ifin=FILE_TYPE_SPECTRA_MAX;
+// QDOAS ???      }
+// QDOAS ???     else
+// QDOAS ???      {
+// QDOAS ???       fileList=FILES_types;
+// QDOAS ???       ideb=fileType;
+// QDOAS ???       ifin=ideb+1;
+// QDOAS ???      }
+// QDOAS ???
+// QDOAS ???     for (i=ideb,j=0;i<ifin;i++)
+// QDOAS ???      {
+// QDOAS ???       pFileType=&fileList[i];
+// QDOAS ???
+// QDOAS ???       memcpy(&fileFilter[j],pFileType->fileType,(len=strlen(pFileType->fileType)));      // <file type>
+// QDOAS ???       memcpy(&fileFilter[(j+=len)]," (*.",4);                                            // <file type> (*.
+// QDOAS ???       memcpy(&fileFilter[(j+=4)],pFileType->fileExt,(len=strlen(pFileType->fileExt)));   // <file type> (*.<file ext>
+// QDOAS ???       fileFilter[(j+=len)]=')';                                                          // <file type> (*.<file ext>)
+// QDOAS ???       fileFilter[(j+=1)]=0;                                                              // <file type> (*.<file ext>)\0
+// QDOAS ???       memcpy(&fileFilter[(j+=1)],"*.",2);                                                // <file type> (*.<file ext>)\0*.
+// QDOAS ???       memcpy(&fileFilter[(j+=2)],pFileType->fileExt,len);                                // <file type> (*.<file ext>)\0*.<file ext>
+// QDOAS ???       fileFilter[(j+=len)]=0;                                                            // <file type> (*.<file ext>)\0*.<file ext>\0
+// QDOAS ???       j++;
+// QDOAS ???      }
+// QDOAS ???    }
+// QDOAS ???
+// QDOAS ???   if (fileType!=FILE_TYPE_ASCII_SPECTRA)
+// QDOAS ???    {
+// QDOAS ???     strcpy(&fileFilter[j],"All files (*.*)");
+// QDOAS ???     strcpy(&fileFilter[j+16],"*.*");
+// QDOAS ???    }
+// QDOAS ???
+// QDOAS ???   // Return
+// QDOAS ???
+// QDOAS ???   return fileFilter;
+// QDOAS ???  }
 
 // QDOAS ??? #if defined(__WINDOAS_GUI_) && (__WINDOAS_GUI_)
 // QDOAS ???

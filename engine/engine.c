@@ -49,6 +49,8 @@
 #include "mediate.h"
 #include "engine.h"
 
+INT  NDET;                                                                      // detector size
+
 ENGINE_CONTEXT engineContext,                                                   // engine context used to make the interface between the mediator and the engine
                ENGINE_contextRef;                                               // engine context used for the automatic search of the reference spectrum
 UCHAR ENGINE_dbgFile[MAX_PATH_LEN+1];

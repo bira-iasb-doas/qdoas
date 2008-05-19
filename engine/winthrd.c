@@ -2197,7 +2197,7 @@ RC ThrdReadFile(ENGINE_CONTEXT *pEngineContext,INT recordNo,INT dateFlag,INT loc
     OBSERVATION_SITE *pSite;
     double SMax,darkSum,longit,latit;
     INDEX indexBand;
-    INT maxBand,maxV,maxH,indexSite,geoFlag,sitesNumber;
+    INT maxBand,maxV,maxH,indexSite,geoFlag;
     UCHAR graphTitle[MAX_ITEM_NAME_LEN+1];
 
     memset(graphTitle,0,MAX_ITEM_NAME_LEN+1);
@@ -2275,17 +2275,17 @@ RC ThrdReadFile(ENGINE_CONTEXT *pEngineContext,INT recordNo,INT dateFlag,INT loc
        geoFlag=0;
       else if ((pProject->spectra.mode==PRJCT_SPECTRA_MODES_OBSLIST) && (pProject->spectra.radius>1.))
        {
-        for (indexSite=0,sitesNumber=TREE_itemType[TREE_ITEM_TYPE_SITE_CHILDREN].dataNumber;indexSite<sitesNumber;indexSite++)
+        for (indexSite=0;indexSite<SITES_itemN;indexSite++)
          {
           pSite=&SITES_itemList[indexSite];
 
-          if (!pSite->hidden)
+// QDOAS ???           if (!pSite->hidden)
            {
             if (THRD_GetDist(longit,latit,pSite->longitude,pSite->latitude)<=(double)pProject->spectra.radius)
              break;
            }
          }
-        if (indexSite==sitesNumber)
+        if (indexSite==SITES_itemN)
          geoFlag=0;
        }
       else if ((pProject->spectra.mode==PRJCT_SPECTRA_MODES_RECTANGLE) &&
