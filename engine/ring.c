@@ -572,7 +572,9 @@ void Ring(void *ringArg)
   INT     nsolar,nslit,nring,                                                   // size of previous vectors
           slitType;                                                             // type of the slit function
   INDEX   i,j,k,indexMin,khi,klo;                                               // indexes for loops and arrays
+  #if defined(__WINDOAS_GUI_) && __WINDOAS_GUI_
   HWND    hwndRing;                                                             // handle of parent window
+  #endif
   FILE   *fp;                                                                   // output file pointer
   RC      rc;                                                                   // return code
 
@@ -584,7 +586,9 @@ void Ring(void *ringArg)
 
   // Initializations
 
+  #if defined(__WINDOAS_GUI_) && __WINDOAS_GUI_
   hwndRing=(HWND)ringArg; // QDOAS ???
+  #endif
 
   memset(&xsSolar,0,sizeof(XS));
   memset(&xsSlit,0,sizeof(XS));

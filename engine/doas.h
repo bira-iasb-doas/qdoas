@@ -835,7 +835,7 @@ EXTERN UCHAR *ANLYS_amf[ANLYS_AMF_TYPE_MAX];
 
 EXTERN PRJCT_FILTER *ANALYSE_plFilter,*ANALYSE_phFilter;
 EXTERN WRK_SYMBOL   *WorkSpace;
-EXTERN INT NWorkSpace;
+EXTERN INT NWorkSpace,NDET;
 EXTERN INT           DimC,DimL,DimP,Z,NFeno,(*Fenetre)[2],ANALYSE_refSelectionFlag,ANALYSE_lonSelectionFlag,
                      SvdPDeb,SvdPFin;
 EXTERN PRJCT_ANLYS  *pAnalysisOptions;             // analysis options

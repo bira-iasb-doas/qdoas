@@ -173,6 +173,7 @@ INT NOrtho,
    *OrthoSet,
     ANALYSE_ignoreAll,
     hFilterSpecLog,hFilterRefLog,
+    NDET,
                                        // description of an analysis windows
 
     Dim,                               // security for border effects
@@ -1688,6 +1689,133 @@ RC AnalyseFwhmCorrectionK(double *Spectre,double *Sref,double *SpecTrav,double *
 // ===============================
 // SVD WORKSPACE MEMORY MANAGEMENT
 // ===============================
+
+// ===============================
+// SVD WORKSPACE MEMORY MANAGEMENT
+// ===============================
+
+// ----------------------------------------------------------------------
+// ANALYSE_SvdFree : Release allocated buffers used for SVD decomposition
+// ----------------------------------------------------------------------
+
+void ANALYSE_SvdFree(UCHAR *callingFunctionShort,SVD *pSvd)
+ {
+  // Declaration
+
+  UCHAR functionNameShort[MAX_STR_SHORT_LEN+1];
+
+  #if defined(__DEBUG_) && __DEBUG_
+  DEBUG_FunctionBegin("ANALYSE_SvdFree",DEBUG_FCTTYPE_MEM);
+  #endif
+
+  // Initialization
+
+  memset(functionNameShort,0,MAX_STR_SHORT_LEN+1);
+
+  // Build complete function name
+
+  if (strlen(callingFunctionShort)<=MAX_STR_SHORT_LEN-strlen("ANALYSE_SvdFree via  "))
+   sprintf(functionNameShort,"ANALYSE_SvdFree via %s ",callingFunctionShort);
+  else
+   sprintf(functionNameShort,"ANALYSE_SvdFree ");
+
+  // Release allocated buffers
+
+  if (pSvd->A!=NULL)
+   MEMORY_ReleaseDMatrix(functionNameShort,"A",pSvd->A,0,pSvd->DimC,1);
+  if (pSvd->U!=NULL)
+   MEMORY_ReleaseDMatrix(functionNameShort,"U",pSvd->U,0,pSvd->DimC,1);
+  if (pSvd->P!=NULL)
+   MEMORY_ReleaseDMatrix(functionNameShort,"P",pSvd->P,0,pSvd->DimP,1);
+  if (pSvd->V!=NULL)
+   MEMORY_ReleaseDMatrix(functionNameShort,"V",pSvd->V,1,pSvd->DimC,1);
+  if (pSvd->W!=NULL)
+   MEMORY_ReleaseDVector(functionNameShort,"W",pSvd->W,1);
+  if (pSvd->SigmaSqr!=NULL)
+   MEMORY_ReleaseDVector(functionNameShort,"SigmaSqr",pSvd->SigmaSqr,0);
+  if (pSvd->covar!=NULL)
+   MEMORY_ReleaseDMatrix(functionNameShort,"covar",pSvd->covar,1,pSvd->DimC,1);
+
+  #if defined(__DEBUG_) && __DEBUG_
+  DEBUG_FunctionStop("ANALYSE_SvdFree",0);
+  #endif
+ }
+
+// --------------------------------------------------------------------
+//  : Allocate SVD matrices for the current window
+// --------------------------------------------------------------------
+
+RC ANALYSE_SvdLocalAlloc(UCHAR *callingFunctionShort,SVD *pSvd)
+ {
+  // Declarations
+
+  UCHAR functionNameShort[MAX_STR_SHORT_LEN+1];
+  INDEX i,j;
+  RC rc;
+
+  #if defined(__DEBUG_) && __DEBUG_
+  DEBUG_FunctionBegin("ANALYSE_SvdLocalAlloc",DEBUG_FCTTYPE_MEM);
+  #endif
+
+  // Initializations
+
+  memset(functionNameShort,0,MAX_STR_SHORT_LEN+1);
+  rc=ERROR_ID_NO;
+
+  // Build complete function name
+
+  if (strlen(callingFunctionShort)<=MAX_STR_SHORT_LEN-strlen("ANALYSE_SvdLocalAlloc via  "))
+   sprintf(functionNameShort,"ANALYSE_SvdLocalAlloc via %s ",callingFunctionShort);
+  else
+   sprintf(functionNameShort,"ANALYSE_SvdLocalAlloc ");
+
+  // Allocation
+
+  if (pSvd->DimC && pSvd->DimL)
+   {
+    if (((pSvd->A=(double **)MEMORY_AllocDMatrix("ANALYSE_SvdLocalAlloc","A",1,pSvd->DimL,0,pSvd->DimC))==NULL) ||
+        ((pSvd->U=(double **)MEMORY_AllocDMatrix("ANALYSE_SvdLocalAlloc","U",1,pSvd->DimL,0,pSvd->DimC))==NULL) ||
+        ((pSvd->V=(double **)MEMORY_AllocDMatrix("ANALYSE_SvdLocalAlloc","V",1,pSvd->DimC,1,pSvd->DimC))==NULL) ||
+        ((pSvd->covar=(double **)MEMORY_AllocDMatrix("ANALYSE_SvdLocalAlloc","covar",1,pSvd->DimC,1,pSvd->DimC))==NULL) ||
+        ((pSvd->W=(double *)MEMORY_AllocDVector("ANALYSE_SvdLocalAlloc","W",1,pSvd->DimC))==NULL) ||
+        ((pSvd->SigmaSqr=(double *)MEMORY_AllocDVector("ANALYSE_SvdLocalAlloc","SigmaSqr",0,pSvd->DimC))==NULL) ||
+        ((pSvd->DimP>0) && ((pSvd->P=(double **)MEMORY_AllocDMatrix("ANALYSE_SvdLocalAlloc","P",1,pSvd->DimL,0,pSvd->DimP))==NULL)))
+
+     rc=ERROR_ID_ALLOC;
+
+    else
+
+    // Initializations
+
+     {
+     	for (i=1;i<=pSvd->DimC;i++)
+     	 {
+     	 	for (j=1;j<=pSvd->DimC;j++)
+     	 	 pSvd->V[i][j]=pSvd->covar[i][j]=(double)0.;
+     	 	pSvd->W[i]=pSvd->SigmaSqr[i]=(double)0.;
+     	 }
+
+      for (i=1;i<=pSvd->DimL;i++)
+       pSvd->A[0][i]=pSvd->U[0][i]=(double)0.;
+
+      if (pSvd->P!=NULL)
+       for (i=1;i<=pSvd->DimL;i++)
+        pSvd->P[0][i]=(double)0.;
+
+      pSvd->SigmaSqr[0]=(double)0.;
+     }
+   }
+  else
+   rc=ERROR_SetLast("functionNameShort",ERROR_TYPE_FATAL,ERROR_ID_ALLOC,"DimC or DimL is zero !");
+
+  // Return
+
+  #if defined(__DEBUG_) && __DEBUG_
+  DEBUG_FunctionStop("ANALYSE_SvdLocalAlloc",rc);
+  #endif
+
+  return rc;
+ }
 
 // ------------------------------------------
 // AnalyseSvdGlobalAlloc : Global allocations
