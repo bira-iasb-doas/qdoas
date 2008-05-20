@@ -2173,7 +2173,7 @@ RC OutputBuildFileName(ENGINE_CONTEXT *pEngineContext,UCHAR *outputFileName,INT 
     else
      fileNamePtr++;
 
-    if ((!strlen(fileNamePtr) || !stricmp(fileNamePtr,"automatic")) &&
+    if ((!strlen(fileNamePtr) || !STD_Stricmp(fileNamePtr,"automatic")) &&
         ((pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN) ||
          (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_ASCII) ||
          (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_HDF) ||
@@ -2840,7 +2840,7 @@ RC OUTPUT_FlushBuffers(ENGINE_CONTEXT *pEngineContext)
     else
      ptr++;
 
-    if ((strlen(ptr)==9) && !stricmp(ptr,"automatic"))
+    if ((strlen(ptr)==9) && !STD_Stricmp(ptr,"automatic"))
      *ptr='\0';
 
     automatic=!strlen(ptr);

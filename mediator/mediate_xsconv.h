@@ -17,8 +17,8 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#include "mediate_response.h"
-#include "../engine/engine_xsconv.h"
+#include "mediate_convolution.h"
+#include "engine_xsconv.h"
 
 #ifndef _MEDIATE_XSCONV_
 #define _MEDIATE_XSCONV_
@@ -27,7 +27,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 extern "C" {
 #endif
 
-int mediateRequestConvolution(ENGINE_XSCONV_CONTEXT *pEngineContext,mediate_convolution_t *pMediateConvolution,void *responseHandle);
+int mediateRequestConvolution(void *engineContext,mediate_convolution_t *pMediateConvolution,void *responseHandle);
 
 int mediateXsconvCreateContext(void **engineContext, void *responseHandle);
 int mediateXsconvDestroyContext(void *engineContext, void *responseHandle);

@@ -108,7 +108,9 @@
 #include <time.h>
 
 
+#ifndef WIN32
 #define strnicmp strncasecmp
+#endif
 
 
 #pragma pack(1)

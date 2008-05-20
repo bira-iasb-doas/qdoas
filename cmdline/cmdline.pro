@@ -17,13 +17,13 @@ QT = core xml
 INCLUDEPATH  += $$QWT_INC_PATH
 
 unix {
-  INCLUDEPATH  += ../mediator ../common ../qdoas ../convolution ../ring ../usamp ../engine
-  LIBS         += -L$$QWT_LIB_PATH -l$$QWT_LIB -lm
+  INCLUDEPATH  += ../mediator ../common ../qdoas ../convolution ../ring ../usamp ../engine $$BEAT_INC_PATH
+  LIBS         += -L$$QWT_LIB_PATH -l$$QWT_LIB -L$$BEAT_LIB_PATH -lbeat -lm
   QMAKE_LFLAGS += -Wl,-rpath=$$QWT_LIB_PATH
 }
 
 win32 {
-  INCLUDEPATH  += ..\mediator ..\common ..\qdoas ..\convolution ..\ring ..\usamp ..\engine
+  INCLUDEPATH  += ..\mediator ..\common ..\qdoas ..\convolution ..\ring ..\usamp ..\engine $$BEAT_INC_PATH
 
   CONFIG      += windows
 }
@@ -58,6 +58,7 @@ SOURCES += cmdline.cpp
 #----------------------------------------------
 SOURCES += ../mediator/mediate_response.cpp
 SOURCES += ../mediator/mediate.c
+SOURCES += ../mediator/mediate_common.c
 SOURCES += ../mediator/mediate_project.c
 SOURCES += ../mediator/mediate_analysis_window.c
 
@@ -97,6 +98,7 @@ HEADERS += ../mediator/mediate_limits.h
 HEADERS += ../mediator/mediate_general.h
 HEADERS += ../mediator/mediate_response.h
 HEADERS += ../mediator/mediate_request.h
+HEADERS += ../mediator/mediate_common.h
 HEADERS += ../mediator/mediate_project.h
 HEADERS += ../mediator/mediate_analysis_window.h
 
@@ -124,6 +126,7 @@ SOURCES += ../engine/filter.c
 SOURCES += ../engine/fvoigt.c
 SOURCES += ../engine/gdp_asc_read.c
 SOURCES += ../engine/gdp_bin_read.c
+SOURCES += ../engine/gome2_read.c
 SOURCES += ../engine/kurucz.c
 SOURCES += ../engine/matrix.c
 SOURCES += ../engine/memory.c

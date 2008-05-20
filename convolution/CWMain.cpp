@@ -524,7 +524,7 @@ void CWMain::slotRunConvolution()
 
   QApplication::setOverrideCursor(Qt::WaitCursor);
 
-  mediateRequestConvolution(&engineContext, &m_guiProperties, resp);
+  mediateRequestConvolution(engineContext, &m_guiProperties, resp);
 
   //TODO_Junk_Test(&engineContext, resp);
 

@@ -28,20 +28,20 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 // RETURN        ERROR_ID_NO if no error found
 // -----------------------------------------------------------------------------
 
-int mediateRequestConvolution(ENGINE_XSCONV_CONTEXT *pEngineContext,mediate_convolution_t *pMediateConvolution,void *responseHandle)
+int mediateRequestConvolution(void *engineContext,mediate_convolution_t *pMediateConvolution,void *responseHandle)
  {
  	// Declarations
-
- 	RC rc;
-
- 	// Initializations
-
- 	rc=ERROR_ID_NO;
+   ENGINE_XSCONV_CONTEXT *pEngineContext = (ENGINE_XSCONV_CONTEXT*)engineContext;
+   RC rc;
+   
+   // Initializations
+   
+   rc=ERROR_ID_NO;
 
   // General information
 
   pEngineContext->convolutionType=pMediateConvolution->general.convolutionType;
-  pEngineContext->convolutionMode=pMediateConvolution->general.conversionType;
+  pEngineContext->conversionMode=pMediateConvolution->general.conversionType;
   pEngineContext->shift=pMediateConvolution->general.shift;
   pEngineContext->conc=pMediateConvolution->general.conc;
   pEngineContext->noComment=pMediateConvolution->general.noheader;
