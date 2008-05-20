@@ -130,6 +130,7 @@ SOURCES += qdoas.cpp
 #----------------------------------------------
 SOURCES += ../mediator/mediate_response.cpp
 SOURCES += ../mediator/mediate.c
+SOURCES += ../mediator/mediate_common.c
 SOURCES += ../mediator/mediate_project.c
 SOURCES += ../mediator/mediate_analysis_window.c
 
@@ -216,6 +217,7 @@ HEADERS += CConfigStateMonitor.h
 HEADERS += ../mediator/mediate.h
 HEADERS += ../mediator/mediate_types.h
 HEADERS += ../mediator/mediate_limits.h
+HEADERS += ../mediator/mediate_common.h
 HEADERS += ../mediator/mediate_general.h
 HEADERS += ../mediator/mediate_response.h
 HEADERS += ../mediator/mediate_request.h
