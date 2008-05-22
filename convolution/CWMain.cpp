@@ -46,12 +46,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "CConvConfigWriter.h"
 #include "CEngineResponse.h"
 
+#include "../mediator/mediate_response.h"
 #include "../mediator/mediate_types.h"
 #include "../mediator/mediate_xsconv.h"
 
 #include "debugutil.h"
-
-void TODO_Junk_Test(void *engineContext, void *resp); // TODO
 
 CWMain::CWMain(QWidget *parent) :
   QFrame(parent),
@@ -526,7 +525,7 @@ void CWMain::slotRunConvolution()
 
   mediateRequestConvolution(engineContext, &m_guiProperties, resp);
 
-  //TODO_Junk_Test(&engineContext, resp);
+  XSCONV_Convolution((ENGINE_XSCONV_CONTEXT *)engineContext,resp);
 
   // process the response - the controller will dispatch ...
   resp->process(m_controller);
@@ -552,7 +551,7 @@ void CWMain::slotPlotPage(const RefCountConstPtr<CPlotPageData> &page)
       m_plotArea = new CWPlotArea;
       m_plotArea->setProperties(prop);
 
-      m_tab->addTab(m_plotArea, "Plot");
+      m_tab->addTab(m_plotArea, page->title());
     }
 
     m_plotArea->setPage(page);
@@ -563,15 +562,15 @@ void CWMain::slotPlotPage(const RefCountConstPtr<CPlotPageData> &page)
 }
 
 
-// void TODO_Junk_Test(void *engineContext, void *resp)
-// {
-//   plot_data_t dummy;
-//   double xData[] = { 0.0, 1.1, 2.2, 3.3, 4.4, 5.5 };
-//   double yData[] = { 3.0, 4.0, 3.5, 1.1, 1.4, 3.0 };
-//
-//   mediateAllocateAndSetPlotData(&dummy, xData, yData, 6, Line);
-//
-//   mediateResponsePlotData(0, &dummy, 1, Spectrum, 0, "Title", "X-Label", "Y-label", resp);
-//
-//   mediateReleasePlotData(&dummy);
-// }
+void TODO_Junk_Test(void *engineContext, void *resp)
+{
+  plot_data_t dummy;
+  double xData[] = { 0.0, 1.1, 2.2, 3.3, 4.4, 5.5 };
+  double yData[] = { 3.0, 4.0, 3.5, 1.1, 1.4, 3.0 };
+
+  mediateAllocateAndSetPlotData(&dummy, xData, yData, 6, Line);
+
+  mediateResponsePlotData(0, &dummy, 1, Spectrum, 0, "Title", "X-Label", "Y-label", resp);
+
+  mediateReleasePlotData(&dummy);
+}
