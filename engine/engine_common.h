@@ -4,7 +4,7 @@
 //  Product/Project   :  QDOAS
 //  Module purpose    :  Functions of the engine that are common to the
 //                       QDOAS application and tools
-//  Name of module    :  mediate_common.h
+//  Name of module    :  engine_common.h
 //  Creation date     :  07/05/2008
 //
 //  QDOAS is a cross-platform application developed in QT for DOAS retrieval

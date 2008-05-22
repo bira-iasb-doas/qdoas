@@ -111,6 +111,7 @@ void   ERF_Free(void);
 
 void realft(double *source,double *buffer,int nn,int sens);
 
+RC   FILTER_OddEvenCorrection(double *lambdaData,double *specData,double *output,INT vectorSize);
 RC   FILTER_Vector(PRJCT_FILTER *pFilter,double *Input,double *Output,int Size,INT outputType);
 RC   FILTER_Build(PRJCT_FILTER *pFilter,double param1,double param2,double param3);
 
@@ -767,11 +768,10 @@ EXTERN INT       THRD_increment;
 EXTERN INT       THRD_isFolder;
 EXTERN INT       THRD_recordLast;
 
-// QDOAS ??? // ----------
-// QDOAS ??? // PROTOTYPES
-// QDOAS ??? // ----------
-// QDOAS ???
-// QDOAS ??? RC               THRD_OddEvenCorrection(double *lambdaData,double *specData,double *output,INT vectorSize);
+// ----------
+// PROTOTYPES
+// ----------
+
 double           THRD_GetDist(double longit, double latit, double longitRef, double latitRef);
 // QDOAS ??? #if defined(__WINDOAS_GUI_) && __WINDOAS_GUI_
 // QDOAS ??? LRESULT CALLBACK THRD_GotoWndProc(HWND hwndThrdGoto,UINT msg,WPARAM mp1,LPARAM mp2);

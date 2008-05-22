@@ -1,7 +1,8 @@
-#ifndef _ENGINE_XSCONV_
-#define _ENGINE_XSCONV_
 
 #include "doas.h"
+
+#ifndef _ENGINE_XSCONV_
+#define _ENGINE_XSCONV_
 
 #if defined(_cplusplus) || defined(__cplusplus)
 extern "C" {
@@ -23,6 +24,7 @@ typedef XSCONV ENGINE_XSCONV_CONTEXT;
 
 ENGINE_XSCONV_CONTEXT *EngineXsconvCreateContext(void);
 RC                     EngineXsconvDestroyContext(ENGINE_XSCONV_CONTEXT *pEngineContext);
+RC                     XSCONV_Convolution(ENGINE_XSCONV_CONTEXT *pEngineContext,void *responseHandle);
 
 #if defined(_cplusplus) || defined(__cplusplus)
 }

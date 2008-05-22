@@ -912,7 +912,6 @@ void PRJCT_SaveConfiguration(FILE *fp,UCHAR *sectionName);
    // ----------------
 
    EXTERN UCHAR *XSCONV_slitTypes[SLIT_TYPE_MAX];
-   EXTERN XSCONV XSCONV_buffer;
 
    // ----------
    // PROTOTYPES
@@ -936,6 +935,7 @@ void PRJCT_SaveConfiguration(FILE *fp,UCHAR *sectionName);
 
    void XSCONV_Reset(XS *pXsconv);
    RC   XSCONV_Alloc(XS *pXsconv,INT npts,INT deriv2Flag);
+
 // QDOAS ???
 // QDOAS ???    // Options in the WinDOAS configuration file
 // QDOAS ???

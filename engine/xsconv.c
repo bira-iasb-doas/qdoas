@@ -141,7 +141,9 @@
 // INCLUDE
 // =======
 
-#include "doas.h"
+#include "../mediator/mediate_response.h"
+#include "../mediator/mediate_types.h"
+#include "../mediator/mediate_xsconv.h"
 
 // =====================
 // CONSTANTS DEFINITIONS
@@ -169,8 +171,6 @@ UCHAR *XSCONV_slitTypes[SLIT_TYPE_MAX]=
   "Error function, wavelength+t° dependent"
  };
 
-XSCONV XSCONV_options,XSCONV_buffer;
-
 // ================
 // STATIC VARIABLES
 // ================
@@ -192,46 +192,46 @@ XSCONV XSCONV_options,XSCONV_buffer;
 // QDOAS ???                xsconvHCurSave;                                                  // handle to the old cursor before the hour glass take place
 // QDOAS ??? #endif
 
-// QDOAS ??? // Convolution method
-// QDOAS ???
-// QDOAS ??? static UCHAR *xsconvConvolutionTypesStr[CONVOLUTION_TYPE_MAX]=
-// QDOAS ???  {
-// QDOAS ???   "Interpolation only",
-// QDOAS ???   "Standard convolution",
-// QDOAS ???   "Convolution with I0 correction"
-// QDOAS ???  };
-// QDOAS ???
-// QDOAS ??? static UCHAR *xsconvConvolutionTypes[CONVOLUTION_TYPE_MAX]=
-// QDOAS ???  {
-// QDOAS ???   "None",
-// QDOAS ???   "Standard",
-// QDOAS ???   "I0 correction"
-// QDOAS ???  };
-// QDOAS ???
-// QDOAS ??? // Conversion modes
-// QDOAS ???
-// QDOAS ??? static UCHAR *xsconvConversionModes[CONVOLUTION_CONVERSION_MAX]=
-// QDOAS ???  {
-// QDOAS ???   "None",
-// QDOAS ???   "Air to Vac",
-// QDOAS ???   "Vac to Air"
-// QDOAS ???  };
-// QDOAS ???
-// QDOAS ??? // Files extensions
-// QDOAS ???
-// QDOAS ??? static UCHAR *xsconvFileExt[CONVOLUTION_TYPE_MAX]=
-// QDOAS ???  {
-// QDOAS ???   "_none",                                                                      // CONVOLUTION_TYPE_NONE
-// QDOAS ???   "_std",                                                                       // CONVOLUTION_TYPE_STANDARD
-// QDOAS ???   "_i0",                                                                        // CONVOLUTION_TYPE_I0_CORRECTION
-// QDOAS ??? //  "_ring"                         // CONVOLUTION_TYPE_RING
-// QDOAS ???  };
-// QDOAS ???
-// QDOAS ??? static XS  XSCONV_slitFunction,                                                 // slit function used for convolution
-// QDOAS ???            XSCONV_slitDFunction,                                                // slit function used for deconvolution
-// QDOAS ???            XSCONV_xshr,                                                         // high resolution cross section
-// QDOAS ???            XSCONV_xsnew,                                                        // convoluted cross section
-// QDOAS ???            XSCONV_kurucz;                                                       // kurucz
+// Convolution method
+
+// static UCHAR *xsconvConvolutionTypesStr[CONVOLUTION_TYPE_MAX]=
+//  {
+//   "Interpolation only",
+//   "Standard convolution",
+//   "Convolution with I0 correction"
+//  };
+//
+// static UCHAR *xsconvConvolutionTypes[CONVOLUTION_TYPE_MAX]=
+//  {
+//   "None",
+//   "Standard",
+//   "I0 correction"
+//  };
+//
+// // Conversion modes
+//
+// static UCHAR *xsconvConversionModes[CONVOLUTION_CONVERSION_MAX]=
+//  {
+//   "None",
+//   "Air to Vac",
+//   "Vac to Air"
+//  };
+//
+// // Files extensions
+//
+// static UCHAR *xsconvFileExt[CONVOLUTION_TYPE_MAX]=
+//  {
+//   "_none",                                                                      // CONVOLUTION_TYPE_NONE
+//   "_std",                                                                       // CONVOLUTION_TYPE_STANDARD
+//   "_i0",                                                                        // CONVOLUTION_TYPE_I0_CORRECTION
+// //  "_ring"                         // CONVOLUTION_TYPE_RING
+//  };
+
+static XS  XSCONV_slitFunction,                                                 // slit function used for convolution
+           XSCONV_slitDFunction,                                                // slit function used for deconvolution
+           XSCONV_xshr,                                                         // high resolution cross section
+           XSCONV_xsnew,                                                        // convoluted cross section
+           XSCONV_kurucz;                                                       // kurucz
 
 // QDOAS ??? static INDEX xsconvIndexSelected;
 
@@ -2378,261 +2378,245 @@ RC XsconvNewSlitFunction(SLIT *pSlitOptions,XS *pSlit,double slitParam,SLIT *pSl
   return rc;
  }
 
-// QDOAS ??? // ----------------------------------------------
-// QDOAS ??? // XSCONV_Convolution : Main convolution function
-// QDOAS ??? // ----------------------------------------------
-// QDOAS ???
-// QDOAS ??? RC XSCONV_Convolution(HWND hwndXsconv)
-// QDOAS ???  {
-// QDOAS ???   // Declarations
-// QDOAS ???
-// QDOAS ???   UCHAR windowTitle[MAX_ITEM_TEXT_LEN+1],graphTitle[MAX_ITEM_TEXT_LEN+1],fileName[MAX_ITEM_TEXT_LEN+1];
-// QDOAS ???   double lambdaMin,lambdaMax,slitParam,slitParam2,slitWidth,*filterVector;
-// QDOAS ???   PRJCT_FILTER *plFilter,*phFilter;
-// QDOAS ???   SLIT *pSlitConv,*pSlitDConv;
-// QDOAS ???   INT slitType,slitType2,deconvFlag,dispConv,dispLFilter,dispHFilter,nGraph,iGraph;
-// QDOAS ???   INT lowFilterType,highFilterType,nFilter;
-// QDOAS ???   RC rc;
-// QDOAS ???
-// QDOAS ???   // Initializations
-// QDOAS ???
-// QDOAS ???   pSlitDConv=&XSCONV_options.slitDConv;
-// QDOAS ???   pSlitConv=&XSCONV_options.slitConv;
-// QDOAS ???   slitType=pSlitConv->slitType;
-// QDOAS ???   slitType2=pSlitDConv->slitType;
-// QDOAS ???   slitParam=slitParam2=(double)0.;
-// QDOAS ???
-// QDOAS ???   // Filtering
-// QDOAS ???
-// QDOAS ???   plFilter=&XSCONV_options.lfilter;
-// QDOAS ???   phFilter=&XSCONV_options.hfilter;
-// QDOAS ???
-// QDOAS ???   lowFilterType=plFilter->type;            // low pass filtering
-// QDOAS ???   highFilterType=phFilter->type;           // high pass filtering
-// QDOAS ???
-// QDOAS ???   plFilter->filterFunction=phFilter->filterFunction=NULL;
-// QDOAS ???
-// QDOAS ???   if ((((lowFilterType=plFilter->type)!=PRJCT_FILTER_TYPE_NONE) &&
-// QDOAS ???         (lowFilterType!=PRJCT_FILTER_TYPE_ODDEVEN) &&
-// QDOAS ???        ((rc=ANALYSE_LoadFilter(plFilter))!=0)) ||
-// QDOAS ???
-// QDOAS ???       (((highFilterType=phFilter->type)!=PRJCT_FILTER_TYPE_NONE) &&
-// QDOAS ???         (highFilterType!=PRJCT_FILTER_TYPE_ODDEVEN) &&
-// QDOAS ???        ((rc=ANALYSE_LoadFilter(phFilter))!=0)))
-// QDOAS ???
-// QDOAS ???    goto EndConvolution;
-// QDOAS ???
-// QDOAS ???   nFilter=0;
-// QDOAS ???
-// QDOAS ???   if ((lowFilterType!=PRJCT_FILTER_TYPE_NONE) && (lowFilterType!=PRJCT_FILTER_TYPE_ODDEVEN))
-// QDOAS ???    nFilter+=(int)(plFilter->filterWidth*sqrt(plFilter->filterNTimes)+0.5);
-// QDOAS ???   if ((highFilterType!=PRJCT_FILTER_TYPE_NONE) && (highFilterType!=PRJCT_FILTER_TYPE_ODDEVEN))
-// QDOAS ???    nFilter+=(int)(phFilter->filterWidth*sqrt(phFilter->filterNTimes)+0.5);
-// QDOAS ???
-// QDOAS ???   filterVector=NULL;
-// QDOAS ???
-// QDOAS ???   // Display control
-// QDOAS ???
-// QDOAS ???   deconvFlag=((XSCONV_options.convolutionType!=CONVOLUTION_TYPE_NONE) && (slitType!=SLIT_TYPE_GAUSS_FILE) && (slitType!=SLIT_TYPE_INVPOLY_FILE) && (slitType!=SLIT_TYPE_ERF_FILE) &&
-// QDOAS ???             (((pSlitDConv->slitType==SLIT_TYPE_FILE) && (strlen(pSlitDConv->slitFile)!=0)) ||
-// QDOAS ???             (((pSlitDConv->slitType==SLIT_TYPE_GAUSS) || (pSlitDConv->slitType==SLIT_TYPE_INVPOLY) || (pSlitDConv->slitType==SLIT_TYPE_ERF)) && (pSlitDConv->slitParam>0.))))?1:0;
-// QDOAS ???
-// QDOAS ???   // Change current cursor into hour glass
-// QDOAS ???
-// QDOAS ???   #if defined (__WINDOAS_GUI_) && __WINDOAS_GUI_
-// QDOAS ???   xsconvHCurHourGlass=LoadCursor(NULL,IDC_WAIT);
-// QDOAS ???   xsconvHCurSave = SetCursor(xsconvHCurHourGlass);
-// QDOAS ???   #endif
-// QDOAS ???
-// QDOAS ???   THRD_delay=INFINITE;
-// QDOAS ???
-// QDOAS ???   // Load calibration file and slit function
-// QDOAS ???
-// QDOAS ???   if (!(rc=XSCONV_LoadCalibrationFile(&XSCONV_xsnew,XSCONV_options.calibrationFile,nFilter)) &&
-// QDOAS ???      (((lowFilterType==PRJCT_FILTER_TYPE_NONE) && (highFilterType==PRJCT_FILTER_TYPE_NONE)) ||
-// QDOAS ???       ((filterVector=(double *)MEMORY_AllocDVector("XSCONV_Convolution ","filterVector",0,XSCONV_xsnew.NDET-1))!=NULL)) &&
-// QDOAS ???       ((XSCONV_options.convolutionType==CONVOLUTION_TYPE_NONE) ||
-// QDOAS ???      (!(rc=XSCONV_LoadSlitFunction(&XSCONV_slitFunction,&XSCONV_options.slitConv,&slitParam,&slitType)) &&
-// QDOAS ???       (!deconvFlag || !(rc=XSCONV_LoadSlitFunction(&XSCONV_slitDFunction,pSlitDConv,&slitParam2,&slitType2))))))
-// QDOAS ???    {
-// QDOAS ???     slitWidth=(double)2.*slitParam;
-// QDOAS ???
-// QDOAS ???     // Window in wavelength
-// QDOAS ???
-// QDOAS ???     if ((slitType!=SLIT_TYPE_FILE) || (XSCONV_options.convolutionType==CONVOLUTION_TYPE_NONE))
-// QDOAS ???      {
-// QDOAS ???       lambdaMin=XSCONV_xsnew.lambda[0]-slitWidth-1.;                     // add 1 nm
-// QDOAS ???       lambdaMax=XSCONV_xsnew.lambda[XSCONV_xsnew.NDET-1]+slitWidth+1.;
-// QDOAS ???      }
-// QDOAS ???     else
-// QDOAS ???      {
-// QDOAS ???       lambdaMin=XSCONV_xsnew.lambda[0]+XSCONV_slitFunction.lambda[0]-1.;                     // add 1 nm
-// QDOAS ???       lambdaMax=XSCONV_xsnew.lambda[XSCONV_xsnew.NDET-1]+XSCONV_slitFunction.lambda[XSCONV_slitFunction.NDET-1]+1.;
-// QDOAS ???      }
-// QDOAS ???
-// QDOAS ???     if (deconvFlag)
-// QDOAS ???      slitType=SLIT_TYPE_FILE;  // the resulting effective slit function works as a slit file type one
-// QDOAS ???
-// QDOAS ???     // Determine effective slit function when a deconvolution slit function is given
-// QDOAS ???
-// QDOAS ???     if ((!deconvFlag || !(rc=XsconvNewSlitFunction(hwndXsconv,pSlitConv,&XSCONV_slitFunction,slitParam,pSlitDConv,&XSCONV_slitDFunction,slitParam2))) &&
-// QDOAS ???
-// QDOAS ???     // Load high resolution Kurucz file in convolution with I0 correction method
-// QDOAS ???
-// QDOAS ???         ((XSCONV_options.convolutionType!=CONVOLUTION_TYPE_I0_CORRECTION) ||
-// QDOAS ???         !(rc=XSCONV_LoadCrossSectionFile(&XSCONV_kurucz,XSCONV_options.kuruczFile,lambdaMin,lambdaMax,(double)0.,CONVOLUTION_CONVERSION_NONE))) &&
-// QDOAS ???         !(rc=XSCONV_LoadCrossSectionFile(&XSCONV_xshr,XSCONV_options.crossFile,lambdaMin,lambdaMax,(double)XSCONV_options.shift,XSCONV_options.conversionMode)))
-// QDOAS ???      {
-// QDOAS ???       dispConv=((XSCONV_options.convolutionType!=CONVOLUTION_TYPE_NONE) ||
-// QDOAS ???             (XSCONV_xshr.NDET!=XSCONV_xsnew.NDET) ||
-// QDOAS ???             !VECTOR_Equal(XSCONV_xshr.lambda,XSCONV_xsnew.lambda,XSCONV_xsnew.NDET,(double)1.e-7))?1:0;
-// QDOAS ???
-// QDOAS ???       dispLFilter=(lowFilterType!=PRJCT_FILTER_TYPE_NONE)?1:0;
-// QDOAS ???       dispHFilter=(highFilterType!=PRJCT_FILTER_TYPE_NONE)?1:0;
-// QDOAS ???
-// QDOAS ???       nGraph=dispConv+dispLFilter+dispHFilter;
-// QDOAS ???       iGraph=0;
-// QDOAS ???
-// QDOAS ???       // -----------
-// QDOAS ???       // Convolution
-// QDOAS ???       // -----------
-// QDOAS ???
-// QDOAS ???       switch(XSCONV_options.convolutionType)
-// QDOAS ???        {
-// QDOAS ???      // ----------------------------------------------------------------------
-// QDOAS ???         case CONVOLUTION_TYPE_NONE :
-// QDOAS ???          rc=XSCONV_TypeNone(&XSCONV_xsnew,&XSCONV_xshr);
-// QDOAS ???         break;
-// QDOAS ???      // ----------------------------------------------------------------------
-// QDOAS ???         case CONVOLUTION_TYPE_STANDARD :
-// QDOAS ???          rc=XSCONV_TypeStandard(&XSCONV_xsnew,0,XSCONV_xsnew.NDET,&XSCONV_xshr,&XSCONV_slitFunction,&XSCONV_xshr,NULL,slitType,slitWidth,slitParam,
-// QDOAS ???                                  XSCONV_options.slitConv.slitParam2,XSCONV_options.slitConv.slitParam3,XSCONV_options.slitConv.slitParam4);
-// QDOAS ???         break;
-// QDOAS ???      // ----------------------------------------------------------------------
-// QDOAS ???         case CONVOLUTION_TYPE_I0_CORRECTION :
-// QDOAS ???           rc=XsconvTypeI0Correction(&XSCONV_xsnew,&XSCONV_xshr,&XSCONV_kurucz,&XSCONV_slitFunction,XSCONV_options.conc,slitType,slitWidth,slitParam,XSCONV_options.slitConv.slitParam2,XSCONV_options.slitConv.slitParam3,XSCONV_options.slitConv.slitParam4);
-// QDOAS ???         break;
-// QDOAS ???      // ----------------------------------------------------------------------
-// QDOAS ???      }
-// QDOAS ???
-// QDOAS ???       if (rc!=0)
-// QDOAS ???        goto EndConvolution;
-// QDOAS ???
-// QDOAS ???       #if defined (__WINDOAS_GUI_) && __WINDOAS_GUI_
-// QDOAS ???
-// QDOAS ???       if ((CHILD_list[CHILD_WINDOW_SPECTRA].hwndChild!=NULL) && dispConv)
-// QDOAS ???        {
-// QDOAS ???         SendMessage(CHILD_hwndFrame,WM_MDIACTIVATE,(WPARAM)CHILD_list[CHILD_WINDOW_SPECTRA].hwndChild,(LPARAM)0);
-// QDOAS ???         sprintf(windowTitle,"Original cross section : %s",FILES_RebuildFileName(fileName,XSCONV_options.crossFile,1));
-// QDOAS ???
-// QDOAS ???         DRAW_Spectra(CHILD_WINDOW_SPECTRA,windowTitle,
-// QDOAS ???                     (XSCONV_options.convolutionType!=CONVOLUTION_TYPE_NONE)?"After convolution":"After interpolation","Wavelength (nm)","",NULL,0,
-// QDOAS ???                     (double)0.,(double)0.,(double)0.,(double)0.,
-// QDOAS ???                      XSCONV_xshr.lambda,XSCONV_xshr.vector,XSCONV_xshr.NDET,DRAW_COLOR2,0,XSCONV_xshr.NDET-1,PS_SOLID,"Original",
-// QDOAS ???                      XSCONV_xsnew.lambda+nFilter,XSCONV_xsnew.vector+nFilter,XSCONV_xsnew.NDET-2*nFilter,DRAW_COLOR1,0,XSCONV_xsnew.NDET-2*nFilter-1,PS_SOLID,
-// QDOAS ???                     (XSCONV_options.convolutionType!=CONVOLUTION_TYPE_NONE)?"Convoluted":"Interpolated",
-// QDOAS ???                      iGraph,1,nGraph,(iGraph==nGraph-1)?1:1);
-// QDOAS ???
-// QDOAS ???         iGraph++;
-// QDOAS ???        }
-// QDOAS ???
-// QDOAS ???       #endif
-// QDOAS ???
-// QDOAS ???       if (filterVector!=NULL)
-// QDOAS ???        memcpy(filterVector,XSCONV_xsnew.vector,XSCONV_xsnew.NDET*sizeof(double));
-// QDOAS ???
-// QDOAS ???       // ------------------
-// QDOAS ???       // Low-Pass filtering
-// QDOAS ???       // ------------------
-// QDOAS ???
-// QDOAS ???       if ((lowFilterType!=PRJCT_FILTER_TYPE_NONE) && (filterVector!=NULL) &&
-// QDOAS ???         (((lowFilterType==PRJCT_FILTER_TYPE_ODDEVEN) && !(rc=THRD_OddEvenCorrection(XSCONV_xsnew.lambda,XSCONV_xsnew.vector,filterVector,XSCONV_xsnew.NDET))) ||
-// QDOAS ???          ((lowFilterType!=PRJCT_FILTER_TYPE_ODDEVEN) && !(rc=FILTER_Vector(plFilter,filterVector,filterVector,XSCONV_xsnew.NDET,PRJCT_FILTER_OUTPUT_LOW)))))
-// QDOAS ???        {
-// QDOAS ???        	#if defined (__WINDOAS_GUI_) && __WINDOAS_GUI_
-// QDOAS ???
-// QDOAS ???         SendMessage(CHILD_hwndFrame,WM_MDIACTIVATE,(WPARAM)CHILD_list[CHILD_WINDOW_SPECTRA].hwndChild,(LPARAM)0);
-// QDOAS ???         sprintf(windowTitle,"Original cross section : %s",FILES_RebuildFileName(fileName,XSCONV_options.crossFile,1));
-// QDOAS ???         strcpy(graphTitle,"After low-pass filtering");
-// QDOAS ???
-// QDOAS ???         DRAW_Spectra(CHILD_WINDOW_SPECTRA,windowTitle,graphTitle,"Wavelength (nm)","",NULL,0,
-// QDOAS ???                     (double)0.,(double)0.,(double)0.,(double)0.,
-// QDOAS ???                      XSCONV_xsnew.lambda+nFilter,XSCONV_xsnew.vector+nFilter,XSCONV_xsnew.NDET-2*nFilter,DRAW_COLOR2,0,XSCONV_xsnew.NDET-2*nFilter-1,PS_SOLID,"Not filtered",
-// QDOAS ???                      XSCONV_xsnew.lambda+nFilter,filterVector+nFilter,XSCONV_xsnew.NDET-2*nFilter,DRAW_COLOR1,0,XSCONV_xsnew.NDET-2*nFilter-1,PS_SOLID,"Filtered",
-// QDOAS ???                      iGraph,1,nGraph,(iGraph==nGraph-1)?1:0);
-// QDOAS ???
-// QDOAS ???         iGraph++;
-// QDOAS ???
-// QDOAS ???         #endif
-// QDOAS ???        }
-// QDOAS ???
-// QDOAS ???       // -------------------
-// QDOAS ???       // High-Pass filtering
-// QDOAS ???       // -------------------
-// QDOAS ???
-// QDOAS ???       if ((highFilterType!=PRJCT_FILTER_TYPE_NONE) && (highFilterType!=PRJCT_FILTER_TYPE_ODDEVEN) && (filterVector!=NULL) &&
-// QDOAS ???          !(rc=FILTER_Vector(phFilter,filterVector,filterVector,XSCONV_xsnew.NDET,PRJCT_FILTER_OUTPUT_HIGH_SUB+phFilter->filterAction)))
-// QDOAS ???        {
-// QDOAS ???        	#if defined (__WINDOAS_GUI_) && __WINDOAS_GUI_
-// QDOAS ???
-// QDOAS ???         SendMessage(CHILD_hwndFrame,WM_MDIACTIVATE,(WPARAM)CHILD_list[CHILD_WINDOW_SPECTRA].hwndChild,(LPARAM)0);
-// QDOAS ???         sprintf(windowTitle,"Original cross section : %s",FILES_RebuildFileName(fileName,XSCONV_options.crossFile,1));
-// QDOAS ???         strcpy(graphTitle,"After high-pass filtering");
-// QDOAS ???
-// QDOAS ???         DRAW_Spectra(CHILD_WINDOW_SPECTRA,windowTitle,graphTitle,"Wavelength (nm)","",NULL,0,
-// QDOAS ???                     (double)0.,(double)0.,(double)0.,(double)0.,
-// QDOAS ???                      XSCONV_xsnew.lambda+nFilter,filterVector+nFilter,XSCONV_xsnew.NDET-2*nFilter,DRAW_COLOR2,0,XSCONV_xsnew.NDET-2*nFilter-1,PS_SOLID,"",
-// QDOAS ???                      NULL,NULL,0,DRAW_COLOR1,0,0,PS_SOLID,"",
-// QDOAS ???                      iGraph,1,nGraph,(iGraph==nGraph-1)?1:0);
-// QDOAS ???
-// QDOAS ???         iGraph++;
-// QDOAS ???
-// QDOAS ???         #endif
-// QDOAS ???        }
-// QDOAS ???
-// QDOAS ???       // ----------------------------
-// QDOAS ???       // Save resulting cross section
-// QDOAS ???       // ----------------------------
-// QDOAS ???
-// QDOAS ???       #if defined (__WINDOAS_GUI_) && __WINDOAS_GUI_
-// QDOAS ???       XsconvSaveNew(hwndXsconv,&XSCONV_xsnew,filterVector,&XSCONV_options,nFilter);
-// QDOAS ???       #endif
-// QDOAS ???      }
-// QDOAS ???    }
-// QDOAS ???
-// QDOAS ???   EndConvolution :
-// QDOAS ???
-// QDOAS ???   // Release allocated buffers
-// QDOAS ???
-// QDOAS ???   XSCONV_Reset(&XSCONV_xsnew);
-// QDOAS ???   XSCONV_Reset(&XSCONV_slitFunction);
-// QDOAS ???   XSCONV_Reset(&XSCONV_slitDFunction);
-// QDOAS ???   XSCONV_Reset(&XSCONV_xshr);
-// QDOAS ???   XSCONV_Reset(&XSCONV_kurucz);
-// QDOAS ???
-// QDOAS ???   if (filterVector!=NULL)
-// QDOAS ???    MEMORY_ReleaseDVector("XSCONV_Convolution ","filterVector",filterVector,0);
-// QDOAS ???
-// QDOAS ???   if (plFilter->filterFunction!=NULL)
-// QDOAS ???    {
-// QDOAS ???     MEMORY_ReleaseDVector("XSCONV_Convolution ","FILTER_function",plFilter->filterFunction,1);
-// QDOAS ???     plFilter->filterFunction=NULL;
-// QDOAS ???    }
-// QDOAS ???
-// QDOAS ???   if (phFilter->filterFunction!=NULL)
-// QDOAS ???    {
-// QDOAS ???     MEMORY_ReleaseDVector("XSCONV_Convolution ","FILTER_function",phFilter->filterFunction,1);
-// QDOAS ???     phFilter->filterFunction=NULL;
-// QDOAS ???    }
-// QDOAS ???
-// QDOAS ???   // Return
-// QDOAS ???
-// QDOAS ???   #if defined (__WINDOAS_GUI_) && __WINDOAS_GUI_
-// QDOAS ???   SetCursor(xsconvHCurSave);
-// QDOAS ???   #endif
-// QDOAS ???
-// QDOAS ???   return rc;
-// QDOAS ???  }
+// ----------------------------------------------
+// XSCONV_Convolution : Main convolution function
+// ----------------------------------------------
+
+RC XSCONV_Convolution(ENGINE_XSCONV_CONTEXT *pEngineContext,void *responseHandle)
+ {
+  // Declarations
+
+  PRJCT_FILTER *plFilter,*phFilter;                                             // pointers to the low pass and high pass filtering parts of the engine context
+  SLIT *pSlitConv,*pSlitDConv;                                                  // pointers to the convolution and deconvolution slit function parts of the engine context
+
+  UCHAR windowTitle[MAX_ITEM_TEXT_LEN+1],graphTitle[MAX_ITEM_TEXT_LEN+1],fileName[MAX_ITEM_TEXT_LEN+1];
+  double lambdaMin,lambdaMax,slitParam,slitParam2,slitWidth,*filterVector;
+
+
+  INT slitType,slitType2,deconvFlag,dispConv,dispLFilter,dispHFilter,nGraph,iGraph;
+  INT lowFilterType,highFilterType,nFilter;
+  RC rc;
+
+  // Slit function
+
+  pSlitDConv=&pEngineContext->slitDConv;
+  pSlitConv=&pEngineContext->slitConv;
+
+  slitType=pSlitConv->slitType;
+  slitType2=pSlitDConv->slitType;
+  slitParam=slitParam2=(double)0.;
+
+  // Filtering
+
+  plFilter=&pEngineContext->lfilter;
+  phFilter=&pEngineContext->hfilter;
+
+  lowFilterType=plFilter->type;            // low pass filtering
+  highFilterType=phFilter->type;           // high pass filtering
+
+  plFilter->filterFunction=phFilter->filterFunction=NULL;
+
+//  if ((((lowFilterType=plFilter->type)!=PRJCT_FILTER_TYPE_NONE) &&
+//        (lowFilterType!=PRJCT_FILTER_TYPE_ODDEVEN) &&
+//       ((rc=ANALYSE_LoadFilter(plFilter))!=0)) ||
+//
+//      (((highFilterType=phFilter->type)!=PRJCT_FILTER_TYPE_NONE) &&
+//        (highFilterType!=PRJCT_FILTER_TYPE_ODDEVEN) &&
+//       ((rc=ANALYSE_LoadFilter(phFilter))!=0)))
+//
+//   goto EndConvolution;
+
+  nFilter=0;
+
+  if ((lowFilterType!=PRJCT_FILTER_TYPE_NONE) && (lowFilterType!=PRJCT_FILTER_TYPE_ODDEVEN))
+   nFilter+=(int)(plFilter->filterWidth*sqrt(plFilter->filterNTimes)+0.5);
+  if ((highFilterType!=PRJCT_FILTER_TYPE_NONE) && (highFilterType!=PRJCT_FILTER_TYPE_ODDEVEN))
+   nFilter+=(int)(phFilter->filterWidth*sqrt(phFilter->filterNTimes)+0.5);
+
+  filterVector=NULL;
+
+  // Display control
+
+  deconvFlag=((pEngineContext->convolutionType!=CONVOLUTION_TYPE_NONE) && (slitType!=SLIT_TYPE_GAUSS_FILE) && (slitType!=SLIT_TYPE_INVPOLY_FILE) && (slitType!=SLIT_TYPE_ERF_FILE) &&
+            (((pSlitDConv->slitType==SLIT_TYPE_FILE) && (strlen(pSlitDConv->slitFile)!=0)) ||
+            (((pSlitDConv->slitType==SLIT_TYPE_GAUSS) || (pSlitDConv->slitType==SLIT_TYPE_INVPOLY) || (pSlitDConv->slitType==SLIT_TYPE_ERF)) && (pSlitDConv->slitParam>0.))))?1:0;
+
+  // Load calibration file and slit function
+
+  if (!(rc=XSCONV_LoadCalibrationFile(&XSCONV_xsnew,pEngineContext->calibrationFile,nFilter)) &&
+     (((lowFilterType==PRJCT_FILTER_TYPE_NONE) && (highFilterType==PRJCT_FILTER_TYPE_NONE)) ||
+      ((filterVector=(double *)MEMORY_AllocDVector("XSCONV_Convolution ","filterVector",0,XSCONV_xsnew.NDET-1))!=NULL)) &&
+      ((pEngineContext->convolutionType==CONVOLUTION_TYPE_NONE) ||
+     (!(rc=XSCONV_LoadSlitFunction(&XSCONV_slitFunction,&pEngineContext->slitConv,&slitParam,&slitType)) &&
+      (!deconvFlag || !(rc=XSCONV_LoadSlitFunction(&XSCONV_slitDFunction,pSlitDConv,&slitParam2,&slitType2))))))
+   {
+    slitWidth=(double)2.*slitParam;
+
+    // Window in wavelength
+
+    if ((slitType!=SLIT_TYPE_FILE) || (pEngineContext->convolutionType==CONVOLUTION_TYPE_NONE))
+     {
+      lambdaMin=XSCONV_xsnew.lambda[0]-slitWidth-1.;                     // add 1 nm
+      lambdaMax=XSCONV_xsnew.lambda[XSCONV_xsnew.NDET-1]+slitWidth+1.;
+     }
+    else
+     {
+      lambdaMin=XSCONV_xsnew.lambda[0]+XSCONV_slitFunction.lambda[0]-1.;                     // add 1 nm
+      lambdaMax=XSCONV_xsnew.lambda[XSCONV_xsnew.NDET-1]+XSCONV_slitFunction.lambda[XSCONV_slitFunction.NDET-1]+1.;
+     }
+
+    if (deconvFlag)
+     slitType=SLIT_TYPE_FILE;  // the resulting effective slit function works as a slit file type one
+
+    // Determine effective slit function when a deconvolution slit function is given
+
+    if ((!deconvFlag || !(rc=XsconvNewSlitFunction(pSlitConv,&XSCONV_slitFunction,slitParam,pSlitDConv,&XSCONV_slitDFunction,slitParam2))) &&
+
+    // Load high resolution Kurucz file in convolution with I0 correction method
+
+        ((pEngineContext->convolutionType!=CONVOLUTION_TYPE_I0_CORRECTION) ||
+        !(rc=XSCONV_LoadCrossSectionFile(&XSCONV_kurucz,pEngineContext->kuruczFile,lambdaMin,lambdaMax,(double)0.,CONVOLUTION_CONVERSION_NONE))) &&
+        !(rc=XSCONV_LoadCrossSectionFile(&XSCONV_xshr,pEngineContext->crossFile,lambdaMin,lambdaMax,(double)pEngineContext->shift,pEngineContext->conversionMode)))
+     {
+      dispConv=((pEngineContext->convolutionType!=CONVOLUTION_TYPE_NONE) ||
+            (XSCONV_xshr.NDET!=XSCONV_xsnew.NDET) ||
+            !VECTOR_Equal(XSCONV_xshr.lambda,XSCONV_xsnew.lambda,XSCONV_xsnew.NDET,(double)1.e-7))?1:0;
+
+      dispLFilter=(lowFilterType!=PRJCT_FILTER_TYPE_NONE)?1:0;
+      dispHFilter=(highFilterType!=PRJCT_FILTER_TYPE_NONE)?1:0;
+
+      nGraph=dispConv+dispLFilter+dispHFilter;
+      iGraph=0;
+
+      // -----------
+      // Convolution
+      // -----------
+
+      switch(pEngineContext->convolutionType)
+       {
+     // ----------------------------------------------------------------------
+        case CONVOLUTION_TYPE_NONE :
+         rc=XSCONV_TypeNone(&XSCONV_xsnew,&XSCONV_xshr);
+        break;
+     // ----------------------------------------------------------------------
+        case CONVOLUTION_TYPE_STANDARD :
+         rc=XSCONV_TypeStandard(&XSCONV_xsnew,0,XSCONV_xsnew.NDET,&XSCONV_xshr,&XSCONV_slitFunction,&XSCONV_xshr,NULL,slitType,slitWidth,slitParam,
+                                 pEngineContext->slitConv.slitParam2,pEngineContext->slitConv.slitParam3,pEngineContext->slitConv.slitParam4);
+        break;
+     // ----------------------------------------------------------------------
+        case CONVOLUTION_TYPE_I0_CORRECTION :
+          rc=XsconvTypeI0Correction(&XSCONV_xsnew,&XSCONV_xshr,&XSCONV_kurucz,&XSCONV_slitFunction,pEngineContext->conc,slitType,slitWidth,slitParam,pEngineContext->slitConv.slitParam2,pEngineContext->slitConv.slitParam3,pEngineContext->slitConv.slitParam4);
+        break;
+     // ----------------------------------------------------------------------
+     }
+
+      if (rc!=0)
+       goto EndConvolution;
+
+      if (dispConv)
+       {
+       	plot_data_t spectrumData[2];
+
+       	sprintf(windowTitle,"Original cross section : %s",pEngineContext->crossFile);
+
+        mediateAllocateAndSetPlotData(&spectrumData[0],XSCONV_xshr.lambda,XSCONV_xshr.vector,XSCONV_xshr.NDET,Line);
+        mediateAllocateAndSetPlotData(&spectrumData[1],XSCONV_xsnew.lambda+nFilter,XSCONV_xsnew.vector+nFilter,XSCONV_xsnew.NDET-2*nFilter,Line);
+        mediateResponsePlotData(0,spectrumData,2,Spectrum,forceAutoScale,windowTitle,"Wavelength (nm)","",responseHandle);
+        mediateResponseLabelPage(0,(pEngineContext->convolutionType!=CONVOLUTION_TYPE_NONE)?"Spectrum after convolution":"Spectrum after interpolation","",responseHandle);
+        mediateReleasePlotData(spectrumData);
+       }
+
+      if (filterVector!=NULL)
+       memcpy(filterVector,XSCONV_xsnew.vector,XSCONV_xsnew.NDET*sizeof(double));
+
+      // ------------------
+      // Low-Pass filtering
+      // ------------------
+
+      if ((lowFilterType!=PRJCT_FILTER_TYPE_NONE) && (filterVector!=NULL) &&
+        (((lowFilterType==PRJCT_FILTER_TYPE_ODDEVEN) && !(rc=FILTER_OddEvenCorrection(XSCONV_xsnew.lambda,XSCONV_xsnew.vector,filterVector,XSCONV_xsnew.NDET))) ||
+         ((lowFilterType!=PRJCT_FILTER_TYPE_ODDEVEN) && !(rc=FILTER_Vector(plFilter,filterVector,filterVector,XSCONV_xsnew.NDET,PRJCT_FILTER_OUTPUT_LOW)))))
+       {
+       	#if defined (__WINDOAS_GUI_) && __WINDOAS_GUI_
+
+        SendMessage(CHILD_hwndFrame,WM_MDIACTIVATE,(WPARAM)CHILD_list[CHILD_WINDOW_SPECTRA].hwndChild,(LPARAM)0);
+        sprintf(windowTitle,"Original cross section : %s",FILES_RebuildFileName(fileName,pEngineContext->crossFile,1));
+        strcpy(graphTitle,"After low-pass filtering");
+
+        DRAW_Spectra(CHILD_WINDOW_SPECTRA,windowTitle,graphTitle,"Wavelength (nm)","",NULL,0,
+                    (double)0.,(double)0.,(double)0.,(double)0.,
+                     XSCONV_xsnew.lambda+nFilter,XSCONV_xsnew.vector+nFilter,XSCONV_xsnew.NDET-2*nFilter,DRAW_COLOR2,0,XSCONV_xsnew.NDET-2*nFilter-1,PS_SOLID,"Not filtered",
+                     XSCONV_xsnew.lambda+nFilter,filterVector+nFilter,XSCONV_xsnew.NDET-2*nFilter,DRAW_COLOR1,0,XSCONV_xsnew.NDET-2*nFilter-1,PS_SOLID,"Filtered",
+                     iGraph,1,nGraph,(iGraph==nGraph-1)?1:0);
+
+        iGraph++;
+
+        #endif
+       }
+
+      // -------------------
+      // High-Pass filtering
+      // -------------------
+
+      if ((highFilterType!=PRJCT_FILTER_TYPE_NONE) && (highFilterType!=PRJCT_FILTER_TYPE_ODDEVEN) && (filterVector!=NULL) &&
+         !(rc=FILTER_Vector(phFilter,filterVector,filterVector,XSCONV_xsnew.NDET,PRJCT_FILTER_OUTPUT_HIGH_SUB+phFilter->filterAction)))
+       {
+       	#if defined (__WINDOAS_GUI_) && __WINDOAS_GUI_
+
+        SendMessage(CHILD_hwndFrame,WM_MDIACTIVATE,(WPARAM)CHILD_list[CHILD_WINDOW_SPECTRA].hwndChild,(LPARAM)0);
+        sprintf(windowTitle,"Original cross section : %s",FILES_RebuildFileName(fileName,pEngineContext->crossFile,1));
+        strcpy(graphTitle,"After high-pass filtering");
+
+        DRAW_Spectra(CHILD_WINDOW_SPECTRA,windowTitle,graphTitle,"Wavelength (nm)","",NULL,0,
+                    (double)0.,(double)0.,(double)0.,(double)0.,
+                     XSCONV_xsnew.lambda+nFilter,filterVector+nFilter,XSCONV_xsnew.NDET-2*nFilter,DRAW_COLOR2,0,XSCONV_xsnew.NDET-2*nFilter-1,PS_SOLID,"",
+                     NULL,NULL,0,DRAW_COLOR1,0,0,PS_SOLID,"",
+                     iGraph,1,nGraph,(iGraph==nGraph-1)?1:0);
+
+        iGraph++;
+
+        #endif
+       }
+
+      // ----------------------------
+      // Save resulting cross section
+      // ----------------------------
+
+      #if defined (__WINDOAS_GUI_) && __WINDOAS_GUI_
+      XsconvSaveNew(hwndXsconv,&XSCONV_xsnew,filterVector,&XSCONV_options,nFilter);
+      #endif
+     }
+   }
+
+  EndConvolution :
+
+  // Release allocated buffers
+
+  XSCONV_Reset(&XSCONV_xsnew);
+  XSCONV_Reset(&XSCONV_slitFunction);
+  XSCONV_Reset(&XSCONV_slitDFunction);
+  XSCONV_Reset(&XSCONV_xshr);
+  XSCONV_Reset(&XSCONV_kurucz);
+
+  if (filterVector!=NULL)
+   MEMORY_ReleaseDVector("XSCONV_Convolution ","filterVector",filterVector,0);
+
+  if (plFilter->filterFunction!=NULL)
+   {
+    MEMORY_ReleaseDVector("XSCONV_Convolution ","FILTER_function",plFilter->filterFunction,1);
+    plFilter->filterFunction=NULL;
+   }
+
+  if (phFilter->filterFunction!=NULL)
+   {
+    MEMORY_ReleaseDVector("XSCONV_Convolution ","FILTER_function",phFilter->filterFunction,1);
+    phFilter->filterFunction=NULL;
+   }
+
+  // Return
+
+  return rc;
+ }
 // QDOAS ???
 // QDOAS ??? #if defined (__WINDOAS_GUI_) && __WINDOAS_GUI_
 // QDOAS ???
@@ -3210,12 +3194,12 @@ RC XsconvNewSlitFunction(SLIT *pSlitOptions,XS *pSlit,double slitParam,SLIT *pSl
 // QDOAS ???
 // QDOAS ???   // Rebuild files names
 // QDOAS ???
-// QDOAS ???   FILES_RebuildFileName(XSCONV_buffer.calibrationFile,XSCONV_options.calibrationFile,1);
-// QDOAS ???   FILES_RebuildFileName(XSCONV_buffer.crossFile,XSCONV_options.crossFile,1);
-// QDOAS ???   FILES_RebuildFileName(XSCONV_buffer.path,XSCONV_options.path,1);
-// QDOAS ???   FILES_RebuildFileName(XSCONV_buffer.kuruczFile,XSCONV_options.kuruczFile,1);
-// QDOAS ???   FILES_RebuildFileName(XSCONV_buffer.slitConv.slitFile,XSCONV_options.slitConv.slitFile,1);
-// QDOAS ???   FILES_RebuildFileName(XSCONV_buffer.slitDConv.slitFile,XSCONV_options.slitDConv.slitFile,1);
+// QDOAS ???   FILES_RebuildFileName(XSCONV_buffer.calibrationFile,pEngineContext->calibrationFile,1);
+// QDOAS ???   FILES_RebuildFileName(XSCONV_buffer.crossFile,pEngineContext->crossFile,1);
+// QDOAS ???   FILES_RebuildFileName(XSCONV_buffer.path,pEngineContext->path,1);
+// QDOAS ???   FILES_RebuildFileName(XSCONV_buffer.kuruczFile,pEngineContext->kuruczFile,1);
+// QDOAS ???   FILES_RebuildFileName(XSCONV_buffer.slitConv.slitFile,pEngineContext->slitConv.slitFile,1);
+// QDOAS ???   FILES_RebuildFileName(XSCONV_buffer.slitDConv.slitFile,pEngineContext->slitDConv.slitFile,1);
 // QDOAS ???
 // QDOAS ???   // Set first tab page
 // QDOAS ???
@@ -3453,12 +3437,12 @@ RC XsconvNewSlitFunction(SLIT *pSlitOptions,XS *pSlit,double slitParam,SLIT *pSl
 // QDOAS ???
 // QDOAS ???     memcpy(&XSCONV_options,&XSCONV_buffer,sizeof(XSCONV));
 // QDOAS ???
-// QDOAS ???     FILES_ChangePath(XSCONV_options.calibrationFile,XSCONV_buffer.calibrationFile,1);
-// QDOAS ???     FILES_ChangePath(XSCONV_options.crossFile,XSCONV_buffer.crossFile,1);
-// QDOAS ???     FILES_ChangePath(XSCONV_options.path,XSCONV_buffer.path,1);
-// QDOAS ???     FILES_ChangePath(XSCONV_options.kuruczFile,XSCONV_buffer.kuruczFile,1);
-// QDOAS ???     FILES_ChangePath(XSCONV_options.slitConv.slitFile,XSCONV_buffer.slitConv.slitFile,1);
-// QDOAS ???     FILES_ChangePath(XSCONV_options.slitDConv.slitFile,XSCONV_buffer.slitDConv.slitFile,1);
+// QDOAS ???     FILES_ChangePath(pEngineContext->calibrationFile,XSCONV_buffer.calibrationFile,1);
+// QDOAS ???     FILES_ChangePath(pEngineContext->crossFile,XSCONV_buffer.crossFile,1);
+// QDOAS ???     FILES_ChangePath(pEngineContext->path,XSCONV_buffer.path,1);
+// QDOAS ???     FILES_ChangePath(pEngineContext->kuruczFile,XSCONV_buffer.kuruczFile,1);
+// QDOAS ???     FILES_ChangePath(pEngineContext->slitConv.slitFile,XSCONV_buffer.slitConv.slitFile,1);
+// QDOAS ???     FILES_ChangePath(pEngineContext->slitDConv.slitFile,XSCONV_buffer.slitDConv.slitFile,1);
 // QDOAS ???
 // QDOAS ???     XSCONV_Convolution(hwndXsconv);
 // QDOAS ???
@@ -3650,7 +3634,7 @@ RC XsconvNewSlitFunction(SLIT *pSlitOptions,XS *pSlit,double slitParam,SLIT *pSl
 // QDOAS ???
 // QDOAS ???   // Low-pass filtering
 // QDOAS ???
-// QDOAS ???   plFilter=&XSCONV_options.lfilter;
+// QDOAS ???   plFilter=&pEngineContext->lfilter;
 // QDOAS ???
 // QDOAS ???   plFilter->fwhmWidth=                                                          // fwhm width for gaussian
 // QDOAS ???   plFilter->kaiserCutoff=                                                       // cutoff frequency for kaiser filter type
@@ -3660,7 +3644,7 @@ RC XsconvNewSlitFunction(SLIT *pSlitOptions,XS *pSlit,double slitParam,SLIT *pSl
 // QDOAS ???
 // QDOAS ???   // High-pass filtering
 // QDOAS ???
-// QDOAS ???   phFilter=&XSCONV_options.hfilter;
+// QDOAS ???   phFilter=&pEngineContext->hfilter;
 // QDOAS ???
 // QDOAS ???   phFilter->fwhmWidth=                                                          // fwhm width for gaussian
 // QDOAS ???   phFilter->kaiserCutoff=                                                       // cutoff frequency for kaiser filter type
@@ -3707,60 +3691,60 @@ RC XsconvNewSlitFunction(SLIT *pSlitOptions,XS *pSlit,double slitParam,SLIT *pSl
 // QDOAS ???     if (sscanf(text,"%d,%[^','],%[^','],%[^','],%[^','],%[^','],%d,%d,%lf,%lf,%[^','],%d,%lf,%lf,%[^','],%lf,%d,%f,%f,%f,%f,%d,%d,%d,%d,%d,%f,%f,%f,%f,%d,%d,%d,%d,%lf,%lf,%lf,%lf",
 // QDOAS ???
 // QDOAS ???                                                                                 // GENERAL
-// QDOAS ???               (INT *)&XSCONV_options.convolutionType,                           // type of convolution (none, standard, I0 correction)
-// QDOAS ???             (UCHAR *) XSCONV_options.shift,                                     // shift to apply to the original cross section
-// QDOAS ???             (UCHAR *) XSCONV_options.crossFile,                                 // the name of the high-resoluted cross section file
-// QDOAS ???             (UCHAR *) XSCONV_options.path,                                      // the output path
-// QDOAS ???             (UCHAR *) XSCONV_options.calibrationFile,                           // the name of the wavelength calibration file
-// QDOAS ???             (UCHAR *) XSCONV_options.kuruczFile,                                // the name of the high resoluted solar spectrum file (I0 correction)
-// QDOAS ???               (INT *)&XSCONV_options.noComment,                                 // flag, 1 to save no comment lines in the output file
+// QDOAS ???               (INT *)&pEngineContext->convolutionType,                           // type of convolution (none, standard, I0 correction)
+// QDOAS ???             (UCHAR *) pEngineContext->shift,                                     // shift to apply to the original cross section
+// QDOAS ???             (UCHAR *) pEngineContext->crossFile,                                 // the name of the high-resoluted cross section file
+// QDOAS ???             (UCHAR *) pEngineContext->path,                                      // the output path
+// QDOAS ???             (UCHAR *) pEngineContext->calibrationFile,                           // the name of the wavelength calibration file
+// QDOAS ???             (UCHAR *) pEngineContext->kuruczFile,                                // the name of the high resoluted solar spectrum file (I0 correction)
+// QDOAS ???               (INT *)&pEngineContext->noComment,                                 // flag, 1 to save no comment lines in the output file
 // QDOAS ???
 // QDOAS ???                                                                                 // SLIT FUNCTION
-// QDOAS ???               (INT *)&XSCONV_options.slitConv.slitType,                         // the type of the slit function to convolute the cross section
-// QDOAS ???            (double *)&XSCONV_options.slitConv.slitParam,                        // the first parameter
-// QDOAS ???            (double *)&XSCONV_options.slitConv.slitParam2,                       // the second parameter
-// QDOAS ???             (UCHAR *) XSCONV_options.slitConv.slitFile,                         // the name of the slit function file
-// QDOAS ???               (INT *)&XSCONV_options.slitDConv.slitType,                        // the type of the slit function to deconvolute the cross section
-// QDOAS ???            (double *)&XSCONV_options.slitDConv.slitParam,                       // the first parameter (deconvolution)
-// QDOAS ???            (double *)&XSCONV_options.slitDConv.slitParam2,                      // the second parameter (deconvolution)
-// QDOAS ???             (UCHAR *) XSCONV_options.slitDConv.slitFile,                        // the name of the slit function file (deconvolution)
-// QDOAS ???            (double *)&XSCONV_options.conc,                                      // concentration to use (I0 correction)
+// QDOAS ???               (INT *)&pEngineContext->slitConv.slitType,                         // the type of the slit function to convolute the cross section
+// QDOAS ???            (double *)&pEngineContext->slitConv.slitParam,                        // the first parameter
+// QDOAS ???            (double *)&pEngineContext->slitConv.slitParam2,                       // the second parameter
+// QDOAS ???             (UCHAR *) pEngineContext->slitConv.slitFile,                         // the name of the slit function file
+// QDOAS ???               (INT *)&pEngineContext->slitDConv.slitType,                        // the type of the slit function to deconvolute the cross section
+// QDOAS ???            (double *)&pEngineContext->slitDConv.slitParam,                       // the first parameter (deconvolution)
+// QDOAS ???            (double *)&pEngineContext->slitDConv.slitParam2,                      // the second parameter (deconvolution)
+// QDOAS ???             (UCHAR *) pEngineContext->slitDConv.slitFile,                        // the name of the slit function file (deconvolution)
+// QDOAS ???            (double *)&pEngineContext->conc,                                      // concentration to use (I0 correction)
 // QDOAS ???
 // QDOAS ???                                                                                 // LOW-PASS FILTERING
-// QDOAS ???               (int *)&XSCONV_options.lfilter.type,                              // type of filter
-// QDOAS ???             (float *)&XSCONV_options.lfilter.fwhmWidth,                         // fwhm width for gaussian filters
-// QDOAS ???             (float *)&XSCONV_options.lfilter.kaiserCutoff,                      // cutoff frequency for kaiser filter type
-// QDOAS ???             (float *)&XSCONV_options.lfilter.kaiserPassBand,                    // pass band for kaiser filter type
-// QDOAS ???             (float *)&XSCONV_options.lfilter.kaiserTolerance,                   // tolerance for kaiser filter type
-// QDOAS ???               (int *)&XSCONV_options.lfilter.filterWidth,                       // filter width for boxcar, triangle and Savitsky-Golay filters
-// QDOAS ???               (int *)&XSCONV_options.lfilter.filterOrder,                       // filter order for Savitsky-Golay filters
-// QDOAS ???               (int *)&XSCONV_options.conversionMode,                            // conversion mode (vacuum to air or air to vacuum)
-// QDOAS ???               (int *)&XSCONV_options.lfilter.filterNTimes,                      // the number of times the filter has to be applied
+// QDOAS ???               (int *)&pEngineContext->lfilter.type,                              // type of filter
+// QDOAS ???             (float *)&pEngineContext->lfilter.fwhmWidth,                         // fwhm width for gaussian filters
+// QDOAS ???             (float *)&pEngineContext->lfilter.kaiserCutoff,                      // cutoff frequency for kaiser filter type
+// QDOAS ???             (float *)&pEngineContext->lfilter.kaiserPassBand,                    // pass band for kaiser filter type
+// QDOAS ???             (float *)&pEngineContext->lfilter.kaiserTolerance,                   // tolerance for kaiser filter type
+// QDOAS ???               (int *)&pEngineContext->lfilter.filterWidth,                       // filter width for boxcar, triangle and Savitsky-Golay filters
+// QDOAS ???               (int *)&pEngineContext->lfilter.filterOrder,                       // filter order for Savitsky-Golay filters
+// QDOAS ???               (int *)&pEngineContext->conversionMode,                            // conversion mode (vacuum to air or air to vacuum)
+// QDOAS ???               (int *)&pEngineContext->lfilter.filterNTimes,                      // the number of times the filter has to be applied
 // QDOAS ???
 // QDOAS ???                                                                                 // HIGH-PASS FILTERING
-// QDOAS ???               (int *)&XSCONV_options.hfilter.type,                              // type of filter
-// QDOAS ???             (float *)&XSCONV_options.hfilter.fwhmWidth,                         // fwhm width for gaussian filters
-// QDOAS ???             (float *)&XSCONV_options.hfilter.kaiserCutoff,                      // cutoff frequency for kaiser filter type
-// QDOAS ???             (float *)&XSCONV_options.hfilter.kaiserPassBand,                    // pass band for kaiser filter type
-// QDOAS ???             (float *)&XSCONV_options.hfilter.kaiserTolerance,                   // tolerance for kaiser filter type
-// QDOAS ???               (int *)&XSCONV_options.hfilter.filterWidth,                       // filter width for boxcar, triangle and Savitsky-Golay filters
-// QDOAS ???               (int *)&XSCONV_options.hfilter.filterOrder,                       // filter order for Savitsky-Golay filters
-// QDOAS ???               (int *)&XSCONV_options.hfilter.filterNTimes,                      // the number of times the filter has to be applied
-// QDOAS ???               (int *)&XSCONV_options.hfilter.filterAction,                      // action according to the analysis mode (substraction or division)
+// QDOAS ???               (int *)&pEngineContext->hfilter.type,                              // type of filter
+// QDOAS ???             (float *)&pEngineContext->hfilter.fwhmWidth,                         // fwhm width for gaussian filters
+// QDOAS ???             (float *)&pEngineContext->hfilter.kaiserCutoff,                      // cutoff frequency for kaiser filter type
+// QDOAS ???             (float *)&pEngineContext->hfilter.kaiserPassBand,                    // pass band for kaiser filter type
+// QDOAS ???             (float *)&pEngineContext->hfilter.kaiserTolerance,                   // tolerance for kaiser filter type
+// QDOAS ???               (int *)&pEngineContext->hfilter.filterWidth,                       // filter width for boxcar, triangle and Savitsky-Golay filters
+// QDOAS ???               (int *)&pEngineContext->hfilter.filterOrder,                       // filter order for Savitsky-Golay filters
+// QDOAS ???               (int *)&pEngineContext->hfilter.filterNTimes,                      // the number of times the filter has to be applied
+// QDOAS ???               (int *)&pEngineContext->hfilter.filterAction,                      // action according to the analysis mode (substraction or division)
 // QDOAS ???
-// QDOAS ???            (double *)&XSCONV_options.slitConv.slitParam3,                       // third parameter (convolution with Voigt function)
-// QDOAS ???            (double *)&XSCONV_options.slitConv.slitParam4,                       // fourth parameter (convolution with Voigt function)
-// QDOAS ???            (double *)&XSCONV_options.slitDConv.slitParam3,                      // third parameter (deconvolution with Voigt function)
-// QDOAS ???            (double *)&XSCONV_options.slitDConv.slitParam4)>=1)                  // fourth parameter (deconvolution with Voigt function)
+// QDOAS ???            (double *)&pEngineContext->slitConv.slitParam3,                       // third parameter (convolution with Voigt function)
+// QDOAS ???            (double *)&pEngineContext->slitConv.slitParam4,                       // fourth parameter (convolution with Voigt function)
+// QDOAS ???            (double *)&pEngineContext->slitDConv.slitParam3,                      // third parameter (deconvolution with Voigt function)
+// QDOAS ???            (double *)&pEngineContext->slitDConv.slitParam4)>=1)                  // fourth parameter (deconvolution with Voigt function)
 // QDOAS ???      {
 // QDOAS ???      	// Compact the files names
 // QDOAS ???
-// QDOAS ???       FILES_CompactPath(XSCONV_options.crossFile,XSCONV_options.crossFile,1,1);
-// QDOAS ???       FILES_CompactPath(XSCONV_options.path,XSCONV_options.path,1,1);
-// QDOAS ???       FILES_CompactPath(XSCONV_options.calibrationFile,XSCONV_options.calibrationFile,1,1);
-// QDOAS ???       FILES_CompactPath(XSCONV_options.kuruczFile,XSCONV_options.kuruczFile,1,1);
-// QDOAS ???       FILES_CompactPath(XSCONV_options.slitConv.slitFile,XSCONV_options.slitConv.slitFile,1,1);
-// QDOAS ???       FILES_CompactPath(XSCONV_options.slitDConv.slitFile,XSCONV_options.slitDConv.slitFile,1,1);
+// QDOAS ???       FILES_CompactPath(pEngineContext->crossFile,pEngineContext->crossFile,1,1);
+// QDOAS ???       FILES_CompactPath(pEngineContext->path,pEngineContext->path,1,1);
+// QDOAS ???       FILES_CompactPath(pEngineContext->calibrationFile,pEngineContext->calibrationFile,1,1);
+// QDOAS ???       FILES_CompactPath(pEngineContext->kuruczFile,pEngineContext->kuruczFile,1,1);
+// QDOAS ???       FILES_CompactPath(pEngineContext->slitConv.slitFile,pEngineContext->slitConv.slitFile,1,1);
+// QDOAS ???       FILES_CompactPath(pEngineContext->slitDConv.slitFile,pEngineContext->slitDConv.slitFile,1,1);
 // QDOAS ???      }
 // QDOAS ???    }
 // QDOAS ???
@@ -3785,49 +3769,49 @@ RC XsconvNewSlitFunction(SLIT *pSlitOptions,XS *pSlit,double slitParam,SLIT *pSl
 // QDOAS ???               XSCONV_SECTION,                                                   // convolution key name
 // QDOAS ???
 // QDOAS ???                                                                                 // GENERAL
-// QDOAS ???               XSCONV_options.convolutionType,                                   // type of convolution (none, standard, I0 correction)
-// QDOAS ???               XSCONV_options.shift,                                             // shift to apply to the original cross section
-// QDOAS ???               XSCONV_options.crossFile,                                         // the name of the high-resoluted cross section file
-// QDOAS ???               XSCONV_options.path,                                              // the output path
-// QDOAS ???               XSCONV_options.calibrationFile,                                   // the name of the wavelength calibration file
-// QDOAS ???               XSCONV_options.kuruczFile,                                        // the name of the high resoluted solar spectrum file (I0 correction)
-// QDOAS ???               XSCONV_options.noComment,                                         // flag, 1 to save no comment lines in the output file
+// QDOAS ???               pEngineContext->convolutionType,                                   // type of convolution (none, standard, I0 correction)
+// QDOAS ???               pEngineContext->shift,                                             // shift to apply to the original cross section
+// QDOAS ???               pEngineContext->crossFile,                                         // the name of the high-resoluted cross section file
+// QDOAS ???               pEngineContext->path,                                              // the output path
+// QDOAS ???               pEngineContext->calibrationFile,                                   // the name of the wavelength calibration file
+// QDOAS ???               pEngineContext->kuruczFile,                                        // the name of the high resoluted solar spectrum file (I0 correction)
+// QDOAS ???               pEngineContext->noComment,                                         // flag, 1 to save no comment lines in the output file
 // QDOAS ???
 // QDOAS ???                                                                                 // SLIT FUNCTION
-// QDOAS ???               XSCONV_options.slitConv.slitType,                                 // the type of the slit function to convolute the cross section
-// QDOAS ???               XSCONV_options.slitConv.slitParam,                                // the first parameter
-// QDOAS ???               XSCONV_options.slitConv.slitParam2,                               // the second parameter
-// QDOAS ???               XSCONV_options.slitConv.slitFile,                                 // the name of the slit function file
-// QDOAS ???               XSCONV_options.slitDConv.slitType,                                // the type of the slit function to deconvolute the cross section
-// QDOAS ???               XSCONV_options.slitDConv.slitParam,                               // the first parameter (deconvolution)
-// QDOAS ???               XSCONV_options.slitDConv.slitParam2,                              // the second parameter (deconvolution)
-// QDOAS ???               XSCONV_options.slitDConv.slitFile,                                // the name of the slit function file (deconvolution)
-// QDOAS ???               XSCONV_options.conc,                                              // concentration to use (I0 correction)
+// QDOAS ???               pEngineContext->slitConv.slitType,                                 // the type of the slit function to convolute the cross section
+// QDOAS ???               pEngineContext->slitConv.slitParam,                                // the first parameter
+// QDOAS ???               pEngineContext->slitConv.slitParam2,                               // the second parameter
+// QDOAS ???               pEngineContext->slitConv.slitFile,                                 // the name of the slit function file
+// QDOAS ???               pEngineContext->slitDConv.slitType,                                // the type of the slit function to deconvolute the cross section
+// QDOAS ???               pEngineContext->slitDConv.slitParam,                               // the first parameter (deconvolution)
+// QDOAS ???               pEngineContext->slitDConv.slitParam2,                              // the second parameter (deconvolution)
+// QDOAS ???               pEngineContext->slitDConv.slitFile,                                // the name of the slit function file (deconvolution)
+// QDOAS ???               pEngineContext->conc,                                              // concentration to use (I0 correction)
 // QDOAS ???
 // QDOAS ???                                                                                 // LOW-PASS FILTERING
-// QDOAS ???          (INT)XSCONV_options.lfilter.type,                                      // type of filter
-// QDOAS ???               XSCONV_options.lfilter.fwhmWidth,                                 // fwhm width for gaussian filters
-// QDOAS ???               XSCONV_options.lfilter.kaiserCutoff,                              // cutoff frequency for kaiser filter type
-// QDOAS ???               XSCONV_options.lfilter.kaiserPassBand,                            // pass band for kaiser filter type
-// QDOAS ???               XSCONV_options.lfilter.kaiserTolerance,                           // tolerance for kaiser filter type
-// QDOAS ???               XSCONV_options.lfilter.filterWidth,                               // filter width for boxcar, triangle and Savitsky-Golay filters
-// QDOAS ???               XSCONV_options.lfilter.filterOrder,                               // filter order for Savitsky-Golay filters
-// QDOAS ???               XSCONV_options.conversionMode,                                    // conversion mode (vacuum to air or air to vacuum)
-// QDOAS ???               XSCONV_options.lfilter.filterNTimes,                              // the number of times the filter has to be applied
+// QDOAS ???          (INT)pEngineContext->lfilter.type,                                      // type of filter
+// QDOAS ???               pEngineContext->lfilter.fwhmWidth,                                 // fwhm width for gaussian filters
+// QDOAS ???               pEngineContext->lfilter.kaiserCutoff,                              // cutoff frequency for kaiser filter type
+// QDOAS ???               pEngineContext->lfilter.kaiserPassBand,                            // pass band for kaiser filter type
+// QDOAS ???               pEngineContext->lfilter.kaiserTolerance,                           // tolerance for kaiser filter type
+// QDOAS ???               pEngineContext->lfilter.filterWidth,                               // filter width for boxcar, triangle and Savitsky-Golay filters
+// QDOAS ???               pEngineContext->lfilter.filterOrder,                               // filter order for Savitsky-Golay filters
+// QDOAS ???               pEngineContext->conversionMode,                                    // conversion mode (vacuum to air or air to vacuum)
+// QDOAS ???               pEngineContext->lfilter.filterNTimes,                              // the number of times the filter has to be applied
 // QDOAS ???
 // QDOAS ???                                                                                 // HIGH-PASS FILTERING
-// QDOAS ???          (INT)XSCONV_options.hfilter.type,                                      // type of filter
-// QDOAS ???               XSCONV_options.hfilter.fwhmWidth,                                 // fwhm width for gaussian filters
-// QDOAS ???               XSCONV_options.hfilter.kaiserCutoff,                              // cutoff frequency for kaiser filter type
-// QDOAS ???               XSCONV_options.hfilter.kaiserPassBand,                            // pass band for kaiser filter type
-// QDOAS ???               XSCONV_options.hfilter.kaiserTolerance,                           // tolerance for kaiser filter type
-// QDOAS ???               XSCONV_options.hfilter.filterWidth,                               // filter width for boxcar, triangle and Savitsky-Golay filters
-// QDOAS ???               XSCONV_options.hfilter.filterOrder,                               // filter order for Savitsky-Golay filters
-// QDOAS ???               XSCONV_options.hfilter.filterNTimes,                              // the number of times the filter has to be applied
-// QDOAS ???               XSCONV_options.hfilter.filterAction,                              // action according to the analysis mode (substraction or division)
+// QDOAS ???          (INT)pEngineContext->hfilter.type,                                      // type of filter
+// QDOAS ???               pEngineContext->hfilter.fwhmWidth,                                 // fwhm width for gaussian filters
+// QDOAS ???               pEngineContext->hfilter.kaiserCutoff,                              // cutoff frequency for kaiser filter type
+// QDOAS ???               pEngineContext->hfilter.kaiserPassBand,                            // pass band for kaiser filter type
+// QDOAS ???               pEngineContext->hfilter.kaiserTolerance,                           // tolerance for kaiser filter type
+// QDOAS ???               pEngineContext->hfilter.filterWidth,                               // filter width for boxcar, triangle and Savitsky-Golay filters
+// QDOAS ???               pEngineContext->hfilter.filterOrder,                               // filter order for Savitsky-Golay filters
+// QDOAS ???               pEngineContext->hfilter.filterNTimes,                              // the number of times the filter has to be applied
+// QDOAS ???               pEngineContext->hfilter.filterAction,                              // action according to the analysis mode (substraction or division)
 // QDOAS ???
-// QDOAS ???               XSCONV_options.slitConv.slitParam3,                               // third parameter (convolution with Voigt function)
-// QDOAS ???               XSCONV_options.slitConv.slitParam4,                               // fourth parameter (convolution with Voigt function)
-// QDOAS ???               XSCONV_options.slitDConv.slitParam3,                              // third parameter (deconvolution with Voigt function)
-// QDOAS ???               XSCONV_options.slitDConv.slitParam4);                             // fourth parameter (deconvolution with Voigt function)
+// QDOAS ???               pEngineContext->slitConv.slitParam3,                               // third parameter (convolution with Voigt function)
+// QDOAS ???               pEngineContext->slitConv.slitParam4,                               // fourth parameter (convolution with Voigt function)
+// QDOAS ???               pEngineContext->slitDConv.slitParam3,                              // third parameter (deconvolution with Voigt function)
+// QDOAS ???               pEngineContext->slitDConv.slitParam4);                             // fourth parameter (deconvolution with Voigt function)
 // QDOAS ???  }

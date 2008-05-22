@@ -74,6 +74,80 @@
 #define   MAXNP            150
 #define   EPS     (double)   2.2204e-016
 
+// -----------------------------------------------------
+// FILTER_OddEvenCorrection : Odd/Even pixels correction
+// -----------------------------------------------------
+
+RC FILTER_OddEvenCorrection(double *lambdaData,double *specData,double *output,INT vectorSize)
+ {
+  // Declarations
+
+  double *lambda,*spectrum,*spectrum2,*spec1,*spec2;
+  INDEX i;
+  RC rc;
+
+  // Buffers allocation
+
+  spectrum=spectrum2=spec1=spec2=NULL;
+
+  if (((lambda=(double *)MEMORY_AllocDVector("FILTER_OddEvenCorrection ","lambda",0,vectorSize-1))==NULL) ||
+      ((spectrum=(double *)MEMORY_AllocDVector("FILTER_OddEvenCorrection ","spectrum",0,vectorSize-1))==NULL) ||
+      ((spectrum2=(double *)MEMORY_AllocDVector("FILTER_OddEvenCorrection ","spectrum2",0,vectorSize-1))==NULL) ||
+      ((spec1=(double *)MEMORY_AllocDVector("FILTER_OddEvenCorrection ","spec1",0,vectorSize-1))==NULL) ||
+      ((spec2=(double *)MEMORY_AllocDVector("FILTER_OddEvenCorrection ","spec2",0,vectorSize-1))==NULL))
+
+   rc=ERROR_ID_ALLOC;
+
+  else
+   {
+    for (i=0;i<vectorSize/2;i++)
+     {
+      lambda[i]=lambdaData[(i<<1)];                  // odd pixels (0 based)
+      lambda[vectorSize/2+i]=lambdaData[(i<<1)+1];         // even pixels
+
+      spectrum[i]=specData[(i<<1)];                         // odd pixels (0 based)
+      spectrum[vectorSize/2+i]=specData[(i<<1)+1];                // even pixels
+     }
+
+    if (!(rc=SPLINE_Deriv2(lambda,spectrum,spectrum2,vectorSize/2,"PDA_OddEvenCorrection ")) &&
+        !(rc=SPLINE_Deriv2(lambda+(vectorSize/2),spectrum+(vectorSize/2),spectrum2+(vectorSize/2),vectorSize/2,"PDA_OddEvenCorrection (2) ")))
+     {
+      memcpy(spec1,specData,sizeof(double)*vectorSize);
+      memcpy(spec2,specData,sizeof(double)*vectorSize);
+
+      for (i=0;i<vectorSize/2;i++)
+
+       if (((rc=SPLINE_Vector(lambda+(vectorSize/2),spectrum+(vectorSize/2),spectrum2+(vectorSize/2),vectorSize/2,&lambdaData[(i<<1)],&spec1[(i<<1)],1,SPLINE_CUBIC,"FILTER_OddEvenCorrection "))!=0) ||
+           ((rc=SPLINE_Vector(lambda,spectrum,spectrum2,vectorSize/2,&lambdaData[(i<<1)+1],&spec2[(i<<1)+1],1,SPLINE_CUBIC,"FILTER_OddEvenCorrection "))!=0))
+
+        break;
+
+       else
+        {
+         output[(i<<1)]=(double)0.5*(spec1[(i<<1)]+spec2[(i<<1)]);
+         output[(i<<1)+1]=(double)0.5*(spec1[(i<<1)+1]+spec2[(i<<1)+1]);
+        }
+     }
+   }
+
+  // Release allocated buffers
+
+  if (lambda!=NULL)
+   MEMORY_ReleaseDVector("FILTER_OddEvenCorrection ","lambda",lambda,0);
+  if (spectrum!=NULL)
+   MEMORY_ReleaseDVector("FILTER_OddEvenCorrection ","spectrum",spectrum,0);
+  if (spectrum2!=NULL)
+   MEMORY_ReleaseDVector("FILTER_OddEvenCorrection ","spectrum2",spectrum2,0);
+  if (spec1!=NULL)
+   MEMORY_ReleaseDVector("FILTER_OddEvenCorrection ","spec1",spec1,0);
+  if (spec2!=NULL)
+   MEMORY_ReleaseDVector("FILTER_OddEvenCorrection ","spec2",spec2,0);
+
+  // Return
+
+  return rc;
+ }
+
 // -----------------------------------------------------------------------------
 // FUNCTION      fourier
 // -----------------------------------------------------------------------------

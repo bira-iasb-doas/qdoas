@@ -1638,80 +1638,6 @@ RC ThrdLoadInstrumental(ENGINE_CONTEXT *pEngineContext,UCHAR *instrFile,INT file
 // FILE PROCESSING
 // ===============
 
-// --------------------------------------------------
-// ThrdOddEvenCorrection : Odd/Even pixels correction
-// --------------------------------------------------
-
-RC THRD_OddEvenCorrection(double *lambdaData,double *specData,double *output,INT vectorSize)
- {
-  // Declarations
-
-  double *lambda,*spectrum,*spectrum2,*spec1,*spec2;
-  INDEX i;
-  RC rc;
-
-  // Buffers allocation
-
-  spectrum=spectrum2=spec1=spec2=NULL;
-
-  if (((lambda=(double *)MEMORY_AllocDVector("ThrdOddEvenCorrection ","lambda",0,vectorSize-1))==NULL) ||
-      ((spectrum=(double *)MEMORY_AllocDVector("ThrdOddEvenCorrection ","spectrum",0,vectorSize-1))==NULL) ||
-      ((spectrum2=(double *)MEMORY_AllocDVector("ThrdOddEvenCorrection ","spectrum2",0,vectorSize-1))==NULL) ||
-      ((spec1=(double *)MEMORY_AllocDVector("ThrdOddEvenCorrection ","spec1",0,vectorSize-1))==NULL) ||
-      ((spec2=(double *)MEMORY_AllocDVector("ThrdOddEvenCorrection ","spec2",0,vectorSize-1))==NULL))
-
-   rc=ERROR_ID_ALLOC;
-
-  else
-   {
-    for (i=0;i<vectorSize/2;i++)
-     {
-      lambda[i]=lambdaData[(i<<1)];                  // odd pixels (0 based)
-      lambda[vectorSize/2+i]=lambdaData[(i<<1)+1];         // even pixels
-
-      spectrum[i]=specData[(i<<1)];                         // odd pixels (0 based)
-      spectrum[vectorSize/2+i]=specData[(i<<1)+1];                // even pixels
-     }
-
-    if (!(rc=SPLINE_Deriv2(lambda,spectrum,spectrum2,vectorSize/2,"PDA_OddEvenCorrection ")) &&
-        !(rc=SPLINE_Deriv2(lambda+(vectorSize/2),spectrum+(vectorSize/2),spectrum2+(vectorSize/2),vectorSize/2,"PDA_OddEvenCorrection (2) ")))
-     {
-      memcpy(spec1,specData,sizeof(double)*vectorSize);
-      memcpy(spec2,specData,sizeof(double)*vectorSize);
-
-      for (i=0;i<vectorSize/2;i++)
-
-       if (((rc=SPLINE_Vector(lambda+(vectorSize/2),spectrum+(vectorSize/2),spectrum2+(vectorSize/2),vectorSize/2,&lambdaData[(i<<1)],&spec1[(i<<1)],1,SPLINE_CUBIC,"THRD_OddEvenCorrection "))!=0) ||
-           ((rc=SPLINE_Vector(lambda,spectrum,spectrum2,vectorSize/2,&lambdaData[(i<<1)+1],&spec2[(i<<1)+1],1,SPLINE_CUBIC,"THRD_OddEvenCorrection "))!=0))
-
-        break;
-
-       else
-        {
-         output[(i<<1)]=(double)0.5*(spec1[(i<<1)]+spec2[(i<<1)]);
-         output[(i<<1)+1]=(double)0.5*(spec1[(i<<1)+1]+spec2[(i<<1)+1]);
-        }
-     }
-   }
-
-  // Release allocated buffers
-
-  if (lambda!=NULL)
-   MEMORY_ReleaseDVector("ThrdOddEvenCorrection ","lambda",lambda,0);
-  if (spectrum!=NULL)
-   MEMORY_ReleaseDVector("ThrdOddEvenCorrection ","spectrum",spectrum,0);
-  if (spectrum2!=NULL)
-   MEMORY_ReleaseDVector("ThrdOddEvenCorrection ","spectrum2",spectrum2,0);
-  if (spec1!=NULL)
-   MEMORY_ReleaseDVector("ThrdOddEvenCorrection ","spec1",spec1,0);
-  if (spec2!=NULL)
-   MEMORY_ReleaseDVector("ThrdOddEvenCorrection ","spec2",spec2,0);
-
-  // Return
-
-  return rc;
- }
-
 // ------------------------------------------------------------------
 // THRD_SpectrumCorrection : Apply instrumental correction to spectra
 // ------------------------------------------------------------------
@@ -1729,7 +1655,7 @@ RC THRD_SpectrumCorrection(ENGINE_CONTEXT *pEngineContext,double *spectrum)
   // Odd even pixel correction
 
   if (pEngineContext->project.lfilter.type==PRJCT_FILTER_TYPE_ODDEVEN)
-   rc=THRD_OddEvenCorrection(pEngineContext->buffers.lambda,spectrum,spectrum,NDET);
+   rc=FILTER_OddEvenCorrection(pEngineContext->buffers.lambda,spectrum,spectrum,NDET);
 
   // Return
 
