@@ -469,6 +469,7 @@ void CWMain::slotOpenFile()
     errMsg = handler->messages();
   }
   delete handler;
+  delete source;
   delete file;
 
   if (!errMsg.isNull())

@@ -4,7 +4,7 @@
 
 TEMPLATE = subdirs
 
-SUBDIRS = qdoas convolution ring usamp
+SUBDIRS = qdoas convolution ring usamp cmdline
 
 CONFIG += ordered
 

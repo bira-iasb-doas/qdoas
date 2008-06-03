@@ -51,6 +51,9 @@ SOURCES += ../qdoas/CProjectConfigAnalysisWindowSubHandlers.cpp
 SOURCES += ../qdoas/CProjectConfigTreeNode.cpp
 SOURCES += ../qdoas/CProjectConfigItem.cpp
 SOURCES += ../qdoas/CWorkSpace.cpp
+
+SOURCES += ../convolution/CConvConfigHandler.cpp
+
 SOURCES += cmdline.cpp
 
 #----------------------------------------------
@@ -61,6 +64,8 @@ SOURCES += ../mediator/mediate.c
 SOURCES += ../mediator/mediate_common.c
 SOURCES += ../mediator/mediate_project.c
 SOURCES += ../mediator/mediate_analysis_window.c
+SOURCES += ../mediator/mediate_xsconv.c
+SOURCES += ../mediator/mediate_convolution.c
 
 #----------------------------------------------
 # Header files
@@ -89,6 +94,8 @@ HEADERS += ../qdoas/CProjectConfigTreeNode.h
 HEADERS += ../qdoas/CProjectConfigItem.h
 HEADERS += ../qdoas/CWorkSpace.h
 
+HEADERS += ../convolution/CConvConfigHandler.h
+
 #----------------------------------------------
 # Mediator Header files
 #----------------------------------------------
@@ -101,6 +108,7 @@ HEADERS += ../mediator/mediate_request.h
 HEADERS += ../mediator/mediate_common.h
 HEADERS += ../mediator/mediate_project.h
 HEADERS += ../mediator/mediate_analysis_window.h
+HEADERS += ../mediator/mediate_xsconv.h
 
 #----------------------------------------------
 # Reasource files
@@ -156,6 +164,7 @@ SOURCES += ../engine/winthrd.c
 SOURCES += ../engine/wintree.c
 SOURCES += ../engine/wvlen_det_pix.c
 SOURCES += ../engine/xsconv.c
+SOURCES += ../engine/engine_xsconv.c
 SOURCES += ../engine/zenithal.c
 
 #----------------------------------------------
@@ -171,3 +180,4 @@ HEADERS += ../engine/lv1c_struct.h
 HEADERS += ../engine/read1c_defs.h
 HEADERS += ../engine/utc_string.h
 HEADERS += ../engine/windoas.h  
+HEADERS += ../engine/engine_xsconv.h

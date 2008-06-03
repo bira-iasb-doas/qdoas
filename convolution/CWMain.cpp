@@ -46,9 +46,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "CConvConfigWriter.h"
 #include "CEngineResponse.h"
 
-#include "../mediator/mediate_response.h"
-#include "../mediator/mediate_types.h"
-#include "../mediator/mediate_xsconv.h"
+#include "mediate_response.h"
+#include "mediate_types.h"
+#include "mediate_xsconv.h"
 
 #include "debugutil.h"
 
@@ -64,7 +64,7 @@ CWMain::CWMain(QWidget *parent) :
   m_controller = new CConvEngineController(this);
 
   // Help system
-  m_helpInterface = CHelpSystem::establishHelpSystem(this); // this is the 'controller'
+  m_helpInterface = CHelpSystem::establishHelpSystem(this);
 
   QVBoxLayout *mainLayout = new QVBoxLayout(this);
   mainLayout->setMargin(0);
@@ -524,8 +524,6 @@ void CWMain::slotRunConvolution()
   QApplication::setOverrideCursor(Qt::WaitCursor);
 
   mediateRequestConvolution(engineContext, &m_guiProperties, resp);
-
-  XSCONV_Convolution((ENGINE_XSCONV_CONTEXT *)engineContext,resp);
 
   // process the response - the controller will dispatch ...
   resp->process(m_controller);

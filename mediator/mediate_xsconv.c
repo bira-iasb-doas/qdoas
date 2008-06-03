@@ -18,6 +18,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
+#include "mediate_types.h"
 #include "mediate_xsconv.h"
 
 // -----------------------------------------------------------------------------
@@ -61,9 +62,15 @@ int mediateRequestConvolution(void *engineContext,mediate_convolution_t *pMediat
   setMediateFilter(&pEngineContext->lfilter,&pMediateConvolution->lowpass);
   setMediateFilter(&pEngineContext->lfilter,&pMediateConvolution->highpass);
 
- 	// Return
+  // run the convolution
+  rc = XSCONV_Convolution(pEngineContext, responseHandle);
+ 
+  if (rc != ERROR_ID_NO) {
+    // Give some feedback about the error - TODO ...
+    mediateResponseErrorMessage("XSCONV_Convolution", "unknown", WarningEngineError, responseHandle);
+  }
 
- 	return rc;    // supposed that an error at the level of the load of projects stops the current session
+  return rc;    // supposed that an error at the level of the load of projects stops the current session
  }
 
 // -----------------------------------------------------------------------------

@@ -20,6 +20,10 @@
 #include "CProjectConfigTreeNode.h"
 #include "constants.h"
 
+#include "CConvConfigHandler.h"
+
+#include "mediate_xsconv.h"
+
 #include "QdoasVersion.h"
 #include "debugutil.h"
 
@@ -47,6 +51,7 @@ typedef struct commands
   QString configFile;
   QString projectName;
   QList<QString> filenames;
+  QString outputDir;
 } commands_t;
 
 //-------------------------------------------------------------------
@@ -61,9 +66,10 @@ int batchProcess(commands_t *cmd);
 
 int batchProcessQdoas(commands_t *cmd);
 int readConfigQdoas(commands_t *cmd, QList<const CProjectConfigItem*> &projectItems);
-int analyseProjectQdoas(const CProjectConfigItem *projItem, const QList<QString> &filenames);
-int analyseProjectQdoas(const CProjectConfigItem *projItem);
-int analyseProjectQdoasPrepare(void **engineContext, const CProjectConfigItem *projItem, CBatchEngineController *controller);
+int analyseProjectQdoas(const CProjectConfigItem *projItem,  const QString &outputDir, const QList<QString> &filenames);
+int analyseProjectQdoas(const CProjectConfigItem *projItem, const QString &outputDir);
+int analyseProjectQdoasPrepare(void **engineContext, const CProjectConfigItem *projItem, const QString &outputDir,
+			       CBatchEngineController *controller);
 int analyseProjectQdoasFile(void *engineContext, CBatchEngineController *controller, const QString &filename);
 int analyseProjectQdoasTreeNode(void *engineContext, CBatchEngineController *controller, const CProjectConfigTreeNode *node);
 int analyseProjectQdoasDirectory(void *engineContext, CBatchEngineController *controller, const QString &dir,
@@ -153,6 +159,16 @@ enum RunMode parseCommandLine(int argc, char **argv, commands_t *cmd)
 	}
 	
       }
+      else if (!strcmp(argv[i], "-o")) { // output directory ...
+	if (++i < argc && argv[i][0] != '-') {
+	  cmd->outputDir = argv[i];
+	}
+	else {
+	  runMode = Error;
+	  std::cout << "Option '-o' requires an argument (directory)." << std::endl;
+	}
+
+      }
       else if (!strcmp(argv[i], "-h")) { // help ...
 	runMode = Help;
       }
@@ -240,7 +256,7 @@ enum BatchTool requiredBatchTool(const QString &filename)
 
 void showUsage()
 {
-  std::cout << "cmdline -c <config file> [-p <project name>] [-f <file>]..." << std::endl << std::endl;
+  std::cout << "doas_cl -c <config file> [-p <project name>] [-o <output path>] [-f <file>]..." << std::endl << std::endl;
   std::cout << "    -c <config file>   : A Qdoas, convolution, ring or usamp config file." << std::endl;
   std::cout << "                         The tool to invoke is determined from the type of" << std::endl;
   std::cout << "                         configuration file specified." << std::endl;
@@ -272,7 +288,7 @@ int batchProcessQdoas(commands_t *cmd)
 
 	const CProjectConfigItem *p = projectItems.takeFirst();
 	
-	retCode = analyseProjectQdoas(p, cmd->filenames);
+	retCode = analyseProjectQdoas(p, cmd->outputDir, cmd->filenames);
 
 	delete p;
       }
@@ -284,7 +300,7 @@ int batchProcessQdoas(commands_t *cmd)
       // all projects ... all files ...
       const CProjectConfigItem *p = projectItems.takeFirst();
 
-      retCode = analyseProjectQdoas(p);
+      retCode = analyseProjectQdoas(p, cmd->outputDir);
 
       delete p;
     }
@@ -370,13 +386,14 @@ int readConfigQdoas(commands_t *cmd, QList<const CProjectConfigItem*> &projectIt
     retCode = 1;
   }
   delete handler;
+  delete source;
   delete file;
 
   return retCode;
 }
 
 
-int analyseProjectQdoas(const CProjectConfigItem *projItem, const QList<QString> &filenames)
+int analyseProjectQdoas(const CProjectConfigItem *projItem,  const QString &outputDir, const QList<QString> &filenames)
 {
   TRACE("analyseProjectQdoas(p, files)");
 
@@ -385,7 +402,7 @@ int analyseProjectQdoas(const CProjectConfigItem *projItem, const QList<QString>
 
   CBatchEngineController *controller = new CBatchEngineController;
 
-  retCode = analyseProjectQdoasPrepare(&engineContext, projItem, controller);
+  retCode = analyseProjectQdoasPrepare(&engineContext, projItem, outputDir, controller);
 
   if (retCode)
     return retCode;
@@ -412,7 +429,7 @@ int analyseProjectQdoas(const CProjectConfigItem *projItem, const QList<QString>
   return retCode;
 }
 
-int analyseProjectQdoas(const CProjectConfigItem *projItem)
+int analyseProjectQdoas(const CProjectConfigItem *projItem, const QString &outputDir)
 {
   TRACE("analyseProjectQdoas(p)");
 
@@ -421,7 +438,7 @@ int analyseProjectQdoas(const CProjectConfigItem *projItem)
 
   CBatchEngineController *controller = new CBatchEngineController;
 
-  retCode = analyseProjectQdoasPrepare(&engineContext, projItem, controller);
+  retCode = analyseProjectQdoasPrepare(&engineContext, projItem, outputDir, controller);
 
   if (retCode)
     return retCode;
@@ -443,7 +460,8 @@ int analyseProjectQdoas(const CProjectConfigItem *projItem)
   return retCode;
 }
 
-int analyseProjectQdoasPrepare(void **engineContext, const CProjectConfigItem *projItem, CBatchEngineController *controller)
+int analyseProjectQdoasPrepare(void **engineContext, const CProjectConfigItem *projItem, const QString &outputDir,
+			       CBatchEngineController *controller)
 {
   TRACE("analyseProjectQdoasPrepare");
 
@@ -455,6 +473,11 @@ int analyseProjectQdoasPrepare(void **engineContext, const CProjectConfigItem *p
 
   mediate_project_t projectData = *(projItem->properties()); // blot copy
   // TODO projectData.display.
+
+  if (!outputDir.isEmpty() && outputDir.size() < FILENAME_BUFFER_LENGTH-1) {
+    // override the output directory
+    strcpy(projectData.output.path, outputDir.toAscii().data());
+  }
 
   // create engine
   if (mediateRequestCreateEngineContext(engineContext, msgResp) != 0) {
@@ -551,8 +574,6 @@ int analyseProjectQdoasTreeNode(void *engineContext, CBatchEngineController *con
 {
   int retCode = 0;
 
-
-
   while (!retCode && node != NULL) {
 
     TRACE("analyseProjectQdoasTreeNode : " << node->name().toStdString());
@@ -582,7 +603,81 @@ int batchProcessConvolution(commands_t *cmd)
 {
   TRACE("batchProcessConvolution");
 
-  return 0;
+  int retCode = 0;
+
+  QFile *file = new QFile(cmd->configFile);
+
+  // parse the file
+  QXmlSimpleReader xmlReader;
+  QXmlInputSource *source = new QXmlInputSource(file);
+
+  CConvConfigHandler *handler = new CConvConfigHandler;
+  xmlReader.setContentHandler(handler);
+  xmlReader.setErrorHandler(handler);
+
+  bool ok = xmlReader.parse(source);
+  
+  if (ok) {
+    void *engineContext = NULL;
+
+    CEngineResponseMessage *resp = new CEngineResponseMessage;
+    CBatchEngineController *controller = new CBatchEngineController;
+
+    // copy the properties data ...
+    mediate_convolution_t properties = *(handler->properties()); // blot copy
+
+    if (!cmd->outputDir.isEmpty() && cmd->outputDir.size() < FILENAME_BUFFER_LENGTH-1) {
+      // override the output directory
+      strcpy(properties.general.outputFile, cmd->outputDir.toAscii().data());
+    }
+
+    if (mediateXsconvCreateContext(&engineContext, resp) != 0) {
+      retCode = 1;
+    }
+    else {
+
+      const QList<QString> &filenames = cmd->filenames;
+
+      if (!filenames.isEmpty()) {
+	
+	// loop over files ...
+	QList<QString>::const_iterator it = filenames.begin();
+	while (!retCode && it != filenames.end()) {
+	  
+	  if (!it->isEmpty() && it->size() < FILENAME_BUFFER_LENGTH-1) {
+	    strcpy(properties.general.inputFile, it->toAscii().data());
+
+	    retCode = mediateRequestConvolution(engineContext, &properties, resp);	  
+	    resp->process(controller);
+	  }
+
+	  ++it;
+	}
+	
+      }
+      else {
+	// use the current input file
+	retCode = mediateRequestConvolution(engineContext, &properties, resp);
+	resp->process(controller);
+      }
+
+      if (mediateXsconvDestroyContext(engineContext, resp) != 0) {
+	retCode = 1;
+      }
+    }
+    
+    delete resp;
+    delete controller;
+  }
+  else {
+    retCode = 1;
+  }
+
+  delete handler;
+  delete source;
+  delete file;
+
+  return retCode;
 }
 
 int batchProcessRing(commands_t *cmd)
