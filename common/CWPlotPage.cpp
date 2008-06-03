@@ -108,16 +108,17 @@ CWPlot::CWPlot(const RefCountConstPtr<CPlotDataSet> &dataSet,
   m_plotProperties(plotProperties),
   m_zoomer(NULL)
 {
-  QwtText tmpTitle = title();
-  QFont tmpFont = tmpTitle.font();
-  tmpFont.setPointSize(tmpFont.pointSize() - 1);
-  tmpTitle.setFont(tmpFont);
-  tmpTitle.setText(m_dataSet->plotTitle());
-  setTitle(tmpTitle);
+  // Example code for font changes ... TODO
+  //QwtText tmpTitle = title();
+  //QFont tmpFont = tmpTitle.font();
+  //tmpFont.setPointSize(tmpFont.pointSize() - 1);
+  //tmpTitle.setFont(tmpFont);
+  //tmpTitle.setText(m_dataSet->plotTitle());
+  //setTitle(tmpTitle);
 
   setFocusPolicy(Qt::ClickFocus); // TODO - prevents keyPressEvent
 
-  //setTitle(m_dataSet->plotTitle());
+  setTitle(m_dataSet->plotTitle());
   //setAxisTitle(QwtPlot::xBottom, m_dataSet->xAxisLabel());
   setAxisTitle(QwtPlot::yLeft, m_dataSet->yAxisLabel());
 
