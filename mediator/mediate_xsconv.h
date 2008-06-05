@@ -28,7 +28,7 @@ extern "C" {
 #endif
 
 void mediateRequestConvolution(void *engineContext,mediate_convolution_t *pMediateConvolution,void *responseHandle);
-RC   mediateConvolutionCalculate(QWidget *parent,void *engineContext,void *responseHandle);
+RC   mediateConvolutionCalculate(void *engineContext,void *responseHandle);
 
 int  mediateXsconvCreateContext(void **engineContext, void *responseHandle);
 int  mediateXsconvDestroyContext(void *engineContext, void *responseHandle);
