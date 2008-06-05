@@ -48,6 +48,10 @@
 #if !defined(__COMDEFS_)
 #define __COMDEFS_
 
+#if defined(_cplusplus) || defined(__cplusplus)
+extern "C" {
+#endif
+
 // ===================
 // COMPILATION CONTROL
 // ===================
@@ -253,6 +257,7 @@ SHORT_DATE;
 #define ERROR_ID_FILE_BAD_FORMAT                126                             // unknown file format
 #define ERROR_ID_FILE_BAD_LENGTH                127
 #define ERROR_ID_WAVELENGTH                     128                             // bad wavelength calibration in the input file
+#define ERROR_ID_FILE_OVERWRITE                 129                             // data not saved; change the output file name
 
 
 // Debug
@@ -543,5 +548,9 @@ int         STD_IsDir(char *filename);
 // QDOAS ??? void    DOAS_ListMoveSelectedItems(HWND hwndParent,ULONG listFrom,ULONG listTo);
 // QDOAS ???
 // QDOAS ??? RC      MSG_MessageBox(HWND hwnd,INT controlID,INT titleID,INT msgID,INT style,...);
+
+#if defined(_cplusplus) || defined(__cplusplus)
+}
+#endif
 
 #endif

@@ -108,6 +108,7 @@ ERROR_TABLE errorTable[]=
   { ERROR_ID_FILE_RECORD               , "the current file record doesn't match the spectra selection criteria"                                               },
   { ERROR_ID_FILE_BAD_FORMAT           , "the format of the file %s is unknown"                                                                               },
   { ERROR_ID_FILE_BAD_LENGTH           , "records of file %s do not have the expected size"                                                                   },
+  { ERROR_ID_FILE_OVERWRITE            , "data not saved; change the output file name"                                                                        },
   { ERROR_ID_WAVELENGTH                , "bad wavelength calibration in file %s"                                                                              },
 
   // Debug

@@ -664,15 +664,15 @@ void CWMain::slotErrorMessages(int highestLevel, const QString &messages)
 {
   switch (highestLevel) {
   case InformationEngineError:
-    QMessageBox::information(this, "Engine Information", messages);
+    QMessageBox::information(this, "QDOAS : Information", messages);
     break;
   case WarningEngineError:
-    QMessageBox::warning(this, "Engine Warning", messages);
+    QMessageBox::warning(this, "QDOAS : Warning", messages);
     break;
   case FatalEngineError:
   default:
     TRACE(messages.toStdString());
-    QMessageBox::critical(this, "Engine Fatal Error", messages);
+    QMessageBox::critical(this, "QDOAS : Fatal Error", messages);
     break;
   }
 }

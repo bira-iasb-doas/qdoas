@@ -20,6 +20,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include <cstring>
 
+
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QMenu>
@@ -32,7 +33,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QFileDialog>
 #include <QCloseEvent>
 #include <QApplication>
-
 #include "CWMain.h"
 #include "CWAboutDialog.h"
 #include "CHelpSystem.h"
@@ -46,9 +46,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "CConvConfigWriter.h"
 #include "CEngineResponse.h"
 
-#include "mediate_response.h"
-#include "mediate_types.h"
-#include "mediate_xsconv.h"
+#include "../mediator/mediate_response.h"
+#include "../mediator/mediate_types.h"
+#include "../mediator/mediate_xsconv.h"
 
 #include "debugutil.h"
 
@@ -495,14 +495,14 @@ void CWMain::slotErrorMessages(int highestLevel, const QString &messages)
 {
   switch (highestLevel) {
   case InformationEngineError:
-    QMessageBox::information(this, "Engine Information", messages);
+    QMessageBox::information(this, "Convolution tool : Information", messages);
     break;
   case WarningEngineError:
-    QMessageBox::warning(this, "Engine Warning", messages);
+    QMessageBox::warning(this, "Convolution tool : Warning", messages);
     break;
   case FatalEngineError:
   default:
-    QMessageBox::critical(this, "Engine Fatal Error", messages);
+    QMessageBox::critical(this, "Convolution tool : Fatal Error", messages);
     break;
   }
 }
@@ -521,14 +521,18 @@ void CWMain::slotRunConvolution()
     return;
   }
 
-  QApplication::setOverrideCursor(Qt::WaitCursor);
+  // QApplication::setOverrideCursor(Qt::WaitCursor);           commented by Caroline - obsolete, computers are fast enough now
+
+  // run the convolution
 
   mediateRequestConvolution(engineContext, &m_guiProperties, resp);
+  if (mediateConvolutionCalculate(this,engineContext,resp)!=ERROR_ID_NO)
+   ERROR_DisplayMessage(resp);
 
   // process the response - the controller will dispatch ...
   resp->process(m_controller);
 
-  QApplication::restoreOverrideCursor();
+  // QApplication::restoreOverrideCursor();
 
   if (mediateXsconvDestroyContext(engineContext, resp) != 0) {
     delete resp;
@@ -557,18 +561,4 @@ void CWMain::slotPlotPage(const RefCountConstPtr<CPlotPageData> &page)
 
     m_tab->setCurrentWidget(m_plotArea);
   }
-}
-
-
-void TODO_Junk_Test(void *engineContext, void *resp)
-{
-  plot_data_t dummy;
-  double xData[] = { 0.0, 1.1, 2.2, 3.3, 4.4, 5.5 };
-  double yData[] = { 3.0, 4.0, 3.5, 1.1, 1.4, 3.0 };
-
-  mediateAllocateAndSetPlotData(&dummy, xData, yData, 6, Line);
-
-  mediateResponsePlotData(0, &dummy, 1, Spectrum, 0, "Title", "X-Label", "Y-label", resp);
-
-  mediateReleasePlotData(&dummy);
 }

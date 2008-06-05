@@ -16,9 +16,6 @@ EXTERN INT            NDET;                                                     
 EXTERN UCHAR          ENGINE_dbgFile[MAX_PATH_LEN+1];                           // debug file
 EXTERN ENGINE_CONTEXT ENGINE_contextRef;                                        // copy of the engine context for the automatic search of the reference spectrum
 EXTERN double         ENGINE_localNoon;                                         // local noon
-EXTERN XSCONV         ENGINE_contextToolConvolution,                            // engine context for the convolution tool
-                      ENGINE_contextToolRing,                                   // engine context for the ring tool
-                      ENGINE_contextToolUndersampling;                          // engine context for the undersampling tool
 
 
 // ==========

@@ -1,5 +1,5 @@
 
-#include "doas.h"
+#include "../engine/doas.h"
 
 #ifndef _ENGINE_XSCONV_
 #define _ENGINE_XSCONV_
@@ -12,7 +12,41 @@ extern "C" {
 // DEFINITION OF CONSTANTS
 // =======================
 
-typedef XSCONV ENGINE_XSCONV_CONTEXT;
+typedef struct _enigneXsconvContext
+ {                                                                              // GENERAL OPTIONS
+  INT    convolutionType;                                                       // type of convolution
+  INT    conversionMode;                                                        // conversion mode
+  double shift;                                                                 // shift to apply to the original high resolution cross section
+  UCHAR  crossFile[MAX_PATH_LEN+1];                                             // high resolution cross section file
+  UCHAR  path[MAX_PATH_LEN+1];                                                  // output path
+  UCHAR  calibrationFile[MAX_PATH_LEN+1];                                       // calibration file
+  INT    noComment;                                                             // flag, 1 to save the convoluted cross section without comment
+
+                                                                                // I0 CORRECTION
+  UCHAR  kuruczFile[MAX_PATH_LEN+1];                                            // Kurucz file used when I0 correction is applied
+  double conc;                                                                  // concentration to use when applying I0 correction
+
+                                                                                // SLIT FUNCTION
+  SLIT   slitConv;                                                              // convolution slit function
+  SLIT   slitDConv;                                                             // deconvolution slit function
+
+                                                                                // FILTERING
+  PRJCT_FILTER lfilter;                                                         // low filtering options
+  PRJCT_FILTER hfilter;                                                         // high filtering options
+  double *filterVector;
+  INT nFilter;
+  XS xsNew;
+
+
+                                                                                // UNDERSAMPLING
+  INT    analysisMethod;                                                        // analysis method
+  UCHAR  path2[MAX_PATH_LEN+1];                                                 // output path for the second phase
+  double fraction;                                                              // tunes the phase
+
+                                                                                // RING
+  INT    temperature;                                                           // temperature
+ }
+ENGINE_XSCONV_CONTEXT;
 
 // ===================
 // GLOBAL DECLARATIONS

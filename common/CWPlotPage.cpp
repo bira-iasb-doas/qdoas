@@ -47,7 +47,7 @@ bool CWPlot::getImageSaveNameAndFormat(QWidget *parent, QString &fileName, QStri
   CPreferences *pref = CPreferences::instance();
 
   QFileDialog dialog(parent);
-  
+
   dialog.setFileMode(QFileDialog::AnyFile);
   dialog.setWindowTitle("Export as Image");;
   dialog.setDirectory(pref->directoryName("ExportPlot"));
@@ -109,21 +109,23 @@ CWPlot::CWPlot(const RefCountConstPtr<CPlotDataSet> &dataSet,
   m_zoomer(NULL)
 {
   // Example code for font changes ... TODO
-  //QwtText tmpTitle = title();
-  //QFont tmpFont = tmpTitle.font();
-  //tmpFont.setPointSize(tmpFont.pointSize() - 1);
-  //tmpTitle.setFont(tmpFont);
-  //tmpTitle.setText(m_dataSet->plotTitle());
-  //setTitle(tmpTitle);
+
+  QwtText tmpTitle = title();
+  QFont tmpFont = tmpTitle.font();
+  tmpFont.setPointSize(tmpFont.pointSize());
+  tmpTitle.setFont(tmpFont);
+  tmpTitle.setText(m_dataSet->plotTitle());
+  setTitle(tmpTitle);
 
   setFocusPolicy(Qt::ClickFocus); // TODO - prevents keyPressEvent
 
-  setTitle(m_dataSet->plotTitle());
+  //setTitle(m_dataSet->plotTitle());
   //setAxisTitle(QwtPlot::xBottom, m_dataSet->xAxisLabel());
+
   setAxisTitle(QwtPlot::yLeft, m_dataSet->yAxisLabel());
 
     // curves ...
-  
+
   int n = m_dataSet->count();
   int i = 0;
 
@@ -136,10 +138,10 @@ CWPlot::CWPlot(const RefCountConstPtr<CPlotDataSet> &dataSet,
 
       // the data is guaranteed to be valid for the life of this object
       curve->setRawData(curveData.xRawData(), curveData.yRawData(), curveData.size());
-      
+
       // configure curve's pen color based on index
       curve->setPen(m_plotProperties.pen((i%4) + 1));
-      
+
       if (curveData.curveType() == Point) {
 	curve->setStyle(QwtPlotCurve::NoCurve);
 	QwtSymbol sym = curve->symbol();
@@ -159,10 +161,10 @@ CWPlot::CWPlot(const RefCountConstPtr<CPlotDataSet> &dataSet,
   pen.setColor((m_plotProperties.backgroundColour().value() < 128) ? Qt::white : Qt::black);
   grid->setPen(pen);
   grid->attach(this);
-    
+
   // possibly apply fixed scaling
   if (!m_dataSet->forceAutoScaling()) {
-    
+
     if (m_plotProperties.scaleControl(m_dataSet->scaleType()).isFixedScale()) {
       setAxisScale(QwtPlot::yLeft,
 		   m_plotProperties.scaleControl(m_dataSet->scaleType()).minimum(),
@@ -187,7 +189,7 @@ void CWPlot::contextMenuEvent(QContextMenuEvent *e)
   if (childAt(e->pos()) != canvas()) {
 
     QMenu menu;
-    
+
     if (m_zoomer)
       menu.addAction("Non-Interactive", this, SLOT(slotToggleInteraction()));
     else
@@ -197,9 +199,9 @@ void CWPlot::contextMenuEvent(QContextMenuEvent *e)
     menu.addAction("Save As...", this, SLOT(slotSaveAs()));
     menu.addAction("Export As Image...", this, SLOT(slotExportAsImage()));
     menu.addAction("Print...", this, SLOT(slotPrint()));
-    
+
     menu.exec(e->globalPos()); // slot will do the rest
-    
+
     e->accept();
   }
   else
@@ -209,11 +211,11 @@ void CWPlot::contextMenuEvent(QContextMenuEvent *e)
 void CWPlot::slotOverlay()
 {
   CPreferences *pref = CPreferences::instance();
-  
+
   QString dirName = pref->directoryName("ASCII_Plot");
 
   QString filename = QFileDialog::getOpenFileName(this, "Overlay Plot(s)", dirName, "*.asc");
-  
+
   if (!filename.isEmpty()) {
     pref->setDirectoryNameGivenFile("ASCII_Plot", filename);
 
@@ -228,7 +230,7 @@ void CWPlot::slotOverlay()
 
       double *xData = NULL;
       double *yData = NULL;
-      
+
       // skip the header
       fgets(buffer, sizeof(buffer), fp);
 
@@ -240,7 +242,7 @@ void CWPlot::slotOverlay()
 	  if (fscanf(fp, "%d", &nPoints) == 1) {
 	    xData = new double[nPoints];
 	    yData = new double[nPoints];
-	    
+
 	    j = 0;
 	    while (j<nPoints && fscanf(fp, "%lf %lf", (xData+j), (yData+j)) == 2)
 	      ++j;
@@ -283,23 +285,23 @@ void CWPlot::slotOverlay()
       replot();
 
   }
-  
+
 }
 
 void CWPlot::slotSaveAs()
 {
   CPreferences *pref = CPreferences::instance();
-  
+
   QString dirName = pref->directoryName("ASCII_Plot");
 
   QString filename = QFileDialog::getSaveFileName(this, "Save Plot", dirName, " Ascii file (*.asc)");
-  
+
   if (!filename.isEmpty()) {
     if (!filename.contains('.'))
       filename += ".asc";
 
     pref->setDirectoryNameGivenFile("ASCII_Plot", filename);
-    
+
     FILE *fp = fopen(filename.toAscii().constData(), "w");
     if (fp != NULL) {
       int nCurves, nPoints, i, j;
@@ -314,7 +316,7 @@ void CWPlot::slotSaveAs()
 	nPoints = curveData.size();
 	if (nPoints > 0) {
 	  fprintf(fp, "%d\n", nPoints);
-	  
+
 	  j=0;
 	  while (j<nPoints) {
 	    fprintf(fp, "%13g  %13g\n", *(curveData.xRawData() + j), *(curveData.yRawData() + j));
@@ -344,7 +346,7 @@ void CWPlot::slotPrint()
   printer.setNumCopies(1);
 
   QPrintDialog dialog(&printer, this);
-    
+
   if (dialog.exec() == QDialog::Accepted) {
 
     // store printer preference
@@ -355,13 +357,13 @@ void CWPlot::slotPrint()
 
     QRect paper = printer.paperRect();
     QRect page = printer.pageRect();
-    
+
     const int cPageBorder = 150;
-    
+
     QRect tmp(cPageBorder, cPageBorder, page.width() - 2 * cPageBorder, page.height() - 2 * cPageBorder);
-    
+
     p.drawRect(tmp);
-    
+
     tmp.adjust(20, 20, -20, -20);
     print(&p, tmp);
   }
@@ -376,9 +378,9 @@ void CWPlot::slotExportAsImage()
 
     QImage img(size(), QImage::Format_RGB32); // image the same size as the plot widget.
     img.fill(0xffffffff);
-    
+
     print(img);
-    
+
     img.save(fileName, format.toAscii().constData());
   }
 }
@@ -437,7 +439,7 @@ void CWPlotPage::addPlot(const RefCountConstPtr<CPlotDataSet> &dataSet)
 
 void CWPlotPage::layoutPlots(const QSize &visibleSize)
 {
-  const int cBorderSize = 10;
+  const int cBorderSize = 15;
 
   // MUST have at least one plot for this to be meaningful
   if (m_plots.size() == 0)
@@ -464,25 +466,25 @@ void CWPlotPage::layoutPlots(const QSize &visibleSize)
     // calculate the size that fits nicely to the full width
     // make a local change to columns if too few plots to fill them...
     columns = (m_plots.size() < m_plotProperties.columns()) ? m_plots.size() : m_plotProperties.columns();
-    
+
 
     unitSize.setWidth((visibleSize.width() - cBorderSize * (columns+1)) / columns);
     // want 3:4 ratio
     unitSize.setHeight(3 * unitSize.width() / 4);
   }
 
-  // respect the minimum size
-  if (minUnitSize.isValid()) {
-    if (unitSize.isValid())
-      unitSize = unitSize.expandedTo(minUnitSize);
-    else
-      unitSize = minUnitSize;
-  }
-  
+ // // respect the minimum size                  Commented out by Caroline FAYT (3rd June 2008 on Ian's recommendation)
+ // if (minUnitSize.isValid()) {                  -> Do not respect the minimum size anymore (so the user is responsible to select the number
+ //   if (unitSize.isValid())                        of plots per column that fits the page
+ //     unitSize = unitSize.expandedTo(minUnitSize);
+ //   else
+ //     unitSize = minUnitSize;
+ // }
+
   // position and resize
   int fitWidth = unitSize.width() + cBorderSize;
   int fitHeight = unitSize.height() + cBorderSize;
-  
+
   int col = 0;
   int row = 0;
   it = m_plots.begin();
@@ -505,52 +507,52 @@ void CWPlotPage::slotPrintAllPlots()
   // MUST have at least one plot for this to be meaningful
   if (m_plots.size() == 0)
     return;
-  
+
   QPrinter printer(QPrinter::HighResolution);
-  
+
   printer.setPageSize(m_plotProperties.printPaperSize());
   printer.setOrientation(m_plotProperties.printPaperOrientation());
   printer.setNumCopies(1);
-  
+
   QPrintDialog dialog(&printer, this);
-  
+
   if (dialog.exec() == QDialog::Accepted) {
-    
+
     // store print preferences
     m_plotProperties.setPrintPaperSize(printer.pageSize());
     m_plotProperties.setPrintPaperOrientation(printer.orientation());
 
     QPainter p(&printer);
     p.setPen(QPen(QColor(Qt::black)));
-    
+
     QRect page = printer.pageRect();
-    
+
     // configure the plot rectangle
     const int cPageBorder = 150; // offset inside the drawable region of the page.
     const int cPlotBorder = 20;  // space between page border and plots, and between two plots.
-    
+
     QRect tmp(cPageBorder, cPageBorder, page.width() - 2 * cPageBorder, page.height() - 2 * cPageBorder);
-    
+
     p.drawRect(tmp);
-    
-    
+
+
     // work out the layout ... and size ...
-    
+
     if (m_plots.size() == 1) {
       // only one plot ...
       tmp.adjust(cPlotBorder, cPlotBorder, -cPlotBorder, -cPlotBorder);
       m_plots.front()->print(&p, tmp);
     }
     else {
-      
+
       // calculate the size that fits nicely to the full width
       // make a local change to columns if too few plots to fill them...
       int columns = (m_plots.size() < m_plotProperties.columns()) ? m_plots.size() : m_plotProperties.columns();
       int rows = m_plots.size() / columns + ((m_plots.size() % columns) ? 1 : 0);
-      
+
       int unitWidth = (tmp.width() - cPlotBorder * (columns+1)) / columns;
       int unitHeight = (tmp.height() - cPlotBorder * (rows+1)) / rows;
-      
+
       int col = 0;
       int row = 0;
       QList<CWPlot*>::iterator it = m_plots.begin();
@@ -558,7 +560,7 @@ void CWPlotPage::slotPrintAllPlots()
 	tmp = QRect(cPageBorder + cPlotBorder + col * (cPlotBorder + unitWidth),
 		    cPageBorder + cPlotBorder + row * (cPlotBorder + unitHeight),
 		    unitWidth, unitHeight);
-	
+
         (*it)->print(&p, tmp);
         if (++col == columns) {
           col = 0;
@@ -574,7 +576,7 @@ void CWPlotPage::slotExportAsImageAllPlots()
 {
   if (m_plots.size() == 0)
     return;
-  
+
   QString fileName;
   QString format;
 
@@ -588,7 +590,7 @@ void CWPlotPage::slotExportAsImageAllPlots()
 
     int columns = (m_plots.size() < m_plotProperties.columns()) ? m_plots.size() : m_plotProperties.columns();
     int rows = m_plots.size() / columns + ((m_plots.size() % columns) ? 1 : 0);
-      
+
     QList<CWPlot*>::iterator it = m_plots.begin();
     while (it != m_plots.end()) {
       plotSize = plotSize.expandedTo((*it)->size());
@@ -601,7 +603,7 @@ void CWPlotPage::slotExportAsImageAllPlots()
 
     QImage img(imgSize, QImage::Format_RGB32); // image the same size as the plot widget.
     img.fill(0xffffffff);
-    
+
     QPainter p(&img);
 
     int col = 0;
@@ -611,7 +613,7 @@ void CWPlotPage::slotExportAsImageAllPlots()
       QRect tmp(cPlotBorder + col * (cPlotBorder + plotSize.width()),
                 cPlotBorder + row * (cPlotBorder + plotSize.height()),
                 plotSize.width(), plotSize.height());
-	
+
       (*it)->print(&p, tmp);
       if (++col == columns) {
         col = 0;
@@ -619,7 +621,7 @@ void CWPlotPage::slotExportAsImageAllPlots()
       }
       ++it;
     }
-    
+
     img.save(fileName, format.toAscii().constData());
   }
 }

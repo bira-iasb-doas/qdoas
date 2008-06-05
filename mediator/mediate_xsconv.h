@@ -18,7 +18,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
 #include "mediate_convolution.h"
-#include "engine_xsconv.h"
+#include "../engine/engine_xsconv.h"
 
 #ifndef _MEDIATE_XSCONV_
 #define _MEDIATE_XSCONV_
@@ -27,10 +27,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 extern "C" {
 #endif
 
-int mediateRequestConvolution(void *engineContext,mediate_convolution_t *pMediateConvolution,void *responseHandle);
+void mediateRequestConvolution(void *engineContext,mediate_convolution_t *pMediateConvolution,void *responseHandle);
+RC   mediateConvolutionCalculate(QWidget *parent,void *engineContext,void *responseHandle);
 
-int mediateXsconvCreateContext(void **engineContext, void *responseHandle);
-int mediateXsconvDestroyContext(void *engineContext, void *responseHandle);
+int  mediateXsconvCreateContext(void **engineContext, void *responseHandle);
+int  mediateXsconvDestroyContext(void *engineContext, void *responseHandle);
 
 #if defined(_cplusplus) || defined(__cplusplus)
 }

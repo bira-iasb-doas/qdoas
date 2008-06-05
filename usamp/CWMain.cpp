@@ -194,7 +194,7 @@ void CWMain::closeEvent(QCloseEvent *e)
 
   if (m_plotArea != NULL)
     CWPlotPropertiesConfig::saveToPreferences(m_plotArea->properties());
-  
+
   // flush write and close ...
   delete CPreferences::instance();
 
@@ -203,13 +203,13 @@ void CWMain::closeEvent(QCloseEvent *e)
     e->accept();
     return;
   }
-  
+
   e->ignore();
 }
 
 bool CWMain::checkStateAndConsiderSaveFile(void)
 {
-  
+
   fetchGuiProperties();
 
   if (compareProperties())
@@ -230,7 +230,7 @@ bool CWMain::checkStateAndConsiderSaveFile(void)
   QMessageBox::StandardButton choice = QMessageBox::question(this, "Save Changes", msg,
 							     QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel,
 							     QMessageBox::Save);
-  
+
   if (choice == QMessageBox::Discard)
     return true; // discard changes
   else if (choice != QMessageBox::Save)
@@ -246,7 +246,7 @@ bool CWMain::checkStateAndConsiderSaveFile(void)
 void CWMain::setConfigFileName(const QString &fileName)
 {
   QString str("Usamp - ");
-  
+
   m_configFile = fileName;
 
   if (m_configFile.isEmpty()) {
@@ -259,7 +259,7 @@ void CWMain::setConfigFileName(const QString &fileName)
 
   setWindowTitle(str);
 }
- 
+
 void CWMain::fetchGuiProperties(void)
 {
   // get the state of the GUI and store it in m_guiProperties. Initialize first so that
@@ -307,7 +307,7 @@ void CWMain::slotOpenFile()
   xmlReader.setErrorHandler(handler);
 
   bool ok = xmlReader.parse(source);
-  
+
   if (ok) {
     // start with a clear configuration
     CPathMgr *pathMgr = CPathMgr::instance();
@@ -322,7 +322,7 @@ void CWMain::slotOpenFile()
       else
 	pathMgr->addPath(i, path);
     }
-    
+
     // copy the properties data ...
     m_guiProperties = *(handler->properties());
 
@@ -331,7 +331,7 @@ void CWMain::slotOpenFile()
 
     fetchGuiProperties(); // see note above about synchronization ...
     m_properties = m_guiProperties;
-    
+
     setConfigFileName(fileName);
   }
   else {
@@ -349,7 +349,7 @@ void CWMain::slotNewFile()
 {
   if (!checkStateAndConsiderSaveFile())
     return;
-  
+
   initializeMediateUsamp(&m_guiProperties);
 
   // update the GUI
@@ -372,7 +372,7 @@ void CWMain::slotSaveAsFile()
   while (returnCode == QMessageBox::Retry) {
 
     returnCode = QMessageBox::Cancel;
-    
+
     QString fileName = QFileDialog::getSaveFileName(this, "SaveAs Config File",
 						    CPreferences::instance()->directoryName("UsampConf"),
 						    "Usamp Config (*.xml);;All Files (*)");
@@ -408,16 +408,16 @@ void CWMain::slotSaveFile()
     slotSaveAsFile();
   }
   else {
-    
+
     fetchGuiProperties();
     CUsampConfigWriter writer(&m_guiProperties);
-    
+
     QString msg = writer.write(m_configFile);
     if (!msg.isNull())
       QMessageBox::critical(this, "Configuration File Write Failure", msg, QMessageBox::Ok);
     else
       m_properties = m_guiProperties;
-      
+
   }
 
 }
@@ -439,7 +439,7 @@ void CWMain::slotEditPlotProperties()
       m_plotArea->setProperties(prop);
     else
       CWPlotPropertiesConfig::saveToPreferences(prop);
-    
+
   }
 }
 
@@ -484,14 +484,14 @@ void CWMain::slotErrorMessages(int highestLevel, const QString &messages)
 {
   switch (highestLevel) {
   case InformationEngineError:
-    QMessageBox::information(this, "Engine Information", messages);
+    QMessageBox::information(this, "Undersampling tool : Information", messages);
     break;
   case WarningEngineError:
-    QMessageBox::warning(this, "Engine Warning", messages);
+    QMessageBox::warning(this, "Undersampling tool : Warning", messages);
     break;
   case FatalEngineError:
   default:
-    QMessageBox::critical(this, "Engine Fatal Error", messages);
+    QMessageBox::critical(this, "Undersampling : Fatal Error", messages);
     break;
   }
 }
@@ -539,7 +539,7 @@ void CWMain::slotPlotPage(const RefCountConstPtr<CPlotPageData> &page)
 
       m_plotArea = new CWPlotArea;
       m_plotArea->setProperties(prop);
-      
+
       m_tab->addTab(m_plotArea, "Plot");
     }
 

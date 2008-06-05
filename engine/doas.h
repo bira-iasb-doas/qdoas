@@ -48,6 +48,10 @@
 #if !defined(__DOAS_)
 #define __DOAS_
 
+#if defined(_cplusplus) || defined(__cplusplus)
+extern "C" {
+#endif
+
 // ==================
 // HEADERS TO INCLUDE
 // ==================
@@ -1542,5 +1546,9 @@ void GOME2_ReleaseBuffers(int action);
 RC GOME2_Set(ENGINE_CONTEXT *pEngineContext);
 RC GOME2_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,INDEX fileIndex);
 RC GOME2_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle);
+
+#if defined(_cplusplus) || defined(__cplusplus)
+}
+#endif
 
 #endif

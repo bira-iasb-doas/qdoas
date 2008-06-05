@@ -95,7 +95,6 @@
 // STATIC DECLARATIONS
 // ===================
 
-XSCONV USAMP_options,USAMP_buffer;
 UCHAR *usampAnalysisMethod[USAMP_METHOD_MAX]={"Optical density","Intensity fitting"};
 USAMP  USAMP_buffers;
 FFT    usampFFT;
@@ -639,47 +638,47 @@ RC USAMP_BuildFromAnalysis(INT analysisFlag,INT gomeFlag)
 //               phase : phase of the undersampling
 // -----------------------------------------------------------------------------
 
-void UsampWriteHeader(FILE *fp,INT phase)
- {
- 	// Declaration
-
-  INT slitType;
-
-  // Initialization
-
-  slitType=USAMP_options.slitConv.slitType;
-
-  // Header
-
-  fprintf(fp,";\n");
-  fprintf(fp,"; UNDERSAMPLING CROSS SECTION (Phase %d)\n",phase);
-  fprintf(fp,"; High resolution Kurucz file : %s\n",USAMP_options.kuruczFile);
-  fprintf(fp,"; Calibration file : %s\n",USAMP_options.calibrationFile);
-
-  fprintf(fp,"; Slit function type : %s\n",XSCONV_slitTypes[slitType]);
-
-  if ((slitType==SLIT_TYPE_FILE) || (slitType==SLIT_TYPE_GAUSS_FILE) || (slitType==SLIT_TYPE_INVPOLY_FILE) || (slitType==SLIT_TYPE_ERF_FILE))
-   fprintf(fp,"; Slit function file : %s\n",USAMP_options.slitConv.slitFile);
-  if ((slitType==SLIT_TYPE_GAUSS) || (slitType==SLIT_TYPE_INVPOLY) || (slitType==SLIT_TYPE_ERF))
-   fprintf(fp,"; FWHM : %lf\n",USAMP_options.slitConv.slitParam);
-  if ((slitType==SLIT_TYPE_INVPOLY) || (slitType==SLIT_TYPE_INVPOLY_FILE))
-   fprintf(fp,"; Polynomial degree : %d\n",(int)USAMP_options.slitConv.slitParam2);
-  if ((slitType==SLIT_TYPE_ERF) || (slitType==SLIT_TYPE_ERF_FILE))
-   fprintf(fp,"; Boxcar width : %.3f\n",USAMP_options.slitConv.slitParam2);
-
-  if (slitType==SLIT_TYPE_VOIGT)
-   {
-    fprintf(fp,"; Gaussian FWHM (L) : %.3f\n",USAMP_options.slitConv.slitParam);
-    fprintf(fp,"; Gaussian/Lorentz ratio (L) : %.3f\n",USAMP_options.slitConv.slitParam2);
-    fprintf(fp,"; Gaussian FWHM (R) : %.3f\n",USAMP_options.slitConv.slitParam3);
-    fprintf(fp,"; Gaussian/Lorentz ratio (R) : %.3f\n",USAMP_options.slitConv.slitParam4);
-   }
-
-  fprintf(fp,"; Analysis method : %s\n",usampAnalysisMethod[USAMP_options.analysisMethod]);
-  fprintf(fp,"; Shift : %g\n",USAMP_options.fraction);
-
-  fprintf(fp,";\n");
- }
+// QDOAS ??? void UsampWriteHeader(FILE *fp,INT phase)
+// QDOAS ???  {
+// QDOAS ???  	// Declaration
+// QDOAS ???
+// QDOAS ???   INT slitType;
+// QDOAS ???
+// QDOAS ???   // Initialization
+// QDOAS ???
+// QDOAS ???   slitType=USAMP_options.slitConv.slitType;
+// QDOAS ???
+// QDOAS ???   // Header
+// QDOAS ???
+// QDOAS ???   fprintf(fp,";\n");
+// QDOAS ???   fprintf(fp,"; UNDERSAMPLING CROSS SECTION (Phase %d)\n",phase);
+// QDOAS ???   fprintf(fp,"; High resolution Kurucz file : %s\n",USAMP_options.kuruczFile);
+// QDOAS ???   fprintf(fp,"; Calibration file : %s\n",USAMP_options.calibrationFile);
+// QDOAS ???
+// QDOAS ???   fprintf(fp,"; Slit function type : %s\n",XSCONV_slitTypes[slitType]);
+// QDOAS ???
+// QDOAS ???   if ((slitType==SLIT_TYPE_FILE) || (slitType==SLIT_TYPE_GAUSS_FILE) || (slitType==SLIT_TYPE_INVPOLY_FILE) || (slitType==SLIT_TYPE_ERF_FILE))
+// QDOAS ???    fprintf(fp,"; Slit function file : %s\n",USAMP_options.slitConv.slitFile);
+// QDOAS ???   if ((slitType==SLIT_TYPE_GAUSS) || (slitType==SLIT_TYPE_INVPOLY) || (slitType==SLIT_TYPE_ERF))
+// QDOAS ???    fprintf(fp,"; FWHM : %lf\n",USAMP_options.slitConv.slitParam);
+// QDOAS ???   if ((slitType==SLIT_TYPE_INVPOLY) || (slitType==SLIT_TYPE_INVPOLY_FILE))
+// QDOAS ???    fprintf(fp,"; Polynomial degree : %d\n",(int)USAMP_options.slitConv.slitParam2);
+// QDOAS ???   if ((slitType==SLIT_TYPE_ERF) || (slitType==SLIT_TYPE_ERF_FILE))
+// QDOAS ???    fprintf(fp,"; Boxcar width : %.3f\n",USAMP_options.slitConv.slitParam2);
+// QDOAS ???
+// QDOAS ???   if (slitType==SLIT_TYPE_VOIGT)
+// QDOAS ???    {
+// QDOAS ???     fprintf(fp,"; Gaussian FWHM (L) : %.3f\n",USAMP_options.slitConv.slitParam);
+// QDOAS ???     fprintf(fp,"; Gaussian/Lorentz ratio (L) : %.3f\n",USAMP_options.slitConv.slitParam2);
+// QDOAS ???     fprintf(fp,"; Gaussian FWHM (R) : %.3f\n",USAMP_options.slitConv.slitParam3);
+// QDOAS ???     fprintf(fp,"; Gaussian/Lorentz ratio (R) : %.3f\n",USAMP_options.slitConv.slitParam4);
+// QDOAS ???    }
+// QDOAS ???
+// QDOAS ???   fprintf(fp,"; Analysis method : %s\n",usampAnalysisMethod[USAMP_options.analysisMethod]);
+// QDOAS ???   fprintf(fp,"; Shift : %g\n",USAMP_options.fraction);
+// QDOAS ???
+// QDOAS ???   fprintf(fp,";\n");
+// QDOAS ???  }
 
 // -----------------------------------------------------------------------------
 // FUNCTION      UsampBuildFromTools

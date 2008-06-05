@@ -46,7 +46,6 @@
 //
 //  ----------------------------------------------------------------------------
 
-#include "mediate_xsconv.h"
 #include "engine_xsconv.h"
 
 // ======================================================================================
@@ -85,6 +84,11 @@ ENGINE_XSCONV_CONTEXT *EngineXsconvCreateContext(void)
 
 RC EngineXsconvDestroyContext(ENGINE_XSCONV_CONTEXT *pEngineContext)
  {
+ 	XSCONV_Reset(&pEngineContext->xsNew);
+
+  if (pEngineContext->filterVector!=NULL)
+   MEMORY_ReleaseDVector("EngineXsconvDestroyContext","filterVector",pEngineContext->filterVector,0);
+
   if (pEngineContext!=NULL)
    free(pEngineContext);
 

@@ -24,6 +24,10 @@
 #if !defined(__WDOAS_)
 #define __WDOAS_
 
+#if defined(_cplusplus) || defined(__cplusplus)
+extern "C" {
+#endif
+
 // ==================
 // HEADERS TO INCLUDE
 // ==================
@@ -872,41 +876,6 @@ void PRJCT_SaveConfiguration(FILE *fp,UCHAR *sectionName);
     }
    FFT;
 
-   // Options of the convolution tool dialog box
-   // ------------------------------------------
-
-   typedef struct _xsconv
-    {                                                                           // GENERAL OPTIONS
-     INT    convolutionType;                                                    // type of convolution
-     INT    conversionMode;                                                     // conversion mode
-     double shift;                                                              // shift to apply to the original high resolution cross section
-     UCHAR  crossFile[MAX_PATH_LEN+1];                                          // high resolution cross section file
-     UCHAR  path[MAX_PATH_LEN+1];                                               // output path
-     UCHAR  calibrationFile[MAX_PATH_LEN+1];                                    // calibration file
-     INT    noComment;                                                          // flag, 1 to save the convoluted cross section without comment
-
-                                                                                // I0 CORRECTION
-     UCHAR  kuruczFile[MAX_PATH_LEN+1];                                         // Kurucz file used when I0 correction is applied
-     double conc;                                                               // concentration to use when applying I0 correction
-
-                                                                                // SLIT FUNCTION
-     SLIT   slitConv;                                                           // convolution slit function
-     SLIT   slitDConv;                                                          // deconvolution slit function
-
-                                                                                // FILTERING
-     PRJCT_FILTER lfilter;                                                      // low filtering options
-     PRJCT_FILTER hfilter;                                                      // high filtering options
-
-                                                                                // UNDERSAMPLING
-     INT    analysisMethod;                                                     // analysis method
-     UCHAR  path2[MAX_PATH_LEN+1];                                              // output path for the second phase
-     double fraction;                                                           // tunes the phase
-
-                                                                                // RING
-     INT    temperature;                                                        // temperature
-    }
-   XSCONV;
-
    // ----------------
    // GLOBAL VARIABLES
    // ----------------
@@ -923,12 +892,15 @@ void PRJCT_SaveConfiguration(FILE *fp,UCHAR *sectionName);
    RC   XSCONV_LoadSlitFunction(XS *pSlitXs,SLIT *pSlit,double *pGaussWidth,INT *pSlitType);
    RC   XSCONV_LoadCrossSectionFile(XS *pCross,UCHAR *crossFile,double lambdaMin,double lambdaMax,double shift,INT conversionMode);
 
+   RC XSCONV_NewSlitFunction(SLIT *pSlitOptions,XS *pSlit,double slitParam,SLIT *pSlit2Options,XS *pSlit2,double slitParam2);
+
    // Convolution functions
 
    RC   XSCONV_TypeNone(XS *pXsnew,XS *pXshr);
    RC   XSCONV_TypeGauss(double *lambda,double *Spec,double *SDeriv2,double lambdaj,double dldj,double *SpecConv,double fwhm,double n,INT slitType);
    RC   XSCONV_TypeStandardFFT(FFT *pFFT,INT fwhmType,double slitParam,double slitParam2,double *lambda,double *target,INT size);
    RC   XSCONV_TypeStandard(XS *pXsnew,INDEX indexLambdaMin,INDEX indexLambdaMax,XS *pXshr,XS *pSlit,XS *pI,double *Ic,INT slitType,double slitWidth,double slitParam,double slitParam2,double slitParam3,double slitParam4);
+   RC XSCONV_TypeI0Correction(XS *pXsnew,XS *pXshr,XS *pI0,XS *pSlit,double conc,INT slitType,double slitWidth,double slitParam,double slitParam2,double slitParam3,double slitParam4);
    RC   XSCONV_RealTimeXs(XS *pXshr,XS *pXsI0,XS *pSlit,double *IcVector,double *lambda,INT NDET,INDEX indexLambdaMin,INDEX indexLambdaMax,double *newXs,INT slitType,double slitParam,double slitParam2,double slitParam3,double slitParam4);
 
    // Buffers allocation
@@ -1514,5 +1486,9 @@ EXTERN INT PATH_mfcFlag,PATH_UofTFlag;
 
 EXTERN ANALYSIS_WINDOWS  *ANLYS_windowsList;       // analysis windows list
 EXTERN LIST_ITEM         *ANLYS_itemList;          // list of items in ListView control owned by tab pages
+
+#if defined(_cplusplus) || defined(__cplusplus)
+}
+#endif
 
 #endif

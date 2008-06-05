@@ -77,7 +77,7 @@
 //  XsconvRebuildSlitFunction - rebuild slit function onto a regular wavelength scale;
 //  XsconvPowFFTMin - return index of the first minimum found in the power spectrum obtained by FFT;
 //  XsconvFreqFilter - frequencies filtering;
-//  XsconvNewSlitFunction - replace slit function by a new one when a deconvolution slit function is given;
+//  XSCONV_NewSlitFunction - replace slit function by a new one when a deconvolution slit function is given;
 //
 //  XSCONV_Convolution - main convolution function;
 //
@@ -89,8 +89,6 @@
 //  XSCONV_LoadCalibrationFile - final wavelength scale read out;
 //  XSCONV_LoadSlitFunction - slit function read out;
 //  XSCONV_LoadCrossSectionFile - load a cross section file;
-//
-//  XsconvSaveNew - save the convoluted cross section;
 //
 //  ==========================================
 //  CONVOLUTION DIALOG BOX MESSAGES PROCESSING
@@ -141,9 +139,11 @@
 // INCLUDE
 // =======
 
-#include "../mediator/mediate_response.h"
-#include "../mediator/mediate_types.h"
-#include "../mediator/mediate_xsconv.h"
+// #include "../mediator/mediate_response.h"
+// #include "../mediator/mediate_types.h"
+// #include "../mediator/mediate_xsconv.h"
+
+#include "doas.h"
 
 // =====================
 // CONSTANTS DEFINITIONS
@@ -170,70 +170,6 @@ UCHAR *XSCONV_slitTypes[SLIT_TYPE_MAX]=
   "Gaussian, wavelength+t° dependent",
   "Error function, wavelength+t° dependent"
  };
-
-// ================
-// STATIC VARIABLES
-// ================
-
-// Tab pages description
-
-// QDOAS ??? #if defined (__WINDOAS_GUI_) && __WINDOAS_GUI_
-// QDOAS ???
-// QDOAS ??? static TAB_PAGE xsconvTabPages[TAB_TYPE_XSCONV_MAX]=
-// QDOAS ???  {
-// QDOAS ???   { "General",       DLG_TOOL_CONVOLUTION_GENERAL, (DLGPROC) XSCONV_GeneralWndProc, NULL},   // General data
-// QDOAS ???   { "Slit function", DLG_TOOL_CONVOLUTION_SLIT,    (DLGPROC) XSCONV_SlitWndProc,    NULL},   // Slit function
-// QDOAS ???   { "Filtering"    , DLG_PRJCT_FILTER,             (DLGPROC) PRJCT_FilterWndProc,   NULL}    // Filter function
-// QDOAS ???  };
-// QDOAS ???
-// QDOAS ??? static HWND xsconvHwndPage=NULL;                                                // handle to the current page
-// QDOAS ???
-// QDOAS ??? static HCURSOR xsconvHCurHourGlass,                                             // handle to the hour glass cursor (when waiting for an action comleted)
-// QDOAS ???                xsconvHCurSave;                                                  // handle to the old cursor before the hour glass take place
-// QDOAS ??? #endif
-
-// Convolution method
-
-// static UCHAR *xsconvConvolutionTypesStr[CONVOLUTION_TYPE_MAX]=
-//  {
-//   "Interpolation only",
-//   "Standard convolution",
-//   "Convolution with I0 correction"
-//  };
-//
-// static UCHAR *xsconvConvolutionTypes[CONVOLUTION_TYPE_MAX]=
-//  {
-//   "None",
-//   "Standard",
-//   "I0 correction"
-//  };
-//
-// // Conversion modes
-//
-// static UCHAR *xsconvConversionModes[CONVOLUTION_CONVERSION_MAX]=
-//  {
-//   "None",
-//   "Air to Vac",
-//   "Vac to Air"
-//  };
-//
-// // Files extensions
-//
-// static UCHAR *xsconvFileExt[CONVOLUTION_TYPE_MAX]=
-//  {
-//   "_none",                                                                      // CONVOLUTION_TYPE_NONE
-//   "_std",                                                                       // CONVOLUTION_TYPE_STANDARD
-//   "_i0",                                                                        // CONVOLUTION_TYPE_I0_CORRECTION
-// //  "_ring"                         // CONVOLUTION_TYPE_RING
-//  };
-
-static XS  XSCONV_slitFunction,                                                 // slit function used for convolution
-           XSCONV_slitDFunction,                                                // slit function used for deconvolution
-           XSCONV_xshr,                                                         // high resolution cross section
-           XSCONV_xsnew,                                                        // convoluted cross section
-           XSCONV_kurucz;                                                       // kurucz
-
-// QDOAS ??? static INDEX xsconvIndexSelected;
 
 // =====================
 // SUPPORTED LINE SHAPES
@@ -1121,242 +1057,6 @@ RC XSCONV_LoadCrossSectionFile(XS *pCross,UCHAR *crossFile,double lambdaMin,doub
   return rc;
  }
 
-// -------------------------------------------------
-// XsconvSaveNew : Save the convoluted cross section
-// -------------------------------------------------
-
-// QDOAS ??? #if defined (__WINDOAS_GUI_) && __WINDOAS_GUI_
-// QDOAS ???
-// QDOAS ??? RC XsconvSaveNew(HWND hwndXsconv,XS *pXs,double *filterVector,XSCONV *pXsOptions,INT nextraPixels)
-// QDOAS ???  {
-// QDOAS ???   // Declarations
-// QDOAS ???
-// QDOAS ???   UCHAR fileName[MAX_ITEM_TEXT_LEN+1];
-// QDOAS ???   PRJCT_FILTER *pLFilter,*pHFilter;
-// QDOAS ???   SZ_LEN fileNameLength;
-// QDOAS ???   HWND hwndTab;
-// QDOAS ???   UCHAR *ptr,*ptr2;
-// QDOAS ???   FILE *fp;
-// QDOAS ???   INDEX i,slitType;
-// QDOAS ???   INT nsize;
-// QDOAS ???   RC rc;
-// QDOAS ???
-// QDOAS ???   // Change cursor appearance
-// QDOAS ???
-// QDOAS ???   SetCursor(xsconvHCurHourGlass);
-// QDOAS ???   pLFilter=&pXsOptions->lfilter;
-// QDOAS ???   pHFilter=&pXsOptions->hfilter;
-// QDOAS ???   nsize=pXs->NDET-nextraPixels;
-// QDOAS ???
-// QDOAS ???   // Initializations
-// QDOAS ???
-// QDOAS ???   hwndTab=GetDlgItem(hwndXsconv,TOOL_CONVOLUTION_TAB);
-// QDOAS ???   strcpy(fileName,pXsOptions->path);
-// QDOAS ???   rc=ERROR_ID_NO;
-// QDOAS ???
-// QDOAS ???   if (((ptr=strrchr(fileName,PATH_SEP))!=NULL) && !strlen(ptr+1))
-// QDOAS ???    {
-// QDOAS ???     // Concatenate file name to output path
-// QDOAS ???
-// QDOAS ???     if ((ptr2=strrchr(pXsOptions->crossFile,PATH_SEP))!=NULL)
-// QDOAS ???      ptr2++;
-// QDOAS ???     else
-// QDOAS ???      ptr2=pXsOptions->crossFile;
-// QDOAS ???
-// QDOAS ???     sprintf(ptr,"%c%s",PATH_SEP,ptr2);
-// QDOAS ???
-// QDOAS ???     // Replace file extension by the correct one
-// QDOAS ???
-// QDOAS ???     if ((fileNameLength=strlen(fileName))!=0)
-// QDOAS ???      {
-// QDOAS ???       if ((ptr=strrchr(fileName,'.'))==NULL)
-// QDOAS ???        {
-// QDOAS ???         fileName[fileNameLength++]='.';
-// QDOAS ???         fileName[fileNameLength]=0;
-// QDOAS ???        }
-// QDOAS ???
-// QDOAS ???       strcat(fileName,xsconvFileExt[pXsOptions->convolutionType]);
-// QDOAS ???      }
-// QDOAS ???    }
-// QDOAS ???
-// QDOAS ???   // Open file
-// QDOAS ???
-// QDOAS ???   if ((fp=fopen(FILES_RebuildFileName(fileName,fileName,1),"rt"))!=NULL)
-// QDOAS ???    {
-// QDOAS ???     TabCtrl_SetCurSel(hwndTab,TAB_TYPE_XSCONV_GENERAL);
-// QDOAS ???     XsconvTabChange(hwndTab);
-// QDOAS ???     if (MSG_MessageBox(hwndXsconv,TOOL_CONVOLUTION_PATH_BUTTON,MENU_WINDOWS_TOOL_CONVOLUTION,IDS_MSGBOX_FILE,
-// QDOAS ???                         MB_YESNO|MB_ICONQUESTION,fileName)==IDNO)
-// QDOAS ???      rc=IDS_MSGBOX_FILE;
-// QDOAS ???    }
-// QDOAS ???
-// QDOAS ???   if (fp!=NULL)
-// QDOAS ???    fclose(fp);
-// QDOAS ???
-// QDOAS ???   // Save file
-// QDOAS ???
-// QDOAS ???   if (!rc)
-// QDOAS ???    {
-// QDOAS ???     if ((fp=fopen(fileName,"w+t"))!=NULL)
-// QDOAS ???      {
-// QDOAS ???       if (!pXsOptions->noComment)
-// QDOAS ???        {
-// QDOAS ???         // Header
-// QDOAS ???
-// QDOAS ???         fprintf(fp,";\n");
-// QDOAS ???         fprintf(fp,"; High resolution cross section file : %s\n",FILES_RebuildFileName(fileName,pXsOptions->crossFile,1));
-// QDOAS ???         fprintf(fp,"; Calibration file : %s\n",FILES_RebuildFileName(fileName,pXsOptions->calibrationFile,1));
-// QDOAS ???         fprintf(fp,"; Shift applied : %s nm\n",pXsOptions->shift);
-// QDOAS ???         fprintf(fp,"; Convolution type : %s\n",xsconvConvolutionTypesStr[pXsOptions->convolutionType]);
-// QDOAS ???
-// QDOAS ???         if (pXsOptions->convolutionType!=CONVOLUTION_TYPE_NONE)
-// QDOAS ???          {
-// QDOAS ???           if (pXsOptions->convolutionType==CONVOLUTION_TYPE_I0_CORRECTION)
-// QDOAS ???            {
-// QDOAS ???             fprintf(fp,"; Kurucz file : %s\n",FILES_RebuildFileName(fileName,pXsOptions->kuruczFile,1));
-// QDOAS ???             fprintf(fp,"; Concentration in I0 (mol/cm**2) : %g\n",pXsOptions->conc);
-// QDOAS ???            }
-// QDOAS ???
-// QDOAS ???           fprintf(fp,"; Slit function type : %s\n",XSCONV_slitTypes[(slitType=pXsOptions->slitConv.slitType)]);
-// QDOAS ???
-// QDOAS ???           if (((slitType=pXsOptions->slitConv.slitType)==SLIT_TYPE_FILE) ||
-// QDOAS ???                (slitType==SLIT_TYPE_GAUSS_FILE) ||
-// QDOAS ???                (slitType==SLIT_TYPE_INVPOLY_FILE) ||
-// QDOAS ??? //               (slitType==SLIT_TYPE_VOIGT_FILE) ||
-// QDOAS ???                (slitType==SLIT_TYPE_ERF_FILE))
-// QDOAS ???            fprintf(fp,"; Slit function file : %s\n",FILES_RebuildFileName(fileName,pXsOptions->slitConv.slitFile,1));
-// QDOAS ???           if ((slitType==SLIT_TYPE_GAUSS) || (slitType==SLIT_TYPE_INVPOLY) || (slitType==SLIT_TYPE_ERF))
-// QDOAS ???            fprintf(fp,"; Gaussian FWHM : %.3f\n",pXsOptions->slitConv.slitParam);
-// QDOAS ???           if ((slitType==SLIT_TYPE_INVPOLY) || (slitType==SLIT_TYPE_INVPOLY_FILE))
-// QDOAS ???            fprintf(fp,"; Polynomial degree : %d\n",(int)pXsOptions->slitConv.slitParam2);
-// QDOAS ???           if ((slitType==SLIT_TYPE_ERF) || (slitType==SLIT_TYPE_ERF_FILE))
-// QDOAS ???            fprintf(fp,"; Boxcar width : %.3f\n",pXsOptions->slitConv.slitParam2);
-// QDOAS ???
-// QDOAS ???           if ((slitType== SLIT_TYPE_APOD) || (slitType== SLIT_TYPE_APODNBS))
-// QDOAS ???            {
-// QDOAS ???             fprintf(fp,"; Resolution : %.3lf\n",pXsOptions->slitConv.slitParam);
-// QDOAS ???             fprintf(fp,"; Phase      : %.3lf\n",pXsOptions->slitConv.slitParam2);
-// QDOAS ???            }
-// QDOAS ???
-// QDOAS ???           if (slitType==SLIT_TYPE_VOIGT)
-// QDOAS ???            {
-// QDOAS ???             fprintf(fp,"; Gaussian FWHM (L) : %.3f\n",pXsOptions->slitConv.slitParam);
-// QDOAS ???             fprintf(fp,"; Lorentz/Gauss ratio (L) : %.3f\n",pXsOptions->slitConv.slitParam2);
-// QDOAS ???             fprintf(fp,"; Gaussian FWHM (R) : %.3f\n",pXsOptions->slitConv.slitParam3);
-// QDOAS ???             fprintf(fp,"; Lorentz/Gauss ratio (R) : %.3f\n",pXsOptions->slitConv.slitParam4);
-// QDOAS ???            }
-// QDOAS ???
-// QDOAS ???           if (((slitType=pXsOptions->slitDConv.slitType)!=SLIT_TYPE_FILE) || (strlen(pXsOptions->slitDConv.slitFile)!=0))
-// QDOAS ???            fprintf(fp,"; Deconvolution slit function type : %s",XSCONV_slitTypes[slitType]);
-// QDOAS ???           if (((slitType==SLIT_TYPE_FILE) && strlen(pXsOptions->slitDConv.slitFile)) ||
-// QDOAS ???                (slitType==SLIT_TYPE_GAUSS_FILE) ||
-// QDOAS ???                (slitType==SLIT_TYPE_INVPOLY_FILE) ||
-// QDOAS ??? //               (slitType==SLIT_TYPE_VOIGT_FILE) ||
-// QDOAS ???                (slitType==SLIT_TYPE_ERF_FILE))
-// QDOAS ???            fprintf(fp,"; Deconvolution slit function file : %s\n",FILES_RebuildFileName(fileName,pXsOptions->slitDConv.slitFile,1));
-// QDOAS ???           if ((slitType==SLIT_TYPE_GAUSS) || (slitType==SLIT_TYPE_INVPOLY) || (slitType==SLIT_TYPE_ERF))
-// QDOAS ???            fprintf(fp,"; Deconvolution slit function gaussian FWHM : %lf\n",pXsOptions->slitDConv.slitParam);
-// QDOAS ???           if ((slitType==SLIT_TYPE_INVPOLY) || (slitType==SLIT_TYPE_INVPOLY_FILE))
-// QDOAS ???            fprintf(fp,"; Deconvolution slit function polynomial degree : %d\n",(int)pXsOptions->slitDConv.slitParam2);
-// QDOAS ???           if ((slitType==SLIT_TYPE_ERF) || (slitType==SLIT_TYPE_ERF_FILE))
-// QDOAS ???            fprintf(fp,"; Deconvolution slit function boxcar width : %lf\n",pXsOptions->slitDConv.slitParam2);
-// QDOAS ???
-// QDOAS ???           if (slitType==SLIT_TYPE_VOIGT)
-// QDOAS ???            {
-// QDOAS ???             fprintf(fp,"; Gaussian FWHM (L) : %.3f\n",pXsOptions->slitDConv.slitParam);
-// QDOAS ???             fprintf(fp,"; Lorentz/Gauss ratio (L) : %.3f\n",pXsOptions->slitDConv.slitParam2);
-// QDOAS ???             fprintf(fp,"; Gaussian FWHM (R) : %.3f\n",pXsOptions->slitDConv.slitParam3);
-// QDOAS ???             fprintf(fp,"; Lorentz/Gauss ratio (R) : %.3f\n",pXsOptions->slitDConv.slitParam4);
-// QDOAS ???            }
-// QDOAS ???          }
-// QDOAS ???
-// QDOAS ???         // Low pass filtering
-// QDOAS ???
-// QDOAS ???         if (pLFilter->type!=PRJCT_FILTER_TYPE_NONE)
-// QDOAS ???          {
-// QDOAS ???           fprintf(fp,"; Low-pass filtering\n");
-// QDOAS ???           fprintf(fp,"; Filter applied : %s\n",PRJCT_filterTypes[pLFilter->type]);
-// QDOAS ???           fprintf(fp,"; Filter number of iterations : %d\n",pLFilter->filterNTimes);
-// QDOAS ???
-// QDOAS ???           if (pLFilter->type==PRJCT_FILTER_TYPE_KAISER)
-// QDOAS ???            {
-// QDOAS ???             fprintf(fp,"; Cutoff frequency : %g\n",pLFilter->kaiserCutoff);
-// QDOAS ???             fprintf(fp,"; Pass band : %g\n",pLFilter->kaiserPassBand);
-// QDOAS ???             fprintf(fp,"; Tolerance : %g\n",pLFilter->kaiserTolerance);
-// QDOAS ???            }
-// QDOAS ???           else if (pLFilter->type==PRJCT_FILTER_TYPE_GAUSSIAN)
-// QDOAS ???            fprintf(fp,"; Gaussian FWHM : %g\n",pLFilter->fwhmWidth);
-// QDOAS ???           else if ((pLFilter->type==PRJCT_FILTER_TYPE_BOXCAR) || (pLFilter->type==PRJCT_FILTER_TYPE_TRIANGLE))
-// QDOAS ???            fprintf(fp,"; Filter width : %d\n",pLFilter->filterWidth);
-// QDOAS ???           else if (pLFilter->type==PRJCT_FILTER_TYPE_SG)
-// QDOAS ???            {
-// QDOAS ???             fprintf(fp,"; Filter width : %d\n",pLFilter->filterWidth);
-// QDOAS ???             fprintf(fp,"; Filter order : %d\n",pLFilter->filterOrder);
-// QDOAS ???            }
-// QDOAS ???          }
-// QDOAS ???
-// QDOAS ???         // High pass filtering
-// QDOAS ???
-// QDOAS ???         if (pHFilter->type!=PRJCT_FILTER_TYPE_NONE)
-// QDOAS ???          {
-// QDOAS ???           fprintf(fp,"; High-pass filtering\n");
-// QDOAS ???           fprintf(fp,"; Filter applied : %s\n",PRJCT_filterTypes[pHFilter->type]);
-// QDOAS ???           fprintf(fp,"; Filter number of iterations : %d\n",pHFilter->filterNTimes);
-// QDOAS ???
-// QDOAS ???           if (pHFilter->type==PRJCT_FILTER_TYPE_KAISER)
-// QDOAS ???            {
-// QDOAS ???             fprintf(fp,"; Cutoff frequency : %g\n",pHFilter->kaiserCutoff);
-// QDOAS ???             fprintf(fp,"; Pass band : %g\n",pHFilter->kaiserPassBand);
-// QDOAS ???             fprintf(fp,"; Tolerance : %g\n",pHFilter->kaiserTolerance);
-// QDOAS ???            }
-// QDOAS ???           else if (pHFilter->type==PRJCT_FILTER_TYPE_GAUSSIAN)
-// QDOAS ???            fprintf(fp,"; Gaussian FWHM : %g\n",pHFilter->fwhmWidth);
-// QDOAS ???           else if ((pHFilter->type==PRJCT_FILTER_TYPE_BOXCAR) || (pHFilter->type==PRJCT_FILTER_TYPE_TRIANGLE))
-// QDOAS ???            fprintf(fp,"; Filter width : %d\n",pHFilter->filterWidth);
-// QDOAS ???           else if (pHFilter->type==PRJCT_FILTER_TYPE_SG)
-// QDOAS ???            {
-// QDOAS ???             fprintf(fp,"; Filter width : %d\n",pHFilter->filterWidth);
-// QDOAS ???             fprintf(fp,"; Filter order : %d\n",pHFilter->filterOrder);
-// QDOAS ???            }
-// QDOAS ???          }
-// QDOAS ???
-// QDOAS ???         fprintf(fp,";\n; Columns description :\n");
-// QDOAS ???         fprintf(fp,"; Column 1 : calibration;\n");
-// QDOAS ???         fprintf(fp,"; Column 2 : %s;\n",((pLFilter->type!=PRJCT_FILTER_TYPE_NONE) || (pHFilter->type!=PRJCT_FILTER_TYPE_NONE))?
-// QDOAS ???                    "convoluted and filtered cross section" : "convoluted cross section");
-// QDOAS ???
-// QDOAS ???         if ((pLFilter->type!=PRJCT_FILTER_TYPE_NONE) || (pHFilter->type!=PRJCT_FILTER_TYPE_NONE))
-// QDOAS ???          fprintf(fp,"; Column 3 : convoluted only cross section.\n");
-// QDOAS ???         fprintf(fp,";\n");
-// QDOAS ???        }
-// QDOAS ???
-// QDOAS ???       // Cross section
-// QDOAS ???
-// QDOAS ???       if ((pLFilter->type!=PRJCT_FILTER_TYPE_NONE) || (pHFilter->type!=PRJCT_FILTER_TYPE_NONE))
-// QDOAS ???        for (i=nextraPixels;i<nsize;i++)
-// QDOAS ???         fprintf(fp,"%.14le %.14le %.14le\n",pXs->lambda[i],filterVector[i],pXs->vector[i]);
-// QDOAS ???       else
-// QDOAS ???        for (i=nextraPixels;i<nsize;i++)
-// QDOAS ???         fprintf(fp,"%.14le %.14le\n",pXs->lambda[i],pXs->vector[i]);
-// QDOAS ???
-// QDOAS ???       fclose(fp);
-// QDOAS ???      }
-// QDOAS ???     else
-// QDOAS ???      {
-// QDOAS ???       TabCtrl_SetCurSel(hwndTab,TAB_TYPE_XSCONV_GENERAL);
-// QDOAS ???       XsconvTabChange(hwndTab);
-// QDOAS ???       MSG_MessageBox(hwndXsconv,TOOL_CONVOLUTION_PATH_BUTTON,MENU_WINDOWS_TOOL_CONVOLUTION,(rc=ERROR_ID_FILE_OPEN),
-// QDOAS ???                       MB_OK|MB_ICONHAND,fileName);
-// QDOAS ???      }
-// QDOAS ???    }
-// QDOAS ???
-// QDOAS ???   // Return
-// QDOAS ???
-// QDOAS ???   return rc;
-// QDOAS ???  }
-// QDOAS ???
-// QDOAS ??? #endif // __WINDOAS_GUI_
-
 // =====================
 // CONVOLUTION FUNCTIONS
 // =====================
@@ -1801,7 +1501,7 @@ RC XSCONV_TypeStandard(XS *pXsnew,INDEX indexLambdaMin,INDEX indexLambdaMax,XS *
 // XsconvTypeI0Correction : Convolution of cross sections with I0 correction
 // -------------------------------------------------------------------------
 
-RC XsconvTypeI0Correction(XS *pXsnew,XS *pXshr,XS *pI0,XS *pSlit,double conc,INT slitType,double slitWidth,double slitParam,double slitParam2,double slitParam3,double slitParam4)
+RC XSCONV_TypeI0Correction(XS *pXsnew,XS *pXshr,XS *pI0,XS *pSlit,double conc,INT slitType,double slitWidth,double slitParam,double slitParam2,double slitParam3,double slitParam4)
  {
   // Declarations
 
@@ -1815,12 +1515,6 @@ RC XsconvTypeI0Correction(XS *pXsnew,XS *pXshr,XS *pI0,XS *pSlit,double conc,INT
   INDEX i;
   XS I,I0c;
   RC rc;
-
-  // Change cursor appearance
-
-// QDOAS ???  #if defined (__WINDOAS_GUI_) && __WINDOAS_GUI_
-// QDOAS ???  SetCursor(xsconvHCurHourGlass);
-// QDOAS ???  #endif
 
   // Use substitution variables
 
@@ -1848,13 +1542,13 @@ RC XsconvTypeI0Correction(XS *pXsnew,XS *pXshr,XS *pI0,XS *pSlit,double conc,INT
 
   if (conc<=(double)0.)
 
-   rc=ERROR_SetLast("XsconvTypeI0Correction",ERROR_TYPE_FATAL,ERROR_ID_BAD_ARGUMENTS);
+   rc=ERROR_SetLast("XSCONV_TypeI0Correction",ERROR_TYPE_FATAL,ERROR_ID_BAD_ARGUMENTS);
 
   // Buffers allocation
 
   else if (XSCONV_Alloc(&I,INDET,1) ||
            XSCONV_Alloc(&I0c,xsnewNDET,0) ||
-         ((IcVector=(double *)MEMORY_AllocDVector("XsconvTypeI0Correction ","IcVector",0,xsnewNDET-1))==NULL))
+         ((IcVector=(double *)MEMORY_AllocDVector("XSCONV_TypeI0Correction ","IcVector",0,xsnewNDET-1))==NULL))
 
    rc=ERROR_ID_ALLOC;
 
@@ -1878,10 +1572,10 @@ RC XsconvTypeI0Correction(XS *pXsnew,XS *pXshr,XS *pI0,XS *pSlit,double conc,INT
     VECTOR_Init(IcVector,(double)0.,sizeof(double));
 
     for (i=0;(i<INDET) && !rc;i++)
-     if (!(rc=SPLINE_Vector(xshrLambda,xshrVector,xshrDeriv2,xshrNDET,&I0Lambda[i],&sigma,1,SPLINE_CUBIC,"XsconvTypeI0Correction ")))
+     if (!(rc=SPLINE_Vector(xshrLambda,xshrVector,xshrDeriv2,xshrNDET,&I0Lambda[i],&sigma,1,SPLINE_CUBIC,"XSCONV_TypeI0Correction ")))
       {
        if (-sigma*conc>(double)700.)
-        rc=ERROR_SetLast("XsconvTypeI0Correction",ERROR_TYPE_FATAL,ERROR_ID_OVERFLOW);
+        rc=ERROR_SetLast("XSCONV_TypeI0Correction",ERROR_TYPE_FATAL,ERROR_ID_OVERFLOW);
        else
         IVector[i]=(double)I0Vector[i]*exp(-sigma*conc);
       }
@@ -1889,7 +1583,7 @@ RC XsconvTypeI0Correction(XS *pXsnew,XS *pXshr,XS *pI0,XS *pSlit,double conc,INT
     // I and I0 convolution
 
     if (!rc &&
-        !(rc=SPLINE_Deriv2(ILambda,IVector,IDeriv2,INDET,"XsconvTypeI0Correction ")) &&               // I second derivatives calculation
+        !(rc=SPLINE_Deriv2(ILambda,IVector,IDeriv2,INDET,"XSCONV_TypeI0Correction ")) &&               // I second derivatives calculation
         !(rc=XSCONV_TypeStandard(&I0c,0,xsnewNDET,pI0,pSlit,&I,IcVector,slitType,slitWidth,slitParam,slitParam2,slitParam3,slitParam4)))    // I0 and I convolution
      {
       // Cross section convolution
@@ -1898,7 +1592,7 @@ RC XsconvTypeI0Correction(XS *pXsnew,XS *pXshr,XS *pI0,XS *pSlit,double conc,INT
        {
         if ((I0cVector[i]<=(double)0.) || (IcVector[i]<=(double)0.) || (conc<=(double)0.))
          xsnewVector[i]=(double)0.;
-//         THRD_Error(ERROR_TYPE_FATAL,(rc=ERROR_ID_LOG),"XsconvTypeI0Correction ");
+//         THRD_Error(ERROR_TYPE_FATAL,(rc=ERROR_ID_LOG),"XSCONV_TypeI0Correction ");
         else
          xsnewVector[i]=(double)log(I0cVector[i]/IcVector[i])/conc;
        }
@@ -1911,7 +1605,7 @@ RC XsconvTypeI0Correction(XS *pXsnew,XS *pXshr,XS *pI0,XS *pSlit,double conc,INT
   XSCONV_Reset(&I0c);
 
   if (IcVector!=NULL)
-   MEMORY_ReleaseDVector("XsconvTypeI0Correction ","IcVector",IcVector,0);
+   MEMORY_ReleaseDVector("XSCONV_TypeI0Correction ","IcVector",IcVector,0);
 
   // Return
 
@@ -2041,10 +1735,10 @@ double XsconvFreqFilter(double freq,double fc,double bp)
  }
 
 // ------------------------------------------------------------------------------------------------------
-// XsconvNewSlitFunction : Replace slit function by a new one when a deconvolution slit function is given
+// XSCONV_NewSlitFunction : Replace slit function by a new one when a deconvolution slit function is given
 // ------------------------------------------------------------------------------------------------------
 
-RC XsconvNewSlitFunction(SLIT *pSlitOptions,XS *pSlit,double slitParam,SLIT *pSlit2Options,XS *pSlit2,double slitParam2)
+RC XSCONV_NewSlitFunction(SLIT *pSlitOptions,XS *pSlit,double slitParam,SLIT *pSlit2Options,XS *pSlit2,double slitParam2)
  {
   // Declarations
 
@@ -2071,16 +1765,16 @@ RC XsconvNewSlitFunction(SLIT *pSlitOptions,XS *pSlit,double slitParam,SLIT *pSl
 
   // Buffers allocation
 
-  if (((lambda=(double *)MEMORY_AllocDVector("XsconvNewSlitFunction ","lambda",0,nslit))==NULL) ||
-      ((slit=(double *)MEMORY_AllocDVector("XsconvNewSlitFunction ","slit",0,nslit))==NULL) ||
-      ((slit2=(double *)MEMORY_AllocDVector("XsconvNewSlitFunction ","slit2",0,nslit))==NULL) ||
-      ((newSlit=(double *)MEMORY_AllocDVector("XsconvNewSlitFunction ","newSlit",0,nslit))==NULL) ||
-      ((slitFFTin=(double *)MEMORY_AllocDVector("XsconvNewSlitFunction ","slitFFTin",1,
+  if (((lambda=(double *)MEMORY_AllocDVector("XSCONV_NewSlitFunction ","lambda",0,nslit))==NULL) ||
+      ((slit=(double *)MEMORY_AllocDVector("XSCONV_NewSlitFunction ","slit",0,nslit))==NULL) ||
+      ((slit2=(double *)MEMORY_AllocDVector("XSCONV_NewSlitFunction ","slit2",0,nslit))==NULL) ||
+      ((newSlit=(double *)MEMORY_AllocDVector("XSCONV_NewSlitFunction ","newSlit",0,nslit))==NULL) ||
+      ((slitFFTin=(double *)MEMORY_AllocDVector("XSCONV_NewSlitFunction ","slitFFTin",1,
               (n2=(int)pow((double)2.,ceil(log((double)nslit)/log((double)2.))))))==NULL) ||
 
-      ((slit2FFTin=(double *)MEMORY_AllocDVector("XsconvNewSlitFunction ","slit2FFTin",1,n2))==NULL) ||
-      ((slitFFTout=(double *)MEMORY_AllocDVector("XsconvNewSlitFunction ","slitFFTout",1,n2))==NULL) ||
-      ((slit2FFTout=(double *)MEMORY_AllocDVector("XsconvNewSlitFunction ","slit2FFTout",1,n2))==NULL))
+      ((slit2FFTin=(double *)MEMORY_AllocDVector("XSCONV_NewSlitFunction ","slit2FFTin",1,n2))==NULL) ||
+      ((slitFFTout=(double *)MEMORY_AllocDVector("XSCONV_NewSlitFunction ","slitFFTout",1,n2))==NULL) ||
+      ((slit2FFTout=(double *)MEMORY_AllocDVector("XSCONV_NewSlitFunction ","slit2FFTout",1,n2))==NULL))
 
    rc=ERROR_ID_ALLOC;
 
@@ -2098,7 +1792,7 @@ RC XsconvNewSlitFunction(SLIT *pSlitOptions,XS *pSlit,double slitParam,SLIT *pSl
       }
     else
      {
-     	rc=ERROR_SetLast("XsconvNewSlitFunction",ERROR_TYPE_FATAL,ERROR_ID_GAUSSIAN,slitParam,slitParam2);
+     	rc=ERROR_SetLast("XSCONV_NewSlitFunction",ERROR_TYPE_FATAL,ERROR_ID_GAUSSIAN,slitParam,slitParam2);
       goto EndNewSlit;
      }
    }
@@ -2125,7 +1819,7 @@ RC XsconvNewSlitFunction(SLIT *pSlitOptions,XS *pSlit,double slitParam,SLIT *pSl
 
     if (norm2==(double)0.)
      {
-     	rc=ERROR_SetLast("XsconvNewSlitFunction",ERROR_TYPE_WARNING,ERROR_ID_DIVISION_BY_0,"calculation of a norm");
+     	rc=ERROR_SetLast("XSCONV_NewSlitFunction",ERROR_TYPE_WARNING,ERROR_ID_DIVISION_BY_0,"calculation of a norm");
       goto EndNewSlit;
      }
 
@@ -2161,36 +1855,36 @@ RC XsconvNewSlitFunction(SLIT *pSlitOptions,XS *pSlit,double slitParam,SLIT *pSl
         // Release allocated buffers
 
         if (lambda!=NULL)
-         MEMORY_ReleaseDVector("XsconvNewSlitFunction ","lambda",lambda,0);
+         MEMORY_ReleaseDVector("XSCONV_NewSlitFunction ","lambda",lambda,0);
         if (slit!=NULL)
-         MEMORY_ReleaseDVector("XsconvNewSlitFunction ","slit",slit,0);
+         MEMORY_ReleaseDVector("XSCONV_NewSlitFunction ","slit",slit,0);
         if (slit2!=NULL)
-         MEMORY_ReleaseDVector("XsconvNewSlitFunction ","slit2",slit2,0);
+         MEMORY_ReleaseDVector("XSCONV_NewSlitFunction ","slit2",slit2,0);
         if (newSlit!=NULL)
-         MEMORY_ReleaseDVector("XsconvNewSlitFunction ","newSlit",newSlit,0);
+         MEMORY_ReleaseDVector("XSCONV_NewSlitFunction ","newSlit",newSlit,0);
         if (slitFFTin!=NULL)
-         MEMORY_ReleaseDVector("XsconvNewSlitFunction ","slitFFTin",slitFFTin,1);
+         MEMORY_ReleaseDVector("XSCONV_NewSlitFunction ","slitFFTin",slitFFTin,1);
         if (slit2FFTin!=NULL)
-         MEMORY_ReleaseDVector("XsconvNewSlitFunction ","slit2FFTin",slit2FFTin,1);
+         MEMORY_ReleaseDVector("XSCONV_NewSlitFunction ","slit2FFTin",slit2FFTin,1);
         if (slitFFTout!=NULL)
-         MEMORY_ReleaseDVector("XsconvNewSlitFunction ","slitFFTout",slitFFTout,1);
+         MEMORY_ReleaseDVector("XSCONV_NewSlitFunction ","slitFFTout",slitFFTout,1);
         if (slit2FFTout!=NULL)
-         MEMORY_ReleaseDVector("XsconvNewSlitFunction ","slit2FFTout",slit2FFTout,1);
+         MEMORY_ReleaseDVector("XSCONV_NewSlitFunction ","slit2FFTout",slit2FFTout,1);
 
         slit=slit2=newSlit=slitFFTin=slit2FFTin=slitFFTout=slit2FFTout=NULL;
 
         // Allocate buffers with the new size
 
-        if (((lambda=(double *)MEMORY_AllocDVector("XsconvNewSlitFunction (2) ","lambda",0,nslit))==NULL) ||
-            ((slit=(double *)MEMORY_AllocDVector("XsconvNewSlitFunction (2) ","slit",0,nslit))==NULL) ||
-            ((slit2=(double *)MEMORY_AllocDVector("XsconvNewSlitFunction (2) ","slit2",0,nslit))==NULL) ||
-            ((newSlit=(double *)MEMORY_AllocDVector("XsconvNewSlitFunction (2) ","newSlit",0,nslit))==NULL) ||
-            ((slitFFTin=(double *)MEMORY_AllocDVector("XsconvNewSlitFunction (2) ","slitFFTin",1,
+        if (((lambda=(double *)MEMORY_AllocDVector("XSCONV_NewSlitFunction (2) ","lambda",0,nslit))==NULL) ||
+            ((slit=(double *)MEMORY_AllocDVector("XSCONV_NewSlitFunction (2) ","slit",0,nslit))==NULL) ||
+            ((slit2=(double *)MEMORY_AllocDVector("XSCONV_NewSlitFunction (2) ","slit2",0,nslit))==NULL) ||
+            ((newSlit=(double *)MEMORY_AllocDVector("XSCONV_NewSlitFunction (2) ","newSlit",0,nslit))==NULL) ||
+            ((slitFFTin=(double *)MEMORY_AllocDVector("XSCONV_NewSlitFunction (2) ","slitFFTin",1,
                     (n2=(int)pow((double)2.,ceil(log((double)nslit)/log((double)2.))))))==NULL) ||
 
-            ((slit2FFTin=(double *)MEMORY_AllocDVector("XsconvNewSlitFunction (2) ","slit2FFTin",1,n2))==NULL) ||
-            ((slitFFTout=(double *)MEMORY_AllocDVector("XsconvNewSlitFunction (2) ","slitFFTout",1,n2))==NULL) ||
-            ((slit2FFTout=(double *)MEMORY_AllocDVector("XsconvNewSlitFunction (2) ","slit2FFTout",1,n2))==NULL))
+            ((slit2FFTin=(double *)MEMORY_AllocDVector("XSCONV_NewSlitFunction (2) ","slit2FFTin",1,n2))==NULL) ||
+            ((slitFFTout=(double *)MEMORY_AllocDVector("XSCONV_NewSlitFunction (2) ","slitFFTout",1,n2))==NULL) ||
+            ((slit2FFTout=(double *)MEMORY_AllocDVector("XSCONV_NewSlitFunction (2) ","slit2FFTout",1,n2))==NULL))
          {
           rc=ERROR_ID_ALLOC;
           goto EndNewSlit;
@@ -2229,7 +1923,7 @@ RC XsconvNewSlitFunction(SLIT *pSlitOptions,XS *pSlit,double slitParam,SLIT *pSl
 
     if ((norm==(double)0.) || (norm2==(double)0.))
      {
-     	rc=ERROR_SetLast("XsconvNewSlitFunction",ERROR_TYPE_WARNING,ERROR_ID_DIVISION_BY_0,"calculation of a norm");
+     	rc=ERROR_SetLast("XSCONV_NewSlitFunction",ERROR_TYPE_WARNING,ERROR_ID_DIVISION_BY_0,"calculation of a norm");
       goto EndNewSlit;
      }
 
@@ -2349,7 +2043,7 @@ RC XsconvNewSlitFunction(SLIT *pSlitOptions,XS *pSlit,double slitParam,SLIT *pSl
     memcpy(pSlit->lambda,lambda,sizeof(double)*nslit);
     memcpy(pSlit->vector,newSlit,sizeof(double)*nslit);
 
-    rc=SPLINE_Deriv2(pSlit->lambda,pSlit->vector,pSlit->deriv2,nslit,"XsconvNewSlitFunction ");
+    rc=SPLINE_Deriv2(pSlit->lambda,pSlit->vector,pSlit->deriv2,nslit,"XSCONV_NewSlitFunction ");
    }
 
   EndNewSlit :
@@ -2357,266 +2051,27 @@ RC XsconvNewSlitFunction(SLIT *pSlitOptions,XS *pSlit,double slitParam,SLIT *pSl
   // Release allocated buffers
 
   if (lambda!=NULL)
-   MEMORY_ReleaseDVector("XsconvNewSlitFunction ","lambda",lambda,0);
+   MEMORY_ReleaseDVector("XSCONV_NewSlitFunction ","lambda",lambda,0);
   if (slit!=NULL)
-   MEMORY_ReleaseDVector("XsconvNewSlitFunction ","slit",slit,0);
+   MEMORY_ReleaseDVector("XSCONV_NewSlitFunction ","slit",slit,0);
   if (slit2!=NULL)
-   MEMORY_ReleaseDVector("XsconvNewSlitFunction ","slit2",slit2,0);
+   MEMORY_ReleaseDVector("XSCONV_NewSlitFunction ","slit2",slit2,0);
   if (newSlit!=NULL)
-   MEMORY_ReleaseDVector("XsconvNewSlitFunction ","newSlit",newSlit,0);
+   MEMORY_ReleaseDVector("XSCONV_NewSlitFunction ","newSlit",newSlit,0);
   if (slitFFTin!=NULL)
-   MEMORY_ReleaseDVector("XsconvNewSlitFunction ","slitFFTin",slitFFTin,1);
+   MEMORY_ReleaseDVector("XSCONV_NewSlitFunction ","slitFFTin",slitFFTin,1);
   if (slit2FFTin!=NULL)
-   MEMORY_ReleaseDVector("XsconvNewSlitFunction ","slit2FFTin",slit2FFTin,1);
+   MEMORY_ReleaseDVector("XSCONV_NewSlitFunction ","slit2FFTin",slit2FFTin,1);
   if (slitFFTout!=NULL)
-   MEMORY_ReleaseDVector("XsconvNewSlitFunction ","slitFFTout",slitFFTout,1);
+   MEMORY_ReleaseDVector("XSCONV_NewSlitFunction ","slitFFTout",slitFFTout,1);
   if (slit2FFTout!=NULL)
-   MEMORY_ReleaseDVector("XsconvNewSlitFunction ","slit2FFTout",slit2FFTout,1);
+   MEMORY_ReleaseDVector("XSCONV_NewSlitFunction ","slit2FFTout",slit2FFTout,1);
 
   // Return
 
   return rc;
  }
 
-// ----------------------------------------------
-// XSCONV_Convolution : Main convolution function
-// ----------------------------------------------
-
-RC XSCONV_Convolution(ENGINE_XSCONV_CONTEXT *pEngineContext,void *responseHandle)
- {
-  // Declarations
-
-  PRJCT_FILTER *plFilter,*phFilter;                                             // pointers to the low pass and high pass filtering parts of the engine context
-  SLIT *pSlitConv,*pSlitDConv;                                                  // pointers to the convolution and deconvolution slit function parts of the engine context
-
-  UCHAR windowTitle[MAX_ITEM_TEXT_LEN+1],graphTitle[MAX_ITEM_TEXT_LEN+1],fileName[MAX_ITEM_TEXT_LEN+1];
-  double lambdaMin,lambdaMax,slitParam,slitParam2,slitWidth,*filterVector;
-
-
-  INT slitType,slitType2,deconvFlag,dispConv,dispLFilter,dispHFilter,nGraph,iGraph;
-  INT lowFilterType,highFilterType,nFilter;
-  RC rc;
-
-  // Slit function
-
-  pSlitDConv=&pEngineContext->slitDConv;
-  pSlitConv=&pEngineContext->slitConv;
-
-  slitType=pSlitConv->slitType;
-  slitType2=pSlitDConv->slitType;
-  slitParam=slitParam2=(double)0.;
-
-  // Filtering
-
-  plFilter=&pEngineContext->lfilter;
-  phFilter=&pEngineContext->hfilter;
-
-  lowFilterType=plFilter->type;            // low pass filtering
-  highFilterType=phFilter->type;           // high pass filtering
-
-  plFilter->filterFunction=phFilter->filterFunction=NULL;
-
-//  if ((((lowFilterType=plFilter->type)!=PRJCT_FILTER_TYPE_NONE) &&
-//        (lowFilterType!=PRJCT_FILTER_TYPE_ODDEVEN) &&
-//       ((rc=ANALYSE_LoadFilter(plFilter))!=0)) ||
-//
-//      (((highFilterType=phFilter->type)!=PRJCT_FILTER_TYPE_NONE) &&
-//        (highFilterType!=PRJCT_FILTER_TYPE_ODDEVEN) &&
-//       ((rc=ANALYSE_LoadFilter(phFilter))!=0)))
-//
-//   goto EndConvolution;
-
-  nFilter=0;
-
-  if ((lowFilterType!=PRJCT_FILTER_TYPE_NONE) && (lowFilterType!=PRJCT_FILTER_TYPE_ODDEVEN))
-   nFilter+=(int)(plFilter->filterWidth*sqrt(plFilter->filterNTimes)+0.5);
-  if ((highFilterType!=PRJCT_FILTER_TYPE_NONE) && (highFilterType!=PRJCT_FILTER_TYPE_ODDEVEN))
-   nFilter+=(int)(phFilter->filterWidth*sqrt(phFilter->filterNTimes)+0.5);
-
-  filterVector=NULL;
-
-  // Display control
-
-  deconvFlag=((pEngineContext->convolutionType!=CONVOLUTION_TYPE_NONE) && (slitType!=SLIT_TYPE_GAUSS_FILE) && (slitType!=SLIT_TYPE_INVPOLY_FILE) && (slitType!=SLIT_TYPE_ERF_FILE) &&
-            (((pSlitDConv->slitType==SLIT_TYPE_FILE) && (strlen(pSlitDConv->slitFile)!=0)) ||
-            (((pSlitDConv->slitType==SLIT_TYPE_GAUSS) || (pSlitDConv->slitType==SLIT_TYPE_INVPOLY) || (pSlitDConv->slitType==SLIT_TYPE_ERF)) && (pSlitDConv->slitParam>0.))))?1:0;
-
-  // Load calibration file and slit function
-
-  if (!(rc=XSCONV_LoadCalibrationFile(&XSCONV_xsnew,pEngineContext->calibrationFile,nFilter)) &&
-     (((lowFilterType==PRJCT_FILTER_TYPE_NONE) && (highFilterType==PRJCT_FILTER_TYPE_NONE)) ||
-      ((filterVector=(double *)MEMORY_AllocDVector("XSCONV_Convolution ","filterVector",0,XSCONV_xsnew.NDET-1))!=NULL)) &&
-      ((pEngineContext->convolutionType==CONVOLUTION_TYPE_NONE) ||
-     (!(rc=XSCONV_LoadSlitFunction(&XSCONV_slitFunction,&pEngineContext->slitConv,&slitParam,&slitType)) &&
-      (!deconvFlag || !(rc=XSCONV_LoadSlitFunction(&XSCONV_slitDFunction,pSlitDConv,&slitParam2,&slitType2))))))
-   {
-    slitWidth=(double)2.*slitParam;
-
-    // Window in wavelength
-
-    if ((slitType!=SLIT_TYPE_FILE) || (pEngineContext->convolutionType==CONVOLUTION_TYPE_NONE))
-     {
-      lambdaMin=XSCONV_xsnew.lambda[0]-slitWidth-1.;                     // add 1 nm
-      lambdaMax=XSCONV_xsnew.lambda[XSCONV_xsnew.NDET-1]+slitWidth+1.;
-     }
-    else
-     {
-      lambdaMin=XSCONV_xsnew.lambda[0]+XSCONV_slitFunction.lambda[0]-1.;                     // add 1 nm
-      lambdaMax=XSCONV_xsnew.lambda[XSCONV_xsnew.NDET-1]+XSCONV_slitFunction.lambda[XSCONV_slitFunction.NDET-1]+1.;
-     }
-
-    if (deconvFlag)
-     slitType=SLIT_TYPE_FILE;  // the resulting effective slit function works as a slit file type one
-
-    // Determine effective slit function when a deconvolution slit function is given
-
-    if ((!deconvFlag || !(rc=XsconvNewSlitFunction(pSlitConv,&XSCONV_slitFunction,slitParam,pSlitDConv,&XSCONV_slitDFunction,slitParam2))) &&
-
-    // Load high resolution Kurucz file in convolution with I0 correction method
-
-        ((pEngineContext->convolutionType!=CONVOLUTION_TYPE_I0_CORRECTION) ||
-        !(rc=XSCONV_LoadCrossSectionFile(&XSCONV_kurucz,pEngineContext->kuruczFile,lambdaMin,lambdaMax,(double)0.,CONVOLUTION_CONVERSION_NONE))) &&
-        !(rc=XSCONV_LoadCrossSectionFile(&XSCONV_xshr,pEngineContext->crossFile,lambdaMin,lambdaMax,(double)pEngineContext->shift,pEngineContext->conversionMode)))
-     {
-      dispConv=((pEngineContext->convolutionType!=CONVOLUTION_TYPE_NONE) ||
-            (XSCONV_xshr.NDET!=XSCONV_xsnew.NDET) ||
-            !VECTOR_Equal(XSCONV_xshr.lambda,XSCONV_xsnew.lambda,XSCONV_xsnew.NDET,(double)1.e-7))?1:0;
-
-      dispLFilter=(lowFilterType!=PRJCT_FILTER_TYPE_NONE)?1:0;
-      dispHFilter=(highFilterType!=PRJCT_FILTER_TYPE_NONE)?1:0;
-
-      nGraph=dispConv+dispLFilter+dispHFilter;
-      iGraph=0;
-
-      // -----------
-      // Convolution
-      // -----------
-
-      switch(pEngineContext->convolutionType)
-       {
-     // ----------------------------------------------------------------------
-        case CONVOLUTION_TYPE_NONE :
-         rc=XSCONV_TypeNone(&XSCONV_xsnew,&XSCONV_xshr);
-        break;
-     // ----------------------------------------------------------------------
-        case CONVOLUTION_TYPE_STANDARD :
-         rc=XSCONV_TypeStandard(&XSCONV_xsnew,0,XSCONV_xsnew.NDET,&XSCONV_xshr,&XSCONV_slitFunction,&XSCONV_xshr,NULL,slitType,slitWidth,slitParam,
-                                 pEngineContext->slitConv.slitParam2,pEngineContext->slitConv.slitParam3,pEngineContext->slitConv.slitParam4);
-        break;
-     // ----------------------------------------------------------------------
-        case CONVOLUTION_TYPE_I0_CORRECTION :
-          rc=XsconvTypeI0Correction(&XSCONV_xsnew,&XSCONV_xshr,&XSCONV_kurucz,&XSCONV_slitFunction,pEngineContext->conc,slitType,slitWidth,slitParam,pEngineContext->slitConv.slitParam2,pEngineContext->slitConv.slitParam3,pEngineContext->slitConv.slitParam4);
-        break;
-     // ----------------------------------------------------------------------
-     }
-
-      if (rc!=0)
-       goto EndConvolution;
-
-      if (dispConv)
-       {
-       	plot_data_t spectrumData[2];
-
-       	sprintf(windowTitle,"Original cross section : %s",pEngineContext->crossFile);
-
-        mediateAllocateAndSetPlotData(&spectrumData[0],XSCONV_xshr.lambda,XSCONV_xshr.vector,XSCONV_xshr.NDET,Line);
-        mediateAllocateAndSetPlotData(&spectrumData[1],XSCONV_xsnew.lambda+nFilter,XSCONV_xsnew.vector+nFilter,XSCONV_xsnew.NDET-2*nFilter,Line);
-        mediateResponsePlotData(0,spectrumData,2,Spectrum,forceAutoScale,windowTitle,"Wavelength (nm)","",responseHandle);
-        mediateResponseLabelPage(0,(pEngineContext->convolutionType!=CONVOLUTION_TYPE_NONE)?"Spectrum after convolution":"Spectrum after interpolation","",responseHandle);
-        mediateReleasePlotData(spectrumData);
-       }
-
-      if (filterVector!=NULL)
-       memcpy(filterVector,XSCONV_xsnew.vector,XSCONV_xsnew.NDET*sizeof(double));
-
-      // ------------------
-      // Low-Pass filtering
-      // ------------------
-
-      if ((lowFilterType!=PRJCT_FILTER_TYPE_NONE) && (filterVector!=NULL) &&
-        (((lowFilterType==PRJCT_FILTER_TYPE_ODDEVEN) && !(rc=FILTER_OddEvenCorrection(XSCONV_xsnew.lambda,XSCONV_xsnew.vector,filterVector,XSCONV_xsnew.NDET))) ||
-         ((lowFilterType!=PRJCT_FILTER_TYPE_ODDEVEN) && !(rc=FILTER_Vector(plFilter,filterVector,filterVector,XSCONV_xsnew.NDET,PRJCT_FILTER_OUTPUT_LOW)))))
-       {
-       	#if defined (__WINDOAS_GUI_) && __WINDOAS_GUI_
-
-        SendMessage(CHILD_hwndFrame,WM_MDIACTIVATE,(WPARAM)CHILD_list[CHILD_WINDOW_SPECTRA].hwndChild,(LPARAM)0);
-        sprintf(windowTitle,"Original cross section : %s",FILES_RebuildFileName(fileName,pEngineContext->crossFile,1));
-        strcpy(graphTitle,"After low-pass filtering");
-
-        DRAW_Spectra(CHILD_WINDOW_SPECTRA,windowTitle,graphTitle,"Wavelength (nm)","",NULL,0,
-                    (double)0.,(double)0.,(double)0.,(double)0.,
-                     XSCONV_xsnew.lambda+nFilter,XSCONV_xsnew.vector+nFilter,XSCONV_xsnew.NDET-2*nFilter,DRAW_COLOR2,0,XSCONV_xsnew.NDET-2*nFilter-1,PS_SOLID,"Not filtered",
-                     XSCONV_xsnew.lambda+nFilter,filterVector+nFilter,XSCONV_xsnew.NDET-2*nFilter,DRAW_COLOR1,0,XSCONV_xsnew.NDET-2*nFilter-1,PS_SOLID,"Filtered",
-                     iGraph,1,nGraph,(iGraph==nGraph-1)?1:0);
-
-        iGraph++;
-
-        #endif
-       }
-
-      // -------------------
-      // High-Pass filtering
-      // -------------------
-
-      if ((highFilterType!=PRJCT_FILTER_TYPE_NONE) && (highFilterType!=PRJCT_FILTER_TYPE_ODDEVEN) && (filterVector!=NULL) &&
-         !(rc=FILTER_Vector(phFilter,filterVector,filterVector,XSCONV_xsnew.NDET,PRJCT_FILTER_OUTPUT_HIGH_SUB+phFilter->filterAction)))
-       {
-       	#if defined (__WINDOAS_GUI_) && __WINDOAS_GUI_
-
-        SendMessage(CHILD_hwndFrame,WM_MDIACTIVATE,(WPARAM)CHILD_list[CHILD_WINDOW_SPECTRA].hwndChild,(LPARAM)0);
-        sprintf(windowTitle,"Original cross section : %s",FILES_RebuildFileName(fileName,pEngineContext->crossFile,1));
-        strcpy(graphTitle,"After high-pass filtering");
-
-        DRAW_Spectra(CHILD_WINDOW_SPECTRA,windowTitle,graphTitle,"Wavelength (nm)","",NULL,0,
-                    (double)0.,(double)0.,(double)0.,(double)0.,
-                     XSCONV_xsnew.lambda+nFilter,filterVector+nFilter,XSCONV_xsnew.NDET-2*nFilter,DRAW_COLOR2,0,XSCONV_xsnew.NDET-2*nFilter-1,PS_SOLID,"",
-                     NULL,NULL,0,DRAW_COLOR1,0,0,PS_SOLID,"",
-                     iGraph,1,nGraph,(iGraph==nGraph-1)?1:0);
-
-        iGraph++;
-
-        #endif
-       }
-
-      // ----------------------------
-      // Save resulting cross section
-      // ----------------------------
-
-      #if defined (__WINDOAS_GUI_) && __WINDOAS_GUI_
-      XsconvSaveNew(hwndXsconv,&XSCONV_xsnew,filterVector,&XSCONV_options,nFilter);
-      #endif
-     }
-   }
-
-  EndConvolution :
-
-  // Release allocated buffers
-
-  XSCONV_Reset(&XSCONV_xsnew);
-  XSCONV_Reset(&XSCONV_slitFunction);
-  XSCONV_Reset(&XSCONV_slitDFunction);
-  XSCONV_Reset(&XSCONV_xshr);
-  XSCONV_Reset(&XSCONV_kurucz);
-
-  if (filterVector!=NULL)
-   MEMORY_ReleaseDVector("XSCONV_Convolution ","filterVector",filterVector,0);
-
-  if (plFilter->filterFunction!=NULL)
-   {
-    MEMORY_ReleaseDVector("XSCONV_Convolution ","FILTER_function",plFilter->filterFunction,1);
-    plFilter->filterFunction=NULL;
-   }
-
-  if (phFilter->filterFunction!=NULL)
-   {
-    MEMORY_ReleaseDVector("XSCONV_Convolution ","FILTER_function",phFilter->filterFunction,1);
-    phFilter->filterFunction=NULL;
-   }
-
-  // Return
-
-  return rc;
- }
 // QDOAS ???
 // QDOAS ??? #if defined (__WINDOAS_GUI_) && __WINDOAS_GUI_
 // QDOAS ???
@@ -3453,365 +2908,3 @@ RC XSCONV_Convolution(ENGINE_XSCONV_CONTEXT *pEngineContext,void *responseHandle
 // QDOAS ???    }
 // QDOAS ???  }
 // QDOAS ???
-// QDOAS ??? // -----------------------------------------------------------------------------
-// QDOAS ??? // FUNCTION        XsConvHelp
-// QDOAS ??? // -----------------------------------------------------------------------------
-// QDOAS ??? // PURPOSE         dispatch help messages from the convolution tools dialog box
-// QDOAS ??? //
-// QDOAS ??? // INPUT           hwndXsconv : handle to the convolution tools dialog box
-// QDOAS ??? //                 ctrlId     : id of the field help is needed for
-// QDOAS ??? // -----------------------------------------------------------------------------
-// QDOAS ???
-// QDOAS ??? void XsConvHelp(HWND hwndXsconv,INT ctrlId)
-// QDOAS ???  {
-// QDOAS ???   // Declaration
-// QDOAS ???
-// QDOAS ???   INT helpId;
-// QDOAS ???
-// QDOAS ???   // Initialization
-// QDOAS ???
-// QDOAS ???   helpId=ITEM_NONE;
-// QDOAS ???
-// QDOAS ???   // Dispatches help messages
-// QDOAS ???
-// QDOAS ???   if (xsconvIndexSelected==TAB_TYPE_XSCONV_FILTER)
-// QDOAS ???    helpId=HLP_TOOLS_CONV_TAB3_DATA;
-// QDOAS ???   else if (ctrlId==ITEM_NONE)
-// QDOAS ???    helpId=(xsconvIndexSelected==TAB_TYPE_XSCONV_GENERAL)?HLP_TOOLS_CONV_TAB1_TYPE:HLP_TOOLS_CONV_TAB2_DATA;
-// QDOAS ???   else
-// QDOAS ???
-// QDOAS ???    switch(ctrlId)
-// QDOAS ???     {
-// QDOAS ???   // ----------------------------------------------------------------------------
-// QDOAS ???      case TOOL_CONVOLUTION_SELECTION :
-// QDOAS ???       helpId=HLP_TOOLS_CONV_TAB1_TYPE;
-// QDOAS ???      break;
-// QDOAS ???   // ----------------------------------------------------------------------------
-// QDOAS ???      case TOOL_CONVOLUTION_CONVERSION :
-// QDOAS ???       helpId=HLP_TOOLS_CONV_TAB1_CONVERSION;
-// QDOAS ???      break;
-// QDOAS ???   // ----------------------------------------------------------------------------
-// QDOAS ???      case TOOL_CONVOLUTION_SHIFT_GROUP :
-// QDOAS ???      case TOOL_CONVOLUTION_SHIFT :
-// QDOAS ???       helpId=HLP_TOOLS_CONV_TAB1_SHIFT;
-// QDOAS ???      break;
-// QDOAS ???   // ----------------------------------------------------------------------------
-// QDOAS ???      case TOOL_CONVOLUTION_CROSS_BUTTON :
-// QDOAS ???      case TOOL_CONVOLUTION_CROSS_FILE :
-// QDOAS ???      case TOOL_CONVOLUTION_PATH_BUTTON :
-// QDOAS ???      case TOOL_CONVOLUTION_PATH :
-// QDOAS ???      case TOOL_CONVOLUTION_CALIBRATION_BUTTON :
-// QDOAS ???      case TOOL_CONVOLUTION_CALIBRATION_FILE :
-// QDOAS ???       helpId=HLP_TOOLS_CONV_TAB1_FILES;
-// QDOAS ???      break;
-// QDOAS ???   // ----------------------------------------------------------------------------
-// QDOAS ???      case TOOL_CONVOLUTION_CONC_TEXT :
-// QDOAS ???      case TOOL_CONVOLUTION_CONC :
-// QDOAS ???      case TOOL_CONVOLUTION_CONC_UNITS :
-// QDOAS ???      case TOOL_CONVOLUTION_KURUCZ_BUTTON :
-// QDOAS ???      case TOOL_CONVOLUTION_KURUCZ_FILE :
-// QDOAS ???       helpId=HLP_TOOLS_CONV_TAB1_I0;
-// QDOAS ???      break;
-// QDOAS ???   // ----------------------------------------------------------------------------
-// QDOAS ???      case TOOL_CONVOLUTION_TYPE :
-// QDOAS ???      case TOOL_CONVOLUTION_GAUSS_WIDTH_TEXT :
-// QDOAS ???      case TOOL_CONVOLUTION_GAUSS_WIDTH :
-// QDOAS ???      case TOOL_CONVOLUTION_GAUSS_WIDTH_NM :
-// QDOAS ???      case TOOL_CONVOLUTION_SLIT_BUTTON :
-// QDOAS ???      case TOOL_CONVOLUTION_SLIT_FILE :
-// QDOAS ???      case TOOL_CONVOLUTION_INVPOLY_TEXT :
-// QDOAS ???      case TOOL_CONVOLUTION_INVPOLY :
-// QDOAS ???      case TOOL_CONVOLUTION_INVPOLY_2 :
-// QDOAS ???       helpId=HLP_TOOLS_CONV_TAB2_DATA;
-// QDOAS ???      break;
-// QDOAS ???   // ----------------------------------------------------------------------------
-// QDOAS ???      case TOOL_DECONVOLUTION_SLIT_TYPE :
-// QDOAS ???      case TOOL_DECONVOLUTION_TYPE :
-// QDOAS ???      case TOOL_DECONVOLUTION_GAUSS_WIDTH_TEXT :
-// QDOAS ???      case TOOL_DECONVOLUTION_GAUSS_WIDTH :
-// QDOAS ???      case TOOL_DECONVOLUTION_GAUSS_WIDTH_NM :
-// QDOAS ???      case TOOL_DECONVOLUTION_SLIT_BUTTON :
-// QDOAS ???      case TOOL_DECONVOLUTION_SLIT_FILE :
-// QDOAS ???      case TOOL_DECONVOLUTION_INVPOLY_TEXT :
-// QDOAS ???      case TOOL_DECONVOLUTION_INVPOLY :
-// QDOAS ???      case TOOL_DECONVOLUTION_INVPOLY_2 :
-// QDOAS ???       helpId=HLP_TOOLS_CONV_TAB2_DECONV;
-// QDOAS ???      break;
-// QDOAS ???   // ----------------------------------------------------------------------------
-// QDOAS ???     }
-// QDOAS ???
-// QDOAS ???   // Call help processor
-// QDOAS ???
-// QDOAS ???   if (helpId!=ITEM_NONE)
-// QDOAS ???    WinHelp(hwndXsconv,DOAS_HelpPath,HELP_CONTEXT,helpId);
-// QDOAS ???  }
-// QDOAS ???
-// QDOAS ??? // -----------------------------------------------------------------------------
-// QDOAS ??? // FUNCTION        XsconvCommand
-// QDOAS ??? // -----------------------------------------------------------------------------
-// QDOAS ??? // PURPOSE         dispatch command messages from the convolution tools dialog box
-// QDOAS ??? //
-// QDOAS ??? // INPUT           usual syntax for windows messages routines
-// QDOAS ??? // -----------------------------------------------------------------------------
-// QDOAS ???
-// QDOAS ??? LRESULT CALLBACK XsconvCommand(HWND hwndXsconv,UINT msg,WPARAM mp1,LPARAM mp2)
-// QDOAS ???  {
-// QDOAS ???   switch((ULONG)GET_WM_COMMAND_ID(mp1,mp2))
-// QDOAS ???    {
-// QDOAS ???  // ---------------------------------------------------------------------------
-// QDOAS ???     case IDOK :
-// QDOAS ???      XsconvOK(hwndXsconv);
-// QDOAS ???     break;
-// QDOAS ???  // ---------------------------------------------------------------------------
-// QDOAS ???     case IDCANCEL :
-// QDOAS ???      EndDialog(hwndXsconv,FALSE);
-// QDOAS ???     break;
-// QDOAS ???  // ---------------------------------------------------------------------------
-// QDOAS ???     case IDHELP :
-// QDOAS ???      XsConvHelp(hwndXsconv,ITEM_NONE);
-// QDOAS ???     break;
-// QDOAS ???  // ---------------------------------------------------------------------------
-// QDOAS ???    }
-// QDOAS ???
-// QDOAS ???   return 0;
-// QDOAS ???  }
-// QDOAS ???
-// QDOAS ??? // -----------------------------------------------------------------------------
-// QDOAS ??? // FUNCTION        XSCONV_WndProc
-// QDOAS ??? // -----------------------------------------------------------------------------
-// QDOAS ??? // PURPOSE         dispatch messages from the convolution tools dialog box
-// QDOAS ??? //
-// QDOAS ??? // INPUT           usual syntax for windows messages routines
-// QDOAS ??? // -----------------------------------------------------------------------------
-// QDOAS ???
-// QDOAS ??? LRESULT CALLBACK XSCONV_WndProc(HWND hwndXsconv,UINT msg,WPARAM mp1,LPARAM mp2)
-// QDOAS ???  {
-// QDOAS ???   switch (msg)
-// QDOAS ???    {
-// QDOAS ???  // ---------------------------------------------------------------------------
-// QDOAS ???     case WM_INITDIALOG :
-// QDOAS ???      XsconvInit(hwndXsconv);
-// QDOAS ???     break;
-// QDOAS ???  // ---------------------------------------------------------------------------
-// QDOAS ???     case WM_NOTIFY :
-// QDOAS ???      XsconvNotify(hwndXsconv,(NMHDR *)mp2);
-// QDOAS ???     break;
-// QDOAS ???  // ---------------------------------------------------------------------------
-// QDOAS ???     case WM_COMMAND :
-// QDOAS ???      XsconvCommand(hwndXsconv,msg,mp1,mp2);
-// QDOAS ???     break;
-// QDOAS ???  // ---------------------------------------------------------------------------
-// QDOAS ???     case WM_HELP :
-// QDOAS ???      XsConvHelp(hwndXsconv,((LPHELPINFO)mp2)->iCtrlId);
-// QDOAS ???     break;
-// QDOAS ???  // ---------------------------------------------------------------------------
-// QDOAS ???    }
-// QDOAS ???
-// QDOAS ???   return 0;
-// QDOAS ???  }
-// QDOAS ???
-// QDOAS ??? #endif
-// QDOAS ???
-// QDOAS ??? // ==================
-// QDOAS ??? // CONFIGURATION FILE
-// QDOAS ??? // ==================
-// QDOAS ???
-// QDOAS ??? // -----------------------------------------------------------------------------
-// QDOAS ??? // FUNCTION        XSCONV_ResetConfiguration
-// QDOAS ??? // -----------------------------------------------------------------------------
-// QDOAS ??? // PURPOSE         Initialize the convolution options to default values
-// QDOAS ??? // -----------------------------------------------------------------------------
-// QDOAS ???
-// QDOAS ??? void XSCONV_ResetConfiguration(void)
-// QDOAS ???  {
-// QDOAS ???  	// Declarations
-// QDOAS ???
-// QDOAS ???   PRJCT_FILTER *plFilter,*phFilter;                                             // pointer to the filter options
-// QDOAS ???
-// QDOAS ???   // Reset all the options
-// QDOAS ???
-// QDOAS ???   memset(&XSCONV_options,0,sizeof(XSCONV));
-// QDOAS ???
-// QDOAS ???   // Low-pass filtering
-// QDOAS ???
-// QDOAS ???   plFilter=&pEngineContext->lfilter;
-// QDOAS ???
-// QDOAS ???   plFilter->fwhmWidth=                                                          // fwhm width for gaussian
-// QDOAS ???   plFilter->kaiserCutoff=                                                       // cutoff frequency for kaiser filter type
-// QDOAS ???   plFilter->kaiserPassBand=                                                     // pass band for kaiser filter type
-// QDOAS ???   plFilter->kaiserTolerance=(float)0.;                                          // tolerance for kaiser filter type
-// QDOAS ???   plFilter->filterNTimes=1;                                                     // number of times the filter has to be applied
-// QDOAS ???
-// QDOAS ???   // High-pass filtering
-// QDOAS ???
-// QDOAS ???   phFilter=&pEngineContext->hfilter;
-// QDOAS ???
-// QDOAS ???   phFilter->fwhmWidth=                                                          // fwhm width for gaussian
-// QDOAS ???   phFilter->kaiserCutoff=                                                       // cutoff frequency for kaiser filter type
-// QDOAS ???   phFilter->kaiserPassBand=                                                     // pass band for kaiser filter type
-// QDOAS ???   phFilter->kaiserTolerance=(float)0.;                                          // tolerance for kaiser filter type
-// QDOAS ???   phFilter->filterNTimes=1;                                                     // number of times the filter has to be applied
-// QDOAS ???  }
-// QDOAS ???
-// QDOAS ??? // -----------------------------------------------------------------------------
-// QDOAS ??? // FUNCTION        XSCONV_LoadConfiguration
-// QDOAS ??? // -----------------------------------------------------------------------------
-// QDOAS ??? // PURPOSE         Load last used information in the convolution tool box from
-// QDOAS ??? //                 the wds configuration file
-// QDOAS ??? //
-// QDOAS ??? // INPUT           fileLine : the convolution line in the configuration file
-// QDOAS ??? //
-// QDOAS ??? // RETURN          0 if the input line is not related to the convolution options
-// QDOAS ??? //                 1 if the input line is related to the convolution options
-// QDOAS ??? // -----------------------------------------------------------------------------
-// QDOAS ???
-// QDOAS ??? RC XSCONV_LoadConfiguration(UCHAR *fileLine)
-// QDOAS ???  {
-// QDOAS ???   // Declarations
-// QDOAS ???
-// QDOAS ???   UCHAR keyName[MAX_ITEM_NAME_LEN+1],                                           // key name of the input line
-// QDOAS ???         text[MAX_STR_LEN+1];                                                    // the remaining of the input line
-// QDOAS ???   RC    rc;                                                                     // return code
-// QDOAS ???
-// QDOAS ???   // Initializations
-// QDOAS ???
-// QDOAS ???   memset(keyName,0,MAX_ITEM_NAME_LEN+1);
-// QDOAS ???   memset(text,0,MAX_STR_LEN+1);
-// QDOAS ???
-// QDOAS ???   rc=0;
-// QDOAS ???
-// QDOAS ???   if ((sscanf(fileLine,"%[^'=']=%[^'\n']",keyName,text)>=2) && !STD_Stricmp(keyName,XSCONV_SECTION))
-// QDOAS ???    {
-// QDOAS ???    	rc=1;
-// QDOAS ???
-// QDOAS ???     // Load new options
-// QDOAS ???
-// QDOAS ???     memset(&XSCONV_options,0,sizeof(XSCONV));
-// QDOAS ???
-// QDOAS ???     if (sscanf(text,"%d,%[^','],%[^','],%[^','],%[^','],%[^','],%d,%d,%lf,%lf,%[^','],%d,%lf,%lf,%[^','],%lf,%d,%f,%f,%f,%f,%d,%d,%d,%d,%d,%f,%f,%f,%f,%d,%d,%d,%d,%lf,%lf,%lf,%lf",
-// QDOAS ???
-// QDOAS ???                                                                                 // GENERAL
-// QDOAS ???               (INT *)&pEngineContext->convolutionType,                           // type of convolution (none, standard, I0 correction)
-// QDOAS ???             (UCHAR *) pEngineContext->shift,                                     // shift to apply to the original cross section
-// QDOAS ???             (UCHAR *) pEngineContext->crossFile,                                 // the name of the high-resoluted cross section file
-// QDOAS ???             (UCHAR *) pEngineContext->path,                                      // the output path
-// QDOAS ???             (UCHAR *) pEngineContext->calibrationFile,                           // the name of the wavelength calibration file
-// QDOAS ???             (UCHAR *) pEngineContext->kuruczFile,                                // the name of the high resoluted solar spectrum file (I0 correction)
-// QDOAS ???               (INT *)&pEngineContext->noComment,                                 // flag, 1 to save no comment lines in the output file
-// QDOAS ???
-// QDOAS ???                                                                                 // SLIT FUNCTION
-// QDOAS ???               (INT *)&pEngineContext->slitConv.slitType,                         // the type of the slit function to convolute the cross section
-// QDOAS ???            (double *)&pEngineContext->slitConv.slitParam,                        // the first parameter
-// QDOAS ???            (double *)&pEngineContext->slitConv.slitParam2,                       // the second parameter
-// QDOAS ???             (UCHAR *) pEngineContext->slitConv.slitFile,                         // the name of the slit function file
-// QDOAS ???               (INT *)&pEngineContext->slitDConv.slitType,                        // the type of the slit function to deconvolute the cross section
-// QDOAS ???            (double *)&pEngineContext->slitDConv.slitParam,                       // the first parameter (deconvolution)
-// QDOAS ???            (double *)&pEngineContext->slitDConv.slitParam2,                      // the second parameter (deconvolution)
-// QDOAS ???             (UCHAR *) pEngineContext->slitDConv.slitFile,                        // the name of the slit function file (deconvolution)
-// QDOAS ???            (double *)&pEngineContext->conc,                                      // concentration to use (I0 correction)
-// QDOAS ???
-// QDOAS ???                                                                                 // LOW-PASS FILTERING
-// QDOAS ???               (int *)&pEngineContext->lfilter.type,                              // type of filter
-// QDOAS ???             (float *)&pEngineContext->lfilter.fwhmWidth,                         // fwhm width for gaussian filters
-// QDOAS ???             (float *)&pEngineContext->lfilter.kaiserCutoff,                      // cutoff frequency for kaiser filter type
-// QDOAS ???             (float *)&pEngineContext->lfilter.kaiserPassBand,                    // pass band for kaiser filter type
-// QDOAS ???             (float *)&pEngineContext->lfilter.kaiserTolerance,                   // tolerance for kaiser filter type
-// QDOAS ???               (int *)&pEngineContext->lfilter.filterWidth,                       // filter width for boxcar, triangle and Savitsky-Golay filters
-// QDOAS ???               (int *)&pEngineContext->lfilter.filterOrder,                       // filter order for Savitsky-Golay filters
-// QDOAS ???               (int *)&pEngineContext->conversionMode,                            // conversion mode (vacuum to air or air to vacuum)
-// QDOAS ???               (int *)&pEngineContext->lfilter.filterNTimes,                      // the number of times the filter has to be applied
-// QDOAS ???
-// QDOAS ???                                                                                 // HIGH-PASS FILTERING
-// QDOAS ???               (int *)&pEngineContext->hfilter.type,                              // type of filter
-// QDOAS ???             (float *)&pEngineContext->hfilter.fwhmWidth,                         // fwhm width for gaussian filters
-// QDOAS ???             (float *)&pEngineContext->hfilter.kaiserCutoff,                      // cutoff frequency for kaiser filter type
-// QDOAS ???             (float *)&pEngineContext->hfilter.kaiserPassBand,                    // pass band for kaiser filter type
-// QDOAS ???             (float *)&pEngineContext->hfilter.kaiserTolerance,                   // tolerance for kaiser filter type
-// QDOAS ???               (int *)&pEngineContext->hfilter.filterWidth,                       // filter width for boxcar, triangle and Savitsky-Golay filters
-// QDOAS ???               (int *)&pEngineContext->hfilter.filterOrder,                       // filter order for Savitsky-Golay filters
-// QDOAS ???               (int *)&pEngineContext->hfilter.filterNTimes,                      // the number of times the filter has to be applied
-// QDOAS ???               (int *)&pEngineContext->hfilter.filterAction,                      // action according to the analysis mode (substraction or division)
-// QDOAS ???
-// QDOAS ???            (double *)&pEngineContext->slitConv.slitParam3,                       // third parameter (convolution with Voigt function)
-// QDOAS ???            (double *)&pEngineContext->slitConv.slitParam4,                       // fourth parameter (convolution with Voigt function)
-// QDOAS ???            (double *)&pEngineContext->slitDConv.slitParam3,                      // third parameter (deconvolution with Voigt function)
-// QDOAS ???            (double *)&pEngineContext->slitDConv.slitParam4)>=1)                  // fourth parameter (deconvolution with Voigt function)
-// QDOAS ???      {
-// QDOAS ???      	// Compact the files names
-// QDOAS ???
-// QDOAS ???       FILES_CompactPath(pEngineContext->crossFile,pEngineContext->crossFile,1,1);
-// QDOAS ???       FILES_CompactPath(pEngineContext->path,pEngineContext->path,1,1);
-// QDOAS ???       FILES_CompactPath(pEngineContext->calibrationFile,pEngineContext->calibrationFile,1,1);
-// QDOAS ???       FILES_CompactPath(pEngineContext->kuruczFile,pEngineContext->kuruczFile,1,1);
-// QDOAS ???       FILES_CompactPath(pEngineContext->slitConv.slitFile,pEngineContext->slitConv.slitFile,1,1);
-// QDOAS ???       FILES_CompactPath(pEngineContext->slitDConv.slitFile,pEngineContext->slitDConv.slitFile,1,1);
-// QDOAS ???      }
-// QDOAS ???    }
-// QDOAS ???
-// QDOAS ???   // Return
-// QDOAS ???
-// QDOAS ???   return rc;
-// QDOAS ???  }
-// QDOAS ???
-// QDOAS ??? // -----------------------------------------------------------------------------
-// QDOAS ??? // FUNCTION        XSCONV_SaveConfiguration
-// QDOAS ??? // -----------------------------------------------------------------------------
-// QDOAS ??? // PURPOSE         Save the last information from the convolution tool box in
-// QDOAS ??? //                 the wds configuration file
-// QDOAS ??? //
-// QDOAS ??? // INPUT           fp          : pointer to the current wds configuration file
-// QDOAS ??? // -----------------------------------------------------------------------------
-// QDOAS ???
-// QDOAS ??? void XSCONV_SaveConfiguration(FILE *fp)
-// QDOAS ???  {
-// QDOAS ???   fprintf(fp,"%s=%d,%s,%s,%s,%s,%s,%d,%d,%lf,%lf,%s,%d,%lf,%lf,%s,%lf,%d,%.3f,%.3f,%.3f,%.3f,%d,%d,%d,%d,%d,%.3f,%.3f,%.3f,%.3f,%d,%d,%d,%d,%.3f,%.3f,%.3f,%.3f\n",
-// QDOAS ???
-// QDOAS ???               XSCONV_SECTION,                                                   // convolution key name
-// QDOAS ???
-// QDOAS ???                                                                                 // GENERAL
-// QDOAS ???               pEngineContext->convolutionType,                                   // type of convolution (none, standard, I0 correction)
-// QDOAS ???               pEngineContext->shift,                                             // shift to apply to the original cross section
-// QDOAS ???               pEngineContext->crossFile,                                         // the name of the high-resoluted cross section file
-// QDOAS ???               pEngineContext->path,                                              // the output path
-// QDOAS ???               pEngineContext->calibrationFile,                                   // the name of the wavelength calibration file
-// QDOAS ???               pEngineContext->kuruczFile,                                        // the name of the high resoluted solar spectrum file (I0 correction)
-// QDOAS ???               pEngineContext->noComment,                                         // flag, 1 to save no comment lines in the output file
-// QDOAS ???
-// QDOAS ???                                                                                 // SLIT FUNCTION
-// QDOAS ???               pEngineContext->slitConv.slitType,                                 // the type of the slit function to convolute the cross section
-// QDOAS ???               pEngineContext->slitConv.slitParam,                                // the first parameter
-// QDOAS ???               pEngineContext->slitConv.slitParam2,                               // the second parameter
-// QDOAS ???               pEngineContext->slitConv.slitFile,                                 // the name of the slit function file
-// QDOAS ???               pEngineContext->slitDConv.slitType,                                // the type of the slit function to deconvolute the cross section
-// QDOAS ???               pEngineContext->slitDConv.slitParam,                               // the first parameter (deconvolution)
-// QDOAS ???               pEngineContext->slitDConv.slitParam2,                              // the second parameter (deconvolution)
-// QDOAS ???               pEngineContext->slitDConv.slitFile,                                // the name of the slit function file (deconvolution)
-// QDOAS ???               pEngineContext->conc,                                              // concentration to use (I0 correction)
-// QDOAS ???
-// QDOAS ???                                                                                 // LOW-PASS FILTERING
-// QDOAS ???          (INT)pEngineContext->lfilter.type,                                      // type of filter
-// QDOAS ???               pEngineContext->lfilter.fwhmWidth,                                 // fwhm width for gaussian filters
-// QDOAS ???               pEngineContext->lfilter.kaiserCutoff,                              // cutoff frequency for kaiser filter type
-// QDOAS ???               pEngineContext->lfilter.kaiserPassBand,                            // pass band for kaiser filter type
-// QDOAS ???               pEngineContext->lfilter.kaiserTolerance,                           // tolerance for kaiser filter type
-// QDOAS ???               pEngineContext->lfilter.filterWidth,                               // filter width for boxcar, triangle and Savitsky-Golay filters
-// QDOAS ???               pEngineContext->lfilter.filterOrder,                               // filter order for Savitsky-Golay filters
-// QDOAS ???               pEngineContext->conversionMode,                                    // conversion mode (vacuum to air or air to vacuum)
-// QDOAS ???               pEngineContext->lfilter.filterNTimes,                              // the number of times the filter has to be applied
-// QDOAS ???
-// QDOAS ???                                                                                 // HIGH-PASS FILTERING
-// QDOAS ???          (INT)pEngineContext->hfilter.type,                                      // type of filter
-// QDOAS ???               pEngineContext->hfilter.fwhmWidth,                                 // fwhm width for gaussian filters
-// QDOAS ???               pEngineContext->hfilter.kaiserCutoff,                              // cutoff frequency for kaiser filter type
-// QDOAS ???               pEngineContext->hfilter.kaiserPassBand,                            // pass band for kaiser filter type
-// QDOAS ???               pEngineContext->hfilter.kaiserTolerance,                           // tolerance for kaiser filter type
-// QDOAS ???               pEngineContext->hfilter.filterWidth,                               // filter width for boxcar, triangle and Savitsky-Golay filters
-// QDOAS ???               pEngineContext->hfilter.filterOrder,                               // filter order for Savitsky-Golay filters
-// QDOAS ???               pEngineContext->hfilter.filterNTimes,                              // the number of times the filter has to be applied
-// QDOAS ???               pEngineContext->hfilter.filterAction,                              // action according to the analysis mode (substraction or division)
-// QDOAS ???
-// QDOAS ???               pEngineContext->slitConv.slitParam3,                               // third parameter (convolution with Voigt function)
-// QDOAS ???               pEngineContext->slitConv.slitParam4,                               // fourth parameter (convolution with Voigt function)
-// QDOAS ???               pEngineContext->slitDConv.slitParam3,                              // third parameter (deconvolution with Voigt function)
-// QDOAS ???               pEngineContext->slitDConv.slitParam4);                             // fourth parameter (deconvolution with Voigt function)
-// QDOAS ???  }
