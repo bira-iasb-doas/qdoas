@@ -209,7 +209,7 @@ int batchProcess(commands_t *cmd)
     return batchProcessUsamp(cmd);
     break;
   default:
-    std::cout << "Failed to determine configuration file type." << std::endl;
+    std::cout << "Failed to open or determine configuration file type." << std::endl;
   }
 
   return 1;
@@ -256,8 +256,8 @@ enum BatchTool requiredBatchTool(const QString &filename)
 
 void showUsage()
 {
-  std::cout << "doas_cl -c <config file> [-p <project name>] [-o <output path>] [-f <file>]..." << std::endl << std::endl;
-  std::cout << "    -c <config file>   : A Qdoas, convolution, ring or usamp config file." << std::endl;
+  std::cout << "doas_cl -c <config file> [-p <project name>] [-o <output>] [-f <file>]..." << std::endl << std::endl;
+  std::cout << "    -c <config file>   : A Qdoas, convolution, [ring or usamp] config file." << std::endl;
   std::cout << "                         The tool to invoke is determined from the type of" << std::endl;
   std::cout << "                         configuration file specified." << std::endl;
 }
@@ -269,6 +269,8 @@ void showHelp()
 
 int batchProcessQdoas(commands_t *cmd)
 {
+  TRACE("batchProcessQdoas");
+
   QList<const CProjectConfigItem*> projectItems;
 
   int retCode = readConfigQdoas(cmd, projectItems);
@@ -316,7 +318,6 @@ int batchProcessQdoas(commands_t *cmd)
 int readConfigQdoas(commands_t *cmd, QList<const CProjectConfigItem*> &projectItems)
 {
   // read the configuration file
-  TRACE("batchProcessQdoas");
 
   int retCode = 0;
 
@@ -395,8 +396,6 @@ int readConfigQdoas(commands_t *cmd, QList<const CProjectConfigItem*> &projectIt
 
 int analyseProjectQdoas(const CProjectConfigItem *projItem,  const QString &outputDir, const QList<QString> &filenames)
 {
-  TRACE("analyseProjectQdoas(p, files)");
-
   void *engineContext;
   int retCode;
 
@@ -431,8 +430,6 @@ int analyseProjectQdoas(const CProjectConfigItem *projItem,  const QString &outp
 
 int analyseProjectQdoas(const CProjectConfigItem *projItem, const QString &outputDir)
 {
-  TRACE("analyseProjectQdoas(p)");
-
   void *engineContext;
   int retCode;
 
@@ -463,8 +460,6 @@ int analyseProjectQdoas(const CProjectConfigItem *projItem, const QString &outpu
 int analyseProjectQdoasPrepare(void **engineContext, const CProjectConfigItem *projItem, const QString &outputDir,
 			       CBatchEngineController *controller)
 {
-  TRACE("analyseProjectQdoasPrepare");
-
   int retCode = 0;
   CEngineResponseMessage *msgResp = new CEngineResponseMessage;
 
@@ -535,8 +530,6 @@ int analyseProjectQdoasFile(void *engineContext, CBatchEngineController *control
   int retCode = 0;
   int result;
 
-  TRACE("analyseProjectQdoasFile " << filename.toStdString());
-
   CEngineResponseBeginAccessFile *beginFileResp = new CEngineResponseBeginAccessFile(filename);
 
   result = mediateRequestBeginAnalyseSpectra(engineContext, filename.toAscii().constData(), beginFileResp);
@@ -598,105 +591,6 @@ int analyseProjectQdoasTreeNode(void *engineContext, CBatchEngineController *con
   return retCode;
 }
 
-
-int batchProcessConvolution(commands_t *cmd)
-{
-  TRACE("batchProcessConvolution");
-
-  int retCode = 0;
-
-  QFile *file = new QFile(cmd->configFile);
-
-  // parse the file
-  QXmlSimpleReader xmlReader;
-  QXmlInputSource *source = new QXmlInputSource(file);
-
-  CConvConfigHandler *handler = new CConvConfigHandler;
-  xmlReader.setContentHandler(handler);
-  xmlReader.setErrorHandler(handler);
-
-  bool ok = xmlReader.parse(source);
-
-  if (ok) {
-    void *engineContext = NULL;
-
-    CEngineResponseMessage *resp = new CEngineResponseMessage;
-    CBatchEngineController *controller = new CBatchEngineController;
-
-    // copy the properties data ...
-    mediate_convolution_t properties = *(handler->properties()); // blot copy
-
-    if (!cmd->outputDir.isEmpty() && cmd->outputDir.size() < FILENAME_BUFFER_LENGTH-1) {
-      // override the output directory
-      strcpy(properties.general.outputFile, cmd->outputDir.toAscii().data());
-    }
-
-    if (mediateXsconvCreateContext(&engineContext, resp) != 0) {
-      retCode = 1;
-    }
-    else {
-
-      const QList<QString> &filenames = cmd->filenames;
-
-      if (!filenames.isEmpty()) {
-
-	// loop over files ...
-	QList<QString>::const_iterator it = filenames.begin();
-	while (!retCode && it != filenames.end()) {
-
-	  if (!it->isEmpty() && it->size() < FILENAME_BUFFER_LENGTH-1) {
-	    strcpy(properties.general.inputFile, it->toAscii().data());
-
-     mediateRequestConvolution(engineContext, &properties, resp);
-	    retCode = mediateConvolutionCalculate(engineContext,resp);
-	    resp->process(controller);
-	  }
-
-	  ++it;
-	}
-
-      }
-      else {
-	// use the current input file
-	mediateRequestConvolution(engineContext, &properties, resp);
-	retCode = mediateConvolutionCalculate(engineContext,resp);
-	resp->process(controller);
-      }
-
-      if (mediateXsconvDestroyContext(engineContext, resp) != 0) {
-	retCode = 1;
-      }
-    }
-
-    delete resp;
-    delete controller;
-  }
-  else {
-    retCode = 1;
-  }
-
-  delete handler;
-  delete source;
-  delete file;
-
-  return retCode;
-}
-
-int batchProcessRing(commands_t *cmd)
-{
-  TRACE("batchProcessRing");
-
-  return 0;
-}
-
-int batchProcessUsamp(commands_t *cmd)
-{
-  TRACE("batchProcessUsamp");
-
-  return 0;
-}
-
-
 int analyseProjectQdoasDirectory(void *engineContext, CBatchEngineController *controller,
 				 const QString &dir, const QString &filter, bool recursive)
 {
@@ -739,3 +633,112 @@ int analyseProjectQdoasDirectory(void *engineContext, CBatchEngineController *co
 
   return retCode;
 }
+
+int batchProcessConvolution(commands_t *cmd)
+{
+  TRACE("batchProcessConvolution");
+
+  int retCode = 0;
+
+  QFile *file = new QFile(cmd->configFile);
+
+  // parse the file
+  QXmlSimpleReader xmlReader;
+  QXmlInputSource *source = new QXmlInputSource(file);
+
+  CConvConfigHandler *handler = new CConvConfigHandler;
+  xmlReader.setContentHandler(handler);
+  xmlReader.setErrorHandler(handler);
+
+  bool ok = xmlReader.parse(source);
+
+  if (ok) {
+    void *engineContext = NULL;
+
+    CEngineResponseTool *resp = new CEngineResponseTool;
+    CBatchEngineController *controller = new CBatchEngineController;
+
+    // copy the properties data ...
+    mediate_convolution_t properties = *(handler->properties()); // blot copy
+
+    if (!cmd->outputDir.isEmpty() && cmd->outputDir.size() < FILENAME_BUFFER_LENGTH-1) {
+      // override the output directory
+      strcpy(properties.general.outputFile, cmd->outputDir.toAscii().data());
+    }
+
+    if (mediateXsconvCreateContext(&engineContext, resp) != 0) {
+      retCode = 1;
+    }
+    else {
+
+      const QList<QString> &filenames = cmd->filenames;
+
+      if (!filenames.isEmpty()) {
+
+	// can only process one file (because the output is a file name).
+
+	QList<QString>::const_iterator it = filenames.begin();
+
+	strcpy(properties.general.inputFile, it->toAscii().data());
+	
+	mediateRequestConvolution(engineContext, &properties, resp);
+	retCode = mediateConvolutionCalculate(engineContext,resp);
+	resp->process(controller);
+
+	++it;
+	if (it != filenames.end()) {
+	  // give a warning for the remaining files
+	  std::cout << "WARNING: Only one file can be processed. Ignoring the file(s)..." << std::endl;
+	  while (it != filenames.end()) {
+
+	    std::cout << "    " << it->toStdString() << std::endl;
+	    ++it;
+	  }
+	}
+	
+      }
+      else {
+	// use the current input file
+	mediateRequestConvolution(engineContext, &properties, resp);
+	retCode = mediateConvolutionCalculate(engineContext,resp);
+	resp->process(controller);
+      }
+      
+      if (mediateXsconvDestroyContext(engineContext, resp) != 0) {
+	retCode = 1;
+      }
+    }
+
+    delete resp;
+    delete controller;
+  }
+  else {
+    retCode = 1;
+  }
+
+  delete handler;
+  delete source;
+  delete file;
+
+  return retCode;
+}
+
+int batchProcessRing(commands_t *cmd)
+{
+  TRACE("batchProcessRing");
+
+  std::cout << "Command-line invocation of the ring tool is not currently supported." << std::endl;
+
+  return 1;
+}
+
+int batchProcessUsamp(commands_t *cmd)
+{
+  TRACE("batchProcessUsamp");
+
+  std::cout << "Command-line invocation of the  tool is not currently supported." << std::endl;
+
+  return 1;
+}
+
+

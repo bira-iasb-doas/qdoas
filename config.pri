@@ -20,8 +20,8 @@ unix {
   INSTALL_PREFIX = /usr/local/Qdoas
 
   # for trace-write debugging ...
-  DEFINES += DEBUG
-  DEFINES += LVL4
+  #DEFINES += DEBUG
+  #DEFINES += LVL4
 }
 
 win32 {
