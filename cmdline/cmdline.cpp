@@ -139,13 +139,13 @@ enum RunMode parseCommandLine(int argc, char **argv, commands_t *cmd)
 	}
 
       }
-      else if (!strcmp(argv[i], "-p")) { // project name file ...
+      else if (!strcmp(argv[i], "-a")) { // project name file ...
 	if (++i < argc && argv[i][0] != '-') {
 	  cmd->projectName = argv[i];
 	}
 	else {
 	  runMode = Error;
-	  std::cout << "Option '-p' requires an argument (project name)." << std::endl;
+	  std::cout << "Option '-a' requires an argument (project name)." << std::endl;
 	}
 
       }
@@ -256,7 +256,7 @@ enum BatchTool requiredBatchTool(const QString &filename)
 
 void showUsage()
 {
-  std::cout << "doas_cl -c <config file> [-p <project name>] [-o <output>] [-f <file>]..." << std::endl << std::endl;
+  std::cout << "doas_cl -c <config file> [-a <project name>] [-o <output>] [-f <file>]..." << std::endl << std::endl;
   std::cout << "    -c <config file>   : A Qdoas, convolution, [ring or usamp] config file." << std::endl;
   std::cout << "                         The tool to invoke is determined from the type of" << std::endl;
   std::cout << "                         configuration file specified." << std::endl;
@@ -461,7 +461,7 @@ int analyseProjectQdoasPrepare(void **engineContext, const CProjectConfigItem *p
 			       CBatchEngineController *controller)
 {
   int retCode = 0;
-  CEngineResponseMessage *msgResp = new CEngineResponseMessage;
+  CEngineResponseTool *msgResp = new CEngineResponseTool;
 
   // copy the project data and mask out any display flags (do not want
   // the engine to create and return visualization data)
@@ -485,7 +485,8 @@ int analyseProjectQdoasPrepare(void **engineContext, const CProjectConfigItem *p
   if (!retCode && mediateRequestSetProject(*engineContext, &projectData, THREAD_TYPE_ANALYSIS, msgResp) != 0) {
     msgResp->process(controller);
     delete msgResp;
-    msgResp = new CEngineResponseMessage;
+    // create a new response ready for the destroy engine context request
+    msgResp = new CEngineResponseTool;
     retCode = 1;
   }
 
@@ -507,7 +508,7 @@ int analyseProjectQdoasPrepare(void **engineContext, const CProjectConfigItem *p
     if (mediateRequestSetAnalysisWindows(*engineContext, nWindows, awDataList, THREAD_TYPE_ANALYSIS, msgResp) != 0) {
       msgResp->process(controller);
       delete msgResp;
-      msgResp = new CEngineResponseMessage;
+      msgResp = new CEngineResponseTool;
       retCode = 1;
     }
   }
@@ -541,6 +542,8 @@ int analyseProjectQdoasFile(void *engineContext, CBatchEngineController *control
   if (result == -1)
     return 1;
 
+  std::cout << "Processing file " << filename.toStdString() << std::endl;
+
   // loop based on the controller ...
   while (!retCode && controller->active()) {
 
@@ -553,6 +556,8 @@ int analyseProjectQdoasFile(void *engineContext, CBatchEngineController *control
 
     if (result == -1)
       retCode = 1;
+    else
+      std::cout << "  completed record " << result << std::endl;
 
     resp->process(controller);
     delete resp;
