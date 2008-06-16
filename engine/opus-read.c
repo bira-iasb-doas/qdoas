@@ -119,11 +119,11 @@ RC OPUS_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
   PAR_BLOCK ParBlock;                                  // Parameter Block
   PRJCT_INSTRUMENTAL *pInstr;
 
-  UCHAR  DateTemp[32],                                 // temporary variable for atof conversion
+  unsigned char  DateTemp[32],                                 // temporary variable for atof conversion
          fileName[MAX_STR_SHORT_LEN+1],                // current file name
         *ptr1,*ptr2;                                   // pointers to the extension of the first and the last files in the current directory
 
-  ULONG  MagicNumber;                                  // OPUS Signature
+  unsigned long  MagicNumber;                                  // OPUS Signature
   double Dtemp;                                        // temporary variable for swapping
   double pas,fact;                                     // temporary variables for building the wavelength calibration
 
@@ -136,7 +136,7 @@ RC OPUS_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
   pInstr=&pEngineContext->project.instrumental;
   found=0;
 
-  pEngineContext->opus.NumberPoints = (ULONG) 0;            // Number of Data Points
+  pEngineContext->opus.NumberPoints = (unsigned long) 0;            // Number of Data Points
   pEngineContext->opus.WaveLow = (double) 0.;               // First X Value
   pEngineContext->opus.WaveHigh = (double) 0.;              // Last X Value
   pEngineContext->opus.Dispersion = (double) 0.;            // Dispersion
@@ -158,7 +158,7 @@ RC OPUS_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
 
   if (specFp==NULL)
    rc=ERROR_SetLast("OPUS_Set",ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pEngineContext->fileName);
-  else if (!fread(&MagicNumber,sizeof(ULONG),1,specFp))
+  else if (!fread(&MagicNumber,sizeof(unsigned long),1,specFp))
    rc=ERROR_SetLast("OPUS_Set",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pEngineContext->fileName);
   else if (MagicNumber!=0XFEFE0A0AL)                                            // OPUS signature ?
    rc=ERROR_SetLast("OPUS_Set",ERROR_TYPE_WARNING,ERROR_ID_FILE_BAD_FORMAT,pEngineContext->fileName);
@@ -170,7 +170,7 @@ RC OPUS_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
 
     for (i=0;(i<Header.CurBlk) && !rc;i++)
      {
-      fseek(specFp,(LONG)Header.DirPtr+sizeof(DIR_BLOCK)*i,SEEK_SET);           // Set Pointer to Dir Block
+      fseek(specFp,(long)Header.DirPtr+sizeof(DIR_BLOCK)*i,SEEK_SET);           // Set Pointer to Dir Block
 
       if (!fread(&DirBlock,sizeof(DIR_BLOCK),1,specFp))                         // Directory Block Read out
        rc=ERROR_ID_FILE_RECORD;
@@ -178,15 +178,15 @@ RC OPUS_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
        {
         fseek(specFp,DirBlock.Pointer,SEEK_SET);                                // Set Pointer to Dir Data
 
-        switch ( (LONG) DirBlock.Type & 131063L )
+        switch ( (long) DirBlock.Type & 131063L )
          {
        // --------------------------------------------------------------
           case  1047L :   //  DATA STATUS PARAMETERS
           case  5143L :   //  transmittance PARAMETERS
        // --------------------------------------------------------------
 
-          if ((!pInstr->user && (((LONG)DirBlock.Type&131063L)==1047L)) ||
-              ((pInstr->user==1) && (((LONG)DirBlock.Type&131063L)==5143L)))
+          if ((!pInstr->user && (((long)DirBlock.Type&131063L)==1047L)) ||
+              ((pInstr->user==1) && (((long)DirBlock.Type&131063L)==5143L)))
            {
             do
             {
@@ -208,7 +208,7 @@ RC OPUS_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
              else if (!strcmp(ParBlock.Name,"END"))
               break;
              else
-              fseek(specFp,(LONG)ParBlock.Rs<<1,SEEK_CUR);
+              fseek(specFp,(long)ParBlock.Rs<<1,SEEK_CUR);
             }
             while (1);
 
@@ -225,7 +225,7 @@ RC OPUS_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
               pEngineContext->opus.WaveLow=Dtemp;
              }
 
-            if (pEngineContext->opus.NumberPoints>(ULONG)NDET)
+            if (pEngineContext->opus.NumberPoints>(unsigned long)NDET)
              rc=ERROR_SetLast("OPUS_Set",ERROR_TYPE_WARNING,ERROR_ID_FILE_BAD_LENGTH,pEngineContext->fileName,pEngineContext->opus.NumberPoints);
             else if (pEngineContext->opus.NumberPoints>1L)
              pEngineContext->opus.Dispersion=(pEngineContext->opus.WaveHigh-pEngineContext->opus.WaveLow)/(double)(pEngineContext->opus.NumberPoints-1L);
@@ -251,7 +251,7 @@ RC OPUS_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
             break;
 
            else
-            fseek(specFp,(LONG)ParBlock.Rs<<1,SEEK_CUR);
+            fseek(specFp,(long)ParBlock.Rs<<1,SEEK_CUR);
           }
           while (1);
 
@@ -335,15 +335,15 @@ RC OPUS_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localD
   // Declarations
 
   PRJCT_INSTRUMENTAL *pInstr;
-  UCHAR  fileName[MAX_STR_SHORT_LEN+1],*ptr1,*ptr2;                             // current file name
+  unsigned char  fileName[MAX_STR_SHORT_LEN+1],*ptr1,*ptr2;                             // current file name
 
   OPUS_HEADER Header;                                                           // File Header
   DIR_BLOCK DirBlock;                                                           // Directory Block
   PAR_BLOCK ParBlock;                                                           // Parameter Block
 
-  ULONG  MagicNumber,NumberPoints;                                              // OPUS Signature
+  unsigned long  MagicNumber,NumberPoints;                                              // OPUS Signature
   float *fSpectrum;                                                             // data in float precision
-  UCHAR  DateTemp[32];                                                          // temporary variable for atof conversion
+  unsigned char  DateTemp[32];                                                          // temporary variable for atof conversion
   double Dtemp,tmLocal,                                                         // temporary variable for swapping
          WaveHigh,WaveLow;                                                      // temporary variables for building the wavelength calibration
   float  newHour;
@@ -389,7 +389,7 @@ RC OPUS_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localD
 
       // Header read out
 
-      if (!fread(&MagicNumber,sizeof(ULONG),1,fp))
+      if (!fread(&MagicNumber,sizeof(unsigned long),1,fp))
        rc=ERROR_SetLast("OPUS_Read",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pEngineContext->fileName);
       else if (MagicNumber!=0XFEFE0A0AL)                                        // OPUS signature ?
        rc=ERROR_SetLast("OPUS_Read",ERROR_TYPE_WARNING,ERROR_ID_FILE_BAD_FORMAT,pEngineContext->fileName);
@@ -401,7 +401,7 @@ RC OPUS_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localD
 
         for (i=0;(i<Header.CurBlk) && !rc;i++)
          {
-          fseek(fp,(LONG)Header.DirPtr+sizeof(DIR_BLOCK)*i,SEEK_SET);               // Set Pointer to Dir Block
+          fseek(fp,(long)Header.DirPtr+sizeof(DIR_BLOCK)*i,SEEK_SET);               // Set Pointer to Dir Block
 
           if (!fread(&DirBlock,sizeof(DIR_BLOCK),1,fp))                         // Directory Block Read out
            rc=ERROR_ID_FILE_RECORD;
@@ -409,15 +409,15 @@ RC OPUS_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localD
            {
             fseek(fp,DirBlock.Pointer,SEEK_SET);                                // Set Pointer to Dir Data
 
-            switch ( (LONG) DirBlock.Type & 131063L )
+            switch ( (long) DirBlock.Type & 131063L )
              {
            // --------------------------------------------------------------
               case   1031L :   //  SAMPLE DATA
               case   5127L :   //  TRANSMITTANCE
            // --------------------------------------------------------------
 
-              if ((!pInstr->user && (((LONG)DirBlock.Type&131063L)==1031L)) ||
-                  ((pInstr->user==1) && (((LONG)DirBlock.Type&131063L)==5127L)))
+              if ((!pInstr->user && (((long)DirBlock.Type&131063L)==1031L)) ||
+                  ((pInstr->user==1) && (((long)DirBlock.Type&131063L)==5127L)))
                {
                 if ((fSpectrum=(float *)MEMORY_AllocBuffer("OPUS_Read ","fSpectrum",NDET,sizeof(float),0,MEMORY_TYPE_FLOAT))==NULL)
                  rc=ERROR_ID_ALLOC;
@@ -434,8 +434,8 @@ RC OPUS_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localD
               case  5143L :   //  TRANSMITTANCE PARAMETERS
            // --------------------------------------------------------------
 
-              if ((!pInstr->user && (((LONG)DirBlock.Type&131063L)==1047L)) ||
-                 ((pInstr->user==1) && (((LONG)DirBlock.Type&131063L)==5143L)))
+              if ((!pInstr->user && (((long)DirBlock.Type&131063L)==1047L)) ||
+                 ((pInstr->user==1) && (((long)DirBlock.Type&131063L)==5143L)))
                {
                 do
                 {
@@ -456,7 +456,7 @@ RC OPUS_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localD
                  else if (!strcmp(ParBlock.Name,"END"))
                   break;
                  else
-                  fseek(fp,(LONG)ParBlock.Rs<<1,SEEK_CUR);
+                  fseek(fp,(long)ParBlock.Rs<<1,SEEK_CUR);
                 }
                 while (1);
 
@@ -486,7 +486,7 @@ RC OPUS_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localD
                else if (!strcmp(ParBlock.Name,"END"))
                 break;
                else
-                fseek(fp,(LONG)ParBlock.Rs<<1,SEEK_CUR);
+                fseek(fp,(long)ParBlock.Rs<<1,SEEK_CUR);
               }
               while (1);
 
@@ -506,7 +506,7 @@ RC OPUS_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localD
                 break;
 
                else
-                fseek(fp,(LONG)ParBlock.Rs<<1,SEEK_CUR);
+                fseek(fp,(long)ParBlock.Rs<<1,SEEK_CUR);
               }
               while (1);
 
@@ -526,7 +526,7 @@ RC OPUS_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localD
                 break;
 
                else
-                fseek(fp,(LONG)ParBlock.Rs<<1,SEEK_CUR);
+                fseek(fp,(long)ParBlock.Rs<<1,SEEK_CUR);
               }
               while (1);
 
@@ -546,7 +546,7 @@ RC OPUS_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localD
                 break;
 
                else
-                fseek(fp,(LONG)ParBlock.Rs<<1,SEEK_CUR);
+                fseek(fp,(long)ParBlock.Rs<<1,SEEK_CUR);
               }
               while (1);
 
@@ -573,7 +573,7 @@ RC OPUS_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localD
                 break;
 
                else
-                fseek(fp,(LONG)ParBlock.Rs<<1,SEEK_CUR);
+                fseek(fp,(long)ParBlock.Rs<<1,SEEK_CUR);
               }
               while (1);
 
@@ -668,12 +668,12 @@ RC OPUS_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localD
         sec=(INT)((newHour-hour-min/60.)*3600.);
 
         pEngineContext->present_day.da_year=(SHORT)year;
-        pEngineContext->present_day.da_mon=(UCHAR)mon;
-        pEngineContext->present_day.da_day=(UCHAR)day;
+        pEngineContext->present_day.da_mon=(unsigned char)mon;
+        pEngineContext->present_day.da_day=(unsigned char)day;
 
-        pEngineContext->present_time.ti_hour=(UCHAR)hour;
-        pEngineContext->present_time.ti_min=(UCHAR)min;
-        pEngineContext->present_time.ti_sec=(UCHAR)sec;
+        pEngineContext->present_time.ti_hour=(unsigned char)hour;
+        pEngineContext->present_time.ti_min=(unsigned char)min;
+        pEngineContext->present_time.ti_sec=(unsigned char)sec;
 
         pEngineContext->Tm=(double)ZEN_NbSec(&pEngineContext->present_day,&pEngineContext->present_time,0);
         pEngineContext->TimeDec=(double)pEngineContext->present_time.ti_hour+pEngineContext->present_time.ti_min/60.+pEngineContext->present_time.ti_sec/3600.;

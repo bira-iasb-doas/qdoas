@@ -111,7 +111,7 @@ UOFT_FORMAT;
 // GLOBAL DECLARATIONS
 // ===================
 
-UCHAR UOFT_figures[UOFT_BASE+1]="0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+unsigned char UOFT_figures[UOFT_BASE+1]="0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
 // ===================
 // STATIC DECLARATIONS
@@ -147,7 +147,7 @@ RC SetUofT(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
  {
   // Declarations
 
-  UCHAR  fileFilter[MAX_PATH_LEN+1],                                            // file filter
+  unsigned char  fileFilter[MAX_PATH_LEN+1],                                            // file filter
          fileLine[MAX_STR_LEN+1],                                               // file line
         *ptr,*ptr2,*ptr3,                                                       // pointers to parts of strings
          tmp1[3],tmp2[5];                                                       // temporary part of the file name
@@ -159,7 +159,7 @@ RC SetUofT(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
   #else
   struct dirent *fileInfo;
   DIR *hDir;
-  UCHAR tmpFile[MAX_STR_LEN+1];
+  unsigned char tmpFile[MAX_STR_LEN+1];
   #endif
   int recordNumber;                                                             // record number retrieved from the file name
   RC rc;                                                                        // return code
@@ -245,13 +245,13 @@ RC SetUofT(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
      {
       if (((fileInfo.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY)==0) &&          // this is not a directory
           ((ptr3=strrchr(fileInfo.cFileName,'.'))!=NULL) &&                     // there is a file extension
-           !strnicmp((UCHAR *)fileInfo.cFileName,ptr,6) &&                      // the 6 first characters should be the same
+           !strnicmp((unsigned char *)fileInfo.cFileName,ptr,6) &&                      // the 6 first characters should be the same
            (strlen(ptr3)==strlen(ptr2)) && !STD_Stricmp(ptr3,ptr2))             // the file extension is the same as the filter one
        {
        	// Get the date of measurement from the file name
 
         sscanf(fileInfo.cFileName,"%2c%02d%4c.%03d",tmp1,&uofTYear,tmp2,&uofTdayNumber);
-        uofTrecordNo=((UCHAR *)strchr(UOFT_figures,tmp2[2])-UOFT_figures)*UOFT_BASE+((UCHAR *)strchr(UOFT_figures,tmp2[3])-UOFT_figures);
+        uofTrecordNo=((unsigned char *)strchr(UOFT_figures,tmp2[2])-UOFT_figures)*UOFT_BASE+((unsigned char *)strchr(UOFT_figures,tmp2[3])-UOFT_figures);
 
         // Attribute a record number and calculate the total number of records
 
@@ -290,7 +290,7 @@ RC SetUofT(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
        	// Get the date of measurement from the file name
 
         sscanf(fileInfo->d_name,"%2c%02d%4c.%03d",tmp1,&uofTYear,tmp2,&uofTdayNumber);
-        uofTrecordNo=((UCHAR *)strchr(UOFT_figures,tmp2[2])-UOFT_figures)*UOFT_BASE+((UCHAR *)strchr(UOFT_figures,tmp2[3])-UOFT_figures);
+        uofTrecordNo=((unsigned char *)strchr(UOFT_figures,tmp2[2])-UOFT_figures)*UOFT_BASE+((unsigned char *)strchr(UOFT_figures,tmp2[3])-UOFT_figures);
 
         // Attribute a record number and calculate the total number of records
 
@@ -336,13 +336,13 @@ RC SetUofT(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
 //               ERROR_ID_NO              otherwise.
 // -----------------------------------------------------------------------------
 
-RC UofTReadRecord(UCHAR *originalFileName,INT recordNo,double *spe,UCHAR *recordName)
+RC UofTReadRecord(unsigned char *originalFileName,INT recordNo,double *spe,unsigned char *recordName)
  {
   // Declarations
 
-  UCHAR  fileName[MAX_PATH_LEN+1],                                              // name of the current file (the current record)
+  unsigned char  fileName[MAX_PATH_LEN+1],                                              // name of the current file (the current record)
         *ptr,*ptr2;                                                             // pointers to parts in the previous string
-  UCHAR  fileLine[MAX_STR_LEN+1],                                               // line of file
+  unsigned char  fileLine[MAX_STR_LEN+1],                                               // line of file
          strBuffer[MAX_STR_LEN+1];                                              // string buffer
 
   FILE  *fp;                                                                    // pointer to the current file
@@ -478,7 +478,7 @@ RC UofTSkipCsvRecord(FILE *specFp,int nSkip)
  {
   // Declarations
 
-  UCHAR fileLine[MAX_STR_LEN+1];                                                // line of the input file
+  unsigned char fileLine[MAX_STR_LEN+1];                                                // line of the input file
   int recordCount,recordNumber;                                                 // resp. browse records to skip and lines in the file
   RC rc;                                                                        // record number
 
@@ -540,7 +540,7 @@ RC UofTReadRecordCsv(ENGINE_CONTEXT *pEngineContext,FILE *specFp,INT recordNo,do
  {
   // Declarations
 
-  UCHAR  fileLine[MAX_STR_LEN+1],                                               // line of file
+  unsigned char  fileLine[MAX_STR_LEN+1],                                               // line of file
          strBuffer[MAX_STR_LEN+1];                                              // string buffer
 
   int    Dm,Mm,Ym,Ds,Ms,Ys,Df,Mf,Yf,                                            // fields of resp. mean, starting and ending dates

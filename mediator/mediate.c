@@ -42,7 +42,7 @@ void mediateRequestPlotSpectra(ENGINE_CONTEXT *pEngineContext,void *responseHand
   struct time *pTime;                                                           // pointer to measurement date
   char tmpString[80];                                                           // buffer for formatted strings
   int indexLine,indexColumn;
-  UCHAR *fileName;                                                              // the name of the current file
+  unsigned char *fileName;                                                              // the name of the current file
   plot_data_t spectrumData;
 
   // Initializations
@@ -481,9 +481,9 @@ void setMediateProjectAnalysis(PRJCT_ANLYS *pEngineAnalysis,const mediate_projec
  {
  	#if defined(__DEBUG_) && __DEBUG_ && defined(__DEBUG_DOAS_CONFIG_) && __DEBUG_DOAS_CONFIG_
 
-  UCHAR *prjctAnlysMethods[PRJCT_ANLYS_METHOD_MAX]={"Optical density fitting","Intensity fitting (Marquardt-Levenberg+SVD)"};
-  UCHAR *prjctAnlysFitWeighting[PRJCT_ANLYS_FIT_WEIGHTING_MAX]={"No weighting","Instrumental weighting"};
-  UCHAR *prjctAnlysInterpol[PRJCT_ANLYS_INTERPOL_MAX]={"linear","spline"};
+  unsigned char *prjctAnlysMethods[PRJCT_ANLYS_METHOD_MAX]={"Optical density fitting","Intensity fitting (Marquardt-Levenberg+SVD)"};
+  unsigned char *prjctAnlysFitWeighting[PRJCT_ANLYS_FIT_WEIGHTING_MAX]={"No weighting","Instrumental weighting"};
+  unsigned char *prjctAnlysInterpol[PRJCT_ANLYS_INTERPOL_MAX]={"linear","spline"};
 
   DEBUG_FunctionBegin("setMediateProjectAnalysis",DEBUG_FCTTYPE_CONFIG);
   #endif
@@ -515,7 +515,7 @@ void setMediateProjectAnalysis(PRJCT_ANLYS *pEngineAnalysis,const mediate_projec
 void setMediateProjectCalibration(PRJCT_KURUCZ *pEngineCalibration,CALIB_FENO *pEngineCalibFeno,const mediate_project_calibration_t *pMediateCalibration)
  {
  	#if defined(__DEBUG_) && __DEBUG_ && defined(__DEBUG_DOAS_CONFIG_) && __DEBUG_DOAS_CONFIG_
- 	UCHAR *prjctAnlysMethods[PRJCT_ANLYS_METHOD_MAX]={"Optical density fitting","Intensity fitting (Marquardt-Levenberg+SVD)"};
+ 	unsigned char *prjctAnlysMethods[PRJCT_ANLYS_METHOD_MAX]={"Optical density fitting","Intensity fitting (Marquardt-Levenberg+SVD)"};
   DEBUG_FunctionBegin("setMediateProjectCalibration",DEBUG_FCTTYPE_CONFIG);
   #endif
 
@@ -612,7 +612,7 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
   DEBUG_FunctionBegin("setMediateProjectInstrumental",DEBUG_FCTTYPE_CONFIG);
   #endif
 
-	 pEngineInstrumental->readOutFormat=(UCHAR)pMediateInstrumental->format;                           // File format
+	 pEngineInstrumental->readOutFormat=(unsigned char)pMediateInstrumental->format;                           // File format
 	 strcpy(pEngineInstrumental->observationSite,pMediateInstrumental->siteName); 		                   // Observation site
 	 NDET=0;
 
@@ -919,8 +919,8 @@ int mediateRequestSetProject(void *engineContext,
   setMediateProjectDisplay(&pEngineProject->spectra,&project->display);
   setMediateProjectSelection(&pEngineProject->spectra,&project->selection);
   setMediateProjectAnalysis(&pEngineProject->analysis,&project->analysis);
-  setMediateFilter(&pEngineProject->lfilter,&project->lowpass);
-  setMediateFilter(&pEngineProject->hfilter,&project->highpass);
+  setMediateFilter(&pEngineProject->lfilter,&project->lowpass,0,0);
+  setMediateFilter(&pEngineProject->hfilter,&project->highpass,1,0);
   setMediateProjectCalibration(&pEngineProject->kurucz,&pEngineContext->calibFeno,&project->calibration);
   setMediateProjectInstrumental(&pEngineProject->instrumental,&project->instrumental);
   setMediateProjectUndersampling(&pEngineProject->usamp,&project->undersampling);
@@ -1002,12 +1002,12 @@ RC mediateRequestSetAnalysisLinear(struct anlyswin_linear *pLinear)
   return rc;
  }
 
-// Caro : int the future, replace structures anlyswin_nonlinear and calibration_sfp with the following one more flexible
+// Caro : in the future, replace structures anlyswin_nonlinear and calibration_sfp with the following one more flexible
 
 // typedef struct _AnalyseNonLinearParameters
 //  {
-//  	UCHAR symbolName[MAX_ITEM_TEXT_LEN+1];
-//  	UCHAR crossFileName[MAX_ITEM_TEXT_LEN+1];
+//  	unsigned char symbolName[MAX_ITEM_TEXT_LEN+1];
+//  	unsigned char crossFileName[MAX_ITEM_TEXT_LEN+1];
 //  	int fitFlag;
 //  	double initialValue;
 //  	double deltaValue;
@@ -1481,7 +1481,7 @@ int mediateRequestSetSymbols(void *engineContext,
  	// Add symbols in the list
 
 	 for (indexSymbol=0;(indexSymbol<numberOfSymbols) && !rc;indexSymbol++)
-	  rc=SYMB_Add((UCHAR *)symbols[indexSymbol].name,(UCHAR *)symbols[indexSymbol].description);
+	  rc=SYMB_Add((unsigned char *)symbols[indexSymbol].name,(unsigned char *)symbols[indexSymbol].description);
 
  	// Check for error
 
@@ -1873,7 +1873,7 @@ int mediateRequestViewCrossSections(void *engineContext, char *awName,double min
 	 // Declarations
 
   ENGINE_CONTEXT *pEngineContext = (ENGINE_CONTEXT *)engineContext;
-  UCHAR symbolName[MAX_ITEM_NAME_LEN+1],*ptr,                                   // the symbol name
+  unsigned char symbolName[MAX_ITEM_NAME_LEN+1],*ptr,                                   // the symbol name
         windowTitle[MAX_ITEM_TEXT_LEN+1],                                       // title to display at the top of the page
         tabTitle[MAX_ITEM_TEXT_LEN+1];                                          // title to display on the tab of the page
   MATRIX_OBJECT xs;                                                             // matrix to load the cross section

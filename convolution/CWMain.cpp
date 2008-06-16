@@ -525,8 +525,8 @@ void CWMain::slotRunConvolution()
 
   // run the convolution
 
-  mediateRequestConvolution(engineContext, &m_guiProperties, resp);
-  if (mediateConvolutionCalculate(engineContext,resp)!=ERROR_ID_NO)
+  if ((mediateRequestConvolution(engineContext, &m_guiProperties,resp)!=ERROR_ID_NO) ||
+      (mediateConvolutionCalculate(engineContext,resp)!=ERROR_ID_NO))
    ERROR_DisplayMessage(resp);
 
   // process the response - the controller will dispatch ...

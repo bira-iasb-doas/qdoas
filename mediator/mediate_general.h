@@ -219,8 +219,8 @@ extern "C" {
 
 // typedef struct _AnalyseNonLinearParameters
 //  {
-//  	UCHAR symbolName[MAX_ITEM_TEXT_LEN+1];
-//  	UCHAR crossFileName[MAX_ITEM_TEXT_LEN+1];
+//  	unsigned char symbolName[MAX_ITEM_TEXT_LEN+1];
+//  	unsigned char crossFileName[MAX_ITEM_TEXT_LEN+1];
 //  	int fitFlag;
 //  	double initialValue;
 //  	double deltaValue;
@@ -336,8 +336,8 @@ extern "C" {
 
 // typedef struct _AnalyseNonLinearParameters
 //  {
-//  	UCHAR symbolName[MAX_ITEM_TEXT_LEN+1];
-//  	UCHAR crossFileName[MAX_ITEM_TEXT_LEN+1];
+//  	unsigned char symbolName[MAX_ITEM_TEXT_LEN+1];
+//  	unsigned char crossFileName[MAX_ITEM_TEXT_LEN+1];
 //  	int fitFlag;
 //  	double initialValue;
 //  	double deltaValue;

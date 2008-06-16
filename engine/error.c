@@ -78,7 +78,7 @@
 typedef struct _errorTable
  {
  	int    errorId;
- 	UCHAR *errorMessage;
+ 	unsigned char *errorMessage;
  }
 ERROR_TABLE;
 
@@ -98,6 +98,7 @@ ERROR_TABLE errorTable[]=
   { ERROR_ID_ALLOCMATRIX               , "matrix allocation error (%s, %d:%d x %d:%d)"                                                                        },
   { ERROR_ID_BUFFER_FULL               , "the buffer of %s is full"                                                                                           },
   { ERROR_ID_COMMANDLINE               , "syntax error in command line"                                                                                       },
+  { ERROR_ID_MEDIATE                   , "Error with field \"%s\" - %s"                                                                                           },
 
   // File
 
@@ -219,7 +220,7 @@ RC ERROR_DisplayMessage(void *responseHandle)
 // RETURN        the errorId
 // -----------------------------------------------------------------------------
 
-RC ERROR_SetLast(UCHAR *callingFunction,int errorType,RC errorId,...)
+RC ERROR_SetLast(unsigned char *callingFunction,int errorType,RC errorId,...)
  {
   // Declarations
 

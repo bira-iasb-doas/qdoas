@@ -54,7 +54,7 @@ extern "C" {
 typedef struct _slit
  {
   INT    slitType;                                                              // type of line shape (see above)
-  UCHAR  slitFile[MAX_STR_LEN+1];                                                // for line shapes provided in file, name of the file
+  unsigned char  slitFile[MAX_STR_LEN+1];                                                // for line shapes provided in file, name of the file
   double slitParam;                                                             // up to 4 parameters can be provided for the line shape
   double slitParam2;                                                            //       usually, the first one is the FWHM
   double slitParam3;                                                            //       the Voigt profile function uses the 4 parameters
@@ -65,10 +65,10 @@ SLIT;
 typedef struct _filter
  {
   INT     type;                                          // type of filter
-  FLOAT   fwhmWidth;                                     // fwhm width for gaussian
-  FLOAT   kaiserCutoff;                                  // cutoff frequency for kaiser filter type
-  FLOAT   kaiserPassBand;                                // pass band for kaiser filter type
-  FLOAT   kaiserTolerance;                               // tolerance for kaiser filter type
+  float   fwhmWidth;                                     // fwhm width for gaussian
+  float   kaiserCutoff;                                  // cutoff frequency for kaiser filter type
+  float   kaiserPassBand;                                // pass band for kaiser filter type
+  float   kaiserTolerance;                               // tolerance for kaiser filter type
   INT     filterOrder;                                   // filter order
   INT     filterWidth;                                   // filter width for boxcar, triangle or Savitsky-Golay filters
   INT     filterNTimes;                                  // the number of times to apply the filter
@@ -82,7 +82,7 @@ typedef struct _filter
 PRJCT_FILTER;
 
 void setMediateSlit(SLIT *pEngineSlit,const mediate_slit_function_t *pMediateSlit);
-void setMediateFilter(PRJCT_FILTER *pEngineFilter,const mediate_filter_t *pMediateFilter);
+void setMediateFilter(PRJCT_FILTER *pEngineFilter,const mediate_filter_t *pMediateFilter,int hpFilterFlag,int convoluteFlag);
 
 #if defined(_cplusplus) || defined(__cplusplus)
 }

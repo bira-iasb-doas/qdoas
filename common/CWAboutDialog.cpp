@@ -33,14 +33,15 @@ CWAboutDialog::CWAboutDialog(QWidget *parent) :
 {
   setWindowTitle("About Qdoas");
 
+  QPixmap qdoas(":/images/splash.png");
   QPixmap logo(":/images/about_logo.png");
 
   QVBoxLayout *mainLayout = new QVBoxLayout(this);
   mainLayout->setSizeConstraint(QLayout::SetFixedSize);
 
-  QLabel *logoLabel = new QLabel(this);
-  logoLabel->setPixmap(logo);
-  mainLayout->addWidget(logoLabel, 1, Qt::AlignCenter);
+  QLabel *qdoasLabel = new QLabel(this);
+  qdoasLabel->setPixmap(qdoas);
+  mainLayout->addWidget(qdoasLabel, 1, Qt::AlignCenter);
 
   mainLayout->addSpacing(10);
 
@@ -67,11 +68,16 @@ CWAboutDialog::CWAboutDialog(QWidget *parent) :
 
   mainLayout->addSpacing(10);
 
+ QLabel *logoLabel = new QLabel(this);
+ logoLabel->setPixmap(logo);
+ mainLayout->addWidget(logoLabel, 1, Qt::AlignCenter);
+ mainLayout->addSpacing(10);
+
   QPushButton *okButton = new QPushButton(QString("Ok"));
   okButton->setDefault(true);
-  
+
   mainLayout->addWidget(okButton, 0, Qt::AlignCenter);
-  
+
   connect(okButton, SIGNAL(clicked()), this, SLOT(accept()));
 }
 

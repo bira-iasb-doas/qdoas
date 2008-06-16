@@ -26,14 +26,14 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 // STATIC VARIABLES
 // ================
 
-static UCHAR *mediateConvolutionTypesStr[CONVOLUTION_TYPE_MAX]=
+static unsigned char *mediateConvolutionTypesStr[CONVOLUTION_TYPE_MAX]=
  {
   "Interpolation only",
   "Standard convolution",
   "Convolution with I0 correction"
  };
 
-static UCHAR *mediateConvolutionFileExt[CONVOLUTION_TYPE_MAX]=
+static unsigned char *mediateConvolutionFileExt[CONVOLUTION_TYPE_MAX]=
    {
     "_none",                                                                      // CONVOLUTION_TYPE_NONE
     "_std",                                                                       // CONVOLUTION_TYPE_STANDARD
@@ -41,7 +41,7 @@ static UCHAR *mediateConvolutionFileExt[CONVOLUTION_TYPE_MAX]=
   //  "_ring"                         // CONVOLUTION_TYPE_RING
    };
 
-UCHAR *mediateConvolutionFilterTypes[PRJCT_FILTER_TYPE_MAX]={"None","Kaiser","Boxcar","Gaussian","Triangular","Savitzky-Golay","Odd-even pixels correction","Binomial"};
+unsigned char *mediateConvolutionFilterTypes[PRJCT_FILTER_TYPE_MAX]={"None","Kaiser","Boxcar","Gaussian","Triangular","Savitzky-Golay","Odd-even pixels correction","Binomial"};
 
 // -------------------------------------------------
 // mediateConvolutionSave : Save the convoluted cross section
@@ -52,10 +52,10 @@ RC mediateConvolutionSave(void *engineContext)
   // Declarations
 
   ENGINE_XSCONV_CONTEXT *pEngineContext=(ENGINE_XSCONV_CONTEXT*)engineContext;
-  UCHAR fileName[MAX_ITEM_TEXT_LEN+1];
+  unsigned char fileName[MAX_ITEM_TEXT_LEN+1];
   PRJCT_FILTER *pLFilter,*pHFilter;
   SZ_LEN fileNameLength;
-  UCHAR *ptr,*ptr2;
+  unsigned char *ptr,*ptr2;
   FILE *fp;
   INDEX i,slitType;
   XS *pXs;
@@ -279,7 +279,7 @@ RC mediateConvolutionCalculate(void *engineContext,void *responseHandle)
   PRJCT_FILTER *plFilter,*phFilter;                                             // pointers to the low pass and high pass filtering parts of the engine context
   SLIT *pSlitConv,*pSlitDConv;                                                  // pointers to the convolution and deconvolution slit function parts of the engine context
 
-  UCHAR windowTitle[MAX_ITEM_TEXT_LEN+1];
+  unsigned char windowTitle[MAX_ITEM_TEXT_LEN+1],pageTitle[MAX_ITEM_TEXT_LEN+1];
   double lambdaMin,lambdaMax,slitParam,slitParam2,slitWidth;
 
   INT slitType,slitType2,deconvFlag,dispConv,dispLFilter,dispHFilter,nGraph,iGraph;
@@ -313,15 +313,15 @@ RC mediateConvolutionCalculate(void *engineContext,void *responseHandle)
 
   plFilter->filterFunction=phFilter->filterFunction=NULL;
 
-//  if ((((lowFilterType=plFilter->type)!=PRJCT_FILTER_TYPE_NONE) &&
-//        (lowFilterType!=PRJCT_FILTER_TYPE_ODDEVEN) &&
-//       ((rc=ANALYSE_LoadFilter(plFilter))!=0)) ||
-//
-//      (((highFilterType=phFilter->type)!=PRJCT_FILTER_TYPE_NONE) &&
-//        (highFilterType!=PRJCT_FILTER_TYPE_ODDEVEN) &&
-//       ((rc=ANALYSE_LoadFilter(phFilter))!=0)))
-//
-//   goto EndConvolution;
+  if ((((lowFilterType=plFilter->type)!=PRJCT_FILTER_TYPE_NONE) &&
+        (lowFilterType!=PRJCT_FILTER_TYPE_ODDEVEN) &&
+       ((rc=FILTER_LoadFilter(plFilter))!=0)) ||
+
+      (((highFilterType=phFilter->type)!=PRJCT_FILTER_TYPE_NONE) &&
+        (highFilterType!=PRJCT_FILTER_TYPE_ODDEVEN) &&
+       ((rc=FILTER_LoadFilter(phFilter))!=0)))
+
+   goto EndConvolution;
 
   nFilter=0;
 
@@ -414,16 +414,21 @@ RC mediateConvolutionCalculate(void *engineContext,void *responseHandle)
       // Save resulting cross section and plot data
       // ------------------------------------------
 
-      if (!rc && !(rc=mediateConvolutionSave(pEngineContext)) && dispConv)
+      if ((lowFilterType==PRJCT_FILTER_TYPE_NONE) && (highFilterType==PRJCT_FILTER_TYPE_NONE))
+       sprintf(pageTitle,(pEngineContext->convolutionType!=CONVOLUTION_TYPE_NONE)?"Spectrum after convolution":"Spectrum after interpolation");
+      else
+       sprintf(pageTitle,(pEngineContext->convolutionType!=CONVOLUTION_TYPE_NONE)?"Spectrum after convolution and filtering":"Spectrum after interpolation and filtering");
+
+      if (!rc && dispConv)
        {
        	plot_data_t spectrumData[2];
 
-       	sprintf(windowTitle,"Original cross section : %s",pEngineContext->crossFile);
+       	sprintf(windowTitle,(pEngineContext->convolutionType!=CONVOLUTION_TYPE_NONE)?"Spectrum after convolution":"Spectrum after interpolation");
 
         mediateAllocateAndSetPlotData(&spectrumData[0],XSCONV_xshr.lambda,XSCONV_xshr.vector,XSCONV_xshr.NDET,Line);
         mediateAllocateAndSetPlotData(&spectrumData[1],pXsnew->lambda+nFilter,pXsnew->vector+nFilter,pXsnew->NDET-2*nFilter,Line);
         mediateResponsePlotData(0,spectrumData,2,Spectrum,forceAutoScale,windowTitle,"Wavelength (nm)","",responseHandle);
-        mediateResponseLabelPage(0,(pEngineContext->convolutionType!=CONVOLUTION_TYPE_NONE)?"Spectrum after convolution":"Spectrum after interpolation","",responseHandle);
+        mediateResponseLabelPage(0,pageTitle,"",responseHandle);
         mediateReleasePlotData(spectrumData);
        }
 
@@ -434,52 +439,46 @@ RC mediateConvolutionCalculate(void *engineContext,void *responseHandle)
       // Low-Pass filtering
       // ------------------
 
-      if ((lowFilterType!=PRJCT_FILTER_TYPE_NONE) && (pEngineContext->filterVector!=NULL) &&
+      if ((lowFilterType!=PRJCT_FILTER_TYPE_NONE) && (pEngineContext->filterVector!=NULL) && !rc &&
         (((lowFilterType==PRJCT_FILTER_TYPE_ODDEVEN) && !(rc=FILTER_OddEvenCorrection(pXsnew->lambda,pXsnew->vector,pEngineContext->filterVector,pXsnew->NDET))) ||
-         ((lowFilterType!=PRJCT_FILTER_TYPE_ODDEVEN) && !(rc=FILTER_Vector(plFilter,pEngineContext->filterVector,pEngineContext->filterVector,pXsnew->NDET,PRJCT_FILTER_OUTPUT_LOW)))))
+         ((lowFilterType!=PRJCT_FILTER_TYPE_ODDEVEN) && !(rc=FILTER_Vector(plFilter,pEngineContext->filterVector,pEngineContext->filterVector,pXsnew->NDET,PRJCT_FILTER_OUTPUT_LOW)))) && dispConv)
        {
-       	#if defined (__WINDOAS_GUI_) && __WINDOAS_GUI_
+       	plot_data_t spectrumData[2];
 
-        SendMessage(CHILD_hwndFrame,WM_MDIACTIVATE,(WPARAM)CHILD_list[CHILD_WINDOW_SPECTRA].hwndChild,(LPARAM)0);
-        sprintf(windowTitle,"Original cross section : %s",pEngineContext->crossFile);
-        strcpy(graphTitle,"After low-pass filtering");
+       	sprintf(windowTitle,(pEngineContext->convolutionType!=CONVOLUTION_TYPE_NONE)?"Spectrum after convolution and low-pass filtering":"Spectrum after interpolation and low-pass filtering");
 
-        DRAW_Spectra(CHILD_WINDOW_SPECTRA,windowTitle,graphTitle,"Wavelength (nm)","",NULL,0,
-                    (double)0.,(double)0.,(double)0.,(double)0.,
-                     pXsnew->lambda+nFilter,pXsnew->vector+nFilter,pXsnew->NDET-2*nFilter,DRAW_COLOR2,0,pXsnew->NDET-2*nFilter-1,PS_SOLID,"Not filtered",
-                     pXsnew->lambda+nFilter,filterVector+nFilter,pXsnew->NDET-2*nFilter,DRAW_COLOR1,0,pXsnew->NDET-2*nFilter-1,PS_SOLID,"Filtered",
-                     iGraph,1,nGraph,(iGraph==nGraph-1)?1:0);
-
-        iGraph++;
-
-        #endif
+        mediateAllocateAndSetPlotData(&spectrumData[0],pXsnew->lambda+nFilter,pXsnew->vector+nFilter,pXsnew->NDET-2*nFilter,Line);
+        mediateAllocateAndSetPlotData(&spectrumData[1],pXsnew->lambda+nFilter,pEngineContext->filterVector+nFilter,pXsnew->NDET-2*nFilter,Line);
+        mediateResponsePlotData(0,spectrumData,2,Spectrum,forceAutoScale,windowTitle,"Wavelength (nm)","",responseHandle);
+        mediateResponseLabelPage(0,pageTitle,"",responseHandle);
+        mediateReleasePlotData(spectrumData);
        }
 
       // -------------------
       // High-Pass filtering
       // -------------------
 
-      if ((highFilterType!=PRJCT_FILTER_TYPE_NONE) && (highFilterType!=PRJCT_FILTER_TYPE_ODDEVEN) && (pEngineContext->filterVector!=NULL) &&
-         !(rc=FILTER_Vector(phFilter,pEngineContext->filterVector,pEngineContext->filterVector,pXsnew->NDET,PRJCT_FILTER_OUTPUT_HIGH_SUB+phFilter->filterAction)))
+      if ((highFilterType!=PRJCT_FILTER_TYPE_NONE) && (highFilterType!=PRJCT_FILTER_TYPE_ODDEVEN) && (pEngineContext->filterVector!=NULL) && !rc &&
+         !(rc=FILTER_Vector(phFilter,pEngineContext->filterVector,pEngineContext->filterVector,pXsnew->NDET,PRJCT_FILTER_OUTPUT_HIGH_SUB+phFilter->filterAction)) && dispConv)
        {
-       	#if defined (__WINDOAS_GUI_) && __WINDOAS_GUI_
+       	plot_data_t spectrumData[1];
 
-        SendMessage(CHILD_hwndFrame,WM_MDIACTIVATE,(WPARAM)CHILD_list[CHILD_WINDOW_SPECTRA].hwndChild,(LPARAM)0);
-        sprintf(windowTitle,"Original cross section : %s",pEngineContext->crossFile);
-        strcpy(graphTitle,"After high-pass filtering");
+       	sprintf(windowTitle,(pEngineContext->convolutionType!=CONVOLUTION_TYPE_NONE)?"Spectrum after convolution, low-pass and high-pass filtering":"Spectrum after interpolation, low-pass and high-pass filtering");
 
-        DRAW_Spectra(CHILD_WINDOW_SPECTRA,windowTitle,graphTitle,"Wavelength (nm)","",NULL,0,
-                    (double)0.,(double)0.,(double)0.,(double)0.,
-                     pXsnew->lambda+nFilter,filterVector+nFilter,pXsnew->NDET-2*nFilter,DRAW_COLOR2,0,pXsnew->NDET-2*nFilter-1,PS_SOLID,"",
-                     NULL,NULL,0,DRAW_COLOR1,0,0,PS_SOLID,"",
-                     iGraph,1,nGraph,(iGraph==nGraph-1)?1:0);
-
-        iGraph++;
-
-        #endif
+        mediateAllocateAndSetPlotData(&spectrumData[0],pXsnew->lambda+nFilter,pEngineContext->filterVector+nFilter,pXsnew->NDET-2*nFilter,Line);
+        mediateResponsePlotData(0,spectrumData,1,Spectrum,forceAutoScale,windowTitle,"Wavelength (nm)","",responseHandle);
+        mediateResponseLabelPage(0,pageTitle,"",responseHandle);
+        mediateReleasePlotData(spectrumData);
        }
+
+      // Result safe keeping
+
+      if (!rc)
+       rc=mediateConvolutionSave(pEngineContext);
      }
    }
+
+  EndConvolution :
 
   // Release allocated buffers
 
@@ -513,11 +512,13 @@ RC mediateConvolutionCalculate(void *engineContext,void *responseHandle)
 // RETURN        ERROR_ID_NO if no error found
 // -----------------------------------------------------------------------------
 
-void mediateRequestConvolution(void *engineContext,mediate_convolution_t *pMediateConvolution,void *responseHandle)
+RC mediateRequestConvolution(void *engineContext,mediate_convolution_t *pMediateConvolution,void *responseHandle)
  {
  	// Declarations
 
   ENGINE_XSCONV_CONTEXT *pEngineContext = (ENGINE_XSCONV_CONTEXT*)engineContext;
+  PRJCT_FILTER *plFilter,*phFilter;                                             // pointers to the low pass and high pass filter parts of the engine context
+  SLIT *pSlitConv,*pSlitDConv;                                                  // pointers to the convolution and deconvolution slit function parts of the engine context
   RC rc;
 
   // Initializations
@@ -544,8 +545,98 @@ void mediateRequestConvolution(void *engineContext,mediate_convolution_t *pMedia
 
   // Filtering configuration
 
-  setMediateFilter(&pEngineContext->lfilter,&pMediateConvolution->lowpass);
-  setMediateFilter(&pEngineContext->lfilter,&pMediateConvolution->highpass);
+  setMediateFilter(&pEngineContext->lfilter,&pMediateConvolution->lowpass,0,1);
+  setMediateFilter(&pEngineContext->hfilter,&pMediateConvolution->highpass,1,1);
+
+  // Check input
+
+  if (!strlen(pEngineContext->crossFile))
+   rc=ERROR_SetLast("mediateRequestConvolution",ERROR_TYPE_FATAL,ERROR_ID_MEDIATE,"Input (General tab page)","Input cross section file name is missing");
+  else if (!strlen(pEngineContext->calibrationFile))
+   rc=ERROR_SetLast("mediateRequestConvolution",ERROR_TYPE_FATAL,ERROR_ID_MEDIATE,"Calibration (General tab page)","Calibration file name is missing");
+  else if (pEngineContext->convolutionType!=CONVOLUTION_TYPE_NONE)
+   {
+   	pSlitConv=&pEngineContext->slitConv;
+   	pSlitDConv=&pEngineContext->slitDConv;
+   	plFilter=&pEngineContext->lfilter;
+   	phFilter=&pEngineContext->hfilter;
+
+   	// Convolution slit function
+
+   	if ((pSlitConv->slitType!=SLIT_TYPE_GAUSS) &&
+        (pSlitConv->slitType!=SLIT_TYPE_INVPOLY) &&
+        (pSlitConv->slitType!=SLIT_TYPE_ERF) &&
+        (pSlitConv->slitType!=SLIT_TYPE_VOIGT) &&
+        (pSlitConv->slitType!=SLIT_TYPE_APOD) &&
+        (pSlitConv->slitType!=SLIT_TYPE_APODNBS) && !strlen(pSlitConv->slitFile))
+
+     rc=ERROR_SetLast("mediateRequestConvolution",ERROR_TYPE_FATAL,ERROR_ID_MEDIATE,"Slit Function Type (Slit Function page, convolution part)","Convolution slit function file is missing");
+
+    else if (((pSlitConv->slitType==SLIT_TYPE_INVPOLY) || (pSlitConv->slitType==SLIT_TYPE_INVPOLY_FILE)) &&
+             ((pSlitConv->slitParam2<=(double)0.) ||
+              (pSlitConv->slitParam2-floor(pSlitConv->slitParam2)!=(double)0.) ||
+              (fmod(pSlitConv->slitParam2,(double)2.)!=(double)0.)))
+
+     rc=ERROR_SetLast("mediateRequestConvolution",ERROR_TYPE_FATAL,ERROR_ID_MEDIATE,"Degree (Slit Function page, convolution part)","Polynomial degree should be a positive integer and a multiple of 2");
+
+    // Deconvolution slit function
+
+    else if ((pSlitDConv->slitType!=SLIT_TYPE_FILE) &&
+             (pSlitDConv->slitType!=SLIT_TYPE_GAUSS) &&
+             (pSlitDConv->slitType!=SLIT_TYPE_INVPOLY) &&
+             (pSlitDConv->slitType!=SLIT_TYPE_ERF) &&
+             (pSlitDConv->slitType!=SLIT_TYPE_VOIGT) &&
+             (pSlitDConv->slitType!=SLIT_TYPE_APOD) &&
+             (pSlitDConv->slitType!=SLIT_TYPE_APODNBS) && !strlen(pSlitDConv->slitFile))
+
+     rc=ERROR_SetLast("mediateRequestConvolution",ERROR_TYPE_FATAL,ERROR_ID_MEDIATE,"Slit Function Type (Slit Function page, Deconvolution part)","Convolution slit function file is missing");
+
+    else if (((pSlitDConv->slitType==SLIT_TYPE_INVPOLY) || (pSlitDConv->slitType==SLIT_TYPE_INVPOLY_FILE)) &&
+             ((pSlitDConv->slitParam2<=(double)0.) ||
+              (pSlitDConv->slitParam2-floor(pSlitDConv->slitParam2)!=(double)0.) ||
+              (fmod(pSlitDConv->slitParam2,(double)2.)!=(double)0.)))
+
+     rc=ERROR_SetLast("mediateRequestConvolution",ERROR_TYPE_FATAL,ERROR_ID_MEDIATE,"Degree (Slit Function page, Deconvolution part)","Polynomial degree should be a positive integer and a multiple of 2");
+
+    // Low pass filtering
+
+    else if ((plFilter->type!=PRJCT_FILTER_TYPE_NONE) &&
+            ((plFilter->type==PRJCT_FILTER_TYPE_BOXCAR) ||
+             (plFilter->type==PRJCT_FILTER_TYPE_TRIANGLE) ||
+             (plFilter->type==PRJCT_FILTER_TYPE_SG) ||
+             (plFilter->type==PRJCT_FILTER_TYPE_BINOMIAL)) &&
+             (plFilter->filterWidth%2!=1))
+
+     rc=ERROR_SetLast("mediateRequestConvolution",ERROR_TYPE_FATAL,ERROR_ID_MEDIATE,"Filter width (Filtering page, low pass filter part)","Filter width should be an odd number");
+
+    else if ((plFilter->type!=PRJCT_FILTER_TYPE_NONE) &&
+             (plFilter->type==PRJCT_FILTER_TYPE_SG) &&
+            ((plFilter->filterOrder%2!=0) || (plFilter->filterOrder==0)))
+
+     rc=ERROR_SetLast("mediateRequestConvolution",ERROR_TYPE_FATAL,ERROR_ID_MEDIATE,"Filter order (Filtering page, low pass filter part)","Filter order should be an even strictly positive number");
+
+    // High pass filtering
+
+    else if ((phFilter->type!=PRJCT_FILTER_TYPE_NONE) &&
+            ((phFilter->type==PRJCT_FILTER_TYPE_BOXCAR) ||
+             (phFilter->type==PRJCT_FILTER_TYPE_TRIANGLE) ||
+             (phFilter->type==PRJCT_FILTER_TYPE_SG) ||
+             (phFilter->type==PRJCT_FILTER_TYPE_BINOMIAL)) &&
+             (phFilter->filterWidth%2!=1))
+
+     rc=ERROR_SetLast("mediateRequestConvolution",ERROR_TYPE_FATAL,ERROR_ID_MEDIATE,"Filter width (Filtering page, low pass filter part)","Filter width should be an odd number");
+
+    else if ((phFilter->type!=PRJCT_FILTER_TYPE_NONE) &&
+             (phFilter->type==PRJCT_FILTER_TYPE_SG) &&
+            ((phFilter->filterOrder%2!=0) || (phFilter->filterOrder==0)))
+
+     rc=ERROR_SetLast("mediateRequestConvolution",ERROR_TYPE_FATAL,ERROR_ID_MEDIATE,"Filter order (Filtering page, low pass filter part)","Filter order should be an even strictly positive number");
+   }
+
+  // Return
+
+  return rc;
+
  }
 
 // -----------------------------------------------------------------------------

@@ -685,9 +685,9 @@ int batchProcessConvolution(commands_t *cmd)
 	QList<QString>::const_iterator it = filenames.begin();
 
 	strcpy(properties.general.inputFile, it->toAscii().data());
-	
-	mediateRequestConvolution(engineContext, &properties, resp);
-	retCode = mediateConvolutionCalculate(engineContext,resp);
+
+	if ((retCode=mediateRequestConvolution(engineContext, &properties, resp))==ERROR_ID_NO)
+	 retCode = mediateConvolutionCalculate(engineContext,resp);
 	resp->process(controller);
 
 	++it;
@@ -700,7 +700,7 @@ int batchProcessConvolution(commands_t *cmd)
 	    ++it;
 	  }
 	}
-	
+
       }
       else {
 	// use the current input file
@@ -708,7 +708,7 @@ int batchProcessConvolution(commands_t *cmd)
 	retCode = mediateConvolutionCalculate(engineContext,resp);
 	resp->process(controller);
       }
-      
+
       if (mediateXsconvDestroyContext(engineContext, resp) != 0) {
 	retCode = 1;
       }

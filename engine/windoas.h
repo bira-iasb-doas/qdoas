@@ -121,7 +121,7 @@ NEWTIME;
 // QDOAS ???
 // QDOAS ??? typedef struct _tabPages
 // QDOAS ???  {
-// QDOAS ???   UCHAR        tabTitle[MAX_ITEM_NAME_LEN+1];          // title of tab page
+// QDOAS ???   unsigned char        tabTitle[MAX_ITEM_NAME_LEN+1];          // title of tab page
 // QDOAS ???   INT          dlgBox;                                 // dialog box to load from resources
 // QDOAS ???   DLGPROC      dlgProc;                                // procedure for processing messages from the previous dialog box
 // QDOAS ???   DLGTEMPLATE *dlgTemp;                                // load template from resources
@@ -150,7 +150,7 @@ void    RESOURCE_Free(void);
 // QDOAS ??? typedef struct _hdfField
 // QDOAS ???  {
 // QDOAS ???   char  fieldName[VSNAMELENMAX];                                                // the name of the current field
-// QDOAS ???   int32 fieldOrder,                                                             // the order if the specified field
+// QDOAS ???   long fieldOrder,                                                             // the order if the specified field
 // QDOAS ???         fieldType,                                                              // the type of the field
 // QDOAS ???         dataSize;                                                               // the size in bytes of data (useful for buffers allocation)
 // QDOAS ???   char *data;                                                                   // pointer to the data
@@ -162,7 +162,7 @@ void    RESOURCE_Free(void);
 // QDOAS ??? typedef struct _hdfSDS
 // QDOAS ???  {
 // QDOAS ???   char  sdsName[MAX_NC_NAME];                                                   // the name of the current SDS
-// QDOAS ???   int32 sdsRank,                                                                // the rank of the current SDS
+// QDOAS ???   long sdsRank,                                                                // the rank of the current SDS
 // QDOAS ???         sdsDim[MAX_VAR_DIMS],                                                   // the dimensions of the current SDS
 // QDOAS ???         sdsDataType,                                                            // the data type of the current SDS
 // QDOAS ???         sdsDataSize,                                                            // the size in bytes of the data
@@ -170,7 +170,7 @@ void    RESOURCE_Free(void);
 // QDOAS ???  }
 // QDOAS ??? HDF_SDS;
 // QDOAS ???
-// QDOAS ??? RC HDF_GetSDSInfo(UCHAR *fileName,int32 hdfSDSId,int32 sdsRef,HDF_SDS *sdsList,INT nSDS);
+// QDOAS ??? RC HDF_GetSDSInfo(unsigned char *fileName,long hdfSDSId,long sdsRef,HDF_SDS *sdsList,INT nSDS);
 // QDOAS ???
 // QDOAS ??? #endif
 // QDOAS ???
@@ -189,9 +189,9 @@ void    RESOURCE_Free(void);
 
 typedef struct _fileType
  {
-  UCHAR fileType[MAX_ITEM_DESC_LEN+1];          // type of files
-  UCHAR fileExt[12];                            // extension associated to this type of files
-  UCHAR defaultPath[MAX_PATH_LEN+1];            // default path
+  unsigned char fileType[MAX_ITEM_DESC_LEN+1];          // type of files
+  unsigned char fileExt[12];                            // extension associated to this type of files
+  unsigned char defaultPath[MAX_PATH_LEN+1];            // default path
  }
 FILE_TYPE;
 
@@ -200,7 +200,7 @@ FILE_TYPE;
 
 typedef struct _filePath
  {
-  UCHAR path[MAX_PATH_LEN+1];
+  unsigned char path[MAX_PATH_LEN+1];
   INT   count;
  }
 FILES_PATH;
@@ -209,7 +209,7 @@ FILES_PATH;
 // GLOBAL VARIABLES
 // ----------------
 
-EXTERN UCHAR FILES_configuration[];            // configuration file
+EXTERN unsigned char FILES_configuration[];            // configuration file
 EXTERN FILE_TYPE FILES_types[];                     // types of files supported by application
 EXTERN INT FILES_version;                           // program version
 EXTERN FILES_PATH *FILES_paths;                     // all paths implied in configuration file
@@ -222,14 +222,14 @@ EXTERN INT FILES_nPaths;                            // the size of the previous 
 // Load data from files
 // --------------------
 
-void   FILES_CompactPath(UCHAR *newPath,UCHAR *path,INT useFileName,INT addFlag);
-UCHAR *FILES_RebuildFileName(UCHAR *newPath,UCHAR *path,INT useFileName);
-void   FILES_ChangePath(UCHAR *oldPath,UCHAR *newPath,INT useFileName);
-void   FILES_RemoveOnePath(UCHAR *path);
-void   FILES_RetrievePath(UCHAR *pathString,SZ_LEN pathStringLength,UCHAR *fullFileName,SZ_LEN fullFileNameLength,INT indexFileType,INT changeDefaultPath);
+void   FILES_CompactPath(unsigned char *newPath,unsigned char *path,INT useFileName,INT addFlag);
+unsigned char *FILES_RebuildFileName(unsigned char *newPath,unsigned char *path,INT useFileName);
+void   FILES_ChangePath(unsigned char *oldPath,unsigned char *newPath,INT useFileName);
+void   FILES_RemoveOnePath(unsigned char *path);
+void   FILES_RetrievePath(unsigned char *pathString,SZ_LEN pathStringLength,unsigned char *fullFileName,SZ_LEN fullFileNameLength,INT indexFileType,INT changeDefaultPath);
 
-RC     FILES_GetMatrixDimensions(FILE *fp,UCHAR *fileName,INT *pNl,INT *pNc,UCHAR *callingFunction,INT errorType);
-RC     FILES_LoadMatrix(FILE *fp,UCHAR *fileName,double **matrix,INT base,INT nl,INT nc,UCHAR *callingFunction,INT errorType);
+RC     FILES_GetMatrixDimensions(FILE *fp,unsigned char *fileName,INT *pNl,INT *pNc,unsigned char *callingFunction,INT errorType);
+RC     FILES_LoadMatrix(FILE *fp,unsigned char *fileName,double **matrix,INT base,INT nl,INT nc,unsigned char *callingFunction,INT errorType);
 
 // QDOAS ??? RC     FILES_Alloc(void);
 // QDOAS ??? void   FILES_Free(void);
@@ -237,18 +237,18 @@ RC     FILES_LoadMatrix(FILE *fp,UCHAR *fileName,double **matrix,INT base,INT nl
 // Select a file
 // -------------
 
-UCHAR  *FILES_BuildFileName(UCHAR *fileName,MASK fileType);
+unsigned char  *FILES_BuildFileName(unsigned char *fileName,MASK fileType);
 
 // QDOAS ??? #if defined(__WINDOAS_GUI_) && (__WINDOAS_GUI_)
-// QDOAS ??? RC      FILES_Open(HWND hwndParent,MASK fileType,UCHAR *buffer,INT bufferSize,LONG openStyles,UCHAR openMode,INT *symbolReferenceNumber,INDEX indexSymbol,INT *pFileType,INT helpID);
-// QDOAS ??? RC      FILES_Select(HWND hwndParent,UCHAR *buffer,INT bufferSize,MASK fileType,INT style,UCHAR openMode,INT *symbolReferenceNumber,INDEX indexSymbol,INT helpID);
+// QDOAS ??? RC      FILES_Open(HWND hwndParent,MASK fileType,unsigned char *buffer,INT bufferSize,long openStyles,unsigned char openMode,INT *symbolReferenceNumber,INDEX indexSymbol,INT *pFileType,INT helpID);
+// QDOAS ??? RC      FILES_Select(HWND hwndParent,unsigned char *buffer,INT bufferSize,MASK fileType,INT style,unsigned char openMode,INT *symbolReferenceNumber,INDEX indexSymbol,INT helpID);
 // QDOAS ??? INDEX   FILES_Insert(HWND hwndTree,INDEX indexParent,INT dataType,MASK fileType);
 // QDOAS ??? #endif
 // QDOAS ???
 // QDOAS ??? // "Files" menu commands processing
 // QDOAS ??? // --------------------------------
 // QDOAS ???
-// QDOAS ??? void    FILES_LoadConfiguration(HWND hwndParent,UCHAR *fileName);
+// QDOAS ??? void    FILES_LoadConfiguration(HWND hwndParent,unsigned char *fileName);
 // QDOAS ??? void    FILES_SaveConfiguration(FILE *fp);
 // QDOAS ???
 // QDOAS ??? #if defined(__WINDOAS_GUI_) && (__WINDOAS_GUI_)
@@ -274,8 +274,8 @@ UCHAR  *FILES_BuildFileName(UCHAR *fileName,MASK fileType);
 
    typedef struct _observationSites
     {
-     UCHAR name[SITE_NAME_BUFFER_LENGTH];
-     UCHAR abbrev[SITE_ABBREV_BUFFER_LENGTH];
+     unsigned char name[SITE_NAME_BUFFER_LENGTH];
+     unsigned char abbrev[SITE_ABBREV_BUFFER_LENGTH];
      double longitude;
      double latitude;
      double altitude;
@@ -297,7 +297,7 @@ UCHAR  *FILES_BuildFileName(UCHAR *fileName,MASK fileType);
    RC      SITES_Alloc(void);
    void    SITES_Free(void);
 
-   INDEX   SITES_GetIndex(UCHAR *siteName);
+   INDEX   SITES_GetIndex(unsigned char *siteName);
 
 // =======
 // SYMBOLS
@@ -315,8 +315,8 @@ UCHAR  *FILES_BuildFileName(UCHAR *fileName,MASK fileType);
 
    typedef struct _symbol
     {
-     UCHAR name[MAX_ITEM_NAME_LEN+1];
-     UCHAR description[MAX_ITEM_DESC_LEN+1];
+     unsigned char name[MAX_ITEM_NAME_LEN+1];
+     unsigned char description[MAX_ITEM_DESC_LEN+1];
     }
    SYMBOL;
 
@@ -328,8 +328,8 @@ UCHAR  *FILES_BuildFileName(UCHAR *fileName,MASK fileType);
    EXTERN SYMBOL_CROSS *SYMB_itemCrossList;                                     // pointer to list of cross sections symbols
    EXTERN INT SYMB_itemCrossN;
 
-   INDEX SYMB_GetListIndex(SYMBOL *symbolList,INT symbolNumber,UCHAR *symbolName);
-   RC SYMB_Add(UCHAR *symbolName,UCHAR *symbolDescription);
+   INDEX SYMB_GetListIndex(SYMBOL *symbolList,INT symbolNumber,unsigned char *symbolName);
+   RC SYMB_Add(unsigned char *symbolName,unsigned char *symbolDescription);
 
    RC    SYMB_Alloc(void);
    void  SYMB_Free(void);
@@ -357,10 +357,10 @@ UCHAR  *FILES_BuildFileName(UCHAR *fileName,MASK fileType);
 // QDOAS ???
 // QDOAS ???    typedef struct _rawSpectra
 // QDOAS ???     {
-// QDOAS ???      UCHAR fileName[MAX_ITEM_TEXT_LEN+1];
-// QDOAS ???      UCHAR windoasPath[MAX_ITEM_TEXT_LEN+1];
-// QDOAS ???      UCHAR names[MAX_ITEM_TEXT_LEN+1];
-// QDOAS ???      UCHAR dark[MAX_ITEM_TEXT_LEN+1];
+// QDOAS ???      unsigned char fileName[MAX_ITEM_TEXT_LEN+1];
+// QDOAS ???      unsigned char windoasPath[MAX_ITEM_TEXT_LEN+1];
+// QDOAS ???      unsigned char names[MAX_ITEM_TEXT_LEN+1];
+// QDOAS ???      unsigned char dark[MAX_ITEM_TEXT_LEN+1];
 // QDOAS ???      INDEX indexProject;
 // QDOAS ???      INT   folderFlag;
 // QDOAS ???      INT   notAutomatic;
@@ -384,8 +384,8 @@ UCHAR  *FILES_BuildFileName(UCHAR *fileName,MASK fileType);
 // QDOAS ???    RC   RAW_Alloc(void);
 // QDOAS ???    void RAW_Free(void);
 // QDOAS ???
-// QDOAS ???    void RAW_LoadConfiguration(UCHAR *fileLine);
-// QDOAS ???    void RAW_SaveConfiguration(FILE *fp,UCHAR *sectionName);
+// QDOAS ???    void RAW_LoadConfiguration(unsigned char *fileLine);
+// QDOAS ???    void RAW_SaveConfiguration(FILE *fp,unsigned char *sectionName);
 
 // =================
 // MATRIX PROCESSING
@@ -406,10 +406,10 @@ MATRIX_OBJECT;
 // Prototypes
 // ----------
 
-RC   MATRIX_Allocate(MATRIX_OBJECT *pMatrix,INT nl,INT nc,INT basel,INT basec,INT allocateDeriv2,UCHAR *callingFunction);
-void MATRIX_Free(MATRIX_OBJECT *pMatrix,UCHAR *callingFunctionShort);
-RC   MATRIX_Copy(MATRIX_OBJECT *pTarget,MATRIX_OBJECT *pSource,UCHAR *callingFunction);
-RC   MATRIX_Load(UCHAR *fileName,MATRIX_OBJECT *pMatrix,INT basel,INT basec,INT nl,INT nc,double xmin,double xmax,INT allocateDeriv2,INT reverseFlag,UCHAR *callingFunction);
+RC   MATRIX_Allocate(MATRIX_OBJECT *pMatrix,INT nl,INT nc,INT basel,INT basec,INT allocateDeriv2,unsigned char *callingFunction);
+void MATRIX_Free(MATRIX_OBJECT *pMatrix,unsigned char *callingFunctionShort);
+RC   MATRIX_Copy(MATRIX_OBJECT *pTarget,MATRIX_OBJECT *pSource,unsigned char *callingFunction);
+RC   MATRIX_Load(unsigned char *fileName,MATRIX_OBJECT *pMatrix,INT basel,INT basec,INT nl,INT nc,double xmin,double xmax,INT allocateDeriv2,INT reverseFlag,unsigned char *callingFunction);
 
 // ===========================
 // ANALYSIS WINDOWS PROPERTIES
@@ -433,15 +433,15 @@ RC   MATRIX_Load(UCHAR *fileName,MATRIX_OBJECT *pMatrix,INT basel,INT basec,INT 
 
 typedef struct _listColumn
  {
-  UCHAR columnTitle[MAX_ITEM_NAME_LEN+1];                  // title of column in list view
+  unsigned char columnTitle[MAX_ITEM_NAME_LEN+1];                  // title of column in list view
   INT columnWidth;                                         // initial width of the column
   INT columnFormat;                                        // format of column
-  UCHAR controlName[20];                                   // name of associated control
+  unsigned char controlName[20];                                   // name of associated control
   UINT controlStyle;                                       // style of associated control
-  UCHAR controlPermanent;                                  // flag set if control is permanent
+  unsigned char controlPermanent;                                  // flag set if control is permanent
   INT comboboxItemType;                                    // type of combobox, cfr above
-  CHAR displayNumber;                                      // number that specify set of selected columns in list to display in ListView control
-  UCHAR defaultValue[MAX_ITEM_NAME_LEN+1];                 // default value
+  char displayNumber;                                      // number that specify set of selected columns in list to display in ListView control
+  unsigned char defaultValue[MAX_ITEM_NAME_LEN+1];                 // default value
  }
 LIST_COLUMN;
 
@@ -452,9 +452,9 @@ LIST_COLUMN;
 
 typedef struct _listItem
  {
-  UCHAR  crossFileName[MAX_ITEM_TEXT_LEN+1];               // cross section file associated to the symbol
-  UCHAR  amfFileName[MAX_ITEM_TEXT_LEN+1];                 // air mass factors file associated to the symbol
-  UCHAR  itemText[MAX_LIST_COLUMNS][MAX_ITEM_TEXT_LEN+1];  // text for items to insert in different columns of ListView control
+  unsigned char  crossFileName[MAX_ITEM_TEXT_LEN+1];               // cross section file associated to the symbol
+  unsigned char  amfFileName[MAX_ITEM_TEXT_LEN+1];                 // air mass factors file associated to the symbol
+  unsigned char  itemText[MAX_LIST_COLUMNS][MAX_ITEM_TEXT_LEN+1];  // text for items to insert in different columns of ListView control
   INT    hidden;                                           // flag that indicates if the line is hidden in the user interface
   INDEX  indexParent,indexPrevious,indexNext;              // indexes of respectively, parent, previous and next item in list
  }
@@ -462,12 +462,12 @@ LIST_ITEM;
 
 typedef struct _anlysTabPages
  {
-  UCHAR tabTitle[MAX_ITEM_NAME_LEN+1];                     // title of tab page
+  unsigned char tabTitle[MAX_ITEM_NAME_LEN+1];                     // title of tab page
   #if defined(__WINDOAS_GUI_) && (__WINDOAS_GUI_)
       LIST_COLUMN *columnList;                             // list of columns to create in ListView control
   #endif
   INT columnNumber;
-  UCHAR symbolType;                                        // type of symbol to use
+  unsigned char symbolType;                                        // type of symbol to use
   SYMBOL *symbolList;                                      // list of symbols to use
   INT symbolNumber;                                        // number of symbols in previous list
   INT *symbolReferenceNumber;                              // number of times a symbol is referenced to
@@ -475,8 +475,8 @@ typedef struct _anlysTabPages
   INT listEntryPoint;                                      // entry point in ListView items list
   INT oldListEntryPoint;                                   // entry point in list before modifications
   INDEX *pTreeEntryPoint;                                  // entry point of analysis window in tree control
-  CHAR displayNumber;                                      // number that specify set of selected columns in list to display in ListView control
-  UCHAR minDisplayNumber;                                  // minimum value for previous field
+  char displayNumber;                                      // number that specify set of selected columns in list to display in ListView control
+  unsigned char minDisplayNumber;                                  // minimum value for previous field
   INT maxDisplayNumber;                                    // maximum value for previous field
 
   #if defined(__WINDOAS_GUI_) && (__WINDOAS_GUI_)
@@ -493,7 +493,7 @@ ANLYS_TAB_PAGE;
 
 typedef struct _analysis
  {
-  UCHAR  windowName[MAX_ITEM_NAME_LEN+1];                   // name of window
+  unsigned char  windowName[MAX_ITEM_NAME_LEN+1];                   // name of window
   INT    refSpectrumSelectionMode;                          // reference spectrum selection mode
   INT    useKurucz;                                         // apply Kurucz
   INT    useSref;                                           // obsolete
@@ -506,18 +506,18 @@ typedef struct _analysis
   INT    displayPredefined;                                 // force display of predefined parameters
   INT    displayFits;                                       // force display fits
   INT    bandType;
-  UCHAR  refSpectrumFile[MAX_ITEM_TEXT_LEN+1];              // reference spectrum file in file mode
-  UCHAR  refEtalon[MAX_ITEM_TEXT_LEN+1];                    // reference etalon file
-  UCHAR  residualsFile[MAX_ITEM_TEXT_LEN+1];                // residuals safe keeping
-  UCHAR  lambdaMin[13],lambdaMax[13];                       // wavelengths or pixels range
-  UCHAR  lambdaMinK[13],lambdaMaxK[13];                     // wavelengths or pixels range
+  unsigned char  refSpectrumFile[MAX_ITEM_TEXT_LEN+1];              // reference spectrum file in file mode
+  unsigned char  refEtalon[MAX_ITEM_TEXT_LEN+1];                    // reference etalon file
+  unsigned char  residualsFile[MAX_ITEM_TEXT_LEN+1];                // residuals safe keeping
+  unsigned char  lambdaMin[13],lambdaMax[13];                       // wavelengths or pixels range
+  unsigned char  lambdaMinK[13],lambdaMaxK[13];                     // wavelengths or pixels range
   INDEX  listEntryPoint[TAB_TYPE_ANLYS_MAX];                // entry points to list for all tab pages
   INT    hidden;                                            // flag set if window is hidden
   double refSZA,refSZADelta;
   double refLatMin,refLatMax,refLonMin,refLonMax;
   INT    pixelType;
   INT    nspectra;
-  UCHAR  gomePixelType[4];
+  unsigned char  gomePixelType[4];
  }
 ANALYSIS_WINDOWS;
 
@@ -528,17 +528,17 @@ ANALYSIS_WINDOWS;
 #if defined(__WINDOAS_GUI_) && (__WINDOAS_GUI_)
     LRESULT CALLBACK ANLYS_WndProc(HWND hwndAnlys,UINT msg,WPARAM mp1,LPARAM mp2);
     void  ANLYS_ViewCrossSections(HWND hwndTree);
-    void  ANLYS_DeleteOneListItem(UCHAR *textItem,INDEX indexWindow,INDEX indexTab);
+    void  ANLYS_DeleteOneListItem(unsigned char *textItem,INDEX indexWindow,INDEX indexTab);
 #endif
 
 void  ANLYS_CopyItems(ANALYSIS_WINDOWS *pAnlysToPaste,ANALYSIS_WINDOWS *pAnlysToCopy);
 void  ANLYS_PasteItems(ANALYSIS_WINDOWS *pAnlysToPaste,ANALYSIS_WINDOWS *pNewAnlys,INDEX indexParent);
 void  ANLYS_ReleaseListItems(INDEX indexWindow);
 void  ANLYS_ResetConfiguration(void);
-void  ANLYS_LoadConfigurationOld(UCHAR *fileName);
+void  ANLYS_LoadConfigurationOld(unsigned char *fileName);
 void  ANLYS_OutputConfiguration(FILE *fp,INDEX indexProject,INDEX indexWindow);
-void  ANLYS_LoadConfiguration(UCHAR *fileLine);
-void  ANLYS_SaveConfiguration(FILE *fp,UCHAR *sectionName);
+void  ANLYS_LoadConfiguration(unsigned char *fileLine);
+void  ANLYS_SaveConfiguration(FILE *fp,unsigned char *sectionName);
 
 RC ANLYS_Alloc(void);
 void ANLYS_Free(void);
@@ -610,7 +610,7 @@ typedef struct _prjctKurucz
   INT              windowsNumber;                      // number of windows
   INT              fwhmPolynomial;                     // security gap in pixels numbers
   INT              shiftPolynomial;                    // degree of polynomial to use
-  UCHAR            file[MAX_ITEM_TEXT_LEN+1];          // kurucz file
+  unsigned char            file[MAX_ITEM_TEXT_LEN+1];          // kurucz file
   INT              displayFit;                         // display fit flag
   INT              displayResidual;                    // display new calibration flag
   INT              displayShift;                       // display shift/Fwhm in each pixel
@@ -630,7 +630,7 @@ PRJCT_KURUCZ;
 
 typedef struct _prjctUsamp
  {
-  UCHAR  kuruczFile[MAX_STR_LEN+1];
+  unsigned char  kuruczFile[MAX_STR_LEN+1];
   INT    method;
   double phase;
  }
@@ -690,19 +690,19 @@ typedef struct _prjctSciaFormat
  {
   INT         sciaChannel;
   INT         sciaCluster[6];
-  UCHAR       sciaReference[4];
+  unsigned char       sciaReference[4];
  }
 PRJCT_SCIA;
 
 typedef struct _prjctInstrumental
  {
-  UCHAR       observationSite[MAX_ITEM_NAME_LEN+1];    // index of observation site in list
-  UCHAR       readOutFormat;                           // spectra read out format
+  unsigned char       observationSite[MAX_ITEM_NAME_LEN+1];    // index of observation site in list
+  unsigned char       readOutFormat;                           // spectra read out format
   INT         user;                                    // user defined
-  UCHAR       calibrationFile[MAX_ITEM_TEXT_LEN+1];    // calibration file
-  UCHAR       instrFunction[MAX_ITEM_TEXT_LEN+1];      // instrumental function
-  UCHAR       vipFile[MAX_ITEM_TEXT_LEN+1];            // interpixel variability correction
-  UCHAR       dnlFile[MAX_ITEM_TEXT_LEN+1];            // detector not linearity correction
+  unsigned char       calibrationFile[MAX_ITEM_TEXT_LEN+1];    // calibration file
+  unsigned char       instrFunction[MAX_ITEM_TEXT_LEN+1];      // instrumental function
+  unsigned char       vipFile[MAX_ITEM_TEXT_LEN+1];            // interpixel variability correction
+  unsigned char       dnlFile[MAX_ITEM_TEXT_LEN+1];            // detector not linearity correction
   INT         detectorSize;                            // size of detector in pixels
   INT         azimuthFlag;
   INT         averageFlag;
@@ -719,7 +719,7 @@ typedef struct _prjctInstrumental
   INT         mfcStdOffset;
   INT         mfcRevert;
   float       opusTimeShift;
-  UCHAR       fileExt[50];
+  unsigned char       fileExt[50];
   float       omiWavelength1,omiWavelength2;
  }
 PRJCT_INSTRUMENTAL;
@@ -732,7 +732,7 @@ typedef struct _prjctSlit
  {
   SLIT  slitFunction;                                  // slit function
   INT   fwhmCorrectionFlag;                            // flag set if fwhm correction is to be applied
-  UCHAR kuruczFile[MAX_STR_LEN+1];
+  unsigned char kuruczFile[MAX_STR_LEN+1];
  }
 PRJCT_SLIT;
 
@@ -745,11 +745,11 @@ PRJCT_SLIT;
 
 typedef struct _prjctResultsFields
  {
-  UCHAR   fieldName[2*(MAX_ITEM_NAME_LEN+1)];
+  unsigned char   fieldName[2*(MAX_ITEM_NAME_LEN+1)];
   INT     fieldType;
   INT     fieldSize;
   INT     fieldDim1,fieldDim2;
-  UCHAR   fieldFormat[MAX_ITEM_NAME_LEN+1];
+  unsigned char   fieldFormat[MAX_ITEM_NAME_LEN+1];
  }
 PRJCT_RESULTS_FIELDS;
 
@@ -758,12 +758,12 @@ PRJCT_RESULTS_FIELDS;
 
 typedef struct _prjctAsciiResults
  {
-  UCHAR path[MAX_ITEM_TEXT_LEN+1];                                          // path for results and fits files
+  unsigned char path[MAX_ITEM_TEXT_LEN+1];                                          // path for results and fits files
   INT   analysisFlag,calibFlag,dirFlag,configFlag,binaryFlag;                             // store results in ascii format
-  UCHAR fluxes[MAX_ITEM_TEXT_LEN+1];                                        // fluxes
-  UCHAR cic[MAX_ITEM_TEXT_LEN+1];                                           // color indexes
+  unsigned char fluxes[MAX_ITEM_TEXT_LEN+1];                                        // fluxes
+  unsigned char cic[MAX_ITEM_TEXT_LEN+1];                                           // color indexes
   INT fieldsNumber;                                                         // number of ascii flags set in the next list
-  UCHAR fieldsFlag[PRJCT_RESULTS_ASCII_MAX];                                // fields used in ascii format
+  unsigned char fieldsFlag[PRJCT_RESULTS_ASCII_MAX];                                // fields used in ascii format
  }
 PRJCT_RESULTS_ASCII;
 
@@ -772,12 +772,12 @@ PRJCT_RESULTS_ASCII;
 
 typedef struct _prjctNasaResults
  {
-  UCHAR path[MAX_ITEM_TEXT_LEN+1];                                          // path for results and fits files
-  UCHAR nasaFlag;                                                           // use NASA-AMES format
-  UCHAR no2RejectionFlag;                                                   // force NO2 rejection test to be applied
-  UCHAR instrument[MAX_ITEM_TEXT_LEN+1];                                    // instrument specification
-  UCHAR experiment[MAX_ITEM_TEXT_LEN+1];                                    // experiment specification
-  UCHAR fields[PRJCT_RESULTS_NASA_MAX][MAX_ITEM_NAME_LEN+1];                // fields used in NASA-AMES format
+  unsigned char path[MAX_ITEM_TEXT_LEN+1];                                          // path for results and fits files
+  unsigned char nasaFlag;                                                           // use NASA-AMES format
+  unsigned char no2RejectionFlag;                                                   // force NO2 rejection test to be applied
+  unsigned char instrument[MAX_ITEM_TEXT_LEN+1];                                    // instrument specification
+  unsigned char experiment[MAX_ITEM_TEXT_LEN+1];                                    // experiment specification
+  unsigned char fields[PRJCT_RESULTS_NASA_MAX][MAX_ITEM_NAME_LEN+1];                // fields used in NASA-AMES format
  }
 PRJCT_RESULTS_NASA;
 
@@ -789,7 +789,7 @@ PRJCT_RESULTS_NASA;
 
 typedef struct _project
  {
-  UCHAR name[MAX_ITEM_NAME_LEN+1];                     // name of window
+  unsigned char name[MAX_ITEM_NAME_LEN+1];                     // name of window
   PRJCT_SPECTRA spectra;                               // spectra selection tab page
   PRJCT_ANLYS analysis;                                // analysis tab page
   PRJCT_FILTER lfilter;                                // filter (low pass options) tab page
@@ -809,7 +809,7 @@ PROJECT;
 
 EXTERN PROJECT *PRJCT_itemList,PRJCT_panelProject;     // list of projects
 EXTERN PRJCT_RESULTS_FIELDS PRJCT_resultsAscii[];      // list of printable fields in a record
-EXTERN UCHAR   *PRJCT_AnlysInterpol[],                 // interpolation methods
+EXTERN unsigned char   *PRJCT_AnlysInterpol[],                 // interpolation methods
                *PRJCT_AnlysMethods[],                  // analysis methods
                *PRJCT_filterTypes[],
                *PRJCT_filterOutput[];
@@ -841,10 +841,10 @@ RC   PRJCT_Alloc(void);
 VOID PRJCT_Free(void);
 
 void PRJCT_OutputConfiguration(FILE *fp,INDEX indexProject);
-void PRJCT_LoadFile(UCHAR *fileName);
+void PRJCT_LoadFile(unsigned char *fileName);
 void PRJCT_ResetConfiguration(void);
-void PRJCT_LoadConfiguration(UCHAR *fileLine);
-void PRJCT_SaveConfiguration(FILE *fp,UCHAR *sectionName);
+void PRJCT_LoadConfiguration(unsigned char *fileLine);
+void PRJCT_SaveConfiguration(FILE *fp,unsigned char *sectionName);
 
 // ===============================
 // CROSS SECTIONS CONVOLUTION TOOL
@@ -880,7 +880,7 @@ void PRJCT_SaveConfiguration(FILE *fp,UCHAR *sectionName);
    // GLOBAL VARIABLES
    // ----------------
 
-   EXTERN UCHAR *XSCONV_slitTypes[SLIT_TYPE_MAX];
+   EXTERN unsigned char *XSCONV_slitTypes[SLIT_TYPE_MAX];
 
    // ----------
    // PROTOTYPES
@@ -888,9 +888,9 @@ void PRJCT_SaveConfiguration(FILE *fp,UCHAR *sectionName);
 
    // Files processing
 
-   RC   XSCONV_LoadCalibrationFile(XS *pLambda,UCHAR *lambdaFile,INT nextraPixels);
+   RC   XSCONV_LoadCalibrationFile(XS *pLambda,unsigned char *lambdaFile,INT nextraPixels);
    RC   XSCONV_LoadSlitFunction(XS *pSlitXs,SLIT *pSlit,double *pGaussWidth,INT *pSlitType);
-   RC   XSCONV_LoadCrossSectionFile(XS *pCross,UCHAR *crossFile,double lambdaMin,double lambdaMax,double shift,INT conversionMode);
+   RC   XSCONV_LoadCrossSectionFile(XS *pCross,unsigned char *crossFile,double lambdaMin,double lambdaMax,double shift,INT conversionMode);
 
    RC XSCONV_NewSlitFunction(SLIT *pSlitOptions,XS *pSlit,double slitParam,SLIT *pSlit2Options,XS *pSlit2,double slitParam2);
 
@@ -912,14 +912,14 @@ void PRJCT_SaveConfiguration(FILE *fp,UCHAR *sectionName);
 // QDOAS ???    // Options in the WinDOAS configuration file
 // QDOAS ???
 // QDOAS ???    void XSCONV_ResetConfiguration(void);
-// QDOAS ???    RC   XSCONV_LoadConfiguration(UCHAR *fileLine);
+// QDOAS ???    RC   XSCONV_LoadConfiguration(unsigned char *fileLine);
 // QDOAS ???    void XSCONV_SaveConfiguration(FILE *fp);
 // QDOAS ???
 // QDOAS ???    // Dialog box processing
 // QDOAS ???
 // QDOAS ???    #if defined(__WINDOAS_GUI_) && __WINDOAS_GUI_
 // QDOAS ???
-// QDOAS ???        void XSCONV_FileSelection(HWND hwndXsconv,UCHAR *file,MASK fileType,INT fileMode,INT fileCommand,INT ringFlag);
+// QDOAS ???        void XSCONV_FileSelection(HWND hwndXsconv,unsigned char *file,MASK fileType,INT fileMode,INT fileCommand,INT ringFlag);
 // QDOAS ???
 // QDOAS ???        void XSCONV_SlitType(HWND hwndSlit,INT slitBase,SLIT *pSlit,SLIT *pSlit2);
 // QDOAS ???
@@ -965,10 +965,6 @@ enum treeItemTypes
 // Data to collect per type of tree node
 // -------------------------------------
 
-#if !defined(__WINDOAS_GUI_) || !(__WINDOAS_GUI_)
-typedef LONG HTREEITEM;
-#endif
-
 typedef struct _treeItemType
  {
   INT     contextMenu;                      // context (or shortcut) menu to load from resources
@@ -993,20 +989,20 @@ TREE_ITEM_TYPE;
 
 typedef struct _treeItem
  {
-  UCHAR     textItem[MAX_ITEM_TEXT_LEN+1];  // complete item text
-  UCHAR     newItem;                        // flag set for a new item
+  unsigned char     textItem[MAX_ITEM_TEXT_LEN+1];  // complete item text
+  unsigned char     newItem;                        // flag set for a new item
   INDEX     parentItem;                     // index of parent item
   INDEX     firstChildItem;                 // index of the first child in list
   INDEX     lastChildItem;                  // index of the first child in list
   INDEX     prevItem;                       // index of previous item in list
   INDEX     nextItem;                       // index of the next item in list
-  HTREEITEM hti;                            // handle of the item in tree
+//  HTREEITEM hti;                            // handle of the item in tree
   INT       dataType;                       // type of data
   INDEX     dataIndex;                      // index of data in data list referenced by data type
   INT       useCount;                       // the number of times the item is referenced
   INT       childNumber;                    // total number of children
   INT       childHidden;                    // total number of hidden children
-  UCHAR     hidden;                         // flag set if item is hidden
+  unsigned char     hidden;                         // flag set if item is hidden
  }
 TREE_ITEM;
 // QDOAS ???
@@ -1020,7 +1016,7 @@ TREE_ITEM;
 // QDOAS ???
 EXTERN TREE_ITEM      *TREE_itemList;       // structure used for all tree items safe keeping
 EXTERN TREE_ITEM_TYPE  TREE_itemType[];     // all tree types description
-// QDOAS ??? EXTERN UCHAR           TREE_editFlag;       // flag set when editing a tree item label
+// QDOAS ??? EXTERN unsigned char           TREE_editFlag;       // flag set when editing a tree item label
 // QDOAS ??? EXTERN INDEX           TREE_blankImageIndex,
 // QDOAS ???                        TREE_openImageIndex,
 // QDOAS ???                        TREE_closeImageIndex;
@@ -1042,14 +1038,14 @@ EXTERN TREE_ITEM_TYPE  TREE_itemType[];     // all tree types description
 // QDOAS ???
 // QDOAS ??? INDEX   TREE_GetProjectParent(INDEX indexItem);
 // QDOAS ??? void    TREE_CollapseChildNodes(HWND hwndTree,INDEX indexParent);
-// QDOAS ??? INDEX   TREE_GetIndexByDataName(UCHAR *dataName,UCHAR dataType,INDEX entryPoint);
-INDEX   TREE_GetIndexByDataIndex(INDEX dataIndex,UCHAR dataType,INDEX entryPoint);
-// QDOAS ??? INT     TREE_GetIndexesByDataType(UCHAR dataType,INDEX entryPoint,INDEX *dataIndexes,INT *pDataNumber);
+// QDOAS ??? INDEX   TREE_GetIndexByDataName(unsigned char *dataName,unsigned char dataType,INDEX entryPoint);
+INDEX   TREE_GetIndexByDataIndex(INDEX dataIndex,unsigned char dataType,INDEX entryPoint);
+// QDOAS ??? INT     TREE_GetIndexesByDataType(unsigned char dataType,INDEX entryPoint,INDEX *dataIndexes,INT *pDataNumber);
 // QDOAS ??? void    TREE_UpdateItem(HWND hwndTree,INDEX indexItem);
 // QDOAS ??? void    TREE_Reset(INDEX indexParent);
 // QDOAS ??? INDEX   TREE_GetSelectedItem(HWND hwndTree);
 // QDOAS ??? INDEX   TREE_DeleteOneItem(INDEX indexItemToDelete);
-// QDOAS ??? INDEX   TREE_InsertOneItem(HWND hwndTree,UCHAR *textItem,INDEX parentItem,INT dataType,UCHAR newItem,UCHAR folderFlag,UCHAR hidden);
+// QDOAS ??? INDEX   TREE_InsertOneItem(HWND hwndTree,unsigned char *textItem,INDEX parentItem,INT dataType,unsigned char newItem,unsigned char folderFlag,unsigned char hidden);
 // QDOAS ??? void    TREE_DeleteChildList(INDEX indexParent);
 // QDOAS ??? void    TREE_ExpandOneNode(HWND hwndTree,INDEX indexParent,HTREEITEM hParent);
 // QDOAS ??? void    TREE_SortChildNodes(HWND hwndTree,INDEX indexParent);
@@ -1140,7 +1136,7 @@ INDEX   TREE_GetIndexByDataIndex(INDEX dataIndex,UCHAR dataType,INDEX entryPoint
 // QDOAS ???
 // QDOAS ???        typedef struct _drawSpectrum
 // QDOAS ???         {
-// QDOAS ???          UCHAR legend[MAX_ITEM_TEXT_LEN+1];
+// QDOAS ???          unsigned char legend[MAX_ITEM_TEXT_LEN+1];
 // QDOAS ???          double *x,*y;                          // couple of XY vectors
 // QDOAS ???          INT usex,usey;                         // flag set to tell which vectors are used
 // QDOAS ???          INT vectorSize;                        // current size of previous vectors
@@ -1155,7 +1151,7 @@ INDEX   TREE_GetIndexByDataIndex(INDEX dataIndex,UCHAR dataType,INDEX entryPoint
 // QDOAS ???
 // QDOAS ???        typedef struct _graph
 // QDOAS ???         {
-// QDOAS ???          UCHAR title[MAX_ITEM_TEXT_LEN+1],      // title of graph
+// QDOAS ???          unsigned char title[MAX_ITEM_TEXT_LEN+1],      // title of graph
 // QDOAS ???                xTitle[MAX_ITEM_TEXT_LEN+1],     // title of x axis
 // QDOAS ???                yTitle[MAX_ITEM_TEXT_LEN+1];     // title of y axis
 // QDOAS ???          DRAW_FRAME specFrame;                  // frame in which spectra are to be hold to
@@ -1184,10 +1180,10 @@ INDEX   TREE_GetIndexByDataIndex(INDEX dataIndex,UCHAR dataType,INDEX entryPoint
 // QDOAS ???        BOOL  DRAW_ClassRegistration(HINSTANCE hinstParent);
 // QDOAS ???        void  DRAW_GetGraphDistribution(INT graphNumber,INT *pGraphMaxV,INT *pGraphMaxH);
 // QDOAS ???
-// QDOAS ???        void  DRAW_Spectra(INT indexChild,UCHAR *windowTitle,UCHAR *graphTitle,UCHAR *xTitle,UCHAR *yTitle,double *vGrid,INT nvGrid,
+// QDOAS ???        void  DRAW_Spectra(INT indexChild,unsigned char *windowTitle,unsigned char *graphTitle,unsigned char *xTitle,unsigned char *yTitle,double *vGrid,INT nvGrid,
 // QDOAS ???                           double xMin,double xMax,double yMin,double yMax,
-// QDOAS ???                           double *x,double *y,INT size,COLORREF colour,INDEX indexMin,INDEX indexMax,INT lineType,UCHAR *legend,
-// QDOAS ???                           double *dotx,double *doty,INT dotSize,COLORREF dotColour,INDEX dotIndexMin,INDEX dotIndexMax,INT dotLineType,UCHAR *dotLegend,
+// QDOAS ???                           double *x,double *y,INT size,COLORREF colour,INDEX indexMin,INDEX indexMax,INT lineType,unsigned char *legend,
+// QDOAS ???                           double *dotx,double *doty,INT dotSize,COLORREF dotColour,INDEX dotIndexMin,INDEX dotIndexMax,INT dotLineType,unsigned char *dotLegend,
 // QDOAS ???                           INDEX graphNumber,INT graphMaxV,INT graphMaxH,INT paintFlag);
 // QDOAS ???
 // QDOAS ???        void  DRAW_SpecMax(double *specMax,INT totalScansNumber,COLORREF specMaxColour);
@@ -1242,11 +1238,11 @@ INDEX   TREE_GetIndexByDataIndex(INDEX dataIndex,UCHAR dataType,INDEX entryPoint
 // QDOAS ???                  hbmStock;                                                         // handle of the previous selected bitmap
 // QDOAS ???          INT cxBitmap,cyBitmap;                                                    // resp. width and height of bitmap
 // QDOAS ???          DRAW_GRAPH drawGraph[MAX_GRAPH];                                          // settings of graphs to hold in draw client area
-// QDOAS ???          UCHAR title[MAX_ITEM_TEXT_LEN+1];                                         // title of mdi child window
-// QDOAS ???          UCHAR graphNumber;                                                        // number of graph to draw in the draw client area
-// QDOAS ???          UCHAR graphMax;                                                           // total number of graphs (graphMaxV*graphMaxH)
-// QDOAS ???          UCHAR graphMaxV;                                                          // total number of graphs to hold vertically in the draw client area
-// QDOAS ???          UCHAR graphMaxH;                                                          // total number of graphs to hold horizontally in the draw client area
+// QDOAS ???          unsigned char title[MAX_ITEM_TEXT_LEN+1];                                         // title of mdi child window
+// QDOAS ???          unsigned char graphNumber;                                                        // number of graph to draw in the draw client area
+// QDOAS ???          unsigned char graphMax;                                                           // total number of graphs (graphMaxV*graphMaxH)
+// QDOAS ???          unsigned char graphMaxV;                                                          // total number of graphs to hold vertically in the draw client area
+// QDOAS ???          unsigned char graphMaxH;                                                          // total number of graphs to hold horizontally in the draw client area
 // QDOAS ???         }
 // QDOAS ???        DRAW_MDI;
 // QDOAS ???
@@ -1304,8 +1300,8 @@ INDEX   TREE_GetIndexByDataIndex(INDEX dataIndex,UCHAR dataType,INDEX entryPoint
 // QDOAS ???    #endif
 // QDOAS ???
 // QDOAS ???    void    CHILD_ResetConfiguration(void);
-// QDOAS ???    void    CHILD_LoadConfiguration(UCHAR *fileLine);
-// QDOAS ???    void    CHILD_SaveConfiguration(FILE *fp,UCHAR *sectionName);
+// QDOAS ???    void    CHILD_LoadConfiguration(unsigned char *fileLine);
+// QDOAS ???    void    CHILD_SaveConfiguration(FILE *fp,unsigned char *sectionName);
 // QDOAS ???
 // QDOAS ???
 // QDOAS ??? // ======================
@@ -1345,7 +1341,7 @@ EXTERN PRJCT_ASCII ASCII_options;
 // QDOAS ??? #endif
 // QDOAS ???
 // QDOAS ??? void RING_ResetConfiguration(void);
-// QDOAS ??? RC   RING_LoadConfiguration(UCHAR *fileLine);
+// QDOAS ??? RC   RING_LoadConfiguration(unsigned char *fileLine);
 // QDOAS ??? void RING_SaveConfiguration(FILE *fp);
 // QDOAS ???
 // QDOAS ??? // ========================
@@ -1357,7 +1353,7 @@ EXTERN PRJCT_ASCII ASCII_options;
 // QDOAS ??? #endif
 // QDOAS ???
 // QDOAS ??? void USAMP_ResetConfiguration(void);
-// QDOAS ??? RC   USAMP_LoadConfiguration(UCHAR *fileLine);
+// QDOAS ??? RC   USAMP_LoadConfiguration(unsigned char *fileLine);
 // QDOAS ??? void USAMP_SaveConfiguration(FILE *fp);
 // QDOAS ???
 // QDOAS ??? // ==================
@@ -1407,7 +1403,7 @@ EXTERN PRJCT_ASCII ASCII_options;
 // QDOAS ??? // The following variable holds a trace of WinDOAS versions in order to ensure a
 // QDOAS ??? // maximum of compatibility when loading older configuration files
 // QDOAS ???
-// QDOAS ??? EXTERN UCHAR *HELP_programVersions[HELP_VERSION_MAX];
+// QDOAS ??? EXTERN unsigned char *HELP_programVersions[HELP_VERSION_MAX];
 // QDOAS ???
 // QDOAS ??? // Prototypes
 // QDOAS ??? // ----------
@@ -1430,9 +1426,9 @@ EXTERN PRJCT_ASCII ASCII_options;
 
 typedef struct _pathFilesFilter
  {
-  UCHAR outputPathShort[MAX_STR_SHORT_LEN+1];
-  UCHAR folderNameShort[MAX_STR_SHORT_LEN+1];
-  UCHAR filterShort[MAX_STR_SHORT_LEN+1];
+  unsigned char outputPathShort[MAX_STR_SHORT_LEN+1];
+  unsigned char folderNameShort[MAX_STR_SHORT_LEN+1];
+  unsigned char filterShort[MAX_STR_SHORT_LEN+1];
   INT   useSubfolders;
  }
 PATH_FILES_FILTER;
@@ -1440,9 +1436,9 @@ PATH_FILES_FILTER;
 // Global variables
 // ----------------
 
-EXTERN UCHAR (*PATH_fileNamesShort)[MAX_STR_SHORT_LEN+1];
-EXTERN UCHAR PATH_fileMax[MAX_STR_SHORT_LEN+1];
-EXTERN UCHAR PATH_fileSpectra[MAX_STR_SHORT_LEN+1];        // current spectra file name
+EXTERN unsigned char (*PATH_fileNamesShort)[MAX_STR_SHORT_LEN+1];
+EXTERN unsigned char PATH_fileMax[MAX_STR_SHORT_LEN+1];
+EXTERN unsigned char PATH_fileSpectra[MAX_STR_SHORT_LEN+1];        // current spectra file name
 
 EXTERN INT PATH_fileNumber;
 EXTERN INT PATH_dirNumber;
@@ -1451,8 +1447,8 @@ EXTERN INT PATH_mfcFlag,PATH_UofTFlag;
 // QDOAS ??? // Prototypes
 // QDOAS ??? // ----------
 // QDOAS ???
-// QDOAS ??? void  PATH_GetFilesList(UCHAR *path,UCHAR *filter,UCHAR dirFlag);
-// QDOAS ??? INDEX PATH_InsertFolder(UCHAR *path,UCHAR *filter,UCHAR folderFlag,INDEX indexParent);
+// QDOAS ??? void  PATH_GetFilesList(unsigned char *path,unsigned char *filter,unsigned char dirFlag);
+// QDOAS ??? INDEX PATH_InsertFolder(unsigned char *path,unsigned char *filter,unsigned char folderFlag,INDEX indexParent);
 // QDOAS ???
 // QDOAS ??? void  PATH_Init(void);
 // QDOAS ??? RC    PATH_Alloc(void);
@@ -1469,7 +1465,7 @@ EXTERN INT PATH_mfcFlag,PATH_UofTFlag;
 // QDOAS ??? // Global variables
 // QDOAS ??? // ----------------
 // QDOAS ???
-// QDOAS ??? EXTERN ULONG SYS_memory,
+// QDOAS ??? EXTERN unsigned long SYS_memory,
 // QDOAS ???              SYS_files,
 // QDOAS ???              SYS_raw,
 // QDOAS ???              SYS_tree,

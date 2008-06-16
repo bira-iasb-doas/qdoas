@@ -72,7 +72,7 @@
 // GLOBAL VARIABLES
 // ================
 
-UCHAR MFC_fileInstr[MAX_STR_SHORT_LEN+1],      // instrumental function file name
+unsigned char MFC_fileInstr[MAX_STR_SHORT_LEN+1],      // instrumental function file name
       MFC_fileDark[MAX_STR_SHORT_LEN+1],       // dark current file name
       MFC_fileOffset[MAX_STR_SHORT_LEN+1];     // offset file name
 
@@ -103,7 +103,7 @@ RC SetMFC(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
   PRJCT_INSTRUMENTAL *pInstrumental;
   BUFFERS *pBuffers;                                                            // pointer to the buffers part of the engine context
 
-  UCHAR  fileName[MAX_STR_SHORT_LEN+1],                                         // name of the current file
+  unsigned char  fileName[MAX_STR_SHORT_LEN+1],                                         // name of the current file
          format[20],                                                            // format string
         *ptr,*ptr2,*ptr3;                                                       // pointers to parts in the previous string
 //  INDEX  indexFile;
@@ -249,7 +249,7 @@ TBinaryMFC MFC_headerDrk,                                                       
 //               ERROR_ID_NO              otherwise.
 // -----------------------------------------------------------------------------
 
-RC MFC_ReadRecord(UCHAR *fileName,
+RC MFC_ReadRecord(unsigned char *fileName,
                   TBinaryMFC *pHeaderSpe,double *spe,
                   TBinaryMFC *pHeaderDrk,double *drk,
                   TBinaryMFC *pHeaderOff,double *off,
@@ -369,7 +369,7 @@ RC ReliMFC(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay
 
   INT                  day,mon,year,hour,min,sec,nsec,                          // date and time fields
                        firstFile;                                               // number of the first file in the current directory
-  UCHAR                fileName[MAX_STR_SHORT_LEN+1],                           // name of the current file (the current record)
+  unsigned char                fileName[MAX_STR_SHORT_LEN+1],                           // name of the current file (the current record)
                        format[20],
                       *ptr,*ptr2;                                               // pointers to parts in the previous string
   SHORT_DATE           today;                                                   // date of the current record
@@ -472,8 +472,8 @@ RC ReliMFC(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay
         sscanf(MFC_header.dateAndTime,"%d.%d.%d",&day,&mon,&year);
         sscanf(&MFC_header.dateAndTime[9],"%d:%d:%d",&hour,&min,&sec);
 
-        today.da_day=(UCHAR)day;
-        today.da_mon=(UCHAR)mon;
+        today.da_day=(unsigned char)day;
+        today.da_mon=(unsigned char)mon;
         today.da_year=(SHORT)year;
 
         if (today.da_year<30)
@@ -483,23 +483,23 @@ RC ReliMFC(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay
         else if (today.da_year<1930)
          today.da_year+=(short)100;
 
-        pRecord->startTime.ti_hour=(UCHAR)hour;
-        pRecord->startTime.ti_min=(UCHAR)min;
-        pRecord->startTime.ti_sec=(UCHAR)sec;
+        pRecord->startTime.ti_hour=(unsigned char)hour;
+        pRecord->startTime.ti_min=(unsigned char)min;
+        pRecord->startTime.ti_sec=(unsigned char)sec;
 
         sscanf(&MFC_header.dateAndTime[18],"%d:%d:%d",&hour,&min,&sec);
 
-        pRecord->endTime.ti_hour=(UCHAR)hour;
-        pRecord->endTime.ti_min=(UCHAR)min;
-        pRecord->endTime.ti_sec=(UCHAR)sec;
+        pRecord->endTime.ti_hour=(unsigned char)hour;
+        pRecord->endTime.ti_min=(unsigned char)min;
+        pRecord->endTime.ti_sec=(unsigned char)sec;
 
         // Data on the current spectrum
 
         nsec=(pRecord->startTime.ti_hour*3600+pRecord->startTime.ti_min*60+pRecord->startTime.ti_sec+
               pRecord->endTime.ti_hour*3600+pRecord->endTime.ti_min*60+pRecord->endTime.ti_sec)/2;
 
-        pRecord->present_day.da_day=(UCHAR)day;
-        pRecord->present_day.da_mon=(UCHAR)mon;
+        pRecord->present_day.da_day=(unsigned char)day;
+        pRecord->present_day.da_mon=(unsigned char)mon;
         pRecord->present_day.da_year=(SHORT)year;
 
         if (pRecord->present_day.da_year<30)
@@ -509,9 +509,9 @@ RC ReliMFC(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay
         else if (pRecord->present_day.da_year<1930)
          pRecord->present_day.da_year+=(short)100;
 
-        pRecord->present_time.ti_hour=(UCHAR)(nsec/3600);
-        pRecord->present_time.ti_min=(UCHAR)((nsec%3600)/60);
-        pRecord->present_time.ti_sec=(UCHAR)((nsec%3600)%60);
+        pRecord->present_time.ti_hour=(unsigned char)(nsec/3600);
+        pRecord->present_time.ti_min=(unsigned char)((nsec%3600)/60);
+        pRecord->present_time.ti_sec=(unsigned char)((nsec%3600)%60);
 
         pRecord->TDet     = 0;
         pRecord->Tint     = MFC_header.int_time*0.001;
@@ -588,7 +588,7 @@ RC ReliMFC(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay
 //               ERROR_ID_NO              otherwise.
 // -----------------------------------------------------------------------------
 
-RC MFC_ReadRecordStd(ENGINE_CONTEXT *pEngineContext,UCHAR *fileName,
+RC MFC_ReadRecordStd(ENGINE_CONTEXT *pEngineContext,unsigned char *fileName,
                      TBinaryMFC *pHeaderSpe,double *spe,
                      TBinaryMFC *pHeaderDrk,double *drk,
                      TBinaryMFC *pHeaderOff,double *off)
@@ -600,7 +600,7 @@ RC MFC_ReadRecordStd(ENGINE_CONTEXT *pEngineContext,UCHAR *fileName,
   FILE *fp;         // pointer to the current file
   INT  pixFin,day,mon,year,hour,min,sec,nsec;        // date and time fields
   float                tmp;                                   // temporary variable
-  UCHAR line[MAX_STR_SHORT_LEN+1],             // line of the current file
+  unsigned char line[MAX_STR_SHORT_LEN+1],             // line of the current file
         keyWord[MAX_STR_SHORT_LEN+1],keyValue[MAX_STR_SHORT_LEN+1],ctmp;
   struct date          today;                                 // date of the current record
 
@@ -653,8 +653,8 @@ RC MFC_ReadRecordStd(ENGINE_CONTEXT *pEngineContext,UCHAR *fileName,
 
     fscanf(fp,"%d:%d:%d\n",&hour,&min,&sec);
 
-    today.da_day=(UCHAR)day;
-    today.da_mon=(UCHAR)mon;
+    today.da_day=(unsigned char)day;
+    today.da_mon=(unsigned char)mon;
     today.da_year=(USHORT)year;
 
     if (today.da_year<30)
@@ -664,21 +664,21 @@ RC MFC_ReadRecordStd(ENGINE_CONTEXT *pEngineContext,UCHAR *fileName,
     else if (today.da_year<1930)
      today.da_year+=(short)100;
 
-    pRecord->startTime.ti_hour=(UCHAR)hour;
-    pRecord->startTime.ti_min=(UCHAR)min;
-    pRecord->startTime.ti_sec=(UCHAR)sec;
+    pRecord->startTime.ti_hour=(unsigned char)hour;
+    pRecord->startTime.ti_min=(unsigned char)min;
+    pRecord->startTime.ti_sec=(unsigned char)sec;
 
     fscanf(fp,"%d:%d:%d\n",&hour,&min,&sec);
 
-    pRecord->endTime.ti_hour=(UCHAR)hour;
-    pRecord->endTime.ti_min=(UCHAR)min;
-    pRecord->endTime.ti_sec=(UCHAR)sec;
+    pRecord->endTime.ti_hour=(unsigned char)hour;
+    pRecord->endTime.ti_min=(unsigned char)min;
+    pRecord->endTime.ti_sec=(unsigned char)sec;
 
     nsec=(pRecord->startTime.ti_hour*3600+pRecord->startTime.ti_min*60+pRecord->startTime.ti_sec+
           pRecord->endTime.ti_hour*3600+pRecord->endTime.ti_min*60+pRecord->endTime.ti_sec)/2;
 
-    pRecord->present_day.da_day=(UCHAR)day;
-    pRecord->present_day.da_mon=(UCHAR)mon;
+    pRecord->present_day.da_day=(unsigned char)day;
+    pRecord->present_day.da_mon=(unsigned char)mon;
     pRecord->present_day.da_year=(USHORT)year;
 
     if (pRecord->present_day.da_year<30)
@@ -688,9 +688,9 @@ RC MFC_ReadRecordStd(ENGINE_CONTEXT *pEngineContext,UCHAR *fileName,
     else if (pRecord->present_day.da_year<1930)
      pRecord->present_day.da_year+=(short)100;
 
-    pRecord->present_time.ti_hour=(UCHAR)(nsec/3600);
-    pRecord->present_time.ti_min=(UCHAR)((nsec%3600)/60);
-    pRecord->present_time.ti_sec=(UCHAR)((nsec%3600)%60);
+    pRecord->present_time.ti_hour=(unsigned char)(nsec/3600);
+    pRecord->present_time.ti_min=(unsigned char)((nsec%3600)/60);
+    pRecord->present_time.ti_sec=(unsigned char)((nsec%3600)%60);
 
     pRecord->TDet     = 0;
 
@@ -787,7 +787,7 @@ RC ReliMFCStd(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int local
   BUFFERS *pBuffers;                                                            // pointer to the buffers part of the engine context
 
   INT                  firstFile;                                               // number of the first file in the current directory
-  UCHAR                fileName[MAX_STR_SHORT_LEN+1],                           // name of the current file (the current record)
+  unsigned char                fileName[MAX_STR_SHORT_LEN+1],                           // name of the current file (the current record)
                        format[20],
                       *ptr,*ptr2;                                               // pointers to parts in the previous string
 
@@ -909,7 +909,7 @@ RC MFC_LoadAnalysis(ENGINE_CONTEXT *pEngineContext)
   BUFFERS *pBuffers;                                                            // pointer to the buffers part of the engine context
 
   PRJCT_INSTRUMENTAL *pInstrumental;
-  UCHAR fileName[MAX_STR_SHORT_LEN+1],*ptr;
+  unsigned char fileName[MAX_STR_SHORT_LEN+1],*ptr;
   TBinaryMFC tbinaryRef;
   INDEX indexWindow,indexFeno,indexTabCross;                                    // indexes for loops and array
   CROSS_REFERENCE *pTabCross;                                                   // pointer to the current cross section

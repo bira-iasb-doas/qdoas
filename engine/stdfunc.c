@@ -137,7 +137,7 @@ double STD_Pow10(int p)
 // RETURN        a pointer to the input string
 // -----------------------------------------------------------------------------
 
-UCHAR *STD_StrTrim(UCHAR *str)
+unsigned char *STD_StrTrim(unsigned char *str)
  {
  	// Declaration
 
@@ -169,7 +169,7 @@ UCHAR *STD_StrTrim(UCHAR *str)
 //               NULL if the end of the format string is reached
 // -----------------------------------------------------------------------------
 
-UCHAR *StrGetFormat(UCHAR *formatString,UCHAR *formatToken)
+unsigned char *StrGetFormat(unsigned char *formatString,unsigned char *formatToken)
  {
   // Declarations
 
@@ -244,12 +244,12 @@ UCHAR *StrGetFormat(UCHAR *formatString,UCHAR *formatToken)
 // QTDOAS ??? //               possible situations may not to have been explored
 // QTDOAS ??? // -----------------------------------------------------------------------------
 // QTDOAS ???
-// QTDOAS ??? int STD_Sscanf(UCHAR *line,UCHAR *formatString,...)
+// QTDOAS ??? int STD_Sscanf(unsigned char *line,unsigned char *formatString,...)
 // QTDOAS ???  {
 // QTDOAS ???   // Declarations
 // QTDOAS ???
-// QTDOAS ???   UCHAR tokenFormat[MAX_FORMAT_LEN+1];                                          // the expected format for the current token
-// QTDOAS ???   UCHAR *tfPtr,*tkOld,*tkNext;                                                  // pointers to substrings
+// QTDOAS ???   unsigned char tokenFormat[MAX_FORMAT_LEN+1];                                          // the expected format for the current token
+// QTDOAS ???   unsigned char *tfPtr,*tkOld,*tkNext;                                                  // pointers to substrings
 // QTDOAS ???   INT strFlag,intFlag,doubleFlag;                                               // flag set according to the expected type in the format string
 // QTDOAS ???   va_list argList;                                                              // variable arguments list
 // QTDOAS ???   void  *argPtr;                                                                // pointer to the next argument in the previous list
@@ -296,7 +296,7 @@ UCHAR *StrGetFormat(UCHAR *formatString,UCHAR *formatToken)
 // QTDOAS ???         else if (doubleFlag)
 // QTDOAS ???          *((double *)argPtr)=(double)0.;
 // QTDOAS ???         else
-// QTDOAS ???          *((UCHAR *)argPtr)='\0';
+// QTDOAS ???          *((unsigned char *)argPtr)='\0';
 // QTDOAS ???
 // QTDOAS ???         tkNext=tkOld;
 // QTDOAS ???        }
@@ -306,10 +306,10 @@ UCHAR *StrGetFormat(UCHAR *formatString,UCHAR *formatToken)
 // QTDOAS ???         if ((tkNext=strchr(tkOld,','))==NULL)
 // QTDOAS ???          tkNext=strchr(tkOld,'\n');
 // QTDOAS ???        }
-// QTDOAS ???       else if (strlen((UCHAR *)argPtr))
+// QTDOAS ???       else if (strlen((unsigned char *)argPtr))
 // QTDOAS ???        {
-// QTDOAS ???         if ((tkNext=strstr(tkOld,(UCHAR *)argPtr))!=NULL)
-// QTDOAS ???          tkNext+=strlen((UCHAR *)argPtr);
+// QTDOAS ???         if ((tkNext=strstr(tkOld,(unsigned char *)argPtr))!=NULL)
+// QTDOAS ???          tkNext+=strlen((unsigned char *)argPtr);
 // QTDOAS ???        }
 // QTDOAS ???
 // QTDOAS ???       ntoken++;
@@ -441,8 +441,8 @@ long STD_FileLength(FILE *fp)
  {
  	// Declarations
 
-  LONG fileSize=0L;                                                             // the size of the file
-  LONG oldPos;                                                                  // the position of the file pointer
+  long fileSize=0L;                                                             // the size of the file
+  long oldPos;                                                                  // the position of the file pointer
 
   // Calculate the file size
 

@@ -13,7 +13,7 @@
 
 EXTERN INT            NDET;                                                     // size of the detector
 
-EXTERN UCHAR          ENGINE_dbgFile[MAX_PATH_LEN+1];                           // debug file
+EXTERN unsigned char          ENGINE_dbgFile[MAX_PATH_LEN+1];                           // debug file
 EXTERN ENGINE_CONTEXT ENGINE_contextRef;                                        // copy of the engine context for the automatic search of the reference spectrum
 EXTERN double         ENGINE_localNoon;                                         // local noon
 

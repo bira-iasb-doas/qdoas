@@ -859,3 +859,51 @@ RC FILTER_Vector(PRJCT_FILTER *pFilter,double *Input,double *Output,int Size,INT
   return rc;
  }
 
+// ------------------------------------
+// FILTER_LoadFilter : Load filter data
+// ------------------------------------
+
+RC FILTER_LoadFilter(PRJCT_FILTER *pFilter)
+ {
+  // Declaration
+
+  RC rc;
+
+  // Initializations
+
+  pFilter->filterEffWidth=(double)1.;   // effective smoothing width used for reduce number of independent terms in analysis system
+  rc=ERROR_ID_NO;
+
+  // Filter type processing
+
+  switch((int)pFilter->type)
+   {
+ // ---------------------------------------------------------------------------
+    case PRJCT_FILTER_TYPE_KAISER :
+     rc=FILTER_Build(pFilter,(double)pFilter->kaiserCutoff,(double)pFilter->kaiserPassBand,(double)pFilter->kaiserTolerance);
+    break;
+ // ---------------------------------------------------------------------------
+    case PRJCT_FILTER_TYPE_GAUSSIAN :
+     rc=FILTER_Build(pFilter,(double)pFilter->fwhmWidth,(double)0.,(double)0.);
+    break;
+ // ---------------------------------------------------------------------------
+    case PRJCT_FILTER_TYPE_TRIANGLE :
+    case PRJCT_FILTER_TYPE_BOXCAR :
+    case PRJCT_FILTER_TYPE_BINOMIAL :
+     rc=FILTER_Build(pFilter,(double)pFilter->filterWidth,(double)0.,(double)0.);
+    break;
+ // ---------------------------------------------------------------------------
+    case PRJCT_FILTER_TYPE_SG :
+     rc=FILTER_Build(pFilter,(double)pFilter->filterWidth,(double)pFilter->filterOrder,(double)0.);
+    break;
+ // ---------------------------------------------------------------------------
+    case PRJCT_FILTER_TYPE_ODDEVEN :
+     pFilter->filterEffWidth=(double)1.9;
+    break;
+ // ---------------------------------------------------------------------------
+   }
+
+  // Return
+
+  return rc;
+ }

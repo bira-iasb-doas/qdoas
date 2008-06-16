@@ -240,7 +240,7 @@ RC SetSAOZ (ENGINE_CONTEXT *pEngineContext,FILE *specFp)
      // -----------------------------------------------------------------------
        }
 
-      pEngineContext->recordNumber=(int)((LONG)STD_FileLength(specFp)-256L)/pEngineContext->recordSize;
+      pEngineContext->recordNumber=(int)((long)STD_FileLength(specFp)-256L)/pEngineContext->recordSize;
      }
    }
 
@@ -337,9 +337,9 @@ RC ReliSAOZ(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDa
   else
    {
     if (namesFp!=NULL)
-     fseek(namesFp,(LONG)20L*(recordNo-1)+260L,SEEK_SET);
+     fseek(namesFp,(long)20L*(recordNo-1)+260L,SEEK_SET);
 
-    fseek(specFp,(LONG)pEngineContext->recordSize*(recordNo-1)+256L,SEEK_SET);
+    fseek(specFp,(long)pEngineContext->recordSize*(recordNo-1)+256L,SEEK_SET);
 
     // Record read out
 
@@ -431,8 +431,8 @@ RC ReliSAOZ(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDa
       // Date and time of the current measurement
 
       day.da_year  = (SHORT) ZEN_FNCaljye (&pRecord->Tm);
-      day.da_mon   = (CHAR) ZEN_FNCaljmon (ZEN_FNCaljye(&pRecord->Tm),ZEN_FNCaljda(&pRecord->Tm));
-      day.da_day   = (CHAR) ZEN_FNCaljday (ZEN_FNCaljye(&pRecord->Tm),ZEN_FNCaljda(&pRecord->Tm));
+      day.da_mon   = (char) ZEN_FNCaljmon (ZEN_FNCaljye(&pRecord->Tm),ZEN_FNCaljda(&pRecord->Tm));
+      day.da_day   = (char) ZEN_FNCaljday (ZEN_FNCaljye(&pRecord->Tm),ZEN_FNCaljda(&pRecord->Tm));
 
       // Fill data
 
@@ -440,9 +440,9 @@ RC ReliSAOZ(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDa
 
       memcpy(&pRecord->present_day,&day,sizeof(SHORT_DATE));
 
-      pRecord->present_time.ti_hour = (UCHAR)( ( strchr(DIGITS,string[0]) - DIGITS ) * 10 + ( strchr(DIGITS,string[1]) - DIGITS ) );
-      pRecord->present_time.ti_min  = (UCHAR)( ( strchr(DIGITS,string[3]) - DIGITS ) * 10 + ( strchr(DIGITS,string[4]) - DIGITS ) );
-      pRecord->present_time.ti_sec  = (UCHAR)0;
+      pRecord->present_time.ti_hour = (unsigned char)( ( strchr(DIGITS,string[0]) - DIGITS ) * 10 + ( strchr(DIGITS,string[1]) - DIGITS ) );
+      pRecord->present_time.ti_min  = (unsigned char)( ( strchr(DIGITS,string[3]) - DIGITS ) * 10 + ( strchr(DIGITS,string[4]) - DIGITS ) );
+      pRecord->present_time.ti_sec  = (unsigned char)0;
 
       pRecord->TDet = (double) param[0] * 0.08138 - 273.1;
       pRecord->TotalExpTime = (double) pRecord->NSomme*pRecord->Tint;
@@ -536,7 +536,7 @@ typedef struct
   BYTE            P_com;
   BYTE            R_Heur,R_Min,R_Sec;
   WORD            Param[8];
-  LONG            GPStim;
+  long            GPStim;
   short int       Tout,Tsond;
   WORD            Press;
   BYTE            Humid;
@@ -644,9 +644,9 @@ RC ReliSAOZEfm(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,INT loca
    {
     // Complete the reading of the record
 
-    fseek(specFp,(LONG)sizeof(UINT)+(recordNo-1)*sizeof(RCHEADER),SEEK_SET);
+    fseek(specFp,(long)sizeof(UINT)+(recordNo-1)*sizeof(RCHEADER),SEEK_SET);
     fread(&header,sizeof(RCHEADER),1,specFp);
-    fseek(specFp,(LONG)sizeof(UINT)+(recordNo-1)*sizeof(double)*NDET+pEngineContext->recordNumber*sizeof(RCHEADER),SEEK_SET);
+    fseek(specFp,(long)sizeof(UINT)+(recordNo-1)*sizeof(double)*NDET+pEngineContext->recordNumber*sizeof(RCHEADER),SEEK_SET);
     fread(spectrum,sizeof(double)*NDET,1,specFp);
 
     if ((today.da_year=header.M_An)<30)

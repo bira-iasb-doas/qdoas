@@ -40,7 +40,7 @@ bool CConvConfigHandler::startElement(const QString &namespaceURI, const QString
 				       const QString &qName, const QXmlAttributes &atts)
 {
   bool result;
-  
+
   if (delegateStartElement(qName, atts, result)) {
     // handled by sub handler ...
     return result;
@@ -146,7 +146,7 @@ bool CConvGeneralSubHandler::start(const QXmlAttributes &atts)
     else
       return postErrorMessage("Solar Reference Filename too long");
   }
-  
+
   return true;
 }
 

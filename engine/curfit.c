@@ -326,12 +326,12 @@ RC CurfitMatinv(double **array,int nOrder,double *pDet)
 // RETURN        a pointer to the final error message
 // -----------------------------------------------------------------------------
 
-UCHAR *CurfitError(UCHAR *string,INDEX indexError,double *p,double *deltap)
+unsigned char *CurfitError(unsigned char *string,INDEX indexError,double *p,double *deltap)
  {
  	// Declarations
 
   CROSS_REFERENCE *pTabCross;                                                   // settings of a parameter to fit
-  UCHAR param[MAX_ITEM_NAME_LEN+1];                                             // the name of the parameter
+  unsigned char param[MAX_ITEM_NAME_LEN+1];                                             // the name of the parameter
   INDEX i;                                                                      // browse parameters to fit
 
   // Initializations
@@ -367,7 +367,7 @@ UCHAR *CurfitError(UCHAR *string,INDEX indexError,double *p,double *deltap)
 
   // Return
 
-  return (UCHAR *)string;
+  return (unsigned char *)string;
  }
 
 // -----------------------------------------------------------------------------
@@ -651,7 +651,7 @@ RC Curfit(int     mode,                                                         
  {
   // Declarations
 
-  UCHAR    string[MAX_ITEM_TEXT_LEN+1];                                         // error message string
+  unsigned char    string[MAX_ITEM_TEXT_LEN+1];                                         // error message string
 
   int      i,j,k,                                                               // indexes for loops and arrays
            outOfRange,                                                          // flag set if a parameter is out of the defined range

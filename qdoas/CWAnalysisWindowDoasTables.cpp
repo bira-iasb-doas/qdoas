@@ -1594,7 +1594,7 @@ void CWOutputDoasTable::slotSymbolListChanged(const QStringList &symbols)
       if (initialValues.isEmpty()) {
 	initialValues.push_back(QVariant(false));
 	initialValues.push_back(QVariant());
-	initialValues.push_back(QVariant(false));
+	initialValues.push_back(QVariant(true));
 	initialValues.push_back(QVariant(false));
 	initialValues.push_back(QVariant(1.0));
 	initialValues.push_back(QVariant(false));

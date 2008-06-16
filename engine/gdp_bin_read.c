@@ -116,7 +116,7 @@ GDP_BIN_REF;
 // GLOBAL VARIABLES
 // ================
 
-UCHAR *GDP_BIN_BandStrTab[SCIENCE_DATA_DEFINED+1] =
+unsigned char *GDP_BIN_BandStrTab[SCIENCE_DATA_DEFINED+1] =
  {
   "All bands",
   "Band 1a", "Band 1b", "Band 2a", "Band 2b", "Band 3",
@@ -284,15 +284,15 @@ RC GDP_BIN_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
   // Declarations
 
   GOME_ORBIT_FILE *pOrbitFile;                                                  // pointer to the current orbit
-  UCHAR filePath[MAX_STR_SHORT_LEN+1];
-  UCHAR fileFilter[MAX_STR_SHORT_LEN+1];
-  UCHAR filePrefix[MAX_STR_SHORT_LEN+1];
-  UCHAR fileExt[MAX_STR_SHORT_LEN+1];
+  unsigned char filePath[MAX_STR_SHORT_LEN+1];
+  unsigned char fileFilter[MAX_STR_SHORT_LEN+1];
+  unsigned char filePrefix[MAX_STR_SHORT_LEN+1];
+  unsigned char fileExt[MAX_STR_SHORT_LEN+1];
   struct dirent *fileInfo;
   DIR *hDir;
   INDEX indexFile;
-  UCHAR *ptr;
-  UCHAR fileName[MAX_ITEM_TEXT_LEN+1];                                          // file name
+  unsigned char *ptr;
+  unsigned char fileName[MAX_ITEM_TEXT_LEN+1];                                          // file name
   INDEX i,j,indexRecord;                                                        // indexes for loops and arrays
   int useErrors,errorFlag;                                                      // 0 if errors are saved with spectra, 1 otherwise
   FILE *fp;
@@ -494,7 +494,7 @@ RC GDP_BIN_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
 
           for (indexRecord=0;indexRecord<pOrbitFile->specNumber;indexRecord++)
            {
-            fseek(fp,(LONG)pOrbitFile->gdpBinHeader.headerSize+indexRecord*pOrbitFile->gdpBinHeader.recordSize,SEEK_SET);
+            fseek(fp,(long)pOrbitFile->gdpBinHeader.headerSize+indexRecord*pOrbitFile->gdpBinHeader.recordSize,SEEK_SET);
 
             if (!fread(&pOrbitFile->gdpBinSpectrum,sizeof(SPECTRUM_RECORD),1,fp))
              rc=ERROR_SetLast("GDP_Bin_Set (2)",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,fileName);
@@ -622,7 +622,7 @@ RC GDP_BIN_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,FILE *specFp,INDEX i
    {
     // Complete record read out
 
-    fseek(fp,(LONG)pOrbitFile->gdpBinHeader.headerSize+(recordNo-1)*pOrbitFile->gdpBinHeader.recordSize,SEEK_SET);
+    fseek(fp,(long)pOrbitFile->gdpBinHeader.headerSize+(recordNo-1)*pOrbitFile->gdpBinHeader.recordSize,SEEK_SET);
 
     if (!fread(&pOrbitFile->gdpBinSpectrum,sizeof(SPECTRUM_RECORD),1,fp) ||
         !fread(pOrbitFile->gdpBinScalingFactor,sizeof(float)*pOrbitFile->gdpBinHeader.nbands,1,fp) ||
@@ -871,7 +871,7 @@ void GdpBinSort(INDEX indexRecord,int flag,int listSize,INDEX fileIndex)
 // RETURN        the number of elements in the refList reference list
 // -----------------------------------------------------------------------------
 
-INT GdpBinRefLat(GDP_BIN_REF *refList,double latMin,double latMax,double lonMin,double lonMax,double sza,double szaDelta,UCHAR *gomePixelType)
+INT GdpBinRefLat(GDP_BIN_REF *refList,double latMin,double latMax,double lonMin,double lonMax,double sza,double szaDelta,unsigned char *gomePixelType)
  {
   // Declarations
 
@@ -973,7 +973,7 @@ INT GdpBinRefLat(GDP_BIN_REF *refList,double latMin,double latMax,double lonMin,
 // RETURN        the number of elements in the refList reference list
 // -----------------------------------------------------------------------------
 
-INT GdpBinRefSza(GDP_BIN_REF *refList,double sza,double szaDelta,UCHAR *gomePixelType)
+INT GdpBinRefSza(GDP_BIN_REF *refList,double sza,double szaDelta,unsigned char *gomePixelType)
  {
   // Declarations
 
@@ -1195,7 +1195,7 @@ RC GdpBinRefSelection(ENGINE_CONTEXT *pEngineContext,
                       double *lambdaK,double *ref,
                       double *lambdaN,double *refN,
                       double *lambdaS,double *refS,
-                      UCHAR *gomePixelType,
+                      unsigned char *gomePixelType,
                       void *responseHandle)
  {
   // Declarations

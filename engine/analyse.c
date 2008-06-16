@@ -76,7 +76,6 @@
 //  ===============
 //
 //  ANALYSE_ResetData - release and reset all data used for a project analysis;
-//  ANALYSE_LoadFilter - load filter data;
 //
 //  AnalyseLoadSlit - load slit function for fwhm correction;
 //  AnalyseLoadCross - load cross sections data from cross sections type tab page;
@@ -125,11 +124,11 @@ ANALYSIS_WINDOWS  *ANLYS_windowsList;       // analysis windows list
 LIST_ITEM         *ANLYS_itemList;          // list of items in ListView control owned by tab pages
 PROJECT *PRJCT_itemList;
 
-UCHAR *AnlysOrthogonal[ANLYS_ORTHOGONAL_TYPE_MAX]={"None","Differential XS"};
-UCHAR *AnlysStretch[ANLYS_STRETCH_TYPE_MAX]={"None","1st order","2nd order"};
-UCHAR *AnlysPolynome[ANLYS_POLY_TYPE_MAX]={"None","order 0","order 1","order 2","order 3","order 4","order 5"};
-UCHAR *ANLYS_crossAction[ANLYS_CROSS_ACTION_MAX]={"None","Interpolate","Convolute Std","Convolute I0","Convolute Ring"}; /* "Detector t° dependent","Strato t° dependent",*/
-UCHAR *ANLYS_amf[ANLYS_AMF_TYPE_MAX]={"None","SZA only","Climatology","Wavelength 1","Wavelength 2","Wavelength 3"};
+unsigned char *AnlysOrthogonal[ANLYS_ORTHOGONAL_TYPE_MAX]={"None","Differential XS"};
+unsigned char *AnlysStretch[ANLYS_STRETCH_TYPE_MAX]={"None","1st order","2nd order"};
+unsigned char *AnlysPolynome[ANLYS_POLY_TYPE_MAX]={"None","order 0","order 1","order 2","order 3","order 4","order 5"};
+unsigned char *ANLYS_crossAction[ANLYS_CROSS_ACTION_MAX]={"None","Interpolate","Convolute Std","Convolute I0","Convolute Ring"}; /* "Detector t° dependent","Strato t° dependent",*/
+unsigned char *ANLYS_amf[ANLYS_AMF_TYPE_MAX]={"None","SZA only","Climatology","Wavelength 1","Wavelength 2","Wavelength 3"};
 
 INT    ANALYSE_plotKurucz,ANALYSE_plotRef,ANALYSE_indexLine;
 
@@ -1005,8 +1004,8 @@ RC AnalyseConvoluteXs(INDEX indexSymbol,INT action,double conc,
 
    {        // TEMPORARY !!!
    	FILE *fp;
-   	UCHAR fileName[MAX_ITEM_TEXT_LEN+1];
-   	UCHAR *ptr;
+   	unsigned char fileName[MAX_ITEM_TEXT_LEN+1];
+   	unsigned char *ptr;
 
     FILES_RebuildFileName(fileName,WorkSpace[indexSymbol].crossFileName,1);
 //   	strcpy(fileName,WorkSpace[indexSymbol].crossFileName);
@@ -1296,12 +1295,12 @@ RC ANALYSE_XsConvolution(FENO *pTabFeno,double *newlambda,
 // AnalyseLoadVector : Load a vector from file
 // --------------------------------------------
 
-RC AnalyseLoadVector(UCHAR *function,UCHAR *fileName,double *lambda,double *vector,INT refFlag,INT *pNewSize)
+RC AnalyseLoadVector(unsigned char *function,unsigned char *fileName,double *lambda,double *vector,INT refFlag,INT *pNewSize)
  {
   // Declarations
 
   FILE *fp;
-  UCHAR string[MAX_ITEM_TEXT_LEN+1],fullFileName[MAX_ITEM_TEXT_LEN+1],*str;
+  unsigned char string[MAX_ITEM_TEXT_LEN+1],fullFileName[MAX_ITEM_TEXT_LEN+1],*str;
   INT day,month,year,hour,min,sec;
   struct time refTime;
   INDEX i;
@@ -1341,12 +1340,12 @@ RC AnalyseLoadVector(UCHAR *function,UCHAR *fileName,double *lambda,double *vect
           {
            sscanf(str-2,"%02d/%02d/%d %02d:%02d:%02d",&day,&month,&year,&hour,&min,&sec);
 
-           refTime.ti_hour=(UCHAR)hour;
-           refTime.ti_min=(UCHAR)min;
-           refTime.ti_sec=(UCHAR)sec;
+           refTime.ti_hour=(unsigned char)hour;
+           refTime.ti_min=(unsigned char)min;
+           refTime.ti_sec=(unsigned char)sec;
 
-           TabFeno[NFeno].refDate.da_day=(CHAR)day;
-           TabFeno[NFeno].refDate.da_mon=(CHAR)month;
+           TabFeno[NFeno].refDate.da_day=(char)day;
+           TabFeno[NFeno].refDate.da_mon=(char)month;
            TabFeno[NFeno].refDate.da_year=(SHORT)year;
 
            TabFeno[NFeno].Tm=(double)ZEN_NbSec(&TabFeno[NFeno].refDate,&refTime,0);
@@ -1374,11 +1373,11 @@ RC AnalyseLoadVector(UCHAR *function,UCHAR *fileName,double *lambda,double *vect
 // ANALYSE_NormalizeVector : Vector normalization
 // ----------------------------------------------
 
-RC ANALYSE_NormalizeVector(double *v,INT dim,double *pFact,UCHAR *function)
+RC ANALYSE_NormalizeVector(double *v,INT dim,double *pFact,unsigned char *function)
  {
   // Declarations
 
-  UCHAR str[MAX_ITEM_TEXT_LEN+1];
+  unsigned char str[MAX_ITEM_TEXT_LEN+1];
   double norm;
   INDEX i;
   RC rc;
@@ -1698,11 +1697,11 @@ RC AnalyseFwhmCorrectionK(double *Spectre,double *Sref,double *SpecTrav,double *
 // ANALYSE_SvdFree : Release allocated buffers used for SVD decomposition
 // ----------------------------------------------------------------------
 
-void ANALYSE_SvdFree(UCHAR *callingFunctionShort,SVD *pSvd)
+void ANALYSE_SvdFree(unsigned char *callingFunctionShort,SVD *pSvd)
  {
   // Declaration
 
-  UCHAR functionNameShort[MAX_STR_SHORT_LEN+1];
+  unsigned char functionNameShort[MAX_STR_SHORT_LEN+1];
 
   #if defined(__DEBUG_) && __DEBUG_
   DEBUG_FunctionBegin("ANALYSE_SvdFree",DEBUG_FCTTYPE_MEM);
@@ -1745,11 +1744,11 @@ void ANALYSE_SvdFree(UCHAR *callingFunctionShort,SVD *pSvd)
 //  : Allocate SVD matrices for the current window
 // --------------------------------------------------------------------
 
-RC ANALYSE_SvdLocalAlloc(UCHAR *callingFunctionShort,SVD *pSvd)
+RC ANALYSE_SvdLocalAlloc(unsigned char *callingFunctionShort,SVD *pSvd)
  {
   // Declarations
 
-  UCHAR functionNameShort[MAX_STR_SHORT_LEN+1];
+  unsigned char functionNameShort[MAX_STR_SHORT_LEN+1];
   INDEX i,j;
   RC rc;
 
@@ -2286,10 +2285,10 @@ RC ANALYSE_AlignReference(INT refFlag,INT saveFlag,void *responseHandle)
   return rc;
  }
 
-RC AnalyseSaveResiduals(UCHAR *fileName,ENGINE_CONTEXT *pEngineContext)
+RC AnalyseSaveResiduals(unsigned char *fileName,ENGINE_CONTEXT *pEngineContext)
  {
   RC rc;
-  UCHAR *fileNamePtr,*ptr,resFile[MAX_ITEM_TEXT_LEN+1],ext[MAX_ITEM_TEXT_LEN+1];
+  unsigned char *fileNamePtr,*ptr,resFile[MAX_ITEM_TEXT_LEN+1],ext[MAX_ITEM_TEXT_LEN+1];
   FILE *fp;
   INDEX i,j;
 
@@ -2641,6 +2640,9 @@ RC ANALYSE_Function ( double *lambda,double *X, double *Y, INT ndet, double *Y0,
         for (j=0;j<Feno->NTabCross;j++)
          if (TabCross[j].IndSvdA)
           DEBUG_Print("+++ %-2d %s\n",TabCross[j].IndSvdA,WorkSpace[TabCross[j].Comp].symbolName);
+
+        DEBUG_PrintVar("Before SVD_Dcmp",U,1,DimL,0,DimC,NULL);
+        DEBUG_PrintVar("Before SVD_Dcmb",A,1,DimL,0,DimC,NULL);
        }
       #endif
 
@@ -2860,6 +2862,7 @@ RC ANALYSE_Function ( double *lambda,double *X, double *Y, INT ndet, double *Y0,
       if (((analyseDebugMask&DEBUG_FCTTYPE_MATH)!=0) && analyseDebugVar)        // SVD is classified as a math function
        DEBUG_PrintVar("Before SVD_Bksb",XTrav,0,DimL-1,YTrav,0,DimL-1,b,1,DimL,NULL);
        DEBUG_PrintVar("Before SVD_Bksb",U,1,DimL,0,DimC,NULL);
+       DEBUG_PrintVar("Before SVD_Bksb",A,1,DimL,0,DimC,NULL);
        DEBUG_PrintVar("Before SVD_Bksb",fitParamsC,0,DimC,NULL);
       #endif
 
@@ -3472,9 +3475,9 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
   CROSS_REFERENCE *TabCross;                 // list of symbols hold by a analysis window
   CROSS_RESULTS *Results;                    // corresponding results
   FENO *pTabFeno;
-  UCHAR windowTitle[MAX_ITEM_TEXT_LEN+1];    // window title for graphs
-  UCHAR tabTitle[MAX_ITEM_TEXT_LEN+1];
-  UCHAR graphTitle[MAX_ITEM_TEXT_LEN+1];     // graph title
+  unsigned char windowTitle[MAX_ITEM_TEXT_LEN+1];    // window title for graphs
+  unsigned char tabTitle[MAX_ITEM_TEXT_LEN+1];
+  unsigned char graphTitle[MAX_ITEM_TEXT_LEN+1];     // graph title
   INDEX WrkFeno,j;                             // index on analysis windows
   INDEX i,k,l,j0;                          // indexes for loops and arrays
 
@@ -4204,7 +4207,7 @@ void ANALYSE_ResetData(void)
       pTabCross->TypeStretch=
       pTabCross->TypeScale=(INT)0;
    // -------------------------------------------
-      pTabCross->display=(UCHAR)0;
+      pTabCross->display=(unsigned char)0;
    // -------------------------------------------
       pTabCross->InitConc=
       pTabCross->InitParam=
@@ -4317,55 +4320,6 @@ void ANALYSE_ResetData(void)
   MATRIX_Free(&O3TD,"ANALYSE_ResetData");
  }
 
-// ------------------------------------
-// ANALYSE_LoadFilter : Load filter data
-// ------------------------------------
-
-RC ANALYSE_LoadFilter(PRJCT_FILTER *pFilter)
- {
-  // Declaration
-
-  RC rc;
-
-  // Initializations
-
-  pFilter->filterEffWidth=(double)1.;   // effective smoothing width used for reduce number of independent terms in analysis system
-  rc=ERROR_ID_NO;
-
-  // Filter type processing
-
-  switch((int)pFilter->type)
-   {
- // ---------------------------------------------------------------------------
-    case PRJCT_FILTER_TYPE_KAISER :
-     rc=FILTER_Build(pFilter,(double)pFilter->kaiserCutoff,(double)pFilter->kaiserPassBand,(double)pFilter->kaiserTolerance);
-    break;
- // ---------------------------------------------------------------------------
-    case PRJCT_FILTER_TYPE_GAUSSIAN :
-     rc=FILTER_Build(pFilter,(double)pFilter->fwhmWidth,(double)0.,(double)0.);
-    break;
- // ---------------------------------------------------------------------------
-    case PRJCT_FILTER_TYPE_TRIANGLE :
-    case PRJCT_FILTER_TYPE_BOXCAR :
-    case PRJCT_FILTER_TYPE_BINOMIAL :
-     rc=FILTER_Build(pFilter,(double)pFilter->filterWidth,(double)0.,(double)0.);
-    break;
- // ---------------------------------------------------------------------------
-    case PRJCT_FILTER_TYPE_SG :
-     rc=FILTER_Build(pFilter,(double)pFilter->filterWidth,(double)pFilter->filterOrder,(double)0.);
-    break;
- // ---------------------------------------------------------------------------
-    case PRJCT_FILTER_TYPE_ODDEVEN :
-     pFilter->filterEffWidth=(double)1.9;
-    break;
- // ---------------------------------------------------------------------------
-   }
-
-  // Return
-
-  return rc;
- }
-
 // --------------------------------------------------------
 // ANALYSE_LoadSlit : Load slit function for fwhm correction
 // --------------------------------------------------------
@@ -4432,11 +4386,11 @@ RC ANALYSE_LoadSlit(PRJCT_SLIT *pSlit)
   return rc;
  }
 
-RC ANALYSE_CheckLambda(WRK_SYMBOL *pWrkSymbol,double *lambda,UCHAR *callingFunction)
+RC ANALYSE_CheckLambda(WRK_SYMBOL *pWrkSymbol,double *lambda,unsigned char *callingFunction)
  {
   // Declarations
 
-  UCHAR fileName[MAX_ITEM_TEXT_LEN+1];
+  unsigned char fileName[MAX_ITEM_TEXT_LEN+1];
   RC rc;
 
   // Initialization
@@ -4482,7 +4436,7 @@ RC ANALYSE_LoadCross(ANALYSIS_CROSS *crossSectionList,INT nCross,INT hidden,doub
  	CROSS_REFERENCE *pEngineCross;                                                // pointer of the current cross section in the engine list
  	ANALYSIS_CROSS *pCross;                                                       // pointer of the current cross section in the mediate list
  	FENO *pTabFeno;                                                               // pointer to the current analysis window
-  UCHAR *pOrthoSymbol[MAX_FIT],                                                 // for each cross section in list, hold cross section to use for orthogonalization
+  unsigned char *pOrthoSymbol[MAX_FIT],                                                 // for each cross section in list, hold cross section to use for orthogonalization
         *symbolName;
   INDEX indexSymbol,indexSvd,                                                   // resp. indexes of item in list and of symbol
         firstTabCross,endTabCross,indexTabCross,i;                              // indexes for browsing list of cross sections symbols
@@ -4709,7 +4663,7 @@ RC ANALYSE_LoadLinear(ANALYSE_LINEAR_PARAMETERS *linearList,INT nLinear)
   CROSS_REFERENCE *pTabCross;                                                   // pointer to an element of the symbol cross reference table of an analysis window
   CROSS_RESULTS *pResults;                                                      // pointer to results
   WRK_SYMBOL *pWrkSymbol;                                                       // pointer to a general description of a symbol
-  UCHAR buttonText[10];                                                         // term in polynomial
+  unsigned char buttonText[10];                                                         // term in polynomial
   ANALYSE_LINEAR_PARAMETERS *pList;                                             // pointer to description of an item in list
   FENO *pTabFeno;                                                               // pointer to description of the current analysis window
   INDEX indexSvd,indexTabCross;                                                 // extra index for swapping
@@ -4842,7 +4796,7 @@ RC ANALYSE_LoadShiftStretch(ANALYSIS_SHIFT_STRETCH *shiftStretchList,INT nShiftS
 
   INDEX indexItem,indexSymbol,indexTabCross,indexSymbolInList,indexCross,       // indexes for loops and arrays
         indexShift,indexStretch,indexStretch2,indexScale,indexScale2;
-  UCHAR *symbol;                                                                // copy of list of symbols
+  unsigned char *symbol;                                                                // copy of list of symbols
   CROSS_REFERENCE *pTabCross;                                                   // pointer to an element of the symbol cross reference table of an analysis window
   CROSS_RESULTS *pResults;                                                      // pointer to results part relative to the symbol
   WRK_SYMBOL *pWrkSymbol;                                                       // pointer to a general description of a symbol
@@ -5001,10 +4955,10 @@ RC ANALYSE_LoadShiftStretch(ANALYSIS_SHIFT_STRETCH *shiftStretchList,INT nShiftS
              pTabFeno->svd.NP++;
            }
 
-          pResults->StoreShift=((!indexSymbolInList) && (pList->shStore==1))?(UCHAR)1:(UCHAR)0;                  // flag set if shift is to be written into output file
-          pResults->StoreStretch=((!indexSymbolInList) && (pList->stStore==1))?(UCHAR)1:(UCHAR)0;                // flag set if stretch is to be written into output file
-          pResults->StoreScale=((!indexSymbolInList) && (pList->scStore==1))?(UCHAR)1:(UCHAR)0;                  // flag set if scaling is to be written into output file
-          pResults->StoreError=((!indexSymbolInList) && (pList->errStore==1))?(UCHAR)1:(UCHAR)0;                 // flag set if errors on linear parameters are to be written into output file
+          pResults->StoreShift=((!indexSymbolInList) && (pList->shStore==1))?(unsigned char)1:(unsigned char)0;                  // flag set if shift is to be written into output file
+          pResults->StoreStretch=((!indexSymbolInList) && (pList->stStore==1))?(unsigned char)1:(unsigned char)0;                // flag set if stretch is to be written into output file
+          pResults->StoreScale=((!indexSymbolInList) && (pList->scStore==1))?(unsigned char)1:(unsigned char)0;                  // flag set if scaling is to be written into output file
+          pResults->StoreError=((!indexSymbolInList) && (pList->errStore==1))?(unsigned char)1:(unsigned char)0;                 // flag set if errors on linear parameters are to be written into output file
          }
        }
      }
@@ -5029,7 +4983,7 @@ RC ANALYSE_LoadNonLinear(ANALYSE_NON_LINEAR_PARAMETERS *nonLinearList,INT nNonLi
   // Declarations
 
   INDEX indexItem,indexSymbol,indexTabCross,indexSvd;                           // indexes for loops and arrays
-  UCHAR *symbol;                                                                // browse symbols
+  unsigned char *symbol;                                                                // browse symbols
   CROSS_REFERENCE *pTabCross;                                                   // pointer to an element of the symbol cross reference table of an analysis window
   CROSS_RESULTS *pResults;                                                      // pointer to results part relative to the symbol
   ANALYSE_NON_LINEAR_PARAMETERS *pListItem;                                     // pointer to the current item in the non linear parameters list
@@ -5240,7 +5194,7 @@ RC ANALYSE_LoadNonLinear(ANALYSE_NON_LINEAR_PARAMETERS *nonLinearList,INT nNonLi
                  pTabCross->IndSvdA=++pTabFeno->svd.DimC;
 
                 pTabCross->crossAction=((pTabFeno->indexRing1==pTabFeno->NTabCross)) ? ANLYS_CROSS_ACTION_INTERPOLATE : ANLYS_CROSS_ACTION_NOTHING;
-                pTabCross->display=(UCHAR)pTabFeno->displayPredefined;
+                pTabCross->display=(unsigned char)pTabFeno->displayPredefined;
 
                 // DOAS fitting : only the Raman spectrum is fitted non linearly, other parameters are considered as cross sections
 
@@ -5496,9 +5450,9 @@ RC ANALYSE_LoadOutput(ANALYSIS_OUTPUT *outputList,INT nOutput)
     // QDOAS !!! See later !!!
     // QDOAS !!! See later !!!      (*pAmfFlag)++;
     // QDOAS !!! See later !!!
-    // QDOAS !!! See later !!!     pResults->StoreAmf=(pList->itemText[COLUMN_CROSS_AMF_OUTPUT][0]=='1')?(UCHAR)1:(UCHAR)0;          // flag set if AMF is to be written into output file
-    // QDOAS !!! See later !!!     pResults->StoreVrtCol=(pList->itemText[COLUMN_CROSS_VRTCOL][0]=='1')?(UCHAR)1:(UCHAR)0;           // flag set if vertical column is to be written into output file
-    // QDOAS !!! See later !!!     pResults->StoreVrtErr=(pList->itemText[COLUMN_CROSS_VRTERR][0]=='1')?(UCHAR)1:(UCHAR)0;           // flag set if error on vertical column is to be written into output file
+    // QDOAS !!! See later !!!     pResults->StoreAmf=(pList->itemText[COLUMN_CROSS_AMF_OUTPUT][0]=='1')?(unsigned char)1:(unsigned char)0;          // flag set if AMF is to be written into output file
+    // QDOAS !!! See later !!!     pResults->StoreVrtCol=(pList->itemText[COLUMN_CROSS_VRTCOL][0]=='1')?(unsigned char)1:(unsigned char)0;           // flag set if vertical column is to be written into output file
+    // QDOAS !!! See later !!!     pResults->StoreVrtErr=(pList->itemText[COLUMN_CROSS_VRTERR][0]=='1')?(unsigned char)1:(unsigned char)0;           // flag set if error on vertical column is to be written into output file
     // QDOAS !!! See later !!!     pResults->VrtFact=atof(pList->itemText[COLUMN_CROSS_VRTFACT]);                                    // vertical column factor
     // QDOAS !!! See later !!!    }
     // QDOAS !!! See later !!!  }
@@ -5520,7 +5474,7 @@ RC ANALYSE_LoadRef(ENGINE_CONTEXT *pEngineContext)
   FENO *pTabFeno;
   double *Sref;
   double *SrefEtalon,factTemp,*lambdaRef,*lambdaRefEtalon;
-  UCHAR *ptr;
+  unsigned char *ptr;
   RC rc;
 
   // Initializations
@@ -5738,8 +5692,8 @@ RC ANALYSE_SetInit(ENGINE_CONTEXT *pEngineContext)
 
   if (pSlitOptions->fwhmCorrectionFlag && pKuruczOptions->fwhmFit)
    rc=ERROR_SetLast("ANALYSE_LoadData",ERROR_TYPE_FATAL,ERROR_ID_FWHM);
-  else if (!(rc=ANALYSE_LoadFilter(&pEngineContext->project.lfilter)) &&   // low pass filtering
-           !(rc=ANALYSE_LoadFilter(&pEngineContext->project.hfilter)) &&   // high pass filtering
+  else if (!(rc=FILTER_LoadFilter(&pEngineContext->project.lfilter)) &&   // low pass filtering
+           !(rc=FILTER_LoadFilter(&pEngineContext->project.hfilter)) &&   // high pass filtering
            !(rc=AnalyseSvdGlobalAlloc(pEngineContext)))
    {
     if (((ANALYSE_zeros=(double *)MEMORY_AllocDVector("ANALYSE_LoadData ","ANALYSE_zeros",0,NDET-1))==NULL) ||

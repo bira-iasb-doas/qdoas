@@ -103,7 +103,7 @@
 // GLOBAL VARIABLES
 // ================
 
-UCHAR     THRD_asciiFile[MAX_ITEM_TEXT_LEN+1],*THRD_asciiPtr;        // ascii file for exporting spectra
+unsigned char     THRD_asciiFile[MAX_ITEM_TEXT_LEN+1],*THRD_asciiPtr;        // ascii file for exporting spectra
 HANDLE    THRD_hEvents[THREAD_EVENT_MAX];      // list of events
 ENGINE_CONTEXT THRD_specInfo;          // data on current spectra and reference
 UINT      THRD_id=THREAD_TYPE_NONE;            // thread identification number
@@ -217,7 +217,7 @@ THRD_GOTO THRD_goto={ 1, ITEM_NONE, 1, 0, ITEM_NONE, ITEM_NONE };
 // QDOAS ??? #endif
 // QDOAS ??? LRESULT CALLBACK ThrdGotoCommand(HWND hwndThrdGoto,UINT msg,WPARAM mp1,LPARAM mp2)
 // QDOAS ???  {
-// QDOAS ???   switch((ULONG)GET_WM_COMMAND_ID(mp1,mp2))
+// QDOAS ???   switch((unsigned long)GET_WM_COMMAND_ID(mp1,mp2))
 // QDOAS ???    {
 // QDOAS ???  // ---------------------------------------------------------------------------
 // QDOAS ???     case IDOK :                      // close dialog box on OK button command
@@ -333,7 +333,7 @@ THRD_GOTO THRD_goto={ 1, ITEM_NONE, 1, 0, ITEM_NONE, ITEM_NONE };
 // QDOAS ???  {
 // QDOAS ???   // Declarations
 // QDOAS ???
-// QDOAS ???   UCHAR tmpBuffer[MAX_ITEM_TEXT_LEN+1],*ptr;     // temporary buffer
+// QDOAS ???   unsigned char tmpBuffer[MAX_ITEM_TEXT_LEN+1],*ptr;     // temporary buffer
 // QDOAS ???   INDEX indexProject;
 // QDOAS ???   RAW_FILES *pRaw;
 // QDOAS ???
@@ -426,7 +426,7 @@ THRD_GOTO THRD_goto={ 1, ITEM_NONE, 1, 0, ITEM_NONE, ITEM_NONE };
 // QDOAS ???  {
 // QDOAS ???   // Declarations
 // QDOAS ???
-// QDOAS ???   UCHAR tmpBuffer[MAX_ITEM_TEXT_LEN+1],*ptr;     // temporary buffer
+// QDOAS ???   unsigned char tmpBuffer[MAX_ITEM_TEXT_LEN+1],*ptr;     // temporary buffer
 // QDOAS ???   INDEX indexRecord,indexFile,indexPath;
 // QDOAS ???   RAW_FILES *pRaw;
 // QDOAS ???   BOOL rc;
@@ -524,7 +524,7 @@ THRD_GOTO THRD_goto={ 1, ITEM_NONE, 1, 0, ITEM_NONE, ITEM_NONE };
 // QDOAS ???   // Declarations
 // QDOAS ???
 // QDOAS ???   ERROR_DESCRIPTION errorDescription;                                           // information about the last error
-// QDOAS ???   UCHAR errorTitle[MAX_STR_LEN+1];                                              // title for error message
+// QDOAS ???   unsigned char errorTitle[MAX_STR_LEN+1];                                              // title for error message
 // QDOAS ???   int errorType;                                                                // the type of the last error
 // QDOAS ???   int errorFatalFlag;                                                           // 1 on fatal error
 // QDOAS ???   FILE *fp;                                                                     // pointer to the log file
@@ -594,12 +594,12 @@ THRD_GOTO THRD_goto={ 1, ITEM_NONE, 1, 0, ITEM_NONE, ITEM_NONE };
 // QDOAS ??? // THRD_Error : temporary and fatal errors handling
 // QDOAS ??? // ------------------------------------------------
 // QDOAS ???
-// QDOAS ??? RC THRD_Error(INT errorType,INT errorId,UCHAR *function,...)
+// QDOAS ??? RC THRD_Error(INT errorType,INT errorId,unsigned char *function,...)
 // QDOAS ???  {
 // QDOAS ???   // Declarations
 // QDOAS ???
 // QDOAS ???   ERROR_DESCRIPTION errorDescription;
-// QDOAS ???   UCHAR   errorString[MAX_ITEM_TEXT_LEN+1],     // message loaded from resources
+// QDOAS ???   unsigned char   errorString[MAX_ITEM_TEXT_LEN+1],     // message loaded from resources
 // QDOAS ???           errorBuf[MAX_ITEM_TEXT_LEN+1],        // formatted message to display
 // QDOAS ???           errorTitle[MAX_ITEM_TEXT_LEN+1],
 // QDOAS ???           errorFunction[MAX_ITEM_TEXT_LEN+1],
@@ -797,7 +797,7 @@ THRD_GOTO THRD_goto={ 1, ITEM_NONE, 1, 0, ITEM_NONE, ITEM_NONE };
 // QDOAS ???             THRD_goto.flag=1;
 // QDOAS ???            }
 // QDOAS ???           else
-// QDOAS ???            THRD_setOriginalFlag=(ThrdNextRecord())?(UCHAR)0:(UCHAR)1;
+// QDOAS ???            THRD_setOriginalFlag=(ThrdNextRecord())?(unsigned char)0:(unsigned char)1;
 // QDOAS ???          }
 // QDOAS ???         else
 // QDOAS ???          {
@@ -821,7 +821,7 @@ THRD_GOTO THRD_goto={ 1, ITEM_NONE, 1, 0, ITEM_NONE, ITEM_NONE };
 // QDOAS ???       else
 // QDOAS ???        {
 // QDOAS ???         THRD_increment=-1;
-// QDOAS ???         THRD_setOriginalFlag=(ThrdNextRecord())?(UCHAR)0:(UCHAR)1;
+// QDOAS ???         THRD_setOriginalFlag=(ThrdNextRecord())?(unsigned char)0:(unsigned char)1;
 // QDOAS ???        }
 // QDOAS ???      }
 // QDOAS ???     break;
@@ -832,7 +832,7 @@ THRD_GOTO THRD_goto={ 1, ITEM_NONE, 1, 0, ITEM_NONE, ITEM_NONE };
 // QDOAS ???
 // QDOAS ???       THRD_resetFlag=1;
 // QDOAS ???       THRD_lastEvent=THREAD_EVENT_PREVIOUS;
-// QDOAS ???       THRD_setOriginalFlag=(ThrdNextRecord())?(UCHAR)0:(UCHAR)1;
+// QDOAS ???       THRD_setOriginalFlag=(ThrdNextRecord())?(unsigned char)0:(unsigned char)1;
 // QDOAS ???      }
 // QDOAS ???     break;
 // QDOAS ???  // ---------------------------------------------------------------------------
@@ -842,7 +842,7 @@ THRD_GOTO THRD_goto={ 1, ITEM_NONE, 1, 0, ITEM_NONE, ITEM_NONE };
 // QDOAS ???
 // QDOAS ???       THRD_resetFlag=1;
 // QDOAS ???       THRD_lastEvent=THREAD_EVENT_NEXT;
-// QDOAS ???       THRD_setOriginalFlag=(ThrdNextRecord())?(UCHAR)0:(UCHAR)1;
+// QDOAS ???       THRD_setOriginalFlag=(ThrdNextRecord())?(unsigned char)0:(unsigned char)1;
 // QDOAS ???      }
 // QDOAS ???     break;
 // QDOAS ???  // ---------------------------------------------------------------------------
@@ -860,7 +860,7 @@ THRD_GOTO THRD_goto={ 1, ITEM_NONE, 1, 0, ITEM_NONE, ITEM_NONE };
 // QDOAS ???        {
 // QDOAS ???         THRD_increment=1;
 // QDOAS ???         THRD_lastEvent=THREAD_EVENT_NEXT;
-// QDOAS ???         THRD_setOriginalFlag=(ThrdNextRecord())?(UCHAR)0:(UCHAR)1;
+// QDOAS ???         THRD_setOriginalFlag=(ThrdNextRecord())?(unsigned char)0:(unsigned char)1;
 // QDOAS ???        }
 // QDOAS ???      }
 // QDOAS ???     break;
@@ -869,11 +869,11 @@ THRD_GOTO THRD_goto={ 1, ITEM_NONE, 1, 0, ITEM_NONE, ITEM_NONE };
 // QDOAS ???      {
 // QDOAS ???       THRD_increment=1;
 // QDOAS ???       THRD_resetFlag=0;
-// QDOAS ???       THRD_setOriginalFlag=(UCHAR)0;
+// QDOAS ???       THRD_setOriginalFlag=(unsigned char)0;
 // QDOAS ???
 // QDOAS ???       if ((THRD_id==THREAD_TYPE_SPECTRA) ||
 // QDOAS ???          ((THRD_lastEvent==THREAD_EVENT_PLAY) && incrementFlag))
-// QDOAS ???        THRD_setOriginalFlag=(ThrdNextRecord())?(UCHAR)0:(UCHAR)1;
+// QDOAS ???        THRD_setOriginalFlag=(ThrdNextRecord())?(unsigned char)0:(unsigned char)1;
 // QDOAS ???
 // QDOAS ???       THRD_lastEvent=THREAD_EVENT_PLAY;
 // QDOAS ???      }
@@ -896,7 +896,7 @@ THRD_GOTO THRD_goto={ 1, ITEM_NONE, 1, 0, ITEM_NONE, ITEM_NONE };
 // QDOAS ???     default :
 // QDOAS ???      {
 // QDOAS ???       if (incrementFlag)
-// QDOAS ???        THRD_setOriginalFlag=(ThrdNextRecord())?(UCHAR)0:(UCHAR)1;
+// QDOAS ???        THRD_setOriginalFlag=(ThrdNextRecord())?(unsigned char)0:(unsigned char)1;
 // QDOAS ???      }
 // QDOAS ???     break;
 // QDOAS ???  // ---------------------------------------------------------------------------
@@ -914,7 +914,7 @@ THRD_GOTO THRD_goto={ 1, ITEM_NONE, 1, 0, ITEM_NONE, ITEM_NONE };
 // QDOAS ??? INDEX THRD_WaitEvent(DWORD delay,INT moveFlag,INT incrementFlag)
 // QDOAS ???  {
 // QDOAS ???   if (incrementFlag)
-// QDOAS ???    THRD_setOriginalFlag=(ThrdNextRecord())?(UCHAR)0:(UCHAR)1;
+// QDOAS ???    THRD_setOriginalFlag=(ThrdNextRecord())?(unsigned char)0:(unsigned char)1;
 // QDOAS ???
 // QDOAS ???   return ITEM_NONE;
 // QDOAS ???  }
@@ -1020,7 +1020,7 @@ RC ThrdInitSpecInfo(ENGINE_CONTEXT *pEngineContext,PROJECT *pProject)
             (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_PDAEGG_ULB) ||
             (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_PDASI_EASOE)) &&
 
-           ((pBuffers->recordIndexes=(ULONG *)MEMORY_AllocBuffer("ThrdInitSpecInfo ","recordIndexes",2001,sizeof(ULONG),0,MEMORY_TYPE_LONG))==NULL)) ||
+           ((pBuffers->recordIndexes=(unsigned long *)MEMORY_AllocBuffer("ThrdInitSpecInfo ","recordIndexes",2001,sizeof(unsigned long),0,MEMORY_TYPE_LONG))==NULL)) ||
 
           (((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_GDP_ASCII) ||
             (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN) ||
@@ -1061,7 +1061,7 @@ RC ThrdInitSpecInfo(ENGINE_CONTEXT *pEngineContext,PROJECT *pProject)
 // QDOAS ???   // Declarations
 // QDOAS ???
 // QDOAS ???   PRJCT_INSTRUMENTAL *pInstrumental;
-// QDOAS ???   UCHAR        fileName[MAX_ITEM_TEXT_LEN+1];
+// QDOAS ???   unsigned char        fileName[MAX_ITEM_TEXT_LEN+1];
 // QDOAS ???   SHORT_DATE  *pDay;                      // pointer to measurement date
 // QDOAS ???   struct time *pTime;                     // pointer to measurement date
 // QDOAS ???   INDEX        indexTabFeno;              // browse analysis windows
@@ -1313,13 +1313,13 @@ RC ThrdInitSpecInfo(ENGINE_CONTEXT *pEngineContext,PROJECT *pProject)
 // ThrdLoadInstrumental : Load instrumental functions
 // --------------------------------------------------
 
-RC ThrdLoadInstrumental(ENGINE_CONTEXT *pEngineContext,UCHAR *instrFile,INT fileType)
+RC ThrdLoadInstrumental(ENGINE_CONTEXT *pEngineContext,unsigned char *instrFile,INT fileType)
  {
   // Declarations
 
   BUFFERS *pBuffers;                                                            // pointer to the buffers part of the engine context
   double *lambda,*instrFunction,*instrDeriv2,*function;
-  UCHAR str[MAX_ITEM_TEXT_LEN+1],fileName[MAX_ITEM_TEXT_LEN+1],*ptr;
+  unsigned char str[MAX_ITEM_TEXT_LEN+1],fileName[MAX_ITEM_TEXT_LEN+1],*ptr;
   PRJCT_INSTRUMENTAL *pInstrumental;
   FILE *gp;
   INDEX i;
@@ -1485,7 +1485,7 @@ RC ThrdLoadInstrumental(ENGINE_CONTEXT *pEngineContext,UCHAR *instrFile,INT file
 // QDOAS ???  {
 // QDOAS ???   // Declarations
 // QDOAS ???
-// QDOAS ???   UCHAR str[MAX_ITEM_TEXT_LEN+1],calibrationFile[MAX_ITEM_TEXT_LEN+1];
+// QDOAS ???   unsigned char str[MAX_ITEM_TEXT_LEN+1],calibrationFile[MAX_ITEM_TEXT_LEN+1];
 // QDOAS ???   PROJECT *pProject;
 // QDOAS ???   FILE *fp;
 // QDOAS ???   INDEX i,indexSite;
@@ -1596,8 +1596,8 @@ RC ThrdLoadInstrumental(ENGINE_CONTEXT *pEngineContext,UCHAR *instrFile,INT file
 // QDOAS ???  {
 // QDOAS ???   // Declarations
 // QDOAS ???
-// QDOAS ???   UCHAR *textBuffer;
-// QDOAS ???   LONG fileSize;
+// QDOAS ???   unsigned char *textBuffer;
+// QDOAS ???   long fileSize;
 // QDOAS ???   FILE *fp;
 // QDOAS ???   HWND hwndEdit;
 // QDOAS ???
@@ -1669,11 +1669,11 @@ RC THRD_SpectrumCorrection(ENGINE_CONTEXT *pEngineContext,double *spectrum)
 // QDOAS ??? #if defined(__BC32_) && __BC32_
 // QDOAS ??? #pragma argsused
 // QDOAS ??? #endif
-// QDOAS ??? RC ThrdFileSetPointers(ENGINE_CONTEXT *pEngineContext,UCHAR *newFileName,FILE *specFp,FILE *namesFp,FILE *darkFp)
+// QDOAS ??? RC ThrdFileSetPointers(ENGINE_CONTEXT *pEngineContext,unsigned char *newFileName,FILE *specFp,FILE *namesFp,FILE *darkFp)
 // QDOAS ???  {
 // QDOAS ???   // Declarations
 // QDOAS ???
-// QDOAS ???   UCHAR string[MAX_ITEM_TEXT_LEN+1];
+// QDOAS ???   unsigned char string[MAX_ITEM_TEXT_LEN+1];
 // QDOAS ???   PROJECT *pProject;
 // QDOAS ???   RC rc;
 // QDOAS ???
@@ -1922,7 +1922,7 @@ RC ThrdReadFile(ENGINE_CONTEXT *pEngineContext,INT recordNo,INT dateFlag,INT loc
  {
   // Declarations
 
-// QDOAS ???   UCHAR windowTitle[MAX_ITEM_TEXT_LEN+1];
+// QDOAS ???   unsigned char windowTitle[MAX_ITEM_TEXT_LEN+1];
   RECORD_INFO *pRecord;                                                         // pointer to the record part of the engine context
   PROJECT *pProject;
   PRJCT_INSTRUMENTAL *pInstrumental;
@@ -2124,7 +2124,7 @@ RC ThrdReadFile(ENGINE_CONTEXT *pEngineContext,INT recordNo,INT dateFlag,INT loc
     double SMax,darkSum,longit,latit;
     INDEX indexBand;
     INT maxBand,maxV,maxH,indexSite,geoFlag;
-    UCHAR graphTitle[MAX_ITEM_NAME_LEN+1];
+    unsigned char graphTitle[MAX_ITEM_NAME_LEN+1];
 
     memset(graphTitle,0,MAX_ITEM_NAME_LEN+1);
     maxV=maxH=maxBand=1;
@@ -2151,7 +2151,7 @@ RC ThrdReadFile(ENGINE_CONTEXT *pEngineContext,INT recordNo,INT dateFlag,INT loc
        ((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC) ||
         (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC_STD)))
      {
-      UCHAR string[30];
+      unsigned char string[30];
       sprintf(string,"%02d/%02d/%d %02d:%02d:%02d",
                       pRecord->present_day.da_day,pRecord->present_day.da_mon,pRecord->present_day.da_year,
                       pRecord->present_time.ti_hour,pRecord->present_time.ti_min,pRecord->present_time.ti_sec);
@@ -2307,7 +2307,7 @@ RC ThrdReadFile(ENGINE_CONTEXT *pEngineContext,INT recordNo,INT dateFlag,INT loc
            fprintf(THRD_asciiFp,"\n");
          }
 
-        else if ((THRD_id==THREAD_TYPE_SPECTRA) || (pProject->spectra.displaySpectraFlag==(UCHAR)1))
+        else if ((THRD_id==THREAD_TYPE_SPECTRA) || (pProject->spectra.displaySpectraFlag==(unsigned char)1))
          {
           if ((pEngineContext->buffers.instrFunction!=NULL) && ((THRD_browseType==THREAD_BROWSE_SPECTRA) || (THRD_browseType==THREAD_BROWSE_EXPORT)))
            {
@@ -2361,7 +2361,7 @@ RC ThrdReadFile(ENGINE_CONTEXT *pEngineContext,INT recordNo,INT dateFlag,INT loc
        }    // END 2
      }    // END 1
 
-// QDOAS ???    if ((rc<THREAD_EVENT_STOP) && ((THRD_id==THREAD_TYPE_SPECTRA) || (pProject->spectra.displaySpectraFlag==(UCHAR)1)))
+// QDOAS ???    if ((rc<THREAD_EVENT_STOP) && ((THRD_id==THREAD_TYPE_SPECTRA) || (pProject->spectra.displaySpectraFlag==(unsigned char)1)))
 // QDOAS ???     {
 // QDOAS ???      delay=(THRD_increment)?THRD_delay:INFINITE;  // delay is conditioned by display options
 // QDOAS ???
@@ -2560,7 +2560,7 @@ RC ThrdReadFile(ENGINE_CONTEXT *pEngineContext,INT recordNo,INT dateFlag,INT loc
 // QDOAS ???   FILE *specFp,*namesFp,*darkFp;                                         // file pointers
 // QDOAS ???   RAW_FILES *pRaw;                                                       // list of raw spectra files
 // QDOAS ???   INDEX indexFeno;                                                       // browse analysis windows
-// QDOAS ???   UCHAR fileName[MAX_ITEM_TEXT_LEN+1],fileTmp[MAX_ITEM_TEXT_LEN+1],      // make a copy of current file name
+// QDOAS ???   unsigned char fileName[MAX_ITEM_TEXT_LEN+1],fileTmp[MAX_ITEM_TEXT_LEN+1],      // make a copy of current file name
 // QDOAS ???         waitEventFlag,
 // QDOAS ???         *ptr,asciiFile[MAX_ITEM_TEXT_LEN+1];
 // QDOAS ???   ENGINE_CONTEXT specInfo;                                                    // data on current spectra and reference
@@ -2715,7 +2715,7 @@ RC ThrdReadFile(ENGINE_CONTEXT *pEngineContext,INT recordNo,INT dateFlag,INT loc
 // QDOAS ???           if (((pRaw->folderFlag==RAW_FOLDER_TYPE_PATH) || (pRaw->folderFlag==RAW_FOLDER_TYPE_PATHSUB)) &&
 // QDOAS ???               ((THRD_indexPathFileCurrent!=ITEM_NONE) || (THRD_indexPathFileOld!=THRD_indexPathFileCurrent)))
 // QDOAS ???            {
-// QDOAS ???             UCHAR *ptr;
+// QDOAS ???             unsigned char *ptr;
 // QDOAS ???             if ((ptr=strrchr(fileName,PATH_SEP))!=NULL)
 // QDOAS ???              strcpy(ptr+1,PATH_fileNamesShort[THRD_indexPathFileCurrent]);
 // QDOAS ???            }

@@ -23,7 +23,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "constants.h"
 
 // ==========================================================
-// INITIALIZATIONS OF NON-ZERO VALUES AND FLOAT/DOUBLE FIELDS
+// INITIALIZATIONS OF NON-ZERO VALUES AND float/DOUBLE FIELDS
 // ==========================================================
 
 void initializeMediateProjectDisplay(mediate_project_display_t *d)

@@ -109,8 +109,8 @@ typedef struct _ccdData
   int         nlCorrection;                                                     // 1 if a nonlinearity correction has been applied; 0 otherwise
   short       nTint;                                                            // number of integration times
   double      brusagElevation;                                                  // elevation angle for off axis measurements
-  UCHAR       filterName[16];                                                   // the name of the filter used if any
-  UCHAR       ignored[998];                                                     // if completed with new data in the future, authorizes compatibility with previous versions
+  unsigned char       filterName[16];                                                   // the name of the filter used if any
+  unsigned char       ignored[998];                                                     // if completed with new data in the future, authorizes compatibility with previous versions
  }
 CCD_DATA;
 
@@ -126,7 +126,7 @@ static double predTint[MAXTPS] =
   38.00,  46.00,  55.00,  66.00,  80.00,  95.00, 115.00, 140.00, 160.00, 200.00,
   240.00, 280.00, 340.00, 410.00, 490.00, 590.00 };
 
-static ULONG ccdDarkCurrentOffset[MAXTPS];                                      // offset of measured dark currents for each integration time
+static unsigned long ccdDarkCurrentOffset[MAXTPS];                                      // offset of measured dark currents for each integration time
 
 // ------------------
 // Read out functions
@@ -154,11 +154,11 @@ RC SetCCD_EEV(ENGINE_CONTEXT *pEngineContext,FILE *specFp,FILE *darkFp)
   BUFFERS *pBuffers;                                                            // pointer to the buffers part of the engine context
 
   CCD_DATA header;                                                              // header of a record
-  ULONG   *recordIndexes;                                                       // indexes of records for direct access
+  unsigned long   *recordIndexes;                                                       // indexes of records for direct access
   INT      ccdX,ccdY;                                                           // size of the detector
   int      specMaxFlag;                                                         // 1 to use specMax, the vector of maxima of the scans
   INDEX    indexTps;                                                            // browse the predefined integration time
-  ULONG    offset;                                                              // offset to remove from the spectrum
+  unsigned long    offset;                                                              // offset to remove from the spectrum
   RC       rc;                                                                  // return code
 
   // Debugging
@@ -173,7 +173,7 @@ RC SetCCD_EEV(ENGINE_CONTEXT *pEngineContext,FILE *specFp,FILE *darkFp)
 
   recordIndexes=pEngineContext->buffers.recordIndexes;
 
-  memset(ccdDarkCurrentOffset,-1L,sizeof(ULONG)*MAXTPS);
+  memset(ccdDarkCurrentOffset,-1L,sizeof(unsigned long)*MAXTPS);
   pEngineContext->recordIndexesSize=2001;
   pEngineContext->recordNumber=0;
   specMaxFlag=0;
@@ -195,7 +195,7 @@ RC SetCCD_EEV(ENGINE_CONTEXT *pEngineContext,FILE *specFp,FILE *darkFp)
     // Read the header of the first record
 
     fseek(specFp,0L,SEEK_SET);
-    memset(recordIndexes,0L,sizeof(ULONG)*pEngineContext->recordIndexesSize);
+    memset(recordIndexes,0L,sizeof(unsigned long)*pEngineContext->recordIndexesSize);
 
     while (!feof(specFp) && fread(&header,sizeof(CCD_DATA),1,specFp))
      {
@@ -204,7 +204,7 @@ RC SetCCD_EEV(ENGINE_CONTEXT *pEngineContext,FILE *specFp,FILE *darkFp)
 
       pEngineContext->recordNumber++;
 
-      recordIndexes[pEngineContext->recordNumber]=(ULONG)
+      recordIndexes[pEngineContext->recordNumber]=(unsigned long)
         recordIndexes[pEngineContext->recordNumber-1]+
         sizeof(CCD_DATA)+((header.saveTracks)?ccdX*ccdY*sizeof(USHORT):ccdX*sizeof(USHORT));
 
@@ -351,7 +351,7 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
    {
     // Set file pointers
 
-    fseek(specFp,(LONG)pBuffers->recordIndexes[recordNo-1],SEEK_SET);
+    fseek(specFp,(long)pBuffers->recordIndexes[recordNo-1],SEEK_SET);
 
     // Complete record read out
 
@@ -630,7 +630,7 @@ RC SetCCD (ENGINE_CONTEXT *pEngineContext,FILE *specFp,INT flag)
  {
   // Declarations
 
-  ULONG  recordSize,                                                            // the size of one record in bytes (without SpecMax)
+  unsigned long  recordSize,                                                            // the size of one record in bytes (without SpecMax)
         *recordIndexes;                                                         // the position of spectra in bytes from the beginning of the file
   SHORT *indexes,                                                               // the number of accumulations per spectrum (give by the same way,
                                                                                 // the size of the SpecMax vectors)
@@ -673,13 +673,13 @@ RC SetCCD (ENGINE_CONTEXT *pEngineContext,FILE *specFp,INT flag)
       // Calculate the size of a record (without SpecMax)
 
       if (flag==0)
-       recordSize=(LONG)sizeof(CCD_1024)+44L*(sizeof(float)+sizeof(USHORT)*NDET) + (LONG)(sizeof(float)+sizeof(SHORT))*300;
+       recordSize=(long)sizeof(CCD_1024)+44L*(sizeof(float)+sizeof(USHORT)*NDET) + (long)(sizeof(float)+sizeof(SHORT))*300;
       else if (flag==1)
-       recordSize=(LONG)sizeof(CCD_1024)+(LONG)sizeof(SHORT)*NDET;
+       recordSize=(long)sizeof(CCD_1024)+(long)sizeof(SHORT)*NDET;
 
       // Calculate the position in bytes from the beginning of the file for each spectra
 
-      recordIndexes[0]=(LONG)(pEngineContext->recordIndexesSize+1)*sizeof(SHORT);    // file header : size of indexes table + curvenum
+      recordIndexes[0]=(long)(pEngineContext->recordIndexesSize+1)*sizeof(SHORT);    // file header : size of indexes table + curvenum
 
       for (i=1;i<curvenum;i++)
        recordIndexes[i]=recordIndexes[i-1]+                                     // position of the previous record
@@ -729,7 +729,7 @@ RC ReliCCD(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay
   RECORD_INFO *pRecord;                                                         // pointer to the record part of the engine context
 
   CCD_1024 DetInfo;                                                             // data on the current record retrieved from the spectra file
-  UCHAR names[20];                                                              // name of the current spectrum
+  unsigned char names[20];                                                              // name of the current spectrum
   USHORT *ISpectre,*ISpecMax;                                                   // resp. spectrum and SpecMax retrieved from the file
   double Max,tmLocal;                                                           // the maximum value measured for the current spectrum
   INDEX i;                                                                      // index for browsing pixels in the spectrum
@@ -760,9 +760,9 @@ RC ReliCCD(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay
     // Set file pointers
 
     if (namesFp!=NULL)
-     fseek(namesFp,(LONG)20L*(recordNo-1),SEEK_SET);
+     fseek(namesFp,(long)20L*(recordNo-1),SEEK_SET);
 
-    fseek(specFp,(LONG)pBuffers->recordIndexes[recordNo-1],SEEK_SET);
+    fseek(specFp,(long)pBuffers->recordIndexes[recordNo-1],SEEK_SET);
 
     // Complete record read out
 
@@ -867,7 +867,7 @@ RC ReliCCDTrack(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loc
   RECORD_INFO *pRecord;                                                         // pointer to the record part of the engine context
 
   CCD_1024 DetInfo;                                                             // data on the current spectra retrieved from the spectra file
-  UCHAR names[20],                                                              // name of the current spectrum
+  unsigned char names[20],                                                              // name of the current spectrum
         fileName[MAX_PATH_LEN+1];                                               // the complete file name (including path)
   USHORT *ISpectre,*ISpecMax;                                                   // resp. spectrum and SpecMax retrieved from the file
   float *TabTint,*MaxTrk;                                                       // resp. integration time and track data
@@ -912,9 +912,9 @@ RC ReliCCDTrack(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loc
     // Set file pointers
 
     if (namesFp!=NULL)
-     fseek(namesFp,(LONG)20L*(recordNo-1),SEEK_SET);
+     fseek(namesFp,(long)20L*(recordNo-1),SEEK_SET);
 
-    fseek(specFp,(LONG)pBuffers->recordIndexes[recordNo-1],SEEK_SET);
+    fseek(specFp,(long)pBuffers->recordIndexes[recordNo-1],SEEK_SET);
 
     // Complete record read out
 
@@ -1066,7 +1066,7 @@ RC CCD_LoadInstrumental(ENGINE_CONTEXT *pEngineContext)
   BUFFERS *pBuffers;                                                            // pointer to the buffers part of the engine context
   RECORD_INFO *pRecord;                                                         // pointer to the record part of the engine context
 
-  UCHAR fileName[MAX_STR_LEN+1];                                                // the complete name (including path) of the file to load
+  unsigned char fileName[MAX_STR_LEN+1];                                                // the complete name (including path) of the file to load
   RC rc;                                                                        // the return code
 
   // Initializations

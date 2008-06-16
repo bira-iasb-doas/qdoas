@@ -146,7 +146,7 @@ PRJCT_RESULTS_FIELDS PRJCT_resultsAscii[PRJCT_RESULTS_ASCII_MAX]=
 
 typedef struct _NDSC_header
  {
-  UCHAR investigator[20],
+  unsigned char investigator[20],
         instrument[12],
         station[12],
         species[12],
@@ -157,8 +157,8 @@ typedef struct _NDSC_header
 NDSC_HEADER;
 
 PRJCT_RESULTS_FIELDS *outputFields;
-UCHAR **outputColumns;
-UCHAR OUTPUT_refFile[MAX_PATH_LEN+1];
+unsigned char **outputColumns;
+unsigned char OUTPUT_refFile[MAX_PATH_LEN+1];
 INT   OUTPUT_nRec;
 
 typedef struct _outputInfo
@@ -177,7 +177,7 @@ INT outputNbDataSet,outputNbFields,outputNbRecords,outputMaxRecords;
 // GLOBAL DECLARATIONS
 // ===================
 
-UCHAR  OUTPUT_currentSpeFile[MAX_ITEM_TEXT_LEN+1],                              // complete results file name
+unsigned char  OUTPUT_currentSpeFile[MAX_ITEM_TEXT_LEN+1],                              // complete results file name
        OUTPUT_currentAscFile[MAX_ITEM_TEXT_LEN+1];
 
 // ===================
@@ -413,11 +413,11 @@ RC OutputGetAmf(CROSS_RESULTS *pResults,double Zm,double Tm,double *pAmf)
 // RETURN        0 in case of success, any other value in case of error
 // -----------------------------------------------------------------------------
 
-RC OutputReadAmf(UCHAR *symbolName,UCHAR *amfFileName,UCHAR *amfType,INDEX *pIndexAmf)
+RC OutputReadAmf(unsigned char *symbolName,unsigned char *amfFileName,unsigned char *amfType,INDEX *pIndexAmf)
  {
   // Declarations
 
-  UCHAR  fileType,                                                              // file extension and type
+  unsigned char  fileType,                                                              // file extension and type
         *oldColumn,*nextColumn,                                                 // go to the next column in record or the next record
          fileName[MAX_ITEM_TEXT_LEN+1];                                         // the complete AMF file name
   SZ_LEN symbolLength,fileLength,lineLength;                                    // length of symbol and lines strings
@@ -489,8 +489,8 @@ RC OutputReadAmf(UCHAR *symbolName,UCHAR *amfFileName,UCHAR *amfType,INDEX *pInd
          rc=ERROR_SetLast("OutputReadAmf",ERROR_TYPE_FATAL,ERROR_ID_FILE_NOT_FOUND,fileName);
         else if (!(fileLength=STD_FileLength(amfFp)))
          rc=ERROR_SetLast("OutputReadAmf",ERROR_TYPE_FATAL,ERROR_ID_FILE_EMPTY,fileName);
-        else if (((nextColumn=(UCHAR *)MEMORY_AllocBuffer("OutputReadAmf ","nextColumn",fileLength+1,1,0,MEMORY_TYPE_STRING))==NULL) ||
-                 ((oldColumn=(UCHAR *)MEMORY_AllocBuffer("OutputReadAmf ","oldColumn",fileLength+1,1,0,MEMORY_TYPE_STRING))==NULL))
+        else if (((nextColumn=(unsigned char *)MEMORY_AllocBuffer("OutputReadAmf ","nextColumn",fileLength+1,1,0,MEMORY_TYPE_STRING))==NULL) ||
+                 ((oldColumn=(unsigned char *)MEMORY_AllocBuffer("OutputReadAmf ","oldColumn",fileLength+1,1,0,MEMORY_TYPE_STRING))==NULL))
          rc=ERROR_ID_ALLOC;
         else
          {
@@ -734,7 +734,7 @@ void OUTPUT_ResetData(void)
       pResults->StoreSlntCol=
       pResults->StoreSlntErr=
       pResults->StoreVrtCol=
-      pResults->StoreVrtErr=(UCHAR)0;
+      pResults->StoreVrtErr=(unsigned char)0;
    // -------------------------------------------
       pResults->ResCol=(double)0.;
    // -------------------------------------------
@@ -782,7 +782,7 @@ void OUTPUT_ResetData(void)
     MEMORY_ReleaseBuffer("OUTPUT_ResetData",outputFields[indexField].fieldName,outputColumns[indexField]);
 
   memset(outputFields,0,sizeof(PRJCT_RESULTS_FIELDS)*MAX_FIELDS);
-  memset(outputColumns,0,sizeof(UCHAR *)*MAX_FIELDS);
+  memset(outputColumns,0,sizeof(unsigned char *)*MAX_FIELDS);
 
   if (outputRecords!=NULL)
    MEMORY_ReleaseBuffer("OUTPUT_ResetData","outputRecords",outputRecords);
@@ -822,12 +822,12 @@ void OUTPUT_ResetData(void)
 //               format       the format string to use to output the data
 // -----------------------------------------------------------------------------
 
-void OutputRegister(UCHAR *titlePart1,UCHAR *titlePart2,UCHAR *titlePart3,INT fieldType,INT fieldSize,
-                    INT fieldDim1,INT fieldDim2,UCHAR *format)
+void OutputRegister(unsigned char *titlePart1,unsigned char *titlePart2,unsigned char *titlePart3,INT fieldType,INT fieldSize,
+                    INT fieldDim1,INT fieldDim2,unsigned char *format)
  {
   // Declarations
 
-  UCHAR title[MAX_STR_LEN+1];
+  unsigned char title[MAX_STR_LEN+1];
   PRJCT_RESULTS_FIELDS *pField;
 
   if (outputNbFields<MAX_FIELDS)
@@ -857,7 +857,7 @@ void OutputRegisterFluxes(ENGINE_CONTEXT *pEngineContext)
  {
   // Declarations
 
-  UCHAR  columnTitle[MAX_ITEM_NAME_LEN+1],
+  unsigned char  columnTitle[MAX_ITEM_NAME_LEN+1],
         *ptrOld,*ptrNew;
 
   // Initializations
@@ -997,7 +997,7 @@ void OutputRegisterCalib(INDEX indexFenoK)
  {
   // Declarations
 
-  UCHAR                windowName[MAX_ITEM_NAME_LEN+1],                         // the name of the current spectral window
+  unsigned char                windowName[MAX_ITEM_NAME_LEN+1],                         // the name of the current spectral window
                        symbolName[MAX_ITEM_NAME_LEN+1];                         // the name of a symbol
   FENO                *pTabFeno;
   CROSS_REFERENCE     *TabCross;
@@ -1080,7 +1080,7 @@ void OutputRegisterParam(ENGINE_CONTEXT *pEngineContext,INT hiddenFlag)
  {
   // Declarations
 
-  UCHAR                windowName[MAX_ITEM_NAME_LEN+1],                         // the name of the current spectral window
+  unsigned char                windowName[MAX_ITEM_NAME_LEN+1],                         // the name of the current spectral window
                        symbolName[MAX_ITEM_NAME_LEN+1];                         // the name of a symbol
   FENO                *pTabFeno;
   CROSS_REFERENCE     *TabCross;
@@ -2096,13 +2096,13 @@ void OutputSaveRecord(ENGINE_CONTEXT *pEngineContext,INT hiddenFlag)
 // OUTPUT        outputFileName, the name of the output file
 // -----------------------------------------------------------------------------
 
-void OutputBuildSiteFileName(ENGINE_CONTEXT *pEngineContext,UCHAR *outputFileName,INT year,INT month,INDEX indexSite,INT ascFlag)
+void OutputBuildSiteFileName(ENGINE_CONTEXT *pEngineContext,unsigned char *outputFileName,INT year,INT month,INDEX indexSite,INT ascFlag)
  {
   // Declarations
 
   PROJECT             *pProject;                                                // pointer to project data
   PRJCT_RESULTS_ASCII *pResults;                                                // pointer to results part of project
-  UCHAR               *fileNamePtr;                                             // character pointers used for building output file name
+  unsigned char               *fileNamePtr;                                             // character pointers used for building output file name
 
   // Initializations
 
@@ -2119,8 +2119,8 @@ void OutputBuildSiteFileName(ENGINE_CONTEXT *pEngineContext,UCHAR *outputFileNam
    fileNamePtr++;
 
   sprintf(fileNamePtr,"%s%04d%02d.%s",
-         (indexSite!=ITEM_NONE)?(UCHAR *)SITES_itemList[indexSite].abbrev:(UCHAR *)"XX",year,month,
-	 (UCHAR *)((ascFlag)?"ASC":"BIN"));
+         (indexSite!=ITEM_NONE)?(unsigned char *)SITES_itemList[indexSite].abbrev:(unsigned char *)"XX",year,month,
+	 (unsigned char *)((ascFlag)?"ASC":"BIN"));
  }
 
 // -----------------------------------------------------------------------------
@@ -2137,14 +2137,14 @@ void OutputBuildSiteFileName(ENGINE_CONTEXT *pEngineContext,UCHAR *outputFileNam
 //               ERROR_ID_NO otherwise
 // -----------------------------------------------------------------------------
 
-RC OutputBuildFileName(ENGINE_CONTEXT *pEngineContext,UCHAR *outputFileName,INT ascFlag)
+RC OutputBuildFileName(ENGINE_CONTEXT *pEngineContext,unsigned char *outputFileName,INT ascFlag)
  {
   // Declarations
 
   PROJECT             *pProject;                                                // pointer to project data
   PRJCT_RESULTS_ASCII *pResults;                                                // pointer to results part of project
   OUTPUT_INFO         *pOutput;
-  UCHAR               *fileNamePtr,                                             // character pointers used for building output file name
+  unsigned char               *fileNamePtr,                                             // character pointers used for building output file name
                        tmpBuffer[MAX_ITEM_TEXT_LEN+1],
                       *ptr;
   RC                   rc;
@@ -2384,7 +2384,7 @@ void OutputAscPrintTitles(ENGINE_CONTEXT *pEngineContext,FILE *fp)
 //               nbRecords       the number of records to save.
 // -----------------------------------------------------------------------------
 
-void OutputAscPrintDataSet(FILE *fp,UCHAR **outputData,INT nbRecords)
+void OutputAscPrintDataSet(FILE *fp,unsigned char **outputData,INT nbRecords)
  {
   // Declarations
 
@@ -2440,7 +2440,7 @@ void OutputAscPrintDataSet(FILE *fp,UCHAR **outputData,INT nbRecords)
 //               outputData      all the data to save;
 // -----------------------------------------------------------------------------
 
-void OutputBinWriteFields(FILE *fp,UCHAR **outputData)
+void OutputBinWriteFields(FILE *fp,unsigned char **outputData)
  {
  	// Declarations
 
@@ -2471,7 +2471,7 @@ void OutputBinWriteFields(FILE *fp,UCHAR **outputData)
 //               ERROR_ID_NO if both are consisten
 // -----------------------------------------------------------------------------
 
-RC OutputBinVerifyFields(UCHAR *outputFileName,FILE *fp)
+RC OutputBinVerifyFields(unsigned char *outputFileName,FILE *fp)
  {
  	// Declarations
 
@@ -2518,7 +2518,7 @@ RC OutputBinVerifyFields(UCHAR *outputFileName,FILE *fp)
 //               nbRecords       the number of records to save.
 // -----------------------------------------------------------------------------
 
-RC OutputBinWriteDataSet(FILE *fp,UCHAR **outputData,INT nbRecords)
+RC OutputBinWriteDataSet(FILE *fp,unsigned char **outputData,INT nbRecords)
  {
   // Declarations
 
@@ -2719,12 +2719,12 @@ RC OutputBinWriteDataSet(FILE *fp,UCHAR **outputData,INT nbRecords)
 // RETURN        pointer to the output file
 // -----------------------------------------------------------------------------
 
-FILE *OutputFileOpen(ENGINE_CONTEXT *pEngineContext,UCHAR *outputFileName,INT ascFlag)
+FILE *OutputFileOpen(ENGINE_CONTEXT *pEngineContext,unsigned char *outputFileName,INT ascFlag)
  {
   // Declarations
 
   FILE *fp;
-  UCHAR r[4],w[4],a[4];
+  unsigned char r[4],w[4],a[4];
   INT newFile;
   INT corrupted;
 
@@ -2804,16 +2804,16 @@ RC OUTPUT_FlushBuffers(ENGINE_CONTEXT *pEngineContext)
  {
   // Declarations
 
-  UCHAR outputFileName[MAX_ITEM_TEXT_LEN+1],
+  unsigned char outputFileName[MAX_ITEM_TEXT_LEN+1],
         outputAutomaticFileName[MAX_ITEM_TEXT_LEN+1];
   FILE *outputFp;
-  UCHAR **outputData;
+  unsigned char **outputData;
 
   OBSERVATION_SITE *pSite;
   PROJECT             *pProject;                     // pointer to project data
   PRJCT_RESULTS_FIELDS *pField;
   PRJCT_RESULTS_ASCII *pResults;                     // pointer to results part of project
-  UCHAR               *ptr;
+  unsigned char               *ptr;
   INDEX indexSite,indexField,firstRecordField,indexRecord,oldYear,oldMonth,oldRecord;
   INT fieldDim2;
   INT automatic,nbRecords;
@@ -2858,7 +2858,7 @@ RC OUTPUT_FlushBuffers(ENGINE_CONTEXT *pEngineContext)
       else
        OutputAscPrintDataSet(outputFp,outputColumns,outputNbRecords);
      }
-    else if ((outputData=(UCHAR **)MEMORY_AllocBuffer("OUTPUT_FlushBuffers","outputData",MAX_FIELDS,sizeof(UCHAR *),0,MEMORY_TYPE_PTR))==NULL)
+    else if ((outputData=(unsigned char **)MEMORY_AllocBuffer("OUTPUT_FlushBuffers","outputData",MAX_FIELDS,sizeof(unsigned char *),0,MEMORY_TYPE_PTR))==NULL)
      rc=ERROR_SetLast("OUTPUT_FlushBuffers",ERROR_TYPE_FATAL,ERROR_ID_ALLOC,"outputData");
     else
      {
@@ -2866,14 +2866,14 @@ RC OUTPUT_FlushBuffers(ENGINE_CONTEXT *pEngineContext)
     // FULL AUTOMATIC MODE
     // -------------------
 
-     	memset(outputData,0,sizeof(UCHAR *)*MAX_FIELDS);
+     	memset(outputData,0,sizeof(unsigned char *)*MAX_FIELDS);
 
      	for (firstRecordField=0;(firstRecordField<outputNbFields) && (outputFields[firstRecordField].fieldDim1!=ITEM_NONE) && !rc;firstRecordField++)
      	 {
      	 	pField=&outputFields[firstRecordField];
      	 	fieldDim2=(pField->fieldDim2!=ITEM_NONE)?pField->fieldDim2:1;
 
-     	  if ((outputData[firstRecordField]=(UCHAR *)MEMORY_AllocBuffer("OUTPUT_FlushBuffers",pField->fieldName,
+     	  if ((outputData[firstRecordField]=(unsigned char *)MEMORY_AllocBuffer("OUTPUT_FlushBuffers",pField->fieldName,
      	                                             pField->fieldDim1*fieldDim2,pField->fieldSize,0,pField->fieldType))==NULL)
      	   rc=ERROR_SetLast("OUTPUT_FlushBuffers",ERROR_TYPE_FATAL,ERROR_ID_ALLOC,"outputData[firstRecordField]");
      	 }
@@ -2881,7 +2881,7 @@ RC OUTPUT_FlushBuffers(ENGINE_CONTEXT *pEngineContext)
      	for (indexField=firstRecordField;(indexField<outputNbFields) && !rc;indexField++)
      	 {
      	 	pField=&outputFields[indexField];
-     	  if ((outputData[indexField]=(UCHAR *)MEMORY_AllocBuffer("OUTPUT_FlushBuffers",pField->fieldName,outputNbRecords,pField->fieldSize,0,pField->fieldType))==NULL)
+     	  if ((outputData[indexField]=(unsigned char *)MEMORY_AllocBuffer("OUTPUT_FlushBuffers",pField->fieldName,outputNbRecords,pField->fieldSize,0,pField->fieldType))==NULL)
      	   rc=ERROR_SetLast("OUTPUT_FlushBuffers",ERROR_TYPE_FATAL,ERROR_ID_ALLOC,"outputData[indexField]");
      	 }
 
@@ -3140,7 +3140,7 @@ RC OUTPUT_LocalAlloc(ENGINE_CONTEXT *pEngineContext)
        if (outputColumns[indexField]!=NULL)
         MEMORY_ReleaseBuffer("OUTPUT_LocalAlloc",outputFields[indexField].fieldName,outputColumns[indexField]);
 
-      memset(outputColumns,0,sizeof(UCHAR *)*MAX_FIELDS);
+      memset(outputColumns,0,sizeof(unsigned char *)*MAX_FIELDS);
       outputRecords=NULL;
       outputMaxRecords=0;
      }
@@ -3167,7 +3167,7 @@ RC OUTPUT_LocalAlloc(ENGINE_CONTEXT *pEngineContext)
            n=pField->fieldDim1*pField->fieldDim2;
 
           if ((outputMaxRecords<newRecordNumber) &&
-             ((outputColumns[indexField]=(UCHAR *)MEMORY_AllocBuffer("OUTPUT_LocalAlloc","outputColumns",n,pField->fieldSize,0,pField->fieldType))==NULL))
+             ((outputColumns[indexField]=(unsigned char *)MEMORY_AllocBuffer("OUTPUT_LocalAlloc","outputColumns",n,pField->fieldSize,0,pField->fieldType))==NULL))
 
            rc=ERROR_ID_ALLOC;
 
@@ -3238,7 +3238,7 @@ RC OUTPUT_Alloc(void)
   // Allocate buffers resp. for data to output
 
   if (((outputFields=(PRJCT_RESULTS_FIELDS *)MEMORY_AllocBuffer("OUTPUT_Alloc","outputFields",MAX_FIELDS,sizeof(PRJCT_RESULTS_FIELDS),0,MEMORY_TYPE_STRUCT))==NULL) ||
-      ((outputColumns=(UCHAR **)MEMORY_AllocBuffer("OUTPUT_Alloc","outputColumns",MAX_FIELDS,sizeof(UCHAR *),0,MEMORY_TYPE_PTR))==NULL) ||
+      ((outputColumns=(unsigned char **)MEMORY_AllocBuffer("OUTPUT_Alloc","outputColumns",MAX_FIELDS,sizeof(unsigned char *),0,MEMORY_TYPE_PTR))==NULL) ||
       ((OUTPUT_AmfSpace=(AMF_SYMBOL *)MEMORY_AllocBuffer("OUTPUT_Alloc ","OUTPUT_AmfSpace",MAX_SYMB,sizeof(AMF_SYMBOL),0,MEMORY_TYPE_STRUCT))==NULL))
 
    rc=ERROR_ID_ALLOC;
@@ -3246,7 +3246,7 @@ RC OUTPUT_Alloc(void)
   else
    {
     memset(outputFields,0,sizeof(PRJCT_RESULTS_FIELDS)*MAX_FIELDS);
-    memset(outputColumns,0,sizeof(UCHAR *)*MAX_FIELDS);
+    memset(outputColumns,0,sizeof(unsigned char *)*MAX_FIELDS);
 
     outputNbDataSet=0;
     outputNbFields=0;

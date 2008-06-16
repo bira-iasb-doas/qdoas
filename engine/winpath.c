@@ -117,13 +117,13 @@
 // GLOBAL VARIABLES
 // ================
 
-UCHAR (*PATH_fileNamesShort)[MAX_STR_SHORT_LEN+1];                              // list of subdirectories and files found in a specified directory
+unsigned char (*PATH_fileNamesShort)[MAX_STR_SHORT_LEN+1];                              // list of subdirectories and files found in a specified directory
 INT     PATH_fileNumber;                                                        // number of files in previous list
 INT     PATH_dirNumber;                                                         // number of subdirectories in previous list
 INT     PATH_mfcFlag,PATH_UofTFlag;
-UCHAR   PATH_fileMax[MAX_STR_SHORT_LEN+1];
-UCHAR   PATH_fileMin[MAX_STR_SHORT_LEN+1];
-UCHAR   PATH_fileSpectra[MAX_STR_SHORT_LEN+1];                                  // current spectra file name
+unsigned char   PATH_fileMax[MAX_STR_SHORT_LEN+1];
+unsigned char   PATH_fileMin[MAX_STR_SHORT_LEN+1];
+unsigned char   PATH_fileSpectra[MAX_STR_SHORT_LEN+1];                                  // current spectra file name
 
 // QDOAS ??? // ================
 // QDOAS ??? // STATIC VARIABLES
@@ -155,11 +155,11 @@ UCHAR   PATH_fileSpectra[MAX_STR_SHORT_LEN+1];                                  
 // QDOAS ???
 // QDOAS ??? #if defined(__WINDOAS_WIN_) && __WINDOAS_WIN_
 // QDOAS ???
-// QDOAS ??? void PATH_GetFilesList(UCHAR *path,UCHAR *filter,UCHAR dirFlag)
+// QDOAS ??? void PATH_GetFilesList(unsigned char *path,unsigned char *filter,unsigned char dirFlag)
 // QDOAS ???  {
 // QDOAS ???   // Declarations
 // QDOAS ???
-// QDOAS ???   UCHAR tmpBufferShort[MAX_STR_SHORT_LEN+1];     // temporary buffer
+// QDOAS ???   unsigned char tmpBufferShort[MAX_STR_SHORT_LEN+1];     // temporary buffer
 // QDOAS ???   WIN32_FIND_DATA fileInfo;                      // structure returned by FindFirstFile and FindNextFile APIs
 // QDOAS ???   HANDLE hDir;                                   // handle to use with FindFirstFile and FindNextFile APIs
 // QDOAS ???   RC rc;                                         // code returned by FindNextFile API
@@ -172,7 +172,7 @@ UCHAR   PATH_fileSpectra[MAX_STR_SHORT_LEN+1];                                  
 // QDOAS ???   INT nFile,nOther;                              // number of items (subdirectories or files according to dirFlag) in buffer
 // QDOAS ???   int uofTrecordNo,uofTdayNumber,uofTYear,
 // QDOAS ???       uofTrecordNo_old,uofTdayNumber_old,uofTYear_old;
-// QDOAS ???   UCHAR *ptr,tmp1[3],tmp2[5];
+// QDOAS ???   unsigned char *ptr,tmp1[3],tmp2[5];
 // QDOAS ???
 // QDOAS ???   // Initializations
 // QDOAS ???
@@ -306,16 +306,16 @@ UCHAR   PATH_fileSpectra[MAX_STR_SHORT_LEN+1];                                  
 // QDOAS ???
 // QDOAS ??? #else
 // QDOAS ???
-// QDOAS ??? void PATH_GetFilesList(UCHAR *path,UCHAR *filter,UCHAR dirFlag)
+// QDOAS ??? void PATH_GetFilesList(unsigned char *path,unsigned char *filter,unsigned char dirFlag)
 // QDOAS ???  {
 // QDOAS ???   // Declarations
 // QDOAS ???
-// QDOAS ???   UCHAR tmpBufferShort[MAX_STR_SHORT_LEN+1];                                    // temporary buffer
+// QDOAS ???   unsigned char tmpBufferShort[MAX_STR_SHORT_LEN+1];                                    // temporary buffer
 // QDOAS ???   struct dirent *fileInfo;                                                      // structure returned by FindFirstFile and FindNextFile APIs
 // QDOAS ???   DIR *hDir;                                                                    // handle to use with FindFirstFile and FindNextFile APIs
 // QDOAS ???   RC rc;                                                                        // code returned by FindNextFile API
 // QDOAS ???   INT fileCount;
-// QDOAS ???   UCHAR tmpdir[MAX_STR_SHORT_LEN+1];
+// QDOAS ???   unsigned char tmpdir[MAX_STR_SHORT_LEN+1];
 // QDOAS ???
 // QDOAS ???   INDEX indexFile,                                                              // index of new item to insert (subdirectory or file according to dirFlag) in buffer
 // QDOAS ???         firstFile,                                                              // index of first item (subdirectory or file according to dirFlag) in buffer
@@ -324,8 +324,8 @@ UCHAR   PATH_fileSpectra[MAX_STR_SHORT_LEN+1];                                  
 // QDOAS ???   INT nFile,nOther;                                                             // number of items (subdirectories or files according to dirFlag) in buffer
 // QDOAS ???   int uofTrecordNo,uofTdayNumber,uofTYear,
 // QDOAS ???       uofTrecordNo_old,uofTdayNumber_old,uofTYear_old;
-// QDOAS ???   UCHAR *ptr,tmp1[3],tmp2[5];
-// QDOAS ???   UCHAR *ptr1,*ptr2;
+// QDOAS ???   unsigned char *ptr,tmp1[3],tmp2[5];
+// QDOAS ???   unsigned char *ptr1,*ptr2;
 // QDOAS ???
 // QDOAS ???   // Initializations
 // QDOAS ???
@@ -362,14 +362,14 @@ UCHAR   PATH_fileSpectra[MAX_STR_SHORT_LEN+1];                                  
 // QDOAS ???            (!dirFlag && ( STD_IsDir(tmpdir) == 0 ) &&
 // QDOAS ???            ( ptr1 != NULL ) && ( ptr2 != NULL ) &&
 // QDOAS ???            ( strlen(ptr1) == strlen(ptr2) ) && !STD_Stricmp(ptr1,ptr2) ) ) &&
-// QDOAS ???            ((ULONG)nFile+nOther<SYS_path) )
+// QDOAS ???            ((unsigned long)nFile+nOther<SYS_path) )
 // QDOAS ???     {
 // QDOAS ???     	uofTrecordNo=ITEM_NONE;
 // QDOAS ???
 // QDOAS ???      if ((PATH_UofTFlag) && ((ptr=strrchr(fileInfo->d_name,'.'))!=NULL))
 // QDOAS ???       {
 // QDOAS ???      	 sscanf(fileInfo->d_name,"%2c%02d%4c.%03d",tmp1,&uofTYear,tmp2,&uofTdayNumber);
-// QDOAS ???      	 uofTrecordNo=((UCHAR *)strchr(UOFT_figures,tmp2[2])-(UCHAR *)UOFT_figures)*UOFT_BASE+((UCHAR *)strchr(UOFT_figures,tmp2[3])-(UCHAR *)UOFT_figures);
+// QDOAS ???      	 uofTrecordNo=((unsigned char *)strchr(UOFT_figures,tmp2[2])-(unsigned char *)UOFT_figures)*UOFT_BASE+((unsigned char *)strchr(UOFT_figures,tmp2[3])-(unsigned char *)UOFT_figures);
 // QDOAS ???      	}
 // QDOAS ???
 // QDOAS ???      // Insert a new item (subdirectory or file according to dirFlag) in buffer
@@ -403,7 +403,7 @@ UCHAR   PATH_fileSpectra[MAX_STR_SHORT_LEN+1];                                  
 // QDOAS ???          for (indexFile=firstFile-1;indexFile>=lastFile;indexFile--)            // for recall, browse buffer from bottom because
 // QDOAS ???           {
 // QDOAS ???        	   sscanf(PATH_fileNamesShort[indexFile],"%2c%02d%4c.%03d",tmp1,&uofTYear_old,tmp2,&uofTdayNumber_old);
-// QDOAS ???        	   uofTrecordNo_old=((UCHAR *)strchr(UOFT_figures,tmp2[2])-(UCHAR *)UOFT_figures)*UOFT_BASE+((UCHAR *)strchr(UOFT_figures,tmp2[3])-(UCHAR *)UOFT_figures);
+// QDOAS ???        	   uofTrecordNo_old=((unsigned char *)strchr(UOFT_figures,tmp2[2])-(unsigned char *)UOFT_figures)*UOFT_BASE+((unsigned char *)strchr(UOFT_figures,tmp2[3])-(unsigned char *)UOFT_figures);
 // QDOAS ???
 // QDOAS ???        	   if ((uofTYear_old>uofTYear) || ((uofTYear_old==uofTYear) && (uofTdayNumber_old>=uofTdayNumber)))
 // QDOAS ???        	    break;
@@ -481,7 +481,7 @@ UCHAR   PATH_fileSpectra[MAX_STR_SHORT_LEN+1];                                  
 // QDOAS ??? // RETURN        index of new item in project tree
 // QDOAS ??? // -----------------------------------------------------------------------------
 // QDOAS ???
-// QDOAS ??? INDEX PATH_InsertFolder(UCHAR *path,UCHAR *filter,UCHAR folderFlag,INDEX indexParent)
+// QDOAS ??? INDEX PATH_InsertFolder(unsigned char *path,unsigned char *filter,unsigned char folderFlag,INDEX indexParent)
 // QDOAS ???  {
 // QDOAS ???   // Declarations
 // QDOAS ???
@@ -491,12 +491,12 @@ UCHAR   PATH_fileSpectra[MAX_STR_SHORT_LEN+1];                                  
 // QDOAS ???   #else
 // QDOAS ???   struct dirent *fileInfo;
 // QDOAS ???   DIR *hDir;
-// QDOAS ???   UCHAR tmpdir[MAX_STR_LEN+1];
+// QDOAS ???   unsigned char tmpdir[MAX_STR_LEN+1];
 // QDOAS ???   #endif
 // QDOAS ???   SZ_LEN strLength;                                                             // string length
 // QDOAS ???   RC rc;                                                                        // code returned by FindNextFile API
 // QDOAS ???
-// QDOAS ???   UCHAR fileNameShort[MAX_STR_SHORT_LEN+1],                                     // temporary buffer for building complete file names
+// QDOAS ???   unsigned char fileNameShort[MAX_STR_SHORT_LEN+1],                                     // temporary buffer for building complete file names
 // QDOAS ???        *ptr;                                                                    // pointer to filename part in previous buffer
 // QDOAS ???   INDEX indexItem;                                                              // index of new item in project tree
 // QDOAS ???
@@ -620,7 +620,7 @@ UCHAR   PATH_fileSpectra[MAX_STR_SHORT_LEN+1];                                  
 // QDOAS ???
 // QDOAS ???   // Buffer allocation
 // QDOAS ???
-// QDOAS ???   if ((PATH_fileNamesShort=(UCHAR(*)[MAX_STR_SHORT_LEN+1])MEMORY_AllocBuffer("PATH_Alloc ","PATH_fileNamesShort",SYS_path,(MAX_STR_SHORT_LEN+1),0,MEMORY_TYPE_STRING))==NULL)
+// QDOAS ???   if ((PATH_fileNamesShort=(unsigned char(*)[MAX_STR_SHORT_LEN+1])MEMORY_AllocBuffer("PATH_Alloc ","PATH_fileNamesShort",SYS_path,(MAX_STR_SHORT_LEN+1),0,MEMORY_TYPE_STRING))==NULL)
 // QDOAS ???    rc=ERROR_ID_ALLOC;
 // QDOAS ???
 // QDOAS ???   // Return
@@ -659,7 +659,7 @@ UCHAR   PATH_fileSpectra[MAX_STR_SHORT_LEN+1];                                  
 // QDOAS ??? // NB : image list is the same as one used by project tree (open/close folders image, blank image)
 // QDOAS ??? // -----------------------------------------------------------------------------
 // QDOAS ???
-// QDOAS ??? void PathInsertListViewItem(HWND hwndList,INDEX indexItem,UCHAR *textItem,INDEX indexImage)
+// QDOAS ??? void PathInsertListViewItem(HWND hwndList,INDEX indexItem,unsigned char *textItem,INDEX indexImage)
 // QDOAS ???  {
 // QDOAS ???   // Declaration
 // QDOAS ???
@@ -696,7 +696,7 @@ UCHAR   PATH_fileSpectra[MAX_STR_SHORT_LEN+1];                                  
 // QDOAS ???   INDEX indexItem,                                                              // index of new item in ListView control
 // QDOAS ???         indexFile,                                                              // browse items in subdirectories and files buffer
 // QDOAS ???         lastFile;                                                               // index of last item in subdirectories and files buffer
-// QDOAS ???   UCHAR *ptr;                                                                   // pointer to folder name part in output path
+// QDOAS ???   unsigned char *ptr;                                                                   // pointer to folder name part in output path
 // QDOAS ???
 // QDOAS ???   // Initializations
 // QDOAS ???
@@ -727,8 +727,8 @@ UCHAR   PATH_fileSpectra[MAX_STR_SHORT_LEN+1];                                  
 // QDOAS ???
 // QDOAS ???     lastFile=SYS_path-(PATH_fileNumber+PATH_dirNumber);
 // QDOAS ???     for (indexFile=SYS_path-1,indexItem=0;indexFile>=lastFile;indexFile--)
-// QDOAS ???      PathInsertListViewItem(hwndList,indexItem++,(UCHAR *)PATH_fileNamesShort[indexFile],
-// QDOAS ???                            ((ULONG)indexFile>=SYS_path-PATH_dirNumber)?TREE_closeImageIndex:TREE_blankImageIndex);
+// QDOAS ???      PathInsertListViewItem(hwndList,indexItem++,(unsigned char *)PATH_fileNamesShort[indexFile],
+// QDOAS ???                            ((unsigned long)indexFile>=SYS_path-PATH_dirNumber)?TREE_closeImageIndex:TREE_blankImageIndex);
 // QDOAS ???    }
 // QDOAS ???  }
 // QDOAS ???
@@ -741,11 +741,11 @@ UCHAR   PATH_fileSpectra[MAX_STR_SHORT_LEN+1];                                  
 // QDOAS ??? //               command  : browsing command from contextual menu.
 // QDOAS ??? // -----------------------------------------------------------------------------
 // QDOAS ???
-// QDOAS ??? void PathBrowseSpectra(HWND hwndPath,ULONG command)
+// QDOAS ??? void PathBrowseSpectra(HWND hwndPath,unsigned long command)
 // QDOAS ???  {
 // QDOAS ???   // Declarations
 // QDOAS ???
-// QDOAS ???   UCHAR   itemTextShort[MAX_STR_SHORT_LEN+1];                                   // text of selected item in ListView
+// QDOAS ???   unsigned char   itemTextShort[MAX_STR_SHORT_LEN+1];                                   // text of selected item in ListView
 // QDOAS ???   INDEX   indexItem;                                                            // index of selected item in ListView
 // QDOAS ???   HWND    hwndList,hwndTree;                                                    // resp. handles of ListView and project tree
 // QDOAS ???   INT     fileNumber;                                                           // number of selected items
@@ -771,7 +771,7 @@ UCHAR   PATH_fileSpectra[MAX_STR_SHORT_LEN+1];                                  
 // QDOAS ???     // Browse selected items
 // QDOAS ???
 // QDOAS ???     while (((indexItem=lvi.iItem=ListView_GetNextItem(hwndList,indexItem,LVNI_SELECTED))!=ITEM_NONE) &&
-// QDOAS ???             ((ULONG)fileNumber<SYS_path))
+// QDOAS ???             ((unsigned long)fileNumber<SYS_path))
 // QDOAS ???
 // QDOAS ???      if (ListView_GetItem(hwndList,&lvi) && strlen(itemTextShort) && (lvi.iImage==TREE_blankImageIndex))
 // QDOAS ???       {
@@ -917,7 +917,7 @@ UCHAR   PATH_fileSpectra[MAX_STR_SHORT_LEN+1];                                  
 // QDOAS ???   // Declaration
 // QDOAS ???
 // QDOAS ???   INDEX indexProject;
-// QDOAS ???   UCHAR *ptr;
+// QDOAS ???   unsigned char *ptr;
 // QDOAS ???
 // QDOAS ???   // Initializations
 // QDOAS ???
@@ -1024,7 +1024,7 @@ UCHAR   PATH_fileSpectra[MAX_STR_SHORT_LEN+1];                                  
 // QDOAS ???
 // QDOAS ???   ITEMIDLIST *pRc;
 // QDOAS ???   BROWSEINFO  browseInfo;
-// QDOAS ???   UCHAR       title[MAX_STR_SHORT_LEN+1];
+// QDOAS ???   unsigned char       title[MAX_STR_SHORT_LEN+1];
 // QDOAS ???
 // QDOAS ???   // Initialize browseInfo structure
 // QDOAS ???
@@ -1105,11 +1105,11 @@ UCHAR   PATH_fileSpectra[MAX_STR_SHORT_LEN+1];                                  
 // QDOAS ???     // Insert item in RAW spectra files list
 // QDOAS ???
 // QDOAS ???     if ((indexItem=PATH_InsertFolder(pathFilesFilter.outputPathShort,pathFilesFilter.filterShort,
-// QDOAS ???                             (UCHAR)((pathFilesFilter.useSubfolders!=0)?RAW_FOLDER_TYPE_PATHSUB:RAW_FOLDER_TYPE_PATH),
+// QDOAS ???                             (unsigned char)((pathFilesFilter.useSubfolders!=0)?RAW_FOLDER_TYPE_PATHSUB:RAW_FOLDER_TYPE_PATH),
 // QDOAS ???                                      pathIndexParent))!=ITEM_NONE)
 // QDOAS ???
 // QDOAS ???  /*   if ((indexItem=PATH_InsertFolder(STD_STD_Strlwr(pathFilesFilter.outputPathShort),STD_STD_Strlwr(pathFilesFilter.filterShort),
-// QDOAS ???                                     (pathFilesFilter.useSubfolders!=0)?(UCHAR)RAW_FOLDER_TYPE_PATHSUB:(UCHAR)RAW_FOLDER_TYPE_PATH,
+// QDOAS ???                                     (pathFilesFilter.useSubfolders!=0)?(unsigned char)RAW_FOLDER_TYPE_PATHSUB:(unsigned char)RAW_FOLDER_TYPE_PATH,
 // QDOAS ???                                      pathIndexParent))!=ITEM_NONE) */
 // QDOAS ???
 // QDOAS ???      TREE_SortChildNodes(pathHwndTree,pathIndexParent); // sort child nodes if any
@@ -1146,9 +1146,9 @@ UCHAR   PATH_fileSpectra[MAX_STR_SHORT_LEN+1];                                  
 // QDOAS ??? #endif
 // QDOAS ??? LRESULT CALLBACK PathCommand(HWND hwndPath,UINT msg,WPARAM mp1,LPARAM mp2)
 // QDOAS ???  {
-// QDOAS ???   ULONG command;
+// QDOAS ???   unsigned long command;
 // QDOAS ???
-// QDOAS ???   switch((command=(ULONG)GET_WM_COMMAND_ID(mp1,mp2)))
+// QDOAS ???   switch((command=(unsigned long)GET_WM_COMMAND_ID(mp1,mp2)))
 // QDOAS ???    {
 // QDOAS ???  // ---------------------------------------------------------------------------
 // QDOAS ???     case PATH_BROWSE :                                                          // browse folders
@@ -1197,7 +1197,7 @@ UCHAR   PATH_fileSpectra[MAX_STR_SHORT_LEN+1];                                  
 // QDOAS ???  {
 // QDOAS ???   // Declarations
 // QDOAS ???
-// QDOAS ???   UCHAR  itemTextShort[MAX_STR_SHORT_LEN+1],                                    // text of selected item
+// QDOAS ???   unsigned char  itemTextShort[MAX_STR_SHORT_LEN+1],                                    // text of selected item
 // QDOAS ???         *ptr;                                                                   // pointer to file name part of selected item
 // QDOAS ???   HWND hwndList;                                                                // handle of ListView control
 // QDOAS ???   LV_ITEM lvi;                                                                  // attributes of the selected item in ListView control
@@ -1237,7 +1237,7 @@ UCHAR   PATH_fileSpectra[MAX_STR_SHORT_LEN+1];                                  
 // QDOAS ???
 // QDOAS ???         else
 // QDOAS ???          {
-// QDOAS ???          	UCHAR pathSep[2];
+// QDOAS ???          	unsigned char pathSep[2];
 // QDOAS ???
 // QDOAS ???           pathSep[0]=PATH_SEP;
 // QDOAS ???           pathSep[1]='\0';

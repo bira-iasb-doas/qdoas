@@ -53,7 +53,7 @@ INT  NDET;                                                                      
 
 ENGINE_CONTEXT engineContext,                                                   // engine context used to make the interface between the mediator and the engine
                ENGINE_contextRef;                                               // engine context used for the automatic search of the reference spectrum
-UCHAR ENGINE_dbgFile[MAX_PATH_LEN+1];
+unsigned char ENGINE_dbgFile[MAX_PATH_LEN+1];
 double ENGINE_localNoon;
 
 // -----------------------------------------------------------------------------
@@ -162,8 +162,8 @@ RC EngineCopyContext(ENGINE_CONTEXT *pEngineContextTarget,ENGINE_CONTEXT *pEngin
       ((pBuffersSource->specMax!=NULL) && (pBuffersTarget->specMax==NULL) &&
       ((pBuffersTarget->specMax=(double *)MEMORY_AllocDVector("EngineCopyContext","specMax",0,NDET-1))==NULL)) ||
       ((pBuffersSource->recordIndexes!=NULL) && (pBuffersTarget->recordIndexes==NULL) &&
-      ((pBuffersTarget->recordIndexes=(ULONG *)MEMORY_AllocBuffer("THRD_CopySpecInfo","recordIndexes",
-       (pEngineContextTarget->recordIndexesSize=pEngineContextSource->recordIndexesSize),sizeof(ULONG),0,MEMORY_TYPE_LONG))==NULL)) ||
+      ((pBuffersTarget->recordIndexes=(unsigned long *)MEMORY_AllocBuffer("THRD_CopySpecInfo","recordIndexes",
+       (pEngineContextTarget->recordIndexesSize=pEngineContextSource->recordIndexesSize),sizeof(unsigned long),0,MEMORY_TYPE_LONG))==NULL)) ||
       ((pEngineContextTarget->recordInfo.ccd.vip.matrix!=NULL) && (pEngineContextTarget->recordInfo.ccd.vip.matrix==NULL) &&
       ((rc=MATRIX_Copy(&pEngineContextTarget->recordInfo.ccd.vip,&pEngineContextSource->recordInfo.ccd.vip,"EngineCopyContext"))!=ERROR_ID_NO)) ||
       ((pEngineContextTarget->recordInfo.ccd.dnl.matrix!=NULL) && (pEngineContextTarget->recordInfo.ccd.dnl.matrix==NULL) &&
@@ -198,7 +198,7 @@ RC EngineCopyContext(ENGINE_CONTEXT *pEngineContextTarget,ENGINE_CONTEXT *pEngin
     if ((pBuffersTarget->specMax!=NULL) && (pBuffersSource->specMax!=NULL))
      memcpy(pBuffersTarget->specMax,pBuffersSource->specMax,sizeof(double)*NDET);
     if ((pBuffersTarget->recordIndexes!=NULL) && (pBuffersSource->recordIndexes!=NULL))
-     memcpy(pBuffersTarget->recordIndexes,pBuffersSource->recordIndexes,sizeof(ULONG)*pEngineContextSource->recordIndexesSize);
+     memcpy(pBuffersTarget->recordIndexes,pBuffersSource->recordIndexes,sizeof(unsigned long)*pEngineContextSource->recordIndexesSize);
 
     // Other structures
 
@@ -252,7 +252,7 @@ RC EngineSetProject(ENGINE_CONTEXT *pEngineContext)
  	double *instrDeriv2;                                                          // second derivative for the instrument function
  	RC rc;                                                                        // return code
  	FILE *fp;                                                                     // file pointer
- 	UCHAR str[MAX_ITEM_TEXT_LEN+1];                                               // buffer to read the lines of the file
+ 	unsigned char str[MAX_ITEM_TEXT_LEN+1];                                               // buffer to read the lines of the file
  	int i;                                                                        // index for loops and arrays
 
  	// Initializations
@@ -289,7 +289,7 @@ RC EngineSetProject(ENGINE_CONTEXT *pEngineContext)
        (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_PDAEGG_OLD) ||
        (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_PDASI_EASOE)) &&
 
-      ((pBuffers->recordIndexes=(ULONG *)MEMORY_AllocBuffer("EngineSetProject","recordIndexes",2001,sizeof(ULONG),0,MEMORY_TYPE_LONG))==NULL)) ||
+      ((pBuffers->recordIndexes=(unsigned long *)MEMORY_AllocBuffer("EngineSetProject","recordIndexes",2001,sizeof(unsigned long),0,MEMORY_TYPE_LONG))==NULL)) ||
 
      (((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_GDP_ASCII) ||
        (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN) ||
@@ -426,7 +426,7 @@ RC EngineSetFile(ENGINE_CONTEXT *pEngineContext,const char *fileName)
  	// Declarations
 
   FILE_INFO *pFile;
-  UCHAR fileTmp[MAX_STR_LEN+1];
+  unsigned char fileTmp[MAX_STR_LEN+1];
  	RC rc;
 
  	// Initializations
@@ -1149,7 +1149,7 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
   INT useKurucz,alignRef,useUsamp,saveFlag,newDimL;
   double factTemp;
   RC rc;
-  UCHAR string[80];                                                              // return code
+  unsigned char string[80];                                                              // return code
 
   // Initializations
 

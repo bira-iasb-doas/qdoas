@@ -162,6 +162,117 @@ void setMediateSlit(SLIT *pEngineSlit,const mediate_slit_function_t *pMediateSli
 // PURPOSE       Filtering configuration
 // -----------------------------------------------------------------------------
 
-void setMediateFilter(PRJCT_FILTER *pEngineFilter,const mediate_filter_t *pMediateFilter)
+void setMediateFilter(PRJCT_FILTER *pEngineFilter,const mediate_filter_t *pMediateFilter,int hpFilterFlag,int convoluteFlag)
  {
- } 
+ 	// Initializations
+
+ 	memset(pEngineFilter,0,sizeof(PRJCT_FILTER));
+ 	pEngineFilter->type=pMediateFilter->mode;
+ 	pEngineFilter->filterEffWidth=(double)0.;
+
+ 	// Fill up the structure according to the filter type
+
+ 	switch(pEngineFilter->type)
+ 	 {
+ // ----------------------------------------------------------------------------
+    case PRJCT_FILTER_TYPE_KAISER :                                             // kaiser filter
+
+     pEngineFilter->kaiserCutoff=(float)pMediateFilter->kaiser.cutoffFrequency; // cutoff frequency for kaiser filter type
+     pEngineFilter->kaiserPassBand=(float)pMediateFilter->kaiser.passband;      // pass band for kaiser filter type
+     pEngineFilter->kaiserTolerance=(float)pMediateFilter->kaiser.tolerance;    // tolerance for kaiser filter type
+
+     pEngineFilter->filterNTimes=pMediateFilter->kaiser.iterations;
+
+     if (hpFilterFlag)
+      {
+       pEngineFilter->hpFilterCalib=pMediateFilter->kaiser.usage.calibrationFlag;
+       pEngineFilter->hpFilterAnalysis=pMediateFilter->kaiser.usage.fittingFlag;
+      }
+
+     if (convoluteFlag)
+      pEngineFilter->filterAction=(pMediateFilter->kaiser.usage.divide)?PRJCT_FILTER_OUTPUT_HIGH_DIV:PRJCT_FILTER_OUTPUT_HIGH_SUB;
+
+    break;
+ // ----------------------------------------------------------------------------
+    case PRJCT_FILTER_TYPE_BOXCAR :                                             // boxcar filter
+
+     pEngineFilter->filterWidth=pMediateFilter->boxcar.width;
+     pEngineFilter->filterNTimes=pMediateFilter->boxcar.iterations;
+
+     if (hpFilterFlag)
+      {
+       pEngineFilter->hpFilterCalib=pMediateFilter->boxcar.usage.calibrationFlag;
+       pEngineFilter->hpFilterAnalysis=pMediateFilter->boxcar.usage.fittingFlag;
+      }
+
+     if (convoluteFlag)
+      pEngineFilter->filterAction=(pMediateFilter->boxcar.usage.divide)?PRJCT_FILTER_OUTPUT_HIGH_DIV:PRJCT_FILTER_OUTPUT_HIGH_SUB;
+
+    break;
+ // ----------------------------------------------------------------------------
+    case PRJCT_FILTER_TYPE_GAUSSIAN :                                           // gaussian filter
+
+     pEngineFilter->fwhmWidth=(float)pMediateFilter->gaussian.fwhm;
+
+     if (hpFilterFlag)
+      {
+       pEngineFilter->hpFilterCalib=pMediateFilter->gaussian.usage.calibrationFlag;
+       pEngineFilter->hpFilterAnalysis=pMediateFilter->gaussian.usage.fittingFlag;
+      }
+
+     if (convoluteFlag)
+      pEngineFilter->filterAction=(pMediateFilter->gaussian.usage.divide)?PRJCT_FILTER_OUTPUT_HIGH_DIV:PRJCT_FILTER_OUTPUT_HIGH_SUB;
+
+    break;
+ // ----------------------------------------------------------------------------
+    case PRJCT_FILTER_TYPE_TRIANGLE :                                           // triangular filter
+
+     pEngineFilter->filterWidth=pMediateFilter->triangular.width;
+     pEngineFilter->filterNTimes=pMediateFilter->triangular.iterations;
+
+     if (hpFilterFlag)
+      {
+       pEngineFilter->hpFilterCalib=pMediateFilter->triangular.usage.calibrationFlag;
+       pEngineFilter->hpFilterAnalysis=pMediateFilter->triangular.usage.fittingFlag;
+      }
+
+     if (convoluteFlag)
+      pEngineFilter->filterAction=(pMediateFilter->triangular.usage.divide)?PRJCT_FILTER_OUTPUT_HIGH_DIV:PRJCT_FILTER_OUTPUT_HIGH_SUB;
+
+    break;
+ // ----------------------------------------------------------------------------
+    case PRJCT_FILTER_TYPE_SG :                                                 // savitzky-Golay filter
+
+     pEngineFilter->filterWidth=pMediateFilter->savitzky.width;
+     pEngineFilter->filterOrder=pMediateFilter->savitzky.order;
+     pEngineFilter->filterNTimes=pMediateFilter->savitzky.iterations;
+
+     if (hpFilterFlag)
+      {
+       pEngineFilter->hpFilterCalib=pMediateFilter->savitzky.usage.calibrationFlag;
+       pEngineFilter->hpFilterAnalysis=pMediateFilter->savitzky.usage.fittingFlag;
+      }
+
+     if (convoluteFlag)
+      pEngineFilter->filterAction=(pMediateFilter->savitzky.usage.divide)?PRJCT_FILTER_OUTPUT_HIGH_DIV:PRJCT_FILTER_OUTPUT_HIGH_SUB;
+
+    break;
+ // ----------------------------------------------------------------------------
+    case PRJCT_FILTER_TYPE_BINOMIAL :                                           // binomial filter
+
+     pEngineFilter->filterWidth=pMediateFilter->binomial.width;
+     pEngineFilter->filterNTimes=pMediateFilter->binomial.iterations;
+
+     if (hpFilterFlag)
+      {
+       pEngineFilter->hpFilterCalib=pMediateFilter->binomial.usage.calibrationFlag;
+       pEngineFilter->hpFilterAnalysis=pMediateFilter->binomial.usage.fittingFlag;
+      }
+
+     if (convoluteFlag)
+      pEngineFilter->filterAction=(pMediateFilter->binomial.usage.divide)?PRJCT_FILTER_OUTPUT_HIGH_DIV:PRJCT_FILTER_OUTPUT_HIGH_SUB;
+
+    break;
+ // ----------------------------------------------------------------------------
+ 	 }
+ }
