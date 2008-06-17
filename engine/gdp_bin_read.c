@@ -468,8 +468,8 @@ RC GDP_BIN_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
          rc=ERROR_SetLast("GDP_Bin_Set (1)",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,fileName);
 
         else if (((pOrbitFile->gdpBinCoeff=(double *)MEMORY_AllocDVector("GDP_BIN_Set ","pOrbitFile->gdpBinCoeff",0,pOrbitFile->gdpBinCoeffSize-1))==NULL) ||
-                 ((pOrbitFile->gdpBinReference=(USHORT *)MEMORY_AllocBuffer("GDP_BIN_Set ","pOrbitFile->gdpBinReference",pOrbitFile->gdpBinSpectraSize,sizeof(USHORT),0,MEMORY_TYPE_USHORT))==NULL) ||
-                 ((pOrbitFile->gdpBinRefError=(USHORT *)MEMORY_AllocBuffer("GDP_BIN_Set ","pOrbitFile->gdpBinRefError",pOrbitFile->gdpBinSpectraSize,sizeof(USHORT),0,MEMORY_TYPE_USHORT))==NULL) ||
+                 ((pOrbitFile->gdpBinReference=(DoasUS *)MEMORY_AllocBuffer("GDP_BIN_Set ","pOrbitFile->gdpBinReference",pOrbitFile->gdpBinSpectraSize,sizeof(DoasUS),0,MEMORY_TYPE_DoasUS))==NULL) ||
+                 ((pOrbitFile->gdpBinRefError=(DoasUS *)MEMORY_AllocBuffer("GDP_BIN_Set ","pOrbitFile->gdpBinRefError",pOrbitFile->gdpBinSpectraSize,sizeof(DoasUS),0,MEMORY_TYPE_DoasUS))==NULL) ||
                  ((pOrbitFile->gdpBinInfo=(GDP_BIN_INFO *)MEMORY_AllocBuffer("GDP_BIN_Set ","pOrbitFile->gdpBinInfo",pOrbitFile->gdpBinHeader.nspectra,sizeof(GDP_BIN_INFO),0,MEMORY_TYPE_STRUCT))==NULL) ||
                  ((pOrbitFile->gdpBinSzaIndex=(INDEX *)MEMORY_AllocBuffer("GDP_BIN_Set ","pOrbitFile->gdpBinSzaIndex",pOrbitFile->gdpBinHeader.nspectra,sizeof(INDEX),0,MEMORY_TYPE_INDEX))==NULL) ||
                  ((pOrbitFile->gdpBinLatIndex=(INDEX *)MEMORY_AllocBuffer("GDP_BIN_Set ","pOrbitFile->gdpBinLatIndex",pOrbitFile->gdpBinHeader.nspectra,sizeof(INDEX),0,MEMORY_TYPE_INDEX))==NULL) ||
@@ -494,7 +494,7 @@ RC GDP_BIN_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
 
           for (indexRecord=0;indexRecord<pOrbitFile->specNumber;indexRecord++)
            {
-            fseek(fp,(LONG)pOrbitFile->gdpBinHeader.headerSize+indexRecord*pOrbitFile->gdpBinHeader.recordSize,SEEK_SET);
+            fseek(fp,(DoasI32)pOrbitFile->gdpBinHeader.headerSize+indexRecord*pOrbitFile->gdpBinHeader.recordSize,SEEK_SET);
 
             if (!fread(&pOrbitFile->gdpBinSpectrum,sizeof(SPECTRUM_RECORD),1,fp))
              rc=ERROR_SetLast("GDP_Bin_Set (2)",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,fileName);
@@ -612,9 +612,9 @@ RC GDP_BIN_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,FILE *specFp,INDEX i
 
   // Buffers allocation
 
-  else if (((spectrum=(unsigned short *)MEMORY_AllocBuffer("GDP_BIN_Read ","spectrum",pOrbitFile->gdpBinSpectraSize,sizeof(unsigned short),0,MEMORY_TYPE_USHORT))==NULL) ||
+  else if (((spectrum=(unsigned short *)MEMORY_AllocBuffer("GDP_BIN_Read ","spectrum",pOrbitFile->gdpBinSpectraSize,sizeof(unsigned short),0,MEMORY_TYPE_DoasUS))==NULL) ||
             (pRecord->useErrors &&
-           ((specError=(unsigned short *)MEMORY_AllocBuffer("GDP_BIN_Read ","specError",pOrbitFile->gdpBinSpectraSize,sizeof(unsigned short),0,MEMORY_TYPE_USHORT))==NULL)))
+           ((specError=(unsigned short *)MEMORY_AllocBuffer("GDP_BIN_Read ","specError",pOrbitFile->gdpBinSpectraSize,sizeof(unsigned short),0,MEMORY_TYPE_DoasUS))==NULL)))
 
   rc=ERROR_ID_ALLOC;
 
@@ -622,7 +622,7 @@ RC GDP_BIN_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,FILE *specFp,INDEX i
    {
     // Complete record read out
 
-    fseek(fp,(LONG)pOrbitFile->gdpBinHeader.headerSize+(recordNo-1)*pOrbitFile->gdpBinHeader.recordSize,SEEK_SET);
+    fseek(fp,(DoasI32)pOrbitFile->gdpBinHeader.headerSize+(recordNo-1)*pOrbitFile->gdpBinHeader.recordSize,SEEK_SET);
 
     if (!fread(&pOrbitFile->gdpBinSpectrum,sizeof(SPECTRUM_RECORD),1,fp) ||
         !fread(pOrbitFile->gdpBinScalingFactor,sizeof(float)*pOrbitFile->gdpBinHeader.nbands,1,fp) ||

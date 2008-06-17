@@ -2164,7 +2164,7 @@ RC XSCONV_NewSlitFunction(SLIT *pSlitOptions,XS *pSlit,double slitParam,SLIT *pS
 // QDOAS ???
 // QDOAS ??? LRESULT CALLBACK XsconvGeneralCommand(HWND hwndGeneral,UINT msg,WPARAM mp1,LPARAM mp2)
 // QDOAS ???  {
-// QDOAS ???   switch((ULONG)GET_WM_COMMAND_ID(mp1,mp2))
+// QDOAS ???   switch((DoasU32)GET_WM_COMMAND_ID(mp1,mp2))
 // QDOAS ???    {
 // QDOAS ???  // ---------------------------------------------------------------------------
 // QDOAS ???     case TOOL_CONVOLUTION_SELECTION :
@@ -2490,7 +2490,7 @@ RC XSCONV_NewSlitFunction(SLIT *pSlitOptions,XS *pSlit,double slitParam,SLIT *pS
 // QDOAS ???
 // QDOAS ??? LRESULT CALLBACK XsconvSlitCommand(HWND hwndSlit,UINT msg,WPARAM mp1,LPARAM mp2)
 // QDOAS ???  {
-// QDOAS ???   switch((ULONG)GET_WM_COMMAND_ID(mp1,mp2))
+// QDOAS ???   switch((DoasU32)GET_WM_COMMAND_ID(mp1,mp2))
 // QDOAS ???    {
 // QDOAS ???  // ---------------------------------------------------------------------------
 // QDOAS ???     case TOOL_CONVOLUTION_SLIT_BUTTON :

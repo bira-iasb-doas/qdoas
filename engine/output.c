@@ -98,36 +98,36 @@
 
 PRJCT_RESULTS_FIELDS PRJCT_resultsAscii[PRJCT_RESULTS_ASCII_MAX]=
  {
-  { "Spec No"                     , MEMORY_TYPE_USHORT, sizeof(USHORT), ITEM_NONE, ITEM_NONE, "%#4d"      },       // PRJCT_RESULTS_ASCII_SPECNO
+  { "Spec No"                     , MEMORY_TYPE_DoasUS, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#4d"      },       // PRJCT_RESULTS_ASCII_SPECNO
   { "Name"                        , MEMORY_TYPE_STRING,             24, ITEM_NONE, ITEM_NONE, "%s"        },       // PRJCT_RESULTS_ASCII_NAME
   { "Date & time (YYYYMMDDhhmmss)", MEMORY_TYPE_STRING,             24, ITEM_NONE, ITEM_NONE, "%s"        },       // PRJCT_RESULTS_ASCII_DATE_TIME
   { "Date (DD/MM/YYYY)"           , MEMORY_TYPE_STRING,             24, ITEM_NONE, ITEM_NONE, "%s"        },       // PRJCT_RESULTS_ASCII_DATE
   { "Time (hh:mm:ss)"             , MEMORY_TYPE_STRING,             24, ITEM_NONE, ITEM_NONE, "%s"        },       // PRJCT_RESULTS_ASCII_TIME
-  { "Year"                        , MEMORY_TYPE_USHORT, sizeof(USHORT), ITEM_NONE, ITEM_NONE, "%#4d"      },       // PRJCT_RESULTS_ASCII_YEAR
-  { "Day number"                  , MEMORY_TYPE_USHORT, sizeof(USHORT), ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_JULIAN
+  { "Year"                        , MEMORY_TYPE_DoasUS, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#4d"      },       // PRJCT_RESULTS_ASCII_YEAR
+  { "Day number"                  , MEMORY_TYPE_DoasUS, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_JULIAN
   { "Fractional day"              , MEMORY_TYPE_DOUBLE, sizeof(double), ITEM_NONE, ITEM_NONE, "%#10.6lf"  },       // PRJCT_RESULTS_ASCII_JDFRAC
   { "Fractional time"             , MEMORY_TYPE_DOUBLE, sizeof(double), ITEM_NONE, ITEM_NONE, "%#20.15lf" },       // PRJCT_RESULTS_ASCII_TIFRAC
-  { "Scans"                       , MEMORY_TYPE_USHORT, sizeof(USHORT), ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_SCANS
+  { "Scans"                       , MEMORY_TYPE_DoasUS, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_SCANS
   { "Tint"                        , MEMORY_TYPE_DOUBLE, sizeof(double), ITEM_NONE, ITEM_NONE, "%#12.6lf"  },       // PRJCT_RESULTS_ASCII_TINT
   { "SZA"                         , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#8.3f"    },       // PRJCT_RESULTS_ASCII_SZA
   { "Chi Square"                  , MEMORY_TYPE_DOUBLE, sizeof(double), ITEM_NONE, ITEM_NONE, "%#12.4le"  },       // PRJCT_RESULTS_ASCII_CHI
   { "RMS"                         , MEMORY_TYPE_DOUBLE, sizeof(double), ITEM_NONE, ITEM_NONE, "%#12.4le"  },       // PRJCT_RESULTS_ASCII_RMS
   { "Solar Azimuth angle"         , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#8.3f"    },       // PRJCT_RESULTS_ASCII_AZIM
   { "Tdet"                        , MEMORY_TYPE_FLOAT , sizeof(double), ITEM_NONE, ITEM_NONE, "%#8.3f"    },       // PRJCT_RESULTS_ASCII_TDET
-  { "Sky Obs"                     , MEMORY_TYPE_USHORT, sizeof(USHORT), ITEM_NONE, ITEM_NONE, "%#2d"      },       // PRJCT_RESULTS_ASCII_SKY
+  { "Sky Obs"                     , MEMORY_TYPE_DoasUS, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#2d"      },       // PRJCT_RESULTS_ASCII_SKY
   { "Best shift"                  , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#8.3f"    },       // PRJCT_RESULTS_ASCII_BESTSHIFT
   { "Ref SZA"                     , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#8.3f"    },       // PRJCT_RESULTS_ASCII_REFZM
   { "Ref2/Ref1 shift"             , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#8.3f"    },       // PRJCT_RESULTS_ASCII_REFSHIFT
-  { "Pixel number"                , MEMORY_TYPE_USHORT, sizeof(USHORT), ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_PIXEL
-  { "Pixel type"                  , MEMORY_TYPE_USHORT, sizeof(USHORT), ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_PIXEL_TYPE
+  { "Pixel number"                , MEMORY_TYPE_DoasUS, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_PIXEL
+  { "Pixel type"                  , MEMORY_TYPE_DoasUS, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_PIXEL_TYPE
   { "Orbit number"                , MEMORY_TYPE_INT   , sizeof(INT)   , ITEM_NONE, ITEM_NONE, "%#8d"      },       // PRJCT_RESULTS_ASCII_ORBIT
-  { "Longitude"                   , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#8.3f"    },       // PRJCT_RESULTS_ASCII_LONGIT
+  { "Longitude"                   , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#8.3f"    },       // PRJCT_RESULTS_ASCII_DoasI32IT
   { "Latitude"                    , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#8.3f"    },       // PRJCT_RESULTS_ASCII_LATIT
   { "Altitude"                    , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#8.3f"    },       // PRJCT_RESULTS_ASCII_ALTIT
   { "Covariances"                 , MEMORY_TYPE_DOUBLE, sizeof(double), ITEM_NONE, ITEM_NONE, "%#12.4le"  },       // PRJCT_RESULTS_ASCII_COVAR
   { "Correlations"                , MEMORY_TYPE_DOUBLE, sizeof(double), ITEM_NONE, ITEM_NONE, "%#12.4le"  },       // PRJCT_RESULTS_ASCII_CORR
   { "Cloud fraction"              , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#8.3f"    },       // PRJCT_RESULTS_ASCII_CLOUD
-  { "Index coeff"                 , MEMORY_TYPE_USHORT, sizeof(USHORT), ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_COEFF
+  { "Index coeff"                 , MEMORY_TYPE_DoasUS, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_COEFF
   { "GDP O3 VCD"                  , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#8.3f"    },       // PRJCT_RESULTS_ASCII_O3
   { "GDP NO2 VCD"                 , MEMORY_TYPE_DOUBLE, sizeof(double), ITEM_NONE, ITEM_NONE, "%#12.4le"  },       // PRJCT_RESULTS_ASCII_NO2
   { "Cloud Top Pressure"          , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#8.3f"    },       // PRJCT_RESULTS_ASCII_CLOUDTOPP
@@ -137,9 +137,9 @@ PRJCT_RESULTS_FIELDS PRJCT_resultsAscii[PRJCT_RESULTS_ASCII_MAX]=
   { "Earth radius"                , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#8.3f"    },       // PRJCT_RESULTS_ASCII_EARTH_RADIUS
   { "Elev. viewing angle"         , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#8.3f"    },       // PRJCT_RESULTS_ASCII_VIEW_ELEVATION
   { "Azim. viewing angle"         , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#8.3f"    },       // PRJCT_RESULTS_ASCII_VIEW_AZIMUTH
-  { "SCIAMACHY Quality Flag"      , MEMORY_TYPE_USHORT, sizeof(USHORT), ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_SCIA_QUALITY
-  { "SCIAMACHY State Index"       , MEMORY_TYPE_USHORT, sizeof(USHORT), ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_SCIA_STATE_INDEX
-  { "SCIAMACHY State Id"          , MEMORY_TYPE_USHORT, sizeof(USHORT), ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_SCIA_STATE_ID
+  { "SCIAMACHY Quality Flag"      , MEMORY_TYPE_DoasUS, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_SCIA_QUALITY
+  { "SCIAMACHY State Index"       , MEMORY_TYPE_DoasUS, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_SCIA_STATE_INDEX
+  { "SCIAMACHY State Id"          , MEMORY_TYPE_DoasUS, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_SCIA_STATE_ID
   { "MFC StartTime (hhmmss)"      , MEMORY_TYPE_STRING,             24, ITEM_NONE, ITEM_NONE, "%s"        },       // PRJCT_RESULTS_ASCII_MFC_STARTTIME
   { "MFC EndTime (hhmmss)"        , MEMORY_TYPE_STRING,             24, ITEM_NONE, ITEM_NONE, "%s"        }        // PRJCT_RESULTS_ASCII_MFC_ENDTIME
  };
@@ -956,7 +956,7 @@ void OutputRegisterFields(ENGINE_CONTEXT *pEngineContext)
     // Geolocation for satellite data
 
     else if (satelliteFlag &&
-           ((indexField==PRJCT_RESULTS_ASCII_LONGIT) ||
+           ((indexField==PRJCT_RESULTS_ASCII_DoasI32IT) ||
             (indexField==PRJCT_RESULTS_ASCII_LATIT)))
      {
       OutputRegister(pField->fieldName,"(1)","",pField->fieldType,pField->fieldSize,pField->fieldDim1,pField->fieldDim2,pField->fieldFormat);
@@ -1475,7 +1475,7 @@ void OutputSaveRecord(ENGINE_CONTEXT *pEngineContext,INT hiddenFlag)
        {
      // ----------------------------------------------------------------------
         case PRJCT_RESULTS_ASCII_SPECNO :
-         ((USHORT *)outputColumns[indexColumn++])[indexRecord]=(USHORT)pEngineContext->indexRecord;
+         ((DoasUS *)outputColumns[indexColumn++])[indexRecord]=(DoasUS)pEngineContext->indexRecord;
         break;
      // ----------------------------------------------------------------------
         case PRJCT_RESULTS_ASCII_NAME :
@@ -1501,7 +1501,7 @@ void OutputSaveRecord(ENGINE_CONTEXT *pEngineContext,INT hiddenFlag)
         break;
      // ----------------------------------------------------------------------
         case PRJCT_RESULTS_ASCII_YEAR :
-         ((USHORT *)outputColumns[indexColumn++])[indexRecord]=(USHORT)pRecordInfo->present_day.da_year;
+         ((DoasUS *)outputColumns[indexColumn++])[indexRecord]=(DoasUS)pRecordInfo->present_day.da_year;
         break;
      // ----------------------------------------------------------------------
         case PRJCT_RESULTS_ASCII_DATE_TIME :
@@ -1552,7 +1552,7 @@ void OutputSaveRecord(ENGINE_CONTEXT *pEngineContext,INT hiddenFlag)
         break;
      // ----------------------------------------------------------------------
         case PRJCT_RESULTS_ASCII_JULIAN :
-         ((USHORT *)outputColumns[indexColumn++])[indexRecord]=(USHORT)ZEN_FNCaljda(&pRecordInfo->Tm);
+         ((DoasUS *)outputColumns[indexColumn++])[indexRecord]=(DoasUS)ZEN_FNCaljda(&pRecordInfo->Tm);
         break;
      // ----------------------------------------------------------------------
         case PRJCT_RESULTS_ASCII_JDFRAC :
@@ -1570,7 +1570,7 @@ void OutputSaveRecord(ENGINE_CONTEXT *pEngineContext,INT hiddenFlag)
         break;
      // ----------------------------------------------------------------------
         case PRJCT_RESULTS_ASCII_SCANS :
-         ((USHORT *)outputColumns[indexColumn++])[indexRecord]=(USHORT)pRecordInfo->NSomme;
+         ((DoasUS *)outputColumns[indexColumn++])[indexRecord]=(DoasUS)pRecordInfo->NSomme;
         break;
      // ----------------------------------------------------------------------
         case PRJCT_RESULTS_ASCII_TINT :
@@ -1665,7 +1665,7 @@ void OutputSaveRecord(ENGINE_CONTEXT *pEngineContext,INT hiddenFlag)
         break;
      // ---------------------------------------------------------------------
         case PRJCT_RESULTS_ASCII_SKY :
-         ((USHORT *)outputColumns[indexColumn++])[indexRecord]=(USHORT)pRecordInfo->SkyObs;
+         ((DoasUS *)outputColumns[indexColumn++])[indexRecord]=(DoasUS)pRecordInfo->SkyObs;
         break;
      // ----------------------------------------------------------------------
         case PRJCT_RESULTS_ASCII_BESTSHIFT :
@@ -1673,13 +1673,13 @@ void OutputSaveRecord(ENGINE_CONTEXT *pEngineContext,INT hiddenFlag)
         break;
      // ----------------------------------------------------------------------
         case PRJCT_RESULTS_ASCII_PIXEL :
-         ((USHORT *)outputColumns[indexColumn++])[indexRecord]=
-         ((pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN) || (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN))?(USHORT)pRecordInfo->gome.pixelNumber:0;
+         ((DoasUS *)outputColumns[indexColumn++])[indexRecord]=
+         ((pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN) || (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN))?(DoasUS)pRecordInfo->gome.pixelNumber:0;
         break;
      // ----------------------------------------------------------------------
         case PRJCT_RESULTS_ASCII_PIXEL_TYPE :
-         ((USHORT *)outputColumns[indexColumn++])[indexRecord]=
-         ((pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN) || (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN))?(USHORT)pRecordInfo->gome.pixelType:0;
+         ((DoasUS *)outputColumns[indexColumn++])[indexRecord]=
+         ((pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN) || (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN))?(DoasUS)pRecordInfo->gome.pixelType:0;
         break;
      // ----------------------------------------------------------------------
         case PRJCT_RESULTS_ASCII_ORBIT :
@@ -1733,33 +1733,33 @@ void OutputSaveRecord(ENGINE_CONTEXT *pEngineContext,INT hiddenFlag)
      // ----------------------------------------------------------------------
         case PRJCT_RESULTS_ASCII_COEFF :
 
-         ((USHORT *)outputColumns[indexColumn++])[indexRecord]=
+         ((DoasUS *)outputColumns[indexColumn++])[indexRecord]=
           (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN)?
-          (USHORT)pOrbitFile->gdpBinSpectrum.indexSpectralParam:(USHORT)defaultValue;
+          (DoasUS)pOrbitFile->gdpBinSpectrum.indexSpectralParam:(DoasUS)defaultValue;
 
         break;
      // ----------------------------------------------------------------------
         case PRJCT_RESULTS_ASCII_SCIA_STATE_INDEX :
 
-         ((USHORT *)outputColumns[indexColumn++])[indexRecord]=
+         ((DoasUS *)outputColumns[indexColumn++])[indexRecord]=
           (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS)?
-          (USHORT)pRecordInfo->scia.stateIndex:(USHORT)defaultValue;
+          (DoasUS)pRecordInfo->scia.stateIndex:(DoasUS)defaultValue;
 
         break;
      // ----------------------------------------------------------------------
         case PRJCT_RESULTS_ASCII_SCIA_STATE_ID :
 
-         ((USHORT *)outputColumns[indexColumn++])[indexRecord]=
+         ((DoasUS *)outputColumns[indexColumn++])[indexRecord]=
           (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS)?
-          (USHORT)pRecordInfo->scia.stateId:(USHORT)defaultValue;
+          (DoasUS)pRecordInfo->scia.stateId:(DoasUS)defaultValue;
 
         break;
      // ----------------------------------------------------------------------
         case PRJCT_RESULTS_ASCII_SCIA_QUALITY :
 
-         ((USHORT *)outputColumns[indexColumn++])[indexRecord]=
+         ((DoasUS *)outputColumns[indexColumn++])[indexRecord]=
           (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS)?
-          (USHORT)pRecordInfo->scia.qualityFlag:(USHORT)defaultValue;
+          (DoasUS)pRecordInfo->scia.qualityFlag:(DoasUS)defaultValue;
 
         break;
      // ----------------------------------------------------------------------
@@ -1874,7 +1874,7 @@ void OutputSaveRecord(ENGINE_CONTEXT *pEngineContext,INT hiddenFlag)
 
         break;
      // ----------------------------------------------------------------------
-        case PRJCT_RESULTS_ASCII_LONGIT :
+        case PRJCT_RESULTS_ASCII_DoasI32IT :
 
          if ((pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_HDF) ||
              (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS))
@@ -2283,8 +2283,8 @@ void OutputAscPrintTitles(ENGINE_CONTEXT *pEngineContext,FILE *fp)
              fprintf(fp,pField->fieldFormat,&outputColumns[indexField][(indexColumn*pField->fieldDim1+indexLine)*pField->fieldSize]);
             break;
          // -------------------------------------------------------------------------
-            case MEMORY_TYPE_USHORT :
-             fprintf(fp,pField->fieldFormat,(USHORT)((USHORT *)outputColumns[indexField])[indexColumn*pField->fieldDim1+indexLine]);
+            case MEMORY_TYPE_DoasUS :
+             fprintf(fp,pField->fieldFormat,(DoasUS)((DoasUS *)outputColumns[indexField])[indexColumn*pField->fieldDim1+indexLine]);
             break;
          // -------------------------------------------------------------------------
             case MEMORY_TYPE_INT :
@@ -2341,8 +2341,8 @@ void OutputAscPrintTitles(ENGINE_CONTEXT *pEngineContext,FILE *fp)
              fprintf(fp,pField2->fieldFormat,&outputColumns[indexField2][indexLine]);
             break;
          // -------------------------------------------------------------------------
-            case MEMORY_TYPE_USHORT :
-             fprintf(fp,pField2->fieldFormat,(USHORT)((USHORT *)outputColumns[indexField2])[indexLine]);
+            case MEMORY_TYPE_DoasUS :
+             fprintf(fp,pField2->fieldFormat,(DoasUS)((DoasUS *)outputColumns[indexField2])[indexLine]);
             break;
          // -------------------------------------------------------------------------
             case MEMORY_TYPE_INT :
@@ -2406,8 +2406,8 @@ void OutputAscPrintDataSet(FILE *fp,DoasCh **outputData,INT nbRecords)
          fprintf(fp,pField->fieldFormat,&outputData[indexField][indexRecord*pField->fieldSize]);
         break;
      // -------------------------------------------------------------------------
-        case MEMORY_TYPE_USHORT :
-         fprintf(fp,pField->fieldFormat,(USHORT)((USHORT *)outputData[indexField])[indexRecord]);
+        case MEMORY_TYPE_DoasUS :
+         fprintf(fp,pField->fieldFormat,(DoasUS)((DoasUS *)outputData[indexField])[indexRecord]);
         break;
      // -------------------------------------------------------------------------
         case MEMORY_TYPE_INT :
@@ -2523,7 +2523,7 @@ RC OutputBinWriteDataSet(FILE *fp,DoasCh **outputData,INT nbRecords)
   // Declarations
 
   double *scalingFactors,*dataMax,*dataMin,defaultValue;
-  SHORT *data;
+  short *data;
   PRJCT_RESULTS_FIELDS *pField;
   INDEX indexField,indexRecord,firstRecordField;
   RC rc;
@@ -2539,7 +2539,7 @@ RC OutputBinWriteDataSet(FILE *fp,DoasCh **outputData,INT nbRecords)
   if (((scalingFactors=(double *)MEMORY_AllocDVector("OutputBinWriteDataSet","scalingFactors",0,outputNbFields-1))==NULL) ||
       ((dataMax=(double *)MEMORY_AllocDVector("OutputBinWriteDataSet","dataMax",0,outputNbFields-1))==NULL) ||
       ((dataMin=(double *)MEMORY_AllocDVector("OutputBinWriteDataSet","dataMin",0,outputNbFields-1))==NULL) ||
-      ((data=(SHORT *)MEMORY_AllocBuffer("OutputBinWriteDataSet","data",nbRecords,sizeof(SHORT),0,MEMORY_TYPE_SHORT))==NULL))
+      ((data=(short *)MEMORY_AllocBuffer("OutputBinWriteDataSet","data",nbRecords,sizeof(short),0,MEMORY_TYPE_SHORT))==NULL))
    rc=ERROR_ID_ALLOC;
   else
    {
@@ -2658,26 +2658,26 @@ RC OutputBinWriteDataSet(FILE *fp,DoasCh **outputData,INT nbRecords)
            for (indexRecord=0;indexRecord<nbRecords;indexRecord++)
             data[indexRecord]=
              (fabs((double)(((int *)outputData[indexField])[indexRecord])-defaultValue)>(double)1.e-6)?
-             (SHORT)(((double)(((int *)outputData[indexField])[indexRecord])-dataMin[indexField])*scalingFactors[indexField]-32000.):(SHORT)defaultValue;
+             (short)(((double)(((int *)outputData[indexField])[indexRecord])-dataMin[indexField])*scalingFactors[indexField]-32000.):(short)defaultValue;
           break;
        // -------------------------------------------------------------------------
           case MEMORY_TYPE_FLOAT :
            for (indexRecord=0;indexRecord<nbRecords;indexRecord++)
             data[indexRecord]=
              (fabs((double)(((float *)outputData[indexField])[indexRecord])-defaultValue)>(double)1.e-6)?
-             (SHORT)(((double)(((float *)outputData[indexField])[indexRecord])-dataMin[indexField])*scalingFactors[indexField]-32000.):(SHORT)defaultValue;
+             (short)(((double)(((float *)outputData[indexField])[indexRecord])-dataMin[indexField])*scalingFactors[indexField]-32000.):(short)defaultValue;
           break;
        // -------------------------------------------------------------------------
           case MEMORY_TYPE_DOUBLE :
            for (indexRecord=0;indexRecord<nbRecords;indexRecord++)
             data[indexRecord]=
              (fabs((double)(((double *)outputData[indexField])[indexRecord])-defaultValue)>(double)1.e-6)?
-             (SHORT)((((double)((double *)outputData[indexField])[indexRecord])-dataMin[indexField])*scalingFactors[indexField]-32000.):(SHORT)defaultValue;
+             (short)((((double)((double *)outputData[indexField])[indexRecord])-dataMin[indexField])*scalingFactors[indexField]-32000.):(short)defaultValue;
           break;
        // -------------------------------------------------------------------------
          }
 
-        fwrite(data,sizeof(SHORT)*nbRecords,1,fp);
+        fwrite(data,sizeof(short)*nbRecords,1,fp);
        }
       else
        fwrite(&outputData[indexField][0],pField->fieldSize*nbRecords,1,fp);
@@ -3180,9 +3180,9 @@ RC OUTPUT_LocalAlloc(ENGINE_CONTEXT *pEngineContext)
               memset(outputColumns[indexField],0,n*pField->fieldSize);
              break;
           // -------------------------------------------------------------------------
-             case MEMORY_TYPE_USHORT :
+             case MEMORY_TYPE_DoasUS :
               for (i=0;i<n;i++)
-               ((USHORT *)outputColumns[indexField])[i]=9999;
+               ((DoasUS *)outputColumns[indexField])[i]=9999;
              break;
           // -------------------------------------------------------------------------
              case MEMORY_TYPE_INT :

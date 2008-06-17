@@ -362,7 +362,7 @@ DoasCh   PATH_fileSpectra[MAX_STR_SHORT_LEN+1];                                 
 // QDOAS ???            (!dirFlag && ( STD_IsDir(tmpdir) == 0 ) &&
 // QDOAS ???            ( ptr1 != NULL ) && ( ptr2 != NULL ) &&
 // QDOAS ???            ( strlen(ptr1) == strlen(ptr2) ) && !STD_Stricmp(ptr1,ptr2) ) ) &&
-// QDOAS ???            ((ULONG)nFile+nOther<SYS_path) )
+// QDOAS ???            ((DoasU32)nFile+nOther<SYS_path) )
 // QDOAS ???     {
 // QDOAS ???     	uofTrecordNo=ITEM_NONE;
 // QDOAS ???
@@ -728,7 +728,7 @@ DoasCh   PATH_fileSpectra[MAX_STR_SHORT_LEN+1];                                 
 // QDOAS ???     lastFile=SYS_path-(PATH_fileNumber+PATH_dirNumber);
 // QDOAS ???     for (indexFile=SYS_path-1,indexItem=0;indexFile>=lastFile;indexFile--)
 // QDOAS ???      PathInsertListViewItem(hwndList,indexItem++,(DoasCh *)PATH_fileNamesShort[indexFile],
-// QDOAS ???                            ((ULONG)indexFile>=SYS_path-PATH_dirNumber)?TREE_closeImageIndex:TREE_blankImageIndex);
+// QDOAS ???                            ((DoasU32)indexFile>=SYS_path-PATH_dirNumber)?TREE_closeImageIndex:TREE_blankImageIndex);
 // QDOAS ???    }
 // QDOAS ???  }
 // QDOAS ???
@@ -741,7 +741,7 @@ DoasCh   PATH_fileSpectra[MAX_STR_SHORT_LEN+1];                                 
 // QDOAS ??? //               command  : browsing command from contextual menu.
 // QDOAS ??? // -----------------------------------------------------------------------------
 // QDOAS ???
-// QDOAS ??? void PathBrowseSpectra(HWND hwndPath,ULONG command)
+// QDOAS ??? void PathBrowseSpectra(HWND hwndPath,DoasU32 command)
 // QDOAS ???  {
 // QDOAS ???   // Declarations
 // QDOAS ???
@@ -771,7 +771,7 @@ DoasCh   PATH_fileSpectra[MAX_STR_SHORT_LEN+1];                                 
 // QDOAS ???     // Browse selected items
 // QDOAS ???
 // QDOAS ???     while (((indexItem=lvi.iItem=ListView_GetNextItem(hwndList,indexItem,LVNI_SELECTED))!=ITEM_NONE) &&
-// QDOAS ???             ((ULONG)fileNumber<SYS_path))
+// QDOAS ???             ((DoasU32)fileNumber<SYS_path))
 // QDOAS ???
 // QDOAS ???      if (ListView_GetItem(hwndList,&lvi) && strlen(itemTextShort) && (lvi.iImage==TREE_blankImageIndex))
 // QDOAS ???       {
@@ -1146,9 +1146,9 @@ DoasCh   PATH_fileSpectra[MAX_STR_SHORT_LEN+1];                                 
 // QDOAS ??? #endif
 // QDOAS ??? LRESULT CALLBACK PathCommand(HWND hwndPath,UINT msg,WPARAM mp1,LPARAM mp2)
 // QDOAS ???  {
-// QDOAS ???   ULONG command;
+// QDOAS ???   DoasU32 command;
 // QDOAS ???
-// QDOAS ???   switch((command=(ULONG)GET_WM_COMMAND_ID(mp1,mp2)))
+// QDOAS ???   switch((command=(DoasU32)GET_WM_COMMAND_ID(mp1,mp2)))
 // QDOAS ???    {
 // QDOAS ???  // ---------------------------------------------------------------------------
 // QDOAS ???     case PATH_BROWSE :                                                          // browse folders

@@ -699,7 +699,7 @@ RC MFC_ReadRecordStd(ENGINE_CONTEXT *pEngineContext,DoasCh *fileName,
     fscanf(fp,"SCANS %d\n",&pRecord->NSomme);
     fscanf(fp,"INT_TIME %lf\n",&pRecord->TotalExpTime);
     fgets(line,MAX_STR_SHORT_LEN,fp);
-    fscanf(fp,"LONGITUDE %lf\n",&pRecord->longitude);
+    fscanf(fp,"DoasI32ITUDE %lf\n",&pRecord->longitude);
     fscanf(fp,"LATITUDE %lf\n",&pRecord->latitude);
 
     pRecord->TotalExpTime*=0.001;

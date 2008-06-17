@@ -99,10 +99,10 @@ DoasCh *MEMORY_types[MEMORY_TYPE_MAX]=                                          
 
 static MEMORY *memoryStack=NULL;                                                // stack with current allocated objects
 static INT     memoryStackObjectsNumber=0;                                      // number of objects currently in the stack
-static LONG    memoryStackBytesNumber=0;                                        // total size used by objects currently in the stack
-static LONG    memoryMaxBytes=0;                                                // maximum number of bytes allocated in one time
+static DoasI32    memoryStackBytesNumber=0;                                        // total size used by objects currently in the stack
+static DoasI32    memoryMaxBytes=0;                                                // maximum number of bytes allocated in one time
 static INT     memoryMaxObjects=0;                                              // maximum number of objects allocated in one time
-static LONG    memoryMaxObjectsSize=0;                                          // total size used when maximum number of objects is reached
+static DoasI32    memoryMaxObjectsSize=0;                                          // total size used when maximum number of objects is reached
 
 // QDOAS ??? #if defined(__WINDOAS_GUI_) && __WINDOAS_GUI_                                   // when the user interface is not loaded, the program is not multithreaded
 // QDOAS ??? static CRITICAL_SECTION memoryCriticalSection;                                  // critical section object used for accessing to previous variables
@@ -235,7 +235,7 @@ void MEMORY_ReleaseBuffer(DoasCh *callingFunctionName,DoasCh *bufferName,void *p
 
   INDEX   indexObjects;                                                         // Browse objects in the stack
   MEMORY *pMemory;                                                              // pointer to an object in the stack
-  ULONG   totalSize;                                                            // total size in bytes of the pointed object
+  DoasU32   totalSize;                                                            // total size in bytes of the pointed object
 
   // Debugging
 

@@ -104,13 +104,11 @@ extern "C" {
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-// QDOAS ??? #include <process.h>
 #include <errno.h>
 #include <sys/types.h>
-// QDOAS ??? #include <dir.h>
 #include <dirent.h>
 #include <time.h>
-
+#include <stdint.h>
 
 #ifndef WIN32
 #define strnicmp strncasecmp
@@ -129,20 +127,13 @@ extern "C" {
 // QDOAS ???
 // QDOAS ??? // Types [re]definition
 // QDOAS ???
-#if !defined(__INCLUDE_HDF_) || !(__INCLUDE_HDF_)
-    typedef int            int32;
-    typedef unsigned long  uint32;
-#endif
 
 typedef int            INT;
-typedef char           CHAR;
 typedef char           DoasCh;
-typedef short          SHORT;
-typedef unsigned short USHORT,WORD;
+typedef unsigned short DoasUS,WORD;
 typedef int            BOOL;
-typedef float          FLOAT;
-typedef uint32         ULONG;
-typedef int32          LONG;
+typedef uint32_t       DoasU32;
+typedef int32_t        DoasI32;
 typedef void           VOID;
 typedef unsigned char  BYTE;
 typedef unsigned int   UINT;
@@ -228,9 +219,9 @@ struct date
 
 typedef struct _shortDate
  {
-  SHORT da_year;                                                                /* Year - 1980      */
-  CHAR  da_day;                                                                 /* Day of the month */
-  CHAR  da_mon;                                                                 /* Month (1 = Jan)  */
+  short da_year;                                                                /* Year - 1980      */
+  char  da_day;                                                                 /* Day of the month */
+  char  da_mon;                                                                 /* Month (1 = Jan)  */
  }
 SHORT_DATE;
 
@@ -367,10 +358,10 @@ typedef union _debugVarPtr                                                      
  {
   DoasCh   **ucharArray;                                                         // pointer to a string array
   DoasCh    *ucharVector;                                                        // pointer to a string
-  SHORT   **shortArray;                                                         // pointer to a short type array
-  SHORT    *shortVector;                                                        // pointer to a short type vector
-  USHORT  **ushortArray;                                                        // pointer to a unsigned short type array
-  USHORT   *ushortVector;                                                       // pointer to a unsigned short type vector
+  short   **shortArray;                                                         // pointer to a short type array
+  short    *shortVector;                                                        // pointer to a short type vector
+  DoasUS  **ushortArray;                                                        // pointer to a unsigned short type array
+  DoasUS   *ushortVector;                                                       // pointer to a unsigned short type vector
   int     **intArray;                                                           // pointer to a integer type array
   int      *intVector;                                                          // pointer to a integer type vector
   long    **longArray;                                                          // pointer to a long type array
@@ -448,9 +439,9 @@ enum _memoryTypes
  	MEMORY_TYPE_PTR,                                                              // pointer
  	MEMORY_TYPE_STRING,                                                           // character/string
  	MEMORY_TYPE_SHORT,                                                            // short
- 	MEMORY_TYPE_USHORT,                                                           // unsigned short
+ 	MEMORY_TYPE_DoasUS,                                                           // unsigned short
  	MEMORY_TYPE_INT,                                                              // integer
- 	MEMORY_TYPE_LONG,                                                             // long
+ 	MEMORY_TYPE_DoasI32,                                                             // long
  	MEMORY_TYPE_FLOAT,                                                            // float
  	MEMORY_TYPE_DOUBLE,                                                           // double
  	MEMORY_TYPE_STRUCT,                                                           // structure
@@ -458,7 +449,7 @@ enum _memoryTypes
  };
 
 #define MEMORY_TYPE_INDEX MEMORY_TYPE_INT
-#define MEMORY_TYPE_ULONG MEMORY_TYPE_LONG
+#define MEMORY_TYPE_DoasU32 MEMORY_TYPE_DoasI32
 #define MEMORY_TYPE_UINT  MEMORY_TYPE_INT
 
 // Information on allocated objects
@@ -546,7 +537,7 @@ int         STD_IsDir(char *filename);
 // QDOAS ??? // ----------
 // QDOAS ???
 // QDOAS ??? void    DOAS_CenterWindow(HWND hwndChild,HWND hwndParent);
-// QDOAS ??? void    DOAS_ListMoveSelectedItems(HWND hwndParent,ULONG listFrom,ULONG listTo);
+// QDOAS ??? void    DOAS_ListMoveSelectedItems(HWND hwndParent,DoasU32 listFrom,DoasU32 listTo);
 // QDOAS ???
 // QDOAS ??? RC      MSG_MessageBox(HWND hwnd,INT controlID,INT titleID,INT msgID,INT style,...);
 

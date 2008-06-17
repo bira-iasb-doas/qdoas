@@ -196,7 +196,7 @@ typedef struct	SpectrometerRecordType
 	}
 NOAA_SpectrometerRecordType;
 
-//	{*Note: After a LONG hiatus, temperature measurements were resumed, starting with
+//	{*Note: After a DoasI32 hiatus, temperature measurements were resumed, starting with
 //	 BlackSG2.23. The "Bottom" temp is now the ROOM temperature outside the instrument case!}
 //	 {**Until13 Apr 93, the space used by 'spacer' and 'band' was used for a Real named
 //	  'finalMagnification'. This was never properly used, and was always defaulted to 1.00,
@@ -358,7 +358,7 @@ RC SetNOAA(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
   // Declarations
 
   SZ_LEN fileLength;                                                            // the length in bytes of the file
-  ULONG offset;                                                                 // offset in the file
+  DoasU32 offset;                                                                 // offset in the file
   short observationType;                                                        // observation type
   RC rc;                                                                        // return code
 
@@ -379,8 +379,8 @@ RC SetNOAA(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
 
   else if (!(fileLength=STD_FileLength(specFp)))
    rc=ERROR_SetLast("SetNOAA",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pEngineContext->fileInfo.fileName);
-  else if ((pEngineContext->buffers.recordIndexes=(ULONG *)MEMORY_AllocBuffer("SetNOAA","recordIndexes",
-           (pEngineContext->recordIndexesSize=(int)(fileLength/NOAA_OFFSET+2L)),sizeof(ULONG),0,MEMORY_TYPE_LONG))==NULL)
+  else if ((pEngineContext->buffers.recordIndexes=(DoasU32 *)MEMORY_AllocBuffer("SetNOAA","recordIndexes",
+           (pEngineContext->recordIndexesSize=(int)(fileLength/NOAA_OFFSET+2L)),sizeof(DoasU32),0,MEMORY_TYPE_DoasI32))==NULL)
    rc=ERROR_ID_ALLOC;
   else
    {
@@ -536,31 +536,31 @@ RC ReliNOAA(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,INT localDa
     // swap bytes
 
     swap_bytes_float((unsigned char *)&pRecordNoaa->timeRecord.macTime);
-		  swap_bytes_short((unsigned char *)&pRecordNoaa->timeRecord.zone);
+		  swap_bytes_SHORT((unsigned char *)&pRecordNoaa->timeRecord.zone);
 
-    swap_bytes_short((unsigned char *)&pRecordNoaa->foreOpticsRecord.filterNumber);
+    swap_bytes_SHORT((unsigned char *)&pRecordNoaa->foreOpticsRecord.filterNumber);
 		  swap_bytes_float((unsigned char *)&pRecordNoaa->foreOpticsRecord.dialSetting);
 		  swap_bytes_float((unsigned char *)&pRecordNoaa->foreOpticsRecord.lambdaMax);
 		  swap_bytes_float((unsigned char *)&pRecordNoaa->foreOpticsRecord.lambdaMin);
-		  swap_bytes_short((unsigned char *)&pRecordNoaa->foreOpticsRecord.polarizerAngle);
+		  swap_bytes_SHORT((unsigned char *)&pRecordNoaa->foreOpticsRecord.polarizerAngle);
 
-		  swap_bytes_short((unsigned char *)&pRecordNoaa->spectrometerRecord.spectrometerNumber);
-		  swap_bytes_short((unsigned char *)&pRecordNoaa->spectrometerRecord.orderNumber);
+		  swap_bytes_SHORT((unsigned char *)&pRecordNoaa->spectrometerRecord.spectrometerNumber);
+		  swap_bytes_SHORT((unsigned char *)&pRecordNoaa->spectrometerRecord.orderNumber);
 		  swap_bytes_float((unsigned char *)&pRecordNoaa->spectrometerRecord.dialSetting);
 		  swap_bytes_float((unsigned char *)&pRecordNoaa->spectrometerRecord.gratingLinesPerMM);
 		  swap_bytes_float((unsigned char *)&pRecordNoaa->spectrometerRecord.gratingInputAngle);
 		  swap_bytes_float((unsigned char *)&pRecordNoaa->spectrometerRecord.gratingOutputAngle);
 		  swap_bytes_float((unsigned char *)&pRecordNoaa->spectrometerRecord.cameraFocalLength);
-		  swap_bytes_short((unsigned char *)&pRecordNoaa->spectrometerRecord.spacer);
-		  swap_bytes_short((unsigned char *)&pRecordNoaa->spectrometerRecord.band);
+		  swap_bytes_SHORT((unsigned char *)&pRecordNoaa->spectrometerRecord.spacer);
+		  swap_bytes_SHORT((unsigned char *)&pRecordNoaa->spectrometerRecord.band);
 		  swap_bytes_float((unsigned char *)&pRecordNoaa->spectrometerRecord.wavelengthAtDetCenter);
 		  swap_bytes_float((unsigned char *)&pRecordNoaa->spectrometerRecord.dispersion);
 		  swap_bytes_float((unsigned char *)&pRecordNoaa->spectrometerRecord.entranceSlitWidth);
 		  swap_bytes_float((unsigned char *)&pRecordNoaa->spectrometerRecord.spectrometerTempTop);
 		  swap_bytes_float((unsigned char *)&pRecordNoaa->spectrometerRecord.spectrometerTempBot);
 
-  		swap_bytes_short((unsigned char *)&pRecordNoaa->detectorRecord.detectorNumber);
-  		swap_bytes_short((unsigned char *)&pRecordNoaa->detectorRecord.numberOfDiodes);
+  		swap_bytes_SHORT((unsigned char *)&pRecordNoaa->detectorRecord.detectorNumber);
+  		swap_bytes_SHORT((unsigned char *)&pRecordNoaa->detectorRecord.numberOfDiodes);
   		swap_bytes_float((unsigned char *)&pRecordNoaa->detectorRecord.diodeWidth);
   		swap_bytes_float((unsigned char *)&pRecordNoaa->detectorRecord.detectorTemperature);
 
@@ -568,15 +568,15 @@ RC ReliNOAA(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,INT localDa
   		swap_bytes_float((unsigned char *)&pRecordNoaa->dataRecord.f2);
   		swap_bytes_float((unsigned char *)&pRecordNoaa->dataRecord.f4Sin);
   		swap_bytes_float((unsigned char *)&pRecordNoaa->dataRecord.f4Cos);
-  		swap_bytes_short((unsigned char *)&pRecordNoaa->dataRecord.patternRecNum);
-  		swap_bytes_short((unsigned char *)&pRecordNoaa->dataRecord.detResponseRecNum);
-  		swap_bytes_short((unsigned char *)&pRecordNoaa->dataRecord.sgResponseRecNum);
-  		swap_bytes_short((unsigned char *)&pRecordNoaa->dataRecord.numberOfReads);
-  		swap_bytes_short((unsigned char *)&pRecordNoaa->dataRecord.strayLightRecNum);
-  		swap_bytes_short((unsigned char *)&pRecordNoaa->dataRecord.firstSaturated);
-  		swap_bytes_short((unsigned char *)&pRecordNoaa->dataRecord.lastSaturated);
-  		swap_bytes_short((unsigned char *)&pRecordNoaa->dataRecord.externalMod);
-  		swap_bytes_short((unsigned char *)&pRecordNoaa->dataRecord.internalMod);
+  		swap_bytes_SHORT((unsigned char *)&pRecordNoaa->dataRecord.patternRecNum);
+  		swap_bytes_SHORT((unsigned char *)&pRecordNoaa->dataRecord.detResponseRecNum);
+  		swap_bytes_SHORT((unsigned char *)&pRecordNoaa->dataRecord.sgResponseRecNum);
+  		swap_bytes_SHORT((unsigned char *)&pRecordNoaa->dataRecord.numberOfReads);
+  		swap_bytes_SHORT((unsigned char *)&pRecordNoaa->dataRecord.strayLightRecNum);
+  		swap_bytes_SHORT((unsigned char *)&pRecordNoaa->dataRecord.firstSaturated);
+  		swap_bytes_SHORT((unsigned char *)&pRecordNoaa->dataRecord.lastSaturated);
+  		swap_bytes_SHORT((unsigned char *)&pRecordNoaa->dataRecord.externalMod);
+  		swap_bytes_SHORT((unsigned char *)&pRecordNoaa->dataRecord.internalMod);
   		swap_bytes_float((unsigned char *)&pRecordNoaa->dataRecord.exposureDiodeRecord.xdDarkCountRate);
   		swap_bytes_float((unsigned char *)&pRecordNoaa->dataRecord.exposureDiodeRecord.xdTerminalCount);
   		swap_bytes_float((unsigned char *)&pRecordNoaa->dataRecord.wavelengthRecord.wlDispToCenter);
@@ -586,13 +586,13 @@ RC ReliNOAA(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,INT localDa
 
    	swap_bytes_float((unsigned char *)&pRecordNoaa->dataRecord.wavelengthRecord.wlID0);
   		swap_bytes_float((unsigned char *)&pRecordNoaa->dataRecord.wavelengthRecord.wlID1);
-  		swap_bytes_short((unsigned char *)&pRecordNoaa->dataRecord.exposureTime);
+  		swap_bytes_SHORT((unsigned char *)&pRecordNoaa->dataRecord.exposureTime);
   		swap_bytes_float((unsigned char *)&pRecordNoaa->dataRecord.aveDeviation);
 
   		for (i=0;i<73;i++)
-  		 swap_bytes_short((unsigned char *)&pRecordNoaa->dataRecord.spare[i]);
+  		 swap_bytes_SHORT((unsigned char *)&pRecordNoaa->dataRecord.spare[i]);
 
-  		swap_bytes_short((unsigned char *)&pRecordNoaa->dataRecord.integrationCycles);
+  		swap_bytes_SHORT((unsigned char *)&pRecordNoaa->dataRecord.integrationCycles);
   		swap_bytes_float((unsigned char *)&pRecordNoaa->dataRecord.integrationTime);
   		swap_bytes_float((unsigned char *)&pRecordNoaa->dataRecord.centerOfBrightness);
   		swap_bytes_float((unsigned char *)&pRecordNoaa->dataRecord.shift);
@@ -601,12 +601,12 @@ RC ReliNOAA(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,INT localDa
   		swap_bytes_float((unsigned char *)&pRecordNoaa->dataRecord.maxData);
   		swap_bytes_float((unsigned char *)&pRecordNoaa->dataRecord.minData);
   		swap_bytes_float((unsigned char *)&pRecordNoaa->dataRecord.aveData);
-  		swap_bytes_short((unsigned char *)&pRecordNoaa->dataRecord.numberOfGapsInteger);
+  		swap_bytes_SHORT((unsigned char *)&pRecordNoaa->dataRecord.numberOfGapsInteger);
 
   		for (i=0;i<MaxNumGaps;i++)
-  		 swap_bytes_short((unsigned char *)&pRecordNoaa->dataRecord.startGap[i]);
+  		 swap_bytes_SHORT((unsigned char *)&pRecordNoaa->dataRecord.startGap[i]);
   		for (i=0;i<MaxNumGaps;i++)
-  		 swap_bytes_short((unsigned char *)&pRecordNoaa->dataRecord.endGap[i]);
+  		 swap_bytes_SHORT((unsigned char *)&pRecordNoaa->dataRecord.endGap[i]);
   		for (i=0;i<MaxNumPnt;i++)
   		 swap_bytes_float((unsigned char *)&pRecordNoaa->dataRecord.spectralData[i]);
 

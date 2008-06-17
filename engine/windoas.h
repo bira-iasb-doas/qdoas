@@ -97,7 +97,7 @@ extern "C" {
 
 typedef struct tagNEWDATE
  {
-  SHORT	year;
+  short	year;
   char	day;
   char	month;
  }
@@ -240,7 +240,7 @@ RC     FILES_LoadMatrix(FILE *fp,DoasCh *fileName,double **matrix,INT base,INT n
 DoasCh  *FILES_BuildFileName(DoasCh *fileName,MASK fileType);
 
 // QDOAS ??? #if defined(__WINDOAS_GUI_) && (__WINDOAS_GUI_)
-// QDOAS ??? RC      FILES_Open(HWND hwndParent,MASK fileType,DoasCh *buffer,INT bufferSize,LONG openStyles,DoasCh openMode,INT *symbolReferenceNumber,INDEX indexSymbol,INT *pFileType,INT helpID);
+// QDOAS ??? RC      FILES_Open(HWND hwndParent,MASK fileType,DoasCh *buffer,INT bufferSize,DoasI32 openStyles,DoasCh openMode,INT *symbolReferenceNumber,INDEX indexSymbol,INT *pFileType,INT helpID);
 // QDOAS ??? RC      FILES_Select(HWND hwndParent,DoasCh *buffer,INT bufferSize,MASK fileType,INT style,DoasCh openMode,INT *symbolReferenceNumber,INDEX indexSymbol,INT helpID);
 // QDOAS ??? INDEX   FILES_Insert(HWND hwndTree,INDEX indexParent,INT dataType,MASK fileType);
 // QDOAS ??? #endif
@@ -440,7 +440,7 @@ typedef struct _listColumn
   UINT controlStyle;                                       // style of associated control
   DoasCh controlPermanent;                                  // flag set if control is permanent
   INT comboboxItemType;                                    // type of combobox, cfr above
-  CHAR displayNumber;                                      // number that specify set of selected columns in list to display in ListView control
+  char displayNumber;                                      // number that specify set of selected columns in list to display in ListView control
   DoasCh defaultValue[MAX_ITEM_NAME_LEN+1];                 // default value
  }
 LIST_COLUMN;
@@ -475,7 +475,7 @@ typedef struct _anlysTabPages
   INT listEntryPoint;                                      // entry point in ListView items list
   INT oldListEntryPoint;                                   // entry point in list before modifications
   INDEX *pTreeEntryPoint;                                  // entry point of analysis window in tree control
-  CHAR displayNumber;                                      // number that specify set of selected columns in list to display in ListView control
+  char displayNumber;                                      // number that specify set of selected columns in list to display in ListView control
   DoasCh minDisplayNumber;                                  // minimum value for previous field
   INT maxDisplayNumber;                                    // maximum value for previous field
 
@@ -966,7 +966,7 @@ enum treeItemTypes
 // -------------------------------------
 
 #if !defined(__WINDOAS_GUI_) || !(__WINDOAS_GUI_)
-typedef LONG HTREEITEM;
+typedef DoasI32 HTREEITEM;
 #endif
 
 typedef struct _treeItemType
@@ -1469,7 +1469,7 @@ EXTERN INT PATH_mfcFlag,PATH_UofTFlag;
 // QDOAS ??? // Global variables
 // QDOAS ??? // ----------------
 // QDOAS ???
-// QDOAS ??? EXTERN ULONG SYS_memory,
+// QDOAS ??? EXTERN DoasU32 SYS_memory,
 // QDOAS ???              SYS_files,
 // QDOAS ???              SYS_raw,
 // QDOAS ???              SYS_tree,

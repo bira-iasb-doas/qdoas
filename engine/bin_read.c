@@ -12,7 +12,7 @@ void swap_bytes_float(unsigned char *var)
   vtmp=var[1];var[1]=var[2];var[2]=vtmp;
  }
 
-void swap_bytes_short(unsigned char *var)
+void swap_bytes_SHORT(unsigned char *var)
  {
   unsigned char vtmp;
 
@@ -124,12 +124,12 @@ void cal_options_GADS_getbin (FILE* unit, CAL_OPTIONS_GADS *var)
    swap_bytes_int((unsigned char *)&var->stop_time.musec);
 
    for (i=0;i<5;i++)
-    swap_bytes_short((unsigned char *)&var->category[i]);
+    swap_bytes_SHORT((unsigned char *)&var->category[i]);
 
-   swap_bytes_short((unsigned char *)&var->num_nadir_clusters);
-   swap_bytes_short((unsigned char *)&var->num_limb_clusters);
-   swap_bytes_short((unsigned char *)&var->num_occ_clusters);
-   swap_bytes_short((unsigned char *)&var->num_mon_clusters);
+   swap_bytes_SHORT((unsigned char *)&var->num_nadir_clusters);
+   swap_bytes_SHORT((unsigned char *)&var->num_limb_clusters);
+   swap_bytes_SHORT((unsigned char *)&var->num_occ_clusters);
+   swap_bytes_SHORT((unsigned char *)&var->num_mon_clusters);
   #endif
  }
 
@@ -148,32 +148,32 @@ void ads_states_getbin (FILE* unit, ADS_STATES *var)
 
    swap_bytes_float((unsigned char *)&var->orbit_phase);
 
-   swap_bytes_short((unsigned char *)&var->category);
-   swap_bytes_short((unsigned char *)&var->state_id);
-   swap_bytes_short((unsigned char *)&var->duration);
-   swap_bytes_short((unsigned char *)&var->longest_int_time);
-   swap_bytes_short((unsigned char *)&var->num_clusters);
+   swap_bytes_SHORT((unsigned char *)&var->category);
+   swap_bytes_SHORT((unsigned char *)&var->state_id);
+   swap_bytes_SHORT((unsigned char *)&var->duration);
+   swap_bytes_SHORT((unsigned char *)&var->longest_int_time);
+   swap_bytes_SHORT((unsigned char *)&var->num_clusters);
 
-   swap_bytes_short((unsigned char *)&var->num_aux);
-   swap_bytes_short((unsigned char *)&var->num_pmd);
-   swap_bytes_short((unsigned char *)&var->num_int);
+   swap_bytes_SHORT((unsigned char *)&var->num_aux);
+   swap_bytes_SHORT((unsigned char *)&var->num_pmd);
+   swap_bytes_SHORT((unsigned char *)&var->num_int);
 
    for (i=0;i<MAX_CLUSTER;i++)
     {
-     swap_bytes_short((unsigned char *)&var->int_times[i]);
-     swap_bytes_short((unsigned char *)&var->num_polar[i]);
+     swap_bytes_SHORT((unsigned char *)&var->int_times[i]);
+     swap_bytes_SHORT((unsigned char *)&var->num_polar[i]);
 
-     swap_bytes_short((unsigned char *)&var->Clcon[i].pixel_nr);
-     swap_bytes_short((unsigned char *)&var->Clcon[i].length);
+     swap_bytes_SHORT((unsigned char *)&var->Clcon[i].pixel_nr);
+     swap_bytes_SHORT((unsigned char *)&var->Clcon[i].length);
      swap_bytes_float((unsigned char *)&var->Clcon[i].pet);
 
-     swap_bytes_short((unsigned char *)&var->Clcon[i].int_time);
-     swap_bytes_short((unsigned char *)&var->Clcon[i].coadd);
-     swap_bytes_short((unsigned char *)&var->Clcon[i].n_read);
+     swap_bytes_SHORT((unsigned char *)&var->Clcon[i].int_time);
+     swap_bytes_SHORT((unsigned char *)&var->Clcon[i].coadd);
+     swap_bytes_SHORT((unsigned char *)&var->Clcon[i].n_read);
     }
 
-   swap_bytes_short((unsigned char *)&var->total_polar);
-   swap_bytes_short((unsigned char *)&var->num_dsr);
+   swap_bytes_SHORT((unsigned char *)&var->total_polar);
+   swap_bytes_SHORT((unsigned char *)&var->num_dsr);
    swap_bytes_int((unsigned char *)&var->length_dsr);
   #endif
  }
@@ -220,10 +220,10 @@ void mds_1c_constant_getbin (FILE* unit, mds_1c_constant *var)
    swap_bytes_int((unsigned char *)&var->StartTime.musec);
    swap_bytes_int((unsigned char *)&var->length);
    swap_bytes_float((unsigned char *)&var->orbit_phase);
-   swap_bytes_short((unsigned char *)&var->category);
-   swap_bytes_short((unsigned char *)&var->state_id);
-   swap_bytes_short((unsigned char *)&var->cluster_id);
-   swap_bytes_short((unsigned char *)&var->nobs);
-   swap_bytes_short((unsigned char *)&var->npixels);
+   swap_bytes_SHORT((unsigned char *)&var->category);
+   swap_bytes_SHORT((unsigned char *)&var->state_id);
+   swap_bytes_SHORT((unsigned char *)&var->cluster_id);
+   swap_bytes_SHORT((unsigned char *)&var->nobs);
+   swap_bytes_SHORT((unsigned char *)&var->npixels);
   #endif
  }

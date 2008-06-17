@@ -272,7 +272,7 @@ DoasCh *Date2String(STRING2DATE *pDate,DoasCh *stringDate)
   fracDay=(double) pDate->hour*3600.+pDate->min*60.+pDate->sec;
   fracDay/=(double)0.864;
   sprintf(stringDate,"%d.%02d%02d%05ld",
-          pDate->year,pDate->month,pDate->day,(ULONG)floor(fracDay+0.5));
+          pDate->year,pDate->month,pDate->day,(DoasU32)floor(fracDay+0.5));
 
   // Return
 

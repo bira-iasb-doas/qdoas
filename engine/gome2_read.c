@@ -1177,9 +1177,9 @@ RC GOME2_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,INDEX fileIndex)
 
      	  // Output information on the current record
 
-     	  pRecord->present_day.da_day=(CHAR)day;
-        pRecord->present_day.da_mon=(CHAR)month;
-        pRecord->present_day.da_year=(SHORT)year;
+     	  pRecord->present_day.da_day=(char)day;
+        pRecord->present_day.da_mon=(char)month;
+        pRecord->present_day.da_year=(short)year;
 
         pRecord->present_time.ti_hour=(unsigned char)hour;
         pRecord->present_time.ti_min=(unsigned char)min;

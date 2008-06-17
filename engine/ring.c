@@ -1210,7 +1210,7 @@ void Ring(void *ringArg)
 // QDOAS ???
 // QDOAS ??? LRESULT CALLBACK RingCommand(HWND hwndRing,UINT msg,WPARAM mp1,LPARAM mp2)
 // QDOAS ???  {
-// QDOAS ???   switch((ULONG)GET_WM_COMMAND_ID(mp1,mp2))
+// QDOAS ???   switch((DoasU32)GET_WM_COMMAND_ID(mp1,mp2))
 // QDOAS ???    {
 // QDOAS ???  // ---------------------------------------------------------------------------
 // QDOAS ???     case TOOL_RING_TYPE_SOLAR :

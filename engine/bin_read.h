@@ -6,7 +6,7 @@
 
 void swap_bytes_float(unsigned char *var);
 void swap_bytes_int(unsigned char *var);
-void swap_bytes_short(unsigned char *var);
+void swap_bytes_SHORT(unsigned char *var);
 
 void GeoN_array_getbin (FILE* unit, GeoN *var, int nr);
 void GeoL_array_getbin (FILE* unit, GeoL *var, int nr);

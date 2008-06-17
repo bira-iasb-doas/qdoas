@@ -610,7 +610,7 @@ typedef struct _engineBuffers
          *varPix,                                                               // variability interpixel
          *dnl;                                                                  // non linearity of detector
 
-  ULONG  *recordIndexes;                                                        // indexes of records for direct access (specific to BIRA-IASB spectra file format)
+  DoasU32  *recordIndexes;                                                        // indexes of records for direct access (specific to BIRA-IASB spectra file format)
  }
 BUFFERS;
 
@@ -1070,7 +1070,7 @@ typedef struct _nasaResults
                   amNResults,pmNResults;                                             // number of AM/PM results
   double          refZm,                                                             // reference zenithal angle
                  *Zm,*Tm,*TDet,*TimeDec,*Cic;                                        // auxiliary results
-  CHAR            SkyObs;                                                            // sky state indication
+  char            SkyObs;                                                            // sky state indication
  }
 NASA_RESULTS;
 
@@ -1128,7 +1128,7 @@ enum _gomeGetCommand
 
 // Date in short format
 
-typedef struct _shortDateTime
+typedef struct _SHORTDateTime
  {
   char  da_year;        /* Year - 1980      */
   char  da_day;         /* Day of the month */
@@ -1185,23 +1185,23 @@ GEO_1;
 
 typedef struct                            // geolocation coordinates version 2
  {
-  USHORT          lonArray[5];            // longitude array
-  SHORT           latArray[5];            // latitude array
+  DoasUS          lonArray[5];            // longitude array
+  short           latArray[5];            // latitude array
   float           szaArray[3];            // zenithal array
   float           azim;                   // azimuth
   float           losZa;                  // line of sight zenith angle
   float           losAzim;                // line of sight azimuth angle
-  USHORT          unused[4];              // unused bytes
+  DoasUS          unused[4];              // unused bytes
  }
 GEO_2;
 
 typedef struct                            // geolocation coordinates version 3
  {
-  USHORT          lonArray[5];            // longitude array
-  SHORT           latArray[5];            // latitude array
+  DoasUS          lonArray[5];            // longitude array
+  short           latArray[5];            // latitude array
   float           szaArray[3];            // zenithal array
-  USHORT          losZa[3];               // line of sight zenithal array
-  USHORT          losAzim[3];             // line of sight azimuthal array
+  DoasUS          losZa[3];               // line of sight zenithal array
+  DoasUS          losAzim[3];             // line of sight azimuthal array
   float           satHeight;              // satellite geodetic height at point B
   float           radiusCurve;            // Earth radius curvatur at point B
  }
@@ -1262,7 +1262,7 @@ typedef struct _GOMEOrbitFiles                                                  
   double             *gdpBinCoeff;                                              // coefficients for reconstructing wavelength calibrations
   float               gdpBinScalingFactor[SCIENCE_DATA_DEFINED],                // scaling factors for spectra band per band
                       gdpBinScalingError[SCIENCE_DATA_DEFINED];                 // scaling factors for errors band per band
-  USHORT             *gdpBinReference,                                          // buffer for irradiance spectra
+  DoasUS             *gdpBinReference,                                          // buffer for irradiance spectra
                      *gdpBinRefError;                                           // errors on irradiance spectra
   INT                 specNumber;
   RC rc;
@@ -1364,10 +1364,10 @@ OMI_GEO;
 
 typedef struct _omi_spectrum
  {
-  SHORT  *mantissa;
-  SHORT  *precisionMantissa;
-  CHAR   *exponent;
-  USHORT *pixelQualityFlags;
+  short  *mantissa;
+  short  *precisionMantissa;
+  char   *exponent;
+  DoasUS *pixelQualityFlags;
   float  *wavelengthCoefficient;
   float  *wavelengthCoefficientPrecision;
  }
@@ -1379,35 +1379,35 @@ typedef struct _omi_data_fields
   DoasCh   *measurementClass;
   DoasCh   *instrumentConfigurationId;
   DoasCh   *instrumentConfigurationVersion;
-  USHORT  *measurementQualityFlags;
-  CHAR    *numberSmallPixelColumns;
-  CHAR    *exposureType;
+  DoasUS  *measurementQualityFlags;
+  char    *numberSmallPixelColumns;
+  char    *exposureType;
   float   *masterClockPeriod;
-  USHORT  *calibrationSettings;
+  DoasUS  *calibrationSettings;
   float   *exposureTime;
   float   *readoutTime;
-  SHORT   *smallPixelColumn;
-  SHORT   *gainSwitchingColumn1;
-  SHORT   *gainSwitchingColumn2;
-  SHORT   *gainSwitchingColumn3;
-  CHAR    *gainCode1;
-  CHAR    *gainCode2;
-  CHAR    *gainCode3;
-  CHAR    *gainCode4;
-  CHAR    *dSGainCode;
-  CHAR    *lowerStrayLightAreaBinningFactor;
-  CHAR    *upperStrayLightAreaBinningFactor;
-  CHAR    *lowerDarkAreaBinningFactor;
-  CHAR    *upperDarkAreaBinningFactor;
-  SHORT   *skipRows1;
-  SHORT   *skipRows2;
-  SHORT   *skipRows3;
-  SHORT   *skipRows4;
+  short   *smallPixelColumn;
+  short   *gainSwitchingColumn1;
+  short   *gainSwitchingColumn2;
+  short   *gainSwitchingColumn3;
+  char    *gainCode1;
+  char    *gainCode2;
+  char    *gainCode3;
+  char    *gainCode4;
+  char    *dSGainCode;
+  char    *lowerStrayLightAreaBinningFactor;
+  char    *upperStrayLightAreaBinningFactor;
+  char    *lowerDarkAreaBinningFactor;
+  char    *upperDarkAreaBinningFactor;
+  short   *skipRows1;
+  short   *skipRows2;
+  short   *skipRows3;
+  short   *skipRows4;
   float   *detectorTemperature;
   float   *opticalBenchTemperature;
   char    *imageBinningFactor;
-  SHORT   *binnedImageRows;
-  SHORT   *stopColumn;
+  short   *binnedImageRows;
+  short   *stopColumn;
  }
 OMI_DATA_FIELDS;
 
@@ -1415,9 +1415,9 @@ OMI_DATA_FIELDS;
 
 typedef struct _omi_swath_attr
  {
-  int32  numTimes;
-  int32  numTimesSmallPixel;
-  float  earthSunDistance;
+  int32_t  numTimes;
+  int32_t  numTimesSmallPixel;
+  float    earthSunDistance;
  }
 OMI_SWATH_ATTR;
 

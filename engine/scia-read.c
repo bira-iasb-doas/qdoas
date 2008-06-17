@@ -635,7 +635,7 @@ RC SciaNadirGeolocations(ENGINE_CONTEXT *pEngineContext,INDEX fileIndex)
   SATELLITE_GEOLOC *pSciaGeoloc;                                                // geolocations in the WinDOAS format
   SCIA_NADIR_STATE *pState;                                                     // pointer to the current state
   SCIA_CLUSDEF *pClusDef;                                                       // pointer to the definition of the cluster with the highest integration time in the current state
-  ULONG offset;                                                                 // offset of geolocation data from the beginning of file
+  DoasU32 offset;                                                                 // offset of geolocation data from the beginning of file
   INDEX indexRecord;                                                            // browse records
   INDEX indexObs;                                                               // browse observations in the current NADIR MDS
   INDEX indexState;                                                             // browse states
@@ -675,7 +675,7 @@ RC SciaNadirGeolocations(ENGINE_CONTEXT *pEngineContext,INDEX fileIndex)
             2*sizeof(char)+                                                     // quality+unit_flag
             1*sizeof(float)+                                                    // orbit_phase
             5*sizeof(short)+                                                    // category+state_id+cluster_id+nobs+npixels
-           (sizeof(USHORT)+                                                     // pixels id
+           (sizeof(DoasUS)+                                                     // pixels id
           2*sizeof(float))*pClusDef->npixels+                                   // wavelength+wavelength errors
           2*pClusDef->npixels*pClusDef->nobs*sizeof(float);                     // signal+error
 
@@ -759,9 +759,9 @@ RC SciaReadSunRefPDS(ENGINE_CONTEXT *pEngineContext,INDEX fileIndex)
   // Declarations
 
   SCIA_ORBIT_FILE *pOrbitFile;                                                  // pointer to the current orbit
-  ULONG offset;                                                                 // offset of reference spectra from the beginning of the PDS file
+  DoasU32 offset;                                                                 // offset of reference spectra from the beginning of the PDS file
   INDEX indexRef;                                                               // browse reference spectra in the file
-  CHAR refId[2];                                                                // id of the reference spectra
+  char refId[2];                                                                // id of the reference spectra
   FILE *fp;                                                                     // pointer to the current file
   INDEX i;                                                                      // browse positions in calibration and reference vectors
   double version;
@@ -876,7 +876,7 @@ RC SciaReadNadirMDSInfo(ENGINE_CONTEXT *pEngineContext,INDEX fileIndex)
   INDEX indexNadirMDS,                                                          // browse NADIR measurement data sets
         indexCluster,                                                           // browse clusters to account for
         indexState;                                                             // index of the current state
-  ULONG offset;                                                                 // offset in file
+  DoasU32 offset;                                                                 // offset in file
   RC rc;
 
   // DEBUG                                                                        // return code
@@ -958,7 +958,7 @@ RC SciaReadNadirMDS(ENGINE_CONTEXT *pEngineContext,INDEX indexState,INDEX indexR
   BUFFERS *pBuffers;                                                            // pointer to the buffers part of the engine context
 
   SCIA_ORBIT_FILE *pOrbitFile;                                                  // pointer to the current orbit
-  ULONG offset;                                                                 // offset from the beginning of file for data to read
+  DoasU32 offset;                                                                 // offset from the beginning of file for data to read
   SCIA_CLUSTER *pCluster;                                                       // pointer to the current cluster
   SCIA_CLUSDEF *pClusDef;                                                       // pointer to the definition of the cluster in the current state
   INDEX indexCluster;                                                           // browse cluster to read out
@@ -991,7 +991,7 @@ RC SciaReadNadirMDS(ENGINE_CONTEXT *pEngineContext,INDEX indexState,INDEX indexR
 
     // don't need pixels id and wavelength+wavelength errors
 
-          (sizeof(USHORT)+                                                      // pixels id
+          (sizeof(DoasUS)+                                                      // pixels id
          2*sizeof(float))*pClusDef->npixels;                                    // wavelength+wavelength errors
 
     // Spectra read out

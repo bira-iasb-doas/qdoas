@@ -947,7 +947,7 @@ RC FILES_LoadMatrix(FILE *fp,DoasCh *fileName,double **matrix,INT base,INT nl,IN
 // QDOAS ???               MASK fileType,                                                    // type of files selected
 // QDOAS ???               DoasCh *buffer,                                                    // buffer for receiving selected files
 // QDOAS ???               INT bufferSize,                                                   // size of previous buffer
-// QDOAS ???               LONG openStyles,                                                  // extra styles for dialog box creation
+// QDOAS ???               DoasI32 openStyles,                                                  // extra styles for dialog box creation
 // QDOAS ???               DoasCh openMode,                                                   // common dialog open mode
 // QDOAS ???               INT *symbolReferenceNumber,                                       // for cross sections, number of times symbols are referenced to
 // QDOAS ???               INDEX indexSymbol,                                                // index of a specified symbol
@@ -1187,7 +1187,7 @@ DoasCh *FILES_BuildFileName(DoasCh *fileName,MASK fileType)
 // QDOAS ???        (strlen(PRJCT_itemList[indexProject].instrumental.fileExt)<12))
 // QDOAS ???    strcpy(FILES_types[FILE_TYPE_SPECTRA].fileExt,PRJCT_itemList[indexProject].instrumental.fileExt);
 // QDOAS ???
-// QDOAS ???   FILES_Select(hwndTree,filesSelected,BUFFER_SIZE,fileType,(LONG)OFN_ALLOWMULTISELECT,FILE_MODE_OPEN,NULL,ITEM_NONE,ITEM_NONE);
+// QDOAS ???   FILES_Select(hwndTree,filesSelected,BUFFER_SIZE,fileType,(DoasI32)OFN_ALLOWMULTISELECT,FILE_MODE_OPEN,NULL,ITEM_NONE,ITEM_NONE);
 // QDOAS ???
 // QDOAS ???   if ((ptr=strchr(filesSelected,0))!=filesSelected)
 // QDOAS ???    {

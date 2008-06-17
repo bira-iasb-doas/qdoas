@@ -126,7 +126,7 @@ static double predTint[MAXTPS] =
   38.00,  46.00,  55.00,  66.00,  80.00,  95.00, 115.00, 140.00, 160.00, 200.00,
   240.00, 280.00, 340.00, 410.00, 490.00, 590.00 };
 
-static ULONG ccdDarkCurrentOffset[MAXTPS];                                      // offset of measured dark currents for each integration time
+static DoasU32 ccdDarkCurrentOffset[MAXTPS];                                      // offset of measured dark currents for each integration time
 
 // ------------------
 // Read out functions
@@ -154,11 +154,11 @@ RC SetCCD_EEV(ENGINE_CONTEXT *pEngineContext,FILE *specFp,FILE *darkFp)
   BUFFERS *pBuffers;                                                            // pointer to the buffers part of the engine context
 
   CCD_DATA header;                                                              // header of a record
-  ULONG   *recordIndexes;                                                       // indexes of records for direct access
+  DoasU32   *recordIndexes;                                                       // indexes of records for direct access
   INT      ccdX,ccdY;                                                           // size of the detector
   int      specMaxFlag;                                                         // 1 to use specMax, the vector of maxima of the scans
   INDEX    indexTps;                                                            // browse the predefined integration time
-  ULONG    offset;                                                              // offset to remove from the spectrum
+  DoasU32    offset;                                                              // offset to remove from the spectrum
   RC       rc;                                                                  // return code
 
   // Debugging
@@ -173,7 +173,7 @@ RC SetCCD_EEV(ENGINE_CONTEXT *pEngineContext,FILE *specFp,FILE *darkFp)
 
   recordIndexes=pEngineContext->buffers.recordIndexes;
 
-  memset(ccdDarkCurrentOffset,-1L,sizeof(ULONG)*MAXTPS);
+  memset(ccdDarkCurrentOffset,-1L,sizeof(DoasU32)*MAXTPS);
   pEngineContext->recordIndexesSize=2001;
   pEngineContext->recordNumber=0;
   specMaxFlag=0;
@@ -195,7 +195,7 @@ RC SetCCD_EEV(ENGINE_CONTEXT *pEngineContext,FILE *specFp,FILE *darkFp)
     // Read the header of the first record
 
     fseek(specFp,0L,SEEK_SET);
-    memset(recordIndexes,0L,sizeof(ULONG)*pEngineContext->recordIndexesSize);
+    memset(recordIndexes,0L,sizeof(DoasU32)*pEngineContext->recordIndexesSize);
 
     while (!feof(specFp) && fread(&header,sizeof(CCD_DATA),1,specFp))
      {
@@ -204,9 +204,9 @@ RC SetCCD_EEV(ENGINE_CONTEXT *pEngineContext,FILE *specFp,FILE *darkFp)
 
       pEngineContext->recordNumber++;
 
-      recordIndexes[pEngineContext->recordNumber]=(ULONG)
+      recordIndexes[pEngineContext->recordNumber]=(DoasU32)
         recordIndexes[pEngineContext->recordNumber-1]+
-        sizeof(CCD_DATA)+((header.saveTracks)?ccdX*ccdY*sizeof(USHORT):ccdX*sizeof(USHORT));
+        sizeof(CCD_DATA)+((header.saveTracks)?ccdX*ccdY*sizeof(DoasUS):ccdX*sizeof(DoasUS));
 
       // 15/02/2003 : dark current acquisition
 
@@ -216,7 +216,7 @@ RC SetCCD_EEV(ENGINE_CONTEXT *pEngineContext,FILE *specFp,FILE *darkFp)
          ((header.today.da_year==2003) && (header.today.da_mon==2) && (header.today.da_day>14))))
        {
         recordIndexes[pEngineContext->recordNumber]+=
-         (sizeof(double)+sizeof(SHORT))*header.nTint+sizeof(double)*(header.nrej+header.nacc);
+         (sizeof(double)+sizeof(short))*header.nTint+sizeof(double)*(header.nrej+header.nacc);
 
         specMaxFlag++;
        }
@@ -243,7 +243,7 @@ RC SetCCD_EEV(ENGINE_CONTEXT *pEngineContext,FILE *specFp,FILE *darkFp)
         if (indexTps<MAXTPS)
          ccdDarkCurrentOffset[indexTps]=offset;
 
-        offset+=sizeof(CCD_DATA)+((header.saveTracks)?ccdX*ccdY*sizeof(USHORT):ccdX*sizeof(USHORT));
+        offset+=sizeof(CCD_DATA)+((header.saveTracks)?ccdX*ccdY*sizeof(DoasUS):ccdX*sizeof(DoasUS));
         fseek(darkFp,offset,SEEK_SET);
        }
      }
@@ -263,7 +263,7 @@ RC SetCCD_EEV(ENGINE_CONTEXT *pEngineContext,FILE *specFp,FILE *darkFp)
 
       NDET=(header.roiWveEnd-header.roiWveStart+1)/header.roiWveGroup;
       ccdSizeY=(header.roiSlitEnd-header.roiSlitStart+1)/header.roiSlitGroup;
-      pEngineContext->recordSize=sizeof(CCD_DATA)+sizeof(USHORT)*NDET*ccdSizeY;
+      pEngineContext->recordSize=sizeof(CCD_DATA)+sizeof(DoasUS)*NDET*ccdSizeY;
       pEngineContext->recordNumber=fileLength/pEngineContext->recordSize;
      }  */
    }
@@ -311,11 +311,11 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
 
   CCD_DATA header;                                                              // header of the current record
   double *dspectrum,*tmpSpectrum;                                               // pointer to the vector in 'pEngineContext' to fill with the current spectrum
-  USHORT *spectrum;                                                             // spectrum to retrieve from the current record in the original format
+  DoasUS *spectrum;                                                             // spectrum to retrieve from the current record in the original format
   INT ccdX,ccdY,spSize;                                                         // dimensions of the CCD detector
-  USHORT *ccdTabNTint;                                                          // number of scans per different integration times
+  DoasUS *ccdTabNTint;                                                          // number of scans per different integration times
   double *ccdTabTint;                                                           // the different integration times used for the current measurement
-  USHORT *darkCurrent;                                                          // the dark current
+  DoasUS *darkCurrent;                                                          // the dark current
   int nTint;                                                                    // the number of different integration times
   double offset;                                                                // offset correction
   double tmLocal;
@@ -351,7 +351,7 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
    {
     // Set file pointers
 
-    fseek(specFp,(LONG)pBuffers->recordIndexes[recordNo-1],SEEK_SET);
+    fseek(specFp,(DoasI32)pBuffers->recordIndexes[recordNo-1],SEEK_SET);
 
     // Complete record read out
 
@@ -369,23 +369,23 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
 
       // Buffers allocation
 
-      if (((spectrum=(USHORT *)MEMORY_AllocBuffer("ReliCCD_EEV","spectrum",spSize,sizeof(USHORT),0,MEMORY_TYPE_USHORT))==NULL) ||
+      if (((spectrum=(DoasUS *)MEMORY_AllocBuffer("ReliCCD_EEV","spectrum",spSize,sizeof(DoasUS),0,MEMORY_TYPE_DoasUS))==NULL) ||
           ((tmpSpectrum=(double *)MEMORY_AllocBuffer("ReliCCD_EEV","tmpSpectrum",NDET,sizeof(double),0,MEMORY_TYPE_DOUBLE))==NULL) ||
-          ((darkCurrent=(USHORT *)MEMORY_AllocBuffer("ReliCCD_EEV","darkCurrent",NDET*400,sizeof(USHORT),0,MEMORY_TYPE_USHORT))==NULL) ||
-          ((ccdTabNTint=(USHORT *)MEMORY_AllocBuffer("ReliCCD_EEV","ccdTabNTint",300,sizeof(USHORT),0,MEMORY_TYPE_USHORT))==NULL) ||
+          ((darkCurrent=(DoasUS *)MEMORY_AllocBuffer("ReliCCD_EEV","darkCurrent",NDET*400,sizeof(DoasUS),0,MEMORY_TYPE_DoasUS))==NULL) ||
+          ((ccdTabNTint=(DoasUS *)MEMORY_AllocBuffer("ReliCCD_EEV","ccdTabNTint",300,sizeof(DoasUS),0,MEMORY_TYPE_DoasUS))==NULL) ||
           ((ccdTabTint=(double *)MEMORY_AllocBuffer("ReliCCD_EEV","ccdTabTint",300,sizeof(double),0,MEMORY_TYPE_DOUBLE))==NULL))
 
        rc=ERROR_ID_ALLOC;
 
       else
        {
-        memset(spectrum,0,sizeof(USHORT)*spSize);
-        memset(darkCurrent,0,sizeof(USHORT)*spSize);
+        memset(spectrum,0,sizeof(DoasUS)*spSize);
+        memset(darkCurrent,0,sizeof(DoasUS)*spSize);
 
-        if (!fread(spectrum,sizeof(USHORT)*spSize,1,specFp) ||
+        if (!fread(spectrum,sizeof(DoasUS)*spSize,1,specFp) ||
            ((header.nTint>0) &&
            (!fread(ccdTabTint,sizeof(double)*header.nTint,1,specFp) ||
-            !fread(ccdTabNTint,sizeof(SHORT)*header.nTint,1,specFp) ||
+            !fread(ccdTabNTint,sizeof(short)*header.nTint,1,specFp) ||
             !fread(pBuffers->specMax,sizeof(double)*(header.nacc+header.nrej),1,specFp))))
 
          rc=ERROR_SetLast("ReliCCD_EEV",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pEngineContext->fileInfo.fileName);
@@ -476,7 +476,7 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
 
                   spSize=(header.saveTracks)?ccdX*(header.roiSlitEnd-header.roiSlitStart+1)/header.roiSlitGroup:ccdX;
 
-                 	fread(darkCurrent,sizeof(USHORT)*spSize,1,darkFp);
+                 	fread(darkCurrent,sizeof(DoasUS)*spSize,1,darkFp);
 
                   for (i=0;i<NDET;i++)
                    {
@@ -582,27 +582,27 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
 
 typedef struct _ccd_1024
  {
-  SHORT        Scans;                                                           //  equivalent to the value for I in the custom scan programs
-  SHORT        Memories;                                                        //  equivalent to the value for J in the custom scan programs
-  SHORT        Ignored_Scans;                                                   //  equivalent to the value for K in the custom scan programs
-  SHORT        Prep_Frames;                                                     //  equivalent to the value for H in the custom scan programs
-  SHORT        Detector_Temp;                                                   //  detector temperature in degrees Celsius
-  SHORT        Cooler_Locked;                                                   //  cooler locked flag
-  SHORT        Shutter_Open_Sync_Index;                                         //  TRUE if wait for sync pulse to open shutter
-  SHORT        Shutter_Close_Sync_Index;                                        //  TRUE if wait for sync pulse to close shutter
-  SHORT        Shutter_Forced_Mode;                                             //  0 = normal.  1 = closed.  2 = open.
+  short        Scans;                                                           //  equivalent to the value for I in the custom scan programs
+  short        Memories;                                                        //  equivalent to the value for J in the custom scan programs
+  short        Ignored_Scans;                                                   //  equivalent to the value for K in the custom scan programs
+  short        Prep_Frames;                                                     //  equivalent to the value for H in the custom scan programs
+  short        Detector_Temp;                                                   //  detector temperature in degrees Celsius
+  short        Cooler_Locked;                                                   //  cooler locked flag
+  short        Shutter_Open_Sync_Index;                                         //  TRUE if wait for sync pulse to open shutter
+  short        Shutter_Close_Sync_Index;                                        //  TRUE if wait for sync pulse to close shutter
+  short        Shutter_Forced_Mode;                                             //  0 = normal.  1 = closed.  2 = open.
   float        Exposure_Time;                                                   //  current exposure time
-  SHORT        Tracks;                                                          //  number of tracks per memory
-  SHORT        Number_of_Points;                                                //  number of points per tracks
-  SHORT        X0;                                                              //  start column of X axis
-  SHORT        Y0;                                                              //  start row of Y axis
-  SHORT        ActiveX;                                                         //  array size, number of channels in the X axis
-  SHORT        ActiveY;                                                         //  array size, number of channels in the Y axis
+  short        Tracks;                                                          //  number of tracks per memory
+  short        Number_of_Points;                                                //  number of points per tracks
+  short        X0;                                                              //  start column of X axis
+  short        Y0;                                                              //  start row of Y axis
+  short        ActiveX;                                                         //  array size, number of channels in the X axis
+  short        ActiveY;                                                         //  array size, number of channels in the Y axis
   float        ReguTemp;                                                        //  bin size for uniform columns
-  SHORT        Slicemode;                                                       //  0 = uniform   1 = non uniform.
-  SHORT        Trackmode;                                                       //  0 = contiguous   1 = Random.
-  SHORT        Shiftmode;                                                       //  0 = CCD   1 = diode array   2 = streak camera
-  SHORT        rejected;                                                        //  number of rejected spectra ( too low or too high signal )
+  short        Slicemode;                                                       //  0 = uniform   1 = non uniform.
+  short        Trackmode;                                                       //  0 = contiguous   1 = Random.
+  short        Shiftmode;                                                       //  0 = CCD   1 = diode array   2 = streak camera
+  short        rejected;                                                        //  number of rejected spectra ( too low or too high signal )
   SHORT_DATE   Day;                                                             //  date of the measurement
   struct time  Hour;                                                            //  hour of the measurement
   double       Zm;                                                              //  zenith angle
@@ -630,9 +630,9 @@ RC SetCCD (ENGINE_CONTEXT *pEngineContext,FILE *specFp,INT flag)
  {
   // Declarations
 
-  ULONG  recordSize,                                                            // the size of one record in bytes (without SpecMax)
+  DoasU32  recordSize,                                                            // the size of one record in bytes (without SpecMax)
         *recordIndexes;                                                         // the position of spectra in bytes from the beginning of the file
-  SHORT *indexes,                                                               // the number of accumulations per spectrum (give by the same way,
+  short *indexes,                                                               // the number of accumulations per spectrum (give by the same way,
                                                                                 // the size of the SpecMax vectors)
          curvenum;                                                              // the number of spectra in the file
   INDEX  i;                                                                     // index for browsing spectra
@@ -649,7 +649,7 @@ RC SetCCD (ENGINE_CONTEXT *pEngineContext,FILE *specFp,INT flag)
 
   recordIndexes=pEngineContext->buffers.recordIndexes;
 
-  if (((indexes=(SHORT *)MEMORY_AllocBuffer("SetCCD","indexes",pEngineContext->recordIndexesSize,sizeof(SHORT),0,MEMORY_TYPE_SHORT))==NULL) ||
+  if (((indexes=(short *)MEMORY_AllocBuffer("SetCCD","indexes",pEngineContext->recordIndexesSize,sizeof(short),0,MEMORY_TYPE_SHORT))==NULL) ||
       ((pEngineContext->buffers.specMax=MEMORY_AllocDVector("SetCCD","specMax",0,NDET-1))==NULL))
 
    rc=ERROR_ID_ALLOC;
@@ -664,8 +664,8 @@ RC SetCCD (ENGINE_CONTEXT *pEngineContext,FILE *specFp,INT flag)
 
     fseek(specFp,0L,SEEK_SET);
 
-    if (fread(&curvenum,sizeof(SHORT),1,specFp) &&                              // number of spectra in the file
-        fread(indexes,pEngineContext->recordIndexesSize*sizeof(SHORT),1,specFp) &&   // number of accumulations (size of SpecMax vectors) per measurement
+    if (fread(&curvenum,sizeof(short),1,specFp) &&                              // number of spectra in the file
+        fread(indexes,pEngineContext->recordIndexesSize*sizeof(short),1,specFp) &&   // number of accumulations (size of SpecMax vectors) per measurement
         (curvenum>0))
      {
       pEngineContext->recordNumber=curvenum;
@@ -673,18 +673,18 @@ RC SetCCD (ENGINE_CONTEXT *pEngineContext,FILE *specFp,INT flag)
       // Calculate the size of a record (without SpecMax)
 
       if (flag==0)
-       recordSize=(LONG)sizeof(CCD_1024)+44L*(sizeof(float)+sizeof(USHORT)*NDET) + (LONG)(sizeof(float)+sizeof(SHORT))*300;
+       recordSize=(DoasI32)sizeof(CCD_1024)+44L*(sizeof(float)+sizeof(DoasUS)*NDET) + (DoasI32)(sizeof(float)+sizeof(short))*300;
       else if (flag==1)
-       recordSize=(LONG)sizeof(CCD_1024)+(LONG)sizeof(SHORT)*NDET;
+       recordSize=(DoasI32)sizeof(CCD_1024)+(DoasI32)sizeof(short)*NDET;
 
       // Calculate the position in bytes from the beginning of the file for each spectra
 
-      recordIndexes[0]=(LONG)(pEngineContext->recordIndexesSize+1)*sizeof(SHORT);    // file header : size of indexes table + curvenum
+      recordIndexes[0]=(DoasI32)(pEngineContext->recordIndexesSize+1)*sizeof(short);    // file header : size of indexes table + curvenum
 
       for (i=1;i<curvenum;i++)
        recordIndexes[i]=recordIndexes[i-1]+                                     // position of the previous record
                         recordSize+                                             // size of the record (without SpecMax)
-                        indexes[i]*sizeof(SHORT);                               // take SpecMax of the previous record into account
+                        indexes[i]*sizeof(short);                               // take SpecMax of the previous record into account
      }
    }
 
@@ -730,7 +730,7 @@ RC ReliCCD(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay
 
   CCD_1024 DetInfo;                                                             // data on the current record retrieved from the spectra file
   DoasCh names[20];                                                              // name of the current spectrum
-  USHORT *ISpectre,*ISpecMax;                                                   // resp. spectrum and SpecMax retrieved from the file
+  DoasUS *ISpectre,*ISpecMax;                                                   // resp. spectrum and SpecMax retrieved from the file
   double Max,tmLocal;                                                           // the maximum value measured for the current spectrum
   INDEX i;                                                                      // index for browsing pixels in the spectrum
   RC rc;                                                                        // return code
@@ -751,8 +751,8 @@ RC ReliCCD(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay
 
   // Buffers allocation
 
-  else if (((ISpectre=(USHORT *)MEMORY_AllocBuffer("ReliCCD","ISpectre",NDET,sizeof(USHORT),0,MEMORY_TYPE_USHORT))==NULL) ||
-           ((ISpecMax=(USHORT *)MEMORY_AllocBuffer("ReliCCD","ISpecMax",2000,sizeof(USHORT),0,MEMORY_TYPE_USHORT))==NULL))
+  else if (((ISpectre=(DoasUS *)MEMORY_AllocBuffer("ReliCCD","ISpectre",NDET,sizeof(DoasUS),0,MEMORY_TYPE_DoasUS))==NULL) ||
+           ((ISpecMax=(DoasUS *)MEMORY_AllocBuffer("ReliCCD","ISpecMax",2000,sizeof(DoasUS),0,MEMORY_TYPE_DoasUS))==NULL))
 
      rc=ERROR_ID_ALLOC;
   else
@@ -760,16 +760,16 @@ RC ReliCCD(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay
     // Set file pointers
 
     if (namesFp!=NULL)
-     fseek(namesFp,(LONG)20L*(recordNo-1),SEEK_SET);
+     fseek(namesFp,(DoasI32)20L*(recordNo-1),SEEK_SET);
 
-    fseek(specFp,(LONG)pBuffers->recordIndexes[recordNo-1],SEEK_SET);
+    fseek(specFp,(DoasI32)pBuffers->recordIndexes[recordNo-1],SEEK_SET);
 
     // Complete record read out
 
     if (((namesFp!=NULL) && !fread(names,20,1,namesFp)) ||
          !fread(&DetInfo,sizeof(CCD_1024),1,specFp) ||
-         !fread(ISpectre,sizeof(USHORT)*NDET,1,specFp) ||
-         !fread(ISpecMax,sizeof(USHORT)*(DetInfo.Scans+DetInfo.rejected),1,specFp))
+         !fread(ISpectre,sizeof(DoasUS)*NDET,1,specFp) ||
+         !fread(ISpecMax,sizeof(DoasUS)*(DetInfo.Scans+DetInfo.rejected),1,specFp))
 
      rc=ERROR_ID_FILE_END;
 
@@ -869,7 +869,7 @@ RC ReliCCDTrack(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loc
   CCD_1024 DetInfo;                                                             // data on the current spectra retrieved from the spectra file
   DoasCh names[20],                                                              // name of the current spectrum
         fileName[MAX_PATH_LEN+1];                                               // the complete file name (including path)
-  USHORT *ISpectre,*ISpecMax;                                                   // resp. spectrum and SpecMax retrieved from the file
+  DoasUS *ISpectre,*ISpecMax;                                                   // resp. spectrum and SpecMax retrieved from the file
   float *TabTint,*MaxTrk;                                                       // resp. integration time and track data
   INT *TabNSomme;                                                               // scans data
   double *varPix,tmLocal;                                                       // instrumental function for interpixel variability correction
@@ -898,11 +898,11 @@ RC ReliCCDTrack(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loc
 
   // Buffers allocation
 
-  else if (((ISpectre=(USHORT *)MEMORY_AllocBuffer("ReliCCDTrack","ISpectre",NDET,sizeof(USHORT),0,MEMORY_TYPE_USHORT))==NULL) ||
-           ((ISpecMax=(USHORT *)MEMORY_AllocBuffer("ReliCCDTrack","ISpecMax",2000,sizeof(USHORT),0,MEMORY_TYPE_USHORT))==NULL) ||
+  else if (((ISpectre=(DoasUS *)MEMORY_AllocBuffer("ReliCCDTrack","ISpectre",NDET,sizeof(DoasUS),0,MEMORY_TYPE_DoasUS))==NULL) ||
+           ((ISpecMax=(DoasUS *)MEMORY_AllocBuffer("ReliCCDTrack","ISpecMax",2000,sizeof(DoasUS),0,MEMORY_TYPE_DoasUS))==NULL) ||
            ((MaxTrk=(float *)MEMORY_AllocBuffer("ReliCCDTrack","MaxTrk",44,sizeof(float),0,MEMORY_TYPE_FLOAT))==NULL) ||
            ((varPix=(double *)MEMORY_AllocBuffer("ReliCCDTrack","varPix",NDET,sizeof(double),0,MEMORY_TYPE_DOUBLE))==NULL) ||
-           ((TabTint=(float *)MEMORY_AllocBuffer("ReliCCDTrack","TabTint",300,sizeof(float),0,MEMORY_TYPE_USHORT))==NULL) ||
+           ((TabTint=(float *)MEMORY_AllocBuffer("ReliCCDTrack","TabTint",300,sizeof(float),0,MEMORY_TYPE_DoasUS))==NULL) ||
            ((TabNSomme=(int *)MEMORY_AllocBuffer("ReliCCDTrack","TabNSomme",300,sizeof(int),0,MEMORY_TYPE_INT))==NULL))
 
    rc=ERROR_ID_ALLOC;
@@ -912,9 +912,9 @@ RC ReliCCDTrack(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loc
     // Set file pointers
 
     if (namesFp!=NULL)
-     fseek(namesFp,(LONG)20L*(recordNo-1),SEEK_SET);
+     fseek(namesFp,(DoasI32)20L*(recordNo-1),SEEK_SET);
 
-    fseek(specFp,(LONG)pBuffers->recordIndexes[recordNo-1],SEEK_SET);
+    fseek(specFp,(DoasI32)pBuffers->recordIndexes[recordNo-1],SEEK_SET);
 
     // Complete record read out
 
@@ -944,7 +944,7 @@ RC ReliCCDTrack(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loc
 
       for (i=0;(i<DetInfo.Tracks) && !rc;i++)
        {
-        if (!fread(ISpectre,sizeof(USHORT)*NDET,1,specFp))
+        if (!fread(ISpectre,sizeof(DoasUS)*NDET,1,specFp))
          rc=ERROR_SetLast("ReliCCD_EEV",ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pEngineContext->fileInfo.fileName);
         else
          {
@@ -958,8 +958,8 @@ RC ReliCCDTrack(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loc
 
       if (!rc)
        {
-        if (!fread(TabTint,sizeof(float)*300,1,specFp) || !fread(TabNSomme,sizeof(SHORT)*300,1,specFp) ||
-            !fread(ISpecMax,sizeof(USHORT)*(DetInfo.Scans+DetInfo.rejected),1,specFp))
+        if (!fread(TabTint,sizeof(float)*300,1,specFp) || !fread(TabNSomme,sizeof(short)*300,1,specFp) ||
+            !fread(ISpecMax,sizeof(DoasUS)*(DetInfo.Scans+DetInfo.rejected),1,specFp))
 
          rc=ERROR_ID_FILE_END;
 

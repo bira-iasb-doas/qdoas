@@ -217,7 +217,7 @@ THRD_GOTO THRD_goto={ 1, ITEM_NONE, 1, 0, ITEM_NONE, ITEM_NONE };
 // QDOAS ??? #endif
 // QDOAS ??? LRESULT CALLBACK ThrdGotoCommand(HWND hwndThrdGoto,UINT msg,WPARAM mp1,LPARAM mp2)
 // QDOAS ???  {
-// QDOAS ???   switch((ULONG)GET_WM_COMMAND_ID(mp1,mp2))
+// QDOAS ???   switch((DoasU32)GET_WM_COMMAND_ID(mp1,mp2))
 // QDOAS ???    {
 // QDOAS ???  // ---------------------------------------------------------------------------
 // QDOAS ???     case IDOK :                      // close dialog box on OK button command
@@ -1020,7 +1020,7 @@ RC ThrdInitSpecInfo(ENGINE_CONTEXT *pEngineContext,PROJECT *pProject)
             (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_PDAEGG_ULB) ||
             (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_PDASI_EASOE)) &&
 
-           ((pBuffers->recordIndexes=(ULONG *)MEMORY_AllocBuffer("ThrdInitSpecInfo ","recordIndexes",2001,sizeof(ULONG),0,MEMORY_TYPE_LONG))==NULL)) ||
+           ((pBuffers->recordIndexes=(DoasU32 *)MEMORY_AllocBuffer("ThrdInitSpecInfo ","recordIndexes",2001,sizeof(DoasU32),0,MEMORY_TYPE_DoasI32))==NULL)) ||
 
           (((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_GDP_ASCII) ||
             (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN) ||
@@ -1597,7 +1597,7 @@ RC ThrdLoadInstrumental(ENGINE_CONTEXT *pEngineContext,DoasCh *instrFile,INT fil
 // QDOAS ???   // Declarations
 // QDOAS ???
 // QDOAS ???   DoasCh *textBuffer;
-// QDOAS ???   LONG fileSize;
+// QDOAS ???   DoasI32 fileSize;
 // QDOAS ???   FILE *fp;
 // QDOAS ???   HWND hwndEdit;
 // QDOAS ???

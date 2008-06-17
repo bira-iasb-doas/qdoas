@@ -814,9 +814,9 @@ L1C_error Read_SPH (FILE* unit, SPH *sph, MPH *mph)
 	   "START_TIME=\"%27c\"\n"
 	   "STOP_TIME=\"%27c\"\n"
 	   "START_LAT=%11c<10-6degN>\n"
-	   "START_LONG=%11c<10-6degE>\n"
+	   "START_DoasI32=%11c<10-6degE>\n"
 	   "STOP_LAT=%11c<10-6degN>\n"
-	   "STOP_LONG=%11c<10-6degE>\n",
+	   "STOP_DoasI32=%11c<10-6degE>\n",
 	   sph->sph_descriptor ,
 	   sph->stripline_continuity_indicator ,
 	   sph->slice_position ,

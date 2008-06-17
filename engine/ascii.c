@@ -182,9 +182,9 @@ static INDEX asciiLastRecord=ITEM_NONE;                                         
 // QDOAS ???  // ---------------------------------------------------------------------------
 // QDOAS ???     case WM_COMMAND :
 // QDOAS ???      {
-// QDOAS ???       ULONG commandID;
+// QDOAS ???       DoasU32 commandID;
 // QDOAS ???
-// QDOAS ???       if ((commandID=(ULONG)GET_WM_COMMAND_ID(mp1,mp2))==IDOK)                  // Close dialog box on OK button command
+// QDOAS ???       if ((commandID=(DoasU32)GET_WM_COMMAND_ID(mp1,mp2))==IDOK)                  // Close dialog box on OK button command
 // QDOAS ???        {
 // QDOAS ???         AsciiSet(hwndAscii);
 // QDOAS ???         EndDialog(hwndAscii,TRUE);
@@ -590,7 +590,7 @@ RC ASCII_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,INT local
 
     if (pInstr->ascii.format==PRJCT_INSTR_ASCII_FORMAT_LINE)
      {
-     	// Allocate buffer for LONG lines
+     	// Allocate buffer for DoasI32 lines
 
       if ((lineRecord=(char *)MEMORY_AllocBuffer("ASCII_Read ","lineRecord",1,MAX_LINE_LENGTH,0,MEMORY_TYPE_STRING))==NULL)
        rc=ERROR_ID_ALLOC;

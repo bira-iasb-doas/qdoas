@@ -64,7 +64,7 @@
 
 typedef struct easoe
  {
-  LONG t_int;                                                                   // exposure time
+  DoasI32 t_int;                                                                   // exposure time
   short n_somm;                                                                 // number of accumulations
   SHORT_DATE present_day;                                                       // measurement date
   struct time present_time;                                                     // measurement time
@@ -97,9 +97,9 @@ RC SetEASOE(ENGINE_CONTEXT *pEngineContext,FILE *specFp,FILE *namesFp)
   // Declarations
 
   DoasCh  names[20];                                                             // name of the current spectrum
-  SHORT *indexes,                                                               // size of SpecMax arrays
+  short *indexes,                                                               // size of SpecMax arrays
          curvenum;                                                              // number of spectra in the file
-  ULONG *recordIndexes;                                                         // save the position of each record in the file
+  DoasU32 *recordIndexes;                                                         // save the position of each record in the file
   INDEX i;                                                                      // browse spectra in the file
   RC rc;                                                                        // return code
 
@@ -111,7 +111,7 @@ RC SetEASOE(ENGINE_CONTEXT *pEngineContext,FILE *specFp,FILE *namesFp)
 
   // Buffers allocation
 
-  if (((indexes=(SHORT *)MEMORY_AllocBuffer("SetEASOE","indexes",pEngineContext->recordIndexesSize,sizeof(SHORT),0,MEMORY_TYPE_SHORT))==NULL) ||
+  if (((indexes=(short *)MEMORY_AllocBuffer("SetEASOE","indexes",pEngineContext->recordIndexesSize,sizeof(short),0,MEMORY_TYPE_SHORT))==NULL) ||
       ((pEngineContext->buffers.specMax=MEMORY_AllocDVector("SetEASOE","specMax",0,NDET-1))==NULL))
 
    rc=ERROR_ID_ALLOC;
@@ -127,8 +127,8 @@ RC SetEASOE(ENGINE_CONTEXT *pEngineContext,FILE *specFp,FILE *namesFp)
     fseek(specFp,0L,SEEK_SET);
     fseek(namesFp,0L,SEEK_SET);
 
-    if (!fread(&curvenum,sizeof(SHORT),1,specFp) ||
-        !fread(indexes,pEngineContext->recordIndexesSize*sizeof(SHORT),1,specFp) ||
+    if (!fread(&curvenum,sizeof(short),1,specFp) ||
+        !fread(indexes,pEngineContext->recordIndexesSize*sizeof(short),1,specFp) ||
         (curvenum<=0))
 
      rc=ERROR_SetLast("SetEASOE",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pEngineContext->fileInfo.fileName);
@@ -136,7 +136,7 @@ RC SetEASOE(ENGINE_CONTEXT *pEngineContext,FILE *specFp,FILE *namesFp)
     else
      {
       i=0;
-      recordIndexes[0]=(LONG)(pEngineContext->recordIndexesSize+1)*sizeof(SHORT);    // file header : size of indexes table + curvenum
+      recordIndexes[0]=(DoasI32)(pEngineContext->recordIndexesSize+1)*sizeof(short);    // file header : size of indexes table + curvenum
 
       if (namesFp!=NULL )
        {
@@ -155,7 +155,7 @@ RC SetEASOE(ENGINE_CONTEXT *pEngineContext,FILE *specFp,FILE *namesFp)
        }
 
       pEngineContext->recordNumber=curvenum;
-      pEngineContext->recordSize=(LONG)sizeof(EASOE);
+      pEngineContext->recordSize=(DoasI32)sizeof(EASOE);
 
       for (i=1;i<curvenum;i++)
        recordIndexes[i]=recordIndexes[i-1]+pEngineContext->recordSize+indexes[i];    // take size of SpecMax arrays into account
@@ -202,7 +202,7 @@ RC ReliEASOE(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localD
 
   EASOE             speRecord,drkRecord;                                        // resp. spectrum and dark current records
   DoasCh             names[20];                                                  // name of the current spectrum
-  USHORT           *ISpecMax;                                                   // scans number for each integration time
+  DoasUS           *ISpecMax;                                                   // scans number for each integration time
   double            tmLocal;                                                    // temporary data
   INDEX             i,j;                                                        // indexes for loops and arrays
   RC                rc;                                                         // return code
@@ -229,7 +229,7 @@ RC ReliEASOE(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localD
 
   // Buffers allocation
 
-  else if ((ISpecMax=(USHORT *)MEMORY_AllocBuffer("ReliEASOE","ISpecMax",2000,sizeof(USHORT),0,MEMORY_TYPE_USHORT))==NULL)
+  else if ((ISpecMax=(DoasUS *)MEMORY_AllocBuffer("ReliEASOE","ISpecMax",2000,sizeof(DoasUS),0,MEMORY_TYPE_DoasUS))==NULL)
    rc=ERROR_ID_ALLOC;
   else
    {
@@ -253,7 +253,7 @@ RC ReliEASOE(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localD
        }
      }
 
-    fseek(specFp,(LONG)pEngineContext->buffers.recordIndexes[recordNo-1],SEEK_SET);
+    fseek(specFp,(DoasI32)pEngineContext->buffers.recordIndexes[recordNo-1],SEEK_SET);
 
     // Complete record read out
 
@@ -261,7 +261,7 @@ RC ReliEASOE(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localD
 
     if ((darkFp!=NULL) && (j>0))
      {
-      fseek(darkFp,(LONG)sizeof(EASOE)*(j-1),SEEK_SET);
+      fseek(darkFp,(DoasI32)sizeof(EASOE)*(j-1),SEEK_SET);
       fread(&drkRecord,pEngineContext->recordSize,1,darkFp);                         // read out the dark current
      }
 

@@ -107,7 +107,7 @@ RC SetPDA_EGG_Logger(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
  {
   // Declarations
 
-  CHAR *record;                         // string buffer
+  char *record;                         // string buffer
   RC rc;                                // return code
 
   // Initializations
@@ -118,7 +118,7 @@ RC SetPDA_EGG_Logger(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
 
   // Buffer allocation
 
-  if ((record=(char *)MEMORY_AllocBuffer("SetPDA_EGG_Logger ","record",8001,sizeof(CHAR),0,MEMORY_TYPE_STRING))==NULL)
+  if ((record=(char *)MEMORY_AllocBuffer("SetPDA_EGG_Logger ","record",8001,sizeof(char),0,MEMORY_TYPE_STRING))==NULL)
    rc=ERROR_ID_ALLOC;
   else if (specFp==NULL)
    rc=ERROR_SetLast("SetPDA_EGG_Logger",ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pEngineContext->fileInfo.fileName);
@@ -185,9 +185,9 @@ RC GotoPDA_EGG_Logger(FILE *specFp,int recordNo)
 
     fgets(record,8000,specFp);                             // read out the first record for calculating its size
     recordSize=strlen(record);                             // each record has the same size in despite this is an ASCII format
-    fseek(specFp,(LONG)recordSize*recordNo,SEEK_SET);      // move the file pointer to the requested record
+    fseek(specFp,(DoasI32)recordSize*recordNo,SEEK_SET);      // move the file pointer to the requested record
 
-//    fseek(specFp,(LONG)LOG_LENGTH*recordNo,SEEK_SET);      // move the file pointer to the requested record
+//    fseek(specFp,(DoasI32)LOG_LENGTH*recordNo,SEEK_SET);      // move the file pointer to the requested record
    }
 
   // Release the allocated buffer
@@ -415,9 +415,9 @@ RC ReliPDA_EGG_Logger(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,i
 PDA1453A
  {
   float       ReguTemp;
-  SHORT       Detector_Temp;
-  SHORT       ScansNumber;
-  SHORT       Rejected;
+  short       Detector_Temp;
+  short       ScansNumber;
+  short       Rejected;
   double      Exposure_time;
   double      Zm;
   char        SkyObs;
@@ -470,9 +470,9 @@ RC SetPDA_EGG(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
 
   BUFFERS *pBuffers;                                                            // pointer to the buffers part of the engine context
   PDA1453A header;                                                              // record header
-  SHORT *indexes,                                                               // size of SpecMax arrays
+  short *indexes,                                                               // size of SpecMax arrays
          curvenum;                                                              // number of spectra in the file
-  ULONG  recordSize,                                                            // size of a record without SpecMax
+  DoasU32  recordSize,                                                            // size of a record without SpecMax
         *recordIndexes;                                                         // save the position of each record in the file
   INDEX i;                                                                      // browse spectra in the file
   RC rc;                                                                        // return code
@@ -489,7 +489,7 @@ RC SetPDA_EGG(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
 
   // Buffers allocation
 
-  if (((indexes=(SHORT *)MEMORY_AllocBuffer("SetPDA_EGG ","indexes",pEngineContext->recordIndexesSize,sizeof(SHORT),0,MEMORY_TYPE_SHORT))==NULL) ||
+  if (((indexes=(short *)MEMORY_AllocBuffer("SetPDA_EGG ","indexes",pEngineContext->recordIndexesSize,sizeof(short),0,MEMORY_TYPE_SHORT))==NULL) ||
       ((pBuffers->specMax=MEMORY_AllocDVector("SetPDA_EGG ","specMax",0,NDET-1))==NULL) ||
       ((pBuffers->specMaxx=MEMORY_AllocDVector("SetPDA_EGG ","specMaxx",0,NDET-1))==NULL))
 
@@ -517,8 +517,8 @@ RC SetPDA_EGG(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
 
     fseek(specFp,0L,SEEK_SET);
 
-    if (!fread(&curvenum,sizeof(SHORT),1,specFp) ||
-        !fread(indexes,pEngineContext->recordIndexesSize*sizeof(SHORT),1,specFp) ||
+    if (!fread(&curvenum,sizeof(short),1,specFp) ||
+        !fread(indexes,pEngineContext->recordIndexesSize*sizeof(short),1,specFp) ||
         (curvenum<=0))
 
      rc=ERROR_SetLast("SetPDA_EGG",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pEngineContext->fileInfo.fileName);
@@ -527,13 +527,13 @@ RC SetPDA_EGG(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
      {
       // Save the position of each record in the file
 
-// !!! */      fwrite(&curvenum,sizeof(SHORT),1,fp);
-// !!! */      fwrite(indexes,pEngineContext->recordIndexesSize*sizeof(SHORT),1,fp);
+// !!! */      fwrite(&curvenum,sizeof(short),1,fp);
+// !!! */      fwrite(indexes,pEngineContext->recordIndexesSize*sizeof(short),1,fp);
 // !!! */      fclose(fp);
 
       pEngineContext->recordNumber=curvenum;
 
-      pEngineContext->recordSize=recordSize=(LONG)sizeof(PDA1453A)-
+      pEngineContext->recordSize=recordSize=(DoasI32)sizeof(PDA1453A)-
                                              sizeof(double)-                    // azimuth (only since dec 2000)
                                              sizeof(float);                     // elevation (only since 2003)
 
@@ -546,17 +546,17 @@ RC SetPDA_EGG(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
          pEngineContext->recordSize+=sizeof(float);
        }
 
-      fseek(specFp,-((LONG)recordSize),SEEK_CUR);
+      fseek(specFp,-((DoasI32)recordSize),SEEK_CUR);
 
-      recordSize=pEngineContext->recordSize+(LONG)sizeof(USHORT)*NDET+(300L*(sizeof(SHORT)+sizeof(float))+8L)*newFlag;
+      recordSize=pEngineContext->recordSize+(DoasI32)sizeof(DoasUS)*NDET+(300L*(sizeof(short)+sizeof(float))+8L)*newFlag;
 
-//      recordSize=(LONG)sizeof(PDA1453A)-((!pEngineContext->project.instrumental.azimuthFlag)?
-//                       sizeof(double):0)+(LONG)sizeof(USHORT)*NDET+(300L*(sizeof(SHORT)+sizeof(float))+8L)*newFlag;
+//      recordSize=(DoasI32)sizeof(PDA1453A)-((!pEngineContext->project.instrumental.azimuthFlag)?
+//                       sizeof(double):0)+(DoasI32)sizeof(DoasUS)*NDET+(300L*(sizeof(short)+sizeof(float))+8L)*newFlag;
 
-      recordIndexes[0]=(LONG)(pEngineContext->recordIndexesSize+1)*sizeof(SHORT);      // file header : size of indexes table + curvenum
+      recordIndexes[0]=(DoasI32)(pEngineContext->recordIndexesSize+1)*sizeof(short);      // file header : size of indexes table + curvenum
 
       for (i=1;i<curvenum;i++)
-       recordIndexes[i]=recordIndexes[i-1]+recordSize+indexes[i]*sizeof(USHORT);  // take size of SpecMax arrays into account
+       recordIndexes[i]=recordIndexes[i-1]+recordSize+indexes[i]*sizeof(DoasUS);  // take size of SpecMax arrays into account
      }
    }
 
@@ -608,7 +608,7 @@ RC ReliPDA_EGG(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
   DoasCh             fileNameShort[MAX_STR_SHORT_LEN+1],                         // temporary file name
                    *ptr,                                                        // pointer to part of the previous string
                     names[20];                                                  // name of the current spectrum
-  USHORT           *ISpectre,                                                   // spectrum in the original format
+  DoasUS           *ISpectre,                                                   // spectrum in the original format
                    *ISpecMax,                                                   // maximum values for each scan
                    *TabNSomme;                                                  // scans number for each integration time
   double            SMax,                                                       // maximum value of the current not normalized spectrum
@@ -661,11 +661,11 @@ RC ReliPDA_EGG(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
 
   // Buffers allocation
 
-  else if (((ISpectre=(USHORT *)MEMORY_AllocBuffer("ReliPDA_EGG ","ISpectre",NDET,sizeof(USHORT),0,MEMORY_TYPE_USHORT))==NULL) ||
+  else if (((ISpectre=(DoasUS *)MEMORY_AllocBuffer("ReliPDA_EGG ","ISpectre",NDET,sizeof(DoasUS),0,MEMORY_TYPE_DoasUS))==NULL) ||
            ((ObsScan=(double *)MEMORY_AllocBuffer("ReliPDA_EGG ","ObsScan",NDET,sizeof(double),0,MEMORY_TYPE_DOUBLE))==NULL) ||
-           ((ISpecMax=(USHORT *)MEMORY_AllocBuffer("ReliPDA_EGG ","ISpecMax",2000,sizeof(USHORT),0,MEMORY_TYPE_USHORT))==NULL) ||
+           ((ISpecMax=(DoasUS *)MEMORY_AllocBuffer("ReliPDA_EGG ","ISpecMax",2000,sizeof(DoasUS),0,MEMORY_TYPE_DoasUS))==NULL) ||
            ((TabTint=(float *)MEMORY_AllocBuffer("ReliPDA_EGG ","TabTint",300,sizeof(float),0,MEMORY_TYPE_FLOAT))==NULL) ||
-           ((TabNSomme=(USHORT *)MEMORY_AllocBuffer("ReliPDA_EGG ","TabNSomme",300,sizeof(USHORT),0,MEMORY_TYPE_USHORT))==NULL))
+           ((TabNSomme=(DoasUS *)MEMORY_AllocBuffer("ReliPDA_EGG ","TabNSomme",300,sizeof(DoasUS),0,MEMORY_TYPE_DoasUS))==NULL))
 
    rc=ERROR_ID_ALLOC;
 
@@ -674,20 +674,20 @@ RC ReliPDA_EGG(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
     // Set file pointers
 
     if (namesFp!=NULL)
-     fseek(namesFp,(LONG)20L*((recordNo-1)*(1+!newFlag)+!newFlag),SEEK_SET);
+     fseek(namesFp,(DoasI32)20L*((recordNo-1)*(1+!newFlag)+!newFlag),SEEK_SET);
 
-    fseek(specFp,(LONG)pBuffers->recordIndexes[recordNo-1],SEEK_SET);
+    fseek(specFp,(DoasI32)pBuffers->recordIndexes[recordNo-1],SEEK_SET);
 
     // Complete record read out
 
     if (((namesFp!=NULL) && !fread(names,20,1,namesFp)) ||
          !fread(&header,pEngineContext->recordSize,1,specFp) ||
-         !fread(ISpectre,sizeof(USHORT)*NDET,1,specFp) ||
+         !fread(ISpectre,sizeof(DoasUS)*NDET,1,specFp) ||
          (newFlag &&
         (!fread(TabTint,sizeof(float)*300,1,specFp) ||
-         !fread(TabNSomme,sizeof(USHORT)*300,1,specFp) ||
+         !fread(TabNSomme,sizeof(DoasUS)*300,1,specFp) ||
          !fread(&Max,sizeof(double),1,specFp))) ||
-         !fread(ISpecMax,sizeof(USHORT)*(header.Rejected+header.ScansNumber),1,specFp))
+         !fread(ISpecMax,sizeof(DoasUS)*(header.Rejected+header.ScansNumber),1,specFp))
 
      rc=ERROR_ID_FILE_END;
 
@@ -769,11 +769,11 @@ RC ReliPDA_EGG(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
         }
 
 // ! ***/           fwrite(&header,sizeof(PDA1453A),1,gp);
-// ! ***/           fwrite(ISpectre,sizeof(USHORT)*NDET,1,gp);
+// ! ***/           fwrite(ISpectre,sizeof(DoasUS)*NDET,1,gp);
 // ! ***/           fwrite(TabTint,sizeof(float)*300,1,gp);
-// ! ***/           fwrite(TabNSomme,sizeof(USHORT)*300,1,gp);
+// ! ***/           fwrite(TabNSomme,sizeof(DoasUS)*300,1,gp);
 // ! ***/           fwrite(&Max,sizeof(double),1,gp);
-// ! ***/           fwrite(ISpecMax,sizeof(USHORT)*(header.Rejected+header.ScansNumber),1,gp);
+// ! ***/           fwrite(ISpecMax,sizeof(DoasUS)*(header.Rejected+header.ScansNumber),1,gp);
 // ! ***/           fclose(gp);
 
         memcpy(&pRecord->present_day, &header.today, sizeof(SHORT_DATE));
@@ -857,7 +857,7 @@ RC ReliPDA_EGG(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
               if ((j!=MAXTPS) && (pBuffers->darkCurrent!=NULL) && (darkFp!=NULL) &&
                   ((int)STD_FileLength(darkFp)>=(int)((j+1)*sizeof(double)*NDET)))
                {
-                fseek(darkFp,(LONG)j*NDET*sizeof(double),SEEK_SET);
+                fseek(darkFp,(DoasI32)j*NDET*sizeof(double),SEEK_SET);
                 fread(ObsScan,sizeof(double)*NDET,1,darkFp);
 
                 for (i=0;i<NDET;i++)
@@ -869,10 +869,10 @@ RC ReliPDA_EGG(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
            }
           else if (pBuffers->darkCurrent!=NULL)
            {
-            fseek(darkFp,(LONG)(pEngineContext->recordIndexesSize+1)*sizeof(SHORT)+(pEngineContext->recordSize+(LONG)sizeof(USHORT)*NDET)*(recordNo-1),SEEK_SET);
+            fseek(darkFp,(DoasI32)(pEngineContext->recordIndexesSize+1)*sizeof(short)+(pEngineContext->recordSize+(DoasI32)sizeof(DoasUS)*NDET)*(recordNo-1),SEEK_SET);
 
             fread(&header,pEngineContext->recordSize,1,darkFp);
-            fread(ISpectre,sizeof(USHORT)*NDET,1,darkFp);
+            fread(ISpectre,sizeof(DoasUS)*NDET,1,darkFp);
 
             for (i=0;i<NDET;i++)
              pBuffers->darkCurrent[i]=(double)ISpectre[i];

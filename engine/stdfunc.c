@@ -441,8 +441,8 @@ long STD_FileLength(FILE *fp)
  {
  	// Declarations
 
-  LONG fileSize=0L;                                                             // the size of the file
-  LONG oldPos;                                                                  // the position of the file pointer
+  DoasI32 fileSize=0L;                                                             // the size of the file
+  DoasI32 oldPos;                                                                  // the position of the file pointer
 
   // Calculate the file size
 
