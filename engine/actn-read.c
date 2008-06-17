@@ -311,15 +311,15 @@ RC ReliActon_Logger(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int
       pRecord=pRecord+20;
       pTemp=strcpy(pTemp,"                    \0");
       strncpy(pTemp,pRecord,2);
-      pRecordInfo->present_time.ti_hour=(UCHAR)atoi(pTemp);
+      pRecordInfo->present_time.ti_hour=(unsigned char)atoi(pTemp);
       pRecord=pRecord+3;
       pTemp=strcpy(pTemp,"                    \0");
       strncpy(pTemp,pRecord,2);
-      pRecordInfo->present_time.ti_min=(UCHAR)atoi(pTemp);
+      pRecordInfo->present_time.ti_min=(unsigned char)atoi(pTemp);
       pRecord=pRecord+3;
       pTemp=strcpy(pTemp,"                    \0");
       strncpy(pTemp,pRecord,2);
-      pRecordInfo->present_time.ti_sec=(UCHAR)atoi(pTemp);
+      pRecordInfo->present_time.ti_sec=(unsigned char)atoi(pTemp);
       pRecord=pRecord+3;
       pTemp=strcpy(pTemp,"                    \0");
       pRecordInfo->ReguTemp=(float)atof(pRecord);

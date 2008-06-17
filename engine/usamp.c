@@ -95,7 +95,7 @@
 // STATIC DECLARATIONS
 // ===================
 
-UCHAR *usampAnalysisMethod[USAMP_METHOD_MAX]={"Optical density","Intensity fitting"};
+DoasCh *usampAnalysisMethod[USAMP_METHOD_MAX]={"Optical density","Intensity fitting"};
 USAMP  USAMP_buffers;
 FFT    usampFFT;
 
@@ -693,7 +693,7 @@ RC USAMP_BuildFromAnalysis(INT analysisFlag,INT gomeFlag)
 // QDOAS ???  {
 // QDOAS ???   // Declarations
 // QDOAS ???
-// QDOAS ???   UCHAR fileName1[MAX_ITEM_TEXT_LEN+1],fileName2[MAX_ITEM_TEXT_LEN+1];
+// QDOAS ???   DoasCh fileName1[MAX_ITEM_TEXT_LEN+1],fileName2[MAX_ITEM_TEXT_LEN+1];
 // QDOAS ???   MATRIX_OBJECT calibrationMatrix,kuruczMatrix;
 // QDOAS ???   HCURSOR hcurSave,hcursHourGlass;
 // QDOAS ???   double *phase1,*phase2;
@@ -866,7 +866,7 @@ RC USAMP_GlobalAlloc(double lambdaMin,double lambdaMax,INT size)
  {
   // Declarations
 
-  UCHAR kuruczFile[MAX_ITEM_TEXT_LEN+1];
+  DoasCh kuruczFile[MAX_ITEM_TEXT_LEN+1];
   FENO *pTabFeno;
   INDEX indexFeno;
   RC rc;
@@ -1112,7 +1112,7 @@ void USAMP_GlobalFree(void)
 // QDOAS ???  {
 // QDOAS ???   // Declarations
 // QDOAS ???
-// QDOAS ???   UCHAR string[20];
+// QDOAS ???   DoasCh string[20];
 // QDOAS ???   HWND hwndConv,hwndMethod;
 // QDOAS ???   INDEX indexItem;
 // QDOAS ???   SLIT *pSlit;
@@ -1186,7 +1186,7 @@ void USAMP_GlobalFree(void)
 // QDOAS ???  {
 // QDOAS ???   // Declarations
 // QDOAS ???
-// QDOAS ???   UCHAR string[MAX_ITEM_TEXT_LEN+1];
+// QDOAS ???   DoasCh string[MAX_ITEM_TEXT_LEN+1];
 // QDOAS ???   SLIT *pSlit;
 // QDOAS ???   RC rc;
 // QDOAS ???
@@ -1199,8 +1199,8 @@ void USAMP_GlobalFree(void)
 // QDOAS ???
 // QDOAS ???   memset(string,0,MAX_ITEM_TEXT_LEN+1);
 // QDOAS ???
-// QDOAS ???   pSlit->slitType=(UCHAR)SendMessage(GetDlgItem(hwndUsamp,TOOL_USAMP_SLIT_TYPE),CB_GETCURSEL,0,0);
-// QDOAS ???   USAMP_buffer.analysisMethod=(UCHAR)SendMessage(GetDlgItem(hwndUsamp,TOOL_USAMP_ANALYSIS_METHOD),CB_GETCURSEL,0,0);
+// QDOAS ???   pSlit->slitType=(DoasCh)SendMessage(GetDlgItem(hwndUsamp,TOOL_USAMP_SLIT_TYPE),CB_GETCURSEL,0,0);
+// QDOAS ???   USAMP_buffer.analysisMethod=(DoasCh)SendMessage(GetDlgItem(hwndUsamp,TOOL_USAMP_ANALYSIS_METHOD),CB_GETCURSEL,0,0);
 // QDOAS ???
 // QDOAS ???   GetWindowText(GetDlgItem(hwndUsamp,TOOL_USAMP_PHASE1_FILE),USAMP_buffer.path,MAX_ITEM_TEXT_LEN);
 // QDOAS ???   GetWindowText(GetDlgItem(hwndUsamp,TOOL_USAMP_PHASE2_FILE),USAMP_buffer.path2,MAX_ITEM_TEXT_LEN);
@@ -1219,7 +1219,7 @@ void USAMP_GlobalFree(void)
 // QDOAS ???   USAMP_buffer.fraction=atof(string);
 // QDOAS ???   GetWindowText(GetDlgItem(hwndUsamp,TOOL_USAMP_SLIT_FILE),pSlit->slitFile,MAX_ITEM_TEXT_LEN);
 // QDOAS ???
-// QDOAS ???   USAMP_buffer.noComment=(UCHAR)(IsDlgButtonChecked(hwndUsamp,TOOL_USAMP_NOCOMMENT)==BST_CHECKED)?(UCHAR)1:(UCHAR)0;
+// QDOAS ???   USAMP_buffer.noComment=(DoasCh)(IsDlgButtonChecked(hwndUsamp,TOOL_USAMP_NOCOMMENT)==BST_CHECKED)?(DoasCh)1:(DoasCh)0;
 // QDOAS ???
 // QDOAS ???   // Check validity of fields
 // QDOAS ???
@@ -1376,11 +1376,11 @@ void USAMP_GlobalFree(void)
 // QDOAS ??? // INPUT         fileLine : the line to process
 // QDOAS ??? // -----------------------------------------------------------------------------
 // QDOAS ???
-// QDOAS ??? RC USAMP_LoadConfiguration(UCHAR *fileLine)
+// QDOAS ??? RC USAMP_LoadConfiguration(DoasCh *fileLine)
 // QDOAS ???  {
 // QDOAS ???   // Declarations
 // QDOAS ???
-// QDOAS ???   UCHAR keyName[MAX_ITEM_NAME_LEN+1],     // key name for first part of project information
+// QDOAS ???   DoasCh keyName[MAX_ITEM_NAME_LEN+1],     // key name for first part of project information
 // QDOAS ???         text[MAX_ITEM_TEXT_LEN+1];
 // QDOAS ???   RC    rc;
 // QDOAS ???
@@ -1397,14 +1397,14 @@ void USAMP_GlobalFree(void)
 // QDOAS ???     rc=1;
 // QDOAS ???
 // QDOAS ???     if (sscanf(text,"%[^','],%[^','],%[^','],%d,%lf,%lf,%[^','],%[^','],%d,%f,%d,%lf,%lf",
-// QDOAS ???             (UCHAR *) USAMP_options.path,
-// QDOAS ???             (UCHAR *) USAMP_options.path2,
-// QDOAS ???             (UCHAR *) USAMP_options.calibrationFile,
+// QDOAS ???             (DoasCh *) USAMP_options.path,
+// QDOAS ???             (DoasCh *) USAMP_options.path2,
+// QDOAS ???             (DoasCh *) USAMP_options.calibrationFile,
 // QDOAS ???               (INT *)&USAMP_options.slitConv.slitType,
 // QDOAS ???            (double *)&USAMP_options.slitConv.slitParam,
 // QDOAS ???            (double *)&USAMP_options.slitConv.slitParam2,
-// QDOAS ???             (UCHAR *) USAMP_options.slitConv.slitFile,
-// QDOAS ???             (UCHAR *)&USAMP_options.kuruczFile,
+// QDOAS ???             (DoasCh *) USAMP_options.slitConv.slitFile,
+// QDOAS ???             (DoasCh *)&USAMP_options.kuruczFile,
 // QDOAS ???               (INT *)&USAMP_options.analysisMethod,
 // QDOAS ???             (float *)&USAMP_options.fraction,
 // QDOAS ???               (INT *)&USAMP_options.noComment,

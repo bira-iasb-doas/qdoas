@@ -105,11 +105,11 @@ static INDEX asciiLastRecord=ITEM_NONE;                                         
 // QDOAS ??? //                 file      : the name of the file to export
 // QDOAS ??? // -----------------------------------------------------------------------------
 // QDOAS ???
-// QDOAS ??? void AsciiDlgInit(HWND hwndAscii,UCHAR *file)
+// QDOAS ??? void AsciiDlgInit(HWND hwndAscii,DoasCh *file)
 // QDOAS ???  {
 // QDOAS ???   // Declarations
 // QDOAS ???
-// QDOAS ???   UCHAR textTitle[MAX_ITEM_TEXT_LEN+1],                                         // title of the dialog box
+// QDOAS ???   DoasCh textTitle[MAX_ITEM_TEXT_LEN+1],                                         // title of the dialog box
 // QDOAS ???         textMsg[MAX_ITEM_TEXT_LEN+1];                                           // message string loaded from the resource file
 // QDOAS ???
 // QDOAS ???   if (initConfig)
@@ -153,12 +153,12 @@ static INDEX asciiLastRecord=ITEM_NONE;                                         
 // QDOAS ???
 // QDOAS ??? void AsciiSet(HWND hwndAscii)
 // QDOAS ???  {
-// QDOAS ???   ASCII_options.szaSaveFlag=(UCHAR)(IsDlgButtonChecked(hwndAscii,ASCII_DATA_SZA)==BST_CHECKED)?(UCHAR)1:(UCHAR)0;
-// QDOAS ???   ASCII_options.azimSaveFlag=(UCHAR)(IsDlgButtonChecked(hwndAscii,ASCII_DATA_AZIM)==BST_CHECKED)?(UCHAR)1:(UCHAR)0;
-// QDOAS ???   ASCII_options.elevSaveFlag=(UCHAR)(IsDlgButtonChecked(hwndAscii,ASCII_DATA_ELEV)==BST_CHECKED)?(UCHAR)1:(UCHAR)0;
-// QDOAS ???   ASCII_options.timeSaveFlag=(UCHAR)(IsDlgButtonChecked(hwndAscii,ASCII_DATA_TIME)==BST_CHECKED)?(UCHAR)1:(UCHAR)0;
-// QDOAS ???   ASCII_options.dateSaveFlag=(UCHAR)(IsDlgButtonChecked(hwndAscii,ASCII_DATA_DATE)==BST_CHECKED)?(UCHAR)1:(UCHAR)0;
-// QDOAS ???   ASCII_options.lambdaSaveFlag=(UCHAR)(IsDlgButtonChecked(hwndAscii,ASCII_DATA_LEMBDA)==BST_CHECKED)?(UCHAR)1:(UCHAR)0;
+// QDOAS ???   ASCII_options.szaSaveFlag=(DoasCh)(IsDlgButtonChecked(hwndAscii,ASCII_DATA_SZA)==BST_CHECKED)?(DoasCh)1:(DoasCh)0;
+// QDOAS ???   ASCII_options.azimSaveFlag=(DoasCh)(IsDlgButtonChecked(hwndAscii,ASCII_DATA_AZIM)==BST_CHECKED)?(DoasCh)1:(DoasCh)0;
+// QDOAS ???   ASCII_options.elevSaveFlag=(DoasCh)(IsDlgButtonChecked(hwndAscii,ASCII_DATA_ELEV)==BST_CHECKED)?(DoasCh)1:(DoasCh)0;
+// QDOAS ???   ASCII_options.timeSaveFlag=(DoasCh)(IsDlgButtonChecked(hwndAscii,ASCII_DATA_TIME)==BST_CHECKED)?(DoasCh)1:(DoasCh)0;
+// QDOAS ???   ASCII_options.dateSaveFlag=(DoasCh)(IsDlgButtonChecked(hwndAscii,ASCII_DATA_DATE)==BST_CHECKED)?(DoasCh)1:(DoasCh)0;
+// QDOAS ???   ASCII_options.lambdaSaveFlag=(DoasCh)(IsDlgButtonChecked(hwndAscii,ASCII_DATA_LEMBDA)==BST_CHECKED)?(DoasCh)1:(DoasCh)0;
 // QDOAS ???
 // QDOAS ???   ASCII_options.format=(IsDlgButtonChecked(hwndAscii,ASCII_FORMAT_LINE))?PRJCT_INSTR_ASCII_FORMAT_LINE:PRJCT_INSTR_ASCII_FORMAT_COLUMN;
 // QDOAS ???  }
@@ -177,7 +177,7 @@ static INDEX asciiLastRecord=ITEM_NONE;                                         
 // QDOAS ???    {
 // QDOAS ???  // ---------------------------------------------------------------------------
 // QDOAS ???     case WM_INITDIALOG :
-// QDOAS ???      AsciiDlgInit(hwndAscii,(UCHAR *)mp2);
+// QDOAS ???      AsciiDlgInit(hwndAscii,(DoasCh *)mp2);
 // QDOAS ???     break;
 // QDOAS ???  // ---------------------------------------------------------------------------
 // QDOAS ???     case WM_COMMAND :
@@ -226,7 +226,7 @@ void ASCII_SaveSpectra(INDEX indexWindow)
   DRAW_SPECTRUM *pSpectrum,*pDotSpectrum;                                       // pointer to the spectra plotted in the selected graph
   HWND hwndParent;                                                              // handle of parent MDI child window
 
-  UCHAR filePath[MAX_ITEM_TEXT_LEN+1];                                          // files selection with path
+  DoasCh filePath[MAX_ITEM_TEXT_LEN+1];                                          // files selection with path
   FILE *fp;                                                                     // pointer to the output file
   INDEX i,indexGraph;                                                           // indexes for loops and arrays
   INT fileType,nspec[MAX_GRAPH],ndot[MAX_GRAPH],n;
@@ -373,7 +373,7 @@ RC AsciiSkip(ENGINE_CONTEXT *pEngineContext,FILE *specFp,int nSkip)
  {
   // Declarations
 
-  UCHAR *lineRecord,line[MAX_ITEM_TEXT_LEN+1];                                  // read the lines from the ASCII file
+  DoasCh *lineRecord,line[MAX_ITEM_TEXT_LEN+1];                                  // read the lines from the ASCII file
   int itemCount,recordCount,maxCount;                                           // counters
   PRJCT_INSTRUMENTAL *pInstr;                                                   // pointer to the instrumental part of the pEngineContext structure
   RC rc;                                                                        // return code
@@ -458,7 +458,7 @@ RC ASCII_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
  {
   // Declarations
 
-  UCHAR *lineRecord,line[MAX_ITEM_TEXT_LEN+1];                                  // get lines from the ASCII file
+  DoasCh *lineRecord,line[MAX_ITEM_TEXT_LEN+1];                                  // get lines from the ASCII file
   INT itemCount,maxCount;                                                       // counters
   PRJCT_INSTRUMENTAL *pInstr;                                                   // pointer to the instrumental part of the pEngineContext structure
   RC rc;                                                                        // return code
@@ -545,7 +545,7 @@ RC ASCII_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,INT local
 
   RECORD_INFO *pRecordInfo;                                                         // pointer to the record part of the engine context
   PRJCT_INSTRUMENTAL *pInstr;                                                   // pointer to the instrumental part of the pEngineContext structure
-  UCHAR *lineRecord,*pRecord,line[MAX_ITEM_TEXT_LEN+1];                         // get lines from the ASCII file
+  DoasCh *lineRecord,*pRecord,line[MAX_ITEM_TEXT_LEN+1];                         // get lines from the ASCII file
   double *spectrum,*lambda,                                                     // the spectrum and the wavelength calibration to read
           tmLocal;                                                              // the measurement time in seconds
   INT lambdaFlag,zmFlag,timeFlag,dateSaveFlag,azimFlag,elevFlag,                // flags to select items to read according to the format options
@@ -775,16 +775,16 @@ RC ASCII_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,INT local
 
       if (timeFlag)
        {
-        pRecordInfo->present_time.ti_hour=(UCHAR)pRecordInfo->TimeDec;
-        pRecordInfo->present_time.ti_min=(UCHAR)((pRecordInfo->TimeDec-pRecordInfo->present_time.ti_hour)*60.);
-        pRecordInfo->present_time.ti_sec=(UCHAR)(((pRecordInfo->TimeDec-pRecordInfo->present_time.ti_hour)*60.-pRecordInfo->present_time.ti_min)*60.);
+        pRecordInfo->present_time.ti_hour=(unsigned char)pRecordInfo->TimeDec;
+        pRecordInfo->present_time.ti_min=(unsigned char)((pRecordInfo->TimeDec-pRecordInfo->present_time.ti_hour)*60.);
+        pRecordInfo->present_time.ti_sec=(unsigned char)(((pRecordInfo->TimeDec-pRecordInfo->present_time.ti_hour)*60.-pRecordInfo->present_time.ti_min)*60.);
        }
 
       if (dateSaveFlag)
        {
-        pRecordInfo->present_day.da_day=(UCHAR)day;
-        pRecordInfo->present_day.da_mon=(UCHAR)mon;
-        pRecordInfo->present_day.da_year=(SHORT)year;
+        pRecordInfo->present_day.da_day=(char)day;
+        pRecordInfo->present_day.da_mon=(char)mon;
+        pRecordInfo->present_day.da_year=(short)year;
        }
 
       // Daily automatic reference spectrum

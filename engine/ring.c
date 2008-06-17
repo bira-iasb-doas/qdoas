@@ -84,6 +84,7 @@
 //  ----------------------------------------------------------------------------
 
 #include "doas.h"
+#include "engine_xsconv.h"
 
 // =====================
 // CONSTANTS DEFINITIONS
@@ -97,7 +98,7 @@
 // STATIC DECLARATIONS
 // ===================
 
-XSCONV RING_options,RING_buffer;
+ENGINE_XSCONV_CONTEXT RING_options, RING_buffer;
 INT    RING_progress;
 HANDLE RING_event;
 
@@ -498,7 +499,7 @@ void RingHeader(FILE *fp,int order)
  {
   // Declaration
 
-  UCHAR   fileName[MAX_ITEM_TEXT_LEN+1];
+  DoasCh   fileName[MAX_ITEM_TEXT_LEN+1];
   INT     slitType;                                                 // type of the slit function
 
   // Header
@@ -551,7 +552,7 @@ void Ring(void *ringArg)
  {
   // Declarations
 
-  UCHAR   ringFileName[MAX_ITEM_TEXT_LEN+1];                                    // name of the output ring file
+  DoasCh   ringFileName[MAX_ITEM_TEXT_LEN+1];                                    // name of the output ring file
   double *n2xref,*o2xref,*n2pos2,                                               // rotational Raman spectra
           gamman2,sigprimen2,sign2,distn2,n2xsec,sign2k,                        // n2 working variables
           gammao2,sigprimeo2,sigo2,disto2,o2xsec,sigo2k,                        // o2 working variables
@@ -1015,7 +1016,7 @@ void Ring(void *ringArg)
 // QDOAS ???  {
 // QDOAS ???   // Declarations
 // QDOAS ???
-// QDOAS ???   UCHAR string[20];
+// QDOAS ???   DoasCh string[20];
 // QDOAS ???   HWND hwndConv;
 // QDOAS ???   INDEX indexItem;
 // QDOAS ???   SLIT *pSlit;
@@ -1109,7 +1110,7 @@ void Ring(void *ringArg)
 // QDOAS ???  {
 // QDOAS ???   // Declarations
 // QDOAS ???
-// QDOAS ???   UCHAR string[MAX_ITEM_TEXT_LEN+1];
+// QDOAS ???   DoasCh string[MAX_ITEM_TEXT_LEN+1];
 // QDOAS ???   SLIT *pSlit;
 // QDOAS ???   RC rc;
 // QDOAS ???
@@ -1124,7 +1125,7 @@ void Ring(void *ringArg)
 // QDOAS ???
 // QDOAS ???   RING_buffer.temperature=(INT)GetDlgItemInt(hwndRing,TOOL_RING_TEMP,NULL,FALSE);
 // QDOAS ???
-// QDOAS ???   pSlit->slitType=(UCHAR)SendMessage(GetDlgItem(hwndRing,TOOL_RING_TYPE),CB_GETCURSEL,0,0);
+// QDOAS ???   pSlit->slitType=(DoasCh)SendMessage(GetDlgItem(hwndRing,TOOL_RING_TYPE),CB_GETCURSEL,0,0);
 // QDOAS ???
 // QDOAS ???   /* --- Commented out on 10 November 2004 (do not account for molecular absorption anymore)
 // QDOAS ???   if (IsDlgButtonChecked(hwndRing,TOOL_RING_TYPE_SOLAR))
@@ -1149,7 +1150,7 @@ void Ring(void *ringArg)
 // QDOAS ???   pSlit->slitParam4=fabs(atof(string));
 // QDOAS ???   GetWindowText(GetDlgItem(hwndRing,TOOL_RING_SLIT_FILE),pSlit->slitFile,MAX_ITEM_TEXT_LEN);
 // QDOAS ???
-// QDOAS ???   RING_buffer.noComment=(UCHAR)(IsDlgButtonChecked(hwndRing,TOOL_RING_NOCOMMENT)==BST_CHECKED)?(UCHAR)1:(UCHAR)0;
+// QDOAS ???   RING_buffer.noComment=(DoasCh)(IsDlgButtonChecked(hwndRing,TOOL_RING_NOCOMMENT)==BST_CHECKED)?(DoasCh)1:(DoasCh)0;
 // QDOAS ???
 // QDOAS ???   // Check validity of fields
 // QDOAS ???
@@ -1351,7 +1352,7 @@ void Ring(void *ringArg)
 // QDOAS ???  {
 // QDOAS ???   // Declarations
 // QDOAS ???
-// QDOAS ???   UCHAR str[MAX_ITEM_TEXT_LEN+1];
+// QDOAS ???   DoasCh str[MAX_ITEM_TEXT_LEN+1];
 // QDOAS ???
 // QDOAS ???   if (mp1>100)
 // QDOAS ???    EndDialog(hwndProgress,FALSE);
@@ -1426,11 +1427,11 @@ void Ring(void *ringArg)
 // QDOAS ??? // INPUT         fileLine : the line to process
 // QDOAS ??? // -----------------------------------------------------------------------------
 // QDOAS ???
-// QDOAS ??? RC RING_LoadConfiguration(UCHAR *fileLine)
+// QDOAS ??? RC RING_LoadConfiguration(DoasCh *fileLine)
 // QDOAS ???  {
 // QDOAS ???   // Declarations
 // QDOAS ???
-// QDOAS ???   UCHAR keyName[MAX_ITEM_NAME_LEN+1],     // key name for first part of project information
+// QDOAS ???   DoasCh keyName[MAX_ITEM_NAME_LEN+1],     // key name for first part of project information
 // QDOAS ???         text[MAX_ITEM_TEXT_LEN+1];
 // QDOAS ???   RC    rc;
 // QDOAS ???
@@ -1449,16 +1450,16 @@ void Ring(void *ringArg)
 // QDOAS ???     // Get data part
 // QDOAS ???
 // QDOAS ???     if (sscanf(text,"%[^','],%[^','],%d,%lf,%lf,%[^','],%[^','],%d,%[^','],%[^','],%d,%lf,%lf,%d",
-// QDOAS ???             (UCHAR *) RING_options.path,
-// QDOAS ???             (UCHAR *) RING_options.calibrationFile,
+// QDOAS ???             (DoasCh *) RING_options.path,
+// QDOAS ???             (DoasCh *) RING_options.calibrationFile,
 // QDOAS ???               (INT *)&RING_options.slitConv.slitType,
 // QDOAS ???            (double *)&RING_options.slitConv.slitParam,
 // QDOAS ???            (double *)&RING_options.slitConv.slitParam2,
-// QDOAS ???             (UCHAR *) RING_options.slitConv.slitFile,
-// QDOAS ???             (UCHAR *)&RING_options.kuruczFile,
+// QDOAS ???             (DoasCh *) RING_options.slitConv.slitFile,
+// QDOAS ???             (DoasCh *)&RING_options.kuruczFile,
 // QDOAS ???               (INT *)&RING_options.noComment,
-// QDOAS ???             (UCHAR *) RING_options.path2,
-// QDOAS ???             (UCHAR *) RING_options.crossFile,
+// QDOAS ???             (DoasCh *) RING_options.path2,
+// QDOAS ???             (DoasCh *) RING_options.crossFile,
 // QDOAS ???               (INT *)&RING_options.convolutionType,
 // QDOAS ???            (double *)&RING_options.slitConv.slitParam3,
 // QDOAS ???            (double *)&RING_options.slitConv.slitParam4,

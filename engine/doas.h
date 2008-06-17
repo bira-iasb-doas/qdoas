@@ -83,7 +83,7 @@ void   VECTOR_Init(double *vector,double value,int dim);
 int    VECTOR_Equal(double *vector1,double *vector2,int dim,double error);
 double VECTOR_Max(double *vector,int dim);
 double VECTOR_Min(double *vector,int dim);
-RC     VECTOR_Log(double *out,double *in,int dim,UCHAR *callingFunction);
+RC     VECTOR_Log(double *out,double *in,int dim,DoasCh *callingFunction);
 int    VECTOR_LocGt(double *vector,double value,int dim);
 void   VECTOR_Invert(double *vector,int dim);
 double VECTOR_Table1(double *X0,int Nx,double *Y0,int Ny,double **Table,double X,double Y);
@@ -131,8 +131,8 @@ enum _spline
   SPLINE_MAX
  };
 
-RC SPLINE_Deriv2(double *X,double *Y,double *Y2,int n,UCHAR *callingFunction);
-RC SPLINE_Vector(double *xa,double *ya,double *y2a,int na,double *xb,double *yb,int nb,int type,UCHAR *callingFunction);
+RC SPLINE_Deriv2(double *X,double *Y,double *Y2,int n,DoasCh *callingFunction);
+RC SPLINE_Vector(double *xa,double *ya,double *y2a,int na,double *xb,double *yb,int nb,int type,DoasCh *callingFunction);
 
 // ====================================
 // SVD.C : Singular value decomposition
@@ -156,8 +156,8 @@ SVD;
 RC SVD_Bksb(double **u,double *w,double **v,int m,int n,double *b,double *x);
 RC SVD_Dcmp(double **a,int m,int n,double *w,double **v,double *SigmaSqr,double **covar);
 
-void SVD_Free(UCHAR *callingFunctionShort,SVD *pSvd);
-RC   SVD_LocalAlloc(UCHAR *callingFunctionShort,SVD *pSvd);
+void SVD_Free(DoasCh *callingFunctionShort,SVD *pSvd);
+RC   SVD_LocalAlloc(DoasCh *callingFunctionShort,SVD *pSvd);
 
 // ============================================================
 // CURFIT.C : Least-square fit applied to a non linear function
@@ -190,7 +190,7 @@ RC Curfit(int     mode,                                                         
 // MOON.C : Get moon positions in terms of azimuthal angle and elevation
 // ---------------------------------------------------------------------
 
-void MOON_GetPosition(UCHAR  *inputDate,   // input date and time for moon positions calculation
+void MOON_GetPosition(DoasCh  *inputDate,   // input date and time for moon positions calculation
                       double  longitude,   // longitude of the observation site
                       double  latitude,    // latitude of the observation site
                       double  altitude,    // altitude of the observation site
@@ -236,7 +236,7 @@ enum _wrkSymbolType
 
 typedef struct _wrkSymbol
  {
-  UCHAR         type,                          // type of symbol
+  DoasCh         type,                          // type of symbol
                 symbolName[MAX_STR_LEN+1],      // name of symbol
                 crossFileName[MAX_STR_LEN+1];   // name of cross section file
   MATRIX_OBJECT xs;                            // cross sections (wavelength+cross section(s))
@@ -263,7 +263,7 @@ typedef struct _crossReference
          TypeStretch,               // order of stretch to fit
          TypeScale;                 // order of scaling factor to fit
 
-  UCHAR  display,                   // flag set if fit is to be displayed
+  DoasCh  display,                   // flag set if fit is to be displayed
          filterFlag;                // flag set if symbol is to be filteres
 
   double Fact,                      // normalization factors
@@ -296,7 +296,7 @@ CROSS_REFERENCE;
 
 typedef struct _crossResults
  {
-  UCHAR  StoreParam,                // flag set if non linear parameter is to be written into output file
+  DoasCh  StoreParam,                // flag set if non linear parameter is to be written into output file
          StoreShift,                // flag set if shift is to be written into output file
          StoreStretch,              // flag set if stretch order 1 is to be written into output file
          StoreScale,                // flag set if scaling factor order 1 is to be written into output file
@@ -348,8 +348,8 @@ typedef struct _feno
  {
                                                                                 //  copy of data from analysis window panel
 
-  UCHAR           windowName[MAX_ITEM_NAME_LEN+1];                              //  name of analysis window
-  UCHAR           refFile[MAX_ITEM_TEXT_LEN+1],                                 //  reference file in reference file selection mode
+  DoasCh           windowName[MAX_ITEM_NAME_LEN+1];                              //  name of analysis window
+  DoasCh           refFile[MAX_ITEM_TEXT_LEN+1],                                 //  reference file in reference file selection mode
                   ref1[MAX_ITEM_TEXT_LEN+1],                                    //  first reference spectrum (in order to replace the SrefEtalon in the old ANALYSIS_WINDOWS structure)
                   ref2[MAX_ITEM_TEXT_LEN+1],                                    //  second reference spectrum (in order to replace the SrefEtalon in the old ANALYSIS_WINDOWS structure)
                   residualsFile[MAX_ITEM_TEXT_LEN+1];
@@ -438,7 +438,7 @@ typedef struct _feno
   RC              rcKurucz;
   INT             SvdPDeb,SvdPFin,Dim,LimMin,LimMax,LimN;
   INT             rc;
-  UCHAR           gomePixelType[4];
+  DoasCh           gomePixelType[4];
   INT             offlFlag;                            // non zero if linear offset is fitted
  }
 FENO;
@@ -618,7 +618,7 @@ BUFFERS;
 
 typedef struct _engineFileInfo
  {
- 	UCHAR   fileName[MAX_STR_LEN+1];                                              // the name of the file
+ 	DoasCh   fileName[MAX_STR_LEN+1];                                              // the name of the file
  	FILE   *specFp,*darkFp,*namesFp;                                              // file pointers for the engine
  }
 FILE_INFO;
@@ -687,7 +687,7 @@ typedef struct _engineRecordInfo
 
   // Reference data
 
-  UCHAR  refFileName[MAX_PATH_LEN+1];
+  DoasCh  refFileName[MAX_PATH_LEN+1];
   INT    refRecord;
 
   // CCD
@@ -757,7 +757,7 @@ THRD_REF;
 // GLOBAL VARIABLES
 // ----------------
 
-EXTERN UCHAR     THRD_asciiFile[];             // ASCII file for exporting spectra
+EXTERN DoasCh     THRD_asciiFile[];             // ASCII file for exporting spectra
 EXTERN HANDLE    THRD_hEvents[];               // list of events
 EXTERN ENGINE_CONTEXT THRD_specInfo;           // data on current spectra and reference
 EXTERN UINT      THRD_id;                      // thread identification number
@@ -784,7 +784,7 @@ double           THRD_GetDist(double longit, double latit, double longitRef, dou
 // QDOAS ??? BOOL             THRD_Context(INDEX indexItem,INT menuId);
 // QDOAS ??? BOOL             THRD_SetIndexes(INDEX indexItem,INT treeCallFlag);
 // QDOAS ??? RC               THRD_ProcessLastError(void);
-// QDOAS ??? RC               THRD_Error(INT errorType,INT errorId,UCHAR *function,...);
+// QDOAS ??? RC               THRD_Error(INT errorType,INT errorId,DoasCh *function,...);
 // QDOAS ??? INDEX            THRD_WaitEvent(DWORD delay,INT moveFlag,INT incrementFlag);
 // QDOAS ??? void             THRD_ResetSpecInfo(ENGINE_CONTEXT *pEngineContext);
 // QDOAS ??? void             THRD_LoadData(void);
@@ -802,7 +802,7 @@ RC               THRD_NewRef(ENGINE_CONTEXT *pEngineContext);
 
 typedef struct _AnalyseLinearParameters
  {
- 	UCHAR symbolName[MAX_ITEM_TEXT_LEN+1];
+ 	DoasCh symbolName[MAX_ITEM_TEXT_LEN+1];
  	int polyOrder;
  	int baseOrder;
  	int storeFit;
@@ -812,8 +812,8 @@ ANALYSE_LINEAR_PARAMETERS;
 
 typedef struct _AnalyseNonLinearParameters
  {
- 	UCHAR symbolName[MAX_ITEM_TEXT_LEN+1];
- 	UCHAR crossFileName[MAX_ITEM_TEXT_LEN+1];
+ 	DoasCh symbolName[MAX_ITEM_TEXT_LEN+1];
+ 	DoasCh crossFileName[MAX_ITEM_TEXT_LEN+1];
  	int fitFlag;
  	double initialValue;
  	double deltaValue;
@@ -835,8 +835,8 @@ typedef struct anlyswin_output ANALYSIS_OUTPUT;
 
 EXTERN INT    ANALYSE_plotKurucz,ANALYSE_plotRef,ANALYSE_indexLine;
 
-EXTERN UCHAR *ANLYS_crossAction[ANLYS_CROSS_ACTION_MAX];
-EXTERN UCHAR *ANLYS_amf[ANLYS_AMF_TYPE_MAX];
+EXTERN DoasCh *ANLYS_crossAction[ANLYS_CROSS_ACTION_MAX];
+EXTERN DoasCh *ANLYS_amf[ANLYS_AMF_TYPE_MAX];
 
 EXTERN PRJCT_FILTER *ANALYSE_plFilter,*ANALYSE_phFilter;
 EXTERN WRK_SYMBOL   *WorkSpace;
@@ -880,10 +880,10 @@ enum _pixelSelection
 
 RC   FNPixel   ( double *lambdaVector, double lambdaValue, INT npts,INT pixelSelection );
 
-RC   ANALYSE_CheckLambda(WRK_SYMBOL *pWrkSymbol,double *lambda,UCHAR *callingFunction);
+RC   ANALYSE_CheckLambda(WRK_SYMBOL *pWrkSymbol,double *lambda,DoasCh *callingFunction);
 RC   ANALYSE_XsInterpolation(FENO *pTabFeno,double *newLambda);
 RC   ANALYSE_XsConvolution(FENO *pTabFeno,double *newLambda,MATRIX_OBJECT *pSlit,INT slitType,double *slitParam1,double *slitParam2,double *slitParam3,double *slitParam4);
-RC   ANALYSE_NormalizeVector(double *v,INT dim,double *fact,UCHAR *function);
+RC   ANALYSE_NormalizeVector(double *v,INT dim,double *fact,DoasCh *function);
 RC   ANALYSE_LinFit(SVD *pSvd,INT Npts,INT Degree,double *a,double *sigma,double *b,double *x);
 RC   ANALYSE_SvdInit(SVD *pSvd);
 RC   ANALYSE_CurFitMethod(double *Spectre,double *SigmaSpec,double *Sref,double *Chisqr,INT *pNiter);
@@ -952,12 +952,12 @@ typedef struct _Kurucz
 
   INDEX   indexKurucz;                          // index of analysis window with Kurucz description
 
-  UCHAR   displayFit;                           // display fit flag
-  UCHAR   displayResidual;                      // display new calibration flag
-  UCHAR   displayShift;                         // display shift in each pixel flag
-  UCHAR   displaySpectra;                       // display complete spectra
-  UCHAR   method;                               // analysis method (Marquadt,SVD)
-  UCHAR   units;                                // units selected for analysis (pixel/nm)
+  DoasCh   displayFit;                           // display fit flag
+  DoasCh   displayResidual;                      // display new calibration flag
+  DoasCh   displayShift;                         // display shift in each pixel flag
+  DoasCh   displaySpectra;                       // display complete spectra
+  DoasCh   method;                               // analysis method (Marquadt,SVD)
+  DoasCh   units;                                // units selected for analysis (pixel/nm)
  }
 KURUCZ;
 
@@ -973,7 +973,7 @@ EXTERN FFT *pKURUCZ_fft;
 // ----------
 
 RC   KURUCZ_Spectrum(double *oldLambda,double *newLambda,double *spectrum,double *reference,double *instrFunction,
-                     UCHAR displayFlag,UCHAR *windowTitle,double **coeff,double **fwhmVector,double **fwhmDeriv2,INT saveFlag,INDEX indexFeno,void *responseHandle);
+                     DoasCh displayFlag,DoasCh *windowTitle,double **coeff,double **fwhmVector,double **fwhmDeriv2,INT saveFlag,INDEX indexFeno,void *responseHandle);
 RC   KURUCZ_ApplyCalibration(FENO *pTabFeno,double *newLambda);
 RC   KURUCZ_Reference(double *instrFunction,INDEX refFlag,INT saveFlag,INT gomeFlag,void *responseHandle);
 void KURUCZ_Init(INT gomeFlag);
@@ -1028,7 +1028,7 @@ RC   USAMP_BuildFromAnalysis(INT analysisFlag,INT gomeFlag);
 
 typedef struct _amfReference
  {
-  UCHAR    type,                          // type of symbol
+  DoasCh    type,                          // type of symbol
            symbolName[MAX_STR_LEN+1],      // name of symbol
            amfFileName[MAX_STR_LEN+1];     // name of AMF file
   double **Phi;                           // AMF data
@@ -1048,7 +1048,7 @@ AMF_SYMBOL;
 typedef struct _nasaComponents
 
  {
-  UCHAR   symbolName[MAX_ITEM_NAME_LEN+1];                                           // name of component
+  DoasCh   symbolName[MAX_ITEM_NAME_LEN+1];                                           // name of component
   double  SlntColFact,SlntErrFact,VrtColFact,AmfFact,                                // scaling factors
           ResCol;                                                                    // residual column in reference spectrum
   INDEX   indexWindow,                                                               // index of analysis window if used
@@ -1078,9 +1078,9 @@ NASA_RESULTS;
 // GLOBAL DECLARATIONS
 // -------------------
 
-EXTERN UCHAR       OUTPUT_refFile[MAX_PATH_LEN+1];
+EXTERN DoasCh       OUTPUT_refFile[MAX_PATH_LEN+1];
 EXTERN INT         OUTPUT_nRec;
-EXTERN UCHAR       OUTPUT_nasaFile[MAX_STR_LEN+1];          // name of file with NASA-AMES header description
+EXTERN DoasCh       OUTPUT_nasaFile[MAX_STR_LEN+1];          // name of file with NASA-AMES header description
 EXTERN INT         OUTPUT_nasaNResults;                     // number of results stored in NASA-AMES structure
 EXTERN AMF_SYMBOL *OUTPUT_AmfSpace;                         // list of cross sections with associated AMF file
 
@@ -1248,8 +1248,8 @@ GDP_BIN_INFO;
 
 typedef struct _GOMEOrbitFiles                                                  // description of an orbit
  {
- 	UCHAR gdpBinFileName[MAX_STR_LEN+1];                                            // the name of the file with a part of the orbit
- 	UCHAR gdpBinFileNumber[9];
+ 	DoasCh gdpBinFileName[MAX_STR_LEN+1];                                            // the name of the file with a part of the orbit
+ 	DoasCh gdpBinFileNumber[9];
   GDP_BIN_INFO *gdpBinInfo;                                                     // useful information on records for fast access
   INDEX gdpBinBandIndex;                                                        // indexes of bands present in the current file
   INDEX *gdpBinLatIndex,*gdpBinLonIndex,*gdpBinSzaIndex,*gdpBinPixIndex;        // indexes of records sorted resp. by latitudes, by SZA or by pixel number
@@ -1277,7 +1277,7 @@ GOME_ORBIT_FILE;
 
 EXTERN GOME_ORBIT_FILE GDP_BIN_orbitFiles[MAX_GOME_FILES];                      // list of files for an orbit
 EXTERN INDEX GDP_BIN_currentFileIndex;                                          // index of the current file in the list
-EXTERN UCHAR *GDP_BIN_BandStrTab[];
+EXTERN DoasCh *GDP_BIN_BandStrTab[];
 
 // ----------
 // PROTOTYPES
@@ -1298,7 +1298,7 @@ RC               GDP_BIN_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,FILE *specF
 #define UOFT_BASE 1296 // 36x36
 #define MAX_UOFT_RECORD (UOFT_BASE+(UOFT_BASE-1))
 
-EXTERN UCHAR UOFT_figures[UOFT_BASE+1];
+EXTERN DoasCh UOFT_figures[UOFT_BASE+1];
 
 RC   SetUofT(ENGINE_CONTEXT *pEngineContext,FILE *specFp);
 RC   ReliUofT(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,INT localDay,FILE *specFp);
@@ -1330,7 +1330,7 @@ RC   ASCII_Read(ENGINE_CONTEXT *pEngineContext,INT recordNo,INT dateFlag,int loc
 RC   SetRAS(ENGINE_CONTEXT *pEngineContext,FILE *specFp);
 RC   ReliRAS(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp);
 
-void SCIA_ReleaseBuffers(UCHAR format);
+void SCIA_ReleaseBuffers(DoasCh format);
 RC   SCIA_SetPDS(ENGINE_CONTEXT *pEngineContext);
 RC   SCIA_ReadPDS(ENGINE_CONTEXT *pEngineContext,int recordNo);
 INDEX SCIA_GetRecordNumber(INT hdfRecord,INT obsNumber);
@@ -1376,9 +1376,9 @@ OMI_SPECTRUM;
 typedef struct _omi_data_fields
  {
  	short   *wavelengthReferenceColumn;
-  UCHAR   *measurementClass;
-  UCHAR   *instrumentConfigurationId;
-  UCHAR   *instrumentConfigurationVersion;
+  DoasCh   *measurementClass;
+  DoasCh   *instrumentConfigurationId;
+  DoasCh   *instrumentConfigurationVersion;
   USHORT  *measurementQualityFlags;
   CHAR    *numberSmallPixelColumns;
   CHAR    *exposureType;
@@ -1435,9 +1435,9 @@ typedef struct _omi_swath_earth
  }
 OMI_SWATH;
 
-extern UCHAR *OMI_swaths[OMI_SWATH_MAX];
+extern DoasCh *OMI_swaths[OMI_SWATH_MAX];
 
-RC   OMI_GetEarthSwath(OMI_SWATH *pSwath,UCHAR *omiFileName,int omiFileId,int earthSwath,int swathType);
+RC   OMI_GetEarthSwath(OMI_SWATH *pSwath,DoasCh *omiFileName,int omiFileId,int earthSwath,int swathType);
 void OMI_ReleaseBuffers(void);
 RC   OMI_SetHDF(ENGINE_CONTEXT *pEngineContext);
 RC   OMI_ReadHDF(ENGINE_CONTEXT *pEngineContext,int recordNo);
@@ -1450,31 +1450,31 @@ typedef struct _TOldFlags
   INT   mode;
   INT   smooth;
   INT   deg_reg;
-  UCHAR Null[8];
-  UCHAR Ref[8];
+  DoasCh Null[8];
+  DoasCh Ref[8];
  }
 TOldFlags;
 
 typedef struct _TBinaryMFC
  {
-  UCHAR     version[20];           //     version number (not of interest)
+  DoasCh     version[20];           //     version number (not of interest)
   INT       no_chan;               // !!! number of channels - 1 (usually 1023)
   void     *Spectrum;              //     pointer to the spectrum, only used at runtime
-  UCHAR     specname[20];          //     optional name of the spectrum
-  UCHAR     site[20];              //     name of measurement site
-  UCHAR     spectroname[20];       //     name of spectrograph
-  UCHAR     scan_dev[20];          //     name of scan device, e.g. PDA
-  UCHAR     first_line[80];
+  DoasCh     specname[20];          //     optional name of the spectrum
+  DoasCh     site[20];              //     name of measurement site
+  DoasCh     spectroname[20];       //     name of spectrograph
+  DoasCh     scan_dev[20];          //     name of scan device, e.g. PDA
+  DoasCh     first_line[80];
   float     elevation;             //     elevation viewing angle
-  UCHAR     spaeter[72];
+  DoasCh     spaeter[72];
   INT       ty;                    //     spectrum flags, can be used to distinguish between
                                    //     different types of spectrum (e.g. straylight,
                                    //     offset, dark current...
-  UCHAR     dateAndTime[28];
-//  UCHAR     date[9];               // !!! date of measurement
-//  UCHAR     start_time[9];         // !!! start time of measurement
-//  UCHAR     stop_time[9];          // !!! stop time of measurement
-//  UCHAR     dummy;
+  DoasCh     dateAndTime[28];
+//  DoasCh     date[9];               // !!! date of measurement
+//  DoasCh     start_time[9];         // !!! start time of measurement
+//  DoasCh     stop_time[9];          // !!! stop time of measurement
+//  DoasCh     dummy;
   INT       low_lim;
   INT       up_lim;
   INT       plot_low_lim;
@@ -1498,10 +1498,10 @@ typedef struct _TBinaryMFC
                                    //                              (0..1023)
   float     opt_dens;
   TOldFlags OldFlags;
-  UCHAR     FileName[8];           //     filename of spectrum
-  UCHAR     backgrnd[8];
+  DoasCh     FileName[8];           //     filename of spectrum
+  DoasCh     backgrnd[8];
   INT       gap_list[40];
-  UCHAR    *comment;
+  DoasCh    *comment;
   INT       reg_no;
   void     *Prev, *Next;
  }
@@ -1509,14 +1509,14 @@ TBinaryMFC;
 
 extern TBinaryMFC MFC_headerDrk,MFC_headerOff,MFC_header,MFC_headerInstr;
 extern int MFC_format,MFC_refFlag;
-extern UCHAR MFC_fileInstr[MAX_STR_SHORT_LEN+1],
+extern DoasCh MFC_fileInstr[MAX_STR_SHORT_LEN+1],
              MFC_fileDark[MAX_STR_SHORT_LEN+1],
              MFC_fileOffset[MAX_STR_SHORT_LEN+1],
              MFC_fileSpectra[MAX_STR_SHORT_LEN+1],
              MFC_fileMin[MAX_STR_SHORT_LEN+1];
 
-RC   MFC_ReadRecord(UCHAR *fileName,TBinaryMFC *pHeaderSpe,double *spe,TBinaryMFC *pHeaderDrk,double *drk,TBinaryMFC *pHeaderOff,double *off,UINT mask,UINT maskSpec,UINT revertFlag);
-RC MFC_ReadRecordStd(ENGINE_CONTEXT *pEngineContext,UCHAR *fileName,
+RC   MFC_ReadRecord(DoasCh *fileName,TBinaryMFC *pHeaderSpe,double *spe,TBinaryMFC *pHeaderDrk,double *drk,TBinaryMFC *pHeaderOff,double *off,UINT mask,UINT maskSpec,UINT revertFlag);
+RC MFC_ReadRecordStd(ENGINE_CONTEXT *pEngineContext,DoasCh *fileName,
                      TBinaryMFC *pHeaderSpe,double *spe,
                      TBinaryMFC *pHeaderDrk,double *drk,
                      TBinaryMFC *pHeaderOff,double *off);

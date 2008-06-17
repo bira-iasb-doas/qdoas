@@ -117,7 +117,7 @@ INT SITES_itemN=0;                                                              
 //                 ITEM_NONE if not found
 // -----------------------------------------------------------------------------
 
-INDEX SITES_GetIndex(UCHAR *siteName)
+INDEX SITES_GetIndex(DoasCh *siteName)
  {
   // Declarations
 
@@ -131,7 +131,7 @@ INDEX SITES_GetIndex(UCHAR *siteName)
   // Search for the site in the observation sites list
 
   for (indexSite=0;indexSite<SITES_itemN;indexSite++)
-   if (((int)strlen(SITES_itemList[indexSite].name)==siteLength) &&
+   if (((SZ_LEN)strlen(SITES_itemList[indexSite].name)==siteLength) &&
        !STD_Stricmp(siteName,SITES_itemList[indexSite].name))
     break;
 
@@ -161,7 +161,7 @@ INDEX SITES_GetIndex(UCHAR *siteName)
 // QDOAS ???   // Declarations
 // QDOAS ???
 // QDOAS ???   OBSERVATION_SITE *pSite;                                                      // pointer to the selected observation site
-// QDOAS ???   UCHAR textTitle[MAX_ITEM_TEXT_LEN+1],                                         // complete title of the dialog box
+// QDOAS ???   DoasCh textTitle[MAX_ITEM_TEXT_LEN+1],                                         // complete title of the dialog box
 // QDOAS ???         textMsg[MAX_ITEM_TEXT_LEN+1],                                           // title of the dialog box retrieved from the resource file
 // QDOAS ???         string[MAX_ITEM_TEXT_LEN+1];                                            // formatted string
 // QDOAS ???

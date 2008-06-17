@@ -182,7 +182,7 @@ int ZEN_FNCaljmon(int Year,int Julian)
   // Calculate the month in the year
 
   if ( (Julian>365+((Year%4)==0)) || (Julian<1) )
-   ERROR_SetLast((UCHAR *)"ZEN_FNCaljmon",ERROR_TYPE_WARNING,ERROR_ID_JULIAN_DAY,Julian,Year);
+   ERROR_SetLast((DoasCh *)"ZEN_FNCaljmon",ERROR_TYPE_WARNING,ERROR_ID_JULIAN_DAY,Julian,Year);
   else
    while ( Julian > (First[Month] + (int) (((Year%4)==0) && (Month>1))) ) Month++;
 
@@ -212,7 +212,7 @@ int ZEN_FNCaljday(int Year,int Julian)
   // Calculate the day in the month
 
   if ( (Julian > 365+((Year%4)==0)) || (Julian<1) )
-   ERROR_SetLast((UCHAR *)"ZEN_FNCaljday",ERROR_TYPE_WARNING,ERROR_ID_JULIAN_DAY,Julian,Year);
+   ERROR_SetLast((DoasCh *)"ZEN_FNCaljday",ERROR_TYPE_WARNING,ERROR_ID_JULIAN_DAY,Julian,Year);
   else
    while ( Julian > (First[Month] += (int) (((Year%4)==0) && (Month>1))) ) Month++;
 
@@ -411,13 +411,13 @@ double ZEN_NbSec(SHORT_DATE *pToday,struct time *pNow,int flag)
 
     // Fill the input structure
 
-    pToday->da_year=(SHORT)year;
-    pToday->da_mon=(CHAR)mon;
-    pToday->da_day=(CHAR)day;
+    pToday->da_year=(short)year;
+    pToday->da_mon=(char)mon;
+    pToday->da_day=(char)day;
 
-    pNow->ti_hour=(UCHAR)hour;
-    pNow->ti_min=(UCHAR)min;
-    pNow->ti_sec=(UCHAR)sec;
+    pNow->ti_hour=(unsigned char)hour;
+    pNow->ti_min=(unsigned char)min;
+    pNow->ti_sec=(unsigned char)sec;
    }
 
   // calculate the calendar date

@@ -81,7 +81,7 @@ RC SetRAS(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
  {
   // Declarations
 
-  UCHAR  fileName[MAX_PATH_LEN+1],                                              // name of the current file
+  DoasCh  fileName[MAX_PATH_LEN+1],                                              // name of the current file
         *ptr,*ptr2;                                                             // pointers to parts in the previous string
   INT    fileLength;                                                            // length of the file
   RC     rc;                                                                    // return code
@@ -137,13 +137,13 @@ RC SetRAS(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
 //               ERROR_ID_NO              otherwise.
 // -----------------------------------------------------------------------------
 
-RC RasReadRecord(UCHAR *fileName,double *spe,double *drk,ENGINE_CONTEXT *pEngineContext)
+RC RasReadRecord(DoasCh *fileName,double *spe,double *drk,ENGINE_CONTEXT *pEngineContext)
  {
   // Declarations
 
   RECORD_INFO *pRecord;                                                         // pointer to the record part of the engine context
 
-  UCHAR fileLine[MAX_STR_SHORT_LEN+1],                                          // line of file
+  DoasCh fileLine[MAX_STR_SHORT_LEN+1],                                          // line of file
         keyName[MAX_STR_SHORT_LEN+1],                                           // key name for commented lines
         strBuffer[MAX_STR_SHORT_LEN+1];                                         // string buffer
 
@@ -198,9 +198,9 @@ RC RasReadRecord(UCHAR *fileName,double *spe,double *drk,ENGINE_CONTEXT *pEngine
         {
          sscanf(strBuffer,"%d:%d:%d",&field1,&field2,&field3);
 
-         pRecord->present_time.ti_hour=(UCHAR)field1;
-         pRecord->present_time.ti_min=(UCHAR)field2;
-         pRecord->present_time.ti_sec=(UCHAR)field3;
+         pRecord->present_time.ti_hour=(unsigned char)field1;
+         pRecord->present_time.ti_min=(unsigned char)field2;
+         pRecord->present_time.ti_sec=(unsigned char)field3;
         }
 
        // Date
@@ -216,9 +216,9 @@ RC RasReadRecord(UCHAR *fileName,double *spe,double *drk,ENGINE_CONTEXT *pEngine
          else if (field3<1930)
           field3+=(short)100;
 
-         pRecord->present_day.da_day=(UCHAR)field1;
-         pRecord->present_day.da_mon=(UCHAR)field2;
-         pRecord->present_day.da_year=(USHORT)field3;
+         pRecord->present_day.da_day=(char)field1;
+         pRecord->present_day.da_mon=(char)field2;
+         pRecord->present_day.da_year=(short)field3;
         }
 
        // Exposure time
@@ -287,7 +287,7 @@ RC ReliRAS(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,INT localDay
 
   RECORD_INFO *pRecord;                                                         // pointer to the record part of the engine context
 
-  UCHAR                fileName[MAX_PATH_LEN+1],                                // name of the current file (the current record)
+  DoasCh                fileName[MAX_PATH_LEN+1],                                // name of the current file (the current record)
                       *ptr;                                                     // pointers to parts in the previous string
   RC                   rc;                                                      // return code
   double               tmLocal;                                                 // the measurement time in seconds

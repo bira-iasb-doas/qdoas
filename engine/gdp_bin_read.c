@@ -116,7 +116,7 @@ GDP_BIN_REF;
 // GLOBAL VARIABLES
 // ================
 
-UCHAR *GDP_BIN_BandStrTab[SCIENCE_DATA_DEFINED+1] =
+DoasCh *GDP_BIN_BandStrTab[SCIENCE_DATA_DEFINED+1] =
  {
   "All bands",
   "Band 1a", "Band 1b", "Band 2a", "Band 2b", "Band 3",
@@ -284,15 +284,15 @@ RC GDP_BIN_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
   // Declarations
 
   GOME_ORBIT_FILE *pOrbitFile;                                                  // pointer to the current orbit
-  UCHAR filePath[MAX_STR_SHORT_LEN+1];
-  UCHAR fileFilter[MAX_STR_SHORT_LEN+1];
-  UCHAR filePrefix[MAX_STR_SHORT_LEN+1];
-  UCHAR fileExt[MAX_STR_SHORT_LEN+1];
+  DoasCh filePath[MAX_STR_SHORT_LEN+1];
+  DoasCh fileFilter[MAX_STR_SHORT_LEN+1];
+  DoasCh filePrefix[MAX_STR_SHORT_LEN+1];
+  DoasCh fileExt[MAX_STR_SHORT_LEN+1];
   struct dirent *fileInfo;
   DIR *hDir;
   INDEX indexFile;
-  UCHAR *ptr;
-  UCHAR fileName[MAX_ITEM_TEXT_LEN+1];                                          // file name
+  DoasCh *ptr;
+  DoasCh fileName[MAX_ITEM_TEXT_LEN+1];                                          // file name
   INDEX i,j,indexRecord;                                                        // indexes for loops and arrays
   int useErrors,errorFlag;                                                      // 0 if errors are saved with spectra, 1 otherwise
   FILE *fp;
@@ -871,7 +871,7 @@ void GdpBinSort(INDEX indexRecord,int flag,int listSize,INDEX fileIndex)
 // RETURN        the number of elements in the refList reference list
 // -----------------------------------------------------------------------------
 
-INT GdpBinRefLat(GDP_BIN_REF *refList,double latMin,double latMax,double lonMin,double lonMax,double sza,double szaDelta,UCHAR *gomePixelType)
+INT GdpBinRefLat(GDP_BIN_REF *refList,double latMin,double latMax,double lonMin,double lonMax,double sza,double szaDelta,DoasCh *gomePixelType)
  {
   // Declarations
 
@@ -973,7 +973,7 @@ INT GdpBinRefLat(GDP_BIN_REF *refList,double latMin,double latMax,double lonMin,
 // RETURN        the number of elements in the refList reference list
 // -----------------------------------------------------------------------------
 
-INT GdpBinRefSza(GDP_BIN_REF *refList,double sza,double szaDelta,UCHAR *gomePixelType)
+INT GdpBinRefSza(GDP_BIN_REF *refList,double sza,double szaDelta,DoasCh *gomePixelType)
  {
   // Declarations
 
@@ -1195,7 +1195,7 @@ RC GdpBinRefSelection(ENGINE_CONTEXT *pEngineContext,
                       double *lambdaK,double *ref,
                       double *lambdaN,double *refN,
                       double *lambdaS,double *refS,
-                      UCHAR *gomePixelType,
+                      DoasCh *gomePixelType,
                       void *responseHandle)
  {
   // Declarations

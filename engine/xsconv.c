@@ -153,7 +153,7 @@
 
 // Slit types
 
-UCHAR *XSCONV_slitTypes[SLIT_TYPE_MAX]=
+DoasCh *XSCONV_slitTypes[SLIT_TYPE_MAX]=
  {
 // !!!  	"None",
   "File",
@@ -635,11 +635,11 @@ RC XsconvGetFwhm(XS *pSlit,INT slitType,double *slitParam)
 
 // QDOAS ??? #if defined (__WINDOAS_GUI_) && __WINDOAS_GUI_
 // QDOAS ???
-// QDOAS ??? void XSCONV_FileSelection(HWND hwndXsconv,UCHAR *file,MASK fileType,INT fileMode,INT fileCommand,INT ringFlag)
+// QDOAS ??? void XSCONV_FileSelection(HWND hwndXsconv,DoasCh *file,MASK fileType,INT fileMode,INT fileCommand,INT ringFlag)
 // QDOAS ???  {
 // QDOAS ???   // Declarations
 // QDOAS ???
-// QDOAS ???   UCHAR *ptr;
+// QDOAS ???   DoasCh *ptr;
 // QDOAS ???   SZ_LEN pathLength;
 // QDOAS ???
 // QDOAS ???   // Initialization
@@ -654,7 +654,7 @@ RC XsconvGetFwhm(XS *pSlit,INT slitType,double *slitParam)
 // QDOAS ???      strcat(file,"automatic");
 // QDOAS ???     else if (pathLength==0)
 // QDOAS ???      {
-// QDOAS ???       UCHAR pathSep[2];
+// QDOAS ???       DoasCh pathSep[2];
 // QDOAS ???
 // QDOAS ???       pathSep[0]=PATH_SEP;
 // QDOAS ???       pathSep[1]='\0';
@@ -667,7 +667,7 @@ RC XsconvGetFwhm(XS *pSlit,INT slitType,double *slitParam)
 // QDOAS ???
 // QDOAS ???   // Select path and file
 // QDOAS ???
-// QDOAS ???   FILES_Select(hwndXsconv,file,MAX_ITEM_TEXT_LEN+1,fileType,0,(UCHAR)fileMode,NULL,ITEM_NONE,ITEM_NONE);
+// QDOAS ???   FILES_Select(hwndXsconv,file,MAX_ITEM_TEXT_LEN+1,fileType,0,(DoasCh)fileMode,NULL,ITEM_NONE,ITEM_NONE);
 // QDOAS ???
 // QDOAS ???   // Returned path processing in output mode
 // QDOAS ???
@@ -688,11 +688,11 @@ RC XsconvGetFwhm(XS *pSlit,INT slitType,double *slitParam)
 // XSCONV_LoadCalibrationFile : Final wavelength scale read out
 // ------------------------------------------------------------
 
-RC XSCONV_LoadCalibrationFile(XS *pLambda,UCHAR *lambdaFile,INT nextraPixels)
+RC XSCONV_LoadCalibrationFile(XS *pLambda,DoasCh *lambdaFile,INT nextraPixels)
  {
   // Declarations
 
-  UCHAR  lambdaBuffer[MAX_ITEM_TEXT_LEN+1];
+  DoasCh  lambdaBuffer[MAX_ITEM_TEXT_LEN+1];
   double step;
   FILE *lambdaFp;
   INT npts;
@@ -771,7 +771,7 @@ RC XSCONV_LoadSlitFunction(XS *pSlitXs,SLIT *pSlit,double *pGaussWidth,INT *pSli
  {
   // Declarations
 
-  UCHAR  slitBuffer[MAX_ITEM_TEXT_LEN+1];
+  DoasCh  slitBuffer[MAX_ITEM_TEXT_LEN+1];
   FILE  *slitFp;
   RC     rc;
   INDEX  i;
@@ -957,12 +957,12 @@ RC XSCONV_LoadSlitFunction(XS *pSlitXs,SLIT *pSlit,double *pGaussWidth,INT *pSli
 // XSCONV_LoadCrossSectionFile : Load a cross section file
 // -------------------------------------------------------
 
-RC XSCONV_LoadCrossSectionFile(XS *pCross,UCHAR *crossFile,double lambdaMin,double lambdaMax,double shift,INT conversionMode)
+RC XSCONV_LoadCrossSectionFile(XS *pCross,DoasCh *crossFile,double lambdaMin,double lambdaMax,double shift,INT conversionMode)
  {
   // Declarations
 
   double lambda,crossValue,firstLambda;
-  UCHAR  crossBuffer[MAX_ITEM_TEXT_LEN+1];
+  DoasCh  crossBuffer[MAX_ITEM_TEXT_LEN+1];
   FILE  *crossFp;
   INT    found,npts;
   INDEX  i,i0,iN,istep;
@@ -2009,7 +2009,7 @@ RC XSCONV_NewSlitFunction(SLIT *pSlitOptions,XS *pSlit,double slitParam,SLIT *pS
 // QDOAS ???
 // QDOAS ???  if (!rc && (CHILD_list[CHILD_WINDOW_SPECTRA].hwndChild!=NULL))
 // QDOAS ???   {
-// QDOAS ???    UCHAR str[MAX_ITEM_TEXT_LEN+1];
+// QDOAS ???    DoasCh str[MAX_ITEM_TEXT_LEN+1];
 // QDOAS ???
 // QDOAS ???    sprintf(str,"Convolution tool : effective slit function (%d x %.4f)",nslit,slitStep);
 // QDOAS ???
@@ -2121,7 +2121,7 @@ RC XSCONV_NewSlitFunction(SLIT *pSlitOptions,XS *pSlit,double slitParam,SLIT *pS
 // QDOAS ???  {
 // QDOAS ???   // Declarations
 // QDOAS ???
-// QDOAS ???   UCHAR string[MAX_ITEM_TEXT_LEN+1];
+// QDOAS ???   DoasCh string[MAX_ITEM_TEXT_LEN+1];
 // QDOAS ???   INDEX indexItem;
 // QDOAS ???
 // QDOAS ???   // Resize tab page
@@ -2204,7 +2204,7 @@ RC XSCONV_NewSlitFunction(SLIT *pSlitOptions,XS *pSlit,double slitParam,SLIT *pS
 // QDOAS ???  {
 // QDOAS ???   // Declaration
 // QDOAS ???
-// QDOAS ???   UCHAR string[MAX_ITEM_TEXT_LEN+1];
+// QDOAS ???   DoasCh string[MAX_ITEM_TEXT_LEN+1];
 // QDOAS ???
 // QDOAS ???   // Get the conversion mode
 // QDOAS ???
@@ -2275,11 +2275,11 @@ RC XSCONV_NewSlitFunction(SLIT *pSlitOptions,XS *pSlit,double slitParam,SLIT *pS
 // QDOAS ???   // Declarations
 // QDOAS ???
 // QDOAS ???   INT action,fileAction,gaussAction,voigtAction,slitType,show_9_10;
-// QDOAS ???   UCHAR string[MAX_ITEM_TEXT_LEN+1],slitFile[MAX_PATH_LEN+1];
+// QDOAS ???   DoasCh string[MAX_ITEM_TEXT_LEN+1],slitFile[MAX_PATH_LEN+1];
 // QDOAS ???
 // QDOAS ???   // Initializations
 // QDOAS ???
-// QDOAS ???   slitType=(UCHAR)SendMessage(GetDlgItem(hwndSlit,slitBase),CB_GETCURSEL,0,0);
+// QDOAS ???   slitType=(DoasCh)SendMessage(GetDlgItem(hwndSlit,slitBase),CB_GETCURSEL,0,0);
 // QDOAS ???   voigtAction=((slitType!=SLIT_TYPE_VOIGT))?SW_HIDE:SW_SHOW;
 // QDOAS ???   show_9_10=(slitType!=SLIT_TYPE_VOIGT)?SW_HIDE:SW_SHOW;
 // QDOAS ???
@@ -2424,7 +2424,7 @@ RC XSCONV_NewSlitFunction(SLIT *pSlitOptions,XS *pSlit,double slitParam,SLIT *pS
 // QDOAS ???  {
 // QDOAS ???   // Declarations
 // QDOAS ???
-// QDOAS ???   UCHAR string[MAX_ITEM_TEXT_LEN+1];                                            // string for float fields
+// QDOAS ???   DoasCh string[MAX_ITEM_TEXT_LEN+1];                                            // string for float fields
 // QDOAS ???   HWND  hwndConv,hwndDConv;                                                     // handles to convolution and deconvolution fields
 // QDOAS ???   SLIT *pSlitConv,*pSlitDConv;                                                  // resp. convolution and deconvolution options
 // QDOAS ???   INDEX indexItem;                                                              // index to browse items to fill comboboxes
@@ -2528,12 +2528,12 @@ RC XSCONV_NewSlitFunction(SLIT *pSlitOptions,XS *pSlit,double slitParam,SLIT *pS
 // QDOAS ???  {
 // QDOAS ???  	// Declaration
 // QDOAS ???
-// QDOAS ???   UCHAR string[MAX_ITEM_TEXT_LEN+1];                                            // string for float fields
+// QDOAS ???   DoasCh string[MAX_ITEM_TEXT_LEN+1];                                            // string for float fields
 // QDOAS ???
 // QDOAS ???   // Get the type of slit function
 // QDOAS ???
-// QDOAS ???   XSCONV_buffer.slitConv.slitType=(UCHAR)SendMessage(GetDlgItem(hwndSlit,TOOL_CONVOLUTION_TYPE),CB_GETCURSEL,0,0);
-// QDOAS ???   XSCONV_buffer.slitDConv.slitType=(UCHAR)SendMessage(GetDlgItem(hwndSlit,TOOL_DECONVOLUTION_TYPE),CB_GETCURSEL,0,0);
+// QDOAS ???   XSCONV_buffer.slitConv.slitType=(DoasCh)SendMessage(GetDlgItem(hwndSlit,TOOL_CONVOLUTION_TYPE),CB_GETCURSEL,0,0);
+// QDOAS ???   XSCONV_buffer.slitDConv.slitType=(DoasCh)SendMessage(GetDlgItem(hwndSlit,TOOL_DECONVOLUTION_TYPE),CB_GETCURSEL,0,0);
 // QDOAS ???
 // QDOAS ???   // Convolution options
 // QDOAS ???
@@ -2697,7 +2697,7 @@ RC XSCONV_NewSlitFunction(SLIT *pSlitOptions,XS *pSlit,double slitParam,SLIT *pS
 // QDOAS ???  {
 // QDOAS ???   // Declarations
 // QDOAS ???
-// QDOAS ???   UCHAR controlName[MAX_ITEM_NAME_LEN+1];                                       // the name of a control
+// QDOAS ???   DoasCh controlName[MAX_ITEM_NAME_LEN+1];                                       // the name of a control
 // QDOAS ???   SLIT *pSlitConv,*pSlitDConv;                                                  // pointers to the convolution and deconvolution slit function options
 // QDOAS ???   PRJCT_FILTER *plFilter,*phFilter;                                             // pointers to the low-pass and high-pass filtering options
 // QDOAS ???   HWND hwndTab;                                                                 // handle to the tab control with the different pages of options
@@ -2888,7 +2888,7 @@ RC XSCONV_NewSlitFunction(SLIT *pSlitOptions,XS *pSlit,double slitParam,SLIT *pS
 // QDOAS ???    }
 // QDOAS ???   else
 // QDOAS ???    {
-// QDOAS ???     XSCONV_buffer.noComment=(UCHAR)(IsDlgButtonChecked(hwndXsconv,TOOL_CONVOLUTION_NOCOMMENT)==BST_CHECKED)?(UCHAR)1:(UCHAR)0;
+// QDOAS ???     XSCONV_buffer.noComment=(DoasCh)(IsDlgButtonChecked(hwndXsconv,TOOL_CONVOLUTION_NOCOMMENT)==BST_CHECKED)?(DoasCh)1:(DoasCh)0;
 // QDOAS ???
 // QDOAS ???     memcpy(&XSCONV_options,&XSCONV_buffer,sizeof(XSCONV));
 // QDOAS ???

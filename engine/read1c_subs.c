@@ -703,7 +703,7 @@ L1C_error coadd_signal (unsigned int n_wl, unsigned int n_coadd,
 L1C_error Read_MPH (FILE* unit, MPH *mph)
 
 {
-    int n;
+    size_t n;
     char *tmp = (char*) mph;
     for (n=0; n<sizeof(MPH); n++)
 	tmp[n] = 0;
@@ -798,7 +798,7 @@ L1C_error Read_MPH (FILE* unit, MPH *mph)
 L1C_error Read_SPH (FILE* unit, SPH *sph, MPH *mph)
 
 {
-    int n;
+    size_t n;
     float swver;
     char *tmp = (char*) sph;
     char iv[100];

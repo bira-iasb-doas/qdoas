@@ -438,11 +438,11 @@ RC ReliSAOZ(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDa
 
       string = ZEN_FNCaljti ( &pRecord->Tm, str );
 
-      memcpy(&pRecord->present_day,&day,sizeof(SHORT_DATE));
+      memcpy(&pRecord->present_day, &day, sizeof(SHORT_DATE));
 
-      pRecord->present_time.ti_hour = (UCHAR)( ( strchr(DIGITS,string[0]) - DIGITS ) * 10 + ( strchr(DIGITS,string[1]) - DIGITS ) );
-      pRecord->present_time.ti_min  = (UCHAR)( ( strchr(DIGITS,string[3]) - DIGITS ) * 10 + ( strchr(DIGITS,string[4]) - DIGITS ) );
-      pRecord->present_time.ti_sec  = (UCHAR)0;
+      pRecord->present_time.ti_hour = (unsigned char)( ( strchr(DIGITS,string[0]) - DIGITS ) * 10 + ( strchr(DIGITS,string[1]) - DIGITS ) );
+      pRecord->present_time.ti_min  = (unsigned char)( ( strchr(DIGITS,string[3]) - DIGITS ) * 10 + ( strchr(DIGITS,string[4]) - DIGITS ) );
+      pRecord->present_time.ti_sec  = (unsigned char)0;
 
       pRecord->TDet = (double) param[0] * 0.08138 - 273.1;
       pRecord->TotalExpTime = (double) pRecord->NSomme*pRecord->Tint;
@@ -688,7 +688,7 @@ RC ReliSAOZEfm(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,INT loca
       pRecord->present_time.ti_min=header.M_Min;
       pRecord->present_time.ti_sec=header.M_Sec;
 
-      memcpy((char *)&pRecord->present_day,(char *)&today,sizeof(SHORT_DATE));
+      memcpy(&pRecord->present_day, &today, sizeof(SHORT_DATE));
 
       pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_day,&pRecord->present_time,0);
       pRecord->TotalExpTime=(double)0.;

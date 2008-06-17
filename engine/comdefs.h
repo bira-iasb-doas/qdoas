@@ -136,7 +136,7 @@ extern "C" {
 
 typedef int            INT;
 typedef char           CHAR;
-typedef char           UCHAR;
+typedef char           DoasCh;
 typedef short          SHORT;
 typedef unsigned short USHORT,WORD;
 typedef int            BOOL;
@@ -365,8 +365,8 @@ enum { DEBUG_DVAR_NO, DEBUG_DVAR_YES };
 
 typedef union _debugVarPtr                                                      // use a different definition of the pointer according to the type of the variable to debug
  {
-  UCHAR   **ucharArray;                                                         // pointer to a string array
-  UCHAR    *ucharVector;                                                        // pointer to a string
+  DoasCh   **ucharArray;                                                         // pointer to a string array
+  DoasCh    *ucharVector;                                                        // pointer to a string
   SHORT   **shortArray;                                                         // pointer to a short type array
   SHORT    *shortVector;                                                        // pointer to a short type vector
   USHORT  **ushortArray;                                                        // pointer to a unsigned short type array
@@ -384,7 +384,7 @@ DEBUG_VARPTR;
 
 typedef struct _debugVariables                                                  // information on variables to debug
  {
-  UCHAR         varName[MAX_VAR_LEN+1];                                         // the name of the variable to debug
+  DoasCh         varName[MAX_VAR_LEN+1];                                         // the name of the variable to debug
   DEBUG_VARPTR  varData;                                                        // pointer to the buffer to print out
   INT           varNl,varNc;                                                    // the size of the variable to debug
   INT           varNlOff,varNcOff;                                              // the offset to apply to resp. index of lines and columns
@@ -396,12 +396,12 @@ DEBUG_VARIABLE;
 
 // Prototypes
 
-void DEBUG_Print(UCHAR *formatString,...);
-void DEBUG_PrintVar(UCHAR *message,...);
-RC   DEBUG_FunctionBegin(UCHAR *fctName,MASK fctType);
-RC   DEBUG_FunctionStop(UCHAR *fctName,RC rcFct);
-RC   DEBUG_Start(UCHAR *fileName,UCHAR *fctName,MASK fctMask,int nLevels,int varFlag,int resetFlag);
-RC   DEBUG_Stop(UCHAR *callingFct);
+void DEBUG_Print(DoasCh *formatString,...);
+void DEBUG_PrintVar(DoasCh *message,...);
+RC   DEBUG_FunctionBegin(DoasCh *fctName,MASK fctType);
+RC   DEBUG_FunctionStop(DoasCh *fctName,RC rcFct);
+RC   DEBUG_Start(DoasCh *fileName,DoasCh *fctName,MASK fctMask,int nLevels,int varFlag,int resetFlag);
+RC   DEBUG_Stop(DoasCh *callingFct);
 
 // ===============
 // ERRORS HANDLING
@@ -421,15 +421,15 @@ typedef struct _errorDescription
  {
   int   errorType;                                                              // type of error (warning, fatal error, ...)
   int   errorId;                                                                // id number of the error
-  UCHAR errorFunction[MAX_FCT_LEN+1];                                           // name of the calling function that produced the error
-  UCHAR errorString[MAX_MSG_LEN+1];                                             // error message
+  DoasCh errorFunction[MAX_FCT_LEN+1];                                           // name of the calling function that produced the error
+  DoasCh errorString[MAX_MSG_LEN+1];                                             // error message
  }
 ERROR_DESCRIPTION;
 
 // Prototypes
 
 RC ERROR_DisplayMessage(void *responseHandle);
-RC ERROR_SetLast(UCHAR *callingFunction,int errorType,RC errorId,...);
+RC ERROR_SetLast(DoasCh *callingFunction,int errorType,RC errorId,...);
 RC ERROR_GetLast(ERROR_DESCRIPTION *pError);
 
 // ===============
@@ -465,9 +465,9 @@ enum _memoryTypes
 
 typedef struct _memory
  {
-  UCHAR  callingFunctionName[MAX_FCT_LEN+1];                                    // name of the calling function
-  UCHAR  bufferName[MAX_VAR_LEN+1];                                             // name of the buffer
-  UCHAR *pBuffer;                                                               // pointer to the allocated buffer
+  DoasCh  callingFunctionName[MAX_FCT_LEN+1];                                    // name of the calling function
+  DoasCh  bufferName[MAX_VAR_LEN+1];                                             // name of the buffer
+  DoasCh *pBuffer;                                                               // pointer to the allocated buffer
   INT    itemNumber;                                                            // number of items in buffer
   INT    itemSize;                                                              // size of item
   INT    offset;                                                                // index of the first item
@@ -478,21 +478,21 @@ MEMORY;
 // Global variables
 
 EXTERN INT MEMORY_stackSize;                                                    // the size of the stack of allocated objects
-EXTERN UCHAR *MEMORY_types[MEMORY_TYPE_MAX];                                    // available types for allocated objects
+EXTERN DoasCh *MEMORY_types[MEMORY_TYPE_MAX];                                    // available types for allocated objects
 
 // Prototypes
 
-void    *MEMORY_AllocBuffer(UCHAR *callingFunctionName,UCHAR *bufferName,INT itemNumber,INT itemSize,INT offset,INT type);
-void     MEMORY_ReleaseBuffer(UCHAR *callingFunctionName,UCHAR *bufferName,void *pBuffer);
-double  *MEMORY_AllocDVector(UCHAR *callingFunctionName,UCHAR *bufferName,int nl,int nh);
-void     MEMORY_ReleaseDVector(UCHAR *callingFunctionName,UCHAR *bufferName,double *v,int nl);
-double **MEMORY_AllocDMatrix(UCHAR *callingFunctionName,UCHAR *bufferName,int nrl,int nrh,int ncl,int nch);
-void     MEMORY_ReleaseDMatrix(UCHAR *callingFunctionName,UCHAR *bufferName,double **m,int ncl,int nch,int nrl);
+void    *MEMORY_AllocBuffer(DoasCh *callingFunctionName,DoasCh *bufferName,INT itemNumber,INT itemSize,INT offset,INT type);
+void     MEMORY_ReleaseBuffer(DoasCh *callingFunctionName,DoasCh *bufferName,void *pBuffer);
+double  *MEMORY_AllocDVector(DoasCh *callingFunctionName,DoasCh *bufferName,int nl,int nh);
+void     MEMORY_ReleaseDVector(DoasCh *callingFunctionName,DoasCh *bufferName,double *v,int nl);
+double **MEMORY_AllocDMatrix(DoasCh *callingFunctionName,DoasCh *bufferName,int nrl,int nrh,int ncl,int nch);
+void     MEMORY_ReleaseDMatrix(DoasCh *callingFunctionName,DoasCh *bufferName,double **m,int ncl,int nch,int nrl);
 
 RC       MEMORY_Alloc(void);
 RC       MEMORY_End(void);
 
-RC       MEMORY_GetInfo(DEBUG_VARIABLE *pVariable,UCHAR *pBuffer);
+RC       MEMORY_GetInfo(DEBUG_VARIABLE *pVariable,DoasCh *pBuffer);
 
 // ======================================
 // STDFUNC.C : STANDARD UTILITY FUNCTIONS
@@ -501,8 +501,8 @@ RC       MEMORY_GetInfo(DEBUG_VARIABLE *pVariable,UCHAR *pBuffer);
 // Prototypes
 
 double      STD_Pow10(int p);
-UCHAR      *STD_StrTrim(UCHAR *str);
-int         STD_Sscanf(UCHAR *line,UCHAR *formatString,...);
+DoasCh      *STD_StrTrim(DoasCh *str);
+int         STD_Sscanf(DoasCh *line,DoasCh *formatString,...);
 long        STD_FileLength(FILE *fp);
 
 char       *STD_Strupr(char *n);
@@ -518,9 +518,9 @@ int         STD_IsDir(char *filename);
 // QDOAS ??? typedef struct _doasArg
 // QDOAS ???  {
 // QDOAS ???   INT   analysisFlag;
-// QDOAS ???   UCHAR wdsFile[MAX_STR_LEN+1];
-// QDOAS ???   UCHAR projectName[MAX_STR_LEN+1];
-// QDOAS ???   UCHAR fileName[MAX_STR_LEN+1];
+// QDOAS ???   DoasCh wdsFile[MAX_STR_LEN+1];
+// QDOAS ???   DoasCh projectName[MAX_STR_LEN+1];
+// QDOAS ???   DoasCh fileName[MAX_STR_LEN+1];
 // QDOAS ???  }
 // QDOAS ??? DOAS_ARG;
 // QDOAS ???
@@ -532,13 +532,13 @@ int         STD_IsDir(char *filename);
 // QDOAS ??? EXTERN HWND      DOAS_hwndMain;                                                 // handle of the main window
 // QDOAS ??? #endif
 // QDOAS ???
-// QDOAS ??? EXTERN UCHAR     DOAS_szTitle[40];                                              // the text of title bar
-// QDOAS ??? EXTERN UCHAR     DOAS_HelpPath[MAX_PATH_LEN+1];                                 // path for help file
-// QDOAS ??? EXTERN UCHAR     DOAS_logFile[MAX_PATH_LEN+1];                                  // file for log errors
-// QDOAS ??? EXTERN UCHAR     DOAS_dbgFile[MAX_PATH_LEN+1];                                  // file for debug output
-// QDOAS ??? EXTERN UCHAR     DOAS_tmpFile[MAX_PATH_LEN+1];                                  // temporary file for spectra and analysis data
-// QDOAS ??? EXTERN UCHAR     DOAS_sysFile[MAX_PATH_LEN+1];                                  // system file
-// QDOAS ??? EXTERN UCHAR     DOAS_broAmfFile[MAX_PATH_LEN+1];                               // specific BrO processing
+// QDOAS ??? EXTERN DoasCh     DOAS_szTitle[40];                                              // the text of title bar
+// QDOAS ??? EXTERN DoasCh     DOAS_HelpPath[MAX_PATH_LEN+1];                                 // path for help file
+// QDOAS ??? EXTERN DoasCh     DOAS_logFile[MAX_PATH_LEN+1];                                  // file for log errors
+// QDOAS ??? EXTERN DoasCh     DOAS_dbgFile[MAX_PATH_LEN+1];                                  // file for debug output
+// QDOAS ??? EXTERN DoasCh     DOAS_tmpFile[MAX_PATH_LEN+1];                                  // temporary file for spectra and analysis data
+// QDOAS ??? EXTERN DoasCh     DOAS_sysFile[MAX_PATH_LEN+1];                                  // system file
+// QDOAS ??? EXTERN DoasCh     DOAS_broAmfFile[MAX_PATH_LEN+1];                               // specific BrO processing
 // QDOAS ???
 // QDOAS ??? EXTERN DOAS_ARG  DOAS_arg;                                                      // arguments of the program when used from the command line prompt
 // QDOAS ???

@@ -182,7 +182,7 @@ INT SCIA_ms=0;
 
 typedef struct _sciaOrbitFiles                                                  // description of an orbit
  {
- 	UCHAR sciaFileName[MAX_STR_LEN+1];                                            // the name of the file with a part of the orbit
+ 	DoasCh sciaFileName[MAX_STR_LEN+1];                                            // the name of the file with a part of the orbit
  	info_l1c        sciaPDSInfo;                                                  // all internal information about the PDS file like data offsets etc.
   float *sciaSunRef,*sciaSunWve;                                                // the sun reference spectrum and calibration
   INDEX *sciaLatIndex,*sciaLonIndex,*sciaSzaIndex;                              // indexes of records sorted resp. by latitude, by longitude and by SZA
@@ -220,7 +220,7 @@ void mds_1c_constant_getbin(FILE* unit, mds_1c_constant *var);
 // PURPOSE       Release buffers allocated by SCIAMACHY readout routines
 // -----------------------------------------------------------------------------
 
-void SCIA_ReleaseBuffers(UCHAR format)
+void SCIA_ReleaseBuffers(DoasCh format)
  {
   // Declarations
 
@@ -416,24 +416,24 @@ void SCIA_FromMJD2000ToYMD(double mjd,SHORT_DATE *pDate,struct time *pTime)
   if (SCIA_ms>=1000)
    {
    	SCIA_ms%=1000;
-   	if (++pTime->ti_sec>=(UCHAR)60)
+   	if (++pTime->ti_sec>=(unsigned char)60)
    	 {
-   	 	pTime->ti_sec%=(UCHAR)60;
-   	 	if (++pTime->ti_min>=(UCHAR)60)
+   	 	pTime->ti_sec%=(unsigned char)60;
+   	 	if (++pTime->ti_min>=(unsigned char)60)
      	 {
-     	 	pTime->ti_min%=(UCHAR)60;
-     	 	if (++pTime->ti_hour>=(UCHAR)24)
+     	 	pTime->ti_min%=(unsigned char)60;
+     	 	if (++pTime->ti_hour>=(unsigned char)24)
      	 	 {
-     	 	 	pTime->ti_hour%=(UCHAR)24;
+     	 	 	pTime->ti_hour%=(unsigned char)24;
      	 	 	nDaysInMonth=daysInMonth[pDate->da_mon-1];
-     	 	 	if (((pDate->da_year%4)==0) && (pDate->da_mon==(UCHAR)2))
+     	 	 	if (((pDate->da_year%4)==0) && (pDate->da_mon==(char)2))
      	 	 	 nDaysInMonth++;
-     	 	 	if (++pDate->da_day>(UCHAR)nDaysInMonth)
+     	 	 	if (++pDate->da_day>(char)nDaysInMonth)
      	 	 	 {
      	 	 	 	pDate->da_day=1;
-     	 	 	 	if (++pDate->da_mon>(UCHAR)12)
+     	 	 	 	if (++pDate->da_mon>(char)12)
      	 	 	 	 {
-     	 	 	 	 	pDate->da_mon=(UCHAR)1;
+     	 	 	 	 	pDate->da_mon=(char)1;
      	 	 	 	 	pDate->da_year++;
      	 	 	 	 }
      	 	 	 }
@@ -1058,16 +1058,16 @@ RC SCIA_SetPDS(ENGINE_CONTEXT *pEngineContext)
   // Declarations
 
   SCIA_ORBIT_FILE *pOrbitFile;                                                  // pointer to the current orbit
-  UCHAR filePath[MAX_STR_SHORT_LEN+1];
-  UCHAR fileFilter[MAX_STR_SHORT_LEN+1];
-  UCHAR fileExt[MAX_STR_SHORT_LEN+1];
-  UCHAR filePrefix[MAX_STR_SHORT_LEN+1];
+  DoasCh filePath[MAX_STR_SHORT_LEN+1];
+  DoasCh fileFilter[MAX_STR_SHORT_LEN+1];
+  DoasCh fileExt[MAX_STR_SHORT_LEN+1];
+  DoasCh filePrefix[MAX_STR_SHORT_LEN+1];
   struct dirent *fileInfo;
   DIR *hDir;
   INDEX indexFile;
-  UCHAR *ptr,*ptrOld;
+  DoasCh *ptr,*ptrOld;
   INT oldCurrentIndex;
-  UCHAR *_nList[10];
+  DoasCh *_nList[10];
   INT _n;
   RC rc;                                                                        // return code
 

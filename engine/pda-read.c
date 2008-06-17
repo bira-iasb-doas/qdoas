@@ -333,9 +333,9 @@ RC ReliPDA_EGG_Logger(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,i
         }
       } // !!!!!!!!!!!!  */
 
-      day.da_day=(UCHAR)iday;
-      day.da_mon=(UCHAR)imonth;
-      day.da_year=(SHORT)iyear;
+      day.da_day=(char)iday;
+      day.da_mon=(char)imonth;
+      day.da_year=(short)iyear;
 
       if (day.da_year<30)
        day.da_year+=(short)2000;
@@ -344,9 +344,9 @@ RC ReliPDA_EGG_Logger(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,i
       else if (day.da_year<1930)
        day.da_year+=(short)100;
 
-      pRecord->present_time.ti_hour=(UCHAR)ihour;
-      pRecord->present_time.ti_min=(UCHAR)imin;
-      pRecord->present_time.ti_sec=(UCHAR)isec;
+      pRecord->present_time.ti_hour=(unsigned char)ihour;
+      pRecord->present_time.ti_min=(unsigned char)imin;
+      pRecord->present_time.ti_sec=(unsigned char)isec;
 //      pRecord->Azimuth=(double)-1.;
 
       memcpy(&pRecord->present_day,&day,sizeof(SHORT_DATE));
@@ -506,7 +506,7 @@ RC SetPDA_EGG(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
    	for (i=0;i<NDET;i++)
    	 pBuffers->specMaxx[i]=(double)i+1.;
 
-// !!! */    UCHAR *ptr,fileout[MAX_ITEM_TEXT_LEN+1];
+// !!! */    DoasCh *ptr,fileout[MAX_ITEM_TEXT_LEN+1];
 // !!! */    FILE *fp;
 
 // !!! */    ptr=strrchr(fileName,PATH_SEP);
@@ -605,7 +605,7 @@ RC ReliPDA_EGG(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
 
   PDA1453A          header;                                                     // file header
   OBSERVATION_SITE *pSite;                                                      // pointer to the observation sites data
-  UCHAR             fileNameShort[MAX_STR_SHORT_LEN+1],                         // temporary file name
+  DoasCh             fileNameShort[MAX_STR_SHORT_LEN+1],                         // temporary file name
                    *ptr,                                                        // pointer to part of the previous string
                     names[20];                                                  // name of the current spectrum
   USHORT           *ISpectre,                                                   // spectrum in the original format
@@ -626,7 +626,7 @@ RC ReliPDA_EGG(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
   INT               newFlag;
 
 // !!! */    FILE *gp;
-// !!! */    UCHAR fileout[MAX_ITEM_TEXT_LEN+1];
+// !!! */    DoasCh fileout[MAX_ITEM_TEXT_LEN+1];
 
   // Initializations
 
@@ -747,9 +747,9 @@ RC ReliPDA_EGG(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
                  Min   = (int) DMin;
                  Sec   = (int)((double)(DMin-Min) * 60.);
 
-                 header.now.ti_hour = (UCHAR)Heure;
-                 header.now.ti_min  = (UCHAR)Min;
-                 header.now.ti_sec  = (UCHAR)Sec;
+                 header.now.ti_hour = (unsigned char)Heure;
+                 header.now.ti_min  = (unsigned char)Min;
+                 header.now.ti_sec  = (unsigned char)Sec;
 
                  Tm = (double) ZEN_NbSec ( &header.today, &header.now, 0 );
 
@@ -776,8 +776,8 @@ RC ReliPDA_EGG(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
 // ! ***/           fwrite(ISpecMax,sizeof(USHORT)*(header.Rejected+header.ScansNumber),1,gp);
 // ! ***/           fclose(gp);
 
-        memcpy((char *)&pRecord->present_day,(char *)&header.today,sizeof(SHORT_DATE));
-        memcpy((char *)&pRecord->present_time,(char *)&header.now,sizeof(struct time));
+        memcpy(&pRecord->present_day, &header.today, sizeof(SHORT_DATE));
+        memcpy(&pRecord->present_time, &header.now, sizeof(struct time));
 
         pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_day,&pRecord->present_time,0);
         pRecord->TotalExpTime=(double)0.;

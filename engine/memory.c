@@ -79,7 +79,7 @@
 // ================
 
 INT MEMORY_stackSize=MEMORY_STACK_SIZE;                                         // the size of the stack of allocated objects
-UCHAR *MEMORY_types[MEMORY_TYPE_MAX]=                                           // available types for allocated objects
+DoasCh *MEMORY_types[MEMORY_TYPE_MAX]=                                           // available types for allocated objects
  {
  	"unknown",                                                                    // unknown
  	"pointer",                                                                    // pointer
@@ -127,12 +127,12 @@ static LONG    memoryMaxObjectsSize=0;                                          
 // RETURN        pointer to the allocated buffer;
 // -----------------------------------------------------------------------------
 
-void *MEMORY_AllocBuffer(UCHAR *callingFunctionName,UCHAR *bufferName,INT itemNumber,INT itemSize,INT offset,INT type)
+void *MEMORY_AllocBuffer(DoasCh *callingFunctionName,DoasCh *bufferName,INT itemNumber,INT itemSize,INT offset,INT type)
  {
   // Declarations
 
   INT totalSize;                                                                // requested total size in bytes number for the object
-  UCHAR *pBuffer;                                                               // pointer to the new allocated buffer
+  DoasCh *pBuffer;                                                               // pointer to the new allocated buffer
   MEMORY *pMemory;                                                              // pointer to the new allocated object
 
   // Debugging
@@ -148,7 +148,7 @@ void *MEMORY_AllocBuffer(UCHAR *callingFunctionName,UCHAR *bufferName,INT itemNu
 
   // Allocate the buffer
 
-  if ((totalSize<=0) || ((pBuffer=(UCHAR *)malloc(totalSize))==NULL))
+  if ((totalSize<=0) || ((pBuffer=(DoasCh *)malloc(totalSize))==NULL))
    ERROR_SetLast(callingFunctionName,ERROR_TYPE_FATAL,ERROR_ID_ALLOC,bufferName,itemNumber,itemSize);
 
   else if (memoryStack!=NULL)
@@ -175,7 +175,7 @@ void *MEMORY_AllocBuffer(UCHAR *callingFunctionName,UCHAR *bufferName,INT itemNu
       strncpy(pMemory->callingFunctionName,callingFunctionName,MAX_FCT_LEN);
       strncpy(pMemory->bufferName,bufferName,MAX_VAR_LEN);
 
-      pMemory->pBuffer=(UCHAR *)pBuffer;
+      pMemory->pBuffer=(DoasCh *)pBuffer;
       pMemory->itemNumber=itemNumber;
       pMemory->itemSize=itemSize;
       pMemory->offset=offset;
@@ -229,7 +229,7 @@ void *MEMORY_AllocBuffer(UCHAR *callingFunctionName,UCHAR *bufferName,INT itemNu
 //               information for error message;
 // -----------------------------------------------------------------------------
 
-void MEMORY_ReleaseBuffer(UCHAR *callingFunctionName,UCHAR *bufferName,void *pBuffer)
+void MEMORY_ReleaseBuffer(DoasCh *callingFunctionName,DoasCh *bufferName,void *pBuffer)
  {
   // Declarations
 
@@ -254,7 +254,7 @@ void MEMORY_ReleaseBuffer(UCHAR *callingFunctionName,UCHAR *bufferName,void *pBu
     // browse objects in the stack
 
     for (indexObjects=memoryStackObjectsNumber-1;indexObjects>=0;indexObjects--)
-     if (memoryStack[indexObjects].pBuffer==(UCHAR *)pBuffer)
+     if (memoryStack[indexObjects].pBuffer==(DoasCh *)pBuffer)
       break;
 
     // remove object from the stack
@@ -307,7 +307,7 @@ void MEMORY_ReleaseBuffer(UCHAR *callingFunctionName,UCHAR *bufferName,void *pBu
 //               MEMORY_ReleaseDVector.
 // -----------------------------------------------------------------------------
 
-double *MEMORY_AllocDVector(UCHAR *callingFunctionName,UCHAR *bufferName,INT nl,INT nh)
+double *MEMORY_AllocDVector(DoasCh *callingFunctionName,DoasCh *bufferName,INT nl,INT nh)
  {
   // Declaration
 
@@ -353,7 +353,7 @@ double *MEMORY_AllocDVector(UCHAR *callingFunctionName,UCHAR *bufferName,INT nl,
 //               nl                   : lower index in use;
 // -----------------------------------------------------------------------------
 
-void MEMORY_ReleaseDVector(UCHAR *callingFunctionName,UCHAR *bufferName,double *v,INT nl)
+void MEMORY_ReleaseDVector(DoasCh *callingFunctionName,DoasCh *bufferName,double *v,INT nl)
  {
  	// Register the function in debugging mode
 
@@ -391,7 +391,7 @@ void MEMORY_ReleaseDVector(UCHAR *callingFunctionName,UCHAR *bufferName,double *
 //               MEMORY_ReleaseDMatrix.
 // -----------------------------------------------------------------------------
 
-double **MEMORY_AllocDMatrix(UCHAR *callingFunctionName,UCHAR *bufferName,INT nrl,INT nrh,INT ncl,INT nch)
+double **MEMORY_AllocDMatrix(DoasCh *callingFunctionName,DoasCh *bufferName,INT nrl,INT nrh,INT ncl,INT nch)
  {
   // Declarations
 
@@ -454,7 +454,7 @@ double **MEMORY_AllocDMatrix(UCHAR *callingFunctionName,UCHAR *bufferName,INT nr
 //               nrl                  : lower index in use for rows;
 // -----------------------------------------------------------------------------
 
-void MEMORY_ReleaseDMatrix(UCHAR *callingFunctionName,UCHAR *bufferName,double **m,INT ncl,INT nch,INT nrl)
+void MEMORY_ReleaseDMatrix(DoasCh *callingFunctionName,DoasCh *bufferName,double **m,INT ncl,INT nch,INT nrl)
  {
   // Declaration
 
@@ -637,7 +637,7 @@ RC MEMORY_End(void)
 //               ERROR_ID_NO otherwise
 // -----------------------------------------------------------------------------
 
-RC MEMORY_GetInfo(DEBUG_VARIABLE *pVariable,UCHAR *pBuffer)
+RC MEMORY_GetInfo(DEBUG_VARIABLE *pVariable,DoasCh *pBuffer)
  {
  	// Declarations
 
@@ -678,7 +678,7 @@ RC MEMORY_GetInfo(DEBUG_VARIABLE *pVariable,UCHAR *pBuffer)
    	  pMemory=&memoryStack[i];
 
    	  strncpy(pVariable->varName,pMemory->bufferName,MAX_VAR_LEN);
-   	  pVariable->varData.ucharVector=(UCHAR *)pMemory->pBuffer;
+   	  pVariable->varData.ucharVector=(DoasCh *)pMemory->pBuffer;
 
    	  // The variable to debug is a vector
 

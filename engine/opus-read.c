@@ -119,7 +119,7 @@ RC OPUS_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
   PAR_BLOCK ParBlock;                                  // Parameter Block
   PRJCT_INSTRUMENTAL *pInstr;
 
-  UCHAR  DateTemp[32],                                 // temporary variable for atof conversion
+  DoasCh  DateTemp[32],                                 // temporary variable for atof conversion
          fileName[MAX_STR_SHORT_LEN+1],                // current file name
         *ptr1,*ptr2;                                   // pointers to the extension of the first and the last files in the current directory
 
@@ -335,7 +335,7 @@ RC OPUS_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localD
   // Declarations
 
   PRJCT_INSTRUMENTAL *pInstr;
-  UCHAR  fileName[MAX_STR_SHORT_LEN+1],*ptr1,*ptr2;                             // current file name
+  DoasCh  fileName[MAX_STR_SHORT_LEN+1],*ptr1,*ptr2;                             // current file name
 
   OPUS_HEADER Header;                                                           // File Header
   DIR_BLOCK DirBlock;                                                           // Directory Block
@@ -343,7 +343,7 @@ RC OPUS_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localD
 
   ULONG  MagicNumber,NumberPoints;                                              // OPUS Signature
   float *fSpectrum;                                                             // data in float precision
-  UCHAR  DateTemp[32];                                                          // temporary variable for atof conversion
+  DoasCh  DateTemp[32];                                                          // temporary variable for atof conversion
   double Dtemp,tmLocal,                                                         // temporary variable for swapping
          WaveHigh,WaveLow;                                                      // temporary variables for building the wavelength calibration
   float  newHour;
@@ -667,13 +667,13 @@ RC OPUS_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localD
         min=(INT)((newHour-hour)*60.);
         sec=(INT)((newHour-hour-min/60.)*3600.);
 
-        pEngineContext->present_day.da_year=(SHORT)year;
-        pEngineContext->present_day.da_mon=(UCHAR)mon;
-        pEngineContext->present_day.da_day=(UCHAR)day;
+        pEngineContext->present_day.da_year=(short)year;
+        pEngineContext->present_day.da_mon=(char)mon;
+        pEngineContext->present_day.da_day=(char)day;
 
-        pEngineContext->present_time.ti_hour=(UCHAR)hour;
-        pEngineContext->present_time.ti_min=(UCHAR)min;
-        pEngineContext->present_time.ti_sec=(UCHAR)sec;
+        pEngineContext->present_time.ti_hour=(unsigned char)hour;
+        pEngineContext->present_time.ti_min=(unsigned char)min;
+        pEngineContext->present_time.ti_sec=(unsigned char)sec;
 
         pEngineContext->Tm=(double)ZEN_NbSec(&pEngineContext->present_day,&pEngineContext->present_time,0);
         pEngineContext->TimeDec=(double)pEngineContext->present_time.ti_hour+pEngineContext->present_time.ti_min/60.+pEngineContext->present_time.ti_sec/3600.;

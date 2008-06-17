@@ -55,7 +55,7 @@
 
 #include "doas.h"
 
-void MOON_GetPosition(UCHAR  *inputDate,                                        // input date and time for moon positions calculation
+void MOON_GetPosition(DoasCh  *inputDate,                                        // input date and time for moon positions calculation
                       double  longitude,                                        // longitude of the observation site
                       double  latitude,                                         // latitude of the observation site
                       double  altitude,                                         // altitude of the observation site

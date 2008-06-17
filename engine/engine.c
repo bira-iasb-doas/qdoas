@@ -53,7 +53,7 @@ INT  NDET;                                                                      
 
 ENGINE_CONTEXT engineContext,                                                   // engine context used to make the interface between the mediator and the engine
                ENGINE_contextRef;                                               // engine context used for the automatic search of the reference spectrum
-UCHAR ENGINE_dbgFile[MAX_PATH_LEN+1];
+DoasCh ENGINE_dbgFile[MAX_PATH_LEN+1];
 double ENGINE_localNoon;
 
 // -----------------------------------------------------------------------------
@@ -252,7 +252,7 @@ RC EngineSetProject(ENGINE_CONTEXT *pEngineContext)
  	double *instrDeriv2;                                                          // second derivative for the instrument function
  	RC rc;                                                                        // return code
  	FILE *fp;                                                                     // file pointer
- 	UCHAR str[MAX_ITEM_TEXT_LEN+1];                                               // buffer to read the lines of the file
+ 	DoasCh str[MAX_ITEM_TEXT_LEN+1];                                               // buffer to read the lines of the file
  	int i;                                                                        // index for loops and arrays
 
  	// Initializations
@@ -426,7 +426,7 @@ RC EngineSetFile(ENGINE_CONTEXT *pEngineContext,const char *fileName)
  	// Declarations
 
   FILE_INFO *pFile;
-  UCHAR fileTmp[MAX_STR_LEN+1];
+  DoasCh fileTmp[MAX_STR_LEN+1];
  	RC rc;
 
  	// Initializations
@@ -1149,7 +1149,7 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
   INT useKurucz,alignRef,useUsamp,saveFlag,newDimL;
   double factTemp;
   RC rc;
-  UCHAR string[80];                                                              // return code
+  DoasCh string[80];                                                              // return code
 
   // Initializations
 

@@ -228,7 +228,7 @@ void Sec2Date(INT refYear, double nbSec, STRING2DATE *pDate)
 // OUTPUT        pDate       the components of the date in a structure
 // -----------------------------------------------------------------------------
 
-void String2Date(UCHAR *stringDate,STRING2DATE *pDate)
+void String2Date(DoasCh *stringDate,STRING2DATE *pDate)
  {
   // String date decomposition
 
@@ -261,7 +261,7 @@ void String2Date(UCHAR *stringDate,STRING2DATE *pDate)
 // RETURN        a pointer to the output string
 // -----------------------------------------------------------------------------
 
-UCHAR *Date2String(STRING2DATE *pDate,UCHAR *stringDate)
+DoasCh *Date2String(STRING2DATE *pDate,DoasCh *stringDate)
  {
  	// Declaration
 
@@ -289,7 +289,7 @@ UCHAR *Date2String(STRING2DATE *pDate,UCHAR *stringDate)
 // OUTPUT        pYear,pMonth,pDay   the components of the date
 // -----------------------------------------------------------------------------
 
-void String2Calendar(UCHAR *strDate,double *pYear,double *pMonth,double *pDay)
+void String2Calendar(DoasCh *strDate,double *pYear,double *pMonth,double *pDay)
  {
   // Declaration
 
@@ -362,7 +362,7 @@ double JulianDay(double year,double month,double day)
 //               pi       equatorial horizontal parallax
 // -----------------------------------------------------------------------------
 
-void MoonPosition(UCHAR *strCalendarDate,double *lambda,double *beta,double *pi)
+void MoonPosition(DoasCh *strCalendarDate,double *lambda,double *beta,double *pi)
  {
   // Declarations //
 
@@ -830,12 +830,12 @@ double MoonFraction(double T,double lambda,double beta)
 //               pFrac       illuminated fraction of the moon
 // -----------------------------------------------------------------------------
 
-void MOON_GetPosition(UCHAR *inputDate,double longitude,double latitude,double altitude,
+void MOON_GetPosition(DoasCh *inputDate,double longitude,double latitude,double altitude,
                       double *pA,double *ph,double *pFrac)
  {
   // Declarations
                            // INPUT DATE AND TIME TRANSFORMATION
-  UCHAR stringDate[20];    // Date(day,month,year,hour,min,sec) -> YYYY.MMDDddddd
+  DoasCh stringDate[20];    // Date(day,month,year,hour,min,sec) -> YYYY.MMDDddddd
   STRING2DATE dateTime;      // DD/MM/YYYY HH:MM:SS -> Date(day,month,year,hour,min,sec)
 
                            // GEOCENTIC COORDINATES

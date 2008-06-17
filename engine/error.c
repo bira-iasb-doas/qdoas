@@ -78,7 +78,7 @@
 typedef struct _errorTable
  {
  	int    errorId;
- 	UCHAR *errorMessage;
+ 	DoasCh *errorMessage;
  }
 ERROR_TABLE;
 
@@ -220,7 +220,7 @@ RC ERROR_DisplayMessage(void *responseHandle)
 // RETURN        the errorId
 // -----------------------------------------------------------------------------
 
-RC ERROR_SetLast(UCHAR *callingFunction,int errorType,RC errorId,...)
+RC ERROR_SetLast(DoasCh *callingFunction,int errorType,RC errorId,...)
  {
   // Declarations
 

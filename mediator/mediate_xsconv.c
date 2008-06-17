@@ -26,14 +26,14 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 // STATIC VARIABLES
 // ================
 
-static unsigned char *mediateConvolutionTypesStr[CONVOLUTION_TYPE_MAX]=
+static DoasCh *mediateConvolutionTypesStr[CONVOLUTION_TYPE_MAX]=
  {
   "Interpolation only",
   "Standard convolution",
   "Convolution with I0 correction"
  };
 
-static unsigned char *mediateConvolutionFileExt[CONVOLUTION_TYPE_MAX]=
+static DoasCh *mediateConvolutionFileExt[CONVOLUTION_TYPE_MAX]=
    {
     "_none",                                                                      // CONVOLUTION_TYPE_NONE
     "_std",                                                                       // CONVOLUTION_TYPE_STANDARD
@@ -41,7 +41,7 @@ static unsigned char *mediateConvolutionFileExt[CONVOLUTION_TYPE_MAX]=
   //  "_ring"                         // CONVOLUTION_TYPE_RING
    };
 
-unsigned char *mediateConvolutionFilterTypes[PRJCT_FILTER_TYPE_MAX]={"None","Kaiser","Boxcar","Gaussian","Triangular","Savitzky-Golay","Odd-even pixels correction","Binomial"};
+DoasCh *mediateConvolutionFilterTypes[PRJCT_FILTER_TYPE_MAX]={"None","Kaiser","Boxcar","Gaussian","Triangular","Savitzky-Golay","Odd-even pixels correction","Binomial"};
 
 // -------------------------------------------------
 // mediateConvolutionSave : Save the convoluted cross section
@@ -52,10 +52,10 @@ RC mediateConvolutionSave(void *engineContext)
   // Declarations
 
   ENGINE_XSCONV_CONTEXT *pEngineContext=(ENGINE_XSCONV_CONTEXT*)engineContext;
-  unsigned char fileName[MAX_ITEM_TEXT_LEN+1];
+  DoasCh fileName[MAX_ITEM_TEXT_LEN+1];
   PRJCT_FILTER *pLFilter,*pHFilter;
   SZ_LEN fileNameLength;
-  unsigned char *ptr,*ptr2;
+  DoasCh *ptr,*ptr2;
   FILE *fp;
   INDEX i,slitType;
   XS *pXs;
@@ -279,7 +279,7 @@ RC mediateConvolutionCalculate(void *engineContext,void *responseHandle)
   PRJCT_FILTER *plFilter,*phFilter;                                             // pointers to the low pass and high pass filtering parts of the engine context
   SLIT *pSlitConv,*pSlitDConv;                                                  // pointers to the convolution and deconvolution slit function parts of the engine context
 
-  unsigned char windowTitle[MAX_ITEM_TEXT_LEN+1],pageTitle[MAX_ITEM_TEXT_LEN+1];
+  DoasCh windowTitle[MAX_ITEM_TEXT_LEN+1],pageTitle[MAX_ITEM_TEXT_LEN+1];
   double lambdaMin,lambdaMax,slitParam,slitParam2,slitWidth;
 
   INT slitType,slitType2,deconvFlag,dispConv,dispLFilter,dispHFilter,nGraph,iGraph;

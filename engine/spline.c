@@ -80,7 +80,7 @@
 //               ERROR_ID_NO for success.
 // -----------------------------------------------------------------------------
 
-RC SPLINE_Deriv2(double *X,double *Y,double *Y2,int n,UCHAR *callingFunction)
+RC SPLINE_Deriv2(double *X,double *Y,double *Y2,int n,DoasCh *callingFunction)
  {
  	// Declarations
 
@@ -194,7 +194,7 @@ RC SPLINE_Deriv2(double *X,double *Y,double *Y2,int n,UCHAR *callingFunction)
 //               this function applies on vector of new absissae.
 // -----------------------------------------------------------------------------
 
-RC SPLINE_Vector(double *xa,double *ya,double *y2a,int na,double *xb,double *yb,int nb,int type,UCHAR *callingFunction)
+RC SPLINE_Vector(double *xa,double *ya,double *y2a,int na,double *xb,double *yb,int nb,int type,DoasCh *callingFunction)
  {
   // Declarations
 

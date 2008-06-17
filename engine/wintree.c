@@ -112,7 +112,7 @@
 
 TREE_ITEM  *TREE_itemList=NULL;                  // list of all tree objects
 INDEX       treeItemFree=0;                      // index of the first available element in list
-UCHAR       TREE_editFlag=0;                     // flag set when editing a tree item label
+DoasCh       TREE_editFlag=0;                     // flag set when editing a tree item label
 
 // Image list
 
@@ -410,7 +410,7 @@ TREE_ITEM_TYPE TREE_itemType[TREE_ITEM_TYPE_MAX];
 // QDOAS ???   // Declarations
 // QDOAS ???
 // QDOAS ???   TREE_ITEM *pTree;         // pointer to the tree node to delete
-// QDOAS ???   UCHAR     *pDataList;     // list of objects of the same type as the node to delete
+// QDOAS ???   DoasCh     *pDataList;     // list of objects of the same type as the node to delete
 // QDOAS ???   INT        dataNumber,    // number of objects in the previous list
 // QDOAS ???              dataSize,      // size in bytes of an object in the previous list
 // QDOAS ???              dataType;      // type of the node to delete
@@ -424,7 +424,7 @@ TREE_ITEM_TYPE TREE_itemType[TREE_ITEM_TYPE_MAX];
 // QDOAS ???     pTree=&TREE_itemList[indexItem];                                                         // pointer to the tree node to delete
 // QDOAS ???
 // QDOAS ???     if (((dataIndex=pTree->dataIndex)!=ITEM_NONE) &&                                         // index of the object in the data list
-// QDOAS ???         ((pDataList=(UCHAR *)TREE_itemType[(dataType=pTree->dataType)].dataList)!=NULL) &&   // list of objects of the same type as the node to delete
+// QDOAS ???         ((pDataList=(DoasCh *)TREE_itemType[(dataType=pTree->dataType)].dataList)!=NULL) &&   // list of objects of the same type as the node to delete
 // QDOAS ???         ((dataNumber=TREE_itemType[dataType].dataNumber)>dataIndex) &&                       // number of objects in the previous list
 // QDOAS ???         ((dataSize=TREE_itemType[dataType].dataSize)>0))                                     // size in bytes of an object in the previous list
 // QDOAS ???      {
@@ -710,7 +710,7 @@ TREE_ITEM_TYPE TREE_itemType[TREE_ITEM_TYPE_MAX];
 // QDOAS ???             *pTreeItem,       // pointer to the current child node
 // QDOAS ???              treeTmp;         // buffer used when swapping child nodes
 // QDOAS ???
-// QDOAS ???   UCHAR     *dataList,        // list of objects child nodes belong to
+// QDOAS ???   DoasCh     *dataList,        // list of objects child nodes belong to
 // QDOAS ???             *dataTmp;         // temporary buffer to receive the description of data when swapping child nodes
 // QDOAS ???
 // QDOAS ???   INT        dataType,        // data type of child nodes
@@ -733,9 +733,9 @@ TREE_ITEM_TYPE TREE_itemType[TREE_ITEM_TYPE_MAX];
 // QDOAS ???     if (((dataType=(RAW_GetFolderFlag(indexParent)!=RAW_FOLDER_TYPE_NONE)?TREE_ITEM_TYPE_FILE_PARENT:
 // QDOAS ???                                                                           TREE_itemList[indexParent].dataType)!=ITEM_NONE) &&
 // QDOAS ???         ((dataType=TREE_itemType[dataType].childDataType)!=ITEM_NONE) &&                                                                               // data type of child nodes
-// QDOAS ???         ((dataList=(UCHAR *)TREE_itemType[dataType].dataList)!=NULL) &&                                                                                // list of objects child nodes belong to
+// QDOAS ???         ((dataList=(DoasCh *)TREE_itemType[dataType].dataList)!=NULL) &&                                                                                // list of objects child nodes belong to
 // QDOAS ???         ((dataSize=TREE_itemType[dataType].dataSize)!=0) &&                                                                                            // size in bytes needed for the data description of child nodes
-// QDOAS ???         ((dataTmp=(UCHAR *)MEMORY_AllocBuffer("TREE_SortChildNodes ","dataTmp",dataSize,1,0,MEMORY_TYPE_STRING))!=NULL) &&                                                  // temporary buffer to receive the description of data when swapping child nodes
+// QDOAS ???         ((dataTmp=(DoasCh *)MEMORY_AllocBuffer("TREE_SortChildNodes ","dataTmp",dataSize,1,0,MEMORY_TYPE_STRING))!=NULL) &&                                                  // temporary buffer to receive the description of data when swapping child nodes
 // QDOAS ???         ((indexLast=TREE_itemList[indexParent].lastChildItem)!=ITEM_NONE))                                                                             // there are children nodes
 // QDOAS ???      {
 // QDOAS ???       // While the list of unsorted items is not empty ...
@@ -938,7 +938,7 @@ TREE_ITEM_TYPE TREE_itemType[TREE_ITEM_TYPE_MAX];
 // QDOAS ??? // RETURN        index of the node in the tree if found; ITEM_NONE otherwise.
 // QDOAS ??? // -----------------------------------------------------------------------------
 // QDOAS ???
-// QDOAS ??? INDEX TREE_GetIndexByDataName(UCHAR *dataName,UCHAR dataType,INDEX entryPoint)
+// QDOAS ??? INDEX TREE_GetIndexByDataName(DoasCh *dataName,DoasCh dataType,INDEX entryPoint)
 // QDOAS ???  {
 // QDOAS ???   // Declarations
 // QDOAS ???
@@ -947,13 +947,13 @@ TREE_ITEM_TYPE TREE_itemType[TREE_ITEM_TYPE_MAX];
 // QDOAS ???   INDEX           indexItem,       // browse child nodes
 // QDOAS ???                   indexTree;       // index of the tree node if found
 // QDOAS ???
-// QDOAS ???   UCHAR          *pDataList;       // list of objects of the same type as the input 'dataType'
+// QDOAS ???   DoasCh          *pDataList;       // list of objects of the same type as the input 'dataType'
 // QDOAS ???   SZ_LEN          dataNameLen;     // length of the input 'dataName'
 // QDOAS ???
 // QDOAS ???   // Initializations
 // QDOAS ???
 // QDOAS ???   pTreeItemType=&TREE_itemType[dataType];
-// QDOAS ???   pDataList=(UCHAR *)pTreeItemType->dataList;
+// QDOAS ???   pDataList=(DoasCh *)pTreeItemType->dataList;
 // QDOAS ???   dataNameLen=strlen(dataName);
 // QDOAS ???   indexTree=ITEM_NONE;
 // QDOAS ???
@@ -1001,7 +1001,7 @@ TREE_ITEM_TYPE TREE_itemType[TREE_ITEM_TYPE_MAX];
 // QDOAS ??? // RETURN        index of the node in the tree if found; ITEM_NONE otherwise.
 // QDOAS ??? // -----------------------------------------------------------------------------
 // QDOAS ???
-// QDOAS ??? INDEX TREE_GetIndexByDataIndex(INDEX dataIndex,UCHAR dataType,INDEX entryPoint)
+// QDOAS ??? INDEX TREE_GetIndexByDataIndex(INDEX dataIndex,DoasCh dataType,INDEX entryPoint)
 // QDOAS ???  {
 // QDOAS ???   // Declarations
 // QDOAS ???
@@ -1045,7 +1045,7 @@ TREE_ITEM_TYPE TREE_itemType[TREE_ITEM_TYPE_MAX];
 // QDOAS ??? // RETURN        the number of found objects.
 // QDOAS ??? // -----------------------------------------------------------------------------
 // QDOAS ???
-// QDOAS ??? INT TREE_GetIndexesByDataType(UCHAR dataType,INDEX entryPoint,INDEX *dataIndexes,INT *pDataNumber)
+// QDOAS ??? INT TREE_GetIndexesByDataType(DoasCh dataType,INDEX entryPoint,INDEX *dataIndexes,INT *pDataNumber)
 // QDOAS ???  {
 // QDOAS ???   // Declarations
 // QDOAS ???
@@ -1201,28 +1201,28 @@ TREE_ITEM_TYPE TREE_itemType[TREE_ITEM_TYPE_MAX];
 // QDOAS ??? // -----------------------------------------------------------------------------
 // QDOAS ???
 // QDOAS ??? INDEX TREE_InsertOneItem(HWND   hwndTree,    // the handle of the tree in which to insert a new item
-// QDOAS ???                          UCHAR *textItem,    // the text of the new item to insert
+// QDOAS ???                          DoasCh *textItem,    // the text of the new item to insert
 // QDOAS ???                          INDEX  parentItem,  // the index in the tree of the parent node
 // QDOAS ???                          INT    dataType,    // the data type of the new item to insert
-// QDOAS ???                          UCHAR  newItem,     // flag set for loading properties dialog box after insertion
-// QDOAS ???                          UCHAR  folderFlag,  // flag set for a folder (user-defined or directory)
-// QDOAS ???                          UCHAR  hidden)      // flag set if item is hidden
+// QDOAS ???                          DoasCh  newItem,     // flag set for loading properties dialog box after insertion
+// QDOAS ???                          DoasCh  folderFlag,  // flag set for a folder (user-defined or directory)
+// QDOAS ???                          DoasCh  hidden)      // flag set if item is hidden
 // QDOAS ???  {
 // QDOAS ???   // Declarations
 // QDOAS ???
-// QDOAS ???   UCHAR fileName[MAX_ITEM_TEXT_LEN+1];       // if the new item is a file/folder, complete file name
+// QDOAS ???   DoasCh fileName[MAX_ITEM_TEXT_LEN+1];       // if the new item is a file/folder, complete file name
 // QDOAS ???   TREE_ITEM *pTree,*pTreeParent;
 // QDOAS ???   TREE_ITEM_TYPE *pTreeItemSpec;
 // QDOAS ???   INDEX indexItem,indexData;
-// QDOAS ???   UCHAR folderFlagParent;                    // folder specification for the parent node
-// QDOAS ???   UCHAR *ptr,*ptr2;                          // pointer to parts of the file name
+// QDOAS ???   DoasCh folderFlagParent;                    // folder specification for the parent node
+// QDOAS ???   DoasCh *ptr,*ptr2;                          // pointer to parts of the file name
 // QDOAS ???
 // QDOAS ???   // Initializations
 // QDOAS ???
 // QDOAS ???   if (!STD_Stricmp(textItem,"Kurucz description"))
 // QDOAS ???    strcpy(textItem,"Calibration description");
 // QDOAS ???
-// QDOAS ???   folderFlagParent=(UCHAR)(((parentItem!=ITEM_NONE) && (TREE_itemList[parentItem].dataType==TREE_ITEM_TYPE_FILE_CHILDREN))?
+// QDOAS ???   folderFlagParent=(DoasCh)(((parentItem!=ITEM_NONE) && (TREE_itemList[parentItem].dataType==TREE_ITEM_TYPE_FILE_CHILDREN))?
 // QDOAS ???                              RAW_spectraFiles[TREE_itemList[parentItem].dataIndex].folderFlag:RAW_FOLDER_TYPE_NONE);
 // QDOAS ???
 // QDOAS ???   indexItem=ITEM_NONE;
@@ -1253,7 +1253,7 @@ TREE_ITEM_TYPE TREE_itemType[TREE_ITEM_TYPE_MAX];
 // QDOAS ???      ptr=fileName;
 // QDOAS ???    }
 // QDOAS ???
-// QDOAS ???   if ((((indexData=TREE_GetIndexByDataName(textItem,(UCHAR)dataType,parentItem))==ITEM_NONE) ||  // there is no item in the tree with the same name
+// QDOAS ???   if ((((indexData=TREE_GetIndexByDataName(textItem,(DoasCh)dataType,parentItem))==ITEM_NONE) ||  // there is no item in the tree with the same name
 // QDOAS ???         (TREE_itemList[indexData].parentItem!=parentItem)) &&                                    // and the same parent as the new one
 // QDOAS ???        ((indexItem=treeItemFree)!=ITEM_NONE))                                                    // it is possible to pick a free item
 // QDOAS ???    {
@@ -1283,7 +1283,7 @@ TREE_ITEM_TYPE TREE_itemType[TREE_ITEM_TYPE_MAX];
 // QDOAS ???
 // QDOAS ???     if ((folderFlag==RAW_FOLDER_TYPE_PATH) || (folderFlag==RAW_FOLDER_TYPE_PATHSUB))
 // QDOAS ???      {
-// QDOAS ???       UCHAR tmpBuffer[MAX_ITEM_TEXT_LEN+1];
+// QDOAS ???       DoasCh tmpBuffer[MAX_ITEM_TEXT_LEN+1];
 // QDOAS ???       sprintf(tmpBuffer,"%s (%s)",ptr,ptr2);
 // QDOAS ???       strncpy(pTree->textItem,tmpBuffer,MAX_ITEM_DESC_LEN);
 // QDOAS ???      }
@@ -1300,14 +1300,14 @@ TREE_ITEM_TYPE TREE_itemType[TREE_ITEM_TYPE_MAX];
 // QDOAS ???       if ((pTreeItemSpec->dataList!=NULL) &&
 // QDOAS ???           (pTreeItemSpec->dataNumber<pTreeItemSpec->dataMaxNumber))
 // QDOAS ???        {
-// QDOAS ???         UCHAR *pList=(UCHAR *)pTreeItemSpec->dataList;
+// QDOAS ???         DoasCh *pList=(DoasCh *)pTreeItemSpec->dataList;
 // QDOAS ???         pTree->dataIndex=pTreeItemSpec->dataNumber++;
 // QDOAS ???
 // QDOAS ???         if ((dataType==TREE_ITEM_TYPE_FILE_CHILDREN) && (folderFlag!=RAW_FOLDER_TYPE_USER) &&
 // QDOAS ???             (folderFlagParent!=RAW_FOLDER_TYPE_PATH) && (folderFlagParent!=RAW_FOLDER_TYPE_PATHSUB))
 // QDOAS ???          FILES_CompactPath(textItem,textItem,1,1);
 // QDOAS ???
-// QDOAS ???         strncpy((UCHAR *)&pList[pTree->dataIndex*pTreeItemSpec->dataSize],
+// QDOAS ???         strncpy((DoasCh *)&pList[pTree->dataIndex*pTreeItemSpec->dataSize],
 // QDOAS ???                 textItem,MAX_ITEM_DESC_LEN);
 // QDOAS ???        }
 // QDOAS ???      }
@@ -1484,7 +1484,7 @@ TREE_ITEM_TYPE TREE_itemType[TREE_ITEM_TYPE_MAX];
 // QDOAS ???   TREE_ITEM *pItem;                                                                        // pointer to the current item
 // QDOAS ???   TREE_ITEM_TYPE *pTreeType;                                                               // pointer to the type description of the current item
 // QDOAS ???   INT dataType;                                                                            // type of data of the current item
-// QDOAS ???   UCHAR textItem[MAX_ITEM_NAME_LEN+1],                                                     // new text after editing label
+// QDOAS ???   DoasCh textItem[MAX_ITEM_NAME_LEN+1],                                                     // new text after editing label
 // QDOAS ???        *dataList;                                                                          // pointer to the list of data objects the current item belongs to
 // QDOAS ???
 // QDOAS ???   // If selected item hasn't edit attribute, cancel editing
@@ -1504,7 +1504,7 @@ TREE_ITEM_TYPE TREE_itemType[TREE_ITEM_TYPE_MAX];
 // QDOAS ???
 // QDOAS ???     lstrcpy(textItem,pTree->item.pszText);
 // QDOAS ???
-// QDOAS ???     if (TREE_GetIndexByDataName(textItem,(UCHAR)pItem->dataType,pItem->parentItem)!=ITEM_NONE)
+// QDOAS ???     if (TREE_GetIndexByDataName(textItem,(DoasCh)pItem->dataType,pItem->parentItem)!=ITEM_NONE)
 // QDOAS ???      MSG_MessageBox(hwndTree,ITEM_NONE,menuID,IDS_MSGBOX_DOUBLE,MB_OK|MB_ICONHAND,textItem);
 // QDOAS ???     else
 // QDOAS ???      {
@@ -1521,8 +1521,8 @@ TREE_ITEM_TYPE TREE_itemType[TREE_ITEM_TYPE_MAX];
 // QDOAS ???
 // QDOAS ???         // update also the data description
 // QDOAS ???
-// QDOAS ???         if ((dataList=(UCHAR *)pTreeType->dataList)!=NULL)
-// QDOAS ???          strncpy((UCHAR *)&dataList[pItem->dataIndex*pTreeType->dataSize],
+// QDOAS ???         if ((dataList=(DoasCh *)pTreeType->dataList)!=NULL)
+// QDOAS ???          strncpy((DoasCh *)&dataList[pItem->dataIndex*pTreeType->dataSize],
 // QDOAS ???                   pItem->textItem,MAX_ITEM_NAME_LEN);
 // QDOAS ???
 // QDOAS ???         // for a new item, open the properties dialog box
@@ -1614,7 +1614,7 @@ TREE_ITEM_TYPE TREE_itemType[TREE_ITEM_TYPE_MAX];
 // QDOAS ???  {
 // QDOAS ???   // Declarations
 // QDOAS ???
-// QDOAS ???   UCHAR textItem[MAX_ITEM_DESC_LEN+1];     // default string for new item
+// QDOAS ???   DoasCh textItem[MAX_ITEM_DESC_LEN+1];     // default string for new item
 // QDOAS ???   TREE_ITEM *pTreeItem;                    // pointer to the parent item in the tree
 // QDOAS ???   TREE_ITEM_TYPE *pTreeType;               // pointer to the description of the type of the parent node
 // QDOAS ???   INT   contextMenu,                       // identification of the context menu called from the parent node
@@ -1658,7 +1658,7 @@ TREE_ITEM_TYPE TREE_itemType[TREE_ITEM_TYPE_MAX];
 // QDOAS ???         if ((pTreeType->dataMaxNumber==0) ||                                        // no objects list is associated to the type of item
 // QDOAS ???             (pTreeType->dataNumber>=pTreeType->dataMaxNumber) ||                    // objects list is full
 // QDOAS ???            ((indexItem=TREE_InsertOneItem(hwndTree,textItem,indexParent,dataType,   // can't allocate an item in the tree
-// QDOAS ???             (UCHAR)!folderFlag,(UCHAR)folderFlag,0))==ITEM_NONE))
+// QDOAS ???             (DoasCh)!folderFlag,(DoasCh)folderFlag,0))==ITEM_NONE))
 // QDOAS ???
 // QDOAS ???          MSG_MessageBox(hwndTree,ITEM_NONE,menuID,IDS_MSGBOX_INSERT,MB_OK|MB_ICONHAND,textItem);
 // QDOAS ???
@@ -2076,7 +2076,7 @@ TREE_ITEM_TYPE TREE_itemType[TREE_ITEM_TYPE_MAX];
 // QDOAS ???   INDEX indexItem;            // index in the tree of the selected item
 // QDOAS ???   TREE_ITEM *pTree;           // pointer to the selected item
 // QDOAS ???   TREE_ITEM_TYPE *pTreeType;  // pointer to the type description of the selected item
-// QDOAS ???   UCHAR path[MAX_PATH_LEN+1];
+// QDOAS ???   DoasCh path[MAX_PATH_LEN+1];
 // QDOAS ???   FILE *fp;
 // QDOAS ???
 // QDOAS ???   if ((indexItem=TREE_GetSelectedItem(hwndTree))!=ITEM_NONE)
@@ -2130,7 +2130,7 @@ TREE_ITEM_TYPE TREE_itemType[TREE_ITEM_TYPE_MAX];
 // QDOAS ???   TREE_ITEM      *pTree;                // pointer to the selected node in the tree
 // QDOAS ???   TREE_ITEM_TYPE *pTreeType,            // pointer to the type description of the selected item
 // QDOAS ???                  *pTreeChildType;       // pointer to the type description of childs of the selected item
-// QDOAS ???   UCHAR          *pData2Copy,           // pointer to the data list to copy
+// QDOAS ???   DoasCh          *pData2Copy,           // pointer to the data list to copy
 // QDOAS ???                  *pData2Paste;          // pointer to the data list to paste
 // QDOAS ???   HMENU           hMenu,hSubMenu;       // handles to the projects menu
 // QDOAS ???
@@ -2161,8 +2161,8 @@ TREE_ITEM_TYPE TREE_itemType[TREE_ITEM_TYPE_MAX];
 // QDOAS ???          (pTree->dataType==TREE_ITEM_TYPE_PROJECT)) &&               // projects nodes
 // QDOAS ???         ((dataIndex=pTree->dataIndex)!=ITEM_NONE) &&
 // QDOAS ???         ((dataSize=pTreeType->dataSize)>0) &&
-// QDOAS ???         ((pData2Copy=(UCHAR *)pTreeType->dataList)!=NULL) &&
-// QDOAS ???         ((pData2Paste=(UCHAR *)pTreeType->data2Paste)!=NULL))
+// QDOAS ???         ((pData2Copy=(DoasCh *)pTreeType->dataList)!=NULL) &&
+// QDOAS ???         ((pData2Paste=(DoasCh *)pTreeType->data2Paste)!=NULL))
 // QDOAS ???      {
 // QDOAS ???       // safe keeping of the data description of the selected item
 // QDOAS ???
@@ -2189,8 +2189,8 @@ TREE_ITEM_TYPE TREE_itemType[TREE_ITEM_TYPE_MAX];
 // QDOAS ???               (pTree->dataType==TREE_ITEM_TYPE_CROSS_PARENT) ||      // user-defined symbols parent nodes
 // QDOAS ???               (pTree->dataType==TREE_ITEM_TYPE_ANALYSIS_PARENT)) &&  // analysis windows parent nodes
 // QDOAS ???              ((dataSize=pTreeChildType->dataSize)>0) &&
-// QDOAS ???              ((pData2Copy=(UCHAR *)pTreeChildType->dataList)!=NULL) &&
-// QDOAS ???              ((pData2Paste=(UCHAR *)pTreeChildType->data2Paste)!=NULL))
+// QDOAS ???              ((pData2Copy=(DoasCh *)pTreeChildType->dataList)!=NULL) &&
+// QDOAS ???              ((pData2Paste=(DoasCh *)pTreeChildType->data2Paste)!=NULL))
 // QDOAS ???      {
 // QDOAS ???       if ((pTree->firstChildItem!=ITEM_NONE) && (pTree->dataType==TREE_ITEM_TYPE_ANALYSIS_PARENT))
 // QDOAS ???        ANLYS_nItemsToPaste=0;
@@ -2245,7 +2245,7 @@ TREE_ITEM_TYPE TREE_itemType[TREE_ITEM_TYPE_MAX];
 // QDOAS ???   INT        dataSize,
 // QDOAS ???              dataType;                       // data type of child nodes to paste
 // QDOAS ???   TREE_ITEM *pTree;                          // pointer to the parent node for the paste operation
-// QDOAS ???   UCHAR     *dataList,                       // objects list child nodes to paste belong to
+// QDOAS ???   DoasCh     *dataList,                       // objects list child nodes to paste belong to
 // QDOAS ???             *pData2Paste,                    // list of objects to paste
 // QDOAS ???              string[MAX_ITEM_TEXT_LEN+1];    // new text of the pasted node (if only one pasted node)
 // QDOAS ???
@@ -2265,8 +2265,8 @@ TREE_ITEM_TYPE TREE_itemType[TREE_ITEM_TYPE_MAX];
 // QDOAS ???     pTree=&TREE_itemList[indexItem];
 // QDOAS ???
 // QDOAS ???     if (((dataType=TREE_itemType[pTree->dataType].childDataType)==TREE_typeOfItem2Copy) && (pTree->hti!=NULL) &&
-// QDOAS ???         ((dataList=(UCHAR *)TREE_itemType[dataType].dataList)!=NULL) &&
-// QDOAS ???         ((pData2Paste=(UCHAR *)TREE_itemType[dataType].data2Paste)!=NULL) &&
+// QDOAS ???         ((dataList=(DoasCh *)TREE_itemType[dataType].dataList)!=NULL) &&
+// QDOAS ???         ((pData2Paste=(DoasCh *)TREE_itemType[dataType].data2Paste)!=NULL) &&
 // QDOAS ???         ((dataSize=TREE_itemType[dataType].dataSize)>0))
 // QDOAS ???      {
 // QDOAS ???       // Only one node to paste
@@ -2302,7 +2302,7 @@ TREE_ITEM_TYPE TREE_itemType[TREE_ITEM_TYPE_MAX];
 // QDOAS ???        {
 // QDOAS ???         for (i=0;i<treeNItem2Copy;i++)
 // QDOAS ???          {
-// QDOAS ???           if (((indexNewItem=TREE_GetIndexByDataName(&pData2Paste[i*dataSize],(UCHAR)dataType,indexItem))==ITEM_NONE) &&
+// QDOAS ???           if (((indexNewItem=TREE_GetIndexByDataName(&pData2Paste[i*dataSize],(DoasCh)dataType,indexItem))==ITEM_NONE) &&
 // QDOAS ???               ((indexNewItem=TREE_InsertOneItem(hwndTree,&pData2Paste[i*dataSize],indexItem,TREE_typeOfItem2Copy,0,0,0))!=ITEM_NONE) &&
 // QDOAS ???               ((indexData=TREE_itemList[indexNewItem].dataIndex)!=ITEM_NONE))
 // QDOAS ???            {
@@ -2473,7 +2473,7 @@ TREE_ITEM_TYPE TREE_itemType[TREE_ITEM_TYPE_MAX];
 // QDOAS ???   INT           contextMenu;                        // ID of the context menu associated to the selected item
 // QDOAS ???   TREE_ITEM    *pTree,*pTreeParent;                 // pointers resp. to the item that has the selection and to one of the parent nodes
 // QDOAS ???   MENUITEMINFO  menuItemInfo;                       // description of menu items
-// QDOAS ???   UCHAR         menuItemText[MAX_ITEM_TEXT_LEN+1];  // text of the current menu item
+// QDOAS ???   DoasCh         menuItemText[MAX_ITEM_TEXT_LEN+1];  // text of the current menu item
 // QDOAS ???   HMENU         hSubMenu;                           // handle of the current context menu
 // QDOAS ???
 // QDOAS ???   // ------------------------------------

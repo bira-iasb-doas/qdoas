@@ -74,11 +74,11 @@
 //               ERROR_ID_NO otherwise
 // -----------------------------------------------------------------------------
 
-RC MATRIX_Allocate(MATRIX_OBJECT *pMatrix,INT nl,INT nc,INT basel,INT basec,INT allocateDeriv2,UCHAR *callingFunction)
+RC MATRIX_Allocate(MATRIX_OBJECT *pMatrix,INT nl,INT nc,INT basel,INT basec,INT allocateDeriv2,DoasCh *callingFunction)
  {
   // Declarations
 
-  UCHAR functionName[MAX_FCT_LEN+1];                                            // the name of the calling function
+  DoasCh functionName[MAX_FCT_LEN+1];                                            // the name of the calling function
   RC rc;                                                                        // the return code
 
   // Initializations
@@ -128,11 +128,11 @@ RC MATRIX_Allocate(MATRIX_OBJECT *pMatrix,INT nl,INT nc,INT basel,INT basec,INT 
 //               callingFunction : the name of the calling function
 // -----------------------------------------------------------------------------
 
-void MATRIX_Free(MATRIX_OBJECT *pMatrix,UCHAR *callingFunction)
+void MATRIX_Free(MATRIX_OBJECT *pMatrix,DoasCh *callingFunction)
  {
   // Declaration
 
-  UCHAR functionName[MAX_FCT_LEN+1];
+  DoasCh functionName[MAX_FCT_LEN+1];
 
   // Initialization
 
@@ -172,7 +172,7 @@ void MATRIX_Free(MATRIX_OBJECT *pMatrix,UCHAR *callingFunction)
 //               ERROR_ID_NO otherwise
 // -----------------------------------------------------------------------------
 
-RC MATRIX_Copy(MATRIX_OBJECT *pTarget,MATRIX_OBJECT *pSource,UCHAR *callingFunction)
+RC MATRIX_Copy(MATRIX_OBJECT *pTarget,MATRIX_OBJECT *pSource,DoasCh *callingFunction)
  {
   // Declarations
 
@@ -239,13 +239,13 @@ RC MATRIX_Copy(MATRIX_OBJECT *pTarget,MATRIX_OBJECT *pSource,UCHAR *callingFunct
 //               ERROR_ID_NO otherwise
 // -----------------------------------------------------------------------------
 
-RC MATRIX_Load(UCHAR *fileName,MATRIX_OBJECT *pMatrix,
+RC MATRIX_Load(DoasCh *fileName,MATRIX_OBJECT *pMatrix,
                INT basel,INT basec,INT nl,INT nc,double xmin,double xmax,
-               INT allocateDeriv2,INT reverseFlag,UCHAR *callingFunction)
+               INT allocateDeriv2,INT reverseFlag,DoasCh *callingFunction)
  {
   // Declarations
 
-  UCHAR   *oldColumn,*nextColumn,                                               // get lines from the input file
+  DoasCh   *oldColumn,*nextColumn,                                               // get lines from the input file
            fullPath[MAX_ITEM_TEXT_LEN+1];                                       // the complete file name to load
   INT      nltmp,nctmp,                                                         // highest indexes for lines and columns
            lineLength,                                                          // length of a file line
@@ -295,8 +295,8 @@ RC MATRIX_Load(UCHAR *fileName,MATRIX_OBJECT *pMatrix,
 
   // Allocate buffers for reading the lines of the file
 
-  else if (((oldColumn=(UCHAR*)MEMORY_AllocBuffer("MATRIX_Load","oldColumn",MAX_ITEM_TEXT_LEN+1,sizeof(UCHAR),0,MEMORY_TYPE_STRING))==NULL) ||
-           ((nextColumn=(UCHAR*)MEMORY_AllocBuffer("MATRIX_Load","nextColumn",MAX_ITEM_TEXT_LEN+1,sizeof(UCHAR),0,MEMORY_TYPE_STRING))==NULL))
+  else if (((oldColumn=(DoasCh*)MEMORY_AllocBuffer("MATRIX_Load","oldColumn",MAX_ITEM_TEXT_LEN+1,sizeof(DoasCh),0,MEMORY_TYPE_STRING))==NULL) ||
+           ((nextColumn=(DoasCh*)MEMORY_AllocBuffer("MATRIX_Load","nextColumn",MAX_ITEM_TEXT_LEN+1,sizeof(DoasCh),0,MEMORY_TYPE_STRING))==NULL))
 
    rc=ERROR_ID_ALLOC;
 

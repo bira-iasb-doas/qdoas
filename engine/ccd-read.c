@@ -109,8 +109,8 @@ typedef struct _ccdData
   int         nlCorrection;                                                     // 1 if a nonlinearity correction has been applied; 0 otherwise
   short       nTint;                                                            // number of integration times
   double      brusagElevation;                                                  // elevation angle for off axis measurements
-  UCHAR       filterName[16];                                                   // the name of the filter used if any
-  UCHAR       ignored[998];                                                     // if completed with new data in the future, authorizes compatibility with previous versions
+  DoasCh       filterName[16];                                                   // the name of the filter used if any
+  DoasCh       ignored[998];                                                     // if completed with new data in the future, authorizes compatibility with previous versions
  }
 CCD_DATA;
 
@@ -729,7 +729,7 @@ RC ReliCCD(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay
   RECORD_INFO *pRecord;                                                         // pointer to the record part of the engine context
 
   CCD_1024 DetInfo;                                                             // data on the current record retrieved from the spectra file
-  UCHAR names[20];                                                              // name of the current spectrum
+  DoasCh names[20];                                                              // name of the current spectrum
   USHORT *ISpectre,*ISpecMax;                                                   // resp. spectrum and SpecMax retrieved from the file
   double Max,tmLocal;                                                           // the maximum value measured for the current spectrum
   INDEX i;                                                                      // index for browsing pixels in the spectrum
@@ -867,7 +867,7 @@ RC ReliCCDTrack(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loc
   RECORD_INFO *pRecord;                                                         // pointer to the record part of the engine context
 
   CCD_1024 DetInfo;                                                             // data on the current spectra retrieved from the spectra file
-  UCHAR names[20],                                                              // name of the current spectrum
+  DoasCh names[20],                                                              // name of the current spectrum
         fileName[MAX_PATH_LEN+1];                                               // the complete file name (including path)
   USHORT *ISpectre,*ISpecMax;                                                   // resp. spectrum and SpecMax retrieved from the file
   float *TabTint,*MaxTrk;                                                       // resp. integration time and track data
@@ -1066,7 +1066,7 @@ RC CCD_LoadInstrumental(ENGINE_CONTEXT *pEngineContext)
   BUFFERS *pBuffers;                                                            // pointer to the buffers part of the engine context
   RECORD_INFO *pRecord;                                                         // pointer to the record part of the engine context
 
-  UCHAR fileName[MAX_STR_LEN+1];                                                // the complete name (including path) of the file to load
+  DoasCh fileName[MAX_STR_LEN+1];                                                // the complete name (including path) of the file to load
   RC rc;                                                                        // the return code
 
   // Initializations

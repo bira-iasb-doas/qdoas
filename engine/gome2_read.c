@@ -113,7 +113,7 @@ GOME2_INFO;
 
 typedef struct _GOME2OrbitFiles                                                 // description of an orbit
  {
- 	UCHAR               gome2FileName[MAX_STR_LEN+1];                             // the name of the file with a part of the orbit
+ 	DoasCh               gome2FileName[MAX_STR_LEN+1];                             // the name of the file with a part of the orbit
  	GOME2_INFO          gome2Info;                                                // all internal information about the PDS file like data offsets etc.
   double             *gome2SunRef,*gome2SunWve;                                 // the sun reference spectrum and calibration
   INDEX              *gome2LatIndex,*gome2LonIndex,*gome2SzaIndex;              // indexes of records sorted resp. by latitude, by longitude and by SZA
@@ -622,8 +622,8 @@ RC Gome2BrowseMDR(GOME2_ORBIT_FILE *pOrbitFile,INDEX indexBand)
   // Declarations
 
   GOME2_INFO *pGome2Info;
-  UCHAR *ptr,*ptrOld;
-  UCHAR geoFileName[MAX_STR_SHORT_LEN+1];
+  DoasCh *ptr,*ptrOld;
+  DoasCh geoFileName[MAX_STR_SHORT_LEN+1];
   FILE *geoFp;
   INDEX i;
   RC  rc;
@@ -841,8 +841,8 @@ RC GOME2_Set(ENGINE_CONTEXT *pEngineContext)
   // Declarations
 
   GOME2_ORBIT_FILE *pOrbitFile;                                                 // pointer to the current orbit
-  UCHAR filePath[MAX_STR_SHORT_LEN+1];
-  UCHAR fileFilter[MAX_STR_SHORT_LEN+1],fileFilterSub[MAX_STR_SHORT_LEN+1];
+  DoasCh filePath[MAX_STR_SHORT_LEN+1];
+  DoasCh fileFilter[MAX_STR_SHORT_LEN+1],fileFilterSub[MAX_STR_SHORT_LEN+1];
   #if defined(__WINDOAS_WIN_) && __WINDOAS_WIN_
   WIN32_FIND_DATA fileInfo,fileInfoSub;                                         // structure returned by FindFirstFile and FindNextFile APIs
   HANDLE hDir,hDirSub;                                                          // handle to use with by FindFirstFile and FindNextFile APIs
@@ -852,7 +852,7 @@ RC GOME2_Set(ENGINE_CONTEXT *pEngineContext)
   #endif
   INDEX indexFile;
   INT searchAllOrbits;
-  UCHAR *ptr,*fileExt;
+  DoasCh *ptr,*fileExt;
   INT oldCurrentIndex;
   RC rc,rcSub;                                                                  // return code
 
@@ -1181,9 +1181,9 @@ RC GOME2_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,INDEX fileIndex)
         pRecord->present_day.da_mon=(CHAR)month;
         pRecord->present_day.da_year=(SHORT)year;
 
-        pRecord->present_time.ti_hour=(UCHAR)hour;
-        pRecord->present_time.ti_min=(UCHAR)min;
-        pRecord->present_time.ti_sec=(UCHAR)sec;
+        pRecord->present_time.ti_hour=(unsigned char)hour;
+        pRecord->present_time.ti_min=(unsigned char)min;
+        pRecord->present_time.ti_sec=(unsigned char)sec;
 
         GOME2_ms=msec;
 
