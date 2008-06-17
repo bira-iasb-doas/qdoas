@@ -121,7 +121,7 @@ PRJCT_RESULTS_FIELDS PRJCT_resultsAscii[PRJCT_RESULTS_ASCII_MAX]=
   { "Pixel number"                , MEMORY_TYPE_DoasUS, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_PIXEL
   { "Pixel type"                  , MEMORY_TYPE_DoasUS, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_PIXEL_TYPE
   { "Orbit number"                , MEMORY_TYPE_INT   , sizeof(INT)   , ITEM_NONE, ITEM_NONE, "%#8d"      },       // PRJCT_RESULTS_ASCII_ORBIT
-  { "Longitude"                   , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#8.3f"    },       // PRJCT_RESULTS_ASCII_DoasI32IT
+  { "Longitude"                   , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#8.3f"    },       // PRJCT_RESULTS_ASCII_LONGIT
   { "Latitude"                    , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#8.3f"    },       // PRJCT_RESULTS_ASCII_LATIT
   { "Altitude"                    , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#8.3f"    },       // PRJCT_RESULTS_ASCII_ALTIT
   { "Covariances"                 , MEMORY_TYPE_DOUBLE, sizeof(double), ITEM_NONE, ITEM_NONE, "%#12.4le"  },       // PRJCT_RESULTS_ASCII_COVAR
@@ -956,7 +956,7 @@ void OutputRegisterFields(ENGINE_CONTEXT *pEngineContext)
     // Geolocation for satellite data
 
     else if (satelliteFlag &&
-           ((indexField==PRJCT_RESULTS_ASCII_DoasI32IT) ||
+           ((indexField==PRJCT_RESULTS_ASCII_LONGIT) ||
             (indexField==PRJCT_RESULTS_ASCII_LATIT)))
      {
       OutputRegister(pField->fieldName,"(1)","",pField->fieldType,pField->fieldSize,pField->fieldDim1,pField->fieldDim2,pField->fieldFormat);
@@ -1874,7 +1874,7 @@ void OutputSaveRecord(ENGINE_CONTEXT *pEngineContext,INT hiddenFlag)
 
         break;
      // ----------------------------------------------------------------------
-        case PRJCT_RESULTS_ASCII_DoasI32IT :
+        case PRJCT_RESULTS_ASCII_LONGIT :
 
          if ((pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_HDF) ||
              (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS))

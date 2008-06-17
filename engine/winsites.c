@@ -188,7 +188,7 @@ INDEX SITES_GetIndex(DoasCh *siteName)
 // QDOAS ???     // Longitude
 // QDOAS ???
 // QDOAS ???     sprintf(string,"%.3lf",pSite->longitude);
-// QDOAS ???     SetWindowText(GetDlgItem(hwndSites,SITES_DoasI32ITUDE),string);
+// QDOAS ???     SetWindowText(GetDlgItem(hwndSites,SITES_LONGITUDE),string);
 // QDOAS ???
 // QDOAS ???     // Latitude
 // QDOAS ???
