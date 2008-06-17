@@ -300,20 +300,20 @@ t39+(-0.556001184E5*t1+2002.0*t23-0.48153268E5*t2+0.101279E4*t12+0.7094609824E5
  *            from 'xinf', to 'xsup'.                   ¨                                       *
  *                                                                                              *
  ***********************************************************************************************/
-void VoigtCase1(double xinf, double xsup, double y, long Nbp, double *lpVoigt)
+void VoigtCase1(double xinf, double xsup, double y, LONG Nbp, double *lpVoigt)
 {
  double Disp;
- long   i,i1,i2,i3,i4,i5,i6;
+ LONG   i,i1,i2,i3,i4,i5,i6;
 
  Disp=(xsup-xinf)/(double)(Nbp-1);
 
  // Limit points
- i1=(long)((y-15.0-xinf)/Disp);
- i2=(long)((y-5.5-xinf)/Disp);
- i3=(long)((-(15.4*y+2.7)/3.0-xinf)/Disp);
- i4=(long)((+(15.4*y+2.7)/3.0-xinf)/Disp);
- i5=(long)((5.5-y-xinf)/Disp);
- i6=(long)((15.0-y-xinf)/Disp);
+ i1=(LONG)((y-15.0-xinf)/Disp);
+ i2=(LONG)((y-5.5-xinf)/Disp);
+ i3=(LONG)((-(15.4*y+2.7)/3.0-xinf)/Disp);
+ i4=(LONG)((+(15.4*y+2.7)/3.0-xinf)/Disp);
+ i5=(LONG)((5.5-y-xinf)/Disp);
+ i6=(LONG)((15.0-y-xinf)/Disp);
 
  // Bounds to physical limits
  i1=min(max(0,i1),Nbp-1);
@@ -348,18 +348,18 @@ void VoigtCase1(double xinf, double xsup, double y, long Nbp, double *lpVoigt)
  *            points from 'xinf', to 'xsup'.                   ¨                                *
  *                                                                                              *
  ***********************************************************************************************/
-void VoigtCase2(double xinf, double xsup, double y, long Nbp, double *lpVoigt)
+void VoigtCase2(double xinf, double xsup, double y, LONG Nbp, double *lpVoigt)
 {
  double Disp;
- long   i,i1,i2,i3,i4;
+ LONG   i,i1,i2,i3,i4;
 
  Disp=(xsup-xinf)/(double)(Nbp-1);
 
  // Limit points
- i1=(long)((y-15.0-xinf)/Disp);
- i2=(long)((y-5.5-xinf)/Disp);
- i3=(long)((5.5-y-xinf)/Disp);
- i4=(long)((15.0-y-xinf)/Disp);
+ i1=(LONG)((y-15.0-xinf)/Disp);
+ i2=(LONG)((y-5.5-xinf)/Disp);
+ i3=(LONG)((5.5-y-xinf)/Disp);
+ i4=(LONG)((15.0-y-xinf)/Disp);
 
  // Bounds to physical limits
  i1=min(max(0,i1),Nbp-1);
@@ -388,16 +388,16 @@ void VoigtCase2(double xinf, double xsup, double y, long Nbp, double *lpVoigt)
  *            from 'xinf', to 'xsup'.                   ¨                                       *
  *                                                                                              *
  ***********************************************************************************************/
-void VoigtCase3(double xinf, double xsup, double y, long Nbp, double *lpVoigt)
+void VoigtCase3(double xinf, double xsup, double y, LONG Nbp, double *lpVoigt)
 {
  double Disp;
- long   i,i1,i2;
+ LONG   i,i1,i2;
 
  Disp=(xsup-xinf)/(double)(Nbp-1);
 
  // Limit points
- i1=(long)((y-15.0-xinf)/Disp);
- i2=(long)((15.0-y-xinf)/Disp);
+ i1=(LONG)((y-15.0-xinf)/Disp);
+ i2=(LONG)((15.0-y-xinf)/Disp);
 
  // Bounds to physical limits
  i1=min(max(0,i1),Nbp-1);
@@ -420,10 +420,10 @@ void VoigtCase3(double xinf, double xsup, double y, long Nbp, double *lpVoigt)
  *            from 'xinf', to 'xsup'.                   ¨                                       *
  *                                                                                              *
  ***********************************************************************************************/
-void VoigtCase4(double xinf, double xsup, double y, long Nbp, double *lpVoigt)
+void VoigtCase4(double xinf, double xsup, double y, LONG Nbp, double *lpVoigt)
 {
  double Disp;
- long   i;
+ LONG   i;
 
  Disp=(xsup-xinf)/(double)(Nbp-1);
 
@@ -485,9 +485,9 @@ double Voigtx(double x,double y)
  *            'xinf', to 'xsup'.                   ¨                                            *
  *                                                                                              *
  ***********************************************************************************************/
-void Voigt(double xinf, double xsup, double y, long Nbp, double *lpVoigt)
+void Voigt(double xinf, double xsup, double y, LONG Nbp, double *lpVoigt)
 {
- long i;
+ LONG i;
 
  // Clean-up the vector
  for (i=0;i<Nbp;++i)

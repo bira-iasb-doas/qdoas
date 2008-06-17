@@ -107,7 +107,7 @@ RC SetPDA_EGG_Logger(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
  {
   // Declarations
 
-  char *record;                         // string buffer
+  CHAR *record;                         // string buffer
   RC rc;                                // return code
 
   // Initializations
@@ -118,7 +118,7 @@ RC SetPDA_EGG_Logger(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
 
   // Buffer allocation
 
-  if ((record=(char *)MEMORY_AllocBuffer("SetPDA_EGG_Logger ","record",8001,sizeof(char),0,MEMORY_TYPE_STRING))==NULL)
+  if ((record=(char *)MEMORY_AllocBuffer("SetPDA_EGG_Logger ","record",8001,sizeof(CHAR),0,MEMORY_TYPE_STRING))==NULL)
    rc=ERROR_ID_ALLOC;
   else if (specFp==NULL)
    rc=ERROR_SetLast("SetPDA_EGG_Logger",ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pEngineContext->fileInfo.fileName);
@@ -185,9 +185,9 @@ RC GotoPDA_EGG_Logger(FILE *specFp,int recordNo)
 
     fgets(record,8000,specFp);                             // read out the first record for calculating its size
     recordSize=strlen(record);                             // each record has the same size in despite this is an ASCII format
-    fseek(specFp,(long)recordSize*recordNo,SEEK_SET);      // move the file pointer to the requested record
+    fseek(specFp,(LONG)recordSize*recordNo,SEEK_SET);      // move the file pointer to the requested record
 
-//    fseek(specFp,(long)LOG_LENGTH*recordNo,SEEK_SET);      // move the file pointer to the requested record
+//    fseek(specFp,(LONG)LOG_LENGTH*recordNo,SEEK_SET);      // move the file pointer to the requested record
    }
 
   // Release the allocated buffer
@@ -333,8 +333,8 @@ RC ReliPDA_EGG_Logger(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,i
         }
       } // !!!!!!!!!!!!  */
 
-      day.da_day=(unsigned char)iday;
-      day.da_mon=(unsigned char)imonth;
+      day.da_day=(UCHAR)iday;
+      day.da_mon=(UCHAR)imonth;
       day.da_year=(SHORT)iyear;
 
       if (day.da_year<30)
@@ -344,9 +344,9 @@ RC ReliPDA_EGG_Logger(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,i
       else if (day.da_year<1930)
        day.da_year+=(short)100;
 
-      pRecord->present_time.ti_hour=(unsigned char)ihour;
-      pRecord->present_time.ti_min=(unsigned char)imin;
-      pRecord->present_time.ti_sec=(unsigned char)isec;
+      pRecord->present_time.ti_hour=(UCHAR)ihour;
+      pRecord->present_time.ti_min=(UCHAR)imin;
+      pRecord->present_time.ti_sec=(UCHAR)isec;
 //      pRecord->Azimuth=(double)-1.;
 
       memcpy(&pRecord->present_day,&day,sizeof(SHORT_DATE));
@@ -472,7 +472,7 @@ RC SetPDA_EGG(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
   PDA1453A header;                                                              // record header
   SHORT *indexes,                                                               // size of SpecMax arrays
          curvenum;                                                              // number of spectra in the file
-  unsigned long  recordSize,                                                            // size of a record without SpecMax
+  ULONG  recordSize,                                                            // size of a record without SpecMax
         *recordIndexes;                                                         // save the position of each record in the file
   INDEX i;                                                                      // browse spectra in the file
   RC rc;                                                                        // return code
@@ -506,7 +506,7 @@ RC SetPDA_EGG(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
    	for (i=0;i<NDET;i++)
    	 pBuffers->specMaxx[i]=(double)i+1.;
 
-// !!! */    unsigned char *ptr,fileout[MAX_ITEM_TEXT_LEN+1];
+// !!! */    UCHAR *ptr,fileout[MAX_ITEM_TEXT_LEN+1];
 // !!! */    FILE *fp;
 
 // !!! */    ptr=strrchr(fileName,PATH_SEP);
@@ -533,7 +533,7 @@ RC SetPDA_EGG(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
 
       pEngineContext->recordNumber=curvenum;
 
-      pEngineContext->recordSize=recordSize=(long)sizeof(PDA1453A)-
+      pEngineContext->recordSize=recordSize=(LONG)sizeof(PDA1453A)-
                                              sizeof(double)-                    // azimuth (only since dec 2000)
                                              sizeof(float);                     // elevation (only since 2003)
 
@@ -546,14 +546,14 @@ RC SetPDA_EGG(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
          pEngineContext->recordSize+=sizeof(float);
        }
 
-      fseek(specFp,-((long)recordSize),SEEK_CUR);
+      fseek(specFp,-((LONG)recordSize),SEEK_CUR);
 
-      recordSize=pEngineContext->recordSize+(long)sizeof(USHORT)*NDET+(300L*(sizeof(SHORT)+sizeof(float))+8L)*newFlag;
+      recordSize=pEngineContext->recordSize+(LONG)sizeof(USHORT)*NDET+(300L*(sizeof(SHORT)+sizeof(float))+8L)*newFlag;
 
-//      recordSize=(long)sizeof(PDA1453A)-((!pEngineContext->project.instrumental.azimuthFlag)?
-//                       sizeof(double):0)+(long)sizeof(USHORT)*NDET+(300L*(sizeof(SHORT)+sizeof(float))+8L)*newFlag;
+//      recordSize=(LONG)sizeof(PDA1453A)-((!pEngineContext->project.instrumental.azimuthFlag)?
+//                       sizeof(double):0)+(LONG)sizeof(USHORT)*NDET+(300L*(sizeof(SHORT)+sizeof(float))+8L)*newFlag;
 
-      recordIndexes[0]=(long)(pEngineContext->recordIndexesSize+1)*sizeof(SHORT);      // file header : size of indexes table + curvenum
+      recordIndexes[0]=(LONG)(pEngineContext->recordIndexesSize+1)*sizeof(SHORT);      // file header : size of indexes table + curvenum
 
       for (i=1;i<curvenum;i++)
        recordIndexes[i]=recordIndexes[i-1]+recordSize+indexes[i]*sizeof(USHORT);  // take size of SpecMax arrays into account
@@ -605,7 +605,7 @@ RC ReliPDA_EGG(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
 
   PDA1453A          header;                                                     // file header
   OBSERVATION_SITE *pSite;                                                      // pointer to the observation sites data
-  unsigned char             fileNameShort[MAX_STR_SHORT_LEN+1],                         // temporary file name
+  UCHAR             fileNameShort[MAX_STR_SHORT_LEN+1],                         // temporary file name
                    *ptr,                                                        // pointer to part of the previous string
                     names[20];                                                  // name of the current spectrum
   USHORT           *ISpectre,                                                   // spectrum in the original format
@@ -626,7 +626,7 @@ RC ReliPDA_EGG(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
   INT               newFlag;
 
 // !!! */    FILE *gp;
-// !!! */    unsigned char fileout[MAX_ITEM_TEXT_LEN+1];
+// !!! */    UCHAR fileout[MAX_ITEM_TEXT_LEN+1];
 
   // Initializations
 
@@ -674,9 +674,9 @@ RC ReliPDA_EGG(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
     // Set file pointers
 
     if (namesFp!=NULL)
-     fseek(namesFp,(long)20L*((recordNo-1)*(1+!newFlag)+!newFlag),SEEK_SET);
+     fseek(namesFp,(LONG)20L*((recordNo-1)*(1+!newFlag)+!newFlag),SEEK_SET);
 
-    fseek(specFp,(long)pBuffers->recordIndexes[recordNo-1],SEEK_SET);
+    fseek(specFp,(LONG)pBuffers->recordIndexes[recordNo-1],SEEK_SET);
 
     // Complete record read out
 
@@ -747,9 +747,9 @@ RC ReliPDA_EGG(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
                  Min   = (int) DMin;
                  Sec   = (int)((double)(DMin-Min) * 60.);
 
-                 header.now.ti_hour = (unsigned char)Heure;
-                 header.now.ti_min  = (unsigned char)Min;
-                 header.now.ti_sec  = (unsigned char)Sec;
+                 header.now.ti_hour = (UCHAR)Heure;
+                 header.now.ti_min  = (UCHAR)Min;
+                 header.now.ti_sec  = (UCHAR)Sec;
 
                  Tm = (double) ZEN_NbSec ( &header.today, &header.now, 0 );
 
@@ -857,7 +857,7 @@ RC ReliPDA_EGG(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
               if ((j!=MAXTPS) && (pBuffers->darkCurrent!=NULL) && (darkFp!=NULL) &&
                   ((int)STD_FileLength(darkFp)>=(int)((j+1)*sizeof(double)*NDET)))
                {
-                fseek(darkFp,(long)j*NDET*sizeof(double),SEEK_SET);
+                fseek(darkFp,(LONG)j*NDET*sizeof(double),SEEK_SET);
                 fread(ObsScan,sizeof(double)*NDET,1,darkFp);
 
                 for (i=0;i<NDET;i++)
@@ -869,7 +869,7 @@ RC ReliPDA_EGG(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
            }
           else if (pBuffers->darkCurrent!=NULL)
            {
-            fseek(darkFp,(long)(pEngineContext->recordIndexesSize+1)*sizeof(SHORT)+(pEngineContext->recordSize+(long)sizeof(USHORT)*NDET)*(recordNo-1),SEEK_SET);
+            fseek(darkFp,(LONG)(pEngineContext->recordIndexesSize+1)*sizeof(SHORT)+(pEngineContext->recordSize+(LONG)sizeof(USHORT)*NDET)*(recordNo-1),SEEK_SET);
 
             fread(&header,pEngineContext->recordSize,1,darkFp);
             fread(ISpectre,sizeof(USHORT)*NDET,1,darkFp);

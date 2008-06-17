@@ -64,7 +64,7 @@
 
 typedef struct easoe
  {
-  long t_int;                                                                   // exposure time
+  LONG t_int;                                                                   // exposure time
   short n_somm;                                                                 // number of accumulations
   SHORT_DATE present_day;                                                       // measurement date
   struct time present_time;                                                     // measurement time
@@ -96,10 +96,10 @@ RC SetEASOE(ENGINE_CONTEXT *pEngineContext,FILE *specFp,FILE *namesFp)
  {
   // Declarations
 
-  unsigned char  names[20];                                                             // name of the current spectrum
+  UCHAR  names[20];                                                             // name of the current spectrum
   SHORT *indexes,                                                               // size of SpecMax arrays
          curvenum;                                                              // number of spectra in the file
-  unsigned long *recordIndexes;                                                         // save the position of each record in the file
+  ULONG *recordIndexes;                                                         // save the position of each record in the file
   INDEX i;                                                                      // browse spectra in the file
   RC rc;                                                                        // return code
 
@@ -136,7 +136,7 @@ RC SetEASOE(ENGINE_CONTEXT *pEngineContext,FILE *specFp,FILE *namesFp)
     else
      {
       i=0;
-      recordIndexes[0]=(long)(pEngineContext->recordIndexesSize+1)*sizeof(SHORT);    // file header : size of indexes table + curvenum
+      recordIndexes[0]=(LONG)(pEngineContext->recordIndexesSize+1)*sizeof(SHORT);    // file header : size of indexes table + curvenum
 
       if (namesFp!=NULL )
        {
@@ -155,7 +155,7 @@ RC SetEASOE(ENGINE_CONTEXT *pEngineContext,FILE *specFp,FILE *namesFp)
        }
 
       pEngineContext->recordNumber=curvenum;
-      pEngineContext->recordSize=(long)sizeof(EASOE);
+      pEngineContext->recordSize=(LONG)sizeof(EASOE);
 
       for (i=1;i<curvenum;i++)
        recordIndexes[i]=recordIndexes[i-1]+pEngineContext->recordSize+indexes[i];    // take size of SpecMax arrays into account
@@ -201,7 +201,7 @@ RC ReliEASOE(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localD
   RECORD_INFO *pRecord;                                                         // pointer to the record part of the engine context
 
   EASOE             speRecord,drkRecord;                                        // resp. spectrum and dark current records
-  unsigned char             names[20];                                                  // name of the current spectrum
+  UCHAR             names[20];                                                  // name of the current spectrum
   USHORT           *ISpecMax;                                                   // scans number for each integration time
   double            tmLocal;                                                    // temporary data
   INDEX             i,j;                                                        // indexes for loops and arrays
@@ -253,7 +253,7 @@ RC ReliEASOE(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localD
        }
      }
 
-    fseek(specFp,(long)pEngineContext->buffers.recordIndexes[recordNo-1],SEEK_SET);
+    fseek(specFp,(LONG)pEngineContext->buffers.recordIndexes[recordNo-1],SEEK_SET);
 
     // Complete record read out
 
@@ -261,7 +261,7 @@ RC ReliEASOE(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localD
 
     if ((darkFp!=NULL) && (j>0))
      {
-      fseek(darkFp,(long)sizeof(EASOE)*(j-1),SEEK_SET);
+      fseek(darkFp,(LONG)sizeof(EASOE)*(j-1),SEEK_SET);
       fread(&drkRecord,pEngineContext->recordSize,1,darkFp);                         // read out the dark current
      }
 

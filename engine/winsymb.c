@@ -112,11 +112,11 @@ INT SYMB_itemCrossN;                                                            
 // QDOAS ??? //                 ITEM_NONE if not found
 // QDOAS ??? // -----------------------------------------------------------------------------
 // QDOAS ???
-// QDOAS ??? INDEX SYMB_GetListIndex(SYMBOL *symbolList,INT symbolNumber,unsigned char *fileName)
+// QDOAS ??? INDEX SYMB_GetListIndex(SYMBOL *symbolList,INT symbolNumber,UCHAR *fileName)
 // QDOAS ???  {
 // QDOAS ???   // Declarations
 // QDOAS ???
-// QDOAS ???   unsigned char symbolName[MAX_PATH_LEN+1],*ptr;                                        // the name of the symbol to search for
+// QDOAS ???   UCHAR symbolName[MAX_PATH_LEN+1],*ptr;                                        // the name of the symbol to search for
 // QDOAS ???   INDEX indexSymbol;                                                            // browse symbols in the input list
 // QDOAS ???   SZ_LEN symbolNameLen;                                                         // the length of the name of the symbol
 // QDOAS ???
@@ -176,7 +176,7 @@ INT SYMB_itemCrossN;                                                            
 //                 ERROR_ID_NO otherwise
 // -----------------------------------------------------------------------------
 
-RC SYMB_Add(unsigned char *symbolName,unsigned char *symbolDescription)
+RC SYMB_Add(UCHAR *symbolName,UCHAR *symbolDescription)
  {
  	// Declaration
 

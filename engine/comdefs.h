@@ -119,17 +119,34 @@ extern "C" {
 
 #pragma pack(1)
 
-// ===========
-// DEFINITIONS
-// ===========
+// QDOAS ??? // ===========
+// QDOAS ??? // DEFINITIONS
+// QDOAS ??? // ===========
+// QDOAS ???
+// QDOAS ??? #if !defined(INFINITE)
+// QDOAS ??? #define INFINITE            0xFFFFFFFF                                          // Infinite timeout
+// QDOAS ??? #endif
+// QDOAS ???
+// QDOAS ??? // Types [re]definition
+// QDOAS ???
+#if !defined(__INCLUDE_HDF_) || !(__INCLUDE_HDF_)
+    typedef int            int32;
+    typedef unsigned long  uint32;
+#endif
 
 typedef int            INT;
+typedef char           CHAR;
+typedef char           UCHAR;
 typedef short          SHORT;
 typedef unsigned short USHORT,WORD;
 typedef int            BOOL;
+typedef float          FLOAT;
+typedef uint32         ULONG;
+typedef int32          LONG;
 typedef void           VOID;
 typedef unsigned char  BYTE;
 typedef unsigned int   UINT;
+//typedef unsigned long  HWND;
 typedef unsigned long  DWORD;
 typedef void *         HANDLE;
 
@@ -212,8 +229,8 @@ struct date
 typedef struct _shortDate
  {
   SHORT da_year;                                                                /* Year - 1980      */
-  char  da_day;                                                                 /* Day of the month */
-  char  da_mon;                                                                 /* Month (1 = Jan)  */
+  CHAR  da_day;                                                                 /* Day of the month */
+  CHAR  da_mon;                                                                 /* Month (1 = Jan)  */
  }
 SHORT_DATE;
 
@@ -229,7 +246,7 @@ SHORT_DATE;
 #define ERROR_ID_ALLOCMATRIX                    102                             // double type matrix allocation error
 #define ERROR_ID_BUFFER_FULL                    103                             // a buffer is full and can not receive objects anymore
 #define ERROR_ID_COMMANDLINE                    105                             // syntax error in command line
-#define ERROR_ID_MEDIATE                        106                             // problem with the user interface
+#define ERROR_ID_MEDIATE                        106
 
 // Files
 
@@ -348,8 +365,8 @@ enum { DEBUG_DVAR_NO, DEBUG_DVAR_YES };
 
 typedef union _debugVarPtr                                                      // use a different definition of the pointer according to the type of the variable to debug
  {
-  unsigned char   **ucharArray;                                                         // pointer to a string array
-  unsigned char    *ucharVector;                                                        // pointer to a string
+  UCHAR   **ucharArray;                                                         // pointer to a string array
+  UCHAR    *ucharVector;                                                        // pointer to a string
   SHORT   **shortArray;                                                         // pointer to a short type array
   SHORT    *shortVector;                                                        // pointer to a short type vector
   USHORT  **ushortArray;                                                        // pointer to a unsigned short type array
@@ -367,7 +384,7 @@ DEBUG_VARPTR;
 
 typedef struct _debugVariables                                                  // information on variables to debug
  {
-  unsigned char         varName[MAX_VAR_LEN+1];                                         // the name of the variable to debug
+  UCHAR         varName[MAX_VAR_LEN+1];                                         // the name of the variable to debug
   DEBUG_VARPTR  varData;                                                        // pointer to the buffer to print out
   INT           varNl,varNc;                                                    // the size of the variable to debug
   INT           varNlOff,varNcOff;                                              // the offset to apply to resp. index of lines and columns
@@ -379,12 +396,12 @@ DEBUG_VARIABLE;
 
 // Prototypes
 
-void DEBUG_Print(unsigned char *formatString,...);
-void DEBUG_PrintVar(unsigned char *message,...);
-RC   DEBUG_FunctionBegin(unsigned char *fctName,MASK fctType);
-RC   DEBUG_FunctionStop(unsigned char *fctName,RC rcFct);
-RC   DEBUG_Start(unsigned char *fileName,unsigned char *fctName,MASK fctMask,int nLevels,int varFlag,int resetFlag);
-RC   DEBUG_Stop(unsigned char *callingFct);
+void DEBUG_Print(UCHAR *formatString,...);
+void DEBUG_PrintVar(UCHAR *message,...);
+RC   DEBUG_FunctionBegin(UCHAR *fctName,MASK fctType);
+RC   DEBUG_FunctionStop(UCHAR *fctName,RC rcFct);
+RC   DEBUG_Start(UCHAR *fileName,UCHAR *fctName,MASK fctMask,int nLevels,int varFlag,int resetFlag);
+RC   DEBUG_Stop(UCHAR *callingFct);
 
 // ===============
 // ERRORS HANDLING
@@ -404,15 +421,15 @@ typedef struct _errorDescription
  {
   int   errorType;                                                              // type of error (warning, fatal error, ...)
   int   errorId;                                                                // id number of the error
-  unsigned char errorFunction[MAX_FCT_LEN+1];                                           // name of the calling function that produced the error
-  unsigned char errorString[MAX_MSG_LEN+1];                                             // error message
+  UCHAR errorFunction[MAX_FCT_LEN+1];                                           // name of the calling function that produced the error
+  UCHAR errorString[MAX_MSG_LEN+1];                                             // error message
  }
 ERROR_DESCRIPTION;
 
 // Prototypes
 
 RC ERROR_DisplayMessage(void *responseHandle);
-RC ERROR_SetLast(unsigned char *callingFunction,int errorType,RC errorId,...);
+RC ERROR_SetLast(UCHAR *callingFunction,int errorType,RC errorId,...);
 RC ERROR_GetLast(ERROR_DESCRIPTION *pError);
 
 // ===============
@@ -448,9 +465,9 @@ enum _memoryTypes
 
 typedef struct _memory
  {
-  unsigned char  callingFunctionName[MAX_FCT_LEN+1];                                    // name of the calling function
-  unsigned char  bufferName[MAX_VAR_LEN+1];                                             // name of the buffer
-  unsigned char *pBuffer;                                                               // pointer to the allocated buffer
+  UCHAR  callingFunctionName[MAX_FCT_LEN+1];                                    // name of the calling function
+  UCHAR  bufferName[MAX_VAR_LEN+1];                                             // name of the buffer
+  UCHAR *pBuffer;                                                               // pointer to the allocated buffer
   INT    itemNumber;                                                            // number of items in buffer
   INT    itemSize;                                                              // size of item
   INT    offset;                                                                // index of the first item
@@ -461,21 +478,21 @@ MEMORY;
 // Global variables
 
 EXTERN INT MEMORY_stackSize;                                                    // the size of the stack of allocated objects
-EXTERN unsigned char *MEMORY_types[MEMORY_TYPE_MAX];                                    // available types for allocated objects
+EXTERN UCHAR *MEMORY_types[MEMORY_TYPE_MAX];                                    // available types for allocated objects
 
 // Prototypes
 
-void    *MEMORY_AllocBuffer(unsigned char *callingFunctionName,unsigned char *bufferName,INT itemNumber,INT itemSize,INT offset,INT type);
-void     MEMORY_ReleaseBuffer(unsigned char *callingFunctionName,unsigned char *bufferName,void *pBuffer);
-double  *MEMORY_AllocDVector(unsigned char *callingFunctionName,unsigned char *bufferName,int nl,int nh);
-void     MEMORY_ReleaseDVector(unsigned char *callingFunctionName,unsigned char *bufferName,double *v,int nl);
-double **MEMORY_AllocDMatrix(unsigned char *callingFunctionName,unsigned char *bufferName,int nrl,int nrh,int ncl,int nch);
-void     MEMORY_ReleaseDMatrix(unsigned char *callingFunctionName,unsigned char *bufferName,double **m,int ncl,int nch,int nrl);
+void    *MEMORY_AllocBuffer(UCHAR *callingFunctionName,UCHAR *bufferName,INT itemNumber,INT itemSize,INT offset,INT type);
+void     MEMORY_ReleaseBuffer(UCHAR *callingFunctionName,UCHAR *bufferName,void *pBuffer);
+double  *MEMORY_AllocDVector(UCHAR *callingFunctionName,UCHAR *bufferName,int nl,int nh);
+void     MEMORY_ReleaseDVector(UCHAR *callingFunctionName,UCHAR *bufferName,double *v,int nl);
+double **MEMORY_AllocDMatrix(UCHAR *callingFunctionName,UCHAR *bufferName,int nrl,int nrh,int ncl,int nch);
+void     MEMORY_ReleaseDMatrix(UCHAR *callingFunctionName,UCHAR *bufferName,double **m,int ncl,int nch,int nrl);
 
 RC       MEMORY_Alloc(void);
 RC       MEMORY_End(void);
 
-RC       MEMORY_GetInfo(DEBUG_VARIABLE *pVariable,unsigned char *pBuffer);
+RC       MEMORY_GetInfo(DEBUG_VARIABLE *pVariable,UCHAR *pBuffer);
 
 // ======================================
 // STDFUNC.C : STANDARD UTILITY FUNCTIONS
@@ -484,8 +501,8 @@ RC       MEMORY_GetInfo(DEBUG_VARIABLE *pVariable,unsigned char *pBuffer);
 // Prototypes
 
 double      STD_Pow10(int p);
-unsigned char      *STD_StrTrim(unsigned char *str);
-int         STD_Sscanf(unsigned char *line,unsigned char *formatString,...);
+UCHAR      *STD_StrTrim(UCHAR *str);
+int         STD_Sscanf(UCHAR *line,UCHAR *formatString,...);
 long        STD_FileLength(FILE *fp);
 
 char       *STD_Strupr(char *n);
@@ -501,9 +518,9 @@ int         STD_IsDir(char *filename);
 // QDOAS ??? typedef struct _doasArg
 // QDOAS ???  {
 // QDOAS ???   INT   analysisFlag;
-// QDOAS ???   unsigned char wdsFile[MAX_STR_LEN+1];
-// QDOAS ???   unsigned char projectName[MAX_STR_LEN+1];
-// QDOAS ???   unsigned char fileName[MAX_STR_LEN+1];
+// QDOAS ???   UCHAR wdsFile[MAX_STR_LEN+1];
+// QDOAS ???   UCHAR projectName[MAX_STR_LEN+1];
+// QDOAS ???   UCHAR fileName[MAX_STR_LEN+1];
 // QDOAS ???  }
 // QDOAS ??? DOAS_ARG;
 // QDOAS ???
@@ -515,13 +532,13 @@ int         STD_IsDir(char *filename);
 // QDOAS ??? EXTERN HWND      DOAS_hwndMain;                                                 // handle of the main window
 // QDOAS ??? #endif
 // QDOAS ???
-// QDOAS ??? EXTERN unsigned char     DOAS_szTitle[40];                                              // the text of title bar
-// QDOAS ??? EXTERN unsigned char     DOAS_HelpPath[MAX_PATH_LEN+1];                                 // path for help file
-// QDOAS ??? EXTERN unsigned char     DOAS_logFile[MAX_PATH_LEN+1];                                  // file for log errors
-// QDOAS ??? EXTERN unsigned char     DOAS_dbgFile[MAX_PATH_LEN+1];                                  // file for debug output
-// QDOAS ??? EXTERN unsigned char     DOAS_tmpFile[MAX_PATH_LEN+1];                                  // temporary file for spectra and analysis data
-// QDOAS ??? EXTERN unsigned char     DOAS_sysFile[MAX_PATH_LEN+1];                                  // system file
-// QDOAS ??? EXTERN unsigned char     DOAS_broAmfFile[MAX_PATH_LEN+1];                               // specific BrO processing
+// QDOAS ??? EXTERN UCHAR     DOAS_szTitle[40];                                              // the text of title bar
+// QDOAS ??? EXTERN UCHAR     DOAS_HelpPath[MAX_PATH_LEN+1];                                 // path for help file
+// QDOAS ??? EXTERN UCHAR     DOAS_logFile[MAX_PATH_LEN+1];                                  // file for log errors
+// QDOAS ??? EXTERN UCHAR     DOAS_dbgFile[MAX_PATH_LEN+1];                                  // file for debug output
+// QDOAS ??? EXTERN UCHAR     DOAS_tmpFile[MAX_PATH_LEN+1];                                  // temporary file for spectra and analysis data
+// QDOAS ??? EXTERN UCHAR     DOAS_sysFile[MAX_PATH_LEN+1];                                  // system file
+// QDOAS ??? EXTERN UCHAR     DOAS_broAmfFile[MAX_PATH_LEN+1];                               // specific BrO processing
 // QDOAS ???
 // QDOAS ??? EXTERN DOAS_ARG  DOAS_arg;                                                      // arguments of the program when used from the command line prompt
 // QDOAS ???
@@ -529,7 +546,7 @@ int         STD_IsDir(char *filename);
 // QDOAS ??? // ----------
 // QDOAS ???
 // QDOAS ??? void    DOAS_CenterWindow(HWND hwndChild,HWND hwndParent);
-// QDOAS ??? void    DOAS_ListMoveSelectedItems(HWND hwndParent,unsigned long listFrom,unsigned long listTo);
+// QDOAS ??? void    DOAS_ListMoveSelectedItems(HWND hwndParent,ULONG listFrom,ULONG listTo);
 // QDOAS ???
 // QDOAS ??? RC      MSG_MessageBox(HWND hwnd,INT controlID,INT titleID,INT msgID,INT style,...);
 

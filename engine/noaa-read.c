@@ -93,7 +93,7 @@ NOAA_TimeRecordType;
 
 typedef struct PlaceRecordType
  {
-		unsigned char name[256];
+		UCHAR name[256];
 		float latitude;		                                                             //	{degrees, North positive }
 		float longitude;	                                                             //	{degrees, East positive  }
 		float height;				                                                             //	{meters above sea level }
@@ -103,7 +103,7 @@ NOAA_PlaceRecordType;
 
 typedef struct	FieldRecordType
  {
-		unsigned char observingConditions[256];
+		UCHAR observingConditions[256];
 		short lightSource;                                                            // LightSourceType
 		NOAA_PlaceRecordType placeRecord;
 		float pressure;                                                               // {millibars               }
@@ -126,7 +126,7 @@ NOAA_FieldRecordType;
 
 typedef struct	AircraftRecordType
  {
-		unsigned char observingConditions[256];
+		UCHAR observingConditions[256];
 		short lightSource;                                                            // LightSourceType
 		float latitude;                                                               // {degrees, North positive }
 		float longitude;                                                              // {degrees, East positive  }
@@ -152,8 +152,8 @@ NOAA_AircraftRecordType;
 
 typedef struct	LaboratoryRecordType
  {
-		unsigned char observingConditions[256];
-		unsigned char gasName[256];
+		UCHAR observingConditions[256];
+		UCHAR gasName[256];
 		short lightSource;                                                            // LightSourceType
 		float concentration;                                                          // {Number per cubic cm     }
 		float pathLength;                                                             // {Centimeters             }
@@ -196,7 +196,7 @@ typedef struct	SpectrometerRecordType
 	}
 NOAA_SpectrometerRecordType;
 
-//	{*Note: After a long hiatus, temperature measurements were resumed, starting with
+//	{*Note: After a LONG hiatus, temperature measurements were resumed, starting with
 //	 BlackSG2.23. The "Bottom" temp is now the ROOM temperature outside the instrument case!}
 //	 {**Until13 Apr 93, the space used by 'spacer' and 'band' was used for a Real named
 //	  'finalMagnification'. This was never properly used, and was always defaulted to 1.00,
@@ -229,7 +229,7 @@ typedef struct	WavelengthRecordType
 		char  wlSpareBool;
 		float wlDispToCenter;
 		float wlCoeff[4];
-		unsigned char wlMethod[12];                                                           // {Program/version used to calibrate.}
+		UCHAR wlMethod[12];                                                           // {Program/version used to calibrate.}
 		int   wlID0;                                                                  // {These fields identify the calibration standard,É    }
 		int   wlID1;                                                                  // {using pointers,times, or recNums (to be determined).}
  }
@@ -313,7 +313,7 @@ NOAA_ObservationCaseType;
 
 typedef struct InputDataRecordType
  {
-		unsigned char generalMessage[256];
+		UCHAR generalMessage[256];
 		NOAA_TimeRecordType timeRecord;
 		NOAA_ForeOpticsRecordType	foreOpticsRecord;
 		NOAA_SpectrometerRecordType spectrometerRecord;
@@ -358,7 +358,7 @@ RC SetNOAA(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
   // Declarations
 
   SZ_LEN fileLength;                                                            // the length in bytes of the file
-  unsigned long offset;                                                                 // offset in the file
+  ULONG offset;                                                                 // offset in the file
   short observationType;                                                        // observation type
   RC rc;                                                                        // return code
 
@@ -379,8 +379,8 @@ RC SetNOAA(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
 
   else if (!(fileLength=STD_FileLength(specFp)))
    rc=ERROR_SetLast("SetNOAA",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pEngineContext->fileInfo.fileName);
-  else if ((pEngineContext->buffers.recordIndexes=(unsigned long *)MEMORY_AllocBuffer("SetNOAA","recordIndexes",
-           (pEngineContext->recordIndexesSize=(int)(fileLength/NOAA_OFFSET+2L)),sizeof(unsigned long),0,MEMORY_TYPE_LONG))==NULL)
+  else if ((pEngineContext->buffers.recordIndexes=(ULONG *)MEMORY_AllocBuffer("SetNOAA","recordIndexes",
+           (pEngineContext->recordIndexesSize=(int)(fileLength/NOAA_OFFSET+2L)),sizeof(ULONG),0,MEMORY_TYPE_LONG))==NULL)
    rc=ERROR_ID_ALLOC;
   else
    {

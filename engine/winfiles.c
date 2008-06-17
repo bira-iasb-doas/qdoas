@@ -151,7 +151,7 @@ FILE_TYPE FILES_typeSpectra[FILE_TYPE_SPECTRA_MAX] =
   { "ASCII Spectra files without header", "asc", "" }                           // WITHOUT COMMENT
  };
 
-unsigned char FILES_configuration[MAX_PATH_LEN+1];                                      // configuration file
+UCHAR FILES_configuration[MAX_PATH_LEN+1];                                      // configuration file
 // QDOAS ??? INT FILES_version=HELP_VERSION_MAX-1;                                           // file version
 FILES_PATH *FILES_paths;                                                        // all paths implied in configuration file
 
@@ -169,12 +169,12 @@ INT FILES_nPaths=FILES_PATH_MAX;                                                
 // QDOAS ??? // INPUT         fileLine   the line of the configuration file with program version information
 // QDOAS ??? // -----------------------------------------------------------------------------
 // QDOAS ???
-// QDOAS ??? void FilesLoadProgramVersion(unsigned char *fileLine)
+// QDOAS ??? void FilesLoadProgramVersion(UCHAR *fileLine)
 // QDOAS ???  {
 // QDOAS ???   // Declarations
 // QDOAS ???
 // QDOAS ???   INDEX indexVersion;
-// QDOAS ???   unsigned char version[MAX_ITEM_TEXT_LEN+1];
+// QDOAS ???   UCHAR version[MAX_ITEM_TEXT_LEN+1];
 // QDOAS ???
 // QDOAS ???   // Initializations
 // QDOAS ???
@@ -204,7 +204,7 @@ INT FILES_nPaths=FILES_PATH_MAX;                                                
 // QDOAS ??? //               sectionName   name of the help section in the configuration file
 // QDOAS ??? // -----------------------------------------------------------------------------
 // QDOAS ???
-// QDOAS ??? void FilesSaveProgramVersion(FILE *fp,unsigned char *sectionName)
+// QDOAS ??? void FilesSaveProgramVersion(FILE *fp,UCHAR *sectionName)
 // QDOAS ???  {
 // QDOAS ???   fprintf(fp,"[%s]\n\n",sectionName);                                           // section
 // QDOAS ???   fprintf(fp,"%s\n\n",HELP_programVersions[HELP_VERSION_MAX-1]);                // current program version
@@ -226,11 +226,11 @@ INT FILES_nPaths=FILES_PATH_MAX;                                                
 // OUTPUT        newPath       the new path (%x\<file name>)
 // -----------------------------------------------------------------------------
 
-void FILES_CompactPath(unsigned char *newPath,unsigned char *path,INT useFileName,INT addFlag)
+void FILES_CompactPath(UCHAR *newPath,UCHAR *path,INT useFileName,INT addFlag)
  {
   // Declarations
 
-  unsigned char  pathTmp[MAX_PATH_LEN+1],*ptr;
+  UCHAR  pathTmp[MAX_PATH_LEN+1],*ptr;
   INDEX  indexPath,indexFirst;
   SZ_LEN pathLength,pathTmpLength;
 
@@ -299,7 +299,7 @@ void FILES_CompactPath(unsigned char *newPath,unsigned char *path,INT useFileNam
 // INPUT         path          the original path
 // -----------------------------------------------------------------------------
 
-void FILES_RemoveOnePath(unsigned char *path)
+void FILES_RemoveOnePath(UCHAR *path)
  {
   // Declaration
 
@@ -326,9 +326,9 @@ void FILES_RemoveOnePath(unsigned char *path)
 // RETURN        pointer to the new path
 // -----------------------------------------------------------------------------
 
-unsigned char *FILES_RebuildFileName(unsigned char *newPath,unsigned char *path,INT useFileName)
+UCHAR *FILES_RebuildFileName(UCHAR *newPath,UCHAR *path,INT useFileName)
  {
- 	unsigned char pathTmp[MAX_PATH_LEN+1],*ptr;
+ 	UCHAR pathTmp[MAX_PATH_LEN+1],*ptr;
 
  	strcpy(pathTmp,path);
 
@@ -344,7 +344,7 @@ unsigned char *FILES_RebuildFileName(unsigned char *newPath,unsigned char *path,
 
 // QDOAS ???  // Declarations
 // QDOAS ???
-// QDOAS ???  unsigned char pathTmp[MAX_PATH_LEN+1],*ptr;
+// QDOAS ???  UCHAR pathTmp[MAX_PATH_LEN+1],*ptr;
 // QDOAS ???  INDEX indexPath;
 // QDOAS ???
 // QDOAS ???  // Initialization
@@ -386,7 +386,7 @@ unsigned char *FILES_RebuildFileName(unsigned char *newPath,unsigned char *path,
 // OUTPUT        newPath       the new path
 // -----------------------------------------------------------------------------
 
-void FILES_ChangePath(unsigned char *oldPath,unsigned char *newPath,INT useFileName)
+void FILES_ChangePath(UCHAR *oldPath,UCHAR *newPath,INT useFileName)
  {
   FILES_RemoveOnePath(oldPath);
   FILES_CompactPath(oldPath,newPath,useFileName,1);
@@ -409,14 +409,14 @@ void FILES_ChangePath(unsigned char *oldPath,unsigned char *newPath,INT useFileN
 // OUTPUT        pathString          the new path
 // -----------------------------------------------------------------------------
 
-void FILES_RetrievePath(unsigned char *pathString,SZ_LEN pathStringLength,
-                        unsigned char *fullFileName,SZ_LEN fullFileNameLength,
+void FILES_RetrievePath(UCHAR *pathString,SZ_LEN pathStringLength,
+                        UCHAR *fullFileName,SZ_LEN fullFileNameLength,
                         INT    indexFileType,INT changeDefaultPath)
  {
   // Declarations
 
   SZ_LEN currentLength;
-  unsigned char *ptr;
+  UCHAR *ptr;
 
   // Initialization
 
@@ -478,11 +478,11 @@ void FilesResetAllPaths(void)
 // INPUT         fileLine  the current line in the wds configuration file
 // -----------------------------------------------------------------------------
 
-void FilesLoadAllPaths(unsigned char *fileLine)
+void FilesLoadAllPaths(UCHAR *fileLine)
  {
   // Declarations
 
-  unsigned char path[MAX_PATH_LEN+1];           // path extracted from fileLine
+  UCHAR path[MAX_PATH_LEN+1];           // path extracted from fileLine
   INDEX indexPath;
 
   // Initialization
@@ -508,7 +508,7 @@ void FilesLoadAllPaths(unsigned char *fileLine)
 //               sectionName   name of the all paths section in the configuration file
 // -----------------------------------------------------------------------------
 
-void FilesSaveAllPaths(FILE *fp,unsigned char *sectionName)
+void FilesSaveAllPaths(FILE *fp,UCHAR *sectionName)
  {
   // Declaration
 
@@ -557,11 +557,11 @@ void FilesResetDefaultPaths(void)
 // INPUT         fileLine  the current line in the wds configuration file
 // -----------------------------------------------------------------------------
 
-void FilesLoadDefaultPaths(unsigned char *fileLine)
+void FilesLoadDefaultPaths(UCHAR *fileLine)
  {
   // Declarations
 
-  unsigned char keyName[MAX_ITEM_TEXT_LEN+1],                                           // name on the left of '=' symbol in a wds statement
+  UCHAR keyName[MAX_ITEM_TEXT_LEN+1],                                           // name on the left of '=' symbol in a wds statement
         defaultPath[MAX_PATH_LEN+1];                                            // default path extracted from fileLine
   INDEX indexFileType;
 
@@ -589,7 +589,7 @@ void FilesLoadDefaultPaths(unsigned char *fileLine)
 //               sectionName   name of the default paths section in the configuration file
 // -----------------------------------------------------------------------------
 
-void FilesSaveDefaultPaths(FILE *fp,unsigned char *sectionName)
+void FilesSaveDefaultPaths(FILE *fp,UCHAR *sectionName)
  {
   // Declaration
 
@@ -629,11 +629,11 @@ void FilesSaveDefaultPaths(FILE *fp,unsigned char *sectionName)
 //               ERROR_ID_FILE_EMPTY if the input file is empty
 // -----------------------------------------------------------------------------
 
-RC FILES_GetMatrixDimensions(FILE *fp,unsigned char *fileName,INT *pNl,INT *pNc,unsigned char *callingFunction,INT errorType)
+RC FILES_GetMatrixDimensions(FILE *fp,UCHAR *fileName,INT *pNl,INT *pNc,UCHAR *callingFunction,INT errorType)
  {
   // Declarations
 
-  unsigned char *oldColumn,*nextColumn;                                                 // line of files
+  UCHAR *oldColumn,*nextColumn;                                                 // line of files
   INT    nl,nc,                                                                 // dimensions of the matrix
          lineLength,                                                            // length of file line
          fileLength;                                                            // total length of file
@@ -651,8 +651,8 @@ RC FILES_GetMatrixDimensions(FILE *fp,unsigned char *fileName,INT *pNl,INT *pNc,
 
   // Allocate buffers for lines of file
 
-  else if (((oldColumn=(unsigned char *)MEMORY_AllocBuffer("FILES_GetMatrixDimensions ","oldColumn",fileLength,sizeof(unsigned char),0,MEMORY_TYPE_STRING))==NULL) ||
-           ((nextColumn=(unsigned char *)MEMORY_AllocBuffer("FILES_GetMatrixDimensions ","nextColumn",fileLength,sizeof(unsigned char),0,MEMORY_TYPE_STRING))==NULL))
+  else if (((oldColumn=(UCHAR *)MEMORY_AllocBuffer("FILES_GetMatrixDimensions ","oldColumn",fileLength,sizeof(UCHAR),0,MEMORY_TYPE_STRING))==NULL) ||
+           ((nextColumn=(UCHAR *)MEMORY_AllocBuffer("FILES_GetMatrixDimensions ","nextColumn",fileLength,sizeof(UCHAR),0,MEMORY_TYPE_STRING))==NULL))
    rc=ERROR_ID_ALLOC;
   else
    {
@@ -715,11 +715,11 @@ RC FILES_GetMatrixDimensions(FILE *fp,unsigned char *fileName,INT *pNl,INT *pNc,
 //               ERROR_ID_FILE_NOT_FOUND if can not open the input file
 // -----------------------------------------------------------------------------
 
-RC FILES_LoadMatrix(FILE *fp,unsigned char *fileName,double **matrix,INT base,INT nl,INT nc,unsigned char *callingFunction,INT errorType)
+RC FILES_LoadMatrix(FILE *fp,UCHAR *fileName,double **matrix,INT base,INT nl,INT nc,UCHAR *callingFunction,INT errorType)
  {
   // Declarations
 
-  unsigned char *oldColumn,*nextColumn;                             // buffers for file lines
+  UCHAR *oldColumn,*nextColumn;                             // buffers for file lines
   INT    lineLength,                                        // length of a file line
          fileLength;                                        // total length of file
   INDEX  i,j;                                               // index for browsing lines and columns in file
@@ -737,8 +737,8 @@ RC FILES_LoadMatrix(FILE *fp,unsigned char *fileName,double **matrix,INT base,IN
 
   // Allocate buffers for lines of file
 
-  else if (((oldColumn=(unsigned char *)MEMORY_AllocBuffer("FILES_LoadMatrix ","oldColumn",fileLength,sizeof(unsigned char),0,MEMORY_TYPE_STRING))==NULL) ||
-           ((nextColumn=(unsigned char *)MEMORY_AllocBuffer("FILES_LoadMatrix ","oldColumn",fileLength,sizeof(unsigned char),0,MEMORY_TYPE_STRING))==NULL))
+  else if (((oldColumn=(UCHAR *)MEMORY_AllocBuffer("FILES_LoadMatrix ","oldColumn",fileLength,sizeof(UCHAR),0,MEMORY_TYPE_STRING))==NULL) ||
+           ((nextColumn=(UCHAR *)MEMORY_AllocBuffer("FILES_LoadMatrix ","oldColumn",fileLength,sizeof(UCHAR),0,MEMORY_TYPE_STRING))==NULL))
    rc=ERROR_SetLast(callingFunction,errorType,ERROR_ID_ALLOC);
   else
    {
@@ -794,12 +794,12 @@ RC FILES_LoadMatrix(FILE *fp,unsigned char *fileName,double **matrix,INT base,IN
 // QDOAS ??? // RETURN        a pointer to the output filter string
 // QDOAS ??? // -----------------------------------------------------------------------------
 // QDOAS ???
-// QDOAS ??? unsigned char *FilesBuildFilter(unsigned char *fileFilter,MASK fileType,INT *symbolReferenceNumber,INDEX indexSymbol)
+// QDOAS ??? UCHAR *FilesBuildFilter(UCHAR *fileFilter,MASK fileType,INT *symbolReferenceNumber,INDEX indexSymbol)
 // QDOAS ???  {
 // QDOAS ???   // Declarations
 // QDOAS ???
 // QDOAS ???   FILE_TYPE *pFileType,*fileList;                                               // pointer to a file type
-// QDOAS ???   unsigned char extension[10];                                                          // extension according to type of file
+// QDOAS ???   UCHAR extension[10];                                                          // extension according to type of file
 // QDOAS ???   SYMBOL *crossList,*pCross;                                                    // list of cross sections
 // QDOAS ???   INT crossNumber;                                                              // number of cross sections in previous list
 // QDOAS ???   SZ_LEN len,extLength;                                                         // string length
@@ -945,10 +945,10 @@ RC FILES_LoadMatrix(FILE *fp,unsigned char *fileName,double **matrix,INT base,IN
 // QDOAS ???
 // QDOAS ??? RC FILES_Open(HWND hwndParent,                                                  // handle of parent
 // QDOAS ???               MASK fileType,                                                    // type of files selected
-// QDOAS ???               unsigned char *buffer,                                                    // buffer for receiving selected files
+// QDOAS ???               UCHAR *buffer,                                                    // buffer for receiving selected files
 // QDOAS ???               INT bufferSize,                                                   // size of previous buffer
-// QDOAS ???               long openStyles,                                                  // extra styles for dialog box creation
-// QDOAS ???               unsigned char openMode,                                                   // common dialog open mode
+// QDOAS ???               LONG openStyles,                                                  // extra styles for dialog box creation
+// QDOAS ???               UCHAR openMode,                                                   // common dialog open mode
 // QDOAS ???               INT *symbolReferenceNumber,                                       // for cross sections, number of times symbols are referenced to
 // QDOAS ???               INDEX indexSymbol,                                                // index of a specified symbol
 // QDOAS ???               INT *pFileType,
@@ -959,7 +959,7 @@ RC FILES_LoadMatrix(FILE *fp,unsigned char *fileName,double **matrix,INT base,IN
 // QDOAS ???   OPENFILENAME ofn = {0};                                                       // common dialog box structure
 // QDOAS ??? //  BROWSEINFO bfn={0};
 // QDOAS ???
-// QDOAS ???   unsigned char fileDir[MAX_PATH_LEN+1],                                                // directory where to search files first
+// QDOAS ???   UCHAR fileDir[MAX_PATH_LEN+1],                                                // directory where to search files first
 // QDOAS ???         fileTitle[MAX_ITEM_TEXT_LEN+1],                                         // title of the common dialog box
 // QDOAS ???         fileName[MAX_PATH_LEN+1],                                               // the selected file(s) without path
 // QDOAS ???         oldFileName[MAX_PATH_LEN+1],
@@ -981,7 +981,7 @@ RC FILES_LoadMatrix(FILE *fp,unsigned char *fileName,double **matrix,INT base,IN
 // QDOAS ???               ((FILE_TYPE_MAX<TREE_itemType[TREE_ITEM_TYPE_CROSS_CHILDREN].dataNumber)?
 // QDOAS ???                 TREE_itemType[TREE_ITEM_TYPE_CROSS_CHILDREN].dataNumber+1:FILE_TYPE_MAX+1);
 // QDOAS ???
-// QDOAS ???   fileFilter=(unsigned char *)MEMORY_AllocBuffer("FILES_Open ","fileFilter",filterLength,1,0,MEMORY_TYPE_STRING);
+// QDOAS ???   fileFilter=(UCHAR *)MEMORY_AllocBuffer("FILES_Open ","fileFilter",filterLength,1,0,MEMORY_TYPE_STRING);
 // QDOAS ???   memset(fileFilter,0,filterLength);
 // QDOAS ???
 // QDOAS ???   FILES_RetrievePath(fileDir,MAX_PATH_LEN+1,buffer,strlen(buffer),fileType,0);
@@ -1066,12 +1066,12 @@ RC FILES_LoadMatrix(FILE *fp,unsigned char *fileName,double **matrix,INT base,IN
 // OUTPUT        pointer to the updated file name
 // -----------------------------------------------------------------------------
 
-unsigned char *FILES_BuildFileName(unsigned char *fileName,MASK fileType)
+UCHAR *FILES_BuildFileName(UCHAR *fileName,MASK fileType)
  {
   // Declarations
 
   SZ_LEN fileNameLength;
-  unsigned char *ptr;
+  UCHAR *ptr;
 
   // Replace file extension by the correct one
 
@@ -1110,23 +1110,23 @@ unsigned char *FILES_BuildFileName(unsigned char *fileName,MASK fileType)
 // QDOAS ??? // -----------------------------------------------------------------------------
 // QDOAS ???
 // QDOAS ??? RC FILES_Select(HWND hwndParent,                                                // handle of parent
-// QDOAS ???                 unsigned char *buffer,                                                  // buffer for receiving file path and name
+// QDOAS ???                 UCHAR *buffer,                                                  // buffer for receiving file path and name
 // QDOAS ???                 INT bufferSize,                                                 // size of previous buffer
 // QDOAS ???                 MASK fileType,                                                  // type of files to select
 // QDOAS ???                 INT style,                                                      // extra style
-// QDOAS ???                 unsigned char openMode,                                                 // common dialog open mode
+// QDOAS ???                 UCHAR openMode,                                                 // common dialog open mode
 // QDOAS ???                 INT *symbolReferenceNumber,                                     // number of times symbols associated to files are referenced to
 // QDOAS ???                 INDEX indexSymbol,                                              // index of the symbol associated to the selected file in symbols list
 // QDOAS ???                 INT helpId)
 // QDOAS ???  {
 // QDOAS ???   // Declarations
 // QDOAS ???
-// QDOAS ???   unsigned char *filesSelected;                                                         // pointers to buffers with selected file(s) and path
+// QDOAS ???   UCHAR *filesSelected;                                                         // pointers to buffers with selected file(s) and path
 // QDOAS ???   RC rc;                                                                        // return code
 // QDOAS ???
 // QDOAS ???   // Buffer allocation
 // QDOAS ???
-// QDOAS ???   filesSelected=(unsigned char *)MEMORY_AllocBuffer("FILES_Select ","filesSelected",bufferSize,1,0,MEMORY_TYPE_STRING);
+// QDOAS ???   filesSelected=(UCHAR *)MEMORY_AllocBuffer("FILES_Select ","filesSelected",bufferSize,1,0,MEMORY_TYPE_STRING);
 // QDOAS ???   memcpy(filesSelected,buffer,bufferSize);
 // QDOAS ???
 // QDOAS ???   // Display and process dialog panel
@@ -1165,7 +1165,7 @@ unsigned char *FILES_BuildFileName(unsigned char *fileName,MASK fileType)
 // QDOAS ???  {
 // QDOAS ???   // Declarations
 // QDOAS ???
-// QDOAS ???   unsigned char *filesSelected,fileName[MAX_PATH_LEN+1],                                // pointers to buffers with selected file(s) and path
+// QDOAS ???   UCHAR *filesSelected,fileName[MAX_PATH_LEN+1],                                // pointers to buffers with selected file(s) and path
 // QDOAS ???         *ptr,*oldPtr;                                                           // pointers used for files name extraction
 // QDOAS ???   INT fileNumber;                                                               // number of retrieved files
 // QDOAS ???   SZ_LEN lenPath;                                                               // length of path
@@ -1178,7 +1178,7 @@ unsigned char *FILES_BuildFileName(unsigned char *fileName,MASK fileType)
 // QDOAS ???
 // QDOAS ???   // Buffer allocation
 // QDOAS ???
-// QDOAS ???   filesSelected=(unsigned char *)MEMORY_AllocBuffer("FILES_Insert ","filesSelected",BUFFER_SIZE,1,0,MEMORY_TYPE_STRING);
+// QDOAS ???   filesSelected=(UCHAR *)MEMORY_AllocBuffer("FILES_Insert ","filesSelected",BUFFER_SIZE,1,0,MEMORY_TYPE_STRING);
 // QDOAS ???   memset(filesSelected,0,BUFFER_SIZE);
 // QDOAS ???
 // QDOAS ???   // Display and process dialog panel
@@ -1187,7 +1187,7 @@ unsigned char *FILES_BuildFileName(unsigned char *fileName,MASK fileType)
 // QDOAS ???        (strlen(PRJCT_itemList[indexProject].instrumental.fileExt)<12))
 // QDOAS ???    strcpy(FILES_types[FILE_TYPE_SPECTRA].fileExt,PRJCT_itemList[indexProject].instrumental.fileExt);
 // QDOAS ???
-// QDOAS ???   FILES_Select(hwndTree,filesSelected,BUFFER_SIZE,fileType,(long)OFN_ALLOWMULTISELECT,FILE_MODE_OPEN,NULL,ITEM_NONE,ITEM_NONE);
+// QDOAS ???   FILES_Select(hwndTree,filesSelected,BUFFER_SIZE,fileType,(LONG)OFN_ALLOWMULTISELECT,FILE_MODE_OPEN,NULL,ITEM_NONE,ITEM_NONE);
 // QDOAS ???
 // QDOAS ???   if ((ptr=strchr(filesSelected,0))!=filesSelected)
 // QDOAS ???    {
@@ -1250,7 +1250,7 @@ unsigned char *FILES_BuildFileName(unsigned char *fileName,MASK fileType)
 // QDOAS ???   FILES_SECTION_MAX
 // QDOAS ???  };
 // QDOAS ???
-// QDOAS ??? unsigned char *FILES_configurationSectionNames[FILES_SECTION_MAX]=
+// QDOAS ??? UCHAR *FILES_configurationSectionNames[FILES_SECTION_MAX]=
 // QDOAS ???  {
 // QDOAS ???   "Version",
 // QDOAS ???   "All paths",
@@ -1295,11 +1295,11 @@ unsigned char *FILES_BuildFileName(unsigned char *fileName,MASK fileType)
 // QDOAS ??? //                 fileName    the name of the configuration file
 // QDOAS ??? // -----------------------------------------------------------------------------
 // QDOAS ???
-// QDOAS ??? void FILES_LoadConfiguration(HWND hwndParent,unsigned char *fileName)
+// QDOAS ??? void FILES_LoadConfiguration(HWND hwndParent,UCHAR *fileName)
 // QDOAS ???  {
 // QDOAS ???   // Declarations
 // QDOAS ???
-// QDOAS ???   unsigned char fileLine[BUFFER_SIZE+1],
+// QDOAS ???   UCHAR fileLine[BUFFER_SIZE+1],
 // QDOAS ???         sectionName[MAX_ITEM_TEXT_LEN+1],
 // QDOAS ???        *ptr;
 // QDOAS ???   INDEX indexSection;
@@ -1364,7 +1364,7 @@ unsigned char *FILES_BuildFileName(unsigned char *fileName,MASK fileType)
 // QDOAS ???
 // QDOAS ???       // Dispatch file lines to configuration loading routines
 // QDOAS ???
-// QDOAS ???       else if ((fileLine[0]!=(unsigned char)0x0D) && (fileLine[0]!=(unsigned char)0x0A))
+// QDOAS ???       else if ((fileLine[0]!=(UCHAR)0x0D) && (fileLine[0]!=(UCHAR)0x0A))
 // QDOAS ???
 // QDOAS ???        switch (indexSection)
 // QDOAS ???         {
@@ -1460,7 +1460,7 @@ unsigned char *FILES_BuildFileName(unsigned char *fileName,MASK fileType)
 // QDOAS ??? //                 fileName    the name of the configuration file
 // QDOAS ??? // -----------------------------------------------------------------------------
 // QDOAS ???
-// QDOAS ??? void FilesSaveConfiguration(HWND hwndParent,unsigned char *fileName)
+// QDOAS ??? void FilesSaveConfiguration(HWND hwndParent,UCHAR *fileName)
 // QDOAS ???  {
 // QDOAS ???   // Declarations
 // QDOAS ???
@@ -1524,7 +1524,7 @@ unsigned char *FILES_BuildFileName(unsigned char *fileName,MASK fileType)
 // QDOAS ???  {
 // QDOAS ???   // Declarations
 // QDOAS ???
-// QDOAS ???   unsigned char titleBar[MAX_ITEM_TEXT_LEN+1];
+// QDOAS ???   UCHAR titleBar[MAX_ITEM_TEXT_LEN+1];
 // QDOAS ???   HMENU hMenu,hSubMenu;
 // QDOAS ???
 // QDOAS ???   // Initializations
@@ -1630,7 +1630,7 @@ unsigned char *FILES_BuildFileName(unsigned char *fileName,MASK fileType)
 // QDOAS ???  {
 // QDOAS ???   // Declarations
 // QDOAS ???
-// QDOAS ???   unsigned char filePath[MAX_PATH_LEN+1];                                               // files selection with path
+// QDOAS ???   UCHAR filePath[MAX_PATH_LEN+1];                                               // files selection with path
 // QDOAS ???   SZ_LEN len;
 // QDOAS ???   RC rc;
 // QDOAS ???

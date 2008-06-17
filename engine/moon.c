@@ -1,12 +1,12 @@
 
 //  ----------------------------------------------------------------------------
 //
-//  Product/Project   :  QDOAS
+//  Product/Project   :  QDOAS               
 //  Module purpose    :  GEOCENTRIC MOON POSITIONS COMPUTATION
-//  Name of module    :  MOON.C
+//  Name of module    :  MOON.C  
 //  Creation date     :  1996
 //
-//  QDOAS is a cross-platform application developed in QT for DOAS retrieval
+//  QDOAS is a cross-platform application developed in QT for DOAS retrieval 
 //  (Differential Optical Absorption Spectroscopy).
 //
 //  The QT version of the program has been developed jointly by the Belgian
@@ -15,21 +15,21 @@
 //
 //      BIRA-IASB                                   S[&]T
 //      Belgian Institute for Space Aeronomy        Science [&] Technology
-//      Avenue Circulaire, 3                        Postbus 608
-//      1180     UCCLE                              2600 AP Delft
-//      BELGIUM                                     THE NETHERLANDS
-//      caroline.fayt@aeronomie.be                  info@stcorp.nl
+//      Avenue Circulaire, 3                        Postbus 608                   
+//      1180     UCCLE                              2600 AP Delft                 
+//      BELGIUM                                     THE NETHERLANDS               
+//      caroline.fayt@aeronomie.be                  info@stcorp.nl                
 //
 //  This program is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU General Public License
 //  as published by the Free Software Foundation; either version 2
 //  of the License, or (at your option) any later version.
-//
+//  
 //  This program is distributed in the hope that it will be useful,
 //  but WITHOUT ANY WARRANTY; without even the implied warranty of
 //  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //  GNU General Public License for more details.
-//
+//  
 //  You should have received a copy of the GNU General Public License
 //  along with this program; if not, write to the Free Software Foundation,
 //  Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
@@ -69,7 +69,7 @@
 //  [1] Astronomy on the Personal Computer, Montenbruck & Pfleger, 1989-1994
 //  [2] Astronomical formulae for calculators, Meeus, 1979
 //  Qdoas is a cross-platform application for spectral analysis with the DOAS
-//  algorithm (Differential Optical Analysis software)
+//  algorithm (Differential Optical Analysis software) 
 //
 //  ----------------------------------------------------------------------------
 
@@ -228,7 +228,7 @@ void Sec2Date(INT refYear, double nbSec, STRING2DATE *pDate)
 // OUTPUT        pDate       the components of the date in a structure
 // -----------------------------------------------------------------------------
 
-void String2Date(unsigned char *stringDate,STRING2DATE *pDate)
+void String2Date(UCHAR *stringDate,STRING2DATE *pDate)
  {
   // String date decomposition
 
@@ -261,7 +261,7 @@ void String2Date(unsigned char *stringDate,STRING2DATE *pDate)
 // RETURN        a pointer to the output string
 // -----------------------------------------------------------------------------
 
-unsigned char *Date2String(STRING2DATE *pDate,unsigned char *stringDate)
+UCHAR *Date2String(STRING2DATE *pDate,UCHAR *stringDate)
  {
  	// Declaration
 
@@ -272,7 +272,7 @@ unsigned char *Date2String(STRING2DATE *pDate,unsigned char *stringDate)
   fracDay=(double) pDate->hour*3600.+pDate->min*60.+pDate->sec;
   fracDay/=(double)0.864;
   sprintf(stringDate,"%d.%02d%02d%05ld",
-          pDate->year,pDate->month,pDate->day,(unsigned long)floor(fracDay+0.5));
+          pDate->year,pDate->month,pDate->day,(ULONG)floor(fracDay+0.5));
 
   // Return
 
@@ -289,7 +289,7 @@ unsigned char *Date2String(STRING2DATE *pDate,unsigned char *stringDate)
 // OUTPUT        pYear,pMonth,pDay   the components of the date
 // -----------------------------------------------------------------------------
 
-void String2Calendar(unsigned char *strDate,double *pYear,double *pMonth,double *pDay)
+void String2Calendar(UCHAR *strDate,double *pYear,double *pMonth,double *pDay)
  {
   // Declaration
 
@@ -362,7 +362,7 @@ double JulianDay(double year,double month,double day)
 //               pi       equatorial horizontal parallax
 // -----------------------------------------------------------------------------
 
-void MoonPosition(unsigned char *strCalendarDate,double *lambda,double *beta,double *pi)
+void MoonPosition(UCHAR *strCalendarDate,double *lambda,double *beta,double *pi)
  {
   // Declarations //
 
@@ -830,12 +830,12 @@ double MoonFraction(double T,double lambda,double beta)
 //               pFrac       illuminated fraction of the moon
 // -----------------------------------------------------------------------------
 
-void MOON_GetPosition(unsigned char *inputDate,double longitude,double latitude,double altitude,
+void MOON_GetPosition(UCHAR *inputDate,double longitude,double latitude,double altitude,
                       double *pA,double *ph,double *pFrac)
  {
   // Declarations
                            // INPUT DATE AND TIME TRANSFORMATION
-  unsigned char stringDate[20];    // Date(day,month,year,hour,min,sec) -> YYYY.MMDDddddd
+  UCHAR stringDate[20];    // Date(day,month,year,hour,min,sec) -> YYYY.MMDDddddd
   STRING2DATE dateTime;      // DD/MM/YYYY HH:MM:SS -> Date(day,month,year,hour,min,sec)
 
                            // GEOCENTIC COORDINATES

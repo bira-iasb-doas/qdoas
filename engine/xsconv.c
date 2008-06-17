@@ -153,7 +153,7 @@
 
 // Slit types
 
-unsigned char *XSCONV_slitTypes[SLIT_TYPE_MAX]=
+UCHAR *XSCONV_slitTypes[SLIT_TYPE_MAX]=
  {
 // !!!  	"None",
   "File",
@@ -635,11 +635,11 @@ RC XsconvGetFwhm(XS *pSlit,INT slitType,double *slitParam)
 
 // QDOAS ??? #if defined (__WINDOAS_GUI_) && __WINDOAS_GUI_
 // QDOAS ???
-// QDOAS ??? void XSCONV_FileSelection(HWND hwndXsconv,unsigned char *file,MASK fileType,INT fileMode,INT fileCommand,INT ringFlag)
+// QDOAS ??? void XSCONV_FileSelection(HWND hwndXsconv,UCHAR *file,MASK fileType,INT fileMode,INT fileCommand,INT ringFlag)
 // QDOAS ???  {
 // QDOAS ???   // Declarations
 // QDOAS ???
-// QDOAS ???   unsigned char *ptr;
+// QDOAS ???   UCHAR *ptr;
 // QDOAS ???   SZ_LEN pathLength;
 // QDOAS ???
 // QDOAS ???   // Initialization
@@ -654,7 +654,7 @@ RC XsconvGetFwhm(XS *pSlit,INT slitType,double *slitParam)
 // QDOAS ???      strcat(file,"automatic");
 // QDOAS ???     else if (pathLength==0)
 // QDOAS ???      {
-// QDOAS ???       unsigned char pathSep[2];
+// QDOAS ???       UCHAR pathSep[2];
 // QDOAS ???
 // QDOAS ???       pathSep[0]=PATH_SEP;
 // QDOAS ???       pathSep[1]='\0';
@@ -667,7 +667,7 @@ RC XsconvGetFwhm(XS *pSlit,INT slitType,double *slitParam)
 // QDOAS ???
 // QDOAS ???   // Select path and file
 // QDOAS ???
-// QDOAS ???   FILES_Select(hwndXsconv,file,MAX_ITEM_TEXT_LEN+1,fileType,0,(unsigned char)fileMode,NULL,ITEM_NONE,ITEM_NONE);
+// QDOAS ???   FILES_Select(hwndXsconv,file,MAX_ITEM_TEXT_LEN+1,fileType,0,(UCHAR)fileMode,NULL,ITEM_NONE,ITEM_NONE);
 // QDOAS ???
 // QDOAS ???   // Returned path processing in output mode
 // QDOAS ???
@@ -688,11 +688,11 @@ RC XsconvGetFwhm(XS *pSlit,INT slitType,double *slitParam)
 // XSCONV_LoadCalibrationFile : Final wavelength scale read out
 // ------------------------------------------------------------
 
-RC XSCONV_LoadCalibrationFile(XS *pLambda,unsigned char *lambdaFile,INT nextraPixels)
+RC XSCONV_LoadCalibrationFile(XS *pLambda,UCHAR *lambdaFile,INT nextraPixels)
  {
   // Declarations
 
-  unsigned char  lambdaBuffer[MAX_ITEM_TEXT_LEN+1];
+  UCHAR  lambdaBuffer[MAX_ITEM_TEXT_LEN+1];
   double step;
   FILE *lambdaFp;
   INT npts;
@@ -771,7 +771,7 @@ RC XSCONV_LoadSlitFunction(XS *pSlitXs,SLIT *pSlit,double *pGaussWidth,INT *pSli
  {
   // Declarations
 
-  unsigned char  slitBuffer[MAX_ITEM_TEXT_LEN+1];
+  UCHAR  slitBuffer[MAX_ITEM_TEXT_LEN+1];
   FILE  *slitFp;
   RC     rc;
   INDEX  i;
@@ -957,12 +957,12 @@ RC XSCONV_LoadSlitFunction(XS *pSlitXs,SLIT *pSlit,double *pGaussWidth,INT *pSli
 // XSCONV_LoadCrossSectionFile : Load a cross section file
 // -------------------------------------------------------
 
-RC XSCONV_LoadCrossSectionFile(XS *pCross,unsigned char *crossFile,double lambdaMin,double lambdaMax,double shift,INT conversionMode)
+RC XSCONV_LoadCrossSectionFile(XS *pCross,UCHAR *crossFile,double lambdaMin,double lambdaMax,double shift,INT conversionMode)
  {
   // Declarations
 
   double lambda,crossValue,firstLambda;
-  unsigned char  crossBuffer[MAX_ITEM_TEXT_LEN+1];
+  UCHAR  crossBuffer[MAX_ITEM_TEXT_LEN+1];
   FILE  *crossFp;
   INT    found,npts;
   INDEX  i,i0,iN,istep;
@@ -976,8 +976,6 @@ RC XSCONV_LoadCrossSectionFile(XS *pCross,unsigned char *crossFile,double lambda
   rc=ERROR_ID_NO;
 
   // Open ASCII file
-
-
 
   if ((crossFp=fopen(FILES_RebuildFileName(crossBuffer,crossFile,1),"rt"))==NULL)
    rc=ERROR_SetLast("XSCONV_LoadCrossSectionFile",ERROR_TYPE_FATAL,ERROR_ID_FILE_NOT_FOUND,crossBuffer);
@@ -1544,7 +1542,7 @@ RC XSCONV_TypeI0Correction(XS *pXsnew,XS *pXshr,XS *pI0,XS *pSlit,double conc,IN
 
   if (conc<=(double)0.)
 
-   rc=ERROR_SetLast("XSCONV_TypeI0Correction",ERROR_TYPE_FATAL,ERROR_ID_BAD_ARGUMENTS,"General tab page : Conc. <= 0.");
+   rc=ERROR_SetLast("XSCONV_TypeI0Correction",ERROR_TYPE_FATAL,ERROR_ID_BAD_ARGUMENTS);
 
   // Buffers allocation
 
@@ -2011,7 +2009,7 @@ RC XSCONV_NewSlitFunction(SLIT *pSlitOptions,XS *pSlit,double slitParam,SLIT *pS
 // QDOAS ???
 // QDOAS ???  if (!rc && (CHILD_list[CHILD_WINDOW_SPECTRA].hwndChild!=NULL))
 // QDOAS ???   {
-// QDOAS ???    unsigned char str[MAX_ITEM_TEXT_LEN+1];
+// QDOAS ???    UCHAR str[MAX_ITEM_TEXT_LEN+1];
 // QDOAS ???
 // QDOAS ???    sprintf(str,"Convolution tool : effective slit function (%d x %.4f)",nslit,slitStep);
 // QDOAS ???
@@ -2073,3 +2071,840 @@ RC XSCONV_NewSlitFunction(SLIT *pSlitOptions,XS *pSlit,double slitParam,SLIT *pS
 
   return rc;
  }
+
+// QDOAS ???
+// QDOAS ??? #if defined (__WINDOAS_GUI_) && __WINDOAS_GUI_
+// QDOAS ???
+// QDOAS ??? // ==========================================
+// QDOAS ??? // CONVOLUTION DIALOG BOX MESSAGES PROCESSING
+// QDOAS ??? // ==========================================
+// QDOAS ???
+// QDOAS ??? // GENERAL TAB PAGE MESSAGES PROCESSING
+// QDOAS ???
+// QDOAS ??? // -----------------------------------------------------------------------------
+// QDOAS ??? // FUNCTION        XsconvGeneralKurucz
+// QDOAS ??? // -----------------------------------------------------------------------------
+// QDOAS ??? // PURPOSE         Enable/Disable Kurucz fields on convolution type
+// QDOAS ??? //
+// QDOAS ??? // INPUT           hwndGeneral : the handle to the current tab page
+// QDOAS ??? // -----------------------------------------------------------------------------
+// QDOAS ???
+// QDOAS ??? void XsconvGeneralKurucz(HWND hwndGeneral)
+// QDOAS ???  {
+// QDOAS ???  	// Declaration
+// QDOAS ???
+// QDOAS ???   INT action;
+// QDOAS ???
+// QDOAS ???   // Get the convolution type
+// QDOAS ???
+// QDOAS ???   action=((XSCONV_buffer.convolutionType=SendMessage(GetDlgItem(hwndGeneral,TOOL_CONVOLUTION_SELECTION),CB_GETCURSEL,0,0))==CONVOLUTION_TYPE_I0_CORRECTION)?
+// QDOAS ???            SW_SHOW:SW_HIDE;
+// QDOAS ???
+// QDOAS ???   // Hide/show the fields (Kurucz and XS concentration) related to the I0 correction according to the selected convolution type
+// QDOAS ???
+// QDOAS ???   ShowWindow(GetDlgItem(hwndGeneral,TOOL_CONVOLUTION_KURUCZ_BUTTON),action);
+// QDOAS ???   ShowWindow(GetDlgItem(hwndGeneral,TOOL_CONVOLUTION_KURUCZ_FILE),action);
+// QDOAS ???   ShowWindow(GetDlgItem(hwndGeneral,TOOL_CONVOLUTION_CONC_TEXT),action);
+// QDOAS ???   ShowWindow(GetDlgItem(hwndGeneral,TOOL_CONVOLUTION_CONC),action);
+// QDOAS ???   ShowWindow(GetDlgItem(hwndGeneral,TOOL_CONVOLUTION_CONC_UNITS),action);
+// QDOAS ???  }
+// QDOAS ???
+// QDOAS ??? // -----------------------------------------------------------------------------
+// QDOAS ??? // FUNCTION        XsconvGeneralInit
+// QDOAS ??? // -----------------------------------------------------------------------------
+// QDOAS ??? // PURPOSE         WM_INIT message processing
+// QDOAS ??? //
+// QDOAS ??? // INPUT           hwndGeneral : the handle to the current tab page
+// QDOAS ??? // -----------------------------------------------------------------------------
+// QDOAS ???
+// QDOAS ??? void XsconvGeneralInit(HWND hwndGeneral)
+// QDOAS ???  {
+// QDOAS ???   // Declarations
+// QDOAS ???
+// QDOAS ???   UCHAR string[MAX_ITEM_TEXT_LEN+1];
+// QDOAS ???   INDEX indexItem;
+// QDOAS ???
+// QDOAS ???   // Resize tab page
+// QDOAS ???
+// QDOAS ???   XsconvTabReSize(GetParent(hwndGeneral),hwndGeneral);
+// QDOAS ???
+// QDOAS ???   // Fill comboboxes fields
+// QDOAS ???
+// QDOAS ???   for (indexItem=0;indexItem<CONVOLUTION_TYPE_MAX;indexItem++)
+// QDOAS ???    SendMessage(GetDlgItem(hwndGeneral,TOOL_CONVOLUTION_SELECTION),CB_ADDSTRING,0,(LPARAM)xsconvConvolutionTypes[indexItem]);
+// QDOAS ???   for (indexItem=0;indexItem<CONVOLUTION_CONVERSION_MAX;indexItem++)
+// QDOAS ???    SendMessage(GetDlgItem(hwndGeneral,TOOL_CONVOLUTION_CONVERSION),CB_ADDSTRING,0,(LPARAM)xsconvConversionModes[indexItem]);
+// QDOAS ???
+// QDOAS ???   // Set convolution type
+// QDOAS ???
+// QDOAS ???   SendMessage(GetDlgItem(hwndGeneral,TOOL_CONVOLUTION_SELECTION),CB_SETCURSEL,(WPARAM)XSCONV_buffer.convolutionType,0);
+// QDOAS ???   SendMessage(GetDlgItem(hwndGeneral,TOOL_CONVOLUTION_CONVERSION),CB_SETCURSEL,(WPARAM)XSCONV_buffer.conversionMode,0);
+// QDOAS ???
+// QDOAS ???   XsconvGeneralKurucz(hwndGeneral);
+// QDOAS ???
+// QDOAS ???   // Fill edit controls
+// QDOAS ???
+// QDOAS ???   SetWindowText(GetDlgItem(hwndGeneral,TOOL_CONVOLUTION_SHIFT),XSCONV_buffer.shift);
+// QDOAS ???   SetWindowText(GetDlgItem(hwndGeneral,TOOL_CONVOLUTION_CROSS_FILE),XSCONV_buffer.crossFile);
+// QDOAS ???   SetWindowText(GetDlgItem(hwndGeneral,TOOL_CONVOLUTION_PATH),XSCONV_buffer.path);
+// QDOAS ???   SetWindowText(GetDlgItem(hwndGeneral,TOOL_CONVOLUTION_CALIBRATION_FILE),XSCONV_buffer.calibrationFile);
+// QDOAS ???   SetWindowText(GetDlgItem(hwndGeneral,TOOL_CONVOLUTION_KURUCZ_FILE),XSCONV_buffer.kuruczFile);
+// QDOAS ???
+// QDOAS ???   sprintf(string,"%g",XSCONV_buffer.conc);
+// QDOAS ???   SetWindowText(GetDlgItem(hwndGeneral,TOOL_CONVOLUTION_CONC),string);
+// QDOAS ???  }
+// QDOAS ???
+// QDOAS ??? // -----------------------------------------------------------------------------
+// QDOAS ??? // FUNCTION        XsconvGeneralCommand
+// QDOAS ??? // -----------------------------------------------------------------------------
+// QDOAS ??? // PURPOSE         WM_COMMAND message processing
+// QDOAS ??? //
+// QDOAS ??? // INPUT           usual syntax for windows messages routines
+// QDOAS ??? // -----------------------------------------------------------------------------
+// QDOAS ???
+// QDOAS ??? LRESULT CALLBACK XsconvGeneralCommand(HWND hwndGeneral,UINT msg,WPARAM mp1,LPARAM mp2)
+// QDOAS ???  {
+// QDOAS ???   switch((ULONG)GET_WM_COMMAND_ID(mp1,mp2))
+// QDOAS ???    {
+// QDOAS ???  // ---------------------------------------------------------------------------
+// QDOAS ???     case TOOL_CONVOLUTION_SELECTION :
+// QDOAS ???      XsconvGeneralKurucz(hwndGeneral);
+// QDOAS ???     break;
+// QDOAS ???  // ---------------------------------------------------------------------------
+// QDOAS ???     case TOOL_CONVOLUTION_CROSS_BUTTON :
+// QDOAS ???      XSCONV_FileSelection(hwndGeneral,XSCONV_buffer.crossFile,FILE_TYPE_CROSS,FILE_MODE_OPEN,TOOL_CONVOLUTION_CROSS_FILE,0);
+// QDOAS ???     break;
+// QDOAS ???  // ---------------------------------------------------------------------------
+// QDOAS ???     case TOOL_CONVOLUTION_PATH_BUTTON :
+// QDOAS ???      XSCONV_FileSelection(hwndGeneral,XSCONV_buffer.path,FILE_TYPE_ALL,FILE_MODE_SAVE,TOOL_CONVOLUTION_PATH,0);
+// QDOAS ???     break;
+// QDOAS ???  // ---------------------------------------------------------------------------
+// QDOAS ???     case TOOL_CONVOLUTION_CALIBRATION_BUTTON :
+// QDOAS ???      XSCONV_FileSelection(hwndGeneral,XSCONV_buffer.calibrationFile,FILE_TYPE_CALIB,FILE_MODE_OPEN,TOOL_CONVOLUTION_CALIBRATION_FILE,0);
+// QDOAS ???     break;
+// QDOAS ???  // ---------------------------------------------------------------------------
+// QDOAS ???     case TOOL_CONVOLUTION_KURUCZ_BUTTON :
+// QDOAS ???      XSCONV_FileSelection(hwndGeneral,XSCONV_buffer.kuruczFile,FILE_TYPE_CALIB_KURUCZ,FILE_MODE_OPEN,TOOL_CONVOLUTION_KURUCZ_FILE,0);
+// QDOAS ???     break;
+// QDOAS ???  // ---------------------------------------------------------------------------
+// QDOAS ???    }
+// QDOAS ???
+// QDOAS ???   return 0;
+// QDOAS ???  }
+// QDOAS ???
+// QDOAS ??? // -----------------------------------------------------------------------------
+// QDOAS ??? // FUNCTION        XsconvGeneralDestroy
+// QDOAS ??? // -----------------------------------------------------------------------------
+// QDOAS ??? // PURPOSE         WM_DESTROY message processing
+// QDOAS ??? //
+// QDOAS ??? // INPUT           hwndGeneral : the handle to the current tab page
+// QDOAS ??? // -----------------------------------------------------------------------------
+// QDOAS ???
+// QDOAS ??? void XsconvGeneralDestroy(HWND hwndGeneral)
+// QDOAS ???  {
+// QDOAS ???   // Declaration
+// QDOAS ???
+// QDOAS ???   UCHAR string[MAX_ITEM_TEXT_LEN+1];
+// QDOAS ???
+// QDOAS ???   // Get the conversion mode
+// QDOAS ???
+// QDOAS ???   XSCONV_buffer.conversionMode=SendMessage(GetDlgItem(hwndGeneral,TOOL_CONVOLUTION_CONVERSION),CB_GETCURSEL,0,0);
+// QDOAS ???
+// QDOAS ???   // Get the shift to apply to the wavelength calibration and the names of the input files
+// QDOAS ???
+// QDOAS ???   GetWindowText(GetDlgItem(hwndGeneral,TOOL_CONVOLUTION_SHIFT),XSCONV_buffer.shift,MAX_PATH_LEN);
+// QDOAS ???   GetWindowText(GetDlgItem(hwndGeneral,TOOL_CONVOLUTION_CROSS_FILE),XSCONV_buffer.crossFile,MAX_PATH_LEN);
+// QDOAS ???   GetWindowText(GetDlgItem(hwndGeneral,TOOL_CONVOLUTION_PATH),XSCONV_buffer.path,MAX_PATH_LEN);
+// QDOAS ???   GetWindowText(GetDlgItem(hwndGeneral,TOOL_CONVOLUTION_CALIBRATION_FILE),XSCONV_buffer.calibrationFile,MAX_PATH_LEN);
+// QDOAS ???   GetWindowText(GetDlgItem(hwndGeneral,TOOL_CONVOLUTION_KURUCZ_FILE),XSCONV_buffer.kuruczFile,MAX_PATH_LEN);
+// QDOAS ???
+// QDOAS ???   // Get the concentration (I0 correction)
+// QDOAS ???
+// QDOAS ???   memset(string,0,MAX_ITEM_TEXT_LEN+1);
+// QDOAS ???   GetWindowText(GetDlgItem(hwndGeneral,TOOL_CONVOLUTION_CONC),string,MAX_ITEM_TEXT_LEN+1);
+// QDOAS ???   XSCONV_buffer.conc=fabs(atof(string));
+// QDOAS ???  }
+// QDOAS ???
+// QDOAS ??? // -----------------------------------------------------------------------------
+// QDOAS ??? // FUNCTION        XSCONV_GeneralWndProc
+// QDOAS ??? // -----------------------------------------------------------------------------
+// QDOAS ??? // PURPOSE         dispatch messages from the page related to general options
+// QDOAS ??? //
+// QDOAS ??? // INPUT           usual syntax for windows messages routines
+// QDOAS ??? // -----------------------------------------------------------------------------
+// QDOAS ???
+// QDOAS ??? LRESULT CALLBACK XSCONV_GeneralWndProc(HWND hwndGeneral,UINT msg,WPARAM mp1,LPARAM mp2)
+// QDOAS ???  {
+// QDOAS ???   switch (msg)
+// QDOAS ???    {
+// QDOAS ???  // ---------------------------------------------------------------------------
+// QDOAS ???     case WM_INITDIALOG :
+// QDOAS ???      XsconvGeneralInit(hwndGeneral);
+// QDOAS ???     break;
+// QDOAS ???  // ---------------------------------------------------------------------------
+// QDOAS ???     case WM_COMMAND :
+// QDOAS ???      XsconvGeneralCommand(hwndGeneral,msg,mp1,mp2);
+// QDOAS ???     break;
+// QDOAS ???  // ---------------------------------------------------------------------------
+// QDOAS ???     case WM_DESTROY :
+// QDOAS ???      XsconvGeneralDestroy(hwndGeneral);
+// QDOAS ???     break;
+// QDOAS ???  // ---------------------------------------------------------------------------
+// QDOAS ???    }
+// QDOAS ???
+// QDOAS ???   return 0;
+// QDOAS ???  }
+// QDOAS ???
+// QDOAS ??? // SLIT FUNCTION TAB PAGE MESSAGES PROCESSING
+// QDOAS ???
+// QDOAS ??? // -----------------------------------------------------------------------------
+// QDOAS ??? // FUNCTION        XSCONV_SlitType
+// QDOAS ??? // -----------------------------------------------------------------------------
+// QDOAS ??? // PURPOSE         According to the selected slit function, show/hide slit options
+// QDOAS ??? //
+// QDOAS ??? // INPUT           hwndSlit : the handle to the current tab page
+// QDOAS ??? //                 slitBase : the id of the "reference" field
+// QDOAS ??? //
+// QDOAS ??? // INPUT/OUTPUT    pSlit    : pointer to the current convolution options
+// QDOAS ??? //                 pSlit2   : pointer to the current deconvolution options
+// QDOAS ??? // -----------------------------------------------------------------------------
+// QDOAS ???
+// QDOAS ???
+// QDOAS ??? void XSCONV_SlitType(HWND hwndSlit,INT slitBase,SLIT *pSlit,SLIT *pSlit2)
+// QDOAS ???  {
+// QDOAS ???   // Declarations
+// QDOAS ???
+// QDOAS ???   INT action,fileAction,gaussAction,voigtAction,slitType,show_9_10;
+// QDOAS ???   UCHAR string[MAX_ITEM_TEXT_LEN+1],slitFile[MAX_PATH_LEN+1];
+// QDOAS ???
+// QDOAS ???   // Initializations
+// QDOAS ???
+// QDOAS ???   slitType=(UCHAR)SendMessage(GetDlgItem(hwndSlit,slitBase),CB_GETCURSEL,0,0);
+// QDOAS ???   voigtAction=((slitType!=SLIT_TYPE_VOIGT))?SW_HIDE:SW_SHOW;
+// QDOAS ???   show_9_10=(slitType!=SLIT_TYPE_VOIGT)?SW_HIDE:SW_SHOW;
+// QDOAS ???
+// QDOAS ???   // Get the slit function file
+// QDOAS ???
+// QDOAS ???   GetWindowText(GetDlgItem(hwndSlit,slitBase+5 /* file */),slitFile,MAX_PATH_LEN+1);
+// QDOAS ???
+// QDOAS ???   // Modify the text of some fields according to the selected slit function file type
+// QDOAS ???
+// QDOAS ???   if (slitType==SLIT_TYPE_GAUSS)
+// QDOAS ???    {
+// QDOAS ???     SetWindowText(GetDlgItem(hwndSlit,slitBase+1),"Gaussian FWHM");
+// QDOAS ???    }
+// QDOAS ???   else if ((slitType==SLIT_TYPE_ERF) || (slitType==SLIT_TYPE_ERF_FILE) || (slitType==SLIT_TYPE_ERF_T_FILE))
+// QDOAS ???    {
+// QDOAS ???     SetWindowText(GetDlgItem(hwndSlit,slitBase+1),"Gaussian FWHM");
+// QDOAS ???     SetWindowText(GetDlgItem(hwndSlit,slitBase+6),"Boxcar width");
+// QDOAS ???     SetWindowText(GetDlgItem(hwndSlit,slitBase+8),"nm");
+// QDOAS ???    }
+// QDOAS ???   else if ((slitType==SLIT_TYPE_INVPOLY) || (slitType==SLIT_TYPE_INVPOLY_FILE))
+// QDOAS ???    {
+// QDOAS ???     SetWindowText(GetDlgItem(hwndSlit,slitBase+1),"Width");
+// QDOAS ???     SetWindowText(GetDlgItem(hwndSlit,slitBase+6),"Degree");
+// QDOAS ???     SetWindowText(GetDlgItem(hwndSlit,slitBase+8),"(multiple of 2)");
+// QDOAS ???    }
+// QDOAS ???   else if (slitType==SLIT_TYPE_VOIGT)
+// QDOAS ???    {
+// QDOAS ???     SetWindowText(GetDlgItem(hwndSlit,slitBase+1),"Gaussian FWHM (L)");
+// QDOAS ???     SetWindowText(GetDlgItem(hwndSlit,slitBase+6),"Lorentz/Gauss (L)");
+// QDOAS ???     SetWindowText(GetDlgItem(hwndSlit,slitBase+9),"Gaussian FWHM (R)");
+// QDOAS ???    }
+// QDOAS ???   else if ((slitType==SLIT_TYPE_APOD) || (slitType==SLIT_TYPE_APODNBS))
+// QDOAS ???    {
+// QDOAS ???     SetWindowText(GetDlgItem(hwndSlit,slitBase+1),"Resolution");
+// QDOAS ???     SetWindowText(GetDlgItem(hwndSlit,slitBase+6),"Phase");
+// QDOAS ???    }
+// QDOAS ???
+// QDOAS ???   // Keep a trace of the previous options
+// QDOAS ???
+// QDOAS ???   if ((slitType!=SLIT_TYPE_GAUSS) &&
+// QDOAS ???       (slitType!=SLIT_TYPE_INVPOLY) &&
+// QDOAS ???       (slitType!=SLIT_TYPE_ERF) &&
+// QDOAS ???       (slitType!=SLIT_TYPE_VOIGT) &&
+// QDOAS ???       (slitType!=SLIT_TYPE_APOD) &&
+// QDOAS ???       (slitType!=SLIT_TYPE_APODNBS))
+// QDOAS ???    {
+// QDOAS ???     GetWindowText(GetDlgItem(hwndSlit,slitBase+2 /* gauss width */),string,MAX_ITEM_TEXT_LEN+1);
+// QDOAS ???     pSlit->slitParam=fabs(atof(string));
+// QDOAS ???     GetWindowText(GetDlgItem(hwndSlit,slitBase+7 /* inv polynomial degree */),string,MAX_ITEM_TEXT_LEN+1);
+// QDOAS ???     pSlit->slitParam2=fabs(atof(string));
+// QDOAS ???     GetWindowText(GetDlgItem(hwndSlit,slitBase+10 /* Voigt Gauss FWHM */),string,MAX_ITEM_TEXT_LEN+1);
+// QDOAS ???     pSlit->slitParam3=fabs(atof(string));
+// QDOAS ???     GetWindowText(GetDlgItem(hwndSlit,slitBase+12 /* Voigt Lorentz/Gauss ratio */),string,MAX_ITEM_TEXT_LEN+1);
+// QDOAS ???     pSlit->slitParam4=fabs(atof(string));
+// QDOAS ???     SetWindowText(GetDlgItem(hwndSlit,slitBase+5 /* file */),slitFile);
+// QDOAS ???
+// QDOAS ???     fileAction=SW_SHOW;
+// QDOAS ???     gaussAction=SW_HIDE;
+// QDOAS ???    }
+// QDOAS ???   else
+// QDOAS ???    {
+// QDOAS ???     GetWindowText(GetDlgItem(hwndSlit,slitBase+5 /* file */),slitFile,MAX_PATH_LEN+1);
+// QDOAS ???     sprintf(string,"%.3lf",pSlit->slitParam);
+// QDOAS ???     SetWindowText(GetDlgItem(hwndSlit,slitBase+2 /* gauss width */),string);
+// QDOAS ???     sprintf(string,"%.3lf",pSlit->slitParam2);
+// QDOAS ???     SetWindowText(GetDlgItem(hwndSlit,slitBase+7 /* inv polynomial degree */),string);
+// QDOAS ???     sprintf(string,"%.3lf",pSlit->slitParam3);
+// QDOAS ???     SetWindowText(GetDlgItem(hwndSlit,slitBase+10 /* Voigt Gauss FWHM */),string);
+// QDOAS ???     sprintf(string,"%.3lf",pSlit->slitParam4);
+// QDOAS ???     SetWindowText(GetDlgItem(hwndSlit,slitBase+12 /* Voigt Lorentz/Gauss ratio */),string);
+// QDOAS ???
+// QDOAS ???     fileAction=SW_HIDE;
+// QDOAS ???     gaussAction=SW_SHOW;
+// QDOAS ???    }
+// QDOAS ???
+// QDOAS ???   pSlit->slitType=slitType;
+// QDOAS ???
+// QDOAS ???   // Show/hide file fields
+// QDOAS ???
+// QDOAS ???   ShowWindow(GetDlgItem(hwndSlit,slitBase+4 /* file button */),fileAction);
+// QDOAS ???   ShowWindow(GetDlgItem(hwndSlit,slitBase+5 /* file control edit */),fileAction);
+// QDOAS ???
+// QDOAS ???   // Show/hide gauss fields
+// QDOAS ???
+// QDOAS ???   ShowWindow(GetDlgItem(hwndSlit,slitBase+1 /* text */),gaussAction);
+// QDOAS ???   ShowWindow(GetDlgItem(hwndSlit,slitBase+2 /* control edit */),gaussAction);
+// QDOAS ???   ShowWindow(GetDlgItem(hwndSlit,slitBase+3 /* nm */),gaussAction);
+// QDOAS ???   ShowWindow(GetDlgItem(hwndSlit,slitBase+6 /* n */),(gaussAction && ((slitType==SLIT_TYPE_INVPOLY) || (slitType==SLIT_TYPE_VOIGT) || (slitType==SLIT_TYPE_APOD) || (slitType==SLIT_TYPE_APODNBS) || (slitType==SLIT_TYPE_ERF))) || (slitType==SLIT_TYPE_INVPOLY_FILE) || (slitType==SLIT_TYPE_ERF_FILE) || (slitType==SLIT_TYPE_ERF_T_FILE));
+// QDOAS ???   ShowWindow(GetDlgItem(hwndSlit,slitBase+7 /* control edit */),(gaussAction && ((slitType==SLIT_TYPE_INVPOLY) || (slitType==SLIT_TYPE_VOIGT) || (slitType==SLIT_TYPE_APOD) || (slitType==SLIT_TYPE_APODNBS) || (slitType==SLIT_TYPE_ERF))) || ((slitType==SLIT_TYPE_INVPOLY_FILE) || (slitType==SLIT_TYPE_ERF_FILE) || (slitType==SLIT_TYPE_ERF_T_FILE)));
+// QDOAS ???   ShowWindow(GetDlgItem(hwndSlit,slitBase+8 /* text */),((gaussAction==SW_SHOW) && (voigtAction==SW_HIDE) && ((slitType==SLIT_TYPE_INVPOLY) || (slitType==SLIT_TYPE_VOIGT) || (slitType==SLIT_TYPE_ERF))) || ((slitType==SLIT_TYPE_INVPOLY_FILE) || (slitType==SLIT_TYPE_ERF_FILE) || (slitType==SLIT_TYPE_ERF_T_FILE)));
+// QDOAS ???
+// QDOAS ???   // Show/hide Voigt fields
+// QDOAS ???
+// QDOAS ???   ShowWindow(GetDlgItem(hwndSlit,slitBase+9),show_9_10);
+// QDOAS ???   ShowWindow(GetDlgItem(hwndSlit,slitBase+10),show_9_10);
+// QDOAS ???   ShowWindow(GetDlgItem(hwndSlit,slitBase+11),voigtAction);
+// QDOAS ???   ShowWindow(GetDlgItem(hwndSlit,slitBase+12),voigtAction);
+// QDOAS ???
+// QDOAS ???   // Hide deconvolution fields if the convolution slit function type is wavelength dependent
+// QDOAS ???
+// QDOAS ???   if ((slitBase==TOOL_CONVOLUTION_TYPE) || (slitBase==TOOL_DECONVOLUTION_TYPE))
+// QDOAS ???    {
+// QDOAS ???    	action=((XSCONV_buffer.slitConv.slitType==SLIT_TYPE_GAUSS_FILE) ||
+// QDOAS ???         	   (XSCONV_buffer.slitConv.slitType==SLIT_TYPE_INVPOLY_FILE) ||
+// QDOAS ???    	        (XSCONV_buffer.slitConv.slitType==SLIT_TYPE_ERF_FILE))?SW_HIDE:SW_SHOW;
+// QDOAS ???
+// QDOAS ???     ShowWindow(GetDlgItem(hwndSlit,TOOL_DECONVOLUTION_GROUP),action);
+// QDOAS ???     ShowWindow(GetDlgItem(hwndSlit,TOOL_DECONVOLUTION_TYPE),action);
+// QDOAS ???     ShowWindow(GetDlgItem(hwndSlit,TOOL_DECONVOLUTION_SLIT_TYPE),action);
+// QDOAS ???
+// QDOAS ???     if (action==SW_HIDE)
+// QDOAS ???      {
+// QDOAS ???       ShowWindow(GetDlgItem(hwndSlit,TOOL_DECONVOLUTION_GAUSS_WIDTH_TEXT),SW_HIDE);
+// QDOAS ???       ShowWindow(GetDlgItem(hwndSlit,TOOL_DECONVOLUTION_GAUSS_WIDTH),SW_HIDE);
+// QDOAS ???       ShowWindow(GetDlgItem(hwndSlit,TOOL_DECONVOLUTION_GAUSS_WIDTH_NM),SW_HIDE);
+// QDOAS ???
+// QDOAS ???       ShowWindow(GetDlgItem(hwndSlit,TOOL_DECONVOLUTION_INVPOLY_TEXT),SW_HIDE);
+// QDOAS ???       ShowWindow(GetDlgItem(hwndSlit,TOOL_DECONVOLUTION_INVPOLY),SW_HIDE);
+// QDOAS ???       ShowWindow(GetDlgItem(hwndSlit,TOOL_DECONVOLUTION_INVPOLY_2),SW_HIDE);
+// QDOAS ???
+// QDOAS ???       ShowWindow(GetDlgItem(hwndSlit,TOOL_DECONVOLUTION_SLIT_BUTTON),SW_HIDE);
+// QDOAS ???       ShowWindow(GetDlgItem(hwndSlit,TOOL_DECONVOLUTION_SLIT_FILE),SW_HIDE);
+// QDOAS ???
+// QDOAS ???       ShowWindow(GetDlgItem(hwndSlit,TOOL_DECONVOLUTION_SLIT_FILE),SW_HIDE);
+// QDOAS ???       ShowWindow(GetDlgItem(hwndSlit,TOOL_DECONVOLUTION_VOIGT_RGAUSS_TEXT),SW_HIDE);
+// QDOAS ???       ShowWindow(GetDlgItem(hwndSlit,TOOL_DECONVOLUTION_VOIGT_RGAUSS),SW_HIDE);
+// QDOAS ???       ShowWindow(GetDlgItem(hwndSlit,TOOL_DECONVOLUTION_VOIGT_RRATIO_TEXT),SW_HIDE);
+// QDOAS ???       ShowWindow(GetDlgItem(hwndSlit,TOOL_DECONVOLUTION_VOIGT_RRATIO),SW_HIDE);
+// QDOAS ???      }
+// QDOAS ???    }
+// QDOAS ???  }
+// QDOAS ???
+// QDOAS ??? // -----------------------------------------------------------------------------
+// QDOAS ??? // FUNCTION        XsconvSlitInit
+// QDOAS ??? // -----------------------------------------------------------------------------
+// QDOAS ??? // PURPOSE         WM_INIT message processing
+// QDOAS ??? //
+// QDOAS ??? // INPUT           hwndSlit : the handle to the current tab page
+// QDOAS ??? // -----------------------------------------------------------------------------
+// QDOAS ???
+// QDOAS ??? void XsconvSlitInit(HWND hwndSlit)
+// QDOAS ???  {
+// QDOAS ???   // Declarations
+// QDOAS ???
+// QDOAS ???   UCHAR string[MAX_ITEM_TEXT_LEN+1];                                            // string for float fields
+// QDOAS ???   HWND  hwndConv,hwndDConv;                                                     // handles to convolution and deconvolution fields
+// QDOAS ???   SLIT *pSlitConv,*pSlitDConv;                                                  // resp. convolution and deconvolution options
+// QDOAS ???   INDEX indexItem;                                                              // index to browse items to fill comboboxes
+// QDOAS ???
+// QDOAS ???   // Initializations
+// QDOAS ???
+// QDOAS ???   pSlitConv=&XSCONV_buffer.slitConv;
+// QDOAS ???   pSlitDConv=&XSCONV_buffer.slitDConv;
+// QDOAS ???
+// QDOAS ???   hwndConv=GetDlgItem(hwndSlit,TOOL_CONVOLUTION_TYPE);
+// QDOAS ???   hwndDConv=GetDlgItem(hwndSlit,TOOL_DECONVOLUTION_TYPE);
+// QDOAS ???
+// QDOAS ???   // Resize the tab page
+// QDOAS ???
+// QDOAS ???   XsconvTabReSize(GetParent(hwndSlit),hwndSlit);
+// QDOAS ???
+// QDOAS ???   // Set the slit function type
+// QDOAS ???
+// QDOAS ???   for (indexItem=0;indexItem<SLIT_TYPE_GAUSS_T_FILE;indexItem++)
+// QDOAS ???    {
+// QDOAS ???     SendMessage(hwndConv,CB_ADDSTRING,0,(LPARAM)XSCONV_slitTypes[indexItem]);
+// QDOAS ???     if (indexItem<SLIT_TYPE_GAUSS_FILE)
+// QDOAS ???      SendMessage(hwndDConv,CB_ADDSTRING,0,(LPARAM)XSCONV_slitTypes[indexItem]);
+// QDOAS ???    }
+// QDOAS ???
+// QDOAS ???   SendMessage(hwndConv,CB_SETCURSEL,(WPARAM)pSlitConv->slitType,0);
+// QDOAS ???   SendMessage(hwndDConv,CB_SETCURSEL,(WPARAM)pSlitDConv->slitType,0);
+// QDOAS ???
+// QDOAS ???   // Fill edit controls
+// QDOAS ???
+// QDOAS ???   SetWindowText(GetDlgItem(hwndSlit,TOOL_CONVOLUTION_SLIT_FILE),pSlitConv->slitFile);
+// QDOAS ???   sprintf(string,"%g",pSlitConv->slitParam);
+// QDOAS ???   SetWindowText(GetDlgItem(hwndSlit,TOOL_CONVOLUTION_GAUSS_WIDTH),string);
+// QDOAS ???   sprintf(string,"%g",pSlitConv->slitParam2);
+// QDOAS ???   SetWindowText(GetDlgItem(hwndSlit,TOOL_CONVOLUTION_INVPOLY),string);
+// QDOAS ???   sprintf(string,"%g",pSlitConv->slitParam3);
+// QDOAS ???   SetWindowText(GetDlgItem(hwndSlit,TOOL_CONVOLUTION_VOIGT_RGAUSS),string);
+// QDOAS ???   sprintf(string,"%g",pSlitConv->slitParam4);
+// QDOAS ???   SetWindowText(GetDlgItem(hwndSlit,TOOL_CONVOLUTION_VOIGT_RRATIO),string);
+// QDOAS ???   SetWindowText(GetDlgItem(hwndSlit,TOOL_DECONVOLUTION_SLIT_FILE),pSlitDConv->slitFile);
+// QDOAS ???   sprintf(string,"%g",pSlitDConv->slitParam);
+// QDOAS ???   SetWindowText(GetDlgItem(hwndSlit,TOOL_DECONVOLUTION_GAUSS_WIDTH),string);
+// QDOAS ???   sprintf(string,"%g",pSlitDConv->slitParam2);
+// QDOAS ???   SetWindowText(GetDlgItem(hwndSlit,TOOL_DECONVOLUTION_INVPOLY),string);
+// QDOAS ???   sprintf(string,"%g",pSlitDConv->slitParam3);
+// QDOAS ???   SetWindowText(GetDlgItem(hwndSlit,TOOL_DECONVOLUTION_VOIGT_RGAUSS),string);
+// QDOAS ???   sprintf(string,"%g",pSlitDConv->slitParam4);
+// QDOAS ???   SetWindowText(GetDlgItem(hwndSlit,TOOL_DECONVOLUTION_VOIGT_RRATIO),string);
+// QDOAS ???
+// QDOAS ???   // Show/Hide File/Gauss fields
+// QDOAS ???
+// QDOAS ???   XSCONV_SlitType(hwndSlit,TOOL_CONVOLUTION_TYPE,pSlitConv,pSlitDConv);
+// QDOAS ???   XSCONV_SlitType(hwndSlit,TOOL_DECONVOLUTION_TYPE,pSlitDConv,pSlitConv);
+// QDOAS ???  }
+// QDOAS ???
+// QDOAS ??? // -----------------------------------------------------------------------------
+// QDOAS ??? // FUNCTION        XsconvSlitCommand
+// QDOAS ??? // -----------------------------------------------------------------------------
+// QDOAS ??? // PURPOSE         WM_COMMAND message processing
+// QDOAS ??? //
+// QDOAS ??? // INPUT           usual syntax for windows messages routines
+// QDOAS ??? // -----------------------------------------------------------------------------
+// QDOAS ???
+// QDOAS ??? LRESULT CALLBACK XsconvSlitCommand(HWND hwndSlit,UINT msg,WPARAM mp1,LPARAM mp2)
+// QDOAS ???  {
+// QDOAS ???   switch((ULONG)GET_WM_COMMAND_ID(mp1,mp2))
+// QDOAS ???    {
+// QDOAS ???  // ---------------------------------------------------------------------------
+// QDOAS ???     case TOOL_CONVOLUTION_SLIT_BUTTON :
+// QDOAS ???      XSCONV_FileSelection(hwndSlit,XSCONV_buffer.slitConv.slitFile,FILE_TYPE_SLIT,FILE_MODE_OPEN,TOOL_CONVOLUTION_SLIT_FILE,0);
+// QDOAS ???     break;
+// QDOAS ???  // ---------------------------------------------------------------------------
+// QDOAS ???     case TOOL_DECONVOLUTION_SLIT_BUTTON :
+// QDOAS ???      XSCONV_FileSelection(hwndSlit,XSCONV_buffer.slitDConv.slitFile,FILE_TYPE_SLIT,FILE_MODE_OPEN,TOOL_DECONVOLUTION_SLIT_FILE,0);
+// QDOAS ???     break;
+// QDOAS ???  // ---------------------------------------------------------------------------
+// QDOAS ???     case TOOL_CONVOLUTION_TYPE :
+// QDOAS ???      XSCONV_SlitType(hwndSlit,TOOL_CONVOLUTION_TYPE,&XSCONV_buffer.slitConv,&XSCONV_buffer.slitDConv);
+// QDOAS ???      XSCONV_SlitType(hwndSlit,TOOL_DECONVOLUTION_TYPE,&XSCONV_buffer.slitDConv,&XSCONV_buffer.slitConv);
+// QDOAS ???     break;
+// QDOAS ???  // ---------------------------------------------------------------------------
+// QDOAS ???     case TOOL_DECONVOLUTION_TYPE :
+// QDOAS ???      XSCONV_SlitType(hwndSlit,TOOL_CONVOLUTION_TYPE,&XSCONV_buffer.slitConv,&XSCONV_buffer.slitDConv);
+// QDOAS ???      XSCONV_SlitType(hwndSlit,TOOL_DECONVOLUTION_TYPE,&XSCONV_buffer.slitDConv,&XSCONV_buffer.slitConv);
+// QDOAS ???     break;
+// QDOAS ???  // ---------------------------------------------------------------------------
+// QDOAS ???    }
+// QDOAS ???
+// QDOAS ???   return 0;
+// QDOAS ???  }
+// QDOAS ???
+// QDOAS ??? // -----------------------------------------------------------------------------
+// QDOAS ??? // FUNCTION        XsconvSlitDestroy
+// QDOAS ??? // -----------------------------------------------------------------------------
+// QDOAS ??? // PURPOSE         WM_DESTROY message processing
+// QDOAS ??? //
+// QDOAS ??? // INPUT           hwndSlit : the handle to the current tab page
+// QDOAS ??? // -----------------------------------------------------------------------------
+// QDOAS ???
+// QDOAS ??? void XsconvSlitDestroy(HWND hwndSlit)
+// QDOAS ???  {
+// QDOAS ???  	// Declaration
+// QDOAS ???
+// QDOAS ???   UCHAR string[MAX_ITEM_TEXT_LEN+1];                                            // string for float fields
+// QDOAS ???
+// QDOAS ???   // Get the type of slit function
+// QDOAS ???
+// QDOAS ???   XSCONV_buffer.slitConv.slitType=(UCHAR)SendMessage(GetDlgItem(hwndSlit,TOOL_CONVOLUTION_TYPE),CB_GETCURSEL,0,0);
+// QDOAS ???   XSCONV_buffer.slitDConv.slitType=(UCHAR)SendMessage(GetDlgItem(hwndSlit,TOOL_DECONVOLUTION_TYPE),CB_GETCURSEL,0,0);
+// QDOAS ???
+// QDOAS ???   // Convolution options
+// QDOAS ???
+// QDOAS ???   memset(string,0,MAX_ITEM_TEXT_LEN+1);
+// QDOAS ???   GetWindowText(GetDlgItem(hwndSlit,TOOL_CONVOLUTION_GAUSS_WIDTH),string,MAX_ITEM_TEXT_LEN);
+// QDOAS ???   XSCONV_buffer.slitConv.slitParam=fabs(atof(string));
+// QDOAS ???   GetWindowText(GetDlgItem(hwndSlit,TOOL_CONVOLUTION_INVPOLY),string,MAX_ITEM_TEXT_LEN);
+// QDOAS ???   XSCONV_buffer.slitConv.slitParam2=fabs(atof(string));
+// QDOAS ???   GetWindowText(GetDlgItem(hwndSlit,TOOL_CONVOLUTION_VOIGT_RGAUSS),string,MAX_ITEM_TEXT_LEN);
+// QDOAS ???   XSCONV_buffer.slitConv.slitParam3=fabs(atof(string));
+// QDOAS ???   GetWindowText(GetDlgItem(hwndSlit,TOOL_CONVOLUTION_VOIGT_RRATIO),string,MAX_ITEM_TEXT_LEN);
+// QDOAS ???   XSCONV_buffer.slitConv.slitParam4=fabs(atof(string));
+// QDOAS ???   GetWindowText(GetDlgItem(hwndSlit,TOOL_CONVOLUTION_SLIT_FILE),XSCONV_buffer.slitConv.slitFile,MAX_PATH_LEN);
+// QDOAS ???
+// QDOAS ???   // Deconvolution options
+// QDOAS ???
+// QDOAS ???   memset(string,0,MAX_ITEM_TEXT_LEN+1);
+// QDOAS ???   GetWindowText(GetDlgItem(hwndSlit,TOOL_DECONVOLUTION_GAUSS_WIDTH),string,MAX_ITEM_TEXT_LEN);
+// QDOAS ???   XSCONV_buffer.slitDConv.slitParam=fabs(atof(string));
+// QDOAS ???   GetWindowText(GetDlgItem(hwndSlit,TOOL_DECONVOLUTION_INVPOLY),string,MAX_ITEM_TEXT_LEN);
+// QDOAS ???   XSCONV_buffer.slitDConv.slitParam2=fabs(atof(string));
+// QDOAS ???   GetWindowText(GetDlgItem(hwndSlit,TOOL_DECONVOLUTION_VOIGT_RGAUSS),string,MAX_ITEM_TEXT_LEN);
+// QDOAS ???   XSCONV_buffer.slitDConv.slitParam3=fabs(atof(string));
+// QDOAS ???   GetWindowText(GetDlgItem(hwndSlit,TOOL_DECONVOLUTION_VOIGT_RRATIO),string,MAX_ITEM_TEXT_LEN);
+// QDOAS ???   XSCONV_buffer.slitDConv.slitParam4=fabs(atof(string));
+// QDOAS ???   GetWindowText(GetDlgItem(hwndSlit,TOOL_DECONVOLUTION_SLIT_FILE),XSCONV_buffer.slitDConv.slitFile,MAX_PATH_LEN);
+// QDOAS ???  }
+// QDOAS ???
+// QDOAS ??? // -----------------------------------------------------------------------------
+// QDOAS ??? // FUNCTION        XSCONV_SlitWndProc
+// QDOAS ??? // -----------------------------------------------------------------------------
+// QDOAS ??? // PURPOSE         dispatch messages from the page related to the slit function
+// QDOAS ??? //
+// QDOAS ??? // INPUT           usual syntax for windows messages routines
+// QDOAS ??? // -----------------------------------------------------------------------------
+// QDOAS ???
+// QDOAS ??? LRESULT CALLBACK XSCONV_SlitWndProc(HWND hwndSlit,UINT msg,WPARAM mp1,LPARAM mp2)
+// QDOAS ???  {
+// QDOAS ???   switch (msg)
+// QDOAS ???    {
+// QDOAS ???  // ---------------------------------------------------------------------------
+// QDOAS ???     case WM_INITDIALOG :
+// QDOAS ???      XsconvSlitInit(hwndSlit);
+// QDOAS ???     break;
+// QDOAS ???  // ---------------------------------------------------------------------------
+// QDOAS ???     case WM_COMMAND :
+// QDOAS ???      XsconvSlitCommand(hwndSlit,msg,mp1,mp2);
+// QDOAS ???     break;
+// QDOAS ???  // ---------------------------------------------------------------------------
+// QDOAS ???     case WM_DESTROY :
+// QDOAS ???      XsconvSlitDestroy(hwndSlit);
+// QDOAS ???     break;
+// QDOAS ???  // ---------------------------------------------------------------------------
+// QDOAS ???    }
+// QDOAS ???
+// QDOAS ???   return 0;
+// QDOAS ???  }
+// QDOAS ???
+// QDOAS ??? // CONVOLUTION DIALOG BOX MESSAGES PROCESSING
+// QDOAS ???
+// QDOAS ??? // -----------------------------------------------------------------------------
+// QDOAS ??? // FUNCTION        XsconvInit
+// QDOAS ??? // -----------------------------------------------------------------------------
+// QDOAS ??? // PURPOSE         initialization of the convolution tools dialog box (WM_INITDIALOG)
+// QDOAS ??? //
+// QDOAS ??? // INPUT           hwndXsconv : the handle to the convolution tools dialog box
+// QDOAS ??? // -----------------------------------------------------------------------------
+// QDOAS ???
+// QDOAS ??? void XsconvInit(HWND hwndXsconv)
+// QDOAS ???  {
+// QDOAS ???   // Declarations
+// QDOAS ???
+// QDOAS ???   TAB_PAGE *pTab;                                                               // pointer to the current tab control
+// QDOAS ???   TC_ITEM tie;                                                                  // attributes of pages in tab control
+// QDOAS ???   HRSRC hrsrc;                                                                  // handle of resource
+// QDOAS ???   HGLOBAL hglb;                                                                 // global handle
+// QDOAS ???   INDEX indexTab;                                                               // tab page number (base 0)
+// QDOAS ???   HWND hwndTab;                                                                 // handle to the current tab page
+// QDOAS ???
+// QDOAS ???   // Center dialog box on parent window
+// QDOAS ???
+// QDOAS ???   DOAS_CenterWindow(hwndXsconv,GetWindow(hwndXsconv,GW_OWNER));
+// QDOAS ???   memcpy(&XSCONV_buffer,&XSCONV_options,sizeof(XSCONV));
+// QDOAS ???
+// QDOAS ???   // Check box
+// QDOAS ???
+// QDOAS ???   CheckDlgButton(hwndXsconv,TOOL_CONVOLUTION_NOCOMMENT,(XSCONV_buffer.noComment!=0)?BST_CHECKED:BST_UNCHECKED);
+// QDOAS ???
+// QDOAS ???   // Initializations
+// QDOAS ???
+// QDOAS ???   hwndTab=GetDlgItem(hwndXsconv,TOOL_CONVOLUTION_TAB);
+// QDOAS ???
+// QDOAS ???   tie.mask=TCIF_TEXT|TCIF_IMAGE;                                                // specify wich members are valid
+// QDOAS ???   tie.iImage=-1;                                                                // no icon is associated to tabs
+// QDOAS ???
+// QDOAS ???   // Browse tab control pages
+// QDOAS ???
+// QDOAS ???   for (indexTab=0;indexTab<TAB_TYPE_XSCONV_MAX;indexTab++)
+// QDOAS ???    {
+// QDOAS ???     pTab=&xsconvTabPages[indexTab];
+// QDOAS ???
+// QDOAS ???     // Insert tab pages
+// QDOAS ???
+// QDOAS ???     tie.pszText=pTab->tabTitle;
+// QDOAS ???     TabCtrl_InsertItem(hwndTab,indexTab,&tie);
+// QDOAS ???
+// QDOAS ???     // Lock resources
+// QDOAS ???
+// QDOAS ???     hrsrc=FindResource(NULL,(LPCTSTR)MAKEINTRESOURCE(pTab->dlgBox),(LPCTSTR)RT_DIALOG);
+// QDOAS ???     hglb=LoadResource(DOAS_hInst,hrsrc);
+// QDOAS ???     pTab->dlgTemp=(DLGTEMPLATE *)LockResource(hglb);
+// QDOAS ???    }
+// QDOAS ???
+// QDOAS ???   // Rebuild files names
+// QDOAS ???
+// QDOAS ???   FILES_RebuildFileName(XSCONV_buffer.calibrationFile,pEngineContext->calibrationFile,1);
+// QDOAS ???   FILES_RebuildFileName(XSCONV_buffer.crossFile,pEngineContext->crossFile,1);
+// QDOAS ???   FILES_RebuildFileName(XSCONV_buffer.path,pEngineContext->path,1);
+// QDOAS ???   FILES_RebuildFileName(XSCONV_buffer.kuruczFile,pEngineContext->kuruczFile,1);
+// QDOAS ???   FILES_RebuildFileName(XSCONV_buffer.slitConv.slitFile,pEngineContext->slitConv.slitFile,1);
+// QDOAS ???   FILES_RebuildFileName(XSCONV_buffer.slitDConv.slitFile,pEngineContext->slitDConv.slitFile,1);
+// QDOAS ???
+// QDOAS ???   // Set first tab page
+// QDOAS ???
+// QDOAS ???   XsconvTabChange(hwndTab);
+// QDOAS ???  }
+// QDOAS ???
+// QDOAS ??? // -----------------------------------------------------------------------------
+// QDOAS ??? // FUNCTION        XsconvNotify
+// QDOAS ??? // -----------------------------------------------------------------------------
+// QDOAS ??? // PURPOSE         WM_NOTIFY message processing
+// QDOAS ??? //
+// QDOAS ??? // INPUT           hwndXsconv : the handle to the convolution tools dialog box
+// QDOAS ??? //                 pHdr       : pointer to the object that sends the notification
+// QDOAS ??? //                              message
+// QDOAS ??? // -----------------------------------------------------------------------------
+// QDOAS ???
+// QDOAS ??? void XsconvNotify(HWND hwndXsconv,NMHDR *pHdr)
+// QDOAS ???  {
+// QDOAS ???   // Notification message processing
+// QDOAS ???
+// QDOAS ???   switch (pHdr->code)
+// QDOAS ???    {
+// QDOAS ???  // ---------------------------------------------------------------------------
+// QDOAS ???     case TCN_SELCHANGE :         // the currently selected tab page has changed
+// QDOAS ???      XsconvTabChange(GetDlgItem(hwndXsconv,TOOL_CONVOLUTION_TAB));
+// QDOAS ???     break;
+// QDOAS ???  // ---------------------------------------------------------------------------
+// QDOAS ???    }
+// QDOAS ???  }
+// QDOAS ???
+// QDOAS ??? // -----------------------------------------------------------------------------
+// QDOAS ??? // FUNCTION        XsconvOK
+// QDOAS ??? // -----------------------------------------------------------------------------
+// QDOAS ??? // PURPOSE         Validate the convolution options on OK command
+// QDOAS ??? //
+// QDOAS ??? // INPUT           hwndXsconv : the handle to the convolution tools dialog box
+// QDOAS ??? // -----------------------------------------------------------------------------
+// QDOAS ???
+// QDOAS ??? void XsconvOK(HWND hwndXsconv)
+// QDOAS ???  {
+// QDOAS ???   // Declarations
+// QDOAS ???
+// QDOAS ???   UCHAR controlName[MAX_ITEM_NAME_LEN+1];                                       // the name of a control
+// QDOAS ???   SLIT *pSlitConv,*pSlitDConv;                                                  // pointers to the convolution and deconvolution slit function options
+// QDOAS ???   PRJCT_FILTER *plFilter,*phFilter;                                             // pointers to the low-pass and high-pass filtering options
+// QDOAS ???   HWND hwndTab;                                                                 // handle to the tab control with the different pages of options
+// QDOAS ???   INDEX indexTab;                                                               // index to the tab page to select in case of bad entry
+// QDOAS ???   RC rc,                                                                        // error code
+// QDOAS ???      idControl;                                                                 // id number of the control to point in case of bad entry
+// QDOAS ???
+// QDOAS ???   // Initializations
+// QDOAS ???
+// QDOAS ???   hwndTab=GetDlgItem(hwndXsconv,TOOL_CONVOLUTION_TAB);
+// QDOAS ???   pSlitConv=&XSCONV_buffer.slitConv;
+// QDOAS ???   pSlitDConv=&XSCONV_buffer.slitDConv;
+// QDOAS ???   plFilter=&XSCONV_buffer.lfilter;
+// QDOAS ???   phFilter=&XSCONV_buffer.hfilter;
+// QDOAS ???   indexTab=ITEM_NONE;
+// QDOAS ???   idControl=ITEM_NONE;
+// QDOAS ???   memset(controlName,0,MAX_ITEM_NAME_LEN+1);
+// QDOAS ???   rc=ERROR_ID_NO;
+// QDOAS ???
+// QDOAS ???   // Get the current page
+// QDOAS ???
+// QDOAS ???   XsconvTabChange(hwndTab);
+// QDOAS ???
+// QDOAS ???   // General options
+// QDOAS ???
+// QDOAS ???   indexTab=TAB_TYPE_XSCONV_GENERAL;
+// QDOAS ???
+// QDOAS ???   if (!strlen(XSCONV_buffer.crossFile))
+// QDOAS ???    {
+// QDOAS ???    	idControl=TOOL_CONVOLUTION_CROSS_FILE;
+// QDOAS ???    	strcpy(controlName,"Input file");
+// QDOAS ???    	rc=IDS_MSGBOX_FIELDEMPTY;
+// QDOAS ???    }
+// QDOAS ???   else if (!strlen(XSCONV_buffer.calibrationFile))
+// QDOAS ???    {
+// QDOAS ???    	idControl=TOOL_CONVOLUTION_CALIBRATION_FILE;
+// QDOAS ???    	strcpy(controlName,"Calibration");
+// QDOAS ???    	rc=IDS_MSGBOX_FIELDEMPTY;
+// QDOAS ???    }
+// QDOAS ???
+// QDOAS ???   // Convolution page
+// QDOAS ???
+// QDOAS ???   if (!rc && (XSCONV_buffer.convolutionType!=CONVOLUTION_TYPE_NONE))
+// QDOAS ???    {
+// QDOAS ???    	indexTab=TAB_TYPE_XSCONV_SLIT;
+// QDOAS ???
+// QDOAS ??? /* !!!
+// QDOAS ???
+// QDOAS ???    	if ((pSlitConv->slitType==SLIT_TYPE_NONE) && (pSlitDConv->slitType==SLIT_TYPE_NONE))
+// QDOAS ???      {
+// QDOAS ???       idControl=TOOL_CONVOLUTION_TYPE;
+// QDOAS ???       strcpy(controlName,"Slit Function type");
+// QDOAS ???       rc=IDS_MSGBOX_FIELDEMPTY;
+// QDOAS ???      }    */
+// QDOAS ???
+// QDOAS ???    	// Convolution
+// QDOAS ???
+// QDOAS ???     if (// !!! (pSlitConv->slitType!=SLIT_TYPE_NONE) &&
+// QDOAS ???         (pSlitConv->slitType!=SLIT_TYPE_GAUSS) &&
+// QDOAS ???         (pSlitConv->slitType!=SLIT_TYPE_INVPOLY) &&
+// QDOAS ???         (pSlitConv->slitType!=SLIT_TYPE_ERF) &&
+// QDOAS ???         (pSlitConv->slitType!=SLIT_TYPE_VOIGT) &&
+// QDOAS ???         (pSlitConv->slitType!=SLIT_TYPE_APOD) &&
+// QDOAS ???         (pSlitConv->slitType!=SLIT_TYPE_APODNBS) && !strlen(pSlitConv->slitFile))
+// QDOAS ???      {
+// QDOAS ???       idControl=TOOL_CONVOLUTION_SLIT_FILE;
+// QDOAS ???       strcpy(controlName,"Convolution slit function file");
+// QDOAS ???       rc=IDS_MSGBOX_FIELDEMPTY;
+// QDOAS ???      }
+// QDOAS ???     else if (((pSlitConv->slitType==SLIT_TYPE_INVPOLY) || (pSlitConv->slitType==SLIT_TYPE_INVPOLY_FILE)) &&
+// QDOAS ???              ((pSlitConv->slitParam2<=(double)0.) ||
+// QDOAS ???               (pSlitConv->slitParam2-floor(pSlitConv->slitParam2)!=(double)0.) ||
+// QDOAS ???               (fmod(pSlitConv->slitParam2,(double)2.)!=(double)0.)))
+// QDOAS ???      {
+// QDOAS ???       idControl=TOOL_CONVOLUTION_INVPOLY;
+// QDOAS ???       strcpy(controlName,"convolution function");
+// QDOAS ???       rc=IDS_MSGBOX_DEGREE_2;
+// QDOAS ???      }
+// QDOAS ???
+// QDOAS ???     // Deconvolution
+// QDOAS ???
+// QDOAS ???     if ((pSlitDConv->slitType!=SLIT_TYPE_FILE) &&
+// QDOAS ???         (pSlitDConv->slitType!=SLIT_TYPE_GAUSS) &&
+// QDOAS ???         (pSlitDConv->slitType!=SLIT_TYPE_INVPOLY) &&
+// QDOAS ???         (pSlitDConv->slitType!=SLIT_TYPE_ERF) &&
+// QDOAS ???         (pSlitDConv->slitType!=SLIT_TYPE_VOIGT) &&
+// QDOAS ???         (pSlitDConv->slitType!=SLIT_TYPE_APOD) &&
+// QDOAS ???         (pSlitDConv->slitType!=SLIT_TYPE_APODNBS) && !strlen(pSlitConv->slitFile))
+// QDOAS ???      {
+// QDOAS ???       idControl=TOOL_DECONVOLUTION_SLIT_FILE;
+// QDOAS ???       strcpy(controlName,"Deconvolution slit function file");
+// QDOAS ???       rc=IDS_MSGBOX_FIELDEMPTY;
+// QDOAS ???      }
+// QDOAS ???     else if (((pSlitDConv->slitType==SLIT_TYPE_INVPOLY) || (pSlitDConv->slitType==SLIT_TYPE_INVPOLY_FILE)) &&
+// QDOAS ???              ((pSlitDConv->slitParam2<=(double)0.) ||
+// QDOAS ???               (pSlitDConv->slitParam2-floor(pSlitDConv->slitParam2)!=(double)0.) ||
+// QDOAS ???               (fmod(pSlitDConv->slitParam2,(double)2.)!=(double)0.)))
+// QDOAS ???      {
+// QDOAS ???       idControl=TOOL_DECONVOLUTION_INVPOLY;
+// QDOAS ???       strcpy(controlName,"deconvolution function");
+// QDOAS ???       rc=IDS_MSGBOX_DEGREE_2;
+// QDOAS ???      }
+// QDOAS ???    }
+// QDOAS ???
+// QDOAS ???   // Low-pass filtering options
+// QDOAS ???
+// QDOAS ???   if (!rc && (plFilter->type!=PRJCT_FILTER_TYPE_NONE))
+// QDOAS ???    {
+// QDOAS ???    	indexTab=TAB_TYPE_XSCONV_FILTER;
+// QDOAS ???
+// QDOAS ???     if (((plFilter->type==PRJCT_FILTER_TYPE_BOXCAR) ||
+// QDOAS ???          (plFilter->type==PRJCT_FILTER_TYPE_TRIANGLE) ||
+// QDOAS ???          (plFilter->type==PRJCT_FILTER_TYPE_SG) ||
+// QDOAS ???          (plFilter->type==PRJCT_FILTER_TYPE_BINOMIAL)) &&
+// QDOAS ???          (plFilter->filterWidth%2!=1))
+// QDOAS ???      {
+// QDOAS ???       idControl=plFilter->type+PRJCT_FILTER_FIELD_FWHM;
+// QDOAS ???       strcpy(controlName,"Filter width");
+// QDOAS ???       rc=IDS_MSGBOX_FILTER_WIDTH;
+// QDOAS ???      }
+// QDOAS ???
+// QDOAS ???     else if ((plFilter->type==PRJCT_FILTER_TYPE_SG) &&
+// QDOAS ???             ((plFilter->filterOrder%2!=0) || (plFilter->filterOrder==0)))
+// QDOAS ???      {
+// QDOAS ???       idControl=plFilter->type+PRJCT_FILTER_FIELD_ORDER;
+// QDOAS ???       strcpy(controlName,"Filter order");
+// QDOAS ???       rc=IDS_MSGBOX_FILTER_ORDER;
+// QDOAS ???      }
+// QDOAS ???     else if ((plFilter->type==PRJCT_FILTER_TYPE_GAUSSIAN) && (plFilter->fwhmWidth<=(double)0.))
+// QDOAS ???      {
+// QDOAS ???       idControl=plFilter->type+PRJCT_FILTER_FIELD_FWHM;
+// QDOAS ???       strcpy(controlName,"Filter width");
+// QDOAS ???       rc=IDS_MSGBOX_POSITIVE;
+// QDOAS ???      }
+// QDOAS ???     else if (plFilter->filterNTimes<=0)
+// QDOAS ???      {
+// QDOAS ???       idControl=plFilter->type+PRJCT_FILTER_FIELD_NITER;
+// QDOAS ???       strcpy(controlName,"Number of iterations");
+// QDOAS ???       rc=IDS_MSGBOX_POSITIVE;
+// QDOAS ???      }
+// QDOAS ???    }
+// QDOAS ???
+// QDOAS ???   // High-pass filtering options
+// QDOAS ???
+// QDOAS ???   if (!rc && (phFilter->type!=PRJCT_FILTER_TYPE_NONE))
+// QDOAS ???    {
+// QDOAS ???    	indexTab=TAB_TYPE_XSCONV_FILTER;
+// QDOAS ???
+// QDOAS ???     if (((phFilter->type==PRJCT_FILTER_TYPE_BOXCAR) ||
+// QDOAS ???          (phFilter->type==PRJCT_FILTER_TYPE_TRIANGLE) ||
+// QDOAS ???          (phFilter->type==PRJCT_FILTER_TYPE_SG) ||
+// QDOAS ???          (phFilter->type==PRJCT_FILTER_TYPE_BINOMIAL)) &&
+// QDOAS ???          (phFilter->filterWidth%2!=1))
+// QDOAS ???      {
+// QDOAS ???       idControl=phFilter->type+PRJCT_FILTER_FIELD_FWHM;
+// QDOAS ???       strcpy(controlName,"Filter width");
+// QDOAS ???       rc=IDS_MSGBOX_FILTER_WIDTH;
+// QDOAS ???      }
+// QDOAS ???
+// QDOAS ???     else if ((phFilter->type==PRJCT_FILTER_TYPE_SG) &&
+// QDOAS ???             ((phFilter->filterOrder%2!=0) || (phFilter->filterOrder==0)))
+// QDOAS ???      {
+// QDOAS ???       idControl=phFilter->type+PRJCT_FILTER_FIELD_ORDER;
+// QDOAS ???       strcpy(controlName,"Filter order");
+// QDOAS ???       rc=IDS_MSGBOX_FILTER_ORDER;
+// QDOAS ???      }
+// QDOAS ???     else if ((phFilter->type==PRJCT_FILTER_TYPE_GAUSSIAN) && (phFilter->fwhmWidth<=(double)0.))
+// QDOAS ???      {
+// QDOAS ???       idControl=phFilter->type+PRJCT_FILTER_FIELD_FWHM;
+// QDOAS ???       strcpy(controlName,"Filter width");
+// QDOAS ???       rc=IDS_MSGBOX_POSITIVE;
+// QDOAS ???      }
+// QDOAS ???     else if (phFilter->filterNTimes<=0)
+// QDOAS ???      {
+// QDOAS ???       idControl=phFilter->type+PRJCT_FILTER_FIELD_NITER;
+// QDOAS ???       strcpy(controlName,"Number of iterations");
+// QDOAS ???       rc=IDS_MSGBOX_POSITIVE;
+// QDOAS ???      }
+// QDOAS ???    }
+// QDOAS ???
+// QDOAS ???   // Send error message
+// QDOAS ???
+// QDOAS ???   if (rc)
+// QDOAS ???    {
+// QDOAS ???     TabCtrl_SetCurSel(hwndTab,indexTab);
+// QDOAS ???     XsconvTabChange(hwndTab);
+// QDOAS ???     MSG_MessageBox(hwndXsconv,idControl,MENU_WINDOWS_TOOL_CONVOLUTION,rc,MB_OK|MB_ICONHAND,controlName);
+// QDOAS ???    }
+// QDOAS ???   else
+// QDOAS ???    {
+// QDOAS ???     XSCONV_buffer.noComment=(UCHAR)(IsDlgButtonChecked(hwndXsconv,TOOL_CONVOLUTION_NOCOMMENT)==BST_CHECKED)?(UCHAR)1:(UCHAR)0;
+// QDOAS ???
+// QDOAS ???     memcpy(&XSCONV_options,&XSCONV_buffer,sizeof(XSCONV));
+// QDOAS ???
+// QDOAS ???     FILES_ChangePath(pEngineContext->calibrationFile,XSCONV_buffer.calibrationFile,1);
+// QDOAS ???     FILES_ChangePath(pEngineContext->crossFile,XSCONV_buffer.crossFile,1);
+// QDOAS ???     FILES_ChangePath(pEngineContext->path,XSCONV_buffer.path,1);
+// QDOAS ???     FILES_ChangePath(pEngineContext->kuruczFile,XSCONV_buffer.kuruczFile,1);
+// QDOAS ???     FILES_ChangePath(pEngineContext->slitConv.slitFile,XSCONV_buffer.slitConv.slitFile,1);
+// QDOAS ???     FILES_ChangePath(pEngineContext->slitDConv.slitFile,XSCONV_buffer.slitDConv.slitFile,1);
+// QDOAS ???
+// QDOAS ???     XSCONV_Convolution(hwndXsconv);
+// QDOAS ???
+// QDOAS ???     if (!TLBAR_bSaveFlag)
+// QDOAS ???      TLBAR_Enable(TRUE);
+// QDOAS ???
+// QDOAS ???     EndDialog(hwndXsconv,TRUE);
+// QDOAS ???    }
+// QDOAS ???  }
+// QDOAS ???

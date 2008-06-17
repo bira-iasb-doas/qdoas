@@ -579,11 +579,11 @@ RC SVD_Dcmp ( double **a, int m, int n, double *w, double **v, double *SigmaSqr,
 // SVD_Free : Release allocated buffers used for SVD decomposition
 // ----------------------------------------------------------------------
 
-void SVD_Free(unsigned char *callingFunctionShort,SVD *pSvd)
+void SVD_Free(UCHAR *callingFunctionShort,SVD *pSvd)
  {
   // Declaration
 
-  unsigned char functionNameShort[MAX_STR_SHORT_LEN+1];
+  UCHAR functionNameShort[MAX_STR_SHORT_LEN+1];
 
   #if defined(__DEBUG_) && __DEBUG_
   DEBUG_FunctionBegin("SVD_Free",DEBUG_FCTTYPE_MEM);
@@ -626,11 +626,11 @@ void SVD_Free(unsigned char *callingFunctionShort,SVD *pSvd)
 // SVD_LocalAlloc : Allocate SVD matrices for the current window
 // --------------------------------------------------------------------
 
-RC SVD_LocalAlloc(unsigned char *callingFunctionShort,SVD *pSvd)
+RC SVD_LocalAlloc(UCHAR *callingFunctionShort,SVD *pSvd)
  {
   // Declarations
 
-  unsigned char functionNameShort[MAX_STR_SHORT_LEN+1];
+  UCHAR functionNameShort[MAX_STR_SHORT_LEN+1];
   INDEX i,j;
   RC rc;
 

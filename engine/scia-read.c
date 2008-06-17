@@ -182,7 +182,7 @@ INT SCIA_ms=0;
 
 typedef struct _sciaOrbitFiles                                                  // description of an orbit
  {
- 	unsigned char sciaFileName[MAX_STR_LEN+1];                                            // the name of the file with a part of the orbit
+ 	UCHAR sciaFileName[MAX_STR_LEN+1];                                            // the name of the file with a part of the orbit
  	info_l1c        sciaPDSInfo;                                                  // all internal information about the PDS file like data offsets etc.
   float *sciaSunRef,*sciaSunWve;                                                // the sun reference spectrum and calibration
   INDEX *sciaLatIndex,*sciaLonIndex,*sciaSzaIndex;                              // indexes of records sorted resp. by latitude, by longitude and by SZA
@@ -220,7 +220,7 @@ void mds_1c_constant_getbin(FILE* unit, mds_1c_constant *var);
 // PURPOSE       Release buffers allocated by SCIAMACHY readout routines
 // -----------------------------------------------------------------------------
 
-void SCIA_ReleaseBuffers(unsigned char format)
+void SCIA_ReleaseBuffers(UCHAR format)
  {
   // Declarations
 
@@ -416,24 +416,24 @@ void SCIA_FromMJD2000ToYMD(double mjd,SHORT_DATE *pDate,struct time *pTime)
   if (SCIA_ms>=1000)
    {
    	SCIA_ms%=1000;
-   	if (++pTime->ti_sec>=(unsigned char)60)
+   	if (++pTime->ti_sec>=(UCHAR)60)
    	 {
-   	 	pTime->ti_sec%=(unsigned char)60;
-   	 	if (++pTime->ti_min>=(unsigned char)60)
+   	 	pTime->ti_sec%=(UCHAR)60;
+   	 	if (++pTime->ti_min>=(UCHAR)60)
      	 {
-     	 	pTime->ti_min%=(unsigned char)60;
-     	 	if (++pTime->ti_hour>=(unsigned char)24)
+     	 	pTime->ti_min%=(UCHAR)60;
+     	 	if (++pTime->ti_hour>=(UCHAR)24)
      	 	 {
-     	 	 	pTime->ti_hour%=(unsigned char)24;
+     	 	 	pTime->ti_hour%=(UCHAR)24;
      	 	 	nDaysInMonth=daysInMonth[pDate->da_mon-1];
-     	 	 	if (((pDate->da_year%4)==0) && (pDate->da_mon==(unsigned char)2))
+     	 	 	if (((pDate->da_year%4)==0) && (pDate->da_mon==(UCHAR)2))
      	 	 	 nDaysInMonth++;
-     	 	 	if (++pDate->da_day>(unsigned char)nDaysInMonth)
+     	 	 	if (++pDate->da_day>(UCHAR)nDaysInMonth)
      	 	 	 {
      	 	 	 	pDate->da_day=1;
-     	 	 	 	if (++pDate->da_mon>(unsigned char)12)
+     	 	 	 	if (++pDate->da_mon>(UCHAR)12)
      	 	 	 	 {
-     	 	 	 	 	pDate->da_mon=(unsigned char)1;
+     	 	 	 	 	pDate->da_mon=(UCHAR)1;
      	 	 	 	 	pDate->da_year++;
      	 	 	 	 }
      	 	 	 }
@@ -635,7 +635,7 @@ RC SciaNadirGeolocations(ENGINE_CONTEXT *pEngineContext,INDEX fileIndex)
   SATELLITE_GEOLOC *pSciaGeoloc;                                                // geolocations in the WinDOAS format
   SCIA_NADIR_STATE *pState;                                                     // pointer to the current state
   SCIA_CLUSDEF *pClusDef;                                                       // pointer to the definition of the cluster with the highest integration time in the current state
-  unsigned long offset;                                                                 // offset of geolocation data from the beginning of file
+  ULONG offset;                                                                 // offset of geolocation data from the beginning of file
   INDEX indexRecord;                                                            // browse records
   INDEX indexObs;                                                               // browse observations in the current NADIR MDS
   INDEX indexState;                                                             // browse states
@@ -759,9 +759,9 @@ RC SciaReadSunRefPDS(ENGINE_CONTEXT *pEngineContext,INDEX fileIndex)
   // Declarations
 
   SCIA_ORBIT_FILE *pOrbitFile;                                                  // pointer to the current orbit
-  unsigned long offset;                                                                 // offset of reference spectra from the beginning of the PDS file
+  ULONG offset;                                                                 // offset of reference spectra from the beginning of the PDS file
   INDEX indexRef;                                                               // browse reference spectra in the file
-  char refId[2];                                                                // id of the reference spectra
+  CHAR refId[2];                                                                // id of the reference spectra
   FILE *fp;                                                                     // pointer to the current file
   INDEX i;                                                                      // browse positions in calibration and reference vectors
   double version;
@@ -876,7 +876,7 @@ RC SciaReadNadirMDSInfo(ENGINE_CONTEXT *pEngineContext,INDEX fileIndex)
   INDEX indexNadirMDS,                                                          // browse NADIR measurement data sets
         indexCluster,                                                           // browse clusters to account for
         indexState;                                                             // index of the current state
-  unsigned long offset;                                                                 // offset in file
+  ULONG offset;                                                                 // offset in file
   RC rc;
 
   // DEBUG                                                                        // return code
@@ -958,7 +958,7 @@ RC SciaReadNadirMDS(ENGINE_CONTEXT *pEngineContext,INDEX indexState,INDEX indexR
   BUFFERS *pBuffers;                                                            // pointer to the buffers part of the engine context
 
   SCIA_ORBIT_FILE *pOrbitFile;                                                  // pointer to the current orbit
-  unsigned long offset;                                                                 // offset from the beginning of file for data to read
+  ULONG offset;                                                                 // offset from the beginning of file for data to read
   SCIA_CLUSTER *pCluster;                                                       // pointer to the current cluster
   SCIA_CLUSDEF *pClusDef;                                                       // pointer to the definition of the cluster in the current state
   INDEX indexCluster;                                                           // browse cluster to read out
@@ -1058,16 +1058,16 @@ RC SCIA_SetPDS(ENGINE_CONTEXT *pEngineContext)
   // Declarations
 
   SCIA_ORBIT_FILE *pOrbitFile;                                                  // pointer to the current orbit
-  unsigned char filePath[MAX_STR_SHORT_LEN+1];
-  unsigned char fileFilter[MAX_STR_SHORT_LEN+1];
-  unsigned char fileExt[MAX_STR_SHORT_LEN+1];
-  unsigned char filePrefix[MAX_STR_SHORT_LEN+1];
+  UCHAR filePath[MAX_STR_SHORT_LEN+1];
+  UCHAR fileFilter[MAX_STR_SHORT_LEN+1];
+  UCHAR fileExt[MAX_STR_SHORT_LEN+1];
+  UCHAR filePrefix[MAX_STR_SHORT_LEN+1];
   struct dirent *fileInfo;
   DIR *hDir;
   INDEX indexFile;
-  unsigned char *ptr,*ptrOld;
+  UCHAR *ptr,*ptrOld;
   INT oldCurrentIndex;
-  unsigned char *_nList[10];
+  UCHAR *_nList[10];
   INT _n;
   RC rc;                                                                        // return code
 
