@@ -98,28 +98,28 @@
 
 PRJCT_RESULTS_FIELDS PRJCT_resultsAscii[PRJCT_RESULTS_ASCII_MAX]=
  {
-  { "Spec No"                     , MEMORY_TYPE_DoasUS, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#4d"      },       // PRJCT_RESULTS_ASCII_SPECNO
+  { "Spec No"                     , MEMORY_TYPE_USHORT, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#4d"      },       // PRJCT_RESULTS_ASCII_SPECNO
   { "Name"                        , MEMORY_TYPE_STRING,             24, ITEM_NONE, ITEM_NONE, "%s"        },       // PRJCT_RESULTS_ASCII_NAME
   { "Date & time (YYYYMMDDhhmmss)", MEMORY_TYPE_STRING,             24, ITEM_NONE, ITEM_NONE, "%s"        },       // PRJCT_RESULTS_ASCII_DATE_TIME
   { "Date (DD/MM/YYYY)"           , MEMORY_TYPE_STRING,             24, ITEM_NONE, ITEM_NONE, "%s"        },       // PRJCT_RESULTS_ASCII_DATE
   { "Time (hh:mm:ss)"             , MEMORY_TYPE_STRING,             24, ITEM_NONE, ITEM_NONE, "%s"        },       // PRJCT_RESULTS_ASCII_TIME
-  { "Year"                        , MEMORY_TYPE_DoasUS, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#4d"      },       // PRJCT_RESULTS_ASCII_YEAR
-  { "Day number"                  , MEMORY_TYPE_DoasUS, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_JULIAN
+  { "Year"                        , MEMORY_TYPE_USHORT, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#4d"      },       // PRJCT_RESULTS_ASCII_YEAR
+  { "Day number"                  , MEMORY_TYPE_USHORT, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_JULIAN
   { "Fractional day"              , MEMORY_TYPE_DOUBLE, sizeof(double), ITEM_NONE, ITEM_NONE, "%#10.6lf"  },       // PRJCT_RESULTS_ASCII_JDFRAC
   { "Fractional time"             , MEMORY_TYPE_DOUBLE, sizeof(double), ITEM_NONE, ITEM_NONE, "%#20.15lf" },       // PRJCT_RESULTS_ASCII_TIFRAC
-  { "Scans"                       , MEMORY_TYPE_DoasUS, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_SCANS
+  { "Scans"                       , MEMORY_TYPE_USHORT, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_SCANS
   { "Tint"                        , MEMORY_TYPE_DOUBLE, sizeof(double), ITEM_NONE, ITEM_NONE, "%#12.6lf"  },       // PRJCT_RESULTS_ASCII_TINT
   { "SZA"                         , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#8.3f"    },       // PRJCT_RESULTS_ASCII_SZA
   { "Chi Square"                  , MEMORY_TYPE_DOUBLE, sizeof(double), ITEM_NONE, ITEM_NONE, "%#12.4le"  },       // PRJCT_RESULTS_ASCII_CHI
   { "RMS"                         , MEMORY_TYPE_DOUBLE, sizeof(double), ITEM_NONE, ITEM_NONE, "%#12.4le"  },       // PRJCT_RESULTS_ASCII_RMS
   { "Solar Azimuth angle"         , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#8.3f"    },       // PRJCT_RESULTS_ASCII_AZIM
   { "Tdet"                        , MEMORY_TYPE_FLOAT , sizeof(double), ITEM_NONE, ITEM_NONE, "%#8.3f"    },       // PRJCT_RESULTS_ASCII_TDET
-  { "Sky Obs"                     , MEMORY_TYPE_DoasUS, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#2d"      },       // PRJCT_RESULTS_ASCII_SKY
+  { "Sky Obs"                     , MEMORY_TYPE_USHORT, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#2d"      },       // PRJCT_RESULTS_ASCII_SKY
   { "Best shift"                  , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#8.3f"    },       // PRJCT_RESULTS_ASCII_BESTSHIFT
   { "Ref SZA"                     , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#8.3f"    },       // PRJCT_RESULTS_ASCII_REFZM
   { "Ref2/Ref1 shift"             , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#8.3f"    },       // PRJCT_RESULTS_ASCII_REFSHIFT
-  { "Pixel number"                , MEMORY_TYPE_DoasUS, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_PIXEL
-  { "Pixel type"                  , MEMORY_TYPE_DoasUS, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_PIXEL_TYPE
+  { "Pixel number"                , MEMORY_TYPE_USHORT, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_PIXEL
+  { "Pixel type"                  , MEMORY_TYPE_USHORT, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_PIXEL_TYPE
   { "Orbit number"                , MEMORY_TYPE_INT   , sizeof(INT)   , ITEM_NONE, ITEM_NONE, "%#8d"      },       // PRJCT_RESULTS_ASCII_ORBIT
   { "Longitude"                   , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#8.3f"    },       // PRJCT_RESULTS_ASCII_LONGIT
   { "Latitude"                    , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#8.3f"    },       // PRJCT_RESULTS_ASCII_LATIT
@@ -127,7 +127,7 @@ PRJCT_RESULTS_FIELDS PRJCT_resultsAscii[PRJCT_RESULTS_ASCII_MAX]=
   { "Covariances"                 , MEMORY_TYPE_DOUBLE, sizeof(double), ITEM_NONE, ITEM_NONE, "%#12.4le"  },       // PRJCT_RESULTS_ASCII_COVAR
   { "Correlations"                , MEMORY_TYPE_DOUBLE, sizeof(double), ITEM_NONE, ITEM_NONE, "%#12.4le"  },       // PRJCT_RESULTS_ASCII_CORR
   { "Cloud fraction"              , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#8.3f"    },       // PRJCT_RESULTS_ASCII_CLOUD
-  { "Index coeff"                 , MEMORY_TYPE_DoasUS, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_COEFF
+  { "Index coeff"                 , MEMORY_TYPE_USHORT, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_COEFF
   { "GDP O3 VCD"                  , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#8.3f"    },       // PRJCT_RESULTS_ASCII_O3
   { "GDP NO2 VCD"                 , MEMORY_TYPE_DOUBLE, sizeof(double), ITEM_NONE, ITEM_NONE, "%#12.4le"  },       // PRJCT_RESULTS_ASCII_NO2
   { "Cloud Top Pressure"          , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#8.3f"    },       // PRJCT_RESULTS_ASCII_CLOUDTOPP
@@ -137,9 +137,9 @@ PRJCT_RESULTS_FIELDS PRJCT_resultsAscii[PRJCT_RESULTS_ASCII_MAX]=
   { "Earth radius"                , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#8.3f"    },       // PRJCT_RESULTS_ASCII_EARTH_RADIUS
   { "Elev. viewing angle"         , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#8.3f"    },       // PRJCT_RESULTS_ASCII_VIEW_ELEVATION
   { "Azim. viewing angle"         , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#8.3f"    },       // PRJCT_RESULTS_ASCII_VIEW_AZIMUTH
-  { "SCIAMACHY Quality Flag"      , MEMORY_TYPE_DoasUS, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_SCIA_QUALITY
-  { "SCIAMACHY State Index"       , MEMORY_TYPE_DoasUS, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_SCIA_STATE_INDEX
-  { "SCIAMACHY State Id"          , MEMORY_TYPE_DoasUS, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_SCIA_STATE_ID
+  { "SCIAMACHY Quality Flag"      , MEMORY_TYPE_USHORT, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_SCIA_QUALITY
+  { "SCIAMACHY State Index"       , MEMORY_TYPE_USHORT, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_SCIA_STATE_INDEX
+  { "SCIAMACHY State Id"          , MEMORY_TYPE_USHORT, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_SCIA_STATE_ID
   { "MFC StartTime (hhmmss)"      , MEMORY_TYPE_STRING,             24, ITEM_NONE, ITEM_NONE, "%s"        },       // PRJCT_RESULTS_ASCII_MFC_STARTTIME
   { "MFC EndTime (hhmmss)"        , MEMORY_TYPE_STRING,             24, ITEM_NONE, ITEM_NONE, "%s"        }        // PRJCT_RESULTS_ASCII_MFC_ENDTIME
  };
@@ -2283,7 +2283,7 @@ void OutputAscPrintTitles(ENGINE_CONTEXT *pEngineContext,FILE *fp)
              fprintf(fp,pField->fieldFormat,&outputColumns[indexField][(indexColumn*pField->fieldDim1+indexLine)*pField->fieldSize]);
             break;
          // -------------------------------------------------------------------------
-            case MEMORY_TYPE_DoasUS :
+            case MEMORY_TYPE_USHORT :
              fprintf(fp,pField->fieldFormat,(DoasUS)((DoasUS *)outputColumns[indexField])[indexColumn*pField->fieldDim1+indexLine]);
             break;
          // -------------------------------------------------------------------------
@@ -2341,7 +2341,7 @@ void OutputAscPrintTitles(ENGINE_CONTEXT *pEngineContext,FILE *fp)
              fprintf(fp,pField2->fieldFormat,&outputColumns[indexField2][indexLine]);
             break;
          // -------------------------------------------------------------------------
-            case MEMORY_TYPE_DoasUS :
+            case MEMORY_TYPE_USHORT :
              fprintf(fp,pField2->fieldFormat,(DoasUS)((DoasUS *)outputColumns[indexField2])[indexLine]);
             break;
          // -------------------------------------------------------------------------
@@ -2406,7 +2406,7 @@ void OutputAscPrintDataSet(FILE *fp,DoasCh **outputData,INT nbRecords)
          fprintf(fp,pField->fieldFormat,&outputData[indexField][indexRecord*pField->fieldSize]);
         break;
      // -------------------------------------------------------------------------
-        case MEMORY_TYPE_DoasUS :
+        case MEMORY_TYPE_USHORT :
          fprintf(fp,pField->fieldFormat,(DoasUS)((DoasUS *)outputData[indexField])[indexRecord]);
         break;
      // -------------------------------------------------------------------------
@@ -3180,7 +3180,7 @@ RC OUTPUT_LocalAlloc(ENGINE_CONTEXT *pEngineContext)
               memset(outputColumns[indexField],0,n*pField->fieldSize);
              break;
           // -------------------------------------------------------------------------
-             case MEMORY_TYPE_DoasUS :
+             case MEMORY_TYPE_USHORT :
               for (i=0;i<n;i++)
                ((DoasUS *)outputColumns[indexField])[i]=9999;
              break;

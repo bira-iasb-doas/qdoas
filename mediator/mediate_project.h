@@ -303,7 +303,7 @@ extern "C" {
 
   struct instrumental_scia {
     int channel;
-    unsigned char clusters[32];                      // flags with cluster number as index
+    char clusters[32];                      // flags with cluster number as index
     char sunReference[4];                            // 2 characters plus terminator
     char calibrationFile[FILENAME_BUFFER_LENGTH];
     char instrFunctionFile[FILENAME_BUFFER_LENGTH];

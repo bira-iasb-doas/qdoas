@@ -89,7 +89,7 @@ RC SetActon_Logger(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
  {
   // Declarations
 
-  char *Record;                                                                 // string buffer for records
+  DoasCh *Record;                                                                 // string buffer for records
   RC rc;                                                                        // return code
 
   // Initializations
@@ -291,12 +291,12 @@ RC ReliActon_Logger(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int
       pRecord=pRecord+2;
       pTemp=strcpy(pTemp,"      \0");
       strncpy(pTemp,pRecord,2);
-      day.da_mon=(char)atoi(pTemp);
+      day.da_mon=(DoasCh)atoi(pTemp);
 
       pRecord=pRecord+2;
       pTemp=strcpy(pTemp,"                    \0");
       strncpy(pTemp,pRecord,2);
-      day.da_day=(char)atoi(pTemp);
+      day.da_day=(DoasCh)atoi(pTemp);
 
       pRecord=pRecord+3;
       strncpy(pRecordInfo->Nom,pRecord,19);
@@ -311,15 +311,15 @@ RC ReliActon_Logger(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int
       pRecord=pRecord+20;
       pTemp=strcpy(pTemp,"                    \0");
       strncpy(pTemp,pRecord,2);
-      pRecordInfo->present_time.ti_hour=(unsigned char)atoi(pTemp);
+      pRecordInfo->present_time.ti_hour=(DoasCh)atoi(pTemp);
       pRecord=pRecord+3;
       pTemp=strcpy(pTemp,"                    \0");
       strncpy(pTemp,pRecord,2);
-      pRecordInfo->present_time.ti_min=(unsigned char)atoi(pTemp);
+      pRecordInfo->present_time.ti_min=(DoasCh)atoi(pTemp);
       pRecord=pRecord+3;
       pTemp=strcpy(pTemp,"                    \0");
       strncpy(pTemp,pRecord,2);
-      pRecordInfo->present_time.ti_sec=(unsigned char)atoi(pTemp);
+      pRecordInfo->present_time.ti_sec=(DoasCh)atoi(pTemp);
       pRecord=pRecord+3;
       pTemp=strcpy(pTemp,"                    \0");
       pRecordInfo->ReguTemp=(float)atof(pRecord);

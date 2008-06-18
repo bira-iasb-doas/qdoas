@@ -369,10 +369,10 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
 
       // Buffers allocation
 
-      if (((spectrum=(DoasUS *)MEMORY_AllocBuffer("ReliCCD_EEV","spectrum",spSize,sizeof(DoasUS),0,MEMORY_TYPE_DoasUS))==NULL) ||
+      if (((spectrum=(DoasUS *)MEMORY_AllocBuffer("ReliCCD_EEV","spectrum",spSize,sizeof(DoasUS),0,MEMORY_TYPE_USHORT))==NULL) ||
           ((tmpSpectrum=(double *)MEMORY_AllocBuffer("ReliCCD_EEV","tmpSpectrum",NDET,sizeof(double),0,MEMORY_TYPE_DOUBLE))==NULL) ||
-          ((darkCurrent=(DoasUS *)MEMORY_AllocBuffer("ReliCCD_EEV","darkCurrent",NDET*400,sizeof(DoasUS),0,MEMORY_TYPE_DoasUS))==NULL) ||
-          ((ccdTabNTint=(DoasUS *)MEMORY_AllocBuffer("ReliCCD_EEV","ccdTabNTint",300,sizeof(DoasUS),0,MEMORY_TYPE_DoasUS))==NULL) ||
+          ((darkCurrent=(DoasUS *)MEMORY_AllocBuffer("ReliCCD_EEV","darkCurrent",NDET*400,sizeof(DoasUS),0,MEMORY_TYPE_USHORT))==NULL) ||
+          ((ccdTabNTint=(DoasUS *)MEMORY_AllocBuffer("ReliCCD_EEV","ccdTabNTint",300,sizeof(DoasUS),0,MEMORY_TYPE_USHORT))==NULL) ||
           ((ccdTabTint=(double *)MEMORY_AllocBuffer("ReliCCD_EEV","ccdTabTint",300,sizeof(double),0,MEMORY_TYPE_DOUBLE))==NULL))
 
        rc=ERROR_ID_ALLOC;
@@ -751,8 +751,8 @@ RC ReliCCD(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay
 
   // Buffers allocation
 
-  else if (((ISpectre=(DoasUS *)MEMORY_AllocBuffer("ReliCCD","ISpectre",NDET,sizeof(DoasUS),0,MEMORY_TYPE_DoasUS))==NULL) ||
-           ((ISpecMax=(DoasUS *)MEMORY_AllocBuffer("ReliCCD","ISpecMax",2000,sizeof(DoasUS),0,MEMORY_TYPE_DoasUS))==NULL))
+  else if (((ISpectre=(DoasUS *)MEMORY_AllocBuffer("ReliCCD","ISpectre",NDET,sizeof(DoasUS),0,MEMORY_TYPE_USHORT))==NULL) ||
+           ((ISpecMax=(DoasUS *)MEMORY_AllocBuffer("ReliCCD","ISpecMax",2000,sizeof(DoasUS),0,MEMORY_TYPE_USHORT))==NULL))
 
      rc=ERROR_ID_ALLOC;
   else
@@ -898,11 +898,11 @@ RC ReliCCDTrack(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loc
 
   // Buffers allocation
 
-  else if (((ISpectre=(DoasUS *)MEMORY_AllocBuffer("ReliCCDTrack","ISpectre",NDET,sizeof(DoasUS),0,MEMORY_TYPE_DoasUS))==NULL) ||
-           ((ISpecMax=(DoasUS *)MEMORY_AllocBuffer("ReliCCDTrack","ISpecMax",2000,sizeof(DoasUS),0,MEMORY_TYPE_DoasUS))==NULL) ||
+  else if (((ISpectre=(DoasUS *)MEMORY_AllocBuffer("ReliCCDTrack","ISpectre",NDET,sizeof(DoasUS),0,MEMORY_TYPE_USHORT))==NULL) ||
+           ((ISpecMax=(DoasUS *)MEMORY_AllocBuffer("ReliCCDTrack","ISpecMax",2000,sizeof(DoasUS),0,MEMORY_TYPE_USHORT))==NULL) ||
            ((MaxTrk=(float *)MEMORY_AllocBuffer("ReliCCDTrack","MaxTrk",44,sizeof(float),0,MEMORY_TYPE_FLOAT))==NULL) ||
            ((varPix=(double *)MEMORY_AllocBuffer("ReliCCDTrack","varPix",NDET,sizeof(double),0,MEMORY_TYPE_DOUBLE))==NULL) ||
-           ((TabTint=(float *)MEMORY_AllocBuffer("ReliCCDTrack","TabTint",300,sizeof(float),0,MEMORY_TYPE_DoasUS))==NULL) ||
+           ((TabTint=(float *)MEMORY_AllocBuffer("ReliCCDTrack","TabTint",300,sizeof(float),0,MEMORY_TYPE_USHORT))==NULL) ||
            ((TabNSomme=(int *)MEMORY_AllocBuffer("ReliCCDTrack","TabNSomme",300,sizeof(int),0,MEMORY_TYPE_INT))==NULL))
 
    rc=ERROR_ID_ALLOC;

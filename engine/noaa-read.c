@@ -380,7 +380,7 @@ RC SetNOAA(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
   else if (!(fileLength=STD_FileLength(specFp)))
    rc=ERROR_SetLast("SetNOAA",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pEngineContext->fileInfo.fileName);
   else if ((pEngineContext->buffers.recordIndexes=(DoasU32 *)MEMORY_AllocBuffer("SetNOAA","recordIndexes",
-           (pEngineContext->recordIndexesSize=(int)(fileLength/NOAA_OFFSET+2L)),sizeof(DoasU32),0,MEMORY_TYPE_DoasI32))==NULL)
+           (pEngineContext->recordIndexesSize=(int)(fileLength/NOAA_OFFSET+2L)),sizeof(DoasU32),0,MEMORY_TYPE_ULONG))==NULL)
    rc=ERROR_ID_ALLOC;
   else
    {

@@ -229,7 +229,7 @@ RC ReliEASOE(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localD
 
   // Buffers allocation
 
-  else if ((ISpecMax=(DoasUS *)MEMORY_AllocBuffer("ReliEASOE","ISpecMax",2000,sizeof(DoasUS),0,MEMORY_TYPE_DoasUS))==NULL)
+  else if ((ISpecMax=(DoasUS *)MEMORY_AllocBuffer("ReliEASOE","ISpecMax",2000,sizeof(DoasUS),0,MEMORY_TYPE_USHORT))==NULL)
    rc=ERROR_ID_ALLOC;
   else
    {

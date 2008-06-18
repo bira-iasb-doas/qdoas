@@ -965,10 +965,6 @@ enum treeItemTypes
 // Data to collect per type of tree node
 // -------------------------------------
 
-#if !defined(__WINDOAS_GUI_) || !(__WINDOAS_GUI_)
-typedef DoasI32 HTREEITEM;
-#endif
-
 typedef struct _treeItemType
  {
   INT     contextMenu;                      // context (or shortcut) menu to load from resources
@@ -1000,7 +996,6 @@ typedef struct _treeItem
   INDEX     lastChildItem;                  // index of the first child in list
   INDEX     prevItem;                       // index of previous item in list
   INDEX     nextItem;                       // index of the next item in list
-  HTREEITEM hti;                            // handle of the item in tree
   INT       dataType;                       // type of data
   INDEX     dataIndex;                      // index of data in data list referenced by data type
   INT       useCount;                       // the number of times the item is referenced

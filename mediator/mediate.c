@@ -1427,12 +1427,22 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
       break;
     }
 
-  if (!rc && ((THRD_id==THREAD_TYPE_KURUCZ) || useKurucz) &&
-     !(rc=KURUCZ_Alloc(&pEngineContext->project,pEngineContext->buffers.lambda,indexKurucz,lambdaMin,lambdaMax)) &&
-     !(rc=KURUCZ_Reference(pEngineContext->buffers.instrFunction,0,saveFlag,1,responseHandle)) &&
+  if (!rc &&
+     (!useKurucz || (((THRD_id==THREAD_TYPE_KURUCZ) || useKurucz) &&
+                     !(rc=KURUCZ_Alloc(&pEngineContext->project,pEngineContext->buffers.lambda,indexKurucz,lambdaMin,lambdaMax)) &&
+                     !(rc=KURUCZ_Reference(pEngineContext->buffers.instrFunction,0,saveFlag,1,responseHandle)))) &&
      !(rc=ANALYSE_AlignReference(0,saveFlag,responseHandle)))
+   {
+    #if defined(__DEBUG_) && __DEBUG_ && __DEBUG_DOAS_OUTPUT_
+    DEBUG_Start(ENGINE_dbgFile,"OUTPUT_RegisterData",DEBUG_FCTTYPE_FILE,5,DEBUG_DVAR_YES,1);
+    #endif
 
-   rc=OUTPUT_RegisterData(pEngineContext);
+    rc=OUTPUT_RegisterData(pEngineContext);
+
+    #if defined(__DEBUG_) && __DEBUG_ && __DEBUG_DOAS_OUTPUT_
+    DEBUG_Stop("OUTPUT_RegisterData");
+    #endif
+   }
 
   if (!rc && useUsamp &&
       !(rc=USAMP_GlobalAlloc(lambdaMin,lambdaMax,NDET)) &&

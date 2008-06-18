@@ -3,6 +3,7 @@
 <qresource>
 
     <file>icons/logo.png</file>
+    <file>images/splash.png</file>
     <file>images/about_logo.png</file>
 
     <file>icons/file_open_16.png</file>

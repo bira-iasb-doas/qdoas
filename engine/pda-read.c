@@ -661,11 +661,11 @@ RC ReliPDA_EGG(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
 
   // Buffers allocation
 
-  else if (((ISpectre=(DoasUS *)MEMORY_AllocBuffer("ReliPDA_EGG ","ISpectre",NDET,sizeof(DoasUS),0,MEMORY_TYPE_DoasUS))==NULL) ||
+  else if (((ISpectre=(DoasUS *)MEMORY_AllocBuffer("ReliPDA_EGG ","ISpectre",NDET,sizeof(DoasUS),0,MEMORY_TYPE_USHORT))==NULL) ||
            ((ObsScan=(double *)MEMORY_AllocBuffer("ReliPDA_EGG ","ObsScan",NDET,sizeof(double),0,MEMORY_TYPE_DOUBLE))==NULL) ||
-           ((ISpecMax=(DoasUS *)MEMORY_AllocBuffer("ReliPDA_EGG ","ISpecMax",2000,sizeof(DoasUS),0,MEMORY_TYPE_DoasUS))==NULL) ||
+           ((ISpecMax=(DoasUS *)MEMORY_AllocBuffer("ReliPDA_EGG ","ISpecMax",2000,sizeof(DoasUS),0,MEMORY_TYPE_USHORT))==NULL) ||
            ((TabTint=(float *)MEMORY_AllocBuffer("ReliPDA_EGG ","TabTint",300,sizeof(float),0,MEMORY_TYPE_FLOAT))==NULL) ||
-           ((TabNSomme=(DoasUS *)MEMORY_AllocBuffer("ReliPDA_EGG ","TabNSomme",300,sizeof(DoasUS),0,MEMORY_TYPE_DoasUS))==NULL))
+           ((TabNSomme=(DoasUS *)MEMORY_AllocBuffer("ReliPDA_EGG ","TabNSomme",300,sizeof(DoasUS),0,MEMORY_TYPE_USHORT))==NULL))
 
    rc=ERROR_ID_ALLOC;
 

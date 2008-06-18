@@ -1020,7 +1020,7 @@ RC ThrdInitSpecInfo(ENGINE_CONTEXT *pEngineContext,PROJECT *pProject)
             (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_PDAEGG_ULB) ||
             (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_PDASI_EASOE)) &&
 
-           ((pBuffers->recordIndexes=(DoasU32 *)MEMORY_AllocBuffer("ThrdInitSpecInfo ","recordIndexes",2001,sizeof(DoasU32),0,MEMORY_TYPE_DoasI32))==NULL)) ||
+           ((pBuffers->recordIndexes=(DoasU32 *)MEMORY_AllocBuffer("ThrdInitSpecInfo ","recordIndexes",2001,sizeof(DoasU32),0,MEMORY_TYPE_ULONG))==NULL)) ||
 
           (((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_GDP_ASCII) ||
             (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN) ||

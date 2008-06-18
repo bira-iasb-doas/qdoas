@@ -219,8 +219,8 @@ extern "C" {
 
 // typedef struct _AnalyseNonLinearParameters
 //  {
-//  	unsigned char symbolName[MAX_ITEM_TEXT_LEN+1];
-//  	unsigned char crossFileName[MAX_ITEM_TEXT_LEN+1];
+//  	char symbolName[MAX_ITEM_TEXT_LEN+1];
+//  	char crossFileName[MAX_ITEM_TEXT_LEN+1];
 //  	int fitFlag;
 //  	double initialValue;
 //  	double deltaValue;
@@ -336,8 +336,8 @@ extern "C" {
 
 // typedef struct _AnalyseNonLinearParameters
 //  {
-//  	unsigned char symbolName[MAX_ITEM_TEXT_LEN+1];
-//  	unsigned char crossFileName[MAX_ITEM_TEXT_LEN+1];
+//  	char symbolName[MAX_ITEM_TEXT_LEN+1];
+//  	char crossFileName[MAX_ITEM_TEXT_LEN+1];
 //  	int fitFlag;
 //  	double initialValue;
 //  	double deltaValue;
@@ -388,7 +388,7 @@ extern "C" {
   typedef struct data_select_list
   {
     int nSelected;
-    unsigned char selected[256];
+    char selected[256];
   } data_select_list_t;
 
 #if defined(_cplusplus) || defined(__cplusplus)

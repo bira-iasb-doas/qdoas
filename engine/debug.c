@@ -278,7 +278,7 @@ void DEBUG_PrintVar(DoasCh *message,...)
               fprintf(fp,"%-6d\t",(int)pVar->varData.shortArray[indexCol][indexNewLine]);
              break;
           // -------------------------------------------------------------------
-             case MEMORY_TYPE_DoasUS : // unsigned short
+             case MEMORY_TYPE_USHORT : // unsigned short
               fprintf(fp,"%-6d\t",(int)pVar->varData.ushortArray[indexCol][indexNewLine]);
              break;
           // -------------------------------------------------------------------
@@ -286,7 +286,7 @@ void DEBUG_PrintVar(DoasCh *message,...)
               fprintf(fp,"%-6d\t",(int)pVar->varData.intArray[indexCol][indexNewLine]);
              break;
           // -------------------------------------------------------------------
-             case MEMORY_TYPE_DoasI32 : // long
+             case MEMORY_TYPE_LONG : // long
               fprintf(fp,"%-6ld\t",pVar->varData.longArray[indexCol][indexNewLine]);
              break;
           // -------------------------------------------------------------------
@@ -311,7 +311,7 @@ void DEBUG_PrintVar(DoasCh *message,...)
              fprintf(fp,"%-6d\t",(int)pVar->varData.shortVector[indexNewLine]);
             break;
          // --------------------------------------------------------------------
-            case MEMORY_TYPE_DoasUS : // unsigned short
+            case MEMORY_TYPE_USHORT : // unsigned short
              fprintf(fp,"%-6d\t",(int)pVar->varData.ushortVector[indexNewLine]);
             break;
          // --------------------------------------------------------------------
@@ -319,7 +319,7 @@ void DEBUG_PrintVar(DoasCh *message,...)
              fprintf(fp,"%-6d\t",(int)pVar->varData.intVector[indexNewLine]);
             break;
          // --------------------------------------------------------------------
-            case MEMORY_TYPE_DoasI32 : // long
+            case MEMORY_TYPE_LONG : // long
              fprintf(fp,"%-6ld\t",pVar->varData.longVector[indexNewLine]);
             break;
          // --------------------------------------------------------------------

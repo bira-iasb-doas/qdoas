@@ -439,9 +439,9 @@ enum _memoryTypes
  	MEMORY_TYPE_PTR,                                                              // pointer
  	MEMORY_TYPE_STRING,                                                           // character/string
  	MEMORY_TYPE_SHORT,                                                            // short
- 	MEMORY_TYPE_DoasUS,                                                           // unsigned short
+ 	MEMORY_TYPE_USHORT,                                                           // unsigned short
  	MEMORY_TYPE_INT,                                                              // integer
- 	MEMORY_TYPE_DoasI32,                                                             // long
+ 	MEMORY_TYPE_LONG,                                                             // long
  	MEMORY_TYPE_FLOAT,                                                            // float
  	MEMORY_TYPE_DOUBLE,                                                           // double
  	MEMORY_TYPE_STRUCT,                                                           // structure
@@ -449,7 +449,7 @@ enum _memoryTypes
  };
 
 #define MEMORY_TYPE_INDEX MEMORY_TYPE_INT
-#define MEMORY_TYPE_DoasU32 MEMORY_TYPE_DoasI32
+#define MEMORY_TYPE_ULONG MEMORY_TYPE_LONG
 #define MEMORY_TYPE_UINT  MEMORY_TYPE_INT
 
 // Information on allocated objects
