@@ -133,7 +133,8 @@ void CQdoasConfigWriter::writeProjects(FILE *fp)
       properties = CWorkSpace::instance()->findProject(projName);
       if (properties != NULL) {
 	// write the project data
-	fprintf(fp, "  <project name=\"%s\">\n", projName.toAscii().constData());
+	fprintf(fp, "  <project name=\"%s\" disable=\"%s\">\n", projName.toAscii().constData(),
+		(projItem->isEnabled() ? sFalse : sTrue));
 	writeProperties(fp, properties);
 
 	// Analysis Windows ...
@@ -982,7 +983,8 @@ void CQdoasConfigWriter::writeAnalysisWindows(FILE *fp, const QString &projectNa
       properties = CWorkSpace::instance()->findAnalysisWindow(projectName, awName);
       if (properties != NULL) {
 
-	fprintf(fp, "    <analysis_window name=\"%s\" kurucz=", awName.toAscii().constData());
+	fprintf(fp, "    <analysis_window name=\"%s\" disable=\"%s\" kurucz=", awName.toAscii().constData(),
+		(awItem->isEnabled() ? sFalse : sTrue));
 
 	switch (properties->kuruczMode) {
 	case ANLYS_KURUCZ_REF:

@@ -42,6 +42,8 @@ bool CAnalysisWindowSubHandler::start(const QXmlAttributes &atts)
   if (!m_item->setName(atts.value("name")))
     return postErrorMessage("Analysis window name too long.");
 
+  m_item->setEnabled(atts.value("disable") != "true");
+
   QString str = atts.value("kurucz");
   if (str == "ref")
     d->kuruczMode = ANLYS_KURUCZ_REF;

@@ -36,11 +36,15 @@ class CAnalysisWindowConfigItem
   bool setName(const QString &name);
   const QString& name(void) const;
 
+  void setEnabled(bool enabled);
+  bool isEnabled(void) const;
+
   mediate_analysis_window_t* properties(void); // WARNING : allows (by design) poking at the internals ...
   const mediate_analysis_window_t* properties(void) const;
 
  private:
   QString m_name;
+  bool m_enabled;
   mediate_analysis_window_t m_awProp;
 };
 
@@ -53,6 +57,9 @@ class CProjectConfigItem
   void setName(const QString &name);
   const QString& name(void) const;
 
+  void setEnabled(bool enabled);
+  bool isEnabled(void) const;
+
   mediate_project_t* properties(void); // WARNING : allows (by design) poking at the internals ...
   const mediate_project_t* properties(void) const;
 
@@ -64,6 +71,7 @@ class CProjectConfigItem
 
  private:
   QString m_name;
+  bool m_enabled;
   mediate_project_t m_projProp;
   CProjectConfigTreeNode *m_root;
   QList<const CAnalysisWindowConfigItem*> m_awItemList;

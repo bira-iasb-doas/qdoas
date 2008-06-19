@@ -717,6 +717,7 @@ QString CWProjectTree::loadConfiguration(const QList<const CProjectConfigItem*> 
   QString errStr;
   QTreeWidgetItem *item;
   CProjectItem *projItem;
+  CAnalysisWindowItem *awItem;
   mediate_project_t *projProp;
   mediate_analysis_window_t *awProp;
 
@@ -739,6 +740,9 @@ QString CWProjectTree::loadConfiguration(const QList<const CProjectConfigItem*> 
       return errStr;
 
     assert(projItem && projItem->childCount() == 2); // sanity check
+
+    // enable (or disable) the project
+    projItem->setEnabled((*it)->isEnabled());
 
     // locate the properties in the workspace then copy
     projProp = CWorkSpace::instance()->findProject(projName);
@@ -769,7 +773,7 @@ QString CWProjectTree::loadConfiguration(const QList<const CProjectConfigItem*> 
       QString awName = (*awIt)->name();
 
       // create the item with the edit iterface
-      errStr = editInsertNewAnalysisWindow(item, awName, preceedingWindowName);
+      errStr = editInsertNewAnalysisWindow(item, awName, preceedingWindowName, &awItem);
       if (!errStr.isNull())
 	return errStr;
 
@@ -780,6 +784,9 @@ QString CWProjectTree::loadConfiguration(const QList<const CProjectConfigItem*> 
       // update useCount for the symbols used in the molecules
       for (int i=0; i < awProp->crossSectionList.nCrossSection; ++i)
 	ws->incrementUseCount(awProp->crossSectionList.crossSection[i].symbol);
+
+      // enable or disable the analyis window
+      awItem->setEnabled((*awIt)->isEnabled());
 
       preceedingWindowName = awName;
       ++awIt;

@@ -243,6 +243,7 @@ bool CProjectSubHandler::start(const QXmlAttributes &atts)
   // the project element - must have a name
 
   m_project->setName(atts.value("name"));
+  m_project->setEnabled(atts.value("disable") != "true");
 
   return !m_project->name().isEmpty();
 }

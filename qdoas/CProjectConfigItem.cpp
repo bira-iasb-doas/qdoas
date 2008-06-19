@@ -2,7 +2,8 @@
 #include "CProjectConfigItem.h"
 
 
-CAnalysisWindowConfigItem::CAnalysisWindowConfigItem()
+CAnalysisWindowConfigItem::CAnalysisWindowConfigItem() :
+  m_enabled(true)
 {
   initializeMediateAnalysisWindow(&m_awProp);
 }
@@ -29,6 +30,16 @@ const QString& CAnalysisWindowConfigItem::name(void) const
   return m_name;
 }
 
+void CAnalysisWindowConfigItem::setEnabled(bool enabled)
+{
+  m_enabled = enabled;
+}
+
+bool CAnalysisWindowConfigItem::isEnabled(void) const
+{
+  return m_enabled;
+}
+
 mediate_analysis_window_t* CAnalysisWindowConfigItem::properties(void)
 {
   // WARNING : allows (by design) poking at the internals ...
@@ -42,7 +53,8 @@ const mediate_analysis_window_t* CAnalysisWindowConfigItem::properties(void) con
 
 //------------------------------------------------------------
 
-CProjectConfigItem::CProjectConfigItem()
+CProjectConfigItem::CProjectConfigItem() :
+  m_enabled(true)
 {
   m_root = new CProjectConfigFolder("root", true);
 
@@ -65,6 +77,16 @@ void CProjectConfigItem::setName(const QString &name)
 const QString& CProjectConfigItem::name(void) const
 {
   return m_name;
+}
+
+void CProjectConfigItem::setEnabled(bool enabled)
+{
+  m_enabled = enabled;
+}
+
+bool CProjectConfigItem::isEnabled(void) const
+{
+  return m_enabled;
 }
 
 mediate_project_t* CProjectConfigItem::properties(void)
