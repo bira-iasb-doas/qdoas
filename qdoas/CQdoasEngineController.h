@@ -71,7 +71,7 @@ Q_OBJECT
 
   // session control
   void slotStartSession(const RefCountPtr<CSession> &session);
-  void slotStopSession(); 
+  void slotStopSession();
 
   void slotViewCrossSections(const RefCountPtr<CViewCrossSectionData> &awData);
 
@@ -94,6 +94,7 @@ Q_OBJECT
 
   const mediate_project_t *m_currentProject;
   int m_currentRecord, m_numberOfRecords, m_numberOfFiles;
+  int m_oldRecord;                                                              // Caroline, 2nd July 2008, in order to avoid infinite loop when a spectra selection is specified
 
   RefCountPtr<CSession> m_session;
   CSessionIterator m_currentIt;

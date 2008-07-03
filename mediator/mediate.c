@@ -771,33 +771,45 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
      NDET=1024;
     break;
  // ---------------------------------------------------------------------------
-   }
-
-	 // Set the detector size (implicit to the selection of the file format)
-
-/*  switch (pEngineInstrumental->readOutFormat)
-   {
- // ---------------------------------------------------------------------------
-    case PRJCT_INSTR_FORMAT_CCD_OHP_96 :                       // CCD OHP 96
-    case PRJCT_INSTR_FORMAT_CCD_HA_94 :                        // CCD Harestua 94
-    case PRJCT_INSTR_FORMAT_PDASI_EASOE :                      // PDA SI (IASB)
-    case PRJCT_INSTR_FORMAT_GDP_ASCII :                        // GOME GDP ASCII format
-    case PRJCT_INSTR_FORMAT_OMI :                              // OMI
-	   case PRJCT_INSTR_FORMAT_GOME2 :                            // GOME2
-     NDET=1024;
-    break;
- // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_UOFT :                             // University of Toronto
      NDET=2000;
     break;
  // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_MFC :                              // MFC Heidelberg
+
+     NDET=pEngineInstrumental->detectorSize=pMediateInstrumental->mfc.detectorSize;
+
+     pEngineInstrumental->mfcRevert=pMediateInstrumental->mfc.revert;
+
+     pEngineInstrumental->mfcMaskOffset=pMediateInstrumental->mfc.offsetMask;
+     pEngineInstrumental->mfcMaskInstr=pMediateInstrumental->mfc.instrFctnMask;
+     pEngineInstrumental->mfcMaskSpec=pMediateInstrumental->mfc.spectraMask;
+     pEngineInstrumental->mfcMaskDark=pMediateInstrumental->mfc.darkCurrentMask;
+
+     pEngineInstrumental->wavelength=pMediateInstrumental->mfc.firstWavelength;
+     pEngineInstrumental->mfcMaskUse=pMediateInstrumental->mfc.autoFileSelect;
+
+	  	 strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->mfc.calibrationFile);     // calibration file
+	  	 strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->mfc.instrFunctionFile);     // instrumental function file
+	  	 strcpy(pEngineInstrumental->vipFile,pMediateInstrumental->mfc.darkCurrentFile);             // dark current file
+	  	 strcpy(pEngineInstrumental->dnlFile,pMediateInstrumental->mfc.offsetFile);                  // offset file
+
+     break;
+ // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_MFC_STD :                          // MFC Heidelberg (ASCII)
-    default :
-     NDET=pEngineInstrumental->detectorSize;
+
+     NDET=pEngineInstrumental->detectorSize=pMediateInstrumental->mfcstd.detectorSize;
+
+     pEngineInstrumental->mfcRevert=pMediateInstrumental->mfcstd.revert;
+
+	  	 strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->mfcstd.calibrationFile);     // calibration file
+	  	 strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->mfcstd.instrFunctionFile);     // instrumental function file
+	  	 strcpy(pEngineInstrumental->vipFile,pMediateInstrumental->mfcstd.darkCurrentFile);             // dark current file
+	  	 strcpy(pEngineInstrumental->dnlFile,pMediateInstrumental->mfcstd.offsetFile);                  // offset file
+
     break;
  // ---------------------------------------------------------------------------
-   } */
+   }
 
   #if defined(__DEBUG_) && __DEBUG_ && defined(__DEBUG_DOAS_CONFIG_) && __DEBUG_DOAS_CONFIG_
   DEBUG_FunctionStop("setMediateProjectInstrumental",0);

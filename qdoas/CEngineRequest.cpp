@@ -97,7 +97,7 @@ bool CEngineRequestSetProject::process(CEngineThread *engineThread)
 
   // post the response
   engineThread->respond(resp);
-  
+
   return (rc == 0);
 }
 
@@ -489,12 +489,12 @@ bool CEngineRequestStop::process(CEngineThread *engineThread)
 {
   // create a response as the handle
   CEngineResponseMessage *resp = new CEngineResponseMessage;
-  
+
   int rc = mediateRequestStop(engineThread->engineContext(), resp);
-  
+
   // post the response
   engineThread->respond(resp);
-  
+
   return (rc != -1);
 }
 

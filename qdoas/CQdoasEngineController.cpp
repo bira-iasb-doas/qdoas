@@ -32,7 +32,8 @@ CQdoasEngineController::CQdoasEngineController(QObject *parent) :
   m_currentProject(NULL),
   m_currentRecord(-1),
   m_numberOfRecords(0),
-  m_numberOfFiles(0)
+  m_numberOfFiles(0),
+  m_oldRecord(-1)
 {
 
   // create the engine thread
@@ -68,6 +69,7 @@ void CQdoasEngineController::notifyReadyToNavigateRecords(const QString &filenam
 
 void CQdoasEngineController::notifyCurrentRecord(int recordNumber)
 {
+ 	m_oldRecord=m_currentRecord;
   m_currentRecord = recordNumber;
 
   emit signalCurrentRecordChanged(m_currentRecord);
@@ -75,6 +77,7 @@ void CQdoasEngineController::notifyCurrentRecord(int recordNumber)
 
 void CQdoasEngineController::notifyEndOfRecords(void)
 {
+	 m_oldRecord=m_currentRecord;
   m_currentRecord = m_numberOfRecords + 1;
 
   emit signalCurrentRecordChanged(m_currentRecord);
@@ -377,7 +380,7 @@ void CQdoasEngineController::slotGotoRecord(int recordNumber)
 
 void CQdoasEngineController::slotStep()
 {
-  if (m_currentRecord >= 0 && m_currentRecord < m_numberOfRecords) {
+  if (m_currentRecord >= 0 && m_currentRecord < m_numberOfRecords && m_currentRecord!=m_oldRecord) {
     // step record
     switch (m_session->mode()) {
     case CSession::Browse:
@@ -391,8 +394,7 @@ void CQdoasEngineController::slotStep()
       break;
     }
   }
-  else if (m_currentRecord == m_numberOfRecords && !m_currentIt.atEnd()) {
-
+  else if ((m_currentRecord == m_numberOfRecords || m_currentRecord==m_oldRecord) && !m_currentIt.atEnd()) {
     CSessionIterator tmpIt = m_currentIt;
 
     // only move if there IS a next file ... this leaves the last file 'active'.
@@ -446,6 +448,7 @@ void CQdoasEngineController::slotStartSession(const RefCountPtr<CSession> &sessi
 
   m_numberOfFiles = sessionFileList.count();
   m_currentRecord = -1;
+  m_oldRecord=-1;
   m_currentProject = NULL;
 
   if (!m_currentIt.atEnd()) {
