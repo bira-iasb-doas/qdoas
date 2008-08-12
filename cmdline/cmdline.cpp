@@ -529,7 +529,7 @@ int analyseProjectQdoasPrepare(void **engineContext, const CProjectConfigItem *p
 int analyseProjectQdoasFile(void *engineContext, CBatchEngineController *controller, const QString &filename)
 {
   int retCode = 0;
-  int result;
+  int result, oldResult;
 
   CEngineResponseBeginAccessFile *beginFileResp = new CEngineResponseBeginAccessFile(filename);
 
@@ -544,22 +544,30 @@ int analyseProjectQdoasFile(void *engineContext, CBatchEngineController *control
 
   std::cout << "Processing file " << filename.toStdString() << std::endl;
 
+  oldResult=-1;
+
   // loop based on the controller ...
-  while (!retCode && controller->active()) {
+  while (!retCode && controller->active() && (result!=oldResult)) {
 
     CEngineResponseAccessRecord *resp = new CEngineResponseAccessRecord;
 
+    oldResult=result;
     result = mediateRequestNextMatchingAnalyseSpectrum(engineContext, resp);
-    resp->setRecordNumber(result);
 
-    TRACE("   record : " << result);
+    if (result!=oldResult)
+     {
+      resp->setRecordNumber(result);
 
-    if (result == -1)
-      retCode = 1;
-    else
-      std::cout << "  completed record " << result << std::endl;
+      TRACE("   record : " << result);
 
-    resp->process(controller);
+      if (result == -1)
+        retCode = 1;
+      else
+        std::cout << "  completed record " << result << std::endl;
+
+      resp->process(controller);
+     }
+
     delete resp;
   }
 

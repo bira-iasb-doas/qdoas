@@ -529,11 +529,26 @@ SATELLITE_GEOLOC;
 
 // Buffers specific to CCD
 
+enum _synchroMeasureModes
+ {
+ 	SYNCHRO_MEASURE_NONE,
+ 	SYNCHRO_MEASURE_OFFAXIS,
+ 	SYNCHRO_MEASURE_DIRECTSUN,
+ 	SYNCHRO_MEASURE_ZENITH,
+ 	SYNCHRO_MEASURE_DARK,
+ 	SYNCHRO_MEASURE_LAMP,
+ 	SYNCHRO_MEASURE_BENTHAM,
+ 	SYNCHRO_MEASURE_MAX
+ };
+
 typedef struct _ccd
  {
   MATRIX_OBJECT drk;
   MATRIX_OBJECT vip;
   MATRIX_OBJECT dnl;
+  INT           filterNumber;
+  double        headTemperature;
+  INT           measureType;
  }
 CCD;
 
@@ -592,6 +607,15 @@ typedef struct _omi
  	      omiNumberOfSpectraPerTrack;                                             // total number of spectra in tracks
  }
 OMI_DATA;
+
+typedef struct _als
+ {
+  short       alsFlag;
+  short       scanIndex;
+  double      scanningAngle;                                          // total number of spectra in tracks
+  DoasCh      atrString[1024];
+ }
+ALS_DATA;
 
 // Buffers needed to load spectra
 
@@ -666,6 +690,7 @@ typedef struct _engineRecordInfo
   SCIA_DATA scia;                                                               // SCIAMACHY format
   GOME2_DATA gome2;                                                             // GOME2 format
   OMI_DATA omi;
+  ALS_DATA als;
 
   double longitude;                                                             // longitude
   double latitude;                                                              // latitude

@@ -892,7 +892,7 @@ RC ANALYSE_XsInterpolation(FENO *pTabFeno,double *newLambda)
   return rc;
  }
 
-RC AnalyseConvoluteXs(INDEX indexSymbol,INT action,double conc,
+RC AnalyseConvoluteXs(FENO *pTabFeno,INDEX indexSymbol,INT action,double conc,
                       MATRIX_OBJECT *pXs,
                       MATRIX_OBJECT *pSlit,INT slitType,double *slitParam1,double *slitParam2,double *slitParam3,double *slitParam4,
                       double *newlambda,double *output,INDEX indexlambdaMin,INDEX indexlambdaMax)
@@ -928,7 +928,7 @@ RC AnalyseConvoluteXs(INDEX indexSymbol,INT action,double conc,
      {
      	// Get high resolution Solar spectrum
 
-      if (pKuruczOptions->fwhmFit)
+      if (pKuruczOptions->fwhmFit && (!pTabFeno->hidden && (pTabFeno->useKurucz!=ANLYS_KURUCZ_NONE)))
        memcpy(&hrSolar,&KURUCZ_buffers.hrSolar,sizeof(XS));
       else
        {
@@ -1127,7 +1127,7 @@ RC XSCONV_TypeGauss(double *lambda,double *Spec,double *SDeriv2,double lambdaj,
 
   if (slitType==SLIT_TYPE_GAUSS)
 //   oldF=(double)exp(-4.*log(2.)*(dld*dld)/(fwhm*fwhm));
-   rc=XsconvFctGauss(&oldF,fwhm,ld_inc,dld);
+   rc=XSCONV_FctGauss(&oldF,fwhm,ld_inc,dld);
   else if (slitType==SLIT_TYPE_INVPOLY)
    oldF=(double)pow(sigma,(double)slitParam2)/(pow(dld,(double)slitParam2)+pow(sigma,(double)slitParam2));
   else if (slitType==SLIT_TYPE_ERF)
@@ -1142,7 +1142,7 @@ RC XSCONV_TypeGauss(double *lambda,double *Spec,double *SDeriv2,double lambdaj,
 
     if (slitType==SLIT_TYPE_GAUSS)
 //     newF=(double)exp(-4.*log(2.)*(dld*dld)/(fwhm*fwhm));
-     rc=XsconvFctGauss(&newF,fwhm,ld_inc,dld);
+     rc=XSCONV_FctGauss(&newF,fwhm,ld_inc,dld);
     else if (slitType==SLIT_TYPE_INVPOLY)
      newF=(double)pow(sigma,(double)slitParam2)/(pow(dld,(double)slitParam2)+pow(sigma,(double)slitParam2));
     else if (slitType==SLIT_TYPE_ERF)
@@ -1211,7 +1211,7 @@ RC ANALYSE_XsConvolution(FENO *pTabFeno,double *newlambda,
 
        if ((pTabCross->crossAction==ANLYS_CROSS_ACTION_CONVOLUTE) || (pTabCross->crossAction==ANLYS_CROSS_ACTION_CONVOLUTE_I0))
 
-        rc=AnalyseConvoluteXs(pTabCross->Comp,pTabCross->crossAction,pTabCross->I0Conc,pXs,pSlit,slitType,slitParam1,slitParam2,slitParam3,slitParam4,
+        rc=AnalyseConvoluteXs(pTabFeno,pTabCross->Comp,pTabCross->crossAction,pTabCross->I0Conc,pXs,pSlit,slitType,slitParam1,slitParam2,slitParam3,slitParam4,
                               newlambda,pTabCross->vector,indexlambdaMin,indexlambdaMax);
 
        else if ((pTabCross->crossAction==ANLYS_CROSS_ACTION_CONVOLUTE_RING) &&
@@ -1232,7 +1232,7 @@ RC ANALYSE_XsConvolution(FENO *pTabFeno,double *newlambda,
            memcpy(matrix.matrix[1],pXs->matrix[2],sizeof(double)*pXs->nl);   // Raman spectrum
            memcpy(matrix.deriv2[1],pXs->deriv2[2],sizeof(double)*pXs->nl);     // Second derivative of the Ramanspectrum
 
-           if ((rc=AnalyseConvoluteXs(pTabCross->Comp,ANLYS_CROSS_ACTION_CONVOLUTE,(double)0.,&matrix,pSlit,slitType,slitParam1,slitParam2,slitParam3,slitParam4,
+           if ((rc=AnalyseConvoluteXs(pTabFeno,pTabCross->Comp,ANLYS_CROSS_ACTION_CONVOLUTE,(double)0.,&matrix,pSlit,slitType,slitParam1,slitParam2,slitParam3,slitParam4,
                                       newlambda,raman,indexlambdaMin,indexlambdaMax))!=ERROR_ID_NO)
             break;
 
@@ -1241,7 +1241,7 @@ RC ANALYSE_XsConvolution(FENO *pTabFeno,double *newlambda,
            memcpy(matrix.matrix[1],pXs->matrix[3],sizeof(double)*pXs->nl);   // Raman spectrum
            memcpy(matrix.deriv2[1],pXs->deriv2[3],sizeof(double)*pXs->nl);     // Second derivative of the Ramanspectrum
 
-           if ((rc=AnalyseConvoluteXs(pTabCross->Comp,ANLYS_CROSS_ACTION_CONVOLUTE,(double)0.,&matrix,pSlit,slitType,slitParam1,slitParam2,slitParam3,slitParam4,
+           if ((rc=AnalyseConvoluteXs(pTabFeno,pTabCross->Comp,ANLYS_CROSS_ACTION_CONVOLUTE,(double)0.,&matrix,pSlit,slitType,slitParam1,slitParam2,slitParam3,slitParam4,
                                       newlambda,solar,indexlambdaMin,indexlambdaMax))!=ERROR_ID_NO)
             break;
 
@@ -2166,8 +2166,11 @@ RC ANALYSE_AlignReference(INT refFlag,INT saveFlag,void *responseHandle)
     for (WrkFeno=0;(WrkFeno<NFeno)&&!rc;WrkFeno++)
      {
       Feno=&RefTabFeno[WrkFeno];
+      Feno->Shift=Feno->Stretch=Feno->Stretch2=(double)0.;
       pResults=&Feno->TabCrossResults[Feno->indexSpectrum];
       NDET=Feno->NDET;
+
+      memcpy(Feno->Lambda,Feno->LambdaRef,sizeof(double)*NDET);
 
       if (refFlag==2)
        {

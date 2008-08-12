@@ -109,10 +109,20 @@ typedef struct _ccdData
   int         nlCorrection;                                                     // 1 if a nonlinearity correction has been applied; 0 otherwise
   short       nTint;                                                            // number of integration times
   double      brusagElevation;                                                  // elevation angle for off axis measurements
-  DoasCh       filterName[16];                                                   // the name of the filter used if any
-  DoasCh       ignored[998];                                                     // if completed with new data in the future, authorizes compatibility with previous versions
+  INT         filterUnused;
+  INT         filterNumber;
+  double      headTemperature;
+  short       alsFlag;                                                          // 1 for asl measurents (cfr Alexis)
+  short       scanIndex;                                                        // scan index for asl measurements
+  double      scanningAngle;
+  DoasCh      ignored[974];                                                     // if completed with new data in the future, authorizes compatibility with previous versions
+  double      mirrorAzimuth;
+  int         measureType;                                                  // if completed with new data in the future, authorizes compatibility with previous versions
  }
 CCD_DATA;
+
+DoasCh *CCD_measureTypes[SYNCHRO_MEASURE_MAX]=
+     	 { "None","Off axis","Direct sun","Zenith","Dark","Lamp","Bentham" };
 
 // ------------------------------------------------------------------
 // Different predefined integration times for dark current correction
@@ -418,6 +428,19 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
           pRecord->SkyObs    = 8;
           pRecord->TDet      = (double)header.currentTemperature;
           pRecord->ReguTemp  = (double)0.;
+          pRecord->TotalExpTime = (double)0.;
+
+          if (header.alsFlag)
+           {
+           	pRecord->als.alsFlag=header.alsFlag;
+            pRecord->als.scanIndex=header.scanIndex;
+            pRecord->als.scanningAngle=header.scanningAngle;                                          // total number of spectra in tracks
+          //  strcpy(pRecord->als.atrString,header.ignored);
+           }
+
+          pRecord->ccd.filterNumber=header.filterNumber;
+          pRecord->ccd.headTemperature=header.headTemperature;
+          pRecord->ccd.measureType=header.measureType;
 
           memcpy(&pRecord->present_day,&header.today,sizeof(SHORT_DATE));
           memcpy(&pRecord->present_time,&header.now,sizeof(struct time));
@@ -428,18 +451,17 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
                ((pRecord->present_day.da_year==2003) && (pRecord->present_day.da_mon==2) && (pRecord->present_day.da_day>20)))?
                 (float)header.brusagElevation:(float)-1.;
 
+          pRecord->Azimuth=header.Azimuth;
+
+          if (!header.alsFlag)
+           pRecord->azimuthViewAngle=
+                ((pRecord->present_day.da_year>2008) ||
+                ((pRecord->present_day.da_year==2008) && (pRecord->present_day.da_mon>4)))?
+                 (float)header.mirrorAzimuth:(float)-1.;
+
           pRecord->TimeDec=(double)header.now.ti_hour+header.now.ti_min/60.+header.now.ti_sec/3600.;
           pRecord->localTimeDec=fmod(pRecord->TimeDec+24.+THRD_localShift,(double)24.);
-
-          if (strlen(header.filterName)>0)
-           {
-           	memset(pRecord->Nom,' ',20);
-           	pRecord->Nom[20]='\0';
-            strcpy(pRecord->Nom,header.filterName);
-            pRecord->Nom[strlen(header.filterName)]=' ';
-           }
-          else
-           memset(pRecord->Nom,0,20);
+          memset(pRecord->Nom,0,20);
 
           // Build dark current
 
@@ -494,13 +516,16 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
              }
 
             for (i=0;i<NDET;i++)
-             pBuffers->darkCurrent[i]=pBuffers->darkCurrent[i]/pRecord->NSomme;
+             {
+              pBuffers->darkCurrent[i]=pBuffers->darkCurrent[i]/pRecord->NSomme;
+              pBuffers->spectrum[i]-=pBuffers->darkCurrent[i];
+             }
            }
 
           tmLocal=pRecord->Tm+THRD_localShift*3600.;
           pRecord->localCalDay=ZEN_FNCaljda(&tmLocal);
 
-          if (rc || (dateFlag && (((pRecord->elevationViewAngle>(double)-0.5) && (pRecord->elevationViewAngle<88.)) || (pRecord->localCalDay!=localDay))))                  // reference spectra are zenith only
+          if (rc || (dateFlag && (pRecord->elevationViewAngle>(double)-0.5) && (pRecord->elevationViewAngle<80.)))                  // reference spectra are zenith only
            rc=ERROR_ID_FILE_RECORD;
          }
        }
@@ -513,19 +538,12 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
    {
    	memcpy(tmpSpectrum,dspectrum,sizeof(double)*NDET);
 
-   	// Dark current correction
-
-   	for (i=0;i<NDET;i++)
-   	 tmpSpectrum[i]-=pBuffers->darkCurrent[i];
-
    	for (i=0;i<NDET;i++)
    	 {
    	 	dspectrum[i]=(double)0.;
 
    	 	for (j=0;j<NDET;j++)
   	 	  dspectrum[i]+=pRecord->ccd.vip.matrix[j%NCURVE][(j/NCURVE)*NDET+i]*tmpSpectrum[j];
-
-  	 	 dspectrum[i]+=pBuffers->darkCurrent[i];    // the dark current is still subtracted in winthrd.c
    	 }
    }
 

@@ -1764,8 +1764,8 @@ int mediateRequestBeginAnalyseSpectra(void *engineContext,
 
   if ((EngineRequestBeginBrowseSpectra(pEngineContext,spectraFileName)!=ERROR_ID_NO) ||
      ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN) && (GDP_BIN_LoadAnalysis(pEngineContext,pEngineContext->fileInfo.specFp,responseHandle)!=ERROR_ID_NO)) ||
-     ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS) && (SCIA_LoadAnalysis(pEngineContext,responseHandle)!=ERROR_ID_NO)) ||
-     ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GOME2) && (GOME2_LoadAnalysis(pEngineContext,responseHandle)!=ERROR_ID_NO)))
+     ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS) && (SCIA_LoadAnalysis(pEngineContext,responseHandle)!=ERROR_ID_NO)) || /* ) // !!! GOME2 || */
+     /* // !!! GOME2 */ ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GOME2) && (GOME2_LoadAnalysis(pEngineContext,responseHandle)!=ERROR_ID_NO)))
 
    ERROR_DisplayMessage(responseHandle);
 

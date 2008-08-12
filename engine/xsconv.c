@@ -43,7 +43,7 @@
 //  SUPPORTED LINE SHAPES
 //  =====================
 //
-//  XsconvFctGauss - gaussian function;
+//  XSCONV_FctGauss - gaussian function;
 //  XsconvFctApod - apodisation function (FTS);
 //  XsconvFctApodNBS - apodisation function Norton Beer Strong (FTS);
 //
@@ -176,7 +176,7 @@ DoasCh *XSCONV_slitTypes[SLIT_TYPE_MAX]=
 // =====================
 
 // -----------------------------------------------------------------------------
-// FUNCTION      XsconvFctGauss
+// FUNCTION      XSCONV_FctGauss
 // -----------------------------------------------------------------------------
 // PURPOSE       Gaussian function
 //
@@ -191,7 +191,7 @@ DoasCh *XSCONV_slitTypes[SLIT_TYPE_MAX]=
 //                        ERROR_ID_NO if the function is successful.
 // -----------------------------------------------------------------------------
 
-RC XsconvFctGauss(double *pValue,double fwhm,double step,double delta)
+RC XSCONV_FctGauss(double *pValue,double fwhm,double step,double delta)
  {
   // Declarations
 
@@ -206,9 +206,9 @@ RC XsconvFctGauss(double *pValue,double fwhm,double step,double delta)
   // Gaussian function
 
   if (fwhm<=(double)0.)
-   rc=ERROR_SetLast("XsconvFctGauss",ERROR_TYPE_FATAL,ERROR_ID_BAD_ARGUMENTS,"fwhm<=0");
+   rc=ERROR_SetLast("XSCONV_FctGauss",ERROR_TYPE_FATAL,ERROR_ID_BAD_ARGUMENTS,"fwhm<=0");
   else if (step<=(double)0.)
-   rc=ERROR_SetLast("XsconvFctGauss",ERROR_TYPE_FATAL,ERROR_ID_BAD_ARGUMENTS,"step<=0");
+   rc=ERROR_SetLast("XSCONV_FctGauss",ERROR_TYPE_FATAL,ERROR_ID_BAD_ARGUMENTS,"step<=0");
   else
    {
     sigma=fwhm*0.5;
@@ -404,7 +404,7 @@ RC XsconvFctBuild(double *slitLambda,double *slitVector,INT slitSize,INT slitTyp
         rc=ERROR_SetLast("XsconvFctBuild",ERROR_TYPE_FATAL,ERROR_ID_BAD_ARGUMENTS,"Gauss function needs 1 parameter");
        else
         for (i=0;(i<slitSize) && !rc;i++)
-         rc=XsconvFctGauss(&slitVector[i],
+         rc=XSCONV_FctGauss(&slitVector[i],
                              slitParam[0],                                      // FWHM
                              slitStep,                                          // resolution of the line shape
                              slitLambda[i]);                                    // distance to the centre wavelength
@@ -1219,7 +1219,7 @@ RC GetNewF(double *pNewF,
   else // if ((slitType==SLIT_TYPE_GAUSS) || (slitType==SLIT_TYPE_GAUSS_FILE))
    newF=(double)exp(-4.*log(2.)*(dist*dist)/(slitParam*slitParam));
 
-//   rc=XsconvFctGauss(&newF,slitParam,step,dist);
+//   rc=XSCONV_FctGauss(&newF,slitParam,step,dist);
 
   *pNewF=newF;
 
