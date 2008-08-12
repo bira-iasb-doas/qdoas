@@ -38,7 +38,7 @@ win32 {
   }
   contains( QWT_LINKAGE, qwtdll ) {
     LIBS        += -L$$QWT_LIB_PATH -l$$QWT_LIB$$QWT_LIB_VERSION -L$$BEAT_LIB_PATH -l$$BEAT_LIB
-    DEFINES     += QWT_DLL LIBBEATDLL
+    DEFINES     += QWT_DLL
   }
 
   DEFINES      += LIBBEATDLL

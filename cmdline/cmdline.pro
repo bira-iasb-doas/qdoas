@@ -23,9 +23,10 @@ unix {
 }
 
 win32 {
+  DEFINES      += LIBBEATDLL
   INCLUDEPATH  += ..\mediator ..\common ..\qdoas ..\convolution ..\ring ..\usamp ..\engine $$BEAT_INC_PATH
-
-  CONFIG      += windows
+  LIBS         += -L$$BEAT_LIB_PATH -l$$BEAT_LIB
+  CONFIG       += console
 }
 
 #----------------------------------------------

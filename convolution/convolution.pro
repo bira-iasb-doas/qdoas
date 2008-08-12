@@ -3,7 +3,7 @@
 #----------------------------------------------
 
 TEMPLATE = app
-TARGET   = ../../qdoas/release/convolution
+TARGET   = convolution
 
 include( ../config.pri )
 

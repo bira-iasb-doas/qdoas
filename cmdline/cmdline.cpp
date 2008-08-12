@@ -1,3 +1,4 @@
+
 #include <cstdio>
 #include <cstring>
 
@@ -26,6 +27,7 @@
 
 #include "QdoasVersion.h"
 #include "debugutil.h"
+
 
 //-------------------------------------------------------------------
 // types

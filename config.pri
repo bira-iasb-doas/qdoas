@@ -25,15 +25,16 @@ unix {
 }
 
 win32 {
-  QWT_INC_PATH    = C:\Qwt\include
-  QWT_LIB_PATH    = C:\Qwt\lib
+  QWT_INC_PATH    = C:/Qwt/include
+  QWT_LIB_PATH    = C:/Qwt/lib
   QWT_LIB         = qwt
   QWT_LIB_VERSION = 5
-  BEAT_INC_PATH   = C:\beat\include
-  BEAT_LIB_PATH   = C:\beat\lib
-  BEAT_LIB        = beat
+  BEAT_INC_PATH   = C:/beat/include
+  BEAT_LIB_PATH   = C:/beat/lib
+  #BEAT_LIB        = beat
+  BEAT_LIB        = beat-mingw  # for use with a 'tweaked' binary release of BEAT
 
-  INSTALL_PREFIX = C:\Qdoas
+  INSTALL_PREFIX = C:/Qdoas
 
   CODE_GENERATION = release # Override because debug is broken
 }
