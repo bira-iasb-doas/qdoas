@@ -260,9 +260,9 @@ RC mediateConvolutionSave(void *engineContext)
   return rc;
  }
 
-// ----------------------------------------------
+// -------------------------------------------------------
 // mediateConvolutionCalculate : Main convolution function
-// ----------------------------------------------
+// -------------------------------------------------------
 
 RC mediateConvolutionCalculate(void *engineContext,void *responseHandle)
  {
@@ -638,6 +638,445 @@ RC mediateRequestConvolution(void *engineContext,mediate_convolution_t *pMediate
   return rc;
 
  }
+
+// =========
+// RING TOOL
+// =========
+
+// -----------------------------------------------------------------------------
+// FUNCTION      mediateRequestRing
+// -----------------------------------------------------------------------------
+// PURPOSE       Transfer the convolution options from the GUI to the engine
+//
+// RETURN        ERROR_ID_NO if no error found
+// -----------------------------------------------------------------------------
+
+RC mediateRequestRing(void *engineContext,mediate_ring_t *pMediateRing,void *responseHandle)
+ {
+ 	// Declarations
+
+  ENGINE_XSCONV_CONTEXT *pEngineContext = (ENGINE_XSCONV_CONTEXT*)engineContext;// pointer to the engine context
+  SLIT *pSlitConv;                                                              // pointer to the convolution part of the engine context
+  RC rc;
+
+  // Initializations
+
+  rc=ERROR_ID_NO;
+
+  // General information
+
+  pEngineContext->noComment=pMediateRing->noheader;
+  pEngineContext->temperature=pMediateRing->temperature;
+
+  strcpy(pEngineContext->path,pMediateRing->outputFile);                        // output path
+  strcpy(pEngineContext->calibrationFile,pMediateRing->calibrationFile);        // calibration file
+  strcpy(pEngineContext->kuruczFile,pMediateRing->solarRefFile);                // Kurucz file used when I0 correction is applied
+
+  // Description of the slit function
+
+  setMediateSlit(&pEngineContext->slitConv,&pMediateRing->slit);
+
+  if (!strlen(pEngineContext->calibrationFile))
+   rc=ERROR_SetLast("mediateRequestRing",ERROR_TYPE_FATAL,ERROR_ID_MEDIATE,"Calibration","Calibration file name is missing");
+  else if (pEngineContext->convolutionType!=CONVOLUTION_TYPE_NONE)
+   {
+   	pSlitConv=&pEngineContext->slitConv;
+
+   	// Convolution slit function
+
+   	if ((pSlitConv->slitType!=SLIT_TYPE_GAUSS) &&
+        (pSlitConv->slitType!=SLIT_TYPE_INVPOLY) &&
+        (pSlitConv->slitType!=SLIT_TYPE_ERF) &&
+        (pSlitConv->slitType!=SLIT_TYPE_VOIGT) &&
+        (pSlitConv->slitType!=SLIT_TYPE_APOD) &&
+        (pSlitConv->slitType!=SLIT_TYPE_APODNBS) && !strlen(pSlitConv->slitFile))
+
+     rc=ERROR_SetLast("mediateRequestRing",ERROR_TYPE_FATAL,ERROR_ID_MEDIATE,"Slit Function Type","Convolution slit function file is missing");
+
+    else if (((pSlitConv->slitType==SLIT_TYPE_INVPOLY) || (pSlitConv->slitType==SLIT_TYPE_INVPOLY_FILE)) &&
+             ((pSlitConv->slitParam2<=(double)0.) ||
+              (pSlitConv->slitParam2-floor(pSlitConv->slitParam2)!=(double)0.) ||
+              (fmod(pSlitConv->slitParam2,(double)2.)!=(double)0.)))
+
+     rc=ERROR_SetLast("mediateRequestRing",ERROR_TYPE_FATAL,ERROR_ID_MEDIATE,"Degree","Polynomial degree should be a positive integer and a multiple of 2");
+   }
+
+  // Return
+
+  return rc;
+
+ }
+
+// -----------------------------------------------------------------------------
+// FUNCTION      mediateRingHeader
+// -----------------------------------------------------------------------------
+// PURPOSE       Write options in the file header
+//
+// INPUT         pEngineContext : pointer to the current engine context
+//               fp    : pointer to the output file
+// -----------------------------------------------------------------------------
+
+void mediateRingHeader(ENGINE_XSCONV_CONTEXT *pEngineContext,FILE *fp)
+ {
+  // Declaration
+
+  INT     slitType;                                                 // type of the slit function
+
+  // Header
+
+  fprintf(fp,";\n");
+  fprintf(fp,"; RING CROSS SECTION\n");
+  fprintf(fp,"; Temperature : %g K\n",pEngineContext->temperature);
+  fprintf(fp,"; High resolution Kurucz file : %s\n",pEngineContext->kuruczFile);
+  fprintf(fp,"; Calibration file : %s\n",pEngineContext->calibrationFile);
+  fprintf(fp,"; Slit function type : %s\n",XSCONV_slitTypes[(slitType=pEngineContext->slitConv.slitType)]);
+
+  if ((slitType==SLIT_TYPE_FILE) || (slitType==SLIT_TYPE_GAUSS_FILE) || (slitType==SLIT_TYPE_INVPOLY_FILE) || (slitType==SLIT_TYPE_ERF_FILE))
+   fprintf(fp,"; Slit function file : %s\n",pEngineContext->slitConv.slitFile);
+  if ((slitType==SLIT_TYPE_GAUSS) || (slitType==SLIT_TYPE_INVPOLY) || (slitType==SLIT_TYPE_ERF))
+   fprintf(fp,"; Gaussian FWHM : %lf\n",pEngineContext->slitConv.slitParam);
+  if ((slitType==SLIT_TYPE_INVPOLY) || (slitType==SLIT_TYPE_INVPOLY_FILE))
+   fprintf(fp,"; Polynomial degree : %d\n",(int)pEngineContext->slitConv.slitParam2);
+  if ((slitType==SLIT_TYPE_ERF) || (slitType==SLIT_TYPE_ERF_FILE))
+   fprintf(fp,"; Boxcar width : %lf\n",pEngineContext->slitConv.slitParam2);
+
+  if (slitType==SLIT_TYPE_VOIGT)
+   {
+    fprintf(fp,"; Gaussian FWHM (L) : %.3f\n",pEngineContext->slitConv.slitParam);
+    fprintf(fp,"; Gaussian/Lorentz ratio (L) : %.3f\n",pEngineContext->slitConv.slitParam2);
+    fprintf(fp,"; Gaussian FWHM (R) : %.3f\n",pEngineContext->slitConv.slitParam3);
+    fprintf(fp,"; Gaussian/Lorentz ratio (R) : %.3f\n",pEngineContext->slitConv.slitParam4);
+   }
+
+  fprintf(fp,"; column 1 : wavelength\n");
+  fprintf(fp,"; column 2 : ring (raman/solar spectrum)\n");
+  fprintf(fp,"; column 3 : interpolated raman\n");
+  fprintf(fp,"; column 4 : convoluted solar spectrum\n");
+
+  fprintf(fp,";\n");
+ }
+
+// -------------------------------------------------------------------
+// mediateRingCalculate : Main function to create a ring cross section
+// -------------------------------------------------------------------
+
+RC mediateRingCalculate(void *engineContext,void *responseHandle)
+ {
+  // Declarations
+
+  ENGINE_XSCONV_CONTEXT *pEngineContext=(ENGINE_XSCONV_CONTEXT*)engineContext;
+  DoasCh   ringFileName[MAX_ITEM_TEXT_LEN+1],                                   // name of the output ring file
+           pageTitle[MAX_ITEM_TEXT_LEN+1];
+  double *n2xref,*o2xref,*n2pos2,                                               // rotational Raman spectra
+          gamman2,sigprimen2,sign2,distn2,n2xsec,sign2k,                        // n2 working variables
+          gammao2,sigprimeo2,sigo2,disto2,o2xsec,sigo2k,                        // o2 working variables
+          sigsq,lambda1e7,solar,n2posj,o2posj,                                  // other working variables
+          lambda,lambdaMin,lambdaMax,                                           // range of wavelengths covered by slit function
+          slitWidth,                                                            // width of the slit function
+         *raman,*raman2,*ramanint,*ringEnd,                                     // output ring cross section
+         *solarLambda,*solarVector,                                             // substitution vectors for solar spectrum
+         *slitLambda,*slitVector,*slitDeriv2,                                   // substitution vectors for slit function
+         *ringLambda,*ringVector,                                               // substitution vectors for ring cross section
+          temp,                                                                 // approximate average temperature in °K for scattering
+          slitParam,                                                            // gaussian full width at half maximum
+          slitParam2,slitParam3,slitParam4,                                     // other slit function parameters
+          a,invapi,delta,sigma,                                                 // parameters to build a slit function
+          fact;
+
+  XS      xsSolar,xsSlit,xsRing,xsO3;                                           // solar spectrum and slit function
+  INT     nsolar,nslit,nring,                                                   // size of previous vectors
+          slitType;                                                             // type of the slit function
+  INDEX   i,j,k,indexMin,khi,klo;                                               // indexes for loops and arrays
+  FILE   *fp;                                                                   // output file pointer
+  RC      rc;                                                                   // return code
+
+  // Debugging
+
+  #if defined(__DEBUG_) && __DEBUG_
+  DEBUG_Start("Ring.dbg","Ring",DEBUG_FCTTYPE_APPL,5,DEBUG_DVAR_YES,1);
+  #endif
+
+  // Initializations
+
+  memset(&xsSolar,0,sizeof(XS));
+  memset(&xsSlit,0,sizeof(XS));
+  memset(&xsRing,0,sizeof(XS));
+  memset(&xsO3,0,sizeof(XS));
+
+  slitWidth=(double)RING_SLIT_WIDTH;                                            // NB : force slit width to 6 because of convolutions
+  slitType=pEngineContext->slitConv.slitType;
+  slitParam2=pEngineContext->slitConv.slitParam2;
+  slitParam3=pEngineContext->slitConv.slitParam3;
+  slitParam4=pEngineContext->slitConv.slitParam4;
+  o2xref=n2pos2=raman=raman2=ramanint=ringEnd=NULL;
+  temp=(double)pEngineContext->temperature;                                        // (double)250.;   May 2005/05/31
+  fp=NULL;
+
+  #if defined(__DEBUG_) && __DEBUG_
+  {
+  	// Declarations
+
+   time_t today;                                                                // current date and time as a time_t number
+   char datetime[20];                                                           // current date and time as a string
+
+   // Get the current date and time
+
+   today=time(NULL);
+
+   // Convert into a string
+
+   strftime(datetime,20,"%d/%m/%Y %H:%M:%S",localtime(&today));
+   DEBUG_Print("Start at %s\n",datetime);
+  }
+  #endif
+
+  // Buffers allocation
+
+  if (((n2xref=(double *)MEMORY_AllocDVector("mediateRingCalculate","n2xref",0,O2_SIZE-1 /* !!! N2_SIZE instead of O2_SIZE for computations optimization */))==NULL) ||
+      ((o2xref=(double *)MEMORY_AllocDVector("mediateRingCalculate","o2xref",0,O2_SIZE-1))==NULL) ||
+      ((n2pos2=(double *)MEMORY_AllocDVector("mediateRingCalculate","n2pos2",0,O2_SIZE-1))==NULL))
+
+   rc=ERROR_ID_ALLOC;
+                                                                                // Load the final wavelength calibration
+
+  else if (!(rc=XSCONV_LoadCalibrationFile(&xsRing,pEngineContext->calibrationFile,0)) &&
+
+  // Load slit function from file or pre-calculate the slit function
+
+           !(rc=XSCONV_LoadSlitFunction(&xsSlit,&pEngineContext->slitConv,&slitParam,&slitType)) &&
+
+  // Load solar spectrum in the range of wavelengths covered by the end wavelength scale corrected by the slit function
+
+           !(rc=XSCONV_LoadCrossSectionFile(&xsSolar,pEngineContext->kuruczFile,(double)xsRing.lambda[0]-slitWidth-1.,
+                                     (double)xsRing.lambda[xsRing.NDET-1]+slitWidth+1.,(double)0.,CONVOLUTION_CONVERSION_NONE)) ) // &&
+
+   {
+    for (i=0;i<N2_SIZE;i++)
+     n2xref[i]=n2pos2[i]=(double)n2pos[i];
+    for (;i<O2_SIZE;i++)
+     n2xref[i]=n2pos2[i]=(double)0.;
+
+    // Set up the rotational Raman spectra
+
+    raman_n2(temp,n2xref);
+    raman_o2(temp,o2xref);
+
+    // Use substitution variables
+
+    solarLambda=xsSolar.lambda;
+    solarVector=xsSolar.vector;
+    nsolar=xsSolar.NDET;
+
+    slitLambda=xsSlit.lambda;
+    slitVector=xsSlit.vector;
+    slitDeriv2=xsSlit.deriv2;
+    nslit=xsSlit.NDET;
+
+    ringLambda=xsRing.lambda;
+    ringVector=xsRing.vector;
+    nring=xsRing.NDET;
+
+    if (!nsolar ||
+       ((raman=MEMORY_AllocDVector("mediateRingCalculate","raman",0,nsolar-1))==NULL) ||
+       ((raman2=MEMORY_AllocDVector("mediateRingCalculate","raman2",0,nsolar-1))==NULL) ||
+       ((ramanint=MEMORY_AllocDVector("mediateRingCalculate","ramanint",0,nring-1))==NULL) || ((ringEnd=MEMORY_AllocDVector("mediateRingCalculate","ringEnd",0,nring-1))==NULL))
+     rc=ERROR_ID_ALLOC;
+    else
+     {
+      if ((rc=XSCONV_TypeStandard(&xsRing,0,xsRing.NDET,&xsSolar,&xsSlit,&xsSolar,NULL,slitType,slitWidth,slitParam,slitParam2,slitParam3,slitParam4))!=ERROR_ID_NO)
+       goto EndRing;
+
+      VECTOR_Init(raman,(double)0.,nsolar);
+      VECTOR_Init(raman2,(double)0.,nsolar);
+
+      // Add up Ring contributions over wavelengths and lines; remember that
+      // the change in photon energy is opposite that of the molecule
+
+      for (i=0;(i<nsolar) && !rc;i++)
+       {
+        solar=(double)solarVector[i];
+        lambda=(double)solarLambda[i];
+        lambda1e7=(double)1.e7/lambda;
+
+        if (((slitType==SLIT_TYPE_GAUSS_FILE) || (slitType==SLIT_TYPE_INVPOLY_FILE) || (slitType==SLIT_TYPE_ERF_FILE)) &&
+            ((rc=SPLINE_Vector(slitLambda,slitVector,slitDeriv2,nslit,&lambda,&slitParam,1,SPLINE_CUBIC,"mediateRingCalculate"))!=0))
+         goto EndRing;
+
+        sigma=slitParam*0.5;
+        a=sigma/sqrt(log(2.));
+        delta=slitParam2*0.5;
+        invapi=(double)1./(a*sqrt(PI));
+
+        sigsq = (double) 1.e6/(lambda*lambda);
+        gamman2 = (double) -0.601466 + 238.557 / (186.099 - sigsq);
+        gammao2 = (double) 0.07149 + 45.9364 / (48.2716 - sigsq);
+
+        gamman2*=gamman2;   // gamman2 <- gamman2**2;
+        gammao2*=gammao2;   // gammao2 <- gammao2**2;
+
+        for (j=0;j<O2_SIZE;j++)
+         {
+          n2posj=n2pos2[j];
+          o2posj=o2pos[j];
+
+          sigprimen2=(double) lambda1e7-n2posj;
+          sigprimen2 *= sigprimen2;       // **2
+          sigprimen2 *= sigprimen2;       // **4
+
+          sigprimeo2 = (double) lambda1e7-o2posj;
+          sigprimeo2 *= sigprimeo2;       // **2
+          sigprimeo2 *= sigprimeo2;       // **4
+
+          n2xsec=n2xref[j]*sigprimen2*gamman2*solar;
+          o2xsec=o2xref[j]*sigprimeo2*gammao2*solar;
+
+          sign2=(double)1.e7/(-n2posj+lambda1e7);
+          sigo2=(double)1.e7/(-o2posj+lambda1e7);
+
+          lambdaMin=(double)min(sign2,sigo2)-4.*slitParam; // lambda-slitWidth;
+          lambdaMax=(double)max(sign2,sigo2)+4.*slitParam; // lambda+slitWidth;
+
+          for (indexMin=0,klo=0,khi=nsolar-1;khi-klo>1;)
+           {
+            indexMin=(khi+klo)>>1;
+
+            if (solarLambda[indexMin]>lambdaMin)
+             khi=indexMin;
+            else
+             klo=indexMin;
+           }
+
+          // Contributions from +- npix pixels away
+
+          for (k=indexMin;(k<nsolar)&&(solarLambda[k]<=lambdaMax);k++)
+           {
+           	sign2k=sign2-solarLambda[k];
+           	sigo2k=sigo2-solarLambda[k];
+
+            if (slitType==SLIT_TYPE_GAUSS_FILE)
+             {
+              distn2=invapi*exp(-(sign2k*sign2k)/(a*a));
+              disto2=invapi*exp(-(sigo2k*sigo2k)/(a*a));
+             }
+            else if (slitType==SLIT_TYPE_INVPOLY_FILE)
+             {
+              distn2=(double)pow(sigma,(double)slitParam2)/((pow(sign2k,(double)slitParam2)+pow(sigma,(double)slitParam2)));
+              disto2=(double)pow(sigma,(double)slitParam2)/((pow(sigo2k,(double)slitParam2)+pow(sigma,(double)slitParam2)));
+             }
+            else if (slitType==SLIT_TYPE_ERF_FILE)
+             {
+              distn2=(double)(ERF_GetValue((sign2k+delta)/a)-ERF_GetValue((sign2k-delta)/a))/(4.*delta);
+              disto2=(double)(ERF_GetValue((sigo2k+delta)/a)-ERF_GetValue((sigo2k-delta)/a))/(4.*delta);
+             }
+            else if ((slitType==SLIT_TYPE_FILE) &&
+                   (((rc=SPLINE_Vector(slitLambda,slitVector,slitDeriv2,nslit,&sign2k,&distn2,1,SPLINE_CUBIC,"mediateRingCalculate"))!=0) ||
+                    ((rc=SPLINE_Vector(slitLambda,slitVector,slitDeriv2,nslit,&sigo2k,&disto2,1,SPLINE_CUBIC,"mediateRingCalculate"))!=0)))
+
+             goto EndRing;
+
+             raman[k]+=(n2xsec*distn2+o2xsec*disto2)*(solarLambda[k]-solarLambda[k-1]);
+           }
+         }
+       }
+
+      strcpy(ringFileName,pEngineContext->path);
+
+      #if defined(__DEBUG_) && __DEBUG_
+      DEBUG_PrintVar("High resolution vectors",solarLambda,0,nsolar-1,solarVector,0,nsolar-1,raman,0,nsolar-1,NULL);
+      #endif
+
+      if (!rc && !(rc=SPLINE_Deriv2(solarLambda,raman,raman2,nsolar,"mediateRingCalculate")) &&
+         !(rc=SPLINE_Vector(solarLambda,raman,raman2,nsolar,ringLambda,ramanint,nring,SPLINE_CUBIC,"mediateRingCalculate")))
+       {
+        if ((fp=fopen(ringFileName,"w+t"))!=NULL)
+         {
+          if (!pEngineContext->noComment)
+           mediateRingHeader(pEngineContext,fp);
+
+          // Output ring
+
+          for (i=0;i<nring;i++)
+           ringEnd[i]=((ramanint[i]>(double)0.) && (ringVector[i]>(double)0.))?
+                                    (double)ramanint[i] /* ring effect source spectrum */ /ringVector[i] /* solar spectrum */:(double)0.;
+
+          if (!(rc=VECTOR_NormalizeVector(ringEnd-1,nring,&fact,"Ring")))
+           {
+           	plot_data_t spectrumData[1];
+
+           	strcpy(pageTitle,"Ring");
+
+            for (i=0;i<nring;i++)
+             fprintf(fp,"%.14le %.14le %.14le %.14le\n",ringLambda[i],ringEnd[i],ramanint[i],ringVector[i]);
+
+            mediateAllocateAndSetPlotData(&spectrumData[0],ringLambda,ringEnd,nring,Line);
+            mediateResponsePlotData(0,spectrumData,1,Spectrum,forceAutoScale,"Calculated ring cross section","Wavelength (nm)","",responseHandle);
+            mediateResponseLabelPage(0,pageTitle,"",responseHandle);
+            mediateReleasePlotData(spectrumData);
+           }
+         }
+       }
+     }
+   }
+
+  EndRing :
+
+  if (fp!=NULL)
+   fclose(fp);
+
+  // Release allocated buffers
+
+  if (n2xref!=NULL)
+   MEMORY_ReleaseDVector("mediateRingCalculate","n2xref",n2xref,0);
+  if (o2xref!=NULL)
+   MEMORY_ReleaseDVector("mediateRingCalculate","o2xref",o2xref,0);
+  if (n2pos2!=NULL)
+   MEMORY_ReleaseDVector("mediateRingCalculate","n2pos2",n2pos2,0);
+  if (raman!=NULL)
+   MEMORY_ReleaseDVector("mediateRingCalculate","raman",raman,0);
+  if (raman2!=NULL)
+   MEMORY_ReleaseDVector("mediateRingCalculate","raman2",raman2,0);
+  if (ramanint!=NULL)
+   MEMORY_ReleaseDVector("mediateRingCalculate","ramanint",ramanint,0);
+  if (ringEnd!=NULL)
+   MEMORY_ReleaseDVector("mediateRingCalculate","ringEnd",ringEnd,0);
+
+  XSCONV_Reset(&xsSolar);
+  XSCONV_Reset(&xsSlit);
+  XSCONV_Reset(&xsRing);
+  XSCONV_Reset(&xsO3);
+
+  #if defined(__DEBUG_) && __DEBUG_
+  {
+  	// Declarations
+
+   time_t today;                                                                // current date and time as a time_t number
+   char datetime[20];                                                           // current date and time as a string
+
+   // Get the current date and time
+
+   today=time(NULL);
+
+   // Convert into a string
+
+   strftime(datetime,20,"%d/%m/%Y %H:%M:%S",localtime(&today));
+   DEBUG_Print("End at %s\n",datetime);
+  }
+  #endif
+
+  // Debugging
+
+  #if defined(__DEBUG_) && __DEBUG_
+  DEBUG_Stop("Ring");
+  #endif
+
+  // Return
+
+  return rc;
+ }
+
+// ============
+// TOOL CONTEXT
+// ============
 
 // -----------------------------------------------------------------------------
 // FUNCTION      mediateXsconvCreateContext

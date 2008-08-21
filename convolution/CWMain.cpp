@@ -20,7 +20,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include <cstring>
 
-
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QMenu>
@@ -33,6 +32,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QFileDialog>
 #include <QCloseEvent>
 #include <QApplication>
+
 #include "CWMain.h"
 #include "CWAboutDialog.h"
 #include "CHelpSystem.h"

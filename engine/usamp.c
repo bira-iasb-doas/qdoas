@@ -719,7 +719,7 @@ RC USAMP_BuildFromAnalysis(INT analysisFlag,INT gomeFlag)
 // QDOAS ???   if (!(rc=MATRIX_Load(USAMP_options.calibrationFile,&calibrationMatrix,0,0,0,0,(double)0.,(double)0.,0,1,"UsampBuildFromTools (calibration file) ")) &&
 // QDOAS ???       !(rc=MATRIX_Load(USAMP_options.kuruczFile,&kuruczMatrix,0,0,0,0,(double)calibrationMatrix.matrix[0][0]-7.,
 // QDOAS ???        (double)calibrationMatrix.matrix[0][calibrationMatrix.nl-1]+7.,1,1,"UsampBuildFromTools (Kurucz) ")) &&
-// QDOAS ???       !(rc=ANALYSE_NormalizeVector(kuruczMatrix.matrix[1]-1,kuruczMatrix.nl,NULL,"UsampBuildFromTools ")))
+// QDOAS ???       !(rc=VECTOR_NormalizeVector(kuruczMatrix.matrix[1]-1,kuruczMatrix.nl,NULL,"UsampBuildFromTools ")))
 // QDOAS ???    {
 // QDOAS ???     hrN=usampFFT.oldSize=kuruczMatrix.nl;
 // QDOAS ???     nSize=calibrationMatrix.nl;
@@ -896,7 +896,7 @@ RC USAMP_GlobalAlloc(double lambdaMin,double lambdaMax,INT size)
     FILES_RebuildFileName(kuruczFile,pUsamp->kuruczFile,1);
 
     if (!(rc=XSCONV_LoadCrossSectionFile(&USAMP_buffers.hrSolar,kuruczFile,lambdaMin-7.,lambdaMax+7.,(double)0.,CONVOLUTION_CONVERSION_NONE)))
-     rc=ANALYSE_NormalizeVector(USAMP_buffers.hrSolar.vector-1,USAMP_buffers.hrSolar.NDET,NULL,"USAMP_GlobalAlloc ");
+     rc=VECTOR_NormalizeVector(USAMP_buffers.hrSolar.vector-1,USAMP_buffers.hrSolar.NDET,NULL,"USAMP_GlobalAlloc ");
    }
 
   if (rc!=ERROR_ID_NO)

@@ -35,6 +35,7 @@ void mediateRequestPlotSpectra(ENGINE_CONTEXT *pEngineContext,void *responseHand
 	 // Declarations
 
   PROJECT *pProject;                                                            // pointer to the project part of the engine context
+  PRJCT_SPECTRA *pSpectra;                                                      // pointer to the spectra part of the project
   PRJCT_INSTRUMENTAL *pInstrumental;                                            // pointer to the instrumental part of the project
   BUFFERS *pBuffers;                                                            // pointer to the buffers part of the engine context
   RECORD_INFO *pRecord;                                                         // pointer to the record part of the engine context
@@ -50,6 +51,7 @@ void mediateRequestPlotSpectra(ENGINE_CONTEXT *pEngineContext,void *responseHand
   pRecord=&pEngineContext->recordInfo;
   pBuffers=&pEngineContext->buffers;
   pProject=&pEngineContext->project;
+  pSpectra=&pProject->spectra;
   pInstrumental=&pProject->instrumental;
   pDay=&pRecord->present_day;
   pTime=&pRecord->present_time;
@@ -119,7 +121,7 @@ void mediateRequestPlotSpectra(ENGINE_CONTEXT *pEngineContext,void *responseHand
      }
    }
 
-  if (pProject->spectra.displaySpectraFlag && pProject->spectra.displayDataFlag)
+  if (pSpectra->displaySpectraFlag && pSpectra->displayDataFlag)
    {
     mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"File","%s",
 
@@ -145,41 +147,40 @@ void mediateRequestPlotSpectra(ENGINE_CONTEXT *pEngineContext,void *responseHand
        mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"Instr. function","%s",pInstrumental->instrFunction);
      }
 
-// QDOAS ???
-// QDOAS ???     if (strlen(pInstrumental->vipFile))
-// QDOAS ???      {
-// QDOAS ???       if (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC_STD)
-// QDOAS ???        fprintf(fp,"Dark current\t\t%s\n",FILES_RebuildFileName(fileName,MFC_fileDark,1));
-// QDOAS ???       else if ((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC) &&
-// QDOAS ???             (((pInstrumental->mfcMaskSpec!=0) && (((UINT)MFC_header.ty==pInstrumental->mfcMaskSpec) || ((UINT)MFC_header.ty==pInstrumental->mfcMaskInstr))) ||
-// QDOAS ???               ((pInstrumental->mfcMaskSpec==0) &&
-// QDOAS ???               ((MFC_header.wavelength1==pInstrumental->mfcMaskInstr) ||
-// QDOAS ???                (fabs((double)(MFC_header.wavelength1-(float)pInstrumental->wavelength))<(double)5.)))))
-// QDOAS ???        fprintf(fp,"Dark current\t\t%s\n",FILES_RebuildFileName(fileName,MFC_fileDark,1));
-// QDOAS ???       else if (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_CCD_EEV)
-// QDOAS ???        fprintf(fp,"Straylight correction\t%s\n",FILES_RebuildFileName(fileName,pInstrumental->vipFile,1));
-// QDOAS ???       else
-// QDOAS ???        fprintf(fp,"Interpixel\t\t\t%s\n",FILES_RebuildFileName(fileName,pInstrumental->vipFile,1));
-// QDOAS ???      }
-// QDOAS ???
-// QDOAS ???     if (strlen(pInstrumental->dnlFile))
-// QDOAS ???      {
-// QDOAS ???       if (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC_STD)
-// QDOAS ???        fprintf(fp,"Offset\t\t\t%s\n",FILES_RebuildFileName(fileName,MFC_fileOffset,1));
-// QDOAS ???       else if ((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC) &&
-// QDOAS ???              (((MFC_header.ty!=0) &&
-// QDOAS ???              (((UINT)MFC_header.ty==pInstrumental->mfcMaskSpec) ||
-// QDOAS ???               ((UINT)MFC_header.ty==pInstrumental->mfcMaskDark) ||
-// QDOAS ???               ((UINT)MFC_header.ty==pInstrumental->mfcMaskInstr))) ||
-// QDOAS ???               ((pInstrumental->mfcMaskSpec==0) &&
-// QDOAS ???               ((MFC_header.wavelength1==pInstrumental->mfcMaskDark) ||
-// QDOAS ???                (MFC_header.wavelength1==pInstrumental->mfcMaskInstr)||
-// QDOAS ???                (fabs((double)(MFC_header.wavelength1-(float)pInstrumental->wavelength))<(double)5.)))))
-// QDOAS ???        fprintf(fp,"Offset\t\t\t%s\n",FILES_RebuildFileName(fileName,MFC_fileOffset,1));
-// QDOAS ???       else
-// QDOAS ???        fprintf(fp,"Non linearity\t\t%s\n",FILES_RebuildFileName(fileName,pInstrumental->dnlFile,1));
-// QDOAS ???      }
-// QDOAS ???
+    if (strlen(pInstrumental->vipFile))
+     {
+      if (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC_STD)
+       mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"Dark current","%s",MFC_fileDark);
+      else if ((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC) &&
+            (((pInstrumental->mfcMaskSpec!=0) && (((UINT)MFC_header.ty==pInstrumental->mfcMaskSpec) || ((UINT)MFC_header.ty==pInstrumental->mfcMaskInstr))) ||
+              ((pInstrumental->mfcMaskSpec==0) &&
+              ((MFC_header.wavelength1==pInstrumental->mfcMaskInstr) ||
+               (fabs((double)(MFC_header.wavelength1-(float)pInstrumental->wavelength))<(double)5.)))))
+       mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"Dark current","%s",MFC_fileDark);
+      else if (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_CCD_EEV)
+       mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"Straylight correction","%s",pInstrumental->vipFile);
+      else
+       mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"Interpixel","%s",pInstrumental->vipFile);
+     }
+
+    if (strlen(pInstrumental->dnlFile))
+     {
+      if (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC_STD)
+       mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"Offset","%s",MFC_fileOffset);
+      else if ((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC) &&
+             (((MFC_header.ty!=0) &&
+             (((UINT)MFC_header.ty==pInstrumental->mfcMaskSpec) ||
+              ((UINT)MFC_header.ty==pInstrumental->mfcMaskDark) ||
+              ((UINT)MFC_header.ty==pInstrumental->mfcMaskInstr))) ||
+              ((pInstrumental->mfcMaskSpec==0) &&
+              ((MFC_header.wavelength1==pInstrumental->mfcMaskDark) ||
+               (MFC_header.wavelength1==pInstrumental->mfcMaskInstr)||
+               (fabs((double)(MFC_header.wavelength1-(float)pInstrumental->wavelength))<(double)5.)))))
+       mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"Offset","%s",MFC_fileOffset);
+      else
+       mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"Non linearity","%s",pInstrumental->dnlFile);
+     }
+
     if (pInstrumental->readOutFormat!=PRJCT_INSTR_FORMAT_GOME2)
      mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"Date and Time","%02d/%02d/%d %02d:%02d:%02d",pDay->da_day,pDay->da_mon,pDay->da_year,pTime->ti_hour,pTime->ti_min,pTime->ti_sec);
 // QDOAS ???     else
@@ -239,15 +240,17 @@ void mediateRequestPlotSpectra(ENGINE_CONTEXT *pEngineContext,void *responseHand
 //   QDOAS ???       sprintf(tmpString,"ty mask\t\t\t%d\n",MFC_header.ty);
 //   QDOAS ???      }
 
-    if ((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_GDP_ASCII) ||
-        (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN))
+    if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_PIXEL])
+    	mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"Pixel number","%d",pRecord->gome.pixelNumber);
+    if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_PIXEL_TYPE])
+     mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"Pixel type","%d",pRecord->gome.pixelType);
+    if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_ORBIT])
      {
-     	mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"Orbit number","%d",pRecord->gome.orbitNumber+1);
-     	mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"Pixel number","%d",pRecord->gome.pixelNumber);
-     	mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"Pixel type","%d",pRecord->gome.pixelType);
+      if ((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_GDP_ASCII) || (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN))
+      	mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"Orbit number","%d",pRecord->gome.orbitNumber+1);
+      else if (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS)
+       mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"Orbit number","%d",pRecord->scia.orbitNumber);
      }
-    else if (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS)
-     mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"Orbit number","%d",pRecord->scia.orbitNumber);
 
 //   QDOAS ???     if (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC)
 //   QDOAS ???      sprintf(tmpString,"Calibration parameters\t%.2f %.3e %.3e %.3e\n",pRecord->wavelength1,pRecord->dispersion[0],
@@ -261,28 +264,51 @@ void mediateRequestPlotSpectra(ENGINE_CONTEXT *pEngineContext,void *responseHand
         (pInstrumental->readOutFormat!=PRJCT_INSTR_FORMAT_OMI) &&
         (pInstrumental->readOutFormat!=PRJCT_INSTR_FORMAT_GOME2))
      {
-      mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"Exposure time","%.3f sec",pRecord->Tint);
-      mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"Scans taken into account","%d",pRecord->NSomme);
-      mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"Elevation viewing angle","%.3f",pRecord->elevationViewAngle);
-      mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"Azimuth viewing angle","%.3f",pRecord->azimuthViewAngle);
+     	if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_TINT])
+       mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"Exposure time","%.3f sec",pRecord->Tint);
+
+      if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_SCANS])
+       mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"Scans taken into account","%d",pRecord->NSomme);
+      if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_NREJ])
+       mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"Rejected scans","%d",pRecord->rejected);
+      if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_VIEW_ELEVATION])
+       mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"Elevation viewing angle","%.3f",pRecord->elevationViewAngle);
+      if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_VIEW_AZIMUTH])
+       mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"Azimuth viewing angle","%.3f",pRecord->azimuthViewAngle);
      }
     else
      {
      	mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"Solar Azimuth angle","%.3f",pRecord->Azimuth);
-     	mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"Viewing Zenith angle","%.3f",pRecord->zenithViewAngle);
-     	mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"Viewing Azimuth angle","%.3f",pRecord->azimuthViewAngle);
+     	if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_VIEW_ELEVATION])
+      	mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"Viewing Zenith angle","%.3f",pRecord->zenithViewAngle);
+     	if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_VIEW_AZIMUTH])
+     	 mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"Viewing Azimuth angle","%.3f",pRecord->azimuthViewAngle);
      }
 
-    if (pRecord->rejected>0)
-     mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"Rejected scans","%d",pRecord->rejected);
-    if (pRecord->TDet!=(double)0.)
+    if (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_CCD_EEV)
+     {
+      if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_ALS_SCANNING])
+       {
+       	mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"Telescope scanning angle","%.3f",pRecord->als.scanningAngle);
+       	mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"ATR string","%s",pRecord->als.atrString);
+       }
+
+      if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_CCD_MEASTYPE])
+       mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"Measure type","%s",CCD_measureTypes[pRecord->ccd.measureType]);
+      if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_CCD_FILTERNUMBER])
+       mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"Filter number","%d",pRecord->ccd.filterNumber);
+      if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_CCD_HEADTEMPERATURE])
+       mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"Temperature in optic head","%.3f deg",pRecord->ccd.headTemperature);
+     }
+
+    if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_TDET])
      mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"Detector temperature","%.3f",pRecord->TDet);
 
-    if (pRecord->longitude!=(double)0.)
+    if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_LONGIT])
      mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"Longitude","%.3f",pRecord->longitude);
-    if (pRecord->latitude!=(double)0.)
+    if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_LATIT])
      mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"Latitude","%.3f",pRecord->latitude);
-    if (pRecord->altitude!=(double)0.)
+    if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_ALTIT])
      mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"Altitude","%.3f",pRecord->altitude);
 
 //   QDOAS ???
@@ -362,6 +388,10 @@ int mediateRequestDestroyEngineContext(void *engineContext, void *responseHandle
 
 void setMediateProjectDisplay(PRJCT_SPECTRA *pEngineSpectra,const mediate_project_display_t *pMediateSpectra)
  {
+ 	// Declaration
+
+ 	INDEX i;
+
   #if defined(__DEBUG_) && __DEBUG_ && defined(__DEBUG_DOAS_CONFIG_) && __DEBUG_DOAS_CONFIG_
   DEBUG_FunctionBegin("setMediateProjectDisplay",DEBUG_FCTTYPE_CONFIG);
   #endif
@@ -371,6 +401,11 @@ void setMediateProjectDisplay(PRJCT_SPECTRA *pEngineSpectra,const mediate_projec
   pEngineSpectra->displaySpectraFlag=pMediateSpectra->requireSpectra;
   pEngineSpectra->displayDataFlag=pMediateSpectra->requireData;
   pEngineSpectra->displayFitFlag=pMediateSpectra->requireFits;
+
+  memset(pEngineSpectra->fieldsFlag,0,PRJCT_RESULTS_ASCII_MAX);
+
+  for (i=0;i<pMediateSpectra->selection.nSelected;i++)
+   pEngineSpectra->fieldsFlag[(int)pMediateSpectra->selection.selected[i]]=(DoasCh)1;
 
   #if defined(__DEBUG_) && __DEBUG_ && defined(__DEBUG_DOAS_CONFIG_) && __DEBUG_DOAS_CONFIG_
   DEBUG_Print("displaySpectraFlag : %d\n",pEngineSpectra->displaySpectraFlag);
@@ -1440,10 +1475,10 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
     }
 
   if (!rc &&
-     (!useKurucz || (((THRD_id==THREAD_TYPE_KURUCZ) || useKurucz) &&
-                     !(rc=KURUCZ_Alloc(&pEngineContext->project,pEngineContext->buffers.lambda,indexKurucz,lambdaMin,lambdaMax)) &&
-                     !(rc=KURUCZ_Reference(pEngineContext->buffers.instrFunction,0,saveFlag,1,responseHandle)))) &&
-     !(rc=ANALYSE_AlignReference(0,saveFlag,responseHandle)))
+     ((!useKurucz && (THRD_id!=THREAD_TYPE_KURUCZ)) || (((THRD_id==THREAD_TYPE_KURUCZ) || useKurucz) &&
+       !(rc=KURUCZ_Alloc(&pEngineContext->project,pEngineContext->buffers.lambda,indexKurucz,lambdaMin,lambdaMax)) &&
+       !(rc=KURUCZ_Reference(pEngineContext->buffers.instrFunction,0,saveFlag,1,responseHandle)))) &&
+       !(rc=ANALYSE_AlignReference(pEngineContext,0,saveFlag,responseHandle)))
    {
     #if defined(__DEBUG_) && __DEBUG_ && __DEBUG_DOAS_OUTPUT_
     DEBUG_Start(ENGINE_dbgFile,"OUTPUT_RegisterData",DEBUG_FCTTYPE_FILE,5,DEBUG_DVAR_YES,1);
@@ -1828,7 +1863,8 @@ int mediateRequestBeginCalibrateSpectra(void *engineContext,
 
   if ((EngineRequestBeginBrowseSpectra(pEngineContext,spectraFileName)!=ERROR_ID_NO) ||
      ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN) && (GDP_BIN_LoadAnalysis(pEngineContext,pEngineContext->fileInfo.specFp,responseHandle)!=ERROR_ID_NO)) ||
-     ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS) && (SCIA_LoadAnalysis(pEngineContext,responseHandle)!=ERROR_ID_NO)))
+     ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS) && (SCIA_LoadAnalysis(pEngineContext,responseHandle)!=ERROR_ID_NO)) || /* ) // !!! GOME2 || */
+     /* // !!! GOME2 */ ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GOME2) && (GOME2_LoadAnalysis(pEngineContext,responseHandle)!=ERROR_ID_NO)))
 
    ERROR_DisplayMessage(responseHandle);
 
@@ -1847,9 +1883,7 @@ int mediateRequestNextMatchingCalibrateSpectrum(void *engineContext,
    {
    	mediateRequestPlotSpectra(pEngineContext,responseHandle);
 
- 	  if ((ANALYSE_refSelectionFlag && !pEngineContext->satelliteFlag && (EngineNewRef(pEngineContext,responseHandle)!=ERROR_ID_NO)) ||
-        (ANALYSE_Spectrum(pEngineContext,responseHandle)!=ERROR_ID_NO))
-
+ 	  if (ANALYSE_Spectrum(pEngineContext,responseHandle)!=ERROR_ID_NO)
      ERROR_DisplayMessage(responseHandle);
    }
 

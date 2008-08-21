@@ -556,20 +556,22 @@ void ANLYS_Free(void);
 
 typedef struct _prjctSpectra
  {
-  INT noMin,noMax;                                     // spectra numbers range
-  float SZAMin,SZAMax,SZADelta;                        // SZA range
-  float longMin,longMax,latMin,latMax,                 // resp. longitude and latitude ranges
-        radius;                                        // radius if circle mode is used
-  INT   namesFlag,                                     // use names
-        darkFlag,                                      // use dark current
-        displaySpectraFlag,                            // display complete spectra
-        displayDataFlag,                               // display data on spectra
-        displayFitFlag,                                // display fits
-        displayPause,                                  // QDOAS obsolete field !!! : force pause between two graph display
-        displayDelay,                                  // QDOAS obsolete field !!! : calculated delay for display pause
-        maxGraphV,                                     // QDOAS obsolete field !!! : maximum number of graphs in height a graphic page can hold
-        maxGraphH,                                     // QDOAS obsolete field !!! : maximum number of graphs in width a graphic page can hold
-        mode;
+  INT    noMin,noMax;                                                           // spectra numbers range
+  float  SZAMin,SZAMax,SZADelta;                                                // SZA range
+  float  longMin,longMax,latMin,latMax,                                         // resp. longitude and latitude ranges
+         radius;                                                                // radius if circle mode is used
+  INT    namesFlag,                                                             // use names
+         darkFlag,                                                              // use dark current
+         displaySpectraFlag,                                                    // display complete spectra
+         displayDataFlag,                                                       // display data on spectra
+         displayFitFlag,                                                        // display fits
+         displayPause,                                                          // QDOAS obsolete field !!! : force pause between two graph display
+         displayDelay,                                                          // QDOAS obsolete field !!! : calculated delay for display pause
+         maxGraphV,                                                             // QDOAS obsolete field !!! : maximum number of graphs in height a graphic page can hold
+         maxGraphH,                                                             // QDOAS obsolete field !!! : maximum number of graphs in width a graphic page can hold
+         mode;
+  INT    fieldsNumber;                                                          // number of ascii flags set in the next list
+  DoasCh fieldsFlag[PRJCT_RESULTS_ASCII_MAX];                                   // fields used in ascii format
  }
 PRJCT_SPECTRA;
 
@@ -1315,34 +1317,7 @@ EXTERN PRJCT_ASCII ASCII_options;
 // QDOAS ???
 // QDOAS ??? void ASCII_SaveSpectra(INDEX indexWindow);
 // QDOAS ???
-// QDOAS ??? // =================================
-// QDOAS ??? // BITMAPS SAVE AND PRINT PROCESSING
-// QDOAS ??? // =================================
-// QDOAS ???
-// QDOAS ??? #if defined(__WINDOAS_GUI_) && __WINDOAS_GUI_
-// QDOAS ??? void DIB_SaveSpectra(INDEX indexWindow);
-// QDOAS ??? #endif
-// QDOAS ???
-// QDOAS ??? // ================
-// QDOAS ??? // RING EFFECT TOOL
-// QDOAS ??? // ================
-// QDOAS ???
-// QDOAS ??? enum _ringTypes
-// QDOAS ???  {
-// QDOAS ???   RING_TYPE_SOLAR,
-// QDOAS ???   RING_TYPE_MOLECULAR,
-// QDOAS ???   RING_TYPE_MAX
-// QDOAS ???  };
-// QDOAS ???
-// QDOAS ??? #if defined(__WINDOAS_GUI_) && __WINDOAS_GUI_
-// QDOAS ??? LRESULT CALLBACK RING_WndProc(HWND hwndRing,UINT msg,WPARAM mp1,LPARAM mp2);
-// QDOAS ??? LRESULT CALLBACK RING_ProgressWndProc(HWND hwndProgress,UINT msg,WPARAM mp1,LPARAM mp2);
-// QDOAS ??? #endif
-// QDOAS ???
-// QDOAS ??? void RING_ResetConfiguration(void);
-// QDOAS ??? RC   RING_LoadConfiguration(DoasCh *fileLine);
-// QDOAS ??? void RING_SaveConfiguration(FILE *fp);
-// QDOAS ???
+
 // QDOAS ??? // ========================
 // QDOAS ??? // UNDERSAMPLING CORRECTION
 // QDOAS ??? // ========================

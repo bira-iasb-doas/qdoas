@@ -305,3 +305,76 @@
 
        return ( (double) LUTable );
     }
+
+// -------------------------------------
+// VECTOR_Norm : Vector norm computation
+// -------------------------------------
+
+double VECTOR_Norm(double *v,INT dim)
+ {
+  // Declarations
+
+  double norm;
+  INDEX i;
+
+  #if defined(__DEBUG_) && __DEBUG_
+  DEBUG_FunctionBegin("VECTOR_Norm",DEBUG_FCTTYPE_MATH);
+  #endif
+
+  // Norm computation
+
+  for (i=1,norm=(double) 0.;i<=dim;i++)
+   norm+=v[i]*v[i];
+
+  // Return norm
+
+  #if defined(__DEBUG_) && __DEBUG_
+  DEBUG_FunctionStop("VECTOR_Norm",0);
+  #endif
+
+  return norm;
+ }
+
+// ----------------------------------------------------
+// VECTOR_NormalizeVector : Vector normalization
+// ----------------------------------------------------
+
+RC VECTOR_NormalizeVector(double *v,INT dim,double *pFact,DoasCh *function)
+ {
+  // Declarations
+
+  DoasCh str[MAX_ITEM_TEXT_LEN+1];
+  double norm;
+  INDEX i;
+  RC rc;
+
+  #if defined(__DEBUG_) && __DEBUG_
+  DEBUG_FunctionBegin("VECTOR_NormalizeVector",DEBUG_FCTTYPE_UTIL);
+  #endif
+
+  // Initializations
+
+  sprintf(str,"VECTOR_NormalizeVector (%s) ",function);
+  rc=ERROR_ID_NO;
+
+  // Vector normalization
+
+  if (VECTOR_Norm(v,dim)<=(double)0.)
+   rc=ERROR_SetLast("str",ERROR_TYPE_WARNING,ERROR_ID_SQRT_ARG);
+  else if ((norm=(double)sqrt(VECTOR_Norm(v,dim)))!=(double)0.)
+   {
+    if (pFact!=NULL)
+     *pFact=norm;
+
+    for (i=1,norm=(double)1./norm;i<=dim;i++)
+     v[i]*=norm;
+   }
+
+  #if defined(__DEBUG_) && __DEBUG_
+  DEBUG_FunctionStop("VECTOR_NormalizeVector",rc);
+  #endif
+
+  // Return
+
+  return rc;
+ }

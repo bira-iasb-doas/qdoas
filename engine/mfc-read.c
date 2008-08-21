@@ -80,6 +80,86 @@ INT   MFC_refFlag=0;
 
 INT mfcLastSpectrum=0;
 
+RC MFC_LoadOffset(ENGINE_CONTEXT *pEngineContext)
+ {
+ 	// Declarations
+
+ 	PROJECT *pProject;                                                            // pointer to the current project
+  PRJCT_INSTRUMENTAL *pInstrumental;                                            // pointer to the instrumental part of the project
+  BUFFERS *pBuffers;                                                            // pointer to the buffers part of the engine context
+  RC rc;
+
+  // Initializations
+
+  pProject=&pEngineContext->project;
+  pInstrumental=&pProject->instrumental;
+  pBuffers=&pEngineContext->buffers;
+
+  rc=ERROR_ID_NO;
+
+  strcpy(MFC_fileOffset,pInstrumental->dnlFile);
+
+  // Read offset
+
+  if (strlen(pInstrumental->dnlFile) && (pBuffers->dnl!=NULL))                  // offset
+   {
+   	VECTOR_Init(pBuffers->dnl,0.,NDET);
+
+    rc=(pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC)?
+        MFC_ReadRecord(pInstrumental->dnlFile,&MFC_headerOff,pBuffers->dnl,
+       &MFC_headerDrk,NULL,&MFC_headerOff,NULL,pInstrumental->mfcMaskOffset,pInstrumental->mfcMaskSpec,pInstrumental->mfcRevert): // remove offset from dark current
+        MFC_ReadRecordStd(pEngineContext,pInstrumental->dnlFile,&MFC_headerOff,pBuffers->dnl,
+       &MFC_headerDrk,NULL,&MFC_headerOff,NULL);
+
+    if (rc==ERROR_ID_FILE_END)
+     rc=0;
+   }
+
+  // Return
+
+  return rc;
+ }
+
+RC MFC_LoadDark(ENGINE_CONTEXT *pEngineContext)
+ {
+ 	// Declarations
+
+ 	PROJECT *pProject;                                                            // pointer to the current project
+  PRJCT_INSTRUMENTAL *pInstrumental;                                            // pointer to the instrumental part of the project
+  BUFFERS *pBuffers;                                                            // pointer to the buffers part of the engine context
+  RC rc;
+
+  // Initializations
+
+  pProject=&pEngineContext->project;
+  pInstrumental=&pProject->instrumental;
+  pBuffers=&pEngineContext->buffers;
+
+  rc=ERROR_ID_NO;
+
+  strcpy(MFC_fileDark,pInstrumental->vipFile);
+
+  // Read dark current
+
+  if (strlen(pInstrumental->vipFile) && (pBuffers->varPix!=NULL))                  // dark current
+   {
+   	VECTOR_Init(pBuffers->varPix,0.,NDET);
+
+    rc=(pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC)?
+        MFC_ReadRecord(pInstrumental->vipFile,&MFC_headerDrk,pBuffers->varPix,
+       &MFC_headerDrk,NULL,&MFC_headerOff,pBuffers->dnl,pInstrumental->mfcMaskOffset,pInstrumental->mfcMaskSpec,pInstrumental->mfcRevert): // remove offset from dark current
+        MFC_ReadRecordStd(pEngineContext,pInstrumental->vipFile,&MFC_headerDrk,pBuffers->varPix,
+       &MFC_headerDrk,NULL,&MFC_headerOff,pBuffers->dnl);
+
+    if (rc==ERROR_ID_FILE_END)
+     rc=0;
+   }
+
+  // Return
+
+  return rc;
+ }
+
 // -----------------------------------------------------------------------------
 // FUNCTION      SetMFC
 // -----------------------------------------------------------------------------
@@ -104,11 +184,7 @@ RC SetMFC(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
   BUFFERS *pBuffers;                                                            // pointer to the buffers part of the engine context
 
   DoasCh  fileName[MAX_STR_SHORT_LEN+1],                                         // name of the current file
-         format[20],                                                            // format string
-        *ptr,*ptr2,*ptr3;                                                       // pointers to parts in the previous string
-//  INDEX  indexFile;
-    INDEX firstFile,lastFile;                                                   // indexes for browsing files (see file names format)
-//  FILE  *fp;                                                                    // pointer to the current file
+         format[20];                                                            // format string
   RC rc;
 
   // Initializations
@@ -954,7 +1030,7 @@ RC MFC_LoadAnalysis(ENGINE_CONTEXT *pEngineContext)
                             &MFC_headerDrk,pBuffers->varPix,
                             &MFC_headerOff,pBuffers->dnl);
 
-       if (!rc && !(rc=ANALYSE_NormalizeVector(pTabFeno->Sref-1,pTabFeno->NDET,&factTemp,"MFC_LoadAnalysis (Reference) ")))
+       if (!rc && !(rc=VECTOR_NormalizeVector(pTabFeno->Sref-1,pTabFeno->NDET,&factTemp,"MFC_LoadAnalysis (Reference) ")))
         {
          memcpy(pTabFeno->SrefEtalon,pTabFeno->Sref,sizeof(double)*pTabFeno->NDET);
          pTabFeno->useEtalon=pTabFeno->displayRef=1;

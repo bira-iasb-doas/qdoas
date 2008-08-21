@@ -181,6 +181,7 @@ RC KURUCZ_Spectrum(double *oldLambda,double *newLambda,double *spectrum,double *
 
     Results=Feno->TabCrossResults;
     pResults=&Feno->TabCrossResults[(Feno->indexSpectrum!=ITEM_NONE)?Feno->indexSpectrum:Feno->indexReference];
+
     rc=ERROR_ID_NO;
 
     VPix       = KURUCZ_buffers.VPix;
@@ -189,6 +190,7 @@ RC KURUCZ_Spectrum(double *oldLambda,double *newLambda,double *spectrum,double *
     pixMid     = KURUCZ_buffers.pixMid;
     VLambda    = KURUCZ_buffers.VLambda;
     VShift     = KURUCZ_buffers.VShift;
+
     svdFeno    = KURUCZ_buffers.KuruczFeno[indexFeno].svdFeno;
 
     Nb_Win     = KURUCZ_buffers.Nb_Win;
@@ -1026,7 +1028,7 @@ RC KURUCZ_Alloc(PROJECT *pProject,double *lambda,INDEX indexKurucz,double lambda
 
   if (!(rc=XSCONV_LoadCrossSectionFile(&KURUCZ_buffers.hrSolar,kuruczFile,lambdaMin-7.-step*KURUCZ_buffers.solarFGap,lambdaMax+7.+step*KURUCZ_buffers.solarFGap,(double)0.,CONVOLUTION_CONVERSION_NONE)))
    {
-    if (((rc=ANALYSE_NormalizeVector(KURUCZ_buffers.hrSolar.vector-1,KURUCZ_buffers.hrSolar.NDET,NULL,"KURUCZ_Alloc "))!=ERROR_ID_NO) ||
+    if (((rc=VECTOR_NormalizeVector(KURUCZ_buffers.hrSolar.vector-1,KURUCZ_buffers.hrSolar.NDET,NULL,"KURUCZ_Alloc "))!=ERROR_ID_NO) ||
         ((rc=SPLINE_Deriv2(KURUCZ_buffers.hrSolar.lambda,KURUCZ_buffers.hrSolar.vector,KURUCZ_buffers.hrSolar.deriv2,KURUCZ_buffers.hrSolar.NDET,"KURUCZ_Alloc "))!=ERROR_ID_NO))
 
      goto EndKuruczAlloc;

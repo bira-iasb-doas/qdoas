@@ -1982,8 +1982,8 @@ RC SciaRefSelection(ENGINE_CONTEXT *pEngineContext,
 
       if (nRefN || nRefS)   // if no record selected, use ref (normalized as loaded)
        {
-        ANALYSE_NormalizeVector(refN-1,NDET,&normFact,"SciaRefSelection (refN) ");
-        ANALYSE_NormalizeVector(refS-1,NDET,&normFact,"SciaRefSelection (refS) ");
+        VECTOR_NormalizeVector(refN-1,NDET,&normFact,"SciaRefSelection (refN) ");
+        VECTOR_NormalizeVector(refS-1,NDET,&normFact,"SciaRefSelection (refS) ");
        }
      }
    }
@@ -2135,8 +2135,8 @@ RC SCIA_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
 //         memcpy(pTabFeno->SrefSigma,SCIA_refE,sizeof(double)*pTabFeno->NDET);
 
-         if (!(rc=ANALYSE_NormalizeVector(pTabFeno->Sref-1,pTabFeno->NDET,&factTemp,"SCIA_LoadAnalysis (Reference) "))) // &&
-//             !(rc=ANALYSE_NormalizeVector(pTabFeno->SrefSigma-1,pTabFeno->NDET,&factTemp,"SCIA_LoadAnalysis (RefError) ")))
+         if (!(rc=VECTOR_NormalizeVector(pTabFeno->Sref-1,pTabFeno->NDET,&factTemp,"SCIA_LoadAnalysis (Reference) "))) // &&
+//             !(rc=VECTOR_NormalizeVector(pTabFeno->SrefSigma-1,pTabFeno->NDET,&factTemp,"SCIA_LoadAnalysis (RefError) ")))
           {
            memcpy(pTabFeno->SrefEtalon,pTabFeno->Sref,sizeof(double)*pTabFeno->NDET);
            pTabFeno->useEtalon=pTabFeno->displayRef=1;
@@ -2227,8 +2227,8 @@ RC SCIA_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
     // Automatic reference selection
 
     if (sciaLoadReferenceFlag && !(rc=SciaNewRef(pEngineContext,responseHandle)) &&
-      !(rc=ANALYSE_AlignReference(2,pEngineContext->project.spectra.displayDataFlag,responseHandle))) // automatic ref selection for Northern hemisphere
-     rc=ANALYSE_AlignReference(3,pEngineContext->project.spectra.displayDataFlag,responseHandle);     // automatic ref selection for Southern hemisphere
+      !(rc=ANALYSE_AlignReference(pEngineContext,2,pEngineContext->project.spectra.displayDataFlag,responseHandle))) // automatic ref selection for Northern hemisphere
+     rc=ANALYSE_AlignReference(pEngineContext,3,pEngineContext->project.spectra.displayDataFlag,responseHandle);     // automatic ref selection for Southern hemisphere
    }
 
   // Return

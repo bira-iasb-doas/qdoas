@@ -88,6 +88,8 @@ int    VECTOR_LocGt(double *vector,double value,int dim);
 void   VECTOR_Invert(double *vector,int dim);
 double VECTOR_Table1(double *X0,int Nx,double *Y0,int Ny,double **Table,double X,double Y);
 double VECTOR_Table2(double **Table,INT Nx,INT Ny,double X,double Y);
+double VECTOR_Norm(double *v,INT dim);
+RC     VECTOR_NormalizeVector(double *v,INT dim,double *fact,DoasCh *function);
 
 // =================================
 // FVOIGT.C : Voigt profile function
@@ -355,6 +357,7 @@ typedef struct _feno
                   residualsFile[MAX_ITEM_TEXT_LEN+1];
   double          refSZA,refSZADelta;                                           //  in automatic reference selection mode, SZA constraints
   INT             refSpectrumSelectionMode;                                     //  reference spectrum selection mode
+  DoasCh          refAM[MAX_ITEM_TEXT_LEN+1],refPM[MAX_ITEM_TEXT_LEN+1];        //  in automatic reference selection mode, names of the spectra files selected for the reference spectra (specific file format : MFC)
   INDEX           indexRefMorning,indexRefAfternoon,                            //  in automatic reference selection mode, index of selected records
                   indexRef;                                                     //  in automatic reference selection mode, index of current selected record
   double          ZmRefMorning,ZmRefAfternoon,Zm,                               //  in automatic reference selection mode, zenithal angles of selected records
@@ -908,13 +911,14 @@ RC   FNPixel   ( double *lambdaVector, double lambdaValue, INT npts,INT pixelSel
 RC   ANALYSE_CheckLambda(WRK_SYMBOL *pWrkSymbol,double *lambda,DoasCh *callingFunction);
 RC   ANALYSE_XsInterpolation(FENO *pTabFeno,double *newLambda);
 RC   ANALYSE_XsConvolution(FENO *pTabFeno,double *newLambda,MATRIX_OBJECT *pSlit,INT slitType,double *slitParam1,double *slitParam2,double *slitParam3,double *slitParam4);
-RC   ANALYSE_NormalizeVector(double *v,INT dim,double *fact,DoasCh *function);
 RC   ANALYSE_LinFit(SVD *pSvd,INT Npts,INT Degree,double *a,double *sigma,double *b,double *x);
+void ANALYSE_SvdFree(DoasCh *callingFunctionShort,SVD *pSvd);
+RC   ANALYSE_SvdLocalAlloc(DoasCh *callingFunctionShort,SVD *pSvd);
 RC   ANALYSE_SvdInit(SVD *pSvd);
 RC   ANALYSE_CurFitMethod(double *Spectre,double *SigmaSpec,double *Sref,double *Chisqr,INT *pNiter);
 void ANALYSE_ResetData(void);
 RC   ANALYSE_SetInit(ENGINE_CONTEXT *pEngineContext);
-RC   ANALYSE_AlignReference(INT refFlag,INT saveFlag,void *responseHandle);
+RC   ANALYSE_AlignReference(ENGINE_CONTEXT *pEngineContext,INT refFlag,INT saveFlag,void *responseHandle);
 RC   ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle);
 
 void ANALYSE_SetAnalysisType(void);
@@ -1323,6 +1327,7 @@ RC               GDP_BIN_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,FILE *specF
 #define UOFT_BASE 1296 // 36x36
 #define MAX_UOFT_RECORD (UOFT_BASE+(UOFT_BASE-1))
 
+EXTERN DoasCh *CCD_measureTypes[];
 EXTERN DoasCh UOFT_figures[UOFT_BASE+1];
 
 RC   SetUofT(ENGINE_CONTEXT *pEngineContext,FILE *specFp);
@@ -1540,7 +1545,9 @@ extern DoasCh MFC_fileInstr[MAX_STR_SHORT_LEN+1],
              MFC_fileSpectra[MAX_STR_SHORT_LEN+1],
              MFC_fileMin[MAX_STR_SHORT_LEN+1];
 
-RC   MFC_ReadRecord(DoasCh *fileName,TBinaryMFC *pHeaderSpe,double *spe,TBinaryMFC *pHeaderDrk,double *drk,TBinaryMFC *pHeaderOff,double *off,UINT mask,UINT maskSpec,UINT revertFlag);
+RC MFC_LoadOffset(ENGINE_CONTEXT *pEngineContext);
+RC MFC_LoadDark(ENGINE_CONTEXT *pEngineContext);
+RC MFC_ReadRecord(DoasCh *fileName,TBinaryMFC *pHeaderSpe,double *spe,TBinaryMFC *pHeaderDrk,double *drk,TBinaryMFC *pHeaderOff,double *off,UINT mask,UINT maskSpec,UINT revertFlag);
 RC MFC_ReadRecordStd(ENGINE_CONTEXT *pEngineContext,DoasCh *fileName,
                      TBinaryMFC *pHeaderSpe,double *spe,
                      TBinaryMFC *pHeaderDrk,double *drk,

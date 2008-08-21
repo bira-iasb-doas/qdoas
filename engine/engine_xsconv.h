@@ -8,9 +8,9 @@
 extern "C" {
 #endif
 
-// =======================
-// DEFINITION OF CONSTANTS
-// =======================
+// ==============
+// ENGINE CONTEXT
+// ==============
 
 typedef struct _enigneXsconvContext
  {                                                                              // GENERAL OPTIONS
@@ -44,21 +44,39 @@ typedef struct _enigneXsconvContext
   double fraction;                                                              // tunes the phase
 
                                                                                 // RING
-  INT    temperature;                                                           // temperature
+  double    temperature;                                                        // temperature
  }
 ENGINE_XSCONV_CONTEXT;
 
-// ===================
-// GLOBAL DECLARATIONS
-// ===================
-
-// ==========
-// PROTOTYPES
-// ==========
-
 ENGINE_XSCONV_CONTEXT *EngineXsconvCreateContext(void);
 RC                     EngineXsconvDestroyContext(ENGINE_XSCONV_CONTEXT *pEngineContext);
+
+// ================
+// CONVOLUTION TOOL
+// ================
+
 RC                     XSCONV_Convolution(ENGINE_XSCONV_CONTEXT *pEngineContext,void *responseHandle);
+
+// ================
+// RING EFFECT TOOL
+// ================
+
+// Constants definitions
+
+#define RING_SLIT_WIDTH (double)6.
+
+#define N2_SIZE  48    // size of n2 data
+#define O2_SIZE  185    // size of o2 data
+
+// Global declarations
+
+EXTERN double n2pos[N2_SIZE];
+EXTERN double o2pos[O2_SIZE];
+
+// Prototypes
+
+void raman_n2(double temp,double *n2xsec);
+void raman_o2(double temp,double *o2xsec);
 
 #if defined(_cplusplus) || defined(__cplusplus)
 }

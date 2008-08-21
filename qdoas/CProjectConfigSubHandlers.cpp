@@ -51,6 +51,8 @@ bool CSelectorSubHandler::start(const QString &element, const QXmlAttributes &at
     d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_TIFRAC;
   else if (str == "scans")
     d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_SCANS;
+  else if (str == "rejected")
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_NREJ;
   else if (str == "tint")
     d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_TINT;
   else if (str == "sza")
@@ -119,6 +121,16 @@ bool CSelectorSubHandler::start(const QString &element, const QXmlAttributes &at
     d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_MFC_STARTTIME;
   else if (str == "mfc_endtime")
     d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_MFC_ENDTIME;
+
+  else if (str == "ccd_telescopeAngle")
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_ALS_SCANNING;
+  else if (str == "ccd_filterNumber")
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_CCD_FILTERNUMBER;
+  else if (str == "ccd_measType")
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_CCD_MEASTYPE;
+  else if (str == "ccd_headTemp")
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_CCD_HEADTEMPERATURE;
+
   else
     return postErrorMessage("Invalid output field " + str);
 

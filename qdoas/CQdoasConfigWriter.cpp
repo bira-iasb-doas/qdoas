@@ -1316,6 +1316,7 @@ void CQdoasConfigWriter::writeDataSelectList(FILE *fp, const data_select_list_t 
     case PRJCT_RESULTS_ASCII_JDFRAC:           fprintf(fp, "jdfrac"); break;
     case PRJCT_RESULTS_ASCII_TIFRAC:           fprintf(fp, "tifrac"); break;
     case PRJCT_RESULTS_ASCII_SCANS:            fprintf(fp, "scans"); break;
+    case PRJCT_RESULTS_ASCII_NREJ:             fprintf(fp, "rejected"); break;
     case PRJCT_RESULTS_ASCII_TINT:             fprintf(fp, "tint"); break;
     case PRJCT_RESULTS_ASCII_SZA:              fprintf(fp, "sza"); break;
     case PRJCT_RESULTS_ASCII_CHI:              fprintf(fp, "chi"); break;
@@ -1350,6 +1351,12 @@ void CQdoasConfigWriter::writeDataSelectList(FILE *fp, const data_select_list_t 
     case PRJCT_RESULTS_ASCII_SCIA_STATE_ID:    fprintf(fp, "scia_state_id"); break;
     case PRJCT_RESULTS_ASCII_MFC_STARTTIME:    fprintf(fp, "mfc_starttime"); break;
     case PRJCT_RESULTS_ASCII_MFC_ENDTIME:      fprintf(fp, "mfc_endtime"); break;
+
+    case PRJCT_RESULTS_ASCII_ALS_SCANNING        :      fprintf(fp, "ccd_telescopeAngle"); break;
+    case PRJCT_RESULTS_ASCII_CCD_FILTERNUMBER    :      fprintf(fp, "ccd_filterNumber"); break;
+    case PRJCT_RESULTS_ASCII_CCD_MEASTYPE        :      fprintf(fp, "ccd_measType"); break;
+    case PRJCT_RESULTS_ASCII_CCD_HEADTEMPERATURE :      fprintf(fp, "ccd_headTemp"); break;
+
     default: fprintf(fp, "Invalid");
     }
     fprintf(fp, "\" />\n");

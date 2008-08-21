@@ -1295,8 +1295,8 @@ RC GdpBinRefSelection(ENGINE_CONTEXT *pEngineContext,
 
       if (nRefN || nRefS)   // if nor record selected, use ref (normalized as loaded)
        {
-        ANALYSE_NormalizeVector(refN-1,NDET,&normFact,"GdpBinRefSelection (refN) ");
-        ANALYSE_NormalizeVector(refS-1,NDET,&normFact,"GdpBinRefSelection (refS) ");
+        VECTOR_NormalizeVector(refN-1,NDET,&normFact,"GdpBinRefSelection (refN) ");
+        VECTOR_NormalizeVector(refS-1,NDET,&normFact,"GdpBinRefSelection (refS) ");
        }
      }
    }
@@ -1443,8 +1443,8 @@ RC GDP_BIN_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,FILE *specFp,void *respon
             pTabFeno->SrefSigma[i]=(double)pOrbitFile->gdpBinRefError[j]/pOrbitFile->gdpBinBandInfo[pOrbitFile->gdpBinBandIndex].scalingError;
           }
 
-         if (!(rc=ANALYSE_NormalizeVector(pTabFeno->Sref-1,pTabFeno->NDET,&factTemp,"GDP_BIN_LoadAnalysis (Reference) ")) &&
-            (!pRecord->useErrors || !(rc=ANALYSE_NormalizeVector(pTabFeno->SrefSigma-1,pTabFeno->NDET,&factTemp,"GDP_BIN_LoadAnalysis (RefError) "))))
+         if (!(rc=VECTOR_NormalizeVector(pTabFeno->Sref-1,pTabFeno->NDET,&factTemp,"GDP_BIN_LoadAnalysis (Reference) ")) &&
+            (!pRecord->useErrors || !(rc=VECTOR_NormalizeVector(pTabFeno->SrefSigma-1,pTabFeno->NDET,&factTemp,"GDP_BIN_LoadAnalysis (RefError) "))))
           {
            memcpy(pTabFeno->SrefEtalon,pTabFeno->Sref,sizeof(double)*pTabFeno->NDET);
            pTabFeno->useEtalon=pTabFeno->displayRef=1;
@@ -1534,8 +1534,8 @@ RC GDP_BIN_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,FILE *specFp,void *respon
     // Reference
 
     if ((THRD_id==THREAD_TYPE_ANALYSIS) && gdpBinLoadReferenceFlag && !(rc=GdpBinNewRef(pEngineContext,specFp,responseHandle)) &&
-       !(rc=ANALYSE_AlignReference(2,pEngineContext->project.spectra.displayDataFlag,responseHandle)))  // automatic ref selection for Northern hemisphere
-     rc=ANALYSE_AlignReference(3,pEngineContext->project.spectra.displayDataFlag,responseHandle);       // automatic ref selection for Southern hemisphere
+       !(rc=ANALYSE_AlignReference(pEngineContext,2,pEngineContext->project.spectra.displayDataFlag,responseHandle)))  // automatic ref selection for Northern hemisphere
+     rc=ANALYSE_AlignReference(pEngineContext,3,pEngineContext->project.spectra.displayDataFlag,responseHandle);       // automatic ref selection for Southern hemisphere
 
     if (rc==ERROR_ID_NO_REF)
      for (i=GDP_BIN_currentFileIndex+1;i<gdpBinOrbitFilesN;i++)

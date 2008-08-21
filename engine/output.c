@@ -108,6 +108,7 @@ PRJCT_RESULTS_FIELDS PRJCT_resultsAscii[PRJCT_RESULTS_ASCII_MAX]=
   { "Fractional day"              , MEMORY_TYPE_DOUBLE, sizeof(double), ITEM_NONE, ITEM_NONE, "%#10.6lf"  },       // PRJCT_RESULTS_ASCII_JDFRAC
   { "Fractional time"             , MEMORY_TYPE_DOUBLE, sizeof(double), ITEM_NONE, ITEM_NONE, "%#20.15lf" },       // PRJCT_RESULTS_ASCII_TIFRAC
   { "Scans"                       , MEMORY_TYPE_USHORT, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_SCANS
+  { "Rejected"                    , MEMORY_TYPE_USHORT, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_NREJ
   { "Tint"                        , MEMORY_TYPE_DOUBLE, sizeof(double), ITEM_NONE, ITEM_NONE, "%#12.6lf"  },       // PRJCT_RESULTS_ASCII_TINT
   { "SZA"                         , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#8.3f"    },       // PRJCT_RESULTS_ASCII_SZA
   { "Chi Square"                  , MEMORY_TYPE_DOUBLE, sizeof(double), ITEM_NONE, ITEM_NONE, "%#12.4le"  },       // PRJCT_RESULTS_ASCII_CHI
@@ -141,7 +142,11 @@ PRJCT_RESULTS_FIELDS PRJCT_resultsAscii[PRJCT_RESULTS_ASCII_MAX]=
   { "SCIAMACHY State Index"       , MEMORY_TYPE_USHORT, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_SCIA_STATE_INDEX
   { "SCIAMACHY State Id"          , MEMORY_TYPE_USHORT, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_SCIA_STATE_ID
   { "MFC StartTime (hhmmss)"      , MEMORY_TYPE_STRING,             24, ITEM_NONE, ITEM_NONE, "%s"        },       // PRJCT_RESULTS_ASCII_MFC_STARTTIME
-  { "MFC EndTime (hhmmss)"        , MEMORY_TYPE_STRING,             24, ITEM_NONE, ITEM_NONE, "%s"        }        // PRJCT_RESULTS_ASCII_MFC_ENDTIME
+  { "MFC EndTime (hhmmss)"        , MEMORY_TYPE_STRING,             24, ITEM_NONE, ITEM_NONE, "%s"        },       // PRJCT_RESULTS_ASCII_MFC_ENDTIME
+  { "Scanning telescope angle"    , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_ALS_SCANNING
+  { "Filter number"               , MEMORY_TYPE_INT   , sizeof(INT)   , ITEM_NONE, ITEM_NONE, "%#8d"      },       // PRJCT_RESULTS_ASCII_CCD_FILTERNUMBER
+  { "Measurement type"            , MEMORY_TYPE_INT   , sizeof(INT)   , ITEM_NONE, ITEM_NONE, "%#8d"      },       // PRJCT_RESULTS_ASCII_CCD_MEASTYPE
+  { "Head temperature"            , MEMORY_TYPE_DOUBLE, sizeof(double), ITEM_NONE, ITEM_NONE, "%#12.6f"   }        // PRJCT_RESULTS_ASCII_CCD_HEADTEMPERATURE
  };
 
 typedef struct _NDSC_header
@@ -1573,6 +1578,10 @@ void OutputSaveRecord(ENGINE_CONTEXT *pEngineContext,INT hiddenFlag)
          ((DoasUS *)outputColumns[indexColumn++])[indexRecord]=(DoasUS)pRecordInfo->NSomme;
         break;
      // ----------------------------------------------------------------------
+        case PRJCT_RESULTS_ASCII_NREJ :
+         ((DoasUS *)outputColumns[indexColumn++])[indexRecord]=(DoasUS)pRecordInfo->rejected;
+        break;
+     // ----------------------------------------------------------------------
         case PRJCT_RESULTS_ASCII_TINT :
          ((double *)outputColumns[indexColumn++])[indexRecord]=(double)pRecordInfo->Tint;
         break;
@@ -1936,6 +1945,22 @@ void OutputSaveRecord(ENGINE_CONTEXT *pEngineContext,INT hiddenFlag)
          ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->altitude;
         break;
      // ----------------------------------------------------------------------
+        case PRJCT_RESULTS_ASCII_ALS_SCANNING :
+         ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->als.scanningAngle;
+        break;
+     // ---------------------------------------------------------------------
+        case PRJCT_RESULTS_ASCII_CCD_FILTERNUMBER :
+         ((INT *)outputColumns[indexColumn++])[indexRecord]=(INT)pRecordInfo->ccd.filterNumber;
+        break;
+     // ---------------------------------------------------------------------
+        case PRJCT_RESULTS_ASCII_CCD_MEASTYPE :
+         ((INT *)outputColumns[indexColumn++])[indexRecord]=(INT)pRecordInfo->ccd.measureType;
+        break;
+     // ---------------------------------------------------------------------
+        case PRJCT_RESULTS_ASCII_CCD_HEADTEMPERATURE :
+         ((double *)outputColumns[indexColumn++])[indexRecord]=(double)pRecordInfo->ccd.headTemperature;
+        break;
+     // ---------------------------------------------------------------------
         default :
          k--;
         break;

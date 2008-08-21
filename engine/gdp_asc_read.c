@@ -923,8 +923,8 @@ RC GDP_ASC_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
        memcpy(pTabFeno->Sref,GDP_ASC_ref,sizeof(double)*NDET);
        memcpy(pTabFeno->SrefSigma,GDP_ASC_refE,sizeof(double)*NDET);
 
-       if (!(rc=ANALYSE_NormalizeVector(pTabFeno->Sref-1,NDET,&factTemp,"GDP_ASC_LoadAnalysis (Reference) ")) &&
-           !(rc=ANALYSE_NormalizeVector(pTabFeno->SrefSigma-1,NDET,&factTemp,"GDP_ASC_LoadAnalysis (RefError) ")))
+       if (!(rc=VECTOR_NormalizeVector(pTabFeno->Sref-1,NDET,&factTemp,"GDP_ASC_LoadAnalysis (Reference) ")) &&
+           !(rc=VECTOR_NormalizeVector(pTabFeno->SrefSigma-1,NDET,&factTemp,"GDP_ASC_LoadAnalysis (RefError) ")))
         {
          memcpy(pTabFeno->SrefEtalon,pTabFeno->Sref,sizeof(double)*NDET);
          pTabFeno->useEtalon=pTabFeno->displayRef=1;

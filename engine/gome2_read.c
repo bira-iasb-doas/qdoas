@@ -1821,8 +1821,8 @@ RC Gome2RefSelection(ENGINE_CONTEXT *pEngineContext,
 
       if (nRefN || nRefS)   // if no record selected, use ref (normalized as loaded)
        {
-        ANALYSE_NormalizeVector(refN-1,NDET,&normFact,"Gome2RefSelection (refN) ");
-        ANALYSE_NormalizeVector(refS-1,NDET,&normFact,"Gome2RefSelection (refS) ");
+        VECTOR_NormalizeVector(refN-1,NDET,&normFact,"Gome2RefSelection (refN) ");
+        VECTOR_NormalizeVector(refS-1,NDET,&normFact,"Gome2RefSelection (refS) ");
        }
      }
    }
@@ -1971,7 +1971,7 @@ RC GOME2_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
          memcpy(pTabFeno->LambdaRef,pOrbitFile->gome2SunWve,sizeof(double)*NDET);
          memcpy(pTabFeno->Sref,pOrbitFile->gome2SunRef,sizeof(double)*NDET);
 
-         if (!(rc=ANALYSE_NormalizeVector(pTabFeno->Sref-1,pTabFeno->NDET,&factTemp,"GOME2_LoadAnalysis (Reference) ")))
+         if (!(rc=VECTOR_NormalizeVector(pTabFeno->Sref-1,pTabFeno->NDET,&factTemp,"GOME2_LoadAnalysis (Reference) ")))
           {
            memcpy(pTabFeno->SrefEtalon,pTabFeno->Sref,sizeof(double)*pTabFeno->NDET);
            pTabFeno->useEtalon=pTabFeno->displayRef=1;

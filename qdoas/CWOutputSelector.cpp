@@ -63,50 +63,55 @@ CWOutputSelector::CWOutputSelector(const data_select_list_t *d, QWidget *parent)
   // populate the with all possible fields initially.
   // These CAN be added in any desired order (the display order in the availble list)
 
-  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_SPECNO,           "Spec No"));
-  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_NAME,             "Name"));
-  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_DATE_TIME,        "Date & time (YYYYMMDDhhmmss)"));
-  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_DATE,             "Date (DD/MM/YYYY)"));
-  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_TIME,             "Time (hh:mm:ss)"));
-  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_YEAR,             "Year"));
-  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_JULIAN,           "Day number"));
-  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_JDFRAC,           "Fractional day"));
-  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_TIFRAC,           "Fractional time"));
-  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_SCANS,            "Scans"));
-  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_TINT,             "Tint"));
-  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_SZA,              "SZA"));
-  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_CHI,              "Chi Square"));
-  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_RMS,              "RMS"));
-  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_AZIM,             "Solar Azimuth angle"));
-  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_TDET,             "Tdet"));
-  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_SKY,              "Sky Obs"));
-  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_BESTSHIFT,        "Best shift"));
-  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_REFZM,            "Ref SZA"));
-  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_REFSHIFT,         "Ref2/Ref1 shift"));
-  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_PIXEL,            "Pixel number"));
-  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_PIXEL_TYPE,       "Pixel type"));
-  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_ORBIT,            "Orbit number"));
-  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_LONGIT,           "Longitude"));
-  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_LATIT,            "Latitude"));
-  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_ALTIT,            "Altitude"));
-  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_COVAR,            "Covariances"));
-  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_CORR,             "Correlations"));
-  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_CLOUD,            "Cloud fraction"));
-  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_COEFF,            "Index coeff"));
-  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_O3,               "GDP O3 VCD"));
-  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_NO2,              "GDP NO2 VCD"));
-  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_CLOUDTOPP,        "Cloud Top Pressure"));
-  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_LOS_ZA,           "LoS ZA"));
-  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_LOS_AZIMUTH,      "LoS Azimuth"));
-  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_SAT_HEIGHT,       "Satellite height"));
-  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_EARTH_RADIUS,     "Earth radius"));
-  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_VIEW_ELEVATION,   "Elev. viewing angle"));
-  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_VIEW_AZIMUTH,     "Azim. viewing angle"));
-  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_SCIA_QUALITY,     "SCIAMACHY Quality Flag"));
-  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_SCIA_STATE_INDEX, "SCIAMACHY State Index"));
-  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_SCIA_STATE_ID,    "SCIAMACHY State Id"));
-  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_MFC_STARTTIME,    "MFC StartTime (hhmmss)"));
-  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_MFC_ENDTIME,      "MFC EndTime (hhmmss)"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_SPECNO,              "Spec No"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_NAME,                "Name"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_DATE_TIME,           "Date & time (YYYYMMDDhhmmss)"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_DATE,                "Date (DD/MM/YYYY)"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_TIME,                "Time (hh:mm:ss)"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_YEAR,                "Year"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_JULIAN,              "Day number"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_JDFRAC,              "Fractional day"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_TIFRAC,              "Fractional time"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_SCANS,               "Scans"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_NREJ,                "Rejected"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_TINT,                "Tint"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_SZA,                 "SZA"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_CHI,                 "Chi Square"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_RMS,                 "RMS"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_AZIM,                "Solar Azimuth angle"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_TDET,                "Tdet"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_SKY,                 "Sky Obs"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_BESTSHIFT,           "Best shift"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_REFZM,               "Ref SZA"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_REFSHIFT,            "Ref2/Ref1 shift"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_PIXEL,               "Pixel number"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_PIXEL_TYPE,          "Pixel type"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_ORBIT,               "Orbit number"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_LONGIT,              "Longitude"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_LATIT,               "Latitude"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_ALTIT,               "Altitude"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_COVAR,               "Covariances"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_CORR,                "Correlations"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_CLOUD,               "Cloud fraction"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_COEFF,               "Index coeff"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_O3,                  "GDP O3 VCD"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_NO2,                 "GDP NO2 VCD"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_CLOUDTOPP,           "Cloud Top Pressure"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_LOS_ZA,              "LoS ZA"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_LOS_AZIMUTH,         "LoS Azimuth"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_SAT_HEIGHT,          "Satellite height"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_EARTH_RADIUS,        "Earth radius"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_VIEW_ELEVATION,      "Elev. viewing angle"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_VIEW_AZIMUTH,        "Azim. viewing angle"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_SCIA_QUALITY,        "SCIAMACHY Quality Flag"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_SCIA_STATE_INDEX,    "SCIAMACHY State Index"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_SCIA_STATE_ID,       "SCIAMACHY State Id"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_MFC_STARTTIME,       "MFC StartTime (hhmmss)"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_MFC_ENDTIME,         "MFC EndTime (hhmmss)"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_ALS_SCANNING,        "Scanning telescope angle"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_CCD_FILTERNUMBER,    "Filter number"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_CCD_MEASTYPE,        "Measurement type"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_CCD_HEADTEMPERATURE, "Head temperature"));
 
   // populate the selected list by key-reference to the available list ...
 
@@ -301,6 +306,7 @@ void getValidFieldFlags(int *validFlags, int instrument)
      {
       validFlags[PRJCT_RESULTS_ASCII_NAME]=1;
       validFlags[PRJCT_RESULTS_ASCII_SCANS]=1;
+      validFlags[PRJCT_RESULTS_ASCII_NREJ]=1;
      }
     break;
  // ----------------------------------------------------------------------------
@@ -310,6 +316,7 @@ void getValidFieldFlags(int *validFlags, int instrument)
       validFlags[PRJCT_RESULTS_ASCII_VIEW_ELEVATION]=1;                         // absent for Harestua, present for OHP MAX-DOAS
       validFlags[PRJCT_RESULTS_ASCII_VIEW_AZIMUTH]=1;                           // absent for Harestua, present for OHP MAX-DOAS
       validFlags[PRJCT_RESULTS_ASCII_SCANS]=1;
+      validFlags[PRJCT_RESULTS_ASCII_NREJ]=1;
      }
     break;
  // ----------------------------------------------------------------------------
@@ -319,6 +326,7 @@ void getValidFieldFlags(int *validFlags, int instrument)
       validFlags[PRJCT_RESULTS_ASCII_VIEW_ELEVATION]=1;                         // absent for Harestua, present for OHP MAX-DOAS
       validFlags[PRJCT_RESULTS_ASCII_VIEW_AZIMUTH]=1;                           // absent for Harestua, present for OHP MAX-DOAS
       validFlags[PRJCT_RESULTS_ASCII_SCANS]=1;
+      validFlags[PRJCT_RESULTS_ASCII_NREJ]=1;
       validFlags[PRJCT_RESULTS_ASCII_TDET]=1;
      }
     break;
@@ -327,6 +335,7 @@ void getValidFieldFlags(int *validFlags, int instrument)
      {
       validFlags[PRJCT_RESULTS_ASCII_NAME]=1;
       validFlags[PRJCT_RESULTS_ASCII_SCANS]=1;
+      validFlags[PRJCT_RESULTS_ASCII_NREJ]=1;
       validFlags[PRJCT_RESULTS_ASCII_TDET]=1;
      }
     break;
@@ -335,6 +344,7 @@ void getValidFieldFlags(int *validFlags, int instrument)
      {
       validFlags[PRJCT_RESULTS_ASCII_NAME]=1;
       validFlags[PRJCT_RESULTS_ASCII_SCANS]=1;
+      validFlags[PRJCT_RESULTS_ASCII_NREJ]=1;
       validFlags[PRJCT_RESULTS_ASCII_BESTSHIFT]=1;
       validFlags[PRJCT_RESULTS_ASCII_TDET]=1;
      }
@@ -344,6 +354,7 @@ void getValidFieldFlags(int *validFlags, int instrument)
     case PRJCT_INSTR_FORMAT_RASAS :
      {
       validFlags[PRJCT_RESULTS_ASCII_SCANS]=1;
+      validFlags[PRJCT_RESULTS_ASCII_NREJ]=1;
       validFlags[PRJCT_RESULTS_ASCII_TDET]=1;
       validFlags[PRJCT_RESULTS_ASCII_LONGIT]=1;
       validFlags[PRJCT_RESULTS_ASCII_LATIT]=1;
@@ -354,9 +365,14 @@ void getValidFieldFlags(int *validFlags, int instrument)
     case PRJCT_INSTR_FORMAT_CCD_EEV :
      {
       validFlags[PRJCT_RESULTS_ASCII_SCANS]=1;
+      validFlags[PRJCT_RESULTS_ASCII_NREJ]=1;
       validFlags[PRJCT_RESULTS_ASCII_TDET]=1;
       validFlags[PRJCT_RESULTS_ASCII_VIEW_ELEVATION]=1;
-      validFlags[PRJCT_RESULTS_ASCII_VIEW_AZIMUTH]=0;                           // not present in all measurements, but could be in the next future
+      validFlags[PRJCT_RESULTS_ASCII_VIEW_AZIMUTH]=1;                           // not present in all measurements, but could be in the next future
+      validFlags[PRJCT_RESULTS_ASCII_ALS_SCANNING]=1;
+      validFlags[PRJCT_RESULTS_ASCII_CCD_FILTERNUMBER]=1;
+      validFlags[PRJCT_RESULTS_ASCII_CCD_MEASTYPE]=1;
+      validFlags[PRJCT_RESULTS_ASCII_CCD_HEADTEMPERATURE]=1;
      }
     break;
  // ----------------------------------------------------------------------------
@@ -364,6 +380,7 @@ void getValidFieldFlags(int *validFlags, int instrument)
      {
       validFlags[PRJCT_RESULTS_ASCII_NAME]=1;
       validFlags[PRJCT_RESULTS_ASCII_SCANS]=1;
+      validFlags[PRJCT_RESULTS_ASCII_NREJ]=1;
      }
     break;
  // ----------------------------------------------------------------------------

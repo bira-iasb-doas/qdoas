@@ -47,7 +47,7 @@
 //  Orthogonalization - orthogonalization of matrix A processing;
 //
 //  AnalyseLoadVector - load a vector from file;
-//  ANALYSE_NormalizeVector - vector normalization;
+//  VECTOR_NormalizeVector - vector normalization;
 //  ANALYSE_LinFit - use svd facilities for linear regressions;
 //
 //  ===============================
@@ -329,34 +329,6 @@ RC FNPixel(double *lambdaVector,double lambdaValue,INT npts,INT pixelSelection)
   return rc;
  }
 
-// ------------------------------
-// Norm : Vector norm computation
-// ------------------------------
-
-double Norm(double *v,INT dim)
- {
-  // Declarations
-
-  double norm;
-  INDEX i;
-
-  #if defined(__DEBUG_) && __DEBUG_
-  DEBUG_FunctionBegin("Norm",DEBUG_FCTTYPE_MATH);
-  #endif
-
-  // Norm computation
-
-  for (i=1,norm=(double) 0.;i<=dim;i++)
-   norm+=v[i]*v[i];
-
-  // Return norm
-
-  #if defined(__DEBUG_) && __DEBUG_
-  DEBUG_FunctionStop("Norm",0);
-  #endif
-
-  return norm;
- }
 
 // ---------------------------------------------------------------------------------------
 // OrthogonalizeVector : Orthogonalize a column in A matrix to a set of other columns of A
@@ -410,7 +382,7 @@ void OrthogonalizeVector(INT *OrthoSet,double *NormSet,INT NOrthoSet,INDEX index
 //     DEBUG_Print(DOAS_logFile,"%s-%s : Norm %g-%g dot %g\n",
 //                 WorkSpace[Feno->TabCross[OrthoSet[i]].Comp].symbolName,
 //                 WorkSpace[Feno->TabCross[j].Comp].symbolName,
-//                 NormSet[i],Norm(A[Feno->TabCross[j].IndSvdA],DimL),dot);
+//                 NormSet[i],VECTOR_Norm(A[Feno->TabCross[j].IndSvdA],DimL),dot);
 //    }
 //  }
 //  #endif
@@ -438,7 +410,7 @@ void OrthogonalizeToCross(INT indexCross,double *NormSet,INT currentNOrtho)
     if (pTabCross->IndOrthog==indexCross)
      {
       OrthoSet[currentNOrtho]=indexCross;
-      NormSet[currentNOrtho]=Norm(A[Feno->TabCross[indexCross].IndSvdA],DimL);
+      NormSet[currentNOrtho]=VECTOR_Norm(A[Feno->TabCross[indexCross].IndSvdA],DimL);
 
       if ((ANALYSE_phFilter->filterFunction==NULL) ||
          (!Feno->hidden && !ANALYSE_phFilter->hpFilterAnalysis) ||
@@ -479,8 +451,8 @@ void Orthogonalization(void)
   for (indexOrthoSet=1;indexOrthoSet<NOrtho;indexOrthoSet++)
    {
     OrthogonalizeVector(OrthoSet,NormSet,indexOrthoSet,Feno->TabCross[OrthoSet[indexOrthoSet]].IndSvdA);
-//    ANALYSE_NormalizeVector(A[Feno->TabCross[OrthoSet[indexOrthoSet]].IndSvdA],DimL,&norm /* Vector norm before normalisation */,"Orthogonalization ");
-    NormSet[indexOrthoSet]=Norm(A[Feno->TabCross[OrthoSet[indexOrthoSet]].IndSvdA],DimL);
+//    VECTOR_NormalizeVector(A[Feno->TabCross[OrthoSet[indexOrthoSet]].IndSvdA],DimL,&norm /* Vector norm before normalisation */,"Orthogonalization ");
+    NormSet[indexOrthoSet]=VECTOR_Norm(A[Feno->TabCross[OrthoSet[indexOrthoSet]].IndSvdA],DimL);
    }
 
   // Orthogonalization to base only
@@ -1369,50 +1341,6 @@ RC AnalyseLoadVector(DoasCh *function,DoasCh *fileName,double *lambda,double *ve
   return rc;
  }
 
-// ----------------------------------------------
-// ANALYSE_NormalizeVector : Vector normalization
-// ----------------------------------------------
-
-RC ANALYSE_NormalizeVector(double *v,INT dim,double *pFact,DoasCh *function)
- {
-  // Declarations
-
-  DoasCh str[MAX_ITEM_TEXT_LEN+1];
-  double norm;
-  INDEX i;
-  RC rc;
-
-  #if defined(__DEBUG_) && __DEBUG_
-  DEBUG_FunctionBegin("ANALYSE_NormalizeVector",DEBUG_FCTTYPE_UTIL);
-  #endif
-
-  // Initializations
-
-  sprintf(str,"ANALYSE_NormalizeVector (%s) ",function);
-  rc=ERROR_ID_NO;
-
-  // Vector normalization
-
-  if (Norm(v,dim)<=(double)0.)
-   rc=ERROR_SetLast("str",ERROR_TYPE_WARNING,ERROR_ID_SQRT_ARG);
-  else if ((norm=(double)sqrt(Norm(v,dim)))!=(double)0.)
-   {
-    if (pFact!=NULL)
-     *pFact=norm;
-
-    for (i=1,norm=(double)1./norm;i<=dim;i++)
-     v[i]*=norm;
-   }
-
-  #if defined(__DEBUG_) && __DEBUG_
-  DEBUG_FunctionStop("ANALYSE_NormalizeVector",rc);
-  #endif
-
-  // Return
-
-  return rc;
- }
-
 // ----------------------------------------------------------
 // ANALYSE_LinFit : Use svd facilities for linear regressions
 // ----------------------------------------------------------
@@ -1471,7 +1399,7 @@ RC ANALYSE_LinFit(SVD *pSvd,INT Npts,INT Degree,double *a,double *sigma,double *
     // Normalize columns in svd matrix
 
     for (i=1;i<=Degree+1;i++)
-     if ((rc=ANALYSE_NormalizeVector(pSvd->A[i],Npts,&Norm[i],"ANALYSE_LinFit "))!=ERROR_ID_NO)
+     if ((rc=VECTOR_NormalizeVector(pSvd->A[i],Npts,&Norm[i],"ANALYSE_LinFit "))!=ERROR_ID_NO)
       goto EndANALYSE_LinFit;
 
     // SVD decomposition and backsubstitution
@@ -2116,7 +2044,7 @@ RC ANALYSE_SvdInit(SVD *pSvd)
 // ANALYSE_AlignReference : Align reference spectrum on etalon
 // ----------------------------------------------------------
 
-RC ANALYSE_AlignReference(INT refFlag,INT saveFlag,void *responseHandle)
+RC ANALYSE_AlignReference(ENGINE_CONTEXT *pEngineContext,INT refFlag,INT saveFlag,void *responseHandle)
 
 //
 //  refFlag==0 : GB, file mode selection        refFlag==2 : GOME, refN
@@ -2136,6 +2064,7 @@ RC ANALYSE_AlignReference(INT refFlag,INT saveFlag,void *responseHandle)
   double *Spectre,*Sref,                                                        // raw spectrum
           x0,lambda0;
   plot_data_t spectrumData[2];
+  DoasCh string[MAX_ITEM_TEXT_LEN+1];
   RC rc;                                                                        // return code
 
 
@@ -2262,6 +2191,23 @@ RC ANALYSE_AlignReference(INT refFlag,INT saveFlag,void *responseHandle)
           mediateReleasePlotData(spectrumData);
 
           mediateResponseCellInfo(plotPageRef,indexLine++,indexColumn,responseHandle,"ALIGNMENT REF1/REF2 IN","%s",Feno->windowName);
+
+          if ((pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_MFC_STD) &&
+              (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_MFC))
+           {
+            sprintf(string,"Reference : %d/%d",Feno->indexRef,
+               (Feno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_AUTOMATIC)?pEngineContext->recordNumber:ITEM_NONE);
+
+           	mediateResponseCellDataString(plotPageRef,indexLine,2,string,responseHandle);
+       	    sprintf(string,"SZA : %g",Feno->Zm);
+       	    mediateResponseCellDataString(plotPageRef,indexLine++,3,string,responseHandle);
+           }
+          else
+           {
+           	mediateResponseCellInfo(plotPageRef,indexLine,indexColumn,responseHandle,"Reference","SZA : %g",Feno->Zm);
+           	mediateResponseCellDataString(plotPageRef,indexLine++,indexColumn+2,(pEngineContext->recordInfo.localTimeDec<=ENGINE_localNoon)?Feno->refAM:Feno->refPM,responseHandle);
+           }
+
           mediateResponseCellInfo(plotPageRef,indexLine++,indexColumn,responseHandle,"Shift","%#10.3e +/-%#10.3e",pResults->Shift,pResults->SigmaShift);
           mediateResponseCellInfo(plotPageRef,indexLine++,indexColumn,responseHandle,"Stretch","%#10.3e +/-%#10.3e",pResults->Stretch,pResults->SigmaStretch);
           mediateResponseCellInfo(plotPageRef,indexLine++,indexColumn,responseHandle,"Stretch2","%#10.3e +/-%#10.3e",pResults->Stretch2,pResults->SigmaStretch2);
@@ -2575,7 +2521,7 @@ RC ANALYSE_Function ( double *lambda,double *X, double *Y, INT ndet, double *Y0,
              (i==Feno->indexUsamp1) ||
              (i==Feno->indexUsamp2)))
 
-          if ((rc=ANALYSE_NormalizeVector(A[indexSvdA],Npts,&pTabCross->Fact,WorkSpace[pTabCross->Comp].symbolName))!=ERROR_ID_NO)  // normalize vectors of A before orthogonalization
+          if ((rc=VECTOR_NormalizeVector(A[indexSvdA],Npts,&pTabCross->Fact,WorkSpace[pTabCross->Comp].symbolName))!=ERROR_ID_NO)  // normalize vectors of A before orthogonalization
            goto EndFunction;
         }
 
@@ -2611,7 +2557,7 @@ RC ANALYSE_Function ( double *lambda,double *X, double *Y, INT ndet, double *Y0,
                A[indexSvdA][k]*=offset*pTabCross->Fact;
               }
 
-            if ((rc=ANALYSE_NormalizeVector(A[indexSvdA],Npts,&pTabCross->Fact,"Function 2 "))!=ERROR_ID_NO)
+            if ((rc=VECTOR_NormalizeVector(A[indexSvdA],Npts,&pTabCross->Fact,"Function 2 "))!=ERROR_ID_NO)
              goto EndFunction;
            }
 
@@ -3549,8 +3495,8 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
     memcpy(Spectre,pBuffers->spectrum,sizeof(double)*NDET);
 
-    if (((rc=ANALYSE_NormalizeVector(Spectre-1,NDET,&factTemp,"ANALYSE_Spectrum (Spectrum) "))!=ERROR_ID_NO) ||
-        (pRecord->useErrors && ((rc=ANALYSE_NormalizeVector(pBuffers->sigmaSpec-1,NDET,&factTemp,"ANALYSE_Spectrum (sigmaSpec) "))!=ERROR_ID_NO)))
+    if (((rc=VECTOR_NormalizeVector(Spectre-1,NDET,&factTemp,"ANALYSE_Spectrum (Spectrum) "))!=ERROR_ID_NO) ||
+        (pRecord->useErrors && ((rc=VECTOR_NormalizeVector(pBuffers->sigmaSpec-1,NDET,&factTemp,"ANALYSE_Spectrum (sigmaSpec) "))!=ERROR_ID_NO)))
      goto EndAnalysis;
 
     // Apply Kurucz on spectrum
@@ -3571,24 +3517,21 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
       else
        {
-        if (useKurucz || (THRD_id==THREAD_TYPE_KURUCZ))
-         {
-          memcpy(SpectreK,Spectre,sizeof(double)*NDET);
+        memcpy(SpectreK,Spectre,sizeof(double)*NDET);
 
-          if (!(rc=KURUCZ_Spectrum(pBuffers->lambda,LambdaK,SpectreK,KURUCZ_buffers.solar,pBuffers->instrFunction,
-                                   1,"Calibration applied on spectrum",KURUCZ_buffers.fwhmPolySpec,KURUCZ_buffers.fwhmVector,KURUCZ_buffers.fwhmDeriv2,saveFlag,
-                                   KURUCZ_buffers.indexKurucz,responseHandle)))
+        if (!(rc=KURUCZ_Spectrum(pBuffers->lambda,LambdaK,SpectreK,KURUCZ_buffers.solar,pBuffers->instrFunction,
+                                 1,"Calibration applied on spectrum",KURUCZ_buffers.fwhmPolySpec,KURUCZ_buffers.fwhmVector,KURUCZ_buffers.fwhmDeriv2,saveFlag,
+                                 KURUCZ_buffers.indexKurucz,responseHandle)))
 
-           for (WrkFeno=0,pTabFeno=&TabFeno[WrkFeno];WrkFeno<NFeno;pTabFeno=&TabFeno[++WrkFeno])
-            if (!pTabFeno->hidden && (pTabFeno->useKurucz==ANLYS_KURUCZ_SPEC))
-             {
-              memcpy(pTabFeno->LambdaK,LambdaK,sizeof(double)*NDET);
-              memcpy(pTabFeno->Lambda,LambdaK,sizeof(double)*NDET);
+         for (WrkFeno=0,pTabFeno=&TabFeno[WrkFeno];WrkFeno<NFeno;pTabFeno=&TabFeno[++WrkFeno])
+          if (!pTabFeno->hidden && (pTabFeno->useKurucz==ANLYS_KURUCZ_SPEC))
+           {
+            memcpy(pTabFeno->LambdaK,LambdaK,sizeof(double)*NDET);
+            memcpy(pTabFeno->Lambda,LambdaK,sizeof(double)*NDET);
 
-              if ((rc=KURUCZ_ApplyCalibration(pTabFeno,LambdaK))!=ERROR_ID_NO)
-               goto EndAnalysis;
-             }
-         }
+            if ((rc=KURUCZ_ApplyCalibration(pTabFeno,LambdaK))!=ERROR_ID_NO)
+             goto EndAnalysis;
+           }
 
         memcpy(SpectreK,Spectre,sizeof(double)*NDET); // !!!
        }
@@ -3959,7 +3902,7 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
           if (saveFlag)
            {
-           	indexLine=2;
+           	indexLine=1;
             indexColumn=2;
 
            	mediateResponseCellDataString(indexPage,indexLine,indexColumn,tabTitle,responseHandle);
@@ -5565,7 +5508,7 @@ RC ANALYSE_LoadRef(ENGINE_CONTEXT *pEngineContext)
 
        !(rc=AnalyseLoadVector("ANALYSE_LoadRef (SrefEtalon) ",pTabFeno->ref1,lambdaRefEtalon,SrefEtalon,1,NULL)) &&
        !(rc=THRD_SpectrumCorrection(pEngineContext,SrefEtalon)) &&
-       !(rc=ANALYSE_NormalizeVector(SrefEtalon-1,NDET,&factTemp,"ANALYSE_LoadRef (SrefEtalon) ")))
+       !(rc=VECTOR_NormalizeVector(SrefEtalon-1,NDET,&factTemp,"ANALYSE_LoadRef (SrefEtalon) ")))
      {
       pTabFeno->displayRef=pTabFeno->useEtalon=pTabFeno->gomeRefFlag=1;
       strcpy(pTabFeno->refFile,pTabFeno->ref1);
@@ -5589,7 +5532,7 @@ RC ANALYSE_LoadRef(ENGINE_CONTEXT *pEngineContext)
 
       !(rc=AnalyseLoadVector("ANALYSE_LoadRef (Sref) ",pTabFeno->ref2,lambdaRef,Sref,1,NULL)) &&
       !(rc=THRD_SpectrumCorrection(pEngineContext,Sref)) &&
-      !(rc=ANALYSE_NormalizeVector(Sref-1,NDET,&factTemp,"ANALYSE_LoadRef (Sref) ")))
+      !(rc=VECTOR_NormalizeVector(Sref-1,NDET,&factTemp,"ANALYSE_LoadRef (Sref) ")))
      {
       if (!pTabFeno->useEtalon)
        {
