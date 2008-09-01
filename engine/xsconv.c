@@ -1284,19 +1284,19 @@ RC XSCONV_TypeStandard(XS *pXsnew,INDEX indexLambdaMin,INDEX indexLambdaMax,XS *
 
   rc=ERROR_ID_NO;
 
-  if ((slitType==SLIT_TYPE_FILE) || (slitType==SLIT_TYPE_VOIGT))
-   {
-    // Calculation of the center of the slit function
-
-    for (i=0,c=si=(double)0.;i<slitNDET;i++)
-     {
-      c+=(double)slitLambda[i]*slitVector[i];
-      si+=(double)slitVector[i];
-     }
-
-    slitCenter=(double)c/si;
-   }
-  else
+// ADD AN OPTION LATER  if ((slitType==SLIT_TYPE_FILE) || (slitType==SLIT_TYPE_VOIGT))
+// ADD AN OPTION LATER   {
+// ADD AN OPTION LATER    // Calculation of the center of the slit function
+// ADD AN OPTION LATER
+// ADD AN OPTION LATER    for (i=0,c=si=(double)0.;i<slitNDET;i++)
+// ADD AN OPTION LATER     {
+// ADD AN OPTION LATER      c+=(double)slitLambda[i]*slitVector[i];
+// ADD AN OPTION LATER      si+=(double)slitVector[i];
+// ADD AN OPTION LATER     }
+// ADD AN OPTION LATER
+// ADD AN OPTION LATER    slitCenter=(double)c/si;
+// ADD AN OPTION LATER   }
+// ADD AN OPTION LATER  else
    {
     slitCenter=(double)0.;
     slitWidth=(double)3.*slitParam;

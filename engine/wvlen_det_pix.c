@@ -1,7 +1,7 @@
 /* copied from the GADS SPECTRAL_BASE of the SCIAMCHY Level 1b product
    SCI_NL__1PNPDK20020725_153559_000004692008_00039_02097_0786.N1 */
 
-static double wvlen_det_pix[8192] =
+double wvlen_det_pix[8192] =
 {212.5327,
  212.6839,
  212.8350,

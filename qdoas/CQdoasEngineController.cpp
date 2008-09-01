@@ -18,6 +18,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
 #include <QTextStream>
+#include <QMessageBox>
 
 #include "CQdoasEngineController.h"
 #include "CEngineRequest.h"
@@ -35,6 +36,9 @@ CQdoasEngineController::CQdoasEngineController(QObject *parent) :
   m_numberOfFiles(0),
   m_oldRecord(-1)
 {
+  m_step=0;
+  m_engineCurrentRecord=m_currentRecord;
+  m_engineCurrentFile="";
 
   // create the engine thread
   m_thread = new CEngineThread(this);
@@ -380,6 +384,10 @@ void CQdoasEngineController::slotGotoRecord(int recordNumber)
 
 void CQdoasEngineController::slotStep()
 {
+  m_step=1;
+  m_engineCurrentRecord=m_currentRecord;
+  m_engineCurrentFile=m_currentIt.file().filePath();
+
   if (m_currentRecord >= 0 && m_currentRecord < m_numberOfRecords && m_currentRecord!=m_oldRecord) {
     // step record
     switch (m_session->mode()) {
@@ -432,6 +440,10 @@ void CQdoasEngineController::slotStep()
 
       m_thread->request(req);
     }
+   else if (m_session->mode()==CSession::Analyse)
+    QMessageBox::information((QWidget *)this->parent(),"QDOAS : Run Analysis","End of analysis");
+   else if (m_session->mode()==CSession::Calibrate)
+    QMessageBox::information((QWidget *)this->parent(),"QDOAS : Run Calibrate","End of calibration");
   }
 }
 
@@ -450,6 +462,7 @@ void CQdoasEngineController::slotStartSession(const RefCountPtr<CSession> &sessi
   m_currentRecord = -1;
   m_oldRecord=-1;
   m_currentProject = NULL;
+  m_step=0;
 
   if (!m_currentIt.atEnd()) {
     m_currentProject = m_currentIt.project();
@@ -500,6 +513,7 @@ void CQdoasEngineController::slotStartSession(const RefCountPtr<CSession> &sessi
 
 void CQdoasEngineController::slotStopSession()
 {
+	 m_step=0;
   // session is stop(ping)
   emit signalSessionRunning(false);
 

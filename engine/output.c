@@ -2143,7 +2143,7 @@ void OutputBuildSiteFileName(ENGINE_CONTEXT *pEngineContext,DoasCh *outputFileNa
   else
    fileNamePtr++;
 
-  sprintf(fileNamePtr,"%s%04d%02d.%s",
+  sprintf(fileNamePtr,"%s_%04d%02d.%s",
          (indexSite!=ITEM_NONE)?(DoasCh *)SITES_itemList[indexSite].abbrev:(DoasCh *)"XX",year,month,
 	 (DoasCh *)((ascFlag)?"ASC":"BIN"));
  }

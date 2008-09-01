@@ -1,12 +1,14 @@
 #ifndef  __BIN_READ_                          /* Avoid multiple includes */
 #define  __BIN_READ_
 
-#include "lv1_struct.h"
-#include "read1c_defs.h"
+#include "scia_l1c.h"
 
 void swap_bytes_float(unsigned char *var);
 void swap_bytes_int(unsigned char *var);
-void swap_bytes_SHORT(unsigned char *var);
+void swap_bytes_short(unsigned char *var);
+
+void ushort_array_getbin (FILE* unit, unsigned short *var, int nr);
+void float_array_getbin (FILE* unit, float *var, int nr);
 
 void GeoN_array_getbin (FILE* unit, GeoN *var, int nr);
 void GeoL_array_getbin (FILE* unit, GeoL *var, int nr);

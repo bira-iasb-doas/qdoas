@@ -36,13 +36,14 @@ extern "C" {
 //----------------------------------------------------------
 
   typedef struct plot_data {
+  	 char curveName[80];
     double *x, *y;
     int length;
     enum eCurveStyleType curveType;
   } plot_data_t;
 
 
-  void mediateAllocateAndSetPlotData(plot_data_t *d, double *xData, double *yData, int len, enum eCurveStyleType type);
+  void mediateAllocateAndSetPlotData(plot_data_t *d, const char *curveName,double *xData, double *yData, int len, enum eCurveStyleType type);
   void mediateReleasePlotData(plot_data_t *d);
 
 // mediateResponsePlotData

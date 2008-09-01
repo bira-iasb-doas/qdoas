@@ -289,53 +289,60 @@ void CWPlot::slotOverlay()
 }
 
 void CWPlot::slotSaveAs()
-{
+ {
   CPreferences *pref = CPreferences::instance();
-
   QString dirName = pref->directoryName("ASCII_Plot");
-
   QString filename = QFileDialog::getSaveFileName(this, "Save Plot", dirName, " Ascii file (*.asc)");
 
-  if (!filename.isEmpty()) {
+  if (!filename.isEmpty())
+   {
     if (!filename.contains('.'))
       filename += ".asc";
 
     pref->setDirectoryNameGivenFile("ASCII_Plot", filename);
 
     FILE *fp = fopen(filename.toAscii().constData(), "w");
-    if (fp != NULL) {
-      int nCurves, nPoints, i, j;
+    if (fp != NULL)
+     {
+      int nCurves, nPoints, i, j, n, maxPoints;
 
       nCurves = m_dataSet->count();
-      fprintf(fp, ";Qdoas Plot v1.0\n%d\n", nCurves);
+      fprintf(fp,";\n");
+      fprintf(fp, "; Plot %s (%d %s)\n;\n", m_dataSet->plotTitle().toAscii().constData(),nCurves,(nCurves>1)?"curves":"curve");
+      for (i=0,maxPoints=0;i<nCurves;i++)
+       {
+       	n=m_dataSet->rawData(i).size();
+        fprintf(fp,";      Curve %d : %s (%d data points)\n",i+1,m_dataSet->rawData(i).curveName(),n);
+        if (n>maxPoints)
+         maxPoints=n;
+       }
+      fprintf(fp,";\n");
 
-      i = 0;
-      while (i < nCurves) {
-	const CXYPlotData &curveData = m_dataSet->rawData(i);
+      for (j=0;j<maxPoints;j++)
+       {
+        for (i=0;i<nCurves;i++)
+         {
+         	const CXYPlotData &curveData = m_dataSet->rawData(i);
+         	nPoints = curveData.size();
+	         if (nPoints > j)
+	          fprintf(fp, "%-22.14le %-22.14le ", *(curveData.xRawData() + j), *(curveData.yRawData() + j));
+	         else
+	          fprintf(fp,"%-22.14le %-22.14le ",(double)0.,(double)0.);
+	        }
+	       fprintf(fp,"\n");
+	      }
 
-	nPoints = curveData.size();
-	if (nPoints > 0) {
-	  fprintf(fp, "%d\n", nPoints);
-
-	  j=0;
-	  while (j<nPoints) {
-	    fprintf(fp, "%13g  %13g\n", *(curveData.xRawData() + j), *(curveData.yRawData() + j));
-	    ++j;
-	  }
-	}
-
-	++i;
-      }
-      fclose(fp);
-    }
-    else {
+	     fclose(fp);
+	    }
+    else
+     {
       QString msg = "Failed to create ASCII plot file ";
       msg += filename;
 
       QMessageBox::warning(this, "Failed file write", msg);
-    }
-  }
-}
+     }
+	  }
+	}
 
 void CWPlot::slotPrint()
 {

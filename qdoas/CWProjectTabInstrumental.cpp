@@ -179,7 +179,6 @@ CWProjectTabInstrumental::CWProjectTabInstrumental(const mediate_project_instrum
   index = m_siteCombo->findText(QString(instr->siteName));
   if (index != -1)
     m_siteCombo->setCurrentIndex(index);
-
  }
 
 CWProjectTabInstrumental::~CWProjectTabInstrumental()
@@ -191,7 +190,7 @@ void CWProjectTabInstrumental::apply(mediate_project_instrumental_t *instr) cons
   // set values for ALL instruments ... the selected mode is handled elsewhere (by the parent).
 
   QString siteName = m_siteCombo->currentText();
-  if (siteName != "No Site Specified" && siteName.length() < (int)sizeof(instr->siteName))
+//  if (siteName != "No Site Specified" && siteName.length() < (int)sizeof(instr->siteName))
     strcpy(instr->siteName, siteName.toAscii().data());
 
   m_asciiEdit->apply(&(instr->ascii));

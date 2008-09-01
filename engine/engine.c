@@ -596,7 +596,9 @@ RC EngineReadFile(ENGINE_CONTEXT *pEngineContext,int indexRecord,INT dateFlag,IN
 
   RECORD_INFO *pRecord;                                                         // pointer to the record part of the engine context
   FILE_INFO *pFile;                                                             // pointer to the file part of the engine context
- 	INDEX i;
+ 	INDEX i,indexSite;
+  OBSERVATION_SITE *pSite;
+  double longit,latit;
  	int rc;                                                                       // Return code
 
  	// Initializations
@@ -743,8 +745,25 @@ RC EngineReadFile(ENGINE_CONTEXT *pEngineContext,int indexRecord,INT dateFlag,IN
   if (!rc)
    {
    	pEngineContext->indexRecord=indexRecord;
-   	if (pEngineContext->recordInfo.oldZm<(double)0.)
-   	 pEngineContext->recordInfo.oldZm=pEngineContext->recordInfo.Zm;
+   	if (pRecord->oldZm<(double)0.)
+   	 pRecord->oldZm=pRecord->Zm;
+
+   	// Correction of the solar zenith angle with the geolocation of the specified observation site
+
+    if ((indexSite=SITES_GetIndex(pEngineContext->project.instrumental.observationSite))!=ITEM_NONE)
+     {
+      pSite=&SITES_itemList[indexSite];
+
+      longit=-pSite->longitude;   // !!! sign is inverted
+
+      pRecord->longitude=-longit;
+      pRecord->latitude=latit=(double)pSite->latitude;
+
+      if (pSite->altitude>(double)0.)
+       pRecord->altitude=pSite->altitude*0.001;
+
+      pRecord->Zm=(pRecord->Tm!=(double)0.)?ZEN_FNTdiz(ZEN_FNCrtjul(&pRecord->Tm),&longit,&latit,&pRecord->Azimuth):(double)-1.;
+     }
 
     if (pEngineContext->buffers.instrFunction!=NULL)
      {
@@ -1430,14 +1449,12 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
   INDEX indexRefRecord,                                                         // index of best record in file for reference selection
         indexTabFeno,                                                           // browse analysis windows
-        indexWindow,                                                            // avoid gaps
-        indexPage;
+        indexWindow;                                                            // avoid gaps
 
   FENO *pTabFeno;                                                               // pointer to the analysis window
   INT useKurucz,alignRef,useUsamp,saveFlag,newDimL;
   double factTemp;
   RC rc;
-  DoasCh string[80];                                                              // return code
 
   // Initializations
 

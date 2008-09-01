@@ -68,7 +68,7 @@ int batchProcess(commands_t *cmd);
 
 int batchProcessQdoas(commands_t *cmd);
 int readConfigQdoas(commands_t *cmd, QList<const CProjectConfigItem*> &projectItems);
-int analyseProjectQdoas(const CProjectConfigItem *projItem,  const QString &outputDir, const QList<QString> &filenames);
+int analyseProjectQdoas(const CProjectConfigItem *projItem, const QString &outputDir, const QList<QString> &filenames);
 int analyseProjectQdoas(const CProjectConfigItem *projItem, const QString &outputDir);
 int analyseProjectQdoasPrepare(void **engineContext, const CProjectConfigItem *projItem, const QString &outputDir,
 			       CBatchEngineController *controller);
@@ -367,7 +367,7 @@ int readConfigQdoas(commands_t *cmd, QList<const CProjectConfigItem*> &projectIt
       while (!tmpItems.isEmpty()) {
 	const CProjectConfigItem *p = tmpItems.takeFirst();
 
-	if (p->name() == cmd->projectName)
+	if (p->name().toUpper() == cmd->projectName.toUpper())
 	  projectItems.push_back(p);
 	else
 	  delete p;
@@ -396,7 +396,7 @@ int readConfigQdoas(commands_t *cmd, QList<const CProjectConfigItem*> &projectIt
 }
 
 
-int analyseProjectQdoas(const CProjectConfigItem *projItem,  const QString &outputDir, const QList<QString> &filenames)
+int analyseProjectQdoas(const CProjectConfigItem *projItem, const QString &outputDir, const QList<QString> &filenames)
 {
   void *engineContext;
   int retCode;
@@ -462,13 +462,17 @@ int analyseProjectQdoas(const CProjectConfigItem *projItem, const QString &outpu
 int analyseProjectQdoasPrepare(void **engineContext, const CProjectConfigItem *projItem, const QString &outputDir,
 			       CBatchEngineController *controller)
 {
-  int retCode = 0;
+	 CWorkSpace *ws = CWorkSpace::instance();
+	 int n;
+	 const mediate_site_t *siteList = ws->siteList(n);
+  int retCode = 0,indexSite;
   CEngineResponseTool *msgResp = new CEngineResponseTool;
 
   // copy the project data and mask out any display flags (do not want
   // the engine to create and return visualization data)
 
   mediate_project_t projectData = *(projItem->properties()); // blot copy
+
   // TODO projectData.display.
 
   if (!outputDir.isEmpty() && outputDir.size() < FILENAME_BUFFER_LENGTH-1) {
@@ -483,8 +487,12 @@ int analyseProjectQdoasPrepare(void **engineContext, const CProjectConfigItem *p
     return 1;
   }
 
+  // Retrieve observation sites
+
   // set project
-  if (!retCode && mediateRequestSetProject(*engineContext, &projectData, THREAD_TYPE_ANALYSIS, msgResp) != 0) {
+  if (!retCode &&
+     ((mediateRequestSetSites(*engineContext,n,siteList,msgResp)!=0) ||
+      (mediateRequestSetProject(*engineContext, &projectData, THREAD_TYPE_ANALYSIS, msgResp)!= 0))) {
     msgResp->process(controller);
     delete msgResp;
     // create a new response ready for the destroy engine context request

@@ -25,12 +25,14 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "CEngineResponse.h"
 #include "CPlotDataSet.h"
 
-void mediateAllocateAndSetPlotData(plot_data_t *d, double *xData, double *yData, int len, enum eCurveStyleType type)
+void mediateAllocateAndSetPlotData(plot_data_t *d, const char *curveName,double *xData, double *yData, int len, enum eCurveStyleType type)
 {
   int byteLen = len * sizeof(double);
 
   d->x = (double*)malloc(byteLen);
   d->y = (double*)malloc(byteLen);
+
+  strcpy(d->curveName,curveName);
 
   if (d->x == NULL || d->y == NULL) {
     // bail out ...
@@ -49,6 +51,9 @@ void mediateAllocateAndSetPlotData(plot_data_t *d, double *xData, double *yData,
 
 void mediateReleasePlotData(plot_data_t *d)
 {
+	 d->length=0;
+	 strcpy(d->curveName,"");
+
   if (d->x) free(d->x);
   if (d->y) free(d->y);
 }
@@ -70,7 +75,7 @@ void mediateResponsePlotData(int page,
 
   int i = 0;
   while (i < arrayLength) {
-    dataSet->addPlotData(plotDataArray[i].x, plotDataArray[i].y, plotDataArray[i].length,
+    dataSet->addPlotData(plotDataArray[i].curveName,plotDataArray[i].x, plotDataArray[i].y, plotDataArray[i].length,
 			 plotDataArray[i].curveType);
     ++i;
   }
@@ -117,13 +122,13 @@ void mediateResponseCellInfo(int page,
  {
    va_list argList;
    char stringValue[1024];
-   
+
   va_start(argList,stringFormat);
   vsprintf(stringValue,stringFormat,argList);
   va_end(argList);
 
   CEngineResponseVisual *resp = static_cast<CEngineResponseVisual*>(responseHandle);
-  
+
   resp->addCell(page,row,column,QVariant(QString(label)));
   resp->addCell(page,row,column+1,QVariant(QString(stringValue)));
  }
@@ -136,11 +141,11 @@ void mediateResponseCellInfoNoLabel(int page,
  {
    va_list argList;
    char stringValue[1024];
-   
+
    va_start(argList,stringFormat);
    vsprintf(stringValue,stringFormat,argList);
    va_end(argList);
-   
+
    CEngineResponseVisual *resp = static_cast<CEngineResponseVisual*>(responseHandle);
    resp->addCell(page,row,column,QVariant(QString(stringValue)));
  }

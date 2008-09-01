@@ -73,7 +73,7 @@ void mediateRequestPlotSpectra(ENGINE_CONTEXT *pEngineContext,void *responseHand
 
   if (pProject->spectra.displaySpectraFlag)
    {
-    mediateAllocateAndSetPlotData(&spectrumData, pBuffers->lambda, pBuffers->spectrum, NDET, Line);
+    mediateAllocateAndSetPlotData(&spectrumData, "Spectrum",pBuffers->lambda, pBuffers->spectrum, NDET, Line);
     mediateResponsePlotData(plotPageSpectrum, &spectrumData, 1, Spectrum, allowFixedScale, "Spectrum", "Wavelength (nm)", "Counts", responseHandle);
     mediateReleasePlotData(&spectrumData);
     mediateResponseLabelPage(plotPageSpectrum, fileName, tmpString, responseHandle);
@@ -86,7 +86,7 @@ void mediateRequestPlotSpectra(ENGINE_CONTEXT *pEngineContext,void *responseHand
      {
      	sprintf(tmpString,"Dark current (%d/%d)",pEngineContext->indexRecord,pEngineContext->recordNumber);
 
-      mediateAllocateAndSetPlotData(&spectrumData, pBuffers->lambda, pBuffers->darkCurrent, NDET, Line);
+      mediateAllocateAndSetPlotData(&spectrumData, "Dark current",pBuffers->lambda, pBuffers->darkCurrent, NDET, Line);
       mediateResponsePlotData(plotPageDarkCurrent, &spectrumData, 1, Spectrum, forceAutoScale, "Dark current", "Wavelength (nm)", "Counts", responseHandle);
       mediateReleasePlotData(&spectrumData);
       mediateResponseLabelPage(plotPageDarkCurrent, fileName, tmpString, responseHandle);
@@ -96,7 +96,7 @@ void mediateRequestPlotSpectra(ENGINE_CONTEXT *pEngineContext,void *responseHand
      {
      	sprintf(tmpString,"Error (%d/%d)",pEngineContext->indexRecord,pEngineContext->recordNumber);
 
-      mediateAllocateAndSetPlotData(&spectrumData, pBuffers->lambda, pBuffers->sigmaSpec, NDET, Line);
+      mediateAllocateAndSetPlotData(&spectrumData, "Error",pBuffers->lambda, pBuffers->sigmaSpec, NDET, Line);
       mediateResponsePlotData(plotPageErrors, &spectrumData, 1, Spectrum, forceAutoScale, "Error", "Wavelength (nm)", "Counts", responseHandle);
       mediateReleasePlotData(&spectrumData);
       mediateResponseLabelPage(plotPageErrors, fileName, tmpString, responseHandle);
@@ -104,7 +104,7 @@ void mediateRequestPlotSpectra(ENGINE_CONTEXT *pEngineContext,void *responseHand
 
     if (pBuffers->irrad!=NULL)
      {
-      mediateAllocateAndSetPlotData(&spectrumData, pBuffers->lambda, pBuffers->irrad, NDET, Line);
+      mediateAllocateAndSetPlotData(&spectrumData, "Irradiance spectrum",pBuffers->lambda, pBuffers->irrad, NDET, Line);
       mediateResponsePlotData(plotPageIrrad, &spectrumData, 1, Spectrum, forceAutoScale, "Irradiance spectrum", "Wavelength (nm)", "Counts", responseHandle);
       mediateReleasePlotData(&spectrumData);
       mediateResponseLabelPage(plotPageIrrad, fileName, "Irradiance", responseHandle);
@@ -114,7 +114,7 @@ void mediateRequestPlotSpectra(ENGINE_CONTEXT *pEngineContext,void *responseHand
         (pBuffers->specMax!=NULL) &&
         (pRecord->NSomme>1))
      {
-      mediateAllocateAndSetPlotData(&spectrumData, pBuffers->specMaxx, pBuffers->specMax,pRecord->rejected+pRecord->NSomme, Line);
+      mediateAllocateAndSetPlotData(&spectrumData, "SpecMax",pBuffers->specMaxx, pBuffers->specMax,pRecord->rejected+pRecord->NSomme, Line);
       mediateResponsePlotData(plotPageSpecMax, &spectrumData, 1, SpecMax, allowFixedScale, "SpecMax", "Scans number", "Signal Maximum", responseHandle);
       mediateReleasePlotData(&spectrumData);
       mediateResponseLabelPage(plotPageSpecMax, fileName, "SpecMax", responseHandle);
@@ -962,6 +962,8 @@ int mediateRequestSetProject(void *engineContext,
 	 #if defined(__DEBUG_) && __DEBUG_
   DEBUG_Start(ENGINE_dbgFile,"Project",DEBUG_FCTTYPE_CONFIG,5,DEBUG_DVAR_YES,0);
   #endif
+
+  // TO DO : Initialize the pEngineProject->name
 
   setMediateProjectDisplay(&pEngineProject->spectra,&project->display);
   setMediateProjectSelection(&pEngineProject->spectra,&project->selection);
@@ -1972,7 +1974,7 @@ int mediateRequestViewCrossSections(void *engineContext, char *awName,double min
      {
      	// Plot the cross section
 
-      mediateAllocateAndSetPlotData(&xs2plot,xs.matrix[0],xs.matrix[1],xs.nl,Line);
+      mediateAllocateAndSetPlotData(&xs2plot,symbolName,xs.matrix[0],xs.matrix[1],xs.nl,Line);
       mediateResponsePlotData(plotPageCross,&xs2plot,1,Spectrum,0,symbolName,"Wavelength","cm**2 / molec", responseHandle);
       mediateResponseLabelPage(plotPageCross,windowTitle,tabTitle, responseHandle);
       mediateReleasePlotData(&xs2plot);

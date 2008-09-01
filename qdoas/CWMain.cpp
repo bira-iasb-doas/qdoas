@@ -661,19 +661,60 @@ void CWMain::slotAboutQt()
 }
 
 void CWMain::slotErrorMessages(int highestLevel, const QString &messages)
-{
-  switch (highestLevel) {
-  case InformationEngineError:
-    QMessageBox::information(this, "QDOAS : Information", messages);
-    break;
-  case WarningEngineError:
-    QMessageBox::warning(this, "QDOAS : Warning", messages);
-    break;
-  case FatalEngineError:
-  default:
-    TRACE(messages.toStdString());
-    QMessageBox::critical(this, "QDOAS : Fatal Error", messages);
-    break;
-  }
-}
+ {
+	 if (this->m_controller->m_step)     // In automatic mode, redirect error messages in a file
+   {
+   	QString fileName=this->m_projectFile;
+
+   	if (!fileName.length())
+   	 fileName="QDOAS_Unnamed.log";
+   	else if (fileName.endsWith("xml",Qt::CaseInsensitive))
+   	 fileName.replace(fileName.length()-3,3,"log");
+   	else
+   	 fileName.append(".log");
+
+   	QFile file(fileName);
+
+   	if (file.open(QIODevice::Append|QIODevice::Text))
+   	 {
+   	 	QTextStream out(&file);
+   	 	out << "File name   : " << this->m_controller->m_engineCurrentFile << "\n";
+
+      switch (highestLevel)
+       {
+        case InformationEngineError:
+          out << "Information : " << messages;
+          break;
+        case WarningEngineError:
+          out << "Message     : " << messages;
+          break;
+        case FatalEngineError:
+        default:
+          TRACE(messages.toStdString());
+          out << "Fatal Error : " << messages;
+          break;
+       }
+
+      out << "Record      : " << this->m_controller->m_engineCurrentRecord+1 << "\n\n";
+      file.close();
+   	 }
+   }
+	 else
+	  {
+    switch (highestLevel)
+     {
+      case InformationEngineError:
+        QMessageBox::information(this, "QDOAS : Information", messages);
+        break;
+      case WarningEngineError:
+        QMessageBox::warning(this, "QDOAS : Warning", messages);
+        break;
+      case FatalEngineError:
+      default:
+        TRACE(messages.toStdString());
+        QMessageBox::critical(this, "QDOAS : Fatal Error", messages);
+        break;
+     }
+   }
+ }
 

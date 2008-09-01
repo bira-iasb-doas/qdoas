@@ -99,9 +99,7 @@
 #include "engine.h"
 
 #include "bin_read.h"
-#include "lv1c_struct.h"
-#include "read1c_defs.h"
-#include "read1c_funct.h"
+#include "scia_l1c_lib.h"
 
 // ====================
 // CONSTANTS DEFINITION
@@ -518,7 +516,7 @@ RC SciaNadirStates(ENGINE_CONTEXT *pEngineContext,INDEX fileIndex)
   // Initializations
 
   pOrbitFile=&sciaOrbitFiles[fileIndex];
-  pOrbitFile->sciaNadirStatesN=pOrbitFile->sciaPDSInfo.n_states[NADIR];         // number of NADIR states
+  pOrbitFile->sciaNadirStatesN=pOrbitFile->sciaPDSInfo.n_states[MDS_NADIR];         // number of NADIR states
   pOrbitFile->specNumber=0;
 
   memset(maxPix,0,sizeof(INT)*MAX_CLUSTER);
@@ -541,7 +539,7 @@ RC SciaNadirStates(ENGINE_CONTEXT *pEngineContext,INDEX fileIndex)
 
     for (indexState=0;indexState<pOrbitFile->sciaNadirStatesN;indexState++)
      {
-      pAdsState=&pOrbitFile->sciaPDSInfo.ads_states[pOrbitFile->sciaPDSInfo.idx_states[NADIR][indexState]];
+      pAdsState=&pOrbitFile->sciaPDSInfo.ads_states[pOrbitFile->sciaPDSInfo.idx_states[MDS_NADIR][indexState]];
       pStateInfo=&pOrbitFile->sciaNadirStates[indexState];
       pStateInfo->stateId=pAdsState->state_id;
       pStateInfo->nobs=99999;
@@ -896,7 +894,7 @@ RC SciaReadNadirMDSInfo(ENGINE_CONTEXT *pEngineContext,INDEX fileIndex)
 
     // Browse NADIR MDS
 
-    for (offset=pOrbitFile->sciaPDSInfo.mds_offset[NADIR],indexNadirMDS=0;
+    for (offset=pOrbitFile->sciaPDSInfo.mds_offset[MDS_NADIR],indexNadirMDS=0;
 	     indexNadirMDS<(int)pOrbitFile->sciaPDSInfo.nadir.num_dsr;indexNadirMDS++)
      {
       // Read the MDS offset
@@ -910,7 +908,7 @@ RC SciaReadNadirMDSInfo(ENGINE_CONTEXT *pEngineContext,INDEX fileIndex)
         // get the index of the state and the cluster
 
         pCluster=&pOrbitFile->sciaNadirClusters[indexCluster];
-        indexState=indexNadirMDS/min(pOrbitFile->sciaPDSInfo.max_cluster_ids,56);
+        indexState=indexNadirMDS/min(pOrbitFile->sciaPDSInfo.max_cluster_ids[MDS_NADIR],56);
         pClusDef=pCluster->clusDef+indexState;
 
         // Complete the definition of the cluster
@@ -1214,10 +1212,10 @@ RC SCIA_SetPDS(ENGINE_CONTEXT *pEngineContext)
        {
         // Read information on radiances spectra
 
-        if (!pOrbitFile->sciaPDSInfo.n_states[NADIR])
+        if (!pOrbitFile->sciaPDSInfo.n_states[MDS_NADIR])
          rc=ERROR_ID_FILE_EMPTY;
-        else if (!(rc=SciaAllocateClusters(pEngineContext,pOrbitFile->sciaPDSInfo.cluster_ids,     // Allocate buffers for clusters
-                 pOrbitFile->sciaPDSInfo.max_cluster_ids,pOrbitFile->sciaPDSInfo.n_states[NADIR],indexFile)) &&
+        else if (!(rc=SciaAllocateClusters(pEngineContext,pOrbitFile->sciaPDSInfo.cluster_ids[MDS_NADIR],     // Allocate buffers for clusters
+                 pOrbitFile->sciaPDSInfo.max_cluster_ids[MDS_NADIR],pOrbitFile->sciaPDSInfo.n_states[MDS_NADIR],indexFile)) &&
                  !(rc=SciaReadNadirMDSInfo(pEngineContext,indexFile)) &&                           // get offset of NADIR measurement data set
                  !(rc=SciaNadirStates(pEngineContext,indexFile)) &&                                // determine the number of records from the cluster with highest integration time in the different states
                  !(rc=SciaNadirGeolocations(pEngineContext,indexFile)))                            // Read geolocations

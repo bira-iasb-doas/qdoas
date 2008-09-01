@@ -451,8 +451,8 @@ RC KURUCZ_Spectrum(double *oldLambda,double *newLambda,double *spectrum,double *
 
         if (KURUCZ_buffers.displaySpectra)
          {
-          mediateAllocateAndSetPlotData(&spectrumData[0],&Lambda[SvdPDeb],&spectrum[SvdPDeb],SvdPFin-SvdPDeb+1,Line);
-          mediateAllocateAndSetPlotData(&spectrumData[1],&Lambda[SvdPDeb],&ANALYSE_secX[SvdPDeb],SvdPFin-SvdPDeb+1,Line);
+          mediateAllocateAndSetPlotData(&spectrumData[0],"Spectrum",&Lambda[0],&spectrum[0],NDET,Line);
+          mediateAllocateAndSetPlotData(&spectrumData[1],"Adjusted Kurucz",&Lambda[0],&ANALYSE_secX[0],NDET,Line);
           mediateResponsePlotData(plotPageCalib,spectrumData,2,Spectrum,forceAutoScale,"Complete fit","Wavelength (nm)","Intensity", responseHandle);
           mediateReleasePlotData(spectrumData);
          }
@@ -465,7 +465,7 @@ RC KURUCZ_Spectrum(double *oldLambda,double *newLambda,double *spectrum,double *
            for (j=SvdPDeb;j<=SvdPFin;j++)
             ANALYSE_absolu[j]=(ANALYSE_tc[j]!=(double)0.)?ANALYSE_absolu[j]/ANALYSE_tc[j]:(double)0.;
 
-          mediateAllocateAndSetPlotData(&spectrumData[0],&Lambda[SvdPDeb],&ANALYSE_absolu[SvdPDeb],SvdPFin-SvdPDeb+1,Line);
+          mediateAllocateAndSetPlotData(&spectrumData[0],"Residual",&Lambda[0],&ANALYSE_absolu[0],NDET,Line);
           mediateResponsePlotData(plotPageCalib,spectrumData,1,Spectrum,forceAutoScale,"Residual","Wavelength (nm)","", responseHandle);
           mediateReleasePlotData(spectrumData);
          }
@@ -494,8 +494,8 @@ RC KURUCZ_Spectrum(double *oldLambda,double *newLambda,double *spectrum,double *
 
           if (KURUCZ_buffers.displayFit)
            {
-            mediateAllocateAndSetPlotData(&spectrumData[0],&Lambda[SvdPDeb],&ANALYSE_absolu[SvdPDeb],SvdPFin-SvdPDeb+1,Line);
-            mediateAllocateAndSetPlotData(&spectrumData[1],&Lambda[SvdPDeb],&ANALYSE_secX[SvdPDeb],SvdPFin-SvdPDeb+1,Line);
+            mediateAllocateAndSetPlotData(&spectrumData[0],"Measured",&Lambda[0],&ANALYSE_absolu[0],NDET,Line);
+            mediateAllocateAndSetPlotData(&spectrumData[1],"Calculated",&Lambda[0],&ANALYSE_secX[0],NDET,Line);
             mediateResponsePlotData(plotPageCalib,spectrumData,2,Spectrum,forceAutoScale,"Offset","Wavelength (nm)","", responseHandle);
             mediateReleasePlotData(spectrumData);
            }
@@ -519,8 +519,8 @@ RC KURUCZ_Spectrum(double *oldLambda,double *newLambda,double *spectrum,double *
 
               sprintf(string,"%s fit",WorkSpace[pTabCross->Comp].symbolName);
 
-              mediateAllocateAndSetPlotData(&spectrumData[0],&Lambda[SvdPDeb],&ANALYSE_absolu[SvdPDeb],SvdPFin-SvdPDeb+1,Line);
-              mediateAllocateAndSetPlotData(&spectrumData[1],&Lambda[SvdPDeb],&ANALYSE_secX[SvdPDeb],SvdPFin-SvdPDeb+1,Line);
+              mediateAllocateAndSetPlotData(&spectrumData[0],"Measured",&Lambda[0],&ANALYSE_absolu[0],NDET,Line);
+              mediateAllocateAndSetPlotData(&spectrumData[1],"Calculated",&Lambda[0],&ANALYSE_secX[0],NDET,Line);
               mediateResponsePlotData(plotPageCalib,spectrumData,2,Spectrum,forceAutoScale,string,"Wavelength (nm)","", responseHandle);
               mediateReleasePlotData(spectrumData);
 
@@ -533,8 +533,8 @@ RC KURUCZ_Spectrum(double *oldLambda,double *newLambda,double *spectrum,double *
 
         if (KURUCZ_buffers.displayShift)
          {
-          mediateAllocateAndSetPlotData(&spectrumData[0],&Lambda[SvdPDeb],&shiftPoly[SvdPDeb],SvdPFin-SvdPDeb+1,Line);
-          mediateAllocateAndSetPlotData(&spectrumData[1],VLambda+1,VShift+1,Nb_Win,Point);
+          mediateAllocateAndSetPlotData(&spectrumData[0],"Polynomial fitting individual shift points",&Lambda[0],&shiftPoly[0],NDET,Line);
+          mediateAllocateAndSetPlotData(&spectrumData[1],"Shift calculated in the individual small windows",VLambda+1,VShift+1,Nb_Win,Point);
           mediateResponsePlotData(plotPageCalib,spectrumData,2,Spectrum,forceAutoScale,"Shift","Wavelength (nm)","Shift (nm)", responseHandle);
           mediateReleasePlotData(spectrumData);
          }
@@ -562,8 +562,8 @@ RC KURUCZ_Spectrum(double *oldLambda,double *newLambda,double *spectrum,double *
 
            if (KURUCZ_buffers.displayShift)
             {
-             mediateAllocateAndSetPlotData(&spectrumData[0],&Lambda[SvdPDeb],&fwhmVector[indexParam][SvdPDeb],SvdPFin-SvdPDeb+1,Line);
-             mediateAllocateAndSetPlotData(&spectrumData[1],VLambda+1,fwhm[indexParam],Nb_Win,Point);
+             mediateAllocateAndSetPlotData(&spectrumData[0],"Polynomial fitting individual FWHM points",&Lambda[0],&fwhmVector[indexParam][0],NDET,Line);
+             mediateAllocateAndSetPlotData(&spectrumData[1],"FWHM calculated in the individual small windows",VLambda+1,fwhm[indexParam],Nb_Win,Point);
              mediateResponsePlotData(plotPageCalib,spectrumData,2,Spectrum,forceAutoScale,string,"Wavelength (nm)","SFP (nm)", responseHandle);
              mediateReleasePlotData(spectrumData);
             }

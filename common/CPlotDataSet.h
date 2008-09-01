@@ -28,25 +28,28 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
 // a set of (increasing x ordered) x,y points that define a single 'curve' on a plot.
- 
+
 class CXYPlotData
 {
  public:
-  CXYPlotData(const double *x, const double *y, int n, enum eCurveStyleType type);
+  CXYPlotData(const char *curveName,const double *x, const double *y, int n, enum eCurveStyleType type);
   ~CXYPlotData();
 
   enum eCurveStyleType curveType(void) const;
+  const char *curveName(void) const;
   const double* xRawData(void) const;
   const double* yRawData(void) const;
   int size(void) const;
 
  private:
+  QString m_curveName;
   double *m_xData, *m_yData;
   int m_nSamples;
   enum eCurveStyleType m_curveType;
 };
 
 inline enum eCurveStyleType CXYPlotData::curveType(void) const { return m_curveType; }
+inline const char *CXYPlotData::curveName(void) const { return m_curveName.toAscii().constData(); }
 inline const double* CXYPlotData::xRawData(void) const { return m_xData; }
 inline const double* CXYPlotData::yRawData(void) const { return m_yData; }
 inline int CXYPlotData::size(void) const { return m_nSamples; }
@@ -60,9 +63,9 @@ class CPlotDataSet
  public:
   CPlotDataSet(enum ePlotScaleType type, bool forceAutoScaling, const char *title, const char *xlabel, const char *ylabel);
   ~CPlotDataSet();
-  
-  void addPlotData(const double *x, const double *y, int n, enum eCurveStyleType type);
-               
+
+  void addPlotData(const char *curveName,const double *x, const double *y, int n, enum eCurveStyleType type);
+
   int count(void) const;
   const CXYPlotData& rawData(int index) const;
   enum eCurveStyleType curveType(int index) const;
@@ -77,7 +80,7 @@ class CPlotDataSet
   QList<CXYPlotData*> m_dataList;
   enum ePlotScaleType m_scaleType;
   bool m_forceAutoScaling;
-  QString m_title, m_xLabel, m_yLabel;
+  QString m_file,m_title, m_xLabel, m_yLabel;
 };
 
 inline int CPlotDataSet::count(void) const { return m_dataList.count(); }

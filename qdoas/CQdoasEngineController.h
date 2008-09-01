@@ -38,6 +38,10 @@ class CQdoasEngineController : public QObject, public CEngineController
 {
 Q_OBJECT
  public:
+  int m_step;
+  int     m_engineCurrentRecord;
+  QString m_engineCurrentFile;
+
   CQdoasEngineController(QObject *parent = 0);
   virtual ~CQdoasEngineController();
 

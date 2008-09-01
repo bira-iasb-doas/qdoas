@@ -53,7 +53,7 @@ QWidget* CNavigationPanel::helperBuildRecordEdit(void)
   layout->setMargin(0);
   layout->setSpacing(0);
   layout->addWidget(m_recordEdit);
-  
+
   return frame;
 }
 
@@ -66,7 +66,7 @@ QWidget* CNavigationPanel::helperBuildDelayEdit(void)
   m_delayEdit->setFixedWidth(fm.width("0000000")); // XX.XXX seconds [0,60]
   m_delayEdit->setToolTip("Play time delay (s)");
   m_delayEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 60.0, 3, m_delayEdit));
-  m_delayEdit->setText("2.000");
+  m_delayEdit->setText("0.000");
 
   QLabel *delayIcon = new QLabel;
   delayIcon->setPixmap(QPixmap(":/icons/nav_timer_16.png"));
@@ -123,7 +123,7 @@ CNavigationPanel::CNavigationPanel(QToolBar *toolBar) :
 
   // play timer
   m_playTimer = new QTimer(this);
-  m_playTimer->setInterval(2000);
+  m_playTimer->setInterval(0);
   m_playTimer->setSingleShot(true);
 
   // connections
@@ -144,7 +144,7 @@ CNavigationPanel::CNavigationPanel(QToolBar *toolBar) :
 }
 
 CNavigationPanel::~CNavigationPanel()
-{  
+{
 }
 
 void CNavigationPanel::slotSetFileList(const QStringList &fileList)
@@ -162,7 +162,7 @@ void CNavigationPanel::slotSetCurrentFile(int fileIndex, int nRecords)
 
   // change line edit validator ...
   m_recordEdit->setValidator(new QIntValidator(1, m_maxRecord, m_recordEdit));
-    
+
   // current record implicitly reset to 0
   m_currentRecord = 0;
 
@@ -184,7 +184,7 @@ void CNavigationPanel::slotSetEnabled(bool enable)
     groupActive = (m_currentRecord != 0) && !m_playing;
     m_firstBtn->setEnabled(groupActive);
     m_prevBtn->setEnabled(groupActive);
-  
+
     // up + last
     groupActive = (m_currentRecord != m_maxRecord) && !m_playing;
     m_nextBtn->setEnabled(groupActive);
@@ -228,7 +228,7 @@ void CNavigationPanel::slotSetCurrentRecord(int record)
   bool groupActive;
 
   m_currentRecord = record;
-  
+
   if (m_stopBtn->isEnabled()) {
     // tests that the navigation panel is enabled ... OK to tweak it ...
 
@@ -246,7 +246,7 @@ void CNavigationPanel::slotSetCurrentRecord(int record)
       groupActive = (m_currentRecord > 1);
       m_firstBtn->setEnabled(groupActive);
       m_prevBtn->setEnabled(groupActive);
-      
+
       // up + last
       groupActive = (m_currentRecord < m_maxRecord);
       m_nextBtn->setEnabled(groupActive);
@@ -341,7 +341,7 @@ void CNavigationPanel::slotRecordEditChanged()
   // on a 'return press'
   bool ok;
   int record = m_recordEdit->text().toInt(&ok);
-  
+
   if (ok && record > 0 && record <= m_maxRecord) {
 
     changeBackground(m_recordEdit, 0xFFFFFFFF);
@@ -356,7 +356,7 @@ void CNavigationPanel::slotRecordEditChanged()
     if (m_currentRecord)
       tmpStr.setNum(m_currentRecord);
     m_recordEdit->setText(tmpStr);
-  } 
+  }
 }
 
 void CNavigationPanel::slotDelayTextEdited(const QString &text)

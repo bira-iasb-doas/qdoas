@@ -425,8 +425,8 @@ RC mediateConvolutionCalculate(void *engineContext,void *responseHandle)
 
        	sprintf(windowTitle,(pEngineContext->convolutionType!=CONVOLUTION_TYPE_NONE)?"Spectrum after convolution":"Spectrum after interpolation");
 
-        mediateAllocateAndSetPlotData(&spectrumData[0],XSCONV_xshr.lambda,XSCONV_xshr.vector,XSCONV_xshr.NDET,Line);
-        mediateAllocateAndSetPlotData(&spectrumData[1],pXsnew->lambda+nFilter,pXsnew->vector+nFilter,pXsnew->NDET-2*nFilter,Line);
+        mediateAllocateAndSetPlotData(&spectrumData[0],"High resolution spectrum",XSCONV_xshr.lambda,XSCONV_xshr.vector,XSCONV_xshr.NDET,Line);
+        mediateAllocateAndSetPlotData(&spectrumData[1],windowTitle,pXsnew->lambda+nFilter,pXsnew->vector+nFilter,pXsnew->NDET-2*nFilter,Line);
         mediateResponsePlotData(0,spectrumData,2,Spectrum,forceAutoScale,windowTitle,"Wavelength (nm)","",responseHandle);
         mediateResponseLabelPage(0,pageTitle,"",responseHandle);
         mediateReleasePlotData(spectrumData);
@@ -447,8 +447,8 @@ RC mediateConvolutionCalculate(void *engineContext,void *responseHandle)
 
        	sprintf(windowTitle,(pEngineContext->convolutionType!=CONVOLUTION_TYPE_NONE)?"Spectrum after convolution and low-pass filtering":"Spectrum after interpolation and low-pass filtering");
 
-        mediateAllocateAndSetPlotData(&spectrumData[0],pXsnew->lambda+nFilter,pXsnew->vector+nFilter,pXsnew->NDET-2*nFilter,Line);
-        mediateAllocateAndSetPlotData(&spectrumData[1],pXsnew->lambda+nFilter,pEngineContext->filterVector+nFilter,pXsnew->NDET-2*nFilter,Line);
+        mediateAllocateAndSetPlotData(&spectrumData[0],"Convoluted spectrum before low pass filtering",pXsnew->lambda+nFilter,pXsnew->vector+nFilter,pXsnew->NDET-2*nFilter,Line);
+        mediateAllocateAndSetPlotData(&spectrumData[1],"Convoluted spectrum after low pass filtering",pXsnew->lambda+nFilter,pEngineContext->filterVector+nFilter,pXsnew->NDET-2*nFilter,Line);
         mediateResponsePlotData(0,spectrumData,2,Spectrum,forceAutoScale,windowTitle,"Wavelength (nm)","",responseHandle);
         mediateResponseLabelPage(0,pageTitle,"",responseHandle);
         mediateReleasePlotData(spectrumData);
@@ -465,7 +465,7 @@ RC mediateConvolutionCalculate(void *engineContext,void *responseHandle)
 
        	sprintf(windowTitle,(pEngineContext->convolutionType!=CONVOLUTION_TYPE_NONE)?"Spectrum after convolution, low-pass and high-pass filtering":"Spectrum after interpolation, low-pass and high-pass filtering");
 
-        mediateAllocateAndSetPlotData(&spectrumData[0],pXsnew->lambda+nFilter,pEngineContext->filterVector+nFilter,pXsnew->NDET-2*nFilter,Line);
+        mediateAllocateAndSetPlotData(&spectrumData[0],windowTitle,pXsnew->lambda+nFilter,pEngineContext->filterVector+nFilter,pXsnew->NDET-2*nFilter,Line);
         mediateResponsePlotData(0,spectrumData,1,Spectrum,forceAutoScale,windowTitle,"Wavelength (nm)","",responseHandle);
         mediateResponseLabelPage(0,pageTitle,"",responseHandle);
         mediateReleasePlotData(spectrumData);
@@ -1008,7 +1008,7 @@ RC mediateRingCalculate(void *engineContext,void *responseHandle)
             for (i=0;i<nring;i++)
              fprintf(fp,"%.14le %.14le %.14le %.14le\n",ringLambda[i],ringEnd[i],ramanint[i],ringVector[i]);
 
-            mediateAllocateAndSetPlotData(&spectrumData[0],ringLambda,ringEnd,nring,Line);
+            mediateAllocateAndSetPlotData(&spectrumData[0],"Calculated ring cross section",ringLambda,ringEnd,nring,Line);
             mediateResponsePlotData(0,spectrumData,1,Spectrum,forceAutoScale,"Calculated ring cross section","Wavelength (nm)","",responseHandle);
             mediateResponseLabelPage(0,pageTitle,"",responseHandle);
             mediateReleasePlotData(spectrumData);

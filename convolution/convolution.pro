@@ -3,7 +3,7 @@
 #----------------------------------------------
 
 TEMPLATE = app
-TARGET   = convolution
+TARGET   = ../../qdoas/release/convolution
 
 include( ../config.pri )
 
@@ -25,23 +25,21 @@ contains ( HELP_SYSTEM, assistant ) {
 INCLUDEPATH  += $$QWT_INC_PATH
 
 unix {
-  INCLUDEPATH  += ../mediator ../common ../engine $$BEAT_INC_PATH
-  LIBS         += -L$$QWT_LIB_PATH -l$$QWT_LIB -L$$BEAT_LIB_PATH -lbeat -lm
+  INCLUDEPATH  += ../mediator ../common ../engine
+  LIBS         += -L$$QWT_LIB_PATH -l$$QWT_LIB -lm
   QMAKE_LFLAGS += -Wl,-rpath=$$QWT_LIB_PATH
 }
 
 win32 {
-  INCLUDEPATH  += ..\mediator ..\common ..\engine $$BEAT_INC_PATH
+  INCLUDEPATH  += ..\mediator ..\common ..\engine
 
   contains( QWT_LINKAGE, qwtstatic ) {
-    LIBS        += -L$$QWT_LIB_PATH -l$$QWT_LIB -L$$BEAT_LIB_PATH -l$$BEAT_LIB
+    LIBS        += -L$$QWT_LIB_PATH -l$$QWT_LIB
   }
   contains( QWT_LINKAGE, qwtdll ) {
-    LIBS        += -L$$QWT_LIB_PATH -l$$QWT_LIB$$QWT_LIB_VERSION -L$$BEAT_LIB_PATH -l$$BEAT_LIB
-    DEFINES     += QWT_DLL LIBBEATDLL
+    LIBS        += -L$$QWT_LIB_PATH -l$$QWT_LIB$$QWT_LIB_VERSION
+    DEFINES     += QWT_DLL
   }
-
-  DEFINES      += LIBBEATDLL
 
   CONFIG      += windows
 }
@@ -164,6 +162,7 @@ SOURCES += ../engine/svd.c
 SOURCES += ../engine/vector.c
 SOURCES += ../engine/winfiles.c
 SOURCES += ../engine/xsconv.c
+SOURCES += ../engine/ring.c
 
 #----------------------------------------------
 # Engine Header files
@@ -172,11 +171,8 @@ HEADERS += ../engine/bin_read.h
 HEADERS += ../engine/comdefs.h
 HEADERS += ../engine/doas.h
 HEADERS += ../engine/engine_xsconv.h
-HEADERS += ../engine/lv1_defs.h
-HEADERS += ../engine/lv1_struct.h
-HEADERS += ../engine/lv1c_struct.h
-HEADERS += ../engine/read1c_defs.h
-HEADERS += ../engine/utc_string.h
+HEADERS += ../engine/engine_common.h
+HEADERS += ../engine/constants.h
 HEADERS += ../engine/windoas.h
 
 #----------------------------------------------

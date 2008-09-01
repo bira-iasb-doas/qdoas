@@ -18,7 +18,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
 #include <iostream>
-
+#include <QFile>
 #include "CBatchEngineController.h"
 
 #include "mediate_types.h"
@@ -35,7 +35,7 @@ CBatchEngineController::CBatchEngineController() :
 CBatchEngineController::~CBatchEngineController()
 {
 }
-  
+
 void CBatchEngineController::notifyReadyToNavigateRecords(const QString &filename, int numberOfRecords)
 {
   m_active = (numberOfRecords > 0);
@@ -45,30 +45,31 @@ void CBatchEngineController::notifyEndOfRecords(void)
 {
   m_active = false;
 }
-  
+
 void CBatchEngineController::notifyErrorMessages(int highestErrorLevel, const QList<CEngineError> &errorMessages)
 {
   QList<CEngineError>::const_iterator it = errorMessages.begin();
-  while (it != errorMessages.end()) {
-
-    switch (it->errorLevel()) {
-    case InformationEngineError:
-      std::cout << "INFO:  ";
-      break;
-    case WarningEngineError:
-      std::cout << "WARN:  ";
-      break;
-    case FatalEngineError:
-      std::cout << "ERROR: ";
-      break;
-    default:
-      std::cout << "???:   ";
-    }
+  while (it != errorMessages.end())
+   {
+    switch (it->errorLevel())
+     {
+      case InformationEngineError:
+        std::cout << "INFO:  ";
+        break;
+      case WarningEngineError:
+        std::cout << "WARN:  ";
+        break;
+      case FatalEngineError:
+        std::cout << "ERROR: ";
+        break;
+      default:
+        std::cout << "???:   ";
+     }
 
     std::cout << it->message().toStdString() << std::endl;
     ++it;
-  }
-  
+   }
+
   // abort if an error occurred
   if (highestErrorLevel == FatalEngineError)
     m_active = false;

@@ -21,7 +21,7 @@ bool CAnalysisWindowConfigItem::setName(const QString &name)
 
     return true;
   }
-  
+
   return false;
 }
 
@@ -105,7 +105,7 @@ CAnalysisWindowConfigItem* CProjectConfigItem::issueNewAnalysisWindowItem(void)
 {
   CAnalysisWindowConfigItem *tmp = new CAnalysisWindowConfigItem;
   m_awItemList.push_back(tmp);
-  
+
   // retains ownership
   return tmp;
 }

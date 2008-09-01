@@ -88,7 +88,7 @@ class CSiteConfigItem
   void setLongitude(double longitude);
   void setLatitude(double latitude);
   void setAltitude(double altitude);
-  
+
   const QString& siteName(void) const;
   const QString& abbreviation(void) const;
   double longitude(void) const;

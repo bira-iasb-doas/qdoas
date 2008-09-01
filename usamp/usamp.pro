@@ -25,13 +25,13 @@ contains ( HELP_SYSTEM, assistant ) {
 INCLUDEPATH  += $$QWT_INC_PATH
 
 unix {
-  INCLUDEPATH  += ../mediator ../common ../engine $$BEAT_INC_PATH
-  LIBS         += -L$$QWT_LIB_PATH -l$$QWT_LIB -L$$BEAT_LIB_PATH -lbeat -lm
+  INCLUDEPATH  += ../mediator ../common ../engine
+  LIBS         += -L$$QWT_LIB_PATH -l$$QWT_LIB -lm
   QMAKE_LFLAGS += -Wl,-rpath=$$QWT_LIB_PATH
 }
 
 win32 {
-  INCLUDEPATH  += ..\mediator ..\common ..\engine $$BEAT_INC_PATH
+  INCLUDEPATH  += ..\mediator ..\common ..\engine
 
   contains( QWT_LINKAGE, qwtstatic ) {
     LIBS        += -L$$QWT_LIB_PATH -l$$QWT_LIB -L$$BEAT_LIB_PATH -l$$BEAT_LIB
@@ -41,6 +41,7 @@ win32 {
     DEFINES     += QWT_DLL LIBBEATDLL
   }
 
+  LIBS         += -L$$BEAT_LIB_PATH -lbeat
   DEFINES      += LIBBEATDLL
 
   CONFIG      += windows
@@ -124,7 +125,6 @@ HEADERS += CUsampConfigWriter.h
 #----------------------------------------------
 SOURCES += ../mediator/mediate_usamp.c
 SOURCES += ../mediator/mediate.c
-SOURCES += ../mediator/mediate_common.c
 SOURCES += ../mediator/mediate_response.cpp
 
 #----------------------------------------------
@@ -133,7 +133,6 @@ SOURCES += ../mediator/mediate_response.cpp
 HEADERS += ../mediator/mediate_limits.h
 HEADERS += ../mediator/mediate_general.h
 HEADERS += ../mediator/mediate_usamp.h
-HEADERS += ../mediator/mediate_common.h
 HEADERS += ../mediator/mediate_response.h
 HEADERS += ../mediator/mediate_request.h
 HEADERS += ../mediator/mediate_project.h
@@ -198,6 +197,8 @@ SOURCES += ../engine/zenithal.c
 #----------------------------------------------
 # Engine Header files
 #----------------------------------------------
+HEADERS += ../engine/beat.h
+HEADERS += ../engine/beatl2.h
 HEADERS += ../engine/bin_read.h
 HEADERS += ../engine/comdefs.h
 HEADERS += ../engine/doas.h
