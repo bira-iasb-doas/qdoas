@@ -742,7 +742,7 @@ RC EngineReadFile(ENGINE_CONTEXT *pEngineContext,int indexRecord,INT dateFlag,IN
  // ---------------------------------------------------------------------------
    }
 
-  if (!rc)
+  if (!rc && !(rc=THRD_SpectrumCorrection(pEngineContext,pEngineContext->buffers.spectrum)))
    {
    	pEngineContext->indexRecord=indexRecord;
    	if (pRecord->oldZm<(double)0.)
@@ -763,15 +763,6 @@ RC EngineReadFile(ENGINE_CONTEXT *pEngineContext,int indexRecord,INT dateFlag,IN
        pRecord->altitude=pSite->altitude*0.001;
 
       pRecord->Zm=(pRecord->Tm!=(double)0.)?ZEN_FNTdiz(ZEN_FNCrtjul(&pRecord->Tm),&longit,&latit,&pRecord->Azimuth):(double)-1.;
-     }
-
-    if (pEngineContext->buffers.instrFunction!=NULL)
-     {
-      for (i=0;(i<NDET) && !rc;i++)
-       if (pEngineContext->buffers.instrFunction[i]==(double)0.)
-        rc=ERROR_SetLast("EngineReadFile",ERROR_TYPE_FATAL,ERROR_ID_DIVISION_BY_0,"Instrumental function");
-       else
-        pEngineContext->buffers.spectrum[i]/=pEngineContext->buffers.instrFunction[i];
      }
    }
 

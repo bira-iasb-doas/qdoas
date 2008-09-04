@@ -73,10 +73,29 @@ void mediateRequestPlotSpectra(ENGINE_CONTEXT *pEngineContext,void *responseHand
 
   if (pProject->spectra.displaySpectraFlag)
    {
-    mediateAllocateAndSetPlotData(&spectrumData, "Spectrum",pBuffers->lambda, pBuffers->spectrum, NDET, Line);
-    mediateResponsePlotData(plotPageSpectrum, &spectrumData, 1, Spectrum, allowFixedScale, "Spectrum", "Wavelength (nm)", "Counts", responseHandle);
-    mediateReleasePlotData(&spectrumData);
-    mediateResponseLabelPage(plotPageSpectrum, fileName, tmpString, responseHandle);
+   	double *tempSpectrum;
+   	int i;
+
+   	if ((tempSpectrum=(double *)MEMORY_AllocDVector("mediateRequestPlotSpectra","tempSpectrum",0,NDET-1))!=NULL)
+   	 {
+   	 	memcpy(tempSpectrum,pBuffers->spectrum,sizeof(double)*NDET);
+
+      if (pEngineContext->buffers.instrFunction!=NULL)
+       {
+        for (i=0;i<NDET;i++)
+         if (pBuffers->instrFunction[i]==(double)0.)
+          tempSpectrum[i]=(double)0.;
+         else
+          tempSpectrum[i]/=pBuffers->instrFunction[i];
+       }
+
+      mediateAllocateAndSetPlotData(&spectrumData, "Spectrum",pBuffers->lambda, tempSpectrum, NDET, Line);
+      mediateResponsePlotData(plotPageSpectrum, &spectrumData, 1, Spectrum, allowFixedScale, "Spectrum", "Wavelength (nm)", "Counts", responseHandle);
+      mediateReleasePlotData(&spectrumData);
+      mediateResponseLabelPage(plotPageSpectrum, fileName, tmpString, responseHandle);
+
+      MEMORY_ReleaseDVector("mediateRequestPlotSpectra","spectrum",tempSpectrum,0);
+     }
 
     if (((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_PDAEGG) ||
          (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_ACTON) ||

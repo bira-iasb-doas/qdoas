@@ -50,6 +50,7 @@ void initializeMediateAnalysisWindow(mediate_analysis_window_t *d)
    {
      d->crossSectionList.crossSection[i].requireFit=1;
      d->crossSectionList.crossSection[i].requireCcFit=1;
+     d->crossSectionList.crossSection[i].requireFilter=1;
      d->crossSectionList.crossSection[i].initialCc=(double)0.;
      d->crossSectionList.crossSection[i].deltaCc=(double)1.e-3;
    }

@@ -38,7 +38,7 @@ bool CFilteringSubHandler::start(const QXmlAttributes &atts)
   else if (str == "savitzky")
     m_filter->mode = PRJCT_FILTER_TYPE_SG;
   else if (str == "oddeven")
-    m_filter->mode = PRJCT_FILTER_TYPE_BINOMIAL;
+    m_filter->mode = PRJCT_FILTER_TYPE_ODDEVEN;
   else if (str == "binomial")
     m_filter->mode = PRJCT_FILTER_TYPE_BINOMIAL;
   else

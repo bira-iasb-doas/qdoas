@@ -1,7 +1,7 @@
 #include "scia_defs.h"
 #include "scia_common.h"
-#include "scia_L1B.h"
-#include "scia_L1C_lib.h"
+#include "scia_l1b.h"
+#include "scia_l1c_lib.h"
 #include "bin_read.h"
 #include "scia_common.h"
 

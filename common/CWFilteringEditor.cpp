@@ -57,27 +57,27 @@ CWFilteringEditor::CWFilteringEditor(const mediate_filter_t *lowpass,
   m_lowKaiser = new CWKaiserEdit(&(lowpass->kaiser), CWFilteringEditor::None);
   m_lowStack->addWidget(m_lowKaiser);
   m_lowCombo->addItem("Kaiser Filter", QVariant(PRJCT_FILTER_TYPE_KAISER));
-  
+
   // boxcar
   m_lowBoxcar = new CWBoxcarTriangularBinomialEdit(&(lowpass->boxcar), CWFilteringEditor::None);
   m_lowStack->addWidget(m_lowBoxcar);
   m_lowCombo->addItem("Boxcar Filter", QVariant(PRJCT_FILTER_TYPE_BOXCAR));
-  
+
   // gaussian
   m_lowGaussian = new CWGaussianEdit(&(lowpass->gaussian), CWFilteringEditor::None);
   m_lowStack->addWidget(m_lowGaussian);
   m_lowCombo->addItem("Gaussian Filter", QVariant(PRJCT_FILTER_TYPE_GAUSSIAN));
-  
+
   // triangular
   m_lowTriangular = new CWBoxcarTriangularBinomialEdit(&(lowpass->triangular), CWFilteringEditor::None);
   m_lowStack->addWidget(m_lowTriangular);
   m_lowCombo->addItem("Triangular Filter", QVariant(PRJCT_FILTER_TYPE_TRIANGLE));
-  
+
   // savitzky-golay
   m_lowSavitzky = new CWSavitzkyGolayEdit(&(lowpass->savitzky), CWFilteringEditor::None);
   m_lowStack->addWidget(m_lowSavitzky);
   m_lowCombo->addItem("Savitzky-Golay Filter", QVariant(PRJCT_FILTER_TYPE_SG));
-  
+
   // none
   m_lowStack->addWidget(new QFrame);
   m_lowCombo->addItem("Odd-Even Correction", QVariant(PRJCT_FILTER_TYPE_ODDEVEN));
@@ -86,7 +86,7 @@ CWFilteringEditor::CWFilteringEditor(const mediate_filter_t *lowpass,
   m_lowBinomial = new CWBoxcarTriangularBinomialEdit(&(lowpass->binomial), CWFilteringEditor::None);
   m_lowStack->addWidget(m_lowBinomial);
   m_lowCombo->addItem("Binomial Filter", QVariant(PRJCT_FILTER_TYPE_BINOMIAL));
-  
+
 
   // low pass group organisation
   lowLayout->addWidget(m_lowCombo);
@@ -109,27 +109,27 @@ CWFilteringEditor::CWFilteringEditor(const mediate_filter_t *lowpass,
   m_highKaiser = new CWKaiserEdit(&(highpass->kaiser), highPassUsage);
   m_highStack->addWidget(m_highKaiser);
   m_highCombo->addItem("Kaiser Filter", QVariant(PRJCT_FILTER_TYPE_KAISER));
-  
+
   // boxcar
   m_highBoxcar = new CWBoxcarTriangularBinomialEdit(&(highpass->boxcar), highPassUsage);
   m_highStack->addWidget(m_highBoxcar);
   m_highCombo->addItem("Boxcar Filter", QVariant(PRJCT_FILTER_TYPE_BOXCAR));
-  
+
   // gaussian
   m_highGaussian = new CWGaussianEdit(&(highpass->gaussian), highPassUsage);
   m_highStack->addWidget(m_highGaussian);
   m_highCombo->addItem("Gaussian Filter", QVariant(PRJCT_FILTER_TYPE_GAUSSIAN));
-  
+
   // triangular
   m_highTriangular = new CWBoxcarTriangularBinomialEdit(&(highpass->triangular), highPassUsage);
   m_highStack->addWidget(m_highTriangular);
   m_highCombo->addItem("Triangular Filter", QVariant(PRJCT_FILTER_TYPE_TRIANGLE));
-  
+
   // savitzky-golay
   m_highSavitzky = new CWSavitzkyGolayEdit(&(highpass->savitzky), highPassUsage);
   m_highStack->addWidget(m_highSavitzky);
   m_highCombo->addItem("Savitzky-Golay Filter", QVariant(PRJCT_FILTER_TYPE_SG));
-  
+
   // odd-even
   m_highStack->addWidget(new QFrame);
   m_highCombo->addItem("Odd-Even Correction", QVariant(PRJCT_FILTER_TYPE_ODDEVEN));
@@ -138,7 +138,7 @@ CWFilteringEditor::CWFilteringEditor(const mediate_filter_t *lowpass,
   m_highBinomial = new CWBoxcarTriangularBinomialEdit(&(highpass->binomial), highPassUsage);
   m_highStack->addWidget(m_highBinomial);
   m_highCombo->addItem("Binomial Filter", QVariant(PRJCT_FILTER_TYPE_BINOMIAL));
-  
+
   // high pass group organisation
   highLayout->addWidget(m_highCombo);
   highLayout->addWidget(m_highStack);
@@ -155,7 +155,7 @@ CWFilteringEditor::CWFilteringEditor(const mediate_filter_t *lowpass,
 
   // set the current mode - stack will follow
   int index;
-  
+
   index = m_lowCombo->findData(QVariant(lowpass->mode));
   if (index != -1)
     m_lowCombo->setCurrentIndex(index);
@@ -243,7 +243,7 @@ CWFilterUsageEdit::CWFilterUsageEdit(const struct filter_usage *d, CWFilteringEd
       layout->addWidget(calCheck);
       QCheckBox *fitCheck = new QCheckBox("Fitting Window", this);
       layout->addWidget(fitCheck);
-      calCheck->setCheckState(m_state.calibrationFlag ? Qt::Checked : Qt::Unchecked); 
+      calCheck->setCheckState(m_state.calibrationFlag ? Qt::Checked : Qt::Unchecked);
       fitCheck->setCheckState(m_state.fittingFlag ? Qt::Checked : Qt::Unchecked);
       // connections ...
       connect(calCheck, SIGNAL(stateChanged(int)), this, SLOT(slotCalibrationStateChanged(int)));
@@ -505,7 +505,7 @@ void CWBoxcarTriangularBinomialEdit::reset(const struct filter_triangular *d)
 {
   m_widthSpinBox->setValue(d->width);
   m_iterationsSpinBox->setValue(d->iterations);
-  m_usageEdit->reset(&(d->usage));  
+  m_usageEdit->reset(&(d->usage));
 }
 
 void CWBoxcarTriangularBinomialEdit::apply(struct filter_triangular *d) const
@@ -519,7 +519,7 @@ void CWBoxcarTriangularBinomialEdit::reset(const struct filter_binomial *d)
 {
   m_widthSpinBox->setValue(d->width);
   m_iterationsSpinBox->setValue(d->iterations);
-  m_usageEdit->reset(&(d->usage));  
+  m_usageEdit->reset(&(d->usage));
 }
 
 void CWBoxcarTriangularBinomialEdit::apply(struct filter_binomial *d) const

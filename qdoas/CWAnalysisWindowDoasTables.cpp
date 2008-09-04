@@ -488,7 +488,7 @@ void CWMoleculesDoasTable::slotInsertRow()
 	  initialValues.push_back(QString("None"));
 	  initialValues.push_back(QString("None"));
 	  initialValues.push_back(true);
-	  initialValues.push_back(false);
+	  initialValues.push_back(true);                                               // Require filter should be initialized at true !!!
 	  initialValues.push_back(false);
 	  initialValues.push_back(true);
 	  initialValues.push_back(0.0);

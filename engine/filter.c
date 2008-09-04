@@ -712,7 +712,6 @@ RC FILTER_Build(PRJCT_FILTER *pFilter,double fa1,double fa2,double fa3)
       else
        for (i=1;i<=pFilter->filterSize;i++)
         pFilter->filterFunction[i]/=sum;
-
      }
    }
 

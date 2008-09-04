@@ -3214,8 +3214,9 @@ RC ANALYSE_CurFitMethod(double *Spectre,          // raw spectrum
         fitParamsC[TabCross[i].IndSvdA]=TabCross[i].InitConc;
 
         if ((WorkSpace[TabCross[i].Comp].type==WRK_SYMBOL_CROSS) && (indexFeno<NFeno) &&
+            (TabCross[i].FitFromPrevious==1) && (TabCross[i].InitConc==(double)0.) &&
           (((Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVD) && (TabCross[i].FitConc==0)) ||
-           ((Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVDMARQUARDT) && (TabCross[i].FitConc==ITEM_NONE))) &&  (TabCross[i].InitConc==(double)0.))
+           ((Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVDMARQUARDT) && (TabCross[i].FitConc==ITEM_NONE))))
          {
           for (indexFeno2=indexFeno-1;indexFeno2>=0;indexFeno2--)
            if (!TabFeno[indexFeno2].hidden)
@@ -4493,6 +4494,7 @@ RC ANALYSE_LoadCross(ANALYSIS_CROSS *crossSectionList,INT nCross,INT hidden,doub
           pEngineCross->display=pCross->requireFit;                    // fit display
           pEngineCross->InitConc=pCross->initialCc;                    // initial concentration
           pEngineCross->FitConc=pCross->requireCcFit;                  // modify concentration
+          pEngineCross->FitFromPrevious=pCross->constrainedCc;
 
           pEngineCross->DeltaConc=(pEngineCross->FitConc)?pCross->deltaCc:(double)0.;   // delta on concentration
           pEngineCross->I0Conc=(pEngineCross->crossAction==ANLYS_CROSS_ACTION_CONVOLUTE_I0)?pCross->ccIo:(double)0.;

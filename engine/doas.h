@@ -256,6 +256,7 @@ typedef struct _crossReference
          IndSvdP,                   // index of column in SVD matrix
          IndOrthog,                 // order in orthogonal base
          FitConc,                   // flag set if concentration is to be fit (non linear method) or modified (linear method)
+         FitFromPrevious,           // flag set if the value of the concentration has to be retrieved from a previous window
          FitParam,                  // flag set if non linear parameter (other than shift or stretch) is to be fit
          FitShift,                  // flag set if shift is to be fit
          FitStretch,                // flag set if stretch order 1 is to be fit
