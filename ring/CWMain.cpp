@@ -497,7 +497,7 @@ void CWMain::slotErrorMessages(int highestLevel, const QString &messages)
 
 void CWMain::slotRunRing()
 {
-	int rc;
+	 int rc;
 
   // uses a snapshot of the guiProperties ...
   fetchGuiProperties();
