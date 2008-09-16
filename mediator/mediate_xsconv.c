@@ -704,7 +704,6 @@ RC mediateRequestRing(void *engineContext,mediate_ring_t *pMediateRing,void *res
   // Return
 
   return rc;
-
  }
 
 // -----------------------------------------------------------------------------
@@ -1074,6 +1073,74 @@ RC mediateRingCalculate(void *engineContext,void *responseHandle)
   return rc;
  }
 
+// ==================
+// UNDERSAMPLING TOOL
+// ==================
+/*
+// -----------------------------------------------------------------------------
+// FUNCTION      mediateRequestUsamp
+// -----------------------------------------------------------------------------
+// PURPOSE       Transfer the convolution options from the GUI to the engine
+//
+// RETURN        ERROR_ID_NO if no error found
+// -----------------------------------------------------------------------------
+
+RC mediateRequestUsamp(void *engineContext,mediate_usamp_t *pMediateUsamp,void *responseHandle)
+ {
+ 	// Declarations
+
+  ENGINE_XSCONV_CONTEXT *pEngineContext = (ENGINE_XSCONV_CONTEXT*)engineContext;// pointer to the engine context
+  SLIT *pSlitConv;                                                              // pointer to the convolution part of the engine context
+  RC rc;
+
+  // Initializations
+
+  rc=ERROR_ID_NO;
+
+  // General information
+
+  pEngineContext->noComment=pMediateUsamp->noheader;
+  pEngineContext->temperature=pMediateUsamp->temperature;
+
+  strcpy(pEngineContext->path,pMediateUsamp->outputFile);                        // output path
+  strcpy(pEngineContext->calibrationFile,pMediateUsamp->calibrationFile);        // calibration file
+  strcpy(pEngineContext->kuruczFile,pMediateUsamp->solarRefFile);                // Kurucz file used when I0 correction is applied
+
+  // Description of the slit function
+
+  setMediateSlit(&pEngineContext->slitConv,&pMediateUsamp->slit);
+
+  if (!strlen(pEngineContext->calibrationFile))
+   rc=ERROR_SetLast("mediateRequestUsamp",ERROR_TYPE_FATAL,ERROR_ID_MEDIATE,"Calibration","Calibration file name is missing");
+  else if (pEngineContext->convolutionType!=CONVOLUTION_TYPE_NONE)
+   {
+   	pSlitConv=&pEngineContext->slitConv;
+
+   	// Convolution slit function
+
+   	if ((pSlitConv->slitType!=SLIT_TYPE_GAUSS) &&
+        (pSlitConv->slitType!=SLIT_TYPE_INVPOLY) &&
+        (pSlitConv->slitType!=SLIT_TYPE_ERF) &&
+        (pSlitConv->slitType!=SLIT_TYPE_VOIGT) &&
+        (pSlitConv->slitType!=SLIT_TYPE_APOD) &&
+        (pSlitConv->slitType!=SLIT_TYPE_APODNBS) && !strlen(pSlitConv->slitFile))
+
+     rc=ERROR_SetLast("mediateRequestUsamp",ERROR_TYPE_FATAL,ERROR_ID_MEDIATE,"Slit Function Type","Convolution slit function file is missing");
+
+    else if (((pSlitConv->slitType==SLIT_TYPE_INVPOLY) || (pSlitConv->slitType==SLIT_TYPE_INVPOLY_FILE)) &&
+             ((pSlitConv->slitParam2<=(double)0.) ||
+              (pSlitConv->slitParam2-floor(pSlitConv->slitParam2)!=(double)0.) ||
+              (fmod(pSlitConv->slitParam2,(double)2.)!=(double)0.)))
+
+     rc=ERROR_SetLast("mediateRequestUsamp",ERROR_TYPE_FATAL,ERROR_ID_MEDIATE,"Degree","Polynomial degree should be a positive integer and a multiple of 2");
+   }
+
+  // Return
+
+  return rc;
+
+ }
+*/
 // ============
 // TOOL CONTEXT
 // ============

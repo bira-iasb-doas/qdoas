@@ -34,6 +34,9 @@ RC   mediateConvolutionCalculate(void *engineContext,void *responseHandle);
 RC   mediateRequestRing(void *engineContext,mediate_ring_t *pMediateRing,void *responseHandle);
 RC   mediateRingCalculate(void *engineContext,void *responseHandle);
 
+// RC   mediateRequestUsamp(void *engineContext,mediate_usamp_t *pMediateUsamp,void *responseHandle);
+// RC   mediateUsampCalculate(void *engineContext,void *responseHandle);
+
 int  mediateXsconvCreateContext(void **engineContext, void *responseHandle);
 int  mediateXsconvDestroyContext(void *engineContext, void *responseHandle);
 
