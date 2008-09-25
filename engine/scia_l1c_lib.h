@@ -2,8 +2,8 @@
 #define  __SCIA_L1C_LIB
 
 #include "scia_defs.h"
-#include "scia_L1B.h"
-#include "scia_L1C.h"
+#include "scia_L1b.h"
+#include "scia_L1c.h"
 
 #define SCAN_LIMB_DURATION 24
 #define SCAN_LIMB_STEP_DURATION 3
