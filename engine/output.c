@@ -146,7 +146,9 @@ PRJCT_RESULTS_FIELDS PRJCT_resultsAscii[PRJCT_RESULTS_ASCII_MAX]=
   { "Scanning telescope angle"    , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_ALS_SCANNING
   { "Filter number"               , MEMORY_TYPE_INT   , sizeof(INT)   , ITEM_NONE, ITEM_NONE, "%#8d"      },       // PRJCT_RESULTS_ASCII_CCD_FILTERNUMBER
   { "Measurement type"            , MEMORY_TYPE_INT   , sizeof(INT)   , ITEM_NONE, ITEM_NONE, "%#8d"      },       // PRJCT_RESULTS_ASCII_CCD_MEASTYPE
-  { "Head temperature"            , MEMORY_TYPE_DOUBLE, sizeof(double), ITEM_NONE, ITEM_NONE, "%#12.6f"   }        // PRJCT_RESULTS_ASCII_CCD_HEADTEMPERATURE
+  { "Head temperature"            , MEMORY_TYPE_DOUBLE, sizeof(double), ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_CCD_HEADTEMPERATURE
+  { "Cooler status"               , MEMORY_TYPE_INT   , sizeof(INT)   , ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_COOLING_STATUS
+  { "Mirror status"               , MEMORY_TYPE_INT   , sizeof(INT)   , ITEM_NONE, ITEM_NONE, "%#5d"      }        // PRJCT_RESULTS_ASCII_MIRROR_ERROR
  };
 
 typedef struct _NDSC_header
@@ -1959,6 +1961,14 @@ void OutputSaveRecord(ENGINE_CONTEXT *pEngineContext,INT hiddenFlag)
      // ---------------------------------------------------------------------
         case PRJCT_RESULTS_ASCII_CCD_HEADTEMPERATURE :
          ((double *)outputColumns[indexColumn++])[indexRecord]=(double)pRecordInfo->ccd.headTemperature;
+        break;
+     // ---------------------------------------------------------------------
+        case PRJCT_RESULTS_ASCII_COOLING_STATUS :
+         ((INT *)outputColumns[indexColumn++])[indexRecord]=(INT)pRecordInfo->coolingStatus;
+        break;
+     // ---------------------------------------------------------------------
+        case PRJCT_RESULTS_ASCII_MIRROR_ERROR :
+         ((INT *)outputColumns[indexColumn++])[indexRecord]=(INT)pRecordInfo->mirrorError;
         break;
      // ---------------------------------------------------------------------
         default :

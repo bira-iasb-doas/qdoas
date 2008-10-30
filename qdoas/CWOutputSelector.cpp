@@ -112,6 +112,8 @@ CWOutputSelector::CWOutputSelector(const data_select_list_t *d, QWidget *parent)
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_CCD_FILTERNUMBER,    "Filter number"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_CCD_MEASTYPE,        "Measurement type"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_CCD_HEADTEMPERATURE, "Head temperature"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_COOLING_STATUS,      "Cooler status"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_MIRROR_ERROR,        "Mirror status"));
 
   // populate the selected list by key-reference to the available list ...
 
@@ -317,6 +319,8 @@ void getValidFieldFlags(int *validFlags, int instrument)
       validFlags[PRJCT_RESULTS_ASCII_VIEW_AZIMUTH]=1;                           // absent for Harestua, present for OHP MAX-DOAS
       validFlags[PRJCT_RESULTS_ASCII_SCANS]=1;
       validFlags[PRJCT_RESULTS_ASCII_NREJ]=1;
+      validFlags[PRJCT_RESULTS_ASCII_COOLING_STATUS]=1;
+      validFlags[PRJCT_RESULTS_ASCII_MIRROR_ERROR]=1;
      }
     break;
  // ----------------------------------------------------------------------------

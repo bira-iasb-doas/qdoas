@@ -302,6 +302,8 @@ void mediateRequestPlotSpectra(ENGINE_CONTEXT *pEngineContext,void *responseHand
       	mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"Viewing Zenith angle","%.3f",pRecord->zenithViewAngle);
      	if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_VIEW_AZIMUTH])
      	 mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"Viewing Azimuth angle","%.3f",pRecord->azimuthViewAngle);
+      if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_MIRROR_ERROR])
+       mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"Mirror status","%.3f",(pRecord->mirrorError==1)?"!!! PROBLEM !!!":"OK");
      }
 
     if (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_CCD_EEV)
@@ -322,6 +324,8 @@ void mediateRequestPlotSpectra(ENGINE_CONTEXT *pEngineContext,void *responseHand
 
     if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_TDET])
      mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"Detector temperature","%.3f",pRecord->TDet);
+    if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_COOLING_STATUS])
+     mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"Cooler status","%.3f",(pRecord->coolingStatus==0)?"!!! UNLOCKED !!!":"Locked");
 
     if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_LONGIT])
      mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"Longitude","%.3f",pRecord->longitude);

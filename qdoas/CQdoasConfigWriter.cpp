@@ -1357,6 +1357,9 @@ void CQdoasConfigWriter::writeDataSelectList(FILE *fp, const data_select_list_t 
     case PRJCT_RESULTS_ASCII_CCD_MEASTYPE        :      fprintf(fp, "ccd_measType"); break;
     case PRJCT_RESULTS_ASCII_CCD_HEADTEMPERATURE :      fprintf(fp, "ccd_headTemp"); break;
 
+    case PRJCT_RESULTS_ASCII_COOLING_STATUS      :      fprintf(fp, "cooler_status"); break;
+    case PRJCT_RESULTS_ASCII_MIRROR_ERROR        :      fprintf(fp, "mirror_status"); break;
+
     default: fprintf(fp, "Invalid");
     }
     fprintf(fp, "\" />\n");

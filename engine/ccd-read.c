@@ -115,7 +115,8 @@ typedef struct _ccdData
   short       alsFlag;                                                          // 1 for asl measurents (cfr Alexis)
   short       scanIndex;                                                        // scan index for asl measurements
   double      scanningAngle;
-  DoasCh      ignored[974];                                                     // if completed with new data in the future, authorizes compatibility with previous versions
+  DoasCh      doubleFlag;
+  DoasCh      ignored[973];                                                     // if completed with new data in the future, authorizes compatibility with previous versions
   double      mirrorAzimuth;
   int         measureType;                                                  // if completed with new data in the future, authorizes compatibility with previous versions
  }
@@ -165,7 +166,7 @@ RC SetCCD_EEV(ENGINE_CONTEXT *pEngineContext,FILE *specFp,FILE *darkFp)
 
   CCD_DATA header;                                                              // header of a record
   DoasU32   *recordIndexes;                                                       // indexes of records for direct access
-  INT      ccdX,ccdY;                                                           // size of the detector
+  INT      ccdX,ccdY,dataSize;                                                  // size of the detector
   int      specMaxFlag;                                                         // 1 to use specMax, the vector of maxima of the scans
   INDEX    indexTps;                                                            // browse the predefined integration time
   DoasU32    offset;                                                              // offset to remove from the spectrum
@@ -211,12 +212,13 @@ RC SetCCD_EEV(ENGINE_CONTEXT *pEngineContext,FILE *specFp,FILE *darkFp)
      {
       ccdX=(header.roiWveEnd-header.roiWveStart+1)/header.roiWveGroup;
       ccdY=(header.roiSlitEnd-header.roiSlitStart+1)/header.roiSlitGroup;
+      dataSize=(header.doubleFlag)?sizeof(double):sizeof(DoasUS);
 
       pEngineContext->recordNumber++;
 
       recordIndexes[pEngineContext->recordNumber]=(DoasU32)
         recordIndexes[pEngineContext->recordNumber-1]+
-        sizeof(CCD_DATA)+((header.saveTracks)?ccdX*ccdY*sizeof(DoasUS):ccdX*sizeof(DoasUS));
+        sizeof(CCD_DATA)+((header.saveTracks)?ccdX*ccdY*dataSize:ccdX*dataSize);
 
       // 15/02/2003 : dark current acquisition
 
@@ -245,6 +247,7 @@ RC SetCCD_EEV(ENGINE_CONTEXT *pEngineContext,FILE *specFp,FILE *darkFp)
        {
         ccdX=(header.roiWveEnd-header.roiWveStart+1)/header.roiWveGroup;
         ccdY=(header.roiSlitEnd-header.roiSlitStart+1)/header.roiSlitGroup;
+        dataSize=(header.doubleFlag)?sizeof(double):sizeof(DoasUS);
 
         for (indexTps=0;indexTps<MAXTPS;indexTps++)
          if (header.exposureTime==predTint[indexTps])
@@ -253,7 +256,7 @@ RC SetCCD_EEV(ENGINE_CONTEXT *pEngineContext,FILE *specFp,FILE *darkFp)
         if (indexTps<MAXTPS)
          ccdDarkCurrentOffset[indexTps]=offset;
 
-        offset+=sizeof(CCD_DATA)+((header.saveTracks)?ccdX*ccdY*sizeof(DoasUS):ccdX*sizeof(DoasUS));
+        offset+=sizeof(CCD_DATA)+((header.saveTracks)?ccdX*ccdY*dataSize:ccdX*dataSize);
         fseek(darkFp,offset,SEEK_SET);
        }
      }
@@ -322,7 +325,7 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
   CCD_DATA header;                                                              // header of the current record
   double *dspectrum,*tmpSpectrum;                                               // pointer to the vector in 'pEngineContext' to fill with the current spectrum
   DoasUS *spectrum;                                                             // spectrum to retrieve from the current record in the original format
-  INT ccdX,ccdY,spSize;                                                         // dimensions of the CCD detector
+  INT ccdX,ccdY,spSize,dataSize;                                                // dimensions of the CCD detector
   DoasUS *ccdTabNTint;                                                          // number of scans per different integration times
   double *ccdTabTint;                                                           // the different integration times used for the current measurement
   DoasUS *darkCurrent;                                                          // the dark current
@@ -330,7 +333,7 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
   double offset;                                                                // offset correction
   double tmLocal;
   INDEX i,j,k;                                                                  // indexes to browse vectors
-  RC rc;                                                                        // return code
+  RC rc,rcFread;                                                                // return code
 
   // Debugging
 
@@ -373,6 +376,7 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
 
       ccdX=(header.roiWveEnd-header.roiWveStart+1)/header.roiWveGroup;
       ccdY=(header.roiSlitEnd-header.roiSlitStart+1)/header.roiSlitGroup;
+      dataSize=(header.doubleFlag)?sizeof(double):sizeof(DoasUS);
 
       spSize=(header.saveTracks)?ccdX*ccdY:ccdX;
       nTint=header.nTint;
@@ -380,7 +384,7 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
       // Buffers allocation
 
       if (((spectrum=(DoasUS *)MEMORY_AllocBuffer("ReliCCD_EEV","spectrum",spSize,sizeof(DoasUS),0,MEMORY_TYPE_USHORT))==NULL) ||
-          ((tmpSpectrum=(double *)MEMORY_AllocBuffer("ReliCCD_EEV","tmpSpectrum",NDET,sizeof(double),0,MEMORY_TYPE_DOUBLE))==NULL) ||
+          ((tmpSpectrum=(double *)MEMORY_AllocBuffer("ReliCCD_EEV","tmpSpectrum",spSize,sizeof(double),0,MEMORY_TYPE_DOUBLE))==NULL) ||
           ((darkCurrent=(DoasUS *)MEMORY_AllocBuffer("ReliCCD_EEV","darkCurrent",NDET*400,sizeof(DoasUS),0,MEMORY_TYPE_USHORT))==NULL) ||
           ((ccdTabNTint=(DoasUS *)MEMORY_AllocBuffer("ReliCCD_EEV","ccdTabNTint",300,sizeof(DoasUS),0,MEMORY_TYPE_USHORT))==NULL) ||
           ((ccdTabTint=(double *)MEMORY_AllocBuffer("ReliCCD_EEV","ccdTabTint",300,sizeof(double),0,MEMORY_TYPE_DOUBLE))==NULL))
@@ -392,7 +396,14 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
         memset(spectrum,0,sizeof(DoasUS)*spSize);
         memset(darkCurrent,0,sizeof(DoasUS)*spSize);
 
-        if (!fread(spectrum,sizeof(DoasUS)*spSize,1,specFp) ||
+        for(i=0;i<NDET;i++)
+         tmpSpectrum[i]=(double)0.;
+
+        rcFread=(header.doubleFlag)?
+                 fread(tmpSpectrum,sizeof(double)*spSize,1,specFp):
+                 fread(spectrum,sizeof(DoasUS)*spSize,1,specFp);
+
+        if (!rcFread ||
            ((header.nTint>0) &&
            (!fread(ccdTabTint,sizeof(double)*header.nTint,1,specFp) ||
             !fread(ccdTabNTint,sizeof(short)*header.nTint,1,specFp) ||
@@ -400,18 +411,38 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
 
          rc=ERROR_SetLast("ReliCCD_EEV",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pEngineContext->fileInfo.fileName);
         else if (!header.saveTracks)
-         for (i=0;i<spSize;i++)
-          dspectrum[i]=(double)spectrum[i];
+         {
+         	if (header.doubleFlag)
+         	 memcpy(dspectrum,tmpSpectrum,sizeof(double)*spSize);
+         	else
+           for (i=0;i<spSize;i++)
+            dspectrum[i]=(double)spectrum[i];
+         }
         else
          {
-          // Accumulate spectra
+         	if (header.doubleFlag)
+         	 {
+            // Accumulate spectra
 
-          for (i=0;i<NDET;i++)
-           {
-            dspectrum[i]=(double)0.;
-            for (j=0;j<ccdY;j++)
-             dspectrum[i]+=spectrum[NDET*j+i];
-            dspectrum[i]/=ccdY;
+            for (i=0;i<NDET;i++)
+             {
+              dspectrum[i]=(double)0.;
+              for (j=0;j<ccdY;j++)
+               dspectrum[i]+=tmpSpectrum[NDET*j+i];
+              dspectrum[i]/=ccdY;
+             }
+         	 }
+         	else
+         	 {
+            // Accumulate spectra
+
+            for (i=0;i<NDET;i++)
+             {
+              dspectrum[i]=(double)0.;
+              for (j=0;j<ccdY;j++)
+               dspectrum[i]+=spectrum[NDET*j+i];
+              dspectrum[i]/=ccdY;
+             }
            }
          }
 

@@ -46,12 +46,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "CUsampConfigWriter.h"
 #include "CEngineResponse.h"
 
-#include "mediate_types.h"
-#include "mediate.h"
+#include "../mediator/mediate_response.h"
+#include "../mediator/mediate_types.h"
+#include "../mediator/mediate_xsconv.h"
 
 #include "debugutil.h"
-
-void TODO_Junk_Test(void *engineContext, void *resp); // TODO
 
 CWMain::CWMain(QWidget *parent) :
   QFrame(parent),
@@ -498,6 +497,8 @@ void CWMain::slotErrorMessages(int highestLevel, const QString &messages)
 
 void CWMain::slotRunUsamp()
 {
+	 int rc;
+
   // uses a snapshot of the guiProperties ...
   fetchGuiProperties();
 
@@ -505,23 +506,25 @@ void CWMain::slotRunUsamp()
   void *engineContext;
   CEngineResponseTool *resp = new CEngineResponseTool;
 
-  if (mediateRequestCreateEngineContext(&engineContext, resp) != 0) {
+  if (mediateXsconvCreateContext(&engineContext, resp) != 0) {
     delete resp;
     return;
   }
 
-  QApplication::setOverrideCursor(Qt::WaitCursor);
+  if ((rc=mediateRequestUsamp(engineContext, &m_guiProperties,resp))==ERROR_ID_NO)
+   {
+    QApplication::setOverrideCursor(Qt::WaitCursor);
+    rc=mediateUsampCalculate(engineContext,resp);
+    QApplication::restoreOverrideCursor();
+   }
 
-  //mediateRequestUsamp(&engineContext, &m_guiProperties, resp);
-
-  TODO_Junk_Test(&engineContext, resp);
+  if (rc!=ERROR_ID_NO)
+   ERROR_DisplayMessage(resp);
 
   // process the response - the controller will dispatch ...
   resp->process(m_controller);
 
-  QApplication::restoreOverrideCursor();
-
-  if (mediateRequestDestroyEngineContext(engineContext, resp) != 0) {
+  if (mediateXsconvDestroyContext(engineContext, resp) != 0) {
     delete resp;
     return;
   }
@@ -550,16 +553,3 @@ void CWMain::slotPlotPage(const RefCountConstPtr<CPlotPageData> &page)
   }
 }
 
-
-void TODO_Junk_Test(void *engineContext, void *resp)
-{
-  plot_data_t dummy;
-  double xData[] = { 0.0, 1.1, 2.2, 3.3, 4.4, 5.5 };
-  double yData[] = { 3.0, 4.0, 3.5, 1.1, 1.4, 3.0 };
-
-  mediateAllocateAndSetPlotData(&dummy, xData, yData, 6, Line);
-
-  mediateResponsePlotData(0, &dummy, 1, Spectrum, 0, "Title", "X-Label", "Y-label", resp);
-
-  mediateReleasePlotData(&dummy);
-}

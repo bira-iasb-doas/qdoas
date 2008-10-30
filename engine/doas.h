@@ -688,6 +688,7 @@ typedef struct _engineRecordInfo
                                                                                 // SATELLITES MEASUREMENTS
 
   int    useErrors;                                                             // 1 if errors are present in the files (GOME)
+  int    coolingStatus,mirrorError;                                             // only for OHP measurements (September 2008)
   INDEX  indexBand;                                                             // index of the band
 
   GOME_DATA gome;                                                               // GOME format

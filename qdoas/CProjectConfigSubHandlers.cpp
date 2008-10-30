@@ -130,6 +130,10 @@ bool CSelectorSubHandler::start(const QString &element, const QXmlAttributes &at
     d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_CCD_MEASTYPE;
   else if (str == "ccd_headTemp")
     d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_CCD_HEADTEMPERATURE;
+  else if (str == "cooler_status")
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_COOLING_STATUS;
+  else if (str == "mirror_status")
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_MIRROR_ERROR;
 
   else
     return postErrorMessage("Invalid output field " + str);
