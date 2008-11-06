@@ -3,7 +3,7 @@
 
 #include "scia_defs.h"
 #include "scia_common.h"
-#include "scia_L1b.h"
+#include "scia_l1b.h"
 
 
 /* DSD name enum */

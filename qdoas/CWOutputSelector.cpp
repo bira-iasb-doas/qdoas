@@ -449,6 +449,13 @@ void getValidFieldFlags(int *validFlags, int instrument)
      }
     break;
  // ----------------------------------------------------------------------------
+    case PRJCT_INSTR_FORMAT_GOME2 :
+     {
+      validFlags[PRJCT_RESULTS_ASCII_LOS_ZA]=1;
+      validFlags[PRJCT_RESULTS_ASCII_LOS_AZIMUTH]=1;
+     }
+    break;
+ // ----------------------------------------------------------------------------
 
 
 // QDOAS !!! STILL TO DO  PRJCT_INSTR_FORMAT_CCD_OHP_96,                        // CCD (OHP 96)

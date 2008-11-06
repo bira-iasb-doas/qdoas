@@ -789,7 +789,8 @@ RC EngineRequestBeginBrowseSpectra(ENGINE_CONTEXT *pEngineContext,const char *sp
 
   // Set file pointers
 
-  if (!(rc=EngineSetFile(pEngineContext,spectraFileName)) && !pEngineContext->recordNumber)
+  if (!(rc=EngineRequestEndBrowseSpectra(pEngineContext)) &&
+      !(rc=EngineSetFile(pEngineContext,spectraFileName)) && !pEngineContext->recordNumber)
    rc=ERROR_SetLast("EngineRequestBeginBrowseSpectra",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,spectraFileName);
   else if ((THRD_id==THREAD_TYPE_SPECTRA) || !(rc=OUTPUT_LocalAlloc(pEngineContext)))
    {

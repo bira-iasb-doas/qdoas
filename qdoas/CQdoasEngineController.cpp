@@ -402,7 +402,7 @@ void CQdoasEngineController::slotStep()
       break;
     }
   }
-  else if ((m_currentRecord == m_numberOfRecords || m_currentRecord==m_oldRecord) && !m_currentIt.atEnd()) {
+  else if ((m_currentRecord >= m_numberOfRecords || m_currentRecord==m_oldRecord) && !m_currentIt.atEnd()) {
     CSessionIterator tmpIt = m_currentIt;
 
     // only move if there IS a next file ... this leaves the last file 'active'.

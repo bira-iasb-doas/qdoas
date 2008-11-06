@@ -2182,6 +2182,7 @@ RC OutputBuildFileName(ENGINE_CONTEXT *pEngineContext,DoasCh *outputFileName,INT
   DoasCh               *fileNamePtr,                                             // character pointers used for building output file name
                        tmpBuffer[MAX_ITEM_TEXT_LEN+1],
                       *ptr;
+  int                  satelliteFlag;
   RC                   rc;
 
   // Initializations
@@ -2208,23 +2209,35 @@ RC OutputBuildFileName(ENGINE_CONTEXT *pEngineContext,DoasCh *outputFileName,INT
     else
      fileNamePtr++;
 
+    satelliteFlag=((pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN) ||
+                   (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_ASCII) ||
+                   (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_HDF) ||
+                   (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS) ||
+                   (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_OMI) ||
+                   (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GOME2));
+
     if ((!strlen(fileNamePtr) || !STD_Stricmp(fileNamePtr,"automatic")) &&
-        ((pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN) ||
-         (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_ASCII) ||
-         (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_HDF) ||
-         (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS) ||
-         (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GOME2)) &&
-        ((pProject->spectra.mode!=PRJCT_SPECTRA_MODES_OBSLIST) || (pProject->spectra.radius<=1.)))
+       ((satelliteFlag && ((pProject->spectra.mode!=PRJCT_SPECTRA_MODES_OBSLIST) || (pProject->spectra.radius<=1.))) ||
+       (!satelliteFlag && (pResults->fileNameFlag || (SITES_GetIndex(pProject->instrumental.observationSite)==ITEM_NONE)))))
      {
       if ((ptr=strrchr(pEngineContext->fileInfo.fileName,PATH_SEP))==NULL)
        ptr=pEngineContext->fileInfo.fileName;
+      else if ((pResults->fileNameFlag || (SITES_GetIndex(pProject->instrumental.observationSite)==ITEM_NONE)) &&
+              ((pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC) || (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC_STD)))
+       {
+       	*ptr=0;
+        if ((ptr=strrchr(pEngineContext->fileInfo.fileName,PATH_SEP))==NULL)
+         ptr=pEngineContext->fileInfo.fileName;
+        else
+         ptr++;
+       }
       else
        ptr++;
 
       fileNamePtr--;                                                            // Remove the separator character in order to build the directory structure
       *fileNamePtr=0;
 
-      if (pResults->dirFlag)
+      if (satelliteFlag && pResults->dirFlag)
        {
         // Create 'year' directory
 
@@ -2259,10 +2272,21 @@ RC OutputBuildFileName(ENGINE_CONTEXT *pEngineContext,DoasCh *outputFileName,INT
 
       // Build output file name
 
-      strcpy(tmpBuffer,outputFileName);
-      sprintf(outputFileName,"%s%c%s",tmpBuffer,PATH_SEP,ptr);
+       strcpy(tmpBuffer,outputFileName);
 
-      if ((ptr=strrchr(outputFileName,'.'))!=NULL)
+      if ((pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_HDF) ||
+          (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS))
+
+       sprintf(outputFileName,"%s%cSCIA_%d%02d%02d_%05d",tmpBuffer,PATH_SEP,pOutput->year,pOutput->month,pOutput->day,pEngineContext->recordInfo.scia.orbitNumber);
+
+//      else if (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GOME2)
+//       sprintf(outputFileName,"%s%cGOME_xxx_1B_%d%02d%02d_%05d",tmpBuffer,PATH_SEP,pOutput->year,pOutput->month,pOutput->day,pEngineContext->recordInfo.gome2.orbitNumber);
+      else
+       sprintf(outputFileName,"%s%c%s",tmpBuffer,PATH_SEP,ptr);
+
+      if ((pProject->instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_MFC) &&
+          (pProject->instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_MFC_STD) &&
+         ((ptr=strrchr(outputFileName,'.'))!=NULL))
        strcpy(ptr,(ascFlag)?".ASC":".BIN");
       else
        strcat(outputFileName,(ascFlag)?".ASC":".BIN");
@@ -3031,10 +3055,9 @@ RC OUTPUT_FlushBuffers(ENGINE_CONTEXT *pEngineContext)
 
     if (outputFp!=NULL)
      fclose(outputFp);
-
-    if (!rc)
-     outputNbRecords=0;
    }
+
+  outputNbRecords=0;
 
   // Release the allocated buffers
 

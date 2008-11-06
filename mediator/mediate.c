@@ -211,9 +211,11 @@ void mediateRequestPlotSpectra(ENGINE_CONTEXT *pEngineContext,void *responseHand
         (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC_STD))
      {
       pTime=&pRecord->startTime;
-      mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"Start time","%02d:%02d:%02d",pTime->ti_hour,pTime->ti_min,pTime->ti_sec);
+      if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_MFC_STARTTIME])
+       mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"Start time","%02d:%02d:%02d",pTime->ti_hour,pTime->ti_min,pTime->ti_sec);
       pTime=&pRecord->endTime;
-      mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"End time","%02d:%02d:%02d",pTime->ti_hour,pTime->ti_min,pTime->ti_sec);
+      if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_MFC_ENDTIME])
+       mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"End time","%02d:%02d:%02d",pTime->ti_hour,pTime->ti_min,pTime->ti_sec);
      }
 
     if (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS)
@@ -232,7 +234,7 @@ void mediateRequestPlotSpectra(ENGINE_CONTEXT *pEngineContext,void *responseHand
     else
      mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"Record","%d/%d",pEngineContext->indexRecord,pEngineContext->recordNumber);
 
-    if (strlen(pRecord->Nom))
+    if (strlen(pRecord->Nom) && (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_NAME]))
      mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"Record name","%s",pRecord->Nom);
 
 //   QDOAS ???
@@ -275,8 +277,10 @@ void mediateRequestPlotSpectra(ENGINE_CONTEXT *pEngineContext,void *responseHand
 //   QDOAS ???      sprintf(tmpString,"Calibration parameters\t%.2f %.3e %.3e %.3e\n",pRecord->wavelength1,pRecord->dispersion[0],
 //   QDOAS ???                  pRecord->dispersion[1],pRecord->dispersion[2]);
 //  QDOAS ???
-      mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"Solar Zenith angle","%-.3f",pRecord->Zm);
-//  QDOAS ???
+
+    if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_SZA])
+     mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"Solar Zenith angle","%-.3f",pRecord->Zm);
+
     if ((pInstrumental->readOutFormat!=PRJCT_INSTR_FORMAT_GDP_ASCII) &&
         (pInstrumental->readOutFormat!=PRJCT_INSTR_FORMAT_GDP_BIN) &&
         (pInstrumental->readOutFormat!=PRJCT_INSTR_FORMAT_SCIA_PDS) &&
@@ -1678,59 +1682,53 @@ int mediateRequestNextMatchingSpectrum(ENGINE_CONTEXT *pEngineContext,void *resp
      	// lower limit
 
    	  if (pProject->spectra.noMin)
-   	   {
-   	    rec=max(rec,pProject->spectra.noMin);
-   	    if (rec==pProject->spectra.noMin)
-   	     inc=1;
-   	   }
+  	    rec=max(rec,pProject->spectra.noMin);
 
    	  // upper limit
 
    	  if (pProject->spectra.noMax)
-   	   {
-   	    rec=min(rec,pProject->spectra.noMax);
-   	    if (rec==pProject->spectra.noMax)
-   	     inc=-1;
-   	   }
+  	    rec=min(rec,pProject->spectra.noMax);
 
    	  // Read the file
 
       if ((rc=EngineReadFile(pEngineContext,rec,0,0))!=ERROR_ID_NO)
       	ERROR_DisplayMessage(responseHandle);
-
-      longit=pRecord->longitude;
-      latit=pRecord->latitude;
-      geoFlag=1;
-
-      if ((pProject->spectra.mode==PRJCT_SPECTRA_MODES_CIRCLE) && (pProject->spectra.radius>1.) &&
-          (THRD_GetDist(longit,latit,pProject->spectra.longMin,pProject->spectra.latMin)>(double)pProject->spectra.radius))
-       geoFlag=0;
-      else if ((pProject->spectra.mode==PRJCT_SPECTRA_MODES_OBSLIST) && (pProject->spectra.radius>1.))
+      else
        {
-        for (indexSite=0;indexSite<SITES_itemN;indexSite++)
-         {
-          pSite=&SITES_itemList[indexSite];
+        longit=pRecord->longitude;
+        latit=pRecord->latitude;
+        geoFlag=1;
 
-// QDOAS ???           if (!pSite->hidden)
+        if ((pProject->spectra.mode==PRJCT_SPECTRA_MODES_CIRCLE) && (pProject->spectra.radius>1.) &&
+            (THRD_GetDist(longit,latit,pProject->spectra.longMin,pProject->spectra.latMin)>(double)pProject->spectra.radius))
+         geoFlag=0;
+        else if ((pProject->spectra.mode==PRJCT_SPECTRA_MODES_OBSLIST) && (pProject->spectra.radius>1.))
+         {
+          for (indexSite=0;indexSite<SITES_itemN;indexSite++)
            {
-            if (THRD_GetDist(longit,latit,pSite->longitude,pSite->latitude)<=(double)pProject->spectra.radius)
-             break;
+            pSite=&SITES_itemList[indexSite];
+
+  // QDOAS ???           if (!pSite->hidden)
+             {
+              if (THRD_GetDist(longit,latit,pSite->longitude,pSite->latitude)<=(double)pProject->spectra.radius)
+               break;
+             }
            }
+          if (indexSite==SITES_itemN)
+           geoFlag=0;
          }
-        if (indexSite==SITES_itemN)
+        else if ((pProject->spectra.mode==PRJCT_SPECTRA_MODES_RECTANGLE) &&
+
+               (((pProject->spectra.longMin!=pProject->spectra.longMax) &&
+                 ((longit>max(pProject->spectra.longMin,pProject->spectra.longMax)) ||
+                  (longit<min(pProject->spectra.longMin,pProject->spectra.longMax)))) ||
+
+                 ((pProject->spectra.latMin!=pProject->spectra.latMax) &&
+                 ((latit>max(pProject->spectra.latMin,pProject->spectra.latMax)) ||
+                  (latit<min(pProject->spectra.latMin,pProject->spectra.latMax))))))
+
          geoFlag=0;
        }
-      else if ((pProject->spectra.mode==PRJCT_SPECTRA_MODES_RECTANGLE) &&
-
-             (((pProject->spectra.longMin!=pProject->spectra.longMax) &&
-               ((longit>max(pProject->spectra.longMin,pProject->spectra.longMax)) ||
-                (longit<min(pProject->spectra.longMin,pProject->spectra.longMax)))) ||
-
-               ((pProject->spectra.latMin!=pProject->spectra.latMax) &&
-               ((latit>max(pProject->spectra.latMin,pProject->spectra.latMax)) ||
-                (latit<min(pProject->spectra.latMin,pProject->spectra.latMax))))))
-
-       geoFlag=0;
 
       // avoid infinite loop
 

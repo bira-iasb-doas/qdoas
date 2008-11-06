@@ -67,7 +67,7 @@
 // STRUCTURES DEFINITION
 // =====================
 
-#pragma pack(1);
+#pragma pack(1)
 
 typedef struct _gome2MdrInfo
  {

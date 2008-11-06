@@ -1,8 +1,8 @@
 #include "bin_read.h"
 #include "scia_common.h"
 #include "scia_defs.h"
-#include "scia_L1B.h"
-#include "scia_L1C.h"
+#include "scia_l1b.h"
+#include "scia_l1c.h"
 
 
 /* Array with DSD Names */
