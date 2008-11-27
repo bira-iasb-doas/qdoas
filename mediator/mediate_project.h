@@ -242,8 +242,10 @@ extern "C" {
   };
 
   struct instrumental_mfcstd {
-    int detectorSize;
-    int revert;
+    int  detectorSize;
+    int  revert;
+    int  straylight;
+    char dateFormat[24];
     char calibrationFile[FILENAME_BUFFER_LENGTH];
     char instrFunctionFile[FILENAME_BUFFER_LENGTH];
     char darkCurrentFile[FILENAME_BUFFER_LENGTH];
@@ -369,6 +371,7 @@ extern "C" {
     int configurationFlag;
     int binaryFormatFlag;
     int directoryFlag;
+    int filenameFlag;
     char flux[FLUX_BUFFER_LENGTH];
     char colourIndex[COLOUR_INDEX_BUFFER_LENGTH];
     char path[FILENAME_BUFFER_LENGTH];

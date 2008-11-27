@@ -44,12 +44,12 @@ void CEngineResponse::addErrorMessage(const QString &tag, const QString &msg, in
 bool CEngineResponse::processErrors(CEngineController *engineController)
 {
   if (hasErrors()) {
-    // send the set of messages to the controller 
+    // send the set of messages to the controller
     engineController->notifyErrorMessages(m_highestErrorLevel, m_errorMessages);
 
     return hasFatalError();
   }
-  
+
   return false;
 }
 
@@ -137,7 +137,7 @@ void CEngineResponseBeginAccessFile::process(CEngineController *engineController
 
   if (m_numberOfRecords > 0) {
     // calibration data ... TODO ...
-    
+
     engineController->notifyReadyToNavigateRecords(m_fileName, m_numberOfRecords);
     // wait for the request to process a record ...
   }

@@ -418,6 +418,7 @@ void getValidFieldFlags(int *validFlags, int instrument)
       validFlags[PRJCT_RESULTS_ASCII_LATIT]=1;
       validFlags[PRJCT_RESULTS_ASCII_MFC_STARTTIME]=1;
       validFlags[PRJCT_RESULTS_ASCII_MFC_ENDTIME]=1;
+      validFlags[PRJCT_RESULTS_ASCII_TDET]=1;
      }
     break;
  // ----------------------------------------------------------------------------

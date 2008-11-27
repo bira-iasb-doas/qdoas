@@ -589,7 +589,9 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   fprintf(fp, " offset=\"%s\" />\n", tmpStr.toAscii().constData());
 
   // mfcstd
-  fprintf(fp, "      <mfcstd size=\"%d\" revert=\"%s\"", d->mfcstd.detectorSize, (d->mfcstd.revert ? sTrue : sFalse));
+  fprintf(fp, "      <mfcstd size=\"%d\" revert=\"%s\" straylight=\"%s\" date=\"%s\"",
+    d->mfcstd.detectorSize, (d->mfcstd.revert ? sTrue : sFalse),
+   (d->mfcstd.straylight ? sTrue : sFalse),d->mfcstd.dateFormat);
 
   tmpStr = pathMgr->simplifyPath(QString(d->mfcstd.calibrationFile));
   fprintf(fp, " calib=\"%s\"", tmpStr.toAscii().constData());
@@ -865,10 +867,11 @@ void CQdoasConfigWriter::writePropertiesOutput(FILE *fp, const mediate_project_o
 {
   QString tmpStr = CPathMgr::instance()->simplifyPath(QString(d->path));
 
-  fprintf(fp, "    <output path=\"%s\" anlys=\"%s\" calib=\"%s\" conf=\"%s\" bin=\"%s\" dirs=\"%s\" flux=\"%s\" cic=\"%s\" >\n",
+  fprintf(fp, "    <output path=\"%s\" anlys=\"%s\" calib=\"%s\" conf=\"%s\" bin=\"%s\" dirs=\"%s\" file=\"%s\" flux=\"%s\" cic=\"%s\" >\n",
 	  tmpStr.toAscii().constData(), (d->analysisFlag ? sTrue : sFalse),
 	  (d->calibrationFlag ? sTrue : sFalse), (d->configurationFlag ? sTrue : sFalse),
 	  (d->binaryFormatFlag ? sTrue : sFalse), (d->directoryFlag ? sTrue : sFalse),
+	  (d->filenameFlag ? sTrue : sFalse),
 	  d->flux, d->colourIndex);
 
   writeDataSelectList(fp, &(d->selection));

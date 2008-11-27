@@ -120,6 +120,7 @@ enum RunMode parseCommandLine(int argc, char **argv, commands_t *cmd)
   // extract data from command line
   enum RunMode runMode = None;
   int i = 1;
+  int fileSwitch = 0;
 
   while (runMode != Error && i < argc) {
 
@@ -128,6 +129,7 @@ enum RunMode parseCommandLine(int argc, char **argv, commands_t *cmd)
 
       if (!strcmp(argv[i], "-c")) { // configuration file ...
 	if (++i < argc && argv[i][0] != '-') {
+		 fileSwitch=0;
 	  if (cmd->configFile.isEmpty()) {
 	    cmd->configFile = argv[i];
 	    runMode = Batch;
@@ -143,6 +145,7 @@ enum RunMode parseCommandLine(int argc, char **argv, commands_t *cmd)
       }
       else if (!strcmp(argv[i], "-a")) { // project name file ...
 	if (++i < argc && argv[i][0] != '-') {
+		 fileSwitch=0;
 	  cmd->projectName = argv[i];
 	}
 	else {
@@ -152,9 +155,11 @@ enum RunMode parseCommandLine(int argc, char **argv, commands_t *cmd)
 
       }
       else if (!strcmp(argv[i], "-f")) { // filename ...
-	if (++i < argc && argv[i][0] != '-') {
-	  cmd->filenames.push_back(argv[i]);
-	}
+	if (++i < argc && argv[i][0] != '-')
+		 {
+    fileSwitch=1;
+ 	  cmd->filenames.push_back(argv[i]);
+	  }
 	else {
 	  runMode = Error;
 	  std::cout << "Option '-f' requires an argument (filename)." << std::endl;
@@ -163,6 +168,7 @@ enum RunMode parseCommandLine(int argc, char **argv, commands_t *cmd)
       }
       else if (!strcmp(argv[i], "-o")) { // output directory ...
 	if (++i < argc && argv[i][0] != '-') {
+		 fileSwitch=0;
 	  cmd->outputDir = argv[i];
 	}
 	else {
@@ -172,11 +178,15 @@ enum RunMode parseCommandLine(int argc, char **argv, commands_t *cmd)
 
       }
       else if (!strcmp(argv[i], "-h")) { // help ...
+      	fileSwitch=0;
 	runMode = Help;
       }
 
     }
-    else {
+    else if (fileSwitch)
+     cmd->filenames.push_back(argv[i]);
+    else
+    {
       runMode = Error;
       std::cout << "Invalid argument '" << argv[i] << "'" << std::endl;
     }
@@ -398,6 +408,7 @@ int readConfigQdoas(commands_t *cmd, QList<const CProjectConfigItem*> &projectIt
 
 int analyseProjectQdoas(const CProjectConfigItem *projItem, const QString &outputDir, const QList<QString> &filenames)
 {
+	 QString fileFilter="*.*";
   void *engineContext;
   int retCode;
 
@@ -411,8 +422,14 @@ int analyseProjectQdoas(const CProjectConfigItem *projItem, const QString &outpu
   // loop over files ...
   QList<QString>::const_iterator it = filenames.begin();
   while (it != filenames.end()) {
+    QFileInfo info(*it);
 
-    retCode = analyseProjectQdoasFile(engineContext, controller, *it);
+  	 if (info.isFile())
+  	  retCode = analyseProjectQdoasFile(engineContext, controller, *it);
+  	 else if (info.isDir())
+ 	   retCode=analyseProjectQdoasDirectory(engineContext,controller,info.filePath(),fileFilter,1);
+ 	  else
+     retCode=analyseProjectQdoasDirectory(engineContext,controller,info.path(),info.fileName(),1);
 
     ++it;
   }
@@ -544,6 +561,7 @@ int analyseProjectQdoasFile(void *engineContext, CBatchEngineController *control
   CEngineResponseBeginAccessFile *beginFileResp = new CEngineResponseBeginAccessFile(filename);
 
   result = mediateRequestBeginAnalyseSpectra(engineContext, filename.toAscii().constData(), beginFileResp);
+
   beginFileResp->setNumberOfRecords(result);
 
   beginFileResp->process(controller);

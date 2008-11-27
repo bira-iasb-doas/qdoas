@@ -3058,6 +3058,7 @@ RC OUTPUT_FlushBuffers(ENGINE_CONTEXT *pEngineContext)
    }
 
   outputNbRecords=0;
+  pEngineContext->lastSavedRecord=0;
 
   // Release the allocated buffers
 

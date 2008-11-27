@@ -863,6 +863,9 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
      NDET=pEngineInstrumental->detectorSize=pMediateInstrumental->mfcstd.detectorSize;
 
      pEngineInstrumental->mfcRevert=pMediateInstrumental->mfcstd.revert;
+     pEngineInstrumental->mfcStdOffset=pMediateInstrumental->mfcstd.straylight;
+
+     strcpy(pEngineInstrumental->mfcStdDate,pMediateInstrumental->mfcstd.dateFormat);
 
 	  	 strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->mfcstd.calibrationFile);     // calibration file
 	  	 strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->mfcstd.instrFunctionFile);     // instrumental function file
@@ -926,6 +929,7 @@ void setMediateProjectOutput(PRJCT_RESULTS_ASCII *pEngineOutput,const mediate_pr
   pEngineOutput->dirFlag=pMediateOutput->directoryFlag;
   pEngineOutput->configFlag=pMediateOutput->configurationFlag;
   pEngineOutput->binaryFlag=pMediateOutput->binaryFormatFlag;
+  pEngineOutput->fileNameFlag=pMediateOutput->filenameFlag;
 
   if (!(pEngineOutput->fieldsNumber=pMediateOutput->selection.nSelected))
    memset(pEngineOutput->fieldsFlag,0,PRJCT_RESULTS_ASCII_MAX);

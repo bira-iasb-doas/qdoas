@@ -719,6 +719,8 @@ typedef struct _prjctInstrumental
   INT         mfcMaskUse;
   INT         mfcMaxSpectra;
   INT         mfcRevert;
+  INT         mfcStdOffset;
+  DoasCh       mfcStdDate[24];
   float       opusTimeShift;
   DoasCh       fileExt[50];
   float       omiWavelength1,omiWavelength2;

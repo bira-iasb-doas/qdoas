@@ -183,8 +183,7 @@ RC SetMFC(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
   PRJCT_INSTRUMENTAL *pInstrumental;
   BUFFERS *pBuffers;                                                            // pointer to the buffers part of the engine context
 
-  DoasCh  fileName[MAX_STR_SHORT_LEN+1],                                         // name of the current file
-         format[20];                                                            // format string
+  DoasCh  fileName[MAX_STR_SHORT_LEN+1];                                        // name of the current file
   RC rc;
 
   // Initializations
@@ -671,22 +670,26 @@ RC MFC_ReadRecordStd(ENGINE_CONTEXT *pEngineContext,DoasCh *fileName,
  {
   // Declarations
 
+  PRJCT_INSTRUMENTAL *pInstrumental;
   RECORD_INFO *pRecord;                                                         // pointer to the record part of the engine context
 
   FILE *fp;         // pointer to the current file
-  INT  pixFin,day,mon,year,hour,min,sec,nsec;        // date and time fields
+  INT  pixFin,day,mon,year,hour,min,sec,nsec,mfcDate[3],yearN,dateSize,sepN;        // date and time fields
   float                tmp;                                   // temporary variable
   DoasCh line[MAX_STR_SHORT_LEN+1],             // line of the current file
         keyWord[MAX_STR_SHORT_LEN+1],keyValue[MAX_STR_SHORT_LEN+1],ctmp;
   struct date          today;                                 // date of the current record
 
-  INDEX i;          // browse pixels in the spectrum
+  INDEX i,iDay,iMon,iYear;          // browse pixels in the spectrum
   RC rc;            // return code
 
   // Initializations
 
   pRecord=&pEngineContext->recordInfo;
-
+  pInstrumental=&pEngineContext->project.instrumental;
+  memset(mfcDate,0,sizeof(INT)*3);
+  iDay=iMon=iYear=-1;
+  yearN=sepN=0;
   memset(line,0,MAX_STR_SHORT_LEN+1);
   rc=ERROR_ID_NO;
 
@@ -724,8 +727,29 @@ RC MFC_ReadRecordStd(ENGINE_CONTEXT *pEngineContext,DoasCh *fileName,
 
     memcpy(pRecord->Nom,pHeaderSpe->specname,20);
 
+    dateSize=strlen(pInstrumental->mfcStdDate);
+
+    for (i=0;i<dateSize;i++)
+     {
+      if (pInstrumental->mfcStdDate[i]=='Y')
+       {
+        iYear=sepN;
+        yearN++;
+       }
+      else if (pInstrumental->mfcStdDate[i]=='M')
+       iMon=sepN;
+      else if (pInstrumental->mfcStdDate[i]=='D')
+       iDay=sepN;
+      else
+       sepN++;
+     }
+
     if (fgets(line,MAX_STR_SHORT_LEN,fp))
-     sscanf(line,"%2d%c%2d%c%d",&mon,&ctmp,&day,&ctmp,&year);
+     sscanf(line,"%d%c%d%c%d",&mfcDate[0],&ctmp,&mfcDate[1],&ctmp,&mfcDate[2]);
+
+    day=mfcDate[iDay];
+    mon=mfcDate[iMon];
+    year=mfcDate[iYear];
 
     fscanf(fp,"%d:%d:%d\n",&hour,&min,&sec);
 
@@ -797,6 +821,8 @@ RC MFC_ReadRecordStd(ENGINE_CONTEXT *pEngineContext,DoasCh *fileName,
      	 	 pRecord->longitude=(double)atof(keyValue);
      	 	else if (!STD_Stricmp(keyWord,"NumScans"))
      	 	 pRecord->NSomme=(int)atoi(keyValue);
+     	 	else if (!STD_Stricmp(keyWord,"Temperature"))
+     	 	 pRecord->TDet=(double)atof(keyValue);
      	 }
      }
 
@@ -820,6 +846,24 @@ RC MFC_ReadRecordStd(ENGINE_CONTEXT *pEngineContext,DoasCh *fileName,
      {
       for (i=0;i<NDET;i++)
        spe[i]-=(double)drk[i]*pHeaderSpe->int_time/(pHeaderDrk->int_time*pHeaderDrk->noscans);
+     }
+
+    // for NOVAC, straylight correction
+
+    if (pEngineContext->project.instrumental.mfcStdOffset)
+     {
+     	int i;
+     	double offset;
+
+     	offset=(double)0.;
+
+     	for (i=50;i<200;i++)
+       offset+=spe[i];
+
+      offset/=(double)150.;
+
+      for (i=0;i<NDET;i++)
+       spe[i]-=offset;
      }
    }
 
@@ -862,10 +906,8 @@ RC ReliMFCStd(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int local
   RECORD_INFO *pRecord;                                                         // pointer to the record part of the engine context
   BUFFERS *pBuffers;                                                            // pointer to the buffers part of the engine context
 
-  INT                  firstFile;                                               // number of the first file in the current directory
   DoasCh                fileName[MAX_STR_SHORT_LEN+1],                           // name of the current file (the current record)
-                       format[20],
-                      *ptr,*ptr2;                                               // pointers to parts in the previous string
+                      *ptr;                                                     // pointers to parts in the previous string
 
   double               longit;                                                  // longitude of the current record
   FILE                *fp;                                                      // pointer to the current file

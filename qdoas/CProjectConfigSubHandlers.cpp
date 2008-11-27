@@ -717,6 +717,15 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
 
     m_instrumental->mfcstd.detectorSize = atts.value("size").toInt();
     m_instrumental->mfcstd.revert = (atts.value("revert") == "true") ? 1 : 0;
+    m_instrumental->mfcstd.straylight = (atts.value("straylight") == "true") ? 1 : 0;
+
+    str = atts.value("date");
+    if (!str.isEmpty()) {
+      if (str.length() < (int)sizeof(m_instrumental->mfcstd.dateFormat))
+        strcpy(m_instrumental->mfcstd.dateFormat, str.toAscii().data());
+      else
+        return postErrorMessage("Date format too long");
+     }
 
     str = atts.value("calib");
     if (!str.isEmpty()) {
@@ -1198,6 +1207,7 @@ bool CProjectOutputSubHandler::start(const QXmlAttributes &atts)
   m_output->configurationFlag = (atts.value("conf") == "true") ? 1 : 0;
   m_output->binaryFormatFlag = (atts.value("bin") == "true") ? 1 : 0;
   m_output->directoryFlag = (atts.value("dirs") == "true") ? 1 : 0;
+  m_output->filenameFlag = (atts.value("file") == "true") ? 1 : 0;
 
   str = atts.value("flux");
   if (!str.isEmpty()) {

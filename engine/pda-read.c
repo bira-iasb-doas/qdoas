@@ -276,7 +276,7 @@ RC ReliPDA_EGG_Logger(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,i
 
       p+=2;
 
-      sscanf(p," %[^' '] %d/%d/%d %d:%d:%d %d %d %lf %lf %lf %f %f",
+      sscanf(p," %[^' '] %d/%d/%d %d:%d:%d %d %d %lf %lf %lf %f %f %d %d",
 
                  pRecord->Nom,                              // record name
                 &iday,&imonth,&iyear,&ihour,&imin,&isec,      // date and time
@@ -286,7 +286,9 @@ RC ReliPDA_EGG_Logger(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,i
                 &pRecord->Zm,                               // zenith angle
                 &Max,                                         // scaling factor
                 &pRecord->azimuthViewAngle,
-                &pRecord->elevationViewAngle);
+                &pRecord->elevationViewAngle,
+                &pRecord->coolingStatus,
+                &pRecord->mirrorError);
 
       if (!pEngineContext->project.instrumental.azimuthFlag || (pRecord->Azimuth==99999.))
        {

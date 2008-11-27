@@ -890,18 +890,43 @@ CWInstrMfcStdEdit::CWInstrMfcStdEdit(const struct instrumental_mfcstd *d, QWidge
   QVBoxLayout *mainLayout = new QVBoxLayout(this);
   QGridLayout *gridLayout = new QGridLayout;
 
-  // detector size
-  gridLayout->addWidget(new QLabel("Detector Size", this), row, 0);
+  // First line
+
+  gridLayout->addWidget(new QLabel("Detector Size", this), row, 0);             // detector size label
+  gridLayout->addWidget(new QLabel("Date Format", this), row, 1);               // date format label
+  m_revertCheck = new QCheckBox("Revert spectra", this);                        // revert spectra check box
+  gridLayout->addWidget(m_revertCheck, row, 2);
+
+  ++row;
+
+  // Second line
+
   m_detSizeEdit = new QLineEdit(this);
   m_detSizeEdit->setFixedWidth(cStandardEditWidth);
   m_detSizeEdit->setValidator(new QIntValidator(0, 8192, m_detSizeEdit));
-  gridLayout->addWidget(m_detSizeEdit, row, 1, Qt::AlignLeft);
+  gridLayout->addWidget(m_detSizeEdit, row, 0, Qt::AlignLeft);
+
+  m_dateFormatEdit = new QLineEdit(this);
+  m_dateFormatEdit->setMaxLength(sizeof(d->dateFormat)-1);
+  gridLayout->addWidget(m_dateFormatEdit, row, 1, Qt::AlignLeft);
+
+  m_strayLightCheck = new QCheckBox("Remove straylight", this);
+  gridLayout->addWidget(m_strayLightCheck, row, 2);
+
   ++row;
 
-  // revert
-  m_revertCheck = new QCheckBox("Revert", this);
-  gridLayout->addWidget(m_revertCheck, row, 1);
-  ++row;
+//  // detector size
+//  gridLayout->addWidget(new QLabel("Detector Size", this), row, 0);
+//  m_detSizeEdit = new QLineEdit(this);
+//  m_detSizeEdit->setFixedWidth(cStandardEditWidth);
+//  m_detSizeEdit->setValidator(new QIntValidator(0, 8192, m_detSizeEdit));
+//  gridLayout->addWidget(m_detSizeEdit, row, 1, Qt::AlignLeft);
+//  ++row;
+//
+//  // revert
+//  m_revertCheck = new QCheckBox("Revert spectra", this);
+//  gridLayout->addWidget(m_revertCheck, row, 1);
+//  ++row;
 
   // files
   helperConstructCalInsFileWidgets(gridLayout, row,
@@ -930,8 +955,11 @@ CWInstrMfcStdEdit::CWInstrMfcStdEdit(const struct instrumental_mfcstd *d, QWidge
   m_detSizeEdit->validator()->fixup(tmpStr);
   m_detSizeEdit->setText(tmpStr);
 
+  m_dateFormatEdit->setText(QString(d->dateFormat));
+
   // revert
   m_revertCheck->setCheckState(d->revert ? Qt::Checked : Qt::Unchecked);
+  m_strayLightCheck->setCheckState(d->straylight ? Qt::Checked : Qt::Unchecked);
 }
 
 CWInstrMfcStdEdit::~CWInstrMfcStdEdit()
@@ -945,6 +973,9 @@ void CWInstrMfcStdEdit::apply(struct instrumental_mfcstd *d) const
 
   // revert
   d->revert = (m_revertCheck->checkState() == Qt::Checked) ? 1 : 0;
+  d->straylight = (m_strayLightCheck->checkState() == Qt::Checked) ? 1 : 0;
+
+  strcpy(d->dateFormat,m_dateFormatEdit->text().toAscii().data());
 
   // files
   strcpy(d->calibrationFile, m_fileOneEdit->text().toAscii().data());

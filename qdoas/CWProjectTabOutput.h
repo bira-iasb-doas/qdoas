@@ -57,10 +57,11 @@ Q_OBJECT
   QLineEdit *m_pathEdit;
   QCheckBox *m_analysisCheck, *m_calibrationCheck;
   QCheckBox *m_configurationCheck, *m_binaryCheck, *m_directoryCheck;
+  QCheckBox *m_useFileName;
   QGroupBox *m_editGroup;
   QLineEdit *m_fluxEdit, *m_colourIndexEdit;
   CWOutputSelector *m_selector;
-  
+
 };
 
 #endif
