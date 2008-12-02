@@ -110,34 +110,34 @@ PRJCT_RESULTS_FIELDS PRJCT_resultsAscii[PRJCT_RESULTS_ASCII_MAX]=
   { "Scans"                       , MEMORY_TYPE_USHORT, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_SCANS
   { "Rejected"                    , MEMORY_TYPE_USHORT, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_NREJ
   { "Tint"                        , MEMORY_TYPE_DOUBLE, sizeof(double), ITEM_NONE, ITEM_NONE, "%#12.6lf"  },       // PRJCT_RESULTS_ASCII_TINT
-  { "SZA"                         , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#8.3f"    },       // PRJCT_RESULTS_ASCII_SZA
+  { "SZA"                         , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_SZA
   { "Chi Square"                  , MEMORY_TYPE_DOUBLE, sizeof(double), ITEM_NONE, ITEM_NONE, "%#12.4le"  },       // PRJCT_RESULTS_ASCII_CHI
   { "RMS"                         , MEMORY_TYPE_DOUBLE, sizeof(double), ITEM_NONE, ITEM_NONE, "%#12.4le"  },       // PRJCT_RESULTS_ASCII_RMS
-  { "Solar Azimuth angle"         , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#8.3f"    },       // PRJCT_RESULTS_ASCII_AZIM
-  { "Tdet"                        , MEMORY_TYPE_FLOAT , sizeof(double), ITEM_NONE, ITEM_NONE, "%#8.3f"    },       // PRJCT_RESULTS_ASCII_TDET
+  { "Solar Azimuth angle"         , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_AZIM
+  { "Tdet"                        , MEMORY_TYPE_FLOAT , sizeof(double), ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_TDET
   { "Sky Obs"                     , MEMORY_TYPE_USHORT, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#2d"      },       // PRJCT_RESULTS_ASCII_SKY
-  { "Best shift"                  , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#8.3f"    },       // PRJCT_RESULTS_ASCII_BESTSHIFT
-  { "Ref SZA"                     , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#8.3f"    },       // PRJCT_RESULTS_ASCII_REFZM
-  { "Ref2/Ref1 shift"             , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#8.3f"    },       // PRJCT_RESULTS_ASCII_REFSHIFT
+  { "Best shift"                  , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_BESTSHIFT
+  { "Ref SZA"                     , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_REFZM
+  { "Ref2/Ref1 shift"             , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_REFSHIFT
   { "Pixel number"                , MEMORY_TYPE_USHORT, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_PIXEL
   { "Pixel type"                  , MEMORY_TYPE_USHORT, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_PIXEL_TYPE
   { "Orbit number"                , MEMORY_TYPE_INT   , sizeof(INT)   , ITEM_NONE, ITEM_NONE, "%#8d"      },       // PRJCT_RESULTS_ASCII_ORBIT
-  { "Longitude"                   , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#8.3f"    },       // PRJCT_RESULTS_ASCII_LONGIT
-  { "Latitude"                    , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#8.3f"    },       // PRJCT_RESULTS_ASCII_LATIT
-  { "Altitude"                    , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#8.3f"    },       // PRJCT_RESULTS_ASCII_ALTIT
+  { "Longitude"                   , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_LONGIT
+  { "Latitude"                    , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_LATIT
+  { "Altitude"                    , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_ALTIT
   { "Covariances"                 , MEMORY_TYPE_DOUBLE, sizeof(double), ITEM_NONE, ITEM_NONE, "%#12.4le"  },       // PRJCT_RESULTS_ASCII_COVAR
   { "Correlations"                , MEMORY_TYPE_DOUBLE, sizeof(double), ITEM_NONE, ITEM_NONE, "%#12.4le"  },       // PRJCT_RESULTS_ASCII_CORR
-  { "Cloud fraction"              , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#8.3f"    },       // PRJCT_RESULTS_ASCII_CLOUD
+  { "Cloud fraction"              , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_CLOUD
   { "Index coeff"                 , MEMORY_TYPE_USHORT, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_COEFF
-  { "GDP O3 VCD"                  , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#8.3f"    },       // PRJCT_RESULTS_ASCII_O3
+  { "GDP O3 VCD"                  , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_O3
   { "GDP NO2 VCD"                 , MEMORY_TYPE_DOUBLE, sizeof(double), ITEM_NONE, ITEM_NONE, "%#12.4le"  },       // PRJCT_RESULTS_ASCII_NO2
-  { "Cloud Top Pressure"          , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#8.3f"    },       // PRJCT_RESULTS_ASCII_CLOUDTOPP
-  { "LoS ZA"                      , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#8.3f"    },       // PRJCT_RESULTS_ASCII_LOS_ZA
-  { "LoS Azimuth"                 , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#8.3f"    },       // PRJCT_RESULTS_ASCII_LOS_AZIMUTH
-  { "Satellite height"            , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#8.3f"    },       // PRJCT_RESULTS_ASCII_SAT_HEIGHT
-  { "Earth radius"                , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#8.3f"    },       // PRJCT_RESULTS_ASCII_EARTH_RADIUS
-  { "Elev. viewing angle"         , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#8.3f"    },       // PRJCT_RESULTS_ASCII_VIEW_ELEVATION
-  { "Azim. viewing angle"         , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#8.3f"    },       // PRJCT_RESULTS_ASCII_VIEW_AZIMUTH
+  { "Cloud Top Pressure"          , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_CLOUDTOPP
+  { "LoS ZA"                      , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_LOS_ZA
+  { "LoS Azimuth"                 , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_LOS_AZIMUTH
+  { "Satellite height"            , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_SAT_HEIGHT
+  { "Earth radius"                , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_EARTH_RADIUS
+  { "Elev. viewing angle"         , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_VIEW_ELEVATION
+  { "Azim. viewing angle"         , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_VIEW_AZIMUTH
   { "SCIAMACHY Quality Flag"      , MEMORY_TYPE_USHORT, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_SCIA_QUALITY
   { "SCIAMACHY State Index"       , MEMORY_TYPE_USHORT, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_SCIA_STATE_INDEX
   { "SCIAMACHY State Id"          , MEMORY_TYPE_USHORT, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_SCIA_STATE_ID
