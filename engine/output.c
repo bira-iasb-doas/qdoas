@@ -1525,8 +1525,8 @@ void OutputSaveRecord(ENGINE_CONTEXT *pEngineContext,INT hiddenFlag)
 
          if (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS)
           sprintf(&outputColumns[indexColumn][indexRecord*pField->fieldSize+14],".%03d",(INT)SCIA_ms);
-// QDOAS ???         else if (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GOME2)
-// QDOAS ???          sprintf(&outputColumns[indexColumn][indexRecord*pField->fieldSize+14],".%06d",(INT)GOME2_ms);
+         else if (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GOME2)
+          sprintf(&outputColumns[indexColumn][indexRecord*pField->fieldSize+14],".%06d",(INT)GOME2_ms);
 
          indexColumn++;
 

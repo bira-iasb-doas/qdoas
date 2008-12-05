@@ -564,7 +564,7 @@ RC EngineSetFile(ENGINE_CONTEXT *pEngineContext,const char *fileName)
      break;
   // ---------------------------------------------------------------------------
      case PRJCT_INSTR_FORMAT_GOME2 :
-      /* // !!! GOME2 */ rc=GOME2_Set(pEngineContext);
+      rc=GOME2_Set(pEngineContext);
      break;
   // ---------------------------------------------------------------------------
      default :
@@ -790,9 +790,9 @@ RC EngineRequestBeginBrowseSpectra(ENGINE_CONTEXT *pEngineContext,const char *sp
   // Set file pointers
 
   if (!(rc=EngineRequestEndBrowseSpectra(pEngineContext)) &&
-      !(rc=EngineSetFile(pEngineContext,spectraFileName)) && !pEngineContext->recordNumber)
-   rc=ERROR_SetLast("EngineRequestBeginBrowseSpectra",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,spectraFileName);
-  else if ((THRD_id==THREAD_TYPE_SPECTRA) || !(rc=OUTPUT_LocalAlloc(pEngineContext)))
+      !(rc=EngineSetFile(pEngineContext,spectraFileName)) &&
+        pEngineContext->recordNumber &&
+      ((THRD_id==THREAD_TYPE_SPECTRA) || !(rc=OUTPUT_LocalAlloc(pEngineContext))))
    {
     pEngineContext->indexRecord=0;
     pEngineContext->currentRecord=1;

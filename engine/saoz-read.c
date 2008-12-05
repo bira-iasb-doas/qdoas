@@ -590,6 +590,14 @@ RC SetSAOZEfm(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
   else if (fread(&curvenum,sizeof(int),1,specFp) && (curvenum>0))
    pEngineContext->recordNumber=curvenum;
 
+    {
+    	FILE *fp;
+    	fp=fopen("toto.dat","a+t");
+    	fprintf(fp,"SAOZ %d\n",sizeof(RCHEADER));
+    	fclose(fp);
+    }
+
+
   // Return
 
   return rc;
