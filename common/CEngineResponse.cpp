@@ -141,6 +141,9 @@ void CEngineResponseBeginAccessFile::process(CEngineController *engineController
     engineController->notifyReadyToNavigateRecords(m_fileName, m_numberOfRecords);
     // wait for the request to process a record ...
   }
+
+ else                                                   // Added by Caroline on 7 December  2008 (otherwise, the program was waiting indefinitely when
+  engineController->notifyEndOfRecords();               // the file was empty
 }
 
 void CEngineResponseBeginAccessFile::setNumberOfRecords(int numberOfRecords)

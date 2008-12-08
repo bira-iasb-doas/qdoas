@@ -1825,13 +1825,13 @@ int mediateRequestBeginAnalyseSpectra(void *engineContext,
  	rc=ERROR_ID_NO;
 
   if (((rc=EngineRequestBeginBrowseSpectra(pEngineContext,spectraFileName))!=ERROR_ID_NO) ||
-     ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN) && (GDP_BIN_LoadAnalysis(pEngineContext,pEngineContext->fileInfo.specFp,responseHandle)!=ERROR_ID_NO)) ||
-     ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS) && (SCIA_LoadAnalysis(pEngineContext,responseHandle)!=ERROR_ID_NO)) || /* ) // !!! GOME2 || */
-     /* // !!! GOME2 */ ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GOME2) && (GOME2_LoadAnalysis(pEngineContext,responseHandle)!=ERROR_ID_NO)))
+     ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN) && ((rc=GDP_BIN_LoadAnalysis(pEngineContext,pEngineContext->fileInfo.specFp,responseHandle))!=ERROR_ID_NO)) ||
+     ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS) && ((rc=SCIA_LoadAnalysis(pEngineContext,responseHandle))!=ERROR_ID_NO)) || /* ) // !!! GOME2 || */
+     /* // !!! GOME2 */ ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GOME2) && ((rc=GOME2_LoadAnalysis(pEngineContext,responseHandle))!=ERROR_ID_NO)))
 
    ERROR_DisplayMessage(responseHandle);
 
-  return ((ENGINE_CONTEXT *)engineContext)->recordNumber;
+  return (rc==ERROR_ID_NO)?((ENGINE_CONTEXT *)engineContext)->recordNumber:-1;
  }
 
 int mediateRequestNextMatchingAnalyseSpectrum(void *engineContext,
