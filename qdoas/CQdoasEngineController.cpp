@@ -17,6 +17,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
 
+#include <QFile>
 #include <QTextStream>
 #include <QMessageBox>
 
@@ -72,6 +73,14 @@ void CQdoasEngineController::notifyReadyToNavigateRecords(const QString &filenam
 
 void CQdoasEngineController::notifyCurrentRecord(int recordNumber)
 {
+// QFile file("qdoas.dbg");
+// if (file.open(QIODevice::Append | QIODevice::Text)!=0)
+//  {
+//   QTextStream out(&file);
+//   out << "   CQdoasEngineController::notifyCurrentRecord " << recordNumber <<"\n";
+//   file.close();
+//  }
+
  	m_oldRecord=m_currentRecord;
   m_currentRecord = recordNumber;
 
@@ -386,6 +395,14 @@ void CQdoasEngineController::slotStep()
   m_step=1;
   m_engineCurrentRecord=m_currentRecord;
   m_engineCurrentFile=m_currentIt.file().filePath();
+
+// QFile file("qdoas.dbg");
+// if (file.open(QIODevice::Append | QIODevice::Text)!=0)
+//  {
+//   QTextStream out(&file);
+//   out << "   CQdoasEngineController::slotStep " << m_currentRecord << " " << m_oldRecord <<"\n";
+//   file.close();
+//  }
 
   if (m_currentRecord >= 0 && m_currentRecord < m_numberOfRecords && m_currentRecord!=m_oldRecord) {
     // step record

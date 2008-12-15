@@ -29,6 +29,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QTextStream>
 #include <QMessageBox>
 
+#include <QFile>
+
 #include "CWorkSpace.h"
 #include "CWProjectTree.h"
 #include "CProjectTreeClipboard.h"
@@ -714,7 +716,7 @@ void CWProjectTree::removeAllContent(void)
 QString CWProjectTree::loadConfiguration(const QList<const CProjectConfigItem*> &itemList)
 {
   // walk the list and create ...
-  QString errStr;
+  QString errStrPartial,errStrTotal=QString();
   QTreeWidgetItem *item;
   CProjectItem *projItem;
   CAnalysisWindowItem *awItem;
@@ -735,9 +737,10 @@ QString CWProjectTree::loadConfiguration(const QList<const CProjectConfigItem*> 
 
     // create the project item
     projItem = NULL;
-    errStr = editInsertNewProject(projName, &projItem);
-    if (!errStr.isNull())
-      return errStr;
+    errStrPartial = editInsertNewProject(projName, &projItem);
+
+    if (!errStrPartial.isNull())
+      return errStrPartial;
 
     assert(projItem && projItem->childCount() == 2); // sanity check
 
@@ -759,9 +762,10 @@ QString CWProjectTree::loadConfiguration(const QList<const CProjectConfigItem*> 
     // recursive construction of the project tree from the config tree ...
     const CProjectConfigTreeNode *firstChild = (*it)->rootNode()->firstChild();
     // top-down construction of the tree ...
-    errStr = CWProjectTree::buildRawSpectraTree(item, firstChild);
-    if (!errStr.isNull())
-      return errStr;
+    errStrPartial = CWProjectTree::buildRawSpectraTree(item, firstChild);
+
+    if (!errStrPartial.isNull())
+      collateErrorMessage(errStrTotal,errStrPartial);
 
     // add any analysis windows
     item = projItem->child(1); // the analysis window branch node
@@ -773,9 +777,9 @@ QString CWProjectTree::loadConfiguration(const QList<const CProjectConfigItem*> 
       QString awName = (*awIt)->name();
 
       // create the item with the edit iterface
-      errStr = editInsertNewAnalysisWindow(item, awName, preceedingWindowName, &awItem);
-      if (!errStr.isNull())
-	return errStr;
+      errStrPartial = editInsertNewAnalysisWindow(item, awName, preceedingWindowName, &awItem);
+      if (!errStrPartial.isNull())
+       collateErrorMessage(errStrTotal,errStrPartial);
 
       // locate the properties in the workspace and copy
       awProp = CWorkSpace::instance()->findAnalysisWindow(projName, awName);
@@ -795,7 +799,7 @@ QString CWProjectTree::loadConfiguration(const QList<const CProjectConfigItem*> 
     ++it;
   }
 
-  return errStr;
+  return errStrTotal;
 }
 
 QString CWProjectTree::buildRawSpectraTree(QTreeWidgetItem *parent, const CProjectConfigTreeNode *childConfigItem)

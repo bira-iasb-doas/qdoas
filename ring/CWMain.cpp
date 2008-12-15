@@ -110,7 +110,7 @@ CWMain::CWMain(QWidget *parent) :
 
   // Calculate menu
   QMenu *calcMenu = new QMenu("Calculate");
-  QAction *convAct = new QAction("Run Ring", this);
+  QAction *convAct = new QAction("Calculate a Ring cross section", this);
   connect(convAct, SIGNAL(triggered()), this, SLOT(slotRunRing()));
   calcMenu->addAction(convAct);
 
@@ -285,7 +285,7 @@ void CWMain::slotOpenFile()
 
   QString fileName = QFileDialog::getOpenFileName(this, "Open Project File",
 						  prefs->directoryName("RingConf"),
-						  "Qdoas Project Config (*.xml);;All Files (*)");
+						  "Ring Config (*.xml);;All Files (*)");
 
   if (fileName.isEmpty()) {
     return;

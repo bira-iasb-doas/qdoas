@@ -40,7 +40,7 @@
 // INCLUDES
 // ========
 
-#include "beat.h"
+#include "coda.h"
 #include "mediate.h"
 #include "engine.h"
 
@@ -119,9 +119,9 @@ typedef struct _GOME2OrbitFiles                                                 
   INDEX              *gome2LatIndex,*gome2LonIndex,*gome2SzaIndex;              // indexes of records sorted resp. by latitude, by longitude and by SZA
   SATELLITE_GEOLOC   *gome2Geolocations;                                        // geolocations
   INT                 specNumber;
-  beat_ProductFile   *gome2Pf;                                                  // GOME2 product file pointer
-  beat_Cursor         gome2Cursor;                                              // GOME2 file cursor
-  beat_Cursor         gome2CursorMDR;                                           // GOME2 file cursor on MDR
+  coda_ProductFile   *gome2Pf;                                                  // GOME2 product file pointer
+  coda_Cursor         gome2Cursor;                                              // GOME2 file cursor
+  coda_Cursor         gome2CursorMDR;                                           // GOME2 file cursor on MDR
   INT                 rc;
  }
 GOME2_ORBIT_FILE;
@@ -176,18 +176,147 @@ static INT gome2TotalRecordNumber=0;
 
 void Gome2Sort(GOME2_ORBIT_FILE *pOrbitFile,INDEX indexRecord,int flag,int listSize);
 
+// =====================================
+// COMPATIBILITY WITH OLD BEAT FUNCTIONS
+// =====================================
+
+int beat_get_utc_string_from_time(double time, char *utc_string)
+{
+    int DAY, MONTH, YEAR, HOUR, MINUTE, SECOND, MUSEC;
+    const char *monthname[12] = {
+        "JAN",
+        "FEB",
+        "MAR",
+        "APR",
+        "MAY",
+        "JUN",
+        "JUL",
+        "AUG",
+        "SEP",
+        "OCT",
+        "NOV",
+        "DEC"
+    };
+
+    if (utc_string == NULL)
+    {
+        coda_set_error(CODA_ERROR_INVALID_ARGUMENT, "utc_string argument is NULL (%s:%u)", __FILE__, __LINE__);
+        return -1;
+    }
+
+    if (coda_double_to_datetime(time, &YEAR, &MONTH, &DAY, &HOUR, &MINUTE, &SECOND, &MUSEC) != 0)
+    {
+        return -1;
+    }
+    if (YEAR < 0 || YEAR > 9999)
+    {
+        coda_set_error(CODA_ERROR_INVALID_DATETIME, "the year can not be represented using a positive four digit "
+                       "number");
+        return -1;
+    }
+    sprintf(utc_string, "%02d-%3s-%04d %02d:%02d:%02d.%06u", DAY, monthname[MONTH - 1], YEAR, HOUR, MINUTE, SECOND,
+            MUSEC);
+
+    return 0;
+}
+
+int beat_cursor_read_geolocation_double_split(const coda_Cursor *cursor, double *dst_latitude,
+                                                          double *dst_longitude)
+{
+    coda_Cursor pair_cursor;
+
+    pair_cursor = *(coda_Cursor *)cursor;
+    if (coda_cursor_goto_record_field_by_index(&pair_cursor, 0) != 0)
+    {
+        // beat_errno = coda_errno_to_beat_errno(coda_errno);
+        return -1;
+    }
+    if (coda_cursor_read_double(&pair_cursor, dst_latitude) != 0)
+    {
+        // beat_errno = coda_errno_to_beat_errno(coda_errno);
+        return -1;
+    }
+    if (coda_cursor_goto_next_record_field(&pair_cursor) != 0)
+    {
+        // beat_errno = coda_errno_to_beat_errno(coda_errno);
+        return -1;
+    }
+    if (coda_cursor_read_double(&pair_cursor, dst_longitude) != 0)
+    {
+        // beat_errno = coda_errno_to_beat_errno(coda_errno);
+        return -1;
+    }
+
+    return 0;
+}
+
+int beat_cursor_read_geolocation_double_split_array(const coda_Cursor *cursor, double *dst_latitude,
+                                                                double *dst_longitude,
+                                                                coda_array_ordering array_ordering)
+{
+    long dim[CODA_MAX_NUM_DIMS];
+    long num_elements;
+    int num_dims;
+    long i;
+
+    if (coda_cursor_get_num_elements((coda_Cursor *)cursor, &num_elements) != 0)
+    {
+        // beat_errno = = coda_errno_to_beat_errno(coda_errno);
+        return -1;
+    }
+    if (coda_cursor_get_array_dim((coda_Cursor *)cursor, &num_dims, dim) != 0)
+    {
+        // beat_errno = = coda_errno_to_beat_errno(coda_errno);
+        return -1;
+    }
+
+    if (num_elements > 0)
+    {
+        if (coda_cursor_goto_first_array_element((coda_Cursor *)cursor) != 0)
+        {
+            // beat_errno = = coda_errno_to_beat_errno(coda_errno);
+            return -1;
+        }
+
+        for (i = 0; i < num_elements; i++)
+        {
+            long index = i;
+
+            if (array_ordering == coda_array_ordering_fortran)
+            {
+                index = coda_c_index_to_fortran_index(num_dims, dim, i);
+            }
+
+            if (beat_cursor_read_geolocation_double_split(cursor, &dst_latitude[index], &dst_longitude[index]) != 0)
+            {
+                return -1;
+            }
+            if (i < num_elements - 1)
+            {
+                if (coda_cursor_goto_next_array_element((coda_Cursor *)cursor) != 0)
+                {
+                    // beat_errno = = coda_errno_to_beat_errno(coda_errno);
+                    return -1;
+                }
+            }
+        }
+        coda_cursor_goto_parent((coda_Cursor *)cursor);
+    }
+    return 0;
+}
+
 // =========
 // UTILITIES
 // =========
 
 /* read UTC string from product; returns both double value (= sec since 1 Jan 2000) and string */
-int read_utc_string(beat_Cursor* cursor, char * utc_string, double * data)
+int read_utc_string(coda_Cursor* cursor, char * utc_string, double * data)
 {
     int status;
 
-    status = beat_cursor_read_double(cursor, data);
+    status = coda_cursor_read_double(cursor, data);
     if (status == 0) {
-	if (beat_isNaN(*data))
+	if (coda_isNaN(*data))
 	{
 	    strcpy(utc_string,"                           ");
 	}
@@ -221,14 +350,14 @@ void Gome2GotoOBS(GOME2_ORBIT_FILE *pOrbitFile,INDEX indexBand,INDEX indexMDR,IN
 
   // Goto the current MDR
 
-  beat_cursor_goto_root(&pOrbitFile->gome2Cursor);
-  beat_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"MDR");
-  beat_cursor_goto_array_element_by_index(&pOrbitFile->gome2Cursor,indexMDR);
+  coda_cursor_goto_root(&pOrbitFile->gome2Cursor);
+  coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"MDR");
+  coda_cursor_goto_array_element_by_index(&pOrbitFile->gome2Cursor,indexMDR);
 
- 	beat_cursor_goto_available_union_field(&pOrbitFile->gome2Cursor);                         // MDR.GOME2_MDR_L1B_EARTHSHINE_V1
- 	beat_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,gome2BandName[indexBand]); // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.band(indexBand)
+ 	coda_cursor_goto_available_union_field(&pOrbitFile->gome2Cursor);                         // MDR.GOME2_MDR_L1B_EARTHSHINE_V1
+ 	coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,gome2BandName[indexBand]); // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.band(indexBand)
 
- 	beat_cursor_goto_array_element_by_index(&pOrbitFile->gome2Cursor,obsToBypass);
+ 	coda_cursor_goto_array_element_by_index(&pOrbitFile->gome2Cursor,obsToBypass);
  }
 
 // -----------------------------------------------------------------------------
@@ -282,7 +411,7 @@ INDEX Gome2GetMDRIndex(GOME2_ORBIT_FILE *pOrbitFile,INDEX indexBand,int recordNo
 //               ERROR_ID_NO  otherwise.
 // -----------------------------------------------------------------------------
 
-int Gome2Open(beat_ProductFile **productFile, char *fileName)
+int Gome2Open(coda_ProductFile **productFile, char *fileName)
  {
   // Declarations
 
@@ -292,29 +421,29 @@ int Gome2Open(beat_ProductFile **productFile, char *fileName)
 
   // Open the file
 
-  rc=beat_open(fileName,&*productFile);
+  rc=coda_open(fileName,&*productFile);
 
-  if ((rc!=0) && (beat_errno==BEAT_ERROR_FILE_OPEN))
+  if ((rc!=0) && (coda_errno==CODA_ERROR_FILE_OPEN))
    {
     /* maybe not enough memory space to map the file in memory =>
      * temporarily disable memory mapping of files and try again
      */
-    beat_set_option_use_mmap(0);
-    rc=beat_open(fileName,&*productFile);
-    beat_set_option_use_mmap(1);
+    coda_set_option_use_mmap(0);
+    rc=coda_open(fileName,&*productFile);
+    coda_set_option_use_mmap(1);
    }
 
   if (rc!=0)
-   rc=ERROR_SetLast("Gome2Init",ERROR_TYPE_WARNING,ERROR_ID_BEAT,"beat_open",fileName,beat_errno_to_string(beat_errno));
+   rc=ERROR_SetLast("Gome2Init",ERROR_TYPE_WARNING,ERROR_ID_BEAT,"coda_open",fileName,coda_errno_to_string(coda_errno));
   else
    {
    	// Retrieve the product class and type
 
-    beat_get_product_class((const beat_ProductFile *)*productFile,(const char **)&productClass);
-    beat_get_product_type((const beat_ProductFile *)*productFile,(const char **)&productType);
+    coda_get_product_class((const coda_ProductFile *)*productFile,(const char **)&productClass);
+    coda_get_product_type((const coda_ProductFile *)*productFile,(const char **)&productType);
 
     if (strcmp(productClass,"EPS") || strcmp(productType,"GOME_xxx_1B"))
-     rc=ERROR_SetLast("Gome2Init",ERROR_TYPE_WARNING,ERROR_ID_BEAT,"beat_get_product_class or beat_get_product_type",fileName,"Not a GOME2 Level-1B file");
+     rc=ERROR_SetLast("Gome2Init",ERROR_TYPE_WARNING,ERROR_ID_BEAT,"coda_get_product_class or coda_get_product_type",fileName,"Not a GOME2 Level-1B file");
    }
 
   // Return
@@ -346,17 +475,17 @@ RC Gome2ReadSunRef(GOME2_ORBIT_FILE *pOrbitFile,INDEX bandIndex)
 
   else
    {
-    beat_cursor_goto_root(&pOrbitFile->gome2Cursor);
-    beat_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"VIADR_SMR");            // VIADR_SMR (Variable Internal Auxiliary Data Record - Sun Mean Reference)
-    beat_cursor_goto_first_array_element(&pOrbitFile->gome2Cursor);
-    beat_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"LAMBDA_SMR");           // VIADR_SMR.LAMBDA_SMR
+    coda_cursor_goto_root(&pOrbitFile->gome2Cursor);
+    coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"VIADR_SMR");            // VIADR_SMR (Variable Internal Auxiliary Data Record - Sun Mean Reference)
+    coda_cursor_goto_first_array_element(&pOrbitFile->gome2Cursor);
+    coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"LAMBDA_SMR");           // VIADR_SMR.LAMBDA_SMR
 
-    beat_cursor_read_double_array(&pOrbitFile->gome2Cursor,&gome2SunWve[0][0],array_ordering_c);
+    coda_cursor_read_double_array(&pOrbitFile->gome2Cursor,&gome2SunWve[0][0],coda_array_ordering_c);
 
-    beat_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                      // VIADR_SMR
-    beat_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"SMR");                  // VIADR_SMR.LAMBDA_SMR
+    coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                      // VIADR_SMR
+    coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"SMR");                  // VIADR_SMR.LAMBDA_SMR
 
-    beat_cursor_read_double_array(&pOrbitFile->gome2Cursor,&gome2SunRef[0][0],array_ordering_c);
+    coda_cursor_read_double_array(&pOrbitFile->gome2Cursor,&gome2SunRef[0][0],coda_array_ordering_c);
 
     for (i=0;i<NDET;i++)
      {
@@ -403,52 +532,52 @@ RC Gome2ReadOrbitInfo(GOME2_ORBIT_FILE *pOrbitFile,int bandIndex)
   // Initializations
 
   pGome2Info=&pOrbitFile->gome2Info;
-  beat_cursor_goto_root(&pOrbitFile->gome2Cursor);
+  coda_cursor_goto_root(&pOrbitFile->gome2Cursor);
   rc=ERROR_ID_NO;
 
   // Retrieve the MPHR
 
-  status = beat_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"MPHR");          // MPHR
+  status = coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"MPHR");          // MPHR
 
-  status = beat_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"ORBIT_START");   // MPHR.orbitStart
-  beat_cursor_read_uint16 (&pOrbitFile->gome2Cursor, &pGome2Info->orbitStart);
-  beat_cursor_goto_parent(&pOrbitFile->gome2Cursor);
+  status = coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"ORBIT_START");   // MPHR.orbitStart
+  coda_cursor_read_uint16 (&pOrbitFile->gome2Cursor, &pGome2Info->orbitStart);
+  coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);
 
-  status = beat_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"ORBIT_END");     // MPHR.ORBIT_END
-  beat_cursor_read_uint16 (&pOrbitFile->gome2Cursor, &pGome2Info->orbitEnd);
-  beat_cursor_goto_parent(&pOrbitFile->gome2Cursor);
+  status = coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"ORBIT_END");     // MPHR.ORBIT_END
+  coda_cursor_read_uint16 (&pOrbitFile->gome2Cursor, &pGome2Info->orbitEnd);
+  coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);
 
-  status = beat_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"TOTAL_VIADR");   // MPHR.TOTAL_VIADR (Variable Internal Auxiliary Data Record)
-  status = beat_cursor_read_uint32 (&pOrbitFile->gome2Cursor, &pGome2Info->total_viadr);
-  beat_cursor_goto_parent(&pOrbitFile->gome2Cursor);
+  status = coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"TOTAL_VIADR");   // MPHR.TOTAL_VIADR (Variable Internal Auxiliary Data Record)
+  status = coda_cursor_read_uint32 (&pOrbitFile->gome2Cursor, &pGome2Info->total_viadr);
+  coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);
 
-  status = beat_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"TOTAL_MDR");     // MPHR.TOTAL_MDR (Measurement Data Record)
-  status = beat_cursor_read_uint32 (&pOrbitFile->gome2Cursor, &pGome2Info->total_mdr);
-  beat_cursor_goto_root(&pOrbitFile->gome2Cursor);
+  status = coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"TOTAL_MDR");     // MPHR.TOTAL_MDR (Measurement Data Record)
+  status = coda_cursor_read_uint32 (&pOrbitFile->gome2Cursor, &pGome2Info->total_mdr);
+  coda_cursor_goto_root(&pOrbitFile->gome2Cursor);
 
   // Retrieve GIADR_Bands
 
-  status = beat_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"GIADR_Bands");
+  status = coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"GIADR_Bands");
 
-  status = beat_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"CHANNEL_NUMBER");
-  status = beat_cursor_read_uint8_array (&pOrbitFile->gome2Cursor, channel_index, array_ordering_c);
-  beat_cursor_goto_parent(&pOrbitFile->gome2Cursor);
+  status = coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"CHANNEL_NUMBER");
+  status = coda_cursor_read_uint8_array (&pOrbitFile->gome2Cursor, channel_index, coda_array_ordering_c);
+  coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);
 
-  status = beat_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"START_PIXEL");
-  status = beat_cursor_read_uint16_array (&pOrbitFile->gome2Cursor, startPixel, array_ordering_c);
-  beat_cursor_goto_parent(&pOrbitFile->gome2Cursor);
+  status = coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"START_PIXEL");
+  status = coda_cursor_read_uint16_array (&pOrbitFile->gome2Cursor, startPixel, coda_array_ordering_c);
+  coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);
 
-  status = beat_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"NUMBER_OF_PIXELS");
-  status = beat_cursor_read_uint16_array (&pOrbitFile->gome2Cursor, no_of_pixels, array_ordering_c);
-  beat_cursor_goto_parent(&pOrbitFile->gome2Cursor);
+  status = coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"NUMBER_OF_PIXELS");
+  status = coda_cursor_read_uint16_array (&pOrbitFile->gome2Cursor, no_of_pixels, coda_array_ordering_c);
+  coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);
 
-  status = beat_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"START_LAMBDA");
-  status = beat_cursor_read_double_array (&pOrbitFile->gome2Cursor, start_lambda, array_ordering_c);
-  beat_cursor_goto_parent(&pOrbitFile->gome2Cursor);
+  status = coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"START_LAMBDA");
+  status = coda_cursor_read_double_array (&pOrbitFile->gome2Cursor, start_lambda, coda_array_ordering_c);
+  coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);
 
-  status = beat_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"END_LAMBDA");
-  status = beat_cursor_read_double_array (&pOrbitFile->gome2Cursor, end_lambda, array_ordering_c);
-  beat_cursor_goto_parent(&pOrbitFile->gome2Cursor);
+  status = coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"END_LAMBDA");
+  status = coda_cursor_read_double_array (&pOrbitFile->gome2Cursor, end_lambda, coda_array_ordering_c);
+  coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);
 
   // Output
 
@@ -458,7 +587,7 @@ RC Gome2ReadOrbitInfo(GOME2_ORBIT_FILE *pOrbitFile,int bandIndex)
   pGome2Info->start_lambda = start_lambda[bandIndex];
   pGome2Info->end_lambda = end_lambda[bandIndex];
 
-  beat_cursor_goto_root(&pOrbitFile->gome2Cursor);
+  coda_cursor_goto_root(&pOrbitFile->gome2Cursor);
 
   // Buffer allocation error
 
@@ -477,140 +606,140 @@ int Gome2ReadMDRInfo(GOME2_ORBIT_FILE *pOrbitFile,GOME2_MDR *pMdr)
  	// Declarations
 
   uint8_t subclass,observationMode;
-  char start_time[BEAT_UTC_STRING_LENGTH+1];
+  char start_time[40];
   double utc_start_double;
 
   // Generic record header
 
-  beat_cursor_goto_available_union_field(&pOrbitFile->gome2Cursor);
-  beat_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"RECORD_HEADER");          // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.RECORD_HEADER
+  coda_cursor_goto_available_union_field(&pOrbitFile->gome2Cursor);
+  coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"RECORD_HEADER");          // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.RECORD_HEADER
 
   // Subclass (determined by the instrument group - earthshine is expected)
 
-  beat_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"RECORD_SUBCLASS");        // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.RECORD_HEADER.RECORD_SUBCLASS
-  beat_cursor_read_uint8(&pOrbitFile->gome2Cursor,&subclass);
-  beat_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                        // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.RECORD_HEADER
+  coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"RECORD_SUBCLASS");        // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.RECORD_HEADER.RECORD_SUBCLASS
+  coda_cursor_read_uint8(&pOrbitFile->gome2Cursor,&subclass);
+  coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                        // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.RECORD_HEADER
 
   // Start time of the record
 
-  beat_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"RECORD_START_TIME");      // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.RECORD_HEADER.RECORD_START_TIME
+  coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"RECORD_START_TIME");      // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.RECORD_HEADER.RECORD_START_TIME
   read_utc_string(&pOrbitFile->gome2Cursor,start_time,&utc_start_double);
-  beat_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                        // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.RECORD_HEADER
+  coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                        // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.RECORD_HEADER
 
   // Observation mode (NADIR is expected)
 
-  beat_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                        // MDR.GOME2_MDR_L1B_EARTHSHINE_V1
-  beat_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"OBSERVATION_MODE");       // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.OBSERVATION_MODE
-  beat_cursor_read_uint8(&pOrbitFile->gome2Cursor,&observationMode);
-  beat_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                        // MDR.GOME2_MDR_L1B_EARTHSHINE_V1
+  coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                        // MDR.GOME2_MDR_L1B_EARTHSHINE_V1
+  coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"OBSERVATION_MODE");       // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.OBSERVATION_MODE
+  coda_cursor_read_uint8(&pOrbitFile->gome2Cursor,&observationMode);
+  coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                        // MDR.GOME2_MDR_L1B_EARTHSHINE_V1
 
   if ((subclass==EARTHSHINE) && (observationMode==0))
    {
     // number of records in each band
 
-    beat_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"NUM_RECS");               // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.NUM_RECS
-    beat_cursor_read_uint16_array(&pOrbitFile->gome2Cursor,pMdr->num_recs,array_ordering_c);
-    beat_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                        // MDR.GOME2_MDR_L1B_EARTHSHINE_V1
+    coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"NUM_RECS");               // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.NUM_RECS
+    coda_cursor_read_uint16_array(&pOrbitFile->gome2Cursor,pMdr->num_recs,coda_array_ordering_c);
+    coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                        // MDR.GOME2_MDR_L1B_EARTHSHINE_V1
 
     // length of records in each band
 
-    beat_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"REC_LENGTH");             // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.REC_LENGTH
-    beat_cursor_read_uint16_array(&pOrbitFile->gome2Cursor,pMdr->rec_length,array_ordering_c);
-    beat_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                        // MDR.GOME2_MDR_L1B_EARTHSHINE_V1
+    coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"REC_LENGTH");             // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.REC_LENGTH
+    coda_cursor_read_uint16_array(&pOrbitFile->gome2Cursor,pMdr->rec_length,coda_array_ordering_c);
+    coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                        // MDR.GOME2_MDR_L1B_EARTHSHINE_V1
 
     // Additional geolocation record for the actual integration time of the earthshine measurements
 
 
-    beat_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor, "GEO_EARTH_ACTUAL");      // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL
+    coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor, "GEO_EARTH_ACTUAL");      // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL
 
     // Unique integration times in the scan
 
-    beat_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor, "UNIQUE_INT");            // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL.UNIQUE_INT
-    beat_cursor_read_double_array(&pOrbitFile->gome2Cursor,pMdr->unique_int,array_ordering_c);
-    beat_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                        // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL
+    coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor, "UNIQUE_INT");            // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL.UNIQUE_INT
+    coda_cursor_read_double_array(&pOrbitFile->gome2Cursor,pMdr->unique_int,coda_array_ordering_c);
+    coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                        // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL
 
     // Unique int. time index for each channel
 
-    beat_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor, "INT_INDEX");             // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL.INT_INDEX
-    beat_cursor_read_uint8_array(&pOrbitFile->gome2Cursor,pMdr->int_index,array_ordering_c);
-    beat_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                        // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL
+    coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor, "INT_INDEX");             // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL.INT_INDEX
+    coda_cursor_read_uint8_array(&pOrbitFile->gome2Cursor,pMdr->int_index,coda_array_ordering_c);
+    coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                        // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL
 
     // actual scanner angles
 
-    beat_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor, "SCANNER_ANGLE_ACTUAL");  // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL.SCANNER_ANGLE_ACTUAL
-    beat_cursor_read_double_array(&pOrbitFile->gome2Cursor,&pMdr->scanner_angle[0][0],array_ordering_c);
-    beat_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                        // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL
+    coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor, "SCANNER_ANGLE_ACTUAL");  // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL.SCANNER_ANGLE_ACTUAL
+    coda_cursor_read_double_array(&pOrbitFile->gome2Cursor,&pMdr->scanner_angle[0][0],coda_array_ordering_c);
+    coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                        // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL
 
     // 4 corner coordinates @ points ABCD
 
-    beat_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"CORNER_ACTUAL");          // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL.CORNER_ACTUAL
+    coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"CORNER_ACTUAL");          // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL.CORNER_ACTUAL
 
     beat_cursor_read_geolocation_double_split_array(&pOrbitFile->gome2Cursor,
    		                                              &pMdr->corner_lat[0][0][0],
    		                                              &pMdr->corner_lon[0][0][0],
-   		                                               array_ordering_c);
+   		                                               coda_array_ordering_c);
 
-    beat_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                        // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL
+    coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                        // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL
 
     // centre coordinate (point F)
 
-    beat_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor, "CENTRE_ACTUAL");         // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL.CENTRE_ACTUAL
+    coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor, "CENTRE_ACTUAL");         // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL.CENTRE_ACTUAL
 
     beat_cursor_read_geolocation_double_split_array(&pOrbitFile->gome2Cursor,
                                               		    &pMdr->centre_lat[0][0],
                                               		    &pMdr->centre_lon[0][0],
-                                              		     array_ordering_c);
-    beat_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                        // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL
+                                              		     coda_array_ordering_c);
+    coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                        // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL
 
     // 3 SZAs @ points EFG
 
-    beat_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"SOLAR_ZENITH_ACTUAL");    // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL.SOLAR_ZENITH_ACTUAL
-    beat_cursor_read_double_array(&pOrbitFile->gome2Cursor,&pMdr->sza[0][0][0],array_ordering_c);
-    beat_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                        // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL
+    coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"SOLAR_ZENITH_ACTUAL");    // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL.SOLAR_ZENITH_ACTUAL
+    coda_cursor_read_double_array(&pOrbitFile->gome2Cursor,&pMdr->sza[0][0][0],coda_array_ordering_c);
+    coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                        // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL
 
     // 3 Solar azimuth angles @ points EFG
 
-    beat_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor, "SOLAR_AZIMUTH_ACTUAL");  // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL.SOLAR_AZIMUTH_ACTUAL
-    beat_cursor_read_double_array(&pOrbitFile->gome2Cursor,&pMdr->saa[0][0][0],array_ordering_c);
-    beat_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                        // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL
+    coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor, "SOLAR_AZIMUTH_ACTUAL");  // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL.SOLAR_AZIMUTH_ACTUAL
+    coda_cursor_read_double_array(&pOrbitFile->gome2Cursor,&pMdr->saa[0][0][0],coda_array_ordering_c);
+    coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                        // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL
 
     // 3 SZAs @ points EFG
 
-    beat_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"SAT_ZENITH_ACTUAL");      // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL.SOLAR_ZENITH_ACTUAL
-    beat_cursor_read_double_array(&pOrbitFile->gome2Cursor,&pMdr->lza[0][0][0],array_ordering_c);
-    beat_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                        // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL
+    coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"SAT_ZENITH_ACTUAL");      // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL.SOLAR_ZENITH_ACTUAL
+    coda_cursor_read_double_array(&pOrbitFile->gome2Cursor,&pMdr->lza[0][0][0],coda_array_ordering_c);
+    coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                        // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL
 
     // 3 Solar azimuth angles @ points EFG
 
-    beat_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor, "SAT_AZIMUTH_ACTUAL");  // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL.SOLAR_AZIMUTH_ACTUAL
-    beat_cursor_read_double_array(&pOrbitFile->gome2Cursor,&pMdr->laa[0][0][0],array_ordering_c);
-    beat_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                      // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL
+    coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor, "SAT_AZIMUTH_ACTUAL");  // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL.SOLAR_AZIMUTH_ACTUAL
+    coda_cursor_read_double_array(&pOrbitFile->gome2Cursor,&pMdr->laa[0][0][0],coda_array_ordering_c);
+    coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                      // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL
 
-    beat_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                      // MDR.GOME2_MDR_L1B_EARTHSHINE_V1
+    coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                      // MDR.GOME2_MDR_L1B_EARTHSHINE_V1
 
 
-    beat_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor, "CLOUD");               // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL.CLOUD
+    coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor, "CLOUD");               // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL.CLOUD
 
-    beat_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor, "FIT_MODE");            // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL.CLOUD.FIT_MODE
-    beat_cursor_read_uint8_array(&pOrbitFile->gome2Cursor,&pMdr->cloudFitMode[0],array_ordering_c);
-    beat_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                      // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL.CLOUD
+    coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor, "FIT_MODE");            // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL.CLOUD.FIT_MODE
+    coda_cursor_read_uint8_array(&pOrbitFile->gome2Cursor,&pMdr->cloudFitMode[0],coda_array_ordering_c);
+    coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                      // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL.CLOUD
 
-    beat_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor, "FIT_1");            // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL.CLOUD.FIT_1
-    beat_cursor_read_double_array(&pOrbitFile->gome2Cursor,&pMdr->cloudTopPressure[0],array_ordering_c);
-    beat_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                      // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL.CLOUD
+    coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor, "FIT_1");            // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL.CLOUD.FIT_1
+    coda_cursor_read_double_array(&pOrbitFile->gome2Cursor,&pMdr->cloudTopPressure[0],coda_array_ordering_c);
+    coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                      // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL.CLOUD
 
-    beat_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor, "FIT_2");            // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL.CLOUD.FIT_2
-    beat_cursor_read_double_array(&pOrbitFile->gome2Cursor,&pMdr->cloudFraction[0],array_ordering_c);
-    beat_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                      // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL.CLOUD
+    coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor, "FIT_2");            // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL.CLOUD.FIT_2
+    coda_cursor_read_double_array(&pOrbitFile->gome2Cursor,&pMdr->cloudFraction[0],coda_array_ordering_c);
+    coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                      // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL.CLOUD
 
-    beat_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                      // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL
+    coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                      // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL
 
     // Output
 
     pMdr->startTime=utc_start_double;
    }
 
-  beat_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                        // MDR
+  coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                        // MDR
 
   // Return
 
@@ -657,12 +786,12 @@ RC Gome2BrowseMDR(GOME2_ORBIT_FILE *pOrbitFile,INDEX indexBand)
    }
   else
    {
-    beat_cursor_goto_root(&pOrbitFile->gome2Cursor);
-    beat_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"MDR");
+    coda_cursor_goto_root(&pOrbitFile->gome2Cursor);
+    coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"MDR");
 
     for (i=0;(uint32_t)i<pGome2Info->total_mdr;i++)
      {
-      beat_cursor_goto_array_element_by_index(&pOrbitFile->gome2Cursor,i);
+      coda_cursor_goto_array_element_by_index(&pOrbitFile->gome2Cursor,i);
 
      	if (!Gome2ReadMDRInfo(pOrbitFile,&pGome2Info->mdr[pGome2Info->total_nadir_mdr]))
      	 {
@@ -671,7 +800,7 @@ RC Gome2BrowseMDR(GOME2_ORBIT_FILE *pOrbitFile,INDEX indexBand)
      	  pGome2Info->total_nadir_mdr++;
      	 }
 
-     	beat_cursor_goto_parent(&pOrbitFile->gome2Cursor);
+     	coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);
      }
    }
 
@@ -797,10 +926,10 @@ void GOME2_ReleaseBuffers(INT action)
 
     if (pOrbitFile->gome2Pf!=NULL)
      {
-      beat_close(pOrbitFile->gome2Pf);
+      coda_close(pOrbitFile->gome2Pf);
       if (action==GOME2_BEAT_CLOSE)
        {
-        beat_done();
+        coda_done();
         gome2BeatAction=GOME2_BEAT_INIT;
        }
      }
@@ -871,8 +1000,8 @@ RC GOME2_Set(ENGINE_CONTEXT *pEngineContext)
 
   if (gome2BeatAction==GOME2_BEAT_INIT)
    {
-    beat_init();
-    beat_set_option_perform_boundary_checks(1);
+    coda_init();
+    coda_set_option_perform_boundary_checks(1);
     gome2BeatAction=GOME2_BEAT_NO;
    }
 
@@ -885,7 +1014,7 @@ RC GOME2_Set(ENGINE_CONTEXT *pEngineContext)
     if (gome2OrbitFilesN && (oldCurrentIndex!=ITEM_NONE) && (oldCurrentIndex<gome2OrbitFilesN) &&
        (gome2OrbitFiles[oldCurrentIndex].gome2Pf!=NULL))
      {
-     	beat_close(gome2OrbitFiles[oldCurrentIndex].gome2Pf);
+     	coda_close(gome2OrbitFiles[oldCurrentIndex].gome2Pf);
       gome2OrbitFiles[oldCurrentIndex].gome2Pf=NULL;
      }
 
@@ -1025,7 +1154,7 @@ RC GOME2_Set(ENGINE_CONTEXT *pEngineContext)
 
       if (!(rc=Gome2Open(&pOrbitFile->gome2Pf,pOrbitFile->gome2FileName)))
        {
-       	beat_cursor_set_product(&pOrbitFile->gome2Cursor,pOrbitFile->gome2Pf);
+       	coda_cursor_set_product(&pOrbitFile->gome2Cursor,pOrbitFile->gome2Pf);
 
        	Gome2ReadOrbitInfo(pOrbitFile,(int)pEngineContext->project.instrumental.user);
        	Gome2BrowseMDR(pOrbitFile,(int)pEngineContext->project.instrumental.user);
@@ -1044,7 +1173,7 @@ RC GOME2_Set(ENGINE_CONTEXT *pEngineContext)
 
         if (pOrbitFile->gome2Pf!=NULL)
          {
-     	    beat_close(pOrbitFile->gome2Pf);
+     	    coda_close(pOrbitFile->gome2Pf);
           pOrbitFile->gome2Pf=NULL;
          }
 
@@ -1071,7 +1200,7 @@ RC GOME2_Set(ENGINE_CONTEXT *pEngineContext)
     if (!(rc=pOrbitFile->rc) && (pOrbitFile->gome2Pf==NULL) &&
         !(rc=Gome2Open(&pOrbitFile->gome2Pf,pEngineContext->fileInfo.fileName)))
      {
-     	beat_cursor_set_product(&pOrbitFile->gome2Cursor,pOrbitFile->gome2Pf);
+     	coda_cursor_set_product(&pOrbitFile->gome2Cursor,pOrbitFile->gome2Pf);
       memcpy(pEngineContext->buffers.lambda,pOrbitFile->gome2SunWve,sizeof(double)*NDET);
 
      	memcpy(pEngineContext->buffers.irrad,pOrbitFile->gome2SunRef,sizeof(double)*NDET);
@@ -1159,12 +1288,12 @@ RC GOME2_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,INDEX fileIndex)
 
      	for (i=pGome2Info->startPixel;(i<pGome2Info->startPixel+pGome2Info->no_of_pixels) && !rc;i++)
      	 {
-     	 	beat_cursor_goto_first_record_field(&pOrbitFile->gome2Cursor);                      // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.BAND[i].RAD
-     	  beat_cursor_read_double(&pOrbitFile->gome2Cursor,&spectrum[i]);
-     	  beat_cursor_goto_next_record_field(&pOrbitFile->gome2Cursor);                       // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.BAND[i].ERR_RAD
-     	  beat_cursor_read_double(&pOrbitFile->gome2Cursor,&sigma[i]);
-     	  beat_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                  // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.BAND[i]
-     	  beat_cursor_goto_next_array_element(&pOrbitFile->gome2Cursor);                      // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.BAND[i+1]
+     	 	coda_cursor_goto_first_record_field(&pOrbitFile->gome2Cursor);                      // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.BAND[i].RAD
+     	  coda_cursor_read_double(&pOrbitFile->gome2Cursor,&spectrum[i]);
+     	  coda_cursor_goto_next_record_field(&pOrbitFile->gome2Cursor);                       // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.BAND[i].ERR_RAD
+     	  coda_cursor_read_double(&pOrbitFile->gome2Cursor,&sigma[i]);
+     	  coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                  // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.BAND[i]
+     	  coda_cursor_goto_next_array_element(&pOrbitFile->gome2Cursor);                      // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.BAND[i+1]
 
      	  if ((spectrum[i]>(double)1.e20) || (spectrum[i]<(double)0.))
      	   rc=ERROR_ID_FILE_RECORD;
@@ -1173,7 +1302,7 @@ RC GOME2_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,INDEX fileIndex)
       if (!rc)
        {
      	  utcTime=pGome2Info->mdr[indexMDR].startTime+unique_int[int_index[indexBand]]*(recordNo-mdrObs-1);
-     	  beat_double_to_datetime(utcTime,&year,&month,&day,&hour,&min,&sec,&msec);
+     	  coda_double_to_datetime(utcTime,&year,&month,&day,&hour,&min,&sec,&msec);
 
      	  // Output information on the current record
 
@@ -1651,7 +1780,7 @@ RC Gome2BuildRef(GOME2_REF *refList,INT nRef,INT nSpectra,double *lambda,double 
       alreadyOpen=(pOrbitFile->gome2Pf!=NULL)?1:0;
 
       if (!alreadyOpen && !(rc=Gome2Open(&pOrbitFile->gome2Pf,pOrbitFile->gome2FileName)))
-      	beat_cursor_set_product(&pOrbitFile->gome2Cursor,pOrbitFile->gome2Pf);
+      	coda_cursor_set_product(&pOrbitFile->gome2Cursor,pOrbitFile->gome2Pf);
 
       if (!(rc=GOME2_Read(pEngineContext,pRef->indexRecord,pRef->indexFile)))
        {
@@ -1669,7 +1798,7 @@ RC Gome2BuildRef(GOME2_REF *refList,INT nRef,INT nSpectra,double *lambda,double 
       if (!alreadyOpen)
        {
         if (pOrbitFile->gome2Pf!=NULL)
-         beat_close(pOrbitFile->gome2Pf);
+         coda_close(pOrbitFile->gome2Pf);
 
         pOrbitFile->gome2Pf=NULL;
        }
@@ -2050,11 +2179,11 @@ RC GOME2_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
     if (useUsamp && (THRD_id!=THREAD_TYPE_KURUCZ))
      {
-      USAMP_LocalFree();
+      ANALYSE_UsampLocalFree();
 
-      if (((rc=USAMP_LocalAlloc(0))!=ERROR_ID_NO) ||
-          ((rc=USAMP_BuildFromAnalysis(0,0))!=ERROR_ID_NO) ||
-          ((rc=USAMP_BuildFromAnalysis(1,ITEM_NONE))!=ERROR_ID_NO))
+      if (((rc=ANALYSE_UsampLocalAlloc(0))!=ERROR_ID_NO) ||
+          ((rc=ANALYSE_UsampBuild(0,0))!=ERROR_ID_NO) ||
+          ((rc=ANALYSE_UsampBuild(1,ITEM_NONE))!=ERROR_ID_NO))
 
        goto EndGOME2_LoadAnalysis;
      }

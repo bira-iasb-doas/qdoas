@@ -1525,9 +1525,9 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
    }
 
   if (!rc && useUsamp &&
-      !(rc=USAMP_GlobalAlloc(lambdaMin,lambdaMax,NDET)) &&
-      !(rc=USAMP_LocalAlloc(1)))
-   rc=USAMP_BuildFromAnalysis(0,1);
+      !(rc=ANALYSE_UsampGlobalAlloc(lambdaMin,lambdaMax,NDET)) &&
+      !(rc=ANALYSE_UsampLocalAlloc(1)))
+   rc=ANALYSE_UsampBuild(0,1);
 
  // QDOAS ???     {
  // QDOAS ???      FILE *fp;
@@ -1670,6 +1670,7 @@ int mediateRequestNextMatchingSpectrum(ENGINE_CONTEXT *pEngineContext,void *resp
   pProject=&pEngineContext->project;
   pRecord=&pEngineContext->recordInfo;
   inc=1;
+  geoFlag=1;
 
   rc=ERROR_ID_NO;
 
@@ -1799,6 +1800,14 @@ int mediateRequestNextMatchingBrowseSpectrum(void *engineContext,
 
   	mediateRequestPlotSpectra(pEngineContext,responseHandle);
 
+//  {
+//  	FILE *fp;
+//  	fp=fopen("qdoas.dbg","a+t");
+//  	fprintf(fp,"   mediateRequestNextMatchingBrowseSpectrum %d/%d\n",pEngineContext->indexRecord,pEngineContext->recordNumber);
+//  	fclose(fp);
+//  }
+
+
   return pEngineContext->indexRecord;
  }
 
@@ -1812,7 +1821,7 @@ int mediateRequestEndBrowseSpectra(void *engineContext,
 
   // Close open files and release allocated buffers to reset the engine context
 
-  return (!rc)?0:-1;
+  return 0;
  }
 
 int mediateRequestBeginAnalyseSpectra(void *engineContext,
@@ -1831,6 +1840,14 @@ int mediateRequestBeginAnalyseSpectra(void *engineContext,
 
    ERROR_DisplayMessage(responseHandle);
 
+//  {
+//  	FILE *fp;
+//  	fp=fopen("qdoas.dbg","a+t");
+//  	fprintf(fp,"mediateRequestBeginAnalyseSpectra  (%d records,rc %d)\n",((ENGINE_CONTEXT *)engineContext)->recordNumber,rc);
+//  	fclose(fp);
+//  }
+
+
   return (rc==ERROR_ID_NO)?((ENGINE_CONTEXT *)engineContext)->recordNumber:-1;
  }
 
@@ -1840,6 +1857,11 @@ int mediateRequestNextMatchingAnalyseSpectrum(void *engineContext,
  	// Declarations
 
   ENGINE_CONTEXT *pEngineContext = (ENGINE_CONTEXT *)engineContext;
+  RC rc;
+
+  // Initialization
+
+  rc=ERROR_ID_NO;
 
   if ((mediateRequestNextMatchingSpectrum(pEngineContext,responseHandle)>0) &&
       (pEngineContext->indexRecord<=pEngineContext->recordNumber))
@@ -1847,10 +1869,18 @@ int mediateRequestNextMatchingAnalyseSpectrum(void *engineContext,
    	mediateRequestPlotSpectra(pEngineContext,responseHandle);
 
  	  if ((ANALYSE_refSelectionFlag && !pEngineContext->satelliteFlag && (EngineNewRef(pEngineContext,responseHandle)!=ERROR_ID_NO)) ||
-        (ANALYSE_Spectrum(pEngineContext,responseHandle)!=ERROR_ID_NO))
+       ((rc=ANALYSE_Spectrum(pEngineContext,responseHandle))!=ERROR_ID_NO))
 
      ERROR_DisplayMessage(responseHandle);
    }
+
+//  {
+//  	FILE *fp;
+//  	fp=fopen("qdoas.dbg","a+t");
+//  	fprintf(fp,"   mediateRequestNextMatchingAnalyseSpectrum %d/%d (rc %d)\n",pEngineContext->indexRecord,pEngineContext->recordNumber,rc);
+//  	fclose(fp);
+//  }
+
 
   return pEngineContext->indexRecord;
  }
@@ -1875,7 +1905,7 @@ int mediateRequestEndAnalyseSpectra(void *engineContext,
 
   // Return
 
-  return (!rc)?0:-1;
+  return 0;
  }
 
 
@@ -1935,7 +1965,7 @@ int mediateRequestEndCalibrateSpectra(void *engineContext,
 
   // Return
 
-  return (!rc)?0:-1;
+  return 0;
  }
 
 int mediateRequestStop(void *engineContext,

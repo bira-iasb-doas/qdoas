@@ -73,7 +73,7 @@ QString CUsampConfigWriter::write(const QString &fileName)
   default:
     fprintf(fp, "\"invalid\"");
   }
-  fprintf(fp, " shift=\"%.1f\" rmhdr=\"%s\"", d->shift,
+  fprintf(fp, " shift=\"%g\" rmhdr=\"%s\"", d->shift,
 	  (d->noheader ? sTrue : sFalse));
 
   tmpStr = pathMgr->simplifyPath(QString(d->outputPhaseOneFile));
@@ -96,7 +96,7 @@ QString CUsampConfigWriter::write(const QString &fileName)
 
   if (fclose(fp)) {
     QTextStream stream(&msg);
-    
+
     stream << "Error writing to the project file '" << fileName << "'";
   }
 

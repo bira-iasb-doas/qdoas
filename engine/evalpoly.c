@@ -1,5 +1,5 @@
 /*----------------------------------------------------------------------------*\
-**                              evalpoly.c  
+**                              evalpoly.c
 **
 **  GDP Level 0 to 1 program EvalPolynom implementation file
 **
@@ -11,7 +11,6 @@
 **    float EvalPolynom_f(float X, float *Coefficient, short Grad)
 **    double EvalPolynom_d(double X, double *Coefficient, short Grad)
 \*----------------------------------------------------------------------------*/
-#pragma ident	"@(#)evalpoly.c	4.1 29 Jul 1996, Copyright DLR 1994"
 
 // #include "utils.h"
 
@@ -25,7 +24,7 @@
 **  Output parameters:
 **  Other interfaces:
 **  Description:
-**    This function evaluates a polynom of grad Grad described by Coefficient 
+**    This function evaluates a polynom of grad Grad described by Coefficient
 **    in the value x
 **  References:
 **  Libraries:
@@ -36,7 +35,7 @@ float EvalPolynom_f(float X, const float *Coefficient, short Grad)
 {
     float Result = 0.0, Mult = 1.0;
 	short i;
- 
+
     for (i=0; i<Grad; i++)
 	{
         Result += Coefficient[i]*Mult;
@@ -54,7 +53,7 @@ float EvalPolynom_f(float X, const float *Coefficient, short Grad)
 **  Output parameters:
 **  Other interfaces:
 **  Description:
-**    This function evaluates a polynom of grad Grad described by Coefficient 
+**    This function evaluates a polynom of grad Grad described by Coefficient
 **    in the value x
 **  References:
 **  Libraries:
@@ -65,7 +64,7 @@ double EvalPolynom_d(double X, const double *Coefficient, short Grad)
 {
     double Result = 0.0, Mult = 1.0;
 	short i;
- 
+
     for (i=0; i<Grad; i++)
 	{
         Result += Coefficient[i]*Mult;

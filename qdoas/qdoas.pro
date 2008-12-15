@@ -22,27 +22,26 @@ contains ( HELP_SYSTEM, assistant ) {
 # Platform dependency ... based on ../config.pri
 #----------------------------------------------
 
-INCLUDEPATH  += $$QWT_INC_PATH $$BEAT_INC_PATH
+INCLUDEPATH  += $$QWT_INC_PATH $$CODA_INC_PATH
 
 unix {
   INCLUDEPATH  += ../mediator ../common ../engine
-  LIBS         += -L$$QWT_LIB_PATH -l$$QWT_LIB -L$$BEAT_LIB_PATH -lbeat -lm
-  QMAKE_LFLAGS += -Wl,-rpath=$$QWT_LIB_PATH:$$BEAT_LIB_PATH
+  LIBS         += -L$$QWT_LIB_PATH -l$$QWT_LIB -L$$CODA_LIB_PATH -lcoda -lm
+  QMAKE_LFLAGS += -Wl,-rpath=$$QWT_LIB_PATH:$$CODA_LIB_PATH
 }
 
 win32 {
   INCLUDEPATH  += ..\mediator ..\common ..\engine
 
   contains( QWT_LINKAGE, qwtstatic ) {
-    LIBS        += -L$$QWT_LIB_PATH -l$$QWT_LIB -L$$BEAT_LIB_PATH -l$$BEAT_LIB
+    LIBS        += -L$$QWT_LIB_PATH -l$$QWT_LIB -L$$CODA_LIB_PATH -l$$CODA_LIB
   }
   contains( QWT_LINKAGE, qwtdll ) {
-    LIBS        += -L$$QWT_LIB_PATH -l$$QWT_LIB$$QWT_LIB_VERSION -L$$BEAT_LIB_PATH -l$$BEAT_LIB
-    DEFINES     += QWT_DLL LIBBEATDLL
+    LIBS        += -L$$QWT_LIB_PATH -l$$QWT_LIB$$QWT_LIB_VERSION -L$$CODA_LIB_PATH -l$$CODA_LIB
+    DEFINES     += QWT_DLL
   }
 
-  LIBS         += -L$$BEAT_LIB_PATH -lbeat
-  DEFINES      += LIBBEATDLL
+  LIBS         += -L$$CODA_LIB_PATH -lcoda
 
   CONFIG      += windows
 }
@@ -284,8 +283,6 @@ SOURCES += ../engine/zenithal.c
 #----------------------------------------------
 # Engine Header files
 #----------------------------------------------
-#HEADERS += ../engine/beat.h
-#HEADERS += ../engine/beatl2.h
 HEADERS += ../engine/bin_read.h
 HEADERS += ../engine/comdefs.h
 HEADERS += ../engine/doas.h

@@ -160,6 +160,7 @@ SOURCES += ../engine/spline.c
 SOURCES += ../engine/stdfunc.c
 SOURCES += ../engine/svd.c
 SOURCES += ../engine/ring.c
+SOURCES += ../engine/usamp.c
 SOURCES += ../engine/vector.c
 SOURCES += ../engine/winfiles.c
 SOURCES += ../engine/xsconv.c

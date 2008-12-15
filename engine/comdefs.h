@@ -134,7 +134,6 @@ typedef unsigned short DoasUS,WORD;
 typedef int            BOOL;
 typedef uint32_t       DoasU32;
 typedef int32_t        DoasI32;
-typedef void           VOID;
 typedef unsigned char  BYTE;
 typedef unsigned int   UINT;
 //typedef unsigned long  HWND;

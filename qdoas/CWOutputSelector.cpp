@@ -454,6 +454,8 @@ void getValidFieldFlags(int *validFlags, int instrument)
      {
       validFlags[PRJCT_RESULTS_ASCII_LOS_ZA]=1;
       validFlags[PRJCT_RESULTS_ASCII_LOS_AZIMUTH]=1;
+      validFlags[PRJCT_RESULTS_ASCII_CLOUD]=1;
+      validFlags[PRJCT_RESULTS_ASCII_CLOUDTOPP]=1;
      }
     break;
  // ----------------------------------------------------------------------------

@@ -21,7 +21,9 @@
 #include "CProjectConfigTreeNode.h"
 #include "constants.h"
 
-#include "CConvConfigHandler.h"
+#include "../convolution/CConvConfigHandler.h"
+#include "../ring/CRingConfigHandler.h"
+#include "../usamp/CUsampConfigHandler.h"
 
 #include "mediate_xsconv.h"
 
@@ -482,7 +484,7 @@ int analyseProjectQdoasPrepare(void **engineContext, const CProjectConfigItem *p
 	 CWorkSpace *ws = CWorkSpace::instance();
 	 int n;
 	 const mediate_site_t *siteList = ws->siteList(n);
-  int retCode = 0,indexSite;
+  int retCode = 0;
   CEngineResponseTool *msgResp = new CEngineResponseTool;
 
   // copy the project data and mask out any display flags (do not want
@@ -648,7 +650,7 @@ int analyseProjectQdoasDirectory(void *engineContext, CBatchEngineController *co
     entries = directory.entryInfoList(); // all entries ... but only take directories on this pass
 
     it = entries.begin();
-    while (!retCode && it != entries.end()) {
+    while (/*!retCode && */ it != entries.end()) {
       if (it->isDir() && !it->fileName().startsWith('.')) {
 
         retCode = analyseProjectQdoasDirectory(engineContext, controller, it->filePath(), filter, true);
@@ -664,7 +666,7 @@ int analyseProjectQdoasDirectory(void *engineContext, CBatchEngineController *co
     entries = directory.entryInfoList(QStringList(filter));
 
   it = entries.begin();
-  while (!retCode && it != entries.end()) {
+  while (/* !retCode && */ it != entries.end()) {
     if (it->isFile()) {
 
       retCode = analyseProjectQdoasFile(engineContext, controller, it->filePath());
@@ -745,6 +747,9 @@ int batchProcessConvolution(commands_t *cmd)
 	resp->process(controller);
       }
 
+      if (retCode)
+       std::cout << "Convolution tool failed, please check your input";
+
       if (mediateXsconvDestroyContext(engineContext, resp) != 0) {
 	retCode = 1;
       }
@@ -768,18 +773,207 @@ int batchProcessRing(commands_t *cmd)
 {
   TRACE("batchProcessRing");
 
-  std::cout << "Command-line invocation of the ring tool is not currently supported." << std::endl;
+  int retCode = 0;
 
-  return 1;
+  QFile *file = new QFile(cmd->configFile);
+
+  // parse the file
+  QXmlSimpleReader xmlReader;
+  QXmlInputSource *source = new QXmlInputSource(file);
+
+  CRingConfigHandler *handler = new CRingConfigHandler;
+  xmlReader.setContentHandler(handler);
+  xmlReader.setErrorHandler(handler);
+
+  bool ok = xmlReader.parse(source);
+
+  if (ok)
+   {
+    void *engineContext = NULL;
+
+    CEngineResponseTool *resp = new CEngineResponseTool;
+    CBatchEngineController *controller = new CBatchEngineController;
+
+    // copy the properties data ...
+    mediate_ring properties = *(handler->properties()); // blot copy
+
+    if (!cmd->outputDir.isEmpty() && cmd->outputDir.size() < FILENAME_BUFFER_LENGTH-1)
+     {
+    	 strcpy(properties.outputFile,cmd->outputDir.toAscii().data());
+     }
+
+    if (mediateXsconvCreateContext(&engineContext, resp) != 0)
+     {
+      retCode = 1;
+     }
+    else
+     {
+      const QList<QString> &filenames = cmd->filenames;
+
+      if (!filenames.isEmpty())
+       {
+       	// can only process one file (because the output is a file name).
+
+       	QList<QString>::const_iterator it = filenames.begin();
+
+       	strcpy(properties.calibrationFile, it->toAscii().data());
+
+       	if ((retCode=mediateRequestRing(engineContext, &properties, resp))==ERROR_ID_NO)
+       	 retCode = mediateRingCalculate(engineContext,resp);
+       	resp->process(controller);
+
+       	++it;
+       	if (it != filenames.end())
+       	 {
+       	  // give a warning for the remaining files
+       	  std::cout << "WARNING: Only one file can be processed. Ignoring the file(s)..." << std::endl;
+       	  while (it != filenames.end())
+       	   {
+       	    std::cout << "    " << it->toStdString() << std::endl;
+       	    ++it;
+        	  }
+        	}
+       }
+      else
+       {
+        // use the current input file
+	       mediateRequestRing(engineContext, &properties, resp);
+	       retCode = mediateRingCalculate(engineContext,resp);
+	       resp->process(controller);
+       }
+
+      if (retCode)
+       std::cout << "Ring tool failed, please check your input";
+
+      if (mediateXsconvDestroyContext(engineContext, resp) != 0)
+       {
+	       retCode = 1;
+       }
+     }
+
+    delete resp;
+    delete controller;
+  }
+  else {
+    retCode = 1;
+  }
+
+  delete handler;
+  delete source;
+  delete file;
+
+  return retCode;
 }
 
 int batchProcessUsamp(commands_t *cmd)
 {
   TRACE("batchProcessUsamp");
 
-  std::cout << "Command-line invocation of the  tool is not currently supported." << std::endl;
+  int retCode = 0;
 
-  return 1;
+  QFile *file = new QFile(cmd->configFile);
+
+  // parse the file
+  QXmlSimpleReader xmlReader;
+  QXmlInputSource *source = new QXmlInputSource(file);
+
+  CUsampConfigHandler *handler = new CUsampConfigHandler;
+  xmlReader.setContentHandler(handler);
+  xmlReader.setErrorHandler(handler);
+
+  bool ok = xmlReader.parse(source);
+
+  if (ok)
+   {
+    void *engineContext = NULL;
+
+    CEngineResponseTool *resp = new CEngineResponseTool;
+    CBatchEngineController *controller = new CBatchEngineController;
+
+    // copy the properties data ...
+    mediate_usamp_t properties = *(handler->properties()); // blot copy
+
+    if (!cmd->outputDir.isEmpty() && cmd->outputDir.size() < FILENAME_BUFFER_LENGTH-1)
+     {
+    	 char *ptr;
+    	 char  tmpFile[FILENAME_BUFFER_LENGTH];
+
+    	 strcpy(tmpFile,cmd->outputDir.toAscii().data());
+
+    	 if ((ptr=strchr(tmpFile,'_'))!=NULL)
+    	  {
+    	  	*ptr++='\0';
+    	  	sprintf(properties.outputPhaseOneFile,"%s1_%s",tmpFile,ptr);
+    	  	sprintf(properties.outputPhaseTwoFile,"%s2_%s",tmpFile,ptr);
+    	  }
+    	 else
+    	  {
+    	  	sprintf(properties.outputPhaseOneFile,"%s_1",tmpFile);
+    	  	sprintf(properties.outputPhaseTwoFile,"%s_2",tmpFile);
+    	  }
+     }
+
+    if (mediateXsconvCreateContext(&engineContext, resp) != 0)
+     {
+      retCode = 1;
+     }
+    else
+     {
+      const QList<QString> &filenames = cmd->filenames;
+
+      if (!filenames.isEmpty())
+       {
+       	// can only process one file (because the output is a file name).
+
+       	QList<QString>::const_iterator it = filenames.begin();
+
+       	strcpy(properties.calibrationFile, it->toAscii().data());
+
+       	if ((retCode=mediateRequestUsamp(engineContext, &properties, resp))==ERROR_ID_NO)
+       	 retCode = mediateUsampCalculate(engineContext,resp);
+       	resp->process(controller);
+
+       	++it;
+       	if (it != filenames.end())
+       	 {
+       	  // give a warning for the remaining files
+       	  std::cout << "WARNING: Only one file can be processed. Ignoring the file(s)..." << std::endl;
+       	  while (it != filenames.end())
+       	   {
+       	    std::cout << "    " << it->toStdString() << std::endl;
+       	    ++it;
+        	  }
+        	}
+       }
+      else
+       {
+        // use the current input file
+	       mediateRequestUsamp(engineContext, &properties, resp);
+	       retCode = mediateUsampCalculate(engineContext,resp);
+	       resp->process(controller);
+       }
+
+      if (retCode)
+       std::cout << "Undersampling tool failed, please check your input";
+
+      if (mediateXsconvDestroyContext(engineContext, resp) != 0)
+       {
+	       retCode = 1;
+       }
+     }
+
+    delete resp;
+    delete controller;
+  }
+  else {
+    retCode = 1;
+  }
+
+  delete handler;
+  delete source;
+  delete file;
+
+  return retCode;
 }
 
 

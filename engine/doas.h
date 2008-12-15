@@ -936,6 +936,12 @@ RC   ANALYSE_LoadSlit(PRJCT_SLIT *pSlit);
 RC   ANALYSE_Alloc(void);
 void ANALYSE_Free(void);
 
+RC   ANALYSE_UsampBuild(INT analysisFlag,INT gomeFlag);
+void ANALYSE_UsampGlobalFree(void);
+RC   ANALYSE_UsampGlobalAlloc(double lambdaMin,double lambdaMax,INT size);
+RC   ANALYSE_UsampLocalAlloc(INT gomeFlag);
+void ANALYSE_UsampLocalFree(void);
+
 // ============================
 // KURUCZ.C : Kurucz procedures
 // ============================
@@ -1026,11 +1032,30 @@ typedef struct _usamp
  }
 USAMP;
 
-void USAMP_GlobalFree(void);
-RC   USAMP_GlobalAlloc(double lambdaMin,double lambdaMax,INT size);
-RC   USAMP_LocalAlloc(INT gomeFlag);
-void USAMP_LocalFree(void);
-RC   USAMP_BuildFromAnalysis(INT analysisFlag,INT gomeFlag);
+RC USAMP_BuildCrossSections(double *phase1,                                     // OUTPUT : phase 1 calculation
+                            double *phase2,                                     // OUTPUT : phase 2 calculation
+                            double *gomeLambda,                                 // GOME calibration
+                            double *gomeLambda2,                                // shifted GOME calibration
+                            double *kuruczInterpolated,                         // preconvoluted Kurucz spectrum interpolated on gome calibration
+                            double *kuruczInterpolatedDeriv2,                   // interpolated Kurucz spectrum second derivatives
+                            INT     nGome,                                      // size of GOME calibration
+                            double *kuruczLambda,                               // Kurucz high resolution wavelength scale
+                            double *kuruczConvolved,                            // preconvoluted Kurucz spectrum on high resolution wavelength scale
+                            double *kuruczConvolvedDeriv2,                      // preconvoluted Kurucz second derivatives
+                            INT     nKurucz,                                    // size of Kurucz vectors
+                            INT     analysisMethod);                            // analysis method
+
+RC USAMP_Build(double *phase1,                                                  // OUTPUT : phase 1 calculation
+               double *phase2,                                                  // OUTPUT : phase 2 calculation
+               double *gomeLambda,                                              // GOME calibration
+               INT     nGome,                                                   // size of GOME calibration
+               double *kuruczLambda,                                            // Kurucz calibration
+               double *kuruczSpectrum,                                          // Kurucz spectrum
+               double *kuruczDeriv2,                                            // Kurucz second derivatives
+               INT     nKurucz,                                                 // size of Kurucz vectors
+               SLIT   *pSlit,                                                   // slit function
+               double  fraction,                                                // tunes the phase
+               INT     analysisMethod);                                         // analysis method
 
 // ======
 // OUTPUT

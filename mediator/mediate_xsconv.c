@@ -42,10 +42,13 @@ static DoasCh *mediateConvolutionFileExt[CONVOLUTION_TYPE_MAX]=
    };
 
 DoasCh *mediateConvolutionFilterTypes[PRJCT_FILTER_TYPE_MAX]={"None","Kaiser","Boxcar","Gaussian","Triangular","Savitzky-Golay","Odd-even pixels correction","Binomial"};
+DoasCh *mediateUsampAnalysisMethod[PRJCT_ANLYS_METHOD_MAX]={"Optical density","Intensity fitting"};
 
-// -------------------------------------------------
+FFT    usampFFT;
+
+// ----------------------------------------------------------
 // mediateConvolutionSave : Save the convoluted cross section
-// -------------------------------------------------
+// ----------------------------------------------------------
 
 RC mediateConvolutionSave(void *engineContext)
  {
@@ -1012,15 +1015,15 @@ RC mediateRingCalculate(void *engineContext,void *responseHandle)
             mediateResponseLabelPage(0,pageTitle,"",responseHandle);
             mediateReleasePlotData(spectrumData);
            }
+
+          if (fp!=NULL)
+           fclose(fp);
          }
        }
      }
    }
 
   EndRing :
-
-  if (fp!=NULL)
-   fclose(fp);
 
   // Release allocated buffers
 
@@ -1076,7 +1079,7 @@ RC mediateRingCalculate(void *engineContext,void *responseHandle)
 // ==================
 // UNDERSAMPLING TOOL
 // ==================
-/*
+
 // -----------------------------------------------------------------------------
 // FUNCTION      mediateRequestUsamp
 // -----------------------------------------------------------------------------
@@ -1100,9 +1103,12 @@ RC mediateRequestUsamp(void *engineContext,mediate_usamp_t *pMediateUsamp,void *
   // General information
 
   pEngineContext->noComment=pMediateUsamp->noheader;
-  pEngineContext->temperature=pMediateUsamp->temperature;
+  pEngineContext->fraction=pMediateUsamp->shift;
+  pEngineContext->analysisMethod=pMediateUsamp->methodType;
 
-  strcpy(pEngineContext->path,pMediateUsamp->outputFile);                        // output path
+  strcpy(pEngineContext->path,pMediateUsamp->outputPhaseOneFile);               // output path
+  strcpy(pEngineContext->path2,pMediateUsamp->outputPhaseTwoFile);              // output path
+
   strcpy(pEngineContext->calibrationFile,pMediateUsamp->calibrationFile);        // calibration file
   strcpy(pEngineContext->kuruczFile,pMediateUsamp->solarRefFile);                // Kurucz file used when I0 correction is applied
 
@@ -1138,9 +1144,207 @@ RC mediateRequestUsamp(void *engineContext,mediate_usamp_t *pMediateUsamp,void *
   // Return
 
   return rc;
-
  }
-*/
+
+// -----------------------------------------------------------------------------
+// FUNCTION      UsampWriteHeader
+// -----------------------------------------------------------------------------
+// PURPOSE       Write options in the file header
+//
+// INPUT         pEngineContext : pointer to the current engine context
+//               fp    : pointer to the output file
+//               phase : phase of the undersampling
+// -----------------------------------------------------------------------------
+
+void UsampWriteHeader(ENGINE_XSCONV_CONTEXT *pEngineContext,FILE *fp,INT phase)
+ {
+ 	// Declaration
+
+  INT slitType;
+
+  // Initialization
+
+  slitType=pEngineContext->slitConv.slitType;
+
+  // Header
+
+  fprintf(fp,";\n");
+  fprintf(fp,"; UNDERSAMPLING CROSS SECTION (Phase %d)\n",phase);
+  fprintf(fp,"; High resolution Kurucz file : %s\n",pEngineContext->kuruczFile);
+  fprintf(fp,"; Calibration file : %s\n",pEngineContext->calibrationFile);
+
+  fprintf(fp,"; Slit function type : %s\n",XSCONV_slitTypes[slitType]);
+
+  if ((slitType==SLIT_TYPE_FILE) || (slitType==SLIT_TYPE_GAUSS_FILE) || (slitType==SLIT_TYPE_INVPOLY_FILE) || (slitType==SLIT_TYPE_ERF_FILE))
+   fprintf(fp,"; Slit function file : %s\n",pEngineContext->slitConv.slitFile);
+  if ((slitType==SLIT_TYPE_GAUSS) || (slitType==SLIT_TYPE_INVPOLY) || (slitType==SLIT_TYPE_ERF))
+   fprintf(fp,"; FWHM : %lf\n",pEngineContext->slitConv.slitParam);
+  if ((slitType==SLIT_TYPE_INVPOLY) || (slitType==SLIT_TYPE_INVPOLY_FILE))
+   fprintf(fp,"; Polynomial degree : %d\n",(int)pEngineContext->slitConv.slitParam2);
+  if ((slitType==SLIT_TYPE_ERF) || (slitType==SLIT_TYPE_ERF_FILE))
+   fprintf(fp,"; Boxcar width : %.3f\n",pEngineContext->slitConv.slitParam2);
+
+  if (slitType==SLIT_TYPE_VOIGT)
+   {
+    fprintf(fp,"; Gaussian FWHM (L) : %.3f\n",pEngineContext->slitConv.slitParam);
+    fprintf(fp,"; Gaussian/Lorentz ratio (L) : %.3f\n",pEngineContext->slitConv.slitParam2);
+    fprintf(fp,"; Gaussian FWHM (R) : %.3f\n",pEngineContext->slitConv.slitParam3);
+    fprintf(fp,"; Gaussian/Lorentz ratio (R) : %.3f\n",pEngineContext->slitConv.slitParam4);
+   }
+
+  fprintf(fp,"; Analysis method : %s\n",mediateUsampAnalysisMethod[pEngineContext->analysisMethod]);
+  fprintf(fp,"; Shift : %g\n",pEngineContext->fraction);
+
+  fprintf(fp,";\n");
+ }
+
+// --------------------------------------------------------
+// mediateUsampSave : Save the undersampling cross sections
+// --------------------------------------------------------
+
+RC mediateUsampSave(ENGINE_XSCONV_CONTEXT *pEngineContext,DoasCh *fileName,int phase,double *lambda,double *usampXS,int nSize,void *responseHandle)
+ {
+ 	// Declarations
+
+ 	FILE *fp;                                                                     // pointer to the output file
+ 	int i;                                                                        // browse data points of the cross section
+ 	RC rc;                                                                        // return code
+
+ 	// Initializations
+
+ 	rc=ERROR_ID_NO;
+
+ 	// Open file
+
+  if ((fp=fopen(fileName,"w+t"))==NULL)
+   rc=ERROR_SetLast("mediateUsampSave",ERROR_TYPE_FATAL,ERROR_ID_FILE_OPEN,fileName);
+  else
+   {
+    if (!pEngineContext->noComment)
+     UsampWriteHeader(pEngineContext,fp,phase);
+
+    for (i=0;i<nSize;i++)
+     fprintf(fp,"%.14le %.14le\n",lambda[i],usampXS[i]);
+
+    fclose(fp);
+   }
+
+  // Return
+
+  return rc;
+ }
+
+// ---------------------------------------------------------------------------
+// mediateUsampCalculate : Main function to build undersampling cross sections
+// ---------------------------------------------------------------------------
+
+RC mediateUsampCalculate(void *engineContext,void *responseHandle)
+ {
+ 	ENGINE_XSCONV_CONTEXT *pEngineContext=(ENGINE_XSCONV_CONTEXT*)engineContext;
+  MATRIX_OBJECT calibrationMatrix,kuruczMatrix;
+  double *phase1,*phase2;
+  INT hrN,fftSize,nSize;
+  double *fftIn;
+  INDEX i;
+  RC rc;
+
+  // Initializations
+
+  memset(&calibrationMatrix,0,sizeof(MATRIX_OBJECT));
+  memset(&kuruczMatrix,0,sizeof(MATRIX_OBJECT));
+  memset(&usampFFT,0,sizeof(FFT));
+  phase1=phase2=NULL;
+
+  // Files read out
+
+  if (!(rc=MATRIX_Load(pEngineContext->calibrationFile,&calibrationMatrix,0,0,0,0,(double)0.,(double)0.,0,1,"mediateUsampCalculate (calibration file) ")) &&
+      !(rc=MATRIX_Load(pEngineContext->kuruczFile,&kuruczMatrix,0,0,0,0,(double)calibrationMatrix.matrix[0][0]-7.,
+       (double)calibrationMatrix.matrix[0][calibrationMatrix.nl-1]+7.,1,1,"mediateUsampCalculate (Kurucz) ")) &&
+      !(rc=VECTOR_NormalizeVector(kuruczMatrix.matrix[1]-1,kuruczMatrix.nl,NULL,"mediateUsampCalculate ")))
+   {
+    hrN=usampFFT.oldSize=kuruczMatrix.nl;
+    nSize=calibrationMatrix.nl;
+    fftSize=usampFFT.fftSize=(int)((double)pow((double)2.,ceil(log((double)hrN)/log((double)2.))));
+
+    if (((phase1=MEMORY_AllocDVector("mediateUsampCalculate ","phase 1",0,nSize-1))==NULL) ||
+        ((phase2=MEMORY_AllocDVector("mediateUsampCalculate ","phase 2",0,nSize-1))==NULL) ||
+        ((fftIn=usampFFT.fftIn=(double *)MEMORY_AllocDVector("mediateUsampCalculate ","fftIn",1,fftSize))==NULL) ||
+        ((usampFFT.fftOut=(double *)MEMORY_AllocDVector("mediateUsampCalculate ","fftOut",1,fftSize))==NULL) ||
+        ((usampFFT.invFftIn=(double *)MEMORY_AllocDVector("mediateUsampCalculate ","invFftIn",1,fftSize))==NULL) ||
+        ((usampFFT.invFftOut=(double *)MEMORY_AllocDVector("mediateUsampCalculate ","invFftOut",1,fftSize))==NULL))
+
+     rc=ERROR_ID_ALLOC;
+
+    else
+     {
+      memcpy(fftIn+1,kuruczMatrix.matrix[1],sizeof(double)*hrN);
+
+      for (i=hrN+1;i<=fftSize;i++)
+       fftIn[i]=fftIn[2*hrN-i];
+
+      realft(usampFFT.fftIn,usampFFT.fftOut,fftSize,1);
+
+      memcpy(fftIn+1,kuruczMatrix.matrix[0],sizeof(double)*hrN);                // Reuse fftIn for high resolution wavelength safe keeping
+
+      rc=USAMP_Build(phase1,                                                     // OUTPUT : phase 1 calculation
+                    phase2,                                                     // OUTPUT : phase 2 calculation
+                    calibrationMatrix.matrix[0],                                // GOME calibration
+                    nSize,                                                      // size of GOME calibration
+                    kuruczMatrix.matrix[0],                                     // Kurucz calibration
+                    kuruczMatrix.matrix[1],                                     // Kurucz spectrum
+                    kuruczMatrix.deriv2[1],                                     // Kurucz second derivatives
+                    kuruczMatrix.nl,                                            // size of Kurucz vectors
+                   &pEngineContext->slitConv,                                   // slit function
+           (double) pEngineContext->fraction,                                   // tunes the phase
+                    pEngineContext->analysisMethod);                            // analysis method
+     }
+
+    if (!rc)
+     {
+     	// Local declarations
+
+     	plot_data_t spectrumData[2];
+     	DoasCh pageTitle[MAX_ITEM_TEXT_LEN+1];
+
+     	// Save
+
+     	if (!(rc=mediateUsampSave(pEngineContext,pEngineContext->path,1,calibrationMatrix.matrix[0],phase1,nSize,responseHandle)))
+     	 rc=mediateUsampSave(pEngineContext,pEngineContext->path2,2,calibrationMatrix.matrix[0],phase2,nSize,responseHandle);
+
+     	// Plot
+
+     	sprintf(pageTitle,"Undersampling");
+
+      mediateAllocateAndSetPlotData(&spectrumData[0],"Phase 1",calibrationMatrix.matrix[0],phase1,nSize,Line);
+      mediateAllocateAndSetPlotData(&spectrumData[1],"Phase 2",calibrationMatrix.matrix[0],phase2,nSize,Line);
+      mediateResponsePlotData(0,spectrumData,2,Spectrum,forceAutoScale,"Calculated undersampling cross sections","Wavelength (nm)","",responseHandle);
+      mediateResponseLabelPage(0,pageTitle,"",responseHandle);
+      mediateReleasePlotData(spectrumData);
+     }
+   }
+
+  // Buffers release
+
+  if (phase1!=NULL)
+   MEMORY_ReleaseDVector("mediateUsampCalculate ","phase1",phase1,0);
+  if (phase2!=NULL)
+   MEMORY_ReleaseDVector("mediateUsampCalculate ","phase2",phase2,0);
+
+  if (usampFFT.fftIn!=NULL)
+   MEMORY_ReleaseDVector("mediateUsampCalculate ","fftIn",usampFFT.fftIn,1);
+  if (usampFFT.fftOut!=NULL)
+   MEMORY_ReleaseDVector("mediateUsampCalculate ","fftOut",usampFFT.fftOut,1);
+  if (usampFFT.invFftIn!=NULL)
+   MEMORY_ReleaseDVector("mediateUsampCalculate ","invFftIn",usampFFT.invFftIn,1);
+  if (usampFFT.invFftOut!=NULL)
+   MEMORY_ReleaseDVector("mediateUsampCalculate ","invFftOut",usampFFT.invFftOut,1);
+
+  MATRIX_Free(&calibrationMatrix,"mediateUsampCalculate");
+  MATRIX_Free(&kuruczMatrix,"mediateUsampCalculate");
+
+  return rc;
+ }
+
 // ============
 // TOOL CONTEXT
 // ============

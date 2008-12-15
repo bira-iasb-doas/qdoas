@@ -3057,6 +3057,13 @@ RC OUTPUT_FlushBuffers(ENGINE_CONTEXT *pEngineContext)
      fclose(outputFp);
    }
 
+//  {
+//  	FILE *fp;
+//  	fp=fopen("qdoas.dbg","a+t");
+//  	fprintf(fp,"   OUTPUT_FlushBuffers (%d records,rc %d)\n",outputNbRecords,rc);
+//  	fclose(fp);
+//  }
+
   outputNbRecords=0;
   pEngineContext->lastSavedRecord=0;
 

@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "comdefs.h"
 #include "bin_read.h"
 
 void swap_bytes_float(unsigned char *var)

@@ -2213,11 +2213,11 @@ RC SCIA_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
     if (useUsamp && (THRD_id!=THREAD_TYPE_KURUCZ))
      {
-      USAMP_LocalFree();
+      ANALYSE_UsampLocalFree();
 
-      if (((rc=USAMP_LocalAlloc(0 /* lambdaMin,lambdaMax,oldNDET */))!=ERROR_ID_NO) ||
-          ((rc=USAMP_BuildFromAnalysis(0,0))!=ERROR_ID_NO) ||
-          ((rc=USAMP_BuildFromAnalysis(1,ITEM_NONE))!=ERROR_ID_NO))
+      if (((rc=ANALYSE_UsampLocalAlloc(0 /* lambdaMin,lambdaMax,oldNDET */))!=ERROR_ID_NO) ||
+          ((rc=ANALYSE_UsampBuild(0,0))!=ERROR_ID_NO) ||
+          ((rc=ANALYSE_UsampBuild(1,ITEM_NONE))!=ERROR_ID_NO))
 
        goto EndSCIA_LoadAnalysis;
      }

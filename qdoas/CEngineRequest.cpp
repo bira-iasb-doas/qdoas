@@ -17,6 +17,8 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
+#include <QFile>
+#include <QTextStream>
 
 #include "CEngineRequest.h"
 #include "CEngineResponse.h"
@@ -335,6 +337,14 @@ CEngineRequestAnalyseNextRecord::~CEngineRequestAnalyseNextRecord()
 
 bool CEngineRequestAnalyseNextRecord::process(CEngineThread *engineThread)
 {
+// QFile file("qdoas.dbg");
+// if (file.open(QIODevice::Append | QIODevice::Text)!=0)
+//  {
+//   QTextStream out(&file);
+//   out << "   CEngineRequestAnalyseNextRecord::process\n";
+//   file.close();
+//  }
+
   // create a response as the handle
   CEngineResponseAccessRecord *resp = new CEngineResponseAccessRecord;
 
@@ -365,6 +375,14 @@ bool CEngineRequestAnalyseSpecificRecord::process(CEngineThread *engineThread)
 {
   // create a response as the handle
   CEngineResponseAccessRecord *resp = new CEngineResponseAccessRecord;
+
+// QFile file("qdoas.dbg");
+// if (file.open(QIODevice::Append | QIODevice::Text)!=0)
+//  {
+//   QTextStream out(&file);
+//   out << "   CEngineRequestAnalyseSpecificRecord::process\n";
+//   file.close();
+//  }
 
   int rc = mediateRequestGotoSpectrum(engineThread->engineContext(),
 				      m_recordNumber, resp);

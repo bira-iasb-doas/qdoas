@@ -17,13 +17,13 @@ typedef struct _enigneXsconvContext
   INT    convolutionType;                                                       // type of convolution
   INT    conversionMode;                                                        // conversion mode
   double shift;                                                                 // shift to apply to the original high resolution cross section
-  DoasCh  crossFile[MAX_PATH_LEN+1];                                             // high resolution cross section file
-  DoasCh  path[MAX_PATH_LEN+1];                                                  // output path
-  DoasCh  calibrationFile[MAX_PATH_LEN+1];                                       // calibration file
+  DoasCh  crossFile[MAX_PATH_LEN+1];                                            // high resolution cross section file
+  DoasCh  path[MAX_PATH_LEN+1];                                                 // output path
+  DoasCh  calibrationFile[MAX_PATH_LEN+1];                                      // calibration file
   INT    noComment;                                                             // flag, 1 to save the convoluted cross section without comment
 
                                                                                 // I0 CORRECTION
-  DoasCh  kuruczFile[MAX_PATH_LEN+1];                                            // Kurucz file used when I0 correction is applied
+  DoasCh  kuruczFile[MAX_PATH_LEN+1];                                           // Kurucz file used when I0 correction is applied
   double conc;                                                                  // concentration to use when applying I0 correction
 
                                                                                 // SLIT FUNCTION
@@ -40,7 +40,7 @@ typedef struct _enigneXsconvContext
 
                                                                                 // UNDERSAMPLING
   INT    analysisMethod;                                                        // analysis method
-  DoasCh  path2[MAX_PATH_LEN+1];                                                 // output path for the second phase
+  DoasCh  path2[MAX_PATH_LEN+1];                                                // output path for the second phase
   double fraction;                                                              // tunes the phase
 
                                                                                 // RING

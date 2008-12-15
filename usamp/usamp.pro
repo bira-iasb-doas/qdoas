@@ -3,7 +3,7 @@
 #----------------------------------------------
 
 TEMPLATE = app
-TARGET   = usamp
+TARGET   = ../../qdoas/release/usamp
 
 include( ../config.pri )
 
@@ -34,15 +34,12 @@ win32 {
   INCLUDEPATH  += ..\mediator ..\common ..\engine
 
   contains( QWT_LINKAGE, qwtstatic ) {
-    LIBS        += -L$$QWT_LIB_PATH -l$$QWT_LIB -L$$BEAT_LIB_PATH -l$$BEAT_LIB
+    LIBS        += -L$$QWT_LIB_PATH -l$$QWT_LIB
   }
   contains( QWT_LINKAGE, qwtdll ) {
-    LIBS        += -L$$QWT_LIB_PATH -l$$QWT_LIB$$QWT_LIB_VERSION -L$$BEAT_LIB_PATH -l$$BEAT_LIB
-    DEFINES     += QWT_DLL LIBBEATDLL
+    LIBS        += -L$$QWT_LIB_PATH -l$$QWT_LIB$$QWT_LIB_VERSION
+    DEFINES     += QWT_DLL
   }
-
-  LIBS         += -L$$BEAT_LIB_PATH -lbeat
-  DEFINES      += LIBBEATDLL
 
   CONFIG      += windows
 }
@@ -124,7 +121,8 @@ HEADERS += CUsampConfigWriter.h
 # Mediator Source files
 #----------------------------------------------
 SOURCES += ../mediator/mediate_usamp.c
-SOURCES += ../mediator/mediate.c
+SOURCES += ../mediator/mediate_xsconv.c
+SOURCES += ../mediator/mediate_common.c
 SOURCES += ../mediator/mediate_response.cpp
 
 #----------------------------------------------
@@ -146,68 +144,33 @@ RESOURCES = ../resources/usamp.qrc
 #----------------------------------------------
 # Engine Source files
 #----------------------------------------------
-SOURCES += ../engine/actn-read.c
-SOURCES += ../engine/analyse.c
-SOURCES += ../engine/ascii.c
-SOURCES += ../engine/bin_read.c
-SOURCES += ../engine/ccd-read.c
-SOURCES += ../engine/curfit.c
 SOURCES += ../engine/debug.c
-SOURCES += ../engine/easoeread.c
-SOURCES += ../engine/engine.c
+SOURCES += ../engine/engine_xsconv.c
 SOURCES += ../engine/erf.c
 SOURCES += ../engine/error.c
 SOURCES += ../engine/evalpoly.c
 SOURCES += ../engine/filter.c
 SOURCES += ../engine/fvoigt.c
-SOURCES += ../engine/gdp_asc_read.c
-SOURCES += ../engine/gdp_bin_read.c
-SOURCES += ../engine/gome2_read.c
-SOURCES += ../engine/kurucz.c
 SOURCES += ../engine/matrix.c
 SOURCES += ../engine/memory.c
-SOURCES += ../engine/mfc-read.c
-SOURCES += ../engine/moon.c
-SOURCES += ../engine/noaa-read.c
-SOURCES += ../engine/output.c
-SOURCES += ../engine/pda-read.c
-SOURCES += ../engine/ras-read.c
-SOURCES += ../engine/read1c_subs.c
-SOURCES += ../engine/resource.c
 SOURCES += ../engine/ring.c
-SOURCES += ../engine/saoz-read.c
-SOURCES += ../engine/scia-read.c
 SOURCES += ../engine/spline.c
 SOURCES += ../engine/stdfunc.c
 SOURCES += ../engine/svd.c
-SOURCES += ../engine/uoft-read.c
-SOURCES += ../engine/usamp.c
-SOURCES += ../engine/utc_string.c
 SOURCES += ../engine/vector.c
 SOURCES += ../engine/winfiles.c
-SOURCES += ../engine/winpath.c
-SOURCES += ../engine/winsites.c
-SOURCES += ../engine/winsymb.c
-SOURCES += ../engine/winthrd.c
-SOURCES += ../engine/wintree.c
-SOURCES += ../engine/wvlen_det_pix.c
 SOURCES += ../engine/xsconv.c
-SOURCES += ../engine/zenithal.c
+SOURCES += ../engine/usamp.c
 
 #----------------------------------------------
 # Engine Header files
 #----------------------------------------------
-HEADERS += ../engine/beat.h
-HEADERS += ../engine/beatl2.h
 HEADERS += ../engine/bin_read.h
 HEADERS += ../engine/comdefs.h
 HEADERS += ../engine/doas.h
-HEADERS += ../engine/engine.h
-HEADERS += ../engine/lv1_defs.h
-HEADERS += ../engine/lv1_struct.h
-HEADERS += ../engine/lv1c_struct.h
-HEADERS += ../engine/read1c_defs.h
-HEADERS += ../engine/utc_string.h
+HEADERS += ../engine/engine_xsconv.h
+HEADERS += ../engine/engine_common.h
+HEADERS += ../engine/constants.h
 HEADERS += ../engine/windoas.h
 
 #----------------------------------------------

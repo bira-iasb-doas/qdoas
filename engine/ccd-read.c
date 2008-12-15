@@ -330,7 +330,7 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
   double *ccdTabTint;                                                           // the different integration times used for the current measurement
   DoasUS *darkCurrent;                                                          // the dark current
   int nTint;                                                                    // the number of different integration times
-  double offset;                                                                // offset correction
+//  double offset;                                                                // offset correction
   double tmLocal;
   INDEX i,j,k;                                                                  // indexes to browse vectors
   RC rc,rcFread;                                                                // return code

@@ -93,6 +93,16 @@
 //
 //  ANALYSE_Alloc - all analysis buffers allocation and initialization;
 //  ANALYSE_Free - release buffers used for analysis;
+//
+//  =============
+//  UNDERSAMPLING
+//  =============
+//
+//  ANALYSE_UsampGlobalAlloc - allocate buffers (not depending on analysis windows) for the calculation of the undersampling XS
+//  ANALYSE_UsampLocalAlloc - allocate buffers (depending on analysis windows) for the calculation of the undersampling XS
+//  ANALYSE_UsampLocalFree - release the buffers previously allocated by the ANALYSE_UsampLocalAlloc function
+//  ANALYSE_UsampGlobalFree - release the buffers previously allocated by the ANALYSE_UsampGlobalAlloc function
+//  ANALYSE_UsampBuild - build undersampling cross sections during analysis process;
 //  ----------------------------------------------------------------------------
 
 //
@@ -163,6 +173,7 @@ double   ANALYSE_nFree;                // number of free degrees
 double   ANALYSE_oldLatitude;
 
 MATRIX_OBJECT ANALYSIS_slit,ANALYSIS_slitK,ANALYSIS_broAmf,O3TD;
+USAMP  ANALYSE_usampBuffers;
 
 // ===================
 // STATIC DECLARATIONS
@@ -2618,7 +2629,7 @@ RC ANALYSE_Function ( double *lambda,double *X, double *Y, INT ndet, double *Y0,
                         (double)0.,(double)0.,(double)0.,
                          fitParamsF,-1,0))!=ERROR_ID_NO) ||
 
-         (Feno->useUsamp && (pUsamp->method==PRJCT_USAMP_AUTOMATIC) && ((rc=USAMP_BuildFromAnalysis(2,ITEM_NONE))!=ERROR_ID_NO)))
+         (Feno->useUsamp && (pUsamp->method==PRJCT_USAMP_AUTOMATIC) && ((rc=ANALYSE_UsampBuild(2,ITEM_NONE))!=ERROR_ID_NO)))
 
        goto EndFunction;
 
@@ -3639,10 +3650,10 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
               if (Feno->useUsamp && (THRD_id!=THREAD_TYPE_KURUCZ))
                {
-                USAMP_LocalFree();
+                ANALYSE_UsampLocalFree();
 
-                if (((rc=USAMP_LocalAlloc(0))!=ERROR_ID_NO) ||
-                    ((rc=USAMP_BuildFromAnalysis(2,ITEM_NONE))!=ERROR_ID_NO))
+                if (((rc=ANALYSE_UsampLocalAlloc(0))!=ERROR_ID_NO) ||
+                    ((rc=ANALYSE_UsampBuild(2,ITEM_NONE))!=ERROR_ID_NO))
                  goto EndAnalysis;
                }
              }
@@ -4186,7 +4197,7 @@ void ANALYSE_ResetData(void)
   // Kurucz buffers
 
   KURUCZ_Free();
-  USAMP_GlobalFree();
+  ANALYSE_UsampGlobalFree();
 
   // Output part
 
@@ -5723,4 +5734,567 @@ void ANALYSE_Free(void)
 
   WorkSpace=NULL;
   TabFeno=NULL;
+ }
+
+
+// -----------------------------------------------------------------------------
+// FUNCTION      ANALYSE_UsampBuild
+// -----------------------------------------------------------------------------
+// PURPOSE       Build undersampling cross sections during analysis process.
+//
+// INPUT         analysisFlag :
+//
+//                   0 : file reference selection mode
+//                   1 : automatic reference selection mode
+//                   2 : automatic undersampling mode
+//
+//               gomeFlag :
+//
+//                   0 : Ref1 is the irradiance spectrum
+//                   1 : Ref1 is a user-defined spectrum
+// -----------------------------------------------------------------------------
+// DESCRIPTION
+//
+// This function is called from different functions during analysis process
+// according to selected reference options and undersampling method.
+// In order to avoid multiple creation of undersampling cross sections, the
+// calling function set input flags.
+//
+// Available combinations :
+//
+// 0,1 : called only one time from ANALYSE_LoadData because reference is already
+//       available (Ref1 is a user-defined spectrum);
+//       no automatic reference selection.
+//
+// 0,0 : called from GOME_LoadAnalysis for every spectra file;
+//       the Ref1 is the irradiance spectrum;
+//       no automatic reference selection.
+//
+// 1,ITEM_NONE : in automatic reference selection mode, the undersampling
+//               must be calculated before aligning Ref1 sur Ref2; this function
+//               is called from GOME_LoadAnalysis.
+
+//
+// 2,ITEM_NONE : used several times during analysis process in the following
+//               cases :
+//
+//               called from Function for every iteration
+//               in automatic undersampling method
+//               -> apply current calibration with current fitted shift
+//               -> independent from the reference selection mode
+//
+//               also called from ANALYSE_Spectrum each time the reference
+//               spectrum is changed because the calibration used to calculate
+//               undersampling cross sections should account for possible shift
+//               between Ref2 and Ref1;
+//               so this function is called after ANALYSE_Spectrum.
+// -----------------------------------------------------------------------------
+
+#if defined(__BC32_) && __BC32_
+#pragma argsused
+#endif
+RC ANALYSE_UsampBuild(INT analysisFlag,INT gomeFlag)
+ {
+  // Declarations
+
+  XS xsKurucz,xsSlit,slitXs;
+  INDEX indexFeno,i,indexPixMin,indexPixMax,indexParam,j;
+  INT slitType;
+  double slitParam2,*lambda,*lambda2,slitParam[MAX_KURUCZ_FWHM_PARAM],lambda0,x0;
+  FENO *pTabFeno,*pKuruczFeno;
+  RC rc;
+
+  // Initializations
+
+  lambda2=NULL;
+  pKuruczFeno=&TabFeno[KURUCZ_buffers.indexKurucz];
+  memset(&xsSlit,0,sizeof(XS));
+  memset(&slitXs,0,sizeof(XS));
+  slitParam2=(double)0.;
+  rc=ERROR_ID_NO;
+
+  // Buffer allocation
+
+  if (((lambda=(double *)MEMORY_AllocDVector("ANALYSE_UsampBuild ","lambda",0,NDET-1))==NULL) ||
+      ((lambda2=(double *)MEMORY_AllocDVector("ANALYSE_UsampBuild ","lambda2",0,NDET-1))==NULL))
+
+   rc=ERROR_ID_ALLOC;
+
+  else
+
+   // Browse analysis windows
+
+   for (indexFeno=0;(indexFeno<NFeno)&&!rc;indexFeno++)
+    {
+     pTabFeno=&TabFeno[indexFeno];
+
+     // Check options combinations
+
+     if (!pTabFeno->hidden && (pTabFeno->useUsamp) &&
+        ((gomeFlag==ITEM_NONE) || (pTabFeno->gomeRefFlag==gomeFlag)) &&
+       (((analysisFlag==0) && (pTabFeno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_FILE) && (pUsamp->method==PRJCT_USAMP_FIXED)) ||
+        ((analysisFlag==1) && (pTabFeno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_AUTOMATIC) && (pUsamp->method==PRJCT_USAMP_FIXED)) ||
+        ((analysisFlag==2) && (pTabFeno==Feno))))
+      {
+       // Build lambda for second phase
+
+       memcpy(lambda,pTabFeno->LambdaK,sizeof(double)*NDET);
+
+       if ((analysisFlag==2) && (pUsamp->method==PRJCT_USAMP_FIXED))
+        {
+        for (j=0,lambda0=pTabFeno->LambdaK[(SvdPDeb+SvdPFin)/2];j<NDET;j++)
+         {
+          x0=lambda[j]-lambda0;
+          lambda[j]-=(pTabFeno->Shift+(pTabFeno->Stretch+pTabFeno->Stretch2*x0)*x0);
+         }
+        }
+
+       memcpy(lambda2,ANALYSE_zeros,sizeof(double)*NDET);
+
+       indexPixMin=0;
+       indexPixMax=NDET;
+
+       if (pUsamp->method==PRJCT_USAMP_FIXED)
+        for (i=indexPixMin+1,lambda2[indexPixMin]=lambda[indexPixMin]-pUsamp->phase;i<indexPixMax;i++)
+         lambda2[i]=lambda[i]-pUsamp->phase; //  (double)(1.-pUsamp->phase)*lambda[i-1]+pUsamp->phase*lambda[i];
+       else
+        {
+         memcpy(lambda2,ANALYSE_shift,sizeof(double)*pTabFeno->NDET);
+
+         if (pAnalysisOptions->units==PRJCT_ANLYS_UNITS_PIXELS)
+          {
+           for (;(indexPixMin<indexPixMax) && (ANALYSE_shift[indexPixMin]<1.e-3);indexPixMin++);
+           for (;(indexPixMax>=indexPixMin) && (ANALYSE_shift[indexPixMax]<1.e-3);indexPixMax--);
+
+           rc=SPLINE_Vector(ANALYSE_splineX,lambda,ANALYSE_splineX2,pTabFeno->NDET,&ANALYSE_shift[indexPixMin],
+                              &lambda2[indexPixMin],(indexPixMax-indexPixMin+1),pAnalysisOptions->interpol,"ANALYSE_UsampBuild ");
+          }
+        }
+
+       // Local initializations
+
+       xsKurucz.vector=ANALYSE_usampBuffers.kuruczConvoluted[indexFeno];
+       xsKurucz.deriv2=ANALYSE_usampBuffers.kuruczConvoluted2[indexFeno];
+       xsKurucz.lambda=&ANALYSE_usampBuffers.hrSolar.lambda[ANALYSE_usampBuffers.lambdaRange[0][indexFeno]];
+       xsKurucz.NDET=ANALYSE_usampBuffers.lambdaRange[1][indexFeno];
+
+       // Not allowed combinations :
+       //
+       //     - fit slit function with calibration and apply calibration on spec only or on ref and spec;
+       //     - fwhmCorrectionFlag and no calibration or fit slit function with the calibration
+
+
+       if ((((pTabFeno->useKurucz==ANLYS_KURUCZ_REF_AND_SPEC) || (pTabFeno->useKurucz==ANLYS_KURUCZ_SPEC)) && pKuruczOptions->fwhmFit) ||
+            ((!pTabFeno->useKurucz || pKuruczOptions->fwhmFit) && pSlitOptions->fwhmCorrectionFlag))
+
+        rc=ERROR_SetLast("ANALYSE_UsampBuild",ERROR_TYPE_FATAL,ERROR_ID_OPTIONS,"Undersampling ",pTabFeno->windowName);
+
+
+       // Convolution with user-defined slit function
+
+       else
+        {
+         if (!pTabFeno->useKurucz ||                                         // don't apply calibration
+             !pKuruczOptions->fwhmFit)                                       // apply calibration but don't fit the slit function
+          {
+           // Convolution with slit function from slit tab page of project properties
+
+           if ((ANALYSIS_slit.matrix!=NULL) && ANALYSIS_slit.nl && ANALYSIS_slit.nc)
+            {
+             xsSlit.lambda=ANALYSIS_slit.matrix[ANALYSIS_slit.basec]+ANALYSIS_slit.basel;
+             xsSlit.vector=ANALYSIS_slit.matrix[ANALYSIS_slit.basec+1]+ANALYSIS_slit.basel;
+             xsSlit.deriv2=ANALYSIS_slit.deriv2[ANALYSIS_slit.basec+1]+ANALYSIS_slit.basel;
+
+             xsSlit.NDET=ANALYSIS_slit.nl;
+            }
+
+           if (!(rc=XSCONV_TypeStandard(&xsKurucz,0,xsKurucz.NDET,&ANALYSE_usampBuffers.hrSolar,&xsSlit,&ANALYSE_usampBuffers.hrSolar,NULL,
+                                        pSlitOptions->slitFunction.slitType,(double)2.*pSlitOptions->slitFunction.slitParam,
+                                        pSlitOptions->slitFunction.slitParam,pSlitOptions->slitFunction.slitParam2,
+                                        pSlitOptions->slitFunction.slitParam3,pSlitOptions->slitFunction.slitParam4)))
+
+            rc=SPLINE_Deriv2(xsKurucz.lambda,xsKurucz.vector,xsKurucz.deriv2,xsKurucz.NDET,"ANALYSE_UsampBuild (2) ");
+          }
+
+         // Convolution with slit function resulting from Kurucz
+
+         else
+          {
+           xsSlit.lambda=pTabFeno->LambdaK;
+           xsSlit.vector=pTabFeno->fwhmVector[0];
+           xsSlit.NDET=pTabFeno->NDET;
+
+
+           // Build slit function and convolute high resolution solar spectrum
+
+           switch(pKuruczOptions->fwhmType)
+            {
+          // ---------------------------------------------------------------------------
+             case SLIT_TYPE_ERF :
+              slitType=SLIT_TYPE_ERF_FILE;
+             break;
+          // ---------------------------------------------------------------------------
+             case SLIT_TYPE_INVPOLY :
+              slitType=SLIT_TYPE_INVPOLY_FILE;
+             break;
+          // ---------------------------------------------------------------------------
+             case SLIT_TYPE_VOIGT :           // for the moment, the program doesn't support multiple
+              slitType=SLIT_TYPE_VOIGT;       // parameters dependency
+             break;
+          // ---------------------------------------------------------------------------
+             default :
+              slitType=SLIT_TYPE_GAUSS_FILE;
+             break;
+          // ---------------------------------------------------------------------------
+            }
+
+           if (slitType==SLIT_TYPE_VOIGT)
+            {
+             SLIT slitOptions;
+             INT slitType2;
+
+             for (i=0;(i<xsKurucz.NDET) && !rc;i++)
+              {
+               for (indexParam=0;indexParam<MAX_KURUCZ_FWHM_PARAM;indexParam++)
+                {
+                if (pTabFeno->fwhmVector[indexParam]==NULL)
+                 slitParam[indexParam]=(double)0.;
+                else if (pTabFeno->fwhmDeriv2[indexParam]==NULL)
+                 slitParam[indexParam]=pKuruczFeno->TabCross[pKuruczFeno->indexFwhmParam[indexParam]].InitParam;
+                else if ((rc=SPLINE_Vector(pTabFeno->LambdaK,pTabFeno->fwhmVector[indexParam],pTabFeno->fwhmDeriv2[indexParam],pTabFeno->NDET,
+                                              &xsKurucz.lambda[i],&slitParam[indexParam],1,pAnalysisOptions->interpol,"ANALYSE_UsampBuild "))!=ERROR_ID_NO)
+                 break;
+                }
+
+               slitOptions.slitType=slitType;                                   // The program doesn't support yet Voigt function parameters dependency
+               slitOptions.slitFile[0]=0;                                       // => build Voigt function pixel per pixel
+               slitOptions.slitParam=slitParam[0];
+               slitOptions.slitParam2=slitParam[1];
+               slitOptions.slitParam3=slitParam[2];
+               slitOptions.slitParam4=slitParam[3];
+
+               if (!rc &&
+                 (((rc=XSCONV_LoadSlitFunction(&slitXs,&slitOptions,&slitParam[0],&slitType2))!=0) ||
+                  ((rc=XSCONV_TypeStandard(&xsKurucz,i,i+1,&ANALYSE_usampBuffers.hrSolar,&slitXs,&ANALYSE_usampBuffers.hrSolar,NULL,
+                                           SLIT_TYPE_FILE,(double)3.*slitParam[0],(double)0.,(double)0.,(double)0.,(double)0.))!=0)))
+                break;
+              }
+            }
+           else
+            {
+             if (slitType!=SLIT_TYPE_GAUSS_FILE)
+              for (i=0;i<pTabFeno->NDET;i++)
+               slitParam2+=pTabFeno->fwhmVector[1][i];
+
+             if ((xsSlit.deriv2=(double *)MEMORY_AllocDVector("ANALYSE_UsampBuild ","deriv2",0,pTabFeno->NDET-1))==NULL)
+              rc=ERROR_ID_ALLOC;
+             else if (!(rc=SPLINE_Deriv2(xsSlit.lambda,xsSlit.vector,xsSlit.deriv2,xsSlit.NDET,"ANALYSE_UsampBuild (Slit) ")))
+              rc=XSCONV_TypeStandard(&xsKurucz,0,xsKurucz.NDET,&ANALYSE_usampBuffers.hrSolar,&xsSlit,&ANALYSE_usampBuffers.hrSolar,NULL,
+                                      slitType,(double)0.,(double)0.,slitParam2/pTabFeno->NDET,(double)0.,(double)0.);
+
+             if (xsSlit.deriv2!=NULL)
+              MEMORY_ReleaseDVector("ANALYSE_UsampBuild ","deriv2",xsSlit.deriv2,0);
+            }
+          }
+
+         // Pre-Interpolation on analysis window wavelength scale
+
+         if (!rc &&
+            !(rc=SPLINE_Deriv2(xsKurucz.lambda,xsKurucz.vector,xsKurucz.deriv2,xsKurucz.NDET,"ANALYSE_UsampBuild (1) ")))
+          {
+           memcpy(ANALYSE_usampBuffers.kuruczInterpolated[indexFeno],ANALYSE_zeros,sizeof(double)*pTabFeno->NDET);
+           memcpy(ANALYSE_usampBuffers.kuruczInterpolated2[indexFeno],ANALYSE_zeros,sizeof(double)*pTabFeno->NDET);
+
+           indexPixMin=ANALYSE_usampBuffers.lambdaRange[2][indexFeno]=FNPixel(lambda,xsKurucz.lambda[0],pTabFeno->NDET,PIXEL_AFTER);
+           indexPixMax=FNPixel(lambda,xsKurucz.lambda[xsKurucz.NDET-1],pTabFeno->NDET,PIXEL_BEFORE);
+           ANALYSE_usampBuffers.lambdaRange[3][indexFeno]=indexPixMax-ANALYSE_usampBuffers.lambdaRange[2][indexFeno]+1;
+
+           if (!(rc=SPLINE_Vector(xsKurucz.lambda,xsKurucz.vector,xsKurucz.deriv2,xsKurucz.NDET,
+                                    &lambda[indexPixMin],&ANALYSE_usampBuffers.kuruczInterpolated[indexFeno][indexPixMin],(indexPixMax-indexPixMin+1),
+                                     pAnalysisOptions->interpol,"ANALYSE_UsampBuild ")))
+
+            rc=SPLINE_Deriv2(&lambda[indexPixMin],&ANALYSE_usampBuffers.kuruczInterpolated[indexFeno][indexPixMin],
+                     &ANALYSE_usampBuffers.kuruczInterpolated2[indexFeno][indexPixMin],(indexPixMax-indexPixMin+1),"ANALYSE_UsampBuild (3) ");
+          }
+
+         // Build undersampling correction
+
+         if (!rc)
+
+          rc=USAMP_BuildCrossSections
+          ((pTabFeno->indexUsamp1!=ITEM_NONE)?&pTabFeno->TabCross[pTabFeno->indexUsamp1].vector[ANALYSE_usampBuffers.lambdaRange[2][indexFeno]]:NULL,
+           (pTabFeno->indexUsamp2!=ITEM_NONE)?&pTabFeno->TabCross[pTabFeno->indexUsamp2].vector[ANALYSE_usampBuffers.lambdaRange[2][indexFeno]]:NULL,
+            &lambda[ANALYSE_usampBuffers.lambdaRange[2][indexFeno]],
+            &lambda2[ANALYSE_usampBuffers.lambdaRange[2][indexFeno]],
+            &ANALYSE_usampBuffers.kuruczInterpolated[indexFeno][ANALYSE_usampBuffers.lambdaRange[2][indexFeno]],
+            &ANALYSE_usampBuffers.kuruczInterpolated2[indexFeno][ANALYSE_usampBuffers.lambdaRange[2][indexFeno]],
+             ANALYSE_usampBuffers.lambdaRange[3][indexFeno],
+             xsKurucz.lambda,
+             xsKurucz.vector,
+             xsKurucz.deriv2,
+             xsKurucz.NDET,
+             pTabFeno->analysisMethod);
+        }
+      }
+    }
+
+  // Return
+
+  XSCONV_Reset(&slitXs);
+
+  if (lambda!=NULL)
+   MEMORY_ReleaseDVector("ANALYSE_UsampBuild ","lambda",lambda,0);
+  if (lambda2!=NULL)
+   MEMORY_ReleaseDVector("ANALYSE_UsampBuild ","lambda2",lambda2,0);
+
+  return rc;
+ }
+
+// ==================
+// BUFFERS ALLOCATION
+// ==================
+
+// -----------------------------------------------------------------------------
+// FUNCTION      ANALYSE_UsampGlobalAlloc
+// -----------------------------------------------------------------------------
+// PURPOSE       allocate buffers (not depending on analysis windows) for the calculation of the undersampling XS
+//
+// INPUT         lambdaMin, lambdaMax : range of wavelengths for the kurucz spectrum
+//               size                 : the size of the final wavelength calibration
+//
+// RETURN        ERROR_ID_ALLOC if the allocation of a buffer failed;
+//               ERROR_ID_USAMP if another called function returns an error;
+//               ERROR_ID_NO on success
+// -----------------------------------------------------------------------------
+
+RC ANALYSE_UsampGlobalAlloc(double lambdaMin,double lambdaMax,INT size)
+ {
+  // Declarations
+
+  DoasCh kuruczFile[MAX_ITEM_TEXT_LEN+1];
+  FENO *pTabFeno;
+  INDEX indexFeno;
+  RC rc;
+
+  // Initialization
+
+  rc=ERROR_ID_NO;
+
+  // Load high resolution kurucz spectrum
+  // NB : if the high resolution spectrum is the same as used in Kurucz, don't reload it from file but only make a copy
+
+  if ((strlen(pKuruczOptions->file)==strlen(pUsamp->kuruczFile)) &&
+      !STD_Stricmp(pKuruczOptions->file,pUsamp->kuruczFile) &&
+       KURUCZ_buffers.hrSolar.NDET)
+   {
+    if ((rc=XSCONV_Alloc(&ANALYSE_usampBuffers.hrSolar,KURUCZ_buffers.hrSolar.NDET,1))!=ERROR_ID_NO)
+     rc=ERROR_ID_ALLOC;
+    else
+     {
+      memcpy(ANALYSE_usampBuffers.hrSolar.lambda,KURUCZ_buffers.hrSolar.lambda,sizeof(double)*KURUCZ_buffers.hrSolar.NDET);
+      memcpy(ANALYSE_usampBuffers.hrSolar.vector,KURUCZ_buffers.hrSolar.vector,sizeof(double)*KURUCZ_buffers.hrSolar.NDET);
+      memcpy(ANALYSE_usampBuffers.hrSolar.deriv2,KURUCZ_buffers.hrSolar.deriv2,sizeof(double)*KURUCZ_buffers.hrSolar.NDET);
+     }
+   }
+  else
+   {
+    FILES_RebuildFileName(kuruczFile,pUsamp->kuruczFile,1);
+
+    if (!(rc=XSCONV_LoadCrossSectionFile(&ANALYSE_usampBuffers.hrSolar,kuruczFile,lambdaMin-7.,lambdaMax+7.,(double)0.,CONVOLUTION_CONVERSION_NONE)))
+     rc=VECTOR_NormalizeVector(ANALYSE_usampBuffers.hrSolar.vector-1,ANALYSE_usampBuffers.hrSolar.NDET,NULL,"ANALYSE_UsampGlobalAlloc ");
+   }
+
+  if (rc!=ERROR_ID_NO)
+   rc=ERROR_SetLast("ANALYSE_UsampGlobalAlloc",ERROR_TYPE_FATAL,ERROR_ID_USAMP,"ANALYSE_UsampGlobalAlloc (0)");
+
+  // Buffers allocation
+
+  else if (((ANALYSE_usampBuffers.lambdaRange[0]=(INT *)MEMORY_AllocBuffer("ANALYSE_UsampGlobalAlloc ","lambdaRange[0]",NFeno,sizeof(INT),0,MEMORY_TYPE_INT))==NULL) ||
+           ((ANALYSE_usampBuffers.lambdaRange[1]=(INT *)MEMORY_AllocBuffer("ANALYSE_UsampGlobalAlloc ","lambdaRange[1]",NFeno,sizeof(INT),0,MEMORY_TYPE_INT))==NULL) ||
+           ((ANALYSE_usampBuffers.lambdaRange[2]=(INT *)MEMORY_AllocBuffer("ANALYSE_UsampGlobalAlloc ","lambdaRange[2]",NFeno,sizeof(INT),0,MEMORY_TYPE_INT))==NULL) ||
+           ((ANALYSE_usampBuffers.lambdaRange[3]=(INT *)MEMORY_AllocBuffer("ANALYSE_UsampGlobalAlloc ","lambdaRange[3]",NFeno,sizeof(INT),0,MEMORY_TYPE_INT))==NULL) ||
+           ((ANALYSE_usampBuffers.kuruczConvoluted=(double **)MEMORY_AllocBuffer("ANALYSE_UsampGlobalAlloc ","kuruczConvoluted",NFeno,sizeof(double *),0,MEMORY_TYPE_DOUBLE))==NULL) ||
+           ((ANALYSE_usampBuffers.kuruczConvoluted2=(double **)MEMORY_AllocBuffer("ANALYSE_UsampGlobalAlloc ","kuruczConvoluted2",NFeno,sizeof(double *),0,MEMORY_TYPE_DOUBLE))==NULL) ||
+           ((ANALYSE_usampBuffers.kuruczInterpolated=(double **)MEMORY_AllocBuffer("ANALYSE_UsampGlobalAlloc ","kuruczInterpolated",NFeno,sizeof(double *),0,MEMORY_TYPE_DOUBLE))==NULL) ||
+           ((ANALYSE_usampBuffers.kuruczInterpolated2=(double **)MEMORY_AllocBuffer("ANALYSE_UsampGlobalAlloc ","kuruczInterpolated2",NFeno,sizeof(double *),0,MEMORY_TYPE_DOUBLE))==NULL))
+
+   rc=ERROR_ID_ALLOC;
+
+  else
+   {
+    for (indexFeno=0;(indexFeno<NFeno) && !rc;indexFeno++)
+     {
+      pTabFeno=&TabFeno[indexFeno];
+
+      ANALYSE_usampBuffers.lambdaRange[0][indexFeno]=
+      ANALYSE_usampBuffers.lambdaRange[1][indexFeno]=
+      ANALYSE_usampBuffers.lambdaRange[2][indexFeno]=
+      ANALYSE_usampBuffers.lambdaRange[3][indexFeno]=ITEM_NONE;
+
+      ANALYSE_usampBuffers.kuruczConvoluted[indexFeno]=
+      ANALYSE_usampBuffers.kuruczConvoluted2[indexFeno]=
+      ANALYSE_usampBuffers.kuruczInterpolated[indexFeno]=
+      ANALYSE_usampBuffers.kuruczInterpolated2[indexFeno]=NULL;
+
+      if (!pTabFeno->hidden && pTabFeno->useUsamp &&
+        (((ANALYSE_usampBuffers.kuruczInterpolated[indexFeno]=(double *)MEMORY_AllocDVector("ANALYSE_UsampGlobalAlloc ","kuruczInterpolated",0,size-1))==NULL) ||
+         ((ANALYSE_usampBuffers.kuruczInterpolated2[indexFeno]=(double *)MEMORY_AllocDVector("ANALYSE_UsampGlobalAlloc ","kuruczInterpolated2",0,size-1))==NULL)))
+
+       rc=ERROR_ID_ALLOC;
+
+      else
+       ANALYSE_usampBuffers.lambdaRange[0][indexFeno]=ANALYSE_usampBuffers.lambdaRange[1][indexFeno]=ITEM_NONE;
+     }
+   }
+
+  // Return
+
+  return rc;
+ }
+
+// -----------------------------------------------------------------------------
+// FUNCTION      ANALYSE_UsampLocalAlloc
+// -----------------------------------------------------------------------------
+// PURPOSE       allocate buffers (depending on analysis windows) for the calculation of the undersampling XS
+//
+// INPUT         gomeFlag = 0 : Ref1 is the irradiance spectrum
+//                          1 : Ref1 is a user-defined spectrum
+//
+// RETURN        ERROR_ID_ALLOC if the allocation of a buffer failed;
+//               ERROR_ID_NO on success
+// -----------------------------------------------------------------------------
+
+#if defined(__BC32_) && __BC32_
+#pragma argsused
+#endif
+RC ANALYSE_UsampLocalAlloc(INT gomeFlag)
+ {
+  // Declarations
+
+  INT lambdaSize,endPixel;
+  INDEX indexFeno;
+  FENO *pTabFeno;
+  RC rc;
+
+  // Initializations
+
+  rc=ERROR_ID_NO;
+
+  for (indexFeno=0;(indexFeno<NFeno) && !rc;indexFeno++)
+   {
+    pTabFeno=&TabFeno[indexFeno];
+
+    if (!pTabFeno->hidden && pTabFeno->useUsamp
+        && (pTabFeno->gomeRefFlag==gomeFlag)
+        )
+     {
+      ANALYSE_usampBuffers.lambdaRange[0][indexFeno]=FNPixel(ANALYSE_usampBuffers.hrSolar.lambda,(double)pTabFeno->svd.LFenetre[0][0]-7.,ANALYSE_usampBuffers.hrSolar.NDET,PIXEL_AFTER);
+      endPixel=FNPixel(ANALYSE_usampBuffers.hrSolar.lambda,(double)pTabFeno->svd.LFenetre[pTabFeno->svd.Z-1][1]+7.,ANALYSE_usampBuffers.hrSolar.NDET,PIXEL_BEFORE);
+
+      lambdaSize=ANALYSE_usampBuffers.lambdaRange[1][indexFeno]=endPixel-ANALYSE_usampBuffers.lambdaRange[0][indexFeno]+1;
+
+      if (((ANALYSE_usampBuffers.kuruczConvoluted[indexFeno]=(double *)MEMORY_AllocDVector("ANALYSE_UsampLocalAlloc ","kuruczConvoluted",0,lambdaSize-1))==NULL) ||
+          ((ANALYSE_usampBuffers.kuruczConvoluted2[indexFeno]=(double *)MEMORY_AllocDVector("ANALYSE_UsampLocalAlloc ","kuruczConvoluted2",0,lambdaSize-1))==NULL))
+
+       rc=ERROR_ID_ALLOC;
+     }
+   }
+
+  // Return
+
+  return rc;
+ }
+
+// -----------------------------------------------------------------------------
+// FUNCTION      ANALYSE_UsampLocalFree
+// -----------------------------------------------------------------------------
+// PURPOSE       release the buffers previously allocated by the ANALYSE_UsampLocalAlloc function
+// -----------------------------------------------------------------------------
+
+void ANALYSE_UsampLocalFree(void)
+ {
+  // Declarations
+
+  INDEX indexFeno;
+
+  // Release allocated buffers
+
+  if (ANALYSE_usampBuffers.kuruczConvoluted!=NULL)
+   {
+    for (indexFeno=0;indexFeno<NFeno;indexFeno++)
+     if (!TabFeno[indexFeno].hidden && TabFeno[indexFeno].useUsamp && !TabFeno[indexFeno].gomeRefFlag)
+      {
+       if (ANALYSE_usampBuffers.kuruczConvoluted[indexFeno]!=NULL)
+        {
+         MEMORY_ReleaseDVector("ANALYSE_UsampLocalFree ","kuruczConvoluted",ANALYSE_usampBuffers.kuruczConvoluted[indexFeno],0);
+         ANALYSE_usampBuffers.kuruczConvoluted[indexFeno]=NULL;
+        }
+
+       if (ANALYSE_usampBuffers.kuruczConvoluted2[indexFeno]!=NULL)
+        {
+         MEMORY_ReleaseDVector("ANALYSE_UsampLocalFree ","kuruczConvoluted2",ANALYSE_usampBuffers.kuruczConvoluted2[indexFeno],0);
+         ANALYSE_usampBuffers.kuruczConvoluted2[indexFeno]=NULL;
+        }
+      }
+   }
+ }
+
+// -----------------------------------------------------------------------------
+// FUNCTION      ANALYSE_UsampGlobalFree
+// -----------------------------------------------------------------------------
+// PURPOSE       release the buffers previously allocated by the ANALYSE_UsampGlobalAlloc function
+// -----------------------------------------------------------------------------
+
+void ANALYSE_UsampGlobalFree(void)
+ {
+  INDEX indexFeno;
+
+  XSCONV_Reset(&ANALYSE_usampBuffers.hrSolar);
+
+  if (ANALYSE_usampBuffers.lambdaRange[0]!=NULL)
+   MEMORY_ReleaseBuffer("ANALYSE_UsampGlobalFree ","lambdaRange[0]",ANALYSE_usampBuffers.lambdaRange[0]);
+  if (ANALYSE_usampBuffers.lambdaRange[1]!=NULL)
+   MEMORY_ReleaseBuffer("ANALYSE_UsampGlobalFree ","lambdaRange[1]",ANALYSE_usampBuffers.lambdaRange[1]);
+  if (ANALYSE_usampBuffers.lambdaRange[2]!=NULL)
+   MEMORY_ReleaseBuffer("ANALYSE_UsampGlobalFree ","lambdaRange[2]",ANALYSE_usampBuffers.lambdaRange[2]);
+  if (ANALYSE_usampBuffers.lambdaRange[3]!=NULL)
+   MEMORY_ReleaseBuffer("ANALYSE_UsampGlobalFree ","lambdaRange[3]",ANALYSE_usampBuffers.lambdaRange[3]);
+
+  if (ANALYSE_usampBuffers.kuruczConvoluted!=NULL)
+   {
+    for (indexFeno=0;indexFeno<NFeno;indexFeno++)
+     if (ANALYSE_usampBuffers.kuruczConvoluted[indexFeno]!=NULL)
+      MEMORY_ReleaseDVector("ANALYSE_UsampGlobalFree ","kuruczConvoluted",ANALYSE_usampBuffers.kuruczConvoluted[indexFeno],0);
+
+    MEMORY_ReleaseBuffer("ANALYSE_UsampGlobalFree ","kuruczConvoluted",ANALYSE_usampBuffers.kuruczConvoluted);
+   }
+
+  if (ANALYSE_usampBuffers.kuruczConvoluted2!=NULL)
+   {
+    for (indexFeno=0;indexFeno<NFeno;indexFeno++)
+     if (ANALYSE_usampBuffers.kuruczConvoluted2[indexFeno]!=NULL)
+      MEMORY_ReleaseDVector("ANALYSE_UsampGlobalFree ","kuruczConvoluted2",ANALYSE_usampBuffers.kuruczConvoluted2[indexFeno],0);
+
+    MEMORY_ReleaseBuffer("ANALYSE_UsampGlobalFree ","kuruczConvoluted2",ANALYSE_usampBuffers.kuruczConvoluted2);
+   }
+
+  if (ANALYSE_usampBuffers.kuruczInterpolated!=NULL)
+   {
+    for (indexFeno=0;indexFeno<NFeno;indexFeno++)
+     if (ANALYSE_usampBuffers.kuruczInterpolated[indexFeno]!=NULL)
+      MEMORY_ReleaseDVector("ANALYSE_UsampGlobalFree ","kuruczInterpolated",ANALYSE_usampBuffers.kuruczInterpolated[indexFeno],0);
+
+    MEMORY_ReleaseBuffer("ANALYSE_UsampGlobalFree ","kuruczInterpolated",ANALYSE_usampBuffers.kuruczInterpolated);
+   }
+
+  if (ANALYSE_usampBuffers.kuruczInterpolated2!=NULL)
+   {
+    for (indexFeno=0;indexFeno<NFeno;indexFeno++)
+     if (ANALYSE_usampBuffers.kuruczInterpolated2[indexFeno]!=NULL)
+      MEMORY_ReleaseDVector("ANALYSE_UsampGlobalFree ","kuruczInterpolated2",ANALYSE_usampBuffers.kuruczInterpolated2[indexFeno],0);
+
+    MEMORY_ReleaseBuffer("ANALYSE_UsampGlobalFree ","kuruczInterpolated2",ANALYSE_usampBuffers.kuruczInterpolated2);
+   }
+
+  memset(&ANALYSE_usampBuffers,0,sizeof(USAMP));
  }

@@ -18,6 +18,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
 
+#include <QFile>
+#include <QTextStream>
+
 #include "CEngineResponse.h"
 #include "CEngineController.h"
 
@@ -134,6 +137,14 @@ void CEngineResponseBeginAccessFile::process(CEngineController *engineController
     engineController->notifyTableData(m_cellList);
     engineController->notifyPlotData(m_plotDataList, m_titleList);
   }
+
+// QFile file("qdoas.dbg");
+// if (file.open(QIODevice::Append | QIODevice::Text)!=0)
+//  {
+//   QTextStream out(&file);
+//   out << "   CEngineResponseBeginAccessFile::process " << m_numberOfRecords <<"\n";
+//   file.close();
+//  }
 
   if (m_numberOfRecords > 0) {
     // calibration data ... TODO ...

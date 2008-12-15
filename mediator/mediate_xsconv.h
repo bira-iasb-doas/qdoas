@@ -19,6 +19,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "mediate_convolution.h"
 #include "mediate_ring.h"
+#include "mediate_usamp.h"
 #include "../engine/engine_xsconv.h"
 
 #ifndef _MEDIATE_XSCONV_
@@ -34,8 +35,8 @@ RC   mediateConvolutionCalculate(void *engineContext,void *responseHandle);
 RC   mediateRequestRing(void *engineContext,mediate_ring_t *pMediateRing,void *responseHandle);
 RC   mediateRingCalculate(void *engineContext,void *responseHandle);
 
-// RC   mediateRequestUsamp(void *engineContext,mediate_usamp_t *pMediateUsamp,void *responseHandle);
-// RC   mediateUsampCalculate(void *engineContext,void *responseHandle);
+RC   mediateRequestUsamp(void *engineContext,mediate_usamp_t *pMediateUsamp,void *responseHandle);
+RC   mediateUsampCalculate(void *engineContext,void *responseHandle);
 
 int  mediateXsconvCreateContext(void **engineContext, void *responseHandle);
 int  mediateXsconvDestroyContext(void *engineContext, void *responseHandle);

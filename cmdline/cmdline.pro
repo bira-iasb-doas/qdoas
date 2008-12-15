@@ -14,27 +14,26 @@ QT = core xml
 # Platform dependency ... based on ../config.pri
 #----------------------------------------------
 
-INCLUDEPATH  += $$QWT_INC_PATH
+INCLUDEPATH  += $$QWT_INC_PATH $$CODA_INC_PATH
 
 unix {
-  INCLUDEPATH  += ../mediator ../common ../qdoas ../convolution ../usamp ../engine
-  LIBS         += -L$$QWT_LIB_PATH -l$$QWT_LIB -L$$BEAT_LIB_PATH -lbeat -lm
-  QMAKE_LFLAGS += -Wl,-rpath=$$QWT_LIB_PATH:$$BEAT_LIB_PATH
+  INCLUDEPATH  += ../mediator ../common ../qdoas ../convolution ../usamp ../engine ../ring
+  LIBS         += -L$$QWT_LIB_PATH -l$$QWT_LIB -L$$CODA_LIB_PATH -lcoda -lm
+  QMAKE_LFLAGS += -Wl,-rpath=$$QWT_LIB_PATH:$$CODA_LIB_PATH
 }
 
 win32 {
-  INCLUDEPATH  += ..\mediator ..\common ..\qdoas ..\convolution ..\usamp ..\engine
+  INCLUDEPATH  += ..\mediator ..\common ..\qdoas ..\convolution ..\usamp ..\engine ..\ring
 
   contains( QWT_LINKAGE, qwtstatic ) {
-    LIBS        += -L$$QWT_LIB_PATH -l$$QWT_LIB -L$$BEAT_LIB_PATH -l$$BEAT_LIB
+    LIBS        += -L$$QWT_LIB_PATH -l$$QWT_LIB -L$$CODA_LIB_PATH -l$$CODA_LIB
   }
   contains( QWT_LINKAGE, qwtdll ) {
-    LIBS        += -L$$QWT_LIB_PATH -l$$QWT_LIB$$QWT_LIB_VERSION -L$$BEAT_LIB_PATH -l$$BEAT_LIB
-    DEFINES     += QWT_DLL LIBBEATDLL
+    LIBS        += -L$$QWT_LIB_PATH -l$$QWT_LIB$$QWT_LIB_VERSION -L$$CODA_LIB_PATH -l$$CODA_LIB
+    DEFINES     += QWT_DLL
   }
 
-  LIBS         += -L$$BEAT_LIB_PATH -lbeat
-  DEFINES      += LIBBEATDLL
+  LIBS         += -L$$CODA_LIB_PATH -lcoda
 
   CONFIG      += console
 }
@@ -64,6 +63,8 @@ SOURCES += ../qdoas/CProjectConfigItem.cpp
 SOURCES += ../qdoas/CWorkSpace.cpp
 
 SOURCES += ../convolution/CConvConfigHandler.cpp
+SOURCES += ../ring/CRingConfigHandler.cpp
+SOURCES += ../usamp/CUsampConfigHandler.cpp
 
 SOURCES += cmdline.cpp
 
@@ -77,6 +78,8 @@ SOURCES += ../mediator/mediate_project.c
 SOURCES += ../mediator/mediate_analysis_window.c
 SOURCES += ../mediator/mediate_xsconv.c
 SOURCES += ../mediator/mediate_convolution.c
+SOURCES += ../mediator/mediate_ring.c
+SOURCES += ../mediator/mediate_usamp.c
 
 #----------------------------------------------
 # Header files
@@ -106,6 +109,8 @@ HEADERS += ../qdoas/CProjectConfigItem.h
 HEADERS += ../qdoas/CWorkSpace.h
 
 HEADERS += ../convolution/CConvConfigHandler.h
+HEADERS += ../ring/CRingConfigHandler.h
+HEADERS += ../usamp/CUsampConfigHandler.h
 
 #----------------------------------------------
 # Mediator Header files

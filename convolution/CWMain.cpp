@@ -293,7 +293,7 @@ void CWMain::slotOpenFile()
 
   QString fileName = QFileDialog::getOpenFileName(this, "Open Project File",
 						  prefs->directoryName("ConvConf"),
-						  "Qdoas Project Config (*.xml);;All Files (*)");
+						  "Convolution Config (*.xml);;All Files (*)");
 
   if (fileName.isEmpty()) {
     return;

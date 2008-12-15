@@ -110,7 +110,7 @@ CWMain::CWMain(QWidget *parent) :
 
   // Calculate menu
   QMenu *calcMenu = new QMenu("Calculate");
-  QAction *convAct = new QAction("Run Usamp", this);
+  QAction *convAct = new QAction("Calculate undersampling cross sections", this);
   connect(convAct, SIGNAL(triggered()), this, SLOT(slotRunUsamp()));
   calcMenu->addAction(convAct);
 
@@ -490,7 +490,7 @@ void CWMain::slotErrorMessages(int highestLevel, const QString &messages)
     break;
   case FatalEngineError:
   default:
-    QMessageBox::critical(this, "Undersampling : Fatal Error", messages);
+    QMessageBox::critical(this, "Undersampling tool : Fatal Error", messages);
     break;
   }
 }
@@ -543,7 +543,7 @@ void CWMain::slotPlotPage(const RefCountConstPtr<CPlotPageData> &page)
       m_plotArea = new CWPlotArea;
       m_plotArea->setProperties(prop);
 
-      m_tab->addTab(m_plotArea, "Plot");
+      m_tab->addTab(m_plotArea, page->title());
     }
 
     m_plotArea->setPage(page);

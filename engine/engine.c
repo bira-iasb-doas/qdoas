@@ -596,7 +596,7 @@ RC EngineReadFile(ENGINE_CONTEXT *pEngineContext,int indexRecord,INT dateFlag,IN
 
   RECORD_INFO *pRecord;                                                         // pointer to the record part of the engine context
   FILE_INFO *pFile;                                                             // pointer to the file part of the engine context
- 	INDEX i,indexSite;
+ 	INDEX indexSite;
   OBSERVATION_SITE *pSite;
   double longit,latit;
  	int rc;                                                                       // Return code
@@ -798,6 +798,20 @@ RC EngineRequestBeginBrowseSpectra(ENGINE_CONTEXT *pEngineContext,const char *sp
     pEngineContext->currentRecord=1;
    }
 
+//  {
+//  	FILE *fp;
+//  	char *ptr;
+//  	fp=fopen("qdoas.dbg","a+t");
+//  	if ((ptr=strrchr(spectraFileName,'/'))!=NULL)
+//  	 ptr=ptr+1;
+//  	else
+//  	 ptr=(char *)spectraFileName;
+//
+//  	fprintf(fp,"EngineRequestBeginBrowseSpectra %s (%d records,rc %d)\n",ptr,pEngineContext->recordNumber,rc);
+//  	fclose(fp);
+//  }
+
+
   // Return
 
   return rc;
@@ -823,6 +837,19 @@ RC EngineRequestEndBrowseSpectra(ENGINE_CONTEXT *pEngineContext)
 
  	if ((THRD_id!=THREAD_TYPE_NONE) && (THRD_id!=THREAD_TYPE_SPECTRA))
  	 rc=OUTPUT_FlushBuffers(pEngineContext);
+
+//  {
+//  	FILE *fp;
+//  	char *ptr;
+//  	fp=fopen("qdoas.dbg","a+t");
+//  	if ((ptr=strrchr(pEngineContext->fileInfo.fileName,'/'))!=NULL)
+//  	 ptr=ptr+1;
+//  	else
+//  	 ptr=pEngineContext->fileInfo.fileName;
+//
+//  	fprintf(fp,"EngineRequestEndBrowseSpectra %s (rc %d)\n",ptr,rc);
+//  	fclose(fp);
+//  }
 
  	// Close the files
 
@@ -867,7 +894,7 @@ RC EngineEndCurrentSession(ENGINE_CONTEXT *pEngineContext)
     GDP_ASC_ReleaseBuffers();
     GDP_BIN_ReleaseBuffers();
 
-  /* // !!! GOME2 */  GOME2_ReleaseBuffers(GOME2_BEAT_CLOSE);
+    GOME2_ReleaseBuffers(GOME2_BEAT_CLOSE);
   //  OMI_ReleaseBuffers();
 
     SCIA_ReleaseBuffers(pEngineContext->project.instrumental.readOutFormat);
@@ -1558,7 +1585,7 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
    rc=ANALYSE_AlignReference(pEngineContext,1,saveFlag,responseHandle);
 
   if (!rc && useUsamp)
-   rc=USAMP_BuildFromAnalysis(1,ITEM_NONE);
+   rc=ANALYSE_UsampBuild(1,ITEM_NONE);
 
   // Return
 

@@ -18,6 +18,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
 
+#include <QFile>
+#include <QTextStream>
 #include <QFontMetrics>
 #include <QIntValidator>
 
@@ -316,6 +318,14 @@ void CNavigationPanel::slotPlayPauseClicked()
 
 void CNavigationPanel::slotTimeout()
 {
+// QFile file("qdoas.dbg");
+// if (file.open(QIODevice::Append | QIODevice::Text)!=0)
+//  {
+//   QTextStream out(&file);
+//   out << "   CNavigationPanel::slotTimeout " << m_playing <<"\n";
+//   file.close();
+//  }
+
   if (m_playing) {
     emit signalStep();
   }

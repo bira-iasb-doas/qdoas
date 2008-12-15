@@ -27,8 +27,9 @@ win32 {
   QWT_LIB_PATH    = C:\Qwt\lib
   QWT_LIB         = qwt
   QWT_LIB_VERSION = 5
-  BEAT_LIB_PATH   = C:\beat
-  BEAT_LIB        = beat
+  CODA_INC_PATH   = C:\coda
+  CODA_LIB_PATH   = C:\coda
+  CODA_LIB        = coda
 
   INSTALL_PREFIX = C:\Qdoas
 

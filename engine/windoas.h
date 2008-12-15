@@ -841,7 +841,7 @@ void  PRJCT_ExpandAll(void);
 // QDOAS ??? #endif
 // QDOAS ???
 RC   PRJCT_Alloc(void);
-VOID PRJCT_Free(void);
+void PRJCT_Free(void);
 
 void PRJCT_OutputConfiguration(FILE *fp,INDEX indexProject);
 void PRJCT_LoadFile(DoasCh *fileName);
@@ -979,8 +979,8 @@ typedef struct _treeItemType
   #endif
 
   INT     childDataType;                    // type of data for children nodes
-  VOID   *dataList;                         // pointer to buffer used for storing data associated to children nodes
-  VOID   *data2Paste;                       // pointer to the structure storing the data to paste
+  void   *dataList;                         // pointer to buffer used for storing data associated to children nodes
+  void   *data2Paste;                       // pointer to the structure storing the data to paste
   INDEX   dataNumber;                       // number of data element in previous list
   INDEX   dataMaxNumber;                    // maximum number of data the list can support
   INT     dataSize;                         // size of data in bytes

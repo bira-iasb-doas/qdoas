@@ -703,14 +703,15 @@ RC GDP_ASC_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
   // Initializations
 
   gdpLastRecord=ITEM_NONE;
+  pRecord=&pEngineContext->recordInfo;
   sprintf(bandStr,"Band %s",bands[pEngineContext->project.instrumental.user]);
   pGome=&pRecord->gome;
 
   pEngineContext->recordNumber=0;
-  pEngineContext->recordInfo.longitude=
-  pEngineContext->recordInfo.latitude=
-  pEngineContext->recordInfo.altitude=(double)0.;
-  pEngineContext->recordInfo.useErrors=1;                                                       // this format includes errors
+  pRecord->longitude=
+  pRecord->latitude=
+  pRecord->altitude=(double)0.;
+  pRecord->useErrors=1;                                                       // this format includes errors
 
   band=pEngineContext->project.instrumental.user;
 
@@ -1024,11 +1025,11 @@ RC GDP_ASC_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
 
   if (useUsamp && (THRD_id!=THREAD_TYPE_KURUCZ))
    {
-    USAMP_LocalFree();
+    ANALYSE_UsampLocalFree();
 
-    if (((rc=USAMP_LocalAlloc(0 /* lambdaMin,lambdaMax,oldNDET */))!=ERROR_ID_NO) ||
-        ((rc=USAMP_BuildFromAnalysis(0,0))!=ERROR_ID_NO) ||
-        ((rc=USAMP_BuildFromAnalysis(1,ITEM_NONE))!=ERROR_ID_NO))
+    if (((rc=ANALYSE_UsampLocalAlloc(0 /* lambdaMin,lambdaMax,oldNDET */))!=ERROR_ID_NO) ||
+        ((rc=ANALYSE_UsampBuild(0,0))!=ERROR_ID_NO) ||
+        ((rc=ANALYSE_UsampBuild(1,ITEM_NONE))!=ERROR_ID_NO))
 
      goto EndGDP_ASC_LoadAnalysis;
    }
