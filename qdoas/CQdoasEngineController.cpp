@@ -53,9 +53,8 @@ CQdoasEngineController::~CQdoasEngineController()
 
 void CQdoasEngineController::notifyReadyToNavigateRecords(const QString &filename, int numberOfRecords)
 {
- // sanity check - currentIt and filename must be consistent
- // assert(m_currentIt.file().filePath() == filename);                          // COMMENTED OUT ON 26 NOVEMBER 2008 BY CAROLINE
-                                                                                // BECAUSE THIS ASSERT MAKES MFC SPECTRA BROWSING TO CRASH
+  // sanity check - currentIt and filename must be consistent
+  assert(m_currentIt.file().filePath() == filename);
 
   m_numberOfRecords = numberOfRecords;
   m_currentRecord = 0;

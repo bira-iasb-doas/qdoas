@@ -211,13 +211,7 @@ void CNavigationPanel::slotSetEnabled(bool enable)
   m_playBtn->setEnabled(groupActive);
   m_stopBtn->setEnabled(groupActive);
 
-  if (enable) {
-    // continue playing ...
-    if (m_playing)
-      m_playTimer->start();
-
-  }
-  else {
+  if (!enable) {
     // stop playing ...
     m_playing = false;
     m_playTimer->stop();
