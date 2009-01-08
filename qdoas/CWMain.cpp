@@ -55,7 +55,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "debugutil.h"
 
 CWMain::CWMain(QWidget *parent) :
-  QFrame(parent)
+  QFrame(parent),
+  m_logToFile(false)
 {
   setProjectFileName(QString());
 
@@ -249,8 +250,8 @@ CWMain::CWMain(QWidget *parent) :
   m_stateMonitor = new CConfigStateMonitor(this);
 
   // connections
-  connect(m_controller, SIGNAL(signalCurrentRecordChanged(int)),
-	  navPanelRecords, SLOT(slotSetCurrentRecord(int)));
+  connect(m_controller, SIGNAL(signalCurrentRecordChanged(int,int)),
+	  navPanelRecords, SLOT(slotSetCurrentRecord(int,int)));
   connect(m_controller, SIGNAL(signalFileListChanged(const QStringList&)),
 	  navPanelRecords, SLOT(slotSetFileList(const QStringList&)));
   connect(m_controller, SIGNAL(signalCurrentFileChanged(int,int)),
@@ -276,6 +277,8 @@ CWMain::CWMain(QWidget *parent) :
 	  m_controller, SLOT(slotStopSession()));
   connect(navPanelRecords, SIGNAL(signalStep()),
 	  m_controller, SLOT(slotStep()));
+  connect(navPanelRecords, SIGNAL(signalPlayStatusChanged(bool)),
+          this, SLOT(slotSetMessageFileLogging(bool)));
 
   // plot data transfer
   connect(m_controller, SIGNAL(signalPlotPages(const QList< RefCountConstPtr<CPlotPageData> >&)),
@@ -660,60 +663,71 @@ void CWMain::slotAboutQt()
   QApplication::aboutQt();
 }
 
+void CWMain::slotSetMessageFileLogging(bool logToFile)
+{
+  m_logToFile = logToFile;
+}
+
 void CWMain::slotErrorMessages(int highestLevel, const QString &messages)
  {
-	 if (this->m_controller->m_step)     // In automatic mode, redirect error messages in a file
+   if (m_logToFile)
    {
-   	QString fileName=this->m_projectFile;
-
-   	if (!fileName.length())
-   	 fileName="QDOAS_Unnamed.log";
-   	else if (fileName.endsWith("xml",Qt::CaseInsensitive))
-   	 fileName.replace(fileName.length()-3,3,"log");
-   	else
-   	 fileName.append(".log");
-
-   	QFile file(fileName);
-
-   	if (file.open(QIODevice::Append|QIODevice::Text))
-   	 {
-   	 	QTextStream out(&file);
-   	 	out << "File name   : " << this->m_controller->m_engineCurrentFile << "\n";
-
-      switch (highestLevel)
-       {
-        case InformationEngineError:
-          out << "Information : " << messages;
-          break;
-        case WarningEngineError:
-          out << "Message     : " << messages;
-          break;
-        case FatalEngineError:
-        default:
-          TRACE(messages.toStdString());
-          out << "Fatal Error : " << messages;
-          break;
-       }
-
-      out << "Record      : " << this->m_controller->m_engineCurrentRecord+1 << "\n\n";
-      file.close();
-   	 }
-   }
-	 else
-	  {
-    switch (highestLevel)
+     QString fileName=this->m_projectFile;
+     
+     if (!fileName.length())
+       fileName="QDOAS_Unnamed.log";
+     else if (fileName.endsWith("xml",Qt::CaseInsensitive))
+       fileName.replace(fileName.length()-3,3,"log");
+     else
+       fileName.append(".log");
+     
+     QFile file(fileName);
+     
+     if (file.open(QIODevice::Append|QIODevice::Text))
      {
-      case InformationEngineError:
-        QMessageBox::information(this, "QDOAS : Information", messages);
-        break;
-      case WarningEngineError:
-        QMessageBox::warning(this, "QDOAS : Warning", messages);
-        break;
-      case FatalEngineError:
-      default:
-        TRACE(messages.toStdString());
-        QMessageBox::critical(this, "QDOAS : Fatal Error", messages);
-        break;
+       QTextStream out(&file);
+       // IAP 200812 - remove this and change the content of the error
+       // message when it is constructed (in CQdoasEngineController::notifyErrorMessages)
+
+       out << "File name   : " << this->m_controller->m_engineCurrentFile << "\n";
+       
+       switch (highestLevel)
+       {
+       case InformationEngineError:
+         out << "Information : " << messages;
+         break;
+       case WarningEngineError:
+         out << "Message     : " << messages;
+         break;
+       case FatalEngineError:
+       default:
+         TRACE(messages.toStdString());
+         out << "Fatal Error : " << messages;
+         break;
+       }
+       
+       // IAP 200812 - remove this and change the content of the error
+       // message when it is constructed (in CQdoasEngineController::notifyErrorMessages)
+
+       out << "Record      : " << this->m_controller->m_engineCurrentRecord+1 << "\n\n";
+       file.close();
+     }
+   }
+   else
+   {
+     switch (highestLevel)
+     {
+     case InformationEngineError:
+       QMessageBox::information(this, "QDOAS : Information", messages);
+       break;
+     case WarningEngineError:
+       QMessageBox::warning(this, "QDOAS : Warning", messages);
+       break;
+     case FatalEngineError:
+     default:
+       TRACE(messages.toStdString());
+       QMessageBox::critical(this, "QDOAS : Fatal Error", messages);
+       break;
      }
    }
  }

@@ -14,6 +14,10 @@ unix {
   QWT_INC_PATH   = /usr/local/qwt/include
   QWT_LIB_PATH   = /usr/local/qwt/lib
   QWT_LIB        = qwt
+  CODA_INC_PATH   = /usr/local/include
+  CODA_LIB_PATH   = /usr/local/lib
+  CODA_LIB        = coda
+
 
   INSTALL_PREFIX = /usr/local/Qdoas
 

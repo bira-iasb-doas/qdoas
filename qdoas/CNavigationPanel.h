@@ -48,7 +48,7 @@ Q_OBJECT
  public slots:
   void slotSetFileList(const QStringList &fileList);
   void slotSetCurrentFile(int fileIndex, int nRecords);
-  void slotSetCurrentRecord(int record);
+  void slotSetCurrentRecord(int record, int firstMiddleLast);
   void slotSetEnabled(bool enabled);
 
  private slots:
@@ -74,6 +74,7 @@ Q_OBJECT
   void signalStep();
   void signalRecordChanged(int);
   void signalSelectedFileChanged(int);
+  void signalPlayStatusChanged(bool);
 
  private:
   QAction *m_firstBtn, *m_prevBtn, *m_nextBtn, *m_lastBtn, *m_stopBtn, *m_playBtn;

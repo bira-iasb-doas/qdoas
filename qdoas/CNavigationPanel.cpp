@@ -177,49 +177,52 @@ void CNavigationPanel::slotSetCurrentFile(int fileIndex, int nRecords)
 void CNavigationPanel::slotSetEnabled(bool enable)
 {
   // enable/disable state of buttons
-  bool groupActive;
 
-  // turn-on, conditionally...
-  if (enable && m_maxRecord != 0 && m_fileCombo->count() != 0) {
+  if (enable) {
+    // switch on (or stay on) - influenced by 'playing' state 
+    
+    bool generalActive = (m_maxRecord != 0 && m_fileCombo->count() != 0);
+    bool groupBackwardActive = generalActive && (m_currentRecord != 0) && !m_playing;
+    bool groupForwardActive = generalActive && (m_currentRecord != m_maxRecord) && !m_playing;
 
-    // down + first
-    groupActive = (m_currentRecord != 0) && !m_playing;
-    m_firstBtn->setEnabled(groupActive);
-    m_prevBtn->setEnabled(groupActive);
+    // groupBackward : down + first
+    m_firstBtn->setEnabled(groupBackwardActive);
+    m_prevBtn->setEnabled(groupBackwardActive);
 
-    // up + last
-    groupActive = (m_currentRecord != m_maxRecord) && !m_playing;
-    m_nextBtn->setEnabled(groupActive);
-    m_lastBtn->setEnabled(groupActive);
+    // groupForward : up + last
+    m_nextBtn->setEnabled(groupForwardActive);
+    m_lastBtn->setEnabled(groupForwardActive);
 
-    // rest are active
-    groupActive = true;
+    m_recordEdit->setEnabled(generalActive && !m_playing);
+    m_fileCombo->setEnabled(generalActive && !m_playing);
+    m_playBtn->setEnabled(generalActive);
+    m_stopBtn->setEnabled(generalActive);    
   }
   else {
-    // disable everything ...
-    groupActive = false;
-    // up + down + first + last
-    m_firstBtn->setEnabled(groupActive);
-    m_prevBtn->setEnabled(groupActive);
-    m_nextBtn->setEnabled(groupActive);
-    m_lastBtn->setEnabled(groupActive);
-  }
+    // switch off
+    if (m_playing) {
+      // stop playing and reset the state
+      m_playing = false;
+      m_playTimer->stop();
+      m_playBtn->setIcon(m_playIcon);
 
-  // groupActive is set appropriately for the rest of the buttons/widgets
-  m_recordEdit->setEnabled(groupActive && !m_playing);
-  m_fileCombo->setEnabled(groupActive && !m_playing);
-  m_playBtn->setEnabled(groupActive);
-  m_stopBtn->setEnabled(groupActive);
+      emit signalPlayStatusChanged(m_playing);
+    }
 
-  if (!enable) {
-    // stop playing ...
-    m_playing = false;
-    m_playTimer->stop();
-    m_playBtn->setIcon(m_playIcon);
+    m_firstBtn->setEnabled(false);
+    m_prevBtn->setEnabled(false);
+    m_nextBtn->setEnabled(false);
+    m_lastBtn->setEnabled(false);
+
+    m_playBtn->setEnabled(false);
+    m_stopBtn->setEnabled(false);
+
+    m_recordEdit->setEnabled(false);
+    m_fileCombo->setEnabled(false);
   }
 }
 
-void CNavigationPanel::slotSetCurrentRecord(int record)
+void CNavigationPanel::slotSetCurrentRecord(int record, int firstMiddleLast)
 {
   bool groupActive;
 
@@ -238,13 +241,15 @@ void CNavigationPanel::slotSetCurrentRecord(int record)
       m_playTimer->start();
     }
     else {
-      // down + first
-      groupActive = (m_currentRecord > 1);
+      // use the firstMiddleLast flag to control the status of the buttons
+      
+      // down + first (firstMiddleLast == -1 when at the start)
+      groupActive = (m_currentRecord > 1) && (firstMiddleLast >= 0);
       m_firstBtn->setEnabled(groupActive);
       m_prevBtn->setEnabled(groupActive);
 
-      // up + last
-      groupActive = (m_currentRecord < m_maxRecord);
+      // up + last (firstMiddleLast == +1 when at the end)
+      groupActive = (m_currentRecord < m_maxRecord) && (firstMiddleLast <= 0);
       m_nextBtn->setEnabled(groupActive);
       m_lastBtn->setEnabled(groupActive);
     }
@@ -279,19 +284,17 @@ void CNavigationPanel::slotStopClicked()
 
 void CNavigationPanel::slotPlayPauseClicked()
 {
-  TRACE4("slotPlayPauseClicked");
-
   if (m_playing) {
-    TRACE4("pause");
     // pause ...
     m_playTimer->stop();
     m_playing = false;
     m_playBtn->setIcon(m_playIcon);
 
+    emit signalPlayStatusChanged(m_playing);
+
     slotSetEnabled(true);
   }
   else {
-    TRACE4("play ");
     // play
     m_playing = true;
     m_playBtn->setIcon(m_pauseIcon);
@@ -304,6 +307,8 @@ void CNavigationPanel::slotPlayPauseClicked()
 
     m_recordEdit->setEnabled(false);
     m_fileCombo->setEnabled(false);
+
+    emit signalPlayStatusChanged(m_playing);
 
     // call the timeout slot - this will (indirectly) keep firing ...
     slotTimeout();

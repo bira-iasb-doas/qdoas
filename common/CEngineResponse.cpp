@@ -24,6 +24,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "CEngineResponse.h"
 #include "CEngineController.h"
 
+#include "debugutil.h"
+
 //------------------------------------------------------------
 
 CEngineResponse::CEngineResponse(CEngineResponse::ResponseType type) :
@@ -180,7 +182,6 @@ void CEngineResponseSpecificRecord::process(CEngineController *engineController)
   if (processErrors(engineController))
     return;
 
-  // TODO
   if (m_recordNumber == 0) {
     // EOF
     engineController->notifyEndOfRecords();
@@ -193,7 +194,9 @@ void CEngineResponseSpecificRecord::process(CEngineController *engineController)
     engineController->notifyCurrentRecord(m_recordNumber);
   }
   else {
-    // some error condition ... TODO
+    // some error condition ... Treat it as fatal ...
+    addErrorMessage("CEngineResponseSpecificRecord", "Unknown Error - Treated as fatal", FatalEngineError);
+    processErrors(engineController);
   }
 }
 

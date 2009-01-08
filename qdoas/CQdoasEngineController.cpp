@@ -35,9 +35,8 @@ CQdoasEngineController::CQdoasEngineController(QObject *parent) :
   m_currentRecord(-1),
   m_numberOfRecords(0),
   m_numberOfFiles(0),
-  m_oldRecord(-1)
+  m_atEndOfCurrentFile(false)
 {
-  m_step=0;
   m_engineCurrentRecord=m_currentRecord;
   m_engineCurrentFile="";
 
@@ -58,6 +57,8 @@ void CQdoasEngineController::notifyReadyToNavigateRecords(const QString &filenam
 
   m_numberOfRecords = numberOfRecords;
   m_currentRecord = 0;
+
+  m_atEndOfCurrentFile = false;
 
   // signals for navigation control
   emit signalCurrentFileChanged(m_currentIt.index(), m_numberOfRecords);
@@ -80,18 +81,29 @@ void CQdoasEngineController::notifyCurrentRecord(int recordNumber)
 //   file.close();
 //  }
 
- 	m_oldRecord=m_currentRecord;
+  int firstMiddleLast = 0;
+
   m_currentRecord = recordNumber;
 
-  emit signalCurrentRecordChanged(m_currentRecord);
+  m_atEndOfCurrentFile = false;
+
+  if (m_currentRecord <= 1)
+    firstMiddleLast = -1; // lower limit
+  else if (m_currentRecord >= m_numberOfRecords)
+    firstMiddleLast = 1;
+
+  emit signalCurrentRecordChanged(m_currentRecord, firstMiddleLast);
 }
 
 void CQdoasEngineController::notifyEndOfRecords(void)
 {
-	 m_oldRecord=m_currentRecord;
-  m_currentRecord = m_numberOfRecords + 1;
+  // This means no more matching records were found in the current file. The
+  // current record will not have changed, but we signal it again (so play
+  // can send another request).
+  
+  m_atEndOfCurrentFile = true;
 
-  emit signalCurrentRecordChanged(m_currentRecord);
+  emit signalCurrentRecordChanged(m_currentRecord, 1);
 }
 
 void CQdoasEngineController::notifyPlotData(QList<SPlotData> &plotDataList, QList<STitleTag> &titleList)
@@ -391,7 +403,6 @@ void CQdoasEngineController::slotGotoRecord(int recordNumber)
 
 void CQdoasEngineController::slotStep()
 {
-  m_step=1;
   m_engineCurrentRecord=m_currentRecord;
   m_engineCurrentFile=m_currentIt.file().filePath();
 
@@ -399,67 +410,86 @@ void CQdoasEngineController::slotStep()
 // if (file.open(QIODevice::Append | QIODevice::Text)!=0)
 //  {
 //   QTextStream out(&file);
-//   out << "   CQdoasEngineController::slotStep " << m_currentRecord << " " << m_oldRecord <<"\n";
+//   out << "   CQdoasEngineController::slotStep " << m_currentRecord << "\n";
 //   file.close();
 //  }
 
-  if (m_currentRecord >= 0 && m_currentRecord < m_numberOfRecords && m_currentRecord!=m_oldRecord) {
-    // step record
-    switch (m_session->mode()) {
-    case CSession::Browse:
-      m_thread->request(new CEngineRequestBrowseNextRecord);
-      break;
-    case CSession::Calibrate:
-      m_thread->request(new CEngineRequestCalibrateNextRecord);
-      break;
-    case CSession::Analyse:
-      m_thread->request(new CEngineRequestAnalyseNextRecord);
-      break;
-    }
-  }
-  else if ((m_currentRecord >= m_numberOfRecords || m_currentRecord==m_oldRecord) && !m_currentIt.atEnd()) {
-    CSessionIterator tmpIt = m_currentIt;
+  // If the m_atEndOfCurrentFile flag is set, then the previous request indicated that no
+  // more records matched. Advance to the next file if possible
 
-    // only move if there IS a next file ... this leaves the last file 'active'.
+  if (m_atEndOfCurrentFile) {
 
-    ++tmpIt;
-    if (!tmpIt.atEnd()) {
-      m_currentIt = tmpIt;
+      bool endOfSession = true;
+      
+      if (!m_currentIt.atEnd()) {
 
-      // move to the next file
-      CEngineRequestCompound *req = new CEngineRequestCompound;
+          CSessionIterator tmpIt = m_currentIt;
 
-      // check for a change in project
-      if (m_currentProject != m_currentIt.project()) {
-	int opMode = THREAD_TYPE_NONE;
-	switch (m_session->mode()) {
-	case CSession::Browse: opMode = THREAD_TYPE_SPECTRA; break;
-	case CSession::Calibrate: opMode = THREAD_TYPE_KURUCZ; break;
-	case CSession::Analyse: opMode = THREAD_TYPE_ANALYSIS; break;
-	}
-	m_currentProject = m_currentIt.project();
-	req->addRequest(new CEngineRequestSetProject(m_currentProject, opMode));
+          ++tmpIt;
+          if (!tmpIt.atEnd()) {
+              // there are more files
+              m_currentIt = tmpIt;
+              m_currentRecord = -1;
+              m_numberOfRecords = 0;
+
+              endOfSession = false;
+
+              // move to the next file
+              CEngineRequestCompound *req = new CEngineRequestCompound;
+              
+              // check for a change in project
+              if (m_currentProject != m_currentIt.project()) {
+                  int opMode = THREAD_TYPE_NONE;
+                  switch (m_session->mode()) {
+                      case CSession::Browse: opMode = THREAD_TYPE_SPECTRA; break;
+                      case CSession::Calibrate: opMode = THREAD_TYPE_KURUCZ; break;
+                      case CSession::Analyse: opMode = THREAD_TYPE_ANALYSIS; break;
+                  }
+                  m_currentProject = m_currentIt.project();
+                  req->addRequest(new CEngineRequestSetProject(m_currentProject, opMode));
+              }
+              
+              switch (m_session->mode()) {
+                  case CSession::Browse:
+                      req->addRequest(new CEngineRequestBeginBrowseFile(m_currentIt.file().filePath()));
+                      break;
+                  case CSession::Calibrate:
+                      req->addRequest(new CEngineRequestBeginCalibrateFile(m_currentIt.file().filePath()));
+                      break;
+                  case CSession::Analyse:
+                      req->addRequest(new CEngineRequestBeginAnalyseFile(m_currentIt.file().filePath()));
+                      break;
+              }
+              
+              m_thread->request(req);
+          }
       }
 
+      if (endOfSession) {
+        // Post end of .... notificatons 
+        if (m_session->mode()==CSession::Analyse)
+          QMessageBox::information((QWidget *)this->parent(),"QDOAS : Run Analysis","End of analysis");
+        else if (m_session->mode()==CSession::Calibrate)
+          QMessageBox::information((QWidget *)this->parent(),"QDOAS : Run Calibrate","End of calibration");
+      }
+
+  }
+  else if (m_currentRecord >= 0) {
+
+      // step record
       switch (m_session->mode()) {
-      case CSession::Browse:
-	req->addRequest(new CEngineRequestBeginBrowseFile(m_currentIt.file().filePath()));
-	break;
-      case CSession::Calibrate:
-	req->addRequest(new CEngineRequestBeginCalibrateFile(m_currentIt.file().filePath()));
-	break;
-      case CSession::Analyse:
-	req->addRequest(new CEngineRequestBeginAnalyseFile(m_currentIt.file().filePath()));
-	break;
+          case CSession::Browse:
+              m_thread->request(new CEngineRequestBrowseNextRecord);
+              break;
+          case CSession::Calibrate:
+              m_thread->request(new CEngineRequestCalibrateNextRecord);
+              break;
+          case CSession::Analyse:
+              m_thread->request(new CEngineRequestAnalyseNextRecord);
+              break;
       }
-
-      m_thread->request(req);
-    }
-   else if (m_session->mode()==CSession::Analyse)
-    QMessageBox::information((QWidget *)this->parent(),"QDOAS : Run Analysis","End of analysis");
-   else if (m_session->mode()==CSession::Calibrate)
-    QMessageBox::information((QWidget *)this->parent(),"QDOAS : Run Calibrate","End of calibration");
   }
+
 }
 
 void CQdoasEngineController::slotStartSession(const RefCountPtr<CSession> &session)
@@ -475,9 +505,7 @@ void CQdoasEngineController::slotStartSession(const RefCountPtr<CSession> &sessi
 
   m_numberOfFiles = sessionFileList.count();
   m_currentRecord = -1;
-  m_oldRecord=-1;
   m_currentProject = NULL;
-  m_step=0;
 
   if (!m_currentIt.atEnd()) {
     m_currentProject = m_currentIt.project();
@@ -528,7 +556,6 @@ void CQdoasEngineController::slotStartSession(const RefCountPtr<CSession> &sessi
 
 void CQdoasEngineController::slotStopSession()
 {
-	 m_step=0;
   // session is stop(ping)
   emit signalSessionRunning(false);
 
@@ -537,8 +564,6 @@ void CQdoasEngineController::slotStopSession()
 
 void CQdoasEngineController::slotViewCrossSections(const RefCountPtr<CViewCrossSectionData> &awData)
 {
-  TRACE("CQdoasEngineController::slotViewCrossSections");
-
   const mediate_analysis_window_t *d = awData->analysisWindow();
 
   int nFiles = d->crossSectionList.nCrossSection;

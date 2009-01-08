@@ -20,6 +20,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "mediate.h"
 #include "engine.h"
 
+#include <stdio.h>
+
 // -----------------------------------------------------------------------------
 // FUNCTION      MediateRequestPlotSpectra
 // -----------------------------------------------------------------------------
@@ -60,9 +62,6 @@ void mediateRequestPlotSpectra(ENGINE_CONTEXT *pEngineContext,void *responseHand
 
   indexLine=1;
   indexColumn=2;
-
- 	pEngineContext->currentRecord=pEngineContext->indexRecord+1;
- 	pRecord->oldZm=pRecord->Zm;
 
   if (ANALYSE_plotRef)
    mediateResponseRetainPage(plotPageRef,responseHandle);
@@ -1640,13 +1639,12 @@ int mediateRequestGotoSpectrum(void *engineContext,
   ENGINE_CONTEXT *pEngineContext = (ENGINE_CONTEXT *)engineContext;
 
   if (recordNumber > 0 && recordNumber <= pEngineContext->recordNumber) {
-  	pEngineContext->currentRecord=recordNumber;
+    pEngineContext->currentRecord=recordNumber;
 
     return recordNumber;
   }
   else {
-    pEngineContext->currentRecord = pEngineContext->recordNumber + 1;
-
+    pEngineContext->currentRecord = 0;
     return 0;
   }
  }
@@ -1659,6 +1657,7 @@ int mediateRequestNextMatchingSpectrum(ENGINE_CONTEXT *pEngineContext,void *resp
   RECORD_INFO *pRecord;                                                         // pointer to the record part of the engine context
   int orec=pEngineContext->indexRecord;
   int rec=pEngineContext->currentRecord;
+  int upperLimit=pEngineContext->recordNumber;
   int inc,geoFlag;
   double longit,latit;
   INDEX indexSite;
@@ -1674,106 +1673,111 @@ int mediateRequestNextMatchingSpectrum(ENGINE_CONTEXT *pEngineContext,void *resp
 
   rc=ERROR_ID_NO;
 
-
-
   if (!pEngineContext->recordNumber)                                            // file is empty
-   return rec=0;
-  else if (rec>pEngineContext->recordNumber)                                    // record number is out of range
-   rec=pEngineContext->recordNumber;
-  else
-   {
-   	do
-     {
-     	rc=ERROR_ID_NO;
+    return 0;
+  
+  // IAP 200812 - set 'starting point' - next or goto 
+  if (pEngineContext->currentRecord) {
+    // use this as the starting point rather than indexRecord
+    rec = pEngineContext->currentRecord;
+    // reset the currentRecord to 0 now that the GOTO request has been serviced.
+    pEngineContext->currentRecord = 0;
+  }
+  else {
+    rec = pEngineContext->indexRecord + 1; // start at the Next record
+  }
 
-     	// lower limit
+  // consider increasing the starting point
+  if (pProject->spectra.noMin && rec < pProject->spectra.noMin)
+    rec = pProject->spectra.noMin;
 
-   	  if (pProject->spectra.noMin)
-  	    rec=max(rec,pProject->spectra.noMin);
+  // consider reducing the upper boundary (inclusive)
+  if (pProject->spectra.noMax && pProject->spectra.noMax < upperLimit)
+    upperLimit = pProject->spectra.noMax;
 
-   	  // upper limit
-
-   	  if (pProject->spectra.noMax)
-  	    rec=min(rec,pProject->spectra.noMax);
-
-   	  // Read the file
-
-      if ((rc=EngineReadFile(pEngineContext,rec,0,0))!=ERROR_ID_NO)
-      	ERROR_DisplayMessage(responseHandle);
-      else
-       {
-        longit=pRecord->longitude;
-        latit=pRecord->latitude;
-        geoFlag=1;
-
-        if ((pProject->spectra.mode==PRJCT_SPECTRA_MODES_CIRCLE) && (pProject->spectra.radius>1.) &&
-            (THRD_GetDist(longit,latit,pProject->spectra.longMin,pProject->spectra.latMin)>(double)pProject->spectra.radius))
-         geoFlag=0;
-        else if ((pProject->spectra.mode==PRJCT_SPECTRA_MODES_OBSLIST) && (pProject->spectra.radius>1.))
-         {
-          for (indexSite=0;indexSite<SITES_itemN;indexSite++)
-           {
-            pSite=&SITES_itemList[indexSite];
-
-  // QDOAS ???           if (!pSite->hidden)
-             {
-              if (THRD_GetDist(longit,latit,pSite->longitude,pSite->latitude)<=(double)pProject->spectra.radius)
-               break;
-             }
-           }
-          if (indexSite==SITES_itemN)
-           geoFlag=0;
-         }
-        else if ((pProject->spectra.mode==PRJCT_SPECTRA_MODES_RECTANGLE) &&
-
+  // Loop in search of a matching record - respect the min and max limits
+  // in general 'break' to exit the loop
+  
+  while (rc == ERROR_ID_NO && rec <= upperLimit)
+  {
+    // read the 'next' record
+    if ((rc=EngineReadFile(pEngineContext,rec,0,0))!=ERROR_ID_NO)
+    {
+      // reset the rc based on the severity of the failure - for non fatal errors keep searching
+      rc = ERROR_DisplayMessage(responseHandle);
+    }
+    else
+    {
+      longit=pRecord->longitude;
+      latit=pRecord->latitude;
+      geoFlag=1;
+      
+      if ((pProject->spectra.mode==PRJCT_SPECTRA_MODES_CIRCLE) && (pProject->spectra.radius>1.) &&
+          (THRD_GetDist(longit,latit,pProject->spectra.longMin,pProject->spectra.latMin)>(double)pProject->spectra.radius))
+        geoFlag=0;
+      else if ((pProject->spectra.mode==PRJCT_SPECTRA_MODES_OBSLIST) && (pProject->spectra.radius>1.))
+      {
+        for (indexSite=0;indexSite<SITES_itemN;indexSite++)
+        {
+          pSite=&SITES_itemList[indexSite];
+          
+          // QDOAS ???           if (!pSite->hidden)
+          {
+            if (THRD_GetDist(longit,latit,pSite->longitude,pSite->latitude)<=(double)pProject->spectra.radius)
+              break;
+          }
+        }
+        if (indexSite==SITES_itemN)
+          geoFlag=0;
+      }
+      else if ((pProject->spectra.mode==PRJCT_SPECTRA_MODES_RECTANGLE) &&
+               
                (((pProject->spectra.longMin!=pProject->spectra.longMax) &&
                  ((longit>max(pProject->spectra.longMin,pProject->spectra.longMax)) ||
                   (longit<min(pProject->spectra.longMin,pProject->spectra.longMax)))) ||
-
-                 ((pProject->spectra.latMin!=pProject->spectra.latMax) &&
+                
+                ((pProject->spectra.latMin!=pProject->spectra.latMax) &&
                  ((latit>max(pProject->spectra.latMin,pProject->spectra.latMax)) ||
                   (latit<min(pProject->spectra.latMin,pProject->spectra.latMax))))))
+        
+        geoFlag=0;
+      
+      if (geoFlag) {
+        if (((fabs(pProject->spectra.SZAMin-pProject->spectra.SZAMax)<(double)1.e-4) ||
+             ((pRecord->Zm>=pProject->spectra.SZAMin) && (pRecord->Zm<=pProject->spectra.SZAMax))) &&
+            ((fabs(pProject->spectra.SZADelta)<(double)1.e-4) ||
+             (fabs(pRecord->Zm-pRecord->oldZm)>pProject->spectra.SZADelta))) {
+          // this record matches - exit the search loop
+          break;
+        }
+      }
+     
+    } 
 
-         geoFlag=0;
-       }
-
-      // avoid infinite loop
-
-      if ((rec==orec) ||
-
-      // record number range
-
-        ((!pProject->spectra.noMin || (rec>=pProject->spectra.noMin)) &&
-         (!pProject->spectra.noMax || (rec<=pProject->spectra.noMax)) &&
-
-      // SZA range
-
-      	  ((fabs(pProject->spectra.SZAMin-pProject->spectra.SZAMax)<(double)1.e-4) ||
-      	  ((pRecord->Zm>=pProject->spectra.SZAMin) && (pRecord->Zm<=pProject->spectra.SZAMax))) &&
-      	  ((fabs(pProject->spectra.SZADelta)<(double)1.e-4) || (fabs(pRecord->Zm-pRecord->oldZm)>pProject->spectra.SZADelta)) &&
-
-      // Geolocation
-
-      	    geoFlag))
-
-      	break;
-
-      orec=rec;
-      rec+=inc;
-     }
-    while (rec<=pEngineContext->recordNumber);
-   }
-
-  // If no new record found, goto the last good one
-
-  if ((rec>pEngineContext->recordNumber) || (rec==orec))
-   {
-   	rec=pEngineContext->indexRecord;
-    if ((rc=EngineReadFile(pEngineContext,rec,0,0))!=ERROR_ID_NO)
-     ERROR_DisplayMessage(responseHandle);
-   }
-
-  return (rc || (rec>pEngineContext->recordNumber))?0:rec;
+    // try the next record
+    rec+=inc;
+  }
+  
+  if (rc != ERROR_ID_NO) {
+    // search loop terminated due to fatal error - a message was already logged
+    return -1;
+  }
+  else if (rec > upperLimit) {
+    // did not find a matching record ... reread the last matching index (if there was one)
+    // and return 0 to indicate the end of records.
+    
+    if (orec != 0) {
+      if ((rc=EngineReadFile(pEngineContext,orec,0,0))!=ERROR_ID_NO)
+      {
+        ERROR_DisplayMessage(responseHandle);
+        return -1; // error
+      }
+    }
+    
+    return 0; // No more matching records
+  }
+  
+  return pEngineContext->indexRecord;
  }
 
 // mediateRequestNextMatchingBrowseSpectrum
@@ -1797,10 +1801,12 @@ int mediateRequestNextMatchingBrowseSpectrum(void *engineContext,
 
   ENGINE_CONTEXT *pEngineContext = (ENGINE_CONTEXT *)engineContext;
 
-  if ((mediateRequestNextMatchingSpectrum(pEngineContext,responseHandle)>0) &&
-      (pEngineContext->indexRecord<=pEngineContext->recordNumber))
+  int rec = mediateRequestNextMatchingSpectrum(pEngineContext,responseHandle);
 
-  	mediateRequestPlotSpectra(pEngineContext,responseHandle);
+  if (rec > 0 && (pEngineContext->indexRecord<=pEngineContext->recordNumber)) {
+
+      mediateRequestPlotSpectra(pEngineContext,responseHandle);
+  }
 
 //  {
 //  	FILE *fp;
@@ -1810,7 +1816,7 @@ int mediateRequestNextMatchingBrowseSpectrum(void *engineContext,
 //  }
 
 
-  return pEngineContext->indexRecord;
+  return rec;
  }
 
 int mediateRequestEndBrowseSpectra(void *engineContext,
@@ -1859,14 +1865,11 @@ int mediateRequestNextMatchingAnalyseSpectrum(void *engineContext,
  	// Declarations
 
   ENGINE_CONTEXT *pEngineContext = (ENGINE_CONTEXT *)engineContext;
-  RC rc;
+  RC rc = ERROR_ID_NO;
 
-  // Initialization
+  int rec = mediateRequestNextMatchingSpectrum(pEngineContext,responseHandle);
 
-  rc=ERROR_ID_NO;
-
-  if ((mediateRequestNextMatchingSpectrum(pEngineContext,responseHandle)>0) &&
-      (pEngineContext->indexRecord<=pEngineContext->recordNumber))
+  if (rec > 0 && (pEngineContext->indexRecord<=pEngineContext->recordNumber))
    {
    	mediateRequestPlotSpectra(pEngineContext,responseHandle);
 
@@ -1883,8 +1886,7 @@ int mediateRequestNextMatchingAnalyseSpectrum(void *engineContext,
 //  	fclose(fp);
 //  }
 
-
-  return pEngineContext->indexRecord;
+  return (rc == ERROR_ID_NO) ? rec : -1;
  }
 
 int mediateRequestPrevMatchingAnalyseSpectrum(void *engineContext,
@@ -1936,17 +1938,19 @@ int mediateRequestNextMatchingCalibrateSpectrum(void *engineContext,
  	// Declarations
 
   ENGINE_CONTEXT *pEngineContext = (ENGINE_CONTEXT *)engineContext;
+  RC rc = ERROR_ID_NO;
 
-  if ((mediateRequestNextMatchingSpectrum(pEngineContext,responseHandle)>0) &&
-      (pEngineContext->indexRecord<=pEngineContext->recordNumber))
+  int rec = mediateRequestNextMatchingSpectrum(pEngineContext,responseHandle);
+
+  if (rec > 0 && (pEngineContext->indexRecord<=pEngineContext->recordNumber))
    {
-   	mediateRequestPlotSpectra(pEngineContext,responseHandle);
+       mediateRequestPlotSpectra(pEngineContext,responseHandle);
 
- 	  if (ANALYSE_Spectrum(pEngineContext,responseHandle)!=ERROR_ID_NO)
-     ERROR_DisplayMessage(responseHandle);
+       if ((rc = ANALYSE_Spectrum(pEngineContext,responseHandle))!=ERROR_ID_NO)
+         ERROR_DisplayMessage(responseHandle);
    }
 
-  return pEngineContext->indexRecord;
+  return (rc == ERROR_ID_NO) ? rec : -1;
  }
 
 int mediateRequestPrevMatchingCalibrateSpectrum(void *engineContext,

@@ -52,6 +52,8 @@ Q_OBJECT
 
   virtual void closeEvent(QCloseEvent *e);
  
+  bool isMessageFileLogging(void) const;
+
  protected:
   void writeConfiguration(FILE *fp);
   bool checkStateAndConsiderSaveFile(void);
@@ -74,6 +76,7 @@ Q_OBJECT
   void slotHelpBrowserPreference(bool light);
   void slotAboutQdoas();
   void slotAboutQt();
+  void slotSetMessageFileLogging(bool logToFile);
   void slotErrorMessages(int highestLevel, const QString &messages);
   
  private:
@@ -105,6 +108,10 @@ Q_OBJECT
 
   // help interface ...
   CHelpSystem *m_helpInterface;
+
+  bool m_logToFile;
 };
+
+inline bool CWMain::isMessageFileLogging(void) const { return m_logToFile; }
 
 #endif

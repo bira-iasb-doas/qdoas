@@ -303,7 +303,8 @@ RC GDP_BIN_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
   if (specFp!=NULL)
    {
     fclose(specFp);
-    specFp=NULL;
+    // IAPIAP
+    pEngineContext->fileInfo.specFp = specFp=NULL;
    }
 
   pEngineContext->recordNumber=0;

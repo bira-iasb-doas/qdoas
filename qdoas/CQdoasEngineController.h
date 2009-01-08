@@ -38,7 +38,7 @@ class CQdoasEngineController : public QObject, public CEngineController
 {
 Q_OBJECT
  public:
-  int m_step;
+// why are these needed??? - IAP 200812
   int     m_engineCurrentRecord;
   QString m_engineCurrentFile;
 
@@ -83,7 +83,7 @@ Q_OBJECT
   void signalFileListChanged(const QStringList &fileList);
   void signalCurrentFileChanged(int fileIndex, int nRecords);
   void signalCurrentFileChanged(const QString &filename);
-  void signalCurrentRecordChanged(int recordNumber);
+  void signalCurrentRecordChanged(int recordNumber, int firstMiddleLast);
 
   void signalPlotPages(const QList< RefCountConstPtr<CPlotPageData> > &pageList);
   void signalTablePages(const QList< RefCountConstPtr<CTablePageData> > &pageList);
@@ -98,10 +98,11 @@ Q_OBJECT
 
   const mediate_project_t *m_currentProject;
   int m_currentRecord, m_numberOfRecords, m_numberOfFiles;
-  int m_oldRecord;                                                              // Caroline, 2nd July 2008, in order to avoid infinite loop when a spectra selection is specified
 
   RefCountPtr<CSession> m_session;
   CSessionIterator m_currentIt;
+
+  bool m_atEndOfCurrentFile;
 };
 
 #endif
