@@ -43,7 +43,7 @@
 //  OUTPUT_GetWveAmf - correct a cross section using wavelength dependent AMF vector;
 //
 //  OutputGetAmf - return the AMF from table at a specified zenith angle;
-//  OutputReadAmf - load Air Mass Factors from file;
+//  OUTPUT_ReadAmf - load Air Mass Factors from file;
 //  OutputFlux - return the flux at a specified wavelength;
 //
 //  OUTPUT_ResetData - release and reset all data used for output;
@@ -407,7 +407,7 @@ RC OutputGetAmf(CROSS_RESULTS *pResults,double Zm,double Tm,double *pAmf)
  }
 
 // -----------------------------------------------------------------------------
-// FUNCTION      OutputReadAmf
+// FUNCTION      OUTPUT_ReadAmf
 // -----------------------------------------------------------------------------
 // PURPOSE       Load Air Mass Factors from file
 //
@@ -420,7 +420,7 @@ RC OutputGetAmf(CROSS_RESULTS *pResults,double Zm,double Tm,double *pAmf)
 // RETURN        0 in case of success, any other value in case of error
 // -----------------------------------------------------------------------------
 
-RC OutputReadAmf(DoasCh *symbolName,DoasCh *amfFileName,DoasCh *amfType,INDEX *pIndexAmf)
+RC OUTPUT_ReadAmf(DoasCh *symbolName,DoasCh *amfFileName,DoasCh *amfType,INDEX *pIndexAmf)
  {
   // Declarations
 
@@ -486,23 +486,23 @@ RC OutputReadAmf(DoasCh *symbolName,DoasCh *amfFileName,DoasCh *amfType,INDEX *p
       // Symbol list is limited to MAX_SYMB symbols
 
       if (OUTPUT_NAmfSpace>=MAX_SYMB)
-       rc=ERROR_SetLast("OutputReadAmf",ERROR_TYPE_FATAL,ERROR_ID_OUT_OF_RANGE,OUTPUT_AmfSpace,0,MAX_SYMB-1);
+       rc=ERROR_SetLast("OUTPUT_ReadAmf",ERROR_TYPE_FATAL,ERROR_ID_OUT_OF_RANGE,OUTPUT_AmfSpace,0,MAX_SYMB-1);
 
       // File read out
 
       else    // ELSE LEVEL 1
        {
         if ((amfFp=fopen(fileName,"rt"))==NULL)
-         rc=ERROR_SetLast("OutputReadAmf",ERROR_TYPE_FATAL,ERROR_ID_FILE_NOT_FOUND,fileName);
+         rc=ERROR_SetLast("OUTPUT_ReadAmf",ERROR_TYPE_FATAL,ERROR_ID_FILE_NOT_FOUND,fileName);
         else if (!(fileLength=STD_FileLength(amfFp)))
-         rc=ERROR_SetLast("OutputReadAmf",ERROR_TYPE_FATAL,ERROR_ID_FILE_EMPTY,fileName);
-        else if (((nextColumn=(DoasCh *)MEMORY_AllocBuffer("OutputReadAmf ","nextColumn",fileLength+1,1,0,MEMORY_TYPE_STRING))==NULL) ||
-                 ((oldColumn=(DoasCh *)MEMORY_AllocBuffer("OutputReadAmf ","oldColumn",fileLength+1,1,0,MEMORY_TYPE_STRING))==NULL))
+         rc=ERROR_SetLast("OUTPUT_ReadAmf",ERROR_TYPE_FATAL,ERROR_ID_FILE_EMPTY,fileName);
+        else if (((nextColumn=(DoasCh *)MEMORY_AllocBuffer("OUTPUT_ReadAmf ","nextColumn",fileLength+1,1,0,MEMORY_TYPE_STRING))==NULL) ||
+                 ((oldColumn=(DoasCh *)MEMORY_AllocBuffer("OUTPUT_ReadAmf ","oldColumn",fileLength+1,1,0,MEMORY_TYPE_STRING))==NULL))
          rc=ERROR_ID_ALLOC;
         else
          {
           if ((fileType==ANLYS_AMF_TYPE_CLIMATOLOGY) || (fileType==ANLYS_AMF_TYPE_SZA) || (fileType==ANLYS_AMF_TYPE_WAVELENGTH3))
-           rc=FILES_GetMatrixDimensions(amfFp,fileName,&PhiLines,&PhiColumns,"OutputReadAmf",ERROR_TYPE_FATAL);
+           rc=FILES_GetMatrixDimensions(amfFp,fileName,&PhiLines,&PhiColumns,"OUTPUT_ReadAmf",ERROR_TYPE_FATAL);
           else // polynomial wavelength dependence
            {
             while (fgets(oldColumn,fileLength,amfFp) && ((strchr(oldColumn,';')!=NULL) || (strchr(oldColumn,'*')!=NULL)));
@@ -543,7 +543,7 @@ RC OutputReadAmf(DoasCh *symbolName,DoasCh *amfFileName,DoasCh *amfType,INDEX *p
          }
 
         if (rc)
-         goto EndOutputReadAmf;
+         goto EndOUTPUT_ReadAmf;
 
         // Allocate AMF matrix
 
@@ -551,20 +551,20 @@ RC OutputReadAmf(DoasCh *symbolName,DoasCh *amfFileName,DoasCh *amfType,INDEX *p
         fseek(amfFp,0L,SEEK_SET);
 
         if ((((fileType==ANLYS_AMF_TYPE_WAVELENGTH1) || (fileType==ANLYS_AMF_TYPE_WAVELENGTH2)) && ((xsLines==0) || (xsColumns==0) ||
-             ((xs=pAmfSymbol->xs=(double **)MEMORY_AllocDMatrix("OutputReadAmf ","xs",0,xsLines-1,0,xsColumns-1))==NULL) ||
-             ((xsDeriv2=pAmfSymbol->xsDeriv2=(double **)MEMORY_AllocDMatrix("OutputReadAmf ","xsDeriv2",1,xsLines,1,xsColumns-1))==NULL))) ||
-             ((Phi=pAmfSymbol->Phi=(double **)MEMORY_AllocDMatrix("OutputReadAmf ","Phi",0,PhiLines,1,PhiColumns))==NULL) ||
+             ((xs=pAmfSymbol->xs=(double **)MEMORY_AllocDMatrix("OUTPUT_ReadAmf ","xs",0,xsLines-1,0,xsColumns-1))==NULL) ||
+             ((xsDeriv2=pAmfSymbol->xsDeriv2=(double **)MEMORY_AllocDMatrix("OUTPUT_ReadAmf ","xsDeriv2",1,xsLines,1,xsColumns-1))==NULL))) ||
+             ((Phi=pAmfSymbol->Phi=(double **)MEMORY_AllocDMatrix("OUTPUT_ReadAmf ","Phi",0,PhiLines,1,PhiColumns))==NULL) ||
              ((fileType!=ANLYS_AMF_TYPE_CLIMATOLOGY) && (fileType!=ANLYS_AMF_TYPE_WAVELENGTH3) &&
-             ((deriv2=pAmfSymbol->deriv2=(double **)MEMORY_AllocDMatrix("OutputReadAmf ","deriv2",1,PhiLines,2,PhiColumns))==NULL)))
+             ((deriv2=pAmfSymbol->deriv2=(double **)MEMORY_AllocDMatrix("OUTPUT_ReadAmf ","deriv2",1,PhiLines,2,PhiColumns))==NULL)))
 
          rc=ERROR_ID_ALLOC;
 
         else if (fileType==ANLYS_AMF_TYPE_CLIMATOLOGY)
-         rc=FILES_LoadMatrix(amfFp,fileName,Phi,1,PhiLines,PhiColumns,"OutputReadAmf",ERROR_TYPE_FATAL);
+         rc=FILES_LoadMatrix(amfFp,fileName,Phi,1,PhiLines,PhiColumns,"OUTPUT_ReadAmf",ERROR_TYPE_FATAL);
         else if (fileType==ANLYS_AMF_TYPE_SZA)
-         rc=FILES_LoadMatrix(amfFp,fileName,Phi,1,PhiLines,PhiColumns,"OutputReadAmf",ERROR_TYPE_FATAL);
+         rc=FILES_LoadMatrix(amfFp,fileName,Phi,1,PhiLines,PhiColumns,"OUTPUT_ReadAmf",ERROR_TYPE_FATAL);
         else if (fileType==ANLYS_AMF_TYPE_WAVELENGTH3)
-         rc=FILES_LoadMatrix(amfFp,fileName,Phi,1,PhiLines,PhiColumns,"OutputReadAmf",ERROR_TYPE_FATAL);
+         rc=FILES_LoadMatrix(amfFp,fileName,Phi,1,PhiLines,PhiColumns,"OUTPUT_ReadAmf",ERROR_TYPE_FATAL);
         else     // wavelength dependence
          {
           while (fgets(oldColumn,fileLength,amfFp) && ((strchr(oldColumn,';')!=NULL) || (strchr(oldColumn,'*')!=NULL)));
@@ -609,17 +609,17 @@ RC OutputReadAmf(DoasCh *symbolName,DoasCh *amfFileName,DoasCh *amfType,INDEX *p
          }
 
         if (rc)
-         goto EndOutputReadAmf;
+         goto EndOUTPUT_ReadAmf;
 
         // Second derivatives computations
 
         if ((fileType!=ANLYS_AMF_TYPE_CLIMATOLOGY) && (fileType!=ANLYS_AMF_TYPE_WAVELENGTH3))
          for (indexColumn=2;(indexColumn<=PhiColumns) && !rc;indexColumn++)
-          rc=SPLINE_Deriv2(Phi[1]+1,Phi[indexColumn]+1,deriv2[indexColumn]+1,PhiLines,"OutputReadAmf ");
+          rc=SPLINE_Deriv2(Phi[1]+1,Phi[indexColumn]+1,deriv2[indexColumn]+1,PhiLines,"OUTPUT_ReadAmf ");
 
         if ((fileType==ANLYS_AMF_TYPE_WAVELENGTH1) || (fileType==ANLYS_AMF_TYPE_WAVELENGTH2))
          for (indexColumn=1;indexColumn<xsColumns;indexColumn++)
-          rc=SPLINE_Deriv2((double *)xs[0],(double *)xs[indexColumn],xsDeriv2[indexColumn]+1,xsLines,"OutputReadAmf (2) ");
+          rc=SPLINE_Deriv2((double *)xs[0],(double *)xs[indexColumn],xsDeriv2[indexColumn]+1,xsLines,"OUTPUT_ReadAmf (2) ");
 
         // Add new symbol
 
@@ -647,12 +647,12 @@ RC OutputReadAmf(DoasCh *symbolName,DoasCh *amfFileName,DoasCh *amfType,INDEX *p
 
   // Return
 
-  EndOutputReadAmf :
+  EndOUTPUT_ReadAmf :
 
   if (nextColumn!=NULL)
-   MEMORY_ReleaseBuffer("OutputReadAmf ","nextColumn",nextColumn);
+   MEMORY_ReleaseBuffer("OUTPUT_ReadAmf ","nextColumn",nextColumn);
   if (oldColumn!=NULL)
-   MEMORY_ReleaseBuffer("OutputReadAmf ","oldColumn",oldColumn);
+   MEMORY_ReleaseBuffer("OUTPUT_ReadAmf ","oldColumn",oldColumn);
   if (amfFp!=NULL)
    fclose(amfFp);
 

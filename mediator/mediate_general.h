@@ -322,6 +322,7 @@ extern "C" {
   {
     char symbol[SYMBOL_NAME_BUFFER_LENGTH];
     int amf;
+    double resCol;
     // residual
     int slantCol;
     int slantErr;

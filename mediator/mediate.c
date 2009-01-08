@@ -1674,6 +1674,8 @@ int mediateRequestNextMatchingSpectrum(ENGINE_CONTEXT *pEngineContext,void *resp
 
   rc=ERROR_ID_NO;
 
+
+
   if (!pEngineContext->recordNumber)                                            // file is empty
    return rec=0;
   else if (rec>pEngineContext->recordNumber)                                    // record number is out of range

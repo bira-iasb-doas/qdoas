@@ -4163,7 +4163,8 @@ void ANALYSE_ResetData(void)
       pTabCross->FitStretch2=
       pTabCross->FitScale=
       pTabCross->FitScale2=
-      pTabCross->Comp=ITEM_NONE;
+      pTabCross->Comp=
+      pTabCross->amfType=ITEM_NONE;
    // -------------------------------------------
       pTabCross->TypeStretch=
       pTabCross->TypeScale=(INT)0;
@@ -4457,6 +4458,7 @@ RC ANALYSE_LoadCross(ANALYSIS_CROSS *crossSectionList,INT nCross,INT hidden,doub
       pWrkSymbol->type=WRK_SYMBOL_CROSS;
       strcpy(pWrkSymbol->symbolName,symbolName);
       strcpy(pWrkSymbol->crossFileName,pCross->crossSectionFile);
+      strcpy(pWrkSymbol->amfFileName,pCross->amfFile);
 
       // Load cross section from file
 
@@ -4485,6 +4487,7 @@ RC ANALYSE_LoadCross(ANALYSIS_CROSS *crossSectionList,INT nCross,INT hidden,doub
       else
        {
         pEngineCross->crossAction=pCross->crossType;
+        pEngineCross->amfType=pCross->amfType;
         pEngineCross->filterFlag=pCross->requireFilter;
 
         if ((pEngineCross->crossAction==ANLYS_CROSS_ACTION_NOTHING) && (pTabFeno->gomeRefFlag || MFC_refFlag))
@@ -4509,8 +4512,6 @@ RC ANALYSE_LoadCross(ANALYSIS_CROSS *crossSectionList,INT nCross,INT hidden,doub
 
           pEngineCross->DeltaConc=(pEngineCross->FitConc)?pCross->deltaCc:(double)0.;   // delta on concentration
           pEngineCross->I0Conc=(pEngineCross->crossAction==ANLYS_CROSS_ACTION_CONVOLUTE_I0)?pCross->ccIo:(double)0.;
-
- // QDOAS !!! FOR LATER         rc=OUTPUT_LoadCross(pList,&pTabFeno->TabCrossResults[pTabFeno->NTabCross],&pTabFeno->amfFlag,hidden);
 
           // Swap columns of original matrix A in order to have in the end of the matrix, cross sections with fixed concentrations
 
@@ -5352,7 +5353,7 @@ RC ANALYSE_LoadOutput(ANALYSIS_OUTPUT *outputList,INT nOutput)
 
   ANALYSIS_OUTPUT *pOutput;
   INDEX indexOutput,indexTabCross;
-  CROSS_REFERENCE *TabCross;                                                    //  symbol cross reference
+  CROSS_REFERENCE *TabCross,*pTabCross;                                                    //  symbol cross reference
   CROSS_RESULTS   *TabCrossResults,*pResults;                                   //  results stored per symbol in previous list
   FENO *pTabFeno;
   RC rc;
@@ -5384,40 +5385,36 @@ RC ANALYSE_LoadOutput(ANALYSIS_OUTPUT *outputList,INT nOutput)
 
   	 if (indexTabCross<pTabFeno->NTabCross)
   	  {
+  	  	pTabCross=&TabCross[indexTabCross];
   	  	pResults=&TabCrossResults[indexTabCross];
 
-      pResults->StoreAmf=pOutput->amf;                                          // flag set if AMF is to be written into output file
-      pResults->StoreVrtCol=pOutput->vertCol;                                   // flag set if vertical column is to be written into output file
-      pResults->StoreVrtErr=pOutput->vertErr;                                   // flag set if error on vertical column is to be written into output file
-      pResults->VrtFact=pOutput->vertFactor;
+  	  	if (!(rc=OUTPUT_ReadAmf(pOutput->symbol,
+  	  	                        WorkSpace[pTabCross->Comp].amfFileName,
+  	  	                        pTabCross->amfType,&pResults->indexAmf)))
+       {
+        // Load fields dependent on AMF
 
-      pResults->StoreSlntCol=pOutput->slantCol;                                 // flag set if slant column is to be written into output file
-      pResults->StoreSlntErr=pOutput->slantErr;                                 // flag set if error on slant column is to be written into output file
-      pResults->SlntFact=pOutput->slantFactor;
+        if ((pResults->indexAmf!=ITEM_NONE) && (OUTPUT_AmfSpace!=NULL))
+         {
+          if ((OUTPUT_AmfSpace[pResults->indexAmf].type==ANLYS_AMF_TYPE_WAVELENGTH1) ||
+              (OUTPUT_AmfSpace[pResults->indexAmf].type==ANLYS_AMF_TYPE_WAVELENGTH2) ||
+              (OUTPUT_AmfSpace[pResults->indexAmf].type==ANLYS_AMF_TYPE_WAVELENGTH3))
 
-      pResults->ResCol=(double)0.;                                              // residual column
+           Feno->amfFlag++;
+
+       	  pResults->StoreAmf=pOutput->amf;                                      // flag set if AMF is to be written into output file
+          pResults->StoreVrtCol=pOutput->vertCol;                               // flag set if vertical column is to be written into output file
+          pResults->StoreVrtErr=pOutput->vertErr;                               // flag set if error on vertical column is to be written into output file
+          pResults->VrtFact=pOutput->vertFactor;
+         }
+
+        pResults->StoreSlntCol=pOutput->slantCol;                               // flag set if slant column is to be written into output file
+        pResults->StoreSlntErr=pOutput->slantErr;                               // flag set if error on slant column is to be written into output file
+        pResults->SlntFact=pOutput->slantFactor;
+
+        pResults->ResCol=(double)0.;                                            // residual column
+       }
   	  }
-
-    // QDOAS !!! See later !!! // Read Amf from files (probably to do from the ANALYSE_LoadCross table)
-    // QDOAS !!! See later !!!
-    // QDOAS !!! See later !!! if (!(rc=OutputReadAmf(pList->itemText[COLUMN_CROSS_FILE],pList->amfFileName,pList->itemText[COLUMN_CROSS_AMF_TYPE],&pResults->indexAmf)))
-    // QDOAS !!! See later !!!  {
-    // QDOAS !!! See later !!!   // Load fields dependent on AMF
-    // QDOAS !!! See later !!!
-    // QDOAS !!! See later !!!   if ((pResults->indexAmf!=ITEM_NONE) && (OUTPUT_AmfSpace!=NULL))
-    // QDOAS !!! See later !!!    {
-    // QDOAS !!! See later !!!     if ((OUTPUT_AmfSpace[pResults->indexAmf].type==ANLYS_AMF_TYPE_WAVELENGTH1) ||
-    // QDOAS !!! See later !!!         (OUTPUT_AmfSpace[pResults->indexAmf].type==ANLYS_AMF_TYPE_WAVELENGTH2) ||
-    // QDOAS !!! See later !!!         (OUTPUT_AmfSpace[pResults->indexAmf].type==ANLYS_AMF_TYPE_WAVELENGTH3))
-    // QDOAS !!! See later !!!
-    // QDOAS !!! See later !!!      (*pAmfFlag)++;
-    // QDOAS !!! See later !!!
-    // QDOAS !!! See later !!!     pResults->StoreAmf=(pList->itemText[COLUMN_CROSS_AMF_OUTPUT][0]=='1')?(DoasCh)1:(DoasCh)0;          // flag set if AMF is to be written into output file
-    // QDOAS !!! See later !!!     pResults->StoreVrtCol=(pList->itemText[COLUMN_CROSS_VRTCOL][0]=='1')?(DoasCh)1:(DoasCh)0;           // flag set if vertical column is to be written into output file
-    // QDOAS !!! See later !!!     pResults->StoreVrtErr=(pList->itemText[COLUMN_CROSS_VRTERR][0]=='1')?(DoasCh)1:(DoasCh)0;           // flag set if error on vertical column is to be written into output file
-    // QDOAS !!! See later !!!     pResults->VrtFact=atof(pList->itemText[COLUMN_CROSS_VRTFACT]);                                    // vertical column factor
-    // QDOAS !!! See later !!!    }
-    // QDOAS !!! See later !!!  }
    }
 
   // Return

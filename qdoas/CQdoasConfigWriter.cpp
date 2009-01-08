@@ -1276,7 +1276,8 @@ void CQdoasConfigWriter::writeOutputList(FILE *fp, const output_list_t *d)
 	    (d->output[j].slantCol ? sTrue : sFalse),
 	    (d->output[j].slantErr ? sTrue : sFalse),
 	    d->output[j].slantFactor);
-    fprintf(fp, " vcol=\"%s\" verr=\"%s\" vfact=\"%.3f\" />\n",
+    fprintf(fp, " rescol=\"%.6le\" vcol=\"%s\" verr=\"%s\" vfact=\"%.3f\" />\n",
+     d->output[j].resCol,
 	    (d->output[j].vertCol ? sTrue : sFalse),
 	    (d->output[j].vertErr ? sTrue : sFalse),
 	    d->output[j].vertFactor);

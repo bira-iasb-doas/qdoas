@@ -518,7 +518,7 @@ bool CAnalysisWindowOutputSubHandler::start(const QXmlAttributes &atts)
       return postErrorMessage("missing symbol (or name too long)");
 
     d->amf = (atts.value("amf") == "true") ? 1 : 0;
-    // residual TODO
+    d->resCol = atts.value("rescol").toDouble();
     d->slantCol = (atts.value("scol") == "true") ? 1 : 0;
     d->slantErr = (atts.value("serr") == "true") ? 1 : 0;
     d->slantFactor = atts.value("sfact").toDouble();

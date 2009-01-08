@@ -238,10 +238,11 @@ enum _wrkSymbolType
 
 typedef struct _wrkSymbol
  {
-  DoasCh         type,                          // type of symbol
+  DoasCh        type,                           // type of symbol
                 symbolName[MAX_STR_LEN+1],      // name of symbol
-                crossFileName[MAX_STR_LEN+1];   // name of cross section file
-  MATRIX_OBJECT xs;                            // cross sections (wavelength+cross section(s))
+                crossFileName[MAX_STR_LEN+1],   // name of cross section file
+                amfFileName[MAX_STR_LEN+1];     // name of AMF file name
+  MATRIX_OBJECT xs;                             // cross sections (wavelength+cross section(s))
  }
 WRK_SYMBOL;
 
@@ -250,47 +251,48 @@ WRK_SYMBOL;
 
 typedef struct _crossReference
  {
-  int    Comp,                      // index of component in WrkSpace list
-         crossAction,               // action to process on cross section before analysis
-         IndSvdA,                   // index of column in SVD matrix
-         IndSvdP,                   // index of column in SVD matrix
-         IndOrthog,                 // order in orthogonal base
-         FitConc,                   // flag set if concentration is to be fit (non linear method) or modified (linear method)
-         FitFromPrevious,           // flag set if the value of the concentration has to be retrieved from a previous window
-         FitParam,                  // flag set if non linear parameter (other than shift or stretch) is to be fit
-         FitShift,                  // flag set if shift is to be fit
-         FitStretch,                // flag set if stretch order 1 is to be fit
-         FitStretch2,               // flag set if stretch order 2 is to be fit
-         FitScale,                  // flag set if a scaling factor order 1 is to be fit
-         FitScale2,                 // flag set if a scaling factor order 2 is to be fit
-         TypeStretch,               // order of stretch to fit
-         TypeScale;                 // order of scaling factor to fit
+  int    Comp,                                                                  // index of component in WrkSpace list
+         crossAction,                                                           // action to process on cross section before analysis
+         IndSvdA,                                                               // index of column in SVD matrix
+         IndSvdP,                                                               // index of column in SVD matrix
+         IndOrthog,                                                             // order in orthogonal base
+         FitConc,                                                               // flag set if concentration is to be fit (non linear method) or modified (linear method)
+         FitFromPrevious,                                                       // flag set if the value of the concentration has to be retrieved from a previous window
+         FitParam,                                                              // flag set if non linear parameter (other than shift or stretch) is to be fit
+         FitShift,                                                              // flag set if shift is to be fit
+         FitStretch,                                                            // flag set if stretch order 1 is to be fit
+         FitStretch2,                                                           // flag set if stretch order 2 is to be fit
+         FitScale,                                                              // flag set if a scaling factor order 1 is to be fit
+         FitScale2,                                                             // flag set if a scaling factor order 2 is to be fit
+         TypeStretch,                                                           // order of stretch to fit
+         TypeScale;                                                             // order of scaling factor to fit
 
-  DoasCh  display,                   // flag set if fit is to be displayed
-         filterFlag;                // flag set if symbol is to be filteres
+  DoasCh display,                                                               // flag set if fit is to be displayed
+         amfType,                                                               // type of AMF
+         filterFlag;                                                            // flag set if symbol is to be filteres
 
-  double Fact,                      // normalization factors
+  double Fact,                                                                  // normalization factors
          I0Conc,
-         InitConc,                  // initial concentration
-         InitParam,                 // initial non linear parameter
-         InitShift,                 // initial shift
-         InitStretch,               // initial stretch order 1
-         InitStretch2,              // initial stretch order 2
-         InitScale,                 // initial scaling factor order 1
-         InitScale2,                // initial scaling factor order 2
-         DeltaConc,                 // step for concentration
-         DeltaParam,                // step for non linear parameter
-         DeltaShift,                // step for shift
-         DeltaStretch,              // step for stretch order 1
-         DeltaStretch2,             // step for stretch order 2
-         DeltaScale,                // step for scaling factor order 1
-         DeltaScale2,               // step for scaling factor order 2
-         MinShift,                  // maximum value for shift
-         MaxShift,                  // maximum value for shift
-         MinParam,                  // minimum value for parameter
-         MaxParam,                  // maximum value for parameter
-        *vector,                    // copy of vector
-        *Deriv2;                    // second derivative
+         InitConc,                                                              // initial concentration
+         InitParam,                                                             // initial non linear parameter
+         InitShift,                                                             // initial shift
+         InitStretch,                                                           // initial stretch order 1
+         InitStretch2,                                                          // initial stretch order 2
+         InitScale,                                                             // initial scaling factor order 1
+         InitScale2,                                                            // initial scaling factor order 2
+         DeltaConc,                                                             // step for concentration
+         DeltaParam,                                                            // step for non linear parameter
+         DeltaShift,                                                            // step for shift
+         DeltaStretch,                                                          // step for stretch order 1
+         DeltaStretch2,                                                         // step for stretch order 2
+         DeltaScale,                                                            // step for scaling factor order 1
+         DeltaScale2,                                                           // step for scaling factor order 2
+         MinShift,                                                              // maximum value for shift
+         MaxShift,                                                              // maximum value for shift
+         MinParam,                                                              // minimum value for parameter
+         MaxParam,                                                              // maximum value for parameter
+        *vector,                                                                // copy of vector
+        *Deriv2;                                                                // second derivative
  }
 CROSS_REFERENCE;
 
@@ -1145,6 +1147,7 @@ EXTERN AMF_SYMBOL *OUTPUT_AmfSpace;                         // list of cross sec
 // ----------
 
 RC   OUTPUT_GetWveAmf(CROSS_RESULTS *pResults,double Zm,double *lambda,double *xs,double *deriv2);
+RC OUTPUT_ReadAmf(DoasCh *symbolName,DoasCh *amfFileName,DoasCh *amfType,INDEX *pIndexAmf);
 
 void OUTPUT_ResetData(void);
 RC   OUTPUT_RegisterData(ENGINE_CONTEXT *pEngineContext);

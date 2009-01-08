@@ -1525,7 +1525,8 @@ void CWOutputDoasTable::populate(const output_list_t *data)
     if (index != -1) {
       // set data
       setCellData(index, 0, QVariant(d->amf));
-      // setCellData(row, 1, Residual);
+      setCellData(index, 1, QVariant(d->resCol));
+
       setCellData(index, 2, QVariant(d->slantCol));
       setCellData(index, 3, QVariant(d->slantErr));
       setCellData(index, 4, QVariant(d->slantFactor));
@@ -1553,6 +1554,7 @@ void CWOutputDoasTable::apply(output_list_t *data) const
     QList<QVariant> state = getCellData(row);
 
     d->amf = state.at(0).toBool() ? 1 : 0;
+    d->resCol = state.at(1).toDouble();
     d->slantCol = state.at(2).toBool() ? 1 : 0;
     d->slantErr = state.at(3).toBool() ? 1 : 0;
     d->slantFactor = state.at(4).toDouble();
