@@ -123,7 +123,7 @@ typedef struct _ccdData
 CCD_DATA;
 
 DoasCh *CCD_measureTypes[SYNCHRO_MEASURE_MAX]=
-     	 { "None","Off axis","Direct sun","Zenith","Dark","Lamp","Bentham" };
+     	 { "None","Off axis","Direct sun","Zenith","Dark","Lamp","Bentham","Almucantar" };
 
 // ------------------------------------------------------------------
 // Different predefined integration times for dark current correction

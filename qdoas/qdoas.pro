@@ -10,7 +10,7 @@ include( ../config.pri )
 CONFIG += qt thread $$CODE_GENERATION
 QT = core gui xml
 
-DEFINES += APP_QDOAS DEBUG
+DEFINES += APP_QDOAS
 
 # Help system to use...
 contains ( HELP_SYSTEM, assistant ) {
