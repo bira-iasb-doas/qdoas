@@ -420,7 +420,7 @@ RC OutputGetAmf(CROSS_RESULTS *pResults,double Zm,double Tm,double *pAmf)
 // RETURN        0 in case of success, any other value in case of error
 // -----------------------------------------------------------------------------
 
-RC OUTPUT_ReadAmf(DoasCh *symbolName,DoasCh *amfFileName,DoasCh *amfType,INDEX *pIndexAmf)
+RC OUTPUT_ReadAmf(DoasCh *symbolName,DoasCh *amfFileName,DoasCh amfType,INDEX *pIndexAmf)
  {
   // Declarations
 
@@ -447,22 +447,13 @@ RC OUTPUT_ReadAmf(DoasCh *symbolName,DoasCh *amfFileName,DoasCh *amfType,INDEX *
 
   FILES_RebuildFileName(fileName,amfFileName,1);
 
-  if (!(symbolLength=strlen(symbolName)) || !(fileLength=strlen(fileName)) || !STD_Stricmp(amfType,ANLYS_amf[ANLYS_AMF_TYPE_NONE]))
+  if (!(symbolLength=strlen(symbolName)) || !(fileLength=strlen(fileName)) || (amfType==ANLYS_AMF_TYPE_NONE))
    indexSymbol=ITEM_NONE;
   else if (OUTPUT_AmfSpace!=NULL) // ELSE LEVEL 0
    {
     // Retrieve the type of file
 
-    if (!STD_Stricmp(amfType,ANLYS_amf[ANLYS_AMF_TYPE_SZA]))
-     fileType=ANLYS_AMF_TYPE_SZA;
-    else if (!STD_Stricmp(amfType,ANLYS_amf[ANLYS_AMF_TYPE_CLIMATOLOGY]))
-     fileType=ANLYS_AMF_TYPE_CLIMATOLOGY;
-    else if (!STD_Stricmp(amfType,ANLYS_amf[ANLYS_AMF_TYPE_WAVELENGTH1]))
-     fileType=ANLYS_AMF_TYPE_WAVELENGTH1;
-    else if (!STD_Stricmp(amfType,ANLYS_amf[ANLYS_AMF_TYPE_WAVELENGTH2]))
-     fileType=ANLYS_AMF_TYPE_WAVELENGTH2;
-    else
-     fileType=ANLYS_AMF_TYPE_WAVELENGTH3;
+    fileType=amfType;
 
     // Search for symbol in list
 

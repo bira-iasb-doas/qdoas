@@ -4441,8 +4441,10 @@ RC ANALYSE_LoadCross(ANALYSIS_CROSS *crossSectionList,INT nCross,INT hidden,doub
       if ((pWrkSymbol->type==WRK_SYMBOL_CROSS) &&
           (strlen(pWrkSymbol->symbolName)==symbolLength) &&
           (strlen(pWrkSymbol->crossFileName)==fileLength) &&
+          (strlen(pWrkSymbol->amfFileName)==strlen(pCross->amfFile)) &&
           !STD_Stricmp(pWrkSymbol->symbolName,symbolName) &&
-          !STD_Stricmp(pWrkSymbol->crossFileName,pCross->crossSectionFile))
+          !STD_Stricmp(pWrkSymbol->crossFileName,pCross->crossSectionFile) &&
+          !STD_Stricmp(pWrkSymbol->amfFileName,pCross->amfFile))
 
        break;
      }

@@ -182,7 +182,7 @@ void CEngineResponseSpecificRecord::process(CEngineController *engineController)
   if (processErrors(engineController))
     return;
 
-  if (m_recordNumber == 0) {
+  if (m_recordNumber <= 0) {    // 20090113 Caroline : If the record number is -1, do not stop the automatic process
     // EOF
     engineController->notifyEndOfRecords();
   }
@@ -193,11 +193,11 @@ void CEngineResponseSpecificRecord::process(CEngineController *engineController)
 
     engineController->notifyCurrentRecord(m_recordNumber);
   }
-  else {
+ /* else {
     // some error condition ... Treat it as fatal ...
     addErrorMessage("CEngineResponseSpecificRecord", "Unknown Error - Treated as fatal", FatalEngineError);
     processErrors(engineController);
-  }
+  }   */
 }
 
 void CEngineResponseSpecificRecord::setRecordNumber(int recordNumber)

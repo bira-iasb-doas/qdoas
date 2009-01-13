@@ -360,7 +360,7 @@ RC VECTOR_NormalizeVector(double *v,INT dim,double *pFact,DoasCh *function)
   // Vector normalization
 
   if (VECTOR_Norm(v,dim)<=(double)0.)
-   rc=ERROR_SetLast("str",ERROR_TYPE_WARNING,ERROR_ID_SQRT_ARG);
+   rc=ERROR_SetLast(function,ERROR_TYPE_WARNING,ERROR_ID_SQRT_ARG);
   else if ((norm=(double)sqrt(VECTOR_Norm(v,dim)))!=(double)0.)
    {
     if (pFact!=NULL)

@@ -1148,7 +1148,7 @@ EXTERN AMF_SYMBOL *OUTPUT_AmfSpace;                         // list of cross sec
 // ----------
 
 RC   OUTPUT_GetWveAmf(CROSS_RESULTS *pResults,double Zm,double *lambda,double *xs,double *deriv2);
-RC OUTPUT_ReadAmf(DoasCh *symbolName,DoasCh *amfFileName,DoasCh *amfType,INDEX *pIndexAmf);
+RC OUTPUT_ReadAmf(DoasCh *symbolName,DoasCh *amfFileName,DoasCh amfType,INDEX *pIndexAmf);
 
 void OUTPUT_ResetData(void);
 RC   OUTPUT_RegisterData(ENGINE_CONTEXT *pEngineContext);
