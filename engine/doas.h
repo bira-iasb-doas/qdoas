@@ -619,10 +619,22 @@ typedef struct _als
  {
   short       alsFlag;
   short       scanIndex;
-  double      scanningAngle;                                          // total number of spectra in tracks
+  double      scanningAngle;
   DoasCh      atrString[1024];
  }
 ALS_DATA;
+
+typedef struct _mkzyPack
+ {
+  double         scanningAngle;
+  double         scanningAngle2;
+  char           instrumentname[16];                                            // the name of the instrument
+  unsigned short startc;                                                        // the startchannel for the first data-point
+  unsigned short pixels;                                                        // number of pixels saved in the data-field
+  unsigned char  channel;                                                       // channel of the spectrometer, typically 0
+  char           coneangle;                                                     // new in version 4, given in cfg.txt
+ }
+MKZYPACK_DATA;
 
 // Buffers needed to load spectra
 
@@ -685,6 +697,7 @@ typedef struct _engineRecordInfo
   float  zenithViewAngle;                                                       // zenith viewing angle
   float  elevationViewAngle;                                                    // elevation viewing angle
   float  azimuthViewAngle;                                                      // azimuth viewing angle
+  float  scanningAngle;                                                         // scanning angle
 
   // Data related to specific formats
 
@@ -699,6 +712,7 @@ typedef struct _engineRecordInfo
   GOME2_DATA gome2;                                                             // GOME2 format
   OMI_DATA omi;
   ALS_DATA als;
+  MKZYPACK_DATA mkzy;
 
   double longitude;                                                             // longitude
   double latitude;                                                              // latitude
@@ -1382,6 +1396,8 @@ RC   ReliEASOE(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
 
 RC   SetSAOZ(ENGINE_CONTEXT *pEngineContext,FILE *specFp);
 RC   ReliSAOZ(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp,FILE *namesFp);
+RC   SetMKZYPack(ENGINE_CONTEXT *pEngineContext,FILE *specFp);
+RC   ReliMKZYPack(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,INT localDay,FILE *specFp);
 RC   SetSAOZEfm(ENGINE_CONTEXT *pEngineContext,FILE *specFp);
 RC   ReliSAOZEfm(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp);
 RC   SetActon_Logger(ENGINE_CONTEXT *pEngineContext,FILE *specFp);

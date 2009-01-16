@@ -253,6 +253,7 @@ SOURCES += ../engine/kurucz.c
 SOURCES += ../engine/matrix.c
 SOURCES += ../engine/memory.c
 SOURCES += ../engine/mfc-read.c
+SOURCES += ../engine/mkzypack-read.c
 SOURCES += ../engine/moon.c
 SOURCES += ../engine/noaa-read.c
 SOURCES += ../engine/output.c

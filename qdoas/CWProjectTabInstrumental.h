@@ -95,7 +95,7 @@ Q_OBJECT
   CWInstrMinimumEdit *m_noaaEdit;
   CWInstrOmiEdit *m_omiEdit;
   CWInstrGdpEdit *m_gome2Edit;
-
+  CWInstrMinimumEdit *m_mkzyPackEdit;
   std::map<int,int> m_instrumentToStackIndexMap;
 };
 

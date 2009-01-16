@@ -207,13 +207,14 @@ void mediateRequestPlotSpectra(ENGINE_CONTEXT *pEngineContext,void *responseHand
  //      sprintf(tmpString,"%.3f -> %.3f \n",pRecord->TimeDec,pRecord->localTimeDec);
 
     if ((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC) ||
-        (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC_STD))
+        (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC_STD) ||
+        (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MKZYPACK))
      {
       pTime=&pRecord->startTime;
-      if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_MFC_STARTTIME])
+      if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_STARTTIME])
        mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"Start time","%02d:%02d:%02d",pTime->ti_hour,pTime->ti_min,pTime->ti_sec);
       pTime=&pRecord->endTime;
-      if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_MFC_ENDTIME])
+      if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_ENDTIME])
        mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"End time","%02d:%02d:%02d",pTime->ti_hour,pTime->ti_min,pTime->ti_sec);
      }
 
@@ -309,13 +310,22 @@ void mediateRequestPlotSpectra(ENGINE_CONTEXT *pEngineContext,void *responseHand
        mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"Mirror status","%.3f",(pRecord->mirrorError==1)?"!!! PROBLEM !!!":"OK");
      }
 
+    if (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MKZYPACK)
+     {
+      if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_SCANNING])
+       {
+    	   mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"Scanning angle","%.3f",pRecord->mkzy.scanningAngle);
+    	   mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"Scanning angle 2","%.3f",pRecord->mkzy.scanningAngle2);
+    	  }
+    	}
+
     if (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_CCD_EEV)
      {
-      if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_ALS_SCANNING])
+      if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_SCANNING])
        {
-       	mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"Telescope scanning angle","%.3f",pRecord->als.scanningAngle);
-       	mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"ATR string","%s",pRecord->als.atrString);
-       }
+       	mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"Telescope Scanning angle","%.3f",pRecord->als.scanningAngle);
+      	 mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"ATR string","%s",pRecord->als.atrString);
+      	}
 
       if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_CCD_MEASTYPE])
        mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"Measure type","%s",CCD_measureTypes[pRecord->ccd.measureType]);
@@ -873,6 +883,15 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
 
     break;
  // ---------------------------------------------------------------------------
+    case PRJCT_INSTR_FORMAT_MKZYPACK :                                                              // MKZY Pack
+
+     NDET=2048;                                                                                     // size of the detector
+
+	  	 strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->mkzypack.calibrationFile);   // calibration file
+	  	 strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->mkzypack.instrFunctionFile);   // instrumental function file
+
+    break;
+	// ----------------------------------------------------------------------------
    }
 
   #if defined(__DEBUG_) && __DEBUG_ && defined(__DEBUG_DOAS_CONFIG_) && __DEBUG_DOAS_CONFIG_
@@ -989,9 +1008,9 @@ int mediateRequestSetProject(void *engineContext,
 
 	 // Transfer projects options from the mediator to the engine
 
-	 #if defined(__DEBUG_) && __DEBUG_
-  DEBUG_Start(ENGINE_dbgFile,"Project",DEBUG_FCTTYPE_CONFIG,5,DEBUG_DVAR_YES,0);
-  #endif
+//	QDOAS DEBUG  #if defined(__DEBUG_) && __DEBUG_
+// QDOAS DEBUG  DEBUG_Start(ENGINE_dbgFile,"Project",DEBUG_FCTTYPE_CONFIG,5,DEBUG_DVAR_YES,0);
+// QDOAS DEBUG  #endif
 
   // TO DO : Initialize the pEngineProject->name
 
@@ -1011,9 +1030,9 @@ int mediateRequestSetProject(void *engineContext,
   if (EngineSetProject(pEngineContext)!=ERROR_ID_NO)
    rc=ERROR_DisplayMessage(responseHandle);
 
-	 #if defined(__DEBUG_) && __DEBUG_
-  DEBUG_Stop("Project");
-  #endif
+//	QDOAS DEBUG  #if defined(__DEBUG_) && __DEBUG_
+// QDOAS DEBUG  DEBUG_Stop("Project");
+// QDOAS DEBUG  #endif
 
   return (rc!=ERROR_ID_NO)?-1:0;    // supposed that an error at the level of the load of projects stops the current session
  }
@@ -1296,12 +1315,12 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
 
 	 // Debug
 
-	 #if defined(__DEBUG_) && __DEBUG_
-	 WRK_SYMBOL *pWrkSymbol;                                                       // pointer to a general description of a symbol
-  CROSS_REFERENCE *pEngineCross;
-  INT indexTabCross;
-  DEBUG_Start(ENGINE_dbgFile,"Analysis windows",DEBUG_FCTTYPE_CONFIG|DEBUG_FCTTYPE_APPL|DEBUG_FCTTYPE_MATH,5,DEBUG_DVAR_NO,0);
-  #endif
+// QDOAS DEBUG	 #if defined(__DEBUG_) && __DEBUG_
+// QDOAS DEBUG	 WRK_SYMBOL *pWrkSymbol;                                                       // pointer to a general description of a symbol
+// QDOAS DEBUG  CROSS_REFERENCE *pEngineCross;
+// QDOAS DEBUG  INT indexTabCross;
+// QDOAS DEBUG  DEBUG_Start(ENGINE_dbgFile,"Analysis windows",DEBUG_FCTTYPE_CONFIG|DEBUG_FCTTYPE_APPL|DEBUG_FCTTYPE_MATH,5,DEBUG_DVAR_NO,0);
+// QDOAS DEBUG  #endif
 
 	 // Initializations
 
@@ -1463,27 +1482,27 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
          }
        }
 
-      #if defined(__DEBUG_) && __DEBUG_
-      DEBUG_Print("Cross sections of %s window (rc %d)\n",pTabFeno->windowName,rc);
-      DEBUG_Print("NAME                      ACTION           A  P    ------------ conc --------------     ----------- param --------------     ----------- shift --------------     --------- stretch --------------     -------- stretch2 --------------\n");
-      for (indexTabCross=0;indexTabCross<pTabFeno->NTabCross;indexTabCross++)
-       {
-       	pEngineCross=&pTabFeno->TabCross[indexTabCross];
-       	pWrkSymbol=&WorkSpace[pEngineCross->Comp];
-
-       	DEBUG_Print("%-25s %-15s %2d %2d     %2d %14.3e %14.3e     %2d %14.3e %14.3e     %2d %14.3e %14.3e     %2d %14.3e %14.3e     %2d %14.3e %14.3e\n",
-           	        pWrkSymbol->symbolName,ANLYS_crossAction[pEngineCross->crossAction],
-           	        pEngineCross->IndSvdA,pEngineCross->IndSvdP,
-                    pEngineCross->FitConc,pEngineCross->InitConc,pEngineCross->DeltaConc,
-                    pEngineCross->FitParam,pEngineCross->InitParam,pEngineCross->DeltaParam,
-                    pEngineCross->FitShift,pEngineCross->InitShift,pEngineCross->DeltaShift,
-                    pEngineCross->FitStretch,pEngineCross->InitStretch,pEngineCross->DeltaStretch,
-                    pEngineCross->FitStretch2,pEngineCross->InitStretch2,pEngineCross->DeltaStretch2);
-
-
-        DEBUG_PrintVar("Cross section",pWrkSymbol->xs.matrix,0,pWrkSymbol->xs.nl-1,0,pWrkSymbol->xs.nc-1,NULL);
-       }
-      #endif
+// QDOAS DEBUG      #if defined(__DEBUG_) && __DEBUG_
+// QDOAS DEBUG      DEBUG_Print("Cross sections of %s window (rc %d)\n",pTabFeno->windowName,rc);
+// QDOAS DEBUG      DEBUG_Print("NAME                      ACTION           A  P    ------------ conc --------------     ----------- param --------------     ----------- shift --------------     --------- stretch --------------     -------- stretch2 --------------\n");
+// QDOAS DEBUG      for (indexTabCross=0;indexTabCross<pTabFeno->NTabCross;indexTabCross++)
+// QDOAS DEBUG       {
+// QDOAS DEBUG       	pEngineCross=&pTabFeno->TabCross[indexTabCross];
+// QDOAS DEBUG       	pWrkSymbol=&WorkSpace[pEngineCross->Comp];
+// QDOAS DEBUG
+// QDOAS DEBUG       	DEBUG_Print("%-25s %-15s %2d %2d     %2d %14.3e %14.3e     %2d %14.3e %14.3e     %2d %14.3e %14.3e     %2d %14.3e %14.3e     %2d %14.3e %14.3e\n",
+// QDOAS DEBUG           	        pWrkSymbol->symbolName,ANLYS_crossAction[pEngineCross->crossAction],
+// QDOAS DEBUG           	        pEngineCross->IndSvdA,pEngineCross->IndSvdP,
+// QDOAS DEBUG                    pEngineCross->FitConc,pEngineCross->InitConc,pEngineCross->DeltaConc,
+// QDOAS DEBUG                    pEngineCross->FitParam,pEngineCross->InitParam,pEngineCross->DeltaParam,
+// QDOAS DEBUG                    pEngineCross->FitShift,pEngineCross->InitShift,pEngineCross->DeltaShift,
+// QDOAS DEBUG                    pEngineCross->FitStretch,pEngineCross->InitStretch,pEngineCross->DeltaStretch,
+// QDOAS DEBUG                    pEngineCross->FitStretch2,pEngineCross->InitStretch2,pEngineCross->DeltaStretch2);
+// QDOAS DEBUG
+// QDOAS DEBUG
+// QDOAS DEBUG        DEBUG_PrintVar("Cross section",pWrkSymbol->xs.matrix,0,pWrkSymbol->xs.nl-1,0,pWrkSymbol->xs.nc-1,NULL);
+// QDOAS DEBUG       }
+// QDOAS DEBUG      #endif
 
       NFeno++;
      }
@@ -1512,15 +1531,15 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
        !(rc=KURUCZ_Reference(pEngineContext->buffers.instrFunction,0,saveFlag,1,responseHandle)))) &&
        !(rc=ANALYSE_AlignReference(pEngineContext,0,saveFlag,responseHandle)))
    {
-    #if defined(__DEBUG_) && __DEBUG_ && __DEBUG_DOAS_OUTPUT_
-    DEBUG_Start(ENGINE_dbgFile,"OUTPUT_RegisterData",DEBUG_FCTTYPE_FILE,5,DEBUG_DVAR_YES,1);
-    #endif
+// QDOAS DEBUG     #if defined(__DEBUG_) && __DEBUG_ && __DEBUG_DOAS_OUTPUT_
+// QDOAS DEBUG     DEBUG_Start(ENGINE_dbgFile,"OUTPUT_RegisterData",DEBUG_FCTTYPE_FILE,5,DEBUG_DVAR_YES,1);
+// QDOAS DEBUG     #endif
 
     rc=OUTPUT_RegisterData(pEngineContext);
 
-    #if defined(__DEBUG_) && __DEBUG_ && __DEBUG_DOAS_OUTPUT_
-    DEBUG_Stop("OUTPUT_RegisterData");
-    #endif
+// QDOAS DEBUG     #if defined(__DEBUG_) && __DEBUG_ && __DEBUG_DOAS_OUTPUT_
+// QDOAS DEBUG     DEBUG_Stop("OUTPUT_RegisterData");
+// QDOAS DEBUG     #endif
    }
 
   if (!rc && useUsamp &&
@@ -1541,9 +1560,9 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
 	 if (rc!=ERROR_ID_NO)
 	  ERROR_DisplayMessage(responseHandle);
 
-	 #if defined(__DEBUG_) && __DEBUG_
-  DEBUG_Stop("Analysis windows");
-  #endif
+// QDOAS DEBUG 	 #if defined(__DEBUG_) && __DEBUG_
+// QDOAS DEBUG   DEBUG_Stop("Analysis windows");
+// QDOAS DEBUG   #endif
 
   return (rc!=ERROR_ID_NO)?-1:0;    // supposed that an error at the level of the load of projects stops the current session
  }

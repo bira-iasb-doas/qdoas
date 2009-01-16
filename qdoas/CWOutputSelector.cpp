@@ -106,9 +106,9 @@ CWOutputSelector::CWOutputSelector(const data_select_list_t *d, QWidget *parent)
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_SCIA_QUALITY,        "SCIAMACHY Quality Flag"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_SCIA_STATE_INDEX,    "SCIAMACHY State Index"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_SCIA_STATE_ID,       "SCIAMACHY State Id"));
-  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_MFC_STARTTIME,       "MFC StartTime (hhmmss)"));
-  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_MFC_ENDTIME,         "MFC EndTime (hhmmss)"));
-  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_ALS_SCANNING,        "Scanning telescope angle"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_STARTTIME,           "Start Time (hhmmss)"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_ENDTIME,             "Stop Time (hhmmss)"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_SCANNING,            "Scanning angle"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_CCD_FILTERNUMBER,    "Filter number"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_CCD_MEASTYPE,        "Measurement type"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_CCD_HEADTEMPERATURE, "Head temperature"));
@@ -373,7 +373,7 @@ void getValidFieldFlags(int *validFlags, int instrument)
       validFlags[PRJCT_RESULTS_ASCII_TDET]=1;
       validFlags[PRJCT_RESULTS_ASCII_VIEW_ELEVATION]=1;
       validFlags[PRJCT_RESULTS_ASCII_VIEW_AZIMUTH]=1;                           // not present in all measurements, but could be in the next future
-      validFlags[PRJCT_RESULTS_ASCII_ALS_SCANNING]=1;
+      validFlags[PRJCT_RESULTS_ASCII_SCANNING]=1;
       validFlags[PRJCT_RESULTS_ASCII_CCD_FILTERNUMBER]=1;
       validFlags[PRJCT_RESULTS_ASCII_CCD_MEASTYPE]=1;
       validFlags[PRJCT_RESULTS_ASCII_CCD_HEADTEMPERATURE]=1;
@@ -416,8 +416,8 @@ void getValidFieldFlags(int *validFlags, int instrument)
       validFlags[PRJCT_RESULTS_ASCII_VIEW_AZIMUTH]=1;
       validFlags[PRJCT_RESULTS_ASCII_LONGIT]=1;
       validFlags[PRJCT_RESULTS_ASCII_LATIT]=1;
-      validFlags[PRJCT_RESULTS_ASCII_MFC_STARTTIME]=1;
-      validFlags[PRJCT_RESULTS_ASCII_MFC_ENDTIME]=1;
+      validFlags[PRJCT_RESULTS_ASCII_STARTTIME]=1;
+      validFlags[PRJCT_RESULTS_ASCII_ENDTIME]=1;
       validFlags[PRJCT_RESULTS_ASCII_TDET]=1;
      }
     break;
@@ -459,12 +459,25 @@ void getValidFieldFlags(int *validFlags, int instrument)
      }
     break;
  // ----------------------------------------------------------------------------
-
+    case PRJCT_INSTR_FORMAT_MKZYPACK :
+     {
+      validFlags[PRJCT_RESULTS_ASCII_SCANS]=1;
+      validFlags[PRJCT_RESULTS_ASCII_NREJ]=1;
+      validFlags[PRJCT_RESULTS_ASCII_NAME]=1;
+      validFlags[PRJCT_RESULTS_ASCII_SCANNING]=1;
+      validFlags[PRJCT_RESULTS_ASCII_STARTTIME]=1;
+      validFlags[PRJCT_RESULTS_ASCII_ENDTIME]=1;
+      validFlags[PRJCT_RESULTS_ASCII_LONGIT]=1;
+      validFlags[PRJCT_RESULTS_ASCII_LATIT]=1;
+      validFlags[PRJCT_RESULTS_ASCII_ALTIT]=1;
+      validFlags[PRJCT_RESULTS_ASCII_TDET]=1;
+     }
+    break;
+ // ----------------------------------------------------------------------------
 
 // QDOAS !!! STILL TO DO  PRJCT_INSTR_FORMAT_CCD_OHP_96,                        // CCD (OHP 96)
 // QDOAS !!! STILL TO DO  PRJCT_INSTR_FORMAT_CCD_HA_94,                         // CCD (HARESTUA 94)
 // QDOAS !!! STILL TO DO  PRJCT_INSTR_FORMAT_OMI,                               // OMI
-// QDOAS !!! STILL TO DO  PRJCT_INSTR_FORMAT_GOME2,                             // GOME2
 
     default:
      {

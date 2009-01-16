@@ -582,33 +582,34 @@ enum _prjctUsampMethod
 
 enum _prjctInstrFormat
  {
-  PRJCT_INSTR_FORMAT_ASCII,                            // ASCII
-  PRJCT_INSTR_FORMAT_LOGGER,                           // Logger (PDA,CCD or HAMAMATSU)
-  PRJCT_INSTR_FORMAT_ACTON,                            // Acton (NILU)
-  PRJCT_INSTR_FORMAT_PDAEGG,                           // PDA EG&G (sept. 94 until now)
-  PRJCT_INSTR_FORMAT_PDAEGG_OLD,                       // PDA EG&G (spring 94)
-  PRJCT_INSTR_FORMAT_PDAEGG_ULB,                       // PDA EG&G (ULB)
-  PRJCT_INSTR_FORMAT_CCD_OHP_96,                       // CCD (OHP 96)
-  PRJCT_INSTR_FORMAT_CCD_HA_94,                        // CCD (HARESTUA 94)
-  PRJCT_INSTR_FORMAT_CCD_ULB,                          // CCD (ULB)
-  PRJCT_INSTR_FORMAT_SAOZ_VIS,                         // SAOZ visible
-  PRJCT_INSTR_FORMAT_SAOZ_UV,                          // SAOZ UV
-  PRJCT_INSTR_FORMAT_SAOZ_EFM,                         // SAOZ EFM (1024)
-  PRJCT_INSTR_FORMAT_MFC,                              // MFC Heidelberg
-  PRJCT_INSTR_FORMAT_MFC_STD,                          // MFC Heidelberg
-  PRJCT_INSTR_FORMAT_RASAS,                            // RASAS (INTA)
-  PRJCT_INSTR_FORMAT_PDASI_EASOE,                       // EASOE
-  PRJCT_INSTR_FORMAT_PDASI_OSMA,                       // PDA SI (OSMA)
-  PRJCT_INSTR_FORMAT_CCD_EEV,                          // CCD EEV
-  PRJCT_INSTR_FORMAT_OPUS,                             // FOURIER,OPUS format
-  PRJCT_INSTR_FORMAT_GDP_ASCII,                        // GOME GDP ASCII format
-  PRJCT_INSTR_FORMAT_GDP_BIN,                          // GOME GDP BINARY format
-  PRJCT_INSTR_FORMAT_SCIA_HDF,                         // SCIAMACHY Calibrated Level 1 data in HDF format
-  PRJCT_INSTR_FORMAT_SCIA_PDS,                         // SCIAMACHY Calibrated Level 1 data in PDS format
-  PRJCT_INSTR_FORMAT_UOFT,                             // University of Toronto
-  PRJCT_INSTR_FORMAT_NOAA,                             // NOAA
-  PRJCT_INSTR_FORMAT_OMI,                              // OMI
-  PRJCT_INSTR_FORMAT_GOME2,                            // GOME2
+  PRJCT_INSTR_FORMAT_ASCII,                                                     // ASCII
+  PRJCT_INSTR_FORMAT_LOGGER,                                                    // Logger (PDA,CCD or HAMAMATSU)
+  PRJCT_INSTR_FORMAT_ACTON,                                                     // Acton (NILU)
+  PRJCT_INSTR_FORMAT_PDAEGG,                                                    // PDA EG&G (sept. 94 until now)
+  PRJCT_INSTR_FORMAT_PDAEGG_OLD,                                                // PDA EG&G (spring 94)
+  PRJCT_INSTR_FORMAT_PDAEGG_ULB,                                                // PDA EG&G (ULB)
+  PRJCT_INSTR_FORMAT_CCD_OHP_96,                                                // CCD (OHP 96)
+  PRJCT_INSTR_FORMAT_CCD_HA_94,                                                 // CCD (HARESTUA 94)
+  PRJCT_INSTR_FORMAT_CCD_ULB,                                                   // CCD (ULB)
+  PRJCT_INSTR_FORMAT_SAOZ_VIS,                                                  // SAOZ visible
+  PRJCT_INSTR_FORMAT_SAOZ_UV,                                                   // SAOZ UV
+  PRJCT_INSTR_FORMAT_SAOZ_EFM,                                                  // SAOZ EFM (1024)
+  PRJCT_INSTR_FORMAT_MFC,                                                       // MFC Heidelberg
+  PRJCT_INSTR_FORMAT_MFC_STD,                                                   // MFC Heidelberg
+  PRJCT_INSTR_FORMAT_RASAS,                                                     // RASAS (INTA)
+  PRJCT_INSTR_FORMAT_PDASI_EASOE,                                               // EASOE
+  PRJCT_INSTR_FORMAT_PDASI_OSMA,                                                // PDA SI (OSMA)
+  PRJCT_INSTR_FORMAT_CCD_EEV,                                                   // CCD EEV
+  PRJCT_INSTR_FORMAT_OPUS,                                                      // FOURIER,OPUS format
+  PRJCT_INSTR_FORMAT_GDP_ASCII,                                                 // GOME GDP ASCII format
+  PRJCT_INSTR_FORMAT_GDP_BIN,                                                   // GOME GDP BINARY format
+  PRJCT_INSTR_FORMAT_SCIA_HDF,                                                  // SCIAMACHY Calibrated Level 1 data in HDF format
+  PRJCT_INSTR_FORMAT_SCIA_PDS,                                                  // SCIAMACHY Calibrated Level 1 data in PDS format
+  PRJCT_INSTR_FORMAT_UOFT,                                                      // University of Toronto
+  PRJCT_INSTR_FORMAT_NOAA,                                                      // NOAA
+  PRJCT_INSTR_FORMAT_OMI,                                                       // OMI
+  PRJCT_INSTR_FORMAT_GOME2,                                                     // GOME2
+  PRJCT_INSTR_FORMAT_MKZYPACK,                                                  // MANNE Kihlman and ZHANG Yan pack format
   PRJCT_INSTR_FORMAT_MAX
  };
 
@@ -766,9 +767,9 @@ enum _prjctResultsAscii
   PRJCT_RESULTS_ASCII_SCIA_QUALITY,
   PRJCT_RESULTS_ASCII_SCIA_STATE_INDEX,
   PRJCT_RESULTS_ASCII_SCIA_STATE_ID,
-  PRJCT_RESULTS_ASCII_MFC_STARTTIME,
-  PRJCT_RESULTS_ASCII_MFC_ENDTIME,
-  PRJCT_RESULTS_ASCII_ALS_SCANNING,
+  PRJCT_RESULTS_ASCII_STARTTIME,
+  PRJCT_RESULTS_ASCII_ENDTIME,
+  PRJCT_RESULTS_ASCII_SCANNING,
   PRJCT_RESULTS_ASCII_CCD_FILTERNUMBER,
   PRJCT_RESULTS_ASCII_CCD_MEASTYPE,
   PRJCT_RESULTS_ASCII_CCD_HEADTEMPERATURE,

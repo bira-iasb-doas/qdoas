@@ -35,7 +35,7 @@ CWProjectPropertyEditor::CWProjectPropertyEditor(const QString &projectName, QWi
   m_projectName(projectName)
 {
   mediate_project_t *projectData = CWorkSpace::instance()->findProject(m_projectName);
-  
+
   if (!projectData)
     return; // TODO - assert or throw
 
@@ -44,7 +44,7 @@ CWProjectPropertyEditor::CWProjectPropertyEditor(const QString &projectName, QWi
   //QVBoxLayout *mainLayout = new QVBoxLayout(this);
   mainLayout->setMargin(25);
   mainLayout->setSpacing(5);
-  
+
   // Instrument selection combos
   QHBoxLayout *instrLayout = new QHBoxLayout;
   instrLayout->setMargin(0);
@@ -76,6 +76,7 @@ CWProjectPropertyEditor::CWProjectPropertyEditor(const QString &projectName, QWi
   m_groundFormatCombo->addItem("RASAS (INTA)", QVariant(PRJCT_INSTR_FORMAT_RASAS));
   m_groundFormatCombo->addItem("SAOZ EFM (1024)", QVariant(PRJCT_INSTR_FORMAT_SAOZ_EFM));
   m_groundFormatCombo->addItem("SAOZ PCD/NMOS (512)", QVariant(PRJCT_INSTR_FORMAT_SAOZ_VIS));
+  m_groundFormatCombo->addItem("PAK (NOVAC, MANNE Kihlman and ZHANG Yan)", QVariant(PRJCT_INSTR_FORMAT_MKZYPACK));
   m_groundFormatCombo->hide();
   // create and populate satellite
   m_satelliteFormatCombo = new QComboBox(this);
@@ -95,15 +96,15 @@ CWProjectPropertyEditor::CWProjectPropertyEditor(const QString &projectName, QWi
 
 
   m_tabs = new QTabWidget(this);
-  
+
   // Display Tab
   m_displayTab = new CWProjectTabDisplay(&(projectData->display));
   m_tabs->addTab(m_displayTab, "Display");
-  
+
   // Selection Tab
   m_selectionTab = new CWProjectTabSelection(&(projectData->selection));
   m_tabs->addTab(m_selectionTab, "Selection");
-  
+
   // Analysis Tab
   m_analysisTab = new CWProjectTabAnalysis(&(projectData->analysis));
   m_tabs->addTab(m_analysisTab, "Analysis");
@@ -207,7 +208,7 @@ bool CWProjectPropertyEditor::actionOk(void)
 {
   // call apply for all tabs ...
   mediate_project_t *projectData = CWorkSpace::instance()->findProject(m_projectName);
-  
+
   if (projectData) {
 
     m_displayTab->apply(&(projectData->display));
@@ -258,7 +259,7 @@ void CWProjectPropertyEditor::slotInstrumentTypeChanged(int index)
     // Ground-Based ...
     m_satelliteFormatCombo->hide();
     m_groundFormatCombo->show();
-    
+
     // the instrument also changes to the selected instrument
     slotGroundInstrumentChanged(m_groundFormatCombo->currentIndex());
   }
@@ -268,7 +269,7 @@ void CWProjectPropertyEditor::slotInstrumentTypeChanged(int index)
     m_satelliteFormatCombo->show();
 
     // the instrument also changes to the selected instrument
-    slotSatelliteInstrumentChanged(m_satelliteFormatCombo->currentIndex());    
+    slotSatelliteInstrumentChanged(m_satelliteFormatCombo->currentIndex());
   }
 
   emit signalInstrumentTypeChanged(m_instrTypeCombo->itemData(index).toInt());
@@ -284,6 +285,6 @@ void CWProjectPropertyEditor::slotGroundInstrumentChanged(int index)
 void CWProjectPropertyEditor::slotSatelliteInstrumentChanged(int index)
 {
   m_selectedInstrument = m_satelliteFormatCombo->itemData(index).toInt();
-  
+
   emit signalInstrumentChanged(m_selectedInstrument);
 }

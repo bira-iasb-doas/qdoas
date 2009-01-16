@@ -118,12 +118,12 @@ bool CSelectorSubHandler::start(const QString &element, const QXmlAttributes &at
   else if (str == "scia_state_id")
     d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_SCIA_STATE_ID;
   else if (str == "mfc_starttime")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_MFC_STARTTIME;
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_STARTTIME;
   else if (str == "mfc_endtime")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_MFC_ENDTIME;
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_ENDTIME;
 
-  else if (str == "ccd_telescopeAngle")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_ALS_SCANNING;
+  else if (str == "scanning_angle")
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_SCANNING;
   else if (str == "ccd_filterNumber")
     d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_CCD_FILTERNUMBER;
   else if (str == "ccd_measType")
@@ -548,6 +548,8 @@ bool CProjectInstrumentalSubHandler::start(const QXmlAttributes &atts)
     m_instrumental->format = PRJCT_INSTR_FORMAT_OMI;
   else if (str == "gome2")
     m_instrumental->format = PRJCT_INSTR_FORMAT_GOME2;
+  else if (str == "mkzypack")
+    m_instrumental->format = PRJCT_INSTR_FORMAT_MKZYPACK;
   else
     return postErrorMessage("Invalid instrumental format");
 
@@ -874,7 +876,9 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
   }
   else if (element == "gome2") { // GOME2
     helperLoadGdp(atts, &(m_instrumental->gome2));
-
+  }
+  else if (element == "mkzypack") { // MKZY Pack
+    return helperLoadMinimum(atts, &(m_instrumental->mkzypack));
   }
 
   // ... other formats ...

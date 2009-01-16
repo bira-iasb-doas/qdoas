@@ -285,7 +285,8 @@ RC EngineSetProject(ENGINE_CONTEXT *pEngineContext)
        (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_CCD_HA_94) ||
        (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_PDAEGG) ||
        (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_PDAEGG_OLD) ||
-       (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_PDASI_EASOE)) &&
+       (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_PDASI_EASOE) ||
+       (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MKZYPACK)) &&
 
       ((pBuffers->recordIndexes=(DoasU32 *)MEMORY_AllocBuffer("EngineSetProject","recordIndexes",2001,sizeof(DoasU32),0,MEMORY_TYPE_ULONG))==NULL)) ||
 
@@ -567,6 +568,10 @@ RC EngineSetFile(ENGINE_CONTEXT *pEngineContext,const char *fileName)
       rc=GOME2_Set(pEngineContext);
      break;
   // ---------------------------------------------------------------------------
+     case PRJCT_INSTR_FORMAT_MKZYPACK :
+      rc=SetMKZYPack(pEngineContext,pFile->specFp);
+     break;
+  // ---------------------------------------------------------------------------
      default :
       rc=ERROR_ID_FILE_FORMAT;
      break;
@@ -733,7 +738,11 @@ RC EngineReadFile(ENGINE_CONTEXT *pEngineContext,int indexRecord,INT dateFlag,IN
     break;
  // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_GOME2 :
-     /* // !!! GOME2 */ rc=GOME2_Read(pEngineContext,indexRecord,ITEM_NONE);
+     rc=GOME2_Read(pEngineContext,indexRecord,ITEM_NONE);
+    break;
+ // ---------------------------------------------------------------------------
+    case PRJCT_INSTR_FORMAT_MKZYPACK :
+     rc=ReliMKZYPack(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp);
     break;
  // ---------------------------------------------------------------------------
     default :

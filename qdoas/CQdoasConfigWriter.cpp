@@ -398,6 +398,9 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   case PRJCT_INSTR_FORMAT_GOME2:
     fprintf(fp, "\"gome2\"");
     break;
+  case PRJCT_INSTR_FORMAT_MKZYPACK:
+    fprintf(fp, "\"mkzypack\"");
+    break;
   default:
     fprintf(fp, "\"invalid\"");
   }
@@ -846,6 +849,13 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   fprintf(fp, " calib=\"%s\"", tmpStr.toAscii().constData());
 
   tmpStr = pathMgr->simplifyPath(QString(d->gome2.instrFunctionFile));
+  fprintf(fp, " instr=\"%s\" />\n", tmpStr.toAscii().constData());
+
+  // mkzypack
+  tmpStr = pathMgr->simplifyPath(QString(d->mkzypack.calibrationFile));
+  fprintf(fp, "      <mkzypack calib=\"%s\"", tmpStr.toAscii().constData());
+
+  tmpStr = pathMgr->simplifyPath(QString(d->mkzypack.instrFunctionFile));
   fprintf(fp, " instr=\"%s\" />\n", tmpStr.toAscii().constData());
 
   fprintf(fp, "    </instrumental>\n");
@@ -1353,10 +1363,10 @@ void CQdoasConfigWriter::writeDataSelectList(FILE *fp, const data_select_list_t 
     case PRJCT_RESULTS_ASCII_SCIA_QUALITY:     fprintf(fp, "scia_quality"); break;
     case PRJCT_RESULTS_ASCII_SCIA_STATE_INDEX: fprintf(fp, "scia_state_index"); break;
     case PRJCT_RESULTS_ASCII_SCIA_STATE_ID:    fprintf(fp, "scia_state_id"); break;
-    case PRJCT_RESULTS_ASCII_MFC_STARTTIME:    fprintf(fp, "mfc_starttime"); break;
-    case PRJCT_RESULTS_ASCII_MFC_ENDTIME:      fprintf(fp, "mfc_endtime"); break;
+    case PRJCT_RESULTS_ASCII_STARTTIME:    fprintf(fp, "mfc_starttime"); break;
+    case PRJCT_RESULTS_ASCII_ENDTIME:      fprintf(fp, "mfc_endtime"); break;
 
-    case PRJCT_RESULTS_ASCII_ALS_SCANNING        :      fprintf(fp, "ccd_telescopeAngle"); break;
+    case PRJCT_RESULTS_ASCII_SCANNING            :      fprintf(fp, "scanning_angle"); break;
     case PRJCT_RESULTS_ASCII_CCD_FILTERNUMBER    :      fprintf(fp, "ccd_filterNumber"); break;
     case PRJCT_RESULTS_ASCII_CCD_MEASTYPE        :      fprintf(fp, "ccd_measType"); break;
     case PRJCT_RESULTS_ASCII_CCD_HEADTEMPERATURE :      fprintf(fp, "ccd_headTemp"); break;

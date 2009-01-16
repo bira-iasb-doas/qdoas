@@ -321,7 +321,7 @@ extern "C" {
   };
 
   typedef struct mediate_project_instrumental
-  {
+   {
     int format;
     char siteName[SITE_NAME_BUFFER_LENGTH];
     struct instrumental_ascii ascii;
@@ -346,8 +346,9 @@ extern "C" {
     struct instrumental_minimum noaa;
     struct instrumental_omi omi;
     struct instrumental_gdp gome2;
-
-  } mediate_project_instrumental_t;
+    struct instrumental_minimum mkzypack;
+   }
+  mediate_project_instrumental_t;
 
 
   /****************************************************/
