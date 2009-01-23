@@ -548,8 +548,8 @@ bool CProjectInstrumentalSubHandler::start(const QXmlAttributes &atts)
     m_instrumental->format = PRJCT_INSTR_FORMAT_OMI;
   else if (str == "gome2")
     m_instrumental->format = PRJCT_INSTR_FORMAT_GOME2;
-  else if (str == "mkzypack")
-    m_instrumental->format = PRJCT_INSTR_FORMAT_MKZYPACK;
+  else if (str == "mkzy")
+    m_instrumental->format = PRJCT_INSTR_FORMAT_MKZY;
   else
     return postErrorMessage("Invalid instrumental format");
 
@@ -877,8 +877,8 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
   else if (element == "gome2") { // GOME2
     helperLoadGdp(atts, &(m_instrumental->gome2));
   }
-  else if (element == "mkzypack") { // MKZY Pack
-    return helperLoadMinimum(atts, &(m_instrumental->mkzypack));
+  else if (element == "mkzy") { // MKZY
+    return helperLoadMinimum(atts, &(m_instrumental->mkzy));
   }
 
   // ... other formats ...

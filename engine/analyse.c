@@ -4391,7 +4391,7 @@ RC ANALYSE_CheckLambda(WRK_SYMBOL *pWrkSymbol,double *lambda,DoasCh *callingFunc
 // PURPOSE       Load data from the molecules pages
 // -----------------------------------------------------------------------------
 
-RC ANALYSE_LoadCross(ANALYSIS_CROSS *crossSectionList,INT nCross,INT hidden,double *lambda)
+RC ANALYSE_LoadCross(ENGINE_CONTEXT *pEngineContext,ANALYSIS_CROSS *crossSectionList,INT nCross,INT hidden,double *lambda)
  {
  	// Declarations
 
@@ -4492,7 +4492,7 @@ RC ANALYSE_LoadCross(ANALYSIS_CROSS *crossSectionList,INT nCross,INT hidden,doub
         pEngineCross->amfType=pCross->amfType;
         pEngineCross->filterFlag=pCross->requireFilter;
 
-        if ((pEngineCross->crossAction==ANLYS_CROSS_ACTION_NOTHING) && (pTabFeno->gomeRefFlag || MFC_refFlag))
+        if ((pEngineCross->crossAction==ANLYS_CROSS_ACTION_NOTHING) && (pTabFeno->gomeRefFlag || pEngineContext->refFlag))
          rc=ANALYSE_CheckLambda(pWrkSymbol,lambda,"ANALYSE_LoadCross ");
 
         if (rc==ERROR_ID_NO)
@@ -4943,7 +4943,7 @@ RC ANALYSE_LoadShiftStretch(ANALYSIS_SHIFT_STRETCH *shiftStretchList,INT nShiftS
 #if defined(__BC32_) && __BC32_
 #pragma argsused
 #endif
-RC ANALYSE_LoadNonLinear(ANALYSE_NON_LINEAR_PARAMETERS *nonLinearList,INT nNonLinear,double *lambda)
+RC ANALYSE_LoadNonLinear(ENGINE_CONTEXT *pEngineContext,ANALYSE_NON_LINEAR_PARAMETERS *nonLinearList,INT nNonLinear,double *lambda)
  {
   // Declarations
 
@@ -5128,7 +5128,7 @@ RC ANALYSE_LoadNonLinear(ANALYSE_NON_LINEAR_PARAMETERS *nonLinearList,INT nNonLi
                      (double)0.,(double)0.,
                     ((pTabFeno->indexRing1==pTabFeno->NTabCross))?1:0,0,"ANALYSE_LoadNonLinear "))!=0)
 
-                 ||((pTabFeno->gomeRefFlag || MFC_refFlag) &&
+                 ||((pTabFeno->gomeRefFlag || pEngineContext->refFlag) &&
                     (pTabFeno->indexRing1!=pTabFeno->NTabCross) &&                               // only the Raman spectrum should be interpolated on the
                    ((rc=ANALYSE_CheckLambda(pWrkSymbol,lambda,"ANALYSE_LoadNonLinear "))!=0))    // grid of the reference spectrum
                  )
@@ -5236,7 +5236,7 @@ RC ANALYSE_LoadNonLinear(ANALYSE_NON_LINEAR_PARAMETERS *nonLinearList,INT nNonLi
 #if defined(__BC32_) && __BC32_
 #pragma argsused
 #endif
-RC ANALYSE_LoadGaps(ANALYSIS_GAP *gapList,INT nGaps,double *lambda,double lambdaMin,double lambdaMax)
+RC ANALYSE_LoadGaps(ENGINE_CONTEXT *pEngineContext,ANALYSIS_GAP *gapList,INT nGaps,double *lambda,double lambdaMin,double lambdaMax)
  {
   // Declarations
 
@@ -5314,7 +5314,7 @@ RC ANALYSE_LoadGaps(ANALYSIS_GAP *gapList,INT nGaps,double *lambda,double lambda
        }
      }
 
-    if (pTabFeno->gomeRefFlag || MFC_refFlag)
+    if (pTabFeno->gomeRefFlag || pEngineContext->refFlag)
      {
       for (indexWindow=0;indexWindow<Z;indexWindow++)
        {
@@ -5355,7 +5355,7 @@ RC ANALYSE_LoadOutput(ANALYSIS_OUTPUT *outputList,INT nOutput)
 
   ANALYSIS_OUTPUT *pOutput;
   INDEX indexOutput,indexTabCross;
-  CROSS_REFERENCE *TabCross,*pTabCross;                                                    //  symbol cross reference
+  CROSS_REFERENCE *TabCross,*pTabCross;                                         //  symbol cross reference
   CROSS_RESULTS   *TabCrossResults,*pResults;                                   //  results stored per symbol in previous list
   FENO *pTabFeno;
   RC rc;
@@ -5408,14 +5408,13 @@ RC ANALYSE_LoadOutput(ANALYSIS_OUTPUT *outputList,INT nOutput)
           pResults->StoreVrtCol=pOutput->vertCol;                               // flag set if vertical column is to be written into output file
           pResults->StoreVrtErr=pOutput->vertErr;                               // flag set if error on vertical column is to be written into output file
           pResults->VrtFact=pOutput->vertFactor;
+          pResults->ResCol=(double)pOutput->resCol;                             // residual column
          }
-
-        pResults->StoreSlntCol=pOutput->slantCol;                               // flag set if slant column is to be written into output file
-        pResults->StoreSlntErr=pOutput->slantErr;                               // flag set if error on slant column is to be written into output file
-        pResults->SlntFact=pOutput->slantFactor;
-
-        pResults->ResCol=(double)0.;                                            // residual column
        }
+
+      pResults->StoreSlntCol=pOutput->slantCol;                                 // flag set if slant column is to be written into output file
+      pResults->StoreSlntErr=pOutput->slantErr;                                 // flag set if error on slant column is to be written into output file
+      pResults->SlntFact=pOutput->slantFactor;
   	  }
    }
 
@@ -5447,7 +5446,7 @@ RC ANALYSE_LoadRef(ENGINE_CONTEXT *pEngineContext)
   lambdaRef=lambdaRefEtalon=NULL;
   pTabFeno->useEtalon=0;
   pTabFeno->displayRef=0;
-  MFC_refFlag=0;
+  pEngineContext->refFlag=0;
 
   pTabFeno->gomeRefFlag=((pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_GDP_ASCII)&&
                          (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_GDP_BIN) &&
@@ -5502,9 +5501,13 @@ RC ANALYSE_LoadRef(ENGINE_CONTEXT *pEngineContext)
    {
    	strcpy(pTabFeno->refFile,pTabFeno->ref1);
     pTabFeno->gomeRefFlag=0;
-    MFC_refFlag++;
+    pEngineContext->refFlag++;
    }
-
+  else if ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MKZY) && !strlen(pTabFeno->ref1) && !strlen(pTabFeno->ref2))
+   {
+   	pTabFeno->gomeRefFlag=0;
+   	pEngineContext->refFlag++;
+   }
   else
    {
     // ====

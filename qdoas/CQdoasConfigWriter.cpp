@@ -398,8 +398,8 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   case PRJCT_INSTR_FORMAT_GOME2:
     fprintf(fp, "\"gome2\"");
     break;
-  case PRJCT_INSTR_FORMAT_MKZYPACK:
-    fprintf(fp, "\"mkzypack\"");
+  case PRJCT_INSTR_FORMAT_MKZY:
+    fprintf(fp, "\"mkzy\"");
     break;
   default:
     fprintf(fp, "\"invalid\"");
@@ -851,11 +851,11 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   tmpStr = pathMgr->simplifyPath(QString(d->gome2.instrFunctionFile));
   fprintf(fp, " instr=\"%s\" />\n", tmpStr.toAscii().constData());
 
-  // mkzypack
-  tmpStr = pathMgr->simplifyPath(QString(d->mkzypack.calibrationFile));
-  fprintf(fp, "      <mkzypack calib=\"%s\"", tmpStr.toAscii().constData());
+  // mkzy
+  tmpStr = pathMgr->simplifyPath(QString(d->mkzy.calibrationFile));
+  fprintf(fp, "      <mkzy calib=\"%s\"", tmpStr.toAscii().constData());
 
-  tmpStr = pathMgr->simplifyPath(QString(d->mkzypack.instrFunctionFile));
+  tmpStr = pathMgr->simplifyPath(QString(d->mkzy.instrFunctionFile));
   fprintf(fp, " instr=\"%s\" />\n", tmpStr.toAscii().constData());
 
   fprintf(fp, "    </instrumental>\n");

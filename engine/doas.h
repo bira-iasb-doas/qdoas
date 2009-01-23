@@ -624,7 +624,7 @@ typedef struct _als
  }
 ALS_DATA;
 
-typedef struct _mkzyPack
+typedef struct _mkzy
  {
   double         scanningAngle;
   double         scanningAngle2;
@@ -633,8 +633,10 @@ typedef struct _mkzyPack
   unsigned short pixels;                                                        // number of pixels saved in the data-field
   unsigned char  channel;                                                       // channel of the spectrometer, typically 0
   char           coneangle;                                                     // new in version 4, given in cfg.txt
+  int            darkFlag,skyFlag;                                              // flags indicating the presence resp. of dark current and sky spectra in the file
+  int            darkScans;                                                     // number of scans of the dark current
  }
-MKZYPACK_DATA;
+MKZY_DATA;
 
 // Buffers needed to load spectra
 
@@ -651,6 +653,7 @@ typedef struct _engineBuffers
          *specMax,                                                              // maxima of signal over scans
          *instrFunction,                                                        // instrumental function
          *varPix,                                                               // variability interpixel
+         *scanRef,                                                              // reference spectrum for the scan (MAXDOAS measurements)
          *dnl;                                                                  // non linearity of detector
 
   DoasU32  *recordIndexes;                                                        // indexes of records for direct access (specific to BIRA-IASB spectra file format)
@@ -712,7 +715,7 @@ typedef struct _engineRecordInfo
   GOME2_DATA gome2;                                                             // GOME2 format
   OMI_DATA omi;
   ALS_DATA als;
-  MKZYPACK_DATA mkzy;
+  MKZY_DATA mkzy;
 
   double longitude;                                                             // longitude
   double latitude;                                                              // latitude
@@ -774,6 +777,8 @@ typedef struct _engineContext
   INDEX   lastRefRecord;
   INT     lastSavedRecord;
   INT     satelliteFlag;
+
+  INT     refFlag;                                                              // this flag is set when the reference spectrum is retrieved from spectra files
 
   CALIB_FENO        calibFeno;                                                  // transfer of wavelength calibration options from the project mediator to the analysis mediator
  }
@@ -942,11 +947,11 @@ RC   ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle);
 
 void ANALYSE_SetAnalysisType(void);
 RC   ANALYSE_LoadRef(ENGINE_CONTEXT *pEngineContext);
-RC   ANALYSE_LoadCross(ANALYSIS_CROSS *crossSectionList,INT nCross,INT hidden,double *lambda);
+RC   ANALYSE_LoadCross(ENGINE_CONTEXT *pEngineContext,ANALYSIS_CROSS *crossSectionList,INT nCross,INT hidden,double *lambda);
 RC   ANALYSE_LoadLinear(ANALYSE_LINEAR_PARAMETERS *linearList,INT nLinear);
-RC   ANALYSE_LoadNonLinear(ANALYSE_NON_LINEAR_PARAMETERS *nonLinearList,INT nNonLinear,double *lambda);
+RC   ANALYSE_LoadNonLinear(ENGINE_CONTEXT *pEngineContext,ANALYSE_NON_LINEAR_PARAMETERS *nonLinearList,INT nNonLinear,double *lambda);
 RC   ANALYSE_LoadShiftStretch(ANALYSIS_SHIFT_STRETCH *shiftStretchList,INT nShiftStretch);
-RC   ANALYSE_LoadGaps(ANALYSIS_GAP *gapList,INT nGaps,double *lambda,double lambdaMin,double lambdaMax);
+RC   ANALYSE_LoadGaps(ENGINE_CONTEXT *pEngineContext,ANALYSIS_GAP *gapList,INT nGaps,double *lambda,double lambdaMin,double lambdaMax);
 RC   ANALYSE_LoadOutput(ANALYSIS_OUTPUT *outputList,INT nOutput);
 RC   ANALYSE_LoadSlit(PRJCT_SLIT *pSlit);
 
@@ -1396,8 +1401,8 @@ RC   ReliEASOE(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
 
 RC   SetSAOZ(ENGINE_CONTEXT *pEngineContext,FILE *specFp);
 RC   ReliSAOZ(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp,FILE *namesFp);
-RC   SetMKZYPack(ENGINE_CONTEXT *pEngineContext,FILE *specFp);
-RC   ReliMKZYPack(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,INT localDay,FILE *specFp);
+RC   MKZY_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp);
+RC   MKZY_Reli(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,INT localDay,FILE *specFp);
 RC   SetSAOZEfm(ENGINE_CONTEXT *pEngineContext,FILE *specFp);
 RC   ReliSAOZEfm(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp);
 RC   SetActon_Logger(ENGINE_CONTEXT *pEngineContext,FILE *specFp);
@@ -1585,7 +1590,7 @@ typedef struct _TBinaryMFC
 TBinaryMFC;
 
 extern TBinaryMFC MFC_headerDrk,MFC_headerOff,MFC_header,MFC_headerInstr;
-extern int MFC_format,MFC_refFlag;
+extern int MFC_format;
 extern DoasCh MFC_fileInstr[MAX_STR_SHORT_LEN+1],
              MFC_fileDark[MAX_STR_SHORT_LEN+1],
              MFC_fileOffset[MAX_STR_SHORT_LEN+1],
@@ -1602,7 +1607,14 @@ RC MFC_ReadRecordStd(ENGINE_CONTEXT *pEngineContext,DoasCh *fileName,
 RC   SetMFC(ENGINE_CONTEXT *pEngineContext,FILE *specFp);
 RC   ReliMFC(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp,UINT mfcMask);
 RC   ReliMFCStd(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp);
-RC MFC_LoadAnalysis(ENGINE_CONTEXT *pEngineContext);
+
+
+RC MFC_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle);
+
+
+RC MKZY_SearchForSky(ENGINE_CONTEXT *pEngineContext,FILE *specFp);
+RC MKZY_SearchForOffset(ENGINE_CONTEXT *pEngineContext,FILE *specFp);
+RC MKZY_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle);
 
 double EvalPolynom_d(double X, const double *Coefficient, short Grad);
 

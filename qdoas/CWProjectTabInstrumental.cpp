@@ -161,9 +161,9 @@ CWProjectTabInstrumental::CWProjectTabInstrumental(const mediate_project_instrum
   m_instrumentToStackIndexMap.insert(std::map<int,int>::value_type(PRJCT_INSTR_FORMAT_GOME2, index));
 
   // mkzy pack
-  m_mkzyPackEdit = new CWInstrMinimumEdit(&(instr->mkzypack));
-  index = m_formatStack->addWidget(m_mkzyPackEdit);
-  m_instrumentToStackIndexMap.insert(std::map<int,int>::value_type(PRJCT_INSTR_FORMAT_MKZYPACK, index));
+  m_mkzyEdit = new CWInstrMinimumEdit(&(instr->mkzy));
+  index = m_formatStack->addWidget(m_mkzyEdit);
+  m_instrumentToStackIndexMap.insert(std::map<int,int>::value_type(PRJCT_INSTR_FORMAT_MKZY, index));
 
   // Site
   m_siteCombo = new CWSiteListCombo(this); // automatically populated
@@ -220,7 +220,7 @@ void CWProjectTabInstrumental::apply(mediate_project_instrumental_t *instr) cons
   m_noaaEdit->apply(&(instr->noaa));
   m_omiEdit->apply(&(instr->omi));
   m_gome2Edit->apply(&(instr->gome2));
-  m_mkzyPackEdit->apply(&(instr->mkzypack));
+  m_mkzyEdit->apply(&(instr->mkzy));
 }
 
 void CWProjectTabInstrumental::slotInstrumentChanged(int instrument)

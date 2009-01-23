@@ -718,21 +718,21 @@ int Gome2ReadMDRInfo(GOME2_ORBIT_FILE *pOrbitFile,GOME2_MDR *pMdr)
     coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                      // MDR.GOME2_MDR_L1B_EARTHSHINE_V1
 
 
-    coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor, "CLOUD");               // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL.CLOUD
+    coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor, "CLOUD");               // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.CLOUD
 
-    coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor, "FIT_MODE");            // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL.CLOUD.FIT_MODE
+    coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor, "FIT_MODE");            // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.CLOUD.FIT_MODE
     coda_cursor_read_uint8_array(&pOrbitFile->gome2Cursor,&pMdr->cloudFitMode[0],coda_array_ordering_c);
-    coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                      // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL.CLOUD
+    coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                      // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.CLOUD
 
-    coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor, "FIT_1");            // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL.CLOUD.FIT_1
+    coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor, "FIT_1");            // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.CLOUD.FIT_1
     coda_cursor_read_double_array(&pOrbitFile->gome2Cursor,&pMdr->cloudTopPressure[0],coda_array_ordering_c);
-    coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                      // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL.CLOUD
+    coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                      // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.CLOUD
 
-    coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor, "FIT_2");            // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL.CLOUD.FIT_2
+    coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor, "FIT_2");            // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.CLOUD.FIT_2
     coda_cursor_read_double_array(&pOrbitFile->gome2Cursor,&pMdr->cloudFraction[0],coda_array_ordering_c);
-    coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                      // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL.CLOUD
+    coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                      // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.CLOUD
 
-    coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                      // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL
+    coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                      // MDR.GOME2_MDR_L1B_EARTHSHINE_V1
 
     // Output
 

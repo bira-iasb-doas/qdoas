@@ -176,7 +176,6 @@ RC KURUCZ_Spectrum(double *oldLambda,double *newLambda,double *spectrum,double *
     sprintf(pageTitle,"Kurucz");
 
     memcpy(Feno->LambdaK,oldLambda,sizeof(double)*NDET);
-
     rc=ANALYSE_XsInterpolation(Feno,oldLambda);
 
     Results=Feno->TabCrossResults;

@@ -76,8 +76,6 @@ DoasCh MFC_fileInstr[MAX_STR_SHORT_LEN+1],      // instrumental function file na
       MFC_fileDark[MAX_STR_SHORT_LEN+1],       // dark current file name
       MFC_fileOffset[MAX_STR_SHORT_LEN+1];     // offset file name
 
-INT   MFC_refFlag=0;
-
 INT mfcLastSpectrum=0;
 
 RC MFC_LoadOffset(ENGINE_CONTEXT *pEngineContext)
@@ -1020,7 +1018,7 @@ RC ReliMFCStd(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int local
 // RETURN        0 for success
 // -----------------------------------------------------------------------------
 
-RC MFC_LoadAnalysis(ENGINE_CONTEXT *pEngineContext)
+RC MFC_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
  {
   // Declarations
 
@@ -1047,7 +1045,7 @@ RC MFC_LoadAnalysis(ENGINE_CONTEXT *pEngineContext)
   strncpy(fileName,pEngineContext->fileInfo.fileName,MAX_STR_SHORT_LEN);
   rc=ERROR_ID_NO;
 
-  if ((THRD_id==THREAD_TYPE_ANALYSIS) && MFC_refFlag && ((ptr=strrchr(fileName,PATH_SEP))!=NULL))
+  if ((THRD_id==THREAD_TYPE_ANALYSIS) && pEngineContext->refFlag && ((ptr=strrchr(fileName,PATH_SEP))!=NULL))
    {
     useKurucz=0;
 
@@ -1129,7 +1127,7 @@ RC MFC_LoadAnalysis(ENGINE_CONTEXT *pEngineContext)
      {
       KURUCZ_Init(0);
 
-      if ((THRD_id!=THREAD_TYPE_KURUCZ) && ((rc=KURUCZ_Reference(NULL,0,saveFlag,0,NULL /* QDOAS !!! responseHandle */))!=ERROR_ID_NO))
+      if ((THRD_id!=THREAD_TYPE_KURUCZ) && ((rc=KURUCZ_Reference(NULL,0,saveFlag,0,responseHandle))!=ERROR_ID_NO))
        goto EndMFC_LoadAnalysis;
      }
    }

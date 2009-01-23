@@ -459,7 +459,7 @@ void getValidFieldFlags(int *validFlags, int instrument)
      }
     break;
  // ----------------------------------------------------------------------------
-    case PRJCT_INSTR_FORMAT_MKZYPACK :
+    case PRJCT_INSTR_FORMAT_MKZY :
      {
       validFlags[PRJCT_RESULTS_ASCII_SCANS]=1;
       validFlags[PRJCT_RESULTS_ASCII_NREJ]=1;

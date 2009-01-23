@@ -95,6 +95,8 @@ void EngineResetContext(ENGINE_CONTEXT *pEngineContext)
    MEMORY_ReleaseDVector("EngineResetContext ","irrad",pBuffers->irrad,0);
   if (pBuffers->darkCurrent!=NULL)
    MEMORY_ReleaseDVector("EngineResetContext ","darkCurrent",pBuffers->darkCurrent,0);
+  if (pBuffers->scanRef!=NULL)
+   MEMORY_ReleaseDVector("EngineResetContext ","scanRef",pBuffers->scanRef,0);
   if (pBuffers->specMaxx!=NULL)
    MEMORY_ReleaseDVector("EngineResetContext ","specMaxx",pBuffers->specMaxx,0);
   if (pBuffers->specMax!=NULL)
@@ -153,6 +155,8 @@ RC EngineCopyContext(ENGINE_CONTEXT *pEngineContextTarget,ENGINE_CONTEXT *pEngin
       ((pBuffersTarget->irrad=(double *)MEMORY_AllocDVector("EngineCopyContext","irrad",0,NDET-1))==NULL)) ||
       ((pBuffersSource->darkCurrent!=NULL) && (pBuffersTarget->darkCurrent==NULL) &&
       ((pBuffersTarget->darkCurrent=(double *)MEMORY_AllocDVector("EngineCopyContext","darkCurrent",0,NDET-1))==NULL)) ||
+      ((pBuffersSource->scanRef!=NULL) && (pBuffersTarget->scanRef==NULL) &&
+      ((pBuffersTarget->scanRef=(double *)MEMORY_AllocDVector("EngineCopyContext","scanRef",0,NDET-1))==NULL)) ||
       ((pBuffersSource->varPix!=NULL) && (pBuffersTarget->varPix==NULL) &&
       ((pBuffersTarget->varPix=(double *)MEMORY_AllocDVector("EngineCopyContext","varPix",0,NDET-1))==NULL)) ||
       ((pBuffersSource->dnl!=NULL) && (pBuffersTarget->dnl==NULL) &&
@@ -189,6 +193,8 @@ RC EngineCopyContext(ENGINE_CONTEXT *pEngineContextTarget,ENGINE_CONTEXT *pEngin
      memcpy(pBuffersTarget->irrad,pBuffersSource->irrad,sizeof(double)*NDET);
     if ((pBuffersTarget->darkCurrent!=NULL) && (pBuffersSource->darkCurrent!=NULL))
      memcpy(pBuffersTarget->darkCurrent,pBuffersSource->darkCurrent,sizeof(double)*NDET);
+    if ((pBuffersTarget->scanRef!=NULL) && (pBuffersSource->scanRef!=NULL))
+     memcpy(pBuffersTarget->scanRef,pBuffersSource->scanRef,sizeof(double)*NDET);
     if ((pBuffersTarget->varPix!=NULL) && (pBuffersSource->varPix!=NULL))
      memcpy(pBuffersTarget->varPix,pBuffersSource->varPix,sizeof(double)*NDET);
     if ((pBuffersTarget->dnl!=NULL) && (pBuffersSource->dnl!=NULL))
@@ -286,7 +292,7 @@ RC EngineSetProject(ENGINE_CONTEXT *pEngineContext)
        (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_PDAEGG) ||
        (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_PDAEGG_OLD) ||
        (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_PDASI_EASOE) ||
-       (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MKZYPACK)) &&
+       (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MKZY)) &&
 
       ((pBuffers->recordIndexes=(DoasU32 *)MEMORY_AllocBuffer("EngineSetProject","recordIndexes",2001,sizeof(DoasU32),0,MEMORY_TYPE_ULONG))==NULL)) ||
 
@@ -299,9 +305,13 @@ RC EngineSetProject(ENGINE_CONTEXT *pEngineContext)
      (((pBuffers->sigmaSpec=MEMORY_AllocDVector("EngineSetProject","sigmaSpec",0,NDET-1))==NULL) ||
       ((pBuffers->irrad=MEMORY_AllocDVector("EngineSetProject","irrad",0,NDET-1))==NULL))) ||
 
+      ((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MKZY) &&
+      ((pBuffers->scanRef=MEMORY_AllocDVector("EngineSetProject","scanRef",0,NDET-1))==NULL)) ||
+
      (((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_ACTON) ||
        (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_PDAEGG) ||
        (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_PDASI_EASOE) ||
+       (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MKZY) ||
        (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_CCD_EEV)) &&
       ((pBuffers->darkCurrent=MEMORY_AllocDVector("EngineSetProject","darkCurrent",0,NDET-1))==NULL)) ||
 
@@ -391,6 +401,8 @@ RC EngineSetProject(ENGINE_CONTEXT *pEngineContext)
 
     if (pBuffers->darkCurrent!=NULL)
      VECTOR_Init(pBuffers->darkCurrent,(double)0.,NDET);                  // To check the initialization of the ANALYSE_zeros vector ...
+    if (pBuffers->scanRef!=NULL)
+     VECTOR_Init(pBuffers->scanRef,(double)0.,NDET);                      // To check the initialization of the ANALYSE_zeros vector ...
    }
 
   // Return
@@ -435,7 +447,7 @@ void EngineCloseFile(FILE_INFO *pFile)
 // RETURN        0 in case of success; the code of the error otherwise
 // -----------------------------------------------------------------------------
 
-RC EngineSetFile(ENGINE_CONTEXT *pEngineContext,const char *fileName)
+RC EngineSetFile(ENGINE_CONTEXT *pEngineContext,const char *fileName,void *responseHandle)
  {
  	// Declarations
 
@@ -519,7 +531,7 @@ RC EngineSetFile(ENGINE_CONTEXT *pEngineContext,const char *fileName)
      case PRJCT_INSTR_FORMAT_MFC :
      case PRJCT_INSTR_FORMAT_MFC_STD :
       if (!(rc=SetMFC(pEngineContext,pFile->specFp)) && (THRD_id!=THREAD_TYPE_SPECTRA) && (THRD_id!=THREAD_TYPE_NONE))
-       rc=MFC_LoadAnalysis(pEngineContext);
+       rc=MFC_LoadAnalysis(pEngineContext,responseHandle);
      break;
   // ---------------------------------------------------------------------------
      case PRJCT_INSTR_FORMAT_RASAS :
@@ -557,19 +569,23 @@ RC EngineSetFile(ENGINE_CONTEXT *pEngineContext,const char *fileName)
      break;
   // ---------------------------------------------------------------------------
      case PRJCT_INSTR_FORMAT_GDP_BIN :
-      rc=GDP_BIN_Set(pEngineContext,pFile->specFp);
+      if (!(rc=GDP_BIN_Set(pEngineContext,pFile->specFp)) &&  (THRD_id!=THREAD_TYPE_SPECTRA) && (THRD_id!=THREAD_TYPE_NONE))
+       rc=GDP_BIN_LoadAnalysis(pEngineContext,pEngineContext->fileInfo.specFp,responseHandle);
      break;
   // ---------------------------------------------------------------------------
      case PRJCT_INSTR_FORMAT_SCIA_PDS :
-      rc=SCIA_SetPDS(pEngineContext);
+      if (!(rc=SCIA_SetPDS(pEngineContext)) &&  (THRD_id!=THREAD_TYPE_SPECTRA) && (THRD_id!=THREAD_TYPE_NONE))
+       rc=SCIA_LoadAnalysis(pEngineContext,responseHandle);
      break;
   // ---------------------------------------------------------------------------
      case PRJCT_INSTR_FORMAT_GOME2 :
-      rc=GOME2_Set(pEngineContext);
+      if (!(rc=GOME2_Set(pEngineContext)) && (THRD_id!=THREAD_TYPE_SPECTRA) && (THRD_id!=THREAD_TYPE_NONE))
+       rc=GOME2_LoadAnalysis(pEngineContext,responseHandle);
      break;
   // ---------------------------------------------------------------------------
-     case PRJCT_INSTR_FORMAT_MKZYPACK :
-      rc=SetMKZYPack(pEngineContext,pFile->specFp);
+     case PRJCT_INSTR_FORMAT_MKZY :
+      if (!(rc=MKZY_Set(pEngineContext,pFile->specFp)) && (THRD_id!=THREAD_TYPE_SPECTRA) && (THRD_id!=THREAD_TYPE_NONE))
+       rc=MKZY_LoadAnalysis(pEngineContext,responseHandle);
      break;
   // ---------------------------------------------------------------------------
      default :
@@ -741,8 +757,8 @@ RC EngineReadFile(ENGINE_CONTEXT *pEngineContext,int indexRecord,INT dateFlag,IN
      rc=GOME2_Read(pEngineContext,indexRecord,ITEM_NONE);
     break;
  // ---------------------------------------------------------------------------
-    case PRJCT_INSTR_FORMAT_MKZYPACK :
-     rc=ReliMKZYPack(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp);
+    case PRJCT_INSTR_FORMAT_MKZY :
+     rc=MKZY_Reli(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp);
     break;
  // ---------------------------------------------------------------------------
     default :
@@ -790,7 +806,7 @@ RC EngineReadFile(ENGINE_CONTEXT *pEngineContext,int indexRecord,INT dateFlag,IN
 // RETURN        0 in case of success; the code of the error otherwise
 // -----------------------------------------------------------------------------
 
-RC EngineRequestBeginBrowseSpectra(ENGINE_CONTEXT *pEngineContext,const char *spectraFileName)
+RC EngineRequestBeginBrowseSpectra(ENGINE_CONTEXT *pEngineContext,const char *spectraFileName,void *responseHandle)
  {
  	// Declaration
 
@@ -799,7 +815,7 @@ RC EngineRequestBeginBrowseSpectra(ENGINE_CONTEXT *pEngineContext,const char *sp
   // Set file pointers
 
   if (!(rc=EngineRequestEndBrowseSpectra(pEngineContext)) &&
-      !(rc=EngineSetFile(pEngineContext,spectraFileName)) &&
+      !(rc=EngineSetFile(pEngineContext,spectraFileName,responseHandle)) &&
         pEngineContext->recordNumber &&
       ((THRD_id==THREAD_TYPE_SPECTRA) || !(rc=OUTPUT_LocalAlloc(pEngineContext))))
    {

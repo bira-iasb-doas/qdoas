@@ -609,7 +609,7 @@ enum _prjctInstrFormat
   PRJCT_INSTR_FORMAT_NOAA,                                                      // NOAA
   PRJCT_INSTR_FORMAT_OMI,                                                       // OMI
   PRJCT_INSTR_FORMAT_GOME2,                                                     // GOME2
-  PRJCT_INSTR_FORMAT_MKZYPACK,                                                  // MANNE Kihlman and ZHANG Yan pack format
+  PRJCT_INSTR_FORMAT_MKZY,                                                      // MANNE Kihlman and ZHANG Yan pak format
   PRJCT_INSTR_FORMAT_MAX
  };
 

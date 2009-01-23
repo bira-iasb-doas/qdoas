@@ -96,6 +96,29 @@ void mediateRequestPlotSpectra(ENGINE_CONTEXT *pEngineContext,void *responseHand
       MEMORY_ReleaseDVector("mediateRequestPlotSpectra","spectrum",tempSpectrum,0);
      }
 
+    if (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MKZY)
+     {
+     	if ((pBuffers->darkCurrent!=NULL) && pEngineContext->recordInfo.mkzy.darkFlag)
+     	 {
+     	  sprintf(tmpString,"Offset");
+
+        mediateAllocateAndSetPlotData(&spectrumData, "Offset",pBuffers->lambda, pBuffers->darkCurrent, NDET, Line);
+        mediateResponsePlotData(plotPageDarkCurrent, &spectrumData, 1, Spectrum, forceAutoScale, "Offset", "Wavelength (nm)", "Counts", responseHandle);
+        mediateReleasePlotData(&spectrumData);
+        mediateResponseLabelPage(plotPageDarkCurrent, fileName, tmpString, responseHandle);
+       }
+
+     	if ((pBuffers->scanRef!=NULL) && pEngineContext->recordInfo.mkzy.skyFlag)
+     	 {
+     	  sprintf(tmpString,"Sky spectrum");
+
+        mediateAllocateAndSetPlotData(&spectrumData, "Sky spectrum",pBuffers->lambda, pBuffers->scanRef, NDET, Line);
+        mediateResponsePlotData(plotPageIrrad, &spectrumData, 1, Spectrum, forceAutoScale, "Sky spectrum", "Wavelength (nm)", "Counts", responseHandle);
+        mediateReleasePlotData(&spectrumData);
+        mediateResponseLabelPage(plotPageIrrad, fileName, tmpString, responseHandle);
+       }
+     }
+
     if (((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_PDAEGG) ||
          (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_ACTON) ||
          (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_PDASI_EASOE) ||
@@ -208,7 +231,7 @@ void mediateRequestPlotSpectra(ENGINE_CONTEXT *pEngineContext,void *responseHand
 
     if ((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC) ||
         (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC_STD) ||
-        (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MKZYPACK))
+        (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MKZY))
      {
       pTime=&pRecord->startTime;
       if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_STARTTIME])
@@ -310,7 +333,7 @@ void mediateRequestPlotSpectra(ENGINE_CONTEXT *pEngineContext,void *responseHand
        mediateResponseCellInfo(plotPageSpectrum,indexLine++,indexColumn,responseHandle,"Mirror status","%.3f",(pRecord->mirrorError==1)?"!!! PROBLEM !!!":"OK");
      }
 
-    if (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MKZYPACK)
+    if (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MKZY)
      {
       if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_SCANNING])
        {
@@ -883,12 +906,12 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
 
     break;
  // ---------------------------------------------------------------------------
-    case PRJCT_INSTR_FORMAT_MKZYPACK :                                                              // MKZY Pack
+    case PRJCT_INSTR_FORMAT_MKZY :                                                                  // MKZY
 
      NDET=2048;                                                                                     // size of the detector
 
-	  	 strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->mkzypack.calibrationFile);   // calibration file
-	  	 strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->mkzypack.instrFunctionFile);   // instrumental function file
+	  	 strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->mkzy.calibrationFile);       // calibration file
+	  	 strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->mkzy.instrFunctionFile);       // instrumental function file
 
     break;
 	// ----------------------------------------------------------------------------
@@ -1124,7 +1147,7 @@ RC mediateRequestSetAnalysisLinear(struct anlyswin_linear *pLinear)
 
 #define NNONLINEAR_CALIB 4
 
-RC mediateRequestSetAnalysisNonLinearCalib(struct calibration_sfp *nonLinearCalib,double *lambda)
+RC mediateRequestSetAnalysisNonLinearCalib(ENGINE_CONTEXT *pEngineContext,struct calibration_sfp *nonLinearCalib,double *lambda)
  {
   // Declarations
 
@@ -1154,7 +1177,7 @@ RC mediateRequestSetAnalysisNonLinearCalib(struct calibration_sfp *nonLinearCali
     nonLinear[indexNonLinear].storeError=nonLinearCalib[indexNonLinear].errStore;
    }
 
-  rc=ANALYSE_LoadNonLinear(nonLinear,NNONLINEAR_CALIB,lambda);
+  rc=ANALYSE_LoadNonLinear(pEngineContext,nonLinear,NNONLINEAR_CALIB,lambda);
 
   // Debug
 
@@ -1175,7 +1198,7 @@ RC mediateRequestSetAnalysisNonLinearCalib(struct calibration_sfp *nonLinearCali
 
 #define NNONLINEAR_DOAS 8
 
-RC mediateRequestSetAnalysisNonLinearDoas(struct anlyswin_nonlinear *pNonLinear,double *lambda)
+RC mediateRequestSetAnalysisNonLinearDoas(ENGINE_CONTEXT *pEngineContext,struct anlyswin_nonlinear *pNonLinear,double *lambda)
  {
   // Declarations
 
@@ -1280,7 +1303,7 @@ RC mediateRequestSetAnalysisNonLinearDoas(struct anlyswin_nonlinear *pNonLinear,
   nonLinear[7].storeFit=pNonLinear->ramanFlagFitStore;
   nonLinear[7].storeError=pNonLinear->ramanFlagErrStore;
 
-  rc=ANALYSE_LoadNonLinear(nonLinear,NNONLINEAR_DOAS,lambda);
+  rc=ANALYSE_LoadNonLinear(pEngineContext,nonLinear,NNONLINEAR_DOAS,lambda);
 
   // Debug
 
@@ -1440,19 +1463,19 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
         memcpy(pTabFeno->LambdaRef,pEngineContext->buffers.lambda,sizeof(double)*NDET);
 
       if (!(rc=ANALYSE_LoadRef(pEngineContext)) &&   // eventually, modify LambdaRef for continuous functions
-          !(rc=ANALYSE_LoadCross(pAnalysisWindows->crossSectionList.crossSection,pAnalysisWindows->crossSectionList.nCrossSection,pTabFeno->hidden,pTabFeno->LambdaRef)) &&
+          !(rc=ANALYSE_LoadCross(pEngineContext,pAnalysisWindows->crossSectionList.crossSection,pAnalysisWindows->crossSectionList.nCrossSection,pTabFeno->hidden,pTabFeno->LambdaRef)) &&
           !(rc=mediateRequestSetAnalysisLinear(&pAnalysisWindows->linear)) &&
 
          // Caro : int the future, replace structures anlyswin_nonlinear and calibration_sfp with the following one more flexible
          //        mediateRequestSetAnalysisNonLinearDoas and mediateRequestSetAnalysisNonLinearCalib would be replaced by only one call to ANALYSE_LoadNonLinear
 
-         ((!pTabFeno->hidden && !(rc=mediateRequestSetAnalysisNonLinearDoas(&pAnalysisWindows->nonlinear,pTabFeno->LambdaRef))) ||
-           (pTabFeno->hidden && !(rc=mediateRequestSetAnalysisNonLinearCalib(pEngineContext->calibFeno.sfp,pTabFeno->LambdaRef)))) &&
+         ((!pTabFeno->hidden && !(rc=mediateRequestSetAnalysisNonLinearDoas(pEngineContext,&pAnalysisWindows->nonlinear,pTabFeno->LambdaRef))) ||
+           (pTabFeno->hidden && !(rc=mediateRequestSetAnalysisNonLinearCalib(pEngineContext,pEngineContext->calibFeno.sfp,pTabFeno->LambdaRef)))) &&
 
           !(rc=ANALYSE_LoadShiftStretch(pAnalysisWindows->shiftStretchList.shiftStretch,pAnalysisWindows->shiftStretchList.nShiftStretch)) &&
           !(rc=ANALYSE_LoadOutput(pAnalysisWindows->outputList.output,pAnalysisWindows->outputList.nOutput)) &&
            (pTabFeno->hidden ||
-         (!(rc=ANALYSE_LoadGaps(pAnalysisWindows->gapList.gap,pAnalysisWindows->gapList.nGap,pTabFeno->LambdaRef,pAnalysisWindows->fitMinWavelength,pAnalysisWindows->fitMaxWavelength)) &&
+         (!(rc=ANALYSE_LoadGaps(pEngineContext,pAnalysisWindows->gapList.gap,pAnalysisWindows->gapList.nGap,pTabFeno->LambdaRef,pAnalysisWindows->fitMinWavelength,pAnalysisWindows->fitMaxWavelength)) &&
 
           (!pTabFeno->gomeRefFlag || !(rc=SVD_LocalAlloc("ANALYSE_LoadData",&pTabFeno->svd)))
          )))
@@ -1463,7 +1486,7 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
          {
           useUsamp+=pTabFeno->useUsamp;
 
-          if (pTabFeno->gomeRefFlag || MFC_refFlag)
+          if (pTabFeno->gomeRefFlag || pEngineContext->refFlag)
            {
             memcpy(pTabFeno->Lambda,pTabFeno->LambdaRef,sizeof(double)*NDET);
             memcpy(pTabFeno->LambdaK,pTabFeno->LambdaRef,sizeof(double)*NDET);
@@ -1519,7 +1542,7 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
     {
      pTabFeno=&TabFeno[indexWindow];
 
-     if (pTabFeno->xsToConvolute && /* pTabFeno->useEtalon && */ (pTabFeno->gomeRefFlag || MFC_refFlag) &&
+     if (pTabFeno->xsToConvolute && /* pTabFeno->useEtalon && */ (pTabFeno->gomeRefFlag || pEngineContext->refFlag) &&
        ((rc=ANALYSE_XsConvolution(pTabFeno,pTabFeno->LambdaRef,&ANALYSIS_slit,pSlitOptions->slitFunction.slitType,&pSlitOptions->slitFunction.slitParam,&pSlitOptions->slitFunction.slitParam2,&pSlitOptions->slitFunction.slitParam3,&pSlitOptions->slitFunction.slitParam4))!=0))
 
       break;
@@ -1643,12 +1666,13 @@ int mediateRequestBeginBrowseSpectra(void *engineContext,
 				     const char *spectraFileName,
 				     void *responseHandle)
  {
+ 	ENGINE_CONTEXT *pEngineContext = (ENGINE_CONTEXT *)engineContext;
  	INT rc;
 
- 	if (EngineRequestBeginBrowseSpectra((ENGINE_CONTEXT *)engineContext,spectraFileName)!=0)
+ 	if (EngineRequestBeginBrowseSpectra(pEngineContext,spectraFileName,responseHandle)!=0)
  	 rc=ERROR_DisplayMessage(responseHandle);
 
-  return ((ENGINE_CONTEXT *)engineContext)->recordNumber;
+  return pEngineContext->recordNumber;
  }
 
 int mediateRequestGotoSpectrum(void *engineContext,
@@ -1860,20 +1884,8 @@ int mediateRequestBeginAnalyseSpectra(void *engineContext,
 
  	rc=ERROR_ID_NO;
 
-  if (((rc=EngineRequestBeginBrowseSpectra(pEngineContext,spectraFileName))!=ERROR_ID_NO) ||
-     ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN) && ((rc=GDP_BIN_LoadAnalysis(pEngineContext,pEngineContext->fileInfo.specFp,responseHandle))!=ERROR_ID_NO)) ||
-     ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS) && ((rc=SCIA_LoadAnalysis(pEngineContext,responseHandle))!=ERROR_ID_NO)) || /* ) // !!! GOME2 || */
-     /* // !!! GOME2 */ ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GOME2) && ((rc=GOME2_LoadAnalysis(pEngineContext,responseHandle))!=ERROR_ID_NO)))
-
+  if ((rc=EngineRequestBeginBrowseSpectra(pEngineContext,spectraFileName,responseHandle))!=ERROR_ID_NO)
    ERROR_DisplayMessage(responseHandle);
-
-//  {
-//  	FILE *fp;
-//  	fp=fopen("qdoas.dbg","a+t");
-//  	fprintf(fp,"mediateRequestBeginAnalyseSpectra  (%d records,rc %d)\n",((ENGINE_CONTEXT *)engineContext)->recordNumber,rc);
-//  	fclose(fp);
-//  }
-
 
   return (rc==ERROR_ID_NO)?((ENGINE_CONTEXT *)engineContext)->recordNumber:-1;
  }
@@ -1941,11 +1953,7 @@ int mediateRequestBeginCalibrateSpectra(void *engineContext,
 
  	rc=ERROR_ID_NO;
 
-  if ((EngineRequestBeginBrowseSpectra(pEngineContext,spectraFileName)!=ERROR_ID_NO) ||
-     ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN) && (GDP_BIN_LoadAnalysis(pEngineContext,pEngineContext->fileInfo.specFp,responseHandle)!=ERROR_ID_NO)) ||
-     ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS) && (SCIA_LoadAnalysis(pEngineContext,responseHandle)!=ERROR_ID_NO)) || /* ) // !!! GOME2 || */
-     /* // !!! GOME2 */ ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GOME2) && (GOME2_LoadAnalysis(pEngineContext,responseHandle)!=ERROR_ID_NO)))
-
+  if (EngineRequestBeginBrowseSpectra(pEngineContext,spectraFileName,responseHandle)!=ERROR_ID_NO)
    ERROR_DisplayMessage(responseHandle);
 
   return ((ENGINE_CONTEXT *)engineContext)->recordNumber;
