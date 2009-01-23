@@ -469,7 +469,7 @@ RC MKZY_SearchForOffset(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
  	// Search for the spectrum
 
   for (indexRecord=1;indexRecord<=pEngineContext->recordNumber;indexRecord++)
-   if (!(rc=MKZY_ReadRecord(pEngineContext,indexRecord,specFp)) && !stricmp(pEngineContext->recordInfo.Nom,"dark"))
+   if (!(rc=MKZY_ReadRecord(pEngineContext,indexRecord,specFp)) && !STD_Stricmp(pEngineContext->recordInfo.Nom,"dark"))
   	 {
   	 	memcpy(pEngineContext->buffers.darkCurrent,pEngineContext->buffers.spectrum,sizeof(double)*NDET);
   	 	pEngineContext->recordInfo.mkzy.darkFlag=1;
@@ -498,7 +498,7 @@ RC MKZY_SearchForSky(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
  	// Search for the spectrum
 
   for (indexRecord=1;indexRecord<=pEngineContext->recordNumber;indexRecord++)
-   if (!(rc=MKZY_ReadRecord(pEngineContext,indexRecord,specFp)) && !stricmp(pEngineContext->recordInfo.Nom,"sky"))
+   if (!(rc=MKZY_ReadRecord(pEngineContext,indexRecord,specFp)) && !STD_Stricmp(pEngineContext->recordInfo.Nom,"sky"))
   	 {
   	 	memcpy(pEngineContext->buffers.scanRef,pEngineContext->buffers.spectrum,sizeof(double)*NDET);
   	 	pEngineContext->recordInfo.mkzy.skyFlag=1;
@@ -625,7 +625,7 @@ RC MKZY_Reli(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,INT localD
 
   if (!(rc=MKZY_ReadRecord(pEngineContext,recordNo,specFp)))
    {
-   	if (stricmp(pEngineContext->recordInfo.Nom,"other"))
+   	if (STD_Stricmp(pEngineContext->recordInfo.Nom,"other"))
      rc=ERROR_ID_FILE_RECORD;
 
     // Correction by offset
