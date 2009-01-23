@@ -3,7 +3,7 @@
 #----------------------------------------------
 
 TEMPLATE = app
-TARGET   = qdoas
+TARGET   = ../../qdoas/release/qdoas
 
 include( ../config.pri )
 
