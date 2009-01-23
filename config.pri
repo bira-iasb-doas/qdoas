@@ -17,6 +17,9 @@ unix {
 
   INSTALL_PREFIX = /usr/local/Qdoas
 
+  CODA_LIB_PATH = /usr/local/lib
+  CODA_INC_PATH = /usr/local/include
+
   # for trace-write debugging ...
   DEFINES += DEBUG
   DEFINES += LVL4
