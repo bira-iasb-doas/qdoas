@@ -25,7 +25,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 // -----------------------------------------------------------------------------
 // FUNCTION      MediateRequestPlotSpectra
 // -----------------------------------------------------------------------------
-// PURPOSE       End the spectra browsing thread
+// PURPOSE       Plot all the spectra related to a record
 //
 // INPUT         pEngineContext     pointer to the engine context
 //
@@ -1031,10 +1031,6 @@ int mediateRequestSetProject(void *engineContext,
 
 	 // Transfer projects options from the mediator to the engine
 
-//	QDOAS DEBUG  #if defined(__DEBUG_) && __DEBUG_
-// QDOAS DEBUG  DEBUG_Start(ENGINE_dbgFile,"Project",DEBUG_FCTTYPE_CONFIG,5,DEBUG_DVAR_YES,0);
-// QDOAS DEBUG  #endif
-
   // TO DO : Initialize the pEngineProject->name
 
   setMediateProjectDisplay(&pEngineProject->spectra,&project->display);
@@ -1052,10 +1048,6 @@ int mediateRequestSetProject(void *engineContext,
 
   if (EngineSetProject(pEngineContext)!=ERROR_ID_NO)
    rc=ERROR_DisplayMessage(responseHandle);
-
-//	QDOAS DEBUG  #if defined(__DEBUG_) && __DEBUG_
-// QDOAS DEBUG  DEBUG_Stop("Project");
-// QDOAS DEBUG  #endif
 
   return (rc!=ERROR_ID_NO)?-1:0;    // supposed that an error at the level of the load of projects stops the current session
  }
@@ -1338,13 +1330,6 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
 
 	 // Debug
 
-// QDOAS DEBUG	 #if defined(__DEBUG_) && __DEBUG_
-// QDOAS DEBUG	 WRK_SYMBOL *pWrkSymbol;                                                       // pointer to a general description of a symbol
-// QDOAS DEBUG  CROSS_REFERENCE *pEngineCross;
-// QDOAS DEBUG  INT indexTabCross;
-// QDOAS DEBUG  DEBUG_Start(ENGINE_dbgFile,"Analysis windows",DEBUG_FCTTYPE_CONFIG|DEBUG_FCTTYPE_APPL|DEBUG_FCTTYPE_MATH,5,DEBUG_DVAR_NO,0);
-// QDOAS DEBUG  #endif
-
 	 // Initializations
 
   lambdaMin=1000;
@@ -1395,8 +1380,14 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
 
         if ((pTabFeno->refSpectrumSelectionMode=pAnalysisWindows->refSpectrumSelection)==ANLYS_REF_SELECTION_MODE_AUTOMATIC)
          {
+         	if ((pTabFeno->refMaxdoasSelectionMode=pAnalysisWindows->refMaxdoasSelection)==ANLYS_MAXDOAS_REF_SCAN)
+           pEngineContext->maxdoasFlag++;
+
           pTabFeno->refSZA=(double)pAnalysisWindows->refSzaCenter;
           pTabFeno->refSZADelta=(double)pAnalysisWindows->refSzaDelta;
+
+          pTabFeno->refMaxdoasSZA=(double)pAnalysisWindows->refMaxdoasSzaCenter;
+          pTabFeno->refMaxdoasSZADelta=(double)pAnalysisWindows->refMaxdoasSzaDelta;
 
           pTabFeno->refLatMin=pAnalysisWindows->refMinLatitude;
           pTabFeno->refLatMax=pAnalysisWindows->refMaxLatitude;
@@ -1505,28 +1496,6 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
          }
        }
 
-// QDOAS DEBUG      #if defined(__DEBUG_) && __DEBUG_
-// QDOAS DEBUG      DEBUG_Print("Cross sections of %s window (rc %d)\n",pTabFeno->windowName,rc);
-// QDOAS DEBUG      DEBUG_Print("NAME                      ACTION           A  P    ------------ conc --------------     ----------- param --------------     ----------- shift --------------     --------- stretch --------------     -------- stretch2 --------------\n");
-// QDOAS DEBUG      for (indexTabCross=0;indexTabCross<pTabFeno->NTabCross;indexTabCross++)
-// QDOAS DEBUG       {
-// QDOAS DEBUG       	pEngineCross=&pTabFeno->TabCross[indexTabCross];
-// QDOAS DEBUG       	pWrkSymbol=&WorkSpace[pEngineCross->Comp];
-// QDOAS DEBUG
-// QDOAS DEBUG       	DEBUG_Print("%-25s %-15s %2d %2d     %2d %14.3e %14.3e     %2d %14.3e %14.3e     %2d %14.3e %14.3e     %2d %14.3e %14.3e     %2d %14.3e %14.3e\n",
-// QDOAS DEBUG           	        pWrkSymbol->symbolName,ANLYS_crossAction[pEngineCross->crossAction],
-// QDOAS DEBUG           	        pEngineCross->IndSvdA,pEngineCross->IndSvdP,
-// QDOAS DEBUG                    pEngineCross->FitConc,pEngineCross->InitConc,pEngineCross->DeltaConc,
-// QDOAS DEBUG                    pEngineCross->FitParam,pEngineCross->InitParam,pEngineCross->DeltaParam,
-// QDOAS DEBUG                    pEngineCross->FitShift,pEngineCross->InitShift,pEngineCross->DeltaShift,
-// QDOAS DEBUG                    pEngineCross->FitStretch,pEngineCross->InitStretch,pEngineCross->DeltaStretch,
-// QDOAS DEBUG                    pEngineCross->FitStretch2,pEngineCross->InitStretch2,pEngineCross->DeltaStretch2);
-// QDOAS DEBUG
-// QDOAS DEBUG
-// QDOAS DEBUG        DEBUG_PrintVar("Cross section",pWrkSymbol->xs.matrix,0,pWrkSymbol->xs.nl-1,0,pWrkSymbol->xs.nc-1,NULL);
-// QDOAS DEBUG       }
-// QDOAS DEBUG      #endif
-
       NFeno++;
      }
 	  }
@@ -1554,15 +1523,7 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
        !(rc=KURUCZ_Reference(pEngineContext->buffers.instrFunction,0,saveFlag,1,responseHandle)))) &&
        !(rc=ANALYSE_AlignReference(pEngineContext,0,saveFlag,responseHandle)))
    {
-// QDOAS DEBUG     #if defined(__DEBUG_) && __DEBUG_ && __DEBUG_DOAS_OUTPUT_
-// QDOAS DEBUG     DEBUG_Start(ENGINE_dbgFile,"OUTPUT_RegisterData",DEBUG_FCTTYPE_FILE,5,DEBUG_DVAR_YES,1);
-// QDOAS DEBUG     #endif
-
     rc=OUTPUT_RegisterData(pEngineContext);
-
-// QDOAS DEBUG     #if defined(__DEBUG_) && __DEBUG_ && __DEBUG_DOAS_OUTPUT_
-// QDOAS DEBUG     DEBUG_Stop("OUTPUT_RegisterData");
-// QDOAS DEBUG     #endif
    }
 
   if (!rc && useUsamp &&
@@ -1582,10 +1543,6 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
 
 	 if (rc!=ERROR_ID_NO)
 	  ERROR_DisplayMessage(responseHandle);
-
-// QDOAS DEBUG 	 #if defined(__DEBUG_) && __DEBUG_
-// QDOAS DEBUG   DEBUG_Stop("Analysis windows");
-// QDOAS DEBUG   #endif
 
   return (rc!=ERROR_ID_NO)?-1:0;    // supposed that an error at the level of the load of projects stops the current session
  }
@@ -1669,10 +1626,12 @@ int mediateRequestBeginBrowseSpectra(void *engineContext,
  	ENGINE_CONTEXT *pEngineContext = (ENGINE_CONTEXT *)engineContext;
  	INT rc;
 
+ 	rc=ERROR_ID_NO;
+
  	if (EngineRequestBeginBrowseSpectra(pEngineContext,spectraFileName,responseHandle)!=0)
  	 rc=ERROR_DisplayMessage(responseHandle);
 
-  return pEngineContext->recordNumber;
+  return ((rc==ERROR_ID_NO)?pEngineContext->recordNumber:-1);
  }
 
 int mediateRequestGotoSpectrum(void *engineContext,
@@ -1881,8 +1840,6 @@ int mediateRequestBeginAnalyseSpectra(void *engineContext,
  {
  	ENGINE_CONTEXT *pEngineContext = (ENGINE_CONTEXT *)engineContext;
  	RC rc;
-
- 	rc=ERROR_ID_NO;
 
   if ((rc=EngineRequestBeginBrowseSpectra(pEngineContext,spectraFileName,responseHandle))!=ERROR_ID_NO)
    ERROR_DisplayMessage(responseHandle);

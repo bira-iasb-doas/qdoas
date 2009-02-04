@@ -197,6 +197,12 @@ RC SetCCD_EEV(ENGINE_CONTEXT *pEngineContext,FILE *specFp,FILE *darkFp)
    MEMORY_ReleaseDVector("SetCCD_EEV","specMax",pBuffers->specMax,0);
   pBuffers->specMax=NULL;
 
+  // Release scanref buffer
+
+  if (pBuffers->scanRefIndexes!=NULL)
+   MEMORY_ReleaseBuffer("SetCCD_EEV","scanRefIndexes",pBuffers->scanRefIndexes);
+  pBuffers->scanRefIndexes=NULL;
+
   // Check the input file pointer
 
   if (specFp==NULL)
@@ -263,7 +269,8 @@ RC SetCCD_EEV(ENGINE_CONTEXT *pEngineContext,FILE *specFp,FILE *darkFp)
 
     // Allocate a buffer to display the variation of the signal along the acquisitions
 
-    if (specMaxFlag && ((pBuffers->specMax=MEMORY_AllocDVector("SetCCD_EEV","specMax",0,NDET-1))==NULL))
+    if ((specMaxFlag && ((pBuffers->specMax=MEMORY_AllocDVector("SetCCD_EEV","specMax",0,NDET-1))==NULL)) ||
+        (pEngineContext->maxdoasFlag && ((pEngineContext->buffers.scanRefIndexes=(INT *)MEMORY_AllocBuffer("EngineSetFile","scanRefIndexes",pEngineContext->recordNumber,sizeof(INT),0,MEMORY_TYPE_INT))==NULL)))
      rc=ERROR_ID_ALLOC;
 
     // Eclipse 99
@@ -556,7 +563,7 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
           tmLocal=pRecord->Tm+THRD_localShift*3600.;
           pRecord->localCalDay=ZEN_FNCaljda(&tmLocal);
 
-          if (rc || (dateFlag && (pRecord->elevationViewAngle>(double)-0.5) && (pRecord->elevationViewAngle<80.)))                  // reference spectra are zenith only
+          if (rc || (dateFlag && (pRecord->elevationViewAngle<80.)))                  // reference spectra are zenith only
            rc=ERROR_ID_FILE_RECORD;
          }
        }
@@ -867,6 +874,14 @@ RC ReliCCD(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay
 
       for (i=0;i<NDET;i++)
        pBuffers->spectrum[NDET-i-1]=(double)ISpectre[i]*Max/65000.*176.-908.25*44.;
+
+       {
+       	FILE *fp;
+       	fp=fopen("toto.dat","a+t");
+       	fprintf(fp,"%d dateFlag %d %d %d\n",recordNo,dateFlag,pRecord->localCalDay,localDay);
+       	fclose(fp);
+       }
+
 
       if (dateFlag && (pRecord->localCalDay!=localDay))
        rc=ERROR_ID_FILE_RECORD;

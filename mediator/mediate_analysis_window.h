@@ -39,6 +39,9 @@ extern "C" {
     char name[ANLYSWIN_NAME_BUFFER_LENGTH];
     int kuruczMode;
     int refSpectrumSelection;
+    int refMaxdoasSelection;
+    double refMaxdoasSzaCenter;
+    double refMaxdoasSzaDelta;
     char refOneFile[FILENAME_BUFFER_LENGTH];
     char refTwoFile[FILENAME_BUFFER_LENGTH];
     char residualFile[FILENAME_BUFFER_LENGTH];
@@ -70,13 +73,13 @@ extern "C" {
     output_list_t outputList;
 
   } mediate_analysis_window_t;
-  
-  
+
+
   /****************************************************/
   /* Helper functions */
-  
+
   void initializeMediateAnalysisWindow(mediate_analysis_window_t *d);
-  
+
 #if defined(_cplusplus) || defined(__cplusplus)
 }
 #endif

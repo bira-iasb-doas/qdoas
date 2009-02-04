@@ -420,6 +420,12 @@ enum _refSpectrumSelectionMode
   ANLYS_REF_SELECTION_MODE_FILE                            // reference spectrum in a specific file
  };
 
+enum _maxdoasRefSelectionMode
+ {
+  ANLYS_MAXDOAS_REF_SZA,
+  ANLYS_MAXDOAS_REF_SCAN
+ };
+
 enum _kuruczMode
  {
   ANLYS_KURUCZ_NONE,

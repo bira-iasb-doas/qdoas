@@ -46,12 +46,14 @@ CWAnalysisWindowPropertyEditor::CWAnalysisWindowPropertyEditor(const QString &pr
   m_projectName(projectName),
   m_analysisWindowName(analysisWindowName),
   m_autoSelection(false),
-  m_activePixelType(false)
+  m_activePixelType(false),
+  m_scanSelection(false)
 {
   const int cIntEditWidth = 50;
   const int cDoubleEditWidth = 70;
 
   mediate_analysis_window_t *d = CWorkSpace::instance()->findAnalysisWindow(m_projectName, m_analysisWindowName);
+  mediate_project_t *p = CWorkSpace::instance()->findProject(m_projectName);
 
   assert(d != NULL);
 
@@ -152,14 +154,61 @@ CWAnalysisWindowPropertyEditor::CWAnalysisWindowPropertyEditor(const QString &pr
 
   filesLayout->addWidget(m_refOneFrame);
 
+  // frame for MAXDOAS measurements
+
+  m_maxdoasFrame=new QFrame(filesGroup);
+  m_maxdoasFrame->setFrameStyle(QFrame::NoFrame);
+  QHBoxLayout *maxdoasLayout = new QHBoxLayout(m_maxdoasFrame);
+  maxdoasLayout->setMargin(0);
+  QLabel *labelMaxdoas = new QLabel(" Reference 2 ", m_maxdoasFrame);
+  labelMaxdoas->setFixedWidth(85);
+
+  m_maxdoasSzaFrame=new QFrame(m_maxdoasFrame);
+  m_maxdoasSzaFrame->setFrameStyle(QFrame::NoFrame);
+  QHBoxLayout *maxdoasSzaLayout = new QHBoxLayout(m_maxdoasSzaFrame);
+  maxdoasSzaLayout->setMargin(0);
+
+  m_maxdoasSzaCenterEdit = new QLineEdit(m_maxdoasSzaFrame);
+  m_maxdoasSzaCenterEdit->setFixedWidth(cDoubleEditWidth);
+  m_maxdoasSzaCenterEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 180.0, 3, m_maxdoasSzaCenterEdit));
+  m_maxdoasSzaDeltaEdit = new QLineEdit(m_maxdoasSzaFrame);
+  m_maxdoasSzaDeltaEdit->setFixedWidth(cDoubleEditWidth);
+  m_maxdoasSzaDeltaEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 180.0, 3, m_maxdoasSzaDeltaEdit));
+
+  maxdoasSzaLayout->addWidget(m_maxdoasSzaCenterEdit);
+  maxdoasSzaLayout->addWidget(new QLabel("+/-", m_maxdoasSzaFrame));
+  maxdoasSzaLayout->addWidget(m_maxdoasSzaDeltaEdit);
+
+  QRadioButton *refScan = new QRadioButton("Scans",  m_maxdoasFrame);
+  QRadioButton *refSza = new QRadioButton("SZA",  m_maxdoasFrame);
+
+  refScan->setFixedWidth(60);
+  refSza->setFixedWidth(60);
+
+  maxdoasLayout->addWidget(labelMaxdoas);
+  maxdoasLayout->addWidget(refScan);
+  maxdoasLayout->addWidget(refSza);
+  maxdoasLayout->addWidget(m_maxdoasSzaFrame);
+
+  maxdoasLayout->addSpacing(10);
+  maxdoasLayout->addStretch(1);
+
+  int maxdoasRefScan = d->refMaxdoasSelection;
+
+  if (maxdoasRefScan==ANLYS_MAXDOAS_REF_SZA)
+    refSza->setChecked(true);
+  else
+    refScan->setChecked(true);
+  slotMaxdoasSelectionChanged(maxdoasRefScan);
+
   // row 1 - Ref2
   // Option for automatic
   m_refTwoSzaFrame = new QFrame(filesGroup);
   m_refTwoSzaFrame->setFrameStyle(QFrame::NoFrame);
   QHBoxLayout *szaLayout = new QHBoxLayout(m_refTwoSzaFrame);
   szaLayout->setMargin(0);
-  QLabel *labelTwoSza = new QLabel(" Reference 2    SZA ", m_refTwoSzaFrame);
-  labelTwoSza->setFixedWidth(120);
+  QLabel *labelTwoSza = new QLabel(" Reference 2 ", m_refTwoSzaFrame);
+  labelTwoSza->setFixedWidth(85);
   m_szaCenterEdit = new QLineEdit(m_refTwoSzaFrame);
   m_szaCenterEdit->setFixedWidth(cDoubleEditWidth);
   m_szaCenterEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 180.0, 3, m_szaCenterEdit));
@@ -167,6 +216,7 @@ CWAnalysisWindowPropertyEditor::CWAnalysisWindowPropertyEditor(const QString &pr
   m_szaDeltaEdit->setFixedWidth(cDoubleEditWidth);
   m_szaDeltaEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 180.0, 3, m_szaDeltaEdit));
   szaLayout->addWidget(labelTwoSza);
+  szaLayout->addWidget(new QLabel("SZA ", m_refTwoSzaFrame));
   szaLayout->addWidget(m_szaCenterEdit);
   szaLayout->addWidget(new QLabel("+/-", m_refTwoSzaFrame));
   szaLayout->addWidget(m_szaDeltaEdit);
@@ -227,7 +277,12 @@ CWAnalysisWindowPropertyEditor::CWAnalysisWindowPropertyEditor(const QString &pr
   // stack for ref 2 switching ...
   m_refTwoStack = new QStackedLayout;
   m_refTwoStack->setMargin(0);
-  m_refTwoStack->addWidget(m_refTwoSzaFrame);  // automatic - takes index 0
+
+  if ((p->instrumental.format==PRJCT_INSTR_FORMAT_CCD_EEV) || (p->instrumental.format==PRJCT_INSTR_FORMAT_MFC_STD))
+   m_refTwoStack->addWidget(m_maxdoasFrame);  // automatic - takes index 0
+  else
+   m_refTwoStack->addWidget(m_refTwoSzaFrame);  // automatic - takes index 0
+
   m_refTwoStack->addWidget(m_refTwoEditFrame); // file      - takes index 1
   filesLayout->addLayout(m_refTwoStack);
 
@@ -348,6 +403,10 @@ CWAnalysisWindowPropertyEditor::CWAnalysisWindowPropertyEditor(const QString &pr
   m_refTwoEdit->setText(d->refTwoFile);
   m_residualEdit->setText(d->residualFile);
 
+  m_maxdoasSzaCenterEdit->validator()->fixup(tmpStr.setNum(d->refMaxdoasSzaCenter));
+  m_maxdoasSzaCenterEdit->setText(tmpStr);
+  m_maxdoasSzaDeltaEdit->validator()->fixup(tmpStr.setNum(d->refMaxdoasSzaDelta));
+  m_maxdoasSzaDeltaEdit->setText(tmpStr);
   m_szaCenterEdit->validator()->fixup(tmpStr.setNum(d->refSzaCenter));
   m_szaCenterEdit->setText(tmpStr);
   m_szaDeltaEdit->validator()->fixup(tmpStr.setNum(d->refSzaDelta));
@@ -380,6 +439,7 @@ CWAnalysisWindowPropertyEditor::CWAnalysisWindowPropertyEditor(const QString &pr
 
   // slot on automatic button is sufficient
   connect(autoButton, SIGNAL(toggled(bool)), this, SLOT(slotRefSelectionChanged(bool)));
+  connect(refScan, SIGNAL(toggled(bool)), this, SLOT(slotMaxdoasSelectionChanged(bool)));
   connect(m_calibrationCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(slotWavelengthCalibrationChanged(int)));
   connect(refOneBrowseBtn, SIGNAL(clicked()), this, SLOT(slotBrowseRefOne()));
   connect(refTwoBrowseBtn, SIGNAL(clicked()), this, SLOT(slotBrowseRefTwo()));
@@ -387,7 +447,6 @@ CWAnalysisWindowPropertyEditor::CWAnalysisWindowPropertyEditor(const QString &pr
 
   notifyAcceptActionOk(true);
 }
-
 CWAnalysisWindowPropertyEditor::~CWAnalysisWindowPropertyEditor()
 {
 }
@@ -404,6 +463,7 @@ bool CWAnalysisWindowPropertyEditor::actionOk(void)
 
     d->kuruczMode = m_calibrationCombo->itemData(m_calibrationCombo->currentIndex()).toInt();
     d->refSpectrumSelection = m_refTwoStack->currentIndex() ? ANLYS_REF_SELECTION_MODE_FILE : ANLYS_REF_SELECTION_MODE_AUTOMATIC;
+    d->refMaxdoasSelection = (m_scanSelection) ? ANLYS_MAXDOAS_REF_SCAN : ANLYS_MAXDOAS_REF_SZA;
 
     d->fitMinWavelength = m_fitMinEdit->text().toDouble();
     d->fitMaxWavelength = m_fitMaxEdit->text().toDouble();
@@ -419,6 +479,8 @@ bool CWAnalysisWindowPropertyEditor::actionOk(void)
     strcpy(d->refTwoFile, m_refTwoEdit->text().toAscii().data());
     strcpy(d->residualFile, m_residualEdit->text().toAscii().data());
 
+    d->refMaxdoasSzaCenter = m_maxdoasSzaCenterEdit->text().toDouble();
+    d->refMaxdoasSzaDelta = m_maxdoasSzaDeltaEdit->text().toDouble();
     d->refSzaCenter = m_szaCenterEdit->text().toDouble();
     d->refSzaDelta = m_szaDeltaEdit->text().toDouble();
     d->refMinLongitude = m_refTwoLonMinEdit->text().toDouble();
@@ -497,34 +559,78 @@ void CWAnalysisWindowPropertyEditor::projectPropertiesChanged()
     // enable/disable the output table
     m_outputTab->setEnabled(analysisEnabled);
 
-    // instrument
-    switch (d->instrumental.format) {
-    case PRJCT_INSTR_FORMAT_GDP_ASCII:
-    case PRJCT_INSTR_FORMAT_GDP_BIN:
-    case PRJCT_INSTR_FORMAT_GOME2:
-      {
-	m_activePixelType = true;
-	m_satelliteFrame->show();
-      }
-      break;
-    case PRJCT_INSTR_FORMAT_SCIA_HDF:
-    case PRJCT_INSTR_FORMAT_SCIA_PDS:
-      {
-	m_activePixelType = false;
-	m_satelliteFrame->show();
-      }
-      break;
-    default:
-      {
-	m_activePixelType = false;
-	m_satelliteFrame->hide();
-      }
-      break;
+    if (m_autoSelection)
+     {
+      // MAXDOAS measurements
+
+      switch (d->instrumental.format)
+       {
+      // -------------------------------------------------------------------------
+         case PRJCT_INSTR_FORMAT_CCD_EEV:
+         case PRJCT_INSTR_FORMAT_MFC_STD:
+          m_maxdoasFrame->show();
+          m_refTwoSzaFrame->hide();
+         break;
+      // -------------------------------------------------------------------------
+         default:
+	         m_maxdoasFrame->hide();
+	         m_refTwoSzaFrame->show();
+         break;
+      // -------------------------------------------------------------------------
+       }
+     }
+    else
+     {
+     	m_maxdoasFrame->hide();
+     	m_refTwoSzaFrame->hide();
+     }
+
+    // satellite instruments
+
+    switch (d->instrumental.format)
+     {
+    // -------------------------------------------------------------------------
+       case PRJCT_INSTR_FORMAT_GDP_ASCII:
+       case PRJCT_INSTR_FORMAT_GDP_BIN:
+       case PRJCT_INSTR_FORMAT_GOME2:
+        {
+	        m_activePixelType = true;
+	        m_satelliteFrame->show();
+        }
+       break;
+    // -------------------------------------------------------------------------
+       case PRJCT_INSTR_FORMAT_SCIA_HDF:
+       case PRJCT_INSTR_FORMAT_SCIA_PDS:
+        {
+	        m_activePixelType = false;
+	        m_satelliteFrame->show();
+        }
+       break;
+    // -------------------------------------------------------------------------
+       default:
+        {
+	        m_activePixelType = false;
+	        m_satelliteFrame->hide();
+        }
+       break;
+    // -------------------------------------------------------------------------
     }
 
+    m_refTwoStack->setCurrentIndex((m_autoSelection)?0:1);
     m_residualStack->setCurrentIndex((m_autoSelection && m_activePixelType) ? 1 : 0);
 
   }
+}
+
+void CWAnalysisWindowPropertyEditor::slotMaxdoasSelectionChanged(bool checked)
+{
+  // checked is true for scan selection
+  m_scanSelection = checked;
+
+  if (m_scanSelection)
+   m_maxdoasSzaFrame->hide();
+  else
+   m_maxdoasSzaFrame->show();
 }
 
 void CWAnalysisWindowPropertyEditor::slotRefSelectionChanged(bool checked)
@@ -547,6 +653,7 @@ void CWAnalysisWindowPropertyEditor::slotWavelengthCalibrationChanged(int index)
       m_refOneFrame->setEnabled(true);
       m_refTwoEditFrame->setEnabled(true);
       m_refTwoSzaFrame->setEnabled(true);
+      m_maxdoasFrame->setEnabled(true);
     }
     break;
   case ANLYS_KURUCZ_SPEC:
@@ -554,6 +661,7 @@ void CWAnalysisWindowPropertyEditor::slotWavelengthCalibrationChanged(int index)
       m_refOneFrame->setEnabled(false);
       m_refTwoEditFrame->setEnabled(false);
       m_refTwoSzaFrame->setEnabled(false);
+      m_maxdoasFrame->setEnabled(false);
     }
     break;
   case ANLYS_KURUCZ_REF_AND_SPEC:
@@ -561,6 +669,7 @@ void CWAnalysisWindowPropertyEditor::slotWavelengthCalibrationChanged(int index)
       m_refOneFrame->setEnabled(false);
       m_refTwoEditFrame->setEnabled(true);
       m_refTwoSzaFrame->setEnabled(true);
+      m_maxdoasFrame->setEnabled(true);
     }
     break;
   }

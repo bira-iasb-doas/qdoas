@@ -55,6 +55,7 @@ Q_OBJECT
   void slotBrowseRefOne();
   void slotBrowseRefTwo();
   void slotBrowseResidual();
+  void slotMaxdoasSelectionChanged(bool checked);
 
  private:
   QComboBox *m_calibrationCombo;
@@ -63,9 +64,10 @@ Q_OBJECT
   QCheckBox *m_residualCheck, *m_predefCheck, *m_ratioCheck;
 
   QFrame *m_refOneFrame;
-  QFrame *m_refTwoEditFrame, *m_refTwoSzaFrame, *m_satelliteFrame;
+  QFrame *m_refTwoEditFrame, *m_refTwoSzaFrame, *m_satelliteFrame, *m_maxdoasFrame, *m_maxdoasSzaFrame;
   QLineEdit *m_refOneEdit, *m_refTwoEdit, *m_residualEdit;
   QLineEdit *m_szaCenterEdit, *m_szaDeltaEdit;
+  QLineEdit *m_maxdoasSzaCenterEdit, *m_maxdoasSzaDeltaEdit;
   // satellite only ...
   QLineEdit *m_refTwoLonMinEdit, *m_refTwoLonMaxEdit;
   QLineEdit *m_refTwoLatMinEdit, *m_refTwoLatMaxEdit;
@@ -75,7 +77,7 @@ Q_OBJECT
 
   QStackedLayout *m_refTwoStack;
   QStackedLayout *m_residualStack;
-  
+
   QTabWidget *m_tabs;
   // specialized DoasTables for each tab ...
   CWMoleculesDoasTable *m_moleculesTab;
@@ -87,7 +89,7 @@ Q_OBJECT
 
 
   QString m_projectName, m_analysisWindowName;
-  bool m_autoSelection, m_activePixelType;
+  bool m_autoSelection, m_activePixelType, m_scanSelection;
 };
 
 #endif

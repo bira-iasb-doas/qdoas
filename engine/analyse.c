@@ -2195,35 +2195,41 @@ RC ANALYSE_AlignReference(ENGINE_CONTEXT *pEngineContext,INT refFlag,INT saveFla
           for (i=SvdPDeb;i<SvdPFin;i++)
            ANALYSE_secX[i]=exp(log(Spectre[i])+ANALYSE_absolu[i]);
 
+          sprintf(string,"Ref1/Ref2 (%s)",Feno->windowName);
+
           mediateAllocateAndSetPlotData(&spectrumData[0],"Measured",&Lambda[SvdPDeb],&Spectre[SvdPDeb],SvdPFin-SvdPDeb+1,Line);
           mediateAllocateAndSetPlotData(&spectrumData[1],"Calculated",&Lambda[SvdPDeb],&ANALYSE_secX[SvdPDeb],SvdPFin-SvdPDeb+1,Line);
-          mediateResponsePlotData(plotPageRef,spectrumData,2,Spectrum,forceAutoScale,Feno->windowName,"Wavelength (nm)","Intensity", responseHandle);
-          mediateResponseLabelPage(plotPageRef, "", "Ref1/Ref2", responseHandle);
+          mediateResponsePlotData(plotPageRef,spectrumData,2,Spectrum,forceAutoScale,string,"Wavelength (nm)","Intensity", responseHandle);
+          mediateResponseLabelPage(plotPageRef, "", "Reference", responseHandle);
           mediateReleasePlotData(spectrumData);
 
-          mediateResponseCellInfo(plotPageRef,indexLine++,indexColumn,responseHandle,"ALIGNMENT REF1/REF2 IN","%s",Feno->windowName);
+          // mediateResponseCellInfo(plotPageRef,indexLine++,indexColumn,responseHandle,"ALIGNMENT REF1/REF2 IN","%s",Feno->windowName);
 
-          if ((pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_MFC_STD) &&
-              (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_MFC))
-           {
-            sprintf(string,"Reference : %d/%d",Feno->indexRef,
-               (Feno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_AUTOMATIC)?pEngineContext->recordNumber:ITEM_NONE);
+          indexLine=ANALYSE_indexLine;
 
-           	mediateResponseCellDataString(plotPageRef,indexLine,2,string,responseHandle);
-       	    sprintf(string,"SZA : %g",Feno->Zm);
-       	    mediateResponseCellDataString(plotPageRef,indexLine++,3,string,responseHandle);
-           }
-          else
-           {
-           	mediateResponseCellInfo(plotPageRef,indexLine,indexColumn,responseHandle,"Reference","SZA : %g",Feno->Zm);
-           	mediateResponseCellDataString(plotPageRef,indexLine++,indexColumn+2,(pEngineContext->recordInfo.localTimeDec<=ENGINE_localNoon)?Feno->refAM:Feno->refPM,responseHandle);
-           }
+          // if ((pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_MFC_STD) &&
+          //     (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_MFC))
+          //  {
+          //   sprintf(string,"Reference : %d/%d",Feno->indexRef,
+          //      (Feno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_AUTOMATIC)?pEngineContext->recordNumber:ITEM_NONE);
+          //
+          //  	mediateResponseCellDataString(plotPageRef,indexLine,2,string,responseHandle);
+       	  //   sprintf(string,"SZA : %g",Feno->Zm);
+       	  //   mediateResponseCellDataString(plotPageRef,indexLine++,3,string,responseHandle);
+          //  }
+          // else
+          //  {
+          //  	mediateResponseCellInfo(plotPageRef,indexLine,indexColumn,responseHandle,"Reference","SZA : %g",Feno->Zm);
+          //  	mediateResponseCellDataString(plotPageRef,indexLine++,indexColumn+2,(pEngineContext->recordInfo.localTimeDec<=ENGINE_localNoon)?Feno->refAM:Feno->refPM,responseHandle);
+          //  }
 
           mediateResponseCellInfo(plotPageRef,indexLine++,indexColumn,responseHandle,"Shift","%#10.3e +/-%#10.3e",pResults->Shift,pResults->SigmaShift);
           mediateResponseCellInfo(plotPageRef,indexLine++,indexColumn,responseHandle,"Stretch","%#10.3e +/-%#10.3e",pResults->Stretch,pResults->SigmaStretch);
           mediateResponseCellInfo(plotPageRef,indexLine++,indexColumn,responseHandle,"Stretch2","%#10.3e +/-%#10.3e",pResults->Stretch2,pResults->SigmaStretch2);
 
-          indexLine+=2;
+          indexColumn+=3;
+
+          // indexLine+=2;
          }
 
         TabFeno[WrkFeno].Decomp=1;
@@ -4118,6 +4124,8 @@ void ANALYSE_ResetData(void)
     pTabFeno->Stretch=pTabFeno->StretchN=pTabFeno->StretchS=
     pTabFeno->Stretch2=pTabFeno->Stretch2N=pTabFeno->Stretch2S=(double) 0.;
 
+    pTabFeno->refMaxdoasSelectionMode=ANLYS_MAXDOAS_REF_SZA;
+
     pTabFeno->indexSpectrum=
     pTabFeno->indexReference=
     pTabFeno->indexFwhmParam[0]=
@@ -5633,6 +5641,7 @@ RC ANALYSE_SetInit(ENGINE_CONTEXT *pEngineContext)
   ANALYSE_ignoreAll=0;
   ANALYSE_refSelectionFlag=ANALYSE_lonSelectionFlag=0;
   analyseIndexRecord=pEngineContext->indexRecord;
+  pEngineContext->maxdoasFlag=0;
 
   rc=ERROR_ID_NO;
 

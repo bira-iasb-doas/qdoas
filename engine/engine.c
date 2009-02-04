@@ -101,6 +101,8 @@ void EngineResetContext(ENGINE_CONTEXT *pEngineContext)
    MEMORY_ReleaseDVector("EngineResetContext ","specMaxx",pBuffers->specMaxx,0);
   if (pBuffers->specMax!=NULL)
    MEMORY_ReleaseDVector("EngineResetContext ","specMax",pBuffers->specMax,0);
+  if (pBuffers->scanRefIndexes!=NULL)
+   MEMORY_ReleaseBuffer("EngineResetContext ","scanRefIndexes",pBuffers->scanRefIndexes);
   if (pBuffers->varPix!=NULL)
    MEMORY_ReleaseDVector("EngineResetContext ","varPix",pBuffers->varPix,0);
   if (pBuffers->dnl!=NULL)
@@ -165,6 +167,8 @@ RC EngineCopyContext(ENGINE_CONTEXT *pEngineContextTarget,ENGINE_CONTEXT *pEngin
       ((pBuffersTarget->specMaxx=(double *)MEMORY_AllocDVector("EngineCopyContext","specMaxx",0,NDET-1))==NULL)) ||
       ((pBuffersSource->specMax!=NULL) && (pBuffersTarget->specMax==NULL) &&
       ((pBuffersTarget->specMax=(double *)MEMORY_AllocDVector("EngineCopyContext","specMax",0,NDET-1))==NULL)) ||
+      ((pBuffersSource->scanRefIndexes!=NULL) && (pBuffersTarget->scanRefIndexes==NULL) &&
+      ((pBuffersTarget->scanRefIndexes=(INT *)MEMORY_AllocBuffer("EngineCopyContext","scanRefIndexes",pEngineContextSource->recordNumber,sizeof(INT),0,MEMORY_TYPE_INT))==NULL)) ||
       ((pBuffersSource->recordIndexes!=NULL) && (pBuffersTarget->recordIndexes==NULL) &&
       ((pBuffersTarget->recordIndexes=(DoasU32 *)MEMORY_AllocBuffer("THRD_CopySpecInfo","recordIndexes",
        (pEngineContextTarget->recordIndexesSize=pEngineContextSource->recordIndexesSize),sizeof(DoasU32),0,MEMORY_TYPE_ULONG))==NULL)) ||
@@ -203,6 +207,8 @@ RC EngineCopyContext(ENGINE_CONTEXT *pEngineContextTarget,ENGINE_CONTEXT *pEngin
      memcpy(pBuffersTarget->specMaxx,pBuffersSource->specMaxx,sizeof(double)*NDET);
     if ((pBuffersTarget->specMax!=NULL) && (pBuffersSource->specMax!=NULL))
      memcpy(pBuffersTarget->specMax,pBuffersSource->specMax,sizeof(double)*NDET);
+    if ((pBuffersTarget->scanRefIndexes!=NULL) && (pBuffersSource->scanRefIndexes!=NULL))
+     memcpy(pBuffersTarget->scanRefIndexes,pBuffersSource->scanRefIndexes,sizeof(INT)*pEngineContextSource->recordNumber);
     if ((pBuffersTarget->recordIndexes!=NULL) && (pBuffersSource->recordIndexes!=NULL))
      memcpy(pBuffersTarget->recordIndexes,pBuffersSource->recordIndexes,sizeof(DoasU32)*pEngineContextSource->recordIndexesSize);
 
@@ -222,6 +228,7 @@ RC EngineCopyContext(ENGINE_CONTEXT *pEngineContextTarget,ENGINE_CONTEXT *pEngin
     pEngineContextTarget->indexFile=pEngineContextSource->indexFile;
     pEngineContextTarget->lastRefRecord=pEngineContextSource->lastRefRecord;
     pEngineContextTarget->lastSavedRecord=pEngineContextSource->lastSavedRecord;
+    pEngineContextTarget->maxdoasFlag=pEngineContextSource->maxdoasFlag;
    }
 
   // Return
@@ -434,6 +441,7 @@ void EngineCloseFile(FILE_INFO *pFile)
    fclose(pFile->namesFp);
 
   pFile->specFp=pFile->darkFp=pFile->namesFp=NULL;
+  pFile->nScanRef=0;
  }
 
 // -----------------------------------------------------------------------------
@@ -1104,13 +1112,19 @@ RC EngineSetRefIndexes(ENGINE_CONTEXT *pEngineContext)
       if (rc==ERROR_ID_FILE_RECORD)
        rc=ERROR_ID_NO;
 
+      if (NRecord && pEngineContext->maxdoasFlag)
+       {
+       	memcpy(pEngineContext->buffers.scanRefIndexes,indexList,sizeof(INT)*NRecord);
+       	pEngineContext->fileInfo.nScanRef=NRecord;
+       }
+
       // Browse analysis windows
 
       for (indexTabFeno=0;(indexTabFeno<NFeno) && !rc;indexTabFeno++)
        {
         pTabFeno=&TabFeno[indexTabFeno];
 
-        if (!pTabFeno->hidden && (pTabFeno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_AUTOMATIC))
+        if (!pTabFeno->hidden && (pTabFeno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_AUTOMATIC) && (pTabFeno->refMaxdoasSelectionMode==ANLYS_MAXDOAS_REF_SZA))
          {
           // Indexes reinitialization
 
@@ -1377,7 +1391,9 @@ RC EngineSetRefIndexesMFC(ENGINE_CONTEXT *pEngineContext)
          {
           pTabFeno=&TabFeno[indexTabFeno];
 
-          if (!pTabFeno->hidden && (pTabFeno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_AUTOMATIC))
+          if (!pTabFeno->hidden &&
+              (pTabFeno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_AUTOMATIC) &&
+              (pTabFeno->refMaxdoasSelectionMode==ANLYS_MAXDOAS_REF_SZA))
            {
             // Indexes reinitialization
 
@@ -1493,19 +1509,26 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
   INDEX indexRefRecord,                                                         // index of best record in file for reference selection
         indexTabFeno,                                                           // browse analysis windows
-        indexWindow;                                                            // avoid gaps
+        indexWindow,                                                            // avoid gaps
+        indexColumn,
+        indexScanRecord,
+        indexRecordOld;
 
   FENO *pTabFeno;                                                               // pointer to the analysis window
   INT useKurucz,alignRef,useUsamp,saveFlag,newDimL;
+  INT *scanRefIndexes;
   double factTemp;
   RC rc;
 
   // Initializations
 
+  ANALYSE_indexLine=2;
   pRecord=&pEngineContext->recordInfo;
   rc=ERROR_ID_NO;
   saveFlag=(INT)pEngineContext->project.spectra.displayDataFlag;
   useKurucz=alignRef=useUsamp=0;
+  indexRefRecord=indexScanRecord=indexRecordOld=ITEM_NONE;
+  indexColumn=2;
 
   // Select spectra records as reference
 
@@ -1518,6 +1541,17 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
        (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC)) ?
          EngineSetRefIndexesMFC(pEngineContext):EngineSetRefIndexes(pEngineContext);
 
+  if (pEngineContext->maxdoasFlag)
+   {
+   	scanRefIndexes=pEngineContext->buffers.scanRefIndexes;
+
+   	for (indexScanRecord=0;indexScanRecord<pEngineContext->fileInfo.nScanRef;indexScanRecord++)
+   	 if (scanRefIndexes[indexScanRecord]>=pEngineContext->indexRecord)
+   	  break;
+
+   	indexScanRecord=(indexScanRecord>=pEngineContext->fileInfo.nScanRef)?ITEM_NONE:scanRefIndexes[indexScanRecord];
+   }
+
   for (indexTabFeno=0;(indexTabFeno<NFeno) && !rc;indexTabFeno++)
    {
     pTabFeno=&TabFeno[indexTabFeno];
@@ -1527,12 +1561,24 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
      {
       pTabFeno->displayRef=0;
 
-      if ((indexRefRecord=(pRecord->localTimeDec<=ENGINE_localNoon)?pTabFeno->indexRefMorning:pTabFeno->indexRefAfternoon)==ITEM_NONE)
+      // Reference spectrum selected on the SZA
+
+      if (pTabFeno->refMaxdoasSelectionMode==ANLYS_MAXDOAS_REF_SZA)
+       indexRefRecord=(pRecord->localTimeDec<=ENGINE_localNoon)?pTabFeno->indexRefMorning:pTabFeno->indexRefAfternoon;
+      else
+       indexRefRecord=indexScanRecord;
+
+      // There is no reference spectrum for the requested twilight
+
+      if (indexRefRecord==ITEM_NONE)
        {
         memcpy((char *)&ENGINE_contextRef.recordInfo.present_day,(char *)&pRecord->present_day,sizeof(SHORT_DATE));
         rc=ERROR_ID_FILE_RECORD;
        }
-      else if (indexRefRecord!=pTabFeno->indexRef)
+
+      // There is a reference spectrum for the requested twilight
+
+      else if ((indexRefRecord!=pTabFeno->indexRef) || (indexRecordOld!=pTabFeno->indexRef))                            // not loaded yet
        {
        	if ((pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_MFC) &&
             (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_MFC_STD))
@@ -1598,8 +1644,44 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
        }
       else if (indexRefRecord==pTabFeno->indexRef)
        pTabFeno->displayRef=1;
+
+      if (indexRefRecord!=ITEM_NONE)
+       {
+        SHORT_DATE  *pDay;                                                      // pointer to measurement date
+        struct time *pTime;                                                     // pointer to measurement date
+       	char string[80];
+       	plot_data_t spectrumData;
+       	int SvdPDeb,SvdPFin;
+       	int indexLine;
+
+       	SvdPDeb=pTabFeno->svd.Fenetre[0][0];
+       	SvdPFin=pTabFeno->svd.Fenetre[pTabFeno->svd.Z-1][1];
+        pDay=&ENGINE_contextRef.recordInfo.present_day;
+        pTime=&ENGINE_contextRef.recordInfo.present_time;
+
+       	sprintf(string,"Reference (%s)",pTabFeno->windowName);
+
+        mediateAllocateAndSetPlotData(&spectrumData,"Measured",&pTabFeno->LambdaRef[SvdPDeb],&pTabFeno->Sref[SvdPDeb],SvdPFin-SvdPDeb+1,Line);
+        mediateResponsePlotData(plotPageRef,&spectrumData,1,Spectrum,forceAutoScale,string,"Wavelength (nm)","Intensity", responseHandle);
+        mediateResponseLabelPage(plotPageRef, "", "Reference", responseHandle);
+        mediateReleasePlotData(&spectrumData);
+
+        indexLine=ANALYSE_indexLine;
+
+        mediateResponseCellInfo(plotPageRef,indexLine++,indexColumn,responseHandle,"Analysis window","%s",pTabFeno->windowName);
+        mediateResponseCellInfo(plotPageRef,indexLine++,indexColumn,responseHandle,"Record number","%d/%d",ENGINE_contextRef.indexRecord,ENGINE_contextRef.recordNumber);
+        mediateResponseCellInfo(plotPageRef,indexLine++,indexColumn,responseHandle,"Date and Time","%02d/%02d/%d %02d:%02d:%02d",pDay->da_day,pDay->da_mon,pDay->da_year,pTime->ti_hour,pTime->ti_min,pTime->ti_sec);
+        mediateResponseCellInfo(plotPageRef,indexLine++,indexColumn,responseHandle,"SZA","%g",ENGINE_contextRef.recordInfo.Zm);
+
+        indexColumn+=3;
+       }
+
+      indexRecordOld=indexRefRecord;
      }
    }
+
+  if (!rc && (indexRefRecord!=ITEM_NONE))
+   ANALYSE_indexLine+=4;
 
   // Reference alignment
 

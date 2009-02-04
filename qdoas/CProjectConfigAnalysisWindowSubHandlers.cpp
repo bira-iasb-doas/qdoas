@@ -114,6 +114,10 @@ bool CAnalysisWindowSubHandler::start(const QString &element, const QXmlAttribut
     d->refMaxLatitude = atts.value("maxlat").toDouble();
     d->refNs = atts.value("refns").toInt();
 
+    d->refMaxdoasSelection = (atts.value("maxdoasrefmode") == "scan") ? ANLYS_MAXDOAS_REF_SCAN :  ANLYS_MAXDOAS_REF_SZA;
+    d->refMaxdoasSzaCenter = atts.value("maxdoasszacenter").toDouble();
+    d->refMaxdoasSzaDelta = atts.value("maxdoasszadelta").toDouble();
+
     d->pixelTypeEast = (atts.value("east") == "true") ? 1 : 0;
     d->pixelTypeCenter = (atts.value("center") == "true") ? 1 : 0;
     d->pixelTypeWest = (atts.value("west") == "true") ? 1 : 0;

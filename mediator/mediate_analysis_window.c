@@ -41,6 +41,8 @@ void initializeMediateAnalysisWindow(mediate_analysis_window_t *d)
 
   // Initialize non integer fields
 
+  d->refMaxdoasSzaCenter=
+  d->refMaxdoasSzaDelta=
   d->refSzaCenter=
   d->refSzaDelta=(double)0.;
 

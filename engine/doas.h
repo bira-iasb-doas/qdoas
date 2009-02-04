@@ -353,13 +353,14 @@ typedef struct _feno
  {
                                                                                 //  copy of data from analysis window panel
 
-  DoasCh           windowName[MAX_ITEM_NAME_LEN+1];                              //  name of analysis window
-  DoasCh           refFile[MAX_ITEM_TEXT_LEN+1],                                 //  reference file in reference file selection mode
+  DoasCh          windowName[MAX_ITEM_NAME_LEN+1];                              //  name of analysis window
+  DoasCh          refFile[MAX_ITEM_TEXT_LEN+1],                                 //  reference file in reference file selection mode
                   ref1[MAX_ITEM_TEXT_LEN+1],                                    //  first reference spectrum (in order to replace the SrefEtalon in the old ANALYSIS_WINDOWS structure)
                   ref2[MAX_ITEM_TEXT_LEN+1],                                    //  second reference spectrum (in order to replace the SrefEtalon in the old ANALYSIS_WINDOWS structure)
                   residualsFile[MAX_ITEM_TEXT_LEN+1];
-  double          refSZA,refSZADelta;                                           //  in automatic reference selection mode, SZA constraints
+  double          refSZA,refSZADelta,refMaxdoasSZA,refMaxdoasSZADelta;          //  in automatic reference selection mode, SZA constraints
   INT             refSpectrumSelectionMode;                                     //  reference spectrum selection mode
+  INT             refMaxdoasSelectionMode;                                      //  for MAXDOAS measurements, selection of the reference spectrum based on the scan or the SZA
   DoasCh          refAM[MAX_ITEM_TEXT_LEN+1],refPM[MAX_ITEM_TEXT_LEN+1];        //  in automatic reference selection mode, names of the spectra files selected for the reference spectra (specific file format : MFC)
   INDEX           indexRefMorning,indexRefAfternoon,                            //  in automatic reference selection mode, index of selected records
                   indexRef;                                                     //  in automatic reference selection mode, index of current selected record
@@ -656,7 +657,8 @@ typedef struct _engineBuffers
          *scanRef,                                                              // reference spectrum for the scan (MAXDOAS measurements)
          *dnl;                                                                  // non linearity of detector
 
-  DoasU32  *recordIndexes;                                                        // indexes of records for direct access (specific to BIRA-IASB spectra file format)
+  DoasU32  *recordIndexes;                                                      // indexes of records for direct access (specific to BIRA-IASB spectra file format)
+  INT      *scanRefIndexes;                                                     // in automatic selection of the reference spectrum, maxdoas measurements, scan mode, indexes of zenith spectra of the scan
  }
 BUFFERS;
 
@@ -666,6 +668,7 @@ typedef struct _engineFileInfo
  {
  	DoasCh   fileName[MAX_STR_LEN+1];                                              // the name of the file
  	FILE   *specFp,*darkFp,*namesFp;                                              // file pointers for the engine
+ 	INT nScanRef;                                                                 // number of reference spectra in the scanRefIndexes buffer
  }
 FILE_INFO;
 
@@ -779,6 +782,7 @@ typedef struct _engineContext
   INT     satelliteFlag;
 
   INT     refFlag;                                                              // this flag is set when the reference spectrum is retrieved from spectra files
+  INT     maxdoasFlag;
 
   CALIB_FENO        calibFeno;                                                  // transfer of wavelength calibration options from the project mediator to the analysis mediator
  }
