@@ -1873,8 +1873,9 @@ int mediateRequestNextMatchingAnalyseSpectrum(void *engineContext,
 //  	fprintf(fp,"   mediateRequestNextMatchingAnalyseSpectrum %d/%d (rc %d)\n",pEngineContext->indexRecord,pEngineContext->recordNumber,rc);
 //  	fclose(fp);
 //  }
-
-  return (rc == ERROR_ID_NO) ? rec : -1;
+              // NB if the function returns -1, the problem is that it is not possible to process
+              // next records.
+  return rec; // (rc == ERROR_ID_NO) ? rec : -1;
  }
 
 int mediateRequestPrevMatchingAnalyseSpectrum(void *engineContext,
@@ -1933,8 +1934,9 @@ int mediateRequestNextMatchingCalibrateSpectrum(void *engineContext,
        if ((rc = ANALYSE_Spectrum(pEngineContext,responseHandle))!=ERROR_ID_NO)
          ERROR_DisplayMessage(responseHandle);
    }
-
-  return (rc == ERROR_ID_NO) ? rec : -1;
+              // NB if the function returns -1, the problem is that it is not possible to process
+              // next records.
+  return rec; // (rc == ERROR_ID_NO) ? rec : -1;
  }
 
 int mediateRequestPrevMatchingCalibrateSpectrum(void *engineContext,
