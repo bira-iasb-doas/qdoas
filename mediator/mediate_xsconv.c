@@ -432,7 +432,8 @@ RC mediateConvolutionCalculate(void *engineContext,void *responseHandle)
         mediateAllocateAndSetPlotData(&spectrumData[1],windowTitle,pXsnew->lambda+nFilter,pXsnew->vector+nFilter,pXsnew->NDET-2*nFilter,Line);
         mediateResponsePlotData(0,spectrumData,2,Spectrum,forceAutoScale,windowTitle,"Wavelength (nm)","",responseHandle);
         mediateResponseLabelPage(0,pageTitle,"",responseHandle);
-        mediateReleasePlotData(spectrumData);
+        mediateReleasePlotData(&spectrumData[1]);
+        mediateReleasePlotData(&spectrumData[0]);
        }
 
       if (pEngineContext->filterVector!=NULL)
@@ -454,7 +455,8 @@ RC mediateConvolutionCalculate(void *engineContext,void *responseHandle)
         mediateAllocateAndSetPlotData(&spectrumData[1],"Convoluted spectrum after low pass filtering",pXsnew->lambda+nFilter,pEngineContext->filterVector+nFilter,pXsnew->NDET-2*nFilter,Line);
         mediateResponsePlotData(0,spectrumData,2,Spectrum,forceAutoScale,windowTitle,"Wavelength (nm)","",responseHandle);
         mediateResponseLabelPage(0,pageTitle,"",responseHandle);
-        mediateReleasePlotData(spectrumData);
+        mediateReleasePlotData(&spectrumData[1]);
+        mediateReleasePlotData(&spectrumData[0]);
        }
 
       // -------------------
@@ -471,7 +473,7 @@ RC mediateConvolutionCalculate(void *engineContext,void *responseHandle)
         mediateAllocateAndSetPlotData(&spectrumData[0],windowTitle,pXsnew->lambda+nFilter,pEngineContext->filterVector+nFilter,pXsnew->NDET-2*nFilter,Line);
         mediateResponsePlotData(0,spectrumData,1,Spectrum,forceAutoScale,windowTitle,"Wavelength (nm)","",responseHandle);
         mediateResponseLabelPage(0,pageTitle,"",responseHandle);
-        mediateReleasePlotData(spectrumData);
+        mediateReleasePlotData(&spectrumData[0]);
        }
 
       // Result safe keeping
@@ -1013,7 +1015,7 @@ RC mediateRingCalculate(void *engineContext,void *responseHandle)
             mediateAllocateAndSetPlotData(&spectrumData[0],"Calculated ring cross section",ringLambda,ringEnd,nring,Line);
             mediateResponsePlotData(0,spectrumData,1,Spectrum,forceAutoScale,"Calculated ring cross section","Wavelength (nm)","",responseHandle);
             mediateResponseLabelPage(0,pageTitle,"",responseHandle);
-            mediateReleasePlotData(spectrumData);
+            mediateReleasePlotData(&spectrumData[0]);
            }
 
           if (fp!=NULL)
@@ -1319,7 +1321,8 @@ RC mediateUsampCalculate(void *engineContext,void *responseHandle)
       mediateAllocateAndSetPlotData(&spectrumData[1],"Phase 2",calibrationMatrix.matrix[0],phase2,nSize,Line);
       mediateResponsePlotData(0,spectrumData,2,Spectrum,forceAutoScale,"Calculated undersampling cross sections","Wavelength (nm)","",responseHandle);
       mediateResponseLabelPage(0,pageTitle,"",responseHandle);
-      mediateReleasePlotData(spectrumData);
+      mediateReleasePlotData(&spectrumData[1]);
+      mediateReleasePlotData(&spectrumData[0]);
      }
    }
 

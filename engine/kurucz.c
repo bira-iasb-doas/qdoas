@@ -453,7 +453,8 @@ RC KURUCZ_Spectrum(double *oldLambda,double *newLambda,double *spectrum,double *
           mediateAllocateAndSetPlotData(&spectrumData[0],"Spectrum",&Lambda[0],&spectrum[0],NDET,Line);
           mediateAllocateAndSetPlotData(&spectrumData[1],"Adjusted Kurucz",&Lambda[0],&ANALYSE_secX[0],NDET,Line);
           mediateResponsePlotData(plotPageCalib,spectrumData,2,Spectrum,forceAutoScale,"Complete fit","Wavelength (nm)","Intensity", responseHandle);
-          mediateReleasePlotData(spectrumData);
+          mediateReleasePlotData(&spectrumData[1]);
+          mediateReleasePlotData(&spectrumData[0]);
          }
 
         // Display residual
@@ -466,7 +467,7 @@ RC KURUCZ_Spectrum(double *oldLambda,double *newLambda,double *spectrum,double *
 
           mediateAllocateAndSetPlotData(&spectrumData[0],"Residual",&Lambda[0],&ANALYSE_absolu[0],NDET,Line);
           mediateResponsePlotData(plotPageCalib,spectrumData,1,Spectrum,forceAutoScale,"Residual","Wavelength (nm)","", responseHandle);
-          mediateReleasePlotData(spectrumData);
+          mediateReleasePlotData(&spectrumData[0]);
          }
 
         memcpy(ANALYSE_secX,ANALYSE_zeros,sizeof(double)*NDET);
@@ -496,7 +497,8 @@ RC KURUCZ_Spectrum(double *oldLambda,double *newLambda,double *spectrum,double *
             mediateAllocateAndSetPlotData(&spectrumData[0],"Measured",&Lambda[0],&ANALYSE_absolu[0],NDET,Line);
             mediateAllocateAndSetPlotData(&spectrumData[1],"Calculated",&Lambda[0],&ANALYSE_secX[0],NDET,Line);
             mediateResponsePlotData(plotPageCalib,spectrumData,2,Spectrum,forceAutoScale,"Offset","Wavelength (nm)","", responseHandle);
-            mediateReleasePlotData(spectrumData);
+            mediateReleasePlotData(&spectrumData[1]);
+            mediateReleasePlotData(&spectrumData[0]);
            }
          }
 
@@ -521,7 +523,8 @@ RC KURUCZ_Spectrum(double *oldLambda,double *newLambda,double *spectrum,double *
               mediateAllocateAndSetPlotData(&spectrumData[0],"Measured",&Lambda[0],&ANALYSE_absolu[0],NDET,Line);
               mediateAllocateAndSetPlotData(&spectrumData[1],"Calculated",&Lambda[0],&ANALYSE_secX[0],NDET,Line);
               mediateResponsePlotData(plotPageCalib,spectrumData,2,Spectrum,forceAutoScale,string,"Wavelength (nm)","", responseHandle);
-              mediateReleasePlotData(spectrumData);
+              mediateReleasePlotData(&spectrumData[1]);
+              mediateReleasePlotData(&spectrumData[0]);
 
               indexCrossFit++;
              }
@@ -535,7 +538,8 @@ RC KURUCZ_Spectrum(double *oldLambda,double *newLambda,double *spectrum,double *
           mediateAllocateAndSetPlotData(&spectrumData[0],"Polynomial fitting individual shift points",&Lambda[0],&shiftPoly[0],NDET,Line);
           mediateAllocateAndSetPlotData(&spectrumData[1],"Shift calculated in the individual small windows",VLambda+1,VShift+1,Nb_Win,Point);
           mediateResponsePlotData(plotPageCalib,spectrumData,2,Spectrum,forceAutoScale,"Shift","Wavelength (nm)","Shift (nm)", responseHandle);
-          mediateReleasePlotData(spectrumData);
+          mediateReleasePlotData(&spectrumData[1]);
+          mediateReleasePlotData(&spectrumData[0]);
          }
 
         // Display wavelength dependence of fwhm
@@ -564,7 +568,8 @@ RC KURUCZ_Spectrum(double *oldLambda,double *newLambda,double *spectrum,double *
              mediateAllocateAndSetPlotData(&spectrumData[0],"Polynomial fitting individual FWHM points",&Lambda[0],&fwhmVector[indexParam][0],NDET,Line);
              mediateAllocateAndSetPlotData(&spectrumData[1],"FWHM calculated in the individual small windows",VLambda+1,fwhm[indexParam],Nb_Win,Point);
              mediateResponsePlotData(plotPageCalib,spectrumData,2,Spectrum,forceAutoScale,string,"Wavelength (nm)","SFP (nm)", responseHandle);
-             mediateReleasePlotData(spectrumData);
+             mediateReleasePlotData(&spectrumData[1]);
+             mediateReleasePlotData(&spectrumData[0]);
             }
           }
 
