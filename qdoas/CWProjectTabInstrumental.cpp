@@ -1201,6 +1201,16 @@ CWInstrCcdEevEdit::CWInstrCcdEevEdit(const struct instrumental_ccdeev *d, QWidge
   gridLayout->addWidget(m_detSizeEdit, row, 1);
   ++row;
 
+  // Spectral Type
+  gridLayout->addWidget(new QLabel("Spectral Type", this), row, 0);
+  m_spectralTypeCombo = new QComboBox(this);
+  m_spectralTypeCombo->addItem("All", QVariant(PRJCT_INSTR_EEV_TYPE_NONE));
+  m_spectralTypeCombo->addItem("Off-axis", QVariant(PRJCT_INSTR_EEV_TYPE_OFFAXIS));
+  m_spectralTypeCombo->addItem("Direct sun", QVariant(PRJCT_INSTR_EEV_TYPE_DIRECTSUN));
+  m_spectralTypeCombo->addItem("Almucantar", QVariant(PRJCT_INSTR_EEV_TYPE_ALMUCANTAR));
+  gridLayout->addWidget(m_spectralTypeCombo, row, 1);
+  ++row;
+
   // files
   helperConstructCalInsFileWidgets(gridLayout, row,
 				   d->calibrationFile, sizeof(d->calibrationFile),
@@ -1227,6 +1237,12 @@ CWInstrCcdEevEdit::CWInstrCcdEevEdit(const struct instrumental_ccdeev *d, QWidge
   tmpStr.setNum(d->detectorSize);
   m_detSizeEdit->validator()->fixup(tmpStr);
   m_detSizeEdit->setText(tmpStr);
+
+  // spectral type
+
+  int index = m_spectralTypeCombo->findData(QVariant(d->spectralType));
+  if (index != -1)
+    m_spectralTypeCombo->setCurrentIndex(index);
 }
 
 CWInstrCcdEevEdit::~CWInstrCcdEevEdit()
@@ -1237,6 +1253,9 @@ void CWInstrCcdEevEdit::apply(struct instrumental_ccdeev *d) const
 {
   // detector size
   d->detectorSize = m_detSizeEdit->text().toInt();
+
+  // spectral type
+  d->spectralType = m_spectralTypeCombo->itemData(m_spectralTypeCombo->currentIndex()).toInt();
 
   // files
   strcpy(d->calibrationFile, m_fileOneEdit->text().toAscii().data());

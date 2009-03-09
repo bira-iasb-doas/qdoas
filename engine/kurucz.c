@@ -306,7 +306,6 @@ RC KURUCZ_Spectrum(double *oldLambda,double *newLambda,double *spectrum,double *
                                     solar,                                      // reference (Kurucz)
                                    &Square,                                     // returned stretch order 2
                                    &NIter[indexWindow]))>0))
-
        break;
 
       #if defined(__DEBUG_) && __DEBUG_
@@ -403,7 +402,7 @@ RC KURUCZ_Spectrum(double *oldLambda,double *newLambda,double *spectrum,double *
       KURUCZ_buffers.KuruczFeno[indexFeno].rms[indexWindow]=(Square>(double)0.)?sqrt(Square):(double)0.;
      }
 
-    if (!rc) //if (THRD_id==THREAD_TYPE_ANALYSIS)
+    if (!rc)
      {
       SvdPDeb=svdFeno[0].Fenetre[0][0];
       SvdPFin=svdFeno[Nb_Win-1].Fenetre[0][1];

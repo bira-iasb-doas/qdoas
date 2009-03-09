@@ -687,7 +687,7 @@ RC SVD_LocalAlloc(DoasCh *callingFunctionShort,SVD *pSvd)
      }
    }
   else
-   rc=ERROR_SetLast("functionNameShort",ERROR_TYPE_FATAL,ERROR_ID_ALLOC,"DimC or DimL is zero !");
+   rc=ERROR_SetLast(functionNameShort,ERROR_TYPE_FATAL,ERROR_ID_ALLOC,"DimC or DimL is zero !");
 
   // Return
 

@@ -295,9 +295,14 @@ RC FNPixel(double *lambdaVector,double lambdaValue,INT npts,INT pixelSelection)
    rc=npts-1;
   else
    {
+   	rc=(npts-1)>>1;
+
     for (klo=0,khi=npts-1;khi-klo>1;)
      {
       rc=(khi+klo)>>1;
+
+      if (fabs(lambdaVector[rc]-lambdaValue)<EPSILON)
+       break;
 
       if (lambdaVector[rc]>lambdaValue)
        khi=rc;
@@ -305,33 +310,36 @@ RC FNPixel(double *lambdaVector,double lambdaValue,INT npts,INT pixelSelection)
        klo=rc;
      }
 
-    switch(pixelSelection)
+    if (fabs(lambdaVector[rc]-lambdaValue)>EPSILON)
      {
-   // --------------------------------------------------------------------------
-     	case PIXEL_BEFORE :
-     	 if ((rc>0) && (lambdaVector[rc]>lambdaValue))
-     	  rc--;
-     	break;
-   // --------------------------------------------------------------------------
-     	case PIXEL_AFTER :
-     	 if ((rc<npts-1) && (lambdaVector[rc]<lambdaValue))
-     	  rc++;
-     	break;
-   // --------------------------------------------------------------------------
-     	case PIXEL_CLOSEST :
+      switch(pixelSelection)
+       {
+     // --------------------------------------------------------------------------
+       	case PIXEL_BEFORE :
+       	 if ((rc>0) && (lambdaVector[rc]>lambdaValue))
+       	  rc--;
+       	break;
+     // --------------------------------------------------------------------------
+       	case PIXEL_AFTER :
+       	 if ((rc<npts-1) && (lambdaVector[rc]<lambdaValue))
+       	  rc++;
+       	break;
+     // --------------------------------------------------------------------------
+       	case PIXEL_CLOSEST :
 
-      	if ((rc>0) && (lambdaVector[rc]>lambdaValue) &&
-           (lambdaVector[rc]-lambdaValue>lambdaValue-lambdaVector[rc-1]))
-        rc--;
-       else if ((rc<npts-1) && (lambdaVector[rc]<lambdaValue) &&
-                (lambdaValue-lambdaVector[rc]>lambdaVector[rc+1]-lambdaValue))
-        rc++;
+        	if ((rc>0) && (lambdaVector[rc]>lambdaValue) &&
+             (lambdaVector[rc]-lambdaValue>lambdaValue-lambdaVector[rc-1]))
+          rc--;
+         else if ((rc<npts-1) && (lambdaVector[rc]<lambdaValue) &&
+                  (lambdaValue-lambdaVector[rc]>lambdaVector[rc+1]-lambdaValue))
+          rc++;
 
-     	break;
-   // --------------------------------------------------------------------------
-     	default :
-     	break;
-   // --------------------------------------------------------------------------
+       	break;
+     // --------------------------------------------------------------------------
+       	default :
+       	break;
+     // --------------------------------------------------------------------------
+       }
      }
    }
 
@@ -1744,7 +1752,7 @@ RC ANALYSE_SvdLocalAlloc(DoasCh *callingFunctionShort,SVD *pSvd)
      }
    }
   else
-   rc=ERROR_SetLast("functionNameShort",ERROR_TYPE_FATAL,ERROR_ID_ALLOC,"DimC or DimL is zero !");
+   rc=ERROR_SetLast(functionNameShort,ERROR_TYPE_FATAL,ERROR_ID_ALLOC,"DimC or DimL is zero !");
 
   // Return
 
@@ -2070,12 +2078,13 @@ RC ANALYSE_AlignReference(ENGINE_CONTEXT *pEngineContext,INT refFlag,INT saveFla
   CROSS_RESULTS *pResults;                                                      // pointer to the set of results relative to a symbol
   INDEX WrkFeno,                                                                // index on analysis windows
         indexLine,indexColumn,                                                  // position in the spreadsheet for information to write
+        indexPage,
         i,j;                                                                    // indexes for loops and arrays
 
   double *Spectre,*Sref,                                                        // raw spectrum
           x0,lambda0;
   plot_data_t spectrumData[2];
-  DoasCh string[MAX_ITEM_TEXT_LEN+1];
+  DoasCh string[MAX_ITEM_TEXT_LEN+1],tabTitle[MAX_ITEM_TEXT_LEN+1];
   RC rc;                                                                        // return code
 
 
@@ -2087,7 +2096,6 @@ RC ANALYSE_AlignReference(ENGINE_CONTEXT *pEngineContext,INT refFlag,INT saveFla
 
   // Initializations
 
-  indexLine=ANALYSE_indexLine;
   indexColumn=2;
   rc=ERROR_ID_NO;
 
@@ -2105,6 +2113,8 @@ RC ANALYSE_AlignReference(ENGINE_CONTEXT *pEngineContext,INT refFlag,INT saveFla
 
     for (WrkFeno=0;(WrkFeno<NFeno)&&!rc;WrkFeno++)
      {
+     	indexPage=(pEngineContext->satelliteFlag)?plotPageRef:WrkFeno+plotPageAnalysis;
+
       Feno=&RefTabFeno[WrkFeno];
       Feno->Shift=Feno->Stretch=Feno->Stretch2=(double)0.;
       pResults=&Feno->TabCrossResults[Feno->indexSpectrum];
@@ -2186,51 +2196,36 @@ RC ANALYSE_AlignReference(ENGINE_CONTEXT *pEngineContext,INT refFlag,INT saveFla
 
         // Display fit
 
-        if (Feno->displayRefEtalon)
+        if (Feno->displayRefEtalon && pEngineContext->project.spectra.displaySpectraFlag)
          {
-         	ANALYSE_plotRef=1;
-
           memcpy(ANALYSE_secX,ANALYSE_zeros,sizeof(double)*NDET);
 
           for (i=SvdPDeb;i<SvdPFin;i++)
            ANALYSE_secX[i]=exp(log(Spectre[i])+ANALYSE_absolu[i]);
 
-          sprintf(string,"Ref1/Ref2 (%s)",Feno->windowName);
+          sprintf(tabTitle,"%s results (%d/%d)",Feno->windowName,pEngineContext->indexRecord,pEngineContext->recordNumber);
+          sprintf(string,"Alignment Ref1/Ref2");
 
           mediateAllocateAndSetPlotData(&spectrumData[0],"Measured",&Lambda[SvdPDeb],&Spectre[SvdPDeb],SvdPFin-SvdPDeb+1,Line);
           mediateAllocateAndSetPlotData(&spectrumData[1],"Calculated",&Lambda[SvdPDeb],&ANALYSE_secX[SvdPDeb],SvdPFin-SvdPDeb+1,Line);
-          mediateResponsePlotData(plotPageRef,spectrumData,2,Spectrum,forceAutoScale,string,"Wavelength (nm)","Intensity", responseHandle);
-          mediateResponseLabelPage(plotPageRef, "", "Reference", responseHandle);
+          mediateResponsePlotData(indexPage,spectrumData,2,Spectrum,forceAutoScale,string,"Wavelength (nm)","Intensity", responseHandle);
+          mediateResponseLabelPage(indexPage,pEngineContext->fileInfo.fileName, "Reference", responseHandle);
           mediateReleasePlotData(&spectrumData[1]);
           mediateReleasePlotData(&spectrumData[0]);
 
-          // mediateResponseCellInfo(plotPageRef,indexLine++,indexColumn,responseHandle,"ALIGNMENT REF1/REF2 IN","%s",Feno->windowName);
+          if (pEngineContext->satelliteFlag)
+           {
+           	ANALYSE_plotRef=1;
+           	indexLine=ANALYSE_indexLine;
 
-          indexLine=ANALYSE_indexLine;
+            mediateResponseCellInfo(plotPageRef,indexLine++,indexColumn,responseHandle,"ALIGNMENT REF1/REF2 IN","%s",Feno->windowName);
 
-          // if ((pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_MFC_STD) &&
-          //     (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_MFC))
-          //  {
-          //   sprintf(string,"Reference : %d/%d",Feno->indexRef,
-          //      (Feno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_AUTOMATIC)?pEngineContext->recordNumber:ITEM_NONE);
-          //
-          //  	mediateResponseCellDataString(plotPageRef,indexLine,2,string,responseHandle);
-       	  //   sprintf(string,"SZA : %g",Feno->Zm);
-       	  //   mediateResponseCellDataString(plotPageRef,indexLine++,3,string,responseHandle);
-          //  }
-          // else
-          //  {
-          //  	mediateResponseCellInfo(plotPageRef,indexLine,indexColumn,responseHandle,"Reference","SZA : %g",Feno->Zm);
-          //  	mediateResponseCellDataString(plotPageRef,indexLine++,indexColumn+2,(pEngineContext->recordInfo.localTimeDec<=ENGINE_localNoon)?Feno->refAM:Feno->refPM,responseHandle);
-          //  }
+            mediateResponseCellInfo(indexPage,indexLine++,indexColumn,responseHandle,"Shift Ref1/Ref2","%#10.3e +/- %#10.3e",pResults->Shift,pResults->SigmaShift);
+            mediateResponseCellInfo(indexPage,indexLine++,indexColumn,responseHandle,"Stretch Ref1/Ref2","%#10.3e +/-%#10.3e",pResults->Stretch,pResults->SigmaStretch);
+            mediateResponseCellInfo(indexPage,indexLine++,indexColumn,responseHandle,"Stretch2 Ref1/Ref2","%#10.3e +/- %#10.3e",pResults->Stretch2,pResults->SigmaStretch2);
 
-          mediateResponseCellInfo(plotPageRef,indexLine++,indexColumn,responseHandle,"Shift","%#10.3e +/-%#10.3e",pResults->Shift,pResults->SigmaShift);
-          mediateResponseCellInfo(plotPageRef,indexLine++,indexColumn,responseHandle,"Stretch","%#10.3e +/-%#10.3e",pResults->Stretch,pResults->SigmaStretch);
-          mediateResponseCellInfo(plotPageRef,indexLine++,indexColumn,responseHandle,"Stretch2","%#10.3e +/-%#10.3e",pResults->Stretch2,pResults->SigmaStretch2);
-
-          indexColumn+=3;
-
-          // indexLine+=2;
+            ANALYSE_indexLine=indexLine+1;
+           }
          }
 
         TabFeno[WrkFeno].Decomp=1;
@@ -3445,6 +3440,7 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
   DoasCh windowTitle[MAX_ITEM_TEXT_LEN+1];    // window title for graphs
   DoasCh tabTitle[MAX_ITEM_TEXT_LEN+1];
   DoasCh graphTitle[MAX_ITEM_TEXT_LEN+1];     // graph title
+  DoasCh string[MAX_ITEM_TEXT_LEN+1];
   INDEX WrkFeno,j;                             // index on analysis windows
   INDEX i,k,l,j0;                          // indexes for loops and arrays
 
@@ -3459,18 +3455,18 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
           factTemp;                          // normalization factor
 
   INT NbFeno,Niter,
-      displayFlag,               // number of MDI child windows used for display analysis fits
+      displayFlag,                           // number of MDI child windows used for display analysis fits
       useKurucz,                             // flag set if Kurucz should be applied on spectra
       saveFlag;
 // QDOAS ???   FILE *fp;                     // pointer to temporary file
 
-  INDEX indexPage,indexLine,indexColumn;
+  INDEX indexPage,indexLine,indexColumn,indexRef;
+  SATELLITE_REF *pRef;
   RC  rc;                                    // return code
   int nrc;
 
   plot_data_t spectrumData[2];
   INT n,n2;
-
 
   #if defined(__DEBUG_) && __DEBUG_
   DEBUG_FunctionBegin("ANALYSE_Spectrum",DEBUG_FCTTYPE_APPL);
@@ -3492,7 +3488,6 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
   saveFlag=(INT)pEngineContext->project.spectra.displayDataFlag;
   SpectreK=LambdaK=Sref=Trend=offset=NULL;
   useKurucz=0;
-  indexPage=plotPageAnalysis;
 
   NbFeno=0;
   nrc=0;
@@ -3569,6 +3564,7 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
       for (WrkFeno=0;(WrkFeno<NFeno) && (rc!=THREAD_EVENT_STOP);WrkFeno++)
        {
+       	indexPage=WrkFeno+plotPageAnalysis;
         Feno=&TabFeno[WrkFeno];
 
         Feno->rc=(!Feno->hidden && VECTOR_Equal(Spectre,Feno->Sref,NDET,(double)1.e-7))?-1:ERROR_ID_NO;
@@ -3583,6 +3579,9 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
                     Feno->displayFits+                                          //  force display fits
                     Feno->displayPredefined+                                    //  force display predefined parameters
                     Feno->displayRef;
+
+        if (displayFlag)
+         mediateResponseLabelPage(indexPage,pEngineContext->fileInfo.fileName,tabTitle,responseHandle);
 
         if (!Feno->hidden && (Feno->rcKurucz==ERROR_ID_NO) &&
           ((Feno->useKurucz==ANLYS_KURUCZ_SPEC) || !Feno->rc))
@@ -3613,11 +3612,7 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
           // Global variables initializations
 
           if ((Feno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_AUTOMATIC) &&
-             ((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_SCIA_HDF) ||
-              (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS) ||
-              (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN) ||
-              (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_GDP_ASCII) ||
-              (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_GOME2)))
+               pEngineContext->satelliteFlag)
            {
             if ((fabs(ANALYSE_oldLatitude)>(double)360.) ||
                ((ANALYSE_oldLatitude>=(double)0.) && (pRecord->latitude<(double)0.)) ||
@@ -3665,19 +3660,61 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
                }
              }
 
-            // Output analysis results in temporary file
-
-// QDOAS ???            #if defined (__WINDOAS_GUI_) && __WINDOAS_GUI_
-// QDOAS ???            if (saveFlag && ((fp=fopen(DOAS_tmpFile,"a+t"))!=NULL))
-// QDOAS ???             {
-// QDOAS ???              fprintf(fp,"Shift\t%#10.3e\n",Feno->Shift);
-// QDOAS ???              fprintf(fp,"Stretch\t%#10.3e\n",Feno->Stretch);
-// QDOAS ???              fprintf(fp,"Stretch2\t%#10.3e\n\n",Feno->Stretch2);
-// QDOAS ???              fclose(fp);
-// QDOAS ???
-// QDOAS ???              THRD_LoadData();
-// QDOAS ???             }
-// QDOAS ???            #endif
+            //if (pEngineContext->project.spectra.displaySpectraFlag)
+            // {
+            //  sprintf(tabTitle,"%s results (%d/%d)",Feno->windowName,pEngineContext->indexRecord,pEngineContext->recordNumber);
+            //
+            //  mediateAllocateAndSetPlotData(&spectrumData[0],"Measured",&Feno->LambdaK[SvdPDeb],&Feno->Sref[SvdPDeb],SvdPFin-SvdPDeb+1,Line);
+            //  mediateResponsePlotData(indexPage,&spectrumData[0],1,Spectrum,forceAutoScale,"Selected reference","Wavelength (nm)","Intensity", responseHandle);
+            //  mediateResponseLabelPage(indexPage, pEngineContext->fileInfo.fileName, tabTitle, responseHandle);
+            //  mediateReleasePlotData(&spectrumData[0]);
+            //
+            //  if (pEngineContext->project.spectra.displayDataFlag)
+            //   {
+            //    Feno->displayLineIndex=mediateRequestDisplaySpecInfo(pEngineContext,indexPage,responseHandle);
+            //    indexLine=Feno->displayLineIndex+1;
+            //    indexColumn=2;
+            //
+            //    mediateResponseCellDataString(indexPage,indexLine++,indexColumn,"Ref Selection",responseHandle);
+            //    mediateResponseCellInfo(indexPage,indexLine++,indexColumn,responseHandle,"Ref File","%s",GDP_BIN_orbitFiles[Feno->satelliteRef[0].indexFile].gdpBinFileName);
+            //    mediateResponseCellDataString(indexPage,indexLine,indexColumn,"Record",responseHandle);
+            //    mediateResponseCellDataString(indexPage,indexLine,indexColumn+1,"Pixel number",responseHandle);
+            //    mediateResponseCellDataString(indexPage,indexLine,indexColumn+2,"Pixel type",responseHandle);
+            //    mediateResponseCellDataString(indexPage,indexLine,indexColumn+3,"SZA",responseHandle);
+            //    mediateResponseCellDataString(indexPage,indexLine,indexColumn+4,"Lat",responseHandle);
+            //    mediateResponseCellDataString(indexPage,indexLine,indexColumn+5,"Lon",responseHandle);
+            //
+            //    indexLine++;
+            //
+            //    for (indexRef=0;indexRef<OUTPUT_nRec;indexRef++)
+            //     {
+            //     	pRef=&Feno->satelliteRef[indexRef];
+            //
+            //      mediateResponseCellDataInteger(indexPage,indexLine,indexColumn,pRef->indexRecord+1,responseHandle);
+            //      mediateResponseCellDataInteger(indexPage,indexLine,indexColumn+1,pRef->pixelNumber,responseHandle);
+            //      mediateResponseCellDataInteger(indexPage,indexLine,indexColumn+2,pRef->pixelType,responseHandle);
+            //      mediateResponseCellDataDouble(indexPage,indexLine,indexColumn+3,pRef->sza,responseHandle);
+            //      mediateResponseCellDataDouble(indexPage,indexLine,indexColumn+4,pRef->latitude,responseHandle);
+            //      mediateResponseCellDataDouble(indexPage,indexLine,indexColumn+5,pRef->longitude,responseHandle);
+            //
+            //      indexLine++;
+            //     }
+            //
+            //    Feno->displayLineIndex=indexLine+1;
+            //   }
+            //
+            //  //if (Feno->displayRefEtalon)
+            //  // {
+            //  //  sprintf(string,"Alignment Ref1/Ref2");
+            //  //
+            //  //  mediateAllocateAndSetPlotData(&spectrumData[0],"Measured",&Lambda[SvdPDeb],&Spectre[SvdPDeb],SvdPFin-SvdPDeb+1,Line);
+            //  //  mediateAllocateAndSetPlotData(&spectrumData[1],"Calculated",&Lambda[SvdPDeb],&ANALYSE_secX[SvdPDeb],SvdPFin-SvdPDeb+1,Line);
+            //  //  mediateResponsePlotData(indexPage,spectrumData,2,Spectrum,forceAutoScale,string,"Wavelength (nm)","Intensity", responseHandle);
+            //  //  mediateResponseLabelPage(indexPage,pEngineContext->fileInfo.fileName, "Reference", responseHandle);
+            //  //  mediateReleasePlotData(&spectrumData[1]);
+            //  //  mediateReleasePlotData(&spectrumData[0]);
+            //  // }
+            // }
            }
 
           // Reference spectrum
@@ -3696,7 +3733,7 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
            {
             mediateAllocateAndSetPlotData(&spectrumData[0],"Spectrum",&Feno->LambdaK[SvdPDeb],&Spectre[SvdPDeb],SvdPFin-SvdPDeb+1,Line);
             mediateAllocateAndSetPlotData(&spectrumData[1],"Reference",&Feno->LambdaK[SvdPDeb],&Sref[SvdPDeb],SvdPFin-SvdPDeb+1,Line);
-            mediateResponsePlotData(indexPage,spectrumData,(Feno->displayRef)?2:1,Spectrum,forceAutoScale,"Spectrum","Wavelength (nm)","", responseHandle);
+            mediateResponsePlotData(indexPage,spectrumData,(Feno->displayRef)?2:1,Spectrum,forceAutoScale,"Spectrum and reference","Wavelength (nm)","", responseHandle);
             mediateReleasePlotData(&spectrumData[1]);
             mediateReleasePlotData(&spectrumData[0]);
            }
@@ -3724,7 +3761,6 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
           #if defined(__DEBUG_) && __DEBUG_
           DEBUG_Stop("Test");
           analyseDebugMask=0;
-// QDOAS ???          THRD_ProcessLastError();
           #endif
 
           pRecord->BestShift+=(double)Feno->TabCrossResults[Feno->indexSpectrum].Shift;
@@ -3785,9 +3821,9 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
           // Display Offset
 
           if  (Feno->displayPredefined &&
-              (Feno->indexOffsetConst!=ITEM_NONE) &&
-              (Feno->indexOffsetOrder1!=ITEM_NONE) &&
-              (Feno->indexOffsetOrder2!=ITEM_NONE) &&
+             ((Feno->indexOffsetConst!=ITEM_NONE) ||
+              (Feno->indexOffsetOrder1!=ITEM_NONE) ||
+              (Feno->indexOffsetOrder2!=ITEM_NONE)) &&
 
              ((TabCross[Feno->indexOffsetConst].FitParam!=ITEM_NONE) ||
               (TabCross[Feno->indexOffsetOrder1].FitParam!=ITEM_NONE) ||
@@ -3921,17 +3957,14 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
           if (!Feno->rc)
            nrc++;
 
-          if (displayFlag || saveFlag)
-           mediateResponseLabelPage(indexPage,pEngineContext->fileInfo.fileName,tabTitle,responseHandle);
-
-          if (saveFlag)
+          if (displayFlag && saveFlag)
            {
-           	indexLine=1;
+           	indexLine=Feno->displayLineIndex;
             indexColumn=2;
 
            	mediateResponseCellDataString(indexPage,indexLine,indexColumn,tabTitle,responseHandle);
 
-           	indexLine+=2;
+            indexLine+=2;
 
            	mediateResponseCellInfo(indexPage,indexLine++,indexColumn,responseHandle,"OD ChiSquare","%.5le",Feno->chiSquare);
            	mediateResponseCellInfo(indexPage,indexLine++,indexColumn,responseHandle,"RMS Residual","%.5le",Feno->RMS);
@@ -3984,8 +4017,6 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
               indexLine++;
              }
            }
-
-          indexPage++;
          }
        }
      }
@@ -4095,6 +4126,8 @@ void ANALYSE_ResetData(void)
      MEMORY_ReleaseDVector("ANALYSE_ResetData ","LambdaK",pTabFeno->LambdaK,0);
     if (pTabFeno->LambdaRef!=NULL)
      MEMORY_ReleaseDVector("ANALYSE_ResetData ","LambdaRef",pTabFeno->LambdaRef,0);
+    if (pTabFeno->satelliteRef!=NULL)
+     MEMORY_ReleaseBuffer("ANALYSE_ResetData ","satelliteRef",pTabFeno->satelliteRef);
 
     // SVD matrices
 

@@ -319,6 +319,7 @@ class CWInstrCcdEevEdit : public CWAllFilesEdit
 
  private:
   QLineEdit *m_detSizeEdit;
+  QComboBox *m_spectralTypeCombo;
 };
 
 //--------------------------------------------------------------------------

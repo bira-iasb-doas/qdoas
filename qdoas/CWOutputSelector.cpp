@@ -291,6 +291,9 @@ void getValidFieldFlags(int *validFlags, int instrument)
   validFlags[PRJCT_RESULTS_ASCII_EARTH_RADIUS]=satelliteFlag;
   validFlags[PRJCT_RESULTS_ASCII_ORBIT]=satelliteFlag;
 
+  validFlags[PRJCT_RESULTS_ASCII_VIEW_ELEVATION]=satelliteFlag;
+  validFlags[PRJCT_RESULTS_ASCII_VIEW_AZIMUTH]=satelliteFlag;
+
   // set the appropriate flags
 
   switch (instrument)

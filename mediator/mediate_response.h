@@ -51,6 +51,8 @@ extern "C" {
 // provide the GUI with plots data. The data is contained in an array
 // of plot_data of length arrayLength.
 
+int mediateRequestDisplaySpecInfo(void *engineContext,int page,void *responseHandle);
+
 void mediateResponsePlotData(int page, plot_data_t *plotDataArray, int arrayLength,
 			     enum ePlotScaleType type, int forceAutoScaling,
 			     const char *title, const char *xLabel,

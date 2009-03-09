@@ -122,8 +122,8 @@ typedef struct _ccdData
  }
 CCD_DATA;
 
-DoasCh *CCD_measureTypes[SYNCHRO_MEASURE_MAX]=
-     	 { "None","Off axis","Direct sun","Zenith","Dark","Lamp","Bentham","Almucantar" };
+DoasCh *CCD_measureTypes[PRJCT_INSTR_EEV_TYPE_MAX]=
+     	                            { "None","Off axis","Direct sun","Zenith","Dark","Lamp","Bentham","Almucantar" };
 
 // ------------------------------------------------------------------
 // Different predefined integration times for dark current correction
@@ -340,6 +340,7 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
 //  double offset;                                                                // offset correction
   double tmLocal;
   INDEX i,j,k;                                                                  // indexes to browse vectors
+  int measurementType;
   RC rc,rcFread;                                                                // return code
 
   // Debugging
@@ -562,9 +563,17 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
 
           tmLocal=pRecord->Tm+THRD_localShift*3600.;
           pRecord->localCalDay=ZEN_FNCaljda(&tmLocal);
+          measurementType=pEngineContext->project.instrumental.user;
 
           if (rc || (dateFlag && (pRecord->elevationViewAngle<80.)))                  // reference spectra are zenith only
            rc=ERROR_ID_FILE_RECORD;
+          else if (measurementType!=PRJCT_INSTR_EEV_TYPE_NONE)
+           {
+           	if (((measurementType==PRJCT_INSTR_EEV_TYPE_OFFAXIS) && (pRecord->ccd.measureType!=PRJCT_INSTR_EEV_TYPE_OFFAXIS) && (pRecord->ccd.measureType!=PRJCT_INSTR_EEV_TYPE_ZENITH)) ||
+           	    ((measurementType!=PRJCT_INSTR_EEV_TYPE_OFFAXIS) && (pRecord->ccd.measureType!=measurementType)))
+
+           	 rc=ERROR_ID_FILE_RECORD;
+           }
          }
        }
      }

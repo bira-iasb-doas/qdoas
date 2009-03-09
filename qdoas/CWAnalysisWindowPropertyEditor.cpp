@@ -113,17 +113,17 @@ CWAnalysisWindowPropertyEditor::CWAnalysisWindowPropertyEditor(const QString &pr
   QGridLayout *displayLayout = new QGridLayout(displayGroup);
   displayLayout->setMargin(3);
   displayLayout->setSpacing(0);
-  m_spectrumCheck = new QCheckBox("Spectrum", displayGroup);
+  m_spectrumCheck = new QCheckBox("Spectrum and reference", displayGroup);
   displayLayout->addWidget(m_spectrumCheck, 0, 0);
-  m_polyCheck = new QCheckBox("Polyn.", displayGroup);
+  m_polyCheck = new QCheckBox("Polynomial", displayGroup);
   displayLayout->addWidget(m_polyCheck, 0, 1);
   m_fitsCheck = new QCheckBox("Fits", displayGroup);
   displayLayout->addWidget(m_fitsCheck, 0, 2);
   m_residualCheck = new QCheckBox("Residual", displayGroup);
   displayLayout->addWidget(m_residualCheck, 1, 0);
-  m_predefCheck = new QCheckBox("Predef.", displayGroup);
+  m_predefCheck = new QCheckBox("Non linear parameters", displayGroup);
   displayLayout->addWidget(m_predefCheck, 1, 1);
-  m_ratioCheck = new QCheckBox("Ref1/Ref2", displayGroup);
+  m_ratioCheck = new QCheckBox("Alignement of Ref1 on Ref2", displayGroup);
   displayLayout->addWidget(m_ratioCheck, 1, 2);
 
   topLayout->addWidget(displayGroup);

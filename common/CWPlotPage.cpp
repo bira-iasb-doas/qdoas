@@ -291,13 +291,13 @@ void CWPlot::slotOverlay()
 void CWPlot::slotSaveAs()
  {
   CPreferences *pref = CPreferences::instance();
-  QString dirName = pref->directoryName("ASCII_Plot");
-  QString filename = QFileDialog::getSaveFileName(this, "Save Plot", dirName, " Ascii file (*.asc)");
+  QString dirName = pref->directoryName("ASCII_Plot")+"/undefined.asc";
+  QString filename = QFileDialog::getSaveFileName(this, "Save Plot", dirName, "All files (*);;Ascii file (*.asc)");
 
   if (!filename.isEmpty())
    {
     if (!filename.contains('.'))
-      filename += ".asc";
+     filename += ".asc";
 
     pref->setDirectoryNameGivenFile("ASCII_Plot", filename);
 

@@ -814,6 +814,21 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
 	return postErrorMessage("Detector Non-Linearity Filename too long");
     }
 
+    str = atts.value("type");
+
+    if (!str.isEmpty())
+    	 {
+      if (str == "all")
+        m_instrumental->ccdeev.spectralType = PRJCT_INSTR_EEV_TYPE_NONE;
+      else if (str == "off-axis")
+        m_instrumental->ccdeev.spectralType = PRJCT_INSTR_EEV_TYPE_OFFAXIS;
+      else if (str == "direct-sun")
+        m_instrumental->ccdeev.spectralType = PRJCT_INSTR_EEV_TYPE_DIRECTSUN;
+      else if (str == "almucantar")
+        m_instrumental->ccdeev.spectralType = PRJCT_INSTR_EEV_TYPE_ALMUCANTAR;
+      else
+        return postErrorMessage("Invalid ccdeev Type");
+     }
   }
   else if (element == "gdpascii") { // GDP ASCII
     helperLoadGdp(atts, &(m_instrumental->gdpascii));

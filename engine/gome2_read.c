@@ -1067,7 +1067,7 @@ RC GOME2_Set(ENGINE_CONTEXT *pEngineContext)
  	 	  if (fileExt==NULL)
  	 	   sprintf(ptr,"%c*.*",PATH_SEP);
  	 	  else if (!ANALYSE_lonSelectionFlag || STD_Stricmp(fileExt,".nadir"))
- 	 	   sprintf(ptr,"%c*%s",PATH_SEP,fileExt);
+ 	 	   sprintf(ptr,"%c*.%s",PATH_SEP,fileExt);
  	 	  else
  	 	   {
  	 	   	*ptr='\0';
@@ -1084,53 +1084,28 @@ RC GOME2_Set(ENGINE_CONTEXT *pEngineContext)
 
       // Search for files of the same orbit
 
-      #if defined(__WINDOAS_WIN_) && __WINDOAS_WIN_
-
-      for (hDir=FindFirstFile(fileFilter,&fileInfo),rc=1;
-          (hDir!=INVALID_HANDLE_VALUE) && (rc!=0) && (gome2OrbitFilesN<MAX_GOME2_FILES);rc=FindNextFile(hDir,&fileInfo))
-       {
-       	if (searchAllOrbits)
-       	 {
-       	 	if (((fileInfo.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY)!=0) &&
-       	 	   (((strlen(fileInfo.cFileName)>1) || (fileInfo.cFileName[0]!='.')) ||
-       	 	    ((strlen(fileInfo.cFileName)>2) || (fileInfo.cFileName[0]!='.') || (fileInfo.cFileName[1]!='.'))))
-       	 	 {
-       	 	  sprintf(fileFilterSub,"%s%c%s%c*.nadir",filePath,PATH_SEP,fileInfo.cFileName,PATH_SEP);
-
-            for (hDirSub=FindFirstFile(fileFilterSub,&fileInfoSub),rcSub=1;
-                (hDirSub!=INVALID_HANDLE_VALUE) && (rcSub!=0) && (gome2OrbitFilesN<MAX_GOME2_FILES);rcSub=FindNextFile(hDirSub,&fileInfoSub))
-
-             if ((fileInfoSub.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY)==0)
-              {
-             	 sprintf(gome2OrbitFiles[gome2OrbitFilesN].gome2FileName,"%s%c%s%c%s",filePath,PATH_SEP,fileInfo.cFileName,PATH_SEP,fileInfoSub.cFileName);
-               gome2OrbitFilesN++;
-              }
-           }
-         }
-        else if ((fileInfo.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY)==0)
-         {
-         	sprintf(gome2OrbitFiles[gome2OrbitFilesN].gome2FileName,"%s%c%s",filePath,PATH_SEP,fileInfo.cFileName);
-          gome2OrbitFilesN++;
-         }
-       }
-
-      // Close handle
-
-      if (hDir!=NULL)
-       FindClose(hDir);
-
-      #else
-
-      for (hDir=opendir(fileFilter);(hDir!=NULL) && ((fileInfo=readdir(hDir))!=NULL);)
+      for (hDir=opendir(filePath);(hDir!=NULL) && ((fileInfo=readdir(hDir))!=NULL);)
         {
-          sprintf(gome2OrbitFiles[gome2OrbitFilesN].gome2FileName,"%s%c%s",filePath,PATH_SEP,fileInfo->d_name);
+          sprintf(gome2OrbitFiles[gome2OrbitFilesN].gome2FileName,"%s/%s",filePath,fileInfo->d_name);
           if ( STD_IsDir(gome2OrbitFiles[gome2OrbitFilesN].gome2FileName) == 0 )
              gome2OrbitFilesN++;
         }
 
       if ( hDir != NULL ) closedir(hDir);
 
-      #endif
+     //   for (hDir=opendir(filePath);(hDir!=NULL) && ((fileInfo=readdir(hDir))!=NULL);)
+     //    {
+     //     sprintf(GDP_BIN_orbitFiles[gdpBinOrbitFilesN].gdpBinFileName,"%s/%s",filePath,fileInfo->d_name);
+     //     if (!STD_IsDir(GDP_BIN_orbitFiles[gdpBinOrbitFilesN].gdpBinFileName))
+     //      {
+     //      	strcpy(filePrefix,fileInfo->d_name);
+     //      	filePrefix[6]='\0';
+     //
+     //       if (((ptr=strrchr(fileInfo->d_name,'.'))!=NULL) && (strlen(ptr+1)==strlen(fileExt)) && !STD_Stricmp(ptr+1,fileExt) &&
+     //            (strlen(filePrefix)==strlen(fileFilter)) && !STD_Stricmp(filePrefix,fileFilter))
+     //        gdpBinOrbitFilesN++;
+     //      }
+     //    }
 
       rc=ERROR_ID_NO;
    	 }
@@ -1479,6 +1454,8 @@ void Gome2Sort(GOME2_ORBIT_FILE *pOrbitFile,INDEX indexRecord,int flag,int listS
 
   // Initializations
 
+  value=(double)0.;
+
   switch(flag)
    {
  // ----------------------------------------------------------------------------
@@ -1733,10 +1710,11 @@ INT Gome2RefSza(GOME2_REF *refList,INT maxRefSize,double sza,double szaDelta)
 //               ERROR_ID_NO otherwise.
 // -----------------------------------------------------------------------------
 
-RC Gome2BuildRef(GOME2_REF *refList,INT nRef,INT nSpectra,double *lambda,double *ref,ENGINE_CONTEXT *pEngineContext,FILE *fp)
+RC Gome2BuildRef(GOME2_REF *refList,INT nRef,INT nSpectra,double *lambda,double *ref,ENGINE_CONTEXT *pEngineContext,INDEX *pIndexLine,void *responseHandle)
  {
   // Declarations
 
+  RECORD_INFO *pRecord;
   GOME2_ORBIT_FILE *pOrbitFile;                                                  // pointer to the current orbit
   GOME2_REF *pRef;                                                               // pointer to the current reference spectrum
   INDEX     indexRef,                                                           // browse reference in the list
@@ -1744,27 +1722,17 @@ RC Gome2BuildRef(GOME2_REF *refList,INT nRef,INT nSpectra,double *lambda,double 
             i;                                                                  // index for loop and arrays
   INT       nRec;                                                               // number of records use for the average
   INT       alreadyOpen;
+  INDEX     indexColumn;
   RC        rc;                                                                 // return code
 
-  // Initialization
+  // Initializations
 
+  pRecord=&pEngineContext->recordInfo;
   for (i=0;i<NDET;i++)
    ref[i]=(double)0.;
 
+  indexColumn=2;
   rc=ERROR_ID_NO;
-
-  if (nRef)
-   {
-    if (fp!=NULL)
-     {
-      fprintf(fp,"Ref Selection :\n");
-      fprintf(fp,"%s\n",gome2OrbitFiles[refList[0].indexFile].gome2FileName);
-      fprintf(fp,"Rec\t  SZA\t  Lat\t  Lon\n");
-     }
-
-    strcpy(pEngineContext->recordInfo.refFileName,gome2OrbitFiles[refList[0].indexFile].gome2FileName);
-    pEngineContext->recordInfo.refRecord=refList[0].indexRecord+1;
-   }
 
   // Search for spectra matching latitudes and SZA conditions
 
@@ -1784,9 +1752,27 @@ RC Gome2BuildRef(GOME2_REF *refList,INT nRef,INT nSpectra,double *lambda,double 
 
       if (!(rc=GOME2_Read(pEngineContext,pRef->indexRecord,pRef->indexFile)))
        {
-        if (fp!=NULL)
-         fprintf(fp,"%-5d\t%-6.2lf\t%-6.2lf\t%-6.2lf\n",
-                    pRef->indexRecord+1,pRef->sza,pRef->latitude,pRef->longitude);
+        if (indexFile==ITEM_NONE)
+         {
+          mediateResponseCellDataString(plotPageRef,(*pIndexLine)++,indexColumn,"Ref Selection",responseHandle);
+          mediateResponseCellInfo(plotPageRef,(*pIndexLine)++,indexColumn,responseHandle,"Ref File","%s",gome2OrbitFiles[refList[0].indexFile].gome2FileName);
+          mediateResponseCellDataString(plotPageRef,(*pIndexLine),indexColumn,"Record",responseHandle);
+          mediateResponseCellDataString(plotPageRef,(*pIndexLine),indexColumn+1,"SZA",responseHandle);
+          mediateResponseCellDataString(plotPageRef,(*pIndexLine),indexColumn+2,"Lat",responseHandle);
+          mediateResponseCellDataString(plotPageRef,(*pIndexLine),indexColumn+3,"Lon",responseHandle);
+
+          (*pIndexLine)++;
+
+          strcpy(pRecord->refFileName,gome2OrbitFiles[pRef->indexFile].gome2FileName);
+          pRecord->refRecord=pRef->indexRecord+1;
+         }
+
+       	mediateResponseCellDataInteger(plotPageRef,(*pIndexLine),indexColumn,pRef->indexRecord+1,responseHandle);
+       	mediateResponseCellDataDouble(plotPageRef,(*pIndexLine),indexColumn+1,pRef->sza,responseHandle);
+       	mediateResponseCellDataDouble(plotPageRef,(*pIndexLine),indexColumn+2,pRef->latitude,responseHandle);
+       	mediateResponseCellDataDouble(plotPageRef,(*pIndexLine),indexColumn+3,pRef->longitude,responseHandle);
+
+       	(*pIndexLine)++;
 
         for (i=0;i<NDET;i++)
          ref[i]+=(double)pEngineContext->buffers.spectrum[i];
@@ -1848,7 +1834,8 @@ RC Gome2RefSelection(ENGINE_CONTEXT *pEngineContext,
                     int nSpectra,
                     double *lambdaK,double *ref,
                     double *lambdaN,double *refN,
-                    double *lambdaS,double *refS)
+                    double *lambdaS,double *refS,
+                    void *responseHandle)
  {
   // Declarations
 
@@ -1856,12 +1843,14 @@ RC Gome2RefSelection(ENGINE_CONTEXT *pEngineContext,
   double latDelta,tmp;
   INT nRefN,nRefS;                                                              // number of reference spectra in the previous list resp. for Northern and Southern hemisphere
   double normFact;                                                              // normalisation factor
-  FILE *fp;                                                                     // pointer to the temporary file with information to display
+  INDEX indexLine,indexColumn;
   RC rc;                                                                        // return code
 
   // Initializations
 
-  fp=NULL; // QDOAS ??? (pEngineContext->project.spectra.displayDataFlag)?fopen(DOAS_tmpFile,"w+t"):NULL;
+  mediateResponseRetainPage(plotPageRef,responseHandle);
+  indexLine=1;
+  indexColumn=2;
 
   if (latMin>latMax)
    {
@@ -1904,7 +1893,7 @@ RC Gome2RefSelection(ENGINE_CONTEXT *pEngineContext,
       // search for potential reference spectra in northern hemisphere
 
       if ((nRefN=nRefS=Gome2RefLat(refList,gome2TotalRecordNumber,latMin,latMax,lonMin,lonMax,sza,szaDelta))>0)
-       rc=Gome2BuildRef(refList,nRefN,nSpectra,lambdaN,refN,pEngineContext,fp);
+       rc=Gome2BuildRef(refList,nRefN,nSpectra,lambdaN,refN,pEngineContext,&indexLine,responseHandle);
 
       if (!rc)
        memcpy(refS,refN,sizeof(double)*NDET);
@@ -1915,7 +1904,7 @@ RC Gome2RefSelection(ENGINE_CONTEXT *pEngineContext,
     else
      {
       if ((nRefN=nRefS=Gome2RefSza(refList,gome2TotalRecordNumber,sza,szaDelta))>0)
-       rc=Gome2BuildRef(refList,nRefN,nSpectra,lambdaN,refN,pEngineContext,fp);
+       rc=Gome2BuildRef(refList,nRefN,nSpectra,lambdaN,refN,pEngineContext,&indexLine,responseHandle);
 
       if (!rc)
        memcpy(refS,refN,sizeof(double)*NDET);
@@ -1932,9 +1921,7 @@ RC Gome2RefSelection(ENGINE_CONTEXT *pEngineContext,
 
       else if (!nRefN)
        {
-        if (fp!=NULL)
-         fprintf(fp,"No record selected for the northern hemisphere, use reference of the southern hemisphere\n");
-
+        mediateResponseCellDataString(plotPageRef,indexLine++,indexColumn,"No record selected for the northern hemisphere, use reference of the southern hemisphere",responseHandle);
         memcpy(refN,refS,sizeof(double)*NDET);
        }
 
@@ -1942,9 +1929,7 @@ RC Gome2RefSelection(ENGINE_CONTEXT *pEngineContext,
 
       else if (!nRefS)
        {
-        if (fp!=NULL)
-         fprintf(fp,"No record selected for the southern hemisphere, use reference of the northern hemisphere\n");
-
+       	mediateResponseCellDataString(plotPageRef,indexLine++,indexColumn,"No record selected for the southern hemisphere, use reference of the northern hemisphere",responseHandle);
         memcpy(refS,refN,sizeof(double)*NDET);
        }
 
@@ -1956,15 +1941,9 @@ RC Gome2RefSelection(ENGINE_CONTEXT *pEngineContext,
      }
    }
 
-  // Close file
-
-  if (fp!=NULL)
-   {
-    fprintf(fp,"\n");
-    fclose(fp);
-   }
-
   // Release allocated buffers
+
+  ANALYSE_indexLine=indexLine+1;
 
   if (refList!=NULL)
    MEMORY_ReleaseBuffer("Gome2RefSelection ","refList",refList);
@@ -1985,7 +1964,7 @@ RC Gome2RefSelection(ENGINE_CONTEXT *pEngineContext,
 //               ERROR_ID_NO otherwise.
 // -----------------------------------------------------------------------------
 
-RC Gome2NewRef(ENGINE_CONTEXT *pEngineContext)
+RC Gome2NewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
  {
   // Declarations
 
@@ -2028,7 +2007,8 @@ RC Gome2NewRef(ENGINE_CONTEXT *pEngineContext)
                           pTabFeno->nspectra,
                           pTabFeno->LambdaK,pTabFeno->Sref,
                           pTabFeno->LambdaN,pTabFeno->SrefN,
-                          pTabFeno->LambdaS,pTabFeno->SrefS);
+                          pTabFeno->LambdaS,pTabFeno->SrefS,
+                          responseHandle);
     }
 
   THRD_goto.indexMin=THRD_goto.indexMax=ITEM_NONE;
@@ -2190,9 +2170,9 @@ RC GOME2_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
     // Automatic reference selection
 
-// QDOAS ???   if (gome2LoadReferenceFlag && !(rc=Gome2NewRef(pEngineContext)) &&
-// QDOAS ???     !(rc=ANALYSE_AlignReference(2,pEngineContext->project.spectra.displayDataFlag,NULL /* QDOAS */))) // automatic ref selection for Northern hemisphere
-// QDOAS ???    rc=ANALYSE_AlignReference(3,pEngineContext->project.spectra.displayDataFlag,NULL /* QDOAS */);     // automatic ref selection for Southern hemisphere
+    if (gome2LoadReferenceFlag && !(rc=Gome2NewRef(pEngineContext,responseHandle)) &&
+       !(rc=ANALYSE_AlignReference(pEngineContext,2,pEngineContext->project.spectra.displayDataFlag,responseHandle))) // automatic ref selection for Northern hemisphere
+         rc=ANALYSE_AlignReference(pEngineContext,3,pEngineContext->project.spectra.displayDataFlag,responseHandle);     // automatic ref selection for Southern hemisphere
    }
 
   // Return

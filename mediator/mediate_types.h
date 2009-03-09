@@ -59,7 +59,7 @@ enum _spectraAutoscale
 // Indexes for the plot pages
 
 #define plotPageCalib           0                                               // kurucz
-#define plotPageRef             1                                               // ref1/ref2
+#define plotPageRef             1
 #define plotPageSpectrum        2                                               // spectra to browse or analyze
 #define plotPageDarkCurrent     3                                               // dark currents
 #define plotPageSpecMax         4                                               // specmax (variation of the signal with the scans)

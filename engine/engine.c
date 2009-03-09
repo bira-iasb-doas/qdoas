@@ -271,7 +271,7 @@ RC EngineSetProject(ENGINE_CONTEXT *pEngineContext)
  	// Initializations
 
  	ANALYSE_plotKurucz=ANALYSE_plotRef=0;
- 	ANALYSE_indexLine=1;
+  ANALYSE_indexLine=1;
   pBuffers=&pEngineContext->buffers;
   pProject=&pEngineContext->project;
   pInstrumental=&pProject->instrumental;
@@ -1510,6 +1510,7 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
   INDEX indexRefRecord,                                                         // index of best record in file for reference selection
         indexTabFeno,                                                           // browse analysis windows
         indexWindow,                                                            // avoid gaps
+        indexPage,
         indexColumn,
         indexScanRecord,
         indexRecordOld;
@@ -1522,7 +1523,6 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
   // Initializations
 
-  ANALYSE_indexLine=2;
   pRecord=&pEngineContext->recordInfo;
   rc=ERROR_ID_NO;
   saveFlag=(INT)pEngineContext->project.spectra.displayDataFlag;
@@ -1555,6 +1555,7 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
   for (indexTabFeno=0;(indexTabFeno<NFeno) && !rc;indexTabFeno++)
    {
     pTabFeno=&TabFeno[indexTabFeno];
+    indexPage=indexTabFeno+plotPageAnalysis;
 
     if (!(pTabFeno->hidden) &&                                                      // not the definition of the window for the wavelength calibration
          (pTabFeno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_AUTOMATIC))  // automatic reference selection only
@@ -1645,11 +1646,11 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
       else if (indexRefRecord==pTabFeno->indexRef)
        pTabFeno->displayRef=1;
 
-      if (indexRefRecord!=ITEM_NONE)
+      if (indexRefRecord!=ITEM_NONE && pEngineContext->project.spectra.displaySpectraFlag)
        {
         SHORT_DATE  *pDay;                                                      // pointer to measurement date
         struct time *pTime;                                                     // pointer to measurement date
-       	char string[80];
+       	char string[80],tabTitle[80];
        	plot_data_t spectrumData;
        	int SvdPDeb,SvdPFin;
        	int indexLine;
@@ -1659,29 +1660,32 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
         pDay=&ENGINE_contextRef.recordInfo.present_day;
         pTime=&ENGINE_contextRef.recordInfo.present_time;
 
-       	sprintf(string,"Reference (%s)",pTabFeno->windowName);
+       	sprintf(string,"Selected reference (%d/%d, SZA %.2f)",ENGINE_contextRef.indexRecord,ENGINE_contextRef.recordNumber,ENGINE_contextRef.recordInfo.Zm);
+       	sprintf(tabTitle,"%s results (%d/%d)",pTabFeno->windowName,pEngineContext->indexRecord,pEngineContext->recordNumber);
 
         mediateAllocateAndSetPlotData(&spectrumData,"Measured",&pTabFeno->LambdaRef[SvdPDeb],&pTabFeno->Sref[SvdPDeb],SvdPFin-SvdPDeb+1,Line);
-        mediateResponsePlotData(plotPageRef,&spectrumData,1,Spectrum,forceAutoScale,string,"Wavelength (nm)","Intensity", responseHandle);
-        mediateResponseLabelPage(plotPageRef, "", "Reference", responseHandle);
+        mediateResponsePlotData(indexPage,&spectrumData,1,Spectrum,forceAutoScale,string,"Wavelength (nm)","Intensity", responseHandle);
+        mediateResponseLabelPage(indexPage, pEngineContext->fileInfo.fileName, tabTitle, responseHandle);
         mediateReleasePlotData(&spectrumData);
 
-        indexLine=ANALYSE_indexLine;
+        if (pEngineContext->project.spectra.displayDataFlag)
+         {
+          pTabFeno->displayLineIndex=mediateRequestDisplaySpecInfo(pEngineContext,indexPage,responseHandle);
+          indexLine=pTabFeno->displayLineIndex+1;
 
-        mediateResponseCellInfo(plotPageRef,indexLine++,indexColumn,responseHandle,"Analysis window","%s",pTabFeno->windowName);
-        mediateResponseCellInfo(plotPageRef,indexLine++,indexColumn,responseHandle,"Record number","%d/%d",ENGINE_contextRef.indexRecord,ENGINE_contextRef.recordNumber);
-        mediateResponseCellInfo(plotPageRef,indexLine++,indexColumn,responseHandle,"Date and Time","%02d/%02d/%d %02d:%02d:%02d",pDay->da_day,pDay->da_mon,pDay->da_year,pTime->ti_hour,pTime->ti_min,pTime->ti_sec);
-        mediateResponseCellInfo(plotPageRef,indexLine++,indexColumn,responseHandle,"SZA","%g",ENGINE_contextRef.recordInfo.Zm);
+          mediateResponseCellInfo(indexPage,indexLine++,indexColumn,responseHandle,"Selected reference for window","%s",pTabFeno->windowName);
+          mediateResponseCellInfo(indexPage,indexLine++,indexColumn,responseHandle,"Record number","%d/%d",ENGINE_contextRef.indexRecord,ENGINE_contextRef.recordNumber);
+          mediateResponseCellInfo(indexPage,indexLine++,indexColumn,responseHandle,"Date and Time","%02d/%02d/%d %02d:%02d:%02d",pDay->da_day,pDay->da_mon,pDay->da_year,pTime->ti_hour,pTime->ti_min,pTime->ti_sec);
+          mediateResponseCellInfo(indexPage,indexLine++,indexColumn,responseHandle,"SZA","%g",ENGINE_contextRef.recordInfo.Zm);
 
-        indexColumn+=3;
+          pTabFeno->displayLineIndex=indexLine+1;
+         }
+
        }
 
       indexRecordOld=indexRefRecord;
      }
    }
-
-  if (!rc && (indexRefRecord!=ITEM_NONE))
-   ANALYSE_indexLine+=4;
 
   // Reference alignment
 

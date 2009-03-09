@@ -76,7 +76,7 @@ void CWPlotRegion::removePagesExcept(const QList<int> pageNumberList)
   }
 
   m_pageMap.clear();
-  
+
   // now put the retained pages back
   while (!retained.isEmpty()) {
     RefCountConstPtr<CPlotPageData> page(retained.takeFirst());
@@ -92,7 +92,7 @@ void CWPlotRegion::addPage(const RefCountConstPtr<CPlotPageData> &page)
   std::map< int,RefCountConstPtr<CPlotPageData> >::iterator it = m_pageMap.find(page->pageNumber());
   if (it == m_pageMap.end())
     m_pageMap.insert(std::map< int,RefCountConstPtr<CPlotPageData> >::value_type(page->pageNumber(), page));
-  
+
   // else just quietly allow page to be discarded
 }
 

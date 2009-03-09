@@ -635,7 +635,27 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   fprintf(fp, " stray=\"%s\"", tmpStr.toAscii().constData());
 
   tmpStr = pathMgr->simplifyPath(QString(d->ccdeev.detectorNonLinearityFile));
-  fprintf(fp, " dnl=\"%s\" />\n", tmpStr.toAscii().constData());
+  fprintf(fp, " dnl=\"%s\" ", tmpStr.toAscii().constData());
+
+  fprintf(fp, " type=");
+  switch (d->ccdeev.spectralType) {
+  case PRJCT_INSTR_EEV_TYPE_NONE:
+    fprintf(fp, "\"all\"");
+    break;
+  case PRJCT_INSTR_EEV_TYPE_OFFAXIS:
+    fprintf(fp, "\"off-axis\"");
+    break;
+  case PRJCT_INSTR_EEV_TYPE_DIRECTSUN:
+    fprintf(fp, "\"direct-sun\"");
+    break;
+  case PRJCT_INSTR_EEV_TYPE_ALMUCANTAR:
+    fprintf(fp, "\"almucantar\"");
+    break;
+  default:
+    fprintf(fp, "\"invalid\"");
+  }
+
+  fprintf(fp," />\n");
 
   // gdpascii
   fprintf(fp, "      <gdpascii type=");

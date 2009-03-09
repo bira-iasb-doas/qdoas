@@ -317,6 +317,8 @@ RC MKZY_ReadRecord(ENGINE_CONTEXT *pEngineContext,int recordNo,FILE *specFp)
   RECORD_INFO    *pRecord;                                                      // pointer to the record part of the engine context
   MKZY_HEADER     header;                                                       // record header
   MKZY_RECORDINFO recordInfo;                                                   // information on the record
+  SHORT_DATE      today;
+  double          Tm1,Tm2;
   unsigned char  *buffer;                                                       // buffer for the spectrum before unpacking
   unsigned long  *lbuffer;                                                      // buffer for the spectrum after unpacking
   unsigned short  checksum,*p;                                                  // check sum
@@ -324,7 +326,8 @@ RC MKZY_ReadRecord(ENGINE_CONTEXT *pEngineContext,int recordNo,FILE *specFp)
   int             npixels;                                                      // number of pixels returned
   double         *spectrum;                                                     // the current spectrum and its maximum value
   double          tmLocal;                                                      // measurement local time
-  int             nsec;                                                         // the total number of seconds
+  double          offset;
+  int             nsec,nsec1,nsec2;                                             // the total number of seconds
   INDEX           i;                                                            // browse pixels in the spectrum
   RC              rc;                                                           // return code
 
@@ -384,13 +387,29 @@ RC MKZY_ReadRecord(ENGINE_CONTEXT *pEngineContext,int recordNo,FILE *specFp)
     if (pRecord->mkzy.scanningAngle2>180.)
      pRecord->mkzy.scanningAngle-=360.;
 
-    MKZY_ParseDate(recordInfo.date,&pRecord->present_day);
+    MKZY_ParseDate(recordInfo.date,&today);
 
     MKZY_ParseTime(recordInfo.starttime,&pRecord->startTime);
     MKZY_ParseTime(recordInfo.stoptime,&pRecord->endTime);
 
-    nsec=(pRecord->startTime.ti_hour*3600+pRecord->startTime.ti_min*60+pRecord->startTime.ti_sec+
-          pRecord->endTime.ti_hour*3600+pRecord->endTime.ti_min*60+pRecord->endTime.ti_sec)/2;
+    Tm1=(double)ZEN_NbSec(&today,&pRecord->startTime,0);
+    Tm2=(double)ZEN_NbSec(&today,&pRecord->endTime,0);
+
+    Tm1=(Tm1+Tm2)*0.5;
+
+    pRecord->present_day.da_year  = (short) ZEN_FNCaljye (&Tm1);
+    pRecord->present_day.da_mon   = (char) ZEN_FNCaljmon (ZEN_FNCaljye(&Tm1),ZEN_FNCaljda(&Tm1));
+    pRecord->present_day.da_day   = (char) ZEN_FNCaljday (ZEN_FNCaljye(&Tm1),ZEN_FNCaljda(&Tm1));
+
+    // Data on the current spectrum
+
+    nsec1=pRecord->startTime.ti_hour*3600+pRecord->startTime.ti_min*60+pRecord->startTime.ti_sec;
+    nsec2=pRecord->endTime.ti_hour*3600+pRecord->endTime.ti_min*60+pRecord->endTime.ti_sec;
+
+    if (nsec2<nsec1)
+     nsec2+=86400;
+
+    nsec=(nsec1+nsec2)/2;
 
     pRecord->present_time.ti_hour=(unsigned char)(nsec/3600);
     pRecord->present_time.ti_min=(unsigned char)((nsec%3600)/60);
@@ -437,8 +456,19 @@ RC MKZY_ReadRecord(ENGINE_CONTEXT *pEngineContext,int recordNo,FILE *specFp)
       if (checksum!=recordInfo.checksum)
        rc=ERROR_ID_FILE_RECORD;
       else
-       for (i=0;i<npixels;i++)
-        spectrum[i]=(double)lbuffer[i];
+       {
+       	// for NOVAC, straylight correction
+
+       	offset=(double)0.;
+
+     	  for (i=50;i<200;i++)
+         offset+=lbuffer[i];
+
+        offset/=(double)150.;
+
+        for (i=0;i<npixels;i++)
+         spectrum[i]=(double)lbuffer[i]-offset;
+       }
      }
    }
 

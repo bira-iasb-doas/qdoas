@@ -75,6 +75,8 @@ extern "C" {
 #define PI2         (double) 6.28318530717958647692
 #define PIDEMI      (double) 1.57079632679489661923
 
+#define EPSILON     (double)   1.e-6
+
 // ===================================================
 // VECTOR.C : UTILITY FUNCTIONS FOR VECTORS AND MATRIX
 // ===================================================
@@ -349,6 +351,20 @@ enum _analysisType
   ANALYSIS_TYPE_FWHM_NLFIT                                                      //  fit the difference of resolution between spectrum and reference
  };
 
+typedef struct _satellite_ref_
+ {
+  INDEX  indexFile;
+  INDEX  indexRecord;
+  INDEX  pixelNumber;
+  INDEX  pixelType;
+  double sza;
+  double latitude;
+  double longitude;
+  double szaDist;
+  double latDist;
+ }
+SATELLITE_REF;
+
 typedef struct _feno
  {
                                                                                 //  copy of data from analysis window panel
@@ -377,6 +393,9 @@ typedef struct _feno
   INT             displayFits;                                                  //  force display fits
   INT             displayPredefined;                                            //  force display predefined parameters
   INT             displayRef;
+
+  INT             displayFlag;                                                  //  summary of the previous flag
+  INT             displayLineIndex;                                             //  index of the current line
   INT             hidden;                                                       //  flag set if window is hidden e.g. for Kurucz calibration
   INT             useKurucz;                                                    //  flag set if Kurucz calibration is to be used for a new wavelength scale
   INT             useUsamp;                                                     //  flag set if undersampling correction is requested
@@ -384,6 +403,8 @@ typedef struct _feno
   INT             useEtalon;                                                    //  flag set if etalon reference is used
   INT             xsToConvolute;                                                //  flag set if high resolution cross sections to convolute real time
   INT             xsToConvoluteI0;
+
+  SATELLITE_REF  *satelliteRef;
 
   double         *LambdaRef,                                                    //  absolute reference wavelength scale
                  *LambdaK,                                                      //  new wavelength scale after Kurucz
@@ -535,19 +556,6 @@ SATELLITE_GEOLOC;
 // ==============
 
 // Buffers specific to CCD
-
-enum _synchroMeasureModes
- {
- 	SYNCHRO_MEASURE_NONE,
- 	SYNCHRO_MEASURE_OFFAXIS,
- 	SYNCHRO_MEASURE_DIRECTSUN,
- 	SYNCHRO_MEASURE_ZENITH,
- 	SYNCHRO_MEASURE_DARK,
- 	SYNCHRO_MEASURE_LAMP,
- 	SYNCHRO_MEASURE_BENTHAM,
- 	SYNCHRO_MEASURE_ALMUCANTAR,
- 	SYNCHRO_MEASURE_MAX
- };
 
 typedef struct _ccd
  {

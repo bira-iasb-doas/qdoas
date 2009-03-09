@@ -440,7 +440,7 @@ RC ReliMFC(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay
   BUFFERS *pBuffers;                                                            // pointer to the buffers part of the engine context
   RECORD_INFO *pRecord;                                                         // pointer to the record part of the engine context
 
-  INT                  day,mon,year,hour,min,sec,nsec,                          // date and time fields
+  INT                  day,mon,year,hour,min,sec,nsec,nsec1,nsec2,              // date and time fields
                        firstFile;                                               // number of the first file in the current directory
   DoasCh                fileName[MAX_STR_SHORT_LEN+1],                           // name of the current file (the current record)
                        format[20],
@@ -448,7 +448,7 @@ RC ReliMFC(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay
   SHORT_DATE           today;                                                   // date of the current record
   PRJCT_INSTRUMENTAL  *pInstrumental;                                           // pointer to the instrumental part of the project
   RC                   rc;                                                      // return code
-  double tmLocal;
+  double tmLocal,Tm1,Tm2;
 
   // Initializations
 
@@ -566,21 +566,24 @@ RC ReliMFC(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay
         pRecord->endTime.ti_min=(unsigned char)min;
         pRecord->endTime.ti_sec=(unsigned char)sec;
 
+        Tm1=(double)ZEN_NbSec(&today,&pRecord->startTime,0);
+        Tm2=(double)ZEN_NbSec(&today,&pRecord->endTime,0);
+
+        Tm1=(Tm1+Tm2)*0.5;
+
+        pRecord->present_day.da_year  = (short) ZEN_FNCaljye (&Tm1);
+        pRecord->present_day.da_mon   = (char) ZEN_FNCaljmon (ZEN_FNCaljye(&Tm1),ZEN_FNCaljda(&Tm1));
+        pRecord->present_day.da_day   = (char) ZEN_FNCaljday (ZEN_FNCaljye(&Tm1),ZEN_FNCaljda(&Tm1));
+
         // Data on the current spectrum
 
-        nsec=(pRecord->startTime.ti_hour*3600+pRecord->startTime.ti_min*60+pRecord->startTime.ti_sec+
-              pRecord->endTime.ti_hour*3600+pRecord->endTime.ti_min*60+pRecord->endTime.ti_sec)/2;
+        nsec1=pRecord->startTime.ti_hour*3600+pRecord->startTime.ti_min*60+pRecord->startTime.ti_sec;
+        nsec2=pRecord->endTime.ti_hour*3600+pRecord->endTime.ti_min*60+pRecord->endTime.ti_sec;
 
-        pRecord->present_day.da_day=(char)day;
-        pRecord->present_day.da_mon=(char)mon;
-        pRecord->present_day.da_year=(short)year;
+        if (nsec2<nsec1)
+         nsec2+=86400;
 
-        if (pRecord->present_day.da_year<30)
-         pRecord->present_day.da_year+=(short)2000;
-        else if (pRecord->present_day.da_year<130)
-         pRecord->present_day.da_year+=(short)1900;
-        else if (pRecord->present_day.da_year<1930)
-         pRecord->present_day.da_year+=(short)100;
+        nsec=(nsec1+nsec2)/2;
 
         pRecord->present_time.ti_hour=(unsigned char)(nsec/3600);
         pRecord->present_time.ti_min=(unsigned char)((nsec%3600)/60);
@@ -676,9 +679,11 @@ RC MFC_ReadRecordStd(ENGINE_CONTEXT *pEngineContext,DoasCh *fileName,
   float                tmp;                                   // temporary variable
   DoasCh line[MAX_STR_SHORT_LEN+1],             // line of the current file
         keyWord[MAX_STR_SHORT_LEN+1],keyValue[MAX_STR_SHORT_LEN+1],ctmp;
-  struct date          today;                                 // date of the current record
+  SHORT_DATE         today;                                 // date of the current record
 
   INDEX i,iDay,iMon,iYear;          // browse pixels in the spectrum
+  double Tm1,Tm2;
+  int nsec1,nsec2;
   RC rc;            // return code
 
   // Initializations
@@ -772,19 +777,24 @@ RC MFC_ReadRecordStd(ENGINE_CONTEXT *pEngineContext,DoasCh *fileName,
     pRecord->endTime.ti_min=(unsigned char)min;
     pRecord->endTime.ti_sec=(unsigned char)sec;
 
-    nsec=(pRecord->startTime.ti_hour*3600+pRecord->startTime.ti_min*60+pRecord->startTime.ti_sec+
-          pRecord->endTime.ti_hour*3600+pRecord->endTime.ti_min*60+pRecord->endTime.ti_sec)/2;
+    Tm1=(double)ZEN_NbSec(&today,&pRecord->startTime,0);
+    Tm2=(double)ZEN_NbSec(&today,&pRecord->endTime,0);
 
-    pRecord->present_day.da_day=(char)day;
-    pRecord->present_day.da_mon=(char)mon;
-    pRecord->present_day.da_year=(short)year;
+    Tm1=(Tm1+Tm2)*0.5;
 
-    if (pRecord->present_day.da_year<30)
-     pRecord->present_day.da_year+=(short)2000;
-    else if (pRecord->present_day.da_year<130)
-     pRecord->present_day.da_year+=(short)1900;
-    else if (pRecord->present_day.da_year<1930)
-     pRecord->present_day.da_year+=(short)100;
+    pRecord->present_day.da_year  = (short) ZEN_FNCaljye (&Tm1);
+    pRecord->present_day.da_mon   = (char) ZEN_FNCaljmon (ZEN_FNCaljye(&Tm1),ZEN_FNCaljda(&Tm1));
+    pRecord->present_day.da_day   = (char) ZEN_FNCaljday (ZEN_FNCaljye(&Tm1),ZEN_FNCaljda(&Tm1));
+
+    // Data on the current spectrum
+
+    nsec1=pRecord->startTime.ti_hour*3600+pRecord->startTime.ti_min*60+pRecord->startTime.ti_sec;
+    nsec2=pRecord->endTime.ti_hour*3600+pRecord->endTime.ti_min*60+pRecord->endTime.ti_sec;
+
+    if (nsec2<nsec1)
+     nsec2+=86400;
+
+    nsec=(nsec1+nsec2)/2;
 
     pRecord->present_time.ti_hour=(unsigned char)(nsec/3600);
     pRecord->present_time.ti_min=(unsigned char)((nsec%3600)/60);

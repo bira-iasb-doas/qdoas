@@ -147,21 +147,6 @@ typedef struct _sciaClusters
  }
 SCIA_CLUSTER;
 
-// Automatic reference selection
-
-typedef struct _refSelection
- {
- 	INDEX  indexFile;
-  INDEX  indexRecord;
-  double sza;
-  double latitude;
-  double longitude;
-  double szaDist;
-  double latDist;
-  double lonDist;
- }
-SCIA_REF;
-
 int SCIA_clusters[PRJCT_INSTR_SCIA_CHANNEL_MAX][2]=
  {
   {  2,  5 },
@@ -1544,7 +1529,7 @@ void SciaSort(INDEX indexRecord,int flag,int listSize,INDEX fileIndex)
 // RETURN        the number of elements in the refList reference list
 // -----------------------------------------------------------------------------
 
-INT SciaRefLat(SCIA_REF *refList,INT maxRefSize,double latMin,double latMax,double lonMin,double lonMax,double sza,double szaDelta)
+INT SciaRefLat(SATELLITE_REF *refList,INT maxRefSize,double latMin,double latMax,double lonMin,double lonMax,double sza,double szaDelta)
  {
   // Declarations
 
@@ -1613,7 +1598,7 @@ INT SciaRefLat(SCIA_REF *refList,INT maxRefSize,double latMin,double latMax,doub
             if (latDist>=refList[indexRef-1].latDist)
              break;
             else
-             memcpy(&refList[indexRef],&refList[indexRef-1],sizeof(SCIA_REF));
+             memcpy(&refList[indexRef],&refList[indexRef-1],sizeof(SATELLITE_REF));
 
            refList[indexRef].indexFile=fileIndex;
            refList[indexRef].indexRecord=pOrbitFile->sciaLatIndex[ilatIndex];
@@ -1648,7 +1633,7 @@ INT SciaRefLat(SCIA_REF *refList,INT maxRefSize,double latMin,double latMax,doub
 // RETURN        the number of elements in the refList reference list
 // -----------------------------------------------------------------------------
 
-INT SciaRefSza(SCIA_REF *refList,INT maxRefSize,double sza,double szaDelta)
+INT SciaRefSza(SATELLITE_REF *refList,INT maxRefSize,double sza,double szaDelta)
  {
   // Declarations
 
@@ -1710,7 +1695,7 @@ INT SciaRefSza(SCIA_REF *refList,INT maxRefSize,double sza,double szaDelta)
             if (szaDist>=refList[indexRef-1].szaDist)
              break;
             else
-             memcpy(&refList[indexRef],&refList[indexRef-1],sizeof(SCIA_REF));
+             memcpy(&refList[indexRef],&refList[indexRef-1],sizeof(SATELLITE_REF));
 
            refList[indexRef].indexFile=fileIndex;
            refList[indexRef].indexRecord=pOrbitFile->sciaSzaIndex[iszaIndex];
@@ -1750,13 +1735,13 @@ INT SciaRefSza(SCIA_REF *refList,INT maxRefSize,double sza,double szaDelta)
 //               ERROR_ID_NO otherwise.
 // -----------------------------------------------------------------------------
 
-RC SciaBuildRef(SCIA_REF *refList,INT nRef,INT nSpectra,double *lambda,double *ref,ENGINE_CONTEXT *pEngineContext,INDEX *pIndexLine,void *responseHandle)
+RC SciaBuildRef(SATELLITE_REF *refList,INT nRef,INT nSpectra,double *lambda,double *ref,ENGINE_CONTEXT *pEngineContext,INDEX *pIndexLine,void *responseHandle)
  {
   // Declarations
 
   RECORD_INFO *pRecord;                                                         // pointer to the record part of the engine context
   SCIA_ORBIT_FILE *pOrbitFile;                                                  // pointer to the current orbit
-  SCIA_REF *pRef;                                                               // pointer to the current reference spectrum
+  SATELLITE_REF *pRef;                                                               // pointer to the current reference spectrum
   INDEX     indexRef,                                                           // browse reference in the list
             indexFile,                                                          // browse files
             indexState,indexObs,                                                // state index and observation number of the current record
@@ -1884,7 +1869,7 @@ RC SciaRefSelection(ENGINE_CONTEXT *pEngineContext,
  {
   // Declarations
 
-  SCIA_REF *refList;                                                            // list of potential reference spectra
+  SATELLITE_REF *refList;                                                            // list of potential reference spectra
   double latDelta,tmp;
   INT nRefN,nRefS;                                                              // number of reference spectra in the previous list resp. for Northern and Southern hemisphere
   double normFact;                                                              // normalisation factor
@@ -1927,7 +1912,7 @@ RC SciaRefSelection(ENGINE_CONTEXT *pEngineContext,
 
   // Buffers allocation
 
-  if ((refList=(SCIA_REF *)MEMORY_AllocBuffer("SciaRefSelection ","refList",sciaTotalRecordNumber,sizeof(SCIA_REF),0,MEMORY_TYPE_STRUCT))==NULL)
+  if ((refList=(SATELLITE_REF *)MEMORY_AllocBuffer("SciaRefSelection ","refList",sciaTotalRecordNumber,sizeof(SATELLITE_REF),0,MEMORY_TYPE_STRUCT))==NULL)
    rc=ERROR_ID_ALLOC;
   else
    {

@@ -485,7 +485,7 @@ void CWMoleculesDoasTable::slotInsertRow()
 	  QList<QVariant> initialValues;
 	  // NOTE: initialized with default values here ...
 	  initialValues.push_back(QString("None"));
-	  initialValues.push_back(QString("None"));
+	  initialValues.push_back(QString("Interpolate"));                             // cross type should be set to interpolate by default
 	  initialValues.push_back(QString("None"));
 	  initialValues.push_back(true);
 	  initialValues.push_back(true);                                               // Require filter should be initialized at true !!!

@@ -282,7 +282,8 @@ extern "C" {
   };
 
   struct instrumental_ccdeev {
-    int detectorSize;
+    int  detectorSize;
+    int  spectralType;
     char calibrationFile[FILENAME_BUFFER_LENGTH];
     char instrFunctionFile[FILENAME_BUFFER_LENGTH];
     char straylightCorrectionFile[FILENAME_BUFFER_LENGTH];
