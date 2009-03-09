@@ -206,7 +206,8 @@ int mediateRequestDisplaySpecInfo(void *engineContext,int page,void *responseHan
    }
   else
    {
-   	mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Solar Azimuth angle","%.3f",pRecord->Azimuth);
+   	if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_AZIM])
+   	 mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Solar Azimuth angle","%.3f",pRecord->Azimuth);
    	if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_VIEW_ELEVATION])
     	mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Viewing Zenith angle","%.3f",pRecord->zenithViewAngle);
    	if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_VIEW_AZIMUTH])
