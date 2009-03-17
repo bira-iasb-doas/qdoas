@@ -138,6 +138,7 @@ SOURCES += ../engine/actn-read.c
 SOURCES += ../engine/analyse.c
 SOURCES += ../engine/ascii.c
 SOURCES += ../engine/bin_read.c
+SOURCES += ../engine/bira-airborne-read.c
 SOURCES += ../engine/ccd-read.c
 SOURCES += ../engine/curfit.c
 SOURCES += ../engine/debug.c
