@@ -165,6 +165,11 @@ CWProjectTabInstrumental::CWProjectTabInstrumental(const mediate_project_instrum
   index = m_formatStack->addWidget(m_mkzyEdit);
   m_instrumentToStackIndexMap.insert(std::map<int,int>::value_type(PRJCT_INSTR_FORMAT_MKZY, index));
 
+  // bira airborne
+  m_biraairborneEdit = new CWInstrMinimumEdit(&(instr->biraairborne));
+  index = m_formatStack->addWidget(m_biraairborneEdit);
+  m_instrumentToStackIndexMap.insert(std::map<int,int>::value_type(PRJCT_INSTR_FORMAT_BIRA_AIRBORNE, index));
+
   // Site
   m_siteCombo = new CWSiteListCombo(this); // automatically populated
 
@@ -221,6 +226,7 @@ void CWProjectTabInstrumental::apply(mediate_project_instrumental_t *instr) cons
   m_omiEdit->apply(&(instr->omi));
   m_gome2Edit->apply(&(instr->gome2));
   m_mkzyEdit->apply(&(instr->mkzy));
+  m_biraairborneEdit->apply(&(instr->biraairborne));
 }
 
 void CWProjectTabInstrumental::slotInstrumentChanged(int instrument)

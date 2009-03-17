@@ -1073,7 +1073,7 @@ RC SCIA_SetPDS(ENGINE_CONTEXT *pEngineContext)
 
   // In automatic reference selection, the file has maybe already loaded
 
-  if ((THRD_id==THREAD_TYPE_ANALYSIS) && ANALYSE_refSelectionFlag)
+  if ((THRD_id==THREAD_TYPE_ANALYSIS) && pEngineContext->analysisRef.refAuto)
    {
     // Close the previous files
 
@@ -1100,7 +1100,7 @@ RC SCIA_SetPDS(ENGINE_CONTEXT *pEngineContext)
 
    	// Get the number of files to load
 
-   	if ((THRD_id==THREAD_TYPE_ANALYSIS) && ANALYSE_refSelectionFlag)
+   	if ((THRD_id==THREAD_TYPE_ANALYSIS) && pEngineContext->analysisRef.refAuto)
     	{
     		sciaLoadReferenceFlag=1;
 
@@ -1119,7 +1119,7 @@ RC SCIA_SetPDS(ENGINE_CONTEXT *pEngineContext)
 
    	 	for (ptrOld=ptr,_n=0;(((_nList[_n]=strchr(ptrOld+1,'_'))!=NULL) && (_n<10));ptrOld=_nList[_n],_n++);
 
-   	 	if (_n<8 || !ANALYSE_lonSelectionFlag) // it's not a standard SCIAMACHY file name, so just use this file
+   	 	if (_n<8 || !pEngineContext->analysisRef.refLon) // it's not a standard SCIAMACHY file name, so just use this file
        {
      	  sciaOrbitFilesN=1;
      	  strcpy(sciaOrbitFiles[0].sciaFileName,pEngineContext->fileInfo.fileName);
@@ -2090,7 +2090,7 @@ RC SCIA_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
   pOrbitFile=&sciaOrbitFiles[sciaCurrentFileIndex];
   saveFlag=(INT)pEngineContext->project.spectra.displayDataFlag;
 
-  if (!(rc=pOrbitFile->rc) && (THRD_id==THREAD_TYPE_ANALYSIS) && (sciaLoadReferenceFlag || !ANALYSE_refSelectionFlag))
+  if (!(rc=pOrbitFile->rc) && (THRD_id==THREAD_TYPE_ANALYSIS) && (sciaLoadReferenceFlag || !pEngineContext->analysisRef.refAuto))
    {
     lambdaMin=(double)9999.;
     lambdaMax=(double)-9999.;

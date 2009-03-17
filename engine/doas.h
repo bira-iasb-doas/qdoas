@@ -666,7 +666,6 @@ typedef struct _engineBuffers
          *dnl;                                                                  // non linearity of detector
 
   DoasU32  *recordIndexes;                                                      // indexes of records for direct access (specific to BIRA-IASB spectra file format)
-  INT      *scanRefIndexes;                                                     // in automatic selection of the reference spectrum, maxdoas measurements, scan mode, indexes of zenith spectra of the scan
  }
 BUFFERS;
 
@@ -767,6 +766,17 @@ typedef struct _engineCalibFeno
  }
 CALIB_FENO;
 
+typedef struct _analysisRef
+ {
+ 	INT      *scanRefIndexes;                                                     // in automatic selection of the reference spectrum, maxdoas measurements, scan mode, indexes of zenith spectra of the scan
+
+ 	int refAuto;
+ 	int refScan;
+ 	int refSza;
+ 	int refLon;
+ }
+ANALYSIS_REF;
+
 // Analysis part of the engine
 
 // QDOAS engine
@@ -777,6 +787,7 @@ typedef struct _engineContext
   FILE_INFO         fileInfo;                                                   // the name of the file to load and file pointers
   RECORD_INFO       recordInfo;                                                 // data on the current record
   PROJECT           project;                                                    // data from the current project
+  ANALYSIS_REF      analysisRef;
 
   // record information
 
@@ -790,7 +801,6 @@ typedef struct _engineContext
   INT     satelliteFlag;
 
   INT     refFlag;                                                              // this flag is set when the reference spectrum is retrieved from spectra files
-  INT     maxdoasFlag;
 
   CALIB_FENO        calibFeno;                                                  // transfer of wavelength calibration options from the project mediator to the analysis mediator
  }
@@ -905,7 +915,7 @@ EXTERN DoasCh *ANLYS_amf[ANLYS_AMF_TYPE_MAX];
 EXTERN PRJCT_FILTER *ANALYSE_plFilter,*ANALYSE_phFilter;
 EXTERN WRK_SYMBOL   *WorkSpace;
 EXTERN INT NWorkSpace,NDET;
-EXTERN INT           DimC,DimL,DimP,Z,NFeno,(*Fenetre)[2],ANALYSE_refSelectionFlag,ANALYSE_lonSelectionFlag,
+EXTERN INT           DimC,DimL,DimP,Z,NFeno,(*Fenetre)[2],
                      SvdPDeb,SvdPFin;
 EXTERN PRJCT_ANLYS  *pAnalysisOptions;             // analysis options
 EXTERN PRJCT_KURUCZ *pKuruczOptions;               // Kurucz options
@@ -1415,6 +1425,8 @@ RC   SetSAOZ(ENGINE_CONTEXT *pEngineContext,FILE *specFp);
 RC   ReliSAOZ(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp,FILE *namesFp);
 RC   MKZY_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp);
 RC   MKZY_Reli(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,INT localDay,FILE *specFp);
+RC   AIRBORNE_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp);
+RC   AIRBORNE_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,INT localDay,FILE *specFp);
 RC   SetSAOZEfm(ENGINE_CONTEXT *pEngineContext,FILE *specFp);
 RC   ReliSAOZEfm(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp);
 RC   SetActon_Logger(ENGINE_CONTEXT *pEngineContext,FILE *specFp);

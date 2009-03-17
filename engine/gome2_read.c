@@ -1007,7 +1007,7 @@ RC GOME2_Set(ENGINE_CONTEXT *pEngineContext)
 
   // In automatic reference selection, the file has maybe already loaded
 
-  if ((THRD_id==THREAD_TYPE_ANALYSIS) && ANALYSE_refSelectionFlag)
+  if ((THRD_id==THREAD_TYPE_ANALYSIS) && pEngineContext->analysisRef.refAuto)
    {
     // Close the previous files
 
@@ -1037,7 +1037,7 @@ RC GOME2_Set(ENGINE_CONTEXT *pEngineContext)
 
    	// Get the number of files to load
 
-   	if ((THRD_id==THREAD_TYPE_ANALYSIS) && ANALYSE_refSelectionFlag)
+   	if ((THRD_id==THREAD_TYPE_ANALYSIS) && pEngineContext->analysisRef.refAuto)
     	{
     		gome2LoadReferenceFlag=1;
 
@@ -1066,7 +1066,7 @@ RC GOME2_Set(ENGINE_CONTEXT *pEngineContext)
 
  	 	  if (fileExt==NULL)
  	 	   sprintf(ptr,"%c*.*",PATH_SEP);
- 	 	  else if (!ANALYSE_lonSelectionFlag || STD_Stricmp(fileExt,".nadir"))
+ 	 	  else if (!pEngineContext->analysisRef.refLon || STD_Stricmp(fileExt,".nadir"))
  	 	   sprintf(ptr,"%c*.%s",PATH_SEP,fileExt);
  	 	  else
  	 	   {
@@ -2057,7 +2057,7 @@ RC GOME2_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
   pOrbitFile=&gome2OrbitFiles[gome2CurrentFileIndex];
   saveFlag=(INT)pEngineContext->project.spectra.displayDataFlag;
 
-  if (!(rc=pOrbitFile->rc) && (THRD_id==THREAD_TYPE_ANALYSIS) && (gome2LoadReferenceFlag || !ANALYSE_refSelectionFlag))
+  if (!(rc=pOrbitFile->rc) && (THRD_id==THREAD_TYPE_ANALYSIS) && (gome2LoadReferenceFlag || !pEngineContext->analysisRef.refAuto))
    {
     lambdaMin=(double)9999.;
     lambdaMax=(double)-9999.;

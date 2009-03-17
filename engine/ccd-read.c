@@ -163,6 +163,7 @@ RC SetCCD_EEV(ENGINE_CONTEXT *pEngineContext,FILE *specFp,FILE *darkFp)
   // Declarations
 
   BUFFERS *pBuffers;                                                            // pointer to the buffers part of the engine context
+  ANALYSIS_REF *pRef;
 
   CCD_DATA header;                                                              // header of a record
   DoasU32   *recordIndexes;                                                       // indexes of records for direct access
@@ -181,6 +182,7 @@ RC SetCCD_EEV(ENGINE_CONTEXT *pEngineContext,FILE *specFp,FILE *darkFp)
   // Initializations
 
   pBuffers=&pEngineContext->buffers;
+  pRef=&pEngineContext->analysisRef;
 
   recordIndexes=pEngineContext->buffers.recordIndexes;
 
@@ -199,9 +201,9 @@ RC SetCCD_EEV(ENGINE_CONTEXT *pEngineContext,FILE *specFp,FILE *darkFp)
 
   // Release scanref buffer
 
-  if (pBuffers->scanRefIndexes!=NULL)
-   MEMORY_ReleaseBuffer("SetCCD_EEV","scanRefIndexes",pBuffers->scanRefIndexes);
-  pBuffers->scanRefIndexes=NULL;
+  if (pRef->scanRefIndexes!=NULL)
+   MEMORY_ReleaseBuffer("SetCCD_EEV","scanRefIndexes",pRef->scanRefIndexes);
+  pRef->scanRefIndexes=NULL;
 
   // Check the input file pointer
 
@@ -270,7 +272,7 @@ RC SetCCD_EEV(ENGINE_CONTEXT *pEngineContext,FILE *specFp,FILE *darkFp)
     // Allocate a buffer to display the variation of the signal along the acquisitions
 
     if ((specMaxFlag && ((pBuffers->specMax=MEMORY_AllocDVector("SetCCD_EEV","specMax",0,NDET-1))==NULL)) ||
-        (pEngineContext->maxdoasFlag && ((pEngineContext->buffers.scanRefIndexes=(INT *)MEMORY_AllocBuffer("EngineSetFile","scanRefIndexes",pEngineContext->recordNumber,sizeof(INT),0,MEMORY_TYPE_INT))==NULL)))
+        (pEngineContext->analysisRef.refScan && ((pRef->scanRefIndexes=(INT *)MEMORY_AllocBuffer("EngineSetFile","scanRefIndexes",pEngineContext->recordNumber,sizeof(INT),0,MEMORY_TYPE_INT))==NULL)))
      rc=ERROR_ID_ALLOC;
 
     // Eclipse 99
@@ -565,7 +567,9 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
           pRecord->localCalDay=ZEN_FNCaljda(&tmLocal);
           measurementType=pEngineContext->project.instrumental.user;
 
-          if (rc || (dateFlag && (pRecord->elevationViewAngle<80.)))                  // reference spectra are zenith only
+          if (rc ||
+             (dateFlag && (pRecord->elevationViewAngle<80.)) ||                                                                              // reference spectra are zenith only
+             (!dateFlag && pEngineContext->analysisRef.refScan && !pEngineContext->analysisRef.refSza && (pRecord->elevationViewAngle>80.)))    // zenith sky spectra are not analyzed in scan reference selection mode
            rc=ERROR_ID_FILE_RECORD;
           else if (measurementType!=PRJCT_INSTR_EEV_TYPE_NONE)
            {
@@ -883,14 +887,6 @@ RC ReliCCD(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay
 
       for (i=0;i<NDET;i++)
        pBuffers->spectrum[NDET-i-1]=(double)ISpectre[i]*Max/65000.*176.-908.25*44.;
-
-       {
-       	FILE *fp;
-       	fp=fopen("toto.dat","a+t");
-       	fprintf(fp,"%d dateFlag %d %d %d\n",recordNo,dateFlag,pRecord->localCalDay,localDay);
-       	fclose(fp);
-       }
-
 
       if (dateFlag && (pRecord->localCalDay!=localDay))
        rc=ERROR_ID_FILE_RECORD;

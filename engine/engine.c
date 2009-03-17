@@ -101,8 +101,8 @@ void EngineResetContext(ENGINE_CONTEXT *pEngineContext)
    MEMORY_ReleaseDVector("EngineResetContext ","specMaxx",pBuffers->specMaxx,0);
   if (pBuffers->specMax!=NULL)
    MEMORY_ReleaseDVector("EngineResetContext ","specMax",pBuffers->specMax,0);
-  if (pBuffers->scanRefIndexes!=NULL)
-   MEMORY_ReleaseBuffer("EngineResetContext ","scanRefIndexes",pBuffers->scanRefIndexes);
+  if (pEngineContext->analysisRef.scanRefIndexes!=NULL)
+   MEMORY_ReleaseBuffer("EngineResetContext ","scanRefIndexes",pEngineContext->analysisRef.scanRefIndexes);
   if (pBuffers->varPix!=NULL)
    MEMORY_ReleaseDVector("EngineResetContext ","varPix",pBuffers->varPix,0);
   if (pBuffers->dnl!=NULL)
@@ -167,8 +167,8 @@ RC EngineCopyContext(ENGINE_CONTEXT *pEngineContextTarget,ENGINE_CONTEXT *pEngin
       ((pBuffersTarget->specMaxx=(double *)MEMORY_AllocDVector("EngineCopyContext","specMaxx",0,NDET-1))==NULL)) ||
       ((pBuffersSource->specMax!=NULL) && (pBuffersTarget->specMax==NULL) &&
       ((pBuffersTarget->specMax=(double *)MEMORY_AllocDVector("EngineCopyContext","specMax",0,NDET-1))==NULL)) ||
-      ((pBuffersSource->scanRefIndexes!=NULL) && (pBuffersTarget->scanRefIndexes==NULL) &&
-      ((pBuffersTarget->scanRefIndexes=(INT *)MEMORY_AllocBuffer("EngineCopyContext","scanRefIndexes",pEngineContextSource->recordNumber,sizeof(INT),0,MEMORY_TYPE_INT))==NULL)) ||
+      ((pEngineContextSource->analysisRef.scanRefIndexes!=NULL) && (pEngineContextTarget->analysisRef.scanRefIndexes==NULL) &&
+      ((pEngineContextTarget->analysisRef.scanRefIndexes=(INT *)MEMORY_AllocBuffer("EngineCopyContext","scanRefIndexes",pEngineContextSource->recordNumber,sizeof(INT),0,MEMORY_TYPE_INT))==NULL)) ||
       ((pBuffersSource->recordIndexes!=NULL) && (pBuffersTarget->recordIndexes==NULL) &&
       ((pBuffersTarget->recordIndexes=(DoasU32 *)MEMORY_AllocBuffer("THRD_CopySpecInfo","recordIndexes",
        (pEngineContextTarget->recordIndexesSize=pEngineContextSource->recordIndexesSize),sizeof(DoasU32),0,MEMORY_TYPE_ULONG))==NULL)) ||
@@ -207,8 +207,8 @@ RC EngineCopyContext(ENGINE_CONTEXT *pEngineContextTarget,ENGINE_CONTEXT *pEngin
      memcpy(pBuffersTarget->specMaxx,pBuffersSource->specMaxx,sizeof(double)*NDET);
     if ((pBuffersTarget->specMax!=NULL) && (pBuffersSource->specMax!=NULL))
      memcpy(pBuffersTarget->specMax,pBuffersSource->specMax,sizeof(double)*NDET);
-    if ((pBuffersTarget->scanRefIndexes!=NULL) && (pBuffersSource->scanRefIndexes!=NULL))
-     memcpy(pBuffersTarget->scanRefIndexes,pBuffersSource->scanRefIndexes,sizeof(INT)*pEngineContextSource->recordNumber);
+    if ((pEngineContextTarget->analysisRef.scanRefIndexes!=NULL) && (pEngineContextSource->analysisRef.scanRefIndexes!=NULL))
+     memcpy(pEngineContextTarget->analysisRef.scanRefIndexes,pEngineContextSource->analysisRef.scanRefIndexes,sizeof(INT)*pEngineContextSource->recordNumber);
     if ((pBuffersTarget->recordIndexes!=NULL) && (pBuffersSource->recordIndexes!=NULL))
      memcpy(pBuffersTarget->recordIndexes,pBuffersSource->recordIndexes,sizeof(DoasU32)*pEngineContextSource->recordIndexesSize);
 
@@ -218,6 +218,7 @@ RC EngineCopyContext(ENGINE_CONTEXT *pEngineContextTarget,ENGINE_CONTEXT *pEngin
     memcpy(&pEngineContextTarget->fileInfo,&pEngineContextSource->fileInfo,sizeof(FILE_INFO));          // the name of the file to load and file pointers
     memcpy(&pEngineContextTarget->recordInfo,&pEngineContextSource->recordInfo,sizeof(RECORD_INFO)-sizeof(CCD));
     memcpy(&pEngineContextTarget->calibFeno,&pEngineContextSource->calibFeno,sizeof(CALIB_FENO));
+    memcpy(&pEngineContextTarget->analysisRef,&pEngineContextSource->analysisRef,sizeof(ANALYSIS_REF));
 
     // Other fields
 
@@ -228,7 +229,6 @@ RC EngineCopyContext(ENGINE_CONTEXT *pEngineContextTarget,ENGINE_CONTEXT *pEngin
     pEngineContextTarget->indexFile=pEngineContextSource->indexFile;
     pEngineContextTarget->lastRefRecord=pEngineContextSource->lastRefRecord;
     pEngineContextTarget->lastSavedRecord=pEngineContextSource->lastSavedRecord;
-    pEngineContextTarget->maxdoasFlag=pEngineContextSource->maxdoasFlag;
    }
 
   // Return
@@ -536,6 +536,10 @@ RC EngineSetFile(ENGINE_CONTEXT *pEngineContext,const char *fileName,void *respo
       rc=SetSAOZEfm(pEngineContext,pFile->specFp);
      break;
   // ---------------------------------------------------------------------------
+     case PRJCT_INSTR_FORMAT_BIRA_AIRBORNE :
+      rc=AIRBORNE_Set(pEngineContext,pFile->specFp);
+     break;
+  // ---------------------------------------------------------------------------
      case PRJCT_INSTR_FORMAT_MFC :
      case PRJCT_INSTR_FORMAT_MFC_STD :
       if (!(rc=SetMFC(pEngineContext,pFile->specFp)) && (THRD_id!=THREAD_TYPE_SPECTRA) && (THRD_id!=THREAD_TYPE_NONE))
@@ -686,6 +690,10 @@ RC EngineReadFile(ENGINE_CONTEXT *pEngineContext,int indexRecord,INT dateFlag,IN
  // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_SAOZ_EFM :
      rc=ReliSAOZEfm(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp);
+    break;
+ // ---------------------------------------------------------------------------
+    case PRJCT_INSTR_FORMAT_BIRA_AIRBORNE :
+     rc=AIRBORNE_Read(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp);
     break;
  // ---------------------------------------------------------------------------
 // QDOAS ???    case PRJCT_INSTR_FORMAT_MFC :
@@ -1050,6 +1058,8 @@ RC EngineSetRefIndexes(ENGINE_CONTEXT *pEngineContext)
 
   EngineCopyContext(&ENGINE_contextRef,pEngineContext);
 
+  ENGINE_contextRef.analysisRef.refScan=0;  // in order not to have error on zenith sky spectra
+
   pProject=&ENGINE_contextRef.project;
   pSpectra=&ENGINE_contextRef.project.spectra;
   pInstr=&ENGINE_contextRef.project.instrumental;
@@ -1112,9 +1122,9 @@ RC EngineSetRefIndexes(ENGINE_CONTEXT *pEngineContext)
       if (rc==ERROR_ID_FILE_RECORD)
        rc=ERROR_ID_NO;
 
-      if (NRecord && pEngineContext->maxdoasFlag)
+      if (NRecord && pEngineContext->analysisRef.refScan)
        {
-       	memcpy(pEngineContext->buffers.scanRefIndexes,indexList,sizeof(INT)*NRecord);
+       	memcpy(pEngineContext->analysisRef.scanRefIndexes,indexList,sizeof(INT)*NRecord);
        	pEngineContext->fileInfo.nScanRef=NRecord;
        }
 
@@ -1238,6 +1248,7 @@ RC EngineSetRefIndexesMFC(ENGINE_CONTEXT *pEngineContext)
   struct dirent *fileInfo;
   DIR *hDir;
   INDEX               indexFile;
+  BUFFERS *pBuffers;                                                            // pointer to the buffers part of the engine context
   PROJECT            *pProject;                                                 // pointer to the project part of the engine
   PRJCT_SPECTRA      *pSpectra;                                                 // pointer to spectra part of the project
   PRJCT_INSTRUMENTAL *pInstr;                                                   // pointer to the instrumental part of the project
@@ -1267,6 +1278,8 @@ RC EngineSetRefIndexesMFC(ENGINE_CONTEXT *pEngineContext)
   // Make a backup of the spectra part of the engine context
 
   EngineCopyContext(&ENGINE_contextRef,pEngineContext);
+
+  ENGINE_contextRef.analysisRef.refScan=0;                                      // in order not to have error on zenith sky spectra
 
   pProject=&ENGINE_contextRef.project;
   pSpectra=&ENGINE_contextRef.project.spectra;
@@ -1541,9 +1554,9 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
        (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC)) ?
          EngineSetRefIndexesMFC(pEngineContext):EngineSetRefIndexes(pEngineContext);
 
-  if (pEngineContext->maxdoasFlag)
+  if (pEngineContext->analysisRef.refScan)
    {
-   	scanRefIndexes=pEngineContext->buffers.scanRefIndexes;
+   	scanRefIndexes=pEngineContext->analysisRef.scanRefIndexes;
 
    	for (indexScanRecord=0;indexScanRecord<pEngineContext->fileInfo.nScanRef;indexScanRecord++)
    	 if (scanRefIndexes[indexScanRecord]>=pEngineContext->indexRecord)

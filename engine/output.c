@@ -1243,7 +1243,7 @@ RC OUTPUT_RegisterData(ENGINE_CONTEXT *pEngineContext)
            (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_HDF) ||
            (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS) ||
            (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GOME2)) &&
-            ANALYSE_refSelectionFlag)                                           // automatic reference is requested for at least one analysis window
+            pEngineContext->analysisRef.refAuto)                                           // automatic reference is requested for at least one analysis window
        {
    	    OutputRegister("Reference file","","",MEMORY_TYPE_STRING,MAX_PATH_LEN+1,1,1,"%s");
    	    OutputRegister("Number of records selected for the reference","","",MEMORY_TYPE_INT,sizeof(int),1,1,"%d");
@@ -2814,7 +2814,7 @@ FILE *OutputFileOpen(ENGINE_CONTEXT *pEngineContext,DoasCh *outputFileName,INT a
            (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_HDF) ||
            (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS) ||
            (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GOME2)) &&
-            ANALYSE_refSelectionFlag)                                           // automatic reference is requested for at least one analysis window
+            pEngineContext->analysisRef.refAuto)                                           // automatic reference is requested for at least one analysis window
        {
        	strcpy(outputColumns[0],OUTPUT_refFile);
        	((int *)outputColumns[1])[0]=OUTPUT_nRec;

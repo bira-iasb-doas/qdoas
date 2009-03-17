@@ -357,6 +357,16 @@ void getValidFieldFlags(int *validFlags, int instrument)
      }
     break;
  // ----------------------------------------------------------------------------
+    case PRJCT_INSTR_FORMAT_BIRA_AIRBORNE :
+     {
+      validFlags[PRJCT_RESULTS_ASCII_SCANS]=1;
+      validFlags[PRJCT_RESULTS_ASCII_NREJ]=1;
+      validFlags[PRJCT_RESULTS_ASCII_LONGIT]=1;
+      validFlags[PRJCT_RESULTS_ASCII_LATIT]=1;
+      validFlags[PRJCT_RESULTS_ASCII_ALTIT]=1;
+     }
+    break;
+ // ----------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_SAOZ_EFM :
     case PRJCT_INSTR_FORMAT_RASAS :
      {

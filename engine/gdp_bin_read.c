@@ -318,7 +318,7 @@ RC GDP_BIN_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
 
   // In automatic reference selection, the file has maybe already loaded
 
-  if ((THRD_id==THREAD_TYPE_ANALYSIS) && ANALYSE_refSelectionFlag)
+  if ((THRD_id==THREAD_TYPE_ANALYSIS) && pEngineContext->analysisRef.refAuto)
    {
     for (indexFile=0;indexFile<gdpBinOrbitFilesN;indexFile++)
      if ((strlen(pEngineContext->fileInfo.fileName)==strlen(GDP_BIN_orbitFiles[indexFile].gdpBinFileName)) &&
@@ -337,11 +337,11 @@ RC GDP_BIN_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
 
    	// Get the number of files to load
 
-   	if ((THRD_id==THREAD_TYPE_ANALYSIS) && ANALYSE_refSelectionFlag)
+   	if ((THRD_id==THREAD_TYPE_ANALYSIS) && pEngineContext->analysisRef.refAuto)
     	{
     		gdpBinLoadReferenceFlag=1;
 
-    		if (ANALYSE_lonSelectionFlag)
+    		if (pEngineContext->analysisRef.refLon)
        {
     		  // Get file path
 
@@ -1113,7 +1113,7 @@ RC GdpBinBuildRef(GDP_BIN_REF *refList,INT nRef,INT nSpectra,double *lambda,doub
       if (indexFile==ITEM_NONE)
        {
         mediateResponseCellDataString(plotPageRef,(*pIndexLine)++,indexColumn,"Ref Selection",responseHandle);
-        mediateResponseCellInfo(plotPageRef,(*pIndexLine)++,indexColumn,responseHandle,"Ref File","%s",GDP_BIN_orbitFiles[refList[0].indexFile].gdpBinFileName);
+        mediateResponseCellInfo(plotPageRef,(*pIndexLine)++,indexColumn,responseHandle,"Ref File","%s",GDP_BIN_orbitFiles[pRef->indexFile].gdpBinFileName);
         mediateResponseCellDataString(plotPageRef,(*pIndexLine),indexColumn,"Record",responseHandle);
         mediateResponseCellDataString(plotPageRef,(*pIndexLine),indexColumn+1,"Pixel number",responseHandle);
         mediateResponseCellDataString(plotPageRef,(*pIndexLine),indexColumn+2,"Pixel type",responseHandle);
@@ -1414,7 +1414,7 @@ RC GDP_BIN_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,FILE *specFp,void *respon
   saveFlag=(INT)pEngineContext->project.spectra.displayDataFlag;
   pOrbitFile=&GDP_BIN_orbitFiles[GDP_BIN_currentFileIndex];
 
-  if (!(rc=pOrbitFile->rc) && (THRD_id==THREAD_TYPE_ANALYSIS) && (gdpBinLoadReferenceFlag || !ANALYSE_refSelectionFlag))
+  if (!(rc=pOrbitFile->rc) && (THRD_id==THREAD_TYPE_ANALYSIS) && (gdpBinLoadReferenceFlag || !pEngineContext->analysisRef.refAuto))
    {
     lambdaMin=(double)9999.;
     lambdaMax=(double)-9999.;

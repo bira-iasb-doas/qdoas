@@ -153,8 +153,6 @@ INT SvdPDeb,SvdPFin,                   // analysis window limits
 WRK_SYMBOL *WorkSpace;                 // list of symbols in a project
 INT NWorkSpace;
 FENO *TabFeno,*Feno;                   // list of analysis windows in a project
-INT ANALYSE_refSelectionFlag,          // flag set when automatic reference selection is requested for at least one analysis window
-    ANALYSE_lonSelectionFlag;
 
 double **U,*x,*Lambda,
         *ANALYSE_pixels,
@@ -5678,9 +5676,9 @@ RC ANALYSE_SetInit(ENGINE_CONTEXT *pEngineContext)
   // Initializations
 
   ANALYSE_ignoreAll=0;
-  ANALYSE_refSelectionFlag=ANALYSE_lonSelectionFlag=0;
+  pEngineContext->analysisRef.refAuto=pEngineContext->analysisRef.refLon=0;
   analyseIndexRecord=pEngineContext->indexRecord;
-  pEngineContext->maxdoasFlag=0;
+  memset(&pEngineContext->analysisRef,0,sizeof(ANALYSIS_REF));
 
   rc=ERROR_ID_NO;
 

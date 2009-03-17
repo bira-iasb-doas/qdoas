@@ -522,6 +522,8 @@ bool CProjectInstrumentalSubHandler::start(const QXmlAttributes &atts)
     m_instrumental->format = PRJCT_INSTR_FORMAT_SAOZ_VIS;
   else if (str == "saozefm")
     m_instrumental->format = PRJCT_INSTR_FORMAT_SAOZ_EFM;
+  else if (str == "biraairborne")
+    m_instrumental->format = PRJCT_INSTR_FORMAT_BIRA_AIRBORNE;
   else if (str == "mfc")
     m_instrumental->format = PRJCT_INSTR_FORMAT_MFC;
   else if (str == "mfcstd")
@@ -894,6 +896,9 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
   }
   else if (element == "mkzy") { // MKZY
     return helperLoadMinimum(atts, &(m_instrumental->mkzy));
+  }
+  else if (element == "biraairborne") { // BIRA AIRBORNE
+    return helperLoadMinimum(atts, &(m_instrumental->biraairborne));
   }
 
   // ... other formats ...

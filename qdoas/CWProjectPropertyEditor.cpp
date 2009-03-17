@@ -77,6 +77,7 @@ CWProjectPropertyEditor::CWProjectPropertyEditor(const QString &projectName, QWi
   m_groundFormatCombo->addItem("SAOZ EFM (1024)", QVariant(PRJCT_INSTR_FORMAT_SAOZ_EFM));
   m_groundFormatCombo->addItem("SAOZ PCD/NMOS (512)", QVariant(PRJCT_INSTR_FORMAT_SAOZ_VIS));
   m_groundFormatCombo->addItem("MKZY PAK (NOVAC, MANNE Kihlman and ZHANG Yan)", QVariant(PRJCT_INSTR_FORMAT_MKZY));
+  m_groundFormatCombo->addItem("BIRA-IASB Airborne", QVariant(PRJCT_INSTR_FORMAT_BIRA_AIRBORNE));
   m_groundFormatCombo->hide();
   // create and populate satellite
   m_satelliteFormatCombo = new QComboBox(this);

@@ -348,6 +348,7 @@ extern "C" {
     struct instrumental_omi omi;
     struct instrumental_gdp gome2;
     struct instrumental_minimum mkzy;
+    struct instrumental_minimum biraairborne;
    }
   mediate_project_instrumental_t;
 
