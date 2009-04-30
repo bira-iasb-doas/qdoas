@@ -180,7 +180,7 @@ INDEX MFC_SearchForCurrentFileIndex(ENGINE_CONTEXT *pEngineContext)
  	  strcpy(fileName,ptr+1);
 
  	 	for (indexFile=0;indexFile<nscanRefFiles;indexFile++)
- 	 	 if (!stricmp(fileName,&scanRefFiles[indexFile*(MAX_ITEM_TEXT_LEN+1)]))
+ 	 	 if (!STD_Stricmp(fileName,&scanRefFiles[indexFile*(MAX_ITEM_TEXT_LEN+1)]))
  	 	  break;
 
  	 	if (indexFile<nscanRefFiles)
