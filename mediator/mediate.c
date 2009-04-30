@@ -36,7 +36,7 @@ int mediateRequestDisplaySpecInfo(void *engineContext,int page,void *responseHan
   struct time *pTime;                                                           // pointer to measurement date
   int indexLine,indexColumn;
   DoasCh *fileName;                                                              // the name of the current file
-  DoasCh blankString[80];
+  DoasCh blankString[256];
 
   // Initializations
 
@@ -50,12 +50,13 @@ int mediateRequestDisplaySpecInfo(void *engineContext,int page,void *responseHan
 
   fileName=pEngineContext->fileInfo.fileName;
 
-  strcpy(blankString,"                                                      ");
+  memset(blankString,' ',256);
+  blankString[255]='\0';
 
   indexLine=1;
   indexColumn=2;
 
-  mediateResponseCellInfo(page,indexLine,4,responseHandle,blankString,blankString);
+  mediateResponseCellInfo(page,0,3,responseHandle,blankString,blankString);
 
   if (strlen(pInstrumental->instrFunction))
    {
@@ -106,8 +107,8 @@ int mediateRequestDisplaySpecInfo(void *engineContext,int page,void *responseHan
 
   if (pInstrumental->readOutFormat!=PRJCT_INSTR_FORMAT_GOME2)
    mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Date and Time","%02d/%02d/%d %02d:%02d:%02d",pDay->da_day,pDay->da_mon,pDay->da_year,pTime->ti_hour,pTime->ti_min,pTime->ti_sec);
-// QDOAS ???     else
-// QDOAS ???      mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Date and Time","%02d/%02d/%d %02d:%02d:%02d.%06d",pDay->da_day,pDay->da_mon,pDay->da_year,pTime->ti_hour,pTime->ti_min,pTime->ti_sec,GOME2_ms);
+  else
+   mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Date and Time","%02d/%02d/%d %02d:%02d:%02d.%06d",pDay->da_day,pDay->da_mon,pDay->da_year,pTime->ti_hour,pTime->ti_min,pTime->ti_sec,GOME2_ms);
 
 //      sprintf(tmpString,"%.3f -> %.3f \n",pRecord->TimeDec,pRecord->localTimeDec);
 
@@ -208,9 +209,9 @@ int mediateRequestDisplaySpecInfo(void *engineContext,int page,void *responseHan
    {
    	if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_AZIM])
    	 mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Solar Azimuth angle","%.3f",pRecord->Azimuth);
-   	if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_VIEW_ELEVATION])
+   	if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_LOS_ZA])
     	mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Viewing Zenith angle","%.3f",pRecord->zenithViewAngle);
-   	if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_VIEW_AZIMUTH])
+   	if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_LOS_AZIMUTH])
    	 mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Viewing Azimuth angle","%.3f",pRecord->azimuthViewAngle);
     if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_MIRROR_ERROR])
      mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Mirror status","%.3f",(pRecord->mirrorError==1)?"!!! PROBLEM !!!":"OK");
@@ -282,7 +283,6 @@ void mediateRequestPlotSpectra(ENGINE_CONTEXT *pEngineContext,void *responseHand
   char tmpString[80];                                                           // buffer for formatted strings
   DoasCh *fileName;                                                              // the name of the current file
   plot_data_t spectrumData;
-  INDEX indexFeno;
 
   // Initializations
 

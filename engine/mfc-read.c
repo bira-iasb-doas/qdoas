@@ -158,6 +158,40 @@ RC MFC_LoadDark(ENGINE_CONTEXT *pEngineContext)
   return rc;
  }
 
+INDEX MFC_SearchForCurrentFileIndex(ENGINE_CONTEXT *pEngineContext)
+ {
+ 	// Declarations
+
+ 	DoasCh  fileName[MAX_ITEM_TEXT_LEN+1];                                        // name of the current file
+ 	DoasCh *ptr,*scanRefFiles;
+ 	INDEX   indexRecord,indexFile;
+ 	INT     nscanRefFiles;
+
+ 	// Initializations
+
+ 	indexRecord=ITEM_NONE;
+ 	scanRefFiles=pEngineContext->analysisRef.scanRefFiles;
+ 	nscanRefFiles=pEngineContext->analysisRef.nscanRefFiles;
+
+ 	//  Browse files
+
+ 	if (pEngineContext->analysisRef.refScan && (scanRefFiles!=NULL) && ((ptr=strrchr(pEngineContext->fileInfo.fileName,'/'))!=NULL) && (strlen(ptr+1)>0))
+ 	 {
+ 	  strcpy(fileName,ptr+1);
+
+ 	 	for (indexFile=0;indexFile<nscanRefFiles;indexFile++)
+ 	 	 if (!stricmp(fileName,&scanRefFiles[indexFile*(MAX_ITEM_TEXT_LEN+1)]))
+ 	 	  break;
+
+ 	 	if (indexFile<nscanRefFiles)
+ 	 	 indexRecord=indexFile;
+ 	 }
+
+ 	// Return
+
+ 	return indexRecord;
+ }
+
 // -----------------------------------------------------------------------------
 // FUNCTION      SetMFC
 // -----------------------------------------------------------------------------
@@ -171,9 +205,6 @@ RC MFC_LoadDark(ENGINE_CONTEXT *pEngineContext)
 // RETURN        ERROR_ID_NO  no error;
 // -----------------------------------------------------------------------------
 
-#if defined(__BC32_) && __BC32_
-#pragma argsused
-#endif
 RC SetMFC(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
  {
   // Declarations

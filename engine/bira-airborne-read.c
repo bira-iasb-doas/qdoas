@@ -146,6 +146,8 @@ RC AIRBORNE_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,INT lo
   AIRBORNE_DATA  header;                                                        // record header
   double        *spectrum;                                                      // the current spectrum
   double         tmLocal;                                                       // measurement local time
+  double         offset;
+  int i;
   RC             rc;                                                            // return code
 
   // Initializations
@@ -167,6 +169,18 @@ RC AIRBORNE_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,INT lo
     fseek(specFp,(recordNo-1)*(sizeof(AIRBORNE_DATA)+sizeof(double)*NDET),SEEK_SET);
     fread(&header,sizeof(AIRBORNE_DATA),1,specFp);
     fread(spectrum,sizeof(double)*NDET,1,specFp);
+
+    // for straylight correction
+
+    offset=(double)0.;
+
+    for (i=50;i<200;i++)
+     offset+=spectrum[i];
+
+    offset/=(double)150.;
+
+    for (i=0;i<NDET;i++)
+     spectrum[i]=(double)spectrum[i]-offset;
 
     memcpy(&pRecord->present_day,&header.today,sizeof(SHORT_DATE));
     memcpy(&pRecord->present_time,&header.now,sizeof(SHORT_DATE));

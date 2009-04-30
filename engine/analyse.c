@@ -138,7 +138,6 @@ DoasCh *AnlysOrthogonal[ANLYS_ORTHOGONAL_TYPE_MAX]={"None","Differential XS"};
 DoasCh *AnlysStretch[ANLYS_STRETCH_TYPE_MAX]={"None","1st order","2nd order"};
 DoasCh *AnlysPolynome[ANLYS_POLY_TYPE_MAX]={"None","order 0","order 1","order 2","order 3","order 4","order 5"};
 DoasCh *ANLYS_crossAction[ANLYS_CROSS_ACTION_MAX]={"None","Interpolate","Convolute Std","Convolute I0","Convolute Ring"}; /* "Detector t° dependent","Strato t° dependent",*/
-DoasCh *ANLYS_amf[ANLYS_AMF_TYPE_MAX]={"None","SZA only","Climatology","Wavelength 1","Wavelength 2","Wavelength 3"};
 
 INT    ANALYSE_plotKurucz,ANALYSE_plotRef,ANALYSE_indexLine;
 
@@ -5443,11 +5442,8 @@ RC ANALYSE_LoadOutput(ANALYSIS_OUTPUT *outputList,INT nOutput)
 
         if ((pResults->indexAmf!=ITEM_NONE) && (OUTPUT_AmfSpace!=NULL))
          {
-          if ((OUTPUT_AmfSpace[pResults->indexAmf].type==ANLYS_AMF_TYPE_WAVELENGTH1) ||
-              (OUTPUT_AmfSpace[pResults->indexAmf].type==ANLYS_AMF_TYPE_WAVELENGTH2) ||
-              (OUTPUT_AmfSpace[pResults->indexAmf].type==ANLYS_AMF_TYPE_WAVELENGTH3))
-
-           Feno->amfFlag++;
+          if (OUTPUT_AmfSpace[pResults->indexAmf].type==ANLYS_AMF_TYPE_WAVELENGTH)
+           pTabFeno->amfFlag++;
 
        	  pResults->StoreAmf=pOutput->amf;                                      // flag set if AMF is to be written into output file
           pResults->StoreVrtCol=pOutput->vertCol;                               // flag set if vertical column is to be written into output file

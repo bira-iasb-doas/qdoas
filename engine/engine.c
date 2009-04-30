@@ -103,6 +103,8 @@ void EngineResetContext(ENGINE_CONTEXT *pEngineContext)
    MEMORY_ReleaseDVector("EngineResetContext ","specMax",pBuffers->specMax,0);
   if (pEngineContext->analysisRef.scanRefIndexes!=NULL)
    MEMORY_ReleaseBuffer("EngineResetContext ","scanRefIndexes",pEngineContext->analysisRef.scanRefIndexes);
+  if (pEngineContext->analysisRef.scanRefFiles!=NULL)
+   MEMORY_ReleaseBuffer("EngineResetContext ","scanRefFiles",pEngineContext->analysisRef.scanRefFiles);
   if (pBuffers->varPix!=NULL)
    MEMORY_ReleaseDVector("EngineResetContext ","varPix",pBuffers->varPix,0);
   if (pBuffers->dnl!=NULL)
@@ -441,7 +443,6 @@ void EngineCloseFile(FILE_INFO *pFile)
    fclose(pFile->namesFp);
 
   pFile->specFp=pFile->darkFp=pFile->namesFp=NULL;
-  pFile->nScanRef=0;
  }
 
 // -----------------------------------------------------------------------------
@@ -1052,6 +1053,8 @@ RC EngineSetRefIndexes(ENGINE_CONTEXT *pEngineContext)
   ZmMin=360.;
   ZmMax=0.;
 
+  pEngineContext->fileInfo.nScanRef=0;
+
   rc=ERROR_ID_NO;
 
   // Make a backup of the spectra part of the engine context
@@ -1122,7 +1125,7 @@ RC EngineSetRefIndexes(ENGINE_CONTEXT *pEngineContext)
       if (rc==ERROR_ID_FILE_RECORD)
        rc=ERROR_ID_NO;
 
-      if (NRecord && pEngineContext->analysisRef.refScan)
+      if (NRecord && pEngineContext->analysisRef.refScan && (pEngineContext->analysisRef.scanRefIndexes!=NULL))
        {
        	memcpy(pEngineContext->analysisRef.scanRefIndexes,indexList,sizeof(INT)*NRecord);
        	pEngineContext->fileInfo.nScanRef=NRecord;
@@ -1240,7 +1243,8 @@ RC EngineSetRefIndexesMFC(ENGINE_CONTEXT *pEngineContext)
 
   INDEX               indexTabFeno,                                             // browse analysis windows list
                       indexZmMin,                                               // index of record with SZA minimum
-                      indexRecord;                                              // browse records
+                      indexRecord,                                              // browse records
+                     *indexList;
   DoasCh              filePath[MAX_ITEM_TEXT_LEN+1];
   DoasCh              fileName[MAX_ITEM_TEXT_LEN+1];
   DoasCh             *ptr,fileExt[MAX_ITEM_TEXT_LEN+1];
@@ -1248,7 +1252,7 @@ RC EngineSetRefIndexesMFC(ENGINE_CONTEXT *pEngineContext)
   struct dirent *fileInfo;
   DIR *hDir;
   INDEX               indexFile;
-  BUFFERS *pBuffers;                                                            // pointer to the buffers part of the engine context
+  ANALYSIS_REF *pRef;
   PROJECT            *pProject;                                                 // pointer to the project part of the engine
   PRJCT_SPECTRA      *pSpectra;                                                 // pointer to spectra part of the project
   PRJCT_INSTRUMENTAL *pInstr;                                                   // pointer to the instrumental part of the project
@@ -1265,15 +1269,33 @@ RC EngineSetRefIndexesMFC(ENGINE_CONTEXT *pEngineContext)
 
   // Initializations
 
+  pRef=&pEngineContext->analysisRef;
   fileList=NULL;
   indexZmMin=ITEM_NONE;
   ZmList=TimeDec=NULL;
+  indexList=NULL;
   NRecord=0;
   ZmMin=360.;
   ZmMax=0.;
   hDir=NULL;
 
   rc=ERROR_ID_NO;
+
+  // Release scanref buffer
+
+  pEngineContext->fileInfo.nScanRef=0;
+
+  if (pRef->scanRefIndexes!=NULL)
+   MEMORY_ReleaseBuffer("EngineSetRefIndexesMFC","scanRefIndexes",pRef->scanRefIndexes);
+  pRef->scanRefIndexes=NULL;
+
+  // Release buffers
+
+  if (pRef->scanRefFiles!=NULL)
+   MEMORY_ReleaseBuffer("EngineSetRefIndexesMFC","scanRefFiles",pRef->scanRefFiles);
+  pRef->scanRefFiles=NULL;
+
+  pEngineContext->fileInfo.nScanRef=0;
 
   // Make a backup of the spectra part of the engine context
 
@@ -1284,6 +1306,8 @@ RC EngineSetRefIndexesMFC(ENGINE_CONTEXT *pEngineContext)
   pProject=&ENGINE_contextRef.project;
   pSpectra=&ENGINE_contextRef.project.spectra;
   pInstr=&ENGINE_contextRef.project.instrumental;
+
+  pRef=&pEngineContext->analysisRef;
 
   localCalDay=ENGINE_contextRef.recordInfo.localCalDay;
   recordNumber=ENGINE_contextRef.recordNumber;
@@ -1333,59 +1357,71 @@ RC EngineSetRefIndexesMFC(ENGINE_CONTEXT *pEngineContext)
     // Memory allocation
 
     if (((fileList=(DoasCh **)MEMORY_AllocBuffer("EngineSetRefIndexesMFC","fileList",fileNumber,sizeof(DoasCh *),0,MEMORY_TYPE_PTR))==NULL) ||
+        ((indexList=(INDEX *)MEMORY_AllocBuffer("EngineSetRefIndexesMFC","",fileNumber-1,sizeof(INDEX),0,MEMORY_TYPE_INDEX))==NULL) ||
         ((ZmList=(double *)MEMORY_AllocDVector("EngineSetRefIndexesMFC","ZmList",0,fileNumber-1))==NULL) ||
-        ((TimeDec=(double *)MEMORY_AllocDVector("EngineSetRefIndexesMFC","TimeDec",0,fileNumber-1))==NULL))
+        ((TimeDec=(double *)MEMORY_AllocDVector("EngineSetRefIndexesMFC","TimeDec",0,fileNumber-1))==NULL) ||
+         (pRef->refScan &&
+       (((pRef->scanRefIndexes=(INT *)MEMORY_AllocBuffer("EngineSetRefIndexesMFC","scanRefIndexes",fileNumber,sizeof(INT),0,MEMORY_TYPE_INT))==NULL) ||
+        ((pRef->scanRefFiles=(DoasCh *)MEMORY_AllocBuffer("EngineSetRefIndexesMFC","scanRefIndexes",fileNumber*(MAX_ITEM_TEXT_LEN+1),1,0,MEMORY_TYPE_STRING))==NULL))))
 
      rc=ERROR_ID_ALLOC;
 
     else
      {
      	memset(fileList,0,sizeof(DoasCh *)*fileNumber);
+     	memset(pRef->scanRefFiles,0,fileNumber*(MAX_ITEM_TEXT_LEN+1));
 
      	for (indexFile=0;(indexFile<fileNumber) && !rc;indexFile++)
-     	 if ((fileList[indexFile]=(DoasCh *)MEMORY_AllocBuffer("EngineSetRefIndexesMFC","fileList[indexFile]",MAX_ITEM_TEXT_LEN,sizeof(DoasCh),0,MEMORY_TYPE_STRING))==NULL)
+     	 if ((fileList[indexFile]=(DoasCh *)MEMORY_AllocBuffer("EngineSetRefIndexesMFC","fileList[indexFile]",MAX_ITEM_TEXT_LEN+1,sizeof(DoasCh),0,MEMORY_TYPE_STRING))==NULL)
      	  rc=ERROR_SetLast("EngineSetRefIndexesMFC",ERROR_TYPE_FATAL,ERROR_ID_ALLOC,"fileList[indexFile]");
 
       if (!rc)
        {
         // Browse records in file
 
-        for (hDir=opendir(filePath),NRecord=0;(hDir!=NULL) && ((fileInfo=readdir(hDir))!=NULL);)
+        for (hDir=opendir(filePath),NRecord=0,indexFile=0;(hDir!=NULL) && ((fileInfo=readdir(hDir))!=NULL);)
          {
           sprintf(ENGINE_contextRef.fileInfo.fileName,"%s%c%s",filePath,PATH_SEP,fileInfo->d_name);
 
           if (!STD_IsDir(ENGINE_contextRef.fileInfo.fileName) &&
            ((((ptr=strrchr(fileInfo->d_name,'.'))==NULL) && !strlen(fileExt)) ||
-             ((strlen(ptr+1)==strlen(fileExt)) && !STD_Stricmp(ptr+1,fileExt))) &&
-             !(rc=EngineReadFile(&ENGINE_contextRef,1,1,localCalDay)) && (ENGINE_contextRef.recordInfo.Zm>(double)0.))
+             ((strlen(ptr+1)==strlen(fileExt)) && !STD_Stricmp(ptr+1,fileExt)))
+             )
            {
             if (rc==ITEM_NONE)
              rc=0;
 
             // Data on record
 
-            strcpy(fileList[NRecord],ENGINE_contextRef.fileInfo.fileName);      // index of record
+            strcpy(&pRef->scanRefFiles[indexFile*(MAX_ITEM_TEXT_LEN+1)],fileInfo->d_name);
+            strcpy(fileList[indexFile],ENGINE_contextRef.fileInfo.fileName);    // index of record
 
-            ZmList[NRecord]=ENGINE_contextRef.recordInfo.Zm;                    // zenith angle
-            TimeDec[NRecord]=ENGINE_contextRef.recordInfo.localTimeDec;         // decimal time for determining when the measurement has occured
-
-            // Minimum and maximum zenith angle
-
-            if (ENGINE_contextRef.recordInfo.Zm<ZmMin)
+            if (!(rc=EngineReadFile(&ENGINE_contextRef,1,1,localCalDay)) && (ENGINE_contextRef.recordInfo.Zm>(double)0.))
              {
-              ZmMin=ENGINE_contextRef.recordInfo.Zm;
-              indexZmMin=NRecord;
+              indexList[NRecord]=indexFile;                                       // index of record
+              ZmList[NRecord]=ENGINE_contextRef.recordInfo.Zm;                    // zenith angle
+              TimeDec[NRecord]=ENGINE_contextRef.recordInfo.localTimeDec;         // decimal time for determining when the measurement has occured
+
+              // Minimum and maximum zenith angle
+
+              if (ENGINE_contextRef.recordInfo.Zm<ZmMin)
+               {
+                ZmMin=ENGINE_contextRef.recordInfo.Zm;
+                indexZmMin=NRecord;
+               }
+
+              if (ENGINE_contextRef.recordInfo.Zm>ZmMax)
+               ZmMax=ENGINE_contextRef.recordInfo.Zm;
+
+              NRecord++;
+             }
+            else if (rc==ERROR_ID_FILE_END)
+             {
+              rc=ERROR_ID_NO;
+              break;
              }
 
-            if (ENGINE_contextRef.recordInfo.Zm>ZmMax)
-             ZmMax=ENGINE_contextRef.recordInfo.Zm;
-
-            NRecord++;
-           }
-          else if (rc==ERROR_ID_FILE_END)
-           {
-            rc=ERROR_ID_NO;
-            break;
+            indexFile++;
            }
          }
 
@@ -1397,6 +1433,12 @@ RC EngineSetRefIndexesMFC(ENGINE_CONTEXT *pEngineContext)
 
         if (rc==ERROR_ID_FILE_RECORD)
          rc=ERROR_ID_NO;
+
+        if (NRecord && pEngineContext->analysisRef.refScan)
+         {
+         	memcpy(pEngineContext->analysisRef.scanRefIndexes,indexList,sizeof(INT)*NRecord);
+         	pEngineContext->fileInfo.nScanRef=NRecord;
+         }
 
         // Browse analysis windows
 
@@ -1478,6 +1520,8 @@ RC EngineSetRefIndexesMFC(ENGINE_CONTEXT *pEngineContext)
        }
      }
 
+    pRef->nscanRefFiles=fileNumber;
+
     // Release buffers
 
     if (fileList!=NULL)
@@ -1489,6 +1533,8 @@ RC EngineSetRefIndexesMFC(ENGINE_CONTEXT *pEngineContext)
       MEMORY_ReleaseBuffer("EngineSetRefIndexesMFC","fileList",fileList);
      }
 
+    if (indexList!=NULL)
+     MEMORY_ReleaseBuffer("EngineSetRefIndexes","indexList",indexList);
     if (ZmList!=NULL)
      MEMORY_ReleaseDVector("EngineSetRefIndexesMFC","ZmList",ZmList,0);
     if (TimeDec!=NULL)
@@ -1525,6 +1571,7 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
         indexWindow,                                                            // avoid gaps
         indexPage,
         indexColumn,
+        indexRecord,
         indexScanRecord,
         indexRecordOld;
 
@@ -1532,6 +1579,7 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
   INT useKurucz,alignRef,useUsamp,saveFlag,newDimL;
   INT *scanRefIndexes;
   double factTemp;
+  DoasCh *ptr;
   RC rc;
 
   // Initializations
@@ -1554,15 +1602,24 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
        (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC)) ?
          EngineSetRefIndexesMFC(pEngineContext):EngineSetRefIndexes(pEngineContext);
 
-  if (pEngineContext->analysisRef.refScan)
+  if (pEngineContext->analysisRef.refScan && (pEngineContext->analysisRef.scanRefIndexes!=NULL))
    {
    	scanRefIndexes=pEngineContext->analysisRef.scanRefIndexes;
 
-   	for (indexScanRecord=0;indexScanRecord<pEngineContext->fileInfo.nScanRef;indexScanRecord++)
-   	 if (scanRefIndexes[indexScanRecord]>=pEngineContext->indexRecord)
-   	  break;
+    indexRecord=((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC_STD) ||
+                 (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC)) ?
+                  MFC_SearchForCurrentFileIndex(pEngineContext):pEngineContext->indexRecord;
 
-   	indexScanRecord=(indexScanRecord>=pEngineContext->fileInfo.nScanRef)?ITEM_NONE:scanRefIndexes[indexScanRecord];
+   	if (indexRecord!=ITEM_NONE)
+   	 {
+   	  for (indexScanRecord=0;indexScanRecord<pEngineContext->fileInfo.nScanRef;indexScanRecord++)
+   	   if (scanRefIndexes[indexScanRecord]>=indexRecord)
+   	    break;
+
+      indexScanRecord=(indexScanRecord>=pEngineContext->fileInfo.nScanRef)?ITEM_NONE:scanRefIndexes[indexScanRecord];
+   	 }
+   	else
+   	 indexScanRecord=ITEM_NONE;
    }
 
   for (indexTabFeno=0;(indexTabFeno<NFeno) && !rc;indexTabFeno++)
@@ -1601,7 +1658,18 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
         else
          {
-         	strcpy(ENGINE_contextRef.fileInfo.fileName,(pRecord->localTimeDec<=ENGINE_localNoon)?pTabFeno->refAM:pTabFeno->refPM);
+         	if (pEngineContext->analysisRef.refScan)
+         	 {
+           	strcpy(ENGINE_contextRef.fileInfo.fileName,pEngineContext->fileInfo.fileName);
+
+           	if ((ptr=strrchr(ENGINE_contextRef.fileInfo.fileName,'/'))!=NULL)
+           	 strcpy(ptr+1,&pEngineContext->analysisRef.scanRefFiles[indexRefRecord*(MAX_ITEM_TEXT_LEN+1)]);
+           	else
+           	 strcpy(ENGINE_contextRef.fileInfo.fileName,&pEngineContext->analysisRef.scanRefFiles[indexRefRecord*(MAX_ITEM_TEXT_LEN+1)]);
+         	 }
+         	else
+         	 strcpy(ENGINE_contextRef.fileInfo.fileName,(pRecord->localTimeDec<=ENGINE_localNoon)?pTabFeno->refAM:pTabFeno->refPM);
+
          	rc=EngineReadFile(&ENGINE_contextRef,1,0,0);
          }
        }
@@ -1687,7 +1755,13 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
           indexLine=pTabFeno->displayLineIndex+1;
 
           mediateResponseCellInfo(indexPage,indexLine++,indexColumn,responseHandle,"Selected reference for window","%s",pTabFeno->windowName);
-          mediateResponseCellInfo(indexPage,indexLine++,indexColumn,responseHandle,"Record number","%d/%d",ENGINE_contextRef.indexRecord,ENGINE_contextRef.recordNumber);
+
+          if ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC_STD) ||
+              (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC))
+           mediateResponseCellInfo(indexPage,indexLine++,indexColumn,responseHandle,"Reference file","%s",ENGINE_contextRef.fileInfo.fileName);
+          else
+           mediateResponseCellInfo(indexPage,indexLine++,indexColumn,responseHandle,"Record number","%d/%d",ENGINE_contextRef.indexRecord,ENGINE_contextRef.recordNumber);
+
           mediateResponseCellInfo(indexPage,indexLine++,indexColumn,responseHandle,"Date and Time","%02d/%02d/%d %02d:%02d:%02d",pDay->da_day,pDay->da_mon,pDay->da_year,pTime->ti_hour,pTime->ti_min,pTime->ti_sec);
           mediateResponseCellInfo(indexPage,indexLine++,indexColumn,responseHandle,"SZA","%g",ENGINE_contextRef.recordInfo.Zm);
 

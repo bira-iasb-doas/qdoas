@@ -118,7 +118,7 @@ typedef struct _ccdData
   DoasCh      doubleFlag;
   DoasCh      ignored[973];                                                     // if completed with new data in the future, authorizes compatibility with previous versions
   double      mirrorAzimuth;
-  int         measureType;                                                  // if completed with new data in the future, authorizes compatibility with previous versions
+  int         measureType;                                                      // if completed with new data in the future, authorizes compatibility with previous versions
  }
 CCD_DATA;
 
@@ -220,7 +220,7 @@ RC SetCCD_EEV(ENGINE_CONTEXT *pEngineContext,FILE *specFp,FILE *darkFp)
      {
       ccdX=(header.roiWveEnd-header.roiWveStart+1)/header.roiWveGroup;
       ccdY=(header.roiSlitEnd-header.roiSlitStart+1)/header.roiSlitGroup;
-      dataSize=(header.doubleFlag)?sizeof(double):sizeof(DoasUS);
+      dataSize=(header.doubleFlag==(DoasCh)1)?sizeof(double):sizeof(DoasUS);
 
       pEngineContext->recordNumber++;
 
@@ -255,7 +255,7 @@ RC SetCCD_EEV(ENGINE_CONTEXT *pEngineContext,FILE *specFp,FILE *darkFp)
        {
         ccdX=(header.roiWveEnd-header.roiWveStart+1)/header.roiWveGroup;
         ccdY=(header.roiSlitEnd-header.roiSlitStart+1)/header.roiSlitGroup;
-        dataSize=(header.doubleFlag)?sizeof(double):sizeof(DoasUS);
+        dataSize=(header.doubleFlag==(DoasCh)1)?sizeof(double):sizeof(DoasUS);
 
         for (indexTps=0;indexTps<MAXTPS;indexTps++)
          if (header.exposureTime==predTint[indexTps])
@@ -272,7 +272,8 @@ RC SetCCD_EEV(ENGINE_CONTEXT *pEngineContext,FILE *specFp,FILE *darkFp)
     // Allocate a buffer to display the variation of the signal along the acquisitions
 
     if ((specMaxFlag && ((pBuffers->specMax=MEMORY_AllocDVector("SetCCD_EEV","specMax",0,NDET-1))==NULL)) ||
-        (pEngineContext->analysisRef.refScan && ((pRef->scanRefIndexes=(INT *)MEMORY_AllocBuffer("EngineSetFile","scanRefIndexes",pEngineContext->recordNumber,sizeof(INT),0,MEMORY_TYPE_INT))==NULL)))
+        (pEngineContext->analysisRef.refScan && pEngineContext->recordNumber &&
+       ((pRef->scanRefIndexes=(INT *)MEMORY_AllocBuffer("EngineSetFile","scanRefIndexes",pEngineContext->recordNumber,sizeof(INT),0,MEMORY_TYPE_INT))==NULL)))
      rc=ERROR_ID_ALLOC;
 
     // Eclipse 99
@@ -386,7 +387,7 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
 
       ccdX=(header.roiWveEnd-header.roiWveStart+1)/header.roiWveGroup;
       ccdY=(header.roiSlitEnd-header.roiSlitStart+1)/header.roiSlitGroup;
-      dataSize=(header.doubleFlag)?sizeof(double):sizeof(DoasUS);
+      dataSize=(header.doubleFlag==(DoasCh)1)?sizeof(double):sizeof(DoasUS);
 
       spSize=(header.saveTracks)?ccdX*ccdY:ccdX;
       nTint=header.nTint;
@@ -409,8 +410,8 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
         for(i=0;i<NDET;i++)
          tmpSpectrum[i]=(double)0.;
 
-        rcFread=(header.doubleFlag)?
-                 fread(tmpSpectrum,sizeof(double)*spSize,1,specFp):
+        rcFread=(header.doubleFlag==(DoasCh)1)?
+                fread(tmpSpectrum,sizeof(double)*spSize,1,specFp):
                  fread(spectrum,sizeof(DoasUS)*spSize,1,specFp);
 
         if (!rcFread ||
@@ -422,7 +423,7 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
          rc=ERROR_SetLast("ReliCCD_EEV",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pEngineContext->fileInfo.fileName);
         else if (!header.saveTracks)
          {
-         	if (header.doubleFlag)
+         	if (header.doubleFlag==(DoasCh)1)
          	 memcpy(dspectrum,tmpSpectrum,sizeof(double)*spSize);
          	else
            for (i=0;i<spSize;i++)
@@ -430,7 +431,7 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
          }
         else
          {
-         	if (header.doubleFlag)
+         	if (header.doubleFlag==(DoasCh)1)
          	 {
             // Accumulate spectra
 
@@ -475,13 +476,18 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
            {
            	pRecord->als.alsFlag=header.alsFlag;
             pRecord->als.scanIndex=header.scanIndex;
-            pRecord->als.scanningAngle=header.scanningAngle;                                          // total number of spectra in tracks
-          //  strcpy(pRecord->als.atrString,header.ignored);
-           }
+            pRecord->als.scanningAngle=header.brusagElevation; // !!! scanningAngle;                                          // total number of spectra in tracks
+            strcpy(pRecord->als.atrString,header.ignored);
 
-          pRecord->ccd.filterNumber=header.filterNumber;
-          pRecord->ccd.headTemperature=header.headTemperature;
-          pRecord->ccd.measureType=header.measureType;
+            pRecord->ccd.filterNumber=pRecord->ccd.measureType=0;
+            pRecord->ccd.headTemperature=(double)0.;
+           }
+          else
+           {
+             pRecord->ccd.filterNumber=header.filterNumber;
+             pRecord->ccd.measureType=header.measureType;
+             pRecord->ccd.headTemperature=header.headTemperature;
+           }
 
           memcpy(&pRecord->present_day,&header.today,sizeof(SHORT_DATE));
           memcpy(&pRecord->present_time,&header.now,sizeof(struct time));

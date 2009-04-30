@@ -226,114 +226,22 @@ RC OUTPUT_GetWveAmf(CROSS_RESULTS *pResults,double Zm,double *lambda,double *xs,
   // Declarations
 
   AMF_SYMBOL *pAmfSymbol;
-  double *amfVector,*amfDeriv2,*phi,*phi80,scale,amf;
-  INDEX indexLine,indexColumn,i;
+  INDEX i;
   RC rc;
 
   // Initializations
 
-  amfVector=amfDeriv2=phi=phi80=NULL;
   rc=ERROR_ID_NO;
 
   // This procedure applies only on wavelength dependent AMF
 
   if ((pResults->indexAmf!=ITEM_NONE) && (OUTPUT_AmfSpace!=NULL))
    {
-    if ((((pAmfSymbol=&OUTPUT_AmfSpace[pResults->indexAmf])->type==ANLYS_AMF_TYPE_WAVELENGTH1) ||
-          (pAmfSymbol->type==ANLYS_AMF_TYPE_WAVELENGTH2)) &&
-          (pAmfSymbol->xsLines!=0))
-     {
-      // Allocate buffers
+   	pAmfSymbol=&OUTPUT_AmfSpace[pResults->indexAmf];
 
-      if (((amfVector=(double *)MEMORY_AllocDVector("OUTPUT_GetWveAmf ","amfVector",0,pAmfSymbol->xsLines-1))==NULL) ||
-          ((amfDeriv2=(double *)MEMORY_AllocDVector("OUTPUT_GetWveAmf ","amfDeriv2",0,pAmfSymbol->xsLines-1))==NULL) ||
-          ((phi=(double *)MEMORY_AllocDVector("OUTPUT_GetWveAmf ","phi",2,pAmfSymbol->PhiColumns))==NULL) ||
-          ((phi80=(double *)MEMORY_AllocDVector("OUTPUT_GetWveAmf ","phi80",2,pAmfSymbol->PhiColumns))==NULL))
-
-       rc=ERROR_ID_ALLOC;
-
-      else
-       {
-        // Interpolate parameters at zenith angles of Zm and 80°
-
-        for (indexColumn=2;indexColumn<=pAmfSymbol->PhiColumns;indexColumn++)
-
-         if (((rc=SPLINE_Vector(pAmfSymbol->Phi[1]+1,pAmfSymbol->Phi[indexColumn]+1,pAmfSymbol->deriv2[indexColumn]+1,pAmfSymbol->PhiLines,&Zm,&phi[indexColumn],1,SPLINE_CUBIC,"OUTPUT_GetWveAmf "))!=ERROR_ID_NO) ||
-             ((rc=SPLINE_Vector(pAmfSymbol->Phi[1]+1,pAmfSymbol->Phi[indexColumn]+1,pAmfSymbol->deriv2[indexColumn]+1,pAmfSymbol->PhiLines,&Feno->Zm,&phi80[indexColumn],1,SPLINE_CUBIC,"OUTPUT_GetWveAmf "))!=ERROR_ID_NO))
-
-          goto EndOUTPUT_GetWveAmf;
-
-        // Compute amf vector dependent on wavelength in amf file
-
-        if (pAmfSymbol->type==ANLYS_AMF_TYPE_WAVELENGTH1)
-
-         for (indexLine=0;indexLine<pAmfSymbol->xsLines;indexLine++)
-          {
-           amfVector[indexLine]=(double)0.;
-           scale=(double)1.;
-
-           for (indexColumn=2;indexColumn<=pAmfSymbol->PhiColumns-pAmfSymbol->xsColumns;indexColumn++)
-            {
-             amfVector[indexLine]+=scale*(phi[indexColumn]-phi80[indexColumn]);
-             scale*=pAmfSymbol->xs[0][indexLine];
-            }
-
-           for (;indexColumn<pAmfSymbol->PhiColumns;indexColumn++)
-            amfVector[indexLine]+=(phi[indexColumn]-phi80[indexColumn])*pAmfSymbol->xs[indexColumn-(pAmfSymbol->PhiColumns-pAmfSymbol->xsColumns)][indexLine];
-
-           if (phi[indexColumn]==(double)0.)
-            {
-             rc=ERROR_SetLast("OUTPUT_GetWveAmf",ERROR_TYPE_FATAL,ERROR_ID_DIVISION_BY_0,"calculation of the air mass factor");
-             goto EndOUTPUT_GetWveAmf;
-            }
-
-           amfVector[indexLine]*=phi80[indexColumn]/phi[indexColumn];
-          }
-
-        else // Case 2
-
-         for (indexLine=0;indexLine<pAmfSymbol->xsLines;indexLine++)
-          {
-           amfVector[indexLine]=(double)0.;
-           scale=(double)1.;
-
-           for (indexColumn=2;indexColumn<=pAmfSymbol->PhiColumns-pAmfSymbol->xsColumns;indexColumn++)
-            {
-             amfVector[indexLine]+=scale*phi[indexColumn];
-             scale*=pAmfSymbol->xs[0][indexLine];
-            }
-
-           for (;indexColumn<pAmfSymbol->PhiColumns;indexColumn++)
-            amfVector[indexLine]+=phi[indexColumn]*pAmfSymbol->xs[indexColumn-(pAmfSymbol->PhiColumns-pAmfSymbol->xsColumns)][indexLine];
-          }
-
-        rc=SPLINE_Deriv2((double *)pAmfSymbol->xs[0],amfVector,amfDeriv2,pAmfSymbol->xsLines,"OUTPUT_GetWveAmf ");
-
-        for (i=0;(i<NDET) && !rc;i++)
-         if (!(rc=SPLINE_Vector((double *)pAmfSymbol->xs[0],amfVector,amfDeriv2,pAmfSymbol->xsLines,&lambda[i],&amf,1,SPLINE_CUBIC,"OUTPUT_GetWveAmf ")))
-          xs[i]*=amf;
-
-        if (!rc)
-         rc=SPLINE_Deriv2((double *)ANALYSE_splineX,xs,deriv2+1,NDET,"OUTPUT_GetWveAmf (2) ");
-       }
-     }
-    else if (pAmfSymbol->type==ANLYS_AMF_TYPE_WAVELENGTH3)
-     for (i=0;i<NDET;i++)
-      xs[i]*=(double)VECTOR_Table2(pAmfSymbol->Phi,pAmfSymbol->PhiLines,pAmfSymbol->PhiColumns,(double)lambda[i],(double)Zm);
+    for (i=0;i<NDET;i++)
+     xs[i]*=(double)VECTOR_Table2(pAmfSymbol->Phi,pAmfSymbol->PhiLines,pAmfSymbol->PhiColumns,(double)lambda[i],(double)Zm);
    }
-
-  EndOUTPUT_GetWveAmf :
-
-  // Release allocated buffers
-
-  if (amfVector!=NULL)
-   MEMORY_ReleaseDVector("OUTPUT_GetWveAmf","amfVector",amfVector,0);
-  if (amfDeriv2!=NULL)
-   MEMORY_ReleaseDVector("OUTPUT_GetWveAmf","amfDeriv2",amfDeriv2,0);
-  if (phi!=NULL)
-   MEMORY_ReleaseDVector("OUTPUT_GetWveAmf","phi",phi,2);
-  if (phi80)
-   MEMORY_ReleaseDVector("OUTPUT_GetWveAmf","phi80",phi80,2);
 
   // Return
 
@@ -424,15 +332,14 @@ RC OUTPUT_ReadAmf(DoasCh *symbolName,DoasCh *amfFileName,DoasCh amfType,INDEX *p
  {
   // Declarations
 
-  DoasCh  fileType,                                                              // file extension and type
+  DoasCh  fileType,                                                             // file extension and type
         *oldColumn,*nextColumn;                                                 // go to the next column in record or the next record
-  SZ_LEN symbolLength,fileLength,lineLength;                                    // length of symbol and lines strings
+  SZ_LEN symbolLength,fileLength;                                               // length of symbol and lines strings
   AMF_SYMBOL *pAmfSymbol;                                                       // pointer to an AMF symbol
-  INDEX indexSymbol,indexLine,indexColumn;                                      // indexes for loops and arrays
-  INT PhiLines,PhiColumns,xsLines,xsColumns,oldPhiColumns;                      // dimensions of the AMF matrix
+  INDEX indexSymbol,indexColumn;                                                // indexes for loops and arrays
+  INT PhiLines,PhiColumns,xsLines,xsColumns;                                    // dimensions of the AMF matrix
   FILE *amfFp;                                                                  // pointer to AMF file
-  double **Phi,**deriv2,**xs,**xsDeriv2,                                        // pointers to resp. AMF buffer and second derivatives
-           tempPhi;                                                             // temporary variable
+  double **Phi,**deriv2,**xs,**xsDeriv2;                                        // pointers to resp. AMF buffer and second derivatives
   RC rc;                                                                        // return code
 
   // Initializations
@@ -489,45 +396,8 @@ RC OUTPUT_ReadAmf(DoasCh *symbolName,DoasCh *amfFileName,DoasCh amfType,INDEX *p
          rc=ERROR_ID_ALLOC;
         else
          {
-          if ((fileType==ANLYS_AMF_TYPE_CLIMATOLOGY) || (fileType==ANLYS_AMF_TYPE_SZA) || (fileType==ANLYS_AMF_TYPE_WAVELENGTH3))
+          if ((fileType==ANLYS_AMF_TYPE_CLIMATOLOGY) || (fileType==ANLYS_AMF_TYPE_SZA) || (fileType==ANLYS_AMF_TYPE_WAVELENGTH))
            rc=FILES_GetMatrixDimensions(amfFp,amfFileName,&PhiLines,&PhiColumns,"OUTPUT_ReadAmf",ERROR_TYPE_FATAL);
-          else // polynomial wavelength dependence
-           {
-            while (fgets(oldColumn,fileLength,amfFp) && ((strchr(oldColumn,';')!=NULL) || (strchr(oldColumn,'*')!=NULL)));
-
-            // Parameters matrix
-
-            for (xsLines=oldPhiColumns=PhiColumns=0;PhiColumns==oldPhiColumns;xsLines++ /* NB : xsLines and PhiLines are invert in this case */)
-             {
-              for (PhiColumns=0;strlen(oldColumn);PhiColumns++)
-               {
-                lineLength=strlen(oldColumn);
-
-                oldColumn[lineLength++]='\n';
-                oldColumn[lineLength]=0;
-
-                memset(nextColumn,0,fileLength);
-                sscanf(oldColumn,"%lf %[^'\n']",(double *)&tempPhi,nextColumn);
-                strcpy(oldColumn,nextColumn);
-               }
-
-              if (!xsLines)
-               oldPhiColumns=PhiColumns;
-
-              fgets(oldColumn,fileLength,amfFp);
-             }
-
-            xsColumns=PhiColumns;
-            PhiColumns=oldPhiColumns;
-            PhiLines=2;
-            xsLines--;
-
-            for (;!feof(amfFp) && fgets(oldColumn,fileLength,amfFp);PhiLines++);
-
-            indexLine=PhiLines;
-            PhiLines=xsLines;
-            xsLines=indexLine;
-           }
          }
 
         if (rc)
@@ -538,12 +408,9 @@ RC OUTPUT_ReadAmf(DoasCh *symbolName,DoasCh *amfFileName,DoasCh amfType,INDEX *p
         pAmfSymbol=&OUTPUT_AmfSpace[indexSymbol];
         fseek(amfFp,0L,SEEK_SET);
 
-        if ((((fileType==ANLYS_AMF_TYPE_WAVELENGTH1) || (fileType==ANLYS_AMF_TYPE_WAVELENGTH2)) && ((xsLines==0) || (xsColumns==0) ||
-             ((xs=pAmfSymbol->xs=(double **)MEMORY_AllocDMatrix("OUTPUT_ReadAmf ","xs",0,xsLines-1,0,xsColumns-1))==NULL) ||
-             ((xsDeriv2=pAmfSymbol->xsDeriv2=(double **)MEMORY_AllocDMatrix("OUTPUT_ReadAmf ","xsDeriv2",1,xsLines,1,xsColumns-1))==NULL))) ||
-             ((Phi=pAmfSymbol->Phi=(double **)MEMORY_AllocDMatrix("OUTPUT_ReadAmf ","Phi",0,PhiLines,1,PhiColumns))==NULL) ||
-             ((fileType!=ANLYS_AMF_TYPE_CLIMATOLOGY) && (fileType!=ANLYS_AMF_TYPE_WAVELENGTH3) &&
-             ((deriv2=pAmfSymbol->deriv2=(double **)MEMORY_AllocDMatrix("OUTPUT_ReadAmf ","deriv2",1,PhiLines,2,PhiColumns))==NULL)))
+        if (((Phi=pAmfSymbol->Phi=(double **)MEMORY_AllocDMatrix("OUTPUT_ReadAmf ","Phi",0,PhiLines,1,PhiColumns))==NULL) ||
+            ((fileType!=ANLYS_AMF_TYPE_CLIMATOLOGY) && (fileType!=ANLYS_AMF_TYPE_WAVELENGTH) &&
+            ((deriv2=pAmfSymbol->deriv2=(double **)MEMORY_AllocDMatrix("OUTPUT_ReadAmf ","deriv2",1,PhiLines,2,PhiColumns))==NULL)))
 
          rc=ERROR_ID_ALLOC;
 
@@ -551,63 +418,17 @@ RC OUTPUT_ReadAmf(DoasCh *symbolName,DoasCh *amfFileName,DoasCh amfType,INDEX *p
          rc=FILES_LoadMatrix(amfFp,amfFileName,Phi,1,PhiLines,PhiColumns,"OUTPUT_ReadAmf",ERROR_TYPE_FATAL);
         else if (fileType==ANLYS_AMF_TYPE_SZA)
          rc=FILES_LoadMatrix(amfFp,amfFileName,Phi,1,PhiLines,PhiColumns,"OUTPUT_ReadAmf",ERROR_TYPE_FATAL);
-        else if (fileType==ANLYS_AMF_TYPE_WAVELENGTH3)
+        else if (fileType==ANLYS_AMF_TYPE_WAVELENGTH)
          rc=FILES_LoadMatrix(amfFp,amfFileName,Phi,1,PhiLines,PhiColumns,"OUTPUT_ReadAmf",ERROR_TYPE_FATAL);
-        else     // wavelength dependence
-         {
-          while (fgets(oldColumn,fileLength,amfFp) && ((strchr(oldColumn,';')!=NULL) || (strchr(oldColumn,'*')!=NULL)));
-
-          // Fill AMF matrix
-
-          for (indexLine=1;indexLine<=PhiLines;indexLine++)
-           {
-            for (indexColumn=1;indexColumn<=PhiColumns;indexColumn++)
-             {
-              lineLength=strlen(oldColumn);
-
-              oldColumn[lineLength++]='\n';
-              oldColumn[lineLength]=0;
-
-              memset(nextColumn,0,fileLength);
-              sscanf(oldColumn,"%lf %[^'\n']",(double *)&Phi[indexColumn][indexLine],nextColumn);
-              strcpy(oldColumn,nextColumn);
-             }
-
-            fgets(oldColumn,fileLength,amfFp);
-           }
-
-          // For wavelength dependent AMF, read out cross sections
-
-          for (indexLine=0;indexLine<xsLines;indexLine++)
-           {
-            for (indexColumn=0;indexColumn<xsColumns;indexColumn++)
-             {
-              lineLength=strlen(oldColumn);
-
-              oldColumn[lineLength++]='\n';
-              oldColumn[lineLength]=0;
-
-              memset(nextColumn,0,fileLength);
-              sscanf(oldColumn,"%lf %[^'\n']",(double *)&xs[indexColumn][indexLine],nextColumn);
-              strcpy(oldColumn,nextColumn);
-             }
-
-            fgets(oldColumn,fileLength,amfFp);
-           }
-         }
 
         if (rc)
          goto EndOUTPUT_ReadAmf;
 
         // Second derivatives computations
 
-        if ((fileType!=ANLYS_AMF_TYPE_CLIMATOLOGY) && (fileType!=ANLYS_AMF_TYPE_WAVELENGTH3))
+        if ((fileType!=ANLYS_AMF_TYPE_CLIMATOLOGY) && (fileType!=ANLYS_AMF_TYPE_WAVELENGTH))
          for (indexColumn=2;(indexColumn<=PhiColumns) && !rc;indexColumn++)
           rc=SPLINE_Deriv2(Phi[1]+1,Phi[indexColumn]+1,deriv2[indexColumn]+1,PhiLines,"OUTPUT_ReadAmf ");
-
-        if ((fileType==ANLYS_AMF_TYPE_WAVELENGTH1) || (fileType==ANLYS_AMF_TYPE_WAVELENGTH2))
-         for (indexColumn=1;indexColumn<xsColumns;indexColumn++)
-          rc=SPLINE_Deriv2((double *)xs[0],(double *)xs[indexColumn],xsDeriv2[indexColumn]+1,xsLines,"OUTPUT_ReadAmf (2) ");
 
         // Add new symbol
 
@@ -1936,7 +1757,10 @@ void OutputSaveRecord(ENGINE_CONTEXT *pEngineContext,INT hiddenFlag)
         break;
      // ----------------------------------------------------------------------
         case PRJCT_RESULTS_ASCII_SCANNING :
-         ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->als.scanningAngle;
+         if (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MKZY)
+          ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->mkzy.scanningAngle;
+         else
+          ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->als.scanningAngle;
         break;
      // ---------------------------------------------------------------------
         case PRJCT_RESULTS_ASCII_CCD_FILTERNUMBER :

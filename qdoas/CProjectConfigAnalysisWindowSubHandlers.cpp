@@ -200,9 +200,9 @@ bool CAnalysisWindowCrossSectionSubHandler::start(const QXmlAttributes &atts)
     str = atts.value("amftype");
     if (str == "sza") d->amfType = ANLYS_AMF_TYPE_SZA;
     else if (str == "climate") d->amfType = ANLYS_AMF_TYPE_CLIMATOLOGY;
-    else if (str == "wave1") d->amfType = ANLYS_AMF_TYPE_WAVELENGTH1;
-    else if (str == "wave2") d->amfType = ANLYS_AMF_TYPE_WAVELENGTH2;
-    else if (str == "wave3") d->amfType = ANLYS_AMF_TYPE_WAVELENGTH3;
+    else if ((str == "wave") ||
+             (str == "wave1") || (str == "wave2") || (str == "wave3"))          // for compatibility with previous versions (wavelength 1, 2, 3)
+     d->amfType = ANLYS_AMF_TYPE_WAVELENGTH;
     else d->amfType = ANLYS_AMF_TYPE_NONE;
 
     d->requireFit = (atts.value("fit") == "true") ? 1 : 0;

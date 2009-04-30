@@ -1142,12 +1142,8 @@ void CQdoasConfigWriter::writeCrossSectionList(FILE *fp, const cross_section_lis
       fprintf(fp, "\"sza\""); break;
     case ANLYS_AMF_TYPE_CLIMATOLOGY:
       fprintf(fp, "\"climate\""); break;
-    case ANLYS_AMF_TYPE_WAVELENGTH1:
-      fprintf(fp, "\"wave1\""); break;
-    case ANLYS_AMF_TYPE_WAVELENGTH2:
-      fprintf(fp, "\"wave2\""); break;
-    case ANLYS_AMF_TYPE_WAVELENGTH3:
-      fprintf(fp, "\"wave3\""); break;
+    case ANLYS_AMF_TYPE_WAVELENGTH:
+      fprintf(fp, "\"wave\""); break;
     default:
       fprintf(fp, "\"none\"");
     }
@@ -1197,35 +1193,35 @@ void CQdoasConfigWriter::writeNonLinear(FILE *fp, const struct anlyswin_nonlinea
 
   fprintf(fp, "      <nonlinear solfit=\"%s\" solinit=\"%.3f\" soldelt=\"%.3f\" solfstr=\"%s\" solestr=\"%s\"\n",
 	  (d->solFlagFit ? sTrue : sFalse), d->solInitial, d->solDelta,
-	  (d->solFlagErrStore ? sTrue : sFalse), (d->solFlagErrStore ? sTrue : sFalse));
+	  (d->solFlagFitStore ? sTrue : sFalse), (d->solFlagErrStore ? sTrue : sFalse));
 
-  fprintf(fp, "                 o0fit=\"%s\" o0init=\"%.3f\" o0delt=\"%.3f\" o0str=\"%s\" o0estr=\"%s\"\n",
+  fprintf(fp, "                 o0fit=\"%s\" o0init=\"%.3f\" o0delt=\"%.3f\" o0fstr=\"%s\" o0estr=\"%s\"\n",
 	  (d->off0FlagFit ? sTrue : sFalse), d->off0Initial, d->off0Delta,
-	  (d->off0FlagErrStore ? sTrue : sFalse), (d->off0FlagErrStore ? sTrue : sFalse));
+	  (d->off0FlagFitStore ? sTrue : sFalse), (d->off0FlagErrStore ? sTrue : sFalse));
 
-  fprintf(fp, "                 o1fit=\"%s\" o1init=\"%.3f\" o1delt=\"%.3f\" o1str=\"%s\" o1estr=\"%s\"\n",
+  fprintf(fp, "                 o1fit=\"%s\" o1init=\"%.3f\" o1delt=\"%.3f\" o1fstr=\"%s\" o1estr=\"%s\"\n",
 	  (d->off1FlagFit ? sTrue : sFalse), d->off1Initial, d->off1Delta,
-	  (d->off1FlagErrStore ? sTrue : sFalse), (d->off1FlagErrStore ? sTrue : sFalse));
+	  (d->off1FlagFitStore ? sTrue : sFalse), (d->off1FlagErrStore ? sTrue : sFalse));
 
-  fprintf(fp, "                 o2fit=\"%s\" o2init=\"%.3f\" o2delt=\"%.3f\" o2str=\"%s\" o2estr=\"%s\"\n",
+  fprintf(fp, "                 o2fit=\"%s\" o2init=\"%.3f\" o2delt=\"%.3f\" o2fstr=\"%s\" o2estr=\"%s\"\n",
 	  (d->off2FlagFit ? sTrue : sFalse), d->off2Initial, d->off2Delta,
-	  (d->off2FlagErrStore ? sTrue : sFalse), (d->off2FlagErrStore ? sTrue : sFalse));
+	  (d->off2FlagFitStore ? sTrue : sFalse), (d->off2FlagErrStore ? sTrue : sFalse));
 
   fprintf(fp, "                 comfit=\"%s\" cominit=\"%.3f\" comdelt=\"%.3f\" comstr=\"%s\" comestr=\"%s\"\n",
 	  (d->comFlagFit ? sTrue : sFalse), d->comInitial, d->comDelta,
-	  (d->comFlagErrStore ? sTrue : sFalse), (d->comFlagErrStore ? sTrue : sFalse));
+	  (d->comFlagFitStore ? sTrue : sFalse), (d->comFlagErrStore ? sTrue : sFalse));
 
   fprintf(fp, "                 u1fit=\"%s\" u1init=\"%.3f\" u1delt=\"%.3f\" u1str=\"%s\" u1estr=\"%s\"\n",
 	  (d->usamp1FlagFit ? sTrue : sFalse), d->usamp1Initial, d->usamp1Delta,
-	  (d->usamp1FlagErrStore ? sTrue : sFalse), (d->usamp1FlagErrStore ? sTrue : sFalse));
+	  (d->usamp1FlagFitStore ? sTrue : sFalse), (d->usamp1FlagErrStore ? sTrue : sFalse));
 
   fprintf(fp, "                 u2fit=\"%s\" u2init=\"%.3f\" u2delt=\"%.3f\" u2str=\"%s\" u2estr=\"%s\"\n",
 	  (d->usamp2FlagFit ? sTrue : sFalse), d->usamp2Initial, d->usamp2Delta,
-	  (d->usamp2FlagErrStore ? sTrue : sFalse), (d->usamp2FlagErrStore ? sTrue : sFalse));
+	  (d->usamp2FlagFitStore ? sTrue : sFalse), (d->usamp2FlagErrStore ? sTrue : sFalse));
 
   fprintf(fp, "                 ramfit=\"%s\" raminit=\"%.3f\" ramdelt=\"%.3f\" ramstr=\"%s\" ramestr=\"%s\"\n",
 	  (d->ramanFlagFit ? sTrue : sFalse), d->ramanInitial, d->ramanDelta,
-	  (d->ramanFlagErrStore ? sTrue : sFalse), (d->ramanFlagErrStore ? sTrue : sFalse));
+	  (d->ramanFlagFitStore ? sTrue : sFalse), (d->ramanFlagErrStore ? sTrue : sFalse));
 
   tmpStr = pathMgr->simplifyPath(QString(d->comFile));
   fprintf(fp, "                 comfile=\"%s\"\n", tmpStr.toAscii().constData());

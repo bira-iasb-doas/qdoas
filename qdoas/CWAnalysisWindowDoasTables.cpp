@@ -156,7 +156,7 @@ CWMoleculesDoasTable::CWMoleculesDoasTable(const QString &label, int columnWidth
   createColumnCombo("Interp/Conv", 120, comboItems);
 
   comboItems.clear();
-  comboItems << "None" << "SZA only" << "Climatology" << "Wavelength 1" << "Wavelength 2" << "Wavelength 3";
+  comboItems << "None" << "SZA only" << "Climatology" << "Wavelength";
   createColumnCombo("AMF", 120, comboItems); // columnIndex = 2
 
   createColumnCheck("Fit disp.", 60);
@@ -338,9 +338,7 @@ QString CWMoleculesDoasTable::mapAmfTypeToComboString(int type)
   switch (type) {
   case ANLYS_AMF_TYPE_SZA: return QString("SZA only"); break;
   case ANLYS_AMF_TYPE_CLIMATOLOGY: return QString("Climatology"); break;
-  case ANLYS_AMF_TYPE_WAVELENGTH1: return QString("Wavelength 1"); break;
-  case ANLYS_AMF_TYPE_WAVELENGTH2: return QString("Wavelength 2"); break;
-  case ANLYS_AMF_TYPE_WAVELENGTH3: return QString("Wavelength 3"); break;
+  case ANLYS_AMF_TYPE_WAVELENGTH: return QString("Wavelength"); break;
   }
 
   return QString("None");
@@ -350,9 +348,7 @@ int CWMoleculesDoasTable::mapComboStringToAmfType(const QString &str)
 {
   if (str == "SZA only") return ANLYS_AMF_TYPE_SZA;
   if (str == "Climatology") return ANLYS_AMF_TYPE_CLIMATOLOGY;
-  if (str == "Wavelength 1") return ANLYS_AMF_TYPE_WAVELENGTH1;
-  if (str == "Wavelength 2") return ANLYS_AMF_TYPE_WAVELENGTH2;
-  if (str == "Wavelength 3") return ANLYS_AMF_TYPE_WAVELENGTH3;
+  if (str == "Wavelength") return ANLYS_AMF_TYPE_WAVELENGTH;
 
   return ANLYS_AMF_TYPE_NONE;
 }
