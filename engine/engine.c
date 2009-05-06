@@ -1295,8 +1295,6 @@ RC EngineSetRefIndexesMFC(ENGINE_CONTEXT *pEngineContext)
    MEMORY_ReleaseBuffer("EngineSetRefIndexesMFC","scanRefFiles",pRef->scanRefFiles);
   pRef->scanRefFiles=NULL;
 
-  pEngineContext->fileInfo.nScanRef=0;
-
   // Make a backup of the spectra part of the engine context
 
   EngineCopyContext(&ENGINE_contextRef,pEngineContext);
@@ -1357,7 +1355,7 @@ RC EngineSetRefIndexesMFC(ENGINE_CONTEXT *pEngineContext)
     // Memory allocation
 
     if (((fileList=(DoasCh **)MEMORY_AllocBuffer("EngineSetRefIndexesMFC","fileList",fileNumber,sizeof(DoasCh *),0,MEMORY_TYPE_PTR))==NULL) ||
-        ((indexList=(INDEX *)MEMORY_AllocBuffer("EngineSetRefIndexesMFC","",fileNumber-1,sizeof(INDEX),0,MEMORY_TYPE_INDEX))==NULL) ||
+        ((indexList=(INDEX *)MEMORY_AllocBuffer("EngineSetRefIndexesMFC","",fileNumber,sizeof(INDEX),0,MEMORY_TYPE_INDEX))==NULL) ||
         ((ZmList=(double *)MEMORY_AllocDVector("EngineSetRefIndexesMFC","ZmList",0,fileNumber-1))==NULL) ||
         ((TimeDec=(double *)MEMORY_AllocDVector("EngineSetRefIndexesMFC","TimeDec",0,fileNumber-1))==NULL) ||
          (pRef->refScan &&
@@ -1369,7 +1367,9 @@ RC EngineSetRefIndexesMFC(ENGINE_CONTEXT *pEngineContext)
     else
      {
      	memset(fileList,0,sizeof(DoasCh *)*fileNumber);
-     	memset(pRef->scanRefFiles,0,fileNumber*(MAX_ITEM_TEXT_LEN+1));
+
+     	if (pRef->refScan)
+     	 memset(pRef->scanRefFiles,0,fileNumber*(MAX_ITEM_TEXT_LEN+1));
 
      	for (indexFile=0;(indexFile<fileNumber) && !rc;indexFile++)
      	 if ((fileList[indexFile]=(DoasCh *)MEMORY_AllocBuffer("EngineSetRefIndexesMFC","fileList[indexFile]",MAX_ITEM_TEXT_LEN+1,sizeof(DoasCh),0,MEMORY_TYPE_STRING))==NULL)
@@ -1393,7 +1393,9 @@ RC EngineSetRefIndexesMFC(ENGINE_CONTEXT *pEngineContext)
 
             // Data on record
 
-            strcpy(&pRef->scanRefFiles[indexFile*(MAX_ITEM_TEXT_LEN+1)],fileInfo->d_name);
+            if (pRef->refScan)
+             strcpy(&pRef->scanRefFiles[indexFile*(MAX_ITEM_TEXT_LEN+1)],fileInfo->d_name);
+
             strcpy(fileList[indexFile],ENGINE_contextRef.fileInfo.fileName);    // index of record
 
             if (!(rc=EngineReadFile(&ENGINE_contextRef,1,1,localCalDay)) && (ENGINE_contextRef.recordInfo.Zm>(double)0.))
@@ -1520,7 +1522,8 @@ RC EngineSetRefIndexesMFC(ENGINE_CONTEXT *pEngineContext)
        }
      }
 
-    pRef->nscanRefFiles=fileNumber;
+    if (pRef->refScan)
+     pRef->nscanRefFiles=fileNumber;
 
     // Release buffers
 
@@ -1534,7 +1537,7 @@ RC EngineSetRefIndexesMFC(ENGINE_CONTEXT *pEngineContext)
      }
 
     if (indexList!=NULL)
-     MEMORY_ReleaseBuffer("EngineSetRefIndexes","indexList",indexList);
+     MEMORY_ReleaseBuffer("EngineSetRefIndexesMFC","indexList",indexList);
     if (ZmList!=NULL)
      MEMORY_ReleaseDVector("EngineSetRefIndexesMFC","ZmList",ZmList,0);
     if (TimeDec!=NULL)
