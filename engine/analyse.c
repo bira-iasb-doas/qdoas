@@ -5537,7 +5537,8 @@ RC ANALYSE_LoadRef(ENGINE_CONTEXT *pEngineContext)
   // Load reference spectra
 
   else if (((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC) ||
-            (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC_STD)) &&
+            (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC_STD) ||
+            (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC_BIRA)) &&
             (strlen(pTabFeno->ref1) && !strrchr(pTabFeno->ref1,PATH_SEP)))
    {
    	strcpy(pTabFeno->refFile,pTabFeno->ref1);

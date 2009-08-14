@@ -117,17 +117,17 @@ bool CSelectorSubHandler::start(const QString &element, const QXmlAttributes &at
     d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_SCIA_STATE_INDEX;
   else if (str == "scia_state_id")
     d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_SCIA_STATE_ID;
-  else if (str == "mfc_starttime")
+  else if ((str == "mfc_starttime") || (str=="starttime"))
     d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_STARTTIME;
-  else if (str == "mfc_endtime")
+  else if ((str == "mfc_endtime") || (str=="endtime"))
     d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_ENDTIME;
 
   else if (str == "scanning_angle")
     d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_SCANNING;
   else if (str == "ccd_filterNumber")
     d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_CCD_FILTERNUMBER;
-  else if (str == "ccd_measType")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_CCD_MEASTYPE;
+  else if ((str == "ccd_measType") || (str == "measType"))
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_MEASTYPE;
   else if (str == "ccd_headTemp")
     d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_CCD_HEADTEMPERATURE;
   else if (str == "cooler_status")
@@ -528,6 +528,8 @@ bool CProjectInstrumentalSubHandler::start(const QXmlAttributes &atts)
     m_instrumental->format = PRJCT_INSTR_FORMAT_MFC;
   else if (str == "mfcstd")
     m_instrumental->format = PRJCT_INSTR_FORMAT_MFC_STD;
+  else if (str == "mfcbira")
+    m_instrumental->format = PRJCT_INSTR_FORMAT_MFC_BIRA;
   else if (str == "rasas")
     m_instrumental->format = PRJCT_INSTR_FORMAT_RASAS;
   else if (str == "pdasieasoe")
@@ -765,8 +767,32 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
       else
 	return postErrorMessage("Offset Filename too long");
     }
-
   }
+  else if (element == "mfcbira") { // MFC STD
+    QString str;
+
+    m_instrumental->mfcbira.detectorSize = atts.value("size").toInt();
+
+    str = atts.value("calib");
+    if (!str.isEmpty()) {
+      str = m_master->pathExpand(str);
+      if (str.length() < (int)sizeof(m_instrumental->mfcbira.calibrationFile))
+	strcpy(m_instrumental->mfcbira.calibrationFile, str.toAscii().data());
+      else
+	return postErrorMessage("Calibration Filename too long");
+    }
+
+    str = atts.value("instr");
+    if (!str.isEmpty()) {
+      str = m_master->pathExpand(str);
+      if (str.length() < (int)sizeof(m_instrumental->mfcbira.instrFunctionFile))
+	strcpy(m_instrumental->mfcbira.instrFunctionFile, str.toAscii().data());
+      else
+	return postErrorMessage("Instrument Function Filename too long");
+    }
+  }
+
+
   else if (element == "rasas") { // RASAS
     return helperLoadMinimum(atts, &(m_instrumental->rasas));
 
@@ -1065,6 +1091,20 @@ bool CProjectInstrumentalSubHandler::helperLoadGdp(const QXmlAttributes &atts, s
     d->bandType = PRJCT_INSTR_GDP_BAND_4;
   else
     return postErrorMessage("Invalid gdp band");
+
+  str = atts.value("pixel");
+  if (str == "all")
+    d->pixelType = PRJCT_INSTR_GDP_PIXEL_ALL;
+  else if (str == "east")
+    d->pixelType = PRJCT_INSTR_GDP_PIXEL_EAST;
+  else if (str == "center")
+    d->pixelType = PRJCT_INSTR_GDP_PIXEL_CENTER;
+  else if (str == "west")
+    d->pixelType = PRJCT_INSTR_GDP_PIXEL_WEST;
+  else if (str == "backscan")
+    d->pixelType = PRJCT_INSTR_GDP_PIXEL_BACKSCAN;
+  else
+    return postErrorMessage("Invalid gdp pixel type");
 
   str = atts.value("calib");
   if (!str.isEmpty()) {

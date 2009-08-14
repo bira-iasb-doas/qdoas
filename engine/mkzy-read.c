@@ -499,7 +499,7 @@ RC MKZY_SearchForOffset(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
  	// Search for the spectrum
 
   for (indexRecord=1;indexRecord<=pEngineContext->recordNumber;indexRecord++)
-   if (!(rc=MKZY_ReadRecord(pEngineContext,indexRecord,specFp)) && !STD_Stricmp(pEngineContext->recordInfo.Nom,"dark"))
+   if (!(rc=MKZY_ReadRecord(pEngineContext,indexRecord,specFp)) && (!STD_Stricmp(pEngineContext->recordInfo.Nom,"dark") || !STD_Stricmp(pEngineContext->recordInfo.Nom,"offset")))
   	 {
   	 	memcpy(pEngineContext->buffers.darkCurrent,pEngineContext->buffers.spectrum,sizeof(double)*NDET);
   	 	pEngineContext->recordInfo.mkzy.darkFlag=1;
@@ -570,8 +570,6 @@ RC MKZY_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
   DoasU32 *recordIndexes;                                                       // save the position of each record in the file
   unsigned char *buffer,*ptr;                                                   // buffer to load the file
   SZ_LEN fileLength;                                                            // the length of the file to load
-  INDEX indexRecord;                                                            // browse records
-  INDEX i;                                                                      // browse pixels of the detector
   RC rc;                                                                        // return code
 
   // Initializations
@@ -655,7 +653,10 @@ RC MKZY_Reli(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,INT localD
 
   if (!(rc=MKZY_ReadRecord(pEngineContext,recordNo,specFp)))
    {
-   	if (STD_Stricmp(pEngineContext->recordInfo.Nom,"other"))
+   	if (!STD_Stricmp(pEngineContext->recordInfo.Nom,"dark") ||
+   	    !STD_Stricmp(pEngineContext->recordInfo.Nom,"sky") ||
+   	    !STD_Stricmp(pEngineContext->recordInfo.Nom,"offset"))
+
      rc=ERROR_ID_FILE_RECORD;
 
     // Correction by offset

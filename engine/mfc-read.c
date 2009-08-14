@@ -78,6 +78,9 @@ DoasCh MFC_fileInstr[MAX_STR_SHORT_LEN+1],      // instrumental function file na
 
 INT mfcLastSpectrum=0;
 
+DoasCh *MFCBIRA_measureTypes[PRJCT_INSTR_MFC_TYPE_MAX]=
+     	                            { "Unknown","Measurement","Offset","Dark current" };
+
 RC MFC_LoadOffset(ENGINE_CONTEXT *pEngineContext)
  {
  	// Declarations
@@ -1013,7 +1016,7 @@ RC ReliMFCStd(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int local
 
       // User constraints
 
-      if (rc || (dateFlag && ((pRecord->localCalDay!=localDay) || (pRecord->elevationViewAngle<88.))))                  // reference spectra are zenith only
+      if (rc || (dateFlag && ((pRecord->localCalDay!=localDay) || (pRecord->elevationViewAngle<80.))))                  // reference spectra are zenith only
        rc=ERROR_ID_FILE_RECORD;
       else if (pEngineContext->project.instrumental.mfcRevert)
        VECTOR_Invert(pBuffers->spectrum,NDET);
@@ -1043,6 +1046,215 @@ RC ReliMFCStd(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int local
 
   if (fp!=NULL)
    fclose(fp);
+
+  // Return
+
+  return rc;
+ }
+
+// ===========================
+// MFC BIRA-IASB BINARY FORMAT
+// ===========================
+
+//! \struct MFC_BIRA
+//! \brief Description of a record in the new MFC binary file format developed
+//!        at BIRA-IASB to make the processing of MFC files by QDOAS easier
+
+typedef struct
+ {
+  //! \details the measurement type
+  int          measurementType;
+  //! \details the measurement date
+  SHORT_DATE   measurementDate;
+  //! \details the starting measurement time
+  struct time  startTime;
+  //! \details the ending measurement time
+  struct time  endTime;
+  //! \details the name of the spectrometer
+  char         spectroName[64];
+  //! \details the name of the device
+  char         deviceName[64];
+  //! \details the number of scans
+  int          scansNumber;
+  //! \details the exposure time
+  float        exposureTime;
+  //! \details the total exposure time (= \ref scansNumber x \ref exposureTime)
+  float        totalExpTime;
+  //! \details the name of the observation site
+  char         siteName[64];
+  //! \details the longitude of the observation site
+  float        longitude;
+  //! \details the latitude of the observation site
+  float        latitude;
+  //! \details the viewing azimuth angle
+  float        azimuthAngle;
+  //! \details the viewing elevation angle
+  float        elevationAngle;
+  //! \details the original file name
+  char         fileName[MAX_STR_LEN+1];
+  //! \details the temperature
+  float        temperature;
+ }
+MFCBIRA_HEADER;
+
+// -----------------------------------------------------------------------------
+// FUNCTION MFCBIRA_Set
+// -----------------------------------------------------------------------------
+/*!
+   \fn      RC MFCBIRA_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
+   \details Set the number of records in a file in the MFC BIRA binary format.
+            This number is the first integer read from the file.  Check also
+            the size of the detector\n
+   \param   [in]  pEngineContext  pointer to the engine context; some fields are affected by this function.
+   \param   [in]  specFp pointer to the spectra file to read
+   \return  ERROR_ID_FILE_NOT_FOUND if the input file pointer \a specFp is NULL \n
+            ERROR_ID_FILE_EMPTY if the file is empty\n
+            ERROR_ID_NO on success
+*/
+// -----------------------------------------------------------------------------
+
+RC MFCBIRA_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
+ {
+  // Declarations
+
+  int detectorSize;
+  RC rc;                                                                        // return code
+
+  // Initializations
+
+  pEngineContext->recordNumber=0;
+
+  rc=ERROR_ID_NO;
+
+  // Get the number of spectra in the file
+
+  if (specFp==NULL)
+   rc=ERROR_SetLast("MFCBIRA_Set",ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pEngineContext->fileInfo.fileName);
+  else if (!STD_FileLength(specFp))
+   rc=ERROR_SetLast("MFCBIRA_Set",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pEngineContext->fileInfo.fileName);
+  else
+   {
+   	fread(&pEngineContext->recordNumber,sizeof(int),1,specFp);
+   	fread(&detectorSize,sizeof(int),1,specFp);
+
+   	if (pEngineContext->recordNumber<=0)
+   	 rc=ERROR_SetLast("MFCBIRA_Set",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pEngineContext->fileInfo.fileName);
+   	else if (detectorSize!=NDET)
+   	 rc=ERROR_SetLast("MFCBIRA_Set",ERROR_TYPE_WARNING,ERROR_ID_FILE_BAD_LENGTH,pEngineContext->fileInfo.fileName);
+  }
+
+  // Return
+
+  return rc;
+ }
+
+// -----------------------------------------------------------------------------
+// FUNCTION MFCBIRA_Reli
+// -----------------------------------------------------------------------------
+/*!
+   \fn      RC MFCBIRA_Reli(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,INT localDay,FILE *specFp)
+   \details
+   \param   [in]  pEngineContext  pointer to the engine context; some fields are affected by this function.
+   \param   [in]  recordNo        the index of the record to read
+   \param   [in]  dateFlag        1 to search for a reference spectrum; 0 otherwise
+   \param   [in]  localDay        if \a dateFlag is 1, the calendar day for the reference spectrum to search for
+   \param   [in]  specFp          pointer to the spectra file to read
+   \return  ERROR_ID_ALLOC if the allocation of the buffer for the spectrum failed \n
+            ERROR_ID_FILE_RECORD if the record is the spectrum is not a spectrum to analyze (sky or dark spectrum)\n
+            ERROR_ID_NO on success
+*/
+// -----------------------------------------------------------------------------
+
+RC MFCBIRA_Reli(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,INT localDay,FILE *specFp)
+ {
+  // Declarations
+
+  MFCBIRA_HEADER header;                                                        // header of records
+  RECORD_INFO *pRecordInfo;                                                     // pointer to the data part of the engine context
+  BUFFERS *pBuffers;                                                            // pointer to the buffers part of the engine context
+  float *spectrum;                                                              // pointer to spectrum and offset
+  double Tm1,Tm2,tmLocal,longit;
+  int nsec,nsec1,nsec2;
+  INDEX   i;                                                                    // browse pixels of the detector
+  RC      rc;                                                                   // return code
+
+  // Initializations
+
+  pRecordInfo=&pEngineContext->recordInfo;
+  pBuffers=&pEngineContext->buffers;
+  rc=ERROR_ID_NO;
+
+  if ((spectrum=MEMORY_AllocBuffer("MFCBIRA_Reli","spectrum",sizeof(float)*NDET,1,0,MEMORY_TYPE_FLOAT))==NULL)
+   rc=ERROR_ID_ALLOC;
+  else
+   {
+   	// Go to the requested record
+
+   	fseek(specFp,2L*sizeof(int)+(recordNo-1)*(sizeof(MFCBIRA_HEADER)+NDET*sizeof(float)),SEEK_SET);
+   	fread(&header,sizeof(MFCBIRA_HEADER),1,specFp);
+   	fread(spectrum,sizeof(float)*NDET,1,specFp);
+
+   	// Retrieve the main information from the header
+
+   	pRecordInfo->NSomme=header.scansNumber;
+   	pRecordInfo->Tint=header.exposureTime;
+   	pRecordInfo->latitude=header.latitude;
+   	pRecordInfo->longitude=header.longitude;
+   	pRecordInfo->TotalExpTime=header.totalExpTime;
+    pRecordInfo->elevationViewAngle=header.elevationAngle;
+    pRecordInfo->azimuthViewAngle=header.azimuthAngle;
+    pRecordInfo->TDet=header.temperature;
+
+    strcpy(pRecordInfo->mfcBira.originalFileName,header.fileName);
+    pRecordInfo->mfcBira.measurementType=header.measurementType;
+
+    // Calculate the date and time at half of the measurement
+
+    memcpy(&pRecordInfo->startTime,&header.startTime,sizeof(struct time));
+    memcpy(&pRecordInfo->endTime,&header.endTime,sizeof(struct time));
+
+    Tm1=(double)ZEN_NbSec(&header.measurementDate,&pRecordInfo->startTime,0);
+    Tm2=(double)ZEN_NbSec(&header.measurementDate,&pRecordInfo->endTime,0);
+
+    Tm1=(Tm1+Tm2)*0.5;
+
+    pRecordInfo->present_day.da_year  = (short) ZEN_FNCaljye (&Tm1);
+    pRecordInfo->present_day.da_mon   = (char) ZEN_FNCaljmon (ZEN_FNCaljye(&Tm1),ZEN_FNCaljda(&Tm1));
+    pRecordInfo->present_day.da_day   = (char) ZEN_FNCaljday (ZEN_FNCaljye(&Tm1),ZEN_FNCaljda(&Tm1));
+
+    // Data on the current spectrum
+
+    nsec1=pRecordInfo->startTime.ti_hour*3600+pRecordInfo->startTime.ti_min*60+pRecordInfo->startTime.ti_sec;
+    nsec2=pRecordInfo->endTime.ti_hour*3600+pRecordInfo->endTime.ti_min*60+pRecordInfo->endTime.ti_sec;
+
+    if (nsec2<nsec1)
+     nsec2+=86400;
+
+    nsec=(nsec1+nsec2)/2;
+
+    pRecordInfo->present_time.ti_hour=(unsigned char)(nsec/3600);
+    pRecordInfo->present_time.ti_min=(unsigned char)((nsec%3600)/60);
+    pRecordInfo->present_time.ti_sec=(unsigned char)((nsec%3600)%60);
+
+    longit=-header.longitude;
+
+    pRecordInfo->Tm=(double)ZEN_NbSec(&pRecordInfo->present_day,&pRecordInfo->present_time,0);
+    pRecordInfo->Zm=ZEN_FNTdiz(ZEN_FNCrtjul(&pRecordInfo->Tm),&longit,&pRecordInfo->latitude,&pRecordInfo->Azimuth);
+
+    pRecordInfo->TimeDec=(double)pRecordInfo->present_time.ti_hour+pRecordInfo->present_time.ti_min/60.+pRecordInfo->present_time.ti_sec/3600.;
+
+    tmLocal=pRecordInfo->Tm+THRD_localShift*3600.;
+    pRecordInfo->localCalDay=ZEN_FNCaljda(&tmLocal);
+    pRecordInfo->localTimeDec=fmod(pRecordInfo->TimeDec+24.+THRD_localShift,(double)24.);
+
+   	for (i=0;i<NDET;i++)
+   	 pBuffers->spectrum[i]=(double)spectrum[i];
+   }
+
+  // Release allocated buffer
+
+  if (spectrum!=NULL)
+   MEMORY_ReleaseBuffer("MFCBIRA_Reli","spectrum",spectrum);
 
   // Return
 

@@ -365,6 +365,9 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   case PRJCT_INSTR_FORMAT_MFC_STD:
     fprintf(fp, "\"mfcstd\"");
     break;
+  case PRJCT_INSTR_FORMAT_MFC_BIRA:
+    fprintf(fp, "\"mfcbira\"");
+    break;
   case PRJCT_INSTR_FORMAT_RASAS:
     fprintf(fp, "\"rasas\"");
     break;
@@ -594,6 +597,14 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   tmpStr = pathMgr->simplifyPath(QString(d->mfc.offsetFile));
   fprintf(fp, " offset=\"%s\" />\n", tmpStr.toAscii().constData());
 
+  // mfcbira
+  fprintf(fp, "      <mfcbira size=\"%d\" ",d->mfcbira.detectorSize);
+
+  tmpStr = pathMgr->simplifyPath(QString(d->mfcbira.calibrationFile));
+  fprintf(fp, " calib=\"%s\"", tmpStr.toAscii().constData());
+  tmpStr = pathMgr->simplifyPath(QString(d->mfcbira.instrFunctionFile));
+  fprintf(fp, " instr=\"%s\" />\n", tmpStr.toAscii().constData());
+
   // mfcstd
   fprintf(fp, "      <mfcstd size=\"%d\" revert=\"%s\" straylight=\"%s\" date=\"%s\"",
     d->mfcstd.detectorSize, (d->mfcstd.revert ? sTrue : sFalse),
@@ -684,6 +695,35 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   default:
     fprintf(fp, "\"invalid\"");
   }
+
+  fprintf(fp," pixel=");
+  switch(d->gdpascii.pixelType)
+   {
+   	case PRJCT_INSTR_GDP_PIXEL_ALL :
+   	 fprintf(fp,"\"all\"");
+   	break;
+
+   	case PRJCT_INSTR_GDP_PIXEL_EAST :
+   	 fprintf(fp,"\"east\"");
+   	break;
+
+   	case PRJCT_INSTR_GDP_PIXEL_CENTER :
+   	 fprintf(fp,"\"center\"");
+   	break;
+
+   	case PRJCT_INSTR_GDP_PIXEL_WEST :
+   	 fprintf(fp,"\"west\"");
+   	break;
+
+   	case PRJCT_INSTR_GDP_PIXEL_BACKSCAN :
+   	 fprintf(fp,"\"backscan\"");
+   	break;
+
+   	default:
+   	 fprintf(fp,"\"invalid\"");
+   	break;
+   };
+
   tmpStr = pathMgr->simplifyPath(QString(d->gdpascii.calibrationFile));
   fprintf(fp, " calib=\"%s\"", tmpStr.toAscii().constData());
 
@@ -714,6 +754,34 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   default:
     fprintf(fp, "\"invalid\"");
   }
+
+  fprintf(fp," pixel=");
+  switch(d->gdpbin.pixelType)
+   {
+   	case PRJCT_INSTR_GDP_PIXEL_ALL :
+   	 fprintf(fp,"\"all\"");
+   	break;
+
+   	case PRJCT_INSTR_GDP_PIXEL_EAST :
+   	 fprintf(fp,"\"east\"");
+   	break;
+
+   	case PRJCT_INSTR_GDP_PIXEL_CENTER :
+   	 fprintf(fp,"\"center\"");
+   	break;
+
+   	case PRJCT_INSTR_GDP_PIXEL_WEST :
+   	 fprintf(fp,"\"west\"");
+   	break;
+
+   	case PRJCT_INSTR_GDP_PIXEL_BACKSCAN :
+   	 fprintf(fp,"\"backscan\"");
+   	break;
+
+   	default:
+   	 fprintf(fp,"\"invalid\"");
+   	break;
+   };
 
   tmpStr = pathMgr->simplifyPath(QString(d->gdpbin.calibrationFile));
   fprintf(fp, " calib=\"%s\"", tmpStr.toAscii().constData());
@@ -1391,12 +1459,12 @@ void CQdoasConfigWriter::writeDataSelectList(FILE *fp, const data_select_list_t 
     case PRJCT_RESULTS_ASCII_SCIA_QUALITY:     fprintf(fp, "scia_quality"); break;
     case PRJCT_RESULTS_ASCII_SCIA_STATE_INDEX: fprintf(fp, "scia_state_index"); break;
     case PRJCT_RESULTS_ASCII_SCIA_STATE_ID:    fprintf(fp, "scia_state_id"); break;
-    case PRJCT_RESULTS_ASCII_STARTTIME:    fprintf(fp, "mfc_starttime"); break;
-    case PRJCT_RESULTS_ASCII_ENDTIME:      fprintf(fp, "mfc_endtime"); break;
+    case PRJCT_RESULTS_ASCII_STARTTIME:        fprintf(fp, "starttime"); break;
+    case PRJCT_RESULTS_ASCII_ENDTIME:          fprintf(fp, "endtime"); break;
 
     case PRJCT_RESULTS_ASCII_SCANNING            :      fprintf(fp, "scanning_angle"); break;
     case PRJCT_RESULTS_ASCII_CCD_FILTERNUMBER    :      fprintf(fp, "ccd_filterNumber"); break;
-    case PRJCT_RESULTS_ASCII_CCD_MEASTYPE        :      fprintf(fp, "ccd_measType"); break;
+    case PRJCT_RESULTS_ASCII_MEASTYPE            :      fprintf(fp, "measType"); break;
     case PRJCT_RESULTS_ASCII_CCD_HEADTEMPERATURE :      fprintf(fp, "ccd_headTemp"); break;
 
     case PRJCT_RESULTS_ASCII_COOLING_STATUS      :      fprintf(fp, "cooler_status"); break;

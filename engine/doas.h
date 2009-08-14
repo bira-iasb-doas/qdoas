@@ -609,7 +609,6 @@ typedef struct _gome2
   double longitudes[4],latitudes[4];                                            // geolocations at the 4 corners of the pixels
   float  solZen[3],solAzi[3],losZen[3],losAzi[3];                               // resp. solar and line of sight zenith and azimuth angles
   float  earthRadius,satHeight;                                                 // for satellite to TOA angles correction
-  float  cloudTopPressure,cloudFraction;                                        // information on clouds
  }
 GOME2_DATA;
 
@@ -647,6 +646,13 @@ typedef struct _mkzy
  }
 MKZY_DATA;
 
+typedef struct _mfcBira
+ {
+ 	char originalFileName[1024];
+ 	int  measurementType;
+ }
+MFC_BIRA;
+
 // Buffers needed to load spectra
 
 typedef struct _engineBuffers
@@ -673,7 +679,7 @@ BUFFERS;
 
 typedef struct _engineFileInfo
  {
- 	DoasCh   fileName[MAX_STR_LEN+1];                                              // the name of the file
+ 	DoasCh   fileName[MAX_STR_LEN+1];                                             // the name of the file
  	FILE   *specFp,*darkFp,*namesFp;                                              // file pointers for the engine
  	INT nScanRef;                                                                 // number of reference spectra in the scanRefIndexes buffer
  }
@@ -726,10 +732,13 @@ typedef struct _engineRecordInfo
   OMI_DATA omi;
   ALS_DATA als;
   MKZY_DATA mkzy;
+  MFC_BIRA mfcBira;
 
   double longitude;                                                             // longitude
   double latitude;                                                              // latitude
   double altitude;                                                              // altitude
+  double cloudFraction;
+  double cloudTopPressure;
 
                                                                                 // SAOZ
 
@@ -1279,26 +1288,6 @@ GDP_BIN_BAND_HEADER;
 
 // Spectrum record structure
 
-typedef struct                            // geolocation coordinates version 1
- {
-  float           lonArray[5];            // longitude array
-  float           latArray[5];            // latitude array
-  float           szaArray[3];            // zenithal array
- }
-GEO_1;
-
-typedef struct                            // geolocation coordinates version 2
- {
-  DoasUS          lonArray[5];            // longitude array
-  short           latArray[5];            // latitude array
-  float           szaArray[3];            // zenithal array
-  float           azim;                   // azimuth
-  float           losZa;                  // line of sight zenith angle
-  float           losAzim;                // line of sight azimuth angle
-  DoasUS          unused[4];              // unused bytes
- }
-GEO_2;
-
 typedef struct                            // geolocation coordinates version 3
  {
   DoasUS          lonArray[5];            // longitude array
@@ -1308,8 +1297,53 @@ typedef struct                            // geolocation coordinates version 3
   DoasUS          losAzim[3];             // line of sight azimuthal array
   float           satHeight;              // satellite geodetic height at point B
   float           radiusCurve;            // Earth radius curvatur at point B
+
+  // From Level 2 data
+
+  unsigned short  o3;                     // O3 VCD
+  unsigned short  no2;                    // NO2 VCD
+  unsigned short  cloudFraction;          // Cloud fraction
+  unsigned short  cloudTopPressure;       // Cloud top pressure
+  float           aziArray[3];
+  unsigned short  unused[4];             // for later new data ?
  }
 GEO_3;
+
+// Cloud information : new in version 4.00, may 2009
+
+typedef struct
+ {
+	 float SurfaceHeight;
+	 float SurfaceAlbedo;
+	 float UV_Albedo;
+	 int Elevation;
+	 float CloudFraction[2]; /* Cloud Fraction and error */
+	 float CloudTopAlbedo[2]; /* Cloud Top Albedo and error */
+	 float CloudTopHeight[2]; /* Cloud Top Height and error */
+	 float TAU[2]; /* Cloud Optical Thickness and error */
+	 float CTP[2]; /* Cloud Top Pressure and error */
+	 short Mode; /* 0=normal, 1=snow/ice */
+	 short Type; /* 1=Cirrus, 2=Cirrostratus, 3=Deep convection, 4=Altocumulus, 5=Altostratus, etc */
+ }
+GDP_BIN_CLOUD_HEADER;
+
+typedef struct                            // geolocation coordinates version 4.00 from May 2009
+ {
+  unsigned short       lonArray[5];       // longitude array
+  short                latArray[5];       // latitude array
+  float                szaArrayTOA[3];    // solar zenithal angles, top of atmosphere
+  float                aziArrayTOA[3];    // solar azimuth angles, top of atmosphere
+  float                losZaTOA[3];       // line of sight zenithal angles, top of atmosphere
+  float                losAzimTOA[3];     // line of sight azimuth angles, top of atmosphere
+  float                szaArrayBOA[3];    // solar zenithal angles, bottom of atmosphere
+  float                aziArrayBOA[3];    // solar azimuth angles, bottom of atmosphere
+  float                losZaBOA[3];       // line of sight zenithal angles, bottom of atmosphere
+  float                losAzimBOA[3];     // line of sight azimuth angles, bottom of atmosphere
+  float                satHeight;         // satellite geodetic height at point B
+  float                radiusCurve;       // Earth radius curvature at point B
+  GDP_BIN_CLOUD_HEADER cloudInfo;
+ }
+GEO_4;
 
 typedef struct
  {
@@ -1321,20 +1355,10 @@ typedef struct
   char            indexSpectralParam;         // index of set of spectral parameters in reference record to use for building calibration
   union _geo
    {
-    GEO_1 geo1;
-    GEO_2 geo2;
     GEO_3 geo3;
+    GEO_4 geo4;
    }
   geo;
-
-  // From Level 2 data
-
-  unsigned short  o3;                     // O3 VCD
-  unsigned short  no2;                    // NO2 VCD
-  unsigned short  cloudFraction;          // Cloud fraction
-  unsigned short  cloudTopPressure;       // Cloud top pressure
-  float           aziArray[3];
-  unsigned short  unused[4];             // for later new data ?
  }
 SPECTRUM_RECORD;
 
@@ -1403,6 +1427,7 @@ RC               GDP_BIN_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,FILE *specF
 #define MAX_UOFT_RECORD (UOFT_BASE+(UOFT_BASE-1))
 
 EXTERN DoasCh *CCD_measureTypes[];
+EXTERN DoasCh *MFCBIRA_measureTypes[];
 EXTERN DoasCh UOFT_figures[UOFT_BASE+1];
 
 RC   SetUofT(ENGINE_CONTEXT *pEngineContext,FILE *specFp);
@@ -1635,7 +1660,8 @@ INDEX MFC_SearchForCurrentFileIndex(ENGINE_CONTEXT *pEngineContext)  ;
 RC   SetMFC(ENGINE_CONTEXT *pEngineContext,FILE *specFp);
 RC   ReliMFC(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp,UINT mfcMask);
 RC   ReliMFCStd(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp);
-
+RC   MFCBIRA_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp);
+RC   MFCBIRA_Reli(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp);
 
 RC MFC_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle);
 

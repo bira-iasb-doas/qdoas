@@ -110,7 +110,7 @@ CWOutputSelector::CWOutputSelector(const data_select_list_t *d, QWidget *parent)
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_ENDTIME,             "Stop Time (hhmmss)"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_SCANNING,            "Scanning angle"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_CCD_FILTERNUMBER,    "Filter number"));
-  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_CCD_MEASTYPE,        "Measurement type"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_MEASTYPE,            "Measurement type"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_CCD_HEADTEMPERATURE, "Head temperature"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_COOLING_STATUS,      "Cooler status"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_MIRROR_ERROR,        "Mirror status"));
@@ -388,8 +388,10 @@ void getValidFieldFlags(int *validFlags, int instrument)
       validFlags[PRJCT_RESULTS_ASCII_VIEW_AZIMUTH]=1;                           // not present in all measurements, but could be in the next future
       validFlags[PRJCT_RESULTS_ASCII_SCANNING]=1;
       validFlags[PRJCT_RESULTS_ASCII_CCD_FILTERNUMBER]=1;
-      validFlags[PRJCT_RESULTS_ASCII_CCD_MEASTYPE]=1;
+      validFlags[PRJCT_RESULTS_ASCII_MEASTYPE]=1;
       validFlags[PRJCT_RESULTS_ASCII_CCD_HEADTEMPERATURE]=1;
+      validFlags[PRJCT_RESULTS_ASCII_STARTTIME]=1;
+      validFlags[PRJCT_RESULTS_ASCII_ENDTIME]=1;
      }
     break;
  // ----------------------------------------------------------------------------
@@ -422,6 +424,7 @@ void getValidFieldFlags(int *validFlags, int instrument)
  // ----------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_MFC :
     case PRJCT_INSTR_FORMAT_MFC_STD :
+    case PRJCT_INSTR_FORMAT_MFC_BIRA :
      {
      	validFlags[PRJCT_RESULTS_ASCII_NAME]=1;
       validFlags[PRJCT_RESULTS_ASCII_SCANS]=1;
@@ -432,6 +435,9 @@ void getValidFieldFlags(int *validFlags, int instrument)
       validFlags[PRJCT_RESULTS_ASCII_STARTTIME]=1;
       validFlags[PRJCT_RESULTS_ASCII_ENDTIME]=1;
       validFlags[PRJCT_RESULTS_ASCII_TDET]=1;
+
+      if (instrument==PRJCT_INSTR_FORMAT_MFC_BIRA);
+       validFlags[PRJCT_RESULTS_ASCII_MEASTYPE]=1;
      }
     break;
  // ----------------------------------------------------------------------------
@@ -450,6 +456,8 @@ void getValidFieldFlags(int *validFlags, int instrument)
       validFlags[PRJCT_RESULTS_ASCII_PIXEL]=1;
       validFlags[PRJCT_RESULTS_ASCII_PIXEL_TYPE]=1;
       validFlags[PRJCT_RESULTS_ASCII_TINT]=0;
+      validFlags[PRJCT_RESULTS_ASCII_CLOUD]=1;
+      validFlags[PRJCT_RESULTS_ASCII_CLOUDTOPP]=1;
      }
     break;
  // ----------------------------------------------------------------------------

@@ -302,6 +302,6 @@ HEADERS += ../engine/constants.h
 target.path = $${INSTALL_PREFIX}/bin
 doc.path    = $${INSTALL_PREFIX}/doc
 
-doc.files = ../../Doc/html ../../Doc/RELEASENOTES ../../LICENSE
+doc.files = ../../Doc/Help ../../Doc/RELEASENOTES ../../LICENSE
 
 INSTALLS += target doc

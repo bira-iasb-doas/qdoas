@@ -105,6 +105,11 @@ CWProjectTabInstrumental::CWProjectTabInstrumental(const mediate_project_instrum
   index = m_formatStack->addWidget(m_mfcStdEdit);
   m_instrumentToStackIndexMap.insert(std::map<int,int>::value_type(PRJCT_INSTR_FORMAT_MFC_STD, index));
 
+  // mfcbira
+  m_mfcbiraEdit = new CWInstrMfcbiraEdit(&(instr->mfcbira));
+  index = m_formatStack->addWidget(m_mfcbiraEdit);
+  m_instrumentToStackIndexMap.insert(std::map<int,int>::value_type(PRJCT_INSTR_FORMAT_MFC_BIRA, index));
+
   // rasas
   m_rasasEdit = new CWInstrMinimumEdit(&(instr->rasas));
   index = m_formatStack->addWidget(m_rasasEdit);
@@ -214,6 +219,7 @@ void CWProjectTabInstrumental::apply(mediate_project_instrumental_t *instr) cons
   m_saozEfmEdit->apply(&(instr->saozefm));
   m_mfcEdit->apply(&(instr->mfc));
   m_mfcStdEdit->apply(&(instr->mfcstd));
+  m_mfcbiraEdit->apply(&(instr->mfcbira));
   m_rasasEdit->apply(&(instr->rasas));
   m_pdasiEasoeEdit->apply(&(instr->pdasieasoe));
   m_ccdEevEdit->apply(&(instr->ccdeev));
@@ -996,6 +1002,58 @@ void CWInstrMfcStdEdit::apply(struct instrumental_mfcstd *d) const
   strcpy(d->offsetFile, m_fileFourEdit->text().toAscii().data());
 }
 
+//--------------------------------------------------------------------------
+
+CWInstrMfcbiraEdit::CWInstrMfcbiraEdit(const struct instrumental_mfcbira *d, QWidget *parent) :
+  CWAllFilesEdit(parent)
+{
+  QString tmpStr;
+  int row = 0;
+  QVBoxLayout *mainLayout = new QVBoxLayout(this);
+  QGridLayout *gridLayout = new QGridLayout;
+
+  gridLayout->addWidget(new QLabel("Detector Size", this), row, 0);             // detector size label
+  ++row;
+
+  // Second line
+
+  m_detSizeEdit = new QLineEdit(this);
+  m_detSizeEdit->setFixedWidth(cStandardEditWidth);
+  m_detSizeEdit->setValidator(new QIntValidator(0, 8192, m_detSizeEdit));
+  gridLayout->addWidget(m_detSizeEdit, row, 0, Qt::AlignLeft);
+
+  ++row;
+
+  // files
+  helperConstructCalInsFileWidgets(gridLayout, row,
+				   d->calibrationFile, sizeof(d->calibrationFile),
+				   d->instrFunctionFile, sizeof(d->instrFunctionFile));
+
+  mainLayout->addLayout(gridLayout);
+  mainLayout->addStretch(1);
+
+  // initialise the values
+
+  // detector size
+  tmpStr.setNum(d->detectorSize);
+  m_detSizeEdit->validator()->fixup(tmpStr);
+  m_detSizeEdit->setText(tmpStr);
+}
+
+CWInstrMfcbiraEdit::~CWInstrMfcbiraEdit()
+{
+}
+
+void CWInstrMfcbiraEdit::apply(struct instrumental_mfcbira *d) const
+{
+  // detector size
+  d->detectorSize = m_detSizeEdit->text().toInt();
+
+  // files
+  strcpy(d->calibrationFile, m_fileOneEdit->text().toAscii().data());
+  strcpy(d->instrFunctionFile, m_fileTwoEdit->text().toAscii().data());
+}
+
 //--------------------------------------------------------
 
 CWInstrMinimumEdit::CWInstrMinimumEdit(const struct instrumental_minimum *d, QWidget *parent) :
@@ -1371,6 +1429,17 @@ CWInstrGdpEdit::CWInstrGdpEdit(const struct instrumental_gdp *d, QWidget *parent
   gridLayout->addWidget(m_bandTypeCombo, row, 1);
   ++row;
 
+  // pixel type
+  gridLayout->addWidget(new QLabel("Pixel Type", this), row, 0);
+  m_pixelTypeCombo = new QComboBox(this);
+  m_pixelTypeCombo->addItem("All", QVariant(PRJCT_INSTR_GDP_PIXEL_ALL));
+  m_pixelTypeCombo->addItem("East", QVariant(PRJCT_INSTR_GDP_PIXEL_EAST));
+  m_pixelTypeCombo->addItem("Center", QVariant(PRJCT_INSTR_GDP_PIXEL_CENTER));
+  m_pixelTypeCombo->addItem("West", QVariant(PRJCT_INSTR_GDP_PIXEL_WEST));
+  m_pixelTypeCombo->addItem("Backscan", QVariant(PRJCT_INSTR_GDP_PIXEL_BACKSCAN));
+  gridLayout->addWidget(m_pixelTypeCombo, row, 1);
+  ++row;
+
   // files
   helperConstructCalInsFileWidgets(gridLayout, row,
 				   d->calibrationFile, sizeof(d->calibrationFile),
@@ -1388,6 +1457,11 @@ CWInstrGdpEdit::CWInstrGdpEdit(const struct instrumental_gdp *d, QWidget *parent
   int index = m_bandTypeCombo->findData(QVariant(d->bandType));
   if (index != -1)
     m_bandTypeCombo->setCurrentIndex(index);
+
+  // pixel type
+  index = m_pixelTypeCombo->findData(QVariant(d->pixelType));
+  if (index != -1)
+    m_pixelTypeCombo->setCurrentIndex(index);
 }
 
 CWInstrGdpEdit::~CWInstrGdpEdit()
@@ -1398,6 +1472,8 @@ void CWInstrGdpEdit::apply(struct instrumental_gdp *d) const
 {
   // band
   d->bandType = m_bandTypeCombo->itemData(m_bandTypeCombo->currentIndex()).toInt();
+  // pixel type
+  d->pixelType = m_pixelTypeCombo->itemData(m_pixelTypeCombo->currentIndex()).toInt();
 
   // files
   strcpy(d->calibrationFile, m_fileOneEdit->text().toAscii().data());

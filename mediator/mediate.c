@@ -112,17 +112,12 @@ int mediateRequestDisplaySpecInfo(void *engineContext,int page,void *responseHan
 
 //      sprintf(tmpString,"%.3f -> %.3f \n",pRecord->TimeDec,pRecord->localTimeDec);
 
-  if ((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC) ||
-      (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC_STD) ||
-      (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MKZY))
-   {
-    pTime=&pRecord->startTime;
-    if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_STARTTIME])
-     mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Start time","%02d:%02d:%02d",pTime->ti_hour,pTime->ti_min,pTime->ti_sec);
-    pTime=&pRecord->endTime;
-    if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_ENDTIME])
-     mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"End time","%02d:%02d:%02d",pTime->ti_hour,pTime->ti_min,pTime->ti_sec);
-   }
+  pTime=&pRecord->startTime;
+  if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_STARTTIME])
+   mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Start time","%02d:%02d:%02d",pTime->ti_hour,pTime->ti_min,pTime->ti_sec);
+  pTime=&pRecord->endTime;
+  if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_ENDTIME])
+   mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"End time","%02d:%02d:%02d",pTime->ti_hour,pTime->ti_min,pTime->ti_sec);
 
   if (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS)
    mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Record","%d/%d",pEngineContext->indexRecord,pEngineContext->recordNumber);
@@ -234,13 +229,16 @@ int mediateRequestDisplaySpecInfo(void *engineContext,int page,void *responseHan
     	 mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"ATR string","%s",pRecord->als.atrString);
     	}
 
-    if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_CCD_MEASTYPE])
-     mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Measure type","%s",CCD_measureTypes[pRecord->ccd.measureType]);
     if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_CCD_FILTERNUMBER])
      mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Filter number","%d",pRecord->ccd.filterNumber);
     if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_CCD_HEADTEMPERATURE])
      mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Temperature in optic head","%.3f deg",pRecord->ccd.headTemperature);
    }
+
+  if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_MEASTYPE] && (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_CCD_EEV))
+   mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Measurement type","%s",CCD_measureTypes[pRecord->ccd.measureType]);
+  if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_MEASTYPE] && (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC_BIRA))
+   mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Measurement type","%s",MFCBIRA_measureTypes[pRecord->mfcBira.measurementType]);
 
   if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_TDET])
    mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Detector temperature","%.3f",pRecord->TDet);
@@ -253,6 +251,11 @@ int mediateRequestDisplaySpecInfo(void *engineContext,int page,void *responseHan
    mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Latitude","%.3f",pRecord->latitude);
   if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_ALTIT])
    mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Altitude","%.3f",pRecord->altitude);
+
+  if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_CLOUD])
+   mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Cloud fraction","%.3f",pRecord->cloudFraction);
+  if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_CLOUDTOPP])
+   mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Cloud top pressure","%.3f",pRecord->cloudTopPressure);
 
   // Return
 
@@ -868,6 +871,18 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
 
     break;
 	// ----------------------------------------------------------------------------
+	   case PRJCT_INSTR_FORMAT_GDP_ASCII :                                                               // GOME ASCII format
+
+	    NDET=1024;                                                                                     // Could be reduced by Set function
+
+	  	 strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->gdpascii.calibrationFile);     // calibration file
+	  	 strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->gdpascii.instrFunctionFile);     // instrumental function file
+
+	  	 pEngineInstrumental->gome.bandType=pMediateInstrumental->gdpascii.bandType;
+	  	 pEngineInstrumental->gome.pixelType=pMediateInstrumental->gdpascii.pixelType-1;
+
+    break;
+	// ----------------------------------------------------------------------------
 	   case PRJCT_INSTR_FORMAT_GDP_BIN :                                                               // GOME WinDOAS BINARY format
 
 	    NDET=1024;                                                                                     // Could be reduced by Set function
@@ -875,7 +890,8 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
 	  	 strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->gdpbin.calibrationFile);     // calibration file
 	  	 strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->gdpbin.instrFunctionFile);     // instrumental function file
 
-	  	 pEngineInstrumental->user=pMediateInstrumental->gdpbin.bandType;
+	  	 pEngineInstrumental->gome.bandType=pMediateInstrumental->gdpbin.bandType;
+	  	 pEngineInstrumental->gome.pixelType=pMediateInstrumental->gdpbin.pixelType-1;
 
     break;
  // ---------------------------------------------------------------------------
@@ -940,6 +956,14 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
 	  	 strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->mfcstd.instrFunctionFile);     // instrumental function file
 	  	 strcpy(pEngineInstrumental->vipFile,pMediateInstrumental->mfcstd.darkCurrentFile);             // dark current file
 	  	 strcpy(pEngineInstrumental->dnlFile,pMediateInstrumental->mfcstd.offsetFile);                  // offset file
+
+    break;
+ // ---------------------------------------------------------------------------
+    case PRJCT_INSTR_FORMAT_MFC_BIRA :                          // MFC BIRA (binary)
+
+     NDET=pEngineInstrumental->detectorSize=pMediateInstrumental->mfcbira.detectorSize;
+	  	 strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->mfcbira.calibrationFile);     // calibration file
+	  	 strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->mfcbira.instrFunctionFile);       // instrumental function file
 
     break;
  // ---------------------------------------------------------------------------

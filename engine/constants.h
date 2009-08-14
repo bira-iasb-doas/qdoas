@@ -600,6 +600,7 @@ enum _prjctInstrFormat
   PRJCT_INSTR_FORMAT_SAOZ_EFM,                                                  // SAOZ EFM (1024)
   PRJCT_INSTR_FORMAT_MFC,                                                       // MFC Heidelberg
   PRJCT_INSTR_FORMAT_MFC_STD,                                                   // MFC Heidelberg
+  PRJCT_INSTR_FORMAT_MFC_BIRA,                                                  // MFC BIRA-IASB
   PRJCT_INSTR_FORMAT_RASAS,                                                     // RASAS (INTA)
   PRJCT_INSTR_FORMAT_PDASI_EASOE,                                               // EASOE
   PRJCT_INSTR_FORMAT_PDASI_OSMA,                                                // PDA SI (OSMA)
@@ -635,8 +636,19 @@ enum _eevSpectrumTypes
  	PRJCT_INSTR_EEV_TYPE_LAMP,
  	PRJCT_INSTR_EEV_TYPE_BENTHAM,
  	PRJCT_INSTR_EEV_TYPE_ALMUCANTAR,
+ 	PRJCT_INSTR_EEV_TYPE_OFFSET,
+ 	PRJCT_INSTR_EEV_TYPE_AZIMUTH,
  	PRJCT_INSTR_EEV_TYPE_MAX
  };
+
+ enum _mfcbiraSpectrumTypes
+  {
+  	PRJCT_INSTR_MFC_TYPE_UNKNOWN,
+  	PRJCT_INSTR_MFC_TYPE_MEASUREMENT,
+  	PRJCT_INSTR_MFC_TYPE_OFFSET,
+  	PRJCT_INSTR_MFC_TYPE_DARK,
+  	PRJCT_INSTR_MFC_TYPE_MAX
+  };
 
 enum _ulbCurveTypes
  {
@@ -689,6 +701,17 @@ enum _gdpBandTypes
   PRJCT_INSTR_GDP_BAND_3,
   PRJCT_INSTR_GDP_BAND_4,
   PRJCT_INSTR_GDP_BAND_MAX
+ };
+
+enum _gdpPixelTypes
+ {
+ 	PRJCT_INSTR_GDP_PIXEL_ALL,
+ 	PRJCT_INSTR_GDP_PIXEL_EAST,
+ 	PRJCT_INSTR_GDP_PIXEL_CENTER,
+ 	PRJCT_INSTR_GDP_PIXEL_WEST,
+ 	PRJCT_INSTR_GDP_PIXEL_BACKSCAN,
+ 	PRJCT_INSTR_GDP_PIXEL_MAX
+
  };
 
 enum _sciaChannels
@@ -789,7 +812,7 @@ enum _prjctResultsAscii
   PRJCT_RESULTS_ASCII_ENDTIME,
   PRJCT_RESULTS_ASCII_SCANNING,
   PRJCT_RESULTS_ASCII_CCD_FILTERNUMBER,
-  PRJCT_RESULTS_ASCII_CCD_MEASTYPE,
+  PRJCT_RESULTS_ASCII_MEASTYPE,
   PRJCT_RESULTS_ASCII_CCD_HEADTEMPERATURE,
   PRJCT_RESULTS_ASCII_COOLING_STATUS,
   PRJCT_RESULTS_ASCII_MIRROR_ERROR,

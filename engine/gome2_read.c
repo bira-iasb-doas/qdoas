@@ -1302,8 +1302,8 @@ RC GOME2_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,INDEX fileIndex)
         memcpy(pRecord->gome2.losZen,pGeoloc->losZen,sizeof(float)*3);
         memcpy(pRecord->gome2.losAzi,pGeoloc->losAzi,sizeof(float)*3);
 
-        pRecord->gome2.cloudTopPressure=pGeoloc->cloudTopPressure;
-        pRecord->gome2.cloudFraction=pGeoloc->cloudFraction;
+        pRecord->cloudTopPressure=pGeoloc->cloudTopPressure;
+        pRecord->cloudFraction=pGeoloc->cloudFraction;
 
         // Misecellaneous data (for TEMIS)
 

@@ -252,6 +252,12 @@ extern "C" {
     char offsetFile[FILENAME_BUFFER_LENGTH];
   };
 
+  struct instrumental_mfcbira {
+    int  detectorSize;
+    char calibrationFile[FILENAME_BUFFER_LENGTH];
+    char instrFunctionFile[FILENAME_BUFFER_LENGTH];
+  };
+
   struct instrumental_minimum {
     char calibrationFile[FILENAME_BUFFER_LENGTH];
     char instrFunctionFile[FILENAME_BUFFER_LENGTH];
@@ -300,6 +306,7 @@ extern "C" {
 
   struct instrumental_gdp {
     int bandType;
+    int pixelType;
     char calibrationFile[FILENAME_BUFFER_LENGTH];
     char instrFunctionFile[FILENAME_BUFFER_LENGTH];
   };
@@ -336,6 +343,7 @@ extern "C" {
     struct instrumental_minimum saozefm;
     struct instrumental_mfc mfc;
     struct instrumental_mfcstd mfcstd;
+    struct instrumental_mfcbira mfcbira;
     struct instrumental_minimum rasas;
     struct instrumental_minimum pdasieasoe;
     struct instrumental_ccdeev ccdeev;

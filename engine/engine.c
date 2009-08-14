@@ -170,7 +170,7 @@ RC EngineCopyContext(ENGINE_CONTEXT *pEngineContextTarget,ENGINE_CONTEXT *pEngin
       ((pBuffersSource->specMax!=NULL) && (pBuffersTarget->specMax==NULL) &&
       ((pBuffersTarget->specMax=(double *)MEMORY_AllocDVector("EngineCopyContext","specMax",0,NDET-1))==NULL)) ||
       ((pEngineContextSource->analysisRef.scanRefIndexes!=NULL) && (pEngineContextTarget->analysisRef.scanRefIndexes==NULL) &&
-      ((pEngineContextTarget->analysisRef.scanRefIndexes=(INT *)MEMORY_AllocBuffer("EngineCopyContext","scanRefIndexes",pEngineContextSource->recordNumber,sizeof(INT),0,MEMORY_TYPE_INT))==NULL)) ||
+      ((pEngineContextTarget->analysisRef.scanRefIndexes=(INT *)MEMORY_AllocBuffer("EngineCopyContext","scanRefIndexes",pEngineContextSource->fileInfo.nScanRef,sizeof(INT),0,MEMORY_TYPE_INT))==NULL)) ||
       ((pBuffersSource->recordIndexes!=NULL) && (pBuffersTarget->recordIndexes==NULL) &&
       ((pBuffersTarget->recordIndexes=(DoasU32 *)MEMORY_AllocBuffer("THRD_CopySpecInfo","recordIndexes",
        (pEngineContextTarget->recordIndexesSize=pEngineContextSource->recordIndexesSize),sizeof(DoasU32),0,MEMORY_TYPE_ULONG))==NULL)) ||
@@ -210,7 +210,7 @@ RC EngineCopyContext(ENGINE_CONTEXT *pEngineContextTarget,ENGINE_CONTEXT *pEngin
     if ((pBuffersTarget->specMax!=NULL) && (pBuffersSource->specMax!=NULL))
      memcpy(pBuffersTarget->specMax,pBuffersSource->specMax,sizeof(double)*NDET);
     if ((pEngineContextTarget->analysisRef.scanRefIndexes!=NULL) && (pEngineContextSource->analysisRef.scanRefIndexes!=NULL))
-     memcpy(pEngineContextTarget->analysisRef.scanRefIndexes,pEngineContextSource->analysisRef.scanRefIndexes,sizeof(INT)*pEngineContextSource->recordNumber);
+     memcpy(pEngineContextTarget->analysisRef.scanRefIndexes,pEngineContextSource->analysisRef.scanRefIndexes,sizeof(INT)*pEngineContextSource->fileInfo.nScanRef);
     if ((pBuffersTarget->recordIndexes!=NULL) && (pBuffersSource->recordIndexes!=NULL))
      memcpy(pBuffersTarget->recordIndexes,pBuffersSource->recordIndexes,sizeof(DoasU32)*pEngineContextSource->recordIndexesSize);
 
@@ -325,7 +325,8 @@ RC EngineSetProject(ENGINE_CONTEXT *pEngineContext)
       ((pBuffers->darkCurrent=MEMORY_AllocDVector("EngineSetProject","darkCurrent",0,NDET-1))==NULL)) ||
 
      (((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC) ||
-       (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC_STD)) &&
+       (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC_STD) ||
+       (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC_BIRA)) &&
 
       ((strlen(pInstrumental->vipFile) && ((pBuffers->varPix=MEMORY_AllocDVector("EngineSetProject","varPix",0,NDET-1))==NULL)) ||
        (strlen(pInstrumental->dnlFile) && ((pBuffers->dnl=MEMORY_AllocDVector("EngineSetProject","dnl",0,NDET-1))==NULL)))))
@@ -547,6 +548,11 @@ RC EngineSetFile(ENGINE_CONTEXT *pEngineContext,const char *fileName,void *respo
        rc=MFC_LoadAnalysis(pEngineContext,responseHandle);
      break;
   // ---------------------------------------------------------------------------
+     case PRJCT_INSTR_FORMAT_MFC_BIRA :
+      if (!(rc=MFCBIRA_Set(pEngineContext,pFile->specFp)) && (THRD_id!=THREAD_TYPE_SPECTRA) && (THRD_id!=THREAD_TYPE_NONE))
+       rc=MFC_LoadAnalysis(pEngineContext,responseHandle);
+     break;
+  // ---------------------------------------------------------------------------
      case PRJCT_INSTR_FORMAT_RASAS :
       rc=SetRAS(pEngineContext,pFile->specFp);
      break;
@@ -657,6 +663,8 @@ RC EngineReadFile(ENGINE_CONTEXT *pEngineContext,int indexRecord,INT dateFlag,IN
   pRecord->longitude=0.;
   pRecord->latitude=0.;
   pRecord->altitude=0.;
+  pRecord->cloudFraction=(double)0.;
+  pRecord->cloudTopPressure=(double)0.;
 
   pRecord->aMoon=0.;
   pRecord->hMoon=0.;
@@ -726,6 +734,10 @@ RC EngineReadFile(ENGINE_CONTEXT *pEngineContext,int indexRecord,INT dateFlag,IN
  // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_MFC_STD :
      rc=ReliMFCStd(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp);
+    break;
+ // ---------------------------------------------------------------------------
+    case PRJCT_INSTR_FORMAT_MFC_BIRA :
+     rc=MFCBIRA_Reli(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp);
     break;
  // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_RASAS :
@@ -1269,7 +1281,6 @@ RC EngineSetRefIndexesMFC(ENGINE_CONTEXT *pEngineContext)
 
   // Initializations
 
-  pRef=&pEngineContext->analysisRef;
   fileList=NULL;
   indexZmMin=ITEM_NONE;
   ZmList=TimeDec=NULL;
@@ -1283,7 +1294,7 @@ RC EngineSetRefIndexesMFC(ENGINE_CONTEXT *pEngineContext)
 
   // Release scanref buffer
 
-  pEngineContext->fileInfo.nScanRef=0;
+  pRef=&pEngineContext->analysisRef;
 
   if (pRef->scanRefIndexes!=NULL)
    MEMORY_ReleaseBuffer("EngineSetRefIndexesMFC","scanRefIndexes",pRef->scanRefIndexes);
@@ -1294,6 +1305,9 @@ RC EngineSetRefIndexesMFC(ENGINE_CONTEXT *pEngineContext)
   if (pRef->scanRefFiles!=NULL)
    MEMORY_ReleaseBuffer("EngineSetRefIndexesMFC","scanRefFiles",pRef->scanRefFiles);
   pRef->scanRefFiles=NULL;
+
+  pRef->nscanRefFiles=0;
+  pEngineContext->fileInfo.nScanRef=0;
 
   // Make a backup of the spectra part of the engine context
 
@@ -1352,6 +1366,8 @@ RC EngineSetRefIndexesMFC(ENGINE_CONTEXT *pEngineContext)
 
   if (fileNumber>0)
    {
+    pRef->nscanRefFiles=pEngineContext->fileInfo.nScanRef=fileNumber;
+
     // Memory allocation
 
     if (((fileList=(DoasCh **)MEMORY_AllocBuffer("EngineSetRefIndexesMFC","fileList",fileNumber,sizeof(DoasCh *),0,MEMORY_TYPE_PTR))==NULL) ||
@@ -1360,7 +1376,7 @@ RC EngineSetRefIndexesMFC(ENGINE_CONTEXT *pEngineContext)
         ((TimeDec=(double *)MEMORY_AllocDVector("EngineSetRefIndexesMFC","TimeDec",0,fileNumber-1))==NULL) ||
          (pRef->refScan &&
        (((pRef->scanRefIndexes=(INT *)MEMORY_AllocBuffer("EngineSetRefIndexesMFC","scanRefIndexes",fileNumber,sizeof(INT),0,MEMORY_TYPE_INT))==NULL) ||
-        ((pRef->scanRefFiles=(DoasCh *)MEMORY_AllocBuffer("EngineSetRefIndexesMFC","scanRefIndexes",fileNumber*(MAX_ITEM_TEXT_LEN+1),1,0,MEMORY_TYPE_STRING))==NULL))))
+        ((pRef->scanRefFiles=(DoasCh *)MEMORY_AllocBuffer("EngineSetRefIndexesMFC","scanRefFiles",fileNumber*(MAX_ITEM_TEXT_LEN+1),1,0,MEMORY_TYPE_STRING))==NULL))))
 
      rc=ERROR_ID_ALLOC;
 
@@ -1393,7 +1409,7 @@ RC EngineSetRefIndexesMFC(ENGINE_CONTEXT *pEngineContext)
 
             // Data on record
 
-            if (pRef->refScan)
+            if (pRef->refScan)                                                                   // reference of the scan
              strcpy(&pRef->scanRefFiles[indexFile*(MAX_ITEM_TEXT_LEN+1)],fileInfo->d_name);
 
             strcpy(fileList[indexFile],ENGINE_contextRef.fileInfo.fileName);    // index of record
@@ -1459,7 +1475,7 @@ RC EngineSetRefIndexesMFC(ENGINE_CONTEXT *pEngineContext)
             // No reference spectrum found in SZA range
 
             if (ZmMax<pTabFeno->refSZA-pTabFeno->refSZADelta)
-             rc=ERROR_SetLast("EngineSetRefIndexesMFC",ERROR_TYPE_WARNING,ERROR_ID_NO_REF,"all the day",ENGINE_contextRef.fileInfo.fileName);
+             rc=ERROR_SetLast("EngineSetRefIndexesMFC",ERROR_TYPE_WARNING,ERROR_ID_NO_REF,"all the day",pEngineContext->fileInfo.fileName);
 
             // Select record with SZA minimum
 
@@ -1494,12 +1510,12 @@ RC EngineSetRefIndexesMFC(ENGINE_CONTEXT *pEngineContext)
               // No record found for the morning OR the afternoon
 
               if ((pTabFeno->indexRefMorning==ITEM_NONE) && (pTabFeno->indexRefAfternoon==ITEM_NONE))
-               rc=ERROR_SetLast("EngineSetRefIndexesMFC",ERROR_TYPE_WARNING,ERROR_ID_NO_REF,"all the day",ENGINE_contextRef.fileInfo.fileName);
+               rc=ERROR_SetLast("EngineSetRefIndexesMFC",ERROR_TYPE_WARNING,ERROR_ID_NO_REF,"all the day",pEngineContext->fileInfo.fileName);
               else if (pInstr->readOutFormat!=PRJCT_INSTR_FORMAT_ASCII)
                {
                 if (pTabFeno->indexRefMorning==ITEM_NONE)
                  {
-                 	rc=ERROR_SetLast("EngineSetRefIndexesMFC",ERROR_TYPE_WARNING,ERROR_ID_NO_REF,"the morning",ENGINE_contextRef.fileInfo.fileName);
+                 	rc=ERROR_SetLast("EngineSetRefIndexesMFC",ERROR_TYPE_WARNING,ERROR_ID_NO_REF,"the morning",pEngineContext->fileInfo.fileName);
                   pTabFeno->indexRefMorning=pTabFeno->indexRefAfternoon;
                  }
                 else if (pTabFeno->indexRefAfternoon==ITEM_NONE)
@@ -1515,8 +1531,8 @@ RC EngineSetRefIndexesMFC(ENGINE_CONTEXT *pEngineContext)
             pTabFeno->ZmRefMorning=(pTabFeno->indexRefMorning!=ITEM_NONE)?ZmList[pTabFeno->indexRefMorning]:(double)-1.;
             pTabFeno->ZmRefAfternoon=(pTabFeno->indexRefAfternoon!=ITEM_NONE)?ZmList[pTabFeno->indexRefAfternoon]:(double)-1.;
 
-            strcpy(pTabFeno->refAM,(pTabFeno->indexRefMorning!=ITEM_NONE)?fileList[pTabFeno->indexRefMorning]:"");
-            strcpy(pTabFeno->refPM,(pTabFeno->indexRefAfternoon!=ITEM_NONE)?fileList[pTabFeno->indexRefAfternoon]:"");
+            strcpy(pTabFeno->refAM,(pTabFeno->indexRefMorning!=ITEM_NONE)?fileList[indexList[pTabFeno->indexRefMorning]]:"");
+            strcpy(pTabFeno->refPM,(pTabFeno->indexRefAfternoon!=ITEM_NONE)?fileList[indexList[pTabFeno->indexRefAfternoon]]:"");
            }
          }
        }
@@ -1602,7 +1618,8 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
   else if (pRecord->localCalDay!=ENGINE_contextRef.recordInfo.localCalDay)
 //  else if (memcmp((char *)&pRecord->present_day,(char *)&ENGINE_contextRef.present_day,sizeof(SHORT_DATE))!=0)  // ref and spectrum are not of the same day
    rc=((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC_STD) ||
-       (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC)) ?
+       (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC) ||
+       (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC_BIRA)) ?
          EngineSetRefIndexesMFC(pEngineContext):EngineSetRefIndexes(pEngineContext);
 
   if (pEngineContext->analysisRef.refScan && (pEngineContext->analysisRef.scanRefIndexes!=NULL))
@@ -1610,7 +1627,8 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
    	scanRefIndexes=pEngineContext->analysisRef.scanRefIndexes;
 
     indexRecord=((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC_STD) ||
-                 (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC)) ?
+                 (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC) ||
+                 (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC_BIRA)) ?
                   MFC_SearchForCurrentFileIndex(pEngineContext):pEngineContext->indexRecord;
 
    	if (indexRecord!=ITEM_NONE)
@@ -1655,7 +1673,8 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
       else if ((indexRefRecord!=pTabFeno->indexRef) || (indexRecordOld!=pTabFeno->indexRef))                            // not loaded yet
        {
        	if ((pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_MFC) &&
-            (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_MFC_STD))
+            (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_MFC_STD) &&
+            (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_MFC_BIRA))
 
          rc=EngineReadFile(&ENGINE_contextRef,indexRefRecord,0,0);
 
@@ -1760,7 +1779,8 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
           mediateResponseCellInfo(indexPage,indexLine++,indexColumn,responseHandle,"Selected reference for window","%s",pTabFeno->windowName);
 
           if ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC_STD) ||
-              (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC))
+              (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC) ||
+              (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC_BIRA))
            mediateResponseCellInfo(indexPage,indexLine++,indexColumn,responseHandle,"Reference file","%s",ENGINE_contextRef.fileInfo.fileName);
           else
            mediateResponseCellInfo(indexPage,indexLine++,indexColumn,responseHandle,"Record number","%d/%d",ENGINE_contextRef.indexRecord,ENGINE_contextRef.recordNumber);

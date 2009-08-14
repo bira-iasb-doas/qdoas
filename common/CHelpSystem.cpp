@@ -157,11 +157,11 @@ void CHelpSystem::createImplementation(CHelpImpl **impl)
 
   bool storeHelpDir = false;
   QString helpDir = CPreferences::instance()->directoryName("Help", ".");
-  
-  QString profile = helpDir + QDir::separator() + "qdoas.adp";
+
+  QString profile = helpDir + QDir::separator() + "qdoas.hlp";
 
   while (!profile.isEmpty() && !QFile::exists(profile)) {
-    profile = QFileDialog::getOpenFileName(m_parentWidget, "Help File", QString(), "qdoas.adp");
+    profile = QFileDialog::getOpenFileName(m_parentWidget, "Help File", QString(), "qdoas.hlp");
     storeHelpDir = true;
   }
   if (!profile.isEmpty()) {
@@ -183,13 +183,13 @@ void CHelpSystem::createImplementation(CHelpImpl **impl)
     if (!m_preferLightBrowser) {
 
       CHelpImplAssistant *tmp = new CHelpImplAssistant(profile, helpDir, m_parentWidget);
-      
+
       // wait until we know if this succeeded or failed ... need to process events for this to work.
       // allow at most 10 seconds...
       QTime monitor;
       monitor.start();
       CHelpImpl::Status status = tmp->status();
-      
+
       QApplication::setOverrideCursor(Qt::WaitCursor);
 
       while (status == CHelpImpl::eUncertain && monitor.elapsed() < 10000) {
@@ -201,7 +201,7 @@ void CHelpSystem::createImplementation(CHelpImpl **impl)
       QApplication::restoreOverrideCursor();
 
       if (status == CHelpImpl::eOpen) {
-	// started -> set *impl, release the recursion block and return 
+	// started -> set *impl, release the recursion block and return
 	*impl = tmp;
 	m_block = false;
 	return;

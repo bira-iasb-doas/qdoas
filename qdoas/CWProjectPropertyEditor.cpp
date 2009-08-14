@@ -68,8 +68,8 @@ CWProjectPropertyEditor::CWProjectPropertyEditor(const QString &projectName, QWi
   m_groundFormatCombo->addItem("CCD (University of Toronto)", QVariant(PRJCT_INSTR_FORMAT_UOFT));
   m_groundFormatCombo->addItem("EASOE", QVariant(PRJCT_INSTR_FORMAT_PDASI_EASOE));
   m_groundFormatCombo->addItem("Logger (PDA, CCD or HAMAMATSU)", QVariant(PRJCT_INSTR_FORMAT_LOGGER));
-  m_groundFormatCombo->addItem("MFC (Heidelberg)", QVariant(PRJCT_INSTR_FORMAT_MFC));
-  m_groundFormatCombo->addItem("MFC Std (Heidelberg)", QVariant(PRJCT_INSTR_FORMAT_MFC_STD));
+  m_groundFormatCombo->addItem("MFC (STD, Heidelberg)", QVariant(PRJCT_INSTR_FORMAT_MFC_STD));
+  m_groundFormatCombo->addItem("MFC (BIN, BIRA-IASB)", QVariant(PRJCT_INSTR_FORMAT_MFC_BIRA));
   m_groundFormatCombo->addItem("NOAA", QVariant(PRJCT_INSTR_FORMAT_NOAA));
   m_groundFormatCombo->addItem("PDA EG&G (Sept. 94 until now)", QVariant(PRJCT_INSTR_FORMAT_PDAEGG));
   m_groundFormatCombo->addItem("PDA EG&G (Spring 94)", QVariant(PRJCT_INSTR_FORMAT_PDAEGG_OLD));

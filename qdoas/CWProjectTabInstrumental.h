@@ -49,6 +49,7 @@ class CWInstrSciaEdit;
 class CWInstrOmiEdit;
 class CWInstrMfcEdit;
 class CWInstrMfcStdEdit;
+class CWInstrMfcbiraEdit;
 
 //--------------------------------------------------------------------------
 class CWProjectTabInstrumental : public QFrame
@@ -81,6 +82,7 @@ Q_OBJECT
   CWInstrSaozEdit *m_saozUvEdit;
   CWInstrMfcEdit *m_mfcEdit;
   CWInstrMfcStdEdit *m_mfcStdEdit;
+  CWInstrMfcbiraEdit *m_mfcbiraEdit;
   CWInstrMinimumEdit *m_saozEfmEdit;
   CWInstrMinimumEdit *m_rasasEdit;
   CWInstrMinimumEdit *m_pdasiEasoeEdit;
@@ -260,6 +262,21 @@ class CWInstrMfcStdEdit : public CWAllFilesEdit
 
 //--------------------------------------------------------------------------
 
+class CWInstrMfcbiraEdit : public CWAllFilesEdit
+{
+ public:
+
+  CWInstrMfcbiraEdit(const struct instrumental_mfcbira *d, QWidget *parent = 0);
+  virtual ~CWInstrMfcbiraEdit();
+
+  void apply(struct instrumental_mfcbira *d) const;
+
+ private:
+  QLineEdit *m_detSizeEdit;
+};
+
+//--------------------------------------------------------------------------
+
 class CWInstrMinimumEdit : public CWCalibInstrEdit
 {
  public:
@@ -350,6 +367,7 @@ class CWInstrGdpEdit : public CWCalibInstrEdit
 
  private:
   QComboBox *m_bandTypeCombo;
+  QComboBox *m_pixelTypeCombo;
 };
 
 //--------------------------------------------------------------------------

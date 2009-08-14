@@ -696,6 +696,13 @@ typedef struct _prjctSciaFormat
  }
 PRJCT_SCIA;
 
+typedef struct _prjctGomeFormat
+ {
+ 	INT bandType;
+ 	INT pixelType;
+ }
+PRJCT_GOME;
+
 typedef struct _prjctInstrumental
  {
   DoasCh       observationSite[MAX_ITEM_NAME_LEN+1];    // index of observation site in list
@@ -710,6 +717,7 @@ typedef struct _prjctInstrumental
   INT         averageFlag;
   PRJCT_ASCII ascii;
   PRJCT_SAOZ  saoz;
+  PRJCT_GOME  gome;
   PRJCT_SCIA  scia;
   INT         wavelength;
   UINT        mfcMaskOffset;

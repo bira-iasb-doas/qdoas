@@ -115,15 +115,18 @@ typedef struct _ccdData
   short       alsFlag;                                                          // 1 for asl measurents (cfr Alexis)
   short       scanIndex;                                                        // scan index for asl measurements
   double      scanningAngle;
-  DoasCh      doubleFlag;
-  DoasCh      ignored[973];                                                     // if completed with new data in the future, authorizes compatibility with previous versions
+  DoasCh      doubleFlag;                                                       // for Alexis
+  DoasCh      ignoredFlag;
+  DoasCh      ignored[964];                                       // if completed with new data in the future, authorizes compatibility with previous versions
+  struct time startTime;
+  struct time endTime;
   double      mirrorAzimuth;
   int         measureType;                                                      // if completed with new data in the future, authorizes compatibility with previous versions
  }
 CCD_DATA;
 
 DoasCh *CCD_measureTypes[PRJCT_INSTR_EEV_TYPE_MAX]=
-     	                            { "None","Off axis","Direct sun","Zenith","Dark","Lamp","Bentham","Almucantar" };
+     	                            { "None","Off axis","Direct sun","Zenith","Dark","Lamp","Bentham","Almucantar","Offset","Azimuth" };
 
 // ------------------------------------------------------------------
 // Different predefined integration times for dark current correction
@@ -476,7 +479,7 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
            {
            	pRecord->als.alsFlag=header.alsFlag;
             pRecord->als.scanIndex=header.scanIndex;
-            pRecord->als.scanningAngle=header.brusagElevation; // !!! scanningAngle;                                          // total number of spectra in tracks
+            pRecord->als.scanningAngle=header.scanningAngle;                                          // total number of spectra in tracks
             strcpy(pRecord->als.atrString,header.ignored);
 
             pRecord->ccd.filterNumber=pRecord->ccd.measureType=0;
@@ -491,6 +494,9 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
 
           memcpy(&pRecord->present_day,&header.today,sizeof(SHORT_DATE));
           memcpy(&pRecord->present_time,&header.now,sizeof(struct time));
+
+          memcpy(&pRecord->startTime,&header.startTime,sizeof(struct time));
+          memcpy(&pRecord->endTime,&header.endTime,sizeof(struct time));
 
           pRecord->elevationViewAngle=
                ((pRecord->present_day.da_year>2003) ||
