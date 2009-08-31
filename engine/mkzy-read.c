@@ -90,8 +90,8 @@ typedef struct MKZY_RECORDINFO
  	        //! The checksum can be calculated with the following routine in C :\n\n
  	        //! \code
  	        //!      MKZY_RECORDINFO mkzy;
- 	        //!      long spec[];              // containing the spectral data points
- 	        //!      int speclen;              // containing the number of datapoints stored in the previous vector
+ 	        //!      DoasU32 spec[];              // containing the spectral data points
+ 	        //!      int speclen;                 // containing the number of datapoints stored in the previous vector
  	        //!      int i;
  	        //!      unsigned short checksum;
  	        //!      unsigned short *p;
@@ -126,11 +126,11 @@ typedef struct MKZY_RECORDINFO
   unsigned char  flag;
           //! \details Date in \a DDMMYY format. Dates and times are given as GMT (Greenwitch Mean Time).\n
           //! Use \ref MKZY_ParseDate to decompose the date in separate year, month and day fields.
-  unsigned long  date;
+  DoasU32  date;
           //! \details time when the scanning was started
-  unsigned long  starttime;
+  DoasU32  starttime;
           //! \details time when the scanning was finished
-  unsigned long  stoptime;
+  DoasU32  stoptime;
           //! \details GPS latitude in degrees
   double         lat;
           //! \details GPS longitude in degrees
@@ -171,16 +171,16 @@ MKZY_RECORDINFO;
 */
 // -----------------------------------------------------------------------------
 
-long MKZY_UnPack(unsigned char *inpek,long kvar,long *ut)
+int MKZY_UnPack(unsigned char *inpek,int kvar,int *ut)
  {
  	// Declarations
 
-  long *utpek=NULL;
+  int *utpek=NULL;
   short len,curr;
   short j,jj;
-  long a;
+  int a;
   unsigned short lentofile=0;
-  long bit=0;
+  int bit=0;
 
   // validate the input data - Added 2006.02.13 by MJ
 
@@ -248,7 +248,7 @@ long MKZY_UnPack(unsigned char *inpek,long kvar,long *ut)
 // FUNCTION MKZY_ParseDate
 // -----------------------------------------------------------------------------
 /*!
-   \fn      void MKZY_ParseDate(unsigned long d,SHORT_DATE *pDate)
+   \fn      void MKZY_ParseDate(DoasU32 d,SHORT_DATE *pDate)
    \details Decompose a date in the MKZY file format.\n
             The date field in the header \ref MKZY_RECORDINFO::date is an unsigned long.\n
             Dates are represented on 6 digits in the \a DDMMYY file format.\n\n
@@ -259,10 +259,10 @@ long MKZY_UnPack(unsigned char *inpek,long kvar,long *ut)
 */
 // -----------------------------------------------------------------------------
 
-void MKZY_ParseDate(unsigned long d,SHORT_DATE *pDate)
+void MKZY_ParseDate(DoasU32 d,SHORT_DATE *pDate)
  {
   pDate->da_day=(char)(d/10000L);                                               // the day
-  pDate->da_mon=(char)((d-(unsigned long)pDate->da_day*10000L)/100L);           // the month
+  pDate->da_mon=(char)((d-(DoasU32)pDate->da_day*10000L)/100L);           // the month
   pDate->da_year=(short)(d%100);                                                // the year
 
   if(pDate->da_year<100)
@@ -273,7 +273,7 @@ void MKZY_ParseDate(unsigned long d,SHORT_DATE *pDate)
 // FUNCTION MKZY_ParseTime
 // -----------------------------------------------------------------------------
 /*!
-   \fn      void MKZY_ParseTime(unsigned long t,struct time *pTime)
+   \fn      void MKZY_ParseTime(DoasU32 t,struct time *pTime)
    \details Decompose a time in the MKZY file format.\n
             Time fields in the header are unsigned long numbers.\n
             They are represented on 8 digits in the \a hhmmssdd file format where \a dd are the decimal milliseconds.\n\n
@@ -284,11 +284,11 @@ void MKZY_ParseDate(unsigned long d,SHORT_DATE *pDate)
 */
 // -----------------------------------------------------------------------------
 
-void MKZY_ParseTime(unsigned long t,struct time *pTime)
+void MKZY_ParseTime(DoasU32 t,struct time *pTime)
  {
   pTime->ti_hour=(unsigned char)(t/1000000L);
-  pTime->ti_min=(unsigned char)((t-(unsigned long)pTime->ti_hour*1000000L)/10000L);
-  pTime->ti_sec=(unsigned char)((t-(unsigned long)pTime->ti_hour*1000000L-(unsigned long)pTime->ti_min*10000L)/100L);
+  pTime->ti_min=(unsigned char)((t-(DoasU32)pTime->ti_hour*1000000L)/10000L);
+  pTime->ti_sec=(unsigned char)((t-(DoasU32)pTime->ti_hour*1000000L-(DoasU32)pTime->ti_min*10000L)/100L);
  }
 
 // -----------------------------------------------------------------------------
@@ -320,9 +320,9 @@ RC MKZY_ReadRecord(ENGINE_CONTEXT *pEngineContext,int recordNo,FILE *specFp)
   SHORT_DATE      today;
   double          Tm1,Tm2;
   unsigned char  *buffer;                                                       // buffer for the spectrum before unpacking
-  unsigned long  *lbuffer;                                                      // buffer for the spectrum after unpacking
+  DoasU32  *lbuffer;                                                            // buffer for the spectrum after unpacking
   unsigned short  checksum,*p;                                                  // check sum
-  unsigned long   chk;                                                          // for the calculation of the check sum
+  DoasU32   chk;                                                                // for the calculation of the check sum
   int             npixels;                                                      // number of pixels returned
   double         *spectrum;                                                     // the current spectrum and its maximum value
   double          tmLocal;                                                      // measurement local time
@@ -352,7 +352,7 @@ RC MKZY_ReadRecord(ENGINE_CONTEXT *pEngineContext,int recordNo,FILE *specFp)
   else if ((recordNo<=0) || (recordNo>pEngineContext->recordNumber))
    rc=ERROR_ID_FILE_END;
   else if (((buffer=MEMORY_AllocBuffer("MKZY_ReadRecord","buffer",pBuffers->recordIndexes[recordNo]-pBuffers->recordIndexes[recordNo-1],1,0,MEMORY_TYPE_STRING))==NULL) ||
-           ((lbuffer=(unsigned long *)MEMORY_AllocBuffer("MKZY_ReadRecord","lbuffer",NDET,sizeof(DoasU32),0,MEMORY_TYPE_ULONG))==NULL))
+           ((lbuffer=(DoasU32 *)MEMORY_AllocBuffer("MKZY_ReadRecord","lbuffer",NDET,sizeof(DoasU32),0,MEMORY_TYPE_ULONG))==NULL))
    rc=ERROR_ID_ALLOC;
   else
    {

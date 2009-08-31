@@ -1591,8 +1591,7 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
         indexPage,
         indexColumn,
         indexRecord,
-        indexScanRecord,
-        indexRecordOld;
+        indexScanRecord;
 
   FENO *pTabFeno;                                                               // pointer to the analysis window
   INT useKurucz,alignRef,useUsamp,saveFlag,newDimL;
@@ -1607,7 +1606,7 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
   rc=ERROR_ID_NO;
   saveFlag=(INT)pEngineContext->project.spectra.displayDataFlag;
   useKurucz=alignRef=useUsamp=0;
-  indexRefRecord=indexScanRecord=indexRecordOld=ITEM_NONE;
+  indexRefRecord=indexScanRecord=ITEM_NONE;
   indexColumn=2;
 
   // Select spectra records as reference
@@ -1670,7 +1669,7 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
       // There is a reference spectrum for the requested twilight
 
-      else if ((indexRefRecord!=pTabFeno->indexRef) || (indexRecordOld!=pTabFeno->indexRef))                            // not loaded yet
+      else if (indexRefRecord!=pTabFeno->indexRef)
        {
        	if ((pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_MFC) &&
             (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_MFC_STD) &&
@@ -1694,60 +1693,60 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
          	rc=EngineReadFile(&ENGINE_contextRef,1,0,0);
          }
-       }
 
-      if (!rc)
-       {
-        alignRef++;
-
-        if (!pTabFeno->useEtalon)
+        if (!rc)
          {
-          memcpy(pTabFeno->LambdaK,ENGINE_contextRef.buffers.lambda,sizeof(double)*NDET);
-          memcpy(pTabFeno->LambdaRef,ENGINE_contextRef.buffers.lambda,sizeof(double)*NDET);
+          alignRef++;
 
-          for (indexWindow=0,newDimL=0;indexWindow<pTabFeno->svd.Z;indexWindow++)
+          if (!pTabFeno->useEtalon)
            {
-            pTabFeno->svd.Fenetre[indexWindow][0]=FNPixel(ENGINE_contextRef.buffers.lambda,pTabFeno->svd.LFenetre[indexWindow][0],pTabFeno->NDET,PIXEL_AFTER);
-            pTabFeno->svd.Fenetre[indexWindow][1]=FNPixel(ENGINE_contextRef.buffers.lambda,pTabFeno->svd.LFenetre[indexWindow][1],pTabFeno->NDET,PIXEL_BEFORE);
+            memcpy(pTabFeno->LambdaK,ENGINE_contextRef.buffers.lambda,sizeof(double)*NDET);
+            memcpy(pTabFeno->LambdaRef,ENGINE_contextRef.buffers.lambda,sizeof(double)*NDET);
 
-            newDimL+=(pTabFeno->svd.Fenetre[indexWindow][1]-pTabFeno->svd.Fenetre[indexWindow][0]+1);
+            for (indexWindow=0,newDimL=0;indexWindow<pTabFeno->svd.Z;indexWindow++)
+             {
+              pTabFeno->svd.Fenetre[indexWindow][0]=FNPixel(ENGINE_contextRef.buffers.lambda,pTabFeno->svd.LFenetre[indexWindow][0],pTabFeno->NDET,PIXEL_AFTER);
+              pTabFeno->svd.Fenetre[indexWindow][1]=FNPixel(ENGINE_contextRef.buffers.lambda,pTabFeno->svd.LFenetre[indexWindow][1],pTabFeno->NDET,PIXEL_BEFORE);
+
+              newDimL+=(pTabFeno->svd.Fenetre[indexWindow][1]-pTabFeno->svd.Fenetre[indexWindow][0]+1);
+             }
+
+            if (newDimL!=pTabFeno->svd.DimL)
+             {
+              ANALYSE_SvdFree("EngineNewRef",&pTabFeno->svd);
+              pTabFeno->svd.DimL=newDimL;
+              ANALYSE_SvdLocalAlloc("EngineNewRef",&pTabFeno->svd);
+             }
+
+            if (pTabFeno->useKurucz)
+             {
+              KURUCZ_Init(0);
+              useKurucz++;
+             }
+            else if (((rc=ANALYSE_XsInterpolation(pTabFeno,pTabFeno->LambdaRef))!=ERROR_ID_NO) ||
+                     ((rc=ANALYSE_XsConvolution(pTabFeno,pTabFeno->LambdaRef,&ANALYSIS_slit,pSlitOptions->slitFunction.slitType,&pSlitOptions->slitFunction.slitParam,&pSlitOptions->slitFunction.slitParam2,&pSlitOptions->slitFunction.slitParam3,&pSlitOptions->slitFunction.slitParam4))!=ERROR_ID_NO))
+             break;
            }
 
-          if (newDimL!=pTabFeno->svd.DimL)
-           {
-            ANALYSE_SvdFree("EngineNewRef",&pTabFeno->svd);
-            pTabFeno->svd.DimL=newDimL;
-            ANALYSE_SvdLocalAlloc("EngineNewRef",&pTabFeno->svd);
-           }
+          if (pTabFeno->useUsamp)
+           useUsamp++;
 
-          if (pTabFeno->useKurucz)
-           {
-            KURUCZ_Init(0);
-            useKurucz++;
-           }
-          else if (((rc=ANALYSE_XsInterpolation(pTabFeno,pTabFeno->LambdaRef))!=ERROR_ID_NO) ||
-                   ((rc=ANALYSE_XsConvolution(pTabFeno,pTabFeno->LambdaRef,&ANALYSIS_slit,pSlitOptions->slitFunction.slitType,&pSlitOptions->slitFunction.slitParam,&pSlitOptions->slitFunction.slitParam2,&pSlitOptions->slitFunction.slitParam3,&pSlitOptions->slitFunction.slitParam4))!=ERROR_ID_NO))
+          memcpy(pTabFeno->Sref,ENGINE_contextRef.buffers.spectrum,sizeof(double)*NDET);
+
+          if ((rc=VECTOR_NormalizeVector(pTabFeno->Sref-1,NDET,&factTemp,"EngineNewRef"))!=ERROR_ID_NO)
            break;
+
+          pTabFeno->indexRef=indexRefRecord;
+          pTabFeno->Zm=ENGINE_contextRef.recordInfo.Zm;
+          pTabFeno->Tm=ENGINE_contextRef.recordInfo.Tm;
+          pTabFeno->TimeDec=ENGINE_contextRef.recordInfo.TimeDec;
+          pTabFeno->displayRef=1;
+
+          memcpy(&pTabFeno->refDate,&ENGINE_contextRef.recordInfo.present_day,sizeof(SHORT_DATE));
          }
-
-        if (pTabFeno->useUsamp)
-         useUsamp++;
-
-        memcpy(pTabFeno->Sref,ENGINE_contextRef.buffers.spectrum,sizeof(double)*NDET);
-
-        if ((rc=VECTOR_NormalizeVector(pTabFeno->Sref-1,NDET,&factTemp,"EngineNewRef"))!=ERROR_ID_NO)
-         break;
-
-        pTabFeno->indexRef=indexRefRecord;
-        pTabFeno->Zm=ENGINE_contextRef.recordInfo.Zm;
-        pTabFeno->Tm=ENGINE_contextRef.recordInfo.Tm;
-        pTabFeno->TimeDec=ENGINE_contextRef.recordInfo.TimeDec;
-        pTabFeno->displayRef=1;
-
-        memcpy(&pTabFeno->refDate,&ENGINE_contextRef.recordInfo.present_day,sizeof(SHORT_DATE));
+        else if (indexRefRecord==pTabFeno->indexRef)
+         pTabFeno->displayRef=1;
        }
-      else if (indexRefRecord==pTabFeno->indexRef)
-       pTabFeno->displayRef=1;
 
       if (indexRefRecord!=ITEM_NONE && pEngineContext->project.spectra.displaySpectraFlag)
        {
@@ -1792,8 +1791,6 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
          }
 
        }
-
-      indexRecordOld=indexRefRecord;
      }
    }
 
