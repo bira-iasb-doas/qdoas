@@ -117,6 +117,10 @@ bool CSelectorSubHandler::start(const QString &element, const QXmlAttributes &at
     d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_SCIA_STATE_INDEX;
   else if (str == "scia_state_id")
     d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_SCIA_STATE_ID;
+  else if (str=="startdate")
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_STARTDATE;
+  else if (str=="enddate")
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_ENDDATE;
   else if ((str == "mfc_starttime") || (str=="starttime"))
     d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_STARTTIME;
   else if ((str == "mfc_endtime") || (str=="endtime"))
@@ -124,8 +128,8 @@ bool CSelectorSubHandler::start(const QString &element, const QXmlAttributes &at
 
   else if (str == "scanning_angle")
     d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_SCANNING;
-  else if (str == "ccd_filterNumber")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_CCD_FILTERNUMBER;
+  else if ((str == "ccd_filterNumber") || (str=="filterNumber"))
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_FILTERNUMBER;
   else if ((str == "ccd_measType") || (str == "measType"))
     d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_MEASTYPE;
   else if (str == "ccd_headTemp")

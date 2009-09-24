@@ -1286,7 +1286,7 @@ void CWShiftAndStretchDoasTable::slotInsertRow()
 
       QList<QVariant> initialValues;
       // defaults ...
-      initialValues.push_back(QVariant(false));
+      initialValues.push_back(QVariant(true));
       initialValues.push_back(QVariant("None"));
       initialValues.push_back(QVariant("None"));
       initialValues.push_back(QVariant(false));

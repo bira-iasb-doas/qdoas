@@ -112,6 +112,13 @@ int mediateRequestDisplaySpecInfo(void *engineContext,int page,void *responseHan
 
 //      sprintf(tmpString,"%.3f -> %.3f \n",pRecord->TimeDec,pRecord->localTimeDec);
 
+  pDay=&pRecord->startDate;
+  if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_STARTDATE])
+   mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Start date","%02d/%02d/%d",pDay->da_day,pDay->da_mon,pDay->da_year);
+  pDay=&pRecord->endDate;
+  if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_ENDDATE])
+   mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"End date","%02d/%02d/%d",pDay->da_day,pDay->da_mon,pDay->da_year);
+
   pTime=&pRecord->startTime;
   if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_STARTTIME])
    mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Start time","%02d:%02d:%02d",pTime->ti_hour,pTime->ti_min,pTime->ti_sec);
@@ -229,7 +236,7 @@ int mediateRequestDisplaySpecInfo(void *engineContext,int page,void *responseHan
     	 mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"ATR string","%s",pRecord->als.atrString);
     	}
 
-    if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_CCD_FILTERNUMBER])
+    if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_FILTERNUMBER])
      mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Filter number","%d",pRecord->ccd.filterNumber);
     if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_CCD_HEADTEMPERATURE])
      mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Temperature in optic head","%.3f deg",pRecord->ccd.headTemperature);
@@ -919,7 +926,11 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
     break;
  // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_UOFT :                             // University of Toronto
-     NDET=2000;
+
+	  	 strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->uoft.calibrationFile);     // calibration file
+	  	 strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->uoft.instrFunctionFile);     // instrumental function file
+
+     NDET=2048;
     break;
  // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_MFC :                              // MFC Heidelberg

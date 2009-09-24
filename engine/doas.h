@@ -653,6 +653,39 @@ typedef struct _mfcBira
  }
 MFC_BIRA;
 
+typedef struct uoft_format
+ {
+ 	SHORT_DATE meanDate;                                                          // averaged date
+  SHORT_DATE startDate;                                                         // start date
+  SHORT_DATE endDate;                                                           // end date
+  struct time meanTime;                                                         // averaged time
+  struct time startTime;                                                        // start time
+  struct time endTime;                                                          // end time
+  float solarElevAngle;                                                         // averaged solar elevation angle
+  float startSolarElevAngle;                                                    // solar elevation angle at the beginning of the measurement
+  float endSolarElevAngle;                                                      // solar elevation angle at the end of the measurement
+  float shutter;                                                                // shutter
+  float numCounts;                                                              // ideal Num of Counts
+  float slitWidth;                                                              // slit Width
+  float groove;                                                                 // groove Density
+  float turret;                                                                 // turret Position
+  float blazeWve;                                                               // blaze wavelength
+  float centerWve;                                                              // centre wavelength
+  float intTime;                                                                // integration Time
+  float numAcc;                                                                 // num Accumulations
+  float meanCCDT;                                                               // mean CCD temperature
+  float minCCDT;                                                                // min CCD temperature
+  float maxCCDT;                                                                // max TCCD temperature
+  float meanBoxT;                                                               // mean box temperature
+  float measType;                                                               // measurement type
+  float viewElev;
+  float viewAzim;
+  float filterId;
+  float longitude;
+  float latitude;
+ }
+UOFT_DATA;
+
 // Buffers needed to load spectra
 
 typedef struct _engineBuffers
@@ -733,6 +766,7 @@ typedef struct _engineRecordInfo
   ALS_DATA als;
   MKZY_DATA mkzy;
   MFC_BIRA mfcBira;
+  UOFT_DATA uoft;
 
   double longitude;                                                             // longitude
   double latitude;                                                              // latitude
@@ -749,6 +783,8 @@ typedef struct _engineRecordInfo
 
                                                                                 // MFC format
 
+  SHORT_DATE startDate;
+  SHORT_DATE endDate;
   struct time startTime;                                                        // starting time
   struct time endTime;                                                          // ending time
   float wavelength1;                                                            // first wavelength
@@ -1423,12 +1459,8 @@ RC               GDP_BIN_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,FILE *specF
 // FILES READ OUT
 // ==============
 
-#define UOFT_BASE 1296 // 36x36
-#define MAX_UOFT_RECORD (UOFT_BASE+(UOFT_BASE-1))
-
 EXTERN DoasCh *CCD_measureTypes[];
 EXTERN DoasCh *MFCBIRA_measureTypes[];
-EXTERN DoasCh UOFT_figures[UOFT_BASE+1];
 
 RC   SetUofT(ENGINE_CONTEXT *pEngineContext,FILE *specFp);
 RC   ReliUofT(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,INT localDay,FILE *specFp);

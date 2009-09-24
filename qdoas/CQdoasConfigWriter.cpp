@@ -1459,11 +1459,13 @@ void CQdoasConfigWriter::writeDataSelectList(FILE *fp, const data_select_list_t 
     case PRJCT_RESULTS_ASCII_SCIA_QUALITY:     fprintf(fp, "scia_quality"); break;
     case PRJCT_RESULTS_ASCII_SCIA_STATE_INDEX: fprintf(fp, "scia_state_index"); break;
     case PRJCT_RESULTS_ASCII_SCIA_STATE_ID:    fprintf(fp, "scia_state_id"); break;
+    case PRJCT_RESULTS_ASCII_STARTDATE:        fprintf(fp, "startdate"); break;
+    case PRJCT_RESULTS_ASCII_ENDDATE:          fprintf(fp, "enddate"); break;
     case PRJCT_RESULTS_ASCII_STARTTIME:        fprintf(fp, "starttime"); break;
     case PRJCT_RESULTS_ASCII_ENDTIME:          fprintf(fp, "endtime"); break;
 
     case PRJCT_RESULTS_ASCII_SCANNING            :      fprintf(fp, "scanning_angle"); break;
-    case PRJCT_RESULTS_ASCII_CCD_FILTERNUMBER    :      fprintf(fp, "ccd_filterNumber"); break;
+    case PRJCT_RESULTS_ASCII_FILTERNUMBER        :      fprintf(fp, "filterNumber"); break;
     case PRJCT_RESULTS_ASCII_MEASTYPE            :      fprintf(fp, "measType"); break;
     case PRJCT_RESULTS_ASCII_CCD_HEADTEMPERATURE :      fprintf(fp, "ccd_headTemp"); break;
 

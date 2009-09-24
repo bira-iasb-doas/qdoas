@@ -3730,7 +3730,7 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
            {
             mediateAllocateAndSetPlotData(&spectrumData[0],"Spectrum",&Feno->LambdaK[SvdPDeb],&Spectre[SvdPDeb],SvdPFin-SvdPDeb+1,Line);
             mediateAllocateAndSetPlotData(&spectrumData[1],"Reference",&Feno->LambdaK[SvdPDeb],&Sref[SvdPDeb],SvdPFin-SvdPDeb+1,Line);
-            mediateResponsePlotData(indexPage,spectrumData,(Feno->displayRef)?2:1,Spectrum,forceAutoScale,"Spectrum and reference","Wavelength (nm)","", responseHandle);
+            mediateResponsePlotData(indexPage,spectrumData,2,Spectrum,forceAutoScale,"Spectrum and reference","Wavelength (nm)","", responseHandle);
             mediateReleasePlotData(&spectrumData[1]);
             mediateReleasePlotData(&spectrumData[0]);
            }
@@ -4023,8 +4023,8 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
     ANALYSE_oldLatitude=pRecord->latitude;
 
-    if ((pEngineContext->lastSavedRecord!=pEngineContext->indexRecord) && nrc &&
-        pProject->asciiResults.analysisFlag)
+    if ((pEngineContext->lastSavedRecord!=pEngineContext->indexRecord) && ((THRD_id==THREAD_TYPE_KURUCZ) || nrc) &&
+      (((THRD_id==THREAD_TYPE_ANALYSIS) && pProject->asciiResults.analysisFlag) || ((THRD_id==THREAD_TYPE_KURUCZ) && pProject->asciiResults.calibFlag)))
 
      rc=OUTPUT_SaveResults(pEngineContext);
    }

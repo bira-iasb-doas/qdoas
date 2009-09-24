@@ -267,8 +267,8 @@ RC EngineSetProject(ENGINE_CONTEXT *pEngineContext)
  	double *instrDeriv2;                                                          // second derivative for the instrument function
  	RC rc;                                                                        // return code
  	FILE *fp;                                                                     // file pointer
- 	DoasCh str[MAX_ITEM_TEXT_LEN+1];                                               // buffer to read the lines of the file
- 	int i;                                                                        // index for loops and arrays
+ 	DoasCh str[MAX_ITEM_TEXT_LEN+1];                                              // buffer to read the lines of the file
+ 	int i,indexSite;                                                              // index for loops and arrays
 
  	// Initializations
 
@@ -287,6 +287,9 @@ RC EngineSetProject(ENGINE_CONTEXT *pEngineContext)
                                  (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_GOME2))?1:0;
 
  	ENGINE_localNoon=(double)12.;
+
+  THRD_localShift=(int)(((indexSite=SITES_GetIndex(pInstrumental->observationSite))!=ITEM_NONE)?
+                          floor(SITES_itemList[indexSite].longitude/15.):0); // 24./360.
 
  	rc=ERROR_ID_NO;
 

@@ -79,9 +79,13 @@ int analyseProjectQdoasTreeNode(void *engineContext, CBatchEngineController *con
 int analyseProjectQdoasDirectory(void *engineContext, CBatchEngineController *controller, const QString &dir,
 				 const QString &filters, bool recursive);
 
+
+
 int batchProcessConvolution(commands_t *cmd);
 int batchProcessRing(commands_t *cmd);
 int batchProcessUsamp(commands_t *cmd);
+
+int calibSwitch=0;
 
 //-------------------------------------------------------------------
 
@@ -156,6 +160,18 @@ enum RunMode parseCommandLine(int argc, char **argv, commands_t *cmd)
 	}
 
       }
+      else if (!strcmp(argv[i], "-k")) { // project name file ...
+	if (++i < argc && argv[i][0] != '-') {
+		 fileSwitch=0;
+		 calibSwitch=1;
+	  cmd->projectName = argv[i];
+	}
+	else {
+	  runMode = Error;
+	  std::cout << "Option '-k' requires an argument (project name)." << std::endl;
+	}
+
+      }
       else if (!strcmp(argv[i], "-f")) { // filename ...
 	if (++i < argc && argv[i][0] != '-')
 		 {
@@ -183,7 +199,6 @@ enum RunMode parseCommandLine(int argc, char **argv, commands_t *cmd)
       	fileSwitch=0;
 	runMode = Help;
       }
-
     }
     else if (fileSwitch)
      cmd->filenames.push_back(argv[i]);
@@ -270,10 +285,15 @@ enum BatchTool requiredBatchTool(const QString &filename)
 
 void showUsage()
 {
-  std::cout << "doas_cl -c <config file> [-a <project name>] [-o <output>] [-f <file>]..." << std::endl << std::endl;
-  std::cout << "    -c <config file>   : A Qdoas, convolution, [ring or usamp] config file." << std::endl;
+  std::cout << "doas_cl -c <config file> [-a/-k <project name>] [-o <output>] [-f <file>]..." << std::endl << std::endl;
+  std::cout << "    -c <config file>   : A QDoas, convolution, [ring or usamp] config file." << std::endl;
   std::cout << "                         The tool to invoke is determined from the type of" << std::endl;
-  std::cout << "                         configuration file specified." << std::endl;
+  std::cout << "                         configuration file specified;" << std::endl << std::endl;
+  std::cout << "    -a <project name>  : for QDoas, run analysis on the specified project" << std::endl;
+  std::cout << "    -k <project name>  : for QDoas, run calibration on the specified project" << std::endl << std::endl;
+  std::cout << "------------------------------------------------------------------------------" << std::endl;
+  std::cout << "doas_cl is a tool of QDoas, a product jointly developed by BIRA-IASB and S[&]T" << std::endl;
+  std::cout << "Last version : " << cQdoasVersionString << std::endl ;
 }
 
 void showHelp()
@@ -511,7 +531,7 @@ int analyseProjectQdoasPrepare(void **engineContext, const CProjectConfigItem *p
   // set project
   if (!retCode &&
      ((mediateRequestSetSites(*engineContext,n,siteList,msgResp)!=0) ||
-      (mediateRequestSetProject(*engineContext, &projectData, THREAD_TYPE_ANALYSIS, msgResp)!= 0))) {
+      (mediateRequestSetProject(*engineContext, &projectData, (!calibSwitch)?THREAD_TYPE_ANALYSIS:THREAD_TYPE_KURUCZ, msgResp)!= 0))) {
     msgResp->process(controller);
     delete msgResp;
     // create a new response ready for the destroy engine context request
@@ -534,7 +554,7 @@ int analyseProjectQdoasPrepare(void **engineContext, const CProjectConfigItem *p
       ++awIt;
     }
 
-    if (mediateRequestSetAnalysisWindows(*engineContext, nWindows, awDataList, THREAD_TYPE_ANALYSIS, msgResp) != 0) {
+    if (mediateRequestSetAnalysisWindows(*engineContext, nWindows, awDataList, (!calibSwitch)?THREAD_TYPE_ANALYSIS:THREAD_TYPE_KURUCZ, msgResp) != 0) {
       msgResp->process(controller);
       delete msgResp;
       msgResp = new CEngineResponseTool;
@@ -562,7 +582,8 @@ int analyseProjectQdoasFile(void *engineContext, CBatchEngineController *control
 
   CEngineResponseBeginAccessFile *beginFileResp = new CEngineResponseBeginAccessFile(filename);
 
-  result = mediateRequestBeginAnalyseSpectra(engineContext, filename.toAscii().constData(), beginFileResp);
+  result = (!calibSwitch) ? mediateRequestBeginAnalyseSpectra(engineContext, filename.toAscii().constData(), beginFileResp) :
+                            mediateRequestBeginCalibrateSpectra(engineContext, filename.toAscii().constData(), beginFileResp);
 
   beginFileResp->setNumberOfRecords(result);
 
@@ -582,7 +603,8 @@ int analyseProjectQdoasFile(void *engineContext, CBatchEngineController *control
     CEngineResponseAccessRecord *resp = new CEngineResponseAccessRecord;
 
     oldResult=result;
-    result = mediateRequestNextMatchingAnalyseSpectrum(engineContext, resp);
+    result = (!calibSwitch) ? mediateRequestNextMatchingAnalyseSpectrum(engineContext, resp) :
+                              mediateRequestNextMatchingCalibrateSpectrum(engineContext, resp);
 
     if (result!=oldResult)
      {
