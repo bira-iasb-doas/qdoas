@@ -572,6 +572,16 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   tmpStr = pathMgr->simplifyPath(QString(d->ccdha94.detectorNonLinearityFile));
   fprintf(fp, " dnl=\"%s\" />\n", tmpStr.toAscii().constData());
 
+  // saozvis
+
+  fprintf(fp, "      <saozvis type=\"%s\"",(d->saozvis.spectralType==PRJCT_INSTR_SAOZ_TYPE_ZENITHAL)?"zenithal":"pointed");
+
+  tmpStr = pathMgr->simplifyPath(QString(d->saozvis.calibrationFile));
+  fprintf(fp, " calib=\"%s\"", tmpStr.toAscii().constData());
+
+  tmpStr = pathMgr->simplifyPath(QString(d->saozvis.instrFunctionFile));
+  fprintf(fp, " instr=\"%s\" />\n", tmpStr.toAscii().constData());
+
   // saozefm
   tmpStr = pathMgr->simplifyPath(QString(d->saozefm.calibrationFile));
   fprintf(fp, "      <saozefm calib=\"%s\"", tmpStr.toAscii().constData());
