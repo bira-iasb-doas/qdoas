@@ -423,7 +423,7 @@ int Gome2Open(coda_ProductFile **productFile, char *fileName)
 
   rc=coda_open(fileName,&*productFile);
 
-  if ((rc!=0) && (coda_errno==CODA_ERROR_FILE_OPEN))
+  if (rc!=0) // && (coda_errno==CODA_ERROR_FILE_OPEN))
    {
     /* maybe not enough memory space to map the file in memory =>
      * temporarily disable memory mapping of files and try again
@@ -434,7 +434,7 @@ int Gome2Open(coda_ProductFile **productFile, char *fileName)
    }
 
   if (rc!=0)
-   rc=ERROR_SetLast("Gome2Init",ERROR_TYPE_WARNING,ERROR_ID_BEAT,"coda_open",fileName,coda_errno_to_string(coda_errno));
+   rc=ERROR_SetLast("Gome2Init",ERROR_TYPE_WARNING,ERROR_ID_BEAT,"coda_open",fileName,""); //coda_errno_to_string(coda_errno));
   else
    {
    	// Retrieve the product class and type
@@ -626,15 +626,16 @@ int Gome2ReadMDRInfo(GOME2_ORBIT_FILE *pOrbitFile,GOME2_MDR *pMdr)
   read_utc_string(&pOrbitFile->gome2Cursor,start_time,&utc_start_double);
   coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                        // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.RECORD_HEADER
 
-  // Observation mode (NADIR is expected)
-
-  coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                        // MDR.GOME2_MDR_L1B_EARTHSHINE_V1
-  coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"OBSERVATION_MODE");       // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.OBSERVATION_MODE
-  coda_cursor_read_uint8(&pOrbitFile->gome2Cursor,&observationMode);
   coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                        // MDR.GOME2_MDR_L1B_EARTHSHINE_V1
 
-  if ((subclass==EARTHSHINE) && (observationMode==0))
+  if (subclass==EARTHSHINE)
    {
+    // Observation mode (NADIR is expected)
+
+    coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"OBSERVATION_MODE");       // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.OBSERVATION_MODE
+    coda_cursor_read_uint8(&pOrbitFile->gome2Cursor,&observationMode);
+    coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                        // MDR.GOME2_MDR_L1B_EARTHSHINE_V1
+
     // number of records in each band
 
     coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"NUM_RECS");               // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.NUM_RECS
@@ -743,7 +744,7 @@ int Gome2ReadMDRInfo(GOME2_ORBIT_FILE *pOrbitFile,GOME2_MDR *pMdr)
 
   // Return
 
-  return ((subclass==EARTHSHINE) && (observationMode==0))?0:1;
+  return (subclass==EARTHSHINE)?0:1;
  }
 
 RC Gome2BrowseMDR(GOME2_ORBIT_FILE *pOrbitFile,INDEX indexBand)
@@ -793,7 +794,7 @@ RC Gome2BrowseMDR(GOME2_ORBIT_FILE *pOrbitFile,INDEX indexBand)
      {
       coda_cursor_goto_array_element_by_index(&pOrbitFile->gome2Cursor,i);
 
-     	if (!Gome2ReadMDRInfo(pOrbitFile,&pGome2Info->mdr[pGome2Info->total_nadir_mdr]))
+     	if (!(rc=Gome2ReadMDRInfo(pOrbitFile,&pGome2Info->mdr[pGome2Info->total_nadir_mdr])))
      	 {
      	 	pGome2Info->total_nadir_obs+=pGome2Info->mdr[pGome2Info->total_nadir_mdr].num_recs[indexBand];
      	 	pGome2Info->mdr[pGome2Info->total_nadir_mdr].indexMDR=i;
@@ -1270,7 +1271,7 @@ RC GOME2_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,INDEX fileIndex)
      	  coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                  // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.BAND[i]
      	  coda_cursor_goto_next_array_element(&pOrbitFile->gome2Cursor);                      // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.BAND[i+1]
 
-     	  if ((spectrum[i]>(double)1.e20) || (spectrum[i]<(double)0.))
+     	  if (fabs(spectrum[i])>(double)1.e20)
      	   rc=ERROR_ID_FILE_RECORD;
      	 }
 
