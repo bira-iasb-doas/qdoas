@@ -352,7 +352,7 @@ void Gome2GotoOBS(GOME2_ORBIT_FILE *pOrbitFile,INDEX indexBand,INDEX indexMDR,IN
 
   coda_cursor_goto_root(&pOrbitFile->gome2Cursor);
   coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"MDR");
-  coda_cursor_goto_array_element_by_index(&pOrbitFile->gome2Cursor,indexMDR);
+  coda_cursor_goto_array_element_by_index(&pOrbitFile->gome2Cursor,pOrbitFile->gome2Info.mdr[indexMDR].indexMDR);
 
  	coda_cursor_goto_available_union_field(&pOrbitFile->gome2Cursor);                         // MDR.GOME2_MDR_L1B_EARTHSHINE_V1
  	coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,gome2BandName[indexBand]); // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.band(indexBand)
@@ -391,7 +391,7 @@ INDEX Gome2GetMDRIndex(GOME2_ORBIT_FILE *pOrbitFile,INDEX indexBand,int recordNo
 
   *pObs=sumObs;
 
-  return pOrbitFile->gome2Info.mdr[indexMDR].indexMDR;
+  return indexMDR; // pOrbitFile->gome2Info.mdr[indexMDR].indexMDR;
  }
 
 // ===============
@@ -650,7 +650,6 @@ int Gome2ReadMDRInfo(GOME2_ORBIT_FILE *pOrbitFile,GOME2_MDR *pMdr)
 
     // Additional geolocation record for the actual integration time of the earthshine measurements
 
-
     coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor, "GEO_EARTH_ACTUAL");      // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL
 
     // Unique integration times in the scan
@@ -690,6 +689,7 @@ int Gome2ReadMDRInfo(GOME2_ORBIT_FILE *pOrbitFile,GOME2_MDR *pMdr)
                                               		    &pMdr->centre_lat[0][0],
                                               		    &pMdr->centre_lon[0][0],
                                               		     coda_array_ordering_c);
+
     coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                        // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL
 
     // 3 SZAs @ points EFG
