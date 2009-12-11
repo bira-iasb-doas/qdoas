@@ -236,6 +236,7 @@ int MKZY_UnPack(unsigned char *inpek,int kvar,int *ut)
     lentofile+=len;
    }
 
+
   for(jj=1;jj<lentofile;jj++)
    ut[jj]+=ut[jj-1];
 
@@ -323,6 +324,7 @@ RC MKZY_ReadRecord(ENGINE_CONTEXT *pEngineContext,int recordNo,FILE *specFp)
   DoasU32  *lbuffer;                                                            // buffer for the spectrum after unpacking
   unsigned short  checksum,*p;                                                  // check sum
   DoasU32   chk;                                                                // for the calculation of the check sum
+  double          longitude;
   int             npixels;                                                      // number of pixels returned
   double         *spectrum;                                                     // the current spectrum and its maximum value
   double          tmLocal;                                                      // measurement local time
@@ -352,7 +354,7 @@ RC MKZY_ReadRecord(ENGINE_CONTEXT *pEngineContext,int recordNo,FILE *specFp)
   else if ((recordNo<=0) || (recordNo>pEngineContext->recordNumber))
    rc=ERROR_ID_FILE_END;
   else if (((buffer=MEMORY_AllocBuffer("MKZY_ReadRecord","buffer",pBuffers->recordIndexes[recordNo]-pBuffers->recordIndexes[recordNo-1],1,0,MEMORY_TYPE_STRING))==NULL) ||
-           ((lbuffer=(DoasU32 *)MEMORY_AllocBuffer("MKZY_ReadRecord","lbuffer",NDET,sizeof(DoasU32),0,MEMORY_TYPE_ULONG))==NULL))
+           ((lbuffer=(DoasU32 *)MEMORY_AllocBuffer("MKZY_ReadRecord","lbuffer",MAX_SPECTRUM_LENGTH,sizeof(DoasU32),0,MEMORY_TYPE_ULONG))==NULL))
    rc=ERROR_ID_ALLOC;
   else
    {
@@ -363,7 +365,9 @@ RC MKZY_ReadRecord(ENGINE_CONTEXT *pEngineContext,int recordNo,FILE *specFp)
     // Read the first bytes (including MKZY sequence and the size of the header)
 
     fread(&header,sizeof(MKZY_HEADER),1,specFp);
-    fread(&recordInfo,min(sizeof(MKZY_RECORDINFO),header.hdrsize-sizeof(MKZY_HEADER)),1,specFp);
+
+    if (header.hdrsize>sizeof(MKZY_HEADER))
+     fread(&recordInfo,min(sizeof(MKZY_RECORDINFO),header.hdrsize-sizeof(MKZY_HEADER)),1,specFp);
 
     strncpy(pRecord->Nom,recordInfo.name,12);                                   // the name of this specific measurement
 
@@ -371,6 +375,8 @@ RC MKZY_ReadRecord(ENGINE_CONTEXT *pEngineContext,int recordNo,FILE *specFp)
     pRecord->Tint=(double)fabs((double)recordInfo.exptime);                     // exposure time, negative if set automatic
     pRecord->longitude=(double)recordInfo.lon;                                  // GPS longitude in degrees
     pRecord->latitude=(double)recordInfo.lat;                                   // GPS latitude in degrees
+
+    longitude=-pRecord->longitude;
 
     strcpy(pRecord->mkzy.instrumentname,recordInfo.instrumentname);             // the name of the instrument
 
@@ -418,7 +424,7 @@ RC MKZY_ReadRecord(ENGINE_CONTEXT *pEngineContext,int recordNo,FILE *specFp)
     pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_day,&pRecord->present_time,0);
     pRecord->TotalExpTime=(double)0.;
     pRecord->TimeDec=(double)pRecord->present_time.ti_hour+pRecord->present_time.ti_min/60.+pRecord->present_time.ti_sec/3600.;
-    pRecord->Zm=ZEN_FNTdiz(ZEN_FNCrtjul(&pRecord->Tm),&pRecord->longitude,&pRecord->latitude,&pRecord->Azimuth);
+    pRecord->Zm=ZEN_FNTdiz(ZEN_FNCrtjul(&pRecord->Tm),&longitude,&pRecord->latitude,&pRecord->Azimuth);
 
     tmLocal=pRecord->Tm+THRD_localShift*3600.;
 
@@ -441,7 +447,7 @@ RC MKZY_ReadRecord(ENGINE_CONTEXT *pEngineContext,int recordNo,FILE *specFp)
 
     fread(buffer,pBuffers->recordIndexes[recordNo]-pBuffers->recordIndexes[recordNo-1]-header.hdrsize,1,specFp);
 
-    if ((recordInfo.pixels>NDET) || ((npixels=MKZY_UnPack(buffer,recordInfo.pixels,(long *)lbuffer))<0))
+    if ((recordInfo.pixels>NDET) || ((npixels=MKZY_UnPack(buffer,recordInfo.pixels,(long *)lbuffer))<0) || (npixels>NDET))
      rc=ERROR_SetLast("MKZY_ReadRecord",ERROR_TYPE_WARNING,ERROR_ID_BUFFER_FULL,"spectra");
     else
      {

@@ -117,7 +117,10 @@ typedef struct _ccdData
   double      scanningAngle;
   DoasCh      doubleFlag;                                                       // for Alexis
   DoasCh      ignoredFlag;
-  DoasCh      ignored[964];                                       // if completed with new data in the future, authorizes compatibility with previous versions
+  DoasCh      ignored[952];                                                     // if completed with new data in the future, authorizes compatibility with previous versions
+  float       scanningCompass;
+  float       scanningPitch;
+  float       scanningRoll;
   struct time startTime;
   struct time endTime;
   double      mirrorAzimuth;

@@ -81,6 +81,8 @@ typedef struct _airborneData
  }
 AIRBORNE_DATA;
 
+int AIRBORNE_pixMin=0,AIRBORNE_pixMax=0;
+
 // -----------------------------------------------------------------------------
 // FUNCTION AIRBORNE_Set
 // -----------------------------------------------------------------------------
@@ -106,6 +108,8 @@ RC AIRBORNE_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
   // Initializations
 
   pEngineContext->recordNumber=0;
+  AIRBORNE_pixMin=50;
+  AIRBORNE_pixMax=200;
   rc=ERROR_ID_NO;
 
   // Get the number of spectra in the file
@@ -116,6 +120,12 @@ RC AIRBORNE_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
    rc=ERROR_SetLast("AIRBORNE_Set",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pEngineContext->fileInfo.fileName);
   else
    pEngineContext->recordNumber=fileLength/(sizeof(AIRBORNE_DATA)+sizeof(double)*NDET);
+
+  if (pEngineContext->buffers.lambda!=NULL)
+   {
+   	AIRBORNE_pixMin=FNPixel(pEngineContext->buffers.lambda,280,NDET,PIXEL_AFTER);
+   	AIRBORNE_pixMax=FNPixel(pEngineContext->buffers.lambda,300,NDET,PIXEL_BEFORE);
+   }
 
   // Return
 
@@ -174,10 +184,10 @@ RC AIRBORNE_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,INT lo
 
     offset=(double)0.;
 
-    for (i=50;i<200;i++)
+    for (i=AIRBORNE_pixMin;i<AIRBORNE_pixMax;i++)
      offset+=spectrum[i];
 
-    offset/=(double)150.;
+    offset/=(double)(AIRBORNE_pixMax-AIRBORNE_pixMin);
 
     for (i=0;i<NDET;i++)
      spectrum[i]=(double)spectrum[i]-offset;
