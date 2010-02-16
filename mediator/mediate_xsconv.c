@@ -772,25 +772,24 @@ RC mediateRingCalculate(void *engineContext,void *responseHandle)
   DoasCh   ringFileName[MAX_ITEM_TEXT_LEN+1],                                   // name of the output ring file
            pageTitle[MAX_ITEM_TEXT_LEN+1];
   double *n2xref,*o2xref,*n2pos2,                                               // rotational Raman spectra
-          gamman2,sigprimen2,sign2,distn2,n2xsec,sign2k,                        // n2 working variables
-          gammao2,sigprimeo2,sigo2,disto2,o2xsec,sigo2k,                        // o2 working variables
+          gamman2,sigprimen2,n2xsec,sign2,sumn2xsec,                            // n2 working variables
+          gammao2,sigprimeo2,o2xsec,sigo2,sumo2xsec,                            // o2 working variables
           sigsq,lambda1e7,solar,n2posj,o2posj,                                  // other working variables
-          lambda,lambdaMin,lambdaMax,                                           // range of wavelengths covered by slit function
+          lambda,                                                               // range of wavelengths covered by slit function
           slitWidth,                                                            // width of the slit function
          *raman,*raman2,*ramanint,*ringEnd,                                     // output ring cross section
-         *solarLambda,*solarVector,                                             // substitution vectors for solar spectrum
+         *solarLambda,*solarVector,*solarDeriv2,                                // substitution vectors for solar spectrum
          *slitLambda,*slitVector,*slitDeriv2,                                   // substitution vectors for slit function
          *ringLambda,*ringVector,                                               // substitution vectors for ring cross section
           temp,                                                                 // approximate average temperature in °K for scattering
           slitParam,                                                            // gaussian full width at half maximum
           slitParam2,slitParam3,slitParam4,                                     // other slit function parameters
-          a,invapi,delta,sigma,                                                 // parameters to build a slit function
-          fact;
+          a,invapi,delta,sigma;                                                 // parameters to build a slit function
 
-  XS      xsSolar,xsSlit,xsRing,xsO3;                                           // solar spectrum and slit function
+  XS      xsSolar,xsSolarConv,xsSlit,xsRing;                                    // solar spectrum and slit function
   INT     nsolar,nslit,nring,                                                   // size of previous vectors
           slitType;                                                             // type of the slit function
-  INDEX   i,j,k,indexMin,khi,klo;                                               // indexes for loops and arrays
+  INDEX   i,j;                                                                  // indexes for loops and arrays
   FILE   *fp;                                                                   // output file pointer
   RC      rc;                                                                   // return code
 
@@ -803,9 +802,9 @@ RC mediateRingCalculate(void *engineContext,void *responseHandle)
   // Initializations
 
   memset(&xsSolar,0,sizeof(XS));
+  memset(&xsSolarConv,0,sizeof(XS));
   memset(&xsSlit,0,sizeof(XS));
   memset(&xsRing,0,sizeof(XS));
-  memset(&xsO3,0,sizeof(XS));
 
   slitWidth=(double)RING_SLIT_WIDTH;                                            // NB : force slit width to 6 because of convolutions
   slitType=pEngineContext->slitConv.slitType;
@@ -836,9 +835,8 @@ RC mediateRingCalculate(void *engineContext,void *responseHandle)
 
   // Buffers allocation
 
-  if (((n2xref=(double *)MEMORY_AllocDVector("mediateRingCalculate","n2xref",0,O2_SIZE-1 /* !!! N2_SIZE instead of O2_SIZE for computations optimization */))==NULL) ||
-      ((o2xref=(double *)MEMORY_AllocDVector("mediateRingCalculate","o2xref",0,O2_SIZE-1))==NULL) ||
-      ((n2pos2=(double *)MEMORY_AllocDVector("mediateRingCalculate","n2pos2",0,O2_SIZE-1))==NULL))
+  if (((n2xref=(double *)MEMORY_AllocDVector("mediateRingCalculate","n2xref",0,N2_SIZE-1))==NULL) ||
+      ((o2xref=(double *)MEMORY_AllocDVector("mediateRingCalculate","o2xref",0,O2_SIZE-1))==NULL))
 
    rc=ERROR_ID_ALLOC;
                                                                                 // Load the final wavelength calibration
@@ -852,14 +850,10 @@ RC mediateRingCalculate(void *engineContext,void *responseHandle)
   // Load solar spectrum in the range of wavelengths covered by the end wavelength scale corrected by the slit function
 
            !(rc=XSCONV_LoadCrossSectionFile(&xsSolar,pEngineContext->kuruczFile,(double)xsRing.lambda[0]-slitWidth-1.,
-                                     (double)xsRing.lambda[xsRing.NDET-1]+slitWidth+1.,(double)0.,CONVOLUTION_CONVERSION_NONE)) ) // &&
+                                     (double)xsRing.lambda[xsRing.NDET-1]+slitWidth+1.,(double)0.,CONVOLUTION_CONVERSION_NONE)) &&
+           !(rc=XSCONV_Alloc(&xsSolarConv,xsSolar.NDET,1)))
 
    {
-    for (i=0;i<N2_SIZE;i++)
-     n2xref[i]=n2pos2[i]=(double)n2pos[i];
-    for (;i<O2_SIZE;i++)
-     n2xref[i]=n2pos2[i]=(double)0.;
-
     // Set up the rotational Raman spectra
 
     raman_n2(temp,n2xref);
@@ -867,9 +861,13 @@ RC mediateRingCalculate(void *engineContext,void *responseHandle)
 
     // Use substitution variables
 
-    solarLambda=xsSolar.lambda;
-    solarVector=xsSolar.vector;
-    nsolar=xsSolar.NDET;
+    for (i=0;i<xsSolarConv.NDET;i++)
+     xsSolarConv.lambda[i]=xsSolar.lambda[i];
+
+    solarLambda=xsSolarConv.lambda;
+    solarVector=xsSolarConv.vector;
+    solarDeriv2=xsSolarConv.deriv2;
+    nsolar=xsSolarConv.NDET;
 
     slitLambda=xsSlit.lambda;
     slitVector=xsSlit.vector;
@@ -887,7 +885,10 @@ RC mediateRingCalculate(void *engineContext,void *responseHandle)
      rc=ERROR_ID_ALLOC;
     else
      {
-      if ((rc=XSCONV_TypeStandard(&xsRing,0,xsRing.NDET,&xsSolar,&xsSlit,&xsSolar,NULL,slitType,slitWidth,slitParam,slitParam2,slitParam3,slitParam4))!=ERROR_ID_NO)
+     	// Start convolving the solar spectrum
+
+      if (((rc=XSCONV_TypeStandard(&xsSolarConv,0,xsSolarConv.NDET,&xsSolar,&xsSlit,&xsSolar,NULL,slitType,slitWidth,slitParam,slitParam2,slitParam3,slitParam4))!=ERROR_ID_NO) ||
+          ((rc=SPLINE_Deriv2(solarLambda,solarVector,solarDeriv2,nsolar,"mediateRingCalculate"))!=0))
        goto EndRing;
 
       VECTOR_Init(raman,(double)0.,nsolar);
@@ -898,9 +899,10 @@ RC mediateRingCalculate(void *engineContext,void *responseHandle)
 
       for (i=0;(i<nsolar) && !rc;i++)
        {
-        solar=(double)solarVector[i];
         lambda=(double)solarLambda[i];
         lambda1e7=(double)1.e7/lambda;
+        sumn2xsec=(double)0.;
+        sumo2xsec=(double)0.;
 
         if (((slitType==SLIT_TYPE_GAUSS_FILE) || (slitType==SLIT_TYPE_INVPOLY_FILE) || (slitType==SLIT_TYPE_ERF_FILE)) &&
             ((rc=SPLINE_Vector(slitLambda,slitVector,slitDeriv2,nslit,&lambda,&slitParam,1,SPLINE_CUBIC,"mediateRingCalculate"))!=0))
@@ -918,69 +920,41 @@ RC mediateRingCalculate(void *engineContext,void *responseHandle)
         gamman2*=gamman2;   // gamman2 <- gamman2**2;
         gammao2*=gammao2;   // gammao2 <- gammao2**2;
 
-        for (j=0;j<O2_SIZE;j++)
+        for (j=0;j<N2_SIZE;j++)
          {
-          n2posj=n2pos2[j];
-          o2posj=o2pos[j];
+          n2posj=n2pos[j];
+          sigprimen2=(double) lambda1e7+n2posj;
+          sign2=(double)1.e7/sigprimen2;
 
-          sigprimen2=(double) lambda1e7-n2posj;
           sigprimen2 *= sigprimen2;       // **2
           sigprimen2 *= sigprimen2;       // **4
 
-          sigprimeo2 = (double) lambda1e7-o2posj;
+          n2xsec=n2xref[j]*sigprimen2*gamman2;
+          sumn2xsec+=n2xsec;
+
+          if (!(rc=SPLINE_Vector(solarLambda,solarVector,solarDeriv2,nsolar,&sign2,&solar,1,SPLINE_CUBIC,"mediateRingCalculate")))
+           raman[i]+=solar*n2xsec;
+         }
+
+        for (j=0;j<O2_SIZE;j++)
+         {
+          o2posj=o2pos[j];
+          sigprimeo2 = (double) lambda1e7+o2posj;
+          sigo2=(double)1.e7/sigprimeo2;
+
           sigprimeo2 *= sigprimeo2;       // **2
           sigprimeo2 *= sigprimeo2;       // **4
 
-          n2xsec=n2xref[j]*sigprimen2*gamman2*solar;
-          o2xsec=o2xref[j]*sigprimeo2*gammao2*solar;
+          o2xsec=o2xref[j]*sigprimeo2*gammao2;
+          sumo2xsec+=o2xsec;
 
-          sign2=(double)1.e7/(-n2posj+lambda1e7);
-          sigo2=(double)1.e7/(-o2posj+lambda1e7);
-
-          lambdaMin=(double)min(sign2,sigo2)-4.*slitParam; // lambda-slitWidth;
-          lambdaMax=(double)max(sign2,sigo2)+4.*slitParam; // lambda+slitWidth;
-
-          for (indexMin=0,klo=0,khi=nsolar-1;khi-klo>1;)
-           {
-            indexMin=(khi+klo)>>1;
-
-            if (solarLambda[indexMin]>lambdaMin)
-             khi=indexMin;
-            else
-             klo=indexMin;
-           }
-
-          // Contributions from +- npix pixels away
-
-          for (k=indexMin;(k<nsolar)&&(solarLambda[k]<=lambdaMax);k++)
-           {
-           	sign2k=sign2-solarLambda[k];
-           	sigo2k=sigo2-solarLambda[k];
-
-            if (slitType==SLIT_TYPE_GAUSS_FILE)
-             {
-              distn2=invapi*exp(-(sign2k*sign2k)/(a*a));
-              disto2=invapi*exp(-(sigo2k*sigo2k)/(a*a));
-             }
-            else if (slitType==SLIT_TYPE_INVPOLY_FILE)
-             {
-              distn2=(double)pow(sigma,(double)slitParam2)/((pow(sign2k,(double)slitParam2)+pow(sigma,(double)slitParam2)));
-              disto2=(double)pow(sigma,(double)slitParam2)/((pow(sigo2k,(double)slitParam2)+pow(sigma,(double)slitParam2)));
-             }
-            else if (slitType==SLIT_TYPE_ERF_FILE)
-             {
-              distn2=(double)(ERF_GetValue((sign2k+delta)/a)-ERF_GetValue((sign2k-delta)/a))/(4.*delta);
-              disto2=(double)(ERF_GetValue((sigo2k+delta)/a)-ERF_GetValue((sigo2k-delta)/a))/(4.*delta);
-             }
-            else if ((slitType==SLIT_TYPE_FILE) &&
-                   (((rc=SPLINE_Vector(slitLambda,slitVector,slitDeriv2,nslit,&sign2k,&distn2,1,SPLINE_CUBIC,"mediateRingCalculate"))!=0) ||
-                    ((rc=SPLINE_Vector(slitLambda,slitVector,slitDeriv2,nslit,&sigo2k,&disto2,1,SPLINE_CUBIC,"mediateRingCalculate"))!=0)))
-
-             goto EndRing;
-
-             raman[k]+=(n2xsec*distn2+o2xsec*disto2)*(solarLambda[k]-solarLambda[k-1]);
-           }
+          if (!(rc=SPLINE_Vector(solarLambda,solarVector,solarDeriv2,nsolar,&sigo2,&solar,1,SPLINE_CUBIC,"mediateRingCalculate")))
+           raman[i]+=solar*o2xsec;
          }
+
+        // normalization
+
+        raman[i]/=(sumn2xsec+sumo2xsec);
        }
 
       strcpy(ringFileName,pEngineContext->path);
@@ -989,34 +963,38 @@ RC mediateRingCalculate(void *engineContext,void *responseHandle)
       DEBUG_PrintVar("High resolution vectors",solarLambda,0,nsolar-1,solarVector,0,nsolar-1,raman,0,nsolar-1,NULL);
       #endif
 
-      if (!rc && !(rc=SPLINE_Deriv2(solarLambda,raman,raman2,nsolar,"mediateRingCalculate")) &&
+      // Interpolate the high resolution spectrum
+
+      if (!rc && !(rc=SPLINE_Deriv2(solarLambda,solarVector,solarDeriv2,nsolar,"mediateRingCalculate")) &&
+         !(rc=SPLINE_Vector(solarLambda,solarVector,solarDeriv2,nsolar,ringLambda,ringVector,nring,SPLINE_CUBIC,"mediateRingCalculate")) &&
+
+      // Interpolate the raman spectrum
+
+         !(rc=SPLINE_Deriv2(solarLambda,raman,raman2,nsolar,"mediateRingCalculate")) &&
          !(rc=SPLINE_Vector(solarLambda,raman,raman2,nsolar,ringLambda,ramanint,nring,SPLINE_CUBIC,"mediateRingCalculate")))
        {
         if ((fp=fopen(ringFileName,"w+t"))!=NULL)
          {
+         	plot_data_t spectrumData[1];
+
           if (!pEngineContext->noComment)
            mediateRingHeader(pEngineContext,fp);
 
-          // Output ring
+          // The final ring is the ratio between the interpolated raman and the interpolated convoluted solar spectrum
 
           for (i=0;i<nring;i++)
            ringEnd[i]=((ramanint[i]>(double)0.) && (ringVector[i]>(double)0.))?
                                     (double)ramanint[i] /* ring effect source spectrum */ /ringVector[i] /* solar spectrum */:(double)0.;
 
-          if (!(rc=VECTOR_NormalizeVector(ringEnd-1,nring,&fact,"Ring")))
-           {
-           	plot_data_t spectrumData[1];
+          strcpy(pageTitle,"Ring");
 
-           	strcpy(pageTitle,"Ring");
+          for (i=0;i<nring;i++)
+           fprintf(fp,"%.14le %.14le %.14le %.14le\n",ringLambda[i],ringEnd[i],ramanint[i],ringVector[i]);
 
-            for (i=0;i<nring;i++)
-             fprintf(fp,"%.14le %.14le %.14le %.14le\n",ringLambda[i],ringEnd[i],ramanint[i],ringVector[i]);
-
-            mediateAllocateAndSetPlotData(&spectrumData[0],"Calculated ring cross section",ringLambda,ringEnd,nring,Line);
-            mediateResponsePlotData(0,spectrumData,1,Spectrum,forceAutoScale,"Calculated ring cross section","Wavelength (nm)","",responseHandle);
-            mediateResponseLabelPage(0,pageTitle,"",responseHandle);
-            mediateReleasePlotData(&spectrumData[0]);
-           }
+          mediateAllocateAndSetPlotData(&spectrumData[0],"Calculated ring cross section",ringLambda,ringEnd,nring,Line);
+          mediateResponsePlotData(0,spectrumData,1,Spectrum,forceAutoScale,"Calculated ring cross section","Wavelength (nm)","",responseHandle);
+          mediateResponseLabelPage(0,pageTitle,"",responseHandle);
+          mediateReleasePlotData(&spectrumData[0]);
 
           if (fp!=NULL)
            fclose(fp);
@@ -1047,7 +1025,6 @@ RC mediateRingCalculate(void *engineContext,void *responseHandle)
   XSCONV_Reset(&xsSolar);
   XSCONV_Reset(&xsSlit);
   XSCONV_Reset(&xsRing);
-  XSCONV_Reset(&xsO3);
 
   #if defined(__DEBUG_) && __DEBUG_
   {

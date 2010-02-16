@@ -628,6 +628,9 @@ typedef struct _als
   short       alsFlag;
   short       scanIndex;
   double      scanningAngle;
+  float       compassAngle;
+  float       pitchAngle;
+  float       rollAngle;
   DoasCh      atrString[1024];
  }
 ALS_DATA;
@@ -643,6 +646,7 @@ typedef struct _mkzy
   char           coneangle;                                                     // new in version 4, given in cfg.txt
   int            darkFlag,skyFlag;                                              // flags indicating the presence resp. of dark current and sky spectra in the file
   int            darkScans;                                                     // number of scans of the dark current
+  int            recordNumber;
  }
 MKZY_DATA;
 

@@ -138,6 +138,12 @@ bool CSelectorSubHandler::start(const QString &element, const QXmlAttributes &at
     d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_COOLING_STATUS;
   else if (str == "mirror_status")
     d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_MIRROR_ERROR;
+  else if (str == "compass_angle")
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_COMPASS;
+  else if (str == "pitch_angle")
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_PITCH;
+  else if (str == "roll_angle")
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_ROLL;
 
   else
     return postErrorMessage("Invalid output field " + str);

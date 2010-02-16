@@ -150,7 +150,10 @@ PRJCT_RESULTS_FIELDS PRJCT_resultsAscii[PRJCT_RESULTS_ASCII_MAX]=
   { "Measurement type"            , MEMORY_TYPE_INT   , sizeof(INT)   , ITEM_NONE, ITEM_NONE, "%#3d"      },       // PRJCT_RESULTS_ASCII_MEASTYPE
   { "Head temperature"            , MEMORY_TYPE_DOUBLE, sizeof(double), ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_CCD_HEADTEMPERATURE
   { "Cooler status"               , MEMORY_TYPE_INT   , sizeof(INT)   , ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_COOLING_STATUS
-  { "Mirror status"               , MEMORY_TYPE_INT   , sizeof(INT)   , ITEM_NONE, ITEM_NONE, "%#5d"      }        // PRJCT_RESULTS_ASCII_MIRROR_ERROR
+  { "Mirror status"               , MEMORY_TYPE_INT   , sizeof(INT)   , ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_MIRROR_ERROR
+  { "Compass angle"               , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_COMPASS
+  { "Pitch angle"                 , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_PITCH
+  { "Roll angle"                  , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   }        // PRJCT_RESULTS_ASCII_ROLL
  };
 
 typedef struct _NDSC_header
@@ -1721,6 +1724,18 @@ void OutputSaveRecord(ENGINE_CONTEXT *pEngineContext,INT hiddenFlag)
           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->mkzy.scanningAngle;
          else
           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->als.scanningAngle;
+        break;
+     // ---------------------------------------------------------------------
+        case PRJCT_RESULTS_ASCII_COMPASS :
+         ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->als.compassAngle;
+        break;
+     // ---------------------------------------------------------------------
+        case PRJCT_RESULTS_ASCII_PITCH :
+         ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->als.pitchAngle;
+        break;
+     // ---------------------------------------------------------------------
+        case PRJCT_RESULTS_ASCII_ROLL :
+         ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->als.rollAngle;
         break;
      // ---------------------------------------------------------------------
         case PRJCT_RESULTS_ASCII_FILTERNUMBER :

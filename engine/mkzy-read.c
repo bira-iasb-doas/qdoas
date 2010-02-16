@@ -351,7 +351,7 @@ RC MKZY_ReadRecord(ENGINE_CONTEXT *pEngineContext,int recordNo,FILE *specFp)
 
   if (specFp==NULL)
    rc=ERROR_SetLast("MKZY_ReadRecord",ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pEngineContext->fileInfo.fileName);
-  else if ((recordNo<=0) || (recordNo>pEngineContext->recordNumber))
+  else if ((recordNo<=0) || (recordNo>pEngineContext->recordInfo.mkzy.recordNumber))
    rc=ERROR_ID_FILE_END;
   else if (((buffer=MEMORY_AllocBuffer("MKZY_ReadRecord","buffer",pBuffers->recordIndexes[recordNo]-pBuffers->recordIndexes[recordNo-1],1,0,MEMORY_TYPE_STRING))==NULL) ||
            ((lbuffer=(DoasU32 *)MEMORY_AllocBuffer("MKZY_ReadRecord","lbuffer",MAX_SPECTRUM_LENGTH,sizeof(DoasU32),0,MEMORY_TYPE_ULONG))==NULL))
@@ -504,7 +504,7 @@ RC MKZY_SearchForOffset(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
 
  	// Search for the spectrum
 
-  for (indexRecord=1;indexRecord<=pEngineContext->recordNumber;indexRecord++)
+  for (indexRecord=1;indexRecord<=pEngineContext->recordInfo.mkzy.recordNumber;indexRecord++)
    if (!(rc=MKZY_ReadRecord(pEngineContext,indexRecord,specFp)) && (!STD_Stricmp(pEngineContext->recordInfo.Nom,"dark") || !STD_Stricmp(pEngineContext->recordInfo.Nom,"offset")))
   	 {
   	 	memcpy(pEngineContext->buffers.darkCurrent,pEngineContext->buffers.spectrum,sizeof(double)*NDET);
@@ -533,7 +533,7 @@ RC MKZY_SearchForSky(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
 
  	// Search for the spectrum
 
-  for (indexRecord=1;indexRecord<=pEngineContext->recordNumber;indexRecord++)
+  for (indexRecord=1;indexRecord<=pEngineContext->recordInfo.mkzy.recordNumber;indexRecord++)
    if (!(rc=MKZY_ReadRecord(pEngineContext,indexRecord,specFp)) && !STD_Stricmp(pEngineContext->recordInfo.Nom,"sky"))
   	 {
   	 	memcpy(pEngineContext->buffers.scanRef,pEngineContext->buffers.spectrum,sizeof(double)*NDET);
@@ -586,6 +586,7 @@ RC MKZY_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
   pBuffers=&pEngineContext->buffers;
   pEngineContext->recordIndexesSize=2001;
   recordIndexes=pBuffers->recordIndexes;
+  pEngineContext->recordInfo.mkzy.recordNumber=0;
 
   pEngineContext->recordInfo.mkzy.darkFlag=pEngineContext->recordInfo.mkzy.skyFlag=0;
 
@@ -607,11 +608,13 @@ RC MKZY_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
 
    	// search for the "magic" sequence of characters : MKZY
 
-   	for (ptr=buffer;(ptr-buffer<fileLength-4) && (pEngineContext->recordNumber<pEngineContext->recordIndexesSize);ptr++)
+   	for (ptr=buffer;(ptr-buffer<fileLength-4) && (pEngineContext->recordInfo.mkzy.recordNumber<pEngineContext->recordIndexesSize);ptr++)
    	 if ((ptr[0]=='M') && (ptr[1]=='K') && (ptr[2]=='Z') && (ptr[3]=='Y'))
-  	  	recordIndexes[pEngineContext->recordNumber++]=ptr-buffer;
+  	  	recordIndexes[pEngineContext->recordInfo.mkzy.recordNumber++]=ptr-buffer;
 
-  	 recordIndexes[pEngineContext->recordNumber]=fileLength;
+  	 recordIndexes[pEngineContext->recordInfo.mkzy.recordNumber]=fileLength;
+
+  	 pEngineContext->recordNumber=pEngineContext->recordInfo.mkzy.recordNumber; // !!!
 
     if (!(rc=MKZY_SearchForOffset(pEngineContext,specFp)))
   	  rc=MKZY_SearchForSky(pEngineContext,specFp);
@@ -649,7 +652,10 @@ RC MKZY_Reli(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,INT localD
   // Declarations
 
   double *spectrum,*offset;                                                     // pointer to spectrum and offset
-  INDEX   i;                                                                    // browse pixels of the detector
+  double *cumSpectrum;
+  double Tm1,Tm2,longitude;
+  int nsec,nsec1,nsec2;
+  INDEX   i,indexRecord,nRecord;                                                // browse pixels of the detector
   RC      rc;                                                                   // return code
 
   // Initializations
@@ -657,21 +663,80 @@ RC MKZY_Reli(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,INT localD
   spectrum=pEngineContext->buffers.spectrum;
   offset=pEngineContext->buffers.darkCurrent;
 
-  if (!(rc=MKZY_ReadRecord(pEngineContext,recordNo,specFp)))
+  if ((cumSpectrum=(double *)MEMORY_AllocDVector("MKZY_Reli ","cumSpectrum",0,NDET-1))==NULL)
+   rc=ERROR_ID_ALLOC;
+  else
    {
-   	if (!STD_Stricmp(pEngineContext->recordInfo.Nom,"dark") ||
-   	    !STD_Stricmp(pEngineContext->recordInfo.Nom,"sky") ||
-   	    !STD_Stricmp(pEngineContext->recordInfo.Nom,"offset"))
+   	for (i=0;i<NDET;i++)
+   	 cumSpectrum[i]=(double)0;
+   	nRecord=0;
+   	indexRecord=recordNo;
 
-     rc=ERROR_ID_FILE_RECORD;
+    //for (indexRecord=0;indexRecord<pEngineContext->recordInfo.mkzy.recordNumber;indexRecord++)
+   	 {
+      if (!(rc=MKZY_ReadRecord(pEngineContext,indexRecord,specFp)))
+       {
+       	if (!STD_Stricmp(pEngineContext->recordInfo.Nom,"dark") ||
+       	    !STD_Stricmp(pEngineContext->recordInfo.Nom,"sky") ||
+       	    !STD_Stricmp(pEngineContext->recordInfo.Nom,"offset"))
 
-    // Correction by offset
+         rc=ERROR_ID_FILE_RECORD;
 
-    else if ((offset!=NULL) && (pEngineContext->recordInfo.mkzy.darkScans>0))
-     {
-      for (i=0;i<NDET;i++)
-       spectrum[i]-=(double)offset[i]*pEngineContext->recordInfo.NSomme/pEngineContext->recordInfo.mkzy.darkScans;
+        // Correction by offset
+
+        else if ((offset!=NULL) && (pEngineContext->recordInfo.mkzy.darkScans>0))
+         {
+          for (i=0;i<NDET;i++)
+           {
+            spectrum[i]-=(double)offset[i]*pEngineContext->recordInfo.NSomme/pEngineContext->recordInfo.mkzy.darkScans;
+            cumSpectrum[i]+=spectrum[i];
+           }
+
+          if (!nRecord)
+           Tm1=(double)ZEN_NbSec(&pEngineContext->recordInfo.present_day,&pEngineContext->recordInfo.startTime,0);
+          else
+           Tm2=(double)ZEN_NbSec(&pEngineContext->recordInfo.present_day,&pEngineContext->recordInfo.endTime,0);
+
+          nRecord++;
+         }
+       }
      }
+
+    // Tm1=(Tm1+Tm2)*0.5;
+    //
+    // pEngineContext->recordInfo.present_day.da_year  = (short) ZEN_FNCaljye (&Tm1);
+    // pEngineContext->recordInfo.present_day.da_mon   = (char) ZEN_FNCaljmon (ZEN_FNCaljye(&Tm1),ZEN_FNCaljda(&Tm1));
+    // pEngineContext->recordInfo.present_day.da_day   = (char) ZEN_FNCaljday (ZEN_FNCaljye(&Tm1),ZEN_FNCaljda(&Tm1));
+    //
+    // // Data on the current spectrum
+    //
+    // nsec1=pEngineContext->recordInfo.startTime.ti_hour*3600+pEngineContext->recordInfo.startTime.ti_min*60+pEngineContext->recordInfo.startTime.ti_sec;
+    // nsec2=pEngineContext->recordInfo.endTime.ti_hour*3600+pEngineContext->recordInfo.endTime.ti_min*60+pEngineContext->recordInfo.endTime.ti_sec;
+    //
+    // if (nsec2<nsec1)
+    //  nsec2+=86400;
+    //
+    // nsec=(nsec1+nsec2)/2;
+    //
+    // pEngineContext->recordInfo.present_time.ti_hour=(unsigned char)(nsec/3600);
+    // pEngineContext->recordInfo.present_time.ti_min=(unsigned char)((nsec%3600)/60);
+    // pEngineContext->recordInfo.present_time.ti_sec=(unsigned char)((nsec%3600)%60);
+    //
+    // longitude=-pEngineContext->recordInfo.longitude;
+    //
+    // pEngineContext->recordInfo.Tm=(double)ZEN_NbSec(&pEngineContext->recordInfo.present_day,&pEngineContext->recordInfo.present_time,0);
+    // pEngineContext->recordInfo.TimeDec=(double)pEngineContext->recordInfo.present_time.ti_hour+pEngineContext->recordInfo.present_time.ti_min/60.+pEngineContext->recordInfo.present_time.ti_sec/3600.;
+    // pEngineContext->recordInfo.Zm=ZEN_FNTdiz(ZEN_FNCrtjul(&pEngineContext->recordInfo.Tm),&longitude,&pEngineContext->recordInfo.latitude,&pEngineContext->recordInfo.Azimuth);
+    //
+    // if (nRecord)
+    //  for (i=0;i<NDET;i++)
+    //   spectrum[i]=cumSpectrum[i]/nRecord;
+    // else
+    //  for (i=0;i<NDET;i++)
+    //   spectrum[i]=(double)0.;
+
+    if (cumSpectrum!=NULL)
+     MEMORY_ReleaseDVector("MKZY_Reli ","cumSpectrum",cumSpectrum,0);
    }
 
   // Return

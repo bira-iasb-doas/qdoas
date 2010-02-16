@@ -231,10 +231,13 @@ int mediateRequestDisplaySpecInfo(void *engineContext,int page,void *responseHan
   if (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_CCD_EEV)
    {
     if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_SCANNING])
-     {
-     	mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Telescope Scanning angle","%.3f",pRecord->als.scanningAngle);
-    	 mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"ATR string","%s",pRecord->als.atrString);
-    	}
+    	mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Telescope Scanning angle","%.3f",pRecord->als.scanningAngle);
+  	 if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_COMPASS])
+  	  mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Scanning compass angle","%.3f",pRecord->als.compassAngle);
+  	 if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_PITCH])
+  	  mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Scanning compass angle","%.3f",pRecord->als.pitchAngle);
+  	 if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_ROLL])
+  	  mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Scanning compass angle","%.3f",pRecord->als.rollAngle);
 
     if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_FILTERNUMBER])
      mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Filter number","%d",pRecord->ccd.filterNumber);

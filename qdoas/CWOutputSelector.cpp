@@ -116,6 +116,9 @@ CWOutputSelector::CWOutputSelector(const data_select_list_t *d, QWidget *parent)
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_CCD_HEADTEMPERATURE, "Head temperature"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_COOLING_STATUS,      "Cooler status"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_MIRROR_ERROR,        "Mirror status"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_COMPASS,             "Compass angle"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_PITCH,               "Pitch angle"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_ROLL,                "Roll angle"));
 
   // populate the selected list by key-reference to the available list ...
 
@@ -394,6 +397,9 @@ void getValidFieldFlags(int *validFlags, int instrument)
       validFlags[PRJCT_RESULTS_ASCII_CCD_HEADTEMPERATURE]=1;
       validFlags[PRJCT_RESULTS_ASCII_STARTTIME]=1;
       validFlags[PRJCT_RESULTS_ASCII_ENDTIME]=1;
+      validFlags[PRJCT_RESULTS_ASCII_COMPASS]=1;
+      validFlags[PRJCT_RESULTS_ASCII_PITCH]=1;
+      validFlags[PRJCT_RESULTS_ASCII_ROLL]=1;
      }
     break;
  // ----------------------------------------------------------------------------

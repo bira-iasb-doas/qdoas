@@ -118,9 +118,9 @@ typedef struct _ccdData
   DoasCh      doubleFlag;                                                       // for Alexis
   DoasCh      ignoredFlag;
   DoasCh      ignored[952];                                                     // if completed with new data in the future, authorizes compatibility with previous versions
-  float       scanningCompass;
-  float       scanningPitch;
-  float       scanningRoll;
+  float       compassAngle;
+  float       pitchAngle;
+  float       rollAngle;
   struct time startTime;
   struct time endTime;
   double      mirrorAzimuth;
@@ -483,6 +483,10 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
            	pRecord->als.alsFlag=header.alsFlag;
             pRecord->als.scanIndex=header.scanIndex;
             pRecord->als.scanningAngle=header.scanningAngle;                                          // total number of spectra in tracks
+            pRecord->als.compassAngle=header.compassAngle;
+            pRecord->als.pitchAngle=header.pitchAngle;
+            pRecord->als.rollAngle=header.rollAngle;
+
             strcpy(pRecord->als.atrString,header.ignored);
 
             pRecord->ccd.filterNumber=pRecord->ccd.measureType=0;
@@ -493,10 +497,21 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
              pRecord->ccd.filterNumber=header.filterNumber;
              pRecord->ccd.measureType=header.measureType;
              pRecord->ccd.headTemperature=header.headTemperature;
+
+             pRecord->als.alsFlag=0;
+             pRecord->als.scanIndex=-1;
+             pRecord->als.scanningAngle=
+             pRecord->als.compassAngle=
+             pRecord->als.pitchAngle=
+             pRecord->als.rollAngle=(float)0.;
            }
 
           memcpy(&pRecord->present_day,&header.today,sizeof(SHORT_DATE));
           memcpy(&pRecord->present_time,&header.now,sizeof(struct time));
+
+          if (header.Tm<EPSILON)
+           pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_day,&pRecord->present_time,0);
+
 
           memcpy(&pRecord->startTime,&header.startTime,sizeof(struct time));
           memcpy(&pRecord->endTime,&header.endTime,sizeof(struct time));
