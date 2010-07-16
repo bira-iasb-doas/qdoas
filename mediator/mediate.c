@@ -186,8 +186,17 @@ int mediateRequestDisplaySpecInfo(void *engineContext,int page,void *responseHan
 // QDOAS ???                  pRecord->dispersion[1],pRecord->dispersion[2]);
 // QDOAS ???
 
+  if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_TINT])
+   mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Exposure time","%.3f sec",pRecord->Tint);
+  if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_SCANS])
+   mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Scans taken into account","%d",pRecord->NSomme);
+  if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_NREJ])
+   mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Rejected scans","%d",pRecord->rejected);
+
   if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_SZA])
    mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Solar Zenith angle","%-.3f",pRecord->Zm);
+  if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_AZIM])
+   mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Solar Azimuth angle","%.3f",pRecord->Azimuth);
 
   if ((pInstrumental->readOutFormat!=PRJCT_INSTR_FORMAT_GDP_ASCII) &&
       (pInstrumental->readOutFormat!=PRJCT_INSTR_FORMAT_GDP_BIN) &&
@@ -195,13 +204,6 @@ int mediateRequestDisplaySpecInfo(void *engineContext,int page,void *responseHan
       (pInstrumental->readOutFormat!=PRJCT_INSTR_FORMAT_OMI) &&
       (pInstrumental->readOutFormat!=PRJCT_INSTR_FORMAT_GOME2))
    {
-   	if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_TINT])
-     mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Exposure time","%.3f sec",pRecord->Tint);
-
-    if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_SCANS])
-     mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Scans taken into account","%d",pRecord->NSomme);
-    if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_NREJ])
-     mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Rejected scans","%d",pRecord->rejected);
     if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_VIEW_ELEVATION])
      mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Elevation viewing angle","%.3f",pRecord->elevationViewAngle);
     if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_VIEW_AZIMUTH])
@@ -209,14 +211,10 @@ int mediateRequestDisplaySpecInfo(void *engineContext,int page,void *responseHan
    }
   else
    {
-   	if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_AZIM])
-   	 mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Solar Azimuth angle","%.3f",pRecord->Azimuth);
    	if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_LOS_ZA])
     	mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Viewing Zenith angle","%.3f",pRecord->zenithViewAngle);
    	if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_LOS_AZIMUTH])
    	 mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Viewing Azimuth angle","%.3f",pRecord->azimuthViewAngle);
-    if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_MIRROR_ERROR])
-     mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Mirror status","%.3f",(pRecord->mirrorError==1)?"!!! PROBLEM !!!":"OK");
    }
 
   if (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MKZY)
@@ -252,6 +250,8 @@ int mediateRequestDisplaySpecInfo(void *engineContext,int page,void *responseHan
 
   if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_TDET])
    mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Detector temperature","%.3f",pRecord->TDet);
+  if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_MIRROR_ERROR])
+   mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Mirror status","%.3f",(pRecord->mirrorError==1)?"!!! PROBLEM !!!":"OK");
   if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_COOLING_STATUS])
    mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Cooler status","%.3f",(pRecord->coolingStatus==0)?"!!! UNLOCKED !!!":"Locked");
 

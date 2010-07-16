@@ -462,7 +462,6 @@ void getValidFieldFlags(int *validFlags, int instrument)
      {
       validFlags[PRJCT_RESULTS_ASCII_PIXEL]=1;
       validFlags[PRJCT_RESULTS_ASCII_PIXEL_TYPE]=1;
-      validFlags[PRJCT_RESULTS_ASCII_TINT]=0;
      }
     break;
  // ----------------------------------------------------------------------------
