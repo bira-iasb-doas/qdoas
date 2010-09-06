@@ -140,6 +140,7 @@ DoasCh *AnlysPolynome[ANLYS_POLY_TYPE_MAX]={"None","order 0","order 1","order 2"
 DoasCh *ANLYS_crossAction[ANLYS_CROSS_ACTION_MAX]={"None","Interpolate","Convolute Std","Convolute I0","Convolute Ring"}; /* "Detector t° dependent","Strato t° dependent",*/
 
 INT    ANALYSE_plotKurucz,ANALYSE_plotRef,ANALYSE_indexLine;
+INT    ANALYSE_maxIter=0;
 
 INT NFeno,                             // number of analysis windows
     DimC,                              // number of columns in SVD matrix == number of symbols to take into account for SVD decomposition
@@ -3033,6 +3034,7 @@ RC ANALYSE_CurFitMethod(double *Spectre,          // raw spectrum
   int i,j,k,l;                                             // indexes for loops and arrays
   INDEX indexFeno,indexFeno2;
   int useErrors;
+  int niter;
   RC rc;                                                 // return code
 
   #if defined(__DEBUG_) && __DEBUG_
@@ -3284,6 +3286,8 @@ RC ANALYSE_CurFitMethod(double *Spectre,          // raw spectrum
       *Chisqr    = (double) 0.;
        Lamda     = (double) 0.001;
 
+       niter=0;
+
        do
        {
           OldChisqr = *Chisqr;
@@ -3293,8 +3297,11 @@ RC ANALYSE_CurFitMethod(double *Spectre,          // raw spectrum
            break;
 
           for ( i=0; i<NF; i++ ) Deltap[i] *= 0.4;
+          niter++;
        }
-       while ( ( *Chisqr != 0. ) && ( fabs(*Chisqr-OldChisqr)/(*Chisqr) > pAnalysisOptions->convergence ) );
+       while ( ( *Chisqr != 0. ) && ( fabs(*Chisqr-OldChisqr)/(*Chisqr) > pAnalysisOptions->convergence ) && (!ANALYSE_maxIter || (niter<ANALYSE_maxIter)) );
+
+      *pNiter=niter;
      }
 
     if (rc<THREAD_EVENT_STOP)
@@ -3761,6 +3768,7 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
           #endif
 
           pRecord->BestShift+=(double)Feno->TabCrossResults[Feno->indexSpectrum].Shift;
+          Feno->nIter=Niter;
 
           // Output analysis results to temporary file
 

@@ -322,6 +322,7 @@ RC EngineSetProject(ENGINE_CONTEXT *pEngineContext)
 
      (((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_ACTON) ||
        (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_PDAEGG) ||
+       (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_PDAEGG_OLD) ||
        (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_PDASI_EASOE) ||
        (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MKZY) ||
        (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_CCD_EEV)) &&
@@ -486,13 +487,16 @@ RC EngineSetFile(ENGINE_CONTEXT *pEngineContext,const char *fileName,void *respo
   //        measurement is ignored.  To improve ???
 
   if ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SAOZ_VIS) ||
-      (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_PDASI_EASOE))
+      (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_PDASI_EASOE) ||
+      (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_PDAEGG) ||
+      (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_PDAEGG_OLD))
 
    pFile->namesFp=fopen(FILES_BuildFileName(fileTmp,FILE_TYPE_NAMES),"rb");
 
   // Dark current files : the file name is automatically built from the spectra file name
 
   if ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_PDAEGG) ||
+      (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_PDAEGG_OLD) ||
       (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_ACTON) ||
       (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_CCD_EEV) ||
       (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_PDASI_EASOE))
@@ -526,7 +530,11 @@ RC EngineSetFile(ENGINE_CONTEXT *pEngineContext,const char *fileName,void *respo
      break;
   // ---------------------------------------------------------------------------
      case PRJCT_INSTR_FORMAT_PDAEGG :
-      rc=SetPDA_EGG(pEngineContext,pFile->specFp);
+      rc=SetPDA_EGG(pEngineContext,pFile->specFp,1);
+     break;
+  // ---------------------------------------------------------------------------
+     case PRJCT_INSTR_FORMAT_PDAEGG_OLD :
+      rc=SetPDA_EGG(pEngineContext,pFile->specFp,0);
      break;
   // ---------------------------------------------------------------------------
      case PRJCT_INSTR_FORMAT_LOGGER :
@@ -689,7 +697,11 @@ RC EngineReadFile(ENGINE_CONTEXT *pEngineContext,int indexRecord,INT dateFlag,IN
     break;
  // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_PDAEGG :
-     rc=ReliPDA_EGG(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp,pFile->namesFp,pFile->darkFp);
+     rc=ReliPDA_EGG(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp,pFile->namesFp,pFile->darkFp,1);
+    break;
+ // ---------------------------------------------------------------------------
+    case PRJCT_INSTR_FORMAT_PDAEGG_OLD :
+     rc=ReliPDA_EGG(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp,pFile->namesFp,pFile->darkFp,0);
     break;
  // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_LOGGER :
@@ -1086,7 +1098,8 @@ RC EngineSetRefIndexes(ENGINE_CONTEXT *pEngineContext)
   recordNumber=ENGINE_contextRef.recordNumber;
 
   if ((pInstr->readOutFormat==PRJCT_INSTR_FORMAT_LOGGER) ||
-      (pInstr->readOutFormat==PRJCT_INSTR_FORMAT_PDAEGG))
+      (pInstr->readOutFormat==PRJCT_INSTR_FORMAT_PDAEGG) ||
+      (pInstr->readOutFormat==PRJCT_INSTR_FORMAT_PDAEGG_OLD))
 
    pInstr->user=PRJCT_INSTR_IASB_TYPE_ZENITHAL;
 
@@ -1105,7 +1118,7 @@ RC EngineSetRefIndexes(ENGINE_CONTEXT *pEngineContext)
       // Browse records in file
 
       for (indexRecord=ENGINE_contextRef.lastRefRecord+1;indexRecord<=recordNumber;indexRecord++)
-
+       {
        if (!(rc=EngineReadFile(&ENGINE_contextRef,indexRecord,1,localCalDay)) &&
            (ENGINE_contextRef.recordInfo.Zm>(double)0.))
         {
@@ -1136,6 +1149,9 @@ RC EngineSetRefIndexes(ENGINE_CONTEXT *pEngineContext)
          rc=ERROR_ID_NO;
          break;
         }
+       }
+
+
 
       if (rc==ERROR_ID_FILE_RECORD)
        rc=ERROR_ID_NO;

@@ -426,6 +426,7 @@ typedef struct _feno
                   chiSquare,                                                    //  chi square
                   RMS;
 
+  INT             nIter;                                                        //  number of iterations
   INT             Decomp;                                                       //  force SVD decomposition
   SVD             svd;                                                          //  SVD decomposition data
   CROSS_REFERENCE TabCross[MAX_FIT];                                            //  symbol cross reference
@@ -1054,6 +1055,7 @@ typedef struct _KuruczFeno
   CROSS_RESULTS **results;
   double         *chiSquare;
   double         *rms;
+  int            *nIter;
  }
 KURUCZ_FENO;
 
@@ -1475,8 +1477,8 @@ RC   ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int lo
 RC   SetCCD (ENGINE_CONTEXT *pEngineContext,FILE *specFp,INT flag);
 RC   ReliCCD(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp,FILE *namesFp,FILE *darkFp);
 RC   ReliCCDTrack(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp,FILE *namesFp,FILE *darkFp);
-RC   SetPDA_EGG(ENGINE_CONTEXT *pEngineContext,FILE *specFp);
-RC   ReliPDA_EGG(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp,FILE *namesFp,FILE *darkFp);
+RC   SetPDA_EGG(ENGINE_CONTEXT *pEngineContext,FILE *specFp,int newFlag);
+RC   ReliPDA_EGG(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp,FILE *namesFp,FILE *darkFp,int newFlag);
 RC   SetPDA_EGG_Logger(ENGINE_CONTEXT *pEngineContext,FILE *specFp);
 RC   ReliPDA_EGG_Logger(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp);
 

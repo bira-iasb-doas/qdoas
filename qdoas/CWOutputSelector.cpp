@@ -119,6 +119,7 @@ CWOutputSelector::CWOutputSelector(const data_select_list_t *d, QWidget *parent)
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_COMPASS,             "Compass angle"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_PITCH,               "Pitch angle"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_ROLL,                "Roll angle"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_ITER,                "Iteration number"));
 
   // populate the selected list by key-reference to the available list ...
 
@@ -284,7 +285,8 @@ void getValidFieldFlags(int *validFlags, int instrument)
   validFlags[PRJCT_RESULTS_ASCII_AZIM]=                                         // solar azimuth angle (can be calculated if date, time and observation site specified)
   validFlags[PRJCT_RESULTS_ASCII_CHI]=                                          // chi square
   validFlags[PRJCT_RESULTS_ASCII_RMS]=                                          // RMS
-  validFlags[PRJCT_RESULTS_ASCII_REFSHIFT]=1;                                   // in automatic reference selection, shift of the reference spectrum
+  validFlags[PRJCT_RESULTS_ASCII_REFSHIFT]=                                     // in automatic reference selection, shift of the reference spectrum
+  validFlags[PRJCT_RESULTS_ASCII_ITER]=
   validFlags[PRJCT_RESULTS_ASCII_TINT]=1;                                       // the integration time
 
   validFlags[PRJCT_RESULTS_ASCII_REFZM]=(satelliteFlag)?0:1;                    // in automatic reference selection, the solar zenith angle of the reference spectrum

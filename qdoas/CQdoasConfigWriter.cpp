@@ -1484,6 +1484,7 @@ void CQdoasConfigWriter::writeDataSelectList(FILE *fp, const data_select_list_t 
     case PRJCT_RESULTS_ASCII_COMPASS             :      fprintf(fp, "compass_angle"); break;
     case PRJCT_RESULTS_ASCII_PITCH               :      fprintf(fp, "pitch_angle"); break;
     case PRJCT_RESULTS_ASCII_ROLL                :      fprintf(fp, "roll_angle"); break;
+    case PRJCT_RESULTS_ASCII_ITER                :      fprintf(fp, "iter_number"); break;
 
     default: fprintf(fp, "Invalid");
     }

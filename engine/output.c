@@ -146,14 +146,15 @@ PRJCT_RESULTS_FIELDS PRJCT_resultsAscii[PRJCT_RESULTS_ASCII_MAX]=
   { "Start Time (hhmmss)"         , MEMORY_TYPE_STRING,             24, ITEM_NONE, ITEM_NONE, "%s"        },       // PRJCT_RESULTS_ASCII_STARTTIME
   { "Stop Time (hhmmss)"          , MEMORY_TYPE_STRING,             24, ITEM_NONE, ITEM_NONE, "%s"        },       // PRJCT_RESULTS_ASCII_ENDTIME
   { "Scanning angle"              , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_SCANNING
-  { "Filter number"               , MEMORY_TYPE_INT   , sizeof(INT)   , ITEM_NONE, ITEM_NONE, "%#8d"      },       // PRJCT_RESULTS_ASCII_FILTERNUMBER
+  { "Filter number"               , MEMORY_TYPE_INT   , sizeof(INT)   , ITEM_NONE, ITEM_NONE, "%#3d"      },       // PRJCT_RESULTS_ASCII_FILTERNUMBER
   { "Measurement type"            , MEMORY_TYPE_INT   , sizeof(INT)   , ITEM_NONE, ITEM_NONE, "%#3d"      },       // PRJCT_RESULTS_ASCII_MEASTYPE
   { "Head temperature"            , MEMORY_TYPE_DOUBLE, sizeof(double), ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_CCD_HEADTEMPERATURE
   { "Cooler status"               , MEMORY_TYPE_INT   , sizeof(INT)   , ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_COOLING_STATUS
   { "Mirror status"               , MEMORY_TYPE_INT   , sizeof(INT)   , ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_MIRROR_ERROR
   { "Compass angle"               , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_COMPASS
   { "Pitch angle"                 , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_PITCH
-  { "Roll angle"                  , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   }        // PRJCT_RESULTS_ASCII_ROLL
+  { "Roll angle"                  , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_ROLL
+  { "Iterations number"           , MEMORY_TYPE_INT   , sizeof(INT)   , ITEM_NONE, ITEM_NONE, "%#6d"      },       // PRJCT_RESULTS_ASCII_ITER
  };
 
 typedef struct _NDSC_header
@@ -202,6 +203,7 @@ AMF_SYMBOL    *OUTPUT_AmfSpace;                                                 
 INT            OUTPUT_NAmfSpace,                                                // number of elements in previous buffer
                OUTPUT_chiSquareFlag,                                            // 1 to save the chi square in the output file
                OUTPUT_rmsFlag,                                                  // 1 to save the RMS in the output file
+               OUTPUT_iterFlag,                                                 // 1 to save the number of iterations in the output file
                OUTPUT_refZmFlag,                                                // 1 to save the SZA of the reference spectrum in the output file
                OUTPUT_refShift,                                                 // 1 to save the shift of the reference spectrum on etalon
                OUTPUT_covarFlag,                                                // 1 to save the covariances in the output file
@@ -612,6 +614,7 @@ void OUTPUT_ResetData(void)
 
   OUTPUT_chiSquareFlag=
   OUTPUT_rmsFlag=
+  OUTPUT_iterFlag=
   OUTPUT_refZmFlag=
   OUTPUT_refShift=
   OUTPUT_covarFlag=
@@ -773,6 +776,8 @@ void OutputRegisterFields(ENGINE_CONTEXT *pEngineContext)
      OUTPUT_covarFlag=(outputRunCalib)?0:1;
     else if (indexField==PRJCT_RESULTS_ASCII_CORR)
      OUTPUT_chiSquareFlag=(outputRunCalib)?0:1;
+    else if (indexField==PRJCT_RESULTS_ASCII_ITER)
+     OUTPUT_iterFlag=1;
 
     // Geolocation for satellite data
 
@@ -968,6 +973,8 @@ void OutputRegisterParam(ENGINE_CONTEXT *pEngineContext,INT hiddenFlag)
         OutputRegister(windowName,"Chi","",MEMORY_TYPE_DOUBLE,sizeof(double),dim1,dim2,"%#12.4le");
        if (OUTPUT_rmsFlag)
         OutputRegister(windowName,"RMS","",MEMORY_TYPE_DOUBLE,sizeof(double),dim1,dim2,"%#12.4le");
+       if (OUTPUT_iterFlag)
+        OutputRegister(windowName,"iter","",MEMORY_TYPE_INT,sizeof(int),dim1,dim2,"%#6d");
 
        // Fitted parameters
 
@@ -1816,6 +1823,8 @@ void OutputSaveRecord(ENGINE_CONTEXT *pEngineContext,INT hiddenFlag)
           ((double *)outputColumns[indexColumn++])[indexRecord]=(!hiddenFlag)?(double)pTabFeno->chiSquare:KURUCZ_buffers.KuruczFeno[indexFeno].chiSquare[indexWin];
          if (OUTPUT_rmsFlag)
           ((double *)outputColumns[indexColumn++])[indexRecord]=(!hiddenFlag)?(double)pTabFeno->RMS:KURUCZ_buffers.KuruczFeno[indexFeno].rms[indexWin];
+         if (OUTPUT_iterFlag)
+          ((int *)outputColumns[indexColumn++])[indexRecord]=(!hiddenFlag)?(double)pTabFeno->nIter:KURUCZ_buffers.KuruczFeno[indexFeno].nIter[indexWin];
 
          // Cross sections results
 

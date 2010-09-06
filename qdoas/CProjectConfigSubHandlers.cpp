@@ -144,6 +144,8 @@ bool CSelectorSubHandler::start(const QString &element, const QXmlAttributes &at
     d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_PITCH;
   else if (str == "roll_angle")
     d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_ROLL;
+  else if (str == "iter_number")
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_ITER;
 
   else
     return postErrorMessage("Invalid output field " + str);
@@ -522,7 +524,7 @@ bool CProjectInstrumentalSubHandler::start(const QXmlAttributes &atts)
     m_instrumental->format = PRJCT_INSTR_FORMAT_ACTON;
   else if (str == "pdaegg")
     m_instrumental->format = PRJCT_INSTR_FORMAT_PDAEGG;
-  else if (str == "pdaegg_old")
+  else if (str == "pdaeggold")
     m_instrumental->format = PRJCT_INSTR_FORMAT_PDAEGG_OLD;
   else if (str == "ccdohp_96")
     m_instrumental->format = PRJCT_INSTR_FORMAT_CCD_OHP_96;

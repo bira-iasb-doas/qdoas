@@ -466,7 +466,7 @@ float Tps2[MAXTPS2] =
 #if defined(__BC32_) && __BC32_
 #pragma argsused
 #endif
-RC SetPDA_EGG(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
+RC SetPDA_EGG(ENGINE_CONTEXT *pEngineContext,FILE *specFp,int newFlag)
  {
   // Declarations
 
@@ -478,7 +478,6 @@ RC SetPDA_EGG(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
         *recordIndexes;                                                         // save the position of each record in the file
   INDEX i;                                                                      // browse spectra in the file
   RC rc;                                                                        // return code
-  INT newFlag;
 
   // Initializations
 
@@ -486,7 +485,6 @@ RC SetPDA_EGG(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
 
   pEngineContext->recordIndexesSize=2001;
   recordIndexes=pBuffers->recordIndexes;
-  newFlag=1;                                                                    // QDOAS !!! To change
   rc=ERROR_ID_NO;
 
   // Buffers allocation
@@ -598,7 +596,7 @@ RC SetPDA_EGG(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
 #if defined(__BC32_) && __BC32_
 #pragma argsused
 #endif
-RC ReliPDA_EGG(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp,FILE *namesFp,FILE *darkFp)
+RC ReliPDA_EGG(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp,FILE *namesFp,FILE *darkFp,int newFlag)
  {
   // Declarations
 
@@ -625,7 +623,6 @@ RC ReliPDA_EGG(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
   FILE             *fp;                                                         // file pointer
   SZ_LEN            nameLen;
   RC                rc;                                                         // return code
-  INT               newFlag;
 
 // !!! */    FILE *gp;
 // !!! */    DoasCh fileout[MAX_ITEM_TEXT_LEN+1];
@@ -634,8 +631,6 @@ RC ReliPDA_EGG(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
 
   pRecord=&pEngineContext->recordInfo;
   pBuffers=&pEngineContext->buffers;
-
-  newFlag=1;
 
   memset(fileNameShort,0,MAX_STR_SHORT_LEN+1);
   strncpy(fileNameShort,pEngineContext->fileInfo.fileName,MAX_STR_SHORT_LEN);

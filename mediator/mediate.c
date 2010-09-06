@@ -366,6 +366,7 @@ void mediateRequestPlotSpectra(ENGINE_CONTEXT *pEngineContext,void *responseHand
      }
 
     if (((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_PDAEGG) ||
+         (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_PDAEGG_OLD) ||
          (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_ACTON) ||
          (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_PDASI_EASOE) ||
          (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_CCD_EEV)) &&
@@ -397,7 +398,8 @@ void mediateRequestPlotSpectra(ENGINE_CONTEXT *pEngineContext,void *responseHand
       mediateResponseLabelPage(plotPageIrrad, fileName, "Irradiance", responseHandle);
      }
 
-    if ((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_PDAEGG) &&
+    if (((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_PDAEGG) ||
+         (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_PDAEGG_OLD)) &&
         (pBuffers->specMax!=NULL) &&
         (pRecord->NSomme>1))
      {
@@ -789,6 +791,18 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
 
 	  	 strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->ascii.calibrationFile);      // calibration file
 	  	 strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->ascii.instrFunctionFile);      // instrumental function file
+
+	  	break;
+	// ----------------------------------------------------------------------------
+	  	case PRJCT_INSTR_FORMAT_PDAEGG_OLD :                                                            // PDA EG&G (spring 94)
+
+	  	 NDET=1024;                                                                                     // size of the detector
+
+	  	 pEngineInstrumental->azimuthFlag=(int)0;                                                       // format including or not the azimuth angle
+	  	 pEngineInstrumental->user=PRJCT_INSTR_IASB_TYPE_ALL;                                           // spectrum type (offaxis or zenith)
+
+	  	 strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->pdaeggold.calibrationFile);     // calibration file
+	  	 strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->pdaeggold.instrFunctionFile);     // instrumental function file
 
 	  	break;
 	// ----------------------------------------------------------------------------
