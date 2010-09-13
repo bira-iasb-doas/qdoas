@@ -516,7 +516,7 @@ RC CurfitDerivFunc(double *X, double *specX, double *srefX, int nX, double *Y, d
   // Declarations
 
   CROSS_REFERENCE *TabCross;                                                    // the list of cross sections involved in the fitting
-  int i,j0;                                                                     // indexes for loops and arrays
+  int i;                                                                        // indexes for loops and arrays
   RC rc;                                                                        // return code
 
   #if defined(__DEBUG_) && __DEBUG_
@@ -526,7 +526,6 @@ RC CurfitDerivFunc(double *X, double *specX, double *srefX, int nX, double *Y, d
   // Initializations
 
   TabCross=Feno->TabCross;
-  j0=(SvdPDeb+SvdPFin)/2;
   rc=ERROR_ID_NO;
 
   for (i=0;i<Feno->NTabCross;i++)

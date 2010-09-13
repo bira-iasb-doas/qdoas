@@ -140,7 +140,7 @@ DoasCh *AnlysPolynome[ANLYS_POLY_TYPE_MAX]={"None","order 0","order 1","order 2"
 DoasCh *ANLYS_crossAction[ANLYS_CROSS_ACTION_MAX]={"None","Interpolate","Convolute Std","Convolute I0","Convolute Ring"}; /* "Detector t° dependent","Strato t° dependent",*/
 
 INT    ANALYSE_plotKurucz,ANALYSE_plotRef,ANALYSE_indexLine;
-INT    ANALYSE_maxIter=0;
+// INT    ANALYSE_maxIter=0;
 
 INT NFeno,                             // number of analysis windows
     DimC,                              // number of columns in SVD matrix == number of symbols to take into account for SVD decomposition
@@ -540,7 +540,8 @@ RC ShiftVector(double *source,double *deriv,double *target,
   // Declarations
 
   CROSS_REFERENCE *TabCross;
-  INDEX i,j,j0;
+  INDEX i,j;
+  double j0,lambda0;
   double x0,y,fwhm,deltaX;
   INT fwhmFlag;
   RC rc;
@@ -554,8 +555,15 @@ RC ShiftVector(double *source,double *deriv,double *target,
   memcpy(ANALYSE_shift,ANALYSE_zeros,sizeof(double)*NDET);
   fwhmFlag=((Feno->analysisType==ANALYSIS_TYPE_FWHM_NLFIT) && (fwhmDir!=0) && (Param!=NULL))?1:0;
   TabCross=Feno->TabCross;
-  j0=(SvdPDeb+SvdPFin)/2;
+
+  j0=(double)(SvdPDeb+SvdPFin)*0.5;
+  lambda0=(fabs(j0-floor(j0))<(double)0.1)?
+                              (double)ANALYSE_splineX[(INDEX)j0]:
+                              (double)0.5*(ANALYSE_splineX[(INDEX)floor(j0)]+ANALYSE_splineX[(INDEX)floor(j0+1.)]);
+
   rc=ERROR_ID_NO;
+
+
 
   // Buffer allocation for second derivative
 
@@ -563,12 +571,12 @@ RC ShiftVector(double *source,double *deriv,double *target,
    {                                                        // !! p'=p-(DSH+DST*(p-p0)+DST2*(p-p0)^2
     // Second shift and stretch                             //    p''=p'-(DSH'+DST'*(p'-p0')+DST2'*(p'-p0')^2
                                                             // with   p=ANALYSE_splineX (Lambda if unit is nm;pixels if unit is pixels)
-    x0=(ANALYSE_splineX[j]-ANALYSE_splineX[j0]);        //        p0'=p0-DSH
+    x0=(ANALYSE_splineX[j]-lambda0);        //        p0'=p0-DSH
     y=ANALYSE_splineX[j]-(DSH_+DST_*x0+DST2_*x0*x0);
 
     // First shift and stretch
 
-    x0=(y-ANALYSE_splineX[j0]+DSH_);
+    x0=(y-lambda0+DSH_);
     ANALYSE_shift[j]=y-(DSH+DST*x0*StretchFact1+DST2*x0*x0*StretchFact2);
 
     // Fit difference of resolution between spectrum and reference
@@ -577,7 +585,7 @@ RC ShiftVector(double *source,double *deriv,double *target,
      {
       fwhm=(double)0.;
 
-      deltaX=(ANALYSE_splineX[j]-ANALYSE_splineX[j0]);
+      deltaX=(ANALYSE_splineX[j]-lambda0);
 
       if (Feno->indexFwhmConst!=ITEM_NONE)
        fwhm+=(TabCross[Feno->indexFwhmConst].FitParam!=ITEM_NONE)?(double)Param[TabCross[Feno->indexFwhmConst].FitParam]:(double)TabCross[Feno->indexFwhmConst].InitParam;
@@ -864,6 +872,7 @@ RC ANALYSE_XsInterpolation(FENO *pTabFeno,double *newLambda)
       if ((rc=SPLINE_Deriv2((pAnalysisOptions->units==PRJCT_ANLYS_UNITS_PIXELS)?ANALYSE_pixels:newLambda,
                       pTabCross->vector,pTabCross->Deriv2+1,pTabFeno->NDET,"ANALYSE_XsInterpolation "))!=0)
        break;
+
      }
    }
 
@@ -1840,7 +1849,8 @@ RC ANALYSE_SvdInit(SVD *pSvd)
 
   CROSS_REFERENCE *pTabCross;
   double deltaX,norm,norm1,norm2,*vector,*lambda,swap,temp;
-  INDEX i,j,j0,k,l;
+  INDEX i,j,k,l;
+  double j0,lambda0;
   RC rc;
 
   #if defined(__DEBUG_) && __DEBUG_
@@ -1892,7 +1902,10 @@ RC ANALYSE_SvdInit(SVD *pSvd)
       SvdPDeb=Fenetre[0][0];
       SvdPFin=Fenetre[Z-1][1];
 
-      j0=(SvdPDeb+SvdPFin)/2;
+      j0=(double)(SvdPDeb+SvdPFin)*0.5;
+      lambda0=(fabs(j0-floor(j0))<(double)0.1)?
+                                  (double)ANALYSE_splineX[(INDEX)j0]:
+                                  (double)0.5*(ANALYSE_splineX[(INDEX)floor(j0)]+ANALYSE_splineX[(INDEX)floor(j0+1.)]);
 
       Dim=0;
 
@@ -1917,7 +1930,7 @@ RC ANALYSE_SvdInit(SVD *pSvd)
       for (j=0,k=1,norm1=norm2=(double)0.;(j<Z);j++)
        for (l=Fenetre[j][0];l<=Fenetre[j][1];l++,k++)
         {
-         deltaX=(double)(ANALYSE_splineX[l]-ANALYSE_splineX[j0])*(ANALYSE_splineX[l]-ANALYSE_splineX[j0]);
+         deltaX=(double)(ANALYSE_splineX[l]-lambda0)*(ANALYSE_splineX[l]-lambda0);
 
          norm1+=deltaX;
          norm2+=deltaX*deltaX;
@@ -1925,9 +1938,9 @@ RC ANALYSE_SvdInit(SVD *pSvd)
 
       for (j=LimMin,StretchFact1=StretchFact2=(double)0.;j<=LimMax;j++)
        {
-        deltaX=(ANALYSE_splineX[j]-ANALYSE_splineX[j0]);
+        deltaX=(ANALYSE_splineX[j]-lambda0);
 
-        deltaX=ANALYSE_splineX[j]-ANALYSE_splineX[j0]-Feno->Stretch*deltaX-Feno->Stretch2*deltaX*deltaX;
+        deltaX=ANALYSE_splineX[j]-lambda0-Feno->Stretch*deltaX-Feno->Stretch2*deltaX*deltaX;
         deltaX*=deltaX;
 
         StretchFact1+=deltaX;
@@ -2312,7 +2325,8 @@ RC ANALYSE_Function ( double *lambda,double *X, double *Y, INT ndet, double *Y0,
   CROSS_REFERENCE *TabCross,*pTabCross;
   MATRIX_OBJECT slit0;
   INT NewDimC,offsetOrder;
-  INDEX i,j,k,l,m,j0,indexSvdA,indexSvdP,polyOrder,polyFlag;
+  INDEX i,j,k,l,m,indexSvdA,indexSvdP,polyOrder,polyFlag;
+  double j0,lambda0;
   RC rc;
 
   #if defined(__DEBUG_) && __DEBUG_
@@ -2324,9 +2338,14 @@ RC ANALYSE_Function ( double *lambda,double *X, double *Y, INT ndet, double *Y0,
   TabCross=Feno->TabCross;
   XTrav=YTrav=newXsTrav=NULL;
   memset(&slit0,0,sizeof(MATRIX_OBJECT));
-  j0=(SvdPDeb+SvdPFin)/2;
+
   polyFlag=0;
   NewDimC=DimC;
+
+  j0=(double)(SvdPDeb+SvdPFin)*0.5;
+  lambda0=(fabs(j0-floor(j0))<(double)0.1)?
+                              (double)ANALYSE_splineX[(INDEX)j0]:
+                              (double)0.5*(ANALYSE_splineX[(INDEX)floor(j0)]+ANALYSE_splineX[(INDEX)floor(j0+1.)]);
 
   rc=ERROR_ID_NO;
 
@@ -2395,11 +2414,11 @@ RC ANALYSE_Function ( double *lambda,double *X, double *Y, INT ndet, double *Y0,
            else if (i==Feno->indexOffsetOrder1)
             for (j=0,k=1;(j<Z);j++)
              for (l=Fenetre[j][0];l<=Fenetre[j][1];l++,k++)
-              A[indexSvdA][k]=(double)(ANALYSE_splineX[l]-ANALYSE_splineX[j0]);
+              A[indexSvdA][k]=(double)(ANALYSE_splineX[l]-lambda0);
            else if (i==Feno->indexOffsetOrder2)
             for (j=0,k=1;(j<Z);j++)
              for (l=Fenetre[j][0];l<=Fenetre[j][1];l++,k++)
-              A[indexSvdA][k]=(double)(ANALYSE_splineX[l]-ANALYSE_splineX[j0])*(ANALYSE_splineX[l]-ANALYSE_splineX[j0]);
+              A[indexSvdA][k]=(double)(ANALYSE_splineX[l]-lambda0)*(ANALYSE_splineX[l]-lambda0);
            else if ((i==Feno->indexCommonResidual) || (i==Feno->indexUsamp1) || (i==Feno->indexUsamp2))
             for (j=0,k=1;(j<Z);j++)
              for (l=Fenetre[j][0];l<=Fenetre[j][1];l++,k++)
@@ -2448,7 +2467,7 @@ RC ANALYSE_Function ( double *lambda,double *X, double *Y, INT ndet, double *Y0,
               for (j=0,k=1;(j<Z);j++)
                for (l=Fenetre[j][0];l<=Fenetre[j][1];l++,k++)
                 {
-                A[indexSvdA][k]=pTabCross->vector[l]=A[indexSvdA-1][k]*ANALYSE_splineX[l]; // (ANALYSE_splineX[l]-ANALYSE_splineX[j0]);
+                A[indexSvdA][k]=pTabCross->vector[l]=A[indexSvdA-1][k]*ANALYSE_splineX[l]; // (ANALYSE_splineX[l]-lambda0);
                }
              else if (polyFlag==-1)
               for (j=0,k=1;(j<Z);j++)
@@ -2560,7 +2579,7 @@ RC ANALYSE_Function ( double *lambda,double *X, double *Y, INT ndet, double *Y0,
              for (l=Fenetre[j][0];l<=Fenetre[j][1];l++,k++)
               {
                offset=(double)1.;
-               deltaX=(double)(ANALYSE_splineX[l]-ANALYSE_splineX[j0]);
+               deltaX=(double)(ANALYSE_splineX[l]-lambda0);
 
                offset+=((pTabCross->FitScale!=ITEM_NONE)?(double)fitParamsF[pTabCross->FitScale]:(double)pTabCross->InitScale)*deltaX;
                offset+=((pTabCross->FitScale2!=ITEM_NONE)?(double)fitParamsF[pTabCross->FitScale2]:(double)pTabCross->InitScale2)*deltaX*deltaX;
@@ -2672,7 +2691,7 @@ RC ANALYSE_Function ( double *lambda,double *X, double *Y, INT ndet, double *Y0,
        {
         for (i=LimMin;i<=LimMax;i++)
          {
-          deltaX=(double)(ANALYSE_splineX[i]-ANALYSE_splineX[j0]);
+          deltaX=(double)(ANALYSE_splineX[i]-lambda0);
 
           offset=(TabCross[Feno->indexOffsetConst].FitParam!=ITEM_NONE)?(double)fitParamsF[TabCross[Feno->indexOffsetConst].FitParam]:(double)TabCross[Feno->indexOffsetConst].InitParam;
 
@@ -3299,9 +3318,10 @@ RC ANALYSE_CurFitMethod(double *Spectre,          // raw spectrum
           for ( i=0; i<NF; i++ ) Deltap[i] *= 0.4;
           niter++;
        }
-       while ( ( *Chisqr != 0. ) && ( fabs(*Chisqr-OldChisqr)/(*Chisqr) > pAnalysisOptions->convergence ) && (!ANALYSE_maxIter || (niter<ANALYSE_maxIter)) );
+       while ( ( *Chisqr != 0. ) && ( fabs(*Chisqr-OldChisqr)/(*Chisqr) > pAnalysisOptions->convergence ) && (Feno->hidden || !pAnalysisOptions->maxIterations || (niter<pAnalysisOptions->maxIterations)) );
 
-      *pNiter=niter;
+      if (pNiter!=NULL)
+       *pNiter=niter;
      }
 
     if (rc<THREAD_EVENT_STOP)
@@ -3446,7 +3466,9 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
   DoasCh graphTitle[MAX_ITEM_TEXT_LEN+1];     // graph title
   DoasCh string[MAX_ITEM_TEXT_LEN+1];
   INDEX WrkFeno,j;                             // index on analysis windows
-  INDEX i,k,l,j0;                          // indexes for loops and arrays
+  INDEX i,k,l;                               // indexes for loops and arrays
+
+  double j0,lambda0;
 
   double *Spectre,                           // raw spectrum
          *SpectreK,                          // spectrum shifted on new calibration build by Kurucz
@@ -3837,12 +3859,17 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
               (TabCross[Feno->indexOffsetOrder1].InitParam!=(double)0.) ||
               (TabCross[Feno->indexOffsetOrder2].InitParam!=(double)0.)))
            {
-            for (j=0,k=1,j0=(SvdPDeb+SvdPFin)/2;j<Z;j++)
+            j0=(double)(SvdPDeb+SvdPFin)*0.5;
+            lambda0=(fabs(j0-floor(j0))<(double)0.1)?
+                                        (double)ANALYSE_splineX[(INDEX)j0]:
+                                        (double)0.5*(ANALYSE_splineX[(INDEX)floor(j0)]+ANALYSE_splineX[(INDEX)floor(j0+1.)]);
+
+            for (j=0,k=1;j<Z;j++)
              for (l=Fenetre[j][0];l<=Fenetre[j][1];l++,k++)       // log(I+offset)=log(I)+log(1+offset/I)
               {
                newVal=(double)1.-Feno->xmean*(Results[Feno->indexOffsetConst].Param+
-                              Results[Feno->indexOffsetOrder1].Param*(ANALYSE_splineX[l]-ANALYSE_splineX[j0])+
-                              Results[Feno->indexOffsetOrder2].Param*(ANALYSE_splineX[l]-ANALYSE_splineX[j0])*(ANALYSE_splineX[l]-ANALYSE_splineX[j0]))/Spectre[l];
+                              Results[Feno->indexOffsetOrder1].Param*(ANALYSE_splineX[l]-lambda0)+
+                              Results[Feno->indexOffsetOrder2].Param*(ANALYSE_splineX[l]-lambda0)*(ANALYSE_splineX[l]-lambda0))/Spectre[l];
 
                ANALYSE_absolu[l]+=((newVal>(double)0.)?log(newVal):(double)0.)-ANALYSE_secX[l];
                ANALYSE_secX[l]=((newVal>(double)0.)?log(newVal):(double)0.);

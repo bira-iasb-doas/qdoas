@@ -630,6 +630,7 @@ void setMediateProjectAnalysis(PRJCT_ANLYS *pEngineAnalysis,const mediate_projec
   pEngineAnalysis->interpol=pMediateAnalysis->interpolationType;                // interpolation
   pEngineAnalysis->convergence=pMediateAnalysis->convergenceCriterion;          // convergence criterion
   pEngineAnalysis->securityGap=pMediateAnalysis->interpolationSecurityGap;      // security pixels to take in order to avoid interpolation problems at the edge of the spectral window
+  pEngineAnalysis->maxIterations=pMediateAnalysis->maxIterations;               // maximum number of iterations
 
   #if defined(__DEBUG_) && __DEBUG_ && defined(__DEBUG_DOAS_CONFIG_) && __DEBUG_DOAS_CONFIG_
   DEBUG_Print("Analysis method : %s\n",prjctAnlysMethods[pEngineAnalysis->method]);

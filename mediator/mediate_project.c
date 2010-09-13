@@ -54,6 +54,7 @@ void initializeMediateProjectAnalysis(mediate_project_analysis_t *d)
 
   d->interpolationType = PRJCT_ANLYS_INTERPOL_SPLINE;
   d->interpolationSecurityGap = 10;
+  d->maxIterations = 0;
   d->convergenceCriterion = 1.0e-4;
 }
 

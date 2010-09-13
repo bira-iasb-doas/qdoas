@@ -39,6 +39,7 @@ class CWProjectTabAnalysis : public QFrame
   QComboBox *m_methodCombo, *m_fitCombo, *m_interpCombo;
   QSpinBox *m_interpolationSecuritySpinBox;
   QLineEdit *m_convergenceCriterionEdit;
+  QSpinBox *m_maxIterationsSpinBox;
 };
 
 #endif

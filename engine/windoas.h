@@ -590,6 +590,7 @@ typedef struct _prjctAnlys
   INT interpol;                                      // interpolation
   double convergence;                                                           // convergence criterion
   int securityGap;
+  int maxIterations;                                                            // maximum number of iterations
  }
 PRJCT_ANLYS;
 

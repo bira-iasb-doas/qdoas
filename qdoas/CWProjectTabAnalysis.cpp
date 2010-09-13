@@ -37,7 +37,7 @@ CWProjectTabAnalysis::CWProjectTabAnalysis(const mediate_project_analysis_t *pro
   QGridLayout *mainLayout = new QGridLayout(this);
   mainLayout->setSpacing(15);
 
-  
+
   int row = 0;
   mainLayout->setRowStretch(row, 1);
   ++row;
@@ -87,12 +87,19 @@ CWProjectTabAnalysis::CWProjectTabAnalysis(const mediate_project_analysis_t *pro
   mainLayout->addWidget(m_convergenceCriterionEdit, row, 2);
   ++row;
 
+  mainLayout->addWidget(new QLabel("Maximum number of iterations", this), row, 1);
+  m_maxIterationsSpinBox = new QSpinBox(this);
+  m_maxIterationsSpinBox->setRange(0, 50);
+  m_maxIterationsSpinBox->setFixedWidth(75);
+  mainLayout->addWidget(m_maxIterationsSpinBox, row, 2);
+  ++row;
+
   mainLayout->setRowStretch(row, 4);
   mainLayout->setColumnStretch(0, 1);
   mainLayout->setColumnStretch(3, 1);
 
   // set initial values
-  
+
   index = m_methodCombo->findData(QVariant(properties->methodType));
   if (index != -1)
     m_methodCombo->setCurrentIndex(index);
@@ -106,6 +113,7 @@ CWProjectTabAnalysis::CWProjectTabAnalysis(const mediate_project_analysis_t *pro
     m_interpCombo->setCurrentIndex(index);
 
   m_interpolationSecuritySpinBox->setValue(properties->interpolationSecurityGap);
+  m_maxIterationsSpinBox->setValue(properties->maxIterations);
 
   // validator controls the initial range and format
   m_convergenceCriterionEdit->validator()->fixup(tmpStr.setNum(properties->convergenceCriterion));
@@ -137,6 +145,7 @@ void CWProjectTabAnalysis::apply(mediate_project_analysis_t *properties) const
   properties->interpolationType = m_interpCombo->itemData(index).toInt();
 
   properties->interpolationSecurityGap = m_interpolationSecuritySpinBox->value();
+  properties->maxIterations = m_maxIterationsSpinBox->value();
 
   tmpDouble = m_convergenceCriterionEdit->text().toDouble(&ok);
 

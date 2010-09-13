@@ -142,6 +142,7 @@ extern "C" {
     int interpolationType;
     int interpolationSecurityGap;
     double convergenceCriterion;
+    int maxIterations;
   } mediate_project_analysis_t;
 
 

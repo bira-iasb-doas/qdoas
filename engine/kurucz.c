@@ -153,7 +153,8 @@ RC KURUCZ_Spectrum(double *oldLambda,double *newLambda,double *spectrum,double *
                    indexTabCross,
                    indexCrossFit,
                    indexLine,indexColumn,                                       // position in the spreadsheet for information to write
-                   i,j,j0,k;                                                    // temporary indexes
+                   i,j,k;                                                    // temporary indexes
+  double j0,lambda0;
   RC               rc;                                                          // return code
   plot_data_t      spectrumData[2];
 
@@ -314,7 +315,8 @@ RC KURUCZ_Spectrum(double *oldLambda,double *newLambda,double *spectrum,double *
 
       // Fill A SVD system
 
-      pixMid[indexWindow+1]=(double)floor((double)0.5*(svdFeno[indexWindow].Fenetre[0][0]+svdFeno[indexWindow].Fenetre[0][1])+0.5);
+      pixMid[indexWindow+1]=(double)(svdFeno[indexWindow].Fenetre[0][0]+svdFeno[indexWindow].Fenetre[0][1])*0.5;
+
       VSig[indexWindow+1]=pResults->SigmaShift;
 
       if (KURUCZ_buffers.units==PRJCT_ANLYS_UNITS_PIXELS)
@@ -337,7 +339,9 @@ RC KURUCZ_Spectrum(double *oldLambda,double *newLambda,double *spectrum,double *
        {
         VShift[indexWindow+1]=(Feno->indexSpectrum!=ITEM_NONE)?(double)-pResults->Shift:(double)pResults->Shift;
         VPix[indexWindow+1]=pixMid[indexWindow+1];
-        VLambda[indexWindow+1]=(double)oldLambda[(INDEX)pixMid[indexWindow+1]]-VShift[indexWindow+1];
+        VLambda[indexWindow+1]=(fabs(pixMid[indexWindow+1]-floor(pixMid[indexWindow+1]))<(double)0.1)?
+                               (double)oldLambda[(INDEX)pixMid[indexWindow+1]]-VShift[indexWindow+1]:
+                               (double)0.5*(oldLambda[(INDEX)floor(pixMid[indexWindow+1])]+oldLambda[(INDEX)floor(pixMid[indexWindow+1]+1.)])-VShift[indexWindow+1];
        }
 
       // Store fwhm for future use
@@ -360,6 +364,11 @@ RC KURUCZ_Spectrum(double *oldLambda,double *newLambda,double *spectrum,double *
          for (i=SvdPDeb;i<=SvdPFin;i++)
           ANALYSE_secX[i]=exp(log(spectrum[i])+ANALYSE_absolu[i]);
 
+        j0=(double)(SvdPDeb+SvdPFin)*0.5;
+        lambda0=(fabs(j0-floor(j0))<(double)0.1)?
+                                    (double)ANALYSE_splineX[(INDEX)j0]:
+                                    (double)0.5*(ANALYSE_splineX[(INDEX)floor(j0)]+ANALYSE_splineX[(INDEX)floor(j0+1.)]);
+
         if ((Feno->indexOffsetConst!=ITEM_NONE) &&
             (Feno->indexOffsetOrder1!=ITEM_NONE) &&
             (Feno->indexOffsetOrder2!=ITEM_NONE) &&
@@ -371,11 +380,11 @@ RC KURUCZ_Spectrum(double *oldLambda,double *newLambda,double *spectrum,double *
             (TabCross[Feno->indexOffsetOrder1].InitParam!=(double)0.) ||
             (TabCross[Feno->indexOffsetOrder2].InitParam!=(double)0.)))
 
-         for (i=SvdPDeb,j0=(SvdPDeb+SvdPFin)/2;i<=SvdPFin;i++)
+         for (i=SvdPDeb;i<=SvdPFin;i++)
           {
            offset[i]=(double)1.-Feno->xmean*(Results[Feno->indexOffsetConst].Param+
-                  Results[Feno->indexOffsetOrder1].Param*(ANALYSE_splineX[i]-ANALYSE_splineX[j0])+
-                  Results[Feno->indexOffsetOrder2].Param*(ANALYSE_splineX[i]-ANALYSE_splineX[j0])*(ANALYSE_splineX[i]-ANALYSE_splineX[j0]))/spectrum[i];
+                  Results[Feno->indexOffsetOrder1].Param*(ANALYSE_splineX[i]-lambda0)+
+                  Results[Feno->indexOffsetOrder2].Param*(ANALYSE_splineX[i]-lambda0)*(ANALYSE_splineX[i]-lambda0))/spectrum[i];
            offset[i]=(offset[i]>(double)0.)?log(offset[i]):(double)0.;
           }
 

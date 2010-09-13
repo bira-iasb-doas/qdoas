@@ -296,6 +296,7 @@ bool CProjectAnalysisSubHandler::start(const QXmlAttributes &atts)
     return postErrorMessage("Invalid analysis interpolation");
 
   m_analysis->interpolationSecurityGap = atts.value("gap").toInt();
+  m_analysis->maxIterations=atts.value("max_iterations").toInt();
   m_analysis->convergenceCriterion = atts.value("converge").toDouble();
 
   return true;
