@@ -306,7 +306,8 @@ RC KURUCZ_Spectrum(double *oldLambda,double *newLambda,double *spectrum,double *
                                     NULL,                                       // no error on previous spectrum
                                     solar,                                      // reference (Kurucz)
                                    &Square,                                     // returned stretch order 2
-                                   &NIter[indexWindow]))>0))
+                                   &NIter[indexWindow],
+                                   (double)1.,(double)1.))>0))
        break;
 
       #if defined(__DEBUG_) && __DEBUG_
@@ -799,7 +800,7 @@ RC KURUCZ_Reference(double *instrFunction,INDEX refFlag,INT saveFlag,INT gomeFla
            {
             // Apply Kurucz for building new calibration for reference
 
-            if ((pTabFeno->rcKurucz=KURUCZ_Spectrum(pTabFeno->LambdaRef,pTabFeno->LambdaK,reference,KURUCZ_buffers.solar,instrFunction,
+            if ((rc=pTabFeno->rcKurucz=KURUCZ_Spectrum(pTabFeno->LambdaRef,pTabFeno->LambdaK,reference,KURUCZ_buffers.solar,instrFunction,
                  1,pTabFeno->windowName,pTabFeno->fwhmPolyRef,pTabFeno->fwhmVector,pTabFeno->fwhmDeriv2,saveFlag,indexFeno,responseHandle))!=ERROR_ID_NO)
 
              goto EndKuruczReference;

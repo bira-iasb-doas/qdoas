@@ -148,6 +148,7 @@ class CProjectInstrumentalSubHandler : public CBasicConfigSubHandler
   bool helperLoadMinimum(const QXmlAttributes &atts, struct instrumental_minimum *d);
   bool helperLoadCcd(const QXmlAttributes &atts, struct instrumental_ccd *d);
   bool helperLoadGdp(const QXmlAttributes &atts, struct instrumental_gdp *d);
+  bool helperLoadGome2(const QXmlAttributes &atts, struct instrumental_gome2 *d);
   bool helperLoadScia(const QXmlAttributes &atts, struct instrumental_scia *d);
 
 

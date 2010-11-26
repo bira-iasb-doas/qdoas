@@ -121,6 +121,11 @@ extern "C" {
     int recordNumberMinimum;
     int recordNumberMaximum;
 
+    // Cloud fraction
+
+    double cloudFractionMinimum;
+    double cloudFractionMaximum;
+
     /* boolean flags for separate dark and name files */
     int useDarkFile;
     int useNameFile;
@@ -312,6 +317,12 @@ extern "C" {
     char instrFunctionFile[FILENAME_BUFFER_LENGTH];
   };
 
+  struct instrumental_gome2 {
+    int bandType;
+    char calibrationFile[FILENAME_BUFFER_LENGTH];
+    char instrFunctionFile[FILENAME_BUFFER_LENGTH];
+  };
+
   struct instrumental_scia {
     int channel;
     char clusters[32];                      // flags with cluster number as index
@@ -355,7 +366,7 @@ extern "C" {
     struct instrumental_minimum uoft;
     struct instrumental_minimum noaa;
     struct instrumental_omi omi;
-    struct instrumental_gdp gome2;
+    struct instrumental_gome2 gome2;
     struct instrumental_minimum mkzy;
     struct instrumental_minimum biraairborne;
    }

@@ -114,6 +114,9 @@ bool CAnalysisWindowSubHandler::start(const QString &element, const QXmlAttribut
     d->refMaxLatitude = atts.value("maxlat").toDouble();
     d->refNs = atts.value("refns").toInt();
 
+    d->cloudFractionMin = atts.value("cloudfmin").toDouble();
+    d->cloudFractionMax = atts.value("cloudfmax").toDouble();
+
     d->refMaxdoasSelection = (atts.value("maxdoasrefmode") == "scan") ? ANLYS_MAXDOAS_REF_SCAN :  ANLYS_MAXDOAS_REF_SZA;
     d->refMaxdoasSzaCenter = atts.value("maxdoasszacenter").toDouble();
     d->refMaxdoasSzaDelta = atts.value("maxdoasszadelta").toDouble();

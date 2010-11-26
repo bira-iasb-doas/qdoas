@@ -84,7 +84,7 @@ CWProjectPropertyEditor::CWProjectPropertyEditor(const QString &projectName, QWi
   m_satelliteFormatCombo->addItem("GDP (ASCII)", QVariant(PRJCT_INSTR_FORMAT_GDP_ASCII));
   m_satelliteFormatCombo->addItem("GDP (Binary)", QVariant(PRJCT_INSTR_FORMAT_GDP_BIN));
   m_satelliteFormatCombo->addItem("GOME2", QVariant(PRJCT_INSTR_FORMAT_GOME2));
-  m_satelliteFormatCombo->addItem("OMI", QVariant(PRJCT_INSTR_FORMAT_OMI));
+//  m_satelliteFormatCombo->addItem("OMI", QVariant(PRJCT_INSTR_FORMAT_OMI));
   m_satelliteFormatCombo->addItem("SCIAMACHY L1C (HDF format)", QVariant(PRJCT_INSTR_FORMAT_SCIA_HDF));
   m_satelliteFormatCombo->addItem("SCIAMACHY L1C (PDS format)", QVariant(PRJCT_INSTR_FORMAT_SCIA_PDS));
   m_satelliteFormatCombo->hide();
@@ -181,6 +181,7 @@ CWProjectPropertyEditor::CWProjectPropertyEditor(const QString &projectName, QWi
   slotInstrumentTypeChanged(m_instrTypeCombo->currentIndex());
 
   m_displayTab->slotInstrumentChanged(m_selectedInstrument);
+  m_selectionTab->slotInstrumentChanged(m_selectedInstrument);
   m_instrumentalTab->slotInstrumentChanged(m_selectedInstrument);
   m_outputTab->slotInstrumentChanged(m_selectedInstrument);
 
@@ -192,6 +193,7 @@ CWProjectPropertyEditor::CWProjectPropertyEditor(const QString &projectName, QWi
   connect(m_satelliteFormatCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(slotSatelliteInstrumentChanged(int)));
 
   connect(this, SIGNAL(signalInstrumentChanged(int)), m_displayTab, SLOT(slotInstrumentChanged(int)));
+  connect(this, SIGNAL(signalInstrumentChanged(int)), m_selectionTab, SLOT(slotInstrumentChanged(int)));
   connect(this, SIGNAL(signalInstrumentChanged(int)), m_instrumentalTab, SLOT(slotInstrumentChanged(int)));
   connect(this, SIGNAL(signalInstrumentChanged(int)), m_outputTab, SLOT(slotInstrumentChanged(int)));
   connect(this, SIGNAL(signalInstrumentTypeChanged(int)), m_instrumentalTab, SLOT(slotInstrumentTypeChanged(int)));

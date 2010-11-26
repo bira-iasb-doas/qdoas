@@ -48,8 +48,6 @@
 // CONSTANTS DEFINITION
 // ====================                                                         // these definitions come from the routines written by Stefan Noel and Andreas Richter
 
-#define EPSILON                    (double)1.e-5
-
 #define MAX_GOME2_FILES 500                                                     // usually, maximum of files per day is 480
 
 #define NCHANNEL 6                                                              // the number of channels
@@ -133,6 +131,7 @@ typedef struct _gome2RefSelection
   double sza;
   double latitude;
   double longitude;
+  double cloudFraction;
   double szaDist;
   double latDist;
   double lonDist;
@@ -876,6 +875,10 @@ void Gome2ReadGeoloc(GOME2_ORBIT_FILE *pOrbitFile,INDEX indexBand)
  	 	pOrbitFile->gome2Geolocations[indexRecord].cloudTopPressure=(float)((pMdr->cloudFitMode[indexObs]==0)?pMdr->cloudTopPressure[indexObs]:-1.);
  	 	pOrbitFile->gome2Geolocations[indexRecord].cloudFraction=(float)((pMdr->cloudFitMode[indexObs]==0)?pMdr->cloudFraction[indexObs]:-1.);
 
+    if (pOrbitFile->gome2Geolocations[indexRecord].cloudFraction<(float)-1.)
+     pOrbitFile->gome2Geolocations[indexRecord].cloudFraction=
+     pOrbitFile->gome2Geolocations[indexRecord].cloudTopPressure=(float)-1.;
+
     Gome2Sort(pOrbitFile,indexRecord,0,indexRecord);                            // sort latitudes
     Gome2Sort(pOrbitFile,indexRecord,1,indexRecord);                            // sort longitudes
     Gome2Sort(pOrbitFile,indexRecord,2,indexRecord);                            // sort SZA
@@ -1321,6 +1324,14 @@ RC GOME2_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,INDEX fileIndex)
         pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_day,&pRecord->present_time,0);
 
         pRecord->gome2.orbitNumber=(int)pOrbitFile->gome2Info.orbitStart;
+
+        if ((pEngineContext->project.spectra.cloudMin>=0.) &&
+            (pEngineContext->project.spectra.cloudMax<=1.) &&
+            (fabs((double)(pEngineContext->project.spectra.cloudMax-pEngineContext->project.spectra.cloudMin))>EPSILON) &&
+            (fabs((double)(pEngineContext->project.spectra.cloudMax-pEngineContext->project.spectra.cloudMin))<1.-EPSILON) &&
+           ((pRecord->cloudFraction<pEngineContext->project.spectra.cloudMin-EPSILON) || (pRecord->cloudFraction>pEngineContext->project.spectra.cloudMax+EPSILON)))
+
+         rc=ERROR_ID_FILE_RECORD;
        }
      }
    }
@@ -1496,16 +1507,17 @@ void Gome2Sort(GOME2_ORBIT_FILE *pOrbitFile,INDEX indexRecord,int flag,int listS
 // PURPOSE       Search for spectra in the orbit file matching latitudes and SZA
 //               conditions
 //
-// INPUT         maxRefSize    the maximum size of vectors
-//               latMin,latMax determine the range of latitudes;
-//               sza,szaDelta  determine the range of SZA;
+// INPUT         maxRefSize         the maximum size of vectors
+//               latMin,latMax      determine the range of latitudes;
+//               sza,szaDelta       determine the range of SZA;
+//               cloudMin,cloudMax  determine the range of cloud fraction
 //
 // OUTPUT        refList       the list of potential reference spectra
 //
 // RETURN        the number of elements in the refList reference list
 // -----------------------------------------------------------------------------
 
-INT Gome2RefLat(GOME2_REF *refList,INT maxRefSize,double latMin,double latMax,double lonMin,double lonMax,double sza,double szaDelta)
+INT Gome2RefLat(GOME2_REF *refList,INT maxRefSize,double latMin,double latMax,double lonMin,double lonMax,double sza,double szaDelta,double cloudMin,double cloudMax)
  {
   // Declarations
 
@@ -1565,7 +1577,9 @@ INT Gome2RefLat(GOME2_REF *refList,INT maxRefSize,double latMin,double latMax,do
          if ((pRecord->latCenter>=latMin) && (pRecord->latCenter<=latMax) &&
             ((szaDelta<EPSILON) || (szaDist<=szaDelta)) &&
             ((fabs(lonMax-lonMin)<EPSILON) || (fabs(lonMax-lonMin)>359.) ||
-            ((lon>=lonMin) && (lon<=lonMax))))
+            ((lon>=lonMin) && (lon<=lonMax))) &&
+            ((fabs(cloudMax-cloudMin)<EPSILON) || (fabs(cloudMax-cloudMin)>(double)1.-EPSILON) ||
+            ((pRecord->cloudFraction>=cloudMin) && (pRecord->cloudFraction<=cloudMax))) )
           {
            // Keep the list of records sorted
 
@@ -1580,6 +1594,7 @@ INT Gome2RefLat(GOME2_REF *refList,INT maxRefSize,double latMin,double latMax,do
            refList[indexRef].indexRecord=pOrbitFile->gome2LatIndex[ilatIndex];
            refList[indexRef].latitude=pRecord->latCenter;
            refList[indexRef].longitude=pRecord->lonCenter;
+           refList[indexRef].cloudFraction=pRecord->cloudFraction;
            refList[indexRef].sza=pRecord->solZen[1];
            refList[indexRef].szaDist=szaDist;
            refList[indexRef].latDist=latDist;
@@ -1609,7 +1624,7 @@ INT Gome2RefLat(GOME2_REF *refList,INT maxRefSize,double latMin,double latMax,do
 // RETURN        the number of elements in the refList reference list
 // -----------------------------------------------------------------------------
 
-INT Gome2RefSza(GOME2_REF *refList,INT maxRefSize,double sza,double szaDelta)
+INT Gome2RefSza(GOME2_REF *refList,INT maxRefSize,double sza,double szaDelta,double cloudMin,double cloudMax)
  {
   // Declarations
 
@@ -1662,7 +1677,9 @@ INT Gome2RefSza(GOME2_REF *refList,INT maxRefSize,double sza,double szaDelta)
          pRecord=&pOrbitFile->gome2Geolocations[pOrbitFile->gome2SzaIndex[iszaIndex]];
          szaDist=fabs(pRecord->solZen[1]-sza);
 
-         if ((szaDelta<EPSILON) || (szaDist<=szaDelta))
+         if (((szaDelta<EPSILON) || (szaDist<=szaDelta)) &&
+            ((fabs(cloudMax-cloudMin)<EPSILON) || (fabs(cloudMax-cloudMin)>(double)1.-EPSILON) ||
+            ((pRecord->cloudFraction>=cloudMin) && (pRecord->cloudFraction<=cloudMax))))
           {
            // Keep the list of records sorted
 
@@ -1676,6 +1693,8 @@ INT Gome2RefSza(GOME2_REF *refList,INT maxRefSize,double sza,double szaDelta)
            refList[indexRef].indexFile=fileIndex;
            refList[indexRef].indexRecord=pOrbitFile->gome2SzaIndex[iszaIndex];
            refList[indexRef].latitude=pRecord->latCenter;
+           refList[indexRef].longitude=pRecord->lonCenter;
+           refList[indexRef].cloudFraction=pRecord->cloudFraction;
            refList[indexRef].sza=pRecord->solZen[1];
            refList[indexRef].szaDist=szaDist;
            refList[indexRef].latDist=(double)0.;
@@ -1761,6 +1780,7 @@ RC Gome2BuildRef(GOME2_REF *refList,INT nRef,INT nSpectra,double *lambda,double 
           mediateResponseCellDataString(plotPageRef,(*pIndexLine),indexColumn+1,"SZA",responseHandle);
           mediateResponseCellDataString(plotPageRef,(*pIndexLine),indexColumn+2,"Lat",responseHandle);
           mediateResponseCellDataString(plotPageRef,(*pIndexLine),indexColumn+3,"Lon",responseHandle);
+          mediateResponseCellDataString(plotPageRef,(*pIndexLine),indexColumn+4,"CF",responseHandle);
 
           (*pIndexLine)++;
 
@@ -1772,6 +1792,7 @@ RC Gome2BuildRef(GOME2_REF *refList,INT nRef,INT nSpectra,double *lambda,double 
        	mediateResponseCellDataDouble(plotPageRef,(*pIndexLine),indexColumn+1,pRef->sza,responseHandle);
        	mediateResponseCellDataDouble(plotPageRef,(*pIndexLine),indexColumn+2,pRef->latitude,responseHandle);
        	mediateResponseCellDataDouble(plotPageRef,(*pIndexLine),indexColumn+3,pRef->longitude,responseHandle);
+       	mediateResponseCellDataDouble(plotPageRef,(*pIndexLine),indexColumn+4,pRef->cloudFraction,responseHandle);
 
        	(*pIndexLine)++;
 
@@ -1817,6 +1838,7 @@ RC Gome2BuildRef(GOME2_REF *refList,INT nRef,INT nSpectra,double *lambda,double 
 //               latMin,latMax determine the range of latitudes;
 //               lonMin,lonMax determine the range of longitudes;
 //               sza,szaDelta determine the range of SZA;
+//               cloudMin,cloudMax determine the range of cloud fraction
 //
 //               nSpectra     the number of spectra to average to build the reference spectrum;
 //               lambdaK,ref  reference spectrum to use if no spectrum in the orbit matches the sza and latitudes conditions;
@@ -1832,10 +1854,11 @@ RC Gome2RefSelection(ENGINE_CONTEXT *pEngineContext,
                     double latMin,double latMax,
                     double lonMin,double lonMax,
                     double sza,double szaDelta,
+                    double cloudMin,double cloudMax,
                     int nSpectra,
                     double *lambdaK,double *ref,
-                    double *lambdaN,double *refN,
-                    double *lambdaS,double *refS,
+                    double *lambdaN,double *refN,double *pRefNormN,
+                    double *lambdaS,double *refS,double *pRefNormS,
                     void *responseHandle)
  {
   // Declarations
@@ -1843,13 +1866,13 @@ RC Gome2RefSelection(ENGINE_CONTEXT *pEngineContext,
   GOME2_REF *refList;                                                            // list of potential reference spectra
   double latDelta,tmp;
   INT nRefN,nRefS;                                                              // number of reference spectra in the previous list resp. for Northern and Southern hemisphere
-  double normFact;                                                              // normalisation factor
   INDEX indexLine,indexColumn;
   RC rc;                                                                        // return code
 
   // Initializations
 
   mediateResponseRetainPage(plotPageRef,responseHandle);
+  *pRefNormN=*pRefNormS=(double)1.;
   indexLine=1;
   indexColumn=2;
 
@@ -1865,6 +1888,13 @@ RC Gome2RefSelection(ENGINE_CONTEXT *pEngineContext,
    	tmp=lonMin;
    	lonMin=lonMax;
    	lonMax=tmp;
+   }
+
+  if (cloudMin>cloudMax)
+   {
+   	tmp=cloudMin;
+   	cloudMin=cloudMax;
+   	cloudMax=tmp;
    }
 
   latDelta=(double)fabs(latMax-latMin);
@@ -1893,7 +1923,7 @@ RC Gome2RefSelection(ENGINE_CONTEXT *pEngineContext,
      {
       // search for potential reference spectra in northern hemisphere
 
-      if ((nRefN=nRefS=Gome2RefLat(refList,gome2TotalRecordNumber,latMin,latMax,lonMin,lonMax,sza,szaDelta))>0)
+      if ((nRefN=nRefS=Gome2RefLat(refList,gome2TotalRecordNumber,latMin,latMax,lonMin,lonMax,sza,szaDelta,cloudMin,cloudMax))>0)
        rc=Gome2BuildRef(refList,nRefN,nSpectra,lambdaN,refN,pEngineContext,&indexLine,responseHandle);
 
       if (!rc)
@@ -1904,7 +1934,7 @@ RC Gome2RefSelection(ENGINE_CONTEXT *pEngineContext,
 
     else
      {
-      if ((nRefN=nRefS=Gome2RefSza(refList,gome2TotalRecordNumber,sza,szaDelta))>0)
+      if ((nRefN=nRefS=Gome2RefSza(refList,gome2TotalRecordNumber,sza,szaDelta,cloudMin,cloudMax))>0)
        rc=Gome2BuildRef(refList,nRefN,nSpectra,lambdaN,refN,pEngineContext,&indexLine,responseHandle);
 
       if (!rc)
@@ -1936,8 +1966,8 @@ RC Gome2RefSelection(ENGINE_CONTEXT *pEngineContext,
 
       if (nRefN || nRefS)   // if no record selected, use ref (normalized as loaded)
        {
-        VECTOR_NormalizeVector(refN-1,NDET,&normFact,"Gome2RefSelection (refN) ");
-        VECTOR_NormalizeVector(refS-1,NDET,&normFact,"Gome2RefSelection (refS) ");
+        VECTOR_NormalizeVector(refN-1,NDET,pRefNormN,"Gome2RefSelection (refN) ");
+        VECTOR_NormalizeVector(refS-1,NDET,pRefNormS,"Gome2RefSelection (refS) ");
        }
      }
    }
@@ -2005,10 +2035,11 @@ RC Gome2NewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
                           pTabFeno->refLatMin,pTabFeno->refLatMax,
                           pTabFeno->refLonMin,pTabFeno->refLonMax,
                           pTabFeno->refSZA,pTabFeno->refSZADelta,
+                          pTabFeno->cloudFractionMin,pTabFeno->cloudFractionMax,
                           pTabFeno->nspectra,
                           pTabFeno->LambdaK,pTabFeno->Sref,
-                          pTabFeno->LambdaN,pTabFeno->SrefN,
-                          pTabFeno->LambdaS,pTabFeno->SrefS,
+                          pTabFeno->LambdaN,pTabFeno->SrefN,&pTabFeno->refNormFactN,
+                          pTabFeno->LambdaS,pTabFeno->SrefS,&pTabFeno->refNormFactS,
                           responseHandle);
     }
 
@@ -2047,7 +2078,7 @@ RC GOME2_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
   CROSS_REFERENCE *pTabCross;                                                   // pointer to the current cross section
   WRK_SYMBOL *pWrkSymbol;                                                       // pointer to a symbol
   FENO *pTabFeno;                                                               // pointer to the current spectral analysis window
-  double factTemp,lambdaMin,lambdaMax;                                          // working variables
+  double lambdaMin,lambdaMax;                                                   // working variables
   INT DimL,useUsamp,useKurucz,saveFlag;                                         // working variables
   RC rc;                                                                        // return code
 
@@ -2081,7 +2112,7 @@ RC GOME2_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
          memcpy(pTabFeno->LambdaRef,pOrbitFile->gome2SunWve,sizeof(double)*NDET);
          memcpy(pTabFeno->Sref,pOrbitFile->gome2SunRef,sizeof(double)*NDET);
 
-         if (!(rc=VECTOR_NormalizeVector(pTabFeno->Sref-1,pTabFeno->NDET,&factTemp,"GOME2_LoadAnalysis (Reference) ")))
+         if (!(rc=VECTOR_NormalizeVector(pTabFeno->Sref-1,pTabFeno->NDET,&pTabFeno->refNormFact,"GOME2_LoadAnalysis (Reference) ")))
           {
            memcpy(pTabFeno->SrefEtalon,pTabFeno->Sref,sizeof(double)*pTabFeno->NDET);
            pTabFeno->useEtalon=pTabFeno->displayRef=1;

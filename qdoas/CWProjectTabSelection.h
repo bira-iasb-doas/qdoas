@@ -26,6 +26,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QLineEdit>
 #include <QComboBox>
 #include <QStackedWidget>
+#include <QGroupBox>
 
 #include "mediate_project.h"
 
@@ -33,16 +34,22 @@ class CWGeolocation;
 
 class CWProjectTabSelection : public QFrame
 {
+	Q_OBJECT
  public:
   CWProjectTabSelection(const mediate_project_selection_t *properties, QWidget *parent = 0);
   virtual ~CWProjectTabSelection();
 
   void apply(mediate_project_selection_t *properties) const;
 
+ public slots:
+  void slotInstrumentChanged(int instrument);
+
  private:
   QLineEdit *m_szaMinEdit, *m_szaMaxEdit, *m_szaDeltaEdit;
   QLineEdit *m_recordMinEdit, *m_recordMaxEdit;
+  QLineEdit *m_cloudFractionMinEdit, *m_cloudFractionMaxEdit;
   CWGeolocation *m_geolocationEdit;
+  QGroupBox *m_cloudFractionGroup;
 };
 
 class CWGeolocation : public QFrame

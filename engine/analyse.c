@@ -2137,11 +2137,13 @@ RC ANALYSE_AlignReference(ENGINE_CONTEXT *pEngineContext,INT refFlag,INT saveFla
        {
         Sref=Feno->SrefN;
         Lambda=Feno->Lambda;
+        Feno->refNormFact=Feno->refNormFactN;
        }
       else if (refFlag==3)
        {
         Sref=Feno->SrefS;
         Lambda=Feno->Lambda;
+        Feno->refNormFact=Feno->refNormFactS;
        }
       else
        {
@@ -2175,7 +2177,8 @@ RC ANALYSE_AlignReference(ENGINE_CONTEXT *pEngineContext,INT refFlag,INT saveFla
                                       NULL,                        // error on raw spectrum
                                       Sref,                        // reference spectrum
                                      &Square,                      // returned stretch order 2
-                                      NULL))>=THREAD_EVENT_STOP))  // number of iterations in Curfit
+                                      NULL,                        // number of iterations in Curfit
+                                     (double)1.,(double)1.))>=THREAD_EVENT_STOP))
 
          goto EndAlignReference;
 
@@ -3032,7 +3035,9 @@ RC ANALYSE_CurFitMethod(double *Spectre,          // raw spectrum
                         double *SigmaSpec,        // error on raw spectrum
                         double *Sref,             // reference spectrum
                         double *Chisqr,           // chi square
-                        INT    *pNiter)           // number of iterations
+                        INT    *pNiter,           // number of iterations
+                        double  speNormFact,
+                        double  refNormFact)
  {
   // Declarations
 
@@ -3369,11 +3374,34 @@ if (!Feno->hidden)
            {
             pResults->SlntCol=x[pTabCross->IndSvdA]=(pTabCross->FitConc!=0)?fitParamsC[pTabCross->IndSvdA]/pTabCross->Fact:fitParamsC[TabCross[i].IndSvdA];
             pResults->SlntErr=Sigma[pTabCross->IndSvdA]=(pTabCross->FitConc!=0)?(double)sqrt(SigmaSqr[pTabCross->IndSvdA]*scalingFactor)/pTabCross->Fact:(double)0.;
+
+            if (WorkSpace[pTabCross->Comp].type==WRK_SYMBOL_CONTINUOUS)
+             {
+            	if (!Feno->hidden)
+
+             	// Intensity fitting but polynomial is fitted linearly
+
+              if ((pTabCross->IndSvdP) && (fabs(refNormFact)>EPSILON))
+              	pResults->SlntCol*=(double)speNormFact/refNormFact;
+
+              // SVD
+
+              else if ((fabs(speNormFact)>EPSILON) && (refNormFact/speNormFact>EPSILON))
+               {
+               	pResults->SlntCol=-pResults->SlntCol;
+
+               	if (!stricmp(WorkSpace[pTabCross->Comp].symbolName,"x0"))
+               	 pResults->SlntCol-=(double)log(refNormFact/speNormFact);
+             	 }
+            	}
            }
           else  // cross sections in SVD+Marquardt method or Raman in SVD method
            {
             pResults->SlntCol=x[pTabCross->IndSvdA] = (pTabCross->FitConc!=ITEM_NONE)?fitParamsF[pTabCross->FitConc] / pTabCross->Fact:fitParamsC[TabCross[i].IndSvdA];
             pResults->SlntErr=Sigma[pTabCross->IndSvdA] = (pTabCross->FitConc!=ITEM_NONE)?(double) Sigmaa[pTabCross->FitConc] / pTabCross->Fact:(double)0.;
+
+            if ((WorkSpace[pTabCross->Comp].type==WRK_SYMBOL_CONTINUOUS) && (fabs(refNormFact)>EPSILON))
+             pResults->SlntCol*=(double)speNormFact/refNormFact;
            }
          }
 
@@ -3478,6 +3506,7 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
          *offset,                            // fitted linear offset
           maxOffset,
           newVal,
+          speNormFact,
           factTemp;                          // normalization factor
 
   INT NbFeno,Niter,
@@ -3508,6 +3537,7 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
   memcpy(ANALYSE_t,ANALYSE_zeros,sizeof(double)*NDET);
   memcpy(ANALYSE_tc,ANALYSE_zeros,sizeof(double)*NDET);
 
+  speNormFact=(double)1.;
   ZM=pRecord->Zm;
   TDET=pRecord->TDet;
 
@@ -3535,7 +3565,7 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
     memcpy(Spectre,pBuffers->spectrum,sizeof(double)*NDET);
 
-    if (((rc=VECTOR_NormalizeVector(Spectre-1,NDET,&factTemp,"ANALYSE_Spectrum (Spectrum) "))!=ERROR_ID_NO) ||
+    if (((rc=VECTOR_NormalizeVector(Spectre-1,NDET,&speNormFact,"ANALYSE_Spectrum (Spectrum) "))!=ERROR_ID_NO) ||
         (pRecord->useErrors && ((rc=VECTOR_NormalizeVector(pBuffers->sigmaSpec-1,NDET,&factTemp,"ANALYSE_Spectrum (sigmaSpec) "))!=ERROR_ID_NO)))
      goto EndAnalysis;
 
@@ -3649,6 +3679,7 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
                 Feno->Shift=Feno->ShiftN;
                 Feno->Stretch=Feno->StretchN;
                 Feno->Stretch2=Feno->Stretch2N;
+                Feno->refNormFact=Feno->refNormFactN;
 
                 memcpy(Feno->Sref,Feno->SrefN,sizeof(double)*NDET);
 
@@ -3661,6 +3692,7 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
                 Feno->Shift=Feno->ShiftS;
                 Feno->Stretch=Feno->StretchS;
                 Feno->Stretch2=Feno->Stretch2S;
+                Feno->refNormFact=Feno->refNormFactS;
 
                 memcpy(Feno->Sref,Feno->SrefS,sizeof(double)*NDET);
 
@@ -3777,7 +3809,9 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
                                        (pRecord->useErrors)?pBuffers->sigmaSpec:NULL,                     // error on raw spectrum
                                         Sref,                                                             // reference spectrum
                                        &Feno->chiSquare,                                                  // returned stretch order 2
-                                       &Niter))==THREAD_EVENT_STOP)                                       // number of iterations in Curfit
+                                       &Niter,
+                                       speNormFact,
+                                       Feno->refNormFact))==THREAD_EVENT_STOP)                                       // number of iterations in Curfit
 
            goto EndAnalysis;  // !!!! Bypass the DEBUG_Stop
 
@@ -4194,6 +4228,7 @@ void ANALYSE_ResetData(void)
     pTabFeno->Shift=pTabFeno->ShiftN=pTabFeno->ShiftS=
     pTabFeno->Stretch=pTabFeno->StretchN=pTabFeno->StretchS=
     pTabFeno->Stretch2=pTabFeno->Stretch2N=pTabFeno->Stretch2S=(double) 0.;
+    pTabFeno->refNormFact=pTabFeno->refNormFactN=pTabFeno->refNormFactS=(double)1.;
 
     pTabFeno->refMaxdoasSelectionMode=ANLYS_MAXDOAS_REF_SZA;
 
@@ -5604,7 +5639,7 @@ RC ANALYSE_LoadRef(ENGINE_CONTEXT *pEngineContext)
 
        !(rc=AnalyseLoadVector("ANALYSE_LoadRef (SrefEtalon) ",pTabFeno->ref1,lambdaRefEtalon,SrefEtalon,1,NULL)) &&
        !(rc=THRD_SpectrumCorrection(pEngineContext,SrefEtalon)) &&
-       !(rc=VECTOR_NormalizeVector(SrefEtalon-1,NDET,&factTemp,"ANALYSE_LoadRef (SrefEtalon) ")))
+       !(rc=VECTOR_NormalizeVector(SrefEtalon-1,NDET,&pTabFeno->refNormFact,"ANALYSE_LoadRef (SrefEtalon) ")))
      {
       pTabFeno->displayRef=pTabFeno->useEtalon=pTabFeno->gomeRefFlag=1;
       strcpy(pTabFeno->refFile,pTabFeno->ref1);
@@ -5628,7 +5663,7 @@ RC ANALYSE_LoadRef(ENGINE_CONTEXT *pEngineContext)
 
       !(rc=AnalyseLoadVector("ANALYSE_LoadRef (Sref) ",pTabFeno->ref2,lambdaRef,Sref,1,NULL)) &&
       !(rc=THRD_SpectrumCorrection(pEngineContext,Sref)) &&
-      !(rc=VECTOR_NormalizeVector(Sref-1,NDET,&factTemp,"ANALYSE_LoadRef (Sref) ")))
+      !(rc=VECTOR_NormalizeVector(Sref-1,NDET,&pTabFeno->refNormFact,"ANALYSE_LoadRef (Sref) ")))
      {
       if (!pTabFeno->useEtalon)
        {

@@ -161,7 +161,7 @@ CWProjectTabInstrumental::CWProjectTabInstrumental(const mediate_project_instrum
   m_instrumentToStackIndexMap.insert(std::map<int,int>::value_type(PRJCT_INSTR_FORMAT_OMI, index));
 
   // gome2
-  m_gome2Edit = new CWInstrGdpEdit(&(instr->gome2));
+  m_gome2Edit = new CWInstrGome2Edit(&(instr->gome2));
   index = m_formatStack->addWidget(m_gome2Edit);
   m_instrumentToStackIndexMap.insert(std::map<int,int>::value_type(PRJCT_INSTR_FORMAT_GOME2, index));
 
@@ -1430,6 +1430,7 @@ CWInstrGdpEdit::CWInstrGdpEdit(const struct instrumental_gdp *d, QWidget *parent
   ++row;
 
   // pixel type
+
   gridLayout->addWidget(new QLabel("Pixel Type", this), row, 0);
   m_pixelTypeCombo = new QComboBox(this);
   m_pixelTypeCombo->addItem("All", QVariant(PRJCT_INSTR_GDP_PIXEL_ALL));
@@ -1474,6 +1475,61 @@ void CWInstrGdpEdit::apply(struct instrumental_gdp *d) const
   d->bandType = m_bandTypeCombo->itemData(m_bandTypeCombo->currentIndex()).toInt();
   // pixel type
   d->pixelType = m_pixelTypeCombo->itemData(m_pixelTypeCombo->currentIndex()).toInt();
+
+  // files
+  strcpy(d->calibrationFile, m_fileOneEdit->text().toAscii().data());
+  strcpy(d->instrFunctionFile, m_fileTwoEdit->text().toAscii().data());
+}
+
+//--------------------------------------------------------------------------
+
+CWInstrGome2Edit::CWInstrGome2Edit(const struct instrumental_gome2 *d, QWidget *parent) :
+  CWCalibInstrEdit(parent)
+{
+  QString tmpStr;
+  int row = 0;
+  QVBoxLayout *mainLayout = new QVBoxLayout(this);
+  QGridLayout *gridLayout = new QGridLayout;
+
+  // band
+  gridLayout->addWidget(new QLabel("Band Type", this), row, 0);
+  m_bandTypeCombo = new QComboBox(this);
+  m_bandTypeCombo->addItem("Band 1a", QVariant(PRJCT_INSTR_GDP_BAND_1A));
+  m_bandTypeCombo->addItem("Band 1b", QVariant(PRJCT_INSTR_GDP_BAND_1B));
+  m_bandTypeCombo->addItem("Band 2a", QVariant(PRJCT_INSTR_GDP_BAND_2A));
+  m_bandTypeCombo->addItem("Band 2b", QVariant(PRJCT_INSTR_GDP_BAND_2B));
+  m_bandTypeCombo->addItem("Band 3", QVariant(PRJCT_INSTR_GDP_BAND_3));
+  m_bandTypeCombo->addItem("Band 4", QVariant(PRJCT_INSTR_GDP_BAND_4));
+  gridLayout->addWidget(m_bandTypeCombo, row, 1);
+  ++row;
+
+  // files
+  helperConstructCalInsFileWidgets(gridLayout, row,
+				   d->calibrationFile, sizeof(d->calibrationFile),
+				   d->instrFunctionFile, sizeof(d->instrFunctionFile));
+
+  gridLayout->setColumnMinimumWidth(0, cSuggestedColumnZeroWidth);
+  gridLayout->setColumnMinimumWidth(2, cSuggestedColumnTwoWidth);
+
+  mainLayout->addLayout(gridLayout);
+  mainLayout->addStretch(1);
+
+  // initial values
+
+  // band
+  int index = m_bandTypeCombo->findData(QVariant(d->bandType));
+  if (index != -1)
+    m_bandTypeCombo->setCurrentIndex(index);
+}
+
+CWInstrGome2Edit::~CWInstrGome2Edit()
+{
+}
+
+void CWInstrGome2Edit::apply(struct instrumental_gome2 *d) const
+{
+  // band
+  d->bandType = m_bandTypeCombo->itemData(m_bandTypeCombo->currentIndex()).toInt();
 
   // files
   strcpy(d->calibrationFile, m_fileOneEdit->text().toAscii().data());

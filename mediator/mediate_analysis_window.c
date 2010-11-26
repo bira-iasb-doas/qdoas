@@ -46,6 +46,9 @@ void initializeMediateAnalysisWindow(mediate_analysis_window_t *d)
   d->refSzaCenter=
   d->refSzaDelta=(double)0.;
 
+  d->cloudFractionMin=(double)0.;
+  d->cloudFractionMax=(double)1.;
+
   // Cross sections
 
   for (i=0;i<MAX_AW_CROSS_SECTION;i++)

@@ -208,6 +208,11 @@ bool CProjectSelectionSubHandler::start(const QString &element, const QXmlAttrib
     m_selection->recordNumberMinimum = atts.value("min").toInt();
     m_selection->recordNumberMaximum = atts.value("max").toInt();
   }
+  else if (element == "cloud")
+   {
+    m_selection->cloudFractionMinimum = atts.value("min").toDouble();
+    m_selection->cloudFractionMaximum = atts.value("max").toDouble();
+   }
   else if (element == "circle") {
 
     m_selection->geo.circle.radius = atts.value("radius").toDouble();
@@ -931,7 +936,7 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
 
   }
   else if (element == "gome2") { // GOME2
-    helperLoadGdp(atts, &(m_instrumental->gome2));
+    helperLoadGome2(atts, &(m_instrumental->gome2));
   }
   else if (element == "mkzy") { // MKZY
     return helperLoadMinimum(atts, &(m_instrumental->mkzy));
@@ -1118,6 +1123,47 @@ bool CProjectInstrumentalSubHandler::helperLoadGdp(const QXmlAttributes &atts, s
     d->pixelType = PRJCT_INSTR_GDP_PIXEL_BACKSCAN;
   else
     return postErrorMessage("Invalid gdp pixel type");
+
+  str = atts.value("calib");
+  if (!str.isEmpty()) {
+    str = m_master->pathExpand(str);
+    if (str.length() < (int)sizeof(d->calibrationFile))
+      strcpy(d->calibrationFile, str.toAscii().data());
+    else
+      return postErrorMessage("Calibration Filename too long");
+  }
+
+  str = atts.value("instr");
+  if (!str.isEmpty()) {
+    str = m_master->pathExpand(str);
+    if (str.length() < (int)sizeof(d->instrFunctionFile))
+      strcpy(d->instrFunctionFile, str.toAscii().data());
+    else
+      return postErrorMessage("Instrument Function Filename too long");
+  }
+
+  return true;
+}
+
+bool CProjectInstrumentalSubHandler::helperLoadGome2(const QXmlAttributes &atts, struct instrumental_gome2 *d)
+{
+  QString str;
+
+  str = atts.value("type");
+  if (str == "1a")
+    d->bandType = PRJCT_INSTR_GDP_BAND_1A;
+  else if (str == "1b")
+    d->bandType = PRJCT_INSTR_GDP_BAND_1B;
+  else if (str == "2a")
+    d->bandType = PRJCT_INSTR_GDP_BAND_2A;
+  else if (str == "2b")
+    d->bandType = PRJCT_INSTR_GDP_BAND_2B;
+  else if (str == "3")
+    d->bandType = PRJCT_INSTR_GDP_BAND_3;
+  else if (str == "3")
+    d->bandType = PRJCT_INSTR_GDP_BAND_4;
+  else
+    return postErrorMessage("Invalid gdp band");
 
   str = atts.value("calib");
   if (!str.isEmpty()) {

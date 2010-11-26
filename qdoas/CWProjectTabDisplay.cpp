@@ -76,7 +76,7 @@ void CWProjectTabDisplay::apply(mediate_project_display_t *properties) const
   properties->requireSpectra = (m_reqSpectraCheck->checkState() == Qt::Checked);
   properties->requireData = (m_reqDataCheck->checkState() == Qt::Checked);
   properties->requireFits = (m_reqFitsCheck->checkState() == Qt::Checked);
-  
+
   m_selector->apply(&(properties->selection));
 }
 
@@ -84,3 +84,5 @@ void CWProjectTabDisplay::slotInstrumentChanged(int instrument)
 {
   m_selector->setInstrument(instrument);
 }
+
+

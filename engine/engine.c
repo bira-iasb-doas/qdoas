@@ -1688,7 +1688,7 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
       // There is a reference spectrum for the requested twilight
 
-      else if (indexRefRecord!=pTabFeno->indexRef)
+      else if ((indexRefRecord!=pTabFeno->indexRef) || (indexRefRecord!=ENGINE_contextRef.indexRecord))
        {
        	if ((pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_MFC) &&
             (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_MFC_STD) &&
@@ -1752,7 +1752,7 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
           memcpy(pTabFeno->Sref,ENGINE_contextRef.buffers.spectrum,sizeof(double)*NDET);
 
-          if ((rc=VECTOR_NormalizeVector(pTabFeno->Sref-1,NDET,&factTemp,"EngineNewRef"))!=ERROR_ID_NO)
+          if ((rc=VECTOR_NormalizeVector(pTabFeno->Sref-1,NDET,&pTabFeno->refNormFact,"EngineNewRef"))!=ERROR_ID_NO)
            break;
 
           pTabFeno->indexRef=indexRefRecord;

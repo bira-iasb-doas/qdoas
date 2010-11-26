@@ -43,7 +43,11 @@ void initializeMediateProjectSelection(mediate_project_selection_t *d)
 
   // any non-zero defaults...
 
-  d->szaMaximum = 96.0;
+  d->szaMinimum = 0.0;
+  d->szaMaximum = 0.0;
+
+  d->cloudFractionMinimum=0.0;
+  d->cloudFractionMaximum=1.0;
 }
 
 void initializeMediateProjectAnalysis(mediate_project_analysis_t *d)

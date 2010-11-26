@@ -1211,8 +1211,8 @@ RC GdpBinRefSelection(ENGINE_CONTEXT *pEngineContext,
                       double sza,double szaDelta,
                       int nSpectra,
                       double *lambdaK,double *ref,
-                      double *lambdaN,double *refN,
-                      double *lambdaS,double *refS,
+                      double *lambdaN,double *refN,double *pRefNormN,
+                      double *lambdaS,double *refS,double *pRefNormS,
                       DoasCh *gomePixelType,
                       void *responseHandle)
  {
@@ -1221,7 +1221,6 @@ RC GdpBinRefSelection(ENGINE_CONTEXT *pEngineContext,
   GDP_BIN_REF *refList;                                                         // list of potential reference spectra
   INT nRefN,nRefS;                                                              // number of reference spectra in the previous list resp. for Northern and Southern hemisphere
   INDEX indexLine,indexColumn;
-  double normFact;                                                              // normalisation factor
   double latDelta,tmp;
   RC rc;                                                                        // return code
 
@@ -1257,6 +1256,7 @@ RC GdpBinRefSelection(ENGINE_CONTEXT *pEngineContext,
   memcpy(refS,ref,sizeof(double)*NDET);
 
   nRefS=0;
+  *pRefNormN=*pRefNormS=(double)1.;
 
   // Buffer allocation
 
@@ -1313,8 +1313,8 @@ RC GdpBinRefSelection(ENGINE_CONTEXT *pEngineContext,
 
       if (nRefN || nRefS)   // if nor record selected, use ref (normalized as loaded)
        {
-        VECTOR_NormalizeVector(refN-1,NDET,&normFact,"GdpBinRefSelection (refN) ");
-        VECTOR_NormalizeVector(refS-1,NDET,&normFact,"GdpBinRefSelection (refS) ");
+        VECTOR_NormalizeVector(refN-1,NDET,pRefNormN,"GdpBinRefSelection (refN) ");
+        VECTOR_NormalizeVector(refS-1,NDET,pRefNormS,"GdpBinRefSelection (refS) ");
        }
      }
    }
@@ -1381,8 +1381,8 @@ RC GdpBinNewRef(ENGINE_CONTEXT *pEngineContext,FILE *specFp,void *responseHandle
                              pTabFeno->refSZA,pTabFeno->refSZADelta,
                              pTabFeno->nspectra,
                              pTabFeno->LambdaK,pTabFeno->Sref,
-                             pTabFeno->LambdaN,pTabFeno->SrefN,
-                             pTabFeno->LambdaS,pTabFeno->SrefS,
+                             pTabFeno->LambdaN,pTabFeno->SrefN,&pTabFeno->refNormFactN,
+                             pTabFeno->LambdaS,pTabFeno->SrefS,&pTabFeno->refNormFactS,
                              pTabFeno->gomePixelType,
                              responseHandle);
     }
@@ -1461,7 +1461,7 @@ RC GDP_BIN_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,FILE *specFp,void *respon
             pTabFeno->SrefSigma[i]=(double)pOrbitFile->gdpBinRefError[j]/pOrbitFile->gdpBinBandInfo[pOrbitFile->gdpBinBandIndex].scalingError;
           }
 
-         if (!(rc=VECTOR_NormalizeVector(pTabFeno->Sref-1,pTabFeno->NDET,&factTemp,"GDP_BIN_LoadAnalysis (Reference) ")) &&
+         if (!(rc=VECTOR_NormalizeVector(pTabFeno->Sref-1,pTabFeno->NDET,&pTabFeno->refNormFact,"GDP_BIN_LoadAnalysis (Reference) ")) &&
             (!pRecord->useErrors || !(rc=VECTOR_NormalizeVector(pTabFeno->SrefSigma-1,pTabFeno->NDET,&factTemp,"GDP_BIN_LoadAnalysis (RefError) "))))
           {
            memcpy(pTabFeno->SrefEtalon,pTabFeno->Sref,sizeof(double)*pTabFeno->NDET);

@@ -47,6 +47,7 @@ CWAnalysisWindowPropertyEditor::CWAnalysisWindowPropertyEditor(const QString &pr
   m_analysisWindowName(analysisWindowName),
   m_autoSelection(false),
   m_activePixelType(false),
+  m_activeCloudFraction(false),
   m_scanSelection(false)
 {
   const int cIntEditWidth = 50;
@@ -286,7 +287,8 @@ CWAnalysisWindowPropertyEditor::CWAnalysisWindowPropertyEditor(const QString &pr
   m_refTwoStack->addWidget(m_refTwoEditFrame); // file      - takes index 1
   filesLayout->addLayout(m_refTwoStack);
 
-  // row 2 - residual or pixel type
+  // row 2 - residual or pixel type or cloud fraction
+
   QFrame *residualFrame = new QFrame(filesGroup);
   residualFrame->setFrameStyle(QFrame::NoFrame);
   QHBoxLayout *residualFrameLayout = new QHBoxLayout(residualFrame);
@@ -321,11 +323,31 @@ CWAnalysisWindowPropertyEditor::CWAnalysisWindowPropertyEditor(const QString &pr
   pixelTypeLayout->addWidget(m_backscanCheck);
   pixelTypeLayout->addStretch(1);
 
+  QFrame *cloudFractionFrame = new QFrame(filesGroup);
+  cloudFractionFrame->setFrameStyle(QFrame::NoFrame);
+  QHBoxLayout *cloudFractionFrameLayout = new QHBoxLayout(cloudFractionFrame);
+  cloudFractionFrameLayout->setMargin(0);
+  QLabel *labelCloudFraction = new QLabel(" Cloud fraction ", cloudFractionFrame);
+  labelCloudFraction->setFixedWidth(85);
+  m_cloudFractionMinEdit = new QLineEdit(cloudFractionFrame);
+  m_cloudFractionMinEdit->setFixedWidth(cDoubleEditWidth);
+  m_cloudFractionMinEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 1.0, 3, m_cloudFractionMinEdit));
+  m_cloudFractionMaxEdit = new QLineEdit(cloudFractionFrame);
+  m_cloudFractionMaxEdit->setFixedWidth(cDoubleEditWidth);
+  m_cloudFractionMaxEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 1.0, 3, m_cloudFractionMaxEdit));
+
+  cloudFractionFrameLayout->addWidget(labelCloudFraction);
+  cloudFractionFrameLayout->addWidget(m_cloudFractionMinEdit, 1);
+  cloudFractionFrameLayout->addWidget(m_cloudFractionMaxEdit,2);
+
+  cloudFractionFrameLayout->addStretch(0);
+
   // stack for residual / pixel type
   m_residualStack = new QStackedLayout;
   m_residualStack->setMargin(0);
-  m_residualStack->addWidget(residualFrame);   // takes index 0
-  m_residualStack->addWidget(pixelTypeFrame);  // takes index 1
+  m_residualStack->addWidget(residualFrame);     // takes index 0
+  m_residualStack->addWidget(pixelTypeFrame);    // takes index 1
+  m_residualStack->addWidget(cloudFractionFrame);// takes index 2
 
   filesLayout->addLayout(m_residualStack);
 
@@ -426,6 +448,11 @@ CWAnalysisWindowPropertyEditor::CWAnalysisWindowPropertyEditor(const QString &pr
   m_westCheck->setCheckState(d->pixelTypeWest ? Qt::Checked : Qt::Unchecked);
   m_backscanCheck->setCheckState(d->pixelTypeBackscan ? Qt::Checked : Qt::Unchecked);
 
+  m_cloudFractionMinEdit->validator()->fixup(tmpStr.setNum(d->cloudFractionMin));
+  m_cloudFractionMinEdit->setText(tmpStr);
+  m_cloudFractionMaxEdit->validator()->fixup(tmpStr.setNum(d->cloudFractionMax));
+  m_cloudFractionMaxEdit->setText(tmpStr);
+
   m_moleculesTab->populate(&(d->crossSectionList));
   m_linearTab->populate(&(d->linear));
   m_nonLinearTab->populate(&(d->nonlinear));
@@ -493,6 +520,9 @@ bool CWAnalysisWindowPropertyEditor::actionOk(void)
     d->pixelTypeCenter = (m_centerCheck->checkState() == Qt::Checked) ? 1 : 0;
     d->pixelTypeWest = (m_westCheck->checkState() == Qt::Checked) ? 1 : 0;
     d->pixelTypeBackscan = (m_backscanCheck->checkState() == Qt::Checked) ? 1 : 0;
+
+    d->cloudFractionMin = m_cloudFractionMinEdit->text().toDouble();
+    d->cloudFractionMax = m_cloudFractionMaxEdit->text().toDouble();
 
     // call apply for all tabs ...
 
@@ -592,17 +622,19 @@ void CWAnalysisWindowPropertyEditor::projectPropertiesChanged()
     // -------------------------------------------------------------------------
        case PRJCT_INSTR_FORMAT_GDP_ASCII:
        case PRJCT_INSTR_FORMAT_GDP_BIN:
-       case PRJCT_INSTR_FORMAT_GOME2:
         {
 	        m_activePixelType = true;
+	        m_activeCloudFraction = false;
 	        m_satelliteFrame->show();
         }
        break;
     // -------------------------------------------------------------------------
+       case PRJCT_INSTR_FORMAT_GOME2:
        case PRJCT_INSTR_FORMAT_SCIA_HDF:
        case PRJCT_INSTR_FORMAT_SCIA_PDS:
         {
 	        m_activePixelType = false;
+	        m_activeCloudFraction = (d->instrumental.format==PRJCT_INSTR_FORMAT_GOME2)?true:false;
 	        m_satelliteFrame->show();
         }
        break;
@@ -610,6 +642,7 @@ void CWAnalysisWindowPropertyEditor::projectPropertiesChanged()
        default:
         {
 	        m_activePixelType = false;
+	        m_activeCloudFraction = false;
 	        m_satelliteFrame->hide();
         }
        break;
@@ -617,8 +650,17 @@ void CWAnalysisWindowPropertyEditor::projectPropertiesChanged()
     }
 
     m_refTwoStack->setCurrentIndex((m_autoSelection)?0:1);
-    m_residualStack->setCurrentIndex((m_autoSelection && m_activePixelType) ? 1 : 0);
 
+    if (!m_autoSelection)
+     m_residualStack->setCurrentIndex(0);
+    else if (m_activePixelType)
+     m_residualStack->setCurrentIndex(1);
+    else if (m_activeCloudFraction)
+     m_residualStack->setCurrentIndex(2);
+    else
+     m_residualStack->setCurrentIndex(0);
+
+    // Commented by CF on 25/11/2010 m_residualStack->setCurrentIndex((m_autoSelection && m_activePixelType) ? 1 : 0);
   }
 }
 
@@ -639,7 +681,17 @@ void CWAnalysisWindowPropertyEditor::slotRefSelectionChanged(bool checked)
   m_autoSelection = checked;
 
   m_refTwoStack->setCurrentIndex(m_autoSelection ? 0 : 1);
-  m_residualStack->setCurrentIndex((m_autoSelection && m_activePixelType) ? 1 : 0);
+
+    if (!m_autoSelection)
+     m_residualStack->setCurrentIndex(0);
+    else if (m_activePixelType)
+     m_residualStack->setCurrentIndex(1);
+    else if (m_activeCloudFraction)
+     m_residualStack->setCurrentIndex(2);
+    else
+     m_residualStack->setCurrentIndex(0);
+
+  // Commented by CF on 25/11/2010 m_residualStack->setCurrentIndex((m_autoSelection && m_activePixelType) ? 1 : 0);
 }
 
 void CWAnalysisWindowPropertyEditor::slotWavelengthCalibrationChanged(int index)

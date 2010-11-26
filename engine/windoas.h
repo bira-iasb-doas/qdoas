@@ -558,6 +558,7 @@ typedef struct _prjctSpectra
  {
   INT    noMin,noMax;                                                           // spectra numbers range
   float  SZAMin,SZAMax,SZADelta;                                                // SZA range
+  float  cloudMin,cloudMax;                                                     // cloud fraction range (for satellite measurements)
   float  longMin,longMax,latMin,latMax,                                         // resp. longitude and latitude ranges
          radius;                                                                // radius if circle mode is used
   INT    namesFlag,                                                             // use names

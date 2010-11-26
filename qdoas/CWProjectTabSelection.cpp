@@ -105,6 +105,33 @@ CWProjectTabSelection::CWProjectTabSelection(const mediate_project_selection_t *
 
   topLayout->addWidget(recordGroup);
 
+  // Cloud fraction group
+
+  m_cloudFractionGroup = new QGroupBox("Cloud fraction", this);
+  QGridLayout *cloudFractionGroupLayout = new QGridLayout;
+  cloudFractionGroupLayout->addWidget(new QLabel("Min", this), 0, 0);
+
+  m_cloudFractionMinEdit = new QLineEdit(this);
+  m_cloudFractionMinEdit->setFixedWidth(pixels);
+  m_cloudFractionMinEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 1.0, 3, m_cloudFractionMinEdit));
+  cloudFractionGroupLayout->addWidget(m_cloudFractionMinEdit, 0, 1);
+  cloudFractionGroupLayout->addWidget(new QLabel("Max", this), 1, 0);
+  m_cloudFractionMaxEdit = new QLineEdit(this);
+  m_cloudFractionMaxEdit->setFixedWidth(pixels);
+  m_cloudFractionMaxEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 1.0, 3, m_cloudFractionMaxEdit));
+  cloudFractionGroupLayout->addWidget(m_cloudFractionMaxEdit, 1, 1);
+
+  cloudFractionGroupLayout->setColumnStretch(2, 1);
+  m_cloudFractionGroup->setLayout(cloudFractionGroupLayout);
+
+  // use the validators to input-check the initial values
+  m_cloudFractionMinEdit->validator()->fixup(tmpStr.setNum(properties->cloudFractionMinimum));
+  m_cloudFractionMinEdit->setText(tmpStr);
+  m_cloudFractionMaxEdit->validator()->fixup(tmpStr.setNum(properties->cloudFractionMaximum));
+  m_cloudFractionMaxEdit->setText(tmpStr);
+
+  topLayout->addWidget(m_cloudFractionGroup);
+
   mainLayout->addLayout(topLayout);
 
   // Gelocation selection - also in a group box
@@ -142,9 +169,25 @@ void CWProjectTabSelection::apply(mediate_project_selection_t *properties) const
   tmpStr = m_recordMaxEdit->text();
   properties->recordNumberMaximum = tmpStr.isEmpty() ? 0 : tmpStr.toInt();
 
+  // Cloud fraction
+
+  tmpStr = m_cloudFractionMinEdit->text();
+  properties->cloudFractionMinimum = tmpStr.isEmpty() ? 0.0 : tmpStr.toDouble();
+  tmpStr = m_cloudFractionMaxEdit->text();
+  properties->cloudFractionMaximum = tmpStr.isEmpty() ? 0.0 : tmpStr.toDouble();
+
   // Geolocation
   m_geolocationEdit->apply(&(properties->geo));
 }
+
+void CWProjectTabSelection::slotInstrumentChanged(int instrument)
+{
+	if (instrument==PRJCT_INSTR_FORMAT_GOME2)
+	 m_cloudFractionGroup->show();
+	else
+	 m_cloudFractionGroup->hide();
+}
+
 
 CWGeolocation::CWGeolocation(const struct geolocation *geo, QWidget *parent) :
   QFrame(parent)

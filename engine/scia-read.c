@@ -105,8 +105,6 @@
 // CONSTANTS DEFINITION
 // ====================
 
-#define EPSILON                    (double)1.e-5
-
 // No specific constants for PDS format
 
 // =====================
@@ -1863,8 +1861,8 @@ RC SciaRefSelection(ENGINE_CONTEXT *pEngineContext,
                     double sza,double szaDelta,
                     int nSpectra,
                     double *lambdaK,double *ref,
-                    double *lambdaN,double *refN,
-                    double *lambdaS,double *refS,
+                    double *lambdaN,double *refN,double *pRefNormN,
+                    double *lambdaS,double *refS,double *pRefNormS,
                     void *responseHandle)
  {
   // Declarations
@@ -1872,13 +1870,13 @@ RC SciaRefSelection(ENGINE_CONTEXT *pEngineContext,
   SATELLITE_REF *refList;                                                            // list of potential reference spectra
   double latDelta,tmp;
   INT nRefN,nRefS;                                                              // number of reference spectra in the previous list resp. for Northern and Southern hemisphere
-  double normFact;                                                              // normalisation factor
   INDEX indexLine,indexColumn;                                                  // current position in the cell page associated to the ref page
   RC rc;                                                                        // return code
 
   // Initializations
 
   mediateResponseRetainPage(plotPageRef,responseHandle);
+ *pRefNormN=*pRefNormS=(double)1.;
   indexLine=1;
   indexColumn=2;
 
@@ -1965,8 +1963,8 @@ RC SciaRefSelection(ENGINE_CONTEXT *pEngineContext,
 
       if (nRefN || nRefS)   // if no record selected, use ref (normalized as loaded)
        {
-        VECTOR_NormalizeVector(refN-1,NDET,&normFact,"SciaRefSelection (refN) ");
-        VECTOR_NormalizeVector(refS-1,NDET,&normFact,"SciaRefSelection (refS) ");
+        VECTOR_NormalizeVector(refN-1,NDET,pRefNormN,"SciaRefSelection (refN) ");
+        VECTOR_NormalizeVector(refS-1,NDET,pRefNormS,"SciaRefSelection (refS) ");
        }
      }
    }
@@ -2039,8 +2037,8 @@ RC SciaNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
                           pTabFeno->refSZA,pTabFeno->refSZADelta,
                           pTabFeno->nspectra,
                           pTabFeno->LambdaK,pTabFeno->Sref,
-                          pTabFeno->LambdaN,pTabFeno->SrefN,
-                          pTabFeno->LambdaS,pTabFeno->SrefS,
+                          pTabFeno->LambdaN,pTabFeno->SrefN,&pTabFeno->refNormFactN,
+                          pTabFeno->LambdaS,pTabFeno->SrefS,&pTabFeno->refNormFactS,
                           responseHandle);
     }
 
@@ -2079,7 +2077,7 @@ RC SCIA_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
   CROSS_REFERENCE *pTabCross;                                                   // pointer to the current cross section
   WRK_SYMBOL *pWrkSymbol;                                                       // pointer to a symbol
   FENO *pTabFeno;                                                               // pointer to the current spectral analysis window
-  double factTemp,lambdaMin,lambdaMax;                                          // working variables
+  double lambdaMin,lambdaMax;                                                   // working variables
   INT DimL,useUsamp,useKurucz,saveFlag;                                         // working variables
   RC rc;                                                                        // return code
 
@@ -2118,7 +2116,7 @@ RC SCIA_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
 //         memcpy(pTabFeno->SrefSigma,SCIA_refE,sizeof(double)*pTabFeno->NDET);
 
-         if (!(rc=VECTOR_NormalizeVector(pTabFeno->Sref-1,pTabFeno->NDET,&factTemp,"SCIA_LoadAnalysis (Reference) "))) // &&
+         if (!(rc=VECTOR_NormalizeVector(pTabFeno->Sref-1,pTabFeno->NDET,&pTabFeno->refNormFact,"SCIA_LoadAnalysis (Reference) "))) // &&
 //             !(rc=VECTOR_NormalizeVector(pTabFeno->SrefSigma-1,pTabFeno->NDET,&factTemp,"SCIA_LoadAnalysis (RefError) ")))
           {
            memcpy(pTabFeno->SrefEtalon,pTabFeno->Sref,sizeof(double)*pTabFeno->NDET);

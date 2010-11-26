@@ -1284,7 +1284,6 @@ RC MFC_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
   CROSS_REFERENCE *pTabCross;                                                   // pointer to the current cross section
   WRK_SYMBOL *pWrkSymbol;                                                       // pointer to a symbol
   FENO *pTabFeno;                                                               // pointer to the current spectral analysis window
-  double factTemp;                                                              // working variables
   INT DimL,useKurucz,saveFlag;                                                       // working variables
   RC rc;                                                                        // return code
 
@@ -1323,7 +1322,7 @@ RC MFC_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
                             &MFC_headerDrk,pBuffers->varPix,
                             &MFC_headerOff,pBuffers->dnl);
 
-       if (!rc && !(rc=VECTOR_NormalizeVector(pTabFeno->Sref-1,pTabFeno->NDET,&factTemp,"MFC_LoadAnalysis (Reference) ")))
+       if (!rc && !(rc=VECTOR_NormalizeVector(pTabFeno->Sref-1,pTabFeno->NDET,&pTabFeno->refNormFact,"MFC_LoadAnalysis (Reference) ")))
         {
          memcpy(pTabFeno->SrefEtalon,pTabFeno->Sref,sizeof(double)*pTabFeno->NDET);
          pTabFeno->useEtalon=pTabFeno->displayRef=1;

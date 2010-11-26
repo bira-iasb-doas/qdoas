@@ -58,6 +58,8 @@ extern "C" {
     int pixelTypeCenter;
     int pixelTypeWest;
     int pixelTypeBackscan;
+    double cloudFractionMin;
+    double cloudFractionMax;
     int requireSpectrum;
     int requirePolynomial;
     int requireFit;

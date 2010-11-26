@@ -377,6 +377,7 @@ typedef struct _feno
   double          refSZA,refSZADelta,refMaxdoasSZA,refMaxdoasSZADelta;          //  in automatic reference selection mode, SZA constraints
   INT             refSpectrumSelectionMode;                                     //  reference spectrum selection mode
   INT             refMaxdoasSelectionMode;                                      //  for MAXDOAS measurements, selection of the reference spectrum based on the scan or the SZA
+  double          cloudFractionMin,cloudFractionMax;
   DoasCh          refAM[MAX_ITEM_TEXT_LEN+1],refPM[MAX_ITEM_TEXT_LEN+1];        //  in automatic reference selection mode, names of the spectra files selected for the reference spectra (specific file format : MFC)
   INDEX           indexRefMorning,indexRefAfternoon,                            //  in automatic reference selection mode, index of selected records
                   indexRef;                                                     //  in automatic reference selection mode, index of current selected record
@@ -417,12 +418,15 @@ typedef struct _feno
                   Shift,                                                        //  shift found when aligning etalon on reference
                   Stretch,                                                      //  stretch order 1 found when aligning etalon on reference
                   Stretch2,                                                     //  stretch order 2 found when aligning etalon on reference
+                  refNormFact,
                   ShiftN,                                                       //  shift found when aligning etalon on reference
                   StretchN,                                                     //  stretch order 1 found when aligning etalon on reference
                   Stretch2N,                                                    //  stretch order 2 found when aligning etalon on reference
+                  refNormFactN,
                   ShiftS,                                                       //  shift found when aligning etalon on reference
                   StretchS,                                                     //  stretch order 1 found when aligning etalon on reference
                   Stretch2S,                                                    //  stretch order 2 found when aligning etalon on reference
+                  refNormFactS,
                   chiSquare,                                                    //  chi square
                   RMS;
 
@@ -1014,7 +1018,7 @@ RC   ANALYSE_LinFit(SVD *pSvd,INT Npts,INT Degree,double *a,double *sigma,double
 void ANALYSE_SvdFree(DoasCh *callingFunctionShort,SVD *pSvd);
 RC   ANALYSE_SvdLocalAlloc(DoasCh *callingFunctionShort,SVD *pSvd);
 RC   ANALYSE_SvdInit(SVD *pSvd);
-RC   ANALYSE_CurFitMethod(double *Spectre,double *SigmaSpec,double *Sref,double *Chisqr,INT *pNiter);
+RC   ANALYSE_CurFitMethod(double *Spectre,double *SigmaSpec,double *Sref,double *Chisqr,INT *pNiter,double speNormFact,double refNormFact);
 void ANALYSE_ResetData(void);
 RC   ANALYSE_SetInit(ENGINE_CONTEXT *pEngineContext);
 RC   ANALYSE_AlignReference(ENGINE_CONTEXT *pEngineContext,INT refFlag,INT saveFlag,void *responseHandle);

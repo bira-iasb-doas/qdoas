@@ -183,6 +183,7 @@ void CQdoasConfigWriter::writePropertiesSelection(FILE *fp, const mediate_projec
   fprintf(fp, "    <selection>\n");
   fprintf(fp, "      <sza min=\"%.3f\" max=\"%.3f\" delta=\"%.3f\" />\n", d->szaMinimum, d->szaMaximum, d->szaDelta);
   fprintf(fp, "      <record min=\"%d\" max=\"%d\" />\n", d->recordNumberMinimum, d->recordNumberMaximum);
+  fprintf(fp, "      <cloud min=\"%.3f\" max=\"%.3f\" />\n", d->cloudFractionMinimum, d->cloudFractionMaximum);
   switch (d->geo.mode) {
   case PRJCT_SPECTRA_MODES_CIRCLE:
     fprintf(fp, "      <geolocation selected=\"circle\">\n");
@@ -1138,11 +1139,12 @@ void CQdoasConfigWriter::writeAnalysisWindows(FILE *fp, const QString &projectNa
 	tmpStr = pathMgr->simplifyPath(QString(properties->refTwoFile));
 	fprintf(fp, "             reftwo=\"%s\"\n", tmpStr.toAscii().constData());
 	tmpStr = pathMgr->simplifyPath(QString(properties->residualFile));
-	fprintf(fp, "             residual=\"%s\"\nszacenter=\"%.3f\" szadelta=\"%.3f\" minlon=\"%.3f\" maxlon=\"%.3f\" minlat=\"%.3f\" maxlat=\"%.3f\" refns=\"%d\"\n",
+	fprintf(fp, "             residual=\"%s\"\nszacenter=\"%.3f\" szadelta=\"%.3f\" minlon=\"%.3f\" maxlon=\"%.3f\" minlat=\"%.3f\" maxlat=\"%.3f\" refns=\"%d\" cloudfmin=\"%.3f\" cloudfmax=\"%.3f\" \n",
                 tmpStr.toAscii().constData(),
 		properties->refSzaCenter , properties->refSzaDelta,
                 properties->refMinLongitude, properties->refMaxLongitude,
-                properties->refMinLatitude, properties->refMaxLatitude, properties->refNs);
+                properties->refMinLatitude, properties->refMaxLatitude, properties->refNs,
+                properties->cloudFractionMin,properties->cloudFractionMax);
 	fprintf(fp,"              maxdoasrefmode=\"%s\" maxdoasszacenter=\"%.3f\" maxdoasszadelta=\"%.3f\"\n",
 	           (properties->refMaxdoasSelection==ANLYS_MAXDOAS_REF_SCAN)?"scan":"sza",properties->refMaxdoasSzaCenter,properties->refMaxdoasSzaDelta);
 	fprintf(fp, "             east=\"%s\" center=\"%s\" west=\"%s\" backscan=\"%s\" />\n",

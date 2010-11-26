@@ -768,7 +768,6 @@ RC MKZY_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
   CROSS_REFERENCE *pTabCross;                                                   // pointer to the current cross section
   WRK_SYMBOL *pWrkSymbol;                                                       // pointer to a symbol
   FENO *pTabFeno;                                                               // pointer to the current spectral analysis window
-  double factTemp;                                                              // working variables
   INT DimL,useKurucz,saveFlag;                                                  // working variables
   RC rc;                                                                        // return code
 
@@ -795,7 +794,7 @@ RC MKZY_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
         memcpy(pTabFeno->Sref,pBuffers->scanRef,sizeof(double)*NDET);
 
-        if (!rc && !(rc=VECTOR_NormalizeVector(pTabFeno->Sref-1,pTabFeno->NDET,&factTemp,"MKZY_LoadAnalysis (Reference) ")))
+        if (!rc && !(rc=VECTOR_NormalizeVector(pTabFeno->Sref-1,pTabFeno->NDET,&pTabFeno->refNormFact,"MKZY_LoadAnalysis (Reference) ")))
          {
           memcpy(pTabFeno->SrefEtalon,pTabFeno->Sref,sizeof(double)*pTabFeno->NDET);
           pTabFeno->useEtalon=pTabFeno->displayRef=1;

@@ -524,6 +524,10 @@ void setMediateProjectDisplay(PRJCT_SPECTRA *pEngineSpectra,const mediate_projec
 
 void setMediateProjectSelection(PRJCT_SPECTRA *pEngineSpectra,const mediate_project_selection_t *pMediateSpectra)
  {
+  // Declarations
+
+  float tmp;
+
   #if defined(__DEBUG_) && __DEBUG_ && defined(__DEBUG_DOAS_CONFIG_) && __DEBUG_DOAS_CONFIG_
   DEBUG_FunctionBegin("setMediateProjectSelection",DEBUG_FCTTYPE_CONFIG);
   #endif
@@ -538,6 +542,18 @@ void setMediateProjectSelection(PRJCT_SPECTRA *pEngineSpectra,const mediate_proj
   pEngineSpectra->SZAMin=(float)pMediateSpectra->szaMinimum;
   pEngineSpectra->SZAMax=(float)pMediateSpectra->szaMaximum;
   pEngineSpectra->SZADelta=(float)pMediateSpectra->szaDelta;
+
+  // Cloud fraction
+
+  pEngineSpectra->cloudMin=(float)pMediateSpectra->cloudFractionMinimum;
+  pEngineSpectra->cloudMax=(float)pMediateSpectra->cloudFractionMaximum;
+
+  if (pEngineSpectra->cloudMin>=pEngineSpectra->cloudMax+EPSILON)
+   {
+   	tmp=pEngineSpectra->cloudMin;
+   	pEngineSpectra->cloudMin=pEngineSpectra->cloudMax;
+   	pEngineSpectra->cloudMax=tmp;
+   }
 
   // QDOAS ??? to move to the instrumental page
 
@@ -1485,6 +1501,9 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
           pTabFeno->refLatMax=pAnalysisWindows->refMaxLatitude;
           pTabFeno->refLonMin=pAnalysisWindows->refMinLongitude;
           pTabFeno->refLonMax=pAnalysisWindows->refMaxLongitude;
+
+          pTabFeno->cloudFractionMin=pAnalysisWindows->cloudFractionMin;
+          pTabFeno->cloudFractionMax=pAnalysisWindows->cloudFractionMax;
 
           pTabFeno->gomePixelType[0]=pTabFeno->gomePixelType[1]=pTabFeno->gomePixelType[2]=pTabFeno->gomePixelType[3]=0;
 

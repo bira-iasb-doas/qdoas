@@ -45,6 +45,7 @@ class CWInstrPdaEggUlbEdit;
 class CWInstrCcdEevEdit;
 class CWInstrOpusEdit;
 class CWInstrGdpEdit;
+class CWInstrGome2Edit;
 class CWInstrSciaEdit;
 class CWInstrOmiEdit;
 class CWInstrMfcEdit;
@@ -96,7 +97,7 @@ Q_OBJECT
   CWInstrMinimumEdit *m_uoftEdit;
   CWInstrMinimumEdit *m_noaaEdit;
   CWInstrOmiEdit *m_omiEdit;
-  CWInstrGdpEdit *m_gome2Edit;
+  CWInstrGome2Edit *m_gome2Edit;
   CWInstrMinimumEdit *m_mkzyEdit;
   CWInstrMinimumEdit *m_biraairborneEdit;
   std::map<int,int> m_instrumentToStackIndexMap;
@@ -364,6 +365,21 @@ class CWInstrGdpEdit : public CWCalibInstrEdit
   virtual ~CWInstrGdpEdit();
 
   void apply(struct instrumental_gdp *d) const;
+
+ private:
+  QComboBox *m_bandTypeCombo;
+  QComboBox *m_pixelTypeCombo;
+};
+
+//--------------------------------------------------------------------------
+
+class CWInstrGome2Edit : public CWCalibInstrEdit
+{
+ public:
+  CWInstrGome2Edit(const struct instrumental_gome2 *d, QWidget *parent = 0);
+  virtual ~CWInstrGome2Edit();
+
+  void apply(struct instrumental_gome2 *d) const;
 
  private:
   QComboBox *m_bandTypeCombo;
