@@ -104,10 +104,6 @@ static DoasI32    memoryMaxBytes=0;                                             
 static INT     memoryMaxObjects=0;                                              // maximum number of objects allocated in one time
 static DoasI32    memoryMaxObjectsSize=0;                                          // total size used when maximum number of objects is reached
 
-// QDOAS ??? #if defined(__WINDOAS_GUI_) && __WINDOAS_GUI_                                   // when the user interface is not loaded, the program is not multithreaded
-// QDOAS ??? static CRITICAL_SECTION memoryCriticalSection;                                  // critical section object used for accessing to previous variables
-// QDOAS ??? #endif
-
 // =========
 // FUNCTIONS
 // =========
@@ -162,10 +158,6 @@ void *MEMORY_AllocBuffer(DoasCh *callingFunctionName,DoasCh *bufferName,INT item
 
     else
      {
-// QDOAS ???      #if defined(__WINDOAS_GUI_) && __WINDOAS_GUI_
-// QDOAS ???      EnterCriticalSection(&memoryCriticalSection);
-// QDOAS ???      #endif
-
       // Save data on the new allocated object
 
       pMemory=&memoryStack[memoryStackObjectsNumber];
@@ -196,10 +188,6 @@ void *MEMORY_AllocBuffer(DoasCh *callingFunctionName,DoasCh *bufferName,INT item
 
       if (memoryStackBytesNumber>memoryMaxBytes)
        memoryMaxBytes=memoryStackBytesNumber;
-
-// QDOAS ???      #if defined(__WINDOAS_GUI_) && __WINDOAS_GUI_
-// QDOAS ???      LeaveCriticalSection(&memoryCriticalSection);
-// QDOAS ???      #endif
      }
    }
 
@@ -247,10 +235,6 @@ void MEMORY_ReleaseBuffer(DoasCh *callingFunctionName,DoasCh *bufferName,void *p
    {
     // Initializations
 
-// QDOAS ???    #if defined(__WINDOAS_GUI_) && __WINDOAS_GUI_
-// QDOAS ???    EnterCriticalSection(&memoryCriticalSection);
-// QDOAS ???    #endif
-
     // browse objects in the stack
 
     for (indexObjects=memoryStackObjectsNumber-1;indexObjects>=0;indexObjects--)
@@ -272,10 +256,6 @@ void MEMORY_ReleaseBuffer(DoasCh *callingFunctionName,DoasCh *bufferName,void *p
       if (indexObjects<memoryStackObjectsNumber)
        memcpy(pMemory,&memoryStack[indexObjects+1],sizeof(MEMORY)*(memoryStackObjectsNumber-indexObjects));
      }
-
-// QDOAS ???    #if defined(__WINDOAS_GUI_) && __WINDOAS_GUI_
-// QDOAS ???    LeaveCriticalSection(&memoryCriticalSection);
-// QDOAS ???    #endif
    }
 
   // Release the allocated object anyway
@@ -512,12 +492,6 @@ RC MEMORY_Alloc(void)
  	else
  	 {
 
- 	  // Use a critical section in multi-thread environment
-
-// QDOAS ???    #if defined(__WINDOAS_GUI_) && __WINDOAS_GUI_
-// QDOAS ???    InitializeCriticalSection(&memoryCriticalSection);
-// QDOAS ???    #endif
-
     // Initialize all the static variables handling the stack
 
     memoryStackObjectsNumber=
@@ -604,11 +578,6 @@ RC MEMORY_End(void)
 
     memoryStack=NULL;
 
-    // The critical section object is not needed anymore
-
-// QDOAS ???    #if defined(__WINDOAS_GUI_) && __WINDOAS_GUI_
-// QDOAS ???    DeleteCriticalSection(&memoryCriticalSection);
-// QDOAS ???    #endif
    }
 
   // Unregister the function in debugging mode
@@ -655,10 +624,6 @@ RC MEMORY_GetInfo(DEBUG_VARIABLE *pVariable,DoasCh *pBuffer)
    rc=ERROR_SetLast("MEMORY_GetInfo",ERROR_TYPE_DEBUG,ERROR_ID_MEMORY_STACKNOTALLOCATED);
   else if (pVariable!=NULL)
    {
-// QDOAS ???    #if defined(__WINDOAS_GUI_) && __WINDOAS_GUI_
-// QDOAS ???    EnterCriticalSection(&memoryCriticalSection);
-// QDOAS ???    #endif
-
     memset(pVariable,0,sizeof(DEBUG_VARIABLE));
 
    	// Browse objects in the stack
@@ -713,10 +678,6 @@ RC MEMORY_GetInfo(DEBUG_VARIABLE *pVariable,DoasCh *pBuffer)
    	    pVariable->varMatrixFlag=1;
    	   }
    	 }
-
-// QDOAS ???    #if defined(__WINDOAS_GUI_) && __WINDOAS_GUI_
-// QDOAS ???    LeaveCriticalSection(&memoryCriticalSection);
-// QDOAS ???    #endif
    }
 
   // Return

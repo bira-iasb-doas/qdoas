@@ -56,45 +56,11 @@ extern "C" {
 // COMPILATION CONTROL
 // ===================
 
-// QDOAS ??? #define __WINDOAS_WIN_ 1                                                        // 1 to compile for Windows
-// QDOAS ??? #define __WINDOAS_GUI_ 1                                                        // 1 to use the Windows graphics user interface
-// QDOAS ??? #define __BC32_        0                                                        // 1 to compile under Borland C/C++ 5.0
-
 #define __INCLUDE_HDF_ 0                                                        // 1 to include HDF
 
 // ===============
 // INCLUDE HEADERS
 // ===============
-
-// QDOAS ??? // Operating system
-// QDOAS ???
-// QDOAS ??? #if defined(__WINDOAS_WIN_) && __WINDOAS_WIN_
-// QDOAS ???     #include <windows.h>
-// QDOAS ???     #include <windowsx.h>
-// QDOAS ???     #include <commctrl.h>
-// QDOAS ???     #include <shlobj.h>
-// QDOAS ???     #include <io.h>
-// QDOAS ???     #include <sys\stat.h>
-// QDOAS ???     #include <share.h>
-// QDOAS ???     #include <process.h>
-// QDOAS ???
-// QDOAS ???     #if defined(__BC32_) && __BC32_
-// QDOAS ???     #include <dir.h>
-// QDOAS ???     #include <dirent.h>
-// QDOAS ???     #else
-// QDOAS ???
-// QDOAS ???     #pragma comment(lib, "comctl32.lib")
-// QDOAS ???     #pragma comment(lib, "ws2_32.lib")
-// QDOAS ???
-// QDOAS ???     #include <direct.h>
-// QDOAS ???     #include <time.h>
-// QDOAS ???     #endif
-// QDOAS ??? #else
-// QDOAS ???     #include <sys/io.h>
-// QDOAS ???     #include <sys/dir.h>
-// QDOAS ???     #include <dirent.h>
-// QDOAS ??? #endif
-// QDOAS ???
 
 #include <ctype.h>
 #include <fcntl.h>
@@ -111,22 +77,12 @@ extern "C" {
 #include <stdint.h>
 
 #ifndef WIN32
+#include <unistd.h>
 #define strnicmp strncasecmp
 #endif
 
 
 #pragma pack(1)
-
-// QDOAS ??? // ===========
-// QDOAS ??? // DEFINITIONS
-// QDOAS ??? // ===========
-// QDOAS ???
-// QDOAS ??? #if !defined(INFINITE)
-// QDOAS ??? #define INFINITE            0xFFFFFFFF                                          // Infinite timeout
-// QDOAS ??? #endif
-// QDOAS ???
-// QDOAS ??? // Types [re]definition
-// QDOAS ???
 
 typedef int            INT;
 typedef char           DoasCh;
@@ -500,45 +456,6 @@ char       *STD_Strlwr(char *n);
 int         STD_Stricmp(char *str1,char *str2);
 
 int         STD_IsDir(char *filename);
-
-// QDOAS ??? // ============
-// QDOAS ??? // MAIN PROGRAM
-// QDOAS ??? // ============
-// QDOAS ???
-// QDOAS ??? typedef struct _doasArg
-// QDOAS ???  {
-// QDOAS ???   INT   analysisFlag;
-// QDOAS ???   DoasCh wdsFile[MAX_STR_LEN+1];
-// QDOAS ???   DoasCh projectName[MAX_STR_LEN+1];
-// QDOAS ???   DoasCh fileName[MAX_STR_LEN+1];
-// QDOAS ???  }
-// QDOAS ??? DOAS_ARG;
-// QDOAS ???
-// QDOAS ??? // Global variables
-// QDOAS ??? // ----------------
-// QDOAS ???
-// QDOAS ??? #if defined (__WINDOAS_GUI_) && __WINDOAS_GUI_
-// QDOAS ??? EXTERN HINSTANCE DOAS_hInst;                                                    // current instance of the program
-// QDOAS ??? EXTERN HWND      DOAS_hwndMain;                                                 // handle of the main window
-// QDOAS ??? #endif
-// QDOAS ???
-// QDOAS ??? EXTERN DoasCh     DOAS_szTitle[40];                                              // the text of title bar
-// QDOAS ??? EXTERN DoasCh     DOAS_HelpPath[MAX_PATH_LEN+1];                                 // path for help file
-// QDOAS ??? EXTERN DoasCh     DOAS_logFile[MAX_PATH_LEN+1];                                  // file for log errors
-// QDOAS ??? EXTERN DoasCh     DOAS_dbgFile[MAX_PATH_LEN+1];                                  // file for debug output
-// QDOAS ??? EXTERN DoasCh     DOAS_tmpFile[MAX_PATH_LEN+1];                                  // temporary file for spectra and analysis data
-// QDOAS ??? EXTERN DoasCh     DOAS_sysFile[MAX_PATH_LEN+1];                                  // system file
-// QDOAS ??? EXTERN DoasCh     DOAS_broAmfFile[MAX_PATH_LEN+1];                               // specific BrO processing
-// QDOAS ???
-// QDOAS ??? EXTERN DOAS_ARG  DOAS_arg;                                                      // arguments of the program when used from the command line prompt
-// QDOAS ???
-// QDOAS ??? // Prototypes
-// QDOAS ??? // ----------
-// QDOAS ???
-// QDOAS ??? void    DOAS_CenterWindow(HWND hwndChild,HWND hwndParent);
-// QDOAS ??? void    DOAS_ListMoveSelectedItems(HWND hwndParent,DoasU32 listFrom,DoasU32 listTo);
-// QDOAS ???
-// QDOAS ??? RC      MSG_MessageBox(HWND hwnd,INT controlID,INT titleID,INT msgID,INT style,...);
 
 #if defined(_cplusplus) || defined(__cplusplus)
 }

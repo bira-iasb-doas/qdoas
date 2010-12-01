@@ -134,8 +134,6 @@ INT    THRD_pathOK;
 INT    THRD_endProgram;
 INT    thrdRefFlag;
 
-THRD_GOTO THRD_goto={ 1, ITEM_NONE, 1, 0, ITEM_NONE, ITEM_NONE };
-
 // ===============
 // DATA PROCESSING
 // ===============

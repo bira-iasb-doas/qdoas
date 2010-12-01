@@ -1387,8 +1387,6 @@ RC GdpBinNewRef(ENGINE_CONTEXT *pEngineContext,FILE *specFp,void *responseHandle
                              responseHandle);
     }
 
-  THRD_goto.indexMin=THRD_goto.indexMax=ITEM_NONE;
-
   // Return
 
   return rc;

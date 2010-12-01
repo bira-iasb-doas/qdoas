@@ -456,59 +456,6 @@ RC XsconvFctBuild(double *slitLambda,double *slitVector,INT slitSize,INT slitTyp
   return rc;
  }
 
-// QDOAS ??? // ======================
-// QDOAS ??? // TAB CONTROL PROCESSING
-// QDOAS ??? // ======================
-// QDOAS ???
-// QDOAS ??? #if defined (__WINDOAS_GUI_) && __WINDOAS_GUI_
-// QDOAS ???
-// QDOAS ??? // ---------------------------------------------------------------
-// QDOAS ??? // XsconvTabChange : TCN_SELCHANGE notification message processing
-// QDOAS ??? // ---------------------------------------------------------------
-// QDOAS ???
-// QDOAS ??? void XsconvTabChange(HWND hwndTab)
-// QDOAS ???  {
-// QDOAS ???   // Declarations and initializations
-// QDOAS ???
-// QDOAS ???   TAB_PAGE *pTab;
-// QDOAS ???   xsconvIndexSelected=TabCtrl_GetCurSel(hwndTab);
-// QDOAS ???   pTab=&xsconvTabPages[xsconvIndexSelected];
-// QDOAS ???
-// QDOAS ???   // Destroys the current child dialog box, if any.
-// QDOAS ???
-// QDOAS ???   if (xsconvHwndPage!=NULL)
-// QDOAS ???    DestroyWindow(xsconvHwndPage);
-// QDOAS ???
-// QDOAS ???   // Load the selected child dialog box
-// QDOAS ???
-// QDOAS ???   xsconvHwndPage=CreateDialogIndirect(DOAS_hInst,pTab->dlgTemp,hwndTab,pTab->dlgProc);
-// QDOAS ???   ShowWindow(hwndTab,SW_SHOW);
-// QDOAS ???  }
-// QDOAS ???
-// QDOAS ??? // ---------------------------------------------
-// QDOAS ??? // XsconvTabReSize : Resize pages in tab control
-// QDOAS ??? // ---------------------------------------------
-// QDOAS ???
-// QDOAS ??? void XsconvTabReSize(HWND hwndParent,HWND hwndChild)
-// QDOAS ???  {
-// QDOAS ???   // Declarations
-// QDOAS ???
-// QDOAS ???   RECT rcParent,rcChild;                 // windows rectangle
-// QDOAS ???
-// QDOAS ???   // Window resizing
-// QDOAS ???
-// QDOAS ???   GetWindowRect(hwndParent,&rcParent);   // parent window rectangle
-// QDOAS ???   GetWindowRect(hwndChild,&rcChild);     // child window rectangle
-// QDOAS ???
-// QDOAS ???   MoveWindow(hwndChild,1,
-// QDOAS ???             (rcParent.bottom-rcParent.top)-(rcChild.bottom-rcChild.top)-10,
-// QDOAS ???              rcChild.right-rcChild.left,
-// QDOAS ???              rcChild.bottom-rcChild.top,
-// QDOAS ???              TRUE);
-// QDOAS ???  }
-// QDOAS ???
-// QDOAS ??? #endif
-
 // ===============
 // DATA PROCESSING
 // ===============
@@ -628,61 +575,6 @@ RC XsconvGetFwhm(XS *pSlit,INT slitType,double *slitParam)
 // ================
 // FILES PROCESSING
 // ================
-
-// -------------------------------------
-// XSCONV_FileSelection : File selection
-// -------------------------------------
-
-// QDOAS ??? #if defined (__WINDOAS_GUI_) && __WINDOAS_GUI_
-// QDOAS ???
-// QDOAS ??? void XSCONV_FileSelection(HWND hwndXsconv,DoasCh *file,MASK fileType,INT fileMode,INT fileCommand,INT ringFlag)
-// QDOAS ???  {
-// QDOAS ???   // Declarations
-// QDOAS ???
-// QDOAS ???   DoasCh *ptr;
-// QDOAS ???   SZ_LEN pathLength;
-// QDOAS ???
-// QDOAS ???   // Initialization
-// QDOAS ???
-// QDOAS ???   pathLength=strlen(file);
-// QDOAS ???
-// QDOAS ???   // Set automatic path in output mode
-// QDOAS ???
-// QDOAS ???   if ((fileMode==FILE_MODE_SAVE) && !ringFlag)
-// QDOAS ???    {
-// QDOAS ???     if ((pathLength!=0) && (file[pathLength-1]==PATH_SEP))
-// QDOAS ???      strcat(file,"automatic");
-// QDOAS ???     else if (pathLength==0)
-// QDOAS ???      {
-// QDOAS ???       DoasCh pathSep[2];
-// QDOAS ???
-// QDOAS ???       pathSep[0]=PATH_SEP;
-// QDOAS ???       pathSep[1]='\0';
-// QDOAS ???
-// QDOAS ???       getcwd(file,MAX_ITEM_TEXT_LEN);
-// QDOAS ???       strcat(file,pathSep);
-// QDOAS ???       strcat(file,"automatic");
-// QDOAS ???      }
-// QDOAS ???    }
-// QDOAS ???
-// QDOAS ???   // Select path and file
-// QDOAS ???
-// QDOAS ???   FILES_Select(hwndXsconv,file,MAX_ITEM_TEXT_LEN+1,fileType,0,(DoasCh)fileMode,NULL,ITEM_NONE,ITEM_NONE);
-// QDOAS ???
-// QDOAS ???   // Returned path processing in output mode
-// QDOAS ???
-// QDOAS ???   if ((fileMode==FILE_MODE_SAVE) && !ringFlag &&
-// QDOAS ???       (!STD_Stricmp((ptr=file),"automatic") ||
-// QDOAS ???      (((ptr=strrchr(file,PATH_SEP))!=NULL) &&
-// QDOAS ???        (strlen(++ptr)!=0) &&
-// QDOAS ???        !STD_Stricmp(ptr,"automatic"))))
-// QDOAS ???
-// QDOAS ???    *ptr=0;
-// QDOAS ???
-// QDOAS ???   SetWindowText(GetDlgItem(hwndXsconv,fileCommand),file);
-// QDOAS ???  }
-// QDOAS ???
-// QDOAS ??? #endif
 
 // ------------------------------------------------------------
 // XSCONV_LoadCalibrationFile : Final wavelength scale read out
@@ -1236,11 +1128,11 @@ RC XSCONV_TypeStandard(XS *pXsnew,INDEX indexLambdaMin,INDEX indexLambdaMax,XS *
          *IVector,*IDeriv2,
           crossFIntegral,IFIntegral,FIntegral,
           oldF,newF,oldIF,newIF,stepF,h,
-          slitCenter,c,si,
+          slitCenter,// ADD AN OPTION LATER c,si,
           lambda,lambdaMin,lambdaMax,oldXshr,newXshr;
   INDEX   xshrPixMin,
           xsnewIndex,indexOld,indexNew,
-          klo,khi,i;
+          klo,khi; // ADD AN OPTION LATER,i;
   INT     xshrNDET,xsnewNDET,slitNDET,msgCount;
   RC      rc;
 
@@ -1387,12 +1279,6 @@ RC XSCONV_TypeStandard(XS *pXsnew,INDEX indexLambdaMin,INDEX indexLambdaMax,XS *
     // Case 2 : the resolution of slit function is better than the resolution of cross section => cross section interpolation
 
     else
-
-// QDOAS ??? #if defined (__WINDOAS_GUI_) && __WINDOAS_GUI_
-// QDOAS ???       if (msgCount || (THRD_id!=THREAD_TYPE_NONE) ||
-// QDOAS ???             ((rc=MSG_MessageBox(DOAS_hwndMain,ITEM_NONE,MENU_TOOLS_CONVOLUTION,
-// QDOAS ???              IDS_MSGBOX_XSCONV_GRID,MB_YESNO|MB_ICONHAND))==IDYES))
-// QDOAS ??? #endif
 
      {
       msgCount=1;
@@ -2006,31 +1892,6 @@ RC XSCONV_NewSlitFunction(SLIT *pSlitOptions,XS *pSlit,double slitParam,SLIT *pS
       newSlit[nslit-i-1]=slitFFTin[n2-(i-ndemi-1)];
      }
    }
-
-// QDOAS ???  #if defined (__WINDOAS_GUI_) && __WINDOAS_GUI_
-// QDOAS ???
-// QDOAS ???  if (!rc && (CHILD_list[CHILD_WINDOW_SPECTRA].hwndChild!=NULL))
-// QDOAS ???   {
-// QDOAS ???    DoasCh str[MAX_ITEM_TEXT_LEN+1];
-// QDOAS ???
-// QDOAS ???    sprintf(str,"Convolution tool : effective slit function (%d x %.4f)",nslit,slitStep);
-// QDOAS ???
-// QDOAS ???    SendMessage(CHILD_hwndFrame,WM_MDIACTIVATE,(WPARAM)CHILD_list[CHILD_WINDOW_SPECTRA].hwndChild,(LPARAM)0);
-// QDOAS ???
-// QDOAS ???    DRAW_Spectra(CHILD_WINDOW_SPECTRA,str,"","Wavelength (nm)","",NULL,0,
-// QDOAS ???                 (double)0.,(double)0.,(double)0.,(double)0.,
-// QDOAS ???                 lambda,newSlit,nslit,DRAW_COLOR1,0,nslit-1,PS_SOLID,NULL,
-// QDOAS ???                 NULL,NULL,0,0,0,0,0,NULL,
-// QDOAS ???                 0,1,1,1);
-// QDOAS ???
-// QDOAS ???    if (MessageBox(hwndXsconv,"Accept effective slit function ? ","Convolution tool",MB_YESNO)==IDNO)
-// QDOAS ???     {
-// QDOAS ???      rc=THREAD_EVENT_STOP;
-// QDOAS ???      goto EndNewSlit;
-// QDOAS ???     }
-// QDOAS ???   }
-// QDOAS ???
-// QDOAS ???   #endif
 
   // Release previous buffers
 

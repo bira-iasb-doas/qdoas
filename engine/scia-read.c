@@ -2042,8 +2042,6 @@ RC SciaNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
                           responseHandle);
     }
 
-  THRD_goto.indexMin=THRD_goto.indexMax=ITEM_NONE;
-
   // Return
 
 //  DEBUG_Print(DOAS_logFile,"End SciaNewRef %d\n",rc);

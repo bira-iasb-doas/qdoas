@@ -447,7 +447,7 @@ RC MKZY_ReadRecord(ENGINE_CONTEXT *pEngineContext,int recordNo,FILE *specFp)
 
     fread(buffer,pBuffers->recordIndexes[recordNo]-pBuffers->recordIndexes[recordNo-1]-header.hdrsize,1,specFp);
 
-    if ((recordInfo.pixels>NDET) || ((npixels=MKZY_UnPack(buffer,recordInfo.pixels,(long *)lbuffer))<0) || (npixels>NDET))
+    if ((recordInfo.pixels>NDET) || ((npixels=MKZY_UnPack(buffer,recordInfo.pixels,(int *)lbuffer))<0) || (npixels>NDET))
      rc=ERROR_SetLast("MKZY_ReadRecord",ERROR_TYPE_WARNING,ERROR_ID_BUFFER_FULL,"spectra");
     else
      {
@@ -653,8 +653,7 @@ RC MKZY_Reli(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,INT localD
 
   double *spectrum,*offset;                                                     // pointer to spectrum and offset
   double *cumSpectrum;
-  double Tm1,Tm2,longitude;
-  int nsec,nsec1,nsec2;
+  double Tm1,Tm2;
   INDEX   i,indexRecord,nRecord;                                                // browse pixels of the detector
   RC      rc;                                                                   // return code
 

@@ -100,8 +100,6 @@ INT SITES_itemN=0;                                                              
 // STATIC VARIABLES
 // ================
 
-// QDOAS ??? static OBSERVATION_SITE *pSITES_selected=NULL;                                  // pointer to the selected observation site
-
 // ===============
 // LIST PROCESSING
 // ===============
@@ -139,69 +137,6 @@ INDEX SITES_GetIndex(DoasCh *siteName)
 
   return (indexSite<SITES_itemN)?indexSite:ITEM_NONE;
  }
-
-// QDOAS ??? // ============================
-// QDOAS ??? // OBSERVATION SITES PROPERTIES
-// QDOAS ??? // ============================
-// QDOAS ???
-// QDOAS ??? #if defined(__WINDOAS_GUI_) && (__WINDOAS_GUI_)
-// QDOAS ???
-// QDOAS ??? // -----------------------------------------------------------------------------
-// QDOAS ??? // FUNCTION        SitesDlgInit
-// QDOAS ??? // -----------------------------------------------------------------------------
-// QDOAS ??? // PURPOSE         Initialize the observation sites dialog box with the information
-// QDOAS ??? //                 on the selected item in the 'environment space' tree
-// QDOAS ??? //
-// QDOAS ??? // INPUT           hwndSites : the handle of the observation sites dialog box
-// QDOAS ??? //                 indexSite : the index of the selected item in the tree
-// QDOAS ??? // -----------------------------------------------------------------------------
-// QDOAS ???
-// QDOAS ??? void SitesDlgInit(HWND hwndSites,INDEX indexSite)
-// QDOAS ???  {
-// QDOAS ???   // Declarations
-// QDOAS ???
-// QDOAS ???   OBSERVATION_SITE *pSite;                                                      // pointer to the selected observation site
-// QDOAS ???   DoasCh textTitle[MAX_ITEM_TEXT_LEN+1],                                         // complete title of the dialog box
-// QDOAS ???         textMsg[MAX_ITEM_TEXT_LEN+1],                                           // title of the dialog box retrieved from the resource file
-// QDOAS ???         string[MAX_ITEM_TEXT_LEN+1];                                            // formatted string
-// QDOAS ???
-// QDOAS ???   // Center dialog box on parent windows
-// QDOAS ???
-// QDOAS ???   DOAS_CenterWindow(hwndSites,GetWindow(hwndSites,GW_OWNER));
-// QDOAS ???
-// QDOAS ???   // Get the selected observation site
-// QDOAS ???
-// QDOAS ???   if ((indexSite!=ITEM_NONE) &&
-// QDOAS ???      ((indexSite=TREE_itemList[indexSite].dataIndex)!=ITEM_NONE))
-// QDOAS ???    {
-// QDOAS ???     pSite=pSITES_selected=&SITES_itemList[indexSite];
-// QDOAS ???
-// QDOAS ???     // Set window title
-// QDOAS ???
-// QDOAS ???     LoadString(DOAS_hInst,IDS_TITLE_OBSERVATION_SITES,textMsg,MAX_ITEM_TEXT_LEN);
-// QDOAS ???     sprintf(textTitle,"%s : %s",textMsg,pSite->name);
-// QDOAS ???     SetWindowText(hwndSites,textTitle);
-// QDOAS ???
-// QDOAS ???     SendDlgItemMessage(hwndSites,SITES_ABBREVIATION,EM_SETLIMITTEXT,(WPARAM)MAX_SITES_ABBREVIATION,(LPARAM)0);
-// QDOAS ???     SetWindowText(GetDlgItem(hwndSites,SITES_ABBREVIATION),pSite->abbrev);
-// QDOAS ???
-// QDOAS ???     // Longitude
-// QDOAS ???
-// QDOAS ???     sprintf(string,"%.3lf",pSite->longitude);
-// QDOAS ???     SetWindowText(GetDlgItem(hwndSites,SITES_LONGITUDE),string);
-// QDOAS ???
-// QDOAS ???     // Latitude
-// QDOAS ???
-// QDOAS ???     sprintf(string,"%.3lf",pSite->latitude);
-// QDOAS ???     SetWindowText(GetDlgItem(hwndSites,SITES_LATITUDE),string);
-// QDOAS ???
-// QDOAS ???     // Altitude
-// QDOAS ???
-// QDOAS ???     sprintf(string,"%.3lf",pSite->altitude);
-// QDOAS ???     SetWindowText(GetDlgItem(hwndSites,SITES_ALTITUDE),string);
-// QDOAS ???    }
-// QDOAS ???  }
-// QDOAS ???
 
 // -----------------------------------------------------------------------------
 // FUNCTION        SITES_Add

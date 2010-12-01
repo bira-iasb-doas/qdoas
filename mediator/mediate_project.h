@@ -340,6 +340,12 @@ extern "C" {
     char instrFunctionFile[FILENAME_BUFFER_LENGTH];
   };
 
+  struct instrumental_oceanoptics {
+    int  detectorSize;
+    char calibrationFile[FILENAME_BUFFER_LENGTH];
+    char instrFunctionFile[FILENAME_BUFFER_LENGTH];
+  };
+
   typedef struct mediate_project_instrumental
    {
     int format;
@@ -369,6 +375,7 @@ extern "C" {
     struct instrumental_gome2 gome2;
     struct instrumental_minimum mkzy;
     struct instrumental_minimum biraairborne;
+    struct instrumental_oceanoptics oceanoptics;
    }
   mediate_project_instrumental_t;
 

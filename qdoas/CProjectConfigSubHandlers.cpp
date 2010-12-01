@@ -572,6 +572,8 @@ bool CProjectInstrumentalSubHandler::start(const QXmlAttributes &atts)
     m_instrumental->format = PRJCT_INSTR_FORMAT_GOME2;
   else if (str == "mkzy")
     m_instrumental->format = PRJCT_INSTR_FORMAT_MKZY;
+  else if (str == "oceanoptics")
+    m_instrumental->format = PRJCT_INSTR_FORMAT_OCEAN_OPTICS;
   else
     return postErrorMessage("Invalid instrumental format");
 
@@ -943,6 +945,29 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
   }
   else if (element == "biraairborne") { // BIRA AIRBORNE
     return helperLoadMinimum(atts, &(m_instrumental->biraairborne));
+  }
+  else if (element == "oceanoptics") { // OCEAN OPTICS
+    QString str;
+
+    m_instrumental->oceanoptics.detectorSize = atts.value("size").toInt();
+
+    str = atts.value("calib");
+    if (!str.isEmpty()) {
+      str = m_master->pathExpand(str);
+      if (str.length() < (int)sizeof(m_instrumental->oceanoptics.calibrationFile))
+	strcpy(m_instrumental->oceanoptics.calibrationFile, str.toAscii().data());
+      else
+	return postErrorMessage("Calibration Filename too long");
+    }
+
+    str = atts.value("instr");
+    if (!str.isEmpty()) {
+      str = m_master->pathExpand(str);
+      if (str.length() < (int)sizeof(m_instrumental->oceanoptics.instrFunctionFile))
+	strcpy(m_instrumental->oceanoptics.instrFunctionFile, str.toAscii().data());
+      else
+	return postErrorMessage("Instrument Function  Filename too long");
+    }
   }
 
   // ... other formats ...

@@ -863,19 +863,6 @@ typedef struct _engineContext
  }
 ENGINE_CONTEXT;
 
-typedef struct _goto
- {
-  INDEX indexOld;
-  INDEX indexRecord;
-  INDEX indexPixel;
-  INT   indexType;
-  INDEX indexMin;
-  INDEX indexMax;
-  INDEX increment;
-  INDEX flag;
- }
-THRD_GOTO;
-
 typedef struct _thrdRef
  {
   INDEX  indexRecord;
@@ -898,7 +885,6 @@ EXTERN DWORD     THRD_delay;                   // wait for next event
 EXTERN INT       THRD_localShift;
 EXTERN INT       THRD_correction;
 EXTERN INT       THRD_browseType;
-EXTERN THRD_GOTO THRD_goto;
 EXTERN INT       THRD_treeCallFlag;
 EXTERN INT       THRD_increment;
 EXTERN INT       THRD_isFolder;
@@ -909,23 +895,9 @@ EXTERN INT       THRD_recordLast;
 // ----------
 
 double           THRD_GetDist(double longit, double latit, double longitRef, double latitRef);
-// QDOAS ??? #if defined(__WINDOAS_GUI_) && __WINDOAS_GUI_
-// QDOAS ??? LRESULT CALLBACK THRD_GotoWndProc(HWND hwndThrdGoto,UINT msg,WPARAM mp1,LPARAM mp2);
-// QDOAS ??? #endif
-// QDOAS ??? BOOL             THRD_Context(INDEX indexItem,INT menuId);
-// QDOAS ??? BOOL             THRD_SetIndexes(INDEX indexItem,INT treeCallFlag);
-// QDOAS ??? RC               THRD_ProcessLastError(void);
-// QDOAS ??? RC               THRD_Error(INT errorType,INT errorId,DoasCh *function,...);
-// QDOAS ??? INDEX            THRD_WaitEvent(DWORD delay,INT moveFlag,INT incrementFlag);
-// QDOAS ??? void             THRD_ResetSpecInfo(ENGINE_CONTEXT *pEngineContext);
-// QDOAS ??? void             THRD_LoadData(void);
 RC               THRD_SpectrumCorrection(ENGINE_CONTEXT *pEngineContext,double *spectrum);
-// QDOAS ??? void             THRD_BrowseSpectra(void *);
-// QDOAS ??? RC               THRD_Alloc(void);
-// QDOAS ??? void             THRD_Free(void);
 RC               THRD_CopySpecInfo(ENGINE_CONTEXT *pSpecInfoTarget,ENGINE_CONTEXT *pSpecInfoSource);
 RC               THRD_NewRef(ENGINE_CONTEXT *pEngineContext);
-// QDOAS ???
 
 // =====================
 // STRUCTURES DEFINITION
@@ -1458,9 +1430,6 @@ EXTERN DoasCh *GDP_BIN_BandStrTab[];
 // ----------
 
 INDEX            GDP_BIN_GetRecordNumber(INT pixelNumber);
-#if defined(__WINDOAS_GUI_) && __WINDOAS_GUI_
-LRESULT CALLBACK GDP_BIN_WndProc(HWND hwndGome,UINT msg,WPARAM mp1,LPARAM mp2);
-#endif
 RC               GDP_BIN_GetBand(ENGINE_CONTEXT *pEngineContext,INT bandNo);
 void             GDP_BIN_GetReferenceInfo(ENGINE_CONTEXT *pEngineContext);
 RC               GDP_BIN_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,FILE *specFp,void *responseHandle);
@@ -1501,6 +1470,8 @@ RC   SetSAOZEfm(ENGINE_CONTEXT *pEngineContext,FILE *specFp);
 RC   ReliSAOZEfm(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp);
 RC   SetActon_Logger(ENGINE_CONTEXT *pEngineContext,FILE *specFp);
 RC   ReliActon_Logger(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp,FILE *namesFp,FILE *darkFp);
+RC   SetOceanOptics(ENGINE_CONTEXT *pEngineContext,FILE *specFp);
+RC   ReliOceanOptics(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp);
 RC   ASCII_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp);
 RC   ASCII_Read(ENGINE_CONTEXT *pEngineContext,INT recordNo,INT dateFlag,int localDay,FILE *specFp);
 RC   SetRAS(ENGINE_CONTEXT *pEngineContext,FILE *specFp);

@@ -529,6 +529,10 @@ RC EngineSetFile(ENGINE_CONTEXT *pEngineContext,const char *fileName,void *respo
       rc=SetEASOE(pEngineContext,pFile->specFp,pFile->namesFp);
      break;
   // ---------------------------------------------------------------------------
+     case PRJCT_INSTR_FORMAT_OCEAN_OPTICS :
+      rc=SetOceanOptics(pEngineContext,pFile->specFp);
+     break;
+  // ---------------------------------------------------------------------------
      case PRJCT_INSTR_FORMAT_PDAEGG :
       rc=SetPDA_EGG(pEngineContext,pFile->specFp,1);
      break;
@@ -694,6 +698,10 @@ RC EngineReadFile(ENGINE_CONTEXT *pEngineContext,int indexRecord,INT dateFlag,IN
  // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_PDASI_EASOE :
      rc=ReliEASOE(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp,pFile->namesFp,pFile->darkFp);
+    break;
+// ---------------------------------------------------------------------------
+    case PRJCT_INSTR_FORMAT_OCEAN_OPTICS :
+     rc=ReliOceanOptics(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp);
     break;
  // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_PDAEGG :
@@ -1615,7 +1623,6 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
   FENO *pTabFeno;                                                               // pointer to the analysis window
   INT useKurucz,alignRef,useUsamp,saveFlag,newDimL;
   INT *scanRefIndexes;
-  double factTemp;
   DoasCh *ptr;
   RC rc;
 

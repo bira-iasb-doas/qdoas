@@ -28,36 +28,6 @@
 extern "C" {
 #endif
 
-// ==================
-// HEADERS TO INCLUDE
-// ==================
-
-// Resources IDs
-
-// QDOAS ??? #include "windoas.rch"
-// QDOAS ???
-// QDOAS ??? #if defined(__WINDOAS_WIN_) && __WINDOAS_WIN_
-// QDOAS ???
-// QDOAS ??? #include "..\help\windoas.h"
-// QDOAS ??? #include "..\help\windoas-anlys.h"
-// QDOAS ??? #include "..\help\windoas-basis.h"
-// QDOAS ???
-// QDOAS ??? // DIB processing
-// QDOAS ???
-// QDOAS ??? #include "dibutil.h"
-// QDOAS ??? #include "dibapi.h"
-// QDOAS ??? #include "dibdll.h"
-// QDOAS ???
-// QDOAS ??? #endif
-// QDOAS ???
-// QDOAS ??? // HDF processing
-// QDOAS ???
-// QDOAS ??? #if defined(__INCLUDE_HDF_) && __INCLUDE_HDF_
-// QDOAS ??? #include "mfhdf.h"
-// QDOAS ??? #endif
-// QDOAS ???
-// QDOAS ??? // #include "ximage.h"
-// QDOAS ???
 // =====================
 // CONSTANTS DEFINITIONS
 // =====================
@@ -113,23 +83,6 @@ typedef struct tagNEWTIME
   char	sec;
  }
 NEWTIME;
-// QDOAS ???
-// QDOAS ??? // Tab page
-// QDOAS ??? // --------
-// QDOAS ???
-// QDOAS ??? #if defined(__WINDOAS_WIN_) && __WINDOAS_WIN_
-// QDOAS ???
-// QDOAS ??? typedef struct _tabPages
-// QDOAS ???  {
-// QDOAS ???   DoasCh        tabTitle[MAX_ITEM_NAME_LEN+1];          // title of tab page
-// QDOAS ???   INT          dlgBox;                                 // dialog box to load from resources
-// QDOAS ???   DLGPROC      dlgProc;                                // procedure for processing messages from the previous dialog box
-// QDOAS ???   DLGTEMPLATE *dlgTemp;                                // load template from resources
-// QDOAS ???   INT          hlprc;                                  // help resource
-// QDOAS ???  }
-// QDOAS ??? TAB_PAGE;
-// QDOAS ???
-// QDOAS ??? #endif
 
 // ====================
 // RESOURCES MANAGEMENT
@@ -231,34 +184,11 @@ void   FILES_RetrievePath(DoasCh *pathString,SZ_LEN pathStringLength,DoasCh *ful
 RC     FILES_GetMatrixDimensions(FILE *fp,DoasCh *fileName,INT *pNl,INT *pNc,DoasCh *callingFunction,INT errorType);
 RC     FILES_LoadMatrix(FILE *fp,DoasCh *fileName,double **matrix,INT base,INT nl,INT nc,DoasCh *callingFunction,INT errorType);
 
-// QDOAS ??? RC     FILES_Alloc(void);
-// QDOAS ??? void   FILES_Free(void);
-
 // Select a file
 // -------------
 
 DoasCh  *FILES_BuildFileName(DoasCh *fileName,MASK fileType);
 
-// QDOAS ??? #if defined(__WINDOAS_GUI_) && (__WINDOAS_GUI_)
-// QDOAS ??? RC      FILES_Open(HWND hwndParent,MASK fileType,DoasCh *buffer,INT bufferSize,DoasI32 openStyles,DoasCh openMode,INT *symbolReferenceNumber,INDEX indexSymbol,INT *pFileType,INT helpID);
-// QDOAS ??? RC      FILES_Select(HWND hwndParent,DoasCh *buffer,INT bufferSize,MASK fileType,INT style,DoasCh openMode,INT *symbolReferenceNumber,INDEX indexSymbol,INT helpID);
-// QDOAS ??? INDEX   FILES_Insert(HWND hwndTree,INDEX indexParent,INT dataType,MASK fileType);
-// QDOAS ??? #endif
-// QDOAS ???
-// QDOAS ??? // "Files" menu commands processing
-// QDOAS ??? // --------------------------------
-// QDOAS ???
-// QDOAS ??? void    FILES_LoadConfiguration(HWND hwndParent,DoasCh *fileName);
-// QDOAS ??? void    FILES_SaveConfiguration(FILE *fp);
-// QDOAS ???
-// QDOAS ??? #if defined(__WINDOAS_GUI_) && (__WINDOAS_GUI_)
-// QDOAS ??? void    FILES_EnableSaveOption(HWND hwndParent,BOOL enableFlag);
-// QDOAS ??? void    FILES_MenuNew(HWND hwndParent);
-// QDOAS ??? void    FILES_MenuOpen(HWND hwndParent);
-// QDOAS ??? RC      FILES_MenuSave(HWND hwndParent);
-// QDOAS ??? RC      FILES_MenuSaveAs(HWND hwndParent);
-// QDOAS ??? #endif
-// QDOAS ???
 // =================
 // OBSERVATION SITES
 // =================
@@ -280,7 +210,6 @@ DoasCh  *FILES_BuildFileName(DoasCh *fileName,MASK fileType);
      double latitude;
      double altitude;
      // QDOAS ??? INT gmtShift;
-     // QDOAS ??? INT hidden;
     }
    OBSERVATION_SITE;
 
@@ -333,59 +262,6 @@ DoasCh  *FILES_BuildFileName(DoasCh *fileName,MASK fileType);
 
    RC    SYMB_Alloc(void);
    void  SYMB_Free(void);
-
-// QDOAS ??? // ============================
-// QDOAS ??? // RAW SPECTRA FILES PROPERTIES
-// QDOAS ??? // ============================
-// QDOAS ???
-// QDOAS ???    // ------------------------------------
-// QDOAS ???    // CONSTANTS AND STRUCTURES DEFINITIONS
-// QDOAS ???    // ------------------------------------
-// QDOAS ???
-// QDOAS ???    #define MAX_RAW_SPECTRA 1000
-// QDOAS ???
-// QDOAS ???    enum _folderFlagType
-// QDOAS ???     {
-// QDOAS ???      RAW_FOLDER_TYPE_NONE,           // file type
-// QDOAS ???      RAW_FOLDER_TYPE_USER,           // user folder type
-// QDOAS ???      RAW_FOLDER_TYPE_PATH,           // directory folder type
-// QDOAS ???      RAW_FOLDER_TYPE_PATHSUB         // directory folder type, include subfolders
-// QDOAS ???     };
-// QDOAS ???
-// QDOAS ???    // GLOBAL VARIABLES
-// QDOAS ???    // ----------------
-// QDOAS ???
-// QDOAS ???    typedef struct _rawSpectra
-// QDOAS ???     {
-// QDOAS ???      DoasCh fileName[MAX_ITEM_TEXT_LEN+1];
-// QDOAS ???      DoasCh windoasPath[MAX_ITEM_TEXT_LEN+1];
-// QDOAS ???      DoasCh names[MAX_ITEM_TEXT_LEN+1];
-// QDOAS ???      DoasCh dark[MAX_ITEM_TEXT_LEN+1];
-// QDOAS ???      INDEX indexProject;
-// QDOAS ???      INT   folderFlag;
-// QDOAS ???      INT   notAutomatic;
-// QDOAS ???      INT   hidden;
-// QDOAS ???     }
-// QDOAS ???    RAW_FILES;
-// QDOAS ???
-// QDOAS ???    EXTERN RAW_FILES *RAW_spectraFiles;     // raw spectra files names
-// QDOAS ???
-// QDOAS ???    // Prototypes
-// QDOAS ???    // ----------
-// QDOAS ???
-// QDOAS ???    void RAW_UpdateWindoasPath(INDEX indexItem,INDEX indexParent,INT folderFlag);
-// QDOAS ???    INT  RAW_GetFolderFlag(INDEX indexTree);
-// QDOAS ???
-// QDOAS ???    #if defined(__WINDOAS_GUI_) && (__WINDOAS_GUI_)
-// QDOAS ???        void RAW_BrowseSpectra(HWND hwndTree,INT displayFlag,INT analysisFlag,INT flag,INT treeCallFlag);
-// QDOAS ???        LRESULT CALLBACK RAW_WndProc(HWND hwndRaw,UINT msg,WPARAM mp1,LPARAM mp2);
-// QDOAS ???    #endif
-// QDOAS ???
-// QDOAS ???    RC   RAW_Alloc(void);
-// QDOAS ???    void RAW_Free(void);
-// QDOAS ???
-// QDOAS ???    void RAW_LoadConfiguration(DoasCh *fileLine);
-// QDOAS ???    void RAW_SaveConfiguration(FILE *fp,DoasCh *sectionName);
 
 // =================
 // MATRIX PROCESSING
@@ -826,7 +702,6 @@ EXTERN DoasCh   *PRJCT_AnlysInterpol[],                 // interpolation methods
                *PRJCT_AnlysMethods[],                  // analysis methods
                *PRJCT_filterTypes[],
                *PRJCT_filterOutput[];
-// QDOAS ??? EXTERN HWND     PRJCT_hwndPage;
 
 // ----------
 // PROTOTYPES
@@ -837,19 +712,6 @@ void  PRJCT_New(void);
 void  PRJCT_DeleteAll(void);
 void  PRJCT_ExpandAll(void);
 
-// QDOAS ??? #if defined(__WINDOAS_GUI_) && (__WINDOAS_GUI_)
-// QDOAS ??? LRESULT CALLBACK PRJCT_SpectraWndProc(HWND hwndSpectra,UINT msg,WPARAM mp1,LPARAM mp2);
-// QDOAS ??? LRESULT CALLBACK PRJCT_AnlysWndProc(HWND hwndPrjct,UINT msg,WPARAM mp1,LPARAM mp2);
-// QDOAS ??? LRESULT CALLBACK PRJCT_FilterWndProc(HWND hwndFilterTab,UINT msg,WPARAM mp1,LPARAM mp2);
-// QDOAS ??? LRESULT CALLBACK PRJCT_CalibrationWndProc(HWND hwndCalibrationTab,UINT msg,WPARAM mp1,LPARAM mp2);
-// QDOAS ??? LRESULT CALLBACK PRJCT_UsampWndProc(HWND hwndUsamp,UINT msg,WPARAM mp1,LPARAM mp2);
-// QDOAS ??? LRESULT CALLBACK PRJCT_InstrumentalWndProc(HWND hwndInstrumental,UINT msg,WPARAM mp1,LPARAM mp2);
-// QDOAS ??? LRESULT CALLBACK PRJCT_SlitWndProc(HWND hwndInstrumental,UINT msg,WPARAM mp1,LPARAM mp2);
-// QDOAS ??? LRESULT CALLBACK PRJCT_ResultsAsciiWndProc(HWND hwndResults,UINT msg,WPARAM mp1,LPARAM mp2);
-// QDOAS ??? LRESULT CALLBACK PRJCT_ResultsNasaWndProc(HWND hwndResults,UINT msg,WPARAM mp1,LPARAM mp2);
-// QDOAS ??? LRESULT CALLBACK PRJCT_WndProc(HWND hwndPrjct,UINT msg,WPARAM mp1,LPARAM mp2);
-// QDOAS ??? #endif
-// QDOAS ???
 RC   PRJCT_Alloc(void);
 void PRJCT_Free(void);
 
@@ -921,28 +783,6 @@ void PRJCT_SaveConfiguration(FILE *fp,DoasCh *sectionName);
 
    void XSCONV_Reset(XS *pXsconv);
    RC   XSCONV_Alloc(XS *pXsconv,INT npts,INT deriv2Flag);
-
-// QDOAS ???
-// QDOAS ???    // Options in the WinDOAS configuration file
-// QDOAS ???
-// QDOAS ???    void XSCONV_ResetConfiguration(void);
-// QDOAS ???    RC   XSCONV_LoadConfiguration(DoasCh *fileLine);
-// QDOAS ???    void XSCONV_SaveConfiguration(FILE *fp);
-// QDOAS ???
-// QDOAS ???    // Dialog box processing
-// QDOAS ???
-// QDOAS ???    #if defined(__WINDOAS_GUI_) && __WINDOAS_GUI_
-// QDOAS ???
-// QDOAS ???        void XSCONV_FileSelection(HWND hwndXsconv,DoasCh *file,MASK fileType,INT fileMode,INT fileCommand,INT ringFlag);
-// QDOAS ???
-// QDOAS ???        void XSCONV_SlitType(HWND hwndSlit,INT slitBase,SLIT *pSlit,SLIT *pSlit2);
-// QDOAS ???
-// QDOAS ???        LRESULT CALLBACK XSCONV_GeneralWndProc(HWND hwndGeneral,UINT msg,WPARAM mp1,LPARAM mp2);
-// QDOAS ???        LRESULT CALLBACK XSCONV_SlitWndProc(HWND hwndSlit,UINT msg,WPARAM mp1,LPARAM mp2);
-// QDOAS ???        LRESULT CALLBACK XSCONV_WndProc(HWND hwndXsconv,UINT msg,WPARAM mp1,LPARAM mp2);
-// QDOAS ???
-// QDOAS ???    #endif
-// QDOAS ???
 
 // ============================
 // TREEVIEW CONTROLS PROCESSING
@@ -1018,453 +858,13 @@ typedef struct _treeItem
   DoasCh     hidden;                         // flag set if item is hidden
  }
 TREE_ITEM;
-// QDOAS ???
-// QDOAS ??? // ----------------
-// QDOAS ??? // GLOBAL VARIABLES
-// QDOAS ??? // ----------------
-// QDOAS ???
-// QDOAS ??? #if defined(__WINDOAS_GUI_) && __WINDOAS_GUI_
-// QDOAS ??? EXTERN HIMAGELIST      TREE_hImageList;     // Handle to ImageList
-// QDOAS ??? #endif
-// QDOAS ???
 EXTERN TREE_ITEM      *TREE_itemList;       // structure used for all tree items safe keeping
 EXTERN TREE_ITEM_TYPE  TREE_itemType[];     // all tree types description
-// QDOAS ??? EXTERN DoasCh           TREE_editFlag;       // flag set when editing a tree item label
-// QDOAS ??? EXTERN INDEX           TREE_blankImageIndex,
-// QDOAS ???                        TREE_openImageIndex,
-// QDOAS ???                        TREE_closeImageIndex;
-// QDOAS ??? EXTERN INT             TREE_typeOfItem2Copy;
-// QDOAS ???
-// QDOAS ??? // ----------
-// QDOAS ??? // PROTOTYPES
-// QDOAS ??? // ----------
-// QDOAS ???
-// QDOAS ??? // Resources management
-// QDOAS ??? // --------------------
-// QDOAS ???
-// QDOAS ??? RC      TREE_Alloc(void);
-// QDOAS ??? void    TREE_Free(void);
-// QDOAS ??? void    TREE_Init(void);
-// QDOAS ???
-// QDOAS ??? // Tree control processing
-// QDOAS ??? // -----------------------
-// QDOAS ???
-// QDOAS ??? INDEX   TREE_GetProjectParent(INDEX indexItem);
-// QDOAS ??? void    TREE_CollapseChildNodes(HWND hwndTree,INDEX indexParent);
-// QDOAS ??? INDEX   TREE_GetIndexByDataName(DoasCh *dataName,DoasCh dataType,INDEX entryPoint);
 INDEX   TREE_GetIndexByDataIndex(INDEX dataIndex,DoasCh dataType,INDEX entryPoint);
-// QDOAS ??? INT     TREE_GetIndexesByDataType(DoasCh dataType,INDEX entryPoint,INDEX *dataIndexes,INT *pDataNumber);
-// QDOAS ??? void    TREE_UpdateItem(HWND hwndTree,INDEX indexItem);
-// QDOAS ??? void    TREE_Reset(INDEX indexParent);
-// QDOAS ??? INDEX   TREE_GetSelectedItem(HWND hwndTree);
-// QDOAS ??? INDEX   TREE_DeleteOneItem(INDEX indexItemToDelete);
-// QDOAS ??? INDEX   TREE_InsertOneItem(HWND hwndTree,DoasCh *textItem,INDEX parentItem,INT dataType,DoasCh newItem,DoasCh folderFlag,DoasCh hidden);
-// QDOAS ??? void    TREE_DeleteChildList(INDEX indexParent);
-// QDOAS ??? void    TREE_ExpandOneNode(HWND hwndTree,INDEX indexParent,HTREEITEM hParent);
-// QDOAS ??? void    TREE_SortChildNodes(HWND hwndTree,INDEX indexParent);
-// QDOAS ???
-// QDOAS ??? // MDI child windows messages processing
-// QDOAS ??? // -------------------------------------
-// QDOAS ???
-// QDOAS ??? #if defined(__WINDOAS_GUI_) && __WINDOAS_GUI_
-// QDOAS ??? HWND    TREE_Create(HWND hwndParent,INDEX indexTree);
-// QDOAS ??? void    TREE_ReSize(HWND hwndParent,HWND hwndTree);
-// QDOAS ??? void    TREE_Context(INDEX indexWindow,LPARAM mp2);
-// QDOAS ??? #endif
-// QDOAS ???
-// QDOAS ??? // MDI child windows notification messages processing
-// QDOAS ??? // --------------------------------------------------
-// QDOAS ???
-// QDOAS ??? #if defined(__WINDOAS_GUI_) && __WINDOAS_GUI_
-// QDOAS ??? void    TREE_GetDispInfo(HWND hwndTree,TV_DISPINFO FAR *pTree);
-// QDOAS ??? void    TREE_BeginLabelEdit(HWND hwndTree,TV_DISPINFO FAR *pTree);
-// QDOAS ??? void    TREE_EndLabelEdit(HWND hwndTree,TV_DISPINFO FAR *pTree,INDEX menuID);
-// QDOAS ??? void    TREE_ExpandNode(HWND hwndTree,NM_TREEVIEW *pTree);
-// QDOAS ??? void    TREE_CollapseNode(HWND hwndTree,NM_TREEVIEW *pTree);
-// QDOAS ??? #endif
-// QDOAS ???
-// QDOAS ??? // MDI child windows context menu commands processing
-// QDOAS ??? // --------------------------------------------------
-// QDOAS ???
-// QDOAS ??? void    TREE_InsertItem(HWND hwndTree,INT menuID,INT folderFlag);
-// QDOAS ???
-// QDOAS ??? #if defined(__WINDOAS_GUI_) && __WINDOAS_GUI_
-// QDOAS ??? void    TREE_Show(HWND hwndTree);
-// QDOAS ??? void    TREE_Hide(HWND hwndTree);
-// QDOAS ??? void    TREE_RenameItem(HWND hwndTree);
-// QDOAS ??? #endif
-// QDOAS ???
-// QDOAS ??? void    TREE_Sort(HWND hwndTree);
-// QDOAS ??? void    TREE_DeleteItem(HWND hwndTree,INT menuID);
-// QDOAS ??? void    TREE_DeleteAllItems(HWND hwndTree,INT menuID);
-// QDOAS ??? void    TREE_ExpandAll(HWND hwndTree,INDEX indexParent);
-// QDOAS ??? void    TREE_CollapseAll(HWND hwndTree,INDEX indexParent);
-// QDOAS ??? void    TREE_Properties(HWND hwndTree);
-// QDOAS ??? void    TREE_Copy(HWND hwndTree,INT cutFlag);
-// QDOAS ??? void    TREE_Paste(HWND hwndTree);
-// QDOAS ??? void    TREE_OutputConfig(HWND hwndTree);
-// QDOAS ???
-// QDOAS ??? // ===================================
-// QDOAS ??? // DRAWING SPECTRA IN MDI CHILD WINDOW
-// QDOAS ??? // ===================================
-// QDOAS ???
-// QDOAS ???    #if defined(__WINDOAS_GUI_) && __WINDOAS_GUI_
-// QDOAS ???
-// QDOAS ???        // ---------------------
-// QDOAS ???        // CONSTANTS DEFINITIONS
-// QDOAS ???        // ---------------------
-// QDOAS ???
-// QDOAS ???        #define DRAW_CLASS "ClientWndClass"                                      // registration class
-// QDOAS ???        #define MAX_GRAPH 20                                                     // the maximum number of graphs to draw in the MDI window
-// QDOAS ???
-// QDOAS ???        // Colours in RGB system colour
-// QDOAS ???        // ----------------------------
-// QDOAS ???
-// QDOAS ???        #define CLR_WHITE                0x00FFFFFFL                             // 00RRGGBB (RGB system colour)
-// QDOAS ???        #define CLR_BLACK                0x00000000L
-// QDOAS ???        #define CLR_DARKGRAY             0x00101010L
-// QDOAS ???        #define CLR_PALEGRAY             0x00C0C0C0L
-// QDOAS ???        #define CLR_GREEN                0x0000FF00L
-// QDOAS ???        #define CLR_RED                  0x000000FFL
-// QDOAS ???        #define CLR_BLUE                 0x00FF0000L
-// QDOAS ???
-// QDOAS ???        #define DRAW_COLOR1              CLR_RED                                 // For Jos, use CLR_BLUE
-// QDOAS ???        #define DRAW_COLOR2              CLR_BLACK
-// QDOAS ???
-// QDOAS ???        enum _drawStatus { DRAW_NO_SPECTRA, DRAW_READY, DRAW_DISPLAY, DRAW_SETTINGS };
-// QDOAS ???
-// QDOAS ???        // ----------------------
-// QDOAS ???        // STRUCTURES DEFINITIONS
-// QDOAS ???        // ----------------------
-// QDOAS ???
-// QDOAS ???        // Frame coordinates
-// QDOAS ???
-// QDOAS ???        typedef struct _drawFrame
-// QDOAS ???         {
-// QDOAS ???          double left,right,top,bottom;          // margins around a frame
-// QDOAS ???         }
-// QDOAS ???        DRAW_FRAME;
-// QDOAS ???
-// QDOAS ???        // Spectra specifications
-// QDOAS ???
-// QDOAS ???        typedef struct _drawSpectrum
-// QDOAS ???         {
-// QDOAS ???          DoasCh legend[MAX_ITEM_TEXT_LEN+1];
-// QDOAS ???          double *x,*y;                          // couple of XY vectors
-// QDOAS ???          INT usex,usey;                         // flag set to tell which vectors are used
-// QDOAS ???          INT vectorSize;                        // current size of previous vectors
-// QDOAS ???          INT vectorSizeMax;                     // effective size of previous vectors
-// QDOAS ???          INDEX indexPixMin,indexPixMax;         // limits of spectra window
-// QDOAS ???          COLORREF colour;                       // colour for pen to use
-// QDOAS ???          INT lineType;                          // type of line for pen to use
-// QDOAS ???         }
-// QDOAS ???        DRAW_SPECTRUM;
-// QDOAS ???
-// QDOAS ???        // Graph description
-// QDOAS ???
-// QDOAS ???        typedef struct _graph
-// QDOAS ???         {
-// QDOAS ???          DoasCh title[MAX_ITEM_TEXT_LEN+1],      // title of graph
-// QDOAS ???                xTitle[MAX_ITEM_TEXT_LEN+1],     // title of x axis
-// QDOAS ???                yTitle[MAX_ITEM_TEXT_LEN+1];     // title of y axis
-// QDOAS ???          DRAW_FRAME specFrame;                  // frame in which spectra are to be hold to
-// QDOAS ???          DRAW_SPECTRUM spectrum,dotSpectrum;    // spectra to display (max 2.)
-// QDOAS ???          double  pixMin,pixMax;                 // extrema of graphics in pixels units
-// QDOAS ???          double  specMin,specMax;               // extrema of graphics in spectrum units
-// QDOAS ???          double *vGrid;                         // force vertical grid
-// QDOAS ???          INT     nvGrid;                        // current size of previous vector
-// QDOAS ???          INT     nvGridMax;                     // effective size of previous vector
-// QDOAS ???          INDEX   indexChild;                    // index of the MDI child window that contain a zoom of the graph
-// QDOAS ???          INT     autoScaleX,autoScaleY;
-// QDOAS ???          double  pixMinOld,pixMaxOld,
-// QDOAS ???                  specMinOld,specMaxOld;
-// QDOAS ???         }
-// QDOAS ???        DRAW_GRAPH;
-// QDOAS ???
-// QDOAS ???        // ----------
-// QDOAS ???        // Prototypes
-// QDOAS ???        // ----------
-// QDOAS ???
-// QDOAS ???        void  DRAW_Reset(INDEX indexChild);
-// QDOAS ???        void  DRAW_Init(void);
-// QDOAS ???        void  DRAW_Close(void);
-// QDOAS ???        INDEX DRAW_OpenWindow(void);
-// QDOAS ???        void  DRAW_CloseWindow(INDEX indexChild);
-// QDOAS ???        BOOL  DRAW_ClassRegistration(HINSTANCE hinstParent);
-// QDOAS ???        void  DRAW_GetGraphDistribution(INT graphNumber,INT *pGraphMaxV,INT *pGraphMaxH);
-// QDOAS ???
-// QDOAS ???        void  DRAW_Spectra(INT indexChild,DoasCh *windowTitle,DoasCh *graphTitle,DoasCh *xTitle,DoasCh *yTitle,double *vGrid,INT nvGrid,
-// QDOAS ???                           double xMin,double xMax,double yMin,double yMax,
-// QDOAS ???                           double *x,double *y,INT size,COLORREF colour,INDEX indexMin,INDEX indexMax,INT lineType,DoasCh *legend,
-// QDOAS ???                           double *dotx,double *doty,INT dotSize,COLORREF dotColour,INDEX dotIndexMin,INDEX dotIndexMax,INT dotLineType,DoasCh *dotLegend,
-// QDOAS ???                           INDEX graphNumber,INT graphMaxV,INT graphMaxH,INT paintFlag);
-// QDOAS ???
-// QDOAS ???        void  DRAW_SpecMax(double *specMax,INT totalScansNumber,COLORREF specMaxColour);
-// QDOAS ???        void  DRAW_ZoomOut(void);
-// QDOAS ???        void  DRAW_ClearWindow(INDEX indexWindow);
-// QDOAS ???        void  DRAW_ReSize(HWND hwndParent,HWND hwndDraw);
-// QDOAS ???        void  DRAW_Context(INDEX indexWindow,LPARAM mp2);
-// QDOAS ???        void  DRAW_Destroy(HWND hwndDraw,UINT message,WPARAM wparam,LPARAM lparam);
-// QDOAS ???
-// QDOAS ???    #endif
-// QDOAS ???
-// QDOAS ??? // =================
-// QDOAS ??? // MDI CHILD WINDOWS
-// QDOAS ??? // =================
-// QDOAS ???
-// QDOAS ???    // Constants definitions
-// QDOAS ???    // ---------------------
-// QDOAS ???
-// QDOAS ???    #define MAX_MDI_WINDOWS        50
-// QDOAS ???    #define CHILD_DEFAULT_WIDTH   500
-// QDOAS ???    #define CHILD_DEFAULT_HEIGHT  300
-// QDOAS ???
-// QDOAS ???    #if !defined (CW_USEDEFAULT)
-// QDOAS ???    #define CW_USEDEFAULT           0
-// QDOAS ???    #endif
-// QDOAS ???
    // Main types of child windows
    // ---------------------------
 
-// QDOAS ???   enum childWindowsTypes
-// QDOAS ???    {
-// QDOAS ???     CHILD_WINDOW_ENVIRONMENT,
-// QDOAS ???     CHILD_WINDOW_PROJECT,
-// QDOAS ???     CHILD_WINDOW_SPECTRA,
-// QDOAS ???     CHILD_WINDOW_SPECINFO,
-// QDOAS ???     CHILD_WINDOW_SPECMAX,
-// QDOAS ???     CHILD_WINDOW_MAX
-// QDOAS ???    };
-// QDOAS ???
-// QDOAS ???    #if defined(__WINDOAS_GUI_) && __WINDOAS_GUI_
-// QDOAS ???
-// QDOAS ???        // MDI child windows description
-// QDOAS ???        // -----------------------------
-// QDOAS ???
-// QDOAS ???        // Draw environment to attribute to a MDI child window
-// QDOAS ???
-// QDOAS ???        typedef struct _drawMDI
-// QDOAS ???         {
-// QDOAS ???          HWND hwndDraw;                                                            // handle of draw client area
-// QDOAS ???          HBITMAP hbmBitmap,                                                        // handle of the bitmap compatible with the device in use
-// QDOAS ???                  hdcBitmap,                                                        // handle of the memory used to store an image of the previous bitmap
-// QDOAS ???                  hbmStock;                                                         // handle of the previous selected bitmap
-// QDOAS ???          INT cxBitmap,cyBitmap;                                                    // resp. width and height of bitmap
-// QDOAS ???          DRAW_GRAPH drawGraph[MAX_GRAPH];                                          // settings of graphs to hold in draw client area
-// QDOAS ???          DoasCh title[MAX_ITEM_TEXT_LEN+1];                                         // title of mdi child window
-// QDOAS ???          DoasCh graphNumber;                                                        // number of graph to draw in the draw client area
-// QDOAS ???          DoasCh graphMax;                                                           // total number of graphs (graphMaxV*graphMaxH)
-// QDOAS ???          DoasCh graphMaxV;                                                          // total number of graphs to hold vertically in the draw client area
-// QDOAS ???          DoasCh graphMaxH;                                                          // total number of graphs to hold horizontally in the draw client area
-// QDOAS ???         }
-// QDOAS ???        DRAW_MDI;
-// QDOAS ???
-// QDOAS ???    #endif
-// QDOAS ???
-// QDOAS ???    #if !defined(__WINDOAS_WIN_)  || !(__WINDOAS_WIN_)
-// QDOAS ???    typedef struct tagRECT
-// QDOAS ???    {
-// QDOAS ???        int left;
-// QDOAS ???        int top;
-// QDOAS ???        int right;
-// QDOAS ???        int bottom;
-// QDOAS ???    } RECT;
-// QDOAS ???    #endif
-// QDOAS ???
-// QDOAS ???    typedef struct _childWindows
-// QDOAS ???     {
-// QDOAS ???     	#if defined(__WINDOAS_GUI_) && __WINDOAS_GUI_
-// QDOAS ???          HWND hwndChild;                                                           // handle of the child window
-// QDOAS ???          INDEX indexMenuItem;                                                      // index of the corresponding item in Windows menu
-// QDOAS ???          HWND hwndEdit;                                                            // handle of edit control owned by the MDI child window
-// QDOAS ???      #endif
-// QDOAS ???          HWND hwndTree;                                                            // handle of tree owned by the MDI child window
-// QDOAS ???          INT openFlag;                                                             // authorization for opening window
-// QDOAS ???          INT graphFlag;                                                            // flag set if window is owned by a graph
-// QDOAS ???          RECT rect;                                                                // size and position
-// QDOAS ???      #if defined(__WINDOAS_GUI_) && __WINDOAS_GUI_
-// QDOAS ???          DRAW_MDI drawEnvironment;                                                 // draw client area if any
-// QDOAS ???      #endif
-// QDOAS ???          INT minimizedFlag;
-// QDOAS ???      INDEX itemTree;                                                               // entry point in the list with tree items
-// QDOAS ???     }
-// QDOAS ???    CHILD_WINDOWS;
-// QDOAS ???
-// QDOAS ???    // Global variables
-// QDOAS ???    // ----------------
-// QDOAS ???
-// QDOAS ???    EXTERN CHILD_WINDOWS CHILD_list[];                                              // list of child windows
-// QDOAS ???
-// QDOAS ???    #if defined(__WINDOAS_GUI_) && __WINDOAS_GUI_
-// QDOAS ???        EXTERN HWND          CHILD_hwndFrame;                                       // child area handle
-// QDOAS ???    #endif
-// QDOAS ???
-// QDOAS ???    // Prototypes
-// QDOAS ???    // ----------
-// QDOAS ???
-// QDOAS ???    #if defined(__WINDOAS_GUI_) && __WINDOAS_GUI_
-// QDOAS ???        void    CHILD_Create(HWND hwndParent);
-// QDOAS ???        HWND    CHILD_Open(INT menuID,INT checkOpenFlag);
-// QDOAS ???        void    CHILD_View(INDEX menuItem);
-// QDOAS ???        INDEX   CHILD_GetActive(void);
-// QDOAS ???        void    CHILD_SetActive(INDEX menuItem);
-// QDOAS ???        BOOL    CHILD_ClassRegistration(HINSTANCE hinstParent);
-// QDOAS ???        LRESULT CHILD_ReSize(HWND hwndParent,UINT msg,WPARAM mp1,LPARAM mp2);
-// QDOAS ???    #endif
-// QDOAS ???
-// QDOAS ???    void    CHILD_ResetConfiguration(void);
-// QDOAS ???    void    CHILD_LoadConfiguration(DoasCh *fileLine);
-// QDOAS ???    void    CHILD_SaveConfiguration(FILE *fp,DoasCh *sectionName);
-// QDOAS ???
-// QDOAS ???
-// QDOAS ??? // ======================
-// QDOAS ??? // ASCII FILES MANAGEMENT
-// QDOAS ??? // ======================
-// QDOAS ???
 EXTERN PRJCT_ASCII ASCII_options;
-// QDOAS ???
-// QDOAS ??? #if defined(__WINDOAS_GUI_) && __WINDOAS_GUI_
-// QDOAS ??? LRESULT CALLBACK ASCII_WndProc(HWND hwndAscii,UINT msg,WPARAM mp1,LPARAM mp2);
-// QDOAS ??? #endif
-// QDOAS ???
-// QDOAS ??? void ASCII_SaveSpectra(INDEX indexWindow);
-// QDOAS ???
-
-// QDOAS ??? // ========================
-// QDOAS ??? // UNDERSAMPLING CORRECTION
-// QDOAS ??? // ========================
-// QDOAS ???
-// QDOAS ??? #if defined(__WINDOAS_GUI_) && __WINDOAS_GUI_
-// QDOAS ??? LRESULT CALLBACK USAMP_WndProc(HWND hwndUsamp,UINT msg,WPARAM mp1,LPARAM mp2);
-// QDOAS ??? #endif
-// QDOAS ???
-// QDOAS ??? void USAMP_ResetConfiguration(void);
-// QDOAS ??? RC   USAMP_LoadConfiguration(DoasCh *fileLine);
-// QDOAS ??? void USAMP_SaveConfiguration(FILE *fp);
-// QDOAS ???
-// QDOAS ??? // ==================
-// QDOAS ??? // MESSAGE PROCESSING
-// QDOAS ??? // ==================
-// QDOAS ???
-// QDOAS ??? #if defined(__WINDOAS_GUI_) && __WINDOAS_GUI_
-// QDOAS ??? LRESULT CALLBACK MSG_WndProc(HWND hwndMsg,UINT msg,WPARAM mp1,LPARAM mp2);
-// QDOAS ??? RC MSG_MessageBox(HWND hwnd,INT controlID,INT titleID,INT msgID,INT style,...);
-// QDOAS ??? #endif
-// QDOAS ???
-// QDOAS ??? // ========
-// QDOAS ??? // PRINTING
-// QDOAS ??? // ========
-// QDOAS ???
-// QDOAS ??? #if defined(__WINDOAS_GUI_) && __WINDOAS_GUI_
-// QDOAS ??? void PRINT_Enable(INT flag);
-// QDOAS ??? void PRINT_Window(INT cmd);
-// QDOAS ??? #endif
-// QDOAS ???
-// QDOAS ??? // ====
-// QDOAS ??? // HELP
-// QDOAS ??? // ====
-// QDOAS ???
-// QDOAS ??? // Constants definitions
-// QDOAS ??? // ---------------------
-// QDOAS ???
-// QDOAS ??? enum _programVersions
-// QDOAS ???  {
-// QDOAS ???   HELP_VERSION_1_00,  // WINDOAS version 1.0
-// QDOAS ???   HELP_VERSION_1_01,  // WINDOAS version 1.1
-// QDOAS ???   HELP_VERSION_1_02,  // WINDOAS version 1.2
-// QDOAS ???   HELP_VERSION_1_03,  // WINDOAS version 1.3 (January 1999)
-// QDOAS ???   HELP_VERSION_1_04,  // WINDOAS version 1.4 (February 1999)
-// QDOAS ???   HELP_VERSION_1_05,  // WINDOAS version 1.5 (June 1999)
-// QDOAS ???   HELP_VERSION_2_00,  // WINDOAS version 2.0 (Dec 2000)
-// QDOAS ???   HELP_VERSION_2_01,  // WINDOAS version 2.01 (Aug. 2000)
-// QDOAS ???   HELP_VERSION_2_02,  // WINDOAS version 2.02 (Aug. 2000)
-// QDOAS ???   HELP_VERSION_2_03,
-// QDOAS ???   HELP_VERSION_2_10,  // WinDOAS version 2.1 (February 2001)
-// QDOAS ???   HELP_VERSION_MAX
-// QDOAS ???  };
-// QDOAS ???
-// QDOAS ??? // Global variables
-// QDOAS ??? // ----------------
-// QDOAS ???
-// QDOAS ??? // The following variable holds a trace of WinDOAS versions in order to ensure a
-// QDOAS ??? // maximum of compatibility when loading older configuration files
-// QDOAS ???
-// QDOAS ??? EXTERN DoasCh *HELP_programVersions[HELP_VERSION_MAX];
-// QDOAS ???
-// QDOAS ??? // Prototypes
-// QDOAS ??? // ----------
-// QDOAS ???
-// QDOAS ??? #if defined(__WINDOAS_GUI_) && __WINDOAS_GUI_
-// QDOAS ??? LRESULT CALLBACK HELP_About(HWND hwndAbout,UINT msg,WPARAM mp1,LPARAM mp2);
-// QDOAS ??? #endif
-// QDOAS ???
-// ===============================
-// PATHS INSERTION IN PROJECT TREE
-// ===============================
-
-// Constant definition
-// -------------------
-
-#define PATH_MAX_FILES   2500
-
-// Structure definition
-// --------------------
-
-typedef struct _pathFilesFilter
- {
-  DoasCh outputPathShort[MAX_STR_SHORT_LEN+1];
-  DoasCh folderNameShort[MAX_STR_SHORT_LEN+1];
-  DoasCh filterShort[MAX_STR_SHORT_LEN+1];
-  INT   useSubfolders;
- }
-PATH_FILES_FILTER;
-
-// Global variables
-// ----------------
-
-EXTERN DoasCh (*PATH_fileNamesShort)[MAX_STR_SHORT_LEN+1];
-EXTERN DoasCh PATH_fileMax[MAX_STR_SHORT_LEN+1];
-EXTERN DoasCh PATH_fileSpectra[MAX_STR_SHORT_LEN+1];        // current spectra file name
-
-EXTERN INT PATH_fileNumber;
-EXTERN INT PATH_dirNumber;
-EXTERN INT PATH_mfcFlag,PATH_UofTFlag;
-// QDOAS ???
-// QDOAS ??? // Prototypes
-// QDOAS ??? // ----------
-// QDOAS ???
-// QDOAS ??? void  PATH_GetFilesList(DoasCh *path,DoasCh *filter,DoasCh dirFlag);
-// QDOAS ??? INDEX PATH_InsertFolder(DoasCh *path,DoasCh *filter,DoasCh folderFlag,INDEX indexParent);
-// QDOAS ???
-// QDOAS ??? void  PATH_Init(void);
-// QDOAS ??? RC    PATH_Alloc(void);
-// QDOAS ??? void  PATH_Free(void);
-// QDOAS ???
-// QDOAS ??? #if defined(__WINDOAS_GUI_) && __WINDOAS_GUI_
-// QDOAS ??? LRESULT CALLBACK PATH_WndProc(HWND hwndPath,UINT msg,WPARAM mp1,LPARAM mp2);
-// QDOAS ??? #endif
-// QDOAS ???
-// QDOAS ??? // ======================
-// QDOAS ??? // SYS.C : SYSTEM CONTROL
-// QDOAS ??? // ======================
-// QDOAS ???
-// QDOAS ??? // Global variables
-// QDOAS ??? // ----------------
-// QDOAS ???
-// QDOAS ??? EXTERN DoasU32 SYS_memory,
-// QDOAS ???              SYS_files,
-// QDOAS ???              SYS_raw,
-// QDOAS ???              SYS_tree,
-// QDOAS ???              SYS_project,
-// QDOAS ???              SYS_anlys,
-// QDOAS ???              SYS_anlysItems,
-// QDOAS ???              SYS_path;
-// QDOAS ???
-// QDOAS ??? // Prototypes
-// QDOAS ??? // ----------
-// QDOAS ???
-// QDOAS ??? void SYS_Load(void);
-// QDOAS ??? void SYS_Save(void);
 
 EXTERN ANALYSIS_WINDOWS  *ANLYS_windowsList;       // analysis windows list
 EXTERN LIST_ITEM         *ANLYS_itemList;          // list of items in ListView control owned by tab pages

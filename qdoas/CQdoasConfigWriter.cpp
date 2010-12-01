@@ -408,6 +408,9 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   case PRJCT_INSTR_FORMAT_BIRA_AIRBORNE:
     fprintf(fp, "\"biraairborne\"");
     break;
+  case PRJCT_INSTR_FORMAT_OCEAN_OPTICS:
+    fprintf(fp, "\"oceanoptics\"");
+    break;
   default:
     fprintf(fp, "\"invalid\"");
   }
@@ -965,6 +968,16 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   fprintf(fp, "      <biraairborne calib=\"%s\"", tmpStr.toAscii().constData());
 
   tmpStr = pathMgr->simplifyPath(QString(d->biraairborne.instrFunctionFile));
+  fprintf(fp, " instr=\"%s\" />\n", tmpStr.toAscii().constData());
+
+  // ocean optics
+
+  fprintf(fp, "      <oceanoptics size=\"%d\" ", d->oceanoptics.detectorSize);
+
+  tmpStr = pathMgr->simplifyPath(QString(d->oceanoptics.calibrationFile));
+  fprintf(fp, " calib=\"%s\"", tmpStr.toAscii().constData());
+
+  tmpStr = pathMgr->simplifyPath(QString(d->oceanoptics.instrFunctionFile));
   fprintf(fp, " instr=\"%s\" />\n", tmpStr.toAscii().constData());
 
   fprintf(fp, "    </instrumental>\n");

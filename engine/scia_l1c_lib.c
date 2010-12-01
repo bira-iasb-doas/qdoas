@@ -1,3 +1,5 @@
+#include "comdefs.h"
+
 #include "scia_defs.h"
 #include "scia_common.h"
 #include "scia_l1b.h"
@@ -254,7 +256,7 @@ DEBUG_Print("num_dsr %d\n",info->states.num_dsr);
 	info->n_states[cat] = 0;
     }
 /*  go through all states*/
-    for (i=0; i < info->states.num_dsr; i++)
+    for (i=0; i < (int) info->states.num_dsr; i++)
     {
 	/* type in product 1-4, index here in program 0-3 */
 	int type = info->ads_states[i].flag_mds - 1;
@@ -765,7 +767,7 @@ SCIA_err read_solar (info_l1c *info,
 
 
 
-  for (iset=0; iset<info->sun_ref.num_dsr;iset++) {
+  for (iset=0; iset<(int)info->sun_ref.num_dsr;iset++) {
 
       gads_sun_ref_getbin (info->FILE_l1c, &sun_ref);
 /*     sun_ref = ReadSunReference(info->FILE_l1c); */
@@ -788,7 +790,7 @@ SCIA_err read_solar (info_l1c *info,
 	  break;			/* no need to read further */
       }
   }
-  if (iset == info->sun_ref.num_dsr) {
+  if (iset == (int)info->sun_ref.num_dsr) {
       DEBUG_Print( "No solar data available.\n");
       return NO_SUN_REF_DATA;
   }
@@ -846,7 +848,7 @@ SCIA_err read_solar_newly_calculated (info_l1c *info,
 
 
 
-  for (iset=0; iset<info->sun_ref.num_dsr;iset++) {
+  for (iset=0; iset<(int)info->sun_ref.num_dsr;iset++) {
 
       gads_sun_ref_getbin (info->FILE_l1c, &sun_ref);
 /*     sun_ref = ReadSunReference(info->FILE_l1c); */
@@ -869,7 +871,7 @@ SCIA_err read_solar_newly_calculated (info_l1c *info,
 	  break;			/* no need to read further */
       }
   }
-  if (iset == info->sun_ref.num_dsr) {
+  if (iset == (int)info->sun_ref.num_dsr) {
       DEBUG_Print( "No solar data available.\n");
       return NO_SUN_REF_DATA;
   }
@@ -1447,11 +1449,11 @@ SCIA_err coadd_signal (unsigned int n_wl, unsigned int n_coadd,
 			float *add_signal_err)   /* Output: rad_err[n_wl] */
 {
     int nw, nc;
-    for (nw = 0; nw < n_wl; nw++)
+    for (nw = 0; nw < (int) n_wl; nw++)
     {
 	add_signal[nw] = 0.0;
 	add_signal_err[nw] = 0.0;
-	for (nc = 0; nc < n_coadd; nc++)
+	for (nc = 0; nc < (int)n_coadd; nc++)
 	{
 	    add_signal[nw] += signal[ nc*n_wl + nw ];
 	    add_signal_err[nw] += signal_err[ nc*n_wl + nw ] * signal_err[ nc*n_wl + nw ];
@@ -1551,7 +1553,7 @@ SCIA_err read_next_mds (info_l1c *info,
 				/* collect data */
     cur_pix=0;
 				/*  Loop over used clusters */
-    for (n_cl=0; n_cl < info->max_cur_used_clusters; n_cl++)
+    for (n_cl=0; n_cl < (unsigned int) info->max_cur_used_clusters; n_cl++)
     {
 	id = info->cur_used_cl[n_cl].id;
 	data = info->st_cl_data + id;
@@ -1570,7 +1572,7 @@ SCIA_err read_next_mds (info_l1c *info,
 	{
 	    for (n_pix=0, n_pix_tmp=0,
 		     n_absolut_pix = info->cur_used_cl[n_cl].pix_start;
-		 n_pix < info->cur_used_cl[n_cl].pix_length;
+		 (int)n_pix < info->cur_used_cl[n_cl].pix_length;
 		 n_pix++, n_absolut_pix++)
 	    {
 		if ( info->cur_pix_output_flag[n_absolut_pix] == 0 )
@@ -1599,7 +1601,7 @@ SCIA_err read_next_mds (info_l1c *info,
 				/* collect other parts, identical for all readouts */
 	for (n_pix=0, n_pix_tmp=0,
 		 n_absolut_pix = info->cur_used_cl[n_cl].pix_start;
-	     n_pix < info->cur_used_cl[n_cl].pix_length;
+	     (int)n_pix < info->cur_used_cl[n_cl].pix_length;
 	     n_pix++, n_absolut_pix++)
 	{
 	    if ( info->cur_pix_output_flag[n_absolut_pix] == 0 )

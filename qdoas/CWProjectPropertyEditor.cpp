@@ -62,6 +62,7 @@ CWProjectPropertyEditor::CWProjectPropertyEditor(const QString &projectName, QWi
   m_groundFormatCombo = new QComboBox(this);
   m_groundFormatCombo->addItem("Acton (NILU)", QVariant(PRJCT_INSTR_FORMAT_ACTON));
   m_groundFormatCombo->addItem("ASCII", QVariant(PRJCT_INSTR_FORMAT_ASCII));
+  m_groundFormatCombo->addItem("BIRA-IASB Airborne", QVariant(PRJCT_INSTR_FORMAT_BIRA_AIRBORNE));
   m_groundFormatCombo->addItem("CCD all tracks", QVariant(PRJCT_INSTR_FORMAT_CCD_OHP_96));
   m_groundFormatCombo->addItem("CCD EEV (BIRA-IASB, NILU)", QVariant(PRJCT_INSTR_FORMAT_CCD_EEV));
   m_groundFormatCombo->addItem("CCD Sesame I", QVariant(PRJCT_INSTR_FORMAT_CCD_HA_94));
@@ -70,14 +71,14 @@ CWProjectPropertyEditor::CWProjectPropertyEditor(const QString &projectName, QWi
   m_groundFormatCombo->addItem("Logger (PDA, CCD or HAMAMATSU)", QVariant(PRJCT_INSTR_FORMAT_LOGGER));
   m_groundFormatCombo->addItem("MFC (STD, Heidelberg)", QVariant(PRJCT_INSTR_FORMAT_MFC_STD));
   m_groundFormatCombo->addItem("MFC (BIN, BIRA-IASB)", QVariant(PRJCT_INSTR_FORMAT_MFC_BIRA));
+  m_groundFormatCombo->addItem("MKZY PAK (NOVAC, MANNE Kihlman and ZHANG Yan)", QVariant(PRJCT_INSTR_FORMAT_MKZY));
   m_groundFormatCombo->addItem("NOAA", QVariant(PRJCT_INSTR_FORMAT_NOAA));
+  m_groundFormatCombo->addItem("Ocean Optics", QVariant(PRJCT_INSTR_FORMAT_OCEAN_OPTICS));
   m_groundFormatCombo->addItem("PDA EG&G (Sept. 94 until now)", QVariant(PRJCT_INSTR_FORMAT_PDAEGG));
   m_groundFormatCombo->addItem("PDA EG&G (Spring 94)", QVariant(PRJCT_INSTR_FORMAT_PDAEGG_OLD));
   m_groundFormatCombo->addItem("RASAS (INTA)", QVariant(PRJCT_INSTR_FORMAT_RASAS));
   m_groundFormatCombo->addItem("SAOZ EFM (1024)", QVariant(PRJCT_INSTR_FORMAT_SAOZ_EFM));
   m_groundFormatCombo->addItem("SAOZ PCD/NMOS (512)", QVariant(PRJCT_INSTR_FORMAT_SAOZ_VIS));
-  m_groundFormatCombo->addItem("MKZY PAK (NOVAC, MANNE Kihlman and ZHANG Yan)", QVariant(PRJCT_INSTR_FORMAT_MKZY));
-  m_groundFormatCombo->addItem("BIRA-IASB Airborne", QVariant(PRJCT_INSTR_FORMAT_BIRA_AIRBORNE));
   m_groundFormatCombo->hide();
   // create and populate satellite
   m_satelliteFormatCombo = new QComboBox(this);

@@ -610,7 +610,7 @@ double JULDAY( struct tm myclock )
 /*
  * Gregorian Calander was adopted on Oct. 15, 1582
  */
-     
+
 
      if ( (jy = year) < 0 ) jy++;
      if ( imon > 2 ) {
@@ -1213,98 +1213,98 @@ int linear_interpol (double *y, double* x, int n_x,
     return 0;
 }
 
-/* smooth an array with boxcar/triangular function of width box_width */
-/*  y, ny : y input array of n_y values, will be
-        overwritten by the smoothed values
-    box_width: width of the boxcar (odd number);
-     smoothing is performed until the edge of the array!
-*/
-
-
-int smooth (double *y, int n_y, int box_width, enum smooth_type stype)
-{
-    int n,j,k;
-    int half_bw = (box_width - 1)/2;
-    double sum;
-    int div;
-    double *smoothed;
-    /* No smoothing with 1 */
-    if (box_width == 1)
-	return n_y;
-    /* start smoothing */
-/*     if (box_width%2 != 1) */
-/* 	SCIA_ERROR (FATAL, "box_width has to be odd!", "");     */
-    smoothed = calloc (n_y, sizeof(double));
-/*     if (!smoothed) */
-/* 	SCIA_ERROR (FATAL,"Out of memory.",""); */
-
-    switch (stype)
-    {
-	case SMOOOTH_BOXCAR:
-	    for (n=0; n<n_y; n++)
-	    {
-		sum = 0.0;
-		for (j=n-half_bw; j <= n+half_bw; j++)
-		{
-		    int i = j;
-		    while (i < 0)
-			i++;
-		    while (i >= n_y)
-			i--;
-		    sum += y[i];
-		}
-		smoothed[n] = sum / (double) box_width;
-	    }
-	    break;
-	case SMOOTH_TRIANGULAR:
-	    div = half_bw+1;
-	    div *= div;
-	    for (n=0; n<n_y; n++)
-	    {
-		sum = 0.0;
-		for (j=n-half_bw, k=0; j <= n+half_bw; j++, k++)
-		{
-		    int i = j;
-		    while (i < 0)
-			i++;
-		    while (i >= n_y)
-			i--;
-		    sum += (k>half_bw ? box_width-k : k+1) *y[i];
-		}
-		smoothed[n] = sum / (double) div;
-	    }
-	    break;
-#if HAVE_LIBGSL
-	case SMOOTH_MEDIAN:
-	    median_arr = calloc (box_width, sizeof(double));
-	    div = half_bw+1;
-	    div *= div;
-	    for (n=0; n<n_y; n++)
-	    {
-		sum = 0.0;
-		for (j=n-half_bw, k=0; j <= n+half_bw; j++, k++)
-		{
-		    int i = j;
-		    while (i < 0)
-			i++;
-		    while (i >= n_y)
-			i--;
-		    median_arr[k] = y[i];
-		}
-		gsl_sort (median_arr, 1, box_width);
-		smoothed[n] = gsl_stats_median_from_sorted_data (
-		    median_arr, 1, box_width);
-	    }
-	    break;
-#endif
-	default:
-	    SCIA_ERROR (FATAL, "Unknown Smoothing type.", "");
-	    break;
-    }
-    memcpy (y, smoothed , n_y * sizeof(double));
-    free (smoothed);
-    return n;
-}
+// NOT USED /* smooth an array with boxcar/triangular function of width box_width */
+// NOT USED /*  y, ny : y input array of n_y values, will be
+// NOT USED         overwritten by the smoothed values
+// NOT USED     box_width: width of the boxcar (odd number);
+// NOT USED      smoothing is performed until the edge of the array!
+// NOT USED */
+// NOT USED
+// NOT USED
+// NOT USED int smooth (double *y, int n_y, int box_width, enum smooth_type stype)
+// NOT USED {
+// NOT USED     int n,j,k;
+// NOT USED     int half_bw = (box_width - 1)/2;
+// NOT USED     double sum;
+// NOT USED     int div;
+// NOT USED     double *smoothed;
+// NOT USED     /* No smoothing with 1 */
+// NOT USED     if (box_width == 1)
+// NOT USED 	return n_y;
+// NOT USED     /* start smoothing */
+// NOT USED /*     if (box_width%2 != 1) */
+// NOT USED /* 	SCIA_ERROR (FATAL, "box_width has to be odd!", "");     */
+// NOT USED     smoothed = calloc (n_y, sizeof(double));
+// NOT USED /*     if (!smoothed) */
+// NOT USED /* 	SCIA_ERROR (FATAL,"Out of memory.",""); */
+// NOT USED
+// NOT USED     switch (stype)
+// NOT USED     {
+// NOT USED 	case SMOOOTH_BOXCAR:
+// NOT USED 	    for (n=0; n<n_y; n++)
+// NOT USED 	    {
+// NOT USED 		sum = 0.0;
+// NOT USED 		for (j=n-half_bw; j <= n+half_bw; j++)
+// NOT USED 		{
+// NOT USED 		    int i = j;
+// NOT USED 		    while (i < 0)
+// NOT USED 			i++;
+// NOT USED 		    while (i >= n_y)
+// NOT USED 			i--;
+// NOT USED 		    sum += y[i];
+// NOT USED 		}
+// NOT USED 		smoothed[n] = sum / (double) box_width;
+// NOT USED 	    }
+// NOT USED 	    break;
+// NOT USED 	case SMOOTH_TRIANGULAR:
+// NOT USED 	    div = half_bw+1;
+// NOT USED 	    div *= div;
+// NOT USED 	    for (n=0; n<n_y; n++)
+// NOT USED 	    {
+// NOT USED 		sum = 0.0;
+// NOT USED 		for (j=n-half_bw, k=0; j <= n+half_bw; j++, k++)
+// NOT USED 		{
+// NOT USED 		    int i = j;
+// NOT USED 		    while (i < 0)
+// NOT USED 			i++;
+// NOT USED 		    while (i >= n_y)
+// NOT USED 			i--;
+// NOT USED 		    sum += (k>half_bw ? box_width-k : k+1) *y[i];
+// NOT USED 		}
+// NOT USED 		smoothed[n] = sum / (double) div;
+// NOT USED 	    }
+// NOT USED 	    break;
+// NOT USED #if HAVE_LIBGSL
+// NOT USED 	case SMOOTH_MEDIAN:
+// NOT USED 	    median_arr = calloc (box_width, sizeof(double));
+// NOT USED 	    div = half_bw+1;
+// NOT USED 	    div *= div;
+// NOT USED 	    for (n=0; n<n_y; n++)
+// NOT USED 	    {
+// NOT USED 		sum = 0.0;
+// NOT USED 		for (j=n-half_bw, k=0; j <= n+half_bw; j++, k++)
+// NOT USED 		{
+// NOT USED 		    int i = j;
+// NOT USED 		    while (i < 0)
+// NOT USED 			i++;
+// NOT USED 		    while (i >= n_y)
+// NOT USED 			i--;
+// NOT USED 		    median_arr[k] = y[i];
+// NOT USED 		}
+// NOT USED 		gsl_sort (median_arr, 1, box_width);
+// NOT USED 		smoothed[n] = gsl_stats_median_from_sorted_data (
+// NOT USED 		    median_arr, 1, box_width);
+// NOT USED 	    }
+// NOT USED 	    break;
+// NOT USED #endif
+// NOT USED 	default:
+// NOT USED 	    SCIA_ERROR (FATAL, "Unknown Smoothing type.", "");
+// NOT USED 	    break;
+// NOT USED     }
+// NOT USED     memcpy (y, smoothed , n_y * sizeof(double));
+// NOT USED     free (smoothed);
+// NOT USED     return n;
+// NOT USED }
 
 
 

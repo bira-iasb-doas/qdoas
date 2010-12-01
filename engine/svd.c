@@ -245,6 +245,7 @@ RC SVD_Dcmp ( double **a, int m, int n, double *w, double **v, double *SigmaSqr,
 
   rv1=NULL;
   rc=ERROR_ID_NO;
+  l=nm=0;
 
   // Check for parameters
 

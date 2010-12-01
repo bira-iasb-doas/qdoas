@@ -975,19 +975,19 @@ RC GOME2_Set(ENGINE_CONTEXT *pEngineContext)
 
   GOME2_ORBIT_FILE *pOrbitFile;                                                 // pointer to the current orbit
   DoasCh filePath[MAX_STR_SHORT_LEN+1];
-  DoasCh fileFilter[MAX_STR_SHORT_LEN+1],fileFilterSub[MAX_STR_SHORT_LEN+1];
+  DoasCh fileFilter[MAX_STR_SHORT_LEN+1];
   #if defined(__WINDOAS_WIN_) && __WINDOAS_WIN_
   WIN32_FIND_DATA fileInfo,fileInfoSub;                                         // structure returned by FindFirstFile and FindNextFile APIs
   HANDLE hDir,hDirSub;                                                          // handle to use with by FindFirstFile and FindNextFile APIs
   #else
-  struct dirent *fileInfo,*fileInfoSub;
-  DIR *hDir,*hDirSub;
+  struct dirent *fileInfo;
+  DIR *hDir;
   #endif
   INDEX indexFile;
   INT searchAllOrbits;
   DoasCh *ptr,*fileExt;
   INT oldCurrentIndex;
-  RC rc,rcSub;                                                                  // return code
+  RC rc;                                                                  // return code
 
   #if defined(__DEBUG_) && __DEBUG_
   DEBUG_FunctionBegin("GOME2_Set",DEBUG_FCTTYPE_FILE);
@@ -1482,6 +1482,7 @@ void Gome2Sort(GOME2_ORBIT_FILE *pOrbitFile,INDEX indexRecord,int flag,int listS
     break;
  // ----------------------------------------------------------------------------
     case 2 :
+    default :
      sortedList=pOrbitFile->gome2SzaIndex;
      value=pOrbitFile->gome2Geolocations[indexRecord].solZen[1];
     break;
@@ -2042,8 +2043,6 @@ RC Gome2NewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
                           pTabFeno->LambdaS,pTabFeno->SrefS,&pTabFeno->refNormFactS,
                           responseHandle);
     }
-
-  THRD_goto.indexMin=THRD_goto.indexMax=ITEM_NONE;
 
   // Return
 

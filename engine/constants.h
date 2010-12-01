@@ -615,7 +615,8 @@ enum _prjctInstrFormat
   PRJCT_INSTR_FORMAT_OMI,                                                       // OMI
   PRJCT_INSTR_FORMAT_GOME2,                                                     // GOME2
   PRJCT_INSTR_FORMAT_MKZY,                                                      // MANNE Kihlman and ZHANG Yan pak format
-  PRJCT_INSTR_FORMAT_BIRA_AIRBORNE,
+  PRJCT_INSTR_FORMAT_BIRA_AIRBORNE,                                             // MOBILEDOAS and ULMDOAS (BIRA-IASB)
+  PRJCT_INSTR_FORMAT_OCEAN_OPTICS,                                              // Ocean optics
   PRJCT_INSTR_FORMAT_MAX
  };
 

@@ -820,12 +820,7 @@ RC KURUCZ_Reference(double *instrFunction,INDEX refFlag,INT saveFlag,INT gomeFla
              }
             else
              {
-             	if ((++nBadKuruczFeno==nKuruczFeno)
-// QDOAS ???               #if defined (__WINDOAS_GUI_) && __WINDOAS_GUI_
-// QDOAS ???               ||  (!msgCount && (THRD_delay==INFINITE) &&
-// QDOAS ???                  ((rc=MSG_MessageBox(DOAS_hwndMain,ITEM_NONE,IDS_TITLE_ANALYSIS,ERROR_ID_KURUCZ,MB_YESNO|MB_ICONHAND,pTabFeno->windowName))==IDNO))
-// QDOAS ???               #endif
-                 )
+             	if (++nBadKuruczFeno==nKuruczFeno)
                {
                 rc=pTabFeno->rcKurucz;
                 break;
@@ -962,7 +957,7 @@ RC KURUCZ_Alloc(PROJECT *pProject,double *lambda,INDEX indexKurucz,double lambda
                     (pKuruczFeno->analysisMethod==PRJCT_ANLYS_METHOD_SVD) &&    // implemented only in DOAS fitting
                     (pKuruczFeno->analysisType==ANALYSIS_TYPE_FWHM_KURUCZ) &&   // for calibration with slit function fitting
                    ((pKuruczFeno->indexSol==ITEM_NONE) ||                       // doesn't fit the Sol non linear parameter
-                    (pKuruczFeno->TabCross[pKuruczFeno->indexSol].FitParam==ITEM_NONE)))?1:0)==1);
+                    (pKuruczFeno->TabCross[pKuruczFeno->indexSol].FitParam==ITEM_NONE)))?1:0)==1)
 
    KURUCZ_buffers.solarFGap=(int)floor(ANALYSE_phFilter->filterWidth*sqrt(ANALYSE_phFilter->filterNTimes)+0.5);
 

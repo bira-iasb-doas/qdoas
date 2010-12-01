@@ -229,97 +229,6 @@ RC SetMFC(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
   mfcLastSpectrum=0;
   rc=ERROR_ID_NO;
 
-// QDOAS ???   if ((THRD_isFolder || !THRD_treeCallFlag) && ((ptr=strrchr(fileName,PATH_SEP))!=NULL))
-// QDOAS ???    {
-// QDOAS ???    	if (strlen(PATH_fileMax))
-// QDOAS ???    	 {
-// QDOAS ??? //    ptr+=2;         // get the number of the first file
-// QDOAS ???
-// QDOAS ???       if ((ptr2=strrchr(ptr,'.'))==NULL)
-// QDOAS ???        ptr2=strrchr(ptr,'\0');
-// QDOAS ???
-// QDOAS ???       for (ptr3=ptr2;(ptr3>ptr+1) && isdigit(*(ptr3-1));ptr3--);
-// QDOAS ???
-// QDOAS ???       sprintf(format,"%%0%dd%%s",ptr2-ptr3);
-// QDOAS ???
-// QDOAS ???       sscanf(ptr3,"%d",&firstFile);
-// QDOAS ???       sscanf(PATH_fileMax+(ptr3-ptr-1),"%d",&lastFile);
-// QDOAS ???
-// QDOAS ???       pEngineContext->recordNumber=(lastFile-firstFile+1);
-// QDOAS ???
-// QDOAS ???       // Refresh dark current and offset
-// QDOAS ???
-// QDOAS ???       if (strlen(pInstrumental->dnlFile) &&                                       // dnl file specified
-// QDOAS ???          !strrchr(pInstrumental->dnlFile,PATH_SEP) &&                             // no path separator
-// QDOAS ???          (pBuffers->dnl!=NULL))                                                  // allocated vector
-// QDOAS ???        {
-// QDOAS ???        	strcpy(fileName,pEngineContext->fileInfo.fileName);
-// QDOAS ???        	if ((ptr=strrchr(fileName,PATH_SEP))!=NULL)
-// QDOAS ???        	 {
-// QDOAS ???        	 	FILES_RebuildFileName(ptr+1,pInstrumental->dnlFile,0);
-// QDOAS ???
-// QDOAS ???        	 	if (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC)
-// QDOAS ???            MFC_ReadRecord(fileName,
-// QDOAS ???                          &MFC_headerOff,pBuffers->dnl,
-// QDOAS ???                          &MFC_headerDrk,NULL,
-// QDOAS ???                          &MFC_headerOff,NULL,
-// QDOAS ???                           pInstrumental->mfcMaskOffset,pInstrumental->mfcMaskSpec,pInstrumental->mfcRevert);
-// QDOAS ???        	 	else
-// QDOAS ???            MFC_ReadRecordStd(pEngineContext,fileName,&MFC_headerOff,pBuffers->dnl,
-// QDOAS ???                             &MFC_headerDrk,NULL,
-// QDOAS ???                             &MFC_headerOff,NULL);
-// QDOAS ???          }
-// QDOAS ???        }
-// QDOAS ???
-// QDOAS ???       if (strlen(pInstrumental->vipFile) &&                      // vip file specified
-// QDOAS ???          !strrchr(pInstrumental->vipFile,PATH_SEP) &&            // no path separator
-// QDOAS ???          (pBuffers->varPix!=NULL))                                               // allocated vector
-// QDOAS ???        {
-// QDOAS ???        	strcpy(fileName,pEngineContext->fileInfo.fileName);
-// QDOAS ???
-// QDOAS ???        	if ((ptr=strrchr(fileName,PATH_SEP))!=NULL)
-// QDOAS ???        	 {
-// QDOAS ???        	  FILES_RebuildFileName(ptr+1,pInstrumental->vipFile,0);
-// QDOAS ???
-// QDOAS ???        	 	if (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC)
-// QDOAS ???            MFC_ReadRecord(fileName,
-// QDOAS ???                          &MFC_headerOff,pBuffers->dnl,
-// QDOAS ???                          &MFC_headerDrk,NULL,
-// QDOAS ???                          &MFC_headerOff,NULL,
-// QDOAS ???                           pInstrumental->mfcMaskDark,pInstrumental->mfcMaskSpec,pInstrumental->mfcRevert);
-// QDOAS ???        	 	else
-// QDOAS ???            MFC_ReadRecordStd(pEngineContext,fileName,&MFC_headerDrk,pBuffers->varPix,
-// QDOAS ???                             &MFC_headerDrk,NULL,
-// QDOAS ???                             &MFC_headerOff,pBuffers->dnl);
-// QDOAS ???          }
-// QDOAS ???        }
-// QDOAS ???
-// QDOAS ???       // Search for the last file
-// QDOAS ???
-// QDOAS ??? /*      for (indexFile=pInstrumental->mfcMaxSpectra+firstFile-1;indexFile>firstFile;indexFile--)
-// QDOAS ???        {
-// QDOAS ???         // Build the right file name
-// QDOAS ???
-// QDOAS ???         sprintf(ptr,format,indexFile,ptr2);
-// QDOAS ???
-// QDOAS ???         if ((fp=fopen(fileName,"rb"))!=NULL)
-// QDOAS ???          {
-// QDOAS ???           fclose(fp);
-// QDOAS ???           break;
-// QDOAS ???          }
-// QDOAS ???        }   */
-// QDOAS ???
-// QDOAS ???       // Calculate the number of files in the current directory;
-// QDOAS ???       // in this format, there's one record per file and a directory
-// QDOAS ???       // is seen as a set of records.
-// QDOAS ???
-// QDOAS ??? //      pEngineContext->recordNumber=indexFile-firstFile+1;
-// QDOAS ??? //      pEngineContext->recordNumber=pInstrumental->mfcMaxSpectra;
-// QDOAS ???      }
-// QDOAS ???     else
-// QDOAS ???      rc=ERROR_SetLast("SetMFC",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pEngineContext->fileInfo.fileName);
-// QDOAS ???    }
-// QDOAS ???   else
    pEngineContext->recordNumber=1;
 
   // Return
@@ -510,7 +419,7 @@ RC ReliMFC(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay
       for (ptr=ptr2;isdigit(*(ptr-1));ptr--);
 
       sscanf(ptr,"%d",&firstFile);
-      sprintf(format,"%%0%dd%%s",ptr2-ptr);
+      sprintf(format,"%%0%dd%%s",(int)(ptr2-ptr));
       sprintf(ptr,format,firstFile+recordNo-1,ptr2);
      }
 
@@ -571,9 +480,6 @@ RC ReliMFC(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay
 
       if (!rc)
        {
-        memset(PATH_fileSpectra,0,MAX_STR_SHORT_LEN+1);
-        strncpy(PATH_fileSpectra,fileName,MAX_STR_SHORT_LEN);
-
         // Date and time read out
 
         sscanf(MFC_header.dateAndTime,"%d.%d.%d",&day,&mon,&year);
@@ -991,9 +897,6 @@ RC ReliMFCStd(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int local
 
     if (!(rc=MFC_ReadRecordStd(pEngineContext,fileName,&MFC_header,pBuffers->spectrum,&MFC_headerDrk,pBuffers->varPix,&MFC_headerOff,pBuffers->dnl)))
      {
-      memset(PATH_fileSpectra,0,MAX_STR_SHORT_LEN+1);
-      strncpy(PATH_fileSpectra,fileName,MAX_STR_SHORT_LEN);
-
       pRecord->SkyObs   = 0;
       pRecord->rejected = 0;
       pRecord->ReguTemp = 0;

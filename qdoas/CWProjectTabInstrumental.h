@@ -51,6 +51,7 @@ class CWInstrOmiEdit;
 class CWInstrMfcEdit;
 class CWInstrMfcStdEdit;
 class CWInstrMfcbiraEdit;
+class CWInstrOceanOpticsEdit;
 
 //--------------------------------------------------------------------------
 class CWProjectTabInstrumental : public QFrame
@@ -100,6 +101,7 @@ Q_OBJECT
   CWInstrGome2Edit *m_gome2Edit;
   CWInstrMinimumEdit *m_mkzyEdit;
   CWInstrMinimumEdit *m_biraairborneEdit;
+  CWInstrOceanOpticsEdit *m_oceanOpticsEdit;
   std::map<int,int> m_instrumentToStackIndexMap;
 };
 
@@ -429,6 +431,20 @@ class CWInstrOmiEdit : public CWCalibInstrEdit
   QComboBox *m_spectralTypeCombo;
   QLineEdit *m_minLambdaEdit, *m_maxLambdaEdit;
   QCheckBox *m_averageCheck;
+};
+
+//--------------------------------------------------------------------------
+
+class CWInstrOceanOpticsEdit : public CWCalibInstrEdit
+{
+ public:
+  CWInstrOceanOpticsEdit(const struct instrumental_oceanoptics *d, QWidget *parent = 0);
+  virtual ~CWInstrOceanOpticsEdit();
+
+  void apply(struct instrumental_oceanoptics *d) const;
+
+ private:
+  QLineEdit *m_detSizeEdit;
 };
 
 

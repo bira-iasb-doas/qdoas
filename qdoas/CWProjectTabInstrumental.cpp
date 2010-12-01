@@ -175,6 +175,11 @@ CWProjectTabInstrumental::CWProjectTabInstrumental(const mediate_project_instrum
   index = m_formatStack->addWidget(m_biraairborneEdit);
   m_instrumentToStackIndexMap.insert(std::map<int,int>::value_type(PRJCT_INSTR_FORMAT_BIRA_AIRBORNE, index));
 
+  // ocean optics
+  m_oceanOpticsEdit = new CWInstrOceanOpticsEdit(&(instr->oceanoptics));
+  index = m_formatStack->addWidget(m_oceanOpticsEdit);
+  m_instrumentToStackIndexMap.insert(std::map<int,int>::value_type(PRJCT_INSTR_FORMAT_OCEAN_OPTICS	, index));
+
   // Site
   m_siteCombo = new CWSiteListCombo(this); // automatically populated
 
@@ -233,6 +238,7 @@ void CWProjectTabInstrumental::apply(mediate_project_instrumental_t *instr) cons
   m_gome2Edit->apply(&(instr->gome2));
   m_mkzyEdit->apply(&(instr->mkzy));
   m_biraairborneEdit->apply(&(instr->biraairborne));
+  m_oceanOpticsEdit->apply(&(instr->oceanoptics));
 }
 
 void CWProjectTabInstrumental::slotInstrumentChanged(int instrument)
@@ -1802,3 +1808,56 @@ void CWInstrOmiEdit::apply(struct instrumental_omi *d) const
   strcpy(d->instrFunctionFile, m_fileTwoEdit->text().toAscii().data());
 }
 
+//--------------------------------------------------------
+
+CWInstrOceanOpticsEdit::CWInstrOceanOpticsEdit(const struct instrumental_oceanoptics *d, QWidget *parent) :
+  CWCalibInstrEdit(parent)
+{
+  QVBoxLayout *mainLayout = new QVBoxLayout(this);
+
+  int row = 0;
+  QGridLayout *bottomLayout = new QGridLayout;
+
+  bottomLayout->addWidget(new QLabel("Detector Size", this), row, 0);
+  m_detSizeEdit = new QLineEdit(this);
+  m_detSizeEdit->setFixedWidth(cStandardEditWidth);
+  m_detSizeEdit->setValidator(new QIntValidator(0, 8192, m_detSizeEdit));
+  bottomLayout->addWidget(m_detSizeEdit, row, 1);
+  ++row;
+
+  // files
+  helperConstructCalInsFileWidgets(bottomLayout, row,
+				   d->calibrationFile, sizeof(d->calibrationFile),
+				   d->instrFunctionFile, sizeof(d->instrFunctionFile));
+
+  bottomLayout->setColumnMinimumWidth(0, cSuggestedColumnZeroWidth);
+  bottomLayout->setColumnMinimumWidth(2, cSuggestedColumnTwoWidth);
+
+  mainLayout->addLayout(bottomLayout);
+  mainLayout->addStretch(1);
+
+  // initial values
+  QString tmpStr;
+
+  // detector size
+  tmpStr.setNum(d->detectorSize);
+  m_detSizeEdit->validator()->fixup(tmpStr);
+  m_detSizeEdit->setText(tmpStr);
+}
+
+CWInstrOceanOpticsEdit::~CWInstrOceanOpticsEdit()
+{
+}
+
+void CWInstrOceanOpticsEdit::apply(struct instrumental_oceanoptics *d) const
+{
+  // detected size
+  d->detectorSize = m_detSizeEdit->text().toInt();
+
+  // files
+  strcpy(d->calibrationFile, m_fileOneEdit->text().toAscii().data());
+  strcpy(d->instrFunctionFile, m_fileTwoEdit->text().toAscii().data());
+
+}
+
+//--------------------------------------------------------

@@ -844,6 +844,15 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
 
 	  	break;
 	// ----------------------------------------------------------------------------
+	  	case PRJCT_INSTR_FORMAT_OCEAN_OPTICS :                                                                 // Format OCEAN OPTICS
+
+	  	 NDET=pMediateInstrumental->oceanoptics.detectorSize;                                           // size of the detector
+
+	  	 strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->ascii.calibrationFile);      // calibration file
+	  	 strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->ascii.instrFunctionFile);      // instrumental function file
+
+	  	break;
+	// ----------------------------------------------------------------------------
 	  	case PRJCT_INSTR_FORMAT_SAOZ_VIS :                                                              // SAOZ PCD/NMOS 512
 
 	  	 NDET=512;                                                                                      // size of the detector

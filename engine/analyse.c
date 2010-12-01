@@ -2998,15 +2998,6 @@ RC ANALYSE_Function ( double *lambda,double *X, double *Y, INT ndet, double *Y0,
   if (newXsTrav!=NULL)
    MEMORY_ReleaseDVector("Function ","newXsTrav",newXsTrav,0);
 
-// QDOAS ???  rc=THRD_ProcessLastError();
-
-  // Wait for event
-
-// QDOAS ???  #if defined (__WINDOAS_GUI_) && __WINDOAS_GUI_
-// QDOAS ???  if (!rc && ((rc=THRD_WaitEvent(0,0,0))==THREAD_EVENT_PAUSE))   // Pause or stop
-// QDOAS ???   rc=THRD_WaitEvent(INFINITE,0,0);
-// QDOAS ???  #endif
-
   // Return
 
   #if defined(__DEBUG_) && __DEBUG_
@@ -3377,22 +3368,23 @@ if (!Feno->hidden)
 
             if (WorkSpace[pTabCross->Comp].type==WRK_SYMBOL_CONTINUOUS)
              {
-            	if (!Feno->hidden)
+            	 if (!Feno->hidden)
+            	  {
+              	 // Intensity fitting but polynomial is fitted linearly
 
-             	// Intensity fitting but polynomial is fitted linearly
+                if ((pTabCross->IndSvdP) && (fabs(refNormFact)>EPSILON))
+                	pResults->SlntCol*=(double)speNormFact/refNormFact;
 
-              if ((pTabCross->IndSvdP) && (fabs(refNormFact)>EPSILON))
-              	pResults->SlntCol*=(double)speNormFact/refNormFact;
+                // SVD
 
-              // SVD
+                else if ((fabs(speNormFact)>EPSILON) && (refNormFact/speNormFact>EPSILON))
+                 {
+                 	pResults->SlntCol=-pResults->SlntCol;
 
-              else if ((fabs(speNormFact)>EPSILON) && (refNormFact/speNormFact>EPSILON))
-               {
-               	pResults->SlntCol=-pResults->SlntCol;
-
-               	if (!stricmp(WorkSpace[pTabCross->Comp].symbolName,"x0"))
-               	 pResults->SlntCol-=(double)log(refNormFact/speNormFact);
-             	 }
+                 	if (!stricmp(WorkSpace[pTabCross->Comp].symbolName,"x0"))
+                 	 pResults->SlntCol-=(double)log(refNormFact/speNormFact);
+              	  }
+               }
             	}
            }
           else  // cross sections in SVD+Marquardt method or Raman in SVD method
@@ -3492,7 +3484,6 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
   DoasCh windowTitle[MAX_ITEM_TEXT_LEN+1];    // window title for graphs
   DoasCh tabTitle[MAX_ITEM_TEXT_LEN+1];
   DoasCh graphTitle[MAX_ITEM_TEXT_LEN+1];     // graph title
-  DoasCh string[MAX_ITEM_TEXT_LEN+1];
   INDEX WrkFeno,j;                             // index on analysis windows
   INDEX i,k,l;                               // indexes for loops and arrays
 
@@ -3515,8 +3506,7 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
       saveFlag;
 // QDOAS ???   FILE *fp;                     // pointer to temporary file
 
-  INDEX indexPage,indexLine,indexColumn,indexRef;
-  SATELLITE_REF *pRef;
+  INDEX indexPage,indexLine,indexColumn;
   RC  rc;                                    // return code
   int nrc;
 
@@ -4474,21 +4464,6 @@ RC ANALYSE_CheckLambda(WRK_SYMBOL *pWrkSymbol,double *lambda,DoasCh *callingFunc
   rc=ERROR_ID_NO;
 
   FILES_RebuildFileName(fileName,pWrkSymbol->crossFileName,1);
-
-// QDOAS ???   #if defined (__WINDOAS_GUI_) && __WINDOAS_GUI_
-// QDOAS ???   if (pWrkSymbol->xs.nl!=NDET)
-// QDOAS ???    THRD_Error(ERROR_TYPE_FATAL,(rc=ERROR_ID_WAVELENGTH),callingFunction,fileName);
-// QDOAS ???   else if (!ANALYSE_ignoreAll && !VECTOR_Equal(pWrkSymbol->xs.matrix[0],lambda,NDET,(double)1.e-7))
-// QDOAS ???    {
-// QDOAS ???     if ((rc=THRD_Error(ERROR_TYPE_OWNERDRAWN,ERROR_ID_WAVELENGTH2,callingFunction,fileName))==IDIGNORE)
-// QDOAS ???      ANALYSE_ignoreAll=1;
-// QDOAS ???
-// QDOAS ???     if ((rc==IDOK) || (rc==IDIGNORE))
-// QDOAS ???      rc=ERROR_ID_NO;
-// QDOAS ???     else if (rc==IDCANCEL)
-// QDOAS ???      THRD_Error(ERROR_TYPE_FATAL,(rc=ERROR_ID_ANALYSIS),callingFunction,ERROR_ID_WAVELENGTH2,"User Break");
-// QDOAS ???    }
-// QDOAS ???   #endif
 
   // Return
 
@@ -5544,7 +5519,7 @@ RC ANALYSE_LoadRef(ENGINE_CONTEXT *pEngineContext)
 
   FENO *pTabFeno;
   double *Sref;
-  double *SrefEtalon,factTemp,*lambdaRef,*lambdaRefEtalon;
+  double *SrefEtalon,*lambdaRef,*lambdaRefEtalon;
   DoasCh *ptr;
   RC rc;
 
