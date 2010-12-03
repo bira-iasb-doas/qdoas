@@ -3381,7 +3381,7 @@ if (!Feno->hidden)
                  {
                  	pResults->SlntCol=-pResults->SlntCol;
 
-                 	if (!stricmp(WorkSpace[pTabCross->Comp].symbolName,"x0"))
+                 	if (!STD_Stricmp(WorkSpace[pTabCross->Comp].symbolName,"x0"))
                  	 pResults->SlntCol-=(double)log(refNormFact/speNormFact);
               	  }
                }
