@@ -60,8 +60,6 @@
 //      these functions convert a string to upper / lower case characters,
 //      to replace similar strupr/strlwr functions when those are not supported
 //
-//  STD_Stricmp - these functions compare two strings; the case is not accounted for;
-//
 //  =====================
 //  FILES AND DIRECTORIES
 //  =====================
@@ -364,26 +362,6 @@ char *STD_Strlwr(char *n)
   for (i=0;n[i];i++)
   	n[i] = (char)tolower(n[i]);
   return n;
- }
-
-// -----------------------------------------------------------------------------
-// FUNCTION      STD_Stricmp
-// -----------------------------------------------------------------------------
-// PURPOSE       these functions compare two strings; the case is not accounted for
-//
-// INPUT         the strings to compare
-//
-// RETURN        the result of the strcmp function
-// -----------------------------------------------------------------------------
-
-int STD_Stricmp(char *str1,char *str2)
- {
- 	char lwrStr1[MAX_STR_LEN+1],lwrStr2[MAX_STR_LEN+1];
-
- 	strcpy(lwrStr1,str1);
- 	strcpy(lwrStr2,str2);
-
- 	return(strcmp(STD_Strlwr(lwrStr1),STD_Strlwr(lwrStr2)));
  }
 
 // =====================

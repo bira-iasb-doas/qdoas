@@ -154,7 +154,7 @@ INT SYMB_itemCrossN;                                                            
 // QDOAS ???
 // QDOAS ???     for (indexSymbol=0;indexSymbol<symbolNumber;indexSymbol++)
 // QDOAS ???      if (((int)strlen(symbolList[indexSymbol].name)==symbolNameLen) &&
-// QDOAS ???          !STD_Stricmp(symbolList[indexSymbol].name,symbolName))
+// QDOAS ???          !strcasecmp(symbolList[indexSymbol].name,symbolName))
 // QDOAS ???       break;
 // QDOAS ???    }
 // QDOAS ???

@@ -183,7 +183,7 @@ INDEX MFC_SearchForCurrentFileIndex(ENGINE_CONTEXT *pEngineContext)
  	  strcpy(fileName,ptr+1);
 
  	 	for (indexFile=0;indexFile<nscanRefFiles;indexFile++)
- 	 	 if (!STD_Stricmp(fileName,&scanRefFiles[indexFile*(MAX_ITEM_TEXT_LEN+1)]))
+ 	 	 if (!strcasecmp(fileName,&scanRefFiles[indexFile*(MAX_ITEM_TEXT_LEN+1)]))
  	 	  break;
 
  	 	if (indexFile<nscanRefFiles)
@@ -757,19 +757,19 @@ RC MFC_ReadRecordStd(ENGINE_CONTEXT *pEngineContext,DoasCh *fileName,
      	if (strchr(line,'=')!=NULL)
      	 {
      	 	sscanf(line,"%s = %s",keyWord,keyValue);
-     	 	if (!STD_Stricmp(keyWord,"AzimuthAngle"))
+     	 	if (!strcasecmp(keyWord,"AzimuthAngle"))
      	 	 pRecord->azimuthViewAngle=(float)atof(keyValue);
-     	 	else if (!STD_Stricmp(keyWord,"ElevationAngle"))
+     	 	else if (!strcasecmp(keyWord,"ElevationAngle"))
      	 	 pRecord->elevationViewAngle=(float)atof(keyValue);
-     	 	else if (!STD_Stricmp(keyWord,"ExposureTime"))
+     	 	else if (!strcasecmp(keyWord,"ExposureTime"))
      	 	 pRecord->Tint=(double)atof(keyValue)*0.001;
-     	 	else if (!STD_Stricmp(keyWord,"Latitude"))
+     	 	else if (!strcasecmp(keyWord,"Latitude"))
      	 	 pRecord->latitude=(double)atof(keyValue);
-     	 	else if (!STD_Stricmp(keyWord,"Longitude"))
+     	 	else if (!strcasecmp(keyWord,"Longitude"))
      	 	 pRecord->longitude=(double)atof(keyValue);
-     	 	else if (!STD_Stricmp(keyWord,"NumScans"))
+     	 	else if (!strcasecmp(keyWord,"NumScans"))
      	 	 pRecord->NSomme=(int)atoi(keyValue);
-     	 	else if (!STD_Stricmp(keyWord,"Temperature"))
+     	 	else if (!strcasecmp(keyWord,"Temperature"))
      	 	 pRecord->TDet=(double)atof(keyValue);
      	 }
      }

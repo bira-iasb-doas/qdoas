@@ -375,8 +375,8 @@ RC OUTPUT_ReadAmf(DoasCh *symbolName,DoasCh *amfFileName,DoasCh amfType,INDEX *p
       if ((pAmfSymbol->type==fileType) &&
           (strlen(pAmfSymbol->symbolName)==symbolLength) &&
           (strlen(pAmfSymbol->amfFileName)==fileLength) &&
-          !STD_Stricmp(pAmfSymbol->symbolName,symbolName) &&
-          !STD_Stricmp(pAmfSymbol->amfFileName,amfFileName))
+          !strcasecmp(pAmfSymbol->symbolName,symbolName) &&
+          !strcasecmp(pAmfSymbol->amfFileName,amfFileName))
 
        break;
      }
@@ -2017,7 +2017,7 @@ RC OutputBuildFileName(ENGINE_CONTEXT *pEngineContext,DoasCh *outputFileName,INT
                    (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_OMI) ||
                    (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GOME2));
 
-    if ((!strlen(fileNamePtr) || !STD_Stricmp(fileNamePtr,"automatic")) &&
+    if ((!strlen(fileNamePtr) || !strcasecmp(fileNamePtr,"automatic")) &&
        ((satelliteFlag && ((pProject->spectra.mode!=PRJCT_SPECTRA_MODES_OBSLIST) || (pProject->spectra.radius<=1.))) ||
        (!satelliteFlag && (pResults->fileNameFlag || (SITES_GetIndex(pProject->instrumental.observationSite)==ITEM_NONE)))))
      {
@@ -2700,7 +2700,7 @@ RC OUTPUT_FlushBuffers(ENGINE_CONTEXT *pEngineContext)
     else
      ptr++;
 
-    if ((strlen(ptr)==9) && !STD_Stricmp(ptr,"automatic"))
+    if ((strlen(ptr)==9) && !strcasecmp(ptr,"automatic"))
      *ptr='\0';
 
     automatic=!strlen(ptr);

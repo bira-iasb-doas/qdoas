@@ -1024,7 +1024,7 @@ RC GOME2_Set(ENGINE_CONTEXT *pEngineContext)
 
     for (indexFile=0;indexFile<gome2OrbitFilesN;indexFile++)
      if ((strlen(pEngineContext->fileInfo.fileName)==strlen(gome2OrbitFiles[indexFile].gome2FileName)) &&
-         !STD_Stricmp(pEngineContext->fileInfo.fileName,gome2OrbitFiles[indexFile].gome2FileName))
+         !strcasecmp(pEngineContext->fileInfo.fileName,gome2OrbitFiles[indexFile].gome2FileName))
       break;
 
     if (indexFile<gome2OrbitFilesN)
@@ -1070,7 +1070,7 @@ RC GOME2_Set(ENGINE_CONTEXT *pEngineContext)
 
  	 	  if (fileExt==NULL)
  	 	   sprintf(ptr,"%c*.*",PATH_SEP);
- 	 	  else if (!pEngineContext->analysisRef.refLon || STD_Stricmp(fileExt,".nadir"))
+ 	 	  else if (!pEngineContext->analysisRef.refLon || strcasecmp(fileExt,".nadir"))
  	 	   sprintf(ptr,"%c*.%s",PATH_SEP,fileExt);
  	 	  else
  	 	   {
@@ -1105,8 +1105,8 @@ RC GOME2_Set(ENGINE_CONTEXT *pEngineContext)
      //      	strcpy(filePrefix,fileInfo->d_name);
      //      	filePrefix[6]='\0';
      //
-     //       if (((ptr=strrchr(fileInfo->d_name,'.'))!=NULL) && (strlen(ptr+1)==strlen(fileExt)) && !STD_Stricmp(ptr+1,fileExt) &&
-     //            (strlen(filePrefix)==strlen(fileFilter)) && !STD_Stricmp(filePrefix,fileFilter))
+     //       if (((ptr=strrchr(fileInfo->d_name,'.'))!=NULL) && (strlen(ptr+1)==strlen(fileExt)) && !strcasecmp(ptr+1,fileExt) &&
+     //            (strlen(filePrefix)==strlen(fileFilter)) && !strcasecmp(filePrefix,fileFilter))
      //        gdpBinOrbitFilesN++;
      //      }
      //    }
@@ -1157,7 +1157,7 @@ RC GOME2_Set(ENGINE_CONTEXT *pEngineContext)
          }
 
         if ((strlen(pEngineContext->fileInfo.fileName)==strlen(pOrbitFile->gome2FileName)) &&
-            !STD_Stricmp(pEngineContext->fileInfo.fileName,pOrbitFile->gome2FileName))
+            !strcasecmp(pEngineContext->fileInfo.fileName,pOrbitFile->gome2FileName))
          gome2CurrentFileIndex=indexFile;
 
         gome2TotalRecordNumber+=pOrbitFile->specNumber;

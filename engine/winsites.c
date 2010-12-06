@@ -130,7 +130,7 @@ INDEX SITES_GetIndex(DoasCh *siteName)
 
   for (indexSite=0;indexSite<SITES_itemN;indexSite++)
    if (((SZ_LEN)strlen(SITES_itemList[indexSite].name)==siteLength) &&
-       !STD_Stricmp(siteName,SITES_itemList[indexSite].name))
+       !strcasecmp(siteName,SITES_itemList[indexSite].name))
     break;
 
   // return

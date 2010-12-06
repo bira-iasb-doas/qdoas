@@ -103,7 +103,7 @@ RC SetRAS(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
 
   else if (((ptr=strrchr(fileName,PATH_SEP))!=NULL) &&
            ((ptr2=strrchr(ptr,'.'))!=NULL) &&                                   // get the extension
-            !STD_Stricmp(ptr2+1,"dir"))
+            !strcasecmp(ptr2+1,"dir"))
    {
     if ((fileLength=STD_FileLength(specFp))>0)
      {

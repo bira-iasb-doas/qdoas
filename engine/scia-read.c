@@ -1083,7 +1083,7 @@ RC SCIA_SetPDS(ENGINE_CONTEXT *pEngineContext)
 
     for (indexFile=0;indexFile<sciaOrbitFilesN;indexFile++)
      if ((strlen(pEngineContext->fileInfo.fileName)==strlen(sciaOrbitFiles[indexFile].sciaFileName)) &&
-         !STD_Stricmp(pEngineContext->fileInfo.fileName,sciaOrbitFiles[indexFile].sciaFileName))
+         !strcasecmp(pEngineContext->fileInfo.fileName,sciaOrbitFiles[indexFile].sciaFileName))
       break;
 
     if (indexFile<sciaOrbitFilesN)
@@ -1151,8 +1151,8 @@ RC SCIA_SetPDS(ENGINE_CONTEXT *pEngineContext)
            	if ((ptr!=NULL) && (_n==4))
            	 *ptr='\0';
 
-            if (((ptr=strrchr(fileInfo->d_name,'.'))!=NULL) && (strlen(ptr+1)==strlen(fileExt)) && !STD_Stricmp(ptr+1,fileExt) &&
-                 (strlen(filePrefix)==strlen(fileFilter)) && !STD_Stricmp(filePrefix,fileFilter))
+            if (((ptr=strrchr(fileInfo->d_name,'.'))!=NULL) && (strlen(ptr+1)==strlen(fileExt)) && !strcasecmp(ptr+1,fileExt) &&
+                 (strlen(filePrefix)==strlen(fileFilter)) && !strcasecmp(filePrefix,fileFilter))
 
              sciaOrbitFilesN++;
            }
@@ -1213,7 +1213,7 @@ RC SCIA_SetPDS(ENGINE_CONTEXT *pEngineContext)
        }
 
       if ((strlen(pEngineContext->fileInfo.fileName)==strlen(pOrbitFile->sciaFileName)) &&
-          !STD_Stricmp(pEngineContext->fileInfo.fileName,pOrbitFile->sciaFileName))
+          !strcasecmp(pEngineContext->fileInfo.fileName,pOrbitFile->sciaFileName))
        sciaCurrentFileIndex=indexFile;
 
       sciaTotalRecordNumber+=pOrbitFile->specNumber;

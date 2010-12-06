@@ -313,7 +313,7 @@ RC GDP_BIN_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
    {
     for (indexFile=0;indexFile<gdpBinOrbitFilesN;indexFile++)
      if ((strlen(pEngineContext->fileInfo.fileName)==strlen(GDP_BIN_orbitFiles[indexFile].gdpBinFileName)) &&
-         !STD_Stricmp(pEngineContext->fileInfo.fileName,GDP_BIN_orbitFiles[indexFile].gdpBinFileName))
+         !strcasecmp(pEngineContext->fileInfo.fileName,GDP_BIN_orbitFiles[indexFile].gdpBinFileName))
       break;
 
     if (indexFile<gdpBinOrbitFilesN)
@@ -370,8 +370,8 @@ RC GDP_BIN_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
            	strcpy(filePrefix,fileInfo->d_name);
            	filePrefix[6]='\0';
 
-            if (((ptr=strrchr(fileInfo->d_name,'.'))!=NULL) && (strlen(ptr+1)==strlen(fileExt)) && !STD_Stricmp(ptr+1,fileExt) &&
-                 (strlen(filePrefix)==strlen(fileFilter)) && !STD_Stricmp(filePrefix,fileFilter))
+            if (((ptr=strrchr(fileInfo->d_name,'.'))!=NULL) && (strlen(ptr+1)==strlen(fileExt)) && !strcasecmp(ptr+1,fileExt) &&
+                 (strlen(filePrefix)==strlen(fileFilter)) && !strcasecmp(filePrefix,fileFilter))
              gdpBinOrbitFilesN++;
            }
          }
@@ -520,7 +520,7 @@ RC GDP_BIN_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
        }
 
       if ((strlen(pEngineContext->fileInfo.fileName)==strlen(pOrbitFile->gdpBinFileName)) &&
-          !STD_Stricmp(pEngineContext->fileInfo.fileName,pOrbitFile->gdpBinFileName))
+          !strcasecmp(pEngineContext->fileInfo.fileName,pOrbitFile->gdpBinFileName))
        GDP_BIN_currentFileIndex=indexFile;
 
       gdpBinTotalRecordNumber+=pOrbitFile->specNumber;

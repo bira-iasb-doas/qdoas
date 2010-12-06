@@ -813,7 +813,7 @@ RC ANALYSE_XsInterpolation(FENO *pTabFeno,double *newLambda)
 
       // Interpolate cross section
 
-      if (!STD_Stricmp(WorkSpace[pTabCross->Comp].symbolName,"O3TD"))
+      if (!strcasecmp(WorkSpace[pTabCross->Comp].symbolName,"O3TD"))
        {
         for (i=2;i<pXs->nc;i++)
 
@@ -2510,7 +2510,7 @@ RC ANALYSE_Function ( double *lambda,double *X, double *Y, INT ndet, double *Y0,
            // Wavelength alignment for cross sections
            // ---------------------------------------
 
-              (!STD_Stricmp(WorkSpace[pTabCross->Comp].symbolName,"O3TD") &&
+              (!strcasecmp(WorkSpace[pTabCross->Comp].symbolName,"O3TD") &&
               ((rc=TemperatureCorrection(ANALYSE_xsTrav,
                                          O3TD.matrix[2],
                                          O3TD.matrix[3],
@@ -2518,7 +2518,7 @@ RC ANALYSE_Function ( double *lambda,double *X, double *Y, INT ndet, double *Y0,
                                          newXsTrav,
                                         (pTabCross->FitShift!=ITEM_NONE)?(double)fitParamsF[pTabCross->FitShift]:(double)pTabCross->InitShift))!=ERROR_ID_NO)) ||
 
-              (STD_Stricmp(WorkSpace[pTabCross->Comp].symbolName,"O3TD") &&
+              (strcasecmp(WorkSpace[pTabCross->Comp].symbolName,"O3TD") &&
 
               ((rc=ShiftVector(ANALYSE_xsTrav /* (0:NDET-1) */,ANALYSE_xsTrav2+1 /* (1:NDET) */,newXsTrav /* (0:NDET-1) */,
                               (pTabCross->FitShift!=ITEM_NONE)?(double)fitParamsF[pTabCross->FitShift]:(double)pTabCross->InitShift,
@@ -3255,7 +3255,7 @@ RC ANALYSE_CurFitMethod(double *Spectre,          // raw spectrum
 
                 scalingFactor=(double)1.;
 
-                if (!STD_Stricmp(WorkSpace[TabCross[i].Comp].symbolName,"bro") &&
+                if (!strcasecmp(WorkSpace[TabCross[i].Comp].symbolName,"bro") &&
                     (ANALYSIS_broAmf.matrix!=NULL) &&
                     !SPLINE_Vector(ANALYSIS_broAmf.matrix[0],ANALYSIS_broAmf.matrix[1],ANALYSIS_broAmf.deriv2[1],
                                       ANALYSIS_broAmf.nl,&ZM,&scalingFactor,1,SPLINE_CUBIC,"ANALYSE_CurFitMethod "))
@@ -3381,7 +3381,7 @@ if (!Feno->hidden)
                  {
                  	pResults->SlntCol=-pResults->SlntCol;
 
-                 	if (!STD_Stricmp(WorkSpace[pTabCross->Comp].symbolName,"x0"))
+                 	if (!strcasecmp(WorkSpace[pTabCross->Comp].symbolName,"x0"))
                  	 pResults->SlntCol-=(double)log(refNormFact/speNormFact);
               	  }
                }
@@ -4531,9 +4531,9 @@ RC ANALYSE_LoadCross(ENGINE_CONTEXT *pEngineContext,ANALYSIS_CROSS *crossSection
           (strlen(pWrkSymbol->symbolName)==symbolLength) &&
           (strlen(pWrkSymbol->crossFileName)==fileLength) &&
           (strlen(pWrkSymbol->amfFileName)==strlen(pCross->amfFile)) &&
-          !STD_Stricmp(pWrkSymbol->symbolName,symbolName) &&
-          !STD_Stricmp(pWrkSymbol->crossFileName,pCross->crossSectionFile) &&
-          !STD_Stricmp(pWrkSymbol->amfFileName,pCross->amfFile))
+          !strcasecmp(pWrkSymbol->symbolName,symbolName) &&
+          !strcasecmp(pWrkSymbol->crossFileName,pCross->crossSectionFile) &&
+          !strcasecmp(pWrkSymbol->amfFileName,pCross->amfFile))
 
        break;
      }
@@ -4553,13 +4553,13 @@ RC ANALYSE_LoadCross(ENGINE_CONTEXT *pEngineContext,ANALYSIS_CROSS *crossSection
 
       // Load cross section from file
 
-      if (((strlen(pWrkSymbol->symbolName)==strlen("1/Ref")) && !STD_Stricmp(pWrkSymbol->symbolName,"1/Ref")) ||
+      if (((strlen(pWrkSymbol->symbolName)==strlen("1/Ref")) && !strcasecmp(pWrkSymbol->symbolName,"1/Ref")) ||
           !(rc=MATRIX_Load(pCross->crossSectionFile,&pWrkSymbol->xs,0 /* line base */,0 /* column base */,0,0,
                           (pCross->crossType==ANLYS_CROSS_ACTION_NOTHING)?(double)0.:lambda[0]-7.,      // max(lambda[0]-7.,(double)290.), - changed on october 2006
                           (pCross->crossType==ANLYS_CROSS_ACTION_NOTHING)?(double)0.:lambda[NDET-1]+7., // min(lambda[NDET-1]+7.,(double)600.), - changed on october 2006
                           (pCross->crossType!=ANLYS_CROSS_ACTION_NOTHING)?1:0,1,"ANALYSE_LoadCross ")))
        {
-        if (!STD_Stricmp(pWrkSymbol->symbolName,"O3TD"))
+        if (!strcasecmp(pWrkSymbol->symbolName,"O3TD"))
          rc=MATRIX_Allocate(&O3TD,NDET,pWrkSymbol->xs.nc,0,0,0,"ANALYSE_LoadCross");
 
         NWorkSpace++;
@@ -4641,12 +4641,12 @@ RC ANALYSE_LoadCross(ENGINE_CONTEXT *pEngineContext,ANALYSIS_CROSS *crossSection
 
       // No orthogonalization
 
-      if ((symbolLength==4) && !STD_Stricmp(pOrthoSymbol[indexTabCross],"None"))
+      if ((symbolLength==4) && !strcasecmp(pOrthoSymbol[indexTabCross],"None"))
        pEngineCross[indexTabCross].IndOrthog=ITEM_NONE;
 
       // Orthogonalization to orthogonal base
 
-      else if ((symbolLength==15) && !STD_Stricmp(pOrthoSymbol[indexTabCross],"Differential XS"))
+      else if ((symbolLength==15) && !strcasecmp(pOrthoSymbol[indexTabCross],"Differential XS"))
        pEngineCross[indexTabCross].IndOrthog=ORTHOGONAL_BASE;
 
       // Orthogonalization to another cross section
@@ -4658,7 +4658,7 @@ RC ANALYSE_LoadCross(ENGINE_CONTEXT *pEngineContext,ANALYSIS_CROSS *crossSection
         for (indexSymbol=firstTabCross;indexSymbol<endTabCross;indexSymbol++)
          if ((indexTabCross!=indexSymbol) &&
              (symbolLength==strlen(WorkSpace[pEngineCross[indexSymbol].Comp].symbolName)) &&
-             !STD_Stricmp(pOrthoSymbol[indexTabCross],WorkSpace[pEngineCross[indexSymbol].Comp].symbolName))
+             !strcasecmp(pOrthoSymbol[indexTabCross],WorkSpace[pEngineCross[indexSymbol].Comp].symbolName))
           break;
 
         pEngineCross[indexTabCross].IndOrthog=(indexSymbol<endTabCross)?indexSymbol:ITEM_NONE;
@@ -4736,9 +4736,9 @@ RC ANALYSE_LoadLinear(ANALYSE_LINEAR_PARAMETERS *linearList,INT nLinear)
    {
     pList=&linearList[indexItem];
 
-    if (!STD_Stricmp(pList->symbolName,"Polynomial (x)"))
+    if (!strcasecmp(pList->symbolName,"Polynomial (x)"))
      polyFlag=1;
-    else if (!STD_Stricmp(pList->symbolName,"Polynomial (1/x)"))
+    else if (!strcasecmp(pList->symbolName,"Polynomial (1/x)"))
      polyFlag=-1;
     else
      polyFlag=0;
@@ -4765,7 +4765,7 @@ RC ANALYSE_LoadLinear(ANALYSE_LINEAR_PARAMETERS *linearList,INT nLinear)
         pWrkSymbol=&WorkSpace[indexSymbol];
 
         if ((pWrkSymbol->type==WRK_SYMBOL_CONTINUOUS) &&
-            !STD_Stricmp(pWrkSymbol->symbolName,buttonText))
+            !strcasecmp(pWrkSymbol->symbolName,buttonText))
 
          break;
        }
@@ -4882,7 +4882,7 @@ RC ANALYSE_LoadShiftStretch(ANALYSIS_SHIFT_STRETCH *shiftStretchList,INT nShiftS
      	 	pWrkSymbol=&WorkSpace[pTabFeno->TabCross[indexCross].Comp];
 
         if ((strlen(pWrkSymbol->symbolName)==symbolLength) &&
-            !STD_Stricmp(pWrkSymbol->symbolName,symbol))
+            !strcasecmp(pWrkSymbol->symbolName,symbol))
 
          break;
         }
@@ -4896,7 +4896,7 @@ RC ANALYSE_LoadShiftStretch(ANALYSIS_SHIFT_STRETCH *shiftStretchList,INT nShiftS
           pWrkSymbol=&WorkSpace[indexSymbol];
 
           if ((strlen(pWrkSymbol->symbolName)==symbolLength) &&
-              !STD_Stricmp(pWrkSymbol->symbolName,symbol))
+              !strcasecmp(pWrkSymbol->symbolName,symbol))
 
            break;
          }
@@ -4926,9 +4926,9 @@ RC ANALYSE_LoadShiftStretch(ANALYSIS_SHIFT_STRETCH *shiftStretchList,INT nShiftS
 
         if ((indexTabCross==pTabFeno->NTabCross) && (pTabFeno->NTabCross<MAX_FIT))
          {
-          if ((symbolLength==strlen(SYMB_itemCrossList[SYMBOL_PREDEFINED_SPECTRUM].name)) && !STD_Stricmp(symbol,SYMB_itemCrossList[SYMBOL_PREDEFINED_SPECTRUM].name))
+          if ((symbolLength==strlen(SYMB_itemCrossList[SYMBOL_PREDEFINED_SPECTRUM].name)) && !strcasecmp(symbol,SYMB_itemCrossList[SYMBOL_PREDEFINED_SPECTRUM].name))
            pTabFeno->indexSpectrum=pTabFeno->NTabCross;
-          else if ((symbolLength==strlen(SYMB_itemCrossList[SYMBOL_PREDEFINED_REF].name)) && !STD_Stricmp(symbol,SYMB_itemCrossList[SYMBOL_PREDEFINED_REF].name))
+          else if ((symbolLength==strlen(SYMB_itemCrossList[SYMBOL_PREDEFINED_REF].name)) && !strcasecmp(symbol,SYMB_itemCrossList[SYMBOL_PREDEFINED_REF].name))
            pTabFeno->indexReference=pTabFeno->NTabCross;
 
           pTabFeno->TabCross[indexTabCross].Comp=indexSymbol;
@@ -5074,8 +5074,8 @@ RC ANALYSE_LoadNonLinear(ENGINE_CONTEXT *pEngineContext,ANALYSE_NON_LINEAR_PARAM
           if ((pWrkSymbol->type==WRK_SYMBOL_PREDEFINED) &&
               (strlen(pWrkSymbol->symbolName)==symbolLength) &&
               (strlen(pWrkSymbol->crossFileName)==fileLength) &&
-              !STD_Stricmp(pWrkSymbol->symbolName,pListItem->symbolName) &&
-              !STD_Stricmp(pWrkSymbol->crossFileName,pListItem->crossFileName))
+              !strcasecmp(pWrkSymbol->symbolName,pListItem->symbolName) &&
+              !strcasecmp(pWrkSymbol->crossFileName,pListItem->crossFileName))
            break;
          }
 
@@ -5095,56 +5095,56 @@ RC ANALYSE_LoadNonLinear(ENGINE_CONTEXT *pEngineContext,ANALYSE_NON_LINEAR_PARAM
          }
 
         if ((indexSymbol<NWorkSpace) && ((indexTabCross=pTabFeno->NTabCross)<MAX_FIT) &&
-           ((STD_Stricmp(symbol,"SFP 1") && STD_Stricmp(symbol,"SFP 2") &&
-             STD_Stricmp(symbol,"SFP 3") && STD_Stricmp(symbol,"SFP 4")) ||
+           ((strcasecmp(symbol,"SFP 1") && strcasecmp(symbol,"SFP 2") &&
+             strcasecmp(symbol,"SFP 3") && strcasecmp(symbol,"SFP 4")) ||
             (pKuruczOptions->fwhmFit &&
-           ((pKuruczOptions->fwhmType==SLIT_TYPE_ERF) || (pKuruczOptions->fwhmType==SLIT_TYPE_VOIGT) || STD_Stricmp(symbol,"SFP 2")) &&
-           ((pKuruczOptions->fwhmType==SLIT_TYPE_VOIGT) || (STD_Stricmp(symbol,"SFP 3") && STD_Stricmp(symbol,"SFP 4"))))))
+           ((pKuruczOptions->fwhmType==SLIT_TYPE_ERF) || (pKuruczOptions->fwhmType==SLIT_TYPE_VOIGT) || strcasecmp(symbol,"SFP 2")) &&
+           ((pKuruczOptions->fwhmType==SLIT_TYPE_VOIGT) || (strcasecmp(symbol,"SFP 3") && strcasecmp(symbol,"SFP 4"))))))
          {
           // Add symbol into symbol cross reference
 
-          if ((symbolLength==strlen("SFP 1")) && !STD_Stricmp(symbol,"SFP 1"))
+          if ((symbolLength==strlen("SFP 1")) && !strcasecmp(symbol,"SFP 1"))
            pTabFeno->indexFwhmParam[0]=pTabFeno->NTabCross;
-          else if ((symbolLength==strlen("SFP 2")) && !STD_Stricmp(symbol,"SFP 2"))
+          else if ((symbolLength==strlen("SFP 2")) && !strcasecmp(symbol,"SFP 2"))
            pTabFeno->indexFwhmParam[1]=pTabFeno->NTabCross;
-          else if ((symbolLength==strlen("SFP 3")) && !STD_Stricmp(symbol,"SFP 3"))
+          else if ((symbolLength==strlen("SFP 3")) && !strcasecmp(symbol,"SFP 3"))
            pTabFeno->indexFwhmParam[2]=pTabFeno->NTabCross;
-          else if ((symbolLength==strlen("SFP 4")) && !STD_Stricmp(symbol,"SFP 4"))
+          else if ((symbolLength==strlen("SFP 4")) && !strcasecmp(symbol,"SFP 4"))
            pTabFeno->indexFwhmParam[3]=pTabFeno->NTabCross;
-//          else if ((symbolLength==strlen("Fwhm (Constant)")) && !STD_Stricmp(symbol,"Fwhm (Constant)"))
+//          else if ((symbolLength==strlen("Fwhm (Constant)")) && !strcasecmp(symbol,"Fwhm (Constant)"))
 //           pTabFeno->indexFwhmConst=pTabFeno->NTabCross;
-//          else if ((symbolLength==strlen("Fwhm (Order 1)")) && !STD_Stricmp(symbol,"Fwhm (Order 1)"))
+//          else if ((symbolLength==strlen("Fwhm (Order 1)")) && !strcasecmp(symbol,"Fwhm (Order 1)"))
 //           pTabFeno->indexFwhmOrder1=pTabFeno->NTabCross;
-//          else if ((symbolLength==strlen("Fwhm (order 2)")) && !STD_Stricmp(symbol,"Fwhm (Order 2)"))
+//          else if ((symbolLength==strlen("Fwhm (order 2)")) && !strcasecmp(symbol,"Fwhm (Order 2)"))
 //           pTabFeno->indexFwhmOrder2=pTabFeno->NTabCross;
-          else if ((symbolLength==strlen("Sol")) && !STD_Stricmp(symbol,"Sol"))
+          else if ((symbolLength==strlen("Sol")) && !strcasecmp(symbol,"Sol"))
            pTabFeno->indexSol=pTabFeno->NTabCross;
-          else if ((symbolLength==strlen("Offset (Constant)")) && !STD_Stricmp(symbol,"Offset (Constant)"))
+          else if ((symbolLength==strlen("Offset (Constant)")) && !strcasecmp(symbol,"Offset (Constant)"))
            pTabFeno->indexOffsetConst=pTabFeno->NTabCross;
-          else if ((symbolLength==strlen("Offset (Order 1)")) && !STD_Stricmp(symbol,"Offset (Order 1)"))
+          else if ((symbolLength==strlen("Offset (Order 1)")) && !strcasecmp(symbol,"Offset (Order 1)"))
            pTabFeno->indexOffsetOrder1=pTabFeno->NTabCross;
-          else if ((symbolLength==strlen("Offset (Order 2)")) && !STD_Stricmp(symbol,"Offset (Order 2)"))
+          else if ((symbolLength==strlen("Offset (Order 2)")) && !strcasecmp(symbol,"Offset (Order 2)"))
            pTabFeno->indexOffsetOrder2=pTabFeno->NTabCross;
           else if ((symbolLength==strlen(SYMB_itemCrossList[SYMBOL_PREDEFINED_COM].name)) &&
-                   !STD_Stricmp(symbol,SYMB_itemCrossList[SYMBOL_PREDEFINED_COM].name) &&
+                   !strcasecmp(symbol,SYMB_itemCrossList[SYMBOL_PREDEFINED_COM].name) &&
                    !pTabFeno->hidden)
 
            pTabFeno->indexCommonResidual=pTabFeno->NTabCross;
 
           else if ((symbolLength==strlen(SYMB_itemCrossList[SYMBOL_PREDEFINED_USAMP1].name)) &&
-                   !STD_Stricmp(symbol,SYMB_itemCrossList[SYMBOL_PREDEFINED_USAMP1].name) &&
+                   !strcasecmp(symbol,SYMB_itemCrossList[SYMBOL_PREDEFINED_USAMP1].name) &&
                    !pTabFeno->hidden)
 
            pTabFeno->indexUsamp1=pTabFeno->NTabCross;
 
           else if ((symbolLength==strlen(SYMB_itemCrossList[SYMBOL_PREDEFINED_USAMP2].name)) &&
-                   !STD_Stricmp(symbol,SYMB_itemCrossList[SYMBOL_PREDEFINED_USAMP2].name) &&
+                   !strcasecmp(symbol,SYMB_itemCrossList[SYMBOL_PREDEFINED_USAMP2].name) &&
                    !pTabFeno->hidden)
 
            pTabFeno->indexUsamp2=pTabFeno->NTabCross;
 
           else if ((symbolLength==strlen(SYMB_itemCrossList[SYMBOL_PREDEFINED_RING1].name)) &&
-                   !STD_Stricmp(symbol,SYMB_itemCrossList[SYMBOL_PREDEFINED_RING1].name) &&
+                   !strcasecmp(symbol,SYMB_itemCrossList[SYMBOL_PREDEFINED_RING1].name) &&
                    !pTabFeno->hidden)
            pTabFeno->indexRing1=pTabFeno->NTabCross;
           else
@@ -5469,7 +5469,7 @@ RC ANALYSE_LoadOutput(ANALYSIS_OUTPUT *outputList,INT nOutput)
 
    	for (indexTabCross=0;indexTabCross<pTabFeno->NTabCross;indexTabCross++)
   	 	if ((strlen(pOutput->symbol)==strlen(WorkSpace[TabCross[indexTabCross].Comp].symbolName)) &&
-  	 	    !STD_Stricmp(pOutput->symbol,WorkSpace[TabCross[indexTabCross].Comp].symbolName))
+  	 	    !strcasecmp(pOutput->symbol,WorkSpace[TabCross[indexTabCross].Comp].symbolName))
   	 	 break;
 
   	 // Symbol found
@@ -5610,7 +5610,7 @@ RC ANALYSE_LoadRef(ENGINE_CONTEXT *pEngineContext)
 
        ((pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_OMI) ||
       (((ptr=strrchr(pTabFeno->ref1,'.'))!=NULL) &&
-        (strlen(ptr)==4) && !STD_Stricmp(ptr,".ref"))) &&
+        (strlen(ptr)==4) && !strcasecmp(ptr,".ref"))) &&
 
        !(rc=AnalyseLoadVector("ANALYSE_LoadRef (SrefEtalon) ",pTabFeno->ref1,lambdaRefEtalon,SrefEtalon,1,NULL)) &&
        !(rc=THRD_SpectrumCorrection(pEngineContext,SrefEtalon)) &&
@@ -5634,7 +5634,7 @@ RC ANALYSE_LoadRef(ENGINE_CONTEXT *pEngineContext)
 
        ((pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_OMI) ||
       (((ptr=strrchr(pTabFeno->ref2,'.'))!=NULL) &&
-        (strlen(ptr)==4) && !STD_Stricmp(ptr,".ref"))) &&
+        (strlen(ptr)==4) && !strcasecmp(ptr,".ref"))) &&
 
       !(rc=AnalyseLoadVector("ANALYSE_LoadRef (Sref) ",pTabFeno->ref2,lambdaRef,Sref,1,NULL)) &&
       !(rc=THRD_SpectrumCorrection(pEngineContext,Sref)) &&
@@ -6174,7 +6174,7 @@ RC ANALYSE_UsampGlobalAlloc(double lambdaMin,double lambdaMax,INT size)
   // NB : if the high resolution spectrum is the same as used in Kurucz, don't reload it from file but only make a copy
 
   if ((strlen(pKuruczOptions->file)==strlen(pUsamp->kuruczFile)) &&
-      !STD_Stricmp(pKuruczOptions->file,pUsamp->kuruczFile) &&
+      !strcasecmp(pKuruczOptions->file,pUsamp->kuruczFile) &&
        KURUCZ_buffers.hrSolar.NDET)
    {
     if ((rc=XSCONV_Alloc(&ANALYSE_usampBuffers.hrSolar,KURUCZ_buffers.hrSolar.NDET,1))!=ERROR_ID_NO)

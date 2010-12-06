@@ -170,7 +170,7 @@ RC EngineCopyContext(ENGINE_CONTEXT *pEngineContextTarget,ENGINE_CONTEXT *pEngin
       ((pBuffersSource->specMax!=NULL) && (pBuffersTarget->specMax==NULL) &&
       ((pBuffersTarget->specMax=(double *)MEMORY_AllocDVector("EngineCopyContext","specMax",0,NDET-1))==NULL)) ||
       ((pEngineContextSource->analysisRef.scanRefIndexes!=NULL) && (pEngineContextTarget->analysisRef.scanRefIndexes==NULL) &&
-      ((pEngineContextTarget->analysisRef.scanRefIndexes=(INT *)MEMORY_AllocBuffer("EngineCopyContext","scanRefIndexes",pEngineContextSource->fileInfo.nScanRef,sizeof(INT),0,MEMORY_TYPE_INT))==NULL)) ||
+      ((pEngineContextTarget->analysisRef.scanRefIndexes=(INT *)MEMORY_AllocBuffer("EngineCopyContext","scanRefIndexes",pEngineContextSource->recordNumber,sizeof(INT),0,MEMORY_TYPE_INT))==NULL)) ||
       ((pBuffersSource->recordIndexes!=NULL) && (pBuffersTarget->recordIndexes==NULL) &&
       ((pBuffersTarget->recordIndexes=(DoasU32 *)MEMORY_AllocBuffer("THRD_CopySpecInfo","recordIndexes",
        (pEngineContextTarget->recordIndexesSize=pEngineContextSource->recordIndexesSize),sizeof(DoasU32),0,MEMORY_TYPE_ULONG))==NULL)) ||
@@ -1380,7 +1380,7 @@ RC EngineSetRefIndexesMFC(ENGINE_CONTEXT *pEngineContext)
 
     if (!STD_IsDir(fileName) &&
      ((((ptr=strrchr(fileInfo->d_name,'.'))==NULL) && !strlen(fileExt)) ||
-       ((strlen(ptr+1)==strlen(fileExt)) && !STD_Stricmp(ptr+1,fileExt))))
+       ((strlen(ptr+1)==strlen(fileExt)) && !strcasecmp(ptr+1,fileExt))))
 
      fileNumber++;
    }
@@ -1428,7 +1428,7 @@ RC EngineSetRefIndexesMFC(ENGINE_CONTEXT *pEngineContext)
 
           if (!STD_IsDir(ENGINE_contextRef.fileInfo.fileName) &&
            ((((ptr=strrchr(fileInfo->d_name,'.'))==NULL) && !strlen(fileExt)) ||
-             ((strlen(ptr+1)==strlen(fileExt)) && !STD_Stricmp(ptr+1,fileExt)))
+             ((strlen(ptr+1)==strlen(fileExt)) && !strcasecmp(ptr+1,fileExt)))
              )
            {
             if (rc==ITEM_NONE)

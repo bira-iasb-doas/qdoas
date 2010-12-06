@@ -486,7 +486,7 @@ RC DEBUG_FunctionStop(DoasCh *fctName,RC rcFct)
 
     else if ((--debugNFct<0) ||
      	       (strlen(debugFct[debugNFct].fctName)!=strlen(fctName)) ||
-     	        STD_Stricmp(debugFct[debugNFct].fctName,fctName))
+     	        strcasecmp(debugFct[debugNFct].fctName,fctName))
 
 
 rc=ERROR_SetLast("DEBUG_FunctionStop",ERROR_TYPE_DEBUG,ERROR_ID_DEBUG_FCTBLOCK,
@@ -663,7 +663,7 @@ RC DEBUG_Stop(DoasCh *callingFct)
    rc=ERROR_SetLast("DEBUG_Stop",ERROR_TYPE_DEBUG,ERROR_ID_DEBUG_STOP);
 
   else if ((strlen(debugFct[0].fctName)==strlen(callingFct)) &&
-           !STD_Stricmp(debugFct[0].fctName,callingFct))
+           !strcasecmp(debugFct[0].fctName,callingFct))
    {
    	// Unregister the calling function
 

@@ -453,7 +453,6 @@ long        STD_FileLength(FILE *fp);
 
 char       *STD_Strupr(char *n);
 char       *STD_Strlwr(char *n);
-int         STD_Stricmp(char *str1,char *str2);
 
 int         STD_IsDir(char *filename);
 

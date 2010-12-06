@@ -202,7 +202,7 @@ void FILES_CompactPath(DoasCh *newPath,DoasCh *path,INT useFileName,INT addFlag)
       // Search for path in list
 
       for (indexPath=0,pathTmpLength=strlen(pathTmp);indexPath<FILES_nPaths;indexPath++)
-       if (((pathLength=strlen(FILES_paths[indexPath].path))==pathTmpLength) && !STD_Stricmp(FILES_paths[indexPath].path,pathTmp))
+       if (((pathLength=strlen(FILES_paths[indexPath].path))==pathTmpLength) && !strcasecmp(FILES_paths[indexPath].path,pathTmp))
         break;
        else if (addFlag && !pathLength && (indexFirst==ITEM_NONE))
         indexFirst=indexPath;
@@ -523,7 +523,7 @@ void FilesLoadDefaultPaths(DoasCh *fileLine)
   // Search for keyName in types of files list
 
   for (indexFileType=0;indexFileType<FILE_TYPE_MAX;indexFileType++)
-   if (!STD_Stricmp(FILES_types[indexFileType].fileType,keyName))
+   if (!strcasecmp(FILES_types[indexFileType].fileType,keyName))
     FILES_CompactPath(FILES_types[indexFileType].defaultPath,defaultPath,0,1);
  }
 
