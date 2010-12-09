@@ -674,14 +674,14 @@ RC MFC_ReadRecordStd(ENGINE_CONTEXT *pEngineContext,DoasCh *fileName,
 
     for (i=0;i<dateSize;i++)
      {
-      if (pInstrumental->mfcStdDate[i]=='Y')
+      if ((pInstrumental->mfcStdDate[i]=='Y') || (pInstrumental->mfcStdDate[i]=='y'))
        {
         iYear=sepN;
         yearN++;
        }
-      else if (pInstrumental->mfcStdDate[i]=='M')
+      else if ((pInstrumental->mfcStdDate[i]=='M') ||(pInstrumental->mfcStdDate[i]=='m'))
        iMon=sepN;
-      else if (pInstrumental->mfcStdDate[i]=='D')
+      else if ((pInstrumental->mfcStdDate[i]=='D') || (pInstrumental->mfcStdDate[i]=='d'))
        iDay=sepN;
       else
        sepN++;
@@ -801,14 +801,18 @@ RC MFC_ReadRecordStd(ENGINE_CONTEXT *pEngineContext,DoasCh *fileName,
     if (pEngineContext->project.instrumental.mfcStdOffset)
      {
      	int i;
+     	int imin,imax;
      	double offset;
 
      	offset=(double)0.;
 
-     	for (i=50;i<200;i++)
+     	imin=50;
+     	imax=135;
+
+     	for (i=imin;i<imax;i++)
        offset+=spe[i];
 
-      offset/=(double)150.;
+      offset/=(double)(imax-imin);
 
       for (i=0;i<NDET;i++)
        spe[i]-=offset;

@@ -455,7 +455,7 @@ void getValidFieldFlags(int *validFlags, int instrument)
       validFlags[PRJCT_RESULTS_ASCII_ENDTIME]=1;
       validFlags[PRJCT_RESULTS_ASCII_TDET]=1;
 
-      if (instrument==PRJCT_INSTR_FORMAT_MFC_BIRA);
+      if (instrument==PRJCT_INSTR_FORMAT_MFC_BIRA)
        validFlags[PRJCT_RESULTS_ASCII_MEASTYPE]=1;
      }
     break;
