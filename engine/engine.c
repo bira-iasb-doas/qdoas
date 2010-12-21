@@ -46,6 +46,7 @@
 //
 //  ----------------------------------------------------------------------------
 
+#include "coda.h"
 #include "mediate.h"
 #include "engine.h"
 
@@ -971,7 +972,7 @@ RC EngineEndCurrentSession(ENGINE_CONTEXT *pEngineContext)
     GDP_ASC_ReleaseBuffers();
     GDP_BIN_ReleaseBuffers();
 
-    GOME2_ReleaseBuffers(GOME2_BEAT_CLOSE);
+    GOME2_ReleaseBuffers();
   //  OMI_ReleaseBuffers();
 
     SCIA_ReleaseBuffers(pEngineContext->project.instrumental.readOutFormat);
@@ -1039,6 +1040,12 @@ RC EngineDestroyContext(ENGINE_CONTEXT *pEngineContext)
  	rc=EngineEndCurrentSession(pEngineContext);
 
  	RESOURCE_Free();
+
+  if (GOME2_beatLoaded)
+   {
+    coda_done();
+    GOME2_beatLoaded=0;
+   }
 
  	return rc;
  }

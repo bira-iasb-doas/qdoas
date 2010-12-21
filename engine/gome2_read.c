@@ -1,5 +1,4 @@
 
-
 //  ----------------------------------------------------------------------------
 //
 //  Product/Project   :  DOAS ANALYSIS PROGRAM FOR WINDOWS
@@ -165,7 +164,7 @@ char *const gome2BandName[NBAND] =
 static GOME2_ORBIT_FILE gome2OrbitFiles[MAX_GOME2_FILES];                       // list of files per day
 static int gome2OrbitFilesN=0;                                                  // the total number of files to browse in one shot
 static INDEX gome2CurrentFileIndex=ITEM_NONE;                                   // index of the current file in the list
-static int gome2BeatAction=GOME2_BEAT_INIT;
+int GOME2_beatLoaded=0;
 static INT gome2LoadReferenceFlag=0;
 static INT gome2TotalRecordNumber=0;
 
@@ -895,7 +894,7 @@ void Gome2ReadGeoloc(GOME2_ORBIT_FILE *pOrbitFile,INDEX indexBand)
 // PURPOSE       Release buffers allocated by GOME2 readout routines
 // -----------------------------------------------------------------------------
 
-void GOME2_ReleaseBuffers(INT action)
+void GOME2_ReleaseBuffers(void)
  {
  	// Declarations
 
@@ -929,14 +928,7 @@ void GOME2_ReleaseBuffers(INT action)
  	  // Close the current file
 
     if (pOrbitFile->gome2Pf!=NULL)
-     {
-      coda_close(pOrbitFile->gome2Pf);
-      if (action==GOME2_BEAT_CLOSE)
-       {
-        coda_done();
-        gome2BeatAction=GOME2_BEAT_INIT;
-       }
-     }
+     coda_close(pOrbitFile->gome2Pf);
    }
 
   for (gome2OrbitFileIndex=0;gome2OrbitFileIndex<MAX_GOME2_FILES;gome2OrbitFileIndex++)
@@ -1002,11 +994,11 @@ RC GOME2_Set(ENGINE_CONTEXT *pEngineContext)
   gome2CurrentFileIndex=ITEM_NONE;
   rc=ERROR_ID_NO;
 
-  if (gome2BeatAction==GOME2_BEAT_INIT)
+  if (!GOME2_beatLoaded)
    {
     coda_init();
     coda_set_option_perform_boundary_checks(1);
-    gome2BeatAction=GOME2_BEAT_NO;
+    GOME2_beatLoaded=1;
    }
 
   // In automatic reference selection, the file has maybe already loaded
@@ -1037,7 +1029,7 @@ RC GOME2_Set(ENGINE_CONTEXT *pEngineContext)
 
    	// Release old buffers
 
-   	GOME2_ReleaseBuffers(gome2BeatAction);
+   	GOME2_ReleaseBuffers();
 
    	// Get the number of files to load
 
