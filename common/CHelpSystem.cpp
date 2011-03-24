@@ -66,17 +66,8 @@ CHelpSystem::CHelpSystem(QWidget *parent) :
 
   // populate the map ...
 
-  m_chapterMap.insert(std::map<QString,int>::value_type("introduction", 1));
-  m_chapterMap.insert(std::map<QString,int>::value_type("installation", 2));
-  m_chapterMap.insert(std::map<QString,int>::value_type("gui", 3));
-  m_chapterMap.insert(std::map<QString,int>::value_type("algorithms", 4));
-  m_chapterMap.insert(std::map<QString,int>::value_type("quickstart", 5));
-  m_chapterMap.insert(std::map<QString,int>::value_type("site", 6));
-  m_chapterMap.insert(std::map<QString,int>::value_type("symbol", 6));
-  m_chapterMap.insert(std::map<QString,int>::value_type("Project", 7));
-  m_chapterMap.insert(std::map<QString,int>::value_type("tool", 8));
-  m_chapterMap.insert(std::map<QString,int>::value_type("annex", 9));
-  m_chapterMap.insert(std::map<QString,int>::value_type("appendix", 9));
+  m_chapterMap.insert(std::map<QString,int>::value_type("Project", 1));
+  m_chapterMap.insert(std::map<QString,int>::value_type("Analysis", 2));
 }
 
 CHelpSystem::~CHelpSystem()
@@ -102,6 +93,7 @@ void CHelpSystem::openBrowser(const QString &chapter, const QString &key)
     QString url;
     // resolve chapter
     std::map<QString,int>::const_iterator it = m_chapterMap.find(chapter);
+
     if (it != m_chapterMap.end()) {
       // construct the URL (relative)
       QTextStream stream(&url);
@@ -110,12 +102,7 @@ void CHelpSystem::openBrowser(const QString &chapter, const QString &key)
 
       //stream << "chapter" << (it->second) << "/chapter" << (it->second) << ".html";
 
-      {
-      	FILE *fp;
-      	fp=fopen("toto.dat","a+t");
-      	fprintf(fp,"%s\n",url.toAscii().constData());
-      	fclose(fp);
-      }
+
 
 //      if (!key.isEmpty())
 //	stream << '#' << key;
@@ -167,7 +154,7 @@ void CHelpSystem::createImplementation(CHelpImpl **impl)
   // need the profile file (to locate the help files/directory)
 
   bool storeHelpDir = false;
-  QString helpDir = CPreferences::instance()->directoryName("Help", "..");
+  QString helpDir = CPreferences::instance()->directoryName("Help", ".");
 
   QString profile = helpDir + QDir::separator() + "qdoas.hlp";
 

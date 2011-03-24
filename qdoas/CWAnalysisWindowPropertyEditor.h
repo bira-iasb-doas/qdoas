@@ -56,6 +56,7 @@ Q_OBJECT
   void slotBrowseRefTwo();
   void slotBrowseResidual();
   void slotMaxdoasSelectionChanged(bool checked);
+  void slotPageChanged(int index);
 
  private:
   QComboBox *m_calibrationCombo;
@@ -91,6 +92,7 @@ Q_OBJECT
 
   QString m_projectName, m_analysisWindowName;
   bool m_autoSelection, m_activePixelType, m_activeCloudFraction,m_scanSelection;
+  int m_selectedPage;
 };
 
 #endif

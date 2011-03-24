@@ -472,6 +472,8 @@ CWAnalysisWindowPropertyEditor::CWAnalysisWindowPropertyEditor(const QString &pr
   connect(refTwoBrowseBtn, SIGNAL(clicked()), this, SLOT(slotBrowseRefTwo()));
   connect(residualBrowseBtn, SIGNAL(clicked()), this, SLOT(slotBrowseResidual()));
 
+  connect(m_tabs,SIGNAL(currentChanged(int)),this,SLOT(slotPageChanged(int)));
+
   notifyAcceptActionOk(true);
 }
 CWAnalysisWindowPropertyEditor::~CWAnalysisWindowPropertyEditor()
@@ -559,7 +561,14 @@ bool CWAnalysisWindowPropertyEditor::actionOk(void)
 
 void CWAnalysisWindowPropertyEditor::actionHelp(void)
 {
-  CHelpSystem::showHelpTopic("project", "AnlysWin");
+	char *analysisPages[]={"Analysis_Molecules",
+	                       "Analysis_Linear",
+	                       "Analysis_NonLinear",
+	                       "Analysis_Shift",
+	                       "Analysis_Gaps",
+	                       "Analysis_Output"};
+
+ CHelpSystem::showHelpTopic("Analysis",((m_selectedPage>=0) && (m_selectedPage<6))?analysisPages[m_selectedPage]:"Analysis_Molecules");
 }
 
 void CWAnalysisWindowPropertyEditor::updateModifyProject(const QString &projectName)
@@ -770,4 +779,9 @@ void CWAnalysisWindowPropertyEditor::slotBrowseResidual()
 
     m_residualEdit->setText(filename);
   }
+}
+
+void CWAnalysisWindowPropertyEditor::slotPageChanged(int index)
+{
+ m_selectedPage=index;
 }

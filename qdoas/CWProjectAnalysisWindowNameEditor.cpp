@@ -41,7 +41,7 @@ CWProjectAnalysisWindowNameEditor::CWProjectAnalysisWindowNameEditor(CWProjectTr
 
   QGridLayout *mainLayout = new QGridLayout(this);
   mainLayout->setMargin(50);
-  
+
   if (newAnalysisWindow)
     mainLayout->addWidget(new QLabel("Enter a name for the new Analysis Window", this), 0, 1);
   else
@@ -53,12 +53,12 @@ CWProjectAnalysisWindowNameEditor::CWProjectAnalysisWindowNameEditor(CWProjectTr
   mainLayout->setColumnStretch(0, 1);
   mainLayout->setColumnStretch(3, 1);
   mainLayout->setRowStretch(1,1);
-  
+
   if (m_newAnalysisWindow)
     m_captionStr = "Create new Analysis Window in ";
   else
     m_captionStr = "Rename Analysis Window ";
-    
+
   m_contextTag.clear();
 
   // build a path from item - will use this to locate the target point in the tree on 'Ok'
@@ -105,7 +105,7 @@ bool CWProjectAnalysisWindowNameEditor::actionOk()
       msg = m_projectTree->editInsertNewAnalysisWindow(item, m_analysisWindowName->text(), m_preceedingWindowName);
     else
       msg = m_projectTree->editRenameAnalysisWindow(item, m_analysisWindowName->text());
-    
+
     if (msg.isNull())
       return true;
 
@@ -124,7 +124,6 @@ bool CWProjectAnalysisWindowNameEditor::actionOk()
 
 void CWProjectAnalysisWindowNameEditor::actionHelp(void)
 {
-  CHelpSystem::showHelpTopic("project", "AnlysWinName");
 }
 
 void CWProjectAnalysisWindowNameEditor::takeFocus(void)

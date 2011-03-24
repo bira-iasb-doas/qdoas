@@ -264,7 +264,7 @@ void CWProjectPropertyEditor::actionHelp(void)
 	                      "Project_Slit",
 	                      "Project_Output"};
 
- CHelpSystem::showHelpTopic("Project",((m_selectedPage>=0) && (m_selectedPage<9))?projectPages[m_selectedPage]:"index");
+ CHelpSystem::showHelpTopic("Project",((m_selectedPage>=0) && (m_selectedPage<9))?projectPages[m_selectedPage]:"Project_Display");
 }
 
 void CWProjectPropertyEditor::slotInstrumentTypeChanged(int index)
