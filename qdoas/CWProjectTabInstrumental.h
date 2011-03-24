@@ -261,6 +261,8 @@ class CWInstrMfcStdEdit : public CWAllFilesEdit
   QLineEdit *m_dateFormatEdit;
   QCheckBox *m_revertCheck;
   QCheckBox *m_strayLightCheck;
+  QLineEdit *m_lambdaMinEdit;
+  QLineEdit *m_lambdaMaxEdit;
 };
 
 //--------------------------------------------------------------------------

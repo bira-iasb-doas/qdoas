@@ -2469,9 +2469,7 @@ RC ANALYSE_Function ( double *lambda,double *X, double *Y, INT ndet, double *Y0,
           	 	else if (polyFlag>=0)
               for (j=0,k=1;(j<Z);j++)
                for (l=Fenetre[j][0];l<=Fenetre[j][1];l++,k++)
-                {
                 A[indexSvdA][k]=pTabCross->vector[l]=A[indexSvdA-1][k]*ANALYSE_splineX[l]; // (ANALYSE_splineX[l]-lambda0);
-               }
              else if (polyFlag==-1)
               for (j=0,k=1;(j<Z);j++)
                for (l=Fenetre[j][0];l<=Fenetre[j][1];l++,k++)

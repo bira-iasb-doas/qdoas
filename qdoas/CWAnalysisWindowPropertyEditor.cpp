@@ -761,7 +761,7 @@ void CWAnalysisWindowPropertyEditor::slotBrowseResidual()
 {
   CPreferences *pref = CPreferences::instance();
 
-  QString filename = QFileDialog::getOpenFileName(this, "Select Residual",
+  QString filename = QFileDialog::getSaveFileName(this, "Select Residual",
 						  pref->directoryName("Residual"),
 						  "All Files (*)");
 

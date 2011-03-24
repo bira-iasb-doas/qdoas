@@ -894,59 +894,62 @@ RC ReliPDA_EGG(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
 //  CONVERSION INTO DATA LOGGER FORMAT
 //  **********************************
 
-//  if (!rc)
-//   {
-//    FILE *logFp;
-//    char fileName[40];
+  if (!rc)
+   {
+    FILE *logFp;
+    char fileName[40];
+                                // U for Hamamatsu
+                                // V for Reticon
+    sprintf(fileName,"ZARD%03d.%02dU",ZEN_FNCaljda(&pRecord->Tm),pRecord->present_day.da_year%100);
 
-//    sprintf(fileName,"zard%03d.%02du",ZEN_FNCaljda(&pRecord->Tm),pRecord->present_day.da_year%100);
+    if ((logFp=fopen(fileName,"a+t"))!=NULL)
+     {
+      Max=(double)pBuffers->spectrum[0];
 
-//    if ((logFp=fopen(fileName,"a+t"))!=NULL)
-//     {
-//      Max=(double)pBuffers->spectrum[0]-pBuffers->darkCurrent[0];
+      for (i=0;i<NDET;i++)
+       if ((double)pBuffers->spectrum[i]>Max)
+        Max=(double)pBuffers->spectrum[i];
+                                 // H for Hamamatsu
+                                 // R for Reticon
+      sprintf(pRecord->Nom,"%#3d%02dHA%02d%02dZ%03d    ",ZEN_FNCaljda(&pRecord->Tm),pRecord->present_day.da_year%100,
+                      pRecord->present_time.ti_hour,
+                      pRecord->present_time.ti_min,
+                (int)(pRecord->Zm*10.));
+                                           // H for Hamamatsu
+                                           // R for Reticon
+      fprintf(logFp,"%04d/%02d/%02d %02d:%02d H %-20s %02d/%02d/%02d %02d:%02d:%02d %05d %05d %07.3f %4.1f %05d ",
+                      pRecord->present_day.da_year,
+                      pRecord->present_day.da_mon,
+                      pRecord->present_day.da_day,
+                      pRecord->present_time.ti_hour,
+                      pRecord->present_time.ti_min,
+                      pRecord->Nom,
+                      pRecord->present_day.da_day,
+                      pRecord->present_day.da_mon,
+                      pRecord->present_day.da_year%100,
+                      pRecord->present_time.ti_hour,
+                      pRecord->present_time.ti_min,
+                      pRecord->present_time.ti_sec,
+                      pRecord->NSomme,                           // number of saved scans
+                      pRecord->rejected,                         // number of rejected scans
+                      pRecord->Tint,                             // integration time
+                      pRecord->Zm,                               // zenith angle
+                      (int)(Max+0.5));                             // scaling factor
 
-//      for (i=0;i<NDET;i++)
-//       if ((double)pBuffers->spectrum[i]-pBuffers->darkCurrent[i]>Max)
-//        Max=(double)pBuffers->spectrum[i]-pBuffers->darkCurrent[i];
+      fprintf(logFp,"99999 99999 99999 99999 99999 99999 99999 99999 99999 99999 99999 99999 " );
 
-//      sprintf(pRecord->Nom,"%#3d%02dHA%02d%02dZ%03d    ",ZEN_FNCaljda(&pRecord->Tm),pRecord->present_day.da_year%100,
-//                      pRecord->present_time.ti_hour,
-//                      pRecord->present_time.ti_min,
-//                (int)(pRecord->Zm*10.));
+      for (i=0;i<NDET;i++)
+       fprintf(logFp,"%05d ",(pBuffers->spectrum[i]<=(double)0.)?0:
+                        (int)(pBuffers->spectrum[i]*65000./Max));
 
-//      fprintf(logFp,"%04d/%02d/%02d %02d:%02d H %-20s %02d/%02d/%02d %02d:%02d:%02d %05d %05d %07.3f %4.1f %05d ",
-//                      pRecord->present_day.da_year,
-//                      pRecord->present_day.da_mon,
-//                      pRecord->present_day.da_day,
-//                      pRecord->present_time.ti_hour,
-//                      pRecord->present_time.ti_min,
-//                      pRecord->Nom,
-//                      pRecord->present_day.da_day,
-//                      pRecord->present_day.da_mon,
-//                      pRecord->present_day.da_year%100,
-//                      pRecord->present_time.ti_hour,
-//                      pRecord->present_time.ti_min,
-//                      pRecord->present_time.ti_sec,
-//                      pRecord->NSomme,                           // number of saved scans
-//                      pRecord->rejected,                         // number of rejected scans
-//                      pRecord->Tint,                             // integration time
-//                      pRecord->Zm,                               // zenith angle
-//                      (int)(Max+0.5));                             // scaling factor
+      fprintf(logFp,"\n");
+     }
 
-//      fprintf(logFp,"99999 99999 99999 99999 99999 99999 99999 99999 99999 99999 99999 99999 " );
+    // Release the allocated buffer
 
-//      for (i=0;i<NDET;i++)
-//       fprintf(logFp,"%05d ",(pBuffers->spectrum[i]-pBuffers->darkCurrent[i])<=(double)0.?0:
-//                       (int)((pBuffers->spectrum[i]-pBuffers->darkCurrent[i])*65000./Max));
-
-//      fprintf(logFp,"\n");
-//     }
-
-//    // Release the allocated buffer
-
-//    if (logFp!=NULL)
-//     fclose(logFp);
-//   }
+    if (logFp!=NULL)
+     fclose(logFp);
+   }
 
   // Close file
 

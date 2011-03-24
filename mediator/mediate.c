@@ -267,6 +267,20 @@ int mediateRequestDisplaySpecInfo(void *engineContext,int page,void *responseHan
   if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_CLOUDTOPP])
    mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Cloud top pressure","%.3f",pRecord->cloudTopPressure);
 
+  if (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_GOME2)
+   {
+    if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_GOME2_SCANDIRECTION])
+     mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Scan direction","%d",pRecord->gome2.scanDirection);
+    if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_GOME2_SAA])
+     mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"SAA flag","%d",pRecord->gome2.saaFlag);
+    if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_GOME2_SUNGLINT_RISK])
+     mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Sunglint risk flag","%d",pRecord->gome2.sunglintDangerFlag);
+    if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_GOME2_SUNGLINT_HIGHRISK])
+     mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Sunglint high risk flag","%d",pRecord->gome2.sunglintHighDangerFlag);
+    if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_GOME2_RAINBOW])
+     mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Rainbow flag","%d",pRecord->gome2.rainbowFlag);
+   }
+
   // Return
 
   return indexLine;
@@ -1003,6 +1017,8 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
 
      pEngineInstrumental->mfcRevert=pMediateInstrumental->mfcstd.revert;
      pEngineInstrumental->mfcStdOffset=pMediateInstrumental->mfcstd.straylight;
+     pEngineInstrumental->lambdaMin=pMediateInstrumental->mfcstd.lambdaMin;
+     pEngineInstrumental->lambdaMax=pMediateInstrumental->mfcstd.lambdaMax;
 
      strcpy(pEngineInstrumental->mfcStdDate,pMediateInstrumental->mfcstd.dateFormat);
 
@@ -1083,9 +1099,8 @@ void setMediateProjectOutput(PRJCT_RESULTS_ASCII *pEngineOutput,const mediate_pr
   pEngineOutput->analysisFlag=pMediateOutput->analysisFlag;
   pEngineOutput->calibFlag=pMediateOutput->calibrationFlag;
   pEngineOutput->dirFlag=pMediateOutput->directoryFlag;
-  pEngineOutput->configFlag=pMediateOutput->configurationFlag;
-  pEngineOutput->binaryFlag=pMediateOutput->binaryFormatFlag;
   pEngineOutput->fileNameFlag=pMediateOutput->filenameFlag;
+  pEngineOutput->binaryFlag=0;
 
   if (!(pEngineOutput->fieldsNumber=pMediateOutput->selection.nSelected))
    memset(pEngineOutput->fieldsFlag,0,PRJCT_RESULTS_ASCII_MAX);

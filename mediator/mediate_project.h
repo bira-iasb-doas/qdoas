@@ -252,6 +252,7 @@ extern "C" {
     int  revert;
     int  straylight;
     char dateFormat[24];
+    double lambdaMin,lambdaMax;
     char calibrationFile[FILENAME_BUFFER_LENGTH];
     char instrFunctionFile[FILENAME_BUFFER_LENGTH];
     char darkCurrentFile[FILENAME_BUFFER_LENGTH];

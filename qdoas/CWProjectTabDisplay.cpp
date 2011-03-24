@@ -47,7 +47,7 @@ CWProjectTabDisplay::CWProjectTabDisplay(const mediate_project_display_t *proper
 
   m_reqSpectraCheck = new QCheckBox("Spectra");
   plotGroupLayout->addWidget(m_reqSpectraCheck);
-  m_reqDataCheck = new QCheckBox("Data");
+  m_reqDataCheck = new QCheckBox("Information on record");
   plotGroupLayout->addWidget(m_reqDataCheck);
   m_reqFitsCheck = new QCheckBox("Fits");
   plotGroupLayout->addWidget(m_reqFitsCheck);

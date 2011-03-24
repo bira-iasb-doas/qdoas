@@ -451,16 +451,17 @@ RC ASCII_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,INT local
  	   for (pRecord=strchr(pRecord,' ');(pRecord!=NULL) && (*pRecord==' ');pRecord++);
          }
 
-	// should be at the end of the line and read ALL of the data
-	if (pRecord != NULL || count) rc = ERROR_ID_FILE_END;
+	       // // should be at the end of the line and read ALL of the data
+	       // if (pRecord != NULL || count) rc = ERROR_ID_FILE_END;
        }
 
       // Read the measurement date
 
       if (!rc && dateSaveFlag)
        {
+       	int k;
         while (fgets(line,MAX_ITEM_TEXT_LEN,specFp) && ((strchr(line,';')!=NULL) || (strchr(line,'*')!=NULL)));
-        if (sscanf(line,"%d/%d/%d",&day,&mon,&year) != 3) rc = ERROR_ID_FILE_END;
+        if ((k=sscanf(line,"%d/%d/%d",&day,&mon,&year)) != 3) rc = ERROR_ID_FILE_END;
        }
 
       // Read the measurement time

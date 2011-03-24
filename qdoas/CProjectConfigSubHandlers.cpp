@@ -146,6 +146,16 @@ bool CSelectorSubHandler::start(const QString &element, const QXmlAttributes &at
     d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_ROLL;
   else if (str == "iter_number")
     d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_ITER;
+  else if (str == "scan_direction")
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_GOME2_SCANDIRECTION;
+  else if (str == "saa_flag")
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_GOME2_SAA;
+  else if (str == "sunglint_danger_flag")
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_GOME2_SUNGLINT_RISK;
+  else if (str == "sunglint_highdanger_flag")
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_GOME2_SUNGLINT_HIGHRISK;
+  else if (str == "rainbow_flag")
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_GOME2_RAINBOW;
 
   else
     return postErrorMessage("Invalid output field " + str);
@@ -744,6 +754,8 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
     m_instrumental->mfcstd.detectorSize = atts.value("size").toInt();
     m_instrumental->mfcstd.revert = (atts.value("revert") == "true") ? 1 : 0;
     m_instrumental->mfcstd.straylight = (atts.value("straylight") == "true") ? 1 : 0;
+    m_instrumental->mfcstd.lambdaMin = atts.value("lambda_min").toDouble();
+    m_instrumental->mfcstd.lambdaMax = atts.value("lambda_max").toDouble();
 
     str = atts.value("date");
     if (!str.isEmpty()) {

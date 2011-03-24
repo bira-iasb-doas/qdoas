@@ -620,9 +620,9 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   fprintf(fp, " instr=\"%s\" />\n", tmpStr.toAscii().constData());
 
   // mfcstd
-  fprintf(fp, "      <mfcstd size=\"%d\" revert=\"%s\" straylight=\"%s\" date=\"%s\"",
+  fprintf(fp, "      <mfcstd size=\"%d\" revert=\"%s\" straylight=\"%s\" date=\"%s\" lambda_min=\"%g\" lambda_max=\"%g\"",
     d->mfcstd.detectorSize, (d->mfcstd.revert ? sTrue : sFalse),
-   (d->mfcstd.straylight ? sTrue : sFalse),d->mfcstd.dateFormat);
+   (d->mfcstd.straylight ? sTrue : sFalse),d->mfcstd.dateFormat,d->mfcstd.lambdaMin,d->mfcstd.lambdaMax);
 
   tmpStr = pathMgr->simplifyPath(QString(d->mfcstd.calibrationFile));
   fprintf(fp, " calib=\"%s\"", tmpStr.toAscii().constData());
@@ -1500,6 +1500,12 @@ void CQdoasConfigWriter::writeDataSelectList(FILE *fp, const data_select_list_t 
     case PRJCT_RESULTS_ASCII_PITCH               :      fprintf(fp, "pitch_angle"); break;
     case PRJCT_RESULTS_ASCII_ROLL                :      fprintf(fp, "roll_angle"); break;
     case PRJCT_RESULTS_ASCII_ITER                :      fprintf(fp, "iter_number"); break;
+
+    case PRJCT_RESULTS_ASCII_GOME2_SCANDIRECTION                :      fprintf(fp, "scan_direction"); break;
+    case PRJCT_RESULTS_ASCII_GOME2_SAA                :      fprintf(fp, "saa_flag"); break;
+    case PRJCT_RESULTS_ASCII_GOME2_SUNGLINT_RISK      :      fprintf(fp, "sunglint_danger_flag"); break;
+    case PRJCT_RESULTS_ASCII_GOME2_SUNGLINT_HIGHRISK  :      fprintf(fp, "sunglint_highdanger_flag"); break;
+    case PRJCT_RESULTS_ASCII_GOME2_RAINBOW            :      fprintf(fp, "rainbow_flag"); break;
 
     default: fprintf(fp, "Invalid");
     }

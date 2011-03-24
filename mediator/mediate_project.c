@@ -77,8 +77,8 @@ void initializeMediateProjectCalibration(mediate_project_calibration_t *d)
   // any non-zero defaults...
 
   d->subWindows=0;
-  d->wavelengthMin=(double)0.;
-  d->wavelengthMax=(double)0.;
+  d->wavelengthMin=(double)330.;
+  d->wavelengthMax=(double)600.;
   d->requireSpectra=1;
   d->requireFits=1;
   d->requireResidual=1;
@@ -106,6 +106,7 @@ void initializeMediateProjectInstrumental(mediate_project_instrumental_t *d)
   // any non-zero defaults...
 
   d->saozvis.spectralRegion=PRJCT_INSTR_SAOZ_REGION_VIS;
+  d->mfcstd.lambdaMin=d->mfcstd.lambdaMax=(double)0.;
 }
 
 void initializeMediateProjectSlit(mediate_project_slit_t *d)

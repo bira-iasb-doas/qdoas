@@ -72,8 +72,11 @@ typedef struct _gome2MdrInfo
   uint16_t rec_length[NBAND];                                                   // record length for the requested band
  	INDEX    indexMDR;                                                            // index of the MDR in the file
  	double   startTime;                                                           // starting time of the MDR
-  double   unique_int[NCHANNEL];                                                // integration time
-  uint8_t  int_index[NCHANNEL];                                                 // index of the integration time
+
+ 	// !!! version <= 12 : NCHANNEL
+
+  uint8_t  int_index[NCHANNEL];                                                 // index of the integration time (version <= 12
+  double   unique_int[NBAND];                                                   // integration time
   double   scanner_angle[N_TINT_MAX][N_SCAN_MAX];                               // scanner angles
   double   corner_lat[N_TINT_MAX][4][N_SCAN_MAX];                               // latitudes at the four corners of the pixels
   double   corner_lon[N_TINT_MAX][4][N_SCAN_MAX];                               // longitudes at the four corners of the pixels
@@ -83,9 +86,30 @@ typedef struct _gome2MdrInfo
   double   saa[N_TINT_MAX][3][N_SCAN_MAX]; 	                                    // solar azimuth angles
   double   lza[N_TINT_MAX][3][N_SCAN_MAX];                                      // line of sight zenith angles
   double   laa[N_TINT_MAX][3][N_SCAN_MAX];                                      // line of sight azimuth angles
+
+ 	//     version == 12 : NBAND
+
+  double   integration_times[NBAND];
+
+  double   scanner_angle12[N_SCAN_MAX];                                         // scanner angles
+  double   corner_lat12[N_SCAN_MAX][4];                                         // latitudes at the four corners of the pixels
+  double   corner_lon12[N_SCAN_MAX][4];                                         // longitudes at the four corners of the pixels
+  double   centre_lat12[N_SCAN_MAX];                                            // latitude at the centre of the pixels
+  double   centre_lon12[N_SCAN_MAX];                                            // longitude at the centre of the pixels
+  double   sza12[N_SCAN_MAX][3];                                                // solar zenith angles
+  double   saa12[N_SCAN_MAX][3]; 	                                              // solar azimuth angles
+  double   lza12[N_SCAN_MAX][3];                                                // line of sight zenith angles
+  double   laa12[N_SCAN_MAX][3];                                                // line of sight azimuth angles
+
+  uint16_t geo_rec_length[NBAND];
   uint8_t  cloudFitMode[N_SCAN_MAX];
   double   cloudTopPressure[N_SCAN_MAX];
   double   cloudFraction[N_SCAN_MAX];
+  uint8_t  scanDirection;
+  uint8_t  saaFlag[N_SCAN_MAX];
+  uint8_t  sunglintDangerFlag[N_SCAN_MAX];
+  uint8_t  sunglintHighDangerFlag[N_SCAN_MAX];
+  uint8_t  rainbowFlag[N_SCAN_MAX];
  }
 GOME2_MDR;
 
@@ -116,9 +140,10 @@ typedef struct _GOME2OrbitFiles                                                 
   INDEX              *gome2LatIndex,*gome2LonIndex,*gome2SzaIndex;              // indexes of records sorted resp. by latitude, by longitude and by SZA
   SATELLITE_GEOLOC   *gome2Geolocations;                                        // geolocations
   INT                 specNumber;
-  coda_ProductFile   *gome2Pf;                                                  // GOME2 product file pointer
+  coda_product   *gome2Pf;                                                  // GOME2 product file pointer
   coda_Cursor         gome2Cursor;                                              // GOME2 file cursor
   coda_Cursor         gome2CursorMDR;                                           // GOME2 file cursor on MDR
+  int                 version;
   INT                 rc;
  }
 GOME2_ORBIT_FILE;
@@ -409,7 +434,7 @@ INDEX Gome2GetMDRIndex(GOME2_ORBIT_FILE *pOrbitFile,INDEX indexBand,int recordNo
 //               ERROR_ID_NO  otherwise.
 // -----------------------------------------------------------------------------
 
-int Gome2Open(coda_ProductFile **productFile, char *fileName)
+int Gome2Open(coda_product **productFile, char *fileName,int *version)
  {
   // Declarations
 
@@ -437,8 +462,9 @@ int Gome2Open(coda_ProductFile **productFile, char *fileName)
    {
    	// Retrieve the product class and type
 
-    coda_get_product_class((const coda_ProductFile *)*productFile,(const char **)&productClass);
-    coda_get_product_type((const coda_ProductFile *)*productFile,(const char **)&productType);
+    coda_get_product_class((const coda_product *)*productFile,(const char **)&productClass);
+    coda_get_product_type((const coda_product *)*productFile,(const char **)&productType);
+    coda_get_product_version((const coda_product *)*productFile, version);
 
     if (strcmp(productClass,"EPS") || strcmp(productType,"GOME_xxx_1B"))
      rc=ERROR_SetLast("Gome2Init",ERROR_TYPE_WARNING,ERROR_ID_BEAT,"coda_get_product_class or coda_get_product_type",fileName,"Not a GOME2 Level-1B file");
@@ -599,13 +625,15 @@ RC Gome2ReadOrbitInfo(GOME2_ORBIT_FILE *pOrbitFile,int bandIndex)
   return rc;
  }
 
-int Gome2ReadMDRInfo(GOME2_ORBIT_FILE *pOrbitFile,GOME2_MDR *pMdr)
+int Gome2ReadMDRInfo(GOME2_ORBIT_FILE *pOrbitFile,GOME2_MDR *pMdr,int indexBand)
  {
  	// Declarations
 
   uint8_t subclass,observationMode;
   char start_time[40];
   double utc_start_double;
+  int indexActual,i;
+  char geoEarthActualString[25];
 
   // Generic record header
 
@@ -646,76 +674,213 @@ int Gome2ReadMDRInfo(GOME2_ORBIT_FILE *pOrbitFile,GOME2_MDR *pMdr)
     coda_cursor_read_uint16_array(&pOrbitFile->gome2Cursor,pMdr->rec_length,coda_array_ordering_c);
     coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                        // MDR.GOME2_MDR_L1B_EARTHSHINE_V1
 
-    // Additional geolocation record for the actual integration time of the earthshine measurements
+    // flags
 
-    coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor, "GEO_EARTH_ACTUAL");      // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL
+    coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"PCD_BASIC");              // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.PCD_BASIC
+
+    if (pOrbitFile->version<=11)
+     {
+      coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"F_SAA");                  // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.PCD_BASIC.F_SAA
+      coda_cursor_read_uint8(&pOrbitFile->gome2Cursor,&pMdr->saaFlag[0]);
+      coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                        // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.PCD_BASIC
+
+      coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"F_SUNGLINT");          // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.PCD_BASIC.F_SUNGLINT
+      coda_cursor_read_uint8(&pOrbitFile->gome2Cursor,&pMdr->sunglintDangerFlag[0]);
+      coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                        // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.PCD_BASIC
+
+      coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"F_RAINBOW");          // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.PCD_BASIC.F_RAINBOW
+      coda_cursor_read_uint8(&pOrbitFile->gome2Cursor,&pMdr->rainbowFlag[0]);
+      coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);
+
+      pMdr->sunglintHighDangerFlag[0]=0;
+
+      memset(&pMdr->saaFlag[1],pMdr->saaFlag[0],N_SCAN_MAX-1);
+      memset(&pMdr->sunglintDangerFlag[1],pMdr->sunglintDangerFlag[0],N_SCAN_MAX-1);
+      memset(&pMdr->sunglintHighDangerFlag[1],pMdr->sunglintHighDangerFlag[0],N_SCAN_MAX-1);
+      memset(&pMdr->rainbowFlag[1],pMdr->rainbowFlag[0],N_SCAN_MAX-1);
+     }
+    else
+     {
+      coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"F_SAA");                  // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.PCD_BASIC.F_SAA
+      coda_cursor_read_uint8_array(&pOrbitFile->gome2Cursor,pMdr->saaFlag,coda_array_ordering_c);
+      coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                        // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.PCD_BASIC
+
+      coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"F_SUNGLINT_RISK");          // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.PCD_BASIC.F_SUNGLINT_RISK
+      coda_cursor_read_uint8_array(&pOrbitFile->gome2Cursor,pMdr->sunglintDangerFlag,coda_array_ordering_c);
+      coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                        // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.PCD_BASIC
+
+      coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"F_SUNGLINT_HIGH_RISK");   // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.PCD_BASIC.F_SUNGLINT_HIGH_RISK
+      coda_cursor_read_uint8_array(&pOrbitFile->gome2Cursor,pMdr->sunglintHighDangerFlag,coda_array_ordering_c);
+      coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                        // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.PCD_BASIC
+
+      coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"F_RAINBOW");              // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.PCD_BASIC.F_RAINBOW
+      coda_cursor_read_uint8_array(&pOrbitFile->gome2Cursor,pMdr->rainbowFlag,coda_array_ordering_c);
+      coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                        // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.PCD_BASIC
+     }
+
+    coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                        // MDR.GOME2_MDR_L1B_EARTHSHINE_V1
 
     // Unique integration times in the scan
 
-    coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor, "UNIQUE_INT");            // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL.UNIQUE_INT
-    coda_cursor_read_double_array(&pOrbitFile->gome2Cursor,pMdr->unique_int,coda_array_ordering_c);
-    coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                        // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL
+    if (pOrbitFile->version<=11)
+     {
+     	pMdr->scanDirection=255;                                                                  // Not defined
 
-    // Unique int. time index for each channel
+      // Additional geolocation record for the actual integration time of the earthshine measurements
 
-    coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor, "INT_INDEX");             // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL.INT_INDEX
-    coda_cursor_read_uint8_array(&pOrbitFile->gome2Cursor,pMdr->int_index,coda_array_ordering_c);
-    coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                        // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL
+      coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor, "GEO_EARTH_ACTUAL");      // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL
 
-    // actual scanner angles
+      coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor, "UNIQUE_INT");            // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL.UNIQUE_INT
+      coda_cursor_read_double_array(&pOrbitFile->gome2Cursor,pMdr->unique_int,coda_array_ordering_c);
+      coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                        // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL
 
-    coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor, "SCANNER_ANGLE_ACTUAL");  // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL.SCANNER_ANGLE_ACTUAL
-    coda_cursor_read_double_array(&pOrbitFile->gome2Cursor,&pMdr->scanner_angle[0][0],coda_array_ordering_c);
-    coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                        // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL
+      // Unique int. time index for each channel
 
-    // 4 corner coordinates @ points ABCD
+      coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor, "INT_INDEX");             // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL.INT_INDEX
+      coda_cursor_read_uint8_array(&pOrbitFile->gome2Cursor,pMdr->int_index,coda_array_ordering_c);
+      coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                        // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL
 
-    coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"CORNER_ACTUAL");          // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL.CORNER_ACTUAL
+      // actual scanner angles
 
-    beat_cursor_read_geolocation_double_split_array(&pOrbitFile->gome2Cursor,
-   		                                              &pMdr->corner_lat[0][0][0],
-   		                                              &pMdr->corner_lon[0][0][0],
-   		                                               coda_array_ordering_c);
+      coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor, "SCANNER_ANGLE_ACTUAL");  // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL.SCANNER_ANGLE_ACTUAL
+      coda_cursor_read_double_array(&pOrbitFile->gome2Cursor,&pMdr->scanner_angle[0][0],coda_array_ordering_c);
+      coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                        // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL
 
-    coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                        // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL
+      // 4 corner coordinates @ points ABCD
 
-    // centre coordinate (point F)
+      coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"CORNER_ACTUAL");          // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL.CORNER_ACTUAL
 
-    coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor, "CENTRE_ACTUAL");         // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL.CENTRE_ACTUAL
+      beat_cursor_read_geolocation_double_split_array(&pOrbitFile->gome2Cursor,
+    	 	                                              &pMdr->corner_lat[0][0][0],
+    	 	                                              &pMdr->corner_lon[0][0][0],
+    	 	                                               coda_array_ordering_c);
 
-    beat_cursor_read_geolocation_double_split_array(&pOrbitFile->gome2Cursor,
-                                              		    &pMdr->centre_lat[0][0],
-                                              		    &pMdr->centre_lon[0][0],
-                                              		     coda_array_ordering_c);
+      coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                        // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL
 
-    coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                        // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL
+      // centre coordinate (point F)
 
-    // 3 SZAs @ points EFG
+      coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor, "CENTRE_ACTUAL");         // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL.CENTRE_ACTUAL
 
-    coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"SOLAR_ZENITH_ACTUAL");    // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL.SOLAR_ZENITH_ACTUAL
-    coda_cursor_read_double_array(&pOrbitFile->gome2Cursor,&pMdr->sza[0][0][0],coda_array_ordering_c);
-    coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                        // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL
+      beat_cursor_read_geolocation_double_split_array(&pOrbitFile->gome2Cursor,
+                                                		    &pMdr->centre_lat[0][0],
+                                                		    &pMdr->centre_lon[0][0],
+                                                		     coda_array_ordering_c);
 
-    // 3 Solar azimuth angles @ points EFG
+      coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                        // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL
 
-    coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor, "SOLAR_AZIMUTH_ACTUAL");  // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL.SOLAR_AZIMUTH_ACTUAL
-    coda_cursor_read_double_array(&pOrbitFile->gome2Cursor,&pMdr->saa[0][0][0],coda_array_ordering_c);
-    coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                        // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL
+      // 3 SZAs @ points EFG
 
-    // 3 SZAs @ points EFG
+      coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"SOLAR_ZENITH_ACTUAL");    // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL.SOLAR_ZENITH_ACTUAL
+      coda_cursor_read_double_array(&pOrbitFile->gome2Cursor,&pMdr->sza[0][0][0],coda_array_ordering_c);
+      coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                        // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL
 
-    coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"SAT_ZENITH_ACTUAL");      // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL.SOLAR_ZENITH_ACTUAL
-    coda_cursor_read_double_array(&pOrbitFile->gome2Cursor,&pMdr->lza[0][0][0],coda_array_ordering_c);
-    coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                        // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL
+      // 3 Solar azimuth angles @ points EFG
 
-    // 3 Solar azimuth angles @ points EFG
+      coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor, "SOLAR_AZIMUTH_ACTUAL");  // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL.SOLAR_AZIMUTH_ACTUAL
+      coda_cursor_read_double_array(&pOrbitFile->gome2Cursor,&pMdr->saa[0][0][0],coda_array_ordering_c);
+      coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                        // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL
 
-    coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor, "SAT_AZIMUTH_ACTUAL");  // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL.SOLAR_AZIMUTH_ACTUAL
-    coda_cursor_read_double_array(&pOrbitFile->gome2Cursor,&pMdr->laa[0][0][0],coda_array_ordering_c);
-    coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                      // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL
+      // 3 SZAs @ points EFG
 
-    coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                      // MDR.GOME2_MDR_L1B_EARTHSHINE_V1
+      coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"SAT_ZENITH_ACTUAL");      // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL.SOLAR_ZENITH_ACTUAL
+      coda_cursor_read_double_array(&pOrbitFile->gome2Cursor,&pMdr->lza[0][0][0],coda_array_ordering_c);
+      coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                        // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL
 
+      // 3 Solar azimuth angles @ points EFG
+
+      coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor, "SAT_AZIMUTH_ACTUAL");  // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL.SOLAR_AZIMUTH_ACTUAL
+      coda_cursor_read_double_array(&pOrbitFile->gome2Cursor,&pMdr->laa[0][0][0],coda_array_ordering_c);
+      coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                      // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL
+
+      coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                      // MDR.GOME2_MDR_L1B_EARTHSHINE_V1
+     }
+    else
+     {
+      coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor, "UNIQUE_INT");            // MDR.GOME2_MDR_L1B_EARTHSHINE_V5.UNIQUE_INT
+      coda_cursor_read_double_array(&pOrbitFile->gome2Cursor,pMdr->unique_int,coda_array_ordering_c);
+      coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                        // MDR.GOME2_MDR_L1B_EARTHSHINE_V5
+
+      coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor, "INTEGRATION_TIMES");            // MDR.GOME2_MDR_L1B_EARTHSHINE_V5.INTEGRATION_TIMES
+      coda_cursor_read_double_array(&pOrbitFile->gome2Cursor,pMdr->integration_times,coda_array_ordering_c);
+      coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);
+
+      coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor, "GEO_REC_LENGTH");            // MDR.GOME2_MDR_L1B_EARTHSHINE_V5.GEO_REC_LENGTH
+      coda_cursor_read_uint16_array(&pOrbitFile->gome2Cursor,pMdr->geo_rec_length,coda_array_ordering_c);
+      coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);
+
+      for (indexActual=0;indexActual<NBAND;indexActual++)
+       if (fabs(pMdr->unique_int[indexActual]-pMdr->integration_times[indexBand])<(double)1.e-6)
+        break;
+
+      sprintf(geoEarthActualString,"GEO_EARTH_ACTUAL_%d",indexActual+1);
+      coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,geoEarthActualString);            // MDR.GOME2_MDR_L1B_EARTHSHINE_V5.GEO_EARTH_ACTUAL
+
+      for (i=0;i<pMdr->geo_rec_length[indexActual];i++)
+       {
+       	coda_cursor_goto_array_element_by_index(&pOrbitFile->gome2Cursor,i);
+
+        // actual scanner angles
+
+        coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor, "SCAN_DIRECTION");        // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL.SCAN_DIRECTION
+        coda_cursor_read_uint8(&pOrbitFile->gome2Cursor,&pMdr->scanDirection);
+        coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                        // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL
+
+        // actual scanner angles
+
+        coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor, "SCANNER_ANGLE_ACTUAL");  // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL.SCANNER_ANGLE_ACTUAL
+        coda_cursor_read_double_array(&pOrbitFile->gome2Cursor,&pMdr->scanner_angle12[i],coda_array_ordering_c);
+        coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                        // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL
+
+        // 4 corner coordinates @ points ABCD
+
+        coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"CORNER_ACTUAL");          // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL.CORNER_ACTUAL
+
+        beat_cursor_read_geolocation_double_split_array(&pOrbitFile->gome2Cursor,
+    	   	                                              &pMdr->corner_lat12[i][0],
+    	   	                                              &pMdr->corner_lon12[i][0],
+    	   	                                               coda_array_ordering_c);
+
+        coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                        // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL
+
+        // centre coordinate (point F)
+
+        coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor, "CENTRE_ACTUAL");         // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL.CENTRE_ACTUAL
+
+        beat_cursor_read_geolocation_double_split(&pOrbitFile->gome2Cursor,
+                                                  &pMdr->centre_lat12[i],
+                                                  &pMdr->centre_lon12[i]);
+
+        coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                        // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL
+
+        // 3 SZAs @ points EFG
+
+        coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"SOLAR_ZENITH_ACTUAL");    // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL.SOLAR_ZENITH_ACTUAL
+        coda_cursor_read_double_array(&pOrbitFile->gome2Cursor,&pMdr->sza12[i][0],coda_array_ordering_c);
+        coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                        // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL
+
+        // 3 Solar azimuth angles @ points EFG
+
+        coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor, "SOLAR_AZIMUTH_ACTUAL");  // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL.SOLAR_AZIMUTH_ACTUAL
+        coda_cursor_read_double_array(&pOrbitFile->gome2Cursor,&pMdr->saa12[i][0],coda_array_ordering_c);
+        coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                        // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL
+
+        // 3 SZAs @ points EFG
+
+        coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"SAT_ZENITH_ACTUAL");      // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL.SOLAR_ZENITH_ACTUAL
+        coda_cursor_read_double_array(&pOrbitFile->gome2Cursor,&pMdr->lza12[i][0],coda_array_ordering_c);
+        coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                        // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL
+
+        // 3 Solar azimuth angles @ points EFG
+
+        coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor, "SAT_AZIMUTH_ACTUAL");  // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL.SOLAR_AZIMUTH_ACTUAL
+        coda_cursor_read_double_array(&pOrbitFile->gome2Cursor,&pMdr->laa12[i][0],coda_array_ordering_c);
+        coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                      // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL
+
+        coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);
+       }
+
+      coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);
+     }
 
     coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor, "CLOUD");               // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.CLOUD
 
@@ -792,7 +957,7 @@ RC Gome2BrowseMDR(GOME2_ORBIT_FILE *pOrbitFile,INDEX indexBand)
      {
       coda_cursor_goto_array_element_by_index(&pOrbitFile->gome2Cursor,i);
 
-     	if (!(rc=Gome2ReadMDRInfo(pOrbitFile,&pGome2Info->mdr[pGome2Info->total_nadir_mdr])))
+     	if (!(rc=Gome2ReadMDRInfo(pOrbitFile,&pGome2Info->mdr[pGome2Info->total_nadir_mdr],indexBand)))
      	 {
      	 	pGome2Info->total_nadir_obs+=pGome2Info->mdr[pGome2Info->total_nadir_mdr].num_recs[indexBand];
      	 	pGome2Info->mdr[pGome2Info->total_nadir_mdr].indexMDR=i;
@@ -827,52 +992,106 @@ void Gome2ReadGeoloc(GOME2_ORBIT_FILE *pOrbitFile,INDEX indexBand)
  	 	indexObs=indexRecord-mdrObs;
 
  	 	pMdr=&pGome2Info->mdr[indexMDR];
- 	 	indexTint=(INDEX)pMdr->int_index[indexBand];
 
- 	 	// Solar zenith angles
+ 	 	if (pOrbitFile->version<=11)
+ 	 	 {
+ 	 	  indexTint=(INDEX)pMdr->int_index[indexBand];
 
- 	 	pOrbitFile->gome2Geolocations[indexRecord].solZen[0]=(float)pMdr->sza[indexTint][0][indexObs];
- 	 	pOrbitFile->gome2Geolocations[indexRecord].solZen[1]=(float)pMdr->sza[indexTint][1][indexObs];
- 	 	pOrbitFile->gome2Geolocations[indexRecord].solZen[2]=(float)pMdr->sza[indexTint][2][indexObs];
+ 	 	  // Solar zenith angles
 
- 	 	// Solar azimuth angles
+ 	 	  pOrbitFile->gome2Geolocations[indexRecord].solZen[0]=(float)pMdr->sza[indexTint][0][indexObs];
+ 	 	  pOrbitFile->gome2Geolocations[indexRecord].solZen[1]=(float)pMdr->sza[indexTint][1][indexObs];
+ 	 	  pOrbitFile->gome2Geolocations[indexRecord].solZen[2]=(float)pMdr->sza[indexTint][2][indexObs];
 
- 	 	pOrbitFile->gome2Geolocations[indexRecord].solAzi[0]=(float)pMdr->saa[indexTint][0][indexObs];
- 	 	pOrbitFile->gome2Geolocations[indexRecord].solAzi[1]=(float)pMdr->saa[indexTint][1][indexObs];
- 	 	pOrbitFile->gome2Geolocations[indexRecord].solAzi[2]=(float)pMdr->saa[indexTint][2][indexObs];
+ 	 	  // Solar azimuth angles
 
- 	 	// Line of sight viewing angles
+ 	 	  pOrbitFile->gome2Geolocations[indexRecord].solAzi[0]=(float)pMdr->saa[indexTint][0][indexObs];
+ 	 	  pOrbitFile->gome2Geolocations[indexRecord].solAzi[1]=(float)pMdr->saa[indexTint][1][indexObs];
+ 	 	  pOrbitFile->gome2Geolocations[indexRecord].solAzi[2]=(float)pMdr->saa[indexTint][2][indexObs];
 
- 	 	pOrbitFile->gome2Geolocations[indexRecord].losZen[0]=(float)pMdr->lza[indexTint][0][indexObs];
- 	 	pOrbitFile->gome2Geolocations[indexRecord].losZen[1]=(float)pMdr->lza[indexTint][1][indexObs];
- 	 	pOrbitFile->gome2Geolocations[indexRecord].losZen[2]=(float)pMdr->lza[indexTint][2][indexObs];
+ 	 	  // Line of sight viewing angles
 
- 	 	// Line of sight azimuth angles
+ 	 	  pOrbitFile->gome2Geolocations[indexRecord].losZen[0]=(float)pMdr->lza[indexTint][0][indexObs];
+ 	 	  pOrbitFile->gome2Geolocations[indexRecord].losZen[1]=(float)pMdr->lza[indexTint][1][indexObs];
+ 	 	  pOrbitFile->gome2Geolocations[indexRecord].losZen[2]=(float)pMdr->lza[indexTint][2][indexObs];
 
- 	 	pOrbitFile->gome2Geolocations[indexRecord].losAzi[0]=(float)pMdr->laa[indexTint][0][indexObs];
- 	 	pOrbitFile->gome2Geolocations[indexRecord].losAzi[1]=(float)pMdr->laa[indexTint][1][indexObs];
- 	 	pOrbitFile->gome2Geolocations[indexRecord].losAzi[2]=(float)pMdr->laa[indexTint][2][indexObs];
+ 	 	  // Line of sight azimuth angles
 
- 	 	// Longitudes
+ 	 	  pOrbitFile->gome2Geolocations[indexRecord].losAzi[0]=(float)pMdr->laa[indexTint][0][indexObs];
+ 	 	  pOrbitFile->gome2Geolocations[indexRecord].losAzi[1]=(float)pMdr->laa[indexTint][1][indexObs];
+ 	 	  pOrbitFile->gome2Geolocations[indexRecord].losAzi[2]=(float)pMdr->laa[indexTint][2][indexObs];
 
- 	 	pOrbitFile->gome2Geolocations[indexRecord].lonCorners[0]=pMdr->corner_lon[indexTint][0][indexObs];
- 	 	pOrbitFile->gome2Geolocations[indexRecord].lonCorners[1]=pMdr->corner_lon[indexTint][1][indexObs];
- 	 	pOrbitFile->gome2Geolocations[indexRecord].lonCorners[2]=pMdr->corner_lon[indexTint][2][indexObs];
- 	 	pOrbitFile->gome2Geolocations[indexRecord].lonCorners[3]=pMdr->corner_lon[indexTint][3][indexObs];
+ 	 	  // Longitudes
 
- 	 	pOrbitFile->gome2Geolocations[indexRecord].lonCenter=pMdr->centre_lon[indexTint][indexObs];
+ 	 	  pOrbitFile->gome2Geolocations[indexRecord].lonCorners[0]=pMdr->corner_lon[indexTint][0][indexObs];
+ 	 	  pOrbitFile->gome2Geolocations[indexRecord].lonCorners[1]=pMdr->corner_lon[indexTint][1][indexObs];
+ 	 	  pOrbitFile->gome2Geolocations[indexRecord].lonCorners[2]=pMdr->corner_lon[indexTint][2][indexObs];
+ 	 	  pOrbitFile->gome2Geolocations[indexRecord].lonCorners[3]=pMdr->corner_lon[indexTint][3][indexObs];
 
- 	 	// Latitudes
+ 	 	  pOrbitFile->gome2Geolocations[indexRecord].lonCenter=pMdr->centre_lon[indexTint][indexObs];
 
- 	 	pOrbitFile->gome2Geolocations[indexRecord].latCorners[0]=pMdr->corner_lat[indexTint][0][indexObs];
- 	 	pOrbitFile->gome2Geolocations[indexRecord].latCorners[1]=pMdr->corner_lat[indexTint][1][indexObs];
- 	 	pOrbitFile->gome2Geolocations[indexRecord].latCorners[2]=pMdr->corner_lat[indexTint][2][indexObs];
- 	 	pOrbitFile->gome2Geolocations[indexRecord].latCorners[3]=pMdr->corner_lat[indexTint][3][indexObs];
+ 	 	  // Latitudes
 
- 	 	pOrbitFile->gome2Geolocations[indexRecord].latCenter=pMdr->centre_lat[indexTint][indexObs];
+ 	 	  pOrbitFile->gome2Geolocations[indexRecord].latCorners[0]=pMdr->corner_lat[indexTint][0][indexObs];
+ 	 	  pOrbitFile->gome2Geolocations[indexRecord].latCorners[1]=pMdr->corner_lat[indexTint][1][indexObs];
+ 	 	  pOrbitFile->gome2Geolocations[indexRecord].latCorners[2]=pMdr->corner_lat[indexTint][2][indexObs];
+ 	 	  pOrbitFile->gome2Geolocations[indexRecord].latCorners[3]=pMdr->corner_lat[indexTint][3][indexObs];
+
+ 	 	  pOrbitFile->gome2Geolocations[indexRecord].latCenter=pMdr->centre_lat[indexTint][indexObs];
+ 	 	 }
+ 	 	else
+ 	 	 {
+ 	 	  // Solar zenith angles
+
+ 	 	  pOrbitFile->gome2Geolocations[indexRecord].solZen[0]=(float)pMdr->sza12[indexObs][0];
+ 	 	  pOrbitFile->gome2Geolocations[indexRecord].solZen[1]=(float)pMdr->sza12[indexObs][1];
+ 	 	  pOrbitFile->gome2Geolocations[indexRecord].solZen[2]=(float)pMdr->sza12[indexObs][2];
+
+ 	 	  // Solar azimuth angles
+
+ 	 	  pOrbitFile->gome2Geolocations[indexRecord].solAzi[0]=(float)pMdr->saa12[indexObs][0];
+ 	 	  pOrbitFile->gome2Geolocations[indexRecord].solAzi[1]=(float)pMdr->saa12[indexObs][1];
+ 	 	  pOrbitFile->gome2Geolocations[indexRecord].solAzi[2]=(float)pMdr->saa12[indexObs][2];
+
+ 	 	  // Line of sight viewing angles
+
+ 	 	  pOrbitFile->gome2Geolocations[indexRecord].losZen[0]=(float)pMdr->lza12[indexObs][0];
+ 	 	  pOrbitFile->gome2Geolocations[indexRecord].losZen[1]=(float)pMdr->lza12[indexObs][1];
+ 	 	  pOrbitFile->gome2Geolocations[indexRecord].losZen[2]=(float)pMdr->lza12[indexObs][2];
+
+ 	 	  // Line of sight azimuth angles
+
+ 	 	  pOrbitFile->gome2Geolocations[indexRecord].losAzi[0]=(float)pMdr->laa12[indexObs][0];
+ 	 	  pOrbitFile->gome2Geolocations[indexRecord].losAzi[1]=(float)pMdr->laa12[indexObs][1];
+ 	 	  pOrbitFile->gome2Geolocations[indexRecord].losAzi[2]=(float)pMdr->laa12[indexObs][2];
+
+ 	 	  // Longitudes
+
+ 	 	  pOrbitFile->gome2Geolocations[indexRecord].lonCorners[0]=pMdr->corner_lon12[indexObs][0];
+ 	 	  pOrbitFile->gome2Geolocations[indexRecord].lonCorners[1]=pMdr->corner_lon12[indexObs][1];
+ 	 	  pOrbitFile->gome2Geolocations[indexRecord].lonCorners[2]=pMdr->corner_lon12[indexObs][2];
+ 	 	  pOrbitFile->gome2Geolocations[indexRecord].lonCorners[3]=pMdr->corner_lon12[indexObs][3];
+
+ 	 	  pOrbitFile->gome2Geolocations[indexRecord].lonCenter=pMdr->centre_lon12[indexObs];
+
+ 	 	  // Latitudes
+
+ 	 	  pOrbitFile->gome2Geolocations[indexRecord].latCorners[0]=pMdr->corner_lat12[indexObs][0];
+ 	 	  pOrbitFile->gome2Geolocations[indexRecord].latCorners[1]=pMdr->corner_lat12[indexObs][1];
+ 	 	  pOrbitFile->gome2Geolocations[indexRecord].latCorners[2]=pMdr->corner_lat12[indexObs][2];
+ 	 	  pOrbitFile->gome2Geolocations[indexRecord].latCorners[3]=pMdr->corner_lat12[indexObs][3];
+
+ 	 	  pOrbitFile->gome2Geolocations[indexRecord].latCenter=pMdr->centre_lat12[indexObs];
+ 	 	 }
 
  	 	pOrbitFile->gome2Geolocations[indexRecord].cloudTopPressure=(float)((pMdr->cloudFitMode[indexObs]==0)?pMdr->cloudTopPressure[indexObs]:-1.);
  	 	pOrbitFile->gome2Geolocations[indexRecord].cloudFraction=(float)((pMdr->cloudFitMode[indexObs]==0)?pMdr->cloudFraction[indexObs]:-1.);
+
+    pOrbitFile->gome2Geolocations[indexRecord].scanDirection=(int)pMdr->scanDirection;
+    pOrbitFile->gome2Geolocations[indexRecord].saaFlag=(int)pMdr->saaFlag[indexObs];
+    pOrbitFile->gome2Geolocations[indexRecord].sunglintDangerFlag=(int)pMdr->sunglintDangerFlag[indexObs];
+    pOrbitFile->gome2Geolocations[indexRecord].sunglintHighDangerFlag=(int)pMdr->sunglintHighDangerFlag[indexObs];
+    pOrbitFile->gome2Geolocations[indexRecord].rainbowFlag=(int)pMdr->rainbowFlag[indexObs];
 
     if (pOrbitFile->gome2Geolocations[indexRecord].cloudFraction<(float)-1.)
      pOrbitFile->gome2Geolocations[indexRecord].cloudFraction=
@@ -1123,7 +1342,7 @@ RC GOME2_Set(ENGINE_CONTEXT *pEngineContext)
 
       // Open the file
 
-      if (!(rc=Gome2Open(&pOrbitFile->gome2Pf,pOrbitFile->gome2FileName)))
+      if (!(rc=Gome2Open(&pOrbitFile->gome2Pf,pOrbitFile->gome2FileName,&pOrbitFile->version)))
        {
        	coda_cursor_set_product(&pOrbitFile->gome2Cursor,pOrbitFile->gome2Pf);
 
@@ -1169,7 +1388,7 @@ RC GOME2_Set(ENGINE_CONTEXT *pEngineContext)
   else
    {
     if (!(rc=pOrbitFile->rc) && (pOrbitFile->gome2Pf==NULL) &&
-        !(rc=Gome2Open(&pOrbitFile->gome2Pf,pEngineContext->fileInfo.fileName)))
+        !(rc=Gome2Open(&pOrbitFile->gome2Pf,pEngineContext->fileInfo.fileName,&pOrbitFile->version)))
      {
      	coda_cursor_set_product(&pOrbitFile->gome2Cursor,pOrbitFile->gome2Pf);
       memcpy(pEngineContext->buffers.lambda,pOrbitFile->gome2SunWve,sizeof(double)*NDET);
@@ -1208,6 +1427,7 @@ RC GOME2_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,INDEX fileIndex)
   double   *unique_int;                                                         // integration time
   uint8_t  *int_index;                                                          // index of the integration time
   int i;
+  double tint;
   double *spectrum,*sigma;                                                      // radiances and errors
   INDEX indexMDR;
   INT mdrObs;
@@ -1255,6 +1475,8 @@ RC GOME2_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,INDEX fileIndex)
      	unique_int=pGome2Info->mdr[indexMDR].unique_int;
      	int_index=pGome2Info->mdr[indexMDR].int_index;
 
+     	tint=(pOrbitFile->version<=11)?unique_int[int_index[indexBand]]:pGome2Info->mdr[indexMDR].integration_times[indexBand];
+
      	Gome2GotoOBS(pOrbitFile,(INDEX)indexBand,indexMDR,recordNo-mdrObs-1);
 
      	for (i=pGome2Info->startPixel;(i<pGome2Info->startPixel+pGome2Info->no_of_pixels) && !rc;i++)
@@ -1272,7 +1494,7 @@ RC GOME2_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,INDEX fileIndex)
 
       if (!rc)
        {
-     	  utcTime=pGome2Info->mdr[indexMDR].startTime+unique_int[int_index[indexBand]]*(recordNo-mdrObs-1);
+     	  utcTime=pGome2Info->mdr[indexMDR].startTime+tint*(recordNo-mdrObs-1);
      	  coda_double_to_datetime(utcTime,&year,&month,&day,&hour,&min,&sec,&msec);
 
      	  // Output information on the current record
@@ -1301,6 +1523,12 @@ RC GOME2_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,INDEX fileIndex)
         pRecord->cloudTopPressure=pGeoloc->cloudTopPressure;
         pRecord->cloudFraction=pGeoloc->cloudFraction;
 
+        pRecord->gome2.scanDirection=pGeoloc->scanDirection;
+        pRecord->gome2.saaFlag=pGeoloc->saaFlag;
+        pRecord->gome2.sunglintDangerFlag=pGeoloc->sunglintDangerFlag;
+        pRecord->gome2.sunglintHighDangerFlag=pGeoloc->sunglintHighDangerFlag;
+        pRecord->gome2.rainbowFlag=pGeoloc->rainbowFlag;
+
         // Misecellaneous data (for TEMIS)
 
         pRecord->latitude=pGeoloc->latCenter;
@@ -1311,7 +1539,8 @@ RC GOME2_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,INDEX fileIndex)
         pRecord->zenithViewAngle=pGeoloc->losZen[1];
         pRecord->azimuthViewAngle=pGeoloc->losAzi[1];
 
-        pRecord->Tint=unique_int[int_index[indexBand]];
+        pRecord->Tint=tint;
+
         pRecord->TimeDec=(double)hour+min/60.+(sec+msec*1.e-3)/(60.*60.);
         pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_day,&pRecord->present_time,0);
 
@@ -1760,7 +1989,7 @@ RC Gome2BuildRef(GOME2_REF *refList,INT nRef,INT nSpectra,double *lambda,double 
 
       alreadyOpen=(pOrbitFile->gome2Pf!=NULL)?1:0;
 
-      if (!alreadyOpen && !(rc=Gome2Open(&pOrbitFile->gome2Pf,pOrbitFile->gome2FileName)))
+      if (!alreadyOpen && !(rc=Gome2Open(&pOrbitFile->gome2Pf,pOrbitFile->gome2FileName,&pOrbitFile->version)))
       	coda_cursor_set_product(&pOrbitFile->gome2Cursor,pOrbitFile->gome2Pf);
 
       if (!(rc=GOME2_Read(pEngineContext,pRef->indexRecord,pRef->indexFile)))

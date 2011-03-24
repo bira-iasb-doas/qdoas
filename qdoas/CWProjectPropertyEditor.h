@@ -52,6 +52,7 @@ Q_OBJECT
    void slotInstrumentTypeChanged(int index);
    void slotGroundInstrumentChanged(int index);
    void slotSatelliteInstrumentChanged(int index);
+   void slotPageChanged(int index);
 
  signals:
    void signalInstrumentChanged(int);
@@ -72,7 +73,7 @@ Q_OBJECT
   //  CWProjectTabNasaAmes *m_nasaAmesTab;
 
   QString m_projectName;
-  int m_selectedInstrument;
+  int m_selectedInstrument,m_selectedPage;
 };
 
 #endif

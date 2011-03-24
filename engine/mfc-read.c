@@ -806,16 +806,19 @@ RC MFC_ReadRecordStd(ENGINE_CONTEXT *pEngineContext,DoasCh *fileName,
 
      	offset=(double)0.;
 
-     	imin=50;
-     	imax=135;
+     	imin=FNPixel(pEngineContext->buffers.lambda,pEngineContext->project.instrumental.lambdaMin,NDET,PIXEL_CLOSEST);
+     	imax=FNPixel(pEngineContext->buffers.lambda,pEngineContext->project.instrumental.lambdaMax,NDET,PIXEL_CLOSEST);
 
-     	for (i=imin;i<imax;i++)
-       offset+=spe[i];
+      if ((imin<=imax) && (imin>=0) && (imax<NDET))
+       {
+       	for (i=imin;i<imax;i++)
+         offset+=spe[i];
 
-      offset/=(double)(imax-imin);
+        offset/=(double)(imax-imin);
 
-      for (i=0;i<NDET;i++)
-       spe[i]-=offset;
+        for (i=0;i<NDET;i++)
+         spe[i]-=offset;
+       }
      }
    }
 
@@ -927,23 +930,6 @@ RC ReliMFCStd(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int local
        rc=ERROR_ID_FILE_RECORD;
       else if (pEngineContext->project.instrumental.mfcRevert)
        VECTOR_Invert(pBuffers->spectrum,NDET);
-
-      // for NOVAC tests, straylight correction
-
-    /*  {
-      	int i;
-      	double offset;
-
-      	offset=(double)0.;
-
-      	for (i=50;i<200;i++)
-        offset+=pBuffers->spectrum[i];
-
-       offset/=(double)150.;
-
-       for (i=0;i<NDET;i++)
-        pBuffers->spectrum[i]-=offset;
-      }  */
      }
    }
   else

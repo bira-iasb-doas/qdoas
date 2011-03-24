@@ -761,6 +761,7 @@ CWInstrMfcEdit::CWInstrMfcEdit(const struct instrumental_mfc *d, QWidget *parent
 {
   QString tmpStr;
   int row = 0;
+
   QVBoxLayout *mainLayout = new QVBoxLayout(this);
 
   // detector size and first wavelength
@@ -909,48 +910,67 @@ void CWInstrMfcEdit::apply(struct instrumental_mfc *d) const
 CWInstrMfcStdEdit::CWInstrMfcStdEdit(const struct instrumental_mfcstd *d, QWidget *parent) :
   CWAllFilesEdit(parent)
 {
-  QString tmpStr;
-  int row = 0;
   QVBoxLayout *mainLayout = new QVBoxLayout(this);
+  QHBoxLayout *groupLayout = new QHBoxLayout;
+  QString tmpStr;
+
+
+
   QGridLayout *gridLayout = new QGridLayout;
 
-  // First line
+  QGroupBox *formatGroup = new QGroupBox("Format", this);
+  QGridLayout *formatLayout = new QGridLayout(formatGroup);
 
-  gridLayout->addWidget(new QLabel("Detector Size", this), row, 0);             // detector size label
-  gridLayout->addWidget(new QLabel("Date Format", this), row, 1);               // date format label
-  m_revertCheck = new QCheckBox("Revert spectra", this);                        // revert spectra check box
-  gridLayout->addWidget(m_revertCheck, row, 2);
+  int row = 0;
+
+  m_revertCheck = new QCheckBox("Revert spectra", formatGroup);                        // revert spectra check box
+  formatLayout->addWidget(m_revertCheck, row, 0);
 
   ++row;
 
-  // Second line
-
-  m_detSizeEdit = new QLineEdit(this);
+  formatLayout->addWidget(new QLabel("Detector Size", formatGroup), row, 0);             // detector size label
+  m_detSizeEdit = new QLineEdit(formatGroup);
   m_detSizeEdit->setFixedWidth(cStandardEditWidth);
   m_detSizeEdit->setValidator(new QIntValidator(0, 8192, m_detSizeEdit));
-  gridLayout->addWidget(m_detSizeEdit, row, 0, Qt::AlignLeft);
-
-  m_dateFormatEdit = new QLineEdit(this);
-  m_dateFormatEdit->setMaxLength(sizeof(d->dateFormat)-1);
-  gridLayout->addWidget(m_dateFormatEdit, row, 1, Qt::AlignLeft);
-
-  m_strayLightCheck = new QCheckBox("Remove straylight", this);
-  gridLayout->addWidget(m_strayLightCheck, row, 2);
+  formatLayout->addWidget(m_detSizeEdit, row, 1, Qt::AlignLeft);
 
   ++row;
 
-//  // detector size
-//  gridLayout->addWidget(new QLabel("Detector Size", this), row, 0);
-//  m_detSizeEdit = new QLineEdit(this);
-//  m_detSizeEdit->setFixedWidth(cStandardEditWidth);
-//  m_detSizeEdit->setValidator(new QIntValidator(0, 8192, m_detSizeEdit));
-//  gridLayout->addWidget(m_detSizeEdit, row, 1, Qt::AlignLeft);
-//  ++row;
-//
-//  // revert
-//  m_revertCheck = new QCheckBox("Revert spectra", this);
-//  gridLayout->addWidget(m_revertCheck, row, 1);
-//  ++row;
+  formatLayout->addWidget(new QLabel("Date Format", formatGroup), row, 0);               // date format label
+  m_dateFormatEdit = new QLineEdit(formatGroup);
+  m_dateFormatEdit->setMaxLength(sizeof(d->dateFormat)-1);
+  formatLayout->addWidget(m_dateFormatEdit, row, 1, Qt::AlignLeft);
+
+  groupLayout->addWidget(formatGroup);
+
+  QGroupBox *straylightGroup = new QGroupBox("Straylight bias", this);
+  QGridLayout *straylightLayout = new QGridLayout(straylightGroup);
+
+  row=0;
+
+  m_strayLightCheck = new QCheckBox("Correct straylight bias", straylightGroup);
+  straylightLayout->addWidget(m_strayLightCheck, row, 0);
+
+  ++row;
+
+  straylightLayout->addWidget(new QLabel("Wavelength min", straylightGroup), row, 0);             // detector size label
+  m_lambdaMinEdit = new QLineEdit(straylightGroup);
+  m_lambdaMinEdit->setFixedWidth(50);
+  m_lambdaMinEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 900.0, 2, m_lambdaMinEdit));
+  straylightLayout->addWidget(m_lambdaMinEdit, row, 1);
+
+  ++row;
+
+  straylightLayout->addWidget(new QLabel("Wavelength max", straylightGroup), row, 0);             // detector size label
+  m_lambdaMaxEdit = new QLineEdit(straylightGroup);
+  m_lambdaMaxEdit->setFixedWidth(50);
+  m_lambdaMaxEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 900.0, 2, m_lambdaMaxEdit));
+  straylightLayout->addWidget(m_lambdaMaxEdit, row, 1);
+
+  groupLayout->addWidget(straylightGroup);
+  mainLayout->addLayout(groupLayout);
+
+  row=0;
 
   // files
   helperConstructCalInsFileWidgets(gridLayout, row,
@@ -984,6 +1004,14 @@ CWInstrMfcStdEdit::CWInstrMfcStdEdit(const struct instrumental_mfcstd *d, QWidge
   // revert
   m_revertCheck->setCheckState(d->revert ? Qt::Checked : Qt::Unchecked);
   m_strayLightCheck->setCheckState(d->straylight ? Qt::Checked : Qt::Unchecked);
+
+  // straylight bias
+  tmpStr.setNum(d->lambdaMin);
+  m_lambdaMinEdit->validator()->fixup(tmpStr);
+  m_lambdaMinEdit->setText(tmpStr);
+  tmpStr.setNum(d->lambdaMax);
+  m_lambdaMaxEdit->validator()->fixup(tmpStr);
+  m_lambdaMaxEdit->setText(tmpStr);
 }
 
 CWInstrMfcStdEdit::~CWInstrMfcStdEdit()
@@ -998,6 +1026,8 @@ void CWInstrMfcStdEdit::apply(struct instrumental_mfcstd *d) const
   // revert
   d->revert = (m_revertCheck->checkState() == Qt::Checked) ? 1 : 0;
   d->straylight = (m_strayLightCheck->checkState() == Qt::Checked) ? 1 : 0;
+  d->lambdaMin = m_lambdaMinEdit->text().toDouble();
+  d->lambdaMax = m_lambdaMaxEdit->text().toDouble();
 
   strcpy(d->dateFormat,m_dateFormatEdit->text().toAscii().data());
 
@@ -1742,11 +1772,11 @@ CWInstrOmiEdit::CWInstrOmiEdit(const struct instrumental_omi *d, QWidget *parent
   QHBoxLayout *rangeLayout = new QHBoxLayout;
   m_minLambdaEdit = new QLineEdit(this);
   m_minLambdaEdit->setFixedWidth(cStandardEditWidth);
-  m_minLambdaEdit->setValidator(new CDoubleFixedFmtValidator(100.0, 999.9, 1, m_minLambdaEdit));
+  m_minLambdaEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 999.9, 1, m_minLambdaEdit));
   rangeLayout->addWidget(m_minLambdaEdit);
   m_maxLambdaEdit = new QLineEdit(this);
   m_maxLambdaEdit->setFixedWidth(cStandardEditWidth);
-  m_maxLambdaEdit->setValidator(new CDoubleFixedFmtValidator(100.0, 999.9, 1, m_maxLambdaEdit));
+  m_maxLambdaEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 999.9, 1, m_maxLambdaEdit));
   rangeLayout->addWidget(m_maxLambdaEdit);
   rangeLayout->addStretch(1);
   gridLayout->addLayout(rangeLayout, row, 1, 1, 2, Qt::AlignLeft);

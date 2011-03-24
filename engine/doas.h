@@ -553,6 +553,11 @@ typedef struct _satelliteGeoloc
 
   float earthRadius,satHeight;
   float cloudTopPressure,cloudFraction;                                         // information on clouds
+  int   saaFlag;
+  int   sunglintDangerFlag;
+  int   sunglintHighDangerFlag;
+  int   rainbowFlag;
+  int   scanDirection;
  }
 SATELLITE_GEOLOC;
 
@@ -614,6 +619,11 @@ typedef struct _gome2
   double longitudes[4],latitudes[4];                                            // geolocations at the 4 corners of the pixels
   float  solZen[3],solAzi[3],losZen[3],losAzi[3];                               // resp. solar and line of sight zenith and azimuth angles
   float  earthRadius,satHeight;                                                 // for satellite to TOA angles correction
+  int    saaFlag;
+  int    sunglintDangerFlag;
+  int    sunglintHighDangerFlag;
+  int    rainbowFlag;
+  int    scanDirection;
  }
 GOME2_DATA;
 

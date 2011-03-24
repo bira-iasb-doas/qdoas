@@ -74,17 +74,11 @@ CWProjectTabOutput::CWProjectTabOutput(const mediate_project_output_t *propertie
   m_calibrationCheck = new QCheckBox("Calibration");
   checkLayout->addWidget(m_calibrationCheck, 1, 0);
 
-  m_configurationCheck = new QCheckBox("Configuration");
-  checkLayout->addWidget(m_configurationCheck, 2, 0);
-
-  m_binaryCheck = new QCheckBox("Binary format");
-  checkLayout->addWidget(m_binaryCheck, 0, 1);
-
   m_directoryCheck = new QCheckBox("Directories");
-  checkLayout->addWidget(m_directoryCheck, 1, 1);
+  checkLayout->addWidget(m_directoryCheck, 0, 1);
 
   m_useFileName = new QCheckBox("Use file name");
-  checkLayout->addWidget(m_useFileName, 2, 1);
+  checkLayout->addWidget(m_useFileName, 1, 1);
 
   middleLayout->addWidget(checkGroup);
 
@@ -116,8 +110,6 @@ CWProjectTabOutput::CWProjectTabOutput(const mediate_project_output_t *propertie
 
   m_analysisCheck->setCheckState(properties->analysisFlag ? Qt::Checked : Qt::Unchecked);
   m_calibrationCheck->setCheckState(properties->calibrationFlag ? Qt::Checked : Qt::Unchecked);
-  m_configurationCheck->setCheckState(properties->configurationFlag ? Qt::Checked : Qt::Unchecked);
-  m_binaryCheck->setCheckState(properties->binaryFormatFlag ? Qt::Checked : Qt::Unchecked);
   m_directoryCheck->setCheckState(properties->directoryFlag ? Qt::Checked : Qt::Unchecked);
   m_useFileName->setCheckState(properties->filenameFlag ? Qt::Checked : Qt::Unchecked);
 
@@ -140,8 +132,6 @@ void CWProjectTabOutput::apply(mediate_project_output_t *properties) const
 {
   properties->analysisFlag = (m_analysisCheck->checkState() == Qt::Checked) ? 1 : 0;
   properties->calibrationFlag = (m_calibrationCheck->checkState() == Qt::Checked) ? 1 : 0;
-  properties->configurationFlag = (m_configurationCheck->checkState() == Qt::Checked) ? 1 : 0;
-  properties->binaryFormatFlag = (m_binaryCheck->checkState() == Qt::Checked) ? 1 : 0;
   properties->directoryFlag = (m_directoryCheck->checkState() == Qt::Checked) ? 1 : 0;
   properties->filenameFlag = (m_useFileName->checkState() == Qt::Checked) ? 1 : 0;
 
@@ -188,8 +178,6 @@ void CWProjectTabOutput::setComponentsEnabled(bool analysisEnabled, bool calibra
 {
   bool allEnabled = (analysisEnabled || calibrationEnabled);
 
-  m_configurationCheck->setEnabled(allEnabled);
-  m_binaryCheck->setEnabled(allEnabled);
   m_directoryCheck->setEnabled(allEnabled);
   m_useFileName->setEnabled(allEnabled);
 

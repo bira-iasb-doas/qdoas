@@ -86,7 +86,7 @@ CWProjectPropertyEditor::CWProjectPropertyEditor(const QString &projectName, QWi
   m_satelliteFormatCombo->addItem("GDP (Binary)", QVariant(PRJCT_INSTR_FORMAT_GDP_BIN));
   m_satelliteFormatCombo->addItem("GOME2", QVariant(PRJCT_INSTR_FORMAT_GOME2));
 //  m_satelliteFormatCombo->addItem("OMI", QVariant(PRJCT_INSTR_FORMAT_OMI));
-  m_satelliteFormatCombo->addItem("SCIAMACHY L1C (HDF format)", QVariant(PRJCT_INSTR_FORMAT_SCIA_HDF));
+//  m_satelliteFormatCombo->addItem("SCIAMACHY L1C (HDF format)", QVariant(PRJCT_INSTR_FORMAT_SCIA_HDF));
   m_satelliteFormatCombo->addItem("SCIAMACHY L1C (PDS format)", QVariant(PRJCT_INSTR_FORMAT_SCIA_PDS));
   m_satelliteFormatCombo->hide();
 
@@ -199,6 +199,8 @@ CWProjectPropertyEditor::CWProjectPropertyEditor(const QString &projectName, QWi
   connect(this, SIGNAL(signalInstrumentChanged(int)), m_outputTab, SLOT(slotInstrumentChanged(int)));
   connect(this, SIGNAL(signalInstrumentTypeChanged(int)), m_instrumentalTab, SLOT(slotInstrumentTypeChanged(int)));
 
+  connect(m_tabs,SIGNAL(currentChanged(int)),this,SLOT(slotPageChanged(int)));
+
   connect(m_outputTab, SIGNAL(signalOutputCalibration(bool)), m_calibrationTab, SLOT(slotOutputCalibration(bool)));
 
   notifyAcceptActionOk(true);
@@ -252,7 +254,17 @@ bool CWProjectPropertyEditor::actionOk(void)
 
 void CWProjectPropertyEditor::actionHelp(void)
 {
-  CHelpSystem::showHelpTopic("project", "Projects");
+	char *projectPages[]={"Project_Display",
+	                      "Project_Selection",
+	                      "Project_Analysis",
+	                      "Project_Filtering",
+	                      "Project_Calibration",
+	                      "Project_Undersampling",
+	                      "Project_Instrumental",
+	                      "Project_Slit",
+	                      "Project_Output"};
+
+ CHelpSystem::showHelpTopic("Project",((m_selectedPage>=0) && (m_selectedPage<9))?projectPages[m_selectedPage]:"index");
 }
 
 void CWProjectPropertyEditor::slotInstrumentTypeChanged(int index)
@@ -291,4 +303,9 @@ void CWProjectPropertyEditor::slotSatelliteInstrumentChanged(int index)
   m_selectedInstrument = m_satelliteFormatCombo->itemData(index).toInt();
 
   emit signalInstrumentChanged(m_selectedInstrument);
+}
+
+void CWProjectPropertyEditor::slotPageChanged(int index)
+{
+ m_selectedPage=index;
 }
