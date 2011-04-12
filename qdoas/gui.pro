@@ -18,7 +18,7 @@ win32 {
   CONFIG += qt thread release
   CONFIG += assistant
   CONFIG += qwtdll # qwtstatic or qwtdll
-  QT = core gui xml
+  QT = core gui xml webkit
 }
 
 # Help system to use...

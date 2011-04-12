@@ -23,8 +23,8 @@
     <p class="menu-left"><span class="menu-left-sub"><img src="../spacer_orange.jpg" width="2" height="2" alt="orange layout spacer"></span><a href="../Project/Project.html" style="text-decoration: none; color: #336699">&nbsp;Project properties</a></p>
     <p class="menu-left"><span class="menu-left-sub"><img src="../spacer_orange.jpg" width="2" height="2" alt="orange layout spacer"></span><a href="Analysis.html" style="text-decoration: none; color: #336699">&nbsp;Analysis&nbsp;windows&nbsp;properties</a></p>
     <p class="menu-left" align="right"><a href="Analysis_Molecules.html" style="text-decoration: none; color: #336699">Molecules</a></p>
-    <p class="menu-left" align="right"><a href="Analysis_Linear.html" style="text-decoration: none; color: #336699">Linear Parameters</a></p>
-    <p class="menu-left" align="right"><a href="Analysis_NonLinear.html" style="text-decoration: none; color: #336699">Non-Linear Parameters</a></p>
+    <p class="menu-left" align="right"><a href="Analysis_Polynomial.html" style="text-decoration: none; color: #336699">Polynomial</a></p>
+    <p class="menu-left" align="right"><a href="Analysis_Predefined.html" style="text-decoration: none; color: #336699">Predefined Parameters</a></p>
     <p class="menu-left" align="right"><a href="Analysis_Shift.html" style="text-decoration: none; color: #336699">Shift and Stretch</a></p>
     <p class="menu-left" align="right"><a href="Analysis_Gaps.html" style="text-decoration: none; color: #336699">Gaps</a></p>
     <p class="menu-left" align="right"><a href="Analysis_Output.html" style="text-decoration: none; color: #336699">Output</a></p>
@@ -38,10 +38,10 @@
       <li>For internal needs to the program, <strong>cross section files names must imperatively start  with the symbol name as prefix followed by the underscore character !</strong>&nbsp; </li>
       <li>There is no  constraint on the cross section file extension; the default one used by QDOAS  for creating cross sections files filters starts with <strong>&ldquo;xs&rdquo;.</strong></li>
       </ul>
-    
+
     <p align="justify">Right-click and select <strong>Insert</strong>, <strong>Delete</strong> or <strong>XS Filename</strong> options in the contextual menu respectively to  insert a new molecule in the list, to delete an existing one or to modify  the file associated to a cross section. The <strong>Remove</strong> option is disabled for a symbol if another  cross section is orthogonalised to the selected one or if the selected symbol  is used in the <strong>Shift and Stretch</strong> pages.</p>
     <p align="justify" class="orangelarge">Differential cross sections<a name="Differential"></a></p>
-    <p align="justify" >Differential cross    sections can be generated  by orthogonalisation according to the definition of an orthogonal base formed with the    component vectors (generally, a base of order 2) of the polynomial defined in    the <a href="Analysis_Linear.html"><strong>Linear parameters</strong></a> page. 
+    <p align="justify" >Differential cross    sections can be generated  by orthogonalisation according to the definition of an orthogonal base formed with the    component vectors (generally, a base of order 2) of the polynomial defined in    the <a href="Analysis_Polynomial.html"><strong>Polynomial</strong></a> page.
 Three options are available :</p>
     <table width="80%" border="0" align="center" cellpadding="5" cellspacing="10" >
       <tr valign="top">
@@ -52,7 +52,7 @@ Three options are available :</p>
         <td width="150" id="table"><strong>Differential XS</strong></td>
         <td id="table"><div align="justify">a differential cross section is generated either :
           <ul>
-            <li>by orthogonalisation if an    orthogonal base is defined in the <a href="Analysis_Linear.html"><strong>Linear parameters</strong></a> page (Gram-Schmitt  algorithm); </li>
+            <li>by orthogonalisation if an    orthogonal base is defined in the <a href="Analysis_Polynomial.html"><strong>Polynomial</strong></a> page (Gram-Schmitt  algorithm); </li>
             <li>using high-pass filtering    options defined in the <strong><a href="../Project/Project_Filtering.html">Filter</a></strong> tab page of <strong>Projects properties</strong> otherwise.</li>
           </ul>
         </div></td>
@@ -63,7 +63,7 @@ Three options are available :</p>
       </tr>
     </table>
 <p align="justify" class="orangelarge">Interpolation/convolution<a name="Interpolation"></a></p>
-    <p align="justify" >Cross sections should be defined on the grid of the control spectrum before the analysis. This  column describes the action to perform on the selected cross section :</p>    
+    <p align="justify" >Cross sections should be defined on the grid of the control spectrum before the analysis. This  column describes the action to perform on the selected cross section :</p>
     <table width="80%" border="0" align="center" cellpadding="5" cellspacing="10" >
       <tr valign="top">
         <td width="150" id="table"><strong>None</strong></td>
@@ -84,7 +84,7 @@ Three options are available :</p>
       <tr valign="top">
         <td width="150" id="table"><strong>Convolute Ring</strong></td>
         <td id="table"><div align="justify">in the same way, the program can generate a ring cross section; the expected input file must be a ring cross section pre-calculated by the <strong>QDOAS Ring tool</strong> on a high-resoluted grid; </div></td>
-      </tr>            
+      </tr>
     </table>
     <p align="justify">As heavy calculations induced by convolution are not really a problem anymore for the computers now, convoluting cross sections in real time is a comfortable option that avoid the pre-convolution of all cross sections with respect to the selected reference spectrum and the calibration options.</p>
     <p align="justify" class="orangelarge">Air mass factors (AMF)<a name="AMF"></a></p>
@@ -117,7 +117,7 @@ Three options are available :</p>
     <p align="justify" >This column is    active only if the <strong>Fits</strong> button is    checked in the <strong>Display</strong> frame of    the current dialog box.&nbsp; It allows    selecting which cross sections fits will be displayed. Note that the display of the fits of all spectral analysis windows could be disabled from the <a href="../Project/Project_Display.html"><strong>Display page</strong></a> of <strong>Project properties</strong>. </p>
     <p align="justify" class="orangelarge">Filtering<a name="Filter"></a></p>
     <p align="justify" >This  column is active only if a low-pass filter has been selected in the <strong><a href="../Project/Project_Filtering.html">Filtering</a></strong> tab page of <strong>Project properties</strong>.&nbsp;  It allows defining individually which cross sections are to be filtered.</p>
-  <p align="justify">&nbsp;</p>    
+  <p align="justify">&nbsp;</p>
   </tr>
 </table>
 <div id="footcontainer" >
@@ -133,11 +133,11 @@ Three options are available :</p>
 	</div>
     <p>&nbsp;</p>
 <map name="Map">
-<area shape="rect" coords="80,174,188,196" href="Analysis_Linear.html">
-<area shape="rect" coords="188,174,322,196" href="Analysis_NonLinear.html">
-<area shape="rect" coords="322,174,426,196" href="Analysis_Shift.html">
-<area shape="rect" coords="426,174,473,196" href="Analysis_Gaps.html">
-<area shape="rect" coords="473,174,528,196" href="Analysis_Output.html">
+<area shape="rect" coords="80,173,152,195" href="Analysis_Polynomial.html">
+<area shape="rect" coords="152,174,286,196" href="Analysis_Predefined.html">
+<area shape="rect" coords="286,174,390,196" href="Analysis_Shift.html">
+<area shape="rect" coords="390,174,437,196" href="Analysis_Gaps.html">
+<area shape="rect" coords="437,174,492,196" href="Analysis_Output.html">
 <area shape="rect" coords="146,194,267,386" href="#Differential">
 <area shape="rect" coords="267,194,387,386" href="#Interpolation">
 <area shape="rect" coords="387,194,506,386" href="#AMF">

@@ -14,8 +14,8 @@
     <p class="menu-left"><span class="menu-left-sub"><img src="../spacer_orange.jpg" width="2" height="2" alt="orange layout spacer"></span><a href="../Project/Project.html" style="text-decoration: none; color: #336699">&nbsp;Project properties</a></p>
     <p class="menu-left"><span class="menu-left-sub"><img src="../spacer_orange.jpg" width="2" height="2" alt="orange layout spacer"></span><a href="Analysis.html" style="text-decoration: none; color: #336699">&nbsp;Analysis&nbsp;windows&nbsp;properties</a></p>
     <p class="menu-left" align="right"><a href="Analysis_Molecules.html" style="text-decoration: none; color: #336699">Molecules</a></p>
-    <p class="menu-left" align="right"><a href="Analysis_Linear.html" style="text-decoration: none; color: #336699">Linear Parameters</a></p>
-    <p class="menu-left" align="right"><a href="Analysis_NonLinear.html" style="text-decoration: none; color: #336699">Non-Linear Parameters</a></p>
+    <p class="menu-left" align="right"><a href="Analysis_Polynomial.html" style="text-decoration: none; color: #336699">Polynomial</a></p>
+    <p class="menu-left" align="right"><a href="Analysis_Predefined.html" style="text-decoration: none; color: #336699">Predefined Parameters</a></p>
     <p class="menu-left" align="right"><a href="Analysis_Shift.html" style="text-decoration: none; color: #336699">Shift and Stretch</a></p>
     <p class="menu-left" align="right"><a href="Analysis_Gaps.html" style="text-decoration: none; color: #336699">Gaps</a></p>
     <p class="menu-left" align="right"><a href="Analysis_Output.html" style="text-decoration: none; color: #336699">Output</a></p>
@@ -53,10 +53,10 @@
       <li>the residual of the fit (the difference between the observed and the calculated);</li>
       <li>the continuum part of the spectrum fitted by a  polynomial;</li>
       <li>the fit obtained for each  species </li>
-      <li>for non linear parameters (offset, undersampling);</li>
+      <li>the predefined parameters (offset, undersampling);</li>
       <li>in the case, two reference spectra have been selected, the result of the fit obtained after the alignment of  <strong>Reference 2</strong> on <strong>Reference 1</strong></li>
     </ul>
-    <p align="justify">The appropriate  buttons are checked according to the graphs to plot.&nbsp; An individual selection of the cross sections and  the non linear parameters can still be performed in the dedicated tab pages.</p>
+    <p align="justify">The appropriate  buttons are checked according to the graphs to plot.&nbsp; An individual selection of the cross sections and  the predefined parameters can still be performed in the dedicated tab pages.</p>
     <p align="justify" class="orangelarge">Residuals<a name="Residuals"></a></p>
     <p align="justify">It is sometimes interesting to save some residuals to realize further studies or to create a synthetic cross section that could be introduced in the fit in case systematic structures are identified. If a <strong>&laquo; Residual  &raquo;</strong> file name is given, the calculated residuals will be saved in an ASCII file. There is one line per processed record and the three first numbers starting a line are respectively the record number, the solar zenith angle and the decimal time. The first line of the file should be the wavelength calibration. As the fits are always appended, the size of the file could increase significantly and it is recommended to disable this option by emptying the <strong>&laquo; Residual  &raquo;</strong> file name field when it is not necessary anymore.</p>
     <p align="justify" class="orangelarge">Fitting parameters<a name="FittingParameters"></a></p>
@@ -67,11 +67,11 @@
         <td id="table"><div align="justify">definition and configuration of the list of cross sections to fit;</div></td>
       </tr>
       <tr valign="top">
-        <td width="150" id="table"><strong><a href="Analysis_Linear.html">Linear Parameters</a></strong></td>
+        <td width="150" id="table"><strong><a href="Analysis_Polynomial.html">Polynomial</a></strong></td>
         <td id="table"><div align="justify">specification of the degree of the polynomial fitting the continuous  component of the absorbance;</div></td>
       </tr>
       <tr valign="top">
-        <td width="150" id="table"><strong><a href="Analysis_NonLinear.html">Non Linear Parameters</a></strong></td>
+        <td width="150" id="table"><strong><a href="Analysis_Predefined.html">Predefined Parameters</a></strong></td>
         <td id="table"><div align="justify">this page proposes several predefined parameters such as offset,  undersampling &hellip;</div></td>
       </tr>
       <tr valign="top">
@@ -104,12 +104,13 @@
 	</div>
     <p>&nbsp;</p>
 
-<map name="Map"><area shape="rect" coords="10,174,80,196" href="Analysis_Molecules.html">
-<area shape="rect" coords="80,174,188,196" href="Analysis_Linear.html">
-<area shape="rect" coords="188,174,322,196" href="Analysis_NonLinear.html">
-<area shape="rect" coords="322,174,426,196" href="Analysis_Shift.html">
-<area shape="rect" coords="426,174,473,196" href="Analysis_Gaps.html">
-<area shape="rect" coords="473,174,528,196" href="Analysis_Output.html">
+<map name="Map">
+  <area shape="rect" coords="10,174,80,196" href="Analysis_Molecules.html">
+<area shape="rect" coords="80,173,152,195" href="Analysis_Polynomial.html">
+<area shape="rect" coords="152,174,286,196" href="Analysis_Predefined.html">
+<area shape="rect" coords="286,174,390,196" href="Analysis_Shift.html">
+<area shape="rect" coords="390,174,437,196" href="Analysis_Gaps.html">
+<area shape="rect" coords="437,174,492,196" href="Analysis_Output.html">
 <area shape="rect" coords="247,12,361,73" href="#FittingInterval">
 <area shape="rect" coords="364,11,818,73" href="#Display">
 <area shape="rect" coords="146,10,242,72" href="#ReferenceSpectra">

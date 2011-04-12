@@ -122,7 +122,7 @@ CWAnalysisWindowPropertyEditor::CWAnalysisWindowPropertyEditor(const QString &pr
   displayLayout->addWidget(m_fitsCheck, 0, 2);
   m_residualCheck = new QCheckBox("Residual", displayGroup);
   displayLayout->addWidget(m_residualCheck, 1, 0);
-  m_predefCheck = new QCheckBox("Non linear parameters", displayGroup);
+  m_predefCheck = new QCheckBox("Predefined parameters", displayGroup);
   displayLayout->addWidget(m_predefCheck, 1, 1);
   m_ratioCheck = new QCheckBox("Alignement of Ref1 on Ref2", displayGroup);
   displayLayout->addWidget(m_ratioCheck, 1, 2);
@@ -361,9 +361,9 @@ CWAnalysisWindowPropertyEditor::CWAnalysisWindowPropertyEditor(const QString &pr
   m_moleculesTab = new CWMoleculesDoasTable("Molecules", 120);
   m_tabs->addTab(m_moleculesTab, "Molecules");
   m_linearTab = new CWLinearParametersDoasTable("Linear Parameters", 120);
-  m_tabs->addTab(m_linearTab, "Linear Parameters");
+  m_tabs->addTab(m_linearTab, "Polynomial");
   m_nonLinearTab = new CWNonLinearParametersDoasTable("NL Parameters", 120);
-  m_tabs->addTab(m_nonLinearTab, "Non-Linear Parameters");
+  m_tabs->addTab(m_nonLinearTab, "Predefined Parameters");
   m_shiftAndStretchTab = new CWShiftAndStretchDoasTable("Cross sections and spectrum", 180);
   m_tabs->addTab(m_shiftAndStretchTab, "Shift and Stretch");
   m_gapTab = new CWGapDoasTable("Gaps", 240);
@@ -563,7 +563,7 @@ void CWAnalysisWindowPropertyEditor::actionHelp(void)
 {
 	char *analysisPages[]={"Analysis_Molecules",
 	                       "Analysis_Linear",
-	                       "Analysis_NonLinear",
+	                       "Analysis_Predefined",
 	                       "Analysis_Shift",
 	                       "Analysis_Gaps",
 	                       "Analysis_Output"};

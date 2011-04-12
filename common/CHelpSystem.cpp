@@ -24,6 +24,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QCoreApplication>
 #include <QTime>
 #include <QApplication>
+// #include <QWebView>
 
 #include "CHelpSystem.h"
 #include "CHelpSystemImpl.h"
@@ -110,6 +111,10 @@ void CHelpSystem::openBrowser(const QString &chapter, const QString &key)
     else {
       url = HELP_HOME_PAGE;
     }
+
+//     QWebView *view = new QWebView(this);
+//     view->load(QUrl(url));
+//     view->show();
 
     m_impl->display(url);
   }

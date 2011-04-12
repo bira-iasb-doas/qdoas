@@ -1318,7 +1318,7 @@ RC mediateRequestSetAnalysisNonLinearCalib(ENGINE_CONTEXT *pEngineContext,struct
 // PURPOSE       Load non linear parameters
 // -----------------------------------------------------------------------------
 
-#define NNONLINEAR_DOAS 8
+#define NNONLINEAR_DOAS 7
 
 RC mediateRequestSetAnalysisNonLinearDoas(ENGINE_CONTEXT *pEngineContext,struct anlyswin_nonlinear *pNonLinear,double *lambda)
  {
@@ -1416,14 +1416,14 @@ RC mediateRequestSetAnalysisNonLinearDoas(ENGINE_CONTEXT *pEngineContext,struct 
 
   // Raman
 
-  strcpy(nonLinear[7].symbolName,"Raman");
-  strcpy(nonLinear[7].crossFileName,pNonLinear->ramanFile);
-
-  nonLinear[7].fitFlag=pNonLinear->ramanFlagFit;
-  nonLinear[7].initialValue=pNonLinear->ramanInitial;
-  nonLinear[7].deltaValue=pNonLinear->ramanDelta;
-  nonLinear[7].storeFit=pNonLinear->ramanFlagFitStore;
-  nonLinear[7].storeError=pNonLinear->ramanFlagErrStore;
+  // Raman : disabled April 2011 strcpy(nonLinear[7].symbolName,"Raman");
+  // Raman : disabled April 2011 strcpy(nonLinear[7].crossFileName,pNonLinear->ramanFile);
+  // Raman : disabled April 2011
+  // Raman : disabled April 2011 nonLinear[7].fitFlag=pNonLinear->ramanFlagFit;
+  // Raman : disabled April 2011 nonLinear[7].initialValue=pNonLinear->ramanInitial;
+  // Raman : disabled April 2011 nonLinear[7].deltaValue=pNonLinear->ramanDelta;
+  // Raman : disabled April 2011 nonLinear[7].storeFit=pNonLinear->ramanFlagFitStore;
+  // Raman : disabled April 2011 nonLinear[7].storeError=pNonLinear->ramanFlagErrStore;
 
   rc=ANALYSE_LoadNonLinear(pEngineContext,nonLinear,NNONLINEAR_DOAS,lambda);
 
