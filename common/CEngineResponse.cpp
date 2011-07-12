@@ -157,6 +157,7 @@ void CEngineResponseBeginAccessFile::process(CEngineController *engineController
 
  else                                                   // Added by Caroline on 7 December  2008 (otherwise, the program was waiting indefinitely when
   engineController->notifyEndOfRecords();               // the file was empty
+
 }
 
 void CEngineResponseBeginAccessFile::setNumberOfRecords(int numberOfRecords)
@@ -198,6 +199,7 @@ void CEngineResponseSpecificRecord::process(CEngineController *engineController)
     addErrorMessage("CEngineResponseSpecificRecord", "Unknown Error - Treated as fatal", FatalEngineError);
     processErrors(engineController);
   }   */
+
 }
 
 void CEngineResponseSpecificRecord::setRecordNumber(int recordNumber)

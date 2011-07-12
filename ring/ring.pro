@@ -31,7 +31,7 @@ unix {
 }
 
 win32 {
-  INCLUDEPATH  += ..\mediator ..\common ..\engine
+  INCLUDEPATH  += ../mediator ../common ../engine
 
   contains( QWT_LINKAGE, qwtstatic ) {
     LIBS        += -L$$QWT_LIB_PATH -l$$QWT_LIB

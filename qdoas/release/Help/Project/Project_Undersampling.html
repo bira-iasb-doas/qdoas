@@ -3,7 +3,7 @@
 <title>QDOAS Project properties : Undersampling page</title>
 <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 <meta NAME="description" CONTENT="QDOAS help">
-<meta NAME="keywords" CONTENT="QDOAS, project, undersampling, cross sections, solar reference spectrum">
+<meta NAME="keywords" CONTENT="QDOAS, project, undersampling, cross-sections, solar reference spectrum">
 <link rel="stylesheet" href="../uvvis.css" type="text/css">
 </head>
 
@@ -12,6 +12,7 @@
 
   <tr>
     <td width="200" valign="top" bgcolor="#F3F3F3">
+<p class="menu-left"><span class="menu-left-sub"><img src="../spacer_orange.jpg" width="2" height="2" alt="orange layout spacer"></span><a href="../GUI/GUI.html" style="text-decoration: none; color: #336699">&nbsp;The&nbsp;user&nbsp;interface</a></p>     
     <p class="menu-left"><span class="menu-left-sub"><img src="../spacer_orange.jpg" width="2" height="2" alt="orange layout spacer"></span><a href="Project.html" style="text-decoration: none; color: #336699">&nbsp;Project properties</a></p>
     <p class="menu-left" align="right"><a href="Project_Display.html" style="text-decoration: none; color: #336699">Display</a></p>
     <p class="menu-left" align="right"><a href="Project_Selection.html" style="text-decoration: none; color: #336699">Selection</a></p>
@@ -23,6 +24,7 @@
     <p class="menu-left" align="right"><a href="Project_Slit.html" style="text-decoration: none; color: #336699">Slit</a></p>
     <p class="menu-left" align="right"><a href="Project_Output.html" style="text-decoration: none; color: #336699">Output</a></p>
     <p class="menu-left"><span class="menu-left-sub"><img src="../spacer_orange.jpg" width="2" height="2" alt="orange layout spacer"></span><a href="../Analysis/Analysis.html" style="text-decoration: none; color: #336699">&nbsp;Analysis&nbsp;windows&nbsp;properties</a></p>
+    <p class="menu-left"><span class="menu-left-sub"><img src="../spacer_orange.jpg" width="2" height="2" alt="orange layout spacer"></span><a href="../Tools/Tools.html" style="text-decoration: none; color: #336699">&nbsp;QDOAS&nbsp;Tools</a></p>
     </td>
     <td width="2">&nbsp;</td>
     <td id="maincontent">
@@ -46,27 +48,19 @@
       from the poor sampling ratio of the GOME instrument (2 to 3 pixels/FWHM of
       the resolution of the spectrometer) which results in a lost of spectral information
       when interpolating earthshine spectra during the DOAS fitting process.
-      The problem can be corrected using ad-hoc cross sections
+      The problem can be corrected using ad-hoc cross-sections
       obtained by simulating the effect from a high-resolution solar reference.
-      Undersampling cross sections can be pre-calculated using the QDOAS
-      undersampling tool or they can be calculated in real time, just
+      Undersampling cross-sections can be pre-calculated using the <a href="../Tools/Tools_Usamp.html"><strong>QDOAS
+      Undersampling tool</strong></a> or they can be calculated in real time, just
       after the wavelength calibration procedure using the corrected grid and the
       determined slit function. Further details can be found in the <strong>QDOAS software user manua</strong>l.</p>
-    <p align="justify" ><strong>To apply no undersampling correction  :</strong></p>
-    <ul>
-    <li>
-      <div align="justify" >in this page : select <strong>From file</strong> method, keep the <strong>Solar Ref. file</strong> field empty and initialize the <strong>Shift</strong> to 0.000. </div>
-    </li>
-    <li>
-      <div align="justify" >for each <a href="../Analysis/Analysis.html"> <strong>Analysis Windows</strong></a> defined under the current project,  uncheck the <strong>Fit  button</strong> for undersampling symbols <strong>&laquo;Usamp 1&raquo;</strong> and <strong>&laquo;Usamp 2&raquo;</strong> defined in the <strong><a href="../Analysis/Analysis_Predefined.html">Predefined parameters</a></strong> page and remove<strong></strong> any undersampling cross sections present in the <strong><a href="../Analysis/Analysis_Molecules.html">Molecules</a></strong> page of the <a href="../Analysis/Analysis.html"><strong>Analysis windows properties</strong></a></div>
-    </li>
-    </ul>
+    <p align="justify" >By default no undersampling correction is applied.</p>
     <p align="justify" class="orangelarge">Method<a name="Method"></a></p>
     <table width="80%" border="0" align="center" cellpadding="5" cellspacing="10" >
       <tr valign="top">
         <td width="200" id="table"><strong>From file</strong></td>
-        <td id="table"><div align="justify">Undersampling cross sections are provided in files like
-usual cross sections. These files might be created using
+        <td id="table"><div align="justify">Undersampling cross-sections are provided in files like
+usual cross-sections. These files might be created using
 the <strong>QDOAS Undersampling tool</strong>.
 The files have  to be provided in the <strong><a href="Project_Analysis.html">Analysis windows  properties</a> </strong>(<strong>Molecules </strong>or<strong> Predefined paremeters </strong>page according to the selected analysis method).</div></td>
       </tr>
@@ -79,7 +73,7 @@ The files have  to be provided in the <strong><a href="Project_Analysis.html">An
       </tr>
       <tr valign="top">
         <td width="200" id="table"><strong>Automatic phase</strong></td>
-        <td id="table"><div align="justify">The undersampling cross sections are calculated at each
+        <td id="table"><div align="justify">The undersampling cross-sections are calculated at each
 iteration of the analysis procedure, using the fitted
 value for the shift between the reference and the measured
 spectra. This method is rather time consuming and
@@ -87,7 +81,7 @@ only applicable for testing purposes.</div></td>
       </tr>
     </table>
     <p align="justify" class="orangelarge">Solar reference file<a name="Solar"></a></p>
-    <p align="justify">In <strong>Fixed phase</strong> and <strong>Automatic phase</strong> methods, undersampling cross sections are
+    <p align="justify">In <strong>Fixed phase</strong> and <strong>Automatic phase</strong> methods, undersampling cross-sections are
       calculated using a high resolution solar spectrum convoluted on an oversampled
       and an undersampled grids with the instrument slit function (according to <a href="Project_Calibration.html"><strong>calibration options</strong></a>, the slit function characterized by the calibration procedure or a slit function provided by the user in the <a href="Project_Slit.html"><strong>slit page</strong></a> of <a href="Project_Slit.html"><strong>project properties</strong></a>).</p>
     <p align="justify" class="orangelarge">Shift<a name="Shift"></a></p>

@@ -32,12 +32,12 @@ class CHelpSystem
 {
  public:
   static CHelpSystem* establishHelpSystem(QWidget *parent);
-
   static void showHelpTopic(const QString &chapter, const QString &key = QString());
 
   ~CHelpSystem();
 
  public:
+
   void openBrowser(void);
   void openBrowser(const QString &chapter, const QString &key = QString());
 
@@ -46,6 +46,7 @@ class CHelpSystem
   void preferLightBrowser(bool light);
   bool isLightBrowserPreferred(void) const;
   bool supportsQtAssistant() const;
+  bool changeDir(const QString &chapter, const QString &key);
 
  private:
   void createImplementation(CHelpImpl **impl);

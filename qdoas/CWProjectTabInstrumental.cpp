@@ -544,6 +544,7 @@ CWInstrAsciiEdit::CWInstrAsciiEdit(const struct instrumental_ascii *d, QWidget *
   QString tmpStr;
 
   // detector size
+
   tmpStr.setNum(d->detectorSize);
   m_detSizeEdit->validator()->fixup(tmpStr);
   m_detSizeEdit->setText(tmpStr);

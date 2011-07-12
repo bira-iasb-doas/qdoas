@@ -2086,7 +2086,7 @@ RC SCIA_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
   pOrbitFile=&sciaOrbitFiles[sciaCurrentFileIndex];
   saveFlag=(INT)pEngineContext->project.spectra.displayDataFlag;
 
-  if (!(rc=pOrbitFile->rc) && (THRD_id==THREAD_TYPE_ANALYSIS) && (sciaLoadReferenceFlag || !pEngineContext->analysisRef.refAuto))
+  if (!(rc=pOrbitFile->rc) && /* (THRD_id==THREAD_TYPE_ANALYSIS) && */ (sciaLoadReferenceFlag || !pEngineContext->analysisRef.refAuto))
    {
     lambdaMin=(double)9999.;
     lambdaMax=(double)-9999.;
@@ -2097,7 +2097,7 @@ RC SCIA_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
     // Browse analysis windows and load missing data
 
     for (indexFeno=0;(indexFeno<NFeno) && !rc;indexFeno++)
-     if (!TabFeno[indexFeno].hidden)
+     if (!TabFeno[indexFeno].hidden || (THRD_id==THREAD_TYPE_KURUCZ))
       {
        pTabFeno=&TabFeno[indexFeno];
        pTabFeno->NDET=NDET;

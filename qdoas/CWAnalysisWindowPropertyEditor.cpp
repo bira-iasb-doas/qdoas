@@ -562,13 +562,13 @@ bool CWAnalysisWindowPropertyEditor::actionOk(void)
 void CWAnalysisWindowPropertyEditor::actionHelp(void)
 {
 	char *analysisPages[]={"Analysis_Molecules",
-	                       "Analysis_Linear",
+	                       "Analysis_Polynomial",
 	                       "Analysis_Predefined",
 	                       "Analysis_Shift",
 	                       "Analysis_Gaps",
 	                       "Analysis_Output"};
 
- CHelpSystem::showHelpTopic("Analysis",((m_selectedPage>=0) && (m_selectedPage<6))?analysisPages[m_selectedPage]:"Analysis_Molecules");
+ CHelpSystem::showHelpTopic("Analysis",((m_selectedPage>=0) && (m_selectedPage<6))?analysisPages[m_selectedPage]:"Analysis");
 }
 
 void CWAnalysisWindowPropertyEditor::updateModifyProject(const QString &projectName)

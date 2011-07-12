@@ -30,19 +30,19 @@ contains( CONFIG, assistant ) {
 #----------------------------------------------
 
 unix {
-  INCLUDEPATH  += /usr/local/qwt/include ../engine
-  LIBS         += -L/usr/local/qwt/lib -lqwt -lm
-  QMAKE_LFLAGS += -Wl,-rpath=/usr/local/qwt/lib
+  INCLUDEPATH  += /usr/local/Qwt-6.0.0/include ../engine
+  LIBS         += -L/usr/local/Qwt-6.0.0/lib -lqwt -lm
+  QMAKE_LFLAGS += -Wl,-rpath=/usr/local/Qwt-6.0.0/lib
 }
 
 win32 {
-  INCLUDEPATH += C:\Qwt\include
-  INCLUDEPATH += ..\engine
+  INCLUDEPATH += C:/Qwt.6.0.0/include
+  INCLUDEPATH += ../engine
   contains( CONFIG, qwtstatic ) {
-    LIBS        += -L"C:\Qwt\lib" -lqwt
+    LIBS        += -L"C:/Qwt-6.0.0/lib" -lqwt
   }
   contains( CONFIG, qwtdll ) {
-    LIBS        += -L"C:\Qwt\lib" -lqwt5
+    LIBS        += -L"C:/Qwt-6.0.0/lib" -lqwt5
     DEFINES     += QWT_DLL
   }
   CONFIG      += windows

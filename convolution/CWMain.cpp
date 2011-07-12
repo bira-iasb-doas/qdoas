@@ -138,22 +138,22 @@ CWMain::CWMain(QWidget *parent) :
   QMenu *helpMenu = new QMenu("Help");
 
   // About
-  helpMenu->addAction("Qdoas Manual", this, SLOT(slotQdoasHelp()));
+  helpMenu->addAction("Qdoas Help", this, SLOT(slotQdoasHelp()));
   // dual help systems ...
   QSettings &settings = CPreferences::instance()->settings();
-  m_helpInterface->preferLightBrowser(settings.value("LightHelpSys", false).toBool());
+  // NOT NEEDED ANYMORE m_helpInterface->preferLightBrowser(settings.value("LightHelpSys", false).toBool());
 
-  QAction *helpCheck = new QAction("Use lightweight help", this);
-  helpCheck->setCheckable(true);
-  helpCheck->setChecked(m_helpInterface->isLightBrowserPreferred());
-  helpCheck->setEnabled(m_helpInterface->supportsQtAssistant());
-  helpMenu->addAction(helpCheck);
+  // NOT NEEDED ANYMORE QAction *helpCheck = new QAction("Use lightweight help", this);
+  // NOT NEEDED ANYMORE helpCheck->setCheckable(true);
+  // NOT NEEDED ANYMORE helpCheck->setChecked(m_helpInterface->isLightBrowserPreferred());
+  // NOT NEEDED ANYMORE helpCheck->setEnabled(m_helpInterface->supportsQtAssistant());
+  // NOT NEEDED ANYMORE helpMenu->addAction(helpCheck);
 
   helpMenu->addAction("About Qdoas", this, SLOT(slotAboutQdoas()));
   helpMenu->addSeparator();
   helpMenu->addAction("About Qt", this, SLOT(slotAboutQt()));
 
-  connect(helpCheck, SIGNAL(triggered(bool)), this, SLOT(slotHelpBrowserPreference(bool)));
+  // NOT NEEDED ANYMORE connect(helpCheck, SIGNAL(triggered(bool)), this, SLOT(slotHelpBrowserPreference(bool)));
 
   m_menuBar->addMenu(helpMenu);
 
@@ -468,7 +468,8 @@ void CWMain::slotExportPlots()
 
 void CWMain::slotQdoasHelp()
 {
-  m_helpInterface->openBrowser();
+	CHelpSystem::showHelpTopic(QString("Tools"),QString("Tools_Convolution"));
+ // NOT NEEDED ANYMORE m_helpInterface->openBrowser();
 }
 
 void CWMain::slotHelpBrowserPreference(bool light)

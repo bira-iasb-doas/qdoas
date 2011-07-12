@@ -37,13 +37,13 @@
 //
 //  ----------------------------------------------------------------------------
 
+#ifndef _MEDIATE_COMMON_
+#define _MEDIATE_COMMON_
+
 #include "mediate_limits.h"
 #include "mediate_general.h"
 #include "../engine/comdefs.h"
 #include "../engine/constants.h"
-
-#ifndef _MEDIATE_COMMON_
-#define _MEDIATE_COMMON_
 
 #if defined(_cplusplus) || defined(__cplusplus)
 extern "C" {

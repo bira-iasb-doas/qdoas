@@ -1458,8 +1458,6 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
 	 INT indexFeno,i;                                                              // browse analysis windows
 	 RC rc;                                                                        // return code
 
-	 // Debug
-
 	 // Initializations
 
   lambdaMin=1000;
@@ -2017,6 +2015,7 @@ int mediateRequestNextMatchingAnalyseSpectrum(void *engineContext,
 //  }
               // NB if the function returns -1, the problem is that it is not possible to process
               // next records.
+
   return rec; // (rc == ERROR_ID_NO) ? rec : -1;
  }
 

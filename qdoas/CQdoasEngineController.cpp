@@ -100,7 +100,7 @@ void CQdoasEngineController::notifyEndOfRecords(void)
   // This means no more matching records were found in the current file. The
   // current record will not have changed, but we signal it again (so play
   // can send another request).
-  
+
   m_atEndOfCurrentFile = true;
 
   emit signalCurrentRecordChanged(m_currentRecord, 1);
@@ -399,6 +399,7 @@ void CQdoasEngineController::slotGotoRecord(int recordNumber)
       break;
     }
   }
+
 }
 
 void CQdoasEngineController::slotStep()
@@ -420,7 +421,7 @@ void CQdoasEngineController::slotStep()
   if (m_atEndOfCurrentFile) {
 
       bool endOfSession = true;
-      
+
       if (!m_currentIt.atEnd()) {
 
           CSessionIterator tmpIt = m_currentIt;
@@ -436,7 +437,7 @@ void CQdoasEngineController::slotStep()
 
               // move to the next file
               CEngineRequestCompound *req = new CEngineRequestCompound;
-              
+
               // check for a change in project
               if (m_currentProject != m_currentIt.project()) {
                   int opMode = THREAD_TYPE_NONE;
@@ -448,7 +449,7 @@ void CQdoasEngineController::slotStep()
                   m_currentProject = m_currentIt.project();
                   req->addRequest(new CEngineRequestSetProject(m_currentProject, opMode));
               }
-              
+
               switch (m_session->mode()) {
                   case CSession::Browse:
                       req->addRequest(new CEngineRequestBeginBrowseFile(m_currentIt.file().filePath()));
@@ -460,13 +461,13 @@ void CQdoasEngineController::slotStep()
                       req->addRequest(new CEngineRequestBeginAnalyseFile(m_currentIt.file().filePath()));
                       break;
               }
-              
+
               m_thread->request(req);
           }
       }
 
       if (endOfSession) {
-        // Post end of .... notificatons 
+        // Post end of .... notificatons
         if (m_session->mode()==CSession::Analyse)
           QMessageBox::information((QWidget *)this->parent(),"QDOAS : Run Analysis","End of analysis");
         else if (m_session->mode()==CSession::Calibrate)
@@ -489,7 +490,6 @@ void CQdoasEngineController::slotStep()
               break;
       }
   }
-
 }
 
 void CQdoasEngineController::slotStartSession(const RefCountPtr<CSession> &session)
@@ -552,6 +552,7 @@ void CQdoasEngineController::slotStartSession(const RefCountPtr<CSession> &sessi
   emit signalFileListChanged(sessionFileList);
 
   m_thread->request(req);
+
 }
 
 void CQdoasEngineController::slotStopSession()
@@ -560,6 +561,7 @@ void CQdoasEngineController::slotStopSession()
   emit signalSessionRunning(false);
 
   m_thread->request(new CEngineRequestStop);
+
 }
 
 void CQdoasEngineController::slotViewCrossSections(const RefCountPtr<CViewCrossSectionData> &awData)

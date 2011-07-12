@@ -93,6 +93,16 @@ int main(int argc, char **argv)
 {
   int retCode = 0;
 
+	// ----------------------------------------------------------------------------
+
+	// to avoid that a thousands comma separator (QT 4.7.3)
+
+	   QLocale qlocale=QLocale::system();
+	   qlocale.setNumberOptions(QLocale::OmitGroupSeparator);
+	   QLocale::setDefault(qlocale);
+
+	// ----------------------------------------------------------------------------
+
   if (argc == 1) {
 
     showUsage();

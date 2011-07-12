@@ -12,6 +12,7 @@
 
   <tr>
     <td width="200" valign="top" bgcolor="#F3F3F3">
+<p class="menu-left"><span class="menu-left-sub"><img src="../spacer_orange.jpg" width="2" height="2" alt="orange layout spacer"></span><a href="../GUI/GUI.html" style="text-decoration: none; color: #336699">&nbsp;The&nbsp;user&nbsp;interface</a></p>     
     <p class="menu-left"><span class="menu-left-sub"><img src="../spacer_orange.jpg" width="2" height="2" alt="orange layout spacer"></span><a href="Project.html" style="text-decoration: none; color: #336699">&nbsp;Project properties</a></p>
     <p class="menu-left" align="right"><a href="Project_Display.html" style="text-decoration: none; color: #336699">Display</a></p>
     <p class="menu-left" align="right"><a href="Project_Selection.html" style="text-decoration: none; color: #336699">Selection</a></p>
@@ -22,7 +23,8 @@
     <p class="menu-left" align="right"><a href="Project_Instrumental.html" style="text-decoration: none; color: #336699">Instrumental</a></p>
     <p class="menu-left" align="right"><a href="Project_Slit.html" style="text-decoration: none; color: #336699">Slit</a></p>
     <p class="menu-left" align="right"><a href="Project_Output.html" style="text-decoration: none; color: #336699">Output</a></p>
-    <p class="menu-left"><span class="menu-left-sub"><img src="../spacer_orange.jpg" width="2" height="2" alt="orange layout spacer"></span><a href="../Analysis/Analysis.html" style="text-decoration: none; color: #336699">&nbsp;Analysis&nbsp;windows&nbsp;properties</a></p>    </td>
+    <p class="menu-left"><span class="menu-left-sub"><img src="../spacer_orange.jpg" width="2" height="2" alt="orange layout spacer"></span><a href="../Analysis/Analysis.html" style="text-decoration: none; color: #336699">&nbsp;Analysis&nbsp;windows&nbsp;properties</a></p>
+    <p class="menu-left"><span class="menu-left-sub"><img src="../spacer_orange.jpg" width="2" height="2" alt="orange layout spacer"></span><a href="../Tools/Tools.html" style="text-decoration: none; color: #336699">&nbsp;QDOAS&nbsp;Tools</a></p>
     <td width="2">&nbsp;</td>
     <td id="maincontent">
     <p class="head-title-page">QDOAS Project properties : Instrumental page</p>
@@ -42,10 +44,11 @@
     </p>
     <p align="justify" ><a name="Options"></a>Except the observation <strong>Site</strong>, the <strong>Calibration File</strong> and the <strong>Instrument function</strong>, the fields that appear in this page depend strictly on the  format of spectra files to process. </p>
     <strong><p align="justify" class="orangelarge">Calibration file and instrumental corrections</p></strong>
-    <p align="justify" >A preliminary wavelength calibration is necessary to browse spectra. If the wavelength calibration is  coded in the spectra file, it is recommended to use it by keeping the field <strong>Calibration File</strong> empty. For the analysis of spectra, the wavelength calibration of the reference spectrum always has the priority over the spectra ones.</p>
+    <p align="justify" >A preliminary wavelength calibration is necessary to browse spectra. If the wavelength calibration is  coded in the spectra file, it is recommended to use it by keeping the field <strong>Calibration File</strong> empty. </p>
+    <p align="justify" ><em><strong>For the analysis of spectra, the wavelength calibration of the reference spectrum always has the priority over the spectra ones.</strong></em></p>
     <p align="justify">Some instrumental corrections can be applied on spectra. For example, a  transmission function previously determined in laboratory with calibrated sources can be specified in the <strong>Instr.  function</strong> field. A two columns ASCII file is expected (wavelength calibration and transmission function) and spectra will be divided by this curve before the wavelength calibration procedure.</p>
     <p align="justify">Dark current correction is also possible according to the file format. The selected file format determines how dark currents are provided and how spectra are corrected. </p>
-    <p align="justify">For the <strong>MFC STD file format</strong>, spectra can be corrected by dark current and offset. The dark current should be a spectrum measured with a large integration time (typically 30 sec) and the offset should be the average of a large number of spectra measured with a very small integration time (typically 1000 x 3 ms). Note that dark current are also corrected by offset. In addition to these corrections, the straylight can be strongly attenuated by subtracting from the spectra, the average of the signal measured in the UV region (below 300 nm if possible). See details in the <strong>Description of Algorithms</strong> section of the <strong>QDOAS Software User Manual.</strong></p>
+    <p align="justify">For the <strong><u>MFC STD file format</u></strong>, spectra can be corrected by dark current and offset. The dark current should be a spectrum measured with a large integration time (typically 30 sec) and the offset should be the average of a large number of spectra measured with a very small integration time (typically 1000 x 3 ms). Note that dark current are also corrected by offset. In addition to these corrections, the straylight can be strongly attenuated by subtracting from the spectra, the average of the signal measured in the UV region (below 300 nm if possible). See details in the <strong>Description of Algorithms</strong> section of the <strong>QDOAS Software User Manual.</strong></p>
     <p align="justify" class="orangelarge">Satellite measurements<a name="Satellites"></a></p>
     <p align="justify">Spectra measured by the following satellite instruments can be processed by QDOAS : </p>
     <table width="80%" border="0" align="center" cellpadding="5" cellspacing="10" >
@@ -59,8 +62,8 @@
       </tr>
       <tr valign="top">
         <td width="150" id="table"><strong>GOME2 (MetOp)</strong></td>
-        <td id="table"><p align="justify">QDOAS uses BEAT library to read spectra from GOME2. BEAT (Basic Envisat Atmospheric Toolbox) provides functions to read atmospheric remote sensing data from different instruments : SCIAMACHY (ENVISAT), GOME (ERS-2), OMI, TES and MLS (Aura), and GOME-2 and IASI (MetOp). The package can be downloaded from the <a href="http://www.stcorp.eu/beat/download/download.html"><strong>S[&amp;]T</strong></a> web site. Before using QDOAS on GOME2 spectra, BEAT should be installed and the CODA_DEFINITION environment variable should be defined. </p>
-          <p align="justify">BEAT is a toolbox developed by <a href="http://www.stcorp.eu"><strong>S[&amp;]T</strong></a>, the Dutch private company that also contributed to migrate the original WinDOAS user interface to the multi-platform QDOAS environment. </p></td>
+        <td id="table"><p align="justify">QDOAS uses BEAT library to read spectra from GOME2. BEAT (Basic Envisat Atmospheric Toolbox) provides functions to read atmospheric remote sensing data from different instruments : SCIAMACHY (ENVISAT), GOME (ERS-2), OMI, TES and MLS (Aura), and GOME-2 and IASI (MetOp). The package can be downloaded from the <a href="http://www.stcorp.eu/beat/download/download.html"><strong>S[&amp;]T</strong></a> web site. Before using QDOAS on GOME2 spectra, BEAT should be installed and the CODA_DEFINITION environment variable should be defined (see the <strong>Installation section</strong> of the <strong>QDOAS Software User Manual</strong>). </p>
+          </td>
       </tr>
     </table>
     <p align="justify">The wavelength calibration of earthshine spectra and irradiances is provided in the files and no instrument function is needed. Both fields should then be kept empty. The only information to provide should be the spectral region to process : the band type (for GOME and GOME2) or the channel and the clusters (for SCIAMACHY).</p>
@@ -90,7 +93,7 @@
       <li>Solar Zenith Angle</li>
       <li>Azimuth Viewing Angle</li>
       <li>Elevation Viewing Angle</li>
-      <li>Date in the DD/MM/YYYY (day, month, year) format</li>
+      <li>Date in the DD/MM/YYYY (day/month/year) format</li>
       <li>Fractional time</li>
     </ol>
   <p align="justify">In the column format, angles have to be given on the same line and a wavelength calibration can be provided with spectra. Some examples of ASCII files supported by QDOAS are given in annex of the <strong>QDOAS Software User Manual.</strong></p>

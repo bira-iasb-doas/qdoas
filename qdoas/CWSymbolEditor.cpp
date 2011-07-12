@@ -43,13 +43,13 @@ CWSymbolEditor::CWSymbolEditor(const QString &symbolName, const QString &descrip
   mainLayout->addWidget(new QLabel("Symbol Name", this), 0, 1);
   m_symbolName = new QLineEdit(this);
   m_symbolName->setMaxLength(SYMBOL_NAME_BUFFER_LENGTH - 1);
-  
+
   // limit the possible input
   m_symbolName->setValidator(new QRegExpValidator(QRegExp("[A-Za-z][A-Za-z0-9\\-_]*"), m_symbolName));
 
   if (modifying) {
     // can modify only the description - the enabled state of the symbolName edit is
-    // used in the actionOk method to see if the action will create or modify the symbol  
+    // used in the actionOk method to see if the action will create or modify the symbol
     m_symbolName->setText(symbolName);
     m_symbolName->setEnabled(false);
   }
@@ -67,7 +67,7 @@ CWSymbolEditor::CWSymbolEditor(const QString &symbolName, const QString &descrip
   mainLayout->setColumnStretch(0, 1);
   mainLayout->setColumnStretch(2, 2);
   mainLayout->setColumnStretch(3, 1);
-  
+
   mainLayout->setRowStretch(2, 1);
 
   // Update the caption and create a context tag
@@ -100,7 +100,7 @@ bool CWSymbolEditor::actionOk(void)
     // new symbol
     // must have a non-empty symbol name
     bool ok = CWorkSpace::instance()->createSymbol(m_symbolName->text(), m_description->text());
-    
+
     if (!ok) {
       notifyAcceptActionOk(false);
       // feed back ...
@@ -116,7 +116,7 @@ bool CWSymbolEditor::actionOk(void)
 
 void CWSymbolEditor::actionHelp(void)
 {
-  CHelpSystem::showHelpTopic("symbol", "Symbols");
+  CHelpSystem::showHelpTopic("GUI", "GUI_Symbols");
 }
 
 void CWSymbolEditor::takeFocus(void)

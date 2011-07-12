@@ -24,6 +24,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QCoreApplication>
 #include <QTime>
 #include <QApplication>
+#include <QDesktopServices>
+#include <QUrl>
 // #include <QWebView>
 
 #include "CHelpSystem.h"
@@ -39,20 +41,89 @@ CHelpSystem* CHelpSystem::m_instance = NULL;
 
 CHelpSystem* CHelpSystem::establishHelpSystem(QWidget *parent)
 {
-  if (m_instance == NULL && parent != NULL) {
-    m_instance = new CHelpSystem(parent);
-    return m_instance;
-  }
+ if (m_instance == NULL && parent != NULL) {
+   m_instance = new CHelpSystem(parent);
+   return m_instance;
+ }
 
   // only want one object to create this system and control it...
   // All others use the static showHelpTopic method and hope for the best.
   return NULL;
 }
 
+bool CHelpSystem::changeDir(const QString &chapter, const QString &key)
+ {
+ 	QString helpDir=CPreferences::instance()->directoryName("Help", ".");
+ 	QString indexFile=helpDir+"/"+chapter+"/"+key+".html";
+ 	QString fileName=key+".html";
+ 	bool storeHelpDir=false;
+
+ 	if (m_instance)
+ 	 {
+    while (!indexFile.isEmpty() && !QFile::exists(indexFile)) {
+      indexFile = QFileDialog::getOpenFileName(m_parentWidget, "Help File", fileName, "*.html");
+      storeHelpDir = true;
+    }
+
+    if (!indexFile.isEmpty() &&  storeHelpDir)
+     {
+     	char rootPath[1024],*ptr;
+
+     	strcpy(rootPath,indexFile.toAscii().constData());
+     	if ((ptr=strrchr(rootPath,'/'))!=NULL)
+     	 *ptr='\0';
+     	if (!chapter.isEmpty() && ((ptr=strrchr(rootPath,'/'))!=NULL))
+     	 *ptr='\0';
+
+      helpDir = QString(rootPath); // just the directory name
+
+      CPreferences::instance()->setDirectoryName("Help", helpDir);
+
+      fileName="file:///"+indexFile;
+      QDesktopServices::openUrl(QUrl(fileName) );
+     }
+   }
+
+  return storeHelpDir;
+ }
+
 void CHelpSystem::showHelpTopic(const QString &chapter, const QString &key)
 {
-  if (m_instance) {
-    m_instance->openBrowser(chapter, key);
+ // PREVIOUS VERSION if (m_instance) {
+ // PREVIOUS VERSION  m_instance->openBrowser(chapter, key);
+ // PREVIOUS VERSION }
+
+ #if defined(QDOAS_HELP_PATH)
+  QString path=QDOAS_HELP_PATH;
+ #else
+  QString path=CPreferences::instance()->directoryName("Help", ".");
+ #endif
+
+ // Load the default browser
+
+ char strPath[800],strUrl[800];
+ bool pageFound=true;
+ FILE *fp;
+
+ strcpy(strPath,path.toAscii().constData());
+
+ if (strlen(chapter.toAscii().constData()))
+  sprintf(strUrl,"%s/%s/%s.html",strPath,chapter.toAscii().constData(),key.toAscii().constData());
+ else
+  sprintf(strUrl,"%s/%s.html",strPath,key.toAscii().constData());
+
+ if ((fp=fopen(strUrl,"rt"))==NULL)
+  pageFound=false;
+ else
+  fclose(fp);
+
+ if (m_instance)
+  m_instance->changeDir(chapter,key);
+
+ if (pageFound)
+  {
+   QString fileName="file:///"+QString(strUrl);
+   QDesktopServices::openUrl(QUrl(fileName) );
   }
 }
 
@@ -62,13 +133,13 @@ CHelpSystem::CHelpSystem(QWidget *parent) :
   m_block(false),
   m_preferLightBrowser(false)
 {
-  // the parent is needed for the impl... it MUST have a lifetime
-  // at least as long as this.
-
-  // populate the map ...
-
-  m_chapterMap.insert(std::map<QString,int>::value_type("Project", 1));
-  m_chapterMap.insert(std::map<QString,int>::value_type("Analysis", 2));
+  // NOT NEEDED ANYMORE // the parent is needed for the impl... it MUST have a lifetime
+  // NOT NEEDED ANYMORE // at least as long as this.
+  // NOT NEEDED ANYMORE
+  // NOT NEEDED ANYMORE // populate the map ...
+  // NOT NEEDED ANYMORE
+  // NOT NEEDED ANYMORE m_chapterMap.insert(std::map<QString,int>::value_type("Project", 1));
+  // NOT NEEDED ANYMORE m_chapterMap.insert(std::map<QString,int>::value_type("Analysis", 2));
 }
 
 CHelpSystem::~CHelpSystem()
@@ -80,44 +151,41 @@ CHelpSystem::~CHelpSystem()
 
 void CHelpSystem::openBrowser(void)
 {
-  createImplementation(&m_impl);
-
-  if (m_impl)
-    m_impl->display(HELP_HOME_PAGE); // the table of contents
+ // NOT NEEDED ANYMORE createImplementation(&m_impl);
+ // NOT NEEDED ANYMORE
+ // NOT NEEDED ANYMORE if (m_impl)
+ // NOT NEEDED ANYMORE   m_impl->display(HELP_HOME_PAGE); // the table of contents
 }
 
 void CHelpSystem::openBrowser(const QString &chapter, const QString &key)
 {
-  createImplementation(&m_impl);
-
-  if (m_impl) {
-    QString url;
-    // resolve chapter
-    std::map<QString,int>::const_iterator it = m_chapterMap.find(chapter);
-
-    if (it != m_chapterMap.end()) {
-      // construct the URL (relative)
-      QTextStream stream(&url);
-
-      stream << chapter << "/" << key << ".html";
-
-      //stream << "chapter" << (it->second) << "/chapter" << (it->second) << ".html";
-
-
-
-//      if (!key.isEmpty())
-//	stream << '#' << key;
-    }
-    else {
-      url = HELP_HOME_PAGE;
-    }
-
-//     QWebView *view = new QWebView(this);
-//     view->load(QUrl(url));
-//     view->show();
-
-    m_impl->display(url);
-  }
+// NOT NEEDED ANYMORE  createImplementation(&m_impl);
+// NOT NEEDED ANYMORE
+// NOT NEEDED ANYMORE  if (m_impl) {
+// NOT NEEDED ANYMORE    QString url;
+// NOT NEEDED ANYMORE    // resolve chapter
+// NOT NEEDED ANYMORE    std::map<QString,int>::const_iterator it = m_chapterMap.find(chapter);
+// NOT NEEDED ANYMORE
+// NOT NEEDED ANYMORE    if (it != m_chapterMap.end()) {
+// NOT NEEDED ANYMORE
+// NOT NEEDED ANYMORE      QTextStream stream(&url);
+// NOT NEEDED ANYMORE
+// NOT NEEDED ANYMORE      stream << chapter << "/" << key << ".html";
+// NOT NEEDED ANYMORE
+// NOT NEEDED ANYMORE      //stream << "chapter" << (it->second) << "/chapter" << (it->second) << ".html";
+// NOT NEEDED ANYMORE//      if (!key.isEmpty())
+// NOT NEEDED ANYMORE//	stream << '#' << key;
+// NOT NEEDED ANYMORE    }
+// NOT NEEDED ANYMORE    else {
+// NOT NEEDED ANYMORE      url = HELP_HOME_PAGE;
+// NOT NEEDED ANYMORE    }
+// NOT NEEDED ANYMORE
+// NOT NEEDED ANYMORE//     QWebView *view = new QWebView(this);
+// NOT NEEDED ANYMORE//     view->load(QUrl(url));
+// NOT NEEDED ANYMORE//     view->show();
+// NOT NEEDED ANYMORE
+// NOT NEEDED ANYMORE    m_impl->display(url);
+// NOT NEEDED ANYMORE  }
 }
 
 void CHelpSystem::closeBrowser(void)
@@ -144,6 +212,8 @@ bool CHelpSystem::supportsQtAssistant(void) const
   return false;
 #endif
 }
+
+
 
 void CHelpSystem::createImplementation(CHelpImpl **impl)
 {

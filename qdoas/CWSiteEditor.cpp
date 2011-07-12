@@ -91,7 +91,7 @@ CWSiteEditor::CWSiteEditor(QTreeWidgetItem *editItem, QWidget *parent) :
     m_siteName->setText(obsSiteStr);
     m_siteName->setEnabled(false); // cant change the site name ...
 
-    // Update the caption and create a context tag 
+    // Update the caption and create a context tag
     m_captionStr = "Modifying properties of observation site ";
     m_captionStr += obsSiteStr;
     m_contextTag = obsSiteStr;
@@ -102,9 +102,9 @@ CWSiteEditor::CWSiteEditor(QTreeWidgetItem *editItem, QWidget *parent) :
     // the corresponding slot being called to check the data and set m_validBits.
 
     assert(editItem->childCount() == 4);
-      
+
     QTreeWidgetItem *child;
-    
+
     // Abbreviation
     child = editItem->child(0);
     m_abbreviation->setText(child->text(1));
@@ -120,7 +120,7 @@ CWSiteEditor::CWSiteEditor(QTreeWidgetItem *editItem, QWidget *parent) :
 
   }
   else {
-    // Update the caption and create a context tag 
+    // Update the caption and create a context tag
     m_captionStr = "Create new observation site";
     m_contextTag = "New Site"; // only ever want one of these active at once
 
@@ -158,7 +158,7 @@ bool CWSiteEditor::actionOk(void)
 
 void CWSiteEditor::actionHelp(void)
 {
-  CHelpSystem::showHelpTopic("site");
+ CHelpSystem::showHelpTopic("GUI","GUI_Sites");
 }
 
 void CWSiteEditor::takeFocus(void)

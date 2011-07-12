@@ -161,11 +161,11 @@ CWMoleculesDoasTable::CWMoleculesDoasTable(const QString &label, int columnWidth
 
   createColumnCheck("Fit disp.", 60);
   createColumnCheck("Filter", 60);           // columnIndex = 4
-  createColumnCheck("Cons. CC", 60);
-  createColumnCheck("CC fit", 60);           // columnIndex = 6
-  createColumnEdit("CC Init", 80);
-  createColumnEdit("CC Delta", 80);          // columnIndex = 8
-  createColumnEdit("CC Io", 80);
+  createColumnCheck("Cons. SCD", 60);
+  createColumnCheck("SCD fit", 60);           // columnIndex = 6
+  createColumnEdit("SCD Init", 80);
+  createColumnEdit("SCD Delta", 80);          // columnIndex = 8
+  createColumnEdit("SCD Io", 80);
 }
 
 CWMoleculesDoasTable::~CWMoleculesDoasTable()

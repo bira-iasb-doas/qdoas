@@ -1890,7 +1890,7 @@ RC ANALYSE_SvdInit(SVD *pSvd)
 //    if ((ANALYSE_phFilter->type!=PRJCT_FILTER_TYPE_NONE) && (ANALYSE_phFilter->type!=PRJCT_FILTER_TYPE_ODDEVEN))
 //     temp+=ANALYSE_phFilter->filterEffWidth;
 
-    ANALYSE_nFree=floor(DimL/((temp!=(double)0.)?temp:(double)1.)+0.5)-pSvd->nFit;
+    ANALYSE_nFree=floor(DimL/((temp>(double)1.e-6)?temp:(double)1.)+0.5)-pSvd->nFit;
 
     if (ANALYSE_nFree<=(double)0.)
      rc=ERROR_SetLast("SvdInit",ERROR_TYPE_FATAL,ERROR_ID_NFREE);

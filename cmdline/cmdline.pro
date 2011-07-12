@@ -23,7 +23,7 @@ unix {
 }
 
 win32 {
-  INCLUDEPATH  += ..\mediator ..\common ..\qdoas ..\convolution ..\usamp ..\engine ..\ring
+  INCLUDEPATH  += ../mediator ../common ../qdoas ../convolution ../usamp ../engine ../ring
 
   contains( QWT_LINKAGE, qwtstatic ) {
     LIBS        += -L$$QWT_LIB_PATH -l$$QWT_LIB -L$$CODA_LIB_PATH -l$$CODA_LIB

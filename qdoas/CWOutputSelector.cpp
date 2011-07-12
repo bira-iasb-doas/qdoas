@@ -293,6 +293,8 @@ void getValidFieldFlags(int *validFlags, int instrument)
   validFlags[PRJCT_RESULTS_ASCII_RMS]=                                          // RMS
   validFlags[PRJCT_RESULTS_ASCII_REFSHIFT]=                                     // in automatic reference selection, shift of the reference spectrum
   validFlags[PRJCT_RESULTS_ASCII_ITER]=
+  validFlags[PRJCT_RESULTS_ASCII_COVAR]=
+  validFlags[PRJCT_RESULTS_ASCII_CORR]=
   validFlags[PRJCT_RESULTS_ASCII_TINT]=1;                                       // the integration time
 
   validFlags[PRJCT_RESULTS_ASCII_REFZM]=(satelliteFlag)?0:1;                    // in automatic reference selection, the solar zenith angle of the reference spectrum

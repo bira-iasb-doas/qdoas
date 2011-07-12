@@ -1,7 +1,8 @@
-/* Tric to force vertical scroll bar in Firefox (prevents page jumping) */
+/* Trick to force vertical scroll bar in Firefox (prevents page jumping) */
 html {
 height:100%;
 margin-bottom:1px;
+overflow-y:scroll;
 }
 
 /* Extra containers required to mimic min-width in IE 6 and earlier */

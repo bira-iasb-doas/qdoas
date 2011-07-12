@@ -30,6 +30,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QFileDialog>
 #include <QCloseEvent>
 #include <QApplication>
+#include <QLocale>
 
 #include "CWMain.h"
 #include "CWProjectTree.h"
@@ -58,6 +59,16 @@ CWMain::CWMain(QWidget *parent) :
   QFrame(parent),
   m_logToFile(false)
 {
+	// ----------------------------------------------------------------------------
+
+	// to avoid that a thousands comma separator (QT 4.7.3)
+
+	   QLocale qlocale=QLocale::system();
+	   qlocale.setNumberOptions(QLocale::OmitGroupSeparator);
+	   QLocale::setDefault(qlocale);
+
+	// ----------------------------------------------------------------------------
+
   setProjectFileName(QString());
 
   QVBoxLayout *mainLayout = new QVBoxLayout(this);
@@ -227,22 +238,23 @@ CWMain::CWMain(QWidget *parent) :
   QMenu *helpMenu = new QMenu("Help");
 
   // About
-  helpMenu->addAction("Qdoas Manual", this, SLOT(slotQdoasHelp()));
+  helpMenu->addAction("Qdoas Help", this, SLOT(slotQdoasHelp()));
   // dual help systems ...
   QSettings &settings = CPreferences::instance()->settings();
-  m_helpInterface->preferLightBrowser(settings.value("LightHelpSys", false).toBool());
 
-  QAction *helpCheck = new QAction("Use lightweight help", this);
-  helpCheck->setCheckable(true);
-  helpCheck->setChecked(m_helpInterface->isLightBrowserPreferred());
-  helpCheck->setEnabled(m_helpInterface->supportsQtAssistant());
-  helpMenu->addAction(helpCheck);
+  // NOT NEEDED ANYMORE m_helpInterface->preferLightBrowser(settings.value("LightHelpSys", false).toBool());
+
+  // NOT NEEDED ANYMORE QAction *helpCheck = new QAction("Use lightweight help", this);
+  // NOT NEEDED ANYMORE helpCheck->setCheckable(true);
+  // NOT NEEDED ANYMORE helpCheck->setChecked(m_helpInterface->isLightBrowserPreferred());
+  // NOT NEEDED ANYMORE helpCheck->setEnabled(m_helpInterface->supportsQtAssistant());
+  // NOT NEEDED ANYMORE helpMenu->addAction(helpCheck);
 
   helpMenu->addAction("About Qdoas", this, SLOT(slotAboutQdoas()));
   helpMenu->addSeparator();
   helpMenu->addAction("About Qt", this, SLOT(slotAboutQt()));
 
-  connect(helpCheck, SIGNAL(triggered(bool)), this, SLOT(slotHelpBrowserPreference(bool)));
+  // NOT NEEDED ANYMORE connect(helpCheck, SIGNAL(triggered(bool)), this, SLOT(slotHelpBrowserPreference(bool)));
 
   m_menuBar->addMenu(helpMenu);
 
@@ -310,7 +322,7 @@ CWMain::CWMain(QWidget *parent) :
 
 CWMain::~CWMain()
 {
-  delete m_helpInterface;
+  // NOT NEEDED ANYMORE delete m_helpInterface;
 }
 
 void CWMain::closeEvent(QCloseEvent *e)
@@ -328,8 +340,8 @@ void CWMain::closeEvent(QCloseEvent *e)
 
   if (checkStateAndConsiderSaveFile()) {
     // shutdown the help system
-    delete m_helpInterface;
-    m_helpInterface = NULL;
+    // NOT NEEDED ANYMORE delete m_helpInterface;
+    // NOT NEEDED ANYMORE m_helpInterface = NULL;
 
     e->accept();
     return;
@@ -641,7 +653,23 @@ void CWMain::slotUndersamplingTool()
 
 void CWMain::slotQdoasHelp()
 {
-  m_helpInterface->openBrowser();
+	// QString helpDir=CPreferences::instance()->directoryName("Help", ".");
+	// QString indexFile=helpDir+"/"+"index.html";
+	// bool storeHelpDir=false;
+ //
+ //  while (!indexFile.isEmpty() && !QFile::exists(indexFile)) {
+ //    indexFile = QFileDialog::getOpenFileName(this, "Help File", QString(), "*.html");
+ //    storeHelpDir = true;
+ //  }
+ //  if (!indexFile.isEmpty()) {
+ //    if (storeHelpDir) {
+ //      helpDir = CPreferences::dirName(indexFile); // just the directory name
+ //      CPreferences::instance()->setDirectoryName("Help", helpDir);
+ //    }
+ //   }
+
+	CHelpSystem::showHelpTopic(QString(""),QString("index"));
+ // NOT NEEDED ANYMORE m_helpInterface->openBrowser();
 }
 
 void CWMain::slotHelpBrowserPreference(bool light)
@@ -673,16 +701,16 @@ void CWMain::slotErrorMessages(int highestLevel, const QString &messages)
    if (m_logToFile)
    {
      QString fileName=this->m_projectFile;
-     
+
      if (!fileName.length())
        fileName="QDOAS_Unnamed.log";
      else if (fileName.endsWith("xml",Qt::CaseInsensitive))
        fileName.replace(fileName.length()-3,3,"log");
      else
        fileName.append(".log");
-     
+
      QFile file(fileName);
-     
+
      if (file.open(QIODevice::Append|QIODevice::Text))
      {
        QTextStream out(&file);
@@ -690,7 +718,7 @@ void CWMain::slotErrorMessages(int highestLevel, const QString &messages)
        // message when it is constructed (in CQdoasEngineController::notifyErrorMessages)
 
        out << "File name   : " << this->m_controller->m_engineCurrentFile << "\n";
-       
+
        switch (highestLevel)
        {
        case InformationEngineError:
@@ -705,7 +733,7 @@ void CWMain::slotErrorMessages(int highestLevel, const QString &messages)
          out << "Fatal Error : " << messages;
          break;
        }
-       
+
        // IAP 200812 - remove this and change the content of the error
        // message when it is constructed (in CQdoasEngineController::notifyErrorMessages)
 

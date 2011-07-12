@@ -39,9 +39,9 @@
 // INCLUDES
 // ========
 
-#include "coda.h"
 #include "mediate.h"
 #include "engine.h"
+#include "coda.h"
 
 // ====================
 // CONSTANTS DEFINITION
@@ -140,7 +140,7 @@ typedef struct _GOME2OrbitFiles                                                 
   INDEX              *gome2LatIndex,*gome2LonIndex,*gome2SzaIndex;              // indexes of records sorted resp. by latitude, by longitude and by SZA
   SATELLITE_GEOLOC   *gome2Geolocations;                                        // geolocations
   INT                 specNumber;
-  coda_product   *gome2Pf;                                                  // GOME2 product file pointer
+  coda_ProductFile   *gome2Pf;                                                  // GOME2 product file pointer
   coda_Cursor         gome2Cursor;                                              // GOME2 file cursor
   coda_Cursor         gome2CursorMDR;                                           // GOME2 file cursor on MDR
   int                 version;
@@ -434,7 +434,7 @@ INDEX Gome2GetMDRIndex(GOME2_ORBIT_FILE *pOrbitFile,INDEX indexBand,int recordNo
 //               ERROR_ID_NO  otherwise.
 // -----------------------------------------------------------------------------
 
-int Gome2Open(coda_product **productFile, char *fileName,int *version)
+int Gome2Open(coda_ProductFile **productFile, char *fileName,int *version)
  {
   // Declarations
 
@@ -462,9 +462,9 @@ int Gome2Open(coda_product **productFile, char *fileName,int *version)
    {
    	// Retrieve the product class and type
 
-    coda_get_product_class((const coda_product *)*productFile,(const char **)&productClass);
-    coda_get_product_type((const coda_product *)*productFile,(const char **)&productType);
-    coda_get_product_version((const coda_product *)*productFile, version);
+    coda_get_product_class((const coda_ProductFile *)*productFile,(const char **)&productClass);
+    coda_get_product_type((const coda_ProductFile *)*productFile,(const char **)&productType);
+    coda_get_product_version((const coda_ProductFile *)*productFile, version);
 
     if (strcmp(productClass,"EPS") || strcmp(productType,"GOME_xxx_1B"))
      rc=ERROR_SetLast("Gome2Init",ERROR_TYPE_WARNING,ERROR_ID_BEAT,"coda_get_product_class or coda_get_product_type",fileName,"Not a GOME2 Level-1B file");

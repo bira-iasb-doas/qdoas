@@ -34,6 +34,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <qwt_symbol.h>
 #include <qwt_legend_item.h>
 #include <qwt_plot_grid.h>
+#include <qwt_plot_renderer.h>
 
 #include "CWPlotPage.h"
 #include "CPreferences.h"
@@ -137,16 +138,18 @@ CWPlot::CWPlot(const RefCountConstPtr<CPlotDataSet> &dataSet,
       QwtPlotCurve *curve = new QwtPlotCurve();
 
       // the data is guaranteed to be valid for the life of this object
-      curve->setRawData(curveData.xRawData(), curveData.yRawData(), curveData.size());
+      curve->setRawSamples(curveData.xRawData(), curveData.yRawData(), curveData.size());     // QWT 5.0.2 (setRawData) -> QWT 6.0.0
 
       // configure curve's pen color based on index
       curve->setPen(m_plotProperties.pen((i%4) + 1));
 
       if (curveData.curveType() == Point) {
+
 	curve->setStyle(QwtPlotCurve::NoCurve);
-	QwtSymbol sym = curve->symbol();
-	sym.setStyle(QwtSymbol::Ellipse);
-	curve->setSymbol(sym);
+
+	QwtSymbol *sym = new QwtSymbol(QwtSymbol::Ellipse);                       // QWT 5.0.2 -> QWT 6.0.0
+ sym->setSize(4);
+	curve->setSymbol(sym);                                     // QWT 5.0.2 -> QWT 6.0.0
       }
 
       curve->attach(this);
@@ -248,7 +251,7 @@ void CWPlot::slotOverlay()
 	      ++j;
 	    if (j == nPoints) {
 	      QwtPlotCurve *curve = new QwtPlotCurve();
-	      curve->setData(xData, yData, nPoints);
+	      curve->setSamples(xData, yData, nPoints);                                // QWT 5.0.2 -> QWT 6.0.0
 	      // configure curve's pen color based on index
 	      curve->setPen(m_plotProperties.pen((curveCount % 4) + 1));
 	      curve->attach(this);
@@ -351,6 +354,7 @@ void CWPlot::slotPrint()
   printer.setPageSize(m_plotProperties.printPaperSize());
   printer.setOrientation(QPrinter::Landscape); // single plot ALWAYS defaults to landscape
   printer.setNumCopies(1);
+  printer.setPageMargins(1,1,1,1, QPrinter::Inch);
 
   QPrintDialog dialog(&printer, this);
 
@@ -359,37 +363,69 @@ void CWPlot::slotPrint()
     // store printer preference
     m_plotProperties.setPrintPaperSize(printer.pageSize());
 
-    QPainter p(&printer);
-    p.setPen(QPen(QColor(Qt::black)));
+    // QWT 5.0.2 -> QWT 6.0.0 QPainter p(&printer);
+    // QWT 5.0.2 -> QWT 6.0.0 p.setPen(QPen(QColor(Qt::black)));
+    // QWT 5.0.2 -> QWT 6.0.0
+    // QWT 5.0.2 -> QWT 6.0.0 QRect paper = printer.paperRect();
+    // QWT 5.0.2 -> QWT 6.0.0 QRect page = printer.pageRect();
+    // QWT 5.0.2 -> QWT 6.0.0
+    // QWT 5.0.2 -> QWT 6.0.0 const int cPageBorder = 150;
+    // QWT 5.0.2 -> QWT 6.0.0
+    // QWT 5.0.2 -> QWT 6.0.0 QRect tmp(cPageBorder, cPageBorder, page.width() - 2 * cPageBorder, page.height() - 2 * cPageBorder);
+    // QWT 5.0.2 -> QWT 6.0.0
+    // QWT 5.0.2 -> QWT 6.0.0 p.drawRect(tmp);
+    // QWT 5.0.2 -> QWT 6.0.0
+    // QWT 5.0.2 -> QWT 6.0.0 tmp.adjust(20, 20, -20, -20);
 
-    QRect paper = printer.paperRect();
-    QRect page = printer.pageRect();
+        QwtPlotRenderer renderer;
 
-    const int cPageBorder = 150;
+        renderer.setDiscardFlag(QwtPlotRenderer::DiscardBackground, false);
+        renderer.setLayoutFlag(QwtPlotRenderer::KeepFrames, true);
 
-    QRect tmp(cPageBorder, cPageBorder, page.width() - 2 * cPageBorder, page.height() - 2 * cPageBorder);
+        renderer.renderTo(this, printer);
 
-    p.drawRect(tmp);
-
-    tmp.adjust(20, 20, -20, -20);
-    print(&p, tmp);
+    //print(&p, tmp);   // QWT 5.0.2 -> QWT 6.0.0 : SEE LATER
   }
 }
 
+// QWT 5.0.2 -> QWT 6.0.0 void CWPlot::slotExportAsImage()
+// QWT 5.0.2 -> QWT 6.0.0 {
+// QWT 5.0.2 -> QWT 6.0.0   QString fileName;
+// QWT 5.0.2 -> QWT 6.0.0   QString format;
+// QWT 5.0.2 -> QWT 6.0.0
+// QWT 5.0.2 -> QWT 6.0.0   if (CWPlot::getImageSaveNameAndFormat(this, fileName, format)) {
+// QWT 5.0.2 -> QWT 6.0.0
+// QWT 5.0.2 -> QWT 6.0.0     QImage img(size(), QImage::Format_RGB32); // image the same size as the plot widget.
+// QWT 5.0.2 -> QWT 6.0.0     img.fill(0xffffffff);
+// QWT 5.0.2 -> QWT 6.0.0
+// QWT 5.0.2 -> QWT 6.0.0     print(img);
+// QWT 5.0.2 -> QWT 6.0.0
+// QWT 5.0.2 -> QWT 6.0.0     img.save(fileName, format.toAscii().constData());
+// QWT 5.0.2 -> QWT 6.0.0   }
+// QWT 5.0.2 -> QWT 6.0.0 }
+
 void CWPlot::slotExportAsImage()
 {
-  QString fileName;
-  QString format;
+    QStringList filter;
+    QString fileName;
 
-  if (CWPlot::getImageSaveNameAndFormat(this, fileName, format)) {
+    fileName="";
+    filter += "PNG Documents (*.png)";
 
-    QImage img(size(), QImage::Format_RGB32); // image the same size as the plot widget.
-    img.fill(0xffffffff);
+    fileName = QFileDialog::getSaveFileName(
+        this, "Export File Name", fileName,
+        filter.join(";;"), NULL, 0);
 
-    print(img);
+    if ( !fileName.isEmpty() )
+    {
+        QwtPlotRenderer renderer;
 
-    img.save(fileName, format.toAscii().constData());
-  }
+        // flags to make the document look like the widget
+        renderer.setDiscardFlag(QwtPlotRenderer::DiscardBackground, false);
+        renderer.setLayoutFlag(QwtPlotRenderer::KeepFrames, true);
+
+        renderer.renderDocument(this, fileName, QSizeF(300, 200), 85);
+    }
 }
 
 void CWPlot::slotToggleInteraction()
@@ -405,7 +441,7 @@ void CWPlot::slotToggleInteraction()
     m_zoomer = new QwtPlotZoomer(c);
     c->setCursor(Qt::PointingHandCursor); // change the cursor to indicate that zooming is active
     // contrasting colour ...
-    m_zoomer->setRubberBandPen(QPen((canvasBackground().value() < 128) ? Qt::white : Qt::black));
+    m_zoomer->setRubberBandPen(QPen((canvasBackground().color().value() < 128) ? Qt::white : Qt::black));   // QWT 5.0.2 -> QWT 6.0.0
   }
 }
 
@@ -548,7 +584,7 @@ void CWPlotPage::slotPrintAllPlots()
     if (m_plots.size() == 1) {
       // only one plot ...
       tmp.adjust(cPlotBorder, cPlotBorder, -cPlotBorder, -cPlotBorder);
-      m_plots.front()->print(&p, tmp);
+      // QWT 5.0.2 -> QWT 6.0.0 : SEE LATER m_plots.front()->print(&p, tmp);
     }
     else {
 
@@ -568,7 +604,7 @@ void CWPlotPage::slotPrintAllPlots()
 		    cPageBorder + cPlotBorder + row * (cPlotBorder + unitHeight),
 		    unitWidth, unitHeight);
 
-        (*it)->print(&p, tmp);
+        // QWT 5.0.2 -> QWT 6.0.0 : SEE LATER  (*it)->print(&p, tmp);
         if (++col == columns) {
           col = 0;
           ++row;
@@ -621,7 +657,7 @@ void CWPlotPage::slotExportAsImageAllPlots()
                 cPlotBorder + row * (cPlotBorder + plotSize.height()),
                 plotSize.width(), plotSize.height());
 
-      (*it)->print(&p, tmp);
+      // QWT 5.0.2 -> QWT 6.0.0 : SEE LATER (*it)->print(&p, tmp);
       if (++col == columns) {
         col = 0;
         ++row;

@@ -19,10 +19,10 @@
 //  Main constants and global definitions
 //  ----------------------------------------------------------------------------
 
-#include "../mediator/mediate_common.h"
-
 #if !defined(__WDOAS_)
 #define __WDOAS_
+
+#include "../mediator/mediate_common.h"
 
 #if defined(_cplusplus) || defined(__cplusplus)
 extern "C" {

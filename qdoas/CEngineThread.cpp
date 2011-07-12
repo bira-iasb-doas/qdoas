@@ -78,18 +78,18 @@ void CEngineThread::setRunState(bool setRunning)
 void CEngineThread::request(CEngineRequest *req)
 {
   m_reqQueueMutex.lock();
-  
+
   m_requests.push_back(req); // add the request
   // wake the engine thread if it is sitting idle (harmless if it is not idle)
   m_cv.wakeOne();
-  
+
   m_reqQueueMutex.unlock();
 }
 
 void CEngineThread::takeResponses(QList<CEngineResponse*> &responses)
 {
   m_respQueueMutex.lock();
-  
+
   responses = m_responses;
   m_responses.clear();
 
@@ -112,14 +112,14 @@ void CEngineThread::run()
 {
   // engine thread - loop until terminated ...
   //
-  // m_terminated, m_requests and are protected by 
+  // m_terminated, m_requests and are protected by
   // m_reqQueueMutex
 
   CEngineRequest *activeRequest;
 
   m_reqQueueMutex.lock();
   while (!m_terminated) {
-    
+
     // will wake the thread if a request is lodged or terminated is set true.
     while (m_requests.isEmpty() && !m_terminated) {
       m_cv.wait(&m_reqQueueMutex);
@@ -128,14 +128,13 @@ void CEngineThread::run()
     if (!m_requests.isEmpty() && !m_terminated) {
       // queue is not empty - process the first item
       activeRequest = m_requests.takeFirst();
-      
-      m_reqQueueMutex.unlock();
 
+      m_reqQueueMutex.unlock();
       // process the request then discard it
       activeRequest->process(this);           // what about the return code ???? TODO
       delete activeRequest;
 
-      // lock before modifying the queue and checking m_terminated 
+      // lock before modifying the queue and checking m_terminated
       m_reqQueueMutex.lock();
     }
   }

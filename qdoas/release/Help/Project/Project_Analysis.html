@@ -12,6 +12,7 @@
 
   <tr>
     <td width="200" valign="top" bgcolor="#F3F3F3">
+<p class="menu-left"><span class="menu-left-sub"><img src="../spacer_orange.jpg" width="2" height="2" alt="orange layout spacer"></span><a href="../GUI/GUI.html" style="text-decoration: none; color: #336699">&nbsp;The&nbsp;user&nbsp;interface</a></p>     
     <p class="menu-left"><span class="menu-left-sub"><img src="../spacer_orange.jpg" width="2" height="2" alt="orange layout spacer"></span><a href="Project.html" style="text-decoration: none; color: #336699">&nbsp;Project properties</a></p>
     <p class="menu-left" align="right"><a href="Project_Display.html" style="text-decoration: none; color: #336699">Display</a></p>
     <p class="menu-left" align="right"><a href="Project_Selection.html" style="text-decoration: none; color: #336699">Selection</a></p>
@@ -23,6 +24,7 @@
     <p class="menu-left" align="right"><a href="Project_Slit.html" style="text-decoration: none; color: #336699">Slit</a></p>
     <p class="menu-left" align="right"><a href="Project_Output.html" style="text-decoration: none; color: #336699">Output</a></p>
     <p class="menu-left"><span class="menu-left-sub"><img src="../spacer_orange.jpg" width="2" height="2" alt="orange layout spacer"></span><a href="../Analysis/Analysis.html" style="text-decoration: none; color: #336699">&nbsp;Analysis&nbsp;windows&nbsp;properties</a></p>
+    <p class="menu-left"><span class="menu-left-sub"><img src="../spacer_orange.jpg" width="2" height="2" alt="orange layout spacer"></span><a href="../Tools/Tools.html" style="text-decoration: none; color: #336699">&nbsp;QDOAS&nbsp;Tools</a></p>
     </td>
     <td width="2">&nbsp;</td>
     <td id="maincontent">
@@ -57,12 +59,12 @@
     <p align="justify" class="orangelarge">Interpolation<a name="Interpolation"></a></p>
     <p align="justify" ><strong>Linear</strong> and cubic <strong>Spline</strong> interpolations are  implemented.&nbsp; <strong>Spline</strong> interpolation is  recommended. &nbsp;</p>
     <p align="justify" class="orangelarge">Interpolation security gap<a name="SecurityGap"></a></p>
-    <p align="justify" >Convolution/filtering/interpolation operations could introduce edge effects if cross sections are strictly defined on the different analysis spectral intervals. In order to avoid that, it is recommended to add some extra pixels on both sides of the final grid. The security gap determines this number of pixels. If the selected filter requires a larger number of additional pixels, the gap is recalculated by QDOAS.</p>
+    <p align="justify" >Convolution/filtering/interpolation operations could introduce edge effects if cross-sections are strictly defined on the different analysis spectral intervals. In order to avoid that, it is recommended to add some extra pixels on both sides of the final grid. The security gap determines this number of pixels. If the selected filter requires a larger number of additional pixels, the gap is recalculated by QDOAS.</p>
     <p align="justify" class="orangelarge">Convergence criterion<a name="ConvergenceCriterion"></a></p>
-    <p align="justify">The purpose of the iterative Marquardt-Levenberg algorithm used to  resolve the DOAS equation is to find the values of unknown variables that minimize the &laquo; chi square &raquo;. It assumes to start from an initial solution and to improve it as far as the chi square calculated at each iteration decreases. If after two successive iterations, the variation of the chi square is less than the<strong> convergence criterion</strong>, the solution is considered good enough and the algorithm stops.</p>
-    <p align="justify">Usually  a value of 1e-3 or 1e-4 is selected for the convergence criterion. Higher is  this value, faster will be the convergence to the solution but the accuracy of  the results could be affected.</p>
+    <p align="justify">The purpose of the iterative Marquardt-Levenberg algorithm used to  resolve the DOAS equation is to find the values of unknown variables that minimize the &laquo; chi square &raquo; (see equation in the <strong>Description of Algorithms section</strong> of the <strong>QDOAS Software User Manual</strong>). It assumes to start from an initial solution and to improve it as far as the chi square calculated at each iteration decreases. If after two successive iterations, the variation of the chi square is less than the<strong> convergence criterion</strong>, the solution is considered good enough and the algorithm stops.</p>
+    <p align="justify">Usually  a value of 1e-3 or 1e-4 is selected for the convergence criterion. The higher is  this value, the faster will be the convergence to the solution but the accuracy of  the results could be affected.</p>
     <p align="justify" class="orangelarge">The maximum number of iterations<a name="NumberIterations"></a></p>
-    <p align="justify" >The number of iterations needed to analyze a spectrum is determined by the convergence of the  Marquardt-Levenberg algorithm for this spectrum. For some tests, it is sometimes useful to limit it. A value of  &laquo; 0 &raquo; doesn't limit the number of iterations.</p>
+    <p align="justify" >The number of iterations needed to analyze a spectrum is determined by the convergence speed of the  Marquardt-Levenberg algorithm for this spectrum. For some tests, it is sometimes useful to limit it. A value of  &laquo; 0 &raquo; doesn't limit the number of iterations.</p>
     <p align="justify">&nbsp;</p>
   </tr>
 </table>
