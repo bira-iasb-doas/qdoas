@@ -1,6 +1,6 @@
 <html>
 <head>
-<title>QDOAS Project properties : Calibration page</title>
+<title>QDOAS Projects Properties : Calibration page</title>
 <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 <meta NAME="description" CONTENT="QDOAS help">
 <meta NAME="keywords" CONTENT="QDOAS, project, wavelength calibration, line shape, solar, high-resolution, gaussian, lorentz, voigt, error function, shift, polynomial degree, analysis method, sub-windows, FWHM">
@@ -12,8 +12,8 @@
 
   <tr>
     <td width="200" valign="top" bgcolor="#F3F3F3">
-<p class="menu-left"><span class="menu-left-sub"><img src="../spacer_orange.jpg" width="2" height="2" alt="orange layout spacer"></span><a href="../GUI/GUI.html" style="text-decoration: none; color: #336699">&nbsp;The&nbsp;user&nbsp;interface</a></p>     
-    <p class="menu-left"><span class="menu-left-sub"><img src="../spacer_orange.jpg" width="2" height="2" alt="orange layout spacer"></span><a href="Project.html" style="text-decoration: none; color: #336699">&nbsp;Project properties</a></p>
+<p class="menu-left"><span class="menu-left-sub"><img src="../spacer_orange.jpg" width="2" height="2" alt="orange layout spacer"></span><a href="../GUI/GUI.html" style="text-decoration: none; color: #336699">&nbsp;The&nbsp;user&nbsp;interface</a></p>
+    <p class="menu-left"><span class="menu-left-sub"><img src="../spacer_orange.jpg" width="2" height="2" alt="orange layout spacer"></span><a href="Project.html" style="text-decoration: none; color: #336699">&nbsp;Projects Properties</a></p>
     <p class="menu-left" align="right"><a href="Project_Display.html" style="text-decoration: none; color: #336699">Display</a></p>
     <p class="menu-left" align="right"><a href="Project_Selection.html" style="text-decoration: none; color: #336699">Selection</a></p>
     <p class="menu-left" align="right"><a href="Project_Analysis.html" style="text-decoration: none; color: #336699">Analysis</a></p>
@@ -28,7 +28,7 @@
     </td>
     <td width="2">&nbsp;</td>
     <td id="maincontent">
-    <p class="head-title-page">QDOAS Project properties : Calibration page</p>
+    <p class="head-title-page">QDOAS Projects Properties : Calibration page</p>
     <p align="center" ><img src="Project_Calibration.jpg" alt="" width="722" height="481" border="0" usemap="#Map">
 <map name="Map">
       <area shape="rect" coords="48,50,104,70" href="Project_Display.html">
@@ -52,12 +52,12 @@
     <p align="justify" class="orangelarge">Window Limits<a name="Limits"></a></p>
     <p align="justify" >The wavelength  interval used for the calibration must be specified in the <strong>Window limits (nm) </strong>frame.&nbsp; It should cover all the spectral analysis windows defined under the <strong>Analysis Windows </strong>node of the project tree. This calibration interval is divided in a number of  equally spaced <strong>sub-windows</strong> and, the shift and the slit function parameters (SFP) are  fitted using the NLLS approach in each interval.&nbsp;</p>
     <p align="justify" class="orangelarge">Polynomial degree<a name="Polynomial"></a></p>
-<p align="justify">The shift values determined in all  sub-windows are then used to reconstruct an accurate wavelength calibration.  Similarly, the wavelength dependent slit function is determined by polynomial  fitting through individual SFP values.&nbsp;  A different <strong>polynomial degree</strong> can be specified  for the shift and for the slit function. The two information (wavelength calibration and variation of the slit  function) are subsequently used e.g. to convolute high resolution cross  sections before  the analysis of spectra and to build undersampling cross-sections.</p>
+<p align="justify">The shift values determined in all  sub-windows are then used to reconstruct an accurate wavelength calibration.  Similarly, the wavelength dependent slit function is determined by polynomial  fitting through individual SFP values.&nbsp;  A different <strong>polynomial degree</strong> can be specified  for the shift and for the slit function. The two information (wavelength calibration and variation of the slit  function) are subsequently used e.g. to convolve high resolution cross  sections before  the analysis of spectra and to build undersampling cross-sections.</p>
     <p align="justify" class="orangelarge">Solar reference file<a name="Solar"></a></p>
     <p>There are two cases  to consider :</p>
     <ol>
       <li>
-        <div align="justify">the slit function of  the instrument is known and there is no need to characterise it once again (<strong>Line Shape</strong> not fitted); then the <strong>Solar Ref. File</strong> should contain a solar reference spectrum (e.g. the Kurucz one) previously convoluted with the instrument slit  function on the grid of the spectrum to calibrate;<br>
+        <div align="justify">the slit function of  the instrument is known and there is no need to characterise it once again (<strong>Line Shape</strong> not fitted); then the <strong>Solar Ref. File</strong> should contain a solar reference spectrum (e.g. the Kurucz one) previously convolved with the instrument slit  function on the grid of the spectrum to calibrate;<br>
         <br></div></li>
 <li><div align="justify" >the slit function of the instrument need to be characterized (selection  of a analytical <strong>Line Shape</strong>); then the <strong>Solar Ref. File</strong> should contain a  high-resolution solar spectrum.&nbsp; Because QDOAS  uses Fourier transform (FT) in order to make the NLLS algorithm fast enough, a high-resolution solar  spectrum sampled on a constant grid is expected. </div></li>
     </ol>

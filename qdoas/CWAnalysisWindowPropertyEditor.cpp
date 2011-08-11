@@ -279,7 +279,8 @@ CWAnalysisWindowPropertyEditor::CWAnalysisWindowPropertyEditor(const QString &pr
   m_refTwoStack = new QStackedLayout;
   m_refTwoStack->setMargin(0);
 
-  if ((p->instrumental.format==PRJCT_INSTR_FORMAT_CCD_EEV) || (p->instrumental.format==PRJCT_INSTR_FORMAT_MFC_STD))
+  if ((p->instrumental.format==PRJCT_INSTR_FORMAT_CCD_EEV) || (p->instrumental.format==PRJCT_INSTR_FORMAT_MFC_STD) ||
+     ((p->instrumental.format==PRJCT_INSTR_FORMAT_ASCII) && p->instrumental.ascii.flagElevationAngle))
    m_refTwoStack->addWidget(m_maxdoasFrame);  // automatic - takes index 0
   else
    m_refTwoStack->addWidget(m_refTwoSzaFrame);  // automatic - takes index 0
@@ -425,9 +426,9 @@ CWAnalysisWindowPropertyEditor::CWAnalysisWindowPropertyEditor(const QString &pr
   m_refTwoEdit->setText(d->refTwoFile);
   m_residualEdit->setText(d->residualFile);
 
-  m_maxdoasSzaCenterEdit->validator()->fixup(tmpStr.setNum(d->refMaxdoasSzaCenter));
+  m_maxdoasSzaCenterEdit->validator()->fixup(tmpStr.setNum(d->refSzaCenter));
   m_maxdoasSzaCenterEdit->setText(tmpStr);
-  m_maxdoasSzaDeltaEdit->validator()->fixup(tmpStr.setNum(d->refMaxdoasSzaDelta));
+  m_maxdoasSzaDeltaEdit->validator()->fixup(tmpStr.setNum(d->refSzaDelta));
   m_maxdoasSzaDeltaEdit->setText(tmpStr);
   m_szaCenterEdit->validator()->fixup(tmpStr.setNum(d->refSzaCenter));
   m_szaCenterEdit->setText(tmpStr);
@@ -486,6 +487,7 @@ bool CWAnalysisWindowPropertyEditor::actionOk(void)
   // NOTE: can perform and validation checks here .. if NOT ok, return false, otherwise proceed to set data ...
 
 
+  const mediate_project_t *p = CWorkSpace::instance()->findProject(m_projectName);
   mediate_analysis_window_t *d = CWorkSpace::instance()->findAnalysisWindow(m_projectName, m_analysisWindowName);
 
   if (d) {
@@ -508,10 +510,18 @@ bool CWAnalysisWindowPropertyEditor::actionOk(void)
     strcpy(d->refTwoFile, m_refTwoEdit->text().toAscii().data());
     strcpy(d->residualFile, m_residualEdit->text().toAscii().data());
 
-    d->refMaxdoasSzaCenter = m_maxdoasSzaCenterEdit->text().toDouble();
-    d->refMaxdoasSzaDelta = m_maxdoasSzaDeltaEdit->text().toDouble();
-    d->refSzaCenter = m_szaCenterEdit->text().toDouble();
-    d->refSzaDelta = m_szaDeltaEdit->text().toDouble();
+    if ((p->instrumental.format==PRJCT_INSTR_FORMAT_CCD_EEV) || (p->instrumental.format==PRJCT_INSTR_FORMAT_MFC_STD) ||
+       ((p->instrumental.format==PRJCT_INSTR_FORMAT_ASCII) && p->instrumental.ascii.flagElevationAngle))
+     {
+      d->refSzaCenter = m_maxdoasSzaCenterEdit->text().toDouble();
+      d->refSzaDelta = m_maxdoasSzaDeltaEdit->text().toDouble();
+     }
+    else
+     {
+      d->refSzaCenter = m_szaCenterEdit->text().toDouble();
+      d->refSzaDelta = m_szaDeltaEdit->text().toDouble();
+     }
+
     d->refMinLongitude = m_refTwoLonMinEdit->text().toDouble();
     d->refMaxLongitude = m_refTwoLonMaxEdit->text().toDouble();
     d->refMinLatitude = m_refTwoLatMinEdit->text().toDouble();
@@ -561,7 +571,7 @@ bool CWAnalysisWindowPropertyEditor::actionOk(void)
 
 void CWAnalysisWindowPropertyEditor::actionHelp(void)
 {
-	char *analysisPages[]={"Analysis_Molecules",
+	const char *analysisPages[]={"Analysis_Molecules",
 	                       "Analysis_Polynomial",
 	                       "Analysis_Predefined",
 	                       "Analysis_Shift",
@@ -602,20 +612,16 @@ void CWAnalysisWindowPropertyEditor::projectPropertiesChanged()
      {
       // MAXDOAS measurements
 
-      switch (d->instrumental.format)
+      if ((d->instrumental.format==PRJCT_INSTR_FORMAT_CCD_EEV) || (d->instrumental.format==PRJCT_INSTR_FORMAT_MFC_STD) ||
+         ((d->instrumental.format==PRJCT_INSTR_FORMAT_ASCII) && d->instrumental.ascii.flagElevationAngle))
        {
-      // -------------------------------------------------------------------------
-         case PRJCT_INSTR_FORMAT_CCD_EEV:
-         case PRJCT_INSTR_FORMAT_MFC_STD:
-          m_maxdoasFrame->show();
-          m_refTwoSzaFrame->hide();
-         break;
-      // -------------------------------------------------------------------------
-         default:
-	         m_maxdoasFrame->hide();
-	         m_refTwoSzaFrame->show();
-         break;
-      // -------------------------------------------------------------------------
+        m_maxdoasFrame->show();
+        m_refTwoSzaFrame->hide();
+       }
+      else
+       {
+        m_maxdoasFrame->hide();
+        m_refTwoSzaFrame->show();
        }
      }
     else

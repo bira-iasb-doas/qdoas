@@ -199,6 +199,7 @@ RC ASCII_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
   DoasCh *lineRecord,line[MAX_ITEM_TEXT_LEN+1];                                  // get lines from the ASCII file
   INT itemCount,maxCount;                                                       // counters
   PRJCT_INSTRUMENTAL *pInstr;                                                   // pointer to the instrumental part of the pEngineContext structure
+  ANALYSIS_REF *pRef;
   RC rc;                                                                        // return code
 
   // Initializations
@@ -207,6 +208,7 @@ RC ASCII_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
   pEngineContext->recordNumber=0;
   lineRecord=NULL;
   pInstr=&pEngineContext->project.instrumental;
+  pRef=&pEngineContext->analysisRef;
   maxCount=NDET+pInstr->ascii.szaSaveFlag+pInstr->ascii.timeSaveFlag+pInstr->ascii.dateSaveFlag;
   rc=ERROR_ID_NO;
 
@@ -249,6 +251,17 @@ RC ASCII_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
 
   if (lineRecord!=NULL)
    MEMORY_ReleaseBuffer("ASCII_Set","lineRecord",lineRecord);
+
+  // Release scanref buffer
+
+  if (pRef->scanRefIndexes!=NULL)
+   MEMORY_ReleaseBuffer("SetCCD_EEV","scanRefIndexes",pRef->scanRefIndexes);
+  pRef->scanRefIndexes=NULL;
+
+  if (pEngineContext->analysisRef.refScan && pEngineContext->recordNumber &&
+    ((pRef->scanRefIndexes=(INT *)MEMORY_AllocBuffer("EngineSetFile","scanRefIndexes",pEngineContext->recordNumber,sizeof(INT),0,MEMORY_TYPE_INT))==NULL))
+
+   rc=ERROR_ID_ALLOC;
 
   // Return
 
@@ -540,7 +553,8 @@ RC ASCII_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,INT local
       else
        pRecordInfo->Tm=(double)0.;
 
-      if (dateFlag && dateSaveFlag && (pRecordInfo->localCalDay!=localDay))
+      if ((dateFlag && ((pRecordInfo->localCalDay!=localDay) || elevFlag && (pRecordInfo->elevationViewAngle<80.))) ||                                                                                 // reference spectra are zenith only
+          (!dateFlag && pEngineContext->analysisRef.refScan && !pEngineContext->analysisRef.refSza && (pRecordInfo->elevationViewAngle>80.)))    // zenith sky spectra are not analyzed in scan reference selection mode
        rc=ERROR_ID_FILE_RECORD;
      }
    }

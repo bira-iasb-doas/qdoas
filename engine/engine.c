@@ -102,8 +102,11 @@ void EngineResetContext(ENGINE_CONTEXT *pEngineContext)
    MEMORY_ReleaseDVector("EngineResetContext ","specMaxx",pBuffers->specMaxx,0);
   if (pBuffers->specMax!=NULL)
    MEMORY_ReleaseDVector("EngineResetContext ","specMax",pBuffers->specMax,0);
+
+
   if (pEngineContext->analysisRef.scanRefIndexes!=NULL)
    MEMORY_ReleaseBuffer("EngineResetContext ","scanRefIndexes",pEngineContext->analysisRef.scanRefIndexes);
+
   if (pEngineContext->analysisRef.scanRefFiles!=NULL)
    MEMORY_ReleaseBuffer("EngineResetContext ","scanRefFiles",pEngineContext->analysisRef.scanRefFiles);
   if (pBuffers->varPix!=NULL)
@@ -221,7 +224,12 @@ RC EngineCopyContext(ENGINE_CONTEXT *pEngineContextTarget,ENGINE_CONTEXT *pEngin
     memcpy(&pEngineContextTarget->fileInfo,&pEngineContextSource->fileInfo,sizeof(FILE_INFO));          // the name of the file to load and file pointers
     memcpy(&pEngineContextTarget->recordInfo,&pEngineContextSource->recordInfo,sizeof(RECORD_INFO)-sizeof(CCD));
     memcpy(&pEngineContextTarget->calibFeno,&pEngineContextSource->calibFeno,sizeof(CALIB_FENO));
-    memcpy(&pEngineContextTarget->analysisRef,&pEngineContextSource->analysisRef,sizeof(ANALYSIS_REF));
+
+    pEngineContextTarget->analysisRef.nscanRefFiles=pEngineContextSource->analysisRef.nscanRefFiles;
+ 	  pEngineContextTarget->analysisRef.refAuto=pEngineContextSource->analysisRef.refAuto;
+ 	  pEngineContextTarget->analysisRef.refScan=pEngineContextSource->analysisRef.refScan;
+ 	  pEngineContextTarget->analysisRef.refSza=pEngineContextSource->analysisRef.refSza;
+ 	  pEngineContextTarget->analysisRef.refLon=pEngineContextSource->analysisRef.refLon;
 
     // Other fields
 
@@ -1166,8 +1174,6 @@ RC EngineSetRefIndexes(ENGINE_CONTEXT *pEngineContext)
         }
        }
 
-
-
       if (rc==ERROR_ID_FILE_RECORD)
        rc=ERROR_ID_NO;
 
@@ -1271,7 +1277,6 @@ RC EngineSetRefIndexes(ENGINE_CONTEXT *pEngineContext)
 
   return rc;
  }
-
 
 // -----------------------------------------------------------------------------
 // FUNCTION      EngineSetRefIndexesMFC
@@ -1647,7 +1652,7 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
   if ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_ASCII) && !pEngineContext->project.instrumental.ascii.szaSaveFlag)
    rc=ERROR_SetLast("EngineNewRef",ERROR_TYPE_WARNING,ERROR_ID_FILE_AUTOMATIC);
 
-  else if (pRecord->localCalDay!=ENGINE_contextRef.recordInfo.localCalDay)
+  else if ((pRecord->localCalDay!=ENGINE_contextRef.recordInfo.localCalDay) || (pEngineContext->analysisRef.refScan && (pEngineContext->analysisRef.scanRefIndexes!=NULL)))
 //  else if (memcmp((char *)&pRecord->present_day,(char *)&ENGINE_contextRef.present_day,sizeof(SHORT_DATE))!=0)  // ref and spectrum are not of the same day
    rc=((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC_STD) ||
        (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC) ||

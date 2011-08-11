@@ -12,8 +12,8 @@
 
   <tr>
     <td width="200" valign="top" bgcolor="#F3F3F3">
-<p class="menu-left"><span class="menu-left-sub"><img src="../spacer_orange.jpg" width="2" height="2" alt="orange layout spacer"></span><a href="../GUI/GUI.html" style="text-decoration: none; color: #336699">&nbsp;The&nbsp;user&nbsp;interface</a></p>     
-    <p class="menu-left"><span class="menu-left-sub"><img src="../spacer_orange.jpg" width="2" height="2" alt="orange layout spacer"></span><a href="../Project/Project.html" style="text-decoration: none; color: #336699">&nbsp;Project properties</a></p>
+<p class="menu-left"><span class="menu-left-sub"><img src="../spacer_orange.jpg" width="2" height="2" alt="orange layout spacer"></span><a href="../GUI/GUI.html" style="text-decoration: none; color: #336699">&nbsp;The&nbsp;user&nbsp;interface</a></p>
+    <p class="menu-left"><span class="menu-left-sub"><img src="../spacer_orange.jpg" width="2" height="2" alt="orange layout spacer"></span><a href="../Project/Project.html" style="text-decoration: none; color: #336699">&nbsp;Projects Properties</a></p>
     <p class="menu-left"><span class="menu-left-sub"><img src="../spacer_orange.jpg" width="2" height="2" alt="orange layout spacer"></span><a href="../Analysis/Analysis.html" style="text-decoration: none; color: #336699">&nbsp;Analysis&nbsp;windows&nbsp;properties</a></p>
     <p class="menu-left"><span class="menu-left-sub"><img src="../spacer_orange.jpg" width="2" height="2" alt="orange layout spacer"></span><a href="../Tools/Tools.html" style="text-decoration: none; color: #336699">&nbsp;QDOAS Tools</a></p>
     <p class="menu-left" align="right"><a href="Tools_Convolution.html" style="text-decoration: none; color: #336699">Convolution/Filtering</a></p>
@@ -24,7 +24,7 @@
     <td id="maincontent">
     <p class="head-title-page">QDOAS Ring Tool (ring)</p>
     <p align="justify">The so-called Ring  effect arises in the atmosphere due to inelastic scattering processes (mainly  Rotational Raman Scattering - RRS by molecular <em>O<sub>2</sub></em> and <em>N<sub>2</sub></em>).&nbsp; Roughly speaking, it manifests itself by a   broadening of the solar and atmospheric spectral features present in measured  spectra.&nbsp; This broadening typically  reduces the depth of thin solar and atmospheric absorption features by several  percents.&nbsp; Hence, it has a strong impact  on spectroscopic measurements using the DOAS method and requires appropriate  correction to be implemented in retrieval algorithms.&nbsp; This is especially true for minor absorbers  like <em>BrO</em> or <em>OClO</em>, for which weak absorption features can be completely masked by  Ring structures. </p>
-<p align="justify">In DOAS, the Ring effect is usually accounted for as an  absorber.&nbsp; The QDOAS Ring tool calculates Ring cross-sections using a simple method [Chance and Spurr, 1997]. &nbsp;See the <strong>Description of Algorithms part</strong> of the <strong>QDOAS Software User manual</strong> for further information on the Ring effect.</p>
+<p align="justify">In DOAS, the Ring effect is usually accounted for as an  absorber.&nbsp; The QDOAS Ring tool calculates Ring cross-sections using a simple method [Chance and Spurr, 1997]. &nbsp;See the <strong>Description of Algorithms </strong>part of the <strong>QDOAS Software User manual</strong> for further information on the Ring effect.</p>
 <p align="justify" class="orangelarge">Example of configuration of the ring tool<a name="Example"></a></p>
 <table width="1206" align="center" border="0">
   <tr>
@@ -46,10 +46,9 @@
       <li>the input wavelength  calibration;</li>
       <li>the calculated ring cross-section;</li>
       <li>the interpolated Raman  spectrum;</li>
-      <li>the convoluted solar spectrum.</li>
+      <li>the convolved solar spectrum.</li>
     </ol>
-    <p align="justify">When this file is  used as cross-section for spectra analysis, QDOAS loads only the two first  columns except if the <strong>Convolve Ring</strong> action is  requested (see the <a href="../Analysis/Analysis_Molecules.html"><strong>Molecules page</strong></a> of <a href="../Analysis/Analysis.html"><strong>Analysis windows properties</strong></a>).&nbsp; In this case, the program  uses the information on the slit function retrieved from the wavelength calibration procedure or from the slit function page to convolute separately the Raman and the solar spectra then the calculated ratio is introduced in the fit.</p>
-    <p align="justify">The format of input and output files is described in the <strong>Annex</strong> of the <strong>QDOAS Software User Manual</strong>.&nbsp; The resulting cross-section file can be    used as input for the retrieval.&nbsp; It is    then better to give the name of the output file in the format imposed by    QDOAS :<em><strong> cross-section files names must imperatively start    with the symbol name as prefix followed by the underscore character !&nbsp;</strong></em></p>
+    <p align="justify">When this file is  used as cross-section for spectra analysis, QDOAS loads only the two first  columns except if the <strong>Convolve Ring</strong> action is  requested (see the <a href="../Analysis/Analysis_Molecules.html"><strong>Molecules page</strong></a> of <a href="../Analysis/Analysis.html"><strong>Analysis windows properties</strong></a>).&nbsp; In this case, the program  uses the information on the slit function retrieved from the wavelength calibration procedure or from the slit function page to convolve separately the Raman and the solar spectra then the calculated ratio is introduced in the fit.</p>
     <p align="justify">&nbsp;</p>
     </tr>
 </table>

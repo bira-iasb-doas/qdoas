@@ -1508,16 +1508,17 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
 
         if ((pTabFeno->refSpectrumSelectionMode=pAnalysisWindows->refSpectrumSelection)==ANLYS_REF_SELECTION_MODE_AUTOMATIC)
          {
-         	if ((pTabFeno->refMaxdoasSelectionMode=pAnalysisWindows->refMaxdoasSelection)==ANLYS_MAXDOAS_REF_SCAN)
-         	 pEngineContext->analysisRef.refScan++;
-         	else if (pTabFeno->refMaxdoasSelectionMode==ANLYS_MAXDOAS_REF_SZA)
-           pEngineContext->analysisRef.refSza++;
+          if ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_CCD_EEV) || (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC_STD) ||
+             ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_ASCII) && pEngineContext->project.instrumental.ascii.elevSaveFlag))
+           {
+         	  if ((pTabFeno->refMaxdoasSelectionMode=pAnalysisWindows->refMaxdoasSelection)==ANLYS_MAXDOAS_REF_SCAN)
+         	   pEngineContext->analysisRef.refScan++;
+         	  else if (pTabFeno->refMaxdoasSelectionMode==ANLYS_MAXDOAS_REF_SZA)
+             pEngineContext->analysisRef.refSza++;
+           }
 
           pTabFeno->refSZA=(double)pAnalysisWindows->refSzaCenter;
           pTabFeno->refSZADelta=(double)pAnalysisWindows->refSzaDelta;
-
-          pTabFeno->refMaxdoasSZA=(double)pAnalysisWindows->refMaxdoasSzaCenter;
-          pTabFeno->refMaxdoasSZADelta=(double)pAnalysisWindows->refMaxdoasSzaDelta;
 
           pTabFeno->refLatMin=pAnalysisWindows->refMinLatitude;
           pTabFeno->refLatMax=pAnalysisWindows->refMaxLatitude;

@@ -40,8 +40,6 @@ extern "C" {
     int kuruczMode;
     int refSpectrumSelection;
     int refMaxdoasSelection;
-    double refMaxdoasSzaCenter;
-    double refMaxdoasSzaDelta;
     char refOneFile[FILENAME_BUFFER_LENGTH];
     char refTwoFile[FILENAME_BUFFER_LENGTH];
     char residualFile[FILENAME_BUFFER_LENGTH];

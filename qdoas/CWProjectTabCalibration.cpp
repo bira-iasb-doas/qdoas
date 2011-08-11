@@ -290,7 +290,7 @@ void CWProjectTabCalibration::slotLineShapeSelectionChanged(int index)
 void CWProjectTabCalibration::slotBrowseSolarRefFile()
 {
   CPreferences *pref = CPreferences::instance();
-  
+
   QString filename = QFileDialog::getOpenFileName(this, "Open Solar Reference File",
 						  pref->directoryName("Ref"),
                                                   "Kurucz File (*.ktz);;All Files (*)");

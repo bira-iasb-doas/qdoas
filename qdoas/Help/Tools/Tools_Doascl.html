@@ -17,8 +17,8 @@
 
   <tr>
     <td width="200" valign="top" bgcolor="#F3F3F3">
-<p class="menu-left"><span class="menu-left-sub"><img src="../spacer_orange.jpg" width="2" height="2" alt="orange layout spacer"></span><a href="../GUI/GUI.html" style="text-decoration: none; color: #336699">&nbsp;The&nbsp;user&nbsp;interface</a></p>     
-    <p class="menu-left"><span class="menu-left-sub"><img src="../spacer_orange.jpg" width="2" height="2" alt="orange layout spacer"></span><a href="../Project/Project.html" style="text-decoration: none; color: #336699">&nbsp;Project properties</a></p>
+<p class="menu-left"><span class="menu-left-sub"><img src="../spacer_orange.jpg" width="2" height="2" alt="orange layout spacer"></span><a href="../GUI/GUI.html" style="text-decoration: none; color: #336699">&nbsp;The&nbsp;user&nbsp;interface</a></p>
+    <p class="menu-left"><span class="menu-left-sub"><img src="../spacer_orange.jpg" width="2" height="2" alt="orange layout spacer"></span><a href="../Project/Project.html" style="text-decoration: none; color: #336699">&nbsp;Projects Properties</a></p>
     <p class="menu-left"><span class="menu-left-sub"><img src="../spacer_orange.jpg" width="2" height="2" alt="orange layout spacer"></span><a href="../Analysis/Analysis.html" style="text-decoration: none; color: #336699">&nbsp;Analysis&nbsp;windows&nbsp;properties</a></p>
     <p class="menu-left"><span class="menu-left-sub"><img src="../spacer_orange.jpg" width="2" height="2" alt="orange layout spacer"></span><a href="../Tools/Tools.html" style="text-decoration: none; color: #336699">&nbsp;QDOAS Tools</a></p>
     <p class="menu-left" align="right"><a href="Tools_Convolution.html" style="text-decoration: none; color: #336699">Convolution/Filtering</a></p>
@@ -28,7 +28,7 @@
     <td width="2">&nbsp;</td>
     <td id="maincontent">
     <p class="head-title-page">QDOAS Command Line Tool (doas_cl)</p>
-    <p align="justify" >The QDOAS package  includes a very powerful command line tool : doas_cl.&nbsp; It consists in a  separate module to load from the command line with a xml configuration file (a  QDOAS application or the configuration file built from the convolution/filtering,  ring or undersampling tool).  
+    <p align="justify" >The QDOAS package  includes a very powerful command line tool : doas_cl.&nbsp; It consists in a  separate module to load from the command line with a xml configuration file (a  QDOAS application or the configuration file built from the convolution/filtering,  ring or undersampling tool).
 <p align="justify" >To see the syntax, just run doas_cl without arguments :&nbsp; </p>
 <table width="100%" border="0" cellpadding="5">
   <tr>
@@ -44,9 +44,9 @@
    <td width="5%">&nbsp;</td>
    <td width="95%"><span class="style4">------------------------------------------------------------------------------<br>
 doas_cl is a tool of QDoas, a  product jointly developed by BIRA-IASB and S[&amp;]T<br>
-Last version : Qdoas version  beta 1.164 - 24 March 2011</span></td>  
+Last version : Qdoas version  beta 1.164 - 24 March 2011</span></td>
 </table>
-<p align="justify" ><strong>doas_cl </strong>is useful to  process large amount of files (for example satellite data).&nbsp; It applies on spectra and directories.&nbsp;  An output file name different from the one given in the project properties can  be specified.&nbsp; The xml input configuration file can also be modified by  the calling batch for more specific needs.</p>
+<p align="justify" ><strong>doas_cl </strong>is useful to  process large amount of files (for example satellite data).&nbsp; It applies on spectra and directories.&nbsp;  An output file name different from the one given in the <a href="../Project/Project_Output.html"><strong>Output page</strong></a> of <strong>Projects Properties </strong>can  be specified.&nbsp; The xml input configuration file can  be modified by  the calling batch for  specific needs.</p>
 <p align="justify">      Example of doas_cl command included in a bash file :</p>
     <table width="100%" border="0">
       <tr valign="top">
@@ -60,7 +60,7 @@ Last version : Qdoas version  beta 1.164 - 24 March 2011</span></td>
     <p align="justify">This command uses the QDOAS_Harestua.xml file previously generated  by QDOAS.&nbsp; It loads the project  &ldquo;Harestua&rdquo; (important to specify if several projects exist in the  application).&nbsp; The output file name is generated  automatically (see the output page of projects properties).&nbsp; </p>
     <p align="justify"><em><strong>Important  : always use slash as path separator for doas_cl file arguments (input and  output) even if you work under Windows.</strong> </em></p>
     <p align="justify">For the convolution  tool, the switch &ndash;f applies only to one file but the command can be called  several times from a batch. &nbsp;For the ring  tool, the switch &ndash;f modifies the final calibration grid.&nbsp; To change other parameters, it is better to  write a piece of code to modify the xml file. </p>
-  <p align="justify" >&nbsp;</p>    
+  <p align="justify" >&nbsp;</p>
   </tr>
 </table>
 <div id="footcontainer" >

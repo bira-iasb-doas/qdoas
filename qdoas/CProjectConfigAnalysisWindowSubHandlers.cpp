@@ -106,8 +106,6 @@ bool CAnalysisWindowSubHandler::start(const QString &element, const QXmlAttribut
 	return postErrorMessage("Residual Filename too long");
     }
 
-    d->refSzaCenter = atts.value("szacenter").toDouble();
-    d->refSzaDelta = atts.value("szadelta").toDouble();
     d->refMinLongitude = atts.value("minlon").toDouble();
     d->refMaxLongitude = atts.value("maxlon").toDouble();
     d->refMinLatitude = atts.value("minlat").toDouble();
@@ -118,8 +116,17 @@ bool CAnalysisWindowSubHandler::start(const QString &element, const QXmlAttribut
     d->cloudFractionMax = atts.value("cloudfmax").toDouble();
 
     d->refMaxdoasSelection = (atts.value("maxdoasrefmode") == "scan") ? ANLYS_MAXDOAS_REF_SCAN :  ANLYS_MAXDOAS_REF_SZA;
-    d->refMaxdoasSzaCenter = atts.value("maxdoasszacenter").toDouble();
-    d->refMaxdoasSzaDelta = atts.value("maxdoasszadelta").toDouble();
+
+    if (d->refMaxdoasSelection==ANLYS_MAXDOAS_REF_SCAN)
+     {
+      d->refSzaCenter = atts.value("maxdoasszacenter").toDouble();
+      d->refSzaDelta = atts.value("maxdoasszadelta").toDouble();
+     }
+    else
+     {
+      d->refSzaCenter = atts.value("szacenter").toDouble();
+      d->refSzaDelta = atts.value("szadelta").toDouble();
+     }
 
     d->pixelTypeEast = (atts.value("east") == "true") ? 1 : 0;
     d->pixelTypeCenter = (atts.value("center") == "true") ? 1 : 0;

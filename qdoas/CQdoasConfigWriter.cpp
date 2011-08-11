@@ -1158,8 +1158,8 @@ void CQdoasConfigWriter::writeAnalysisWindows(FILE *fp, const QString &projectNa
                 properties->refMinLongitude, properties->refMaxLongitude,
                 properties->refMinLatitude, properties->refMaxLatitude, properties->refNs,
                 properties->cloudFractionMin,properties->cloudFractionMax);
-	fprintf(fp,"              maxdoasrefmode=\"%s\" maxdoasszacenter=\"%.3f\" maxdoasszadelta=\"%.3f\"\n",
-	           (properties->refMaxdoasSelection==ANLYS_MAXDOAS_REF_SCAN)?"scan":"sza",properties->refMaxdoasSzaCenter,properties->refMaxdoasSzaDelta);
+	fprintf(fp,"              maxdoasrefmode=\"%s\" \n",
+	           (properties->refMaxdoasSelection==ANLYS_MAXDOAS_REF_SCAN)?"scan":"sza");
 	fprintf(fp, "             east=\"%s\" center=\"%s\" west=\"%s\" backscan=\"%s\" />\n",
 		(properties->pixelTypeEast ? sTrue : sFalse), (properties->pixelTypeCenter ? sTrue : sFalse),
 		(properties->pixelTypeWest ? sTrue : sFalse), (properties->pixelTypeBackscan ? sTrue : sFalse));

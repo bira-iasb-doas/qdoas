@@ -1,6 +1,6 @@
 <html>
 <head>
-<title>QDOAS Project properties : Instrumental page</title>
+<title>QDOAS Projects Properties : Instrumental page</title>
 <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 <meta NAME="description" CONTENT="QDOAS help">
 <meta NAME="keywords" CONTENT="QDOAS, project, format, ASCII, SAOZ, DOASIS, MFC, GOME, SCIAMACHY, GOME2, ground-based, line, column, size of the detector, MKZY, NOVAC">
@@ -12,8 +12,8 @@
 
   <tr>
     <td width="200" valign="top" bgcolor="#F3F3F3">
-<p class="menu-left"><span class="menu-left-sub"><img src="../spacer_orange.jpg" width="2" height="2" alt="orange layout spacer"></span><a href="../GUI/GUI.html" style="text-decoration: none; color: #336699">&nbsp;The&nbsp;user&nbsp;interface</a></p>     
-    <p class="menu-left"><span class="menu-left-sub"><img src="../spacer_orange.jpg" width="2" height="2" alt="orange layout spacer"></span><a href="Project.html" style="text-decoration: none; color: #336699">&nbsp;Project properties</a></p>
+<p class="menu-left"><span class="menu-left-sub"><img src="../spacer_orange.jpg" width="2" height="2" alt="orange layout spacer"></span><a href="../GUI/GUI.html" style="text-decoration: none; color: #336699">&nbsp;The&nbsp;user&nbsp;interface</a></p>
+    <p class="menu-left"><span class="menu-left-sub"><img src="../spacer_orange.jpg" width="2" height="2" alt="orange layout spacer"></span><a href="Project.html" style="text-decoration: none; color: #336699">&nbsp;Projects Properties</a></p>
     <p class="menu-left" align="right"><a href="Project_Display.html" style="text-decoration: none; color: #336699">Display</a></p>
     <p class="menu-left" align="right"><a href="Project_Selection.html" style="text-decoration: none; color: #336699">Selection</a></p>
     <p class="menu-left" align="right"><a href="Project_Analysis.html" style="text-decoration: none; color: #336699">Analysis</a></p>
@@ -27,7 +27,7 @@
     <p class="menu-left"><span class="menu-left-sub"><img src="../spacer_orange.jpg" width="2" height="2" alt="orange layout spacer"></span><a href="../Tools/Tools.html" style="text-decoration: none; color: #336699">&nbsp;QDOAS&nbsp;Tools</a></p>
     <td width="2">&nbsp;</td>
     <td id="maincontent">
-    <p class="head-title-page">QDOAS Project properties : Instrumental page</p>
+    <p class="head-title-page">QDOAS Projects Properties : Instrumental page</p>
     <p align="center" ><img src="Project_InstrumentalAscii.jpg" alt="" width="722" height="481" border="0" usemap="#Map">
 <map name="Map">
       <area shape="rect" coords="48,50,104,70" href="Project_Display.html">
@@ -45,10 +45,10 @@
     <p align="justify" ><a name="Options"></a>Except the observation <strong>Site</strong>, the <strong>Calibration File</strong> and the <strong>Instrument function</strong>, the fields that appear in this page depend strictly on the  format of spectra files to process. </p>
     <strong><p align="justify" class="orangelarge">Calibration file and instrumental corrections</p></strong>
     <p align="justify" >A preliminary wavelength calibration is necessary to browse spectra. If the wavelength calibration is  coded in the spectra file, it is recommended to use it by keeping the field <strong>Calibration File</strong> empty. </p>
-    <p align="justify" ><em><strong>For the analysis of spectra, the wavelength calibration of the reference spectrum always has the priority over the spectra ones.</strong></em></p>
+    <p align="justify"><em><strong>For the analysis of spectra, the wavelength calibration of the reference spectrum always has the priority over the spectra ones. It is important to select this  file very carefully mainly when browsing spectra to save a new reference  spectrum.</strong></em></p>
     <p align="justify">Some instrumental corrections can be applied on spectra. For example, a  transmission function previously determined in laboratory with calibrated sources can be specified in the <strong>Instr.  function</strong> field. A two columns ASCII file is expected (wavelength calibration and transmission function) and spectra will be divided by this curve before the wavelength calibration procedure.</p>
     <p align="justify">Dark current correction is also possible according to the file format. The selected file format determines how dark currents are provided and how spectra are corrected. </p>
-    <p align="justify">For the <strong><u>MFC STD file format</u></strong>, spectra can be corrected by dark current and offset. The dark current should be a spectrum measured with a large integration time (typically 30 sec) and the offset should be the average of a large number of spectra measured with a very small integration time (typically 1000 x 3 ms). Note that dark current are also corrected by offset. In addition to these corrections, the straylight can be strongly attenuated by subtracting from the spectra, the average of the signal measured in the UV region (below 300 nm if possible). See details in the <strong>Description of Algorithms</strong> section of the <strong>QDOAS Software User Manual.</strong></p>
+    <p align="justify">For the <strong><u>MFC STD file format</u></strong>, spectra can be corrected by dark current and offset. The dark current should be a spectrum measured with a large integration time (typically 30 sec) and the offset should be the average of a large number of spectra measured with a very small integration time (typically 1000 x 3 ms). Note that QDOAS corrects dark current by offset. In addition to these corrections, the straylight can be strongly attenuated by subtracting from the spectra, the average of the signal measured in the UV region (below 300 nm if possible). See details in the <strong>Description of Algorithms</strong> section of the <strong>QDOAS Software User Manual.</strong></p>
     <p align="justify" class="orangelarge">Satellite measurements<a name="Satellites"></a></p>
     <p align="justify">Spectra measured by the following satellite instruments can be processed by QDOAS : </p>
     <table width="80%" border="0" align="center" cellpadding="5" cellspacing="10" >
@@ -98,7 +98,7 @@
     </ol>
   <p align="justify">In the column format, angles have to be given on the same line and a wavelength calibration can be provided with spectra. Some examples of ASCII files supported by QDOAS are given in annex of the <strong>QDOAS Software User Manual.</strong></p>
   <p align="justify" class="orangelarge">The observation site<a name="Site"></a></p>
-  <p align="justify">The information on the observation <strong>Site</strong> is used to  (re&#8209;)calculate solar zenith angle from geolocation coordinates given for this site in the <strong>Sites </strong>sheet. This can be useful for example if the solar zenith angles saved in the files are not reliable enough. The abbreviation of the observation site is also used to build  automatic output file names (see the<strong> <a href="Project_Output.html#AutomaticFile">Output Page</a></strong>).</p>
+  <p align="justify">The information on the observation <strong>Site</strong> is used to  (re&#8209;)calculate solar zenith angle from geolocation coordinates given for this site in the <strong><a href="../GUI/GUI_Sites.html">Sites</a> </strong>sheet. This can be useful for example if the solar zenith angles saved in the files are not reliable enough. The abbreviation of the observation site is also used to build  automatic output file names (see the<strong> <a href="Project_Output.html#AutomaticFile">Output Page</a></strong>).</p>
   <p align="justify">&nbsp;</p>    </tr>
 </table>
 <div id="footcontainer" >
