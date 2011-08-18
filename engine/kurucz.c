@@ -354,6 +354,7 @@ RC KURUCZ_Spectrum(double *oldLambda,double *newLambda,double *spectrum,double *
          fwhmSigma[indexParam][indexWindow]=Feno->TabCrossResults[Feno->indexFwhmParam[indexParam]].SigmaParam;
         }
 
+
       // Store fit for display
 
       if (displayFlag)
@@ -411,7 +412,8 @@ RC KURUCZ_Spectrum(double *oldLambda,double *newLambda,double *spectrum,double *
       KURUCZ_buffers.KuruczFeno[indexFeno].chiSquare[indexWindow]=Square;
       KURUCZ_buffers.KuruczFeno[indexFeno].rms[indexWindow]=(Square>(double)0.)?sqrt(Square):(double)0.;
       KURUCZ_buffers.KuruczFeno[indexFeno].nIter[indexWindow]=NIter[indexWindow];
-     }
+
+     }  // End for (indexWindow=...
 
     if (!rc)
      {
@@ -905,11 +907,11 @@ void KURUCZ_Init(INT gomeFlag)
         Fenetre[0][1]=FNPixel(pTabFeno->LambdaRef,Lambda_max,pTabFeno->NDET,PIXEL_BEFORE);
 
         pSvd->DimL=Fenetre[0][1]-Fenetre[0][0]+1;
+
         Lambda_min=Lambda_max;
        }
      }
    }
-
  }
 
 // ----------------------------------------------------------------------------

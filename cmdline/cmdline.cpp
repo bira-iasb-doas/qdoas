@@ -86,6 +86,7 @@ int batchProcessRing(commands_t *cmd);
 int batchProcessUsamp(commands_t *cmd);
 
 int calibSwitch=0;
+int verboseMode=0;
 
 //-------------------------------------------------------------------
 
@@ -194,7 +195,9 @@ enum RunMode parseCommandLine(int argc, char **argv, commands_t *cmd)
 	}
 
       }
-      else if (!strcmp(argv[i], "-o")) { // output directory ...
+	else if (!strcmp(argv[i],"-v"))
+	 verboseMode=1;
+ else if (!strcmp(argv[i], "-o")) { // output directory ...
 	if (++i < argc && argv[i][0] != '-') {
 		 fileSwitch=0;
 	  cmd->outputDir = argv[i];
@@ -301,6 +304,7 @@ void showUsage()
   std::cout << "                         configuration file specified;" << std::endl << std::endl;
   std::cout << "    -a <project name>  : for QDoas, run analysis on the specified project" << std::endl;
   std::cout << "    -k <project name>  : for QDoas, run calibration on the specified project" << std::endl << std::endl;
+  std::cout << "    -v                 : verbose on (default is off)" << std::endl << std::endl;
   std::cout << "------------------------------------------------------------------------------" << std::endl;
   std::cout << "doas_cl is a tool of QDoas, a product jointly developed by BIRA-IASB and S[&]T" << std::endl;
   std::cout << "Last version : " << cQdoasVersionString << std::endl ;
@@ -603,7 +607,8 @@ int analyseProjectQdoasFile(void *engineContext, CBatchEngineController *control
   if (result == -1)
     return 1;
 
-  std::cout << "Processing file " << filename.toStdString() << std::endl;
+  if (verboseMode)
+   std::cout << "Processing file " << filename.toStdString() << std::endl;
 
   oldResult=-1;
 
@@ -624,7 +629,7 @@ int analyseProjectQdoasFile(void *engineContext, CBatchEngineController *control
 
       if (result == -1)
         retCode = 1;
-      else
+      else if (verboseMode)
         std::cout << "  completed record " << result << std::endl;
 
       resp->process(controller);

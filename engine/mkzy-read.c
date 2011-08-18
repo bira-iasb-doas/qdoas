@@ -778,7 +778,7 @@ RC MKZY_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
   pInstrumental=&pEngineContext->project.instrumental;
   rc=ERROR_ID_NO;
 
-  if ((THRD_id==THREAD_TYPE_ANALYSIS) && pEngineContext->recordInfo.mkzy.skyFlag && pEngineContext->refFlag)
+  if (pEngineContext->recordInfo.mkzy.skyFlag && pEngineContext->refFlag)
    {
     useKurucz=0;
 

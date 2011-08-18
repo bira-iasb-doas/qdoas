@@ -2309,7 +2309,7 @@ RC GOME2_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
   pOrbitFile=&gome2OrbitFiles[gome2CurrentFileIndex];
   saveFlag=(INT)pEngineContext->project.spectra.displayDataFlag;
 
-  if (!(rc=pOrbitFile->rc) && (THRD_id==THREAD_TYPE_ANALYSIS) && (gome2LoadReferenceFlag || !pEngineContext->analysisRef.refAuto))
+  if (!(rc=pOrbitFile->rc) && (gome2LoadReferenceFlag || !pEngineContext->analysisRef.refAuto))
    {
     lambdaMin=(double)9999.;
     lambdaMax=(double)-9999.;
@@ -2320,82 +2320,84 @@ RC GOME2_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
     // Browse analysis windows and load missing data
 
     for (indexFeno=0;(indexFeno<NFeno) && !rc;indexFeno++)
-     if (!TabFeno[indexFeno].hidden)
-      {
-       pTabFeno=&TabFeno[indexFeno];
-       pTabFeno->NDET=NDET;
+     {
+      pTabFeno=&TabFeno[indexFeno];
+      pTabFeno->NDET=NDET;
 
-       // Load calibration and reference spectra
+      // Load calibration and reference spectra
 
-       if (!pTabFeno->gomeRefFlag)
-        {
-         memcpy(pTabFeno->LambdaRef,pOrbitFile->gome2SunWve,sizeof(double)*NDET);
-         memcpy(pTabFeno->Sref,pOrbitFile->gome2SunRef,sizeof(double)*NDET);
+      if (!pTabFeno->gomeRefFlag)
+       {
+        memcpy(pTabFeno->LambdaRef,pOrbitFile->gome2SunWve,sizeof(double)*NDET);
+        memcpy(pTabFeno->Sref,pOrbitFile->gome2SunRef,sizeof(double)*NDET);
 
-         if (!(rc=VECTOR_NormalizeVector(pTabFeno->Sref-1,pTabFeno->NDET,&pTabFeno->refNormFact,"GOME2_LoadAnalysis (Reference) ")))
-          {
-           memcpy(pTabFeno->SrefEtalon,pTabFeno->Sref,sizeof(double)*pTabFeno->NDET);
-           pTabFeno->useEtalon=pTabFeno->displayRef=1;
+        if (!TabFeno[indexFeno].hidden)
+         {
+          if (!(rc=VECTOR_NormalizeVector(pTabFeno->Sref-1,pTabFeno->NDET,&pTabFeno->refNormFact,"GOME2_LoadAnalysis (Reference) ")))
+           {
+            memcpy(pTabFeno->SrefEtalon,pTabFeno->Sref,sizeof(double)*pTabFeno->NDET);
+            pTabFeno->useEtalon=pTabFeno->displayRef=1;
 
-           // Browse symbols
+            // Browse symbols
 
-           for (indexTabCross=0;indexTabCross<pTabFeno->NTabCross;indexTabCross++)
-            {
-             pTabCross=&pTabFeno->TabCross[indexTabCross];
-             pWrkSymbol=&WorkSpace[pTabCross->Comp];
+            for (indexTabCross=0;indexTabCross<pTabFeno->NTabCross;indexTabCross++)
+             {
+              pTabCross=&pTabFeno->TabCross[indexTabCross];
+              pWrkSymbol=&WorkSpace[pTabCross->Comp];
 
-             // Cross sections and predefined vectors
+              // Cross sections and predefined vectors
 
-             if ((((pWrkSymbol->type==WRK_SYMBOL_CROSS) && (pTabCross->crossAction==ANLYS_CROSS_ACTION_NOTHING)) ||
-                  ((pWrkSymbol->type==WRK_SYMBOL_PREDEFINED) &&
-                  ((indexTabCross==pTabFeno->indexCommonResidual) ||
-                 (((indexTabCross==pTabFeno->indexUsamp1) || (indexTabCross==pTabFeno->indexUsamp2)) && (pUsamp->method==PRJCT_USAMP_FILE))))) &&
-                  ((rc=ANALYSE_CheckLambda(pWrkSymbol,pTabFeno->LambdaRef,"GOME2_LoadAnalysis "))!=ERROR_ID_NO))
+              if ((((pWrkSymbol->type==WRK_SYMBOL_CROSS) && (pTabCross->crossAction==ANLYS_CROSS_ACTION_NOTHING)) ||
+                   ((pWrkSymbol->type==WRK_SYMBOL_PREDEFINED) &&
+                   ((indexTabCross==pTabFeno->indexCommonResidual) ||
+                  (((indexTabCross==pTabFeno->indexUsamp1) || (indexTabCross==pTabFeno->indexUsamp2)) && (pUsamp->method==PRJCT_USAMP_FILE))))) &&
+                   ((rc=ANALYSE_CheckLambda(pWrkSymbol,pTabFeno->LambdaRef,"GOME2_LoadAnalysis "))!=ERROR_ID_NO))
 
-              goto EndGOME2_LoadAnalysis;
-            }
+               goto EndGOME2_LoadAnalysis;
+             }
 
-           // Gaps : rebuild subwindows on new wavelength scale
+            // Gaps : rebuild subwindows on new wavelength scale
 
-           for (indexWindow=0,DimL=0;indexWindow<pTabFeno->svd.Z;indexWindow++)
-            {
-             pTabFeno->svd.Fenetre[indexWindow][0]=FNPixel(pTabFeno->LambdaRef,pTabFeno->svd.LFenetre[indexWindow][0],pTabFeno->NDET,PIXEL_AFTER);
-             pTabFeno->svd.Fenetre[indexWindow][1]=FNPixel(pTabFeno->LambdaRef,pTabFeno->svd.LFenetre[indexWindow][1],pTabFeno->NDET,PIXEL_BEFORE);
+            for (indexWindow=0,DimL=0;indexWindow<pTabFeno->svd.Z;indexWindow++)
+             {
+              pTabFeno->svd.Fenetre[indexWindow][0]=FNPixel(pTabFeno->LambdaRef,pTabFeno->svd.LFenetre[indexWindow][0],pTabFeno->NDET,PIXEL_AFTER);
+              pTabFeno->svd.Fenetre[indexWindow][1]=FNPixel(pTabFeno->LambdaRef,pTabFeno->svd.LFenetre[indexWindow][1],pTabFeno->NDET,PIXEL_BEFORE);
 
-             DimL+=(pTabFeno->svd.Fenetre[indexWindow][1]-pTabFeno->svd.Fenetre[indexWindow][0]+1);
-            }
+              DimL+=(pTabFeno->svd.Fenetre[indexWindow][1]-pTabFeno->svd.Fenetre[indexWindow][0]+1);
+             }
 
-           pTabFeno->svd.DimL=DimL;
+            pTabFeno->svd.DimL=DimL;
 
-           // Buffers allocation
+            // Buffers allocation
 
-           SVD_Free("GOME2_LoadAnalysis",&pTabFeno->svd);
-           SVD_LocalAlloc("GOME2_LoadAnalysis",&pTabFeno->svd);
+            SVD_Free("GOME2_LoadAnalysis",&pTabFeno->svd);
+            SVD_LocalAlloc("GOME2_LoadAnalysis",&pTabFeno->svd);
 
-           pTabFeno->Decomp=1;
+            pTabFeno->Decomp=1;
 
-           if (((rc=ANALYSE_XsInterpolation(pTabFeno,pTabFeno->LambdaRef))!=ERROR_ID_NO) ||
-               ((!pKuruczOptions->fwhmFit || !pTabFeno->useKurucz) && pTabFeno->xsToConvolute &&
-               ((rc=ANALYSE_XsConvolution(pTabFeno,pTabFeno->LambdaRef,&ANALYSIS_slit,pSlitOptions->slitFunction.slitType,&pSlitOptions->slitFunction.slitParam,&pSlitOptions->slitFunction.slitParam2,&pSlitOptions->slitFunction.slitParam3,&pSlitOptions->slitFunction.slitParam4))!=ERROR_ID_NO)))
+            if (((rc=ANALYSE_XsInterpolation(pTabFeno,pTabFeno->LambdaRef))!=ERROR_ID_NO) ||
+                ((!pKuruczOptions->fwhmFit || !pTabFeno->useKurucz) && pTabFeno->xsToConvolute &&
+                ((rc=ANALYSE_XsConvolution(pTabFeno,pTabFeno->LambdaRef,&ANALYSIS_slit,pSlitOptions->slitFunction.slitType,&pSlitOptions->slitFunction.slitParam,&pSlitOptions->slitFunction.slitParam2,&pSlitOptions->slitFunction.slitParam3,&pSlitOptions->slitFunction.slitParam4))!=ERROR_ID_NO)))
 
-            goto EndGOME2_LoadAnalysis;
-          }
+             goto EndGOME2_LoadAnalysis;
+           }
+         }
 
-         memcpy(pTabFeno->LambdaK,pTabFeno->LambdaRef,sizeof(double)*pTabFeno->NDET);
-         memcpy(pTabFeno->Lambda,pTabFeno->LambdaRef,sizeof(double)*pTabFeno->NDET);
+        memcpy(pTabFeno->LambdaK,pTabFeno->LambdaRef,sizeof(double)*pTabFeno->NDET);
+        memcpy(pTabFeno->Lambda,pTabFeno->LambdaRef,sizeof(double)*pTabFeno->NDET);
 
-         useUsamp+=pTabFeno->useUsamp;
-         useKurucz+=pTabFeno->useKurucz;
+        useUsamp+=pTabFeno->useUsamp;
+        useKurucz+=pTabFeno->useKurucz;
 
-         if (pTabFeno->useUsamp)
-          {
-           if (pTabFeno->LambdaRef[0]<lambdaMin)
-            lambdaMin=pTabFeno->LambdaRef[0];
-           if (pTabFeno->LambdaRef[pTabFeno->NDET-1]>lambdaMax)
-            lambdaMax=pTabFeno->LambdaRef[pTabFeno->NDET-1];
-          }
-        }
-      }
+        if (pTabFeno->useUsamp)
+         {
+          if (pTabFeno->LambdaRef[0]<lambdaMin)
+           lambdaMin=pTabFeno->LambdaRef[0];
+          if (pTabFeno->LambdaRef[pTabFeno->NDET-1]>lambdaMax)
+           lambdaMax=pTabFeno->LambdaRef[pTabFeno->NDET-1];
+         }
+       }
+     }
 
     // Wavelength calibration alignment
 

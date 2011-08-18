@@ -24,6 +24,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "debugutil.h"
 
+extern int verboseMode;
+
 
 CBatchEngineController::CBatchEngineController() :
   CEngineController(),
@@ -56,7 +58,8 @@ void CBatchEngineController::notifyErrorMessages(int highestErrorLevel, const QL
         std::cout << "INFO:  ";
         break;
       case WarningEngineError:
-        std::cout << "WARN:  ";
+        if (verboseMode)
+         std::cout << "WARN:  ";
         break;
       case FatalEngineError:
         std::cout << "ERROR: ";
@@ -65,7 +68,8 @@ void CBatchEngineController::notifyErrorMessages(int highestErrorLevel, const QL
         std::cout << "???:   ";
      }
 
-    std::cout << it->message().toStdString() << std::endl;
+    if ((it->errorLevel()!=WarningEngineError) || verboseMode)
+     std::cout << it->message().toStdString() << std::endl;
     ++it;
    }
 
