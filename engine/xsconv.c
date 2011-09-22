@@ -150,6 +150,7 @@
 // =====================
 
 #define XSCONV_SECTION "Convolution"
+#define NFWHM          18                 // number of pixels/FWHM
 
 // Slit types
 
@@ -667,7 +668,7 @@ RC XSCONV_LoadSlitFunction(XS *pSlitXs,SLIT *pSlit,double *pGaussWidth,INT *pSli
   FILE  *slitFp;
   RC     rc;
   INDEX  i;
-  double x,a,a2,delta,sigma,invapi,sumPoly,slitStep,norm1,norm2,slitParam[4];
+  double x,a,a2,delta,sigma,invapi,sumPoly,slitStep,norm1,norm2,slitParam[4],fwhm;
   INT    nSlit,slitType,slitSize,nFwhm;
 
   // Initializations
@@ -685,7 +686,7 @@ RC XSCONV_LoadSlitFunction(XS *pSlitXs,SLIT *pSlit,double *pGaussWidth,INT *pSli
   slitParam[3]=pSlit->slitParam4;
 
   slitType=pSlit->slitType;
-  nFwhm=6;         // number of pixels by FWHM
+  nFwhm=NFWHM;         // number of pixels by FWHM
   rc=ERROR_ID_NO;
 
   // Input read out
@@ -693,6 +694,7 @@ RC XSCONV_LoadSlitFunction(XS *pSlitXs,SLIT *pSlit,double *pGaussWidth,INT *pSli
   if ((slitType!=SLIT_TYPE_GAUSS) &&    // File or wavelength dependent function
       (slitType!=SLIT_TYPE_INVPOLY) &&
       (slitType!=SLIT_TYPE_ERF) &&
+      (slitType!=SLIT_TYPE_AGAUSS) &&
       (slitType!=SLIT_TYPE_VOIGT) &&
       (slitType!=SLIT_TYPE_APOD) &&
       (slitType!=SLIT_TYPE_APODNBS))
@@ -755,7 +757,8 @@ RC XSCONV_LoadSlitFunction(XS *pSlitXs,SLIT *pSlit,double *pGaussWidth,INT *pSli
 
   else if ((slitType!=SLIT_TYPE_APOD) && (slitType!=SLIT_TYPE_APODNBS))
    {
-    slitStep=pSlit->slitParam/nFwhm;                               // 6 points/FWHM
+   	fwhm=(slitType!=SLIT_TYPE_ERF)?pSlit->slitParam:sqrt(pSlit->slitParam*pSlit->slitParam+pSlit->slitParam2*pSlit->slitParam2);
+    slitStep=fwhm/nFwhm;                               // number of points /FWHM
 
  //   slitSize=(int)(ceil((nFwhm*pSlit->slitParam)/slitStep)+1.);
 
@@ -789,7 +792,7 @@ RC XSCONV_LoadSlitFunction(XS *pSlitXs,SLIT *pSlit,double *pGaussWidth,INT *pSli
       else
        norm1=norm2=(double)1.;
 
-      for (i=0,x=(double)-0.5*nFwhm*pSlit->slitParam;(i<slitSize) && !rc;i++,x+=(double)slitStep)
+      for (i=0,x=(double)-0.5*nFwhm*fwhm;(i<slitSize) && !rc;i++,x+=(double)slitStep)
        {
         pSlitXs->lambda[i]=(double)x;
 
@@ -797,6 +800,11 @@ RC XSCONV_LoadSlitFunction(XS *pSlitXs,SLIT *pSlit,double *pGaussWidth,INT *pSli
          sumPoly+=pSlitXs->vector[i]=(double)pow(sigma,pSlit->slitParam2)/(pow(x,pSlit->slitParam2)+pow(sigma,pSlit->slitParam2));
         else if (slitType==SLIT_TYPE_ERF)
          pSlitXs->vector[i]=(double)(ERF_GetValue((x+delta)/a)-ERF_GetValue((x-delta)/a))/(4.*delta)*slitStep;
+        else if (slitType==SLIT_TYPE_AGAUSS)
+         {
+         	a2=(x<(double)0.)?a*(1.-pSlit->slitParam2):a*(1.+pSlit->slitParam2);
+          pSlitXs->vector[i]=(double)exp(-(x*x)/(a2*a2));
+         }
         else if (slitType==SLIT_TYPE_GAUSS)
          pSlitXs->vector[i]=(double)invapi*exp(-(x*x)/(a*a));
         else if (slitType==SLIT_TYPE_VOIGT)
@@ -809,6 +817,15 @@ RC XSCONV_LoadSlitFunction(XS *pSlitXs,SLIT *pSlit,double *pGaussWidth,INT *pSli
           sumPoly+=pSlitXs->vector[i];
          }
        }
+
+//         {
+//         	FILE *fp;
+//         	fp=fopen("slit.dat","w+t");
+//         	for (i=0;i<slitSize;i++)
+//         	 fprintf(fp,"%g %g\n",pSlitXs->lambda[i],pSlitXs->vector[i]);
+//         	fclose(fp);
+//         }
+
    //   exit(1);
       if (slitType==SLIT_TYPE_GAUSS)
        rc=XsconvFctBuild(pSlitXs->lambda,pSlitXs->vector,slitSize,pSlit->slitType,slitParam,4);
@@ -1095,6 +1112,11 @@ RC GetNewF(double *pNewF,
    newF=(double)pow(sigma,slitParam2)/(pow(dist,slitParam2)+pow(sigma,slitParam2));
   else if (((slitType==SLIT_TYPE_ERF) || (slitType==SLIT_TYPE_ERF_FILE)) && (slitParam2!=(double)0.))
    newF=(double)(ERF_GetValue((dist+delta)/a)-ERF_GetValue((dist-delta)/a))/(4.*delta);
+  else if (slitType==SLIT_TYPE_AGAUSS)
+   {
+    a2=(dist<(double)0.)?slitParam*(1.-slitParam2):slitParam*(1.+slitParam2);
+    newF=(double)exp(-4.*log(2)*(dist*dist)/(a2*a2));
+   }
   else if ((slitType==SLIT_TYPE_VOIGT) ) // || (slitType===SLIT_TYPE_VOIGT_FILE))
    {
     if ((dist>(double)0.) && (slitParam3!=(double)0.))
@@ -1127,7 +1149,7 @@ RC XSCONV_TypeStandard(XS *pXsnew,INDEX indexLambdaMin,INDEX indexLambdaMax,XS *
          *slitLambda,*slitVector,*slitDeriv2,dist,
          *IVector,*IDeriv2,
           crossFIntegral,IFIntegral,FIntegral,
-          oldF,newF,oldIF,newIF,stepF,h,
+          oldF,newF,oldIF,newIF,stepF,h,fwhm,
           slitCenter,// ADD AN OPTION LATER c,si,
           lambda,lambdaMin,lambdaMax,oldXshr,newXshr;
   INDEX   xshrPixMin,
@@ -1166,12 +1188,15 @@ RC XSCONV_TypeStandard(XS *pXsnew,INDEX indexLambdaMin,INDEX indexLambdaMax,XS *
 
   // Initializations
 
+  fwhm=(slitType!=SLIT_TYPE_ERF)?slitParam:sqrt(slitParam*slitParam+slitParam2*slitParam2);
+
   if (slitType==SLIT_TYPE_FILE)
    stepF=slitLambda[1]-slitLambda[0];
   else if ((slitType==SLIT_TYPE_APOD) ||(slitType==SLIT_TYPE_APODNBS))
-   stepF=slitParam/50.;
+   stepF=fwhm/50.;
   else
-   stepF=slitParam/6.;
+   stepF=fwhm/(double)NFWHM;
+
   msgCount=0;
 
   rc=ERROR_ID_NO;
@@ -1191,7 +1216,7 @@ RC XSCONV_TypeStandard(XS *pXsnew,INDEX indexLambdaMin,INDEX indexLambdaMax,XS *
 // ADD AN OPTION LATER  else
    {
     slitCenter=(double)0.;
-    slitWidth=(double)3.*slitParam;
+    slitWidth=(double)3.*fwhm;
    }
 
   // Browse wavelengths in the final calibration vector
@@ -1207,8 +1232,10 @@ RC XSCONV_TypeStandard(XS *pXsnew,INDEX indexLambdaMin,INDEX indexLambdaMax,XS *
      {
       SPLINE_Vector(slitLambda,slitVector,slitDeriv2,slitNDET,&lambda,&slitParam,1,SPLINE_CUBIC,"XSCONV_TypeStandard ");
 
-      stepF=slitParam/6.;            // 6 points/FWHM
-      slitWidth=(double)3.*slitParam;
+      fwhm=(slitType!=SLIT_TYPE_ERF_FILE)?slitParam:sqrt(slitParam*slitParam+slitParam2*slitParam2);
+
+      stepF=fwhm/(double)NFWHM;            // number of points/FWHM
+      slitWidth=(double)3.*fwhm;
      }
 
     if (slitType!=SLIT_TYPE_FILE)
@@ -1542,7 +1569,7 @@ RC XsconvRebuildSlitFunction(double *lambda,double *slit,INT nslit,SLIT *pSlit,X
  {
   // Declarations
 
-  double slitParam,n,sigma,delta,a;
+  double slitParam,n,sigma,delta,a,a2;
   INDEX i;
   RC rc;
 
@@ -1553,8 +1580,8 @@ RC XsconvRebuildSlitFunction(double *lambda,double *slit,INT nslit,SLIT *pSlit,X
   // Build deconvolution slit function
 
   if (pSlit->slitType==SLIT_TYPE_GAUSS)
-   for (i=0,slitParam=pSlit->slitParam*pSlit->slitParam;i<nslit;i++)
-    slit[i]=(double)exp(-4.*log(2.)*(lambda[i]*lambda[i])/slitParam);
+   for (i=0,slitParam=pSlit->slitParam;i<nslit;i++)
+    slit[i]=(double)exp(-4.*log(2.)*(lambda[i]*lambda[i])/(slitParam*slitParam));
 
   else if (pSlit->slitType==SLIT_TYPE_INVPOLY)
    for (i=0,sigma=pSlit->slitParam*0.5,n=(double)pSlit->slitParam2;i<nslit;i++)
@@ -1563,6 +1590,13 @@ RC XsconvRebuildSlitFunction(double *lambda,double *slit,INT nslit,SLIT *pSlit,X
   else if (pSlit->slitType==SLIT_TYPE_ERF)
    for (i=0,sigma=pSlit->slitParam*0.5,a=(double)sigma/sqrt(log(2.)),delta=(double)pSlit->slitParam2*0.5;i<nslit;i++)
     slit[i]=(double)(ERF_GetValue((lambda[i]+delta)/a)-ERF_GetValue((lambda[i]-delta)/a))/(4.*delta);
+
+  else if (pSlit->slitType==SLIT_TYPE_AGAUSS)
+    for (i=0;i<nslit;i++)
+     {
+     	a2=(lambda[i]<(double)0.)?pSlit->slitParam*(1.-pSlit->slitParam2):pSlit->slitParam*(1+pSlit->slitParam2);
+      slit[i]=(double)exp(-4.*log(2.)*(lambda[i]*lambda[i])/(a2*a2));
+     }
 
   else // slit type == SLIT_TYPE_FILE
    rc=SPLINE_Vector(pSlitXs->lambda,pSlitXs->vector,pSlitXs->deriv2,pSlitXs->NDET,lambda,slit,nslit,SPLINE_CUBIC,"XsconvRebuildSlitFunction ");

@@ -71,18 +71,18 @@ void CWSlitFileBase::helperConstructFileEdit(QGridLayout *gridLayout, int &row, 
 void CWSlitFileBase::slotBrowseFile()
 {
   CPreferences *pref = CPreferences::instance();
-  
+
   QString filename = QFileDialog::getOpenFileName(this, "Select Slit Function File",
 						  pref->directoryName("Slit"),
 						  "Slit Function File (*.slf);;All Files (*)");
-  
+
   if (!filename.isEmpty()) {
     pref->setDirectoryNameGivenFile("Slit", filename);
-    
+
     m_filenameEdit->setText(filename);
   }
 }
-   
+
 //--------------------------------------------------------
 
 CWSlitFileEdit::CWSlitFileEdit(const struct slit_file *d, QWidget *parent) :
@@ -91,7 +91,7 @@ CWSlitFileEdit::CWSlitFileEdit(const struct slit_file *d, QWidget *parent) :
   int row = 0;
   QVBoxLayout *mainLayout = new QVBoxLayout(this);
   QGridLayout *gridLayout = new QGridLayout;
- 
+
   helperConstructFileEdit(gridLayout, row, d->filename, sizeof(d->filename));
 
   gridLayout->setColumnMinimumWidth(0, cSuggestedColumnZeroWidth);
@@ -123,11 +123,11 @@ CWSlitGaussianEdit::CWSlitGaussianEdit(const struct slit_gaussian *d, QWidget *p
 {
   QVBoxLayout *mainLayout = new QVBoxLayout(this);
   QGridLayout *gridLayout = new QGridLayout;
-  
+
   gridLayout->addWidget(new QLabel("FWHM (nm)"), 0, 0, Qt::AlignRight);
   m_fwhmEdit = new QLineEdit(this);
   m_fwhmEdit->setFixedWidth(cStandardEditWidth);
-  m_fwhmEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 50.0, 3, m_fwhmEdit));  
+  m_fwhmEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 50.0, 3, m_fwhmEdit));
   gridLayout->addWidget(m_fwhmEdit, 0, 1, Qt::AlignLeft);
 
   // initialise
@@ -148,7 +148,7 @@ void CWSlitGaussianEdit::reset(const struct slit_gaussian *d)
 {
   QString tmpStr;
   m_fwhmEdit->validator()->fixup(tmpStr.setNum(d->fwhm));
-  m_fwhmEdit->setText(tmpStr);  
+  m_fwhmEdit->setText(tmpStr);
 }
 
 void CWSlitGaussianEdit::apply(struct slit_gaussian *d) const
@@ -170,7 +170,7 @@ CWSlitLorentzEdit::CWSlitLorentzEdit(const struct slit_lorentz *d, QWidget *pare
   gridLayout->addWidget(new QLabel("Width (nm)"), row, 0, Qt::AlignRight);
   m_widthEdit = new QLineEdit(this);
   m_widthEdit->setFixedWidth(cStandardEditWidth);
-  m_widthEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 50.0, 3, m_widthEdit));  
+  m_widthEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 50.0, 3, m_widthEdit));
   gridLayout->addWidget(m_widthEdit, row, 1, Qt::AlignLeft);
   ++row;
   // degree
@@ -181,7 +181,7 @@ CWSlitLorentzEdit::CWSlitLorentzEdit(const struct slit_lorentz *d, QWidget *pare
   m_degreeSpin->setFixedWidth(cStandardEditWidth);
   gridLayout->addWidget(m_degreeSpin, row, 1, Qt::AlignLeft);
   ++row;
-  
+
   // initialise
   reset(d);
 
@@ -201,7 +201,7 @@ void CWSlitLorentzEdit::reset(const struct slit_lorentz *d)
   QString tmpStr;
   m_widthEdit->validator()->fixup(tmpStr.setNum(d->width));
   m_widthEdit->setText(tmpStr);
-  m_degreeSpin->setValue(d->degree);  
+  m_degreeSpin->setValue(d->degree);
 }
 
 void CWSlitLorentzEdit::apply(struct slit_lorentz *d) const
@@ -224,13 +224,13 @@ CWSlitVoigtEdit::CWSlitVoigtEdit(const struct slit_voigt *d, QWidget *parent) :
   gridLayout->addWidget(new QLabel("Gaussian FWHM (L)"), row, 0, Qt::AlignRight);
   m_fwhmLeftEdit = new QLineEdit(this);
   m_fwhmLeftEdit->setFixedWidth(cStandardEditWidth);
-  m_fwhmLeftEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 50.0, 3, m_fwhmLeftEdit));  
+  m_fwhmLeftEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 50.0, 3, m_fwhmLeftEdit));
   gridLayout->addWidget(m_fwhmLeftEdit, row, 1, Qt::AlignLeft);
   // right FHWM
   gridLayout->addWidget(new QLabel("Gaussian FWHM (R)"), row, 3, Qt::AlignRight);
   m_fwhmRightEdit = new QLineEdit(this);
   m_fwhmRightEdit->setFixedWidth(cStandardEditWidth);
-  m_fwhmRightEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 50.0, 3, m_fwhmRightEdit));  
+  m_fwhmRightEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 50.0, 3, m_fwhmRightEdit));
   gridLayout->addWidget(m_fwhmRightEdit, row, 4, Qt::AlignLeft);
 
   gridLayout->addWidget(new QLabel("(nm)"), row, 2, Qt::AlignLeft);
@@ -240,13 +240,13 @@ CWSlitVoigtEdit::CWSlitVoigtEdit(const struct slit_voigt *d, QWidget *parent) :
   gridLayout->addWidget(new QLabel("Gaussian/Lorentz (L)"), row, 0, Qt::AlignRight);
   m_ratioLeftEdit = new QLineEdit(this);
   m_ratioLeftEdit->setFixedWidth(cStandardEditWidth);
-  m_ratioLeftEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 10.0, 3, m_ratioLeftEdit));  
+  m_ratioLeftEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 10.0, 3, m_ratioLeftEdit));
   gridLayout->addWidget(m_ratioLeftEdit, row, 1, Qt::AlignLeft);
   // right Gauss/Lorentz ratio
   gridLayout->addWidget(new QLabel("Gaussian/Lorentz (R)"), row, 3, Qt::AlignRight);
   m_ratioRightEdit = new QLineEdit(this);
   m_ratioRightEdit->setFixedWidth(cStandardEditWidth);
-  m_ratioRightEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 10.0, 3, m_ratioRightEdit));  
+  m_ratioRightEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 10.0, 3, m_ratioRightEdit));
   gridLayout->addWidget(m_ratioRightEdit, row, 4, Qt::AlignLeft);
   ++row;
 
@@ -299,17 +299,17 @@ CWSlitErrorEdit::CWSlitErrorEdit(const struct slit_error *d, QWidget *parent) :
   gridLayout->addWidget(new QLabel("Gaussian FWHM (nm)"), row, 0, Qt::AlignRight);
   m_fwhmEdit = new QLineEdit(this);
   m_fwhmEdit->setFixedWidth(cStandardEditWidth);
-  m_fwhmEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 50.0, 3, m_fwhmEdit));  
+  m_fwhmEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 50.0, 3, m_fwhmEdit));
   gridLayout->addWidget(m_fwhmEdit, row, 1, Qt::AlignLeft);
   ++row;
   // width
   gridLayout->addWidget(new QLabel("Boxcar Width (nm)"), row, 0, Qt::AlignRight);
   m_widthEdit = new QLineEdit(this);
   m_widthEdit->setFixedWidth(cStandardEditWidth);
-  m_widthEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 50.0, 3, m_widthEdit));  
+  m_widthEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 50.0, 3, m_widthEdit));
   gridLayout->addWidget(m_widthEdit, row, 1, Qt::AlignLeft);
   ++row;
-  
+
   // initialise
   reset(d);
 
@@ -330,7 +330,7 @@ void CWSlitErrorEdit::reset(const struct slit_error *d)
   m_fwhmEdit->validator()->fixup(tmpStr.setNum(d->fwhm));
   m_fwhmEdit->setText(tmpStr);
   m_widthEdit->validator()->fixup(tmpStr.setNum(d->width));
-  m_widthEdit->setText(tmpStr);  
+  m_widthEdit->setText(tmpStr);
 }
 
 void CWSlitErrorEdit::apply(struct slit_error *d) const
@@ -353,17 +353,17 @@ CWSlitApodEdit::CWSlitApodEdit(const struct slit_apod *d, QWidget *parent) :
   gridLayout->addWidget(new QLabel("Resolution (nm)"), row, 0, Qt::AlignRight);
   m_resolutionEdit = new QLineEdit(this);
   m_resolutionEdit->setFixedWidth(cStandardEditWidth);
-  m_resolutionEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 50.0, 3, m_resolutionEdit));  
+  m_resolutionEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 50.0, 3, m_resolutionEdit));
   gridLayout->addWidget(m_resolutionEdit, row, 1, Qt::AlignLeft);
   ++row;
   // phase
   gridLayout->addWidget(new QLabel("Phase"), row, 0, Qt::AlignRight);
   m_phaseEdit = new QLineEdit(this);
   m_phaseEdit->setFixedWidth(cStandardEditWidth);
-  m_phaseEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 360.0, 3, m_phaseEdit));  
+  m_phaseEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 360.0, 3, m_phaseEdit));
   gridLayout->addWidget(m_phaseEdit, row, 1, Qt::AlignLeft);
   ++row;
-  
+
   // initialise
   reset(d);
 
@@ -413,7 +413,7 @@ CWSlitLorentzFileEdit::CWSlitLorentzFileEdit(const struct slit_lorentz_file *d, 
   m_degreeSpin->setFixedWidth(cStandardEditWidth);
   gridLayout->addWidget(m_degreeSpin, row, 1, Qt::AlignLeft);
   ++row;
-  
+
   // initialize
   m_degreeSpin->setValue(d->degree);
 
@@ -458,10 +458,10 @@ CWSlitErrorFileEdit::CWSlitErrorFileEdit(const struct slit_error_file *d, QWidge
   gridLayout->addWidget(new QLabel("Boxcar Width (nm)"), row, 0, Qt::AlignRight);
   m_widthEdit = new QLineEdit(this);
   m_widthEdit->setFixedWidth(cStandardEditWidth);
-  m_widthEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 50.0, 3, m_widthEdit));  
+  m_widthEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 50.0, 3, m_widthEdit));
   gridLayout->addWidget(m_widthEdit, row, 1, Qt::AlignLeft);
   ++row;
-  
+
   // initialise
   QString tmpStr;
   m_widthEdit->validator()->fixup(tmpStr.setNum(d->width));
@@ -494,8 +494,64 @@ void CWSlitErrorFileEdit::apply(struct slit_error_file *d) const
   d->width = m_widthEdit->text().toDouble();
 }
 
+//--------------------------------------------------------
+
+CWSlitAGaussEdit::CWSlitAGaussEdit(const struct slit_agauss *d, QWidget *parent) :
+  QFrame(parent)
+{
+  int row = 0;
+
+  QVBoxLayout *mainLayout = new QVBoxLayout(this);
+  QGridLayout *gridLayout = new QGridLayout;
+
+  // fwhm
+  gridLayout->addWidget(new QLabel("Gaussian FWHM (nm)"), row, 0, Qt::AlignRight);
+  m_fwhmEdit = new QLineEdit(this);
+  m_fwhmEdit->setFixedWidth(cStandardEditWidth);
+  m_fwhmEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 50.0, 3, m_fwhmEdit));
+  gridLayout->addWidget(m_fwhmEdit, row, 1, Qt::AlignLeft);
+  ++row;
+
+  // asymmetry factor
+  gridLayout->addWidget(new QLabel("Asymmetry factor"), row, 0, Qt::AlignRight);
+  m_asymEdit = new QLineEdit(this);
+  m_asymEdit->setFixedWidth(cStandardEditWidth);
+  m_asymEdit->setValidator(new CDoubleFixedFmtValidator(-50., 50.0, 3, m_asymEdit));
+  gridLayout->addWidget(m_asymEdit, row, 1, Qt::AlignLeft);
+  ++row;
+
+  // initialise
+  reset(d);
+
+  gridLayout->setColumnMinimumWidth(0, cSuggestedColumnZeroWidth);
+  gridLayout->setColumnStretch(1, 1);
+
+  mainLayout->addLayout(gridLayout);
+  mainLayout->addStretch(1);
+}
+
+CWSlitAGaussEdit::~CWSlitAGaussEdit()
+{
+}
+
+void CWSlitAGaussEdit::reset(const struct slit_agauss *d)
+{
+  QString tmpStr;
+  m_fwhmEdit->validator()->fixup(tmpStr.setNum(d->fwhm));
+  m_fwhmEdit->setText(tmpStr);
+  m_asymEdit->validator()->fixup(tmpStr.setNum(d->asym));
+  m_asymEdit->setText(tmpStr);
+}
+
+void CWSlitAGaussEdit::apply(struct slit_agauss *d) const
+{
+  d->fwhm = m_fwhmEdit->text().toDouble();
+  d->asym = m_asymEdit->text().toDouble();
+}
 
 //--------------------------------------------------------
+
+
 
 CWSlitSelector::CWSlitSelector(const mediate_slit_function_t *slit, const QString &title, QWidget *parent) :
   QGroupBox(title, parent)
@@ -527,6 +583,10 @@ CWSlitSelector::CWSlitSelector(const mediate_slit_function_t *slit, const QStrin
   m_errorEdit = new CWSlitErrorEdit(&(slit->error));
   m_slitStack->addWidget(m_errorEdit);
   m_slitCombo->addItem("Error Function", QVariant(SLIT_TYPE_ERF));
+
+  m_agaussEdit = new CWSlitAGaussEdit(&(slit->agauss));
+  m_slitStack->addWidget(m_agaussEdit);
+  m_slitCombo->addItem("Asymmetric Gaussian", QVariant(SLIT_TYPE_AGAUSS));
 
   m_boxcarApodEdit = new CWSlitApodEdit(&(slit->boxcarapod));
   m_slitStack->addWidget(m_boxcarApodEdit);
@@ -585,12 +645,13 @@ void CWSlitSelector::reset(const mediate_slit_function_t *slit)
     m_slitCombo->setCurrentIndex(index);
     // stack will follow ...
   }
-  
+
   m_fileEdit->reset(&(slit->file));
   m_gaussianEdit->reset(&(slit->gaussian));
   m_lorentzEdit->reset(&(slit->lorentz));
   m_voigtEdit->reset(&(slit->voigt));
   m_errorEdit->reset(&(slit->error));
+  m_agaussEdit->reset(&(slit->agauss));
   m_boxcarApodEdit->reset(&(slit->boxcarapod));
   m_nbsApodEdit->reset(&(slit->nbsapod));
   m_gaussianFileEdit->reset(&(slit->gaussianfile));
@@ -605,12 +666,13 @@ void CWSlitSelector::apply(mediate_slit_function_t *slit) const
   // set values for ALL slits ... and the selected slit type
 
   slit->type = m_slitCombo->itemData(m_slitCombo->currentIndex()).toInt();
-  
+
   m_fileEdit->apply(&(slit->file));
   m_gaussianEdit->apply(&(slit->gaussian));
   m_lorentzEdit->apply(&(slit->lorentz));
   m_voigtEdit->apply(&(slit->voigt));
   m_errorEdit->apply(&(slit->error));
+  m_agaussEdit->apply(&(slit->agauss));
   m_boxcarApodEdit->apply(&(slit->boxcarapod));
   m_nbsApodEdit->apply(&(slit->nbsapod));
   m_gaussianFileEdit->apply(&(slit->gaussianfile));

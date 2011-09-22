@@ -16,7 +16,7 @@ void writePaths(FILE *fp)
 	  "    <!-- upto 10 paths can be specified (index 0 to 9). Any file or directory name in the  -->\n"
 	  "    <!-- raw_spectra tree that begins with %%? (where ? is a single digit) is expanded with -->\n"
 	  "    <!-- the correponding path.                                                            -->\n\n");
-  
+
   for (int i=0; i<10; ++i) {
     QString path = pathMgr->path(i);
     if (!path.isNull()) {
@@ -127,6 +127,9 @@ void writeSlitFunction(FILE *fp, size_t nIndent, const mediate_slit_function_t *
   case SLIT_TYPE_ERF:
     fprintf(fp, "\"error\"");
     break;
+  case SLIT_TYPE_AGAUSS:
+    fprintf(fp, "\"agauss\"");
+    break;
   case SLIT_TYPE_APOD:
     fprintf(fp, "\"boxcarapod\"");
     break;
@@ -161,6 +164,7 @@ void writeSlitFunction(FILE *fp, size_t nIndent, const mediate_slit_function_t *
   fprintf(fp, "%s  <voigt fwhmleft=\"%.3f\" fwhmright=\"%.3f\" glrleft=\"%.3f\" glrright=\"%.3f\" />\n",
 	  buf, d->voigt.fwhmL, d->voigt.fwhmR, d->voigt.glRatioL, d->voigt.glRatioR);
   fprintf(fp, "%s  <error fwhm=\"%.3f\" width=\"%.3f\" />\n", buf, d->error.fwhm, d->error.width);
+  fprintf(fp, "%s  <agauss fwhm=\"%.3f\" asym=\"%.3f\" />\n", buf, d->agauss.fwhm, d->agauss.asym);
   fprintf(fp, "%s  <boxcarapod resolution=\"%.3f\" phase=\"%.3f\" />\n", buf,
 	  d->boxcarapod.resolution, d->boxcarapod.phase);
   fprintf(fp, "%s  <nbsapod resolution=\"%.3f\" phase=\"%.3f\" />\n", buf,
@@ -180,7 +184,7 @@ void writeSlitFunction(FILE *fp, size_t nIndent, const mediate_slit_function_t *
 
   tmpStr = pathMgr->simplifyPath(QString(d->errortempfile.filename));
   fprintf(fp, "%s  <errortempfile file=\"%s\" width=\"%.3f\" />\n", buf, tmpStr.toAscii().data(), d->errortempfile.width);
-  
+
   fprintf(fp, "%s</slit_func>\n", buf);
 }
 

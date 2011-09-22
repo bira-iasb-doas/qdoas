@@ -79,6 +79,11 @@ void setMediateSlit(SLIT *pEngineSlit,const mediate_slit_function_t *pMediateSli
      pEngineSlit->slitParam2=pMediateSlit->error.width;
     break;
  // ----------------------------------------------------------------------------
+    case SLIT_TYPE_AGAUSS :                                                     // Asymmetric Gaussian
+     pEngineSlit->slitParam=pMediateSlit->agauss.fwhm;
+     pEngineSlit->slitParam2=pMediateSlit->agauss.asym;
+    break;
+ // ----------------------------------------------------------------------------
     case SLIT_TYPE_APOD :                                                       // apodisation function (used with FTS)
      pEngineSlit->slitParam=pMediateSlit->boxcarapod.resolution;
      pEngineSlit->slitParam2=pMediateSlit->boxcarapod.phase;

@@ -70,6 +70,7 @@ CWProjectTabCalibration::CWProjectTabCalibration(const mediate_project_calibrati
   m_lineShapeCombo->addItem("Error Function", QVariant(PRJCT_CALIB_FWHM_TYPE_ERF));
   m_lineShapeCombo->addItem("2n-Lorentz", QVariant(PRJCT_CALIB_FWHM_TYPE_INVPOLY));
   m_lineShapeCombo->addItem("Voigt", QVariant(PRJCT_CALIB_FWHM_TYPE_VOIGT));
+  m_lineShapeCombo->addItem("Asymmetric Gaussian", QVariant(PRJCT_CALIB_FWHM_TYPE_AGAUSS));
   topLayout->addWidget(m_lineShapeCombo, 2, 1);
 
   // degree of 2n-Lorentz

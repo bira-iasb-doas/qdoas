@@ -254,15 +254,15 @@ bool CWProjectPropertyEditor::actionOk(void)
 
 void CWProjectPropertyEditor::actionHelp(void)
 {
-	char *projectPages[]={"Project_Display",
-	                      "Project_Selection",
-	                      "Project_Analysis",
-	                      "Project_Filtering",
-	                      "Project_Calibration",
-	                      "Project_Undersampling",
-	                      "Project_Instrumental",
-	                      "Project_Slit",
-	                      "Project_Output"};
+	char *projectPages[]={(char *)"Project_Display",
+	                      (char *)"Project_Selection",
+	                      (char *)"Project_Analysis",
+	                      (char *)"Project_Filtering",
+	                      (char *)"Project_Calibration",
+	                      (char *)"Project_Undersampling",
+	                      (char *)"Project_Instrumental",
+	                      (char *)"Project_Slit",
+	                      (char *)"Project_Output"};
 
  CHelpSystem::showHelpTopic("Project",((m_selectedPage>=0) && (m_selectedPage<9))?projectPages[m_selectedPage]:"Project");
 }

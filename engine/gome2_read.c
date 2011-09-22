@@ -488,6 +488,7 @@ RC Gome2ReadSunRef(GOME2_ORBIT_FILE *pOrbitFile,INDEX bandIndex)
   // Initializations
 
   channel=(INDEX)pOrbitFile->gome2Info.channelIndex;
+
   rc=ERROR_ID_NO;
 
   // Allocate buffers
@@ -1426,6 +1427,7 @@ RC GOME2_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,INDEX fileIndex)
 
   double   *unique_int;                                                         // integration time
   uint8_t  *int_index;                                                          // index of the integration time
+  uint32_t  spe32;
   int i;
   double tint;
   double *spectrum,*sigma;                                                      // radiances and errors
@@ -1482,7 +1484,20 @@ RC GOME2_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,INDEX fileIndex)
      	for (i=pGome2Info->startPixel;(i<pGome2Info->startPixel+pGome2Info->no_of_pixels) && !rc;i++)
      	 {
      	 	coda_cursor_goto_first_record_field(&pOrbitFile->gome2Cursor);                      // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.BAND[i].RAD
+
+
+     	 	coda_cursor_read_uint32(&pOrbitFile->gome2Cursor,&spe32);
+
+     	 	{
+     	 		FILE *fp;
+     	 		fp=fopen("toto.dat","a+t");
+     	 		fprintf(fp,"%d\n",spe32);
+     	 		fclose(fp);
+     	 	}
+
      	  coda_cursor_read_double(&pOrbitFile->gome2Cursor,&spectrum[i]);
+
+
      	  coda_cursor_goto_next_record_field(&pOrbitFile->gome2Cursor);                       // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.BAND[i].ERR_RAD
      	  coda_cursor_read_double(&pOrbitFile->gome2Cursor,&sigma[i]);
      	  coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                  // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.BAND[i]

@@ -77,6 +77,11 @@ extern "C" {
     double width;
   };
 
+  struct slit_agauss {
+  	 double fwhm;
+  	 double asym;
+  };
+
   struct slit_apod {
     double resolution;
     double phase;
@@ -100,6 +105,7 @@ extern "C" {
     struct slit_lorentz lorentz;
     struct slit_voigt voigt;
     struct slit_error error;
+    struct slit_agauss agauss;
     struct slit_apod boxcarapod;
     struct slit_apod nbsapod;
     struct slit_file gaussianfile;

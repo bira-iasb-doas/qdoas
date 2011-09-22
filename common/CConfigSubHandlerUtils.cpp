@@ -134,6 +134,8 @@ bool CSlitFunctionSubHandler::start(const QXmlAttributes &atts)
     m_function->type = SLIT_TYPE_VOIGT;
   else if (str == "error")
     m_function->type = SLIT_TYPE_ERF;
+  else if (str == "agauss")
+    m_function->type = SLIT_TYPE_AGAUSS;
   else if (str == "boxcarapod")
     m_function->type = SLIT_TYPE_APOD;
   else if (str == "nbsapod")
@@ -187,6 +189,11 @@ bool CSlitFunctionSubHandler::start(const QString &element, const QXmlAttributes
 
     m_function->error.fwhm = atts.value("fwhm").toDouble();
     m_function->error.width = atts.value("width").toDouble();
+  }
+  else if (element == "agauss") {
+
+    m_function->agauss.fwhm = atts.value("fwhm").toDouble();
+    m_function->agauss.asym = atts.value("asym").toDouble();
   }
   else if (element == "boxcarapod") {
 

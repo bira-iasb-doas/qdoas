@@ -372,7 +372,7 @@ RC MKZY_ReadRecord(ENGINE_CONTEXT *pEngineContext,int recordNo,FILE *specFp)
     strncpy(pRecord->Nom,recordInfo.name,12);                                   // the name of this specific measurement
 
     pRecord->NSomme=recordInfo.scans;                                           // total number of scans added
-    pRecord->Tint=(double)fabs((double)recordInfo.exptime);                     // exposure time, negative if set automatic
+    pRecord->Tint=(double)fabs((double)recordInfo.exptime)*0.001;               // exposure time, negative if set automatic (exposure time is given in ms)
     pRecord->longitude=(double)recordInfo.lon;                                  // GPS longitude in degrees
     pRecord->latitude=(double)recordInfo.lat;                                   // GPS latitude in degrees
 
@@ -505,7 +505,7 @@ RC MKZY_SearchForOffset(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
  	// Search for the spectrum
 
   for (indexRecord=1;indexRecord<=pEngineContext->recordInfo.mkzy.recordNumber;indexRecord++)
-   if (!(rc=MKZY_ReadRecord(pEngineContext,indexRecord,specFp)) && (!strcasecmp(pEngineContext->recordInfo.Nom,"dark") || !strcasecmp(pEngineContext->recordInfo.Nom,"offset")))
+   if (!(rc=MKZY_ReadRecord(pEngineContext,indexRecord,specFp)) && (!strncasecmp(pEngineContext->recordInfo.Nom,"dark",4) || !strncasecmp(pEngineContext->recordInfo.Nom,"offset",6)))
   	 {
   	 	memcpy(pEngineContext->buffers.darkCurrent,pEngineContext->buffers.spectrum,sizeof(double)*NDET);
   	 	pEngineContext->recordInfo.mkzy.darkFlag=1;
@@ -534,7 +534,7 @@ RC MKZY_SearchForSky(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
  	// Search for the spectrum
 
   for (indexRecord=1;indexRecord<=pEngineContext->recordInfo.mkzy.recordNumber;indexRecord++)
-   if (!(rc=MKZY_ReadRecord(pEngineContext,indexRecord,specFp)) && !strcasecmp(pEngineContext->recordInfo.Nom,"sky"))
+   if (!(rc=MKZY_ReadRecord(pEngineContext,indexRecord,specFp)) && !strncasecmp(pEngineContext->recordInfo.Nom,"sky",3))
   	 {
   	 	memcpy(pEngineContext->buffers.scanRef,pEngineContext->buffers.spectrum,sizeof(double)*NDET);
   	 	pEngineContext->recordInfo.mkzy.skyFlag=1;
@@ -675,9 +675,9 @@ RC MKZY_Reli(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,INT localD
    	 {
       if (!(rc=MKZY_ReadRecord(pEngineContext,indexRecord,specFp)))
        {
-       	if (!strcasecmp(pEngineContext->recordInfo.Nom,"dark") ||
-       	    !strcasecmp(pEngineContext->recordInfo.Nom,"sky") ||
-       	    !strcasecmp(pEngineContext->recordInfo.Nom,"offset"))
+       	if (!strncasecmp(pEngineContext->recordInfo.Nom,"dark",4) ||
+       	    !strncasecmp(pEngineContext->recordInfo.Nom,"sky",3) ||
+       	    !strncasecmp(pEngineContext->recordInfo.Nom,"offset",6))
 
          rc=ERROR_ID_FILE_RECORD;
 

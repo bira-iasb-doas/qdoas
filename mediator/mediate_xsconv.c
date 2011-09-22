@@ -144,6 +144,8 @@ RC mediateConvolutionSave(void *engineContext)
            fprintf(fp,"; Polynomial degree : %d\n",(int)pEngineContext->slitConv.slitParam2);
           if ((slitType==SLIT_TYPE_ERF) || (slitType==SLIT_TYPE_ERF_FILE))
            fprintf(fp,"; Boxcar width : %.3f\n",pEngineContext->slitConv.slitParam2);
+          if (slitType==SLIT_TYPE_AGAUSS)
+           fprintf(fp,"; Asymmetry factor : %.3f\n",pEngineContext->slitConv.slitParam2);
 
           if ((slitType== SLIT_TYPE_APOD) || (slitType== SLIT_TYPE_APODNBS))
            {
@@ -572,6 +574,7 @@ RC mediateRequestConvolution(void *engineContext,mediate_convolution_t *pMediate
         (pSlitConv->slitType!=SLIT_TYPE_INVPOLY) &&
         (pSlitConv->slitType!=SLIT_TYPE_ERF) &&
         (pSlitConv->slitType!=SLIT_TYPE_VOIGT) &&
+        (pSlitConv->slitType!=SLIT_TYPE_AGAUSS) &&
         (pSlitConv->slitType!=SLIT_TYPE_APOD) &&
         (pSlitConv->slitType!=SLIT_TYPE_APODNBS) && !strlen(pSlitConv->slitFile))
 
@@ -591,6 +594,7 @@ RC mediateRequestConvolution(void *engineContext,mediate_convolution_t *pMediate
              (pSlitDConv->slitType!=SLIT_TYPE_INVPOLY) &&
              (pSlitDConv->slitType!=SLIT_TYPE_ERF) &&
              (pSlitDConv->slitType!=SLIT_TYPE_VOIGT) &&
+             (pSlitConv->slitType!=SLIT_TYPE_AGAUSS) &&
              (pSlitDConv->slitType!=SLIT_TYPE_APOD) &&
              (pSlitDConv->slitType!=SLIT_TYPE_APODNBS) && !strlen(pSlitDConv->slitFile))
 
@@ -693,6 +697,7 @@ RC mediateRequestRing(void *engineContext,mediate_ring_t *pMediateRing,void *res
         (pSlitConv->slitType!=SLIT_TYPE_INVPOLY) &&
         (pSlitConv->slitType!=SLIT_TYPE_ERF) &&
         (pSlitConv->slitType!=SLIT_TYPE_VOIGT) &&
+        (pSlitConv->slitType!=SLIT_TYPE_AGAUSS) &&
         (pSlitConv->slitType!=SLIT_TYPE_APOD) &&
         (pSlitConv->slitType!=SLIT_TYPE_APODNBS) && !strlen(pSlitConv->slitFile))
 
@@ -743,6 +748,8 @@ void mediateRingHeader(ENGINE_XSCONV_CONTEXT *pEngineContext,FILE *fp)
    fprintf(fp,"; Polynomial degree : %d\n",(int)pEngineContext->slitConv.slitParam2);
   if ((slitType==SLIT_TYPE_ERF) || (slitType==SLIT_TYPE_ERF_FILE))
    fprintf(fp,"; Boxcar width : %lf\n",pEngineContext->slitConv.slitParam2);
+  if (slitType==SLIT_TYPE_AGAUSS)
+   fprintf(fp,"; Asymmetry factor : %.3f\n",pEngineContext->slitConv.slitParam2);
 
   if (slitType==SLIT_TYPE_VOIGT)
    {
@@ -1107,6 +1114,7 @@ RC mediateRequestUsamp(void *engineContext,mediate_usamp_t *pMediateUsamp,void *
         (pSlitConv->slitType!=SLIT_TYPE_INVPOLY) &&
         (pSlitConv->slitType!=SLIT_TYPE_ERF) &&
         (pSlitConv->slitType!=SLIT_TYPE_VOIGT) &&
+        (pSlitConv->slitType!=SLIT_TYPE_AGAUSS) &&
         (pSlitConv->slitType!=SLIT_TYPE_APOD) &&
         (pSlitConv->slitType!=SLIT_TYPE_APODNBS) && !strlen(pSlitConv->slitFile))
 
@@ -1162,6 +1170,8 @@ void UsampWriteHeader(ENGINE_XSCONV_CONTEXT *pEngineContext,FILE *fp,INT phase)
    fprintf(fp,"; Polynomial degree : %d\n",(int)pEngineContext->slitConv.slitParam2);
   if ((slitType==SLIT_TYPE_ERF) || (slitType==SLIT_TYPE_ERF_FILE))
    fprintf(fp,"; Boxcar width : %.3f\n",pEngineContext->slitConv.slitParam2);
+  if (slitType==SLIT_TYPE_AGAUSS)
+   fprintf(fp,"; Asymmetry factor : %.3f\n",pEngineContext->slitConv.slitParam2);
 
   if (slitType==SLIT_TYPE_VOIGT)
    {

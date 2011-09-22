@@ -617,7 +617,7 @@ RC ShiftVector(double *source,double *deriv,double *target,
 
     if (pKuruczOptions->fwhmType==SLIT_TYPE_INVPOLY)
      slitParam2=pKuruczOptions->invPolyDegree;
-    else if (((pKuruczOptions->fwhmType==SLIT_TYPE_ERF) || (pKuruczOptions->fwhmType==SLIT_TYPE_VOIGT)) && (Feno->indexFwhmParam[1]!=ITEM_NONE))
+    else if (((pKuruczOptions->fwhmType==SLIT_TYPE_ERF) || (pKuruczOptions->fwhmType==SLIT_TYPE_AGAUSS) || (pKuruczOptions->fwhmType==SLIT_TYPE_VOIGT)) && (Feno->indexFwhmParam[1]!=ITEM_NONE))
      slitParam2=(TabCross[Feno->indexFwhmParam[1]].FitParam!=ITEM_NONE)?(double)Param[TabCross[Feno->indexFwhmParam[1]].FitParam]:(double)TabCross[Feno->indexFwhmParam[1]].InitParam;
     else
      slitParam2=(double)0.;
@@ -704,16 +704,20 @@ RC ShiftVector(double *source,double *deriv,double *target,
         xsNew.deriv2=NULL;
         xsNew.NDET=NDET;
 
-//        slitType=pKuruczOptions->fwhmType;
+        slitType=pKuruczOptions->fwhmType;
 
-        if ((slitType=pKuruczOptions->fwhmType)==SLIT_TYPE_VOIGT)
+        if ((slitType==SLIT_TYPE_VOIGT) || (slitType==SLIT_TYPE_AGAUSS))
          {
           slitOptions.slitType=slitType;
           slitOptions.slitFile[0]=0;
           slitOptions.slitParam=slitParam;
           slitOptions.slitParam2=slitParam2;
-          slitOptions.slitParam3=slitParam3;
-          slitOptions.slitParam4=slitParam4;
+
+          if (slitType==SLIT_TYPE_VOIGT)
+           {
+            slitOptions.slitParam3=slitParam3;
+            slitOptions.slitParam4=slitParam4;
+           }
 
           memcpy(&source[LimMin],&ANALYSE_shift[LimMin],sizeof(double)*LimN);
           rc=XSCONV_LoadSlitFunction(&slitXs,&slitOptions,NULL,&slitType);
@@ -997,7 +1001,8 @@ RC AnalyseConvoluteXs(FENO *pTabFeno,INDEX indexSymbol,INT action,double conc,
        }
       else if (!(rc=XSCONV_Alloc(&xsSlit,pSlit->nl-1,1)))
        {
-       	xsSlit.lambda=(double *)pSlit->matrix[1]+2;   // base of slit matrix is 1 and there is a header line
+       	memcpy(xsSlit.lambda,(double *)pSlit->matrix[1]+2,sizeof(double)*(pSlit->nl-1));   // base of slit matrix is 1 and there is a header line
+
        	xsSlit.NDET=pSlit->nl-1;
 
    {        // TEMPORARY !!!
@@ -5096,7 +5101,7 @@ RC ANALYSE_LoadNonLinear(ENGINE_CONTEXT *pEngineContext,ANALYSE_NON_LINEAR_PARAM
            ((strcasecmp(symbol,"SFP 1") && strcasecmp(symbol,"SFP 2") &&
              strcasecmp(symbol,"SFP 3") && strcasecmp(symbol,"SFP 4")) ||
             (pKuruczOptions->fwhmFit &&
-           ((pKuruczOptions->fwhmType==SLIT_TYPE_ERF) || (pKuruczOptions->fwhmType==SLIT_TYPE_VOIGT) || strcasecmp(symbol,"SFP 2")) &&
+           ((pKuruczOptions->fwhmType==SLIT_TYPE_ERF) || (pKuruczOptions->fwhmType==SLIT_TYPE_AGAUSS) || (pKuruczOptions->fwhmType==SLIT_TYPE_VOIGT) || strcasecmp(symbol,"SFP 2")) &&
            ((pKuruczOptions->fwhmType==SLIT_TYPE_VOIGT) || (strcasecmp(symbol,"SFP 3") && strcasecmp(symbol,"SFP 4"))))))
          {
           // Add symbol into symbol cross reference
@@ -6026,6 +6031,10 @@ RC ANALYSE_UsampBuild(INT analysisFlag,INT gomeFlag)
               slitType=SLIT_TYPE_INVPOLY_FILE;
              break;
           // ---------------------------------------------------------------------------
+             case SLIT_TYPE_AGAUSS :           // for the moment, the program doesn't support multiple
+              slitType=SLIT_TYPE_AGAUSS;       // parameters dependency
+             break;
+          // ---------------------------------------------------------------------------
              case SLIT_TYPE_VOIGT :           // for the moment, the program doesn't support multiple
               slitType=SLIT_TYPE_VOIGT;       // parameters dependency
              break;
@@ -6036,7 +6045,7 @@ RC ANALYSE_UsampBuild(INT analysisFlag,INT gomeFlag)
           // ---------------------------------------------------------------------------
             }
 
-           if (slitType==SLIT_TYPE_VOIGT)
+           if ((slitType==SLIT_TYPE_VOIGT) || (slitType==SLIT_TYPE_AGAUSS))
             {
              SLIT slitOptions;
              INT slitType2;
@@ -6058,8 +6067,12 @@ RC ANALYSE_UsampBuild(INT analysisFlag,INT gomeFlag)
                slitOptions.slitFile[0]=0;                                       // => build Voigt function pixel per pixel
                slitOptions.slitParam=slitParam[0];
                slitOptions.slitParam2=slitParam[1];
-               slitOptions.slitParam3=slitParam[2];
-               slitOptions.slitParam4=slitParam[3];
+
+               if (slitType==SLIT_TYPE_VOIGT)
+                {
+                 slitOptions.slitParam3=slitParam[2];
+                 slitOptions.slitParam4=slitParam[3];
+                }
 
                if (!rc &&
                  (((rc=XSCONV_LoadSlitFunction(&slitXs,&slitOptions,&slitParam[0],&slitType2))!=0) ||

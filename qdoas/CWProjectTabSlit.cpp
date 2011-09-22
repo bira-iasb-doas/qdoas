@@ -87,6 +87,10 @@ CWProjectTabSlit::CWProjectTabSlit(const mediate_project_slit_t *slit, QWidget *
   m_slitStack->addWidget(m_errorEdit);
   m_slitCombo->addItem("Error Function", QVariant(SLIT_TYPE_ERF));
 
+  m_agaussEdit = new CWSlitAGaussEdit(&(slit->function.agauss));
+  m_slitStack->addWidget(m_agaussEdit);
+  m_slitCombo->addItem("Asymmetric Gaussian", QVariant(SLIT_TYPE_AGAUSS));
+
   m_boxcarApodEdit = new CWSlitApodEdit(&(slit->function.boxcarapod));
   m_slitStack->addWidget(m_boxcarApodEdit);
   m_slitCombo->addItem("Boxcar (FTS)", QVariant(SLIT_TYPE_APOD));
@@ -152,12 +156,13 @@ void CWProjectTabSlit::apply(mediate_project_slit_t *slit) const
   slit->function.type = m_slitCombo->itemData(m_slitCombo->currentIndex()).toInt();
   slit->applyFwhmCorrection = m_fwhmCorrectionCheck->isChecked() ? 1 : 0;
   strcpy(slit->solarRefFile, m_solarRefFileEdit->text().toAscii().data());
-  
+
   m_fileEdit->apply(&(slit->function.file));
   m_gaussianEdit->apply(&(slit->function.gaussian));
   m_lorentzEdit->apply(&(slit->function.lorentz));
   m_voigtEdit->apply(&(slit->function.voigt));
   m_errorEdit->apply(&(slit->function.error));
+  m_agaussEdit->apply(&(slit->function.agauss));
   m_boxcarApodEdit->apply(&(slit->function.boxcarapod));
   m_nbsApodEdit->apply(&(slit->function.nbsapod));
   m_gaussianFileEdit->apply(&(slit->function.gaussianfile));
@@ -174,11 +179,11 @@ void CWProjectTabSlit::slotSolarRefFileBrowse()
   QString filename = QFileDialog::getOpenFileName(this, "Select Solar Reference File",
 						  pref->directoryName("Ref"),
 						  "Kurucz File (*.ktz);;All Files (*)");
-  
+
   if (!filename.isEmpty()) {
     pref->setDirectoryNameGivenFile("Ref", filename);
-    
+
     m_solarRefFileEdit->setText(filename);
   }
 }
-   
+

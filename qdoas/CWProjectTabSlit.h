@@ -57,6 +57,7 @@ Q_OBJECT
   CWSlitLorentzEdit *m_lorentzEdit;
   CWSlitVoigtEdit *m_voigtEdit;
   CWSlitErrorEdit *m_errorEdit;
+  CWSlitAGaussEdit *m_agaussEdit;
   CWSlitApodEdit *m_boxcarApodEdit, *m_nbsApodEdit;
   CWSlitFileEdit *m_gaussianFileEdit;
   CWSlitLorentzFileEdit *m_lorentzFileEdit;

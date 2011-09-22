@@ -562,6 +562,7 @@ enum _prjctFwhmTypes
   PRJCT_CALIB_FWHM_TYPE_ERF,
   PRJCT_CALIB_FWHM_TYPE_INVPOLY,
   PRJCT_CALIB_FWHM_TYPE_VOIGT,
+  PRJCT_CALIB_FWHM_TYPE_AGAUSS,
   PRJCT_CALIB_FWHM_TYPE_MAX
  };
 
@@ -882,6 +883,7 @@ enum prjctTabPagesTypes
      SLIT_TYPE_INVPOLY,                                                         // 2n-Lorentz (generalisation of the Lorentzian function
      SLIT_TYPE_VOIGT,                                                           // Voigt profile function
      SLIT_TYPE_ERF,                                                             // error function (convolution of a Gaussian and a boxcar)
+     SLIT_TYPE_AGAUSS,                                                          // asymmetric gaussian line shape
      SLIT_TYPE_APOD,                                                            // apodisation function (used with FTS)
      SLIT_TYPE_APODNBS,                                                         // apodisation function (Norton Beer Strong function)
      SLIT_TYPE_GAUSS_FILE,                                                      // Gaussian line shape, wavelength dependent (provided in a file)

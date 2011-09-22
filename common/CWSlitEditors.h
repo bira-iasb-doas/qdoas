@@ -47,7 +47,7 @@ Q_OBJECT
 
  public slots:
   void slotBrowseFile();
-   
+
  protected:
   QLineEdit *m_filenameEdit;
 };
@@ -119,6 +119,20 @@ class CWSlitErrorEdit : public QFrame
   QLineEdit *m_widthEdit;
 };
 
+class CWSlitAGaussEdit : public QFrame
+{
+ public:
+  CWSlitAGaussEdit(const struct slit_agauss *d, QWidget *parent = 0);
+  virtual ~CWSlitAGaussEdit();
+
+  void reset(const struct slit_agauss *d);
+  void apply(struct slit_agauss *d) const;
+
+ private:
+  QLineEdit *m_fwhmEdit;
+  QLineEdit *m_asymEdit;
+};
+
 class CWSlitApodEdit : public QFrame
 {
  public:
@@ -179,6 +193,7 @@ class CWSlitSelector : public QGroupBox
   CWSlitLorentzEdit *m_lorentzEdit;
   CWSlitVoigtEdit *m_voigtEdit;
   CWSlitErrorEdit *m_errorEdit;
+  CWSlitAGaussEdit *m_agaussEdit;
   CWSlitApodEdit *m_boxcarApodEdit, *m_nbsApodEdit;
   CWSlitFileEdit *m_gaussianFileEdit;
   CWSlitLorentzFileEdit *m_lorentzFileEdit;
