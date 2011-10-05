@@ -84,7 +84,7 @@ void initializeMediateProjectCalibration(mediate_project_calibration_t *d)
   d->requireResidual=1;
   d->requireShiftSfp=1;
 
-  for (i=0;i<4;i++)
+  for (i=0;i<NSFP;i++)
    {
     d->sfp[i].fitFlag=1;
     d->sfp[i].initialValue=(double)0.5;

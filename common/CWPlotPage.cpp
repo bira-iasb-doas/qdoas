@@ -363,28 +363,26 @@ void CWPlot::slotPrint()
     // store printer preference
     m_plotProperties.setPrintPaperSize(printer.pageSize());
 
-    // QWT 5.0.2 -> QWT 6.0.0 QPainter p(&printer);
-    // QWT 5.0.2 -> QWT 6.0.0 p.setPen(QPen(QColor(Qt::black)));
-    // QWT 5.0.2 -> QWT 6.0.0
-    // QWT 5.0.2 -> QWT 6.0.0 QRect paper = printer.paperRect();
-    // QWT 5.0.2 -> QWT 6.0.0 QRect page = printer.pageRect();
-    // QWT 5.0.2 -> QWT 6.0.0
-    // QWT 5.0.2 -> QWT 6.0.0 const int cPageBorder = 150;
-    // QWT 5.0.2 -> QWT 6.0.0
-    // QWT 5.0.2 -> QWT 6.0.0 QRect tmp(cPageBorder, cPageBorder, page.width() - 2 * cPageBorder, page.height() - 2 * cPageBorder);
-    // QWT 5.0.2 -> QWT 6.0.0
-    // QWT 5.0.2 -> QWT 6.0.0 p.drawRect(tmp);
-    // QWT 5.0.2 -> QWT 6.0.0
-    // QWT 5.0.2 -> QWT 6.0.0 tmp.adjust(20, 20, -20, -20);
+    QPainter p(&printer);
+    p.setPen(QPen(QColor(Qt::black)));
+
+    QRect paper = printer.paperRect();
+    QRect page = printer.pageRect();
+
+    const int cPageBorder = 150;
+
+    QRect tmp(cPageBorder, cPageBorder, page.width() - 2 * cPageBorder, page.height() - 2 * cPageBorder);
+
+    p.drawRect(tmp);
+
+    tmp.adjust(20, 20, -20, -20);
 
         QwtPlotRenderer renderer;
 
         renderer.setDiscardFlag(QwtPlotRenderer::DiscardBackground, false);
-        renderer.setLayoutFlag(QwtPlotRenderer::KeepFrames, true);
+        renderer.setLayoutFlag(QwtPlotRenderer::KeepFrames, false);
 
-        renderer.renderTo(this, printer);
-
-    //print(&p, tmp);   // QWT 5.0.2 -> QWT 6.0.0 : SEE LATER
+        renderer.render(this, &p,tmp);
   }
 }
 
@@ -422,7 +420,7 @@ void CWPlot::slotExportAsImage()
 
         // flags to make the document look like the widget
         renderer.setDiscardFlag(QwtPlotRenderer::DiscardBackground, false);
-        renderer.setLayoutFlag(QwtPlotRenderer::KeepFrames, true);
+        renderer.setLayoutFlag(QwtPlotRenderer::KeepFrames, false);
 
         renderer.renderDocument(this, fileName, QSizeF(300, 200), 85);
     }
@@ -552,6 +550,10 @@ void CWPlotPage::slotPrintAllPlots()
     return;
 
   QPrinter printer(QPrinter::HighResolution);
+  QwtPlotRenderer renderer;
+
+        renderer.setDiscardFlag(QwtPlotRenderer::DiscardBackground, false);
+        renderer.setLayoutFlag(QwtPlotRenderer::KeepFrames, false);
 
   printer.setPageSize(m_plotProperties.printPaperSize());
   printer.setOrientation(m_plotProperties.printPaperOrientation());
@@ -604,13 +606,15 @@ void CWPlotPage::slotPrintAllPlots()
 		    cPageBorder + cPlotBorder + row * (cPlotBorder + unitHeight),
 		    unitWidth, unitHeight);
 
-        // QWT 5.0.2 -> QWT 6.0.0 : SEE LATER  (*it)->print(&p, tmp);
+        renderer.render(*it,&p,tmp);
+
         if (++col == columns) {
           col = 0;
           ++row;
         }
         ++it;
       }
+
     }
   }
 }
@@ -622,6 +626,11 @@ void CWPlotPage::slotExportAsImageAllPlots()
 
   QString fileName;
   QString format;
+  QwtPlotRenderer renderer;
+
+        // flags to make the document look like the widget
+        renderer.setDiscardFlag(QwtPlotRenderer::DiscardBackground, false);
+        renderer.setLayoutFlag(QwtPlotRenderer::KeepFrames, false);
 
   if (CWPlot::getImageSaveNameAndFormat(this, fileName, format)) {
 
@@ -656,6 +665,8 @@ void CWPlotPage::slotExportAsImageAllPlots()
       QRect tmp(cPlotBorder + col * (cPlotBorder + plotSize.width()),
                 cPlotBorder + row * (cPlotBorder + plotSize.height()),
                 plotSize.width(), plotSize.height());
+
+      renderer.render(*it,&p,tmp);
 
       // QWT 5.0.2 -> QWT 6.0.0 : SEE LATER (*it)->print(&p, tmp);
       if (++col == columns) {

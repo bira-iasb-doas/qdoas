@@ -438,7 +438,7 @@ void VoigtCase4(double xinf, double xsup, double y, DoasI32 Nbp, double *lpVoigt
 //               the values of input x and y;
 //
 // INPUT         x : the distance from the line center in units of Doppler halfwidths;
-//               y : the ratio of the Doppler halfwidth to the Lorentzian halfwidth;
+//               y : the ratio of the Lorentzian halfwidth to the Doppler halfwidth;
 // -----------------------------------------------------------------------------
 // RETURN        the Voigt profile function calculated for the pair (x,y)
 // -----------------------------------------------------------------------------

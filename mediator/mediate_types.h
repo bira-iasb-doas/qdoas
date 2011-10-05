@@ -62,9 +62,10 @@ enum _spectraAutoscale
 #define plotPageRef             1
 #define plotPageSpectrum        2                                               // spectra to browse or analyze
 #define plotPageDarkCurrent     3                                               // dark currents
-#define plotPageSpecMax         4                                               // specmax (variation of the signal with the scans)
-#define plotPageIrrad           5                                               // irradiance spectra
-#define plotPageErrors          6                                               // errors on measurements
+#define plotPageOffset          4
+#define plotPageSpecMax         5                                               // specmax (variation of the signal with the scans)
+#define plotPageIrrad           6                                               // irradiance spectra
+#define plotPageErrors          7                                               // errors on measurements
 
 #define plotPageCross          10                                               // cross sections
 #define plotPageAnalysis       20                                               // analysis

@@ -608,7 +608,7 @@ RC ShiftVector(double *source,double *deriv,double *target,
    {
     // Declarations
 
-    double slitParam,slitParam2,slitParam3,slitParam4;
+    double slitParam,slitParam2;
     XS xsNew;
 
     // Initializations
@@ -621,16 +621,6 @@ RC ShiftVector(double *source,double *deriv,double *target,
      slitParam2=(TabCross[Feno->indexFwhmParam[1]].FitParam!=ITEM_NONE)?(double)Param[TabCross[Feno->indexFwhmParam[1]].FitParam]:(double)TabCross[Feno->indexFwhmParam[1]].InitParam;
     else
      slitParam2=(double)0.;
-
-    if ((pKuruczOptions->fwhmType==SLIT_TYPE_VOIGT) && (Feno->indexFwhmParam[2]!=ITEM_NONE))
-     slitParam3=(TabCross[Feno->indexFwhmParam[2]].FitParam!=ITEM_NONE)?(double)Param[TabCross[Feno->indexFwhmParam[2]].FitParam]:(double)TabCross[Feno->indexFwhmParam[2]].InitParam;
-    else
-     slitParam3=(double)0.;
-
-    if ((pKuruczOptions->fwhmType==SLIT_TYPE_VOIGT) && (Feno->indexFwhmParam[3]!=ITEM_NONE))
-     slitParam4=(TabCross[Feno->indexFwhmParam[3]].FitParam!=ITEM_NONE)?(double)Param[TabCross[Feno->indexFwhmParam[3]].FitParam]:(double)TabCross[Feno->indexFwhmParam[3]].InitParam;
-    else
-     slitParam4=(double)0.;
 
     // Interpolation
 
@@ -713,12 +703,6 @@ RC ShiftVector(double *source,double *deriv,double *target,
           slitOptions.slitParam=slitParam;
           slitOptions.slitParam2=slitParam2;
 
-          if (slitType==SLIT_TYPE_VOIGT)
-           {
-            slitOptions.slitParam3=slitParam3;
-            slitOptions.slitParam4=slitParam4;
-           }
-
           memcpy(&source[LimMin],&ANALYSE_shift[LimMin],sizeof(double)*LimN);
           rc=XSCONV_LoadSlitFunction(&slitXs,&slitOptions,NULL,&slitType);
          }
@@ -728,7 +712,7 @@ RC ShiftVector(double *source,double *deriv,double *target,
 
          rc=XSCONV_TypeStandard(&xsNew,LimMin,LimMax+1,&KURUCZ_buffers.hrSolar,
                                (slitType==SLIT_TYPE_FILE)?&slitXs:NULL,&KURUCZ_buffers.hrSolar,NULL,
-                                slitType,slitParam*3.,slitParam,slitParam2,slitParam3,slitParam4);
+                                slitType,slitParam*3.,slitParam,slitParam2);
 
         XSCONV_Reset(&slitXs);
        }
@@ -896,7 +880,7 @@ RC ANALYSE_XsInterpolation(FENO *pTabFeno,double *newLambda)
 
 RC AnalyseConvoluteXs(FENO *pTabFeno,INDEX indexSymbol,INT action,double conc,
                       MATRIX_OBJECT *pXs,
-                      MATRIX_OBJECT *pSlit,INT slitType,double *slitParam1,double *slitParam2,double *slitParam3,double *slitParam4,
+                      MATRIX_OBJECT *pSlit,INT slitType,double *slitParam1,double *slitParam2,
                       double *newlambda,double *output,INDEX indexlambdaMin,INDEX indexlambdaMax)
  {
   // Declarations
@@ -981,9 +965,7 @@ RC AnalyseConvoluteXs(FENO *pTabFeno,INDEX indexSymbol,INT action,double conc,
                NULL,IcVector,
                newlambda,NDET,j,j+1,ANALYSE_xsTrav,slitType,
               (slitParam1!=NULL)?slitParam1[0]:(double)0.,
-              (slitParam2!=NULL)?slitParam2[0]:(double)0.,
-              (slitParam3!=NULL)?slitParam3[0]:(double)0.,
-              (slitParam4!=NULL)?slitParam4[0]:(double)0.)))
+              (slitParam2!=NULL)?slitParam2[0]:(double)0.)))
 
           output[j]=ANALYSE_xsTrav[j];
        }
@@ -997,7 +979,7 @@ RC AnalyseConvoluteXs(FENO *pTabFeno,INDEX indexSymbol,INT action,double conc,
         rc=XSCONV_RealTimeXs(&xshr,(action==ANLYS_CROSS_ACTION_CONVOLUTE_I0)?&xsI0:NULL,
                              &xsSlit,IcVector,
                              newlambda,NDET,indexlambdaMin,indexlambdaMax,output,
-                             slitType,*slitParam1,*slitParam2,*slitParam3,*slitParam4);
+                             slitType,*slitParam1,*slitParam2);
        }
       else if (!(rc=XSCONV_Alloc(&xsSlit,pSlit->nl-1,1)))
        {
@@ -1030,7 +1012,7 @@ RC AnalyseConvoluteXs(FENO *pTabFeno,INDEX indexSymbol,INT action,double conc,
               !(rc=XSCONV_RealTimeXs(&xshr,(action==ANLYS_CROSS_ACTION_CONVOLUTE_I0)?&xsI0:NULL,
                  &xsSlit,IcVector,
                  newlambda,NDET,j,j+1,ANALYSE_xsTrav,slitType,
-                (double)0.,(double)0.,(double)0.,(double)0.)))
+                (double)0.,(double)0.)))
            {
             output[j]=ANALYSE_xsTrav[j];
             fprintf(fp,"%.3lf %14.6le\n",newlambda[j],output[j]);
@@ -1053,11 +1035,26 @@ RC AnalyseConvoluteXs(FENO *pTabFeno,INDEX indexSymbol,INT action,double conc,
             NULL,IcVector,
             newlambda,NDET,j,j+1,ANALYSE_xsTrav,slitType,
            (slitParam1!=NULL)?slitParam1[j]:(double)0.,
-           (slitParam2!=NULL)?slitParam2[j]:(double)0.,
-           (slitParam3!=NULL)?slitParam3[j]:(double)0.,
-           (slitParam4!=NULL)?slitParam4[j]:(double)0.)))
+           (slitParam2!=NULL)?slitParam2[j]:(double)0.)))
 
        output[j]=ANALYSE_xsTrav[j];
+
+   // if (slitType==5)
+   //  {
+   //  	FILE *fp;
+   //  	fp=fopen("toto.dat","a+t");
+   //  	for (j=indexlambdaMin;(j<indexlambdaMax) && !rc;j++)
+   //  	 fprintf(fp,"%d %g %g %g %g\n",j,newlambda[j],output[j],slitParam1[j],slitParam2[j]);
+   //  	fclose(fp);
+   //  }
+   // else
+   //  {
+   //  	FILE *fp;
+   //  	fp=fopen("toto.dat","a+t");
+   //  	for (j=indexlambdaMin;(j<indexlambdaMax) && !rc;j++)
+   //  	 fprintf(fp,"%d %g %g %g \n",j,newlambda[j],output[j],slitParam1[j]);
+   //  	fclose(fp);
+   //  }
 
     if (action==ANLYS_CROSS_ACTION_CONVOLUTE_I0)
      for (j=indexlambdaMin;(j<indexlambdaMax) && !rc;j++)
@@ -1174,8 +1171,7 @@ RC XSCONV_TypeGauss(double *lambda,double *Spec,double *SDeriv2,double lambdaj,
 
 RC ANALYSE_XsConvolution(FENO *pTabFeno,double *newlambda,
                          MATRIX_OBJECT *pSlit,INT slitType,
-                         double *slitParam1,double *slitParam2,
-                         double *slitParam3,double *slitParam4)
+                         double *slitParam1,double *slitParam2)
  {
   // Declarations
 
@@ -1214,7 +1210,7 @@ RC ANALYSE_XsConvolution(FENO *pTabFeno,double *newlambda,
 
        if ((pTabCross->crossAction==ANLYS_CROSS_ACTION_CONVOLUTE) || (pTabCross->crossAction==ANLYS_CROSS_ACTION_CONVOLUTE_I0))
 
-        rc=AnalyseConvoluteXs(pTabFeno,pTabCross->Comp,pTabCross->crossAction,pTabCross->I0Conc,pXs,pSlit,slitType,slitParam1,slitParam2,slitParam3,slitParam4,
+        rc=AnalyseConvoluteXs(pTabFeno,pTabCross->Comp,pTabCross->crossAction,pTabCross->I0Conc,pXs,pSlit,slitType,slitParam1,slitParam2,
                               newlambda,pTabCross->vector,indexlambdaMin,indexlambdaMax);
 
        else if ((pTabCross->crossAction==ANLYS_CROSS_ACTION_CONVOLUTE_RING) &&
@@ -1235,7 +1231,7 @@ RC ANALYSE_XsConvolution(FENO *pTabFeno,double *newlambda,
            memcpy(matrix.matrix[1],pXs->matrix[2],sizeof(double)*pXs->nl);   // Raman spectrum
            memcpy(matrix.deriv2[1],pXs->deriv2[2],sizeof(double)*pXs->nl);     // Second derivative of the Ramanspectrum
 
-           if ((rc=AnalyseConvoluteXs(pTabFeno,pTabCross->Comp,ANLYS_CROSS_ACTION_CONVOLUTE,(double)0.,&matrix,pSlit,slitType,slitParam1,slitParam2,slitParam3,slitParam4,
+           if ((rc=AnalyseConvoluteXs(pTabFeno,pTabCross->Comp,ANLYS_CROSS_ACTION_CONVOLUTE,(double)0.,&matrix,pSlit,slitType,slitParam1,slitParam2,
                                       newlambda,raman,indexlambdaMin,indexlambdaMax))!=ERROR_ID_NO)
             break;
 
@@ -1244,7 +1240,7 @@ RC ANALYSE_XsConvolution(FENO *pTabFeno,double *newlambda,
            memcpy(matrix.matrix[1],pXs->matrix[3],sizeof(double)*pXs->nl);   // Raman spectrum
            memcpy(matrix.deriv2[1],pXs->deriv2[3],sizeof(double)*pXs->nl);     // Second derivative of the Ramanspectrum
 
-           if ((rc=AnalyseConvoluteXs(pTabFeno,pTabCross->Comp,ANLYS_CROSS_ACTION_CONVOLUTE,(double)0.,&matrix,pSlit,slitType,slitParam1,slitParam2,slitParam3,slitParam4,
+           if ((rc=AnalyseConvoluteXs(pTabFeno,pTabCross->Comp,ANLYS_CROSS_ACTION_CONVOLUTE,(double)0.,&matrix,pSlit,slitType,slitParam1,slitParam2,
                                       newlambda,solar,indexlambdaMin,indexlambdaMax))!=ERROR_ID_NO)
             break;
 
@@ -1535,7 +1531,7 @@ RC AnalyseFwhmCorrectionT(double *Spectre,double *Sref,double *SpecTrav,double *
   // Real time convolution for high resolution cross sections
 
   if (!rc && Feno->xsToConvolute)
-   rc=ANALYSE_XsConvolution(Feno,Lambda,NULL,slitType,xsTrav,xsTrav2,xsTrav,xsTrav2);
+   rc=ANALYSE_XsConvolution(Feno,Lambda,NULL,slitType,xsTrav,xsTrav2);
 
   // Return
 
@@ -1630,7 +1626,7 @@ RC AnalyseFwhmCorrectionK(double *Spectre,double *Sref,double *SpecTrav,double *
   // Real time convolution for high resolution cross sections
 
   if (!rc && Feno->xsToConvolute)
-   rc=ANALYSE_XsConvolution(Feno,Lambda,NULL,pKuruczOptions->fwhmType,xsTrav,KURUCZ_buffers.fwhmVector[1],KURUCZ_buffers.fwhmVector[2],KURUCZ_buffers.fwhmVector[3]);
+   rc=ANALYSE_XsConvolution(Feno,Lambda,NULL,pKuruczOptions->fwhmType,xsTrav,KURUCZ_buffers.fwhmVector[1]);
 
   // Return
 
@@ -2371,9 +2367,7 @@ RC ANALYSE_Function ( double *lambda,double *X, double *Y, INT ndet, double *Y0,
 
    rc=ANALYSE_XsConvolution(Feno,Lambda,&slit0,pKuruczOptions->fwhmType,
                            (TabCross[Feno->indexFwhmParam[0]].FitParam!=ITEM_NONE)?&fitParamsF[TabCross[Feno->indexFwhmParam[0]].FitParam]:&TabCross[Feno->indexFwhmParam[0]].InitParam,
-                           (TabCross[Feno->indexFwhmParam[1]].FitParam!=ITEM_NONE)?&fitParamsF[TabCross[Feno->indexFwhmParam[1]].FitParam]:&TabCross[Feno->indexFwhmParam[1]].InitParam,
-                           (TabCross[Feno->indexFwhmParam[2]].FitParam!=ITEM_NONE)?&fitParamsF[TabCross[Feno->indexFwhmParam[2]].FitParam]:&TabCross[Feno->indexFwhmParam[2]].InitParam,
-                           (TabCross[Feno->indexFwhmParam[3]].FitParam!=ITEM_NONE)?&fitParamsF[TabCross[Feno->indexFwhmParam[3]].FitParam]:&TabCross[Feno->indexFwhmParam[3]].InitParam);
+                           (TabCross[Feno->indexFwhmParam[1]].FitParam!=ITEM_NONE)?&fitParamsF[TabCross[Feno->indexFwhmParam[1]].FitParam]:&TabCross[Feno->indexFwhmParam[1]].InitParam);
 
   // Don't take fixed concentrations into account for singular value decomposition
 
@@ -5098,11 +5092,10 @@ RC ANALYSE_LoadNonLinear(ENGINE_CONTEXT *pEngineContext,ANALYSE_NON_LINEAR_PARAM
          }
 
         if ((indexSymbol<NWorkSpace) && ((indexTabCross=pTabFeno->NTabCross)<MAX_FIT) &&
-           ((strcasecmp(symbol,"SFP 1") && strcasecmp(symbol,"SFP 2") &&
-             strcasecmp(symbol,"SFP 3") && strcasecmp(symbol,"SFP 4")) ||
+           ((strcasecmp(symbol,"SFP 1") && strcasecmp(symbol,"SFP 2")) ||
             (pKuruczOptions->fwhmFit &&
-           ((pKuruczOptions->fwhmType==SLIT_TYPE_ERF) || (pKuruczOptions->fwhmType==SLIT_TYPE_AGAUSS) || (pKuruczOptions->fwhmType==SLIT_TYPE_VOIGT) || strcasecmp(symbol,"SFP 2")) &&
-           ((pKuruczOptions->fwhmType==SLIT_TYPE_VOIGT) || (strcasecmp(symbol,"SFP 3") && strcasecmp(symbol,"SFP 4"))))))
+           ((pKuruczOptions->fwhmType==SLIT_TYPE_ERF) || (pKuruczOptions->fwhmType==SLIT_TYPE_AGAUSS) || (pKuruczOptions->fwhmType==SLIT_TYPE_VOIGT) || strcasecmp(symbol,"SFP 2")))))
+
          {
           // Add symbol into symbol cross reference
 
@@ -5110,10 +5103,6 @@ RC ANALYSE_LoadNonLinear(ENGINE_CONTEXT *pEngineContext,ANALYSE_NON_LINEAR_PARAM
            pTabFeno->indexFwhmParam[0]=pTabFeno->NTabCross;
           else if ((symbolLength==strlen("SFP 2")) && !strcasecmp(symbol,"SFP 2"))
            pTabFeno->indexFwhmParam[1]=pTabFeno->NTabCross;
-          else if ((symbolLength==strlen("SFP 3")) && !strcasecmp(symbol,"SFP 3"))
-           pTabFeno->indexFwhmParam[2]=pTabFeno->NTabCross;
-          else if ((symbolLength==strlen("SFP 4")) && !strcasecmp(symbol,"SFP 4"))
-           pTabFeno->indexFwhmParam[3]=pTabFeno->NTabCross;
 //          else if ((symbolLength==strlen("Fwhm (Constant)")) && !strcasecmp(symbol,"Fwhm (Constant)"))
 //           pTabFeno->indexFwhmConst=pTabFeno->NTabCross;
 //          else if ((symbolLength==strlen("Fwhm (Order 1)")) && !strcasecmp(symbol,"Fwhm (Order 1)"))
@@ -6003,8 +5992,7 @@ RC ANALYSE_UsampBuild(INT analysisFlag,INT gomeFlag)
 
            if (!(rc=XSCONV_TypeStandard(&xsKurucz,0,xsKurucz.NDET,&ANALYSE_usampBuffers.hrSolar,&xsSlit,&ANALYSE_usampBuffers.hrSolar,NULL,
                                         pSlitOptions->slitFunction.slitType,(double)2.*pSlitOptions->slitFunction.slitParam,
-                                        pSlitOptions->slitFunction.slitParam,pSlitOptions->slitFunction.slitParam2,
-                                        pSlitOptions->slitFunction.slitParam3,pSlitOptions->slitFunction.slitParam4)))
+                                        pSlitOptions->slitFunction.slitParam,pSlitOptions->slitFunction.slitParam2)))
 
             rc=SPLINE_Deriv2(xsKurucz.lambda,xsKurucz.vector,xsKurucz.deriv2,xsKurucz.NDET,"ANALYSE_UsampBuild (2) ");
           }
@@ -6068,16 +6056,10 @@ RC ANALYSE_UsampBuild(INT analysisFlag,INT gomeFlag)
                slitOptions.slitParam=slitParam[0];
                slitOptions.slitParam2=slitParam[1];
 
-               if (slitType==SLIT_TYPE_VOIGT)
-                {
-                 slitOptions.slitParam3=slitParam[2];
-                 slitOptions.slitParam4=slitParam[3];
-                }
-
                if (!rc &&
                  (((rc=XSCONV_LoadSlitFunction(&slitXs,&slitOptions,&slitParam[0],&slitType2))!=0) ||
                   ((rc=XSCONV_TypeStandard(&xsKurucz,i,i+1,&ANALYSE_usampBuffers.hrSolar,&slitXs,&ANALYSE_usampBuffers.hrSolar,NULL,
-                                           SLIT_TYPE_FILE,(double)3.*slitParam[0],(double)0.,(double)0.,(double)0.,(double)0.))!=0)))
+                                           SLIT_TYPE_FILE,(double)3.*slitParam[0],(double)0.,(double)0.))!=0)))
                 break;
               }
             }
@@ -6091,7 +6073,7 @@ RC ANALYSE_UsampBuild(INT analysisFlag,INT gomeFlag)
               rc=ERROR_ID_ALLOC;
              else if (!(rc=SPLINE_Deriv2(xsSlit.lambda,xsSlit.vector,xsSlit.deriv2,xsSlit.NDET,"ANALYSE_UsampBuild (Slit) ")))
               rc=XSCONV_TypeStandard(&xsKurucz,0,xsKurucz.NDET,&ANALYSE_usampBuffers.hrSolar,&xsSlit,&ANALYSE_usampBuffers.hrSolar,NULL,
-                                      slitType,(double)0.,(double)0.,slitParam2/pTabFeno->NDET,(double)0.,(double)0.);
+                                      slitType,(double)0.,(double)0.,slitParam2/pTabFeno->NDET);
 
              if (xsSlit.deriv2!=NULL)
               MEMORY_ReleaseDVector("ANALYSE_UsampBuild ","deriv2",xsSlit.deriv2,0);

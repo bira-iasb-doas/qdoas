@@ -358,12 +358,22 @@ void mediateRequestPlotSpectra(ENGINE_CONTEXT *pEngineContext,void *responseHand
 
     if (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MKZY)
      {
-     	if ((pBuffers->darkCurrent!=NULL) && pEngineContext->recordInfo.mkzy.darkFlag)
+     	if ((pBuffers->offset!=NULL) && pEngineContext->recordInfo.mkzy.offsetFlag)
      	 {
      	  sprintf(tmpString,"Offset");
 
-        mediateAllocateAndSetPlotData(&spectrumData, "Offset",pBuffers->lambda, pBuffers->darkCurrent, NDET, Line);
-        mediateResponsePlotData(plotPageDarkCurrent, &spectrumData, 1, Spectrum, forceAutoScale, "Offset", "Wavelength (nm)", "Counts", responseHandle);
+        mediateAllocateAndSetPlotData(&spectrumData, tmpString,pBuffers->lambda, pBuffers->offset, NDET, Line);
+        mediateResponsePlotData(plotPageOffset, &spectrumData, 1, Spectrum, forceAutoScale, tmpString, "Wavelength (nm)", "Counts", responseHandle);
+        mediateReleasePlotData(&spectrumData);
+        mediateResponseLabelPage(plotPageOffset, fileName, tmpString, responseHandle);
+       }
+
+     	if ((pBuffers->darkCurrent!=NULL) && pEngineContext->recordInfo.mkzy.darkFlag)
+     	 {
+     	  sprintf(tmpString,(pEngineContext->recordInfo.mkzy.offsetFlag)?"Dark current":"Offset");
+
+        mediateAllocateAndSetPlotData(&spectrumData,tmpString,pBuffers->lambda, pBuffers->darkCurrent, NDET, Line);
+        mediateResponsePlotData(plotPageDarkCurrent, &spectrumData, 1, Spectrum, forceAutoScale,tmpString, "Wavelength (nm)", "Counts", responseHandle);
         mediateReleasePlotData(&spectrumData);
         mediateResponseLabelPage(plotPageDarkCurrent, fileName, tmpString, responseHandle);
        }
@@ -1657,7 +1667,7 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
      pTabFeno=&TabFeno[indexWindow];
 
      if (pTabFeno->xsToConvolute && /* pTabFeno->useEtalon && */ (pTabFeno->gomeRefFlag || pEngineContext->refFlag) &&
-       ((rc=ANALYSE_XsConvolution(pTabFeno,pTabFeno->LambdaRef,&ANALYSIS_slit,pSlitOptions->slitFunction.slitType,&pSlitOptions->slitFunction.slitParam,&pSlitOptions->slitFunction.slitParam2,&pSlitOptions->slitFunction.slitParam3,&pSlitOptions->slitFunction.slitParam4))!=0))
+       ((rc=ANALYSE_XsConvolution(pTabFeno,pTabFeno->LambdaRef,&ANALYSIS_slit,pSlitOptions->slitFunction.slitType,&pSlitOptions->slitFunction.slitParam,&pSlitOptions->slitFunction.slitParam2))!=0))
 
       break;
     }

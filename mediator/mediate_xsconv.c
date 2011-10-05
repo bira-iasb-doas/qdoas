@@ -155,10 +155,8 @@ RC mediateConvolutionSave(void *engineContext)
 
           if (slitType==SLIT_TYPE_VOIGT)
            {
-            fprintf(fp,"; Gaussian FWHM (L) : %.3f\n",pEngineContext->slitConv.slitParam);
-            fprintf(fp,"; Lorentz/Gauss ratio (L) : %.3f\n",pEngineContext->slitConv.slitParam2);
-            fprintf(fp,"; Gaussian FWHM (R) : %.3f\n",pEngineContext->slitConv.slitParam3);
-            fprintf(fp,"; Lorentz/Gauss ratio (R) : %.3f\n",pEngineContext->slitConv.slitParam4);
+            fprintf(fp,"; Gaussian FWHM : %.3f\n",pEngineContext->slitConv.slitParam);
+            fprintf(fp,"; Lorentz/Gauss ratio : %.3f\n",pEngineContext->slitConv.slitParam2);
            }
 
           if (((slitType=pEngineContext->slitDConv.slitType)!=SLIT_TYPE_FILE) || (strlen(pEngineContext->slitDConv.slitFile)!=0))
@@ -178,10 +176,8 @@ RC mediateConvolutionSave(void *engineContext)
 
           if (slitType==SLIT_TYPE_VOIGT)
            {
-            fprintf(fp,"; Gaussian FWHM (L) : %.3f\n",pEngineContext->slitDConv.slitParam);
-            fprintf(fp,"; Lorentz/Gauss ratio (L) : %.3f\n",pEngineContext->slitDConv.slitParam2);
-            fprintf(fp,"; Gaussian FWHM (R) : %.3f\n",pEngineContext->slitDConv.slitParam3);
-            fprintf(fp,"; Lorentz/Gauss ratio (R) : %.3f\n",pEngineContext->slitDConv.slitParam4);
+            fprintf(fp,"; Gaussian FWHM : %.3f\n",pEngineContext->slitDConv.slitParam);
+            fprintf(fp,"; Lorentz/Gauss ratio : %.3f\n",pEngineContext->slitDConv.slitParam2);
            }
          }
 
@@ -406,11 +402,11 @@ RC mediateConvolutionCalculate(void *engineContext,void *responseHandle)
      // ----------------------------------------------------------------------
         case CONVOLUTION_TYPE_STANDARD :
          rc=XSCONV_TypeStandard(pXsnew,0,pXsnew->NDET,&XSCONV_xshr,&XSCONV_slitFunction,&XSCONV_xshr,NULL,slitType,slitWidth,slitParam,
-                                 pEngineContext->slitConv.slitParam2,pEngineContext->slitConv.slitParam3,pEngineContext->slitConv.slitParam4);
+                                 pEngineContext->slitConv.slitParam2);
         break;
      // ----------------------------------------------------------------------
         case CONVOLUTION_TYPE_I0_CORRECTION :
-          rc=XSCONV_TypeI0Correction(pXsnew,&XSCONV_xshr,&XSCONV_kurucz,&XSCONV_slitFunction,pEngineContext->conc,slitType,slitWidth,slitParam,pEngineContext->slitConv.slitParam2,pEngineContext->slitConv.slitParam3,pEngineContext->slitConv.slitParam4);
+          rc=XSCONV_TypeI0Correction(pXsnew,&XSCONV_xshr,&XSCONV_kurucz,&XSCONV_slitFunction,pEngineContext->conc,slitType,slitWidth,slitParam,pEngineContext->slitConv.slitParam2);
         break;
      // ----------------------------------------------------------------------
      }
@@ -753,10 +749,8 @@ void mediateRingHeader(ENGINE_XSCONV_CONTEXT *pEngineContext,FILE *fp)
 
   if (slitType==SLIT_TYPE_VOIGT)
    {
-    fprintf(fp,"; Gaussian FWHM (L) : %.3f\n",pEngineContext->slitConv.slitParam);
-    fprintf(fp,"; Gaussian/Lorentz ratio (L) : %.3f\n",pEngineContext->slitConv.slitParam2);
-    fprintf(fp,"; Gaussian FWHM (R) : %.3f\n",pEngineContext->slitConv.slitParam3);
-    fprintf(fp,"; Gaussian/Lorentz ratio (R) : %.3f\n",pEngineContext->slitConv.slitParam4);
+    fprintf(fp,"; Gaussian FWHM : %.3f\n",pEngineContext->slitConv.slitParam);
+    fprintf(fp,"; Lorentz/Gaussian ratio : %.3f\n",pEngineContext->slitConv.slitParam2);
    }
 
   fprintf(fp,"; column 1 : wavelength\n");
@@ -790,7 +784,7 @@ RC mediateRingCalculate(void *engineContext,void *responseHandle)
          *ringLambda,*ringVector,                                               // substitution vectors for ring cross section
           temp,                                                                 // approximate average temperature in °K for scattering
           slitParam,                                                            // gaussian full width at half maximum
-          slitParam2,slitParam3,slitParam4,                                     // other slit function parameters
+          slitParam2,                                                           // other slit function parameters
           a,invapi,delta,sigma;                                                 // parameters to build a slit function
 
   XS      xsSolar,xsSolarConv,xsSlit,xsRing;                                    // solar spectrum and slit function
@@ -816,8 +810,6 @@ RC mediateRingCalculate(void *engineContext,void *responseHandle)
   slitWidth=(double)RING_SLIT_WIDTH;                                            // NB : force slit width to 6 because of convolutions
   slitType=pEngineContext->slitConv.slitType;
   slitParam2=pEngineContext->slitConv.slitParam2;
-  slitParam3=pEngineContext->slitConv.slitParam3;
-  slitParam4=pEngineContext->slitConv.slitParam4;
   o2xref=n2pos2=raman=raman2=ramanint=ringEnd=NULL;
   temp=(double)pEngineContext->temperature;                                        // (double)250.;   May 2005/05/31
   fp=NULL;
@@ -894,7 +886,7 @@ RC mediateRingCalculate(void *engineContext,void *responseHandle)
      {
      	// Start convolving the solar spectrum
 
-      if (((rc=XSCONV_TypeStandard(&xsSolarConv,0,xsSolarConv.NDET,&xsSolar,&xsSlit,&xsSolar,NULL,slitType,slitWidth,slitParam,slitParam2,slitParam3,slitParam4))!=ERROR_ID_NO) ||
+      if (((rc=XSCONV_TypeStandard(&xsSolarConv,0,xsSolarConv.NDET,&xsSolar,&xsSlit,&xsSolar,NULL,slitType,slitWidth,slitParam,slitParam2))!=ERROR_ID_NO) ||
           ((rc=SPLINE_Deriv2(solarLambda,solarVector,solarDeriv2,nsolar,"mediateRingCalculate"))!=0))
        goto EndRing;
 
@@ -1175,10 +1167,8 @@ void UsampWriteHeader(ENGINE_XSCONV_CONTEXT *pEngineContext,FILE *fp,INT phase)
 
   if (slitType==SLIT_TYPE_VOIGT)
    {
-    fprintf(fp,"; Gaussian FWHM (L) : %.3f\n",pEngineContext->slitConv.slitParam);
-    fprintf(fp,"; Gaussian/Lorentz ratio (L) : %.3f\n",pEngineContext->slitConv.slitParam2);
-    fprintf(fp,"; Gaussian FWHM (R) : %.3f\n",pEngineContext->slitConv.slitParam3);
-    fprintf(fp,"; Gaussian/Lorentz ratio (R) : %.3f\n",pEngineContext->slitConv.slitParam4);
+    fprintf(fp,"; Gaussian FWHM : %.3f\n",pEngineContext->slitConv.slitParam);
+    fprintf(fp,"; Gaussian/Lorentz ratio : %.3f\n",pEngineContext->slitConv.slitParam2);
    }
 
   fprintf(fp,"; Analysis method : %s\n",mediateUsampAnalysisMethod[pEngineContext->analysisMethod]);

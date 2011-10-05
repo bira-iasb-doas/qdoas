@@ -555,6 +555,8 @@ enum prjctFilterFields
 // Calibration tab page description
 // --------------------------------
 
+#define NSFP 2
+
 enum _prjctFwhmTypes
  {
   PRJCT_CALIB_FWHM_TYPE_NONE,

@@ -328,7 +328,6 @@ RC MKZY_ReadRecord(ENGINE_CONTEXT *pEngineContext,int recordNo,FILE *specFp)
   int             npixels;                                                      // number of pixels returned
   double         *spectrum;                                                     // the current spectrum and its maximum value
   double          tmLocal;                                                      // measurement local time
-  double          offset;
   int             nsec,nsec1,nsec2;                                             // the total number of seconds
   INDEX           i;                                                            // browse pixels in the spectrum
   RC              rc;                                                           // return code
@@ -462,19 +461,8 @@ RC MKZY_ReadRecord(ENGINE_CONTEXT *pEngineContext,int recordNo,FILE *specFp)
       if (checksum!=recordInfo.checksum)
        rc=ERROR_ID_FILE_RECORD;
       else
-       {
-       	// for NOVAC, straylight correction
-
-       	offset=(double)0.;
-
-     	  for (i=50;i<200;i++)
-         offset+=lbuffer[i];
-
-        offset/=(double)150.;
-
-        for (i=0;i<npixels;i++)
-         spectrum[i]=(double)lbuffer[i]-offset;
-       }
+       for (i=0;i<npixels;i++)
+        spectrum[i]=(double)lbuffer[i];
      }
    }
 
@@ -495,23 +483,47 @@ RC MKZY_SearchForOffset(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
  	// Declarations
 
  	INDEX indexRecord;
+ 	double *offset,*darkCurrent;
+ 	int i;
  	RC rc;
 
  	// Initializations
 
- 	pEngineContext->recordInfo.mkzy.darkFlag=0;
+ 	offset=pEngineContext->buffers.offset;
+ 	darkCurrent=pEngineContext->buffers.darkCurrent;
+ 	pEngineContext->recordInfo.mkzy.darkTint=(double)0.;
  	rc=ERROR_ID_NO;
 
  	// Search for the spectrum
 
   for (indexRecord=1;indexRecord<=pEngineContext->recordInfo.mkzy.recordNumber;indexRecord++)
-   if (!(rc=MKZY_ReadRecord(pEngineContext,indexRecord,specFp)) && (!strncasecmp(pEngineContext->recordInfo.Nom,"dark",4) || !strncasecmp(pEngineContext->recordInfo.Nom,"offset",6)))
+   if (!(rc=MKZY_ReadRecord(pEngineContext,indexRecord,specFp)))
   	 {
-  	 	memcpy(pEngineContext->buffers.darkCurrent,pEngineContext->buffers.spectrum,sizeof(double)*NDET);
-  	 	pEngineContext->recordInfo.mkzy.darkFlag=1;
-  	 	pEngineContext->recordInfo.mkzy.darkScans=pEngineContext->recordInfo.NSomme;
-  	 	break;
+  	 	// Dark current
+
+  	 	if ((darkCurrent!=NULL) && !strncasecmp(pEngineContext->recordInfo.Nom,"dark",4))
+  	 	 {
+  	 	  memcpy(darkCurrent,pEngineContext->buffers.spectrum,sizeof(double)*NDET);
+  	 	  pEngineContext->recordInfo.mkzy.darkFlag=1;
+  	 	  pEngineContext->recordInfo.mkzy.darkScans=pEngineContext->recordInfo.NSomme;
+  	 	  pEngineContext->recordInfo.mkzy.darkTint=pEngineContext->recordInfo.Tint;
+  	 	 }
+
+  	 	// Offset
+
+  	 	if ((offset!=NULL) && !strncasecmp(pEngineContext->recordInfo.Nom,"offset",6))
+  	 	 {
+  	 	  memcpy(offset,pEngineContext->buffers.spectrum,sizeof(double)*NDET);
+  	 	  pEngineContext->recordInfo.mkzy.offsetFlag=1;
+  	 	  pEngineContext->recordInfo.mkzy.offsetScans=pEngineContext->recordInfo.NSomme;
+  	 	 }
   	 }
+
+  // Remove offset from dark current
+
+  if (pEngineContext->recordInfo.mkzy.darkFlag && pEngineContext->recordInfo.mkzy.offsetFlag)
+   for (i=0;i<NDET;i++)
+    darkCurrent[i]-=(double)offset[i]*pEngineContext->recordInfo.mkzy.darkScans/pEngineContext->recordInfo.mkzy.offsetScans;
 
  	// Return
 
@@ -539,9 +551,16 @@ RC MKZY_SearchForSky(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
   	 	memcpy(pEngineContext->buffers.scanRef,pEngineContext->buffers.spectrum,sizeof(double)*NDET);
   	 	pEngineContext->recordInfo.mkzy.skyFlag=1;
 
+  	 	// Correct by offset and dark current
+
+  	  if (pEngineContext->recordInfo.mkzy.darkFlag && pEngineContext->recordInfo.mkzy.offsetFlag) // similar MFC correction
+      for (i=0;i<NDET;i++)
+       pEngineContext->buffers.scanRef[i]-=(double)(pEngineContext->buffers.offset[i]*pEngineContext->recordInfo.NSomme/pEngineContext->recordInfo.mkzy.offsetScans+
+                                                    pEngineContext->buffers.darkCurrent[i]*pEngineContext->recordInfo.Tint/(pEngineContext->recordInfo.mkzy.darkTint*pEngineContext->recordInfo.mkzy.darkScans));
+
   	 	// Correct by the dark current
 
-  	  if (pEngineContext->recordInfo.mkzy.darkFlag)
+  	  else if (pEngineContext->recordInfo.mkzy.darkFlag)
       for (i=0;i<NDET;i++)
        pEngineContext->buffers.scanRef[i]-=(double)pEngineContext->buffers.darkCurrent[i]*pEngineContext->recordInfo.NSomme/pEngineContext->recordInfo.mkzy.darkScans;
 
@@ -576,11 +595,15 @@ RC MKZY_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
   DoasU32 *recordIndexes;                                                       // save the position of each record in the file
   unsigned char *buffer,*ptr;                                                   // buffer to load the file
   SZ_LEN fileLength;                                                            // the length of the file to load
+  int i;                                                                        // index for loops and arrays
   RC rc;                                                                        // return code
 
   // Initializations
 
   buffer=NULL;
+
+  for (i=0;i<NDET;i++)
+   pEngineContext->buffers.darkCurrent[i]=pEngineContext->buffers.offset[i]=(double)0.;
 
   pEngineContext->recordNumber=0;
   pBuffers=&pEngineContext->buffers;
@@ -588,7 +611,7 @@ RC MKZY_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
   recordIndexes=pBuffers->recordIndexes;
   pEngineContext->recordInfo.mkzy.recordNumber=0;
 
-  pEngineContext->recordInfo.mkzy.darkFlag=pEngineContext->recordInfo.mkzy.skyFlag=0;
+  pEngineContext->recordInfo.mkzy.offsetFlag=pEngineContext->recordInfo.mkzy.darkFlag=pEngineContext->recordInfo.mkzy.skyFlag=0;
 
   rc=ERROR_ID_NO;
 
@@ -651,16 +674,18 @@ RC MKZY_Reli(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,INT localD
  {
   // Declarations
 
-  double *spectrum,*offset;                                                     // pointer to spectrum and offset
+  double *spectrum,*offset,*dark;                                               // pointer to spectrum, offset and dark current
   double *cumSpectrum;
   double Tm1,Tm2;
+  double averagedPixels;
   INDEX   i,indexRecord,nRecord;                                                // browse pixels of the detector
   RC      rc;                                                                   // return code
 
   // Initializations
 
   spectrum=pEngineContext->buffers.spectrum;
-  offset=pEngineContext->buffers.darkCurrent;
+  offset=pEngineContext->buffers.offset;
+  dark=pEngineContext->buffers.darkCurrent;
 
   if ((cumSpectrum=(double *)MEMORY_AllocDVector("MKZY_Reli ","cumSpectrum",0,NDET-1))==NULL)
    rc=ERROR_ID_ALLOC;
@@ -681,15 +706,38 @@ RC MKZY_Reli(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,INT localD
 
          rc=ERROR_ID_FILE_RECORD;
 
-        // Correction by offset
+  	 	   // Correct by offset and dark current
 
-        else if ((offset!=NULL) && (pEngineContext->recordInfo.mkzy.darkScans>0))
+  	     else if (pEngineContext->recordInfo.mkzy.darkFlag && pEngineContext->recordInfo.mkzy.offsetFlag) // similar MFC correction
+         for (i=0;i<NDET;i++)
+          spectrum[i]-=(double)(offset[i]*pEngineContext->recordInfo.NSomme/pEngineContext->recordInfo.mkzy.offsetScans+
+                                                       dark[i]*pEngineContext->recordInfo.Tint/(pEngineContext->recordInfo.mkzy.darkTint*pEngineContext->recordInfo.mkzy.darkScans));
+
+  	 	   // Correct by the dark current only (used as offset
+
+  	     else if (pEngineContext->recordInfo.mkzy.darkFlag)
+         for (i=0;i<NDET;i++)
+          spectrum[i]-=(double)dark[i]*pEngineContext->recordInfo.NSomme/pEngineContext->recordInfo.mkzy.darkScans;
+
+       	// for NOVAC, straylight correction
+
+       	if (!pEngineContext->recordInfo.mkzy.offsetFlag)
+         {
+       	  averagedPixels=(double)0.;
+
+     	    for (i=50;i<200;i++)
+           averagedPixels+=spectrum[i];
+
+          averagedPixels/=(double)150.;
+
+          for (i=0;i<NDET;i++)
+           spectrum[i]-=averagedPixels;
+         }
+
+        if (!rc)
          {
           for (i=0;i<NDET;i++)
-           {
-            spectrum[i]-=(double)offset[i]*pEngineContext->recordInfo.NSomme/pEngineContext->recordInfo.mkzy.darkScans;
-            cumSpectrum[i]+=spectrum[i];
-           }
+           cumSpectrum[i]+=spectrum[i];
 
           if (!nRecord)
            Tm1=(double)ZEN_NbSec(&pEngineContext->recordInfo.present_day,&pEngineContext->recordInfo.startTime,0);
@@ -836,7 +884,7 @@ RC MKZY_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
           if (((rc=ANALYSE_XsInterpolation(pTabFeno,pTabFeno->LambdaRef))!=ERROR_ID_NO) ||
               (!pKuruczOptions->fwhmFit && pTabFeno->xsToConvolute &&
-              ((rc=ANALYSE_XsConvolution(pTabFeno,pTabFeno->LambdaRef,&ANALYSIS_slit,pSlitOptions->slitFunction.slitType,&pSlitOptions->slitFunction.slitParam,&pSlitOptions->slitFunction.slitParam2,&pSlitOptions->slitFunction.slitParam3,&pSlitOptions->slitFunction.slitParam4))!=ERROR_ID_NO)))
+              ((rc=ANALYSE_XsConvolution(pTabFeno,pTabFeno->LambdaRef,&ANALYSIS_slit,pSlitOptions->slitFunction.slitType,&pSlitOptions->slitFunction.slitParam,&pSlitOptions->slitFunction.slitParam2))!=ERROR_ID_NO)))
 
            goto EndMKZY_LoadAnalysis;
          }

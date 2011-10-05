@@ -221,33 +221,33 @@ CWSlitVoigtEdit::CWSlitVoigtEdit(const struct slit_voigt *d, QWidget *parent) :
   QGridLayout *gridLayout = new QGridLayout;
 
   // left FWHM
-  gridLayout->addWidget(new QLabel("Gaussian FWHM (L)"), row, 0, Qt::AlignRight);
+  gridLayout->addWidget(new QLabel("Gaussian FWHM"), row, 0, Qt::AlignRight);
   m_fwhmLeftEdit = new QLineEdit(this);
   m_fwhmLeftEdit->setFixedWidth(cStandardEditWidth);
   m_fwhmLeftEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 50.0, 3, m_fwhmLeftEdit));
   gridLayout->addWidget(m_fwhmLeftEdit, row, 1, Qt::AlignLeft);
   // right FHWM
-  gridLayout->addWidget(new QLabel("Gaussian FWHM (R)"), row, 3, Qt::AlignRight);
-  m_fwhmRightEdit = new QLineEdit(this);
-  m_fwhmRightEdit->setFixedWidth(cStandardEditWidth);
-  m_fwhmRightEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 50.0, 3, m_fwhmRightEdit));
-  gridLayout->addWidget(m_fwhmRightEdit, row, 4, Qt::AlignLeft);
-
-  gridLayout->addWidget(new QLabel("(nm)"), row, 2, Qt::AlignLeft);
+  // gridLayout->addWidget(new QLabel("Gaussian FWHM (R)"), row, 3, Qt::AlignRight);
+  // m_fwhmRightEdit = new QLineEdit(this);
+  // m_fwhmRightEdit->setFixedWidth(cStandardEditWidth);
+  // m_fwhmRightEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 50.0, 3, m_fwhmRightEdit));
+  // gridLayout->addWidget(m_fwhmRightEdit, row, 4, Qt::AlignLeft);
+  //
+  // gridLayout->addWidget(new QLabel("(nm)"), row, 2, Qt::AlignLeft);
   ++row;
 
   // left Gauss/Lorentz ratio
-  gridLayout->addWidget(new QLabel("Gaussian/Lorentz (L)"), row, 0, Qt::AlignRight);
+  gridLayout->addWidget(new QLabel("Lorentz/Gaussian"), row, 0, Qt::AlignRight);
   m_ratioLeftEdit = new QLineEdit(this);
   m_ratioLeftEdit->setFixedWidth(cStandardEditWidth);
   m_ratioLeftEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 10.0, 3, m_ratioLeftEdit));
   gridLayout->addWidget(m_ratioLeftEdit, row, 1, Qt::AlignLeft);
   // right Gauss/Lorentz ratio
-  gridLayout->addWidget(new QLabel("Gaussian/Lorentz (R)"), row, 3, Qt::AlignRight);
-  m_ratioRightEdit = new QLineEdit(this);
-  m_ratioRightEdit->setFixedWidth(cStandardEditWidth);
-  m_ratioRightEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 10.0, 3, m_ratioRightEdit));
-  gridLayout->addWidget(m_ratioRightEdit, row, 4, Qt::AlignLeft);
+  // gridLayout->addWidget(new QLabel("Gaussian/Lorentz (R)"), row, 3, Qt::AlignRight);
+  // m_ratioRightEdit = new QLineEdit(this);
+  // m_ratioRightEdit->setFixedWidth(cStandardEditWidth);
+  // m_ratioRightEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 10.0, 3, m_ratioRightEdit));
+  // gridLayout->addWidget(m_ratioRightEdit, row, 4, Qt::AlignLeft);
   ++row;
 
   // initialise
@@ -269,20 +269,20 @@ void CWSlitVoigtEdit::reset(const struct slit_voigt *d)
   QString tmpStr;
   m_fwhmLeftEdit->validator()->fixup(tmpStr.setNum(d->fwhmL));
   m_fwhmLeftEdit->setText(tmpStr);
-  m_fwhmRightEdit->validator()->fixup(tmpStr.setNum(d->fwhmR));
-  m_fwhmRightEdit->setText(tmpStr);
+  // m_fwhmRightEdit->validator()->fixup(tmpStr.setNum(d->fwhmR));
+  // m_fwhmRightEdit->setText(tmpStr);
   m_ratioLeftEdit->validator()->fixup(tmpStr.setNum(d->glRatioL));
   m_ratioLeftEdit->setText(tmpStr);
-  m_ratioRightEdit->validator()->fixup(tmpStr.setNum(d->glRatioR));
-  m_ratioRightEdit->setText(tmpStr);
+  // m_ratioRightEdit->validator()->fixup(tmpStr.setNum(d->glRatioR));
+  // m_ratioRightEdit->setText(tmpStr);
 }
 
 void CWSlitVoigtEdit::apply(struct slit_voigt *d) const
 {
   d->fwhmL = m_fwhmLeftEdit->text().toDouble();
-  d->fwhmR = m_fwhmRightEdit->text().toDouble();
+  // d->fwhmR = m_fwhmRightEdit->text().toDouble();
   d->glRatioL = m_ratioLeftEdit->text().toDouble();
-  d->glRatioR = m_ratioRightEdit->text().toDouble();
+  // d->glRatioR = m_ratioRightEdit->text().toDouble();
 }
 
 //--------------------------------------------------------

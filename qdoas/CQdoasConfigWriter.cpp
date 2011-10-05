@@ -1425,7 +1425,7 @@ void CQdoasConfigWriter::writeSfps(FILE *fp, const struct calibration_sfp *d)
 {
   fprintf(fp, "      <sfps>\n");
 
-  for (int i=0; i<4; ++i) {
+  for (int i=0; i<NSFP; ++i) {
     fprintf(fp, "        <sfp index=\"%d\" fit=\"%s\" init=\"%.3f\" delta=\"%.3f\" fstr=\"%s\" estr=\"%s\" />\n",
 	    i+1, (d->fitFlag ? sTrue : sFalse),
 	    d->initialValue, d->deltaValue,

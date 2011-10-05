@@ -350,7 +350,11 @@ RC KURUCZ_Spectrum(double *oldLambda,double *newLambda,double *spectrum,double *
       if (pKuruczOptions->fwhmFit)
        for (indexParam=0;indexParam<maxParam;indexParam++)
         {
-         fwhm[indexParam][indexWindow]=fabs(Feno->TabCrossResults[Feno->indexFwhmParam[indexParam]].Param);
+        	if ((indexParam==1) && (pKuruczOptions->fwhmType==SLIT_TYPE_AGAUSS))
+          fwhm[indexParam][indexWindow]=Feno->TabCrossResults[Feno->indexFwhmParam[indexParam]].Param;  // asymmetric factor can be negatif for asymmetric gaussian
+         else
+          fwhm[indexParam][indexWindow]=fabs(Feno->TabCrossResults[Feno->indexFwhmParam[indexParam]].Param);
+
          fwhmSigma[indexParam][indexWindow]=Feno->TabCrossResults[Feno->indexFwhmParam[indexParam]].SigmaParam;
         }
 
@@ -658,8 +662,8 @@ RC KURUCZ_ApplyCalibration(FENO *pTabFeno,double *newLambda)
 
   if (((pTabFeno->rcKurucz=ANALYSE_XsInterpolation(pTabFeno,newLambda))!=ERROR_ID_NO) ||
        (pTabFeno->xsToConvolute && ((pTabFeno->useKurucz==ANLYS_KURUCZ_REF) || (pTabFeno->useKurucz==ANLYS_KURUCZ_SPEC)) &&
-      ((pKuruczOptions->fwhmFit && ((pTabFeno->rcKurucz=ANALYSE_XsConvolution(pTabFeno,newLambda,NULL,pKuruczOptions->fwhmType,pTabFeno->fwhmVector[0],pTabFeno->fwhmVector[1],pTabFeno->fwhmVector[2],pTabFeno->fwhmVector[3]))!=ERROR_ID_NO)) ||
-      (!pKuruczOptions->fwhmFit && ((pTabFeno->rcKurucz=ANALYSE_XsConvolution(pTabFeno,newLambda,&ANALYSIS_slit,pSlitOptions->slitFunction.slitType,&pSlitOptions->slitFunction.slitParam,&pSlitOptions->slitFunction.slitParam2,&pSlitOptions->slitFunction.slitParam3,&pSlitOptions->slitFunction.slitParam4))!=ERROR_ID_NO)))))
+      ((pKuruczOptions->fwhmFit && ((pTabFeno->rcKurucz=ANALYSE_XsConvolution(pTabFeno,newLambda,NULL,pKuruczOptions->fwhmType,pTabFeno->fwhmVector[0],pTabFeno->fwhmVector[1]))!=ERROR_ID_NO)) ||
+      (!pKuruczOptions->fwhmFit && ((pTabFeno->rcKurucz=ANALYSE_XsConvolution(pTabFeno,newLambda,&ANALYSIS_slit,pSlitOptions->slitFunction.slitType,&pSlitOptions->slitFunction.slitParam,&pSlitOptions->slitFunction.slitParam2))!=ERROR_ID_NO)))))
 
    rc=pTabFeno->rcKurucz;
 

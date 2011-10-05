@@ -96,6 +96,8 @@ void EngineResetContext(ENGINE_CONTEXT *pEngineContext)
    MEMORY_ReleaseDVector("EngineResetContext ","irrad",pBuffers->irrad,0);
   if (pBuffers->darkCurrent!=NULL)
    MEMORY_ReleaseDVector("EngineResetContext ","darkCurrent",pBuffers->darkCurrent,0);
+  if (pBuffers->offset!=NULL)
+   MEMORY_ReleaseDVector("EngineResetContext ","offset",pBuffers->offset,0);
   if (pBuffers->scanRef!=NULL)
    MEMORY_ReleaseDVector("EngineResetContext ","scanRef",pBuffers->scanRef,0);
   if (pBuffers->specMaxx!=NULL)
@@ -163,6 +165,8 @@ RC EngineCopyContext(ENGINE_CONTEXT *pEngineContextTarget,ENGINE_CONTEXT *pEngin
       ((pBuffersTarget->irrad=(double *)MEMORY_AllocDVector("EngineCopyContext","irrad",0,NDET-1))==NULL)) ||
       ((pBuffersSource->darkCurrent!=NULL) && (pBuffersTarget->darkCurrent==NULL) &&
       ((pBuffersTarget->darkCurrent=(double *)MEMORY_AllocDVector("EngineCopyContext","darkCurrent",0,NDET-1))==NULL)) ||
+      ((pBuffersSource->offset!=NULL) && (pBuffersTarget->offset==NULL) &&
+      ((pBuffersTarget->offset=(double *)MEMORY_AllocDVector("EngineCopyContext","offset",0,NDET-1))==NULL)) ||
       ((pBuffersSource->scanRef!=NULL) && (pBuffersTarget->scanRef==NULL) &&
       ((pBuffersTarget->scanRef=(double *)MEMORY_AllocDVector("EngineCopyContext","scanRef",0,NDET-1))==NULL)) ||
       ((pBuffersSource->varPix!=NULL) && (pBuffersTarget->varPix==NULL) &&
@@ -203,6 +207,8 @@ RC EngineCopyContext(ENGINE_CONTEXT *pEngineContextTarget,ENGINE_CONTEXT *pEngin
      memcpy(pBuffersTarget->irrad,pBuffersSource->irrad,sizeof(double)*NDET);
     if ((pBuffersTarget->darkCurrent!=NULL) && (pBuffersSource->darkCurrent!=NULL))
      memcpy(pBuffersTarget->darkCurrent,pBuffersSource->darkCurrent,sizeof(double)*NDET);
+    if ((pBuffersTarget->offset!=NULL) && (pBuffersSource->offset!=NULL))
+     memcpy(pBuffersTarget->offset,pBuffersSource->offset,sizeof(double)*NDET);
     if ((pBuffersTarget->scanRef!=NULL) && (pBuffersSource->scanRef!=NULL))
      memcpy(pBuffersTarget->scanRef,pBuffersSource->scanRef,sizeof(double)*NDET);
     if ((pBuffersTarget->varPix!=NULL) && (pBuffersSource->varPix!=NULL))
@@ -337,6 +343,9 @@ RC EngineSetProject(ENGINE_CONTEXT *pEngineContext)
        (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_CCD_EEV)) &&
       ((pBuffers->darkCurrent=MEMORY_AllocDVector("EngineSetProject","darkCurrent",0,NDET-1))==NULL)) ||
 
+      ((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MKZY) &&
+      ((pBuffers->offset=MEMORY_AllocDVector("EngineSetProject","offset",0,NDET-1))==NULL)) ||
+
      (((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC) ||
        (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC_STD) ||
        (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC_BIRA)) &&
@@ -424,6 +433,8 @@ RC EngineSetProject(ENGINE_CONTEXT *pEngineContext)
 
     if (pBuffers->darkCurrent!=NULL)
      VECTOR_Init(pBuffers->darkCurrent,(double)0.,NDET);                  // To check the initialization of the ANALYSE_zeros vector ...
+    if (pBuffers->offset!=NULL)
+     VECTOR_Init(pBuffers->offset,(double)0.,NDET);                       // To check the initialization of the ANALYSE_zeros vector ...
     if (pBuffers->scanRef!=NULL)
      VECTOR_Init(pBuffers->scanRef,(double)0.,NDET);                      // To check the initialization of the ANALYSE_zeros vector ...
    }
@@ -1762,7 +1773,7 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
               useKurucz++;
              }
             else if (((rc=ANALYSE_XsInterpolation(pTabFeno,pTabFeno->LambdaRef))!=ERROR_ID_NO) ||
-                     ((rc=ANALYSE_XsConvolution(pTabFeno,pTabFeno->LambdaRef,&ANALYSIS_slit,pSlitOptions->slitFunction.slitType,&pSlitOptions->slitFunction.slitParam,&pSlitOptions->slitFunction.slitParam2,&pSlitOptions->slitFunction.slitParam3,&pSlitOptions->slitFunction.slitParam4))!=ERROR_ID_NO))
+                     ((rc=ANALYSE_XsConvolution(pTabFeno,pTabFeno->LambdaRef,&ANALYSIS_slit,pSlitOptions->slitFunction.slitType,&pSlitOptions->slitFunction.slitParam,&pSlitOptions->slitFunction.slitParam2))!=ERROR_ID_NO))
              break;
            }
 

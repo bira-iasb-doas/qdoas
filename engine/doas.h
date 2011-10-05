@@ -659,8 +659,9 @@ typedef struct _mkzy
   unsigned short pixels;                                                        // number of pixels saved in the data-field
   unsigned char  channel;                                                       // channel of the spectrometer, typically 0
   char           coneangle;                                                     // new in version 4, given in cfg.txt
-  int            darkFlag,skyFlag;                                              // flags indicating the presence resp. of dark current and sky spectra in the file
-  int            darkScans;                                                     // number of scans of the dark current
+  int            darkFlag,offsetFlag,skyFlag;                                   // flags indicating the presence resp. of dark current, offset and sky spectra in the file
+  int            darkScans,offsetScans;                                         // number of scans of the dark current and the offset
+  double         darkTint;
   int            recordNumber;
  }
 MKZY_DATA;
@@ -716,6 +717,7 @@ typedef struct _engineBuffers
          *sigmaSpec,                                                            // error on raw spectrum if any
          *irrad,                                                                // irradiance spectrum (for satellites measurements)
          *darkCurrent,                                                          // dark current
+         *offset,                                                               // offset
          *specMaxx,                                                             // scans number for SpecMax
          *specMax,                                                              // maxima of signal over scans
          *instrFunction,                                                        // instrumental function
@@ -995,7 +997,7 @@ RC   FNPixel   ( double *lambdaVector, double lambdaValue, INT npts,INT pixelSel
 
 RC   ANALYSE_CheckLambda(WRK_SYMBOL *pWrkSymbol,double *lambda,DoasCh *callingFunction);
 RC   ANALYSE_XsInterpolation(FENO *pTabFeno,double *newLambda);
-RC   ANALYSE_XsConvolution(FENO *pTabFeno,double *newLambda,MATRIX_OBJECT *pSlit,INT slitType,double *slitParam1,double *slitParam2,double *slitParam3,double *slitParam4);
+RC   ANALYSE_XsConvolution(FENO *pTabFeno,double *newLambda,MATRIX_OBJECT *pSlit,INT slitType,double *slitParam1,double *slitParam2);
 RC   ANALYSE_LinFit(SVD *pSvd,INT Npts,INT Degree,double *a,double *sigma,double *b,double *x);
 void ANALYSE_SvdFree(DoasCh *callingFunctionShort,SVD *pSvd);
 RC   ANALYSE_SvdLocalAlloc(DoasCh *callingFunctionShort,SVD *pSvd);

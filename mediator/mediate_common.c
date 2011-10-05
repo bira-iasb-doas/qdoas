@@ -51,9 +51,7 @@ void setMediateSlit(SLIT *pEngineSlit,const mediate_slit_function_t *pMediateSli
   pEngineSlit->slitType=pMediateSlit->type;
 
   pEngineSlit->slitParam=
-  pEngineSlit->slitParam2=
-  pEngineSlit->slitParam3=
-  pEngineSlit->slitParam4=(double)0.;
+  pEngineSlit->slitParam2=(double)0.;
 
   switch(pEngineSlit->slitType)
    {
@@ -70,8 +68,6 @@ void setMediateSlit(SLIT *pEngineSlit,const mediate_slit_function_t *pMediateSli
     case SLIT_TYPE_VOIGT :                                                      // Voigt profile function
      pEngineSlit->slitParam=pMediateSlit->voigt.fwhmL;
      pEngineSlit->slitParam2=pMediateSlit->voigt.glRatioL;
-     pEngineSlit->slitParam3=pMediateSlit->voigt.fwhmR;
-     pEngineSlit->slitParam4=pMediateSlit->voigt.glRatioR;
     break;
  // ----------------------------------------------------------------------------
     case SLIT_TYPE_ERF :                                                        // error function (convolution of a Gaussian and a boxcar)

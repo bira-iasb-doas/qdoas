@@ -1487,14 +1487,6 @@ RC GOME2_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,INDEX fileIndex)
 
 
      	 	coda_cursor_read_uint32(&pOrbitFile->gome2Cursor,&spe32);
-
-     	 	{
-     	 		FILE *fp;
-     	 		fp=fopen("toto.dat","a+t");
-     	 		fprintf(fp,"%d\n",spe32);
-     	 		fclose(fp);
-     	 	}
-
      	  coda_cursor_read_double(&pOrbitFile->gome2Cursor,&spectrum[i]);
 
 
@@ -2392,7 +2384,7 @@ RC GOME2_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
             if (((rc=ANALYSE_XsInterpolation(pTabFeno,pTabFeno->LambdaRef))!=ERROR_ID_NO) ||
                 ((!pKuruczOptions->fwhmFit || !pTabFeno->useKurucz) && pTabFeno->xsToConvolute &&
-                ((rc=ANALYSE_XsConvolution(pTabFeno,pTabFeno->LambdaRef,&ANALYSIS_slit,pSlitOptions->slitFunction.slitType,&pSlitOptions->slitFunction.slitParam,&pSlitOptions->slitFunction.slitParam2,&pSlitOptions->slitFunction.slitParam3,&pSlitOptions->slitFunction.slitParam4))!=ERROR_ID_NO)))
+                ((rc=ANALYSE_XsConvolution(pTabFeno,pTabFeno->LambdaRef,&ANALYSIS_slit,pSlitOptions->slitFunction.slitType,&pSlitOptions->slitFunction.slitParam,&pSlitOptions->slitFunction.slitParam2))!=ERROR_ID_NO)))
 
              goto EndGOME2_LoadAnalysis;
            }

@@ -1641,7 +1641,7 @@ CWSfpParametersDoasTable::~CWSfpParametersDoasTable()
 
 void CWSfpParametersDoasTable::populate(const struct calibration_sfp *data)
 {
-  for (int i = 0; i<4; ++i) {
+  for (int i = 0; i<NSFP; ++i) {
     QList<QVariant> initialValues;
     initialValues.push_back(QVariant(data->fitFlag));
     initialValues.push_back(QVariant(data->initialValue));
@@ -1659,7 +1659,7 @@ void CWSfpParametersDoasTable::populate(const struct calibration_sfp *data)
 
 void CWSfpParametersDoasTable::apply(struct calibration_sfp *data) const
 {
-  for (int i = 0; i<4; ++i) {
+  for (int i = 0; i<NSFP; ++i) {
     QList<QVariant> state = getCellData(i);
 
     data->fitFlag = (state.at(0).toBool() ? 1 : 0);
