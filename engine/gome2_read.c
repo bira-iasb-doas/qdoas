@@ -444,7 +444,7 @@ int Gome2Open(coda_ProductFile **productFile, char *fileName,int *version)
 
   // Open the file
 
-  rc=coda_open(fileName,&*productFile);
+  rc=coda_open(fileName,productFile);          // &*productFile
 
   if (rc!=0) // && (coda_errno==CODA_ERROR_FILE_OPEN))
    {
@@ -452,7 +452,7 @@ int Gome2Open(coda_ProductFile **productFile, char *fileName,int *version)
      * temporarily disable memory mapping of files and try again
      */
     coda_set_option_use_mmap(0);
-    rc=coda_open(fileName,&*productFile);
+    rc=coda_open(fileName,productFile);        // &*productFile
     coda_set_option_use_mmap(1);
    }
 
