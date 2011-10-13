@@ -1247,7 +1247,7 @@ RC ANALYSE_XsConvolution(FENO *pTabFeno,double *newlambda,
            // Calculate Raman/Solar
 
            for (j=indexlambdaMin;j<indexlambdaMax;j++)
-            pTabCross->vector[j]=(solar[j]!=(double)0.)?(double)raman[j]/solar[j]:(double)0.;
+            pTabCross->vector[j]=(solar[j]!=(double)0.)?(double)raman[j]/solar[j]:(double)0.;   // log added on 2011 October 7 - test for GOME2 (ISA) : not concluding
           }
         }
 

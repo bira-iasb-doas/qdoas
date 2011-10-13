@@ -130,6 +130,7 @@ void setMediateFilter(PRJCT_FILTER *pEngineFilter,const mediate_filter_t *pMedia
  	// Initializations
 
  	memset(pEngineFilter,0,sizeof(PRJCT_FILTER));
+
  	pEngineFilter->type=pMediateFilter->mode;
  	pEngineFilter->filterEffWidth=(double)0.;
 

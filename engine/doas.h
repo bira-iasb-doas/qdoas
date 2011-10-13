@@ -1159,7 +1159,7 @@ RC USAMP_Build(double *phase1,                                                  
 #define     MAX_FLUXES    20
 #define     MAX_CIC       20
 #define     MAX_RESULTS  500   // 250 measurements the morning; 250 measurements the afternoon.
-#define     MAX_FIELDS   200
+#define     MAX_FIELDS   1600
 
 // ----------------------
 // STRUCTURES DEFINITIONS

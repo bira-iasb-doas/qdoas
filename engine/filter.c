@@ -406,6 +406,14 @@ RC FilterNeqRipple (PRJCT_FILTER *pFilter,double *Beta, double *Delta,double *dB
   pFilter->filterSize = Nterm+1;
 
   DNp = (double) Nterm;
+
+//  {
+//  	FILE *fp;
+//  	fp=fopen("toto.dat","a+t");
+//  	fprintf(fp,"Réiniti filterFunction %08X\n",(unsigned int) pFilter->filterFunction);
+//  	fclose(fp);
+//  }
+
   pFilter->filterFunction=NULL;
 
   // Test Np against dimension limit

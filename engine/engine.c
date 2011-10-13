@@ -981,11 +981,6 @@ RC EngineEndCurrentSession(ENGINE_CONTEXT *pEngineContext)
 
     rc=EngineRequestEndBrowseSpectra(pEngineContext);
 
-   	// Reset the context of the engine
-
-   	EngineResetContext(pEngineContext);
-   	EngineResetContext(&ENGINE_contextRef);
-
    	// Release other allocated buffers
 
     GDP_ASC_ReleaseBuffers();
@@ -998,6 +993,11 @@ RC EngineEndCurrentSession(ENGINE_CONTEXT *pEngineContext)
 
     if ((THRD_id!=THREAD_TYPE_NONE) && (THRD_id!=THREAD_TYPE_SPECTRA))
      ANALYSE_ResetData();
+
+   	// Reset the context of the engine
+
+   	EngineResetContext(pEngineContext);
+   	EngineResetContext(&ENGINE_contextRef);
 
     THRD_id=THREAD_TYPE_NONE;
     SYMB_itemCrossN=SYMBOL_PREDEFINED_MAX;

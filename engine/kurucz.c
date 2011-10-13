@@ -1025,7 +1025,10 @@ RC KURUCZ_Alloc(PROJECT *pProject,double *lambda,INDEX indexKurucz,double lambda
   if (hFilterFlag && KURUCZ_buffers.solarFGap)
    {
     if (lambda[NDET-1]-lambda[0]+1==NDET)
-     memcpy(KURUCZ_buffers.lambdaF,ANALYSE_zeros,sizeof(double)*NDET+2*KURUCZ_buffers.solarFGap);
+     {
+      for (i=0;i<NDET+2*KURUCZ_buffers.solarFGap;i++)
+       KURUCZ_buffers.lambdaF[i]=(double)0.;
+     }
     else
      {
       memcpy(&KURUCZ_buffers.lambdaF[KURUCZ_buffers.solarFGap],lambda,sizeof(double)*NDET);

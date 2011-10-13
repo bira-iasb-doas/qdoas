@@ -434,6 +434,7 @@ int readConfigQdoas(commands_t *cmd, QList<const CProjectConfigItem*> &projectIt
     std::cout << handler->messages().toStdString() << std::endl;
     retCode = 1;
   }
+
   delete handler;
   delete source;
   delete file;
@@ -460,7 +461,7 @@ int analyseProjectQdoas(const CProjectConfigItem *projItem, const QString &outpu
   while (it != filenames.end()) {
     QFileInfo info(*it);
 
-  	 if (info.isFile())
+    if (info.isFile())
   	  retCode = analyseProjectQdoasFile(engineContext, controller, *it);
   	 else if (info.isDir())
  	   retCode=analyseProjectQdoasDirectory(engineContext,controller,info.filePath(),fileFilter,1);
