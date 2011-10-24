@@ -610,7 +610,7 @@ void OUTPUT_ResetData(void)
    	// {
    	// 	FILE *fp;
    	// 	fp=fopen("toto.dat","a+t");
-   	// 	fprintf(fp,"%#3d %s\n",indexField,outputFields[indexField].fieldName);
+   	// 	fprintf(fp,"OUTPUT_ResetData %-3d %s %08x\n",indexField,outputFields[indexField].fieldName,(unsigned int)outputColumns[indexField]);
    	// 	fclose(fp);
    	// }
 
@@ -1782,6 +1782,26 @@ void OutputSaveRecord(ENGINE_CONTEXT *pEngineContext,INT hiddenFlag)
      // ---------------------------------------------------------------------
         case PRJCT_RESULTS_ASCII_MIRROR_ERROR :
          ((INT *)outputColumns[indexColumn++])[indexRecord]=(INT)pRecordInfo->mirrorError;
+        break;
+     // ---------------------------------------------------------------------
+        case PRJCT_RESULTS_ASCII_GOME2_SCANDIRECTION :
+         ((INT *)outputColumns[indexColumn++])[indexRecord]=(INT)pRecordInfo->gome2.scanDirection;
+        break;
+     // ---------------------------------------------------------------------
+        case PRJCT_RESULTS_ASCII_GOME2_SAA :
+         ((INT *)outputColumns[indexColumn++])[indexRecord]=(INT)pRecordInfo->gome2.saaFlag;
+        break;
+     // ---------------------------------------------------------------------
+        case PRJCT_RESULTS_ASCII_GOME2_SUNGLINT_RISK :
+         ((INT *)outputColumns[indexColumn++])[indexRecord]=(INT)pRecordInfo->gome2.sunglintDangerFlag;
+        break;
+     // ---------------------------------------------------------------------
+        case PRJCT_RESULTS_ASCII_GOME2_SUNGLINT_HIGHRISK :
+         ((INT *)outputColumns[indexColumn++])[indexRecord]=(INT)pRecordInfo->gome2.sunglintHighDangerFlag;
+        break;
+     // ---------------------------------------------------------------------
+        case PRJCT_RESULTS_ASCII_GOME2_RAINBOW :
+         ((INT *)outputColumns[indexColumn++])[indexRecord]=(INT)pRecordInfo->gome2.rainbowFlag;
         break;
      // ---------------------------------------------------------------------
         default :
@@ -3014,7 +3034,15 @@ RC OUTPUT_LocalAlloc(ENGINE_CONTEXT *pEngineContext)
 
       for (indexField=0;indexField<outputNbFields;indexField++)
        if (outputColumns[indexField]!=NULL)
-        MEMORY_ReleaseBuffer("OUTPUT_LocalAlloc",outputFields[indexField].fieldName,outputColumns[indexField]);
+        {
+   	// {
+   	// 	FILE *fp;
+   	// 	fp=fopen("toto.dat","a+t");
+   	// 	fprintf(fp,"OUTPUT_LocalAlloc Release %-3d %s %08x\n",indexField,outputFields[indexField].fieldName,(unsigned int)outputColumns[indexField]);
+   	// 	fclose(fp);
+   	// }
+         MEMORY_ReleaseBuffer("OUTPUT_LocalAlloc",outputFields[indexField].fieldName,outputColumns[indexField]);
+        }
 
       memset(outputColumns,0,sizeof(DoasCh *)*MAX_FIELDS);
       outputRecords=NULL;
@@ -3086,6 +3114,14 @@ RC OUTPUT_LocalAlloc(ENGINE_CONTEXT *pEngineContext)
           // -------------------------------------------------------------------------
             }
          }
+
+   	// {
+   	// 	FILE *fp;
+   	// 	fp=fopen("toto.dat","a+t");
+   	// 	for (indexField=0;(indexField<outputNbFields) && !rc;indexField++)
+   	// 	 fprintf(fp,"OUTPUT_LocalAlloc Allocate %-3d %s %08x\n",indexField,outputFields[indexField].fieldName,(unsigned int)outputColumns[indexField]);
+   	// 	fclose(fp);
+   	// }
        }
 
       if ((outputMaxRecords<newRecordNumber) && !rc)
