@@ -606,8 +606,17 @@ void OUTPUT_ResetData(void)
   memset(OUTPUT_currentAscFile,0,MAX_ITEM_TEXT_LEN+1);
 
   for (indexField=0;indexField<outputNbFields;indexField++)
-   if (outputColumns[indexField]!=NULL)
-    MEMORY_ReleaseBuffer("OUTPUT_ResetData",outputFields[indexField].fieldName,outputColumns[indexField]);
+   {
+   	{
+   		FILE *fp;
+   		fp=fopen("toto.dat","a+t");
+   		fprintf(fp,"%#3d %s\n",indexField,outputFields[indexField].fieldName);
+   		fclose(fp);
+   	}
+
+    if (outputColumns[indexField]!=NULL)
+     MEMORY_ReleaseBuffer("OUTPUT_ResetData",outputFields[indexField].fieldName,outputColumns[indexField]);
+   }
 
   memset(outputFields,0,sizeof(PRJCT_RESULTS_FIELDS)*MAX_FIELDS);
   memset(outputColumns,0,sizeof(DoasCh *)*MAX_FIELDS);
@@ -3014,7 +3023,7 @@ RC OUTPUT_LocalAlloc(ENGINE_CONTEXT *pEngineContext)
 
     // Allocate new buffers
 
-    if (newRecordNumber)
+    if (newRecordNumber>0)
      {
       if ((outputMaxRecords<newRecordNumber) && ((outputRecords=(OUTPUT_INFO *)MEMORY_AllocBuffer("OUTPUT_LocalAlloc","outputRecords",newRecordNumber,sizeof(OUTPUT_INFO),0,MEMORY_TYPE_STRUCT))==NULL))
        rc=ERROR_ID_ALLOC;
@@ -3033,8 +3042,16 @@ RC OUTPUT_LocalAlloc(ENGINE_CONTEXT *pEngineContext)
           else
            n=pField->fieldDim1*pField->fieldDim2;
 
+          {
+          	FILE *fp;
+          	fp=fopen("toto.dat","a+t");
+          	fprintf(fp,"%s %d x %d %d x %d\n",pField->fieldName,pField->fieldDim1,pField->fieldDim2,n,pField->fieldSize);
+          	fclose(fp);
+          }
+
+
           if ((outputMaxRecords<newRecordNumber) &&
-             ((outputColumns[indexField]=(DoasCh *)MEMORY_AllocBuffer("OUTPUT_LocalAlloc","outputColumns",n,pField->fieldSize,0,pField->fieldType))==NULL))
+             ((outputColumns[indexField]=(DoasCh *)MEMORY_AllocBuffer("OUTPUT_LocalAlloc",outputFields[indexField].fieldName,n,pField->fieldSize,0,pField->fieldType))==NULL))
 
            rc=ERROR_ID_ALLOC;
 

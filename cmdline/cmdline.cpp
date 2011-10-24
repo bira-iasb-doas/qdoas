@@ -622,7 +622,7 @@ int analyseProjectQdoasFile(void *engineContext, CBatchEngineController *control
     result = (!calibSwitch) ? mediateRequestNextMatchingAnalyseSpectrum(engineContext, resp) :
                               mediateRequestNextMatchingCalibrateSpectrum(engineContext, resp);
 
-    if (result!=oldResult)
+    if ((result!=0) && (result!=oldResult))                                     // Try to debug
      {
       resp->setRecordNumber(result);
 
