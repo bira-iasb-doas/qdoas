@@ -607,12 +607,12 @@ void OUTPUT_ResetData(void)
 
   for (indexField=0;indexField<outputNbFields;indexField++)
    {
-   	{
-   		FILE *fp;
-   		fp=fopen("toto.dat","a+t");
-   		fprintf(fp,"%#3d %s\n",indexField,outputFields[indexField].fieldName);
-   		fclose(fp);
-   	}
+   	// {
+   	// 	FILE *fp;
+   	// 	fp=fopen("toto.dat","a+t");
+   	// 	fprintf(fp,"%#3d %s\n",indexField,outputFields[indexField].fieldName);
+   	// 	fclose(fp);
+   	// }
 
     if (outputColumns[indexField]!=NULL)
      MEMORY_ReleaseBuffer("OUTPUT_ResetData",outputFields[indexField].fieldName,outputColumns[indexField]);
@@ -3042,12 +3042,12 @@ RC OUTPUT_LocalAlloc(ENGINE_CONTEXT *pEngineContext)
           else
            n=pField->fieldDim1*pField->fieldDim2;
 
-          {
-          	FILE *fp;
-          	fp=fopen("toto.dat","a+t");
-          	fprintf(fp,"%s %d x %d %d x %d\n",pField->fieldName,pField->fieldDim1,pField->fieldDim2,n,pField->fieldSize);
-          	fclose(fp);
-          }
+          // {
+          // 	FILE *fp;
+          // 	fp=fopen("toto.dat","a+t");
+          // 	fprintf(fp,"%s %d x %d %d x %d\n",pField->fieldName,pField->fieldDim1,pField->fieldDim2,n,pField->fieldSize);
+          // 	fclose(fp);
+          // }
 
 
           if ((outputMaxRecords<newRecordNumber) &&
