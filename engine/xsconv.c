@@ -1128,6 +1128,7 @@ RC XSCONV_TypeStandard(XS *pXsnew,INDEX indexLambdaMin,INDEX indexLambdaMax,XS *
           crossFIntegral,IFIntegral,FIntegral,
           oldF,newF,oldIF,newIF,stepF,h,fwhm,
           slitCenter,c,si,
+          stepXshr,
           lambda,lambdaMin,lambdaMax,oldXshr,newXshr;
   INDEX   xshrPixMin,
           xsnewIndex,indexOld,indexNew,
@@ -1170,7 +1171,11 @@ RC XSCONV_TypeStandard(XS *pXsnew,INDEX indexLambdaMin,INDEX indexLambdaMax,XS *
   fwhm=(slitType!=SLIT_TYPE_ERF)?slitParam:sqrt(slitParam*slitParam+slitParam2*slitParam2);
 
   if (slitType==SLIT_TYPE_FILE)
-   stepF=slitLambda[1]-slitLambda[0];
+   {
+    for (i=1,stepF=(double)0.;i<slitNDET;i++)
+     stepF+=(slitLambda[i]-slitLambda[i-1]);
+    stepF/=(slitNDET-1);
+   }
   else if ((slitType==SLIT_TYPE_APOD) ||(slitType==SLIT_TYPE_APODNBS))
    stepF=fwhm/50.;
   else
@@ -1197,13 +1202,9 @@ RC XSCONV_TypeStandard(XS *pXsnew,INDEX indexLambdaMin,INDEX indexLambdaMax,XS *
 
   slitWidth=(double)3.*fwhm;
 
-  // {
-  // 	FILE *fp;
-  // 	fp=fopen("toto.dat","w+t");
-  // 	cas=0;
-  // 	fclose(fp);
-  // }
-
+  for (i=1,stepXshr=(double)0.;i<xshrNDET;i++)
+   stepXshr+=(xshrLambda[i]-xshrLambda[i-1]);
+  stepXshr/=(xshrNDET-1);
 
   // Browse wavelengths in the final calibration vector
 
@@ -1231,8 +1232,8 @@ RC XSCONV_TypeStandard(XS *pXsnew,INDEX indexLambdaMin,INDEX indexLambdaMax,XS *
      }
     else
      {
-      lambdaMin=lambda+slitLambda[0];                     // add 1 nm
-      lambdaMax=lambda+slitLambda[slitNDET-1];
+      lambdaMin=lambda-max(fabs(slitLambda[0]),fabs(slitLambda[slitNDET-1]));   // use max between both limits in order to account for asymetric line shapes
+      lambdaMax=lambda+max(fabs(slitLambda[0]),fabs(slitLambda[slitNDET-1]));   // use max between both limits in order to account for asymetric line shapes
      }
 
     // Search for first pixel in high resolution cross section in the wavelength range delimited by slit function
@@ -1250,26 +1251,13 @@ RC XSCONV_TypeStandard(XS *pXsnew,INDEX indexLambdaMin,INDEX indexLambdaMax,XS *
     xshrPixMin=(xshrLambda[klo]<lambdaMin)?khi:klo;
     crossFIntegral=IFIntegral=FIntegral=(double)0.;
 
-    // {
-    // 	FILE *fp;
-    // 	fp=fopen("toto.dat","a+t");
-    // 	fprintf(fp,"xshrNDET xshrPixMin %d %d\n",xshrNDET,xshrPixMin);
-    // 	fclose(fp);
-    // }
-
     if (xshrPixMin==xshrNDET-1)
      newF=newXshr=(double)0.;
+
     // Case 1 : the resolution of cross section is better than the resolution of slit function => slit function interpolation only
 
-    else if (stepF-(xshrLambda[xshrPixMin+1]-xshrLambda[xshrPixMin])>EPSILON)
+    else if (2*stepF-stepXshr>EPSILON)
      {
-    // 	{
-    // 		FILE *fp;
-    // 		fp=fopen("toto.dat","a+t");
-    // 		fprintf(fp,"Cas 1 %g %g %g\n",lambda,stepF,(xshrLambda[xshrPixMin+1]-xshrLambda[xshrPixMin]));
-    // 		fclose(fp);
-    // 	}
-
       // set indexes to browse wavelengths in the grid of the high resolution cross section
 
       indexOld=xshrPixMin;
@@ -1310,13 +1298,6 @@ RC XSCONV_TypeStandard(XS *pXsnew,INDEX indexLambdaMin,INDEX indexLambdaMax,XS *
     else
      {
       msgCount=1;
-
-     	// {
-     	// 	FILE *fp;
-     	// 	fp=fopen("toto.dat","a+t");
-     	// 	fprintf(fp,"Cas 2 %g %g %g\n",lambda,stepF,(xshrLambda[xshrPixMin+1]-xshrLambda[xshrPixMin]));
-     	// 	fclose(fp);
-     	// }
 
       // set indexes to browse wavelengths in the grid of the slit function if pre-calculated
 

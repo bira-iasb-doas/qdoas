@@ -607,13 +607,6 @@ void OUTPUT_ResetData(void)
 
   for (indexField=0;indexField<outputNbFields;indexField++)
    {
-   	// {
-   	// 	FILE *fp;
-   	// 	fp=fopen("toto.dat","a+t");
-   	// 	fprintf(fp,"OUTPUT_ResetData %-3d %s %08x\n",indexField,outputFields[indexField].fieldName,(unsigned int)outputColumns[indexField]);
-   	// 	fclose(fp);
-   	// }
-
     if (outputColumns[indexField]!=NULL)
      MEMORY_ReleaseBuffer("OUTPUT_ResetData",outputFields[indexField].fieldName,outputColumns[indexField]);
    }
@@ -3034,15 +3027,7 @@ RC OUTPUT_LocalAlloc(ENGINE_CONTEXT *pEngineContext)
 
       for (indexField=0;indexField<outputNbFields;indexField++)
        if (outputColumns[indexField]!=NULL)
-        {
-   	// {
-   	// 	FILE *fp;
-   	// 	fp=fopen("toto.dat","a+t");
-   	// 	fprintf(fp,"OUTPUT_LocalAlloc Release %-3d %s %08x\n",indexField,outputFields[indexField].fieldName,(unsigned int)outputColumns[indexField]);
-   	// 	fclose(fp);
-   	// }
-         MEMORY_ReleaseBuffer("OUTPUT_LocalAlloc",outputFields[indexField].fieldName,outputColumns[indexField]);
-        }
+        MEMORY_ReleaseBuffer("OUTPUT_LocalAlloc",outputFields[indexField].fieldName,outputColumns[indexField]);
 
       memset(outputColumns,0,sizeof(DoasCh *)*MAX_FIELDS);
       outputRecords=NULL;
@@ -3069,14 +3054,6 @@ RC OUTPUT_LocalAlloc(ENGINE_CONTEXT *pEngineContext)
            n=pField->fieldDim1;
           else
            n=pField->fieldDim1*pField->fieldDim2;
-
-          // {
-          // 	FILE *fp;
-          // 	fp=fopen("toto.dat","a+t");
-          // 	fprintf(fp,"%s %d x %d %d x %d\n",pField->fieldName,pField->fieldDim1,pField->fieldDim2,n,pField->fieldSize);
-          // 	fclose(fp);
-          // }
-
 
           if ((outputMaxRecords<newRecordNumber) &&
              ((outputColumns[indexField]=(DoasCh *)MEMORY_AllocBuffer("OUTPUT_LocalAlloc",outputFields[indexField].fieldName,n,pField->fieldSize,0,pField->fieldType))==NULL))
@@ -3114,14 +3091,6 @@ RC OUTPUT_LocalAlloc(ENGINE_CONTEXT *pEngineContext)
           // -------------------------------------------------------------------------
             }
          }
-
-   	// {
-   	// 	FILE *fp;
-   	// 	fp=fopen("toto.dat","a+t");
-   	// 	for (indexField=0;(indexField<outputNbFields) && !rc;indexField++)
-   	// 	 fprintf(fp,"OUTPUT_LocalAlloc Allocate %-3d %s %08x\n",indexField,outputFields[indexField].fieldName,(unsigned int)outputColumns[indexField]);
-   	// 	fclose(fp);
-   	// }
        }
 
       if ((outputMaxRecords<newRecordNumber) && !rc)

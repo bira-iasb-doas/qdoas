@@ -1536,7 +1536,7 @@ RC GOME2_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,INDEX fileIndex)
         pRecord->gome2.sunglintHighDangerFlag=pGeoloc->sunglintHighDangerFlag;
         pRecord->gome2.rainbowFlag=pGeoloc->rainbowFlag;
 
-        // Misecellaneous data (for TEMIS)
+        // Miscellaneous data (for TEMIS)
 
         pRecord->latitude=pGeoloc->latCenter;
         pRecord->longitude=pGeoloc->lonCenter;
