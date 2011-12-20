@@ -159,7 +159,11 @@ PRJCT_RESULTS_FIELDS PRJCT_resultsAscii[PRJCT_RESULTS_ASCII_MAX]=
   { "GOME2 SAA flag"               , MEMORY_TYPE_INT   , sizeof(INT)   , ITEM_NONE, ITEM_NONE, "%#6d"      },       // PRJCT_RESULTS_ASCII_GOME2_SAA
   { "GOME2 sunglint risk flag"     , MEMORY_TYPE_INT   , sizeof(INT)   , ITEM_NONE, ITEM_NONE, "%#6d"      },       // PRJCT_RESULTS_ASCII_GOME2_SUNGLINT_RISK
   { "GOME2 sunglint high risk flag", MEMORY_TYPE_INT   , sizeof(INT)   , ITEM_NONE, ITEM_NONE, "%#6d"      },       // PRJCT_RESULTS_ASCII_GOME2_SUNGLINT_HIGHRISK
-  { "GOME2 rainbow flag"           , MEMORY_TYPE_INT   , sizeof(INT)   , ITEM_NONE, ITEM_NONE, "%#6d"      }        // PRJCT_RESULTS_ASCII_GOME2_RAINBOW
+  { "GOME2 rainbow flag"           , MEMORY_TYPE_INT   , sizeof(INT)   , ITEM_NONE, ITEM_NONE, "%#6d"      },       // PRJCT_RESULTS_ASCII_GOME2_RAINBOW
+  { "Diodes"                       , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_CCD_DIODES,
+  { "Target Azimuth"               , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_CCD_TARGETAZIMUTH,
+  { "Target Elevation"             , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_CCD_TARGETELEVATION,
+  { "Saturated"                    , MEMORY_TYPE_USHORT, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#5d"      }        // PRJCT_RESULTS_ASCII_SATURATED,
  };
 
 typedef struct _NDSC_header
@@ -785,6 +789,13 @@ void OutputRegisterFields(ENGINE_CONTEXT *pEngineContext)
      OUTPUT_chiSquareFlag=(outputRunCalib)?0:1;
     else if (indexField==PRJCT_RESULTS_ASCII_ITER)
      OUTPUT_iterFlag=1;
+    else if (indexField==PRJCT_RESULTS_ASCII_CCD_DIODES)
+     {
+     	OutputRegister(pField->fieldName,"(1)","",pField->fieldType,pField->fieldSize,pField->fieldDim1,pField->fieldDim2,pField->fieldFormat);
+     	OutputRegister(pField->fieldName,"(2)","",pField->fieldType,pField->fieldSize,pField->fieldDim1,pField->fieldDim2,pField->fieldFormat);
+     	OutputRegister(pField->fieldName,"(3)","",pField->fieldType,pField->fieldSize,pField->fieldDim1,pField->fieldDim2,pField->fieldFormat);
+     	OutputRegister(pField->fieldName,"(4)","",pField->fieldType,pField->fieldSize,pField->fieldDim1,pField->fieldDim2,pField->fieldFormat);
+     }
 
     // Geolocation for satellite data
 
@@ -1795,6 +1806,26 @@ void OutputSaveRecord(ENGINE_CONTEXT *pEngineContext,INT hiddenFlag)
      // ---------------------------------------------------------------------
         case PRJCT_RESULTS_ASCII_GOME2_RAINBOW :
          ((INT *)outputColumns[indexColumn++])[indexRecord]=(INT)pRecordInfo->gome2.rainbowFlag;
+        break;
+     // ---------------------------------------------------------------------
+        case PRJCT_RESULTS_ASCII_CCD_DIODES :
+
+         if (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_CCD_EEV)
+          for (i=0;i<4;i++,k++)
+           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->ccd.diodes[i];
+
+        break;
+     // ---------------------------------------------------------------------
+        case PRJCT_RESULTS_ASCII_CCD_TARGETAZIMUTH :
+         ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->ccd.targetAzimuth;
+        break;
+     // ---------------------------------------------------------------------
+        case PRJCT_RESULTS_ASCII_CCD_TARGETELEVATION :
+         ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->ccd.targetElevation;
+        break;
+     // ---------------------------------------------------------------------
+        case PRJCT_RESULTS_ASCII_SATURATED :
+         ((DoasUS *)outputColumns[indexColumn++])[indexRecord]=(DoasUS)pRecordInfo->ccd.saturatedFlag;
         break;
      // ---------------------------------------------------------------------
         default :

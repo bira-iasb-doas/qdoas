@@ -167,9 +167,10 @@ Q_OBJECT
   void slotStraylightCorrectionThreeBrowse();
   void slotDetectorNonLinearityFourBrowse();
   void slotOffsetFourBrowse();
+  void slotImagePathFiveBrowse();
 
  protected:
-  QLineEdit *m_fileThreeEdit, *m_fileFourEdit;
+  QLineEdit *m_fileThreeEdit, *m_fileFourEdit, *m_fileFiveEdit;
 };
 
 //--------------------------------------------------------------------------

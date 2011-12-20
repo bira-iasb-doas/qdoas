@@ -156,6 +156,14 @@ bool CSelectorSubHandler::start(const QString &element, const QXmlAttributes &at
     d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_GOME2_SUNGLINT_HIGHRISK;
   else if (str == "rainbow_flag")
     d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_GOME2_RAINBOW;
+  else if (str == "diodes")
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_CCD_DIODES;
+  else if (str == "target_azimuth")
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_CCD_TARGETAZIMUTH;
+  else if (str == "target_elevation")
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_CCD_TARGETELEVATION;
+  else if (str == "saturated")
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_SATURATED;
 
   else
     return postErrorMessage("Invalid output field " + str);
@@ -856,6 +864,15 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
 	strcpy(m_instrumental->ccdeev.instrFunctionFile, str.toAscii().data());
       else
 	return postErrorMessage("Instrument Function Filename too long");
+    }
+
+    str = atts.value("image");
+    if (!str.isEmpty()) {
+      str = m_master->pathExpand(str);
+      if (str.length() < (int)sizeof(m_instrumental->ccdeev.imagePath))
+	strcpy(m_instrumental->ccdeev.imagePath, str.toAscii().data());
+      else
+	return postErrorMessage("Stray Light Correction Filename too long");
     }
 
     str = atts.value("stray");

@@ -583,14 +583,15 @@ PRJCT_GOME;
 
 typedef struct _prjctInstrumental
  {
-  DoasCh       observationSite[MAX_ITEM_NAME_LEN+1];    // index of observation site in list
-  DoasCh       readOutFormat;                           // spectra read out format
-  INT         user;                                    // user defined
-  DoasCh       calibrationFile[MAX_ITEM_TEXT_LEN+1];    // calibration file
-  DoasCh       instrFunction[MAX_ITEM_TEXT_LEN+1];      // instrumental function
-  DoasCh       vipFile[MAX_ITEM_TEXT_LEN+1];            // interpixel variability correction
-  DoasCh       dnlFile[MAX_ITEM_TEXT_LEN+1];            // detector not linearity correction
-  INT         detectorSize;                            // size of detector in pixels
+  DoasCh       observationSite[MAX_ITEM_NAME_LEN+1];                            // index of observation site in list
+  DoasCh       readOutFormat;                                                   // spectra read out format
+  INT         user;                                                             // user defined
+  DoasCh       calibrationFile[MAX_ITEM_TEXT_LEN+1];                            // calibration file
+  DoasCh       instrFunction[MAX_ITEM_TEXT_LEN+1];                              // instrumental function
+  DoasCh       vipFile[MAX_ITEM_TEXT_LEN+1];                                    // interpixel variability correction
+  DoasCh       dnlFile[MAX_ITEM_TEXT_LEN+1];                                    // detector not linearity correction
+  DoasCh       imagePath[MAX_ITEM_TEXT_LEN+1];                                  // root path for camera pictures
+  INT         detectorSize;                                                     // size of detector in pixels
   INT         azimuthFlag;
   INT         averageFlag;
   PRJCT_ASCII ascii;

@@ -119,6 +119,7 @@ void CQdoasEngineController::notifyPlotData(QList<SPlotData> &plotDataList, QLis
   while (!plotDataList.isEmpty()) {
     // existing page?
     pageNo = plotDataList.front().page;
+
     mIt = pageMap.find(pageNo);
     if (mIt == pageMap.end()) {
       // need a new page

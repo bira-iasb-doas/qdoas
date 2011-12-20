@@ -444,6 +444,19 @@ void CWAllFilesEdit::slotOffsetFourBrowse()
   }
 }
 
+void CWAllFilesEdit::slotImagePathFiveBrowse()                                  // !!!!!
+{
+ QString dir = CPreferences::instance()->directoryName("ImageDir", ".");
+
+ // modal dialog
+ dir = QFileDialog::getExistingDirectory(0, "Select the root path for camera pictures if any", dir);
+
+ if (!dir.isEmpty()) {
+   CPreferences::instance()->setDirectoryName("ImageDir", dir);
+   m_fileFiveEdit->setText(dir);
+ }
+}
+
 void CWAllFilesEdit::helperConstructIpvDnlFileWidgets(QGridLayout *gridLayout, int &row,
 						      const char *ipv, int lenIpv,
 						      const char *dnl, int lenDnl)
@@ -1318,6 +1331,11 @@ CWInstrCcdEevEdit::CWInstrCcdEevEdit(const struct instrumental_ccdeev *d, QWidge
 				   d->instrFunctionFile, sizeof(d->instrFunctionFile));
 
   // non-standard files...
+
+  helperConstructFileWidget(&m_fileFiveEdit, gridLayout, row,                   // !!!!
+			    d->imagePath, sizeof(d->imagePath),
+			    "Camera pictures", SLOT(slotImagePathFiveBrowse()));
+
   helperConstructFileWidget(&m_fileThreeEdit, gridLayout, row,
 			    d->straylightCorrectionFile, sizeof(d->straylightCorrectionFile),
 			    "Stray-Light Correction", SLOT(slotStraylightCorrectionThreeBrowse()));
@@ -1363,6 +1381,7 @@ void CWInstrCcdEevEdit::apply(struct instrumental_ccdeev *d) const
   strcpy(d->instrFunctionFile, m_fileTwoEdit->text().toAscii().data());
   strcpy(d->straylightCorrectionFile, m_fileThreeEdit->text().toAscii().data());
   strcpy(d->detectorNonLinearityFile, m_fileFourEdit->text().toAscii().data());
+  strcpy(d->imagePath, m_fileFiveEdit->text().toAscii().data());
 }
 
 //--------------------------------------------------------

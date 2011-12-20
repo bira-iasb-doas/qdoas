@@ -473,6 +473,7 @@ typedef struct _feno
   INT             rc;
   DoasCh           gomePixelType[4];
   INT             offlFlag;                            // non zero if linear offset is fitted
+  int             longPathFlag;                                                 // for Anoop
  }
 FENO;
 
@@ -575,6 +576,10 @@ typedef struct _ccd
   INT           filterNumber;
   double        headTemperature;
   INT           measureType;
+  float         diodes[4];
+  float         targetElevation,targetAzimuth;
+  int           saturatedFlag;
+  INDEX         indexImage;
  }
 CCD;
 

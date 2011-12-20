@@ -241,6 +241,15 @@ int mediateRequestDisplaySpecInfo(void *engineContext,int page,void *responseHan
      mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Filter number","%d",pRecord->ccd.filterNumber);
     if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_CCD_HEADTEMPERATURE])
      mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Temperature in optic head","%.3f deg",pRecord->ccd.headTemperature);
+
+    if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_CCD_DIODES])
+     mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Diodes","%.3f %.3f %.3f %.3f",pRecord->ccd.diodes[0],pRecord->ccd.diodes[1],pRecord->ccd.diodes[2],pRecord->ccd.diodes[3]);
+    if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_CCD_TARGETAZIMUTH])
+     mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Target azimuth","%.3f deg",pRecord->ccd.targetAzimuth);
+    if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_CCD_TARGETELEVATION])
+     mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Target elevation","%.3f deg",pRecord->ccd.targetElevation);
+    if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_SATURATED])
+     mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Saturated","%s",(pRecord->ccd.saturatedFlag)?"yes":"no");
    }
 
   if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_MEASTYPE] && (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_CCD_EEV))
@@ -402,6 +411,16 @@ void mediateRequestPlotSpectra(ENGINE_CONTEXT *pEngineContext,void *responseHand
       mediateResponsePlotData(plotPageDarkCurrent, &spectrumData, 1, Spectrum, forceAutoScale, "Dark current", "Wavelength (nm)", "Counts", responseHandle);
       mediateReleasePlotData(&spectrumData);
       mediateResponseLabelPage(plotPageDarkCurrent, fileName, tmpString, responseHandle);
+     }
+
+    if ((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_CCD_EEV) && (strlen(pInstrumental->imagePath)>0))
+     {
+     	sprintf(tmpString,"Camera picture (%d/%d)",pEngineContext->indexRecord,pEngineContext->recordNumber);
+
+      mediateAllocateAndSetPlotData(&spectrumData, "Camera picture",pBuffers->lambda, pBuffers->spectrum, NDET, Line);
+      mediateResponsePlotData(plotPageImage, &spectrumData, 1, Spectrum, forceAutoScale, "Camera picture", "Wavelength (nm)", "Counts", responseHandle);
+      mediateReleasePlotData(&spectrumData);
+      mediateResponseLabelPage(plotPageImage, fileName, tmpString, responseHandle);
      }
 
     if (pBuffers->sigmaSpec!=NULL)
@@ -980,6 +999,7 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
 
 	  	 strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->ccdeev.calibrationFile);     // calibration file
 	  	 strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->ccdeev.instrFunctionFile);     // instrumental function file
+	  	 strcpy(pEngineInstrumental->imagePath,pMediateInstrumental->ccdeev.imagePath);     // instrumental function file
 
      // ---> not used for the moment : pMediateInstrumental->ccdeev.straylightCorrectionFile;
      // ---> not used for the moment : pMediateInstrumental->ccdeev.detectorNonLinearityFile;

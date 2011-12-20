@@ -987,6 +987,7 @@ RC EngineEndCurrentSession(ENGINE_CONTEXT *pEngineContext)
     GDP_BIN_ReleaseBuffers();
 
     GOME2_ReleaseBuffers();
+
   //  OMI_ReleaseBuffers();
 
     SCIA_ReleaseBuffers(pEngineContext->project.instrumental.readOutFormat);

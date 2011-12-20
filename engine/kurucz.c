@@ -836,6 +836,12 @@ RC KURUCZ_Reference(double *instrFunction,INDEX refFlag,INT saveFlag,INT gomeFla
              }
            }
          }
+
+        if (pTabFeno->longPathFlag)                                             // !!! Anoop
+         {
+          memcpy(pTabFeno->SrefEtalon,ANALYSE_ones,sizeof(double)*NDET);
+          memcpy(pTabFeno->Sref,ANALYSE_ones,sizeof(double)*NDET);
+         }
        }
      }
    }

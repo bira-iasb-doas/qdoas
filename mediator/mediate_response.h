@@ -46,6 +46,8 @@ extern "C" {
   void mediateAllocateAndSetPlotData(plot_data_t *d, const char *curveName,double *xData, double *yData, int len, enum eCurveStyleType type);
   void mediateReleasePlotData(plot_data_t *d);
 
+  void mediateResponseAddImage(int page,const char *imageFile,void *responseHandle);
+
 // mediateResponsePlotData
 //
 // provide the GUI with plots data. The data is contained in an array

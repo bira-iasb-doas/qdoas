@@ -73,7 +73,7 @@ typedef struct _gome2MdrInfo
  	INDEX    indexMDR;                                                            // index of the MDR in the file
  	double   startTime;                                                           // starting time of the MDR
 
- 	// !!! version <= 12 : NCHANNEL
+ 	// !!! version < 12 : NCHANNEL
 
   uint8_t  int_index[NCHANNEL];                                                 // index of the integration time (version <= 12
   double   unique_int[NBAND];                                                   // integration time
@@ -918,6 +918,7 @@ RC Gome2BrowseMDR(GOME2_ORBIT_FILE *pOrbitFile,INDEX indexBand)
   GOME2_INFO *pGome2Info;
   DoasCh *ptr,*ptrOld;
   DoasCh geoFileName[MAX_STR_SHORT_LEN+1];
+  GOME2_MDR *pMdr;
   FILE *geoFp;
   INDEX i;
   RC  rc;
@@ -957,11 +958,25 @@ RC Gome2BrowseMDR(GOME2_ORBIT_FILE *pOrbitFile,INDEX indexBand)
     for (i=0;(uint32_t)i<pGome2Info->total_mdr;i++)
      {
       coda_cursor_goto_array_element_by_index(&pOrbitFile->gome2Cursor,i);
+      pMdr=&pGome2Info->mdr[pGome2Info->total_nadir_mdr];
 
-     	if (!(rc=Gome2ReadMDRInfo(pOrbitFile,&pGome2Info->mdr[pGome2Info->total_nadir_mdr],indexBand)))
+     	if (!(rc=Gome2ReadMDRInfo(pOrbitFile,pMdr,indexBand)))
      	 {
-     	 	pGome2Info->total_nadir_obs+=pGome2Info->mdr[pGome2Info->total_nadir_mdr].num_recs[indexBand];
-     	 	pGome2Info->mdr[pGome2Info->total_nadir_mdr].indexMDR=i;
+     	 	pGome2Info->total_nadir_obs+=pMdr->num_recs[indexBand];
+     	 	pMdr->indexMDR=i;
+
+     	// 	{
+     	// 		FILE *fp;
+      //
+     	// 		fp=fopen("toto.dat","a+t");
+      //
+     	// 		fprintf(fp,"version %d MDR %-2d  Obs %-2d  Int %-12.6f\n",pOrbitFile->version,i,pGome2Info->mdr[pGome2Info->total_nadir_mdr].num_recs[indexBand],
+      //
+     	// 		 	 	(pOrbitFile->version<=11)?pMdr->unique_int[pMdr->int_index[indexBand]]:pMdr->integration_times[indexBand]);
+      //
+     	// 		fclose(fp);
+     	// 	}
+
      	  pGome2Info->total_nadir_mdr++;
      	 }
 
@@ -1501,7 +1516,7 @@ RC GOME2_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,INDEX fileIndex)
 
       if (!rc)
        {
-     	  utcTime=pGome2Info->mdr[indexMDR].startTime+tint*(recordNo-mdrObs-1);
+     	  utcTime=pGome2Info->mdr[indexMDR].startTime+tint*(recordNo-mdrObs-2);     // NOV 2011 : problem with integration time (FRESCO comparison)
      	  coda_double_to_datetime(utcTime,&year,&month,&day,&hour,&min,&sec,&msec);
 
      	  // Output information on the current record
@@ -1552,6 +1567,26 @@ RC GOME2_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,INDEX fileIndex)
         pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_day,&pRecord->present_time,0);
 
         pRecord->gome2.orbitNumber=(int)pOrbitFile->gome2Info.orbitStart;
+
+ 	 	  // {
+ 	 	  // 	FILE *fp;
+ 	 	  // 	fp=fopen("toto.dat","a+t");
+ 	 	  // 	fprintf(fp,"%-2d %-2d %02d%02d%02d.%03d %-10.4f %-10.4f %-10.4f %-10.4f %-10.4f %-10.4f %-10.4f %-10.4f %-10.4f %-10.4f \n",indexMDR,recordNo-mdrObs,
+ 	 	  // 	            hour,min,sec,(int)floor(msec/1000+0.5),
+      //
+ 	 	  // 	            pGeoloc->latCorners[0],
+ 	 	  // 	            pGeoloc->latCorners[1],
+ 	 	  // 	            pGeoloc->latCorners[2],
+ 	 	  // 	            pGeoloc->latCorners[3],
+ 	 	  // 	            pGeoloc->latCenter,
+ 	 	  // 	            pGeoloc->lonCorners[0],
+ 	 	  // 	            pGeoloc->lonCorners[1],
+ 	 	  // 	            pGeoloc->lonCorners[2],
+ 	 	  // 	            pGeoloc->lonCorners[3],
+ 	 	  // 	            pGeoloc->lonCenter);
+      //
+ 	 	  // 	fclose(fp);
+ 	 	  // }
 
         if ((pEngineContext->project.spectra.cloudMin>=0.) &&
             (pEngineContext->project.spectra.cloudMax<=1.) &&

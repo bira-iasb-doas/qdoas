@@ -162,6 +162,7 @@ DoasCh *XSCONV_slitTypes[SLIT_TYPE_MAX]=
   "2n-Lorentz",
   "Voigt",
   "Error function",
+  "Asymmetric gaussian",
   "Boxcar (FTS)",
   "Norton Beer Strong (FTS)",
   "Gaussian, wavelength dependent",

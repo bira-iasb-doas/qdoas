@@ -709,9 +709,11 @@ RC MKZY_Reli(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,INT localD
   	 	   // Correct by offset and dark current
 
   	     else if (pEngineContext->recordInfo.mkzy.darkFlag && pEngineContext->recordInfo.mkzy.offsetFlag) // similar MFC correction
+  	     {
          for (i=0;i<NDET;i++)
-          spectrum[i]-=(double)(offset[i]*pEngineContext->recordInfo.NSomme/pEngineContext->recordInfo.mkzy.offsetScans+
-                                                       dark[i]*pEngineContext->recordInfo.Tint/(pEngineContext->recordInfo.mkzy.darkTint*pEngineContext->recordInfo.mkzy.darkScans));
+          spectrum[i]-=(double)pEngineContext->recordInfo.NSomme*(offset[i]/pEngineContext->recordInfo.mkzy.offsetScans+
+                                                      dark[i]*pEngineContext->recordInfo.Tint/(pEngineContext->recordInfo.mkzy.darkTint*pEngineContext->recordInfo.mkzy.darkScans));
+        }
 
   	 	   // Correct by the dark current only (used as offset
 
@@ -826,7 +828,7 @@ RC MKZY_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
   pInstrumental=&pEngineContext->project.instrumental;
   rc=ERROR_ID_NO;
 
-  if (pEngineContext->recordInfo.mkzy.skyFlag && pEngineContext->refFlag)
+  if ((pEngineContext->recordInfo.mkzy.skyFlag || (THRD_id==THREAD_TYPE_KURUCZ)) && pEngineContext->refFlag)
    {
     useKurucz=0;
 

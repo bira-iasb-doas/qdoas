@@ -662,6 +662,9 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   tmpStr = pathMgr->simplifyPath(QString(d->ccdeev.instrFunctionFile));
   fprintf(fp, " instr=\"%s\"", tmpStr.toAscii().constData());
 
+  tmpStr = pathMgr->simplifyPath(QString(d->ccdeev.imagePath));
+  fprintf(fp, " image=\"%s\"", tmpStr.toAscii().constData());
+
   tmpStr = pathMgr->simplifyPath(QString(d->ccdeev.straylightCorrectionFile));
   fprintf(fp, " stray=\"%s\"", tmpStr.toAscii().constData());
 
@@ -1509,6 +1512,11 @@ void CQdoasConfigWriter::writeDataSelectList(FILE *fp, const data_select_list_t 
     case PRJCT_RESULTS_ASCII_GOME2_SUNGLINT_RISK      :      fprintf(fp, "sunglint_danger_flag"); break;
     case PRJCT_RESULTS_ASCII_GOME2_SUNGLINT_HIGHRISK  :      fprintf(fp, "sunglint_highdanger_flag"); break;
     case PRJCT_RESULTS_ASCII_GOME2_RAINBOW            :      fprintf(fp, "rainbow_flag"); break;
+
+    case PRJCT_RESULTS_ASCII_CCD_DIODES : fprintf(fp,"diodes"); break;
+    case PRJCT_RESULTS_ASCII_CCD_TARGETAZIMUTH : fprintf(fp,"target_azimuth"); break;
+    case PRJCT_RESULTS_ASCII_CCD_TARGETELEVATION : fprintf(fp,"target_elevation"); break;
+    case PRJCT_RESULTS_ASCII_SATURATED : fprintf(fp,"saturated"); break;
 
     default: fprintf(fp, "Invalid");
     }

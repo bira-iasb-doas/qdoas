@@ -69,6 +69,7 @@ enum _spectraAutoscale
 
 #define plotPageCross          10                                               // cross sections
 #define plotPageAnalysis       20                                               // analysis
+#define plotPageImage          30                                               // image
 
 #endif
 

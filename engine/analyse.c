@@ -130,6 +130,8 @@
 // GLOBAL DECLARATIONS
 // ===================
 
+#define ANALYSE_LONGPATH 0                                                      // !!! Anoop
+
 ANALYSIS_WINDOWS  *ANLYS_windowsList;       // analysis windows list
 LIST_ITEM         *ANLYS_itemList;          // list of items in ListView control owned by tab pages
 PROJECT *PRJCT_itemList;
@@ -3777,9 +3779,19 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
           if (Feno->displaySpectrum)
            {
             mediateAllocateAndSetPlotData(&spectrumData[0],"Spectrum",&Feno->LambdaK[SvdPDeb],&Spectre[SvdPDeb],SvdPFin-SvdPDeb+1,Line);
-            mediateAllocateAndSetPlotData(&spectrumData[1],"Reference",&Feno->LambdaK[SvdPDeb],&Sref[SvdPDeb],SvdPFin-SvdPDeb+1,Line);
-            mediateResponsePlotData(indexPage,spectrumData,2,Spectrum,forceAutoScale,"Spectrum and reference","Wavelength (nm)","", responseHandle);
-            mediateReleasePlotData(&spectrumData[1]);
+
+            if (!Feno->longPathFlag)
+             {
+             	mediateAllocateAndSetPlotData(&spectrumData[1],"Reference",&Feno->LambdaK[SvdPDeb],&Sref[SvdPDeb],SvdPFin-SvdPDeb+1,Line);
+             	mediateResponsePlotData(indexPage,spectrumData,2,Spectrum,forceAutoScale,"Spectrum and reference","Wavelength (nm)","", responseHandle);
+             	mediateReleasePlotData(&spectrumData[1]);
+             }
+            else                                                                // !!! Anoop
+             mediateResponsePlotData(indexPage,spectrumData,1,Spectrum,forceAutoScale,"Spectrum","Wavelength (nm)","", responseHandle);
+
+            if (!Feno->longPathFlag)
+
+
             mediateReleasePlotData(&spectrumData[0]);
            }
 
@@ -5525,6 +5537,7 @@ RC ANALYSE_LoadRef(ENGINE_CONTEXT *pEngineContext)
   pTabFeno->useEtalon=0;
   pTabFeno->displayRef=0;
   pEngineContext->refFlag=0;
+  pTabFeno->longPathFlag=ANALYSE_LONGPATH;                                      // !!! Anoop
 
   pTabFeno->gomeRefFlag=((pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_GDP_ASCII)&&
                          (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_GDP_BIN) &&

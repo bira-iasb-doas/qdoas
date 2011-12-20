@@ -59,7 +59,7 @@ CWActiveContext::CWActiveContext(QWidget *parent) :
   m_title->setAlignment(Qt::AlignHCenter);
   m_title->setFrameStyle(QFrame::Sunken | QFrame::StyledPanel);
   m_title->setLineWidth(1);
-  
+
   QPalette palette(m_title->palette());
   palette.setColor(QPalette::Window, QColor(cGraphTitleBackgroundColour));
   palette.setColor(QPalette::WindowText, QColor(cGraphTitleTextColour));
@@ -153,8 +153,8 @@ CWActiveContext::CWActiveContext(QWidget *parent) :
   // plt region and properties
   CPlotProperties prop;
   CWPlotPropertiesConfig::loadFromPreferences(prop);
-  
-  m_plotRegion = new CWPlotRegion(this);  
+
+  m_plotRegion = new CWPlotRegion(this);
   m_plotRegion->setProperties(prop);
 
   // this might be adjusted in edit mode ...
@@ -165,7 +165,7 @@ CWActiveContext::CWActiveContext(QWidget *parent) :
   connect(m_okButton, SIGNAL(clicked()), this, SLOT(slotOkButtonClicked()));
   connect(m_helpButton, SIGNAL(clicked()), this, SLOT(slotHelpButtonClicked()));
   connect(m_cancelButton, SIGNAL(clicked()), this, SLOT(slotCancelButtonClicked()));
-  
+
   connect(m_graphTab, SIGNAL(currentChanged(int)),
 	  this, SLOT(slotCurrentGraphTabChanged(int)));
   connect(m_activeTab, SIGNAL(currentChanged(int)),
@@ -205,7 +205,7 @@ void CWActiveContext::addEditor(CWEditor *editor)
     }
     else
       m_activeTab->addTab(editor->editContextTag());
-    
+
     // set this tab as active ...
     m_activeTab->setCurrentIndex(1);
   }
@@ -241,7 +241,7 @@ void CWActiveContext::addEditor(CWEditor *editor)
     m_activeTab->setCurrentIndex(index + 1);
   }
 }
-  
+
 void CWActiveContext::savePreferences(void) const
 {
   CWPlotPropertiesConfig::saveToPreferences(m_plotRegion->properties());
@@ -319,7 +319,7 @@ void CWActiveContext::moveAndResizeButtons(int hei)
   // position the widgets in the control region
   tmpH = hei - m_buttonRegionHeight + cBorderSize;
   m_helpButton->move(cBorderSize, tmpH);
-  
+
   tmpW = m_centralRegionWidth - cBorderSize - m_cancelButton->width();
   m_cancelButton->move(tmpW, tmpH);
   tmpW -= cBorderSize + m_okButton->width();
@@ -331,12 +331,12 @@ void CWActiveContext::moveAndResizeGraph(int hei)
   // position and resize the tab widget
   m_graphTab->move(0, hei - m_graphTabRegionHeight);
   m_graphTab->resize(m_centralRegionWidth, m_graphTabRegionHeight);
-  
+
   // scroll area
   // m_plotPage->layoutPlots(wid - 16); TODOTODO
   m_plotRegion->move(0, m_titleRegionHeight);
   m_plotRegion->resize(m_centralRegionWidth, m_centralRegionHeight);
-} 
+}
 
 void CWActiveContext::moveAndResizeActiveEditor(void)
 {
@@ -355,7 +355,7 @@ void CWActiveContext::moveAndResizeActiveEditor(void)
 
     int wid = m_centralRegionWidth;
     int hei = m_centralRegionHeight;
-    
+
     // check for stronger upper limits
     tmpSize = m_activeEditor->maximumSize();
     if (tmpSize.isValid()) {
@@ -441,15 +441,16 @@ void CWActiveContext::slotAcceptOk(bool canDoOk)
 
 void CWActiveContext::slotPlotPages(const QList< RefCountConstPtr<CPlotPageData> > &pageList)
 {
-  
+
   int pageNumber;
-  
+
   int activePageNumber = m_plotRegion->pageDisplayed();
   int activeTabIndex = 0;
 
   // adjust the number of tabs
   int nPages = pageList.count();
   int index = m_graphTab->count();
+
   while (index > nPages)
     m_graphTab->removeTab(--index);
   while (nPages > index)
@@ -480,7 +481,7 @@ void CWActiveContext::slotPlotPages(const QList< RefCountConstPtr<CPlotPageData>
     // try and reselect the same active page as before ...
     if (pageNumber == activePageNumber)
       activeTabIndex = index;
-    
+
     ++index;
     ++it;
   }
@@ -496,7 +497,7 @@ void CWActiveContext::slotPlotPages(const QList< RefCountConstPtr<CPlotPageData>
     }
     ++it;
   }
-  
+
   if (m_graphTab->count()) {
     if (!m_activeEditor)
       m_graphTab->show();
@@ -514,14 +515,14 @@ void CWActiveContext::slotPlotPages(const QList< RefCountConstPtr<CPlotPageData>
 void CWActiveContext::slotCurrentGraphTabChanged(int index)
 {
   int pageNumber = (index == -1) ? -1 : m_graphTab->tabData(index).toInt();
-  
+
   m_plotRegion->displayPage(pageNumber);
 
   // set the graph title
   m_graphTitleStr = m_plotRegion->pageTitle(pageNumber);
   if (!m_activeEditor)
     m_title->setText(m_graphTitleStr);
-  
+
   emit signalActivePageChanged(pageNumber);
 }
 

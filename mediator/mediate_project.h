@@ -299,6 +299,7 @@ extern "C" {
     int  spectralType;
     char calibrationFile[FILENAME_BUFFER_LENGTH];
     char instrFunctionFile[FILENAME_BUFFER_LENGTH];
+    char imagePath[FILENAME_BUFFER_LENGTH];
     char straylightCorrectionFile[FILENAME_BUFFER_LENGTH];
     char detectorNonLinearityFile[FILENAME_BUFFER_LENGTH];
   };

@@ -793,7 +793,7 @@ RC MFC_ReadRecordStd(ENGINE_CONTEXT *pEngineContext,DoasCh *fileName,
     if ((drk!=NULL) && (pHeaderDrk->int_time!=(float)0.) && (THRD_browseType!=THREAD_BROWSE_MFC_OFFSET) && (THRD_browseType!=THREAD_BROWSE_MFC_DARK))
      {
       for (i=0;i<NDET;i++)
-       spe[i]-=(double)drk[i]*pHeaderSpe->int_time/(pHeaderDrk->int_time*pHeaderDrk->noscans);
+       spe[i]-=(double)pHeaderSpe->noscans*drk[i]*pHeaderSpe->int_time/(pHeaderDrk->int_time*pHeaderDrk->noscans);
      }
 
     // for NOVAC, straylight correction

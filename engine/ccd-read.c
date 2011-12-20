@@ -73,6 +73,7 @@
 #include "doas.h"
 
 #define NCURVE      20
+#define MAX_CAMERA_PICTURES 2000                                                // a picture should be captured every minute.  So 60x24 = 1440 pictures max per day
 
 // ===================================
 // 1340x400 DETECTORS (1999 until now)
@@ -116,8 +117,11 @@ typedef struct _ccdData
   short       scanIndex;                                                        // scan index for asl measurements
   double      scanningAngle;
   DoasCh      doubleFlag;                                                       // for Alexis
-  DoasCh      ignoredFlag;
-  DoasCh      ignored[952];                                                     // if completed with new data in the future, authorizes compatibility with previous versions
+  DoasCh      brusagVersion;
+  float       diodes[4];
+  float       targetElevation,targetAzimuth;
+  DoasCh      saturatedFlag,ignoredFlag;
+  DoasCh      ignored[926];                                                     // if completed with new data in the future, authorizes compatibility with previous versions
   float       compassAngle;
   float       pitchAngle;
   float       rollAngle;
@@ -128,8 +132,16 @@ typedef struct _ccdData
  }
 CCD_DATA;
 
+typedef struct cameraPicture
+ {
+ 	int timestamp;
+ 	DoasCh fileName[MAX_STR_LEN];
+ }
+CAMERA_PICTURE;
+
 DoasCh *CCD_measureTypes[PRJCT_INSTR_EEV_TYPE_MAX]=
-     	                            { "None","Off axis","Direct sun","Zenith","Dark","Lamp","Bentham","Almucantar","Offset","Azimuth" };
+     	                            { "None","Off axis","Direct sun","Zenith","Dark","Lamp","Bentham","Almucantar","Offset","Azimuth", "Principal plane" };
+
 
 // ------------------------------------------------------------------
 // Different predefined integration times for dark current correction
@@ -144,6 +156,98 @@ static double predTint[MAXTPS] =
   240.00, 280.00, 340.00, 410.00, 490.00, 590.00 };
 
 static DoasU32 ccdDarkCurrentOffset[MAXTPS];                                      // offset of measured dark currents for each integration time
+
+CAMERA_PICTURE ccdImageFilesList[MAX_CAMERA_PICTURES];
+DoasCh ccdCurrentImagePath[MAX_ITEM_TEXT_LEN+1];
+int ccdImageFilesN=0;
+
+void CCD_GetImageFilesList(SHORT_DATE *pFileDate,DoasCh *rootPath)
+ {
+ 	// Declarations
+
+ 	DoasCh imageFileName[MAX_ITEM_TEXT_LEN+1];
+ 	DoasCh dateStr[9],*ptr;
+  struct dirent *fileInfo;
+  int hour,minute,sec,newtimestamp;
+  INDEX i;
+  DIR *hDir;
+
+  // Initializations
+
+  sprintf(dateStr,"%d%02d%02d",pFileDate->da_year,pFileDate->da_mon,pFileDate->da_day);
+  ccdImageFilesN=0;
+
+  // Build the full path
+
+  sprintf(ccdCurrentImagePath,"%s/%d/%02d/%02d",rootPath,pFileDate->da_year,pFileDate->da_mon,pFileDate->da_day);
+
+  if (strlen(rootPath) && STD_IsDir(ccdCurrentImagePath))
+
+   // Browse the directory
+
+   for (hDir=opendir(ccdCurrentImagePath);(hDir!=NULL) && ((fileInfo=readdir(hDir))!=NULL);)
+    {
+    	sprintf(imageFileName,"%s/%s",ccdCurrentImagePath,fileInfo->d_name);
+
+     if (!STD_IsDir(imageFileName) && ((ptr=strstr(fileInfo->d_name,dateStr))!=NULL))
+      {
+      	sscanf(ptr+8,"%02d%02d%02d",&hour,&minute,&sec);
+      	newtimestamp=hour*3600+minute*60+sec;
+
+      	if (!ccdImageFilesN || (newtimestamp>ccdImageFilesList[ccdImageFilesN-1].timestamp))
+      	 {
+         for (i=ccdImageFilesN;(i>0) && (newtimestamp<ccdImageFilesList[i-1].timestamp);i--)
+          memcpy(&ccdImageFilesList[i],&ccdImageFilesList[i-1],sizeof(CAMERA_PICTURE));
+
+      	  ccdImageFilesList[i].timestamp=newtimestamp;
+         strcpy(ccdImageFilesList[i].fileName,imageFileName);
+        }
+
+       ccdImageFilesN++;
+      }
+    }
+ }
+
+INDEX CCD_SearchForImage(int timestamp)
+ {
+  // Declarations
+
+  INDEX i,imin,imax;
+
+  // Initializations
+
+  i=imin=0;
+  imax=ccdImageFilesN-1;
+
+  // Dichotomic search
+
+  while (imin+1<imax)
+   {
+   	i=(imax+imin)>>1;
+
+   	if (timestamp<=ccdImageFilesList[imin].timestamp)
+   	 i=imax=imin;
+   	else if (timestamp>=ccdImageFilesList[imax].timestamp)
+   	 i=imin=imax;
+   	else if (timestamp<ccdImageFilesList[i].timestamp)
+   	 imax=i;
+   	else if (timestamp>=ccdImageFilesList[i].timestamp)
+   	 imin=i;
+   }
+
+  if ((imax>=imin) && (i>=imin) && (i<=imax))
+   {
+    i=((timestamp-ccdImageFilesList[imin].timestamp)<=(ccdImageFilesList[imax].timestamp-timestamp))?imin:imax;
+    if (abs(timestamp-ccdImageFilesList[i].timestamp)>60)
+     i=ITEM_NONE;
+   }
+  else
+   i=ITEM_NONE;
+
+  // Return
+
+  return i;
+ }
 
 // ------------------
 // Read out functions
@@ -224,6 +328,9 @@ RC SetCCD_EEV(ENGINE_CONTEXT *pEngineContext,FILE *specFp,FILE *darkFp)
 
     while (!feof(specFp) && fread(&header,sizeof(CCD_DATA),1,specFp))
      {
+     	if (!pEngineContext->recordNumber)
+     	 CCD_GetImageFilesList(&header.today,pEngineContext->project.instrumental.imagePath);
+
       ccdX=(header.roiWveEnd-header.roiWveStart+1)/header.roiWveGroup;
       ccdY=(header.roiSlitEnd-header.roiSlitStart+1)/header.roiSlitGroup;
       dataSize=(header.doubleFlag==(DoasCh)1)?sizeof(double):sizeof(DoasUS);
@@ -389,6 +496,8 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
      rc=ERROR_SetLast("ReliCCD_EEV",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pEngineContext->fileInfo.fileName);
     else
      {
+     	// !!! if (ccdImageFilesN)
+
       // get the size of the CCD
 
       ccdX=(header.roiWveEnd-header.roiWveStart+1)/header.roiWveGroup;
@@ -478,6 +587,19 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
           pRecord->ReguTemp  = (double)0.;
           pRecord->TotalExpTime = (double)0.;
 
+          pRecord->als.alsFlag=0;
+          pRecord->als.scanIndex=-1;
+          pRecord->als.scanningAngle=
+          pRecord->als.compassAngle=
+          pRecord->als.pitchAngle=
+          pRecord->als.rollAngle=(float)0.;
+
+          pRecord->ccd.diodes[0]=pRecord->ccd.diodes[1]=pRecord->ccd.diodes[2]=pRecord->ccd.diodes[3]=(float)0.;
+          pRecord->ccd.targetElevation=header.brusagElevation;
+          pRecord->ccd.targetAzimuth=header.Azimuth;
+          pRecord->ccd.saturatedFlag=0;
+          pRecord->ccd.indexImage=CCD_SearchForImage((int)header.now.ti_hour*3600+header.now.ti_min*60+header.now.ti_sec);
+
           if (header.alsFlag)
            {
            	pRecord->als.alsFlag=header.alsFlag;
@@ -498,12 +620,13 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
              pRecord->ccd.measureType=header.measureType;
              pRecord->ccd.headTemperature=header.headTemperature;
 
-             pRecord->als.alsFlag=0;
-             pRecord->als.scanIndex=-1;
-             pRecord->als.scanningAngle=
-             pRecord->als.compassAngle=
-             pRecord->als.pitchAngle=
-             pRecord->als.rollAngle=(float)0.;
+             if (header.brusagVersion==2)
+              {
+               memcpy(pRecord->ccd.diodes,header.diodes,sizeof(float)*4);
+               pRecord->ccd.targetElevation=header.targetElevation;
+               pRecord->ccd.targetAzimuth=header.targetAzimuth;
+               pRecord->ccd.saturatedFlag=header.saturatedFlag;
+              }
            }
 
           memcpy(&pRecord->present_day,&header.today,sizeof(SHORT_DATE));

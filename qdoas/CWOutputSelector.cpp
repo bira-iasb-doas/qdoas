@@ -125,7 +125,11 @@ CWOutputSelector::CWOutputSelector(const data_select_list_t *d, QWidget *parent)
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_GOME2_SAA,              "SAA flag"               ));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_GOME2_SUNGLINT_RISK,    "Sunglint risk flag"     ));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_GOME2_SUNGLINT_HIGHRISK,"Sunglint high risk flag"));
-  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_GOME2_RAINBOW,          "Sainbow flag"           ));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_GOME2_RAINBOW,          "Rainbow flag"           ));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_CCD_DIODES,             "Diodes"                 ));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_CCD_TARGETAZIMUTH,      "Target azimuth"           ));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_CCD_TARGETELEVATION,    "Target elevation"          ));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_SATURATED,              "Saturated flag"           ));
 
   // populate the selected list by key-reference to the available list ...
 
@@ -410,6 +414,10 @@ void getValidFieldFlags(int *validFlags, int instrument)
       validFlags[PRJCT_RESULTS_ASCII_COMPASS]=1;
       validFlags[PRJCT_RESULTS_ASCII_PITCH]=1;
       validFlags[PRJCT_RESULTS_ASCII_ROLL]=1;
+      validFlags[PRJCT_RESULTS_ASCII_CCD_DIODES]=1;
+      validFlags[PRJCT_RESULTS_ASCII_CCD_TARGETAZIMUTH]=1;
+      validFlags[PRJCT_RESULTS_ASCII_CCD_TARGETELEVATION]=1;
+      validFlags[PRJCT_RESULTS_ASCII_SATURATED]=1;
      }
     break;
  // ----------------------------------------------------------------------------
