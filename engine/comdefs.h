@@ -129,7 +129,7 @@ typedef UINT        MASK,SZ_LEN;
 #define MAX_PATH_LEN                           1023                             // maximum length for path and file names
 #define MAX_FCT_LEN                              63                             // maximum length for the names of functions
 #define MAX_VAR_LEN                              63                             // maximum length for the names of variables
-#define MAX_ITEM_TEXT_LEN                      1023     // Before 511           // item text length
+#define MAX_ITEM_TEXT_LEN                      4192     // Before 511           // item text length
 #define MAX_ITEM_NAME_LEN                       127                             // name of a symbol
 #define MAX_ITEM_DESC_LEN                       255                             // description of a symbol
 

@@ -210,52 +210,7 @@
     }
 
 // -----------------------------------------------------------------------------
-// FUNCTION      VECTOR_Table1
-// -----------------------------------------------------------------------------
-// PURPOSE       Look-up table 2-D, 0 based (linear interpolation)
-//
-// INPUT         X0,Y0  : coordinates vectors for both dimensions of the data matrix;
-//               value  : the constant value to compare to vector components;
-//               Table  : data matrix for each (X0,Y0) couple of coordinates;
-//               X,Y    : the new coordinates;
-//
-// RETURN        interpolated value from Table in X and Y coordinates
-// -----------------------------------------------------------------------------
-
-    double VECTOR_Table1 ( double *X0, int Nx, double *Y0, int Ny, double **Table, double X, double Y )
-    {
-       int Ix, Iy;
-       double Zi, Tab1, Tab2, LUTable;
-
-       Ix = VECTOR_LocGt ( X0, X, Nx );
-       Iy = VECTOR_LocGt ( Y0, Y, Ny );
-
-       if ( (Ix==Nx) && (Iy==Ny) )  return ( (double) Table[Ny-1][Nx-1] );
-       if ( Ix==Nx )
-         {
-           Zi = (double) (Y - Y0[Iy-1]) / (Y0[Iy] - Y0[Iy-1]);
-           LUTable = (double) ( Table[Iy-1][Nx-1] + (Table[Iy][Nx-1]-Table[Iy-1][Nx-1]) * Zi );
-           return ( (double) LUTable );
-         }
-       if ( Iy==Ny )
-         {
-           Zi = (double) (X - X0[Ix-1]) / (X0[Ix] - X0[Ix-1]);
-           LUTable = (double) ( Table[Ny-1][Ix-1] + (Table[Ny-1][Ix]-Table[Ny-1][Ix-1]) * Zi );
-           return ( (double) LUTable );
-         }
-
-       Zi = (double) ( X - X0[Ix-1] ) / ( X0[Ix] - X0[Ix-1] );
-       Tab1 = (double) ( Table[Iy-1][Ix-1] + (Table[Iy-1][Ix]-Table[Iy-1][Ix-1]) * Zi);
-       Tab2 = (double) ( Table[Iy][Ix-1] + (Table[Iy][Ix]-Table[Iy][Ix-1]) * Zi);
-
-       Zi = (double) (Y - Y0[Iy-1]) / (Y0[Iy] - Y0[Iy-1]);
-       LUTable = (double) ( Tab1 + (Tab2-Tab1) * Zi );
-
-       return ( (double) LUTable );
-    }
-
-// -----------------------------------------------------------------------------
-// FUNCTION      VECTOR_Table2
+// FUNCTION      VECTOR_Table2_Index1
 // -----------------------------------------------------------------------------
 // PURPOSE       Look-up table 2-D, 1 based (linear interpolation)
 //
@@ -267,7 +222,7 @@
 // RETURN        interpolated value from Table in X and Y coordinates
 // -----------------------------------------------------------------------------
 
-    double VECTOR_Table2 ( double **Table, INT Nx, INT Ny, double X, double Y )
+    double VECTOR_Table2_Index1 ( double **Table, INT Nx, INT Ny, double X, double Y )
     {
        int Ix, Iy;
        double Zi, Tab1, Tab2, LUTable;
@@ -304,6 +259,76 @@
        LUTable = (double) ( Tab1 + (Tab2-Tab1) * Zi );
 
        return ( (double) LUTable );
+    }
+
+// -----------------------------------------------------------------------------
+// FUNCTION      VECTOR_Table2
+// -----------------------------------------------------------------------------
+// PURPOSE       Look-up table 2-D, 0 based (linear interpolation)
+//
+// INPUT         Table  : data matrix with first line and first column,
+//                        coordinates vectors for both dimensions;
+//               Nx,Ny  : dimensions of the matrix
+//               X,Y    : the new coordinates;
+//
+// RETURN        interpolated value from Table in X and Y coordinates
+// -----------------------------------------------------------------------------
+
+    double VECTOR_Table2 ( double **Table, INT Nx, INT Ny, double X, double Y )
+    {
+       int Ix, Iy;
+       double Zi, Tab1, Tab2, LUTable;
+
+       for (Ix=1;Ix<Nx;Ix++)
+        if ((double)X<Table[0][Ix])
+         break;
+
+       for (Iy=1;Iy<Ny;Iy++)
+        if ((double)Y<Table[Iy][0])
+         break;
+
+       if ((Ix==1) && (Iy==1))
+        LUTable=(double)Table[1][1];
+       else if ((Ix>=Nx) && (Iy>=Ny))
+        LUTable=(double)Table[Ny-1][Nx-1];
+       else if ((Ix>=Nx) && (Iy==1))
+        LUTable=(double)Table[1][Nx-1];
+       else if ((Iy>=Ny) && (Ix==1))
+        LUTable=(double)Table[Ny-1][1];
+       else if ((Ix>1) && (Iy>1) && (Ix<Nx) && (Iy<Ny))
+        {
+         Zi = (double) ( X - Table[0][Ix-1] ) / ( Table[0][Ix] - Table[0][Ix-1] );
+         Tab1 = (double) ( Table[Iy-1][Ix-1] + (Table[Iy-1][Ix]-Table[Iy-1][Ix-1]) * Zi);
+         Tab2 = (double) ( Table[Iy][Ix-1] + (Table[Iy][Ix]-Table[Iy][Ix-1]) * Zi);
+
+         Zi = (double) (Y - Table[Iy-1][0]) / (Table[Iy][0] - Table[Iy-1][0]);
+         LUTable = (double) ( Tab1 + (Tab2-Tab1) * Zi );
+        }
+       else
+        {
+         if (Ix>=Nx)
+          {
+           Zi = (double) (Y - Table[Iy-1][0]) / (Table[Iy][0] - Table[Iy-1][0]);
+           LUTable = (double) ( Table[Iy-1][Nx-1] + (Table[Iy][Nx-1]-Table[Iy-1][Nx-1]) * Zi );
+          }
+         else if (Iy>=Ny)
+          {
+           Zi = (double) (X - Table[0][Ix-1]) / (Table[0][Ix] - Table[0][Ix-1]);
+           LUTable = (double) ( Table[Ny-1][Ix-1] + (Table[Ny-1][Ix]-Table[Ny-1][Ix-1]) * Zi );
+          }
+         else if (Ix==1)
+          {
+           Zi = (double) (Y - Table[Iy-1][0]) / (Table[Iy][0] - Table[Iy-1][0]);
+           LUTable = (double) ( Table[Iy-1][1] + (Table[Iy][1]-Table[Iy-1][1]) * Zi );
+          }
+         else // if (Iy==1)
+          {
+           Zi = (double) (X - Table[0][Ix-1]) / (Table[0][Ix] - Table[0][Ix-1]);
+           LUTable = (double) ( Table[1][Ix-1] + (Table[1][Ix]-Table[1][Ix-1]) * Zi );
+          }
+        }
+
+     return ( (double) LUTable );
     }
 
 // -------------------------------------

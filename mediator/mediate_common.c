@@ -52,32 +52,64 @@ void setMediateSlit(SLIT *pEngineSlit,const mediate_slit_function_t *pMediateSli
 
   pEngineSlit->slitParam=
   pEngineSlit->slitParam2=(double)0.;
+  pEngineSlit->slitWveDptFlag=0;
+
+  pEngineSlit->slitFile[0]=pEngineSlit->slitFile2[0]='\0';
 
   switch(pEngineSlit->slitType)
    {
  // ----------------------------------------------------------------------------
     case SLIT_TYPE_GAUSS :                                                      // Gaussian line shape
+
      pEngineSlit->slitParam=pMediateSlit->gaussian.fwhm;
+     pEngineSlit->slitWveDptFlag=pMediateSlit->gaussian.wveDptFlag;
+
+     strcpy(pEngineSlit->slitFile,pMediateSlit->gaussian.filename);
+
     break;
  // ----------------------------------------------------------------------------
-    case SLIT_TYPE_INVPOLY :                                                    // 2n-Lorentz (generalisation of the Lorentzian function
+    case SLIT_TYPE_INVPOLY :
+                                              // 2n-Lorentz (generalisation of the Lorentzian function
      pEngineSlit->slitParam=pMediateSlit->lorentz.width;
      pEngineSlit->slitParam2=pMediateSlit->lorentz.degree;
+     pEngineSlit->slitWveDptFlag=pMediateSlit->lorentz.wveDptFlag;
+
+     strcpy(pEngineSlit->slitFile,pMediateSlit->lorentz.filename);
+
     break;
  // ----------------------------------------------------------------------------
     case SLIT_TYPE_VOIGT :                                                      // Voigt profile function
+
      pEngineSlit->slitParam=pMediateSlit->voigt.fwhmL;
      pEngineSlit->slitParam2=pMediateSlit->voigt.glRatioL;
+     pEngineSlit->slitWveDptFlag=pMediateSlit->voigt.wveDptFlag;
+
+     strcpy(pEngineSlit->slitFile,pMediateSlit->voigt.filename);
+     strcpy(pEngineSlit->slitFile2,pMediateSlit->voigt.filename2);
+
     break;
  // ----------------------------------------------------------------------------
     case SLIT_TYPE_ERF :                                                        // error function (convolution of a Gaussian and a boxcar)
+
      pEngineSlit->slitParam=pMediateSlit->error.fwhm;
      pEngineSlit->slitParam2=pMediateSlit->error.width;
+     pEngineSlit->slitWveDptFlag=pMediateSlit->error.wveDptFlag;
+
+     strcpy(pEngineSlit->slitFile,pMediateSlit->error.filename);
+     strcpy(pEngineSlit->slitFile2,pMediateSlit->error.filename2);
+
     break;
  // ----------------------------------------------------------------------------
     case SLIT_TYPE_AGAUSS :                                                     // Asymmetric Gaussian
+
      pEngineSlit->slitParam=pMediateSlit->agauss.fwhm;
      pEngineSlit->slitParam2=pMediateSlit->agauss.asym;
+
+     pEngineSlit->slitWveDptFlag=pMediateSlit->agauss.wveDptFlag;
+
+     strcpy(pEngineSlit->slitFile,pMediateSlit->agauss.filename);
+     strcpy(pEngineSlit->slitFile2,pMediateSlit->agauss.filename2);
+
     break;
  // ----------------------------------------------------------------------------
     case SLIT_TYPE_APOD :                                                       // apodisation function (used with FTS)
@@ -90,28 +122,28 @@ void setMediateSlit(SLIT *pEngineSlit,const mediate_slit_function_t *pMediateSli
      pEngineSlit->slitParam2=pMediateSlit->nbsapod.phase;
     break;
  // ----------------------------------------------------------------------------
-    case SLIT_TYPE_GAUSS_FILE :
-     strcpy(pEngineSlit->slitFile,pMediateSlit->gaussianfile.filename);
-    break;
- // ----------------------------------------------------------------------------
-    case SLIT_TYPE_INVPOLY_FILE :                                               // 2n-Lorentz line shape, wavelength dependent (file)
-     strcpy(pEngineSlit->slitFile,pMediateSlit->lorentzfile.filename);
-     pEngineSlit->slitParam2=pMediateSlit->lorentzfile.degree;
-    break;
- // ----------------------------------------------------------------------------
-    case SLIT_TYPE_ERF_FILE :                                                   // error function, wavelength dependent (file)
-     strcpy(pEngineSlit->slitFile,pMediateSlit->errorfile.filename);
-     pEngineSlit->slitParam2=pMediateSlit->errorfile.width;
-    break;
- // ----------------------------------------------------------------------------
-    case SLIT_TYPE_GAUSS_T_FILE :
-     strcpy(pEngineSlit->slitFile,pMediateSlit->gaussiantempfile.filename);
-    break;
- // ----------------------------------------------------------------------------
-    case SLIT_TYPE_ERF_T_FILE :
-     strcpy(pEngineSlit->slitFile,pMediateSlit->errortempfile.filename);
-    break;
- // ----------------------------------------------------------------------------
+ // NOT USED : commented on 01/02/2012    case SLIT_TYPE_GAUSS_FILE :
+ // NOT USED : commented on 01/02/2012     strcpy(pEngineSlit->slitFile,pMediateSlit->gaussianfile.filename);
+ // NOT USED : commented on 01/02/2012    break;
+ // NOT USED : commented on 01/02/2012 // ----------------------------------------------------------------------------
+ // NOT USED : commented on 01/02/2012    case SLIT_TYPE_INVPOLY_FILE :                                               // 2n-Lorentz line shape, wavelength dependent (file)
+ // NOT USED : commented on 01/02/2012     strcpy(pEngineSlit->slitFile,pMediateSlit->lorentzfile.filename);
+ // NOT USED : commented on 01/02/2012     pEngineSlit->slitParam2=pMediateSlit->lorentzfile.degree;
+ // NOT USED : commented on 01/02/2012    break;
+ // NOT USED : commented on 01/02/2012 // ----------------------------------------------------------------------------
+ // NOT USED : commented on 01/02/2012    case SLIT_TYPE_ERF_FILE :                                                   // error function, wavelength dependent (file)
+ // NOT USED : commented on 01/02/2012     strcpy(pEngineSlit->slitFile,pMediateSlit->errorfile.filename);
+ // NOT USED : commented on 01/02/2012     strcpy(pEngineSlit->slitFile2,pMediateSlit->errorfile.filename2);
+ // NOT USED : commented on 01/02/2012    break;
+ // NOT USED : commented on 12/01/2012 // ----------------------------------------------------------------------------
+ // NOT USED : commented on 12/01/2012    case SLIT_TYPE_GAUSS_T_FILE :
+ // NOT USED : commented on 12/01/2012     strcpy(pEngineSlit->slitFile,pMediateSlit->gaussiantempfile.filename);
+ // NOT USED : commented on 12/01/2012    break;
+ // NOT USED : commented on 12/01/2012 // ----------------------------------------------------------------------------
+ // NOT USED : commented on 12/01/2012    case SLIT_TYPE_ERF_T_FILE :
+ // NOT USED : commented on 12/01/2012     strcpy(pEngineSlit->slitFile,pMediateSlit->errortempfile.filename);
+ // NOT USED : commented on 12/01/2012    break;
+ // NOT USED : commented on 12/01/2012 // ----------------------------------------------------------------------------
     default :
      strcpy(pEngineSlit->slitFile,pMediateSlit->file.filename);
     break;

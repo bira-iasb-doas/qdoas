@@ -24,11 +24,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QFrame>
 #include <QComboBox>
 #include <QStackedWidget>
+#include <QStackedLayout>
 #include <QLineEdit>
 #include <QCheckBox>
 #include <QSpinBox>
 #include <QGroupBox>
 #include <QGridLayout>
+#include <QPushButton>
 
 #include "mediate_general.h"
 
@@ -43,13 +45,17 @@ Q_OBJECT
   virtual ~CWSlitFileBase();
 
  protected:
-  void helperConstructFileEdit(QGridLayout *gridLayout, int &row, const char *str, int len);
+  void helperConstructFileEdit(QGridLayout *gridLayout, int &row, const char *label,const char *str, int len);
 
  public slots:
   void slotBrowseFile();
+  void slotToggleWavelength(int);
 
  protected:
-  QLineEdit *m_filenameEdit;
+  QLineEdit *m_filenameEdit[2];
+  QPushButton *m_browseBtn[2];
+  QCheckBox *m_wavelengthDependent;
+  QStackedLayout *m_toggleWavelengthStack;
 };
 
 //--------------------------------------------------------------------------
@@ -64,7 +70,7 @@ class CWSlitFileEdit : public CWSlitFileBase
   void apply(struct slit_file *d) const;
 };
 
-class CWSlitGaussianEdit : public QFrame
+class CWSlitGaussianEdit : public CWSlitFileBase
 {
  public:
   CWSlitGaussianEdit(const struct slit_gaussian *d, QWidget *parent = 0);
@@ -77,7 +83,7 @@ class CWSlitGaussianEdit : public QFrame
   QLineEdit *m_fwhmEdit;
 };
 
-class CWSlitLorentzEdit : public QFrame
+class CWSlitLorentzEdit : public CWSlitFileBase
 {
  public:
   CWSlitLorentzEdit(const struct slit_lorentz *d, QWidget *parent = 0);
@@ -91,7 +97,7 @@ class CWSlitLorentzEdit : public QFrame
   QSpinBox *m_degreeSpin;
 };
 
-class CWSlitVoigtEdit : public QFrame
+class CWSlitVoigtEdit : public CWSlitFileBase
 {
  public:
   CWSlitVoigtEdit(const struct slit_voigt *d, QWidget *parent = 0);
@@ -105,7 +111,7 @@ class CWSlitVoigtEdit : public QFrame
   QLineEdit *m_ratioLeftEdit, *m_ratioRightEdit;
 };
 
-class CWSlitErrorEdit : public QFrame
+class CWSlitErrorEdit : public CWSlitFileBase
 {
  public:
   CWSlitErrorEdit(const struct slit_error *d, QWidget *parent = 0);
@@ -119,7 +125,7 @@ class CWSlitErrorEdit : public QFrame
   QLineEdit *m_widthEdit;
 };
 
-class CWSlitAGaussEdit : public QFrame
+class CWSlitAGaussEdit : public CWSlitFileBase
 {
  public:
   CWSlitAGaussEdit(const struct slit_agauss *d, QWidget *parent = 0);
@@ -169,8 +175,8 @@ class CWSlitErrorFileEdit : public CWSlitFileBase
   void reset(const struct slit_error_file *d);
   void apply(struct slit_error_file *d) const;
 
- private:
-  QLineEdit *m_widthEdit;
+//  private:
+//   QLineEdit *m_widthEdit;
 };
 
 //-----------------------------------------------
@@ -195,11 +201,11 @@ class CWSlitSelector : public QGroupBox
   CWSlitErrorEdit *m_errorEdit;
   CWSlitAGaussEdit *m_agaussEdit;
   CWSlitApodEdit *m_boxcarApodEdit, *m_nbsApodEdit;
-  CWSlitFileEdit *m_gaussianFileEdit;
-  CWSlitLorentzFileEdit *m_lorentzFileEdit;
-  CWSlitErrorFileEdit *m_errorFileEdit;
-  CWSlitFileEdit *m_gaussianTempFileEdit;
-  CWSlitErrorFileEdit *m_errorTempFileEdit;
+  // Not used anymore : commented on 01/02/2012 CWSlitFileEdit *m_gaussianFileEdit;
+  // Not used anymore : commented on 01/02/2012 CWSlitLorentzFileEdit *m_lorentzFileEdit;
+  // Not used anymore : commented on 01/02/2012 CWSlitErrorFileEdit *m_errorFileEdit;
+  // Not used anymore : commented on 12/01/2012 CWSlitFileEdit *m_gaussianTempFileEdit;
+  // Not used anymore : commented on 12/01/2012 CWSlitErrorFileEdit *m_errorTempFileEdit;
 };
 
 #endif

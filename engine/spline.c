@@ -109,7 +109,7 @@ RC SPLINE_Deriv2(double *X,double *Y,double *Y2,int n,DoasCh *callingFunction)
 
     if (yp1>(double)0.99e30)                                                    // The lower boundary condition is
      Y2[0]=u[0]=(double)0.;                                                     // set to be "natural" else to have
-    else if (X[1]-X[0]<=(double)0.)                                             // a specified first derivative
+    else if (X[1]-X[0]<=(double)0.)
      rc=ERROR_SetLast(callingFunction,ERROR_TYPE_WARNING,ERROR_ID_SPLINE);
     else
      {

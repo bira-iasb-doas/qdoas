@@ -176,7 +176,7 @@ CWMain::CWMain(QWidget *parent) :
   m_properties = m_guiProperties;
 
   // icon
-  setWindowIcon(QIcon(QPixmap(":/icons/logo.png")));
+  setWindowIcon(QIcon(QPixmap(":/icons/QDOAS_IcoTransparent.png")));
 
   // get the window size from the settings
   resize(CPreferences::instance()->windowSize("ConvTool", QSize(450,350)));

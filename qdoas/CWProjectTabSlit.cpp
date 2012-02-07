@@ -59,8 +59,8 @@ CWProjectTabSlit::CWProjectTabSlit(const mediate_project_slit_t *slit, QWidget *
   topLayout->addWidget(refBrowseBtn, 0, 2);
 
   // fhwm correction checkbox
-  m_fwhmCorrectionCheck = new QCheckBox("Apply FWHM correction", this);
-  topLayout->addWidget(m_fwhmCorrectionCheck, 1, 1, 1, 2);
+//  m_fwhmCorrectionCheck = new QCheckBox("Apply FWHM correction", this);
+//  topLayout->addWidget(m_fwhmCorrectionCheck, 1, 1, 1, 2);
 
   // slit type
   m_slitCombo = new QComboBox(this);
@@ -99,25 +99,25 @@ CWProjectTabSlit::CWProjectTabSlit(const mediate_project_slit_t *slit, QWidget *
   m_slitStack->addWidget(m_nbsApodEdit);
   m_slitCombo->addItem("Norton Beer Strong (FTS)", QVariant(SLIT_TYPE_APODNBS));
 
-  m_gaussianFileEdit = new CWSlitFileEdit(&(slit->function.gaussianfile));
-  m_slitStack->addWidget(m_gaussianFileEdit);
-  m_slitCombo->addItem("Gaussian, wavelength dependent", QVariant(SLIT_TYPE_GAUSS_FILE));
+  // not used anymore : commented on 01/02/2012 m_gaussianFileEdit = new CWSlitFileEdit(&(slit->function.gaussianfile));
+  // not used anymore : commented on 01/02/2012 m_slitStack->addWidget(m_gaussianFileEdit);
+  // not used anymore : commented on 01/02/2012 m_slitCombo->addItem("Gaussian, wavelength dependent", QVariant(SLIT_TYPE_GAUSS_FILE));
+  // not used anymore : commented on 01/02/2012
+  // not used anymore : commented on 01/02/2012 m_lorentzFileEdit = new CWSlitLorentzFileEdit(&(slit->function.lorentzfile));
+  // not used anymore : commented on 01/02/2012 m_slitStack->addWidget(m_lorentzFileEdit);
+  // not used anymore : commented on 01/02/2012 m_slitCombo->addItem("2n-Lorentz, wavelength dependent", QVariant(SLIT_TYPE_INVPOLY_FILE));
+  // not used anymore : commented on 01/02/2012
+  // not used anymore : commented on 01/02/2012 m_errorFileEdit = new CWSlitErrorFileEdit(&(slit->function.errorfile));
+  // not used anymore : commented on 01/02/2012 m_slitStack->addWidget(m_errorFileEdit);
+  // not used anymore : commented on 01/02/2012 m_slitCombo->addItem("Error Function, wavelength dependent", QVariant(SLIT_TYPE_ERF_FILE));
 
-  m_lorentzFileEdit = new CWSlitLorentzFileEdit(&(slit->function.lorentzfile));
-  m_slitStack->addWidget(m_lorentzFileEdit);
-  m_slitCombo->addItem("2n-Lorentz, wavelength dependent", QVariant(SLIT_TYPE_INVPOLY_FILE));
-
-  m_errorFileEdit = new CWSlitErrorFileEdit(&(slit->function.errorfile));
-  m_slitStack->addWidget(m_errorFileEdit);
-  m_slitCombo->addItem("Error Function, wavelength dependent", QVariant(SLIT_TYPE_ERF_FILE));
-
-  m_gaussianTempFileEdit = new CWSlitFileEdit(&(slit->function.gaussiantempfile));
-  m_slitStack->addWidget(m_gaussianTempFileEdit);
-  m_slitCombo->addItem("Gaussian, wavelength + Temp. dependent", QVariant(SLIT_TYPE_GAUSS_T_FILE));
-
-  m_errorTempFileEdit = new CWSlitErrorFileEdit(&(slit->function.errortempfile));
-  m_slitStack->addWidget(m_errorTempFileEdit);
-  m_slitCombo->addItem("Error Function, wavelength + Temp. dependent", QVariant(SLIT_TYPE_ERF_T_FILE));
+  // not used anymore : commented on 12/01/2012 m_gaussianTempFileEdit = new CWSlitFileEdit(&(slit->function.gaussiantempfile));
+  // not used anymore : commented on 12/01/2012 m_slitStack->addWidget(m_gaussianTempFileEdit);
+  // not used anymore : commented on 12/01/2012 m_slitCombo->addItem("Gaussian, wavelength + Temp. dependent", QVariant(SLIT_TYPE_GAUSS_T_FILE));
+  // not used anymore : commented on 12/01/2012
+  // not used anymore : commented on 12/01/2012 m_errorTempFileEdit = new CWSlitErrorFileEdit(&(slit->function.errortempfile));
+  // not used anymore : commented on 12/01/2012 m_slitStack->addWidget(m_errorTempFileEdit);
+  // not used anymore : commented on 12/01/2012 m_slitCombo->addItem("Error Function, wavelength + Temp. dependent", QVariant(SLIT_TYPE_ERF_T_FILE));
 
 
   topLayout->addWidget(new QLabel("Slit Function Type", this), 2, 0);
@@ -137,7 +137,7 @@ CWProjectTabSlit::CWProjectTabSlit(const mediate_project_slit_t *slit, QWidget *
 
   // initialize
   m_solarRefFileEdit->setText(slit->solarRefFile);
-  m_fwhmCorrectionCheck->setCheckState(slit->applyFwhmCorrection ? Qt::Checked : Qt::Unchecked);
+  // m_fwhmCorrectionCheck->setCheckState(slit->applyFwhmCorrection ? Qt::Checked : Qt::Unchecked);
   // set the current slit - stack will follow
   int index = m_slitCombo->findData(QVariant(slit->function.type));
   if (index != -1)
@@ -154,7 +154,7 @@ void CWProjectTabSlit::apply(mediate_project_slit_t *slit) const
   // set values for ALL slits ... and the selected slit type
 
   slit->function.type = m_slitCombo->itemData(m_slitCombo->currentIndex()).toInt();
-  slit->applyFwhmCorrection = m_fwhmCorrectionCheck->isChecked() ? 1 : 0;
+  // slit->applyFwhmCorrection = m_fwhmCorrectionCheck->isChecked() ? 1 : 0;
   strcpy(slit->solarRefFile, m_solarRefFileEdit->text().toAscii().data());
 
   m_fileEdit->apply(&(slit->function.file));
@@ -165,11 +165,11 @@ void CWProjectTabSlit::apply(mediate_project_slit_t *slit) const
   m_agaussEdit->apply(&(slit->function.agauss));
   m_boxcarApodEdit->apply(&(slit->function.boxcarapod));
   m_nbsApodEdit->apply(&(slit->function.nbsapod));
-  m_gaussianFileEdit->apply(&(slit->function.gaussianfile));
-  m_lorentzFileEdit->apply(&(slit->function.lorentzfile));
-  m_errorFileEdit->apply(&(slit->function.errorfile));
-  m_gaussianTempFileEdit->apply(&(slit->function.gaussiantempfile));
-  m_errorTempFileEdit->apply(&(slit->function.errortempfile));
+  // not used anymore : commented on 01/02/2012 m_gaussianFileEdit->apply(&(slit->function.gaussianfile));
+  // not used anymore : commented on 01/02/2012 m_lorentzFileEdit->apply(&(slit->function.lorentzfile));
+  // not used anymore : commented on 01/02/2012 m_errorFileEdit->apply(&(slit->function.errorfile));
+  // not used anymore : commented on 12/01/2012 m_gaussianTempFileEdit->apply(&(slit->function.gaussiantempfile));
+  // not used anymore : commented on 12/01/2012 m_errorTempFileEdit->apply(&(slit->function.errortempfile));
 }
 
 void CWProjectTabSlit::slotSolarRefFileBrowse()

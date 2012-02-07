@@ -101,7 +101,7 @@ void writeSlitFunction(FILE *fp, size_t nIndent, const mediate_slit_function_t *
 {
   size_t i;
   char buf[32]; // max index is sizeof(buf)-1
-  QString tmpStr;
+  QString tmpStr,tmpStr2;
   CPathMgr *pathMgr = CPathMgr::instance();
 
   // make a space padding string - robust against nIndex < 0.
@@ -136,21 +136,21 @@ void writeSlitFunction(FILE *fp, size_t nIndent, const mediate_slit_function_t *
   case SLIT_TYPE_APODNBS:
     fprintf(fp, "\"nbsapod\"");
     break;
-  case SLIT_TYPE_GAUSS_FILE:
-    fprintf(fp, "\"gaussianfile\"");
-    break;
-  case SLIT_TYPE_INVPOLY_FILE:
-    fprintf(fp, "\"lorentzfile\"");
-    break;
-  case SLIT_TYPE_ERF_FILE:
-    fprintf(fp, "\"errorfile\"");
-    break;
-  case SLIT_TYPE_GAUSS_T_FILE:
-    fprintf(fp, "\"gaussiantempfile\"");
-    break;
-  case SLIT_TYPE_ERF_T_FILE:
-    fprintf(fp, "\"errortempfile\"");
-    break;
+  // not used anymore : commented on 01/02/2012 case SLIT_TYPE_GAUSS_FILE:
+  // not used anymore : commented on 01/02/2012   fprintf(fp, "\"gaussianfile\"");
+  // not used anymore : commented on 01/02/2012   break;
+  // not used anymore : commented on 01/02/2012 case SLIT_TYPE_INVPOLY_FILE:
+  // not used anymore : commented on 01/02/2012   fprintf(fp, "\"lorentzfile\"");
+  // not used anymore : commented on 01/02/2012   break;
+  // not used anymore : commented on 01/02/2012 case SLIT_TYPE_ERF_FILE:
+  // not used anymore : commented on 01/02/2012   fprintf(fp, "\"errorfile\"");
+  // not used anymore : commented on 01/02/2012   break;
+  // not used anymore : commented on 12/01/2012 case SLIT_TYPE_GAUSS_T_FILE:
+  // not used anymore : commented on 12/01/2012   fprintf(fp, "\"gaussiantempfile\"");
+  // not used anymore : commented on 12/01/2012   break;
+  // not used anymore : commented on 12/01/2012 case SLIT_TYPE_ERF_T_FILE:
+  // not used anymore : commented on 12/01/2012   fprintf(fp, "\"errortempfile\"");
+  // not used anymore : commented on 12/01/2012   break;
   default:
     fprintf(fp, "\"invalid\"");
   }
@@ -158,32 +158,40 @@ void writeSlitFunction(FILE *fp, size_t nIndent, const mediate_slit_function_t *
 
   tmpStr = pathMgr->simplifyPath(QString(d->file.filename));
   fprintf(fp, "%s  <file file=\"%s\" />\n", buf, tmpStr.toAscii().data());
-
-  fprintf(fp, "%s  <gaussian fwhm=\"%.3f\" />\n", buf, d->gaussian.fwhm);
-  fprintf(fp, "%s  <lorentz width=\"%.3f\" degree=\"%d\" />\n", buf, d->lorentz.width, d->lorentz.degree);
-  fprintf(fp, "%s  <voigt fwhmleft=\"%.3f\" fwhmright=\"%.3f\" glrleft=\"%.3f\" glrright=\"%.3f\" />\n",
-	  buf, d->voigt.fwhmL, d->voigt.fwhmR, d->voigt.glRatioL, d->voigt.glRatioR);
-  fprintf(fp, "%s  <error fwhm=\"%.3f\" width=\"%.3f\" />\n", buf, d->error.fwhm, d->error.width);
-  fprintf(fp, "%s  <agauss fwhm=\"%.3f\" asym=\"%.3f\" />\n", buf, d->agauss.fwhm, d->agauss.asym);
+  tmpStr = pathMgr->simplifyPath(QString(d->gaussian.filename));
+  fprintf(fp, "%s  <gaussian fwhm=\"%.3f\" wveDptFlag=\"%s\" file=\"%s\" />\n", buf, d->gaussian.fwhm,(d->gaussian.wveDptFlag ? sTrue : sFalse),tmpStr.toAscii().data());
+  tmpStr = pathMgr->simplifyPath(QString(d->lorentz.filename));
+  fprintf(fp, "%s  <lorentz width=\"%.3f\" degree=\"%d\" wveDptFlag=\"%s\" file=\"%s\" />\n", buf, d->lorentz.width, d->lorentz.degree,(d->lorentz.wveDptFlag ? sTrue : sFalse),tmpStr.toAscii().data());
+  tmpStr = pathMgr->simplifyPath(QString(d->voigt.filename));
+  tmpStr2 = pathMgr->simplifyPath(QString(d->voigt.filename2));
+  fprintf(fp, "%s  <voigt fwhmleft=\"%.3f\" fwhmright=\"%.3f\" glrleft=\"%.3f\" glrright=\"%.3f\" wveDptFlag=\"%s\" file=\"%s\" file2=\"%s\" />\n",
+	  buf, d->voigt.fwhmL, d->voigt.fwhmR, d->voigt.glRatioL, d->voigt.glRatioR,(d->voigt.wveDptFlag ? sTrue : sFalse),tmpStr.toAscii().data(), tmpStr2.toAscii().data());
+  tmpStr = pathMgr->simplifyPath(QString(d->error.filename));
+  tmpStr2 = pathMgr->simplifyPath(QString(d->error.filename2));
+  fprintf(fp, "%s  <error fwhm=\"%.3f\" width=\"%.3f\" wveDptFlag=\"%s\" file=\"%s\" file2=\"%s\" />\n", buf, d->error.fwhm, d->error.width,(d->error.wveDptFlag ? sTrue : sFalse),tmpStr.toAscii().data(), tmpStr2.toAscii().data());
+  tmpStr = pathMgr->simplifyPath(QString(d->agauss.filename));
+  tmpStr2 = pathMgr->simplifyPath(QString(d->agauss.filename2));
+  fprintf(fp, "%s  <agauss fwhm=\"%.3f\" asym=\"%.3f\" wveDptFlag=\"%s\" file=\"%s\" file2=\"%s\" />\n", buf, d->agauss.fwhm, d->agauss.asym,(d->agauss.wveDptFlag ? sTrue : sFalse),tmpStr.toAscii().data(), tmpStr2.toAscii().data());
   fprintf(fp, "%s  <boxcarapod resolution=\"%.3f\" phase=\"%.3f\" />\n", buf,
 	  d->boxcarapod.resolution, d->boxcarapod.phase);
   fprintf(fp, "%s  <nbsapod resolution=\"%.3f\" phase=\"%.3f\" />\n", buf,
 	  d->nbsapod.resolution, d->nbsapod.phase);
 
-  tmpStr = pathMgr->simplifyPath(QString(d->gaussianfile.filename));
-  fprintf(fp, "%s  <gaussianfile file=\"%s\" />\n", buf, tmpStr.toAscii().data());
+  // not used anymore : commented on 01/02/2012 tmpStr = pathMgr->simplifyPath(QString(d->gaussianfile.filename));
+  // not used anymore : commented on 01/02/2012 fprintf(fp, "%s  <gaussianfile file=\"%s\" />\n", buf, tmpStr.toAscii().data());
+  // not used anymore : commented on 01/02/2012
+  // not used anymore : commented on 01/02/2012 tmpStr = pathMgr->simplifyPath(QString(d->lorentzfile.filename));
+  // not used anymore : commented on 01/02/2012 fprintf(fp, "%s  <lorentzfile file=\"%s\" degree=\"%d\" />\n", buf, tmpStr.toAscii().data(), d->lorentzfile.degree);
+  // not used anymore : commented on 01/02/2012
+  // not used anymore : commented on 01/02/2012 tmpStr = pathMgr->simplifyPath(QString(d->errorfile.filename));
+  // not used anymore : commented on 01/02/2012 tmpStr2 = pathMgr->simplifyPath(QString(d->errorfile.filename2));
+  // not used anymore : commented on 01/02/2012 fprintf(fp, "%s  <errorfile file=\"%s\" file2=\"%s\" />\n", buf, tmpStr.toAscii().data(), tmpStr2.toAscii().data());
 
-  tmpStr = pathMgr->simplifyPath(QString(d->lorentzfile.filename));
-  fprintf(fp, "%s  <lorentzfile file=\"%s\" degree=\"%d\" />\n", buf, tmpStr.toAscii().data(), d->lorentzfile.degree);
-
-  tmpStr = pathMgr->simplifyPath(QString(d->errorfile.filename));
-  fprintf(fp, "%s  <errorfile file=\"%s\" width=\"%.3f\" />\n", buf, tmpStr.toAscii().data(), d->errorfile.width);
-
-  tmpStr = pathMgr->simplifyPath(QString(d->gaussiantempfile.filename));
-  fprintf(fp, "%s  <gaussiantempfile file=\"%s\" />\n", buf, tmpStr.toAscii().data());
-
-  tmpStr = pathMgr->simplifyPath(QString(d->errortempfile.filename));
-  fprintf(fp, "%s  <errortempfile file=\"%s\" width=\"%.3f\" />\n", buf, tmpStr.toAscii().data(), d->errortempfile.width);
+  // Not used anymore : commented on 12/01/2012 tmpStr = pathMgr->simplifyPath(QString(d->gaussiantempfile.filename));
+  // Not used anymore : commented on 12/01/2012 fprintf(fp, "%s  <gaussiantempfile file=\"%s\" />\n", buf, tmpStr.toAscii().data());
+  // Not used anymore : commented on 12/01/2012
+  // Not used anymore : commented on 12/01/2012 tmpStr = pathMgr->simplifyPath(QString(d->errortempfile.filename));
+  // Not used anymore : commented on 12/01/2012 fprintf(fp, "%s  <errortempfile file=\"%s\" width=\"%.3f\" />\n", buf, tmpStr.toAscii().data(), d->errortempfile.width);
 
   fprintf(fp, "%s</slit_func>\n", buf);
 }

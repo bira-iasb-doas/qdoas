@@ -184,52 +184,44 @@ RC USAMP_Build(double *phase1,                                                  
                double *phase2,                                                  // OUTPUT : phase 2 calculation
                double *gomeLambda,                                              // GOME calibration
                INT     nGome,                                                   // size of GOME calibration
-               double *kuruczLambda,                                            // Kurucz calibration
-               double *kuruczSpectrum,                                          // Kurucz spectrum
-               double *kuruczDeriv2,                                            // Kurucz second derivatives
-               INT     nKurucz,                                                 // size of Kurucz vectors
+               MATRIX_OBJECT *pKuruczMatrix,                                    // Kurucz matrix
                SLIT   *pSlit,                                                   // slit function
                double  fraction,                                                // tunes the phase
                INT     analysisMethod)                                          // analysis method
  {
   // Declarations
 
-  XS      xsnew,xshr,slitFunction;
-  double *kuruczConvolved,*kuruczConvolvedDeriv2,*gomeLambda2,slitParam,
+  MATRIX_OBJECT xsnew,slitFunction,slitFunction2;
+  double *gomeLambda2,*kuruczLambda,slitParam,
          *resample,*d2res;
-  INT     slitType;
+  INT     slitType,nKurucz;
   INDEX   i;
   RC      rc;
 
   // Initializations
 
-  kuruczConvolvedDeriv2=gomeLambda2=resample=d2res=NULL;
-  memset(&slitFunction,0,sizeof(XS));
+  gomeLambda2=resample=d2res=NULL;
+  memset(&xsnew,0,sizeof(MATRIX_OBJECT));
+  memset(&slitFunction,0,sizeof(MATRIX_OBJECT));
+  memset(&slitFunction2,0,sizeof(MATRIX_OBJECT));
   slitType=pSlit->slitType;
+  kuruczLambda=pKuruczMatrix->matrix[0];
+  nKurucz=pKuruczMatrix->nl;
 
   // Buffers allocation
 
-  if (((kuruczConvolved=MEMORY_AllocDVector("USAMP_Build ","kuruczConvolved",0,nKurucz))==NULL) ||
-      ((kuruczConvolvedDeriv2=MEMORY_AllocDVector("USAMP_Build ","kuruczConvolvedDeriv2",0,nKurucz))==NULL) ||
-      ((gomeLambda2=MEMORY_AllocDVector("USAMP_Build ","gomeLambda2",0,nGome))==NULL) ||
+  if (((gomeLambda2=MEMORY_AllocDVector("USAMP_Build ","gomeLambda2",0,nGome))==NULL) ||
       ((resample=MEMORY_AllocDVector("USAMP_Build ","resample",0,nGome))==NULL) ||
-      ((d2res=MEMORY_AllocDVector("USAMP_Build ","d2res",0,nGome))==NULL))
+      ((d2res=MEMORY_AllocDVector("USAMP_Build ","d2res",0,nGome))==NULL) ||
+      ((rc=MATRIX_Allocate(&xsnew,nKurucz,2,0,0,1,"USAMP_Build (xsnew)"))!=0))
 
    rc=ERROR_ID_ALLOC;
 
   else
    {
-    VECTOR_Init(kuruczConvolved,(double)0.,nKurucz);
+    memcpy(xsnew.matrix[0],kuruczLambda,nKurucz*sizeof(double));
 
-    xsnew.lambda=kuruczLambda;
-    xsnew.vector=kuruczConvolved;
-    xsnew.deriv2=kuruczConvolvedDeriv2;
-    xsnew.NDET=nKurucz;
-
-    xshr.lambda=kuruczLambda;
-    xshr.vector=kuruczSpectrum;
-    xshr.deriv2=kuruczDeriv2;
-    xshr.NDET=nKurucz;
+    VECTOR_Init(xsnew.matrix[1],(double)0.,nKurucz);
 
     for (i=1,gomeLambda2[0]=gomeLambda[0]-fraction;i<nGome;i++)
      gomeLambda2[i]=gomeLambda[i]-fraction;
@@ -237,15 +229,15 @@ RC USAMP_Build(double *phase1,                                                  
 
     // Kurucz spectrum convolution with a gaussian
 
-    if (!(rc=XSCONV_LoadSlitFunction(&slitFunction,pSlit,&slitParam,&slitType)) &&
+    if (!(rc=XSCONV_LoadSlitFunction(&slitFunction,&slitFunction2,pSlit,&slitParam,&slitType)) &&
 //        !(rc=XSCONV_TypeStandardFFT(&usampFFT,slitType,pSlit->slitParam,pSlit->slitParam2,kuruczLambda,kuruczConvolved,nKurucz)) &&
-        !(rc=XSCONV_TypeStandard(&xsnew,0,nKurucz,&xshr,&slitFunction,&xshr,NULL,slitType,(double)2.*slitParam,slitParam,pSlit->slitParam2)) &&
+        !(rc=XSCONV_TypeStandard(&xsnew,0,nKurucz,pKuruczMatrix,&slitFunction,&slitFunction2,pKuruczMatrix,NULL,slitType,(double)2.*slitParam,slitParam,pSlit->slitParam2,pSlit->slitWveDptFlag)) &&
 
-        !(rc=SPLINE_Deriv2(kuruczLambda,kuruczConvolved,kuruczConvolvedDeriv2,nKurucz,"USAMP_Build (kuruczConvolved) ")) &&
-        !(rc=SPLINE_Vector(kuruczLambda,kuruczConvolved,kuruczConvolvedDeriv2,nKurucz,gomeLambda,resample,nGome,SPLINE_CUBIC,"USAMP_Build (kuruczConvolved) ")) && // calculate solar spectrum at GOME positions
+        !(rc=SPLINE_Deriv2(kuruczLambda,xsnew.matrix[1],xsnew.deriv2[1],nKurucz,"USAMP_Build (kuruczConvolved) ")) &&
+        !(rc=SPLINE_Vector(kuruczLambda,xsnew.matrix[1],xsnew.deriv2[1],nKurucz,gomeLambda,resample,nGome,SPLINE_CUBIC,"USAMP_Build (kuruczConvolved) ")) && // calculate solar spectrum at GOME positions
         !(rc=SPLINE_Deriv2(gomeLambda,resample,d2res,nGome,"USAMP_Build (resample 1) ")))
 
-     rc=USAMP_BuildCrossSections(phase1,                                        // OUTPUT : phase 1 calculation
+      rc=USAMP_BuildCrossSections(phase1,                                        // OUTPUT : phase 1 calculation
                                  phase2,                                        // OUTPUT : phase 2 calculation
                                  gomeLambda,                                    // GOME calibration
                                  gomeLambda2,                                   // shifted GOME calibration
@@ -253,20 +245,18 @@ RC USAMP_Build(double *phase1,                                                  
                                  d2res,                                         // interpolated Kurucz spectrum second derivatives
                                  nGome,                                         // size of GOME calibration
                                  kuruczLambda,                                  // Kurucz high resolution wavelength scale
-                                 kuruczConvolved,                               // preconvoluted Kurucz spectrum on high resolution wavelength scale
-                                 kuruczConvolvedDeriv2,                         // preconvoluted Kurucz second derivatives
+                                 xsnew.matrix[1],                               // preconvoluted Kurucz spectrum on high resolution wavelength scale
+                                 xsnew.deriv2[1],                               // preconvoluted Kurucz second derivatives
                                  nKurucz,                                       // size of Kurucz vectors
                                  analysisMethod);                               // analysis method
-   }
+  }
 
   // Buffers release
 
-  XSCONV_Reset(&slitFunction);
+  MATRIX_Free(&slitFunction,"USAMP_Build (slitFunction)");
+  MATRIX_Free(&slitFunction2,"USAMP_Build (slitFunction)");
+  MATRIX_Free(&xsnew,"USAMP_Build (xsnew)");
 
-  if (kuruczConvolved!=NULL)
-   MEMORY_ReleaseDVector("USAMP_Build ","kuruczConvolved",kuruczConvolved,0);
-  if (kuruczConvolvedDeriv2!=NULL)
-   MEMORY_ReleaseDVector("USAMP_Build ","kuruczConvolvedDeriv2",kuruczConvolvedDeriv2,0);
   if (gomeLambda2!=NULL)
    MEMORY_ReleaseDVector("USAMP_Build ","gomeLambda2",gomeLambda2,0);
 

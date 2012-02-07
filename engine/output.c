@@ -256,7 +256,7 @@ RC OUTPUT_GetWveAmf(CROSS_RESULTS *pResults,double Zm,double *lambda,double *xs,
    	pAmfSymbol=&OUTPUT_AmfSpace[pResults->indexAmf];
 
     for (i=0;i<NDET;i++)
-     xs[i]*=(double)VECTOR_Table2(pAmfSymbol->Phi,pAmfSymbol->PhiLines,pAmfSymbol->PhiColumns,(double)lambda[i],(double)Zm);
+     xs[i]*=(double)VECTOR_Table2_Index1(pAmfSymbol->Phi,pAmfSymbol->PhiLines,pAmfSymbol->PhiColumns,(double)lambda[i],(double)Zm);
    }
 
   // Return
@@ -308,7 +308,7 @@ RC OutputGetAmf(CROSS_RESULTS *pResults,double Zm,double Tm,double *pAmf)
          if ((Zm>=(double)pAmfSymbol->Phi[1][2]) && (Zm<=(double)pAmfSymbol->Phi[1][pAmfSymbol->PhiLines]) &&
              (Dte>=(double)pAmfSymbol->Phi[2][1]) && (Dte<=(double)pAmfSymbol->Phi[pAmfSymbol->PhiColumns][1]))
 
-          *pAmf=(double)VECTOR_Table2(pAmfSymbol->Phi,pAmfSymbol->PhiLines,pAmfSymbol->PhiColumns,(double)Zm,(double)Dte);
+          *pAmf=(double)VECTOR_Table2_Index1(pAmfSymbol->Phi,pAmfSymbol->PhiLines,pAmfSymbol->PhiColumns,(double)Zm,(double)Dte);
         }
        break;
     // ------------------------------------------------------------------------

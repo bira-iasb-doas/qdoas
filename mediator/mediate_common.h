@@ -44,6 +44,7 @@
 #include "mediate_general.h"
 #include "../engine/comdefs.h"
 #include "../engine/constants.h"
+#include "../engine/engine_common.h"
 
 #if defined(_cplusplus) || defined(__cplusplus)
 extern "C" {
@@ -51,16 +52,17 @@ extern "C" {
 
 // Description of the slit function
 
-typedef struct _slit
- {
-  INT    slitType;                                                              // type of line shape (see above)
-  DoasCh slitFile[MAX_STR_LEN+1];                                                // for line shapes provided in file, name of the file
-  double slitParam;                                                             // up to 4 parameters can be provided for the line shape
-  double slitParam2;                                                            //       usually, the first one is the FWHM
-  double slitParam3;                                                            //       the Voigt profile function uses the 4 parameters
-  double slitParam4;
- }
-SLIT;
+// typedef struct _slit
+//  {
+//   INT    slitType;                                                              // type of line shape (see above)
+//   DoasCh slitFile[MAX_STR_LEN+1];                                               // for line shapes provided in file, name of the first file
+//   DoasCh slitFile2[MAX_STR_LEN+1];                                              // for line shapes provided in file, name of the second file
+//   double slitParam;                                                             // up to 4 parameters can be provided for the line shape
+//   double slitParam2;                                                            //       usually, the first one is the FWHM
+//   double slitParam3;                                                            //       obsolete : the Voigt profile function uses the 4 parameters
+//   double slitParam4;
+//  }
+// SLIT;
 
 typedef struct _filter
  {

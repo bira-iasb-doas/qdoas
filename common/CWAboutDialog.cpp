@@ -33,7 +33,7 @@ CWAboutDialog::CWAboutDialog(QWidget *parent) :
 {
   setWindowTitle("About Qdoas");
 
-  QPixmap qdoas(":/images/splash.png");
+  QPixmap qdoas(":/images/QDOAS_IcoTransparent2_Small.png");
   QPixmap logo(":/images/about_logo.png");
 
   QVBoxLayout *mainLayout = new QVBoxLayout(this);

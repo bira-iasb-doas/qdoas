@@ -59,27 +59,40 @@ extern "C" {
   };
 
   struct slit_gaussian {
+  	 int wveDptFlag;
     double fwhm;
+    char filename[FILENAME_BUFFER_LENGTH];
   };
 
   struct slit_lorentz {
+  	 int wveDptFlag;
     double width;
     int degree;
+    char filename[FILENAME_BUFFER_LENGTH];
   };
 
   struct slit_voigt {
+  	 int wveDptFlag;
     double fwhmL, fwhmR;
     double glRatioL, glRatioR;
+    char filename[FILENAME_BUFFER_LENGTH];
+    char filename2[FILENAME_BUFFER_LENGTH];
   };
 
   struct slit_error {
+  	 int wveDptFlag;
     double fwhm;
     double width;
+    char filename[FILENAME_BUFFER_LENGTH];
+    char filename2[FILENAME_BUFFER_LENGTH];
   };
 
   struct slit_agauss {
+  	 int wveDptFlag;
   	 double fwhm;
   	 double asym;
+  	 char filename[FILENAME_BUFFER_LENGTH];
+  	 char filename2[FILENAME_BUFFER_LENGTH];
   };
 
   struct slit_apod {
@@ -94,6 +107,7 @@ extern "C" {
 
   struct slit_error_file {
     char filename[FILENAME_BUFFER_LENGTH];
+    char filename2[FILENAME_BUFFER_LENGTH];
     double width;
   };
 
@@ -111,8 +125,8 @@ extern "C" {
     struct slit_file gaussianfile;
     struct slit_lorentz_file lorentzfile;
     struct slit_error_file errorfile;
-    struct slit_file gaussiantempfile;
-    struct slit_error_file errortempfile;
+    // not useful anymore : commented on 12/01/2012 struct slit_file gaussiantempfile;
+    // not useful anymore : commented on 12/01/2012 struct slit_error_file errortempfile;
   } mediate_slit_function_t;
 
   /*************************************************************************/

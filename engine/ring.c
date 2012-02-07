@@ -110,7 +110,7 @@
 //  Reference :
 //
 //  Ring effect studies : Rayleigh scattering, including molecular parameters for rotational
-//  Ralan scattering and the Franhofer spectrum, K.Chance and R.J.D.Spurr, Applied optics (in press)
+//  Raman scattering and the Franhofer spectrum, K.Chance and R.J.D.Spurr, Applied optics (in press)
 //  ----------------------------------------------------------------------------
 
 #include "engine_xsconv.h"

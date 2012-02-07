@@ -893,12 +893,12 @@ enum prjctTabPagesTypes
      SLIT_TYPE_AGAUSS,                                                          // asymmetric gaussian line shape
      SLIT_TYPE_APOD,                                                            // apodisation function (used with FTS)
      SLIT_TYPE_APODNBS,                                                         // apodisation function (Norton Beer Strong function)
-     SLIT_TYPE_GAUSS_FILE,                                                      // Gaussian line shape, wavelength dependent (provided in a file)
-     SLIT_TYPE_INVPOLY_FILE,                                                    // 2n-Lorentz line shape, wavelength dependent (file)
+   //  SLIT_TYPE_GAUSS_FILE,                                                      // Gaussian line shape, wavelength dependent (provided in a file)
+   //  SLIT_TYPE_INVPOLY_FILE,                                                    // 2n-Lorentz line shape, wavelength dependent (file)
    //  SLIT_TYPE_VOIGT_FILE,                                                    // Voigt profile function, wavelength dependent (file)
-     SLIT_TYPE_ERF_FILE,                                                        // error function, wavelength dependent (file)
-     SLIT_TYPE_GAUSS_T_FILE,                                                    // Gaussian line shape, wavelength and temperature dependent (file)
-     SLIT_TYPE_ERF_T_FILE,                                                      // error function, wavelength and temperature dependent (file)
+   //  SLIT_TYPE_ERF_FILE,                                                        // error function, wavelength dependent (file)
+   //  SLIT_TYPE_GAUSS_T_FILE,                                                    // Gaussian line shape, wavelength and temperature dependent (file)
+   //  SLIT_TYPE_ERF_T_FILE,                                                      // error function, wavelength and temperature dependent (file)
      SLIT_TYPE_MAX
     };
 

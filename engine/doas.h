@@ -88,7 +88,7 @@ double VECTOR_Min(double *vector,int dim);
 RC     VECTOR_Log(double *out,double *in,int dim,DoasCh *callingFunction);
 int    VECTOR_LocGt(double *vector,double value,int dim);
 void   VECTOR_Invert(double *vector,int dim);
-double VECTOR_Table1(double *X0,int Nx,double *Y0,int Ny,double **Table,double X,double Y);
+double VECTOR_Table2_Index1(double **Table,INT Nx,INT Ny,double X,double Y);
 double VECTOR_Table2(double **Table,INT Nx,INT Ny,double X,double Y);
 double VECTOR_Norm(double *v,INT dim);
 RC     VECTOR_NormalizeVector(double *v,INT dim,double *fact,DoasCh *function);
@@ -968,7 +968,7 @@ EXTERN PRJCT_KURUCZ *pKuruczOptions;               // Kurucz options
 EXTERN PRJCT_SLIT   *pSlitOptions;                 // slit function options
 EXTERN PRJCT_USAMP  *pUsamp;
 EXTERN FENO         *TabFeno,*Feno;
-EXTERN MATRIX_OBJECT ANALYSIS_slit,O3TD;
+EXTERN MATRIX_OBJECT ANALYSIS_slit,ANALYSIS_slit2,O3TD;
 EXTERN double      **U,*x,*Lambda,
                     *ANALYSE_pixels,
                     *ANALYSE_splineX,              // abscissa used for spectra, in the units selected by user
@@ -1002,7 +1002,7 @@ RC   FNPixel   ( double *lambdaVector, double lambdaValue, INT npts,INT pixelSel
 
 RC   ANALYSE_CheckLambda(WRK_SYMBOL *pWrkSymbol,double *lambda,DoasCh *callingFunction);
 RC   ANALYSE_XsInterpolation(FENO *pTabFeno,double *newLambda);
-RC   ANALYSE_XsConvolution(FENO *pTabFeno,double *newLambda,MATRIX_OBJECT *pSlit,INT slitType,double *slitParam1,double *slitParam2);
+RC   ANALYSE_XsConvolution(FENO *pTabFeno,double *newLambda,MATRIX_OBJECT *pSlit,MATRIX_OBJECT *pSlit2,INT slitType,double *slitParam1,double *slitParam2);
 RC   ANALYSE_LinFit(SVD *pSvd,INT Npts,INT Degree,double *a,double *sigma,double *b,double *x);
 void ANALYSE_SvdFree(DoasCh *callingFunctionShort,SVD *pSvd);
 RC   ANALYSE_SvdLocalAlloc(DoasCh *callingFunctionShort,SVD *pSvd);
@@ -1055,7 +1055,7 @@ KURUCZ_FENO;
 typedef struct _Kurucz
  {
   KURUCZ_FENO *KuruczFeno;
-  XS      hrSolar;                              // high resolution kurucz spectrum for convolution
+  MATRIX_OBJECT hrSolar;                        // high resolution kurucz spectrum for convolution
   SVD     svdFwhm;                              // svd matrix used for computing coefficients of polynomial fitting fwhm
   double *solar,                                // convoluted kurucz spectrum
          *lambdaF,
@@ -1114,7 +1114,7 @@ void KURUCZ_Free(void);
 
 typedef struct _usamp
  {
-  XS       hrSolar;
+  MATRIX_OBJECT hrSolar;
   INT     *lambdaRange[4];                       // for each analysis window, give the lambda range
   double **kuruczConvoluted,                     // high resolution kurucz convoluted on its own calibration
          **kuruczConvoluted2,                    // second derivatives of previous vector
@@ -1140,10 +1140,7 @@ RC USAMP_Build(double *phase1,                                                  
                double *phase2,                                                  // OUTPUT : phase 2 calculation
                double *gomeLambda,                                              // GOME calibration
                INT     nGome,                                                   // size of GOME calibration
-               double *kuruczLambda,                                            // Kurucz calibration
-               double *kuruczSpectrum,                                          // Kurucz spectrum
-               double *kuruczDeriv2,                                            // Kurucz second derivatives
-               INT     nKurucz,                                                 // size of Kurucz vectors
+               MATRIX_OBJECT *pKuruczMatrix,                                    // Kurucz matrix
                SLIT   *pSlit,                                                   // slit function
                double  fraction,                                                // tunes the phase
                INT     analysisMethod);                                         // analysis method

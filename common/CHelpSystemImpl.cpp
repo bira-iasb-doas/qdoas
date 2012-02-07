@@ -53,18 +53,18 @@ CHelpImplAssistant::CHelpImplAssistant(const QString &profile, const QString &he
 {
   // need the ... location of the assistant binary
   QString path = CPreferences::instance()->directoryName("Assistant");
-    
+
   QStringList arguments;
   arguments << "-profile" << profile;
-  
+
   m_client = new QAssistantClient(path, parent);
   m_client->setArguments(arguments);
-  
+
   // the openAssistant call is asynchronous ... which means that this object must
   // be constructed before we can determine if it is 'useful'...   So...
   // connect to the signals emitted and provide an alternative way for the
   // help system to 'switch implementations' ...
-  
+
   connect(m_client, SIGNAL(assistantOpened()), this, SLOT(slotAssistantOpened()));
   connect(m_client, SIGNAL(assistantClosed()), this, SLOT(slotAssistantClosed()));
   connect(m_client, SIGNAL(error(const QString&)), this, SLOT(slotAssistantError(const QString&)));
@@ -77,7 +77,7 @@ CHelpImplAssistant::~CHelpImplAssistant()
   m_client->closeAssistant();
   delete m_client;
 }
-  
+
 void CHelpImplAssistant::display(const QString &url)
 {
   switch (m_status) {
@@ -86,7 +86,7 @@ void CHelpImplAssistant::display(const QString &url)
     break;
   case CHelpImpl::eClosed:
     m_client->openAssistant();
-    if (!url.isEmpty())    
+    if (!url.isEmpty())
       m_client->showPage(m_helpDir + QDir::separator() + url);
     break;
   default:
@@ -112,7 +112,7 @@ void CHelpImplAssistant::slotAssistantClosed()
 void CHelpImplAssistant::slotAssistantError(const QString &msg)
 {
   TRACE("Assistant Error " << msg.toStdString());
-  
+
   // parse the error to determine how serious this is ...
   if (msg.startsWith("Failed to start"))
     m_status = CHelpImpl::eError;
@@ -161,7 +161,7 @@ void CHelpImplTextBrowser::display(const QString &url)
       m_browser->showNormal();
     else
       m_browser->show();
-      
+
     m_browser->raise();
   }
 }
@@ -178,7 +178,7 @@ CBasicHelpBrowser::CBasicHelpBrowser(const QString &homeUrl, CHelpImplTextBrowse
   m_owner(owner)
 {
   setWindowTitle("Qdoas User Manual");
-  setWindowIcon(QIcon(QPixmap(":/icons/logo.png")));
+  setWindowIcon(QIcon(QPixmap(":/icons/QDOAS_IcoTransparent.png")));
 
   QVBoxLayout *mainLayout = new QVBoxLayout(this);
   mainLayout->setMargin(0);

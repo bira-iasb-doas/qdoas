@@ -733,15 +733,6 @@ void PRJCT_SaveConfiguration(FILE *fp,DoasCh *sectionName);
 
    // Cross section to convolute
 
-   typedef struct _xs
-    {
-     INT     NDET;                                                              // size of vector
-     double *lambda,                                                            // wavelength calibration
-            *vector,                                                            // cross section
-            *deriv2;                                                            // second derivative for interpolation
-    }
-   XS;
-
    typedef struct _FFT
     {
      double *fftIn;
@@ -765,26 +756,21 @@ void PRJCT_SaveConfiguration(FILE *fp,DoasCh *sectionName);
 
    // Files processing
 
-   RC   XSCONV_LoadCalibrationFile(XS *pLambda,DoasCh *lambdaFile,INT nextraPixels);
-   RC   XSCONV_LoadSlitFunction(XS *pSlitXs,SLIT *pSlit,double *pGaussWidth,INT *pSlitType);
-   RC   XSCONV_LoadCrossSectionFile(XS *pCross,DoasCh *crossFile,double lambdaMin,double lambdaMax,double shift,INT conversionMode);
+   RC   XSCONV_LoadCalibrationFile(MATRIX_OBJECT *pLambda,DoasCh *lambdaFile,INT nextraPixels);
+   RC   XSCONV_LoadSlitFunction(MATRIX_OBJECT *pSlitXs,MATRIX_OBJECT *pSlitXs2,SLIT *pSlit,double *pGaussWidth,INT *pSlitType);
+   RC   XSCONV_LoadCrossSectionFile(MATRIX_OBJECT *pCross,DoasCh *crossFile,double lambdaMin,double lambdaMax,double shift,INT conversionMode);
 
-   RC XSCONV_NewSlitFunction(SLIT *pSlitOptions,XS *pSlit,double slitParam,SLIT *pSlit2Options,XS *pSlit2,double slitParam2);
+   RC XSCONV_NewSlitFunction(SLIT *pSlitOptions,MATRIX_OBJECT *pSlit,double slitParam,SLIT *pSlit2Options,MATRIX_OBJECT *pSlit2,double slitParam2);
 
    // Convolution functions
 
-   RC   XSCONV_TypeNone(XS *pXsnew,XS *pXshr);
+   RC   XSCONV_TypeNone(MATRIX_OBJECT *pXsnew,MATRIX_OBJECT *pXshr);
    RC   XSCONV_FctGauss(double *pValue,double fwhm,double step,double delta);
    RC   XSCONV_TypeGauss(double *lambda,double *Spec,double *SDeriv2,double lambdaj,double dldj,double *SpecConv,double fwhm,double n,INT slitType);
    RC   XSCONV_TypeStandardFFT(FFT *pFFT,INT fwhmType,double slitParam,double slitParam2,double *lambda,double *target,INT size);
-   RC   XSCONV_TypeStandard(XS *pXsnew,INDEX indexLambdaMin,INDEX indexLambdaMax,XS *pXshr,XS *pSlit,XS *pI,double *Ic,INT slitType,double slitWidth,double slitParam,double slitParam2);
-   RC   XSCONV_TypeI0Correction(XS *pXsnew,XS *pXshr,XS *pI0,XS *pSlit,double conc,INT slitType,double slitWidth,double slitParam,double slitParam2);
-   RC   XSCONV_RealTimeXs(XS *pXshr,XS *pXsI0,XS *pSlit,double *IcVector,double *lambda,INT NDET,INDEX indexLambdaMin,INDEX indexLambdaMax,double *newXs,INT slitType,double slitParam,double slitParam2);
-
-   // Buffers allocation
-
-   void XSCONV_Reset(XS *pXsconv);
-   RC   XSCONV_Alloc(XS *pXsconv,INT npts,INT deriv2Flag);
+   RC   XSCONV_TypeStandard(MATRIX_OBJECT *pXsnew,INDEX indexLambdaMin,INDEX indexLambdaMax,MATRIX_OBJECT *pXshr,MATRIX_OBJECT *pSlit,MATRIX_OBJECT *pSlit2,MATRIX_OBJECT *pI,double *Ic,INT slitType,double slitWidth,double slitParam,double slitParam2,int wveDptFlag);
+   RC   XSCONV_TypeI0Correction(MATRIX_OBJECT *pXsnew,MATRIX_OBJECT *pXshr,MATRIX_OBJECT *pI0,MATRIX_OBJECT *pSlit,MATRIX_OBJECT *pSlit2,double conc,INT slitType,double slitWidth,double slitParam,double slitParam2,int wveDptFlag);
+   RC   XSCONV_RealTimeXs(MATRIX_OBJECT *pXshr,MATRIX_OBJECT *pXsI0,MATRIX_OBJECT *pSlit,MATRIX_OBJECT *pSlit2,double *IcVector,double *lambda,INT NDET,INDEX indexLambdaMin,INDEX indexLambdaMax,double *newXs,INT slitType,double slitParam,double slitParam2,int wveDptFlag);
 
 // ============================
 // TREEVIEW CONTROLS PROCESSING

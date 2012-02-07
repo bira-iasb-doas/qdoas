@@ -1,8 +1,9 @@
 <!DOCTYPE RCC>
 <RCC version="1.0">
 <qresource>
-    <file>icons/logo.png</file>
-    <file>images/splash.png</file>
+    <file>icons/QDOAS_IcoTransparent.png</file>
+    <file>images/QDOAS_IcoTransparent2.png</file>
+    <file>images/QDOAS_IcoTransparent2_Small.png</file>
     <file>images/about_logo.png</file>
 
     <file>icons/project_directory_16.png</file>

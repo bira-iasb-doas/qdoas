@@ -63,12 +63,12 @@ int mediateRequestDisplaySpecInfo(void *engineContext,int page,void *responseHan
     if (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_PDAEGG_ULB)
      mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Dark Current","%s",pInstrumental->instrFunction);
     else if (pInstrumental->readOutFormat!=PRJCT_INSTR_FORMAT_MFC)
-     mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Instr. function","%s",pInstrumental->instrFunction);
+     mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Transmission file","%s",pInstrumental->instrFunction);
     else if (((pInstrumental->mfcMaskSpec!=0) && ((UINT)MFC_header.ty==pInstrumental->mfcMaskSpec)) ||
              ((pInstrumental->mfcMaskSpec==0) &&
              ((MFC_header.wavelength1==pInstrumental->mfcMaskInstr) ||
               (fabs((double)(MFC_header.wavelength1-(float)pInstrumental->wavelength))<(double)5.))))
-     mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Instr. function","%s",pInstrumental->instrFunction);
+     mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Transmission file","%s",pInstrumental->instrFunction);
    }
 
   if (strlen(pInstrumental->vipFile))
@@ -1687,7 +1687,7 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
      pTabFeno=&TabFeno[indexWindow];
 
      if (pTabFeno->xsToConvolute && /* pTabFeno->useEtalon && */ (pTabFeno->gomeRefFlag || pEngineContext->refFlag) &&
-       ((rc=ANALYSE_XsConvolution(pTabFeno,pTabFeno->LambdaRef,&ANALYSIS_slit,pSlitOptions->slitFunction.slitType,&pSlitOptions->slitFunction.slitParam,&pSlitOptions->slitFunction.slitParam2))!=0))
+       ((rc=ANALYSE_XsConvolution(pTabFeno,pTabFeno->LambdaRef,&ANALYSIS_slit,&ANALYSIS_slit2,pSlitOptions->slitFunction.slitType,&pSlitOptions->slitFunction.slitParam,&pSlitOptions->slitFunction.slitParam2))!=0))
 
       break;
     }

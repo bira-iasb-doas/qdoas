@@ -35,9 +35,8 @@ typedef struct _enigneXsconvContext
   PRJCT_FILTER hfilter;                                                         // high filtering options
   double *filterVector;
   INT nFilter;
-  XS xsNew;
-
-
+                                                                                // New cross section
+  MATRIX_OBJECT xsNew;
                                                                                 // UNDERSAMPLING
   INT    analysisMethod;                                                        // analysis method
   DoasCh  path2[MAX_PATH_LEN+1];                                                // output path for the second phase

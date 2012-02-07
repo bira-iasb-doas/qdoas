@@ -355,7 +355,7 @@ void CWCalibInstrEdit::helperConstructCalInsFileWidgets(QGridLayout *gridLayout,
 			    "Calibration File", SLOT(slotCalibOneBrowse()));
 
   helperConstructFileWidget(&m_fileTwoEdit, gridLayout, row, instr, lenInstr,
-			    "Instr. function", SLOT(slotInstrTwoBrowse()));
+			    "Transmission file", SLOT(slotInstrTwoBrowse()));
 }
 
 //--------------------------------------------------------
