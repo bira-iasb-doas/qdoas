@@ -1175,7 +1175,7 @@ RC ANALYSE_XsConvolution(FENO *pTabFeno,double *newlambda,
 
        if ((pTabCross->crossAction==ANLYS_CROSS_ACTION_CONVOLUTE) || (pTabCross->crossAction==ANLYS_CROSS_ACTION_CONVOLUTE_I0))
         rc=AnalyseConvoluteXs(pTabFeno,pTabCross->Comp,pTabCross->crossAction,pTabCross->I0Conc,pXs,pSlit,pSlit2,slitType,slitParam1,slitParam2,
-                              newlambda,pTabCross->vector,indexlambdaMin,indexlambdaMax,(!stricmp(WorkSpace[pTabCross->Comp].symbolName,"no2"))?1:0);
+                              newlambda,pTabCross->vector,indexlambdaMin,indexlambdaMax,0);
 
        else if ((pTabCross->crossAction==ANLYS_CROSS_ACTION_CONVOLUTE_RING) &&
                !(rc=MATRIX_Allocate(&matrix,pXs->nl,2,pXs->basel,pXs->basec,1,"ANALYSE_XsConvolution ")))
