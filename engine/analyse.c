@@ -2369,6 +2369,7 @@ RC ANALYSE_Function ( double *lambda,double *X, double *Y, INT ndet, double *Y0,
        if ((indexSvdA=TabCross[i].IndSvdA)>0)
         {
          pTabCross=&TabCross[i];
+         pTabCross->Fact=(double)1.;
 
          // Fill SVD matrix with predefined components
 
@@ -2427,13 +2428,15 @@ RC ANALYSE_Function ( double *lambda,double *X, double *Y, INT ndet, double *Y0,
           	if (polyFlag || polyOrder)
           	 {
           	 	if (!polyOrder)
+          	 	{
               for (j=0,k=1;(j<Z);j++)
                for (l=Fenetre[j][0];l<=Fenetre[j][1];l++,k++)
                 A[indexSvdA][k]=pTabCross->vector[l];
-          	 	else if (polyFlag>=0)
-              for (j=0,k=1;(j<Z);j++)
+             }
+          	 	else if (polyFlag>=0)                             // in order to have geophysical values of the polynomial in output,
+              for (j=0,k=1;(j<Z);j++)                          // the polynomial has to be calculated at the centre of the fitting window
                for (l=Fenetre[j][0];l<=Fenetre[j][1];l++,k++)
-                A[indexSvdA][k]=pTabCross->vector[l]=A[indexSvdA-1][k]*ANALYSE_splineX[l]; // (ANALYSE_splineX[l]-lambda0);
+                A[indexSvdA][k]=pTabCross->vector[l]=A[indexSvdA-1][k]*(ANALYSE_splineX[l]-lambda0);
              else if (polyFlag==-1)
               for (j=0,k=1;(j<Z);j++)
                for (l=Fenetre[j][0];l<=Fenetre[j][1];l++,k++)
@@ -2516,7 +2519,9 @@ RC ANALYSE_Function ( double *lambda,double *X, double *Y, INT ndet, double *Y0,
              (i==Feno->indexUsamp1) ||
              (i==Feno->indexUsamp2)))
 
-          if ((rc=VECTOR_NormalizeVector(A[indexSvdA],Npts,&pTabCross->Fact,WorkSpace[pTabCross->Comp].symbolName))!=ERROR_ID_NO)  // normalize vectors of A before orthogonalization
+           // normalize vectors of A before orthogonalization
+
+          if ((rc=VECTOR_NormalizeVector(A[indexSvdA],Npts,&pTabCross->Fact,WorkSpace[pTabCross->Comp].symbolName))!=ERROR_ID_NO)
            goto EndFunction;
         }
 
@@ -2589,6 +2594,24 @@ RC ANALYSE_Function ( double *lambda,double *X, double *Y, INT ndet, double *Y0,
         DEBUG_PrintVar("Before SVD_Dcmb",A,1,DimL,0,DimC,NULL);
        }
       #endif
+
+       // {
+       // 	{
+       // 		FILE *fp;
+       // 		fp=fopen("toto.dat","a+t");
+       //
+       // 	fprintf(fp,"+++ SVD decomposition (%s window)\n",Feno->windowName);
+       //
+       //  for (j=0;j<Feno->NTabCross;j++)
+       //   if (TabCross[j].IndSvdA)
+       //    fprintf(fp,"+++ %-2d %s\n",TabCross[j].IndSvdA,WorkSpace[TabCross[j].Comp].symbolName);
+       //
+       //  fprintf(fp,"Before SVD_Dcmp",U,1,DimL,0,DimC,NULL);
+       //  fprintf(fp,"Before SVD_Dcmb",A,1,DimL,0,DimC,NULL);
+       //
+       //   fclose(fp);
+       //  }
+       // }
 
       if ((Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVD) &&
          ((rc=SVD_Dcmp(A,Npts,NewDimC /* don't take fixed concentrations into account */ ,W,V,SigmaSqr,covar))!=ERROR_ID_NO))
@@ -2826,14 +2849,6 @@ RC ANALYSE_Function ( double *lambda,double *X, double *Y, INT ndet, double *Y0,
         {
          for (l=0;l<Feno->NTabCross;l++)
           {
-      //   if (!Feno->hidden && (TabCross[l].IndSvdA>0) && (TabCross[l].IndSvdA<=NewDimC))
-      //   {
-      //  		FILE *fp;
-      //  		fp=fopen("toto.dat","a+t");
-      //  		fprintf(fp,"%d %d %g\n",l,TabCross[l].IndSvdA,TabCross[l].Fact);
-      //  		fclose(fp);
-      //  	}
-
            if ((TabCross[l].IndSvdA>0) && (l!=Feno->indexRing1))
             XTrav[k-1]+=(TabCross[l].IndSvdA<=NewDimC)?fitParamsC[TabCross[l].IndSvdA]*U[TabCross[l].IndSvdA][k]/TabCross[l].Fact:
 
@@ -3303,18 +3318,6 @@ RC ANALYSE_CurFitMethod(double *Spectre,          // raw spectrum
         pResults=&Feno->TabCrossResults[i];
         pTabCross=&TabCross[i];
 
-/*
-if (!Feno->hidden)
-{
-	FILE *fp;
-	fp=fopen("toto.dat","a+t");
-	fprintf(fp,"%-20s %-2d %-2d %-2d %-2d\n",
-	            WorkSpace[pTabCross->Comp].symbolName,
-	            pTabCross->FitConc,pTabCross->FitParam,pTabCross->IndSvdA,pTabCross->IndSvdP);
-	fclose(fp);
-}
-*/
-
         /*  ==================================  */
         /*  Concentrations Scaling for Display  */
         /*  ==================================  */
@@ -3334,18 +3337,18 @@ if (!Feno->hidden)
             	  {
               	 // Intensity fitting but polynomial is fitted linearly
 
-                if ((pTabCross->IndSvdP) && (fabs(refNormFact)>EPSILON))
-                	pResults->SlntCol*=(double)speNormFact/refNormFact;
-
-                // SVD
-
-                else if ((fabs(speNormFact)>EPSILON) && (refNormFact/speNormFact>EPSILON))
-                 {
-                 	pResults->SlntCol=-pResults->SlntCol;
-
-                 	if (!strcasecmp(WorkSpace[pTabCross->Comp].symbolName,"x0"))
-                 	 pResults->SlntCol-=(double)log(refNormFact/speNormFact);
-              	  }
+                if ((pTabCross->IndSvdP) && (fabs(refNormFact)>EPSILON))                      // polynomial : the output differs from the display in order
+                	pResults->SlntCol*=(double)speNormFact/refNormFact;                          //  to make the values geophysical
+                                                                                              // the sign is inverted because it is better to compare with the
+                // SVD                                                                        // log(spe/irrad) instead of log(irrad/spe)
+                                                                                              // to build the polynomial :
+                else if ((fabs(speNormFact)>EPSILON) && (refNormFact/speNormFact>EPSILON))    // poly=x0+x1*(w-w0)+x2*(w-w0).*(w-w0)...;
+                 {                                                                            // in comparison to a polyfit, polyval in Matlab :
+                 	pResults->SlntCol=-pResults->SlntCol;                                       //     >> p=polyfit(spectra(:,1),log(irrad(i,2)./spe(i,2)),2);
+                                                                                              //     >> newp=polyval(p,spectra(:,1));
+                 	if (!strcasecmp(WorkSpace[pTabCross->Comp].symbolName,"x0"))                // offset, shift can influence the polynomial
+                 	 pResults->SlntCol-=(double)log(refNormFact/speNormFact);                   // it is also recommended for a better comparison with Matlab
+              	  }                                                                            // to orthogonalize all cross sections (O4, BrO, HCHO...)
                }
             	}
            }
@@ -3927,11 +3930,11 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
               {
               	if (((char)tolower(WorkSpace[TabCross[i].Comp].symbolName[0])=='x') ||
                    ((char)tolower(WorkSpace[TabCross[i].Comp].symbolName[2])=='x'))
-
-                for (j=0,k=1;j<Z;j++)
-                 for (l=Fenetre[j][0];l<=Fenetre[j][1];l++,k++)
-                  Trend[l]+=x[TabCross[i].IndSvdA]*U[TabCross[i].IndSvdA][k];
-
+                {
+                 for (j=0,k=1;j<Z;j++)
+                  for (l=Fenetre[j][0];l<=Fenetre[j][1];l++,k++)
+                   Trend[l]+=x[TabCross[i].IndSvdA]*U[TabCross[i].IndSvdA][k];
+                }
                else if ((WorkSpace[TabCross[i].Comp].symbolName[0]=='o') ||
                         (WorkSpace[TabCross[i].Comp].symbolName[1]=='f') ||
                         (WorkSpace[TabCross[i].Comp].symbolName[2]=='f') ||

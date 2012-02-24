@@ -754,13 +754,13 @@ RC XSCONV_LoadSlitFunction(MATRIX_OBJECT *pSlitXs,MATRIX_OBJECT *pSlitXs2,SLIT *
   else if (pGaussWidth!=NULL)
    *pGaussWidth=pSlit->slitParam;
 
-    //     {
-    //  	FILE *fp;
-    //  	fp=fopen("slit.dat","w+t");
-    //  	for (i=0;i<pSlitXs->nl;i++)
-    //  	 fprintf(fp,"%g %g %g\n",pSlitXs->matrix[0][i],pSlitXs->matrix[1][i],pSlitXs->deriv2[1][i]);
-    //  	fclose(fp);
-    //  }
+        {
+     	FILE *fp;
+     	fp=fopen("slit.dat","w+t");
+     	for (i=0;i<pSlitXs->nl;i++)
+     	 fprintf(fp,"%g %g %g\n",pSlitXs->matrix[0][i],pSlitXs->matrix[1][i],pSlitXs->deriv2[1][i]);
+     	fclose(fp);
+     }
 
   // Return
 
