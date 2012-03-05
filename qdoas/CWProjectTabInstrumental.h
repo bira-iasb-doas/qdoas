@@ -186,6 +186,9 @@ class CWInstrAsciiEdit : public CWCalibInstrEdit
    QLineEdit *m_detSizeEdit;
    QRadioButton *m_lineRadioButton, *m_columnRadioButton;
    QCheckBox *m_zenCheck, *m_aziCheck, *m_eleCheck, *m_dateCheck, *m_timeCheck, *m_lambdaCheck;
+   QCheckBox *m_strayLightCheck;
+   QLineEdit *m_lambdaMinEdit;
+   QLineEdit *m_lambdaMaxEdit;
 };
 
 //--------------------------------------------------------------------------
@@ -279,6 +282,9 @@ class CWInstrMfcbiraEdit : public CWAllFilesEdit
 
  private:
   QLineEdit *m_detSizeEdit;
+  QCheckBox *m_strayLightCheck;
+  QLineEdit *m_lambdaMinEdit;
+  QLineEdit *m_lambdaMaxEdit;
 };
 
 //--------------------------------------------------------------------------
@@ -290,6 +296,11 @@ class CWInstrMinimumEdit : public CWCalibInstrEdit
   virtual ~CWInstrMinimumEdit();
 
   void apply(struct instrumental_minimum *d) const;
+
+ private:
+  QCheckBox *m_strayLightCheck;
+  QLineEdit *m_lambdaMinEdit;
+  QLineEdit *m_lambdaMaxEdit;
 };
 
 //--------------------------------------------------------------------------
@@ -315,6 +326,9 @@ class CWInstrCcdUlbEdit : public CWAllFilesEdit
 
  private:
   QLineEdit *m_gratingEdit, *m_cenLambdaEdit;
+  QCheckBox *m_strayLightCheck;
+  QLineEdit *m_lambdaMinEdit;
+  QLineEdit *m_lambdaMaxEdit;
 };
 
 //--------------------------------------------------------------------------
@@ -344,6 +358,9 @@ class CWInstrCcdEevEdit : public CWAllFilesEdit
  private:
   QLineEdit *m_detSizeEdit;
   QComboBox *m_spectralTypeCombo;
+  QCheckBox *m_strayLightCheck;
+  QLineEdit *m_lambdaMinEdit;
+  QLineEdit *m_lambdaMaxEdit;
 };
 
 //--------------------------------------------------------------------------
@@ -359,6 +376,9 @@ class CWInstrOpusEdit : public CWCalibInstrEdit
  private:
   QLineEdit *m_detSizeEdit, *m_timeShiftEdit;
   QCheckBox *m_transmittanceCheck;
+  QCheckBox *m_strayLightCheck;
+  QLineEdit *m_lambdaMinEdit;
+  QLineEdit *m_lambdaMaxEdit;
 };
 
 //--------------------------------------------------------------------------
@@ -448,6 +468,9 @@ class CWInstrOceanOpticsEdit : public CWCalibInstrEdit
 
  private:
   QLineEdit *m_detSizeEdit;
+  QCheckBox *m_strayLightCheck;
+  QLineEdit *m_lambdaMinEdit;
+  QLineEdit *m_lambdaMaxEdit;
 };
 
 

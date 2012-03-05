@@ -606,7 +606,7 @@ typedef struct _prjctInstrumental
   INT         mfcMaskUse;
   INT         mfcMaxSpectra;
   INT         mfcRevert;
-  INT         mfcStdOffset;
+  INT         offsetFlag;
   double      lambdaMin,lambdaMax;
   DoasCh       mfcStdDate[24];
   float       opusTimeShift;

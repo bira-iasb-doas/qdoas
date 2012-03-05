@@ -161,6 +161,34 @@ RC THRD_SpectrumCorrection(ENGINE_CONTEXT *pEngineContext,double *spectrum)
   if (pEngineContext->project.lfilter.type==PRJCT_FILTER_TYPE_ODDEVEN)
    rc=FILTER_OddEvenCorrection(pEngineContext->buffers.lambda,spectrum,spectrum,NDET);
 
+  // Straylight bias correction
+
+  if (pEngineContext->project.instrumental.offsetFlag)
+   {
+   	int i;
+   	int imin,imax;
+   	double offset;
+   	double *spe;
+
+   	spe=pEngineContext->buffers.spectrum;
+
+   	offset=(double)0.;
+
+   	imin=FNPixel(pEngineContext->buffers.lambda,pEngineContext->project.instrumental.lambdaMin,NDET,PIXEL_CLOSEST);
+   	imax=FNPixel(pEngineContext->buffers.lambda,pEngineContext->project.instrumental.lambdaMax,NDET,PIXEL_CLOSEST);
+
+    if ((imin<=imax) && (imin>=0) && (imax<NDET))
+     {
+     	for (i=imin;i<imax;i++)
+       offset+=spe[i];
+
+      offset/=(double)(imax-imin);
+
+      for (i=0;i<NDET;i++)
+       spe[i]-=offset;
+     }
+   }
+
   // Return
 
   return rc;

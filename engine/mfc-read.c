@@ -795,31 +795,6 @@ RC MFC_ReadRecordStd(ENGINE_CONTEXT *pEngineContext,DoasCh *fileName,
       for (i=0;i<NDET;i++)
        spe[i]-=(double)pHeaderSpe->noscans*drk[i]*pHeaderSpe->int_time/(pHeaderDrk->int_time*pHeaderDrk->noscans);
      }
-
-    // for NOVAC, straylight correction
-
-    if (pEngineContext->project.instrumental.mfcStdOffset)
-     {
-     	int i;
-     	int imin,imax;
-     	double offset;
-
-     	offset=(double)0.;
-
-     	imin=FNPixel(pEngineContext->buffers.lambda,pEngineContext->project.instrumental.lambdaMin,NDET,PIXEL_CLOSEST);
-     	imax=FNPixel(pEngineContext->buffers.lambda,pEngineContext->project.instrumental.lambdaMax,NDET,PIXEL_CLOSEST);
-
-      if ((imin<=imax) && (imin>=0) && (imax<NDET))
-       {
-       	for (i=imin;i<imax;i++)
-         offset+=spe[i];
-
-        offset/=(double)(imax-imin);
-
-        for (i=0;i<NDET;i++)
-         spe[i]-=offset;
-       }
-     }
    }
 
 

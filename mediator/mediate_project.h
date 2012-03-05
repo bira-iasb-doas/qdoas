@@ -208,6 +208,8 @@ extern "C" {
     int flagDate;
     int flagTime;
     int flagWavelength;
+    int  straylight;
+    double lambdaMin,lambdaMax;
     char calibrationFile[FILENAME_BUFFER_LENGTH];
     char instrFunctionFile[FILENAME_BUFFER_LENGTH];
   };
@@ -263,11 +265,15 @@ extern "C" {
     int  detectorSize;
     char calibrationFile[FILENAME_BUFFER_LENGTH];
     char instrFunctionFile[FILENAME_BUFFER_LENGTH];
+    int  straylight;
+    double lambdaMin,lambdaMax;
   };
 
   struct instrumental_minimum {
     char calibrationFile[FILENAME_BUFFER_LENGTH];
     char instrFunctionFile[FILENAME_BUFFER_LENGTH];
+    int  straylight;
+    double lambdaMin,lambdaMax;
   };
 
   struct instrumental_ccd {
@@ -302,6 +308,8 @@ extern "C" {
     char imagePath[FILENAME_BUFFER_LENGTH];
     char straylightCorrectionFile[FILENAME_BUFFER_LENGTH];
     char detectorNonLinearityFile[FILENAME_BUFFER_LENGTH];
+    int  straylight;
+    double lambdaMin,lambdaMax;
   };
 
   struct instrumental_opus {
@@ -346,6 +354,8 @@ extern "C" {
     int  detectorSize;
     char calibrationFile[FILENAME_BUFFER_LENGTH];
     char instrFunctionFile[FILENAME_BUFFER_LENGTH];
+    int  straylight;
+    double lambdaMin,lambdaMax;
   };
 
   typedef struct mediate_project_instrumental

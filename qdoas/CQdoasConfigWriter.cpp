@@ -431,10 +431,11 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   default:
     fprintf(fp, "\"invalid\"");
   }
-  fprintf(fp, " zen=\"%s\" azi=\"%s\" ele=\"%s\" date=\"%s\" time=\"%s\" lambda=\"%s\"",
+  fprintf(fp, " zen=\"%s\" azi=\"%s\" ele=\"%s\" date=\"%s\" time=\"%s\" lambda=\"%s\" straylight=\"%s\" lambda_min=\"%g\" lambda_max=\"%g\"",
 	  (d->ascii.flagZenithAngle ? sTrue : sFalse), (d->ascii.flagAzimuthAngle ? sTrue : sFalse),
 	  (d->ascii.flagElevationAngle ? sTrue : sFalse), (d->ascii.flagDate ? sTrue : sFalse),
-	  (d->ascii.flagTime ? sTrue : sFalse), (d->ascii.flagWavelength ? sTrue : sFalse));
+	  (d->ascii.flagTime ? sTrue : sFalse), (d->ascii.flagWavelength ? sTrue : sFalse),
+	  (d->ascii.straylight ? sTrue : sFalse),d->ascii.lambdaMin,d->ascii.lambdaMax);
 
   tmpStr = pathMgr->simplifyPath(QString(d->ascii.calibrationFile));
   fprintf(fp, " calib=\"%s\"", tmpStr.toAscii().constData());
@@ -589,9 +590,11 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   tmpStr = pathMgr->simplifyPath(QString(d->saozvis.instrFunctionFile));
   fprintf(fp, " instr=\"%s\" />\n", tmpStr.toAscii().constData());
 
+  fprintf(fp, "      <saozefm straylight=\"%s\" lambda_min=\"%g\" lambda_max=\"%g\"",(d->saozefm.straylight ? sTrue : sFalse),d->saozefm.lambdaMin,d->saozefm.lambdaMax);
+
   // saozefm
   tmpStr = pathMgr->simplifyPath(QString(d->saozefm.calibrationFile));
-  fprintf(fp, "      <saozefm calib=\"%s\"", tmpStr.toAscii().constData());
+  fprintf(fp, "      calib=\"%s\"", tmpStr.toAscii().constData());
 
   tmpStr = pathMgr->simplifyPath(QString(d->saozefm.instrFunctionFile));
   fprintf(fp, " instr=\"%s\" />\n", tmpStr.toAscii().constData());
@@ -615,7 +618,8 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   fprintf(fp, " offset=\"%s\" />\n", tmpStr.toAscii().constData());
 
   // mfcbira
-  fprintf(fp, "      <mfcbira size=\"%d\" ",d->mfcbira.detectorSize);
+  fprintf(fp, "      <mfcbira size=\"%d\" straylight=\"%s\" lambda_min=\"%g\" lambda_max=\"%g\"",d->mfcbira.detectorSize,
+  (d->mfcbira.straylight ? sTrue : sFalse),d->mfcbira.lambdaMin,d->mfcbira.lambdaMax);
 
   tmpStr = pathMgr->simplifyPath(QString(d->mfcbira.calibrationFile));
   fprintf(fp, " calib=\"%s\"", tmpStr.toAscii().constData());
@@ -640,21 +644,25 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   fprintf(fp, " offset=\"%s\" />\n", tmpStr.toAscii().constData());
 
   // rasas
+
+  fprintf(fp, "      <rasas straylight=\"%s\" lambda_min=\"%g\" lambda_max=\"%g\"",(d->rasas.straylight ? sTrue : sFalse),d->rasas.lambdaMin,d->rasas.lambdaMax);
   tmpStr = pathMgr->simplifyPath(QString(d->rasas.calibrationFile));
-  fprintf(fp, "      <rasas calib=\"%s\"", tmpStr.toAscii().constData());
+  fprintf(fp, " calib=\"%s\"", tmpStr.toAscii().constData());
 
   tmpStr = pathMgr->simplifyPath(QString(d->rasas.instrFunctionFile));
   fprintf(fp, " instr=\"%s\" />\n", tmpStr.toAscii().constData());
 
   // pdasieasoe
+
+  fprintf(fp, "      <pdasieasoe straylight=\"%s\" lambda_min=\"%g\" lambda_max=\"%g\"",(d->pdasieasoe.straylight ? sTrue : sFalse),d->pdasieasoe.lambdaMin,d->pdasieasoe.lambdaMax);
   tmpStr = pathMgr->simplifyPath(QString(d->pdasieasoe.calibrationFile));
-  fprintf(fp, "      <pdasieasoe calib=\"%s\"", tmpStr.toAscii().constData());
+  fprintf(fp, " calib=\"%s\"", tmpStr.toAscii().constData());
 
   tmpStr = pathMgr->simplifyPath(QString(d->pdasieasoe.instrFunctionFile));
   fprintf(fp, " instr=\"%s\" />\n", tmpStr.toAscii().constData());
 
   // ccdeev
-  fprintf(fp, "      <ccdeev size=\"%d\"", d->ccdeev.detectorSize);
+  fprintf(fp, "      <ccdeev size=\"%d\" straylight=\"%s\" lambda_min=\"%g\" lambda_max=\"%g\"", d->ccdeev.detectorSize,(d->ccdeev.straylight ? sTrue : sFalse),d->ccdeev.lambdaMin,d->ccdeev.lambdaMax);
 
   tmpStr = pathMgr->simplifyPath(QString(d->ccdeev.calibrationFile));
   fprintf(fp, " calib=\"%s\"", tmpStr.toAscii().constData());
@@ -894,15 +902,18 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   fprintf(fp, " instr=\"%s\" />\n", tmpStr.toAscii().constData());
 
   // uoft
+
+  fprintf(fp, "      <uoft straylight=\"%s\" lambda_min=\"%g\" lambda_max=\"%g\"",(d->uoft.straylight ? sTrue : sFalse),d->uoft.lambdaMin,d->uoft.lambdaMax);
   tmpStr = pathMgr->simplifyPath(QString(d->uoft.calibrationFile));
-  fprintf(fp, "      <uoft calib=\"%s\"", tmpStr.toAscii().constData());
+  fprintf(fp, "      calib=\"%s\"", tmpStr.toAscii().constData());
 
   tmpStr = pathMgr->simplifyPath(QString(d->uoft.instrFunctionFile));
   fprintf(fp, " instr=\"%s\" />\n", tmpStr.toAscii().constData());
 
   // noaa
+  fprintf(fp, "      <noaa straylight=\"%s\" lambda_min=\"%g\" lambda_max=\"%g\"",(d->noaa.straylight ? sTrue : sFalse),d->noaa.lambdaMin,d->noaa.lambdaMax);
   tmpStr = pathMgr->simplifyPath(QString(d->noaa.calibrationFile));
-  fprintf(fp, "      <noaa calib=\"%s\"", tmpStr.toAscii().constData());
+  fprintf(fp, " calib=\"%s\"", tmpStr.toAscii().constData());
 
   tmpStr = pathMgr->simplifyPath(QString(d->noaa.instrFunctionFile));
   fprintf(fp, " instr=\"%s\" />\n", tmpStr.toAscii().constData());
@@ -963,22 +974,24 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   fprintf(fp, " instr=\"%s\" />\n", tmpStr.toAscii().constData());
 
   // mkzy
+  fprintf(fp, "      <mkzy straylight=\"%s\" lambda_min=\"%g\" lambda_max=\"%g\"",(d->mkzy.straylight ? sTrue : sFalse),d->mkzy.lambdaMin,d->mkzy.lambdaMax);
   tmpStr = pathMgr->simplifyPath(QString(d->mkzy.calibrationFile));
-  fprintf(fp, "      <mkzy calib=\"%s\"", tmpStr.toAscii().constData());
+  fprintf(fp, " calib=\"%s\"", tmpStr.toAscii().constData());
 
   tmpStr = pathMgr->simplifyPath(QString(d->mkzy.instrFunctionFile));
   fprintf(fp, " instr=\"%s\" />\n", tmpStr.toAscii().constData());
 
   // biraairborne
+  fprintf(fp, "      <biraairborne straylight=\"%s\" lambda_min=\"%g\" lambda_max=\"%g\"",(d->biraairborne.straylight ? sTrue : sFalse),d->biraairborne.lambdaMin,d->biraairborne.lambdaMax);
   tmpStr = pathMgr->simplifyPath(QString(d->biraairborne.calibrationFile));
-  fprintf(fp, "      <biraairborne calib=\"%s\"", tmpStr.toAscii().constData());
+  fprintf(fp, " calib=\"%s\"", tmpStr.toAscii().constData());
 
   tmpStr = pathMgr->simplifyPath(QString(d->biraairborne.instrFunctionFile));
   fprintf(fp, " instr=\"%s\" />\n", tmpStr.toAscii().constData());
 
   // ocean optics
 
-  fprintf(fp, "      <oceanoptics size=\"%d\" ", d->oceanoptics.detectorSize);
+  fprintf(fp, "      <oceanoptics size=\"%d\" straylight=\"%s\" lambda_min=\"%g\" lambda_max=\"%g\"", d->oceanoptics.detectorSize,(d->oceanoptics.straylight ? sTrue : sFalse),d->oceanoptics.lambdaMin,d->oceanoptics.lambdaMax);
 
   tmpStr = pathMgr->simplifyPath(QString(d->oceanoptics.calibrationFile));
   fprintf(fp, " calib=\"%s\"", tmpStr.toAscii().constData());

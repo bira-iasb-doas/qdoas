@@ -631,6 +631,9 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
     m_instrumental->ascii.flagDate = (atts.value("date") == "true") ? 1 : 0;
     m_instrumental->ascii.flagTime = (atts.value("time") == "true") ? 1 : 0;
     m_instrumental->ascii.flagWavelength = (atts.value("lambda") == "true") ? 1 : 0;
+    m_instrumental->ascii.straylight = (atts.value("straylight") == "true") ? 1 : 0;
+    m_instrumental->ascii.lambdaMin = atts.value("lambda_min").toDouble();
+    m_instrumental->ascii.lambdaMax = atts.value("lambda_max").toDouble();
 
     str = atts.value("calib");
     if (!str.isEmpty()) {
@@ -706,6 +709,9 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
 
   }
   else if (element == "saozefm") { // SAOZ EFM
+    m_instrumental->saozefm.straylight = (atts.value("straylight") == "true") ? 1 : 0;
+    m_instrumental->saozefm.lambdaMin = atts.value("lambda_min").toDouble();
+    m_instrumental->saozefm.lambdaMax = atts.value("lambda_max").toDouble();
     return helperLoadMinimum(atts, &(m_instrumental->saozefm));
 
   }
@@ -810,10 +816,13 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
 	return postErrorMessage("Offset Filename too long");
     }
   }
-  else if (element == "mfcbira") { // MFC STD
+  else if (element == "mfcbira") { // MFC bira
     QString str;
 
     m_instrumental->mfcbira.detectorSize = atts.value("size").toInt();
+    m_instrumental->mfcbira.straylight = (atts.value("straylight") == "true") ? 1 : 0;
+    m_instrumental->mfcbira.lambdaMin = atts.value("lambda_min").toDouble();
+    m_instrumental->mfcbira.lambdaMax = atts.value("lambda_max").toDouble();
 
     str = atts.value("calib");
     if (!str.isEmpty()) {
@@ -836,10 +845,16 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
 
 
   else if (element == "rasas") { // RASAS
+    m_instrumental->rasas.straylight = (atts.value("straylight") == "true") ? 1 : 0;
+    m_instrumental->rasas.lambdaMin = atts.value("lambda_min").toDouble();
+    m_instrumental->rasas.lambdaMax = atts.value("lambda_max").toDouble();
     return helperLoadMinimum(atts, &(m_instrumental->rasas));
 
   }
   else if (element == "pdasieasoe") { // PDASI EASOE
+    m_instrumental->pdasieasoe.straylight = (atts.value("straylight") == "true") ? 1 : 0;
+    m_instrumental->pdasieasoe.lambdaMin = atts.value("lambda_min").toDouble();
+    m_instrumental->pdasieasoe.lambdaMax = atts.value("lambda_max").toDouble();
     return helperLoadMinimum(atts, &(m_instrumental->pdasieasoe));
 
   }
@@ -847,6 +862,9 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
     QString str;
 
     m_instrumental->ccdeev.detectorSize = atts.value("size").toInt();
+    m_instrumental->ccdeev.straylight = (atts.value("straylight") == "true") ? 1 : 0;
+    m_instrumental->ccdeev.lambdaMin = atts.value("lambda_min").toDouble();
+    m_instrumental->ccdeev.lambdaMax = atts.value("lambda_max").toDouble();
 
     str = atts.value("calib");
     if (!str.isEmpty()) {
@@ -925,10 +943,16 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
 
   }
   else if (element == "uoft") { // UOFT
+    m_instrumental->uoft.straylight = (atts.value("straylight") == "true") ? 1 : 0;
+    m_instrumental->uoft.lambdaMin = atts.value("lambda_min").toDouble();
+    m_instrumental->uoft.lambdaMax = atts.value("lambda_max").toDouble();
     return helperLoadMinimum(atts, &(m_instrumental->uoft));
 
   }
   else if (element == "noaa") { // NOAA
+    m_instrumental->noaa.straylight = (atts.value("straylight") == "true") ? 1 : 0;
+    m_instrumental->noaa.lambdaMin = atts.value("lambda_min").toDouble();
+    m_instrumental->noaa.lambdaMax = atts.value("lambda_max").toDouble();
     return helperLoadMinimum(atts, &(m_instrumental->noaa));
 
   }
@@ -972,15 +996,24 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
     helperLoadGome2(atts, &(m_instrumental->gome2));
   }
   else if (element == "mkzy") { // MKZY
+    m_instrumental->mkzy.straylight = (atts.value("straylight") == "true") ? 1 : 0;
+    m_instrumental->mkzy.lambdaMin = atts.value("lambda_min").toDouble();
+    m_instrumental->mkzy.lambdaMax = atts.value("lambda_max").toDouble();
     return helperLoadMinimum(atts, &(m_instrumental->mkzy));
   }
   else if (element == "biraairborne") { // BIRA AIRBORNE
+    m_instrumental->biraairborne.straylight = (atts.value("straylight") == "true") ? 1 : 0;
+    m_instrumental->biraairborne.lambdaMin = atts.value("lambda_min").toDouble();
+    m_instrumental->biraairborne.lambdaMax = atts.value("lambda_max").toDouble();
     return helperLoadMinimum(atts, &(m_instrumental->biraairborne));
   }
   else if (element == "oceanoptics") { // OCEAN OPTICS
     QString str;
 
     m_instrumental->oceanoptics.detectorSize = atts.value("size").toInt();
+    m_instrumental->oceanoptics.straylight = (atts.value("straylight") == "true") ? 1 : 0;
+    m_instrumental->oceanoptics.lambdaMin = atts.value("lambda_min").toDouble();
+    m_instrumental->oceanoptics.lambdaMax = atts.value("lambda_max").toDouble();
 
     str = atts.value("calib");
     if (!str.isEmpty()) {

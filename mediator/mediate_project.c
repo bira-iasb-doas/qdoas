@@ -106,7 +106,19 @@ void initializeMediateProjectInstrumental(mediate_project_instrumental_t *d)
   // any non-zero defaults...
 
   d->saozvis.spectralRegion=PRJCT_INSTR_SAOZ_REGION_VIS;
+
+  d->ascii.lambdaMin=d->ascii.lambdaMax=(double)0.;
+  d->saozefm.lambdaMin=d->saozefm.lambdaMax=(double)0.;
   d->mfcstd.lambdaMin=d->mfcstd.lambdaMax=(double)0.;
+  d->mfcbira.lambdaMin=d->mfcbira.lambdaMax=(double)0.;
+  d->rasas.lambdaMin=d->rasas.lambdaMax=(double)0.;
+  d->pdasieasoe.lambdaMin=d->pdasieasoe.lambdaMax=(double)0.;
+  d->ccdeev.lambdaMin=d->ccdeev.lambdaMax=(double)0.;
+  d->uoft.lambdaMin=d->uoft.lambdaMax=(double)0.;
+  d->noaa.lambdaMin=d->noaa.lambdaMax=(double)0.;
+  d->mkzy.lambdaMin=d->mkzy.lambdaMax=(double)0.;
+  d->biraairborne.lambdaMin=d->biraairborne.lambdaMax=(double)0.;
+  d->oceanoptics.lambdaMin=d->oceanoptics.lambdaMax=(double)0.;
 }
 
 void initializeMediateProjectSlit(mediate_project_slit_t *d)

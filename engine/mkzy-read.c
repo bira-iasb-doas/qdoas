@@ -721,21 +721,6 @@ RC MKZY_Reli(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,INT localD
          for (i=0;i<NDET;i++)
           spectrum[i]-=(double)dark[i]*pEngineContext->recordInfo.NSomme/pEngineContext->recordInfo.mkzy.darkScans;
 
-       	// for NOVAC, straylight correction
-
-       	if (!pEngineContext->recordInfo.mkzy.offsetFlag)
-         {
-       	  averagedPixels=(double)0.;
-
-     	    for (i=50;i<200;i++)
-           averagedPixels+=spectrum[i];
-
-          averagedPixels/=(double)150.;
-
-          for (i=0;i<NDET;i++)
-           spectrum[i]-=averagedPixels;
-         }
-
         if (!rc)
          {
           for (i=0;i<NDET;i++)

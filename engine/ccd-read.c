@@ -751,25 +751,6 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
    	 }
    }
 
-  // Get an approximation of the offset
-
-/*  if (!rc)
-   {
-    if ((pRecord->elevationViewAngle<80.) && (pBuffers->lambda[0]>=290) && (pBuffers->lambda[0]<=300))
-     {
-     	int npoints;
-
-     	npoints=50;
-
-      for (offset=(double)0.,i=1;i<=npoints;i++)
-       offset+=(dspectrum[i]-((pBuffers->darkCurrent!=NULL)?pBuffers->darkCurrent[i]:(double)0.));
-      offset=(double)offset/npoints;
-
-      for (i=0;i<NDET;i++)
-       dspectrum[i]-=offset;
-     }
-   }  */
-
   // Release the allocated buffers
 
   if (spectrum!=NULL)

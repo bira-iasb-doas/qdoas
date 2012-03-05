@@ -853,6 +853,10 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
      pEngineInstrumental->ascii.dateSaveFlag=pMediateInstrumental->ascii.flagDate;                  // 1 if the date information is saved in the file
      pEngineInstrumental->ascii.lambdaSaveFlag=pMediateInstrumental->ascii.flagWavelength;          // 1 if the wavelength calibration is saved with spectra in the file
 
+     pEngineInstrumental->offsetFlag=pMediateInstrumental->ascii.straylight;
+     pEngineInstrumental->lambdaMin=pMediateInstrumental->ascii.lambdaMin;
+     pEngineInstrumental->lambdaMax=pMediateInstrumental->ascii.lambdaMax;
+
 	  	 strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->ascii.calibrationFile);      // calibration file
 	  	 strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->ascii.instrFunctionFile);      // instrumental function file
 
@@ -886,6 +890,10 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
 
 	  	 NDET=1024;                                                                                     // size of the detector
 
+     pEngineInstrumental->offsetFlag=pMediateInstrumental->pdasieasoe.straylight;
+     pEngineInstrumental->lambdaMin=pMediateInstrumental->pdasieasoe.lambdaMin;
+     pEngineInstrumental->lambdaMax=pMediateInstrumental->pdasieasoe.lambdaMax;
+
 	  	 strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->pdasieasoe.calibrationFile); // calibration file
 	  	 strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->pdasieasoe.instrFunctionFile); // instrumental function file
 
@@ -895,8 +903,12 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
 
 	  	 NDET=pMediateInstrumental->oceanoptics.detectorSize;                                           // size of the detector
 
-	  	 strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->ascii.calibrationFile);      // calibration file
-	  	 strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->ascii.instrFunctionFile);      // instrumental function file
+     pEngineInstrumental->offsetFlag=pMediateInstrumental->oceanoptics.straylight;
+     pEngineInstrumental->lambdaMin=pMediateInstrumental->oceanoptics.lambdaMin;
+     pEngineInstrumental->lambdaMax=pMediateInstrumental->oceanoptics.lambdaMax;
+
+	  	 strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->oceanoptics.calibrationFile);      // calibration file
+	  	 strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->oceanoptics.instrFunctionFile);      // instrumental function file
 
 	  	break;
 	// ----------------------------------------------------------------------------
@@ -916,6 +928,10 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
 
      NDET=1024;                                                                                     // size of the detector
 
+     pEngineInstrumental->offsetFlag=pMediateInstrumental->saozefm.straylight;
+     pEngineInstrumental->lambdaMin=pMediateInstrumental->saozefm.lambdaMin;
+     pEngineInstrumental->lambdaMax=pMediateInstrumental->saozefm.lambdaMax;
+
 	  	 strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->saozefm.calibrationFile);    // calibration file
 	  	 strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->saozefm.instrFunctionFile);    // instrumental function file
 
@@ -924,6 +940,10 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
     case PRJCT_INSTR_FORMAT_BIRA_AIRBORNE :                                                              // BIRA AIRBORNE
 
      NDET=2048;                                                                                     // size of the detector
+
+     pEngineInstrumental->offsetFlag=pMediateInstrumental->biraairborne.straylight;
+     pEngineInstrumental->lambdaMin=pMediateInstrumental->biraairborne.lambdaMin;
+     pEngineInstrumental->lambdaMax=pMediateInstrumental->biraairborne.lambdaMax;
 
 	  	 strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->biraairborne.calibrationFile);    // calibration file
 	  	 strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->biraairborne.instrFunctionFile);    // instrumental function file
@@ -934,6 +954,10 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
 
      NDET=1024;                                                                                     // size of the detector
 
+     pEngineInstrumental->offsetFlag=pMediateInstrumental->rasas.straylight;
+     pEngineInstrumental->lambdaMin=pMediateInstrumental->rasas.lambdaMin;
+     pEngineInstrumental->lambdaMax=pMediateInstrumental->rasas.lambdaMax;
+
 	  	 strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->rasas.calibrationFile);      // calibration file
 	  	 strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->rasas.instrFunctionFile);      // instrumental function file
 
@@ -942,6 +966,10 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
     case PRJCT_INSTR_FORMAT_NOAA :                                                                  // NOAA
 
      NDET=1024;                                                                                     // size of the detector
+
+     pEngineInstrumental->offsetFlag=pMediateInstrumental->noaa.straylight;
+     pEngineInstrumental->lambdaMin=pMediateInstrumental->noaa.lambdaMin;
+     pEngineInstrumental->lambdaMax=pMediateInstrumental->noaa.lambdaMax;
 
 	  	 strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->noaa.calibrationFile);       // calibration file
 	  	 strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->noaa.instrFunctionFile);       // instrumental function file
@@ -997,6 +1025,10 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
      NDET=(pMediateInstrumental->ccdeev.detectorSize)?pMediateInstrumental->ccdeev.detectorSize:1340;
      pEngineInstrumental->user=pMediateInstrumental->ccdeev.spectralType;                           // spectrum type (offaxis or zenith)
 
+     pEngineInstrumental->offsetFlag=pMediateInstrumental->ccdeev.straylight;
+     pEngineInstrumental->lambdaMin=pMediateInstrumental->ccdeev.lambdaMin;
+     pEngineInstrumental->lambdaMax=pMediateInstrumental->ccdeev.lambdaMax;
+
 	  	 strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->ccdeev.calibrationFile);     // calibration file
 	  	 strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->ccdeev.instrFunctionFile);     // instrumental function file
 	  	 strcpy(pEngineInstrumental->imagePath,pMediateInstrumental->ccdeev.imagePath);     // instrumental function file
@@ -1017,6 +1049,10 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
     break;
  // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_UOFT :                             // University of Toronto
+
+     pEngineInstrumental->offsetFlag=pMediateInstrumental->uoft.straylight;
+     pEngineInstrumental->lambdaMin=pMediateInstrumental->uoft.lambdaMin;
+     pEngineInstrumental->lambdaMax=pMediateInstrumental->uoft.lambdaMax;
 
 	  	 strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->uoft.calibrationFile);     // calibration file
 	  	 strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->uoft.instrFunctionFile);     // instrumental function file
@@ -1050,7 +1086,7 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
      NDET=pEngineInstrumental->detectorSize=pMediateInstrumental->mfcstd.detectorSize;
 
      pEngineInstrumental->mfcRevert=pMediateInstrumental->mfcstd.revert;
-     pEngineInstrumental->mfcStdOffset=pMediateInstrumental->mfcstd.straylight;
+     pEngineInstrumental->offsetFlag=pMediateInstrumental->mfcstd.straylight;
      pEngineInstrumental->lambdaMin=pMediateInstrumental->mfcstd.lambdaMin;
      pEngineInstrumental->lambdaMax=pMediateInstrumental->mfcstd.lambdaMax;
 
@@ -1065,6 +1101,10 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
  // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_MFC_BIRA :                          // MFC BIRA (binary)
 
+     pEngineInstrumental->offsetFlag=pMediateInstrumental->mfcbira.straylight;
+     pEngineInstrumental->lambdaMin=pMediateInstrumental->mfcbira.lambdaMin;
+     pEngineInstrumental->lambdaMax=pMediateInstrumental->mfcbira.lambdaMax;
+
      NDET=pEngineInstrumental->detectorSize=pMediateInstrumental->mfcbira.detectorSize;
 	  	 strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->mfcbira.calibrationFile);     // calibration file
 	  	 strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->mfcbira.instrFunctionFile);       // instrumental function file
@@ -1074,6 +1114,10 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
     case PRJCT_INSTR_FORMAT_MKZY :                                                                  // MKZY
 
      NDET=2048;                                                                                     // size of the detector
+
+     pEngineInstrumental->offsetFlag=pMediateInstrumental->mkzy.straylight;
+     pEngineInstrumental->lambdaMin=pMediateInstrumental->mkzy.lambdaMin;
+     pEngineInstrumental->lambdaMax=pMediateInstrumental->mkzy.lambdaMax;
 
 	  	 strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->mkzy.calibrationFile);       // calibration file
 	  	 strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->mkzy.instrFunctionFile);       // instrumental function file

@@ -12,6 +12,7 @@
 
   <tr>
     <td width="200" valign="top" bgcolor="#F3F3F3">
+<p align="center"><img src="../QDOAS_IcoTransparent2_Small.png" alt="QDOAS_logo" width="80" height="71"></p>    
 <p class="menu-left"><span class="menu-left-sub"><img src="../spacer_orange.jpg" width="2" height="2" alt="orange layout spacer"></span><a href="../GUI/GUI.html" style="text-decoration: none; color: #336699">&nbsp;The&nbsp;user&nbsp;interface</a></p>
     <p class="menu-left"><span class="menu-left-sub"><img src="../spacer_orange.jpg" width="2" height="2" alt="orange layout spacer"></span><a href="Project.html" style="text-decoration: none; color: #336699">&nbsp;Projects Properties</a></p>
     <p class="menu-left" align="right"><a href="Project_Display.html" style="text-decoration: none; color: #336699">Display</a></p>
@@ -39,8 +40,8 @@
             <area shape="rect" coords="545,50,581,70" href="Project_Slit.html">
             <area shape="rect" coords="582,50,638,70" href="Project_Output.html">
 <area shape="rect" coords="52,90,665,132" href="#Site">
-<area shape="rect" coords="52,138,665,268" href="#ASCII">
-<area shape="rect" coords="52,269,665,324" href="#Options"></map>
+<area shape="rect" coords="52,138,400,268" href="#ASCII">
+<area shape="rect" coords="52,269,665,324" href="#Options"><area shape="rect" coords="401,138,657,246" href="#Options"></map>
     </p>
     <p align="justify" ><a name="Options"></a>Except the observation <strong>Site</strong>, the <strong>Calibration File</strong> and the <strong>Transmission file</strong>, the fields that appear in this page depend strictly on the  format of spectra files to process. </p>
     <strong><p align="justify" class="orangelarge">Calibration file and instrumental corrections</p></strong>
@@ -48,7 +49,8 @@
     <p align="justify"><em><strong>For the analysis of spectra, the wavelength calibration of the reference spectrum always has the priority over the spectra ones. It is important to select this  file very carefully mainly when browsing spectra to save a new reference  spectrum.</strong></em></p>
     <p align="justify">Some instrumental corrections can be applied on spectra. For example, a  transmission function previously determined in laboratory with calibrated sources can be specified in the <strong>Transmission file</strong> field. A two columns ASCII file is expected (wavelength calibration and transmission function) and spectra will be divided by this curve before the wavelength calibration procedure.</p>
     <p align="justify">Dark current correction is also possible according to the file format. The selected file format determines how dark currents are provided and how spectra are corrected. </p>
-    <p align="justify">For the <strong><u>MFC STD file format</u></strong>, spectra can be corrected by dark current and offset. The dark current should be a spectrum measured with a large integration time (typically 30 sec) and the offset should be the average of a large number of spectra measured with a very small integration time (typically 1000 x 3 ms). Note that QDOAS corrects dark current by offset. In addition to these corrections, the straylight can be strongly attenuated by subtracting from the spectra, the average of the signal measured in the UV region (below 300 nm if possible). See details in the <strong>Description of Algorithms</strong> section of the <strong>QDOAS Software User Manual.</strong></p>
+    <p align="justify">For the <strong><u>MFC STD file format</u></strong>, spectra can be corrected by dark current and offset. The dark current should be a spectrum measured with a large integration time (typically 30 sec) and the offset should be the average of a large number of spectra measured with a very small integration time (typically 1000 x 3 ms). Note that QDOAS corrects dark current by offset. See details in the <strong>Description of Algorithms</strong> section of the <strong>QDOAS Software User Manual.</strong></p>
+    <p align="justify">For SO<sub>2</sub> retrieval, the straylight  can be problematic. It can be strongly attenuated by subtracting from the spectra, the average of the signal measured in the UV region (below 300 nm if possible). </p>
     <p align="justify" class="orangelarge">Satellite measurements<a name="Satellites"></a></p>
     <p align="justify">Spectra measured by the following satellite instruments can be processed by QDOAS : </p>
     <table width="80%" border="0" align="center" cellpadding="5" cellspacing="10" >
