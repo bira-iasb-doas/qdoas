@@ -1021,20 +1021,20 @@ CWShiftAndStretchDoasTable::CWShiftAndStretchDoasTable(const QString &label, int
   createColumnCheck("Sc store", 60);   // column 5
   createColumnCheck("Err store", 60);
 
-  createColumnEdit(-100.0, 100.0, 3, "Sh Init (nm)", 80);
-  createColumnEdit(-100.0, 100.0, 3, "St Init", 80);
-  createColumnEdit(-100.0, 100.0, 3, "St Init (2)", 80);
-  createColumnEdit(-100.0, 100.0, 3, "Sc Init", 80);
-  createColumnEdit(-100.0, 100.0, 3, "Sc Init (2)", 80);
+  createColumnEdit("Sh Init (nm)", 80);
+  createColumnEdit("St Init", 80);
+  createColumnEdit("St Init (2)", 80);
+  createColumnEdit("Sc Init", 80);
+  createColumnEdit("Sc Init (2)", 80);
 
-  createColumnEdit(0.0001, 0.9999, 4, "Sh Delta (nm)", 80);
-  createColumnEdit(0.0001, 0.9999, 4, "St Delta", 80);
-  createColumnEdit(0.0001, 0.9999, 4, "St Delta (2)", 80);
-  createColumnEdit(0.0001, 0.9999, 4, "Sc Delta", 80);
-  createColumnEdit(0.0001, 0.9999, 4, "Sc Delta (2)", 80);
+  createColumnEdit("Sh Delta (nm)", 80);
+  createColumnEdit("St Delta", 80);
+  createColumnEdit("St Delta (2)", 80);
+  createColumnEdit("Sc Delta", 80);
+  createColumnEdit("Sc Delta (2)", 80);
 
-  createColumnEdit(-100.0, 100.0, 3, "Sh min (nm)", 80);
-  createColumnEdit(-100.0, 100.0, 3, "Sh max (nm)", 80);
+  createColumnEdit("Sh min (nm)", 80);
+  createColumnEdit("Sh max (nm)", 80);
 }
 
 CWShiftAndStretchDoasTable::~CWShiftAndStretchDoasTable()
@@ -1382,8 +1382,8 @@ CWGapDoasTable::CWGapDoasTable(const QString &label, int columnWidth, int header
   m_selectedRow(-1)
 {
   // two columns
-  createColumnEdit(100.00, 999.99, 2, "Min (nm)", 80);
-  createColumnEdit(100.00, 999.99, 2, "Max (nm)", 80);
+  createColumnEdit("Min (nm)", 80);
+  createColumnEdit("Max (nm)", 80);
 }
 
 CWGapDoasTable::~CWGapDoasTable()
@@ -1500,10 +1500,10 @@ CWOutputDoasTable::CWOutputDoasTable(const QString &label, int columnWidth, int 
   createColumnEdit("Residuals", 60);
   createColumnCheck("Slnt Col", 60);                      // col 2
   createColumnCheck("Slnt Err", 60);
-  createColumnEdit(0.0, 10.0, 3, "Slnt Fact", 80);  // col 4
+  createColumnEdit("Slnt Fact", 80);  // col 4
   createColumnCheck("Vrt Col", 60);
   createColumnCheck("Vrt Err", 60);                       // col 6
-  createColumnEdit(0.0, 10.0, 3, "Vrt Fact", 80);
+  createColumnEdit("Vrt Fact", 80);
 }
 
 CWOutputDoasTable::~CWOutputDoasTable()
@@ -1627,8 +1627,8 @@ CWSfpParametersDoasTable::CWSfpParametersDoasTable(const QString &label, int col
 {
   // 4 fixed row
   createColumnCheck("Fit", 60);
-  createColumnEdit(-10.0, 10.0, 3, "Init. Val.", 80);
-  createColumnEdit(-1.0, 1.0, 3, "delta Val.", 80);
+  createColumnEdit("Init. Val.", 80);
+  createColumnEdit("delta Val.", 80);
   createColumnCheck("Fit store", 60);
   createColumnCheck("Err store", 60);
 }

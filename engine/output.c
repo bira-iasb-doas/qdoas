@@ -98,72 +98,77 @@
 
 PRJCT_RESULTS_FIELDS PRJCT_resultsAscii[PRJCT_RESULTS_ASCII_MAX]=
  {
-  { "Spec No"                      , MEMORY_TYPE_USHORT, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#4d"      },       // PRJCT_RESULTS_ASCII_SPECNO
-  { "Name"                         , MEMORY_TYPE_STRING,             24, ITEM_NONE, ITEM_NONE, "%s"        },       // PRJCT_RESULTS_ASCII_NAME
-  { "Date & time (YYYYMMDDhhmmss)" , MEMORY_TYPE_STRING,             24, ITEM_NONE, ITEM_NONE, "%s"        },       // PRJCT_RESULTS_ASCII_DATE_TIME
-  { "Date (DD/MM/YYYY)"            , MEMORY_TYPE_STRING,             24, ITEM_NONE, ITEM_NONE, "%s"        },       // PRJCT_RESULTS_ASCII_DATE
-  { "Time (hh:mm:ss)"              , MEMORY_TYPE_STRING,             24, ITEM_NONE, ITEM_NONE, "%s"        },       // PRJCT_RESULTS_ASCII_TIME
-  { "Year"                         , MEMORY_TYPE_USHORT, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#4d"      },       // PRJCT_RESULTS_ASCII_YEAR
-  { "Day number"                   , MEMORY_TYPE_USHORT, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_JULIAN
-  { "Fractional day"               , MEMORY_TYPE_DOUBLE, sizeof(double), ITEM_NONE, ITEM_NONE, "%#10.6lf"  },       // PRJCT_RESULTS_ASCII_JDFRAC
-  { "Fractional time"              , MEMORY_TYPE_DOUBLE, sizeof(double), ITEM_NONE, ITEM_NONE, "%#20.15lf" },       // PRJCT_RESULTS_ASCII_TIFRAC
-  { "Scans"                        , MEMORY_TYPE_USHORT, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_SCANS
-  { "Rejected"                     , MEMORY_TYPE_USHORT, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_NREJ
-  { "Tint"                         , MEMORY_TYPE_DOUBLE, sizeof(double), ITEM_NONE, ITEM_NONE, "%#12.6lf"  },       // PRJCT_RESULTS_ASCII_TINT
-  { "SZA"                          , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_SZA
-  { "Chi Square"                   , MEMORY_TYPE_DOUBLE, sizeof(double), ITEM_NONE, ITEM_NONE, "%#12.4le"  },       // PRJCT_RESULTS_ASCII_CHI
-  { "RMS"                          , MEMORY_TYPE_DOUBLE, sizeof(double), ITEM_NONE, ITEM_NONE, "%#12.4le"  },       // PRJCT_RESULTS_ASCII_RMS
-  { "Solar Azimuth angle"          , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_AZIM
-  { "Tdet"                         , MEMORY_TYPE_FLOAT , sizeof(double), ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_TDET
-  { "Sky Obs"                      , MEMORY_TYPE_USHORT, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#2d"      },       // PRJCT_RESULTS_ASCII_SKY
-  { "Best shift"                   , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_BESTSHIFT
-  { "Ref SZA"                      , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_REFZM
-  { "Ref2/Ref1 shift"              , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_REFSHIFT
-  { "Pixel number"                 , MEMORY_TYPE_USHORT, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_PIXEL
-  { "Pixel type"                   , MEMORY_TYPE_USHORT, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_PIXEL_TYPE
-  { "Orbit number"                 , MEMORY_TYPE_INT   , sizeof(INT)   , ITEM_NONE, ITEM_NONE, "%#8d"      },       // PRJCT_RESULTS_ASCII_ORBIT
-  { "Longitude"                    , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_LONGIT
-  { "Latitude"                     , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_LATIT
-  { "Altitude"                     , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_ALTIT
-  { "Covariances"                  , MEMORY_TYPE_DOUBLE, sizeof(double), ITEM_NONE, ITEM_NONE, "%#12.4le"  },       // PRJCT_RESULTS_ASCII_COVAR
-  { "Correlations"                 , MEMORY_TYPE_DOUBLE, sizeof(double), ITEM_NONE, ITEM_NONE, "%#12.4le"  },       // PRJCT_RESULTS_ASCII_CORR
-  { "Cloud fraction"               , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_CLOUD
-  { "Index coeff"                  , MEMORY_TYPE_USHORT, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_COEFF
-  { "GDP O3 VCD"                   , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_O3
-  { "GDP NO2 VCD"                  , MEMORY_TYPE_DOUBLE, sizeof(double), ITEM_NONE, ITEM_NONE, "%#12.4le"  },       // PRJCT_RESULTS_ASCII_NO2
-  { "Cloud Top Pressure"           , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_CLOUDTOPP
-  { "LoS ZA"                       , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_LOS_ZA
-  { "LoS Azimuth"                  , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_LOS_AZIMUTH
-  { "Satellite height"             , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_SAT_HEIGHT
-  { "Earth radius"                 , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_EARTH_RADIUS
-  { "Elev. viewing angle"          , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_VIEW_ELEVATION
-  { "Azim. viewing angle"          , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_VIEW_AZIMUTH
-  { "SCIAMACHY Quality Flag"       , MEMORY_TYPE_USHORT, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_SCIA_QUALITY
-  { "SCIAMACHY State Index"        , MEMORY_TYPE_USHORT, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_SCIA_STATE_INDEX
-  { "SCIAMACHY State Id"           , MEMORY_TYPE_USHORT, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_SCIA_STATE_ID
-  { "Start Date (DDMMYYYY)"        , MEMORY_TYPE_STRING,             24, ITEM_NONE, ITEM_NONE, "%s"        },       // PRJCT_RESULTS_ASCII_STARTDATE
-  { "Stop Date (DDMMYYYY)"         , MEMORY_TYPE_STRING,             24, ITEM_NONE, ITEM_NONE, "%s"        },       // PRJCT_RESULTS_ASCII_ENDDATE
-  { "Start Time (hhmmss)"          , MEMORY_TYPE_STRING,             24, ITEM_NONE, ITEM_NONE, "%s"        },       // PRJCT_RESULTS_ASCII_STARTTIME
-  { "Stop Time (hhmmss)"           , MEMORY_TYPE_STRING,             24, ITEM_NONE, ITEM_NONE, "%s"        },       // PRJCT_RESULTS_ASCII_ENDTIME
-  { "Scanning angle"               , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_SCANNING
-  { "Filter number"                , MEMORY_TYPE_INT   , sizeof(INT)   , ITEM_NONE, ITEM_NONE, "%#3d"      },       // PRJCT_RESULTS_ASCII_FILTERNUMBER
-  { "Measurement type"             , MEMORY_TYPE_INT   , sizeof(INT)   , ITEM_NONE, ITEM_NONE, "%#3d"      },       // PRJCT_RESULTS_ASCII_MEASTYPE
-  { "Head temperature"             , MEMORY_TYPE_DOUBLE, sizeof(double), ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_CCD_HEADTEMPERATURE
-  { "Cooler status"                , MEMORY_TYPE_INT   , sizeof(INT)   , ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_COOLING_STATUS
-  { "Mirror status"                , MEMORY_TYPE_INT   , sizeof(INT)   , ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_MIRROR_ERROR
-  { "Compass angle"                , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_COMPASS
-  { "Pitch angle"                  , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_PITCH
-  { "Roll angle"                   , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_ROLL
-  { "Iterations number"            , MEMORY_TYPE_INT   , sizeof(INT)   , ITEM_NONE, ITEM_NONE, "%#6d"      },       // PRJCT_RESULTS_ASCII_ITER
-  { "GOME2 scan direction"         , MEMORY_TYPE_INT   , sizeof(INT)   , ITEM_NONE, ITEM_NONE, "%#6d"      },       // PRJCT_RESULTS_ASCII_GOME2_SCANDIRECTION
-  { "GOME2 SAA flag"               , MEMORY_TYPE_INT   , sizeof(INT)   , ITEM_NONE, ITEM_NONE, "%#6d"      },       // PRJCT_RESULTS_ASCII_GOME2_SAA
-  { "GOME2 sunglint risk flag"     , MEMORY_TYPE_INT   , sizeof(INT)   , ITEM_NONE, ITEM_NONE, "%#6d"      },       // PRJCT_RESULTS_ASCII_GOME2_SUNGLINT_RISK
-  { "GOME2 sunglint high risk flag", MEMORY_TYPE_INT   , sizeof(INT)   , ITEM_NONE, ITEM_NONE, "%#6d"      },       // PRJCT_RESULTS_ASCII_GOME2_SUNGLINT_HIGHRISK
-  { "GOME2 rainbow flag"           , MEMORY_TYPE_INT   , sizeof(INT)   , ITEM_NONE, ITEM_NONE, "%#6d"      },       // PRJCT_RESULTS_ASCII_GOME2_RAINBOW
-  { "Diodes"                       , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_CCD_DIODES,
-  { "Target Azimuth"               , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_CCD_TARGETAZIMUTH,
-  { "Target Elevation"             , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_CCD_TARGETELEVATION,
-  { "Saturated"                    , MEMORY_TYPE_USHORT, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#5d"      }        // PRJCT_RESULTS_ASCII_SATURATED,
+  { "Spec No"                         , MEMORY_TYPE_USHORT, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#4d"      },       // PRJCT_RESULTS_ASCII_SPECNO
+  { "Name"                            , MEMORY_TYPE_STRING,             24, ITEM_NONE, ITEM_NONE, "%s"        },       // PRJCT_RESULTS_ASCII_NAME
+  { "Date & time (YYYYMMDDhhmmss)"    , MEMORY_TYPE_STRING,             24, ITEM_NONE, ITEM_NONE, "%s"        },       // PRJCT_RESULTS_ASCII_DATE_TIME
+  { "Date (DD/MM/YYYY)"               , MEMORY_TYPE_STRING,             24, ITEM_NONE, ITEM_NONE, "%s"        },       // PRJCT_RESULTS_ASCII_DATE
+  { "Time (hh:mm:ss)"                 , MEMORY_TYPE_STRING,             24, ITEM_NONE, ITEM_NONE, "%s"        },       // PRJCT_RESULTS_ASCII_TIME
+  { "Year"                            , MEMORY_TYPE_USHORT, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#4d"      },       // PRJCT_RESULTS_ASCII_YEAR
+  { "Day number"                      , MEMORY_TYPE_USHORT, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_JULIAN
+  { "Fractional day"                  , MEMORY_TYPE_DOUBLE, sizeof(double), ITEM_NONE, ITEM_NONE, "%#10.6lf"  },       // PRJCT_RESULTS_ASCII_JDFRAC
+  { "Fractional time"                 , MEMORY_TYPE_DOUBLE, sizeof(double), ITEM_NONE, ITEM_NONE, "%#20.15lf" },       // PRJCT_RESULTS_ASCII_TIFRAC
+  { "Scans"                           , MEMORY_TYPE_USHORT, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_SCANS
+  { "Rejected"                        , MEMORY_TYPE_USHORT, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_NREJ
+  { "Tint"                            , MEMORY_TYPE_DOUBLE, sizeof(double), ITEM_NONE, ITEM_NONE, "%#12.6lf"  },       // PRJCT_RESULTS_ASCII_TINT
+  { "SZA"                             , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_SZA
+  { "Chi Square"                      , MEMORY_TYPE_DOUBLE, sizeof(double), ITEM_NONE, ITEM_NONE, "%#12.4le"  },       // PRJCT_RESULTS_ASCII_CHI
+  { "RMS"                             , MEMORY_TYPE_DOUBLE, sizeof(double), ITEM_NONE, ITEM_NONE, "%#12.4le"  },       // PRJCT_RESULTS_ASCII_RMS
+  { "Solar Azimuth angle"             , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_AZIM
+  { "Tdet"                            , MEMORY_TYPE_FLOAT , sizeof(double), ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_TDET
+  { "Sky Obs"                         , MEMORY_TYPE_USHORT, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#2d"      },       // PRJCT_RESULTS_ASCII_SKY
+  { "Best shift"                      , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_BESTSHIFT
+  { "Ref SZA"                         , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_REFZM
+  { "Ref2/Ref1 shift"                 , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_REFSHIFT
+  { "Pixel number"                    , MEMORY_TYPE_USHORT, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_PIXEL
+  { "Pixel type"                      , MEMORY_TYPE_USHORT, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_PIXEL_TYPE
+  { "Orbit number"                    , MEMORY_TYPE_INT   , sizeof(INT)   , ITEM_NONE, ITEM_NONE, "%#8d"      },       // PRJCT_RESULTS_ASCII_ORBIT
+  { "Longitude"                       , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_LONGIT
+  { "Latitude"                        , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_LATIT
+  { "Altitude"                        , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_ALTIT
+  { "Covariances"                     , MEMORY_TYPE_DOUBLE, sizeof(double), ITEM_NONE, ITEM_NONE, "%#12.4le"  },       // PRJCT_RESULTS_ASCII_COVAR
+  { "Correlations"                    , MEMORY_TYPE_DOUBLE, sizeof(double), ITEM_NONE, ITEM_NONE, "%#12.4le"  },       // PRJCT_RESULTS_ASCII_CORR
+  { "Cloud fraction"                  , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_CLOUD
+  { "Index coeff"                     , MEMORY_TYPE_USHORT, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_COEFF
+  { "GDP O3 VCD"                      , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_O3
+  { "GDP NO2 VCD"                     , MEMORY_TYPE_DOUBLE, sizeof(double), ITEM_NONE, ITEM_NONE, "%#12.4le"  },       // PRJCT_RESULTS_ASCII_NO2
+  { "Cloud Top Pressure"              , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_CLOUDTOPP
+  { "LoS ZA"                          , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_LOS_ZA
+  { "LoS Azimuth"                     , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_LOS_AZIMUTH
+  { "Satellite height"                , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_SAT_HEIGHT
+  { "Earth radius"                    , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_EARTH_RADIUS
+  { "Elev. viewing angle"             , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_VIEW_ELEVATION
+  { "Azim. viewing angle"             , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_VIEW_AZIMUTH
+  { "Zenith viewing angle"            , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_VIEW_ZENITH     -> the same as LOS ZA
+  { "SCIAMACHY Quality Flag"          , MEMORY_TYPE_USHORT, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_SCIA_QUALITY
+  { "SCIAMACHY State Index"           , MEMORY_TYPE_USHORT, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_SCIA_STATE_INDEX
+  { "SCIAMACHY State Id"              , MEMORY_TYPE_USHORT, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_SCIA_STATE_ID
+  { "Start Date (DDMMYYYY)"           , MEMORY_TYPE_STRING,             24, ITEM_NONE, ITEM_NONE, "%s"        },       // PRJCT_RESULTS_ASCII_STARTDATE
+  { "Stop Date (DDMMYYYY)"            , MEMORY_TYPE_STRING,             24, ITEM_NONE, ITEM_NONE, "%s"        },       // PRJCT_RESULTS_ASCII_ENDDATE
+  { "Start Time (hhmmss)"             , MEMORY_TYPE_STRING,             24, ITEM_NONE, ITEM_NONE, "%s"        },       // PRJCT_RESULTS_ASCII_STARTTIME
+  { "Stop Time (hhmmss)"              , MEMORY_TYPE_STRING,             24, ITEM_NONE, ITEM_NONE, "%s"        },       // PRJCT_RESULTS_ASCII_ENDTIME
+  { "Scanning angle"                  , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_SCANNING
+  { "Filter number"                   , MEMORY_TYPE_INT   , sizeof(INT)   , ITEM_NONE, ITEM_NONE, "%#3d"      },       // PRJCT_RESULTS_ASCII_FILTERNUMBER
+  { "Measurement type"                , MEMORY_TYPE_INT   , sizeof(INT)   , ITEM_NONE, ITEM_NONE, "%#3d"      },       // PRJCT_RESULTS_ASCII_MEASTYPE
+  { "Head temperature"                , MEMORY_TYPE_DOUBLE, sizeof(double), ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_CCD_HEADTEMPERATURE
+  { "Cooler status"                   , MEMORY_TYPE_INT   , sizeof(INT)   , ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_COOLING_STATUS
+  { "Mirror status"                   , MEMORY_TYPE_INT   , sizeof(INT)   , ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_MIRROR_ERROR
+  { "Compass angle"                   , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_COMPASS
+  { "Pitch angle"                     , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_PITCH
+  { "Roll angle"                      , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_ROLL
+  { "Iterations number"               , MEMORY_TYPE_INT   , sizeof(INT)   , ITEM_NONE, ITEM_NONE, "%#6d"      },       // PRJCT_RESULTS_ASCII_ITER
+  { "GOME2 scan direction"            , MEMORY_TYPE_INT   , sizeof(INT)   , ITEM_NONE, ITEM_NONE, "%#6d"      },       // PRJCT_RESULTS_ASCII_GOME2_SCANDIRECTION
+  { "GOME2 SAA flag"                  , MEMORY_TYPE_INT   , sizeof(INT)   , ITEM_NONE, ITEM_NONE, "%#6d"      },       // PRJCT_RESULTS_ASCII_GOME2_SAA
+  { "GOME2 sunglint risk flag"        , MEMORY_TYPE_INT   , sizeof(INT)   , ITEM_NONE, ITEM_NONE, "%#6d"      },       // PRJCT_RESULTS_ASCII_GOME2_SUNGLINT_RISK
+  { "GOME2 sunglint high risk flag"   , MEMORY_TYPE_INT   , sizeof(INT)   , ITEM_NONE, ITEM_NONE, "%#6d"      },       // PRJCT_RESULTS_ASCII_GOME2_SUNGLINT_HIGHRISK
+  { "GOME2 rainbow flag"              , MEMORY_TYPE_INT   , sizeof(INT)   , ITEM_NONE, ITEM_NONE, "%#6d"      },       // PRJCT_RESULTS_ASCII_GOME2_RAINBOW
+  { "Diodes"                          , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_CCD_DIODES,
+  { "Target Azimuth"                  , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_CCD_TARGETAZIMUTH,
+  { "Target Elevation"                , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_CCD_TARGETELEVATION,
+  { "Saturated"                       , MEMORY_TYPE_USHORT, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_SATURATED
+  { "OMI index swath"                 , MEMORY_TYPE_INT   , sizeof(INT)   , ITEM_NONE, ITEM_NONE, "%#6d"      },       // PRJCT_RESULTS_ASCII_OMI_INDEX_SWATH,
+  { "OMI index row"                   , MEMORY_TYPE_INT   , sizeof(int)   , ITEM_NONE, ITEM_NONE, "%#3d"      },       // PRJCT_RESULTS_ASCII_OMI_INDEX_ROW
+  { "UAV servo sent position byte"    , MEMORY_TYPE_USHORT, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#3d"      },       // PRJCT_RESULTS_ASCII_UAV_SERVO_BYTE_SENT
+  { "UAV servo received position byte", MEMORY_TYPE_USHORT, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#3d"      }        // PRJCT_RESULTS_ASCII_UAV_SERVO_BYTE_RECEIVED
  };
 
 typedef struct _NDSC_header
@@ -540,44 +545,47 @@ void OUTPUT_ResetData(void)
   // Declarations
 
   FENO *pTabFeno;
-  INDEX indexFeno,indexTabCross,indexSymbol,indexField;
+  INDEX indexFeno,indexFenoColumn,indexTabCross,indexSymbol,indexField;
   CROSS_RESULTS *pResults;
   AMF_SYMBOL *pAmf;
 
   // Reset output part of data in analysis windows
 
-  for (indexFeno=0;indexFeno<MAX_FENO;indexFeno++)
+  for (indexFenoColumn=0;indexFenoColumn<MAX_SWATHSIZE;indexFenoColumn++)
    {
-    pTabFeno=&TabFeno[indexFeno];
-
-    // Browse symbols
-
-    for (indexTabCross=0;indexTabCross<MAX_FIT;indexTabCross++)
+    for (indexFeno=0;indexFeno<MAX_FENO;indexFeno++)
      {
-      pResults=&pTabFeno->TabCrossResults[indexTabCross];
+      pTabFeno=&TabFeno[indexFenoColumn][indexFeno];
 
-      pResults->indexAmf=ITEM_NONE;
-   // -------------------------------------------
-      pResults->StoreAmf=
-      pResults->StoreShift=
-      pResults->StoreStretch=
-      pResults->StoreScale=
-      pResults->StoreError=
-      pResults->StoreSlntCol=
-      pResults->StoreSlntErr=
-      pResults->StoreVrtCol=
-      pResults->StoreVrtErr=(DoasCh)0;
-   // -------------------------------------------
-      pResults->ResCol=(double)0.;
-   // -------------------------------------------
-      pResults->Amf=
-      pResults->SlntCol=
-      pResults->SlntErr=
-      pResults->VrtCol=
-      pResults->VrtErr=(double)9999.;
-   // -------------------------------------------
-      pResults->SlntFact=
-      pResults->VrtFact=(double)1.;
+      // Browse symbols
+
+      for (indexTabCross=0;indexTabCross<MAX_FIT;indexTabCross++)
+       {
+        pResults=&pTabFeno->TabCrossResults[indexTabCross];
+
+        pResults->indexAmf=ITEM_NONE;
+     // -------------------------------------------
+        pResults->StoreAmf=
+        pResults->StoreShift=
+        pResults->StoreStretch=
+        pResults->StoreScale=
+        pResults->StoreError=
+        pResults->StoreSlntCol=
+        pResults->StoreSlntErr=
+        pResults->StoreVrtCol=
+        pResults->StoreVrtErr=(DoasCh)0;
+     // -------------------------------------------
+        pResults->ResCol=(double)0.;
+     // -------------------------------------------
+        pResults->Amf=
+        pResults->SlntCol=
+        pResults->SlntErr=
+        pResults->VrtCol=
+        pResults->VrtErr=(double)9999.;
+     // -------------------------------------------
+        pResults->SlntFact=
+        pResults->VrtFact=(double)1.;
+       }
      }
    }
 
@@ -837,7 +845,7 @@ void OutputRegisterFields(ENGINE_CONTEXT *pEngineContext)
 // INPUT         indexFenoK   the current window of the wavelength calibration interval
 // -----------------------------------------------------------------------------
 
-void OutputRegisterCalib(INDEX indexFenoK)
+void OutputRegisterCalib(INDEX indexFenoK,INDEX indexFenoColumn)
  {
   // Declarations
 
@@ -849,17 +857,17 @@ void OutputRegisterCalib(INDEX indexFenoK)
   INDEX                indexTabCross;
   INT                  nbWin,dim1,dim2;
 
-  nbWin=KURUCZ_buffers.Nb_Win;
+  nbWin=KURUCZ_buffers[indexFenoColumn].Nb_Win;
 
   dim1=nbWin;
   dim2=ITEM_NONE;
 
-  pTabFeno=&TabFeno[indexFenoK];
+  pTabFeno=&TabFeno[indexFenoColumn][indexFenoK];
   TabCross=pTabFeno->TabCross;
 
   // Register columns
 
-  sprintf(windowName,"Calib.");
+  sprintf(windowName,"Calib(%d/%d).",indexFenoColumn+1,ANALYSE_swathSize);
 
   OutputRegister(windowName,"RMS","",MEMORY_TYPE_DOUBLE,sizeof(double),dim1,dim2,"%#12.4le");
 
@@ -924,134 +932,144 @@ void OutputRegisterParam(ENGINE_CONTEXT *pEngineContext,INT hiddenFlag)
  {
   // Declarations
 
-  DoasCh                windowName[MAX_ITEM_NAME_LEN+1],                         // the name of the current spectral window
+  DoasCh               windowName[MAX_ITEM_NAME_LEN+1],                         // the name of the current spectral window
                        symbolName[MAX_ITEM_NAME_LEN+1];                         // the name of a symbol
   FENO                *pTabFeno;
   CROSS_REFERENCE     *TabCross;
   CROSS_RESULTS       *pTabCrossResults;
-  INDEX                indexFeno,indexWin,
+  INDEX                indexFeno,indexWin,indexFenoColumn,
                        indexTabCross,indexTabCross2;
   INT                  nbWin,dim1,dim2;
 
   dim1=ITEM_NONE;
   dim2=ITEM_NONE;
 
-  nbWin=(hiddenFlag)?KURUCZ_buffers.Nb_Win:1;
 
-  // Browse analysis windows
+  for (indexFenoColumn=0;indexFenoColumn<ANALYSE_swathSize;indexFenoColumn++)
+   {
+    nbWin=(hiddenFlag)?KURUCZ_buffers[indexFenoColumn].Nb_Win:1;
 
-  for (indexWin=0;indexWin<nbWin;indexWin++)
+   	if ((pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_OMI) ||
+   	     pEngineContext->project.instrumental.omi.omiTracks[indexFenoColumn])
+   	 {
+      // Browse analysis windows
 
-   for (indexFeno=0;indexFeno<NFeno;indexFeno++)
-    {
-     pTabFeno=&TabFeno[indexFeno];
-     TabCross=pTabFeno->TabCross;
+      for (indexWin=0;indexWin<nbWin;indexWin++)
 
-     if (pTabFeno->hidden==hiddenFlag)
-      {
-      	if (!pTabFeno->hidden)
-      	 {
-         // Not fitted parameters
-
-         sprintf(windowName,"%s.",pTabFeno->windowName);
-
-         if (OUTPUT_refZmFlag)
-          OutputRegister(windowName,"RefZm","",MEMORY_TYPE_FLOAT,sizeof(float),dim1,dim2,"%#8.3f");
-         if (OUTPUT_refShift)
-          OutputRegister(windowName,"Ref2/Ref1 Shift","",MEMORY_TYPE_FLOAT,sizeof(float),dim1,dim2,"%#8.3f");
-
-         if (OUTPUT_covarFlag && (pTabFeno->svd.covar!=NULL))
-          for (indexTabCross=0;indexTabCross<pTabFeno->NTabCross;indexTabCross++)
-           if (TabCross[indexTabCross].IndSvdA>0)
-            for (indexTabCross2=0;indexTabCross2<indexTabCross;indexTabCross2++)
-             if (TabCross[indexTabCross2].IndSvdA>0)
-              {
-               sprintf(symbolName,"(%s,%s)",
-                      WorkSpace[TabCross[indexTabCross2].Comp].symbolName,
-                      WorkSpace[TabCross[indexTabCross].Comp].symbolName);
-               OutputRegister(windowName,"Covar",symbolName,MEMORY_TYPE_DOUBLE,sizeof(double),dim1,dim2,"%#12.4le");
-              }
-
-         if (OUTPUT_corrFlag && (pTabFeno->svd.covar!=NULL))
-          for (indexTabCross=0;indexTabCross<pTabFeno->NTabCross;indexTabCross++)
-           if (TabCross[indexTabCross].IndSvdA>0)
-            for (indexTabCross2=0;indexTabCross2<indexTabCross;indexTabCross2++)
-             if (TabCross[indexTabCross2].IndSvdA>0)
-              {
-               sprintf(symbolName,"(%s,%s)",
-                      WorkSpace[TabCross[indexTabCross2].Comp].symbolName,
-                      WorkSpace[TabCross[indexTabCross].Comp].symbolName);
-               OutputRegister(windowName,"Corr",symbolName,MEMORY_TYPE_DOUBLE,sizeof(double),dim1,dim2,"%#12.4le");
-              }
-        }
-       else if (outputRunCalib)
-        sprintf(windowName,"RunCalib(%d).",indexWin+1);
-
-       if (OUTPUT_chiSquareFlag)
-        OutputRegister(windowName,"Chi","",MEMORY_TYPE_DOUBLE,sizeof(double),dim1,dim2,"%#12.4le");
-       if (OUTPUT_rmsFlag)
-        OutputRegister(windowName,"RMS","",MEMORY_TYPE_DOUBLE,sizeof(double),dim1,dim2,"%#12.4le");
-       if (OUTPUT_iterFlag)
-        OutputRegister(windowName,"iter","",MEMORY_TYPE_INT,sizeof(int),dim1,dim2,"%#6d");
-
-       // Fitted parameters
-
-       for (indexTabCross=0;indexTabCross<pTabFeno->NTabCross;indexTabCross++)
+       for (indexFeno=0;indexFeno<NFeno;indexFeno++)
         {
-         pTabCrossResults=&pTabFeno->TabCrossResults[indexTabCross];
-         sprintf(symbolName,"(%s)",WorkSpace[pTabFeno->TabCross[indexTabCross].Comp].symbolName);
+         pTabFeno=&TabFeno[indexFenoColumn][indexFeno];
+         TabCross=pTabFeno->TabCross;
 
-         if (pTabCrossResults->indexAmf!=ITEM_NONE)
+         if (pTabFeno->hidden==hiddenFlag)
           {
-           if (pTabCrossResults->StoreAmf)              // AMF
-            OutputRegister(windowName,"AMF",symbolName,MEMORY_TYPE_FLOAT,sizeof(double),dim1,dim2,"%#8.3lf");
-           if (pTabCrossResults->StoreVrtCol)           // Vertical column
-            OutputRegister(windowName,"VCol",symbolName,MEMORY_TYPE_DOUBLE,sizeof(double),dim1,dim2,"%#12.4le");
-           if (pTabCrossResults->StoreVrtErr)           // Error on vertical column
-            OutputRegister(windowName,"VErr",symbolName,MEMORY_TYPE_DOUBLE,sizeof(double),dim1,dim2,"%#12.4le");
-          }
+          	if (!pTabFeno->hidden)
+          	 {
+             // Not fitted parameters
 
-         if (pTabCrossResults->StoreSlntCol)                         // Slant column
-          OutputRegister(windowName,"SlCol",symbolName,MEMORY_TYPE_DOUBLE,sizeof(double),dim1,dim2,"%#12.4le");
-         if (pTabCrossResults->StoreSlntErr)                         // Error on slant column
-          OutputRegister(windowName,"SlErr",symbolName,MEMORY_TYPE_DOUBLE,sizeof(double),dim1,dim2,"%#12.4le");
+             sprintf(windowName,"%s.",pTabFeno->windowName);
 
-         if (pTabCrossResults->StoreShift)              // Shift
-          {
-           OutputRegister(windowName,"Shift",symbolName,MEMORY_TYPE_DOUBLE,sizeof(double),dim1,dim2,"%#12.4le");
-           if (pTabCrossResults->StoreError)
-            OutputRegister(windowName,"Err Shift",symbolName,MEMORY_TYPE_DOUBLE,sizeof(double),dim1,dim2,"%#12.4le");
-          }
+             if (OUTPUT_refZmFlag)
+              OutputRegister(windowName,"RefZm","",MEMORY_TYPE_FLOAT,sizeof(float),dim1,dim2,"%#8.3f");
+             if (OUTPUT_refShift)
+              OutputRegister(windowName,"Ref2/Ref1 Shift","",MEMORY_TYPE_FLOAT,sizeof(float),dim1,dim2,"%#8.3f");
 
-         if (pTabCrossResults->StoreStretch)            // Stretch
-          {
-           OutputRegister(windowName,"Stretch",symbolName,MEMORY_TYPE_DOUBLE,sizeof(double),dim1,dim2,"%#12.4le");
-           if (pTabCrossResults->StoreError)
-            OutputRegister(windowName,"Err Stretch",symbolName,MEMORY_TYPE_DOUBLE,sizeof(double),dim1,dim2,"%#12.4le");
-           OutputRegister(windowName,"Stretch2",symbolName,MEMORY_TYPE_DOUBLE,sizeof(double),dim1,dim2,"%#12.4le");
-           if (pTabCrossResults->StoreError)
-            OutputRegister(windowName,"Err Stretch2",symbolName,MEMORY_TYPE_DOUBLE,sizeof(double),dim1,dim2,"%#12.4le");
-          }
+             if (OUTPUT_covarFlag && (pTabFeno->svd.covar!=NULL))
+              for (indexTabCross=0;indexTabCross<pTabFeno->NTabCross;indexTabCross++)
+               if (TabCross[indexTabCross].IndSvdA>0)
+                for (indexTabCross2=0;indexTabCross2<indexTabCross;indexTabCross2++)
+                 if (TabCross[indexTabCross2].IndSvdA>0)
+                  {
+                   sprintf(symbolName,"(%s,%s)",
+                          WorkSpace[TabCross[indexTabCross2].Comp].symbolName,
+                          WorkSpace[TabCross[indexTabCross].Comp].symbolName);
+                   OutputRegister(windowName,"Covar",symbolName,MEMORY_TYPE_DOUBLE,sizeof(double),dim1,dim2,"%#12.4le");
+                  }
 
-         if (pTabCrossResults->StoreScale)              // Scale
-          {
-           OutputRegister(windowName,"Scale",symbolName,MEMORY_TYPE_DOUBLE,sizeof(double),dim1,dim2,"%#12.4le");
-           if (pTabCrossResults->StoreError)
-            OutputRegister(windowName,"Err Scale",symbolName,MEMORY_TYPE_DOUBLE,sizeof(double),dim1,dim2,"%#12.4le");
-           OutputRegister(windowName,"Scale2",symbolName,MEMORY_TYPE_DOUBLE,sizeof(double),dim1,dim2,"%#12.4le");
-           if (pTabCrossResults->StoreError)
-            OutputRegister(windowName,"Err Scale2",symbolName,MEMORY_TYPE_DOUBLE,sizeof(double),dim1,dim2,"%#12.4le");
-          }
+             if (OUTPUT_corrFlag && (pTabFeno->svd.covar!=NULL))
+              for (indexTabCross=0;indexTabCross<pTabFeno->NTabCross;indexTabCross++)
+               if (TabCross[indexTabCross].IndSvdA>0)
+                for (indexTabCross2=0;indexTabCross2<indexTabCross;indexTabCross2++)
+                 if (TabCross[indexTabCross2].IndSvdA>0)
+                  {
+                   sprintf(symbolName,"(%s,%s)",
+                          WorkSpace[TabCross[indexTabCross2].Comp].symbolName,
+                          WorkSpace[TabCross[indexTabCross].Comp].symbolName);
+                   OutputRegister(windowName,"Corr",symbolName,MEMORY_TYPE_DOUBLE,sizeof(double),dim1,dim2,"%#12.4le");
+                  }
+            }
+           else if (outputRunCalib)
+            sprintf(windowName,"RunCalib(%d).",indexWin+1);
 
-         if (pTabCrossResults->StoreParam)              // Param
-          {
-           OutputRegister(windowName,WorkSpace[pTabFeno->TabCross[indexTabCross].Comp].symbolName,"",MEMORY_TYPE_DOUBLE,sizeof(double),dim1,dim2,"%#12.4le");
-           if (pTabCrossResults->StoreParamError)
-            OutputRegister(windowName,"Err ",WorkSpace[pTabFeno->TabCross[indexTabCross].Comp].symbolName,MEMORY_TYPE_DOUBLE,sizeof(double),dim1,dim2,"%#12.4le");
-          }
-        }
-      }
-    }
+           if (OUTPUT_chiSquareFlag)
+            OutputRegister(windowName,"Chi","",MEMORY_TYPE_DOUBLE,sizeof(double),dim1,dim2,"%#12.4le");
+           if (OUTPUT_rmsFlag)
+            OutputRegister(windowName,"RMS","",MEMORY_TYPE_DOUBLE,sizeof(double),dim1,dim2,"%#12.4le");
+           if (OUTPUT_iterFlag)
+            OutputRegister(windowName,"iter","",MEMORY_TYPE_INT,sizeof(int),dim1,dim2,"%#6d");
+
+           // Fitted parameters
+
+           for (indexTabCross=0;indexTabCross<pTabFeno->NTabCross;indexTabCross++)
+            {
+             pTabCrossResults=&pTabFeno->TabCrossResults[indexTabCross];
+             sprintf(symbolName,"(%s)",WorkSpace[pTabFeno->TabCross[indexTabCross].Comp].symbolName);
+
+             if (pTabCrossResults->indexAmf!=ITEM_NONE)
+              {
+               if (pTabCrossResults->StoreAmf)              // AMF
+                OutputRegister(windowName,"AMF",symbolName,MEMORY_TYPE_FLOAT,sizeof(double),dim1,dim2,"%#8.3lf");
+               if (pTabCrossResults->StoreVrtCol)           // Vertical column
+                OutputRegister(windowName,"VCol",symbolName,MEMORY_TYPE_DOUBLE,sizeof(double),dim1,dim2,"%#12.4le");
+               if (pTabCrossResults->StoreVrtErr)           // Error on vertical column
+                OutputRegister(windowName,"VErr",symbolName,MEMORY_TYPE_DOUBLE,sizeof(double),dim1,dim2,"%#12.4le");
+              }
+
+             if (pTabCrossResults->StoreSlntCol)                         // Slant column
+              OutputRegister(windowName,"SlCol",symbolName,MEMORY_TYPE_DOUBLE,sizeof(double),dim1,dim2,"%#12.4le");
+             if (pTabCrossResults->StoreSlntErr)                         // Error on slant column
+              OutputRegister(windowName,"SlErr",symbolName,MEMORY_TYPE_DOUBLE,sizeof(double),dim1,dim2,"%#12.4le");
+
+             if (pTabCrossResults->StoreShift)              // Shift
+              {
+               OutputRegister(windowName,"Shift",symbolName,MEMORY_TYPE_DOUBLE,sizeof(double),dim1,dim2,"%#12.4le");
+               if (pTabCrossResults->StoreError)
+                OutputRegister(windowName,"Err Shift",symbolName,MEMORY_TYPE_DOUBLE,sizeof(double),dim1,dim2,"%#12.4le");
+              }
+
+             if (pTabCrossResults->StoreStretch)            // Stretch
+              {
+               OutputRegister(windowName,"Stretch",symbolName,MEMORY_TYPE_DOUBLE,sizeof(double),dim1,dim2,"%#12.4le");
+               if (pTabCrossResults->StoreError)
+                OutputRegister(windowName,"Err Stretch",symbolName,MEMORY_TYPE_DOUBLE,sizeof(double),dim1,dim2,"%#12.4le");
+               OutputRegister(windowName,"Stretch2",symbolName,MEMORY_TYPE_DOUBLE,sizeof(double),dim1,dim2,"%#12.4le");
+               if (pTabCrossResults->StoreError)
+                OutputRegister(windowName,"Err Stretch2",symbolName,MEMORY_TYPE_DOUBLE,sizeof(double),dim1,dim2,"%#12.4le");
+              }
+
+             if (pTabCrossResults->StoreScale)              // Scale
+              {
+               OutputRegister(windowName,"Scale",symbolName,MEMORY_TYPE_DOUBLE,sizeof(double),dim1,dim2,"%#12.4le");
+               if (pTabCrossResults->StoreError)
+                OutputRegister(windowName,"Err Scale",symbolName,MEMORY_TYPE_DOUBLE,sizeof(double),dim1,dim2,"%#12.4le");
+               OutputRegister(windowName,"Scale2",symbolName,MEMORY_TYPE_DOUBLE,sizeof(double),dim1,dim2,"%#12.4le");
+               if (pTabCrossResults->StoreError)
+                OutputRegister(windowName,"Err Scale2",symbolName,MEMORY_TYPE_DOUBLE,sizeof(double),dim1,dim2,"%#12.4le");
+              }
+
+             if (pTabCrossResults->StoreParam)              // Param
+              {
+               OutputRegister(windowName,WorkSpace[pTabFeno->TabCross[indexTabCross].Comp].symbolName,"",MEMORY_TYPE_DOUBLE,sizeof(double),dim1,dim2,"%#12.4le");
+               if (pTabCrossResults->StoreParamError)
+                OutputRegister(windowName,"Err ",WorkSpace[pTabFeno->TabCross[indexTabCross].Comp].symbolName,MEMORY_TYPE_DOUBLE,sizeof(double),dim1,dim2,"%#12.4le");
+              }
+            }  // for (indexTabCross=0;indexTabCross<pTabFeno->NTabCross;indexTabCross++)
+          }  // if (pTabFeno->hidden==hiddenFlag)
+        }  // for (indexFeno=0;indexFeno<NFeno;indexFeno++)
+
+       break; // even for OMI, register param only one time
+     }   // if ((pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_OMI) ||
+   }
  }
 
 // -----------------------------------------------------------------------------
@@ -1069,6 +1087,7 @@ RC OUTPUT_RegisterData(ENGINE_CONTEXT *pEngineContext)
   INDEX indexFeno,indexFenoK,indexFeno1;
   PROJECT *pProject;
   PRJCT_RESULTS_ASCII *pResults;
+  INDEX indexFenoColumn;
  	RC rc;
 
   #if defined(__DEBUG_) && __DEBUG_
@@ -1104,24 +1123,31 @@ RC OUTPUT_RegisterData(ENGINE_CONTEXT *pEngineContext)
 
      	if (pResults->calibFlag)
      	 {
-        for (indexFeno=0;indexFeno<NFeno;indexFeno++)
-         if (TabFeno[indexFeno].hidden)
-          indexFenoK=indexFeno;
-         else if (!TabFeno[indexFeno].hidden &&
-                 ((TabFeno[indexFeno].useKurucz==ANLYS_KURUCZ_REF) ||
-                  (TabFeno[indexFeno].useKurucz==ANLYS_KURUCZ_REF_AND_SPEC)) &&
-                  !TabFeno[indexFeno].rcKurucz)
-          {
-          	if (indexFeno1==ITEM_NONE)
-          	 indexFeno1=indexFeno;
-           outputCalibFlag++;
-          }
+     	 	for (indexFenoColumn=0;indexFenoColumn<ANALYSE_swathSize;indexFenoColumn++)
+     	 	 {
+   	      if ((pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_OMI) ||
+   	           pEngineContext->project.instrumental.omi.omiTracks[indexFenoColumn])
+   	       {
+            for (indexFeno=0;indexFeno<NFeno;indexFeno++)
+             if (TabFeno[indexFenoColumn][indexFeno].hidden)
+              indexFenoK=indexFeno;
+             else if (!TabFeno[indexFenoColumn][indexFeno].hidden &&
+                     ((TabFeno[indexFenoColumn][indexFeno].useKurucz==ANLYS_KURUCZ_REF) ||
+                      (TabFeno[indexFenoColumn][indexFeno].useKurucz==ANLYS_KURUCZ_REF_AND_SPEC)) &&
+                      !TabFeno[indexFenoColumn][indexFeno].rcKurucz)
+              {
+              	if (indexFeno1==ITEM_NONE)
+              	 indexFeno1=indexFeno;
+               outputCalibFlag++;
+              }
 
-        if (indexFenoK==ITEM_NONE)
-         outputCalibFlag=0;
+            if (indexFenoK==ITEM_NONE)
+             outputCalibFlag=0;
 
-        if (outputCalibFlag)
-         OutputRegisterCalib(indexFenoK);
+            if (outputCalibFlag)
+             OutputRegisterCalib(indexFenoK,indexFenoColumn);
+           }
+         }
        }
    	 }
 
@@ -1130,9 +1156,9 @@ RC OUTPUT_RegisterData(ENGINE_CONTEXT *pEngineContext)
     else if (THRD_id==THREAD_TYPE_KURUCZ)
      outputRunCalib++;
 
-    OutputRegisterFields(pEngineContext);
+    OutputRegisterFields(pEngineContext);                                       // do not depend on swath size
     OutputRegisterParam(pEngineContext,(THRD_id==THREAD_TYPE_ANALYSIS)?0:1);
-    OutputRegisterFluxes(pEngineContext);
+    OutputRegisterFluxes(pEngineContext);                                       // do not depend on swath size
    }
 
   #if defined(__DEBUG_) && __DEBUG_
@@ -1161,7 +1187,7 @@ void OutputCalib(ENGINE_CONTEXT *pEngineContext)
   FENO                *pTabFeno;
   CROSS_REFERENCE     *TabCross;
   CROSS_RESULTS       *pTabCrossResults;
-  INDEX                indexFeno,indexFenoK,indexColumn,indexTabCross,indexWin;
+  INDEX                indexFeno,indexFenoColumn,indexFenoK,indexColumnOld,indexColumn,indexTabCross,indexWin;
   INT                  nbWin;
   double               defaultValue;
 
@@ -1175,83 +1201,94 @@ void OutputCalib(ENGINE_CONTEXT *pEngineContext)
   pProject=(PROJECT *)&pEngineContext->project;
   pResults=(PRJCT_RESULTS_ASCII *)&pProject->asciiResults;
 
-  nbWin=KURUCZ_buffers.Nb_Win;
-  indexFenoK=ITEM_NONE;
+  indexColumnOld=indexColumn=0;
 
-  for (indexFeno=0;(indexFeno<NFeno) && (indexFenoK==ITEM_NONE);indexFeno++)
-   if (TabFeno[indexFeno].hidden==1)
-    indexFenoK=indexFeno;
-
-  if (outputCalibFlag && (indexFeno<NFeno))
+  for (indexFenoColumn=0;indexFenoColumn<ANALYSE_swathSize;indexFenoColumn++)
    {
-    pTabFeno=&TabFeno[indexFenoK];
-    TabCross=pTabFeno->TabCross;
+   	if ((pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_OMI) ||
+   	     pEngineContext->project.instrumental.omi.omiTracks[indexFenoColumn])
+   	 {
+      nbWin=KURUCZ_buffers[indexFenoColumn].Nb_Win;
+      indexFenoK=ITEM_NONE;
 
-    for (indexWin=0;indexWin<nbWin;indexWin++)
-     {
-     	// Bypass predefined data (e.g. reference spectrum record)
+      for (indexFeno=0;(indexFeno<NFeno) && (indexFenoK==ITEM_NONE);indexFeno++)
+       if (TabFeno[indexFenoColumn][indexFeno].hidden==1)
+        indexFenoK=indexFeno;
 
-      for (indexColumn=0;(outputFields[indexColumn].fieldDim2!=ITEM_NONE);indexColumn++);
-
-      // RMS
-
-      ((double *)outputColumns[indexColumn++])[indexWin]=KURUCZ_buffers.KuruczFeno[indexFeno].rms[indexWin];
-
-      // Fitted parameters
-
-      for (indexTabCross=0;indexTabCross<pTabFeno->NTabCross;indexTabCross++)
+      if (outputCalibFlag && (indexFeno<NFeno))
        {
-        pTabCrossResults=&pTabFeno->TabCrossResults[indexTabCross];
+        pTabFeno=&TabFeno[indexFenoColumn][indexFenoK];
+        TabCross=pTabFeno->TabCross;
 
-        pTabCrossResults=&KURUCZ_buffers.KuruczFeno[indexFeno].results[indexWin][indexTabCross];
-
-        if (pTabCrossResults->StoreSlntCol)            // Slant column
-         	((double *)outputColumns[indexColumn++])[indexWin]=
-         	(!pTabFeno->rc && (pTabCrossResults->SlntFact!=(double)0.))?
-         	 (double)pTabCrossResults->SlntCol/pTabCrossResults->SlntFact:(double)defaultValue;
-
-        if (pTabCrossResults->StoreSlntErr)            // Error on slant column
-         	((double *)outputColumns[indexColumn++])[indexWin]=
-         	(!pTabFeno->rc && (pTabCrossResults->SlntFact!=(double)0.))?
-         	 (double)pTabCrossResults->SlntErr/pTabCrossResults->SlntFact:(double)defaultValue;
-
-        if (pTabCrossResults->StoreShift)              // Shift
+        for (indexWin=0;indexWin<nbWin;indexWin++)
          {
-          ((double *)outputColumns[indexColumn++])[indexWin]=(!pTabFeno->rc)?(double)pTabCrossResults->Shift:(double)defaultValue;
-          if (pTabCrossResults->StoreError)
-           ((double *)outputColumns[indexColumn++])[indexWin]=(!pTabFeno->rc)?(double)pTabCrossResults->SigmaShift:(double)defaultValue;
+         	// Bypass predefined data (e.g. reference spectrum record)
+
+          for (indexColumn=indexColumnOld;(outputFields[indexColumn].fieldDim2!=ITEM_NONE);indexColumn++);
+
+          // RMS
+
+          ((double *)outputColumns[indexColumn++])[indexWin]=KURUCZ_buffers[indexFenoColumn].KuruczFeno[indexFeno].rms[indexWin];
+
+          // Fitted parameters
+
+          for (indexTabCross=0;indexTabCross<pTabFeno->NTabCross;indexTabCross++)
+           {
+            pTabCrossResults=&pTabFeno->TabCrossResults[indexTabCross];
+
+            pTabCrossResults=&KURUCZ_buffers[indexFenoColumn].KuruczFeno[indexFeno].results[indexWin][indexTabCross];
+
+            if (pTabCrossResults->StoreSlntCol)            // Slant column
+             	((double *)outputColumns[indexColumn++])[indexWin]=
+             	(!pTabFeno->rc && (pTabCrossResults->SlntFact!=(double)0.))?
+             	 (double)pTabCrossResults->SlntCol/pTabCrossResults->SlntFact:(double)defaultValue;
+
+            if (pTabCrossResults->StoreSlntErr)            // Error on slant column
+             	((double *)outputColumns[indexColumn++])[indexWin]=
+             	(!pTabFeno->rc && (pTabCrossResults->SlntFact!=(double)0.))?
+             	 (double)pTabCrossResults->SlntErr/pTabCrossResults->SlntFact:(double)defaultValue;
+
+            if (pTabCrossResults->StoreShift)              // Shift
+             {
+              ((double *)outputColumns[indexColumn++])[indexWin]=(!pTabFeno->rc)?(double)pTabCrossResults->Shift:(double)defaultValue;
+              if (pTabCrossResults->StoreError)
+               ((double *)outputColumns[indexColumn++])[indexWin]=(!pTabFeno->rc)?(double)pTabCrossResults->SigmaShift:(double)defaultValue;
+             }
+
+            if (pTabCrossResults->StoreStretch)            // Stretch
+             {
+              ((double *)outputColumns[indexColumn++])[indexWin]=(!pTabFeno->rc)?(double)pTabCrossResults->Stretch:(double)defaultValue;
+              if (pTabCrossResults->StoreError)
+               ((double *)outputColumns[indexColumn++])[indexWin]=(!pTabFeno->rc)?(double)pTabCrossResults->SigmaStretch:(double)defaultValue;
+              ((double *)outputColumns[indexColumn++])[indexWin]=(!pTabFeno->rc)?(double)pTabCrossResults->Stretch2:(double)defaultValue;
+              if (pTabCrossResults->StoreError)
+               ((double *)outputColumns[indexColumn++])[indexWin]=(!pTabFeno->rc)?(double)pTabCrossResults->SigmaStretch2:(double)defaultValue;
+             }
+
+            if (pTabCrossResults->StoreScale)              // Scale
+             {
+              ((double *)outputColumns[indexColumn++])[indexWin]=(!pTabFeno->rc)?(double)pTabCrossResults->Scale:(double)defaultValue;
+              if (pTabCrossResults->StoreError)
+               ((double *)outputColumns[indexColumn++])[indexWin]=(!pTabFeno->rc)?(double)pTabCrossResults->SigmaScale:(double)defaultValue;
+              ((double *)outputColumns[indexColumn++])[indexWin]=(!pTabFeno->rc)?(double)pTabCrossResults->Scale2:(double)defaultValue;
+              if (pTabCrossResults->StoreError)
+               ((double *)outputColumns[indexColumn++])[indexWin]=(!pTabFeno->rc)?(double)pTabCrossResults->SigmaScale2:(double)defaultValue;
+             }
+
+            if (pTabCrossResults->StoreParam)              // Param
+             {
+              ((double *)outputColumns[indexColumn++])[indexWin]=
+               (double)((!pTabFeno->rc)?
+                       ((TabCross[indexTabCross].IndSvdA)?pTabCrossResults->SlntCol:pTabCrossResults->Param):defaultValue);
+              if (pTabCrossResults->StoreParamError)
+              ((double *)outputColumns[indexColumn++])[indexWin]=
+               (double)((!pTabFeno->rc)?
+                       ((TabCross[indexTabCross].IndSvdA)?pTabCrossResults->SlntErr:pTabCrossResults->SigmaParam):(double)defaultValue);
+             }
+           }
          }
 
-        if (pTabCrossResults->StoreStretch)            // Stretch
-         {
-          ((double *)outputColumns[indexColumn++])[indexWin]=(!pTabFeno->rc)?(double)pTabCrossResults->Stretch:(double)defaultValue;
-          if (pTabCrossResults->StoreError)
-           ((double *)outputColumns[indexColumn++])[indexWin]=(!pTabFeno->rc)?(double)pTabCrossResults->SigmaStretch:(double)defaultValue;
-          ((double *)outputColumns[indexColumn++])[indexWin]=(!pTabFeno->rc)?(double)pTabCrossResults->Stretch2:(double)defaultValue;
-          if (pTabCrossResults->StoreError)
-           ((double *)outputColumns[indexColumn++])[indexWin]=(!pTabFeno->rc)?(double)pTabCrossResults->SigmaStretch2:(double)defaultValue;
-         }
-
-        if (pTabCrossResults->StoreScale)              // Scale
-         {
-          ((double *)outputColumns[indexColumn++])[indexWin]=(!pTabFeno->rc)?(double)pTabCrossResults->Scale:(double)defaultValue;
-          if (pTabCrossResults->StoreError)
-           ((double *)outputColumns[indexColumn++])[indexWin]=(!pTabFeno->rc)?(double)pTabCrossResults->SigmaScale:(double)defaultValue;
-          ((double *)outputColumns[indexColumn++])[indexWin]=(!pTabFeno->rc)?(double)pTabCrossResults->Scale2:(double)defaultValue;
-          if (pTabCrossResults->StoreError)
-           ((double *)outputColumns[indexColumn++])[indexWin]=(!pTabFeno->rc)?(double)pTabCrossResults->SigmaScale2:(double)defaultValue;
-         }
-
-        if (pTabCrossResults->StoreParam)              // Param
-         {
-          ((double *)outputColumns[indexColumn++])[indexWin]=
-           (double)((!pTabFeno->rc)?
-                   ((TabCross[indexTabCross].IndSvdA)?pTabCrossResults->SlntCol:pTabCrossResults->Param):defaultValue);
-          if (pTabCrossResults->StoreParamError)
-          ((double *)outputColumns[indexColumn++])[indexWin]=
-           (double)((!pTabFeno->rc)?
-                   ((TabCross[indexTabCross].IndSvdA)?pTabCrossResults->SlntErr:pTabCrossResults->SigmaParam):(double)defaultValue);
-         }
+        indexColumnOld=indexColumn;
        }
      }
    }
@@ -1266,7 +1303,7 @@ void OutputCalib(ENGINE_CONTEXT *pEngineContext)
 //               hiddenFlag  0 to save analysis results, 1 to save calibration results
 // -----------------------------------------------------------------------------
 
-void OutputSaveRecord(ENGINE_CONTEXT *pEngineContext,INT hiddenFlag)
+void OutputSaveRecord(ENGINE_CONTEXT *pEngineContext,INT hiddenFlag,INDEX indexFenoColumn)
  {
   // Declarations
 
@@ -1291,7 +1328,7 @@ void OutputSaveRecord(ENGINE_CONTEXT *pEngineContext,INT hiddenFlag)
   double               defaultValue;
   INT                  nbWin,indexWin;
 
-  nbWin=(hiddenFlag)?KURUCZ_buffers.Nb_Win:1;
+  nbWin=(hiddenFlag)?KURUCZ_buffers[indexFenoColumn].Nb_Win:1;
 
   // Initializations
 
@@ -1611,6 +1648,10 @@ void OutputSaveRecord(ENGINE_CONTEXT *pEngineContext,INT hiddenFlag)
          ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->elevationViewAngle;
         break;
      // ----------------------------------------------------------------------
+        case PRJCT_RESULTS_ASCII_VIEW_ZENITH :
+         ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->zenithViewAngle;
+        break;
+     // ----------------------------------------------------------------------
         case PRJCT_RESULTS_ASCII_VIEW_AZIMUTH :
          ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->azimuthViewAngle;
         break;
@@ -1647,7 +1688,7 @@ void OutputSaveRecord(ENGINE_CONTEXT *pEngineContext,INT hiddenFlag)
          else if (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_ASCII)
           indexColumn+=3;
          else
-          indexColumn++;
+          ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->zenithViewAngle;
 
         break;
      // ----------------------------------------------------------------------
@@ -1684,7 +1725,7 @@ void OutputSaveRecord(ENGINE_CONTEXT *pEngineContext,INT hiddenFlag)
          else if (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_ASCII)
           indexColumn+=3;
          else
-          indexColumn++;
+          ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->azimuthViewAngle;
 
         break;
      // ----------------------------------------------------------------------
@@ -1828,6 +1869,22 @@ void OutputSaveRecord(ENGINE_CONTEXT *pEngineContext,INT hiddenFlag)
          ((DoasUS *)outputColumns[indexColumn++])[indexRecord]=(DoasUS)pRecordInfo->ccd.saturatedFlag;
         break;
      // ---------------------------------------------------------------------
+        case PRJCT_RESULTS_ASCII_OMI_INDEX_SWATH :
+         ((INT *)outputColumns[indexColumn++])[indexRecord]=(INT)pRecordInfo->omi.omiSwathIndex;
+        break;
+     // ---------------------------------------------------------------------
+        case PRJCT_RESULTS_ASCII_OMI_INDEX_ROW :
+         ((INT *)outputColumns[indexColumn++])[indexRecord]=(INT)pRecordInfo->omi.omiRowIndex;
+        break;
+     // ---------------------------------------------------------------------
+        case PRJCT_RESULTS_ASCII_UAV_SERVO_BYTE_SENT :
+         ((DoasUS *)outputColumns[indexColumn++])[indexRecord]=(DoasUS)pRecordInfo->uavBira.servoSentPosition;
+        break;
+     // ---------------------------------------------------------------------
+        case PRJCT_RESULTS_ASCII_UAV_SERVO_BYTE_RECEIVED :
+         ((DoasUS *)outputColumns[indexColumn++])[indexRecord]=(DoasUS)pRecordInfo->uavBira.servoReceivedPosition;
+        break;
+     // ----------------------------------------------------------------------
         default :
          k--;
         break;
@@ -1843,7 +1900,7 @@ void OutputSaveRecord(ENGINE_CONTEXT *pEngineContext,INT hiddenFlag)
 
      for (indexFeno=0;indexFeno<NFeno;indexFeno++)
       {
-      	pTabFeno=(!hiddenFlag)?&TabFeno[indexFeno]:&TabFeno[KURUCZ_buffers.indexKurucz];
+      	pTabFeno=(!hiddenFlag)?&TabFeno[indexFenoColumn][indexFeno]:&TabFeno[indexFenoColumn][KURUCZ_buffers[indexFenoColumn].indexKurucz];
       	TabCross=pTabFeno->TabCross;
 
       	if (pTabFeno->hidden==hiddenFlag)
@@ -1878,17 +1935,17 @@ void OutputSaveRecord(ENGINE_CONTEXT *pEngineContext,INT hiddenFlag)
           }
 
          if (OUTPUT_chiSquareFlag)
-          ((double *)outputColumns[indexColumn++])[indexRecord]=(!hiddenFlag)?(double)pTabFeno->chiSquare:KURUCZ_buffers.KuruczFeno[indexFeno].chiSquare[indexWin];
+          ((double *)outputColumns[indexColumn++])[indexRecord]=(!hiddenFlag)?(double)pTabFeno->chiSquare:KURUCZ_buffers[indexFenoColumn].KuruczFeno[indexFeno].chiSquare[indexWin];
          if (OUTPUT_rmsFlag)
-          ((double *)outputColumns[indexColumn++])[indexRecord]=(!hiddenFlag)?(double)pTabFeno->RMS:KURUCZ_buffers.KuruczFeno[indexFeno].rms[indexWin];
+          ((double *)outputColumns[indexColumn++])[indexRecord]=(!hiddenFlag)?(double)pTabFeno->RMS:KURUCZ_buffers[indexFenoColumn].KuruczFeno[indexFeno].rms[indexWin];
          if (OUTPUT_iterFlag)
-          ((int *)outputColumns[indexColumn++])[indexRecord]=(!hiddenFlag)?(double)pTabFeno->nIter:KURUCZ_buffers.KuruczFeno[indexFeno].nIter[indexWin];
+          ((int *)outputColumns[indexColumn++])[indexRecord]=(!hiddenFlag)?(double)pTabFeno->nIter:KURUCZ_buffers[indexFenoColumn].KuruczFeno[indexFeno].nIter[indexWin];
 
          // Cross sections results
 
          for (indexTabCross=0;indexTabCross<pTabFeno->NTabCross;indexTabCross++)
           {
-           pTabCrossResults=(!hiddenFlag)?&pTabFeno->TabCrossResults[indexTabCross]:&KURUCZ_buffers.KuruczFeno[indexFeno].results[indexWin][indexTabCross];
+           pTabCrossResults=(!hiddenFlag)?&pTabFeno->TabCrossResults[indexTabCross]:&KURUCZ_buffers[indexFenoColumn].KuruczFeno[indexFeno].results[indexWin][indexTabCross];
 
            if (pTabCrossResults->indexAmf!=ITEM_NONE)
             {
@@ -2948,7 +3005,7 @@ RC OUTPUT_FlushBuffers(ENGINE_CONTEXT *pEngineContext)
 //               ERROR_ID_NO on success
 // -----------------------------------------------------------------------------
 
-RC OUTPUT_SaveResults(ENGINE_CONTEXT *pEngineContext)
+RC OUTPUT_SaveResults(ENGINE_CONTEXT *pEngineContext,INDEX indexFenoColumn)
  {
   // Declarations
 
@@ -2970,7 +3027,7 @@ RC OUTPUT_SaveResults(ENGINE_CONTEXT *pEngineContext)
 
    for (indexFeno=0;indexFeno<NFeno;indexFeno++)
     {
-     pTabFeno=&TabFeno[indexFeno];
+     pTabFeno=&TabFeno[indexFenoColumn][indexFeno];
 
      if ((THRD_id!=THREAD_TYPE_KURUCZ) && !pTabFeno->hidden && !pTabFeno->rcKurucz)
       {
@@ -3003,7 +3060,7 @@ RC OUTPUT_SaveResults(ENGINE_CONTEXT *pEngineContext)
    }
 
   if (outputNbRecords<pEngineContext->recordNumber)
-   OutputSaveRecord(pEngineContext,(THRD_id==THREAD_TYPE_ANALYSIS)?0:1);
+   OutputSaveRecord(pEngineContext,(THRD_id==THREAD_TYPE_ANALYSIS)?0:1,indexFenoColumn);
 
   // Results safe keeping
 

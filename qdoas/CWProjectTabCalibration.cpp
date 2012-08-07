@@ -51,27 +51,46 @@ CWProjectTabCalibration::CWProjectTabCalibration(const mediate_project_calibrati
   m_refFileEdit  = new QLineEdit(this);
   m_refFileEdit->setMaxLength(sizeof(properties->solarRefFile) - 1); // limit test length to buffer size
 
-  topLayout->addWidget(m_refFileEdit, 0, 1);
+  topLayout->addWidget(m_refFileEdit, 0, 1, 1, 4);
   QPushButton *browseBtn = new QPushButton("Browse", this);
-  topLayout->addWidget(browseBtn, 0, 2);
+  topLayout->addWidget(browseBtn, 0, 5);
 
   // methodType
   topLayout->addWidget(new QLabel("Analysis Method", this), 1, 0);
   m_methodCombo = new QComboBox(this);
   m_methodCombo->addItem("Optical Density Fitting", QVariant(PRJCT_ANLYS_METHOD_SVD));
   m_methodCombo->addItem("Intensity fitting (Marquardt-Levenberg+SVD)", QVariant(PRJCT_ANLYS_METHOD_SVDMARQUARDT));
-  topLayout->addWidget(m_methodCombo, 1, 1, 1, 2); // spans two columns
+  topLayout->addWidget(m_methodCombo, 1, 1, 1, 4); // spans two columns
 
   // line shape
   topLayout->addWidget(new QLabel("Line Shape (SFP)", this), 2, 0);
   m_lineShapeCombo = new QComboBox(this);
   m_lineShapeCombo->addItem("Dont Fit", QVariant(PRJCT_CALIB_FWHM_TYPE_NONE));
+  m_lineShapeCombo->addItem("File", QVariant(PRJCT_CALIB_FWHM_TYPE_FILE));
   m_lineShapeCombo->addItem("Gaussian", QVariant(PRJCT_CALIB_FWHM_TYPE_GAUSS));
   m_lineShapeCombo->addItem("Error Function", QVariant(PRJCT_CALIB_FWHM_TYPE_ERF));
   m_lineShapeCombo->addItem("2n-Lorentz", QVariant(PRJCT_CALIB_FWHM_TYPE_INVPOLY));
   m_lineShapeCombo->addItem("Voigt", QVariant(PRJCT_CALIB_FWHM_TYPE_VOIGT));
   m_lineShapeCombo->addItem("Asymmetric Gaussian", QVariant(PRJCT_CALIB_FWHM_TYPE_AGAUSS));
+  m_lineShapeCombo->setFixedWidth(160);
   topLayout->addWidget(m_lineShapeCombo, 2, 1);
+
+  // File
+  m_fileWidget = new QFrame(this);
+  m_fileWidget->setFrameStyle(QFrame::NoFrame);
+  QHBoxLayout *fileLayout = new QHBoxLayout(m_fileWidget);
+  fileLayout->setMargin(0);
+  m_slfFileEdit  = new QLineEdit(this);
+  // m_slfFileEdit->setMaxLength(sizeof(properties->solarRefFile) - 1); // limit test length to buffer size
+
+  fileLayout->addWidget(m_slfFileEdit);
+  QPushButton *fileBrowseBtn = new QPushButton("Browse", this);
+  fileLayout->addWidget(fileBrowseBtn);
+
+
+  topLayout->addWidget(m_fileWidget, 2, 2, 2,4);
+  //topLayout->addWidget(fileBrowseBtn,2,5);
+  m_fileWidget->hide(); // show when lineshape combo is File
 
   // degree of 2n-Lorentz
   m_degreeWidget = new QFrame(this);
@@ -82,12 +101,18 @@ CWProjectTabCalibration::CWProjectTabCalibration(const mediate_project_calibrati
   m_degreeSpinBox = new QSpinBox(this);
   m_degreeSpinBox->setRange(0, 10);
   degreeLayout->addWidget(m_degreeSpinBox);
-  topLayout->addWidget(m_degreeWidget, 2, 2);
+  topLayout->addWidget(m_degreeWidget, 2, 5);
   m_degreeWidget->hide(); // show when lineshape combo is cSpectralLineShapeLorentz
 
   // force some sizes to prevent 'jumpy' display.
   m_degreeSpinBox->setFixedHeight(m_lineShapeCombo->sizeHint().height());
   browseBtn->setFixedWidth(m_degreeWidget->sizeHint().width());
+  fileBrowseBtn->setFixedWidth(m_degreeWidget->sizeHint().width());
+
+  // force some sizes to prevent 'jumpy' display.
+  m_slfFileEdit->setFixedHeight(m_lineShapeCombo->sizeHint().height());
+  // m_slfFileEdit->setFixedWidth(m_fileWidget->sizeHint().width());
+
 
   mainLayout->addLayout(topLayout);
 
@@ -188,6 +213,7 @@ CWProjectTabCalibration::CWProjectTabCalibration(const mediate_project_calibrati
 
   // set the current values
   m_refFileEdit->setText(QString(properties->solarRefFile));
+  m_slfFileEdit->setText(QString(properties->slfFile));
 
   index = m_methodCombo->findData(QVariant(properties->methodType));
   if (index != -1)
@@ -237,6 +263,7 @@ CWProjectTabCalibration::CWProjectTabCalibration(const mediate_project_calibrati
   // connections
   connect(m_lineShapeCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(slotLineShapeSelectionChanged(int)));
   connect(browseBtn, SIGNAL(clicked()), this, SLOT(slotBrowseSolarRefFile()));
+  connect(fileBrowseBtn, SIGNAL(clicked()), this, SLOT(slotBrowseSlfFile()));
 
 }
 
@@ -248,6 +275,7 @@ void CWProjectTabCalibration::apply(mediate_project_calibration_t *properties) c
 {
   // a safe text length is assured.
   strcpy(properties->solarRefFile, m_refFileEdit->text().toAscii().data());
+  strcpy(properties->slfFile, m_slfFileEdit->text().toAscii().data());
 
   properties->methodType = m_methodCombo->itemData(m_methodCombo->currentIndex()).toInt();
 
@@ -279,6 +307,11 @@ void CWProjectTabCalibration::slotLineShapeSelectionChanged(int index)
 {
   int tmp = m_lineShapeCombo->itemData(index).toInt();
 
+  if (tmp == PRJCT_CALIB_FWHM_TYPE_FILE)
+    m_fileWidget->show();
+  else
+    m_fileWidget->hide();
+
   if (tmp == PRJCT_CALIB_FWHM_TYPE_INVPOLY)
     m_degreeWidget->show();
   else
@@ -300,6 +333,21 @@ void CWProjectTabCalibration::slotBrowseSolarRefFile()
     pref->setDirectoryNameGivenFile("Ref", filename);
 
     m_refFileEdit->setText(filename);
+  }
+}
+
+void CWProjectTabCalibration::slotBrowseSlfFile()
+{
+  CPreferences *pref = CPreferences::instance();
+
+  QString filename = QFileDialog::getOpenFileName(this, "Open Slit Function File",
+						  pref->directoryName("Slf"),
+                                                  "Slit function File (*.slf);;All Files (*)");
+
+  if (!filename.isEmpty()) {
+    pref->setDirectoryNameGivenFile("Slf", filename);
+
+    m_slfFileEdit->setText(filename);
   }
 }
 

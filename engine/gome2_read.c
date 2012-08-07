@@ -2287,7 +2287,7 @@ RC Gome2NewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
    for (indexFeno=0;(indexFeno<NFeno) && !rc;indexFeno++)
     {
-     pTabFeno=&TabFeno[indexFeno];
+     pTabFeno=&TabFeno[0][indexFeno];
 
      if ((pTabFeno->hidden!=1) &&
          (pTabFeno->useKurucz!=ANLYS_KURUCZ_SPEC) &&
@@ -2361,9 +2361,11 @@ RC GOME2_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
     // Browse analysis windows and load missing data
 
+
+
     for (indexFeno=0;(indexFeno<NFeno) && !rc;indexFeno++)
      {
-      pTabFeno=&TabFeno[indexFeno];
+      pTabFeno=&TabFeno[0][indexFeno];
       pTabFeno->NDET=NDET;
 
       // Load calibration and reference spectra
@@ -2373,7 +2375,7 @@ RC GOME2_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
         memcpy(pTabFeno->LambdaRef,pOrbitFile->gome2SunWve,sizeof(double)*NDET);
         memcpy(pTabFeno->Sref,pOrbitFile->gome2SunRef,sizeof(double)*NDET);
 
-        if (!TabFeno[indexFeno].hidden)
+        if (!TabFeno[0][indexFeno].hidden)
          {
           if (!(rc=VECTOR_NormalizeVector(pTabFeno->Sref-1,pTabFeno->NDET,&pTabFeno->refNormFact,"GOME2_LoadAnalysis (Reference) ")))
            {
@@ -2419,7 +2421,7 @@ RC GOME2_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
             if (((rc=ANALYSE_XsInterpolation(pTabFeno,pTabFeno->LambdaRef))!=ERROR_ID_NO) ||
                 ((!pKuruczOptions->fwhmFit || !pTabFeno->useKurucz) && pTabFeno->xsToConvolute &&
-                ((rc=ANALYSE_XsConvolution(pTabFeno,pTabFeno->LambdaRef,&ANALYSIS_slit,&ANALYSIS_slit2,pSlitOptions->slitFunction.slitType,&pSlitOptions->slitFunction.slitParam,&pSlitOptions->slitFunction.slitParam2))!=ERROR_ID_NO)))
+                ((rc=ANALYSE_XsConvolution(pTabFeno,pTabFeno->LambdaRef,&ANALYSIS_slit,&ANALYSIS_slit2,pSlitOptions->slitFunction.slitType,&pSlitOptions->slitFunction.slitParam,&pSlitOptions->slitFunction.slitParam2,0))!=ERROR_ID_NO)))
 
              goto EndGOME2_LoadAnalysis;
            }
@@ -2445,9 +2447,9 @@ RC GOME2_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
     if (useKurucz || (THRD_id==THREAD_TYPE_KURUCZ))
      {
-      KURUCZ_Init(0);
+      KURUCZ_Init(0,0);
 
-      if ((THRD_id!=THREAD_TYPE_KURUCZ) && ((rc=KURUCZ_Reference(NULL,0,saveFlag,0,responseHandle))!=ERROR_ID_NO))
+      if ((THRD_id!=THREAD_TYPE_KURUCZ) && ((rc=KURUCZ_Reference(NULL,0,saveFlag,0,responseHandle,0))!=ERROR_ID_NO))
        goto EndGOME2_LoadAnalysis;
      }
 
@@ -2467,8 +2469,8 @@ RC GOME2_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
     // Automatic reference selection
 
     if (gome2LoadReferenceFlag && !(rc=Gome2NewRef(pEngineContext,responseHandle)) &&
-       !(rc=ANALYSE_AlignReference(pEngineContext,2,pEngineContext->project.spectra.displayDataFlag,responseHandle))) // automatic ref selection for Northern hemisphere
-         rc=ANALYSE_AlignReference(pEngineContext,3,pEngineContext->project.spectra.displayDataFlag,responseHandle);     // automatic ref selection for Southern hemisphere
+       !(rc=ANALYSE_AlignReference(pEngineContext,2,pEngineContext->project.spectra.displayDataFlag,responseHandle,0))) // automatic ref selection for Northern hemisphere
+         rc=ANALYSE_AlignReference(pEngineContext,3,pEngineContext->project.spectra.displayDataFlag,responseHandle,0);     // automatic ref selection for Southern hemisphere
    }
 
   // Return

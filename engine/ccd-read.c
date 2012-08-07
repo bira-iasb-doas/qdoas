@@ -279,6 +279,7 @@ RC SetCCD_EEV(ENGINE_CONTEXT *pEngineContext,FILE *specFp,FILE *darkFp)
   DoasU32   *recordIndexes;                                                       // indexes of records for direct access
   INT      ccdX,ccdY,dataSize;                                                  // size of the detector
   int      specMaxFlag;                                                         // 1 to use specMax, the vector of maxima of the scans
+  int      maxScans;
   INDEX    indexTps;                                                            // browse the predefined integration time
   DoasU32    offset;                                                              // offset to remove from the spectrum
   RC       rc;                                                                  // return code
@@ -299,7 +300,7 @@ RC SetCCD_EEV(ENGINE_CONTEXT *pEngineContext,FILE *specFp,FILE *darkFp)
   memset(ccdDarkCurrentOffset,-1L,sizeof(DoasU32)*MAXTPS);
   pEngineContext->recordIndexesSize=2001;
   pEngineContext->recordNumber=0;
-  specMaxFlag=0;
+  specMaxFlag=maxScans=0;
 
   rc=ERROR_ID_NO;
 
@@ -351,6 +352,9 @@ RC SetCCD_EEV(ENGINE_CONTEXT *pEngineContext,FILE *specFp,FILE *darkFp)
         recordIndexes[pEngineContext->recordNumber]+=
          (sizeof(double)+sizeof(short))*header.nTint+sizeof(double)*(header.nrej+header.nacc);
 
+        if (header.nrej+header.nacc>maxScans)
+         maxScans=header.nrej+header.nacc;
+
         specMaxFlag++;
        }
 
@@ -384,7 +388,7 @@ RC SetCCD_EEV(ENGINE_CONTEXT *pEngineContext,FILE *specFp,FILE *darkFp)
 
     // Allocate a buffer to display the variation of the signal along the acquisitions
 
-    if ((specMaxFlag && ((pBuffers->specMax=MEMORY_AllocDVector("SetCCD_EEV","specMax",0,NDET-1))==NULL)) ||
+    if ((specMaxFlag && ((pBuffers->specMax=MEMORY_AllocDVector("SetCCD_EEV","specMax",0,maxScans-1))==NULL)) ||
         (pEngineContext->analysisRef.refScan && pEngineContext->recordNumber &&
        ((pRef->scanRefIndexes=(INT *)MEMORY_AllocBuffer("EngineSetFile","scanRefIndexes",pEngineContext->recordNumber,sizeof(INT),0,MEMORY_TYPE_INT))==NULL)))
      rc=ERROR_ID_ALLOC;
@@ -464,7 +468,6 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
   #if defined(__DEBUG_) && __DEBUG_
   DEBUG_FunctionBegin("ReliCCD_EEV",DEBUG_FCTTYPE_FILE);
   #endif
-
   // Initializations
 
   pRecord=&pEngineContext->recordInfo;
@@ -486,6 +489,9 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
    rc=ERROR_ID_FILE_END;
   else
    {
+    for(i=0;i<NDET;i++)
+     dspectrum[i]=(double)0.;
+
     // Set file pointers
 
     fseek(specFp,(DoasI32)pBuffers->recordIndexes[recordNo-1],SEEK_SET);
@@ -496,8 +502,6 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
      rc=ERROR_SetLast("ReliCCD_EEV",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pEngineContext->fileInfo.fileName);
     else
      {
-     	// !!! if (ccdImageFilesN)
-
       // get the size of the CCD
 
       ccdX=(header.roiWveEnd-header.roiWveStart+1)/header.roiWveGroup;
@@ -511,227 +515,229 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
 
       if (((spectrum=(DoasUS *)MEMORY_AllocBuffer("ReliCCD_EEV","spectrum",spSize,sizeof(DoasUS),0,MEMORY_TYPE_USHORT))==NULL) ||
           ((tmpSpectrum=(double *)MEMORY_AllocBuffer("ReliCCD_EEV","tmpSpectrum",spSize,sizeof(double),0,MEMORY_TYPE_DOUBLE))==NULL) ||
-          ((darkCurrent=(DoasUS *)MEMORY_AllocBuffer("ReliCCD_EEV","darkCurrent",NDET*400,sizeof(DoasUS),0,MEMORY_TYPE_USHORT))==NULL) ||
+          ((darkCurrent=(DoasUS *)MEMORY_AllocBuffer("ReliCCD_EEV","darkCurrent",spSize,sizeof(DoasUS),0,MEMORY_TYPE_USHORT))==NULL) ||
           ((ccdTabNTint=(DoasUS *)MEMORY_AllocBuffer("ReliCCD_EEV","ccdTabNTint",300,sizeof(DoasUS),0,MEMORY_TYPE_USHORT))==NULL) ||
           ((ccdTabTint=(double *)MEMORY_AllocBuffer("ReliCCD_EEV","ccdTabTint",300,sizeof(double),0,MEMORY_TYPE_DOUBLE))==NULL))
 
        rc=ERROR_ID_ALLOC;
 
-      else
-       {
-        memset(spectrum,0,sizeof(DoasUS)*spSize);
-        memset(darkCurrent,0,sizeof(DoasUS)*spSize);
+       else
+        {
+         memset(spectrum,0,sizeof(DoasUS)*spSize);
+         memset(darkCurrent,0,sizeof(DoasUS)*spSize);
 
-        for(i=0;i<NDET;i++)
-         tmpSpectrum[i]=(double)0.;
+         for(i=0;i<NDET;i++)
+          tmpSpectrum[i]=(double)0.;
 
-        rcFread=(header.doubleFlag==(DoasCh)1)?
-                fread(tmpSpectrum,sizeof(double)*spSize,1,specFp):
-                 fread(spectrum,sizeof(DoasUS)*spSize,1,specFp);
+         rcFread=(header.doubleFlag==(DoasCh)1)?
+                  fread(tmpSpectrum,sizeof(double)*spSize,1,specFp):
+                  fread(spectrum,sizeof(DoasUS)*spSize,1,specFp);
 
-        if (!rcFread ||
-           ((header.nTint>0) &&
-           (!fread(ccdTabTint,sizeof(double)*header.nTint,1,specFp) ||
-            !fread(ccdTabNTint,sizeof(short)*header.nTint,1,specFp) ||
-            !fread(pBuffers->specMax,sizeof(double)*(header.nacc+header.nrej),1,specFp))))
+         if (!rcFread)
+          rc=ERROR_SetLast("ReliCCD_EEV",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pEngineContext->fileInfo.fileName);
+         else if ((header.nTint<=0) ||
+                  !fread(ccdTabTint,sizeof(double)*header.nTint,1,specFp) ||
+                  !fread(ccdTabNTint,sizeof(short)*header.nTint,1,specFp) ||
+                  !fread(pBuffers->specMax,sizeof(double)*(header.nacc+header.nrej),1,specFp))
+          rc=ERROR_ID_FILE_RECORD;
+         else if (!header.saveTracks)
+          {
+          	if (header.doubleFlag==(DoasCh)1)
+          	 memcpy(dspectrum,tmpSpectrum,sizeof(double)*spSize);
+          	else
+            for (i=0;i<spSize;i++)
+             dspectrum[i]=(double)spectrum[i];
+          }
+         else
+          {
+          	if (header.doubleFlag==(DoasCh)1)
+          	 {
+             // Accumulate spectra
 
-         rc=ERROR_SetLast("ReliCCD_EEV",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pEngineContext->fileInfo.fileName);
-        else if (!header.saveTracks)
-         {
-         	if (header.doubleFlag==(DoasCh)1)
-         	 memcpy(dspectrum,tmpSpectrum,sizeof(double)*spSize);
-         	else
-           for (i=0;i<spSize;i++)
-            dspectrum[i]=(double)spectrum[i];
-         }
-        else
-         {
-         	if (header.doubleFlag==(DoasCh)1)
-         	 {
-            // Accumulate spectra
-
-            for (i=0;i<NDET;i++)
-             {
-              dspectrum[i]=(double)0.;
-              for (j=0;j<ccdY;j++)
-               dspectrum[i]+=tmpSpectrum[NDET*j+i];
-              dspectrum[i]/=ccdY;
-             }
-         	 }
-         	else
-         	 {
-            // Accumulate spectra
-
-            for (i=0;i<NDET;i++)
-             {
-              dspectrum[i]=(double)0.;
-              for (j=0;j<ccdY;j++)
-               dspectrum[i]+=spectrum[NDET*j+i];
-              dspectrum[i]/=ccdY;
-             }
-           }
-         }
-
-        if (!rc)
-         {
-          // Data on the current spectrum
-
-          pRecord->Tint      = (double)header.exposureTime;
-          pRecord->NSomme    = header.nacc;
-          pRecord->Zm        = header.Zm;
-          pRecord->Tm        = header.Tm;
-          pRecord->NTracks   = (header.roiSlitEnd-header.roiSlitStart+1)/header.roiSlitGroup;
-          pRecord->rejected  = header.nrej;
-          pRecord->SkyObs    = 8;
-          pRecord->TDet      = (double)header.currentTemperature;
-          pRecord->ReguTemp  = (double)0.;
-          pRecord->TotalExpTime = (double)0.;
-
-          pRecord->als.alsFlag=0;
-          pRecord->als.scanIndex=-1;
-          pRecord->als.scanningAngle=
-          pRecord->als.compassAngle=
-          pRecord->als.pitchAngle=
-          pRecord->als.rollAngle=(float)0.;
-
-          pRecord->ccd.diodes[0]=pRecord->ccd.diodes[1]=pRecord->ccd.diodes[2]=pRecord->ccd.diodes[3]=(float)0.;
-          pRecord->ccd.targetElevation=header.brusagElevation;
-          pRecord->ccd.targetAzimuth=header.Azimuth;
-          pRecord->ccd.saturatedFlag=0;
-          pRecord->ccd.indexImage=CCD_SearchForImage((int)header.now.ti_hour*3600+header.now.ti_min*60+header.now.ti_sec);
-
-          if (header.alsFlag)
-           {
-           	pRecord->als.alsFlag=header.alsFlag;
-            pRecord->als.scanIndex=header.scanIndex;
-            pRecord->als.scanningAngle=header.scanningAngle;                                          // total number of spectra in tracks
-            pRecord->als.compassAngle=header.compassAngle;
-            pRecord->als.pitchAngle=header.pitchAngle;
-            pRecord->als.rollAngle=header.rollAngle;
-
-            strcpy(pRecord->als.atrString,header.ignored);
-
-            pRecord->ccd.filterNumber=pRecord->ccd.measureType=0;
-            pRecord->ccd.headTemperature=(double)0.;
-           }
-          else
-           {
-             pRecord->ccd.filterNumber=header.filterNumber;
-             pRecord->ccd.measureType=header.measureType;
-             pRecord->ccd.headTemperature=header.headTemperature;
-
-             if (header.brusagVersion==2)
+             for (i=0;i<NDET;i++)
               {
-               memcpy(pRecord->ccd.diodes,header.diodes,sizeof(float)*4);
-               pRecord->ccd.targetElevation=header.targetElevation;
-               pRecord->ccd.targetAzimuth=header.targetAzimuth;
-               pRecord->ccd.saturatedFlag=header.saturatedFlag;
+               dspectrum[i]=(double)0.;
+               for (j=0;j<ccdY;j++)
+                dspectrum[i]+=tmpSpectrum[NDET*j+i];
+               dspectrum[i]/=ccdY;
               }
-           }
+          	 }
+          	else
+          	 {
+             // Accumulate spectra
 
-          memcpy(&pRecord->present_day,&header.today,sizeof(SHORT_DATE));
-          memcpy(&pRecord->present_time,&header.now,sizeof(struct time));
+             for (i=0;i<NDET;i++)
+              {
+               dspectrum[i]=(double)0.;
+               for (j=0;j<ccdY;j++)
+                dspectrum[i]+=spectrum[NDET*j+i];
+               dspectrum[i]/=ccdY;
+              }
+            }
+          }
 
-          if (header.Tm<EPSILON)
-           pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_day,&pRecord->present_time,0);
+         if (!rc)
+          {
+           // Data on the current spectrum
 
+           pRecord->Tint      = (double)header.exposureTime;
+           pRecord->NSomme    = header.nacc;
+           pRecord->Zm        = header.Zm;
+           pRecord->Tm        = header.Tm;
+           pRecord->NTracks   = (header.roiSlitEnd-header.roiSlitStart+1)/header.roiSlitGroup;
+           pRecord->rejected  = header.nrej;
+           pRecord->SkyObs    = 8;
+           pRecord->TDet      = (double)header.currentTemperature;
+           pRecord->ReguTemp  = (double)0.;
+           pRecord->TotalExpTime = (double)0.;
 
-          memcpy(&pRecord->startTime,&header.startTime,sizeof(struct time));
-          memcpy(&pRecord->endTime,&header.endTime,sizeof(struct time));
+           pRecord->als.alsFlag=0;
+           pRecord->als.scanIndex=-1;
+           pRecord->als.scanningAngle=
+           pRecord->als.compassAngle=
+           pRecord->als.pitchAngle=
+           pRecord->als.rollAngle=(float)0.;
 
-          pRecord->elevationViewAngle=
-               ((pRecord->present_day.da_year>2003) ||
-               ((pRecord->present_day.da_year==2003) && (pRecord->present_day.da_mon>2)) ||
-               ((pRecord->present_day.da_year==2003) && (pRecord->present_day.da_mon==2) && (pRecord->present_day.da_day>20)))?
-                (float)header.brusagElevation:(float)-1.;
+           pRecord->ccd.diodes[0]=pRecord->ccd.diodes[1]=pRecord->ccd.diodes[2]=pRecord->ccd.diodes[3]=(float)0.;
+           pRecord->ccd.targetElevation=header.brusagElevation;
+           pRecord->ccd.targetAzimuth=header.Azimuth;
+           pRecord->ccd.saturatedFlag=0;
+           pRecord->ccd.indexImage=CCD_SearchForImage((int)header.now.ti_hour*3600+header.now.ti_min*60+header.now.ti_sec);
 
-          pRecord->Azimuth=header.Azimuth;
+           if (header.alsFlag)
+            {
+            	pRecord->als.alsFlag=header.alsFlag;
+             pRecord->als.scanIndex=header.scanIndex;
+             pRecord->als.scanningAngle=header.scanningAngle;                                          // total number of spectra in tracks
+             pRecord->als.compassAngle=header.compassAngle;
+             pRecord->als.pitchAngle=header.pitchAngle;
+             pRecord->als.rollAngle=header.rollAngle;
 
-          if (!header.alsFlag)
-           pRecord->azimuthViewAngle=
-                ((pRecord->present_day.da_year>2008) ||
-                ((pRecord->present_day.da_year==2008) && (pRecord->present_day.da_mon>4)))?
-                 (float)header.mirrorAzimuth:(float)-1.;
+             strcpy(pRecord->als.atrString,header.ignored);
 
-          pRecord->TimeDec=(double)header.now.ti_hour+header.now.ti_min/60.+header.now.ti_sec/3600.;
-          pRecord->localTimeDec=fmod(pRecord->TimeDec+24.+THRD_localShift,(double)24.);
-          memset(pRecord->Nom,0,20);
+             pRecord->ccd.filterNumber=pRecord->ccd.measureType=0;
+             pRecord->ccd.headTemperature=(double)0.;
+            }
+           else
+            {
+              pRecord->ccd.filterNumber=header.filterNumber;
+              pRecord->ccd.measureType=header.measureType;
+              pRecord->ccd.headTemperature=header.headTemperature;
 
-          // Build dark current
-
-          if (pRecord->NSomme==0)
-           rc=ERROR_SetLast("ReliCCD_EEV",ERROR_TYPE_WARNING,ERROR_ID_DIVISION_BY_0,"number of accumulations");
-          else if ((pBuffers->darkCurrent!=NULL) && (darkFp!=NULL))
-           {
-            for (i=0;i<NDET;i++)
-             pBuffers->darkCurrent[i]=(double)0.;
-
-            for (k=0;k<nTint;k++)
-             {
-              pRecord->TotalExpTime+=(double)ccdTabNTint[k]*ccdTabTint[k];
-
-              for (j=0;j<MAXTPS;j++)
-               if (ccdTabTint[k]<=predTint[j])
-                break;
-
-              if (j<MAXTPS)
+              if (header.brusagVersion==2)
                {
-                if ((j>0) && (predTint[j]!=ccdTabTint[k]) && (predTint[j]-ccdTabTint[k]>ccdTabTint[k]-predTint[j-1]))
-                 j--;
-
-                fseek(darkFp,ccdDarkCurrentOffset[j],SEEK_SET);
-
-                if (!fread(&header,sizeof(CCD_DATA),1,darkFp))
-                 rc=ERROR_SetLast("ReliCCD_EEV",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pEngineContext->fileInfo.fileName);
-                else if (!header.roiWveGroup || !header.roiSlitGroup)
-                 rc=ERROR_SetLast("ReliCCD_EEV",ERROR_TYPE_WARNING,ERROR_ID_DIVISION_BY_0,"header is corrupted");
-                else
-                 {
-                  ccdX=(header.roiWveEnd-header.roiWveStart+1)/header.roiWveGroup;
-                  ccdY=(header.roiSlitEnd-header.roiSlitStart+1)/header.roiSlitGroup;
-
-                  spSize=(header.saveTracks)?ccdX*(header.roiSlitEnd-header.roiSlitStart+1)/header.roiSlitGroup:ccdX;
-
-                 	fread(darkCurrent,sizeof(DoasUS)*spSize,1,darkFp);
-
-                  for (i=0;i<NDET;i++)
-                   {
-                    if (!header.saveTracks)
-                     pBuffers->darkCurrent[i]+=darkCurrent[i]*ccdTabNTint[k];
-                    else
-                     {
-                      for (j=0;j<ccdY;j++)
-                       pBuffers->darkCurrent[i]+=(double)darkCurrent[NDET*j+i]*ccdTabNTint[k];
-                      pBuffers->darkCurrent[i]/=ccdY;
-                     }
-                   }
-                 }
+                memcpy(pRecord->ccd.diodes,header.diodes,sizeof(float)*4);
+                pRecord->ccd.targetElevation=header.targetElevation;
+                pRecord->ccd.targetAzimuth=header.targetAzimuth;
+                pRecord->ccd.saturatedFlag=header.saturatedFlag;
                }
-             }
+            }
 
-            for (i=0;i<NDET;i++)
-             {
-              pBuffers->darkCurrent[i]=pBuffers->darkCurrent[i]/pRecord->NSomme;
-              pBuffers->spectrum[i]-=pBuffers->darkCurrent[i];
-             }
-           }
+           memcpy(&pRecord->present_day,&header.today,sizeof(SHORT_DATE));
+           memcpy(&pRecord->present_time,&header.now,sizeof(struct time));
 
-          tmLocal=pRecord->Tm+THRD_localShift*3600.;
-          pRecord->localCalDay=ZEN_FNCaljda(&tmLocal);
-          measurementType=pEngineContext->project.instrumental.user;
+           if (header.Tm<EPSILON)
+            pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_day,&pRecord->present_time,0);
 
-          if (rc ||
-             (dateFlag && (pRecord->elevationViewAngle<80.)) ||                                                                              // reference spectra are zenith only
-             (!dateFlag && pEngineContext->analysisRef.refScan && !pEngineContext->analysisRef.refSza && (pRecord->elevationViewAngle>80.)))    // zenith sky spectra are not analyzed in scan reference selection mode
-           rc=ERROR_ID_FILE_RECORD;
-          else if (measurementType!=PRJCT_INSTR_EEV_TYPE_NONE)
-           {
-           	if (((measurementType==PRJCT_INSTR_EEV_TYPE_OFFAXIS) && (pRecord->ccd.measureType!=PRJCT_INSTR_EEV_TYPE_OFFAXIS) && (pRecord->ccd.measureType!=PRJCT_INSTR_EEV_TYPE_ZENITH)) ||
-           	    ((measurementType!=PRJCT_INSTR_EEV_TYPE_OFFAXIS) && (pRecord->ccd.measureType!=measurementType)))
 
-           	 rc=ERROR_ID_FILE_RECORD;
-           }
-         }
+           memcpy(&pRecord->startTime,&header.startTime,sizeof(struct time));
+           memcpy(&pRecord->endTime,&header.endTime,sizeof(struct time));
+
+           pRecord->elevationViewAngle=
+                ((pRecord->present_day.da_year>2003) ||
+                ((pRecord->present_day.da_year==2003) && (pRecord->present_day.da_mon>2)) ||
+                ((pRecord->present_day.da_year==2003) && (pRecord->present_day.da_mon==2) && (pRecord->present_day.da_day>20)))?
+                 (float)header.brusagElevation:(float)-1.;
+
+           pRecord->Azimuth=header.Azimuth;
+
+           if (!header.alsFlag)
+            pRecord->azimuthViewAngle=
+                 ((pRecord->present_day.da_year>2008) ||
+                 ((pRecord->present_day.da_year==2008) && (pRecord->present_day.da_mon>4)))?
+                  (float)header.mirrorAzimuth:(float)-1.;
+
+           pRecord->TimeDec=(double)header.now.ti_hour+header.now.ti_min/60.+header.now.ti_sec/3600.;
+           pRecord->localTimeDec=fmod(pRecord->TimeDec+24.+THRD_localShift,(double)24.);
+           memset(pRecord->Nom,0,20);
+
+           // Build dark current
+
+           if (pRecord->NSomme==0)
+            rc=ERROR_SetLast("ReliCCD_EEV",ERROR_TYPE_WARNING,ERROR_ID_DIVISION_BY_0,"number of accumulations");
+           else if ((pBuffers->darkCurrent!=NULL) && (darkFp!=NULL))
+            {
+             for (i=0;i<NDET;i++)
+              pBuffers->darkCurrent[i]=(double)0.;
+
+             for (k=0;k<nTint;k++)
+              {
+               pRecord->TotalExpTime+=(double)ccdTabNTint[k]*ccdTabTint[k];
+
+               for (j=0;j<MAXTPS;j++)
+                if (ccdTabTint[k]<=predTint[j])
+                 break;
+
+               if (j<MAXTPS)
+                {
+                 if ((j>0) && (predTint[j]!=ccdTabTint[k]) && (predTint[j]-ccdTabTint[k]>ccdTabTint[k]-predTint[j-1]))
+                  j--;
+
+                 fseek(darkFp,ccdDarkCurrentOffset[j],SEEK_SET);
+
+                 if (!fread(&header,sizeof(CCD_DATA),1,darkFp))
+                  rc=ERROR_SetLast("ReliCCD_EEV",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pEngineContext->fileInfo.fileName);
+                 else if (!header.roiWveGroup || !header.roiSlitGroup)
+                  rc=ERROR_SetLast("ReliCCD_EEV",ERROR_TYPE_WARNING,ERROR_ID_DIVISION_BY_0,"header is corrupted");
+                 else
+                  {
+                   ccdX=(header.roiWveEnd-header.roiWveStart+1)/header.roiWveGroup;
+                   ccdY=(header.roiSlitEnd-header.roiSlitStart+1)/header.roiSlitGroup;
+
+                   spSize=(header.saveTracks)?ccdX*(header.roiSlitEnd-header.roiSlitStart+1)/header.roiSlitGroup:ccdX;
+
+                  	fread(darkCurrent,sizeof(DoasUS)*spSize,1,darkFp);
+
+                   for (i=0;i<NDET;i++)
+                    {
+                     if (!header.saveTracks)
+                      pBuffers->darkCurrent[i]+=darkCurrent[i]*ccdTabNTint[k];
+                     else
+                      {
+                       for (j=0;j<ccdY;j++)
+                        pBuffers->darkCurrent[i]+=(double)darkCurrent[NDET*j+i]*ccdTabNTint[k];
+                       pBuffers->darkCurrent[i]/=ccdY;
+                      }
+                    }
+                  }
+                }
+              }
+
+             for (i=0;i<NDET;i++)
+              {
+               pBuffers->darkCurrent[i]=pBuffers->darkCurrent[i]/pRecord->NSomme;
+               pBuffers->spectrum[i]-=pBuffers->darkCurrent[i];
+              }
+            }
+
+           tmLocal=pRecord->Tm+THRD_localShift*3600.;
+           pRecord->localCalDay=ZEN_FNCaljda(&tmLocal);
+           measurementType=pEngineContext->project.instrumental.user;
+
+           if (rc ||
+              (dateFlag && (pRecord->elevationViewAngle>0.) && (pRecord->elevationViewAngle<80.)) ||                                                                              // reference spectra are zenith only
+              (!dateFlag && pEngineContext->analysisRef.refScan && !pEngineContext->analysisRef.refSza && (pRecord->elevationViewAngle>80.)))    // zenith sky spectra are not analyzed in scan reference selection mode
+
+            rc=ERROR_ID_FILE_RECORD;
+
+           else if (measurementType!=PRJCT_INSTR_EEV_TYPE_NONE)
+            {
+            	if (((measurementType==PRJCT_INSTR_EEV_TYPE_OFFAXIS) && (pRecord->ccd.measureType!=PRJCT_INSTR_EEV_TYPE_OFFAXIS) && (pRecord->ccd.measureType!=PRJCT_INSTR_EEV_TYPE_ZENITH)) ||
+            	    ((measurementType!=PRJCT_INSTR_EEV_TYPE_OFFAXIS) && (pRecord->ccd.measureType!=measurementType)))
+
+            	 rc=ERROR_ID_FILE_RECORD;
+            }
+          }
        }
      }
    }

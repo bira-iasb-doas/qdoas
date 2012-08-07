@@ -41,7 +41,7 @@ Q_OBJECT
   void slotInstrumentChanged(int instrument);
 
  private:
-  QCheckBox *m_reqSpectraCheck, *m_reqDataCheck, *m_reqFitsCheck;
+  QCheckBox *m_reqSpectraCheck, *m_reqDataCheck, *m_reqFitsCheck, *m_reqCalibCheck;
   CWOutputSelector *m_selector;
 };
 

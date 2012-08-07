@@ -169,8 +169,8 @@ void CQdoasConfigWriter::writeProperties(FILE *fp, const mediate_project_t *d)
 
 void CQdoasConfigWriter::writePropertiesDisplay(FILE *fp, const mediate_project_display_t *d)
 {
-  fprintf(fp, "    <display spectra=\"%s\" data=\"%s\" fits=\"%s\">\n",
-	  (d->requireSpectra ? sTrue : sFalse), (d->requireData ? sTrue : sFalse), (d->requireFits ? sTrue : sFalse));
+  fprintf(fp, "    <display spectra=\"%s\" data=\"%s\" calib=\"%s\" fits=\"%s\">\n",
+	  (d->requireSpectra ? sTrue : sFalse), (d->requireData ? sTrue : sFalse), (d->requireCalib ? sTrue : sFalse), (d->requireFits ? sTrue : sFalse));
 
   writeDataSelectList(fp, &(d->selection));
 
@@ -273,6 +273,9 @@ void CQdoasConfigWriter::writePropertiesCalibration(FILE *fp, const mediate_proj
   }
   fprintf(fp, ">\n      <line shape=");
   switch (d->lineShape) {
+  case PRJCT_CALIB_FWHM_TYPE_FILE:
+    fprintf(fp, "\"file\"");
+    break;
   case PRJCT_CALIB_FWHM_TYPE_GAUSS:
     fprintf(fp, "\"gauss\"");
     break;
@@ -291,7 +294,9 @@ void CQdoasConfigWriter::writePropertiesCalibration(FILE *fp, const mediate_proj
   default:
     fprintf(fp, "\"none\"");
   }
-  fprintf(fp, " lorentzdegree=\"%d\" />\n", d->lorentzDegree);
+  fprintf(fp, " lorentzdegree=\"%d\"", d->lorentzDegree);
+  fprintf(fp, " slfFile=\"%s\" />\n", d->slfFile);
+
   fprintf(fp, "      <display spectra=\"%s\" fits=\"%s\" residual=\"%s\" shiftsfp=\"%s\" />\n",
 	  (d->requireSpectra ? sTrue : sFalse), (d->requireFits ? sTrue : sFalse),
 	  (d->requireResidual ? sTrue : sFalse), (d->requireShiftSfp ? sTrue : sFalse));
@@ -933,8 +938,8 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   default:
     fprintf(fp, "\"invalid\"");
   }
-  fprintf(fp, " min=\"%.1f\" max=\"%.1f\" ave=\"%s\"",
-	  d->omi.minimumWavelength, d->omi.maximumWavelength, (d->omi.flagAverage ? sTrue : sFalse));
+  fprintf(fp, " min=\"%.1f\" max=\"%.1f\" ave=\"%s\" trackSelection=\"%s\"",
+	  d->omi.minimumWavelength, d->omi.maximumWavelength, (d->omi.flagAverage ? sTrue : sFalse),d->omi.trackSelection);
 
   tmpStr = pathMgr->simplifyPath(QString(d->omi.calibrationFile));
   fprintf(fp, " calib=\"%s\"", tmpStr.toAscii().constData());
@@ -1499,6 +1504,7 @@ void CQdoasConfigWriter::writeDataSelectList(FILE *fp, const data_select_list_t 
     case PRJCT_RESULTS_ASCII_SAT_HEIGHT:       fprintf(fp, "sat_height"); break;
     case PRJCT_RESULTS_ASCII_EARTH_RADIUS:     fprintf(fp, "earth_radius"); break;
     case PRJCT_RESULTS_ASCII_VIEW_ELEVATION:   fprintf(fp, "view_elevation"); break;
+    case PRJCT_RESULTS_ASCII_VIEW_ZENITH:      fprintf(fp, "view_zenith"); break;
     case PRJCT_RESULTS_ASCII_VIEW_AZIMUTH:     fprintf(fp, "view_azimuth"); break;
     case PRJCT_RESULTS_ASCII_SCIA_QUALITY:     fprintf(fp, "scia_quality"); break;
     case PRJCT_RESULTS_ASCII_SCIA_STATE_INDEX: fprintf(fp, "scia_state_index"); break;
@@ -1530,6 +1536,10 @@ void CQdoasConfigWriter::writeDataSelectList(FILE *fp, const data_select_list_t 
     case PRJCT_RESULTS_ASCII_CCD_TARGETAZIMUTH : fprintf(fp,"target_azimuth"); break;
     case PRJCT_RESULTS_ASCII_CCD_TARGETELEVATION : fprintf(fp,"target_elevation"); break;
     case PRJCT_RESULTS_ASCII_SATURATED : fprintf(fp,"saturated"); break;
+    case PRJCT_RESULTS_ASCII_OMI_INDEX_SWATH : fprintf(fp,"omi_index_swath"); break;
+    case PRJCT_RESULTS_ASCII_OMI_INDEX_ROW : fprintf(fp,"omi_index_row"); break;
+    case PRJCT_RESULTS_ASCII_UAV_SERVO_BYTE_SENT :      fprintf(fp, "servo_byte_sent"); break;
+    case PRJCT_RESULTS_ASCII_UAV_SERVO_BYTE_RECEIVED :      fprintf(fp, "servo_byte_received"); break;
 
     default: fprintf(fp, "Invalid");
     }

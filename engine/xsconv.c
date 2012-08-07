@@ -60,7 +60,7 @@
 //  DATA PROCESSING
 //  ===============
 //
-//  XsconvGetFwhm - get slit function full width half way up;
+//  XSCONV_GetFwhm - get slit function full width half way up;
 //
 //  =====================
 //  CONVOLUTION FUNCTIONS
@@ -461,10 +461,10 @@ RC XsconvFctBuild(double *slitLambda,double *slitVector,INT slitSize,INT slitTyp
 // ===============
 
 // --------------------------------------------------------
-// XsconvGetFwhm : Get slit function full width half way up
+// XSCONV_GetFwhm : Get slit function full width half way up
 // --------------------------------------------------------
 
-RC XsconvGetFwhm(double *lambda,double *slit,double *deriv2,INT nl,INT slitType,double *slitParam)
+RC XSCONV_GetFwhm(double *lambda,double *slit,double *deriv2,INT nl,INT slitType,double *slitParam)
  {
   // Declarations
 
@@ -480,7 +480,7 @@ RC XsconvGetFwhm(double *lambda,double *slit,double *deriv2,INT nl,INT slitType,
    {
     // Get the value of function half way up
 
-    if ((rc=SPLINE_Vector(lambda,slit,deriv2,nl,&x0,&max,1,SPLINE_CUBIC,"XsconvGetFwhm "))!=0)
+    if ((rc=SPLINE_Vector(lambda,slit,deriv2,nl,&x0,&max,1,SPLINE_CUBIC,"XSCONV_GetFwhm "))!=0)
      goto EndFwhm;
 
     max*=(double)0.5;
@@ -490,7 +490,7 @@ RC XsconvGetFwhm(double *lambda,double *slit,double *deriv2,INT nl,INT slitType,
     for (lmin=lambda[0],lmax=(double)0.,l1=lmin*0.5,x=(double)0.;
         (lmin<lmax) && fabs(x-max)>1.e-5;l1=(lmin+lmax)*0.5)
      {
-      if ((rc=SPLINE_Vector(lambda,slit,deriv2,nl,&l1,&x,1,SPLINE_CUBIC,"XsconvGetFwhm "))!=0)
+      if ((rc=SPLINE_Vector(lambda,slit,deriv2,nl,&l1,&x,1,SPLINE_CUBIC,"XSCONV_GetFwhm "))!=0)
        goto EndFwhm;
 
       if (x<max)
@@ -504,7 +504,7 @@ RC XsconvGetFwhm(double *lambda,double *slit,double *deriv2,INT nl,INT slitType,
     for (lmin=(double)0.,lmax=lambda[nl-1],l2=lmax*0.5,x=(double)0.;
         (lmin<lmax) && fabs(x-max)>1.e-5;l2=(lmin+lmax)*0.5)
      {
-      if ((rc=SPLINE_Vector(lambda,slit,deriv2,nl,&l2,&x,1,SPLINE_CUBIC,"XsconvGetFwhm "))!=0)
+      if ((rc=SPLINE_Vector(lambda,slit,deriv2,nl,&l2,&x,1,SPLINE_CUBIC,"XSCONV_GetFwhm "))!=0)
        goto EndFwhm;
 
       if (x<max)
@@ -660,12 +660,12 @@ RC XSCONV_LoadSlitFunction(MATRIX_OBJECT *pSlitXs,MATRIX_OBJECT *pSlitXs2,SLIT *
          pSlitXs->matrix[1][i]/=sumPoly;
 
        	if (!(rc=SPLINE_Deriv2(pSlitXs->matrix[0],pSlitXs->matrix[1],pSlitXs->deriv2[1],pSlitXs->nl,"XSCONV_LoadSlitFunction")))
-       	 rc=XsconvGetFwhm(pSlitXs->matrix[0],pSlitXs->matrix[1],pSlitXs->deriv2[1],pSlitXs->nl,slitType,pGaussWidth);
+       	 rc=XSCONV_GetFwhm(pSlitXs->matrix[0],pSlitXs->matrix[1],pSlitXs->deriv2[1],pSlitXs->nl,slitType,pGaussWidth);
        }
       else if (pSlitXs->nc>2)
        {
        	if (!(rc=SPLINE_Deriv2(pSlitXs->matrix[0]+1,pSlitXs->matrix[1]+1,pSlitXs->deriv2[1]+1,pSlitXs->nl-1,"XSCONV_LoadSlitFunction")))
-       	 rc=XsconvGetFwhm(pSlitXs->matrix[0]+1,pSlitXs->matrix[1]+1,pSlitXs->deriv2[1]+1,pSlitXs->nl-1,slitType,pGaussWidth);
+       	 rc=XSCONV_GetFwhm(pSlitXs->matrix[0]+1,pSlitXs->matrix[1]+1,pSlitXs->deriv2[1]+1,pSlitXs->nl-1,slitType,pGaussWidth);
        }
      }
    }
@@ -754,13 +754,13 @@ RC XSCONV_LoadSlitFunction(MATRIX_OBJECT *pSlitXs,MATRIX_OBJECT *pSlitXs2,SLIT *
   else if (pGaussWidth!=NULL)
    *pGaussWidth=pSlit->slitParam;
 
-        {
-     	FILE *fp;
-     	fp=fopen("slit.dat","w+t");
-     	for (i=0;i<pSlitXs->nl;i++)
-     	 fprintf(fp,"%g %g %g\n",pSlitXs->matrix[0][i],pSlitXs->matrix[1][i],pSlitXs->deriv2[1][i]);
-     	fclose(fp);
-     }
+  // {
+  // 	FILE *fp;
+  // 	fp=fopen("slit.dat","w+t");
+  // 	for (i=0;i<pSlitXs->nl;i++)
+  // 	 fprintf(fp,"%g %g %g\n",pSlitXs->matrix[0][i],pSlitXs->matrix[1][i],pSlitXs->deriv2[1][i]);
+  // 	fclose(fp);
+  // }
 
   // Return
 
@@ -1105,7 +1105,7 @@ RC XSCONV_TypeStandard(MATRIX_OBJECT *pXsnew,INDEX indexLambdaMin,INDEX indexLam
 
   // Wavelength dependent functions that require two parameters
 
-  if (wveDptFlag && ((slitType==SLIT_TYPE_ERF) || (slitType==SLIT_TYPE_VOIGT) || (slitType==SLIT_TYPE_AGAUSS)))
+  if (wveDptFlag && ((slitType==SLIT_TYPE_FILE) || (slitType==SLIT_TYPE_ERF) || (slitType==SLIT_TYPE_VOIGT) || (slitType==SLIT_TYPE_AGAUSS)))
    {
     slitLambda2=pSlit2->matrix[0];
     slitVector2=pSlit2->matrix[1];
@@ -1126,6 +1126,20 @@ RC XSCONV_TypeStandard(MATRIX_OBJECT *pXsnew,INDEX indexLambdaMin,INDEX indexLam
       slitVector=pSlit->matrix[1];
       slitDeriv2=pSlit->deriv2[1];
       slitNDET=pSlit->nl;
+
+      if (wveDptFlag)
+       {
+       	// Make a backup of the slit function
+
+        if ((rc=MATRIX_Allocate(&slitTmp,pSlit->nl,2,0,0,1,"XSCONV_TypeStandard"))!=0)
+         goto EndTypeStandard;
+        else
+         {
+         	memcpy(slitTmp.matrix[0],slitLambda,sizeof(double)*pSlit->nl);
+         	memcpy(slitTmp.matrix[1],slitVector,sizeof(double)*pSlit->nl);
+         	memcpy(slitTmp.deriv2[1],slitDeriv2,sizeof(double)*pSlit->nl);
+         }
+       }
      }
     else if ((rc=MATRIX_Allocate(&slitTmp,pSlit->nl-1,2,0,0,1,"XSCONV_TypeStandard"))!=0)
      goto EndTypeStandard;
@@ -1199,12 +1213,25 @@ RC XSCONV_TypeStandard(MATRIX_OBJECT *pXsnew,INDEX indexLambdaMin,INDEX indexLam
 
     if (wveDptFlag)
      {
-      SPLINE_Vector(slitLambda,slitVector,slitDeriv2,slitNDET,&lambda,&slitParam,1,SPLINE_CUBIC,"XSCONV_TypeStandard ");
-
       if (slitLambda2!=NULL)
        SPLINE_Vector(slitLambda2,slitVector2,slitDeriv22,slitNDET2,&lambda,&slitParam2,1,SPLINE_CUBIC,"XSCONV_TypeStandard ");
 
-      fwhm=(slitType!=SLIT_TYPE_ERF)?slitParam:sqrt(slitParam*slitParam+slitParam2*slitParam2);
+      if (slitType==SLIT_TYPE_FILE)
+       {
+       	for (i=0;i<slitTmp.nl;i++)
+         slitLambda[i]=slitTmp.matrix[0][i]*slitParam2;
+
+        // Recalculate second derivatives and the FWHM
+
+        if (!(rc=SPLINE_Deriv2(slitLambda,slitVector,slitDeriv2,slitTmp.nl,"XSCONV_TypeStandard ")))
+         rc=XSCONV_GetFwhm(slitLambda,slitVector,slitDeriv2,slitTmp.nl,SLIT_TYPE_FILE,&slitParam);
+        fwhm=slitParam;
+       }
+      else
+       {
+       	SPLINE_Vector(slitLambda,slitVector,slitDeriv2,slitNDET,&lambda,&slitParam,1,SPLINE_CUBIC,"XSCONV_TypeStandard ");
+        fwhm=(slitType!=SLIT_TYPE_ERF)?slitParam:sqrt(slitParam*slitParam+slitParam2*slitParam2);
+       }
 
       stepF=fwhm/(double)NFWHM;            // number of points/FWHM
       slitWidth=(double)0.5*NFWHM*fwhm; // 3.*fwhm; // slitWidth=(double)3.*fwhm;
@@ -1544,7 +1571,7 @@ RC XSCONV_RealTimeXs(MATRIX_OBJECT *pXshr,MATRIX_OBJECT *pXsI0,MATRIX_OBJECT *pS
 
     // process convolution
 
-    if ((pSlit==NULL) || !(rc=XsconvGetFwhm(pSlit->matrix[0],pSlit->matrix[1],pSlit->deriv2[1],pSlit->nl,slitType,&slitParam)))
+    if ((pSlit==NULL) || !(rc=XSCONV_GetFwhm(pSlit->matrix[0],pSlit->matrix[1],pSlit->deriv2[1],pSlit->nl,slitType,&slitParam)))
      rc=XSCONV_TypeStandard(&xsnew,indexLambdaMin,indexLambdaMax,pXshr,pSlit,pSlit2,(pXsI0==NULL)?pXshr:pXsI0,IcVector,slitType,(double)3.*slitParam,slitParam,slitParam2,wveDptFlag);
 
     memcpy(newXs,xsnew.matrix[1],sizeof(double)*NDET);

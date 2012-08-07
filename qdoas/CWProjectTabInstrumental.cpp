@@ -1956,25 +1956,33 @@ CWInstrOmiEdit::CWInstrOmiEdit(const struct instrumental_omi *d, QWidget *parent
   gridLayout->addWidget(m_spectralTypeCombo, row, 1);
   ++row;
 
-  // spectral range
-  gridLayout->addWidget(new QLabel("Wavelength Range (nm)", this), row, 0);
-  QHBoxLayout *rangeLayout = new QHBoxLayout;
-  m_minLambdaEdit = new QLineEdit(this);
-  m_minLambdaEdit->setFixedWidth(cStandardEditWidth);
-  m_minLambdaEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 999.9, 1, m_minLambdaEdit));
-  rangeLayout->addWidget(m_minLambdaEdit);
-  m_maxLambdaEdit = new QLineEdit(this);
-  m_maxLambdaEdit->setFixedWidth(cStandardEditWidth);
-  m_maxLambdaEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 999.9, 1, m_maxLambdaEdit));
-  rangeLayout->addWidget(m_maxLambdaEdit);
-  rangeLayout->addStretch(1);
-  gridLayout->addLayout(rangeLayout, row, 1, 1, 2, Qt::AlignLeft);
+  // Track selection
+  gridLayout->addWidget(new QLabel("Row selection (for example : 5-15,20-30)", this), row, 0);
+  m_trackSelection = new QLineEdit(this);
+  gridLayout->addWidget(m_trackSelection, row, 1);
   ++row;
 
-  // average
-  m_averageCheck = new QCheckBox("Average spectra in tracks", this);
-  gridLayout->addWidget(m_averageCheck, row, 1, 1, 2, Qt::AlignLeft);
-  ++row;
+//  // spectral range
+//  gridLayout->addWidget(new QLabel("Wavelength Range (nm)", this), row, 0);
+//  QHBoxLayout *rangeLayout = new QHBoxLayout;
+//  m_minLambdaEdit = new QLineEdit(this);
+//  m_minLambdaEdit->setFixedWidth(cStandardEditWidth);
+//  m_minLambdaEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 999.9, 1, m_minLambdaEdit));
+//  rangeLayout->addWidget(m_minLambdaEdit);
+//  m_maxLambdaEdit = new QLineEdit(this);
+//  m_maxLambdaEdit->setFixedWidth(cStandardEditWidth);
+//  m_maxLambdaEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 999.9, 1, m_maxLambdaEdit));
+//  rangeLayout->addWidget(m_maxLambdaEdit);
+//  rangeLayout->addStretch(1);
+//  gridLayout->addLayout(rangeLayout, row, 1, 1, 2, Qt::AlignLeft);
+//  ++row;
+//
+//  // average
+//  m_averageCheck = new QCheckBox("Average spectra in tracks", this);
+//  gridLayout->addWidget(m_averageCheck, row, 1, 1, 2, Qt::AlignLeft);
+//  ++row;
+
+
 
   // files
   helperConstructCalInsFileWidgets(gridLayout, row,
@@ -1994,16 +2002,18 @@ CWInstrOmiEdit::CWInstrOmiEdit(const struct instrumental_omi *d, QWidget *parent
   if (index != -1)
     m_spectralTypeCombo->setCurrentIndex(index);
 
-  // wavelength range
-  tmpStr.setNum(d->minimumWavelength);
-  m_minLambdaEdit->validator()->fixup(tmpStr);
-  m_minLambdaEdit->setText(tmpStr);
-  tmpStr.setNum(d->maximumWavelength);
-  m_maxLambdaEdit->validator()->fixup(tmpStr);
-  m_maxLambdaEdit->setText(tmpStr);
+  m_trackSelection->setText(QString(d->trackSelection));
 
-  // average
-  m_averageCheck->setCheckState(d->flagAverage ? Qt::Checked : Qt::Unchecked);
+  // wavelength range
+//  tmpStr.setNum(d->minimumWavelength);
+//  m_minLambdaEdit->validator()->fixup(tmpStr);
+//  m_minLambdaEdit->setText(tmpStr);
+//  tmpStr.setNum(d->maximumWavelength);
+//  m_maxLambdaEdit->validator()->fixup(tmpStr);
+//  m_maxLambdaEdit->setText(tmpStr);
+//
+//  // average
+//  m_averageCheck->setCheckState(d->flagAverage ? Qt::Checked : Qt::Unchecked);
 
 }
 
@@ -2017,10 +2027,14 @@ void CWInstrOmiEdit::apply(struct instrumental_omi *d) const
   d->spectralType = m_spectralTypeCombo->itemData(m_spectralTypeCombo->currentIndex()).toInt();
 
   // wavelength range
-  d->minimumWavelength = m_minLambdaEdit->text().toDouble();
-  d->maximumWavelength = m_maxLambdaEdit->text().toDouble();
+//  d->minimumWavelength = m_minLambdaEdit->text().toDouble();
+//  d->maximumWavelength = m_maxLambdaEdit->text().toDouble();
+//
+//  d->flagAverage = (m_averageCheck->checkState() == Qt::Checked) ? 1 : 0;
 
-  d->flagAverage = (m_averageCheck->checkState() == Qt::Checked) ? 1 : 0;
+   // track selection
+
+  strcpy(d->trackSelection, m_trackSelection->text().toAscii().data());
 
   // files
   strcpy(d->calibrationFile, m_fileOneEdit->text().toAscii().data());

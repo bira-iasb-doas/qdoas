@@ -49,7 +49,9 @@ CWProjectTabDisplay::CWProjectTabDisplay(const mediate_project_display_t *proper
   plotGroupLayout->addWidget(m_reqSpectraCheck);
   m_reqDataCheck = new QCheckBox("Information on record");
   plotGroupLayout->addWidget(m_reqDataCheck);
-  m_reqFitsCheck = new QCheckBox("Fits");
+  m_reqCalibCheck = new QCheckBox("Calibration fits");
+  plotGroupLayout->addWidget(m_reqCalibCheck);
+  m_reqFitsCheck = new QCheckBox("Analysis fits");
   plotGroupLayout->addWidget(m_reqFitsCheck);
   plotGroup->setLayout(plotGroupLayout);
 
@@ -61,6 +63,7 @@ CWProjectTabDisplay::CWProjectTabDisplay(const mediate_project_display_t *proper
   // initialize
   m_reqSpectraCheck->setCheckState(properties->requireSpectra ? Qt::Checked : Qt::Unchecked);
   m_reqDataCheck->setCheckState(properties->requireData ? Qt::Checked : Qt::Unchecked);
+  m_reqCalibCheck->setCheckState(properties->requireCalib ? Qt::Checked : Qt::Unchecked);
   m_reqFitsCheck->setCheckState(properties->requireFits ? Qt::Checked : Qt::Unchecked);
 
 }
@@ -75,6 +78,7 @@ void CWProjectTabDisplay::apply(mediate_project_display_t *properties) const
 
   properties->requireSpectra = (m_reqSpectraCheck->checkState() == Qt::Checked);
   properties->requireData = (m_reqDataCheck->checkState() == Qt::Checked);
+  properties->requireCalib = (m_reqCalibCheck->checkState() == Qt::Checked);
   properties->requireFits = (m_reqFitsCheck->checkState() == Qt::Checked);
 
   m_selector->apply(&(properties->selection));

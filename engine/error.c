@@ -173,6 +173,9 @@ ERROR_TABLE errorTable[]=
   { ERROR_ID_GDP_BANDINDEX             , "The specified band is not present in the file %s"                                                                   },
   { ERROR_ID_PDS                       , "[%s] failed for %s PDS file"                                                                                        },
   { ERROR_ID_BEAT                      , "[%s] failed (file %s, error %s)"                                                                                    },
+  { ERROR_ID_OMI_SWATH                 , "[%s] swath not present in %s"                                                                                       },
+  { ERROR_ID_OMI_REF                   , "Incompatibility of reference between analysis windows"                                                                             },
+  { ERROR_ID_OMI_REFSIZE               , "irradiance and spectra swaths do not have the same size"                                                            },
   { ERROR_ID_FILE_FORMAT               , "File format is unknown"                                                                                             },
 
   // End of the table

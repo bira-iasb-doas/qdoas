@@ -911,9 +911,9 @@ RC GDP_ASC_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
   // Browse analysis windows and load missing data
 
   for (indexFeno=0;(indexFeno<NFeno) && !rc;indexFeno++)
-   if (!TabFeno[indexFeno].hidden)
+   if (!TabFeno[0][indexFeno].hidden)
     {
-     pTabFeno=&TabFeno[indexFeno];
+     pTabFeno=&TabFeno[0][indexFeno];
      pTabFeno->NDET=NDET;
 
      // Load calibration and reference spectra
@@ -1015,9 +1015,9 @@ RC GDP_ASC_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
 
   if (useKurucz || (THRD_id==THREAD_TYPE_KURUCZ))
    {
-    KURUCZ_Init(0);
+    KURUCZ_Init(0,0);
 
-    if ((THRD_id!=THREAD_TYPE_KURUCZ) && ((rc=KURUCZ_Reference(NULL,0,saveFlag,0,NULL /* QDOAS !!! responseHandle */))!=ERROR_ID_NO))
+    if ((THRD_id!=THREAD_TYPE_KURUCZ) && ((rc=KURUCZ_Reference(NULL,0,saveFlag,0,NULL /* QDOAS !!! responseHandle */,0))!=ERROR_ID_NO))
      goto EndGDP_ASC_LoadAnalysis;
    }
 

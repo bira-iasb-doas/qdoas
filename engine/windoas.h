@@ -441,6 +441,7 @@ typedef struct _prjctSpectra
          darkFlag,                                                              // use dark current
          displaySpectraFlag,                                                    // display complete spectra
          displayDataFlag,                                                       // display data on spectra
+         displayCalibFlag,
          displayFitFlag,                                                        // display fits
          displayPause,                                                          // QDOAS obsolete field !!! : force pause between two graph display
          displayDelay,                                                          // QDOAS obsolete field !!! : calculated delay for display pause
@@ -490,7 +491,8 @@ typedef struct _prjctKurucz
   INT              windowsNumber;                      // number of windows
   INT              fwhmPolynomial;                     // security gap in pixels numbers
   INT              shiftPolynomial;                    // degree of polynomial to use
-  DoasCh            file[MAX_ITEM_TEXT_LEN+1];          // kurucz file
+  DoasCh           file[MAX_ITEM_TEXT_LEN+1];          // kurucz file
+  DoasCh           slfFile[MAX_ITEM_TEXT_LEN+1];       // slit function file
   INT              displayFit;                         // display fit flag
   INT              displayResidual;                    // display new calibration flag
   INT              displayShift;                       // display shift/Fwhm in each pixel
@@ -581,6 +583,15 @@ typedef struct _prjctGomeFormat
  }
 PRJCT_GOME;
 
+typedef struct _prjctOmiFormat
+ {
+ 	DoasCh refPath[MAX_STR_LEN+1];
+ 	INT spectralType;
+ 	INT averageFlag;
+  int   omiTracks[MAX_SWATHSIZE];
+ }
+PRJCT_OMI;
+
 typedef struct _prjctInstrumental
  {
   DoasCh       observationSite[MAX_ITEM_NAME_LEN+1];                            // index of observation site in list
@@ -598,6 +609,7 @@ typedef struct _prjctInstrumental
   PRJCT_SAOZ  saoz;
   PRJCT_GOME  gome;
   PRJCT_SCIA  scia;
+  PRJCT_OMI   omi;
   INT         wavelength;
   UINT        mfcMaskOffset;
   UINT        mfcMaskDark;
@@ -764,6 +776,7 @@ void PRJCT_SaveConfiguration(FILE *fp,DoasCh *sectionName);
 
    // Convolution functions
 
+   RC   XSCONV_GetFwhm(double *lambda,double *slit,double *deriv2,INT nl,INT slitType,double *slitParam);
    RC   XSCONV_TypeNone(MATRIX_OBJECT *pXsnew,MATRIX_OBJECT *pXshr);
    RC   XSCONV_FctGauss(double *pValue,double fwhm,double step,double delta);
    RC   XSCONV_TypeGauss(double *lambda,double *Spec,double *SDeriv2,double lambdaj,double dldj,double *SpecConv,double fwhm,double n,INT slitType);

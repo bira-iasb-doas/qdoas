@@ -145,7 +145,9 @@ void setMediateSlit(SLIT *pEngineSlit,const mediate_slit_function_t *pMediateSli
  // NOT USED : commented on 12/01/2012    break;
  // NOT USED : commented on 12/01/2012 // ----------------------------------------------------------------------------
     default :
+     pEngineSlit->slitWveDptFlag=pMediateSlit->file.wveDptFlag;
      strcpy(pEngineSlit->slitFile,pMediateSlit->file.filename);
+     strcpy(pEngineSlit->slitFile2,pMediateSlit->file.filename2);
     break;
  // ----------------------------------------------------------------------------
    }

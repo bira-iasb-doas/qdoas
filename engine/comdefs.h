@@ -271,7 +271,10 @@ SHORT_DATE;
 #define ERROR_ID_GDP_BANDINDEX                 1300                             // band is not present in the GDP file
 
 #define ERROR_ID_PDS                           1400                             // error in the SCIA PDS file
-#define ERROR_ID_BEAT                          1401                             // error in the GOME2 format
+#define ERROR_ID_BEAT                          1401                             // error in the GOME2/OMI format
+#define ERROR_ID_OMI_SWATH                     1402                             // OMI requested swath not present
+#define ERROR_ID_OMI_REF                       1403                             // no irradiance found
+#define ERROR_ID_OMI_REFSIZE                   1404                             // irradiance and spectra swaths do not have the same size
 #define ERROR_ID_FILE_FORMAT                   2000                             // bad file format
 
 // =========

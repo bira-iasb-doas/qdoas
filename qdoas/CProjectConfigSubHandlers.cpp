@@ -109,6 +109,8 @@ bool CSelectorSubHandler::start(const QString &element, const QXmlAttributes &at
     d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_EARTH_RADIUS;
   else if (str == "view_elevation")
     d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_VIEW_ELEVATION;
+  else if (str == "view_zenith")
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_VIEW_ZENITH;
   else if (str == "view_azimuth")
     d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_VIEW_AZIMUTH;
   else if (str == "scia_quality")
@@ -164,6 +166,14 @@ bool CSelectorSubHandler::start(const QString &element, const QXmlAttributes &at
     d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_CCD_TARGETELEVATION;
   else if (str == "saturated")
     d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_SATURATED;
+  else if (str == "omi_index_swath")
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_OMI_INDEX_SWATH;
+  else if (str == "omi_index_row")
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_OMI_INDEX_ROW;
+  else if (str == "servo_byte_sent")
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_UAV_SERVO_BYTE_SENT;
+  else if (str == "servo_byte_received")
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_UAV_SERVO_BYTE_RECEIVED;
 
   else
     return postErrorMessage("Invalid output field " + str);
@@ -192,6 +202,7 @@ bool CProjectDisplaySubHandler::start(const QXmlAttributes &atts)
 {
   m_display->requireSpectra = (atts.value("spectra") == "true") ? 1 : 0;
   m_display->requireData = (atts.value("data") == "true") ? 1 : 0;
+  m_display->requireCalib = (atts.value("calib") == "true") ? 1 : 0;
   m_display->requireFits = (atts.value("fits") == "true") ? 1 : 0;
 
   return true;
@@ -424,6 +435,8 @@ bool CProjectCalibrationSubHandler::start(const QString &element, const QXmlAttr
     str = atts.value("shape");
     if (str == "none")
       m_calibration->lineShape = PRJCT_CALIB_FWHM_TYPE_NONE;
+    else if (str == "file")
+      m_calibration->lineShape = PRJCT_CALIB_FWHM_TYPE_FILE;
     else if (str == "gauss")
       m_calibration->lineShape = PRJCT_CALIB_FWHM_TYPE_GAUSS;
     else if (str == "error")
@@ -438,6 +451,16 @@ bool CProjectCalibrationSubHandler::start(const QString &element, const QXmlAttr
       postErrorMessage("Invalid line shape");
 
     m_calibration->lorentzDegree = atts.value("lorentzdegree").toInt();
+
+    str = atts.value("slfFile");
+    if (!str.isEmpty())
+     {
+      str = m_master->pathExpand(str);
+      if (str.length() < (int)sizeof(m_calibration->slfFile))
+        strcpy(m_calibration->slfFile, str.toAscii().data());
+      else
+        return postErrorMessage("Slit function Filename too long");
+     }
   }
   else if (element == "display") {
 
@@ -972,6 +995,15 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
     m_instrumental->omi.minimumWavelength = atts.value("min").toDouble();
     m_instrumental->omi.maximumWavelength = atts.value("max").toDouble();
     m_instrumental->omi.flagAverage = (atts.value("ave") == "true") ? 1 : 0;
+
+    str = atts.value("trackSelection");
+    if (!str.isEmpty()) {
+      str = m_master->pathExpand(str);
+      if (str.length() < (int)sizeof(m_instrumental->omi.trackSelection))
+	strcpy(m_instrumental->omi.trackSelection, str.toAscii().data());
+      else
+	return postErrorMessage("Track selection string too long");
+    }
 
     str = atts.value("calib");
     if (!str.isEmpty()) {

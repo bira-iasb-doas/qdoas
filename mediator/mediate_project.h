@@ -73,6 +73,7 @@ extern "C" {
     /* Data required from engine for Display purposes */
     int requireSpectra;
     int requireData;
+    int requireCalib;
     int requireFits;
 
     /* SZA (Solar Zenith Angle) range of interest */
@@ -101,6 +102,7 @@ extern "C" {
   {
     /* Data required from engine for Display purposes */
     int requireSpectra;
+    int requireCalib;
     int requireData;
     int requireFits;
     data_select_list_t selection;
@@ -161,6 +163,7 @@ extern "C" {
   typedef struct mediate_project_calibration
   {
     char solarRefFile[FILENAME_BUFFER_LENGTH];
+    char slfFile[FILENAME_BUFFER_LENGTH];
     int methodType;
     int subWindows;
     int lineShape;
@@ -348,6 +351,7 @@ extern "C" {
     int flagAverage;
     char calibrationFile[FILENAME_BUFFER_LENGTH];
     char instrFunctionFile[FILENAME_BUFFER_LENGTH];
+    char trackSelection[TRACK_SELECTION_LENGTH];
   };
 
   struct instrumental_oceanoptics {

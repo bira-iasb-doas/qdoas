@@ -55,7 +55,9 @@ extern "C" {
   /* Slits */
 
   struct slit_file {
+  	 int wveDptFlag;
     char filename[FILENAME_BUFFER_LENGTH];
+    char filename2[FILENAME_BUFFER_LENGTH];
   };
 
   struct slit_gaussian {

@@ -600,11 +600,9 @@ RC EngineSetFile(ENGINE_CONTEXT *pEngineContext,const char *fileName,void *respo
       rc=SetNOAA(pEngineContext,pFile->specFp);
      break;
   // ---------------------------------------------------------------------------
-     #if defined (__INCLUDE_HDF_) && __INCLUDE_HDF_
      case PRJCT_INSTR_FORMAT_OMI :
-      rc=OMI_SetHDF(pEngineContext);
+      rc=OMI_Set(pEngineContext);
      break;
-     #endif
   // ---------------------------------------------------------------------------
      case PRJCT_INSTR_FORMAT_CCD_EEV :
       rc=SetCCD_EEV(pEngineContext,pFile->specFp,pFile->darkFp);
@@ -795,11 +793,9 @@ RC EngineReadFile(ENGINE_CONTEXT *pEngineContext,int indexRecord,INT dateFlag,IN
      rc=ReliNOAA(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp);
     break;
  // ---------------------------------------------------------------------------
-    #if defined (__INCLUDE_HDF_) && __INCLUDE_HDF_
     case PRJCT_INSTR_FORMAT_OMI :
-     rc=OMI_ReadHDF(pEngineContext,indexRecord);
+     rc=OMI_Read(pEngineContext,indexRecord,ITEM_NONE);
     break;
-    #endif
  // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_CCD_EEV :
      rc=ReliCCD_EEV(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp,pFile->darkFp);
@@ -987,13 +983,16 @@ RC EngineEndCurrentSession(ENGINE_CONTEXT *pEngineContext)
     GDP_BIN_ReleaseBuffers();
 
     GOME2_ReleaseBuffers();
-
-  //  OMI_ReleaseBuffers();
-
+    OMI_ReleaseBuffers();
     SCIA_ReleaseBuffers(pEngineContext->project.instrumental.readOutFormat);
 
     if ((THRD_id!=THREAD_TYPE_NONE) && (THRD_id!=THREAD_TYPE_SPECTRA))
-     ANALYSE_ResetData();
+     {
+     	if (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_OMI)
+     	 OMI_ReleaseReference();
+
+      ANALYSE_ResetData();
+     }
 
    	// Reset the context of the engine
 
@@ -1061,10 +1060,10 @@ RC EngineDestroyContext(ENGINE_CONTEXT *pEngineContext)
 
  	RESOURCE_Free();
 
-  if (GOME2_beatLoaded)
+  if (GOME2_beatLoaded || OMI_beatLoaded)
    {
     coda_done();
-    GOME2_beatLoaded=0;
+    GOME2_beatLoaded=OMI_beatLoaded=0;
    }
 
  	return rc;
@@ -1154,119 +1153,124 @@ RC EngineSetRefIndexes(ENGINE_CONTEXT *pEngineContext)
 
       for (indexRecord=ENGINE_contextRef.lastRefRecord+1;indexRecord<=recordNumber;indexRecord++)
        {
-       if (!(rc=EngineReadFile(&ENGINE_contextRef,indexRecord,1,localCalDay)) &&
-           (ENGINE_contextRef.recordInfo.Zm>(double)0.))
-        {
-         if (rc==ITEM_NONE)
-          rc=0;
-
-         // Data on record
-
-         indexList[NRecord]=indexRecord;                                        // index of record
-         ZmList[NRecord]=ENGINE_contextRef.recordInfo.Zm;                       // zenith angle
-         TimeDec[NRecord]=ENGINE_contextRef.recordInfo.localTimeDec;            // decimal time for determining when the measurement has occured
-
-         // Minimum and maximum zenith angle
-
-         if (ENGINE_contextRef.recordInfo.Zm<ZmMin)
-          {
-           ZmMin=ENGINE_contextRef.recordInfo.Zm;
-           indexZmMin=NRecord;
-          }
-
-         if (ENGINE_contextRef.recordInfo.Zm>ZmMax)
-          ZmMax=ENGINE_contextRef.recordInfo.Zm;
-
-         NRecord++;
-        }
-       else if (rc==ERROR_ID_FILE_END)
-        {
-         rc=ERROR_ID_NO;
-         break;
-        }
-       }
-
-      if (rc==ERROR_ID_FILE_RECORD)
-       rc=ERROR_ID_NO;
-
-      if (NRecord && pEngineContext->analysisRef.refScan && (pEngineContext->analysisRef.scanRefIndexes!=NULL))
-       {
-       	memcpy(pEngineContext->analysisRef.scanRefIndexes,indexList,sizeof(INT)*NRecord);
-       	pEngineContext->fileInfo.nScanRef=NRecord;
-       }
-
-      // Browse analysis windows
-
-      for (indexTabFeno=0;(indexTabFeno<NFeno) && !rc;indexTabFeno++)
-       {
-        pTabFeno=&TabFeno[indexTabFeno];
-
-        if (!pTabFeno->hidden && (pTabFeno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_AUTOMATIC) && (pTabFeno->refMaxdoasSelectionMode==ANLYS_MAXDOAS_REF_SZA))
+        if (!(rc=EngineReadFile(&ENGINE_contextRef,indexRecord,1,localCalDay)) &&
+            (ENGINE_contextRef.recordInfo.Zm>(double)0.))
          {
-          // Indexes reinitialization
+          if (rc==ITEM_NONE)
+           rc=0;
 
-          pTabFeno->indexRefMorning=pTabFeno->indexRefAfternoon=pTabFeno->indexRef=ITEM_NONE;
+          // Data on record
 
-          // No reference spectrum found in SZA range
+          indexList[NRecord]=indexRecord;                                        // index of record
+          ZmList[NRecord]=ENGINE_contextRef.recordInfo.Zm;                       // zenith angle
+          TimeDec[NRecord]=ENGINE_contextRef.recordInfo.localTimeDec;            // decimal time for determining when the measurement has occured
 
-          if (ZmMax<pTabFeno->refSZA-pTabFeno->refSZADelta)
-           rc=ERROR_SetLast("EngineSetRefIndexes",ERROR_TYPE_WARNING,ERROR_ID_NO_REF,"all the day",ENGINE_contextRef.fileInfo.fileName);
+          // Minimum and maximum zenith angle
 
-          // Select record with SZA minimum
-
-          else if (ZmMin>=pTabFeno->refSZA+pTabFeno->refSZADelta)
-           pTabFeno->indexRefMorning=pTabFeno->indexRefAfternoon=indexZmMin;
-
-          // Select a record for the morning and the afternoon
-
-          else
+          if (ENGINE_contextRef.recordInfo.Zm<ZmMin)
            {
-            deltaZmMorning=deltaZmAfternoon=360.;
-
-            for (indexRecord=0;indexRecord<NRecord;indexRecord++)
-             {
-              if ((ZmList[indexRecord]>=pTabFeno->refSZA-pTabFeno->refSZADelta) &&
-                  (ZmList[indexRecord]<=pTabFeno->refSZA+pTabFeno->refSZADelta))
-               {
-                if ((TimeDec[indexRecord]<=ENGINE_localNoon) && (fabs(pTabFeno->refSZA-ZmList[indexRecord])<deltaZmMorning))
-                 {
-                  pTabFeno->indexRefMorning=indexRecord;
-                  deltaZmMorning=fabs(pTabFeno->refSZA-ZmList[indexRecord]);
-                 }
-
-                if ((TimeDec[indexRecord]>ENGINE_localNoon) && (fabs(pTabFeno->refSZA-ZmList[indexRecord])<deltaZmAfternoon))
-                 {
-                  pTabFeno->indexRefAfternoon=indexRecord;
-                  deltaZmAfternoon=fabs(pTabFeno->refSZA-ZmList[indexRecord]);
-                 }
-               }
-             }
-
-            // No record found for the morning OR the afternoon
-
-            if ((pTabFeno->indexRefMorning==ITEM_NONE) && (pTabFeno->indexRefAfternoon==ITEM_NONE))
-             rc=ERROR_SetLast("EngineSetRefIndexes",ERROR_TYPE_WARNING,ERROR_ID_NO_REF,"all the day",ENGINE_contextRef.fileInfo.fileName);
-            else if (pInstr->readOutFormat!=PRJCT_INSTR_FORMAT_ASCII)
-             {
-              if (pTabFeno->indexRefMorning==ITEM_NONE)
-               {
-               	rc=ERROR_SetLast("EngineSetRefIndexes",ERROR_TYPE_WARNING,ERROR_ID_NO_REF,"the morning",ENGINE_contextRef.fileInfo.fileName);
-                pTabFeno->indexRefMorning=pTabFeno->indexRefAfternoon;
-               }
-              else if (pTabFeno->indexRefAfternoon==ITEM_NONE)
-               {
-               	rc=ERROR_SetLast("EngineSetRefIndexes",ERROR_TYPE_WARNING,ERROR_ID_NO_REF,"the afternoon",ENGINE_contextRef.fileInfo.fileName);
-                pTabFeno->indexRefAfternoon=pTabFeno->indexRefMorning;
-               }
-             }
+            ZmMin=ENGINE_contextRef.recordInfo.Zm;
+            indexZmMin=NRecord;
            }
 
-          pTabFeno->oldZmRefMorning=pTabFeno->ZmRefMorning;
-          pTabFeno->oldZmRefAfternoon=pTabFeno->ZmRefAfternoon;
-          pTabFeno->ZmRefMorning=(pTabFeno->indexRefMorning!=ITEM_NONE)?ZmList[pTabFeno->indexRefMorning]:(double)-1.;
-          pTabFeno->ZmRefAfternoon=(pTabFeno->indexRefAfternoon!=ITEM_NONE)?ZmList[pTabFeno->indexRefAfternoon]:(double)-1.;
-          pTabFeno->indexRefMorning=(pTabFeno->indexRefMorning!=ITEM_NONE)?indexList[pTabFeno->indexRefMorning]:ITEM_NONE;
-          pTabFeno->indexRefAfternoon=(pTabFeno->indexRefAfternoon!=ITEM_NONE)?indexList[pTabFeno->indexRefAfternoon]:ITEM_NONE;
+          if (ENGINE_contextRef.recordInfo.Zm>ZmMax)
+           ZmMax=ENGINE_contextRef.recordInfo.Zm;
+
+          NRecord++;
+         }
+        else if (rc==ERROR_ID_FILE_END)
+         {
+          rc=ERROR_ID_NO;
+          break;
+         }
+       }
+
+      if (!NRecord)
+       rc=ERROR_SetLast("EngineSetRefIndexes",ERROR_TYPE_WARNING,ERROR_ID_NO_REF,"all the day",ENGINE_contextRef.fileInfo.fileName);
+      else
+       {
+        if (rc==ERROR_ID_FILE_RECORD)
+         rc=ERROR_ID_NO;
+
+        if (NRecord && pEngineContext->analysisRef.refScan && (pEngineContext->analysisRef.scanRefIndexes!=NULL))
+         {
+         	memcpy(pEngineContext->analysisRef.scanRefIndexes,indexList,sizeof(INT)*NRecord);
+         	pEngineContext->fileInfo.nScanRef=NRecord;
+         }
+
+        // Browse analysis windows
+
+        for (indexTabFeno=0;(indexTabFeno<NFeno) && !rc;indexTabFeno++)
+         {
+          pTabFeno=&TabFeno[0][indexTabFeno];
+
+          if (!pTabFeno->hidden && (pTabFeno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_AUTOMATIC) && (pTabFeno->refMaxdoasSelectionMode==ANLYS_MAXDOAS_REF_SZA))
+           {
+            // Indexes reinitialization
+
+            pTabFeno->indexRefMorning=pTabFeno->indexRefAfternoon=pTabFeno->indexRef=ITEM_NONE;
+
+            // No reference spectrum found in SZA range
+
+            if (ZmMax<pTabFeno->refSZA-pTabFeno->refSZADelta)
+             rc=ERROR_SetLast("EngineSetRefIndexes",ERROR_TYPE_WARNING,ERROR_ID_NO_REF,"all the day",ENGINE_contextRef.fileInfo.fileName);
+
+            // Select record with SZA minimum
+
+            else if (ZmMin>=pTabFeno->refSZA+pTabFeno->refSZADelta)
+             pTabFeno->indexRefMorning=pTabFeno->indexRefAfternoon=indexZmMin;
+
+            // Select a record for the morning and the afternoon
+
+            else
+             {
+              deltaZmMorning=deltaZmAfternoon=360.;
+
+              for (indexRecord=0;indexRecord<NRecord;indexRecord++)
+               {
+                if ((ZmList[indexRecord]>=pTabFeno->refSZA-pTabFeno->refSZADelta) &&
+                    (ZmList[indexRecord]<=pTabFeno->refSZA+pTabFeno->refSZADelta))
+                 {
+                  if ((TimeDec[indexRecord]<=ENGINE_localNoon) && (fabs(pTabFeno->refSZA-ZmList[indexRecord])<deltaZmMorning))
+                   {
+                    pTabFeno->indexRefMorning=indexRecord;
+                    deltaZmMorning=fabs(pTabFeno->refSZA-ZmList[indexRecord]);
+                   }
+
+                  if ((TimeDec[indexRecord]>ENGINE_localNoon) && (fabs(pTabFeno->refSZA-ZmList[indexRecord])<deltaZmAfternoon))
+                   {
+                    pTabFeno->indexRefAfternoon=indexRecord;
+                    deltaZmAfternoon=fabs(pTabFeno->refSZA-ZmList[indexRecord]);
+                   }
+                 }
+               }
+
+              // No record found for the morning OR the afternoon
+
+              if ((pTabFeno->indexRefMorning==ITEM_NONE) && (pTabFeno->indexRefAfternoon==ITEM_NONE))
+               rc=ERROR_SetLast("EngineSetRefIndexes",ERROR_TYPE_WARNING,ERROR_ID_NO_REF,"all the day",ENGINE_contextRef.fileInfo.fileName);
+              else if (pInstr->readOutFormat!=PRJCT_INSTR_FORMAT_ASCII)
+               {
+                if (pTabFeno->indexRefMorning==ITEM_NONE)
+                 {
+                 	rc=ERROR_SetLast("EngineSetRefIndexes",ERROR_TYPE_WARNING,ERROR_ID_NO_REF,"the morning",ENGINE_contextRef.fileInfo.fileName);
+                  pTabFeno->indexRefMorning=pTabFeno->indexRefAfternoon;
+                 }
+                else if (pTabFeno->indexRefAfternoon==ITEM_NONE)
+                 {
+                 	rc=ERROR_SetLast("EngineSetRefIndexes",ERROR_TYPE_WARNING,ERROR_ID_NO_REF,"the afternoon",ENGINE_contextRef.fileInfo.fileName);
+                  pTabFeno->indexRefAfternoon=pTabFeno->indexRefMorning;
+                 }
+               }
+             }
+
+            pTabFeno->oldZmRefMorning=pTabFeno->ZmRefMorning;
+            pTabFeno->oldZmRefAfternoon=pTabFeno->ZmRefAfternoon;
+            pTabFeno->ZmRefMorning=(pTabFeno->indexRefMorning!=ITEM_NONE)?ZmList[pTabFeno->indexRefMorning]:(double)-1.;
+            pTabFeno->ZmRefAfternoon=(pTabFeno->indexRefAfternoon!=ITEM_NONE)?ZmList[pTabFeno->indexRefAfternoon]:(double)-1.;
+            pTabFeno->indexRefMorning=(pTabFeno->indexRefMorning!=ITEM_NONE)?indexList[pTabFeno->indexRefMorning]:ITEM_NONE;
+            pTabFeno->indexRefAfternoon=(pTabFeno->indexRefAfternoon!=ITEM_NONE)?indexList[pTabFeno->indexRefAfternoon]:ITEM_NONE;
+           }
          }
        }
      }
@@ -1513,7 +1517,7 @@ RC EngineSetRefIndexesMFC(ENGINE_CONTEXT *pEngineContext)
 
         for (indexTabFeno=0;(indexTabFeno<NFeno) && !rc;indexTabFeno++)
          {
-          pTabFeno=&TabFeno[indexTabFeno];
+          pTabFeno=&TabFeno[0][indexTabFeno];
 
           if (!pTabFeno->hidden &&
               (pTabFeno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_AUTOMATIC) &&
@@ -1694,7 +1698,7 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
   for (indexTabFeno=0;(indexTabFeno<NFeno) && !rc;indexTabFeno++)
    {
-    pTabFeno=&TabFeno[indexTabFeno];
+    pTabFeno=&TabFeno[0][indexTabFeno];
     indexPage=indexTabFeno+plotPageAnalysis;
 
     if (!(pTabFeno->hidden) &&                                                      // not the definition of the window for the wavelength calibration
@@ -1770,11 +1774,11 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
             if (pTabFeno->useKurucz)
              {
-              KURUCZ_Init(0);
+              KURUCZ_Init(0,0);  // Currently doesn't account for OMI swaths !!!
               useKurucz++;
              }
             else if (((rc=ANALYSE_XsInterpolation(pTabFeno,pTabFeno->LambdaRef))!=ERROR_ID_NO) ||
-                     ((rc=ANALYSE_XsConvolution(pTabFeno,pTabFeno->LambdaRef,&ANALYSIS_slit,&ANALYSIS_slit2,pSlitOptions->slitFunction.slitType,&pSlitOptions->slitFunction.slitParam,&pSlitOptions->slitFunction.slitParam2))!=ERROR_ID_NO))
+                     ((rc=ANALYSE_XsConvolution(pTabFeno,pTabFeno->LambdaRef,&ANALYSIS_slit,&ANALYSIS_slit2,pSlitOptions->slitFunction.slitType,&pSlitOptions->slitFunction.slitParam,&pSlitOptions->slitFunction.slitParam2,0))!=ERROR_ID_NO))
              break;
            }
 
@@ -1847,10 +1851,10 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
   // Reference alignment
 
   if (!rc && useKurucz)
-   rc=KURUCZ_Reference(ENGINE_contextRef.buffers.instrFunction,1,saveFlag,1,responseHandle);
+   rc=KURUCZ_Reference(ENGINE_contextRef.buffers.instrFunction,1,saveFlag,1,responseHandle,0);
 
   if (!rc && alignRef)
-   rc=ANALYSE_AlignReference(pEngineContext,1,saveFlag,responseHandle);
+   rc=ANALYSE_AlignReference(pEngineContext,1,saveFlag,responseHandle,0);
 
   if (!rc && useUsamp)
    rc=ANALYSE_UsampBuild(1,ITEM_NONE);

@@ -700,11 +700,17 @@ RC MKZY_Reli(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,INT localD
    	 {
       if (!(rc=MKZY_ReadRecord(pEngineContext,indexRecord,specFp)))
        {
-       	if (!strncasecmp(pEngineContext->recordInfo.Nom,"dark",4) ||
+       	if ((THRD_id!=THREAD_TYPE_SPECTRA) &&
+       	   (!strncasecmp(pEngineContext->recordInfo.Nom,"dark",4) ||
        	    !strncasecmp(pEngineContext->recordInfo.Nom,"sky",3) ||
-       	    !strncasecmp(pEngineContext->recordInfo.Nom,"offset",6))
+       	    !strncasecmp(pEngineContext->recordInfo.Nom,"offset",6)))
 
          rc=ERROR_ID_FILE_RECORD;
+
+        else if (!strncasecmp(pEngineContext->recordInfo.Nom,"dark",4))
+         memcpy(spectrum,dark,sizeof(double)*NDET);
+        else if (!strncasecmp(pEngineContext->recordInfo.Nom,"offset",4))
+         memcpy(spectrum,offset,sizeof(double)*NDET);
 
   	 	   // Correct by offset and dark current
 
@@ -813,7 +819,9 @@ RC MKZY_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
   pInstrumental=&pEngineContext->project.instrumental;
   rc=ERROR_ID_NO;
 
-  if ((pEngineContext->recordInfo.mkzy.skyFlag || (THRD_id==THREAD_TYPE_KURUCZ)) && pEngineContext->refFlag)
+  if (!pEngineContext->recordInfo.mkzy.skyFlag && (THRD_id==THREAD_TYPE_ANALYSIS))
+   rc=ERROR_SetLast("MKZY_LoadAnalysis",ERROR_TYPE_WARNING,ERROR_ID_NO_REF,"spectra",pEngineContext->fileInfo.fileName);
+  else if (pEngineContext->refFlag)
    {
     useKurucz=0;
 
@@ -821,9 +829,9 @@ RC MKZY_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
     for (indexFeno=0;(indexFeno<NFeno) && !rc;indexFeno++)
      {
-      if (!TabFeno[indexFeno].hidden && !TabFeno[indexFeno].gomeRefFlag)
+      if (!TabFeno[0][indexFeno].hidden && !TabFeno[0][indexFeno].gomeRefFlag)
        {
-        pTabFeno=&TabFeno[indexFeno];
+        pTabFeno=&TabFeno[0][indexFeno];
         pTabFeno->NDET=NDET;
 
         memcpy(pTabFeno->Sref,pBuffers->scanRef,sizeof(double)*NDET);
@@ -871,7 +879,7 @@ RC MKZY_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
           if (((rc=ANALYSE_XsInterpolation(pTabFeno,pTabFeno->LambdaRef))!=ERROR_ID_NO) ||
               (!pKuruczOptions->fwhmFit && pTabFeno->xsToConvolute &&
-              ((rc=ANALYSE_XsConvolution(pTabFeno,pTabFeno->LambdaRef,&ANALYSIS_slit,&ANALYSIS_slit2,pSlitOptions->slitFunction.slitType,&pSlitOptions->slitFunction.slitParam,&pSlitOptions->slitFunction.slitParam2))!=ERROR_ID_NO)))
+              ((rc=ANALYSE_XsConvolution(pTabFeno,pTabFeno->LambdaRef,&ANALYSIS_slit,&ANALYSIS_slit2,pSlitOptions->slitFunction.slitType,&pSlitOptions->slitFunction.slitParam,&pSlitOptions->slitFunction.slitParam2,0))!=ERROR_ID_NO)))
 
            goto EndMKZY_LoadAnalysis;
          }
@@ -884,9 +892,9 @@ RC MKZY_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
     if (useKurucz || (THRD_id==THREAD_TYPE_KURUCZ))
      {
-      KURUCZ_Init(0);
+      KURUCZ_Init(0,0);
 
-      if ((THRD_id!=THREAD_TYPE_KURUCZ) && ((rc=KURUCZ_Reference(NULL,0,saveFlag,0,responseHandle))!=ERROR_ID_NO))
+      if ((THRD_id!=THREAD_TYPE_KURUCZ) && ((rc=KURUCZ_Reference(NULL,0,saveFlag,0,responseHandle,0))!=ERROR_ID_NO))
        goto EndMKZY_LoadAnalysis;
      }
    }

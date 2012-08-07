@@ -797,6 +797,7 @@ RC mediateRingCalculate(void *engineContext,void *responseHandle)
  {
   // Declarations
 
+  MATRIX_OBJECT slitTmp;
   ENGINE_XSCONV_CONTEXT *pEngineContext=(ENGINE_XSCONV_CONTEXT*)engineContext;
   DoasCh   ringFileName[MAX_ITEM_TEXT_LEN+1],                                   // name of the output ring file
            pageTitle[MAX_ITEM_TEXT_LEN+1];
@@ -816,8 +817,9 @@ RC mediateRingCalculate(void *engineContext,void *responseHandle)
           slitParam2,                                                           // other slit function parameters
           a,invapi,delta,sigma;                                                 // parameters to build a slit function
 
-  MATRIX_OBJECT  xsSolar,xsSolarConv,xsSlit,xsSlit2,xsRing;                     // solar spectrum and slit function
+  MATRIX_OBJECT  xsSolar,xsSolarConv,xsSlit,xsSlit2,xsRing,*pSlit,*pSlit2;                     // solar spectrum and slit function
   INT     nsolar,nslit,nslit2,nring,                                            // size of previous vectors
+          wveDptFlag,
           slitType;                                                             // type of the slit function
   INDEX   i,j;                                                                  // indexes for loops and arrays
   FILE   *fp;                                                                   // output file pointer
@@ -836,6 +838,7 @@ RC mediateRingCalculate(void *engineContext,void *responseHandle)
   memset(&xsSlit,0,sizeof(MATRIX_OBJECT));
   memset(&xsSlit2,0,sizeof(MATRIX_OBJECT));
   memset(&xsRing,0,sizeof(MATRIX_OBJECT));
+  memset(&slitTmp,0,sizeof(MATRIX_OBJECT));
 
 
   slitWidth=(double)RING_SLIT_WIDTH;                                            // NB : force slit width to 6 because of convolutions
@@ -896,22 +899,60 @@ RC mediateRingCalculate(void *engineContext,void *responseHandle)
     for (i=0;i<xsSolarConv.nl;i++)
      xsSolarConv.matrix[0][i]=xsSolar.matrix[0][i];
 
+     pSlit=&xsSlit;
+     pSlit2=&xsSlit2;
+
     solarLambda=xsSolarConv.matrix[0];
     solarVector=xsSolarConv.matrix[1];
     solarDeriv2=xsSolarConv.deriv2[1];
     nsolar=xsSolarConv.nl;
 
-    slitLambda=xsSlit.matrix[0];
-    slitVector=xsSlit.matrix[1];
-    slitDeriv2=xsSlit.deriv2[1];
-    nslit=xsSlit.nl;
+    wveDptFlag=pEngineContext->slitConv.slitWveDptFlag;
 
-    if (xsSlit2.matrix!=NULL)
+   	if ((slitType!=SLIT_TYPE_FILE) || (pSlit->nc==2))
+   	 {
+      slitLambda=pSlit->matrix[0];
+      slitVector=pSlit->matrix[1];
+      slitDeriv2=pSlit->deriv2[1];
+      nslit=pSlit->nl;
+
+      if (wveDptFlag)
+       {
+       	// Make a backup of the slit function
+
+        if ((rc=MATRIX_Allocate(&slitTmp,pSlit->nl,2,0,0,1,"XSCONV_TypeStandard"))!=0)
+         goto EndRing;
+        else
+         {
+         	memcpy(slitTmp.matrix[0],slitLambda,sizeof(double)*pSlit->nl);
+         	memcpy(slitTmp.matrix[1],slitVector,sizeof(double)*pSlit->nl);
+         	memcpy(slitTmp.deriv2[1],slitDeriv2,sizeof(double)*pSlit->nl);
+         }
+       }
+     }
+    else if ((rc=MATRIX_Allocate(&slitTmp,pSlit->nl-1,2,0,0,1,"XSCONV_TypeStandard"))!=0)
+     goto EndRing;
+    else
      {
-      slitLambda2=xsSlit2.matrix[0];
-      slitVector2=xsSlit2.matrix[1];
-      slitDeriv22=xsSlit2.deriv2[1];
-      nslit2=xsSlit2.nl;
+      slitLambda=slitTmp.matrix[0];
+      slitVector=slitTmp.matrix[1];
+      slitDeriv2=slitTmp.deriv2[1];
+      nslit=slitTmp.nl;
+
+      memcpy(slitTmp.matrix[0],(double *)pSlit->matrix[0]+1,sizeof(double)*(pSlit->nl-1));
+     }
+
+    if (wveDptFlag && ((slitType==SLIT_TYPE_FILE) || (slitType==SLIT_TYPE_ERF) || (slitType==SLIT_TYPE_VOIGT) || (slitType==SLIT_TYPE_AGAUSS)))
+     {
+      slitLambda2=pSlit2->matrix[0];
+      slitVector2=pSlit2->matrix[1];
+      slitDeriv22=pSlit2->deriv2[1];
+      nslit2=pSlit2->nl;
+     }
+    else
+     {
+     	slitLambda2=slitVector2=slitDeriv22=NULL;
+     	nslit2=0;
      }
 
     ringLambda=xsRing.matrix[0];
@@ -944,12 +985,34 @@ RC mediateRingCalculate(void *engineContext,void *responseHandle)
         sumn2xsec=(double)0.;
         sumo2xsec=(double)0.;
 
-        if (pEngineContext->slitConv.slitWveDptFlag &&
-            ((rc=SPLINE_Vector(slitLambda,slitVector,slitDeriv2,nslit,&lambda,&slitParam,1,SPLINE_CUBIC,"mediateRingCalculate"))!=0))
-         goto EndRing;
+        if (wveDptFlag)
+         {
+          if ((slitLambda2!=NULL) &&
+             ((rc=SPLINE_Vector(slitLambda2,slitVector2,slitDeriv22,nslit2,&lambda,&slitParam2,1,SPLINE_CUBIC,"mediateRingCalculate"))!=0))
+           goto EndRing;
 
-        if ((slitLambda2!=NULL) &&
-            ((rc=SPLINE_Vector(slitLambda2,slitVector2,slitDeriv22,nslit2,&lambda,&slitParam2,1,SPLINE_CUBIC,"mediateRingCalculate"))!=0))
+          if (slitType==SLIT_TYPE_FILE)
+           {
+           	for (j=0;j<slitTmp.nl;j++)
+             slitLambda[j]=slitTmp.matrix[0][j]*slitParam2;
+
+            // Recalculate second derivatives and the FWHM
+
+            if (!(rc=SPLINE_Deriv2(slitLambda,slitVector,slitDeriv2,slitTmp.nl,"mediateRingCalculate ")))
+             rc=XSCONV_GetFwhm(slitLambda,slitVector,slitDeriv2,slitTmp.nl,SLIT_TYPE_FILE,&slitParam);
+           }
+          else
+          	rc=SPLINE_Vector(slitLambda,slitVector,slitDeriv2,nslit,&lambda,&slitParam,1,SPLINE_CUBIC,"mediateRingCalculate ");
+         }
+        else if ((slitType==SLIT_TYPE_FILE) && (pSlit->nc>2))
+         {
+          for (j=0;j<slitTmp.nl;j++)
+           slitTmp.matrix[1][j]=(double)VECTOR_Table2(pSlit->matrix,pSlit->nl,pSlit->nc,slitTmp.matrix[0][j],lambda);
+
+          SPLINE_Deriv2(slitTmp.matrix[0],slitTmp.matrix[1],slitTmp.deriv2[1],slitTmp.nl,"mediateRingCalculate");
+         }
+
+        if (rc!=0)
          goto EndRing;
 
         sigma=slitParam*0.5;
@@ -1071,6 +1134,7 @@ RC mediateRingCalculate(void *engineContext,void *responseHandle)
   MATRIX_Free(&xsSlit,"mediateRingCalculate");
   MATRIX_Free(&xsSlit2,"mediateRingCalculate");
   MATRIX_Free(&xsRing,"mediateRingCalculate");
+  MATRIX_Free(&slitTmp,"mediateRingCalculate");
 
   #if defined(__DEBUG_) && __DEBUG_
   {

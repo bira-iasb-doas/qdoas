@@ -188,7 +188,8 @@ RC Curfit(int     mode,                                                         
           double *Yfit,                                                         // O   vector of calculated values of Y
           double *pLambda,                                                      // O   proportion of gradient search included
           double *pChisqr,                                                      // O   reduced Chi square for fit ( output )
-          int    *pNiter);                                                      // O   number of iterations
+          int    *pNiter,                                                       // O   number of iterations
+          INDEX   indexFenoColumn);
 
 // ---------------------------------------------------------------------
 // MOON.C : Get moon positions in terms of azimuthal angle and elevation
@@ -474,6 +475,7 @@ typedef struct _feno
   DoasCh           gomePixelType[4];
   INT             offlFlag;                            // non zero if linear offset is fitted
   int             longPathFlag;                                                 // for Anoop
+  INDEX           indexRefOmi;
  }
 FENO;
 
@@ -636,10 +638,10 @@ GOME2_DATA;
 
 typedef struct _omi
  {
- 	INDEX omiTrackIndex;                                                          // index of the track record
- 	INDEX omiSpecIndex;                                                           // index of the current spectrum in the current track
- 	int   omiNumberOfTracks,                                                      // total number of tracks
- 	      omiNumberOfSpectraPerTrack;                                             // total number of spectra in tracks
+ 	INDEX omiSwathIndex;                                                          // index of the swath
+ 	INDEX omiRowIndex;                                                            // index of the current row in the current swath
+ 	int   omiNumberOfSwaths,                                                      // total number of tracks
+ 	      omiNumberOfRows;                                             // total number of spectra in tracks
  }
 OMI_DATA;
 
@@ -710,6 +712,13 @@ typedef struct uoft_format
   float latitude;
  }
 UOFT_DATA;
+
+typedef struct _airborneBira
+ {
+ 	unsigned char servoSentPosition;
+ 	unsigned char servoReceivedPosition;
+ }
+UAVBIRA_DATA;
 
 // Buffers needed to load spectra
 
@@ -793,6 +802,7 @@ typedef struct _engineRecordInfo
   MKZY_DATA mkzy;
   MFC_BIRA mfcBira;
   UOFT_DATA uoft;
+  UAVBIRA_DATA uavBira;
 
   double longitude;                                                             // longitude
   double latitude;                                                              // latitude
@@ -954,6 +964,7 @@ typedef struct anlyswin_output ANALYSIS_OUTPUT;
 // -------------------
 
 EXTERN INT    ANALYSE_plotKurucz,ANALYSE_plotRef,ANALYSE_indexLine;
+EXTERN INT    ANALYSE_swathSize;
 
 EXTERN DoasCh *ANLYS_crossAction[ANLYS_CROSS_ACTION_MAX];
 EXTERN DoasCh *ANLYS_amf[ANLYS_AMF_TYPE_MAX];
@@ -967,9 +978,9 @@ EXTERN PRJCT_ANLYS  *pAnalysisOptions;             // analysis options
 EXTERN PRJCT_KURUCZ *pKuruczOptions;               // Kurucz options
 EXTERN PRJCT_SLIT   *pSlitOptions;                 // slit function options
 EXTERN PRJCT_USAMP  *pUsamp;
-EXTERN FENO         *TabFeno,*Feno;
+EXTERN FENO         **TabFeno,*Feno;
 EXTERN MATRIX_OBJECT ANALYSIS_slit,ANALYSIS_slit2,O3TD;
-EXTERN double      **U,*x,*Lambda,
+EXTERN double      **U,*x,*Lambda,*LambdaSpec,
                     *ANALYSE_pixels,
                     *ANALYSE_splineX,              // abscissa used for spectra, in the units selected by user
                     *ANALYSE_splineX2,             // in pixels units, second derivatives of corresponding wavelengths
@@ -989,7 +1000,7 @@ EXTERN double      **U,*x,*Lambda,
 // ----------
 
 RC ANALYSE_Function ( double *lambda,double *X, double *Y, INT ndet, double *Y0, double *SigmaY, double *Yfit, int Npts,
-              double *fitParamsC, double *fitParamsF );
+              double *fitParamsC, double *fitParamsF,INDEX indexFenoColumn);
 
 enum _pixelSelection
  {
@@ -1002,25 +1013,25 @@ RC   FNPixel   ( double *lambdaVector, double lambdaValue, INT npts,INT pixelSel
 
 RC   ANALYSE_CheckLambda(WRK_SYMBOL *pWrkSymbol,double *lambda,DoasCh *callingFunction);
 RC   ANALYSE_XsInterpolation(FENO *pTabFeno,double *newLambda);
-RC   ANALYSE_XsConvolution(FENO *pTabFeno,double *newLambda,MATRIX_OBJECT *pSlit,MATRIX_OBJECT *pSlit2,INT slitType,double *slitParam1,double *slitParam2);
+RC   ANALYSE_XsConvolution(FENO *pTabFeno,double *newLambda,MATRIX_OBJECT *pSlit,MATRIX_OBJECT *pSlit2,INT slitType,double *slitParam1,double *slitParam2,INDEX indexFenoColumn);
 RC   ANALYSE_LinFit(SVD *pSvd,INT Npts,INT Degree,double *a,double *sigma,double *b,double *x);
 void ANALYSE_SvdFree(DoasCh *callingFunctionShort,SVD *pSvd);
 RC   ANALYSE_SvdLocalAlloc(DoasCh *callingFunctionShort,SVD *pSvd);
 RC   ANALYSE_SvdInit(SVD *pSvd);
-RC   ANALYSE_CurFitMethod(double *Spectre,double *SigmaSpec,double *Sref,double *Chisqr,INT *pNiter,double speNormFact,double refNormFact);
+RC   ANALYSE_CurFitMethod(INDEX indexFenoColumn,double *Spectre,double *SigmaSpec,double *Sref,double *Chisqr,INT *pNiter,double speNormFact,double refNormFact);
 void ANALYSE_ResetData(void);
 RC   ANALYSE_SetInit(ENGINE_CONTEXT *pEngineContext);
-RC   ANALYSE_AlignReference(ENGINE_CONTEXT *pEngineContext,INT refFlag,INT saveFlag,void *responseHandle);
+RC   ANALYSE_AlignReference(ENGINE_CONTEXT *pEngineContext,INT refFlag,INT saveFlag,void *responseHandle,INDEX indexFenoColumn);
 RC   ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle);
 
-void ANALYSE_SetAnalysisType(void);
-RC   ANALYSE_LoadRef(ENGINE_CONTEXT *pEngineContext);
-RC   ANALYSE_LoadCross(ENGINE_CONTEXT *pEngineContext,ANALYSIS_CROSS *crossSectionList,INT nCross,INT hidden,double *lambda);
-RC   ANALYSE_LoadLinear(ANALYSE_LINEAR_PARAMETERS *linearList,INT nLinear);
-RC   ANALYSE_LoadNonLinear(ENGINE_CONTEXT *pEngineContext,ANALYSE_NON_LINEAR_PARAMETERS *nonLinearList,INT nNonLinear,double *lambda);
-RC   ANALYSE_LoadShiftStretch(ANALYSIS_SHIFT_STRETCH *shiftStretchList,INT nShiftStretch);
-RC   ANALYSE_LoadGaps(ENGINE_CONTEXT *pEngineContext,ANALYSIS_GAP *gapList,INT nGaps,double *lambda,double lambdaMin,double lambdaMax);
-RC   ANALYSE_LoadOutput(ANALYSIS_OUTPUT *outputList,INT nOutput);
+void ANALYSE_SetAnalysisType(INDEX indexFenoColumn);
+RC   ANALYSE_LoadRef(ENGINE_CONTEXT *pEngineContext,INDEX indexFenoColumn);
+RC   ANALYSE_LoadCross(ENGINE_CONTEXT *pEngineContext,ANALYSIS_CROSS *crossSectionList,INT nCross,INT hidden,double *lambda,INDEX indexFenoColumn);
+RC   ANALYSE_LoadLinear(ANALYSE_LINEAR_PARAMETERS *linearList,INT nLinear,INDEX indexFenoColumn);
+RC   ANALYSE_LoadNonLinear(ENGINE_CONTEXT *pEngineContext,ANALYSE_NON_LINEAR_PARAMETERS *nonLinearList,INT nNonLinear,double *lambda,INDEX indexFenoColumn);
+RC   ANALYSE_LoadShiftStretch(ANALYSIS_SHIFT_STRETCH *shiftStretchList,INT nShiftStretch,INDEX indexFenoColumn);
+RC   ANALYSE_LoadGaps(ENGINE_CONTEXT *pEngineContext,ANALYSIS_GAP *gapList,INT nGaps,double *lambda,double lambdaMin,double lambdaMax,INDEX indexFenoColumn);
+RC   ANALYSE_LoadOutput(ANALYSIS_OUTPUT *outputList,INT nOutput,INDEX indexFenoColumn);
 RC   ANALYSE_LoadSlit(PRJCT_SLIT *pSlit);
 
 RC   ANALYSE_Alloc(void);
@@ -1056,6 +1067,7 @@ typedef struct _Kurucz
  {
   KURUCZ_FENO *KuruczFeno;
   MATRIX_OBJECT hrSolar;                        // high resolution kurucz spectrum for convolution
+  MATRIX_OBJECT slitFunction;                   // user-defined slit function (file option)
   SVD     svdFwhm;                              // svd matrix used for computing coefficients of polynomial fitting fwhm
   double *solar,                                // convoluted kurucz spectrum
          *lambdaF,
@@ -1093,19 +1105,20 @@ KURUCZ;
 // GLOBAL DECLARATIONS
 // -------------------
 
-EXTERN KURUCZ KURUCZ_buffers;
+EXTERN KURUCZ KURUCZ_buffers[MAX_SWATHSIZE];
 EXTERN FFT *pKURUCZ_fft;
+EXTERN INT KURUCZ_indexLine;
 
 // ----------
 // PROTOTYPES
 // ----------
 
 RC   KURUCZ_Spectrum(double *oldLambda,double *newLambda,double *spectrum,double *reference,double *instrFunction,
-                     DoasCh displayFlag,DoasCh *windowTitle,double **coeff,double **fwhmVector,double **fwhmDeriv2,INT saveFlag,INDEX indexFeno,void *responseHandle);
-RC   KURUCZ_ApplyCalibration(FENO *pTabFeno,double *newLambda);
-RC   KURUCZ_Reference(double *instrFunction,INDEX refFlag,INT saveFlag,INT gomeFlag,void *responseHandle);
-void KURUCZ_Init(INT gomeFlag);
-RC   KURUCZ_Alloc(PROJECT *pProject,double *lambda,INDEX indexKurucz,double lambdaMin,double lambdaMax);
+                     DoasCh displayFlag,DoasCh *windowTitle,double **coeff,double **fwhmVector,double **fwhmDeriv2,INT saveFlag,INDEX indexFeno,void *responseHandle,INDEX indexFenoColumn);
+RC   KURUCZ_ApplyCalibration(FENO *pTabFeno,double *newLambda,INDEX indexFenoColumn);
+RC   KURUCZ_Reference(double *instrFunction,INDEX refFlag,INT saveFlag,INT gomeFlag,void *responseHandle,INDEX indexFenoColumn);
+void KURUCZ_Init(INT gomeFlag,INDEX indexFenoColumn);
+RC   KURUCZ_Alloc(PROJECT *pProject,double *lambda,INDEX indexKurucz,double lambdaMin,double lambdaMax,INDEX indexFenoColumn);
 void KURUCZ_Free(void);
 
 // ==================================
@@ -1240,7 +1253,7 @@ RC   OUTPUT_RegisterData(ENGINE_CONTEXT *pEngineContext);
 RC   OUTPUT_FlushBuffers(ENGINE_CONTEXT *pEngineContext);
 
 RC   OUTPUT_SaveNasaAmes(void);
-RC   OUTPUT_SaveResults(ENGINE_CONTEXT *pEngineContext);
+RC   OUTPUT_SaveResults(ENGINE_CONTEXT *pEngineContext,INDEX indexFenoColumn);
 
 RC   OUTPUT_LocalAlloc(ENGINE_CONTEXT *pEngineContext);
 RC   OUTPUT_Alloc(void);
@@ -1497,112 +1510,6 @@ RC   SCIA_ReadPDS(ENGINE_CONTEXT *pEngineContext,int recordNo);
 INDEX SCIA_GetRecordNumber(INT hdfRecord,INT obsNumber);
 RC SCIA_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle);
 
-enum _omiSwathType { OMI_SWATH_UV1, OMI_SWATH_UV2, OMI_SWATH_VIS, OMI_SWATH_MAX };
-enum _omiVdataType { OMI_VDATA_GEO, OMI_VDATA_DATA, OMI_VDATA_ATTR, OMI_VDATA_MAX };
-enum _omiSpecType  { OMI_SPEC_IRRAD, OMI_SPEC_RAD };
-
-// Geolocation fields
-
-typedef struct _omi_geo
- {
-  double         *time;
-  float          *secondsInDay;
-  float          *spacecraftLatitude;
-  float          *spacecraftLongitude;
-  float          *spacecraftAltitude;
-  float          *latitude;
-  float          *longitude;
-  float          *solarZenithAngle;
-  float          *solarAzimuthAngle;
-  float          *viewingZenithAngle;
-  float          *viewingAzimuthAngle;
-  short          *terrainHeight;
-  unsigned short *groundPixelQualityFlags;
- }
-OMI_GEO;
-
-// Data fields
-
-typedef struct _omi_spectrum
- {
-  short  *mantissa;
-  short  *precisionMantissa;
-  char   *exponent;
-  DoasUS *pixelQualityFlags;
-  float  *wavelengthCoefficient;
-  float  *wavelengthCoefficientPrecision;
- }
-OMI_SPECTRUM;
-
-typedef struct _omi_data_fields
- {
- 	short   *wavelengthReferenceColumn;
-  DoasCh   *measurementClass;
-  DoasCh   *instrumentConfigurationId;
-  DoasCh   *instrumentConfigurationVersion;
-  DoasUS  *measurementQualityFlags;
-  char    *numberSmallPixelColumns;
-  char    *exposureType;
-  float   *masterClockPeriod;
-  DoasUS  *calibrationSettings;
-  float   *exposureTime;
-  float   *readoutTime;
-  short   *smallPixelColumn;
-  short   *gainSwitchingColumn1;
-  short   *gainSwitchingColumn2;
-  short   *gainSwitchingColumn3;
-  char    *gainCode1;
-  char    *gainCode2;
-  char    *gainCode3;
-  char    *gainCode4;
-  char    *dSGainCode;
-  char    *lowerStrayLightAreaBinningFactor;
-  char    *upperStrayLightAreaBinningFactor;
-  char    *lowerDarkAreaBinningFactor;
-  char    *upperDarkAreaBinningFactor;
-  short   *skipRows1;
-  short   *skipRows2;
-  short   *skipRows3;
-  short   *skipRows4;
-  float   *detectorTemperature;
-  float   *opticalBenchTemperature;
-  char    *imageBinningFactor;
-  short   *binnedImageRows;
-  short   *stopColumn;
- }
-OMI_DATA_FIELDS;
-
-// Swath attributes
-
-typedef struct _omi_swath_attr
- {
-  int32_t  numTimes;
-  int32_t  numTimesSmallPixel;
-  float    earthSunDistance;
- }
-OMI_SWATH_ATTR;
-
-// Definition of a swath
-//     - UV-1 Swath
-//     - UV-2 Swath
-//     - VIS Swath
-
-typedef struct _omi_swath_earth
- {
-  OMI_GEO         geolocationFields;
-  OMI_SPECTRUM    spectrum;
-  OMI_DATA_FIELDS dataFields;
-  OMI_SWATH_ATTR  swathAttributes;
- }
-OMI_SWATH;
-
-extern DoasCh *OMI_swaths[OMI_SWATH_MAX];
-
-RC   OMI_GetEarthSwath(OMI_SWATH *pSwath,DoasCh *omiFileName,int omiFileId,int earthSwath,int swathType);
-void OMI_ReleaseBuffers(void);
-RC   OMI_SetHDF(ENGINE_CONTEXT *pEngineContext);
-RC   OMI_ReadHDF(ENGINE_CONTEXT *pEngineContext,int recordNo);
-
 RC   CCD_LoadInstrumental(ENGINE_CONTEXT *pEngineContext);
 void CCD_ResetInstrumental(CCD *pCCD);
 
@@ -1720,8 +1627,20 @@ RC GOME2_Set(ENGINE_CONTEXT *pEngineContext);
 RC GOME2_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,INDEX fileIndex);
 RC GOME2_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle);
 
+// OMI
+
+extern int OMI_beatLoaded;
+
+void OMI_TrackSelection(DoasCh *omiTrackSelection,int *omiTracks);
+void OMI_ReleaseReference(void);
+RC   OMI_LoadReference(ENGINE_CONTEXT *pEngineContext,DoasCh *refFile);
+RC   OMI_GetReference(ENGINE_CONTEXT *pEngineContext,DoasCh *refFile,INDEX indexColumn,double *lambda,double *ref,double *refSigma);
+RC   OMI_Set(ENGINE_CONTEXT *pEngineContext);
+RC   OMI_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,INDEX fileIndex);
+
 #if defined(_cplusplus) || defined(__cplusplus)
 }
 #endif
 
 #endif
+

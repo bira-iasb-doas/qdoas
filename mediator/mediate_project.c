@@ -34,6 +34,7 @@ void initializeMediateProjectDisplay(mediate_project_display_t *d)
 
   d->requireSpectra = 1;
   d->requireData = 1;
+  d->requireCalib = 1;
   d->requireFits = 1;
 }
 

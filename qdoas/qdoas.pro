@@ -258,6 +258,7 @@ SOURCES += ../engine/mkzy-read.c
 SOURCES += ../engine/moon.c
 SOURCES += ../engine/noaa-read.c
 SOURCES += ../engine/oceanoptics.c
+SOURCES += ../engine/omi_read.c
 SOURCES += ../engine/output.c
 SOURCES += ../engine/pda-read.c
 SOURCES += ../engine/ras-read.c

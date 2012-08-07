@@ -31,6 +31,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #define COLOUR_INDEX_BUFFER_LENGTH  256
 #define NASA_AMES_VAR_BUFFER_LENGTH  64
 #define ANLYSWIN_NAME_BUFFER_LENGTH  64
+#define TRACK_SELECTION_LENGTH      256
 
 #define MAX_AW_CROSS_SECTION         16
 #define MAX_AW_SHIFT_STRETCH         MAX_AW_CROSS_SECTION+2                     // the total number of cross sections + spectrum + ref (note that practically, it will never possible to shift all cross sections separately !)

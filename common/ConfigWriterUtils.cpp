@@ -157,7 +157,8 @@ void writeSlitFunction(FILE *fp, size_t nIndent, const mediate_slit_function_t *
   fprintf(fp, ">\n");
 
   tmpStr = pathMgr->simplifyPath(QString(d->file.filename));
-  fprintf(fp, "%s  <file file=\"%s\" />\n", buf, tmpStr.toAscii().data());
+  tmpStr2 = pathMgr->simplifyPath(QString(d->file.filename2));
+  fprintf(fp, "%s  <file file=\"%s\" wveDptFlag=\"%s\" file2=\"%s\" />\n", buf, tmpStr.toAscii().data(),(d->file.wveDptFlag ? sTrue : sFalse),tmpStr2.toAscii().data());
   tmpStr = pathMgr->simplifyPath(QString(d->gaussian.filename));
   fprintf(fp, "%s  <gaussian fwhm=\"%.3f\" wveDptFlag=\"%s\" file=\"%s\" />\n", buf, d->gaussian.fwhm,(d->gaussian.wveDptFlag ? sTrue : sFalse),tmpStr.toAscii().data());
   tmpStr = pathMgr->simplifyPath(QString(d->lorentz.filename));

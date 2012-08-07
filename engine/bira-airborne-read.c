@@ -60,7 +60,7 @@
 // CONSTANTS DEFINITION
 // ====================
 
-#define IGNORED_BYTES 160
+#define IGNORED_BYTES 153
 
 // ====================
 // STRUCTURE DEFINITION
@@ -77,7 +77,11 @@ typedef struct _airborneData
   int         nrejMeas,naccMeas;                                                // resp. number of rejected spectra and number of accumulation
   float       longitude,latitude,altitude;                                      // GPS data
   float       exposureTime;                                                     // exposure time (in milliseconds)
-  char        ignoredBytes[IGNORED_BYTES];
+  struct time gpsTime;
+  unsigned char floatflag;
+  unsigned char sentPosition;
+  unsigned char receivedPosition;
+  unsigned char ignoredBytes[IGNORED_BYTES];
  }
 AIRBORNE_DATA;
 
@@ -181,6 +185,9 @@ RC AIRBORNE_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,INT lo
     pRecord->longitude=(double)header.longitude;
     pRecord->latitude=(double)header.latitude;
     pRecord->altitude=(double)header.altitude;
+
+    pRecord->uavBira.servoSentPosition=(unsigned char)header.sentPosition;                     // UAV servo control : position byte sent to the PIC
+    pRecord->uavBira.servoReceivedPosition=(unsigned char)header.receivedPosition;             // UAV servo control : position byte received by the PIC
 
     pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_day,&pRecord->present_time,0);
     pRecord->Zm=(double)ZEN_FNTdiz(ZEN_FNCrtjul(&pRecord->Tm),&pRecord->longitude,&pRecord->latitude,&pRecord->Azimuth);

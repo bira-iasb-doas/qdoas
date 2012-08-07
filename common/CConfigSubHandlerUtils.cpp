@@ -161,6 +161,10 @@ bool CSlitFunctionSubHandler::start(const QString &element, const QXmlAttributes
   if (element == "file") {
 
     QString str = atts.value("file");
+    QString str2 = atts.value("file2");
+
+    m_function->file.wveDptFlag=(atts.value("wveDptFlag") == "true") ? 1 : 0;
+
     if (!str.isEmpty()) {
       str = m_master->pathExpand(str);
       if (str.length() < (int)sizeof(m_function->file.filename))
@@ -168,6 +172,17 @@ bool CSlitFunctionSubHandler::start(const QString &element, const QXmlAttributes
       else
 	return postErrorMessage("Slit Function Filename too long");
     }
+
+    if (!str2.isEmpty())
+     {
+      str2 = m_master->pathExpand(str2);
+      if (str2.length() < (int)sizeof(m_function->file.filename2))
+	      strcpy(m_function->file.filename2, str2.toAscii().data());
+      else
+	      return postErrorMessage("Slit Function Filename too long");
+	    }
+	   else
+	    strcpy(m_function->file.filename2 ,"\0");
   }
   else if (element == "gaussian") {
 

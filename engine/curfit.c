@@ -381,7 +381,7 @@ DoasCh *CurfitError(DoasCh *string,INDEX indexError,double *p,double *deltap)
 //               nX      - the size of previous vectors (depending on the size of the detector)
 //
 //                   !!! use whole vectors (0..NDET-1) in order to avoid side
-//                   !!! effects if the shift is fitted in ANALYSE_Function
+//                   !!! effects if the shift is fitted in Function
 //
 //               Y       - the data to fit (vector of zeros to fit the residual)
 //               sigmaY  - standard deviations for Y data points
@@ -401,7 +401,7 @@ DoasCh *CurfitError(DoasCh *string,INDEX indexError,double *p,double *deltap)
 // -----------------------------------------------------------------------------
 
 RC CurfitNumDeriv(double *X, double *specX, double *srefX, int nX, double *Y, double *sigmaY, int nY,
-                  double *P, double *A, double *deltaA,int indexA,double **deriv)
+                  double *P, double *A, double *deltaA,int indexA,double **deriv,INDEX indexFenoColumn)
  {
   // Declarations
 
@@ -441,13 +441,13 @@ RC CurfitNumDeriv(double *X, double *specX, double *srefX, int nX, double *Y, do
     // Evaluate function for Aj+Dj
 
     A[indexA]=(double)Aj+Dj;
-    if ((rc=ANALYSE_Function(X,specX,srefX,nX,Y,sigmaY,Yfit2,nY,P,A))>=THREAD_EVENT_STOP)
+    if ((rc=ANALYSE_Function(X,specX,srefX,nX,Y,sigmaY,Yfit2,nY,P,A,indexFenoColumn))>=THREAD_EVENT_STOP)
      goto EndNumDeriv;
 
     // Evaluate function for Aj-Dj
 
     A[indexA]=(double)Aj-Dj;
-    if ((rc=ANALYSE_Function(X,specX,srefX,nX,Y,sigmaY,Yfit1,nY,P,A))>=THREAD_EVENT_STOP)
+    if ((rc=ANALYSE_Function(X,specX,srefX,nX,Y,sigmaY,Yfit1,nY,P,A,indexFenoColumn))>=THREAD_EVENT_STOP)
      goto EndNumDeriv;
 
      // Calculate the partial derivative of the function for the non linear parameter
@@ -511,7 +511,7 @@ RC CurfitNumDeriv(double *X, double *specX, double *srefX, int nX, double *Y, do
 // -----------------------------------------------------------------------------
 
 RC CurfitDerivFunc(double *X, double *specX, double *srefX, int nX, double *Y, double *sigmaY, double *Yfit,int nY,
-                   double *P, double *A, double *deltaA,double **deriv)
+                   double *P, double *A, double *deltaA,double **deriv,INDEX indexFenoColumn)
  {
   // Declarations
 
@@ -538,7 +538,7 @@ RC CurfitDerivFunc(double *X, double *specX, double *srefX, int nX, double *Y, d
     //    predefined parameters as offset, undersampling, raman, common residual are fitted linearly
 
     if (((Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVDMARQUARDT) &&
-         (TabCross[i].FitConc!=ITEM_NONE) && ((rc=CurfitNumDeriv(X,specX,srefX,nX,Y,sigmaY,nY,P,A,deltaA,TabCross[i].FitConc,deriv))>=THREAD_EVENT_STOP)) ||
+         (TabCross[i].FitConc!=ITEM_NONE) && ((rc=CurfitNumDeriv(X,specX,srefX,nX,Y,sigmaY,nY,P,A,deltaA,TabCross[i].FitConc,deriv,indexFenoColumn))>=THREAD_EVENT_STOP)) ||
 
     // SVD : concentrations of molecules fitted linearly
     //       second derivatives of non linear parameters (predefined parameters, shift, stretch)
@@ -553,15 +553,15 @@ RC CurfitDerivFunc(double *X, double *specX, double *srefX, int nX, double *Y, d
          (i!=Feno->indexUsamp2) &&
          (i!=Feno->indexRing1)) ||
          (Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVD)) &&
-        ((rc=CurfitNumDeriv(X,specX,srefX,nX,Y,sigmaY,nY,P,A,deltaA,TabCross[i].FitParam,deriv))>=THREAD_EVENT_STOP)) ||
+        ((rc=CurfitNumDeriv(X,specX,srefX,nX,Y,sigmaY,nY,P,A,deltaA,TabCross[i].FitParam,deriv,indexFenoColumn))>=THREAD_EVENT_STOP)) ||
 
     //    derivatives of the fitting function in shift, stretch and scaling are always numeric undependantly on the method of analysis
 
-        ((TabCross[i].FitShift!=ITEM_NONE) && ((rc=CurfitNumDeriv(X,specX,srefX,nX,Y,sigmaY,nY,P,A,deltaA,TabCross[i].FitShift,deriv))>=THREAD_EVENT_STOP)) ||
-        ((TabCross[i].FitStretch!=ITEM_NONE) && ((rc=CurfitNumDeriv(X,specX,srefX,nX,Y,sigmaY,nY,P,A,deltaA,TabCross[i].FitStretch,deriv))>=THREAD_EVENT_STOP)) ||
-        ((TabCross[i].FitStretch2!=ITEM_NONE) && ((rc=CurfitNumDeriv(X,specX,srefX,nX,Y,sigmaY,nY,P,A,deltaA,TabCross[i].FitStretch2,deriv))>=THREAD_EVENT_STOP)) ||
-        ((TabCross[i].FitScale!=ITEM_NONE) && ((rc=CurfitNumDeriv(X,specX,srefX,nX,Y,sigmaY,nY,P,A,deltaA,TabCross[i].FitScale,deriv))>=THREAD_EVENT_STOP)) ||
-        ((TabCross[i].FitScale2!=ITEM_NONE) && ((rc=CurfitNumDeriv(X,specX,srefX,nX,Y,sigmaY,nY,P,A,deltaA,TabCross[i].FitScale2,deriv))>=THREAD_EVENT_STOP)))
+        ((TabCross[i].FitShift!=ITEM_NONE) && ((rc=CurfitNumDeriv(X,specX,srefX,nX,Y,sigmaY,nY,P,A,deltaA,TabCross[i].FitShift,deriv,indexFenoColumn))>=THREAD_EVENT_STOP)) ||
+        ((TabCross[i].FitStretch!=ITEM_NONE) && ((rc=CurfitNumDeriv(X,specX,srefX,nX,Y,sigmaY,nY,P,A,deltaA,TabCross[i].FitStretch,deriv,indexFenoColumn))>=THREAD_EVENT_STOP)) ||
+        ((TabCross[i].FitStretch2!=ITEM_NONE) && ((rc=CurfitNumDeriv(X,specX,srefX,nX,Y,sigmaY,nY,P,A,deltaA,TabCross[i].FitStretch2,deriv,indexFenoColumn))>=THREAD_EVENT_STOP)) ||
+        ((TabCross[i].FitScale!=ITEM_NONE) && ((rc=CurfitNumDeriv(X,specX,srefX,nX,Y,sigmaY,nY,P,A,deltaA,TabCross[i].FitScale,deriv,indexFenoColumn))>=THREAD_EVENT_STOP)) ||
+        ((TabCross[i].FitScale2!=ITEM_NONE) && ((rc=CurfitNumDeriv(X,specX,srefX,nX,Y,sigmaY,nY,P,A,deltaA,TabCross[i].FitScale2,deriv,indexFenoColumn))>=THREAD_EVENT_STOP)))
 
      goto EndCurfitDerivFunc;
 
@@ -646,11 +646,12 @@ RC Curfit(int     mode,                                                         
           double *Yfit,                                                         // O   vector of calculated values of Y
           double *pLambda,                                                      // O   proportion of gradient search included
           double *pChisqr,                                                      // O   reduced Chi square for fit (output)
-          int    *pNiter)                                                       // O   number of iterations
+          int    *pNiter,                                                       // O   number of iterations
+          INDEX	  indexFenoColumn)
  {
   // Declarations
 
-  DoasCh    string[MAX_ITEM_TEXT_LEN+1];                                         // error message string
+  DoasCh   string[MAX_ITEM_TEXT_LEN+1];                                         // error message string
 
   int      i,j,k,                                                               // indexes for loops and arrays
            outOfRange,                                                          // flag set if a parameter is out of the defined range
@@ -727,8 +728,8 @@ RC Curfit(int     mode,                                                         
        alpha[j][k]=0.;
      }
 
-    if (((rc=CurfitDerivFunc(X,specX,srefX,nX,Y,sigmaY,Yfit,nY,P,A,deltaA,deriv))>=THREAD_EVENT_STOP) ||
-        ((rc=ANALYSE_Function(X,specX,srefX,nX,Y,sigmaY,Yfit,nY,P,A))>=THREAD_EVENT_STOP))
+    if (((rc=CurfitDerivFunc(X,specX,srefX,nX,Y,sigmaY,Yfit,nY,P,A,deltaA,deriv,indexFenoColumn))>=THREAD_EVENT_STOP) ||
+        ((rc=ANALYSE_Function(X,specX,srefX,nX,Y,sigmaY,Yfit,nY,P,A,indexFenoColumn))>=THREAD_EVENT_STOP))
 
      goto EndCurfit;
 
@@ -796,7 +797,7 @@ RC Curfit(int     mode,                                                         
 
       // If the Chi square increased,increase pLambda and try again
 
-      if ((rc=ANALYSE_Function(X,specX,srefX,nX,Y,sigmaY,Yfit,nY,P,B))>=THREAD_EVENT_STOP) goto EndCurfit;
+      if ((rc=ANALYSE_Function(X,specX,srefX,nX,Y,sigmaY,Yfit,nY,P,B,indexFenoColumn))>=THREAD_EVENT_STOP) goto EndCurfit;
 
       chisqr=(double)Fchisq(mode,nFree,Y,Yfit,sigmaY,nY);
       if (chisq1<chisqr)
@@ -833,7 +834,7 @@ RC Curfit(int     mode,                                                         
 
     if (outOfRange)
      {
-      if ((rc=ANALYSE_Function(X,specX,srefX,nX,Y,sigmaY,Yfit,nY,P,B))>=THREAD_EVENT_STOP)
+      if ((rc=ANALYSE_Function(X,specX,srefX,nX,Y,sigmaY,Yfit,nY,P,B,indexFenoColumn))>=THREAD_EVENT_STOP)
        goto EndCurfit;
       chisqr=(double)Fchisq(mode,nFree,Y,Yfit,sigmaY,nY);
      }

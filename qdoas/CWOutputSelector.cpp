@@ -103,6 +103,7 @@ CWOutputSelector::CWOutputSelector(const data_select_list_t *d, QWidget *parent)
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_EARTH_RADIUS,           "Earth radius"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_VIEW_ELEVATION,         "Elev. viewing angle"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_VIEW_AZIMUTH,           "Azim. viewing angle"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_VIEW_ZENITH,            "Zenith viewing angle"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_SCIA_QUALITY,           "SCIAMACHY Quality Flag"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_SCIA_STATE_INDEX,       "SCIAMACHY State Index"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_SCIA_STATE_ID,          "SCIAMACHY State Id"));
@@ -130,6 +131,10 @@ CWOutputSelector::CWOutputSelector(const data_select_list_t *d, QWidget *parent)
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_CCD_TARGETAZIMUTH,      "Target azimuth"           ));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_CCD_TARGETELEVATION,    "Target elevation"          ));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_SATURATED,              "Saturated flag"           ));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_OMI_INDEX_SWATH,        "Index of the swath"           ));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_OMI_INDEX_ROW,          "Index of the row in the swath"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_UAV_SERVO_BYTE_SENT,    "Servo position byte sent"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_UAV_SERVO_BYTE_RECEIVED,"Servo position byte received"));
 
   // populate the selected list by key-reference to the available list ...
 
@@ -270,7 +275,6 @@ void getValidFieldFlags(int *validFlags, int instrument)
      (instrument==PRJCT_INSTR_FORMAT_GDP_BIN) ||
      (instrument==PRJCT_INSTR_FORMAT_SCIA_HDF) ||
      (instrument==PRJCT_INSTR_FORMAT_SCIA_PDS) ||
-     (instrument==PRJCT_INSTR_FORMAT_OMI) ||
      (instrument==PRJCT_INSTR_FORMAT_GOME2))?1:0;
 
   // validFlags is indexed by the PRJCT_RESULTS_ASCII_* enumerated values. A non-zero
@@ -310,7 +314,8 @@ void getValidFieldFlags(int *validFlags, int instrument)
   validFlags[PRJCT_RESULTS_ASCII_EARTH_RADIUS]=satelliteFlag;
   validFlags[PRJCT_RESULTS_ASCII_ORBIT]=satelliteFlag;
 
-  validFlags[PRJCT_RESULTS_ASCII_VIEW_ELEVATION]=satelliteFlag;
+  validFlags[PRJCT_RESULTS_ASCII_VIEW_ELEVATION]=0;
+  validFlags[PRJCT_RESULTS_ASCII_VIEW_ZENITH]=satelliteFlag;
   validFlags[PRJCT_RESULTS_ASCII_VIEW_AZIMUTH]=satelliteFlag;
 
   // set the appropriate flags
@@ -383,6 +388,8 @@ void getValidFieldFlags(int *validFlags, int instrument)
       validFlags[PRJCT_RESULTS_ASCII_LONGIT]=1;
       validFlags[PRJCT_RESULTS_ASCII_LATIT]=1;
       validFlags[PRJCT_RESULTS_ASCII_ALTIT]=1;
+      validFlags[PRJCT_RESULTS_ASCII_UAV_SERVO_BYTE_SENT]=1;
+      validFlags[PRJCT_RESULTS_ASCII_UAV_SERVO_BYTE_RECEIVED]=1;
      }
     break;
  // ----------------------------------------------------------------------------
@@ -541,10 +548,22 @@ void getValidFieldFlags(int *validFlags, int instrument)
      }
     break;
  // ----------------------------------------------------------------------------
+    case PRJCT_INSTR_FORMAT_OMI :
+     {
+      validFlags[PRJCT_RESULTS_ASCII_LONGIT]=1;
+      validFlags[PRJCT_RESULTS_ASCII_LATIT]=1;
+      validFlags[PRJCT_RESULTS_ASCII_VIEW_ZENITH]=1;
+      validFlags[PRJCT_RESULTS_ASCII_VIEW_AZIMUTH]=1;
+      validFlags[PRJCT_RESULTS_ASCII_LOS_ZA]=1;
+      validFlags[PRJCT_RESULTS_ASCII_LOS_AZIMUTH]=1;
+      validFlags[PRJCT_RESULTS_ASCII_OMI_INDEX_SWATH]=1;
+      validFlags[PRJCT_RESULTS_ASCII_OMI_INDEX_ROW]=1;
+     }
+    break;
+ // ----------------------------------------------------------------------------
 
 // QDOAS !!! STILL TO DO  PRJCT_INSTR_FORMAT_CCD_OHP_96,                        // CCD (OHP 96)
 // QDOAS !!! STILL TO DO  PRJCT_INSTR_FORMAT_CCD_HA_94,                         // CCD (HARESTUA 94)
-// QDOAS !!! STILL TO DO  PRJCT_INSTR_FORMAT_OMI,                               // OMI
 
     default:
      {

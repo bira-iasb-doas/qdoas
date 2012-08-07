@@ -87,10 +87,10 @@ void CWSlitFileBase::slotBrowseFile()
   if (!filename.isEmpty()) {
     pref->setDirectoryNameGivenFile("Slit", filename);
 
-  if (button==m_browseBtn[0])
-   m_filenameEdit[0]->setText(filename);
-  else
+  if (button==m_browseBtn[1])
    m_filenameEdit[1]->setText(filename);
+  else
+   m_filenameEdit[0]->setText(filename);
   }
 }
 
@@ -108,13 +108,56 @@ CWSlitFileEdit::CWSlitFileEdit(const struct slit_file *d, QWidget *parent) :
   QVBoxLayout *mainLayout = new QVBoxLayout(this);
   QGridLayout *gridLayout = new QGridLayout;
 
-  helperConstructFileEdit(gridLayout, row, "Slit function File",d->filename, sizeof(d->filename));
+  // Wavelength dependent
 
-  gridLayout->setColumnMinimumWidth(0, cSuggestedColumnZeroWidth);
-  gridLayout->setColumnMinimumWidth(2, cSuggestedColumnTwoWidth);
-  gridLayout->setColumnStretch(1, 1);
+  m_wavelengthDependent = new QCheckBox("Wavelength dependent", this);
+  gridLayout->addWidget(m_wavelengthDependent, 0, 1, Qt::AlignLeft);
+  connect(m_wavelengthDependent, SIGNAL(stateChanged(int)), this, SLOT (slotToggleWavelength(int)));
+
+   QLabel *labelfwhm = new QLabel("Slit Function File");
+   labelfwhm->setFixedWidth(115);
+   labelfwhm->setAlignment(Qt::AlignVCenter|Qt::AlignRight);
+
+   gridLayout->addWidget(labelfwhm, 1, 0, Qt::AlignRight);
+   m_filenameEdit[0] = new QLineEdit(this);
+   m_filenameEdit[0]->setMaxLength(sizeof(d->filename));
+   gridLayout->addWidget(m_filenameEdit[0], 1, 1);
+   m_browseBtn[0] = new QPushButton("Browse", this);
+   // m_browseBtn[0]->setMaxLength(sizeof("Browse")-1);
+    gridLayout->addWidget(m_browseBtn[0], 1, 2);
+
+   // initialise
+   m_filenameEdit[0]->setText(d->filename);
+
+   connect(m_browseBtn[0], SIGNAL(clicked()), this, SLOT(slotBrowseFile()));
+
+  QFrame *fileFrame = new QFrame(this);
+  fileFrame->setFrameStyle(QFrame::NoFrame);
+  QGridLayout *fileFrameLayout = new QGridLayout(fileFrame);
+  fileFrameLayout->setMargin(0);
+
+  QFrame *fileFrameWve = new QFrame(this);
+  fileFrameWve->setFrameStyle(QFrame::NoFrame);
+  QGridLayout *fileFrameLayoutWve = new QGridLayout(fileFrameWve);
+  fileFrameLayoutWve->setMargin(0);
+
+  row=1;
+
+  helperConstructFileEdit(fileFrameLayoutWve, row, "Stretch on wavelength",d->filename2, sizeof(d->filename2));
+
+  m_toggleWavelengthStack = new QStackedLayout;
+  m_toggleWavelengthStack->setMargin(0);
+  m_toggleWavelengthStack->addWidget(fileFrame);
+  m_toggleWavelengthStack->addWidget(fileFrameWve);
 
   mainLayout->addLayout(gridLayout);
+  mainLayout->addLayout(m_toggleWavelengthStack);
+
+  reset(d);
+
+  gridLayout->setColumnMinimumWidth(0, cSuggestedColumnZeroWidth);
+  gridLayout->setColumnStretch(1, 1);
+
   mainLayout->addStretch(1);
 }
 
@@ -124,12 +167,22 @@ CWSlitFileEdit::~CWSlitFileEdit()
 
 void CWSlitFileEdit::reset(const struct slit_file *d)
 {
-  m_filenameEdit[0]->setText(d->filename);
+	 m_filenameEdit[0]->setText(d->filename);
+
+	 if (d->wveDptFlag)
+   m_filenameEdit[1]->setText(d->filename2);
+
+  m_wavelengthDependent->setCheckState(d->wveDptFlag ? Qt::Checked : Qt::Unchecked);
+
 }
 
 void CWSlitFileEdit::apply(struct slit_file *d) const
 {
-  strcpy(d->filename, m_filenameEdit[0]->text().toAscii().data());
+	 d->wveDptFlag = m_wavelengthDependent->isChecked() ? 1 : 0;
+	 strcpy(d->filename, m_filenameEdit[0]->text().toAscii().data());
+
+  if (d->wveDptFlag)
+   strcpy(d->filename2, m_filenameEdit[1]->text().toAscii().data());
 }
 
 //--------------------------------------------------------

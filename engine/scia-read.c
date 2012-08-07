@@ -163,7 +163,7 @@ INT SCIA_ms=0;
 
 typedef struct _sciaOrbitFiles                                                  // description of an orbit
  {
- 	DoasCh sciaFileName[MAX_STR_LEN+1];                                            // the name of the file with a part of the orbit
+ 	DoasCh sciaFileName[MAX_STR_LEN+1];                                           // the name of the file with a part of the orbit
  	info_l1c        sciaPDSInfo;                                                  // all internal information about the PDS file like data offsets etc.
   float *sciaSunRef,*sciaSunWve;                                                // the sun reference spectrum and calibration
   INDEX *sciaLatIndex,*sciaLonIndex,*sciaSzaIndex;                              // indexes of records sorted resp. by latitude, by longitude and by SZA
@@ -2022,7 +2022,7 @@ RC SciaNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
    for (indexFeno=0;(indexFeno<NFeno) && !rc;indexFeno++)
     {
-     pTabFeno=&TabFeno[indexFeno];
+     pTabFeno=&TabFeno[0][indexFeno];
 
      if ((pTabFeno->hidden!=1) &&
          (pTabFeno->useKurucz!=ANLYS_KURUCZ_NONE) &&
@@ -2098,7 +2098,7 @@ RC SCIA_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
     for (indexFeno=0;(indexFeno<NFeno) && !rc;indexFeno++)
       {
-       pTabFeno=&TabFeno[indexFeno];
+       pTabFeno=&TabFeno[0][indexFeno];
        pTabFeno->NDET=NDET;
 
        // Load calibration and reference spectra
@@ -2111,7 +2111,7 @@ RC SCIA_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
            pTabFeno->Sref[i]=(double)(((float *)pOrbitFile->sciaSunRef)[i]);
           }
 
-         if (!TabFeno[indexFeno].hidden)
+         if (!TabFeno[0][indexFeno].hidden)
           {
 
 //         memcpy(pTabFeno->SrefSigma,SCIA_refE,sizeof(double)*pTabFeno->NDET);
@@ -2161,7 +2161,7 @@ RC SCIA_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
              if (((rc=ANALYSE_XsInterpolation(pTabFeno,pTabFeno->LambdaRef))!=ERROR_ID_NO) ||
                  ((!pKuruczOptions->fwhmFit || !pTabFeno->useKurucz) && pTabFeno->xsToConvolute &&
-                 ((rc=ANALYSE_XsConvolution(pTabFeno,pTabFeno->LambdaRef,&ANALYSIS_slit,&ANALYSIS_slit2,pSlitOptions->slitFunction.slitType,&pSlitOptions->slitFunction.slitParam,&pSlitOptions->slitFunction.slitParam2))!=ERROR_ID_NO)))
+                 ((rc=ANALYSE_XsConvolution(pTabFeno,pTabFeno->LambdaRef,&ANALYSIS_slit,&ANALYSIS_slit2,pSlitOptions->slitFunction.slitType,&pSlitOptions->slitFunction.slitParam,&pSlitOptions->slitFunction.slitParam2,0))!=ERROR_ID_NO)))
 
               goto EndSCIA_LoadAnalysis;
             }
@@ -2187,9 +2187,9 @@ RC SCIA_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
     if (useKurucz || (THRD_id==THREAD_TYPE_KURUCZ))
      {
-      KURUCZ_Init(0);
+      KURUCZ_Init(0,0);
 
-      if ((THRD_id!=THREAD_TYPE_KURUCZ) && ((rc=KURUCZ_Reference(NULL,0,saveFlag,0,responseHandle))!=ERROR_ID_NO))
+      if ((THRD_id!=THREAD_TYPE_KURUCZ) && ((rc=KURUCZ_Reference(NULL,0,saveFlag,0,responseHandle,0))!=ERROR_ID_NO))
        goto EndSCIA_LoadAnalysis;
      }
 
@@ -2209,8 +2209,8 @@ RC SCIA_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
     // Automatic reference selection
 
     if (sciaLoadReferenceFlag && !(rc=SciaNewRef(pEngineContext,responseHandle)) &&
-      !(rc=ANALYSE_AlignReference(pEngineContext,2,pEngineContext->project.spectra.displayDataFlag,responseHandle))) // automatic ref selection for Northern hemisphere
-     rc=ANALYSE_AlignReference(pEngineContext,3,pEngineContext->project.spectra.displayDataFlag,responseHandle);     // automatic ref selection for Southern hemisphere
+      !(rc=ANALYSE_AlignReference(pEngineContext,2,pEngineContext->project.spectra.displayDataFlag,responseHandle,0))) // automatic ref selection for Northern hemisphere
+     rc=ANALYSE_AlignReference(pEngineContext,3,pEngineContext->project.spectra.displayDataFlag,responseHandle,0);     // automatic ref selection for Southern hemisphere
    }
 
   // Return
