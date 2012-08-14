@@ -464,13 +464,13 @@ RC OMI_AllocateSwath(OMI_SWATH *pSwath,int nSwaths,int nSpectra)
 
  		// Buffers related to spectra and calibration
 
- 	if (((pSpectrum->mantissa=(SHORT *)MEMORY_AllocBuffer("OMI_AllocateSwath","mantissa",NDET,sizeof(SHORT),0,MEMORY_TYPE_SHORT))==NULL) ||
- 	    ((pSpectrum->precisionMantissa=(SHORT *)MEMORY_AllocBuffer("OMI_AllocateSwath","precisionMantissa",NDET,sizeof(SHORT),0,MEMORY_TYPE_SHORT))==NULL) ||
+ 	if (((pSpectrum->mantissa=(short *)MEMORY_AllocBuffer("OMI_AllocateSwath","mantissa",NDET,sizeof(SHORT),0,MEMORY_TYPE_SHORT))==NULL) ||
+ 	    ((pSpectrum->precisionMantissa=(short *)MEMORY_AllocBuffer("OMI_AllocateSwath","precisionMantissa",NDET,sizeof(SHORT),0,MEMORY_TYPE_SHORT))==NULL) ||
  	    ((pSpectrum->exponent=(int8_t *)MEMORY_AllocBuffer("OMI_AllocateSwath","exponent",NDET,sizeof(int8_t),0,MEMORY_TYPE_STRING))==NULL) ||
 
  	// Earth swath
 
- 	    ((pData->measurementQualityFlags=(USHORT *)MEMORY_AllocBuffer("OMI_AllocateSwath","measurementQualityFlags",nSwaths,sizeof(USHORT),0,MEMORY_TYPE_USHORT))==NULL) ||
+ 	    ((pData->measurementQualityFlags=(unsigned short *)MEMORY_AllocBuffer("OMI_AllocateSwath","measurementQualityFlags",nSwaths,sizeof(unsigned short),0,MEMORY_TYPE_USHORT))==NULL) ||
  	    ((pData->exposureTime=(float *)MEMORY_AllocBuffer("OMI_AllocateSwath","exposureTime",nSwaths,sizeof(float),0,MEMORY_TYPE_FLOAT))==NULL) ||
  	    ((pData->detectorTemperature=(float *)MEMORY_AllocBuffer("OMI_AllocateSwath","detectorTemperature",nSwaths,sizeof(float),0,MEMORY_TYPE_FLOAT))==NULL) ||
  	    ((pData->wavelengthReferenceColumn=(short *)MEMORY_AllocBuffer("OMI_AllocateSwath","wavelengthReferenceColumn",nSwaths,sizeof(SHORT),0,MEMORY_TYPE_SHORT))==NULL) ||

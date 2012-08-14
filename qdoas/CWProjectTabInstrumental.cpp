@@ -1764,7 +1764,7 @@ void CWInstrGome2Edit::apply(struct instrumental_gome2 *d) const
 //--------------------------------------------------------------------------
 
 CWInstrSciaEdit::CWInstrSciaEdit(const struct instrumental_scia *d, QWidget *parent) :
-  CWCalibInstrEdit(parent),
+  CWAllFilesEdit(parent),
   m_clusterOffset(0)
 {
   QString tmpStr;
@@ -1807,6 +1807,9 @@ CWInstrSciaEdit::CWInstrSciaEdit(const struct instrumental_scia *d, QWidget *par
   helperConstructCalInsFileWidgets(gridLayout, row,
 				   d->calibrationFile, sizeof(d->calibrationFile),
 				   d->instrFunctionFile, sizeof(d->instrFunctionFile));
+
+  helperConstructFileWidget(&m_fileFourEdit, gridLayout, row, d->detectorNonLinearityFile, sizeof(d->detectorNonLinearityFile),
+			    "Det. Non-Linearity", SLOT(slotDetectorNonLinearityFourBrowse()));
 
   gridLayout->setColumnMinimumWidth(0, cSuggestedColumnZeroWidth);
   gridLayout->setColumnMinimumWidth(2, cSuggestedColumnTwoWidth);
@@ -1857,6 +1860,7 @@ void CWInstrSciaEdit::apply(struct instrumental_scia *d) const
   // files
   strcpy(d->calibrationFile, m_fileOneEdit->text().toAscii().data());
   strcpy(d->instrFunctionFile, m_fileTwoEdit->text().toAscii().data());
+  strcpy(d->detectorNonLinearityFile, m_fileFourEdit->text().toAscii().data());
 }
 
 void CWInstrSciaEdit::slotChannelChanged(int index)

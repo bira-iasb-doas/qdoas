@@ -413,7 +413,7 @@ class CWInstrGome2Edit : public CWCalibInstrEdit
 
 //--------------------------------------------------------------------------
 
-class CWInstrSciaEdit : public CWCalibInstrEdit
+class CWInstrSciaEdit : public CWAllFilesEdit
 {
 Q_OBJECT
  public:

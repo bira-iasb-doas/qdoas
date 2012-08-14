@@ -113,10 +113,11 @@ void EngineResetContext(ENGINE_CONTEXT *pEngineContext)
    MEMORY_ReleaseBuffer("EngineResetContext ","scanRefFiles",pEngineContext->analysisRef.scanRefFiles);
   if (pBuffers->varPix!=NULL)
    MEMORY_ReleaseDVector("EngineResetContext ","varPix",pBuffers->varPix,0);
-  if (pBuffers->dnl!=NULL)
-   MEMORY_ReleaseDVector("EngineResetContext ","dnl",pBuffers->dnl,0);
   if (pBuffers->recordIndexes!=NULL)
    MEMORY_ReleaseBuffer("EngineResetContext ","recordIndexes",pBuffers->recordIndexes);
+
+  if (pBuffers->dnl.matrix!=NULL)
+   MATRIX_Free(&pBuffers->dnl,"EngineResetContext (dnl)");
 
   CCD_ResetInstrumental(&pRecord->ccd);
 
@@ -171,8 +172,6 @@ RC EngineCopyContext(ENGINE_CONTEXT *pEngineContextTarget,ENGINE_CONTEXT *pEngin
       ((pBuffersTarget->scanRef=(double *)MEMORY_AllocDVector("EngineCopyContext","scanRef",0,NDET-1))==NULL)) ||
       ((pBuffersSource->varPix!=NULL) && (pBuffersTarget->varPix==NULL) &&
       ((pBuffersTarget->varPix=(double *)MEMORY_AllocDVector("EngineCopyContext","varPix",0,NDET-1))==NULL)) ||
-      ((pBuffersSource->dnl!=NULL) && (pBuffersTarget->dnl==NULL) &&
-      ((pBuffersTarget->dnl=(double *)MEMORY_AllocDVector("EngineCopyContext","dnl",0,NDET-1))==NULL)) ||
       ((pBuffersSource->specMaxx!=NULL) && (pBuffersTarget->specMaxx==NULL) &&
       ((pBuffersTarget->specMaxx=(double *)MEMORY_AllocDVector("EngineCopyContext","specMaxx",0,NDET-1))==NULL)) ||
       ((pBuffersSource->specMax!=NULL) && (pBuffersTarget->specMax==NULL) &&
@@ -187,7 +186,9 @@ RC EngineCopyContext(ENGINE_CONTEXT *pEngineContextTarget,ENGINE_CONTEXT *pEngin
       ((pEngineContextTarget->recordInfo.ccd.dnl.matrix!=NULL) && (pEngineContextTarget->recordInfo.ccd.dnl.matrix==NULL) &&
       ((rc=MATRIX_Copy(&pEngineContextTarget->recordInfo.ccd.dnl,&pEngineContextSource->recordInfo.ccd.dnl,"EngineCopyContext"))!=ERROR_ID_NO)) ||
       ((pEngineContextTarget->recordInfo.ccd.drk.matrix!=NULL) && (pEngineContextTarget->recordInfo.ccd.drk.matrix==NULL) &&
-      ((rc=MATRIX_Copy(&pEngineContextTarget->recordInfo.ccd.drk,&pEngineContextSource->recordInfo.ccd.drk,"EngineCopyContext"))!=ERROR_ID_NO)))
+      ((rc=MATRIX_Copy(&pEngineContextTarget->recordInfo.ccd.drk,&pEngineContextSource->recordInfo.ccd.drk,"EngineCopyContext"))!=ERROR_ID_NO)) ||
+      ((pBuffersSource->dnl.matrix!=NULL) && (pBuffersTarget->dnl.matrix==NULL) &&
+      ((rc=MATRIX_Copy(&pBuffersTarget->dnl,&pBuffersSource->dnl,"EngineCopyContext"))!=ERROR_ID_NO)))
 
    rc=ERROR_ID_ALLOC;
 
@@ -213,8 +214,6 @@ RC EngineCopyContext(ENGINE_CONTEXT *pEngineContextTarget,ENGINE_CONTEXT *pEngin
      memcpy(pBuffersTarget->scanRef,pBuffersSource->scanRef,sizeof(double)*NDET);
     if ((pBuffersTarget->varPix!=NULL) && (pBuffersSource->varPix!=NULL))
      memcpy(pBuffersTarget->varPix,pBuffersSource->varPix,sizeof(double)*NDET);
-    if ((pBuffersTarget->dnl!=NULL) && (pBuffersSource->dnl!=NULL))
-     memcpy(pBuffersTarget->dnl,pBuffersSource->dnl,sizeof(double)*NDET);
     if ((pBuffersTarget->specMaxx!=NULL) && (pBuffersSource->specMaxx!=NULL))
      memcpy(pBuffersTarget->specMaxx,pBuffersSource->specMaxx,sizeof(double)*NDET);
     if ((pBuffersTarget->specMax!=NULL) && (pBuffersSource->specMax!=NULL))
@@ -343,15 +342,26 @@ RC EngineSetProject(ENGINE_CONTEXT *pEngineContext)
        (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_CCD_EEV)) &&
       ((pBuffers->darkCurrent=MEMORY_AllocDVector("EngineSetProject","darkCurrent",0,NDET-1))==NULL)) ||
 
-      ((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MKZY) &&
+      (((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MKZY) ||
+        (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC) ||
+        (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC_STD)||
+        (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC_BIRA)) &&
       ((pBuffers->offset=MEMORY_AllocDVector("EngineSetProject","offset",0,NDET-1))==NULL)) ||
 
      (((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC) ||
        (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC_STD) ||
        (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC_BIRA)) &&
 
-      ((strlen(pInstrumental->vipFile) && ((pBuffers->varPix=MEMORY_AllocDVector("EngineSetProject","varPix",0,NDET-1))==NULL)) ||
-       (strlen(pInstrumental->dnlFile) && ((pBuffers->dnl=MEMORY_AllocDVector("EngineSetProject","dnl",0,NDET-1))==NULL)))))
+       (strlen(pInstrumental->vipFile) && ((pBuffers->varPix=MEMORY_AllocDVector("EngineSetProject","varPix",0,NDET-1))==NULL))) ||
+
+       // Load the detector non linearity file
+
+       ((strlen(pInstrumental->dnlFile)>0) && (pBuffers->dnl.matrix==NULL) &&
+       ((rc=MATRIX_Load(pInstrumental->dnlFile,
+                       &pBuffers->dnl,
+                        0 /* line base */,0 /* column base */,0,0,
+                        0.,0.,
+                        1,0,"EngineSetProject (dnl)"))!=ERROR_ID_NO)))
 
    rc=ERROR_ID_ALLOC;
 
@@ -381,62 +391,65 @@ RC EngineSetProject(ENGINE_CONTEXT *pEngineContext)
       fclose(fp);
      }
 
-    // Load the instrumental function                                           // QDOAS !!! LOAD vip + dnl
-
-    if (strlen(pInstrumental->instrFunction))
+    if (!rc)
      {
-     	lambdaInstr=instrFunction=instrDeriv2=NULL;
+      // Initialize buffers
 
-      if ((fp=fopen(pInstrumental->instrFunction,"rt"))==NULL)
-       rc=ERROR_SetLast("EngineSetProject",ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pInstrumental->instrFunction);
-      else if (((pBuffers->instrFunction=MEMORY_AllocDVector("EngineSetProject","instrFunction",0,NDET-1))==NULL) ||
-               ((lambdaInstr=MEMORY_AllocDVector("EngineSetProject","lambdaInstr",0,NDET-1))==NULL) ||
-               ((instrFunction=MEMORY_AllocDVector("EngineSetProject","instrFunction",0,NDET-1))==NULL) ||
-               ((instrDeriv2=MEMORY_AllocDVector("EngineSetProject","instrDeriv2",0,NDET-1))==NULL))
+      if (pBuffers->darkCurrent!=NULL)
+       VECTOR_Init(pBuffers->darkCurrent,(double)0.,NDET);                  // To check the initialization of the ANALYSE_zeros vector ...
+      if (pBuffers->offset!=NULL)
+       VECTOR_Init(pBuffers->offset,(double)0.,NDET);                       // To check the initialization of the ANALYSE_zeros vector ...
+      if (pBuffers->scanRef!=NULL)
+       VECTOR_Init(pBuffers->scanRef,(double)0.,NDET);                      // To check the initialization of the ANALYSE_zeros vector ...
 
-       rc=ERROR_ID_ALLOC;
+      // Load the instrumental function                                           // QDOAS !!! LOAD vip + dnl
 
-      else
+      if (strlen(pInstrumental->instrFunction))
        {
-        for (i=0;(i<NDET) && fgets(str,MAX_ITEM_TEXT_LEN,fp);)
-         if ((strchr(str,';')==NULL) && (strchr(str,'*')==NULL))
-          {
-           sscanf(str,"%lf %lf",&lambdaInstr[i],&instrFunction[i]);
-           i++;
-          }
+       	lambdaInstr=instrFunction=instrDeriv2=NULL;
 
-        if (!SPLINE_Deriv2(lambdaInstr,instrFunction,instrDeriv2,NDET,"EngineSetProject"))
-         rc=SPLINE_Vector(lambdaInstr,instrFunction,instrDeriv2,NDET,pBuffers->lambda,pBuffers->instrFunction,NDET,SPLINE_CUBIC,"EngineSetProject");
+        if ((fp=fopen(pInstrumental->instrFunction,"rt"))==NULL)
+         rc=ERROR_SetLast("EngineSetProject",ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pInstrumental->instrFunction);
+        else if (((pBuffers->instrFunction=MEMORY_AllocDVector("EngineSetProject","instrFunction",0,NDET-1))==NULL) ||
+                 ((lambdaInstr=MEMORY_AllocDVector("EngineSetProject","lambdaInstr",0,NDET-1))==NULL) ||
+                 ((instrFunction=MEMORY_AllocDVector("EngineSetProject","instrFunction",0,NDET-1))==NULL) ||
+                 ((instrDeriv2=MEMORY_AllocDVector("EngineSetProject","instrDeriv2",0,NDET-1))==NULL))
+
+         rc=ERROR_ID_ALLOC;
+
+        else
+         {
+          for (i=0;(i<NDET) && fgets(str,MAX_ITEM_TEXT_LEN,fp);)
+           if ((strchr(str,';')==NULL) && (strchr(str,'*')==NULL))
+            {
+             sscanf(str,"%lf %lf",&lambdaInstr[i],&instrFunction[i]);
+             i++;
+            }
+
+          if (!SPLINE_Deriv2(lambdaInstr,instrFunction,instrDeriv2,NDET,"EngineSetProject"))
+           rc=SPLINE_Vector(lambdaInstr,instrFunction,instrDeriv2,NDET,pBuffers->lambda,pBuffers->instrFunction,NDET,SPLINE_CUBIC,"EngineSetProject");
+         }
+
+        if (fp!=NULL)
+         fclose(fp);
+
+        // Release the allocated buffers
+
+        if (lambdaInstr!=NULL)
+         MEMORY_ReleaseDVector("EngineSetProject","lambdaInstr",lambdaInstr,0);
+        if (instrFunction!=NULL)
+         MEMORY_ReleaseDVector("EngineSetProject","instrFunction",instrFunction,0);
+        if (instrDeriv2!=NULL)
+         MEMORY_ReleaseDVector("EngineSetProject","instrDeriv2",instrDeriv2,0);
        }
 
-      if (fp!=NULL)
-       fclose(fp);
+      // MFC : load dark current and offset
 
-      // Release the allocated buffers
+      if (!rc && ((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC) || (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC_STD)) &&
+         !(rc=MFC_LoadOffset(pEngineContext)))
 
-      if (lambdaInstr!=NULL)
-       MEMORY_ReleaseDVector("EngineSetProject","lambdaInstr",lambdaInstr,0);
-      if (instrFunction!=NULL)
-       MEMORY_ReleaseDVector("EngineSetProject","instrFunction",instrFunction,0);
-      if (instrDeriv2!=NULL)
-       MEMORY_ReleaseDVector("EngineSetProject","instrDeriv2",instrDeriv2,0);
+       rc=MFC_LoadDark(pEngineContext);
      }
-
-    // MFC : load dark current and offset
-
-    if (((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC) || (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC_STD)) &&
-        !(rc=MFC_LoadOffset(pEngineContext)))
-
-     rc=MFC_LoadDark(pEngineContext);
-
-    // Initialize buffers
-
-    if (pBuffers->darkCurrent!=NULL)
-     VECTOR_Init(pBuffers->darkCurrent,(double)0.,NDET);                  // To check the initialization of the ANALYSE_zeros vector ...
-    if (pBuffers->offset!=NULL)
-     VECTOR_Init(pBuffers->offset,(double)0.,NDET);                       // To check the initialization of the ANALYSE_zeros vector ...
-    if (pBuffers->scanRef!=NULL)
-     VECTOR_Init(pBuffers->scanRef,(double)0.,NDET);                      // To check the initialization of the ANALYSE_zeros vector ...
    }
 
   // Return

@@ -87,7 +87,7 @@ int mediateRequestDisplaySpecInfo(void *engineContext,int page,void *responseHan
      mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Interpixel","%s",pInstrumental->vipFile);
    }
 
-  if (strlen(pInstrumental->dnlFile))
+  if (strlen(pInstrumental->offsetFile))
    {
     if (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC_STD)
      mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Offset","%s",MFC_fileOffset);
@@ -101,9 +101,10 @@ int mediateRequestDisplaySpecInfo(void *engineContext,int page,void *responseHan
              (MFC_header.wavelength1==pInstrumental->mfcMaskInstr)||
              (fabs((double)(MFC_header.wavelength1-(float)pInstrumental->wavelength))<(double)5.)))))
      mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Offset","%s",MFC_fileOffset);
-    else
-     mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Non linearity","%s",pInstrumental->dnlFile);
    }
+
+  if (strlen(pInstrumental->dnlFile))
+   mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Non linearity","%s",pInstrumental->dnlFile);
 
   if (pInstrumental->readOutFormat!=PRJCT_INSTR_FORMAT_GOME2)
    mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Date and Time","%02d/%02d/%d %02d:%02d:%02d",pDay->da_day,pDay->da_mon,pDay->da_year,pTime->ti_hour,pTime->ti_min,pTime->ti_sec);
@@ -992,6 +993,7 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
 
 	  	 strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->sciapds.calibrationFile);    // calibration file
 	  	 strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->sciapds.instrFunctionFile);    // instrumental function file
+	  	 strcpy(pEngineInstrumental->dnlFile,pMediateInstrumental->sciapds.detectorNonLinearityFile);   // correction for the non linearity of the detector
 
 	  	 pEngineInstrumental->scia.sciaChannel=pMediateInstrumental->sciapds.channel;
 
@@ -1087,7 +1089,7 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
 	  	 strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->mfc.calibrationFile);     // calibration file
 	  	 strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->mfc.instrFunctionFile);     // instrumental function file
 	  	 strcpy(pEngineInstrumental->vipFile,pMediateInstrumental->mfc.darkCurrentFile);             // dark current file
-	  	 strcpy(pEngineInstrumental->dnlFile,pMediateInstrumental->mfc.offsetFile);                  // offset file
+	  	 strcpy(pEngineInstrumental->offsetFile,pMediateInstrumental->mfc.offsetFile);               // offset file
 
      break;
  // ---------------------------------------------------------------------------
@@ -1105,7 +1107,7 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
 	  	 strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->mfcstd.calibrationFile);     // calibration file
 	  	 strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->mfcstd.instrFunctionFile);     // instrumental function file
 	  	 strcpy(pEngineInstrumental->vipFile,pMediateInstrumental->mfcstd.darkCurrentFile);             // dark current file
-	  	 strcpy(pEngineInstrumental->dnlFile,pMediateInstrumental->mfcstd.offsetFile);                  // offset file
+	  	 strcpy(pEngineInstrumental->offsetFile,pMediateInstrumental->mfcstd.offsetFile);               // offset file
 
     break;
  // ---------------------------------------------------------------------------

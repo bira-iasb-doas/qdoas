@@ -601,6 +601,7 @@ typedef struct _prjctInstrumental
   DoasCh       instrFunction[MAX_ITEM_TEXT_LEN+1];                              // instrumental function
   DoasCh       vipFile[MAX_ITEM_TEXT_LEN+1];                                    // interpixel variability correction
   DoasCh       dnlFile[MAX_ITEM_TEXT_LEN+1];                                    // detector not linearity correction
+  DoasCh       offsetFile[MAX_ITEM_TEXT_LEN+1];                                 // offset file
   DoasCh       imagePath[MAX_ITEM_TEXT_LEN+1];                                  // root path for camera pictures
   INT         detectorSize;                                                     // size of detector in pixels
   INT         azimuthFlag;

@@ -98,18 +98,18 @@ RC MFC_LoadOffset(ENGINE_CONTEXT *pEngineContext)
 
   rc=ERROR_ID_NO;
 
-  strcpy(MFC_fileOffset,pInstrumental->dnlFile);
+  strcpy(MFC_fileOffset,pInstrumental->offsetFile);
 
   // Read offset
 
-  if (strlen(pInstrumental->dnlFile) && (pBuffers->dnl!=NULL))                  // offset
+  if (strlen(pInstrumental->offsetFile) && (pBuffers->offset!=NULL))                  // offset
    {
-   	VECTOR_Init(pBuffers->dnl,0.,NDET);
+   	VECTOR_Init(pBuffers->offset,0.,NDET);
 
     rc=(pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC)?
-        MFC_ReadRecord(pInstrumental->dnlFile,&MFC_headerOff,pBuffers->dnl,
+        MFC_ReadRecord(pInstrumental->offsetFile,&MFC_headerOff,pBuffers->offset,
        &MFC_headerDrk,NULL,&MFC_headerOff,NULL,pInstrumental->mfcMaskOffset,pInstrumental->mfcMaskSpec,pInstrumental->mfcRevert): // remove offset from dark current
-        MFC_ReadRecordStd(pEngineContext,pInstrumental->dnlFile,&MFC_headerOff,pBuffers->dnl,
+        MFC_ReadRecordStd(pEngineContext,pInstrumental->offsetFile,&MFC_headerOff,pBuffers->offset,
        &MFC_headerDrk,NULL,&MFC_headerOff,NULL);
 
     if (rc==ERROR_ID_FILE_END)
@@ -148,9 +148,9 @@ RC MFC_LoadDark(ENGINE_CONTEXT *pEngineContext)
 
     rc=(pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC)?
         MFC_ReadRecord(pInstrumental->vipFile,&MFC_headerDrk,pBuffers->varPix,
-       &MFC_headerDrk,NULL,&MFC_headerOff,pBuffers->dnl,pInstrumental->mfcMaskOffset,pInstrumental->mfcMaskSpec,pInstrumental->mfcRevert): // remove offset from dark current
+       &MFC_headerDrk,NULL,&MFC_headerOff,pBuffers->offset,pInstrumental->mfcMaskOffset,pInstrumental->mfcMaskSpec,pInstrumental->mfcRevert): // remove offset from dark current
         MFC_ReadRecordStd(pEngineContext,pInstrumental->vipFile,&MFC_headerDrk,pBuffers->varPix,
-       &MFC_headerDrk,NULL,&MFC_headerOff,pBuffers->dnl);
+       &MFC_headerDrk,NULL,&MFC_headerOff,pBuffers->offset);
 
     if (rc==ERROR_ID_FILE_END)
      rc=0;
@@ -425,7 +425,7 @@ RC ReliMFC(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay
 
     // Record read out
 
-    if (!(rc=MFC_ReadRecord(fileName,&MFC_header,pBuffers->spectrum,&MFC_headerDrk,pBuffers->varPix,&MFC_headerOff,pBuffers->dnl,mfcMask,pInstrumental->mfcMaskSpec,pInstrumental->mfcRevert)))
+    if (!(rc=MFC_ReadRecord(fileName,&MFC_header,pBuffers->spectrum,&MFC_headerDrk,pBuffers->varPix,&MFC_headerOff,pBuffers->offset,mfcMask,pInstrumental->mfcMaskSpec,pInstrumental->mfcRevert)))
      {
       if ((mfcMask==pInstrumental->mfcMaskSpec) &&
          (((pInstrumental->mfcMaskSpec!=(UINT)0) && ((UINT)MFC_header.ty==mfcMask)) ||
@@ -446,7 +446,7 @@ RC ReliMFC(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay
             MFC_ReadRecord(fileName,
                           &MFC_headerInstr,pBuffers->instrFunction,
                           &MFC_headerDrk,pBuffers->varPix,               // instrument function should be corrected for dark current
-                          &MFC_headerOff,pBuffers->dnl,                  // instrument function should be corrected for offset
+                          &MFC_headerOff,pBuffers->offset,                  // instrument function should be corrected for offset
                           pInstrumental->mfcMaskInstr,pInstrumental->mfcMaskSpec,pInstrumental->mfcRevert);
 
             FILES_CompactPath(MFC_fileInstr,fileName,1,1);
@@ -456,15 +456,15 @@ RC ReliMFC(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay
             MFC_ReadRecord(fileName,
                           &MFC_headerInstr,pBuffers->varPix,
                           &MFC_headerDrk,NULL,                            // no correction for dark current
-                          &MFC_headerOff,pBuffers->dnl,                  // dark current should be corrected for offset
+                          &MFC_headerOff,pBuffers->offset,                  // dark current should be corrected for offset
                           pInstrumental->mfcMaskDark,pInstrumental->mfcMaskSpec,0);
 
             FILES_CompactPath(MFC_fileDark,fileName,1,1);
            }
-          else if ((((MFC_header.ty&pInstrumental->mfcMaskOffset)!=0) || (MFC_header.wavelength1==pInstrumental->mfcMaskOffset)) &&  (pBuffers->dnl!=NULL))
+          else if ((((MFC_header.ty&pInstrumental->mfcMaskOffset)!=0) || (MFC_header.wavelength1==pInstrumental->mfcMaskOffset)) &&  (pBuffers->offset!=NULL))
            {
             MFC_ReadRecord(fileName,
-                          &MFC_headerOff,pBuffers->dnl,
+                          &MFC_headerOff,pBuffers->offset,
                           &MFC_headerDrk,NULL,                            // no correction for dark current
                           &MFC_headerOff,NULL,                            // no correction for offset
                           pInstrumental->mfcMaskOffset,pInstrumental->mfcMaskSpec,0);
@@ -877,7 +877,7 @@ RC ReliMFCStd(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int local
 
     // open the file
 
-    if (!(rc=MFC_ReadRecordStd(pEngineContext,fileName,&MFC_header,pBuffers->spectrum,&MFC_headerDrk,pBuffers->varPix,&MFC_headerOff,pBuffers->dnl)))
+    if (!(rc=MFC_ReadRecordStd(pEngineContext,fileName,&MFC_header,pBuffers->spectrum,&MFC_headerDrk,pBuffers->varPix,&MFC_headerOff,pBuffers->offset)))
      {
       pRecord->SkyObs   = 0;
       pRecord->rejected = 0;
@@ -1182,13 +1182,13 @@ RC MFC_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
         rc=MFC_ReadRecord(fileName,
                          &tbinaryRef,pTabFeno->Sref,
                          &MFC_headerDrk,pBuffers->varPix,
-                         &MFC_headerOff,pBuffers->dnl,
+                         &MFC_headerOff,pBuffers->offset,
                          pInstrumental->mfcMaskSpec,pInstrumental->mfcMaskSpec,pInstrumental->mfcRevert);
     	 	else
         rc=MFC_ReadRecordStd(pEngineContext,fileName,
                             &tbinaryRef,pTabFeno->Sref,
                             &MFC_headerDrk,pBuffers->varPix,
-                            &MFC_headerOff,pBuffers->dnl);
+                            &MFC_headerOff,pBuffers->offset);
 
        if (!rc && !(rc=VECTOR_NormalizeVector(pTabFeno->Sref-1,pTabFeno->NDET,&pTabFeno->refNormFact,"MFC_LoadAnalysis (Reference) ")))
         {

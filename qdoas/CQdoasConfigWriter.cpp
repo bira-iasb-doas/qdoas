@@ -864,6 +864,9 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   tmpStr = pathMgr->simplifyPath(QString(d->sciahdf.instrFunctionFile));
   fprintf(fp, " instr=\"%s\" />\n", tmpStr.toAscii().constData());
 
+  tmpStr = pathMgr->simplifyPath(QString(d->sciahdf.detectorNonLinearityFile));
+  fprintf(fp, " dnl=\"%s\" />\n", tmpStr.toAscii().constData());
+
   // sciapds
   fprintf(fp, "      <sciapds channel=");
   switch (d->sciapds.channel) {
@@ -904,7 +907,10 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   fprintf(fp, " calib=\"%s\"", tmpStr.toAscii().constData());
 
   tmpStr = pathMgr->simplifyPath(QString(d->sciapds.instrFunctionFile));
-  fprintf(fp, " instr=\"%s\" />\n", tmpStr.toAscii().constData());
+  fprintf(fp, " instr=\"%s\"", tmpStr.toAscii().constData());
+
+  tmpStr = pathMgr->simplifyPath(QString(d->sciapds.detectorNonLinearityFile));
+  fprintf(fp, " dnl=\"%s\" />\n", tmpStr.toAscii().constData());
 
   // uoft
 

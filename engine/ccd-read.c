@@ -7,7 +7,7 @@
 //  Creation date     :  This module was already existing in old DOS versions and
 //                       has been added in the WinDOAS package in 97
 //
-//  Author            :  Ann-Carine VANDAELE (a-c.vandaele@oma.be)
+//  Author            :  Caroline FAYT
 //
 //  QDOAS is a cross-platform application developed in QT for DOAS retrieval
 //  (Differential Optical Absorption Spectroscopy).

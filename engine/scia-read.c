@@ -739,6 +739,7 @@ RC SciaReadSunRefPDS(ENGINE_CONTEXT *pEngineContext,INDEX fileIndex)
  {
   // Declarations
 
+  BUFFERS *pBuffers;                                                            // pointer to the buffers part of the engine context
   SCIA_ORBIT_FILE *pOrbitFile;                                                  // pointer to the current orbit
   DoasU32 offset;                                                                 // offset of reference spectra from the beginning of the PDS file
   INDEX indexRef;                                                               // browse reference spectra in the file
@@ -747,11 +748,14 @@ RC SciaReadSunRefPDS(ENGINE_CONTEXT *pEngineContext,INDEX fileIndex)
   INDEX i;                                                                      // browse positions in calibration and reference vectors
   double version;
   int dlrFlag;
+  double dnl;
   RC rc;                                                                        // return code
 
   // Initializations
 
 //  DEBUG_Print(DOAS_logFile,"Begin SciaReadSunRefPDS\n");
+
+  pBuffers=&pEngineContext->buffers;
 
   pOrbitFile=&sciaOrbitFiles[fileIndex];
   fp=pOrbitFile->sciaPDSInfo.FILE_l1c;
@@ -817,10 +821,24 @@ RC SciaReadSunRefPDS(ENGINE_CONTEXT *pEngineContext,INDEX fileIndex)
     else
      {
       for (i=0;i<NDET;i++)
-       pEngineContext->buffers.lambda[i]=(double)(((float *)pOrbitFile->sciaSunWve)[i]);
+       pBuffers->lambda[i]=(double)(((float *)pOrbitFile->sciaSunWve)[i]);
 
       for (i=0;i<NDET;i++)
-       pEngineContext->buffers.irrad[i]=(double)(((float *)pOrbitFile->sciaSunRef)[i]);
+       pBuffers->irrad[i]=(double)(((float *)pOrbitFile->sciaSunRef)[i]);
+
+      if ((pBuffers->dnl.matrix!=NULL) && (pBuffers->dnl.deriv2!=NULL))
+       {
+       	for (i=0;i<NDET;i++)
+       	 {
+       	 	if (!(rc=SPLINE_Vector(pBuffers->dnl.matrix[0],pBuffers->dnl.matrix[1],pBuffers->dnl.deriv2[1],pBuffers->dnl.nl,&pBuffers->irrad[i],&dnl,1,SPLINE_CUBIC,"SciaReadNadirMDS")))
+           {
+            if (dnl==(double)0.)
+             rc=ERROR_SetLast("SciaReadNadirMDS",ERROR_TYPE_WARNING,ERROR_ID_DIVISION_BY_0,"non linearity of the detector");
+            else
+             pBuffers->irrad[i]/=(double)dnl;
+           }
+         }
+       }
      }
    }
 
@@ -945,12 +963,16 @@ RC SciaReadNadirMDS(ENGINE_CONTEXT *pEngineContext,INDEX indexState,INDEX indexR
   INDEX indexCluster;                                                           // browse cluster to read out
   INDEX i,j;                                                                    // browse position in spectra
   FILE *fp;                                                                     // pointer to the PDS file
+  double dnl;
+  RC rc;
 
   // Initializations
 
   pBuffers=&pEngineContext->buffers;
   pOrbitFile=&sciaOrbitFiles[fileIndex];
   fp=pOrbitFile->sciaPDSInfo.FILE_l1c;
+
+  rc=ERROR_ID_NO;
 
   for (i=0;i<NDET;i++)
    pBuffers->spectrum[i]=pBuffers->sigmaSpec[i]=(double)0.;
@@ -1013,7 +1035,21 @@ RC SciaReadNadirMDS(ENGINE_CONTEXT *pEngineContext,INDEX indexState,INDEX indexR
       }
    }
 
-  return 0;
+  if ((pBuffers->dnl.matrix!=NULL) && (pBuffers->dnl.deriv2!=NULL))
+   {
+   	for (i=0;i<NDET;i++)
+   	 {
+   	 	if (!(rc=SPLINE_Vector(pBuffers->dnl.matrix[0],pBuffers->dnl.matrix[1],pBuffers->dnl.deriv2[1],pBuffers->dnl.nl,&pBuffers->spectrum[i],&dnl,1,SPLINE_CUBIC,"SciaReadNadirMDS")))
+       {
+        if (dnl==(double)0.)
+         rc=ERROR_SetLast("SciaReadNadirMDS",ERROR_TYPE_WARNING,ERROR_ID_DIVISION_BY_0,"non linearity of the detector");
+        else
+         pBuffers->spectrum[i]/=(double)dnl;
+       }
+     }
+   }
+
+  return rc;
  }
 
 // -----------------------------------------------------------------------------

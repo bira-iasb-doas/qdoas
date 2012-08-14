@@ -1374,6 +1374,15 @@ bool CProjectInstrumentalSubHandler::helperLoadScia(const QXmlAttributes &atts, 
       return postErrorMessage("Instrument Function Filename too long");
   }
 
+    str = atts.value("dnl");
+    if (!str.isEmpty()) {
+      str = m_master->pathExpand(str);
+      if (str.length() < (int)sizeof(d->detectorNonLinearityFile))
+	strcpy(d->detectorNonLinearityFile, str.toAscii().data());
+      else
+	return postErrorMessage("Detector Non-Linearity Filename too long");
+    }
+
   return true;
 }
 

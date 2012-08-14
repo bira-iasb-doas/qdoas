@@ -736,10 +736,10 @@ typedef struct _engineBuffers
          *specMax,                                                              // maxima of signal over scans
          *instrFunction,                                                        // instrumental function
          *varPix,                                                               // variability interpixel
-         *scanRef,                                                              // reference spectrum for the scan (MAXDOAS measurements)
-         *dnl;                                                                  // non linearity of detector
+         *scanRef;                                                              // reference spectrum for the scan (MAXDOAS measurements)
 
   DoasU32  *recordIndexes;                                                      // indexes of records for direct access (specific to BIRA-IASB spectra file format)
+  MATRIX_OBJECT dnl;                                                            // correction for the non linearity of the detector
  }
 BUFFERS;
 
