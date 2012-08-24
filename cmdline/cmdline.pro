@@ -67,7 +67,6 @@ SOURCES += ../ring/CRingConfigHandler.cpp
 SOURCES += ../usamp/CUsampConfigHandler.cpp
 
 SOURCES += cmdline.cpp
-SOURCES += qdoasxml.cpp
 
 #----------------------------------------------
 # Mediator Source files

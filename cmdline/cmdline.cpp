@@ -29,8 +29,6 @@
 
 #include "QdoasVersion.h"
 #include "debugutil.h"
-#include "qdoasxml.h"
-
 
 //-------------------------------------------------------------------
 // types
@@ -88,7 +86,6 @@ int batchProcessRing(commands_t *cmd);
 int batchProcessUsamp(commands_t *cmd);
 
 int calibSwitch=0;
-int xmlSwitch=0;
 int verboseMode=0;
 
 //-------------------------------------------------------------------
@@ -199,16 +196,6 @@ enum RunMode parseCommandLine(int argc, char **argv, commands_t *cmd)
 	}
 
       }
- else if (!strcmp(argv[i],"-xml"))
-	 if (++i < argc && argv[i][0] != '-')
-	 	 {
-     xmlSwitch=1;
-  	  cmd->xmlCommands.push_back(argv[i]);
-	   }
-	 else {
-	   runMode = Error;
-	   std::cout << "Option '-xml' requires at least an argument (xmlPath=xmlValue)." << std::endl;
-	 }
 	else if (!strcmp(argv[i],"-v"))
 	 verboseMode=1;
  else if (!strcmp(argv[i], "-o")) { // output directory ...
@@ -431,66 +418,6 @@ int readConfigQdoas(commands_t *cmd, QList<const CProjectConfigItem*> &projectIt
 	if (p->name().toUpper() == cmd->projectName.toUpper())
 
 	  {
-	  	if (xmlSwitch)
-	  	 QDOASXML_Parse(cmd->xmlCommands,p);
-
-	  // Test OMI	mediate_project_t newProjectProperties,newProjectProperties2;
-   // Test OMI
-	  // Test OMI	memcpy(&newProjectProperties,(mediate_project_t *)p->properties(),sizeof(mediate_project_t));
-   // Test OMI
-   // Test OMI {
-   // Test OMI 	FILE *fp;
-	  // Test OMI	 fp=fopen("toto.dat","a+t");
-	  // Test OMI	 fprintf(fp,"track 1 %s\n",newProjectProperties.instrumental.omi.trackSelection);
-	  // Test OMI	 fclose(fp);
-   // Test OMI }
-   // Test OMI
-	  // Test OMI	// memcpy(&newProjectProperties,projectProperties,sizeof(mediate_project_t));
-   // Test OMI //
-	  // Test OMI	strcpy(newProjectProperties.instrumental.omi.trackSelection,"20-25,30-35,40-45");
-   // Test OMI
-   // Test OMI // p->setEnabled(true);
-	  // Test OMI	p->SetProperties(( mediate_project_t *)&newProjectProperties);
-   // Test OMI
-	  // Test OMI	memcpy(&newProjectProperties2,(mediate_project_t *)p->properties(),sizeof(mediate_project_t));
-   // Test OMI
-   // Test OMI {
-   // Test OMI 	FILE *fp;
-	  // Test OMI	 fp=fopen("toto.dat","a+t");
-	  // Test OMI	 fprintf(fp,"track 2 %s\n",newProjectProperties2.instrumental.omi.trackSelection);
-	  // Test OMI	 fclose(fp);
-   // Test OMI }
-   // Test OMI const QList<const CAnalysisWindowConfigItem*> awList = p->analysisWindowItems();
-   // Test OMI int nWindows = awList.size();
-   // Test OMI mediate_analysis_window_t newAnalysisWindows,newAnalysisWindows2;
-   // Test OMI
-   // Test OMI QList<const CAnalysisWindowConfigItem*>::const_iterator awIt = awList.begin();
-   // Test OMI while (awIt != awList.end()) {
-   // Test OMI   memcpy(&newAnalysisWindows,(mediate_analysis_window_t *)((*awIt)->properties()),sizeof(mediate_analysis_window_t));
-   // Test OMI
-   // Test OMI   {
-   // Test OMI   	FILE *fp;
-   // Test OMI   	fp=fopen("toto.dat","a+t");
-   // Test OMI   	fprintf(fp,"Analysis 1 %s Window %g %g Ref %s\n",newAnalysisWindows.name,newAnalysisWindows.fitMinWavelength,newAnalysisWindows.fitMaxWavelength,newAnalysisWindows.refOneFile);
-   // Test OMI   	fclose(fp);
-   // Test OMI   }
-   // Test OMI
-   // Test OMI   strcpy(newAnalysisWindows.refOneFile,"D:/My_Satellites_Activities/OMI/OMI-Aura_L1-OML1BIRR_2007m0103t0544-o13135_v003-2007m0529t021615.he4");
-   // Test OMI
-   // Test OMI   (*awIt)->SetProperties(( mediate_analysis_window_t *)&newAnalysisWindows);
-   // Test OMI
-   // Test OMI   memcpy(&newAnalysisWindows2,(mediate_analysis_window_t *)((*awIt)->properties()),sizeof(mediate_analysis_window_t));
-   // Test OMI
-   // Test OMI   {
-   // Test OMI   	FILE *fp;
-   // Test OMI   	fp=fopen("toto.dat","a+t");
-   // Test OMI   	fprintf(fp,"Analysis 2 %s Window %g %g Ref %s\n",newAnalysisWindows2.name,newAnalysisWindows2.fitMinWavelength,newAnalysisWindows2.fitMaxWavelength,newAnalysisWindows2.refOneFile);
-   // Test OMI   	fclose(fp);
-   // Test OMI   }
-   // Test OMI
-   // Test OMI   ++awIt;
-   // Test OMI }
-
 	  	projectItems.push_back(p);
 	  }
 
