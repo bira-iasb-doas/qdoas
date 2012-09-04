@@ -911,7 +911,7 @@ RC ReliPDA_EGG(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
         Max=(double)pBuffers->spectrum[i];
                                  // H for Hamamatsu
                                  // R for Reticon
-      sprintf(pRecord->Nom,"%#3d%02dHA%02d%02dZ%03d    ",ZEN_FNCaljda(&pRecord->Tm),pRecord->present_day.da_year%100,
+      sprintf(pRecord->Nom,"%-3d%02dHA%02d%02dZ%03d    ",ZEN_FNCaljda(&pRecord->Tm),pRecord->present_day.da_year%100,
                       pRecord->present_time.ti_hour,
                       pRecord->present_time.ti_min,
                 (int)(pRecord->Zm*10.));

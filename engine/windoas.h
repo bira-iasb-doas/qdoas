@@ -91,42 +91,6 @@ NEWTIME;
 RC      RESOURCE_Alloc(void);
 void    RESOURCE_Free(void);
 
-// QDOAS ???
-// QDOAS ??? // ===============
-// QDOAS ??? // HDF file format
-// QDOAS ??? // ===============
-// QDOAS ???
-// QDOAS ??? #if defined(__INCLUDE_HDF_) && __INCLUDE_HDF_
-// QDOAS ???
-// QDOAS ??? // The structure below describes the fields to retrieve from HDF files
-// QDOAS ???
-// QDOAS ??? typedef struct _hdfField
-// QDOAS ???  {
-// QDOAS ???   char  fieldName[VSNAMELENMAX];                                                // the name of the current field
-// QDOAS ???   int32 fieldOrder,                                                             // the order if the specified field
-// QDOAS ???         fieldType,                                                              // the type of the field
-// QDOAS ???         dataSize;                                                               // the size in bytes of data (useful for buffers allocation)
-// QDOAS ???   char *data;                                                                   // pointer to the data
-// QDOAS ???  }
-// QDOAS ??? HDF_FIELD;
-// QDOAS ???
-// QDOAS ??? // Information of a SDS
-// QDOAS ???
-// QDOAS ??? typedef struct _hdfSDS
-// QDOAS ???  {
-// QDOAS ???   char  sdsName[MAX_NC_NAME];                                                   // the name of the current SDS
-// QDOAS ???   int32 sdsRank,                                                                // the rank of the current SDS
-// QDOAS ???         sdsDim[MAX_VAR_DIMS],                                                   // the dimensions of the current SDS
-// QDOAS ???         sdsDataType,                                                            // the data type of the current SDS
-// QDOAS ???         sdsDataSize,                                                            // the size in bytes of the data
-// QDOAS ???         sdsIndex;                                                               // index number of the current SDS
-// QDOAS ???  }
-// QDOAS ??? HDF_SDS;
-// QDOAS ???
-// QDOAS ??? RC HDF_GetSDSInfo(DoasCh *fileName,int32 hdfSDSId,int32 sdsRef,HDF_SDS *sdsList,INT nSDS);
-// QDOAS ???
-// QDOAS ??? #endif
-// QDOAS ???
 // ================
 // FILES PROCESSING
 // ================
@@ -290,77 +254,6 @@ RC   MATRIX_Load(DoasCh *fileName,MATRIX_OBJECT *pMatrix,INT basel,INT basec,INT
 // ===========================
 // ANALYSIS WINDOWS PROPERTIES
 // ===========================
-
-// -----------
-// DEFINITIONS
-// -----------
-
-// Description of columns in ListView control
-// ------------------------------------------
-
-#define MAX_LIST_COLUMNS 30
-
-#define COMBOBOX_ITEM_TYPE_NONE           0x0000           // not a combobox control
-#define COMBOBOX_ITEM_TYPE_EXCLUSIVE      0x0001           // combobox to fill with symbols that are not used yet
-#define COMBOBOX_ITEM_TYPE_ORTHOGONAL     0x0002           // combobox to fill with all available symbols except the one selected
-#define COMBOBOX_ITEM_TYPE_POLYNOME       0x0008           // polynomial modes
-#define COMBOBOX_ITEM_TYPE_AMF            0x0010           // types of AMF files
-#define COMBOBOX_ITEM_TYPE_XS             0x0020           // types of AMF files
-
-typedef struct _listColumn
- {
-  DoasCh columnTitle[MAX_ITEM_NAME_LEN+1];                  // title of column in list view
-  INT columnWidth;                                         // initial width of the column
-  INT columnFormat;                                        // format of column
-  DoasCh controlName[20];                                   // name of associated control
-  UINT controlStyle;                                       // style of associated control
-  DoasCh controlPermanent;                                  // flag set if control is permanent
-  INT comboboxItemType;                                    // type of combobox, cfr above
-  char displayNumber;                                      // number that specify set of selected columns in list to display in ListView control
-  DoasCh defaultValue[MAX_ITEM_NAME_LEN+1];                 // default value
- }
-LIST_COLUMN;
-
-// ListView items
-// --------------
-
-#define MAX_LIST_ITEMS 500
-
-typedef struct _listItem
- {
-  DoasCh  crossFileName[MAX_ITEM_TEXT_LEN+1];               // cross section file associated to the symbol
-  DoasCh  amfFileName[MAX_ITEM_TEXT_LEN+1];                 // air mass factors file associated to the symbol
-  DoasCh  itemText[MAX_LIST_COLUMNS][MAX_ITEM_TEXT_LEN+1];  // text for items to insert in different columns of ListView control
-  INT    hidden;                                           // flag that indicates if the line is hidden in the user interface
-  INDEX  indexParent,indexPrevious,indexNext;              // indexes of respectively, parent, previous and next item in list
- }
-LIST_ITEM;
-
-typedef struct _anlysTabPages
- {
-  DoasCh tabTitle[MAX_ITEM_NAME_LEN+1];                     // title of tab page
-  #if defined(__WINDOAS_GUI_) && (__WINDOAS_GUI_)
-      LIST_COLUMN *columnList;                             // list of columns to create in ListView control
-  #endif
-  INT columnNumber;
-  DoasCh symbolType;                                        // type of symbol to use
-  SYMBOL *symbolList;                                      // list of symbols to use
-  INT symbolNumber;                                        // number of symbols in previous list
-  INT *symbolReferenceNumber;                              // number of times a symbol is referenced to
-  INT availableSymbolNumber;                               // number of available symbols
-  INT listEntryPoint;                                      // entry point in ListView items list
-  INT oldListEntryPoint;                                   // entry point in list before modifications
-  INDEX *pTreeEntryPoint;                                  // entry point of analysis window in tree control
-  char displayNumber;                                      // number that specify set of selected columns in list to display in ListView control
-  DoasCh minDisplayNumber;                                  // minimum value for previous field
-  INT maxDisplayNumber;                                    // maximum value for previous field
-
-  #if defined(__WINDOAS_GUI_) && (__WINDOAS_GUI_)
-      INT anlysHelpId;
-      INT calibHelpId;
-  #endif
- }
-ANLYS_TAB_PAGE;
 
 // Analysis windows
 // ----------------
@@ -786,90 +679,11 @@ void PRJCT_SaveConfiguration(FILE *fp,DoasCh *sectionName);
    RC   XSCONV_TypeI0Correction(MATRIX_OBJECT *pXsnew,MATRIX_OBJECT *pXshr,MATRIX_OBJECT *pI0,MATRIX_OBJECT *pSlit,MATRIX_OBJECT *pSlit2,double conc,INT slitType,double slitWidth,double slitParam,double slitParam2,int wveDptFlag);
    RC   XSCONV_RealTimeXs(MATRIX_OBJECT *pXshr,MATRIX_OBJECT *pXsI0,MATRIX_OBJECT *pSlit,MATRIX_OBJECT *pSlit2,double *IcVector,double *lambda,INT NDET,INDEX indexLambdaMin,INDEX indexLambdaMax,double *newXs,INT slitType,double slitParam,double slitParam2,int wveDptFlag);
 
-// ============================
-// TREEVIEW CONTROLS PROCESSING
-// ============================
-
-// ----------------------
-// TREE ITEMS DESCRIPTION
-// ----------------------
-
-// Maximum number of items supported by structure used for TreeView controls processing
-// ------------------------------------------------------------------------------------
-
-#define MAX_TREE_ITEMS 1500
-
-// Node types for tree items properties
-// ------------------------------------
-
-enum treeItemTypes
- {
-  TREE_ITEM_TYPE_NONE,                      // item has no type
-  TREE_ITEM_TYPE_SITE_PARENT,               // observation sites parent node
-  TREE_ITEM_TYPE_SITE_CHILDREN,             // observation sites children nodes
-  TREE_ITEM_TYPE_CROSS_PARENT,              // cross sections symbols parent node
-  TREE_ITEM_TYPE_CROSS_CHILDREN,            // cross sections symbols children nodes
-  TREE_ITEM_TYPE_PROJECT_PARENT,            // project parent node
-  TREE_ITEM_TYPE_PROJECT,                   // project nodes
-  TREE_ITEM_TYPE_FILE_PARENT,               // files parent node
-  TREE_ITEM_TYPE_FILE_CHILDREN,             // files children nodes
-  TREE_ITEM_TYPE_ANALYSIS_PARENT,           // analysis parent nodes
-  TREE_ITEM_TYPE_ANALYSIS_CHILDREN,         // analysis windows children nodes
-  TREE_ITEM_TYPE_MAX
- };
-
-// Data to collect per type of tree node
-// -------------------------------------
-
-typedef struct _treeItemType
- {
-  INT     contextMenu;                      // context (or shortcut) menu to load from resources
-
-  #if defined(__WINDOAS_GUI_) && __WINDOAS_GUI_
-  INT     dlgBox;                           // dialog box to load from resources
-  DLGPROC dlgProc;                          // procedure for processing messages from the previous dialog box
-  #endif
-
-  INT     childDataType;                    // type of data for children nodes
-  void   *dataList;                         // pointer to buffer used for storing data associated to children nodes
-  void   *data2Paste;                       // pointer to the structure storing the data to paste
-  INDEX   dataNumber;                       // number of data element in previous list
-  INDEX   dataMaxNumber;                    // maximum number of data the list can support
-  INT     dataSize;                         // size of data in bytes
-  MASK    childFileType;                    // type of file for children
- }
-TREE_ITEM_TYPE;
-
-// Tree items description
-// ----------------------
-
-typedef struct _treeItem
- {
-  DoasCh     textItem[MAX_ITEM_TEXT_LEN+1];  // complete item text
-  DoasCh     newItem;                        // flag set for a new item
-  INDEX     parentItem;                     // index of parent item
-  INDEX     firstChildItem;                 // index of the first child in list
-  INDEX     lastChildItem;                  // index of the first child in list
-  INDEX     prevItem;                       // index of previous item in list
-  INDEX     nextItem;                       // index of the next item in list
-  INT       dataType;                       // type of data
-  INDEX     dataIndex;                      // index of data in data list referenced by data type
-  INT       useCount;                       // the number of times the item is referenced
-  INT       childNumber;                    // total number of children
-  INT       childHidden;                    // total number of hidden children
-  DoasCh     hidden;                         // flag set if item is hidden
- }
-TREE_ITEM;
-EXTERN TREE_ITEM      *TREE_itemList;       // structure used for all tree items safe keeping
-EXTERN TREE_ITEM_TYPE  TREE_itemType[];     // all tree types description
-INDEX   TREE_GetIndexByDataIndex(INDEX dataIndex,DoasCh dataType,INDEX entryPoint);
    // Main types of child windows
    // ---------------------------
 
 EXTERN PRJCT_ASCII ASCII_options;
-
 EXTERN ANALYSIS_WINDOWS  *ANLYS_windowsList;       // analysis windows list
-EXTERN LIST_ITEM         *ANLYS_itemList;          // list of items in ListView control owned by tab pages
 
 #if defined(_cplusplus) || defined(__cplusplus)
 }

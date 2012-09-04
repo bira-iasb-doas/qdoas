@@ -72,7 +72,6 @@
 void ProjectApplyDouble(const CProjectConfigItem *p,                            // project to modify
                         QString *pXmlKey,                                       // the path of the field to replace
                         QString *pXmlValue,                                     // string with the new value
-                        mediate_project_t *pNewProject,                         // target structure for project properties
                         double *pDoubleField)                                   // pointer to the field to change (should point within the previous target structure)
  {
  	// Declarations
@@ -94,7 +93,6 @@ void ProjectApplyDouble(const CProjectConfigItem *p,                            
 void ProjectApplyInt(const CProjectConfigItem *p,                               // project to modify
                      QString *pXmlKey,                                          // the path of the field to replace
                      QString *pXmlValue,                                        // string with the new value
-                     mediate_project_t *pNewProject,                            // target structure for project properties
                      int *pIntField)                                            // pointer to the field to change (should point within the previous target structure)
  {
  	// Declarations
@@ -116,7 +114,6 @@ void ProjectApplyInt(const CProjectConfigItem *p,                               
 void ProjectApplyChoice(const CProjectConfigItem *p,                            // project to modify
                         QString *pXmlKey,                                       // the path of the field to replace
                         QString *pXmlValue,                                     // string with the new value
-                        mediate_project_t *pNewProject,                         // target structure for project properties
                         const char *optionsList[],                              // list of possible options
                         int nOptions,                                           // number of options in the previous list
                         int *pNewIndexOption)                                   // index of the new option
@@ -171,69 +168,115 @@ RC ParseSelection(QStringList &xmlFields,int xmlFieldN,int startingField,QString
  	 	 	if (indexField+1>=xmlFieldN)
  	 	 	 std::cout << "sza attribute is missing" << std::endl;
  	 	 	else if (xmlFields.at(indexField+1)=="min")
- 	 	 	 ProjectApplyDouble(p,pXmlKey,pXmlValue,&newProjectProperties,&newProjectProperties.selection.szaMinimum);
+ 	 	 	 ProjectApplyDouble(p,pXmlKey,pXmlValue,&newProjectProperties.selection.szaMinimum);
  	 	 	else if (xmlFields.at(indexField+1)=="max")
- 	 	 	 ProjectApplyDouble(p,pXmlKey,pXmlValue,&newProjectProperties,&newProjectProperties.selection.szaMaximum);
+ 	 	 	 ProjectApplyDouble(p,pXmlKey,pXmlValue,&newProjectProperties.selection.szaMaximum);
  	 	 	else if (xmlFields.at(indexField+1)=="delta")
- 	 	 	 ProjectApplyDouble(p,pXmlKey,pXmlValue,&newProjectProperties,&newProjectProperties.selection.szaDelta);
+ 	 	 	 ProjectApplyDouble(p,pXmlKey,pXmlValue,&newProjectProperties.selection.szaDelta);
  	 	 }
     else if (xmlFields.at(indexField)=="record")
      {
  	 	 	if (indexField+1>=xmlFieldN)
  	 	 	 std::cout << "record attribute is missing" << std::endl;
  	 	 	else if (xmlFields.at(indexField+1)=="min")
- 	 	 	 ProjectApplyInt(p,pXmlKey,pXmlValue,&newProjectProperties,&newProjectProperties.selection.recordNumberMinimum);
+ 	 	 	 ProjectApplyInt(p,pXmlKey,pXmlValue,&newProjectProperties.selection.recordNumberMinimum);
  	 	 	else if (xmlFields.at(indexField+1)=="max")
- 	 	 	 ProjectApplyInt(p,pXmlKey,pXmlValue,&newProjectProperties,&newProjectProperties.selection.recordNumberMaximum);
+ 	 	 	 ProjectApplyInt(p,pXmlKey,pXmlValue,&newProjectProperties.selection.recordNumberMaximum);
      }
  	 	else if (xmlFields.at(indexField)=="cloud")
  	 	 {
  	 	 	if (indexField+1>=xmlFieldN)
  	 	 	 std::cout << "cloud attribute is missing" << std::endl;
  	 	 	else if (xmlFields.at(indexField+1)=="min")
- 	 	 	 ProjectApplyDouble(p,pXmlKey,pXmlValue,&newProjectProperties,&newProjectProperties.selection.cloudFractionMinimum);
+ 	 	 	 ProjectApplyDouble(p,pXmlKey,pXmlValue,&newProjectProperties.selection.cloudFractionMinimum);
  	 	 	else if (xmlFields.at(indexField+1)=="max")
- 	 	 	 ProjectApplyDouble(p,pXmlKey,pXmlValue,&newProjectProperties,&newProjectProperties.selection.cloudFractionMaximum);
+ 	 	 	 ProjectApplyDouble(p,pXmlKey,pXmlValue,&newProjectProperties.selection.cloudFractionMaximum);
  	 	 }
  	 	else if (xmlFields.at(indexField)=="geolocation")
  	 	 {
  	 	 	if (indexField+1>=xmlFieldN)
  	 	 	 std::cout << "geolocation attribute is missing" << std::endl;
  	 	 	else if (xmlFields.at(indexField+1)=="selected")
-       ProjectApplyChoice(p,pXmlKey,pXmlValue,&newProjectProperties,geoSelectionMode,PRJCT_SPECTRA_MODES_MAX,&newProjectProperties.selection.geo.mode);
+       ProjectApplyChoice(p,pXmlKey,pXmlValue,geoSelectionMode,PRJCT_SPECTRA_MODES_MAX,&newProjectProperties.selection.geo.mode);
  	 	 	else if (xmlFields.at(indexField+1)=="circle")
  	 	 	 {
  	 	 	 	if (indexField+2>=xmlFieldN)
  	 	 	   std::cout << "geolocation/circle attribute is missing" << std::endl;
  	 	 	  else if (xmlFields.at(indexField+2)=="radius")
- 	 	 	   ProjectApplyDouble(p,pXmlKey,pXmlValue,&newProjectProperties,&newProjectProperties.selection.geo.circle.radius);
+ 	 	 	   ProjectApplyDouble(p,pXmlKey,pXmlValue,&newProjectProperties.selection.geo.circle.radius);
  	 	 	  else if (xmlFields.at(indexField+2)=="long")
- 	 	 	   ProjectApplyDouble(p,pXmlKey,pXmlValue,&newProjectProperties,&newProjectProperties.selection.geo.circle.centerLongitude);
+ 	 	 	   ProjectApplyDouble(p,pXmlKey,pXmlValue,&newProjectProperties.selection.geo.circle.centerLongitude);
  	 	 	  else if (xmlFields.at(indexField+2)=="lat")
- 	 	 	   ProjectApplyDouble(p,pXmlKey,pXmlValue,&newProjectProperties,&newProjectProperties.selection.geo.circle.centerLatitude);
+ 	 	 	   ProjectApplyDouble(p,pXmlKey,pXmlValue,&newProjectProperties.selection.geo.circle.centerLatitude);
  	 	 	 }
  	 	 	else if (xmlFields.at(indexField+1)=="rectangle")
  	 	 	 {
  	 	 	 	if (indexField+2>=xmlFieldN)
  	 	 	   std::cout << "geolocation/rectangle attribute is missing" << std::endl;
  	 	 	  else if (xmlFields.at(indexField+2)=="west")
- 	 	 	   ProjectApplyDouble(p,pXmlKey,pXmlValue,&newProjectProperties,&newProjectProperties.selection.geo.rectangle.westernLongitude);
+ 	 	 	   ProjectApplyDouble(p,pXmlKey,pXmlValue,&newProjectProperties.selection.geo.rectangle.westernLongitude);
  	 	 	  else if (xmlFields.at(indexField+2)=="east")
- 	 	 	   ProjectApplyDouble(p,pXmlKey,pXmlValue,&newProjectProperties,&newProjectProperties.selection.geo.rectangle.easternLongitude);
+ 	 	 	   ProjectApplyDouble(p,pXmlKey,pXmlValue,&newProjectProperties.selection.geo.rectangle.easternLongitude);
  	 	 	  else if (xmlFields.at(indexField+2)=="south")
- 	 	 	   ProjectApplyDouble(p,pXmlKey,pXmlValue,&newProjectProperties,&newProjectProperties.selection.geo.rectangle.southernLatitude);
+ 	 	 	   ProjectApplyDouble(p,pXmlKey,pXmlValue,&newProjectProperties.selection.geo.rectangle.southernLatitude);
  	 	 	  else if (xmlFields.at(indexField+2)=="north")
- 	 	 	   ProjectApplyDouble(p,pXmlKey,pXmlValue,&newProjectProperties,&newProjectProperties.selection.geo.rectangle.northernLatitude);
+ 	 	 	   ProjectApplyDouble(p,pXmlKey,pXmlValue,&newProjectProperties.selection.geo.rectangle.northernLatitude);
  	 	 	 }
  	 	 	else if (xmlFields.at(indexField+1)=="sites")
  	 	 	 {
  	 	 	 	if (indexField+2>=xmlFieldN)
  	 	 	   std::cout << "geolocation/sites attribute is missing" << std::endl;
  	 	 	  else if (xmlFields.at(indexField+2)=="radius")
- 	 	 	   ProjectApplyDouble(p,pXmlKey,pXmlValue,&newProjectProperties,&newProjectProperties.selection.geo.sites.radius);
+ 	 	 	   ProjectApplyDouble(p,pXmlKey,pXmlValue,&newProjectProperties.selection.geo.sites.radius);
  	 	 	 }
+ 	 	  else
+       std::cout << pXmlKey->toAscii().constData() << " unknown path" << std::endl;
  	 	 }
+ 	 	else
+     std::cout << pXmlKey->toAscii().constData() << " unknown path" << std::endl;
    }
+
+  p->SetProperties((mediate_project_t *)&newProjectProperties);
+
+  // Return
+
+  return rc;
+ }
+
+// ==================================
+// PROJECT PROPERTIES : ANALYSIS PAGE
+// ==================================
+
+RC ParseAnalysis(QStringList &xmlFields,int xmlFieldN,int startingField,QString *pXmlKey,QString *pXmlValue,const CProjectConfigItem *p)
+ {
+ 	// Declarations
+
+  mediate_project_t newProjectProperties;
+ 	int indexField;
+ 	RC  rc;
+
+ 	// Initializations
+
+ 	memcpy(&newProjectProperties,(mediate_project_t *)p->properties(),sizeof(mediate_project_t));
+ 	rc=ERROR_ID_NO;
+
+ 	for (indexField=startingField;indexField<xmlFieldN;indexField++)
+ 	 {
+ 	 	if ((xmlFields.at(indexField)=="method") ||
+ 	 	    (xmlFields.at(indexField)=="fit") ||
+ 	 	    (xmlFields.at(indexField)=="unit") ||
+ 	 	    (xmlFields.at(indexField)=="interpolation") ||
+ 	 	    (xmlFields.at(indexField)=="gap"))
+
+ 	 	 std::cout << pXmlKey->toAscii().constData() << " can not be changed" << std::endl;
+
+ 	 	else if (xmlFields.at(indexField)=="converge")
+ 	 	 ProjectApplyDouble(p,pXmlKey,pXmlValue,&newProjectProperties.analysis.convergenceCriterion);
+ 	 	else if (xmlFields.at(indexField)=="max_iterations")
+ 	 	 ProjectApplyInt(p,pXmlKey,pXmlValue,&newProjectProperties.analysis.maxIterations);
+ 	 	else
+ 	 	 std::cout << pXmlKey->toAscii().constData() << " unknown path" << std::endl;
+ 	 }
 
   p->SetProperties((mediate_project_t *)&newProjectProperties);
 
@@ -583,6 +626,8 @@ RC QDOASXML_Parse(QList<QString> &xmlCommands,const CProjectConfigItem *p)
          	  std::cout << xmlKey.toAscii().constData() << " fields can not be changed" << std::endl;
          	else if (xmlFields.at(indexField)=="selection")
          	 rc=ParseSelection(xmlFields,xmlFieldsN,indexField+1,&xmlKey,&xmlValue,p);
+         	else if (xmlFields.at(indexField)=="analysis")
+         	 rc=ParseAnalysis(xmlFields,xmlFieldsN,indexField+1,&xmlKey,&xmlValue,p);
          	else if (xmlFields.at(indexField)=="instrumental")
          	 rc=ParseInstrumental(xmlFields,xmlFieldsN,indexField+1,&xmlValue,p);
          	else if (xmlFields.at(indexField)=="analysis_window")

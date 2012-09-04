@@ -1740,7 +1740,7 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
                 memcpy(pTabFeno->LambdaK,pTabFeno->LambdaRef,sizeof(double)*NDET);
 
                 if (pTabFeno->LambdaRef[NDET-1]-pTabFeno->Lambda[0]+1!=NDET)
-                 rc=ANALYSE_XsInterpolation(pTabFeno,pTabFeno->LambdaRef);
+                 rc=ANALYSE_XsInterpolation(pTabFeno,pTabFeno->LambdaRef,indexFenoColumn);
                }
              }
 

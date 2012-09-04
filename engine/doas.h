@@ -466,7 +466,6 @@ typedef struct _feno
   double          refLonMin,refLonMax;
   int             nspectra;
   INT             NDET;
-  double          lambdaMinK,lambdaMaxK;
   INT             gomeRefFlag;
   INT             mfcRefFlag;
   RC              rcKurucz;
@@ -1012,7 +1011,7 @@ enum _pixelSelection
 RC   FNPixel   ( double *lambdaVector, double lambdaValue, INT npts,INT pixelSelection );
 
 RC   ANALYSE_CheckLambda(WRK_SYMBOL *pWrkSymbol,double *lambda,DoasCh *callingFunction);
-RC   ANALYSE_XsInterpolation(FENO *pTabFeno,double *newLambda);
+RC   ANALYSE_XsInterpolation(FENO *pTabFeno,double *newLambda,INDEX indexFenoColumn);
 RC   ANALYSE_XsConvolution(FENO *pTabFeno,double *newLambda,MATRIX_OBJECT *pSlit,MATRIX_OBJECT *pSlit2,INT slitType,double *slitParam1,double *slitParam2,INDEX indexFenoColumn);
 RC   ANALYSE_LinFit(SVD *pSvd,INT Npts,INT Degree,double *a,double *sigma,double *b,double *x);
 void ANALYSE_SvdFree(DoasCh *callingFunctionShort,SVD *pSvd);

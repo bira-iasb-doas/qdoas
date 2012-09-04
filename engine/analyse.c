@@ -133,7 +133,6 @@
 #define ANALYSE_LONGPATH 0                                                      // !!! Anoop
 
 ANALYSIS_WINDOWS  *ANLYS_windowsList;       // analysis windows list
-LIST_ITEM         *ANLYS_itemList;          // list of items in ListView control owned by tab pages
 PROJECT *PRJCT_itemList;
 
 DoasCh *AnlysOrthogonal[ANLYS_ORTHOGONAL_TYPE_MAX]={"None","Differential XS"};
@@ -780,13 +779,13 @@ RC ShiftVector(double *lambda,double *source,double *deriv,double *target,
 // ANALYSE_XsInterpolation : Interpolation of all cross sections in an analysis window
 // ----------------------------------------------------------------------------------
 
-RC ANALYSE_XsInterpolation(FENO *pTabFeno,double *newLambda)
+RC ANALYSE_XsInterpolation(FENO *pTabFeno,double *newLambda,INDEX indexFenoColumn)
  {
   // Declarations
 
   CROSS_REFERENCE *pTabCross;
   double *filtCross,*filtDeriv2;
-  INDEX indexTabCross,i;
+  INDEX indexTabCross,i,icolumn;
   MATRIX_OBJECT *pXs;
   INT oldNl;
   RC rc;
@@ -814,7 +813,7 @@ RC ANALYSE_XsInterpolation(FENO *pTabFeno,double *newLambda)
         (pTabCross->crossAction==ANLYS_CROSS_ACTION_INTERPOLATE))))
      {
       pXs=&WorkSpace[pTabCross->Comp].xs;
-
+      icolumn=((ANALYSE_swathSize==1) || (pXs->nc<=ANALYSE_swathSize))?1:indexFenoColumn+1;
 
       // Buffer allocation
 
@@ -855,10 +854,10 @@ RC ANALYSE_XsInterpolation(FENO *pTabFeno,double *newLambda)
       if ((pTabCross->crossAction==ANLYS_CROSS_ACTION_NOTHING) ||
          ((pXs->nl==pTabFeno->NDET) && VECTOR_Equal(pXs->matrix[0],newLambda,pTabFeno->NDET,(double)1.e-7)))          // wavelength scale is the same as new one
 
-       memcpy(filtCross,pXs->matrix[1],sizeof(double)*pTabFeno->NDET);
+       memcpy(filtCross,pXs->matrix[icolumn],sizeof(double)*pTabFeno->NDET);
 
       else
-       if ((rc=SPLINE_Vector(pXs->matrix[0],pXs->matrix[1],pXs->deriv2[1],pXs->nl,newLambda,filtCross,pTabFeno->NDET,pAnalysisOptions->interpol,"ANALYSE_XsInterpolation "))!=0)           // interpolation processing
+       if ((rc=SPLINE_Vector(pXs->matrix[0],pXs->matrix[icolumn],pXs->deriv2[icolumn],pXs->nl,newLambda,filtCross,pTabFeno->NDET,pAnalysisOptions->interpol,"ANALYSE_XsInterpolation "))!=0)           // interpolation processing
         break;
 
       //
@@ -5400,20 +5399,10 @@ RC ANALYSE_LoadGaps(ENGINE_CONTEXT *pEngineContext,ANALYSIS_GAP *gapList,INT nGa
   lambda1=lambdaMin;
   lambda2=lambdaMax;
 
-  pTabFeno->lambdaMinK=
-  pTabFeno->lambdaMaxK=0;
-
   if (lambda1==lambda2)
    rc=ERROR_SetLast("ANALYSIS_LoadGaps",ERROR_TYPE_FATAL,ERROR_ID_GAPS,lambdaMin,lambdaMax);
   else
    {
-    if (pTabFeno->lambdaMinK>pTabFeno->lambdaMaxK)
-     {
-      swap=pTabFeno->lambdaMinK;
-      pTabFeno->lambdaMinK=pTabFeno->lambdaMaxK;
-      pTabFeno->lambdaMaxK=swap;
-     }
-
     LFenetre[Z][0]=min(lambda1,lambda2);
     LFenetre[Z][1]=max(lambda1,lambda2);
 

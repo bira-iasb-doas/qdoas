@@ -67,6 +67,7 @@ SOURCES += ../ring/CRingConfigHandler.cpp
 SOURCES += ../usamp/CUsampConfigHandler.cpp
 
 SOURCES += cmdline.cpp
+SOURCES += convxml.cpp
 SOURCES += qdoasxml.cpp
 
 #----------------------------------------------
@@ -101,6 +102,8 @@ HEADERS += ../common/ConfigWriterUtils.h
 HEADERS += ../common/CPathMgr.h
 
 HEADERS += CBatchEngineController.h
+HEADERS += convxml.h
+HEADERS += qdoasxml.h
 HEADERS += ../qdoas/CEngineRequest.h
 HEADERS += ../qdoas/CQdoasConfigHandler.h
 HEADERS += ../qdoas/CProjectConfigSubHandlers.h

@@ -970,7 +970,7 @@ RC GDP_ASC_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
             }
           }
 
-         if ((rc=ANALYSE_XsInterpolation(pTabFeno,pTabFeno->LambdaRef))!=ERROR_ID_NO)
+         if ((rc=ANALYSE_XsInterpolation(pTabFeno,pTabFeno->LambdaRef,0))!=ERROR_ID_NO)
           goto EndGDP_ASC_LoadAnalysis;
 
          // Gaps : rebuild subwindows on new wavelength scale

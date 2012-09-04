@@ -180,7 +180,7 @@ RC KURUCZ_Spectrum(double *oldLambda,double *newLambda,double *spectrum,double *
     sprintf(pageTitle,"Kurucz");
 
     memcpy(Feno->LambdaK,oldLambda,sizeof(double)*NDET);
-    rc=ANALYSE_XsInterpolation(Feno,oldLambda);
+    rc=ANALYSE_XsInterpolation(Feno,oldLambda,indexFenoColumn);
 
     Results=Feno->TabCrossResults;
     pResults=&Feno->TabCrossResults[(Feno->indexSpectrum!=ITEM_NONE)?Feno->indexSpectrum:Feno->indexReference];
@@ -740,7 +740,7 @@ RC KURUCZ_ApplyCalibration(FENO *pTabFeno,double *newLambda,INDEX indexFenoColum
    	 }
    }
 
-  if (((pTabFeno->rcKurucz=ANALYSE_XsInterpolation(pTabFeno,newLambda))!=ERROR_ID_NO) ||
+  if (((pTabFeno->rcKurucz=ANALYSE_XsInterpolation(pTabFeno,newLambda,indexFenoColumn))!=ERROR_ID_NO) ||
        (pTabFeno->xsToConvolute && ((pTabFeno->useKurucz==ANLYS_KURUCZ_REF) || (pTabFeno->useKurucz==ANLYS_KURUCZ_SPEC)) &&
       ((pKuruczOptions->fwhmFit && (pKuruczOptions->fwhmType!=SLIT_TYPE_FILE) && ((pTabFeno->rcKurucz=ANALYSE_XsConvolution(pTabFeno,newLambda,NULL,NULL,pKuruczOptions->fwhmType,pTabFeno->fwhmVector[0],(pKuruczOptions->fwhmType!=SLIT_TYPE_INVPOLY)?pTabFeno->fwhmVector[1]:&slitParam2,indexFenoColumn))!=ERROR_ID_NO)) ||
        (pKuruczOptions->fwhmFit && (pKuruczOptions->fwhmType==SLIT_TYPE_FILE) && ((pTabFeno->rcKurucz=ANALYSE_XsConvolution(pTabFeno,newLambda,&KURUCZ_buffers[indexFenoColumn].slitFunction,&wveDptStretch,pKuruczOptions->fwhmType,&slitParam2,&slitParam2,indexFenoColumn))!=ERROR_ID_NO)) ||
