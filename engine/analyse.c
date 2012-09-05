@@ -140,6 +140,7 @@ DoasCh *AnlysStretch[ANLYS_STRETCH_TYPE_MAX]={"None","1st order","2nd order"};
 DoasCh *AnlysPolynome[ANLYS_POLY_TYPE_MAX]={"None","order 0","order 1","order 2","order 3","order 4","order 5"};
 DoasCh *ANLYS_crossAction[ANLYS_CROSS_ACTION_MAX]={"None","Interpolate","Convolute Std","Convolute I0","Convolute Ring"}; /* "Detector t° dependent","Strato t° dependent",*/
 
+double spike_threshold = 10.;
 INT    ANALYSE_plotKurucz,ANALYSE_plotRef,ANALYSE_indexLine;
 // INT    ANALYSE_maxIter=0;
 
@@ -229,35 +230,125 @@ INDEX analyseIndexRecord;
 // UTILITY FUNCTIONS
 // =================
 
+/*
+double average_magnitude(double * array)
+{
+  int i, j, k;
+  double average = 0.;
+  for (j = k = 0; j < Z; j++)
+   for (i = Fenetre[j][0]; i <= Fenetre[j][1]; i++, k++)
+    average += fabs(array[i]);
+  printf("arraylength: %d\n", k);
+  return average / k;
+}
+*/
+
+// -----------------------------------------------------------------
+// exclude_pixel: Create a new set of analysis windows by excluding
+// one pixel.
+// -----------------------------------------------------------------
+
+int exclude_pixel(int pixel, int (*fenetre)[2], int num_ranges)
+{
+  int i;
+  for (i = 0; i < num_ranges; i++)
+   {
+    if (fenetre[i][0] <= pixel && fenetre[i][1] >= pixel) // look for the window containing the current pixel
+     break;
+   }
+  if (fenetre[i][0] == pixel) // pixel is at the start of an existing range
+   {
+    if (fenetre[i][1] == fenetre[i][0])
+     { // we have range of one pixel, which must be removed from the list (probably unlikely)
+      for (; i < num_ranges; i++)
+       { // shift existing ranges down
+	fenetre[i][0] = fenetre[i + 1][0];
+	fenetre[i][1] = fenetre[i + 1][1];
+       }
+      fenetre[i][0] = 0; // erase previous last range
+      fenetre[i][1] = 0;
+      num_ranges--;
+     } 
+    else 
+     {
+      fenetre[i][0] += 1;
+     }
+   } 
+  else if (fenetre[i][1] == pixel) // pixel is at the end of an existing range
+   fenetre[i][1] -= 1;
+  else
+   { // pixel is in the middle of an existing range, which we need to split
+    int j;
+    for (j = num_ranges; j > i; j--)
+     { // shift all existing ranges up
+      fenetre[j][0] = fenetre[j - 1][0];
+      fenetre[j][1] = fenetre[j - 1][1];
+     }
+    fenetre[i][1] = pixel - 1;
+    fenetre[i + 1][0] = pixel + 1;
+    num_ranges++;
+   }
+  return num_ranges;
+}
+
+// remove_spikes: see if the array of residuals contains values > (spike_threshold * average_residual),
+// if so: exclude these from the given set of spectral windows, update the number of spectral windows,
+
+BOOL remove_spikes(double *residuals, double average_residual, int (*spectral_windows)[2], int* pnum_windows)
+{
+  BOOL spikes = 0;
+  int temp_windows[MAX_FEN][2];
+  memcpy(temp_windows, spectral_windows, 2*MAX_FEN);
+  int num_windows = * pnum_windows;
+  int pixel,j;
+  for (j = 0; j < *pnum_windows; j++)
+   {
+    for (pixel = spectral_windows[j][0]; pixel <= spectral_windows[j][1]; pixel++)
+     {
+      if (fabs(residuals[pixel]) > spike_threshold * average_residual)
+       {
+	spikes = 1;
+	num_windows = exclude_pixel(pixel, temp_windows, num_windows);
+       }
+     }
+   }
+  if(spikes)
+   {
+    memcpy(spectral_windows, temp_windows, 2*MAX_FEN);
+    *pnum_windows = num_windows;
+   }
+  return spikes;
+}
+
 void AnalyseGetFenoLim(FENO *pFeno,INDEX *pLimMin,INDEX *pLimMax)
- {
+{
   INT (*fenetre)[2],
-        nFenetre,
-        deb,fin,Dim;
-
+    nFenetre,
+    deb,fin,Dim;
+  
   // Debugging
-
-  #if defined(__DEBUG_) && __DEBUG_
+  
+#if defined(__DEBUG_) && __DEBUG_
   DEBUG_FunctionBegin("AnalyseGetFenoLim",DEBUG_FCTTYPE_UTIL);
-  #endif
-
+#endif
+  
   deb=Dim=0;
   fin=NDET-1;
-
+  
   if (!pFeno->hidden)
    {
     fenetre=pFeno->svd.Fenetre;
     nFenetre=pFeno->svd.Z;
-
+    
     deb=fenetre[0][0];
     fin=fenetre[nFenetre-1][1];
-
+    
     Dim=0;
-
+    
     if (!pFeno->hidden && (ANALYSE_plFilter->type!=PRJCT_FILTER_TYPE_NONE) && (ANALYSE_plFilter->type!=PRJCT_FILTER_TYPE_ODDEVEN))
      Dim+=(int)(ANALYSE_plFilter->filterSize*sqrt(ANALYSE_plFilter->filterNTimes));
     if (((!pFeno->hidden && ANALYSE_phFilter->hpFilterAnalysis) || ((pFeno->hidden==1) && ANALYSE_phFilter->hpFilterCalib)) &&
-          (ANALYSE_phFilter->type!=PRJCT_FILTER_TYPE_NONE) && (ANALYSE_phFilter->type!=PRJCT_FILTER_TYPE_ODDEVEN))
+	(ANALYSE_phFilter->type!=PRJCT_FILTER_TYPE_NONE) && (ANALYSE_phFilter->type!=PRJCT_FILTER_TYPE_ODDEVEN))
      Dim+=(int)(ANALYSE_phFilter->filterSize*sqrt(ANALYSE_phFilter->filterNTimes));
 
     Dim=max(Dim,pAnalysisOptions->securityGap);
@@ -281,9 +372,9 @@ void AnalyseGetFenoLim(FENO *pFeno,INDEX *pLimMin,INDEX *pLimMax)
 // ---------------------------------------
 
 RC FNPixel(double *lambdaVector,double lambdaValue,INT npts,INT pixelSelection)
- {
- 	// Declarations
-
+{
+  // Declarations
+  
   INDEX klo,khi,rc;
 
   // Initialization
@@ -296,8 +387,8 @@ RC FNPixel(double *lambdaVector,double lambdaValue,INT npts,INT pixelSelection)
    rc=npts-1;
   else
    {
-   	rc=(npts-1)>>1;
-
+    rc=(npts-1)>>1;
+    
     for (klo=0,khi=npts-1;khi-klo>1;)
      {
       rc=(khi+klo)>>1;
@@ -3351,13 +3442,37 @@ RC ANALYSE_CurFitMethod(INDEX   indexFenoColumn,  // for OMI
       /*  Residual Computation  */
       /*  ====================  */
 
+      double av_residual = 0;
       for ( j=k=0; j<Z; j++ )
        for ( i=Fenetre[j][0]; i<=Fenetre[j][1]; i++, k++ )
         {
          ANALYSE_absolu[i]  =  (Yfit[k]-Y0[k]);
+	 av_residual += fabs(ANALYSE_absolu[i]);
          if (Feno->analysisMethod!=PRJCT_ANLYS_METHOD_SVD)
           ANALYSE_t[i]=(ANALYSE_tc[i]!=(double)0.)?(double)1.+ANALYSE_absolu[i]/ANALYSE_tc[i]:(double)0.;
         }
+      av_residual /= k;
+
+      if ( remove_spikes(ANALYSE_absolu, av_residual, Fenetre, &Z))
+       { // in case spikes were found, redo the analysis with the new set of spectral windows (which excludes these pixels)
+	int dimL = 0;
+	for (i=0;i<Z;i++)
+	 dimL += Fenetre[i][1] - Fenetre[i][0] + 1;
+	Feno->svd.DimL = dimL;
+	Feno->svd.Z = Z;
+	Feno->Decomp = 1;
+	ANALYSE_SvdInit(&Feno->svd);
+	memcpy(ANALYSE_absolu, ANALYSE_zeros, sizeof(double) * NDET);
+	rc  = ANALYSE_CurFitMethod(indexFenoColumn,
+				   Spectre,
+				   SigmaSpec,
+				   Sref,
+				   Chisqr,
+				   pNiter,
+				   speNormFact,
+				   refNormFact);
+	goto EndCurFitMethod;
+       }
 
       scalingFactor=(pAnalysisOptions->fitWeighting==PRJCT_ANLYS_FIT_WEIGHTING_NONE)?(*Chisqr):(double)1.;
 
