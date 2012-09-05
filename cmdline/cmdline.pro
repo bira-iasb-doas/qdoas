@@ -203,3 +203,11 @@ HEADERS += ../engine/scia_l1c.h
 HEADERS += ../engine/scia_l1c_lib.h
 HEADERS += ../engine/windoas.h
 HEADERS += ../engine/engine_xsconv.h
+
+#----------------------------------------------
+# Install
+#----------------------------------------------
+
+target.path = $${INSTALL_PREFIX}/bin
+
+INSTALLS += target
