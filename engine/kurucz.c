@@ -76,11 +76,12 @@ INT KURUCZ_indexLine=1;
 // PURPOSE         search for a reference spectrum in analysis windows on which Kurucz has already been applied
 //
 // INPUT           indexRefFeno   index of the analysis window with the reference to search for in other analysis windows;
+//                 indexRefColumn index to account to the second dimension of FENO (new with OMI)
 //
 // RETURN          indexFeno      index of the analysis window in which reference has been found;
 // ----------------------------------------------------------------------------
 
-INDEX KuruczSearchReference(INDEX indexRefFeno)
+INDEX KuruczSearchReference(INDEX indexRefFeno,INDEX indexRefColumn)
  {
   // Declarations
 
@@ -90,13 +91,13 @@ INDEX KuruczSearchReference(INDEX indexRefFeno)
 
   // Initialization
 
-  reference=(TabFeno[0][indexRefFeno].useEtalon)?TabFeno[0][indexRefFeno].SrefEtalon:TabFeno[0][indexRefFeno].Sref;
+  reference=(TabFeno[indexRefColumn][indexRefFeno].useEtalon)?TabFeno[indexRefColumn][indexRefFeno].SrefEtalon:TabFeno[indexRefColumn][indexRefFeno].Sref;
 
   // Search for reference in analysis windows
 
   for (indexFeno=0;indexFeno<NFeno;indexFeno++)
    {
-    pTabFeno=&TabFeno[0][indexFeno];
+    pTabFeno=&TabFeno[indexRefColumn][indexFeno];
 
     if (!pTabFeno->hidden && pTabFeno->useKurucz && (indexFeno!=indexRefFeno) &&
          VECTOR_Equal((pTabFeno->useEtalon)?pTabFeno->SrefEtalon:pTabFeno->Sref, // Etalon has highest priority
@@ -836,14 +837,14 @@ RC KURUCZ_Reference(double *instrFunction,INDEX refFlag,INT saveFlag,INT gomeFla
 
        	if ((pTabFeno->NDET==pKurucz->hrSolar.nl) &&
        	     VECTOR_Equal(pKurucz->hrSolar.matrix[0],pTabFeno->LambdaRef,pTabFeno->NDET,(double)1.e-7) &&
-       	     VECTOR_Equal(pKurucz->hrSolar.matrix[1],reference,pTabFeno->NDET,(double)1.e-7))
+       	     VECTOR_Equal(pKurucz->hrSolar.matrix[indexFenoColumn],reference,pTabFeno->NDET,(double)1.e-7))
 
        	 pTabFeno->rcKurucz=ERROR_ID_NO;
        	else
        	 {
        	  // Apply instrumental corrections on reference spectrum
 
-          if (((indexRef=KuruczSearchReference(indexFeno))<NFeno) && (indexRef!=indexFeno) &&
+          if (((indexRef=KuruczSearchReference(indexFeno,indexFenoColumn))<NFeno) && (indexRef!=indexFeno) &&
               ((indexRef<indexFeno) ||
               ((refFlag && !pTabFeno->useEtalon) && ((TabFeno[indexFenoColumn][indexRef].refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_FILE) || TabFeno[indexFenoColumn][indexRef].useEtalon))))
            {
@@ -1131,8 +1132,8 @@ RC KURUCZ_Alloc(PROJECT *pProject,double *lambda,INDEX indexKurucz,double lambda
 
   if (!(rc=XSCONV_LoadCrossSectionFile(&pKurucz->hrSolar,kuruczFile,lambdaMin-7.-step*pKurucz->solarFGap,lambdaMax+7.+step*pKurucz->solarFGap,(double)0.,CONVOLUTION_CONVERSION_NONE)))
    {
-    if (((rc=VECTOR_NormalizeVector(pKurucz->hrSolar.matrix[1]-1,pKurucz->hrSolar.nl,NULL,"KURUCZ_Alloc "))!=ERROR_ID_NO) ||
-        ((rc=SPLINE_Deriv2(pKurucz->hrSolar.matrix[0],pKurucz->hrSolar.matrix[1],pKurucz->hrSolar.deriv2[1],pKurucz->hrSolar.nl,"KURUCZ_Alloc "))!=ERROR_ID_NO))
+    if (((rc=VECTOR_NormalizeVector(pKurucz->hrSolar.matrix[indexFenoColumn]-1,pKurucz->hrSolar.nl,NULL,"KURUCZ_Alloc "))!=ERROR_ID_NO) ||
+        ((rc=SPLINE_Deriv2(pKurucz->hrSolar.matrix[0],pKurucz->hrSolar.matrix[indexFenoColumn],pKurucz->hrSolar.deriv2[indexFenoColumn],pKurucz->hrSolar.nl,"KURUCZ_Alloc "))!=ERROR_ID_NO))
 
      goto EndKuruczAlloc;
 
@@ -1243,7 +1244,7 @@ RC KURUCZ_Alloc(PROJECT *pProject,double *lambda,INDEX indexKurucz,double lambda
               goto EndKuruczAlloc;
              }
 
-            memcpy(fftIn+1,pKurucz->hrSolar.matrix[1]+hrDeb,sizeof(double)*hrN);
+            memcpy(fftIn+1,pKurucz->hrSolar.matrix[indexFenoColumn]+hrDeb,sizeof(double)*hrN);
 
             for (i=hrN+1;i<=fftSize;i++)
              fftIn[i]=fftIn[2*hrN-i];
@@ -1331,7 +1332,7 @@ RC KURUCZ_Alloc(PROJECT *pProject,double *lambda,INDEX indexKurucz,double lambda
      goto EndKuruczAlloc;
 
     if (hFilterFlag && pKurucz->solarFGap && (lambda[NDET-1]-lambda[0]+1!=NDET) &&
-     (((rc=SPLINE_Vector(pKurucz->hrSolar.matrix[0],pKurucz->hrSolar.matrix[1],pKurucz->hrSolar.deriv2[1],pKurucz->hrSolar.nl,
+     (((rc=SPLINE_Vector(pKurucz->hrSolar.matrix[0],pKurucz->hrSolar.matrix[indexFenoColumn],pKurucz->hrSolar.deriv2[indexFenoColumn],pKurucz->hrSolar.nl,
                             pKurucz->lambdaF,pKurucz->solarF,NDET+2*pKurucz->solarFGap,pAnalysisOptions->interpol,"KURUCZ_Alloc "))!=0) ||
       ((rc=FILTER_Vector(ANALYSE_phFilter,pKurucz->solarF,pKurucz->solarF,NDET+2*pKurucz->solarFGap,PRJCT_FILTER_OUTPUT_LOW))!=0) ||
       ((rc=SPLINE_Deriv2(pKurucz->lambdaF,pKurucz->solarF,pKurucz->solarF2,NDET+2*pKurucz->solarFGap,"KURUCZ_Alloc (solarF) "))!=0)))
