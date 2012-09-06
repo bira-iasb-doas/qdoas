@@ -291,8 +291,11 @@ int exclude_pixel(int pixel, int (*fenetre)[2], int num_ranges)
   return num_ranges;
 }
 
-// remove_spikes: see if the array of residuals contains values > (spike_threshold * average_residual),
-// if so: exclude these from the given set of spectral windows, update the number of spectral windows,
+/* remove_spikes: see if the array of residuals contains values >
+   (spike_threshold * average_residual), if so: exclude these from the
+   given set of spectral windows, update the number of spectral
+   windows,
+*/
 
 BOOL remove_spikes(double *residuals, double average_residual, int (*spectral_windows)[2], int* pnum_windows)
 {
@@ -300,12 +303,13 @@ BOOL remove_spikes(double *residuals, double average_residual, int (*spectral_wi
   int temp_windows[MAX_FEN][2];
   memcpy(temp_windows, spectral_windows, 2*MAX_FEN);
   int num_windows = * pnum_windows;
+  double max_residual = spike_threshold * average_residual;
   int pixel,j;
   for (j = 0; j < *pnum_windows; j++)
    {
     for (pixel = spectral_windows[j][0]; pixel <= spectral_windows[j][1]; pixel++)
      {
-      if (fabs(residuals[pixel]) > spike_threshold * average_residual)
+      if (fabs(residuals[pixel]) > max_residual)
        {
 	spikes = 1;
 	num_windows = exclude_pixel(pixel, temp_windows, num_windows);
