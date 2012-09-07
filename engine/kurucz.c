@@ -108,6 +108,14 @@ INDEX KuruczSearchReference(INDEX indexRefFeno,INDEX indexRefColumn)
 
   // Return
 
+  {
+  	FILE *fp;
+  	fp=fopen("toto.dat","a+t");
+  	fprintf(fp,"Search reference %d %d %d\n",indexRefFeno,indexRefColumn,indexFeno);
+  	fclose(fp);
+  }
+
+
   return indexFeno;
  }
 
@@ -160,6 +168,7 @@ RC KURUCZ_Spectrum(double *oldLambda,double *newLambda,double *spectrum,double *
   RC               rc;                                                          // return code
   plot_data_t      spectrumData[2];
   KURUCZ *pKurucz;
+  INDEX kuruczIndexRow;
 
   // Initializations
 
@@ -230,18 +239,35 @@ RC KURUCZ_Spectrum(double *oldLambda,double *newLambda,double *spectrum,double *
 
     // Set solar spectrum
 
+    {
+    	FILE *fp;
+    	fp=fopen("toto.dat","a+t");
+    	fprintf(fp,"OK1\n");
+    	fclose(fp);
+    }
+
+    kuruczIndexRow=(pKurucz->hrSolar.nc>indexFenoColumn)?indexFenoColumn+1:1;
+
     if ((solar=MEMORY_AllocDVector("KURUCZ_Spectrum ","solar",0,NDET-1))==NULL)
      rc=ERROR_ID_ALLOC;
     else if (!pKuruczOptions->fwhmFit)
      {
       if ((pKurucz->hrSolar.nl==NDET) && VECTOR_Equal(pKurucz->hrSolar.matrix[0],oldLambda,NDET,(double)1.e-7))
-       memcpy(solar,pKurucz->hrSolar.matrix[1],sizeof(double)*NDET);
+       memcpy(solar,pKurucz->hrSolar.matrix[kuruczIndexRow],sizeof(double)*NDET);
       else
-       rc=SPLINE_Vector(pKurucz->hrSolar.matrix[0],pKurucz->hrSolar.matrix[1],pKurucz->hrSolar.deriv2[1],pKurucz->hrSolar.nl,
+       rc=SPLINE_Vector(pKurucz->hrSolar.matrix[0],pKurucz->hrSolar.matrix[kuruczIndexRow],pKurucz->hrSolar.deriv2[kuruczIndexRow],pKurucz->hrSolar.nl,
                            oldLambda,solar,NDET,pAnalysisOptions->interpol,"KURUCZ_Spectrum ");
      }
     else
      memcpy(solar,reference,sizeof(double)*NDET);
+
+     {
+     	FILE *fp;
+     	fp=fopen("toto.dat","a+t");
+     	fprintf(fp,"OK2 : %d %d %g %g %g %g %g\n",indexFenoColumn,kuruczIndexRow,solar[0],solar[1],solar[2],solar[3],solar[4]);
+     	fclose(fp);
+     }
+
 
     // Buffers for fits initialization
 
@@ -308,6 +334,14 @@ RC KURUCZ_Spectrum(double *oldLambda,double *newLambda,double *spectrum,double *
       DEBUG_Start(ENGINE_dbgFile,"Kurucz",DEBUG_FCTTYPE_MATH|DEBUG_FCTTYPE_APPL,5,DEBUG_DVAR_YES,0); // !debugResetFlag++);
       #endif
 
+      {
+      	FILE *fp;
+      	fp=fopen("toto.dat","a+t");
+      	fprintf(fp,"Analysis %d/%d\n",indexWindow,Nb_Win);
+      	fclose(fp);
+      }
+
+
 
       if (((rc=ANALYSE_SvdInit(&svdFeno[indexWindow]))!=ERROR_ID_NO) ||
 
@@ -321,6 +355,13 @@ RC KURUCZ_Spectrum(double *oldLambda,double *newLambda,double *spectrum,double *
                                    &NIter[indexWindow],
                                    (double)1.,(double)1.))>0))
        break;
+
+      {
+      	FILE *fp;
+      	fp=fopen("toto.dat","a+t");
+      	fprintf(fp,"Analysis OK %d/%d\n",indexWindow,Nb_Win);
+      	fclose(fp);
+      }
 
       #if defined(__DEBUG_) && __DEBUG_
       DEBUG_Stop("Kurucz");
@@ -793,6 +834,7 @@ RC KURUCZ_Reference(double *instrFunction,INDEX refFlag,INT saveFlag,INT gomeFla
   INDEX            indexFeno,                                                   // browse analysis windows
                    indexRef;                                                    // index of another analysis window with the same reference spectrum
   KURUCZ *pKurucz;
+  INDEX kuruczIndexRow;
   RC               rc;                                                          // return code
 
   // Initializations
@@ -835,9 +877,11 @@ RC KURUCZ_Reference(double *instrFunction,INDEX refFlag,INT saveFlag,INT gomeFla
        {
        	memcpy(reference,(pTabFeno->useEtalon)?pTabFeno->SrefEtalon:pTabFeno->Sref,sizeof(double)*pTabFeno->NDET);
 
+       	kuruczIndexRow=(pKurucz->hrSolar.nc>indexFenoColumn)?indexFenoColumn+1:1;
+
        	if ((pTabFeno->NDET==pKurucz->hrSolar.nl) &&
        	     VECTOR_Equal(pKurucz->hrSolar.matrix[0],pTabFeno->LambdaRef,pTabFeno->NDET,(double)1.e-7) &&
-       	     VECTOR_Equal(pKurucz->hrSolar.matrix[indexFenoColumn],reference,pTabFeno->NDET,(double)1.e-7))
+       	     VECTOR_Equal(pKurucz->hrSolar.matrix[kuruczIndexRow],reference,pTabFeno->NDET,(double)1.e-7))
 
        	 pTabFeno->rcKurucz=ERROR_ID_NO;
        	else
@@ -871,10 +915,26 @@ RC KURUCZ_Reference(double *instrFunction,INDEX refFlag,INT saveFlag,INT gomeFla
            {
             // Apply Kurucz for building new calibration for reference
 
+            {
+            	FILE *fp;
+            	fp=fopen("toto.dat","a+t");
+            	fprintf(fp,"Begin Spectrum %d %d\n",indexFenoColumn,indexFeno);
+            	fclose(fp);
+            }
+
+
             if ((rc=pTabFeno->rcKurucz=KURUCZ_Spectrum(pTabFeno->LambdaRef,pTabFeno->LambdaK,reference,pKurucz->solar,instrFunction,
                  1,pTabFeno->windowName,pTabFeno->fwhmPolyRef,pTabFeno->fwhmVector,pTabFeno->fwhmDeriv2,saveFlag,indexFeno,responseHandle,indexFenoColumn))!=ERROR_ID_NO)
 
              goto EndKuruczReference;
+
+             {
+             	FILE *fp;
+             	fp=fopen("toto.dat","a+t");
+             	fprintf(fp,"End Spectrum\n");
+             	fclose(fp);
+             }
+
            }
 
          if (!rc && !pTabFeno->rcKurucz)
@@ -1020,9 +1080,18 @@ RC KURUCZ_Alloc(PROJECT *pProject,double *lambda,INDEX indexKurucz,double lambda
          Win_size,step;                                                         // size of a little window in nm
   SVD   *pSvd,*pSvdFwhm;                                                        // pointers to svd environments
   KURUCZ *pKurucz;
+  INDEX kuruczIndexRow;                                                                 // number of columns of the Kurucz Matrix
   RC rc;
 
   // Initializations
+
+  {
+  	FILE *fp;
+  	fp=fopen("toto.dat","a+t");
+  	fprintf(fp,"Begin Kurucz_Alloc\n");
+  	fclose(fp);
+  }
+
 
   pKurucz=&KURUCZ_buffers[indexFenoColumn];
 
@@ -1132,8 +1201,16 @@ RC KURUCZ_Alloc(PROJECT *pProject,double *lambda,INDEX indexKurucz,double lambda
 
   if (!(rc=XSCONV_LoadCrossSectionFile(&pKurucz->hrSolar,kuruczFile,lambdaMin-7.-step*pKurucz->solarFGap,lambdaMax+7.+step*pKurucz->solarFGap,(double)0.,CONVOLUTION_CONVERSION_NONE)))
    {
-    if (((rc=VECTOR_NormalizeVector(pKurucz->hrSolar.matrix[indexFenoColumn]-1,pKurucz->hrSolar.nl,NULL,"KURUCZ_Alloc "))!=ERROR_ID_NO) ||
-        ((rc=SPLINE_Deriv2(pKurucz->hrSolar.matrix[0],pKurucz->hrSolar.matrix[indexFenoColumn],pKurucz->hrSolar.deriv2[indexFenoColumn],pKurucz->hrSolar.nl,"KURUCZ_Alloc "))!=ERROR_ID_NO))
+   	kuruczIndexRow=(pKurucz->hrSolar.nc>indexFenoColumn)?indexFenoColumn+1:1;
+
+   	               // If the fwhm of the slit function is fitted, then we can use the same high resolution solar
+   	               // spectrum.  If we do not fit the slit function, the solar spectrum has to be preconvoluted.
+   	               // For OMI, the number of rows is 60 and the number of preconvoluted spectra should be 60 too.
+   	               // So in principle, a test if the slit function should be enough but why we couldn't use the
+   	               // same spectrum ?
+
+    if (((rc=VECTOR_NormalizeVector(pKurucz->hrSolar.matrix[kuruczIndexRow]-1,pKurucz->hrSolar.nl,NULL,"KURUCZ_Alloc "))!=ERROR_ID_NO) ||
+        ((rc=SPLINE_Deriv2(pKurucz->hrSolar.matrix[0],pKurucz->hrSolar.matrix[kuruczIndexRow],pKurucz->hrSolar.deriv2[kuruczIndexRow],pKurucz->hrSolar.nl,"KURUCZ_Alloc "))!=ERROR_ID_NO))
 
      goto EndKuruczAlloc;
 
@@ -1244,7 +1321,7 @@ RC KURUCZ_Alloc(PROJECT *pProject,double *lambda,INDEX indexKurucz,double lambda
               goto EndKuruczAlloc;
              }
 
-            memcpy(fftIn+1,pKurucz->hrSolar.matrix[indexFenoColumn]+hrDeb,sizeof(double)*hrN);
+            memcpy(fftIn+1,pKurucz->hrSolar.matrix[1]+hrDeb,sizeof(double)*hrN);   // When the slit function is fitted, we use a high resolution solar spectrum (2 columns only)
 
             for (i=hrN+1;i<=fftSize;i++)
              fftIn[i]=fftIn[2*hrN-i];
@@ -1332,7 +1409,7 @@ RC KURUCZ_Alloc(PROJECT *pProject,double *lambda,INDEX indexKurucz,double lambda
      goto EndKuruczAlloc;
 
     if (hFilterFlag && pKurucz->solarFGap && (lambda[NDET-1]-lambda[0]+1!=NDET) &&
-     (((rc=SPLINE_Vector(pKurucz->hrSolar.matrix[0],pKurucz->hrSolar.matrix[indexFenoColumn],pKurucz->hrSolar.deriv2[indexFenoColumn],pKurucz->hrSolar.nl,
+     (((rc=SPLINE_Vector(pKurucz->hrSolar.matrix[0],pKurucz->hrSolar.matrix[kuruczIndexRow],pKurucz->hrSolar.deriv2[kuruczIndexRow],pKurucz->hrSolar.nl,
                             pKurucz->lambdaF,pKurucz->solarF,NDET+2*pKurucz->solarFGap,pAnalysisOptions->interpol,"KURUCZ_Alloc "))!=0) ||
       ((rc=FILTER_Vector(ANALYSE_phFilter,pKurucz->solarF,pKurucz->solarF,NDET+2*pKurucz->solarFGap,PRJCT_FILTER_OUTPUT_LOW))!=0) ||
       ((rc=SPLINE_Deriv2(pKurucz->lambdaF,pKurucz->solarF,pKurucz->solarF2,NDET+2*pKurucz->solarFGap,"KURUCZ_Alloc (solarF) "))!=0)))
@@ -1345,6 +1422,14 @@ RC KURUCZ_Alloc(PROJECT *pProject,double *lambda,INDEX indexKurucz,double lambda
   // Return
 
   EndKuruczAlloc :
+
+  {
+  	FILE *fp;
+  	fp=fopen("toto.dat","a+t");
+  	fprintf(fp,"End Kurucz_Alloc()\n");
+  	fclose(fp);
+  }
+
 
   return rc;
  }

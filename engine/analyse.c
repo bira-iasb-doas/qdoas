@@ -268,12 +268,12 @@ int exclude_pixel(int pixel, int (*fenetre)[2], int num_ranges)
       fenetre[i][0] = 0; // erase previous last range
       fenetre[i][1] = 0;
       num_ranges--;
-     } 
-    else 
+     }
+    else
      {
       fenetre[i][0] += 1;
      }
-   } 
+   }
   else if (fenetre[i][1] == pixel) // pixel is at the end of an existing range
    fenetre[i][1] -= 1;
   else
@@ -329,26 +329,26 @@ void AnalyseGetFenoLim(FENO *pFeno,INDEX *pLimMin,INDEX *pLimMax)
   INT (*fenetre)[2],
     nFenetre,
     deb,fin,Dim;
-  
+
   // Debugging
-  
+
 #if defined(__DEBUG_) && __DEBUG_
   DEBUG_FunctionBegin("AnalyseGetFenoLim",DEBUG_FCTTYPE_UTIL);
 #endif
-  
+
   deb=Dim=0;
   fin=NDET-1;
-  
+
   if (!pFeno->hidden)
    {
     fenetre=pFeno->svd.Fenetre;
     nFenetre=pFeno->svd.Z;
-    
+
     deb=fenetre[0][0];
     fin=fenetre[nFenetre-1][1];
-    
+
     Dim=0;
-    
+
     if (!pFeno->hidden && (ANALYSE_plFilter->type!=PRJCT_FILTER_TYPE_NONE) && (ANALYSE_plFilter->type!=PRJCT_FILTER_TYPE_ODDEVEN))
      Dim+=(int)(ANALYSE_plFilter->filterSize*sqrt(ANALYSE_plFilter->filterNTimes));
     if (((!pFeno->hidden && ANALYSE_phFilter->hpFilterAnalysis) || ((pFeno->hidden==1) && ANALYSE_phFilter->hpFilterCalib)) &&
@@ -378,7 +378,7 @@ void AnalyseGetFenoLim(FENO *pFeno,INDEX *pLimMin,INDEX *pLimMax)
 RC FNPixel(double *lambdaVector,double lambdaValue,INT npts,INT pixelSelection)
 {
   // Declarations
-  
+
   INDEX klo,khi,rc;
 
   // Initialization
@@ -392,7 +392,7 @@ RC FNPixel(double *lambdaVector,double lambdaValue,INT npts,INT pixelSelection)
   else
    {
     rc=(npts-1)>>1;
-    
+
     for (klo=0,khi=npts-1;khi-klo>1;)
      {
       rc=(khi+klo)>>1;
@@ -3457,25 +3457,28 @@ RC ANALYSE_CurFitMethod(INDEX   indexFenoColumn,  // for OMI
         }
       av_residual /= k;
 
-      if ( remove_spikes(ANALYSE_absolu, av_residual, Fenetre, &Z))
-       { // in case spikes were found, redo the analysis with the new set of spectral windows (which excludes these pixels)
-	int dimL = 0;
-	for (i=0;i<Z;i++)
-	 dimL += Fenetre[i][1] - Fenetre[i][0] + 1;
-	Feno->svd.DimL = dimL;
-	Feno->svd.Z = Z;
-	Feno->Decomp = 1;
-	ANALYSE_SvdInit(&Feno->svd);
-	memcpy(ANALYSE_absolu, ANALYSE_zeros, sizeof(double) * NDET);
-	rc  = ANALYSE_CurFitMethod(indexFenoColumn,
-				   Spectre,
-				   SigmaSpec,
-				   Sref,
-				   Chisqr,
-				   pNiter,
-				   speNormFact,
-				   refNormFact);
-	goto EndCurFitMethod;
+      if (!Feno->hidden)
+       {
+        if ( remove_spikes(ANALYSE_absolu, av_residual, Fenetre, &Z))
+         { // in case spikes were found, redo the analysis with the new set of spectral windows (which excludes these pixels)
+  	int dimL = 0;
+  	for (i=0;i<Z;i++)
+  	 dimL += Fenetre[i][1] - Fenetre[i][0] + 1;
+  	Feno->svd.DimL = dimL;
+  	Feno->svd.Z = Z;
+  	Feno->Decomp = 1;
+  	ANALYSE_SvdInit(&Feno->svd);
+  	memcpy(ANALYSE_absolu, ANALYSE_zeros, sizeof(double) * NDET);
+  	rc  = ANALYSE_CurFitMethod(indexFenoColumn,
+  				   Spectre,
+  				   SigmaSpec,
+  				   Sref,
+  				   Chisqr,
+  				   pNiter,
+  				   speNormFact,
+  				   refNormFact);
+  	goto EndCurFitMethod;
+         }
        }
 
       scalingFactor=(pAnalysisOptions->fitWeighting==PRJCT_ANLYS_FIT_WEIGHTING_NONE)?(*Chisqr):(double)1.;
