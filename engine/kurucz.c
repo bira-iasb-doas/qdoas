@@ -108,14 +108,6 @@ INDEX KuruczSearchReference(INDEX indexRefFeno,INDEX indexRefColumn)
 
   // Return
 
-  {
-  	FILE *fp;
-  	fp=fopen("toto.dat","a+t");
-  	fprintf(fp,"Search reference %d %d %d\n",indexRefFeno,indexRefColumn,indexFeno);
-  	fclose(fp);
-  }
-
-
   return indexFeno;
  }
 
@@ -239,13 +231,6 @@ RC KURUCZ_Spectrum(double *oldLambda,double *newLambda,double *spectrum,double *
 
     // Set solar spectrum
 
-    {
-    	FILE *fp;
-    	fp=fopen("toto.dat","a+t");
-    	fprintf(fp,"OK1\n");
-    	fclose(fp);
-    }
-
     kuruczIndexRow=(pKurucz->hrSolar.nc>indexFenoColumn)?indexFenoColumn+1:1;
 
     if ((solar=MEMORY_AllocDVector("KURUCZ_Spectrum ","solar",0,NDET-1))==NULL)
@@ -260,14 +245,6 @@ RC KURUCZ_Spectrum(double *oldLambda,double *newLambda,double *spectrum,double *
      }
     else
      memcpy(solar,reference,sizeof(double)*NDET);
-
-     {
-     	FILE *fp;
-     	fp=fopen("toto.dat","a+t");
-     	fprintf(fp,"OK2 : %d %d %g %g %g %g %g\n",indexFenoColumn,kuruczIndexRow,solar[0],solar[1],solar[2],solar[3],solar[4]);
-     	fclose(fp);
-     }
-
 
     // Buffers for fits initialization
 
@@ -334,15 +311,6 @@ RC KURUCZ_Spectrum(double *oldLambda,double *newLambda,double *spectrum,double *
       DEBUG_Start(ENGINE_dbgFile,"Kurucz",DEBUG_FCTTYPE_MATH|DEBUG_FCTTYPE_APPL,5,DEBUG_DVAR_YES,0); // !debugResetFlag++);
       #endif
 
-      {
-      	FILE *fp;
-      	fp=fopen("toto.dat","a+t");
-      	fprintf(fp,"Analysis %d/%d\n",indexWindow,Nb_Win);
-      	fclose(fp);
-      }
-
-
-
       if (((rc=ANALYSE_SvdInit(&svdFeno[indexWindow]))!=ERROR_ID_NO) ||
 
       // Analysis method
@@ -355,13 +323,6 @@ RC KURUCZ_Spectrum(double *oldLambda,double *newLambda,double *spectrum,double *
                                    &NIter[indexWindow],
                                    (double)1.,(double)1.))>0))
        break;
-
-      {
-      	FILE *fp;
-      	fp=fopen("toto.dat","a+t");
-      	fprintf(fp,"Analysis OK %d/%d\n",indexWindow,Nb_Win);
-      	fclose(fp);
-      }
 
       #if defined(__DEBUG_) && __DEBUG_
       DEBUG_Stop("Kurucz");
@@ -915,25 +876,10 @@ RC KURUCZ_Reference(double *instrFunction,INDEX refFlag,INT saveFlag,INT gomeFla
            {
             // Apply Kurucz for building new calibration for reference
 
-            {
-            	FILE *fp;
-            	fp=fopen("toto.dat","a+t");
-            	fprintf(fp,"Begin Spectrum %d %d\n",indexFenoColumn,indexFeno);
-            	fclose(fp);
-            }
-
-
             if ((rc=pTabFeno->rcKurucz=KURUCZ_Spectrum(pTabFeno->LambdaRef,pTabFeno->LambdaK,reference,pKurucz->solar,instrFunction,
                  1,pTabFeno->windowName,pTabFeno->fwhmPolyRef,pTabFeno->fwhmVector,pTabFeno->fwhmDeriv2,saveFlag,indexFeno,responseHandle,indexFenoColumn))!=ERROR_ID_NO)
 
              goto EndKuruczReference;
-
-             {
-             	FILE *fp;
-             	fp=fopen("toto.dat","a+t");
-             	fprintf(fp,"End Spectrum\n");
-             	fclose(fp);
-             }
 
            }
 
@@ -1084,14 +1030,6 @@ RC KURUCZ_Alloc(PROJECT *pProject,double *lambda,INDEX indexKurucz,double lambda
   RC rc;
 
   // Initializations
-
-  {
-  	FILE *fp;
-  	fp=fopen("toto.dat","a+t");
-  	fprintf(fp,"Begin Kurucz_Alloc\n");
-  	fclose(fp);
-  }
-
 
   pKurucz=&KURUCZ_buffers[indexFenoColumn];
 
@@ -1422,14 +1360,6 @@ RC KURUCZ_Alloc(PROJECT *pProject,double *lambda,INDEX indexKurucz,double lambda
   // Return
 
   EndKuruczAlloc :
-
-  {
-  	FILE *fp;
-  	fp=fopen("toto.dat","a+t");
-  	fprintf(fp,"End Kurucz_Alloc()\n");
-  	fclose(fp);
-  }
-
 
   return rc;
  }
