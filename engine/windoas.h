@@ -352,18 +352,20 @@ PRJCT_SPECTRA;
 
 // Analysis tab page description
 // -----------------------------
-
-typedef struct _prjctAnlys
- {
-  INT method;                                        // analysis method
-  INT fitWeighting;                                  // least-squares fit weighting
-  INT units;                                         // units for shift and stretch
-  INT interpol;                                      // interpolation
-  double convergence;                                                           // convergence criterion
-  int securityGap;
-  int maxIterations;                                                            // maximum number of iterations
- }
-PRJCT_ANLYS;
+  
+  typedef struct _prjctAnlys
+  {
+    INT method;                                        // analysis method
+    INT fitWeighting;                                  // least-squares fit weighting
+    INT units;                                         // units for shift and stretch
+    INT interpol;                                      // interpolation
+    double convergence;                                // convergence criterion
+    double spike_tolerance;                            // max ratio of (pixel residual)/(average residual)
+    
+    int securityGap;
+    int maxIterations;                                 // maximum number of iterations
+  }
+    PRJCT_ANLYS;
 
 // ---------------
 // FILTER TAB PAGE
@@ -478,10 +480,10 @@ PRJCT_GOME;
 
 typedef struct _prjctOmiFormat
  {
- 	DoasCh refPath[MAX_STR_LEN+1];
- 	INT spectralType;
- 	INT averageFlag;
-  int   omiTracks[MAX_SWATHSIZE];
+   DoasCh refPath[MAX_STR_LEN+1];
+   INT spectralType;
+   INT averageFlag;
+   int   omiTracks[MAX_SWATHSIZE];
  }
 PRJCT_OMI;
 

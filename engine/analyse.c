@@ -138,9 +138,8 @@ PROJECT *PRJCT_itemList;
 DoasCh *AnlysOrthogonal[ANLYS_ORTHOGONAL_TYPE_MAX]={"None","Differential XS"};
 DoasCh *AnlysStretch[ANLYS_STRETCH_TYPE_MAX]={"None","1st order","2nd order"};
 DoasCh *AnlysPolynome[ANLYS_POLY_TYPE_MAX]={"None","order 0","order 1","order 2","order 3","order 4","order 5"};
-DoasCh *ANLYS_crossAction[ANLYS_CROSS_ACTION_MAX]={"None","Interpolate","Convolute Std","Convolute I0","Convolute Ring"}; /* "Detector t° dependent","Strato t° dependent",*/
+DoasCh *ANLYS_crossAction[ANLYS_CROSS_ACTION_MAX]={"None","Interpolate","Convolute Std","Convolute I0","Convolute Ring"}; /* "Detector tï¿½ dependent","Strato tï¿½ dependent",*/
 
-double spike_threshold = 10.;
 INT    ANALYSE_plotKurucz,ANALYSE_plotRef,ANALYSE_indexLine;
 // INT    ANALYSE_maxIter=0;
 
@@ -230,24 +229,6 @@ INDEX analyseIndexRecord;
 // UTILITY FUNCTIONS
 // =================
 
-/*
-double average_magnitude(double * array)
-{
-  int i, j, k;
-  double average = 0.;
-  for (j = k = 0; j < Z; j++)
-   for (i = Fenetre[j][0]; i <= Fenetre[j][1]; i++, k++)
-    average += fabs(array[i]);
-  printf("arraylength: %d\n", k);
-  return average / k;
-}
-*/
-
-// -----------------------------------------------------------------
-// exclude_pixel: Create a new set of analysis windows by excluding
-// one pixel.
-// -----------------------------------------------------------------
-
 int exclude_pixel(int pixel, int (*fenetre)[2], int num_ranges)
 {
   int i;
@@ -292,18 +273,17 @@ int exclude_pixel(int pixel, int (*fenetre)[2], int num_ranges)
 }
 
 /* remove_spikes: see if the array of residuals contains values >
-   (spike_threshold * average_residual), if so: exclude these from the
+   (max_residual), if so: exclude these from the
    given set of spectral windows, update the number of spectral
    windows,
 */
 
-BOOL remove_spikes(double *residuals, double average_residual, int (*spectral_windows)[2], int* pnum_windows)
+BOOL remove_spikes(double *residuals, double max_residual, int (*spectral_windows)[2], int* pnum_windows)
 {
   BOOL spikes = 0;
   int temp_windows[MAX_FEN][2];
   memcpy(temp_windows, spectral_windows, 2*MAX_FEN);
   int num_windows = * pnum_windows;
-  double max_residual = spike_threshold * average_residual;
   int pixel,j;
   for (j = 0; j < *pnum_windows; j++)
    {
@@ -3457,28 +3437,26 @@ RC ANALYSE_CurFitMethod(INDEX   indexFenoColumn,  // for OMI
         }
       av_residual /= k;
 
-      if (!Feno->hidden)
-       {
-        if ( remove_spikes(ANALYSE_absolu, av_residual, Fenetre, &Z))
-         { // in case spikes were found, redo the analysis with the new set of spectral windows (which excludes these pixels)
-  	int dimL = 0;
-  	for (i=0;i<Z;i++)
-  	 dimL += Fenetre[i][1] - Fenetre[i][0] + 1;
-  	Feno->svd.DimL = dimL;
-  	Feno->svd.Z = Z;
-  	Feno->Decomp = 1;
-  	ANALYSE_SvdInit(&Feno->svd);
-  	memcpy(ANALYSE_absolu, ANALYSE_zeros, sizeof(double) * NDET);
-  	rc  = ANALYSE_CurFitMethod(indexFenoColumn,
-  				   Spectre,
-  				   SigmaSpec,
-  				   Sref,
-  				   Chisqr,
-  				   pNiter,
-  				   speNormFact,
-  				   refNormFact);
-  	goto EndCurFitMethod;
-         }
+      if ( !Feno->hidden
+           &&remove_spikes(ANALYSE_absolu, av_residual * pAnalysisOptions->spike_tolerance , Fenetre, &Z))
+       { // in case spikes were found, redo the analysis with the new set of spectral windows (which excludes these pixels)
+	int dimL = 0;
+	for (i=0;i<Z;i++)
+	 dimL += Fenetre[i][1] - Fenetre[i][0] + 1;
+	Feno->svd.DimL = dimL;
+	Feno->svd.Z = Z;
+	Feno->Decomp = 1;
+	ANALYSE_SvdInit(&Feno->svd);
+	memcpy(ANALYSE_absolu, ANALYSE_zeros, sizeof(double) * NDET);
+	rc  = ANALYSE_CurFitMethod(indexFenoColumn,
+				   Spectre,
+				   SigmaSpec,
+				   Sref,
+				   Chisqr,
+				   pNiter,
+				   speNormFact,
+				   refNormFact);
+	goto EndCurFitMethod;
        }
 
       scalingFactor=(pAnalysisOptions->fitWeighting==PRJCT_ANLYS_FIT_WEIGHTING_NONE)?(*Chisqr):(double)1.;

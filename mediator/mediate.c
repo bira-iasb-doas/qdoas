@@ -688,6 +688,7 @@ void setMediateProjectAnalysis(PRJCT_ANLYS *pEngineAnalysis,const mediate_projec
   pEngineAnalysis->units=PRJCT_ANLYS_UNITS_NANOMETERS;                          // units for shift and stretch : force nm with QDOAS !!!
   pEngineAnalysis->interpol=pMediateAnalysis->interpolationType;                // interpolation
   pEngineAnalysis->convergence=pMediateAnalysis->convergenceCriterion;          // convergence criterion
+  pEngineAnalysis->spike_tolerance=pMediateAnalysis->spike_tolerance;
   pEngineAnalysis->securityGap=pMediateAnalysis->interpolationSecurityGap;      // security pixels to take in order to avoid interpolation problems at the edge of the spectral window
   pEngineAnalysis->maxIterations=pMediateAnalysis->maxIterations;               // maximum number of iterations
 
@@ -1137,18 +1138,18 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
     break;
 	// ----------------------------------------------------------------------------
 	   case PRJCT_INSTR_FORMAT_OMI :                                                               // GOME ASCII format
-
-	    NDET=1024;                                                                                  // Could be reduced by Set function
-
-	    memset(pEngineInstrumental->omi.omiTracks,0,sizeof(int)*MAX_SWATHSIZE);
-
-	  	 strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->omi.calibrationFile);     // calibration file
-	  	 strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->omi.instrFunctionFile);     // instrumental function file
-
-	  	 pEngineInstrumental->omi.spectralType=pMediateInstrumental->omi.spectralType;
-     pEngineInstrumental->omi.averageFlag=pMediateInstrumental->omi.flagAverage;
-
-     OMI_TrackSelection((DoasCh *)pMediateInstrumental->omi.trackSelection,pEngineInstrumental->omi.omiTracks);
+	     
+	     NDET=1024;                                                                                  // Could be reduced by Set function
+	     
+	     memset(pEngineInstrumental->omi.omiTracks,0,sizeof(int)*MAX_SWATHSIZE);
+	     
+	     strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->omi.calibrationFile);     // calibration file
+	     strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->omi.instrFunctionFile);     // instrumental function file
+	     
+	     pEngineInstrumental->omi.spectralType=pMediateInstrumental->omi.spectralType;
+	     pEngineInstrumental->omi.averageFlag=pMediateInstrumental->omi.flagAverage;
+	     
+	     OMI_TrackSelection((DoasCh *)pMediateInstrumental->omi.trackSelection,pEngineInstrumental->omi.omiTracks);
 
     break;
 	// ----------------------------------------------------------------------------

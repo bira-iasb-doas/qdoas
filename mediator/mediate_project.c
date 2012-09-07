@@ -61,6 +61,7 @@ void initializeMediateProjectAnalysis(mediate_project_analysis_t *d)
   d->interpolationSecurityGap = 10;
   d->maxIterations = 0;
   d->convergenceCriterion = 1.0e-4;
+  d->spike_tolerance = 999.9;
 }
 
 void initializeMediateProjectFiltering(mediate_filter_t *d)

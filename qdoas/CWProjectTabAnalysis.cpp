@@ -27,6 +27,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "constants.h"
 
+static const int cStandardEditWidth = 75;
+
 CWProjectTabAnalysis::CWProjectTabAnalysis(const mediate_project_analysis_t *properties,
 					   QWidget *parent) :
   QFrame(parent)
@@ -75,7 +77,7 @@ CWProjectTabAnalysis::CWProjectTabAnalysis(const mediate_project_analysis_t *pro
   mainLayout->addWidget(new QLabel("Interpolation security gap", this), row, 1);
   m_interpolationSecuritySpinBox = new QSpinBox(this);
   m_interpolationSecuritySpinBox->setRange(1, 50);
-  m_interpolationSecuritySpinBox->setFixedWidth(75);
+  m_interpolationSecuritySpinBox->setFixedWidth(cStandardEditWidth);
   mainLayout->addWidget(m_interpolationSecuritySpinBox, row, 2);
   ++row;
 
@@ -83,15 +85,23 @@ CWProjectTabAnalysis::CWProjectTabAnalysis(const mediate_project_analysis_t *pro
   mainLayout->addWidget(new QLabel("Convergence criterion", this), row, 1);
   m_convergenceCriterionEdit = new QLineEdit(this);
   m_convergenceCriterionEdit->setValidator(new CDoubleExpFmtValidator(1.0e-30, 1.0, 4, m_convergenceCriterionEdit));
-  m_convergenceCriterionEdit->setFixedWidth(75);
+  m_convergenceCriterionEdit->setFixedWidth(cStandardEditWidth);
   mainLayout->addWidget(m_convergenceCriterionEdit, row, 2);
   ++row;
 
   mainLayout->addWidget(new QLabel("Maximum number of iterations", this), row, 1);
   m_maxIterationsSpinBox = new QSpinBox(this);
   m_maxIterationsSpinBox->setRange(0, 50);
-  m_maxIterationsSpinBox->setFixedWidth(75);
+  m_maxIterationsSpinBox->setFixedWidth(cStandardEditWidth);
   mainLayout->addWidget(m_maxIterationsSpinBox, row, 2);
+  ++row;
+
+  // Residual spike tolerance
+  mainLayout->addWidget(new QLabel("Spike tolerance factor (>3.0)", this), row, 1);
+  m_spikeTolerance = new QLineEdit(this);
+  m_spikeTolerance->setFixedWidth(cStandardEditWidth);
+  m_spikeTolerance->setValidator(new CDoubleFixedFmtValidator(3., 999.9, 1, m_spikeTolerance));  // residuals up to 3x average are always allowed.
+  mainLayout->addWidget(m_spikeTolerance, row, 2);
   ++row;
 
   mainLayout->setRowStretch(row, 4);
@@ -118,6 +128,9 @@ CWProjectTabAnalysis::CWProjectTabAnalysis(const mediate_project_analysis_t *pro
   // validator controls the initial range and format
   m_convergenceCriterionEdit->validator()->fixup(tmpStr.setNum(properties->convergenceCriterion));
   m_convergenceCriterionEdit->setText(tmpStr);
+
+  m_spikeTolerance->validator()->fixup(tmpStr.setNum(properties->spike_tolerance));
+  m_spikeTolerance->setText(tmpStr);
 
 }
 
@@ -151,5 +164,9 @@ void CWProjectTabAnalysis::apply(mediate_project_analysis_t *properties) const
 
   // default if not ok
   properties->convergenceCriterion = ok ? tmpDouble : 1.0e-4;
+
+  // spikes
+  tmpDouble = m_spikeTolerance->text().toDouble(&ok);
+  properties->spike_tolerance = ok ? tmpDouble : 999.9;
 
 }
