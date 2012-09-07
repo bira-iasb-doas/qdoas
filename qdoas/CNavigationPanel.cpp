@@ -46,7 +46,7 @@ QWidget* CNavigationPanel::helperBuildRecordEdit(void)
 
   QFontMetrics fm(m_recordEdit->font());
 
-  m_recordEdit->setFixedWidth(fm.width("00000")); // for a 4 digit line-edit
+  m_recordEdit->setFixedWidth(fm.width("00000000")); // for a 4 digit line-edit
   m_recordEdit->setToolTip("Goto record");
 
   QFrame *frame = new QFrame;
