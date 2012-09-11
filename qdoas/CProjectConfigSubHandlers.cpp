@@ -332,6 +332,9 @@ bool CProjectAnalysisSubHandler::start(const QXmlAttributes &atts)
   m_analysis->interpolationSecurityGap = atts.value("gap").toInt();
   m_analysis->maxIterations=atts.value("max_iterations").toInt();
   m_analysis->convergenceCriterion = atts.value("converge").toDouble();
+  if (atts.value("spike_tolerance") != "")
+    m_analysis->spike_tolerance = atts.value("spike_tolerance").toDouble();
+  atts.
 
   return true;
 }

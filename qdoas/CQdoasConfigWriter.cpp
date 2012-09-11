@@ -250,8 +250,13 @@ void CQdoasConfigWriter::writePropertiesAnalysis(FILE *fp, const mediate_project
   default:
     fprintf(fp, "\"invalid\"");
   }
-  fprintf(fp, " gap=\"%d\" converge=\"%g\" max_iterations=\"%d\" >\n", d->interpolationSecurityGap, d->convergenceCriterion,d->maxIterations);
-  fprintf(fp, "      <!-- method        : ODF ML+SVD -->\n"
+  fprintf(fp, " gap=\"%d\" converge=\"%g\" max_iterations=\"%d\" spike_tolerance=\"%g\" >\n",
+	  d->interpolationSecurityGap, 
+	  d->convergenceCriterion,
+	  d->maxIterations,
+	  d->spike_tolerance);
+  fprintf(fp,
+	  "      <!-- method        : ODF ML+SVD -->\n"
 	  "      <!-- fit           : none instr -->\n"
 	  "      <!-- unit          : pixel nm -->\n"
 	  "      <!-- interpolation : linear spline -->\n"
