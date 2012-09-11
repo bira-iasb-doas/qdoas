@@ -319,6 +319,7 @@ RC KURUCZ_Spectrum(double *oldLambda,double *newLambda,double *spectrum,double *
                                     spectrum,                                   // spectrum
                                     NULL,                                       // no error on previous spectrum
                                     solar,                                      // reference (Kurucz)
+				    NULL,
                                    &Square,                                     // returned stretch order 2
                                    &NIter[indexWindow],
                                    (double)1.,(double)1.))>0))

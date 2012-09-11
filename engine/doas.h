@@ -1017,7 +1017,7 @@ RC   ANALYSE_LinFit(SVD *pSvd,INT Npts,INT Degree,double *a,double *sigma,double
 void ANALYSE_SvdFree(DoasCh *callingFunctionShort,SVD *pSvd);
 RC   ANALYSE_SvdLocalAlloc(DoasCh *callingFunctionShort,SVD *pSvd);
 RC   ANALYSE_SvdInit(SVD *pSvd);
-RC   ANALYSE_CurFitMethod(INDEX indexFenoColumn,double *Spectre,double *SigmaSpec,double *Sref,double *Chisqr,INT *pNiter,double speNormFact,double refNormFact);
+RC   ANALYSE_CurFitMethod(INDEX indexFenoColumn,double *Spectre,double *SigmaSpec,double *Sref, double * residuals,double *Chisqr,INT *pNiter,double speNormFact,double refNormFact);
 void ANALYSE_ResetData(void);
 RC   ANALYSE_SetInit(ENGINE_CONTEXT *pEngineContext);
 RC   ANALYSE_AlignReference(ENGINE_CONTEXT *pEngineContext,INT refFlag,INT saveFlag,void *responseHandle,INDEX indexFenoColumn);

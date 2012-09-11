@@ -131,6 +131,7 @@
 // ===================
 
 #define ANALYSE_LONGPATH 0                                                      // !!! Anoop
+#define MAX_REPEAT_CURFIT 3
 
 ANALYSIS_WINDOWS  *ANLYS_windowsList;       // analysis windows list
 PROJECT *PRJCT_itemList;
@@ -229,6 +230,16 @@ INDEX analyseIndexRecord;
 // UTILITY FUNCTIONS
 // =================
 
+double average_magnitude(double * array)
+{
+  int i, j, k;
+  double average = 0.;
+  for (j = k = 0; j < Z; j++)
+   for (i = Fenetre[j][0]; i <= Fenetre[j][1]; i++, k++)
+    average += fabs(array[i]);
+  return average / k;
+}
+
 int exclude_pixel(int pixel, int (*fenetre)[2], int num_ranges)
 {
   int i;
@@ -278,7 +289,11 @@ int exclude_pixel(int pixel, int (*fenetre)[2], int num_ranges)
    windows,
 */
 
-BOOL remove_spikes(double *residuals, double max_residual, int (*spectral_windows)[2], int* pnum_windows)
+BOOL remove_spikes(double *residuals,
+		   double max_residual,
+		   int (*spectral_windows)[2], // updated to exclude pixels with spikes
+		   int* pnum_windows, // updated with the new number of spectral ranges after spike removal
+		   BOOL * spike_arr) // array to store value of residiuals for pixels with spikes
 {
   BOOL spikes = 0;
   int temp_windows[MAX_FEN][2];
@@ -293,6 +308,7 @@ BOOL remove_spikes(double *residuals, double max_residual, int (*spectral_window
        {
 	spikes = 1;
 	num_windows = exclude_pixel(pixel, temp_windows, num_windows);
+	spike_arr[pixel] = 1;
        }
      }
    }
@@ -302,6 +318,19 @@ BOOL remove_spikes(double *residuals, double max_residual, int (*spectral_window
     *pnum_windows = num_windows;
    }
   return spikes;
+}
+
+int reinit_analysis(FENO *pFeno) {
+  int dimL = 0;
+  int i;
+  for (i=0;i<Z;i++)
+   dimL += Fenetre[i][1] - Fenetre[i][0] + 1;
+  pFeno->svd.DimL = dimL;
+  pFeno->svd.Z = Z;
+  pFeno->Decomp = 1;
+  ANALYSE_SvdInit(&Feno->svd);
+  memcpy(ANALYSE_absolu, ANALYSE_zeros, sizeof(double) * NDET);
+  return 1;
 }
 
 void AnalyseGetFenoLim(FENO *pFeno,INDEX *pLimMin,INDEX *pLimMax)
@@ -2248,6 +2277,7 @@ RC ANALYSE_AlignReference(ENGINE_CONTEXT *pEngineContext,INT refFlag,INT saveFla
                                       Spectre,                     // etalon reference spectrum
                                       NULL,                        // error on raw spectrum
                                       Sref,                        // reference spectrum
+				      NULL,
                                      &Square,                      // returned stretch order 2
                                       NULL,                        // number of iterations in Curfit
                                      (double)1.,(double)1.))>=THREAD_EVENT_STOP))
@@ -3126,6 +3156,7 @@ RC ANALYSE_CurFitMethod(INDEX   indexFenoColumn,  // for OMI
                         double *Spectre,          // raw spectrum
                         double *SigmaSpec,        // error on raw spectrum
                         double *Sref,             // reference spectrum
+			double *residuals,        // pointer to store residuals (NULL if not needed)
                         double *Chisqr,           // chi square
                         INT    *pNiter,           // number of iterations
                         double  speNormFact,
@@ -3426,38 +3457,15 @@ RC ANALYSE_CurFitMethod(INDEX   indexFenoColumn,  // for OMI
       /*  Residual Computation  */
       /*  ====================  */
 
-      double av_residual = 0;
       for ( j=k=0; j<Z; j++ )
        for ( i=Fenetre[j][0]; i<=Fenetre[j][1]; i++, k++ )
         {
          ANALYSE_absolu[i]  =  (Yfit[k]-Y0[k]);
-	 av_residual += fabs(ANALYSE_absolu[i]);
          if (Feno->analysisMethod!=PRJCT_ANLYS_METHOD_SVD)
           ANALYSE_t[i]=(ANALYSE_tc[i]!=(double)0.)?(double)1.+ANALYSE_absolu[i]/ANALYSE_tc[i]:(double)0.;
         }
-      av_residual /= k;
-
-      if ( !Feno->hidden
-           &&remove_spikes(ANALYSE_absolu, av_residual * pAnalysisOptions->spike_tolerance , Fenetre, &Z))
-       { // in case spikes were found, redo the analysis with the new set of spectral windows (which excludes these pixels)
-	int dimL = 0;
-	for (i=0;i<Z;i++)
-	 dimL += Fenetre[i][1] - Fenetre[i][0] + 1;
-	Feno->svd.DimL = dimL;
-	Feno->svd.Z = Z;
-	Feno->Decomp = 1;
-	ANALYSE_SvdInit(&Feno->svd);
-	memcpy(ANALYSE_absolu, ANALYSE_zeros, sizeof(double) * NDET);
-	rc  = ANALYSE_CurFitMethod(indexFenoColumn,
-				   Spectre,
-				   SigmaSpec,
-				   Sref,
-				   Chisqr,
-				   pNiter,
-				   speNormFact,
-				   refNormFact);
-	goto EndCurFitMethod;
-       }
+      if (residuals != NULL)
+       memcpy(residuals,ANALYSE_absolu, NDET * sizeof(double));
 
       scalingFactor=(pAnalysisOptions->fitWeighting==PRJCT_ANLYS_FIT_WEIGHTING_NONE)?(*Chisqr):(double)1.;
 
@@ -3940,19 +3948,33 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 /*             ((Feno->useKurucz==ANLYS_KURUCZ_REF_AND_SPEC) &&
             (((rc=SPLINE_Deriv2(LambdaK,Spectre,SplineSpec,NDET,"Spline(Spectre) "))!=ERROR_ID_NO) ||
              ((rc=SPLINE_Vector(LambdaK,Spectre,SplineSpec,NDET,Lambda,SpectreK,NDET,pAnalysisOptions->interpol,"ANALYSE_Spectrum "))!=ERROR_ID_NO))) || */
-          if ((rc=ANALYSE_CurFitMethod(indexFenoColumn,
-                                      (Feno->useKurucz==ANLYS_KURUCZ_REF_AND_SPEC)?SpectreK:Spectre,     // raw spectrum
-                                      (pRecord->useErrors)?pBuffers->sigmaSpec:NULL,                     // error on raw spectrum
-                                       Sref,                                                             // reference spectrum
-                                      &Feno->chiSquare,                                                  // returned stretch order 2
-                                      &Niter,
-                                      speNormFact,
-                                      Feno->refNormFact))==THREAD_EVENT_STOP)                                       // number of iterations in Curfit
+	  double residuals[NDET];
+	  memcpy(residuals, ANALYSE_zeros, NDET * sizeof(double));
+	  BOOL spikes[NDET];
+	  for(i = 0; i<NDET;i++)
+	   spikes[i] = 0;
+	  double av_residual = 0;
+	  int num_repeats = 0;
+	  do {
+	   if ((rc=ANALYSE_CurFitMethod(indexFenoColumn,
+					(Feno->useKurucz==ANLYS_KURUCZ_REF_AND_SPEC)?SpectreK:Spectre,     // raw spectrum
+					(pRecord->useErrors)?pBuffers->sigmaSpec:NULL,                     // error on raw spectrum
+					Sref,                                                             // reference spectrum
+					residuals,
+					&Feno->chiSquare,                                                  // returned stretch order 2
+					&Niter,
+					speNormFact,
+					Feno->refNormFact))==THREAD_EVENT_STOP)                                       // number of iterations in Curfit
 
-           goto EndAnalysis;  // !!!! Bypass the DEBUG_Stop
+	    goto EndAnalysis;  // !!!! Bypass the DEBUG_Stop
 
-          else if (rc>THREAD_EVENT_STOP)
-           Feno->rc=rc;
+	   else if (rc>THREAD_EVENT_STOP)
+	    Feno->rc=rc;
+	   av_residual = average_magnitude(residuals);
+	  } while ( !Feno->hidden // no spike removal for calibration
+		    && remove_spikes(residuals, av_residual * pAnalysisOptions->spike_tolerance, Fenetre, &Z, spikes)
+		    && (++num_repeats < MAX_REPEAT_CURFIT)
+		    && reinit_analysis(Feno));
 
           #if defined(__DEBUG_) && __DEBUG_
           DEBUG_Stop("Test");
@@ -4161,24 +4183,33 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
           if (displayFlag && saveFlag)
            {
-           	indexLine=Feno->displayLineIndex;
-            indexColumn=2;
+	    indexLine = Feno->displayLineIndex;
+	    indexColumn=2;
 
-           	mediateResponseCellDataString(indexPage,indexLine,indexColumn,tabTitle,responseHandle);
+	    mediateResponseCellDataString(indexPage,indexLine,indexColumn,tabTitle,responseHandle);
 
-            indexLine+=2;
+	    indexLine +=2;
+	    if(num_repeats) {
+	     mediateResponseCellInfoNoLabel(indexPage,indexLine,indexColumn,responseHandle,
+					    "Spike removal: the following pixels were excluded after %d iterations",num_repeats);
+	     for (i = 0; i< NDET; i++)
+	      if(spikes[i])
+	       mediateResponseCellInfoNoLabel(indexPage,indexLine++,indexColumn+1, responseHandle,"%d",i);
 
-           	mediateResponseCellInfo(indexPage,indexLine++,indexColumn,responseHandle,"OD ChiSquare","%.5le",Feno->chiSquare);
-           	mediateResponseCellInfo(indexPage,indexLine++,indexColumn,responseHandle,"RMS Residual","%.5le",Feno->RMS);
-           	mediateResponseCellInfo(indexPage,indexLine,indexColumn,responseHandle,"Iterations","%d",Niter);
-
-           	indexLine+=2;
-
-           	mediateResponseCellDataString(indexPage,indexLine,indexColumn+1,"[CONC/Param]",responseHandle);
-           	mediateResponseCellDataString(indexPage,indexLine,indexColumn+2,"Shift",responseHandle);
-           	mediateResponseCellDataString(indexPage,indexLine,indexColumn+3,"Stretch",responseHandle);
-
-           	indexLine++;
+	     indexLine++;
+	    }
+	    	    
+	    mediateResponseCellInfo(indexPage,indexLine++,indexColumn,responseHandle,"OD ChiSquare","%.5le",Feno->chiSquare);
+	    mediateResponseCellInfo(indexPage,indexLine++,indexColumn,responseHandle,"RMS Residual","%.5le",Feno->RMS);
+	    mediateResponseCellInfo(indexPage,indexLine,indexColumn,responseHandle,"Iterations","%d",Niter);
+	    
+	    indexLine+=2;
+	    
+	    mediateResponseCellDataString(indexPage,indexLine,indexColumn+1,"[CONC/Param]",responseHandle);
+	    mediateResponseCellDataString(indexPage,indexLine,indexColumn+2,"Shift",responseHandle);
+	    mediateResponseCellDataString(indexPage,indexLine,indexColumn+3,"Stretch",responseHandle);
+	    
+	    indexLine++;
 
             for (i=0;i<Feno->NTabCross;i++)
              {
