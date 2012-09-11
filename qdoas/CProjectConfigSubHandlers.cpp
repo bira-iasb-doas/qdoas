@@ -334,7 +334,6 @@ bool CProjectAnalysisSubHandler::start(const QXmlAttributes &atts)
   m_analysis->convergenceCriterion = atts.value("converge").toDouble();
   if (atts.value("spike_tolerance") != "")
     m_analysis->spike_tolerance = atts.value("spike_tolerance").toDouble();
-  atts.
 
   return true;
 }
