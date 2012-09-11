@@ -1634,11 +1634,12 @@ RC OMI_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,INDEX fileIndex)
      	pRecord->Azimuth=pGeo->solarAzimuthAngle[recordNo-1];
      	pRecord->zenithViewAngle=pGeo->viewingZenithAngle[recordNo-1];
      	pRecord->azimuthViewAngle=pGeo->viewingAzimuthAngle[recordNo-1];
+     	pRecord->useErrors=1;                                                     // Errors are available for OMI
 
      	// Complete information on the current spectrum
 
      	pRecord->omi.omiSwathIndex=indexSwath+1;                                  // index of the current swath
-     	pRecord->omi.omiRowIndex=indexSpectrum+1;                                // index of the current spectrum in the current swath
+     	pRecord->omi.omiRowIndex=indexSpectrum+1;                                 // index of the current spectrum in the current swath
 
      	OMI_FromTAI1993ToYMD((double)pGeo->time[indexSwath],&pRecord->present_day,&pRecord->present_time,&OMI_ms);
 
