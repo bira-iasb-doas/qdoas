@@ -243,6 +243,7 @@ double average_magnitude(double * array)
 int exclude_pixel(int pixel, int (*fenetre)[2], int num_ranges)
 {
   int i;
+
   for (i = 0; i < num_ranges; i++)
    {
     if (fenetre[i][0] <= pixel && fenetre[i][1] >= pixel) // look for the window containing the current pixel
@@ -2623,7 +2624,7 @@ RC ANALYSE_Function ( double *lambda,double *X, double *Y, INT ndet, double *Y0,
            if ((Feno->amfFlag && ((rc=OUTPUT_GetWveAmf(&Feno->TabCrossResults[i],ZM,Lambda,ANALYSE_xsTrav,ANALYSE_xsTrav2))!=0)) ||
 
            // ---------------------------------------
-           // Wavelength alignment for cross sections
+           // Wavelength alignment (AMF) for cross sections
            // ---------------------------------------
 
               (!strcasecmp(WorkSpace[pTabCross->Comp].symbolName,"O3TD") &&
@@ -2777,7 +2778,7 @@ RC ANALYSE_Function ( double *lambda,double *X, double *Y, INT ndet, double *Y0,
     // ========
 
     // ---------------------------------
-    // Wavelength alignment for spectrum
+    // Wavelength alignment (shift option in Shift and stretch page) for spectrum
     // ---------------------------------
 
     if (((rc=ShiftVector(LambdaSpec,X /* (0:NDET-1) */,SplineSpec /* (0:NDET-1) */,newXsTrav /* (0:NDET-1) */,
@@ -2877,7 +2878,7 @@ RC ANALYSE_Function ( double *lambda,double *X, double *Y, INT ndet, double *Y0,
     // =========
 
     // ----------------------------------
-    // Wavelength alignment for reference
+    // Wavelength alignment (shift) for reference
     // ----------------------------------
 
     if ((rc=ShiftVector(ANALYSE_splineX,Y,SplineRef,newXsTrav,
@@ -4198,17 +4199,17 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
 	     indexLine++;
 	    }
-	    	    
+
 	    mediateResponseCellInfo(indexPage,indexLine++,indexColumn,responseHandle,"OD ChiSquare","%.5le",Feno->chiSquare);
 	    mediateResponseCellInfo(indexPage,indexLine++,indexColumn,responseHandle,"RMS Residual","%.5le",Feno->RMS);
 	    mediateResponseCellInfo(indexPage,indexLine,indexColumn,responseHandle,"Iterations","%d",Niter);
-	    
+
 	    indexLine+=2;
-	    
+
 	    mediateResponseCellDataString(indexPage,indexLine,indexColumn+1,"[CONC/Param]",responseHandle);
 	    mediateResponseCellDataString(indexPage,indexLine,indexColumn+2,"Shift",responseHandle);
 	    mediateResponseCellDataString(indexPage,indexLine,indexColumn+3,"Stretch",responseHandle);
-	    
+
 	    indexLine++;
 
             for (i=0;i<Feno->NTabCross;i++)

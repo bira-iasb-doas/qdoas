@@ -170,6 +170,10 @@ bool CSelectorSubHandler::start(const QString &element, const QXmlAttributes &at
     d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_OMI_INDEX_SWATH;
   else if (str == "omi_index_row")
     d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_OMI_INDEX_ROW;
+  else if (str == "omi_groundp_qf")
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_OMI_GROUNDP_QF;
+  else if (str == "omi_xtrack_qf")
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_OMI_XTRACK_QF;
   else if (str == "servo_byte_sent")
     d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_UAV_SERVO_BYTE_SENT;
   else if (str == "servo_byte_received")

@@ -133,6 +133,8 @@ CWOutputSelector::CWOutputSelector(const data_select_list_t *d, QWidget *parent)
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_SATURATED,              "Saturated flag"           ));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_OMI_INDEX_SWATH,        "Index of the swath"           ));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_OMI_INDEX_ROW,          "Index of the row in the swath"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_OMI_GROUNDP_QF,         "Ground pixel quality flags"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_OMI_XTRACK_QF,          "Xtrack quality flags"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_UAV_SERVO_BYTE_SENT,    "Servo position byte sent"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_UAV_SERVO_BYTE_RECEIVED,"Servo position byte received"));
 
@@ -558,6 +560,8 @@ void getValidFieldFlags(int *validFlags, int instrument)
       validFlags[PRJCT_RESULTS_ASCII_LOS_AZIMUTH]=1;
       validFlags[PRJCT_RESULTS_ASCII_OMI_INDEX_SWATH]=1;
       validFlags[PRJCT_RESULTS_ASCII_OMI_INDEX_ROW]=1;
+      validFlags[PRJCT_RESULTS_ASCII_OMI_GROUNDP_QF]=1;
+      validFlags[PRJCT_RESULTS_ASCII_OMI_XTRACK_QF]=1;
      }
     break;
  // ----------------------------------------------------------------------------

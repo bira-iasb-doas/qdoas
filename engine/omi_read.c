@@ -70,6 +70,7 @@ typedef struct _omi_geo
   float          *viewingAzimuthAngle;
   short          *terrainHeight;
   unsigned short *groundPixelQualityFlags;
+  uint8_t        *xtrackQualityFlags;
  }
 OMI_GEO;
 
@@ -352,7 +353,9 @@ void OMI_ReleaseBuffers(void)
    	if (pOrbitFile->omiSwath.geolocationFields.terrainHeight!=NULL)
    	 MEMORY_ReleaseBuffer("OMI_ReleaseBuffers","terrainHeight",pOrbitFile->omiSwath.geolocationFields.terrainHeight);
    	if (pOrbitFile->omiSwath.geolocationFields.groundPixelQualityFlags!=NULL)
-   	 MEMORY_ReleaseBuffer("OMI_ReleaseBuffers","terrainHeight",pOrbitFile->omiSwath.geolocationFields.groundPixelQualityFlags);
+   	 MEMORY_ReleaseBuffer("OMI_ReleaseBuffers","groundPixelQualityFlags",pOrbitFile->omiSwath.geolocationFields.groundPixelQualityFlags);
+   	if (pOrbitFile->omiSwath.geolocationFields.xtrackQualityFlags!=NULL)
+   	 MEMORY_ReleaseBuffer("OMI_ReleaseBuffers","xtrackQualityFlags",pOrbitFile->omiSwath.geolocationFields.xtrackQualityFlags);
 
  	  // Close the current file
 
@@ -489,7 +492,8 @@ RC OMI_AllocateSwath(OMI_SWATH *pSwath,int nSwaths,int nSpectra)
  	    ((pGeo->viewingZenithAngle=(float *)MEMORY_AllocBuffer("OMI_AllocateSwath","viewingZenithAngle",nRecords,sizeof(float),0,MEMORY_TYPE_FLOAT))==NULL) ||
  	    ((pGeo->viewingAzimuthAngle=(float *)MEMORY_AllocBuffer("OMI_AllocateSwath","viewingAzimuthAngle",nRecords,sizeof(float),0,MEMORY_TYPE_FLOAT))==NULL) ||
  	    ((pGeo->terrainHeight=(short *)MEMORY_AllocBuffer("OMI_AllocateSwath","terrainHeight",nRecords,sizeof(short),0,MEMORY_TYPE_SHORT))==NULL) ||
- 	    ((pGeo->groundPixelQualityFlags=(unsigned short *)MEMORY_AllocBuffer("OMI_AllocateSwath","groundPixelQualityFlags",nRecords,sizeof(unsigned short),0,MEMORY_TYPE_USHORT))==NULL))
+ 	    ((pGeo->groundPixelQualityFlags=(unsigned short *)MEMORY_AllocBuffer("OMI_AllocateSwath","groundPixelQualityFlags",nRecords,sizeof(unsigned short),0,MEMORY_TYPE_USHORT))==NULL) ||
+ 	    ((pGeo->xtrackQualityFlags=(uint8_t *)MEMORY_AllocBuffer("OMI_AllocateSwath","xtrackQualityFlags",nRecords,sizeof(unsigned short),0,MEMORY_TYPE_STRING))==NULL))
 
  	 rc=ERROR_ID_ALLOC;
 
@@ -651,8 +655,10 @@ RC OmiGetSwathGeolocation(OMI_ORBIT_FILE *pOrbitFile) // ,INDEX indexTrack,INDEX
          omiPathViewingZenithAngle[MAX_STR_LEN+1],
          omiPathViewingAzimuthAngle[MAX_STR_LEN+1],
          omiPathTerrainHeight[MAX_STR_LEN+1],
-         omiPathGroundPixelQualityFlags[MAX_STR_LEN+1];
+         omiPathGroundPixelQualityFlags[MAX_STR_LEN+1],
+         omiPathXtrackQualityFlags[MAX_STR_LEN+1];
   RC    rc;                                                                     // return code
+  int   i,nRecords;
 
   // Initializations
 
@@ -674,6 +680,7 @@ RC OmiGetSwathGeolocation(OMI_ORBIT_FILE *pOrbitFile) // ,INDEX indexTrack,INDEX
   sprintf(omiPathViewingAzimuthAngle,"/%s/Geolocation_Fields/ViewingAzimuthAngle",pOrbitFile->omiSwathName);
   sprintf(omiPathTerrainHeight,"/%s/Geolocation_Fields/TerrainHeight",pOrbitFile->omiSwathName);
   sprintf(omiPathGroundPixelQualityFlags,"/%s/Geolocation_Fields/GroundPixelQualityFlags",pOrbitFile->omiSwathName);
+  sprintf(omiPathXtrackQualityFlags,"/%s/Geolocation_Fields/xtrackQualityFlags",pOrbitFile->omiSwathName);
 
   // Time
 
@@ -765,6 +772,14 @@ RC OmiGetSwathGeolocation(OMI_ORBIT_FILE *pOrbitFile) // ,INDEX indexTrack,INDEX
    rc=ERROR_SetLast("OmiGetSwathGeolocation",ERROR_TYPE_WARNING,ERROR_ID_BEAT,"OmiGetSwathGeolocation",pOrbitFile->omiFileName,"Can not access Geolocation_Fields\\GroundPixelQualityFlags");
   else if (coda_cursor_read_uint16_array(&pOrbitFile->omiCursor,pGeo->groundPixelQualityFlags,coda_array_ordering_c)!=0)
    rc=ERROR_SetLast("OmiGetSwathGeolocation",ERROR_TYPE_WARNING,ERROR_ID_BEAT,"OmiGetSwathGeolocation",pOrbitFile->omiFileName,"Can not read Geolocation_Fields\\GroundPixelQualityFlags");
+
+  // xtrack Quality flags
+
+  else if (coda_cursor_goto(&pOrbitFile->omiCursor,omiPathXtrackQualityFlags)!=0)                         // xtrack quality flags not present in old versions of files
+   for (i=0,nRecords=pOrbitFile->omiNumberOfSwaths*pOrbitFile->omiNumberOfSpectraPerSwath;i<nRecords;i++)
+    pGeo->xtrackQualityFlags[i]=(uint8_t)0;
+  else if (coda_cursor_read_uint8_array(&pOrbitFile->omiCursor,pGeo->xtrackQualityFlags,coda_array_ordering_c)!=0)
+   rc=ERROR_SetLast("OmiGetSwathGeolocation",ERROR_TYPE_WARNING,ERROR_ID_BEAT,"OmiGetSwathGeolocation",pOrbitFile->omiFileName,"Can not read Geolocation_Fields\\xtrackQualityFlags");
 
   // Return
 
@@ -1640,6 +1655,8 @@ RC OMI_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,INDEX fileIndex)
 
      	pRecord->omi.omiSwathIndex=indexSwath+1;                                  // index of the current swath
      	pRecord->omi.omiRowIndex=indexSpectrum+1;                                 // index of the current spectrum in the current swath
+     	pRecord->omi.omiGroundPQF=(DoasUS)pGeo->groundPixelQualityFlags[recordNo-1];          // ground pixel quality flag
+     	pRecord->omi.omiXtrackQF=(DoasUS)pGeo->xtrackQualityFlags[recordNo-1];                // xtrack quality flag
 
      	OMI_FromTAI1993ToYMD((double)pGeo->time[indexSwath],&pRecord->present_day,&pRecord->present_time,&OMI_ms);
 

@@ -251,7 +251,7 @@ void CQdoasConfigWriter::writePropertiesAnalysis(FILE *fp, const mediate_project
     fprintf(fp, "\"invalid\"");
   }
   fprintf(fp, " gap=\"%d\" converge=\"%g\" max_iterations=\"%d\" spike_tolerance=\"%g\" >\n",
-	  d->interpolationSecurityGap, 
+	  d->interpolationSecurityGap,
 	  d->convergenceCriterion,
 	  d->maxIterations,
 	  d->spike_tolerance);
@@ -1549,6 +1549,8 @@ void CQdoasConfigWriter::writeDataSelectList(FILE *fp, const data_select_list_t 
     case PRJCT_RESULTS_ASCII_SATURATED : fprintf(fp,"saturated"); break;
     case PRJCT_RESULTS_ASCII_OMI_INDEX_SWATH : fprintf(fp,"omi_index_swath"); break;
     case PRJCT_RESULTS_ASCII_OMI_INDEX_ROW : fprintf(fp,"omi_index_row"); break;
+    case PRJCT_RESULTS_ASCII_OMI_GROUNDP_QF : fprintf(fp,"omi_groundp_qf"); break;
+    case PRJCT_RESULTS_ASCII_OMI_XTRACK_QF		: fprintf(fp,"omi_xtrack_qf"); break;
     case PRJCT_RESULTS_ASCII_UAV_SERVO_BYTE_SENT :      fprintf(fp, "servo_byte_sent"); break;
     case PRJCT_RESULTS_ASCII_UAV_SERVO_BYTE_RECEIVED :      fprintf(fp, "servo_byte_received"); break;
 

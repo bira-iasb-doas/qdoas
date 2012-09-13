@@ -144,6 +144,10 @@ int mediateRequestDisplaySpecInfo(void *engineContext,int page,void *responseHan
      mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Index of swath","%d",pRecord->omi.omiSwathIndex);
     if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_OMI_INDEX_ROW])
      mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Index of row","%d",pRecord->omi.omiRowIndex);
+    if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_OMI_GROUNDP_QF])
+     mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"GroundPixel QF","%d",pRecord->omi.omiGroundPQF);
+    if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_OMI_XTRACK_QF])
+     mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"XTrack QF","%d",pRecord->omi.omiXtrackQF);
    }
   else
    mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Record","%d/%d",pEngineContext->indexRecord,pEngineContext->recordNumber);
@@ -1138,17 +1142,17 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
     break;
 	// ----------------------------------------------------------------------------
 	   case PRJCT_INSTR_FORMAT_OMI :                                                               // GOME ASCII format
-	     
+
 	     NDET=1024;                                                                                  // Could be reduced by Set function
-	     
+
 	     memset(pEngineInstrumental->omi.omiTracks,0,sizeof(int)*MAX_SWATHSIZE);
-	     
+
 	     strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->omi.calibrationFile);     // calibration file
 	     strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->omi.instrFunctionFile);     // instrumental function file
-	     
+
 	     pEngineInstrumental->omi.spectralType=pMediateInstrumental->omi.spectralType;
 	     pEngineInstrumental->omi.averageFlag=pMediateInstrumental->omi.flagAverage;
-	     
+
 	     OMI_TrackSelection((DoasCh *)pMediateInstrumental->omi.trackSelection,pEngineInstrumental->omi.omiTracks);
 
     break;

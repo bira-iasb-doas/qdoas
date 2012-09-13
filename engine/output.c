@@ -167,6 +167,8 @@ PRJCT_RESULTS_FIELDS PRJCT_resultsAscii[PRJCT_RESULTS_ASCII_MAX]=
   { "Saturated"                       , MEMORY_TYPE_USHORT, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_SATURATED
   { "OMI index swath"                 , MEMORY_TYPE_INT   , sizeof(INT)   , ITEM_NONE, ITEM_NONE, "%#6d"      },       // PRJCT_RESULTS_ASCII_OMI_INDEX_SWATH,
   { "OMI index row"                   , MEMORY_TYPE_INT   , sizeof(int)   , ITEM_NONE, ITEM_NONE, "%#3d"      },       // PRJCT_RESULTS_ASCII_OMI_INDEX_ROW
+  { "OMI groundpixel quality flag"    , MEMORY_TYPE_USHORT, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#6d"      },       // PRJCT_RESULTS_ASCII_OMI_INDEX_GROUNDP_QF,
+  { "OMI xtrack quality flag"         , MEMORY_TYPE_USHORT, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#6d"      },       // PRJCT_RESULTS_ASCII_OMI_INDEX_XTRACK_QF,
   { "UAV servo sent position byte"    , MEMORY_TYPE_USHORT, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#3d"      },       // PRJCT_RESULTS_ASCII_UAV_SERVO_BYTE_SENT
   { "UAV servo received position byte", MEMORY_TYPE_USHORT, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#3d"      }        // PRJCT_RESULTS_ASCII_UAV_SERVO_BYTE_RECEIVED
  };
@@ -1875,6 +1877,14 @@ void OutputSaveRecord(ENGINE_CONTEXT *pEngineContext,INT hiddenFlag,INDEX indexF
      // ---------------------------------------------------------------------
         case PRJCT_RESULTS_ASCII_OMI_INDEX_ROW :
          ((INT *)outputColumns[indexColumn++])[indexRecord]=(INT)pRecordInfo->omi.omiRowIndex;
+        break;
+     // ---------------------------------------------------------------------
+        case PRJCT_RESULTS_ASCII_OMI_GROUNDP_QF :
+         ((DoasUS *)outputColumns[indexColumn++])[indexRecord]=(DoasUS)pRecordInfo->omi.omiGroundPQF;
+        break;
+     // ---------------------------------------------------------------------
+        case PRJCT_RESULTS_ASCII_OMI_XTRACK_QF :
+         ((DoasUS *)outputColumns[indexColumn++])[indexRecord]=(DoasUS)pRecordInfo->omi.omiXtrackQF;
         break;
      // ---------------------------------------------------------------------
         case PRJCT_RESULTS_ASCII_UAV_SERVO_BYTE_SENT :

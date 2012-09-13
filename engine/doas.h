@@ -637,10 +637,12 @@ GOME2_DATA;
 
 typedef struct _omi
  {
- 	INDEX omiSwathIndex;                                                          // index of the swath
- 	INDEX omiRowIndex;                                                            // index of the current row in the current swath
- 	int   omiNumberOfSwaths,                                                      // total number of tracks
- 	      omiNumberOfRows;                                             // total number of spectra in tracks
+ 	INDEX  omiSwathIndex;                                                         // index of the swath
+ 	INDEX  omiRowIndex;                                                           // index of the current row in the current swath
+ 	DoasUS omiGroundPQF;                                                          // ground pixel quality flags
+ 	DoasUS omiXtrackQF;                                                           // xtrack quality flags
+ 	int    omiNumberOfSwaths,                                                     // total number of tracks
+ 	       omiNumberOfRows;                                                       // total number of spectra in tracks
  }
 OMI_DATA;
 
