@@ -1,0 +1,16 @@
+List of requested changes:
+--------------------------
+
+- allow analysis to continue after spike removal causes a "square root error"
+
+- Save pixels with residual spikes to output file
+
+- restore analysis windows to previous state after processing a spectrum with a spike
+
+- use OMI pixel quality flags when reading data
+
+- improve spike removal (also remove pixel before & after spike?)
+
+- improve plots: display (spectrum + offset) vs reference
+
+- improve plots: don't plot gaps
