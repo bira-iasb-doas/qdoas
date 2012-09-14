@@ -19,3 +19,9 @@ Documentation
 -------------
 
 T/C - Conversion Doc -> Latex
+
+Tests
+-----
+
+C - Force sqrt warning error in ANALYSE_SvdInit and try on ground-based applications.
+C - use the new program in automatic ground-based processes
