@@ -2047,7 +2047,7 @@ RC ANALYSE_SvdInit(SVD *pSvd)
       if ((norm1<=(double)0.) || (norm2<=(double)0.) ||
           (StretchFact1<=(double)0.) || (StretchFact2<=(double)0.))
 
-       rc=ERROR_SetLast("SvdInit",ERROR_TYPE_FATAL,ERROR_ID_SQRT_ARG);
+       rc=ERROR_SetLast("SvdInit",ERROR_TYPE_WARNING,ERROR_ID_SQRT_ARG); // WARNING instead of FATAL so we can continue with other spectra
 
       else
        {

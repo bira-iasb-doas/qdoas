@@ -1,8 +1,6 @@
 List of requested changes:
 --------------------------
 
-T - allow analysis to continue after spike removal causes a "square root error"
-
 T - Save pixels with residual spikes to output file
 
 T/C - restore analysis windows to previous state after processing a spectrum with a spike
@@ -25,3 +23,8 @@ Tests
 
 C - Force sqrt warning error in ANALYSE_SvdInit and try on ground-based applications.
 C - use the new program in automatic ground-based processes
+
+Done
+----
+
+17/09/2012 - allow analysis to continue after spike removal causes a "square root error"
