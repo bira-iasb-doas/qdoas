@@ -23,6 +23,7 @@ Tests
 
 C - Force sqrt warning error in ANALYSE_SvdInit and try on ground-based applications.
 C - use the new program in automatic ground-based processes
+C/T - test doas_cl on MiniDOAS files
 
 Done
 ----
