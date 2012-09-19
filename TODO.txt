@@ -7,6 +7,8 @@ T/C - restore analysis windows to previous state after processing a spectrum wit
 
 C - use OMI pixel quality flags when reading data
 
+- add "goodness of fit" chi²/(instrumental error) to the output when this makes sense
+
 - improve spike removal (also remove pixel before & after spike?)
 
 - improve plots: display (spectrum + offset) vs reference
