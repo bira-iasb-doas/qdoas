@@ -949,8 +949,9 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   default:
     fprintf(fp, "\"invalid\"");
   }
-  fprintf(fp, " min=\"%.1f\" max=\"%.1f\" ave=\"%s\" trackSelection=\"%s\"",
-	  d->omi.minimumWavelength, d->omi.maximumWavelength, (d->omi.flagAverage ? sTrue : sFalse),d->omi.trackSelection);
+  fprintf(fp, " min=\"%.1f\" max=\"%.1f\" ave=\"%s\" trackSelection=\"%s\" pixelQF_rejectionFlag=\"%s\" pixelQF_maxGaps=\"%d\" pixelQF_mask=\"%d\"",
+	  d->omi.minimumWavelength, d->omi.maximumWavelength, (d->omi.flagAverage ? sTrue : sFalse),d->omi.trackSelection,
+	  (d->omi.pixelQFRejectionFlag ? sTrue : sFalse),d->omi.pixelQFMaxGaps,d->omi.pixelQFMask);
 
   tmpStr = pathMgr->simplifyPath(QString(d->omi.calibrationFile));
   fprintf(fp, " calib=\"%s\"", tmpStr.toAscii().constData());
@@ -1551,6 +1552,8 @@ void CQdoasConfigWriter::writeDataSelectList(FILE *fp, const data_select_list_t 
     case PRJCT_RESULTS_ASCII_OMI_INDEX_ROW : fprintf(fp,"omi_index_row"); break;
     case PRJCT_RESULTS_ASCII_OMI_GROUNDP_QF : fprintf(fp,"omi_groundp_qf"); break;
     case PRJCT_RESULTS_ASCII_OMI_XTRACK_QF		: fprintf(fp,"omi_xtrack_qf"); break;
+    case PRJCT_RESULTS_ASCII_OMI_PIXELS_QF		: fprintf(fp,"omi_pixels_qf"); break;
+    case PRJCT_RESULTS_ASCII_SPIKES: fprintf(fp,"spike_pixels"); break;
     case PRJCT_RESULTS_ASCII_UAV_SERVO_BYTE_SENT :      fprintf(fp, "servo_byte_sent"); break;
     case PRJCT_RESULTS_ASCII_UAV_SERVO_BYTE_RECEIVED :      fprintf(fp, "servo_byte_received"); break;
 

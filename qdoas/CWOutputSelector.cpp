@@ -135,6 +135,8 @@ CWOutputSelector::CWOutputSelector(const data_select_list_t *d, QWidget *parent)
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_OMI_INDEX_ROW,          "Index of the row in the swath"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_OMI_GROUNDP_QF,         "Ground pixel quality flags"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_OMI_XTRACK_QF,          "Xtrack quality flags"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_OMI_PIXELS_QF,          "Rejected pixels based on quality flags"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_SPIKES,                 "Pixels with spikes in residual"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_UAV_SERVO_BYTE_SENT,    "Servo position byte sent"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ASCII_UAV_SERVO_BYTE_RECEIVED,"Servo position byte received"));
 
@@ -305,7 +307,8 @@ void getValidFieldFlags(int *validFlags, int instrument)
   validFlags[PRJCT_RESULTS_ASCII_ITER]=
   validFlags[PRJCT_RESULTS_ASCII_COVAR]=
   validFlags[PRJCT_RESULTS_ASCII_CORR]=
-  validFlags[PRJCT_RESULTS_ASCII_TINT]=1;                                       // the integration time
+  validFlags[PRJCT_RESULTS_ASCII_TINT]=                                         // the integration time
+  validFlags[PRJCT_RESULTS_ASCII_SPIKES]=1;
 
   validFlags[PRJCT_RESULTS_ASCII_REFZM]=(satelliteFlag)?0:1;                    // in automatic reference selection, the solar zenith angle of the reference spectrum
   validFlags[PRJCT_RESULTS_ASCII_SKY]=0;                                        // information on the sky (never used except EASOE campaign, 1991 !)                                      // for satellite measurements, several spectra are averaged
@@ -562,6 +565,7 @@ void getValidFieldFlags(int *validFlags, int instrument)
       validFlags[PRJCT_RESULTS_ASCII_OMI_INDEX_ROW]=1;
       validFlags[PRJCT_RESULTS_ASCII_OMI_GROUNDP_QF]=1;
       validFlags[PRJCT_RESULTS_ASCII_OMI_XTRACK_QF]=1;
+      validFlags[PRJCT_RESULTS_ASCII_OMI_PIXELS_QF]=1;
      }
     break;
  // ----------------------------------------------------------------------------

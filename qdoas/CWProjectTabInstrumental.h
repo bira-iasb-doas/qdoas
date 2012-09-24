@@ -454,6 +454,9 @@ class CWInstrOmiEdit : public CWCalibInstrEdit
   QComboBox *m_spectralTypeCombo;
   QLineEdit *m_minLambdaEdit, *m_maxLambdaEdit,*m_trackSelection;
   QCheckBox *m_averageCheck;
+  QCheckBox *m_pixelQFCheck;
+  QLineEdit *m_pixelQFMaskEdit;
+  QLineEdit *m_pixelQFMaxGapsEdit;
 };
 
 //--------------------------------------------------------------------------

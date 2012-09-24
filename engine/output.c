@@ -71,6 +71,7 @@
 //  OUTPUT FUNCTIONS
 //  ================
 //
+//  write - generate a string containing a list of all pixels with spikes
 //  OutputBuildSiteFileName - build the output file name using the selected observation site;
 //  OutputBuildFileName - for satellites measurements, build automatically a file name
 //                        for output and create a directory structure;
@@ -95,6 +96,7 @@
 //  ----------------------------------------------------------------------------
 
 #include "engine.h"
+#include <string.h>
 
 PRJCT_RESULTS_FIELDS PRJCT_resultsAscii[PRJCT_RESULTS_ASCII_MAX]=
  {
@@ -169,6 +171,8 @@ PRJCT_RESULTS_FIELDS PRJCT_resultsAscii[PRJCT_RESULTS_ASCII_MAX]=
   { "OMI index row"                   , MEMORY_TYPE_INT   , sizeof(int)   , ITEM_NONE, ITEM_NONE, "%#3d"      },       // PRJCT_RESULTS_ASCII_OMI_INDEX_ROW
   { "OMI groundpixel quality flag"    , MEMORY_TYPE_USHORT, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#6d"      },       // PRJCT_RESULTS_ASCII_OMI_INDEX_GROUNDP_QF,
   { "OMI xtrack quality flag"         , MEMORY_TYPE_USHORT, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#6d"      },       // PRJCT_RESULTS_ASCII_OMI_INDEX_XTRACK_QF,
+  { "OMI rejected pixels based on QF" , MEMORY_TYPE_STRING, 50            , ITEM_NONE, ITEM_NONE, "%s"        },       // PRJCT_RESULTS_ASCII_OMI_PIXELS_QF
+  { "Pixels with spikes"              , MEMORY_TYPE_STRING, 50            , ITEM_NONE, ITEM_NONE, "%s"        },       //   PRJCT_RESULTS_ASCII_SPIKES,
   { "UAV servo sent position byte"    , MEMORY_TYPE_USHORT, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#3d"      },       // PRJCT_RESULTS_ASCII_UAV_SERVO_BYTE_SENT
   { "UAV servo received position byte", MEMORY_TYPE_USHORT, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#3d"      }        // PRJCT_RESULTS_ASCII_UAV_SERVO_BYTE_RECEIVED
  };
@@ -224,8 +228,12 @@ INT            OUTPUT_NAmfSpace,                                                
                OUTPUT_refShift,                                                 // 1 to save the shift of the reference spectrum on etalon
                OUTPUT_covarFlag,                                                // 1 to save the covariances in the output file
                OUTPUT_corrFlag,                                                 // 1 to save the correlations in the output file
+               OUTPUT_omiRejPixelsFlag,                                         // 1 to save rejected pixels based on pixels quality flags (OMI only)
+               OUTPUT_spikeFlag, // 1 to save pixels that were removed due to residual spikes to output
                outputRunCalib,                                                  // 1 in run calibration mode
                outputCalibFlag;                                                 // <> 0 to save wavelength calibration parameters before analysis results
+
+RC write_spikes(char *spikestring, unsigned int length, BOOL *spikes,int ndet);
 
 // ===============
 // DATA PROCESSING
@@ -640,6 +648,8 @@ void OUTPUT_ResetData(void)
   OUTPUT_refShift=
   OUTPUT_covarFlag=
   OUTPUT_corrFlag=
+  OUTPUT_omiRejPixelsFlag=
+    OUTPUT_spikeFlag=
   outputRunCalib=
   outputCalibFlag=
   outputNbFields=
@@ -796,9 +806,13 @@ void OutputRegisterFields(ENGINE_CONTEXT *pEngineContext)
     else if (indexField==PRJCT_RESULTS_ASCII_COVAR)
      OUTPUT_covarFlag=(outputRunCalib)?0:1;
     else if (indexField==PRJCT_RESULTS_ASCII_CORR)
-     OUTPUT_chiSquareFlag=(outputRunCalib)?0:1;
+     OUTPUT_corrFlag=(outputRunCalib)?0:1;
     else if (indexField==PRJCT_RESULTS_ASCII_ITER)
      OUTPUT_iterFlag=1;
+    else if (indexField==PRJCT_RESULTS_ASCII_OMI_PIXELS_QF)
+     OUTPUT_omiRejPixelsFlag=(outputRunCalib)?0:1;
+    else if (indexField==PRJCT_RESULTS_ASCII_SPIKES)
+     OUTPUT_spikeFlag = 1;
     else if (indexField==PRJCT_RESULTS_ASCII_CCD_DIODES)
      {
      	OutputRegister(pField->fieldName,"(1)","",pField->fieldType,pField->fieldSize,pField->fieldDim1,pField->fieldDim2,pField->fieldFormat);
@@ -1009,6 +1023,10 @@ void OutputRegisterParam(ENGINE_CONTEXT *pEngineContext,INT hiddenFlag)
             OutputRegister(windowName,"RMS","",MEMORY_TYPE_DOUBLE,sizeof(double),dim1,dim2,"%#12.4le");
            if (OUTPUT_iterFlag)
             OutputRegister(windowName,"iter","",MEMORY_TYPE_INT,sizeof(int),dim1,dim2,"%#6d");
+           if (OUTPUT_omiRejPixelsFlag)
+	    OutputRegister(windowName,"omiRejPixelsQF","",MEMORY_TYPE_STRING,50,dim1,dim2,"%s");
+	   if (OUTPUT_spikeFlag)
+	    OutputRegister(windowName,"spikeRemoval","",MEMORY_TYPE_STRING,50,dim1,dim2,"%s");
 
            // Fitted parameters
 
@@ -1887,6 +1905,18 @@ void OutputSaveRecord(ENGINE_CONTEXT *pEngineContext,INT hiddenFlag,INDEX indexF
          ((DoasUS *)outputColumns[indexColumn++])[indexRecord]=(DoasUS)pRecordInfo->omi.omiXtrackQF;
         break;
      // ---------------------------------------------------------------------
+	/*
+       case PRJCT_RESULTS_ASCII_SPIKES :
+	 for (i=0;i<NFeno;i++)
+	   {
+	     FENO *feno = &TabFeno[indexFenoColumn][i];
+	     if(!feno->hidden)
+	       write_spikes(&outputColumns[indexColumn++][indexRecord*pField->fieldSize], pField->fieldSize,
+			    feno->spikes,feno->NDET);
+	   }
+	 break;
+	*/
+	 // ---------------------------------------------------------------------
         case PRJCT_RESULTS_ASCII_UAV_SERVO_BYTE_SENT :
          ((DoasUS *)outputColumns[indexColumn++])[indexRecord]=(DoasUS)pRecordInfo->uavBira.servoSentPosition;
         break;
@@ -1910,7 +1940,9 @@ void OutputSaveRecord(ENGINE_CONTEXT *pEngineContext,INT hiddenFlag,INDEX indexF
 
      for (indexFeno=0;indexFeno<NFeno;indexFeno++)
       {
-      	pTabFeno=(!hiddenFlag)?&TabFeno[indexFenoColumn][indexFeno]:&TabFeno[indexFenoColumn][KURUCZ_buffers[indexFenoColumn].indexKurucz];
+      	pTabFeno=(!hiddenFlag)?
+	  &TabFeno[indexFenoColumn][indexFeno]:
+	  &TabFeno[indexFenoColumn][KURUCZ_buffers[indexFenoColumn].indexKurucz];
       	TabCross=pTabFeno->TabCross;
 
       	if (pTabFeno->hidden==hiddenFlag)
@@ -1950,6 +1982,10 @@ void OutputSaveRecord(ENGINE_CONTEXT *pEngineContext,INT hiddenFlag,INDEX indexF
           ((double *)outputColumns[indexColumn++])[indexRecord]=(!hiddenFlag)?(double)pTabFeno->RMS:KURUCZ_buffers[indexFenoColumn].KuruczFeno[indexFeno].rms[indexWin];
          if (OUTPUT_iterFlag)
           ((int *)outputColumns[indexColumn++])[indexRecord]=(!hiddenFlag)?(double)pTabFeno->nIter:KURUCZ_buffers[indexFenoColumn].KuruczFeno[indexFeno].nIter[indexWin];
+         if (OUTPUT_omiRejPixelsFlag)
+          write_spikes(&outputColumns[indexColumn++][indexRecord*PRJCT_resultsAscii[PRJCT_RESULTS_ASCII_OMI_PIXELS_QF].fieldSize], PRJCT_resultsAscii[PRJCT_RESULTS_ASCII_OMI_PIXELS_QF].fieldSize,pTabFeno->omiRejPixelsQF,pTabFeno->NDET);
+	 if (OUTPUT_spikeFlag)
+	  write_spikes(&outputColumns[indexColumn++][indexRecord*PRJCT_resultsAscii[PRJCT_RESULTS_ASCII_SPIKES].fieldSize], PRJCT_resultsAscii[PRJCT_RESULTS_ASCII_SPIKES].fieldSize, pTabFeno->spikes,pTabFeno->NDET);
 
          // Cross sections results
 
@@ -2487,6 +2523,41 @@ RC OutputBinVerifyFields(DoasCh *outputFileName,FILE *fp)
 
  	return rc;
  }
+
+// write_spikes:
+// concatenate all pixels containing spikes into a single string for output.
+
+RC write_spikes(char *spikestring, unsigned int length, BOOL *spikes,int ndet) {
+  strcpy(spikestring,"");
+  char num[10];
+  RC rc = 0;
+  int nspikes = 0;
+
+  int i;
+
+  if (spikes!=NULL)
+   for (i=0; i< ndet; i++)
+    {
+     if (spikes[i])
+      {
+       (nspikes++ > 0 ) ? sprintf(num,",%d",i): sprintf(num,"%d",i);
+       if(strlen(num) + strlen(spikestring) < length) {
+        strcat(spikestring,num);
+       } else {
+        rc = 1;
+        break;
+       }
+      }
+    }
+
+  if (!nspikes)
+   strcpy(spikestring,"-1");
+
+  sprintf(spikestring,"%-*s",length-1,spikestring); // pad with spaces
+
+  return rc;
+}
+
 
 // -----------------------------------------------------------------------------
 // FUNCTION      OutputBinWriteDataSet

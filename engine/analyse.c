@@ -249,6 +249,7 @@ int exclude_pixel(int pixel, int (*fenetre)[2], int num_ranges)
     if (fenetre[i][0] <= pixel && fenetre[i][1] >= pixel) // look for the window containing the current pixel
      break;
    }
+
   if (fenetre[i][0] == pixel) // pixel is at the start of an existing range
    {
     if (fenetre[i][1] == fenetre[i][0])
@@ -272,6 +273,7 @@ int exclude_pixel(int pixel, int (*fenetre)[2], int num_ranges)
   else
    { // pixel is in the middle of an existing range, which we need to split
     int j;
+
     for (j = num_ranges; j > i; j--)
      { // shift all existing ranges up
       fenetre[j][0] = fenetre[j - 1][0];
@@ -281,6 +283,7 @@ int exclude_pixel(int pixel, int (*fenetre)[2], int num_ranges)
     fenetre[i + 1][0] = pixel + 1;
     num_ranges++;
    }
+
   return num_ranges;
 }
 
@@ -301,7 +304,7 @@ BOOL remove_spikes(double *residuals,
   memcpy(temp_windows, spectral_windows, 2*MAX_FEN);
   int num_windows = * pnum_windows;
   int pixel,j;
-  for (j = 0; j < *pnum_windows; j++)
+  for (j = 0 ; j < *pnum_windows; j++)
    {
     for (pixel = spectral_windows[j][0]; pixel <= spectral_windows[j][1]; pixel++)
      {
@@ -313,6 +316,7 @@ BOOL remove_spikes(double *residuals,
        }
      }
    }
+  
   if(spikes)
    {
     memcpy(spectral_windows, temp_windows, 2*MAX_FEN);
@@ -322,16 +326,20 @@ BOOL remove_spikes(double *residuals,
 }
 
 int reinit_analysis(FENO *pFeno) {
-  int dimL = 0;
-  int i;
-  for (i=0;i<Z;i++)
-   dimL += Fenetre[i][1] - Fenetre[i][0] + 1;
-  pFeno->svd.DimL = dimL;
-  pFeno->svd.Z = Z;
+  pFeno->svd.DimL = calculate_npixels(pFeno->svd.Fenetre,pFeno->svd.Z);
   pFeno->Decomp = 1;
-  ANALYSE_SvdInit(&Feno->svd);
+
   memcpy(ANALYSE_absolu, ANALYSE_zeros, sizeof(double) * NDET);
-  return 1;
+
+  return ANALYSE_SvdInit(&Feno->svd);
+}
+
+int calculate_npixels(int (*spectral_windows)[2], int num_windows) {
+  int npixels = 0;
+  int i;
+  for (i = 0; i<num_windows; i++)
+    npixels += spectral_windows[i][1] - spectral_windows[i][0] + 1;
+  return npixels;  
 }
 
 void AnalyseGetFenoLim(FENO *pFeno,INDEX *pLimMin,INDEX *pLimMax)
@@ -2047,7 +2055,7 @@ RC ANALYSE_SvdInit(SVD *pSvd)
       if ((norm1<=(double)0.) || (norm2<=(double)0.) ||
           (StretchFact1<=(double)0.) || (StretchFact2<=(double)0.))
 
-       rc=ERROR_SetLast("SvdInit",ERROR_TYPE_WARNING,ERROR_ID_SQRT_ARG); // WARNING instead of FATAL so we can continue with other spectra
+       rc=ERROR_SetLast("SvdInit",ERROR_TYPE_WARNING,ERROR_ID_SQRT_ARG);
 
       else
        {
@@ -2278,7 +2286,7 @@ RC ANALYSE_AlignReference(ENGINE_CONTEXT *pEngineContext,INT refFlag,INT saveFla
                                       Spectre,                     // etalon reference spectrum
                                       NULL,                        // error on raw spectrum
                                       Sref,                        // reference spectrum
-				      NULL,
+				                                  NULL,
                                      &Square,                      // returned stretch order 2
                                       NULL,                        // number of iterations in Curfit
                                      (double)1.,(double)1.))>=THREAD_EVENT_STOP))
@@ -3008,9 +3016,8 @@ RC ANALYSE_Function ( double *lambda,double *X, double *Y, INT ndet, double *Y0,
           }
 
          Yfit[k-1]=YTrav[k-1]-XTrav[k-1]; // NB : logarithm test on YTrav has been made in the previous loop
-        }
      }
-
+     }
     //
     // INTENSITY FITTING (Marquardt-Levenberg + SVD)
     //
@@ -3587,6 +3594,19 @@ RC ANALYSE_CurFitMethod(INDEX   indexFenoColumn,  // for OMI
   return rc;
  }
 
+void AnalyseCopyFenetre(int (*fenetreTarget)[2],int *pZTarget,int (*fenetreSource)[2],int ZSource)
+ {
+ 	int i;
+
+ 	for (i=0;i<ZSource;i++)
+   {
+    fenetreTarget[i][0]=fenetreSource[i][0];
+    fenetreTarget[i][1]=fenetreSource[i][1];
+   }
+
+  *pZTarget=ZSource;
+ }
+
 // -------------------------------------------
 // ANALYSE_Spectrum : Spectrum record analysis
 // -------------------------------------------
@@ -3609,6 +3629,8 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
   INDEX WrkFeno,j;                             // index on analysis windows
   INDEX i,k,l;                               // indexes for loops and arrays
   INDEX indexFenoColumn;
+
+  INT oldFenetre[MAX_FEN][2],oldZ;           // backup of the spectral windows limits + gaps
 
   double j0,lambda0;
 
@@ -3664,6 +3686,10 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
   saveFlag=(INT)pEngineContext->project.spectra.displayDataFlag;
   SpectreK=LambdaK=Sref=Trend=offset=NULL;
   useKurucz=0;
+
+  for (i=0;i<MAX_FEN;i++)
+   oldFenetre[i][0]=oldFenetre[i][1]=0;
+  oldZ=0;
 
   NbFeno=0;
   nrc=0;
@@ -3797,7 +3823,34 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
           Lambda=Feno->LambdaK;
           LambdaSpec=Feno->Lambda;
 
-          if ((rc=ANALYSE_SvdInit(&Feno->svd))!=ERROR_ID_NO)
+         	// Make a backup of spectral window limits + gaps
+
+         	AnalyseCopyFenetre(oldFenetre,&oldZ,Feno->svd.Fenetre,Feno->svd.Z);
+
+         	if ((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_OMI) &&
+         	     pInstrumental->omi.pixelQFRejectionFlag &&
+         	    (pEngineContext->recordInfo.omi.omiPixelQF!=NULL) && (Feno->omiRejPixelsQF!=NULL))
+         	 {
+         	 	DoasUS *pixelQF=(DoasUS *)pEngineContext->recordInfo.omi.omiPixelQF;
+
+         	 	memset(Feno->omiRejPixelsQF,0,sizeof(int)*Feno->NDET);
+
+         	  for (j=oldFenetre[0][0];j<=oldFenetre[oldZ-1][1];j++)
+         	   if (((pixelQF[j]&pInstrumental->omi.pixelQFMask)!=0) && (Feno->svd.Z<=pInstrumental->omi.pixelQFMaxGaps))     // one of bits 0->5 set means exclusion of the wavelength
+         	    {
+         	     Feno->svd.Z=exclude_pixel(j,Feno->svd.Fenetre,Feno->svd.Z);
+         	     Feno->omiRejPixelsQF[j]=1;
+         	    }
+
+            if ((Feno->svd.Z>pInstrumental->omi.pixelQFMaxGaps) ||
+               ((rc=reinit_analysis(Feno))!=ERROR_ID_NO))
+             {
+             	AnalyseCopyFenetre(Feno->svd.Fenetre,&Feno->svd.Z,oldFenetre,oldZ);
+        	     rc=ERROR_SetLast("ANALYSE_Spectrum",ERROR_TYPE_WARNING,ERROR_ID_OMI_PIXELQF);
+              goto EndAnalysis;
+             }
+         	 }
+          else if ((rc=ANALYSE_SvdInit(&Feno->svd))!=ERROR_ID_NO)
            goto EndAnalysis;
 
           // Global variables initializations
@@ -3951,32 +4004,35 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
              ((rc=SPLINE_Vector(LambdaK,Spectre,SplineSpec,NDET,Lambda,SpectreK,NDET,pAnalysisOptions->interpol,"ANALYSE_Spectrum "))!=ERROR_ID_NO))) || */
 	  double residuals[NDET];
 	  memcpy(residuals, ANALYSE_zeros, NDET * sizeof(double));
-	  BOOL spikes[NDET];
+
 	  for(i = 0; i<NDET;i++)
-	   spikes[i] = 0;
+	   Feno->spikes[i] = 0;
+
 	  double av_residual = 0;
 	  int num_repeats = 0;
+
 	  do {
-	   if ((rc=ANALYSE_CurFitMethod(indexFenoColumn,
-					(Feno->useKurucz==ANLYS_KURUCZ_REF_AND_SPEC)?SpectreK:Spectre,     // raw spectrum
-					(pRecord->useErrors)?pBuffers->sigmaSpec:NULL,                     // error on raw spectrum
-					Sref,                                                             // reference spectrum
-					residuals,
-					&Feno->chiSquare,                                                  // returned stretch order 2
-					&Niter,
-					speNormFact,
-					Feno->refNormFact))==THREAD_EVENT_STOP)                                       // number of iterations in Curfit
-
-	    goto EndAnalysis;  // !!!! Bypass the DEBUG_Stop
-
-	   else if (rc>THREAD_EVENT_STOP)
-	    Feno->rc=rc;
-	   av_residual = average_magnitude(residuals);
-	  } while ( !Feno->hidden // no spike removal for calibration
-		    && remove_spikes(residuals, av_residual * pAnalysisOptions->spike_tolerance, Fenetre, &Z, spikes)
-		    && (++num_repeats < MAX_REPEAT_CURFIT)
-		    && reinit_analysis(Feno));
-
+	    if ((rc=ANALYSE_CurFitMethod(indexFenoColumn,
+					 (Feno->useKurucz==ANLYS_KURUCZ_REF_AND_SPEC)?SpectreK:Spectre,     // raw spectrum
+					 (pRecord->useErrors)?pBuffers->sigmaSpec:NULL,                     // error on raw spectrum
+					 Sref,                                                             // reference spectrum
+					 residuals,
+					 &Feno->chiSquare,                                                  // returned stretch order 2
+					 &Niter,
+					 speNormFact,
+					 Feno->refNormFact))==THREAD_EVENT_STOP)                                       // number of iterations in Curfit
+	      
+	      goto EndAnalysis;  // !!!! Bypass the DEBUG_Stop
+	    
+	    else if (rc>THREAD_EVENT_STOP)
+	      Feno->rc=rc;
+	    av_residual = average_magnitude(residuals);
+	  }
+	  while(!Feno->hidden // no spike removal for calibration
+		&& remove_spikes(residuals, av_residual * pAnalysisOptions->spike_tolerance, Feno->svd.Fenetre, &Feno->svd.Z, Feno->spikes) // repeat as long as spikes are found
+		&& (++num_repeats < MAX_REPEAT_CURFIT)
+		&& !(rc=reinit_analysis(Feno))); // SVD matrix must be initialized again when pixels are removed.
+	  
           #if defined(__DEBUG_) && __DEBUG_
           DEBUG_Stop("Test");
           analyseDebugMask=0;
@@ -4194,7 +4250,7 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 	     mediateResponseCellInfoNoLabel(indexPage,indexLine,indexColumn,responseHandle,
 					    "Spike removal: the following pixels were excluded after %d iterations",num_repeats);
 	     for (i = 0; i< NDET; i++)
-	      if(spikes[i])
+	      if(Feno->spikes[i])
 	       mediateResponseCellInfoNoLabel(indexPage,indexLine++,indexColumn+1, responseHandle,"%d",i);
 
 	     indexLine++;
@@ -4232,28 +4288,18 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
                mediateResponseCellInfoNoLabel(indexPage,indexLine,indexColumn+3,responseHandle,"%10.3e +/-%10.3e",Results[i].Stretch,Results[i].SigmaStretch);
               else
                mediateResponseCellInfoNoLabel(indexPage,indexLine,indexColumn+3,responseHandle,"%10.3e",Results[i].Stretch);
-           // -------------------------------------------------------------------
-//              if (TabCross[i].FitStretch2!=ITEM_NONE)
-//               fprintf(fp,"%10.3e +/-%10.3e\t",Results[i].Stretch2,Results[i].SigmaStretch2);
-//              else
-//               fprintf(fp,"%10.3e\t\t",Results[i].Stretch2);
-//           // -------------------------------------------------------------------
-//              if (TabCross[i].FitScale!=ITEM_NONE)
-//               fprintf(fp,"%10.3e +/-%10.3e\t",Results[i].Scale,Results[i].SigmaScale);
-//              else
-//               fprintf(fp,"%10.3e\t\t",Results[i].Scale);
-//           // -------------------------------------------------------------------
-//              if (TabCross[i].FitScale2!=ITEM_NONE)
-//               fprintf(fp,"%10.3e +/-%10.3e\t",Results[i].Scale2,Results[i].SigmaScale2);
-//              else
-//               fprintf(fp,"%10.3e\t\t",Results[i].Scale2);
-           // -------------------------------------------------------------------
               indexLine++;
-             }
-           }
-         }
-       }
-     }
+             }  // for (i=0;i<Feno->NTabCross;i++)
+           }  // if (displayFlag && saveFlag)
+
+          // Recover spectral window limits and gaps eventually modified after spike removal
+
+          AnalyseCopyFenetre(Feno->svd.Fenetre,&Feno->svd.Z,oldFenetre,oldZ);
+	  Feno->svd.DimL = calculate_npixels(Feno->svd.Fenetre, Feno->svd.Z);
+	  Feno->Decomp = 1;
+         }  // if (!Feno->hidden && (Feno->rcKurucz==ERROR_ID_NO) &&
+       }  // for (WrkFeno=0;(WrkFeno<NFeno) && (rc!=THREAD_EVENT_STOP);WrkFeno++)
+     }  // if (THRD_id==THREAD_TYPE_ANALYSIS)
 
     if (NbFeno)
      pRecord->BestShift/=(double)NbFeno;
@@ -4368,6 +4414,10 @@ void ANALYSE_ResetData(void)
       // SVD matrices
 
       SVD_Free("ANALYSE_ResetData",&pTabFeno->svd);
+
+      // spike array
+      if(pTabFeno->spikes != NULL)
+       MEMORY_ReleaseBuffer("ANALYSE_ResetData ", "spikes", pTabFeno->spikes);
 
       // Coefficients for building polynomial fitting fwhm
 

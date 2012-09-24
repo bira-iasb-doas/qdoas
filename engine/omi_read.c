@@ -78,12 +78,12 @@ OMI_GEO;
 
 typedef struct _omi_spectrum
  {
-  short  *mantissa;
-  short  *precisionMantissa;
-  int8_t *exponent;
-  DoasUS *pixelQualityFlags;
-  float   wavelengthCoefficient[5];
-  float   wavelengthCoefficientPrecision[5];
+  short          *mantissa;
+  short          *precisionMantissa;
+  int8_t         *exponent;
+  unsigned short *pixelQualityFlags;
+  float           wavelengthCoefficient[5];
+  float           wavelengthCoefficientPrecision[5];
  }
 OMI_SPECTRUM;
 
@@ -236,6 +236,8 @@ void OMI_ReleaseReference(void)
      MEMORY_ReleaseBuffer("OMI_ReleaseBuffers","pRef->spectrum.precisionMantissa",pRef->spectrum.precisionMantissa);
     if (pRef->spectrum.exponent!=NULL)                                          // exponent
      MEMORY_ReleaseBuffer("OMI_ReleaseBuffers","pRef->spectrum.exponent",pRef->spectrum.exponent);
+    if (pRef->spectrum.pixelQualityFlags!=NULL)                                          // exponent
+     MEMORY_ReleaseBuffer("OMI_ReleaseBuffers","pRef->spectrum.pixelQualityFlags",pRef->spectrum.pixelQualityFlags);
 
     memset(pRef,0,sizeof(OMI_ref[i]));
    }
@@ -263,7 +265,8 @@ RC OMI_AllocateReference(INDEX indexRef,int nSpectra,int nPoints)
 
  	    ((pRef->spectrum.mantissa=(short *)MEMORY_AllocBuffer("OMI_AllocateReference","mantissa",nPoints,sizeof(short),0,MEMORY_TYPE_SHORT))==NULL) ||
  	    ((pRef->spectrum.precisionMantissa=(short *)MEMORY_AllocBuffer("OMI_AllocateReference","precisionMantissa",nPoints,sizeof(short),0,MEMORY_TYPE_SHORT))==NULL) ||
- 	    ((pRef->spectrum.exponent=(int8_t *)MEMORY_AllocBuffer("OMI_AllocateReference","exponent",nPoints,sizeof(int8_t),0,MEMORY_TYPE_STRING))==NULL))
+ 	    ((pRef->spectrum.exponent=(int8_t *)MEMORY_AllocBuffer("OMI_AllocateReference","exponent",nPoints,sizeof(int8_t),0,MEMORY_TYPE_STRING))==NULL) ||
+ 	    ((pRef->spectrum.pixelQualityFlags=(unsigned short *)MEMORY_AllocBuffer("OMI_AllocateReference","pixelQualityFlags",nPoints,sizeof(unsigned short),0,MEMORY_TYPE_USHORT))==NULL))
 
    rc=ERROR_ID_ALLOC;
 
@@ -313,6 +316,8 @@ void OMI_ReleaseBuffers(void)
      MEMORY_ReleaseBuffer("OMI_ReleaseBuffers","pOrbitFile->omiSwath.spectrum.precisionMantissa",pOrbitFile->omiSwath.spectrum.precisionMantissa);
     if (pOrbitFile->omiSwath.spectrum.exponent!=NULL)                                    // exponent
      MEMORY_ReleaseBuffer("OMI_ReleaseBuffers","pOrbitFile->omiSwath.spectrum.exponent",pOrbitFile->omiSwath.spectrum.exponent);
+    if (pOrbitFile->omiSwath.spectrum.pixelQualityFlags!=NULL)                                    // exponent
+     MEMORY_ReleaseBuffer("OMI_ReleaseBuffers","pOrbitFile->omiSwath.spectrum.pixelQualityFlags",pOrbitFile->omiSwath.spectrum.pixelQualityFlags);
 
    	// Earth swath data fields
 
@@ -470,6 +475,7 @@ RC OMI_AllocateSwath(OMI_SWATH *pSwath,int nSwaths,int nSpectra)
  	if (((pSpectrum->mantissa=(short *)MEMORY_AllocBuffer("OMI_AllocateSwath","mantissa",NDET,sizeof(short),0,MEMORY_TYPE_SHORT))==NULL) ||
  	    ((pSpectrum->precisionMantissa=(short *)MEMORY_AllocBuffer("OMI_AllocateSwath","precisionMantissa",NDET,sizeof(short),0,MEMORY_TYPE_SHORT))==NULL) ||
  	    ((pSpectrum->exponent=(int8_t *)MEMORY_AllocBuffer("OMI_AllocateSwath","exponent",NDET,sizeof(int8_t),0,MEMORY_TYPE_STRING))==NULL) ||
+ 	    ((pSpectrum->pixelQualityFlags=(unsigned short *)MEMORY_AllocBuffer("OMI_AllocateSwath","pixelQualityFlags",NDET,sizeof(unsigned short),0,MEMORY_TYPE_USHORT))==NULL) ||
 
  	// Earth swath
 
@@ -794,6 +800,7 @@ RC OmiGetSpectrum(coda_Cursor *pCursor,DoasCh *omiFileName,DoasCh *omiSwathName,
          omiPathPrecisionMantissa[MAX_STR_LEN+1],
          omiPathWavelengthCoefficient[MAX_STR_LEN+1],
          omiPathExponent[MAX_STR_LEN+1],
+         omiPathPixelQualityFlags[MAX_STR_LEN+1],
          omiSpectraType[MAX_STR_LEN+1];
 
   double *tempLambda,*tempMantissa;
@@ -828,6 +835,7 @@ RC OmiGetSpectrum(coda_Cursor *pCursor,DoasCh *omiFileName,DoasCh *omiSwathName,
   sprintf(omiPathPrecisionMantissa,"/%s/Data_Fields/%sPrecisionMantissa",omiSwathName,omiSpectraType);
   sprintf(omiPathWavelengthCoefficient,"/%s/Data_Fields/WavelengthCoefficient",omiSwathName);
   sprintf(omiPathExponent,"/%s/Data_Fields/%sExponent",omiSwathName,omiSpectraType);
+  sprintf(omiPathPixelQualityFlags,"/%s/Data_Fields/PixelQualityFlags",omiSwathName);
 
   if (((tempIndexLow=(INDEX *)MEMORY_AllocBuffer("OmiGetSpectrum","tempIndexLow",NDET,sizeof(INDEX),0,MEMORY_TYPE_INT))==NULL) ||
       ((tempIndexHigh=(INDEX *)MEMORY_AllocBuffer("OmiGetSpectrum","tempIndexHigh",NDET,sizeof(INDEX),0,MEMORY_TYPE_INT))==NULL) ||
@@ -869,6 +877,24 @@ RC OmiGetSpectrum(coda_Cursor *pCursor,DoasCh *omiFileName,DoasCh *omiSwathName,
      	 }
      }
    }
+
+  // Read pixel quality flags
+
+   if (!rc)
+    {
+    	if (coda_cursor_goto(pCursor,omiPathPixelQualityFlags)!=0)
+      rc=ERROR_SetLast("OmiGetSpectrum",ERROR_TYPE_WARNING,ERROR_ID_BEAT,"OmiGetSpectrum",omiFileName,"Can not access Data_Fields\\PixelQualityFlags");
+     else if (coda_cursor_goto_array_element(pCursor,3,subset)!=0)
+      rc=ERROR_SetLast("OmiGetSpectrum",ERROR_TYPE_WARNING,ERROR_ID_BEAT,"OmiGetSpectrum",omiFileName,"Can not goto first element of Data_Fields\\PixelQualityFlags");
+     else
+      {
+      	for (i=0;i<ndata;i++)
+      	 {
+      	 	coda_cursor_read_uint16(pCursor,(unsigned short *)&pSpectrum->pixelQualityFlags[i]);
+      	 	coda_cursor_goto_next_array_element(pCursor);
+      	 }
+      }
+    }
 
   // Read precision mantissa
 
@@ -964,15 +990,6 @@ RC OmiGetSpectrum(coda_Cursor *pCursor,DoasCh *omiFileName,DoasCh *omiSwathName,
      spectrum[i]=sigma[i]=(double)0.;
     rc=ERROR_ID_FILE_RECORD;
    }
-
-
-// {
-// 	FILE *fp;
-// 	fp=fopen("toto.dat","a+t");
-// 	for (i=0;i<ndata;i++)
-// 	 fprintf(fp,"%-3d %-3d %d %d %g %g %g %g %g\n",indexSpectrum,i,tempIndexLow[i],tempIndexHigh[i],lambda[i],spectrum[i],(double)pSpectrum->mantissa[i]*STD_Pow10((int)pSpectrum->exponent[i]),tempMantissa[tempIndexLow[i]],tempMantissa[tempIndexHigh[i]]);
-// 	fclose(fp);
-// }
 
   // Release allocated vectors
 
@@ -1657,6 +1674,8 @@ RC OMI_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,INDEX fileIndex)
      	pRecord->omi.omiRowIndex=indexSpectrum+1;                                 // index of the current spectrum in the current swath
      	pRecord->omi.omiGroundPQF=(DoasUS)pGeo->groundPixelQualityFlags[recordNo-1];          // ground pixel quality flag
      	pRecord->omi.omiXtrackQF=(DoasUS)pGeo->xtrackQualityFlags[recordNo-1];                // xtrack quality flag
+
+     	memcpy(pRecord->omi.omiPixelQF,pSpectrum->pixelQualityFlags,sizeof(unsigned short)*NDET);
 
      	OMI_FromTAI1993ToYMD((double)pGeo->time[indexSwath],&pRecord->present_day,&pRecord->present_time,&OMI_ms);
 

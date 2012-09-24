@@ -121,6 +121,8 @@ void initializeMediateProjectInstrumental(mediate_project_instrumental_t *d)
   d->mkzy.lambdaMin=d->mkzy.lambdaMax=(double)0.;
   d->biraairborne.lambdaMin=d->biraairborne.lambdaMax=(double)0.;
   d->oceanoptics.lambdaMin=d->oceanoptics.lambdaMax=(double)0.;
+
+  d->omi.pixelQFMaxGaps=5;
 }
 
 void initializeMediateProjectSlit(mediate_project_slit_t *d)

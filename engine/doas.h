@@ -436,6 +436,8 @@ typedef struct _feno
   SVD             svd;                                                          //  SVD decomposition data
   CROSS_REFERENCE TabCross[MAX_FIT];                                            //  symbol cross reference
   CROSS_RESULTS   TabCrossResults[MAX_FIT];                                     //  results stored per symbol in previous list
+  BOOL           *spikes;                                                       //  spikes[i] is true if the residual at pixel i has a spike
+  BOOL           *omiRejPixelsQF;                                                  //  rejPixelsQF[i] is true if the pixel i is rejected based on pixels QF (OMI only)
   INT             NTabCross;                                                    //  number of elements in the two previous lists
   INDEX           indexSpectrum,                                                //  index of raw spectrum in symbol cross reference
                   indexReference,                                               //  index of reference spectrum in symbol cross reference
@@ -637,12 +639,13 @@ GOME2_DATA;
 
 typedef struct _omi
  {
- 	INDEX  omiSwathIndex;                                                         // index of the swath
- 	INDEX  omiRowIndex;                                                           // index of the current row in the current swath
- 	DoasUS omiGroundPQF;                                                          // ground pixel quality flags
- 	DoasUS omiXtrackQF;                                                           // xtrack quality flags
- 	int    omiNumberOfSwaths,                                                     // total number of tracks
- 	       omiNumberOfRows;                                                       // total number of spectra in tracks
+ 	INDEX   omiSwathIndex;                                                        // index of the swath
+ 	INDEX   omiRowIndex;                                                          // index of the current row in the current swath
+ 	DoasUS  omiGroundPQF;                                                         // ground pixel quality flags
+ 	DoasUS  omiXtrackQF;                                                          // xtrack quality flags
+ 	int     omiNumberOfSwaths,                                                    // total number of tracks
+ 	        omiNumberOfRows;                                                      // total number of spectra in tracks
+  DoasUS *omiPixelQF; 	                                                         // pixel quality flag
  }
 OMI_DATA;
 

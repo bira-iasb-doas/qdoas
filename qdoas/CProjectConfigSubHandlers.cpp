@@ -174,6 +174,10 @@ bool CSelectorSubHandler::start(const QString &element, const QXmlAttributes &at
     d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_OMI_GROUNDP_QF;
   else if (str == "omi_xtrack_qf")
     d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_OMI_XTRACK_QF;
+  else if (str == "omi_pixels_qf")
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_OMI_PIXELS_QF;
+  else if (str == "spike_pixels")
+    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_SPIKES;
   else if (str == "servo_byte_sent")
     d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_UAV_SERVO_BYTE_SENT;
   else if (str == "servo_byte_received")
@@ -1010,6 +1014,12 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
       else
 	return postErrorMessage("Track selection string too long");
     }
+
+    m_instrumental->omi.pixelQFRejectionFlag = (atts.value("pixelQF_rejectionFlag") == "true") ? 1 : 0;
+
+    str = atts.value("pixelQF_maxGaps");
+    m_instrumental->omi.pixelQFMaxGaps = (!str.isEmpty())?atts.value("pixelQF_maxGaps").toInt():5;
+    m_instrumental->omi.pixelQFMask = atts.value("pixelQF_mask").toInt();
 
     str = atts.value("calib");
     if (!str.isEmpty()) {

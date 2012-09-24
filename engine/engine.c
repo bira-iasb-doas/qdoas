@@ -115,9 +115,10 @@ void EngineResetContext(ENGINE_CONTEXT *pEngineContext)
    MEMORY_ReleaseDVector("EngineResetContext ","varPix",pBuffers->varPix,0);
   if (pBuffers->recordIndexes!=NULL)
    MEMORY_ReleaseBuffer("EngineResetContext ","recordIndexes",pBuffers->recordIndexes);
-
   if (pBuffers->dnl.matrix!=NULL)
    MATRIX_Free(&pBuffers->dnl,"EngineResetContext (dnl)");
+  if (pRecord->omi.omiPixelQF!=NULL)
+   MEMORY_ReleaseBuffer("EngineResetContext","omiPixelQF",pRecord->omi.omiPixelQF);
 
   CCD_ResetInstrumental(&pRecord->ccd);
 
@@ -154,6 +155,14 @@ RC EngineCopyContext(ENGINE_CONTEXT *pEngineContextTarget,ENGINE_CONTEXT *pEngin
 
   // Buffers allocation
 
+  {
+  	FILE *fp;
+  	fp=fopen("toto.dat","a+t");
+  	fprintf(fp,"AllocQF %d\n",NDET);
+  	fclose(fp);
+  }
+
+
   if (((pBuffersSource->lambda!=NULL) && (pBuffersTarget->lambda==NULL) &&
       ((pBuffersTarget->lambda=(double *)MEMORY_AllocDVector("EngineCopyContext","lambda",0,NDET-1))==NULL)) ||
       ((pBuffersSource->instrFunction!=NULL) && (pBuffersTarget->instrFunction==NULL) &&
@@ -178,6 +187,8 @@ RC EngineCopyContext(ENGINE_CONTEXT *pEngineContextTarget,ENGINE_CONTEXT *pEngin
       ((pBuffersTarget->specMax=(double *)MEMORY_AllocDVector("EngineCopyContext","specMax",0,NDET-1))==NULL)) ||
       ((pEngineContextSource->analysisRef.scanRefIndexes!=NULL) && (pEngineContextTarget->analysisRef.scanRefIndexes==NULL) &&
       ((pEngineContextTarget->analysisRef.scanRefIndexes=(INT *)MEMORY_AllocBuffer("EngineCopyContext","scanRefIndexes",pEngineContextSource->recordNumber,sizeof(INT),0,MEMORY_TYPE_INT))==NULL)) ||
+      ((pEngineContextSource->recordInfo.omi.omiPixelQF!=NULL) && (pEngineContextTarget->recordInfo.omi.omiPixelQF==NULL) &&
+      ((pEngineContextTarget->recordInfo.omi.omiPixelQF=(unsigned short *)MEMORY_AllocBuffer("EngineCopyContext","omiPixelQF",NDET,sizeof(unsigned short),0,MEMORY_TYPE_USHORT))==NULL)) ||
       ((pBuffersSource->recordIndexes!=NULL) && (pBuffersTarget->recordIndexes==NULL) &&
       ((pBuffersTarget->recordIndexes=(DoasU32 *)MEMORY_AllocBuffer("THRD_CopySpecInfo","recordIndexes",
        (pEngineContextTarget->recordIndexesSize=pEngineContextSource->recordIndexesSize),sizeof(DoasU32),0,MEMORY_TYPE_ULONG))==NULL)) ||
@@ -218,6 +229,8 @@ RC EngineCopyContext(ENGINE_CONTEXT *pEngineContextTarget,ENGINE_CONTEXT *pEngin
      memcpy(pBuffersTarget->specMaxx,pBuffersSource->specMaxx,sizeof(double)*NDET);
     if ((pBuffersTarget->specMax!=NULL) && (pBuffersSource->specMax!=NULL))
      memcpy(pBuffersTarget->specMax,pBuffersSource->specMax,sizeof(double)*NDET);
+    if ((pEngineContextTarget->recordInfo.omi.omiPixelQF!=NULL) && (pEngineContextSource->recordInfo.omi.omiPixelQF!=NULL))
+     memcpy(pEngineContextTarget->recordInfo.omi.omiPixelQF,pEngineContextSource->recordInfo.omi.omiPixelQF,sizeof(unsigned short)*NDET);
     if ((pEngineContextTarget->analysisRef.scanRefIndexes!=NULL) && (pEngineContextSource->analysisRef.scanRefIndexes!=NULL))
      memcpy(pEngineContextTarget->analysisRef.scanRefIndexes,pEngineContextSource->analysisRef.scanRefIndexes,sizeof(INT)*pEngineContextSource->fileInfo.nScanRef);
     if ((pBuffersTarget->recordIndexes!=NULL) && (pBuffersSource->recordIndexes!=NULL))
@@ -249,6 +262,14 @@ RC EngineCopyContext(ENGINE_CONTEXT *pEngineContextTarget,ENGINE_CONTEXT *pEngin
 
   // Return
 
+  {
+  	FILE *fp;
+  	fp=fopen("toto.dat","a+t");
+  	fprintf(fp,"EndAlloc QF\n");
+  	fclose(fp);
+  }
+
+
   return rc;
  }
 
@@ -275,6 +296,7 @@ RC EngineSetProject(ENGINE_CONTEXT *pEngineContext)
  	PROJECT *pProject;                                                            // pointer to the current project
   PRJCT_INSTRUMENTAL *pInstrumental;                                            // pointer to the instrumental part of the project
   BUFFERS *pBuffers;                                                            // pointer to the buffers part of the engine context
+  RECORD_INFO *pRecord;                                                         // pointer to the record part of the engine context
 
  	double *lambdaInstr;                                                          // wavelength calibration of the instrument function
  	double *instrFunction;                                                        // instrumental function
@@ -291,6 +313,7 @@ RC EngineSetProject(ENGINE_CONTEXT *pEngineContext)
   pBuffers=&pEngineContext->buffers;
   pProject=&pEngineContext->project;
   pInstrumental=&pProject->instrumental;
+  pRecord=&pEngineContext->recordInfo;
 
   pEngineContext->lastRefRecord=0;
 
@@ -330,6 +353,9 @@ RC EngineSetProject(ENGINE_CONTEXT *pEngineContext)
 
      (((pBuffers->sigmaSpec=MEMORY_AllocDVector("EngineSetProject","sigmaSpec",0,NDET-1))==NULL) ||
       ((pBuffers->irrad=MEMORY_AllocDVector("EngineSetProject","irrad",0,NDET-1))==NULL))) ||
+
+      ((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_OMI) &&
+      ((pRecord->omi.omiPixelQF=(unsigned short *)MEMORY_AllocBuffer("EngineSetProject","omiPixelQF",NDET,sizeof(unsigned short),0,MEMORY_TYPE_USHORT))==NULL)) ||
 
       ((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MKZY) &&
       ((pBuffers->scanRef=MEMORY_AllocDVector("EngineSetProject","scanRef",0,NDET-1))==NULL)) ||

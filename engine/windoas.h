@@ -352,7 +352,7 @@ PRJCT_SPECTRA;
 
 // Analysis tab page description
 // -----------------------------
-  
+
   typedef struct _prjctAnlys
   {
     INT method;                                        // analysis method
@@ -361,7 +361,7 @@ PRJCT_SPECTRA;
     INT interpol;                                      // interpolation
     double convergence;                                // convergence criterion
     double spike_tolerance;                            // max ratio of (pixel residual)/(average residual)
-    
+
     int securityGap;
     int maxIterations;                                 // maximum number of iterations
   }
@@ -484,6 +484,7 @@ typedef struct _prjctOmiFormat
    INT spectralType;
    INT averageFlag;
    int   omiTracks[MAX_SWATHSIZE];
+   int   pixelQFRejectionFlag,pixelQFMaxGaps,pixelQFMask;                       // pixel quality flags rejection
  }
 PRJCT_OMI;
 

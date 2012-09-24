@@ -351,6 +351,9 @@ extern "C" {
     double minimumWavelength;
     double maximumWavelength;
     int flagAverage;
+    int  pixelQFRejectionFlag;
+    int  pixelQFMaxGaps;
+    int  pixelQFMask;
     char calibrationFile[FILENAME_BUFFER_LENGTH];
     char instrFunctionFile[FILENAME_BUFFER_LENGTH];
     char trackSelection[TRACK_SELECTION_LENGTH];

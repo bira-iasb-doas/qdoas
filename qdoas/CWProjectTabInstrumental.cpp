@@ -1946,9 +1946,12 @@ CWInstrOmiEdit::CWInstrOmiEdit(const struct instrumental_omi *d, QWidget *parent
   CWCalibInstrEdit(parent)
 {
   QString tmpStr;
+  char str[80];
   int row = 0;
   QVBoxLayout *mainLayout = new QVBoxLayout(this);
   QGridLayout *gridLayout = new QGridLayout;
+  // Format and Flags group
+  QHBoxLayout *groupLayout = new QHBoxLayout;
 
   // spectral
   gridLayout->addWidget(new QLabel("Spectral Type", this), row, 0);
@@ -1964,6 +1967,32 @@ CWInstrOmiEdit::CWInstrOmiEdit(const struct instrumental_omi *d, QWidget *parent
   m_trackSelection = new QLineEdit(this);
   gridLayout->addWidget(m_trackSelection, row, 1);
   ++row;
+
+  // Pixels quality flags
+
+  QGroupBox *pixelQFGroup = new QGroupBox("Pixels Quality Flags", this);
+  QGridLayout *pixelQFLayout = new QGridLayout(pixelQFGroup);
+
+  m_pixelQFCheck = new QCheckBox("Pixels rejection based on quality flags", pixelQFGroup);
+  pixelQFLayout->addWidget(m_pixelQFCheck, row, 0);
+
+  ++row;
+
+  pixelQFLayout->addWidget(new QLabel("Mask for pixel rejection", pixelQFGroup), row, 0);             // detector size label
+  m_pixelQFMaskEdit = new QLineEdit(pixelQFGroup);
+  m_pixelQFMaskEdit->setFixedWidth(50);
+  pixelQFLayout->addWidget(m_pixelQFMaskEdit, row, 1);
+
+  ++row;
+
+  pixelQFLayout->addWidget(new QLabel("Maximum number of gaps", pixelQFGroup), row, 0);             // detector size label
+  m_pixelQFMaxGapsEdit = new QLineEdit(pixelQFGroup);
+  m_pixelQFMaxGapsEdit->setFixedWidth(50);
+  m_pixelQFMaxGapsEdit->setValidator(new QIntValidator(0, 20, m_pixelQFMaxGapsEdit));
+  pixelQFLayout->addWidget(m_pixelQFMaxGapsEdit, row, 1);
+
+  groupLayout->addWidget(pixelQFGroup);
+  mainLayout->addLayout(groupLayout);
 
 //  // spectral range
 //  gridLayout->addWidget(new QLabel("Wavelength Range (nm)", this), row, 0);
@@ -2007,6 +2036,17 @@ CWInstrOmiEdit::CWInstrOmiEdit(const struct instrumental_omi *d, QWidget *parent
 
   m_trackSelection->setText(QString(d->trackSelection));
 
+  // pixel quality flag
+
+  m_pixelQFCheck->setCheckState(d->pixelQFRejectionFlag ? Qt::Checked : Qt::Unchecked);
+
+  tmpStr.setNum(d->pixelQFMaxGaps);
+  m_pixelQFMaxGapsEdit->validator()->fixup(tmpStr);
+  m_pixelQFMaxGapsEdit->setText(tmpStr);
+
+  sprintf(str,"%02X",d->pixelQFMask);
+  m_pixelQFMaskEdit->setText(QString(str));
+
   // wavelength range
 //  tmpStr.setNum(d->minimumWavelength);
 //  m_minLambdaEdit->validator()->fixup(tmpStr);
@@ -2036,6 +2076,11 @@ void CWInstrOmiEdit::apply(struct instrumental_omi *d) const
 //  d->flagAverage = (m_averageCheck->checkState() == Qt::Checked) ? 1 : 0;
 
    // track selection
+
+  d->pixelQFRejectionFlag=(m_pixelQFCheck->checkState() == Qt::Checked) ? 1 : 0;
+  d->pixelQFMaxGaps=m_pixelQFMaxGapsEdit->text().toInt();
+
+  sscanf(m_pixelQFMaskEdit->text().toAscii().data(),"%02X",&d->pixelQFMask);
 
   strcpy(d->trackSelection, m_trackSelection->text().toAscii().data());
 

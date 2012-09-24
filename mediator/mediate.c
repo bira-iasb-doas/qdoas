@@ -1152,6 +1152,10 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
 
 	     pEngineInstrumental->omi.spectralType=pMediateInstrumental->omi.spectralType;
 	     pEngineInstrumental->omi.averageFlag=pMediateInstrumental->omi.flagAverage;
+	     pEngineInstrumental->omi.pixelQFRejectionFlag=pMediateInstrumental->omi.pixelQFRejectionFlag;
+	     pEngineInstrumental->omi.pixelQFMaxGaps=pMediateInstrumental->omi.pixelQFMaxGaps;
+	     pEngineInstrumental->omi.pixelQFMask=pMediateInstrumental->omi.pixelQFMask;
+
 
 	     OMI_TrackSelection((DoasCh *)pMediateInstrumental->omi.trackSelection,pEngineInstrumental->omi.omiTracks);
 
@@ -1694,11 +1698,24 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
 
           pTabFeno->Decomp=1;
 
+	  // spikes buffer
+	  if ((pTabFeno->spikes == NULL) &&
+	     ((pTabFeno->spikes=(BOOL *)MEMORY_AllocBuffer("mediateRequestSetAnalysisWindows ","spikes",NDET,sizeof(int),0,MEMORY_TYPE_INT))==NULL))
+	    {
+   rc = ERROR_ID_ALLOC;
+   break;
+ }
+
           // Wavelength scales read out
 
           if (((pTabFeno->Lambda==NULL) && ((pTabFeno->Lambda=MEMORY_AllocDVector("mediateRequestSetAnalysisWindows ","Lambda",0,NDET-1))==NULL)) ||
               ((pTabFeno->LambdaK==NULL) && ((pTabFeno->LambdaK=MEMORY_AllocDVector("mediateRequestSetAnalysisWindows ","LambdaK",0,NDET-1))==NULL)) ||
-              ((pTabFeno->LambdaRef==NULL) && ((pTabFeno->LambdaRef=MEMORY_AllocDVector("mediateRequestSetAnalysisWindows ","LambdaRef",0,NDET-1))==NULL)))
+              ((pTabFeno->LambdaRef==NULL) && ((pTabFeno->LambdaRef=MEMORY_AllocDVector("mediateRequestSetAnalysisWindows ","LambdaRef",0,NDET-1))==NULL)) ||
+
+          // omi rejected pixels
+
+              ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_OMI) && pEngineContext->project.instrumental.omi.pixelQFRejectionFlag &&
+               (pTabFeno->omiRejPixelsQF == NULL) && ((pTabFeno->omiRejPixelsQF=(BOOL *)MEMORY_AllocBuffer("mediateRequestSetAnalysisWindows ","omiRejPixelsQF",NDET,sizeof(int),0,MEMORY_TYPE_INT))==NULL)))
            {
             rc=ERROR_ID_ALLOC;
             break;
