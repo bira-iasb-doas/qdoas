@@ -3004,19 +3004,20 @@ RC ANALYSE_Function ( double *lambda,double *X, double *Y, INT ndet, double *Y0,
       // Yfit computation with the solution of the system
       // ------------------------------------------------
 
-      for (j=0,k=1;j<Z;j++)
-       for (i=Fenetre[j][0];i<=Fenetre[j][1];i++,k++)
-        {
-         for (l=0;l<Feno->NTabCross;l++)
-          {
-           if ((TabCross[l].IndSvdA>0) && (l!=Feno->indexRing1))
-            XTrav[k-1]+=(TabCross[l].IndSvdA<=NewDimC)?fitParamsC[TabCross[l].IndSvdA]*U[TabCross[l].IndSvdA][k]/TabCross[l].Fact:
-
-            fitParamsC[TabCross[l].IndSvdA]*U[TabCross[l].IndSvdA][k];
-          }
-
-         Yfit[k-1]=YTrav[k-1]-XTrav[k-1]; // NB : logarithm test on YTrav has been made in the previous loop
-     }
+      for (l=0;l<Feno->NTabCross;l++)
+       {
+	  int svdIndex = TabCross[l].IndSvdA;
+	  double weight = (svdIndex <= NewDimC)
+	    ? fitParamsC[svdIndex]/TabCross[l].Fact
+	    : fitParamsC[svdIndex];
+	  if (svdIndex > 0 && (l!=Feno->indexRing1))
+	    for (k=1;k<=DimL;k++) {
+	      XTrav[k-1]+= U[svdIndex][k]*weight;
+	      }
+	}
+      for( k=1;k<=DimL;k++) {
+	Yfit[k-1]=YTrav[k-1]-XTrav[k-1]; // NB : logarithm test on YTrav has been made in the previous loo
+      }
      }
     //
     // INTENSITY FITTING (Marquardt-Levenberg + SVD)
