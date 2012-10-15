@@ -860,20 +860,23 @@ RC MKZY_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
           // Gaps : rebuild subwindows on new wavelength scale
 
-          for (indexWindow=0,DimL=0;indexWindow<pTabFeno->svd.Z;indexWindow++)
+          doas_spectrum *new_range = spectrum_new();
+          for (indexWindow = 0, DimL=0; indexWindow < pTabFeno->svd.Z; indexWindow++)
            {
-            pTabFeno->svd.Fenetre[indexWindow][0]=FNPixel(pTabFeno->LambdaRef,pTabFeno->svd.LFenetre[indexWindow][0],pTabFeno->NDET,PIXEL_AFTER);
-            pTabFeno->svd.Fenetre[indexWindow][1]=FNPixel(pTabFeno->LambdaRef,pTabFeno->svd.LFenetre[indexWindow][1],pTabFeno->NDET,PIXEL_BEFORE);
-
-            DimL+=(pTabFeno->svd.Fenetre[indexWindow][1]-pTabFeno->svd.Fenetre[indexWindow][0]+1);
+            int pixel_start = FNPixel(pTabFeno->LambdaRef,pTabFeno->svd.LFenetre[indexWindow][0],pTabFeno->NDET,PIXEL_AFTER);
+            int pixel_end = FNPixel(pTabFeno->LambdaRef,pTabFeno->svd.LFenetre[indexWindow][1],pTabFeno->NDET,PIXEL_BEFORE);
+            
+            spectrum_append(new_range, pixel_start, pixel_end);
+            
+            DimL += pixel_end - pixel_start +1;
            }
-
-          pTabFeno->svd.DimL=DimL;
-
+          
           // Buffers allocation
-
           SVD_Free("MKZY_LoadAnalysis",&pTabFeno->svd);
+          pTabFeno->svd.DimL=DimL;
           SVD_LocalAlloc("MKZY_LoadAnalysis",&pTabFeno->svd);
+          // new spectral windows
+          pTabFeno->svd.specrange = new_range;
 
           pTabFeno->Decomp=1;
 

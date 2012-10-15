@@ -4,7 +4,9 @@
 
 HELP_SYSTEM     =      # or empty
 QWT_LINKAGE     = qwtdll        # qwtstatic or qwtdll
-CODE_GENERATION = debug         # debug or release
+CODE_GENERATION = release         # debug or release
+
+QMAKE_CFLAGS += -std=gnu99
 
 #----------------------------------------------
 # Platform dependency ...
@@ -15,19 +17,20 @@ unix {
   QWT_LIB_PATH   = /usr/local/qwt/lib
   QWT_LIB        = qwt
 
-  INSTALL_PREFIX = /usr/local/Qdoas
-
-  CODA_LIB_PATH = /usr/local/lib
-  CODA_INC_PATH = /usr/local/include
+  INSTALL_PREFIX = /bira-iasb/proj_dyn/DOAS/Programmes/QDOAS-linux
+  CODA_LIB_PATH = /bira-iasb/proj_dyn/DOAS/Programmes/QDOAS-linux/lib
+  CODA_INC_PATH = /bira-iasb/proj_dyn/DOAS/Programmes/QDOAS-linux/include
+  HDFEOS_LIB_PATH = /bira-iasb/proj_dyn/DOAS/Programmes/QDOAS-linux/hdfeos/lib/linux64
+  HDF4_LIB_PATH = /bira-iasb/proj_dyn/DOAS/Programmes/QDOAS-linux/lib
 
   # QDOAS online help
 
-  QDOAS_HELP= '\\"D:/My_Applications/QDoas/trunk/Src/qdoas/release/Help\\"'  # place quotes around the version string
-  DEFINES += QDOAS_HELP_PATH=\"$${QDOAS_HELP}\"
+  #  QDOAS_HELP= '\\"D:/My_Applications/QDoas/trunk/Src/qdoas/release/Help\\"'  # place quotes around the version string
+  # DEFINES += QDOAS_HELP_PATH=\"$${QDOAS_HELP}\"
 
   # for trace-write debugging ...
-  DEFINES += DEBUG
-  DEFINES += LVL4
+  # DEFINES += DEBUG
+  # DEFINES += LVL4
 }
 
 win32 {

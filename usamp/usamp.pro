@@ -161,6 +161,7 @@ SOURCES += ../engine/vector.c
 SOURCES += ../engine/winfiles.c
 SOURCES += ../engine/xsconv.c
 SOURCES += ../engine/usamp.c
+SOURCES += ../engine/spectral_range.c
 
 #----------------------------------------------
 # Engine Header files
@@ -172,6 +173,7 @@ HEADERS += ../engine/engine_xsconv.h
 HEADERS += ../engine/engine_common.h
 HEADERS += ../engine/constants.h
 HEADERS += ../engine/windoas.h
+HEADERS += ../engine/spectral_range.h
 
 #----------------------------------------------
 # Install

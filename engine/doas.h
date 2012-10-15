@@ -44,6 +44,7 @@
 //  ----------------------------------------------------------------------------
 
 #include "windoas.h"
+#include "spectral_range.h"
 
 #if !defined(__DOAS_)
 #define __DOAS_
@@ -147,13 +148,14 @@ RC SPLINE_Vector(double *xa,double *ya,double *y2a,int na,double *xb,double *yb,
 
 typedef struct _svd
  {
-  INT DimC,DimL,DimP,NF,NP,Z,nFit,                     // gaps and analysis window limits in pixels units
-      Fenetre[MAX_FEN][2];
+   INT DimC,DimL,DimP,NF,NP,nFit,Z;                     // gaps and analysis window limits in pixels units
+  //      Fenetre[MAX_FEN][2];
 
   double   LFenetre[MAX_FEN][2],                       // gaps and analysis window limits in wavelength units (nm)
          **A,**U,**V,*W,**P,                           // SVD matrices
          **covar,
           *SigmaSqr;
+   doas_spectrum *specrange; // gaps and analysis window limits in pixels units
  }
 SVD;
 
@@ -1003,7 +1005,7 @@ EXTERN double      **U,*x,*Lambda,*LambdaSpec,
 // PROTOTYPES
 // ----------
 
-RC ANALYSE_Function ( double *lambda,double *X, double *Y, INT ndet, double *Y0, double *SigmaY, double *Yfit, int Npts,
+RC ANALYSE_Function ( double *X, double *Y, double *SigmaY, double *Yfit, int Npts,
               double *fitParamsC, double *fitParamsF,INDEX indexFenoColumn);
 
 enum _pixelSelection
@@ -1638,7 +1640,7 @@ extern int OMI_beatLoaded;
 void OMI_TrackSelection(DoasCh *omiTrackSelection,int *omiTracks);
 void OMI_ReleaseReference(void);
 RC   OMI_LoadReference(ENGINE_CONTEXT *pEngineContext,DoasCh *refFile);
-RC   OMI_GetReference(ENGINE_CONTEXT *pEngineContext,DoasCh *refFile,INDEX indexColumn,double *lambda,double *ref,double *refSigma);
+RC   OMI_GetReference(DoasCh *refFile,INDEX indexColumn,double *lambda,double *ref,double *refSigma);
 RC   OMI_Set(ENGINE_CONTEXT *pEngineContext);
 RC   OMI_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,INDEX fileIndex);
 

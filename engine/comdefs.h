@@ -276,6 +276,7 @@ SHORT_DATE;
 #define ERROR_ID_OMI_REF                       1403                             // no irradiance found
 #define ERROR_ID_OMI_REFSIZE                   1404                             // irradiance and spectra swaths do not have the same size
 #define ERROR_ID_OMI_PIXELQF                   1405                             // spectrum rejected based on pixels quality flags
+#define ERROR_ID_HDFEOS                        1406                             // error in hdfeos file
 #define ERROR_ID_FILE_FORMAT                   2000                             // bad file format
 
 // =========

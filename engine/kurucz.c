@@ -331,7 +331,8 @@ RC KURUCZ_Spectrum(double *oldLambda,double *newLambda,double *spectrum,double *
 
       // Fill A SVD system
 
-      pixMid[indexWindow+1]=(double)(svdFeno[indexWindow].Fenetre[0][0]+svdFeno[indexWindow].Fenetre[0][1])*0.5;
+      pixMid[indexWindow+1]=(double)( spectrum_start(svdFeno[indexWindow].specrange) 
+                                      + spectrum_end(svdFeno[indexWindow].specrange) )*0.5;
 
       VSig[indexWindow+1]=pResults->SigmaShift;
 
@@ -435,8 +436,8 @@ RC KURUCZ_Spectrum(double *oldLambda,double *newLambda,double *spectrum,double *
 
     if (!rc)
      {
-      SvdPDeb=svdFeno[0].Fenetre[0][0];
-      SvdPFin=svdFeno[Nb_Win-1].Fenetre[0][1];
+      SvdPDeb=spectrum_start(svdFeno[0].specrange);
+      SvdPFin=spectrum_end(svdFeno[Nb_Win-1].specrange);
 
       // New wavelength scale (corrected calibration)
       // NB : we fit a polynomial in Lambda+shift point but it's possible to fit a polynomial in shift points by replacing
@@ -692,13 +693,13 @@ RC KURUCZ_Spectrum(double *oldLambda,double *newLambda,double *spectrum,double *
 // ----------------------------------------------------------------------------
 
 RC KURUCZ_ApplyCalibration(FENO *pTabFeno,double *newLambda,INDEX indexFenoColumn)
- {
+{
   // Declarations
 
   MATRIX_OBJECT wveDptStretch;    // for slit function file type, the wavelength dependent stretch is saved as a slit matrix
   double slitParam2;
   INDEX indexWindow;
-  INT newDimL;
+  INT newDimL = 0;
   RC rc;
 
   // Initializations
@@ -708,20 +709,27 @@ RC KURUCZ_ApplyCalibration(FENO *pTabFeno,double *newLambda,INDEX indexFenoColum
 
   // Rebuild gaps
 
-  for (indexWindow=newDimL=0;indexWindow<pTabFeno->svd.Z;indexWindow++)
+  doas_spectrum *new_range = spectrum_new();
+  for (indexWindow = 0; indexWindow < pTabFeno->svd.Z; indexWindow++)
    {
-    pTabFeno->svd.Fenetre[indexWindow][0]=FNPixel(newLambda,pTabFeno->svd.LFenetre[indexWindow][0],pTabFeno->NDET,PIXEL_AFTER);
-    pTabFeno->svd.Fenetre[indexWindow][1]=FNPixel(newLambda,pTabFeno->svd.LFenetre[indexWindow][1],pTabFeno->NDET,PIXEL_BEFORE);
+    int pixel_start = FNPixel(newLambda,pTabFeno->svd.LFenetre[indexWindow][0],pTabFeno->NDET,PIXEL_AFTER);
+    int pixel_end = FNPixel(newLambda,pTabFeno->svd.LFenetre[indexWindow][1],pTabFeno->NDET,PIXEL_BEFORE);
 
-    newDimL+=(pTabFeno->svd.Fenetre[indexWindow][1]-pTabFeno->svd.Fenetre[indexWindow][0]+1);
+    spectrum_append(new_range, pixel_start, pixel_end);
+
+    newDimL += pixel_end - pixel_start +1;
    }
 
-  if (newDimL!=pTabFeno->svd.DimL)
-   {
+  if (newDimL != pTabFeno->svd.DimL)
+   { // reallocate complete SVD structure.
     SVD_Free("KURUCZ_ApplyCalibration ",&pTabFeno->svd);
     pTabFeno->svd.DimL=newDimL;
     SVD_LocalAlloc("KURUCZ_ApplyCalibration ",&pTabFeno->svd);
-   }
+   } // only update specrange
+  else if(pTabFeno->svd.specrange != NULL)
+   spectrum_destroy(pTabFeno->svd.specrange);
+
+  pTabFeno->svd.specrange = new_range;
 
   // Force decomposition
 
@@ -782,7 +790,7 @@ RC KURUCZ_ApplyCalibration(FENO *pTabFeno,double *newLambda,INDEX indexFenoColum
 #pragma argsused
 #endif
 RC KURUCZ_Reference(double *instrFunction,INDEX refFlag,INT saveFlag,INT gomeFlag,void *responseHandle,INDEX indexFenoColumn)
- {
+{
   // Declarations
 
   CROSS_REFERENCE *TabCross;                                                    // pointer to a symbol description hold by an analysis window
@@ -956,7 +964,7 @@ void KURUCZ_Init(INT gomeFlag,INDEX indexFenoColumn)
   // Declarations
 
   INDEX indexFeno,indexWindow;
-  INT (*Fenetre)[2],nbWin;
+  INT nbWin;
   double Lambda_min,Lambda_max,Win_size;
   FENO *pTabFeno;
   SVD *pSvd;
@@ -982,13 +990,16 @@ void KURUCZ_Init(INT gomeFlag,INDEX indexFenoColumn)
       for (indexWindow=0;indexWindow<nbWin;indexWindow++)
        {
         pSvd=&KURUCZ_buffers[indexFenoColumn].KuruczFeno[indexFeno].svdFeno[indexWindow];
-        Fenetre=pSvd->Fenetre;
+        
         Lambda_max=Lambda_min+Win_size;
 
-        Fenetre[0][0]=FNPixel(pTabFeno->LambdaRef,Lambda_min,pTabFeno->NDET,PIXEL_AFTER);
-        Fenetre[0][1]=FNPixel(pTabFeno->LambdaRef,Lambda_max,pTabFeno->NDET,PIXEL_BEFORE);
+        int pixel_start=FNPixel(pTabFeno->LambdaRef,Lambda_min,pTabFeno->NDET,PIXEL_AFTER);
+        int pixel_end=FNPixel(pTabFeno->LambdaRef,Lambda_max,pTabFeno->NDET,PIXEL_BEFORE);
 
-        pSvd->DimL=Fenetre[0][1]-Fenetre[0][0]+1;
+        pSvd->specrange = spectrum_new();
+        spectrum_append(pSvd->specrange, pixel_start, pixel_end);
+
+        pSvd->DimL=pixel_end - pixel_start + 1;
 
         Lambda_min=Lambda_max;
        }

@@ -21,32 +21,36 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #ifndef _MEDIATE_RESPONSE_H_GUARD
 #define _MEDIATE_RESPONSE_H_GUARD
 
+#define MAX_PLOT_SEGMENTS 
+
 #include "mediate_types.h"
 
 #if defined(_cplusplus) || defined(__cplusplus)
 extern "C" {
 #endif
-
+  
 //----------------------------------------------------------
 // mediateResponse interface
 //----------------------------------------------------------
-
+  
 //----------------------------------------------------------
 // Plotting oriented interface
 //----------------------------------------------------------
+  
+typedef struct plot_data {
+  char curveName[80];
+  double *x, *y;
+  int length;
+  int curveNumber;
+  enum eCurveStyleType curveType;
+} plot_data_t;
 
-  typedef struct plot_data {
-  	 char curveName[80];
-    double *x, *y;
-    int length;
-    enum eCurveStyleType curveType;
-  } plot_data_t;
 
+void mediateAllocateAndSetPlotData(plot_data_t *d, const char *curveName,double *xData, double *yData, int len, enum eCurveStyleType type);
+void mediateAllocateAndSetNumberedPlotData(plot_data_t *d, const char *curveName,double *xData, double *yData, int len, enum eCurveStyleType type, int curveNumber);
+void mediateReleasePlotData(plot_data_t *d);
 
-  void mediateAllocateAndSetPlotData(plot_data_t *d, const char *curveName,double *xData, double *yData, int len, enum eCurveStyleType type);
-  void mediateReleasePlotData(plot_data_t *d);
-
-  void mediateResponseAddImage(int page,const char *imageFile,void *responseHandle);
+void mediateResponseAddImage(int page,const char *imageFile,void *responseHandle);
 
 // mediateResponsePlotData
 //

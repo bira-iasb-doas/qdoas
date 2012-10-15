@@ -141,7 +141,7 @@ CWPlot::CWPlot(const RefCountConstPtr<CPlotDataSet> &dataSet,
       curve->setRawSamples(curveData.xRawData(), curveData.yRawData(), curveData.size());     // QWT 5.0.2 (setRawData) -> QWT 6.0.0
 
       // configure curve's pen color based on index
-      curve->setPen(m_plotProperties.pen((i%4) + 1));
+      curve->setPen(m_plotProperties.pen(( curveData.curveNumber() %4) + 1));
 
       if (curveData.curveType() == Point) {
 

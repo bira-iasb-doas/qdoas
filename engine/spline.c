@@ -81,8 +81,8 @@
 // -----------------------------------------------------------------------------
 
 RC SPLINE_Deriv2(double *X,double *Y,double *Y2,int n,DoasCh *callingFunction)
- {
- 	// Declarations
+{
+  // Declarations
 
   int i, k;
   double p, qn, sig, un, *u, yp1,ypn;
@@ -90,9 +90,9 @@ RC SPLINE_Deriv2(double *X,double *Y,double *Y2,int n,DoasCh *callingFunction)
 
   // Debugging
 
-  #if defined(__DEBUG_) && __DEBUG_ && defined(__DEBUG_DOAS_SHIFT_) && __DEBUG_DOAS_SHIFT_
+#if defined(__DEBUG_) && __DEBUG_ && defined(__DEBUG_DOAS_SHIFT_) && __DEBUG_DOAS_SHIFT_
   DEBUG_FunctionBegin("SPLINE_Deriv2",DEBUG_FCTTYPE_MATH);
-  #endif
+#endif
 
   // Initializations
 
@@ -132,7 +132,7 @@ RC SPLINE_Deriv2(double *X,double *Y,double *Y2,int n,DoasCh *callingFunction)
        u[i]=(double)(6.*u[i]/(X[i+1]-X[i-1])-sig*u[i-1])/p;
 
        if (fabs(u[i])<(double)1.e-300)
-        u[i]=(double)0.;
+	u[i]=(double)0.;
       }
 
     // consider upper boundary :
@@ -143,8 +143,8 @@ RC SPLINE_Deriv2(double *X,double *Y,double *Y2,int n,DoasCh *callingFunction)
        qn=un=(double)0.;
       else
        {
-        qn=(double)0.5;
-        un=(double)(3./(X[i]-X[i-1]))*(ypn-(Y[i]-Y[i-1])/(X[i]-X[i-1]));
+	qn=(double)0.5;
+	un=(double)(3./(X[i]-X[i-1]))*(ypn-(Y[i]-Y[i-1])/(X[i]-X[i-1]));
        }
 
       Y2[i]=(un-qn*u[i-1])/(qn*Y2[i-1]+1.);
@@ -160,16 +160,16 @@ RC SPLINE_Deriv2(double *X,double *Y,double *Y2,int n,DoasCh *callingFunction)
 
   // Debugging
 
-  #if defined(__DEBUG_) && __DEBUG_ && defined(__DEBUG_DOAS_SHIFT_) && __DEBUG_DOAS_SHIFT_
+#if defined(__DEBUG_) && __DEBUG_ && defined(__DEBUG_DOAS_SHIFT_) && __DEBUG_DOAS_SHIFT_
   if (rc)
    DEBUG_PrintVar("Input vectors",X,0,n-1,Y,0,n-1,NULL);
   DEBUG_FunctionStop("SPLINE_Deriv2",rc);
-  #endif
+#endif
 
   // Return
 
   return rc;
- }
+}
 
 // -----------------------------------------------------------------------------
 // FUNCTION      SPLINE_Vector
@@ -195,24 +195,29 @@ RC SPLINE_Deriv2(double *X,double *Y,double *Y2,int n,DoasCh *callingFunction)
 // -----------------------------------------------------------------------------
 
 RC SPLINE_Vector(double *xa,double *ya,double *y2a,int na,double *xb,double *yb,int nb,int type,DoasCh *callingFunction)
- {
+{
   // Declarations
 
   INDEX indexb,                                                                 // index for browsing new absissae
-        klo,khi,k;                                                              // indexes for dichotomic search in original absissae
+    klo,khi,k;                                                              // indexes for dichotomic search in original absissae
 
   double h,b,a,x;                                                               // variables
   RC rc;                                                                        // return code
 
   // Debugging
 
-  #if defined(__DEBUG_) && __DEBUG_ && defined(__DEBUG_DOAS_SHIFT_) && __DEBUG_DOAS_SHIFT_
+#if defined(__DEBUG_) && __DEBUG_ && defined(__DEBUG_DOAS_SHIFT_) && __DEBUG_DOAS_SHIFT_
   DEBUG_FunctionBegin("SPLINE_Vector",DEBUG_FCTTYPE_MATH);
-  #endif
+#endif
 
   // Initialization
 
   rc=ERROR_ID_NO;
+
+  double xlo = xa[0];
+  double xhi = xa[na-1];
+  klo=0;
+  khi=na-1;
 
   // Browse new absissae
 
@@ -228,21 +233,31 @@ RC SPLINE_Vector(double *xa,double *ya,double *y2a,int na,double *xb,double *yb,
      yb[indexb]=ya[na-1];
     else
      {
-     	// set boundaries
-
-      klo=0;
-      khi=na-1;
+      // set boundaries
+   
+      // when interpolating a range of x's, often klo and/or khi will not change from one x to the next
+      // therefore, we save some time by reusing klo and khi when possible
+      if(x > xhi) {
+       khi=na-1; //risky?
+       xhi=xa[na-1];
+      } else if(x < xlo) {
+       klo=0; //risky
+       xlo=xa[0];
+      }
 
       // dichotomic search for an interval including the new absissa
 
       while (khi-klo>1)
        {
-        k=(khi+klo)>>1;
+	k=(khi+klo)>>1;
 
-        if (xa[k]>x)
-         khi=k;
-        else
-         klo=k;
+	if (xa[k]>x) {
+	 khi=k;
+	 xhi=xa[k];
+	} else {
+	 klo=k;
+	 xlo=xa[k];
+	}
        }
 
       h=xa[khi]-xa[klo];
@@ -251,26 +266,26 @@ RC SPLINE_Vector(double *xa,double *ya,double *y2a,int na,double *xb,double *yb,
        rc=ERROR_SetLast(callingFunction,ERROR_TYPE_WARNING,ERROR_ID_SPLINE,klo,khi,xa[klo],xa[khi]);
       else
        {
-       	// get ratios
+	// get ratios
 
-        a = (xa[khi]-x)/h;
-        b = (x-xa[klo])/h;
+	a = (xa[khi]-x)/h;
+	b = (x-xa[klo])/h;
 
-        // interpolation
+	// interpolation
 
-        if (type==SPLINE_LINEAR)
-         yb[indexb]=a*ya[klo]+b*ya[khi];
-        else if (type==SPLINE_CUBIC)
-         yb[indexb]=a*ya[klo]+b*ya[khi]+((a*a*a-a)*y2a[klo]+(b*b*b-b)*y2a[khi])*(h*h)/6.;
+	if (type==SPLINE_LINEAR)
+	 yb[indexb]=a*ya[klo]+b*ya[khi];
+	else if (type==SPLINE_CUBIC)
+	 yb[indexb]=a*ya[klo]+b*ya[khi]+((a*a*a-a)*y2a[klo]+(b*b*b-b)*y2a[khi])*(h*h)/6.;
        }
      }
    }
 
   // Return
 
-  #if defined(__DEBUG_) && __DEBUG_ && defined(__DEBUG_DOAS_SHIFT_) && __DEBUG_DOAS_SHIFT_
+#if defined(__DEBUG_) && __DEBUG_ && defined(__DEBUG_DOAS_SHIFT_) && __DEBUG_DOAS_SHIFT_
   DEBUG_FunctionStop("SPLINE_Vector",rc);
-  #endif
+#endif
 
   return rc;
- }
+}

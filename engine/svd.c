@@ -617,6 +617,8 @@ void SVD_Free(DoasCh *callingFunctionShort,SVD *pSvd)
    MEMORY_ReleaseDVector(functionNameShort,"SigmaSqr",pSvd->SigmaSqr,0);
   if (pSvd->covar!=NULL)
    MEMORY_ReleaseDMatrix(functionNameShort,"covar",pSvd->covar,1,pSvd->DimC,1);
+  if (pSvd->specrange !=NULL)
+   spectrum_destroy(pSvd->specrange);
 
   #if defined(__DEBUG_) && __DEBUG_
   DEBUG_FunctionStop("SVD_Free",0);
@@ -670,12 +672,12 @@ RC SVD_LocalAlloc(DoasCh *callingFunctionShort,SVD *pSvd)
     // Initializations
 
      {
-     	for (i=1;i<=pSvd->DimC;i++)
-     	 {
-     	 	for (j=1;j<=pSvd->DimC;j++)
-     	 	 pSvd->V[i][j]=pSvd->covar[i][j]=(double)0.;
-     	 	pSvd->W[i]=pSvd->SigmaSqr[i]=(double)0.;
-     	 }
+      for (i=1;i<=pSvd->DimC;i++)
+       {
+        for (j=1;j<=pSvd->DimC;j++)
+         pSvd->V[i][j]=pSvd->covar[i][j]=(double)0.;
+        pSvd->W[i]=pSvd->SigmaSqr[i]=(double)0.;
+       }
 
       for (i=1;i<=pSvd->DimL;i++)
        pSvd->A[0][i]=pSvd->U[0][i]=(double)0.;

@@ -14,11 +14,11 @@ QT = core xml
 # Platform dependency ... based on ../config.pri
 #----------------------------------------------
 
-INCLUDEPATH  += $$QWT_INC_PATH $$CODA_INC_PATH
+INCLUDEPATH  += $$QWT_INC_PATH $$CODA_INC_PATH /home/thomasd/hdfeos/include /home/thomasd/hdf4/include/
 
 unix {
   INCLUDEPATH  += ../mediator ../common ../qdoas ../convolution ../usamp ../engine ../ring
-  LIBS         += -L$$QWT_LIB_PATH -l$$QWT_LIB -L$$CODA_LIB_PATH -lcoda -lm
+  LIBS         += -L$$QWT_LIB_PATH -l$$QWT_LIB -L$$CODA_LIB_PATH -lcoda -lm -L$$HDFEOS_LIB_PATH -lhdfeos -L$$HDF4_LIB_PATH -lmfhdf -ldf -ljpeg -lsz -lz
   QMAKE_LFLAGS += -Wl,-rpath=$$QWT_LIB_PATH:$$CODA_LIB_PATH
 }
 
@@ -189,6 +189,7 @@ SOURCES += ../engine/wvlen_det_pix.c
 SOURCES += ../engine/xsconv.c
 SOURCES += ../engine/engine_xsconv.c
 SOURCES += ../engine/zenithal.c
+SOURCES += ../engine/spectral_range.c
 
 #----------------------------------------------
 # Engine Header files
@@ -203,6 +204,7 @@ HEADERS += ../engine/scia_l1c.h
 HEADERS += ../engine/scia_l1c_lib.h
 HEADERS += ../engine/windoas.h
 HEADERS += ../engine/engine_xsconv.h
+HEADERS += ../engine/spectral_range.h
 
 #----------------------------------------------
 # Install

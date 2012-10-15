@@ -33,18 +33,21 @@ class CXYPlotData
 {
  public:
   CXYPlotData(const char *curveName,const double *x, const double *y, int n, enum eCurveStyleType type);
+  CXYPlotData(const char *curveName,const double *x, const double *y, int n, enum eCurveStyleType type, int curveNumber);
   ~CXYPlotData();
 
   enum eCurveStyleType curveType(void) const;
   const char *curveName(void) const;
   const double* xRawData(void) const;
   const double* yRawData(void) const;
+  int curveNumber(void) const;
   int size(void) const;
 
  private:
   QString m_curveName;
   double *m_xData, *m_yData;
   int m_nSamples;
+  int m_curveNumber;
   enum eCurveStyleType m_curveType;
 };
 
@@ -53,6 +56,7 @@ inline const char *CXYPlotData::curveName(void) const { return m_curveName.toAsc
 inline const double* CXYPlotData::xRawData(void) const { return m_xData; }
 inline const double* CXYPlotData::yRawData(void) const { return m_yData; }
 inline int CXYPlotData::size(void) const { return m_nSamples; }
+inline int CXYPlotData::curveNumber(void) const { return m_curveNumber; }
 
 
 
@@ -65,6 +69,7 @@ class CPlotDataSet
   ~CPlotDataSet();
 
   void addPlotData(const char *curveName,const double *x, const double *y, int n, enum eCurveStyleType type);
+  void addPlotData(const char *curveName,const double *x, const double *y, int n, enum eCurveStyleType curveType, int curveNumber);
 
   int count(void) const;
   const CXYPlotData& rawData(int index) const;

@@ -30,6 +30,33 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 void mediateAllocateAndSetPlotData(plot_data_t *d, const char *curveName,double *xData, double *yData, int len, enum eCurveStyleType type)
 {
+  d->curveNumber = -1;
+
+  int byteLen = len * sizeof(double);
+
+  d->x = (double*)malloc(byteLen);
+  d->y = (double*)malloc(byteLen);
+
+  strcpy(d->curveName,curveName);
+
+  if (d->x == NULL || d->y == NULL) {
+    // bail out ...
+    mediateReleasePlotData(d);
+    d->x = d->y = NULL;
+    d->length = 0;
+    d->curveType = type;
+  }
+  else {
+    memcpy(d->x, xData, byteLen);
+    memcpy(d->y, yData, byteLen);
+    d->length = len;
+    d->curveType = type;
+  }
+}
+
+void mediateAllocateAndSetNumberedPlotData(plot_data_t *d, const char *curveName,double *xData, double *yData, int len, enum eCurveStyleType type, int curveNumber)
+{
+  d->curveNumber = curveNumber;
   int byteLen = len * sizeof(double);
 
   d->x = (double*)malloc(byteLen);
@@ -78,8 +105,10 @@ void mediateResponsePlotData(int page,
 
   int i = 0;
   while (i < arrayLength) {
-    dataSet->addPlotData(plotDataArray[i].curveName,plotDataArray[i].x, plotDataArray[i].y, plotDataArray[i].length,
-			 plotDataArray[i].curveType);
+    if(plotDataArray[i].curveNumber >= 0)
+      dataSet->addPlotData(plotDataArray[i].curveName,plotDataArray[i].x, plotDataArray[i].y, plotDataArray[i].length, plotDataArray[i].curveType, plotDataArray[i].curveNumber);
+    else
+      dataSet->addPlotData(plotDataArray[i].curveName,plotDataArray[i].x, plotDataArray[i].y, plotDataArray[i].length, plotDataArray[i].curveType);
     ++i;
   }
 

@@ -122,9 +122,12 @@
 //                                       determined by Kurucz;
 //
 
+/*! \file analyse.c Main doas analysis code.*/
 
 #include "mediate.h"
 #include "engine.h"
+#include "spectral_range.h"
+#include <stdbool.h>
 
 // ===================
 // GLOBAL DECLARATIONS
@@ -141,16 +144,16 @@ DoasCh *AnlysStretch[ANLYS_STRETCH_TYPE_MAX]={"None","1st order","2nd order"};
 DoasCh *AnlysPolynome[ANLYS_POLY_TYPE_MAX]={"None","order 0","order 1","order 2","order 3","order 4","order 5"};
 DoasCh *ANLYS_crossAction[ANLYS_CROSS_ACTION_MAX]={"None","Interpolate","Convolute Std","Convolute I0","Convolute Ring"}; /* "Detector t� dependent","Strato t� dependent",*/
 
+doas_spectrum *global_doas_spectrum; // Should better remove this global variable.
+
 INT    ANALYSE_plotKurucz,ANALYSE_plotRef,ANALYSE_indexLine;
 // INT    ANALYSE_maxIter=0;
 
 INT NFeno,                             // number of analysis windows
-    DimC,                              // number of columns in SVD matrix == number of symbols to take into account for SVD decomposition
-    Z,                                 // number of small windows to take into account
-    (*Fenetre)[2];                     // list of small windows
+  DimC;                              // number of columns in SVD matrix == number of symbols to take into account for SVD decomposition
 
 INT SvdPDeb,SvdPFin,                   // analysis window limits
-    LimMin,LimMax,LimN;
+  LimMin,LimMax,LimN;
 
 WRK_SYMBOL *WorkSpace;                 // list of symbols in a project
 INT NWorkSpace;
@@ -159,18 +162,18 @@ FENO **TabFeno,*Feno;                  // list of analysis windows in a project
 INT ANALYSE_swathSize=0;
 
 double **U,*x,*Lambda,*LambdaSpec,
-        *ANALYSE_pixels,
-        *ANALYSE_splineX,              // abscissa used for spectra, in the units selected by user
-        *ANALYSE_splineX2,             // in pixels units, second derivatives of corresponding wavelengths
-        *ANALYSE_absolu,               // residual spectrum
-        *ANALYSE_secX,                 // residual spectrum + the contribution of a cross section for fit display
-        *ANALYSE_t,                    // residual transmission in Marquardt-Levenberg not linear method
-        *ANALYSE_tc,                   // residual transmission in Marquardt-Levenberg not linear method
-        *ANALYSE_xsTrav,               // temporary buffer for processing on cross sections
-        *ANALYSE_xsTrav2,              // cross sections second derivatives
-        *ANALYSE_shift,
-        *ANALYSE_zeros,
-        *ANALYSE_ones;
+  *ANALYSE_pixels,
+  *ANALYSE_splineX,              // abscissa used for spectra, in the units selected by user
+  *ANALYSE_splineX2,             // in pixels units, second derivatives of corresponding wavelengths
+  *ANALYSE_absolu,               // residual spectrum
+  *ANALYSE_secX,                 // residual spectrum + the contribution of a cross section for fit display
+  *ANALYSE_t,                    // residual transmission in Marquardt-Levenberg not linear method
+  *ANALYSE_tc,                   // residual transmission in Marquardt-Levenberg not linear method
+  *ANALYSE_xsTrav,               // temporary buffer for processing on cross sections
+  *ANALYSE_xsTrav2,              // cross sections second derivatives
+  *ANALYSE_shift,
+  *ANALYSE_zeros,
+  *ANALYSE_ones;
 double   ANALYSE_nFree;                // number of free degrees
 double   ANALYSE_oldLatitude;
 
@@ -182,16 +185,16 @@ USAMP  ANALYSE_usampBuffers;
 // ===================
 
 INT NOrtho,
-   *OrthoSet,
-    ANALYSE_ignoreAll,
-    hFilterSpecLog,hFilterRefLog,
-    NDET,
-                                       // description of an analysis windows
+  *OrthoSet,
+  ANALYSE_ignoreAll,
+  hFilterSpecLog,hFilterRefLog,
+  NDET,
+// description of an analysis windows
 
-    Dim,                               // security for border effects
-    DimL,                              // number of lines in SVD matrix == total number of pixels to take into account for SVD decomposition
-    DimP,
-    NF,NP,FAST;                        // number of non linear parameters to fit
+  Dim,                               // security for border effects
+  DimL,                              // number of lines in SVD matrix == total number of pixels to take into account for SVD decomposition
+  DimP,
+  NF,NP,FAST;                        // number of non linear parameters to fit
 
 PRJCT_FILTER *ANALYSE_plFilter,*ANALYSE_phFilter;
 PRJCT_ANLYS  *pAnalysisOptions;        // analysis options
@@ -200,20 +203,20 @@ PRJCT_KURUCZ *pKuruczOptions;          // Kurucz options
 PRJCT_USAMP  *pUsamp;                  // undersampling options
 
 double **A,**V,*W,**P,                 // SVD matrices
-       **covar,
-        *SigmaSqr,
-        *Fitp,
-        *FitDeltap,
-        *FitMinp,
-        *FitMaxp,
-        *a,
-        *b,
-        *Sigma,
-        *SplineSpec,
-        *SplineRef,
-         StretchFact1,StretchFact2,
-         Square,
-         ZM,TDET;
+  **covar,
+  *SigmaSqr,
+  *Fitp,
+  *FitDeltap,
+  *FitMinp,
+  *FitMaxp,
+  *a,
+  *b,
+  *Sigma,
+  *SplineSpec,
+  *SplineRef,
+  StretchFact1,StretchFact2,
+  Square,
+  ZM,TDET;
 
 // QDOAS ??? INDEX AnalyseChildWindows[MAX_MDI_WINDOWS];
 
@@ -230,164 +233,155 @@ INDEX analyseIndexRecord;
 // UTILITY FUNCTIONS
 // =================
 
-double average_magnitude(double * array)
-{
-  int i, j, k;
+/*! Plot a set of curves, leaving blank space for gaps.
+ *
+ * \param page
+ * \param curve_data (num_curves x 2) array of pointers to the x and y data of the curves.
+ * \param num_curves The number of different curves to plot.
+ * \param type
+ * \param forceAutoscaling
+ * \param title
+ * \param responseHandle
+ * \param specrange The doas_spectrum describing the gaps in the spectrum
+ */
+void plot_curves( int page,
+                  double *(*curve_data)[2],
+                  int num_curves,
+                  enum ePlotScaleType type,
+                  int forceAutoScaling,
+                  const char *title,
+                  void *responseHandle,
+                  doas_spectrum* specrange) 
+ {
+  int num_segments = num_curves * spectrum_num_windows(specrange);
+  plot_data_t *plotdata = malloc(num_segments * sizeof(plot_data_t));
+  plot_data_t *plot = plotdata;
+  doas_iterator my_iterator;
+  for (doas_interval *interval = iterator_start_interval(&my_iterator, specrange);
+       interval != NULL;
+       interval = iterator_next_interval(&my_iterator)) {
+   int start = interval_start(interval);
+   int end = interval_end(interval);
+   for (int j = 0; j < num_curves; j++,plot++) {
+     mediateAllocateAndSetNumberedPlotData(plot,"",(curve_data[j][0])+start,(curve_data[j][1])+start,end-start+1,Line, j);
+   }
+  }
+  mediateResponsePlotData( page,plotdata,num_segments,type,forceAutoScaling,title,"Wavelength (nm)","", responseHandle);
+  
+  plot = plotdata;
+  for (int i = 0; i < num_segments; i++)
+    mediateReleasePlotData(plot++);
+  free(plotdata);
+ }
+
+/*! Average magnitude, averaging over valid points of the spectrum.
+ *
+ * The average of the absolute value is returned, for those pixels
+ * which are not excluded from the spectrum.
+ *
+ * \param array Values to average.
+ * \param ranges Describes valid ranges of the spectrum.
+ *
+ * \return The average of the absolute values.
+ */
+double average_magnitude(double * array, doas_spectrum *ranges)
+ {
   double average = 0.;
-  for (j = k = 0; j < Z; j++)
-   for (i = Fenetre[j][0]; i <= Fenetre[j][1]; i++, k++)
-    average += fabs(array[i]);
-  return average / k;
-}
+  doas_iterator my_iterator;
+  for( int i = iterator_start(&my_iterator, ranges); i != ITERATOR_FINISHED; i=iterator_next(&my_iterator))
+   average += fabs(array[i]);
+  return average / spectrum_length(ranges);
+ }
 
-int exclude_pixel(int pixel, int (*fenetre)[2], int num_ranges)
-{
-  int i;
-
-  for (i = 0; i < num_ranges; i++)
-   {
-    if (fenetre[i][0] <= pixel && fenetre[i][1] >= pixel) // look for the window containing the current pixel
-     break;
-   }
-
-  if (fenetre[i][0] == pixel) // pixel is at the start of an existing range
-   {
-    if (fenetre[i][1] == fenetre[i][0])
-     { // we have range of one pixel, which must be removed from the list (probably unlikely)
-      for (; i < num_ranges; i++)
-       { // shift existing ranges down
-	fenetre[i][0] = fenetre[i + 1][0];
-	fenetre[i][1] = fenetre[i + 1][1];
-       }
-      fenetre[i][0] = 0; // erase previous last range
-      fenetre[i][1] = 0;
-      num_ranges--;
-     }
-    else
-     {
-      fenetre[i][0] += 1;
-     }
-   }
-  else if (fenetre[i][1] == pixel) // pixel is at the end of an existing range
-   fenetre[i][1] -= 1;
-  else
-   { // pixel is in the middle of an existing range, which we need to split
-    int j;
-
-    for (j = num_ranges; j > i; j--)
-     { // shift all existing ranges up
-      fenetre[j][0] = fenetre[j - 1][0];
-      fenetre[j][1] = fenetre[j - 1][1];
-     }
-    fenetre[i][1] = pixel - 1;
-    fenetre[i + 1][0] = pixel + 1;
-    num_ranges++;
-   }
-
-  return num_ranges;
-}
-
-/* remove_spikes: see if the array of residuals contains values >
-   (max_residual), if so: exclude these from the
-   given set of spectral windows, update the number of spectral
-   windows,
-*/
-
+/*! Remove pixels with residuals above a certain threshold.
+ *
+ * If the array of residuals contains values > (max_residual), exclude
+ * these from the given set of spectral windows.
+ *
+ * \param residuals The array containing the residuals.
+ * 
+ * \param max_residual The threshold.
+ * 
+ * \param pspecrange The current set of valid point of the spectrum.
+ * 
+ * \param spike_arr An array of boolean values to keep track of which
+ * pixels have been removed.  Updated.
+ *
+ * \return True if pixels were removed.
+ */
 BOOL remove_spikes(double *residuals,
 		   double max_residual,
-		   int (*spectral_windows)[2], // updated to exclude pixels with spikes
-		   int* pnum_windows, // updated with the new number of spectral ranges after spike removal
+		   doas_spectrum *pspecrange, // updated to exclude pixels with spikes
 		   BOOL * spike_arr) // array to store value of residiuals for pixels with spikes
-{
+ {
   BOOL spikes = 0;
-  int temp_windows[MAX_FEN][2];
-  memcpy(temp_windows, spectral_windows, 2*MAX_FEN);
-  int num_windows = * pnum_windows;
-  int pixel,j;
-  for (j = 0 ; j < *pnum_windows; j++)
+
+  doas_spectrum *temprange = spectrum_copy(pspecrange);
+  doas_iterator my_iterator;
+  for( int pixel = iterator_start(&my_iterator,temprange); pixel != ITERATOR_FINISHED; pixel=iterator_next(&my_iterator))
    {
-    for (pixel = spectral_windows[j][0]; pixel <= spectral_windows[j][1]; pixel++)
+    if (fabs(residuals[pixel]) > max_residual)
      {
-      if (fabs(residuals[pixel]) > max_residual)
-       {
-	spikes = 1;
-	num_windows = exclude_pixel(pixel, temp_windows, num_windows);
-	spike_arr[pixel] = 1;
-       }
+      spikes = 1;
+      spectrum_remove_pixel(pspecrange, pixel);
+      spike_arr[pixel] = 1;
      }
    }
-  
-  if(spikes)
-   {
-    memcpy(spectral_windows, temp_windows, 2*MAX_FEN);
-    *pnum_windows = num_windows;
-   }
-  return spikes;
-}
+  spectrum_destroy(temprange);
 
-int reinit_analysis(FENO *pFeno) {
-  pFeno->svd.DimL = calculate_npixels(pFeno->svd.Fenetre,pFeno->svd.Z);
+  return spikes;
+ }
+
+int reinit_analysis(FENO *pFeno)
+ {
+  pFeno->svd.DimL = spectrum_length(pFeno->svd.specrange);
   pFeno->Decomp = 1;
 
   memcpy(ANALYSE_absolu, ANALYSE_zeros, sizeof(double) * NDET);
 
   return ANALYSE_SvdInit(&Feno->svd);
-}
-
-int calculate_npixels(int (*spectral_windows)[2], int num_windows) {
-  int npixels = 0;
-  int i;
-  for (i = 0; i<num_windows; i++)
-    npixels += spectral_windows[i][1] - spectral_windows[i][0] + 1;
-  return npixels;  
-}
+ }
 
 void AnalyseGetFenoLim(FENO *pFeno,INDEX *pLimMin,INDEX *pLimMax)
 {
-  INT (*fenetre)[2],
-    nFenetre,
-    deb,fin,Dim;
-
+  INT deb,fin,Dim;
+  
   // Debugging
-
+  
 #if defined(__DEBUG_) && __DEBUG_
   DEBUG_FunctionBegin("AnalyseGetFenoLim",DEBUG_FCTTYPE_UTIL);
 #endif
-
+  
   deb=Dim=0;
   fin=NDET-1;
-
+  
   if (!pFeno->hidden)
    {
-    fenetre=pFeno->svd.Fenetre;
-    nFenetre=pFeno->svd.Z;
-
-    deb=fenetre[0][0];
-    fin=fenetre[nFenetre-1][1];
-
+    
+    deb = spectrum_start(pFeno->svd.specrange);
+    fin = spectrum_end(pFeno->svd.specrange);
+    
     Dim=0;
-
+    
     if (!pFeno->hidden && (ANALYSE_plFilter->type!=PRJCT_FILTER_TYPE_NONE) && (ANALYSE_plFilter->type!=PRJCT_FILTER_TYPE_ODDEVEN))
      Dim+=(int)(ANALYSE_plFilter->filterSize*sqrt(ANALYSE_plFilter->filterNTimes));
     if (((!pFeno->hidden && ANALYSE_phFilter->hpFilterAnalysis) || ((pFeno->hidden==1) && ANALYSE_phFilter->hpFilterCalib)) &&
 	(ANALYSE_phFilter->type!=PRJCT_FILTER_TYPE_NONE) && (ANALYSE_phFilter->type!=PRJCT_FILTER_TYPE_ODDEVEN))
      Dim+=(int)(ANALYSE_phFilter->filterSize*sqrt(ANALYSE_phFilter->filterNTimes));
-
+    
     Dim=max(Dim,pAnalysisOptions->securityGap);
-
-//    if ((deb-Dim<0) || (fin+Dim>=NDET))
-//     Dim=min(deb,NDET-fin-1);
+    
    }
-
+  
   *pLimMin=max(deb-Dim,0);
   *pLimMax=min(fin+Dim,NDET-1);
-
+  
   // Debugging
-
-  #if defined(__DEBUG_) && __DEBUG_
+  
+#if defined(__DEBUG_) && __DEBUG_
   DEBUG_FunctionStop("AnalyseGetFenoLim",0);
-  #endif
- }
+#endif
+}
 
 // ---------------------------------------
 // FNPixel : Get a pixel from a wavelength
@@ -396,9 +390,9 @@ void AnalyseGetFenoLim(FENO *pFeno,INDEX *pLimMin,INDEX *pLimMax)
 RC FNPixel(double *lambdaVector,double lambdaValue,INT npts,INT pixelSelection)
 {
   // Declarations
-
+  
   INDEX klo,khi,rc;
-
+  
   // Initialization
 
   rc=0;
@@ -428,39 +422,39 @@ RC FNPixel(double *lambdaVector,double lambdaValue,INT npts,INT pixelSelection)
      {
       switch(pixelSelection)
        {
-     // --------------------------------------------------------------------------
-       	case PIXEL_BEFORE :
+	// --------------------------------------------------------------------------
+       case PIXEL_BEFORE :
        	 if ((rc>0) && (lambdaVector[rc]>lambdaValue))
        	  rc--;
-       	break;
-     // --------------------------------------------------------------------------
-       	case PIXEL_AFTER :
+	 break;
+	 // --------------------------------------------------------------------------
+       case PIXEL_AFTER :
        	 if ((rc<npts-1) && (lambdaVector[rc]<lambdaValue))
        	  rc++;
-       	break;
-     // --------------------------------------------------------------------------
-       	case PIXEL_CLOSEST :
-
-        	if ((rc>0) && (lambdaVector[rc]>lambdaValue) &&
+	 break;
+	 // --------------------------------------------------------------------------
+       case PIXEL_CLOSEST :
+	 
+	 if ((rc>0) && (lambdaVector[rc]>lambdaValue) &&
              (lambdaVector[rc]-lambdaValue>lambdaValue-lambdaVector[rc-1]))
-          rc--;
-         else if ((rc<npts-1) && (lambdaVector[rc]<lambdaValue) &&
-                  (lambdaValue-lambdaVector[rc]>lambdaVector[rc+1]-lambdaValue))
-          rc++;
-
-       	break;
-     // --------------------------------------------------------------------------
-       	default :
-       	break;
-     // --------------------------------------------------------------------------
+	  rc--;
+	 else if ((rc<npts-1) && (lambdaVector[rc]<lambdaValue) &&
+		  (lambdaValue-lambdaVector[rc]>lambdaVector[rc+1]-lambdaValue))
+	  rc++;
+	 
+	 break;
+	 // --------------------------------------------------------------------------
+       default :
+	 break;
+	 // --------------------------------------------------------------------------
        }
      }
    }
-
+  
   // Return
-
+  
   return rc;
- }
+}
 
 
 // ---------------------------------------------------------------------------------------
@@ -468,115 +462,91 @@ RC FNPixel(double *lambdaVector,double lambdaValue,INT npts,INT pixelSelection)
 // ---------------------------------------------------------------------------------------
 
 void OrthogonalizeVector(INT *OrthoSet,double *NormSet,INT NOrthoSet,INDEX indexColumn)
- {
+{
   // Declarations
 
   INDEX indexOrthoSet,                   // browse OrthoSet vector
-        indexSvd,                        // index of column in A SVD matrix
-        i;
+    indexSvd,                        // index of column in A SVD matrix
+    i;
   double dot,norm;
-
-  #if defined(__DEBUG_) && __DEBUG_
+  
+#if defined(__DEBUG_) && __DEBUG_
   DEBUG_FunctionBegin("OrthogonalizeVector",DEBUG_FCTTYPE_UTIL);
-  #endif
-
+#endif
+  
   // Orthogonalization
-
+  
   for (indexOrthoSet=0;indexOrthoSet<NOrthoSet;indexOrthoSet++)
-
+   
    if ((norm=NormSet[indexOrthoSet])!=(double)0.)
     {
      indexSvd=Feno->TabCross[OrthoSet[indexOrthoSet]].IndSvdA;
      norm=(double)1./norm;
-
+     
      for (i=1,dot=(double)0.;i<=DimL;i++)
       dot+=A[indexSvd][i]*A[indexColumn][i];
-
+     
      for (i=1;i<=DimL;i++)
       A[indexColumn][i]-=dot*A[indexSvd][i]*norm;
     }
-
-//  #if defined(__DEBUG_) && __DEBUG_
-//  {
-//   INDEX j,l;
-//   double dot;
-//
-//   DEBUG_Print(DOAS_logFile,"Orthogonalization :\n");
-//
-//   for (i=0;i<NOrthoSet;i++)
-//    {
-//     for (l=1,dot=(double)0.;l<=DimL;l++)
-//      dot+=A[Feno->TabCross[OrthoSet[i]].IndSvdA][l]*A[indexColumn][l];
-//
-//     for (j=0;j<Feno->NTabCross;j++)
-//      if (Feno->TabCross[j].IndSvdA==indexColumn)
-//       break;
-//
-//     DEBUG_Print(DOAS_logFile,"%s-%s : Norm %g-%g dot %g\n",
-//                 WorkSpace[Feno->TabCross[OrthoSet[i]].Comp].symbolName,
-//                 WorkSpace[Feno->TabCross[j].Comp].symbolName,
-//                 NormSet[i],VECTOR_Norm(A[Feno->TabCross[j].IndSvdA],DimL),dot);
-//    }
-//  }
-//  #endif
-
-  #if defined(__DEBUG_) && __DEBUG_
+  
+#if defined(__DEBUG_) && __DEBUG_
   DEBUG_FunctionStop("OrthogonalizeVector",0);
-  #endif
- }
+#endif
+}
 
 void OrthogonalizeToCross(INT indexCross,double *NormSet,INT currentNOrtho)
- {
+{
   // Declarations
-
+  
   CROSS_REFERENCE *pTabCross;
   INDEX indexTabCross;
 
-  #if defined(__DEBUG_) && __DEBUG_
+#if defined(__DEBUG_) && __DEBUG_
   DEBUG_FunctionBegin("OrthogonalizeToCross",DEBUG_FCTTYPE_UTIL);
-  #endif
+#endif
 
   for (indexTabCross=0;indexTabCross<Feno->NTabCross;indexTabCross++)
    {
     pTabCross=&Feno->TabCross[indexTabCross];
-
+    
     if (pTabCross->IndOrthog==indexCross)
      {
       OrthoSet[currentNOrtho]=indexCross;
       NormSet[currentNOrtho]=VECTOR_Norm(A[Feno->TabCross[indexCross].IndSvdA],DimL);
-
+      
       if ((ANALYSE_phFilter->filterFunction==NULL) ||
-         (!Feno->hidden && !ANALYSE_phFilter->hpFilterAnalysis) ||
-         ((Feno->hidden==1) && !ANALYSE_phFilter->hpFilterCalib))
+	  (!Feno->hidden && !ANALYSE_phFilter->hpFilterAnalysis) ||
+	  ((Feno->hidden==1) && !ANALYSE_phFilter->hpFilterCalib))
        OrthogonalizeVector(OrthoSet,NormSet,currentNOrtho+1,pTabCross->IndSvdA);
       else
        OrthogonalizeVector(&OrthoSet[NOrtho],&NormSet[NOrtho],currentNOrtho-NOrtho+1,pTabCross->IndSvdA);
-
+      
       OrthogonalizeToCross(indexTabCross,NormSet,currentNOrtho+1);
      }
    }
-
-  #if defined(__DEBUG_) && __DEBUG_
+  
+#if defined(__DEBUG_) && __DEBUG_
   DEBUG_FunctionStop("OrthogonalizeToCross",0);
-  #endif
- }
+#endif
+}
 
 // ------------------------------------------------------------
 // Orthogonalization : Orthogonalization of matrix A processing
 // ------------------------------------------------------------
 
 void Orthogonalization(void)
- {
+{
   // Declarations
-
+  
   INDEX indexOrthoSet,indexTabCross;
   CROSS_REFERENCE *pTabCross;
   double NormSet[MAX_FIT];
-
-  #if defined(__DEBUG_) && __DEBUG_
+  
+#if defined(__DEBUG_) && __DEBUG_
   DEBUG_FunctionBegin("Orthogonalization",DEBUG_FCTTYPE_UTIL);
-  #endif
-
+#endif
+  
   // Orthogonal base
 
   memcpy(NormSet,ANALYSE_ones,NOrtho*sizeof(double));
@@ -584,38 +554,38 @@ void Orthogonalization(void)
   for (indexOrthoSet=1;indexOrthoSet<NOrtho;indexOrthoSet++)
    {
     OrthogonalizeVector(OrthoSet,NormSet,indexOrthoSet,Feno->TabCross[OrthoSet[indexOrthoSet]].IndSvdA);
-//    VECTOR_NormalizeVector(A[Feno->TabCross[OrthoSet[indexOrthoSet]].IndSvdA],DimL,&norm /* Vector norm before normalisation */,"Orthogonalization ");
+    //    VECTOR_NormalizeVector(A[Feno->TabCross[OrthoSet[indexOrthoSet]].IndSvdA],DimL,&norm /* Vector norm before normalisation */,"Orthogonalization ");
     NormSet[indexOrthoSet]=VECTOR_Norm(A[Feno->TabCross[OrthoSet[indexOrthoSet]].IndSvdA],DimL);
    }
-
+  
   // Orthogonalization to base only
-
+  
   if ((ANALYSE_phFilter->filterFunction==NULL) ||
-     (!Feno->hidden && !ANALYSE_phFilter->hpFilterAnalysis) ||
-     ((Feno->hidden==1) && !ANALYSE_phFilter->hpFilterCalib))
-
+      (!Feno->hidden && !ANALYSE_phFilter->hpFilterAnalysis) ||
+      ((Feno->hidden==1) && !ANALYSE_phFilter->hpFilterCalib))
+   
    for (indexTabCross=0;indexTabCross<Feno->NTabCross;indexTabCross++)
     {
      pTabCross=&Feno->TabCross[indexTabCross];
-
+     
      if (pTabCross->IndSvdA && (pTabCross->IndOrthog==ORTHOGONAL_BASE))
       OrthogonalizeVector(OrthoSet,NormSet,NOrtho,pTabCross->IndSvdA);
     }
-
+  
   // Orthogonalization to base plus another vector
-
+  
   for (indexTabCross=0;indexTabCross<Feno->NTabCross;indexTabCross++)
    {
     pTabCross=&Feno->TabCross[indexTabCross];
-
+    
     if (pTabCross->IndSvdA && (pTabCross->IndOrthog==ORTHOGONAL_BASE))
      OrthogonalizeToCross(indexTabCross,NormSet,NOrtho);
    }
-
-  #if defined(__DEBUG_) && __DEBUG_
+  
+#if defined(__DEBUG_) && __DEBUG_
   DEBUG_FunctionStop("Orthogonalization",0);
-  #endif
- }
+#endif
+}
 
 // =======================================
 // Real time interpolation and convolution
@@ -625,24 +595,24 @@ void Orthogonalization(void)
 // Test 24/01/2002
 
 RC TemperatureCorrection(double *xs,double *A,double *B,double *C,double *newXs,double T)
- {
+{
   INDEX j;
 
-  #if defined(__DEBUG_) && __DEBUG_
+#if defined(__DEBUG_) && __DEBUG_
   DEBUG_FunctionBegin("TemperatureCorrection",DEBUG_FCTTYPE_UTIL);
-  #endif
+#endif
 
   memcpy(newXs,ANALYSE_zeros,sizeof(double)*NDET);
 
   for (j=LimMin;j<=LimMax;j++)
    newXs[j]=xs[j]+(T-241)*A[j]+(T-241)*(T-241)*B[j]+(T-241)*(T-241)*(T-241)*C[j];
 
-  #if defined(__DEBUG_) && __DEBUG_
+#if defined(__DEBUG_) && __DEBUG_
   DEBUG_FunctionStop("TemperatureCorrection",0);
-  #endif
+#endif
 
   return 0;
- }
+}
 
 // -----------------------------------------------
 // ShiftVector : Apply shift and stretch on vector
@@ -652,9 +622,9 @@ RC ShiftVector(double *lambda,double *source,double *deriv,double *target,
                double DSH,double DST,double DST2,                           // first shift and stretch
                double DSH_,double DST_,double DST2_,                        // second shift and stretch
                double *Param,INT fwhmDir,INT kuruczFlag,double *preshift,INDEX indexFenoColumn)
- {
+{
   // Declarations
-
+  
   CROSS_REFERENCE *TabCross;
   INDEX i,j;
   double j0,lambda0;
@@ -664,9 +634,9 @@ RC ShiftVector(double *lambda,double *source,double *deriv,double *target,
 
   // Initializations
 
-  #if defined(__DEBUG_) && __DEBUG_
+#if defined(__DEBUG_) && __DEBUG_
   DEBUG_FunctionBegin("ShiftVector",DEBUG_FCTTYPE_APPL);
-  #endif
+#endif
 
   memcpy(ANALYSE_shift,ANALYSE_zeros,sizeof(double)*NDET);
   fwhmFlag=((Feno->analysisType==ANALYSIS_TYPE_FWHM_NLFIT) && (fwhmDir!=0) && (Param!=NULL))?1:0;
@@ -674,8 +644,8 @@ RC ShiftVector(double *lambda,double *source,double *deriv,double *target,
 
   j0=(double)(SvdPDeb+SvdPFin)*0.5;
   lambda0=(fabs(j0-floor(j0))<(double)0.1)?
-                              (double)ANALYSE_splineX[(INDEX)j0]:
-                              (double)0.5*(ANALYSE_splineX[(INDEX)floor(j0)]+ANALYSE_splineX[(INDEX)floor(j0+1.)]);
+    (double)ANALYSE_splineX[(INDEX)j0]:
+    (double)0.5*(ANALYSE_splineX[(INDEX)floor(j0)]+ANALYSE_splineX[(INDEX)floor(j0+1.)]);
 
   rc=ERROR_ID_NO;
 
@@ -684,7 +654,7 @@ RC ShiftVector(double *lambda,double *source,double *deriv,double *target,
   for (j=LimMin;j<=LimMax;j++)
    {                                                        // !! p'=p-(DSH+DST*(p-p0)+DST2*(p-p0)^2
     // Second shift and stretch                             //    p''=p'-(DSH'+DST'*(p'-p0')+DST2'*(p'-p0')^2
-                                                            // with   p=ANALYSE_splineX (Lambda if unit is nm;pixels if unit is pixels)
+    // with   p=ANALYSE_splineX (Lambda if unit is nm;pixels if unit is pixels)
     x0=(ANALYSE_splineX[j]-lambda0);        //        p0'=p0-DSH
     y=ANALYSE_splineX[j]-(DSH_+DST_*x0+DST2_*x0*x0);
 
@@ -714,8 +684,8 @@ RC ShiftVector(double *lambda,double *source,double *deriv,double *target,
       // Apply shift and stretch
 
       if ((rc=((fwhm!=(double)0.) && (((fwhmDir>0) && (fwhm>(double)0.)) || ((fwhmDir<0) && (fwhm<(double)0.)))) ?
-                XSCONV_TypeGauss(lambda,source,deriv,ANALYSE_shift[j],(ANALYSE_splineX[j+1]-ANALYSE_splineX[j]),&target[j],fabs(fwhm),(double)0.,SLIT_TYPE_GAUSS):
-                SPLINE_Vector(lambda,source,deriv,NDET,&ANALYSE_shift[j],&target[j],1,pAnalysisOptions->interpol,"ShiftVector "))!=ERROR_ID_NO)
+	   XSCONV_TypeGauss(lambda,source,deriv,ANALYSE_shift[j],(ANALYSE_splineX[j+1]-ANALYSE_splineX[j]),&target[j],fabs(fwhm),(double)0.,SLIT_TYPE_GAUSS):
+	   SPLINE_Vector(lambda,source,deriv,NDET,&ANALYSE_shift[j],&target[j],1,pAnalysisOptions->interpol,"ShiftVector "))!=ERROR_ID_NO)
 
        break;
      }
@@ -741,11 +711,11 @@ RC ShiftVector(double *lambda,double *source,double *deriv,double *target,
     // Interpolation
 
     if ((pKuruczOptions->fwhmType!=SLIT_TYPE_FILE) && ((slitParam==(double)0.) ||
-      (((pKuruczOptions->fwhmType==SLIT_TYPE_ERF) || (pKuruczOptions->fwhmType==SLIT_TYPE_INVPOLY)) &&
-        (slitParam2==(double)0.))))
+						       (((pKuruczOptions->fwhmType==SLIT_TYPE_ERF) || (pKuruczOptions->fwhmType==SLIT_TYPE_INVPOLY)) &&
+							(slitParam2==(double)0.))))
 
      rc=SPLINE_Vector(KURUCZ_buffers[indexFenoColumn].hrSolar.matrix[0],KURUCZ_buffers[indexFenoColumn].hrSolar.matrix[1],KURUCZ_buffers[indexFenoColumn].hrSolar.deriv2[1],KURUCZ_buffers[indexFenoColumn].hrSolar.nl,
-                         ANALYSE_shift,source,NDET,pAnalysisOptions->interpol,"ShiftVector ");
+		      ANALYSE_shift,source,NDET,pAnalysisOptions->interpol,"ShiftVector ");
 
     // Convolution
 
@@ -792,10 +762,10 @@ RC ShiftVector(double *lambda,double *source,double *deriv,double *target,
         memcpy(&source[LimMin],&ANALYSE_shift[LimMin],sizeof(double)*LimN);
 
         if ((pAnalysisOptions->units==PRJCT_ANLYS_UNITS_NANOMETERS) ||
-           !(rc=SPLINE_Vector(ANALYSE_splineX,Lambda,ANALYSE_splineX2,NDET,&source[LimMin],&ANALYSE_shift[LimMin],LimN,pAnalysisOptions->interpol,"ShiftVector ")))
+	    !(rc=SPLINE_Vector(ANALYSE_splineX,Lambda,ANALYSE_splineX2,NDET,&source[LimMin],&ANALYSE_shift[LimMin],LimN,pAnalysisOptions->interpol,"ShiftVector ")))
 
          SPLINE_Vector(pKURUCZ_fft->fftIn+1,pKURUCZ_fft->invFftOut+1,pKURUCZ_fft->invFftIn+1,pKURUCZ_fft->oldSize,
-                         &ANALYSE_shift[LimMin],&target[LimMin],LimN,pAnalysisOptions->interpol,"ShiftVector ");
+		       &ANALYSE_shift[LimMin],&target[LimMin],LimN,pAnalysisOptions->interpol,"ShiftVector ");
        }
       else
        {
@@ -813,35 +783,35 @@ RC ShiftVector(double *lambda,double *source,double *deriv,double *target,
          rc=ERROR_ID_ALLOC;
         else
          {
-         	memcpy(xsNew.matrix[0],ANALYSE_shift,sizeof(double)*NDET);
-         	memcpy(xsNew.matrix[1],target,sizeof(double)*NDET);
+	  memcpy(xsNew.matrix[0],ANALYSE_shift,sizeof(double)*NDET);
+	  memcpy(xsNew.matrix[1],target,sizeof(double)*NDET);
 
           slitType=pKuruczOptions->fwhmType;
 
           if (slitType==SLIT_TYPE_FILE)
            {
-           	fwhmStretch=(Feno->indexFwhmParam[0]!=ITEM_NONE)?((TabCross[Feno->indexFwhmParam[0]].FitParam!=ITEM_NONE)?(double)Param[TabCross[Feno->indexFwhmParam[0]].FitParam]:(double)TabCross[Feno->indexFwhmParam[0]].InitParam):(double)1.;
+	    fwhmStretch=(Feno->indexFwhmParam[0]!=ITEM_NONE)?((TabCross[Feno->indexFwhmParam[0]].FitParam!=ITEM_NONE)?(double)Param[TabCross[Feno->indexFwhmParam[0]].FitParam]:(double)TabCross[Feno->indexFwhmParam[0]].InitParam):(double)1.;
 
-           	if (MATRIX_Allocate(&slitXs,KURUCZ_buffers[indexFenoColumn].slitFunction.nl,2,0,0,1,"ShiftVector"))
-           	 rc=ERROR_ID_ALLOC;
-           	else
-           	 {
-           	  memcpy(slitXs.matrix[1],KURUCZ_buffers[indexFenoColumn].slitFunction.matrix[1],sizeof(double)*KURUCZ_buffers[0].slitFunction.nl);
+	    if (MATRIX_Allocate(&slitXs,KURUCZ_buffers[indexFenoColumn].slitFunction.nl,2,0,0,1,"ShiftVector"))
+	     rc=ERROR_ID_ALLOC;
+	    else
+	     {
+	      memcpy(slitXs.matrix[1],KURUCZ_buffers[indexFenoColumn].slitFunction.matrix[1],sizeof(double)*KURUCZ_buffers[0].slitFunction.nl);
 
-              // Apply the stretch on the slit wavelength calibration
+	      // Apply the stretch on the slit wavelength calibration
 
-           	  for (i=0;i<slitXs.nl;i++)
-           	   slitXs.matrix[0][i]=fwhmStretch*KURUCZ_buffers[indexFenoColumn].slitFunction.matrix[0][i];
+	      for (i=0;i<slitXs.nl;i++)
+	       slitXs.matrix[0][i]=fwhmStretch*KURUCZ_buffers[indexFenoColumn].slitFunction.matrix[0][i];
 
-           	  // Recalculate second derivatives and the FWHM
+	      // Recalculate second derivatives and the FWHM
 
-           	  if (!(rc=SPLINE_Deriv2(slitXs.matrix[0],slitXs.matrix[1],slitXs.deriv2[1],slitXs.nl,"ShiftVector ")))
-            	  rc=XSCONV_GetFwhm(slitXs.matrix[0],slitXs.matrix[1],slitXs.deriv2[1],slitXs.nl,slitType,&slitParam);
-           	 }
+	      if (!(rc=SPLINE_Deriv2(slitXs.matrix[0],slitXs.matrix[1],slitXs.deriv2[1],slitXs.nl,"ShiftVector ")))
+	       rc=XSCONV_GetFwhm(slitXs.matrix[0],slitXs.matrix[1],slitXs.deriv2[1],slitXs.nl,slitType,&slitParam);
+	     }
            }
           else if ((slitType==SLIT_TYPE_VOIGT) || (slitType==SLIT_TYPE_AGAUSS) || (slitType==SLIT_TYPE_INVPOLY))
            {
-           	memset(&slitOptions,0,sizeof(SLIT));
+	    memset(&slitOptions,0,sizeof(SLIT));
 
             slitOptions.slitType=slitType;
             slitOptions.slitFile[0]=0;
@@ -853,9 +823,9 @@ RC ShiftVector(double *lambda,double *source,double *deriv,double *target,
            }
 
           if (!rc && ((pAnalysisOptions->units==PRJCT_ANLYS_UNITS_NANOMETERS) ||
-             !(rc=SPLINE_Vector(ANALYSE_splineX,Lambda,ANALYSE_splineX2,NDET,&source[LimMin],&ANALYSE_shift[LimMin],LimN,pAnalysisOptions->interpol,"ShiftVector "))) &&
-             !(rc=XSCONV_TypeStandard(&xsNew,LimMin,LimMax+1,&KURUCZ_buffers[indexFenoColumn].hrSolar,
-                                      &slitXs,&slitXs2,&KURUCZ_buffers[indexFenoColumn].hrSolar,NULL,
+		      !(rc=SPLINE_Vector(ANALYSE_splineX,Lambda,ANALYSE_splineX2,NDET,&source[LimMin],&ANALYSE_shift[LimMin],LimN,pAnalysisOptions->interpol,"ShiftVector "))) &&
+	      !(rc=XSCONV_TypeStandard(&xsNew,LimMin,LimMax+1,&KURUCZ_buffers[indexFenoColumn].hrSolar,
+				       &slitXs,&slitXs2,&KURUCZ_buffers[indexFenoColumn].hrSolar,NULL,
                                        slitType,slitParam*3.,slitParam,slitParam2,0)))
 
            memcpy(target,xsNew.matrix[1],sizeof(double)*NDET);
@@ -881,19 +851,19 @@ RC ShiftVector(double *lambda,double *source,double *deriv,double *target,
 
   // Return
 
-  #if defined(__DEBUG_) && __DEBUG_
+#if defined(__DEBUG_) && __DEBUG_
   DEBUG_FunctionStop("ShiftVector",rc);
-  #endif
+#endif
 
   return rc;
- }
+}
 
 // -----------------------------------------------------------------------------------
 // ANALYSE_XsInterpolation : Interpolation of all cross sections in an analysis window
 // ----------------------------------------------------------------------------------
 
 RC ANALYSE_XsInterpolation(FENO *pTabFeno,double *newLambda,INDEX indexFenoColumn)
- {
+{
   // Declarations
 
   CROSS_REFERENCE *pTabCross;
@@ -903,9 +873,9 @@ RC ANALYSE_XsInterpolation(FENO *pTabFeno,double *newLambda,INDEX indexFenoColum
   INT oldNl;
   RC rc;
 
-  #if defined(__DEBUG_) && __DEBUG_
+#if defined(__DEBUG_) && __DEBUG_
   DEBUG_FunctionBegin("ANALYSE_XsInterpolation",DEBUG_FCTTYPE_APPL);
-  #endif
+#endif
 
   // Initializations
 
@@ -920,10 +890,10 @@ RC ANALYSE_XsInterpolation(FENO *pTabFeno,double *newLambda,INDEX indexFenoColum
     pTabCross=&pTabFeno->TabCross[indexTabCross];
 
     if ((((WorkSpace[pTabCross->Comp].type==WRK_SYMBOL_CROSS) &&   // take only cross sections into account
-       ((pTabCross->crossAction==ANLYS_CROSS_ACTION_NOTHING) ||
-        (pTabCross->crossAction==ANLYS_CROSS_ACTION_INTERPOLATE))) ||
-       ((WorkSpace[pTabCross->Comp].type==WRK_SYMBOL_PREDEFINED) &&   // take only cross sections into account
-        (pTabCross->crossAction==ANLYS_CROSS_ACTION_INTERPOLATE))))
+          ((pTabCross->crossAction==ANLYS_CROSS_ACTION_NOTHING) ||
+           (pTabCross->crossAction==ANLYS_CROSS_ACTION_INTERPOLATE))) ||
+         ((WorkSpace[pTabCross->Comp].type==WRK_SYMBOL_PREDEFINED) &&   // take only cross sections into account
+          (pTabCross->crossAction==ANLYS_CROSS_ACTION_INTERPOLATE))))
      {
       pXs=&WorkSpace[pTabCross->Comp].xs;
       icolumn=((ANALYSE_swathSize==1) || (pXs->nc<=ANALYSE_swathSize))?1:indexFenoColumn+1;
@@ -953,19 +923,19 @@ RC ANALYSE_XsInterpolation(FENO *pTabFeno,double *newLambda,INDEX indexFenoColum
        {
         for (i=2;i<pXs->nc;i++)
 
-          if ((rc=SPLINE_Vector(pXs->matrix[0],
-                                   pXs->matrix[i],
-                                   pXs->deriv2[i],
-                                   pXs->nl,newLambda,
-                                   O3TD.matrix[i],pTabFeno->NDET,pAnalysisOptions->interpol,"ANALYSE_XsInterpolation "))!=0)
-           break;
+         if ((rc=SPLINE_Vector(pXs->matrix[0],
+                               pXs->matrix[i],
+                               pXs->deriv2[i],
+                               pXs->nl,newLambda,
+                               O3TD.matrix[i],pTabFeno->NDET,pAnalysisOptions->interpol,"ANALYSE_XsInterpolation "))!=0)
+          break;
 
         if (rc)
          break;
        }
 
       if ((pTabCross->crossAction==ANLYS_CROSS_ACTION_NOTHING) ||
-         ((pXs->nl==pTabFeno->NDET) && VECTOR_Equal(pXs->matrix[0],newLambda,pTabFeno->NDET,(double)1.e-7)))          // wavelength scale is the same as new one
+          ((pXs->nl==pTabFeno->NDET) && VECTOR_Equal(pXs->matrix[0],newLambda,pTabFeno->NDET,(double)1.e-7)))          // wavelength scale is the same as new one
 
        memcpy(filtCross,pXs->matrix[icolumn],sizeof(double)*pTabFeno->NDET);
 
@@ -987,15 +957,15 @@ RC ANALYSE_XsInterpolation(FENO *pTabFeno,double *newLambda,INDEX indexFenoColum
       // Low-pass filtering of the original cross section
 
       if (!pTabFeno->hidden && pTabCross->filterFlag && (ANALYSE_plFilter->filterFunction!=NULL) &&
-         ((rc=FILTER_Vector(ANALYSE_plFilter,filtCross,filtCross,pTabFeno->NDET,PRJCT_FILTER_OUTPUT_LOW))!=0))
+          ((rc=FILTER_Vector(ANALYSE_plFilter,filtCross,filtCross,pTabFeno->NDET,PRJCT_FILTER_OUTPUT_LOW))!=0))
 
        break;
 
       // High-pass filtering of the original cross section
 
       if ((pTabCross->IndOrthog!=ITEM_NONE) && (ANALYSE_phFilter->filterFunction!=NULL) &&
-         ((!pTabFeno->hidden && ANALYSE_phFilter->hpFilterAnalysis) || ((pTabFeno->hidden==1) && ANALYSE_phFilter->hpFilterCalib)) &&
-         ((rc=FILTER_Vector(ANALYSE_phFilter,filtCross,filtCross,pTabFeno->NDET,PRJCT_FILTER_OUTPUT_HIGH_SUB))!=0))
+          ((!pTabFeno->hidden && ANALYSE_phFilter->hpFilterAnalysis) || ((pTabFeno->hidden==1) && ANALYSE_phFilter->hpFilterCalib)) &&
+          ((rc=FILTER_Vector(ANALYSE_phFilter,filtCross,filtCross,pTabFeno->NDET,PRJCT_FILTER_OUTPUT_HIGH_SUB))!=0))
 
        break;
 
@@ -1006,7 +976,7 @@ RC ANALYSE_XsInterpolation(FENO *pTabFeno,double *newLambda,INDEX indexFenoColum
       // Second derivatives computation
 
       if ((rc=SPLINE_Deriv2((pAnalysisOptions->units==PRJCT_ANLYS_UNITS_PIXELS)?ANALYSE_pixels:newLambda,
-                      pTabCross->vector,pTabCross->Deriv2,pTabFeno->NDET,"ANALYSE_XsInterpolation "))!=0)
+                            pTabCross->vector,pTabCross->Deriv2,pTabFeno->NDET,"ANALYSE_XsInterpolation "))!=0)
        break;
 
      }
@@ -1019,18 +989,18 @@ RC ANALYSE_XsInterpolation(FENO *pTabFeno,double *newLambda,INDEX indexFenoColum
   if (filtDeriv2!=NULL)
    MEMORY_ReleaseDVector("ANALYSE_XsInterpolation ","filtDeriv2",filtDeriv2,0);
 
-  #if defined(__DEBUG_) && __DEBUG_
+#if defined(__DEBUG_) && __DEBUG_
   DEBUG_FunctionStop("ANALYSE_XsInterpolation",rc);
-  #endif
+#endif
 
   return rc;
- }
+}
 
 RC AnalyseConvoluteXs(FENO *pTabFeno,INDEX indexSymbol,INT action,double conc,
                       MATRIX_OBJECT *pXs,
                       MATRIX_OBJECT *pSlit,MATRIX_OBJECT *pSlit2,INT slitType,double *slitParam1,double *slitParam2,
                       double *newlambda,double *output,INDEX indexlambdaMin,INDEX indexlambdaMax,int printFlag,INDEX indexFenoColumn)
- {
+{
   // Declarations
 
   MATRIX_OBJECT xsI0,xsSlit,hrSolar,xshr;
@@ -1038,9 +1008,9 @@ RC AnalyseConvoluteXs(FENO *pTabFeno,INDEX indexSymbol,INT action,double conc,
   INDEX i,j;
   RC rc;
 
-  #if defined(__DEBUG_) && __DEBUG_
+#if defined(__DEBUG_) && __DEBUG_
   DEBUG_FunctionBegin("AnalyseConvoluteXs",DEBUG_FCTTYPE_APPL);
-  #endif
+#endif
 
   // Initializations
 
@@ -1060,7 +1030,7 @@ RC AnalyseConvoluteXs(FENO *pTabFeno,INDEX indexSymbol,INT action,double conc,
      rc=ERROR_ID_ALLOC;
     else
      {
-     	// Get high resolution Solar spectrum
+      // Get high resolution Solar spectrum
 
       if (pKuruczOptions->fwhmFit && (!pTabFeno->hidden && (pTabFeno->useKurucz!=ANLYS_KURUCZ_NONE)))
        memcpy(&hrSolar,&KURUCZ_buffers[indexFenoColumn].hrSolar,sizeof(MATRIX_OBJECT));
@@ -1070,7 +1040,7 @@ RC AnalyseConvoluteXs(FENO *pTabFeno,INDEX indexSymbol,INT action,double conc,
       if (!(rc=MATRIX_Allocate(&xsI0,hrSolar.nl,2,0,0,1,"AnalyseConvoluteXs")) &&
           !(rc=MATRIX_Allocate(&xshr,hrSolar.nl,2,0,0,1,"AnalyseConvoluteXs")) &&
           !(rc=SPLINE_Vector(pXs->matrix[0],pXs->matrix[1],pXs->deriv2[1],pXs->nl,           // interpolation of XS on the grid of the high resolution solar spectrum
-                                hrSolar.matrix[0],xshr.matrix[1],xshr.nl,pAnalysisOptions->interpol,"AnalyseConvoluteXs ")))
+                             hrSolar.matrix[0],xshr.matrix[1],xshr.nl,pAnalysisOptions->interpol,"AnalyseConvoluteXs ")))
        {
         memcpy(xsI0.matrix[0],hrSolar.matrix[0],xshr.nl*sizeof(double));               // solar spectrum corrected by the cross section
         memcpy(xshr.matrix[0],hrSolar.matrix[0],xshr.nl*sizeof(double));
@@ -1091,28 +1061,28 @@ RC AnalyseConvoluteXs(FENO *pTabFeno,INDEX indexSymbol,INT action,double conc,
 
   if (!rc)
    {
-   	if (action==ANLYS_CROSS_ACTION_CONVOLUTE_I0)
-   	 memcpy(IcVector,ANALYSE_zeros,sizeof(double)*NDET);
+    if (action==ANLYS_CROSS_ACTION_CONVOLUTE_I0)
+     memcpy(IcVector,ANALYSE_zeros,sizeof(double)*NDET);
 
     if (pSlit!=NULL)
      {
-     	if ((pSlitOptions->slitFunction.slitType!=SLIT_TYPE_FILE) || pSlitOptions->slitFunction.slitWveDptFlag)
+      if ((pSlitOptions->slitFunction.slitType!=SLIT_TYPE_FILE) || pSlitOptions->slitFunction.slitWveDptFlag)
        {
         for (j=indexlambdaMin;(j<indexlambdaMax) && !rc;j++)
          if (!(rc=XSCONV_RealTimeXs(&xshr,(action==ANLYS_CROSS_ACTION_CONVOLUTE_I0)?&xsI0:NULL,
-               pSlit,pSlit2,IcVector,
-               newlambda,NDET,j,j+1,ANALYSE_xsTrav,pSlitOptions->slitFunction.slitType,
-              (slitParam1!=NULL)?slitParam1[0]:(double)0.,
-              (slitParam2!=NULL)?slitParam2[0]:(double)0.,pSlitOptions->slitFunction.slitWveDptFlag)))
+                                    pSlit,pSlit2,IcVector,
+                                    newlambda,NDET,j,j+1,ANALYSE_xsTrav,pSlitOptions->slitFunction.slitType,
+                                    (slitParam1!=NULL)?slitParam1[0]:(double)0.,
+                                    (slitParam2!=NULL)?slitParam2[0]:(double)0.,pSlitOptions->slitFunction.slitWveDptFlag)))
 
           output[j]=ANALYSE_xsTrav[j];
        }
-     	else if (pSlit->nc==2)
-     	 {
+      else if (pSlit->nc==2)
+       {
         rc=XSCONV_RealTimeXs(&xshr,(action==ANLYS_CROSS_ACTION_CONVOLUTE_I0)?&xsI0:NULL,
-                              pSlit,pSlit2,IcVector,
-                              newlambda,NDET,indexlambdaMin,indexlambdaMax,output,
-                              pSlitOptions->slitFunction.slitType,*slitParam1,*slitParam2,0);
+                             pSlit,pSlit2,IcVector,
+                             newlambda,NDET,indexlambdaMin,indexlambdaMax,output,
+                             pSlitOptions->slitFunction.slitType,*slitParam1,*slitParam2,0);
        }
 
       else if (!(rc=MATRIX_Allocate(&xsSlit,pSlit->nl-1,2,0,0,1,"AnalyseConvoluteXs")))
@@ -1126,9 +1096,9 @@ RC AnalyseConvoluteXs(FENO *pTabFeno,INDEX indexSymbol,INT action,double conc,
 
           if (!(rc=SPLINE_Deriv2(xsSlit.matrix[0],xsSlit.matrix[1],xsSlit.deriv2[1],xsSlit.nl,"AnalyseConvoluteX")) &&
               !(rc=XSCONV_RealTimeXs(&xshr,(action==ANLYS_CROSS_ACTION_CONVOLUTE_I0)?&xsI0:NULL,
-                 &xsSlit,NULL,IcVector,
-                 newlambda,NDET,j,j+1,ANALYSE_xsTrav,pSlitOptions->slitFunction.slitType,
-                (double)0.,(double)0.,0)))
+                                     &xsSlit,NULL,IcVector,
+                                     newlambda,NDET,j,j+1,ANALYSE_xsTrav,pSlitOptions->slitFunction.slitType,
+                                     (double)0.,(double)0.,0)))
 
            output[j]=ANALYSE_xsTrav[j];
          }
@@ -1140,10 +1110,10 @@ RC AnalyseConvoluteXs(FENO *pTabFeno,INDEX indexSymbol,INT action,double conc,
      {
       for (j=indexlambdaMin;(j<indexlambdaMax) && !rc;j++)
        if (!(rc=XSCONV_RealTimeXs(&xshr,(action==ANLYS_CROSS_ACTION_CONVOLUTE_I0)?&xsI0:NULL,
-             NULL,NULL,IcVector,
-             newlambda,NDET,j,j+1,ANALYSE_xsTrav,slitType,
-            (slitParam1!=NULL)?slitParam1[j]:(double)0.,
-            (slitParam2!=NULL)?slitParam2[(slitType!=SLIT_TYPE_INVPOLY)?j:0]:(double)0.,0)))
+                                  NULL,NULL,IcVector,
+                                  newlambda,NDET,j,j+1,ANALYSE_xsTrav,slitType,
+                                  (slitParam1!=NULL)?slitParam1[j]:(double)0.,
+                                  (slitParam2!=NULL)?slitParam2[(slitType!=SLIT_TYPE_INVPOLY)?j:0]:(double)0.,0)))
 
         output[j]=ANALYSE_xsTrav[j];
      }
@@ -1151,27 +1121,16 @@ RC AnalyseConvoluteXs(FENO *pTabFeno,INDEX indexSymbol,INT action,double conc,
     if (action==ANLYS_CROSS_ACTION_CONVOLUTE_I0)
      for (j=indexlambdaMin;(j<indexlambdaMax) && !rc;j++)
       {
-      if ((IcVector[j]==(double)0.) || (conc==(double)0.))
-       rc=ERROR_SetLast("AnalyseConvoluteXs",ERROR_TYPE_WARNING,ERROR_ID_DIVISION_BY_0,"I0-Convolution with undefined concentration");
-      else if ((double)output[j]/IcVector[j]<=(double)0.)
-       rc=ERROR_SetLast("AnalyseConvoluteXs",ERROR_TYPE_WARNING,ERROR_ID_LOG,-1);
-      else
-       output[j]=(double)log(output[j]/IcVector[j])/conc;
+       if ((IcVector[j]==(double)0.) || (conc==(double)0.))
+        rc=ERROR_SetLast("AnalyseConvoluteXs",ERROR_TYPE_WARNING,ERROR_ID_DIVISION_BY_0,"I0-Convolution with undefined concentration");
+       else if ((double)output[j]/IcVector[j]<=(double)0.)
+        rc=ERROR_SetLast("AnalyseConvoluteXs",ERROR_TYPE_WARNING,ERROR_ID_LOG,-1);
+       else
+        output[j]=(double)log(output[j]/IcVector[j])/conc;
       }
    }
 
   // Return
-
-// if (printFlag)
-//  {
-//  	FILE *fp;
-//  	fp=fopen("toto.dat","a+t");
-//  	for (j=indexlambdaMin;(j<indexlambdaMax) && !rc;j++)
-//  	 fprintf(fp,"%.14le %.14le\n",newlambda[j],output[j]);
-//  	fprintf(fp,"-------------------\n");
-//  	fclose(fp);
-//  }
-
 
   if (action==ANLYS_CROSS_ACTION_CONVOLUTE_I0)
    {
@@ -1182,12 +1141,12 @@ RC AnalyseConvoluteXs(FENO *pTabFeno,INDEX indexSymbol,INT action,double conc,
   if (IcVector!=NULL)
    MEMORY_ReleaseDVector("AnalyseConvoluteXs ","IcVector",IcVector,0);
 
-  #if defined(__DEBUG_) && __DEBUG_
+#if defined(__DEBUG_) && __DEBUG_
   DEBUG_FunctionStop("AnalyseConvoluteXs",rc);
-  #endif
+#endif
 
   return rc;
- }
+}
 
 // -----------------------------------------------------------------------
 // XSCONV_TypeGauss : Gaussian convolution with variable half way up width
@@ -1195,12 +1154,12 @@ RC AnalyseConvoluteXs(FENO *pTabFeno,INDEX indexSymbol,INT action,double conc,
 
 RC XSCONV_TypeGauss(double *lambda,double *Spec,double *SDeriv2,double lambdaj,
                     double dldj,double *SpecConv,double fwhm,double slitParam2,INT slitType)
- {
+{
   // Declarations
 
   double h,oldF,newF,Lim,ld_inc,ldi,dld,a,delta,
-         lambdaMax,SpecOld, SpecNew,sigma,
-         crossFIntegral, FIntegral;
+    lambdaMax,SpecOld, SpecNew,sigma,
+    crossFIntegral, FIntegral;
 
   RC rc;
 
@@ -1229,7 +1188,7 @@ RC XSCONV_TypeGauss(double *lambda,double *Spec,double *SDeriv2,double lambdaj,
   dld = -(ldi-lambdaj);
 
   if (slitType==SLIT_TYPE_GAUSS)
-//   oldF=(double)exp(-4.*log(2.)*(dld*dld)/(fwhm*fwhm));
+   //   oldF=(double)exp(-4.*log(2.)*(dld*dld)/(fwhm*fwhm));
    rc=XSCONV_FctGauss(&oldF,fwhm,ld_inc,dld);
   else if (slitType==SLIT_TYPE_INVPOLY)
    oldF=(double)pow(sigma,(double)slitParam2)/(pow(dld,(double)slitParam2)+pow(sigma,(double)slitParam2));
@@ -1244,7 +1203,7 @@ RC XSCONV_TypeGauss(double *lambda,double *Spec,double *SDeriv2,double lambdaj,
     dld = -(ldi-lambdaj);
 
     if (slitType==SLIT_TYPE_GAUSS)
-//     newF=(double)exp(-4.*log(2.)*(dld*dld)/(fwhm*fwhm));
+     //     newF=(double)exp(-4.*log(2.)*(dld*dld)/(fwhm*fwhm));
      rc=XSCONV_FctGauss(&newF,fwhm,ld_inc,dld);
     else if (slitType==SLIT_TYPE_INVPOLY)
      newF=(double)pow(sigma,(double)slitParam2)/(pow(dld,(double)slitParam2)+pow(sigma,(double)slitParam2));
@@ -1266,7 +1225,7 @@ RC XSCONV_TypeGauss(double *lambda,double *Spec,double *SDeriv2,double lambdaj,
   // Return
 
   return rc;
- }
+}
 
 // -------------------------------------------------------------------------------
 // ANALYSE_XsConvolution : Real time convolution of high resolution cross sections
@@ -1275,7 +1234,7 @@ RC XSCONV_TypeGauss(double *lambda,double *Spec,double *SDeriv2,double lambdaj,
 RC ANALYSE_XsConvolution(FENO *pTabFeno,double *newlambda,
                          MATRIX_OBJECT *pSlit,MATRIX_OBJECT *pSlit2,INT slitType,
                          double *slitParam1,double *slitParam2,INDEX indexFenoColumn)
- {
+{
   // Declarations
 
   MATRIX_OBJECT matrix,*pXs;
@@ -1286,9 +1245,9 @@ RC ANALYSE_XsConvolution(FENO *pTabFeno,double *newlambda,
 
   // Initializations
 
-  #if defined(__DEBUG_) && __DEBUG_
+#if defined(__DEBUG_) && __DEBUG_
   DEBUG_FunctionBegin("ANALYSE_XsConvolution",DEBUG_FCTTYPE_APPL);
-  #endif
+#endif
 
   memset(&matrix,0,sizeof(MATRIX_OBJECT));
   raman=solar=NULL;
@@ -1305,9 +1264,9 @@ RC ANALYSE_XsConvolution(FENO *pTabFeno,double *newlambda,
      pXs=&WorkSpace[pTabCross->Comp].xs;
 
      if ((WorkSpace[pTabCross->Comp].type==WRK_SYMBOL_CROSS) &&   // take only cross sections into account
-        ((pTabCross->crossAction==ANLYS_CROSS_ACTION_CONVOLUTE) ||
-         (pTabCross->crossAction==ANLYS_CROSS_ACTION_CONVOLUTE_I0) ||
-         (pTabCross->crossAction==ANLYS_CROSS_ACTION_CONVOLUTE_RING)))
+         ((pTabCross->crossAction==ANLYS_CROSS_ACTION_CONVOLUTE) ||
+          (pTabCross->crossAction==ANLYS_CROSS_ACTION_CONVOLUTE_I0) ||
+          (pTabCross->crossAction==ANLYS_CROSS_ACTION_CONVOLUTE_RING)))
       {
        memcpy(pTabCross->vector,ANALYSE_zeros,sizeof(double)*NDET);
 
@@ -1316,7 +1275,7 @@ RC ANALYSE_XsConvolution(FENO *pTabFeno,double *newlambda,
                               newlambda,pTabCross->vector,indexlambdaMin,indexlambdaMax,0,indexFenoColumn);
 
        else if ((pTabCross->crossAction==ANLYS_CROSS_ACTION_CONVOLUTE_RING) &&
-               !(rc=MATRIX_Allocate(&matrix,pXs->nl,2,pXs->basel,pXs->basec,1,"ANALYSE_XsConvolution ")))
+                !(rc=MATRIX_Allocate(&matrix,pXs->nl,2,pXs->basel,pXs->basec,1,"ANALYSE_XsConvolution ")))
         {
          // Temporary buffers allocation
 
@@ -1356,19 +1315,19 @@ RC ANALYSE_XsConvolution(FENO *pTabFeno,double *newlambda,
        // Low-pass filtering
 
        if  (rc ||
-          (!pTabFeno->hidden && pTabCross->filterFlag && (ANALYSE_plFilter->filterFunction!=NULL) &&
-          ((rc=FILTER_Vector(ANALYSE_plFilter,pTabCross->vector,pTabCross->vector,NDET,PRJCT_FILTER_OUTPUT_LOW))!=ERROR_ID_NO)) ||
+            (!pTabFeno->hidden && pTabCross->filterFlag && (ANALYSE_plFilter->filterFunction!=NULL) &&
+             ((rc=FILTER_Vector(ANALYSE_plFilter,pTabCross->vector,pTabCross->vector,NDET,PRJCT_FILTER_OUTPUT_LOW))!=ERROR_ID_NO)) ||
 
-       // High-pass filtering
+            // High-pass filtering
 
-          ((pTabCross->IndOrthog!=ITEM_NONE) && (ANALYSE_phFilter->filterFunction!=NULL) &&
-          ((!pTabFeno->hidden && ANALYSE_phFilter->hpFilterAnalysis) || ((pTabFeno->hidden==1) && ANALYSE_phFilter->hpFilterCalib)) &&
-          ((rc=FILTER_Vector(ANALYSE_phFilter,pTabCross->vector,pTabCross->vector,NDET,PRJCT_FILTER_OUTPUT_HIGH_SUB))!=ERROR_ID_NO)) ||
+            ((pTabCross->IndOrthog!=ITEM_NONE) && (ANALYSE_phFilter->filterFunction!=NULL) &&
+             ((!pTabFeno->hidden && ANALYSE_phFilter->hpFilterAnalysis) || ((pTabFeno->hidden==1) && ANALYSE_phFilter->hpFilterCalib)) &&
+             ((rc=FILTER_Vector(ANALYSE_phFilter,pTabCross->vector,pTabCross->vector,NDET,PRJCT_FILTER_OUTPUT_HIGH_SUB))!=ERROR_ID_NO)) ||
 
-       // Interpolation
+            // Interpolation
 
-          ((rc=SPLINE_Deriv2((pAnalysisOptions->units==PRJCT_ANLYS_UNITS_PIXELS)?ANALYSE_pixels:newlambda,
-                       pTabCross->vector,pTabCross->Deriv2,NDET,"ANALYSE_XsConvolution "))!=ERROR_ID_NO))
+            ((rc=SPLINE_Deriv2((pAnalysisOptions->units==PRJCT_ANLYS_UNITS_PIXELS)?ANALYSE_pixels:newlambda,
+                               pTabCross->vector,pTabCross->Deriv2,NDET,"ANALYSE_XsConvolution "))!=ERROR_ID_NO))
 
         break;
       }
@@ -1383,14 +1342,14 @@ RC ANALYSE_XsConvolution(FENO *pTabFeno,double *newlambda,
 
   MATRIX_Free(&matrix,"ANALYSE_XsConvolution ");
 
-  #if defined(__DEBUG_) && __DEBUG_
+#if defined(__DEBUG_) && __DEBUG_
   DEBUG_FunctionStop("ANALYSE_XsConvolution",rc);
-  #endif
+#endif
 
   // Return
 
   return rc;
- }
+}
 
 // --------------------------------------------
 // AnalyseLoadVector : Load a vector from file
@@ -1399,7 +1358,7 @@ RC ANALYSE_XsConvolution(FENO *pTabFeno,double *newlambda,
 // Rem : not for OMI -> TabFeno[0]
 
 RC AnalyseLoadVector(DoasCh *function,DoasCh *fileName,double *lambda,double *vector,INT refFlag,INT *pNewSize)
- {
+{
   // Declarations
 
   FILE *fp;
@@ -1409,9 +1368,9 @@ RC AnalyseLoadVector(DoasCh *function,DoasCh *fileName,double *lambda,double *ve
   INDEX i;
   RC rc;
 
-  #if defined(__DEBUG_) && __DEBUG_
+#if defined(__DEBUG_) && __DEBUG_
   DEBUG_FunctionBegin("AnalyseLoadVector",DEBUG_FCTTYPE_FILE);
-  #endif
+#endif
 
   // Initializations
 
@@ -1463,30 +1422,30 @@ RC AnalyseLoadVector(DoasCh *function,DoasCh *fileName,double *lambda,double *ve
      }
    }
 
-  #if defined(__DEBUG_) && __DEBUG_
+#if defined(__DEBUG_) && __DEBUG_
   DEBUG_FunctionStop("AnalyseLoadVector",rc);
-  #endif
+#endif
 
   // Return
 
   return rc;
- }
+}
 
 // ----------------------------------------------------------
 // ANALYSE_LinFit : Use svd facilities for linear regressions
 // ----------------------------------------------------------
 
 RC ANALYSE_LinFit(SVD *pSvd,INT Npts,INT Degree,double *a,double *sigma,double *b,double *x)
- {
+{
   // Declarations
 
   double *Norm,*bSig,mean;
   INDEX i,j;
   RC rc;
 
-  #if defined(__DEBUG_) && __DEBUG_
+#if defined(__DEBUG_) && __DEBUG_
   DEBUG_FunctionBegin("ANALYSE_LinFit",DEBUG_FCTTYPE_UTIL);
-  #endif
+#endif
 
   // Initializations
 
@@ -1544,19 +1503,19 @@ RC ANALYSE_LinFit(SVD *pSvd,INT Npts,INT Degree,double *a,double *sigma,double *
 
   // Return
 
-  EndANALYSE_LinFit :
+ EndANALYSE_LinFit :
 
   if (Norm!=NULL)
    MEMORY_ReleaseDVector("ANALYSE_LinFit ","Norm",Norm,1);
   if (bSig!=NULL)
    MEMORY_ReleaseDVector("ANALYSE_LinFit ","bSig",bSig,1);
 
-  #if defined(__DEBUG_) && __DEBUG_
+#if defined(__DEBUG_) && __DEBUG_
   DEBUG_FunctionStop("ANALYSE_LinFit",rc);
-  #endif
+#endif
 
   return rc;
- }
+}
 
 // ===========================
 // FWHM ADJUSTMENT AND FITTING
@@ -1656,16 +1615,16 @@ RC ANALYSE_LinFit(SVD *pSvd,INT Npts,INT Degree,double *a,double *sigma,double *
 // ----------------------------------------------------------------------------------------------------------
 
 RC AnalyseFwhmCorrectionK(double *Spectre,double *Sref,double *SpecTrav,double *RefTrav,INDEX indexFenoColumn)
- {
+{
   // Declarations
 
   double specFwhm,refFwhm,*xsTrav;
   INDEX j;
   RC rc;
 
-  #if defined(__DEBUG_) && __DEBUG_
+#if defined(__DEBUG_) && __DEBUG_
   DEBUG_FunctionBegin("AnalyseFwhmCorrectionK",DEBUG_FCTTYPE_APPL);
-  #endif
+#endif
 
   // Initializations
 
@@ -1707,7 +1666,7 @@ RC AnalyseFwhmCorrectionK(double *Spectre,double *Sref,double *SpecTrav,double *
         xsTrav[j]=specFwhm;
         specFwhm=sqrt(specFwhm*specFwhm-refFwhm*refFwhm);
         rc=XSCONV_TypeGauss(Lambda,Sref,SplineRef,Lambda[j],(Lambda[j+1]-Lambda[j]),&RefTrav[j],specFwhm,
-                           (Feno->fwhmVector[1]!=NULL)?Feno->fwhmVector[1][j]:(double)0.,pKuruczOptions->fwhmType);
+                            (Feno->fwhmVector[1]!=NULL)?Feno->fwhmVector[1][j]:(double)0.,pKuruczOptions->fwhmType);
        }
 
       // Case 2 : spectrum has highest resolution => degrade spectrum
@@ -1717,7 +1676,7 @@ RC AnalyseFwhmCorrectionK(double *Spectre,double *Sref,double *SpecTrav,double *
         xsTrav[j]=refFwhm;
         specFwhm=sqrt(refFwhm*refFwhm-specFwhm*specFwhm);
         rc=XSCONV_TypeGauss(LambdaSpec,Spectre,SplineSpec,Lambda[j],(Lambda[j+1]-Lambda[j]),&SpecTrav[j],specFwhm,
-                           (Feno->fwhmVector[1]!=NULL)?Feno->fwhmVector[1][j]:(double)0.,pKuruczOptions->fwhmType);
+                            (Feno->fwhmVector[1]!=NULL)?Feno->fwhmVector[1][j]:(double)0.,pKuruczOptions->fwhmType);
        }
 
       // Case 3 : spectrum and reference have the same resolution
@@ -1737,12 +1696,12 @@ RC AnalyseFwhmCorrectionK(double *Spectre,double *Sref,double *SpecTrav,double *
   if (xsTrav!=NULL)
    MEMORY_ReleaseDVector("AnalyseFwhmCorrectionK ","xsTrav",xsTrav,0);
 
-  #if defined(__DEBUG_) && __DEBUG_
+#if defined(__DEBUG_) && __DEBUG_
   DEBUG_FunctionStop("AnalyseFwhmCorrectionK",rc);
-  #endif
+#endif
 
   return rc;
- }
+}
 
 // ===============================
 // SVD WORKSPACE MEMORY MANAGEMENT
@@ -1757,14 +1716,14 @@ RC AnalyseFwhmCorrectionK(double *Spectre,double *Sref,double *SpecTrav,double *
 // ----------------------------------------------------------------------
 
 void ANALYSE_SvdFree(DoasCh *callingFunctionShort,SVD *pSvd)
- {
+{
   // Declaration
 
   DoasCh functionNameShort[MAX_STR_SHORT_LEN+1];
 
-  #if defined(__DEBUG_) && __DEBUG_
+#if defined(__DEBUG_) && __DEBUG_
   DEBUG_FunctionBegin("ANALYSE_SvdFree",DEBUG_FCTTYPE_MEM);
-  #endif
+#endif
 
   // Initialization
 
@@ -1794,26 +1753,26 @@ void ANALYSE_SvdFree(DoasCh *callingFunctionShort,SVD *pSvd)
   if (pSvd->covar!=NULL)
    MEMORY_ReleaseDMatrix(functionNameShort,"covar",pSvd->covar,1,pSvd->DimC,1);
 
-  #if defined(__DEBUG_) && __DEBUG_
+#if defined(__DEBUG_) && __DEBUG_
   DEBUG_FunctionStop("ANALYSE_SvdFree",0);
-  #endif
- }
+#endif
+}
 
 // --------------------------------------------------------------------
 //  : Allocate SVD matrices for the current window
 // --------------------------------------------------------------------
 
 RC ANALYSE_SvdLocalAlloc(DoasCh *callingFunctionShort,SVD *pSvd)
- {
+{
   // Declarations
 
   DoasCh functionNameShort[MAX_STR_SHORT_LEN+1];
   INDEX i,j;
   RC rc;
 
-  #if defined(__DEBUG_) && __DEBUG_
+#if defined(__DEBUG_) && __DEBUG_
   DEBUG_FunctionBegin("ANALYSE_SvdLocalAlloc",DEBUG_FCTTYPE_MEM);
-  #endif
+#endif
 
   // Initializations
 
@@ -1843,15 +1802,15 @@ RC ANALYSE_SvdLocalAlloc(DoasCh *callingFunctionShort,SVD *pSvd)
 
     else
 
-    // Initializations
+     // Initializations
 
      {
-     	for (i=1;i<=pSvd->DimC;i++)
-     	 {
-     	 	for (j=1;j<=pSvd->DimC;j++)
-     	 	 pSvd->V[i][j]=pSvd->covar[i][j]=(double)0.;
-     	 	pSvd->W[i]=pSvd->SigmaSqr[i]=(double)0.;
-     	 }
+      for (i=1;i<=pSvd->DimC;i++)
+       {
+        for (j=1;j<=pSvd->DimC;j++)
+         pSvd->V[i][j]=pSvd->covar[i][j]=(double)0.;
+        pSvd->W[i]=pSvd->SigmaSqr[i]=(double)0.;
+       }
 
       for (i=1;i<=pSvd->DimL;i++)
        pSvd->A[0][i]=pSvd->U[0][i]=(double)0.;
@@ -1868,27 +1827,27 @@ RC ANALYSE_SvdLocalAlloc(DoasCh *callingFunctionShort,SVD *pSvd)
 
   // Return
 
-  #if defined(__DEBUG_) && __DEBUG_
+#if defined(__DEBUG_) && __DEBUG_
   DEBUG_FunctionStop("ANALYSE_SvdLocalAlloc",rc);
-  #endif
+#endif
 
   return rc;
- }
+}
 
 // ------------------------------------------
 // AnalyseSvdGlobalAlloc : Global allocations
 // ------------------------------------------
 
 RC AnalyseSvdGlobalAlloc(ENGINE_CONTEXT *pEngineContext)
- {
+{
   // Declarations
 
   INDEX i;
   RC rc;
 
-  #if defined(__DEBUG_) && __DEBUG_
+#if defined(__DEBUG_) && __DEBUG_
   DEBUG_FunctionBegin("AnalyseSvdGlobalAlloc",DEBUG_FCTTYPE_MEM);
-  #endif
+#endif
 
   // Initialization
 
@@ -1921,7 +1880,7 @@ RC AnalyseSvdGlobalAlloc(ENGINE_CONTEXT *pEngineContext)
 
   else
 
-  // Initializations
+   // Initializations
 
    {
     Sigma[0]=x[0]=(double)0.;
@@ -1932,12 +1891,12 @@ RC AnalyseSvdGlobalAlloc(ENGINE_CONTEXT *pEngineContext)
 
   // Return
 
-  #if defined(__DEBUG_) && __DEBUG_
+#if defined(__DEBUG_) && __DEBUG_
   DEBUG_FunctionStop("AnalyseSvdGlobalAlloc",rc);
-  #endif
+#endif
 
   return rc;
- }
+}
 
 // ===============
 // ANALYSIS METHOD
@@ -1949,18 +1908,18 @@ RC AnalyseSvdGlobalAlloc(ENGINE_CONTEXT *pEngineContext)
 // --------------------------------------------------------------------------
 
 RC ANALYSE_SvdInit(SVD *pSvd)
- {
+{
   // Declarations
 
   CROSS_REFERENCE *pTabCross;
   double deltaX,norm,norm1,norm2,*vector,*lambda,swap,temp;
-  INDEX i,j,k,l;
+  INDEX i,j;
   double j0,lambda0;
   RC rc;
 
-  #if defined(__DEBUG_) && __DEBUG_
+#if defined(__DEBUG_) && __DEBUG_
   DEBUG_FunctionBegin("ANALYSE_SvdInit",DEBUG_FCTTYPE_APPL);
-  #endif
+#endif
 
   // Initializations
 
@@ -1991,9 +1950,9 @@ RC ANALYSE_SvdInit(SVD *pSvd)
     if (!Feno->hidden && (ANALYSE_plFilter->type!=PRJCT_FILTER_TYPE_NONE))
      temp+=ANALYSE_plFilter->filterEffWidth;
 
-//    for high-pass filters, don't account for the filter width in the calculation of the number of freedom
-//    if ((ANALYSE_phFilter->type!=PRJCT_FILTER_TYPE_NONE) && (ANALYSE_phFilter->type!=PRJCT_FILTER_TYPE_ODDEVEN))
-//     temp+=ANALYSE_phFilter->filterEffWidth;
+    //    for high-pass filters, don't account for the filter width in the calculation of the number of freedom
+    //    if ((ANALYSE_phFilter->type!=PRJCT_FILTER_TYPE_NONE) && (ANALYSE_phFilter->type!=PRJCT_FILTER_TYPE_ODDEVEN))
+    //     temp+=ANALYSE_phFilter->filterEffWidth;
 
     ANALYSE_nFree=floor(DimL/((temp>(double)1.e-6)?temp:(double)1.)+0.5)-pSvd->nFit;
 
@@ -2001,29 +1960,25 @@ RC ANALYSE_SvdInit(SVD *pSvd)
      rc=ERROR_SetLast("SvdInit",ERROR_TYPE_FATAL,ERROR_ID_NFREE);
     else
      {
-      Fenetre=pSvd->Fenetre;
-      Z=pSvd->Z;
+      global_doas_spectrum = pSvd->specrange;
 
-      SvdPDeb=Fenetre[0][0];
-      SvdPFin=Fenetre[Z-1][1];
+      SvdPDeb=spectrum_start(pSvd->specrange);
+      SvdPFin=spectrum_end(pSvd->specrange);
 
       j0=(double)(SvdPDeb+SvdPFin)*0.5;
       lambda0=(fabs(j0-floor(j0))<(double)0.1)?
-                                  (double)ANALYSE_splineX[(INDEX)j0]:
-                                  (double)0.5*(ANALYSE_splineX[(INDEX)floor(j0)]+ANALYSE_splineX[(INDEX)floor(j0+1.)]);
+        (double)ANALYSE_splineX[(INDEX)j0]:
+        (double)0.5*(ANALYSE_splineX[(INDEX)floor(j0)]+ANALYSE_splineX[(INDEX)floor(j0+1.)]);
 
       Dim=0;
 
       if (!Feno->hidden && (ANALYSE_plFilter->type!=PRJCT_FILTER_TYPE_NONE) && (ANALYSE_plFilter->type!=PRJCT_FILTER_TYPE_ODDEVEN))
        Dim+=(int)((ANALYSE_plFilter->filterSize)*sqrt(ANALYSE_plFilter->filterNTimes));
       if (((!Feno->hidden && ANALYSE_phFilter->hpFilterAnalysis) || ((Feno->hidden==1) && ANALYSE_phFilter->hpFilterCalib)) &&
-            (ANALYSE_phFilter->type!=PRJCT_FILTER_TYPE_NONE) && (ANALYSE_phFilter->type!=PRJCT_FILTER_TYPE_ODDEVEN))
+          (ANALYSE_phFilter->type!=PRJCT_FILTER_TYPE_NONE) && (ANALYSE_phFilter->type!=PRJCT_FILTER_TYPE_ODDEVEN))
        Dim+=(int)((ANALYSE_phFilter->filterSize)*sqrt(ANALYSE_phFilter->filterNTimes));
 
       Dim=max(Dim,pAnalysisOptions->securityGap); // !!!!!!!!!!!!!!!!!
-
-//      if ((SvdPDeb-Dim<0) || (SvdPFin+Dim>=NDET))
-//       Dim=min(SvdPDeb,NDET-SvdPFin-1);
 
       LimMin=max(SvdPDeb-Dim,0);
       LimMax=min(SvdPFin+Dim,NDET-1);
@@ -2032,14 +1987,16 @@ RC ANALYSE_SvdInit(SVD *pSvd)
 
       // Set non linear normalization factors
 
-      for (j=0,k=1,norm1=norm2=(double)0.;(j<Z);j++)
-       for (l=Fenetre[j][0];l<=Fenetre[j][1];l++,k++)
-        {
-         deltaX=(double)(ANALYSE_splineX[l]-lambda0)*(ANALYSE_splineX[l]-lambda0);
+      norm1=norm2=(double)0.;
 
-         norm1+=deltaX;
-         norm2+=deltaX*deltaX;
-        }
+      doas_iterator my_iterator;
+      for( int i = iterator_start(&my_iterator, pSvd->specrange); i != ITERATOR_FINISHED; i=iterator_next(&my_iterator))
+       {
+        deltaX=(double)(ANALYSE_splineX[i]-lambda0)*(ANALYSE_splineX[i]-lambda0);
+
+        norm1+=deltaX;
+        norm2+=deltaX*deltaX;
+       }
 
       for (j=LimMin,StretchFact1=StretchFact2=(double)0.;j<=LimMax;j++)
        {
@@ -2053,9 +2010,10 @@ RC ANALYSE_SvdInit(SVD *pSvd)
        }
 
       if ((norm1<=(double)0.) || (norm2<=(double)0.) ||
-          (StretchFact1<=(double)0.) || (StretchFact2<=(double)0.))
+          (StretchFact1<=(double)0.) || (StretchFact2<=(double)0.)) {
 
        rc=ERROR_SetLast("SvdInit",ERROR_TYPE_WARNING,ERROR_ID_SQRT_ARG);
+      }
 
       else
        {
@@ -2078,7 +2036,7 @@ RC ANALYSE_SvdInit(SVD *pSvd)
 
           // Fill, 'Fit' vectors with data on parameters to fit
 
-       // ---------------------------------------------------------------------------
+          // ---------------------------------------------------------------------------
           if ((Feno->analysisMethod!=PRJCT_ANLYS_METHOD_SVD) && (pTabCross->FitConc!=ITEM_NONE))
            {
             if (pTabCross->InitConc!=(double)0.)
@@ -2098,7 +2056,7 @@ RC ANALYSE_SvdInit(SVD *pSvd)
             FitMinp[pTabCross->FitConc]=(double)0.;
             FitMaxp[pTabCross->FitConc]=(double)0.;
            }
-       // ---------------------------------------------------------------------------
+          // ---------------------------------------------------------------------------
           if ((pTabCross->FitParam!=ITEM_NONE) && !pTabCross->IndSvdP)
            {
             Fitp[pTabCross->FitParam]=pTabCross->InitParam;
@@ -2106,7 +2064,7 @@ RC ANALYSE_SvdInit(SVD *pSvd)
             FitMinp[pTabCross->FitParam]=pTabCross->MinParam;
             FitMaxp[pTabCross->FitParam]=pTabCross->MaxParam;
            }
-       // ---------------------------------------------------------------------------
+          // ---------------------------------------------------------------------------
           if (pTabCross->FitShift!=ITEM_NONE)
            {
             Fitp[pTabCross->FitShift]=pTabCross->InitShift;
@@ -2114,7 +2072,7 @@ RC ANALYSE_SvdInit(SVD *pSvd)
             FitMinp[pTabCross->FitShift]=pTabCross->MinShift;
             FitMaxp[pTabCross->FitShift]=pTabCross->MaxShift;
            }
-       // ---------------------------------------------------------------------------
+          // ---------------------------------------------------------------------------
           if (pTabCross->FitStretch!=ITEM_NONE)
            {
             Fitp[pTabCross->FitStretch]=pTabCross->InitStretch;
@@ -2122,7 +2080,7 @@ RC ANALYSE_SvdInit(SVD *pSvd)
             FitMinp[pTabCross->FitStretch]=(double)0.;
             FitMaxp[pTabCross->FitStretch]=(double)0.;
            }
-       // ---------------------------------------------------------------------------
+          // ---------------------------------------------------------------------------
           if (pTabCross->FitStretch2!=ITEM_NONE)
            {
             Fitp[pTabCross->FitStretch2]=pTabCross->InitStretch2;
@@ -2130,7 +2088,7 @@ RC ANALYSE_SvdInit(SVD *pSvd)
             FitMinp[pTabCross->FitStretch2]=(double)0.;
             FitMaxp[pTabCross->FitStretch2]=(double)0.;
            }
-       // ---------------------------------------------------------------------------
+          // ---------------------------------------------------------------------------
           if (pTabCross->FitScale!=ITEM_NONE)
            {
             Fitp[pTabCross->FitScale]=pTabCross->InitScale;
@@ -2138,7 +2096,7 @@ RC ANALYSE_SvdInit(SVD *pSvd)
             FitMinp[pTabCross->FitScale]=(double)0.;
             FitMaxp[pTabCross->FitScale]=(double)0.;
            }
-       // ---------------------------------------------------------------------------
+          // ---------------------------------------------------------------------------
           if (pTabCross->FitScale2!=ITEM_NONE)
            {
             Fitp[pTabCross->FitScale2]=pTabCross->InitScale2;
@@ -2146,7 +2104,7 @@ RC ANALYSE_SvdInit(SVD *pSvd)
             FitMinp[pTabCross->FitScale2]=(double)0.;
             FitMaxp[pTabCross->FitScale2]=(double)0.;
            }
-       // ---------------------------------------------------------------------------
+          // ---------------------------------------------------------------------------
          }
 
         for (i=0;i<NF;i++)
@@ -2168,12 +2126,12 @@ RC ANALYSE_SvdInit(SVD *pSvd)
 
   // Return
 
-  #if defined(__DEBUG_) && __DEBUG_
+#if defined(__DEBUG_) && __DEBUG_
   DEBUG_FunctionStop("ANALYSE_SvdInit",rc);
-  #endif
+#endif
 
   return rc;
- }
+}
 
 // ----------------------------------------------------------
 // ANALYSE_AlignReference : Align reference spectrum on etalon
@@ -2188,19 +2146,19 @@ RC ANALYSE_AlignReference(ENGINE_CONTEXT *pEngineContext,INT refFlag,INT saveFla
 
 // Currently : not for OMI
 
- {
+{
   // Declarations
 
   FENO *RefTabFeno;                                                             // copy of analysis windows for reference use
   SVD *pSvd;                                                                    // pointer to svd environment of an analysis window
   CROSS_RESULTS *pResults;                                                      // pointer to the set of results relative to a symbol
   INDEX WrkFeno,                                                                // index on analysis windows
-        indexLine,indexColumn,                                                  // position in the spreadsheet for information to write
-        indexPage,
-        i,j;                                                                    // indexes for loops and arrays
+    indexLine,indexColumn,                                                  // position in the spreadsheet for information to write
+    indexPage,
+    i,j;                                                                    // indexes for loops and arrays
 
   double *Spectre,*Sref,                                                        // raw spectrum
-          x0,lambda0;
+    x0,lambda0;
   plot_data_t spectrumData[2];
   DoasCh string[MAX_ITEM_TEXT_LEN+1],tabTitle[MAX_ITEM_TEXT_LEN+1];
   RC rc;                                                                        // return code
@@ -2208,9 +2166,9 @@ RC ANALYSE_AlignReference(ENGINE_CONTEXT *pEngineContext,INT refFlag,INT saveFla
 
   // Initializations
 
-  #if defined(__DEBUG_) && __DEBUG_
+#if defined(__DEBUG_) && __DEBUG_
   DEBUG_FunctionBegin("ANALYSE_AlignReference",DEBUG_FCTTYPE_APPL);
-  #endif
+#endif
 
   // Initializations
 
@@ -2232,7 +2190,7 @@ RC ANALYSE_AlignReference(ENGINE_CONTEXT *pEngineContext,INT refFlag,INT saveFla
 
     for (WrkFeno=0;(WrkFeno<NFeno)&&!rc;WrkFeno++)
      {
-     	indexPage=(pEngineContext->satelliteFlag)?plotPageRef:WrkFeno+plotPageAnalysis;
+      indexPage=(pEngineContext->satelliteFlag)?plotPageRef:WrkFeno+plotPageAnalysis;
 
       Feno=&RefTabFeno[WrkFeno];
       Feno->Shift=Feno->Stretch=Feno->Stretch2=(double)0.;
@@ -2260,10 +2218,10 @@ RC ANALYSE_AlignReference(ENGINE_CONTEXT *pEngineContext,INT refFlag,INT saveFla
        }
 
       if (!Feno->hidden && (Feno->useKurucz!=ANLYS_KURUCZ_NONE) && (Feno->useKurucz!=ANLYS_KURUCZ_SPEC) && (Feno->useKurucz!=ANLYS_KURUCZ_REF_AND_SPEC) &&
-        ((!refFlag && (Feno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_FILE)) ||
-          (refFlag && (Feno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_AUTOMATIC))) &&
-           Feno->useEtalon && !VECTOR_Equal(Feno->SrefEtalon,Sref,NDET,(double)0.) &&
-         ((refFlag!=3) || !VECTOR_Equal(Feno->SrefN,Sref,NDET,(double)0.)))
+          ((!refFlag && (Feno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_FILE)) ||
+           (refFlag && (Feno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_AUTOMATIC))) &&
+          Feno->useEtalon && !VECTOR_Equal(Feno->SrefEtalon,Sref,NDET,(double)0.) &&
+          ((refFlag!=3) || !VECTOR_Equal(Feno->SrefN,Sref,NDET,(double)0.)))
        {
         memcpy(Lambda,Feno->LambdaK,sizeof(double)*NDET);
         LambdaSpec=Feno->Lambda;
@@ -2286,19 +2244,19 @@ RC ANALYSE_AlignReference(ENGINE_CONTEXT *pEngineContext,INT refFlag,INT saveFla
                                       Spectre,                     // etalon reference spectrum
                                       NULL,                        // error on raw spectrum
                                       Sref,                        // reference spectrum
-				                                  NULL,
-                                     &Square,                      // returned stretch order 2
+                                      NULL,
+                                      &Square,                      // returned stretch order 2
                                       NULL,                        // number of iterations in Curfit
-                                     (double)1.,(double)1.))>=THREAD_EVENT_STOP))
+                                      (double)1.,(double)1.))>=THREAD_EVENT_STOP))
 
          goto EndAlignReference;
 
         if (pAnalysisOptions->units==PRJCT_ANLYS_UNITS_NANOMETERS)
-          for (j=0,lambda0=Lambda[(SvdPDeb+SvdPFin)/2];j<NDET;j++) // This is used only for spectra display
-           {
-            x0=Lambda[j]-lambda0;
-            Lambda[j]=Lambda[j]-(pResults->Shift+(pResults->Stretch+pResults->Stretch2*x0)*x0);
-           }
+         for (j=0,lambda0=Lambda[(SvdPDeb+SvdPFin)/2];j<NDET;j++) // This is used only for spectra display
+          {
+           x0=Lambda[j]-lambda0;
+           Lambda[j]=Lambda[j]-(pResults->Shift+(pResults->Stretch+pResults->Stretch2*x0)*x0);
+          }
 
         if (refFlag==2)
          {
@@ -2347,8 +2305,8 @@ RC ANALYSE_AlignReference(ENGINE_CONTEXT *pEngineContext,INT refFlag,INT saveFla
 
           if (pEngineContext->satelliteFlag)
            {
-           	ANALYSE_plotRef=1;
-           	indexLine=ANALYSE_indexLine;
+            ANALYSE_plotRef=1;
+            indexLine=ANALYSE_indexLine;
 
             mediateResponseCellInfo(plotPageRef,indexLine++,indexColumn,responseHandle,"ALIGNMENT REF1/REF2 IN","%s",Feno->windowName);
 
@@ -2367,24 +2325,24 @@ RC ANALYSE_AlignReference(ENGINE_CONTEXT *pEngineContext,INT refFlag,INT saveFla
 
   // Return
 
-  EndAlignReference :
+ EndAlignReference :
 
   if (RefTabFeno!=NULL)
    MEMORY_ReleaseBuffer("ANALYSE_AlignReference ","RefTabFeno",RefTabFeno);
 
-  #if defined(__DEBUG_) && __DEBUG_
+#if defined(__DEBUG_) && __DEBUG_
   DEBUG_FunctionStop("ANALYSE_AlignReference",rc);
-  #endif
+#endif
 
   return rc;
- }
+}
 
 RC AnalyseSaveResiduals(DoasCh *fileName,ENGINE_CONTEXT *pEngineContext)
- {
+{
   RC rc;
   DoasCh *fileNamePtr,*ptr,resFile[MAX_ITEM_TEXT_LEN+1],ext[MAX_ITEM_TEXT_LEN+1];
   FILE *fp;
-  INDEX i,j;
+  doas_iterator my_iterator;
 
   rc=ERROR_ID_NO;
 
@@ -2412,47 +2370,46 @@ RC AnalyseSaveResiduals(DoasCh *fileName,ENGINE_CONTEXT *pEngineContext)
     if (!STD_FileLength(fp))
      {
       fprintf(fp,"0 0 0 ");
-
-      for (j=0;j<Z;j++)
-       for (i=Fenetre[j][0];i<=Fenetre[j][1];i++)
-        fprintf(fp,"%.14le ",Feno->Lambda[i]);
+      
+      for( int i = iterator_start(&my_iterator, Feno->svd.specrange); i != ITERATOR_FINISHED; i=iterator_next(&my_iterator))
+       fprintf(fp,"%.14le ",Feno->Lambda[i]);
 
       fprintf(fp,"\n");
      }
 
     fprintf(fp,"%-5d %.3lf %-8.4lf ",pEngineContext->indexRecord,pEngineContext->recordInfo.Zm,
-           (double)ZEN_FNCaljda(&pEngineContext->recordInfo.Tm)+ZEN_FNCaldti(&pEngineContext->recordInfo.Tm)/24.);
+            (double)ZEN_FNCaljda(&pEngineContext->recordInfo.Tm)+ZEN_FNCaldti(&pEngineContext->recordInfo.Tm)/24.);
 
-    for (j=0;j<Z;j++)
-     for (i=Fenetre[j][0];i<=Fenetre[j][1];i++)
-      fprintf(fp,"%.14le ",ANALYSE_absolu[i]);
+    for( int i = iterator_start(&my_iterator, Feno->svd.specrange); i != ITERATOR_FINISHED; i=iterator_next(&my_iterator))
+     fprintf(fp,"%.14le ",ANALYSE_absolu[i]);
+
     fprintf(fp,"\n");
     fclose(fp);
    }
 
   return rc;
- }
+}
 
 // --------------------------------------------------------------------------------------------------------
 // Function : Cross sections and spectrum alignment using spline fitting functions and new Yfit computation
 // --------------------------------------------------------------------------------------------------------
 
-RC ANALYSE_Function ( double *lambda,double *X, double *Y, INT ndet, double *Y0, double *SigmaY, double *Yfit, int Npts,
-              double *fitParamsC, double *fitParamsF,INDEX indexFenoColumn)
- {
+RC ANALYSE_Function ( double *X, double *Y, double *SigmaY, double *Yfit, int Npts,
+                      double *fitParamsC, double *fitParamsF,INDEX indexFenoColumn) // unused parameter Y0
+{
   // Declarations
 
   double *XTrav,*YTrav,*newXsTrav,*preshift,offset,deltaX,tau;
   CROSS_REFERENCE *TabCross,*pTabCross;
   MATRIX_OBJECT slit0,slit1;
   INT NewDimC,offsetOrder;
-  INDEX i,j,k,l,m,indexSvdA,indexSvdP,polyOrder,polyFlag;
+  INDEX indexSvdA,indexSvdP,polyOrder,polyFlag;
   double j0,lambda0;
   RC rc;
 
-  #if defined(__DEBUG_) && __DEBUG_
+#if defined(__DEBUG_) && __DEBUG_
   DEBUG_FunctionBegin("ANALYSE_Function",DEBUG_FCTTYPE_APPL);
-  #endif
+#endif
 
   // Initializations
 
@@ -2466,16 +2423,17 @@ RC ANALYSE_Function ( double *lambda,double *X, double *Y, INT ndet, double *Y0,
 
   j0=(double)(SvdPDeb+SvdPFin)*0.5;
   lambda0=(fabs(j0-floor(j0))<(double)0.1)?
-                              (double)ANALYSE_splineX[(INDEX)j0]:
-                              (double)0.5*(ANALYSE_splineX[(INDEX)floor(j0)]+ANALYSE_splineX[(INDEX)floor(j0+1.)]);
+    (double)ANALYSE_splineX[(INDEX)j0]:
+    (double)0.5*(ANALYSE_splineX[(INDEX)floor(j0)]+ANALYSE_splineX[(INDEX)floor(j0+1.)]);
 
   rc=ERROR_ID_NO;
 
   // Calculate the mean
 
-  for (j=0,k=1,Feno->xmean=(double)0.;(j<Z);j++)
-   for (l=Fenetre[j][0];l<=Fenetre[j][1];l++,k++)
-    Feno->xmean+=(double)X[l];
+
+  doas_iterator my_iterator;
+  for( int i = iterator_start(&my_iterator, global_doas_spectrum); i != ITERATOR_FINISHED; i=iterator_next(&my_iterator))
+   Feno->xmean+=(double)X[i];
 
   Feno->xmean/=Npts;
 
@@ -2484,12 +2442,12 @@ RC ANALYSE_Function ( double *lambda,double *X, double *Y, INT ndet, double *Y0,
   if ((Feno->hidden==1) && Feno->xsToConvolute && pKuruczOptions->fwhmFit)
 
    rc=ANALYSE_XsConvolution(Feno,Lambda,&slit0,&slit1,pKuruczOptions->fwhmType,
-                           (TabCross[Feno->indexFwhmParam[0]].FitParam!=ITEM_NONE)?&fitParamsF[TabCross[Feno->indexFwhmParam[0]].FitParam]:&TabCross[Feno->indexFwhmParam[0]].InitParam,
-                           (TabCross[Feno->indexFwhmParam[1]].FitParam!=ITEM_NONE)?&fitParamsF[TabCross[Feno->indexFwhmParam[1]].FitParam]:&TabCross[Feno->indexFwhmParam[1]].InitParam,indexFenoColumn);
+                            (TabCross[Feno->indexFwhmParam[0]].FitParam!=ITEM_NONE)?&fitParamsF[TabCross[Feno->indexFwhmParam[0]].FitParam]:&TabCross[Feno->indexFwhmParam[0]].InitParam,
+                            (TabCross[Feno->indexFwhmParam[1]].FitParam!=ITEM_NONE)?&fitParamsF[TabCross[Feno->indexFwhmParam[1]].FitParam]:&TabCross[Feno->indexFwhmParam[1]].InitParam,indexFenoColumn);
 
   // Don't take fixed concentrations into account for singular value decomposition
 
-  for (i=0;i<Feno->NTabCross && (NewDimC==DimC);i++)
+  for (int i=0;i<Feno->NTabCross && (NewDimC==DimC);i++)
    if ((Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVD) && (TabCross[i].FitConc==0) &&
        (TabCross[i].DeltaConc==(double)0.) && TabCross[i].IndSvdA && (TabCross[i].IndSvdA<=NewDimC))
 
@@ -2506,11 +2464,11 @@ RC ANALYSE_Function ( double *lambda,double *X, double *Y, INT ndet, double *Y0,
 
   else
    {
-   	// if (!Feno->hidden)
-  	 //  for (i=0;i<NDET;i++)
-  	 //   preshift[i]=Feno->LambdaK[i]-Feno->Lambda[i];
-  	 // else
-  	  memcpy(preshift,ANALYSE_zeros,sizeof(double)*NDET);
+    // if (!Feno->hidden)
+    //  for (i=0;i<NDET;i++)
+    //   preshift[i]=Feno->LambdaK[i]-Feno->Lambda[i];
+    // else
+    memcpy(preshift,ANALYSE_zeros,sizeof(double)*NDET);
 
     memcpy(newXsTrav,ANALYSE_zeros,sizeof(double)*NDET);
 
@@ -2524,7 +2482,7 @@ RC ANALYSE_Function ( double *lambda,double *X, double *Y, INT ndet, double *Y0,
 
     if (Feno->Decomp)
      {
-      for (i=0;i<Feno->NTabCross;i++)
+      for (int i=0;i<Feno->NTabCross;i++)
 
        if ((indexSvdA=TabCross[i].IndSvdA)>0)
         {
@@ -2533,153 +2491,158 @@ RC ANALYSE_Function ( double *lambda,double *X, double *Y, INT ndet, double *Y0,
 
          // Fill SVD matrix with predefined components
 
+         int numpixels = spectrum_length(global_doas_spectrum);
+
          if (WorkSpace[pTabCross->Comp].type==WRK_SYMBOL_PREDEFINED)
           {
+           doas_iterator my_iterator;
            if (i==Feno->indexOffsetConst)
-            for (j=0,k=1;(j<Z);j++)
-             for (l=Fenetre[j][0];l<=Fenetre[j][1];l++,k++)
-              A[indexSvdA][k]=(double)1.;
-           else if (i==Feno->indexOffsetOrder1)
-            for (j=0,k=1;(j<Z);j++)
-             for (l=Fenetre[j][0];l<=Fenetre[j][1];l++,k++)
-              A[indexSvdA][k]=(double)(ANALYSE_splineX[l]-lambda0);
+            for (int k=1; k<=numpixels; k++)
+             A[indexSvdA][k]=(double)1.;
+           else if (i==Feno->indexOffsetOrder1) {
+            for( int k=1,l=iterator_start(&my_iterator, global_doas_spectrum); l != ITERATOR_FINISHED; k++,l=iterator_next(&my_iterator))
+             A[indexSvdA][k]=(double)(ANALYSE_splineX[l]-lambda0);
+           } 
            else if (i==Feno->indexOffsetOrder2)
-            for (j=0,k=1;(j<Z);j++)
-             for (l=Fenetre[j][0];l<=Fenetre[j][1];l++,k++)
-              A[indexSvdA][k]=(double)(ANALYSE_splineX[l]-lambda0)*(ANALYSE_splineX[l]-lambda0);
+            {
+            for( int k=1,l=iterator_start(&my_iterator, global_doas_spectrum); l != ITERATOR_FINISHED; k++,l=iterator_next(&my_iterator))
+             A[indexSvdA][k]=(double)(ANALYSE_splineX[l]-lambda0)*(ANALYSE_splineX[l]-lambda0);
+            } 
            else if ((i==Feno->indexCommonResidual) || (i==Feno->indexUsamp1) || (i==Feno->indexUsamp2))
-            for (j=0,k=1;(j<Z);j++)
-             for (l=Fenetre[j][0];l<=Fenetre[j][1];l++,k++)
-              A[indexSvdA][k]=(Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVD)?
-                               -pTabCross->vector[l]:pTabCross->vector[l];
+            {
+             for( int k=1, l=iterator_start(&my_iterator, global_doas_spectrum); l != ITERATOR_FINISHED; k++,l=iterator_next(&my_iterator))
+              A[indexSvdA][k]=(Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVD) ?
+                -pTabCross->vector[l] : pTabCross->vector[l];
+            } 
            else if (i==Feno->indexRing1)
-            for (j=0,k=1;(j<Z);j++)
-             for (l=Fenetre[j][0];l<=Fenetre[j][1];l++,k++)
-              A[indexSvdA][k]=(Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVD)?
-                               -pTabCross->vector[l]:pTabCross->vector[l]/Y[l];      // !!! Assumed Raman spectrum
+            {
+             for( int k=1,l=iterator_start(&my_iterator, global_doas_spectrum); l != ITERATOR_FINISHED; k++,l=iterator_next(&my_iterator))
+              A[indexSvdA][k]=(Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVD) ?
+                -pTabCross->vector[l] : pTabCross->vector[l]/Y[l];      // !!! Assumed Raman spectrum
+            }
           }
 
          // Fill SVD matrix with polynomial components
 
          else if (WorkSpace[pTabCross->Comp].type==WRK_SYMBOL_CONTINUOUS)
           {
-          	if ((strlen(WorkSpace[pTabCross->Comp].symbolName)==2) && (WorkSpace[pTabCross->Comp].symbolName[0]=='x'))
-          	 {
-          	  polyOrder=WorkSpace[pTabCross->Comp].symbolName[1]-'0';
-          	  polyFlag=1;
-          	 }
-          	else if ((strlen(WorkSpace[pTabCross->Comp].symbolName)==4) && (WorkSpace[pTabCross->Comp].symbolName[2]=='x'))
-          	 {
-          	  polyOrder=WorkSpace[pTabCross->Comp].symbolName[3]-'0';
-          	  polyFlag=-1;
-          	 }
-          	else if ((strlen(WorkSpace[pTabCross->Comp].symbolName)==5) &&
-          	         (WorkSpace[pTabCross->Comp].symbolName[0]=='o') &&
-          	         (WorkSpace[pTabCross->Comp].symbolName[1]=='f') &&
-          	         (WorkSpace[pTabCross->Comp].symbolName[2]=='f') &&
-          	         (WorkSpace[pTabCross->Comp].symbolName[3]=='l'))
-          	 {
-          	 	polyOrder=WorkSpace[pTabCross->Comp].symbolName[4]-'0';
-          	  polyFlag=0;
-          	 }
-          	else
-          	 polyOrder=ITEM_NONE;
-
-          	if (polyFlag || polyOrder)
-          	 {
-          	 	if (!polyOrder)
-          	 	{
-              for (j=0,k=1;(j<Z);j++)
-               for (l=Fenetre[j][0];l<=Fenetre[j][1];l++,k++)
+           if ((strlen(WorkSpace[pTabCross->Comp].symbolName)==2) && (WorkSpace[pTabCross->Comp].symbolName[0]=='x'))
+            {
+             polyOrder=WorkSpace[pTabCross->Comp].symbolName[1]-'0';
+             polyFlag=1;
+            }
+           else if ((strlen(WorkSpace[pTabCross->Comp].symbolName)==4) && (WorkSpace[pTabCross->Comp].symbolName[2]=='x'))
+            {
+             polyOrder=WorkSpace[pTabCross->Comp].symbolName[3]-'0';
+             polyFlag=-1;
+            }
+           else if ((strlen(WorkSpace[pTabCross->Comp].symbolName)==5) &&
+                    (WorkSpace[pTabCross->Comp].symbolName[0]=='o') &&
+                    (WorkSpace[pTabCross->Comp].symbolName[1]=='f') &&
+                    (WorkSpace[pTabCross->Comp].symbolName[2]=='f') &&
+                    (WorkSpace[pTabCross->Comp].symbolName[3]=='l'))
+            {
+             polyOrder=WorkSpace[pTabCross->Comp].symbolName[4]-'0';
+             polyFlag=0;
+            }
+           else
+            polyOrder=ITEM_NONE;
+           
+           if (polyFlag || polyOrder)
+            {
+             doas_iterator my_iterator;
+             if (!polyOrder)
+              {
+               for( int k=1,l=iterator_start(&my_iterator, global_doas_spectrum); l != ITERATOR_FINISHED; k++,l=iterator_next(&my_iterator))
                 A[indexSvdA][k]=pTabCross->vector[l];
-             }
-          	 	else if (polyFlag>=0)                             // in order to have geophysical values of the polynomial in output,
-              for (j=0,k=1;(j<Z);j++)                          // the polynomial has to be calculated at the centre of the fitting window
-               for (l=Fenetre[j][0];l<=Fenetre[j][1];l++,k++)
+              }
+             else if (polyFlag>=0)                             // in order to have geophysical values of the polynomial in output,
+              {
+               for( int k=1,l=iterator_start(&my_iterator, global_doas_spectrum); l != ITERATOR_FINISHED; k++,l=iterator_next(&my_iterator))
                 A[indexSvdA][k]=pTabCross->vector[l]=A[indexSvdA-1][k]*(ANALYSE_splineX[l]-lambda0);
+              }
              else if (polyFlag==-1)
-              for (j=0,k=1;(j<Z);j++)
-               for (l=Fenetre[j][0];l<=Fenetre[j][1];l++,k++)
+              {
+               for( int k=1,l=iterator_start(&my_iterator, global_doas_spectrum); l != ITERATOR_FINISHED; k++,l=iterator_next(&my_iterator))
                 A[indexSvdA][k]=pTabCross->vector[l]=A[indexSvdA-1][k]/ANALYSE_splineX[l];
-          	 }
-          	else if (Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVD)               // linear offset, SVD method -> normalized w.r.t. the spectrum
-          	 {
-              for (j=0,k=1;(j<Z);j++)
-               for (l=Fenetre[j][0];l<=Fenetre[j][1];l++,k++)
-                A[indexSvdA][k]=pTabCross->vector[l]=(fabs(X[l])>(double)1.e-6)?(double)-Feno->xmean/X[l]:(double)0.;
-          	 }
-          	else                                                                 // linear offset, Marquadt+SVD method -> normalized w.r.t. the reference
-          	 {
-              for (j=0,k=1;(j<Z);j++)
-               for (l=Fenetre[j][0];l<=Fenetre[j][1];l++,k++)
-                A[indexSvdA][k]=pTabCross->vector[l]=(fabs(Y[l])>(double)1.e-6)?(double)Feno->xmean/Y[l] :(double)0.;
-          	 }
+              }
+            }
+           else if (Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVD)               // linear offset, SVD method -> normalized w.r.t. the spectrum
+            {
+             for( int k=1,l=iterator_start(&my_iterator, global_doas_spectrum); l != ITERATOR_FINISHED; k++,l=iterator_next(&my_iterator))
+              A[indexSvdA][k]=pTabCross->vector[l]=(fabs(X[l])>(double)1.e-6)?(double)-Feno->xmean/X[l]:(double)0.;
+            }
+           else                                                                 // linear offset, Marquadt+SVD method -> normalized w.r.t. the reference
+            {
+             for( int k=1,l=iterator_start(&my_iterator, global_doas_spectrum); l != ITERATOR_FINISHED; k++,l=iterator_next(&my_iterator))
+              A[indexSvdA][k]=pTabCross->vector[l]=(fabs(Y[l])>(double)1.e-6)?(double)Feno->xmean/Y[l] :(double)0.;
+            }
           }
-
+         
          // Fill SVD matrix with cross sections
-
+         
          else if (WorkSpace[pTabCross->Comp].type==WRK_SYMBOL_CROSS)
           {
            // Use substitution vectors for cross sections because of AMF correction
-
+           
            memcpy(ANALYSE_xsTrav,pTabCross->vector,sizeof(double)*NDET);
            memcpy(ANALYSE_xsTrav2,pTabCross->Deriv2,sizeof(double)*NDET);
-
+           
            // --------------
            // AMF correction
            // --------------
-
+           
            if ((Feno->amfFlag && ((rc=OUTPUT_GetWveAmf(&Feno->TabCrossResults[i],ZM,Lambda,ANALYSE_xsTrav,ANALYSE_xsTrav2))!=0)) ||
-
-           // ---------------------------------------
-           // Wavelength alignment (AMF) for cross sections
-           // ---------------------------------------
-
-              (!strcasecmp(WorkSpace[pTabCross->Comp].symbolName,"O3TD") &&
-              ((rc=TemperatureCorrection(ANALYSE_xsTrav,
-                                         O3TD.matrix[2],
-                                         O3TD.matrix[3],
-                                         O3TD.matrix[4],
-                                         newXsTrav,
-                                        (pTabCross->FitShift!=ITEM_NONE)?(double)fitParamsF[pTabCross->FitShift]:(double)pTabCross->InitShift))!=ERROR_ID_NO)) ||
-
-              (strcasecmp(WorkSpace[pTabCross->Comp].symbolName,"O3TD") &&
-
-              ((rc=ShiftVector(ANALYSE_splineX,ANALYSE_xsTrav /* (0:NDET-1) */,ANALYSE_xsTrav2 /* (0:NDET-1) */,newXsTrav /* (0:NDET-1) */,
-                              (pTabCross->FitShift!=ITEM_NONE)?(double)fitParamsF[pTabCross->FitShift]:(double)pTabCross->InitShift,
-                              (pTabCross->FitStretch!=ITEM_NONE)?(double)fitParamsF[pTabCross->FitStretch]:(double)pTabCross->InitStretch,
-                              (pTabCross->FitStretch2!=ITEM_NONE)?(double)fitParamsF[pTabCross->FitStretch2]:(double)pTabCross->InitStretch2,
-                               Feno->Shift,Feno->Stretch,Feno->Stretch2,
-                               NULL,0,0,NULL,indexFenoColumn))!=ERROR_ID_NO)))
-
+               
+               // ---------------------------------------
+               // Wavelength alignment (AMF) for cross sections
+               // ---------------------------------------
+               
+               (!strcasecmp(WorkSpace[pTabCross->Comp].symbolName,"O3TD") &&
+                ((rc=TemperatureCorrection(ANALYSE_xsTrav,
+                                           O3TD.matrix[2],
+                                           O3TD.matrix[3],
+                                           O3TD.matrix[4],
+                                           newXsTrav,
+                                           (pTabCross->FitShift!=ITEM_NONE)?(double)fitParamsF[pTabCross->FitShift]:(double)pTabCross->InitShift))!=ERROR_ID_NO)) ||
+               
+               (strcasecmp(WorkSpace[pTabCross->Comp].symbolName,"O3TD") &&
+                
+                ((rc=ShiftVector(ANALYSE_splineX,ANALYSE_xsTrav /* (0:NDET-1) */,ANALYSE_xsTrav2 /* (0:NDET-1) */,newXsTrav /* (0:NDET-1) */,
+                                 (pTabCross->FitShift!=ITEM_NONE)?(double)fitParamsF[pTabCross->FitShift]:(double)pTabCross->InitShift,
+                                 (pTabCross->FitStretch!=ITEM_NONE)?(double)fitParamsF[pTabCross->FitStretch]:(double)pTabCross->InitStretch,
+                                 (pTabCross->FitStretch2!=ITEM_NONE)?(double)fitParamsF[pTabCross->FitStretch2]:(double)pTabCross->InitStretch2,
+                                 Feno->Shift,Feno->Stretch,Feno->Stretch2,
+                                 NULL,0,0,NULL,indexFenoColumn))!=ERROR_ID_NO)))
+            
             goto EndFunction;
-
+           
            else
             {
-             for (j=0,k=1;(j<Z);j++)
-              for (l=Fenetre[j][0];l<=Fenetre[j][1];l++,k++)
-               A[indexSvdA][k]=newXsTrav[l];
+             doas_iterator my_iterator;
+             for( int k=1,l=iterator_start(&my_iterator, global_doas_spectrum); l != ITERATOR_FINISHED; k++,l=iterator_next(&my_iterator))
+              A[indexSvdA][k]=newXsTrav[l];
             }
           }
         }
-
+      
       // ---------------------------------
       // Orthogonalization of columns of A
       // ---------------------------------
-
-      for (i=0;i<Feno->NTabCross;i++)
+      
+      for (int i=0;i<Feno->NTabCross;i++)
 
        if ((indexSvdA=TabCross[i].IndSvdA)>0)
         {
          pTabCross=&TabCross[i];
 
          if ((WorkSpace[pTabCross->Comp].type!=WRK_SYMBOL_PREDEFINED) ||
-            (// (Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVDMARQUARDT) &&
-             (i==Feno->indexRing1) ||
-             (i==Feno->indexUsamp1) ||
-             (i==Feno->indexUsamp2)))
+             (// (Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVDMARQUARDT) &&
+              (i==Feno->indexRing1) ||
+              (i==Feno->indexUsamp1) ||
+              (i==Feno->indexUsamp2)))
 
-           // normalize vectors of A before orthogonalization
+          // normalize vectors of A before orthogonalization
 
           if ((rc=VECTOR_NormalizeVector(A[indexSvdA],Npts,&pTabCross->Fact,WorkSpace[pTabCross->Comp].symbolName))!=ERROR_ID_NO)
            goto EndFunction;
@@ -2691,7 +2654,7 @@ RC ANALYSE_Function ( double *lambda,double *X, double *Y, INT ndet, double *Y0,
       // Cross sections correction with non linear parameters
       // ----------------------------------------------------
 
-      for (i=0;i<Feno->NTabCross;i++)
+      for (int i=0;i<Feno->NTabCross;i++)
        {
         pTabCross=&TabCross[i];
 
@@ -2702,21 +2665,21 @@ RC ANALYSE_Function ( double *lambda,double *X, double *Y, INT ndet, double *Y0,
           // ----------------------------------------------------
 
           if ((WorkSpace[pTabCross->Comp].type==WRK_SYMBOL_CROSS) &&
-             ((pTabCross->FitScale!=ITEM_NONE) || (pTabCross->InitScale!=(double)0.) ||
-              (pTabCross->FitScale2!=ITEM_NONE) || (pTabCross->InitScale2!=(double)0.)))
+              ((pTabCross->FitScale!=ITEM_NONE) || (pTabCross->InitScale!=(double)0.) ||
+               (pTabCross->FitScale2!=ITEM_NONE) || (pTabCross->InitScale2!=(double)0.)))
            {
-            for (j=0,k=1;(j<Z);j++)
-             for (l=Fenetre[j][0];l<=Fenetre[j][1];l++,k++)
-              {
-               offset=(double)1.;
-               deltaX=(double)(ANALYSE_splineX[l]-lambda0);
-
-               offset+=((pTabCross->FitScale!=ITEM_NONE)?(double)fitParamsF[pTabCross->FitScale]:(double)pTabCross->InitScale)*deltaX;
-               offset+=((pTabCross->FitScale2!=ITEM_NONE)?(double)fitParamsF[pTabCross->FitScale2]:(double)pTabCross->InitScale2)*deltaX*deltaX;
-
-               A[indexSvdA][k]*=offset*pTabCross->Fact;
-              }
-
+            doas_iterator my_iterator;
+            for( int k=1,l=iterator_start(&my_iterator, global_doas_spectrum); l != ITERATOR_FINISHED; k++,l=iterator_next(&my_iterator))
+             {
+              offset=(double)1.;
+              deltaX=(double)(ANALYSE_splineX[l]-lambda0);
+              
+              offset+=((pTabCross->FitScale!=ITEM_NONE)?(double)fitParamsF[pTabCross->FitScale]:(double)pTabCross->InitScale)*deltaX;
+              offset+=((pTabCross->FitScale2!=ITEM_NONE)?(double)fitParamsF[pTabCross->FitScale2]:(double)pTabCross->InitScale2)*deltaX*deltaX;
+              
+              A[indexSvdA][k]*=offset*pTabCross->Fact;
+             }
+            
             if ((rc=VECTOR_NormalizeVector(A[indexSvdA],Npts,&pTabCross->Fact,"Function 2 "))!=ERROR_ID_NO)
              goto EndFunction;
            }
@@ -2727,21 +2690,21 @@ RC ANALYSE_Function ( double *lambda,double *X, double *Y, INT ndet, double *Y0,
 
           memcpy((char *)(U[indexSvdA]+1),(char *)(A[indexSvdA]+1),sizeof(double)*Npts);
 
-          for (l=1;l<=DimL;l++)
+          for (int l=1;l<=DimL;l++)
            U[indexSvdA][l]*=pTabCross->Fact;   // Multiply column of U by normalization factor
          }
        }
 
       if ((Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVD) && (SigmaY!=NULL))
        for (indexSvdA=0;indexSvdA<=DimC;indexSvdA++)
-        for (k=1;k<=DimL;k++)
+        for (int k=1;k<=DimL;k++)
          A[indexSvdA][k]/=SigmaY[k-1];
 
       // -----------------
       // SVD Decomposition
       // -----------------
 
-      #if defined(__DEBUG_) && __DEBUG_ && defined(__DEBUG_DOAS_SVD_) && __DEBUG_DOAS_SVD_
+#if defined(__DEBUG_) && __DEBUG_ && defined(__DEBUG_DOAS_SVD_) && __DEBUG_DOAS_SVD_
       if (((analyseDebugMask&DEBUG_FCTTYPE_MATH)!=0) && analyseDebugVar)        // SVD is classified as a math function
        {
        	DEBUG_Print("+++ SVD decomposition (%s window)\n",Feno->windowName);
@@ -2753,28 +2716,10 @@ RC ANALYSE_Function ( double *lambda,double *X, double *Y, INT ndet, double *Y0,
         DEBUG_PrintVar("Before SVD_Dcmp",U,1,DimL,0,DimC,NULL);
         DEBUG_PrintVar("Before SVD_Dcmb",A,1,DimL,0,DimC,NULL);
        }
-      #endif
-
-       // {
-       // 	{
-       // 		FILE *fp;
-       // 		fp=fopen("toto.dat","a+t");
-       //
-       // 	fprintf(fp,"+++ SVD decomposition (%s window)\n",Feno->windowName);
-       //
-       //  for (j=0;j<Feno->NTabCross;j++)
-       //   if (TabCross[j].IndSvdA)
-       //    fprintf(fp,"+++ %-2d %s\n",TabCross[j].IndSvdA,WorkSpace[TabCross[j].Comp].symbolName);
-       //
-       //  fprintf(fp,"Before SVD_Dcmp",U,1,DimL,0,DimC,NULL);
-       //  fprintf(fp,"Before SVD_Dcmb",A,1,DimL,0,DimC,NULL);
-       //
-       //   fclose(fp);
-       //  }
-       // }
+#endif
 
       if ((Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVD) &&
-         ((rc=SVD_Dcmp(A,Npts,NewDimC /* don't take fixed concentrations into account */ ,W,V,SigmaSqr,covar))!=ERROR_ID_NO))
+          ((rc=SVD_Dcmp(A,Npts,NewDimC /* don't take fixed concentrations into account */ ,W,V,SigmaSqr,covar))!=ERROR_ID_NO))
        goto EndFunction;
 
       if (FAST && (SigmaY==NULL) && (!Feno->offlFlag || (Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVDMARQUARDT)))
@@ -2790,22 +2735,22 @@ RC ANALYSE_Function ( double *lambda,double *X, double *Y, INT ndet, double *Y0,
     // ---------------------------------
 
     if (((rc=ShiftVector(LambdaSpec,X /* (0:NDET-1) */,SplineSpec /* (0:NDET-1) */,newXsTrav /* (0:NDET-1) */,
-                        (Feno->indexSpectrum!=ITEM_NONE)?((TabCross[Feno->indexSpectrum].FitShift!=ITEM_NONE)?(double)fitParamsF[TabCross[Feno->indexSpectrum].FitShift]:(double)TabCross[Feno->indexSpectrum].InitShift):(double)0.,
-                        (Feno->indexSpectrum!=ITEM_NONE)?((TabCross[Feno->indexSpectrum].FitStretch!=ITEM_NONE)?(double)fitParamsF[TabCross[Feno->indexSpectrum].FitStretch]:(double)TabCross[Feno->indexSpectrum].InitStretch):(double)0.,
-                        (Feno->indexSpectrum!=ITEM_NONE)?((TabCross[Feno->indexSpectrum].FitStretch2!=ITEM_NONE)?(double)fitParamsF[TabCross[Feno->indexSpectrum].FitStretch2]:(double)TabCross[Feno->indexSpectrum].InitStretch2):(double)0.,
-                        (double)0.,(double)0.,(double)0.,
+                         (Feno->indexSpectrum!=ITEM_NONE)?((TabCross[Feno->indexSpectrum].FitShift!=ITEM_NONE)?(double)fitParamsF[TabCross[Feno->indexSpectrum].FitShift]:(double)TabCross[Feno->indexSpectrum].InitShift):(double)0.,
+                         (Feno->indexSpectrum!=ITEM_NONE)?((TabCross[Feno->indexSpectrum].FitStretch!=ITEM_NONE)?(double)fitParamsF[TabCross[Feno->indexSpectrum].FitStretch]:(double)TabCross[Feno->indexSpectrum].InitStretch):(double)0.,
+                         (Feno->indexSpectrum!=ITEM_NONE)?((TabCross[Feno->indexSpectrum].FitStretch2!=ITEM_NONE)?(double)fitParamsF[TabCross[Feno->indexSpectrum].FitStretch2]:(double)TabCross[Feno->indexSpectrum].InitStretch2):(double)0.,
+                         (double)0.,(double)0.,(double)0.,
                          fitParamsF,-1,0,NULL,indexFenoColumn))!=ERROR_ID_NO) ||
 
-         (Feno->useUsamp && (pUsamp->method==PRJCT_USAMP_AUTOMATIC) && ((rc=ANALYSE_UsampBuild(2,ITEM_NONE))!=ERROR_ID_NO)))
+        (Feno->useUsamp && (pUsamp->method==PRJCT_USAMP_AUTOMATIC) && ((rc=ANALYSE_UsampBuild(2,ITEM_NONE))!=ERROR_ID_NO)))
 
-       goto EndFunction;
+     goto EndFunction;
 
-    #if defined(__DEBUG_) && __DEBUG_  && defined(__DEBUG_DOAS_SHIFT_) && __DEBUG_DOAS_SHIFT_
+#if defined(__DEBUG_) && __DEBUG_  && defined(__DEBUG_DOAS_SHIFT_) && __DEBUG_DOAS_SHIFT_
     if (((analyseDebugMask&DEBUG_FCTTYPE_MATH)!=0) && analyseDebugVar &&
-         (Feno->indexSpectrum!=ITEM_NONE) &&
+        (Feno->indexSpectrum!=ITEM_NONE) &&
         ((TabCross[Feno->indexSpectrum].FitShift!=ITEM_NONE) || (TabCross[Feno->indexSpectrum].InitShift!=(double)0.)))
      DEBUG_PrintVar("Interpolation of the spectrum",ANALYSE_splineX,LimMin,LimMax,X,LimMin,LimMax,SplineSpec,LimMin,LimMax,newXsTrav,LimMin,LimMax,NULL);
-    #endif
+#endif
 
     // ------------------------------
     // Low pass filtering on spectrum
@@ -2814,9 +2759,9 @@ RC ANALYSE_Function ( double *lambda,double *X, double *Y, INT ndet, double *Y0,
     // Filter real time only when fitting difference of resolution between spectrum and reference
 
     if ((Feno->analysisType==ANALYSIS_TYPE_FWHM_NLFIT) && (ANALYSE_plFilter->filterFunction!=NULL) &&
-       ((rc=FILTER_Vector(ANALYSE_plFilter,&newXsTrav[LimMin],&newXsTrav[LimMin],LimN,PRJCT_FILTER_OUTPUT_LOW))!=0))
+        ((rc=FILTER_Vector(ANALYSE_plFilter,&newXsTrav[LimMin],&newXsTrav[LimMin],LimN,PRJCT_FILTER_OUTPUT_LOW))!=0))
      {
-     	rc=ERROR_SetLast("EndFunction",ERROR_TYPE_WARNING,ERROR_ID_ANALYSIS,analyseIndexRecord,"Filter");
+      rc=ERROR_SetLast("EndFunction",ERROR_TYPE_WARNING,ERROR_ID_ANALYSIS,analyseIndexRecord,"Filter");
       goto EndFunction;
      }
 
@@ -2837,7 +2782,7 @@ RC ANALYSE_Function ( double *lambda,double *X, double *Y, INT ndet, double *Y0,
 
       if (offsetOrder>=0)
        {
-        for (i=LimMin;i<=LimMax;i++)
+        for (int i=LimMin;i<=LimMax;i++)
          {
           deltaX=(double)(ANALYSE_splineX[i]-lambda0);
 
@@ -2855,7 +2800,7 @@ RC ANALYSE_Function ( double *lambda,double *X, double *Y, INT ndet, double *Y0,
 
     if ((Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVD) && (Feno->indexRing1!=ITEM_NONE))
      {
-      for (i=LimMin;i<=LimMax;i++)
+      for (int i=LimMin;i<=LimMax;i++)
        newXsTrav[i]-=((double)(TabCross[Feno->indexRing1].FitParam!=ITEM_NONE)?
                       (double)fitParamsF[TabCross[Feno->indexRing1].FitParam]:
                       (double)TabCross[Feno->indexRing1].InitParam)*TabCross[Feno->indexRing1].vector[i]/TabCross[Feno->indexRing1].Fact;
@@ -2866,10 +2811,10 @@ RC ANALYSE_Function ( double *lambda,double *X, double *Y, INT ndet, double *Y0,
     // -------------------------------
 
     if ((Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVD) && !hFilterSpecLog &&  // logarithms are not calculated and filtered before entering this function
-      (((rc=VECTOR_Log(&newXsTrav[LimMin],&newXsTrav[LimMin],LimN,"ANLYSE_Function (Spec) "))!=0) ||
-       ((ANALYSE_phFilter->filterFunction!=NULL) &&
-       ((!Feno->hidden && ANALYSE_phFilter->hpFilterAnalysis) || ((Feno->hidden==1) && ANALYSE_phFilter->hpFilterCalib)) &&
-       ((rc=FILTER_Vector(ANALYSE_phFilter,&newXsTrav[LimMin],&newXsTrav[LimMin],LimN,PRJCT_FILTER_OUTPUT_HIGH_SUB))!=0))))
+        (((rc=VECTOR_Log(&newXsTrav[LimMin],&newXsTrav[LimMin],LimN,"ANLYSE_Function (Spec) "))!=0) ||
+         ((ANALYSE_phFilter->filterFunction!=NULL) &&
+          ((!Feno->hidden && ANALYSE_phFilter->hpFilterAnalysis) || ((Feno->hidden==1) && ANALYSE_phFilter->hpFilterCalib)) &&
+          ((rc=FILTER_Vector(ANALYSE_phFilter,&newXsTrav[LimMin],&newXsTrav[LimMin],LimN,PRJCT_FILTER_OUTPUT_HIGH_SUB))!=0))))
 
      goto EndFunction;
 
@@ -2877,9 +2822,9 @@ RC ANALYSE_Function ( double *lambda,double *X, double *Y, INT ndet, double *Y0,
     // Transfer to working variable
     // ----------------------------
 
-    for (j=0,k=0;(j<Z);j++)
-     for (l=Fenetre[j][0];l<=Fenetre[j][1];l++,k++)
-      XTrav[k]=newXsTrav[l];
+    doas_iterator my_iterator;
+    for( int k=0,l=iterator_start(&my_iterator, global_doas_spectrum); l != ITERATOR_FINISHED; k++,l=iterator_next(&my_iterator))
+     XTrav[k]=newXsTrav[l];
 
     // =========
     // REFERENCE
@@ -2890,20 +2835,20 @@ RC ANALYSE_Function ( double *lambda,double *X, double *Y, INT ndet, double *Y0,
     // ----------------------------------
 
     if ((rc=ShiftVector(ANALYSE_splineX,Y,SplineRef,newXsTrav,
-                       (Feno->indexReference!=ITEM_NONE)?((TabCross[Feno->indexReference].FitShift!=ITEM_NONE)?(double)fitParamsF[TabCross[Feno->indexReference].FitShift]:(double)TabCross[Feno->indexReference].InitShift):(double)0.,
-                       (Feno->indexReference!=ITEM_NONE)?((TabCross[Feno->indexReference].FitStretch!=ITEM_NONE)?(double)fitParamsF[TabCross[Feno->indexReference].FitStretch]:(double)TabCross[Feno->indexReference].InitStretch):(double)0.,
-                       (Feno->indexReference!=ITEM_NONE)?((TabCross[Feno->indexReference].FitStretch2!=ITEM_NONE)?(double)fitParamsF[TabCross[Feno->indexReference].FitStretch2]:(double)TabCross[Feno->indexReference].InitStretch2):(double)0.,
+                        (Feno->indexReference!=ITEM_NONE)?((TabCross[Feno->indexReference].FitShift!=ITEM_NONE)?(double)fitParamsF[TabCross[Feno->indexReference].FitShift]:(double)TabCross[Feno->indexReference].InitShift):(double)0.,
+                        (Feno->indexReference!=ITEM_NONE)?((TabCross[Feno->indexReference].FitStretch!=ITEM_NONE)?(double)fitParamsF[TabCross[Feno->indexReference].FitStretch]:(double)TabCross[Feno->indexReference].InitStretch):(double)0.,
+                        (Feno->indexReference!=ITEM_NONE)?((TabCross[Feno->indexReference].FitStretch2!=ITEM_NONE)?(double)fitParamsF[TabCross[Feno->indexReference].FitStretch2]:(double)TabCross[Feno->indexReference].InitStretch2):(double)0.,
                         (double)0.,(double)0.,(double)0.,
                         fitParamsF,1,(Feno->analysisType==ANALYSIS_TYPE_FWHM_KURUCZ)?1:0,NULL,indexFenoColumn))!=ERROR_ID_NO)
 
-       goto EndFunction;
+     goto EndFunction;
 
-    #if defined(__DEBUG_) && __DEBUG_  && defined(__DEBUG_DOAS_SHIFT_) && __DEBUG_DOAS_SHIFT_
+#if defined(__DEBUG_) && __DEBUG_  && defined(__DEBUG_DOAS_SHIFT_) && __DEBUG_DOAS_SHIFT_
     if (((analyseDebugMask&DEBUG_FCTTYPE_MATH)!=0) && analyseDebugVar &&
-         (Feno->indexReference!=ITEM_NONE) &&
+        (Feno->indexReference!=ITEM_NONE) &&
         ((TabCross[Feno->indexReference].FitShift!=ITEM_NONE) || (TabCross[Feno->indexReference].InitShift!=(double)0.)))
      DEBUG_PrintVar("Interpolation of the reference",ANALYSE_splineX,LimMin,LimMax,Y,LimMin,LimMax,SplineRef,LimMin,LimMax,newXsTrav,LimMin,LimMax,NULL);
-    #endif
+#endif
 
     // -------------------------------
     // Low pass filtering on reference
@@ -2912,9 +2857,9 @@ RC ANALYSE_Function ( double *lambda,double *X, double *Y, INT ndet, double *Y0,
     // Filter real time only when fitting difference of resolution between spectrum and reference
 
     if ((Feno->analysisType==ANALYSIS_TYPE_FWHM_NLFIT) && (ANALYSE_plFilter->filterFunction!=NULL) &&
-       ((rc=FILTER_Vector(ANALYSE_plFilter,&newXsTrav[LimMin],&newXsTrav[LimMin],LimN,PRJCT_FILTER_OUTPUT_LOW))!=0))
+        ((rc=FILTER_Vector(ANALYSE_plFilter,&newXsTrav[LimMin],&newXsTrav[LimMin],LimN,PRJCT_FILTER_OUTPUT_LOW))!=0))
      {
-     	rc=ERROR_SetLast("EndFunction",ERROR_TYPE_WARNING,ERROR_ID_ANALYSIS,analyseIndexRecord,"Filter");
+      rc=ERROR_SetLast("EndFunction",ERROR_TYPE_WARNING,ERROR_ID_ANALYSIS,analyseIndexRecord,"Filter");
       goto EndFunction;
      }
 
@@ -2924,12 +2869,12 @@ RC ANALYSE_Function ( double *lambda,double *X, double *Y, INT ndet, double *Y0,
 
     if ((Feno->analysisMethod!=PRJCT_ANLYS_METHOD_SVDMARQUARDT) &&
         (Feno->indexSol!=ITEM_NONE) &&
-       ((TabCross[Feno->indexSol].FitParam!=ITEM_NONE) ||
-       ((TabCross[Feno->indexSol].InitParam!=(double)0.)&&(TabCross[Feno->indexSol].InitParam!=(double)1.))))
-
-     for (i=LimMin;i<=LimMax;i++)
+        ((TabCross[Feno->indexSol].FitParam!=ITEM_NONE) ||
+         ((TabCross[Feno->indexSol].InitParam!=(double)0.)&&(TabCross[Feno->indexSol].InitParam!=(double)1.))))
+     
+     for (int i=LimMin;i<=LimMax;i++)
       newXsTrav[i]=pow(newXsTrav[i],(TabCross[Feno->indexSol].FitParam!=ITEM_NONE)?(double)fitParamsF[TabCross[Feno->indexSol].FitParam]:(double)TabCross[Feno->indexSol].InitParam);
-
+    
     // --------------------------------
     // High pass filtering on reference
     // --------------------------------
@@ -2937,22 +2882,19 @@ RC ANALYSE_Function ( double *lambda,double *X, double *Y, INT ndet, double *Y0,
     // logarithms are not calculated and filtered before entering this function
 
     if ((Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVD) && !hFilterRefLog &&  // logarithms are not calculated and filtered before entering this function
-      (((rc=VECTOR_Log(&newXsTrav[LimMin],&newXsTrav[LimMin],LimN,"ANLYSE_Function (Ref) "))!=0) ||
-       ((ANALYSE_phFilter->filterFunction!=NULL) &&
-       ((!Feno->hidden && ANALYSE_phFilter->hpFilterAnalysis) || ((Feno->hidden==1) && ANALYSE_phFilter->hpFilterCalib)) &&
-       ((rc=FILTER_Vector(ANALYSE_phFilter,&newXsTrav[LimMin],&newXsTrav[LimMin],LimN,PRJCT_FILTER_OUTPUT_HIGH_SUB))!=0))))
-
+        (((rc=VECTOR_Log(&newXsTrav[LimMin],&newXsTrav[LimMin],LimN,"ANLYSE_Function (Ref) "))!=0) ||
+         ((ANALYSE_phFilter->filterFunction!=NULL) &&
+          ((!Feno->hidden && ANALYSE_phFilter->hpFilterAnalysis) || ((Feno->hidden==1) && ANALYSE_phFilter->hpFilterCalib)) &&
+          ((rc=FILTER_Vector(ANALYSE_phFilter,&newXsTrav[LimMin],&newXsTrav[LimMin],LimN,PRJCT_FILTER_OUTPUT_HIGH_SUB))!=0))))
+     
      goto EndFunction;
 
     // ----------------------------
     // Transfer to working variable
     // ----------------------------
 
-    for (j=0,k=0;(j<Z);j++)
-     for (l=Fenetre[j][0];l<=Fenetre[j][1];l++,k++)
-      YTrav[k]=newXsTrav[l];
-
-
+    for( int k=0,l=iterator_start(&my_iterator, global_doas_spectrum); l != ITERATOR_FINISHED; k++,l=iterator_next(&my_iterator))
+     YTrav[k]=newXsTrav[l];
 
     //
     // OPTICAL THICKNESS FITTING (SVD)
@@ -2963,131 +2905,125 @@ RC ANALYSE_Function ( double *lambda,double *X, double *Y, INT ndet, double *Y0,
       // ---------------------
       // SVD back substitution
       // ---------------------
-
+      
       // N.B. : YTrav -> reference spectrum, shifted and stretched
       //        XTrav -> raw spectrum, shifted and stretched
 
-      for (j=0,k=1;j<Z;j++)
-       for (i=Fenetre[j][0];i<=Fenetre[j][1];i++,k++)
-        {
-         b[k]=YTrav[k-1]-XTrav[k-1];
+      for(int k=1; k<=spectrum_length(global_doas_spectrum); k++)
+       {
+        b[k]=YTrav[k-1]-XTrav[k-1];
+      
+        for (int l=NewDimC+1;l<=DimC;l++)
+         {
+          for (int m=0;m<Feno->NTabCross;m++)
+           if (TabCross[m].IndSvdA==l)
+            break;
+      
+          b[k]-=U[l][k]*fitParamsC[l];
+         }
+      
+        if (SigmaY!=NULL)
+         b[k]/=SigmaY[k-1];
+       }
 
-         for (l=NewDimC+1;l<=DimC;l++)
-          {
-           for (m=0;m<Feno->NTabCross;m++)
-            if (TabCross[m].IndSvdA==l)
-             break;
-
-           b[k]-=U[l][k]*fitParamsC[l];
-          }
-
-         if (SigmaY!=NULL)
-          b[k]/=SigmaY[k-1];
-        }
-
-      #if defined(__DEBUG_) && __DEBUG_ && defined(__DEBUG_DOAS_SVD_) && __DEBUG_DOAS_SVD_
+#if defined(__DEBUG_) && __DEBUG_ && defined(__DEBUG_DOAS_SVD_) && __DEBUG_DOAS_SVD_
       if (((analyseDebugMask&DEBUG_FCTTYPE_MATH)!=0) && analyseDebugVar)        // SVD is classified as a math function
        DEBUG_PrintVar("Before SVD_Bksb",XTrav,0,DimL-1,YTrav,0,DimL-1,b,1,DimL,NULL);
-       DEBUG_PrintVar("Before SVD_Bksb",U,1,DimL,0,DimC,NULL);
-       DEBUG_PrintVar("Before SVD_Bksb",fitParamsC,0,DimC,NULL);
-      #endif
-
+      DEBUG_PrintVar("Before SVD_Bksb",U,1,DimL,0,DimC,NULL);
+      DEBUG_PrintVar("Before SVD_Bksb",fitParamsC,0,DimC,NULL);
+#endif
+      
       if ((rc=SVD_Bksb(A,W,V,Npts,NewDimC /* don't take fixed concentrations into account */, b, fitParamsC ))!=ERROR_ID_NO)  // Solve system A*fitParamsF=b
        goto EndFunction;
-
-      #if defined(__DEBUG_) && __DEBUG_ && defined(__DEBUG_DOAS_SVD_) && __DEBUG_DOAS_SVD_
+      
+#if defined(__DEBUG_) && __DEBUG_ && defined(__DEBUG_DOAS_SVD_) && __DEBUG_DOAS_SVD_
       if (((analyseDebugMask&DEBUG_FCTTYPE_MATH)!=0) && analyseDebugVar)        // SVD is classified as a math function
        DEBUG_PrintVar("After SVD_Bksb",fitParamsC,0,DimC,NULL);
-      #endif
-
+#endif
+      
       // ------------------------------------------------
       // Yfit computation with the solution of the system
       // ------------------------------------------------
-
-      for (l=0;l<Feno->NTabCross;l++)
+      
+      for (int l=0;l<Feno->NTabCross;l++)
        {
-	  int svdIndex = TabCross[l].IndSvdA;
-	  double weight = (svdIndex <= NewDimC)
-	    ? fitParamsC[svdIndex]/TabCross[l].Fact
-	    : fitParamsC[svdIndex];
-	  if (svdIndex > 0 && (l!=Feno->indexRing1))
-	    for (k=1;k<=DimL;k++) {
-	      XTrav[k-1]+= U[svdIndex][k]*weight;
-	      }
-	}
-      for( k=1;k<=DimL;k++) {
-	Yfit[k-1]=YTrav[k-1]-XTrav[k-1]; // NB : logarithm test on YTrav has been made in the previous loo
+        int svdIndex = TabCross[l].IndSvdA;
+        double weight = (svdIndex <= NewDimC)
+          ? fitParamsC[svdIndex]/TabCross[l].Fact
+          : fitParamsC[svdIndex];
+        if (svdIndex > 0 && (l!=Feno->indexRing1))
+         for (int k=1;k<=DimL;k++) {
+          XTrav[k-1]+= U[svdIndex][k]*weight;
+         }
+       }
+      for (int k=1;k<=DimL;k++) {
+       Yfit[k-1]=YTrav[k-1]-XTrav[k-1]; // NB : logarithm test on YTrav has been made in the previous loo
       }
      }
     //
     // INTENSITY FITTING (Marquardt-Levenberg + SVD)
     //
-
+    
     else if (Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVDMARQUARDT)
      {
       // ---------------
       // Fill SVD matrix
       // ---------------
-
-      for (j=0,k=1;j<Z;j++)
-       for (i=Fenetre[j][0];i<=Fenetre[j][1];i++,k++)
-        {
-         for (tau=(double)0.,l=0;l<Feno->NTabCross;l++)
-          {
-           pTabCross=&TabCross[l];
-
-           if (((indexSvdA=pTabCross->IndSvdA)>0) && (WorkSpace[pTabCross->Comp].type==WRK_SYMBOL_CROSS))
-            tau+=(pTabCross->FitConc>ITEM_NONE)?(double)fitParamsF[pTabCross->FitConc]*A[pTabCross->IndSvdA][k]:  // Conc non linear fitting
-                  fitParamsC[pTabCross->IndSvdA]*U[pTabCross->IndSvdA][k];
-          }
-
-         if (-tau>(double)700.)
-          {
-          	rc=ERROR_SetLast("Function",ERROR_TYPE_WARNING,ERROR_ID_OVERFLOW);
-           goto EndFunction;
-          }
-         else if (YTrav[k-1]==(double)0.)
-          {
-          	rc=ERROR_SetLast("Function",ERROR_TYPE_WARNING,ERROR_ID_DIVISION_BY_0);
-           goto EndFunction;
-          }
-
-         ANALYSE_t[i]=exp(-tau); // exp(-tau)
-         ANALYSE_tc[i]=XTrav[k-1]/YTrav[k-1];  // I/I0
-        }
-
+      
+      for (int k=1,i=iterator_start(&my_iterator, global_doas_spectrum); i != ITERATOR_FINISHED; k++,i=iterator_next(&my_iterator))
+       {
+        tau = (double)0.;
+        for (int l=0;l<Feno->NTabCross;l++)
+         {
+          pTabCross=&TabCross[l];
+          
+          if (((indexSvdA=pTabCross->IndSvdA)>0) && (WorkSpace[pTabCross->Comp].type==WRK_SYMBOL_CROSS))
+           tau+=(pTabCross->FitConc>ITEM_NONE)?(double)fitParamsF[pTabCross->FitConc]*A[pTabCross->IndSvdA][k]:  // Conc non linear fitting
+             fitParamsC[pTabCross->IndSvdA]*U[pTabCross->IndSvdA][k];
+         }
+        
+        if (-tau>(double)700.)
+         {
+          rc=ERROR_SetLast("Function",ERROR_TYPE_WARNING,ERROR_ID_OVERFLOW);
+          goto EndFunction;
+         }
+        else if (YTrav[k-1]==(double)0.)
+         {
+          rc=ERROR_SetLast("Function",ERROR_TYPE_WARNING,ERROR_ID_DIVISION_BY_0);
+          goto EndFunction;
+         }
+        
+        ANALYSE_t[i]=exp(-tau); // exp(-tau)
+        ANALYSE_tc[i]=XTrav[k-1]/YTrav[k-1];  // I/I0
+       }
+      
       // ---------------------------------------
       // SVD decomposition and back substitution
       // ---------------------------------------
 
-      for (l=0;l<Feno->NTabCross;l++)
+      for (int l=0;l<Feno->NTabCross;l++)
        {
         pTabCross=&TabCross[l];
-
+        
         if (((indexSvdA=pTabCross->IndSvdA)>0) && ((indexSvdP=pTabCross->IndSvdP)>0))
-         for (j=0,k=1;j<Z;j++)
-          for (i=Fenetre[j][0];i<=Fenetre[j][1];i++,k++)
+         {
+          for( int k=1,i=iterator_start(&my_iterator, global_doas_spectrum); i != ITERATOR_FINISHED; k++,i=iterator_next(&my_iterator))
            {
             // Polynomial
-
+            
             if ((WorkSpace[pTabCross->Comp].type==WRK_SYMBOL_CONTINUOUS) && (WorkSpace[pTabCross->Comp].symbolName[0]!='o')) // Polynomial
              P[indexSvdP][k]=ANALYSE_t[i]*A[indexSvdA][k];
-
+            
             // Linear offset normalized w.r.t. the reference spectrum and other parameters (Ring ...)
-
+            
             else
              P[indexSvdP][k]=A[indexSvdA][k];
            }
+         }
        }
-
-/*      if ((rc=Regres(P,XTrav,NULL,Npts,DimP,pAnalysisOptions->fitWeighting,Yfit,
-                    (TabCross[Feno->indexOffsetConst].FitParam!=ITEM_NONE)?TabCross[Feno->indexOffsetConst].IndSvdP-1:ITEM_NONE,
-                     b+1,SigmaSqr+1,&tau))!=ERROR_ID_NO)
-
-       goto EndFunction; */
-
+      
       if (((rc=SVD_Dcmp(P,Npts,DimP,W,V,SigmaSqr,covar))!=ERROR_ID_NO) ||
-          ((rc=SVD_Bksb(P,W,V,Npts,DimP,&ANALYSE_tc[Fenetre[0][0]]-1,b))!=ERROR_ID_NO))      // Solve system P*b=b
+          ((rc=SVD_Bksb(P,W,V,Npts,DimP,&ANALYSE_tc[spectrum_start(global_doas_spectrum)]-1,b))!=ERROR_ID_NO))      // Solve system P*b=b
 
        goto EndFunction;
 
@@ -3095,39 +3031,39 @@ RC ANALYSE_Function ( double *lambda,double *X, double *Y, INT ndet, double *Y0,
       // Yfit computation with the solution of the system
       // ------------------------------------------------
 
-      for (i=0;i<Feno->NTabCross;i++)
+      for (int i=0;i<Feno->NTabCross;i++)
        if (((indexSvdA=TabCross[i].IndSvdA)>0) && ((indexSvdP=TabCross[i].IndSvdP)>0))
         fitParamsC[indexSvdA]=b[indexSvdP];
 
-      for (j=0,k=1;j<Z;j++)
-       for (i=Fenetre[j][0];i<=Fenetre[j][1];i++,k++)
-        {
-         for (l=0,tau=offset=(double)0.;l<Feno->NTabCross;l++)
-          if (((indexSvdA=TabCross[l].IndSvdA)>0) && ((indexSvdP=TabCross[l].IndSvdP)>0))
-           {
-            if ((WorkSpace[TabCross[l].Comp].type==WRK_SYMBOL_CONTINUOUS) && (WorkSpace[TabCross[l].Comp].symbolName[0]!='o'))      // Polynomial
-             tau+=b[indexSvdP]*A[indexSvdA][k];
-            else                                                                // Offset and other parameters (ring...)
-             offset+=b[indexSvdP]*A[indexSvdA][k];
-           }
-
-          ANALYSE_tc[i]-=offset;            // I/I0 - offset/I0
-          ANALYSE_t[i]*=tau;                // tau*exp(-optical depth)
-
-          Yfit[k-1]=ANALYSE_t[i]-ANALYSE_tc[i];
-        }
-
-      #if defined(__DEBUG_) && __DEBUG_ && defined(__DEBUG_DOAS_SVD_) && __DEBUG_DOAS_SVD_
+      for (int k=1,i=iterator_start(&my_iterator, global_doas_spectrum); i != ITERATOR_FINISHED; k++,i=iterator_next(&my_iterator))
+       {
+        tau=offset=(double)0.;
+        for (int l=0;l<Feno->NTabCross;l++)
+         if (((indexSvdA=TabCross[l].IndSvdA)>0) && ((indexSvdP=TabCross[l].IndSvdP)>0))
+          {
+           if ((WorkSpace[TabCross[l].Comp].type==WRK_SYMBOL_CONTINUOUS) && (WorkSpace[TabCross[l].Comp].symbolName[0]!='o'))      // Polynomial
+            tau+=b[indexSvdP]*A[indexSvdA][k];
+           else                                                                // Offset and other parameters (ring...)
+            offset+=b[indexSvdP]*A[indexSvdA][k];
+          }
+        
+        ANALYSE_tc[i]-=offset;            // I/I0 - offset/I0
+        ANALYSE_t[i]*=tau;                // tau*exp(-optical depth)
+        
+        Yfit[k-1]=ANALYSE_t[i]-ANALYSE_tc[i];
+       }
+      
+#if defined(__DEBUG_) && __DEBUG_ && defined(__DEBUG_DOAS_SVD_) && __DEBUG_DOAS_SVD_
       if (((analyseDebugMask&DEBUG_FCTTYPE_MATH)!=0) && analyseDebugVar)        // SVD is classified as a math function
        DEBUG_PrintVar("After the fit",ANALYSE_t,0,NDET-1,ANALYSE_tc,0,NDET-1,NULL);
-      #endif
+#endif
      }
    }
-
+  
   // Release allocated buffers
-
-  EndFunction :
-
+  
+ EndFunction :
+  
   if (XTrav!=NULL)
    MEMORY_ReleaseDVector("Function ","XTrav",XTrav,0);
   if (YTrav!=NULL)
@@ -3139,12 +3075,12 @@ RC ANALYSE_Function ( double *lambda,double *X, double *Y, INT ndet, double *Y0,
 
   // Return
 
-  #if defined(__DEBUG_) && __DEBUG_
+#if defined(__DEBUG_) && __DEBUG_
   DEBUG_FunctionStop("ANALYSE_Function",rc);
-  #endif
+#endif
 
   return rc;
- }
+}
 
 /*                                                                           */
 /*  ANALYSE_CurFitMethod ( Spectre, Spreflog, Absolu, Square ) :             */
@@ -3170,32 +3106,32 @@ RC ANALYSE_CurFitMethod(INDEX   indexFenoColumn,  // for OMI
                         INT    *pNiter,           // number of iterations
                         double  speNormFact,
                         double  refNormFact)
- {
+{
   // Declarations
-
+  
   CROSS_REFERENCE *TabCross,*pTabCross;
   CROSS_RESULTS *pResults;
   double OldChisqr,                                      // chi square a step before
-        *Y0,                                              // vector to fit; deduced from measurements
-        *SigmaY,
-        *Yfit,                                           // vector fitted
-        *Deltap,                                         // increments for parameters
-        *fitParamsF,
-        *fitParamsC,
-        *Sigmaa,                                         // errors on parameters
-        *SpecTrav,*RefTrav,                              // substitution vectors
-         Lamda,                                          // scaling factor used by curfit (not related to wavelength scale)
-         scalingFactor;
+    *Y0,                                              // vector to fit; deduced from measurements
+    *SigmaY,
+    *Yfit,                                           // vector fitted
+    *Deltap,                                         // increments for parameters
+    *fitParamsF,
+    *fitParamsC,
+    *Sigmaa,                                         // errors on parameters
+    *SpecTrav,*RefTrav,                              // substitution vectors
+    Lamda,                                          // scaling factor used by curfit (not related to wavelength scale)
+    scalingFactor;
 
-  int i,j,k,l;                                             // indexes for loops and arrays
+  //  int i,j,k,l;                                             // indexes for loops and arrays
   INDEX indexFeno,indexFeno2;
   int useErrors;
   int niter;
   RC rc;                                                 // return code
 
-  #if defined(__DEBUG_) && __DEBUG_
+#if defined(__DEBUG_) && __DEBUG_
   DEBUG_FunctionBegin("ANALYSE_CurFitMethod",DEBUG_FCTTYPE_APPL);
-  #endif
+#endif
 
   // Initializations
 
@@ -3211,7 +3147,8 @@ RC ANALYSE_CurFitMethod(INDEX   indexFenoColumn,  // for OMI
   /*  Buffers allocation  */
   /*  ==================  */
 
-  if (((Yfit=(double *)MEMORY_AllocDVector("ANALYSE_CurFitMethod ","YFit",0,DimL-1))==NULL) ||
+  if (
+      ((Yfit=(double *)MEMORY_AllocDVector("ANALYSE_CurFitMethod ","YFit",0,DimL-1))==NULL) ||
       ((fitParamsC=(double *)MEMORY_AllocDVector("ANALYSE_CurFitMethod ","fitParamsC",0,DimC))==NULL) ||
       ((NF!=0) && (((fitParamsF=(double *)MEMORY_AllocDVector("ANALYSE_CurFitMethod ","fitParamsF",0,NF-1))==NULL) ||
                    ((Deltap=(double *)MEMORY_AllocDVector("ANALYSE_CurFitMethod ","Deltap",0,NF-1))==NULL) ||
@@ -3220,18 +3157,18 @@ RC ANALYSE_CurFitMethod(INDEX   indexFenoColumn,  // for OMI
       (useErrors && ((SigmaY=(double *)MEMORY_AllocDVector("ANALYSE_CurFitMethod ","SigmaY",0,DimL-1))==NULL)) ||
       ((SpecTrav=(double *)MEMORY_AllocDVector("ANALYSE_CurFitMethod ","SpecTrav",0,NDET-1))==NULL) ||
       ((RefTrav=(double *)MEMORY_AllocDVector("ANALYSE_CurFitMethod ","RefTrav",0,NDET-1))==NULL))
-
+   
    rc=ERROR_ID_ALLOC;       // NB : call filter one time for determining the best Dim (security for filtering and interpolation)
-
+  
   else
    {
     // Initializations
-
+  
     memcpy(SpecTrav,Spectre,sizeof(double)*NDET);
     if (SigmaY!=NULL)
      memcpy(SigmaY,ANALYSE_zeros,sizeof(double)*DimL);
     memcpy(RefTrav,Sref,sizeof(double)*NDET);
-
+  
     memcpy(Yfit,ANALYSE_zeros,sizeof(double)*DimL);
     memcpy(Y0,ANALYSE_zeros,sizeof(double)*DimL);
 
@@ -3272,26 +3209,26 @@ RC ANALYSE_CurFitMethod(INDEX   indexFenoColumn,  // for OMI
         (Feno->analysisType!=ANALYSIS_TYPE_FWHM_NLFIT) &&     // doesn't fit the resolution (FWHM) between the reference and the spectrum as a non linear parameter
         !Feno->hidden &&                                      // low pass filtering is disabled for calibration in order not to degrade the spectrum to calibrate
 
-      (((rc=FILTER_Vector(ANALYSE_plFilter,&SpecTrav[LimMin],&SpecTrav[LimMin],LimN,PRJCT_FILTER_OUTPUT_LOW))!=0) ||
-       ((rc=FILTER_Vector(ANALYSE_plFilter,&RefTrav[LimMin],&RefTrav[LimMin],LimN,PRJCT_FILTER_OUTPUT_LOW))!=0)))
+        (((rc=FILTER_Vector(ANALYSE_plFilter,&SpecTrav[LimMin],&SpecTrav[LimMin],LimN,PRJCT_FILTER_OUTPUT_LOW))!=0) ||
+         ((rc=FILTER_Vector(ANALYSE_plFilter,&RefTrav[LimMin],&RefTrav[LimMin],LimN,PRJCT_FILTER_OUTPUT_LOW))!=0)))
      {
-     	rc=ERROR_SetLast("ANALYSE_CurFitMethod",ERROR_TYPE_WARNING,ERROR_ID_ANALYSIS,analyseIndexRecord,"Filter");
+      rc=ERROR_SetLast("ANALYSE_CurFitMethod",ERROR_TYPE_WARNING,ERROR_ID_ANALYSIS,analyseIndexRecord,"Filter");
       goto EndCurFitMethod;
      }
 
     // High pass filtering (spectrum)
 
     if ((ANALYSE_phFilter->filterFunction!=NULL) &&           // high pass filtering is requested
-       ((!Feno->hidden && ANALYSE_phFilter->hpFilterAnalysis) || ((Feno->hidden==1) && ANALYSE_phFilter->hpFilterCalib)) &&
+        ((!Feno->hidden && ANALYSE_phFilter->hpFilterAnalysis) || ((Feno->hidden==1) && ANALYSE_phFilter->hpFilterCalib)) &&
         (Feno->analysisType!=ANALYSIS_TYPE_FWHM_NLFIT) &&     // doesn't fit the resolution (FWHM) between the reference and the spectrum as a non linear parameter
         (Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVD) &&     // only implemented in optical density fitting
 
                                                               // if offset is applied on spectrum, filter spectrum and reference at each iteration in Function
                                                               // otherwise, filter logarithms
 
-       ((Feno->indexOffsetConst==ITEM_NONE) || (TabCross[Feno->indexOffsetConst].FitParam==ITEM_NONE)) &&
-       ((Feno->indexOffsetOrder1==ITEM_NONE) || (TabCross[Feno->indexOffsetOrder1].FitParam==ITEM_NONE)) &&
-       ((Feno->indexOffsetOrder2==ITEM_NONE) || (TabCross[Feno->indexOffsetOrder2].FitParam==ITEM_NONE)))
+        ((Feno->indexOffsetConst==ITEM_NONE) || (TabCross[Feno->indexOffsetConst].FitParam==ITEM_NONE)) &&
+        ((Feno->indexOffsetOrder1==ITEM_NONE) || (TabCross[Feno->indexOffsetOrder1].FitParam==ITEM_NONE)) &&
+        ((Feno->indexOffsetOrder2==ITEM_NONE) || (TabCross[Feno->indexOffsetOrder2].FitParam==ITEM_NONE)))
      {
       hFilterSpecLog=1;
 
@@ -3304,12 +3241,12 @@ RC ANALYSE_CurFitMethod(INDEX   indexFenoColumn,  // for OMI
     // High pass filtering (Reference)
 
     if ((ANALYSE_phFilter->filterFunction!=NULL) &&                   // high pass filtering is requested
-       ((!Feno->hidden && ANALYSE_phFilter->hpFilterAnalysis) || ((Feno->hidden==1) && ANALYSE_phFilter->hpFilterCalib)) &&
-
+        ((!Feno->hidden && ANALYSE_phFilter->hpFilterAnalysis) || ((Feno->hidden==1) && ANALYSE_phFilter->hpFilterCalib)) &&
+    
         (Feno->analysisType!=ANALYSIS_TYPE_FWHM_NLFIT) &&     // doesn't fit the resolution (FWHM) between the reference and the spectrum as a non linear parameter
         (Feno->analysisType!=ANALYSIS_TYPE_FWHM_KURUCZ) &&
         (Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVD) &&       // only implemented in optical density fitting
-       ((Feno->indexSol==ITEM_NONE) || (TabCross[Feno->indexSol].FitParam==ITEM_NONE)))
+        ((Feno->indexSol==ITEM_NONE) || (TabCross[Feno->indexSol].FitParam==ITEM_NONE)))
      {
       hFilterRefLog=1;
 
@@ -3319,39 +3256,10 @@ RC ANALYSE_CurFitMethod(INDEX   indexFenoColumn,  // for OMI
        goto EndCurFitMethod;
      }
 
-    // High pass filtering (high resolution kurucz spectrum)
-/*
-    if ((KURUCZ_buffers[0].lambdaF!=NULL) && (KURUCZ_buffers[0].solarF!=NULL) && (KURUCZ_buffers[0].solarF2!=NULL) &&
-        (ANALYSE_phFilter->filterFunction!=NULL) && (Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVD) &&
-        (Feno->analysisType==ANALYSIS_TYPE_FWHM_KURUCZ) &&
-       ((Feno->indexSol==ITEM_NONE) || (TabCross[Feno->indexSol].FitParam==ITEM_NONE)))
-     {
-      if (!KURUCZ_buffers[0].solarFGap || (KURUCZ_buffers[0].lambdaF[0]==(double)0.))
-       {
-        memcpy(&KURUCZ_buffers[0].lambdaF[KURUCZ_buffers[0].solarFGap],Lambda,sizeof(double)*NDET);
-        step=(Lambda[NDET-1]-Lambda[0])/NDET;
-
-        for (i=0;i<KURUCZ_buffers[0].solarFGap;i++)
-         {
-          KURUCZ_buffers[0].lambdaF[i]=Lambda[0]-step*(KURUCZ_buffers[0].solarFGap-i);
-          KURUCZ_buffers[0].lambdaF[NDET+KURUCZ_buffers[0].solarFGap+i]=Lambda[NDET-1]+step*(i+1);
-         }
-
-        if (((rc=SPLINE_Vector(KURUCZ_buffers[0].hrSolar.lambda,KURUCZ_buffers[0].hrSolar.vector,KURUCZ_buffers[0].hrSolar.deriv2,KURUCZ_buffers[0].hrSolar.NDET,
-                                  KURUCZ_buffers[0].lambdaF,KURUCZ_buffers[0].solarF,NDET+2*KURUCZ_buffers[0].solarFGap,pAnalysisOptions->interpol,"ANALYSE_CurFitMethod "))!=0) ||
-            ((rc=FILTER_Vector(ANALYSE_phFilter,KURUCZ_buffers[0].solarF,KURUCZ_buffers[0].solarF,NDET+2*KURUCZ_buffers[0].solarFGap,PRJCT_FILTER_OUTPUT_LOW))!=0) ||
-            ((rc=SPLINE_Deriv2(KURUCZ_buffers[0].lambdaF,KURUCZ_buffers[0].solarF,KURUCZ_buffers[0].solarF2,NDET+2*KURUCZ_buffers[0].solarFGap,"KURUCZ_Alloc (solarF) "))!=0))
-
-
-           goto EndCurFitMethod;
-       }
-
-      hFilterRefLog=1;
-     }           */
-
-    for (j=0,k=1,Feno->ymean=(double)0.;(j<Z);j++)
-     for (l=Fenetre[j][0];l<=Fenetre[j][1];l++,k++)
-      Feno->ymean+=(double)RefTrav[l];
+    Feno->ymean=(double)0.;
+    doas_iterator my_iterator;
+    for( int i=iterator_start(&my_iterator, global_doas_spectrum); i != ITERATOR_FINISHED;i=iterator_next(&my_iterator))
+     Feno->ymean+=(double)RefTrav[i];
 
     Feno->ymean/=DimL;
 
@@ -3373,7 +3281,7 @@ RC ANALYSE_CurFitMethod(INDEX   indexFenoColumn,  // for OMI
          (Feno==&TabFeno[indexFenoColumn][indexFeno]))
       break;
 
-    for (i=0;i<Feno->NTabCross;i++)                        // parameters initialization
+    for (int i=0;i<Feno->NTabCross;i++)                        // parameters initialization
      {
       indexFeno2=ITEM_NONE;
 
@@ -3383,30 +3291,31 @@ RC ANALYSE_CurFitMethod(INDEX   indexFenoColumn,  // for OMI
 
         if ((WorkSpace[TabCross[i].Comp].type==WRK_SYMBOL_CROSS) && (indexFeno<NFeno) &&
             (TabCross[i].FitFromPrevious==1) && (TabCross[i].InitConc==(double)0.) &&
-          (((Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVD) && (TabCross[i].FitConc==0)) ||
-           ((Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVDMARQUARDT) && (TabCross[i].FitConc==ITEM_NONE))))
+            (((Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVD) && (TabCross[i].FitConc==0)) ||
+             ((Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVDMARQUARDT) && (TabCross[i].FitConc==ITEM_NONE))))
          {
           for (indexFeno2=indexFeno-1;indexFeno2>=0;indexFeno2--)
            if (!TabFeno[indexFenoColumn][indexFeno2].hidden)
             {
+             int j;
              for (j=0;j<TabFeno[indexFenoColumn][indexFeno2].NTabCross;j++)
               if (TabFeno[indexFenoColumn][indexFeno2].TabCross[j].Comp==TabCross[i].Comp)
                {
                 double scalingFactor;
-
+                
                 scalingFactor=(double)1.;
-
+                
                 if (!strcasecmp(WorkSpace[TabCross[i].Comp].symbolName,"bro") &&
                     (ANALYSIS_broAmf.matrix!=NULL) &&
                     !SPLINE_Vector(ANALYSIS_broAmf.matrix[0],ANALYSIS_broAmf.matrix[1],ANALYSIS_broAmf.deriv2[1],
-                                      ANALYSIS_broAmf.nl,&ZM,&scalingFactor,1,SPLINE_CUBIC,"ANALYSE_CurFitMethod "))
-
+                                   ANALYSIS_broAmf.nl,&ZM,&scalingFactor,1,SPLINE_CUBIC,"ANALYSE_CurFitMethod "))
+                 
                  fitParamsC[TabCross[i].IndSvdA]=TabFeno[indexFenoColumn][indexFeno2].TabCrossResults[j].SlntCol*scalingFactor;
                 else
                  fitParamsC[TabCross[i].IndSvdA]=TabFeno[indexFenoColumn][indexFeno2].TabCrossResults[j].SlntCol;
                 break;
                }
-
+             
              if (j<TabFeno[indexFenoColumn][indexFeno2].NTabCross)
               break;
             }
@@ -3416,45 +3325,44 @@ RC ANALYSE_CurFitMethod(INDEX   indexFenoColumn,  // for OMI
 
     if (useErrors)
      {
-      for (j=0,k=0;(j<Z);j++)
-       for (i=Fenetre[j][0];i<=Fenetre[j][1];i++,k++)
-        if ((SpecTrav[i]==(double)0.) || (RefTrav[i]==(double)0.))
-        	rc=ERROR_SetLast("ANALYSE_CurFitMethod",ERROR_TYPE_WARNING,ERROR_ID_DIVISION_BY_0,"try to divide errors by a zero");
-        else
-         SigmaY[k]=(double)sqrt((SigmaSpec[i]*SigmaSpec[i])/(SpecTrav[i]*SpecTrav[i])+
-                                (Feno->SrefSigma[i]*Feno->SrefSigma[i])/(RefTrav[i]*RefTrav[i]));
-
+      for( int k=0,i=iterator_start(&my_iterator, global_doas_spectrum); i != ITERATOR_FINISHED; k++,i=iterator_next(&my_iterator))
+       if ((SpecTrav[i]==(double)0.) || (RefTrav[i]==(double)0.))
+        rc=ERROR_SetLast("ANALYSE_CurFitMethod",ERROR_TYPE_WARNING,ERROR_ID_DIVISION_BY_0,"try to divide errors by a zero");
+       else
+        SigmaY[k]=(double)sqrt((SigmaSpec[i]*SigmaSpec[i])/(SpecTrav[i]*SpecTrav[i])+
+                               (Feno->SrefSigma[i]*Feno->SrefSigma[i])/(RefTrav[i]*RefTrav[i]));
+      
       if (rc!=0)
        goto EndCurFitMethod;
      }
 
-    if ((NF==0) && ((rc=ANALYSE_Function(ANALYSE_splineX,SpecTrav,RefTrav,NDET,Y0,SigmaY,Yfit,DimL,fitParamsC,fitParamsF,indexFenoColumn))<THREAD_EVENT_STOP))
+    if ((NF==0) && ((rc=ANALYSE_Function(SpecTrav,RefTrav,SigmaY,Yfit,DimL,fitParamsC,fitParamsF,indexFenoColumn))<THREAD_EVENT_STOP))
      *Chisqr=(double)Fchisq(pAnalysisOptions->fitWeighting,(int)ANALYSE_nFree,Y0,Yfit,SigmaY,DimL);
     else if (NF)
      {
-      for ( i=0; i<NF; i++ ) { fitParamsF[i] = Fitp[i]; Deltap[i] = FitDeltap[i]; }
+      for (int i=0; i<NF; i++ ) { fitParamsF[i] = Fitp[i]; Deltap[i] = FitDeltap[i]; }
 
       /*  ==============  */
       /*  Loop on Chisqr  */
       /*  ==============  */
 
       *Chisqr    = (double) 0.;
-       Lamda     = (double) 0.001;
+      Lamda     = (double) 0.001;
 
-       niter=0;
+      niter=0;
 
-       do
+      do
        {
-          OldChisqr = *Chisqr;
+        OldChisqr = *Chisqr;
 
-          if ((rc=Curfit(pAnalysisOptions->fitWeighting,(int)ANALYSE_nFree,ANALYSE_splineX,SpecTrav,RefTrav,NDET,Y0,SigmaY,DimL,
-                  fitParamsC,fitParamsF,Deltap,Sigmaa,FitMinp,FitMaxp,NF,Yfit,&Lamda,Chisqr,pNiter,indexFenoColumn))>=THREAD_EVENT_STOP)
-           break;
+        if ((rc=Curfit(pAnalysisOptions->fitWeighting,(int)ANALYSE_nFree,ANALYSE_splineX,SpecTrav,RefTrav,NDET,Y0,SigmaY,DimL,
+                       fitParamsC,fitParamsF,Deltap,Sigmaa,FitMinp,FitMaxp,NF,Yfit,&Lamda,Chisqr,pNiter,indexFenoColumn))>=THREAD_EVENT_STOP)
+         break;
 
-          for ( i=0; i<NF; i++ ) Deltap[i] *= 0.4;
-          niter++;
+        for (int i=0; i<NF; i++ ) Deltap[i] *= 0.4;
+        niter++;
        }
-       while ( ( *Chisqr != 0. ) && ( fabs(*Chisqr-OldChisqr)/(*Chisqr) > pAnalysisOptions->convergence ) && (Feno->hidden || !pAnalysisOptions->maxIterations || (niter<pAnalysisOptions->maxIterations)) );
+      while ( ( *Chisqr != 0. ) && ( fabs(*Chisqr-OldChisqr)/(*Chisqr) > pAnalysisOptions->convergence ) && (Feno->hidden || !pAnalysisOptions->maxIterations || (niter<pAnalysisOptions->maxIterations)) );
 
       if (pNiter!=NULL)
        *pNiter=niter;
@@ -3465,20 +3373,18 @@ RC ANALYSE_CurFitMethod(INDEX   indexFenoColumn,  // for OMI
       /*  ====================  */
       /*  Residual Computation  */
       /*  ====================  */
-
-      for ( j=k=0; j<Z; j++ )
-       for ( i=Fenetre[j][0]; i<=Fenetre[j][1]; i++, k++ )
-        {
-         ANALYSE_absolu[i]  =  (Yfit[k]-Y0[k]);
-         if (Feno->analysisMethod!=PRJCT_ANLYS_METHOD_SVD)
-          ANALYSE_t[i]=(ANALYSE_tc[i]!=(double)0.)?(double)1.+ANALYSE_absolu[i]/ANALYSE_tc[i]:(double)0.;
-        }
+      for( int k=0,i=iterator_start(&my_iterator, global_doas_spectrum); i != ITERATOR_FINISHED; k++,i=iterator_next(&my_iterator))
+       {
+        ANALYSE_absolu[i]  =  (Yfit[k]-Y0[k]);
+        if (Feno->analysisMethod!=PRJCT_ANLYS_METHOD_SVD)
+         ANALYSE_t[i]=(ANALYSE_tc[i]!=(double)0.)?(double)1.+ANALYSE_absolu[i]/ANALYSE_tc[i]:(double)0.;
+       }
       if (residuals != NULL)
        memcpy(residuals,ANALYSE_absolu, NDET * sizeof(double));
 
       scalingFactor=(pAnalysisOptions->fitWeighting==PRJCT_ANLYS_FIT_WEIGHTING_NONE)?(*Chisqr):(double)1.;
 
-      for (i=0;i<Feno->NTabCross;i++)
+      for (int i=0;i<Feno->NTabCross;i++)
        {
         pResults=&Feno->TabCrossResults[i];
         pTabCross=&TabCross[i];
@@ -3489,7 +3395,7 @@ RC ANALYSE_CurFitMethod(INDEX   indexFenoColumn,  // for OMI
 
         if (pTabCross->IndSvdA) // Cross section, polynomial, linear offset, undersampling
          {
-         	// Fitting using SVD -> in SVD+Marquardt, polynomial is also fitted linearly !
+          // Fitting using SVD -> in SVD+Marquardt, polynomial is also fitted linearly !
 
           if (((Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVD) && (pTabCross->FitParam==ITEM_NONE)) || pTabCross->IndSvdP)
            {
@@ -3498,24 +3404,24 @@ RC ANALYSE_CurFitMethod(INDEX   indexFenoColumn,  // for OMI
 
             if (WorkSpace[pTabCross->Comp].type==WRK_SYMBOL_CONTINUOUS)
              {
-            	 if (!Feno->hidden)
-            	  {
-              	 // Intensity fitting but polynomial is fitted linearly
+              if (!Feno->hidden)
+               {
+                // Intensity fitting but polynomial is fitted linearly
 
                 if ((pTabCross->IndSvdP) && (fabs(refNormFact)>EPSILON))                      // polynomial : the output differs from the display in order
-                	pResults->SlntCol*=(double)speNormFact/refNormFact;                          //  to make the values geophysical
+                 pResults->SlntCol*=(double)speNormFact/refNormFact;                          //  to make the values geophysical
                                                                                               // the sign is inverted because it is better to compare with the
                 // SVD                                                                        // log(spe/irrad) instead of log(irrad/spe)
-                                                                                              // to build the polynomial :
+                // to build the polynomial :
                 else if ((fabs(speNormFact)>EPSILON) && (refNormFact/speNormFact>EPSILON))    // poly=x0+x1*(w-w0)+x2*(w-w0).*(w-w0)...;
                  {                                                                            // in comparison to a polyfit, polyval in Matlab :
-                 	pResults->SlntCol=-pResults->SlntCol;                                       //     >> p=polyfit(spectra(:,1),log(irrad(i,2)./spe(i,2)),2);
+                  pResults->SlntCol=-pResults->SlntCol;                                       //     >> p=polyfit(spectra(:,1),log(irrad(i,2)./spe(i,2)),2);
                                                                                               //     >> newp=polyval(p,spectra(:,1));
-                 	if (!strcasecmp(WorkSpace[pTabCross->Comp].symbolName,"x0"))                // offset, shift can influence the polynomial
-                 	 pResults->SlntCol-=(double)log(refNormFact/speNormFact);                   // it is also recommended for a better comparison with Matlab
-              	  }                                                                            // to orthogonalize all cross sections (O4, BrO, HCHO...)
+                  if (!strcasecmp(WorkSpace[pTabCross->Comp].symbolName,"x0"))                // offset, shift can influence the polynomial
+                   pResults->SlntCol-=(double)log(refNormFact/speNormFact);                   // it is also recommended for a better comparison with Matlab
+                 }                                                                            // to orthogonalize all cross sections (O4, BrO, HCHO...)
                }
-            	}
+             }
            }
           else  // cross sections in SVD+Marquardt method or Raman in SVD method
            {
@@ -3556,9 +3462,9 @@ RC ANALYSE_CurFitMethod(INDEX   indexFenoColumn,  // for OMI
   /*  Free Memory  */
   /*  ===========  */
 
-  EndCurFitMethod :
+ EndCurFitMethod :
 
-  for (i=0;i<Feno->NTabCross;i++)
+  for (int i=0;i<Feno->NTabCross;i++)
    {
     pTabCross=&TabCross[i];
 
@@ -3588,32 +3494,19 @@ RC ANALYSE_CurFitMethod(INDEX   indexFenoColumn,  // for OMI
 
   // Return
 
-  #if defined(__DEBUG_) && __DEBUG_
+#if defined(__DEBUG_) && __DEBUG_
   DEBUG_FunctionStop("ANALYSE_CurFitMethod",rc);
-  #endif
+#endif
 
   return rc;
- }
-
-void AnalyseCopyFenetre(int (*fenetreTarget)[2],int *pZTarget,int (*fenetreSource)[2],int ZSource)
- {
- 	int i;
-
- 	for (i=0;i<ZSource;i++)
-   {
-    fenetreTarget[i][0]=fenetreSource[i][0];
-    fenetreTarget[i][1]=fenetreSource[i][1];
-   }
-
-  *pZTarget=ZSource;
- }
+}
 
 // -------------------------------------------
 // ANALYSE_Spectrum : Spectrum record analysis
 // -------------------------------------------
 
 RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
- {
+{
   // Declarations
 
   PROJECT *pProject;                                                            // pointer to the project part of the engine context
@@ -3628,29 +3521,30 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
   DoasCh tabTitle[MAX_ITEM_TEXT_LEN+1];
   DoasCh graphTitle[MAX_ITEM_TEXT_LEN+1];     // graph title
   INDEX WrkFeno,j;                             // index on analysis windows
-  INDEX i,k,l;                               // indexes for loops and arrays
+  INDEX i;                               // indexes for loops and arrays
   INDEX indexFenoColumn;
 
-  INT oldFenetre[MAX_FEN][2],oldZ;           // backup of the spectral windows limits + gaps
+  //  INT oldFenetre[MAX_FEN][2],oldZ;           // backup of the spectral windows limits + gaps
+  doas_spectrum *old_range = NULL;
 
   double j0,lambda0;
 
   double *Spectre,                           // raw spectrum
-         *SpectreK,                          // spectrum shifted on new calibration build by Kurucz
-         *LambdaK,                           // calibration found by Kurucz
-         *Sref,                              // reference spectrum
-         *Trend,                             // fitted trend
-         *offset,                            // fitted linear offset
-          maxOffset,
-          newVal,
-          speNormFact,
-          factTemp;                          // normalization factor
+    *SpectreK,                          // spectrum shifted on new calibration build by Kurucz
+    *LambdaK,                           // calibration found by Kurucz
+    *Sref,                              // reference spectrum
+    *Trend,                             // fitted trend
+    *offset,                            // fitted linear offset
+    maxOffset,
+    newVal,
+    speNormFact,
+    factTemp;                          // normalization factor
 
   INT NbFeno,Niter,
-      displayFlag,                           // number of MDI child windows used for display analysis fits
-      useKurucz,                             // flag set if Kurucz should be applied on spectra
-      saveFlag;
-// QDOAS ???   FILE *fp;                     // pointer to temporary file
+    displayFlag,                           // number of MDI child windows used for display analysis fits
+    useKurucz,                             // flag set if Kurucz should be applied on spectra
+    saveFlag;
+  // QDOAS ???   FILE *fp;                     // pointer to temporary file
 
   INDEX indexPage,indexLine,indexColumn;
   RC  rc;                                    // return code
@@ -3659,9 +3553,9 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
   plot_data_t spectrumData[2];
   INT n,n2;
 
-  #if defined(__DEBUG_) && __DEBUG_
+#if defined(__DEBUG_) && __DEBUG_
   DEBUG_FunctionBegin("ANALYSE_Spectrum",DEBUG_FCTTYPE_APPL);
-  #endif
+#endif
 
   // Initializations
 
@@ -3672,11 +3566,11 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
   indexFenoColumn=(pInstrumental->readOutFormat!=PRJCT_INSTR_FORMAT_OMI)?0:pRecord->omi.omiRowIndex-1;
 
-      // For OMI :
-
-      // pRecord->omi.omiSwathIndex=indexSwath+1;                                  // index of the current swath
-     	// pRecord->omi.omiRowIndex=indexSpectrum+1;                                // index of the current spectrum in the current swath
-
+  // For OMI :
+  
+  // pRecord->omi.omiSwathIndex=indexSwath+1;                                  // index of the current swath
+  // pRecord->omi.omiRowIndex=indexSpectrum+1;                                // index of the current spectrum in the current swath
+  
   memcpy(ANALYSE_t,ANALYSE_zeros,sizeof(double)*NDET);
   memcpy(ANALYSE_tc,ANALYSE_zeros,sizeof(double)*NDET);
 
@@ -3687,10 +3581,6 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
   saveFlag=(INT)pEngineContext->project.spectra.displayDataFlag;
   SpectreK=LambdaK=Sref=Trend=offset=NULL;
   useKurucz=0;
-
-  for (i=0;i<MAX_FEN;i++)
-   oldFenetre[i][0]=oldFenetre[i][1]=0;
-  oldZ=0;
 
   NbFeno=0;
   nrc=0;
@@ -3720,8 +3610,8 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
     for (WrkFeno=0;WrkFeno<NFeno;WrkFeno++)
      if (!TabFeno[indexFenoColumn][WrkFeno].hidden &&
-        ((TabFeno[indexFenoColumn][WrkFeno].useKurucz==ANLYS_KURUCZ_REF_AND_SPEC) ||
-         (TabFeno[indexFenoColumn][WrkFeno].useKurucz==ANLYS_KURUCZ_SPEC)))
+         ((TabFeno[indexFenoColumn][WrkFeno].useKurucz==ANLYS_KURUCZ_REF_AND_SPEC) ||
+          (TabFeno[indexFenoColumn][WrkFeno].useKurucz==ANLYS_KURUCZ_SPEC)))
 
       useKurucz++;
 
@@ -3776,12 +3666,12 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
         if (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_OMI)
          {
-         	memcpy(Feno->Lambda,Feno->LambdaK,sizeof(double)*NDET);
+          memcpy(Feno->Lambda,Feno->LambdaK,sizeof(double)*NDET);
           sprintf(tabTitle,"%s results (%d/%d)",Feno->windowName,pEngineContext->indexRecord,pEngineContext->recordNumber);
          }
         else
          {
-         	memcpy(Feno->Lambda,pBuffers->lambda,sizeof(double)*NDET);
+          memcpy(Feno->Lambda,pBuffers->lambda,sizeof(double)*NDET);
 
           sprintf(tabTitle,"%s results (record %d/%d, swath %d/%d, row %d/%d)",
                   Feno->windowName,pEngineContext->indexRecord,pEngineContext->recordNumber,
@@ -3790,29 +3680,29 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
          }
 
         displayFlag=Feno->displaySpectrum+                                      //  force display spectrum
-                    Feno->displayResidue+                                       //  force display residue
-                    Feno->displayTrend+                                         //  force display trend
-                    Feno->displayRefEtalon+                                     //  force display alignment of reference on etalon
-                    Feno->displayFits+                                          //  force display fits
-                    Feno->displayPredefined+                                    //  force display predefined parameters
-                    Feno->displayRef;
+          Feno->displayResidue+                                       //  force display residue
+          Feno->displayTrend+                                         //  force display trend
+          Feno->displayRefEtalon+                                     //  force display alignment of reference on etalon
+          Feno->displayFits+                                          //  force display fits
+          Feno->displayPredefined+                                    //  force display predefined parameters
+          Feno->displayRef;
 
         if (displayFlag)
          mediateResponseLabelPage(indexPage,pEngineContext->fileInfo.fileName,tabTitle,responseHandle);
-
+        
         if (!Feno->hidden && (Feno->rcKurucz==ERROR_ID_NO) &&
-          ((Feno->useKurucz==ANLYS_KURUCZ_SPEC) || !Feno->rc))
+            ((Feno->useKurucz==ANLYS_KURUCZ_SPEC) || !Feno->rc))
          {
           memcpy(ANALYSE_absolu,ANALYSE_zeros,sizeof(double)*NDET);
-
+          
           if (Feno->amfFlag ||
-            ((Feno->useKurucz==ANLYS_KURUCZ_REF_AND_SPEC) && Feno->xsToConvolute) ||
-             (Feno->offlFlag && (Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVD)))   // fit a linear offset using the inverse of the spectrum
-
+              ((Feno->useKurucz==ANLYS_KURUCZ_REF_AND_SPEC) && Feno->xsToConvolute) ||
+              (Feno->offlFlag && (Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVD)))   // fit a linear offset using the inverse of the spectrum
+           
            Feno->Decomp=1;
-
+          
           // Local variables initializations
-
+          
           Niter=0;
           NbFeno++;
           TabCross=Feno->TabCross;
@@ -3824,44 +3714,49 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
           Lambda=Feno->LambdaK;
           LambdaSpec=Feno->Lambda;
 
-         	// Make a backup of spectral window limits + gaps
-
-         	AnalyseCopyFenetre(oldFenetre,&oldZ,Feno->svd.Fenetre,Feno->svd.Z);
-
-         	if ((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_OMI) &&
-         	     pInstrumental->omi.pixelQFRejectionFlag &&
-         	    (pEngineContext->recordInfo.omi.omiPixelQF!=NULL) && (Feno->omiRejPixelsQF!=NULL))
-         	 {
-         	 	DoasUS *pixelQF=(DoasUS *)pEngineContext->recordInfo.omi.omiPixelQF;
-
-         	 	memset(Feno->omiRejPixelsQF,0,sizeof(int)*Feno->NDET);
-
-         	  for (j=oldFenetre[0][0];j<=oldFenetre[oldZ-1][1];j++)
-         	   if (((pixelQF[j]&pInstrumental->omi.pixelQFMask)!=0) && (Feno->svd.Z<=pInstrumental->omi.pixelQFMaxGaps))     // one of bits 0->5 set means exclusion of the wavelength
-         	    {
-         	     Feno->svd.Z=exclude_pixel(j,Feno->svd.Fenetre,Feno->svd.Z);
-         	     Feno->omiRejPixelsQF[j]=1;
-         	    }
-
-            if ((Feno->svd.Z>pInstrumental->omi.pixelQFMaxGaps) ||
-               ((rc=reinit_analysis(Feno))!=ERROR_ID_NO))
+          // Make a backup of spectral window limits + gaps
+          
+          //AnalyseCopyFenetre(oldFenetre,&oldZ,Feno->svd.Fenetre,Feno->svd.Z);
+          old_range = spectrum_copy(Feno->svd.specrange);
+          
+          if ((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_OMI) &&
+              pInstrumental->omi.pixelQFRejectionFlag &&
+              (pEngineContext->recordInfo.omi.omiPixelQF!=NULL) && (Feno->omiRejPixelsQF!=NULL))
+           {
+            DoasUS *pixelQF=(DoasUS *)pEngineContext->recordInfo.omi.omiPixelQF;
+            
+            memset(Feno->omiRejPixelsQF,0,sizeof(int)*Feno->NDET);
+            int start = spectrum_start(old_range);
+            int end = spectrum_end(old_range);
+            for (int j= start; j<= end; j++)
+             if ( ((pixelQF[j]&pInstrumental->omi.pixelQFMask)!=0) &&
+                  (spectrum_num_windows(Feno->svd.specrange)<=pInstrumental->omi.pixelQFMaxGaps))     // one of bits 0->5 set means exclusion of the wavelength
+              {
+               spectrum_remove_pixel(Feno->svd.specrange,j);
+               Feno->omiRejPixelsQF[j]=1;
+              }
+            
+            if ((spectrum_num_windows(Feno->svd.specrange) > pInstrumental->omi.pixelQFMaxGaps) ||
+                ((rc=reinit_analysis(Feno))!=ERROR_ID_NO))
              {
-             	AnalyseCopyFenetre(Feno->svd.Fenetre,&Feno->svd.Z,oldFenetre,oldZ);
-        	     rc=ERROR_SetLast("ANALYSE_Spectrum",ERROR_TYPE_WARNING,ERROR_ID_OMI_PIXELQF);
+              spectrum_destroy(Feno->svd.specrange);
+              Feno->svd.specrange = old_range;
+
+              rc=ERROR_SetLast("ANALYSE_Spectrum",ERROR_TYPE_WARNING,ERROR_ID_OMI_PIXELQF);
               goto EndAnalysis;
              }
-         	 }
+           }
           else if ((rc=ANALYSE_SvdInit(&Feno->svd))!=ERROR_ID_NO)
            goto EndAnalysis;
 
           // Global variables initializations
-
+          
           if ((Feno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_AUTOMATIC) &&
-               pEngineContext->satelliteFlag)
+              pEngineContext->satelliteFlag)
            {
             if ((fabs(ANALYSE_oldLatitude)>(double)360.) ||
-               ((ANALYSE_oldLatitude>=(double)0.) && (pRecord->latitude<(double)0.)) ||
-               ((ANALYSE_oldLatitude<(double)0.) && (pRecord->latitude>=(double)0.)))
+                ((ANALYSE_oldLatitude>=(double)0.) && (pRecord->latitude<(double)0.)) ||
+                ((ANALYSE_oldLatitude<(double)0.) && (pRecord->latitude>=(double)0.)))
              {
               if (pRecord->latitude>=(double)0.)
                {
@@ -3869,12 +3764,12 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
                 Feno->Stretch=Feno->StretchN;
                 Feno->Stretch2=Feno->Stretch2N;
                 Feno->refNormFact=Feno->refNormFactN;
-
+                
                 memcpy(Feno->Sref,Feno->SrefN,sizeof(double)*NDET);
-
+                
                 if (!Feno->useKurucz)
                  memcpy(Feno->LambdaK,Feno->LambdaN,sizeof(double)*NDET);
-
+                
                }
               else
                {
@@ -3892,8 +3787,8 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
               // Undersampling
 
               if (!Feno->useKurucz &&
-                (((rc=KURUCZ_ApplyCalibration(Feno,Feno->LambdaK,indexFenoColumn))!=ERROR_ID_NO) ||
-                 ((rc=ANALYSE_SvdInit(&Feno->svd))!=ERROR_ID_NO)))
+                  (((rc=KURUCZ_ApplyCalibration(Feno,Feno->LambdaK,indexFenoColumn))!=ERROR_ID_NO) ||
+                   ((rc=ANALYSE_SvdInit(&Feno->svd))!=ERROR_ID_NO)))
 
                goto EndAnalysis;
 
@@ -3907,61 +3802,6 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
                }
              }
 
-            //if (pEngineContext->project.spectra.displaySpectraFlag)
-            // {
-            //  sprintf(tabTitle,"%s results (%d/%d)",Feno->windowName,pEngineContext->indexRecord,pEngineContext->recordNumber);
-            //
-            //  mediateAllocateAndSetPlotData(&spectrumData[0],"Measured",&Feno->LambdaK[SvdPDeb],&Feno->Sref[SvdPDeb],SvdPFin-SvdPDeb+1,Line);
-            //  mediateResponsePlotData(indexPage,&spectrumData[0],1,Spectrum,forceAutoScale,"Selected reference","Wavelength (nm)","Intensity", responseHandle);
-            //  mediateResponseLabelPage(indexPage, pEngineContext->fileInfo.fileName, tabTitle, responseHandle);
-            //  mediateReleasePlotData(&spectrumData[0]);
-            //
-            //  if (pEngineContext->project.spectra.displayDataFlag)
-            //   {
-            //    Feno->displayLineIndex=mediateRequestDisplaySpecInfo(pEngineContext,indexPage,responseHandle);
-            //    indexLine=Feno->displayLineIndex+1;
-            //    indexColumn=2;
-            //
-            //    mediateResponseCellDataString(indexPage,indexLine++,indexColumn,"Ref Selection",responseHandle);
-            //    mediateResponseCellInfo(indexPage,indexLine++,indexColumn,responseHandle,"Ref File","%s",GDP_BIN_orbitFiles[Feno->satelliteRef[0].indexFile].gdpBinFileName);
-            //    mediateResponseCellDataString(indexPage,indexLine,indexColumn,"Record",responseHandle);
-            //    mediateResponseCellDataString(indexPage,indexLine,indexColumn+1,"Pixel number",responseHandle);
-            //    mediateResponseCellDataString(indexPage,indexLine,indexColumn+2,"Pixel type",responseHandle);
-            //    mediateResponseCellDataString(indexPage,indexLine,indexColumn+3,"SZA",responseHandle);
-            //    mediateResponseCellDataString(indexPage,indexLine,indexColumn+4,"Lat",responseHandle);
-            //    mediateResponseCellDataString(indexPage,indexLine,indexColumn+5,"Lon",responseHandle);
-            //
-            //    indexLine++;
-            //
-            //    for (indexRef=0;indexRef<OUTPUT_nRec;indexRef++)
-            //     {
-            //     	pRef=&Feno->satelliteRef[indexRef];
-            //
-            //      mediateResponseCellDataInteger(indexPage,indexLine,indexColumn,pRef->indexRecord+1,responseHandle);
-            //      mediateResponseCellDataInteger(indexPage,indexLine,indexColumn+1,pRef->pixelNumber,responseHandle);
-            //      mediateResponseCellDataInteger(indexPage,indexLine,indexColumn+2,pRef->pixelType,responseHandle);
-            //      mediateResponseCellDataDouble(indexPage,indexLine,indexColumn+3,pRef->sza,responseHandle);
-            //      mediateResponseCellDataDouble(indexPage,indexLine,indexColumn+4,pRef->latitude,responseHandle);
-            //      mediateResponseCellDataDouble(indexPage,indexLine,indexColumn+5,pRef->longitude,responseHandle);
-            //
-            //      indexLine++;
-            //     }
-            //
-            //    Feno->displayLineIndex=indexLine+1;
-            //   }
-            //
-            //  //if (Feno->displayRefEtalon)
-            //  // {
-            //  //  sprintf(string,"Alignment Ref1/Ref2");
-            //  //
-            //  //  mediateAllocateAndSetPlotData(&spectrumData[0],"Measured",&Lambda[SvdPDeb],&Spectre[SvdPDeb],SvdPFin-SvdPDeb+1,Line);
-            //  //  mediateAllocateAndSetPlotData(&spectrumData[1],"Calculated",&Lambda[SvdPDeb],&ANALYSE_secX[SvdPDeb],SvdPFin-SvdPDeb+1,Line);
-            //  //  mediateResponsePlotData(indexPage,spectrumData,2,Spectrum,forceAutoScale,string,"Wavelength (nm)","Intensity", responseHandle);
-            //  //  mediateResponseLabelPage(indexPage,pEngineContext->fileInfo.fileName, "Reference", responseHandle);
-            //  //  mediateReleasePlotData(&spectrumData[1]);
-            //  //  mediateReleasePlotData(&spectrumData[0]);
-            //  // }
-            // }
            }
 
           // Reference spectrum
@@ -3979,65 +3819,59 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
           if (Feno->displaySpectrum)
            {
-            mediateAllocateAndSetPlotData(&spectrumData[0],"Spectrum",&LambdaSpec[SvdPDeb],&Spectre[SvdPDeb],SvdPFin-SvdPDeb+1,Line);
+            double *curves[2][2] = {{LambdaSpec, Spectre},
+                                    {Lambda, Sref}};
 
             if (!Feno->longPathFlag)
-             {
-             	mediateAllocateAndSetPlotData(&spectrumData[1],"Reference",&Lambda[SvdPDeb],&Sref[SvdPDeb],SvdPFin-SvdPDeb+1,Line);
-             	mediateResponsePlotData(indexPage,spectrumData,2,Spectrum,forceAutoScale,"Spectrum and reference","Wavelength (nm)","", responseHandle);
-             	mediateReleasePlotData(&spectrumData[1]);
-             }
-            else                                                                // !!! Anoop
-             mediateResponsePlotData(indexPage,spectrumData,1,Spectrum,forceAutoScale,"Spectrum","Wavelength (nm)","", responseHandle);
-
-            if (!Feno->longPathFlag)
-             mediateReleasePlotData(&spectrumData[0]);
+             plot_curves(indexPage, curves, 2, Spectrum, forceAutoScale, "Spectrum and reference", responseHandle, Feno->svd.specrange);
+            else
+             plot_curves(indexPage, curves, 1, Spectrum, forceAutoScale, "Spectrum", responseHandle, Feno->svd.specrange);
            }
 
           // Analysis method
 
-          #if defined(__DEBUG_) && __DEBUG_
+#if defined(__DEBUG_) && __DEBUG_
           DEBUG_Start(ENGINE_dbgFile,"Test",(analyseDebugMask=DEBUG_FCTTYPE_MATH|DEBUG_FCTTYPE_APPL),5,(analyseDebugVar=DEBUG_DVAR_YES),0); // !debugResetFlag++);
-          #endif
+#endif
 
-/*             ((Feno->useKurucz==ANLYS_KURUCZ_REF_AND_SPEC) &&
-            (((rc=SPLINE_Deriv2(LambdaK,Spectre,SplineSpec,NDET,"Spline(Spectre) "))!=ERROR_ID_NO) ||
-             ((rc=SPLINE_Vector(LambdaK,Spectre,SplineSpec,NDET,Lambda,SpectreK,NDET,pAnalysisOptions->interpol,"ANALYSE_Spectrum "))!=ERROR_ID_NO))) || */
-	  double residuals[NDET];
-	  memcpy(residuals, ANALYSE_zeros, NDET * sizeof(double));
+          /*             ((Feno->useKurucz==ANLYS_KURUCZ_REF_AND_SPEC) &&
+                         (((rc=SPLINE_Deriv2(LambdaK,Spectre,SplineSpec,NDET,"Spline(Spectre) "))!=ERROR_ID_NO) ||
+                         ((rc=SPLINE_Vector(LambdaK,Spectre,SplineSpec,NDET,Lambda,SpectreK,NDET,pAnalysisOptions->interpol,"ANALYSE_Spectrum "))!=ERROR_ID_NO))) || */
+          double residuals[NDET];
+          memcpy(residuals, ANALYSE_zeros, NDET * sizeof(double));
 
-	  for(i = 0; i<NDET;i++)
-	   Feno->spikes[i] = 0;
+          for(i = 0; i<NDET;i++)
+           Feno->spikes[i] = 0;
 
-	  double av_residual = 0;
-	  int num_repeats = 0;
+          double av_residual = 0;
+          int num_repeats = 0;
 
-	  do {
-	    if ((rc=ANALYSE_CurFitMethod(indexFenoColumn,
-					 (Feno->useKurucz==ANLYS_KURUCZ_REF_AND_SPEC)?SpectreK:Spectre,     // raw spectrum
-					 (pRecord->useErrors)?pBuffers->sigmaSpec:NULL,                     // error on raw spectrum
-					 Sref,                                                             // reference spectrum
-					 residuals,
-					 &Feno->chiSquare,                                                  // returned stretch order 2
-					 &Niter,
-					 speNormFact,
-					 Feno->refNormFact))==THREAD_EVENT_STOP)                                       // number of iterations in Curfit
+          do {
+           if ((rc=ANALYSE_CurFitMethod(indexFenoColumn,
+                                        (Feno->useKurucz==ANLYS_KURUCZ_REF_AND_SPEC)?SpectreK:Spectre,     // raw spectrum
+                                        (pRecord->useErrors)?pBuffers->sigmaSpec:NULL,                     // error on raw spectrum
+                                        Sref,                                                             // reference spectrum
+                                        residuals,
+                                        &Feno->chiSquare,                                                  // returned stretch order 2
+                                        &Niter,
+                                        speNormFact,
+                                        Feno->refNormFact))==THREAD_EVENT_STOP)                                       // number of iterations in Curfit
 	      
-	      goto EndAnalysis;  // !!!! Bypass the DEBUG_Stop
+            goto EndAnalysis;  // !!!! Bypass the DEBUG_Stop
 	    
-	    else if (rc>THREAD_EVENT_STOP)
-	      Feno->rc=rc;
-	    av_residual = average_magnitude(residuals);
-	  }
-	  while(!Feno->hidden // no spike removal for calibration
-		&& remove_spikes(residuals, av_residual * pAnalysisOptions->spike_tolerance, Feno->svd.Fenetre, &Feno->svd.Z, Feno->spikes) // repeat as long as spikes are found
-		&& (++num_repeats < MAX_REPEAT_CURFIT)
-		&& !(rc=reinit_analysis(Feno))); // SVD matrix must be initialized again when pixels are removed.
+           else if (rc>THREAD_EVENT_STOP)
+            Feno->rc=rc;
+           av_residual = average_magnitude(residuals, Feno->svd.specrange);
+          }
+          while(!Feno->hidden // no spike removal for calibration
+                && remove_spikes(residuals, av_residual * pAnalysisOptions->spike_tolerance, Feno->svd.specrange, Feno->spikes) // repeat as long as spikes are found
+                && (++num_repeats < MAX_REPEAT_CURFIT)
+                && !(rc=reinit_analysis(Feno))); // SVD matrix must be initialized again when pixels are removed.
 	  
-          #if defined(__DEBUG_) && __DEBUG_
+#if defined(__DEBUG_) && __DEBUG_
           DEBUG_Stop("Test");
           analyseDebugMask=0;
-          #endif
+#endif
 
           pRecord->BestShift+=(double)Feno->TabCrossResults[Feno->indexSpectrum].Shift;
           Feno->nIter=Niter;
@@ -4065,11 +3899,10 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
              for (j=SvdPDeb;j<=SvdPFin;j++)
               ANALYSE_absolu[j]=(ANALYSE_tc[j]!=(double)0.)?ANALYSE_absolu[j]/ANALYSE_tc[j]:(double)0.;
 
-           	sprintf(graphTitle,"%s (%.2le)",(Feno->analysisMethod!=PRJCT_ANLYS_METHOD_SVD)?"Normalized Residual":"Residual",Feno->RMS);
+            sprintf(graphTitle,"%s (%.2le)",(Feno->analysisMethod!=PRJCT_ANLYS_METHOD_SVD)?"Normalized Residual":"Residual",Feno->RMS);
 
-            mediateAllocateAndSetPlotData(&spectrumData[0],(Feno->analysisMethod!=PRJCT_ANLYS_METHOD_SVD)?"Normalized Residual":"Residual",&Feno->LambdaK[SvdPDeb],&ANALYSE_absolu[SvdPDeb],SvdPFin-SvdPDeb+1,Line);
-            mediateResponsePlotData(indexPage,spectrumData,1,Residual,0,graphTitle,"Wavelength (nm)","", responseHandle);
-            mediateReleasePlotData(&spectrumData[0]);
+            double *curves[1][2] = {{Feno->LambdaK,ANALYSE_absolu}};
+            plot_curves(indexPage,curves,1,Residual,0,graphTitle, responseHandle, Feno->svd.specrange);
            }
 
           if (Feno->analysisMethod!=PRJCT_ANLYS_METHOD_SVD)
@@ -4077,126 +3910,119 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
             ANALYSE_absolu[j]=(ANALYSE_t[j]>(double)0.)?log(ANALYSE_t[j]):(double)0.;
 
           if (strlen(Feno->residualsFile) &&
-            ((rc=AnalyseSaveResiduals(Feno->residualsFile,pEngineContext))!=ERROR_ID_NO))
-
+              ((rc=AnalyseSaveResiduals(Feno->residualsFile,pEngineContext))!=ERROR_ID_NO))
+           
            goto EndAnalysis;
-
+          
           if  (Feno->displayResidue && (Feno->analysisMethod!=PRJCT_ANLYS_METHOD_SVD))
            {
-            mediateAllocateAndSetPlotData(&spectrumData[0],"OD residual",&Feno->LambdaK[SvdPDeb],&ANALYSE_absolu[SvdPDeb],SvdPFin-SvdPDeb+1,Line);
-            mediateResponsePlotData(indexPage,spectrumData,1,Residual,0,"OD residual","Wavelength (nm)","", responseHandle);
-            mediateReleasePlotData(&spectrumData[0]);
+            double * curves[1][2] = {{Feno->LambdaK,ANALYSE_absolu}};
+            plot_curves(indexPage,curves,1,Residual,allowFixedScale,"OD Residual", responseHandle, Feno->svd.specrange);
            }
-
+          
           // Store fits
-
+          
           memcpy(ANALYSE_secX,ANALYSE_zeros,sizeof(double)*NDET);
           memcpy(Trend,ANALYSE_zeros,sizeof(double)*NDET);
           memcpy(offset,ANALYSE_zeros,sizeof(double)*NDET);
           maxOffset=(double)0.;
-
+          
           // Display Offset
-
+          
           if  (Feno->displayPredefined &&
-             ((Feno->indexOffsetConst!=ITEM_NONE) ||
-              (Feno->indexOffsetOrder1!=ITEM_NONE) ||
-              (Feno->indexOffsetOrder2!=ITEM_NONE)) &&
-
-             ((TabCross[Feno->indexOffsetConst].FitParam!=ITEM_NONE) ||
-              (TabCross[Feno->indexOffsetOrder1].FitParam!=ITEM_NONE) ||
-              (TabCross[Feno->indexOffsetOrder2].FitParam!=ITEM_NONE) ||
-              (TabCross[Feno->indexOffsetConst].InitParam!=(double)0.) ||
-              (TabCross[Feno->indexOffsetOrder1].InitParam!=(double)0.) ||
-              (TabCross[Feno->indexOffsetOrder2].InitParam!=(double)0.)))
+               ((Feno->indexOffsetConst!=ITEM_NONE) ||
+                (Feno->indexOffsetOrder1!=ITEM_NONE) ||
+                (Feno->indexOffsetOrder2!=ITEM_NONE)) &&
+               
+               ((TabCross[Feno->indexOffsetConst].FitParam!=ITEM_NONE) ||
+                (TabCross[Feno->indexOffsetOrder1].FitParam!=ITEM_NONE) ||
+                (TabCross[Feno->indexOffsetOrder2].FitParam!=ITEM_NONE) ||
+                (TabCross[Feno->indexOffsetConst].InitParam!=(double)0.) ||
+                (TabCross[Feno->indexOffsetOrder1].InitParam!=(double)0.) ||
+                (TabCross[Feno->indexOffsetOrder2].InitParam!=(double)0.)))
            {
             j0=(double)(SvdPDeb+SvdPFin)*0.5;
             lambda0=(fabs(j0-floor(j0))<(double)0.1)?
-                                        (double)ANALYSE_splineX[(INDEX)j0]:
-                                        (double)0.5*(ANALYSE_splineX[(INDEX)floor(j0)]+ANALYSE_splineX[(INDEX)floor(j0+1.)]);
-
-            for (j=0,k=1;j<Z;j++)
-             for (l=Fenetre[j][0];l<=Fenetre[j][1];l++,k++)       // log(I+offset)=log(I)+log(1+offset/I)
-              {
-               newVal=(double)1.-Feno->xmean*(Results[Feno->indexOffsetConst].Param+
-                              Results[Feno->indexOffsetOrder1].Param*(ANALYSE_splineX[l]-lambda0)+
-                              Results[Feno->indexOffsetOrder2].Param*(ANALYSE_splineX[l]-lambda0)*(ANALYSE_splineX[l]-lambda0))/Spectre[l];
-
-               ANALYSE_absolu[l]+=((newVal>(double)0.)?log(newVal):(double)0.)-ANALYSE_secX[l];
-               ANALYSE_secX[l]=((newVal>(double)0.)?log(newVal):(double)0.);
-              }
-
-            mediateAllocateAndSetPlotData(&spectrumData[0],"Measured offset",&Feno->LambdaK[SvdPDeb],&ANALYSE_absolu[SvdPDeb],SvdPFin-SvdPDeb+1,Line);
-            mediateAllocateAndSetPlotData(&spectrumData[1],"Calculated offset",&Feno->LambdaK[SvdPDeb],&ANALYSE_secX[SvdPDeb],SvdPFin-SvdPDeb+1,Line);
-            mediateResponsePlotData(indexPage,spectrumData,2,Residual,allowFixedScale,"Offset","Wavelength (nm)","", responseHandle);
-            mediateReleasePlotData(&spectrumData[1]);
-            mediateReleasePlotData(&spectrumData[0]);
+              (double)ANALYSE_splineX[(INDEX)j0]:
+              (double)0.5*(ANALYSE_splineX[(INDEX)floor(j0)]+ANALYSE_splineX[(INDEX)floor(j0+1.)]);
+            
+            doas_iterator my_iterator;
+            for (int l=iterator_start(&my_iterator, Feno->svd.specrange); l != ITERATOR_FINISHED; l=iterator_next(&my_iterator)) // log(I+offset)=log(I)+log(1+offset/I)
+             {
+              newVal=(double)1.-Feno->xmean*(Results[Feno->indexOffsetConst].Param+
+                                             Results[Feno->indexOffsetOrder1].Param*(ANALYSE_splineX[l]-lambda0)+
+                                             Results[Feno->indexOffsetOrder2].Param*(ANALYSE_splineX[l]-lambda0)*(ANALYSE_splineX[l]-lambda0))/Spectre[l];
+              
+              ANALYSE_absolu[l]+=((newVal>(double)0.)?log(newVal):(double)0.)-ANALYSE_secX[l];
+              ANALYSE_secX[l]=((newVal>(double)0.)?log(newVal):(double)0.);
+             }
+            
+            double *curves[2][2] = {{Feno->LambdaK, ANALYSE_absolu},
+                                    {Feno->LambdaK, ANALYSE_secX}};
+            plot_curves(indexPage,curves,2,Residual,allowFixedScale,"Offset", responseHandle, Feno->svd.specrange);
            }
-
+          
           // Display fits
 
-          for (i=0;i<Feno->NTabCross;i++)
+          for (int i=0;i<Feno->NTabCross;i++)
 
            if (TabCross[i].IndSvdA)
             {
              if (((WorkSpace[TabCross[i].Comp].type==WRK_SYMBOL_CROSS) ||
                   (WorkSpace[TabCross[i].Comp].type==WRK_SYMBOL_PREDEFINED)) &&
-                   Feno->displayFits && TabCross[i].display)
+                 Feno->displayFits && TabCross[i].display)
               {
-            	  if (Feno->indexRing1==i)
-            	   {
-                 for (j=0,k=1;j<Z;j++)
-                  for (l=Fenetre[j][0];l<=Fenetre[j][1];l++,k++)
-                   {
-                    newVal=(Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVD)?
-                            log(1+x[TabCross[i].IndSvdA]*U[TabCross[i].IndSvdA][k]/Spectre[l]):
-                            log(1-x[TabCross[i].IndSvdA]*U[TabCross[i].IndSvdA][k]*Sref[l]/Spectre[l]);
-
-                    ANALYSE_absolu[l]+=newVal-ANALYSE_secX[l];
-                    ANALYSE_secX[l]=newVal;
-                   }
-
-                 sprintf(graphTitle,"%s (%.2le)",WorkSpace[TabCross[i].Comp].symbolName,Results[i].SlntCol);
-            	   }
-              	else
-              	 {
-                 for (j=0,k=1;j<Z;j++)
-                  for (l=Fenetre[j][0];l<=Fenetre[j][1];l++,k++)
-                   {
-                    newVal=x[TabCross[i].IndSvdA]*U[TabCross[i].IndSvdA][k];
-
-                    ANALYSE_absolu[l]+=newVal-ANALYSE_secX[l];
-                    ANALYSE_secX[l]=newVal;
-                   }
+               doas_iterator my_iterator;
+               if (Feno->indexRing1==i)
+                {
+                 
+                 for (int k=1,l=iterator_start(&my_iterator, Feno->svd.specrange); l != ITERATOR_FINISHED; k++,l=iterator_next(&my_iterator))
+                  {
+                   newVal=(Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVD)?
+                     log(1+x[TabCross[i].IndSvdA]*U[TabCross[i].IndSvdA][k]/Spectre[l]):
+                     log(1-x[TabCross[i].IndSvdA]*U[TabCross[i].IndSvdA][k]*Sref[l]/Spectre[l]);
+                   
+                   ANALYSE_absolu[l]+=newVal-ANALYSE_secX[l];
+                   ANALYSE_secX[l]=newVal;
+                  }
 
                  sprintf(graphTitle,"%s (%.2le)",WorkSpace[TabCross[i].Comp].symbolName,Results[i].SlntCol);
                 }
+               else
+                {
+                 for (int k=1,l=iterator_start(&my_iterator, Feno->svd.specrange); l != ITERATOR_FINISHED; k++,l=iterator_next(&my_iterator))
+                  {
+                   newVal=x[TabCross[i].IndSvdA]*U[TabCross[i].IndSvdA][k];
+                   
+                   ANALYSE_absolu[l]+=newVal-ANALYSE_secX[l];
+                   ANALYSE_secX[l]=newVal;
+                  }
+                 
+                 sprintf(graphTitle,"%s (%.2le)",WorkSpace[TabCross[i].Comp].symbolName,Results[i].SlntCol);
+                }
 
-               mediateAllocateAndSetPlotData(&spectrumData[0],"Measured",&Feno->LambdaK[SvdPDeb],&ANALYSE_absolu[SvdPDeb],SvdPFin-SvdPDeb+1,Line);
-               mediateAllocateAndSetPlotData(&spectrumData[1],"Calculated",&Feno->LambdaK[SvdPDeb],&ANALYSE_secX[SvdPDeb],SvdPFin-SvdPDeb+1,Line);
-               mediateResponsePlotData(indexPage,spectrumData,2,Residual,0,graphTitle,"Wavelength (nm)","", responseHandle);
-               mediateReleasePlotData(&spectrumData[1]);
-               mediateReleasePlotData(&spectrumData[0]);
+               double *curves[2][2] = {{Feno->LambdaK, ANALYSE_absolu},
+                                       {Feno->LambdaK, ANALYSE_secX}};
+               plot_curves(indexPage,curves,2,Residual,allowFixedScale,graphTitle, responseHandle, Feno->svd.specrange);
               }
              else if ((WorkSpace[TabCross[i].Comp].type==WRK_SYMBOL_CONTINUOUS) && Feno->displayTrend)
               {
-              	if (((char)tolower(WorkSpace[TabCross[i].Comp].symbolName[0])=='x') ||
+               doas_iterator my_iterator;
+               if (((char)tolower(WorkSpace[TabCross[i].Comp].symbolName[0])=='x') ||
                    ((char)tolower(WorkSpace[TabCross[i].Comp].symbolName[2])=='x'))
                 {
-                 for (j=0,k=1;j<Z;j++)
-                  for (l=Fenetre[j][0];l<=Fenetre[j][1];l++,k++)
-                   Trend[l]+=x[TabCross[i].IndSvdA]*U[TabCross[i].IndSvdA][k];
+                 for (int k=1,l=iterator_start(&my_iterator, Feno->svd.specrange); l != ITERATOR_FINISHED; k++,l=iterator_next(&my_iterator))
+                  Trend[l]+=x[TabCross[i].IndSvdA]*U[TabCross[i].IndSvdA][k];
                 }
                else if ((WorkSpace[TabCross[i].Comp].symbolName[0]=='o') ||
                         (WorkSpace[TabCross[i].Comp].symbolName[1]=='f') ||
                         (WorkSpace[TabCross[i].Comp].symbolName[2]=='f') ||
                         (WorkSpace[TabCross[i].Comp].symbolName[3]=='l'))
                 {
-                 for (j=0,k=1;j<Z;j++)
-                  for (l=Fenetre[j][0];l<=Fenetre[j][1];l++,k++)
-                   offset[l]+=x[TabCross[i].IndSvdA]*U[TabCross[i].IndSvdA][k];
+                 for (int k=1,l=iterator_start(&my_iterator, Feno->svd.specrange); l != ITERATOR_FINISHED; k++,l=iterator_next(&my_iterator))
+                  offset[l]+=x[TabCross[i].IndSvdA]*U[TabCross[i].IndSvdA][k];
 
-                 for (j=0,k=1;j<Z;j++)
-                  for (l=Fenetre[j][0];l<=Fenetre[j][1];l++,k++)
+                 for (int l=iterator_start(&my_iterator, Feno->svd.specrange); l != ITERATOR_FINISHED; l=iterator_next(&my_iterator))
                    if (fabs(offset[l])>maxOffset)
                     maxOffset=fabs(offset[l]);
                 }
@@ -4207,32 +4033,28 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
           if (Feno->displayTrend)
            {
-            for (j=0,k=1;j<Z;j++)
-             for (l=Fenetre[j][0];l<=Fenetre[j][1];l++,k++)
-              ANALYSE_absolu[l]+=Trend[l]-ANALYSE_secX[l];
+            doas_iterator my_iterator;
+            for (int l=iterator_start(&my_iterator, Feno->svd.specrange); l != ITERATOR_FINISHED; l=iterator_next(&my_iterator))
+             ANALYSE_absolu[l]+=Trend[l]-ANALYSE_secX[l];
 
-            mediateAllocateAndSetPlotData(&spectrumData[0],"Measured",&Feno->LambdaK[SvdPDeb],&ANALYSE_absolu[SvdPDeb],SvdPFin-SvdPDeb+1,Line);
-            mediateAllocateAndSetPlotData(&spectrumData[1],"Calculated",&Feno->LambdaK[SvdPDeb],&Trend[SvdPDeb],SvdPFin-SvdPDeb+1,Line);
-            mediateResponsePlotData(indexPage,spectrumData,2,Residual,allowFixedScale,"Polynomial","Wavelength (nm)","", responseHandle);
-            mediateReleasePlotData(&spectrumData[1]);
-            mediateReleasePlotData(&spectrumData[0]);
+            double *curves[2][2] = {{Feno->LambdaK,ANALYSE_absolu},
+                                    {Feno->LambdaK,Trend}};
+            plot_curves(indexPage,curves,2,Residual,allowFixedScale,"Polynomial", responseHandle, Feno->svd.specrange);
 
             if (maxOffset>(double)0.)
              {
-             	if (Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVDMARQUARDT)
-               for (j=0,k=1;j<Z;j++)
-                for (l=Fenetre[j][0];l<=Fenetre[j][1];l++,k++)
-                 offset[l]=-offset[l];           // inverse the sign in order to have the same display as in SVD method
+              doas_iterator my_iterator;
+              if (Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVDMARQUARDT)
+               for (int l=iterator_start(&my_iterator, Feno->svd.specrange); l != ITERATOR_FINISHED; l=iterator_next(&my_iterator))
+                offset[l]=-offset[l];           // inverse the sign in order to have the same display as in SVD method
 
-              for (j=0,k=1;j<Z;j++)
-               for (l=Fenetre[j][0];l<=Fenetre[j][1];l++,k++)
-                ANALYSE_absolu[l]+=offset[l]-Trend[l];
 
-              mediateAllocateAndSetPlotData(&spectrumData[0],"Measured",&Feno->LambdaK[SvdPDeb],&ANALYSE_absolu[SvdPDeb],SvdPFin-SvdPDeb+1,Line);
-              mediateAllocateAndSetPlotData(&spectrumData[1],"Calculated",&Feno->LambdaK[SvdPDeb],&offset[SvdPDeb],SvdPFin-SvdPDeb+1,Line);
-              mediateResponsePlotData(indexPage,spectrumData,2,Residual,allowFixedScale,"Linear offset","Wavelength (nm)","", responseHandle);
-              mediateReleasePlotData(&spectrumData[1]);
-              mediateReleasePlotData(&spectrumData[0]);
+              for (int l=iterator_start(&my_iterator, Feno->svd.specrange); l != ITERATOR_FINISHED; l=iterator_next(&my_iterator))
+               ANALYSE_absolu[l]+=offset[l]-Trend[l];
+              
+              double *curves[2][2] = {{Feno->LambdaK, ANALYSE_absolu},
+                                      {Feno->LambdaK, offset}};
+              plot_curves(indexPage, curves, 2, Residual, allowFixedScale, "Linear offset",responseHandle, Feno->svd.specrange);
              }
            }  // end displayTrend
 
@@ -4241,50 +4063,50 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
           if (displayFlag && saveFlag)
            {
-	    indexLine = Feno->displayLineIndex;
-	    indexColumn=2;
+            indexLine = Feno->displayLineIndex;
+            indexColumn=2;
 
-	    mediateResponseCellDataString(indexPage,indexLine,indexColumn,tabTitle,responseHandle);
+            mediateResponseCellDataString(indexPage,indexLine,indexColumn,tabTitle,responseHandle);
 
-	    indexLine +=2;
-	    if(num_repeats) {
-	     mediateResponseCellInfoNoLabel(indexPage,indexLine,indexColumn,responseHandle,
-					    "Spike removal: the following pixels were excluded after %d iterations",num_repeats);
-	     for (i = 0; i< NDET; i++)
-	      if(Feno->spikes[i])
-	       mediateResponseCellInfoNoLabel(indexPage,indexLine++,indexColumn+1, responseHandle,"%d",i);
+            indexLine +=2;
+            if(num_repeats) {
+             mediateResponseCellInfoNoLabel(indexPage,indexLine,indexColumn,responseHandle,
+                                            "Spike removal: the following pixels were excluded after %d iterations",num_repeats);
+             for (i = 0; i< NDET; i++)
+              if(Feno->spikes[i])
+               mediateResponseCellInfoNoLabel(indexPage,indexLine++,indexColumn+1, responseHandle,"%d",i);
 
-	     indexLine++;
-	    }
+             indexLine++;
+            }
 
-	    mediateResponseCellInfo(indexPage,indexLine++,indexColumn,responseHandle,"OD ChiSquare","%.5le",Feno->chiSquare);
-	    mediateResponseCellInfo(indexPage,indexLine++,indexColumn,responseHandle,"RMS Residual","%.5le",Feno->RMS);
-	    mediateResponseCellInfo(indexPage,indexLine,indexColumn,responseHandle,"Iterations","%d",Niter);
+            mediateResponseCellInfo(indexPage,indexLine++,indexColumn,responseHandle,"OD ChiSquare","%.5le",Feno->chiSquare);
+            mediateResponseCellInfo(indexPage,indexLine++,indexColumn,responseHandle,"RMS Residual","%.5le",Feno->RMS);
+            mediateResponseCellInfo(indexPage,indexLine,indexColumn,responseHandle,"Iterations","%d",Niter);
 
-	    indexLine+=2;
+            indexLine+=2;
 
-	    mediateResponseCellDataString(indexPage,indexLine,indexColumn+1,"[CONC/Param]",responseHandle);
-	    mediateResponseCellDataString(indexPage,indexLine,indexColumn+2,"Shift",responseHandle);
-	    mediateResponseCellDataString(indexPage,indexLine,indexColumn+3,"Stretch",responseHandle);
+            mediateResponseCellDataString(indexPage,indexLine,indexColumn+1,"[CONC/Param]",responseHandle);
+            mediateResponseCellDataString(indexPage,indexLine,indexColumn+2,"Shift",responseHandle);
+            mediateResponseCellDataString(indexPage,indexLine,indexColumn+3,"Stretch",responseHandle);
 
-	    indexLine++;
+            indexLine++;
 
             for (i=0;i<Feno->NTabCross;i++)
              {
               mediateResponseCellDataString(indexPage,indexLine,indexColumn,WorkSpace[TabCross[i].Comp].symbolName,responseHandle);
-           // -------------------------------------------------------------------
+              // -------------------------------------------------------------------
               if (TabCross[i].IndSvdA)
                mediateResponseCellInfoNoLabel(indexPage,indexLine,indexColumn+1,responseHandle,"%10.3e +/-%10.3e",Results[i].SlntCol,Results[i].SlntErr);
               else if (TabCross[i].FitParam!=ITEM_NONE)
                mediateResponseCellInfoNoLabel(indexPage,indexLine,indexColumn+1,responseHandle,"%10.3e +/-%10.3e",Results[i].Param,Results[i].SigmaParam);
               else
                mediateResponseCellInfoNoLabel(indexPage,indexLine,indexColumn+1,responseHandle,"%10.3e",Results[i].Param);
-           // -------------------------------------------------------------------
+              // -------------------------------------------------------------------
               if (TabCross[i].FitShift!=ITEM_NONE)
                mediateResponseCellInfoNoLabel(indexPage,indexLine,indexColumn+2,responseHandle,"%10.3e +/-%10.3e",Results[i].Shift,Results[i].SigmaShift);
               else
                mediateResponseCellInfoNoLabel(indexPage,indexLine,indexColumn+2,responseHandle,"%10.3e",Results[i].Shift);
-           // -------------------------------------------------------------------
+              // -------------------------------------------------------------------
               if (TabCross[i].FitStretch!=ITEM_NONE)
                mediateResponseCellInfoNoLabel(indexPage,indexLine,indexColumn+3,responseHandle,"%10.3e +/-%10.3e",Results[i].Stretch,Results[i].SigmaStretch);
               else
@@ -4295,9 +4117,11 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
           // Recover spectral window limits and gaps eventually modified after spike removal
 
-          AnalyseCopyFenetre(Feno->svd.Fenetre,&Feno->svd.Z,oldFenetre,oldZ);
-	  Feno->svd.DimL = calculate_npixels(Feno->svd.Fenetre, Feno->svd.Z);
-	  Feno->Decomp = 1;
+          //AnalyseCopyFenetre(Feno->svd.Fenetre,&Feno->svd.Z,oldFenetre,oldZ);
+          spectrum_destroy(Feno->svd.specrange);
+          Feno->svd.specrange = old_range;
+          Feno->svd.DimL = spectrum_length(Feno->svd.specrange);
+          Feno->Decomp = 1;
          }  // if (!Feno->hidden && (Feno->rcKurucz==ERROR_ID_NO) &&
        }  // for (WrkFeno=0;(WrkFeno<NFeno) && (rc!=THREAD_EVENT_STOP);WrkFeno++)
      }  // if (THRD_id==THREAD_TYPE_ANALYSIS)
@@ -4308,14 +4132,14 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
     ANALYSE_oldLatitude=pRecord->latitude;
 
     if ((pEngineContext->lastSavedRecord!=pEngineContext->indexRecord) && ((THRD_id==THREAD_TYPE_KURUCZ) || nrc) &&
-      (((THRD_id==THREAD_TYPE_ANALYSIS) && pProject->asciiResults.analysisFlag) || ((THRD_id==THREAD_TYPE_KURUCZ) && pProject->asciiResults.calibFlag)))
+        (((THRD_id==THREAD_TYPE_ANALYSIS) && pProject->asciiResults.analysisFlag) || ((THRD_id==THREAD_TYPE_KURUCZ) && pProject->asciiResults.calibFlag)))
 
      rc=OUTPUT_SaveResults(pEngineContext,indexFenoColumn);
    }
 
   // Return
 
-  EndAnalysis :
+ EndAnalysis :
 
   if (Spectre!=NULL)
    MEMORY_ReleaseDVector("ANALYSE_Spectrum ","Spectre",Spectre,0);
@@ -4330,16 +4154,16 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
   if (offset!=NULL)
    MEMORY_ReleaseDVector("ANALYSE_Spectrum ","offset",offset,0);
 
-  #if defined(__DEBUG_) && __DEBUG_
+#if defined(__DEBUG_) && __DEBUG_
   DEBUG_FunctionStop("ANALYSE_Spectrum",rc);
-  #endif
+#endif
 
-//  TO SIMULATE ERROR ON SPECTRA
-//  if ((pEngineContext->indexRecord%2)==0)
-//   rc=ERROR_SetLast("ShiftVector",ERROR_TYPE_WARNING,ERROR_ID_LOG,analyseIndexRecord);
+  //  TO SIMULATE ERROR ON SPECTRA
+  //  if ((pEngineContext->indexRecord%2)==0)
+  //   rc=ERROR_SetLast("ShiftVector",ERROR_TYPE_WARNING,ERROR_ID_LOG,analyseIndexRecord);
 
   return rc;
- }
+}
 
 // ===============
 // DATA PROCESSING
@@ -4350,7 +4174,7 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 // --------------------------------------------------------------------------
 
 void ANALYSE_ResetData(void)
- {
+{
   // Declarations
 
   CROSS_REFERENCE *pTabCross;
@@ -4447,40 +4271,40 @@ void ANALYSE_ResetData(void)
       memset(pTabFeno,0,sizeof(FENO));
 
       pTabFeno->Shift=pTabFeno->ShiftN=pTabFeno->ShiftS=
-      pTabFeno->Stretch=pTabFeno->StretchN=pTabFeno->StretchS=
-      pTabFeno->Stretch2=pTabFeno->Stretch2N=pTabFeno->Stretch2S=(double) 0.;
+        pTabFeno->Stretch=pTabFeno->StretchN=pTabFeno->StretchS=
+        pTabFeno->Stretch2=pTabFeno->Stretch2N=pTabFeno->Stretch2S=(double) 0.;
       pTabFeno->refNormFact=pTabFeno->refNormFactN=pTabFeno->refNormFactS=(double)1.;
 
       pTabFeno->refMaxdoasSelectionMode=ANLYS_MAXDOAS_REF_SZA;
 
       pTabFeno->indexSpectrum=
-      pTabFeno->indexReference=
-      pTabFeno->indexFwhmParam[0]=
-      pTabFeno->indexFwhmParam[1]=
-      pTabFeno->indexFwhmParam[2]=
-      pTabFeno->indexFwhmParam[3]=
-      pTabFeno->indexFwhmConst=
-      pTabFeno->indexFwhmOrder1=
-      pTabFeno->indexFwhmOrder2=
-      pTabFeno->indexSol=
-      pTabFeno->indexOffsetConst=
-      pTabFeno->indexOffsetOrder1=
-      pTabFeno->indexOffsetOrder2=
-      pTabFeno->indexCommonResidual=
-      pTabFeno->indexUsamp1=
-      pTabFeno->indexUsamp2=
-      pTabFeno->indexRing1=ITEM_NONE;
+        pTabFeno->indexReference=
+        pTabFeno->indexFwhmParam[0]=
+        pTabFeno->indexFwhmParam[1]=
+        pTabFeno->indexFwhmParam[2]=
+        pTabFeno->indexFwhmParam[3]=
+        pTabFeno->indexFwhmConst=
+        pTabFeno->indexFwhmOrder1=
+        pTabFeno->indexFwhmOrder2=
+        pTabFeno->indexSol=
+        pTabFeno->indexOffsetConst=
+        pTabFeno->indexOffsetOrder1=
+        pTabFeno->indexOffsetOrder2=
+        pTabFeno->indexCommonResidual=
+        pTabFeno->indexUsamp1=
+        pTabFeno->indexUsamp2=
+        pTabFeno->indexRing1=ITEM_NONE;
 
       pTabFeno->indexRefMorning=
-      pTabFeno->indexRefAfternoon=
-      pTabFeno->indexRef=ITEM_NONE;
+        pTabFeno->indexRefAfternoon=
+        pTabFeno->indexRef=ITEM_NONE;
 
       pTabFeno->ZmRefMorning=
-      pTabFeno->ZmRefAfternoon=
-      pTabFeno->Zm=
-      pTabFeno->TDet=
-      pTabFeno->Tm=
-      pTabFeno->TimeDec=(double)9999.;
+        pTabFeno->ZmRefAfternoon=
+        pTabFeno->Zm=
+        pTabFeno->TDet=
+        pTabFeno->Tm=
+        pTabFeno->TimeDec=(double)9999.;
 
       memset(&pTabFeno->refDate,0,sizeof(SHORT_DATE));
 
@@ -4489,43 +4313,43 @@ void ANALYSE_ResetData(void)
       for (indexTabCross=0;indexTabCross<MAX_FIT;indexTabCross++)
        {
         pTabCross=&pTabFeno->TabCross[indexTabCross];
-     // -------------------------------------------
+        // -------------------------------------------
         pTabCross->IndOrthog=
-        pTabCross->FitConc=
-        pTabCross->FitParam=
-        pTabCross->FitShift=
-        pTabCross->FitStretch=
-        pTabCross->FitStretch2=
-        pTabCross->FitScale=
-        pTabCross->FitScale2=
-        pTabCross->Comp=
-        pTabCross->amfType=ITEM_NONE;
-     // -------------------------------------------
+          pTabCross->FitConc=
+          pTabCross->FitParam=
+          pTabCross->FitShift=
+          pTabCross->FitStretch=
+          pTabCross->FitStretch2=
+          pTabCross->FitScale=
+          pTabCross->FitScale2=
+          pTabCross->Comp=
+          pTabCross->amfType=ITEM_NONE;
+        // -------------------------------------------
         pTabCross->TypeStretch=
-        pTabCross->TypeScale=(INT)0;
-     // -------------------------------------------
+          pTabCross->TypeScale=(INT)0;
+        // -------------------------------------------
         pTabCross->display=(DoasCh)0;
-     // -------------------------------------------
+        // -------------------------------------------
         pTabCross->InitConc=
-        pTabCross->InitParam=
-        pTabCross->InitShift=
-        pTabCross->InitStretch=
-        pTabCross->InitStretch2=
-        pTabCross->InitScale=
-        pTabCross->InitScale2=
-        pTabCross->DeltaConc=
-        pTabCross->DeltaParam=
-        pTabCross->DeltaShift=
-        pTabCross->DeltaStretch=
-        pTabCross->DeltaStretch2=
-        pTabCross->DeltaScale=
-        pTabCross->DeltaScale2=(double)0.;
-     // -------------------------------------------
+          pTabCross->InitParam=
+          pTabCross->InitShift=
+          pTabCross->InitStretch=
+          pTabCross->InitStretch2=
+          pTabCross->InitScale=
+          pTabCross->InitScale2=
+          pTabCross->DeltaConc=
+          pTabCross->DeltaParam=
+          pTabCross->DeltaShift=
+          pTabCross->DeltaStretch=
+          pTabCross->DeltaStretch2=
+          pTabCross->DeltaScale=
+          pTabCross->DeltaScale2=(double)0.;
+        // -------------------------------------------
         pTabCross->MinParam=
-        pTabCross->MinShift=(double)-99.;
+          pTabCross->MinShift=(double)-99.;
         pTabCross->MaxParam=
-        pTabCross->MaxShift=(double)99.;
-     // -------------------------------------------
+          pTabCross->MaxShift=(double)99.;
+        // -------------------------------------------
         pTabCross->Fact=(double)1.;
        }
      }
@@ -4591,41 +4415,41 @@ void ANALYSE_ResetData(void)
    MEMORY_ReleaseDVector("ANALYSE_ResetData ","ANALYSE_ones",ANALYSE_ones,0);
 
   Fitp=
-  FitDeltap=
-  FitMinp=
-  FitMaxp=
-  a=
-  b=
-  x=
-  Sigma=
-  ANALYSE_shift=
-  ANALYSE_pixels=
-  ANALYSE_splineX=
-  ANALYSE_splineX2=
-  ANALYSE_absolu=
-  ANALYSE_secX=
-  ANALYSE_t=
-  ANALYSE_tc=
-  ANALYSE_xsTrav=
-  ANALYSE_xsTrav2=
-  SplineSpec=
-  SplineRef=
-  ANALYSE_zeros=
-  ANALYSE_ones=NULL;
+    FitDeltap=
+    FitMinp=
+    FitMaxp=
+    a=
+    b=
+    x=
+    Sigma=
+    ANALYSE_shift=
+    ANALYSE_pixels=
+    ANALYSE_splineX=
+    ANALYSE_splineX2=
+    ANALYSE_absolu=
+    ANALYSE_secX=
+    ANALYSE_t=
+    ANALYSE_tc=
+    ANALYSE_xsTrav=
+    ANALYSE_xsTrav2=
+    SplineSpec=
+    SplineRef=
+    ANALYSE_zeros=
+    ANALYSE_ones=NULL;
 
   MATRIX_Free(&ANALYSIS_slit,"ANALYSE_ResetData (2)");
   MATRIX_Free(&ANALYSIS_slit2,"ANALYSE_ResetData (3)");
   MATRIX_Free(&ANALYSIS_slitK,"ANALYSE_ResetData (4)");
   MATRIX_Free(&ANALYSIS_broAmf,"ANALYSE_ResetData");
   MATRIX_Free(&O3TD,"ANALYSE_ResetData");
- }
+}
 
 // --------------------------------------------------------
 // ANALYSE_LoadSlit : Load slit function for fwhm correction
 // --------------------------------------------------------
 
 RC ANALYSE_LoadSlit(PRJCT_SLIT *pSlit)
- {
+{
   // Declarations
 
   INT   xsToConvolute,xsToConvoluteI0;
@@ -4643,7 +4467,7 @@ RC ANALYSE_LoadSlit(PRJCT_SLIT *pSlit)
 
   for (indexFeno=0;indexFeno<NFeno;indexFeno++)
    if (!pKuruczOptions->fwhmFit ||
-      (!TabFeno[0][indexFeno].hidden && (TabFeno[0][indexFeno].useKurucz==ANLYS_KURUCZ_NONE)))       // can use TabFeno[0] as options are the same for all windows
+       (!TabFeno[0][indexFeno].hidden && (TabFeno[0][indexFeno].useKurucz==ANLYS_KURUCZ_NONE)))       // can use TabFeno[0] as options are the same for all windows
     {
      xsToConvolute+=TabFeno[0][indexFeno].xsToConvolute+TabFeno[0][indexFeno].useUsamp;
      xsToConvoluteI0+=TabFeno[0][indexFeno].xsToConvoluteI0;
@@ -4661,18 +4485,18 @@ RC ANALYSE_LoadSlit(PRJCT_SLIT *pSlit)
        rc=ERROR_SetLast("ANALYSE_LoadSlit",ERROR_TYPE_FATAL,ERROR_ID_MSGBOX_FIELDEMPTY,"Slit File");
       else
        rc=MATRIX_Load(pSlitFunction->slitFile,&ANALYSIS_slit,0 /* line base */,0 /* column base */,0,0,
-                     -9999.,9999.,
-                   /* ((pSlitFunction->slitType==SLIT_TYPE_GAUSS_T_FILE) ||
-                     (pSlitFunction->slitType==SLIT_TYPE_ERF_T_FILE))?0: */ 1,0,"ANALYSE_LoadSlit ");
+                      -9999.,9999.,
+                      /* ((pSlitFunction->slitType==SLIT_TYPE_GAUSS_T_FILE) ||
+                         (pSlitFunction->slitType==SLIT_TYPE_ERF_T_FILE))?0: */ 1,0,"ANALYSE_LoadSlit ");
      }
 
     if (pSlitFunction->slitWveDptFlag && ((pSlitFunction->slitType==SLIT_TYPE_FILE) ||(pSlitFunction->slitType==SLIT_TYPE_ERF) ||(pSlitFunction->slitType==SLIT_TYPE_AGAUSS) || (pSlitFunction->slitType==SLIT_TYPE_VOIGT)))
      {
-     	if (!strlen(pSlitFunction->slitFile2))
+      if (!strlen(pSlitFunction->slitFile2))
        rc=ERROR_SetLast("ANALYSE_LoadSlit",ERROR_TYPE_FATAL,ERROR_ID_MSGBOX_FIELDEMPTY,"Slit File 2");
       else
        rc=MATRIX_Load(pSlitFunction->slitFile2,&ANALYSIS_slit2,0 /* line base */,0 /* column base */,0,0,
-                     -9999.,9999.,1,0,"ANALYSE_LoadSlit 2");
+                      -9999.,9999.,1,0,"ANALYSE_LoadSlit 2");
      }
    }
 
@@ -4687,10 +4511,10 @@ RC ANALYSE_LoadSlit(PRJCT_SLIT *pSlit)
   // Return
 
   return rc;
- }
+}
 
 RC ANALYSE_CheckLambda(WRK_SYMBOL *pWrkSymbol,double *lambda,DoasCh *callingFunction)
- {
+{
   // Declarations
 
   DoasCh fileName[MAX_ITEM_TEXT_LEN+1];
@@ -4705,7 +4529,7 @@ RC ANALYSE_CheckLambda(WRK_SYMBOL *pWrkSymbol,double *lambda,DoasCh *callingFunc
   // Return
 
   return rc;
- }
+}
 
 // -----------------------------------------------------------------------------
 // AnalyseLoadCross : Load cross sections data from cross sections type tab page
@@ -4718,39 +4542,39 @@ RC ANALYSE_CheckLambda(WRK_SYMBOL *pWrkSymbol,double *lambda,DoasCh *callingFunc
 // -----------------------------------------------------------------------------
 
 RC ANALYSE_LoadCross(ENGINE_CONTEXT *pEngineContext,ANALYSIS_CROSS *crossSectionList,INT nCross,INT hidden,double *lambda,INDEX indexFenoColumn)
- {
- 	// Declarations
+{
+  // Declarations
 
- 	CROSS_REFERENCE *pEngineCross;                                                // pointer of the current cross section in the engine list
- 	ANALYSIS_CROSS *pCross;                                                       // pointer of the current cross section in the mediate list
- 	FENO *pTabFeno;                                                               // pointer to the current analysis window
+  CROSS_REFERENCE *pEngineCross;                                                // pointer of the current cross section in the engine list
+  ANALYSIS_CROSS *pCross;                                                       // pointer of the current cross section in the mediate list
+  FENO *pTabFeno;                                                               // pointer to the current analysis window
   DoasCh *pOrthoSymbol[MAX_FIT],                                                 // for each cross section in list, hold cross section to use for orthogonalization
-        *symbolName;
+    *symbolName;
   INDEX indexSymbol,indexSvd,                                                   // resp. indexes of item in list and of symbol
-        firstTabCross,endTabCross,indexTabCross,i;                              // indexes for browsing list of cross sections symbols
+    firstTabCross,endTabCross,indexTabCross,i;                              // indexes for browsing list of cross sections symbols
   SZ_LEN fileLength,symbolLength;                                               // length in characters of file name and symbol name
   WRK_SYMBOL *pWrkSymbol;                                                       // pointer to a general description of a symbol
- 	RC rc;
+  RC rc;
 
- 	// Debug
+  // Debug
 
-  #if defined(__DEBUG_) && __DEBUG_ && defined(__DEBUG_DOAS_CONFIG_) && __DEBUG_DOAS_CONFIG_
+#if defined(__DEBUG_) && __DEBUG_ && defined(__DEBUG_DOAS_CONFIG_) && __DEBUG_DOAS_CONFIG_
   DEBUG_FunctionBegin("ANALYSE_LoadCross",DEBUG_FCTTYPE_CONFIG);
-  #endif
+#endif
 
- 	// Initializations
+  // Initializations
 
   pWrkSymbol=NULL;
   pTabFeno=&TabFeno[indexFenoColumn][NFeno];
   firstTabCross=pTabFeno->NTabCross;
- 	rc=ERROR_ID_NO;
+  rc=ERROR_ID_NO;
 
- 	for (indexTabCross=0;
- 	    (indexTabCross<nCross) && (pTabFeno->NTabCross<MAX_FIT) && !rc;
- 	     indexTabCross++)
- 	 {
- 	 	pEngineCross=&pTabFeno->TabCross[pTabFeno->NTabCross];
- 	 	pCross=&crossSectionList[indexTabCross];
+  for (indexTabCross=0;
+       (indexTabCross<nCross) && (pTabFeno->NTabCross<MAX_FIT) && !rc;
+       indexTabCross++)
+   {
+    pEngineCross=&pTabFeno->TabCross[pTabFeno->NTabCross];
+    pCross=&crossSectionList[indexTabCross];
 
     // Get cross section name from analysis properties dialog box
 
@@ -4792,9 +4616,9 @@ RC ANALYSE_LoadCross(ENGINE_CONTEXT *pEngineContext,ANALYSIS_CROSS *crossSection
 
       if (((strlen(pWrkSymbol->symbolName)==strlen("1/Ref")) && !strcasecmp(pWrkSymbol->symbolName,"1/Ref")) ||
           !(rc=MATRIX_Load(pCross->crossSectionFile,&pWrkSymbol->xs,0 /* line base */,0 /* column base */,0,0,
-                          (pCross->crossType==ANLYS_CROSS_ACTION_NOTHING)?(double)0.:lambda[0]-7.,      // max(lambda[0]-7.,(double)290.), - changed on october 2006
-                          (pCross->crossType==ANLYS_CROSS_ACTION_NOTHING)?(double)0.:lambda[NDET-1]+7., // min(lambda[NDET-1]+7.,(double)600.), - changed on october 2006
-                          (pCross->crossType!=ANLYS_CROSS_ACTION_NOTHING)?1:0,1,"ANALYSE_LoadCross ")))
+                           (pCross->crossType==ANLYS_CROSS_ACTION_NOTHING)?(double)0.:lambda[0]-7.,      // max(lambda[0]-7.,(double)290.), - changed on october 2006
+                           (pCross->crossType==ANLYS_CROSS_ACTION_NOTHING)?(double)0.:lambda[NDET-1]+7., // min(lambda[NDET-1]+7.,(double)600.), - changed on october 2006
+                           (pCross->crossType!=ANLYS_CROSS_ACTION_NOTHING)?1:0,1,"ANALYSE_LoadCross ")))
        {
         if (!strcasecmp(pWrkSymbol->symbolName,"O3TD"))
          rc=MATRIX_Allocate(&O3TD,NDET,pWrkSymbol->xs.nc,0,0,0,"ANALYSE_LoadCross");
@@ -4864,7 +4688,7 @@ RC ANALYSE_LoadCross(ENGINE_CONTEXT *pEngineContext,ANALYSIS_CROSS *crossSection
          }
        }
      }
- 	 }
+   }
 
   // Orthogonalization data
 
@@ -4910,44 +4734,44 @@ RC ANALYSE_LoadCross(ENGINE_CONTEXT *pEngineContext,ANALYSIS_CROSS *crossSection
        {
         // if orthogonalization in succession, orthogonalization is ignored
 
-/* !!!!!        if (pEngineCross[pEngineCross[indexTabCross].IndOrthog].IndOrthog>=0)  // != ORTHOGONAL_BASE
-         {
-          THRD_Error(ERROR_TYPE_WARNING,ERROR_ID_ORTHOGONAL_CASCADE,"",WorkSpace[pEngineCross[indexTabCross].Comp].symbolName);
-          pEngineCross[indexTabCross].IndOrthog=ITEM_NONE;
-         }
-
-        // Force to be orthogonalized to base
-
-        else  */
-         {
-          if (pEngineCross[pEngineCross[indexTabCross].IndOrthog].IndOrthog==ITEM_NONE)
+        /* !!!!!        if (pEngineCross[pEngineCross[indexTabCross].IndOrthog].IndOrthog>=0)  // != ORTHOGONAL_BASE
            {
-           	rc=ERROR_SetLast("ANALYSE_LoadCross",ERROR_TYPE_WARNING,ERROR_ID_ORTHOGONAL_BASE,
-                              WorkSpace[pEngineCross[pEngineCross[indexTabCross].IndOrthog].Comp].symbolName,
-                              WorkSpace[pEngineCross[indexTabCross].Comp].symbolName);
-
-            pEngineCross[pEngineCross[indexTabCross].IndOrthog].IndOrthog=ORTHOGONAL_BASE;
+           THRD_Error(ERROR_TYPE_WARNING,ERROR_ID_ORTHOGONAL_CASCADE,"",WorkSpace[pEngineCross[indexTabCross].Comp].symbolName);
+           pEngineCross[indexTabCross].IndOrthog=ITEM_NONE;
            }
-         }
+
+           // Force to be orthogonalized to base
+
+           else  */
+        {
+         if (pEngineCross[pEngineCross[indexTabCross].IndOrthog].IndOrthog==ITEM_NONE)
+          {
+           rc=ERROR_SetLast("ANALYSE_LoadCross",ERROR_TYPE_WARNING,ERROR_ID_ORTHOGONAL_BASE,
+                            WorkSpace[pEngineCross[pEngineCross[indexTabCross].IndOrthog].Comp].symbolName,
+                            WorkSpace[pEngineCross[indexTabCross].Comp].symbolName);
+
+           pEngineCross[pEngineCross[indexTabCross].IndOrthog].IndOrthog=ORTHOGONAL_BASE;
+          }
+        }
        }
      }
    }
 
-  #if defined(__DEBUG_) && __DEBUG_ && defined(__DEBUG_DOAS_CONFIG_) && __DEBUG_DOAS_CONFIG_
+#if defined(__DEBUG_) && __DEBUG_ && defined(__DEBUG_DOAS_CONFIG_) && __DEBUG_DOAS_CONFIG_
   DEBUG_FunctionStop("ANALYSE_LoadCross",rc);
-  #endif
+#endif
 
   // Return
 
   return rc;
- }
+}
 
 // -------------------------------------------------
 // ANALYSE_LoadLinear : Load continuous functions
 // -------------------------------------------------
 
 RC ANALYSE_LoadLinear(ANALYSE_LINEAR_PARAMETERS *linearList,INT nLinear,INDEX indexFenoColumn)
- {
+{
   // Declarations
 
   INDEX indexItem,indexSymbol,indexOrder;                                       // indexes for loops and arrays
@@ -5051,8 +4875,8 @@ RC ANALYSE_LoadLinear(ANALYSE_LINEAR_PARAMETERS *linearList,INT nLinear,INDEX in
 
           for (indexTabCross=pTabFeno->NTabCross-2;indexTabCross>=0;indexTabCross--)
            if (((indexSvd=pTabFeno->TabCross[indexTabCross].IndSvdA)!=0) &&
-                (pTabFeno->TabCross[indexTabCross].FitConc==0) &&
-                (pTabFeno->TabCross[indexTabCross].DeltaConc==(double)0.))
+               (pTabFeno->TabCross[indexTabCross].FitConc==0) &&
+               (pTabFeno->TabCross[indexTabCross].DeltaConc==(double)0.))
             {
              pTabFeno->TabCross[indexTabCross].IndSvdA=pTabCross->IndSvdA;
              pTabCross->IndSvdA=indexSvd;
@@ -5069,25 +4893,25 @@ RC ANALYSE_LoadLinear(ANALYSE_LINEAR_PARAMETERS *linearList,INT nLinear,INDEX in
           pResults->StoreSlntErr=pList->storeError;                             // flag set if error on slant column is to be written into output file
           pResults->SlntFact=1.;
          }
-     	 }
+       }
      }
    }
 
   // Return
 
   return rc;
- }
+}
 
 // ------------------------------------------------------------------------------------------------
 // ANALYSE_LoadShiftStretch : Load shift and stretch for cross sections implied in SVD decomposition
 // ------------------------------------------------------------------------------------------------
 
 RC ANALYSE_LoadShiftStretch(ANALYSIS_SHIFT_STRETCH *shiftStretchList,INT nShiftStretch,INDEX indexFenoColumn)
- {
+{
   // Declarations
 
   INDEX indexItem,indexSymbol,indexTabCross,indexSymbolInList,indexCross,       // indexes for loops and arrays
-        indexShift,indexStretch,indexStretch2,indexScale,indexScale2;
+    indexShift,indexStretch,indexStretch2,indexScale,indexScale2;
   DoasCh *symbol;                                                                // copy of list of symbols
   CROSS_REFERENCE *pTabCross;                                                   // pointer to an element of the symbol cross reference table of an analysis window
   CROSS_RESULTS *pResults;                                                      // pointer to results part relative to the symbol
@@ -5110,20 +4934,20 @@ RC ANALYSE_LoadShiftStretch(ANALYSIS_SHIFT_STRETCH *shiftStretchList,INT nShiftS
 
     for (indexSymbolInList=0;indexSymbolInList<pList->nSymbol;indexSymbolInList++)
      {
-     	symbol=pList->symbol[indexSymbolInList];
-     	symbolLength=strlen(symbol);
+      symbol=pList->symbol[indexSymbolInList];
+      symbolLength=strlen(symbol);
 
-     	// Search for the symbols in the cross sections list
+      // Search for the symbols in the cross sections list
 
-     	for (indexCross=0;indexCross<pTabFeno->NTabCross;indexCross++)
-     	 {
-     	 	pWrkSymbol=&WorkSpace[pTabFeno->TabCross[indexCross].Comp];
+      for (indexCross=0;indexCross<pTabFeno->NTabCross;indexCross++)
+       {
+        pWrkSymbol=&WorkSpace[pTabFeno->TabCross[indexCross].Comp];
 
         if ((strlen(pWrkSymbol->symbolName)==symbolLength) &&
             !strcasecmp(pWrkSymbol->symbolName,symbol))
 
          break;
-        }
+       }
 
       if (indexCross<pTabFeno->NTabCross)
        indexSymbol=pTabFeno->TabCross[indexCross].Comp;
@@ -5186,10 +5010,10 @@ RC ANALYSE_LoadShiftStretch(ANALYSIS_SHIFT_STRETCH *shiftStretchList,INT nShiftS
 
           if (pList->shFit!=0)
            indexShift=pTabCross->FitShift=(!indexSymbolInList)?                 // flag set when shift is to be fit
-            pTabFeno->svd.NF++:indexShift;
+             pTabFeno->svd.NF++:indexShift;
 
           pTabCross->DeltaShift=(pTabCross->FitShift!=ITEM_NONE)?
-           pList->shDelta:(double)0.;                                           // delta value for shift
+            pList->shDelta:(double)0.;                                           // delta value for shift
 
           pTabCross->MinShift=pList->shMin;                                     // minimum value for shift
           pTabCross->MaxShift=pList->shMax;                                     // maximum value for shift
@@ -5203,16 +5027,16 @@ RC ANALYSE_LoadShiftStretch(ANALYSIS_SHIFT_STRETCH *shiftStretchList,INT nShiftS
 
           if (pTabCross->TypeStretch!=ANLYS_STRETCH_TYPE_NONE)
            indexStretch=pTabCross->FitStretch=(!indexSymbolInList)?          // flag set when stretch is to be fit
-            pTabFeno->svd.NF++:indexStretch;
+             pTabFeno->svd.NF++:indexStretch;
 
           if (pTabCross->TypeStretch==ANLYS_STRETCH_TYPE_SECOND_ORDER)
            indexStretch2=pTabCross->FitStretch2=(!indexSymbolInList)?        // flag set when stretch is to be fit
-            pTabFeno->svd.NF++:indexStretch2;
+             pTabFeno->svd.NF++:indexStretch2;
 
           pTabCross->DeltaStretch=(pTabCross->FitStretch!=ITEM_NONE)?        // delta value for stretch order 1
-           pList->stDelta:(double)0.;
+            pList->stDelta:(double)0.;
           pTabCross->DeltaStretch2=(pTabCross->FitStretch2!=ITEM_NONE)?      // delta value for stretch order 2
-           pList->stDelta2:(double)0.;
+            pList->stDelta2:(double)0.;
 
           // Scaling
 
@@ -5222,16 +5046,16 @@ RC ANALYSE_LoadShiftStretch(ANALYSIS_SHIFT_STRETCH *shiftStretchList,INT nShiftS
 
           if (pTabCross->TypeScale!=ANLYS_STRETCH_TYPE_NONE)
            indexScale=pTabCross->FitScale=(!indexSymbolInList)?                 // flag set when scale is to be fit
-            pTabFeno->svd.NF++:indexScale;
+             pTabFeno->svd.NF++:indexScale;
 
           if (pTabCross->TypeScale==ANLYS_STRETCH_TYPE_SECOND_ORDER)
            indexScale2=pTabCross->FitScale2=(!indexSymbolInList)?               // flag set when scale is to be fit
-            pTabFeno->svd.NF++:indexScale2;
+             pTabFeno->svd.NF++:indexScale2;
 
           pTabCross->DeltaScale=(pTabCross->FitScale!=ITEM_NONE)?               // delta value for scale order 1
-           pList->scDelta:(double)0.;
+            pList->scDelta:(double)0.;
           pTabCross->DeltaScale2=(pTabCross->FitScale2!=ITEM_NONE)?             // delta value for scale order 2
-           pList->scDelta2:(double)0.;
+            pList->scDelta2:(double)0.;
 
           if (pTabCross->IndSvdA)
            {
@@ -5261,7 +5085,7 @@ RC ANALYSE_LoadShiftStretch(ANALYSIS_SHIFT_STRETCH *shiftStretchList,INT nShiftS
   pTabFeno->svd.nFit+=(pTabFeno->svd.NF-oldNF);
 
   return rc;
- }
+}
 
 // --------------------------------------------------
 // AnalyseLoadPredefined : Load predefined parameters
@@ -5271,7 +5095,7 @@ RC ANALYSE_LoadShiftStretch(ANALYSIS_SHIFT_STRETCH *shiftStretchList,INT nShiftS
 #pragma argsused
 #endif
 RC ANALYSE_LoadNonLinear(ENGINE_CONTEXT *pEngineContext,ANALYSE_NON_LINEAR_PARAMETERS *nonLinearList,INT nNonLinear,double *lambda,INDEX indexFenoColumn)
- {
+{
   // Declarations
 
   INDEX indexItem,indexSymbol,indexTabCross,indexSvd;                           // indexes for loops and arrays
@@ -5292,10 +5116,10 @@ RC ANALYSE_LoadNonLinear(ENGINE_CONTEXT *pEngineContext,ANALYSE_NON_LINEAR_PARAM
 
   for (indexItem=0;(indexItem<nNonLinear) && !rc;indexItem++)
    {
-   	pListItem=&nonLinearList[indexItem];
+    pListItem=&nonLinearList[indexItem];
 
-   	if (pListItem->fitFlag || (pListItem->initialValue!=(double)0.))
-   	 {
+    if (pListItem->fitFlag || (pListItem->initialValue!=(double)0.))
+     {
       if ((pTabFeno->analysisMethod==PRJCT_ANLYS_METHOD_SVD) || strnicmp(pListItem->symbolName,"offset",6))
        {
         symbol=pListItem->symbolName;
@@ -5329,13 +5153,13 @@ RC ANALYSE_LoadNonLinear(ENGINE_CONTEXT *pEngineContext,ANALYSE_NON_LINEAR_PARAM
 
           // Load cross section from file
 
-           NWorkSpace++;
+          NWorkSpace++;
          }
 
         if ((indexSymbol<NWorkSpace) && ((indexTabCross=pTabFeno->NTabCross)<MAX_FIT) &&
-           ((strcasecmp(symbol,"SFP 1") && strcasecmp(symbol,"SFP 2")) ||
-            (pKuruczOptions->fwhmFit &&
-           ((pKuruczOptions->fwhmType==SLIT_TYPE_ERF) || (pKuruczOptions->fwhmType==SLIT_TYPE_AGAUSS) || (pKuruczOptions->fwhmType==SLIT_TYPE_VOIGT) || strcasecmp(symbol,"SFP 2")))))
+            ((strcasecmp(symbol,"SFP 1") && strcasecmp(symbol,"SFP 2")) ||
+             (pKuruczOptions->fwhmFit &&
+              ((pKuruczOptions->fwhmType==SLIT_TYPE_ERF) || (pKuruczOptions->fwhmType==SLIT_TYPE_AGAUSS) || (pKuruczOptions->fwhmType==SLIT_TYPE_VOIGT) || strcasecmp(symbol,"SFP 2")))))
 
          {
           // Add symbol into symbol cross reference
@@ -5344,12 +5168,12 @@ RC ANALYSE_LoadNonLinear(ENGINE_CONTEXT *pEngineContext,ANALYSE_NON_LINEAR_PARAM
            pTabFeno->indexFwhmParam[0]=pTabFeno->NTabCross;
           else if ((symbolLength==strlen("SFP 2")) && !strcasecmp(symbol,"SFP 2"))
            pTabFeno->indexFwhmParam[1]=pTabFeno->NTabCross;
-//          else if ((symbolLength==strlen("Fwhm (Constant)")) && !strcasecmp(symbol,"Fwhm (Constant)"))
-//           pTabFeno->indexFwhmConst=pTabFeno->NTabCross;
-//          else if ((symbolLength==strlen("Fwhm (Order 1)")) && !strcasecmp(symbol,"Fwhm (Order 1)"))
-//           pTabFeno->indexFwhmOrder1=pTabFeno->NTabCross;
-//          else if ((symbolLength==strlen("Fwhm (order 2)")) && !strcasecmp(symbol,"Fwhm (Order 2)"))
-//           pTabFeno->indexFwhmOrder2=pTabFeno->NTabCross;
+          //          else if ((symbolLength==strlen("Fwhm (Constant)")) && !strcasecmp(symbol,"Fwhm (Constant)"))
+          //           pTabFeno->indexFwhmConst=pTabFeno->NTabCross;
+          //          else if ((symbolLength==strlen("Fwhm (Order 1)")) && !strcasecmp(symbol,"Fwhm (Order 1)"))
+          //           pTabFeno->indexFwhmOrder1=pTabFeno->NTabCross;
+          //          else if ((symbolLength==strlen("Fwhm (order 2)")) && !strcasecmp(symbol,"Fwhm (Order 2)"))
+          //           pTabFeno->indexFwhmOrder2=pTabFeno->NTabCross;
           else if ((symbolLength==strlen("Sol")) && !strcasecmp(symbol,"Sol"))
            pTabFeno->indexSol=pTabFeno->NTabCross;
           else if ((symbolLength==strlen("Offset (Constant)")) && !strcasecmp(symbol,"Offset (Constant)"))
@@ -5397,15 +5221,15 @@ RC ANALYSE_LoadNonLinear(ENGINE_CONTEXT *pEngineContext,ANALYSE_NON_LINEAR_PARAM
             // Marquardt-Levenberg method -> the parameters are fitted linearly
 
             if ((pTabFeno->analysisMethod==PRJCT_ANLYS_METHOD_SVDMARQUARDT) &&
-               ((pTabFeno->indexOffsetConst==pTabFeno->NTabCross) ||
-                (pTabFeno->indexOffsetOrder1==pTabFeno->NTabCross) ||
-                (pTabFeno->indexOffsetOrder2==pTabFeno->NTabCross) ||
-                (pTabFeno->indexCommonResidual==pTabFeno->NTabCross) ||
-                (pTabFeno->indexUsamp1==pTabFeno->NTabCross) ||
-                (pTabFeno->indexUsamp2==pTabFeno->NTabCross) ||
-                (pTabFeno->indexRing1==pTabFeno->NTabCross)) &&
-              (((pTabCross->FitParam=((pListItem->fitFlag)?1:0))!=ITEM_NONE) ||
-                (pTabCross->InitParam!=(double)0.)))
+                ((pTabFeno->indexOffsetConst==pTabFeno->NTabCross) ||
+                 (pTabFeno->indexOffsetOrder1==pTabFeno->NTabCross) ||
+                 (pTabFeno->indexOffsetOrder2==pTabFeno->NTabCross) ||
+                 (pTabFeno->indexCommonResidual==pTabFeno->NTabCross) ||
+                 (pTabFeno->indexUsamp1==pTabFeno->NTabCross) ||
+                 (pTabFeno->indexUsamp2==pTabFeno->NTabCross) ||
+                 (pTabFeno->indexRing1==pTabFeno->NTabCross)) &&
+                (((pTabCross->FitParam=((pListItem->fitFlag)?1:0))!=ITEM_NONE) ||
+                 (pTabCross->InitParam!=(double)0.)))
              {
               pTabCross->IndSvdA=++pTabFeno->svd.DimC;
               pTabCross->IndSvdP=++pTabFeno->svd.DimP;
@@ -5447,13 +5271,13 @@ RC ANALYSE_LoadNonLinear(ENGINE_CONTEXT *pEngineContext,ANALYSE_NON_LINEAR_PARAM
                   (pUsamp->method==PRJCT_USAMP_FILE))
                {
                 if (((rc=MATRIX_Load(pListItem->crossFileName,&pWrkSymbol->xs,0 /* line base */,0 /* column base */,0,0,
-                     (double)0.,(double)0.,
-                    ((pTabFeno->indexRing1==pTabFeno->NTabCross))?1:0,0,"ANALYSE_LoadNonLinear "))!=0)
+                                     (double)0.,(double)0.,
+                                     ((pTabFeno->indexRing1==pTabFeno->NTabCross))?1:0,0,"ANALYSE_LoadNonLinear "))!=0)
 
-                 ||((pTabFeno->gomeRefFlag || pEngineContext->refFlag) &&
-                    (pTabFeno->indexRing1!=pTabFeno->NTabCross) &&                               // only the Raman spectrum should be interpolated on the
-                   ((rc=ANALYSE_CheckLambda(pWrkSymbol,lambda,"ANALYSE_LoadNonLinear "))!=0))    // grid of the reference spectrum
-                 )
+                    ||((pTabFeno->gomeRefFlag || pEngineContext->refFlag) &&
+                       (pTabFeno->indexRing1!=pTabFeno->NTabCross) &&                               // only the Raman spectrum should be interpolated on the
+                       ((rc=ANALYSE_CheckLambda(pWrkSymbol,lambda,"ANALYSE_LoadNonLinear "))!=0))    // grid of the reference spectrum
+                    )
 
                  goto EndLoadPredefined;
                }
@@ -5461,8 +5285,8 @@ RC ANALYSE_LoadNonLinear(ENGINE_CONTEXT *pEngineContext,ANALYSE_NON_LINEAR_PARAM
                pTabFeno->useUsamp=1;
 
               if (((pTabCross->vector=(double *)MEMORY_AllocDVector("ANALYSE_LoadNonLinear ","vector",0,NDET-1))==NULL) ||
-                 (((pTabFeno->indexRing1==pTabFeno->NTabCross)) &&
-                  ((pTabCross->Deriv2=(double *)MEMORY_AllocDVector("ANALYSE_LoadNonLinear ","Deriv2",0,NDET-1))==NULL)))     // for Raman interpolation
+                  (((pTabFeno->indexRing1==pTabFeno->NTabCross)) &&
+                   ((pTabCross->Deriv2=(double *)MEMORY_AllocDVector("ANALYSE_LoadNonLinear ","Deriv2",0,NDET-1))==NULL)))     // for Raman interpolation
 
                rc=ERROR_ID_ALLOC;
               else if (rc==ERROR_ID_NO)
@@ -5475,7 +5299,7 @@ RC ANALYSE_LoadNonLinear(ENGINE_CONTEXT *pEngineContext,ANALYSE_NON_LINEAR_PARAM
                 else
                  memcpy(pTabCross->vector,ANALYSE_zeros,sizeof(double)*NDET);
 
-//                memcpy(pTabCross->vector,(pUsamp->method==PRJCT_USAMP_FILE)?pWrkSymbol->xs.matrix[1]:ANALYSE_zeros,sizeof(double)*NDET);
+                //                memcpy(pTabCross->vector,(pUsamp->method==PRJCT_USAMP_FILE)?pWrkSymbol->xs.matrix[1]:ANALYSE_zeros,sizeof(double)*NDET);
 
                 if (((pTabFeno->analysisMethod!=PRJCT_ANLYS_METHOD_SVDMARQUARDT) || (pTabCross->FitParam==ITEM_NONE)))
                  pTabCross->IndSvdA=++pTabFeno->svd.DimC;
@@ -5497,7 +5321,7 @@ RC ANALYSE_LoadNonLinear(ENGINE_CONTEXT *pEngineContext,ANALYSE_NON_LINEAR_PARAM
                    {
                     for (indexTabCross=pTabFeno->NTabCross-1;indexTabCross>=0;indexTabCross--)
                      if (((indexSvd=pTabFeno->TabCross[indexTabCross].IndSvdA)!=0) &&
-                          !pTabFeno->TabCross[indexTabCross].FitConc)
+                         !pTabFeno->TabCross[indexTabCross].FitConc)
                       {
                        pTabFeno->TabCross[indexTabCross].IndSvdA=pTabCross->IndSvdA;
                        pTabCross->IndSvdA=indexSvd;
@@ -5544,12 +5368,12 @@ RC ANALYSE_LoadNonLinear(ENGINE_CONTEXT *pEngineContext,ANALYSE_NON_LINEAR_PARAM
      }
    }
 
-  EndLoadPredefined :
+ EndLoadPredefined :
 
   // Return
 
   return rc;
- }
+}
 
 // ----------------------------------------------------------
 // AnalyseLoadGaps : Load gaps defined in an analysis windows
@@ -5559,11 +5383,11 @@ RC ANALYSE_LoadNonLinear(ENGINE_CONTEXT *pEngineContext,ANALYSE_NON_LINEAR_PARAM
 #pragma argsused
 #endif
 RC ANALYSE_LoadGaps(ENGINE_CONTEXT *pEngineContext,ANALYSIS_GAP *gapList,INT nGaps,double *lambda,double lambdaMin,double lambdaMax,INDEX indexFenoColumn)
- {
+{
   // Declarations
 
   ANALYSIS_GAP *pGap;
-  INT (*Fenetre)[2],Z,DimL;
+  INT Z;
   INDEX indexItem,indexWindow,i;
   double swap,lambda1,lambda2,(*LFenetre)[2];
   FENO *pTabFeno;
@@ -5573,9 +5397,8 @@ RC ANALYSE_LoadGaps(ENGINE_CONTEXT *pEngineContext,ANALYSIS_GAP *gapList,INT nGa
 
   pTabFeno=&TabFeno[indexFenoColumn][NFeno];
   LFenetre=pTabFeno->svd.LFenetre;    // gaps in wavelength units
-  Fenetre=pTabFeno->svd.Fenetre;      // gaps in pixels units
   rc=ERROR_ID_NO;
-  Z=DimL=0;
+  Z=0;
 
   // Get window limits
 
@@ -5593,7 +5416,7 @@ RC ANALYSE_LoadGaps(ENGINE_CONTEXT *pEngineContext,ANALYSIS_GAP *gapList,INT nGa
 
     for (indexItem=0,Z=1;(indexItem<nGaps);indexItem++)
      {
-     	pGap=&gapList[indexItem];
+      pGap=&gapList[indexItem];
 
       lambda1=pGap->minimum;
       lambda2=pGap->maximum;
@@ -5628,15 +5451,17 @@ RC ANALYSE_LoadGaps(ENGINE_CONTEXT *pEngineContext,ANALYSIS_GAP *gapList,INT nGa
 
     if (pTabFeno->gomeRefFlag || pEngineContext->refFlag)
      {
+      if(pTabFeno->svd.specrange != NULL)
+       spectrum_destroy(pTabFeno->svd.specrange);
+      pTabFeno->svd.specrange = spectrum_new();
+
       for (indexWindow=0;indexWindow<Z;indexWindow++)
        {
-        Fenetre[indexWindow][0]=FNPixel(lambda,LFenetre[indexWindow][0],pTabFeno->NDET,PIXEL_AFTER);
-        Fenetre[indexWindow][1]=FNPixel(lambda,LFenetre[indexWindow][1],pTabFeno->NDET,PIXEL_BEFORE);
-
-        DimL+=(Fenetre[indexWindow][1]-Fenetre[indexWindow][0]+1);
+        int start = FNPixel(lambda,LFenetre[indexWindow][0],pTabFeno->NDET,PIXEL_AFTER);
+        int end = FNPixel(lambda,LFenetre[indexWindow][1],pTabFeno->NDET,PIXEL_BEFORE);
+        spectrum_append(pTabFeno->svd.specrange, start, end);
        }
-
-      pTabFeno->svd.DimL=DimL;
+      pTabFeno->svd.DimL= spectrum_length(pTabFeno->svd.specrange);
      }
 
     pTabFeno->svd.Z=Z;
@@ -5645,7 +5470,7 @@ RC ANALYSE_LoadGaps(ENGINE_CONTEXT *pEngineContext,ANALYSIS_GAP *gapList,INT nGa
   // Return
 
   return rc;
- }
+}
 
 // -----------------------------------------------------------------------------
 // FUNCTION      ANALYSE_LoadOutput
@@ -5662,7 +5487,7 @@ RC ANALYSE_LoadGaps(ENGINE_CONTEXT *pEngineContext,ANALYSIS_GAP *gapList,INT nGa
 // -----------------------------------------------------------------------------
 
 RC ANALYSE_LoadOutput(ANALYSIS_OUTPUT *outputList,INT nOutput,INDEX indexFenoColumn)
- {
+{
   // Declarations
 
   ANALYSIS_OUTPUT *pOutput;
@@ -5685,26 +5510,26 @@ RC ANALYSE_LoadOutput(ANALYSIS_OUTPUT *outputList,INT nOutput,INDEX indexFenoCol
 
   for (indexOutput=0;indexOutput<nOutput;indexOutput++)
    {
-   	pOutput=&outputList[indexOutput];
+    pOutput=&outputList[indexOutput];
 
-   	// Search for the equivalence of symbols between the molecules and output pages
-   	// Probably, that indexOutput==indexTabCross would be OK but it's safer
+    // Search for the equivalence of symbols between the molecules and output pages
+    // Probably, that indexOutput==indexTabCross would be OK but it's safer
 
-   	for (indexTabCross=0;indexTabCross<pTabFeno->NTabCross;indexTabCross++)
-  	 	if ((strlen(pOutput->symbol)==strlen(WorkSpace[TabCross[indexTabCross].Comp].symbolName)) &&
-  	 	    !strcasecmp(pOutput->symbol,WorkSpace[TabCross[indexTabCross].Comp].symbolName))
-  	 	 break;
+    for (indexTabCross=0;indexTabCross<pTabFeno->NTabCross;indexTabCross++)
+     if ((strlen(pOutput->symbol)==strlen(WorkSpace[TabCross[indexTabCross].Comp].symbolName)) &&
+         !strcasecmp(pOutput->symbol,WorkSpace[TabCross[indexTabCross].Comp].symbolName))
+      break;
 
-  	 // Symbol found
+    // Symbol found
 
-  	 if (indexTabCross<pTabFeno->NTabCross)
-  	  {
-  	  	pTabCross=&TabCross[indexTabCross];
-  	  	pResults=&TabCrossResults[indexTabCross];
+    if (indexTabCross<pTabFeno->NTabCross)
+     {
+      pTabCross=&TabCross[indexTabCross];
+      pResults=&TabCrossResults[indexTabCross];
 
-  	  	if (!(rc=OUTPUT_ReadAmf(pOutput->symbol,
-  	  	                        WorkSpace[pTabCross->Comp].amfFileName,
-  	  	                        pTabCross->amfType,&pResults->indexAmf)))
+      if (!(rc=OUTPUT_ReadAmf(pOutput->symbol,
+                              WorkSpace[pTabCross->Comp].amfFileName,
+                              pTabCross->amfType,&pResults->indexAmf)))
        {
         // Load fields dependent on AMF
 
@@ -5724,20 +5549,20 @@ RC ANALYSE_LoadOutput(ANALYSIS_OUTPUT *outputList,INT nOutput,INDEX indexFenoCol
       pResults->StoreSlntCol=pOutput->slantCol;                                 // flag set if slant column is to be written into output file
       pResults->StoreSlntErr=pOutput->slantErr;                                 // flag set if error on slant column is to be written into output file
       pResults->SlntFact=pOutput->slantFactor;
-  	  }
+     }
    }
 
   // Return
 
   return rc;
- }
+}
 
 // ---------------------------------------
 // AnalyseLoadRef : Load reference spectra
 // ---------------------------------------
 
 RC ANALYSE_LoadRef(ENGINE_CONTEXT *pEngineContext,INDEX indexFenoColumn)
- {
+{
   // Declarations
 
   FENO *pTabFeno;
@@ -5765,15 +5590,15 @@ RC ANALYSE_LoadRef(ENGINE_CONTEXT *pEngineContext,INDEX indexFenoColumn)
                          (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_SCIA_PDS) &&
                          (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_GOME2))?1:0;
 
-           //
-           // in the case of satellites measurements :
-           //
-           //      gomeRefFlag=0 means that irradiance is used as etalon spectrum
-           //      gomeRefFlag=1 means that a reference spectrum is given
-           //
-           // in other formats, gomeRefFlag is always equal to 1 even though no
-           // reference is given (tropospheric measurements)
-           //
+  //
+  // in the case of satellites measurements :
+  //
+  //      gomeRefFlag=0 means that irradiance is used as etalon spectrum
+  //      gomeRefFlag=1 means that a reference spectrum is given
+  //
+  // in other formats, gomeRefFlag is always equal to 1 even though no
+  // reference is given (tropospheric measurements)
+  //
 
   memset(pTabFeno->refFile,0,MAX_ITEM_TEXT_LEN+1);
   rc=0;
@@ -5783,24 +5608,24 @@ RC ANALYSE_LoadRef(ENGINE_CONTEXT *pEngineContext,INDEX indexFenoColumn)
   if (((Sref=pTabFeno->Sref=(double *)MEMORY_AllocDVector("ANALYSE_LoadRef ","Sref",0,NDET-1))==NULL) ||
       ((SrefEtalon=pTabFeno->SrefEtalon=(double *)MEMORY_AllocDVector("ANALYSE_LoadRef ","SrefEtalon",0,NDET))==NULL) ||
 
-     (((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_ASCII) ||
-       (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN) ||
-       (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_OMI)) &&
-      ((pTabFeno->SrefSigma=(double *)MEMORY_AllocDVector("ANALYSE_LoadRef ","SrefSigma",0,NDET))==NULL)) ||
+      (((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_ASCII) ||
+        (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN) ||
+        (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_OMI)) &&
+       ((pTabFeno->SrefSigma=(double *)MEMORY_AllocDVector("ANALYSE_LoadRef ","SrefSigma",0,NDET))==NULL)) ||
 
       ((lambdaRef=(double *)MEMORY_AllocDVector("ANALYSE_LoadRef ","lambdaRef",0,NDET))==NULL) ||
       ((lambdaRefEtalon=(double *)MEMORY_AllocDVector("ANALYSE_LoadRef ","lambdaRefEtalon",0,NDET))==NULL) ||
 
       ((pTabFeno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_AUTOMATIC) &&
-      ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_ASCII) ||
-       (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN) ||
-       (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_HDF) ||
-       (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS) ||
-       (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GOME2)) &&
-     (((pTabFeno->SrefN=(double *)MEMORY_AllocDVector("ANALYSE_LoadRef ","SrefN",0,NDET-1))==NULL) ||
-      ((pTabFeno->SrefS=(double *)MEMORY_AllocDVector("ANALYSE_LoadRef ","SrefS",0,NDET-1))==NULL) ||
-      ((pTabFeno->LambdaN=(double *)MEMORY_AllocDVector("ANALYSE_LoadRef ","LambdaN",0,NDET-1))==NULL) ||
-      ((pTabFeno->LambdaS=(double *)MEMORY_AllocDVector("ANALYSE_LoadRef ","LambdaS",0,NDET-1))==NULL))))
+       ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_ASCII) ||
+        (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN) ||
+        (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_HDF) ||
+        (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS) ||
+        (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GOME2)) &&
+       (((pTabFeno->SrefN=(double *)MEMORY_AllocDVector("ANALYSE_LoadRef ","SrefN",0,NDET-1))==NULL) ||
+        ((pTabFeno->SrefS=(double *)MEMORY_AllocDVector("ANALYSE_LoadRef ","SrefS",0,NDET-1))==NULL) ||
+        ((pTabFeno->LambdaN=(double *)MEMORY_AllocDVector("ANALYSE_LoadRef ","LambdaN",0,NDET-1))==NULL) ||
+        ((pTabFeno->LambdaS=(double *)MEMORY_AllocDVector("ANALYSE_LoadRef ","LambdaS",0,NDET-1))==NULL))))
 
    rc=ERROR_ID_ALLOC;
 
@@ -5809,16 +5634,16 @@ RC ANALYSE_LoadRef(ENGINE_CONTEXT *pEngineContext,INDEX indexFenoColumn)
   else if (((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC) ||
             (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC_STD) ||
             (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC_BIRA)) &&
-            (strlen(pTabFeno->ref1) && !strrchr(pTabFeno->ref1,PATH_SEP)))
+           (strlen(pTabFeno->ref1) && !strrchr(pTabFeno->ref1,PATH_SEP)))
    {
-   	strcpy(pTabFeno->refFile,pTabFeno->ref1);
+    strcpy(pTabFeno->refFile,pTabFeno->ref1);
     pTabFeno->gomeRefFlag=0;
     pEngineContext->refFlag++;
    }
   else if ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MKZY) && !strlen(pTabFeno->ref1) && !strlen(pTabFeno->ref2))
    {
-   	pTabFeno->gomeRefFlag=0;
-   	pEngineContext->refFlag++;
+    pTabFeno->gomeRefFlag=0;
+    pEngineContext->refFlag++;
    }
   else
    {
@@ -5831,12 +5656,12 @@ RC ANALYSE_LoadRef(ENGINE_CONTEXT *pEngineContext,INDEX indexFenoColumn)
 
     if ((pTabFeno->useKurucz!=ANLYS_KURUCZ_SPEC) &&                             // if the wavelength calibration procedure is applied on the measured
         (pTabFeno->useKurucz!=ANLYS_KURUCZ_REF_AND_SPEC) &&                     // spectrum, the ref1 has no sense.
-         strlen(pTabFeno->ref1))
+        strlen(pTabFeno->ref1))
      {
-     	if ((((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_OMI) && !(rc=OMI_GetReference(pEngineContext,pTabFeno->ref1,indexFenoColumn,lambdaRefEtalon,SrefEtalon,pTabFeno->SrefSigma))) ||
-     	     ((pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_OMI) && !(rc=AnalyseLoadVector("ANALYSE_LoadRef (SrefEtalon) ",pTabFeno->ref1,lambdaRefEtalon,SrefEtalon,1,NULL)))) &&
-           !(rc=THRD_SpectrumCorrection(pEngineContext,SrefEtalon)) &&
-           !(rc=VECTOR_NormalizeVector(SrefEtalon-1,NDET,&pTabFeno->refNormFact,"ANALYSE_LoadRef (SrefEtalon) ")))
+      if ((((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_OMI) && !(rc=OMI_GetReference(pTabFeno->ref1,indexFenoColumn,lambdaRefEtalon,SrefEtalon,pTabFeno->SrefSigma))) ||
+           ((pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_OMI) && !(rc=AnalyseLoadVector("ANALYSE_LoadRef (SrefEtalon) ",pTabFeno->ref1,lambdaRefEtalon,SrefEtalon,1,NULL)))) &&
+          !(rc=THRD_SpectrumCorrection(pEngineContext,SrefEtalon)) &&
+          !(rc=VECTOR_NormalizeVector(SrefEtalon-1,NDET,&pTabFeno->refNormFact,"ANALYSE_LoadRef (SrefEtalon) ")))
        {
         pTabFeno->displayRef=pTabFeno->useEtalon=pTabFeno->gomeRefFlag=1;
         strcpy(pTabFeno->refFile,pTabFeno->ref1);
@@ -5851,17 +5676,17 @@ RC ANALYSE_LoadRef(ENGINE_CONTEXT *pEngineContext,INDEX indexFenoColumn)
     memcpy(Sref,SrefEtalon,sizeof(double)*NDET);
 
     if (!rc &&
-       (pTabFeno->useKurucz!=ANLYS_KURUCZ_SPEC) &&
-       (pTabFeno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_FILE) &&
+        (pTabFeno->useKurucz!=ANLYS_KURUCZ_SPEC) &&
+        (pTabFeno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_FILE) &&
         strlen(pTabFeno->ref2) &&
 
-       ((pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_OMI) ||
-      (((ptr=strrchr(pTabFeno->ref2,'.'))!=NULL) &&
-        (strlen(ptr)==4) && !strcasecmp(ptr,".ref"))) &&
+        ((pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_OMI) ||
+         (((ptr=strrchr(pTabFeno->ref2,'.'))!=NULL) &&
+          (strlen(ptr)==4) && !strcasecmp(ptr,".ref"))) &&
 
-      !(rc=AnalyseLoadVector("ANALYSE_LoadRef (Sref) ",pTabFeno->ref2,lambdaRef,Sref,1,NULL)) &&
-      !(rc=THRD_SpectrumCorrection(pEngineContext,Sref)) &&
-      !(rc=VECTOR_NormalizeVector(Sref-1,NDET,&pTabFeno->refNormFact,"ANALYSE_LoadRef (Sref) ")))
+        !(rc=AnalyseLoadVector("ANALYSE_LoadRef (Sref) ",pTabFeno->ref2,lambdaRef,Sref,1,NULL)) &&
+        !(rc=THRD_SpectrumCorrection(pEngineContext,Sref)) &&
+        !(rc=VECTOR_NormalizeVector(Sref-1,NDET,&pTabFeno->refNormFact,"ANALYSE_LoadRef (Sref) ")))
      {
       if (!pTabFeno->useEtalon)
        {
@@ -5877,7 +5702,7 @@ RC ANALYSE_LoadRef(ENGINE_CONTEXT *pEngineContext,INDEX indexFenoColumn)
      memcpy(pTabFeno->LambdaRef,(pTabFeno->useEtalon)?lambdaRefEtalon:lambdaRef,sizeof(double)*NDET);
    }
 
-   // Return
+  // Return
 
   if (lambdaRef!=NULL)
    MEMORY_ReleaseDVector("ANALYSE_LoadRef ","lambdaRef",lambdaRef,0);
@@ -5885,14 +5710,14 @@ RC ANALYSE_LoadRef(ENGINE_CONTEXT *pEngineContext,INDEX indexFenoColumn)
    MEMORY_ReleaseDVector("ANALYSE_LoadRef ","lambdaRefEtalon",lambdaRefEtalon,0);
 
   return rc;
- }
+}
 
 // -----------------------------------------------------------------------------------------
 // AnalyseSetAnalysisType : Set the type of analysis to apply in the current analysis window
 // -----------------------------------------------------------------------------------------
 
 void ANALYSE_SetAnalysisType(INDEX indexFenoColumn)
- {
+{
   // Declarations
 
   CROSS_REFERENCE *TabCross;
@@ -5922,21 +5747,21 @@ void ANALYSE_SetAnalysisType(INDEX indexFenoColumn)
     else if ((pTabFeno->indexFwhmConst!=ITEM_NONE) && ((TabCross[pTabFeno->indexFwhmConst].FitParam!=ITEM_NONE) || (TabCross[pTabFeno->indexFwhmConst].InitParam!=(double)0.)))
      pTabFeno->analysisType=ANALYSIS_TYPE_FWHM_NLFIT;
    }
- }
+}
 
 // -------------------------------------------
 // ANALYSE_LoadData : Load data from a project
 // -------------------------------------------
 
 RC ANALYSE_SetInit(ENGINE_CONTEXT *pEngineContext)
- {
+{
   // Declarations
 
   RC rc;                           // return code
 
-  #if defined(__DEBUG_) && __DEBUG_
+#if defined(__DEBUG_) && __DEBUG_
   DEBUG_FunctionBegin("ANALYSE_SetInit",DEBUG_FCTTYPE_FILE);
-  #endif
+#endif
 
   // Initializations
 
@@ -5988,13 +5813,13 @@ RC ANALYSE_SetInit(ENGINE_CONTEXT *pEngineContext)
 
   // Return
 
-  #if defined(__DEBUG_) && __DEBUG_
+#if defined(__DEBUG_) && __DEBUG_
   DEBUG_FunctionStop("ANALYSE_SetInit",(RC)rc);
   analyseDebugMask=0;
-  #endif
+#endif
 
   return rc;
- }
+}
 
 // ====================
 // RESOURCES MANAGEMENT
@@ -6005,7 +5830,7 @@ RC ANALYSE_SetInit(ENGINE_CONTEXT *pEngineContext)
 // ------------------------------------------------------------------
 
 RC ANALYSE_Alloc(void)
- {
+{
   // Declarations
 
   INDEX indexFenoColumn;
@@ -6035,25 +5860,25 @@ RC ANALYSE_Alloc(void)
     memset(&ANALYSIS_slitK,0,sizeof(MATRIX_OBJECT));
     memset(&ANALYSIS_broAmf,0,sizeof(MATRIX_OBJECT));
 
-   	for (indexFenoColumn=0;(indexFenoColumn<MAX_SWATHSIZE) && !rc;indexFenoColumn++)
-   	 if ((TabFeno[indexFenoColumn]=(FENO *)MEMORY_AllocBuffer("ANALYSE_Alloc ","TabFeno",MAX_FENO,sizeof(FENO),0,MEMORY_TYPE_STRUCT))==NULL)
-   	  rc=ERROR_ID_ALLOC;
-   	 else
-   	  memset(TabFeno[indexFenoColumn],0,sizeof(FENO)*MAX_FENO);
+    for (indexFenoColumn=0;(indexFenoColumn<MAX_SWATHSIZE) && !rc;indexFenoColumn++)
+     if ((TabFeno[indexFenoColumn]=(FENO *)MEMORY_AllocBuffer("ANALYSE_Alloc ","TabFeno",MAX_FENO,sizeof(FENO),0,MEMORY_TYPE_STRUCT))==NULL)
+      rc=ERROR_ID_ALLOC;
+     else
+      memset(TabFeno[indexFenoColumn],0,sizeof(FENO)*MAX_FENO);
    }
 
   // Return
 
   return rc;
- }
+}
 
 // ------------------------------------------------
 // ANALYSE_Free : Release buffers used for analysis
 // ------------------------------------------------
 
 void ANALYSE_Free(void)
- {
- 	int i;
+{
+  int i;
 
   if (WorkSpace!=NULL)
    MEMORY_ReleaseBuffer("ANALYSE_Free ","WorkSpace",WorkSpace);
@@ -6066,7 +5891,7 @@ void ANALYSE_Free(void)
 
   WorkSpace=NULL;
   TabFeno=NULL;
- }
+}
 
 
 // -----------------------------------------------------------------------------
@@ -6126,13 +5951,13 @@ void ANALYSE_Free(void)
 #pragma argsused
 #endif
 RC ANALYSE_UsampBuild(INT analysisFlag,INT gomeFlag)      // OMI ???
- {
+{
   // Declarations
 
   MATRIX_OBJECT xsKurucz,xsSlit,xsSlit2,slitXs,slitXs2;
-  INDEX indexFeno,i,indexPixMin,indexPixMax,indexParam,j;
+  INDEX indexFeno,i,indexPixMin,indexPixMax,j;
   INT slitType;
-  double slitParam2,*lambda,*lambda2,slitParam[MAX_KURUCZ_FWHM_PARAM],lambda0,x0;
+  double slitParam2,*lambda,*lambda2,lambda0,x0;
   FENO *pTabFeno,*pKuruczFeno;
   RC rc;
 
@@ -6168,10 +5993,10 @@ RC ANALYSE_UsampBuild(INT analysisFlag,INT gomeFlag)      // OMI ???
      // Check options combinations
 
      if (!pTabFeno->hidden && (pTabFeno->useUsamp) &&
-        ((gomeFlag==ITEM_NONE) || (pTabFeno->gomeRefFlag==gomeFlag)) &&
-       (((analysisFlag==0) && (pTabFeno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_FILE) && (pUsamp->method==PRJCT_USAMP_FIXED)) ||
-        ((analysisFlag==1) && (pTabFeno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_AUTOMATIC) && (pUsamp->method==PRJCT_USAMP_FIXED)) ||
-        ((analysisFlag==2) && (pTabFeno==Feno))))
+         ((gomeFlag==ITEM_NONE) || (pTabFeno->gomeRefFlag==gomeFlag)) &&
+         (((analysisFlag==0) && (pTabFeno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_FILE) && (pUsamp->method==PRJCT_USAMP_FIXED)) ||
+          ((analysisFlag==1) && (pTabFeno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_AUTOMATIC) && (pUsamp->method==PRJCT_USAMP_FIXED)) ||
+          ((analysisFlag==2) && (pTabFeno==Feno))))
       {
        // Build lambda for second phase
 
@@ -6179,11 +6004,11 @@ RC ANALYSE_UsampBuild(INT analysisFlag,INT gomeFlag)      // OMI ???
 
        if ((analysisFlag==2) && (pUsamp->method==PRJCT_USAMP_FIXED))
         {
-        for (j=0,lambda0=pTabFeno->LambdaK[(SvdPDeb+SvdPFin)/2];j<NDET;j++)
-         {
-          x0=lambda[j]-lambda0;
-          lambda[j]-=(pTabFeno->Shift+(pTabFeno->Stretch+pTabFeno->Stretch2*x0)*x0);
-         }
+         for (j=0,lambda0=pTabFeno->LambdaK[(SvdPDeb+SvdPFin)/2];j<NDET;j++)
+          {
+           x0=lambda[j]-lambda0;
+           lambda[j]-=(pTabFeno->Shift+(pTabFeno->Stretch+pTabFeno->Stretch2*x0)*x0);
+          }
         }
 
        memcpy(lambda2,ANALYSE_zeros,sizeof(double)*NDET);
@@ -6204,7 +6029,7 @@ RC ANALYSE_UsampBuild(INT analysisFlag,INT gomeFlag)      // OMI ???
            for (;(indexPixMax>=indexPixMin) && (ANALYSE_shift[indexPixMax]<1.e-3);indexPixMax--);
 
            rc=SPLINE_Vector(ANALYSE_splineX,lambda,ANALYSE_splineX2,pTabFeno->NDET,&ANALYSE_shift[indexPixMin],
-                              &lambda2[indexPixMin],(indexPixMax-indexPixMin+1),pAnalysisOptions->interpol,"ANALYSE_UsampBuild ");
+                            &lambda2[indexPixMin],(indexPixMax-indexPixMin+1),pAnalysisOptions->interpol,"ANALYSE_UsampBuild ");
           }
         }
 
@@ -6218,7 +6043,7 @@ RC ANALYSE_UsampBuild(INT analysisFlag,INT gomeFlag)      // OMI ???
         rc=ERROR_ID_ALLOC;
 
        else if ((((pTabFeno->useKurucz==ANLYS_KURUCZ_REF_AND_SPEC) || (pTabFeno->useKurucz==ANLYS_KURUCZ_SPEC)) && pKuruczOptions->fwhmFit) ||
-            ((!pTabFeno->useKurucz || pKuruczOptions->fwhmFit) && pSlitOptions->fwhmCorrectionFlag))
+                ((!pTabFeno->useKurucz || pKuruczOptions->fwhmFit) && pSlitOptions->fwhmCorrectionFlag))
 
         rc=ERROR_SetLast("ANALYSE_UsampBuild",ERROR_TYPE_FATAL,ERROR_ID_OPTIONS,"Undersampling ",pTabFeno->windowName);
 
@@ -6242,7 +6067,7 @@ RC ANALYSE_UsampBuild(INT analysisFlag,INT gomeFlag)      // OMI ???
            // Convolution with slit function from slit tab page of project properties
 
            if ((ANALYSIS_slit.matrix!=NULL) && ANALYSIS_slit.nl && ANALYSIS_slit.nc &&
-              !(rc=MATRIX_Allocate(&xsSlit,ANALYSIS_slit.nl,2,0,0,1,"ANALYSE_UsampBuild")))
+               !(rc=MATRIX_Allocate(&xsSlit,ANALYSIS_slit.nl,2,0,0,1,"ANALYSE_UsampBuild")))
             {
              memcpy(xsSlit.matrix[0],ANALYSIS_slit.matrix[ANALYSIS_slit.basec]+ANALYSIS_slit.basel,sizeof(double)*ANALYSIS_slit.nl);
              memcpy(xsSlit.matrix[1],ANALYSIS_slit.matrix[ANALYSIS_slit.basec+1]+ANALYSIS_slit.basel,sizeof(double)*ANALYSIS_slit.nl);
@@ -6254,7 +6079,7 @@ RC ANALYSE_UsampBuild(INT analysisFlag,INT gomeFlag)      // OMI ???
            // Convolution with slit function from slit tab page of project properties
 
            if ((ANALYSIS_slit2.matrix!=NULL) && ANALYSIS_slit2.nl && ANALYSIS_slit2.nc &&
-              !(rc=MATRIX_Allocate(&xsSlit2,ANALYSIS_slit2.nl,2,0,0,1,"ANALYSE_UsampBuild")))
+               !(rc=MATRIX_Allocate(&xsSlit2,ANALYSIS_slit2.nl,2,0,0,1,"ANALYSE_UsampBuild")))
             {
              memcpy(xsSlit2.matrix[0],ANALYSIS_slit2.matrix[ANALYSIS_slit2.basec]+ANALYSIS_slit2.basel,sizeof(double)*ANALYSIS_slit2.nl);
              memcpy(xsSlit2.matrix[1],ANALYSIS_slit2.matrix[ANALYSIS_slit2.basec+1]+ANALYSIS_slit2.basel,sizeof(double)*ANALYSIS_slit2.nl);
@@ -6274,7 +6099,7 @@ RC ANALYSE_UsampBuild(INT analysisFlag,INT gomeFlag)      // OMI ???
 
          else if (!(rc=MATRIX_Allocate(&xsSlit,pTabFeno->NDET,2,0,0,1,"ANALYSE_UsampBuild")) &&
                   ((pKuruczOptions->fwhmType==SLIT_TYPE_GAUSS) || (pKuruczOptions->fwhmType==SLIT_TYPE_INVPOLY) ||
-                  !(rc=MATRIX_Allocate(&xsSlit2,pTabFeno->NDET,2,0,0,1,"ANALYSE_UsampBuild"))))
+                   !(rc=MATRIX_Allocate(&xsSlit2,pTabFeno->NDET,2,0,0,1,"ANALYSE_UsampBuild"))))
           {
            memcpy(xsSlit.matrix[0],pTabFeno->LambdaK,sizeof(double)*pTabFeno->NDET);
            memcpy(xsSlit.matrix[1],pTabFeno->fwhmVector[0],sizeof(double)*pTabFeno->NDET);
@@ -6289,8 +6114,8 @@ RC ANALYSE_UsampBuild(INT analysisFlag,INT gomeFlag)      // OMI ???
 
            if (!(rc=SPLINE_Deriv2(xsSlit.matrix[0],xsSlit.matrix[1],xsSlit.deriv2[1],xsSlit.nl,"ANALYSE_UsampBuild (Slit) ")) &&
                ((pKuruczOptions->fwhmType==SLIT_TYPE_GAUSS) || (pKuruczOptions->fwhmType==SLIT_TYPE_INVPOLY) || !(rc=SPLINE_Deriv2(xsSlit2.matrix[0],xsSlit2.matrix[1],xsSlit2.deriv2[1],xsSlit2.nl,"ANALYSE_UsampBuild (Slit2) "))))
-              rc=XSCONV_TypeStandard(&xsKurucz,0,xsKurucz.nl,&ANALYSE_usampBuffers.hrSolar,&xsSlit,&xsSlit2,&ANALYSE_usampBuffers.hrSolar,NULL,
-                                      slitType,(double)0.,(double)0.,slitParam2/pTabFeno->NDET,1);
+            rc=XSCONV_TypeStandard(&xsKurucz,0,xsKurucz.nl,&ANALYSE_usampBuffers.hrSolar,&xsSlit,&xsSlit2,&ANALYSE_usampBuffers.hrSolar,NULL,
+                                   slitType,(double)0.,(double)0.,slitParam2/pTabFeno->NDET,1);
           }
 
          MATRIX_Free(&xsSlit,"ANALYSE_UsampBuild");
@@ -6298,7 +6123,7 @@ RC ANALYSE_UsampBuild(INT analysisFlag,INT gomeFlag)      // OMI ???
          // Pre-Interpolation on analysis window wavelength scale
 
          if (!rc &&
-            !(rc=SPLINE_Deriv2(xsKurucz.matrix[0],xsKurucz.matrix[1],xsKurucz.deriv2[1],xsKurucz.nl,"ANALYSE_UsampBuild (1) ")))
+             !(rc=SPLINE_Deriv2(xsKurucz.matrix[0],xsKurucz.matrix[1],xsKurucz.deriv2[1],xsKurucz.nl,"ANALYSE_UsampBuild (1) ")))
           {
            memcpy(ANALYSE_usampBuffers.kuruczInterpolated[indexFeno],ANALYSE_zeros,sizeof(double)*pTabFeno->NDET);
            memcpy(ANALYSE_usampBuffers.kuruczInterpolated2[indexFeno],ANALYSE_zeros,sizeof(double)*pTabFeno->NDET);
@@ -6308,11 +6133,11 @@ RC ANALYSE_UsampBuild(INT analysisFlag,INT gomeFlag)      // OMI ???
            ANALYSE_usampBuffers.lambdaRange[3][indexFeno]=indexPixMax-ANALYSE_usampBuffers.lambdaRange[2][indexFeno]+1;
 
            if (!(rc=SPLINE_Vector(xsKurucz.matrix[0],xsKurucz.matrix[1],xsKurucz.deriv2[1],xsKurucz.nl,
-                                    &lambda[indexPixMin],&ANALYSE_usampBuffers.kuruczInterpolated[indexFeno][indexPixMin],(indexPixMax-indexPixMin+1),
-                                     pAnalysisOptions->interpol,"ANALYSE_UsampBuild ")))
+                                  &lambda[indexPixMin],&ANALYSE_usampBuffers.kuruczInterpolated[indexFeno][indexPixMin],(indexPixMax-indexPixMin+1),
+                                  pAnalysisOptions->interpol,"ANALYSE_UsampBuild ")))
 
             rc=SPLINE_Deriv2(&lambda[indexPixMin],&ANALYSE_usampBuffers.kuruczInterpolated[indexFeno][indexPixMin],
-                     &ANALYSE_usampBuffers.kuruczInterpolated2[indexFeno][indexPixMin],(indexPixMax-indexPixMin+1),"ANALYSE_UsampBuild (3) ");
+                             &ANALYSE_usampBuffers.kuruczInterpolated2[indexFeno][indexPixMin],(indexPixMax-indexPixMin+1),"ANALYSE_UsampBuild (3) ");
           }
 
          // Build undersampling correction
@@ -6320,12 +6145,12 @@ RC ANALYSE_UsampBuild(INT analysisFlag,INT gomeFlag)      // OMI ???
          if (!rc)
 
           rc=USAMP_BuildCrossSections
-          ((pTabFeno->indexUsamp1!=ITEM_NONE)?&pTabFeno->TabCross[pTabFeno->indexUsamp1].vector[ANALYSE_usampBuffers.lambdaRange[2][indexFeno]]:NULL,
-           (pTabFeno->indexUsamp2!=ITEM_NONE)?&pTabFeno->TabCross[pTabFeno->indexUsamp2].vector[ANALYSE_usampBuffers.lambdaRange[2][indexFeno]]:NULL,
-            &lambda[ANALYSE_usampBuffers.lambdaRange[2][indexFeno]],
-            &lambda2[ANALYSE_usampBuffers.lambdaRange[2][indexFeno]],
-            &ANALYSE_usampBuffers.kuruczInterpolated[indexFeno][ANALYSE_usampBuffers.lambdaRange[2][indexFeno]],
-            &ANALYSE_usampBuffers.kuruczInterpolated2[indexFeno][ANALYSE_usampBuffers.lambdaRange[2][indexFeno]],
+            ((pTabFeno->indexUsamp1!=ITEM_NONE)?&pTabFeno->TabCross[pTabFeno->indexUsamp1].vector[ANALYSE_usampBuffers.lambdaRange[2][indexFeno]]:NULL,
+             (pTabFeno->indexUsamp2!=ITEM_NONE)?&pTabFeno->TabCross[pTabFeno->indexUsamp2].vector[ANALYSE_usampBuffers.lambdaRange[2][indexFeno]]:NULL,
+             &lambda[ANALYSE_usampBuffers.lambdaRange[2][indexFeno]],
+             &lambda2[ANALYSE_usampBuffers.lambdaRange[2][indexFeno]],
+             &ANALYSE_usampBuffers.kuruczInterpolated[indexFeno][ANALYSE_usampBuffers.lambdaRange[2][indexFeno]],
+             &ANALYSE_usampBuffers.kuruczInterpolated2[indexFeno][ANALYSE_usampBuffers.lambdaRange[2][indexFeno]],
              ANALYSE_usampBuffers.lambdaRange[3][indexFeno],
              xsKurucz.matrix[0],
              xsKurucz.matrix[1],
@@ -6350,7 +6175,7 @@ RC ANALYSE_UsampBuild(INT analysisFlag,INT gomeFlag)      // OMI ???
    MEMORY_ReleaseDVector("ANALYSE_UsampBuild ","lambda2",lambda2,0);
 
   return rc;
- }
+}
 
 // ==================
 // BUFFERS ALLOCATION
@@ -6370,7 +6195,7 @@ RC ANALYSE_UsampBuild(INT analysisFlag,INT gomeFlag)      // OMI ???
 // -----------------------------------------------------------------------------
 
 RC ANALYSE_UsampGlobalAlloc(double lambdaMin,double lambdaMax,INT size)
- {
+{
   // Declarations
 
   DoasCh kuruczFile[MAX_ITEM_TEXT_LEN+1];
@@ -6387,9 +6212,9 @@ RC ANALYSE_UsampGlobalAlloc(double lambdaMin,double lambdaMax,INT size)
 
   if ((strlen(pKuruczOptions->file)==strlen(pUsamp->kuruczFile)) &&
       !strcasecmp(pKuruczOptions->file,pUsamp->kuruczFile) &&
-       KURUCZ_buffers[0].hrSolar.nl)
+      KURUCZ_buffers[0].hrSolar.nl)
    {
-   	if ((rc=MATRIX_Allocate(&ANALYSE_usampBuffers.hrSolar,KURUCZ_buffers[0].hrSolar.nl,2,0,0,1,"ANALYSE_UsampGlobalAlloc")))
+    if ((rc=MATRIX_Allocate(&ANALYSE_usampBuffers.hrSolar,KURUCZ_buffers[0].hrSolar.nl,2,0,0,1,"ANALYSE_UsampGlobalAlloc")))
      rc=ERROR_ID_ALLOC;
     else
      {
@@ -6424,24 +6249,24 @@ RC ANALYSE_UsampGlobalAlloc(double lambdaMin,double lambdaMax,INT size)
 
   else
    {
-   	for (indexFenoColumn=0;(indexFenoColumn<ANALYSE_swathSize) && !rc;indexFenoColumn++)
+    for (indexFenoColumn=0;(indexFenoColumn<ANALYSE_swathSize) && !rc;indexFenoColumn++)
      for (indexFeno=0;(indexFeno<NFeno) && !rc;indexFeno++)
       {
        pTabFeno=&TabFeno[indexFenoColumn][indexFeno];
 
        ANALYSE_usampBuffers.lambdaRange[0][indexFeno]=
-       ANALYSE_usampBuffers.lambdaRange[1][indexFeno]=
-       ANALYSE_usampBuffers.lambdaRange[2][indexFeno]=
-       ANALYSE_usampBuffers.lambdaRange[3][indexFeno]=ITEM_NONE;
+         ANALYSE_usampBuffers.lambdaRange[1][indexFeno]=
+         ANALYSE_usampBuffers.lambdaRange[2][indexFeno]=
+         ANALYSE_usampBuffers.lambdaRange[3][indexFeno]=ITEM_NONE;
 
        ANALYSE_usampBuffers.kuruczConvoluted[indexFeno]=
-       ANALYSE_usampBuffers.kuruczConvoluted2[indexFeno]=
-       ANALYSE_usampBuffers.kuruczInterpolated[indexFeno]=
-       ANALYSE_usampBuffers.kuruczInterpolated2[indexFeno]=NULL;
+         ANALYSE_usampBuffers.kuruczConvoluted2[indexFeno]=
+         ANALYSE_usampBuffers.kuruczInterpolated[indexFeno]=
+         ANALYSE_usampBuffers.kuruczInterpolated2[indexFeno]=NULL;
 
        if (!pTabFeno->hidden && pTabFeno->useUsamp &&
-         (((ANALYSE_usampBuffers.kuruczInterpolated[indexFeno]=(double *)MEMORY_AllocDVector("ANALYSE_UsampGlobalAlloc ","kuruczInterpolated",0,size-1))==NULL) ||
-          ((ANALYSE_usampBuffers.kuruczInterpolated2[indexFeno]=(double *)MEMORY_AllocDVector("ANALYSE_UsampGlobalAlloc ","kuruczInterpolated2",0,size-1))==NULL)))
+           (((ANALYSE_usampBuffers.kuruczInterpolated[indexFeno]=(double *)MEMORY_AllocDVector("ANALYSE_UsampGlobalAlloc ","kuruczInterpolated",0,size-1))==NULL) ||
+            ((ANALYSE_usampBuffers.kuruczInterpolated2[indexFeno]=(double *)MEMORY_AllocDVector("ANALYSE_UsampGlobalAlloc ","kuruczInterpolated2",0,size-1))==NULL)))
 
         rc=ERROR_ID_ALLOC;
 
@@ -6453,7 +6278,7 @@ RC ANALYSE_UsampGlobalAlloc(double lambdaMin,double lambdaMax,INT size)
   // Return
 
   return rc;
- }
+}
 
 // -----------------------------------------------------------------------------
 // FUNCTION      ANALYSE_UsampLocalAlloc
@@ -6471,7 +6296,7 @@ RC ANALYSE_UsampGlobalAlloc(double lambdaMin,double lambdaMax,INT size)
 #pragma argsused
 #endif
 RC ANALYSE_UsampLocalAlloc(INT gomeFlag)
- {
+{
   // Declarations
 
   INT lambdaSize,endPixel;
@@ -6507,7 +6332,7 @@ RC ANALYSE_UsampLocalAlloc(INT gomeFlag)
   // Return
 
   return rc;
- }
+}
 
 // -----------------------------------------------------------------------------
 // FUNCTION      ANALYSE_UsampLocalFree
@@ -6516,7 +6341,7 @@ RC ANALYSE_UsampLocalAlloc(INT gomeFlag)
 // -----------------------------------------------------------------------------
 
 void ANALYSE_UsampLocalFree(void)
- {
+{
   // Declarations
 
   INDEX indexFeno,indexFenoColumn;
@@ -6525,7 +6350,7 @@ void ANALYSE_UsampLocalFree(void)
 
   if (ANALYSE_usampBuffers.kuruczConvoluted!=NULL)
    {
-   	for (indexFenoColumn=0;(indexFenoColumn<ANALYSE_swathSize);indexFenoColumn++)
+    for (indexFenoColumn=0;(indexFenoColumn<ANALYSE_swathSize);indexFenoColumn++)
      for (indexFeno=0;indexFeno<NFeno;indexFeno++)
       if (!TabFeno[indexFenoColumn][indexFeno].hidden && TabFeno[indexFenoColumn][indexFeno].useUsamp && !TabFeno[indexFenoColumn][indexFeno].gomeRefFlag)
        {
@@ -6540,9 +6365,9 @@ void ANALYSE_UsampLocalFree(void)
           MEMORY_ReleaseDVector("ANALYSE_UsampLocalFree ","kuruczConvoluted2",ANALYSE_usampBuffers.kuruczConvoluted2[indexFeno],0);
           ANALYSE_usampBuffers.kuruczConvoluted2[indexFeno]=NULL;
          }
-       }
+      }
    }
- }
+}
 
 // -----------------------------------------------------------------------------
 // FUNCTION      ANALYSE_UsampGlobalFree
@@ -6551,7 +6376,7 @@ void ANALYSE_UsampLocalFree(void)
 // -----------------------------------------------------------------------------
 
 void ANALYSE_UsampGlobalFree(void)
- {
+{
   INDEX indexFeno;
 
   MATRIX_Free(&ANALYSE_usampBuffers.hrSolar,"ANALYSE_UsampGlobalFree");
@@ -6602,4 +6427,4 @@ void ANALYSE_UsampGlobalFree(void)
    }
 
   memset(&ANALYSE_usampBuffers,0,sizeof(USAMP));
- }
+}

@@ -441,13 +441,13 @@ RC CurfitNumDeriv(double *X, double *specX, double *srefX, int nX, double *Y, do
     // Evaluate function for Aj+Dj
 
     A[indexA]=(double)Aj+Dj;
-    if ((rc=ANALYSE_Function(X,specX,srefX,nX,Y,sigmaY,Yfit2,nY,P,A,indexFenoColumn))>=THREAD_EVENT_STOP)
+    if ((rc=ANALYSE_Function(specX,srefX,sigmaY,Yfit2,nY,P,A,indexFenoColumn))>=THREAD_EVENT_STOP)
      goto EndNumDeriv;
 
     // Evaluate function for Aj-Dj
 
     A[indexA]=(double)Aj-Dj;
-    if ((rc=ANALYSE_Function(X,specX,srefX,nX,Y,sigmaY,Yfit1,nY,P,A,indexFenoColumn))>=THREAD_EVENT_STOP)
+    if ((rc=ANALYSE_Function(specX,srefX,sigmaY,Yfit1,nY,P,A,indexFenoColumn))>=THREAD_EVENT_STOP)
      goto EndNumDeriv;
 
      // Calculate the partial derivative of the function for the non linear parameter
@@ -729,7 +729,7 @@ RC Curfit(int     mode,                                                         
      }
 
     if (((rc=CurfitDerivFunc(X,specX,srefX,nX,Y,sigmaY,Yfit,nY,P,A,deltaA,deriv,indexFenoColumn))>=THREAD_EVENT_STOP) ||
-        ((rc=ANALYSE_Function(X,specX,srefX,nX,Y,sigmaY,Yfit,nY,P,A,indexFenoColumn))>=THREAD_EVENT_STOP))
+        ((rc=ANALYSE_Function(specX,srefX,sigmaY,Yfit,nY,P,A,indexFenoColumn))>=THREAD_EVENT_STOP))
 
      goto EndCurfit;
 
@@ -797,7 +797,7 @@ RC Curfit(int     mode,                                                         
 
       // If the Chi square increased,increase pLambda and try again
 
-      if ((rc=ANALYSE_Function(X,specX,srefX,nX,Y,sigmaY,Yfit,nY,P,B,indexFenoColumn))>=THREAD_EVENT_STOP) goto EndCurfit;
+      if ((rc=ANALYSE_Function(specX,srefX,sigmaY,Yfit,nY,P,B,indexFenoColumn))>=THREAD_EVENT_STOP) goto EndCurfit;
 
       chisqr=(double)Fchisq(mode,nFree,Y,Yfit,sigmaY,nY);
       if (chisq1<chisqr)
@@ -834,7 +834,7 @@ RC Curfit(int     mode,                                                         
 
     if (outOfRange)
      {
-      if ((rc=ANALYSE_Function(X,specX,srefX,nX,Y,sigmaY,Yfit,nY,P,B,indexFenoColumn))>=THREAD_EVENT_STOP)
+      if ((rc=ANALYSE_Function(specX,srefX,sigmaY,Yfit,nY,P,B,indexFenoColumn))>=THREAD_EVENT_STOP)
        goto EndCurfit;
       chisqr=(double)Fchisq(mode,nFree,Y,Yfit,sigmaY,nY);
      }
