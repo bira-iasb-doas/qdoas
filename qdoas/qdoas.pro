@@ -22,7 +22,7 @@ contains ( HELP_SYSTEM, assistant ) {
 # Platform dependency ... based on ../config.pri
 #----------------------------------------------
 
-INCLUDEPATH  += $$QWT_INC_PATH $$CODA_INC_PATH /home/thomasd/hdfeos/include /home/thomasd/hdf4/include/
+INCLUDEPATH  += $$QWT_INC_PATH $$CODA_INC_PATH $$HDF_INC_PATH $$HDFEOS_INC_PATH
 
 unix {
 #  QMAKE_CXX	 = icpc
@@ -36,14 +36,14 @@ win32 {
   INCLUDEPATH  += ../mediator ../common ../engine
 
   contains( QWT_LINKAGE, qwtstatic ) {
-    LIBS        += -L$$QWT_LIB_PATH -l$$QWT_LIB -L$$CODA_LIB_PATH -l$$CODA_LIB
+    LIBS        += -L$$QWT_LIB_PATH -l$$QWT_LIB
   }
   contains( QWT_LINKAGE, qwtdll ) {
-    LIBS        += -L$$QWT_LIB_PATH -l$$QWT_LIB$$QWT_LIB_VERSION -L$$CODA_LIB_PATH -l$$CODA_LIB
+    LIBS        += -L$$QWT_LIB_PATH -l$$QWT_LIB$$QWT_LIB_VERSION
     DEFINES     += QWT_DLL
   }
 
-  LIBS         += -L$$CODA_LIB_PATH -lcoda
+  LIBS         += -L$$CODA_LIB_PATH -lcoda -L$$HDFEOS_LIB_PATH -lhdf -L$$HDFEOS_LIB_PATH -lmfhdf -L$$HDFEOS_LIB_PATH -lhdfeos -lm
 
   CONFIG      += windows
 }

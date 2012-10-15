@@ -7,20 +7,33 @@
 //  Program Language  :  C/C++
 //  Creation date     :  4 April 2007
 //
-//  Author            :  Caroline FAYT
+//  QDOAS is a cross-platform application developed in QT for DOAS retrieval
+//  (Differential Optical Absorption Spectroscopy).
 //
-//        Copyright  (C) Belgian Institute for Space Aeronomy (BIRA-IASB)
-//                       Avenue Circulaire, 3
-//                       1180     UCCLE
-//                       BELGIUM
+//  The QT version of the program has been developed jointly by the Belgian
+//  Institute for Space Aeronomy (BIRA-IASB) and the Science and Technology
+//  company (S[&]T) - Copyright (C) 2007
 //
-//  As the WinDOAS software is distributed freely within the DOAS community, it
-//  would be nice if BIRA-IASB Institute and the authors were mentioned at least
-//  in acknowledgements of papers presenting results obtained with this program.
+//      BIRA-IASB                                   S[&]T
+//      Belgian Institute for Space Aeronomy        Science [&] Technology
+//      Avenue Circulaire, 3                        Postbus 608
+//      1180     UCCLE                              2600 AP Delft
+//      BELGIUM                                     THE NETHERLANDS
+//      thomasd@aeronomie.be                        info@stcorp.nl
 //
-//  The source code is also available on request for use, modification and free
-//  distribution but authors are not responsible of unexpected behaviour of the
-//  program if changes have been made on the original code.
+//  This program is free software; you can redistribute it and/or
+//  modify it under the terms of the GNU General Public License
+//  as published by the Free Software Foundation; either version 2
+//  of the License, or (at your option) any later version.
+//
+//  This program is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//  GNU General Public License for more details.
+//
+//  You should have received a copy of the GNU General Public License
+//  along with this program; if not, write to the Free Software Foundation,
+//  Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //
 //  ----------------------------------------------------------------------------
 //  FUNCTIONS
@@ -29,9 +42,8 @@
 //
 //  LIBRARIES
 //
-//  This module uses read out routines written by Stefan Noel (Stefan.Noel@iup.physik.uni.bremen.de)
-//  and Andreas Richter (richter@iup.physik.uni-bremen.de) from IFE/IUP Uni Bremen.  These routines
-//  are based on based on BEAT library.
+//  This module uses HDF-EOS (Hierarchical Data Format - Earth Observing System)
+//  libraries based on HDF-4
 //
 //  ----------------------------------------------------------------------------
 
@@ -317,7 +329,7 @@ void OMI_ReleaseBuffers(void)
 
       if (pOrbitFile->omiSwath.spectrum.pixelQualityFlags!=NULL)                                    //pixel quality
 	MEMORY_ReleaseBuffer("OMI_ReleaseBuffers","pOrbitFile->omiSwath.spectrum.pixelQualityFlags",pOrbitFile->omiSwath.spectrum.pixelQualityFlags);
- 
+
 
       // Earth swath data fields
 
@@ -361,7 +373,7 @@ void OMI_ReleaseBuffers(void)
 	MEMORY_ReleaseBuffer("OMI_ReleaseBuffers","groundPixelQualityFlags",pOrbitFile->omiSwath.geolocationFields.groundPixelQualityFlags);
       if (pOrbitFile->omiSwath.geolocationFields.xtrackQualityFlags!=NULL)
 	MEMORY_ReleaseBuffer("OMI_ReleaseBuffers","xtrackQualityFlags",pOrbitFile->omiSwath.geolocationFields.xtrackQualityFlags);
-      
+
       // Close the current file
       if(pOrbitFile->sw_id != 0) {
 	SWdetach(pOrbitFile->sw_id);
@@ -578,7 +590,7 @@ RC OmiGetSwathData(OMI_ORBIT_FILE *pOrbitFile)
   OMI_GEO *pGeo = &pOrbitFile->omiSwath.geolocationFields;
   RC rc=ERROR_ID_NO;
 
-  struct omi_field swathdata[] = 
+  struct omi_field swathdata[] =
     {
       {"MeasurementQualityFlags", pData->measurementQualityFlags},
       {"ExposureTime", pData->exposureTime},
@@ -678,10 +690,10 @@ RC OmiOpen(OMI_ORBIT_FILE *pOrbitFile,char *swathName)
   pOrbitFile->specNumber=pOrbitFile->omiNumberOfSwaths*pOrbitFile->omiNumberOfSpectraPerSwath;
   if (!pOrbitFile->specNumber)
     rc=ERROR_SetLast("OmiOpen",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pOrbitFile->omiFileName);
-  
-  
+
+
   // Allocate data
-      
+
   if ((rc=OMI_AllocateSwath(&pOrbitFile->omiSwath,pOrbitFile->omiNumberOfSwaths,pOrbitFile->omiNumberOfSpectraPerSwath)))
     rc=ERROR_ID_ALLOC;
   // Retrieve information on records from Data fields and Geolocation fields
@@ -700,20 +712,20 @@ RC OMI_LoadReference(ENGINE_CONTEXT *pEngineContext,DoasCh *refFile)
   OMI_REF * pRef=&OMI_ref[omiRefFilesN];
   int spectralType=pEngineContext->project.instrumental.omi.spectralType;
   RC rc=ERROR_ID_NO;
-  
+
   int32 swf_id = 0;
   int32 sw_id = 0;
   swf_id = SWopen(refFile, DFACC_READ);
   if (swf_id == FAIL) {
     rc=ERROR_SetLast("OMI_LoadReference",ERROR_TYPE_WARNING,ERROR_ID_HDFEOS,"OMI_LoadReference",refFile,"SWopen");
     goto end_loadreference;
-  } 
+  }
   sw_id = SWattach(swf_id, OMI_SunSwaths[spectralType]);
   if (sw_id  == FAIL) {
     rc=ERROR_SetLast("OMI_LoadReference",ERROR_TYPE_WARNING,ERROR_ID_HDFEOS,"OMI_LoadReference",refFile,"SWattach");
     goto end_loadreference;
   }
-  
+
   int32 n_xtrack = SWdiminfo(sw_id, "nXtrack");
   if (n_xtrack == FAIL) {
     rc = ERROR_SetLast("OMI_LoadReference", ERROR_TYPE_WARNING, ERROR_ID_HDFEOS, "nXtrack", refFile, "SWdiminfo");
@@ -724,7 +736,7 @@ RC OMI_LoadReference(ENGINE_CONTEXT *pEngineContext,DoasCh *refFile)
     rc = ERROR_SetLast("OMI_LoadReference", ERROR_TYPE_WARNING, ERROR_ID_HDFEOS, "nWavel", refFile, "SWdiminfo");
     goto end_loadreference;
   }
-  
+
   OMI_AllocateReference(omiRefFilesN,n_xtrack,n_wavel);
 
   strcpy(pRef->omiRefFileName,refFile);
@@ -734,7 +746,7 @@ RC OMI_LoadReference(ENGINE_CONTEXT *pEngineContext,DoasCh *refFile)
   int indexSpectrum;
   for (indexSpectrum=0; indexSpectrum < pRef->omiNumberOfSpectraPerSwath; indexSpectrum++) {
     rc = omi_load_spectrum(OMI_SPEC_IRRAD, sw_id, 0, indexSpectrum, n_wavel,
-			   pRef->omiRefLambda[indexSpectrum], 
+			   pRef->omiRefLambda[indexSpectrum],
 			   pRef->omiRefSpectrum[indexSpectrum],
 			   pRef->omiRefSigma[indexSpectrum],
 			   pRef->spectrum.pixelQualityFlags);
@@ -928,13 +940,13 @@ RC OMI_Set(ENGINE_CONTEXT *pEngineContext)
   if (omiCurrentFileIndex==ITEM_NONE)
     {
       // Release old buffers
-   
+
       OMI_ReleaseBuffers();
-   
+
       omiOrbitFilesN=1;
       omiCurrentFileIndex=0;
       strcpy(omiOrbitFiles[0].omiFileName,pEngineContext->fileInfo.fileName);
-   
+
       // Load files
 
       for (omiTotalRecordNumber=indexFile=0;indexFile<omiOrbitFilesN;indexFile++)

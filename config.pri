@@ -21,7 +21,9 @@ unix {
   CODA_LIB_PATH = /bira-iasb/proj_dyn/DOAS/Programmes/QDOAS-linux/lib
   CODA_INC_PATH = /bira-iasb/proj_dyn/DOAS/Programmes/QDOAS-linux/include
   HDFEOS_LIB_PATH = /bira-iasb/proj_dyn/DOAS/Programmes/QDOAS-linux/hdfeos/lib/linux64
+  HDFEOS_INC_PATH = /home/thomasd/hdfeos/include
   HDF4_LIB_PATH = /bira-iasb/proj_dyn/DOAS/Programmes/QDOAS-linux/lib
+  HDF_INC_PATH    = /home/thomasd/hdf4/include/
 
   # QDOAS online help
 
@@ -41,6 +43,10 @@ win32 {
   CODA_INC_PATH   = C:/coda
   CODA_LIB_PATH   = C:/coda
   CODA_LIB        = coda
+
+  HDFEOS_INC_PATH = D:/My_Libraries/HDF/hdfeos2_18/hdfeos2.18/hdfeos/include
+  HDFEOS_LIB_PATH = D:/My_Applications/QDoas/hdfeos
+  HDF_INC_PATH    = D:/My_Libraries/HDF/hdf-4.2.8/Src/hdf-4.2.8/hdf/src
 
   INSTALL_PREFIX = C:/Qdoas
 
