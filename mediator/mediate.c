@@ -1567,6 +1567,7 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
     saveFlag;
   INDEX indexKurucz,indexWindow;
   ENGINE_CONTEXT *pEngineContext;                                               // engine context
+  PRJCT_INSTRUMENTAL *pInstrumental;
   mediate_analysis_window_t *pAnalysisWindows;                                  // pointer to the current analysis window from the user interface
   mediate_analysis_window_t calibWindows;                                       // pointer to the calibration parameters
   FENO *pTabFeno;                                                               // pointer to the description of an analysis window
@@ -1578,6 +1579,7 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
   lambdaMin=1000;
   lambdaMax=0;
   pEngineContext=(ENGINE_CONTEXT *)engineContext;
+  pInstrumental=&pEngineContext->project.instrumental;
   saveFlag=(INT)pEngineContext->project.spectra.displayDataFlag;
   useKurucz=useUsamp=0;
   indexKurucz=ITEM_NONE;
@@ -1594,17 +1596,35 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
   KURUCZ_indexLine=1;
   rc=ANALYSE_SetInit(pEngineContext);
 
-  if ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_OMI) && numberOfWindows && strlen(analysisWindows[0].refOneFile))
-    OMI_LoadReference(pEngineContext,(DoasCh *)analysisWindows[0].refOneFile);
+  if (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_OMI)
+   {
+   	if ((THRD_id==THREAD_TYPE_ANALYSIS) && numberOfWindows)
+   	 {
+   	  for (indexFeno=0;(indexFeno<numberOfWindows+1) && !rc;indexFeno++)
+   	   if (strlen(analysisWindows[0].refOneFile))
+   	    {
+         rc=OMI_LoadReference(pEngineContext,(DoasCh *)analysisWindows[indexFeno].refOneFile);
+         break;
+        }
+     }
+    else if (THRD_id==THREAD_TYPE_KURUCZ)
+     {
+      if (!strlen(pEngineContext->project.instrumental.calibrationFile))
+       rc=ERROR_SetLast("mediateRequestSetAnalysisWindows",ERROR_TYPE_FATAL,ERROR_ID_FILE_NOT_FOUND,pInstrumental->calibrationFile);
+      else
+       rc=OMI_LoadReference(pEngineContext,(DoasCh *)pEngineContext->project.instrumental.calibrationFile);
+     }
+   }
 
   // Load analysis windows
 
   for (indexFenoColumn=0;(indexFenoColumn<ANALYSE_swathSize) && !rc;indexFenoColumn++)
     {
       if ((pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_OMI) ||
-          pEngineContext->project.instrumental.omi.omiTracks[indexFenoColumn])
+           pEngineContext->project.instrumental.omi.omiTracks[indexFenoColumn])
         {
         	 NFeno=0;
+
         	 for (indexFeno=0;(indexFeno<numberOfWindows+1) && !rc;indexFeno++)
         	  {
             // Pointers initialization
@@ -1613,6 +1633,7 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
 
             pTabFeno->hidden=!indexFeno;
             pAnalysisWindows=(!pTabFeno->hidden)?(mediate_analysis_window_t *)&analysisWindows[indexFeno-1]:(mediate_analysis_window_t *)&calibWindows;
+
             pTabFeno->NDET=NDET;
 
             if ((pTabFeno->hidden<2) && ((THRD_id==THREAD_TYPE_ANALYSIS) || (pTabFeno->hidden==1)))               // QDOAS : avoid the load of disabled analysis windows with hidden==2
@@ -1729,6 +1750,10 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
                 //               (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_GDP_BIN) &&
                 //               (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_SCIA_HDF) &&
                 //               (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_SCIA_PDS))
+
+                if ((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_OMI) && strlen(pInstrumental->calibrationFile) &&
+                   ((rc=OMI_GetReference(pInstrumental->calibrationFile,indexFenoColumn,pEngineContext->buffers.lambda,pEngineContext->buffers.spectrum,pEngineContext->buffers.sigmaSpec))!=ERROR_ID_NO))
+                  break;
 
                 memcpy(pTabFeno->LambdaRef,pEngineContext->buffers.lambda,sizeof(double)*NDET);
                 memcpy(pTabFeno->Lambda,pEngineContext->buffers.lambda,sizeof(double)*NDET);
