@@ -2149,7 +2149,6 @@ RC SCIA_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
          if (!TabFeno[0][indexFeno].hidden)
           {
-
 //         memcpy(pTabFeno->SrefSigma,SCIA_refE,sizeof(double)*pTabFeno->NDET);
 
            if (!(rc=VECTOR_NormalizeVector(pTabFeno->Sref-1,pTabFeno->NDET,&pTabFeno->refNormFact,"SCIA_LoadAnalysis (Reference) "))) // &&
@@ -2188,7 +2187,7 @@ RC SCIA_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
                DimL += pixel_end - pixel_start +1;
               }
-             
+
              // Buffers allocation
              SVD_Free("SCIA_LoadAnalysis",&pTabFeno->svd);
              pTabFeno->svd.DimL=DimL;
@@ -2247,8 +2246,8 @@ RC SCIA_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
     // Automatic reference selection
 
-    if (sciaLoadReferenceFlag && !(rc=SciaNewRef(pEngineContext,responseHandle)) &&
-      !(rc=ANALYSE_AlignReference(pEngineContext,2,pEngineContext->project.spectra.displayDataFlag,responseHandle,0))) // automatic ref selection for Northern hemisphere
+    if ((THRD_id!=THREAD_TYPE_KURUCZ) && sciaLoadReferenceFlag && !(rc=SciaNewRef(pEngineContext,responseHandle)) &&
+       !(rc=ANALYSE_AlignReference(pEngineContext,2,pEngineContext->project.spectra.displayDataFlag,responseHandle,0))) // automatic ref selection for Northern hemisphere
      rc=ANALYSE_AlignReference(pEngineContext,3,pEngineContext->project.spectra.displayDataFlag,responseHandle,0);     // automatic ref selection for Southern hemisphere
    }
 
