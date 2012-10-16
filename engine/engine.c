@@ -379,7 +379,7 @@ RC EngineSetProject(ENGINE_CONTEXT *pEngineContext)
     {
      // Load the wavelength calibration
 
-     if (!strlen(pInstrumental->calibrationFile))
+     if (!strlen(pInstrumental->calibrationFile) || (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_OMI))
       for (i=0;i<NDET;i++)
        pBuffers->lambda[i]=i+1;
      else if ((fp=fopen(pInstrumental->calibrationFile,"rt"))==NULL)
@@ -387,15 +387,17 @@ RC EngineSetProject(ENGINE_CONTEXT *pEngineContext)
      else
       {
        for (i=0;i<NDET;)
+
         if (!fgets(str,MAX_ITEM_TEXT_LEN,fp))
          break;
         else if ((strchr(str,';')==NULL) && (strchr(str,'*')==NULL))
          {
           sscanf(str,"%lf",&pBuffers->lambda[i]);
+
           i++;
          }
 
-       if (i!=NDET)
+       else if (i!=NDET)
         rc=ERROR_SetLast("EngineSetProject",ERROR_TYPE_FATAL,ERROR_ID_FILE_EMPTY,pInstrumental->calibrationFile);
 
        fclose(fp);
