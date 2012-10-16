@@ -715,6 +715,7 @@ RC OMI_LoadReference(ENGINE_CONTEXT *pEngineContext,DoasCh *refFile)
 
   int32 swf_id = 0;
   int32 sw_id = 0;
+
   swf_id = SWopen(refFile, DFACC_READ);
   if (swf_id == FAIL) {
     rc=ERROR_SetLast("OMI_LoadReference",ERROR_TYPE_WARNING,ERROR_ID_HDFEOS,"OMI_LoadReference",refFile,"SWopen");
