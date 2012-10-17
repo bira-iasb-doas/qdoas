@@ -457,6 +457,9 @@ class CWInstrOmiEdit : public CWCalibInstrEdit
   QCheckBox *m_pixelQFCheck;
   QLineEdit *m_pixelQFMaskEdit;
   QLineEdit *m_pixelQFMaxGapsEdit;
+  QRadioButton *m_ignoreXTrackQF;
+  QRadioButton *m_nonstrictXTrackQF;
+  QRadioButton *m_strictXTrackQF;
 };
 
 //--------------------------------------------------------------------------

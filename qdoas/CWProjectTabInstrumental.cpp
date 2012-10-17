@@ -1994,6 +1994,34 @@ CWInstrOmiEdit::CWInstrOmiEdit(const struct instrumental_omi *d, QWidget *parent
   groupLayout->addWidget(pixelQFGroup);
   mainLayout->addLayout(groupLayout);
 
+  // XTrack Quality Flag handling:
+  QGroupBox *xtrackQFBox = new QGroupBox("Cross-track Quality Flags", this);
+  m_ignoreXTrackQF = new QRadioButton("Ignore");
+  m_nonstrictXTrackQF = new QRadioButton("Exclude bad pixels");
+  m_strictXTrackQF = new QRadioButton("Exclude all affected pixels");
+
+  switch(d->xtrack_mode) {
+  case IGNORE:
+    m_ignoreXTrackQF->setChecked(true);
+    break;
+  case NONSTRICT:
+    m_nonstrictXTrackQF->setChecked(true);
+    break;
+  case STRICT:
+    m_strictXTrackQF->setChecked(true);
+    break;
+  }
+
+  QVBoxLayout *xtrackQFBoxLayout = new QVBoxLayout;
+  xtrackQFBoxLayout->setAlignment(Qt::AlignCenter);
+  xtrackQFBoxLayout->addWidget(m_ignoreXTrackQF);
+  xtrackQFBoxLayout->addWidget(m_nonstrictXTrackQF);
+  xtrackQFBoxLayout->addWidget(m_strictXTrackQF);
+  xtrackQFBoxLayout->addStretch(1);
+  xtrackQFBox->setLayout(xtrackQFBoxLayout);
+  
+  mainLayout->addWidget(xtrackQFBox);
+
 //  // spectral range
 //  gridLayout->addWidget(new QLabel("Wavelength Range (nm)", this), row, 0);
 //  QHBoxLayout *rangeLayout = new QHBoxLayout;
@@ -2083,6 +2111,14 @@ void CWInstrOmiEdit::apply(struct instrumental_omi *d) const
   sscanf(m_pixelQFMaskEdit->text().toAscii().data(),"%02X",&d->pixelQFMask);
 
   strcpy(d->trackSelection, m_trackSelection->text().toAscii().data());
+
+  // XTrack Quality Flags:
+  if (m_strictXTrackQF->isChecked() )
+    d->xtrack_mode = STRICT;
+  else if (m_nonstrictXTrackQF->isChecked() )
+    d->xtrack_mode = NONSTRICT;
+  else
+    d->xtrack_mode = IGNORE;
 
   // files
   strcpy(d->calibrationFile, m_fileOneEdit->text().toAscii().data());
