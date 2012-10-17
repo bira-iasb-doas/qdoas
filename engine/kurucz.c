@@ -231,7 +231,7 @@ RC KURUCZ_Spectrum(double *oldLambda,double *newLambda,double *spectrum,double *
 
     // Set solar spectrum
 
-    kuruczIndexRow=(pKurucz->hrSolar.nc>indexFenoColumn)?indexFenoColumn+1:1;
+    kuruczIndexRow=(pKurucz->hrSolar.nc>indexFenoColumn+1)?indexFenoColumn+1:1;
 
     if ((solar=MEMORY_AllocDVector("KURUCZ_Spectrum ","solar",0,NDET-1))==NULL)
      rc=ERROR_ID_ALLOC;
@@ -331,7 +331,7 @@ RC KURUCZ_Spectrum(double *oldLambda,double *newLambda,double *spectrum,double *
 
       // Fill A SVD system
 
-      pixMid[indexWindow+1]=(double)( spectrum_start(svdFeno[indexWindow].specrange) 
+      pixMid[indexWindow+1]=(double)( spectrum_start(svdFeno[indexWindow].specrange)
                                       + spectrum_end(svdFeno[indexWindow].specrange) )*0.5;
 
       VSig[indexWindow+1]=pResults->SigmaShift;
@@ -847,7 +847,7 @@ RC KURUCZ_Reference(double *instrFunction,INDEX refFlag,INT saveFlag,INT gomeFla
        {
        	memcpy(reference,(pTabFeno->useEtalon)?pTabFeno->SrefEtalon:pTabFeno->Sref,sizeof(double)*pTabFeno->NDET);
 
-       	kuruczIndexRow=(pKurucz->hrSolar.nc>indexFenoColumn)?indexFenoColumn+1:1;
+       	kuruczIndexRow=(pKurucz->hrSolar.nc>indexFenoColumn+1)?indexFenoColumn+1:1;
 
        	if ((pTabFeno->NDET==pKurucz->hrSolar.nl) &&
        	     VECTOR_Equal(pKurucz->hrSolar.matrix[0],pTabFeno->LambdaRef,pTabFeno->NDET,(double)1.e-7) &&
@@ -990,7 +990,7 @@ void KURUCZ_Init(INT gomeFlag,INDEX indexFenoColumn)
       for (indexWindow=0;indexWindow<nbWin;indexWindow++)
        {
         pSvd=&KURUCZ_buffers[indexFenoColumn].KuruczFeno[indexFeno].svdFeno[indexWindow];
-        
+
         Lambda_max=Lambda_min+Win_size;
 
         int pixel_start=FNPixel(pTabFeno->LambdaRef,Lambda_min,pTabFeno->NDET,PIXEL_AFTER);
@@ -1151,7 +1151,7 @@ RC KURUCZ_Alloc(PROJECT *pProject,double *lambda,INDEX indexKurucz,double lambda
 
   if (!(rc=XSCONV_LoadCrossSectionFile(&pKurucz->hrSolar,kuruczFile,lambdaMin-7.-step*pKurucz->solarFGap,lambdaMax+7.+step*pKurucz->solarFGap,(double)0.,CONVOLUTION_CONVERSION_NONE)))
    {
-   	kuruczIndexRow=(pKurucz->hrSolar.nc>indexFenoColumn)?indexFenoColumn+1:1;
+   	kuruczIndexRow=(pKurucz->hrSolar.nc>indexFenoColumn+1)?indexFenoColumn+1:1;
 
    	               // If the fwhm of the slit function is fitted, then we can use the same high resolution solar
    	               // spectrum.  If we do not fit the slit function, the solar spectrum has to be preconvoluted.
