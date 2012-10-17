@@ -214,7 +214,7 @@ typedef struct _OMIOrbitFiles                                                   
 // ================
 
 DoasCh *OMI_EarthSwaths[OMI_SWATH_MAX]={"Earth UV-1 Swath","Earth UV-2 Swath","Earth VIS Swath"};
-DoasCh *OMI_SunSwaths[OMI_SWATH_MAX]={"Sun Volume UV-1 _Swath","Sun Volume UV-2 Swath","Sun Volume VIS Swath"};
+DoasCh *OMI_SunSwaths[OMI_SWATH_MAX]={"Sun Volume UV-1 Swath","Sun Volume UV-2 Swath","Sun Volume VIS Swath"};
 
 static OMI_ORBIT_FILE omiOrbitFiles[MAX_OMI_FILES];                             // list of files per day
 static int omiOrbitFilesN=0,omiRefFilesN=0;                                     // the total number of files to browse in one shot
@@ -609,7 +609,7 @@ RC OmiGetSwathData(OMI_ORBIT_FILE *pOrbitFile)
       {"ViewingAzimuthAngle", pGeo->viewingAzimuthAngle},
       {"TerrainHeight", pGeo->terrainHeight},
       {"GroundPixelQualityFlags", pGeo->groundPixelQualityFlags},
-      {"XTrackQualityFlags",pGeo->xtrackQualityFlags} // TODO: check for presence of xtrackQualityFlags (not present in older files)
+      {"XTrackQualityFlags",pGeo->xtrackQualityFlags}
     };
 
   int32 start[] = {0,0};
@@ -1102,6 +1102,7 @@ RC OMI_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,INDEX fileIndex)
 
 	  pRecord->omi.omiSwathIndex=indexSwath+1;                                  // index of the current swath
 	  pRecord->omi.omiRowIndex=indexSpectrum+1;                                 // index of the current spectrum in the current swath
+          pRecord->omi.omiXtrackQF = pGeo->xtrackQualityFlags[recordNo-1];
 	  memcpy(pRecord->omi.omiPixelQF,pSpectrum->pixelQualityFlags,sizeof(unsigned short)*NDET);
 
 	  OMI_FromTAI1993ToYMD((double)pGeo->time[indexSwath],&pRecord->present_day,&pRecord->present_time,&OMI_ms);
