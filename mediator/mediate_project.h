@@ -23,6 +23,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "mediate_limits.h"
 #include "mediate_general.h"
+#include "constants.h"
 
 #if defined(_cplusplus) || defined(__cplusplus)
 extern "C" {

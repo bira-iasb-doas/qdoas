@@ -414,8 +414,6 @@ extern "C" {
     char selected[256];
   } data_select_list_t;
 
-  enum omi_xtrack_mode { IGNORE, STRICT, NONSTRICT };
-
 #if defined(_cplusplus) || defined(__cplusplus)
 }
 #endif

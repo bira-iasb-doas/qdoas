@@ -8,6 +8,10 @@
 
 #include "debugutil.h"
 
+extern const char *STR_IGNORE = "IGNORE";
+extern const char *STR_STRICT = "STRICT";
+extern const char *STR_NONSTRICT = "NONSTRICT";
+
 //------------------------------------------------------------------------
 
 CSelectorSubHandler::CSelectorSubHandler(CConfigHandler *master, data_select_list_t *selectList) :
@@ -1013,6 +1017,15 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
 	strcpy(m_instrumental->omi.trackSelection, str.toAscii().data());
       else
 	return postErrorMessage("Track selection string too long");
+    }
+
+    str = atts.value("xTrackMode");
+    m_instrumental->omi.xtrack_mode = IGNORE;
+    if(!str.isEmpty()) {
+      if (str == STR_STRICT)
+        m_instrumental->omi.xtrack_mode = STRICT;
+      else if (str == STR_NONSTRICT)
+        m_instrumental->omi.xtrack_mode = NONSTRICT;
     }
 
     m_instrumental->omi.pixelQFRejectionFlag = (atts.value("pixelQF_rejectionFlag") == "true") ? 1 : 0;

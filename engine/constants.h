@@ -949,4 +949,12 @@ enum prjctTabPagesTypes
      TAB_TYPE_XSCONV_MAX
     };
 
+
+enum omi_xtrack_mode { 
+  IGNORE = 0,
+  STRICT = 1,
+  NONSTRICT = 2
+};
+
+extern const char *STR_IGNORE, *STR_STRICT, *STR_NONSTRICT;
 #endif
