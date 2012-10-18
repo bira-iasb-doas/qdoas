@@ -950,7 +950,7 @@ enum prjctTabPagesTypes
     };
 
 
-enum omi_xtrack_mode { 
+enum omi_xtrack_mode {
   XTRACKQF_IGNORE = 0,
   XTRACKQF_STRICT = 1,
   XTRACKQF_NONSTRICT = 2

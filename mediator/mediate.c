@@ -46,19 +46,19 @@
  *  STRICT: only use pixels with flag 0 (unaffected)
  *  NONSTRICT: also use pixels which are slightly affected or corrected (flag 2,3 or 4)
  */
-bool omi_use_track(int quality_flag, enum omi_xtrack_mode mode) 
+bool omi_use_track(int quality_flag, enum omi_xtrack_mode mode)
  {
    quality_flag &= 7; // reduce to bits 0-2
    bool result;
    switch(mode)
     {
-    case IGNORE:
+    case XTRACKQF_IGNORE:
       result = true;
       break;
-    case STRICT:
+    case XTRACKQF_STRICT:
       result = (quality_flag == 0);
       break;
-    case NONSTRICT:
+    case XTRACKQF_NONSTRICT:
       result = (quality_flag == 0 || quality_flag == 2 || quality_flag == 3 || quality_flag == 4);
       break;
     }

@@ -952,10 +952,10 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
 
   const char *this_xtrack_mode;
   switch(d->omi.xtrack_mode) {
-  case STRICT:
+  case XTRACKQF_STRICT:
     this_xtrack_mode = STR_STRICT;
     break;
-  case NONSTRICT:
+  case XTRACKQF_NONSTRICT:
     this_xtrack_mode = STR_NONSTRICT;
     break;
   default:
