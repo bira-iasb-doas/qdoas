@@ -951,9 +951,9 @@ enum prjctTabPagesTypes
 
 
 enum omi_xtrack_mode { 
-  IGNORE = 0,
-  STRICT = 1,
-  NONSTRICT = 2
+  XTRACKQF_IGNORE = 0,
+  XTRACKQF_STRICT = 1,
+  XTRACKQF_NONSTRICT = 2
 };
 
 extern const char *STR_IGNORE, *STR_STRICT, *STR_NONSTRICT;

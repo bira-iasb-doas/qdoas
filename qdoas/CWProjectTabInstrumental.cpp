@@ -2001,13 +2001,13 @@ CWInstrOmiEdit::CWInstrOmiEdit(const struct instrumental_omi *d, QWidget *parent
   m_strictXTrackQF = new QRadioButton("Exclude all affected pixels");
 
   switch(d->xtrack_mode) {
-  case IGNORE:
+  case XTRACKQF_IGNORE:
     m_ignoreXTrackQF->setChecked(true);
     break;
-  case NONSTRICT:
+  case XTRACKQF_NONSTRICT:
     m_nonstrictXTrackQF->setChecked(true);
     break;
-  case STRICT:
+  case XTRACKQF_STRICT:
     m_strictXTrackQF->setChecked(true);
     break;
   }
@@ -2114,11 +2114,11 @@ void CWInstrOmiEdit::apply(struct instrumental_omi *d) const
 
   // XTrack Quality Flags:
   if (m_strictXTrackQF->isChecked() )
-    d->xtrack_mode = STRICT;
+    d->xtrack_mode = XTRACKQF_STRICT;
   else if (m_nonstrictXTrackQF->isChecked() )
-    d->xtrack_mode = NONSTRICT;
+    d->xtrack_mode = XTRACKQF_NONSTRICT;
   else
-    d->xtrack_mode = IGNORE;
+    d->xtrack_mode = XTRACKQF_IGNORE;
 
   // files
   strcpy(d->calibrationFile, m_fileOneEdit->text().toAscii().data());

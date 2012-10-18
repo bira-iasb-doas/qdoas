@@ -15,11 +15,11 @@ extern const char *STR_NONSTRICT = "NONSTRICT";
 extern enum omi_xtrack_mode str_to_mode(const char *configstr) {
   enum omi_xtrack_mode result;
   if (! strcmp(configstr,STR_STRICT))
-   result = STRICT;
+   result = XTRACKQF_STRICT;
   else if (! strcmp(configstr,STR_NONSTRICT))
-   result = NONSTRICT;
+   result = XTRACKQF_NONSTRICT;
   else
-   result = IGNORE;
+   result = XTRACKQF_IGNORE;
   return result;
 }
 
