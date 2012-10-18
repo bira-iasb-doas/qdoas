@@ -12,6 +12,17 @@ extern const char *STR_IGNORE = "IGNORE";
 extern const char *STR_STRICT = "STRICT";
 extern const char *STR_NONSTRICT = "NONSTRICT";
 
+extern enum omi_xtrack_mode str_to_mode(const char *configstr) {
+  enum omi_xtrack_mode result;
+  if (! strcmp(configstr,STR_STRICT))
+   result = STRICT;
+  else if (! strcmp(configstr,STR_NONSTRICT))
+   result = NONSTRICT;
+  else
+   result = IGNORE;
+  return result;
+}
+
 //------------------------------------------------------------------------
 
 CSelectorSubHandler::CSelectorSubHandler(CConfigHandler *master, data_select_list_t *selectList) :
@@ -1020,14 +1031,8 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
     }
 
     str = atts.value("xTrackMode");
-    m_instrumental->omi.xtrack_mode = IGNORE;
-    if(!str.isEmpty()) {
-      if (str == STR_STRICT)
-        m_instrumental->omi.xtrack_mode = STRICT;
-      else if (str == STR_NONSTRICT)
-        m_instrumental->omi.xtrack_mode = NONSTRICT;
-    }
-
+    m_instrumental->omi.xtrack_mode = str_to_mode(str.toAscii().constData());
+      
     m_instrumental->omi.pixelQFRejectionFlag = (atts.value("pixelQF_rejectionFlag") == "true") ? 1 : 0;
 
     str = atts.value("pixelQF_maxGaps");

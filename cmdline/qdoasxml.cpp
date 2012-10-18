@@ -291,101 +291,108 @@ RC ParseAnalysis(QStringList &xmlFields,int xmlFieldN,int startingField,QString 
 
 RC ParseInstrumental(QStringList &xmlFields,int xmlFieldN,int startingField,QString *pXmlValue,const CProjectConfigItem *p)
  {
- 	// Declarations
+   // Declarations
+   
+   mediate_project_t newProjectProperties;
+   int indexField;
+   RC  rc;
+   
+   // Initializations
+   
+   memcpy(&newProjectProperties,(mediate_project_t *)p->properties(),sizeof(mediate_project_t));
+   rc=ERROR_ID_NO;
+   
+   for (indexField=startingField;indexField<xmlFieldN;indexField++)
+    {
+     if (xmlFields.at(indexField)=="format")
+      std::cout << "project/instrumental/format field can not be changed" << std::endl;
+     else if (xmlFields.at(indexField)=="site")
+      std::cout << "project/instrumental/site field can not be changed" << std::endl;
+     else if (xmlFields.at(indexField)=="ascii")
+      std::cout << "project/instrumental/ascii field can not be changed yet" << std::endl;
+     else if (xmlFields.at(indexField)=="logger")
+      std::cout << "project/instrumental/logger field can not be changed yet" << std::endl;
+     else if (xmlFields.at(indexField)=="acton")
+      std::cout << "project/instrumental/acton field can not be changed yet" << std::endl;
+     else if (xmlFields.at(indexField)=="pdaegg")
+      std::cout << "project/instrumental/pdaegg field can not be changed yet" << std::endl;
+     else if (xmlFields.at(indexField)=="pdaeggold")
+      std::cout << "project/instrumental/pdaeggold field can not be changed yet" << std::endl;
+     else if (xmlFields.at(indexField)=="ccdohp96")
+      std::cout << "project/instrumental/ccdohp96 field can not be changed yet" << std::endl;
+     else if (xmlFields.at(indexField)=="ccdha94")
+      std::cout << "project/instrumental/ccdha94 field can not be changed yet" << std::endl;
+     else if (xmlFields.at(indexField)=="saozvis")
+      std::cout << "project/instrumental/saozvis field can not be changed yet" << std::endl;
+     else if (xmlFields.at(indexField)=="saozefm")
+      std::cout << "project/instrumental/saozefm field can not be changed yet" << std::endl;
+     else if (xmlFields.at(indexField)=="mfc")
+      std::cout << "project/instrumental/mfc field can not be changed yet" << std::endl;
+     else if (xmlFields.at(indexField)=="mfcbira")
+      std::cout << "project/instrumental/mfcbira field can not be changed yet" << std::endl;
+     else if (xmlFields.at(indexField)=="mfcstd")
+      std::cout << "project/instrumental/mfcstd field can not be changed yet" << std::endl;
+     else if (xmlFields.at(indexField)=="rasas")
+      std::cout << "project/instrumental/rasas field can not be changed yet" << std::endl;
+     else if (xmlFields.at(indexField)=="pdasieasoe")
+      std::cout << "project/instrumental/pdasieasoe field can not be changed yet" << std::endl;
+     else if (xmlFields.at(indexField)=="ccdeev")
+      std::cout << "project/instrumental/ccdeev field can not be changed yet" << std::endl;
+     else if (xmlFields.at(indexField)=="gdpascii")
+      std::cout << "project/instrumental/gdpascii field can not be changed yet" << std::endl;
+     else if (xmlFields.at(indexField)=="gdpbin")
+      std::cout << "project/instrumental/gdpbin field can not be changed yet" << std::endl;
+     else if (xmlFields.at(indexField)=="sciahdf")
+      std::cout << "project/instrumental/sciahdf field can not be changed yet" << std::endl;
+     else if (xmlFields.at(indexField)=="sciapds")
+      std::cout << "project/instrumental/sciapds field can not be changed yet" << std::endl;
+     else if (xmlFields.at(indexField)=="uoft")
+      std::cout << "project/instrumental/uoft field can not be changed yet" << std::endl;
+     else if (xmlFields.at(indexField)=="noaa")
+      std::cout << "project/instrumental/noaa field can not be changed yet" << std::endl;
+     else if (xmlFields.at(indexField)=="omi")
+      {
+       if (indexField+1>=xmlFieldN)
+        std::cout << "omi attribute is missing" << std::endl;
+       else if (xmlFields.at(indexField+1)=="type")
+        std::cout << "project/instrumental/omi/type field can not be changed" << std::endl;
+       else if (xmlFields.at(indexField+1)=="min")
+        std::cout << "project/instrumental/omi/min field can not be changed" << std::endl;
+       else if (xmlFields.at(indexField+1)=="max")
+        std::cout << "project/instrumental/omi/max field can not be changed" << std::endl;
+       else if (xmlFields.at(indexField+1)=="ave")
+        std::cout << "project/instrumental/omi/ave field can not be changed" << std::endl;
+       else if (xmlFields.at(indexField+1)=="trackSelection")
+        {
+         std::cout << "project/instrumental/omi/trackSelection : " << newProjectProperties.instrumental.omi.trackSelection << " replaced by " << pXmlValue->toAscii().constData() << std::endl;
+         strcpy(newProjectProperties.instrumental.omi.trackSelection,pXmlValue->toAscii().constData());
+        }
+       else if (xmlFields.at(indexField+1)=="xTrackMode")
+        {
+         std::cout << "project/instrumental/omi/xTrackMode : " << pXmlValue->toAscii().constData() << std::endl;
+         newProjectProperties.instrumental.omi.xtrack_mode = str_to_mode(pXmlValue->toAscii().constData());
+        }
+       else if (xmlFields.at(indexField+1)=="calib")
+        std::cout << "project/instrumental/omi/calib field can not be changed" << std::endl;
+       else if (xmlFields.at(indexField+1)=="instr")
+        std::cout << "project/instrumental/omi/instr field can not be changed yet" << std::endl;
+      }
+     else if (xmlFields.at(indexField)=="gome2")
+      std::cout << "project/instrumental/gome2 field can not be changed yet" << std::endl;
+     else if (xmlFields.at(indexField)=="mkzy")
+      std::cout << "project/instrumental/mkzy field can not be changed yet" << std::endl;
+     else if (xmlFields.at(indexField)=="biraairborne")
+      std::cout << "project/instrumental/biraairborne field can not be changed yet" << std::endl;
+     else if (xmlFields.at(indexField)=="oceanoptics")
+      std::cout << "project/instrumental/oceanoptics field can not be changed yet" << std::endl;
+    }
+   
+   
+   p->SetProperties(( mediate_project_t *)&newProjectProperties);
+   
+   // Return
 
-  mediate_project_t newProjectProperties;
- 	int indexField;
- 	RC  rc;
-
- 	// Initializations
-
- 	memcpy(&newProjectProperties,(mediate_project_t *)p->properties(),sizeof(mediate_project_t));
- 	rc=ERROR_ID_NO;
-
- 	for (indexField=startingField;indexField<xmlFieldN;indexField++)
- 	 {
- 	 	if (xmlFields.at(indexField)=="format")
- 	 	 std::cout << "project/instrumental/format field can not be changed" << std::endl;
- 	 	else if (xmlFields.at(indexField)=="site")
- 	 	 std::cout << "project/instrumental/site field can not be changed" << std::endl;
- 	 	else if (xmlFields.at(indexField)=="ascii")
- 	 	 std::cout << "project/instrumental/ascii field can not be changed yet" << std::endl;
- 	 	else if (xmlFields.at(indexField)=="logger")
- 	 	 std::cout << "project/instrumental/logger field can not be changed yet" << std::endl;
- 	 	else if (xmlFields.at(indexField)=="acton")
- 	 	 std::cout << "project/instrumental/acton field can not be changed yet" << std::endl;
- 	 	else if (xmlFields.at(indexField)=="pdaegg")
- 	 	 std::cout << "project/instrumental/pdaegg field can not be changed yet" << std::endl;
- 	 	else if (xmlFields.at(indexField)=="pdaeggold")
- 	 	 std::cout << "project/instrumental/pdaeggold field can not be changed yet" << std::endl;
- 	 	else if (xmlFields.at(indexField)=="ccdohp96")
- 	 	 std::cout << "project/instrumental/ccdohp96 field can not be changed yet" << std::endl;
- 	 	else if (xmlFields.at(indexField)=="ccdha94")
- 	 	 std::cout << "project/instrumental/ccdha94 field can not be changed yet" << std::endl;
- 	 	else if (xmlFields.at(indexField)=="saozvis")
- 	 	 std::cout << "project/instrumental/saozvis field can not be changed yet" << std::endl;
- 	 	else if (xmlFields.at(indexField)=="saozefm")
- 	 	 std::cout << "project/instrumental/saozefm field can not be changed yet" << std::endl;
- 	 	else if (xmlFields.at(indexField)=="mfc")
- 	 	 std::cout << "project/instrumental/mfc field can not be changed yet" << std::endl;
- 	 	else if (xmlFields.at(indexField)=="mfcbira")
- 	 	 std::cout << "project/instrumental/mfcbira field can not be changed yet" << std::endl;
- 	 	else if (xmlFields.at(indexField)=="mfcstd")
- 	 	 std::cout << "project/instrumental/mfcstd field can not be changed yet" << std::endl;
- 	 	else if (xmlFields.at(indexField)=="rasas")
- 	 	 std::cout << "project/instrumental/rasas field can not be changed yet" << std::endl;
- 	 	else if (xmlFields.at(indexField)=="pdasieasoe")
- 	 	 std::cout << "project/instrumental/pdasieasoe field can not be changed yet" << std::endl;
- 	 	else if (xmlFields.at(indexField)=="ccdeev")
- 	 	 std::cout << "project/instrumental/ccdeev field can not be changed yet" << std::endl;
- 	 	else if (xmlFields.at(indexField)=="gdpascii")
- 	 	 std::cout << "project/instrumental/gdpascii field can not be changed yet" << std::endl;
- 	 	else if (xmlFields.at(indexField)=="gdpbin")
- 	 	 std::cout << "project/instrumental/gdpbin field can not be changed yet" << std::endl;
- 	 	else if (xmlFields.at(indexField)=="sciahdf")
- 	 	 std::cout << "project/instrumental/sciahdf field can not be changed yet" << std::endl;
- 	 	else if (xmlFields.at(indexField)=="sciapds")
- 	 	 std::cout << "project/instrumental/sciapds field can not be changed yet" << std::endl;
- 	 	else if (xmlFields.at(indexField)=="uoft")
- 	 	 std::cout << "project/instrumental/uoft field can not be changed yet" << std::endl;
- 	 	else if (xmlFields.at(indexField)=="noaa")
- 	 	 std::cout << "project/instrumental/noaa field can not be changed yet" << std::endl;
- 	 	else if (xmlFields.at(indexField)=="omi")
- 	 	 {
- 	 	 	if (indexField+1>=xmlFieldN)
- 	 	 	 std::cout << "omi attribute is missing" << std::endl;
- 	 	 	else if (xmlFields.at(indexField+1)=="type")
- 	 	 	 std::cout << "project/instrumental/omi/type field can not be changed" << std::endl;
- 	 	 	else if (xmlFields.at(indexField+1)=="min")
- 	 	 	 std::cout << "project/instrumental/omi/min field can not be changed" << std::endl;
- 	 	 	else if (xmlFields.at(indexField+1)=="max")
- 	 	 	 std::cout << "project/instrumental/omi/max field can not be changed" << std::endl;
- 	 	 	else if (xmlFields.at(indexField+1)=="ave")
- 	 	 	 std::cout << "project/instrumental/omi/ave field can not be changed" << std::endl;
- 	 	 	else if (xmlFields.at(indexField+1)=="trackSelection")
- 	 	 	 {
-	       std::cout << "project/instrumental/omi/trackSelection : " << newProjectProperties.instrumental.omi.trackSelection << " replaced by " << pXmlValue->toAscii().constData() << std::endl;
-	       strcpy(newProjectProperties.instrumental.omi.trackSelection,pXmlValue->toAscii().constData());
-        p->SetProperties(( mediate_project_t *)&newProjectProperties);
- 	 	 	 }
- 	 	 	else if (xmlFields.at(indexField+1)=="calib")
- 	 	 	 std::cout << "project/instrumental/omi/calib field can not be changed" << std::endl;
- 	 	 	else if (xmlFields.at(indexField+1)=="instr")
- 	 	 	 std::cout << "project/instrumental/omi/instr field can not be changed yet" << std::endl;
- 	 	 }
- 	 	else if (xmlFields.at(indexField)=="gome2")
- 	 	 std::cout << "project/instrumental/gome2 field can not be changed yet" << std::endl;
- 	 	else if (xmlFields.at(indexField)=="mkzy")
- 	 	 std::cout << "project/instrumental/mkzy field can not be changed yet" << std::endl;
- 	 	else if (xmlFields.at(indexField)=="biraairborne")
- 	 	 std::cout << "project/instrumental/biraairborne field can not be changed yet" << std::endl;
- 	 	else if (xmlFields.at(indexField)=="oceanoptics")
- 	 	 std::cout << "project/instrumental/oceanoptics field can not be changed yet" << std::endl;
-   }
-
-  // Return
-
-  return rc;
+   return rc;
  }
 
 // ===========================
