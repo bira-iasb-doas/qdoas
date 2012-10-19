@@ -7,8 +7,6 @@
 //  Program Language  :  C/C++
 //  Creation date     :  3 September 2012
 //
-//  Author            :  Caroline FAYT
-//
 //        Copyright  (C) Belgian Institute for Space Aeronomy (BIRA-IASB)
 //                       Avenue Circulaire, 3
 //                       1180     UCCLE
@@ -27,6 +25,7 @@
 //      1180     UCCLE                              2600 AP Delft
 //      BELGIUM                                     THE NETHERLANDS
 //      caroline.fayt@aeronomie.be                  info@stcorp.nl
+//      thomas.danckaert@aeronomie.be
 //
 //  This program is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU General Public License
@@ -201,7 +200,13 @@ RC CONVXML_Parse(QList<QString> &xmlCommands,mediate_convolution_t *properties)
      	for (indexField=0;(indexField<xmlFieldsN) && !rc;indexField++)
      	 {
         if (xmlFields.at(indexField)=="general")
-          std::cout << xmlKey.toAscii().constData() << " fields can not be changed yet" << std::endl;
+         {
+         	if (xmlFields.at(indexField+1)=="calib")
+         	 {
+            ConvApplyString(&xmlKey,&xmlValue,properties->general.calibrationFile);        // the path of the field to replace
+            break;
+           }
+         }
         else if (xmlFields.at(indexField)=="con_slit")
          {
           rc=ParseSlit(xmlFields,xmlFieldsN,indexField+1,&xmlKey,&xmlValue,&properties->conslit);
@@ -213,6 +218,57 @@ RC CONVXML_Parse(QList<QString> &xmlCommands,mediate_convolution_t *properties)
          std::cout << xmlKey.toAscii().constData() << " fields can not be changed yet" << std::endl;
         else if (xmlFields.at(indexField)=="highpass_filter")
      	 	 std::cout << xmlKey.toAscii().constData() << " fields can not be changed yet" << std::endl;
+     	 }
+     }
+
+
+    ++it;
+   }
+
+  return rc;
+ }
+
+RC RINGXML_Parse(QList<QString> &xmlCommands,mediate_ring *properties)
+ {
+  QList<QString>::const_iterator it = xmlCommands.begin();
+
+  QString newXmlCmd;
+  QStringList xmlParts;
+  QStringList xmlFields;
+  QString xmlKey,xmlValue;
+
+  int xmlFieldsN,indexField,projectField,analysisField;
+  RC rc;
+
+  // Initializations
+
+  rc=ERROR_ID_NO;
+
+  while ((it!=xmlCommands.end()) && !rc)
+   {
+    newXmlCmd=*it;
+    xmlParts=newXmlCmd.split("=");
+    if (xmlParts.size()==2)
+     {
+     	xmlKey=xmlParts.at(0);
+     	xmlValue=xmlParts.at(1);
+
+     	xmlFields=xmlKey.split("/");
+     	xmlFieldsN=xmlFields.size();
+
+     	projectField=analysisField=0;
+
+     	for (indexField=0;(indexField<xmlFieldsN) && !rc;indexField++)
+     	 {
+        if (xmlFields.at(indexField)=="general")
+         {
+          if (xmlFields.at(indexField+1)=="calib")
+           ConvApplyString(&xmlKey,&xmlValue,properties->calibrationFile);        // the path of the field to replace
+          else
+           rc=ParseSlit(xmlFields,xmlFieldsN,indexField+1,&xmlKey,&xmlValue,&properties->slit);
+
+          break;
+         }
      	 }
      }
 

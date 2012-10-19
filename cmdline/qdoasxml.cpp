@@ -7,8 +7,6 @@
 //  Program Language  :  C/C++
 //  Creation date     :  13 August 2012
 //
-//  Author            :  Caroline FAYT
-//
 //        Copyright  (C) Belgian Institute for Space Aeronomy (BIRA-IASB)
 //                       Avenue Circulaire, 3
 //                       1180     UCCLE
@@ -27,6 +25,7 @@
 //      1180     UCCLE                              2600 AP Delft
 //      BELGIUM                                     THE NETHERLANDS
 //      caroline.fayt@aeronomie.be                  info@stcorp.nl
+//      thomas.danckaert@aeronomie.be
 //
 //  This program is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU General Public License
@@ -292,16 +291,16 @@ RC ParseAnalysis(QStringList &xmlFields,int xmlFieldN,int startingField,QString 
 RC ParseInstrumental(QStringList &xmlFields,int xmlFieldN,int startingField,QString *pXmlValue,const CProjectConfigItem *p)
  {
    // Declarations
-   
+
    mediate_project_t newProjectProperties;
    int indexField;
    RC  rc;
-   
+
    // Initializations
-   
+
    memcpy(&newProjectProperties,(mediate_project_t *)p->properties(),sizeof(mediate_project_t));
    rc=ERROR_ID_NO;
-   
+
    for (indexField=startingField;indexField<xmlFieldN;indexField++)
     {
      if (xmlFields.at(indexField)=="format")
@@ -386,10 +385,10 @@ RC ParseInstrumental(QStringList &xmlFields,int xmlFieldN,int startingField,QStr
      else if (xmlFields.at(indexField)=="oceanoptics")
       std::cout << "project/instrumental/oceanoptics field can not be changed yet" << std::endl;
     }
-   
-   
+
+
    p->SetProperties(( mediate_project_t *)&newProjectProperties);
-   
+
    // Return
 
    return rc;

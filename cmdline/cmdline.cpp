@@ -864,6 +864,9 @@ int batchProcessRing(commands_t *cmd)
     // copy the properties data ...
     mediate_ring properties = *(handler->properties()); // blot copy
 
+    if (xmlSwitch)
+     RINGXML_Parse(cmd->xmlCommands,&properties);
+
     if (!cmd->outputDir.isEmpty() && cmd->outputDir.size() < FILENAME_BUFFER_LENGTH-1)
      {
     	 strcpy(properties.outputFile,cmd->outputDir.toAscii().data());
