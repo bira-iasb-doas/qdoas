@@ -397,7 +397,7 @@ RC EngineSetProject(ENGINE_CONTEXT *pEngineContext)
           i++;
          }
 
-       else if (i!=NDET)
+       if (i!=NDET)
         rc=ERROR_SetLast("EngineSetProject",ERROR_TYPE_FATAL,ERROR_ID_FILE_EMPTY,pInstrumental->calibrationFile);
 
        fclose(fp);
