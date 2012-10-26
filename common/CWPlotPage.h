@@ -61,7 +61,7 @@ Q_OBJECT
 
  private:
   RefCountConstPtr<CPlotDataSet> m_dataSet;
-  mutable CPlotProperties &m_plotProperties;
+  CPlotProperties &m_plotProperties;
   QwtPlotZoomer *m_zoomer;
 };
 
@@ -82,7 +82,7 @@ Q_OBJECT
   void slotExportAsImageAllPlots();
 
  private:
-  mutable CPlotProperties &m_plotProperties;
+  CPlotProperties &m_plotProperties;
   QList<CWPlot*> m_plots;
 };
 
