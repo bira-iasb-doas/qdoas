@@ -552,6 +552,8 @@ RC Gome2ReadOrbitInfo(GOME2_ORBIT_FILE *pOrbitFile,int bandIndex)
   double end_lambda[NBAND];
   GOME2_INFO *pGome2Info;
 
+  char *defPath,*ptr;
+
   RC rc;
 
   // Initializations
@@ -584,6 +586,8 @@ RC Gome2ReadOrbitInfo(GOME2_ORBIT_FILE *pOrbitFile,int bandIndex)
 
   status = coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"GIADR_Bands");
 
+  coda_cursor_goto_array_element_by_index(&pOrbitFile->gome2Cursor,0);          // !!! beat 6.7.0
+
   status = coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"CHANNEL_NUMBER");
   status = coda_cursor_read_uint8_array (&pOrbitFile->gome2Cursor, channel_index, coda_array_ordering_c);
   coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);
@@ -603,6 +607,8 @@ RC Gome2ReadOrbitInfo(GOME2_ORBIT_FILE *pOrbitFile,int bandIndex)
   status = coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"END_LAMBDA");
   status = coda_cursor_read_double_array (&pOrbitFile->gome2Cursor, end_lambda, coda_array_ordering_c);
   coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);
+
+  coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);  // !!! beat 6.7.0
 
   // Output
 
@@ -2407,12 +2413,12 @@ RC GOME2_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
              {
               int pixel_start = FNPixel(pTabFeno->LambdaRef,pTabFeno->svd.LFenetre[indexWindow][0],pTabFeno->NDET,PIXEL_AFTER);
               int pixel_end = FNPixel(pTabFeno->LambdaRef,pTabFeno->svd.LFenetre[indexWindow][1],pTabFeno->NDET,PIXEL_BEFORE);
-              
+
               spectrum_append(new_range, pixel_start, pixel_end);
-              
+
               DimL += pixel_end - pixel_start +1;
              }
-            
+
             // Buffers allocation
             SVD_Free("GOME2_LoadAnalysis",&pTabFeno->svd);
             pTabFeno->svd.DimL=DimL;
