@@ -123,7 +123,7 @@ static DoasI32    memoryMaxObjectsSize=0;                                       
 // RETURN        pointer to the allocated buffer;
 // -----------------------------------------------------------------------------
 
-void *MEMORY_AllocBuffer(DoasCh *callingFunctionName,DoasCh *bufferName,INT itemNumber,INT itemSize,INT offset,INT type)
+void *MEMORY_AllocBuffer(const DoasCh *callingFunctionName,DoasCh *bufferName,INT itemNumber,INT itemSize,INT offset,INT type)
  {
   // Declarations
 
@@ -217,7 +217,7 @@ void *MEMORY_AllocBuffer(DoasCh *callingFunctionName,DoasCh *bufferName,INT item
 //               information for error message;
 // -----------------------------------------------------------------------------
 
-void MEMORY_ReleaseBuffer(DoasCh *callingFunctionName,DoasCh *bufferName,void *pBuffer)
+void MEMORY_ReleaseBuffer(const DoasCh *callingFunctionName,DoasCh *bufferName,void *pBuffer)
  {
   // Declarations
 
@@ -287,7 +287,7 @@ void MEMORY_ReleaseBuffer(DoasCh *callingFunctionName,DoasCh *bufferName,void *p
 //               MEMORY_ReleaseDVector.
 // -----------------------------------------------------------------------------
 
-double *MEMORY_AllocDVector(DoasCh *callingFunctionName,DoasCh *bufferName,INT nl,INT nh)
+double *MEMORY_AllocDVector(const DoasCh *callingFunctionName,DoasCh *bufferName,INT nl,INT nh)
  {
   // Declaration
 
@@ -333,7 +333,7 @@ double *MEMORY_AllocDVector(DoasCh *callingFunctionName,DoasCh *bufferName,INT n
 //               nl                   : lower index in use;
 // -----------------------------------------------------------------------------
 
-void MEMORY_ReleaseDVector(DoasCh *callingFunctionName,DoasCh *bufferName,double *v,INT nl)
+void MEMORY_ReleaseDVector(const DoasCh *callingFunctionName,DoasCh *bufferName,double *v,INT nl)
  {
  	// Register the function in debugging mode
 
@@ -371,7 +371,7 @@ void MEMORY_ReleaseDVector(DoasCh *callingFunctionName,DoasCh *bufferName,double
 //               MEMORY_ReleaseDMatrix.
 // -----------------------------------------------------------------------------
 
-double **MEMORY_AllocDMatrix(DoasCh *callingFunctionName,DoasCh *bufferName,INT nrl,INT nrh,INT ncl,INT nch)
+double **MEMORY_AllocDMatrix(const DoasCh *callingFunctionName,DoasCh *bufferName,INT nrl,INT nrh,INT ncl,INT nch)
  {
   // Declarations
 
@@ -434,7 +434,7 @@ double **MEMORY_AllocDMatrix(DoasCh *callingFunctionName,DoasCh *bufferName,INT 
 //               nrl                  : lower index in use for rows;
 // -----------------------------------------------------------------------------
 
-void MEMORY_ReleaseDMatrix(DoasCh *callingFunctionName,DoasCh *bufferName,double **m,INT ncl,INT nch,INT nrl)
+void MEMORY_ReleaseDMatrix(const DoasCh *callingFunctionName,DoasCh *bufferName,double **m,INT ncl,INT nch,INT nrl)
  {
   // Declaration
 

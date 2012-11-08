@@ -23,48 +23,6 @@
 #include <stdio.h>
 #include <stdbool.h>
 
-/* OMI XTrackQualityFlags description from OMI IODS_Vol_2_issue8:
- *
- *  Bit 0-2:
- *    0 = ok
- *    1 = affected by anomaly, don't use pixel
- *    2 = slightly affected, use with caution
- *    3 = affected, not optimally corrected, use with caution
- *    4 = affected, optimally corrected, use with caution
- *    5 = "not used"
- *    6 = "not used"
- *    7 = error during correction, don't use
- *  Bit 3: reserved for future use
- *  Bit 4 = possibly affected by wavelength shift
- *  Bit 5 = possibly affected by blockage
- *  Bit 6 = possibly affected by stray sunlight
- *  Bit 7 = possibly affected by stray earthshine
- *
- *  We provide three possible uses of XTrackQualityFlags in the analysis:
- *
- *  IGNORE: don't use xtrackqualityflags
- *  STRICT: only use pixels with flag 0 (unaffected)
- *  NONSTRICT: also use pixels which are slightly affected or corrected (flag 2,3 or 4)
- */
-bool omi_use_track(int quality_flag, enum omi_xtrack_mode mode)
- {
-   quality_flag &= 7; // reduce to bits 0-2
-   bool result;
-   switch(mode)
-    {
-    case XTRACKQF_IGNORE:
-      result = true;
-      break;
-    case XTRACKQF_STRICT:
-      result = (quality_flag == 0);
-      break;
-    case XTRACKQF_NONSTRICT:
-      result = (quality_flag == 0 || quality_flag == 2 || quality_flag == 3 || quality_flag == 4);
-      break;
-    }
-   return result;
- }
-
 int mediateRequestDisplaySpecInfo(void *engineContext,int page,void *responseHandle)
  {
    // Declarations
@@ -176,12 +134,12 @@ int mediateRequestDisplaySpecInfo(void *engineContext,int page,void *responseHan
     {
       if (pInstrumental->averageFlag)
         mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Record","%d/%d (%d spectra averaged)",
-                                pEngineContext->indexRecord,pEngineContext->recordNumber,pRecord->omi.omiNumberOfRows);
+                                pEngineContext->indexRecord,pEngineContext->recordNumber,pRecord->omi.nMeasurements);
       else
        mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Record","%d/%d (swath %d/%d, row %d/%d)",
                                pEngineContext->indexRecord,pEngineContext->recordNumber,
-                               pRecord->omi.omiSwathIndex,pRecord->omi.omiNumberOfSwaths,
-                               pRecord->omi.omiRowIndex,pRecord->omi.omiNumberOfRows);
+                               pRecord->omi.omiSwathIndex,pRecord->omi.nMeasurements,
+                               pRecord->omi.omiRowIndex,pRecord->omi.nXtrack);
 
       if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_OMI_INDEX_SWATH])
        mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Index of swath","%d",pRecord->omi.omiSwathIndex);
@@ -1644,7 +1602,7 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
      if ((THRD_id==THREAD_TYPE_ANALYSIS) && numberOfWindows)
       {
        for (indexFeno=0;(indexFeno<numberOfWindows+1) && !rc;indexFeno++)
-        if (strlen(analysisWindows[0].refOneFile))
+        if (strlen(analysisWindows[indexFeno].refOneFile)) // Analysis Window properties -> Reference 1.
          {
           rc=OMI_LoadReference(pEngineContext,(DoasCh *)analysisWindows[indexFeno].refOneFile);
           break;
@@ -1652,7 +1610,7 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
       }
      else if (THRD_id==THREAD_TYPE_KURUCZ)
       {
-       if (!strlen(pEngineContext->project.instrumental.calibrationFile))
+       if (!strlen(pEngineContext->project.instrumental.calibrationFile)) // Project properties ->Instrumental: Calibration File
         rc=ERROR_SetLast("mediateRequestSetAnalysisWindows",ERROR_TYPE_FATAL,ERROR_ID_FILE_NOT_FOUND,pInstrumental->calibrationFile);
        else
         rc=OMI_LoadReference(pEngineContext,(DoasCh *)pEngineContext->project.instrumental.calibrationFile);

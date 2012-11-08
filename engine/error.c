@@ -226,7 +226,7 @@ RC ERROR_DisplayMessage(void *responseHandle)
 // RETURN        the errorId
 // -----------------------------------------------------------------------------
 
-RC ERROR_SetLast(DoasCh *callingFunction,int errorType,RC errorId,...)
+RC ERROR_SetLast(const DoasCh *callingFunction,int errorType,RC errorId,...)
  {
   // Declarations
 

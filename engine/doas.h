@@ -92,7 +92,7 @@ void   VECTOR_Invert(double *vector,int dim);
 double VECTOR_Table2_Index1(double **Table,INT Nx,INT Ny,double X,double Y);
 double VECTOR_Table2(double **Table,INT Nx,INT Ny,double X,double Y);
 double VECTOR_Norm(double *v,INT dim);
-RC     VECTOR_NormalizeVector(double *v,INT dim,double *fact,DoasCh *function);
+RC     VECTOR_NormalizeVector(double *v,INT dim,double *fact,const DoasCh *function);
 
 // =================================
 // FVOIGT.C : Voigt profile function
@@ -136,8 +136,8 @@ enum _spline
   SPLINE_MAX
  };
 
-RC SPLINE_Deriv2(double *X,double *Y,double *Y2,int n,DoasCh *callingFunction);
-RC SPLINE_Vector(double *xa,double *ya,double *y2a,int na,double *xb,double *yb,int nb,int type,DoasCh *callingFunction);
+RC SPLINE_Deriv2(double *X,double *Y,double *Y2,int n,const DoasCh *callingFunction);
+RC SPLINE_Vector(double *xa,double *ya,double *y2a,int na,double *xb,double *yb,int nb,int type,const DoasCh *callingFunction);
 
 // ====================================
 // SVD.C : Singular value decomposition
@@ -645,8 +645,8 @@ typedef struct _omi
    INDEX   omiRowIndex;                                                          // index of the current row in the current swath
    DoasUS  omiGroundPQF;                                                         // ground pixel quality flags
    DoasUS  omiXtrackQF;                                                          // xtrack quality flags
-   int     omiNumberOfSwaths,                                                    // total number of tracks
-     omiNumberOfRows;                                                      // total number of spectra in tracks
+   int nMeasurements,                                                    // total number of tracks
+     nXtrack;                                                      // total number of spectra in tracks
    DoasUS *omiPixelQF; 	                                                         // pixel quality flag
 }
 OMI_DATA;
@@ -1635,14 +1635,14 @@ RC GOME2_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle);
 
 // OMI
 
-extern int OMI_beatLoaded;
-
 void OMI_TrackSelection(DoasCh *omiTrackSelection,int *omiTracks);
 void OMI_ReleaseReference(void);
 RC   OMI_LoadReference(ENGINE_CONTEXT *pEngineContext,DoasCh *refFile);
 RC   OMI_GetReference(DoasCh *refFile,INDEX indexColumn,double *lambda,double *ref,double *refSigma);
 RC   OMI_Set(ENGINE_CONTEXT *pEngineContext);
-RC   OMI_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,INDEX fileIndex);
+RC   OMI_Read(ENGINE_CONTEXT *pEngineContext,int recordNo);
+RC   OMI_load_analysis(ENGINE_CONTEXT *pEngineContext, void *responseHandle);
+bool omi_use_track(int quality_flag, enum omi_xtrack_mode mode);
 
 #if defined(_cplusplus) || defined(__cplusplus)
 }

@@ -647,6 +647,7 @@ void CWAnalysisWindowPropertyEditor::projectPropertiesChanged()
        case PRJCT_INSTR_FORMAT_GOME2:
        case PRJCT_INSTR_FORMAT_SCIA_HDF:
        case PRJCT_INSTR_FORMAT_SCIA_PDS:
+       case PRJCT_INSTR_FORMAT_OMI:
         {
 	        m_activePixelType = false;
 	        m_activeCloudFraction = (d->instrumental.format==PRJCT_INSTR_FORMAT_GOME2)?true:false;

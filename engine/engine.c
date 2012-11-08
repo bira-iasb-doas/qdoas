@@ -627,6 +627,8 @@ RC EngineSetFile(ENGINE_CONTEXT *pEngineContext,const char *fileName,void *respo
        // ---------------------------------------------------------------------------
      case PRJCT_INSTR_FORMAT_OMI :
        rc=OMI_Set(pEngineContext);
+       if(!rc)
+         rc = OMI_load_analysis(pEngineContext, responseHandle);
        break;
        // ---------------------------------------------------------------------------
      case PRJCT_INSTR_FORMAT_CCD_EEV :
@@ -819,7 +821,7 @@ RC EngineReadFile(ENGINE_CONTEXT *pEngineContext,int indexRecord,INT dateFlag,IN
       break;
       // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_OMI :
-      rc=OMI_Read(pEngineContext,indexRecord,ITEM_NONE);
+      rc=OMI_Read(pEngineContext,indexRecord);
       break;
       // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_CCD_EEV :
@@ -1085,10 +1087,10 @@ RC EngineDestroyContext(ENGINE_CONTEXT *pEngineContext)
 
    RESOURCE_Free();
 
-   if (GOME2_beatLoaded || OMI_beatLoaded)
+   if (GOME2_beatLoaded)
     {
      coda_done();
-     GOME2_beatLoaded=OMI_beatLoaded=0;
+     GOME2_beatLoaded=0;
     }
 
    return rc;

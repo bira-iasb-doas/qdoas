@@ -380,7 +380,7 @@ ERROR_DESCRIPTION;
 // Prototypes
 
 RC ERROR_DisplayMessage(void *responseHandle);
-RC ERROR_SetLast(DoasCh *callingFunction,int errorType,RC errorId,...);
+RC ERROR_SetLast(const DoasCh *callingFunction,int errorType,RC errorId,...);
 RC ERROR_GetLast(ERROR_DESCRIPTION *pError);
 
 // ===============
@@ -433,12 +433,12 @@ EXTERN DoasCh *MEMORY_types[MEMORY_TYPE_MAX];                                   
 
 // Prototypes
 
-void    *MEMORY_AllocBuffer(DoasCh *callingFunctionName,DoasCh *bufferName,INT itemNumber,INT itemSize,INT offset,INT type);
-void     MEMORY_ReleaseBuffer(DoasCh *callingFunctionName,DoasCh *bufferName,void *pBuffer);
-double  *MEMORY_AllocDVector(DoasCh *callingFunctionName,DoasCh *bufferName,int nl,int nh);
-void     MEMORY_ReleaseDVector(DoasCh *callingFunctionName,DoasCh *bufferName,double *v,int nl);
-double **MEMORY_AllocDMatrix(DoasCh *callingFunctionName,DoasCh *bufferName,int nrl,int nrh,int ncl,int nch);
-void     MEMORY_ReleaseDMatrix(DoasCh *callingFunctionName,DoasCh *bufferName,double **m,int ncl,int nch,int nrl);
+void    *MEMORY_AllocBuffer(const DoasCh *callingFunctionName,DoasCh *bufferName,INT itemNumber,INT itemSize,INT offset,INT type);
+void     MEMORY_ReleaseBuffer(const DoasCh *callingFunctionName,DoasCh *bufferName,void *pBuffer);
+double  *MEMORY_AllocDVector(const DoasCh *callingFunctionName,DoasCh *bufferName,int nl,int nh);
+void     MEMORY_ReleaseDVector(const DoasCh *callingFunctionName,DoasCh *bufferName,double *v,int nl);
+double **MEMORY_AllocDMatrix(const DoasCh *callingFunctionName,DoasCh *bufferName,int nrl,int nrh,int ncl,int nch);
+void     MEMORY_ReleaseDMatrix(const DoasCh *callingFunctionName,DoasCh *bufferName,double **m,int ncl,int nch,int nrl);
 
 RC       MEMORY_Alloc(void);
 RC       MEMORY_End(void);

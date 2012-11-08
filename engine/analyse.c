@@ -2229,7 +2229,7 @@ RC ANALYSE_AlignReference(ENGINE_CONTEXT *pEngineContext,INT refFlag,INT saveFla
 
         Spectre=Feno->SrefEtalon;
 
-        Feno->Decomp=TabFeno[0][WrkFeno].Decomp=1;
+        Feno->Decomp=1;
         Feno->amfFlag=0;
 
         pSvd=&Feno->svd;
@@ -2259,9 +2259,9 @@ RC ANALYSE_AlignReference(ENGINE_CONTEXT *pEngineContext,INT refFlag,INT saveFla
 
         if (refFlag==2)
          {
-          TabFeno[indexFenoColumn][WrkFeno].ShiftS=TabFeno[0][WrkFeno].ShiftN=pResults->Shift;
-          TabFeno[indexFenoColumn][WrkFeno].StretchS=TabFeno[0][WrkFeno].StretchN=pResults->Stretch;
-          TabFeno[indexFenoColumn][WrkFeno].Stretch2S=TabFeno[0][WrkFeno].Stretch2N=pResults->Stretch2;
+          TabFeno[indexFenoColumn][WrkFeno].ShiftS=TabFeno[indexFenoColumn][WrkFeno].ShiftN=pResults->Shift;
+          TabFeno[indexFenoColumn][WrkFeno].StretchS=TabFeno[indexFenoColumn][WrkFeno].StretchN=pResults->Stretch;
+          TabFeno[indexFenoColumn][WrkFeno].Stretch2S=TabFeno[indexFenoColumn][WrkFeno].Stretch2N=pResults->Stretch2;
          }
         else if (refFlag==3)
          {
@@ -2290,8 +2290,8 @@ RC ANALYSE_AlignReference(ENGINE_CONTEXT *pEngineContext,INT refFlag,INT saveFla
           else
            sprintf(tabTitle,"%s results (record %d/%d, swath %d/%d, row %d/%d)",
                    Feno->windowName,pEngineContext->indexRecord,pEngineContext->recordNumber,
-                   pEngineContext->recordInfo.omi.omiSwathIndex,pEngineContext->recordInfo.omi.omiNumberOfSwaths,
-                   pEngineContext->recordInfo.omi.omiRowIndex,pEngineContext->recordInfo.omi.omiNumberOfRows);
+                   pEngineContext->recordInfo.omi.omiSwathIndex,pEngineContext->recordInfo.omi.nMeasurements,
+                   pEngineContext->recordInfo.omi.omiRowIndex,pEngineContext->recordInfo.omi.nXtrack);
 
           sprintf(string,"Alignment Ref1/Ref2");
 
@@ -2317,7 +2317,7 @@ RC ANALYSE_AlignReference(ENGINE_CONTEXT *pEngineContext,INT refFlag,INT saveFla
            }
          }
 
-        TabFeno[0][WrkFeno].Decomp=1;
+        TabFeno[indexFenoColumn][WrkFeno].Decomp=1;
        }
      }
    }
@@ -3335,10 +3335,25 @@ RC ANALYSE_CurFitMethod(INDEX   indexFenoColumn,  // for OMI
        goto EndCurFitMethod;
      }
 
+    FILE *checkspec = fopen("before_analyse_function.txt","w");
+
+    for(int i = 0; i<NDET; i++) {
+     fprintf(checkspec, "%f %f %f %f ", LambdaSpec[i], SpecTrav[i], ANALYSE_splineX[i], RefTrav[i]);
+     fprintf(checkspec, "\n");
+    }
+    fclose(checkspec);
+
     if ((NF==0) && ((rc=ANALYSE_Function(SpecTrav,RefTrav,SigmaY,Yfit,DimL,fitParamsC,fitParamsF,indexFenoColumn))<THREAD_EVENT_STOP))
      *Chisqr=(double)Fchisq(pAnalysisOptions->fitWeighting,(int)ANALYSE_nFree,Y0,Yfit,SigmaY,DimL);
     else if (NF)
      {
+      checkspec = fopen("after_analyse_function.txt","w");
+      for(int i = 0; i<NDET; i++) {
+       fprintf(checkspec, "%f %f %f %f ", LambdaSpec[i], SpecTrav[i], ANALYSE_splineX[i], RefTrav[i]);
+       fprintf(checkspec, "\n");
+      }
+      fclose(checkspec);
+      
       for (int i=0; i<NF; i++ ) { fitParamsF[i] = Fitp[i]; Deltap[i] = FitDeltap[i]; }
 
       /*  ==============  */
@@ -3565,11 +3580,6 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
   indexFenoColumn=(pInstrumental->readOutFormat!=PRJCT_INSTR_FORMAT_OMI)?0:pRecord->omi.omiRowIndex-1;
 
-  // For OMI :
-
-  // pRecord->omi.omiSwathIndex=indexSwath+1;                                  // index of the current swath
-  // pRecord->omi.omiRowIndex=indexSpectrum+1;                                // index of the current spectrum in the current swath
-
   memcpy(ANALYSE_t,ANALYSE_zeros,sizeof(double)*NDET);
   memcpy(ANALYSE_tc,ANALYSE_zeros,sizeof(double)*NDET);
 
@@ -3650,6 +3660,7 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
     if (THRD_id==THREAD_TYPE_ANALYSIS)
      {
+       
       // Browse analysis windows
 
       n=0,n2=0;
@@ -3674,8 +3685,8 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
           sprintf(tabTitle,"%s results (record %d/%d, swath %d/%d, row %d/%d)",
                   Feno->windowName,pEngineContext->indexRecord,pEngineContext->recordNumber,
-                  pEngineContext->recordInfo.omi.omiSwathIndex,pEngineContext->recordInfo.omi.omiNumberOfSwaths,
-                  pEngineContext->recordInfo.omi.omiRowIndex,pEngineContext->recordInfo.omi.omiNumberOfRows);
+                  pEngineContext->recordInfo.omi.omiSwathIndex,pEngineContext->recordInfo.omi.nMeasurements,
+                  pEngineContext->recordInfo.omi.omiRowIndex,pEngineContext->recordInfo.omi.nXtrack);
          }
 
         displayFlag=Feno->displaySpectrum+                                      //  force display spectrum
@@ -3753,6 +3764,17 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
           if ((Feno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_AUTOMATIC) &&
               pEngineContext->satelliteFlag)
            {
+             if (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_OMI) {
+               memcpy(Feno->Sref,Feno->SrefN,sizeof(double)*NDET); // TD quick test for omi
+                Feno->Shift=Feno->ShiftN;
+                Feno->Stretch=Feno->StretchN;
+                Feno->Stretch2=Feno->Stretch2N;
+                Feno->refNormFact=Feno->refNormFactN;
+
+                if (!Feno->useKurucz)
+                 memcpy(Feno->LambdaK,Feno->LambdaN,sizeof(double)*NDET);
+
+             } else
             if ((fabs(ANALYSE_oldLatitude)>(double)360.) ||
                 ((ANALYSE_oldLatitude>=(double)0.) && (pRecord->latitude<(double)0.)) ||
                 ((ANALYSE_oldLatitude<(double)0.) && (pRecord->latitude>=(double)0.)))
@@ -3803,11 +3825,13 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
            }
 
-          // Reference spectrum
+          // Reference spectrum // TD: remove?
 
           memcpy(Sref,Feno->Sref,sizeof(double)*NDET);
           Lambda=Feno->LambdaK;
           LambdaSpec=Feno->Lambda;
+
+          // TD: end remove
 
           // Display spectrum in the current analysis window
 
@@ -3818,13 +3842,20 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
           if (Feno->displaySpectrum)
            {
-            double *curves[2][2] = {{LambdaSpec, Spectre},
-                                    {Lambda, Sref}};
+            double *spectre_plot = malloc(NDET * sizeof(double));
+            // in case spectrum & reference have different wavelength grids (shift in pixels): interpolate Spectre on the grid of the reference
+            rc = SPLINE_Vector(LambdaSpec, Spectre, NULL, NDET, Lambda, spectre_plot, NDET, SPLINE_LINEAR, __func__);
 
+            double *curves[2][2] = {{Lambda, spectre_plot},
+                                    {Lambda, Sref}};
             if (!Feno->longPathFlag)
              plot_curves(indexPage, curves, 2, Spectrum, forceAutoScale, "Spectrum and reference", responseHandle, Feno->svd.specrange);
             else
              plot_curves(indexPage, curves, 1, Spectrum, forceAutoScale, "Spectrum", responseHandle, Feno->svd.specrange);
+
+            free(spectre_plot);
+            if (rc)
+             goto EndAnalysis;
            }
 
           // Analysis method
@@ -3844,6 +3875,13 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
           double av_residual = 0;
           int num_repeats = 0;
+
+          FILE *checkspec = fopen("before_analyse_curfitmethod.txt","w");
+          for(int i =0; i<NDET; i++) {
+           fprintf(checkspec, "%f %f %f %f ", LambdaSpec[i], Spectre[i], Feno->LambdaRef[i], Sref[i]);
+           fprintf(checkspec,  "\n");
+          }
+          fclose(checkspec);
 
           do {
            if ((rc=ANALYSE_CurFitMethod(indexFenoColumn,
@@ -5620,7 +5658,9 @@ RC ANALYSE_LoadRef(ENGINE_CONTEXT *pEngineContext,INDEX indexFenoColumn)
         (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN) ||
         (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_HDF) ||
         (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS) ||
-        (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GOME2)) &&
+        (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GOME2)
+        || (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_OMI)
+        ) &&
        (((pTabFeno->SrefN=(double *)MEMORY_AllocDVector("ANALYSE_LoadRef ","SrefN",0,NDET-1))==NULL) ||
         ((pTabFeno->SrefS=(double *)MEMORY_AllocDVector("ANALYSE_LoadRef ","SrefS",0,NDET-1))==NULL) ||
         ((pTabFeno->LambdaN=(double *)MEMORY_AllocDVector("ANALYSE_LoadRef ","LambdaN",0,NDET-1))==NULL) ||

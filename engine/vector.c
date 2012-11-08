@@ -364,7 +364,7 @@ double VECTOR_Norm(double *v,INT dim)
 // VECTOR_NormalizeVector : Vector normalization
 // ----------------------------------------------------
 
-RC VECTOR_NormalizeVector(double *v,INT dim,double *pFact,DoasCh *function)
+RC VECTOR_NormalizeVector(double *v,INT dim,double *pFact,const DoasCh *function)
  {
   // Declarations
 
