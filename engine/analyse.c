@@ -3335,25 +3335,10 @@ RC ANALYSE_CurFitMethod(INDEX   indexFenoColumn,  // for OMI
        goto EndCurFitMethod;
      }
 
-    FILE *checkspec = fopen("before_analyse_function.txt","w");
-
-    for(int i = 0; i<NDET; i++) {
-     fprintf(checkspec, "%f %f %f %f ", LambdaSpec[i], SpecTrav[i], ANALYSE_splineX[i], RefTrav[i]);
-     fprintf(checkspec, "\n");
-    }
-    fclose(checkspec);
-
     if ((NF==0) && ((rc=ANALYSE_Function(SpecTrav,RefTrav,SigmaY,Yfit,DimL,fitParamsC,fitParamsF,indexFenoColumn))<THREAD_EVENT_STOP))
      *Chisqr=(double)Fchisq(pAnalysisOptions->fitWeighting,(int)ANALYSE_nFree,Y0,Yfit,SigmaY,DimL);
     else if (NF)
      {
-      checkspec = fopen("after_analyse_function.txt","w");
-      for(int i = 0; i<NDET; i++) {
-       fprintf(checkspec, "%f %f %f %f ", LambdaSpec[i], SpecTrav[i], ANALYSE_splineX[i], RefTrav[i]);
-       fprintf(checkspec, "\n");
-      }
-      fclose(checkspec);
-      
       for (int i=0; i<NF; i++ ) { fitParamsF[i] = Fitp[i]; Deltap[i] = FitDeltap[i]; }
 
       /*  ==============  */
@@ -3875,13 +3860,6 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
           double av_residual = 0;
           int num_repeats = 0;
-
-          FILE *checkspec = fopen("before_analyse_curfitmethod.txt","w");
-          for(int i =0; i<NDET; i++) {
-           fprintf(checkspec, "%f %f %f %f ", LambdaSpec[i], Spectre[i], Feno->LambdaRef[i], Sref[i]);
-           fprintf(checkspec,  "\n");
-          }
-          fclose(checkspec);
 
           do {
            if ((rc=ANALYSE_CurFitMethod(indexFenoColumn,
