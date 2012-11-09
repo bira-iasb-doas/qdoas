@@ -207,7 +207,7 @@ static int num_reference_orbit_files = 0;
 int OMI_ms=0;
 int omiSwathOld=ITEM_NONE;
 
-RC OmiOpen(OMI_ORBIT_FILE *pOrbitFile,char *swathName);
+RC OmiOpen(OMI_ORBIT_FILE *pOrbitFile,const char *swathName);
 void omi_calculate_wavelengths(float32 wavelength_coeff[], int16 refcol, int32 n_wavel, double* lambda);
 void omi_free_swath_data(OMI_SWATH *pSwath);
 void omi_calculate_wavelengths(float32 wavelength_coeff[], int16 refcol, int32 n_wavel, double* lambda);
@@ -921,7 +921,7 @@ RC OmiGetSwathData(OMI_ORBIT_FILE *pOrbitFile)
   return rc;
 }
 
-RC OmiOpen(OMI_ORBIT_FILE *pOrbitFile,char *swathName)
+RC OmiOpen(OMI_ORBIT_FILE *pOrbitFile,const char *swathName)
 {
   RC rc = ERROR_ID_NO;
 
@@ -1215,7 +1215,6 @@ RC OMI_load_analysis(ENGINE_CONTEXT *pEngineContext, void *responseHandle) {
       goto end_omi_load_analysis;
     }
 
-    /* TD: no effect?
     for(int i=0; i<ANALYSE_swathSize; i++) {
       if (pEngineContext->project.instrumental.omi.omiTracks[i]) {
         // fit wavelength shift between calibrated solar irradiance
@@ -1224,7 +1223,6 @@ RC OMI_load_analysis(ENGINE_CONTEXT *pEngineContext, void *responseHandle) {
         rc = ANALYSE_AlignReference(pEngineContext,2,pEngineContext->project.spectra.displayDataFlag,responseHandle,i);
       }
     }
-    */
   }
 
  end_omi_load_analysis:
