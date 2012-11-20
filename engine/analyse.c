@@ -2398,7 +2398,7 @@ RC ANALYSE_Function ( double *X, double *Y, double *SigmaY, double *Yfit, int Np
 {
   // Declarations
 
-  double *XTrav,*YTrav,*newXsTrav,*preshift,offset,deltaX,tau;
+  double *XTrav,*YTrav,*newXsTrav,*spectrum_interpolated,*reference_shifted,*preshift,offset,deltaX,tau;
   CROSS_REFERENCE *TabCross,*pTabCross;
   MATRIX_OBJECT slit0,slit1;
   INT NewDimC,offsetOrder;
@@ -2427,15 +2427,6 @@ RC ANALYSE_Function ( double *X, double *Y, double *SigmaY, double *Yfit, int Np
 
   rc=ERROR_ID_NO;
 
-  // Calculate the mean
-
-
-  doas_iterator my_iterator;
-  for( int i = iterator_start(&my_iterator, global_doas_spectrum); i != ITERATOR_FINISHED; i=iterator_next(&my_iterator))
-   Feno->xmean+=(double)X[i];
-
-  Feno->xmean/=Npts;
-
   // Real time convolution for Kurucz
 
   if ((Feno->hidden==1) && Feno->xsToConvolute && pKuruczOptions->fwhmFit)
@@ -2457,6 +2448,8 @@ RC ANALYSE_Function ( double *X, double *Y, double *SigmaY, double *Yfit, int Np
   if (((XTrav=MEMORY_AllocDVector("Function ","XTrav",0,Npts-1))==NULL) ||                  // raw spectrum
       ((YTrav=MEMORY_AllocDVector("Function ","YTrav",0,Npts-1))==NULL) ||                  // reference spectrum
       ((newXsTrav=MEMORY_AllocDVector("Function ","newXsTrav",0,NDET-1))==NULL) ||
+      ((spectrum_interpolated=MEMORY_AllocDVector(__func__,"spectrum_interpolated",0,NDET-1))==NULL) || // spectrum interpolated on reference wavelength grid
+      ((reference_shifted=MEMORY_AllocDVector(__func__,"reference_shifted",0,NDET-1))==NULL) ||
       ((preshift=MEMORY_AllocDVector("Function ","preshift",0,NDET-1))==NULL))            // shifted and stretched cross section
 
    rc=ERROR_ID_ALLOC;
@@ -2470,6 +2463,107 @@ RC ANALYSE_Function ( double *X, double *Y, double *SigmaY, double *Yfit, int Np
     memcpy(preshift,ANALYSE_zeros,sizeof(double)*NDET);
 
     memcpy(newXsTrav,ANALYSE_zeros,sizeof(double)*NDET);
+
+    // ========
+    // SPECTRUM
+    // ========
+
+    // ---------------------------------
+    // Wavelength alignment (shift option in Shift and stretch page) for spectrum
+    // ---------------------------------
+
+    if (((rc=ShiftVector(LambdaSpec,X,SplineSpec,spectrum_interpolated,
+                         (Feno->indexSpectrum!=ITEM_NONE)?((TabCross[Feno->indexSpectrum].FitShift!=ITEM_NONE)?(double)fitParamsF[TabCross[Feno->indexSpectrum].FitShift]:(double)TabCross[Feno->indexSpectrum].InitShift):(double)0.,
+                         (Feno->indexSpectrum!=ITEM_NONE)?((TabCross[Feno->indexSpectrum].FitStretch!=ITEM_NONE)?(double)fitParamsF[TabCross[Feno->indexSpectrum].FitStretch]:(double)TabCross[Feno->indexSpectrum].InitStretch):(double)0.,
+                         (Feno->indexSpectrum!=ITEM_NONE)?((TabCross[Feno->indexSpectrum].FitStretch2!=ITEM_NONE)?(double)fitParamsF[TabCross[Feno->indexSpectrum].FitStretch2]:(double)TabCross[Feno->indexSpectrum].InitStretch2):(double)0.,
+                         (double)0.,(double)0.,(double)0.,
+                         fitParamsF,-1,0,NULL,indexFenoColumn))!=ERROR_ID_NO) ||
+
+        (Feno->useUsamp && (pUsamp->method==PRJCT_USAMP_AUTOMATIC) && ((rc=ANALYSE_UsampBuild(2,ITEM_NONE))!=ERROR_ID_NO)))
+
+     goto EndFunction;
+
+    // ------------------------------
+    // Low pass filtering on spectrum
+    // ------------------------------
+
+    // Filter real time only when fitting difference of resolution between spectrum and reference
+
+    if ((Feno->analysisType==ANALYSIS_TYPE_FWHM_NLFIT) && (ANALYSE_plFilter->filterFunction!=NULL) &&
+        ((rc=FILTER_Vector(ANALYSE_plFilter,&spectrum_interpolated[LimMin],&spectrum_interpolated[LimMin],LimN,PRJCT_FILTER_OUTPUT_LOW))!=0))
+     {
+      rc=ERROR_SetLast("EndFunction",ERROR_TYPE_WARNING,ERROR_ID_ANALYSIS,analyseIndexRecord,"Filter");
+      goto EndFunction;
+     }
+
+    // -------------------------------
+    // High-pass filtering on spectrum
+    // -------------------------------
+
+    if ((Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVD) && !hFilterSpecLog &&  // logarithms are not calculated and filtered before entering this function
+        (((rc=VECTOR_Log(&spectrum_interpolated[LimMin],&spectrum_interpolated[LimMin],LimN,"ANLYSE_Function (Spec) "))!=0) ||
+         ((ANALYSE_phFilter->filterFunction!=NULL) &&
+          ((!Feno->hidden && ANALYSE_phFilter->hpFilterAnalysis) || ((Feno->hidden==1) && ANALYSE_phFilter->hpFilterCalib)) &&
+          ((rc=FILTER_Vector(ANALYSE_phFilter,&spectrum_interpolated[LimMin],&spectrum_interpolated[LimMin],LimN,PRJCT_FILTER_OUTPUT_HIGH_SUB))!=0))))
+
+     goto EndFunction;
+
+    //-------------------
+    // Calculate the mean
+    //-------------------
+    doas_iterator my_iterator;
+    for( int i = iterator_start(&my_iterator, global_doas_spectrum); i != ITERATOR_FINISHED; i=iterator_next(&my_iterator))
+     Feno->xmean+=(double)spectrum_interpolated[i];
+    
+    Feno->xmean/=Npts;
+
+    // -------------------------------
+    // Spectrum correction with offset
+    // -------------------------------
+
+    if (Feno->analysisMethod!=PRJCT_ANLYS_METHOD_SVDMARQUARDT)
+     {
+      offsetOrder=-1;
+
+      if ((Feno->indexOffsetConst!=ITEM_NONE) && ((TabCross[Feno->indexOffsetConst].FitParam!=ITEM_NONE) || (TabCross[Feno->indexOffsetConst].InitParam!=(double)0.)))
+       offsetOrder=0;
+      if ((Feno->indexOffsetOrder1!=ITEM_NONE) && ((TabCross[Feno->indexOffsetOrder1].FitParam!=ITEM_NONE) || (TabCross[Feno->indexOffsetOrder1].InitParam!=(double)0.)))
+       offsetOrder=1;
+      if ((Feno->indexOffsetOrder2!=ITEM_NONE) && ((TabCross[Feno->indexOffsetOrder2].FitParam!=ITEM_NONE) || (TabCross[Feno->indexOffsetOrder2].InitParam!=(double)0.)))
+       offsetOrder=2;
+
+      if (offsetOrder>=0)
+       {
+        for (int i=LimMin;i<=LimMax;i++)
+         {
+          deltaX=(double)(ANALYSE_splineX[i]-lambda0);
+
+          offset=(TabCross[Feno->indexOffsetConst].FitParam!=ITEM_NONE)?(double)fitParamsF[TabCross[Feno->indexOffsetConst].FitParam]:(double)TabCross[Feno->indexOffsetConst].InitParam;
+
+          if (offsetOrder>=1)
+           offset+=((TabCross[Feno->indexOffsetOrder1].FitParam!=ITEM_NONE)?(double)fitParamsF[TabCross[Feno->indexOffsetOrder1].FitParam]/TabCross[Feno->indexOffsetOrder1].Fact:(double)TabCross[Feno->indexOffsetOrder1].InitParam)*deltaX;
+          if (offsetOrder>=2)
+           offset+=((TabCross[Feno->indexOffsetOrder2].FitParam!=ITEM_NONE)?(double)fitParamsF[TabCross[Feno->indexOffsetOrder2].FitParam]/TabCross[Feno->indexOffsetOrder2].Fact:(double)TabCross[Feno->indexOffsetOrder2].InitParam)*deltaX*deltaX;
+
+          spectrum_interpolated[i]-=(double)offset*Feno->xmean;
+         }
+       }
+     }
+
+    if ((Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVD) && (Feno->indexRing1!=ITEM_NONE))
+     {
+      for (int i=LimMin;i<=LimMax;i++)
+       spectrum_interpolated[i]-=((double)(TabCross[Feno->indexRing1].FitParam!=ITEM_NONE)?
+                      (double)fitParamsF[TabCross[Feno->indexRing1].FitParam]:
+                      (double)TabCross[Feno->indexRing1].InitParam)*TabCross[Feno->indexRing1].vector[i]/TabCross[Feno->indexRing1].Fact;
+     }
+
+    // ----------------------------
+    // Transfer to working variable
+    // ----------------------------
+
+    for( int k=0,l=iterator_start(&my_iterator, global_doas_spectrum); l != ITERATOR_FINISHED; k++,l=iterator_next(&my_iterator))
+     XTrav[k]=spectrum_interpolated[l];
 
     // ==============
     // CROSS SECTIONS
@@ -2569,7 +2663,7 @@ RC ANALYSE_Function ( double *X, double *Y, double *SigmaY, double *Yfit, int Np
            else if (Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVD)               // linear offset, SVD method -> normalized w.r.t. the spectrum
             {
              for( int k=1,l=iterator_start(&my_iterator, global_doas_spectrum); l != ITERATOR_FINISHED; k++,l=iterator_next(&my_iterator))
-              A[indexSvdA][k]=pTabCross->vector[l]=(fabs(X[l])>(double)1.e-6)?(double)-Feno->xmean/X[l]:(double)0.;
+              A[indexSvdA][k]=pTabCross->vector[l]=(fabs(spectrum_interpolated[l])>(double)1.e-6)?(double)-Feno->xmean/spectrum_interpolated[l]:(double)0.;
             }
            else                                                                 // linear offset, Marquadt+SVD method -> normalized w.r.t. the reference
             {
@@ -2725,106 +2819,6 @@ RC ANALYSE_Function ( double *X, double *Y, double *SigmaY, double *Yfit, int Np
        Feno->Decomp=0;
      }
 
-    // ========
-    // SPECTRUM
-    // ========
-
-    // ---------------------------------
-    // Wavelength alignment (shift option in Shift and stretch page) for spectrum
-    // ---------------------------------
-
-    if (((rc=ShiftVector(LambdaSpec,X /* (0:NDET-1) */,SplineSpec /* (0:NDET-1) */,newXsTrav /* (0:NDET-1) */,
-                         (Feno->indexSpectrum!=ITEM_NONE)?((TabCross[Feno->indexSpectrum].FitShift!=ITEM_NONE)?(double)fitParamsF[TabCross[Feno->indexSpectrum].FitShift]:(double)TabCross[Feno->indexSpectrum].InitShift):(double)0.,
-                         (Feno->indexSpectrum!=ITEM_NONE)?((TabCross[Feno->indexSpectrum].FitStretch!=ITEM_NONE)?(double)fitParamsF[TabCross[Feno->indexSpectrum].FitStretch]:(double)TabCross[Feno->indexSpectrum].InitStretch):(double)0.,
-                         (Feno->indexSpectrum!=ITEM_NONE)?((TabCross[Feno->indexSpectrum].FitStretch2!=ITEM_NONE)?(double)fitParamsF[TabCross[Feno->indexSpectrum].FitStretch2]:(double)TabCross[Feno->indexSpectrum].InitStretch2):(double)0.,
-                         (double)0.,(double)0.,(double)0.,
-                         fitParamsF,-1,0,NULL,indexFenoColumn))!=ERROR_ID_NO) ||
-
-        (Feno->useUsamp && (pUsamp->method==PRJCT_USAMP_AUTOMATIC) && ((rc=ANALYSE_UsampBuild(2,ITEM_NONE))!=ERROR_ID_NO)))
-
-     goto EndFunction;
-
-#if defined(__DEBUG_) && __DEBUG_  && defined(__DEBUG_DOAS_SHIFT_) && __DEBUG_DOAS_SHIFT_
-    if (((analyseDebugMask&DEBUG_FCTTYPE_MATH)!=0) && analyseDebugVar &&
-        (Feno->indexSpectrum!=ITEM_NONE) &&
-        ((TabCross[Feno->indexSpectrum].FitShift!=ITEM_NONE) || (TabCross[Feno->indexSpectrum].InitShift!=(double)0.)))
-     DEBUG_PrintVar("Interpolation of the spectrum",ANALYSE_splineX,LimMin,LimMax,X,LimMin,LimMax,SplineSpec,LimMin,LimMax,newXsTrav,LimMin,LimMax,NULL);
-#endif
-
-    // ------------------------------
-    // Low pass filtering on spectrum
-    // ------------------------------
-
-    // Filter real time only when fitting difference of resolution between spectrum and reference
-
-    if ((Feno->analysisType==ANALYSIS_TYPE_FWHM_NLFIT) && (ANALYSE_plFilter->filterFunction!=NULL) &&
-        ((rc=FILTER_Vector(ANALYSE_plFilter,&newXsTrav[LimMin],&newXsTrav[LimMin],LimN,PRJCT_FILTER_OUTPUT_LOW))!=0))
-     {
-      rc=ERROR_SetLast("EndFunction",ERROR_TYPE_WARNING,ERROR_ID_ANALYSIS,analyseIndexRecord,"Filter");
-      goto EndFunction;
-     }
-
-    // -------------------------------
-    // Spectrum correction with offset
-    // -------------------------------
-
-    if (Feno->analysisMethod!=PRJCT_ANLYS_METHOD_SVDMARQUARDT)
-     {
-      offsetOrder=-1;
-
-      if ((Feno->indexOffsetConst!=ITEM_NONE) && ((TabCross[Feno->indexOffsetConst].FitParam!=ITEM_NONE) || (TabCross[Feno->indexOffsetConst].InitParam!=(double)0.)))
-       offsetOrder=0;
-      if ((Feno->indexOffsetOrder1!=ITEM_NONE) && ((TabCross[Feno->indexOffsetOrder1].FitParam!=ITEM_NONE) || (TabCross[Feno->indexOffsetOrder1].InitParam!=(double)0.)))
-       offsetOrder=1;
-      if ((Feno->indexOffsetOrder2!=ITEM_NONE) && ((TabCross[Feno->indexOffsetOrder2].FitParam!=ITEM_NONE) || (TabCross[Feno->indexOffsetOrder2].InitParam!=(double)0.)))
-       offsetOrder=2;
-
-      if (offsetOrder>=0)
-       {
-        for (int i=LimMin;i<=LimMax;i++)
-         {
-          deltaX=(double)(ANALYSE_splineX[i]-lambda0);
-
-          offset=(TabCross[Feno->indexOffsetConst].FitParam!=ITEM_NONE)?(double)fitParamsF[TabCross[Feno->indexOffsetConst].FitParam]:(double)TabCross[Feno->indexOffsetConst].InitParam;
-
-          if (offsetOrder>=1)
-           offset+=((TabCross[Feno->indexOffsetOrder1].FitParam!=ITEM_NONE)?(double)fitParamsF[TabCross[Feno->indexOffsetOrder1].FitParam]/TabCross[Feno->indexOffsetOrder1].Fact:(double)TabCross[Feno->indexOffsetOrder1].InitParam)*deltaX;
-          if (offsetOrder>=2)
-           offset+=((TabCross[Feno->indexOffsetOrder2].FitParam!=ITEM_NONE)?(double)fitParamsF[TabCross[Feno->indexOffsetOrder2].FitParam]/TabCross[Feno->indexOffsetOrder2].Fact:(double)TabCross[Feno->indexOffsetOrder2].InitParam)*deltaX*deltaX;
-
-          newXsTrav[i]-=(double)offset*Feno->xmean;
-         }
-       }
-     }
-
-    if ((Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVD) && (Feno->indexRing1!=ITEM_NONE))
-     {
-      for (int i=LimMin;i<=LimMax;i++)
-       newXsTrav[i]-=((double)(TabCross[Feno->indexRing1].FitParam!=ITEM_NONE)?
-                      (double)fitParamsF[TabCross[Feno->indexRing1].FitParam]:
-                      (double)TabCross[Feno->indexRing1].InitParam)*TabCross[Feno->indexRing1].vector[i]/TabCross[Feno->indexRing1].Fact;
-     }
-
-    // -------------------------------
-    // High-pass filtering on spectrum
-    // -------------------------------
-
-    if ((Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVD) && !hFilterSpecLog &&  // logarithms are not calculated and filtered before entering this function
-        (((rc=VECTOR_Log(&newXsTrav[LimMin],&newXsTrav[LimMin],LimN,"ANLYSE_Function (Spec) "))!=0) ||
-         ((ANALYSE_phFilter->filterFunction!=NULL) &&
-          ((!Feno->hidden && ANALYSE_phFilter->hpFilterAnalysis) || ((Feno->hidden==1) && ANALYSE_phFilter->hpFilterCalib)) &&
-          ((rc=FILTER_Vector(ANALYSE_phFilter,&newXsTrav[LimMin],&newXsTrav[LimMin],LimN,PRJCT_FILTER_OUTPUT_HIGH_SUB))!=0))))
-
-     goto EndFunction;
-
-    // ----------------------------
-    // Transfer to working variable
-    // ----------------------------
-
-    doas_iterator my_iterator;
-    for( int k=0,l=iterator_start(&my_iterator, global_doas_spectrum); l != ITERATOR_FINISHED; k++,l=iterator_next(&my_iterator))
-     XTrav[k]=newXsTrav[l];
-
     // =========
     // REFERENCE
     // =========
@@ -2833,7 +2827,7 @@ RC ANALYSE_Function ( double *X, double *Y, double *SigmaY, double *Yfit, int Np
     // Wavelength alignment (shift) for reference
     // ----------------------------------
 
-    if ((rc=ShiftVector(ANALYSE_splineX,Y,SplineRef,newXsTrav,
+    if ((rc=ShiftVector(ANALYSE_splineX,Y,SplineRef,reference_shifted,
                         (Feno->indexReference!=ITEM_NONE)?((TabCross[Feno->indexReference].FitShift!=ITEM_NONE)?(double)fitParamsF[TabCross[Feno->indexReference].FitShift]:(double)TabCross[Feno->indexReference].InitShift):(double)0.,
                         (Feno->indexReference!=ITEM_NONE)?((TabCross[Feno->indexReference].FitStretch!=ITEM_NONE)?(double)fitParamsF[TabCross[Feno->indexReference].FitStretch]:(double)TabCross[Feno->indexReference].InitStretch):(double)0.,
                         (Feno->indexReference!=ITEM_NONE)?((TabCross[Feno->indexReference].FitStretch2!=ITEM_NONE)?(double)fitParamsF[TabCross[Feno->indexReference].FitStretch2]:(double)TabCross[Feno->indexReference].InitStretch2):(double)0.,
@@ -2846,7 +2840,7 @@ RC ANALYSE_Function ( double *X, double *Y, double *SigmaY, double *Yfit, int Np
     if (((analyseDebugMask&DEBUG_FCTTYPE_MATH)!=0) && analyseDebugVar &&
         (Feno->indexReference!=ITEM_NONE) &&
         ((TabCross[Feno->indexReference].FitShift!=ITEM_NONE) || (TabCross[Feno->indexReference].InitShift!=(double)0.)))
-     DEBUG_PrintVar("Interpolation of the reference",ANALYSE_splineX,LimMin,LimMax,Y,LimMin,LimMax,SplineRef,LimMin,LimMax,newXsTrav,LimMin,LimMax,NULL);
+     DEBUG_PrintVar("Interpolation of the reference",ANALYSE_splineX,LimMin,LimMax,Y,LimMin,LimMax,SplineRef,LimMin,LimMax,reference_shifted,LimMin,LimMax,NULL);
 #endif
 
     // -------------------------------
@@ -2856,7 +2850,7 @@ RC ANALYSE_Function ( double *X, double *Y, double *SigmaY, double *Yfit, int Np
     // Filter real time only when fitting difference of resolution between spectrum and reference
 
     if ((Feno->analysisType==ANALYSIS_TYPE_FWHM_NLFIT) && (ANALYSE_plFilter->filterFunction!=NULL) &&
-        ((rc=FILTER_Vector(ANALYSE_plFilter,&newXsTrav[LimMin],&newXsTrav[LimMin],LimN,PRJCT_FILTER_OUTPUT_LOW))!=0))
+        ((rc=FILTER_Vector(ANALYSE_plFilter,&reference_shifted[LimMin],&reference_shifted[LimMin],LimN,PRJCT_FILTER_OUTPUT_LOW))!=0))
      {
       rc=ERROR_SetLast("EndFunction",ERROR_TYPE_WARNING,ERROR_ID_ANALYSIS,analyseIndexRecord,"Filter");
       goto EndFunction;
@@ -2872,7 +2866,7 @@ RC ANALYSE_Function ( double *X, double *Y, double *SigmaY, double *Yfit, int Np
          ((TabCross[Feno->indexSol].InitParam!=(double)0.)&&(TabCross[Feno->indexSol].InitParam!=(double)1.))))
 
      for (int i=LimMin;i<=LimMax;i++)
-      newXsTrav[i]=pow(newXsTrav[i],(TabCross[Feno->indexSol].FitParam!=ITEM_NONE)?(double)fitParamsF[TabCross[Feno->indexSol].FitParam]:(double)TabCross[Feno->indexSol].InitParam);
+      reference_shifted[i]=pow(reference_shifted[i],(TabCross[Feno->indexSol].FitParam!=ITEM_NONE)?(double)fitParamsF[TabCross[Feno->indexSol].FitParam]:(double)TabCross[Feno->indexSol].InitParam);
 
     // --------------------------------
     // High pass filtering on reference
@@ -2881,10 +2875,10 @@ RC ANALYSE_Function ( double *X, double *Y, double *SigmaY, double *Yfit, int Np
     // logarithms are not calculated and filtered before entering this function
 
     if ((Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVD) && !hFilterRefLog &&  // logarithms are not calculated and filtered before entering this function
-        (((rc=VECTOR_Log(&newXsTrav[LimMin],&newXsTrav[LimMin],LimN,"ANLYSE_Function (Ref) "))!=0) ||
+        (((rc=VECTOR_Log(&reference_shifted[LimMin],&reference_shifted[LimMin],LimN,"ANLYSE_Function (Ref) "))!=0) ||
          ((ANALYSE_phFilter->filterFunction!=NULL) &&
           ((!Feno->hidden && ANALYSE_phFilter->hpFilterAnalysis) || ((Feno->hidden==1) && ANALYSE_phFilter->hpFilterCalib)) &&
-          ((rc=FILTER_Vector(ANALYSE_phFilter,&newXsTrav[LimMin],&newXsTrav[LimMin],LimN,PRJCT_FILTER_OUTPUT_HIGH_SUB))!=0))))
+          ((rc=FILTER_Vector(ANALYSE_phFilter,&reference_shifted[LimMin],&reference_shifted[LimMin],LimN,PRJCT_FILTER_OUTPUT_HIGH_SUB))!=0))))
 
      goto EndFunction;
 
@@ -2893,7 +2887,7 @@ RC ANALYSE_Function ( double *X, double *Y, double *SigmaY, double *Yfit, int Np
     // ----------------------------
 
     for( int k=0,l=iterator_start(&my_iterator, global_doas_spectrum); l != ITERATOR_FINISHED; k++,l=iterator_next(&my_iterator))
-     YTrav[k]=newXsTrav[l];
+     YTrav[k]=reference_shifted[l];
 
     //
     // OPTICAL THICKNESS FITTING (SVD)
@@ -3069,6 +3063,10 @@ RC ANALYSE_Function ( double *X, double *Y, double *SigmaY, double *Yfit, int Np
    MEMORY_ReleaseDVector("Function ","YTrav",YTrav,0);
   if (newXsTrav!=NULL)
    MEMORY_ReleaseDVector("Function ","newXsTrav",newXsTrav,0);
+  if (spectrum_interpolated!= NULL)
+   MEMORY_ReleaseDVector(__func__,"spectrum_interpolated",spectrum_interpolated,0);
+  if (reference_shifted != NULL)
+   MEMORY_ReleaseDVector(__func__,"reference_shifted",reference_shifted,0);
   if (preshift!=NULL)
    MEMORY_ReleaseDVector("Function ","preshift",preshift,0);
 
@@ -3338,7 +3336,7 @@ RC ANALYSE_CurFitMethod(INDEX   indexFenoColumn,  // for OMI
     if ((NF==0) && ((rc=ANALYSE_Function(SpecTrav,RefTrav,SigmaY,Yfit,DimL,fitParamsC,fitParamsF,indexFenoColumn))<THREAD_EVENT_STOP))
      *Chisqr=(double)Fchisq(pAnalysisOptions->fitWeighting,(int)ANALYSE_nFree,Y0,Yfit,SigmaY,DimL);
     else if (NF)
-     {
+     {      
       for (int i=0; i<NF; i++ ) { fitParamsF[i] = Fitp[i]; Deltap[i] = FitDeltap[i]; }
 
       /*  ==============  */

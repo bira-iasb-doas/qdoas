@@ -738,7 +738,7 @@ enum _omiSpectralTypes
  };
 
 #define MAX_SWATHSIZE         200    // maximum number of tracks per swath (for satellites)
-
+#define OMI_TOTAL_ROWS 60 // 60 detector rows for OMI
 
 // Types of irradiances for SCIAMACHY
 

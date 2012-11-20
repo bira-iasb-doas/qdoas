@@ -57,7 +57,6 @@
 #include "HdfEosDef.h"
 
 #define MAX_OMI_FILES 500
-#define OMI_TOTAL_ROWS 60 // 60 detector rows
 
 // Omi field names for readout routines:
 #define REFERENCE_COLUMN "WavelengthReferenceColumn"
@@ -207,7 +206,7 @@ static int num_reference_orbit_files = 0;
 int OMI_ms=0;
 int omiSwathOld=ITEM_NONE;
 
-RC OmiOpen(OMI_ORBIT_FILE *pOrbitFile,const char *swathName);
+RC OmiOpen(OMI_ORBIT_FILE *pOrbitFile,char *swathName);
 void omi_calculate_wavelengths(float32 wavelength_coeff[], int16 refcol, int32 n_wavel, double* lambda);
 void omi_free_swath_data(OMI_SWATH *pSwath);
 void omi_calculate_wavelengths(float32 wavelength_coeff[], int16 refcol, int32 n_wavel, double* lambda);
@@ -334,7 +333,6 @@ bool omi_use_track(int quality_flag, enum omi_xtrack_mode mode)
    }
    return result;
  }
-
 
 /*! \brief release the allocated buffers with swath attributes. */
 void omi_free_swath_data(OMI_SWATH *pSwath)
@@ -563,6 +561,7 @@ RC read_reference_orbit_files(const char *spectrum_file) {
             char *file_name = malloc(strlen(current_dir)+strlen(fileInfo->d_name) +2); //directory + path_sep + filename + trailing \0
             sprintf(file_name,"%s%c%s",current_dir,PATH_SEP,fileInfo->d_name);
             reference_orbit_files[num_reference_orbit_files]->omiFileName = file_name;
+            reference_orbit_files[num_reference_orbit_files]->omiSwath = NULL;
             num_reference_orbit_files++;
           }
       }
@@ -601,6 +600,42 @@ bool use_as_reference(OMI_ORBIT_FILE *orbit_file, int recordnumber, FENO *pTabFe
     && ((lon_min <= lon && lon_max >= lon) || !use_lon)
     && ((lat_min <= lat && lat_max >= lat) || !use_lat)
     && ((sza_min <= sza && sza_max >= sza) || !use_sza);
+}
+
+char *automatic_reference_info(struct omi_ref_list *spectra) {
+  char *filename = spectra->reference->orbit_file->omiFileName;
+  struct omi_ref_list *current = spectra;
+  int length = strlen(filename);
+  while(current != NULL) {
+    // spectra in the list are ordered per file.  We want to list each filename only once.
+    if (current->reference->orbit_file->omiFileName != filename) {
+      filename = current->reference->orbit_file->omiFileName;
+      length += strlen(filename + 5); // allocate memory for "\n# <filename>: "
+    }
+    length+= 6; // " current->reference->measurement_number"
+    current = current->next;
+  }
+  char *result = malloc(length*sizeof(char));
+  
+  current = spectra;
+  filename = spectra->reference->orbit_file->omiFileName;
+  strcpy(result,"# ");
+  strcat(result,filename);
+  strcat(result,":");
+  while(current != NULL) {
+    if (current->reference->orbit_file->omiFileName != filename) {
+      filename = current->reference->orbit_file->omiFileName;
+      strcat(result,"\n# ");
+      strcat(result,filename);
+      strcat(result,":");
+    }
+    char tempstring[10];
+    sprintf(tempstring, " %d",current->reference->measurement_number);
+    strcat(result,tempstring);
+    current = current->next;
+  }
+
+  return result;
 }
 
 void free_ref_candidates( struct omi_ref_spectrum *reflist) {
@@ -741,8 +776,22 @@ RC setup_automatic_reference(ENGINE_CONTEXT *pEngineContext)
     }
   }
 
-  // list that will contain the actual data of the selected spectra
+  // list containing the actual data of the selected spectra
   struct omi_ref_spectrum *ref_candidates = NULL;
+  // strings describing the list of spectra for each row/analysis window
+  //  if (pEngineContext->project.instrumental.omi.automatic_reference != NULL) {
+  for(int row = 0; row < OMI_TOTAL_ROWS; row++) {
+    if(pEngineContext->project.instrumental.omi.automatic_reference[row] != NULL) {
+      
+for(int i = 0; i < NFeno; i++)
+        if (pEngineContext->project.instrumental.omi.automatic_reference[row][i] != NULL) {
+          free (pEngineContext->project.instrumental.omi.automatic_reference[row][i]);
+          pEngineContext->project.instrumental.omi.automatic_reference[row][i] = NULL;
+        }
+    } else {
+      pEngineContext->project.instrumental.omi.automatic_reference[row] = calloc(NFeno, sizeof(char *)); 
+    }
+  }
 
   // create the list of all orbit files used for this automatic reference 
   RC rc = read_reference_orbit_files(pEngineContext->fileInfo.fileName);
@@ -765,8 +814,6 @@ RC setup_automatic_reference(ENGINE_CONTEXT *pEngineContext)
     omi_close_orbit_file(reference_orbit_files[i]);
   }
 
-  // TODO: sort/select matching spectra?
-
   // take the average of the matching spectra for each detector row & analysis window:
   for(int row = 0; row < OMI_TOTAL_ROWS; row++) {
     if (pEngineContext->project.instrumental.omi.omiTracks[row]) {
@@ -786,6 +833,7 @@ RC setup_automatic_reference(ENGINE_CONTEXT *pEngineContext)
           pTabFeno->refNormFactS = pTabFeno->refNormFactN;
           memcpy(pTabFeno->LambdaN,pTabFeno->LambdaK, sizeof(double) * NDET);
           memcpy(pTabFeno->LambdaS,pTabFeno->LambdaK, sizeof(double) * NDET);
+          pEngineContext->project.instrumental.omi.automatic_reference[row][analysis_window] = automatic_reference_info(reflist);
         } else{
           // todo: include analysis window and row number in error message.
           rc=ERROR_SetLast(__func__,ERROR_TYPE_WARNING,ERROR_ID_NO_REF,"OMI",pEngineContext->fileInfo.fileName);
@@ -921,7 +969,7 @@ RC OmiGetSwathData(OMI_ORBIT_FILE *pOrbitFile)
   return rc;
 }
 
-RC OmiOpen(OMI_ORBIT_FILE *pOrbitFile,const char *swathName)
+RC OmiOpen(OMI_ORBIT_FILE *pOrbitFile,char *swathName)
 {
   RC rc = ERROR_ID_NO;
 
@@ -1215,6 +1263,7 @@ RC OMI_load_analysis(ENGINE_CONTEXT *pEngineContext, void *responseHandle) {
       goto end_omi_load_analysis;
     }
 
+    /*
     for(int i=0; i<ANALYSE_swathSize; i++) {
       if (pEngineContext->project.instrumental.omi.omiTracks[i]) {
         // fit wavelength shift between calibrated solar irradiance
@@ -1223,6 +1272,7 @@ RC OMI_load_analysis(ENGINE_CONTEXT *pEngineContext, void *responseHandle) {
         rc = ANALYSE_AlignReference(pEngineContext,2,pEngineContext->project.spectra.displayDataFlag,responseHandle,i);
       }
     }
+    */
   }
 
  end_omi_load_analysis:
@@ -1378,6 +1428,7 @@ RC OMI_Read(ENGINE_CONTEXT *pEngineContext,int recordNo)
 void OMI_ReleaseBuffers() {
 
   for(int i=0; i< num_reference_orbit_files; i++) {
+
     omi_destroy_orbit_file(reference_orbit_files[i]);
     reference_orbit_files[i] = NULL;
   }

@@ -171,8 +171,8 @@ PRJCT_RESULTS_FIELDS PRJCT_resultsAscii[PRJCT_RESULTS_ASCII_MAX]=
   { "OMI index row"                   , MEMORY_TYPE_INT   , sizeof(int)   , ITEM_NONE, ITEM_NONE, "%#3d"      },       // PRJCT_RESULTS_ASCII_OMI_INDEX_ROW
   { "OMI groundpixel quality flag"    , MEMORY_TYPE_USHORT, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#6d"      },       // PRJCT_RESULTS_ASCII_OMI_INDEX_GROUNDP_QF,
   { "OMI xtrack quality flag"         , MEMORY_TYPE_USHORT, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#6d"      },       // PRJCT_RESULTS_ASCII_OMI_INDEX_XTRACK_QF,
-  { "OMI rejected pixels based on QF" , MEMORY_TYPE_STRING, 50            , ITEM_NONE, ITEM_NONE, "%-50s"        },       // PRJCT_RESULTS_ASCII_OMI_PIXELS_QF
-  { "Pixels with spikes"              , MEMORY_TYPE_STRING, 50            , ITEM_NONE, ITEM_NONE, "%-50s"        },       //   PRJCT_RESULTS_ASCII_SPIKES,
+  { "OMI rejected pixels based on QF" , MEMORY_TYPE_STRING, 50            , ITEM_NONE, ITEM_NONE, "%-50s"     },       // PRJCT_RESULTS_ASCII_OMI_PIXELS_QF
+  { "Pixels with spikes"              , MEMORY_TYPE_STRING, 50            , ITEM_NONE, ITEM_NONE, "%-50s"     },       //   PRJCT_RESULTS_ASCII_SPIKES,
   { "UAV servo sent position byte"    , MEMORY_TYPE_USHORT, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#3d"      },       // PRJCT_RESULTS_ASCII_UAV_SERVO_BYTE_SENT
   { "UAV servo received position byte", MEMORY_TYPE_USHORT, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#3d"      }        // PRJCT_RESULTS_ASCII_UAV_SERVO_BYTE_RECEIVED
  };
@@ -234,7 +234,7 @@ INT            OUTPUT_NAmfSpace,                                                
                outputCalibFlag;                                                 // <> 0 to save wavelength calibration parameters before analysis results
 
 RC write_spikes(char *spikestring, unsigned int length, BOOL *spikes,int ndet);
-
+void write_automatic_reference_info(FILE *fp, ENGINE_CONTEXT *pEngineContext);
 // ===============
 // DATA PROCESSING
 // ===============
@@ -2820,7 +2820,10 @@ FILE *OutputFileOpen(ENGINE_CONTEXT *pEngineContext,DoasCh *outputFileName,INT a
        {
        	strcpy(outputColumns[0],OUTPUT_refFile);
        	((int *)outputColumns[1])[0]=OUTPUT_nRec;
-       }
+       } else if(pEngineContext->project.instrumental.readOutFormat == PRJCT_INSTR_FORMAT_OMI 
+                 && pEngineContext->analysisRef.refAuto)
+        write_automatic_reference_info(fp, pEngineContext);
+
      }
 
    	// Save information on the calibration
@@ -3340,3 +3343,16 @@ void OUTPUT_Free(void)
   outputColumns=NULL;
   outputRecords=NULL;
  }
+
+void write_automatic_reference_info(FILE *fp, ENGINE_CONTEXT *pEngineContext) 
+{
+  for(int analysiswindow = 0; analysiswindow < NFeno; analysiswindow++)
+    for(int row=0; row< OMI_TOTAL_ROWS; row++)
+      if (pEngineContext->project.instrumental.omi.automatic_reference[row][analysiswindow] != NULL
+          && !TabFeno[row][analysiswindow].hidden
+          && TabFeno[row][analysiswindow].refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_AUTOMATIC)
+        fprintf(fp, "# %s, row %d: automatic reference:\n%s\n", 
+                TabFeno[row][analysiswindow].windowName, 
+                row, 
+                pEngineContext->project.instrumental.omi.automatic_reference[row][analysiswindow]);
+}
