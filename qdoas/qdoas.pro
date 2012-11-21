@@ -28,7 +28,7 @@ unix {
 #  QMAKE_CXX	 = icpc
 #  QMAKE_CC	 = icc
   INCLUDEPATH  += ../mediator ../common ../engine
-  LIBS         += -L$$QWT_LIB_PATH -l$$QWT_LIB -L$$CODA_LIB_PATH -lcoda -lm -L$$HDFEOS_LIB_PATH -lhdfeos -L$$HDF4_LIB_PATH -lmfhdf -ldf -ljpeg -lsz -lz
+  LIBS         += -L$$QWT_LIB_PATH -l$$QWT_LIB -L$$CODA_LIB_PATH -lcoda -lm -L$$HDFEOS_LIB_PATH -lhdfeos -L$$HDF4_LIB_PATH -lmfhdf -ldf -lz
   QMAKE_LFLAGS += -Wl,-rpath=$$QWT_LIB_PATH:$$CODA_LIB_PATH
 }
 
