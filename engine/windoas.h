@@ -483,7 +483,7 @@ typedef struct _prjctOmiFormat
    DoasCh refPath[MAX_STR_LEN+1];
    INT spectralType;
    INT averageFlag;
-   int   omiTracks[OMI_TOTAL_ROWS];
+   int   omiTracks[MAX_SWATHSIZE];
    int   pixelQFRejectionFlag,pixelQFMaxGaps,pixelQFMask;                       // pixel quality flags rejection
    enum omi_xtrack_mode xtrack_mode;                                            // how to use XTrackQualityFlags
  }
