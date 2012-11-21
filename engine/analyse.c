@@ -2413,7 +2413,7 @@ RC ANALYSE_Function ( double *X, double *Y, double *SigmaY, double *Yfit, int Np
   // Initializations
 
   TabCross=Feno->TabCross;
-  XTrav=YTrav=newXsTrav=preshift=NULL;
+  XTrav=YTrav=newXsTrav=preshift=spectrum_interpolated=reference_shifted=NULL;
   memset(&slit0,0,sizeof(MATRIX_OBJECT));
   memset(&slit1,0,sizeof(MATRIX_OBJECT));
 
@@ -2483,38 +2483,14 @@ RC ANALYSE_Function ( double *X, double *Y, double *SigmaY, double *Yfit, int Np
 
      goto EndFunction;
 
-    // ------------------------------
-    // Low pass filtering on spectrum
-    // ------------------------------
-
-    // Filter real time only when fitting difference of resolution between spectrum and reference
-
-    if ((Feno->analysisType==ANALYSIS_TYPE_FWHM_NLFIT) && (ANALYSE_plFilter->filterFunction!=NULL) &&
-        ((rc=FILTER_Vector(ANALYSE_plFilter,&spectrum_interpolated[LimMin],&spectrum_interpolated[LimMin],LimN,PRJCT_FILTER_OUTPUT_LOW))!=0))
-     {
-      rc=ERROR_SetLast("EndFunction",ERROR_TYPE_WARNING,ERROR_ID_ANALYSIS,analyseIndexRecord,"Filter");
-      goto EndFunction;
-     }
-
-    // -------------------------------
-    // High-pass filtering on spectrum
-    // -------------------------------
-
-    if ((Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVD) && !hFilterSpecLog &&  // logarithms are not calculated and filtered before entering this function
-        (((rc=VECTOR_Log(&spectrum_interpolated[LimMin],&spectrum_interpolated[LimMin],LimN,"ANLYSE_Function (Spec) "))!=0) ||
-         ((ANALYSE_phFilter->filterFunction!=NULL) &&
-          ((!Feno->hidden && ANALYSE_phFilter->hpFilterAnalysis) || ((Feno->hidden==1) && ANALYSE_phFilter->hpFilterCalib)) &&
-          ((rc=FILTER_Vector(ANALYSE_phFilter,&spectrum_interpolated[LimMin],&spectrum_interpolated[LimMin],LimN,PRJCT_FILTER_OUTPUT_HIGH_SUB))!=0))))
-
-     goto EndFunction;
-
     //-------------------
     // Calculate the mean
     //-------------------
     doas_iterator my_iterator;
-    for( int i = iterator_start(&my_iterator, global_doas_spectrum); i != ITERATOR_FINISHED; i=iterator_next(&my_iterator))
+    Feno->xmean=(double)0.;
+    for(int i = iterator_start(&my_iterator, global_doas_spectrum); i != ITERATOR_FINISHED; i=iterator_next(&my_iterator))
      Feno->xmean+=(double)spectrum_interpolated[i];
-    
+
     Feno->xmean/=Npts;
 
     // -------------------------------
@@ -2549,6 +2525,32 @@ RC ANALYSE_Function ( double *X, double *Y, double *SigmaY, double *Yfit, int Np
          }
        }
      }
+
+    // ------------------------------
+    // Low pass filtering on spectrum
+    // ------------------------------
+
+    // Filter real time only when fitting difference of resolution between spectrum and reference
+
+    if ((Feno->analysisType==ANALYSIS_TYPE_FWHM_NLFIT) && (ANALYSE_plFilter->filterFunction!=NULL) &&
+        ((rc=FILTER_Vector(ANALYSE_plFilter,&spectrum_interpolated[LimMin],&spectrum_interpolated[LimMin],LimN,PRJCT_FILTER_OUTPUT_LOW))!=0))
+     {
+      rc=ERROR_SetLast("EndFunction",ERROR_TYPE_WARNING,ERROR_ID_ANALYSIS,analyseIndexRecord,"Filter");
+      goto EndFunction;
+     }
+
+    // -------------------------------
+    // High-pass filtering on spectrum
+    // -------------------------------
+
+    if ((Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVD) && !hFilterSpecLog &&  // logarithms are not calculated and filtered before entering this function
+        (((rc=VECTOR_Log(&spectrum_interpolated[LimMin],&spectrum_interpolated[LimMin],LimN,"ANLYSE_Function (Spec) "))!=0) ||
+         ((ANALYSE_phFilter->filterFunction!=NULL) &&
+          ((!Feno->hidden && ANALYSE_phFilter->hpFilterAnalysis) || ((Feno->hidden==1) && ANALYSE_phFilter->hpFilterCalib)) &&
+          ((rc=FILTER_Vector(ANALYSE_phFilter,&spectrum_interpolated[LimMin],&spectrum_interpolated[LimMin],LimN,PRJCT_FILTER_OUTPUT_HIGH_SUB))!=0))))
+
+     goto EndFunction;
+
 
     if ((Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVD) && (Feno->indexRing1!=ITEM_NONE))
      {
@@ -3336,7 +3338,7 @@ RC ANALYSE_CurFitMethod(INDEX   indexFenoColumn,  // for OMI
     if ((NF==0) && ((rc=ANALYSE_Function(SpecTrav,RefTrav,SigmaY,Yfit,DimL,fitParamsC,fitParamsF,indexFenoColumn))<THREAD_EVENT_STOP))
      *Chisqr=(double)Fchisq(pAnalysisOptions->fitWeighting,(int)ANALYSE_nFree,Y0,Yfit,SigmaY,DimL);
     else if (NF)
-     {      
+     {
       for (int i=0; i<NF; i++ ) { fitParamsF[i] = Fitp[i]; Deltap[i] = FitDeltap[i]; }
 
       /*  ==============  */
@@ -3643,7 +3645,7 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
     if (THRD_id==THREAD_TYPE_ANALYSIS)
      {
-       
+
       // Browse analysis windows
 
       n=0,n2=0;
