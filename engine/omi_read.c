@@ -778,20 +778,13 @@ RC setup_automatic_reference(ENGINE_CONTEXT *pEngineContext)
 
   // list containing the actual data of the selected spectra
   struct omi_ref_spectrum *ref_candidates = NULL;
-  // strings describing the list of spectra for each row/analysis window
-  //  if (pEngineContext->project.instrumental.omi.automatic_reference != NULL) {
-  for(int row = 0; row < OMI_TOTAL_ROWS; row++) {
-    if(pEngineContext->project.instrumental.omi.automatic_reference[row] != NULL) {
-      
-for(int i = 0; i < NFeno; i++)
-        if (pEngineContext->project.instrumental.omi.automatic_reference[row][i] != NULL) {
-          free (pEngineContext->project.instrumental.omi.automatic_reference[row][i]);
-          pEngineContext->project.instrumental.omi.automatic_reference[row][i] = NULL;
-        }
-    } else {
-      pEngineContext->project.instrumental.omi.automatic_reference[row] = calloc(NFeno, sizeof(char *)); 
-    }
-  }
+  // strings describing the selected spectra for each row/analysis window
+  for(int row = 0; row < OMI_TOTAL_ROWS; row++)
+    for(int analysis_window = 0; analysis_window < NFeno; analysis_window++)
+      if (TabFeno[row][analysis_window].ref_description != NULL) {
+	free(TabFeno[row][analysis_window].ref_description);
+	TabFeno[row][analysis_window].ref_description = NULL;
+      }
 
   // create the list of all orbit files used for this automatic reference 
   RC rc = read_reference_orbit_files(pEngineContext->fileInfo.fileName);
@@ -833,7 +826,7 @@ for(int i = 0; i < NFeno; i++)
           pTabFeno->refNormFactS = pTabFeno->refNormFactN;
           memcpy(pTabFeno->LambdaN,pTabFeno->LambdaK, sizeof(double) * NDET);
           memcpy(pTabFeno->LambdaS,pTabFeno->LambdaK, sizeof(double) * NDET);
-          pEngineContext->project.instrumental.omi.automatic_reference[row][analysis_window] = automatic_reference_info(reflist);
+	  pTabFeno->ref_description = automatic_reference_info(reflist);
         } else{
           // todo: include analysis window and row number in error message.
           rc=ERROR_SetLast(__func__,ERROR_TYPE_WARNING,ERROR_ID_NO_REF,"OMI",pEngineContext->fileInfo.fileName);

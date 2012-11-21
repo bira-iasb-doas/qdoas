@@ -484,7 +484,6 @@ typedef struct _prjctOmiFormat
    INT spectralType;
    INT averageFlag;
    int   omiTracks[OMI_TOTAL_ROWS];
-   char **automatic_reference[OMI_TOTAL_ROWS]; // description of spectra used in the current automatic reference
    int   pixelQFRejectionFlag,pixelQFMaxGaps,pixelQFMask;                       // pixel quality flags rejection
    enum omi_xtrack_mode xtrack_mode;                                            // how to use XTrackQualityFlags
  }

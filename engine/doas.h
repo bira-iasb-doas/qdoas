@@ -1,5 +1,4 @@
 
-
 //  ----------------------------------------------------------------------------
 //
 //  Product/Project   :  QDOAS
@@ -147,17 +146,15 @@ RC SPLINE_Vector(double *xa,double *ya,double *y2a,int na,double *xb,double *yb,
 // ---------------------------------------
 
 typedef struct _svd
- {
-   INT DimC,DimL,DimP,NF,NP,nFit,Z;                     // gaps and analysis window limits in pixels units
-  //      Fenetre[MAX_FEN][2];
-
-  double   LFenetre[MAX_FEN][2],                       // gaps and analysis window limits in wavelength units (nm)
-         **A,**U,**V,*W,**P,                           // SVD matrices
-         **covar,
-          *SigmaSqr;
-   doas_spectrum *specrange; // gaps and analysis window limits in pixels units
- }
-SVD;
+{
+  INT DimC,DimL,DimP,NF,NP,nFit,Z; // gaps and analysis window limits in pixels units
+  
+  double LFenetre[MAX_FEN][2], // gaps and analysis window limits in wavelength units (nm)
+    **A,**U,**V,*W,**P,         // SVD matrices
+    **covar,
+    *SigmaSqr;
+  doas_spectrum *specrange;     // gaps and analysis window limits in pixels units
+} SVD;
 
 RC SVD_Bksb(double **u,double *w,double **v,int m,int n,double *b,double *x);
 RC SVD_Dcmp(double **a,int m,int n,double *w,double **v,double *SigmaSqr,double **covar);
@@ -197,13 +194,13 @@ RC Curfit(int     mode,                                                         
 // MOON.C : Get moon positions in terms of azimuthal angle and elevation
 // ---------------------------------------------------------------------
 
-void MOON_GetPosition(DoasCh  *inputDate,   // input date and time for moon positions calculation
+void MOON_GetPosition(DoasCh *inputDate,   // input date and time for moon positions calculation
                       double  longitude,   // longitude of the observation site
                       double  latitude,    // latitude of the observation site
                       double  altitude,    // altitude of the observation site
                       double *pA,          // azimuth, measured westward from the south
                       double *ph,          // altitude above the horizon
-                      double *pFrac);       // illuminated fraction of the moon
+                      double *pFrac);      // illuminated fraction of the moon
 
 // ==========================================================
 // ZENITHAL.C : CALCULATION OF ZENITHAL ANGLES AND JULIAN DAY
@@ -369,7 +366,7 @@ typedef struct _satellite_ref_
 SATELLITE_REF;
 
 typedef struct _feno
- {
+{
                                                                                 //  copy of data from analysis window panel
 
   DoasCh          windowName[MAX_ITEM_NAME_LEN+1];                              //  name of analysis window
@@ -432,14 +429,14 @@ typedef struct _feno
                   refNormFactS,
                   chiSquare,                                                    //  chi square
                   RMS;
-
+  char           *ref_description;                                              //  string describing spectra used in automatic reference.
   INT             nIter;                                                        //  number of iterations
   INT             Decomp;                                                       //  force SVD decomposition
   SVD             svd;                                                          //  SVD decomposition data
   CROSS_REFERENCE TabCross[MAX_FIT];                                            //  symbol cross reference
   CROSS_RESULTS   TabCrossResults[MAX_FIT];                                     //  results stored per symbol in previous list
   BOOL           *spikes;                                                       //  spikes[i] is true if the residual at pixel i has a spike
-  BOOL           *omiRejPixelsQF;                                                  //  rejPixelsQF[i] is true if the pixel i is rejected based on pixels QF (OMI only)
+  BOOL           *omiRejPixelsQF;                                               //  rejPixelsQF[i] is true if the pixel i is rejected based on pixels QF (OMI only)
   INT             NTabCross;                                                    //  number of elements in the two previous lists
   INDEX           indexSpectrum,                                                //  index of raw spectrum in symbol cross reference
                   indexReference,                                               //  index of reference spectrum in symbol cross reference
@@ -479,7 +476,7 @@ typedef struct _feno
   INT             offlFlag;                            // non zero if linear offset is fitted
   int             longPathFlag;                                                 // for Anoop
   INDEX           indexRefOmi;
- }
+}
 FENO;
 
 // =================

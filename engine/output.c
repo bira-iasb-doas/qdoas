@@ -3346,13 +3346,19 @@ void OUTPUT_Free(void)
 
 void write_automatic_reference_info(FILE *fp, ENGINE_CONTEXT *pEngineContext) 
 {
-  for(int analysiswindow = 0; analysiswindow < NFeno; analysiswindow++)
-    for(int row=0; row< OMI_TOTAL_ROWS; row++)
-      if (pEngineContext->project.instrumental.omi.automatic_reference[row][analysiswindow] != NULL
-          && !TabFeno[row][analysiswindow].hidden
-          && TabFeno[row][analysiswindow].refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_AUTOMATIC)
-        fprintf(fp, "# %s, row %d: automatic reference:\n%s\n", 
-                TabFeno[row][analysiswindow].windowName, 
-                row, 
-                pEngineContext->project.instrumental.omi.automatic_reference[row][analysiswindow]);
+  for(int analysiswindow = 0; analysiswindow < NFeno; analysiswindow++) {
+   for(int row=0; row< OMI_TOTAL_ROWS; row++)
+    {
+     FENO *pTabFeno = &TabFeno[row][analysiswindow];
+     if (!pTabFeno->hidden
+         && pTabFeno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_AUTOMATIC
+         && pTabFeno->ref_description != NULL)
+      {
+       fprintf(fp, "# %s, row %d: automatic reference:\n%s\n", 
+               pTabFeno->windowName, 
+               row,
+               pTabFeno->ref_description);
+      }
+    }
+  }
 }
