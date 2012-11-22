@@ -74,6 +74,9 @@ CWProjectTabOutput::CWProjectTabOutput(const mediate_project_output_t *propertie
   m_calibrationCheck = new QCheckBox("Calibration");
   checkLayout->addWidget(m_calibrationCheck, 1, 0);
 
+  m_referenceCheck = new QCheckBox("Automatic reference");
+  checkLayout->addWidget(m_referenceCheck, 2, 0);
+
   m_directoryCheck = new QCheckBox("Directories");
   checkLayout->addWidget(m_directoryCheck, 0, 1);
 
@@ -110,17 +113,20 @@ CWProjectTabOutput::CWProjectTabOutput(const mediate_project_output_t *propertie
 
   m_analysisCheck->setCheckState(properties->analysisFlag ? Qt::Checked : Qt::Unchecked);
   m_calibrationCheck->setCheckState(properties->calibrationFlag ? Qt::Checked : Qt::Unchecked);
+  m_referenceCheck->setCheckState(properties->referenceFlag ? Qt::Checked : Qt::Unchecked);
   m_directoryCheck->setCheckState(properties->directoryFlag ? Qt::Checked : Qt::Unchecked);
   m_useFileName->setCheckState(properties->filenameFlag ? Qt::Checked : Qt::Unchecked);
 
   m_fluxEdit->setText(QString(properties->flux));
   m_colourIndexEdit->setText(QString(properties->colourIndex));
 
-  setComponentsEnabled((m_analysisCheck->checkState() == Qt::Checked), (m_calibrationCheck->checkState() == Qt::Checked));
+  setComponentsEnabled((m_analysisCheck->checkState() == Qt::Checked),
+                       (m_calibrationCheck->checkState() == Qt::Checked) || (m_referenceCheck->checkState() == Qt::Checked) );
 
   // connections
   connect(m_analysisCheck, SIGNAL(stateChanged(int)), this, SLOT(slotAnalysisCheckChanged(int)));
   connect(m_calibrationCheck, SIGNAL(stateChanged(int)), this, SLOT(slotCalibrationCheckChanged(int)));
+  connect(m_referenceCheck, SIGNAL(stateChanged(int)), this, SLOT(slotReferenceCheckChanged(int)));
   connect(browseBtn, SIGNAL(clicked()), this, SLOT(slotBrowsePath()));
 }
 
@@ -132,6 +138,7 @@ void CWProjectTabOutput::apply(mediate_project_output_t *properties) const
 {
   properties->analysisFlag = (m_analysisCheck->checkState() == Qt::Checked) ? 1 : 0;
   properties->calibrationFlag = (m_calibrationCheck->checkState() == Qt::Checked) ? 1 : 0;
+  properties->referenceFlag = (m_referenceCheck->checkState() == Qt::Checked);
   properties->directoryFlag = (m_directoryCheck->checkState() == Qt::Checked) ? 1 : 0;
   properties->filenameFlag = (m_useFileName->checkState() == Qt::Checked) ? 1 : 0;
 
@@ -164,14 +171,22 @@ void CWProjectTabOutput::slotInstrumentChanged(int instrument)
 
 void CWProjectTabOutput::slotAnalysisCheckChanged(int state)
 {
-  setComponentsEnabled((state == Qt::Checked), (m_calibrationCheck->checkState() == Qt::Checked));
+  setComponentsEnabled((state == Qt::Checked),
+                       (m_calibrationCheck->checkState() == Qt::Checked) || (m_referenceCheck->checkState() == Qt::Checked));
 }
 
 void CWProjectTabOutput::slotCalibrationCheckChanged(int state)
 {
-  setComponentsEnabled((m_analysisCheck->checkState() == Qt::Checked), (state == Qt::Checked));
+  setComponentsEnabled((m_analysisCheck->checkState() == Qt::Checked),
+                       (state == Qt::Checked) || (m_referenceCheck->checkState() == Qt::Checked));
 
   emit signalOutputCalibration((state == Qt::Checked));
+}
+
+void CWProjectTabOutput::slotReferenceCheckChanged(int state)
+{
+  setComponentsEnabled((m_analysisCheck->checkState() == Qt::Checked),
+                       (m_calibrationCheck->checkState() == Qt::Checked) || (state == Qt::Checked));
 }
 
 void CWProjectTabOutput::setComponentsEnabled(bool analysisEnabled, bool calibrationEnabled)

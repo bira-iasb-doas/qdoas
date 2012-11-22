@@ -421,6 +421,7 @@ extern "C" {
   {
     int analysisFlag;
     int calibrationFlag;
+    int referenceFlag; // write components of automatic reference to output
     int configurationFlag;
     int binaryFormatFlag;
     int directoryFlag;

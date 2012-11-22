@@ -8,9 +8,10 @@
 
 #include "debugutil.h"
 
-extern const char *STR_IGNORE = "IGNORE";
-extern const char *STR_STRICT = "STRICT";
-extern const char *STR_NONSTRICT = "NONSTRICT";
+const char *STR_IGNORE = "IGNORE";
+const char *STR_STRICT = "STRICT";
+const char *STR_NONSTRICT = "NONSTRICT";
+
 
 extern enum omi_xtrack_mode str_to_mode(const char *configstr) {
   enum omi_xtrack_mode result;
@@ -1492,6 +1493,7 @@ bool CProjectOutputSubHandler::start(const QXmlAttributes &atts)
   m_output->analysisFlag = (atts.value("anlys") == "true") ? 1 : 0;
   m_output->calibrationFlag = (atts.value("calib") == "true") ? 1 : 0;
   m_output->configurationFlag = (atts.value("conf") == "true") ? 1 : 0;
+  m_output->referenceFlag = (atts.value("ref") == "true");
   m_output->binaryFormatFlag = (atts.value("bin") == "true") ? 1 : 0;
   m_output->directoryFlag = (atts.value("dirs") == "true") ? 1 : 0;
   m_output->filenameFlag = (atts.value("file") == "true") ? 1 : 0;

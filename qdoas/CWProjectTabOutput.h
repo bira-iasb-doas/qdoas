@@ -48,6 +48,7 @@ Q_OBJECT
   void slotInstrumentChanged(int instrument);
   void slotAnalysisCheckChanged(int state);
   void slotCalibrationCheckChanged(int state);
+  void slotReferenceCheckChanged(int state);
 
  signals:
   void signalOutputCalibration(bool enabled);
@@ -55,7 +56,7 @@ Q_OBJECT
  private:
   QFrame *m_pathFrame;
   QLineEdit *m_pathEdit;
-  QCheckBox *m_analysisCheck, *m_calibrationCheck;
+  QCheckBox *m_analysisCheck, *m_calibrationCheck, *m_referenceCheck;
   QCheckBox *m_directoryCheck;
   QCheckBox *m_useFileName;
   QGroupBox *m_editGroup;

@@ -1169,7 +1169,7 @@ RC OUTPUT_RegisterData(ENGINE_CONTEXT *pEngineContext)
            }
          }
        }
-   	 }
+     }
 
     // Run calibration on measurement spectra
 
@@ -2820,17 +2820,18 @@ FILE *OutputFileOpen(ENGINE_CONTEXT *pEngineContext,DoasCh *outputFileName,INT a
        {
        	strcpy(outputColumns[0],OUTPUT_refFile);
        	((int *)outputColumns[1])[0]=OUTPUT_nRec;
-       } else if(pEngineContext->project.instrumental.readOutFormat == PRJCT_INSTR_FORMAT_OMI 
-                 && pEngineContext->analysisRef.refAuto)
-        write_automatic_reference_info(fp, pEngineContext);
-
+       }
      }
-
-   	// Save information on the calibration
-
-   	if (pResults->calibFlag)
+    
+    // Save information on automatic reference spectrum
+    if(pEngineContext->analysisRef.refAuto
+       && pEngineContext->project.asciiResults.referenceFlag)
+     write_automatic_reference_info(fp, pEngineContext);
+    
+    // Save information on the calibration
+    if (pResults->calibFlag)
      OutputCalib(pEngineContext);
-
+    
     if (ascFlag)
      OutputAscPrintTitles(pEngineContext,fp);
     else

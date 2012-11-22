@@ -1050,13 +1050,12 @@ void CQdoasConfigWriter::writePropertiesOutput(FILE *fp, const mediate_project_o
 {
   QString tmpStr = CPathMgr::instance()->simplifyPath(QString(d->path));
 
-  fprintf(fp, "    <output path=\"%s\" anlys=\"%s\" calib=\"%s\" conf=\"%s\" bin=\"%s\" dirs=\"%s\" file=\"%s\" flux=\"%s\" cic=\"%s\" >\n",
-	  tmpStr.toAscii().constData(), (d->analysisFlag ? sTrue : sFalse),
-	  (d->calibrationFlag ? sTrue : sFalse), (d->configurationFlag ? sTrue : sFalse),
-	  (d->binaryFormatFlag ? sTrue : sFalse), (d->directoryFlag ? sTrue : sFalse),
-	  (d->filenameFlag ? sTrue : sFalse),
-	  d->flux, d->colourIndex);
-
+  fprintf(fp, "    <output path=\"%s\" anlys=\"%s\" calib=\"%s\" ref=\"%s\" conf=\"%s\" bin=\"%s\" dirs=\"%s\" file=\"%s\" flux=\"%s\" cic=\"%s\" >\n",
+          tmpStr.toAscii().constData(), (d->analysisFlag ? sTrue : sFalse),
+          (d->calibrationFlag ? sTrue : sFalse), (d->referenceFlag ? sTrue : sFalse),
+          (d->configurationFlag ? sTrue : sFalse), (d->binaryFormatFlag ? sTrue : sFalse),
+          (d->directoryFlag ? sTrue : sFalse), (d->filenameFlag ? sTrue : sFalse), d->flux, d->colourIndex);
+  
   writeDataSelectList(fp, &(d->selection));
 
   fprintf(fp, "    </output>\n");

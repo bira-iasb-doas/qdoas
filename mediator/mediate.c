@@ -1214,6 +1214,7 @@ void setMediateProjectOutput(PRJCT_RESULTS_ASCII *pEngineOutput,const mediate_pr
 
    pEngineOutput->analysisFlag=pMediateOutput->analysisFlag;
    pEngineOutput->calibFlag=pMediateOutput->calibrationFlag;
+   pEngineOutput->referenceFlag=pMediateOutput->referenceFlag;
    pEngineOutput->dirFlag=pMediateOutput->directoryFlag;
    pEngineOutput->fileNameFlag=pMediateOutput->filenameFlag;
    pEngineOutput->binaryFlag=0;
