@@ -165,7 +165,7 @@ RC SVD_Bksb(double **u,double *w,double **v,int m,int n,double *b,double *x)
 
          if ( fabs(w[j]) < 1.e-12 )
            {
-            rc=ERROR_SetLast("SVD_Bksb",ERROR_TYPE_WARNING,ERROR_ID_SVD_ILLCONDITIONNED);
+            rc=ERROR_SetLast("SVD_Bksb",ERROR_TYPE_WARNING,ERROR_ID_SVD_ILLCONDITIONED);
             goto EndSVD_Bksb;
            }
           else

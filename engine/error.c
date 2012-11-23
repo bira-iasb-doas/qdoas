@@ -147,7 +147,7 @@ ERROR_TABLE errorTable[]=
 
   // High-level math functions
 
-  { ERROR_ID_SVD_ILLCONDITIONNED       , "ill-conditionned matrix"                                                                                            },
+  { ERROR_ID_SVD_ILLCONDITIONED       , "ill-conditioned matrix"                                                                                            },
   { ERROR_ID_SVD_ARG                   , "the number of lines of the matrix to decompose is expected to be higher than the number of columns (%d x %d)"       },
   { ERROR_ID_SPLINE                    , "spline interpolation requests increasing absissae (indexes : %d - %d, values : %g - %g)"                            },
   { ERROR_ID_VOIGT                     , "Voigt function failed (x=%g,y=%g)"                                                                                  },

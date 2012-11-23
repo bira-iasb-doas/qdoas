@@ -242,7 +242,7 @@ SHORT_DATE;
 
 // High-level math functions
 
-#define ERROR_ID_SVD_ILLCONDITIONNED           1101                             // ill-conditionned matrix
+#define ERROR_ID_SVD_ILLCONDITIONED           1101                             // ill-conditionned matrix
 #define ERROR_ID_SVD_ARG                       1102                             // bad arguments
 #define ERROR_ID_SPLINE                        1110                             // spline interpolation requests increasing absissae
 #define ERROR_ID_VOIGT                         1111                             // Voigt function failed
