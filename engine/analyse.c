@@ -2150,7 +2150,6 @@ RC ANALYSE_AlignReference(ENGINE_CONTEXT *pEngineContext,INT refFlag,INT saveFla
   // Declarations
 
   FENO *RefTabFeno;                                                             // copy of analysis windows for reference use
-  SVD *pSvd;                                                                    // pointer to svd environment of an analysis window
   CROSS_RESULTS *pResults;                                                      // pointer to the set of results relative to a symbol
   INDEX WrkFeno,                                                                // index on analysis windows
     indexLine,indexColumn,                                                  // position in the spreadsheet for information to write
@@ -2231,8 +2230,6 @@ RC ANALYSE_AlignReference(ENGINE_CONTEXT *pEngineContext,INT refFlag,INT saveFla
 
         Feno->Decomp=1;
         Feno->amfFlag=0;
-
-        pSvd=&Feno->svd;
 
         Feno->indexReference=ITEM_NONE;
 
@@ -2551,15 +2548,6 @@ RC ANALYSE_Function ( double *X, double *Y, double *SigmaY, double *Yfit, int Np
 
      goto EndFunction;
 
-
-    if ((Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVD) && (Feno->indexRing1!=ITEM_NONE))
-     {
-      for (int i=LimMin;i<=LimMax;i++)
-       spectrum_interpolated[i]-=((double)(TabCross[Feno->indexRing1].FitParam!=ITEM_NONE)?
-                      (double)fitParamsF[TabCross[Feno->indexRing1].FitParam]:
-                      (double)TabCross[Feno->indexRing1].InitParam)*TabCross[Feno->indexRing1].vector[i]/TabCross[Feno->indexRing1].Fact;
-     }
-
     // ----------------------------
     // Transfer to working variable
     // ----------------------------
@@ -2608,12 +2596,6 @@ RC ANALYSE_Function ( double *X, double *Y, double *SigmaY, double *Yfit, int Np
              for( int k=1, l=iterator_start(&my_iterator, global_doas_spectrum); l != ITERATOR_FINISHED; k++,l=iterator_next(&my_iterator))
               A[indexSvdA][k]=(Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVD) ?
                 -pTabCross->vector[l] : pTabCross->vector[l];
-            }
-           else if (i==Feno->indexRing1)
-            {
-             for( int k=1,l=iterator_start(&my_iterator, global_doas_spectrum); l != ITERATOR_FINISHED; k++,l=iterator_next(&my_iterator))
-              A[indexSvdA][k]=(Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVD) ?
-                -pTabCross->vector[l] : pTabCross->vector[l]/Y[l];      // !!! Assumed Raman spectrum
             }
           }
 
@@ -2721,6 +2703,15 @@ RC ANALYSE_Function ( double *X, double *Y, double *SigmaY, double *Yfit, int Np
           }
         }
 
+      // weighting by instrumental errors:
+      if ((Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVD) && (SigmaY!=NULL)) {
+       doas_iterator my_iterator;
+       for (indexSvdA=0;indexSvdA<=DimC;indexSvdA++)
+        for( int k=1; k<=DimL; k++) {
+         A[indexSvdA][k]/=SigmaY[k-1];
+        }
+      }
+
       // ---------------------------------
       // Orthogonalization of columns of A
       // ---------------------------------
@@ -2733,7 +2724,6 @@ RC ANALYSE_Function ( double *X, double *Y, double *SigmaY, double *Yfit, int Np
 
          if ((WorkSpace[pTabCross->Comp].type!=WRK_SYMBOL_PREDEFINED) ||
              (// (Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVDMARQUARDT) &&
-              (i==Feno->indexRing1) ||
               (i==Feno->indexUsamp1) ||
               (i==Feno->indexUsamp2)))
 
@@ -2785,15 +2775,13 @@ RC ANALYSE_Function ( double *X, double *Y, double *SigmaY, double *Yfit, int Np
 
           memcpy((char *)(U[indexSvdA]+1),(char *)(A[indexSvdA]+1),sizeof(double)*Npts);
 
-          for (int l=1;l<=DimL;l++)
-           U[indexSvdA][l]*=pTabCross->Fact;   // Multiply column of U by normalization factor
+          for (int l=1;l<=DimL;l++) {
+           U[indexSvdA][l]*= (SigmaY == NULL) ? 
+             pTabCross->Fact : pTabCross->Fact*SigmaY[l-1];   // Multiply columns of U by normalization factor, multiply rows by error
+          }
+
          }
        }
-
-      if ((Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVD) && (SigmaY!=NULL))
-       for (indexSvdA=0;indexSvdA<=DimC;indexSvdA++)
-        for (int k=1;k<=DimL;k++)
-         A[indexSvdA][k]/=SigmaY[k-1];
 
       // -----------------
       // SVD Decomposition
@@ -2909,16 +2897,10 @@ RC ANALYSE_Function ( double *X, double *Y, double *SigmaY, double *Yfit, int Np
         b[k]=YTrav[k-1]-XTrav[k-1];
 
         for (int l=NewDimC+1;l<=DimC;l++)
-         {
-          for (int m=0;m<Feno->NTabCross;m++)
-           if (TabCross[m].IndSvdA==l)
-            break;
-
           b[k]-=U[l][k]*fitParamsC[l];
-         }
 
         if (SigmaY!=NULL)
-         b[k]/=SigmaY[k-1];
+         b[k]/=SigmaY[k-1];        
        }
 
 #if defined(__DEBUG_) && __DEBUG_ && defined(__DEBUG_DOAS_SVD_) && __DEBUG_DOAS_SVD_
@@ -2946,15 +2928,16 @@ RC ANALYSE_Function ( double *X, double *Y, double *SigmaY, double *Yfit, int Np
         double weight = (svdIndex <= NewDimC)
           ? fitParamsC[svdIndex]/TabCross[l].Fact
           : fitParamsC[svdIndex];
-        if (svdIndex > 0 && (l!=Feno->indexRing1))
+        if (svdIndex > 0)
          for (int k=1;k<=DimL;k++) {
           XTrav[k-1]+= U[svdIndex][k]*weight;
          }
        }
       for (int k=1;k<=DimL;k++) {
-       Yfit[k-1]=YTrav[k-1]-XTrav[k-1]; // NB : logarithm test on YTrav has been made in the previous loo
+       Yfit[k-1]=YTrav[k-1]-XTrav[k-1]; // NB : logarithm test on YTrav has been made in the previous loop
       }
      }
+
     //
     // INTENSITY FITTING (Marquardt-Levenberg + SVD)
     //
@@ -3327,10 +3310,10 @@ RC ANALYSE_CurFitMethod(INDEX   indexFenoColumn,  // for OMI
       for( int k=0,i=iterator_start(&my_iterator, global_doas_spectrum); i != ITERATOR_FINISHED; k++,i=iterator_next(&my_iterator))
        if ((SpecTrav[i]==(double)0.) || (RefTrav[i]==(double)0.))
         rc=ERROR_SetLast("ANALYSE_CurFitMethod",ERROR_TYPE_WARNING,ERROR_ID_DIVISION_BY_0,"try to divide errors by a zero");
-       else
-        SigmaY[k]=(double)sqrt((SigmaSpec[i]*SigmaSpec[i])/(SpecTrav[i]*SpecTrav[i])+
-                               (Feno->SrefSigma[i]*Feno->SrefSigma[i])/(RefTrav[i]*RefTrav[i]));
-
+       else { // TODO: fix error calculation (value is currently not correct due to inconsistent normalization)
+        SigmaY[k]=(double)sqrt( (SigmaSpec[i]*SigmaSpec[i])/(SpecTrav[i]*SpecTrav[i])
+                                + (Feno->SrefSigma[i]*Feno->SrefSigma[i])/(RefTrav[i]*RefTrav[i]));
+       }
       if (rc!=0)
        goto EndCurFitMethod;
      }
@@ -3523,7 +3506,6 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
   INDEX i;                               // indexes for loops and arrays
   INDEX indexFenoColumn;
 
-  //  INT oldFenetre[MAX_FEN][2],oldZ;           // backup of the spectral windows limits + gaps
   doas_spectrum *old_range = NULL;
 
   double j0,lambda0;
@@ -3543,14 +3525,10 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
     displayFlag,                           // number of MDI child windows used for display analysis fits
     useKurucz,                             // flag set if Kurucz should be applied on spectra
     saveFlag;
-  // QDOAS ???   FILE *fp;                     // pointer to temporary file
 
   INDEX indexPage,indexLine,indexColumn;
   RC  rc;                                    // return code
   int nrc;
-
-  plot_data_t spectrumData[2];
-  INT n,n2;
 
 #if defined(__DEBUG_) && __DEBUG_
   DEBUG_FunctionBegin("ANALYSE_Spectrum",DEBUG_FCTTYPE_APPL);
@@ -3596,8 +3574,8 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
     memcpy(Spectre,pBuffers->spectrum,sizeof(double)*NDET);
 
-    if (((rc=VECTOR_NormalizeVector(Spectre-1,NDET,&speNormFact,"ANALYSE_Spectrum (Spectrum) "))!=ERROR_ID_NO) ||
-        (pRecord->useErrors && ((rc=VECTOR_NormalizeVector(pBuffers->sigmaSpec-1,NDET,&factTemp,"ANALYSE_Spectrum (sigmaSpec) "))!=ERROR_ID_NO)))
+    if ( (rc=VECTOR_NormalizeVector(Spectre-1,NDET,&speNormFact,"ANALYSE_Spectrum (Spectrum) "))!=ERROR_ID_NO
+         || (pRecord->useErrors && (rc=VECTOR_NormalizeVector(pBuffers->sigmaSpec-1,NDET,&factTemp,"ANALYSE_Spectrum (sigmaSpec) "))!=ERROR_ID_NO ) )
      goto EndAnalysis;
 
     // Apply Kurucz on spectrum
@@ -3647,8 +3625,6 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
      {
 
       // Browse analysis windows
-
-      n=0,n2=0;
 
       for (WrkFeno=0;(WrkFeno<NFeno) && (rc!=THREAD_EVENT_STOP);WrkFeno++)
        {
@@ -3863,14 +3839,14 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
           do {
            if ((rc=ANALYSE_CurFitMethod(indexFenoColumn,
-                                        (Feno->useKurucz==ANLYS_KURUCZ_REF_AND_SPEC)?SpectreK:Spectre,     // raw spectrum
-                                        (pRecord->useErrors)?pBuffers->sigmaSpec:NULL,                     // error on raw spectrum
-                                        Sref,                                                             // reference spectrum
+                                        (Feno->useKurucz==ANLYS_KURUCZ_REF_AND_SPEC)?SpectreK:Spectre, // raw spectrum
+                                        (pRecord->useErrors)?pBuffers->sigmaSpec:NULL, // error on raw spectrum
+                                        Sref, // reference spectrum
                                         residuals,
-                                        &Feno->chiSquare,                                                  // returned stretch order 2
+                                        &Feno->chiSquare, // returned stretch order 2
                                         &Niter,
                                         speNormFact,
-                                        Feno->refNormFact))==THREAD_EVENT_STOP)                                       // number of iterations in Curfit
+                                        Feno->refNormFact)) == THREAD_EVENT_STOP) // number of iterations in Curfit
 
             goto EndAnalysis;  // !!!! Bypass the DEBUG_Stop
 
@@ -3893,6 +3869,7 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
           // Output analysis results to temporary file
 
+          /*
           if (Feno->analysisMethod!=PRJCT_ANLYS_METHOD_SVD)
            {
             Feno->chiSquare=(double)0.;
@@ -3901,8 +3878,9 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
              if (ANALYSE_t[j]>(double)0.)
               Feno->chiSquare+=(double)log(ANALYSE_t[j])*log(ANALYSE_t[j]);
 
-            Feno->chiSquare/=ANALYSE_nFree;
+              Feno->chiSquare/=ANALYSE_nFree;
            }
+          */
 
           Feno->RMS=(Feno->chiSquare>(double)0.)?sqrt(Feno->chiSquare):(double)0.;
 
@@ -3988,33 +3966,14 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
                  Feno->displayFits && TabCross[i].display)
               {
                doas_iterator my_iterator;
-               if (Feno->indexRing1==i)
+               for (int k=1,l=iterator_start(&my_iterator, Feno->svd.specrange); l != ITERATOR_FINISHED; k++,l=iterator_next(&my_iterator))
                 {
-
-                 for (int k=1,l=iterator_start(&my_iterator, Feno->svd.specrange); l != ITERATOR_FINISHED; k++,l=iterator_next(&my_iterator))
-                  {
-                   newVal=(Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVD)?
-                     log(1+x[TabCross[i].IndSvdA]*U[TabCross[i].IndSvdA][k]/Spectre[l]):
-                     log(1-x[TabCross[i].IndSvdA]*U[TabCross[i].IndSvdA][k]*Sref[l]/Spectre[l]);
-
+                 newVal=x[TabCross[i].IndSvdA]*U[TabCross[i].IndSvdA][k];
+                 
                    ANALYSE_absolu[l]+=newVal-ANALYSE_secX[l];
                    ANALYSE_secX[l]=newVal;
-                  }
-
-                 sprintf(graphTitle,"%s (%.2le)",WorkSpace[TabCross[i].Comp].symbolName,Results[i].SlntCol);
                 }
-               else
-                {
-                 for (int k=1,l=iterator_start(&my_iterator, Feno->svd.specrange); l != ITERATOR_FINISHED; k++,l=iterator_next(&my_iterator))
-                  {
-                   newVal=x[TabCross[i].IndSvdA]*U[TabCross[i].IndSvdA][k];
-
-                   ANALYSE_absolu[l]+=newVal-ANALYSE_secX[l];
-                   ANALYSE_secX[l]=newVal;
-                  }
-
-                 sprintf(graphTitle,"%s (%.2le)",WorkSpace[TabCross[i].Comp].symbolName,Results[i].SlntCol);
-                }
+               sprintf(graphTitle,"%s (%.2le)",WorkSpace[TabCross[i].Comp].symbolName,Results[i].SlntCol);
 
                double *curves[2][2] = {{Feno->LambdaK, ANALYSE_absolu},
                                        {Feno->LambdaK, ANALYSE_secX}};
@@ -5975,13 +5934,12 @@ RC ANALYSE_UsampBuild(INT analysisFlag,INT gomeFlag)      // OMI ???
   INDEX indexFeno,i,indexPixMin,indexPixMax,j;
   INT slitType;
   double slitParam2,*lambda,*lambda2,lambda0,x0;
-  FENO *pTabFeno,*pKuruczFeno;
+  FENO *pTabFeno;
   RC rc;
 
   // Initializations
 
   lambda2=NULL;
-  pKuruczFeno=&TabFeno[0][KURUCZ_buffers[0].indexKurucz];
   memset(&xsSlit,0,sizeof(MATRIX_OBJECT));
   memset(&xsSlit2,0,sizeof(MATRIX_OBJECT));
   memset(&slitXs,0,sizeof(MATRIX_OBJECT));
