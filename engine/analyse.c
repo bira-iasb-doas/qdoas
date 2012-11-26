@@ -274,6 +274,14 @@ void plot_curves( int page,
   free(plotdata);
  }
 
+double root_mean_squares(double * array, doas_spectrum *ranges) {
+  double sum = 0.;
+  doas_iterator my_iterator;
+  for( int i = iterator_start(&my_iterator, ranges); i != ITERATOR_FINISHED; i=iterator_next(&my_iterator))
+   sum += array[i]*array[i];
+  return sqrt(sum / spectrum_length(ranges));
+}
+
 /*! Average magnitude, averaging over valid points of the spectrum.
  *
  * The average of the absolute value is returned, for those pixels
@@ -3869,9 +3877,6 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
           pRecord->BestShift+=(double)Feno->TabCrossResults[Feno->indexSpectrum].Shift;
           Feno->nIter=Niter;
 
-          // Output analysis results to temporary file
-
-          /*
           if (Feno->analysisMethod!=PRJCT_ANLYS_METHOD_SVD)
            {
             Feno->chiSquare=(double)0.;
@@ -3882,9 +3887,8 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
               Feno->chiSquare/=ANALYSE_nFree;
            }
-          */
 
-          Feno->RMS=(Feno->chiSquare>(double)0.)?sqrt(Feno->chiSquare):(double)0.;
+          Feno->RMS = root_mean_squares(ANALYSE_absolu, Feno->svd.specrange);
 
           // Display residual spectrum
 
