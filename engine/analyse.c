@@ -2390,7 +2390,7 @@ RC AnalyseSaveResiduals(DoasCh *fileName,ENGINE_CONTEXT *pEngineContext)
 // Function : Cross sections and spectrum alignment using spline fitting functions and new Yfit computation
 // --------------------------------------------------------------------------------------------------------
 
-RC ANALYSE_Function ( double *X, double *Y, double *SigmaY, double *Yfit, int Npts,
+RC ANALYSE_Function( double *X, double *Y, double *SigmaY, double *Yfit, int Npts,
                       double *fitParamsC, double *fitParamsF,INDEX indexFenoColumn) // unused parameter Y0
 {
   // Declarations
@@ -3310,9 +3310,12 @@ RC ANALYSE_CurFitMethod(INDEX   indexFenoColumn,  // for OMI
       for( int k=0,i=iterator_start(&my_iterator, global_doas_spectrum); i != ITERATOR_FINISHED; k++,i=iterator_next(&my_iterator))
        if ((SpecTrav[i]==(double)0.) || (RefTrav[i]==(double)0.))
         rc=ERROR_SetLast("ANALYSE_CurFitMethod",ERROR_TYPE_WARNING,ERROR_ID_DIVISION_BY_0,"try to divide errors by a zero");
-       else { // TODO: fix error calculation (value is currently not correct due to inconsistent normalization)
-        SigmaY[k]=(double)sqrt( (SigmaSpec[i]*SigmaSpec[i])/(SpecTrav[i]*SpecTrav[i])
-                                + (Feno->SrefSigma[i]*Feno->SrefSigma[i])/(RefTrav[i]*RefTrav[i]));
+       else {
+        // error on sigma_log(I/I0) = sqrt( (sigma_I/I)^2 + (sigma_I0/I0)^2)
+        double Ispec = speNormFact * Spectre[i]; // spectrum intensity
+        double Iref = refNormFact * Sref[i]; // reference intensity
+        SigmaY[k]=(double)sqrt( (SigmaSpec[i]*SigmaSpec[i])/(Ispec*Ispec)
+                                + (Feno->SrefSigma[i]*Feno->SrefSigma[i])/(Iref*Iref) );
        }
       if (rc!=0)
        goto EndCurFitMethod;
@@ -3574,8 +3577,7 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
     memcpy(Spectre,pBuffers->spectrum,sizeof(double)*NDET);
 
-    if ( (rc=VECTOR_NormalizeVector(Spectre-1,NDET,&speNormFact,"ANALYSE_Spectrum (Spectrum) "))!=ERROR_ID_NO
-         || (pRecord->useErrors && (rc=VECTOR_NormalizeVector(pBuffers->sigmaSpec-1,NDET,&factTemp,"ANALYSE_Spectrum (sigmaSpec) "))!=ERROR_ID_NO ) )
+    if ( (rc=VECTOR_NormalizeVector(Spectre-1,NDET,&speNormFact,"ANALYSE_Spectrum (Spectrum) "))!=ERROR_ID_NO )
      goto EndAnalysis;
 
     // Apply Kurucz on spectrum
