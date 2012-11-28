@@ -15,7 +15,8 @@ QMAKE_CFLAGS += -std=gnu99
 unix {
   INSTALL_PREFIX = /home/thomasd
   INCLUDEPATH += /home/thomasd/include /usr/include/qwt /usr/include/hdf
-  QMAKE_LFLAGS += -Wl,-rpath=/home/thomas/lib -L/home/thomasd/lib
+  QMAKE_LFLAGS += -Wl,-rpath=/home/thomasd/lib
+  QMAKE_LIBDIR += /home/thomasd/lib
   QMAKE_LIBS += -lqwt
   # QDOAS online help
 
