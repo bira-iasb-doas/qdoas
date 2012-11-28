@@ -4,7 +4,7 @@
 
 HELP_SYSTEM     =      # or empty
 QWT_LINKAGE     = qwtdll        # qwtstatic or qwtdll
-CODE_GENERATION = release         # debug or release
+CODE_GENERATION = debug         # debug or release
 
 QMAKE_CFLAGS += -std=gnu99
 
@@ -13,18 +13,10 @@ QMAKE_CFLAGS += -std=gnu99
 #----------------------------------------------
 
 unix {
-  QWT_INC_PATH   = /usr/local/qwt/include
-  QWT_LIB_PATH   = /usr/local/qwt/lib
-  QWT_LIB        = qwt
-
-  INSTALL_PREFIX = /bira-iasb/proj_dyn/DOAS/Programmes/QDOAS-linux
-  CODA_LIB_PATH = /bira-iasb/proj_dyn/DOAS/Programmes/QDOAS-linux/lib
-  CODA_INC_PATH = /bira-iasb/proj_dyn/DOAS/Programmes/QDOAS-linux/include
-  HDFEOS_LIB_PATH = /bira-iasb/proj_dyn/DOAS/Programmes/QDOAS-linux/hdfeos/lib/linux64
-  HDFEOS_INC_PATH = /home/thomasd/hdfeos/include
-  HDF4_LIB_PATH = /bira-iasb/proj_dyn/DOAS/Programmes/QDOAS-linux/lib
-  HDF_INC_PATH    = /home/thomasd/hdf4/include/
-
+  INSTALL_PREFIX = /home/thomasd
+  INCLUDEPATH += /home/thomasd/include /usr/include/qwt /usr/include/hdf
+  QMAKE_LFLAGS += -Wl,-rpath=/home/thomas/lib -L/home/thomasd/lib
+  QMAKE_LIBS += -lqwt
   # QDOAS online help
 
   #  QDOAS_HELP= '\\"D:/My_Applications/QDoas/trunk/Src/qdoas/release/Help\\"'  # place quotes around the version string
