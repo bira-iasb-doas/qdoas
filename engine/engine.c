@@ -1258,13 +1258,13 @@ RC EngineSetRefIndexes(ENGINE_CONTEXT *pEngineContext)
                  if ((ZmList[indexRecord]>=pTabFeno->refSZA-pTabFeno->refSZADelta) &&
                      (ZmList[indexRecord]<=pTabFeno->refSZA+pTabFeno->refSZADelta))
                   {
-                   if ((TimeDec[indexRecord]<=ENGINE_localNoon) && (fabs(pTabFeno->refSZA-ZmList[indexRecord])<deltaZmMorning))
+                   if ((TimeDec[indexRecord]<=TimeDec[indexZmMin]) && (fabs(pTabFeno->refSZA-ZmList[indexRecord])<deltaZmMorning))
                     {
                      pTabFeno->indexRefMorning=indexRecord;
                      deltaZmMorning=fabs(pTabFeno->refSZA-ZmList[indexRecord]);
                     }
 
-                   if ((TimeDec[indexRecord]>ENGINE_localNoon) && (fabs(pTabFeno->refSZA-ZmList[indexRecord])<deltaZmAfternoon))
+                   if ((TimeDec[indexRecord]>=TimeDec[indexZmMin]) && (fabs(pTabFeno->refSZA-ZmList[indexRecord])<deltaZmAfternoon))
                     {
                      pTabFeno->indexRefAfternoon=indexRecord;
                      deltaZmAfternoon=fabs(pTabFeno->refSZA-ZmList[indexRecord]);
