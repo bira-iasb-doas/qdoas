@@ -555,39 +555,43 @@ void Orthogonalization(void)
   DEBUG_FunctionBegin("Orthogonalization",DEBUG_FCTTYPE_UTIL);
 #endif
 
-  // Orthogonal base
-
-  memcpy(NormSet,ANALYSE_ones,NOrtho*sizeof(double));
-
-  for (indexOrthoSet=1;indexOrthoSet<NOrtho;indexOrthoSet++)
+  if (NOrtho)                                                                   // if no orthogonal base, cross sections can not be orthogonalized to another cross section
    {
-    OrthogonalizeVector(OrthoSet,NormSet,indexOrthoSet,Feno->TabCross[OrthoSet[indexOrthoSet]].IndSvdA);
-    //    VECTOR_NormalizeVector(A[Feno->TabCross[OrthoSet[indexOrthoSet]].IndSvdA],DimL,&norm /* Vector norm before normalisation */,"Orthogonalization ");
-    NormSet[indexOrthoSet]=VECTOR_Norm(A[Feno->TabCross[OrthoSet[indexOrthoSet]].IndSvdA],DimL);
-   }
+    // Orthogonal base
 
-  // Orthogonalization to base only
+    memcpy(NormSet,ANALYSE_ones,NOrtho*sizeof(double));
 
-  if ((ANALYSE_phFilter->filterFunction==NULL) ||
-      (!Feno->hidden && !ANALYSE_phFilter->hpFilterAnalysis) ||
-      ((Feno->hidden==1) && !ANALYSE_phFilter->hpFilterCalib))
+    for (indexOrthoSet=1;indexOrthoSet<NOrtho;indexOrthoSet++)
+     {
+      OrthogonalizeVector(OrthoSet,NormSet,indexOrthoSet,Feno->TabCross[OrthoSet[indexOrthoSet]].IndSvdA);
+      //    VECTOR_NormalizeVector(A[Feno->TabCross[OrthoSet[indexOrthoSet]].IndSvdA],DimL,&norm /* Vector norm before normalisation */,"Orthogonalization ");
+      NormSet[indexOrthoSet]=VECTOR_Norm(A[Feno->TabCross[OrthoSet[indexOrthoSet]].IndSvdA],DimL);
+     }
 
-   for (indexTabCross=0;indexTabCross<Feno->NTabCross;indexTabCross++)
-    {
-     pTabCross=&Feno->TabCross[indexTabCross];
+    // Orthogonalization to base only
 
-     if (pTabCross->IndSvdA && (pTabCross->IndOrthog==ORTHOGONAL_BASE))
-      OrthogonalizeVector(OrthoSet,NormSet,NOrtho,pTabCross->IndSvdA);
-    }
+    if ((ANALYSE_phFilter->filterFunction==NULL) ||
+        (!Feno->hidden && !ANALYSE_phFilter->hpFilterAnalysis) ||
+        ((Feno->hidden==1) && !ANALYSE_phFilter->hpFilterCalib))
 
-  // Orthogonalization to base plus another vector
+     for (indexTabCross=0;indexTabCross<Feno->NTabCross;indexTabCross++)
+      {
+       pTabCross=&Feno->TabCross[indexTabCross];
 
-  for (indexTabCross=0;indexTabCross<Feno->NTabCross;indexTabCross++)
-   {
-    pTabCross=&Feno->TabCross[indexTabCross];
+       if (pTabCross->IndSvdA && (pTabCross->IndOrthog==ORTHOGONAL_BASE))
+        OrthogonalizeVector(OrthoSet,NormSet,NOrtho,pTabCross->IndSvdA);
+      }
 
-    if (pTabCross->IndSvdA && (pTabCross->IndOrthog==ORTHOGONAL_BASE))
-     OrthogonalizeToCross(indexTabCross,NormSet,NOrtho);
+    // Orthogonalization to base plus another vector
+
+    for (indexTabCross=0;indexTabCross<Feno->NTabCross;indexTabCross++)
+     {
+      pTabCross=&Feno->TabCross[indexTabCross];
+
+      if (pTabCross->IndSvdA && (pTabCross->IndOrthog==ORTHOGONAL_BASE))
+       OrthogonalizeToCross(indexTabCross,NormSet,NOrtho);
+     }
+
    }
 
 #if defined(__DEBUG_) && __DEBUG_
@@ -2784,7 +2788,7 @@ RC ANALYSE_Function( double *X, double *Y, double *SigmaY, double *Yfit, int Npt
           memcpy((char *)(U[indexSvdA]+1),(char *)(A[indexSvdA]+1),sizeof(double)*Npts);
 
           for (int l=1;l<=DimL;l++) {
-           U[indexSvdA][l]*= (SigmaY == NULL) ? 
+           U[indexSvdA][l]*= (SigmaY == NULL) ?
              pTabCross->Fact : pTabCross->Fact*SigmaY[l-1];   // Multiply columns of U by normalization factor, multiply rows by error
           }
 
@@ -2908,7 +2912,7 @@ RC ANALYSE_Function( double *X, double *Y, double *SigmaY, double *Yfit, int Npt
           b[k]-=U[l][k]*fitParamsC[l];
 
         if (SigmaY!=NULL)
-         b[k]/=SigmaY[k-1];        
+         b[k]/=SigmaY[k-1];
        }
 
 #if defined(__DEBUG_) && __DEBUG_ && defined(__DEBUG_DOAS_SVD_) && __DEBUG_DOAS_SVD_
@@ -3975,7 +3979,7 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
                for (int k=1,l=iterator_start(&my_iterator, Feno->svd.specrange); l != ITERATOR_FINISHED; k++,l=iterator_next(&my_iterator))
                 {
                  newVal=x[TabCross[i].IndSvdA]*U[TabCross[i].IndSvdA][k];
-                 
+
                    ANALYSE_absolu[l]+=newVal-ANALYSE_secX[l];
                    ANALYSE_secX[l]=newVal;
                 }
