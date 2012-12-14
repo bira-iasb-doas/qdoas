@@ -725,12 +725,13 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
            measurementType=pEngineContext->project.instrumental.user;
 
            if (rc ||
-              (dateFlag && (pRecord->elevationViewAngle>0.) && (pRecord->elevationViewAngle<80.)) ||                                                                              // reference spectra are zenith only
+              (dateFlag && (((pRecord->elevationViewAngle>0.) && (pRecord->elevationViewAngle<80.)) ||
+                            ((pRecord->ccd.measureType!=PRJCT_INSTR_EEV_TYPE_NONE) && (pRecord->ccd.measureType!=PRJCT_INSTR_EEV_TYPE_ZENITH)))) ||                    // reference spectra are zenith only
               (!dateFlag && pEngineContext->analysisRef.refScan && !pEngineContext->analysisRef.refSza && (pRecord->elevationViewAngle>80.)))    // zenith sky spectra are not analyzed in scan reference selection mode
 
             rc=ERROR_ID_FILE_RECORD;
 
-           else if (measurementType!=PRJCT_INSTR_EEV_TYPE_NONE)
+           else if (!dateFlag && (measurementType!=PRJCT_INSTR_EEV_TYPE_NONE))
             {
             	if (((measurementType==PRJCT_INSTR_EEV_TYPE_OFFAXIS) && (pRecord->ccd.measureType!=PRJCT_INSTR_EEV_TYPE_OFFAXIS) && (pRecord->ccd.measureType!=PRJCT_INSTR_EEV_TYPE_ZENITH)) ||
             	    ((measurementType!=PRJCT_INSTR_EEV_TYPE_OFFAXIS) && (pRecord->ccd.measureType!=measurementType)))

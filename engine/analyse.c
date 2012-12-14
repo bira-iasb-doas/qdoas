@@ -2473,99 +2473,99 @@ RC ANALYSE_Function( double *X, double *Y, double *SigmaY, double *Yfit, int Npt
 
     memcpy(newXsTrav,ANALYSE_zeros,sizeof(double)*NDET);
 
-    // ========
-    // SPECTRUM
-    // ========
+   // ========
+   // SPECTRUM
+   // ========
 
-    // ---------------------------------
-    // Wavelength alignment (shift option in Shift and stretch page) for spectrum
-    // ---------------------------------
+   // ---------------------------------
+   // Wavelength alignment (shift option in Shift and stretch page) for spectrum
+   // ---------------------------------
 
-    if (((rc=ShiftVector(LambdaSpec,X,SplineSpec,spectrum_interpolated,
-                         (Feno->indexSpectrum!=ITEM_NONE)?((TabCross[Feno->indexSpectrum].FitShift!=ITEM_NONE)?(double)fitParamsF[TabCross[Feno->indexSpectrum].FitShift]:(double)TabCross[Feno->indexSpectrum].InitShift):(double)0.,
-                         (Feno->indexSpectrum!=ITEM_NONE)?((TabCross[Feno->indexSpectrum].FitStretch!=ITEM_NONE)?(double)fitParamsF[TabCross[Feno->indexSpectrum].FitStretch]:(double)TabCross[Feno->indexSpectrum].InitStretch):(double)0.,
-                         (Feno->indexSpectrum!=ITEM_NONE)?((TabCross[Feno->indexSpectrum].FitStretch2!=ITEM_NONE)?(double)fitParamsF[TabCross[Feno->indexSpectrum].FitStretch2]:(double)TabCross[Feno->indexSpectrum].InitStretch2):(double)0.,
-                         (double)0.,(double)0.,(double)0.,
-                         fitParamsF,-1,0,NULL,indexFenoColumn))!=ERROR_ID_NO) ||
+   if (((rc=ShiftVector(LambdaSpec,X,SplineSpec,spectrum_interpolated,
+                        (Feno->indexSpectrum!=ITEM_NONE)?((TabCross[Feno->indexSpectrum].FitShift!=ITEM_NONE)?(double)fitParamsF[TabCross[Feno->indexSpectrum].FitShift]:(double)TabCross[Feno->indexSpectrum].InitShift):(double)0.,
+                        (Feno->indexSpectrum!=ITEM_NONE)?((TabCross[Feno->indexSpectrum].FitStretch!=ITEM_NONE)?(double)fitParamsF[TabCross[Feno->indexSpectrum].FitStretch]:(double)TabCross[Feno->indexSpectrum].InitStretch):(double)0.,
+                        (Feno->indexSpectrum!=ITEM_NONE)?((TabCross[Feno->indexSpectrum].FitStretch2!=ITEM_NONE)?(double)fitParamsF[TabCross[Feno->indexSpectrum].FitStretch2]:(double)TabCross[Feno->indexSpectrum].InitStretch2):(double)0.,
+                        (double)0.,(double)0.,(double)0.,
+                        fitParamsF,-1,0,NULL,indexFenoColumn))!=ERROR_ID_NO) ||
 
-        (Feno->useUsamp && (pUsamp->method==PRJCT_USAMP_AUTOMATIC) && ((rc=ANALYSE_UsampBuild(2,ITEM_NONE))!=ERROR_ID_NO)))
+       (Feno->useUsamp && (pUsamp->method==PRJCT_USAMP_AUTOMATIC) && ((rc=ANALYSE_UsampBuild(2,ITEM_NONE))!=ERROR_ID_NO)))
 
+    goto EndFunction;
+
+   // ------------------------------
+   // Low pass filtering on spectrum
+   // ------------------------------
+
+   // Filter real time only when fitting difference of resolution between spectrum and reference
+
+   if ((Feno->analysisType==ANALYSIS_TYPE_FWHM_NLFIT) && (ANALYSE_plFilter->filterFunction!=NULL) &&
+       ((rc=FILTER_Vector(ANALYSE_plFilter,&spectrum_interpolated[LimMin],&spectrum_interpolated[LimMin],LimN,PRJCT_FILTER_OUTPUT_LOW))!=0))
+    {
+     rc=ERROR_SetLast("EndFunction",ERROR_TYPE_WARNING,ERROR_ID_ANALYSIS,analyseIndexRecord,"Filter");
      goto EndFunction;
+    }
 
-    //-------------------
-    // Calculate the mean
-    //-------------------
-    doas_iterator my_iterator;
-    Feno->xmean=(double)0.;
-    for(int i = iterator_start(&my_iterator, global_doas_spectrum); i != ITERATOR_FINISHED; i=iterator_next(&my_iterator))
-     Feno->xmean+=(double)spectrum_interpolated[i];
+   //-------------------
+   // Calculate the mean
+   //-------------------
+   doas_iterator my_iterator;
+   Feno->xmean=(double)0.;
+   for(int i = iterator_start(&my_iterator, global_doas_spectrum); i != ITERATOR_FINISHED; i=iterator_next(&my_iterator))
+    Feno->xmean+=(double)spectrum_interpolated[i];
 
-    Feno->xmean/=Npts;
+   Feno->xmean/=Npts;
 
-    // -------------------------------
-    // Spectrum correction with offset
-    // -------------------------------
+   // -------------------------------
+   // Spectrum correction with offset
+   // -------------------------------
 
-    if (Feno->analysisMethod!=PRJCT_ANLYS_METHOD_SVDMARQUARDT)
-     {
-      offsetOrder=-1;
+   if (Feno->analysisMethod!=PRJCT_ANLYS_METHOD_SVDMARQUARDT)
+    {
+     offsetOrder=-1;
 
-      if ((Feno->indexOffsetConst!=ITEM_NONE) && ((TabCross[Feno->indexOffsetConst].FitParam!=ITEM_NONE) || (TabCross[Feno->indexOffsetConst].InitParam!=(double)0.)))
-       offsetOrder=0;
-      if ((Feno->indexOffsetOrder1!=ITEM_NONE) && ((TabCross[Feno->indexOffsetOrder1].FitParam!=ITEM_NONE) || (TabCross[Feno->indexOffsetOrder1].InitParam!=(double)0.)))
-       offsetOrder=1;
-      if ((Feno->indexOffsetOrder2!=ITEM_NONE) && ((TabCross[Feno->indexOffsetOrder2].FitParam!=ITEM_NONE) || (TabCross[Feno->indexOffsetOrder2].InitParam!=(double)0.)))
-       offsetOrder=2;
+     if ((Feno->indexOffsetConst!=ITEM_NONE) && ((TabCross[Feno->indexOffsetConst].FitParam!=ITEM_NONE) || (TabCross[Feno->indexOffsetConst].InitParam!=(double)0.)))
+      offsetOrder=0;
+     if ((Feno->indexOffsetOrder1!=ITEM_NONE) && ((TabCross[Feno->indexOffsetOrder1].FitParam!=ITEM_NONE) || (TabCross[Feno->indexOffsetOrder1].InitParam!=(double)0.)))
+      offsetOrder=1;
+     if ((Feno->indexOffsetOrder2!=ITEM_NONE) && ((TabCross[Feno->indexOffsetOrder2].FitParam!=ITEM_NONE) || (TabCross[Feno->indexOffsetOrder2].InitParam!=(double)0.)))
+      offsetOrder=2;
 
-      if (offsetOrder>=0)
-       {
-        for (int i=LimMin;i<=LimMax;i++)
-         {
-          deltaX=(double)(ANALYSE_splineX[i]-lambda0);
+     if (offsetOrder>=0)
+      {
+       for (int i=LimMin;i<=LimMax;i++)
+        {
+         deltaX=(double)(ANALYSE_splineX[i]-lambda0);
 
-          offset=(TabCross[Feno->indexOffsetConst].FitParam!=ITEM_NONE)?(double)fitParamsF[TabCross[Feno->indexOffsetConst].FitParam]:(double)TabCross[Feno->indexOffsetConst].InitParam;
+         offset=(TabCross[Feno->indexOffsetConst].FitParam!=ITEM_NONE)?(double)fitParamsF[TabCross[Feno->indexOffsetConst].FitParam]:(double)TabCross[Feno->indexOffsetConst].InitParam;
 
-          if (offsetOrder>=1)
-           offset+=((TabCross[Feno->indexOffsetOrder1].FitParam!=ITEM_NONE)?(double)fitParamsF[TabCross[Feno->indexOffsetOrder1].FitParam]/TabCross[Feno->indexOffsetOrder1].Fact:(double)TabCross[Feno->indexOffsetOrder1].InitParam)*deltaX;
-          if (offsetOrder>=2)
-           offset+=((TabCross[Feno->indexOffsetOrder2].FitParam!=ITEM_NONE)?(double)fitParamsF[TabCross[Feno->indexOffsetOrder2].FitParam]/TabCross[Feno->indexOffsetOrder2].Fact:(double)TabCross[Feno->indexOffsetOrder2].InitParam)*deltaX*deltaX;
+         if (offsetOrder>=1)
+          offset+=((TabCross[Feno->indexOffsetOrder1].FitParam!=ITEM_NONE)?(double)fitParamsF[TabCross[Feno->indexOffsetOrder1].FitParam]/TabCross[Feno->indexOffsetOrder1].Fact:(double)TabCross[Feno->indexOffsetOrder1].InitParam)*deltaX;
+         if (offsetOrder>=2)
+          offset+=((TabCross[Feno->indexOffsetOrder2].FitParam!=ITEM_NONE)?(double)fitParamsF[TabCross[Feno->indexOffsetOrder2].FitParam]/TabCross[Feno->indexOffsetOrder2].Fact:(double)TabCross[Feno->indexOffsetOrder2].InitParam)*deltaX*deltaX;
 
-          spectrum_interpolated[i]-=(double)offset*Feno->xmean;
-         }
-       }
-     }
+         spectrum_interpolated[i]-=(double)offset*Feno->xmean;
+        }
+      }
+    }
 
-    // ------------------------------
-    // Low pass filtering on spectrum
-    // ------------------------------
+   // -------------------------------
+   // High-pass filtering on spectrum
+   // -------------------------------
 
-    // Filter real time only when fitting difference of resolution between spectrum and reference
+   if ((Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVD) && !hFilterSpecLog &&  // logarithms are not calculated and filtered before entering this function
+       (((rc=VECTOR_Log(&spectrum_interpolated[LimMin],&spectrum_interpolated[LimMin],LimN,"ANLYSE_Function (Spec) "))!=0) ||
+        ((ANALYSE_phFilter->filterFunction!=NULL) &&
+         ((!Feno->hidden && ANALYSE_phFilter->hpFilterAnalysis) || ((Feno->hidden==1) && ANALYSE_phFilter->hpFilterCalib)) &&
+         ((rc=FILTER_Vector(ANALYSE_phFilter,&spectrum_interpolated[LimMin],&spectrum_interpolated[LimMin],LimN,PRJCT_FILTER_OUTPUT_HIGH_SUB))!=0))))
 
-    if ((Feno->analysisType==ANALYSIS_TYPE_FWHM_NLFIT) && (ANALYSE_plFilter->filterFunction!=NULL) &&
-        ((rc=FILTER_Vector(ANALYSE_plFilter,&spectrum_interpolated[LimMin],&spectrum_interpolated[LimMin],LimN,PRJCT_FILTER_OUTPUT_LOW))!=0))
-     {
-      rc=ERROR_SetLast("EndFunction",ERROR_TYPE_WARNING,ERROR_ID_ANALYSIS,analyseIndexRecord,"Filter");
-      goto EndFunction;
-     }
+    goto EndFunction;
 
-    // -------------------------------
-    // High-pass filtering on spectrum
-    // -------------------------------
+   // ----------------------------
+   // Transfer to working variable
+   // ----------------------------
 
-    if ((Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVD) && !hFilterSpecLog &&  // logarithms are not calculated and filtered before entering this function
-        (((rc=VECTOR_Log(&spectrum_interpolated[LimMin],&spectrum_interpolated[LimMin],LimN,"ANLYSE_Function (Spec) "))!=0) ||
-         ((ANALYSE_phFilter->filterFunction!=NULL) &&
-          ((!Feno->hidden && ANALYSE_phFilter->hpFilterAnalysis) || ((Feno->hidden==1) && ANALYSE_phFilter->hpFilterCalib)) &&
-          ((rc=FILTER_Vector(ANALYSE_phFilter,&spectrum_interpolated[LimMin],&spectrum_interpolated[LimMin],LimN,PRJCT_FILTER_OUTPUT_HIGH_SUB))!=0))))
-
-     goto EndFunction;
-
-    // ----------------------------
-    // Transfer to working variable
-    // ----------------------------
-
-    for( int k=0,l=iterator_start(&my_iterator, global_doas_spectrum); l != ITERATOR_FINISHED; k++,l=iterator_next(&my_iterator))
-     XTrav[k]=spectrum_interpolated[l];
+   for( int k=0,l=iterator_start(&my_iterator, global_doas_spectrum); l != ITERATOR_FINISHED; k++,l=iterator_next(&my_iterator))
+    XTrav[k]=spectrum_interpolated[l];
 
     // ==============
     // CROSS SECTIONS
@@ -2717,7 +2717,6 @@ RC ANALYSE_Function( double *X, double *Y, double *SigmaY, double *Yfit, int Npt
 
       // weighting by instrumental errors:
       if ((Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVD) && (SigmaY!=NULL)) {
-       doas_iterator my_iterator;
        for (indexSvdA=0;indexSvdA<=DimC;indexSvdA++)
         for( int k=1; k<=DimL; k++) {
          A[indexSvdA][k]/=SigmaY[k-1];
@@ -3533,8 +3532,7 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
     *offset,                            // fitted linear offset
     maxOffset,
     newVal,
-    speNormFact,
-    factTemp;                          // normalization factor
+    speNormFact;                          // normalization factor
 
   INT NbFeno,Niter,
     displayFlag,                           // number of MDI child windows used for display analysis fits
