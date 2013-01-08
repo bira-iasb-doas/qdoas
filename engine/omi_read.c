@@ -62,6 +62,7 @@
 #define REFERENCE_COLUMN "WavelengthReferenceColumn"
 #define WAVELENGTH_COEFFICIENT "WavelengthCoefficient"
 #define OMI_NUM_COEFFICIENTS 5 // 5 coefficients in wavelenght polynomial
+#define OMI_NUM_ROWS 60
 #define OMI_XTRACK_NOTUSED 255 // XTrackQualityFlags = 255 is used to label unused rows in the detector during special zoom mode.
 #define RADIANCE_MANTISSA "RadianceMantissa"
 #define RADIANCE_PRECISION_MANTISSA "RadiancePrecisionMantissa"
@@ -189,12 +190,12 @@ struct omi_ref_list
   struct omi_ref_list *next;
 };
 
+const DoasCh *OMI_EarthSwaths[OMI_SWATH_MAX]={"Earth UV-1 Swath","Earth UV-2 Swath","Earth VIS Swath"};
+const DoasCh *OMI_SunSwaths[OMI_SWATH_MAX]={"Sun Volume UV-1 Swath","Sun Volume UV-2 Swath","Sun Volume VIS Swath"};
+
 // ================
 // STATIC VARIABLES
 // ================
-
-const DoasCh *OMI_EarthSwaths[OMI_SWATH_MAX]={"Earth UV-1 Swath","Earth UV-2 Swath","Earth VIS Swath"};
-const DoasCh *OMI_SunSwaths[OMI_SWATH_MAX]={"Sun Volume UV-1 Swath","Sun Volume UV-2 Swath","Sun Volume VIS Swath"};
 
 static OMI_ORBIT_FILE current_orbit_file;
 static int omiRefFilesN=0; // the total number of files to browse in one shot
@@ -203,6 +204,7 @@ static OMI_REF OMI_ref[MAX_FENO]; // the number of reference spectra is limited 
 
 static OMI_ORBIT_FILE* reference_orbit_files[MAX_OMI_FILES]; // List of filenames for which the current automatic reference spectrum is valid. -> all spectra from the same day/same directory.
 static int num_reference_orbit_files = 0;
+static bool automatic_reference_ok[OMI_NUM_ROWS]; // array to keep track if automatic reference creation spectrum failed for one of the detector rows
 
 int OMI_ms=0;
 int omiSwathOld=ITEM_NONE;
@@ -334,6 +336,12 @@ bool omi_use_track(int quality_flag, enum omi_xtrack_mode mode)
    }
    return result;
  }
+
+/*! \brief check if automatic reference creation was successful for this row */
+bool omi_has_automatic_reference(int row)
+{
+  return automatic_reference_ok[row];
+}
 
 /*! \brief release the allocated buffers with swath attributes. */
 void omi_free_swath_data(OMI_SWATH *pSwath)
@@ -777,7 +785,7 @@ void average_spectrum( double *average, double *errors, struct omi_ref_list *spe
   }
 }
 
-RC setup_automatic_reference(ENGINE_CONTEXT *pEngineContext)
+RC setup_automatic_reference(ENGINE_CONTEXT *pEngineContext, void *responseHandle)
 {
   // keep a NFeno*OMI_TOTAL_ROWS array of matching spectra for every detector row & analysis window
   struct omi_ref_list *(*row_references)[NFeno][OMI_TOTAL_ROWS] = malloc(NFeno * OMI_TOTAL_ROWS * sizeof(struct omi_ref_list*));
@@ -821,6 +829,7 @@ RC setup_automatic_reference(ENGINE_CONTEXT *pEngineContext)
   // take the average of the matching spectra for each detector row & analysis window:
   for(int row = 0; row < OMI_TOTAL_ROWS; row++) {
     if (pEngineContext->project.instrumental.omi.omiTracks[row]) {
+      automatic_reference_ok[row] = true; // initialize to true, set it to false if automatic reference fails for one or more analysis windows
       for(int analysis_window = 0; analysis_window < NFeno; analysis_window++) {
         FENO *pTabFeno = &TabFeno[row][analysis_window];
         if(pTabFeno->hidden || !pTabFeno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_AUTOMATIC ) {
@@ -839,8 +848,10 @@ RC setup_automatic_reference(ENGINE_CONTEXT *pEngineContext)
           memcpy(pTabFeno->LambdaS,pTabFeno->LambdaK, sizeof(double) * NDET);
 	  pTabFeno->ref_description = automatic_reference_info(reflist);
         } else{
-          // todo: include analysis window and row number in error message.
-          rc=ERROR_SetLast(__func__,ERROR_TYPE_WARNING,ERROR_ID_NO_REF,"OMI",pEngineContext->fileInfo.fileName);
+          char errormessage[250];
+          sprintf( errormessage, "Can not find reference spectra for row %d and analysis window_%s", row, pTabFeno->windowName);
+          mediateResponseErrorMessage(__func__, errormessage, WarningEngineError, responseHandle);
+          automatic_reference_ok[row] = false;
         }
       }
     }
@@ -1259,7 +1270,7 @@ RC OMI_load_analysis(ENGINE_CONTEXT *pEngineContext, void *responseHandle) {
    
   // if we need a new automatic reference, generate it
   if(pEngineContext->analysisRef.refAuto && !valid_reference_file(current_orbit_file.omiFileName)) {
-    rc = setup_automatic_reference(pEngineContext);
+    rc = setup_automatic_reference(pEngineContext, responseHandle);
     if(rc) {
       goto end_omi_load_analysis;
     }
@@ -1374,7 +1385,7 @@ RC OMI_Read(ENGINE_CONTEXT *pEngineContext,int recordNo)
       for (int i=0;i<NDET;i++)
 	spectrum[i]=sigma[i]=(double)0.;
       
-      int indexSwath=floor((recordNo-1)/pOrbitFile->nXtrack);      // index of the swath
+      int indexMeasurement=floor((recordNo-1)/pOrbitFile->nXtrack);      // index of the swath
       int indexSpectrum=(recordNo-1)%pOrbitFile->nXtrack;          // index of the spectrum in the swath
 
       if (!pEngineContext->project.instrumental.omi.omiTracks[indexSpectrum]) {
@@ -1382,7 +1393,7 @@ RC OMI_Read(ENGINE_CONTEXT *pEngineContext,int recordNo)
       } else if (!(rc=
                    omi_load_spectrum(OMI_SPEC_RAD,
                                      pOrbitFile->sw_id,
-                                     indexSwath,
+                                     indexMeasurement,
                                      indexSpectrum,
                                      pOrbitFile->nWavel,
                                      lambda,spectrum,sigma,
@@ -1390,10 +1401,10 @@ RC OMI_Read(ENGINE_CONTEXT *pEngineContext,int recordNo)
 	{
 	  if ((THRD_id==THREAD_TYPE_ANALYSIS) && omiRefFilesN)
 	    {
-	      if (omiSwathOld!=indexSwath)
+	      if (omiSwathOld!=indexMeasurement)
 		{
 		  KURUCZ_indexLine=1;
-		  omiSwathOld=indexSwath;
+		  omiSwathOld=indexMeasurement;
 		}
               
 	      memcpy(pEngineContext->buffers.irrad,OMI_ref[0].omiRefSpectrum[indexSpectrum],sizeof(double)*NDET);
@@ -1409,12 +1420,12 @@ RC OMI_Read(ENGINE_CONTEXT *pEngineContext,int recordNo)
           
 	  // Complete information on the current spectrum
           
-	  pRecord->omi.omiSwathIndex=indexSwath+1;                                  // index of the current swath
-	  pRecord->omi.omiRowIndex=indexSpectrum+1;                                 // index of the current spectrum in the current swath
+	  pRecord->omi.omiMeasurementIndex=indexMeasurement+1;                                  // index of the current measurement
+	  pRecord->omi.omiRowIndex=indexSpectrum+1;                                 // row of the current spectrum in the current measurement
           pRecord->omi.omiXtrackQF = pGeo->xtrackQualityFlags[recordNo-1];
           //	  memcpy(pRecord->omi.omiPixelQF,pSpectrum->pixelQualityFlags,sizeof(unsigned short)*NDET);
           
-	  OMI_FromTAI1993ToYMD((double)pGeo->time[indexSwath],&pRecord->present_day,&pRecord->present_time,&OMI_ms);
+	  OMI_FromTAI1993ToYMD((double)pGeo->time[indexMeasurement],&pRecord->present_day,&pRecord->present_time,&OMI_ms);
           
 	  pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_day,&pRecord->present_time,0);
 	}

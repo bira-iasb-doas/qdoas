@@ -638,8 +638,8 @@ GOME2_DATA;
 
 typedef struct _omi
  {
-   INDEX   omiSwathIndex;                                                        // index of the swath
-   INDEX   omiRowIndex;                                                          // index of the current row in the current swath
+   INDEX   omiMeasurementIndex;                                                        // index of the measurement
+   INDEX   omiRowIndex;                                                          // index of the current row in the current measurement
    DoasUS  omiGroundPQF;                                                         // ground pixel quality flags
    DoasUS  omiXtrackQF;                                                          // xtrack quality flags
    int nMeasurements,                                                    // total number of tracks
@@ -1640,6 +1640,7 @@ RC   OMI_Set(ENGINE_CONTEXT *pEngineContext);
 RC   OMI_Read(ENGINE_CONTEXT *pEngineContext,int recordNo);
 RC   OMI_load_analysis(ENGINE_CONTEXT *pEngineContext, void *responseHandle);
 bool omi_use_track(int quality_flag, enum omi_xtrack_mode mode);
+bool omi_has_automatic_reference(int row);
 
 #if defined(_cplusplus) || defined(__cplusplus)
 }

@@ -136,13 +136,13 @@ int mediateRequestDisplaySpecInfo(void *engineContext,int page,void *responseHan
         mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Record","%d/%d (%d spectra averaged)",
                                 pEngineContext->indexRecord,pEngineContext->recordNumber,pRecord->omi.nMeasurements);
       else
-       mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Record","%d/%d (swath %d/%d, row %d/%d)",
+       mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Record","%d/%d (measurement %d/%d, row %d/%d)",
                                pEngineContext->indexRecord,pEngineContext->recordNumber,
-                               pRecord->omi.omiSwathIndex,pRecord->omi.nMeasurements,
+                               pRecord->omi.omiMeasurementIndex,pRecord->omi.nMeasurements,
                                pRecord->omi.omiRowIndex,pRecord->omi.nXtrack);
 
       if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_OMI_INDEX_SWATH])
-       mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Index of swath","%d",pRecord->omi.omiSwathIndex);
+       mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Index of measurement","%d",pRecord->omi.omiMeasurementIndex);
       if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_OMI_INDEX_ROW])
        mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Index of row","%d",pRecord->omi.omiRowIndex);
       if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_OMI_GROUNDP_QF])
@@ -2195,6 +2195,13 @@ int mediateRequestNextMatchingAnalyseSpectrum(void *engineContext,
    RC rc = ERROR_ID_NO;
 
    int rec = mediateRequestNextMatchingSpectrum(pEngineContext,responseHandle);
+
+   // for omi, when using automatic reference selection for one or
+   // more analysis windows, check if automatic reference spectrum is
+   // ok, skip this row if not.
+   if (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_OMI &&
+       pEngineContext->analysisRef.refAuto &&
+       !omi_has_automatic_reference(pEngineContext->recordInfo.omi.omiRowIndex))     return -1;
 
    if (rec > 0 && (pEngineContext->indexRecord<=pEngineContext->recordNumber))
     {

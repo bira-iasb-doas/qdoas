@@ -1890,7 +1890,7 @@ void OutputSaveRecord(ENGINE_CONTEXT *pEngineContext,INT hiddenFlag,INDEX indexF
         break;
      // ---------------------------------------------------------------------
         case PRJCT_RESULTS_ASCII_OMI_INDEX_SWATH :
-         ((INT *)outputColumns[indexColumn++])[indexRecord]=(INT)pRecordInfo->omi.omiSwathIndex;
+         ((INT *)outputColumns[indexColumn++])[indexRecord]=(INT)pRecordInfo->omi.omiMeasurementIndex;
         break;
      // ---------------------------------------------------------------------
         case PRJCT_RESULTS_ASCII_OMI_INDEX_ROW :
