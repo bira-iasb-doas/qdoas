@@ -1970,10 +1970,10 @@ CWInstrOmiEdit::CWInstrOmiEdit(const struct instrumental_omi *d, QWidget *parent
 
   // Pixels quality flags
 
-  QGroupBox *pixelQFGroup = new QGroupBox("Pixels Quality Flags", this);
+  QGroupBox *pixelQFGroup = new QGroupBox("Pixel Quality Flags", this);
   QGridLayout *pixelQFLayout = new QGridLayout(pixelQFGroup);
 
-  m_pixelQFCheck = new QCheckBox("Pixels rejection based on quality flags", pixelQFGroup);
+  m_pixelQFCheck = new QCheckBox("Pixel rejection based on quality flags", pixelQFGroup);
   pixelQFLayout->addWidget(m_pixelQFCheck, row, 0);
 
   ++row;

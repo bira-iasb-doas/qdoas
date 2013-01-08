@@ -4,7 +4,7 @@
 
 HELP_SYSTEM     =      # or empty
 QWT_LINKAGE     = qwtdll        # qwtstatic or qwtdll
-CODE_GENERATION = debug         # debug or release
+CODE_GENERATION = release         # debug or release
 
 QMAKE_CFLAGS += -std=gnu99
 
