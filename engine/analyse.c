@@ -2297,7 +2297,7 @@ RC ANALYSE_AlignReference(ENGINE_CONTEXT *pEngineContext,INT refFlag,INT saveFla
           if (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_OMI)
            sprintf(tabTitle,"%s results (%d/%d)",Feno->windowName,pEngineContext->indexRecord,pEngineContext->recordNumber);
           else
-           sprintf(tabTitle,"%s results (record %d/%d, swath %d/%d, row %d/%d)",
+           sprintf(tabTitle,"%s results (record %d/%d, measurement %d/%d, row %d/%d)",
                    Feno->windowName,pEngineContext->indexRecord,pEngineContext->recordNumber,
                    pEngineContext->recordInfo.omi.omiMeasurementIndex,pEngineContext->recordInfo.omi.nMeasurements,
                    pEngineContext->recordInfo.omi.omiRowIndex,pEngineContext->recordInfo.omi.nXtrack);
@@ -3656,7 +3656,7 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
          {
           memcpy(Feno->Lambda,pBuffers->lambda,sizeof(double)*NDET);
 
-          sprintf(tabTitle,"%s results (record %d/%d, swath %d/%d, row %d/%d)",
+          sprintf(tabTitle,"%s results (record %d/%d, measurement %d/%d, row %d/%d)",
                   Feno->windowName,pEngineContext->indexRecord,pEngineContext->recordNumber,
                   pEngineContext->recordInfo.omi.omiMeasurementIndex,pEngineContext->recordInfo.omi.nMeasurements,
                   pEngineContext->recordInfo.omi.omiRowIndex,pEngineContext->recordInfo.omi.nXtrack);
