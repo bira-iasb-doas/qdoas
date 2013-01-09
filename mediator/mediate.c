@@ -2196,13 +2196,19 @@ int mediateRequestNextMatchingAnalyseSpectrum(void *engineContext,
 
    int rec = mediateRequestNextMatchingSpectrum(pEngineContext,responseHandle);
 
-   // for omi, when using automatic reference selection for one or
-   // more analysis windows, check if automatic reference spectrum is
-   // ok, skip this row if not.
    if (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_OMI &&
-       pEngineContext->analysisRef.refAuto &&
-       !omi_has_automatic_reference(pEngineContext->recordInfo.omi.omiRowIndex))     return -1;
-
+       pEngineContext->analysisRef.refAuto)
+    {
+     // for omi, when using automatic reference selection for one or
+     // more analysis windows, check if automatic reference spectrum is
+     // ok for this detector row, if not: get next spectrum.
+     while( !omi_has_automatic_reference(pEngineContext->recordInfo.omi.omiRowIndex)
+            && rec > 0 )
+      {
+       rec = mediateRequestNextMatchingSpectrum(pEngineContext,responseHandle);
+      }
+    }
+   
    if (rec > 0 && (pEngineContext->indexRecord<=pEngineContext->recordNumber))
     {
      mediateRequestPlotSpectra(pEngineContext,responseHandle);
