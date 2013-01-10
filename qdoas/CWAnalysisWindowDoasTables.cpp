@@ -166,6 +166,8 @@ CWMoleculesDoasTable::CWMoleculesDoasTable(const QString &label, int columnWidth
   createColumnEdit("SCD Init", 80);
   createColumnEdit("SCD Delta", 80);          // columnIndex = 8
   createColumnEdit("SCD Io", 80);
+  createColumnEdit("SCD min", 80);           // columnIndex = 10
+  createColumnEdit("SCD max", 80);
 }
 
 CWMoleculesDoasTable::~CWMoleculesDoasTable()
@@ -190,6 +192,8 @@ void CWMoleculesDoasTable::populate(const cross_section_list_t *data)
     initialValues.push_back(d->initialCc);
     initialValues.push_back(d->deltaCc);
     initialValues.push_back(d->ccIo);
+    initialValues.push_back(d->ccMin);
+    initialValues.push_back(d->ccMax);
 
     // add the row (with filenames)
     addRow(cStandardRowHeight, QString(d->symbol), initialValues,
@@ -235,6 +239,8 @@ void CWMoleculesDoasTable::apply(cross_section_list_t *data) const
     d->initialCc = state.at(7).toDouble();
     d->deltaCc = state.at(8).toDouble();
     d->ccIo = state.at(9).toDouble();
+    d->ccMin = state.at(10).toDouble();
+    d->ccMax = state.at(11).toDouble();
 
     ++d;
     ++row;
@@ -580,7 +586,8 @@ CWLinearParametersDoasTable::CWLinearParametersDoasTable(const QString &label, i
 {
   // construct and populate the table
   QStringList comboItems;
-  comboItems << "None" << "Order 0" << "Order 1" << "Order 2" << "Order 3" << "Order 4" << "Order 5";
+
+  comboItems << "None" << "Order 0" << "Order 1" << "Order 2" << "Order 3" << "Order 4" << "Order 5" << "Order 6" << "Order 7" << "Order 8";
 
   // columns
   createColumnCombo("Polynomial order", 120, comboItems);
@@ -606,13 +613,13 @@ void CWLinearParametersDoasTable::populate(const struct anlyswin_linear *data)
 
   initialValues.clear();
 
-  initialValues.push_back(mapOrderToComboString(data->xinvPolyOrder));
-  initialValues.push_back(mapOrderToComboString(data->xinvBaseOrder));
-  initialValues.push_back(data->xinvFlagFitStore); // bool
-  initialValues.push_back(data->xinvFlagErrStore); // bool
-  addRow(cStandardRowHeight, "Polynomial (1/x)", initialValues);
-
-  initialValues.clear();
+  // not used anymore 2013/01/10 initialValues.push_back(mapOrderToComboString(data->xinvPolyOrder));
+  // not used anymore 2013/01/10 initialValues.push_back(mapOrderToComboString(data->xinvBaseOrder));
+  // not used anymore 2013/01/10 initialValues.push_back(data->xinvFlagFitStore); // bool
+  // not used anymore 2013/01/10 initialValues.push_back(data->xinvFlagErrStore); // bool
+  // not used anymore 2013/01/10 addRow(cStandardRowHeight, "Polynomial (1/x)", initialValues);
+  // not used anymore 2013/01/10
+  // not used anymore 2013/01/10 initialValues.clear();
 
   initialValues.push_back(mapOrderToComboString(data->offsetPolyOrder));
   initialValues.push_back(mapOrderToComboString(data->offsetBaseOrder));
@@ -627,7 +634,7 @@ void CWLinearParametersDoasTable::populate(const struct anlyswin_linear *data)
   QWidget *tmp;
   QComboBox *p;
 
-  if ((tmp = directAccessToCellWidget(2, 0)) != NULL) {
+  if ((tmp = directAccessToCellWidget(1, 0)) != NULL) {
     p = dynamic_cast<QComboBox*>(tmp);
     if (p) {
       for (int index=6; index>3; --index)
@@ -635,7 +642,7 @@ void CWLinearParametersDoasTable::populate(const struct anlyswin_linear *data)
     }
   }
 
-  if ((tmp = directAccessToCellWidget(2, 1)) != NULL) {
+  if ((tmp = directAccessToCellWidget(1, 1)) != NULL) {
     p = dynamic_cast<QComboBox*>(tmp);
     if (p) {
       for (int index=6; index>3; --index)
@@ -654,13 +661,13 @@ void CWLinearParametersDoasTable::apply(struct anlyswin_linear *data) const
   data->xFlagFitStore = state.at(2).toBool() ? 1 : 0;
   data->xFlagErrStore = state.at(3).toBool() ? 1 : 0;
 
-  state = getCellData(1); // xinvPoly
-  data->xinvPolyOrder = mapComboStringToOrder(state.at(0).toString());
-  data->xinvBaseOrder = mapComboStringToOrder(state.at(1).toString());
-  data->xinvFlagFitStore = state.at(2).toBool() ? 1 : 0;
-  data->xinvFlagErrStore = state.at(3).toBool() ? 1 : 0;
+  // not used anymore 2013/01/10 state = getCellData(1); // xinvPoly
+  // not used anymore 2013/01/10 data->xinvPolyOrder = mapComboStringToOrder(state.at(0).toString());
+  // not used anymore 2013/01/10 data->xinvBaseOrder = mapComboStringToOrder(state.at(1).toString());
+  // not used anymore 2013/01/10 data->xinvFlagFitStore = state.at(2).toBool() ? 1 : 0;
+  // not used anymore 2013/01/10 data->xinvFlagErrStore = state.at(3).toBool() ? 1 : 0;
 
-  state = getCellData(2); // xinvPoly
+  state = getCellData(1); // offset
   data->offsetPolyOrder = mapComboStringToOrder(state.at(0).toString());
   data->offsetBaseOrder = mapComboStringToOrder(state.at(1).toString());
   data->offsetFlagFitStore = state.at(2).toBool() ? 1 : 0;
@@ -676,6 +683,9 @@ QString CWLinearParametersDoasTable::mapOrderToComboString(int order)
   case ANLYS_POLY_TYPE_3: return QString("Order 3"); break;
   case ANLYS_POLY_TYPE_4: return QString("Order 4"); break;
   case ANLYS_POLY_TYPE_5: return QString("Order 5"); break;
+  case ANLYS_POLY_TYPE_6: return QString("Order 6"); break;
+  case ANLYS_POLY_TYPE_7: return QString("Order 7"); break;
+  case ANLYS_POLY_TYPE_8: return QString("Order 8"); break;
   }
 
   return QString("None");
@@ -689,6 +699,9 @@ int CWLinearParametersDoasTable::mapComboStringToOrder(const QString &str)
   if (str == "Order 3") return ANLYS_POLY_TYPE_3;
   if (str == "Order 4") return ANLYS_POLY_TYPE_4;
   if (str == "Order 5") return ANLYS_POLY_TYPE_5;
+  if (str == "Order 6") return ANLYS_POLY_TYPE_6;
+  if (str == "Order 7") return ANLYS_POLY_TYPE_7;
+  if (str == "Order 8") return ANLYS_POLY_TYPE_8;
 
   return ANLYS_POLY_TYPE_NONE;
 }

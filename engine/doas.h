@@ -148,7 +148,7 @@ RC SPLINE_Vector(double *xa,double *ya,double *y2a,int na,double *xb,double *yb,
 typedef struct _svd
 {
   INT DimC,DimL,DimP,NF,NP,nFit,Z; // gaps and analysis window limits in pixels units
-  
+
   double LFenetre[MAX_FEN][2], // gaps and analysis window limits in wavelength units (nm)
     **A,**U,**V,*W,**P,         // SVD matrices
     **covar,
@@ -293,6 +293,8 @@ typedef struct _crossReference
          MaxShift,                                                              // maximum value for shift
          MinParam,                                                              // minimum value for parameter
          MaxParam,                                                              // maximum value for parameter
+         MinConc,                                                               // minimum value for the concentration if fitted
+         MaxConc,                                                               // maximum value for the concentration if fitted
         *vector,                                                                // copy of vector
         *Deriv2;                                                                // second derivative
  }

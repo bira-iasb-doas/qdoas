@@ -1055,7 +1055,7 @@ void CQdoasConfigWriter::writePropertiesOutput(FILE *fp, const mediate_project_o
           (d->calibrationFlag ? sTrue : sFalse), (d->referenceFlag ? sTrue : sFalse),
           (d->configurationFlag ? sTrue : sFalse), (d->binaryFormatFlag ? sTrue : sFalse),
           (d->directoryFlag ? sTrue : sFalse), (d->filenameFlag ? sTrue : sFalse), d->flux, d->colourIndex);
-  
+
   writeDataSelectList(fp, &(d->selection));
 
   fprintf(fp, "    </output>\n");
@@ -1249,6 +1249,9 @@ void CQdoasConfigWriter::writePolyType(FILE *fp, const char *attr, int type)
   case ANLYS_POLY_TYPE_3: fprintf(fp, " %s=\"3\"", attr); break;
   case ANLYS_POLY_TYPE_4: fprintf(fp, " %s=\"4\"", attr); break;
   case ANLYS_POLY_TYPE_5: fprintf(fp, " %s=\"5\"", attr); break;
+  case ANLYS_POLY_TYPE_6: fprintf(fp, " %s=\"6\"", attr); break;
+  case ANLYS_POLY_TYPE_7: fprintf(fp, " %s=\"7\"", attr); break;
+  case ANLYS_POLY_TYPE_8: fprintf(fp, " %s=\"8\"", attr); break;
   default: fprintf(fp, " %s=\"none\"", attr);
   }
 }
@@ -1291,12 +1294,12 @@ void CQdoasConfigWriter::writeCrossSectionList(FILE *fp, const cross_section_lis
       fprintf(fp, "\"none\"");
     }
 
-    fprintf(fp, " fit=\"%s\" filter=\"%s\" cstrncc=\"%s\" ccfit=\"%s\" icc=\"%.3f\" dcc=\"%.3f\" ccio=\"%.3f\"",
+    fprintf(fp, " fit=\"%s\" filter=\"%s\" cstrncc=\"%s\" ccfit=\"%s\" icc=\"%.3f\" dcc=\"%.3f\" ccio=\"%.3e\" ccmin=\"%.3e\" ccmax=\"%.3e\"",
 	    (d->requireFit ? sTrue : sFalse),
 	    (d->requireFilter ? sTrue : sFalse),
 	    (d->constrainedCc ? sTrue : sFalse),
 	    (d->requireCcFit ? sTrue : sFalse),
-	    d->initialCc, d->deltaCc, d->ccIo);
+	    d->initialCc, d->deltaCc, d->ccIo,d->ccMin,d->ccMax);
     tmpStr = pathMgr->simplifyPath(QString(d->crossSectionFile));
     fprintf(fp, " csfile=\"%s\"", tmpStr.toAscii().constData());
     tmpStr = pathMgr->simplifyPath(QString(d->amfFile));
@@ -1316,11 +1319,11 @@ void CQdoasConfigWriter::writeLinear(FILE *fp, const struct anlyswin_linear *d)
   fprintf(fp, " xfit=\"%s\" xerr=\"%s\"",
 	  (d->xFlagFitStore ? sTrue : sFalse),
 	  (d->xFlagErrStore ? sTrue : sFalse));
-  writePolyType(fp, "xinvpoly", d->xinvPolyOrder);
-  writePolyType(fp, "xinvbase", d->xinvBaseOrder);
-  fprintf(fp, " xinvfit=\"%s\" xinverr=\"%s\"",
-	  (d->xinvFlagFitStore ? sTrue : sFalse),
-	  (d->xinvFlagErrStore ? sTrue : sFalse));
+  // not used anymore writePolyType(fp, "xinvpoly", d->xinvPolyOrder);
+  // not used anymore writePolyType(fp, "xinvbase", d->xinvBaseOrder);
+  // not used anymore fprintf(fp, " xinvfit=\"%s\" xinverr=\"%s\"",
+	 // not used anymore  (d->xinvFlagFitStore ? sTrue : sFalse),
+	 // not used anymore  (d->xinvFlagErrStore ? sTrue : sFalse));
   writePolyType(fp, "offpoly", d->offsetPolyOrder);
   writePolyType(fp, "offbase", d->offsetBaseOrder);
   fprintf(fp, " offfit=\"%s\" offerr=\"%s\"",

@@ -166,6 +166,9 @@ int CAnalysisWindowSubHandler::mapToPolyType(const QString &str)
   else if (str == "3") result = ANLYS_POLY_TYPE_3;
   else if (str == "4") result = ANLYS_POLY_TYPE_4;
   else if (str == "5") result = ANLYS_POLY_TYPE_5;
+  else if (str == "6") result = ANLYS_POLY_TYPE_6;
+  else if (str == "7") result = ANLYS_POLY_TYPE_7;
+  else if (str == "8") result = ANLYS_POLY_TYPE_8;
 
   return result;
 }
@@ -222,6 +225,8 @@ bool CAnalysisWindowCrossSectionSubHandler::start(const QXmlAttributes &atts)
     d->initialCc = atts.value("icc").toDouble();
     d->deltaCc = atts.value("dcc").toDouble();
     d->ccIo = atts.value("ccio").toDouble();
+    d->ccMin = atts.value("ccmin").toDouble();
+    d->ccMax = atts.value("ccmax").toDouble();
 
     str = atts.value("csfile");
     if (!str.isEmpty()) {
@@ -272,10 +277,10 @@ bool CAnalysisWindowLinearSubHandler::start(const QXmlAttributes &atts)
   m_d->xFlagFitStore = (atts.value("xfit") == "true") ? 1 : 0;
   m_d->xFlagErrStore = (atts.value("xerr") == "true") ? 1 : 0;
 
-  m_d->xinvPolyOrder = CAnalysisWindowSubHandler::mapToPolyType(atts.value("xinvpoly"));
-  m_d->xinvBaseOrder = CAnalysisWindowSubHandler::mapToPolyType(atts.value("xinvbase"));
-  m_d->xinvFlagFitStore = (atts.value("xinvfit") == "true") ? 1 : 0;
-  m_d->xinvFlagErrStore = (atts.value("xinverr") == "true") ? 1 : 0;
+  // not used anymore m_d->xinvPolyOrder = CAnalysisWindowSubHandler::mapToPolyType(atts.value("xinvpoly"));
+  // not used anymore m_d->xinvBaseOrder = CAnalysisWindowSubHandler::mapToPolyType(atts.value("xinvbase"));
+  // not used anymore m_d->xinvFlagFitStore = (atts.value("xinvfit") == "true") ? 1 : 0;
+  // not used anymore m_d->xinvFlagErrStore = (atts.value("xinverr") == "true") ? 1 : 0;
 
   m_d->offsetPolyOrder = CAnalysisWindowSubHandler::mapToPolyType(atts.value("offpoly"));
   m_d->offsetBaseOrder = CAnalysisWindowSubHandler::mapToPolyType(atts.value("offbase"));

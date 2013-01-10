@@ -955,18 +955,20 @@ RC GDP_ASC_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
 
              if (pWrkSymbol->symbolName[0]=='x')
               sscanf(pWrkSymbol->symbolName,"x%d",&degree);
-             else
-              {
-               sscanf(pWrkSymbol->symbolName,"1/x%d",&degree);
-               invFlag=1;
-              }
+
+             // Not used anymore else
+             // Not used anymore  {
+             // Not used anymore   sscanf(pWrkSymbol->symbolName,"1/x%d",&degree);
+             // Not used anymore   invFlag=1;
+             // Not used anymore  }
 
              if (!invFlag)
               for (i=0;i<NDET;i++)
                pTabCross->vector[i]=(double)pow(pTabFeno->LambdaRef[i],degree);
-             else
-              for (i=0;i<NDET;i++)
-               pTabCross->vector[i]=(double)1./pow(pTabFeno->LambdaRef[i],degree);
+
+             // Not used anymore else
+             // Not used anymore  for (i=0;i<NDET;i++)
+             // Not used anymore   pTabCross->vector[i]=(double)1./pow(pTabFeno->LambdaRef[i],degree);
             }
           }
 

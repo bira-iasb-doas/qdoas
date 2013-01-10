@@ -1333,23 +1333,23 @@ RC mediateRequestSetAnalysisLinear(struct anlyswin_linear *pLinear,INDEX indexFe
 
    // Polynomial (1/x)
 
-   strcpy(linear[1].symbolName,"Polynomial (1/x)");
-
-   linear[1].polyOrder=pLinear->xinvPolyOrder-1;
-   linear[1].baseOrder=pLinear->xinvBaseOrder-1;
-   linear[1].storeFit=pLinear->xinvFlagFitStore;
-   linear[1].storeError=pLinear->xinvFlagErrStore;
+   // not used anymore strcpy(linear[1].symbolName,"Polynomial (1/x)");
+   // not used anymore
+   // not used anymore linear[1].polyOrder=pLinear->xinvPolyOrder-1;
+   // not used anymore linear[1].baseOrder=pLinear->xinvBaseOrder-1;
+   // not used anymore linear[1].storeFit=pLinear->xinvFlagFitStore;
+   // not used anymore linear[1].storeError=pLinear->xinvFlagErrStore;
 
    // Linear offset
 
-   strcpy(linear[2].symbolName,"Offset");
+   strcpy(linear[1].symbolName,"Offset");
 
-   linear[2].polyOrder=pLinear->offsetPolyOrder-1;
-   linear[2].baseOrder=pLinear->offsetBaseOrder-1;
-   linear[2].storeFit=pLinear->offsetFlagFitStore;
-   linear[2].storeError=pLinear->offsetFlagErrStore;
+   linear[1].polyOrder=pLinear->offsetPolyOrder-1;
+   linear[1].baseOrder=pLinear->offsetBaseOrder-1;
+   linear[1].storeFit=pLinear->offsetFlagFitStore;
+   linear[1].storeError=pLinear->offsetFlagErrStore;
 
-   rc=ANALYSE_LoadLinear(linear,3,indexFenoColumn);
+   rc=ANALYSE_LoadLinear(linear,2,indexFenoColumn);
 
    // Debug
 
@@ -2208,7 +2208,7 @@ int mediateRequestNextMatchingAnalyseSpectrum(void *engineContext,
        rec = mediateRequestNextMatchingSpectrum(pEngineContext,responseHandle);
       }
     }
-   
+
    if (rec > 0 && (pEngineContext->indexRecord<=pEngineContext->recordNumber))
     {
      mediateRequestPlotSpectra(pEngineContext,responseHandle);

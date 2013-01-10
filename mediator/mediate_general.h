@@ -216,6 +216,8 @@ extern "C" {
     double initialCc;
     double deltaCc;
     double ccIo;
+    double ccMin;
+    double ccMax;
   };
 
   struct anlyswin_linear

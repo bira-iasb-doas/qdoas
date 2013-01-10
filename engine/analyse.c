@@ -139,11 +139,6 @@
 ANALYSIS_WINDOWS  *ANLYS_windowsList;       // analysis windows list
 PROJECT *PRJCT_itemList;
 
-DoasCh *AnlysOrthogonal[ANLYS_ORTHOGONAL_TYPE_MAX]={"None","Differential XS"};
-DoasCh *AnlysStretch[ANLYS_STRETCH_TYPE_MAX]={"None","1st order","2nd order"};
-DoasCh *AnlysPolynome[ANLYS_POLY_TYPE_MAX]={"None","order 0","order 1","order 2","order 3","order 4","order 5"};
-DoasCh *ANLYS_crossAction[ANLYS_CROSS_ACTION_MAX]={"None","Interpolate","Convolute Std","Convolute I0","Convolute Ring"}; /* "Detector t� dependent","Strato t� dependent",*/
-
 doas_spectrum *global_doas_spectrum; // Should better remove this global variable.
 
 INT    ANALYSE_plotKurucz,ANALYSE_plotRef,ANALYSE_indexLine;
@@ -1924,7 +1919,7 @@ RC ANALYSE_SvdInit(SVD *pSvd)
   // Declarations
 
   CROSS_REFERENCE *pTabCross;
-  double deltaX,norm,norm1,norm2,*vector,*lambda,swap,temp;
+  double deltaX,norm,norm1,norm2,swap,temp;
   INDEX i,j;
   double j0,lambda0;
   RC rc;
@@ -2051,22 +2046,30 @@ RC ANALYSE_SvdInit(SVD *pSvd)
           // ---------------------------------------------------------------------------
           if ((Feno->analysisMethod!=PRJCT_ANLYS_METHOD_SVD) && (pTabCross->FitConc!=ITEM_NONE))
            {
-            if (pTabCross->InitConc!=(double)0.)
+           	//
+           	// The best would be to use Fact (calculated in ANALYSE_Function when Decomp=1) but this implies that
+           	// FitMinp and FitMaxp are in parameters of ANALYSE_Function (called by curfit)
+           	//
+
+            if ((pTabCross->InitConc!=(double)0.) || (pTabCross->MinConc!=(double)0.) || (pTabCross->MaxConc!=(double)0.))
              {
-              lambda=WorkSpace[pTabCross->Comp].xs.matrix[0];    // NB : reuse original matrix because of possible real time
-              vector=WorkSpace[pTabCross->Comp].xs.matrix[1];    //      convolution of high resolution cross sections
+             	norm=(double)0.;
 
-              for (j=0,norm=(double)0.;j<WorkSpace[pTabCross->Comp].xs.nl;j++)
-               if ((lambda[j]>=Feno->Lambda[SvdPDeb]) && (lambda[j]<=Feno->Lambda[SvdPFin]))  // compute norm only in the analysis window lambda range otherwise nonsense
-                norm+=vector[j]*vector[j];
+             	for( int i = iterator_start(&my_iterator, pSvd->specrange); i != ITERATOR_FINISHED; i=iterator_next(&my_iterator))
+               norm+=pTabCross->vector[i]*pTabCross->vector[i];
+
+              if (norm<=(double)0.)
+               rc=ERROR_SetLast("SvdInit",ERROR_TYPE_FATAL,ERROR_ID_SQRT_ARG);
+              else
+               {
+                norm=sqrt(norm);
+
+                Fitp[pTabCross->FitConc]=(pTabCross->InitConc!=(double)0.)?pTabCross->InitConc*norm:(double)0.;
+                FitDeltap[pTabCross->FitConc]=pTabCross->DeltaConc;
+                FitMinp[pTabCross->FitConc]=(pTabCross->MinConc!=(double)0.)?(double)pTabCross->MinConc*norm:(double)0.;
+                FitMaxp[pTabCross->FitConc]=(pTabCross->MaxConc!=(double)0.)?(double)pTabCross->MaxConc*norm:(double)0.;
+               }
              }
-            else
-             norm=(double)1.;
-
-            Fitp[pTabCross->FitConc]=(norm!=(double)0.)?pTabCross->InitConc*sqrt(norm):(double)0.;
-            FitDeltap[pTabCross->FitConc]=pTabCross->DeltaConc;
-            FitMinp[pTabCross->FitConc]=(double)0.;
-            FitMaxp[pTabCross->FitConc]=(double)0.;
            }
           // ---------------------------------------------------------------------------
           if ((pTabCross->FitParam!=ITEM_NONE) && !pTabCross->IndSvdP)
@@ -2620,11 +2623,11 @@ RC ANALYSE_Function( double *X, double *Y, double *SigmaY, double *Yfit, int Npt
              polyOrder=WorkSpace[pTabCross->Comp].symbolName[1]-'0';
              polyFlag=1;
             }
-           else if ((strlen(WorkSpace[pTabCross->Comp].symbolName)==4) && (WorkSpace[pTabCross->Comp].symbolName[2]=='x'))
-            {
-             polyOrder=WorkSpace[pTabCross->Comp].symbolName[3]-'0';
-             polyFlag=-1;
-            }
+           // 1/x not used anymore else if ((strlen(WorkSpace[pTabCross->Comp].symbolName)==4) && (WorkSpace[pTabCross->Comp].symbolName[2]=='x'))
+           // 1/x not used anymore  {
+           // 1/x not used anymore   polyOrder=WorkSpace[pTabCross->Comp].symbolName[3]-'0';
+           // 1/x not used anymore   polyFlag=-1;
+           // 1/x not used anymore  }
            else if ((strlen(WorkSpace[pTabCross->Comp].symbolName)==5) &&
                     (WorkSpace[pTabCross->Comp].symbolName[0]=='o') &&
                     (WorkSpace[pTabCross->Comp].symbolName[1]=='f') &&
@@ -2650,11 +2653,11 @@ RC ANALYSE_Function( double *X, double *Y, double *SigmaY, double *Yfit, int Npt
                for( int k=1,l=iterator_start(&my_iterator, global_doas_spectrum); l != ITERATOR_FINISHED; k++,l=iterator_next(&my_iterator))
                 A[indexSvdA][k]=pTabCross->vector[l]=A[indexSvdA-1][k]*(ANALYSE_splineX[l]-lambda0);
               }
-             else if (polyFlag==-1)
-              {
-               for( int k=1,l=iterator_start(&my_iterator, global_doas_spectrum); l != ITERATOR_FINISHED; k++,l=iterator_next(&my_iterator))
-                A[indexSvdA][k]=pTabCross->vector[l]=A[indexSvdA-1][k]/ANALYSE_splineX[l];
-              }
+             // 1/x not used anymore else if (polyFlag==-1)
+             // 1/x not used anymore  {
+             // 1/x not used anymore   for( int k=1,l=iterator_start(&my_iterator, global_doas_spectrum); l != ITERATOR_FINISHED; k++,l=iterator_next(&my_iterator))
+             // 1/x not used anymore    A[indexSvdA][k]=pTabCross->vector[l]=A[indexSvdA-1][k]/ANALYSE_splineX[l];
+             // 1/x not used anymore  }
             }
            else if (Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVD)               // linear offset, SVD method -> normalized w.r.t. the spectrum
             {
@@ -4325,7 +4328,10 @@ void ANALYSE_ResetData(void)
           pTabCross->DeltaStretch=
           pTabCross->DeltaStretch2=
           pTabCross->DeltaScale=
-          pTabCross->DeltaScale2=(double)0.;
+          pTabCross->DeltaScale2=
+          pTabCross->I0Conc=
+          pTabCross->MinConc=
+          pTabCross->MaxConc=(double)0.;
         // -------------------------------------------
         pTabCross->MinParam=
           pTabCross->MinShift=(double)-99.;
@@ -4646,6 +4652,8 @@ RC ANALYSE_LoadCross(ENGINE_CONTEXT *pEngineContext,ANALYSIS_CROSS *crossSection
 
           pEngineCross->DeltaConc=(pEngineCross->FitConc)?pCross->deltaCc:(double)0.;   // delta on concentration
           pEngineCross->I0Conc=(pEngineCross->crossAction==ANLYS_CROSS_ACTION_CONVOLUTE_I0)?pCross->ccIo:(double)0.;
+          pEngineCross->MinConc=pCross->ccMin;
+          pEngineCross->MaxConc=pCross->ccMax;
 
           // Swap columns of original matrix A in order to have in the end of the matrix, cross sections with fixed concentrations
 
@@ -4781,8 +4789,8 @@ RC ANALYSE_LoadLinear(ANALYSE_LINEAR_PARAMETERS *linearList,INT nLinear,INDEX in
 
     if (!strcasecmp(pList->symbolName,"Polynomial (x)"))
      polyFlag=1;
-    else if (!strcasecmp(pList->symbolName,"Polynomial (1/x)"))
-     polyFlag=-1;
+    // Not used anymore else if (!strcasecmp(pList->symbolName,"Polynomial (1/x)"))
+    // Not used anymore  polyFlag=-1;
     else
      polyFlag=0;
 
@@ -4797,7 +4805,8 @@ RC ANALYSE_LoadLinear(ANALYSE_LINEAR_PARAMETERS *linearList,INT nLinear,INDEX in
       // Set symbol name
 
       if (polyFlag!=0)
-       sprintf(buttonText,(polyFlag==1)?"x%d":"1/x%d",indexOrder);
+       sprintf(buttonText,"x%d",indexOrder);
+       // 1/x not used anymore sprintf(buttonText,(polyFlag==1)?"x%d":"1/x%d",indexOrder);
       else
        sprintf(buttonText,"offl%d",indexOrder);
 
