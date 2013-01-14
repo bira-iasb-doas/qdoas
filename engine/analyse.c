@@ -2051,7 +2051,9 @@ RC ANALYSE_SvdInit(SVD *pSvd)
            	// FitMinp and FitMaxp are in parameters of ANALYSE_Function (called by curfit)
            	//
 
-            if ((pTabCross->InitConc!=(double)0.) || (pTabCross->MinConc!=(double)0.) || (pTabCross->MaxConc!=(double)0.))
+           	FitDeltap[pTabCross->FitConc]=pTabCross->DeltaConc;
+
+            if ((fabs(pTabCross->InitConc)>EPSILON) || (fabs(pTabCross->MinConc)>EPSILON) || (fabs(pTabCross->MaxConc)>EPSILON))
              {
              	norm=(double)0.;
 
@@ -2064,12 +2066,14 @@ RC ANALYSE_SvdInit(SVD *pSvd)
                {
                 norm=sqrt(norm);
 
-                Fitp[pTabCross->FitConc]=(pTabCross->InitConc!=(double)0.)?pTabCross->InitConc*norm:(double)0.;
-                FitDeltap[pTabCross->FitConc]=pTabCross->DeltaConc;
-                FitMinp[pTabCross->FitConc]=(pTabCross->MinConc!=(double)0.)?(double)pTabCross->MinConc*norm:(double)0.;
-                FitMaxp[pTabCross->FitConc]=(pTabCross->MaxConc!=(double)0.)?(double)pTabCross->MaxConc*norm:(double)0.;
+                Fitp[pTabCross->FitConc]=(fabs(pTabCross->InitConc)>EPSILON)?pTabCross->InitConc*norm:(double)0.;
+                FitMinp[pTabCross->FitConc]=(fabs(pTabCross->MinConc)>EPSILON)?(double)pTabCross->MinConc*norm:(double)0.;
+                FitMaxp[pTabCross->FitConc]=(fabs(pTabCross->MaxConc)>EPSILON)?(double)pTabCross->MaxConc*norm:(double)0.;
                }
              }
+
+            else
+             Fitp[pTabCross->FitConc]=FitMinp[pTabCross->FitConc]=FitMaxp[pTabCross->FitConc]=(double)0.;
            }
           // ---------------------------------------------------------------------------
           if ((pTabCross->FitParam!=ITEM_NONE) && !pTabCross->IndSvdP)
