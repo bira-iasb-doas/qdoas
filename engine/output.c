@@ -1343,7 +1343,7 @@ void OutputSaveRecord(ENGINE_CONTEXT *pEngineContext,INT hiddenFlag,INDEX indexF
                        indexField,                                              // browse fields of record
                        indexFluxes,                                             // browse selected wavelengths for fluxes
                        indexCic,                                                // browse selected wavelengths for color indexes
-                       i,k;
+                       i;
   double               flux;                                                    // temporary variable
   double               defaultValue;
   INT                  nbWin,indexWin;
@@ -1364,15 +1364,19 @@ void OutputSaveRecord(ENGINE_CONTEXT *pEngineContext,INT hiddenFlag,INDEX indexF
 
     for (indexColumn=0;(outputFields[indexColumn].fieldDim1!=ITEM_NONE);indexColumn++);
 
+    printf("outer loop: indexcolumn = %d\n",indexColumn);
+
     indexRecord=outputNbRecords++;
 
     // ---------------------------------
     // INFORMATION ON THE CURRENT RECORD
     // ---------------------------------
 
-    for (indexField=0,k=indexColumn;indexField<pResults->fieldsNumber;indexField++,k++)
+    for (indexField=0;indexField<pResults->fieldsNumber;indexField++)
      {
-      pField=&outputFields[k];
+       // simplify: remove indexField, put 'fieldsFlag' in PRJCT_RESULTS_ASCII struct?
+       printf("inner loop: indexColumn=%d, indexField = %d\n", indexColumn, indexField);
+       pField=&outputFields[indexColumn];
 
       switch(pResults->fieldsFlag[indexField])
        {
@@ -1488,35 +1492,35 @@ void OutputSaveRecord(ENGINE_CONTEXT *pEngineContext,INT hiddenFlag,INDEX indexF
 
          if ((pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_HDF) || (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS))
           {
-           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->scia.solZen[0];k++;
-           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->scia.solZen[1];k++;
+           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->scia.solZen[0];
+           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->scia.solZen[1];
            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->scia.solZen[2];
           }
          else if (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GOME2)
           {
-           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->gome2.solZen[0];k++;
-           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->gome2.solZen[1];k++;
+           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->gome2.solZen[0];
+           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->gome2.solZen[1];
            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->gome2.solZen[2];
           }
          else if (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN)
           {
            if (pOrbitFile->gdpBinHeader.version<40)
             {
-             ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pOrbitFile->gdpBinSpectrum.geo.geo3.szaArray[0];k++;
-             ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pOrbitFile->gdpBinSpectrum.geo.geo3.szaArray[1];k++;
+             ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pOrbitFile->gdpBinSpectrum.geo.geo3.szaArray[0];
+             ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pOrbitFile->gdpBinSpectrum.geo.geo3.szaArray[1];
              ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pOrbitFile->gdpBinSpectrum.geo.geo3.szaArray[2];
             }
            else
             {
-             ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pOrbitFile->gdpBinSpectrum.geo.geo4.szaArrayBOA[0];k++;
-             ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pOrbitFile->gdpBinSpectrum.geo.geo4.szaArrayBOA[1];k++;
+             ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pOrbitFile->gdpBinSpectrum.geo.geo4.szaArrayBOA[0];
+             ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pOrbitFile->gdpBinSpectrum.geo.geo4.szaArrayBOA[1];
              ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pOrbitFile->gdpBinSpectrum.geo.geo4.szaArrayBOA[2];
             }
           }
          else if (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_ASCII)
           {
-           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->gome.sza[0];k++;
-           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->gome.sza[1];k++;
+           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->gome.sza[0];
+           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->gome.sza[1];
            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->gome.sza[2];
           }
          else
@@ -1529,32 +1533,32 @@ void OutputSaveRecord(ENGINE_CONTEXT *pEngineContext,INT hiddenFlag,INDEX indexF
          if ((pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_HDF) ||
              (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS))
           {
-           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->scia.solAzi[0];k++;
-           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->scia.solAzi[1];k++;
+           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->scia.solAzi[0];
+           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->scia.solAzi[1];
            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->scia.solAzi[2];
           }
          else if (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GOME2)
           {
-           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->gome2.solAzi[0];k++;
-           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->gome2.solAzi[1];k++;
+           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->gome2.solAzi[0];
+           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->gome2.solAzi[1];
            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->gome2.solAzi[2];
           }
          else if (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_ASCII)
           {
-           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->gome.azim[0];k++;
-           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->gome.azim[1];k++;
+           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->gome.azim[0];
+           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->gome.azim[1];
            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->gome.azim[2];
           }
          else if ((pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN) && (pOrbitFile->gdpBinHeader.version<40))
           {
-           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pOrbitFile->gdpBinSpectrum.geo.geo3.aziArray[0];k++;
-           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pOrbitFile->gdpBinSpectrum.geo.geo3.aziArray[1];k++;
+           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pOrbitFile->gdpBinSpectrum.geo.geo3.aziArray[0];
+           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pOrbitFile->gdpBinSpectrum.geo.geo3.aziArray[1];
            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pOrbitFile->gdpBinSpectrum.geo.geo3.aziArray[2];
           }
          else if ((pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN) && (pOrbitFile->gdpBinHeader.version>=40))
           {
-           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pOrbitFile->gdpBinSpectrum.geo.geo4.aziArrayBOA[0];k++;
-           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pOrbitFile->gdpBinSpectrum.geo.geo4.aziArrayBOA[1];k++;
+           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pOrbitFile->gdpBinSpectrum.geo.geo4.aziArrayBOA[0];
+           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pOrbitFile->gdpBinSpectrum.geo.geo4.aziArrayBOA[1];
            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pOrbitFile->gdpBinSpectrum.geo.geo4.aziArrayBOA[2];
           }
          else
@@ -1680,28 +1684,28 @@ void OutputSaveRecord(ENGINE_CONTEXT *pEngineContext,INT hiddenFlag,INDEX indexF
 
          if ((pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_HDF) || (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS))
           {
-           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->scia.losZen[0];k++;
-           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->scia.losZen[1];k++;
+           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->scia.losZen[0];
+           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->scia.losZen[1];
            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->scia.losZen[2];
           }
          else if (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GOME2)
           {
-           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->gome2.losZen[0];k++;
-           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->gome2.losZen[1];k++;
+           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->gome2.losZen[0];
+           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->gome2.losZen[1];
            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->gome2.losZen[2];
           }
          else if (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN)
           {
            if (pOrbitFile->gdpBinHeader.version<40)
             {
-             ((float *)outputColumns[indexColumn++])[indexRecord]=(float)(pOrbitFile->gdpBinSpectrum.geo.geo3.losZa[0]*0.01);k++;
-             ((float *)outputColumns[indexColumn++])[indexRecord]=(float)(pOrbitFile->gdpBinSpectrum.geo.geo3.losZa[1]*0.01);k++;
+             ((float *)outputColumns[indexColumn++])[indexRecord]=(float)(pOrbitFile->gdpBinSpectrum.geo.geo3.losZa[0]*0.01);
+             ((float *)outputColumns[indexColumn++])[indexRecord]=(float)(pOrbitFile->gdpBinSpectrum.geo.geo3.losZa[1]*0.01);
              ((float *)outputColumns[indexColumn++])[indexRecord]=(float)(pOrbitFile->gdpBinSpectrum.geo.geo3.losZa[2]*0.01);
             }
            else if (pOrbitFile->gdpBinHeader.version>=40)
             {
-             ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pOrbitFile->gdpBinSpectrum.geo.geo4.losZaBOA[0];k++;
-             ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pOrbitFile->gdpBinSpectrum.geo.geo4.losZaBOA[1];k++;
+             ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pOrbitFile->gdpBinSpectrum.geo.geo4.losZaBOA[0];
+             ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pOrbitFile->gdpBinSpectrum.geo.geo4.losZaBOA[1];
              ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pOrbitFile->gdpBinSpectrum.geo.geo4.losZaBOA[2];
             }
           }
@@ -1716,29 +1720,29 @@ void OutputSaveRecord(ENGINE_CONTEXT *pEngineContext,INT hiddenFlag,INDEX indexF
 
          if (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GOME2)
           {
-           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->gome2.losAzi[0];k++;
-           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->gome2.losAzi[1];k++;
+           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->gome2.losAzi[0];
+           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->gome2.losAzi[1];
            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->gome2.losAzi[2];
           }
          else if ((pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_HDF) ||
                   (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS))
           {
-           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->scia.losAzi[0];k++;
-           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->scia.losAzi[1];k++;
+           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->scia.losAzi[0];
+           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->scia.losAzi[1];
            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->scia.losAzi[2];
           }
          else if (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN)
           {
            if (pOrbitFile->gdpBinHeader.version<40)
             {
-             ((float *)outputColumns[indexColumn++])[indexRecord]=(float)(pOrbitFile->gdpBinSpectrum.geo.geo3.losAzim[0]*0.01);k++;
-             ((float *)outputColumns[indexColumn++])[indexRecord]=(float)(pOrbitFile->gdpBinSpectrum.geo.geo3.losAzim[1]*0.01);k++;
+             ((float *)outputColumns[indexColumn++])[indexRecord]=(float)(pOrbitFile->gdpBinSpectrum.geo.geo3.losAzim[0]*0.01);
+             ((float *)outputColumns[indexColumn++])[indexRecord]=(float)(pOrbitFile->gdpBinSpectrum.geo.geo3.losAzim[1]*0.01);
              ((float *)outputColumns[indexColumn++])[indexRecord]=(float)(pOrbitFile->gdpBinSpectrum.geo.geo3.losAzim[2]*0.01);
             }
            else
             {
-             ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pOrbitFile->gdpBinSpectrum.geo.geo4.losAzimBOA[0];k++;
-             ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pOrbitFile->gdpBinSpectrum.geo.geo4.losAzimBOA[1];k++;
+             ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pOrbitFile->gdpBinSpectrum.geo.geo4.losAzimBOA[0];
+             ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pOrbitFile->gdpBinSpectrum.geo.geo4.losAzimBOA[1];
              ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pOrbitFile->gdpBinSpectrum.geo.geo4.losAzimBOA[2];
             }
           }
@@ -1753,22 +1757,22 @@ void OutputSaveRecord(ENGINE_CONTEXT *pEngineContext,INT hiddenFlag,INDEX indexF
 
          if ((pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_HDF) ||
              (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS))
-          for (i=0;i<4;i++,k++)
+          for (i=0;i<4;i++)
            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->scia.longitudes[i];
          else if (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GOME2)
-          for (i=0;i<4;i++,k++)
+          for (i=0;i<4;i++)
            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->gome2.longitudes[i];
          else if (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN)
           {
            if (pOrbitFile->gdpBinHeader.version<40)
-            for (i=0;i<4;i++,k++)
+            for (i=0;i<4;i++)
              ((float *)outputColumns[indexColumn++])[indexRecord]=(float)0.01*pOrbitFile->gdpBinSpectrum.geo.geo3.lonArray[i];
            else
-            for (i=0;i<4;i++,k++)
+            for (i=0;i<4;i++)
              ((float *)outputColumns[indexColumn++])[indexRecord]=(float)0.01*pOrbitFile->gdpBinSpectrum.geo.geo4.lonArray[i];
           }
          else if (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_ASCII)
-          for (i=0;i<4;i++,k++)
+          for (i=0;i<4;i++)
            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->gome.longit[i];
 
          ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->longitude;
@@ -1779,22 +1783,22 @@ void OutputSaveRecord(ENGINE_CONTEXT *pEngineContext,INT hiddenFlag,INDEX indexF
 
          if ((pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_HDF) ||
              (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS))
-          for (i=0;i<4;i++,k++)
+          for (i=0;i<4;i++)
            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->scia.latitudes[i];
          else if (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GOME2)
-          for (i=0;i<4;i++,k++)
+          for (i=0;i<4;i++)
            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->gome2.latitudes[i];
          else if (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN)
           {
            if (pOrbitFile->gdpBinHeader.version<40)
-            for (i=0;i<4;i++,k++)
+            for (i=0;i<4;i++)
              ((float *)outputColumns[indexColumn++])[indexRecord]=(float)0.01*pOrbitFile->gdpBinSpectrum.geo.geo3.latArray[i];
            else
-            for (i=0;i<4;i++,k++)
+            for (i=0;i<4;i++)
              ((float *)outputColumns[indexColumn++])[indexRecord]=(float)0.01*pOrbitFile->gdpBinSpectrum.geo.geo4.latArray[i];
           }
          else if (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_ASCII)
-          for (i=0;i<4;i++,k++)
+          for (i=0;i<4;i++)
            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->gome.latit[i];
 
          ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->latitude;
@@ -1872,7 +1876,7 @@ void OutputSaveRecord(ENGINE_CONTEXT *pEngineContext,INT hiddenFlag,INDEX indexF
         case PRJCT_RESULTS_ASCII_CCD_DIODES :
 
          if (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_CCD_EEV)
-          for (i=0;i<4;i++,k++)
+          for (i=0;i<4;i++)
            ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->ccd.diodes[i];
 
         break;
@@ -1905,18 +1909,6 @@ void OutputSaveRecord(ENGINE_CONTEXT *pEngineContext,INT hiddenFlag,INDEX indexF
          ((DoasUS *)outputColumns[indexColumn++])[indexRecord]=(DoasUS)pRecordInfo->omi.omiXtrackQF;
         break;
      // ---------------------------------------------------------------------
-	/*
-       case PRJCT_RESULTS_ASCII_SPIKES :
-	 for (i=0;i<NFeno;i++)
-	   {
-	     FENO *feno = &TabFeno[indexFenoColumn][i];
-	     if(!feno->hidden)
-	       write_spikes(&outputColumns[indexColumn++][indexRecord*pField->fieldSize], pField->fieldSize,
-			    feno->spikes,feno->NDET);
-	   }
-	 break;
-	*/
-	 // ---------------------------------------------------------------------
         case PRJCT_RESULTS_ASCII_UAV_SERVO_BYTE_SENT :
          ((DoasUS *)outputColumns[indexColumn++])[indexRecord]=(DoasUS)pRecordInfo->uavBira.servoSentPosition;
         break;
@@ -1926,7 +1918,6 @@ void OutputSaveRecord(ENGINE_CONTEXT *pEngineContext,INT hiddenFlag,INDEX indexF
         break;
      // ----------------------------------------------------------------------
         default :
-         k--;
         break;
      // ----------------------------------------------------------------------
        }
