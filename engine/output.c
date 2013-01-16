@@ -1360,11 +1360,9 @@ void OutputSaveRecord(ENGINE_CONTEXT *pEngineContext,INT hiddenFlag,INDEX indexF
 
   if (pResults->analysisFlag)
    {
-   	defaultValue=(double)9999.;
+    defaultValue=(double)9999.;
 
     for (indexColumn=0;(outputFields[indexColumn].fieldDim1!=ITEM_NONE);indexColumn++);
-
-    printf("outer loop: indexcolumn = %d\n",indexColumn);
 
     indexRecord=outputNbRecords++;
 
@@ -1374,9 +1372,7 @@ void OutputSaveRecord(ENGINE_CONTEXT *pEngineContext,INT hiddenFlag,INDEX indexF
 
     for (indexField=0;indexField<pResults->fieldsNumber;indexField++)
      {
-       // simplify: remove indexField, put 'fieldsFlag' in PRJCT_RESULTS_ASCII struct?
-       printf("inner loop: indexColumn=%d, indexField = %d\n", indexColumn, indexField);
-       pField=&outputFields[indexColumn];
+      pField=&outputFields[indexColumn];
 
       switch(pResults->fieldsFlag[indexField])
        {
