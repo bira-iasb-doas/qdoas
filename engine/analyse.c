@@ -269,12 +269,16 @@ void plot_curves( int page,
   free(plotdata);
  }
 
-double root_mean_square(double * array, doas_spectrum *ranges) {
+double sum_of_squares(double *array, doas_spectrum *ranges) {
   double sum = 0.;
   doas_iterator my_iterator;
   for( int i = iterator_start(&my_iterator, ranges); i != ITERATOR_FINISHED; i=iterator_next(&my_iterator))
    sum += array[i]*array[i];
-  return sqrt(sum / spectrum_length(ranges));
+  return sum;
+}
+
+double root_mean_square(double * array, doas_spectrum *ranges) {
+  return sqrt(sum_of_squares(array, ranges) / spectrum_length(ranges));
 }
 
 /*! Average magnitude, averaging over valid points of the spectrum.
@@ -3886,18 +3890,7 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
           pRecord->BestShift+=(double)Feno->TabCrossResults[Feno->indexSpectrum].Shift;
           Feno->nIter=Niter;
 
-          if (Feno->analysisMethod!=PRJCT_ANLYS_METHOD_SVD)
-           {
-            Feno->chiSquare=(double)0.;
-
-            for (j=SvdPDeb;j<=SvdPFin;j++)
-             if (ANALYSE_t[j]>(double)0.)
-              Feno->chiSquare+=(double)log(ANALYSE_t[j])*log(ANALYSE_t[j]);
-
-              Feno->chiSquare/=ANALYSE_nFree;
-           }
-
-          Feno->RMS = root_mean_square(ANALYSE_absolu, Feno->svd.specrange); // is this correct for intensity fitting?
+          Feno->RMS = root_mean_square(ANALYSE_absolu, Feno->svd.specrange);
 
           // Display residual spectrum
 
