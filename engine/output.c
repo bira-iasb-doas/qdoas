@@ -2811,7 +2811,8 @@ FILE *OutputFileOpen(ENGINE_CONTEXT *pEngineContext,DoasCh *outputFileName,INT a
      }
     
     // Save information on automatic reference spectrum
-    if(pEngineContext->analysisRef.refAuto
+    if(pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_OMI
+       && pEngineContext->analysisRef.refAuto
        && pEngineContext->project.asciiResults.referenceFlag)
      write_automatic_reference_info(fp, pEngineContext);
     
