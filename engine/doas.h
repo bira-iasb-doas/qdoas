@@ -1064,6 +1064,7 @@ typedef struct _KuruczFeno
   CROSS_RESULTS **results;
   double         *chiSquare;
   double         *rms;
+  double         *wve;
   int            *nIter;
  }
 KURUCZ_FENO;

@@ -112,6 +112,11 @@ bool CAnalysisWindowSubHandler::start(const QString &element, const QXmlAttribut
     d->refMaxLatitude = atts.value("maxlat").toDouble();
     d->refNs = atts.value("refns").toInt();
 
+    if (d->refNs<=0)
+     d->refNs=1;
+    else if (d->refNs>50)
+     d->refNs=50;
+
     d->cloudFractionMin = atts.value("cloudfmin").toDouble();
     d->cloudFractionMax = atts.value("cloudfmax").toDouble();
 

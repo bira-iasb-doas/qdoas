@@ -694,6 +694,14 @@ void OutputRegister(DoasCh *titlePart1,DoasCh *titlePart2,DoasCh *titlePart3,INT
     pField->fieldSize=fieldSize;
     pField->fieldDim1=fieldDim1;
     pField->fieldDim2=fieldDim2;
+
+//    {
+//    	FILE *fp;
+//    	fp=fopen("toto.dat","a+t");
+//    	fprintf(fp,"Register %s %d %d\n",pField->fieldName,pField->fieldDim1,pField->fieldDim2);
+//    	fclose(fp);
+//    }
+
    }
  }
 
@@ -880,8 +888,12 @@ void OutputRegisterCalib(INDEX indexFenoK,INDEX indexFenoColumn)
 
   // Register columns
 
-  sprintf(windowName,"Calib(%d/%d).",indexFenoColumn+1,ANALYSE_swathSize);
+  if (ANALYSE_swathSize>1)
+   sprintf(windowName,"Calib(%d/%d).",indexFenoColumn+1,ANALYSE_swathSize);
+  else
+   sprintf(windowName,"Calib.");
 
+  OutputRegister(windowName,"Wavelength","",MEMORY_TYPE_DOUBLE,sizeof(double),dim1,dim2,"%#12.4le");
   OutputRegister(windowName,"RMS","",MEMORY_TYPE_DOUBLE,sizeof(double),dim1,dim2,"%#12.4le");
 
   // Fitted parameters
@@ -956,7 +968,6 @@ void OutputRegisterParam(ENGINE_CONTEXT *pEngineContext,INT hiddenFlag)
 
   dim1=ITEM_NONE;
   dim2=ITEM_NONE;
-
 
   for (indexFenoColumn=0;indexFenoColumn<ANALYSE_swathSize;indexFenoColumn++)
    {
@@ -1242,6 +1253,10 @@ void OutputCalib(ENGINE_CONTEXT *pEngineContext)
          	// Bypass predefined data (e.g. reference spectrum record)
 
           for (indexColumn=indexColumnOld;(outputFields[indexColumn].fieldDim2!=ITEM_NONE);indexColumn++);
+
+          // Wavelength
+
+          ((double *)outputColumns[indexColumn++])[indexWin]=KURUCZ_buffers[indexFenoColumn].KuruczFeno[indexFeno].wve[indexWin];
 
           // RMS
 
@@ -2369,6 +2384,7 @@ void OutputAscPrintTitles(ENGINE_CONTEXT *pEngineContext,FILE *fp)
   for (;indexField<outputNbFields;indexField++)
    fprintf(fp,"%s\t",outputFields[indexField].fieldName);
   fprintf(fp,"\n");
+
  }
 
 // -----------------------------------------------------------------------------
@@ -2521,17 +2537,17 @@ FILE *OutputFileOpen(ENGINE_CONTEXT *pEngineContext,DoasCh *outputFileName)
        	((int *)outputColumns[1])[0]=OUTPUT_nRec;
        }
      }
-    
+
     // Save information on automatic reference spectrum
     if(pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_OMI
        && pEngineContext->analysisRef.refAuto
        && pEngineContext->project.asciiResults.referenceFlag)
      write_automatic_reference_info(fp, pEngineContext);
-    
+
     // Save information on the calibration
     if (pResults->calibFlag)
      OutputCalib(pEngineContext);
-    
+
     OutputAscPrintTitles(pEngineContext,fp);
    }
 
@@ -2720,7 +2736,7 @@ RC OUTPUT_FlushBuffers(ENGINE_CONTEXT *pEngineContext)
 
               if ((outputFp=OutputFileOpen(pEngineContext,outputAutomaticFileName))==NULL)
                ERROR_SetLast("OutputFlushBuffers",ERROR_TYPE_FATAL,ERROR_ID_FILE_OPEN,"outputFileName");
-              else 
+              else
                OutputAscPrintDataSet(outputFp,outputData,nbRecords);
 
               if (outputFp!=NULL)
@@ -3036,7 +3052,7 @@ void OUTPUT_Free(void)
   outputRecords=NULL;
  }
 
-void write_automatic_reference_info(FILE *fp, ENGINE_CONTEXT *pEngineContext) 
+void write_automatic_reference_info(FILE *fp, ENGINE_CONTEXT *pEngineContext)
 {
   for(int analysiswindow = 0; analysiswindow < NFeno; analysiswindow++) {
    for(int row=0; row< OMI_TOTAL_ROWS; row++)
@@ -3046,8 +3062,8 @@ void write_automatic_reference_info(FILE *fp, ENGINE_CONTEXT *pEngineContext)
          && pTabFeno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_AUTOMATIC
          && pTabFeno->ref_description != NULL)
       {
-       fprintf(fp, "# %s, row %d: automatic reference:\n%s\n", 
-               pTabFeno->windowName, 
+       fprintf(fp, "# %s, row %d: automatic reference:\n%s\n",
+               pTabFeno->windowName,
                row,
                pTabFeno->ref_description);
       }

@@ -254,7 +254,7 @@ CWAnalysisWindowPropertyEditor::CWAnalysisWindowPropertyEditor(const QString &pr
   satelliteLayout->addWidget(new QLabel("Ns", m_satelliteFrame));
   m_refTwoNsSpin = new QSpinBox(m_satelliteFrame);
   m_refTwoNsSpin->setFixedWidth(cIntEditWidth);
-  m_refTwoNsSpin->setRange(0, 50);
+  m_refTwoNsSpin->setRange(1, 50);
   satelliteLayout->addWidget(m_refTwoNsSpin);
 
   szaLayout->addWidget(m_satelliteFrame);

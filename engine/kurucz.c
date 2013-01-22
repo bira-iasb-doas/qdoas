@@ -429,6 +429,8 @@ RC KURUCZ_Spectrum(double *oldLambda,double *newLambda,double *spectrum,double *
       // Results safe keeping
 
       memcpy(pKurucz->KuruczFeno[indexFeno].results[indexWindow],Feno->TabCrossResults,sizeof(CROSS_RESULTS)*Feno->NTabCross);
+
+      pKurucz->KuruczFeno[indexFeno].wve[indexWindow]=VLambda[indexWindow+1];
       pKurucz->KuruczFeno[indexFeno].chiSquare[indexWindow]=Square;
       pKurucz->KuruczFeno[indexFeno].rms[indexWindow]=(Square>(double)0.)?sqrt(Square):(double)0.;
       pKurucz->KuruczFeno[indexFeno].nIter[indexWindow]=NIter[indexWindow];
@@ -1207,6 +1209,8 @@ RC KURUCZ_Alloc(PROJECT *pProject,double *lambda,INDEX indexKurucz,double lambda
          rc=ERROR_ID_ALLOC;
         else if ((pKurucz->KuruczFeno[indexFeno].rms=(double *)MEMORY_AllocDVector("KURUCZ_Alloc ","rms",0,Nb_Win-1))==NULL)
          rc=ERROR_ID_ALLOC;
+        else if ((pKurucz->KuruczFeno[indexFeno].wve=(double *)MEMORY_AllocDVector("KURUCZ_Alloc ","wve",0,Nb_Win-1))==NULL)
+         rc=ERROR_ID_ALLOC;
         else if ((pKurucz->KuruczFeno[indexFeno].nIter=(int *)MEMORY_AllocBuffer("KURUCZ_Alloc ","nIter",Nb_Win,sizeof(int),0,MEMORY_TYPE_INT))==NULL)                           // svd environments
          rc=ERROR_ID_ALLOC;
         else if ((pKurucz->KuruczFeno[indexFeno].results=(CROSS_RESULTS **)MEMORY_AllocBuffer("KURUCZ_Alloc ","results",Nb_Win,sizeof(CROSS_RESULTS *),0,MEMORY_TYPE_STRUCT))==NULL)
@@ -1490,6 +1494,8 @@ void KURUCZ_Free(void)
 
         if (pKFeno->chiSquare!=NULL)
          MEMORY_ReleaseDVector("KURUCZ_Free ","chiSquare",pKFeno->chiSquare,0);
+        if (pKFeno->wve!=NULL)
+         MEMORY_ReleaseDVector("KURUCZ_Free ","wve",pKFeno->wve,0);
         if (pKFeno->rms!=NULL)
          MEMORY_ReleaseDVector("KURUCZ_Free ","rms",pKFeno->rms,0);
         if (pKFeno->nIter!=NULL)
