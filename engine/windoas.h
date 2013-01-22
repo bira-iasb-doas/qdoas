@@ -560,7 +560,7 @@ PRJCT_RESULTS_FIELDS;
 typedef struct _prjctAsciiResults
  {
   DoasCh path[MAX_ITEM_TEXT_LEN+1];                                          // path for results and fits files
-  INT   analysisFlag,calibFlag,referenceFlag,dirFlag,binaryFlag,fileNameFlag;   // store results in ascii format
+  INT   analysisFlag,calibFlag,referenceFlag,dirFlag,fileNameFlag;   // store results in ascii format
   DoasCh fluxes[MAX_ITEM_TEXT_LEN+1];                                        // fluxes
   DoasCh cic[MAX_ITEM_TEXT_LEN+1];                                           // color indexes
   INT fieldsNumber;                                                         // number of ascii flags set in the next list

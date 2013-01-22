@@ -1217,7 +1217,6 @@ void setMediateProjectOutput(PRJCT_RESULTS_ASCII *pEngineOutput,const mediate_pr
    pEngineOutput->referenceFlag=pMediateOutput->referenceFlag;
    pEngineOutput->dirFlag=pMediateOutput->directoryFlag;
    pEngineOutput->fileNameFlag=pMediateOutput->filenameFlag;
-   pEngineOutput->binaryFlag=0;
 
    if (!(pEngineOutput->fieldsNumber=pMediateOutput->selection.nSelected))
     memset(pEngineOutput->fieldsFlag,0,PRJCT_RESULTS_ASCII_MAX);

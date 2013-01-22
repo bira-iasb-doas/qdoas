@@ -78,9 +78,6 @@
 //
 //  OutputAscPrintTitles - print titles of columns in the output ASCII file;
 //  OutputAscPrintDataSet - flush the data set to the output file (ASC format);
-//  OutputBinWriteFields - output information on fields in the binary output file;
-//  OutputBinVerifyFields - verify the consistency of the outputFile with the current data set to save;
-//  OutputBinWriteDataSet - flush the data set to the output file (binary format);
 //  OutputFileOpen - open the outputFile and save the preliminary information;
 //
 //  OUTPUT_FlushBuffers - flusth the buffers in a one shot;
@@ -2075,12 +2072,11 @@ void OutputSaveRecord(ENGINE_CONTEXT *pEngineContext,INT hiddenFlag,INDEX indexF
 // INPUT         pEngineContext   structure including information on project options
 //               year,month  current date to process (monthly files are created)
 //               indexSite   index of the observation site
-//               ascFlag     0 to add BIN extension, 1 to add ASC extension
 //
 // OUTPUT        outputFileName, the name of the output file
 // -----------------------------------------------------------------------------
 
-void OutputBuildSiteFileName(ENGINE_CONTEXT *pEngineContext,DoasCh *outputFileName,INT year,INT month,INDEX indexSite,INT ascFlag)
+void OutputBuildSiteFileName(ENGINE_CONTEXT *pEngineContext,DoasCh *outputFileName,INT year,INT month,INDEX indexSite)
  {
   // Declarations
 
@@ -2103,8 +2099,7 @@ void OutputBuildSiteFileName(ENGINE_CONTEXT *pEngineContext,DoasCh *outputFileNa
    fileNamePtr++;
 
   sprintf(fileNamePtr,"%s_%04d%02d.%s",
-         (indexSite!=ITEM_NONE)?(DoasCh *)SITES_itemList[indexSite].abbrev:(DoasCh *)"XX",year,month,
-	 (DoasCh *)((ascFlag)?"ASC":"BIN"));
+          (indexSite!=ITEM_NONE)?(DoasCh *)SITES_itemList[indexSite].abbrev:"XX",year,month,"ASC");
  }
 
 // -----------------------------------------------------------------------------
@@ -2115,13 +2110,12 @@ void OutputBuildSiteFileName(ENGINE_CONTEXT *pEngineContext,DoasCh *outputFileNa
 //
 // INPUT         pEngineContext       structure including information on project options
 // INPUT/OUTPUT  outputFileName  the original output file name to complete
-//               ascFlag         0 to add BIN extension, 1 to add ASC extension
 //
 // RETURN        ERROR_ID_NOTHING_TO_SAVE if there is nothing to save,
 //               ERROR_ID_NO otherwise
 // -----------------------------------------------------------------------------
 
-RC OutputBuildFileName(ENGINE_CONTEXT *pEngineContext,DoasCh *outputFileName,INT ascFlag)
+RC OutputBuildFileName(ENGINE_CONTEXT *pEngineContext,DoasCh *outputFileName)
  {
   // Declarations
 
@@ -2231,9 +2225,9 @@ RC OutputBuildFileName(ENGINE_CONTEXT *pEngineContext,DoasCh *outputFileName,INT
       if ((pProject->instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_MFC) &&
           (pProject->instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_MFC_STD) &&
          ((ptr=strrchr(ptr2+1,'.'))!=NULL))
-       strcpy(ptr,(ascFlag)?".ASC":".BIN");
+       strcpy(ptr,".ASC");
       else
-       strcat(outputFileName,(ascFlag)?".ASC":".BIN");
+       strcat(outputFileName,".ASC");
      }
    }
 
@@ -2434,83 +2428,6 @@ void OutputAscPrintDataSet(FILE *fp,DoasCh **outputData,INT nbRecords)
    }
  }
 
-// -----------------------------------------------------------------------------
-// FUNCTION      OutputBinWriteFields
-// -----------------------------------------------------------------------------
-// PURPOSE       Output information on fields in the binary output file
-//
-// INPUT         fp              pointer to the output file;
-//               outputData      all the data to save;
-// -----------------------------------------------------------------------------
-
-void OutputBinWriteFields(FILE *fp,DoasCh **outputData)
- {
- 	// Declarations
-
- 	INDEX indexField;
- 	PRJCT_RESULTS_FIELDS *pField;
-
- 	fwrite(&outputNbDataSet,sizeof(int),1,fp);
- 	fwrite(&outputNbFields,sizeof(int),1,fp);
-  fwrite(outputFields,sizeof(PRJCT_RESULTS_FIELDS),outputNbFields,fp);
-
-  for (indexField=0;indexField<outputNbFields;indexField++)
-   {
-   	pField=&outputFields[indexField];
-    fwrite(outputData[indexField],pField->fieldDim1*((pField->fieldDim2==ITEM_NONE)?1:pField->fieldDim2)*pField->fieldSize,1,fp);
-   }
- }
-
-// -----------------------------------------------------------------------------
-// FUNCTION      OutputBinVerifyFields
-// -----------------------------------------------------------------------------
-// PURPOSE       Verify the consistency of the outputFile with the current data set to save
-//
-// INPUT         outputFileName  the name of the output file
-//               fp              pointer to the output file;
-//
-// RETURN        ERROR_ID_ALLOC if the allocation of a vector failed
-//               ERROR_ID_OUTPUT if file and current data set are unconsistent
-//               ERROR_ID_NO if both are consisten
-// -----------------------------------------------------------------------------
-
-RC OutputBinVerifyFields(DoasCh *outputFileName,FILE *fp)
- {
- 	// Declarations
-
-  PRJCT_RESULTS_FIELDS *fields;
- 	int nbFields;
-  RC rc;
-
- 	// Initialization
-
- 	fields=NULL;
- 	rc=ERROR_ID_NO;
-
-  fread(&outputNbDataSet,sizeof(int),1,fp);
- 	fread(&nbFields,sizeof(int),1,fp);
-
- 	if (nbFields!=outputNbFields)
- 	 rc=ERROR_SetLast("OutputBinVerifyFields",ERROR_TYPE_FATAL,ERROR_ID_OUTPUT,outputFileName);
- 	else if ((fields=(PRJCT_RESULTS_FIELDS *)MEMORY_AllocBuffer("OutputBinVerifyFields","fields",nbFields,sizeof(PRJCT_RESULTS_FIELDS),0,MEMORY_TYPE_STRUCT))==NULL)
- 	 rc=ERROR_ID_ALLOC;
- 	else
- 	 {
- 	 	fread(fields,sizeof(PRJCT_RESULTS_FIELDS)*nbFields,1,fp);
- 	 	if (memcmp(fields,outputFields,sizeof(PRJCT_RESULTS_FIELDS)*nbFields))
- 	 	 rc=ERROR_SetLast("OutputBinVerifyFields",ERROR_TYPE_FATAL,ERROR_ID_OUTPUT,outputFileName);
- 	 }
-
- 	// Release the allocated buffer
-
-  if (fields!=NULL)
-   MEMORY_ReleaseBuffer("OutputBinVerifyFields","fields",fields);
-
- 	// Return
-
- 	return rc;
- }
-
 // write_spikes:
 // concatenate all pixels containing spikes into a single string for output.
 
@@ -2543,205 +2460,6 @@ RC write_spikes(char *spikestring, unsigned int length, BOOL *spikes,int ndet) {
   return rc;
 }
 
-
-// -----------------------------------------------------------------------------
-// FUNCTION      OutputBinWriteDataSet
-// -----------------------------------------------------------------------------
-// PURPOSE       Flush the data set to the output file (binary format)
-//
-// INPUT         fp              pointer to the output file;
-//               outputData      all the data to save;
-//               nbRecords       the number of records to save.
-// -----------------------------------------------------------------------------
-
-RC OutputBinWriteDataSet(FILE *fp,DoasCh **outputData,INT nbRecords)
- {
-  // Declarations
-
-  double *scalingFactors,*dataMax,*dataMin,defaultValue;
-  short *data;
-  PRJCT_RESULTS_FIELDS *pField;
-  INDEX indexField,indexRecord,firstRecordField;
-  RC rc;
-
-  // Initializations
-
-  indexRecord=0;
-  dataMax=dataMin=NULL;
-  defaultValue=(double)9999.;
-  rc=ERROR_ID_NO;
-  data=NULL;
-
-  if (((scalingFactors=(double *)MEMORY_AllocDVector("OutputBinWriteDataSet","scalingFactors",0,outputNbFields-1))==NULL) ||
-      ((dataMax=(double *)MEMORY_AllocDVector("OutputBinWriteDataSet","dataMax",0,outputNbFields-1))==NULL) ||
-      ((dataMin=(double *)MEMORY_AllocDVector("OutputBinWriteDataSet","dataMin",0,outputNbFields-1))==NULL) ||
-      ((data=(short *)MEMORY_AllocBuffer("OutputBinWriteDataSet","data",nbRecords,sizeof(short),0,MEMORY_TYPE_SHORT))==NULL))
-   rc=ERROR_ID_ALLOC;
-  else
-   {
-    // Initializations
-
-    for (firstRecordField=0;(firstRecordField<outputNbFields) && (outputFields[firstRecordField].fieldDim1!=ITEM_NONE);firstRecordField++)
-     {
-      scalingFactors[firstRecordField]=(double)-1.;
-      dataMax[firstRecordField]=dataMin[firstRecordField]=(double)0.;
-     }
-
-    for (indexField=firstRecordField;indexField<outputNbFields;indexField++)
-     {
-     	pField=&outputFields[indexField];
-     	scalingFactors[indexField]=(double)-1.;
-     	dataMax[indexField]=dataMin[indexField]=(double)0.;
-
-     	// Search for the first valid value
-
-     	if ((pField->fieldType==MEMORY_TYPE_INT) || (pField->fieldType==MEMORY_TYPE_FLOAT) || (pField->fieldType==MEMORY_TYPE_DOUBLE))
-     	 {
-       	for (indexRecord=0;(indexRecord<nbRecords) &&
-       	  (((pField->fieldType==MEMORY_TYPE_INT) && (fabs((double)((int *)outputData[indexField])[indexRecord]-defaultValue)<(double)1.e-6)) ||
-       	   ((pField->fieldType==MEMORY_TYPE_FLOAT) && (fabs((double)((float *)outputData[indexField])[indexRecord]-defaultValue)<(double)1.e-6)) ||
-       	   ((pField->fieldType==MEMORY_TYPE_DOUBLE) && (fabs((double)((double *)outputData[indexField])[indexRecord]-defaultValue)<(double)1.e-6)));
-       	     indexRecord++);
-
-       	if (indexRecord<nbRecords)
-       	 switch(pField->fieldType)
-       	  {
-       	// ---------------------------------------------------------------------
-       	   case MEMORY_TYPE_INT :
-       	    dataMax[indexField]=dataMin[indexField]=(double)((int *)outputData[indexField])[indexRecord++];
-       	   break;
-       	// ---------------------------------------------------------------------
-       	   case MEMORY_TYPE_FLOAT :
-       	    dataMax[indexField]=dataMin[indexField]=(double)((float *)outputData[indexField])[indexRecord++];
-       	   break;
-       	// ---------------------------------------------------------------------
-       	   case MEMORY_TYPE_DOUBLE :
-       	    dataMax[indexField]=dataMin[indexField]=(double)((double *)outputData[indexField])[indexRecord++];
-       	   break;
-       	// ---------------------------------------------------------------------
-       	  }
-     	 }
-
-      if (pField->fieldType==MEMORY_TYPE_INT)
-       {
-       	for (;indexRecord<nbRecords;indexRecord++)
-         if (fabs((double)(((int *)outputData[indexField])[indexRecord])-defaultValue)>(double)1.e-6)
-        	 {
-        	 	if (((double)((int *)outputData[indexField])[indexRecord])>dataMax[indexField])
-        	 	 dataMax[indexField]=(double)((int *)outputData[indexField])[indexRecord];
-        	 	if (((double)((int *)outputData[indexField])[indexRecord])<dataMin[indexField])
-        	 	 dataMin[indexField]=(double)((int *)outputData[indexField])[indexRecord];
-        	 }
-       }
-      else if (pField->fieldType==MEMORY_TYPE_FLOAT)
-       {
-       	for (;indexRecord<nbRecords;indexRecord++)
-       	 if (fabs((double)(((float *)outputData[indexField])[indexRecord])-defaultValue)>(double)1.e-6)
-        	 {
-        	 	if (((double)((float *)outputData[indexField])[indexRecord])>dataMax[indexField])
-        	 	 dataMax[indexField]=(double)((float *)outputData[indexField])[indexRecord];
-        	 	if (((double)((float *)outputData[indexField])[indexRecord])<dataMin[indexField])
-        	 	 dataMin[indexField]=(double)((float *)outputData[indexField])[indexRecord];
-        	 }
-       }
-      else if (pField->fieldType==MEMORY_TYPE_DOUBLE)
-       {
-       	for (;indexRecord<nbRecords;indexRecord++)
-       	 if (fabs((double)(((double *)outputData[indexField])[indexRecord])-defaultValue)>(double)1.e-6)
-       	  {
-       	  	if (((double)((double *)outputData[indexField])[indexRecord])>dataMax[indexField])
-       	  	 dataMax[indexField]=(double)((double *)outputData[indexField])[indexRecord];
-       	  	if (((double)((double *)outputData[indexField])[indexRecord])<dataMin[indexField])
-       	  	 dataMin[indexField]=(double)((double *)outputData[indexField])[indexRecord];
-       	  }
-       }
-     }
-
-    // Calculate the scaling factors and output them
-
-    for (indexField=firstRecordField;indexField<outputNbFields;indexField++)
-     {
-     	pField=&outputFields[indexField];
-
-     	if ((pField->fieldType==MEMORY_TYPE_INT) ||
-     	    (pField->fieldType==MEMORY_TYPE_FLOAT) ||
-     	    (pField->fieldType==MEMORY_TYPE_DOUBLE))
-     	 {
-        if (dataMin[indexField]<dataMax[indexField])
-         scalingFactors[indexField]=(double)64000./(dataMax[indexField]-dataMin[indexField]);
-        else
-         scalingFactors[indexField]=(double)1.;
-       }
-     }
-
-    fseek(fp,0L,SEEK_END);
-    fwrite(&nbRecords,sizeof(int),1,fp);
-    fwrite(scalingFactors,sizeof(double)*outputNbFields,1,fp);
-    fwrite(dataMin,sizeof(double)*outputNbFields,1,fp);
-
-    // Adjust the maxima
-
-    for (indexField=firstRecordField;indexField<outputNbFields;indexField++)
-     {
-      pField=&outputFields[indexField];
-
-      if (scalingFactors[indexField]>=(double)0.)
-       {
-        switch(pField->fieldType)
-         {
-       // -------------------------------------------------------------------------
-          case MEMORY_TYPE_INT :
-           for (indexRecord=0;indexRecord<nbRecords;indexRecord++)
-            data[indexRecord]=
-             (fabs((double)(((int *)outputData[indexField])[indexRecord])-defaultValue)>(double)1.e-6)?
-             (short)(((double)(((int *)outputData[indexField])[indexRecord])-dataMin[indexField])*scalingFactors[indexField]-32000.):(short)defaultValue;
-          break;
-       // -------------------------------------------------------------------------
-          case MEMORY_TYPE_FLOAT :
-           for (indexRecord=0;indexRecord<nbRecords;indexRecord++)
-            data[indexRecord]=
-             (fabs((double)(((float *)outputData[indexField])[indexRecord])-defaultValue)>(double)1.e-6)?
-             (short)(((double)(((float *)outputData[indexField])[indexRecord])-dataMin[indexField])*scalingFactors[indexField]-32000.):(short)defaultValue;
-          break;
-       // -------------------------------------------------------------------------
-          case MEMORY_TYPE_DOUBLE :
-           for (indexRecord=0;indexRecord<nbRecords;indexRecord++)
-            data[indexRecord]=
-             (fabs((double)(((double *)outputData[indexField])[indexRecord])-defaultValue)>(double)1.e-6)?
-             (short)((((double)((double *)outputData[indexField])[indexRecord])-dataMin[indexField])*scalingFactors[indexField]-32000.):(short)defaultValue;
-          break;
-       // -------------------------------------------------------------------------
-         }
-
-        fwrite(data,sizeof(short)*nbRecords,1,fp);
-       }
-      else
-       fwrite(&outputData[indexField][0],pField->fieldSize*nbRecords,1,fp);
-     }
-
-    // Update the number of data set
-
-    outputNbDataSet++;
-    fseek(fp,0L,SEEK_SET);
-    fwrite(&outputNbDataSet,sizeof(int),1,fp);
-   }
-
-  // Release the allocated buffers
-
-  if (scalingFactors!=NULL)
-   MEMORY_ReleaseDVector("OutputBinWriteDataSet","scalingFactors",scalingFactors,0);
-  if (dataMax!=NULL)
-   MEMORY_ReleaseDVector("OutputBinWriteDataSet","dataMax",dataMax,0);
-  if (dataMin!=NULL)
-   MEMORY_ReleaseDVector("OutputBinWriteDataSet","dataMin",dataMin,0);
-  if (data!=NULL)
-   MEMORY_ReleaseBuffer("OutputBinWriteDataSet","data",data);
-
-  // Return
-
-  return rc;
- }
-
 // -----------------------------------------------------------------------------
 // FUNCTION      OutputFileOpen
 // -----------------------------------------------------------------------------
@@ -2749,20 +2467,17 @@ RC OutputBinWriteDataSet(FILE *fp,DoasCh **outputData,INT nbRecords)
 //
 // INPUT         pEngineContext       structure including information on project options
 //               outputFileName  the name of the outputFile
-//               ascFlag         0 to output to a binary file,
-//                               1 to output data to an ASCII file
 //
 // RETURN        pointer to the output file
 // -----------------------------------------------------------------------------
 
-FILE *OutputFileOpen(ENGINE_CONTEXT *pEngineContext,DoasCh *outputFileName,INT ascFlag)
+FILE *OutputFileOpen(ENGINE_CONTEXT *pEngineContext,DoasCh *outputFileName)
  {
   // Declarations
 
   FILE *fp;
   DoasCh r[4],w[4],a[4];
   INT newFile;
-  INT corrupted;
 
   PROJECT             *pProject;                                                // pointer to project data
   PRJCT_RESULTS_ASCII *pResults;                                                // pointer to results part of project
@@ -2774,14 +2489,13 @@ FILE *OutputFileOpen(ENGINE_CONTEXT *pEngineContext,DoasCh *outputFileName,INT a
 
   // Initializations
 
-  strcpy(r,(ascFlag)?"rt":"rb");                                                // open the file in read mode
-  strcpy(w,(ascFlag)?"w+t":"w+b");                                              // open the file in write mode
-  strcpy(a,(ascFlag)?"a+t":"r+b");                                              // open the file in append mode
+  strcpy(r,"rt");                                               // open the file in read mode
+  strcpy(w,"w+t");                                              // open the file in write mode
+  strcpy(a,"a+t");                                              // open the file in append mode
 
   outputNbDataSet=0;
 
   newFile=((fp=fopen(outputFileName,r))==NULL)?1:0;
-  corrupted=(!newFile && !ascFlag && OutputBinVerifyFields(outputFileName,fp))?1:0;
 
   // Close the file
 
@@ -2790,9 +2504,7 @@ FILE *OutputFileOpen(ENGINE_CONTEXT *pEngineContext,DoasCh *outputFileName,INT a
 
   // Open the file in append mode
 
-  if (corrupted)
-   fp=NULL;
-  else if (((fp=fopen(outputFileName,(newFile)?w:a))!=NULL) && newFile)
+  if (((fp=fopen(outputFileName,(newFile)?w:a))!=NULL) && newFile)
    {
     if (THRD_id==THREAD_TYPE_ANALYSIS)
      {
@@ -2820,10 +2532,7 @@ FILE *OutputFileOpen(ENGINE_CONTEXT *pEngineContext,DoasCh *outputFileName,INT a
     if (pResults->calibFlag)
      OutputCalib(pEngineContext);
     
-    if (ascFlag)
-     OutputAscPrintTitles(pEngineContext,fp);
-    else
-     OutputBinWriteFields(fp,outputColumns);
+    OutputAscPrintTitles(pEngineContext,fp);
    }
 
   // Return
@@ -2874,7 +2583,7 @@ RC OUTPUT_FlushBuffers(ENGINE_CONTEXT *pEngineContext)
 
   rc=ERROR_ID_NO;
 
-  if ((pResults->analysisFlag || pResults->calibFlag) && outputNbRecords && !(rc=OutputBuildFileName(pEngineContext,outputFileName,!pResults->binaryFlag)))
+  if ((pResults->analysisFlag || pResults->calibFlag) && outputNbRecords && !(rc=OutputBuildFileName(pEngineContext,outputFileName)))
    {
     if ((ptr=strrchr(outputFileName,PATH_SEP))==NULL)
      ptr=outputFileName;
@@ -2892,10 +2601,8 @@ RC OUTPUT_FlushBuffers(ENGINE_CONTEXT *pEngineContext)
 
     if (!automatic)
      {
-      if ((outputFp=OutputFileOpen(pEngineContext,outputFileName,!pResults->binaryFlag))==NULL)
+      if ((outputFp=OutputFileOpen(pEngineContext,outputFileName)) == NULL )
        rc=ERROR_SetLast("OUTPUT_FlushBuffers",ERROR_TYPE_FATAL,ERROR_ID_FILE_OPEN,"outputFileName");
-      else if (pResults->binaryFlag)
-       rc=OutputBinWriteDataSet(outputFp,outputColumns,outputNbRecords);
       else
        OutputAscPrintDataSet(outputFp,outputColumns,outputNbRecords);
      }
@@ -2963,12 +2670,10 @@ RC OUTPUT_FlushBuffers(ENGINE_CONTEXT *pEngineContext)
 
      	 	 	  	if (nbRecords)
      	 	 	  	 {
-     	 	 	  	 	OutputBuildSiteFileName(pEngineContext,outputAutomaticFileName,oldYear,oldMonth,indexSite,!pResults->binaryFlag);
+     	 	 	  	 	OutputBuildSiteFileName(pEngineContext,outputAutomaticFileName,oldYear,oldMonth,indexSite);
 
-               if ((outputFp=OutputFileOpen(pEngineContext,outputAutomaticFileName,!pResults->binaryFlag))==NULL)
+               if ((outputFp=OutputFileOpen(pEngineContext,outputAutomaticFileName))==NULL)
                 ERROR_SetLast("OutputFlushBuffers",ERROR_TYPE_FATAL,ERROR_ID_FILE_OPEN,"outputFileName");
-               else if (pResults->binaryFlag)
-                rc=OutputBinWriteDataSet(outputFp,outputData,nbRecords);
                else
                 OutputAscPrintDataSet(outputFp,outputData,nbRecords);
 
@@ -3011,13 +2716,11 @@ RC OUTPUT_FlushBuffers(ENGINE_CONTEXT *pEngineContext)
     	   	 	 	   memcpy(&outputData[indexField][0],&outputColumns[indexField][oldRecord*pField->fieldSize],nbRecords*pField->fieldSize);
      	 	   	 	 }
 
-     	 	 	 	 	OutputBuildSiteFileName(pEngineContext,outputAutomaticFileName,oldYear,oldMonth,indexSite,!pResults->binaryFlag);
+     	 	 	 	 	OutputBuildSiteFileName(pEngineContext,outputAutomaticFileName,oldYear,oldMonth,indexSite);
 
-              if ((outputFp=OutputFileOpen(pEngineContext,outputAutomaticFileName,!pResults->binaryFlag))==NULL)
+              if ((outputFp=OutputFileOpen(pEngineContext,outputAutomaticFileName))==NULL)
                ERROR_SetLast("OutputFlushBuffers",ERROR_TYPE_FATAL,ERROR_ID_FILE_OPEN,"outputFileName");
-              else if (pResults->binaryFlag)
-               rc=OutputBinWriteDataSet(outputFp,outputData,nbRecords);
-              else
+              else 
                OutputAscPrintDataSet(outputFp,outputData,nbRecords);
 
               if (outputFp!=NULL)
