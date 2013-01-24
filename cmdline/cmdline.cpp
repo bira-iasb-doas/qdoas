@@ -314,12 +314,14 @@ enum BatchTool requiredBatchTool(const QString &filename)
 void showUsage()
 {
   std::cout << "doas_cl -c <config file> [-a/-k <project name>] [-o <output>] [-f <file>]..." << std::endl << std::endl;
-  std::cout << "    -c <config file>   : A QDoas, convolution, [ring or usamp] config file." << std::endl;
-  std::cout << "                         The tool to invoke is determined from the type of" << std::endl;
-  std::cout << "                         configuration file specified;" << std::endl << std::endl;
-  std::cout << "    -a <project name>  : for QDoas, run analysis on the specified project" << std::endl;
-  std::cout << "    -k <project name>  : for QDoas, run calibration on the specified project" << std::endl << std::endl;
-  std::cout << "    -v                 : verbose on (default is off)" << std::endl << std::endl;
+  std::cout << "    -c <config file>  : A QDoas, convolution, [ring or usamp] config file." << std::endl;
+  std::cout << "                        The tool to invoke is determined from the type of" << std::endl;
+  std::cout << "                        configuration file specified;" << std::endl << std::endl;
+  std::cout << "    -a <project name> : for QDoas, run analysis on the specified project" << std::endl;
+  std::cout << "    -k <project name> : for QDoas, run calibration on the specified project" << std::endl << std::endl;
+  std::cout << "    -v                : verbose on (default is off)" << std::endl << std::endl;
+  std::cout << "    -xml <path=value> : advanced option to replace the values of some options " << std::endl
+  std::cout << "                        in the configuration file by new ones." << std::endl
   std::cout << "------------------------------------------------------------------------------" << std::endl;
   std::cout << "doas_cl is a tool of QDoas, a product jointly developed by BIRA-IASB and S[&]T" << std::endl;
   std::cout << "Last version : " << cQdoasVersionString << std::endl ;

@@ -45,7 +45,8 @@
             <area shape="rect" coords="153,173,570,206" href="#Interpolation">
             <area shape="rect" coords="153,208,570,239" href="#SecurityGap">
             <area shape="rect" coords="153,242,570,274" href="#ConvergenceCriterion">
-            <area shape="rect" coords="153,279,570,307" href="#NumberIterations"></map>
+            <area shape="rect" coords="153,279,570,307" href="#NumberIterations">
+            <area shape="rect" coords="153,316,570,344" href="#SpikeTolerance"></map>
     </p>
     <p align="justify" ><a name="Options"></a>Default options of this page are valid for all applications. Expert users can change them to perform some tests. Further details on the retrieval algorithms can be found in the <strong>Description of Algorithms </strong>chapter of the <strong>QDOAS Software User Manual</strong>.</p>
     <p align="justify" class="orangelarge">Analysis method<a name="Method"></a></p>
@@ -66,6 +67,8 @@
     <p align="justify">Usually  a value of 1e-3 or 1e-4 is selected for the convergence criterion. The higher is  this value, the faster will be the convergence to the solution but the accuracy of  the results could be affected.</p>
     <p align="justify" class="orangelarge">The maximum number of iterations<a name="NumberIterations"></a></p>
     <p align="justify" >The number of iterations needed to analyze a spectrum is determined by the convergence speed of the  Marquardt-Levenberg algorithm for this spectrum. For some tests, it is sometimes useful to limit it. A value of  &laquo; 0 &raquo; doesn't limit the number of iterations.</p>
+    <p align="justify" class="orangelarge">Spike tolerance factor<a name="SpikeTolerance"></a></p>
+    <p align="justify" >QDOAS can try to  automatically remove bad data points, such as satellite measurements affected by the South Atlantic Anomaly, from the fit.  To do this, QDOAS calculates the average magnitude of the residuals after the fit.  If pixels are found with a residual exceeding this average by more than the spike tolerance factor, QDOAS will remove these pixels from the analysis and calculate a new fit.   This procedure is applied iteratively until no residuals exceed the average by more than the given tolerance factor.  The analysis results contain a list of all pixels that were removed.  This feature should be used with caution, as choosing a too low tolerance factor might exclude valid data points from the fit.</p>
     <p align="justify">&nbsp;</p>
   </tr>
 </table>

@@ -34,18 +34,24 @@
 <table width="100%" border="0" cellpadding="5">
   <tr>
    <td width="5%">&nbsp;</td>
-   <td width="95%"><span class="style4">doas_cl -c &lt;config  file&gt; [-a/-k &lt;project name&gt;] [-o &lt;output&gt;] [-f &lt;file&gt;]... </span></td>
+   <td width="95%"><span class="style4">doas_cl -c &lt;config file&gt; [-a/-k &lt;project name&gt;] [-o &lt;output&gt;] [-f &lt;file&gt;]...</span></td>
   </tr>
   <tr valign="top">
     <td width="5%">&nbsp;</td>
-    <td width="95%"><span class="style4">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-c &quot;$HA_pathAnalysis/QDOAS_Harestua.xml&quot; \<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-a &quot;Harestua&quot; -o  &quot;$HA_pathAnalysisOutput/$year/automatic&quot; \<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-f &quot;$HA_fileToProcess&quot;</span></td>
+    <td width="95%"><p class="style4">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-c &lt;config file&gt;   : A QDoas, convolution, [Ring or usamp] config file.<br>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;The tool to invoke is determined from the type of<br>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;configuration file specified;</p>
+      <p class="style4">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-a &lt;project name&gt;  : for QDoas, run analysis on the specified project<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-k &lt;project name&gt;  : for QDoas, run calibration on the specified project</p>
+      <p class="style4">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-v                 : verbose on (default is off)<br>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-xml &lt;path=value&gt;  : advanced option to replace the values of some options<br>
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;in the configuration file by new ones.</p>
+      </td>
   </tr>
    <td width="5%">&nbsp;</td>
    <td width="95%"><span class="style4">------------------------------------------------------------------------------<br>
 doas_cl is a tool of QDoas, a  product jointly developed by BIRA-IASB and S[&amp;]T<br>
-Last version : Qdoas version  beta 1.164 - 24 March 2011</span></td>
+Last version : Qdoas version  2.1 - 20 December 2012</span></td>
 </table>
 <p align="justify" ><strong>doas_cl </strong>is useful to  process large amount of files (for example satellite data).&nbsp; It applies on spectra and directories.&nbsp;  An output file name different from the one given in the <a href="../Project/Project_Output.html"><strong>Output page</strong></a> of <strong>Projects Properties </strong>can  be specified.&nbsp; The xml input configuration file can  be modified by  the calling batch for  specific needs.</p>
 <p align="justify">      Example of doas_cl command included in a bash file :</p>
@@ -61,7 +67,8 @@ Last version : Qdoas version  beta 1.164 - 24 March 2011</span></td>
     <p align="justify">This command uses the QDOAS_Harestua.xml file previously generated  by QDOAS.&nbsp; It loads the project  &ldquo;Harestua&rdquo; (important to specify if several projects exist in the  application).&nbsp; The output file name is generated  automatically (see the output page of projects properties).&nbsp; </p>
     <p align="justify"><em><strong>Important  : always use slash as path separator for doas_cl file arguments (input and  output) even if you work under Windows.</strong> </em></p>
     <p align="justify">For the convolution  tool, the switch &ndash;f applies only to one file but the command can be called  several times from a batch. &nbsp;For the ring  tool, the switch &ndash;f modifies the final calibration grid.&nbsp; To change other parameters, it is better to  write a piece of code to modify the xml file. </p>
-  <p align="justify" >&nbsp;</p>
+    <p align="justify">About the -xml switch, see the<strong> QDOAS S/W user manual.</strong></p>
+    <p align="justify" >&nbsp;</p>
   </tr>
 </table>
 <div id="footcontainer" >
