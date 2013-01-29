@@ -1949,7 +1949,7 @@ RC ANALYSE_SvdInit(SVD *pSvd)
 
     SigmaSqr=pSvd->SigmaSqr;
     covar=pSvd->covar;
-
+    
     DimL=pSvd->DimL;
     DimC=pSvd->DimC;
     DimP=pSvd->DimP;
@@ -2821,12 +2821,12 @@ RC ANALYSE_Function( double *X, double *Y, double *SigmaY, double *Yfit, int Npt
         DEBUG_PrintVar("Before SVD_Dcmp",U,1,DimL,0,DimC,NULL);
         DEBUG_PrintVar("Before SVD_Dcmb",A,1,DimL,0,DimC,NULL);
        }
-#endif
+#endif                                                                                                       
 
       if ((Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVD) &&
           ((rc=SVD_Dcmp(A,Npts,NewDimC /* don't take fixed concentrations into account */ ,W,V,SigmaSqr,covar))!=ERROR_ID_NO))
        goto EndFunction;
-
+                         
       if (FAST && (SigmaY==NULL) && (!Feno->offlFlag || (Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVDMARQUARDT)))
        Feno->Decomp=0;
      }
@@ -3020,13 +3020,13 @@ RC ANALYSE_Function( double *X, double *Y, double *SigmaY, double *Yfit, int Npt
              P[indexSvdP][k]=A[indexSvdA][k];
            }
          }
-       }
-
+       }    
+       
       if (((rc=SVD_Dcmp(P,Npts,DimP,W,V,SigmaSqr,covar))!=ERROR_ID_NO) ||
           ((rc=SVD_Bksb(P,W,V,Npts,DimP,&ANALYSE_tc[spectrum_start(global_doas_spectrum)]-1,b))!=ERROR_ID_NO))      // Solve system P*b=b
 
        goto EndFunction;
-
+       
       // ------------------------------------------------
       // Yfit computation with the solution of the system
       // ------------------------------------------------

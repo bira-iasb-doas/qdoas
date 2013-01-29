@@ -997,20 +997,20 @@ void OutputRegisterParam(ENGINE_CONTEXT *pEngineContext,INT hiddenFlag)
               OutputRegister(windowName,"RefZm","",MEMORY_TYPE_FLOAT,sizeof(float),dim1,dim2,"%#8.3f");
              if (OUTPUT_refShift)
               OutputRegister(windowName,"Ref2/Ref1 Shift","",MEMORY_TYPE_FLOAT,sizeof(float),dim1,dim2,"%#8.3f");
-
-             if (OUTPUT_covarFlag && (pTabFeno->svd.covar!=NULL))
-              for (indexTabCross=0;indexTabCross<pTabFeno->NTabCross;indexTabCross++)
+              
+             if (OUTPUT_covarFlag)
+              for (indexTabCross=0;indexTabCross<pTabFeno->NTabCross;indexTabCross++) 
                if (TabCross[indexTabCross].IndSvdA>0)
                 for (indexTabCross2=0;indexTabCross2<indexTabCross;indexTabCross2++)
                  if (TabCross[indexTabCross2].IndSvdA>0)
-                  {
+                  {          
                    sprintf(symbolName,"(%s,%s)",
                           WorkSpace[TabCross[indexTabCross2].Comp].symbolName,
                           WorkSpace[TabCross[indexTabCross].Comp].symbolName);
                    OutputRegister(windowName,"Covar",symbolName,MEMORY_TYPE_DOUBLE,sizeof(double),dim1,dim2,"%#12.4le");
-                  }
-
-             if (OUTPUT_corrFlag && (pTabFeno->svd.covar!=NULL))
+                  }                                 
+              
+             if (OUTPUT_corrFlag)
               for (indexTabCross=0;indexTabCross<pTabFeno->NTabCross;indexTabCross++)
                if (TabCross[indexTabCross].IndSvdA>0)
                 for (indexTabCross2=0;indexTabCross2<indexTabCross;indexTabCross2++)
@@ -1121,7 +1121,7 @@ RC OUTPUT_RegisterData(ENGINE_CONTEXT *pEngineContext)
   #if defined(__DEBUG_) && __DEBUG_
   DEBUG_FunctionBegin("OUTPUT_RegisterData",DEBUG_FCTTYPE_FILE);
   #endif
-
+  
  	// Initializations
 
   pProject=&pEngineContext->project;
@@ -1191,8 +1191,8 @@ RC OUTPUT_RegisterData(ENGINE_CONTEXT *pEngineContext)
 
   #if defined(__DEBUG_) && __DEBUG_
   DEBUG_FunctionStop("OUTPUT_RegisterData",rc);
-  #endif
-
+  #endif     
+  
   return rc;
  }
 
@@ -1962,7 +1962,7 @@ void OutputSaveRecord(ENGINE_CONTEXT *pEngineContext,INT hiddenFlag,INDEX indexF
                 (!pTabFeno->rc && (TabCross[indexTabCross].Fact!=(double)0.))?
                  (double)pTabFeno->svd.covar[TabCross[indexTabCross2].IndSvdA][TabCross[indexTabCross].IndSvdA]*pTabFeno->chiSquare/
                  (TabCross[indexTabCross].Fact*TabCross[indexTabCross2].Fact):(double)defaultValue;
-
+                 
            if (OUTPUT_corrFlag && (pTabFeno->svd.covar!=NULL))
             for (indexTabCross=0;indexTabCross<pTabFeno->NTabCross;indexTabCross++)
              if (TabCross[indexTabCross].IndSvdA>0)

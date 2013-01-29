@@ -1575,8 +1575,8 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
    INT indexFeno,indexFenoColumn,i;                                              // browse analysis windows
    RC rc;                                                                        // return code
 
-   // Initializations
-
+   // Initializations                 
+   
    lambdaMin=1000;
    lambdaMax=0;
    pEngineContext=(ENGINE_CONTEXT *)engineContext;
@@ -1859,26 +1859,16 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
      }
 
    // OMI SEE LATER
-
+   
    if (!rc && !(rc=OUTPUT_RegisterData(pEngineContext)) &&
        (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_OMI) && useUsamp &&
        !(rc=ANALYSE_UsampGlobalAlloc(lambdaMin,lambdaMax,NDET)) &&
        !(rc=ANALYSE_UsampLocalAlloc(1)))
-    rc=ANALYSE_UsampBuild(0,1);
-
-   // QDOAS ???     {
-   // QDOAS ???      FILE *fp;
-   // QDOAS ???
-   // QDOAS ???      if ((fp=fopen(DOAS_broAmfFile,"rt"))!=NULL)
-   // QDOAS ???       {
-   // QDOAS ???        fclose(fp);
-   // QDOAS ???        MATRIX_Load(DOAS_broAmfFile,&ANALYSIS_broAmf,0,0,0,0,-9999.,9999.,1,0,"ANALYSE_LoadData ");
-   // QDOAS ???       }
-   // QDOAS ???     }
-
+    rc=ANALYSE_UsampBuild(0,1);        
+    
    if (rc!=ERROR_ID_NO)
-    ERROR_DisplayMessage(responseHandle);
-
+    ERROR_DisplayMessage(responseHandle);      
+    
    return (rc!=ERROR_ID_NO)?-1:0;    // supposed that an error at the level of the load of projects stops the current session
  }
 
