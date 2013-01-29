@@ -552,8 +552,6 @@ RC Gome2ReadOrbitInfo(GOME2_ORBIT_FILE *pOrbitFile,int bandIndex)
   double end_lambda[NBAND];
   GOME2_INFO *pGome2Info;
 
-  char *defPath,*ptr;
-
   RC rc;
 
   // Initializations
@@ -1228,7 +1226,7 @@ RC GOME2_Set(ENGINE_CONTEXT *pEngineContext)
 
   // Initializations
 
-  gome2LoadReferenceFlag=0;
+  // gome2LoadReferenceFlag=0;
   ANALYSE_oldLatitude=(double)99999.;
   pEngineContext->recordNumber=0;
   oldCurrentIndex=gome2CurrentFileIndex;
@@ -1256,9 +1254,11 @@ RC GOME2_Set(ENGINE_CONTEXT *pEngineContext)
      }
 
     for (indexFile=0;indexFile<gome2OrbitFilesN;indexFile++)
-     if ((strlen(pEngineContext->fileInfo.fileName)==strlen(gome2OrbitFiles[indexFile].gome2FileName)) &&
-         !strcasecmp(pEngineContext->fileInfo.fileName,gome2OrbitFiles[indexFile].gome2FileName))
-      break;
+     {
+      if ((strlen(pEngineContext->fileInfo.fileName)==strlen(gome2OrbitFiles[indexFile].gome2FileName)) &&
+          !strcasecmp(pEngineContext->fileInfo.fileName,gome2OrbitFiles[indexFile].gome2FileName))
+       break;
+     }
 
     if (indexFile<gome2OrbitFilesN)
      gome2CurrentFileIndex=indexFile;
@@ -1325,7 +1325,7 @@ RC GOME2_Set(ENGINE_CONTEXT *pEngineContext)
         {
           sprintf(gome2OrbitFiles[gome2OrbitFilesN].gome2FileName,"%s/%s",filePath,fileInfo->d_name);
           if ( STD_IsDir(gome2OrbitFiles[gome2OrbitFilesN].gome2FileName) == 0 )
-             gome2OrbitFilesN++;
+           gome2OrbitFilesN++;
         }
 
       if ( hDir != NULL ) closedir(hDir);
@@ -1395,9 +1395,7 @@ RC GOME2_Set(ENGINE_CONTEXT *pEngineContext)
 
         gome2TotalRecordNumber+=pOrbitFile->specNumber;
 
-        if (rc!=ERROR_ID_NO)
-         pOrbitFile->rc=rc;
-
+        pOrbitFile->rc=rc;
         rc=ERROR_ID_NO;
        }
      }
@@ -2035,63 +2033,68 @@ RC Gome2BuildRef(GOME2_REF *refList,INT nRef,INT nSpectra,double *lambda,double 
      {
       pOrbitFile=&gome2OrbitFiles[pRef->indexFile];
 
-      alreadyOpen=(pOrbitFile->gome2Pf!=NULL)?1:0;
-
-      if (!alreadyOpen && !(rc=Gome2Open(&pOrbitFile->gome2Pf,pOrbitFile->gome2FileName,&pOrbitFile->version)))
-      	coda_cursor_set_product(&pOrbitFile->gome2Cursor,pOrbitFile->gome2Pf);
-
-      if (!(rc=GOME2_Read(pEngineContext,pRef->indexRecord,pRef->indexFile)))
+      if (pOrbitFile->rc==ERROR_ID_NO)
        {
-        if (indexFile==ITEM_NONE)
+        alreadyOpen=(pOrbitFile->gome2Pf!=NULL)?1:0;
+
+        if (!alreadyOpen && !(rc=Gome2Open(&pOrbitFile->gome2Pf,pOrbitFile->gome2FileName,&pOrbitFile->version)))
+        	coda_cursor_set_product(&pOrbitFile->gome2Cursor,pOrbitFile->gome2Pf);
+
+        if (!(rc=GOME2_Read(pEngineContext,pRef->indexRecord,pRef->indexFile)))
          {
-          mediateResponseCellDataString(plotPageRef,(*pIndexLine)++,indexColumn,"Ref Selection",responseHandle);
-          mediateResponseCellInfo(plotPageRef,(*pIndexLine)++,indexColumn,responseHandle,"Ref File","%s",gome2OrbitFiles[refList[0].indexFile].gome2FileName);
-          mediateResponseCellDataString(plotPageRef,(*pIndexLine),indexColumn,"Record",responseHandle);
-          mediateResponseCellDataString(plotPageRef,(*pIndexLine),indexColumn+1,"SZA",responseHandle);
-          mediateResponseCellDataString(plotPageRef,(*pIndexLine),indexColumn+2,"Lat",responseHandle);
-          mediateResponseCellDataString(plotPageRef,(*pIndexLine),indexColumn+3,"Lon",responseHandle);
-          mediateResponseCellDataString(plotPageRef,(*pIndexLine),indexColumn+4,"CF",responseHandle);
+          if (indexFile==ITEM_NONE)
+           {
+            mediateResponseCellDataString(plotPageRef,(*pIndexLine)++,indexColumn,"Ref Selection",responseHandle);
+            mediateResponseCellInfo(plotPageRef,(*pIndexLine)++,indexColumn,responseHandle,"Ref File","%s",gome2OrbitFiles[refList[0].indexFile].gome2FileName);
+            mediateResponseCellDataString(plotPageRef,(*pIndexLine),indexColumn,"Record",responseHandle);
+            mediateResponseCellDataString(plotPageRef,(*pIndexLine),indexColumn+1,"SZA",responseHandle);
+            mediateResponseCellDataString(plotPageRef,(*pIndexLine),indexColumn+2,"Lat",responseHandle);
+            mediateResponseCellDataString(plotPageRef,(*pIndexLine),indexColumn+3,"Lon",responseHandle);
+            mediateResponseCellDataString(plotPageRef,(*pIndexLine),indexColumn+4,"CF",responseHandle);
 
-          (*pIndexLine)++;
+            (*pIndexLine)++;
 
-          strcpy(pRecord->refFileName,gome2OrbitFiles[pRef->indexFile].gome2FileName);
-          pRecord->refRecord=pRef->indexRecord+1;
+            strcpy(pRecord->refFileName,gome2OrbitFiles[pRef->indexFile].gome2FileName);
+            pRecord->refRecord=pRef->indexRecord+1;
+           }
+
+         	mediateResponseCellDataInteger(plotPageRef,(*pIndexLine),indexColumn,pRef->indexRecord+1,responseHandle);
+         	mediateResponseCellDataDouble(plotPageRef,(*pIndexLine),indexColumn+1,pRef->sza,responseHandle);
+         	mediateResponseCellDataDouble(plotPageRef,(*pIndexLine),indexColumn+2,pRef->latitude,responseHandle);
+         	mediateResponseCellDataDouble(plotPageRef,(*pIndexLine),indexColumn+3,pRef->longitude,responseHandle);
+         	mediateResponseCellDataDouble(plotPageRef,(*pIndexLine),indexColumn+4,pRef->cloudFraction,responseHandle);
+
+         	(*pIndexLine)++;
+
+          for (i=0;i<NDET;i++)
+           ref[i]+=(double)pEngineContext->buffers.spectrum[i];
+
+          nRec++;
+          indexFile=pRef->indexFile;
          }
 
-       	mediateResponseCellDataInteger(plotPageRef,(*pIndexLine),indexColumn,pRef->indexRecord+1,responseHandle);
-       	mediateResponseCellDataDouble(plotPageRef,(*pIndexLine),indexColumn+1,pRef->sza,responseHandle);
-       	mediateResponseCellDataDouble(plotPageRef,(*pIndexLine),indexColumn+2,pRef->latitude,responseHandle);
-       	mediateResponseCellDataDouble(plotPageRef,(*pIndexLine),indexColumn+3,pRef->longitude,responseHandle);
-       	mediateResponseCellDataDouble(plotPageRef,(*pIndexLine),indexColumn+4,pRef->cloudFraction,responseHandle);
+        if (!alreadyOpen)
+         {
+          if (pOrbitFile->gome2Pf!=NULL)
+           coda_close(pOrbitFile->gome2Pf);
 
-       	(*pIndexLine)++;
-
-        for (i=0;i<NDET;i++)
-         ref[i]+=(double)pEngineContext->buffers.spectrum[i];
-
-        nRec++;
-        indexFile=pRef->indexFile;
-       }
-
-      if (!alreadyOpen)
-       {
-        if (pOrbitFile->gome2Pf!=NULL)
-         coda_close(pOrbitFile->gome2Pf);
-
-        pOrbitFile->gome2Pf=NULL;
+          pOrbitFile->gome2Pf=NULL;
+         }
        }
      }
    }
 
   if (nRec==0)
    rc=ERROR_ID_NO_REF;
-  else if (!rc)
+  else if (!rc || (rc==ERROR_ID_FILE_RECORD))
    {
    	strcpy(OUTPUT_refFile,gome2OrbitFiles[indexFile].gome2FileName);
    	OUTPUT_nRec=nRec;
 
     for (i=0;i<NDET;i++)
      ref[i]/=nRec;
+
+    rc=ERROR_ID_NO;
    }
 
   // Return
@@ -2179,7 +2182,7 @@ RC Gome2RefSelection(ENGINE_CONTEXT *pEngineContext,
   memcpy(refN,ref,sizeof(double)*NDET);
   memcpy(refS,ref,sizeof(double)*NDET);
 
-  nRefS=0;
+  nRefN=nRefS=0;
 
   // Buffers allocation
 
@@ -2367,8 +2370,6 @@ RC GOME2_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
     // Browse analysis windows and load missing data
 
-
-
     for (indexFeno=0;(indexFeno<NFeno) && !rc;indexFeno++)
      {
       pTabFeno=&TabFeno[0][indexFeno];
@@ -2480,6 +2481,9 @@ RC GOME2_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
     if (gome2LoadReferenceFlag && !(rc=Gome2NewRef(pEngineContext,responseHandle)) &&
        !(rc=ANALYSE_AlignReference(pEngineContext,2,pEngineContext->project.spectra.displayDataFlag,responseHandle,0))) // automatic ref selection for Northern hemisphere
          rc=ANALYSE_AlignReference(pEngineContext,3,pEngineContext->project.spectra.displayDataFlag,responseHandle,0);     // automatic ref selection for Southern hemisphere
+
+    if (!rc)
+     gome2LoadReferenceFlag=0;
    }
 
   // Return

@@ -1097,7 +1097,7 @@ RC SCIA_SetPDS(ENGINE_CONTEXT *pEngineContext)
   // Initializations
 
   _n=0;
-  sciaLoadReferenceFlag=0;
+  // sciaLoadReferenceFlag=0;
   ANALYSE_oldLatitude=(double)99999.;
   pEngineContext->recordNumber=0;
   oldCurrentIndex=sciaCurrentFileIndex;
@@ -1254,9 +1254,7 @@ RC SCIA_SetPDS(ENGINE_CONTEXT *pEngineContext)
 
       sciaTotalRecordNumber+=pOrbitFile->specNumber;
 
-      if (rc!=ERROR_ID_NO)
-       pOrbitFile->rc=rc;
-
+      pOrbitFile->rc=rc;
       rc=ERROR_ID_NO;
      }
    }
@@ -1806,64 +1804,69 @@ RC SciaBuildRef(SATELLITE_REF *refList,INT nRef,INT nSpectra,double *lambda,doub
      {
       pOrbitFile=&sciaOrbitFiles[pRef->indexFile];
 
-      alreadyOpen=(pOrbitFile->sciaPDSInfo.FILE_l1c!=NULL)?1:0;
-
-      if (!alreadyOpen)
-       pOrbitFile->sciaPDSInfo.FILE_l1c=fopen(pOrbitFile->sciaFileName,"rb");
-
-      if ((indexState=SciaGetStateIndex(pRef->indexRecord,&indexObs,pRef->indexFile))==ITEM_NONE)
-       rc=ERROR_ID_FILE_RECORD;
-
-      // Read and accumulate selected radiances
-
-      else if (((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS) && !(rc=SciaReadNadirMDS(pEngineContext,indexState,pRef->indexRecord-indexObs,pRef->indexFile))))
+      if (pOrbitFile->rc==ERROR_ID_NO)
        {
-        if (indexFile==ITEM_NONE)
+        alreadyOpen=(pOrbitFile->sciaPDSInfo.FILE_l1c!=NULL)?1:0;
+
+        if (!alreadyOpen)
+         pOrbitFile->sciaPDSInfo.FILE_l1c=fopen(pOrbitFile->sciaFileName,"rb");
+
+        if ((indexState=SciaGetStateIndex(pRef->indexRecord,&indexObs,pRef->indexFile))==ITEM_NONE)
+         rc=ERROR_ID_FILE_RECORD;
+
+        // Read and accumulate selected radiances
+
+        else if (((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS) && !(rc=SciaReadNadirMDS(pEngineContext,indexState,pRef->indexRecord-indexObs,pRef->indexFile))))
          {
-          mediateResponseCellDataString(plotPageRef,(*pIndexLine)++,indexColumn,"Ref Selection",responseHandle);
-          mediateResponseCellInfo(plotPageRef,(*pIndexLine)++,indexColumn,responseHandle,"Ref File","%s",sciaOrbitFiles[refList[0].indexFile].sciaFileName);
-          mediateResponseCellDataString(plotPageRef,(*pIndexLine),indexColumn,"Record",responseHandle);
-          mediateResponseCellDataString(plotPageRef,(*pIndexLine),indexColumn+1,"SZA",responseHandle);
-          mediateResponseCellDataString(plotPageRef,(*pIndexLine),indexColumn+2,"Lat",responseHandle);
-          mediateResponseCellDataString(plotPageRef,(*pIndexLine),indexColumn+3,"Lon",responseHandle);
+          if (indexFile==ITEM_NONE)
+           {
+            mediateResponseCellDataString(plotPageRef,(*pIndexLine)++,indexColumn,"Ref Selection",responseHandle);
+            mediateResponseCellInfo(plotPageRef,(*pIndexLine)++,indexColumn,responseHandle,"Ref File","%s",sciaOrbitFiles[refList[0].indexFile].sciaFileName);
+            mediateResponseCellDataString(plotPageRef,(*pIndexLine),indexColumn,"Record",responseHandle);
+            mediateResponseCellDataString(plotPageRef,(*pIndexLine),indexColumn+1,"SZA",responseHandle);
+            mediateResponseCellDataString(plotPageRef,(*pIndexLine),indexColumn+2,"Lat",responseHandle);
+            mediateResponseCellDataString(plotPageRef,(*pIndexLine),indexColumn+3,"Lon",responseHandle);
 
-          (*pIndexLine)++;
+            (*pIndexLine)++;
 
-          strcpy(pRecord->refFileName,sciaOrbitFiles[pRef->indexFile].sciaFileName);
-          pRecord->refRecord=pRef->indexRecord+1;
+            strcpy(pRecord->refFileName,sciaOrbitFiles[pRef->indexFile].sciaFileName);
+            pRecord->refRecord=pRef->indexRecord+1;
+           }
+
+         	mediateResponseCellDataInteger(plotPageRef,(*pIndexLine),indexColumn,pRef->indexRecord+1,responseHandle);
+         	mediateResponseCellDataDouble(plotPageRef,(*pIndexLine),indexColumn+1,pRef->sza,responseHandle);
+         	mediateResponseCellDataDouble(plotPageRef,(*pIndexLine),indexColumn+2,pRef->latitude,responseHandle);
+         	mediateResponseCellDataDouble(plotPageRef,(*pIndexLine),indexColumn+3,pRef->longitude,responseHandle);
+
+         	(*pIndexLine)++;
+
+          for (i=0;i<NDET;i++)
+           ref[i]+=(double)pEngineContext->buffers.spectrum[i];
+
+          nRec++;
+          indexFile=pRef->indexFile;
          }
 
-       	mediateResponseCellDataInteger(plotPageRef,(*pIndexLine),indexColumn,pRef->indexRecord+1,responseHandle);
-       	mediateResponseCellDataDouble(plotPageRef,(*pIndexLine),indexColumn+1,pRef->sza,responseHandle);
-       	mediateResponseCellDataDouble(plotPageRef,(*pIndexLine),indexColumn+2,pRef->latitude,responseHandle);
-       	mediateResponseCellDataDouble(plotPageRef,(*pIndexLine),indexColumn+3,pRef->longitude,responseHandle);
-
-       	(*pIndexLine)++;
-
-        for (i=0;i<NDET;i++)
-         ref[i]+=(double)pEngineContext->buffers.spectrum[i];
-
-        nRec++;
-        indexFile=pRef->indexFile;
-       }
-
-      if (!alreadyOpen)
-       {
-        fclose(pOrbitFile->sciaPDSInfo.FILE_l1c);
-        pOrbitFile->sciaPDSInfo.FILE_l1c=NULL;
+        if (!alreadyOpen)
+         {
+          fclose(pOrbitFile->sciaPDSInfo.FILE_l1c);
+          pOrbitFile->sciaPDSInfo.FILE_l1c=NULL;
+         }
        }
      }
    }
 
   if (nRec==0)
    rc=ERROR_ID_NO_REF;
-  else if (!rc)
+  else if (!rc || (rc==ERROR_ID_FILE_RECORD))
    {
    	strcpy(OUTPUT_refFile,sciaOrbitFiles[indexFile].sciaFileName);
    	OUTPUT_nRec=nRec;
 
     for (i=0;i<NDET;i++)
      ref[i]/=nRec;
+
+    rc=ERROR_ID_NO;
    }
 
   // Return
@@ -1942,7 +1945,7 @@ RC SciaRefSelection(ENGINE_CONTEXT *pEngineContext,
   memcpy(refN,ref,sizeof(double)*NDET);
   memcpy(refS,ref,sizeof(double)*NDET);
 
-  nRefS=0;
+  nRefN=nRefS=0;
 
   // Buffers allocation
 
@@ -2249,6 +2252,9 @@ RC SCIA_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
     if ((THRD_id!=THREAD_TYPE_KURUCZ) && sciaLoadReferenceFlag && !(rc=SciaNewRef(pEngineContext,responseHandle)) &&
        !(rc=ANALYSE_AlignReference(pEngineContext,2,pEngineContext->project.spectra.displayDataFlag,responseHandle,0))) // automatic ref selection for Northern hemisphere
      rc=ANALYSE_AlignReference(pEngineContext,3,pEngineContext->project.spectra.displayDataFlag,responseHandle,0);     // automatic ref selection for Southern hemisphere
+
+    if (!rc)
+     sciaLoadReferenceFlag=0;
    }
 
   // Return

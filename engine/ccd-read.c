@@ -374,12 +374,15 @@ RC SetCCD_EEV(ENGINE_CONTEXT *pEngineContext,FILE *specFp,FILE *darkFp)
         ccdY=(header.roiSlitEnd-header.roiSlitStart+1)/header.roiSlitGroup;
         dataSize=(header.doubleFlag==(DoasCh)1)?sizeof(double):sizeof(DoasUS);
 
-        for (indexTps=0;indexTps<MAXTPS;indexTps++)
-         if (header.exposureTime==predTint[indexTps])
-          break;
+        if (header.measureType==PRJCT_INSTR_EEV_TYPE_DARK)
+         {
+          for (indexTps=0;indexTps<MAXTPS;indexTps++)
+           if (header.exposureTime==predTint[indexTps])
+            break;
 
-        if (indexTps<MAXTPS)
-         ccdDarkCurrentOffset[indexTps]=offset;
+          if (indexTps<MAXTPS)
+           ccdDarkCurrentOffset[indexTps]=offset;
+         }
 
         offset+=sizeof(CCD_DATA)+((header.saveTracks)?ccdX*ccdY*dataSize:ccdX*dataSize);
         fseek(darkFp,offset,SEEK_SET);
@@ -683,41 +686,43 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
                  if ((j>0) && (predTint[j]!=ccdTabTint[k]) && (predTint[j]-ccdTabTint[k]>ccdTabTint[k]-predTint[j-1]))
                   j--;
 
-                 fseek(darkFp,ccdDarkCurrentOffset[j],SEEK_SET);
-
-                 if (!fread(&header,sizeof(CCD_DATA),1,darkFp))
-                  rc=ERROR_SetLast("ReliCCD_EEV",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pEngineContext->fileInfo.fileName);
-                 else if (!header.roiWveGroup || !header.roiSlitGroup)
-                  rc=ERROR_SetLast("ReliCCD_EEV",ERROR_TYPE_WARNING,ERROR_ID_DIVISION_BY_0,"header is corrupted");
-                 else
+                 if (ccdDarkCurrentOffset[j]>0)
                   {
-                   ccdX=(header.roiWveEnd-header.roiWveStart+1)/header.roiWveGroup;
-                   ccdY=(header.roiSlitEnd-header.roiSlitStart+1)/header.roiSlitGroup;
+                   fseek(darkFp,ccdDarkCurrentOffset[j],SEEK_SET);
 
-                   spSize=(header.saveTracks)?ccdX*(header.roiSlitEnd-header.roiSlitStart+1)/header.roiSlitGroup:ccdX;
-
-                  	fread(darkCurrent,sizeof(DoasUS)*spSize,1,darkFp);
-
-                   for (i=0;i<NDET;i++)
+                   if (!fread(&header,sizeof(CCD_DATA),1,darkFp) && (!header.roiWveGroup || !header.roiSlitGroup))
+                    rc=ERROR_SetLast("ReliCCD_EEV",ERROR_TYPE_WARNING,ERROR_ID_DIVISION_BY_0,"header is corrupted");
+                   else
                     {
-                     if (!header.saveTracks)
-                      pBuffers->darkCurrent[i]+=darkCurrent[i]*ccdTabNTint[k];
-                     else
+                     ccdX=(header.roiWveEnd-header.roiWveStart+1)/header.roiWveGroup;
+                     ccdY=(header.roiSlitEnd-header.roiSlitStart+1)/header.roiSlitGroup;
+
+                     spSize=(header.saveTracks)?ccdX*(header.roiSlitEnd-header.roiSlitStart+1)/header.roiSlitGroup:ccdX;
+
+                    	fread(darkCurrent,sizeof(DoasUS)*spSize,1,darkFp);
+
+                     for (i=0;i<NDET;i++)
                       {
-                       for (j=0;j<ccdY;j++)
-                        pBuffers->darkCurrent[i]+=(double)darkCurrent[NDET*j+i]*ccdTabNTint[k];
-                       pBuffers->darkCurrent[i]/=ccdY;
+                       if (!header.saveTracks)
+                        pBuffers->darkCurrent[i]+=darkCurrent[i]*ccdTabNTint[k];
+                       else
+                        {
+                         for (j=0;j<ccdY;j++)
+                          pBuffers->darkCurrent[i]+=(double)darkCurrent[NDET*j+i]*ccdTabNTint[k];
+                         pBuffers->darkCurrent[i]/=ccdY;
+                        }
                       }
                     }
                   }
                 }
               }
 
-             for (i=0;i<NDET;i++)
-              {
-               pBuffers->darkCurrent[i]=pBuffers->darkCurrent[i]/pRecord->NSomme;
-               pBuffers->spectrum[i]-=pBuffers->darkCurrent[i];
-              }
+             if (pRecord->NSomme)
+              for (i=0;i<NDET;i++)
+               {
+               	pBuffers->darkCurrent[i]/=(double)pRecord->NSomme;              // if we have different integration times for the spectrum
+                pBuffers->spectrum[i]-=pBuffers->darkCurrent[i];
+               }
             }
 
            tmLocal=pRecord->Tm+THRD_localShift*3600.;
