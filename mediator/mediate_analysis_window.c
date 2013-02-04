@@ -109,6 +109,10 @@ void initializeMediateAnalysisWindow(mediate_analysis_window_t *d)
 
   // Output
 
-  for (i=0;i<MAX_AW_CROSS_SECTION;i++)
-   d->outputList.output[i].slantFactor=(double)1.;
+  for (i=0;i<MAX_AW_CROSS_SECTION;i++)  
+   {
+    d->outputList.output[i].slantFactor=(double)1.;
+    d->outputList.output[i].slantCol=
+    d->outputList.output[i].slantErr=1;
+   } 
  }
