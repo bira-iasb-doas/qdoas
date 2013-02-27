@@ -54,8 +54,13 @@ void CWTableRegion::slotDisplayPage(int pageNumber)
 {
   m_model->setActivePage(pageNumber);
 
+  setVisible(false); // if the table is visible, only the currently
+                     // visible parts of the Table are taken into
+                     // account when computing the column width using
+                     // resize...ToContents()
   resizeRowsToContents();
   resizeColumnsToContents();
+  setVisible(true);
 }
 
 void CWTableRegion::contextMenuEvent(QContextMenuEvent *e)
