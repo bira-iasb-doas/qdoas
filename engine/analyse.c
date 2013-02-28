@@ -3946,6 +3946,10 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
             lambda0=(fabs(j0-floor(j0))<(double)0.1)?
               (double)ANALYSE_splineX[(INDEX)j0]:
               (double)0.5*(ANALYSE_splineX[(INDEX)floor(j0)]+ANALYSE_splineX[(INDEX)floor(j0+1.)]);
+            double plot_offset_meas[NDET];
+            memcpy(plot_offset_meas, ANALYSE_absolu, NDET * sizeof(double));
+            double plot_offset_calc[NDET];
+            memcpy(plot_offset_calc, ANALYSE_zeros, NDET * sizeof(double));
 
             doas_iterator my_iterator;
             for (int l=iterator_start(&my_iterator, Feno->svd.specrange); l != ITERATOR_FINISHED; l=iterator_next(&my_iterator)) // log(I+offset)=log(I)+log(1+offset/I)
@@ -3953,18 +3957,18 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
               newVal=(double)1.-Feno->xmean*(Results[Feno->indexOffsetConst].Param+
                                              Results[Feno->indexOffsetOrder1].Param*(ANALYSE_splineX[l]-lambda0)+
                                              Results[Feno->indexOffsetOrder2].Param*(ANALYSE_splineX[l]-lambda0)*(ANALYSE_splineX[l]-lambda0))/Spectre[l];
-
-              ANALYSE_absolu[l]+=((newVal>(double)0.)?log(newVal):(double)0.)-ANALYSE_secX[l];
-              ANALYSE_secX[l]=((newVal>(double)0.)?log(newVal):(double)0.);
+              if (newVal > 0.) {
+               plot_offset_meas[l] += log(newVal);
+               plot_offset_calc[l] += log(newVal);
+              }
              }
-
-            double *curves[2][2] = {{Feno->LambdaK, ANALYSE_absolu},
-                                    {Feno->LambdaK, ANALYSE_secX}};
+            double *curves[2][2] = {{Feno->LambdaK, plot_offset_meas},
+                                    {Feno->LambdaK, plot_offset_calc}};
             plot_curves(indexPage,curves,2,Residual,allowFixedScale,"Offset", responseHandle, Feno->svd.specrange);
            }
-
+            
           // Display fits
-
+          
           for (int i=0;i<Feno->NTabCross;i++)
 
            if (TabCross[i].IndSvdA)
@@ -3973,18 +3977,19 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
                   (WorkSpace[TabCross[i].Comp].type==WRK_SYMBOL_PREDEFINED)) &&
                  Feno->displayFits && TabCross[i].display)
               {
+               double plot_xs_meas[NDET];
+               double plot_xs_calc[NDET];
                doas_iterator my_iterator;
                for (int k=1,l=iterator_start(&my_iterator, Feno->svd.specrange); l != ITERATOR_FINISHED; k++,l=iterator_next(&my_iterator))
                 {
                  newVal=x[TabCross[i].IndSvdA]*U[TabCross[i].IndSvdA][k];
-
-                   ANALYSE_absolu[l]+=newVal-ANALYSE_secX[l];
-                   ANALYSE_secX[l]=newVal;
+                 plot_xs_meas[l] = newVal + ANALYSE_absolu[l];
+                 plot_xs_calc[l] = newVal;
                 }
                sprintf(graphTitle,"%s (%.2le)",WorkSpace[TabCross[i].Comp].symbolName,Results[i].SlntCol);
 
-               double *curves[2][2] = {{Feno->LambdaK, ANALYSE_absolu},
-                                       {Feno->LambdaK, ANALYSE_secX}};
+               double *curves[2][2] = {{Feno->LambdaK, plot_xs_meas},
+                                       {Feno->LambdaK, plot_xs_calc}};
                plot_curves(indexPage,curves,2,Residual,allowFixedScale,graphTitle, responseHandle, Feno->svd.specrange);
               }
              else if ((WorkSpace[TabCross[i].Comp].type==WRK_SYMBOL_CONTINUOUS) && Feno->displayTrend)
@@ -4015,26 +4020,35 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
           if (Feno->displayTrend)
            {
+            double plot_trend_meas[NDET];
             doas_iterator my_iterator;
-            for (int l=iterator_start(&my_iterator, Feno->svd.specrange); l != ITERATOR_FINISHED; l=iterator_next(&my_iterator))
-             ANALYSE_absolu[l]+=Trend[l]-ANALYSE_secX[l];
+            if (Feno->analysisMethod == PRJCT_ANLYS_METHOD_SVDMARQUARDT) {
+              // intensity fitting
+              for (int l=iterator_start(&my_iterator, Feno->svd.specrange); l != ITERATOR_FINISHED; l=iterator_next(&my_iterator))
+               plot_trend_meas[l] = (ANALYSE_t[l] != (double)0.) ? Trend[l]/ANALYSE_t[l] : (double)0.;
+            } else {
+              // optical density fitting
+              for (int l=iterator_start(&my_iterator, Feno->svd.specrange); l != ITERATOR_FINISHED; l=iterator_next(&my_iterator))
+               plot_trend_meas[l] = Trend[l] + ANALYSE_absolu[l];
+            }
 
-            double *curves[2][2] = {{Feno->LambdaK,ANALYSE_absolu},
+            double *curves[2][2] = {{Feno->LambdaK,plot_trend_meas},
                                     {Feno->LambdaK,Trend}};
             plot_curves(indexPage,curves,2,Residual,allowFixedScale,"Polynomial", responseHandle, Feno->svd.specrange);
 
             if (maxOffset>(double)0.)
              {
+              double plot_offset_meas[NDET];
               doas_iterator my_iterator;
               if (Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVDMARQUARDT)
                for (int l=iterator_start(&my_iterator, Feno->svd.specrange); l != ITERATOR_FINISHED; l=iterator_next(&my_iterator))
-                offset[l]=-offset[l];           // inverse the sign in order to have the same display as in SVD method
+                offset[l]=-offset[l];           // invert the sign in order to have the same display as in SVD method
 
 
               for (int l=iterator_start(&my_iterator, Feno->svd.specrange); l != ITERATOR_FINISHED; l=iterator_next(&my_iterator))
-               ANALYSE_absolu[l]+=offset[l]-Trend[l];
+               plot_offset_meas[l] = ANALYSE_absolu[l] + offset[l]; // check: not correct for intensity fitting mode SVDMARQUARDT?
 
-              double *curves[2][2] = {{Feno->LambdaK, ANALYSE_absolu},
+              double *curves[2][2] = {{Feno->LambdaK, plot_offset_meas},
                                       {Feno->LambdaK, offset}};
               plot_curves(indexPage, curves, 2, Residual, allowFixedScale, "Linear offset",responseHandle, Feno->svd.specrange);
              }
