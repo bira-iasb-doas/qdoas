@@ -69,7 +69,7 @@ void initializeMediateAnalysisWindow(mediate_analysis_window_t *d)
   d->nonlinear.comInitial=
   d->nonlinear.usamp1Initial=
   d->nonlinear.usamp2Initial=
-  d->nonlinear.ramanInitial=(double)0.;
+  d->nonlinear.resolInitial=(double)0.;
 
   d->nonlinear.solDelta=
   d->nonlinear.off0Delta=
@@ -78,7 +78,7 @@ void initializeMediateAnalysisWindow(mediate_analysis_window_t *d)
   d->nonlinear.comDelta=
   d->nonlinear.usamp1Delta=
   d->nonlinear.usamp2Delta=
-  d->nonlinear.ramanDelta=(double)1.e-3;
+  d->nonlinear.resolDelta=(double)1.e-3;
 
   // Shift and stretch
 

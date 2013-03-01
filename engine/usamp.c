@@ -231,7 +231,7 @@ RC USAMP_Build(double *phase1,                                                  
 
     if (!(rc=XSCONV_LoadSlitFunction(&slitFunction,&slitFunction2,pSlit,&slitParam,&slitType)) &&
 //        !(rc=XSCONV_TypeStandardFFT(&usampFFT,slitType,pSlit->slitParam,pSlit->slitParam2,kuruczLambda,kuruczConvolved,nKurucz)) &&
-        !(rc=XSCONV_TypeStandard(&xsnew,0,nKurucz,pKuruczMatrix,&slitFunction,&slitFunction2,pKuruczMatrix,NULL,slitType,(double)2.*slitParam,slitParam,pSlit->slitParam2,pSlit->slitWveDptFlag)) &&
+        !(rc=XSCONV_TypeStandard(&xsnew,0,nKurucz,pKuruczMatrix,&slitFunction,&slitFunction2,pKuruczMatrix,NULL,(double)2.*slitParam,slitParam,pSlit->slitParam2,pSlit->slitWveDptFlag)) &&
 
         !(rc=SPLINE_Deriv2(kuruczLambda,xsnew.matrix[1],xsnew.deriv2[1],nKurucz,"USAMP_Build (kuruczConvolved) ")) &&
         !(rc=SPLINE_Vector(kuruczLambda,xsnew.matrix[1],xsnew.deriv2[1],nKurucz,gomeLambda,resample,nGome,SPLINE_CUBIC,"USAMP_Build (kuruczConvolved) ")) && // calculate solar spectrum at GOME positions

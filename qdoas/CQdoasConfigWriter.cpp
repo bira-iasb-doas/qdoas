@@ -228,17 +228,17 @@ void CQdoasConfigWriter::writePropertiesAnalysis(FILE *fp, const mediate_project
   default:
     fprintf(fp, "\"none\"");
   }
-  fprintf(fp, " unit=");
-  switch (d->unitType) {
-  case PRJCT_ANLYS_UNITS_PIXELS:
-    fprintf(fp, "\"pixel\"");
-    break;
-  case PRJCT_ANLYS_UNITS_NANOMETERS:
-    fprintf(fp, "\"nm\"");
-    break;
-  default:
-    fprintf(fp, "\"invalid\"");
-  }
+  // not used anymore as we work only in nm now fprintf(fp, " unit=");
+  // not used anymore as we work only in nm now switch (d->unitType) {
+  // not used anymore as we work only in nm now case PRJCT_ANLYS_UNITS_PIXELS:
+  // not used anymore as we work only in nm now   fprintf(fp, "\"pixel\"");
+  // not used anymore as we work only in nm now   break;
+  // not used anymore as we work only in nm now case PRJCT_ANLYS_UNITS_NANOMETERS:
+  // not used anymore as we work only in nm now   fprintf(fp, "\"nm\"");
+  // not used anymore as we work only in nm now   break;
+  // not used anymore as we work only in nm now default:
+  // not used anymore as we work only in nm now   fprintf(fp, "\"invalid\"");
+  // not used anymore as we work only in nm now }
   fprintf(fp, " interpolation=");
   switch (d->interpolationType) {
   case PRJCT_ANLYS_INTERPOL_LINEAR:
@@ -1365,9 +1365,9 @@ void CQdoasConfigWriter::writeNonLinear(FILE *fp, const struct anlyswin_nonlinea
 	  (d->usamp2FlagFit ? sTrue : sFalse), d->usamp2Initial, d->usamp2Delta,
 	  (d->usamp2FlagFitStore ? sTrue : sFalse), (d->usamp2FlagErrStore ? sTrue : sFalse));
 
-  fprintf(fp, "                 ramfit=\"%s\" raminit=\"%.3f\" ramdelt=\"%.3f\" ramstr=\"%s\" ramestr=\"%s\"\n",
-	  (d->ramanFlagFit ? sTrue : sFalse), d->ramanInitial, d->ramanDelta,
-	  (d->ramanFlagFitStore ? sTrue : sFalse), (d->ramanFlagErrStore ? sTrue : sFalse));
+  fprintf(fp, "                 resolfit=\"%s\" resolinit=\"%.3f\" resoldelt=\"%.3f\" resolstr=\"%s\" resolestr=\"%s\"\n",
+	  (d->resolFlagFit ? sTrue : sFalse), d->resolInitial, d->resolDelta,
+	  (d->resolFlagFitStore ? sTrue : sFalse), (d->resolFlagErrStore ? sTrue : sFalse));	  
 
   tmpStr = pathMgr->simplifyPath(QString(d->comFile));
   fprintf(fp, "                 comfile=\"%s\"\n", tmpStr.toAscii().constData());

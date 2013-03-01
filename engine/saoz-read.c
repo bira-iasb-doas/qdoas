@@ -577,12 +577,12 @@ RC SetSAOZEfm(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
 
   UINT curvenum;                    // number of spectra in the file
   RC rc;                            // return code
-
+  
   // Initializations
 
   rc=ERROR_ID_NO;
   pEngineContext->recordNumber=0;
-
+  
   // Get the number of spectra in the file
 
   if (specFp==NULL)
@@ -633,9 +633,9 @@ RC ReliSAOZEfm(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,INT loca
   spectrum=(double *)pEngineContext->buffers.spectrum;
   SMax=(double)0.;
   rc=ERROR_ID_NO;
-
+  
   // Verify input
-
+  
   if (specFp==NULL)
    rc=ERROR_SetLast("ReliSAOZEfm",ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pEngineContext->fileInfo.fileName);
   else if ((recordNo<=0) || (recordNo>pEngineContext->recordNumber))

@@ -111,9 +111,7 @@ RC SetEASOE(ENGINE_CONTEXT *pEngineContext,FILE *specFp,FILE *namesFp)
 
   // Buffers allocation
 
-  if (((indexes=(short *)MEMORY_AllocBuffer("SetEASOE","indexes",pEngineContext->recordIndexesSize,sizeof(short),0,MEMORY_TYPE_SHORT))==NULL) ||
-      ((pEngineContext->buffers.specMax=MEMORY_AllocDVector("SetEASOE","specMax",0,NDET-1))==NULL))
-
+  if ((indexes=(short *)MEMORY_AllocBuffer("SetEASOE","indexes",pEngineContext->recordIndexesSize,sizeof(short),0,MEMORY_TYPE_SHORT))==NULL)
    rc=ERROR_ID_ALLOC;
 
   // Open spectra file
@@ -276,9 +274,10 @@ RC ReliEASOE(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localD
       pEngineContext->buffers.darkCurrent[i]=(double)drkRecord.spectre[NDET-i-1];
      }
 
-    if (speRecord.n_somm>0)
-     for (i=0;i<speRecord.n_somm;i++)
-      pEngineContext->buffers.specMax[i]=(double)ISpecMax[i];
+    for (i=0;i<speRecord.n_somm;i++)
+     pEngineContext->buffers.specMax[i]=(double)ISpecMax[i];
+
+    pRecord->nSpecMax=speRecord.n_somm;
 
     // Data on the current record
 

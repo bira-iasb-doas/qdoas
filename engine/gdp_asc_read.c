@@ -949,7 +949,7 @@ RC GDP_ASC_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
 
            // Continuous functions
 
-           if ((pWrkSymbol->type==WRK_SYMBOL_CONTINUOUS) && (pAnalysisOptions->units==PRJCT_ANLYS_UNITS_NANOMETERS))
+           if (pWrkSymbol->type==WRK_SYMBOL_CONTINUOUS) 
             {
              invFlag=0;
 

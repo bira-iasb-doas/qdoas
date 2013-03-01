@@ -64,6 +64,7 @@ extern "C" {
 #define MAX_FIT                50    // maximum number of parameters to fit
 #define MAX_FENO               25    // maximum number of analysis windows in a project
 #define MAX_SYMB              150    // maximum number of different symbols in a project
+#define MAX_SPECMAX          5000    // maximum number of items in SpecMax
 
 #define DIM                    10    // default number of security pixels for border effects
 
@@ -74,8 +75,6 @@ extern "C" {
 #define PI          (double) 3.14159265358979323846
 #define PI2         (double) 6.28318530717958647692
 #define PIDEMI      (double) 1.57079632679489661923
-
-#define EPSILON     (double)   1.e-6
 
 // ===================================================
 // VECTOR.C : UTILITY FUNCTIONS FOR VECTORS AND MATRIX
@@ -305,7 +304,7 @@ CROSS_REFERENCE;
 
 typedef struct _crossResults
  {
-  DoasCh  StoreParam,                // flag set if non linear parameter is to be written into output file
+  DoasCh  StoreParam,               // flag set if non linear parameter is to be written into output file
          StoreShift,                // flag set if shift is to be written into output file
          StoreStretch,              // flag set if stretch order 1 is to be written into output file
          StoreScale,                // flag set if scaling factor order 1 is to be written into output file
@@ -347,10 +346,10 @@ CROSS_RESULTS;
 
 enum _analysisType
  {
-  ANALYSIS_TYPE_FWHM_NONE,                                                      //  no fwhm fit
-  ANALYSIS_TYPE_FWHM_CORRECTION,                                                //  fwhm correction between spectrum and reference based on their temperature
-  ANALYSIS_TYPE_FWHM_KURUCZ,                                                    //  fwhm fit in Kurucz procedure
-  ANALYSIS_TYPE_FWHM_NLFIT                                                      //  fit the difference of resolution between spectrum and reference
+  ANALYSIS_TYPE_FWHM_NONE,                                                      // no fwhm fit
+  ANALYSIS_TYPE_FWHM_CORRECTION,                                                // fwhm correction between spectrum and reference based on their temperature
+  ANALYSIS_TYPE_FWHM_KURUCZ,                                                    // fwhm fit in Kurucz procedure
+  ANALYSIS_TYPE_FWHM_NLFIT                                                      // fit the difference of resolution between spectrum and reference
  };
 
 typedef struct _satellite_ref_
@@ -369,96 +368,96 @@ SATELLITE_REF;
 
 typedef struct _feno
 {
-                                                                                //  copy of data from analysis window panel
+                                                                                // copy of data from analysis window panel
 
-  DoasCh          windowName[MAX_ITEM_NAME_LEN+1];                              //  name of analysis window
-  DoasCh          refFile[MAX_ITEM_TEXT_LEN+1],                                 //  reference file in reference file selection mode
-                  ref1[MAX_ITEM_TEXT_LEN+1],                                    //  first reference spectrum (in order to replace the SrefEtalon in the old ANALYSIS_WINDOWS structure)
-                  ref2[MAX_ITEM_TEXT_LEN+1],                                    //  second reference spectrum (in order to replace the SrefEtalon in the old ANALYSIS_WINDOWS structure)
+  DoasCh          windowName[MAX_ITEM_NAME_LEN+1];                              // name of analysis window
+  DoasCh          refFile[MAX_ITEM_TEXT_LEN+1],                                 // reference file in reference file selection mode
+                  ref1[MAX_ITEM_TEXT_LEN+1],                                    // first reference spectrum (in order to replace the SrefEtalon in the old ANALYSIS_WINDOWS structure)
+                  ref2[MAX_ITEM_TEXT_LEN+1],                                    // second reference spectrum (in order to replace the SrefEtalon in the old ANALYSIS_WINDOWS structure)
                   residualsFile[MAX_ITEM_TEXT_LEN+1];
-  double          refSZA,refSZADelta,refMaxdoasSZA,refMaxdoasSZADelta;          //  in automatic reference selection mode, SZA constraints
-  INT             refSpectrumSelectionMode;                                     //  reference spectrum selection mode
-  INT             refMaxdoasSelectionMode;                                      //  for MAXDOAS measurements, selection of the reference spectrum based on the scan or the SZA
+  double          refSZA,refSZADelta,refMaxdoasSZA,refMaxdoasSZADelta;          // in automatic reference selection mode, SZA constraints
+  INT             refSpectrumSelectionMode;                                     // reference spectrum selection mode
+  INT             refMaxdoasSelectionMode;                                      // for MAXDOAS measurements, selection of the reference spectrum based on the scan or the SZA
   double          cloudFractionMin,cloudFractionMax;
-  DoasCh          refAM[MAX_ITEM_TEXT_LEN+1],refPM[MAX_ITEM_TEXT_LEN+1];        //  in automatic reference selection mode, names of the spectra files selected for the reference spectra (specific file format : MFC)
-  INDEX           indexRefMorning,indexRefAfternoon,                            //  in automatic reference selection mode, index of selected records
-                  indexRef;                                                     //  in automatic reference selection mode, index of current selected record
-  double          ZmRefMorning,ZmRefAfternoon,Zm,                               //  in automatic reference selection mode, zenithal angles of selected records
-                  oldZmRefMorning,oldZmRefAfternoon,                            //  make a copy of previous zenithal angles
-                  TimeDec,Tm,                                                   //  in automatic reference selection mode, measurement time of selected record
-                  TDet;                                                         //  temperature of reference
+  DoasCh          refAM[MAX_ITEM_TEXT_LEN+1],refPM[MAX_ITEM_TEXT_LEN+1];        // in automatic reference selection mode, names of the spectra files selected for the reference spectra (specific file format : MFC)
+  INDEX           indexRefMorning,indexRefAfternoon,                            // in automatic reference selection mode, index of selected records
+                  indexRef;                                                     // in automatic reference selection mode, index of current selected record
+  double          ZmRefMorning,ZmRefAfternoon,Zm,                               // in automatic reference selection mode, zenithal angles of selected records
+                  oldZmRefMorning,oldZmRefAfternoon,                            // make a copy of previous zenithal angles
+                  TimeDec,Tm,                                                   // in automatic reference selection mode, measurement time of selected record
+                  TDet;                                                         // temperature of reference
 
-  SHORT_DATE      refDate;                                                      //  in automatic reference selection mode, date of selected record
-  INT             displaySpectrum;                                              //  force display spectrum
-  INT             displayResidue;                                               //  force display residue
-  INT             displayTrend;                                                 //  force display trend
-  INT             displayRefEtalon;                                             //  force display alignment of reference on etalon
-  INT             displayFits;                                                  //  force display fits
-  INT             displayPredefined;                                            //  force display predefined parameters
+  SHORT_DATE      refDate;                                                      // in automatic reference selection mode, date of selected record
+  INT             displaySpectrum;                                              // force display spectrum
+  INT             displayResidue;                                               // force display residue
+  INT             displayTrend;                                                 // force display trend
+  INT             displayRefEtalon;                                             // force display alignment of reference on etalon
+  INT             displayFits;                                                  // force display fits
+  INT             displayPredefined;                                            // force display predefined parameters
   INT             displayRef;
 
-  INT             displayFlag;                                                  //  summary of the previous flag
-  INT             displayLineIndex;                                             //  index of the current line
-  INT             hidden;                                                       //  flag set if window is hidden e.g. for Kurucz calibration
-  INT             useKurucz;                                                    //  flag set if Kurucz calibration is to be used for a new wavelength scale
-  INT             useUsamp;                                                     //  flag set if undersampling correction is requested
-  INT             amfFlag;                                                      //  flag set if there is a wavelength dependence of AMF for one or several cross sections
-  INT             useEtalon;                                                    //  flag set if etalon reference is used
-  INT             xsToConvolute;                                                //  flag set if high resolution cross sections to convolute real time
+  INT             displayFlag;                                                  // summary of the previous flag
+  INT             displayLineIndex;                                             // index of the current line
+  INT             hidden;                                                       // flag set if window is hidden e.g. for Kurucz calibration
+  INT             useKurucz;                                                    // flag set if Kurucz calibration is to be used for a new wavelength scale
+  INT             useUsamp;                                                     // flag set if undersampling correction is requested
+  INT             amfFlag;                                                      // flag set if there is a wavelength dependence of AMF for one or several cross sections
+  INT             useEtalon;                                                    // flag set if etalon reference is used
+  INT             xsToConvolute;                                                // flag set if high resolution cross sections to convolute real time
   INT             xsToConvoluteI0;
 
   SATELLITE_REF  *satelliteRef;
 
-  double         *LambdaRef,                                                    //  absolute reference wavelength scale
-                 *LambdaK,                                                      //  new wavelength scale after Kurucz
-                 *Lambda,                                                       //  wavelength scale to use for analysis
-                 *Sref,                                                         //  reference spectrum
-                 *SrefSigma,                                                    //  error on reference spectrum
-                 *SrefEtalon,                                                   //  etalon reference spectrum
+  double         *LambdaRef,                                                    // absolute reference wavelength scale
+                 *LambdaK,                                                      // new wavelength scale after Kurucz
+                 *Lambda,                                                       // wavelength scale to use for analysis
+                 *Sref,                                                         // reference spectrum
+                 *SrefSigma,                                                    // error on reference spectrum
+                 *SrefEtalon,                                                   // etalon reference spectrum
                  *LambdaN,*LambdaS,
                  *SrefN,*SrefS,
-                  Shift,                                                        //  shift found when aligning etalon on reference
-                  Stretch,                                                      //  stretch order 1 found when aligning etalon on reference
-                  Stretch2,                                                     //  stretch order 2 found when aligning etalon on reference
+                  Shift,                                                        // shift found when aligning etalon on reference
+                  Stretch,                                                      // stretch order 1 found when aligning etalon on reference
+                  Stretch2,                                                     // stretch order 2 found when aligning etalon on reference
                   refNormFact,
-                  ShiftN,                                                       //  shift found when aligning etalon on reference
-                  StretchN,                                                     //  stretch order 1 found when aligning etalon on reference
-                  Stretch2N,                                                    //  stretch order 2 found when aligning etalon on reference
+                  ShiftN,                                                       // shift found when aligning etalon on reference
+                  StretchN,                                                     // stretch order 1 found when aligning etalon on reference
+                  Stretch2N,                                                    // stretch order 2 found when aligning etalon on reference
                   refNormFactN,
-                  ShiftS,                                                       //  shift found when aligning etalon on reference
-                  StretchS,                                                     //  stretch order 1 found when aligning etalon on reference
-                  Stretch2S,                                                    //  stretch order 2 found when aligning etalon on reference
+                  ShiftS,                                                       // shift found when aligning etalon on reference
+                  StretchS,                                                     // stretch order 1 found when aligning etalon on reference
+                  Stretch2S,                                                    // stretch order 2 found when aligning etalon on reference
                   refNormFactS,
-                  chiSquare,                                                    //  chi square
+                  chiSquare,                                                    // chi square
                   RMS;
-  char           *ref_description;                                              //  string describing spectra used in automatic reference.
-  INT             nIter;                                                        //  number of iterations
-  INT             Decomp;                                                       //  force SVD decomposition
-  SVD             svd;                                                          //  SVD decomposition data
-  CROSS_REFERENCE TabCross[MAX_FIT];                                            //  symbol cross reference
-  CROSS_RESULTS   TabCrossResults[MAX_FIT];                                     //  results stored per symbol in previous list
-  BOOL           *spikes;                                                       //  spikes[i] is true if the residual at pixel i has a spike
-  BOOL           *omiRejPixelsQF;                                               //  rejPixelsQF[i] is true if the pixel i is rejected based on pixels QF (OMI only)
-  INT             NTabCross;                                                    //  number of elements in the two previous lists
-  INDEX           indexSpectrum,                                                //  index of raw spectrum in symbol cross reference
-                  indexReference,                                               //  index of reference spectrum in symbol cross reference
-                  indexFwhmParam[MAX_KURUCZ_FWHM_PARAM],                        //  index of 1st predefined parameter when fitting fwhm with Kurucz
-                  indexFwhmConst,                                               //  index of 'fwhm (constant)' predefined parameter in symbol cross reference
-                  indexFwhmOrder1,                                              //  index of 'fwhm (order 1)' predefined parameter in symbol cross reference
-                  indexFwhmOrder2,                                              //  index of 'fwhm (order 2)' predefined parameter in symbol cross reference
-                  indexSol,                                                     //  index of 'Sol' predefined parameter in symbol cross reference
-                  indexOffsetConst,                                             //  index of 'offset (constant)' predefined parameter in symbol cross reference
-                  indexOffsetOrder1,                                            //  index of 'offset (order 1)' predefined parameter in symbol cross reference
-                  indexOffsetOrder2,                                            //  index of 'offset (order 2)' predefined parameter in symbol cross reference
-                  indexCommonResidual,                                          //  index of 'Common residual' predefined parameter in symbol cross reference
-                  indexUsamp1,                                                  //  index of 'Undersampling (phase 1)' predefined parameter in symbol cross reference
-                  indexUsamp2,                                                  //  index of 'Undersampling (phase 2)' predefined parameter in symbol cross reference
-                  indexRing1;
+  char           *ref_description;                                              // string describing spectra used in automatic reference.
+  INT             nIter;                                                        // number of iterations
+  INT             Decomp;                                                       // force SVD decomposition
+  SVD             svd;                                                          // SVD decomposition data
+  CROSS_REFERENCE TabCross[MAX_FIT];                                            // symbol cross reference
+  CROSS_RESULTS   TabCrossResults[MAX_FIT];                                     // results stored per symbol in previous list
+  BOOL           *spikes;                                                       // spikes[i] is true if the residual at pixel i has a spike
+  BOOL           *omiRejPixelsQF;                                               // rejPixelsQF[i] is true if the pixel i is rejected based on pixels QF (OMI only)
+  INT             NTabCross;                                                    // number of elements in the two previous lists
+  INDEX           indexSpectrum,                                                // index of raw spectrum in symbol cross reference
+                  indexReference,                                               // index of reference spectrum in symbol cross reference
+                  indexFwhmParam[MAX_KURUCZ_FWHM_PARAM],                        // index of 1st predefined parameter when fitting fwhm with Kurucz
+                  indexFwhmConst,                                               // index of 'fwhm (constant)' predefined parameter in symbol cross reference
+                  indexFwhmOrder1,                                              // index of 'fwhm (order 1)' predefined parameter in symbol cross reference
+                  indexFwhmOrder2,                                              // index of 'fwhm (order 2)' predefined parameter in symbol cross reference
+                  indexSol,                                                     // index of 'Sol' predefined parameter in symbol cross reference
+                  indexOffsetConst,                                             // index of 'offset (constant)' predefined parameter in symbol cross reference
+                  indexOffsetOrder1,                                            // index of 'offset (order 1)' predefined parameter in symbol cross reference
+                  indexOffsetOrder2,                                            // index of 'offset (order 2)' predefined parameter in symbol cross reference
+                  indexCommonResidual,                                          // index of 'Common residual' predefined parameter in symbol cross reference
+                  indexUsamp1,                                                  // index of 'Undersampling (phase 1)' predefined parameter in symbol cross reference
+                  indexUsamp2,                                                  // index of 'Undersampling (phase 2)' predefined parameter in symbol cross reference
+                  indexResol;                                                   // index of 'Resol' predefined parameter in symbol cross reference
 
-  int             OrthoSet[MAX_FIT];                                            //  Vecteurs candidats à une orthogonalisation
+  int             OrthoSet[MAX_FIT];                                            // Vecteurs candidats à une orthogonalisation
   int             NOrtho;
-  int             DifRLis;                                                      //  Nombre de points pour le lissage du log du sp. de ref
-  double         *fwhmPolyRef[MAX_KURUCZ_FWHM_PARAM],                           //  polynomial coefficients for building wavelength dependence of fwhm for reference
+  int             DifRLis;                                                      // Nombre de points pour le lissage du log du sp. de ref
+  double         *fwhmPolyRef[MAX_KURUCZ_FWHM_PARAM],                           // polynomial coefficients for building wavelength dependence of fwhm for reference
                  *fwhmVector[MAX_KURUCZ_FWHM_PARAM],
                  *fwhmDeriv2[MAX_KURUCZ_FWHM_PARAM],
                   xmean,ymean;                                                  // resp. the spectrum and reference averaged on the fitting window
@@ -737,7 +736,7 @@ typedef struct _engineBuffers
          *irrad,                                                                // irradiance spectrum (for satellites measurements)
          *darkCurrent,                                                          // dark current
          *offset,                                                               // offset
-         *specMaxx,                                                             // scans number for SpecMax
+         *specMaxx,                                                             // scans numbers to use as absissae for the plot of specMax
          *specMax,                                                              // maxima of signal over scans
          *instrFunction,                                                        // instrumental function
          *varPix,                                                               // variability interpixel
@@ -821,6 +820,7 @@ typedef struct _engineRecordInfo
          BestShift;                                                             // best shift
 
   int NTracks;                                                                  // Nbre de tracks retenus
+  int nSpecMax;                                                                 // number of elements in the SpecMax buffer if any
 
                                                                                 // MFC format
 
@@ -1018,7 +1018,11 @@ RC   FNPixel   ( double *lambdaVector, double lambdaValue, INT npts,INT pixelSel
 
 RC   ANALYSE_CheckLambda(WRK_SYMBOL *pWrkSymbol,double *lambda,DoasCh *callingFunction);
 RC   ANALYSE_XsInterpolation(FENO *pTabFeno,double *newLambda,INDEX indexFenoColumn);
-RC   ANALYSE_XsConvolution(FENO *pTabFeno,double *newLambda,MATRIX_OBJECT *pSlit,MATRIX_OBJECT *pSlit2,INT slitType,double *slitParam1,double *slitParam2,INDEX indexFenoColumn);
+RC   ANALYSE_ConvoluteXs(FENO *pTabFeno,INT action,double conc,
+                         MATRIX_OBJECT *pXs,
+                         MATRIX_OBJECT *pSlit,MATRIX_OBJECT *pSlit2,INT slitType,double *slitParam1,double *slitParam2,
+                         double *newlambda,double *output,INDEX indexlambdaMin,INDEX indexlambdaMax,INDEX indexFenoColumn,INT wveDptFlag);
+RC   ANALYSE_XsConvolution(FENO *pTabFeno,double *newLambda,MATRIX_OBJECT *pSlit,MATRIX_OBJECT *pSlit2,INT slitType,double *slitParam1,double *slitParam2,INDEX indexFenoColumn,INT wveDptFlag);
 RC   ANALYSE_LinFit(SVD *pSvd,INT Npts,INT Degree,double *a,double *sigma,double *b,double *x);
 void ANALYSE_SvdFree(DoasCh *callingFunctionShort,SVD *pSvd);
 RC   ANALYSE_SvdLocalAlloc(DoasCh *callingFunctionShort,SVD *pSvd);
@@ -1037,7 +1041,7 @@ RC   ANALYSE_LoadNonLinear(ENGINE_CONTEXT *pEngineContext,ANALYSE_NON_LINEAR_PAR
 RC   ANALYSE_LoadShiftStretch(ANALYSIS_SHIFT_STRETCH *shiftStretchList,INT nShiftStretch,INDEX indexFenoColumn);
 RC   ANALYSE_LoadGaps(ENGINE_CONTEXT *pEngineContext,ANALYSIS_GAP *gapList,INT nGaps,double *lambda,double lambdaMin,double lambdaMax,INDEX indexFenoColumn);
 RC   ANALYSE_LoadOutput(ANALYSIS_OUTPUT *outputList,INT nOutput,INDEX indexFenoColumn);
-RC   ANALYSE_LoadSlit(PRJCT_SLIT *pSlit);
+RC   ANALYSE_LoadSlit(PRJCT_SLIT *pSlit,int kuruczFlag);
 
 RC   ANALYSE_Alloc(void);
 void ANALYSE_Free(void);

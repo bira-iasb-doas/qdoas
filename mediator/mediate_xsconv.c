@@ -431,13 +431,13 @@ RC mediateConvolutionCalculate(void *engineContext,void *responseHandle)
         break;
      // ----------------------------------------------------------------------
         case CONVOLUTION_TYPE_STANDARD :
-         rc=XSCONV_TypeStandard(pXsnew,0,pXsnew->nl,&XSCONV_xshr,&XSCONV_slitFunction,&XSCONV_slitFunction2,&XSCONV_xshr,NULL,slitType,slitWidth,slitParam,
+         rc=XSCONV_TypeStandard(pXsnew,0,pXsnew->nl,&XSCONV_xshr,&XSCONV_slitFunction,&XSCONV_slitFunction2,&XSCONV_xshr,NULL,slitType,slitParam,
                                  pEngineContext->slitConv.slitParam2,pSlitConv->slitWveDptFlag);
 
          break;
      // ----------------------------------------------------------------------
         case CONVOLUTION_TYPE_I0_CORRECTION :
-          rc=XSCONV_TypeI0Correction(pXsnew,&XSCONV_xshr,&XSCONV_kurucz,&XSCONV_slitFunction,&XSCONV_slitFunction2,pEngineContext->conc,slitType,slitWidth,slitParam,pEngineContext->slitConv.slitParam2,pSlitConv->slitWveDptFlag);
+          rc=XSCONV_TypeI0Correction(pXsnew,&XSCONV_xshr,&XSCONV_kurucz,&XSCONV_slitFunction,&XSCONV_slitFunction2,pEngineContext->conc,slitType,slitParam,pEngineContext->slitConv.slitParam2,pSlitConv->slitWveDptFlag);
         break;
      // ----------------------------------------------------------------------
      }
@@ -968,7 +968,7 @@ RC mediateRingCalculate(void *engineContext,void *responseHandle)
      {
      	// Start convolving the solar spectrum
 
-      if (((rc=XSCONV_TypeStandard(&xsSolarConv,0,xsSolarConv.nl,&xsSolar,&xsSlit,&xsSlit2,&xsSolar,NULL,slitType,slitWidth,slitParam,slitParam2,pEngineContext->slitConv.slitWveDptFlag))!=ERROR_ID_NO) ||
+      if (((rc=XSCONV_TypeStandard(&xsSolarConv,0,xsSolarConv.nl,&xsSolar,&xsSlit,&xsSlit2,&xsSolar,NULL,slitType,slitParam,slitParam2,pEngineContext->slitConv.slitWveDptFlag))!=ERROR_ID_NO) ||
           ((rc=SPLINE_Deriv2(solarLambda,solarVector,solarDeriv2,nsolar,"mediateRingCalculate"))!=0))
        goto EndRing;
 

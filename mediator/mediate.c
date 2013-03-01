@@ -453,14 +453,17 @@ void mediateRequestPlotSpectra(ENGINE_CONTEXT *pEngineContext,void *responseHand
       }
 
      if (((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_PDAEGG) ||
-          (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_PDAEGG_OLD)) &&
+          (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_PDAEGG_OLD) ||
+          (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_CCD_EEV)) &&
          (pBuffers->specMax!=NULL) &&
          (pRecord->NSomme>1))
       {
+      	sprintf(tmpString,"SpecMax (%d/%d)",pEngineContext->indexRecord,pEngineContext->recordNumber);
+
        mediateAllocateAndSetPlotData(&spectrumData, "SpecMax",pBuffers->specMaxx, pBuffers->specMax,pRecord->rejected+pRecord->NSomme, Line);
        mediateResponsePlotData(plotPageSpecMax, &spectrumData, 1, SpecMax, allowFixedScale, "SpecMax", "Scans number", "Signal Maximum", responseHandle);
        mediateReleasePlotData(&spectrumData);
-       mediateResponseLabelPage(plotPageSpecMax, fileName, "SpecMax", responseHandle);
+       mediateResponseLabelPage(plotPageSpecMax, fileName, tmpString, responseHandle);
       }
     }
 
@@ -1434,7 +1437,7 @@ RC mediateRequestSetAnalysisNonLinearCalib(ENGINE_CONTEXT *pEngineContext,struct
 // PURPOSE       Load non linear parameters
 // -----------------------------------------------------------------------------
 
-#define NNONLINEAR_DOAS 7
+#define NNONLINEAR_DOAS 8
 
 RC mediateRequestSetAnalysisNonLinearDoas(ENGINE_CONTEXT *pEngineContext,struct anlyswin_nonlinear *pNonLinear,double *lambda, INDEX indexFenoColumn)
  {
@@ -1530,16 +1533,15 @@ RC mediateRequestSetAnalysisNonLinearDoas(ENGINE_CONTEXT *pEngineContext,struct 
    nonLinear[6].storeFit=pNonLinear->usamp2FlagFitStore;
    nonLinear[6].storeError=pNonLinear->usamp2FlagErrStore;
 
-   // Raman
+   // Resol
 
-   // Raman : disabled April 2011 strcpy(nonLinear[7].symbolName,"Raman");
-   // Raman : disabled April 2011 strcpy(nonLinear[7].crossFileName,pNonLinear->ramanFile);
-   // Raman : disabled April 2011
-   // Raman : disabled April 2011 nonLinear[7].fitFlag=pNonLinear->ramanFlagFit;
-   // Raman : disabled April 2011 nonLinear[7].initialValue=pNonLinear->ramanInitial;
-   // Raman : disabled April 2011 nonLinear[7].deltaValue=pNonLinear->ramanDelta;
-   // Raman : disabled April 2011 nonLinear[7].storeFit=pNonLinear->ramanFlagFitStore;
-   // Raman : disabled April 2011 nonLinear[7].storeError=pNonLinear->ramanFlagErrStore;
+   strcpy(nonLinear[7].symbolName,"Resol");
+
+   nonLinear[7].fitFlag=pNonLinear->resolFlagFit;
+   nonLinear[7].initialValue=pNonLinear->resolInitial;
+   nonLinear[7].deltaValue=pNonLinear->resolDelta;
+   nonLinear[7].storeFit=pNonLinear->resolFlagFitStore;
+   nonLinear[7].storeError=pNonLinear->resolFlagErrStore;
 
    rc=ANALYSE_LoadNonLinear(pEngineContext,nonLinear,NNONLINEAR_DOAS,lambda,indexFenoColumn);
 
@@ -1563,9 +1565,11 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
    // Declarations
 
    double lambdaMin,lambdaMax;
-   INT useKurucz,                                                                // flag set if Kurucz is to be used
-     useUsamp,                                                                 // flag set if undersampling correction is requested
-     saveFlag;
+   INT useKurucz,                                                               // flag set if Kurucz is to be used in at least one analysis window
+       useUsamp,                                                                // flag set if undersampling correction is requested in at least one analysis window
+       xsToConvolute,                                                           // flag set if at least one cross section has to be convolved in at least one analysis window
+       xsToConvoluteI0,                                                         // flag set if at least one cross section has to be I0-convolved in at least one analysis window
+       saveFlag;
    INDEX indexKurucz,indexWindow;
    ENGINE_CONTEXT *pEngineContext;                                               // engine context
    PRJCT_INSTRUMENTAL *pInstrumental;
@@ -1575,14 +1579,14 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
    INT indexFeno,indexFenoColumn,i;                                              // browse analysis windows
    RC rc;                                                                        // return code
 
-   // Initializations                 
-   
+   // Initializations
+
    lambdaMin=1000;
    lambdaMax=0;
    pEngineContext=(ENGINE_CONTEXT *)engineContext;
    pInstrumental=&pEngineContext->project.instrumental;
    saveFlag=(INT)pEngineContext->project.spectra.displayDataFlag;
-   useKurucz=useUsamp=0;
+   useKurucz=useUsamp=xsToConvolute=xsToConvoluteI0=0;
    indexKurucz=ITEM_NONE;
 
    memset(&calibWindows,0,sizeof(mediate_analysis_window_t));
@@ -1782,6 +1786,8 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
              else
               {
                useUsamp+=pTabFeno->useUsamp;
+               xsToConvolute+=pTabFeno->xsToConvolute;
+               xsToConvoluteI0+=pTabFeno->xsToConvoluteI0;
 
                if (pTabFeno->gomeRefFlag || pEngineContext->refFlag)
                 {
@@ -1814,19 +1820,24 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
      lambdaMax=pEngineContext->buffers.lambda[NDET-1];
     }
 
-   if (!rc && !(rc=ANALYSE_LoadSlit(pSlitOptions)))
+   if (!rc && ((useKurucz && pKuruczOptions->fwhmFit) ||                        // calibration procedure with FWHM fit -> Kurucz (and xs) are convolved with the fitted slit function
+              (!useKurucz && !xsToConvolute) ||                                 // no calibration procedure and no xs to convolve -> nothing to do with the slit function in the slit page
+              !(rc=ANALYSE_LoadSlit(pSlitOptions,useKurucz||xsToConvoluteI0)))) // in other cases : xs to convolve and no calibration procedure
+                                                                                //                  calibration procedure but FWHM not fitted
+                                                                                //      -> use the slit function in the slit page of project properties to convolve solar spectrum and xs
+
     for (indexFenoColumn=0;(indexFenoColumn<ANALYSE_swathSize) && !rc;indexFenoColumn++)
      {
       if ((pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_OMI) ||
           pEngineContext->project.instrumental.omi.omiTracks[indexFenoColumn])
        {
-        if (!pKuruczOptions->fwhmFit || !useKurucz)
-         for (indexWindow=0;indexWindow<NFeno;indexWindow++)
+       	if ((xsToConvolute && !useKurucz) || !pKuruczOptions->fwhmFit)
+         for (indexWindow=0;(indexWindow<NFeno) && !rc;indexWindow++)
           {
            pTabFeno=&TabFeno[indexFenoColumn][indexWindow];
 
            if (pTabFeno->xsToConvolute && /* pTabFeno->useEtalon && */ (pTabFeno->gomeRefFlag || pEngineContext->refFlag) &&
-               ((rc=ANALYSE_XsConvolution(pTabFeno,pTabFeno->LambdaRef,&ANALYSIS_slit,&ANALYSIS_slit2,pSlitOptions->slitFunction.slitType,&pSlitOptions->slitFunction.slitParam,&pSlitOptions->slitFunction.slitParam2,indexFenoColumn))!=0))
+             ((rc=ANALYSE_XsConvolution(pTabFeno,pTabFeno->LambdaRef,&ANALYSIS_slit,&ANALYSIS_slit2,pSlitOptions->slitFunction.slitType,&pSlitOptions->slitFunction.slitParam,&pSlitOptions->slitFunction.slitParam2,indexFenoColumn,pSlitOptions->slitFunction.slitWveDptFlag))!=0))
 
             break;
 
@@ -1859,16 +1870,16 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
      }
 
    // OMI SEE LATER
-   
+
    if (!rc && !(rc=OUTPUT_RegisterData(pEngineContext)) &&
        (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_OMI) && useUsamp &&
        !(rc=ANALYSE_UsampGlobalAlloc(lambdaMin,lambdaMax,NDET)) &&
        !(rc=ANALYSE_UsampLocalAlloc(1)))
-    rc=ANALYSE_UsampBuild(0,1);        
-    
+    rc=ANALYSE_UsampBuild(0,1);
+
    if (rc!=ERROR_ID_NO)
-    ERROR_DisplayMessage(responseHandle);      
-    
+    ERROR_DisplayMessage(responseHandle);
+
    return (rc!=ERROR_ID_NO)?-1:0;    // supposed that an error at the level of the load of projects stops the current session
  }
 

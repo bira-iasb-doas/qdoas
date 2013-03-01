@@ -299,11 +299,11 @@ extern "C" {
     int usamp2FlagFitStore;
     int usamp2FlagErrStore;
 
-    int ramanFlagFit;
-    double ramanInitial;
-    double ramanDelta;
-    int ramanFlagFitStore;
-    int ramanFlagErrStore;
+    int resolFlagFit;
+    double resolInitial;
+    double resolDelta;
+    int resolFlagFitStore;
+    int resolFlagErrStore;    
 
     char comFile[FILENAME_BUFFER_LENGTH];
     char usamp1File[FILENAME_BUFFER_LENGTH];

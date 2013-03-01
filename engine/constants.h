@@ -61,6 +61,8 @@
 #define BUFFER_SIZE   4096                                                      // any buffer allocation
 #define STRING_LENGTH 1023                                                      // maximum size for strings
 
+#define EPSILON     (double)   1.e-6
+
 
 // ================
 // OPERATING MODES
@@ -161,7 +163,7 @@ enum _filesTypesSpectra
      SYMBOL_PREDEFINED_COM,                                                     // common residual
      SYMBOL_PREDEFINED_USAMP1,                                                  // undersampling phase 1
      SYMBOL_PREDEFINED_USAMP2,                                                  // undersampling phase 2
-     SYMBOL_PREDEFINED_RING1,                                                   // different cross sections for ring
+     SYMBOL_PREDEFINED_RESOL,                                                   // resol synthetic spectrum (reference spectrum convolved with a very thin slit function)
      SYMBOL_PREDEFINED_MAX
     };
 

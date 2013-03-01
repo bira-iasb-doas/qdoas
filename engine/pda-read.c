@@ -489,10 +489,7 @@ RC SetPDA_EGG(ENGINE_CONTEXT *pEngineContext,FILE *specFp,int newFlag)
 
   // Buffers allocation
 
-  if (((indexes=(short *)MEMORY_AllocBuffer("SetPDA_EGG ","indexes",pEngineContext->recordIndexesSize,sizeof(short),0,MEMORY_TYPE_SHORT))==NULL) ||
-      ((pBuffers->specMax=MEMORY_AllocDVector("SetPDA_EGG ","specMax",0,NDET-1))==NULL) ||
-      ((pBuffers->specMaxx=MEMORY_AllocDVector("SetPDA_EGG ","specMaxx",0,NDET-1))==NULL))
-
+  if ((indexes=(short *)MEMORY_AllocBuffer("SetPDA_EGG ","indexes",pEngineContext->recordIndexesSize,sizeof(short),0,MEMORY_TYPE_SHORT))==NULL)
    rc=ERROR_ID_ALLOC;
 
   // Open spectra file
@@ -502,9 +499,6 @@ RC SetPDA_EGG(ENGINE_CONTEXT *pEngineContext,FILE *specFp,int newFlag)
   else
    {
    	// Initializations
-
-   	for (i=0;i<NDET;i++)
-   	 pBuffers->specMaxx[i]=(double)i+1.;
 
 // !!! */    DoasCh *ptr,fileout[MAX_ITEM_TEXT_LEN+1];
 // !!! */    FILE *fp;
@@ -799,9 +793,8 @@ RC ReliPDA_EGG(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
 
           if (newFlag)
            {
-            if (pBuffers->specMax!=NULL)
-             for (i=0;i<(header.Rejected+header.ScansNumber);i++)
-              pBuffers->specMax[i]=(double)ISpecMax[i]; // *0.5;
+            for (i=0;i<(header.Rejected+header.ScansNumber);i++)
+             pBuffers->specMax[i]=(double)ISpecMax[i]; // *0.5;
 
             for (i=0;i<NDET;i++)
              pBuffers->spectrum[i]=(double)ISpectre[i]*Max/65000.; //SMax;
@@ -821,6 +814,7 @@ RC ReliPDA_EGG(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
 
           // Data on the current record
 
+          pRecord->nSpecMax = header.Rejected+header.ScansNumber;
           pRecord->TDet     = header.Detector_Temp;
           pRecord->Tint     = header.Exposure_time;
           pRecord->NSomme   = header.ScansNumber;

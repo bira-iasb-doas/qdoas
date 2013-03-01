@@ -54,7 +54,7 @@ Q_OBJECT
   QLineEdit *m_refFileEdit,*m_slfFileEdit;
   QComboBox *m_methodCombo;
   QComboBox *m_lineShapeCombo;
-  QFrame *m_degreeWidget,*m_fileWidget;
+  QFrame *m_degreeWidget,*m_fileWidget, *m_refWidget;
   QCheckBox *m_spectraCheck, *m_fitsCheck, *m_residualCheck, *m_shiftSfpCheck;
   QSpinBox *m_degreeSpinBox, *m_shiftDegreeSpinBox, *m_sfpDegreeSpinBox;
   QLineEdit *m_lambdaMinEdit, *m_lambdaMaxEdit;

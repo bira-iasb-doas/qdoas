@@ -18,6 +18,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
 
+#include <math.h>
 #include "CProjectConfigAnalysisWindowSubHandlers.h"
 #include "CProjectConfigItem.h"
 
@@ -232,6 +233,9 @@ bool CAnalysisWindowCrossSectionSubHandler::start(const QXmlAttributes &atts)
     d->ccIo = atts.value("ccio").toDouble();
     d->ccMin = atts.value("ccmin").toDouble();
     d->ccMax = atts.value("ccmax").toDouble();
+    
+    if (fabs(d->deltaCc)<(double)EPSILON)
+     d->deltaCc=(double)1.e-3;
 
     str = atts.value("csfile");
     if (!str.isEmpty()) {
@@ -317,48 +321,72 @@ bool CAnalysisWindowNonLinearSubHandler::start(const QXmlAttributes &atts)
   m_d->solDelta = atts.value("soldelt").toDouble();
   m_d->solFlagFitStore = (atts.value("solfstr") == "true") ? 1 : 0;
   m_d->solFlagErrStore = (atts.value("solestr") == "true") ? 1 : 0;
+  
+  if (fabs(m_d->solDelta)<(double)EPSILON)
+   m_d->solDelta=(double)1.e-3;
 
   m_d->off0FlagFit = (atts.value("o0fit") == "true") ? 1 : 0;
   m_d->off0Initial = atts.value("o0init").toDouble();
   m_d->off0Delta = atts.value("o0delt").toDouble();
   m_d->off0FlagFitStore = (atts.value("o0fstr") == "true") ? 1 : 0;
   m_d->off0FlagErrStore = (atts.value("o0estr") == "true") ? 1 : 0;
+  
+  if (fabs(m_d->off0Delta)<(double)EPSILON)
+   m_d->off0Delta=(double)1.e-3;  
 
   m_d->off1FlagFit = (atts.value("o1fit") == "true") ? 1 : 0;
   m_d->off1Initial = atts.value("o1init").toDouble();
   m_d->off1Delta = atts.value("o1delt").toDouble();
   m_d->off1FlagFitStore = (atts.value("o1fstr") == "true") ? 1 : 0;
-  m_d->off1FlagErrStore = (atts.value("o1estr") == "true") ? 1 : 0;
+  m_d->off1FlagErrStore = (atts.value("o1estr") == "true") ? 1 : 0;    
+  
+  if (fabs(m_d->off1Delta)<(double)EPSILON)
+   m_d->off1Delta=(double)1.e-3;  
 
   m_d->off2FlagFit = (atts.value("o2fit") == "true") ? 1 : 0;
   m_d->off2Initial = atts.value("o2init").toDouble();
   m_d->off2Delta = atts.value("o2delt").toDouble();
   m_d->off2FlagFitStore = (atts.value("o2fstr") == "true") ? 1 : 0;
   m_d->off2FlagErrStore = (atts.value("o2estr") == "true") ? 1 : 0;
+  
+  if (fabs(m_d->off2Delta)<(double)EPSILON)
+   m_d->off2Delta=(double)1.e-3;  
 
   m_d->comFlagFit = (atts.value("comfit") == "true") ? 1 : 0;
   m_d->comInitial = atts.value("cominit").toDouble();
   m_d->comDelta = atts.value("comdelt").toDouble();
   m_d->comFlagFitStore = (atts.value("comfstr") == "true") ? 1 : 0;
   m_d->comFlagErrStore = (atts.value("comestr") == "true") ? 1 : 0;
+  
+  if (fabs(m_d->comDelta)<(double)EPSILON)
+   m_d->comDelta=(double)1.e-3;  
 
   m_d->usamp1FlagFit = (atts.value("u1fit") == "true") ? 1 : 0;
   m_d->usamp1Initial = atts.value("u1init").toDouble();
   m_d->usamp1Delta = atts.value("u1delt").toDouble();
   m_d->usamp1FlagFitStore = (atts.value("u1fstr") == "true") ? 1 : 0;
   m_d->usamp1FlagErrStore = (atts.value("u1estr") == "true") ? 1 : 0;
+  
+  if (fabs(m_d->usamp1Delta)<(double)EPSILON)
+   m_d->usamp1Delta=(double)1.e-3;  
 
   m_d->usamp2FlagFit = (atts.value("u2fit") == "true") ? 1 : 0;
   m_d->usamp2Initial = atts.value("u2init").toDouble();
   m_d->usamp2Delta = atts.value("u2delt").toDouble();
   m_d->usamp2FlagFitStore = (atts.value("u2fstr") == "true") ? 1 : 0;
   m_d->usamp2FlagErrStore = (atts.value("u2estr") == "true") ? 1 : 0;
+  
+  if (fabs(m_d->usamp2Delta)<(double)EPSILON)
+   m_d->usamp2Delta=(double)1.e-3;  
 
-  m_d->ramanFlagFit = (atts.value("ramfit") == "true") ? 1 : 0;
-  m_d->ramanInitial = atts.value("raminit").toDouble();
-  m_d->ramanDelta = atts.value("ramdelt").toDouble();
-  m_d->ramanFlagFitStore = (atts.value("ramfstr") == "true") ? 1 : 0;
-  m_d->ramanFlagErrStore = (atts.value("ramestr") == "true") ? 1 : 0;
+  m_d->resolFlagFit = (atts.value("resolfit") == "true") ? 1 : 0;
+  m_d->resolInitial = atts.value("resolinit").toDouble();
+  m_d->resolDelta = atts.value("resoldelt").toDouble();
+  m_d->resolFlagFitStore = (atts.value("resolfstr") == "true") ? 1 : 0;
+  m_d->resolFlagErrStore = (atts.value("resolestr") == "true") ? 1 : 0;  
+  
+  if (fabs(m_d->resolDelta)<(double)EPSILON)
+   m_d->resolDelta=(double)1.e-3;  
 
   str = atts.value("comfile");
   if (!str.isEmpty()) {
@@ -385,15 +413,6 @@ bool CAnalysisWindowNonLinearSubHandler::start(const QXmlAttributes &atts)
       strcpy(m_d->usamp2File, str.toAscii().data());
     else
       return postErrorMessage("Usamp2 filename too long");
-  }
-
-  str = atts.value("ramfile");
-  if (!str.isEmpty()) {
-    str = m_master->pathExpand(str);
-    if (str.length() < (int)sizeof(m_d->ramanFile))
-      strcpy(m_d->ramanFile, str.toAscii().data());
-    else
-      return postErrorMessage("Raman filename too long");
   }
 
   return true;
@@ -442,11 +461,11 @@ bool CAnalysisWindowShiftStretchSubHandler::start(const QXmlAttributes &atts)
     d->scInit = atts.value("scini").toDouble();
     d->scInit2 = atts.value("scini2").toDouble();
 
-    d->shDelta = atts.value("shdel").toDouble();
-    d->stDelta = atts.value("stdel").toDouble();
-    d->stDelta2 = atts.value("stdel2").toDouble();
-    d->scDelta = atts.value("scdel").toDouble();
-    d->scDelta2 = atts.value("scdel2").toDouble();
+    if (fabs((double)(d->shDelta = atts.value("shdel").toDouble()  ))<EPSILON) d->shDelta  =(double)1.e-3;
+    if (fabs((double)(d->stDelta = atts.value("stdel").toDouble()  ))<EPSILON) d->stDelta  =(double)1.e-3;
+    if (fabs((double)(d->stDelta2 = atts.value("stdel2").toDouble()))<EPSILON) d->stDelta2 =(double)1.e-3;
+    if (fabs((double)(d->scDelta = atts.value("scdel").toDouble()  ))<EPSILON) d->scDelta  =(double)1.e-3;
+    if (fabs((double)(d->scDelta2 = atts.value("scdel2").toDouble()))<EPSILON) d->scDelta2=(double)1.e-3;
 
     d->shMin = atts.value("shmin").toDouble();
     d->shMax = atts.value("shmax").toDouble();
@@ -584,6 +603,9 @@ bool CAnalysisWindowSfpSubHandler::start(const QXmlAttributes &atts)
     p->deltaValue = atts.value("delta").toDouble();
     p->fitStore = (atts.value("fstr") == "true") ? 1 : 0;
     p->errStore = (atts.value("estr") == "true") ? 1 : 0;
+    
+    if (fabs(p->deltaValue)<EPSILON)
+     p->deltaValue=(double)1.e-3;
 
     return true;
   }

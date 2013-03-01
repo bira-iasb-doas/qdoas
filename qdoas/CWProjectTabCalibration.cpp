@@ -40,23 +40,33 @@ CWProjectTabCalibration::CWProjectTabCalibration(const mediate_project_calibrati
   int index;
   QString tmpStr;
 
-  QVBoxLayout *mainLayout = new QVBoxLayout(this);
+  QVBoxLayout *mainLayout = new QVBoxLayout(this);   
+  QLabel *methodLabel,*refLabel;
 
   QGridLayout *topLayout = new QGridLayout;
 
-  mainLayout->addSpacing(5);
-
-  // ref file
-  topLayout->addWidget(new QLabel("Solar Ref. File", this), 0, 0);
+  mainLayout->addSpacing(5);     
+  
+  // ref file    
+  
+  m_refWidget = new QFrame(this);                              
+  m_refWidget->setFrameStyle(QFrame::NoFrame);                 
+  QHBoxLayout *refLayout = new QHBoxLayout(m_refWidget);       
+  refLayout->setMargin(0);                                     
+    
+  refLayout->addWidget((refLabel=new QLabel("Solar Ref. File", this)), 0, 0);  
+  
   m_refFileEdit  = new QLineEdit(this);
   m_refFileEdit->setMaxLength(sizeof(properties->solarRefFile) - 1); // limit test length to buffer size
 
-  topLayout->addWidget(m_refFileEdit, 0, 1, 1, 4);
+  refLayout->addWidget(m_refFileEdit); // !!! , 0, 1, 1, 4);
   QPushButton *browseBtn = new QPushButton("Browse", this);
-  topLayout->addWidget(browseBtn, 0, 5);
-
+  refLayout->addWidget(browseBtn);
+  
+  topLayout->addWidget(m_refWidget,0, 0, 1, 6);           
+  
   // methodType
-  topLayout->addWidget(new QLabel("Analysis Method", this), 1, 0);
+  topLayout->addWidget((methodLabel=new QLabel("Analysis Method", this)), 1, 0);
   m_methodCombo = new QComboBox(this);
   m_methodCombo->addItem("Optical Density Fitting", QVariant(PRJCT_ANLYS_METHOD_SVD));
   m_methodCombo->addItem("Intensity fitting (Marquardt-Levenberg+SVD)", QVariant(PRJCT_ANLYS_METHOD_SVDMARQUARDT));
@@ -112,6 +122,9 @@ CWProjectTabCalibration::CWProjectTabCalibration(const mediate_project_calibrati
   // force some sizes to prevent 'jumpy' display.
   m_slfFileEdit->setFixedHeight(m_lineShapeCombo->sizeHint().height());
   // m_slfFileEdit->setFixedWidth(m_fileWidget->sizeHint().width());
+  
+  refLabel->setFixedWidth(methodLabel->sizeHint().width()+7);      
+  // m_refFileEdit->setFixedWidth(m_methodCombo->sizeHint().width());        
 
 
   mainLayout->addLayout(topLayout);
@@ -316,7 +329,12 @@ void CWProjectTabCalibration::slotLineShapeSelectionChanged(int index)
     m_degreeWidget->show();
   else
     m_degreeWidget->hide();
-
+    
+  if (tmp==PRJCT_CALIB_FWHM_TYPE_NONE)
+   m_refWidget->setEnabled(false);
+  else  
+   m_refWidget->setEnabled(true);
+   
   m_sfpDegreeSpinBox->setEnabled(tmp != PRJCT_CALIB_FWHM_TYPE_NONE);
 
 }

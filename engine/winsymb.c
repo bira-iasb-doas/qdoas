@@ -237,7 +237,7 @@ RC SYMB_Alloc(void)
     strcpy(SYMB_itemCrossList[SYMBOL_PREDEFINED_COM].name,"Com");
     strcpy(SYMB_itemCrossList[SYMBOL_PREDEFINED_USAMP1].name,"Usamp1");
     strcpy(SYMB_itemCrossList[SYMBOL_PREDEFINED_USAMP2].name,"Usamp2");
-    strcpy(SYMB_itemCrossList[SYMBOL_PREDEFINED_RING1].name,"Raman");
+    strcpy(SYMB_itemCrossList[SYMBOL_PREDEFINED_RESOL].name,"Resol");
 
     SYMB_itemCrossN=SYMBOL_PREDEFINED_MAX;
    }

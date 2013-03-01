@@ -104,17 +104,16 @@ void EngineResetContext(ENGINE_CONTEXT *pEngineContext)
     MEMORY_ReleaseDVector("EngineResetContext ","specMaxx",pBuffers->specMaxx,0);
    if (pBuffers->specMax!=NULL)
     MEMORY_ReleaseDVector("EngineResetContext ","specMax",pBuffers->specMax,0);
-
-
-   if (pEngineContext->analysisRef.scanRefIndexes!=NULL)
-    MEMORY_ReleaseBuffer("EngineResetContext ","scanRefIndexes",pEngineContext->analysisRef.scanRefIndexes);
-
-   if (pEngineContext->analysisRef.scanRefFiles!=NULL)
-    MEMORY_ReleaseBuffer("EngineResetContext ","scanRefFiles",pEngineContext->analysisRef.scanRefFiles);
    if (pBuffers->varPix!=NULL)
     MEMORY_ReleaseDVector("EngineResetContext ","varPix",pBuffers->varPix,0);
    if (pBuffers->recordIndexes!=NULL)
     MEMORY_ReleaseBuffer("EngineResetContext ","recordIndexes",pBuffers->recordIndexes);
+
+   if (pEngineContext->analysisRef.scanRefIndexes!=NULL)
+    MEMORY_ReleaseBuffer("EngineResetContext ","scanRefIndexes",pEngineContext->analysisRef.scanRefIndexes);
+   if (pEngineContext->analysisRef.scanRefFiles!=NULL)
+    MEMORY_ReleaseBuffer("EngineResetContext ","scanRefFiles",pEngineContext->analysisRef.scanRefFiles);
+
    if (pBuffers->dnl.matrix!=NULL)
     MATRIX_Free(&pBuffers->dnl,"EngineResetContext (dnl)");
    if (pRecord->omi.omiPixelQF!=NULL)
@@ -174,16 +173,16 @@ RC EngineCopyContext(ENGINE_CONTEXT *pEngineContextTarget,ENGINE_CONTEXT *pEngin
        ((pBuffersSource->varPix!=NULL) && (pBuffersTarget->varPix==NULL) &&
         ((pBuffersTarget->varPix=(double *)MEMORY_AllocDVector("EngineCopyContext","varPix",0,NDET-1))==NULL)) ||
        ((pBuffersSource->specMaxx!=NULL) && (pBuffersTarget->specMaxx==NULL) &&
-        ((pBuffersTarget->specMaxx=(double *)MEMORY_AllocDVector("EngineCopyContext","specMaxx",0,NDET-1))==NULL)) ||
+        ((pBuffersTarget->specMaxx=(double *)MEMORY_AllocDVector("EngineCopyContext","specMaxx",0,MAX_SPECMAX-1))==NULL)) ||
        ((pBuffersSource->specMax!=NULL) && (pBuffersTarget->specMax==NULL) &&
-        ((pBuffersTarget->specMax=(double *)MEMORY_AllocDVector("EngineCopyContext","specMax",0,NDET-1))==NULL)) ||
+        ((pBuffersTarget->specMax=(double *)MEMORY_AllocDVector("EngineCopyContext","specMax",0,MAX_SPECMAX-1))==NULL)) ||
        ((pEngineContextSource->analysisRef.scanRefIndexes!=NULL) && (pEngineContextTarget->analysisRef.scanRefIndexes==NULL) &&
         ((pEngineContextTarget->analysisRef.scanRefIndexes=(INT *)MEMORY_AllocBuffer("EngineCopyContext","scanRefIndexes",pEngineContextSource->recordNumber,sizeof(INT),0,MEMORY_TYPE_INT))==NULL)) ||
        ((pEngineContextSource->recordInfo.omi.omiPixelQF!=NULL) && (pEngineContextTarget->recordInfo.omi.omiPixelQF==NULL) &&
         ((pEngineContextTarget->recordInfo.omi.omiPixelQF=(unsigned short *)MEMORY_AllocBuffer("EngineCopyContext","omiPixelQF",NDET,sizeof(unsigned short),0,MEMORY_TYPE_USHORT))==NULL)) ||
        ((pBuffersSource->recordIndexes!=NULL) && (pBuffersTarget->recordIndexes==NULL) &&
         ((pBuffersTarget->recordIndexes=(DoasU32 *)MEMORY_AllocBuffer("THRD_CopySpecInfo","recordIndexes",
-                                                                      (pEngineContextTarget->recordIndexesSize=pEngineContextSource->recordIndexesSize),sizeof(DoasU32),0,MEMORY_TYPE_ULONG))==NULL)) ||
+         (pEngineContextTarget->recordIndexesSize=pEngineContextSource->recordIndexesSize),sizeof(DoasU32),0,MEMORY_TYPE_ULONG))==NULL)) ||
        ((pEngineContextTarget->recordInfo.ccd.vip.matrix!=NULL) && (pEngineContextTarget->recordInfo.ccd.vip.matrix==NULL) &&
         ((rc=MATRIX_Copy(&pEngineContextTarget->recordInfo.ccd.vip,&pEngineContextSource->recordInfo.ccd.vip,"EngineCopyContext"))!=ERROR_ID_NO)) ||
        ((pEngineContextTarget->recordInfo.ccd.dnl.matrix!=NULL) && (pEngineContextTarget->recordInfo.ccd.dnl.matrix==NULL) &&
@@ -197,8 +196,6 @@ RC EngineCopyContext(ENGINE_CONTEXT *pEngineContextTarget,ENGINE_CONTEXT *pEngin
 
    else
     {
-     // Buffers
-
      if ((pBuffersTarget->lambda!=NULL) && (pBuffersSource->lambda!=NULL))
       memcpy(pBuffersTarget->lambda,pBuffersSource->lambda,sizeof(double)*NDET);
      if ((pBuffersTarget->instrFunction!=NULL) && (pBuffersSource->instrFunction!=NULL))
@@ -218,9 +215,9 @@ RC EngineCopyContext(ENGINE_CONTEXT *pEngineContextTarget,ENGINE_CONTEXT *pEngin
      if ((pBuffersTarget->varPix!=NULL) && (pBuffersSource->varPix!=NULL))
       memcpy(pBuffersTarget->varPix,pBuffersSource->varPix,sizeof(double)*NDET);
      if ((pBuffersTarget->specMaxx!=NULL) && (pBuffersSource->specMaxx!=NULL))
-      memcpy(pBuffersTarget->specMaxx,pBuffersSource->specMaxx,sizeof(double)*NDET);
+      memcpy(pBuffersTarget->specMaxx,pBuffersSource->specMaxx,sizeof(double)*MAX_SPECMAX);
      if ((pBuffersTarget->specMax!=NULL) && (pBuffersSource->specMax!=NULL))
-      memcpy(pBuffersTarget->specMax,pBuffersSource->specMax,sizeof(double)*NDET);
+      memcpy(pBuffersTarget->specMax,pBuffersSource->specMax,sizeof(double)*MAX_SPECMAX);
      if ((pEngineContextTarget->recordInfo.omi.omiPixelQF!=NULL) && (pEngineContextSource->recordInfo.omi.omiPixelQF!=NULL))
       memcpy(pEngineContextTarget->recordInfo.omi.omiPixelQF,pEngineContextSource->recordInfo.omi.omiPixelQF,sizeof(unsigned short)*NDET);
      if ((pEngineContextTarget->analysisRef.scanRefIndexes!=NULL) && (pEngineContextSource->analysisRef.scanRefIndexes!=NULL))
@@ -300,6 +297,7 @@ RC EngineSetProject(ENGINE_CONTEXT *pEngineContext)
    pRecord=&pEngineContext->recordInfo;
 
    pEngineContext->lastRefRecord=0;
+   pRecord->nSpecMax=0;
 
    pEngineContext->satelliteFlag=((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_GDP_ASCII) ||
                                   (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN) ||
@@ -328,6 +326,17 @@ RC EngineSetProject(ENGINE_CONTEXT *pEngineContext)
          (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MKZY)) &&
 
         ((pBuffers->recordIndexes=(DoasU32 *)MEMORY_AllocBuffer("EngineSetProject","recordIndexes",2001,sizeof(DoasU32),0,MEMORY_TYPE_ULONG))==NULL)) ||
+
+       (((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_CCD_EEV) ||
+         (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_CCD_OHP_96) ||
+         (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_CCD_HA_94) ||
+         (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_PDAEGG) ||
+         (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_PDAEGG_OLD) ||
+         (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_PDASI_EASOE)) &&
+
+        (((pBuffers->specMaxx=(double *)MEMORY_AllocDVector("EngineSetProject","specMaxx",0,MAX_SPECMAX-1))==NULL) ||
+        ((pBuffers->specMax=(double *)MEMORY_AllocDVector("EngineSetProject","specMax",0,MAX_SPECMAX-1))==NULL))) ||
+
 
        (((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_GDP_ASCII) ||
          (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN) ||
@@ -377,6 +386,12 @@ RC EngineSetProject(ENGINE_CONTEXT *pEngineContext)
 
    else
     {
+    	// Buffers initialization
+
+    	if (pBuffers->specMaxx!=NULL)
+    	 for (i=0;i<MAX_SPECMAX;i++)
+    	  pBuffers->specMaxx[i]=(double)i+1;
+
      // Load the wavelength calibration
 
      if (!strlen(pInstrumental->calibrationFile) || (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_OMI))
@@ -1796,9 +1811,9 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
              if (newDimL != pTabFeno->svd.DimL)
               { // reallocate complete SVD structure.
-               ANALYSE_SvdFree("EngineNewRef",&pTabFeno->svd);
+               SVD_Free("EngineNewRef",&pTabFeno->svd);
                pTabFeno->svd.DimL=newDimL;
-               ANALYSE_SvdLocalAlloc("EngineNewRef",&pTabFeno->svd);
+               SVD_LocalAlloc("EngineNewRef",&pTabFeno->svd);
               }
              else if(pTabFeno->svd.specrange != NULL) // only update specrange
               spectrum_destroy(pTabFeno->svd.specrange);
@@ -1811,8 +1826,9 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
                useKurucz++;
               }
              else if (((rc=ANALYSE_XsInterpolation(pTabFeno,pTabFeno->LambdaRef,0))!=ERROR_ID_NO) ||
-                      ((rc=ANALYSE_XsConvolution(pTabFeno,pTabFeno->LambdaRef,&ANALYSIS_slit,&ANALYSIS_slit2,pSlitOptions->slitFunction.slitType,&pSlitOptions->slitFunction.slitParam,&pSlitOptions->slitFunction.slitParam2,0))!=ERROR_ID_NO))
+                      ((rc=ANALYSE_XsConvolution(pTabFeno,pTabFeno->LambdaRef,&ANALYSIS_slit,&ANALYSIS_slit2,pSlitOptions->slitFunction.slitType,&pSlitOptions->slitFunction.slitParam,&pSlitOptions->slitFunction.slitParam2,0,pSlitOptions->slitFunction.slitWveDptFlag))!=ERROR_ID_NO))
               break;
+
             }
 
            if (pTabFeno->useUsamp)
@@ -1835,7 +1851,7 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
           pTabFeno->displayRef=1;
         }
 
-       if (indexRefRecord!=ITEM_NONE && pEngineContext->project.spectra.displaySpectraFlag)
+       if (indexRefRecord!=ITEM_NONE && pEngineContext->project.spectra.displayFitFlag)
         {
          SHORT_DATE  *pDay;                                                      // pointer to measurement date
          struct time *pTime;                                                     // pointer to measurement date

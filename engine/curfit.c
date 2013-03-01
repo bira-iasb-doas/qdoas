@@ -551,7 +551,7 @@ RC CurfitDerivFunc(double *X, double *specX, double *srefX, int nX, double *Y, d
          (i!=Feno->indexCommonResidual) &&
          (i!=Feno->indexUsamp1) &&
          (i!=Feno->indexUsamp2) &&
-         (i!=Feno->indexRing1)) ||
+         (i!=Feno->indexResol)) ||
          (Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVD)) &&
         ((rc=CurfitNumDeriv(X,specX,srefX,nX,Y,sigmaY,nY,P,A,deltaA,TabCross[i].FitParam,deriv,indexFenoColumn))>=THREAD_EVENT_STOP)) ||
 

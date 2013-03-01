@@ -770,8 +770,8 @@ void CWNonLinearParametersDoasTable::populate(const struct anlyswin_nonlinear *d
   initialValues.push_back(data->off2FlagErrStore);
   addRow(cStandardRowHeight, "Offset (Order 2)", initialValues);
 
-  initialValues.clear();
-
+  initialValues.clear();  
+  
   // Com
   initialValues.push_back(data->comFlagFit);
   initialValues.push_back(data->comInitial);
@@ -802,20 +802,18 @@ void CWNonLinearParametersDoasTable::populate(const struct anlyswin_nonlinear *d
 
   initialValues.clear();
 
-  // Raman : disabled April 2011
+  // Resol
 
-  // initialValues.push_back(data->ramanFlagFit);
-  // initialValues.push_back(data->ramanInitial);
-  // initialValues.push_back(data->ramanDelta);
-  // initialValues.push_back(data->ramanFlagFitStore);
-  // initialValues.push_back(data->ramanFlagErrStore);
-  // addRow(cStandardRowHeight, "Raman", initialValues);
+  initialValues.push_back(data->resolFlagFit);
+  initialValues.push_back(data->resolInitial);
+  initialValues.push_back(data->resolDelta);
+  initialValues.push_back(data->resolFlagFitStore);
+  initialValues.push_back(data->resolFlagErrStore);
+  addRow(cStandardRowHeight, "Resol", initialValues);
 
   m_comFilename = data->comFile;
   m_usamp1Filename = data->usamp1File;
   m_usamp2Filename = data->usamp2File;
-  // m_ramanFilename = data->ramanFile;
-
 }
 
 void CWNonLinearParametersDoasTable::apply(struct anlyswin_nonlinear *data) const
@@ -871,12 +869,12 @@ void CWNonLinearParametersDoasTable::apply(struct anlyswin_nonlinear *data) cons
   data->usamp2FlagFitStore = state.at(3).toBool() ? 1 : 0;
   data->usamp2FlagErrStore = state.at(4).toBool() ? 1 : 0;
 
-  // Raman : disabled April 20111 state = getCellData(7); // Raman
-  // Raman : disabled April 20111 data->ramanFlagFit = state.at(0).toBool() ? 1 : 0;
-  // Raman : disabled April 20111 data->ramanInitial = state.at(1).toDouble();
-  // Raman : disabled April 20111 data->ramanDelta = state.at(2).toDouble();
-  // Raman : disabled April 20111 data->ramanFlagFitStore = state.at(3).toBool() ? 1 : 0;
-  // Raman : disabled April 20111 data->ramanFlagErrStore = state.at(4).toBool() ? 1 : 0;
+  state = getCellData(7); // Resol
+  data->resolFlagFit = state.at(0).toBool() ? 1 : 0;
+  data->resolInitial = state.at(1).toDouble();
+  data->resolDelta = state.at(2).toDouble();
+  data->resolFlagFitStore = state.at(3).toBool() ? 1 : 0;
+  data->resolFlagErrStore = state.at(4).toBool() ? 1 : 0;
 
   // filenames
 
@@ -894,12 +892,6 @@ void CWNonLinearParametersDoasTable::apply(struct anlyswin_nonlinear *data) cons
     strcpy(data->usamp2File, m_usamp2Filename.toAscii().data());
   else
     *(data->usamp2File) = '\0';
-
-  // Raman : disabled April 2011 if (m_ramanFilename.length() < (int)sizeof(data->ramanFile))
-  // Raman : disabled April 2011   strcpy(data->ramanFile, m_ramanFilename.toAscii().data());
-  // Raman : disabled April 2011 else
-  // Raman : disabled April 2011   *(data->ramanFile) = '\0';
-
 }
 
 void CWNonLinearParametersDoasTable::contextMenuEvent(QContextMenuEvent *e)
@@ -907,7 +899,7 @@ void CWNonLinearParametersDoasTable::contextMenuEvent(QContextMenuEvent *e)
 
   m_selectedRow = rowIndexAtPosition(e->y());
 
-  if (m_selectedRow >= 4 && m_selectedRow <= 7) {
+  if (m_selectedRow >= 4 && m_selectedRow <=6) {
 
     // create a popup menu
     QMenu menu;
@@ -945,14 +937,6 @@ void CWNonLinearParametersDoasTable::slotSelectFile()
       }
     }
     break;
-  // Raman : disabled April 2011 case 7: // Raman
-  // Raman : disabled April 2011   {
-  // Raman : disabled April 2011     QString filename = QFileDialog::getOpenFileName(this, "Raman Filename", m_ramanFilename);
-  // Raman : disabled April 2011     if (!filename.isEmpty()) {
-  // Raman : disabled April 2011      m_ramanFilename = filename; // change the filename
-  // Raman : disabled April 2011     }
-  // Raman : disabled April 2011   }
-  // Raman : disabled April 2011   break;
   }
 }
 

@@ -239,9 +239,12 @@ RC KURUCZ_Spectrum(double *oldLambda,double *newLambda,double *spectrum,double *
      {
       if ((pKurucz->hrSolar.nl==NDET) && VECTOR_Equal(pKurucz->hrSolar.matrix[0],oldLambda,NDET,(double)1.e-7))
        memcpy(solar,pKurucz->hrSolar.matrix[kuruczIndexRow],sizeof(double)*NDET);
-      else
-       rc=SPLINE_Vector(pKurucz->hrSolar.matrix[0],pKurucz->hrSolar.matrix[kuruczIndexRow],pKurucz->hrSolar.deriv2[kuruczIndexRow],pKurucz->hrSolar.nl,
-                           oldLambda,solar,NDET,pAnalysisOptions->interpol,"KURUCZ_Spectrum ");
+      else // 20130208 : a high resolution spectrum is now loaded from the slit page of project properties and convolved
+      	rc=ANALYSE_ConvoluteXs(NULL,ANLYS_CROSS_ACTION_CONVOLUTE,(double)0.,&pKurucz->hrSolar,&ANALYSIS_slit,&ANALYSIS_slit2,
+                             pSlitOptions->slitFunction.slitType,&pSlitOptions->slitFunction.slitParam,&pSlitOptions->slitFunction.slitParam2,
+                             oldLambda,solar,0,NDET-1,0,pSlitOptions->slitFunction.slitWveDptFlag);
+// 20130208 :     rc=SPLINE_Vector(pKurucz->hrSolar.matrix[0],pKurucz->hrSolar.matrix[kuruczIndexRow],pKurucz->hrSolar.deriv2[kuruczIndexRow],pKurucz->hrSolar.nl,
+//                        oldLambda,solar,NDET,pAnalysisOptions->interpol,"KURUCZ_Spectrum ");
      }
     else
      memcpy(solar,reference,sizeof(double)*NDET);
@@ -336,23 +339,23 @@ RC KURUCZ_Spectrum(double *oldLambda,double *newLambda,double *spectrum,double *
 
       VSig[indexWindow+1]=pResults->SigmaShift;
 
-      if (pKurucz->units==PRJCT_ANLYS_UNITS_PIXELS)
-       {
-        VShift[indexWindow+1]=(Feno->indexSpectrum!=ITEM_NONE)?(double)-pResults->Shift:(double)pResults->Shift;
-        VPix[indexWindow+1]=(double)pixMid[indexWindow+1];                      // -pResults->Shift and VLambda[indexWindow+1]=(double)oldLambda[(INDEX)pixMid[indexWindow+1]]
-
-        newPix=(double)pixMid[indexWindow+1]-VShift[indexWindow+1]+1.;
-                                                                                // if kurucz spectrum is passed as reference
-        if ((rc=SPLINE_Vector(ANALYSE_pixels,                                   // pixels vector
-                                 oldLambda,                                     // wavelength scale
-                                 ANALYSE_splineX2,                              // second derivatives
-                                 NDET,
-                                &newPix,
-                                &VLambda[indexWindow+1],1,
-                                 SPLINE_CUBIC,"KURUCZ_Spectrum "))!=ERROR_ID_NO)
-         break;
-       }
-      else
+      // not used anymore as we work only in nm now if (pKurucz->units==PRJCT_ANLYS_UNITS_PIXELS)
+      // not used anymore as we work only in nm now  {
+      // not used anymore as we work only in nm now   VShift[indexWindow+1]=(Feno->indexSpectrum!=ITEM_NONE)?(double)-pResults->Shift:(double)pResults->Shift;
+      // not used anymore as we work only in nm now   VPix[indexWindow+1]=(double)pixMid[indexWindow+1];                      // -pResults->Shift and VLambda[indexWindow+1]=(double)oldLambda[(INDEX)pixMid[indexWindow+1]]
+      // not used anymore as we work only in nm now
+      // not used anymore as we work only in nm now   newPix=(double)pixMid[indexWindow+1]-VShift[indexWindow+1]+1.;
+      // not used anymore as we work only in nm now                                                                           // if kurucz spectrum is passed as reference
+      // not used anymore as we work only in nm now   if ((rc=SPLINE_Vector(ANALYSE_pixels,                                   // pixels vector
+      // not used anymore as we work only in nm now                            oldLambda,                                     // wavelength scale
+      // not used anymore as we work only in nm now                            ANALYSE_splineX2,                              // second derivatives
+      // not used anymore as we work only in nm now                            NDET,
+      // not used anymore as we work only in nm now                           &newPix,
+      // not used anymore as we work only in nm now                           &VLambda[indexWindow+1],1,
+      // not used anymore as we work only in nm now                            SPLINE_CUBIC,"KURUCZ_Spectrum "))!=ERROR_ID_NO)
+      // not used anymore as we work only in nm now    break;
+      // not used anymore as we work only in nm now  }
+      // not used anymore as we work only in nm now else
        {
         VShift[indexWindow+1]=(Feno->indexSpectrum!=ITEM_NONE)?(double)-pResults->Shift:(double)pResults->Shift;
         VPix[indexWindow+1]=pixMid[indexWindow+1];
@@ -445,8 +448,8 @@ RC KURUCZ_Spectrum(double *oldLambda,double *newLambda,double *spectrum,double *
       // NB : we fit a polynomial in Lambda+shift point but it's possible to fit a polynomial in shift points by replacing
       //      VLambda by VShift in the following instruction
 
-      if ((rc=ANALYSE_LinFit(&Feno->svd,Nb_Win,pKurucz->shiftDegree,VPix,NULL,
-          (pKurucz->units==PRJCT_ANLYS_UNITS_PIXELS)?VLambda:VShift,Pcalib))!=ERROR_ID_NO) // !!! Change in the future VLambda -> VShift
+      if ((rc=ANALYSE_LinFit(&Feno->svd,Nb_Win,pKurucz->shiftDegree,VPix,NULL,VShift,Pcalib))!=ERROR_ID_NO)
+      // VLambda not used anymore as we work only in nm now    (pKurucz->units==PRJCT_ANLYS_UNITS_PIXELS)?VLambda:VShift,Pcalib))!=ERROR_ID_NO) // !!! Change in the future VLambda -> VShift
        goto EndKuruczSpectrum;
 
       if (pKuruczOptions->fwhmFit)
@@ -471,10 +474,10 @@ RC KURUCZ_Spectrum(double *oldLambda,double *newLambda,double *spectrum,double *
         for (j=pKurucz->shiftDegree;j>=1;j--)
          shiftPoly[i]=shiftPoly[i]*(double)i+Pcalib[j];
 
-        if (pKurucz->units==PRJCT_ANLYS_UNITS_NANOMETERS)
+        // not used anymore as we work only in nm now if (pKurucz->units==PRJCT_ANLYS_UNITS_NANOMETERS)
          Lambda[i]=oldLambda[i]-shiftPoly[i];    // only if you want to fit a polynomial in shift points and afterwards,
-        else
-         Lambda[i]=shiftPoly[i];
+        // not used anymore as we work only in nm now else
+        // not used anymore as we work only in nm now  Lambda[i]=shiftPoly[i];
        }
 
       if (displayFlag)
@@ -743,22 +746,24 @@ RC KURUCZ_ApplyCalibration(FENO *pTabFeno,double *newLambda,INDEX indexFenoColum
       pKuruczOptions->fwhmFit &&                                                                // fit of the slit function
      (pKuruczOptions->fwhmType==SLIT_TYPE_FILE))                                                // slit function is file type
    {
-   	if (MATRIX_Allocate(&wveDptStretch,NDET,2,0,0,1,"ShiftVector"))
+   	if (MATRIX_Allocate(&wveDptStretch,NDET,3,0,0,1,"ShiftVector")!=0)
    	 rc=ERROR_ID_ALLOC;
    	else
    	 {
    	 	memcpy(wveDptStretch.matrix[0],newLambda,sizeof(double)*NDET);
    	 	memcpy(wveDptStretch.matrix[1],pTabFeno->fwhmVector[0],sizeof(double)*NDET);
+   	 	memcpy(wveDptStretch.matrix[2],pTabFeno->fwhmVector[1],sizeof(double)*NDET);
 
-   	 	rc=SPLINE_Deriv2(wveDptStretch.matrix[0],wveDptStretch.matrix[1],wveDptStretch.deriv2[1],wveDptStretch.nl,"XSCONV_TypeStandard ");
+   	 	if (!(rc=SPLINE_Deriv2(wveDptStretch.matrix[0],wveDptStretch.matrix[1],wveDptStretch.deriv2[1],wveDptStretch.nl,"XSCONV_TypeStandard ")))
+   	 	 rc=SPLINE_Deriv2(wveDptStretch.matrix[0],wveDptStretch.matrix[2],wveDptStretch.deriv2[2],wveDptStretch.nl,"XSCONV_TypeStandard ");
    	 }
    }
 
   if (((pTabFeno->rcKurucz=ANALYSE_XsInterpolation(pTabFeno,newLambda,indexFenoColumn))!=ERROR_ID_NO) ||
        (pTabFeno->xsToConvolute && ((pTabFeno->useKurucz==ANLYS_KURUCZ_REF) || (pTabFeno->useKurucz==ANLYS_KURUCZ_SPEC)) &&
-      ((pKuruczOptions->fwhmFit && (pKuruczOptions->fwhmType!=SLIT_TYPE_FILE) && ((pTabFeno->rcKurucz=ANALYSE_XsConvolution(pTabFeno,newLambda,NULL,NULL,pKuruczOptions->fwhmType,pTabFeno->fwhmVector[0],(pKuruczOptions->fwhmType!=SLIT_TYPE_INVPOLY)?pTabFeno->fwhmVector[1]:&slitParam2,indexFenoColumn))!=ERROR_ID_NO)) ||
-       (pKuruczOptions->fwhmFit && (pKuruczOptions->fwhmType==SLIT_TYPE_FILE) && ((pTabFeno->rcKurucz=ANALYSE_XsConvolution(pTabFeno,newLambda,&KURUCZ_buffers[indexFenoColumn].slitFunction,&wveDptStretch,pKuruczOptions->fwhmType,&slitParam2,&slitParam2,indexFenoColumn))!=ERROR_ID_NO)) ||
-      (!pKuruczOptions->fwhmFit && ((pTabFeno->rcKurucz=ANALYSE_XsConvolution(pTabFeno,newLambda,&ANALYSIS_slit,&ANALYSIS_slit2,pSlitOptions->slitFunction.slitType,&pSlitOptions->slitFunction.slitParam,&pSlitOptions->slitFunction.slitParam2,indexFenoColumn))!=ERROR_ID_NO)))))
+      ((pKuruczOptions->fwhmFit && (pKuruczOptions->fwhmType!=SLIT_TYPE_FILE) && ((pTabFeno->rcKurucz=ANALYSE_XsConvolution(pTabFeno,newLambda,NULL,NULL,pKuruczOptions->fwhmType,pTabFeno->fwhmVector[0],(pKuruczOptions->fwhmType!=SLIT_TYPE_INVPOLY)?pTabFeno->fwhmVector[1]:&slitParam2,indexFenoColumn,0))!=ERROR_ID_NO)) ||
+       (pKuruczOptions->fwhmFit && (pKuruczOptions->fwhmType==SLIT_TYPE_FILE) && ((pTabFeno->rcKurucz=ANALYSE_XsConvolution(pTabFeno,newLambda,&KURUCZ_buffers[indexFenoColumn].slitFunction,&wveDptStretch,pKuruczOptions->fwhmType,&slitParam2,&slitParam2,indexFenoColumn,1))!=ERROR_ID_NO)) ||
+      (!pKuruczOptions->fwhmFit && ((pTabFeno->rcKurucz=ANALYSE_XsConvolution(pTabFeno,newLambda,&ANALYSIS_slit,&ANALYSIS_slit2,pSlitOptions->slitFunction.slitType,&pSlitOptions->slitFunction.slitParam,&pSlitOptions->slitFunction.slitParam2,indexFenoColumn,pSlitOptions->slitFunction.slitWveDptFlag))!=ERROR_ID_NO)))))
 
    rc=pTabFeno->rcKurucz;
 
@@ -1054,7 +1059,7 @@ RC KURUCZ_Alloc(PROJECT *pProject,double *lambda,INDEX indexKurucz,double lambda
 
   step=(double)0.;
 
-  FILES_RebuildFileName(kuruczFile,pKuruczOptions->file,1);
+  FILES_RebuildFileName(kuruczFile,(pKuruczOptions->fwhmFit)?pKuruczOptions->file:pSlitOptions->kuruczFile,1);
   FILES_RebuildFileName(slitFile,pKuruczOptions->slfFile,1);
 
   if ((hFilterFlag=((ANALYSE_phFilter->filterFunction!=NULL) &&                 // high pass filtering

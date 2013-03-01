@@ -576,6 +576,8 @@ RC SVD_Dcmp ( double **a, int m, int n, double *w, double **v, double *SigmaSqr,
   return rc;
  }
 
+ extern int engineRef;
+
 // ----------------------------------------------------------------------
 // SVD_Free : Release allocated buffers used for SVD decomposition
 // ----------------------------------------------------------------------
@@ -620,6 +622,10 @@ void SVD_Free(DoasCh *callingFunctionShort,SVD *pSvd)
   if (pSvd->specrange !=NULL)
    spectrum_destroy(pSvd->specrange);
 
+  pSvd->A=pSvd->U=pSvd->P=pSvd->V=pSvd->covar=NULL;
+  pSvd->W=pSvd->SigmaSqr=NULL;
+  pSvd->specrange=NULL;
+
   #if defined(__DEBUG_) && __DEBUG_
   DEBUG_FunctionStop("SVD_Free",0);
   #endif
@@ -628,6 +634,7 @@ void SVD_Free(DoasCh *callingFunctionShort,SVD *pSvd)
 // --------------------------------------------------------------------
 // SVD_LocalAlloc : Allocate SVD matrices for the current window
 // --------------------------------------------------------------------
+
 
 RC SVD_LocalAlloc(DoasCh *callingFunctionShort,SVD *pSvd)
  {

@@ -337,13 +337,13 @@ bool CProjectAnalysisSubHandler::start(const QXmlAttributes &atts)
   else
     return postErrorMessage("Invalid analysis fit");
 
-  str = atts.value("unit");
-  if (str == "pixel")
-    m_analysis->unitType = PRJCT_ANLYS_UNITS_PIXELS;
-  else if (str == "nm")
-    m_analysis->unitType = PRJCT_ANLYS_UNITS_NANOMETERS;
-  else
-    return postErrorMessage("Invalid analysis unit");
+  // not used anymore as we work in nm now str = atts.value("unit");
+  // not used anymore as we work in nm now if (str == "pixel")
+  // not used anymore as we work in nm now   m_analysis->unitType = PRJCT_ANLYS_UNITS_PIXELS;
+  // not used anymore as we work in nm now else if (str == "nm")
+  // not used anymore as we work in nm now   m_analysis->unitType = PRJCT_ANLYS_UNITS_NANOMETERS;
+  // not used anymore as we work in nm now else
+  // not used anymore as we work in nm now   return postErrorMessage("Invalid analysis unit");
 
   str = atts.value("interpolation");
   if (str == "linear")
