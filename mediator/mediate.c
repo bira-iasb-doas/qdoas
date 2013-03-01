@@ -2191,7 +2191,7 @@ int mediateRequestNextMatchingAnalyseSpectrum(void *engineContext,
      // for omi, when using automatic reference selection for one or
      // more analysis windows, check if automatic reference spectrum is
      // ok for this detector row, if not: get next spectrum.
-     while( !omi_has_automatic_reference(pEngineContext->recordInfo.omi.omiRowIndex)
+     while( !omi_has_automatic_reference(pEngineContext->recordInfo.omi.omiRowIndex-1)
             && rec > 0 )
       {
        rec = mediateRequestNextMatchingSpectrum(pEngineContext,responseHandle);
