@@ -42,11 +42,13 @@
 //
 //  ----------------------------------------------------------------------------
 
+/*! \file doas.h main header file */
+
 #include "windoas.h"
 #include "spectral_range.h"
 
-#if !defined(__DOAS_)
-#define __DOAS_
+#ifndef DOAS_H
+#define DOAS_H
 
 #if defined(_cplusplus) || defined(__cplusplus)
 extern "C" {
@@ -211,9 +213,9 @@ void MOON_GetPosition(DoasCh *inputDate,   // input date and time for moon posit
 double  ZEN_NbSec     ( SHORT_DATE *today, struct time *now, int flag);
 double  ZEN_FNTdiz    ( double NbreJours, double *ObsLong, double *ObsLat,double *pAzimuth );
 double  ZEN_FNCrtjul  ( double *NbreSec );
-double  ZEN_FNCaldti  ( double *Tm );
+double  ZEN_FNCaldti  ( const double *Tm );
 char   *ZEN_FNCaljti  ( double *Tm, char *str );
-int     ZEN_FNCaljda  ( double *Tm );
+int     ZEN_FNCaljda  ( const double *Tm );
 int     ZEN_FNCaljday ( int Year, int Julian );
 int     ZEN_FNCaljye  ( double *Tm );
 int     ZEN_FNCaljmon ( int Year, int Julian );
@@ -247,9 +249,7 @@ typedef struct _wrkSymbol
  }
 WRK_SYMBOL;
 
-// Symbol cross reference
-// ----------------------
-
+/*! \brief Symbol cross reference */
 typedef struct _crossReference
  {
   int    Comp,                                                                  // index of component in WrkSpace list
@@ -301,7 +301,7 @@ CROSS_REFERENCE;
 
 // Results
 // -------
-
+/*! Fit results for a fitted cross section. */
 typedef struct _crossResults
  {
   DoasCh  StoreParam,               // flag set if non linear parameter is to be written into output file
@@ -366,6 +366,7 @@ typedef struct _satellite_ref_
  }
 SATELLITE_REF;
 
+  /*! \brief Configuration data related to an analysis window. */
 typedef struct _feno
 {
                                                                                 // copy of data from analysis window panel
@@ -880,7 +881,7 @@ typedef struct _engineContext
 
   // record information
 
-  INT     recordNumber;                                                         // total number of record in file
+  int     recordNumber;                                                         // total number of record in file
   INT     recordIndexesSize;                                                    // size of 'recordIndexes' buffer
   INT     recordSize;                                                           // size of record if length fixed
   INDEX   indexRecord,indexFile;
@@ -1240,34 +1241,6 @@ typedef struct _nasaResults
   char            SkyObs;                                                            // sky state indication
  }
 NASA_RESULTS;
-
-// -------------------
-// GLOBAL DECLARATIONS
-// -------------------
-
-EXTERN DoasCh       OUTPUT_refFile[MAX_PATH_LEN+1];
-EXTERN INT         OUTPUT_nRec;
-EXTERN DoasCh       OUTPUT_nasaFile[MAX_STR_LEN+1];          // name of file with NASA-AMES header description
-EXTERN INT         OUTPUT_nasaNResults;                     // number of results stored in NASA-AMES structure
-EXTERN AMF_SYMBOL *OUTPUT_AmfSpace;                         // list of cross sections with associated AMF file
-
-// ----------
-// PROTOTYPES
-// ----------
-
-RC   OUTPUT_GetWveAmf(CROSS_RESULTS *pResults,double Zm,double *lambda,double *xs,double *deriv2);
-RC OUTPUT_ReadAmf(DoasCh *symbolName,DoasCh *amfFileName,DoasCh amfType,INDEX *pIndexAmf);
-
-void OUTPUT_ResetData(void);
-RC   OUTPUT_RegisterData(ENGINE_CONTEXT *pEngineContext);
-RC   OUTPUT_FlushBuffers(ENGINE_CONTEXT *pEngineContext);
-
-RC   OUTPUT_SaveNasaAmes(void);
-RC   OUTPUT_SaveResults(ENGINE_CONTEXT *pEngineContext,INDEX indexFenoColumn);
-
-RC   OUTPUT_LocalAlloc(ENGINE_CONTEXT *pEngineContext);
-RC   OUTPUT_Alloc(void);
-void OUTPUT_Free(void);
 
 // =======================
 // GOME SPECTRA PROCESSING
@@ -1639,9 +1612,10 @@ RC GOME2_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle);
 
 // OMI
 
-void OMI_TrackSelection(DoasCh *omiTrackSelection,int *omiTracks);
+void OMI_TrackSelection(const char *omiTrackSelection,int *omiTracks);
 void OMI_ReleaseReference(void);
-RC   OMI_LoadReference(ENGINE_CONTEXT *pEngineContext,DoasCh *refFile);
+void OMI_ReleaseBuffers(void);
+RC   OMI_LoadReference(ENGINE_CONTEXT *pEngineContext,const char *refFile);
 RC   OMI_GetReference(DoasCh *refFile,INDEX indexColumn,double *lambda,double *ref,double *refSigma);
 RC   OMI_Set(ENGINE_CONTEXT *pEngineContext);
 RC   OMI_Read(ENGINE_CONTEXT *pEngineContext,int recordNo);

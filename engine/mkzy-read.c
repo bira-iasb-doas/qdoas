@@ -1,7 +1,7 @@
 
 //  ----------------------------------------------------------------------------
 /*!
-    \file    MKZY-READ.C
+    \file    mkzy-read.c
     \brief   MKZY (Manne Kihlman and Zhang Yan) read out routines.
     \details This module contains the routines needed to read data from PAK files written
              in a compressed file format created by MANNE Kihlman and ZHANG Yan, Chalmers,

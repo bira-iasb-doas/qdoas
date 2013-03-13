@@ -42,6 +42,7 @@
 #include "mediate.h"
 #include "engine.h"
 #include "coda.h"
+#include "output.h"
 
 // ====================
 // CONSTANTS DEFINITION
@@ -166,7 +167,7 @@ GOME2_REF;
 // GLOBAL VARIABLES
 // ================
 
-INT GOME2_ms=0;
+INT GOME2_mus=0;
 
 // ================
 // STATIC VARIABLES
@@ -1453,7 +1454,7 @@ RC GOME2_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,INDEX fileIndex)
   INDEX indexMDR;
   INT mdrObs;
   INDEX indexBand;
-  INT year,month,day,hour,min,sec,msec;
+  INT year,month,day,hour,min,sec,musec;
   double utcTime;
   GOME2_ORBIT_FILE *pOrbitFile;                                                  // pointer to the current orbit
   SATELLITE_GEOLOC *pGeoloc;
@@ -1521,7 +1522,7 @@ RC GOME2_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,INDEX fileIndex)
       if (!rc)
        {
      	  utcTime=pGome2Info->mdr[indexMDR].startTime+tint*(recordNo-mdrObs-2);     // NOV 2011 : problem with integration time (FRESCO comparison)
-     	  coda_double_to_datetime(utcTime,&year,&month,&day,&hour,&min,&sec,&msec);
+     	  coda_double_to_datetime(utcTime,&year,&month,&day,&hour,&min,&sec,&musec);
 
      	  // Output information on the current record
 
@@ -1533,7 +1534,7 @@ RC GOME2_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,INDEX fileIndex)
         pRecord->present_time.ti_min=(unsigned char)min;
         pRecord->present_time.ti_sec=(unsigned char)sec;
 
-        GOME2_ms=msec;
+        GOME2_mus=musec;
 
         // Geolocation
 
@@ -1567,7 +1568,7 @@ RC GOME2_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,INDEX fileIndex)
 
         pRecord->Tint=tint;
 
-        pRecord->TimeDec=(double)hour+min/60.+(sec+msec*1.e-3)/(60.*60.);
+        pRecord->TimeDec=(double)hour+min/60.+(sec+musec*1.e-6)/(60.*60.);
         pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_day,&pRecord->present_time,0);
 
         pRecord->gome2.orbitNumber=(int)pOrbitFile->gome2Info.orbitStart;

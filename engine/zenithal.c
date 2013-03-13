@@ -232,7 +232,7 @@ int ZEN_FNCaljday(int Year,int Julian)
 // RETURN        the calendar day
 // -----------------------------------------------------------------------------
 
-int ZEN_FNCaljda(double *Tm)
+int ZEN_FNCaljda(const double *Tm)
  {
   // Declarations
 
@@ -308,7 +308,7 @@ char *ZEN_FNCaljti(double *Tm,char *str)
 // RETURN        the decimal time
 // -----------------------------------------------------------------------------
 
-double ZEN_FNCaldti(double *Tm)
+double ZEN_FNCaldti(const double *Tm)
  {
   // Declarations
 

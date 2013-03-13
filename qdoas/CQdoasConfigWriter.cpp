@@ -397,9 +397,6 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   case PRJCT_INSTR_FORMAT_GDP_BIN:
     fprintf(fp, "\"gdpbin\"");
     break;
-  case PRJCT_INSTR_FORMAT_SCIA_HDF:
-    fprintf(fp, "\"sciahdf\"");
-    break;
   case PRJCT_INSTR_FORMAT_SCIA_PDS:
     fprintf(fp, "\"sciapds\"");
     break;
@@ -827,51 +824,6 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   tmpStr = pathMgr->simplifyPath(QString(d->gdpbin.instrFunctionFile));
   fprintf(fp, " instr=\"%s\" />\n", tmpStr.toAscii().constData());
 
-  // sciahdf
-  fprintf(fp, "      <sciahdf channel=");
-  switch (d->sciahdf.channel) {
-  case PRJCT_INSTR_SCIA_CHANNEL_1:
-    fprintf(fp, "\"1\"");
-    break;
-  case PRJCT_INSTR_SCIA_CHANNEL_2:
-    fprintf(fp, "\"2\"");
-    break;
-  case PRJCT_INSTR_SCIA_CHANNEL_3:
-    fprintf(fp, "\"3\"");
-    break;
-  case PRJCT_INSTR_SCIA_CHANNEL_4:
-    fprintf(fp, "\"4\"");
-    break;
-  default:
-    fprintf(fp, "\"invalid\"");
-  }
-  fprintf(fp, " sunref=\"%s\"", d->sciahdf.sunReference);
-  for (i=2; i<=5; ++i) {
-    if (d->sciahdf.clusters[i])
-      fprintf(fp, " c%d=\"true\"", i);
-  }
-  for (i=8; i<=10; ++i) {
-    if (d->sciahdf.clusters[i])
-      fprintf(fp, " c%d=\"true\"", i);
-  }
-  for (i=13; i<=18; ++i) {
-    if (d->sciahdf.clusters[i])
-      fprintf(fp, " c%d=\"true\"", i);
-  }
-  for (i=22; i<=27; ++i) {
-    if (d->sciahdf.clusters[i])
-      fprintf(fp, " c%d=\"true\"", i);
-  }
-
-  tmpStr = pathMgr->simplifyPath(QString(d->sciahdf.calibrationFile));
-  fprintf(fp, " calib=\"%s\"", tmpStr.toAscii().constData());
-
-  tmpStr = pathMgr->simplifyPath(QString(d->sciahdf.instrFunctionFile));
-  fprintf(fp, " instr=\"%s\" />\n", tmpStr.toAscii().constData());
-
-  tmpStr = pathMgr->simplifyPath(QString(d->sciahdf.detectorNonLinearityFile));
-  fprintf(fp, " dnl=\"%s\" />\n", tmpStr.toAscii().constData());
-
   // sciapds
   fprintf(fp, "      <sciapds channel=");
   switch (d->sciapds.channel) {
@@ -1050,11 +1002,15 @@ void CQdoasConfigWriter::writePropertiesOutput(FILE *fp, const mediate_project_o
 {
   QString tmpStr = CPathMgr::instance()->simplifyPath(QString(d->path));
 
-  fprintf(fp, "    <output path=\"%s\" anlys=\"%s\" calib=\"%s\" ref=\"%s\" conf=\"%s\" bin=\"%s\" dirs=\"%s\" file=\"%s\" flux=\"%s\" cic=\"%s\" >\n",
+  fprintf(fp, "    <output path=\"%s\" anlys=\"%s\" calib=\"%s\" ref=\"%s\" conf=\"%s\" dirs=\"%s\" file=\"%s\" flux=\"%s\" cic=\"%s\" swathName=\"%s\" fileFormat=\"%s\">\n",
           tmpStr.toAscii().constData(), (d->analysisFlag ? sTrue : sFalse),
           (d->calibrationFlag ? sTrue : sFalse), (d->referenceFlag ? sTrue : sFalse),
-          (d->configurationFlag ? sTrue : sFalse), (d->binaryFormatFlag ? sTrue : sFalse),
-          (d->directoryFlag ? sTrue : sFalse), (d->filenameFlag ? sTrue : sFalse), d->flux, d->colourIndex);
+          (d->configurationFlag ? sTrue : sFalse),
+          (d->directoryFlag ? sTrue : sFalse),
+          (d->filenameFlag ? sTrue : sFalse),
+          d->flux, d->colourIndex,
+          d->swath_name,
+          output_file_extensions[d->file_format]);
 
   writeDataSelectList(fp, &(d->selection));
 
@@ -1494,85 +1450,84 @@ void CQdoasConfigWriter::writeDataSelectList(FILE *fp, const data_select_list_t 
 
     fprintf(fp, "      <field name=\"");
     switch (d->selected[i]) {
-    case PRJCT_RESULTS_ASCII_SPECNO:           fprintf(fp, "specno"); break;
-    case PRJCT_RESULTS_ASCII_NAME:             fprintf(fp, "name"); break;
-    case PRJCT_RESULTS_ASCII_DATE_TIME:        fprintf(fp, "date_time"); break;
-    case PRJCT_RESULTS_ASCII_DATE:             fprintf(fp, "date"); break;
-    case PRJCT_RESULTS_ASCII_TIME:             fprintf(fp, "time"); break;
-    case PRJCT_RESULTS_ASCII_YEAR:             fprintf(fp, "year"); break;
-    case PRJCT_RESULTS_ASCII_JULIAN:           fprintf(fp, "julian"); break;
-    case PRJCT_RESULTS_ASCII_JDFRAC:           fprintf(fp, "jdfrac"); break;
-    case PRJCT_RESULTS_ASCII_TIFRAC:           fprintf(fp, "tifrac"); break;
-    case PRJCT_RESULTS_ASCII_SCANS:            fprintf(fp, "scans"); break;
-    case PRJCT_RESULTS_ASCII_NREJ:             fprintf(fp, "rejected"); break;
-    case PRJCT_RESULTS_ASCII_TINT:             fprintf(fp, "tint"); break;
-    case PRJCT_RESULTS_ASCII_SZA:              fprintf(fp, "sza"); break;
-    case PRJCT_RESULTS_ASCII_CHI:              fprintf(fp, "chi"); break;
-    case PRJCT_RESULTS_ASCII_RMS:              fprintf(fp, "rms"); break;
-    case PRJCT_RESULTS_ASCII_AZIM:             fprintf(fp, "azim"); break;
-    case PRJCT_RESULTS_ASCII_TDET:             fprintf(fp, "tdet"); break;
-    case PRJCT_RESULTS_ASCII_SKY:              fprintf(fp, "sky"); break;
-    case PRJCT_RESULTS_ASCII_BESTSHIFT:        fprintf(fp, "bestshift"); break;
-    case PRJCT_RESULTS_ASCII_REFZM:            fprintf(fp, "refzm"); break;
-    case PRJCT_RESULTS_ASCII_REFSHIFT:         fprintf(fp, "refshift"); break;
-    case PRJCT_RESULTS_ASCII_PIXEL:            fprintf(fp, "pixel"); break;
-    case PRJCT_RESULTS_ASCII_PIXEL_TYPE:       fprintf(fp, "pixel_type"); break;
-    case PRJCT_RESULTS_ASCII_ORBIT:            fprintf(fp, "orbit"); break;
-    case PRJCT_RESULTS_ASCII_LONGIT:           fprintf(fp, "longit"); break;
-    case PRJCT_RESULTS_ASCII_LATIT:            fprintf(fp, "latit"); break;
-    case PRJCT_RESULTS_ASCII_ALTIT:            fprintf(fp, "altit"); break;
-    case PRJCT_RESULTS_ASCII_COVAR:            fprintf(fp, "covar"); break;
-    case PRJCT_RESULTS_ASCII_CORR:             fprintf(fp, "corr"); break;
-    case PRJCT_RESULTS_ASCII_CLOUD:            fprintf(fp, "cloud"); break;
-    case PRJCT_RESULTS_ASCII_COEFF:            fprintf(fp, "coeff"); break;
-    case PRJCT_RESULTS_ASCII_O3:               fprintf(fp, "o3"); break;
-    case PRJCT_RESULTS_ASCII_NO2:              fprintf(fp, "no2"); break;
-    case PRJCT_RESULTS_ASCII_CLOUDTOPP:        fprintf(fp, "cloudtopp"); break;
-    case PRJCT_RESULTS_ASCII_LOS_ZA:           fprintf(fp, "los_za"); break;
-    case PRJCT_RESULTS_ASCII_LOS_AZIMUTH:      fprintf(fp, "los_azimuth"); break;
-    case PRJCT_RESULTS_ASCII_SAT_HEIGHT:       fprintf(fp, "sat_height"); break;
-    case PRJCT_RESULTS_ASCII_EARTH_RADIUS:     fprintf(fp, "earth_radius"); break;
-    case PRJCT_RESULTS_ASCII_VIEW_ELEVATION:   fprintf(fp, "view_elevation"); break;
-    case PRJCT_RESULTS_ASCII_VIEW_ZENITH:      fprintf(fp, "view_zenith"); break;
-    case PRJCT_RESULTS_ASCII_VIEW_AZIMUTH:     fprintf(fp, "view_azimuth"); break;
-    case PRJCT_RESULTS_ASCII_SCIA_QUALITY:     fprintf(fp, "scia_quality"); break;
-    case PRJCT_RESULTS_ASCII_SCIA_STATE_INDEX: fprintf(fp, "scia_state_index"); break;
-    case PRJCT_RESULTS_ASCII_SCIA_STATE_ID:    fprintf(fp, "scia_state_id"); break;
-    case PRJCT_RESULTS_ASCII_STARTDATE:        fprintf(fp, "startdate"); break;
-    case PRJCT_RESULTS_ASCII_ENDDATE:          fprintf(fp, "enddate"); break;
-    case PRJCT_RESULTS_ASCII_STARTTIME:        fprintf(fp, "starttime"); break;
-    case PRJCT_RESULTS_ASCII_ENDTIME:          fprintf(fp, "endtime"); break;
+    case PRJCT_RESULTS_SPECNO:           fprintf(fp, "specno"); break;
+    case PRJCT_RESULTS_NAME:             fprintf(fp, "name"); break;
+    case PRJCT_RESULTS_DATE_TIME:        fprintf(fp, "date_time"); break;
+    case PRJCT_RESULTS_DATE:             fprintf(fp, "date"); break;
+    case PRJCT_RESULTS_TIME:             fprintf(fp, "time"); break;
+    case PRJCT_RESULTS_YEAR:             fprintf(fp, "year"); break;
+    case PRJCT_RESULTS_JULIAN:           fprintf(fp, "julian"); break;
+    case PRJCT_RESULTS_JDFRAC:           fprintf(fp, "jdfrac"); break;
+    case PRJCT_RESULTS_TIFRAC:           fprintf(fp, "tifrac"); break;
+    case PRJCT_RESULTS_SCANS:            fprintf(fp, "scans"); break;
+    case PRJCT_RESULTS_NREJ:             fprintf(fp, "rejected"); break;
+    case PRJCT_RESULTS_TINT:             fprintf(fp, "tint"); break;
+    case PRJCT_RESULTS_SZA:              fprintf(fp, "sza"); break;
+    case PRJCT_RESULTS_CHI:              fprintf(fp, "chi"); break;
+    case PRJCT_RESULTS_RMS:              fprintf(fp, "rms"); break;
+    case PRJCT_RESULTS_AZIM:             fprintf(fp, "azim"); break;
+    case PRJCT_RESULTS_TDET:             fprintf(fp, "tdet"); break;
+    case PRJCT_RESULTS_SKY:              fprintf(fp, "sky"); break;
+    case PRJCT_RESULTS_BESTSHIFT:        fprintf(fp, "bestshift"); break;
+    case PRJCT_RESULTS_REFZM:            fprintf(fp, "refzm"); break;
+    case PRJCT_RESULTS_REFSHIFT:         fprintf(fp, "refshift"); break;
+    case PRJCT_RESULTS_PIXEL:            fprintf(fp, "pixel"); break;
+    case PRJCT_RESULTS_PIXEL_TYPE:       fprintf(fp, "pixel_type"); break;
+    case PRJCT_RESULTS_ORBIT:            fprintf(fp, "orbit"); break;
+    case PRJCT_RESULTS_LONGIT:           fprintf(fp, "longit"); break;
+    case PRJCT_RESULTS_LATIT:            fprintf(fp, "latit"); break;
+    case PRJCT_RESULTS_ALTIT:            fprintf(fp, "altit"); break;
+    case PRJCT_RESULTS_COVAR:            fprintf(fp, "covar"); break;
+    case PRJCT_RESULTS_CORR:             fprintf(fp, "corr"); break;
+    case PRJCT_RESULTS_CLOUD:            fprintf(fp, "cloud"); break;
+    case PRJCT_RESULTS_O3:               fprintf(fp, "o3"); break;
+    case PRJCT_RESULTS_NO2:              fprintf(fp, "no2"); break;
+    case PRJCT_RESULTS_CLOUDTOPP:        fprintf(fp, "cloudtopp"); break;
+    case PRJCT_RESULTS_LOS_ZA:           fprintf(fp, "los_za"); break;
+    case PRJCT_RESULTS_LOS_AZIMUTH:      fprintf(fp, "los_azimuth"); break;
+    case PRJCT_RESULTS_SAT_HEIGHT:       fprintf(fp, "sat_height"); break;
+    case PRJCT_RESULTS_EARTH_RADIUS:     fprintf(fp, "earth_radius"); break;
+    case PRJCT_RESULTS_VIEW_ELEVATION:   fprintf(fp, "view_elevation"); break;
+    case PRJCT_RESULTS_VIEW_ZENITH:      fprintf(fp, "view_zenith"); break;
+    case PRJCT_RESULTS_VIEW_AZIMUTH:     fprintf(fp, "view_azimuth"); break;
+    case PRJCT_RESULTS_SCIA_QUALITY:     fprintf(fp, "scia_quality"); break;
+    case PRJCT_RESULTS_SCIA_STATE_INDEX: fprintf(fp, "scia_state_index"); break;
+    case PRJCT_RESULTS_SCIA_STATE_ID:    fprintf(fp, "scia_state_id"); break;
+    case PRJCT_RESULTS_STARTDATE:        fprintf(fp, "startdate"); break;
+    case PRJCT_RESULTS_ENDDATE:          fprintf(fp, "enddate"); break;
+    case PRJCT_RESULTS_STARTTIME:        fprintf(fp, "starttime"); break;
+    case PRJCT_RESULTS_ENDTIME:          fprintf(fp, "endtime"); break;
 
-    case PRJCT_RESULTS_ASCII_SCANNING            :      fprintf(fp, "scanning_angle"); break;
-    case PRJCT_RESULTS_ASCII_FILTERNUMBER        :      fprintf(fp, "filterNumber"); break;
-    case PRJCT_RESULTS_ASCII_MEASTYPE            :      fprintf(fp, "measType"); break;
-    case PRJCT_RESULTS_ASCII_CCD_HEADTEMPERATURE :      fprintf(fp, "ccd_headTemp"); break;
+    case PRJCT_RESULTS_SCANNING            :      fprintf(fp, "scanning_angle"); break;
+    case PRJCT_RESULTS_FILTERNUMBER        :      fprintf(fp, "filterNumber"); break;
+    case PRJCT_RESULTS_MEASTYPE            :      fprintf(fp, "measType"); break;
+    case PRJCT_RESULTS_CCD_HEADTEMPERATURE :      fprintf(fp, "ccd_headTemp"); break;
 
-    case PRJCT_RESULTS_ASCII_COOLING_STATUS      :      fprintf(fp, "cooler_status"); break;
-    case PRJCT_RESULTS_ASCII_MIRROR_ERROR        :      fprintf(fp, "mirror_status"); break;
-    case PRJCT_RESULTS_ASCII_COMPASS             :      fprintf(fp, "compass_angle"); break;
-    case PRJCT_RESULTS_ASCII_PITCH               :      fprintf(fp, "pitch_angle"); break;
-    case PRJCT_RESULTS_ASCII_ROLL                :      fprintf(fp, "roll_angle"); break;
-    case PRJCT_RESULTS_ASCII_ITER                :      fprintf(fp, "iter_number"); break;
+    case PRJCT_RESULTS_COOLING_STATUS      :      fprintf(fp, "cooler_status"); break;
+    case PRJCT_RESULTS_MIRROR_ERROR        :      fprintf(fp, "mirror_status"); break;
+    case PRJCT_RESULTS_COMPASS             :      fprintf(fp, "compass_angle"); break;
+    case PRJCT_RESULTS_PITCH               :      fprintf(fp, "pitch_angle"); break;
+    case PRJCT_RESULTS_ROLL                :      fprintf(fp, "roll_angle"); break;
+    case PRJCT_RESULTS_ITER                :      fprintf(fp, "iter_number"); break;
 
-    case PRJCT_RESULTS_ASCII_GOME2_SCANDIRECTION                :      fprintf(fp, "scan_direction"); break;
-    case PRJCT_RESULTS_ASCII_GOME2_SAA                :      fprintf(fp, "saa_flag"); break;
-    case PRJCT_RESULTS_ASCII_GOME2_SUNGLINT_RISK      :      fprintf(fp, "sunglint_danger_flag"); break;
-    case PRJCT_RESULTS_ASCII_GOME2_SUNGLINT_HIGHRISK  :      fprintf(fp, "sunglint_highdanger_flag"); break;
-    case PRJCT_RESULTS_ASCII_GOME2_RAINBOW            :      fprintf(fp, "rainbow_flag"); break;
+    case PRJCT_RESULTS_GOME2_SCANDIRECTION                :      fprintf(fp, "scan_direction"); break;
+    case PRJCT_RESULTS_GOME2_SAA                :      fprintf(fp, "saa_flag"); break;
+    case PRJCT_RESULTS_GOME2_SUNGLINT_RISK      :      fprintf(fp, "sunglint_danger_flag"); break;
+    case PRJCT_RESULTS_GOME2_SUNGLINT_HIGHRISK  :      fprintf(fp, "sunglint_highdanger_flag"); break;
+    case PRJCT_RESULTS_GOME2_RAINBOW            :      fprintf(fp, "rainbow_flag"); break;
 
-    case PRJCT_RESULTS_ASCII_CCD_DIODES : fprintf(fp,"diodes"); break;
-    case PRJCT_RESULTS_ASCII_CCD_TARGETAZIMUTH : fprintf(fp,"target_azimuth"); break;
-    case PRJCT_RESULTS_ASCII_CCD_TARGETELEVATION : fprintf(fp,"target_elevation"); break;
-    case PRJCT_RESULTS_ASCII_SATURATED : fprintf(fp,"saturated"); break;
-    case PRJCT_RESULTS_ASCII_OMI_INDEX_SWATH : fprintf(fp,"omi_index_swath"); break;
-    case PRJCT_RESULTS_ASCII_OMI_INDEX_ROW : fprintf(fp,"omi_index_row"); break;
-    case PRJCT_RESULTS_ASCII_OMI_GROUNDP_QF : fprintf(fp,"omi_groundp_qf"); break;
-    case PRJCT_RESULTS_ASCII_OMI_XTRACK_QF		: fprintf(fp,"omi_xtrack_qf"); break;
-    case PRJCT_RESULTS_ASCII_OMI_PIXELS_QF		: fprintf(fp,"omi_pixels_qf"); break;
-    case PRJCT_RESULTS_ASCII_SPIKES: fprintf(fp,"spike_pixels"); break;
-    case PRJCT_RESULTS_ASCII_UAV_SERVO_BYTE_SENT :      fprintf(fp, "servo_byte_sent"); break;
-    case PRJCT_RESULTS_ASCII_UAV_SERVO_BYTE_RECEIVED :      fprintf(fp, "servo_byte_received"); break;
+    case PRJCT_RESULTS_CCD_DIODES : fprintf(fp,"diodes"); break;
+    case PRJCT_RESULTS_CCD_TARGETAZIMUTH : fprintf(fp,"target_azimuth"); break;
+    case PRJCT_RESULTS_CCD_TARGETELEVATION : fprintf(fp,"target_elevation"); break;
+    case PRJCT_RESULTS_SATURATED : fprintf(fp,"saturated"); break;
+    case PRJCT_RESULTS_OMI_INDEX_SWATH : fprintf(fp,"omi_index_swath"); break;
+    case PRJCT_RESULTS_OMI_INDEX_ROW : fprintf(fp,"omi_index_row"); break;
+    case PRJCT_RESULTS_OMI_GROUNDP_QF : fprintf(fp,"omi_groundp_qf"); break;
+    case PRJCT_RESULTS_OMI_XTRACK_QF		: fprintf(fp,"omi_xtrack_qf"); break;
+    case PRJCT_RESULTS_OMI_PIXELS_QF		: fprintf(fp,"omi_pixels_qf"); break;
+    case PRJCT_RESULTS_SPIKES: fprintf(fp,"spike_pixels"); break;
+    case PRJCT_RESULTS_UAV_SERVO_BYTE_SENT :      fprintf(fp, "servo_byte_sent"); break;
+    case PRJCT_RESULTS_UAV_SERVO_BYTE_RECEIVED :      fprintf(fp, "servo_byte_received"); break;
 
     default: fprintf(fp, "Invalid");
     }

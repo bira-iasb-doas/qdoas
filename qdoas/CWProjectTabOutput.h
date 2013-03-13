@@ -25,6 +25,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QLineEdit>
 #include <QCheckBox>
 #include <QGroupBox>
+#include <QComboBox>
 #include <QListWidget>
 #include <QListWidgetItem>
 
@@ -49,6 +50,7 @@ Q_OBJECT
   void slotAnalysisCheckChanged(int state);
   void slotCalibrationCheckChanged(int state);
   void slotReferenceCheckChanged(int state);
+  void slotSelectFileFormatChanged(int index);
 
  signals:
   void signalOutputCalibration(bool enabled);
@@ -61,8 +63,9 @@ Q_OBJECT
   QCheckBox *m_useFileName;
   QGroupBox *m_editGroup;
   QLineEdit *m_fluxEdit, *m_colourIndexEdit;
+  QComboBox *m_selectFileFormat;
+  QLineEdit *m_swathNameEdit;
   CWOutputSelector *m_selector;
-
 };
 
 #endif

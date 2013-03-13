@@ -51,7 +51,7 @@ const mediate_analysis_window_t* CAnalysisWindowConfigItem::properties(void) con
   return &m_awProp;
 }
 
-const int CAnalysisWindowConfigItem::SetProperties(mediate_analysis_window_t *a) const
+int CAnalysisWindowConfigItem::SetProperties(mediate_analysis_window_t *a) const
 {
   // WARNING : allows (by design) poking at the internals ...
 
@@ -110,7 +110,7 @@ const mediate_project_t* CProjectConfigItem::properties(void) const
   return &m_projProp;
 }
 
-const int CProjectConfigItem::SetProperties(mediate_project_t *p) const
+int CProjectConfigItem::SetProperties(mediate_project_t *p) const
 {
   // WARNING : allows (by design) poking at the internals ...
 

@@ -136,7 +136,8 @@ void initializeMediateProjectOutput(mediate_project_output_t *d)
 {
   memset(d, 0, sizeof(mediate_project_output_t));
 
-  // any non-zero defaults...
+  // non-zero defaults:
+  strcpy(d->swath_name, OUTPUT_HDFEOS_DEFAULT_SWATH);
 }
 
 /* TODO JUST REMOVE */

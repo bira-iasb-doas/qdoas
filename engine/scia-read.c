@@ -97,6 +97,7 @@
 
 #include "mediate.h"
 #include "engine.h"
+#include "output.h"
 
 #include "bin_read.h"
 #include "scia_l1c_lib.h"

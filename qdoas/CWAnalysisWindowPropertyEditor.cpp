@@ -645,7 +645,6 @@ void CWAnalysisWindowPropertyEditor::projectPropertiesChanged()
        break;
     // -------------------------------------------------------------------------
        case PRJCT_INSTR_FORMAT_GOME2:
-       case PRJCT_INSTR_FORMAT_SCIA_HDF:
        case PRJCT_INSTR_FORMAT_SCIA_PDS:
        case PRJCT_INSTR_FORMAT_OMI:
         {

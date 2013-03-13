@@ -12,8 +12,7 @@ const char *STR_IGNORE = "IGNORE";
 const char *STR_STRICT = "STRICT";
 const char *STR_NONSTRICT = "NONSTRICT";
 
-
-extern enum omi_xtrack_mode str_to_mode(const char *configstr) {
+enum omi_xtrack_mode str_to_mode(const char *configstr) {
   enum omi_xtrack_mode result;
   if (! strcmp(configstr,STR_STRICT))
    result = XTRACKQF_STRICT;
@@ -43,161 +42,159 @@ bool CSelectorSubHandler::start(const QString &element, const QXmlAttributes &at
 
   data_select_list_t *d = m_selectList;
 
-  if (d->nSelected >= PRJCT_RESULTS_ASCII_MAX)
+  if (d->nSelected >= PRJCT_RESULTS_MAX)
     return postErrorMessage("Too many output fields");
 
   QString str = atts.value("name");
   if (str == "specno")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_SPECNO;
+    d->selected[d->nSelected] = PRJCT_RESULTS_SPECNO;
   else if (str == "name")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_NAME;
+    d->selected[d->nSelected] = PRJCT_RESULTS_NAME;
   else if (str == "date_time")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_DATE_TIME;
+    d->selected[d->nSelected] = PRJCT_RESULTS_DATE_TIME;
   else if (str == "date")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_DATE;
+    d->selected[d->nSelected] = PRJCT_RESULTS_DATE;
   else if (str == "time")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_TIME;
+    d->selected[d->nSelected] = PRJCT_RESULTS_TIME;
   else if (str == "year")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_YEAR;
+    d->selected[d->nSelected] = PRJCT_RESULTS_YEAR;
   else if (str == "julian")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_JULIAN;
+    d->selected[d->nSelected] = PRJCT_RESULTS_JULIAN;
   else if (str == "jdfrac")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_JDFRAC;
+    d->selected[d->nSelected] = PRJCT_RESULTS_JDFRAC;
   else if (str == "tifrac")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_TIFRAC;
+    d->selected[d->nSelected] = PRJCT_RESULTS_TIFRAC;
   else if (str == "scans")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_SCANS;
+    d->selected[d->nSelected] = PRJCT_RESULTS_SCANS;
   else if (str == "rejected")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_NREJ;
+    d->selected[d->nSelected] = PRJCT_RESULTS_NREJ;
   else if (str == "tint")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_TINT;
+    d->selected[d->nSelected] = PRJCT_RESULTS_TINT;
   else if (str == "sza")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_SZA;
+    d->selected[d->nSelected] = PRJCT_RESULTS_SZA;
   else if (str == "chi")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_CHI;
+    d->selected[d->nSelected] = PRJCT_RESULTS_CHI;
   else if (str == "rms")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_RMS;
+    d->selected[d->nSelected] = PRJCT_RESULTS_RMS;
   else if (str == "azim")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_AZIM;
+    d->selected[d->nSelected] = PRJCT_RESULTS_AZIM;
   else if (str == "tdet")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_TDET;
+    d->selected[d->nSelected] = PRJCT_RESULTS_TDET;
   else if (str == "sky")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_SKY;
+    d->selected[d->nSelected] = PRJCT_RESULTS_SKY;
   else if (str == "bestshift")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_BESTSHIFT;
+    d->selected[d->nSelected] = PRJCT_RESULTS_BESTSHIFT;
   else if (str == "refzm")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_REFZM;
+    d->selected[d->nSelected] = PRJCT_RESULTS_REFZM;
   else if (str == "refshift")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_REFSHIFT;
+    d->selected[d->nSelected] = PRJCT_RESULTS_REFSHIFT;
   else if (str == "pixel")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_PIXEL;
+    d->selected[d->nSelected] = PRJCT_RESULTS_PIXEL;
   else if (str == "pixel_type")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_PIXEL_TYPE;
+    d->selected[d->nSelected] = PRJCT_RESULTS_PIXEL_TYPE;
   else if (str == "orbit")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_ORBIT;
+    d->selected[d->nSelected] = PRJCT_RESULTS_ORBIT;
   else if (str == "longit")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_LONGIT;
+    d->selected[d->nSelected] = PRJCT_RESULTS_LONGIT;
   else if (str == "latit")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_LATIT;
+    d->selected[d->nSelected] = PRJCT_RESULTS_LATIT;
   else if (str == "altit")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_ALTIT;
+    d->selected[d->nSelected] = PRJCT_RESULTS_ALTIT;
   else if (str == "covar")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_COVAR;
+    d->selected[d->nSelected] = PRJCT_RESULTS_COVAR;
   else if (str == "corr")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_CORR;
+    d->selected[d->nSelected] = PRJCT_RESULTS_CORR;
   else if (str == "cloud")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_CLOUD;
-  else if (str == "coeff")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_COEFF;
+    d->selected[d->nSelected] = PRJCT_RESULTS_CLOUD;
   else if (str == "o3")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_O3;
+    d->selected[d->nSelected] = PRJCT_RESULTS_O3;
   else if (str == "no2")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_NO2;
+    d->selected[d->nSelected] = PRJCT_RESULTS_NO2;
   else if (str == "cloudtopp")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_CLOUDTOPP;
+    d->selected[d->nSelected] = PRJCT_RESULTS_CLOUDTOPP;
   else if (str == "los_za")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_LOS_ZA;
+    d->selected[d->nSelected] = PRJCT_RESULTS_LOS_ZA;
   else if (str == "los_azimuth")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_LOS_AZIMUTH;
+    d->selected[d->nSelected] = PRJCT_RESULTS_LOS_AZIMUTH;
   else if (str == "sat_height")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_SAT_HEIGHT;
+    d->selected[d->nSelected] = PRJCT_RESULTS_SAT_HEIGHT;
   else if (str == "earth_radius")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_EARTH_RADIUS;
+    d->selected[d->nSelected] = PRJCT_RESULTS_EARTH_RADIUS;
   else if (str == "view_elevation")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_VIEW_ELEVATION;
+    d->selected[d->nSelected] = PRJCT_RESULTS_VIEW_ELEVATION;
   else if (str == "view_zenith")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_VIEW_ZENITH;
+    d->selected[d->nSelected] = PRJCT_RESULTS_VIEW_ZENITH;
   else if (str == "view_azimuth")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_VIEW_AZIMUTH;
+    d->selected[d->nSelected] = PRJCT_RESULTS_VIEW_AZIMUTH;
   else if (str == "scia_quality")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_SCIA_QUALITY;
+    d->selected[d->nSelected] = PRJCT_RESULTS_SCIA_QUALITY;
   else if (str == "scia_state_index")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_SCIA_STATE_INDEX;
+    d->selected[d->nSelected] = PRJCT_RESULTS_SCIA_STATE_INDEX;
   else if (str == "scia_state_id")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_SCIA_STATE_ID;
+    d->selected[d->nSelected] = PRJCT_RESULTS_SCIA_STATE_ID;
   else if (str=="startdate")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_STARTDATE;
+    d->selected[d->nSelected] = PRJCT_RESULTS_STARTDATE;
   else if (str=="enddate")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_ENDDATE;
+    d->selected[d->nSelected] = PRJCT_RESULTS_ENDDATE;
   else if ((str == "mfc_starttime") || (str=="starttime"))
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_STARTTIME;
+    d->selected[d->nSelected] = PRJCT_RESULTS_STARTTIME;
   else if ((str == "mfc_endtime") || (str=="endtime"))
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_ENDTIME;
+    d->selected[d->nSelected] = PRJCT_RESULTS_ENDTIME;
 
   else if (str == "scanning_angle")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_SCANNING;
+    d->selected[d->nSelected] = PRJCT_RESULTS_SCANNING;
   else if ((str == "ccd_filterNumber") || (str=="filterNumber"))
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_FILTERNUMBER;
+    d->selected[d->nSelected] = PRJCT_RESULTS_FILTERNUMBER;
   else if ((str == "ccd_measType") || (str == "measType"))
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_MEASTYPE;
+    d->selected[d->nSelected] = PRJCT_RESULTS_MEASTYPE;
   else if (str == "ccd_headTemp")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_CCD_HEADTEMPERATURE;
+    d->selected[d->nSelected] = PRJCT_RESULTS_CCD_HEADTEMPERATURE;
   else if (str == "cooler_status")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_COOLING_STATUS;
+    d->selected[d->nSelected] = PRJCT_RESULTS_COOLING_STATUS;
   else if (str == "mirror_status")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_MIRROR_ERROR;
+    d->selected[d->nSelected] = PRJCT_RESULTS_MIRROR_ERROR;
   else if (str == "compass_angle")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_COMPASS;
+    d->selected[d->nSelected] = PRJCT_RESULTS_COMPASS;
   else if (str == "pitch_angle")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_PITCH;
+    d->selected[d->nSelected] = PRJCT_RESULTS_PITCH;
   else if (str == "roll_angle")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_ROLL;
+    d->selected[d->nSelected] = PRJCT_RESULTS_ROLL;
   else if (str == "iter_number")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_ITER;
+    d->selected[d->nSelected] = PRJCT_RESULTS_ITER;
   else if (str == "scan_direction")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_GOME2_SCANDIRECTION;
+    d->selected[d->nSelected] = PRJCT_RESULTS_GOME2_SCANDIRECTION;
   else if (str == "saa_flag")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_GOME2_SAA;
+    d->selected[d->nSelected] = PRJCT_RESULTS_GOME2_SAA;
   else if (str == "sunglint_danger_flag")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_GOME2_SUNGLINT_RISK;
+    d->selected[d->nSelected] = PRJCT_RESULTS_GOME2_SUNGLINT_RISK;
   else if (str == "sunglint_highdanger_flag")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_GOME2_SUNGLINT_HIGHRISK;
+    d->selected[d->nSelected] = PRJCT_RESULTS_GOME2_SUNGLINT_HIGHRISK;
   else if (str == "rainbow_flag")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_GOME2_RAINBOW;
+    d->selected[d->nSelected] = PRJCT_RESULTS_GOME2_RAINBOW;
   else if (str == "diodes")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_CCD_DIODES;
+    d->selected[d->nSelected] = PRJCT_RESULTS_CCD_DIODES;
   else if (str == "target_azimuth")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_CCD_TARGETAZIMUTH;
+    d->selected[d->nSelected] = PRJCT_RESULTS_CCD_TARGETAZIMUTH;
   else if (str == "target_elevation")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_CCD_TARGETELEVATION;
+    d->selected[d->nSelected] = PRJCT_RESULTS_CCD_TARGETELEVATION;
   else if (str == "saturated")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_SATURATED;
+    d->selected[d->nSelected] = PRJCT_RESULTS_SATURATED;
   else if (str == "omi_index_swath")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_OMI_INDEX_SWATH;
+    d->selected[d->nSelected] = PRJCT_RESULTS_OMI_INDEX_SWATH;
   else if (str == "omi_index_row")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_OMI_INDEX_ROW;
+    d->selected[d->nSelected] = PRJCT_RESULTS_OMI_INDEX_ROW;
   else if (str == "omi_groundp_qf")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_OMI_GROUNDP_QF;
+    d->selected[d->nSelected] = PRJCT_RESULTS_OMI_GROUNDP_QF;
   else if (str == "omi_xtrack_qf")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_OMI_XTRACK_QF;
+    d->selected[d->nSelected] = PRJCT_RESULTS_OMI_XTRACK_QF;
   else if (str == "omi_pixels_qf")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_OMI_PIXELS_QF;
+    d->selected[d->nSelected] = PRJCT_RESULTS_OMI_PIXELS_QF;
   else if (str == "spike_pixels")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_SPIKES;
+    d->selected[d->nSelected] = PRJCT_RESULTS_SPIKES;
   else if (str == "servo_byte_sent")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_UAV_SERVO_BYTE_SENT;
+    d->selected[d->nSelected] = PRJCT_RESULTS_UAV_SERVO_BYTE_SENT;
   else if (str == "servo_byte_received")
-    d->selected[d->nSelected] = PRJCT_RESULTS_ASCII_UAV_SERVO_BYTE_RECEIVED;
+    d->selected[d->nSelected] = PRJCT_RESULTS_UAV_SERVO_BYTE_RECEIVED;
 
   else
     return postErrorMessage("Invalid output field " + str);
@@ -627,8 +624,6 @@ bool CProjectInstrumentalSubHandler::start(const QXmlAttributes &atts)
     m_instrumental->format = PRJCT_INSTR_FORMAT_GDP_ASCII;
   else if (str == "gdpbin")
     m_instrumental->format = PRJCT_INSTR_FORMAT_GDP_BIN;
-  else if (str == "sciahdf")
-    m_instrumental->format = PRJCT_INSTR_FORMAT_SCIA_HDF;
   else if (str == "sciapds")
     m_instrumental->format = PRJCT_INSTR_FORMAT_SCIA_PDS;
   else if (str == "uoft")
@@ -981,10 +976,6 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
   }
   else if (element == "gdpbin") { // GDP BIN
     helperLoadGdp(atts, &(m_instrumental->gdpbin));
-
-  }
-  else if (element == "sciahdf") { // SCIA HDF
-    helperLoadScia(atts, &(m_instrumental->sciahdf));
 
   }
   else if (element == "sciapds") { // SCIA PDS
@@ -1494,13 +1485,12 @@ bool CProjectOutputSubHandler::start(const QXmlAttributes &atts)
   m_output->calibrationFlag = (atts.value("calib") == "true") ? 1 : 0;
   m_output->configurationFlag = (atts.value("conf") == "true") ? 1 : 0;
   m_output->referenceFlag = (atts.value("ref") == "true");
-  m_output->binaryFormatFlag = (atts.value("bin") == "true") ? 1 : 0;
   m_output->directoryFlag = (atts.value("dirs") == "true") ? 1 : 0;
   m_output->filenameFlag = (atts.value("file") == "true") ? 1 : 0;
 
   str = atts.value("flux");
   if (!str.isEmpty()) {
-    if (str.length() < (int)sizeof(m_output->flux))
+    if (str.length()+1 < (int)sizeof(m_output->flux))
       strcpy(m_output->flux, str.toAscii().data());
     else
       return postErrorMessage("Output flux too long");
@@ -1508,10 +1498,25 @@ bool CProjectOutputSubHandler::start(const QXmlAttributes &atts)
 
   str = atts.value("cic");
   if (!str.isEmpty()) {
-    if (str.length() < (int)sizeof(m_output->colourIndex))
+    if (str.length()+1 < (int)sizeof(m_output->colourIndex))
       strcpy(m_output->colourIndex, str.toAscii().data());
     else
       return postErrorMessage("Output colour index too long");
+  }
+
+  str = atts.value("swathName");
+  if (!str.isEmpty()) {
+    if ((size_t) str.length()+1 < sizeof(m_output->swath_name))
+      strcpy(m_output->swath_name, str.toAscii().data());
+    else
+      return postErrorMessage("Output file swath name too long.");
+  }
+
+  str = atts.value("fileFormat");
+  if (!str.isEmpty()) {
+    enum output_format format = output_get_format(str.toAscii().data());
+    if (format != -1)
+      m_output->file_format = format;
   }
 
   return true;

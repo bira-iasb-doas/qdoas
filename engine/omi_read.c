@@ -3,8 +3,8 @@
 //
 //  Product/Project   :  QDOAS
 //  Module purpose    :  OMI interface
-//  Name of module    :  OMIRead.C
-//  Program Language  :  C/C++
+//  Name of module    :  omi_read.c
+//  Program Language  :  C
 //  Creation date     :  4 April 2007
 //
 //  QDOAS is a cross-platform application developed in QT for DOAS retrieval
@@ -36,10 +36,6 @@
 //  Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //
 //  ----------------------------------------------------------------------------
-//  FUNCTIONS
-//
-//
-//
 //  LIBRARIES
 //
 //  This module uses HDF-EOS (Hierarchical Data Format - Earth Observing System)
@@ -124,7 +120,7 @@ typedef struct _omi_ref
   double       **omiRefSpectrum;
   double       **omiRefLambdaK;
   double       **omiRefSigma;
-  DoasCh         omiRefFileName[MAX_STR_LEN+1];
+  char         omiRefFileName[MAX_STR_LEN+1];
   OMI_SPECTRUM   spectrum;
   long           nXtrack,nWavel;
   double        *omiRefFact;
@@ -190,8 +186,8 @@ struct omi_ref_list
   struct omi_ref_list *next;
 };
 
-const DoasCh *OMI_EarthSwaths[OMI_SWATH_MAX]={"Earth UV-1 Swath","Earth UV-2 Swath","Earth VIS Swath"};
-const DoasCh *OMI_SunSwaths[OMI_SWATH_MAX]={"Sun Volume UV-1 Swath","Sun Volume UV-2 Swath","Sun Volume VIS Swath"};
+const char *OMI_EarthSwaths[OMI_SWATH_MAX]={"Earth UV-1 Swath","Earth UV-2 Swath","Earth VIS Swath"};
+const char *OMI_SunSwaths[OMI_SWATH_MAX]={"Sun Volume UV-1 Swath","Sun Volume UV-2 Swath","Sun Volume VIS Swath"};
 
 // ================
 // STATIC VARIABLES
@@ -209,7 +205,7 @@ static bool automatic_reference_ok[OMI_NUM_ROWS]; // array to keep track if auto
 int OMI_ms=0;
 int omiSwathOld=ITEM_NONE;
 
-RC OmiOpen(OMI_ORBIT_FILE *pOrbitFile,char *swathName);
+RC OmiOpen(OMI_ORBIT_FILE *pOrbitFile,const char *swathName);
 void omi_calculate_wavelengths(float32 wavelength_coeff[], int16 refcol, int32 n_wavel, double* lambda);
 void omi_free_swath_data(OMI_SWATH *pSwath);
 void omi_calculate_wavelengths(float32 wavelength_coeff[], int16 refcol, int32 n_wavel, double* lambda);
@@ -408,11 +404,11 @@ void omi_destroy_orbit_file(OMI_ORBIT_FILE *pOrbitFile) {
   free(pOrbitFile);
 }
 
-void OMI_TrackSelection(DoasCh *omiTrackSelection,int *omiTracks)
+void OMI_TrackSelection(const char *omiTrackSelection,int *omiTracks)
 {
   // Declarations
 
-  DoasCh str[256],*ptr;
+  char str[256];
   int number1,number2,i,n,resetFlag,rangeFlag;
 
   // Initializations
@@ -428,7 +424,7 @@ void OMI_TrackSelection(DoasCh *omiTrackSelection,int *omiTracks)
       omiTracks[i]=1;
   else
     {
-      for (ptr=omiTrackSelection;(int)(ptr-omiTrackSelection)<=256;ptr++)
+      for (const char *ptr=omiTrackSelection;(int)(ptr-omiTrackSelection)<=256;ptr++)
 	{
 	  if (resetFlag)
 	    {
@@ -623,7 +619,7 @@ char *automatic_reference_info(struct omi_ref_list *spectra) {
     length+= 6; // " current->reference->measurement_number"
     current = current->next;
   }
-  char *result = malloc(length*sizeof(char));
+  char *result = malloc(length);
   
   current = spectra;
   filename = spectra->reference->orbit_file->omiFileName;
@@ -717,9 +713,9 @@ RC find_matching_spectra(ENGINE_CONTEXT *pEngineContext, OMI_ORBIT_FILE *orbit_f
               newref->next = *first;
               *first = newref; // add spectrum to the list of all spectra
               newref->orbit_file = orbit_file;
-              newref->spectrum = malloc(orbit_file->nWavel * sizeof(double));
-              newref->errors = malloc(orbit_file->nWavel * sizeof(double));
-              newref->wavelengths = malloc(orbit_file->nWavel * sizeof(double));
+              newref->spectrum = malloc(orbit_file->nWavel * sizeof(*newref->spectrum));
+              newref->errors = malloc(orbit_file->nWavel * sizeof(*newref->errors));
+              newref->wavelengths = malloc(orbit_file->nWavel * sizeof(*newref->wavelengths));
 
               rc = omi_load_spectrum(OMI_SPEC_RAD, orbit_file->sw_id, measurement, row, orbit_file->nWavel, newref->wavelengths, newref->spectrum, newref->errors, NULL);
 
@@ -984,7 +980,7 @@ RC OmiGetSwathData(OMI_ORBIT_FILE *pOrbitFile)
   return rc;
 }
 
-RC OmiOpen(OMI_ORBIT_FILE *pOrbitFile,char *swathName)
+RC OmiOpen(OMI_ORBIT_FILE *pOrbitFile,const char *swathName)
 {
   RC rc = ERROR_ID_NO;
 
@@ -1057,7 +1053,7 @@ RC OmiOpen(OMI_ORBIT_FILE *pOrbitFile,char *swathName)
   return rc;
 }
 
-RC OMI_LoadReference(ENGINE_CONTEXT *pEngineContext,DoasCh *refFile)
+RC OMI_LoadReference(ENGINE_CONTEXT *pEngineContext,const char *refFile)
 {
   OMI_REF * pRef=&OMI_ref[omiRefFilesN];
   int spectralType=pEngineContext->project.instrumental.omi.spectralType;
@@ -1066,12 +1062,12 @@ RC OMI_LoadReference(ENGINE_CONTEXT *pEngineContext,DoasCh *refFile)
   int32 swf_id = 0;
   int32 sw_id = 0;
 
-  swf_id = SWopen(refFile, DFACC_READ);
+  swf_id = SWopen((char *)refFile, DFACC_READ); // library header doesn't contain const modifier
   if (swf_id == FAIL) {
     rc=ERROR_SetLast(__func__,ERROR_TYPE_WARNING,ERROR_ID_HDFEOS,__func__,refFile,"SWopen");
     goto end_loadreference;
   }
-  sw_id = SWattach(swf_id, OMI_SunSwaths[spectralType]);
+  sw_id = SWattach(swf_id, (char *) OMI_SunSwaths[spectralType]); // library header doesn't contain const modifier
   if (sw_id  == FAIL) {
     rc=ERROR_SetLast(__func__,ERROR_TYPE_WARNING,ERROR_ID_HDFEOS,__func__,refFile,"SWattach");
     goto end_loadreference;
@@ -1128,9 +1124,9 @@ RC OMI_LoadReference(ENGINE_CONTEXT *pEngineContext,DoasCh *refFile)
 RC omi_load_spectrum(int spec_type, int32 sw_id, int32 measurement, int32 track, int32 n_wavel, double *lambda, double *spectrum, double *sigma, DoasUS *pixelQualityFlags) {
   RC rc = ERROR_ID_NO;
 
-  int16 *mantissa = malloc(n_wavel*2);
-  int16 *precisionmantissa = malloc(n_wavel*2);
-  int8 *exponent = malloc(n_wavel);
+  int16 *mantissa = malloc(n_wavel*sizeof(*mantissa));
+  int16 *precisionmantissa = malloc(n_wavel*sizeof(*precisionmantissa));
+  int8 *exponent = malloc(n_wavel*sizeof(*exponent));
 
   // names of the fields in omi hdf files.
   char *s_mantissa = IRRADIANCE_MANTISSA;
@@ -1237,7 +1233,7 @@ void omi_interpolate_errors(int16 mantissa[], int32 n_wavel, double wavelengths[
   }
 }
 
-RC OMI_GetReference(DoasCh *refFile,INDEX indexColumn,double *lambda,double *ref,double *refSigma)
+RC OMI_GetReference(char *refFile,INDEX indexColumn,double *lambda,double *ref,double *refSigma)
 {
   RC rc=ERROR_ID_NO; 
 
@@ -1443,6 +1439,9 @@ void OMI_ReleaseBuffers() {
     omi_destroy_orbit_file(reference_orbit_files[i]);
     reference_orbit_files[i] = NULL;
   }
+
+  omi_close_orbit_file(&current_orbit_file);
+
   num_reference_orbit_files = 0;
 
   omiRefFilesN=0; // the total number of files to browse in one shot

@@ -115,7 +115,7 @@ INT SITES_itemN=0;                                                              
 //                 ITEM_NONE if not found
 // -----------------------------------------------------------------------------
 
-INDEX SITES_GetIndex(DoasCh *siteName)
+INDEX SITES_GetIndex(const DoasCh *siteName)
  {
   // Declarations
 

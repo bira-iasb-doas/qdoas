@@ -180,7 +180,18 @@ ERROR_TABLE errorTable[]=
   { ERROR_ID_OMI_PIXELQF               , "Spectrum rejected based on pixels quality flags"                                                                    },
   { ERROR_ID_HDFEOS                    , "[%s] failed (file %s, error %s)"
   },
-
+  { ERROR_ID_HDFEOS5_SWATH             , "Could not create swath %s in file %s"
+  },
+  { ERROR_ID_HDFEOS5_FILE_EXISTS       , "Can not write to existing HDF-EOS5 file %s"
+  },
+  { ERROR_ID_HDFEOS5_DEFFIELD          , "HDF-EOS5: error creating field %s"
+  },
+  { ERROR_ID_HDFEOS5_DEFDIM            , "HDF-EOS5: error creating dimension %s of size %d"
+  },
+  { ERROR_ID_HDFEOS5_WRITEFIELD        , "HDF-EOS5: error writing to field %s"
+  },
+  { ERROR_ID_HDFEOS5_WRITEATTR         , "HDF-EOS5: error writing to attribute %s"
+  },
   // End of the table
 
   { ITEM_NONE                          , "Unknown error (%d)"                                                                                           }

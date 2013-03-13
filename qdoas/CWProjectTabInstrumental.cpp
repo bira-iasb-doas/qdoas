@@ -134,11 +134,6 @@ CWProjectTabInstrumental::CWProjectTabInstrumental(const mediate_project_instrum
   index = m_formatStack->addWidget(m_gdpBinEdit);
   m_instrumentToStackIndexMap.insert(std::map<int,int>::value_type(PRJCT_INSTR_FORMAT_GDP_BIN, index));
 
-  // sciahds
-  m_sciaHdfEdit = new CWInstrSciaEdit(&(instr->sciahdf));
-  index = m_formatStack->addWidget(m_sciaHdfEdit);
-  m_instrumentToStackIndexMap.insert(std::map<int,int>::value_type(PRJCT_INSTR_FORMAT_SCIA_HDF, index));
-
   // sciapds
   m_sciaPdsEdit = new CWInstrSciaEdit(&(instr->sciapds));
   index = m_formatStack->addWidget(m_sciaPdsEdit);
@@ -229,7 +224,6 @@ void CWProjectTabInstrumental::apply(mediate_project_instrumental_t *instr) cons
   m_ccdEevEdit->apply(&(instr->ccdeev));
   m_gdpAsciiEdit->apply(&(instr->gdpascii));
   m_gdpBinEdit->apply(&(instr->gdpbin));
-  m_sciaHdfEdit->apply(&(instr->sciahdf));
   m_sciaPdsEdit->apply(&(instr->sciapds));
   m_uoftEdit->apply(&(instr->uoft));
   m_noaaEdit->apply(&(instr->noaa));

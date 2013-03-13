@@ -576,7 +576,7 @@ void FilesSaveDefaultPaths(FILE *fp,DoasCh *sectionName)
 //               ERROR_ID_FILE_EMPTY if the input file is empty
 // -----------------------------------------------------------------------------
 
-RC FILES_GetMatrixDimensions(FILE *fp,DoasCh *fileName,INT *pNl,INT *pNc,DoasCh *callingFunction,INT errorType)
+RC FILES_GetMatrixDimensions(FILE *fp,const char *fileName,INT *pNl,INT *pNc,const char *callingFunction,INT errorType)
  {
   // Declarations
 
@@ -662,7 +662,7 @@ RC FILES_GetMatrixDimensions(FILE *fp,DoasCh *fileName,INT *pNl,INT *pNc,DoasCh 
 //               ERROR_ID_FILE_NOT_FOUND if can not open the input file
 // -----------------------------------------------------------------------------
 
-RC FILES_LoadMatrix(FILE *fp,DoasCh *fileName,double **matrix,INT base,INT nl,INT nc,DoasCh *callingFunction,INT errorType)
+RC FILES_LoadMatrix(FILE *fp,const char *fileName,double **matrix,INT base,INT nl,INT nc,const char *callingFunction,INT errorType)
  {
   // Declarations
 

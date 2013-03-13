@@ -1,7 +1,7 @@
 
 //  ----------------------------------------------------------------------------
 /*!
-    \file    BIRA-AIRBORNE-READ.C
+    \file    bira-airborne-read.C
     \brief   Format developed at BIRA-IASB for airborne measurements
     \details This module contains the routines needed to read data measured
              from aircraft and ULM
@@ -151,7 +151,6 @@ RC AIRBORNE_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,INT lo
   double        *spectrum;                                                      // the current spectrum
   double         tmLocal;                                                       // measurement local time
   double         offset;
-  int i;
   RC             rc;                                                            // return code
 
   // Initializations

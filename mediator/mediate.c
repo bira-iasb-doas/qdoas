@@ -110,22 +110,22 @@ int mediateRequestDisplaySpecInfo(void *engineContext,int page,void *responseHan
   if (pInstrumental->readOutFormat!=PRJCT_INSTR_FORMAT_GOME2)
     mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Date and Time","%02d/%02d/%d %02d:%02d:%02d",pDay->da_day,pDay->da_mon,pDay->da_year,pTime->ti_hour,pTime->ti_min,pTime->ti_sec);
   else
-    mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Date and Time","%02d/%02d/%d %02d:%02d:%02d.%06d",pDay->da_day,pDay->da_mon,pDay->da_year,pTime->ti_hour,pTime->ti_min,pTime->ti_sec,GOME2_ms);
+    mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Date and Time","%02d/%02d/%d %02d:%02d:%02d.%06d",pDay->da_day,pDay->da_mon,pDay->da_year,pTime->ti_hour,pTime->ti_min,pTime->ti_sec,GOME2_mus);
 
   //      sprintf(tmpString,"%.3f -> %.3f \n",pRecord->TimeDec,pRecord->localTimeDec);
 
   pDay=&pRecord->startDate;
-  if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_STARTDATE])
+  if (pSpectra->fieldsFlag[PRJCT_RESULTS_STARTDATE])
     mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Start date","%02d/%02d/%d",pDay->da_day,pDay->da_mon,pDay->da_year);
   pDay=&pRecord->endDate;
-  if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_ENDDATE])
+  if (pSpectra->fieldsFlag[PRJCT_RESULTS_ENDDATE])
     mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"End date","%02d/%02d/%d",pDay->da_day,pDay->da_mon,pDay->da_year);
 
   pTime=&pRecord->startTime;
-  if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_STARTTIME])
+  if (pSpectra->fieldsFlag[PRJCT_RESULTS_STARTTIME])
     mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Start time","%02d:%02d:%02d",pTime->ti_hour,pTime->ti_min,pTime->ti_sec);
   pTime=&pRecord->endTime;
-  if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_ENDTIME])
+  if (pSpectra->fieldsFlag[PRJCT_RESULTS_ENDTIME])
     mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"End time","%02d:%02d:%02d",pTime->ti_hour,pTime->ti_min,pTime->ti_sec);
 
   if (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS)
@@ -141,19 +141,19 @@ int mediateRequestDisplaySpecInfo(void *engineContext,int page,void *responseHan
                                pRecord->omi.omiMeasurementIndex,pRecord->omi.nMeasurements,
                                pRecord->omi.omiRowIndex,pRecord->omi.nXtrack);
 
-      if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_OMI_INDEX_SWATH])
+      if (pSpectra->fieldsFlag[PRJCT_RESULTS_OMI_INDEX_SWATH])
        mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Index of measurement","%d",pRecord->omi.omiMeasurementIndex);
-      if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_OMI_INDEX_ROW])
+      if (pSpectra->fieldsFlag[PRJCT_RESULTS_OMI_INDEX_ROW])
        mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Index of row","%d",pRecord->omi.omiRowIndex);
-      if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_OMI_GROUNDP_QF])
+      if (pSpectra->fieldsFlag[PRJCT_RESULTS_OMI_GROUNDP_QF])
        mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"GroundPixel QF","%d",pRecord->omi.omiGroundPQF);
-      if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_OMI_XTRACK_QF])
+      if (pSpectra->fieldsFlag[PRJCT_RESULTS_OMI_XTRACK_QF])
        mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"XTrack QF","%d",pRecord->omi.omiXtrackQF);
     }
   else
    mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Record","%d/%d",pEngineContext->indexRecord,pEngineContext->recordNumber);
 
-  if (strlen(pRecord->Nom) && (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_NAME]))
+  if (strlen(pRecord->Nom) && (pSpectra->fieldsFlag[PRJCT_RESULTS_NAME]))
    mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Record name","%s",pRecord->Nom);
 
   // QDOAS ???
@@ -180,11 +180,11 @@ int mediateRequestDisplaySpecInfo(void *engineContext,int page,void *responseHan
   // QDOAS ???       sprintf(tmpString,"ty mask\t\t\t%d\n",MFC_header.ty);
   // QDOAS ???      }
 
-  if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_PIXEL])
+  if (pSpectra->fieldsFlag[PRJCT_RESULTS_PIXEL])
    mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Pixel number","%d",pRecord->gome.pixelNumber);
-  if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_PIXEL_TYPE])
+  if (pSpectra->fieldsFlag[PRJCT_RESULTS_PIXEL_TYPE])
    mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Pixel type","%d",pRecord->gome.pixelType);
-  if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_ORBIT])
+  if (pSpectra->fieldsFlag[PRJCT_RESULTS_ORBIT])
    {
     if ((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_GDP_ASCII) || (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN))
      mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Orbit number","%d",pRecord->gome.orbitNumber+1);
@@ -197,32 +197,32 @@ int mediateRequestDisplaySpecInfo(void *engineContext,int page,void *responseHan
   // QDOAS ???                  pRecord->dispersion[1],pRecord->dispersion[2]);
   // QDOAS ???
 
-  if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_TINT])
+  if (pSpectra->fieldsFlag[PRJCT_RESULTS_TINT])
    mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Exposure time","%.3f sec",pRecord->Tint);
-  if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_SCANS])
+  if (pSpectra->fieldsFlag[PRJCT_RESULTS_SCANS])
    mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Scans taken into account","%d",pRecord->NSomme);
-  if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_NREJ])
+  if (pSpectra->fieldsFlag[PRJCT_RESULTS_NREJ])
    mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Rejected scans","%d",pRecord->rejected);
 
-  if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_SZA])
+  if (pSpectra->fieldsFlag[PRJCT_RESULTS_SZA])
    mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Solar Zenith angle","%-.3f",pRecord->Zm);
-  if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_AZIM])
+  if (pSpectra->fieldsFlag[PRJCT_RESULTS_AZIM])
    mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Solar Azimuth angle","%.3f",pRecord->Azimuth);
 
-  if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_VIEW_ELEVATION])
+  if (pSpectra->fieldsFlag[PRJCT_RESULTS_VIEW_ELEVATION])
    mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Elevation viewing angle","%.3f",pRecord->elevationViewAngle);
-  if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_VIEW_ZENITH])
+  if (pSpectra->fieldsFlag[PRJCT_RESULTS_VIEW_ZENITH])
    mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Zenith viewing angle","%.3f",pRecord->zenithViewAngle);
-  if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_VIEW_AZIMUTH])
+  if (pSpectra->fieldsFlag[PRJCT_RESULTS_VIEW_AZIMUTH])
    mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Azimuth viewing angle","%.3f",pRecord->azimuthViewAngle);
-  if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_LOS_ZA])
+  if (pSpectra->fieldsFlag[PRJCT_RESULTS_LOS_ZA])
    mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Viewing Zenith angle","%.3f",pRecord->zenithViewAngle);
-  if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_LOS_AZIMUTH])
+  if (pSpectra->fieldsFlag[PRJCT_RESULTS_LOS_AZIMUTH])
    mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Viewing Azimuth angle","%.3f",pRecord->azimuthViewAngle);
 
   if (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MKZY)
    {
-    if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_SCANNING])
+    if (pSpectra->fieldsFlag[PRJCT_RESULTS_SCANNING])
      {
       mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Scanning angle","%.3f",pRecord->mkzy.scanningAngle);
       mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Scanning angle 2","%.3f",pRecord->mkzy.scanningAngle2);
@@ -231,73 +231,73 @@ int mediateRequestDisplaySpecInfo(void *engineContext,int page,void *responseHan
 
   if (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_CCD_EEV)
    {
-    if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_SCANNING])
+    if (pSpectra->fieldsFlag[PRJCT_RESULTS_SCANNING])
      mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Telescope Scanning angle","%.3f",pRecord->als.scanningAngle);
-    if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_COMPASS])
+    if (pSpectra->fieldsFlag[PRJCT_RESULTS_COMPASS])
      mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Scanning compass angle","%.3f",pRecord->als.compassAngle);
-    if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_PITCH])
+    if (pSpectra->fieldsFlag[PRJCT_RESULTS_PITCH])
      mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Scanning compass angle","%.3f",pRecord->als.pitchAngle);
-    if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_ROLL])
+    if (pSpectra->fieldsFlag[PRJCT_RESULTS_ROLL])
      mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Scanning compass angle","%.3f",pRecord->als.rollAngle);
 
-    if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_FILTERNUMBER])
+    if (pSpectra->fieldsFlag[PRJCT_RESULTS_FILTERNUMBER])
      mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Filter number","%d",pRecord->ccd.filterNumber);
-    if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_CCD_HEADTEMPERATURE])
+    if (pSpectra->fieldsFlag[PRJCT_RESULTS_CCD_HEADTEMPERATURE])
      mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Temperature in optic head","%.3f deg",pRecord->ccd.headTemperature);
 
-    if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_CCD_DIODES])
+    if (pSpectra->fieldsFlag[PRJCT_RESULTS_CCD_DIODES])
      mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Diodes","%.3f %.3f %.3f %.3f",pRecord->ccd.diodes[0],pRecord->ccd.diodes[1],pRecord->ccd.diodes[2],pRecord->ccd.diodes[3]);
-    if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_CCD_TARGETAZIMUTH])
+    if (pSpectra->fieldsFlag[PRJCT_RESULTS_CCD_TARGETAZIMUTH])
      mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Target azimuth","%.3f deg",pRecord->ccd.targetAzimuth);
-    if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_CCD_TARGETELEVATION])
+    if (pSpectra->fieldsFlag[PRJCT_RESULTS_CCD_TARGETELEVATION])
      mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Target elevation","%.3f deg",pRecord->ccd.targetElevation);
-    if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_SATURATED])
+    if (pSpectra->fieldsFlag[PRJCT_RESULTS_SATURATED])
      mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Saturated","%s",(pRecord->ccd.saturatedFlag)?"yes":"no");
    }
 
-  if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_MEASTYPE] && (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_CCD_EEV))
+  if (pSpectra->fieldsFlag[PRJCT_RESULTS_MEASTYPE] && (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_CCD_EEV))
    mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Measurement type","%s",CCD_measureTypes[pRecord->ccd.measureType]);
-  if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_MEASTYPE] && (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC_BIRA))
+  if (pSpectra->fieldsFlag[PRJCT_RESULTS_MEASTYPE] && (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC_BIRA))
    mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Measurement type","%s",MFCBIRA_measureTypes[pRecord->mfcBira.measurementType]);
 
-  if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_TDET])
+  if (pSpectra->fieldsFlag[PRJCT_RESULTS_TDET])
    mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Detector temperature","%.3f",pRecord->TDet);
-  if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_MIRROR_ERROR])
+  if (pSpectra->fieldsFlag[PRJCT_RESULTS_MIRROR_ERROR])
    mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Mirror status","%.3f",(pRecord->mirrorError==1)?"!!! PROBLEM !!!":"OK");
-  if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_COOLING_STATUS])
+  if (pSpectra->fieldsFlag[PRJCT_RESULTS_COOLING_STATUS])
    mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Cooler status","%.3f",(pRecord->coolingStatus==0)?"!!! UNLOCKED !!!":"Locked");
 
-  if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_LONGIT])
+  if (pSpectra->fieldsFlag[PRJCT_RESULTS_LONGIT])
    mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Longitude","%.3f",pRecord->longitude);
-  if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_LATIT])
+  if (pSpectra->fieldsFlag[PRJCT_RESULTS_LATIT])
    mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Latitude","%.3f",pRecord->latitude);
-  if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_ALTIT])
+  if (pSpectra->fieldsFlag[PRJCT_RESULTS_ALTIT])
    mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Altitude","%.3f",pRecord->altitude);
 
-  if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_CLOUD])
+  if (pSpectra->fieldsFlag[PRJCT_RESULTS_CLOUD])
    mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Cloud fraction","%.3f",pRecord->cloudFraction);
-  if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_CLOUDTOPP])
+  if (pSpectra->fieldsFlag[PRJCT_RESULTS_CLOUDTOPP])
    mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Cloud top pressure","%.3f",pRecord->cloudTopPressure);
 
   if (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_GOME2)
    {
-    if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_GOME2_SCANDIRECTION])
+    if (pSpectra->fieldsFlag[PRJCT_RESULTS_GOME2_SCANDIRECTION])
      mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Scan direction","%d",pRecord->gome2.scanDirection);
-    if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_GOME2_SAA])
+    if (pSpectra->fieldsFlag[PRJCT_RESULTS_GOME2_SAA])
      mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"SAA flag","%d",pRecord->gome2.saaFlag);
-    if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_GOME2_SUNGLINT_RISK])
+    if (pSpectra->fieldsFlag[PRJCT_RESULTS_GOME2_SUNGLINT_RISK])
      mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Sunglint risk flag","%d",pRecord->gome2.sunglintDangerFlag);
-    if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_GOME2_SUNGLINT_HIGHRISK])
+    if (pSpectra->fieldsFlag[PRJCT_RESULTS_GOME2_SUNGLINT_HIGHRISK])
      mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Sunglint high risk flag","%d",pRecord->gome2.sunglintHighDangerFlag);
-    if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_GOME2_RAINBOW])
+    if (pSpectra->fieldsFlag[PRJCT_RESULTS_GOME2_RAINBOW])
      mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Rainbow flag","%d",pRecord->gome2.rainbowFlag);
    }
 
   if (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_BIRA_AIRBORNE)
    {
-    if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_UAV_SERVO_BYTE_SENT])
+    if (pSpectra->fieldsFlag[PRJCT_RESULTS_UAV_SERVO_BYTE_SENT])
      mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Servo position byte sent","%d",(int)pRecord->uavBira.servoSentPosition);
-    if (pSpectra->fieldsFlag[PRJCT_RESULTS_ASCII_UAV_SERVO_BYTE_RECEIVED])
+    if (pSpectra->fieldsFlag[PRJCT_RESULTS_UAV_SERVO_BYTE_RECEIVED])
      mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Servo position byte received","%d",(int)pRecord->uavBira.servoReceivedPosition);
    }
 
@@ -561,7 +561,7 @@ void setMediateProjectDisplay(PRJCT_SPECTRA *pEngineSpectra,const mediate_projec
    pEngineSpectra->displayCalibFlag=pMediateSpectra->requireCalib;
    pEngineSpectra->displayFitFlag=pMediateSpectra->requireFits;
 
-   memset(pEngineSpectra->fieldsFlag,0,PRJCT_RESULTS_ASCII_MAX);
+   memset(pEngineSpectra->fieldsFlag,0,PRJCT_RESULTS_MAX);
 
    for (i=0;i<pMediateSpectra->selection.nSelected;i++)
     pEngineSpectra->fieldsFlag[(int)pMediateSpectra->selection.selected[i]]=(DoasCh)1;
@@ -1202,7 +1202,7 @@ void setMediateProjectSlit(PRJCT_SLIT *pEngineSlit,const mediate_project_slit_t 
 // PURPOSE       Output (binary/ascii format) part of the project properties
 // -----------------------------------------------------------------------------
 
-void setMediateProjectOutput(PRJCT_RESULTS_ASCII *pEngineOutput,const mediate_project_output_t *pMediateOutput)
+void setMediateProjectOutput(PRJCT_RESULTS *pEngineOutput,const mediate_project_output_t *pMediateOutput)
  {
    // Declarations
 
@@ -1214,6 +1214,9 @@ void setMediateProjectOutput(PRJCT_RESULTS_ASCII *pEngineOutput,const mediate_pr
    strcpy(pEngineOutput->path,pMediateOutput->path);                             // path for results and fits files
    strcpy(pEngineOutput->fluxes,pMediateOutput->flux);                           // fluxes
    strcpy(pEngineOutput->cic,pMediateOutput->colourIndex);                       // color indexes
+   strcpy(pEngineOutput->swath_name,pMediateOutput->swath_name);
+
+   pEngineOutput->file_format=pMediateOutput->file_format;
 
    pEngineOutput->analysisFlag=pMediateOutput->analysisFlag;
    pEngineOutput->calibFlag=pMediateOutput->calibrationFlag;
@@ -1222,7 +1225,7 @@ void setMediateProjectOutput(PRJCT_RESULTS_ASCII *pEngineOutput,const mediate_pr
    pEngineOutput->fileNameFlag=pMediateOutput->filenameFlag;
 
    if (!(pEngineOutput->fieldsNumber=pMediateOutput->selection.nSelected))
-    memset(pEngineOutput->fieldsFlag,0,PRJCT_RESULTS_ASCII_MAX);
+    memset(pEngineOutput->fieldsFlag,0,PRJCT_RESULTS_MAX);
    else
     memcpy(pEngineOutput->fieldsFlag,pMediateOutput->selection.selected,pEngineOutput->fieldsNumber);
 
@@ -1230,8 +1233,6 @@ void setMediateProjectOutput(PRJCT_RESULTS_ASCII *pEngineOutput,const mediate_pr
    DEBUG_Print("Path %s",pEngineOutput->path);
    DEBUG_Print("Fluxes %s",pEngineOutput->fluxes);
    DEBUG_Print("Cic %s",pEngineOutput->cic);
-   for (i=0;i<pEngineOutput->fieldsNumber;i++)
-    DEBUG_Print("Output field %s\n",PRJCT_resultsAscii[pEngineOutput->fieldsFlag[i]].fieldName);
    DEBUG_FunctionStop("setMediateProjectOutput",0);
 #endif
  }

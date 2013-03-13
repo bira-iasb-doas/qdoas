@@ -23,6 +23,7 @@
 #define __WDOAS_
 
 #include "../mediator/mediate_common.h"
+#include "../engine/output_formats.h"
 
 #if defined(_cplusplus) || defined(__cplusplus)
 extern "C" {
@@ -145,8 +146,8 @@ void   FILES_ChangePath(DoasCh *oldPath,DoasCh *newPath,INT useFileName);
 void   FILES_RemoveOnePath(DoasCh *path);
 void   FILES_RetrievePath(DoasCh *pathString,SZ_LEN pathStringLength,DoasCh *fullFileName,SZ_LEN fullFileNameLength,INT indexFileType,INT changeDefaultPath);
 
-RC     FILES_GetMatrixDimensions(FILE *fp,DoasCh *fileName,INT *pNl,INT *pNc,DoasCh *callingFunction,INT errorType);
-RC     FILES_LoadMatrix(FILE *fp,DoasCh *fileName,double **matrix,INT base,INT nl,INT nc,DoasCh *callingFunction,INT errorType);
+RC     FILES_GetMatrixDimensions(FILE *fp,const char *fileName,INT *pNl,INT *pNc,const char *callingFunction,INT errorType);
+RC     FILES_LoadMatrix(FILE *fp,const char *fileName,double **matrix,INT base,INT nl,INT nc,const char *callingFunction,INT errorType);
 
 // Select a file
 // -------------
@@ -190,7 +191,7 @@ DoasCh  *FILES_BuildFileName(DoasCh *fileName,MASK fileType);
    RC      SITES_Alloc(void);
    void    SITES_Free(void);
 
-   INDEX   SITES_GetIndex(DoasCh *siteName);
+   INDEX   SITES_GetIndex(const DoasCh *siteName);
 
 // =======
 // SYMBOLS
@@ -342,7 +343,7 @@ typedef struct _prjctSpectra
          maxGraphH,                                                             // QDOAS obsolete field !!! : maximum number of graphs in width a graphic page can hold
          mode;
   INT    fieldsNumber;                                                          // number of ascii flags set in the next list
-  DoasCh fieldsFlag[PRJCT_RESULTS_ASCII_MAX];                                   // fields used in ascii format
+  DoasCh fieldsFlag[PRJCT_RESULTS_MAX];                                         // fields used in ascii format
  }
 PRJCT_SPECTRA;
 
@@ -443,9 +444,9 @@ PRJCT_USAMP;
 #define SCIA_REFERENCE_ASMBU 9
 
 EXTERN int SCIA_clusters[PRJCT_INSTR_SCIA_CHANNEL_MAX][2];
-EXTERN int SCIA_ms;
+EXTERN int SCIA_ms; // number of milliseconds
 
-EXTERN int GOME2_ms;
+EXTERN int GOME2_mus; //number of microseconds
 
 // Instrumental tab page description
 // ---------------------------------
@@ -558,15 +559,17 @@ PRJCT_RESULTS_FIELDS;
 // ----------------------------------
 
 typedef struct _prjctAsciiResults
- {
-  DoasCh path[MAX_ITEM_TEXT_LEN+1];                                          // path for results and fits files
-  INT   analysisFlag,calibFlag,referenceFlag,dirFlag,fileNameFlag;   // store results in ascii format
-  DoasCh fluxes[MAX_ITEM_TEXT_LEN+1];                                        // fluxes
-  DoasCh cic[MAX_ITEM_TEXT_LEN+1];                                           // color indexes
+{
+  DoasCh path[MAX_ITEM_TEXT_LEN+1];                                         // path for results and fits files
+  INT   analysisFlag,calibFlag,referenceFlag,dirFlag,fileNameFlag;          // store results in ascii format
+  DoasCh fluxes[MAX_ITEM_TEXT_LEN+1];                                       // fluxes
+  DoasCh cic[MAX_ITEM_TEXT_LEN+1];                                          // color indexes
   INT fieldsNumber;                                                         // number of ascii flags set in the next list
-  DoasCh fieldsFlag[PRJCT_RESULTS_ASCII_MAX];                                // fields used in ascii format
+  DoasCh fieldsFlag[PRJCT_RESULTS_MAX];                                     // fields used in output
+  enum output_format file_format;
+  char swath_name[HDFEOS_OBJ_LEN_MAX];
  }
-PRJCT_RESULTS_ASCII;
+PRJCT_RESULTS;
 
 // Results tab page description
 // ----------------------------
@@ -598,7 +601,7 @@ typedef struct _project
   PRJCT_KURUCZ kurucz;                                 // Kurucz tab page
   PRJCT_USAMP usamp;                                   // undersampling tab page
   PRJCT_INSTRUMENTAL instrumental;                     // instrumental tab page
-  PRJCT_RESULTS_ASCII asciiResults;                    // ASCII results tab page
+  PRJCT_RESULTS asciiResults;                    // ASCII results tab page
   PRJCT_RESULTS_NASA nasaResults;                      // NASA results tab page
   PRJCT_SLIT slit;                                     // slit function tab page
  }
@@ -609,7 +612,6 @@ PROJECT;
 // ----------------
 
 EXTERN PROJECT *PRJCT_itemList,PRJCT_panelProject;     // list of projects
-EXTERN PRJCT_RESULTS_FIELDS PRJCT_resultsAscii[];      // list of printable fields in a record
 EXTERN DoasCh   *PRJCT_AnlysInterpol[],                 // interpolation methods
                *PRJCT_AnlysMethods[],                  // analysis methods
                *PRJCT_filterTypes[],

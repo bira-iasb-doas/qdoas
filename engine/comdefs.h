@@ -179,7 +179,6 @@ typedef struct _shortDate
   char  da_mon;                                                                 /* Month (1 = Jan)  */
  }
 SHORT_DATE;
-
 // ===============
 // TABLE OF ERRORS
 // ===============
@@ -277,6 +276,12 @@ SHORT_DATE;
 #define ERROR_ID_OMI_REFSIZE                   1404                             // irradiance and spectra swaths do not have the same size
 #define ERROR_ID_OMI_PIXELQF                   1405                             // spectrum rejected based on pixels quality flags
 #define ERROR_ID_HDFEOS                        1406                             // error in hdfeos file
+#define ERROR_ID_HDFEOS5_SWATH                 1407                             // can not create swath
+#define ERROR_ID_HDFEOS5_FILE_EXISTS           1408                             // output file already exists, not allowed for HDF-EOS5
+#define ERROR_ID_HDFEOS5_DEFFIELD              1409                             // error creating data/geolocation field
+#define ERROR_ID_HDFEOS5_DEFDIM                1410                             // error creating dimension
+#define ERROR_ID_HDFEOS5_WRITEFIELD            1411                             // error writing to field
+#define ERROR_ID_HDFEOS5_WRITEATTR             1412                             // error writing attribute
 #define ERROR_ID_FILE_FORMAT                   2000                             // bad file format
 
 // =========
@@ -432,7 +437,6 @@ EXTERN INT MEMORY_stackSize;                                                    
 EXTERN DoasCh *MEMORY_types[MEMORY_TYPE_MAX];                                    // available types for allocated objects
 
 // Prototypes
-
 void    *MEMORY_AllocBuffer(const DoasCh *callingFunctionName,DoasCh *bufferName,INT itemNumber,INT itemSize,INT offset,INT type);
 void     MEMORY_ReleaseBuffer(const DoasCh *callingFunctionName,DoasCh *bufferName,void *pBuffer);
 double  *MEMORY_AllocDVector(const DoasCh *callingFunctionName,DoasCh *bufferName,int nl,int nh);

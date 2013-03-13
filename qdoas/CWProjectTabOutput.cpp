@@ -19,6 +19,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
 #include <cstring>
+#include <iostream>
 
 #include <QGridLayout>
 #include <QVBoxLayout>
@@ -32,6 +33,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "CPreferences.h"
 
 #include "constants.h"
+#include "output_formats.h"
 
 #include "debugutil.h"
 
@@ -39,26 +41,50 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 CWProjectTabOutput::CWProjectTabOutput(const mediate_project_output_t *properties, QWidget *parent) :
   QFrame(parent)
 {
+  // main layout: VBox
   QVBoxLayout *mainLayout = new QVBoxLayout(this);
-
   mainLayout->addSpacing(25);
 
-  // Output Path
+  // Output file/format widgets:
   m_pathFrame = new QFrame(this);
   m_pathFrame->setFrameStyle(QFrame::NoFrame);
-  QHBoxLayout *pathLayout = new QHBoxLayout(m_pathFrame);
-
-  pathLayout->addWidget(new QLabel("Output Path", m_pathFrame));
 
   m_pathEdit = new QLineEdit(m_pathFrame);
   m_pathEdit->setMaxLength(sizeof(properties->path)-1);
-  pathLayout->addWidget(m_pathEdit, 1);
 
   QPushButton *browseBtn = new QPushButton("Browse", m_pathFrame);
+
+  m_selectFileFormat = new QComboBox(m_pathFrame);
+  // fill combobox with available output formats.  The index of each
+  // item will correspond to the enum value of the output format.
+  for(int i=0; i<=LAST_OUTPUT_FORMAT; i++) {
+    m_selectFileFormat->addItem(output_file_extensions[i]);
+  }
+
+  QFrame *swathFrame = new QFrame(m_pathFrame);
+  swathFrame->setFrameStyle(QFrame::NoFrame);
+  m_swathNameEdit = new QLineEdit("QDOAS_results", swathFrame);
+  QRegExp validSwathName("[^/]{1,255}"); // Swath name may not contain "/" and can be 1 to 255 characters long.
+  m_swathNameEdit->setValidator(new QRegExpValidator(validSwathName, m_swathNameEdit));
+
+  // Layout for output file/format widgets:
+  QHBoxLayout *pathLayout = new QHBoxLayout();
+  pathLayout->addWidget(new QLabel("Output Path", m_pathFrame),0);
+  pathLayout->addWidget(m_pathEdit, 1);
   pathLayout->addWidget(browseBtn);
+  pathLayout->addWidget(new QLabel("File Format", m_pathFrame),0);
+  pathLayout->addWidget(m_selectFileFormat, 0);
+
+  QVBoxLayout *outputFileLayout = new QVBoxLayout(m_pathFrame);
+  outputFileLayout->addLayout(pathLayout, 0);
+  outputFileLayout->addWidget(swathFrame);
+
+  QHBoxLayout *swathLayout = new QHBoxLayout(swathFrame);
+  swathLayout->setContentsMargins(0, 0, 0, 0);
+  swathLayout->addWidget(new QLabel("HDF-EOS Swath Name", swathFrame),0);
+  swathLayout->addWidget(m_swathNameEdit, 1);
 
   mainLayout->addWidget(m_pathFrame);
-
   mainLayout->addSpacing(5);
 
   // checkboxes and edits
@@ -111,6 +137,11 @@ CWProjectTabOutput::CWProjectTabOutput(const mediate_project_output_t *propertie
   // initialize ...
   m_pathEdit->setText(QString(properties->path));
 
+  m_swathNameEdit->setText(properties->swath_name);
+
+  m_selectFileFormat->setCurrentIndex(properties->file_format);
+  swathFrame->setVisible(properties->file_format == HDFEOS5); // swath frame is hidden unless HDF-EOS5 output is selected
+
   m_analysisCheck->setCheckState(properties->analysisFlag ? Qt::Checked : Qt::Unchecked);
   m_calibrationCheck->setCheckState(properties->calibrationFlag ? Qt::Checked : Qt::Unchecked);
   m_referenceCheck->setCheckState(properties->referenceFlag ? Qt::Checked : Qt::Unchecked);
@@ -128,6 +159,7 @@ CWProjectTabOutput::CWProjectTabOutput(const mediate_project_output_t *propertie
   connect(m_calibrationCheck, SIGNAL(stateChanged(int)), this, SLOT(slotCalibrationCheckChanged(int)));
   connect(m_referenceCheck, SIGNAL(stateChanged(int)), this, SLOT(slotReferenceCheckChanged(int)));
   connect(browseBtn, SIGNAL(clicked()), this, SLOT(slotBrowsePath()));
+  connect(m_selectFileFormat, SIGNAL(currentIndexChanged(int)), this, SLOT(slotSelectFileFormatChanged(int)));
 }
 
 CWProjectTabOutput::~CWProjectTabOutput()
@@ -142,11 +174,25 @@ void CWProjectTabOutput::apply(mediate_project_output_t *properties) const
   properties->directoryFlag = (m_directoryCheck->checkState() == Qt::Checked) ? 1 : 0;
   properties->filenameFlag = (m_useFileName->checkState() == Qt::Checked) ? 1 : 0;
 
+  properties->file_format = static_cast<enum output_format>(m_selectFileFormat->currentIndex());
+
   strcpy(properties->flux, m_fluxEdit->text().toAscii().data());
   strcpy(properties->colourIndex, m_colourIndexEdit->text().toAscii().data());
   strcpy(properties->path, m_pathEdit->text().toAscii().data());
+  
+  strcpy(properties->swath_name, m_swathNameEdit->hasAcceptableInput()
+         ? m_swathNameEdit->text().toAscii().data()
+         : OUTPUT_HDFEOS_DEFAULT_SWATH);
 
   m_selector->apply(&(properties->selection));
+}
+
+void CWProjectTabOutput::slotSelectFileFormatChanged(int index)
+{
+  // parent widget of m_swathNameEdit contains the label and the text
+  // field -> set both to visible/invisible if HDF-EOS5 output is
+  // selected/unselected
+  m_swathNameEdit->parentWidget()->setVisible(index==HDFEOS5);
 }
 
 void CWProjectTabOutput::slotBrowsePath()
@@ -201,6 +247,3 @@ void CWProjectTabOutput::setComponentsEnabled(bool analysisEnabled, bool calibra
   m_editGroup->setEnabled(analysisEnabled);
   m_selector->setEnabled(analysisEnabled);
 }
-
-
-

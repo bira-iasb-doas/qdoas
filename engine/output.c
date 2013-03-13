@@ -17,8 +17,8 @@
 //      Avenue Circulaire, 3                        Postbus 608
 //      1180     UCCLE                              2600 AP Delft
 //      BELGIUM                                     THE NETHERLANDS
-//      caroline.fayt@aeronomie.be                  info@stcorp.nl
-//
+//      thomas.danckaert@aeronomie.be               info@stcorp.nl
+// 
 //  This program is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU General Public License
 //  as published by the Free Software Foundation; either version 2
@@ -34,222 +34,240 @@
 //  Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //
 //  ----------------------------------------------------------------------------
-//  FUNCTIONS
-//
-//  ===============
-//  DATA PROCESSING
-//  ===============
-//
-//  OUTPUT_GetWveAmf - correct a cross section using wavelength dependent AMF vector;
-//
-//  OutputGetAmf - return the AMF from table at a specified zenith angle;
-//  OUTPUT_ReadAmf - load Air Mass Factors from file;
-//  OutputFlux - return the flux at a specified wavelength;
-//
-//  OUTPUT_ResetData - release and reset all data used for output;
-//
-//  =======================
-//  REGISTER DATA TO OUTPUT
-//  =======================
-//
-//  OutputRegister - register a field to output;
-//  OutputRegisterFluxes - register fluxes;
-//  OutputRegisterFields - register all the fields that are not parameters of the fit
-//  OutputRegisterCalib - register all the calibration fields for each window of the wavelength calibration interval;
-//  OutputRegisterParam - register all the parameters of the fit;
-//
-//  OUTPUT_RegisterData - register all the data to output;
-//
-//  ===================
-//  KEEP DATA TO OUTPUT
-//  ===================
-//
-//  OutputCalib - save data related to the wavelength calibration;
-//  OutputSaveRecord - save all the data on the current record (including fitted parameters);
-//
-//  ================
-//  OUTPUT FUNCTIONS
-//  ================
-//
-//  write - generate a string containing a list of all pixels with spikes
-//  OutputBuildSiteFileName - build the output file name using the selected observation site;
-//  OutputBuildFileName - for satellites measurements, build automatically a file name
-//                        for output and create a directory structure;
-//
-//  OutputAscPrintTitles - print titles of columns in the output ASCII file;
-//  OutputAscPrintDataSet - flush the data set to the output file (ASC format);
-//  OutputFileOpen - open the outputFile and save the preliminary information;
-//
-//  OUTPUT_FlushBuffers - flusth the buffers in a one shot;
-//
-//  ====================
-//  RESOURCES MANAGEMENT
-//  ====================
-//
-//  OUTPUT_LocalAlloc - allocate and initialize buffers for the records to output
-//  OUTPUT_Alloc - allocate general use buffers for output;
-//  OUTPUT_Free - release buffers allocated for output;
-//
-//  ----------------------------------------------------------------------------
 
-#include "engine.h"
+/*! \file output.c
+  \brief Set up output buffers according to the
+  user's configuration and write output to files.
+
+  All logic regarding what should written to the output file is
+  handled via OUTPUT_RegisterData():  Each variable that should be
+  written to output is described using a struct output_field.  Output
+  fields containing results of the reference calibration are stored in
+  the array #output_data_calib, and output fields containing results of
+  the analyis (or run calibration) are contained in the array
+  #output_data_analysis.
+
+  The main members of the output_field structure are the buffer
+  output_field::data, used to store the required data until it is
+  written to file, and the function pointer output_field::get_data(),
+  used to retrieve the data that should go into output_field::data.
+  The functions OutputRegisterFields(), OutputRegisterParam(),
+  register_calibration() and OutputRegisterFluxes() create the right
+  output_field structures depending on the user's configuration,
+  setting pointers to the required functions from output_private.h.
+
+  For the calibration output, a different field is registered for each
+  selected calibration variable and each detector row (indexFenoColumn).
+
+  For analysis output, different fields are registered for each
+  selected analysis variable and for each analysis window.
+  */
+
+/* TODO todo : fix memory corruption with multidimensional calibration fields !? ?! see gome2 example */
+
+#include "output.h"
+#include "output_common.h"
 #include <string.h>
-
-PRJCT_RESULTS_FIELDS PRJCT_resultsAscii[PRJCT_RESULTS_ASCII_MAX]=
- {
-  { "Spec No"                         , MEMORY_TYPE_USHORT, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#4d"      },       // PRJCT_RESULTS_ASCII_SPECNO
-  { "Name"                            , MEMORY_TYPE_STRING,             24, ITEM_NONE, ITEM_NONE, "%s"        },       // PRJCT_RESULTS_ASCII_NAME
-  { "Date & time (YYYYMMDDhhmmss)"    , MEMORY_TYPE_STRING,             24, ITEM_NONE, ITEM_NONE, "%s"        },       // PRJCT_RESULTS_ASCII_DATE_TIME
-  { "Date (DD/MM/YYYY)"               , MEMORY_TYPE_STRING,             24, ITEM_NONE, ITEM_NONE, "%s"        },       // PRJCT_RESULTS_ASCII_DATE
-  { "Time (hh:mm:ss)"                 , MEMORY_TYPE_STRING,             24, ITEM_NONE, ITEM_NONE, "%s"        },       // PRJCT_RESULTS_ASCII_TIME
-  { "Year"                            , MEMORY_TYPE_USHORT, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#4d"      },       // PRJCT_RESULTS_ASCII_YEAR
-  { "Day number"                      , MEMORY_TYPE_USHORT, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_JULIAN
-  { "Fractional day"                  , MEMORY_TYPE_DOUBLE, sizeof(double), ITEM_NONE, ITEM_NONE, "%#10.6lf"  },       // PRJCT_RESULTS_ASCII_JDFRAC
-  { "Fractional time"                 , MEMORY_TYPE_DOUBLE, sizeof(double), ITEM_NONE, ITEM_NONE, "%#20.15lf" },       // PRJCT_RESULTS_ASCII_TIFRAC
-  { "Scans"                           , MEMORY_TYPE_USHORT, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_SCANS
-  { "Rejected"                        , MEMORY_TYPE_USHORT, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_NREJ
-  { "Tint"                            , MEMORY_TYPE_DOUBLE, sizeof(double), ITEM_NONE, ITEM_NONE, "%#12.6lf"  },       // PRJCT_RESULTS_ASCII_TINT
-  { "SZA"                             , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_SZA
-  { "Chi Square"                      , MEMORY_TYPE_DOUBLE, sizeof(double), ITEM_NONE, ITEM_NONE, "%#12.4le"  },       // PRJCT_RESULTS_ASCII_CHI
-  { "RMS"                             , MEMORY_TYPE_DOUBLE, sizeof(double), ITEM_NONE, ITEM_NONE, "%#12.4le"  },       // PRJCT_RESULTS_ASCII_RMS
-  { "Solar Azimuth angle"             , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_AZIM
-  { "Tdet"                            , MEMORY_TYPE_FLOAT , sizeof(double), ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_TDET
-  { "Sky Obs"                         , MEMORY_TYPE_USHORT, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#2d"      },       // PRJCT_RESULTS_ASCII_SKY
-  { "Best shift"                      , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_BESTSHIFT
-  { "Ref SZA"                         , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_REFZM
-  { "Ref2/Ref1 shift"                 , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_REFSHIFT
-  { "Pixel number"                    , MEMORY_TYPE_USHORT, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_PIXEL
-  { "Pixel type"                      , MEMORY_TYPE_USHORT, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_PIXEL_TYPE
-  { "Orbit number"                    , MEMORY_TYPE_INT   , sizeof(INT)   , ITEM_NONE, ITEM_NONE, "%#8d"      },       // PRJCT_RESULTS_ASCII_ORBIT
-  { "Longitude"                       , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_LONGIT
-  { "Latitude"                        , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_LATIT
-  { "Altitude"                        , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_ALTIT
-  { "Covariances"                     , MEMORY_TYPE_DOUBLE, sizeof(double), ITEM_NONE, ITEM_NONE, "%#12.4le"  },       // PRJCT_RESULTS_ASCII_COVAR
-  { "Correlations"                    , MEMORY_TYPE_DOUBLE, sizeof(double), ITEM_NONE, ITEM_NONE, "%#12.4le"  },       // PRJCT_RESULTS_ASCII_CORR
-  { "Cloud fraction"                  , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_CLOUD
-  { "Index coeff"                     , MEMORY_TYPE_USHORT, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_COEFF
-  { "GDP O3 VCD"                      , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_O3
-  { "GDP NO2 VCD"                     , MEMORY_TYPE_DOUBLE, sizeof(double), ITEM_NONE, ITEM_NONE, "%#12.4le"  },       // PRJCT_RESULTS_ASCII_NO2
-  { "Cloud Top Pressure"              , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_CLOUDTOPP
-  { "LoS ZA"                          , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_LOS_ZA
-  { "LoS Azimuth"                     , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_LOS_AZIMUTH
-  { "Satellite height"                , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_SAT_HEIGHT
-  { "Earth radius"                    , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_EARTH_RADIUS
-  { "Elev. viewing angle"             , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_VIEW_ELEVATION
-  { "Azim. viewing angle"             , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_VIEW_AZIMUTH
-  { "Zenith viewing angle"            , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_VIEW_ZENITH     -> the same as LOS ZA
-  { "SCIAMACHY Quality Flag"          , MEMORY_TYPE_USHORT, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_SCIA_QUALITY
-  { "SCIAMACHY State Index"           , MEMORY_TYPE_USHORT, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_SCIA_STATE_INDEX
-  { "SCIAMACHY State Id"              , MEMORY_TYPE_USHORT, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_SCIA_STATE_ID
-  { "Start Date (DDMMYYYY)"           , MEMORY_TYPE_STRING,             24, ITEM_NONE, ITEM_NONE, "%s"        },       // PRJCT_RESULTS_ASCII_STARTDATE
-  { "Stop Date (DDMMYYYY)"            , MEMORY_TYPE_STRING,             24, ITEM_NONE, ITEM_NONE, "%s"        },       // PRJCT_RESULTS_ASCII_ENDDATE
-  { "Start Time (hhmmss)"             , MEMORY_TYPE_STRING,             24, ITEM_NONE, ITEM_NONE, "%s"        },       // PRJCT_RESULTS_ASCII_STARTTIME
-  { "Stop Time (hhmmss)"              , MEMORY_TYPE_STRING,             24, ITEM_NONE, ITEM_NONE, "%s"        },       // PRJCT_RESULTS_ASCII_ENDTIME
-  { "Scanning angle"                  , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_SCANNING
-  { "Filter number"                   , MEMORY_TYPE_INT   , sizeof(INT)   , ITEM_NONE, ITEM_NONE, "%#3d"      },       // PRJCT_RESULTS_ASCII_FILTERNUMBER
-  { "Measurement type"                , MEMORY_TYPE_INT   , sizeof(INT)   , ITEM_NONE, ITEM_NONE, "%#3d"      },       // PRJCT_RESULTS_ASCII_MEASTYPE
-  { "Head temperature"                , MEMORY_TYPE_DOUBLE, sizeof(double), ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_CCD_HEADTEMPERATURE
-  { "Cooler status"                   , MEMORY_TYPE_INT   , sizeof(INT)   , ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_COOLING_STATUS
-  { "Mirror status"                   , MEMORY_TYPE_INT   , sizeof(INT)   , ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_MIRROR_ERROR
-  { "Compass angle"                   , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_COMPASS
-  { "Pitch angle"                     , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_PITCH
-  { "Roll angle"                      , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_ROLL
-  { "Iterations number"               , MEMORY_TYPE_INT   , sizeof(INT)   , ITEM_NONE, ITEM_NONE, "%#6d"      },       // PRJCT_RESULTS_ASCII_ITER
-  { "GOME2 scan direction"            , MEMORY_TYPE_INT   , sizeof(INT)   , ITEM_NONE, ITEM_NONE, "%#6d"      },       // PRJCT_RESULTS_ASCII_GOME2_SCANDIRECTION
-  { "GOME2 SAA flag"                  , MEMORY_TYPE_INT   , sizeof(INT)   , ITEM_NONE, ITEM_NONE, "%#6d"      },       // PRJCT_RESULTS_ASCII_GOME2_SAA
-  { "GOME2 sunglint risk flag"        , MEMORY_TYPE_INT   , sizeof(INT)   , ITEM_NONE, ITEM_NONE, "%#6d"      },       // PRJCT_RESULTS_ASCII_GOME2_SUNGLINT_RISK
-  { "GOME2 sunglint high risk flag"   , MEMORY_TYPE_INT   , sizeof(INT)   , ITEM_NONE, ITEM_NONE, "%#6d"      },       // PRJCT_RESULTS_ASCII_GOME2_SUNGLINT_HIGHRISK
-  { "GOME2 rainbow flag"              , MEMORY_TYPE_INT   , sizeof(INT)   , ITEM_NONE, ITEM_NONE, "%#6d"      },       // PRJCT_RESULTS_ASCII_GOME2_RAINBOW
-  { "Diodes"                          , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_CCD_DIODES,
-  { "Target Azimuth"                  , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_CCD_TARGETAZIMUTH,
-  { "Target Elevation"                , MEMORY_TYPE_FLOAT , sizeof(float) , ITEM_NONE, ITEM_NONE, "%#12.6f"   },       // PRJCT_RESULTS_ASCII_CCD_TARGETELEVATION,
-  { "Saturated"                       , MEMORY_TYPE_USHORT, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#5d"      },       // PRJCT_RESULTS_ASCII_SATURATED
-  { "OMI index swath"                 , MEMORY_TYPE_INT   , sizeof(INT)   , ITEM_NONE, ITEM_NONE, "%#6d"      },       // PRJCT_RESULTS_ASCII_OMI_INDEX_SWATH,
-  { "OMI index row"                   , MEMORY_TYPE_INT   , sizeof(int)   , ITEM_NONE, ITEM_NONE, "%#3d"      },       // PRJCT_RESULTS_ASCII_OMI_INDEX_ROW
-  { "OMI groundpixel quality flag"    , MEMORY_TYPE_USHORT, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#6d"      },       // PRJCT_RESULTS_ASCII_OMI_INDEX_GROUNDP_QF,
-  { "OMI xtrack quality flag"         , MEMORY_TYPE_USHORT, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#6d"      },       // PRJCT_RESULTS_ASCII_OMI_INDEX_XTRACK_QF,
-  { "OMI rejected pixels based on QF" , MEMORY_TYPE_STRING, 50            , ITEM_NONE, ITEM_NONE, "%-50s"     },       // PRJCT_RESULTS_ASCII_OMI_PIXELS_QF
-  { "Pixels with spikes"              , MEMORY_TYPE_STRING, 50            , ITEM_NONE, ITEM_NONE, "%-50s"     },       //   PRJCT_RESULTS_ASCII_SPIKES,
-  { "UAV servo sent position byte"    , MEMORY_TYPE_USHORT, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#3d"      },       // PRJCT_RESULTS_ASCII_UAV_SERVO_BYTE_SENT
-  { "UAV servo received position byte", MEMORY_TYPE_USHORT, sizeof(DoasUS), ITEM_NONE, ITEM_NONE, "%#3d"      }        // PRJCT_RESULTS_ASCII_UAV_SERVO_BYTE_RECEIVED
- };
-
-typedef struct _NDSC_header
- {
-  DoasCh investigator[20],
-        instrument[12],
-        station[12],
-        species[12],
-        startTime[20],
-        endTime[20],
-        qualityFlag[3];
- }
-NDSC_HEADER;
-
-PRJCT_RESULTS_FIELDS *outputFields;
-DoasCh **outputColumns;
-DoasCh OUTPUT_refFile[MAX_PATH_LEN+1];
-INT   OUTPUT_nRec;
-
-typedef struct _outputInfo
- {
-  INT nbColumns;
-  INT year,month,day;
-  float longit,latit;
- }
-OUTPUT_INFO;
-
-OUTPUT_INFO *outputRecords;
-INT outputNbDataSet,outputNbFields,outputNbRecords,outputMaxRecords;
-
+#include <stdbool.h>
+#include <assert.h>
+#include <search.h>
+#include <stdlib.h>
 
 // ===================
-// GLOBAL DECLARATIONS
+// GLOBAL DEFINITIONS
 // ===================
 
-DoasCh  OUTPUT_currentSpeFile[MAX_ITEM_TEXT_LEN+1],                              // complete results file name
-       OUTPUT_currentAscFile[MAX_ITEM_TEXT_LEN+1];
-
-// ===================
-// STATIC DECLARATIONS
-// ===================
-
-double         OUTPUT_fluxes[MAX_FLUXES],OUTPUT_cic[MAX_CIC][2];                // fluxes and color indexes for ASCII results
-INT            OUTPUT_NFluxes,OUTPUT_NCic;                                      // resp. number of fluxes and color indexes in previous buffers
 AMF_SYMBOL    *OUTPUT_AmfSpace;                                                 // list of cross sections with associated AMF file
-INT            OUTPUT_NAmfSpace,                                                // number of elements in previous buffer
-               OUTPUT_chiSquareFlag,                                            // 1 to save the chi square in the output file
-               OUTPUT_rmsFlag,                                                  // 1 to save the RMS in the output file
-               OUTPUT_iterFlag,                                                 // 1 to save the number of iterations in the output file
-               OUTPUT_refZmFlag,                                                // 1 to save the SZA of the reference spectrum in the output file
-               OUTPUT_refShift,                                                 // 1 to save the shift of the reference spectrum on etalon
-               OUTPUT_covarFlag,                                                // 1 to save the covariances in the output file
-               OUTPUT_corrFlag,                                                 // 1 to save the correlations in the output file
-               OUTPUT_omiRejPixelsFlag,                                         // 1 to save rejected pixels based on pixels quality flags (OMI only)
-               OUTPUT_spikeFlag, // 1 to save pixels that were removed due to residual spikes to output
-               outputRunCalib,                                                  // 1 in run calibration mode
-               outputCalibFlag;                                                 // <> 0 to save wavelength calibration parameters before analysis results
 
-RC write_spikes(char *spikestring, unsigned int length, BOOL *spikes,int ndet);
-void write_automatic_reference_info(FILE *fp, ENGINE_CONTEXT *pEngineContext);
-// ===============
-// DATA PROCESSING
-// ===============
+char OUTPUT_refFile[MAX_PATH_LEN+1];
+int OUTPUT_nRec;
 
-// -----------------------------------------------------------------------------
-// FUNCTION      OUTPUT_GetWveAmf
-// -----------------------------------------------------------------------------
-// PURPOSE       Correct a cross section using wavelength dependent AMF vector
-//
-// INPUT         pResults     output options for the selected cross section
-//               Zm           the current solar zenith angle
-//               lambda       the current wavelength calibration
-//
-// INPUT/OUTPUT  xs           the cross section to correct by wavelength dependent AMF
-// OUTPUT        deriv2       second derivatives of the new cross section
-// -----------------------------------------------------------------------------
+/*! \brief Array matching enum output_format values with strings
+    containing their filename extension.  The position in the array
+    must correspond to the value of the enum.*/
+const char *output_file_extensions[] = { [ASCII] = ".asc",
+                                         [HDFEOS5] = ".he5"};
 
-RC OUTPUT_GetWveAmf(CROSS_RESULTS *pResults,double Zm,double *lambda,double *xs,double *deriv2)
+struct output_field output_data_analysis[MAX_FIELDS]; // todo: allocate dynamically?
+unsigned int output_num_fields = 0;
+struct output_field output_data_calib[MAX_FIELDS];
+unsigned int calib_num_fields = 0;
+
+// ===================
+// STATIC DEFINITIONS
+// ===================
+static unsigned int outputNbRecords; /*!< \brief Number of records written to output.*/
+static int NAmfSpace; /*!< \brief Number of elements in buffer OUTPUT_NAmfSpace */
+static OUTPUT_INFO *outputRecords; /*!< \brief Meta data on the records written to output.*/
+static int outputRunCalib, /*!< \brief ==1 in run calibration mode */
+  outputCalibFlag; /*!< \brief <> 0 to save wavelength calibration parameters */
+static double OUTPUT_fluxes[MAX_FLUXES], /*!< \brief fluxes */
+  OUTPUT_cic[MAX_CIC][2];  /*!< \brief color indexes */
+static INT OUTPUT_NFluxes, /*!< \brief number of fluxes in OUTPUT_fluxes array */
+  OUTPUT_NCic; /*!< \brief number of color indexes in OUTPUT_cic array */
+
+#define output_c
+#include "output_private.h"
+
+static enum output_format selected_format = ASCII; // ASCII files as default
+
+/** @name Output function pointer types
+ *
+ * Function pointer types for the functions that retrieve data of
+ * various types (float, double, ...).
+ */
+//!@{
+typedef void (*func_float)(struct output_field *this_field, float *datbuf, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn, int index_calib);
+typedef void (*func_double)(struct output_field *this_field, double *datbuf, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn, int index_calib);
+typedef void (*func_int)(struct output_field *this_field, int *datbuf,const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn, int index_calib);
+typedef void (*func_uint)(struct output_field *this_field, unsigned int *datbuf,const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn, int index_calib);
+typedef void (*func_ushort)(struct output_field *this_field, unsigned short *datbuf,const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn, int index_calib);
+typedef void (*func_short)(struct output_field *this_field, short *datbuf,const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn, int index_calib);
+typedef void (*func_date)(struct output_field *this_field, struct date *date,const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn, int index_calib);
+typedef void (*func_time)(struct output_field *this_field, struct time *time,const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn, int index_calib);
+typedef void (*func_datetime)(struct output_field *this_field, struct datetime *datetime,const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn, int index_calib);
+typedef void (*func_string)(struct output_field *this_field, char **datbuf,const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn, int index_calib);
+//!@}
+
+#define FORMAT_FLOAT "%#8.3f"
+#define FORMAT_DOUBLE "%#12.4le"
+#define FORMAT_INT "%#6d"
+
+static void save_calibration(void);
+static void output_field_clear(struct output_field *this_field);
+static void output_field_free(struct output_field *this_field);
+static struct field_attribute *copy_attributes(const struct field_attribute *attributes, int num_attributes);
+
+/*! \brief Calculate flux for a given wavelength.*/
+double output_flux(const ENGINE_CONTEXT *pEngineContext, double wavelength) {
+  double flux =0.;
+  if ( wavelength >= pEngineContext->buffers.lambda[0] &&
+       wavelength <= pEngineContext->buffers.lambda[NDET-1] ) {
+    int pixel=FNPixel(pEngineContext->buffers.lambda,wavelength,NDET,PIXEL_CLOSEST);
+
+    int imin=max(pixel-3,0);
+    int imax=min(pixel+3,NDET-1);
+
+    // Flux calculation
+
+    for (int i=imin; i<=imax; i++)
+      flux+=pEngineContext->buffers.spectrum[i];
+
+    flux/=(double)(imax-imin+1);
+   }
+  return flux;
+}
+
+/*! \brief Structure to associate a _prjctResutls type to an
+    output_field configuration.*/
+struct outputconfig {
+  enum _prjctResults type;
+  struct output_field field;
+};
+
+/*! \brief Comparison function to search an output field configuration
+  by its _prjctResults type using lfind.*/
+static int compare_record(const void *searched_type, const void *record) {
+  return *((enum _prjctResults *)searched_type) - ((struct outputconfig *)record)->type;
+}
+
+/*! \brief Comparison function to search a string in an array using
+    lfind. */
+static int compare_string(const void *left, const void *right) {
+  return strcasecmp( (char*) left, *((char**) right));
+}
+
+/*! \brief Save the data of a single record of an output_field to the field's data buffer.
+
+  The output_field::memory_type is used to cast the buffer and the
+  output_field::get_data function pointer to the correct data types.*/
+static void save_analysis_data(struct output_field *output_field, int recordno, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn) {
+  size_t ncols = output_field->data_cols;
+  void *data = output_field->data;
+  int index_calib = output_field->index_calib;
+  func_void get_data = output_field->get_data;
+  switch(output_field->memory_type) 
+    {
+    case OUTPUT_INT:
+      ((func_int) get_data)(output_field, ((int (*)[ncols])data)[recordno], pEngineContext, indexFenoColumn, index_calib);
+      break;
+    case OUTPUT_SHORT:
+      ((func_short) get_data)(output_field, ((short (*)[ncols])data)[recordno], pEngineContext, indexFenoColumn, index_calib);
+      break;
+    case OUTPUT_USHORT:
+      ((func_ushort) get_data)(output_field, ((unsigned short (*)[ncols])data)[recordno], pEngineContext, indexFenoColumn, index_calib);
+      break;
+    case OUTPUT_STRING:
+      ((func_string) get_data)(output_field, ((char* (*)[ncols])data)[recordno], pEngineContext, indexFenoColumn, index_calib); 
+      break;
+    case OUTPUT_FLOAT:
+      ((func_float) get_data)(output_field, ((float (*)[ncols])data)[recordno], pEngineContext, indexFenoColumn, index_calib); 
+      break;
+    case OUTPUT_DOUBLE:
+      ((func_double) get_data)(output_field, ((double (*)[ncols])data)[recordno], pEngineContext, indexFenoColumn, index_calib);
+      break;
+    case OUTPUT_DATE:
+      ((func_date) get_data)(output_field, ((struct date (*)[ncols])data)[recordno], pEngineContext, indexFenoColumn, index_calib);
+      break;
+    case OUTPUT_TIME:
+      ((func_time) get_data)(output_field, ((struct time (*)[ncols])data)[recordno], pEngineContext, indexFenoColumn, index_calib);
+      break;
+    case OUTPUT_DATETIME:
+      ((func_datetime) get_data)(output_field, ((struct datetime (*)[ncols])data)[recordno], pEngineContext, indexFenoColumn, index_calib);
+      break;
+    }
+}
+
+/*! \brief save the calibration data for output_field from the
+    calibration subwindow index_calib */
+static void save_calib_data(struct output_field *output_field, int index_calib) {
+  switch(output_field->memory_type) 
+    {
+    case OUTPUT_INT:
+      ((func_int) output_field->get_data)(output_field,  &((int *)output_field->data)[index_calib], NULL, output_field->index_row, index_calib);
+      break;
+    case OUTPUT_SHORT:
+      ((func_short) output_field->get_data)(output_field,  &((short *)output_field->data)[index_calib], NULL, output_field->index_row, index_calib);
+      break;
+    case OUTPUT_USHORT:
+      ((func_ushort) output_field->get_data)(output_field,  &((unsigned short *)output_field->data)[index_calib], NULL, output_field->index_row, index_calib);
+      break;
+    case OUTPUT_STRING:
+      ((func_string) output_field->get_data)(output_field,  &((char **)output_field->data)[index_calib], NULL, output_field->index_row, index_calib);
+      break;
+    case OUTPUT_FLOAT:
+      ((func_float) output_field->get_data)(output_field,  &((float *)output_field->data)[index_calib], NULL, output_field->index_row, index_calib);
+      break;
+    case OUTPUT_DOUBLE:
+      ((func_double) output_field->get_data)(output_field,  &((double *)output_field->data)[index_calib], NULL, output_field->index_row, index_calib);
+      break;
+    case OUTPUT_DATE:
+      ((func_date) output_field->get_data)(output_field,  &((struct date *)output_field->data)[index_calib], NULL, output_field->index_row, index_calib);
+      break;
+    case OUTPUT_TIME:
+      ((func_time) output_field->get_data)(output_field,  &((struct time *)output_field->data)[index_calib], NULL, output_field->index_row, index_calib);
+      break;
+    case OUTPUT_DATETIME:
+      ((func_datetime) output_field->get_data)(output_field,  &((struct datetime *)output_field->data)[index_calib], NULL, output_field->index_row, index_calib);
+      break;
+  }
+}
+
+static void register_analysis_output(const PRJCT_RESULTS *pResults, int indexFeno, int index_calib, const char *windowName);
+static void register_cross_results(const PRJCT_RESULTS *pResults, const FENO *pTabFeno, int indexFeno, int index_calib, const char *windowName);
+
+/*! \brief Correct a cross section using wavelength dependent AMF vector
+
+  \param [in] pResults     output options for the selected cross section
+  \param [in] Zm           the current solar zenith angle
+  \param [in] lambda       the current wavelength calibration
+
+  \param [in,out] xs       the cross section to correct by wavelength dependent AMF
+  
+  \param [out] deriv2      second derivatives of the new cross section
+
+  */
+RC OUTPUT_GetWveAmf(CROSS_RESULTS *pResults,double Zm,double *lambda,double *xs)
  {
   // Declarations
 
@@ -276,21 +294,19 @@ RC OUTPUT_GetWveAmf(CROSS_RESULTS *pResults,double Zm,double *lambda,double *xs,
   return rc;
  }
 
-// -----------------------------------------------------------------------------
-// FUNCTION      OutputGetAmf
-// -----------------------------------------------------------------------------
-// PURPOSE       Return the AMF from table at a specified zenith angle
-//
-// INPUT         pResults     output options for the selected cross section
-//               Zm           the current solar zenith angle
-//               Tm           the current number of seconds in order to retrieve
-//                            AMF from a climatology table
-//
-// OUTPUT        pAmf         the calculated AMF
-//
-// RETURN        0 in case of success, any other value in case of error
-// -----------------------------------------------------------------------------
+/*! \brief Return the AMF from table at a specified zenith angle
 
+  \param [in] pResults     output options for the selected cross section
+
+  \param [in] Zm           the current solar zenith angle
+
+  \param [in] Tm           the current number of seconds in order to retrieve
+                           AMF from a climatology table
+
+  \param [out] pAmf        the calculated AMF
+
+  \retval ERROR_ID_NO in case of success, any other value in case of error
+*/
 RC OutputGetAmf(CROSS_RESULTS *pResults,double Zm,double Tm,double *pAmf)
  {
   // Declarations
@@ -342,22 +358,20 @@ RC OutputGetAmf(CROSS_RESULTS *pResults,double Zm,double Tm,double *pAmf)
   return rc;
  }
 
-// -----------------------------------------------------------------------------
-// FUNCTION      OUTPUT_ReadAmf
-// -----------------------------------------------------------------------------
-// PURPOSE       Load Air Mass Factors from file
-//
-// INPUT         symbolName   the name of the selected symbol
-//               amfFileName  the name of the AMF file to load
-//               amfType      the type of AMF to load
-//
-// OUTPUT        pIndexAmf    the index of AMF data in the AMF table
-//
-// RETURN        0 in case of success, any other value in case of error
-// -----------------------------------------------------------------------------
+/*! \brief Load Air Mass Factors from file
 
-RC OUTPUT_ReadAmf(DoasCh *symbolName,DoasCh *amfFileName,DoasCh amfType,INDEX *pIndexAmf)
- {
+ \param [in] symbolName   the name of the selected symbol
+
+ \param [in] amfFileName  the name of the AMF file to load
+
+ \param [in] amfType      the type of AMF to load
+
+ \param [out] pIndexAmf   the index of AMF data in the AMF table
+
+ \retval ERROR_ID_NO in case of success, any other value in case of error
+*/
+RC OUTPUT_ReadAmf(const char *symbolName,const char *amfFileName,DoasCh amfType,INDEX *pIndexAmf)
+{
   // Declarations
 
   DoasCh  fileType,                                                             // file extension and type
@@ -389,7 +403,7 @@ RC OUTPUT_ReadAmf(DoasCh *symbolName,DoasCh *amfFileName,DoasCh amfType,INDEX *p
 
     // Search for symbol in list
 
-    for (indexSymbol=0;indexSymbol<OUTPUT_NAmfSpace;indexSymbol++)
+    for (indexSymbol=0;indexSymbol<NAmfSpace;indexSymbol++)
      {
       pAmfSymbol=&OUTPUT_AmfSpace[indexSymbol];
 
@@ -404,11 +418,11 @@ RC OUTPUT_ReadAmf(DoasCh *symbolName,DoasCh *amfFileName,DoasCh amfType,INDEX *p
 
     // A new symbol is found
 
-    if (indexSymbol==OUTPUT_NAmfSpace)
+    if (indexSymbol==NAmfSpace)
      {
       // Symbol list is limited to MAX_SYMB symbols
 
-      if (OUTPUT_NAmfSpace>=MAX_SYMB)
+      if (NAmfSpace>=MAX_SYMB)
        rc=ERROR_SetLast("OUTPUT_ReadAmf",ERROR_TYPE_FATAL,ERROR_ID_OUT_OF_RANGE,OUTPUT_AmfSpace,0,MAX_SYMB-1);
 
       // File read out
@@ -473,12 +487,12 @@ RC OUTPUT_ReadAmf(DoasCh *symbolName,DoasCh *amfFileName,DoasCh amfType,INDEX *p
           pAmfSymbol->xsLines=xsLines;
           pAmfSymbol->xsColumns=xsColumns;
 
-          OUTPUT_NAmfSpace++;
+          NAmfSpace++;
          }
        }     // END ELSE LEVEL 1
-     }    // END if (indexSymbol==OUTPUT_NAmfSpace)
+     }    // END if (indexSymbol==NAmfSpace)
 
-    if (indexSymbol>=OUTPUT_NAmfSpace)
+    if (indexSymbol>=NAmfSpace)
      indexSymbol=ITEM_NONE;
    }   // END ELSE LEVEL 0
 
@@ -496,79 +510,24 @@ RC OUTPUT_ReadAmf(DoasCh *symbolName,DoasCh *amfFileName,DoasCh amfType,INDEX *p
   *pIndexAmf=indexSymbol;
 
   return rc;
- }
+}
 
-// -----------------------------------------------------------------------------
-// FUNCTION      OutputFlux
-// -----------------------------------------------------------------------------
-// PURPOSE       return the flux at a specified wavelength
-//
-// INPUT         pEngineContext    information on the current spectrum
-//               waveLength   the wavelength
-//
-// RETURN        the flux calculated at the input wavelength
-// -----------------------------------------------------------------------------
-
-double OutputFlux(ENGINE_CONTEXT *pEngineContext,double waveLength)
- {
-  // Declarations
-
-  double flux;
-  INDEX i,imin,imax;
-  INT pixel;
-
-  if ((waveLength<pEngineContext->buffers.lambda[0]) || (waveLength>pEngineContext->buffers.lambda[NDET-1]))
-   flux=(double)0.;
-  else
-   {
-    // Initialization
-
-    pixel=FNPixel(pEngineContext->buffers.lambda,waveLength,NDET,PIXEL_CLOSEST);
-
-    imin=max(pixel-3,0);
-    imax=min(pixel+3,NDET-1);
-
-    // Flux calculation
-
-    for (i=imin,flux=(double)0.;i<=imax;i++)
-     flux+=pEngineContext->buffers.spectrum[i];
-
-    flux/=(double)(imax-imin+1);
-   }
-
-  // Return
-
-  return flux;
- }
-
-// -----------------------------------------------------------------------------
-// FUNCTION      OUTPUT_ResetData
-// -----------------------------------------------------------------------------
-// PURPOSE       release and reset all data used for output
-// -----------------------------------------------------------------------------
-
+/*! \brief release and reset all data used for output */
 void OUTPUT_ResetData(void)
- {
-  // Declarations
-
-  FENO *pTabFeno;
-  INDEX indexFeno,indexFenoColumn,indexTabCross,indexSymbol,indexField;
-  CROSS_RESULTS *pResults;
-  AMF_SYMBOL *pAmf;
-
+{
   // Reset output part of data in analysis windows
 
-  for (indexFenoColumn=0;indexFenoColumn<MAX_SWATHSIZE;indexFenoColumn++)
+  for (int indexFenoColumn=0;indexFenoColumn<MAX_SWATHSIZE;indexFenoColumn++)
    {
-    for (indexFeno=0;indexFeno<MAX_FENO;indexFeno++)
+    for (int indexFeno=0;indexFeno<MAX_FENO;indexFeno++)
      {
-      pTabFeno=&TabFeno[indexFenoColumn][indexFeno];
+       FENO *pTabFeno=&TabFeno[indexFenoColumn][indexFeno];
 
       // Browse symbols
 
-      for (indexTabCross=0;indexTabCross<MAX_FIT;indexTabCross++)
+      for (int indexTabCross=0;indexTabCross<MAX_FIT;indexTabCross++)
        {
-        pResults=&pTabFeno->TabCrossResults[indexTabCross];
+         CROSS_RESULTS *pResults=&pTabFeno->TabCrossResults[indexTabCross];
 
         pResults->indexAmf=ITEM_NONE;
      // -------------------------------------------
@@ -600,9 +559,9 @@ void OUTPUT_ResetData(void)
 
   if (OUTPUT_AmfSpace!=NULL)
    {
-    for (indexSymbol=0;indexSymbol<MAX_SYMB;indexSymbol++)
+    for (int indexSymbol=0;indexSymbol<MAX_SYMB;indexSymbol++)
      {
-      pAmf=&OUTPUT_AmfSpace[indexSymbol];
+       AMF_SYMBOL *pAmf=&OUTPUT_AmfSpace[indexSymbol];
 
       if (pAmf->Phi!=NULL)
        MEMORY_ReleaseDMatrix("OUTPUT_ResetData ","Phi",pAmf->Phi,1,pAmf->PhiColumns,0);
@@ -619,106 +578,40 @@ void OUTPUT_ResetData(void)
 
   // Reset Amf
 
-  OUTPUT_NAmfSpace=0;
+  NAmfSpace=0;
 
-  memset(OUTPUT_currentSpeFile,0,MAX_ITEM_TEXT_LEN+1);
-  memset(OUTPUT_currentAscFile,0,MAX_ITEM_TEXT_LEN+1);
-
-  for (indexField=0;indexField<outputNbFields;indexField++)
-   {
-    if (outputColumns[indexField]!=NULL)
-     MEMORY_ReleaseBuffer("OUTPUT_ResetData",outputFields[indexField].fieldName,outputColumns[indexField]);
-   }
-
-  memset(outputFields,0,sizeof(PRJCT_RESULTS_FIELDS)*MAX_FIELDS);
-  memset(outputColumns,0,sizeof(DoasCh *)*MAX_FIELDS);
+  for (size_t i=0; i<output_num_fields; i++) {
+    output_field_free(&output_data_analysis[i]);
+  }
+  for (size_t i=0; i<calib_num_fields; i++) {
+    output_field_free(&output_data_calib[i]);
+  }
+  output_num_fields = calib_num_fields = 0;
 
   if (outputRecords!=NULL)
    MEMORY_ReleaseBuffer("OUTPUT_ResetData","outputRecords",outputRecords);
 
   outputRecords=NULL;
 
-  OUTPUT_chiSquareFlag=
-  OUTPUT_rmsFlag=
-  OUTPUT_iterFlag=
-  OUTPUT_refZmFlag=
-  OUTPUT_refShift=
-  OUTPUT_covarFlag=
-  OUTPUT_corrFlag=
-  OUTPUT_omiRejPixelsFlag=
-    OUTPUT_spikeFlag=
   outputRunCalib=
   outputCalibFlag=
-  outputNbFields=
-  outputNbDataSet=
-  outputNbRecords=
-  outputMaxRecords=0;
- }
+  outputNbRecords=0;
+}
 
 //  =======================
 //  REGISTER DATA TO OUTPUT
 //  =======================
 
-// -----------------------------------------------------------------------------
-// FUNCTION      OutputRegister
-// -----------------------------------------------------------------------------
-// PURPOSE       Register a field to output
-//
-// INPUT         titlePart1   1st part of the field name
-//               titlePart2   2nd part of the field name (optional)
-//               titlePart3   3rd part of the field name (optional)
-//               fieldType    the type of field to register (data type or format)
-//               fieldSize    the size of one item
-//               fieldDim1    1st dimension of the field
-//               fieldDim2    2nd dimension of the field
-//               format       the format string to use to output the data
-// -----------------------------------------------------------------------------
+/*! \brief Register fluxes
 
-void OutputRegister(DoasCh *titlePart1,DoasCh *titlePart2,DoasCh *titlePart3,INT fieldType,INT fieldSize,
-                    INT fieldDim1,INT fieldDim2,DoasCh *format)
- {
+  \param [in] pEngineContext   structure including information on project options
+*/
+static void OutputRegisterFluxes(const ENGINE_CONTEXT *pEngineContext)
+{
   // Declarations
 
-  DoasCh title[MAX_STR_LEN+1];
-  PRJCT_RESULTS_FIELDS *pField;
-
-  if (outputNbFields<MAX_FIELDS)
-   {
-    pField=&outputFields[outputNbFields++];
-
-    sprintf(title,"%s%s%s",titlePart1,titlePart2,titlePart3);
-
-    strncpy(pField->fieldName,title,2*MAX_ITEM_NAME_LEN);
-    strncpy(pField->fieldFormat,format,MAX_ITEM_NAME_LEN);
-    pField->fieldType=fieldType;
-    pField->fieldSize=fieldSize;
-    pField->fieldDim1=fieldDim1;
-    pField->fieldDim2=fieldDim2;
-
-//    {
-//    	FILE *fp;
-//    	fp=fopen("toto.dat","a+t");
-//    	fprintf(fp,"Register %s %d %d\n",pField->fieldName,pField->fieldDim1,pField->fieldDim2);
-//    	fclose(fp);
-//    }
-
-   }
- }
-
-// -----------------------------------------------------------------------------
-// FUNCTION      OutputRegisterFluxes
-// -----------------------------------------------------------------------------
-// PURPOSE       Register fluxes
-//
-// INPUT         pEngineContext   structure including information on project options
-// -----------------------------------------------------------------------------
-
-void OutputRegisterFluxes(ENGINE_CONTEXT *pEngineContext)
- {
-  // Declarations
-
-  DoasCh  columnTitle[MAX_ITEM_NAME_LEN+1],
-        *ptrOld,*ptrNew;
+   DoasCh  columnTitle[MAX_ITEM_NAME_LEN+1];
+   const char *ptrOld,*ptrNew;
 
   // Initializations
 
@@ -734,7 +627,14 @@ void OutputRegisterFluxes(ENGINE_CONTEXT *pEngineContext)
     if (sscanf(ptrOld,"%lf",&OUTPUT_fluxes[OUTPUT_NFluxes])==1)
      {
       sprintf(columnTitle,"Fluxes %g",OUTPUT_fluxes[OUTPUT_NFluxes]);
-      OutputRegister(columnTitle,"","",MEMORY_TYPE_DOUBLE,sizeof(double),ITEM_NONE,ITEM_NONE,"%#15.6le");
+      struct output_field *output_flux = &output_data_analysis[output_num_fields++];
+      output_flux->resulttype = PRJCT_RESULTS_FLUX;
+      output_flux->fieldname = strdup(columnTitle);
+      output_flux->memory_type = OUTPUT_DOUBLE;
+      output_flux->format = "%#15.6le";
+      output_flux->index_flux = OUTPUT_NFluxes;
+      output_flux->get_data = (func_void)&get_flux;
+      output_flux->data_cols = 1;
       OUTPUT_NFluxes++;
      }
 
@@ -752,1357 +652,764 @@ void OutputRegisterFluxes(ENGINE_CONTEXT *pEngineContext)
     if (sscanf(ptrOld,"%lf/%lf",&OUTPUT_cic[OUTPUT_NCic][0],&OUTPUT_cic[OUTPUT_NCic][1])>=2)
      {
       sprintf(columnTitle,"%g/%g",OUTPUT_cic[OUTPUT_NCic][0],OUTPUT_cic[OUTPUT_NCic][1]);
-      OutputRegister(columnTitle,"","",MEMORY_TYPE_DOUBLE,sizeof(double),ITEM_NONE,ITEM_NONE,"%#15.6le");
+      struct output_field *output_cic = &output_data_analysis[output_num_fields++];
+      output_cic->resulttype = PRJCT_RESULTS_CIC;
+      output_cic->fieldname = strdup(columnTitle);
+      output_cic->memory_type = OUTPUT_DOUBLE;
+      output_cic->format = "%#15.6le";
+      output_cic->index_cic = OUTPUT_NCic;
+      output_cic->get_data = (func_void)&get_cic;
+      output_cic->data_cols = 1;
       OUTPUT_NCic++;
      }
 
     if ((ptrNew=strchr(ptrOld,';'))!=NULL)
      ptrNew++;
    }
- }
+}
 
-// -----------------------------------------------------------------------------
-// FUNCTION      OutputRegisterFields
-// -----------------------------------------------------------------------------
-// PURPOSE       Register all the fields that are not parameters of the fit
-//
-// INPUT         pEngineContext   structure including information on project options
-// -----------------------------------------------------------------------------
+static void register_field(struct output_field field) {
+  struct output_field *newfield = &output_data_analysis[output_num_fields++];
+  *newfield = field;
+  newfield->fieldname = strdup(newfield->fieldname);  // allocate a new buffer for the name so we can free() all output_field data later on.
+  if (newfield->data_cols == 0) // default number of columns is 1
+    newfield->data_cols = 1;
+  newfield->index_feno = ITEM_NONE;
+  newfield->index_calib = ITEM_NONE;
+  newfield->index_row = ITEM_NONE;
+  newfield->get_tabfeno = outputRunCalib ? get_tabfeno_calib : get_tabfeno_analysis;
+}
 
-void OutputRegisterFields(ENGINE_CONTEXT *pEngineContext)
- {
-  // Declarations
+/*! \brief Register all the fields that are not results of the fit,
+    and therefore do not depend on an analysis window.
 
-  PRJCT_RESULTS_FIELDS *pField;
-  PRJCT_RESULTS_ASCII *pResults;
-  PROJECT             *pProject;                                                // pointer to project data
-  INDEX                indexField,
-                       j;
-  int satelliteFlag;
+  \param [in] pEngineContext   structure including information on project options
+*/
+static void OutputRegisterFields(const ENGINE_CONTEXT *pEngineContext)
+{
+  PROJECT *pProject=(PROJECT *)&pEngineContext->project;
+  PRJCT_RESULTS *pResults=(PRJCT_RESULTS *)&pProject->asciiResults;
 
-  // Initializations
+  // earth_radius/sat_height/orbit_number: depends on satellite data format
+  func_float func_earth_radius = NULL, func_sat_height = NULL;
+  func_int func_orbit_number = NULL;
 
-  pProject=(PROJECT *)&pEngineContext->project;
-  pResults=(PRJCT_RESULTS_ASCII *)&pProject->asciiResults;
+  // default values for instrument-dependent output functions:
+  func_int func_meastype = &mfc_get_meastype;
+  func_float func_corner_latitudes = NULL;
+  func_float func_corner_longitudes = NULL;
+  size_t num_sza = 1;
+  func_float func_sza = &get_sza;
+  size_t num_azimuth = 1;
+  func_float func_azimuth = &get_azim;
+  size_t num_los_azimuth = 1;
+  func_float func_los_azimuth = &get_los_azimuth;
+  size_t num_los_zenith = 1;
+  func_float func_los_zenith = &get_los_zenith;
+  func_float func_scanning_angle = &get_scanning_angle;
+  char *format_datetime = "%4d%02d%02d%02d%02d%02d"; // year, month, day, hour, min, sec
+  func_datetime func_datetime = &get_datetime;
+  func_double func_frac_time = &get_frac_time;
 
-  satelliteFlag=((pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN) ||
-                 (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_ASCII) ||
-                 (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_HDF) ||
-                 (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS) ||
-                 (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GOME2))?1:0;
+  char *title_sza = "SZA";
+  char *title_azimuth = "Solar Azimuth Angle";
+  char *title_los_zenith = "LoS ZA";
+  char *title_los_azimuth = "LoS Azimuth";
+
+  switch(pProject->instrumental.readOutFormat) {
+  case PRJCT_INSTR_FORMAT_SCIA_PDS:
+  case PRJCT_INSTR_FORMAT_GOME2:
+  case PRJCT_INSTR_FORMAT_GDP_BIN:
+  case PRJCT_INSTR_FORMAT_GDP_ASCII:
+    num_sza = num_azimuth = num_los_zenith = num_los_azimuth = 3;
+    break;
+  }
+  
+  switch(pProject->instrumental.readOutFormat) {
+  case PRJCT_INSTR_FORMAT_SCIA_PDS:
+    func_frac_time = &get_frac_time_recordinfo;
+    func_corner_longitudes = &scia_get_corner_longitudes;
+    func_corner_latitudes = &scia_get_corner_latitudes;
+    func_los_azimuth = &scia_get_los_azimuth;
+    func_los_zenith = &scia_get_los_zenith;
+    func_sza = &scia_get_sza;
+    func_azimuth = &scia_get_azim;
+    func_earth_radius = &scia_get_earth_radius;
+    func_sat_height = &scia_get_sat_height;
+    func_datetime = &scia_get_datetime;
+    format_datetime = "%4d%02d%02d%02d%02d%02d.%03d"; // year, month, day, hour, min, sec, milliseconds
+    func_orbit_number = &scia_get_orbit_number;
+    break;
+  case PRJCT_INSTR_FORMAT_GOME2:
+    func_sza = &gome2_get_sza;
+    func_azimuth = &gome2_get_azim;
+    func_corner_longitudes = &gome2_get_corner_longitudes;
+    func_corner_latitudes = &gome2_get_corner_latitudes;
+    func_los_azimuth = &gome2_get_los_azimuth;
+    func_los_zenith = &gome2_get_los_zenith;
+    func_earth_radius = &gome2_get_earth_radius;
+    func_sat_height = &gome2_get_sat_height;
+    func_datetime = &gome2_get_datetime;
+    format_datetime = "%4d%02d%02d%02d%02d%02d.%06d"; // year, month, day, hour, min, sec, milliseconds
+    func_orbit_number = &gome2_get_orbit_number;
+    func_frac_time = &get_frac_time_recordinfo;
+    break;
+  case PRJCT_INSTR_FORMAT_GDP_BIN:
+    func_orbit_number = gdp_get_orbit_number;
+    if (GDP_BIN_orbitFiles[GDP_BIN_currentFileIndex].gdpBinHeader.version<40) {
+      func_sza = &gdp3_get_sza;
+      func_azimuth = &gdp3_get_azim;
+      func_corner_longitudes = &gdp3_get_corner_longitudes;
+      func_corner_latitudes = &gdp3_get_corner_latitudes;
+      func_los_azimuth = &gdp3_get_los_azimuth;
+      func_los_zenith = &gdp3_get_los_zenith;
+      func_earth_radius = &gdp3_get_earth_radius;
+      func_sat_height = &gdp3_get_sat_height;
+    } else {
+      func_sza = &gdp4_get_sza;
+      func_azimuth = &gdp4_get_azim;
+      func_corner_longitudes = &gdp4_get_corner_longitudes;
+      func_corner_latitudes = &gdp4_get_corner_latitudes;
+      func_los_azimuth = &gdp4_get_los_azimuth;
+      func_los_zenith = &gdp4_get_los_zenith;
+      func_earth_radius = &gdp4_get_earth_radius;
+      func_sat_height = &gdp4_get_sat_height;
+    }
+    break;
+  case PRJCT_INSTR_FORMAT_GDP_ASCII:
+    func_sza = &gdpasc_get_sza;
+    func_azimuth = &gdpasc_get_azim;
+    func_corner_longitudes = &gdpasc_get_corner_longitudes;
+    func_corner_latitudes = &gdpasc_get_corner_latitudes;
+    func_orbit_number = gdp_get_orbit_number;
+    break;
+  case PRJCT_INSTR_FORMAT_MKZY:
+    func_scanning_angle = &mkzy_get_scanning_angle;
+    break;
+  case PRJCT_INSTR_FORMAT_CCD_EEV:
+    func_meastype = ccd_get_meastype;
+    break;
+  case PRJCT_INSTR_FORMAT_MFC_BIRA:
+    func_meastype= mfc_get_meastype;
+    break;
+  }
 
   // Browse fields
-
-  for (j=0;j<pResults->fieldsNumber;j++)
+  for (int j=0;j<pResults->fieldsNumber;j++)
    {
-    indexField=pResults->fieldsFlag[j];
-    pField=&PRJCT_resultsAscii[indexField];
-
-    // Fields to define for each spectral window
-
-    if (indexField==PRJCT_RESULTS_ASCII_CHI)
-     OUTPUT_chiSquareFlag=1;
-    else if (indexField==PRJCT_RESULTS_ASCII_RMS)
-     OUTPUT_rmsFlag=1;
-    else if (indexField==PRJCT_RESULTS_ASCII_REFZM)
-     OUTPUT_refZmFlag=(outputRunCalib)?0:1;
-    else if (indexField==PRJCT_RESULTS_ASCII_REFSHIFT)
-     OUTPUT_refShift=(outputRunCalib)?0:1;
-    else if (indexField==PRJCT_RESULTS_ASCII_COVAR)
-     OUTPUT_covarFlag=(outputRunCalib)?0:1;
-    else if (indexField==PRJCT_RESULTS_ASCII_CORR)
-     OUTPUT_corrFlag=(outputRunCalib)?0:1;
-    else if (indexField==PRJCT_RESULTS_ASCII_ITER)
-     OUTPUT_iterFlag=1;
-    else if (indexField==PRJCT_RESULTS_ASCII_OMI_PIXELS_QF)
-     OUTPUT_omiRejPixelsFlag=(outputRunCalib)?0:1;
-    else if (indexField==PRJCT_RESULTS_ASCII_SPIKES)
-     OUTPUT_spikeFlag = 1;
-    else if (indexField==PRJCT_RESULTS_ASCII_CCD_DIODES)
-     {
-     	OutputRegister(pField->fieldName,"(1)","",pField->fieldType,pField->fieldSize,pField->fieldDim1,pField->fieldDim2,pField->fieldFormat);
-     	OutputRegister(pField->fieldName,"(2)","",pField->fieldType,pField->fieldSize,pField->fieldDim1,pField->fieldDim2,pField->fieldFormat);
-     	OutputRegister(pField->fieldName,"(3)","",pField->fieldType,pField->fieldSize,pField->fieldDim1,pField->fieldDim2,pField->fieldFormat);
-     	OutputRegister(pField->fieldName,"(4)","",pField->fieldType,pField->fieldSize,pField->fieldDim1,pField->fieldDim2,pField->fieldFormat);
+     enum _prjctResults fieldtype = pResults->fieldsFlag[j];
+     
+     switch(fieldtype) {
+     case PRJCT_RESULTS_SPECNO:
+       register_field( (struct output_field) { .fieldname = "Spec No", .resulttype = fieldtype, .format = "%#4d", .memory_type = OUTPUT_USHORT, .get_data = (func_void)&get_specno } );
+       break;
+     case PRJCT_RESULTS_NAME:
+       register_field( (struct output_field) { .fieldname = "Name", .memory_type = OUTPUT_STRING, .resulttype = fieldtype, .format = "%s", .get_data = (func_void)&get_name });
+       break;
+     case PRJCT_RESULTS_DATE_TIME:
+       register_field( (struct output_field) { .fieldname = "Date & time (YYYYMMDDhhmmss)", .memory_type = OUTPUT_DATETIME, .resulttype = fieldtype, .format = format_datetime, .get_data = (func_void)func_datetime });
+       break;
+     case PRJCT_RESULTS_DATE:
+       register_field( (struct output_field) { .fieldname = "Date (DD/MM/YYYY)", .memory_type = OUTPUT_DATE, .resulttype = fieldtype, .format = "%02d/%02d/%d", .get_data = (func_void)&get_date });
+       break;
+     case PRJCT_RESULTS_TIME:
+       register_field( (struct output_field) { .fieldname = "Time (hh:mm:ss)", .memory_type = OUTPUT_TIME, .resulttype = fieldtype, .format = "%02d:%02d:%02d", .get_data = (func_void)&get_time });
+       break;
+     case PRJCT_RESULTS_YEAR:
+       register_field( (struct output_field) { .fieldname = "Year", .memory_type = OUTPUT_USHORT, .resulttype = fieldtype, .format = "%#4d", .get_data = (func_void)&get_year });
+       break;
+     case PRJCT_RESULTS_JULIAN:
+       register_field( (struct output_field) { .fieldname = "Day number", .memory_type = OUTPUT_USHORT, .resulttype = fieldtype, .format = "%#5d", .get_data = (func_void)&get_julian });
+       break;
+     case PRJCT_RESULTS_JDFRAC:
+       register_field( (struct output_field) { .fieldname = "Fractional day", .memory_type = OUTPUT_DOUBLE, .resulttype = fieldtype, .format = "%#10.6lf", .get_data = (func_void)&get_frac_julian });
+       break;
+     case PRJCT_RESULTS_TIFRAC:
+       register_field( (struct output_field) { .fieldname = "Fractional time", .memory_type = OUTPUT_DOUBLE, .resulttype = fieldtype, .format = "%#20.15lf", .get_data = (func_void)func_frac_time });
+       break;
+     case PRJCT_RESULTS_SCANS:
+       register_field( (struct output_field) { .fieldname = "Scans", .memory_type = OUTPUT_USHORT, .resulttype = fieldtype, .format = "%#5d", .get_data = (func_void)&get_scans });
+       break;
+     case PRJCT_RESULTS_NREJ:
+       register_field( (struct output_field) { .fieldname = "Rejected", .memory_type = OUTPUT_USHORT, .resulttype = fieldtype, .format = "%#5d", .get_data = (func_void)&get_n_rejected });
+       break;
+     case PRJCT_RESULTS_TINT:
+       register_field( (struct output_field) { .fieldname = "Tint", .memory_type = OUTPUT_DOUBLE, .resulttype = fieldtype, .format = "%#12.6lf", .get_data = (func_void)&get_t_int });
+       break;
+     case PRJCT_RESULTS_SZA:
+       register_field( (struct output_field) { .fieldname = title_sza, .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)func_sza, .data_cols = num_sza, .column_number_format="(%c)", .column_number_alphabetic = true });
+       break;
+     case PRJCT_RESULTS_AZIM:
+       register_field( (struct output_field) { .fieldname = title_azimuth, .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)func_azimuth, .data_cols = num_azimuth, .column_number_format="(%c)", .column_number_alphabetic = true });
+       break;
+     case PRJCT_RESULTS_TDET:
+       register_field( (struct output_field) { .fieldname = "Tdet", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_tdet });
+       break;
+     case PRJCT_RESULTS_SKY:
+       register_field( (struct output_field) { .fieldname = "Sky Obs", .memory_type = OUTPUT_USHORT, .resulttype = fieldtype, .format = "%#2d", .get_data = (func_void)&get_sky });
+       break;
+     case PRJCT_RESULTS_BESTSHIFT:
+       register_field( (struct output_field) { .fieldname = "Best shift", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_bestshift });
+       break;
+     case PRJCT_RESULTS_PIXEL:
+       register_field( (struct output_field) { .fieldname = "Pixel number", .memory_type = OUTPUT_USHORT, .resulttype = fieldtype, .format = "%#5d", .get_data = (func_void)&get_pixel_number });
+       break;
+     case PRJCT_RESULTS_PIXEL_TYPE:
+       register_field( (struct output_field) { .fieldname = "Pixel type", .memory_type = OUTPUT_USHORT, .resulttype = fieldtype, .format = "%#5d" , .get_data = (func_void)&get_pixel_type});
+       break;
+     case PRJCT_RESULTS_ORBIT:
+       register_field( (struct output_field) { .fieldname = "Orbit number", .memory_type = OUTPUT_INT, .resulttype = fieldtype, .format = "%#8d", .get_data = (func_void)func_orbit_number });
+       break;
+     case PRJCT_RESULTS_LONGIT:
+       if(func_corner_longitudes) { // we have pixel corners
+         register_field( (struct output_field) { .fieldname = "Longitude", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)func_corner_longitudes, .data_cols = 4, .column_number_format="(%d)" });
+       }
+       register_field( (struct output_field) { .fieldname = "Longitude(pixel center)", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_longitude }); // pixel centre
+       break;
+     case PRJCT_RESULTS_LATIT:
+       if(func_corner_latitudes) { // we have pixel corners
+         register_field( (struct output_field) { .fieldname = "Latitude", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)func_corner_latitudes, .data_cols = 4, .column_number_format="(%d)" });
+       }
+       register_field( (struct output_field) { .fieldname = "Latitude(pixel center)", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_latitude });
+       break;
+     case PRJCT_RESULTS_ALTIT:
+       register_field( (struct output_field) { .fieldname = "Altitude", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_altitude });
+       break;
+     case PRJCT_RESULTS_CLOUD:
+       register_field( (struct output_field) { .fieldname = "Cloud fraction", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_cloud_fraction });
+       break;
+     case PRJCT_RESULTS_CLOUDTOPP:
+       register_field( (struct output_field) { .fieldname = "Cloud Top Pressure", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_cloud_top_pressure });
+       break;
+     case PRJCT_RESULTS_LOS_ZA:
+       register_field( (struct output_field) { .fieldname = title_los_zenith, .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)func_los_zenith, .data_cols = num_los_zenith, .column_number_format="(%c)", .column_number_alphabetic = true });
+       break;
+     case PRJCT_RESULTS_LOS_AZIMUTH:
+       register_field( (struct output_field) { .fieldname = title_los_azimuth, .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)func_los_azimuth, .data_cols = num_los_azimuth, .column_number_format="(%c)", .column_number_alphabetic = true });
+       break;
+     case PRJCT_RESULTS_SAT_HEIGHT:
+       register_field( (struct output_field) { .fieldname = "Satellite height", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)func_sat_height });
+       break;
+     case PRJCT_RESULTS_EARTH_RADIUS:
+       register_field( (struct output_field) { .fieldname = "Earth radius", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)func_earth_radius });
+       break;
+     case PRJCT_RESULTS_VIEW_ELEVATION:
+       register_field( (struct output_field) { .fieldname = "Elev. viewing angle", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_view_elevation });
+       break;
+     case PRJCT_RESULTS_VIEW_AZIMUTH:
+       register_field( (struct output_field) { .fieldname = "Azim. viewing angle", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_view_azimuth });
+       break;
+     case PRJCT_RESULTS_VIEW_ZENITH:
+       register_field( (struct output_field) { .fieldname = "Zenith viewing angle", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_view_zenith });
+       break;
+     case PRJCT_RESULTS_SCIA_QUALITY:
+       register_field( (struct output_field) { .fieldname = "SCIAMACHY Quality Flag", .memory_type = OUTPUT_USHORT, .resulttype = fieldtype, .format = "%#5d", .get_data = (func_void)&get_scia_quality });
+       break;
+     case PRJCT_RESULTS_SCIA_STATE_INDEX:
+       register_field( (struct output_field) { .fieldname = "SCIAMACHY State Index", .memory_type = OUTPUT_USHORT, .resulttype = fieldtype, .format = "%#5d", .get_data = (func_void)&get_scia_state_index });
+       break;
+     case PRJCT_RESULTS_SCIA_STATE_ID:
+       register_field( (struct output_field) { .fieldname = "SCIAMACHY State Id", .memory_type = OUTPUT_USHORT, .resulttype = fieldtype, .format = "%#5d", .get_data = (func_void)&get_scia_state_id });
+       break;
+     case PRJCT_RESULTS_STARTTIME:
+       register_field( (struct output_field) { .fieldname = "Start Time (hhmmss)", .memory_type = OUTPUT_TIME, .resulttype = fieldtype, .format = "%02d%02d%02d", .get_data = (func_void)&get_start_time });
+       break;
+     case PRJCT_RESULTS_ENDTIME:
+       register_field( (struct output_field) { .fieldname = "Stop Time (hhmmss)", .memory_type = OUTPUT_TIME, .resulttype = fieldtype, .format = "%02d%02d%02d", .get_data = (func_void)&get_end_time });
+       break;
+     case PRJCT_RESULTS_SCANNING:
+       register_field( (struct output_field) { .fieldname = "Scanning angle", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)func_scanning_angle });
+       break;
+     case PRJCT_RESULTS_FILTERNUMBER:
+       register_field( (struct output_field) { .fieldname = "Filter number", .memory_type = OUTPUT_INT, .resulttype = fieldtype, .format = "%#3d", .get_data = (func_void)&get_filter_number });
+       break;
+     case PRJCT_RESULTS_MEASTYPE:
+       register_field( (struct output_field) { .fieldname = "Measurement type", .memory_type = OUTPUT_INT, .resulttype = fieldtype, .format = "%#3d", .get_data = (func_void)func_meastype });
+       break;
+     case PRJCT_RESULTS_CCD_HEADTEMPERATURE:
+       register_field( (struct output_field) { .fieldname = "Head temperature", .memory_type = OUTPUT_DOUBLE, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&ccd_get_head_temperature });
+       break;
+     case PRJCT_RESULTS_COOLING_STATUS:
+       register_field( (struct output_field) { .fieldname = "Cooler status", .memory_type = OUTPUT_INT, .resulttype = fieldtype, .format = "%#5d", .get_data = (func_void)&get_cooling_status });
+       break;
+     case PRJCT_RESULTS_MIRROR_ERROR:
+       register_field( (struct output_field) { .fieldname = "Mirror status", .memory_type = OUTPUT_INT, .resulttype = fieldtype, .format = "%#5d", .get_data = (func_void)&get_mirror_error });
+       break;
+     case PRJCT_RESULTS_COMPASS:
+       register_field( (struct output_field) { .fieldname = "Compass angle", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_compass_angle });
+       break;
+     case PRJCT_RESULTS_PITCH:
+       register_field( (struct output_field) { .fieldname = "Pitch angle", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_pitch_angle });
+       break;
+     case PRJCT_RESULTS_ROLL:
+       register_field( (struct output_field) { .fieldname = "Roll angle", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_roll_angle });
+       break;
+     case PRJCT_RESULTS_ITER:
+       register_field( (struct output_field) { .fieldname = "Iterations number", .memory_type = OUTPUT_INT, .resulttype = fieldtype, .format = "%#6d", .get_data = (func_void)&get_n_iter });
+       break;
+     case PRJCT_RESULTS_GOME2_SCANDIRECTION:
+       register_field( (struct output_field) { .fieldname = "GOME2 scan direction", .memory_type = OUTPUT_INT, .resulttype = fieldtype, .format = "%#6d", .get_data = (func_void)&gome2_get_scan_direction });
+       break;
+     case PRJCT_RESULTS_GOME2_SAA:
+       register_field( (struct output_field) { .fieldname = "GOME2 SAA flag", .memory_type = OUTPUT_INT, .resulttype = fieldtype, .format = "%#6d", .get_data = (func_void)&gome2_get_saa });
+       break;
+     case PRJCT_RESULTS_GOME2_SUNGLINT_RISK:
+       register_field( (struct output_field) { .fieldname = "GOME2 sunglint risk flag", .memory_type = OUTPUT_INT, .resulttype = fieldtype, .format = "%#6d", .get_data = (func_void)&gome2_get_sunglint_risk });
+       break;
+     case PRJCT_RESULTS_GOME2_SUNGLINT_HIGHRISK:
+       register_field( (struct output_field) { .fieldname = "GOME2 sunglint high risk flag", .memory_type = OUTPUT_INT, .resulttype = fieldtype, .format = "%#6d", .get_data = (func_void)&gome2_get_sunglint_high_risk });
+       break;
+     case PRJCT_RESULTS_GOME2_RAINBOW:
+       register_field( (struct output_field) { .fieldname = "GOME2 rainbow flag", .memory_type = OUTPUT_INT, .resulttype = fieldtype, .format = "%#6d", .get_data = (func_void)&gome2_get_rainbow });
+       break;
+     case PRJCT_RESULTS_CCD_DIODES:
+       register_field( (struct output_field) { .fieldname = "Diodes", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_diodes, .data_cols = 4, .column_number_format="(%d)" });
+       break;
+     case PRJCT_RESULTS_CCD_TARGETAZIMUTH:
+       register_field( (struct output_field) { .fieldname = "Target Azimuth", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_target_azimuth });
+       break;
+     case PRJCT_RESULTS_CCD_TARGETELEVATION:
+       register_field( (struct output_field) { .fieldname = "Target Elevation", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_target_elevation });
+       break;
+     case PRJCT_RESULTS_SATURATED:
+       register_field( (struct output_field) { .fieldname = "Saturated", .memory_type = OUTPUT_USHORT, .resulttype = fieldtype, .format = "%#5d", .get_data = (func_void)&get_saturated_flag });
+       break;
+     case PRJCT_RESULTS_OMI_INDEX_SWATH:
+       register_field( (struct output_field) { .fieldname = "OMI index swath", .memory_type = OUTPUT_INT, .resulttype = fieldtype, .format = "%#6d", .get_data = (func_void)&get_omi_measurement_number });
+       break;
+     case PRJCT_RESULTS_OMI_INDEX_ROW:
+       register_field( (struct output_field) { .fieldname = "OMI index row", .memory_type = OUTPUT_INT, .resulttype = fieldtype, .format = "%#3d", .get_data = (func_void)&get_omi_row });
+       break;
+     case PRJCT_RESULTS_OMI_GROUNDP_QF:
+       register_field( (struct output_field) { .fieldname = "OMI groundpixel quality flag", .memory_type = OUTPUT_USHORT, .resulttype = fieldtype, .format = "%#6d", .get_data = (func_void)&get_omi_groundpixelqf });
+       break;
+     case PRJCT_RESULTS_OMI_XTRACK_QF:
+       register_field( (struct output_field) { .fieldname = "OMI xtrack quality flag", .memory_type = OUTPUT_USHORT, .resulttype = fieldtype, .format = "%#6d", .get_data = (func_void)&get_omi_xtrackqf });
+       break;
+     case PRJCT_RESULTS_OMI_PIXELS_QF:
+       register_field( (struct output_field) { .fieldname = "OMI rejected pixels based on QF", .memory_type = OUTPUT_STRING, .resulttype = fieldtype, .format = "%-50s", .get_data = (func_void)&omi_get_rejected_pixels });
+       break;
+     case PRJCT_RESULTS_UAV_SERVO_BYTE_SENT:
+       register_field( (struct output_field) { .fieldname = "UAV servo sent position byte", .memory_type = OUTPUT_USHORT, .resulttype = fieldtype, .format = "%#3d", .get_data = (func_void)&get_uav_servo_byte_sent });
+       break;
+     case PRJCT_RESULTS_UAV_SERVO_BYTE_RECEIVED:
+       register_field( (struct output_field) { .fieldname = "UAV servo received position byte", .memory_type = OUTPUT_USHORT, .resulttype = fieldtype, .format = "%#3d", .get_data = (func_void)&get_uav_servo_byte_received });
+       break;
+     default:
+       break;
      }
-
-    // Geolocation for satellite data
-
-    else if (satelliteFlag &&
-           ((indexField==PRJCT_RESULTS_ASCII_LONGIT) ||
-            (indexField==PRJCT_RESULTS_ASCII_LATIT)))
-     {
-      OutputRegister(pField->fieldName,"(1)","",pField->fieldType,pField->fieldSize,pField->fieldDim1,pField->fieldDim2,pField->fieldFormat);
-      OutputRegister(pField->fieldName,"(2)","",pField->fieldType,pField->fieldSize,pField->fieldDim1,pField->fieldDim2,pField->fieldFormat);
-      OutputRegister(pField->fieldName,"(3)","",pField->fieldType,pField->fieldSize,pField->fieldDim1,pField->fieldDim2,pField->fieldFormat);
-      OutputRegister(pField->fieldName,"(4)","",pField->fieldType,pField->fieldSize,pField->fieldDim1,pField->fieldDim2,pField->fieldFormat);
-
-      OutputRegister(pField->fieldName,"(pixel center)","",pField->fieldType,pField->fieldSize,pField->fieldDim1,pField->fieldDim2,pField->fieldFormat);
-     }
-    else if (satelliteFlag &&
-           ((indexField==PRJCT_RESULTS_ASCII_SZA) ||
-            (indexField==PRJCT_RESULTS_ASCII_AZIM) ||
-            (indexField==PRJCT_RESULTS_ASCII_LOS_ZA) ||
-            (indexField==PRJCT_RESULTS_ASCII_LOS_AZIMUTH)))
-     {
-      OutputRegister(pField->fieldName,"(A)","",pField->fieldType,pField->fieldSize,pField->fieldDim1,pField->fieldDim2,pField->fieldFormat);
-      OutputRegister(pField->fieldName,"(B)","",pField->fieldType,pField->fieldSize,pField->fieldDim1,pField->fieldDim2,pField->fieldFormat);
-      OutputRegister(pField->fieldName,"(C)","",pField->fieldType,pField->fieldSize,pField->fieldDim1,pField->fieldDim2,pField->fieldFormat);
-     }
-
-    // Other data
-
-    else
-     OutputRegister(pField->fieldName,"","",pField->fieldType,pField->fieldSize,pField->fieldDim1,pField->fieldDim2,pField->fieldFormat);
    }
- }
+}
 
-// -----------------------------------------------------------------------------
-// FUNCTION      OutputRegisterCalib
-// -----------------------------------------------------------------------------
-// PURPOSE       Register all the calibration fields for each window of the
-//               wavelength calibration interval
-//
-// INPUT         indexFenoK   the current window of the wavelength calibration interval
-// -----------------------------------------------------------------------------
+/*! \brief Helper function to initialize a new output_field in the
+    \ref output_data_calib array.*/
+static void register_calibration_field(struct output_field newfield) {
+  struct output_field *calibfield = &output_data_calib[calib_num_fields++];
+  *calibfield = newfield; // copy all contents
+  if(calibfield->data_cols == 0) // data_cols = 1 as default value -> we only need to set data_cols explicitly if we want a multi-column field
+    calibfield->data_cols = 1;
+  calibfield->fieldname = strdup(calibfield->fieldname); // each output_field should malloc its own copy of fieldname, so we can always use free() afterwards 
+  calibfield->get_tabfeno = &get_tabfeno_calib;
+  calibfield->get_cross_results = &get_cross_results_calib;
+  calibfield->memory_type = OUTPUT_DOUBLE;
+  calibfield->format = FORMAT_DOUBLE;
+}
 
-void OutputRegisterCalib(INDEX indexFenoK,INDEX indexFenoColumn)
- {
-  // Declarations
+/*! \brief Register selected output fields for the reference spectrum
+    calibration.*/
+static void register_calibration(int kurucz_index, int index_row) {
+  FENO *pTabFeno=&TabFeno[index_row][kurucz_index];
 
-  DoasCh                windowName[MAX_ITEM_NAME_LEN+1],                         // the name of the current spectral window
-                       symbolName[MAX_ITEM_NAME_LEN+1];                         // the name of a symbol
-  FENO                *pTabFeno;
-  CROSS_REFERENCE     *TabCross;
-  CROSS_RESULTS       *pTabCrossResults;
-  INDEX                indexTabCross;
-  INT                  nbWin,dim1,dim2;
+  int index_feno = KURUCZ_buffers[index_row].indexKurucz +1;
 
-  nbWin=KURUCZ_buffers[indexFenoColumn].Nb_Win;
+  register_calibration_field((struct output_field){.fieldname="Wavelength", .resulttype = PRJCT_RESULTS_WAVELENGTH, .index_feno=index_feno, .index_row=index_row, .index_cross=ITEM_NONE, .get_data=(func_void)&get_wavelength_calib });
+  register_calibration_field((struct output_field){.fieldname="RMS", .resulttype = PRJCT_RESULTS_RMS, .index_feno=index_feno, .index_row=index_row, .index_cross=ITEM_NONE, .get_data=(func_void)&get_rms_calib });
 
-  dim1=nbWin;
-  dim2=ITEM_NONE;
+  for (int indexTabCross=0;indexTabCross<pTabFeno->NTabCross;indexTabCross++) {
+    CROSS_RESULTS *pTabCrossResults = &pTabFeno->TabCrossResults[indexTabCross];
+    char *symbol_name = WorkSpace[pTabFeno->TabCross[indexTabCross].Comp].symbolName;
+    char symbol_name_brackets[strlen(symbol_name)+2+1];
+    sprintf(symbol_name_brackets,"(%s)",symbol_name);
+    
+    struct calibconfig {
+      bool register_field;
+      char *output_name;
+      char *symbol_name;
+      struct output_field fieldconfig;
+    };
+    
+    struct calibconfig calibrationfields[] = {
+      { pTabCrossResults->StoreSlntCol, "SlCol", symbol_name_brackets,
+        { .get_data=(func_void)&get_slant_column, .resulttype = PRJCT_RESULTS_SLANT_COL} },
+      { pTabCrossResults->StoreSlntErr, "SlErr", symbol_name_brackets, 
+        { .get_data=(func_void)&get_slant_err, .resulttype = PRJCT_RESULTS_SLANT_ERR} },
+      { pTabCrossResults->StoreShift, "Shift", symbol_name_brackets, 
+        { .get_data=(func_void)&get_shift, .resulttype = PRJCT_RESULTS_SHIFT} },
+      { pTabCrossResults->StoreShift && pTabCrossResults->StoreError, "Err Shift", symbol_name_brackets,
+        { .get_data=(func_void)&get_shift_err, .resulttype = PRJCT_RESULTS_SHIFT_ERR} },
+      { pTabCrossResults->StoreStretch, "Stretch", symbol_name_brackets,
+        { .get_data=(func_void)&get_stretches, .data_cols=2, .column_number_format="%d", .resulttype = PRJCT_RESULTS_STRETCH} },
+      { pTabCrossResults->StoreStretch && pTabCrossResults->StoreError, "Err Stretch", symbol_name_brackets,
+        { .get_data=(func_void)&get_stretch_errors, .resulttype = PRJCT_RESULTS_STRETCH_ERR, .data_cols=2,.column_number_format = "%d"} },
+      { pTabCrossResults->StoreScale, "Scale", symbol_name_brackets,
+        { .get_data=(func_void)&get_scale, .resulttype = PRJCT_RESULTS_SCALE} },
+      { pTabCrossResults->StoreScale && pTabCrossResults->StoreError, "Err Scale", symbol_name_brackets,
+        { .get_data=(func_void)&get_scale_err, .resulttype = PRJCT_RESULTS_SCALE_ERR} },
+      { pTabCrossResults->StoreParam, symbol_name, "",
+        { .get_data=(func_void)&get_param, .resulttype = PRJCT_RESULTS_PARAM} },
+      { pTabCrossResults->StoreParam && pTabCrossResults->StoreParamError, "Err ", symbol_name,
+        { .get_data=(func_void)&get_param_err, .resulttype = PRJCT_RESULTS_PARAM_ERR} }
+    };
+    
+    for(unsigned int i=0; i<sizeof(calibrationfields)/sizeof(calibrationfields[0]); i++) {
+      if(calibrationfields[i].register_field) {
+        char fieldname[strlen(calibrationfields[i].output_name) + strlen(calibrationfields[i].symbol_name) +1];
+        sprintf(fieldname, "%s%s", calibrationfields[i].output_name, calibrationfields[i].symbol_name);
+        struct output_field newfield = calibrationfields[i].fieldconfig; // copy all non-zero fields from 'fieldconfig'
+        newfield.fieldname=fieldname;
+        newfield.index_feno=index_feno;
+        newfield.index_row=index_row;
+        newfield.index_cross=indexTabCross;
+        register_calibration_field(newfield);
+      }
+    }
+  }
+}
 
-  pTabFeno=&TabFeno[indexFenoColumn][indexFenoK];
-  TabCross=pTabFeno->TabCross;
+/*! \brief Register all output related to analysis (or run
+    calibration) results.
 
-  // Register columns
+  This function registers all results of the fit: global results such
+  as the RMS, by calling \ref register_analysis_output, as well as the fitted parameters for each cross section
+  in the fit, by calling \ref register_cross_results.
 
-  if (ANALYSE_swathSize>1)
-   sprintf(windowName,"Calib(%d/%d).",indexFenoColumn+1,ANALYSE_swathSize);
-  else
-   sprintf(windowName,"Calib.");
+  \param [in] pEngineContext   structure including information on project options
+*/
+static void OutputRegisterParam(const ENGINE_CONTEXT *pEngineContext)
+{
+  int indexFenoColumn = 0;
+  // if using OMI: increase indexFenoColumn until we find a used track, otherwise: use track 0
+  for(indexFenoColumn=0; indexFenoColumn<ANALYSE_swathSize; indexFenoColumn++) {
+    if ( pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_OMI ||
+         pEngineContext->project.instrumental.omi.omiTracks[indexFenoColumn] )
+      break;
+  }
 
-  OutputRegister(windowName,"Wavelength","",MEMORY_TYPE_DOUBLE,sizeof(double),dim1,dim2,"%#12.4le");
-  OutputRegister(windowName,"RMS","",MEMORY_TYPE_DOUBLE,sizeof(double),dim1,dim2,"%#12.4le");
+  const PRJCT_RESULTS *pResults= &pEngineContext->project.asciiResults;
+      
+  // Browse analysis windows
+  for (int indexFeno=0;indexFeno<NFeno;indexFeno++) {
+    FENO *pTabFeno=&TabFeno[indexFenoColumn][indexFeno];
+    char window_name[MAX_ITEM_NAME_LEN+1];
+    if(!outputRunCalib && !pTabFeno->hidden) {
+      // run analysis: skip calibration settings
+      sprintf(window_name,"%s.",pTabFeno->windowName);
+      register_analysis_output(pResults, indexFeno, ITEM_NONE, window_name);
+      register_cross_results(pResults, pTabFeno, indexFeno, ITEM_NONE, window_name);
+    } 
+    else if (outputRunCalib && pTabFeno->hidden) { 
+      // run calibration: use TabFeno with calibration settings, register parameters
+      // for each calibration window
+      for (int indexWin=0; indexWin<KURUCZ_buffers[indexFenoColumn].Nb_Win; indexWin++) {
+        sprintf(window_name,"RunCalib(%d).",indexWin+1);
+        register_analysis_output(pResults, indexFeno, indexWin, window_name);
+        register_cross_results(pResults, pTabFeno, indexFeno, indexWin, window_name);
+      }
+    } 
+  }
+}
 
-  // Fitted parameters
+/*! \brief helper function to initialize an output_field containing analysis results. */
+static void register_analysis_field(const struct output_field* fieldcontent, int index_feno, int index_calib, int index_cross, const char *window_name, const char *symbol_name) {
+  struct output_field *newfield = &output_data_analysis[output_num_fields++];
+  *newfield = *fieldcontent;
+  char *full_fieldname = malloc(strlen(newfield->fieldname) + strlen(window_name) + strlen(symbol_name) +1);
+  sprintf(full_fieldname, "%s%s%s", window_name, newfield->fieldname, symbol_name);
+  newfield->fieldname = full_fieldname;
+  newfield->data = NULL;
+  if (newfield->data_cols == 0) // data_cols = 1 as a default
+    newfield->data_cols = 1;
+  newfield->index_feno = index_feno;
+  newfield->get_tabfeno = (outputRunCalib) ? &get_tabfeno_calib : &get_tabfeno_analysis;
+  newfield->index_calib = (outputRunCalib) ? index_calib : ITEM_NONE;
+  newfield->index_cross = index_cross;
+  newfield->get_cross_results = (outputRunCalib) ? &get_cross_results_calib : &get_cross_results;
+  if(newfield->num_attributes) // create own heap-allocated copy of attributes
+    newfield->attributes = copy_attributes(newfield->attributes, newfield->num_attributes);
+}
 
-  for (indexTabCross=0;indexTabCross<pTabFeno->NTabCross;indexTabCross++)
-   {
-    pTabCrossResults=&pTabFeno->TabCrossResults[indexTabCross];
-    sprintf(symbolName,"(%s)",WorkSpace[pTabFeno->TabCross[indexTabCross].Comp].symbolName);
+/*! \brief Register output fields related to overall analysis (or run
+    calibration) results (per analysis window).
 
-    if (pTabCrossResults->StoreSlntCol)                         // Slant column
-     OutputRegister(windowName,"SlCol",symbolName,MEMORY_TYPE_DOUBLE,sizeof(double),dim1,dim2,"%#12.4le");
-    if (pTabCrossResults->StoreSlntErr)                         // Error on slant column
-     OutputRegister(windowName,"SlErr",symbolName,MEMORY_TYPE_DOUBLE,sizeof(double),dim1,dim2,"%#12.4le");
+  \param [in] pResults PRCJT_RESULTS array of containing output fields selected by the user.
 
-    if (pTabCrossResults->StoreShift)              // Shift
-     {
-      OutputRegister(windowName,"Shift",symbolName,MEMORY_TYPE_DOUBLE,sizeof(double),dim1,dim2,"%#12.4le");
-      if (pTabCrossResults->StoreError)
-       OutputRegister(windowName,"Err Shift",symbolName,MEMORY_TYPE_DOUBLE,sizeof(double),dim1,dim2,"%#12.4le");
-     }
+  \param [in] indexFeno index of the analysis window.
 
-    if (pTabCrossResults->StoreStretch)            // Stretch
-     {
-      OutputRegister(windowName,"Stretch",symbolName,MEMORY_TYPE_DOUBLE,sizeof(double),dim1,dim2,"%#12.4le");
-      if (pTabCrossResults->StoreError)
-       OutputRegister(windowName,"Err Stretch",symbolName,MEMORY_TYPE_DOUBLE,sizeof(double),dim1,dim2,"%#12.4le");
-      OutputRegister(windowName,"Stretch2",symbolName,MEMORY_TYPE_DOUBLE,sizeof(double),dim1,dim2,"%#12.4le");
-      if (pTabCrossResults->StoreError)
-       OutputRegister(windowName,"Err Stretch2",symbolName,MEMORY_TYPE_DOUBLE,sizeof(double),dim1,dim2,"%#12.4le");
-     }
+  \param [in] index_calib in case of run_calibration: index of the calibration window
 
-    if (pTabCrossResults->StoreScale)              // Scale
-     {
-      OutputRegister(windowName,"Scale",symbolName,MEMORY_TYPE_DOUBLE,sizeof(double),dim1,dim2,"%#12.4le");
-      if (pTabCrossResults->StoreError)
-       OutputRegister(windowName,"Err Scale",symbolName,MEMORY_TYPE_DOUBLE,sizeof(double),dim1,dim2,"%#12.4le");
-      OutputRegister(windowName,"Scale2",symbolName,MEMORY_TYPE_DOUBLE,sizeof(double),dim1,dim2,"%#12.4le");
-      if (pTabCrossResults->StoreError)
-       OutputRegister(windowName,"Err Scale2",symbolName,MEMORY_TYPE_DOUBLE,sizeof(double),dim1,dim2,"%#12.4le");
-     }
+  \param [in] windowName name of the analysis window, with suffix "."
+*/
+static void register_analysis_output(const PRJCT_RESULTS *pResults, int indexFeno, int index_calib, const char *windowName) {
 
-    if (pTabCrossResults->StoreParam)              // Param
-     {
-      OutputRegister(windowName,WorkSpace[pTabFeno->TabCross[indexTabCross].Comp].symbolName,"",MEMORY_TYPE_DOUBLE,sizeof(double),dim1,dim2,"%#12.4le");
-      if (pTabCrossResults->StoreParamError)
-       OutputRegister(windowName,"Err ",WorkSpace[pTabFeno->TabCross[indexTabCross].Comp].symbolName,MEMORY_TYPE_DOUBLE,sizeof(double),dim1,dim2,"%#12.4le");
-     }
-   }
- }
+  struct outputconfig analysis_infos[] = {
+    { (outputRunCalib) ? -1 : PRJCT_RESULTS_REFZM, // no REFZM in "run calibration" mode
+      { .fieldname = "RefZm", .format = FORMAT_FLOAT, .memory_type = OUTPUT_FLOAT, .get_data = (func_void) &get_refzm} },
+    { (outputRunCalib) ? -1 : PRJCT_RESULTS_REFSHIFT, // no REFSHIFT in "run calibration" mode
+      { .fieldname = "Ref2/Ref1 Shift", .format = FORMAT_FLOAT, .memory_type = OUTPUT_FLOAT, .get_data = (func_void) &get_ref_shift} },
+    { (outputRunCalib) ? -1 : PRJCT_RESULTS_SPIKES, // no spike removal in "run calibration" mode
+      { .fieldname = "Spike removal", .format = "%-50s", .memory_type = OUTPUT_STRING, .get_data = (func_void) &get_spikes } },
+    { (outputRunCalib) ? -1 : PRJCT_RESULTS_OMI_PIXELS_QF,  // no pixel quality flags in "run calibration" mode
+      { .fieldname = "omiRejPixelsQF", .format = "%-50s", .memory_type = OUTPUT_STRING, .get_data = (func_void) &get_omi_rejected_pixels } },
+    { PRJCT_RESULTS_CHI,
+      { .fieldname = "Chi", .format = FORMAT_DOUBLE, .memory_type = OUTPUT_DOUBLE,
+        .get_data = (outputRunCalib) ? (func_void) &get_chisquare_calib : (func_void) &get_chisquare} },
+    { PRJCT_RESULTS_RMS,
+      { .fieldname = "RMS", .format = FORMAT_DOUBLE, .memory_type = OUTPUT_DOUBLE, 
+        .get_data = (outputRunCalib) ? (func_void) &get_rms_calib : (func_void) &get_rms} },
+    { PRJCT_RESULTS_ITER,
+      { .fieldname = "iter", .format = FORMAT_INT, .memory_type = OUTPUT_INT,
+        .get_data = (outputRunCalib) ? (func_void) &get_n_iter_calib : (func_void) &get_n_iter} }
+  };
 
-// -----------------------------------------------------------------------------
-// FUNCTION      OutputRegisterParam
-// -----------------------------------------------------------------------------
-// PURPOSE       Register all the parameters of the fit
-//
-// INPUT         pEngineContext   structure including information on project options
-//               hiddenFlag  indicates if the calling windows is hidden in the projects tree
-// -----------------------------------------------------------------------------
+  size_t arr_length = sizeof(analysis_infos)/sizeof(analysis_infos[0]);
 
-void OutputRegisterParam(ENGINE_CONTEXT *pEngineContext,INT hiddenFlag)
- {
-  // Declarations
+  for(int i = 0; i<pResults->fieldsNumber; i++) {
+    enum _prjctResults indexField = pResults->fieldsFlag[i];
+    struct outputconfig *output =  (struct outputconfig *) lfind(&indexField, analysis_infos, &arr_length, sizeof(analysis_infos[0]), &compare_record);
+    if(output) {
+      output->field.get_tabfeno = &get_tabfeno_analysis;
+      output->field.resulttype = output->type;
+      register_analysis_field(&output->field, indexFeno, index_calib, ITEM_NONE, windowName, "");
+    }
+  }
+}
 
-  DoasCh               windowName[MAX_ITEM_NAME_LEN+1],                         // the name of the current spectral window
-                       symbolName[MAX_ITEM_NAME_LEN+1];                         // the name of a symbol
-  FENO                *pTabFeno;
-  CROSS_REFERENCE     *TabCross;
-  CROSS_RESULTS       *pTabCrossResults;
-  INDEX                indexFeno,indexWin,indexFenoColumn,
-                       indexTabCross,indexTabCross2;
-  INT                  nbWin,dim1,dim2;
+/*! \brief Register output fields related to analysis (or run
+    calibration) results of cross sections (per analysis window).
 
-  dim1=ITEM_NONE;
-  dim2=ITEM_NONE;
+  \param [in] pResults PRCJT_RESULTS array of containing output fields
+  selected by the user.
 
-  for (indexFenoColumn=0;indexFenoColumn<ANALYSE_swathSize;indexFenoColumn++)
-   {
-    nbWin=(hiddenFlag)?KURUCZ_buffers[indexFenoColumn].Nb_Win:1;
+  \param [in] pTabFeno FENO structure describing the analysis window.
 
-   	if ((pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_OMI) ||
-   	     pEngineContext->project.instrumental.omi.omiTracks[indexFenoColumn])
-   	 {
-      // Browse analysis windows
+  \param [in] indexFeno index of the analysis window.
 
-      for (indexWin=0;indexWin<nbWin;indexWin++)
+  \param [in] index_calib in case of run_calibration: index of the
+  calibration window
 
-       for (indexFeno=0;indexFeno<NFeno;indexFeno++)
-        {
-         pTabFeno=&TabFeno[indexFenoColumn][indexFeno];
-         TabCross=pTabFeno->TabCross;
-
-         if (pTabFeno->hidden==hiddenFlag)
-          {
-          	if (!pTabFeno->hidden)
-          	 {
-             // Not fitted parameters
-
-             sprintf(windowName,"%s.",pTabFeno->windowName);
-
-             if (OUTPUT_refZmFlag)
-              OutputRegister(windowName,"RefZm","",MEMORY_TYPE_FLOAT,sizeof(float),dim1,dim2,"%#8.3f");
-             if (OUTPUT_refShift)
-              OutputRegister(windowName,"Ref2/Ref1 Shift","",MEMORY_TYPE_FLOAT,sizeof(float),dim1,dim2,"%#8.3f");
-              
-             if (OUTPUT_covarFlag)
-              for (indexTabCross=0;indexTabCross<pTabFeno->NTabCross;indexTabCross++) 
-               if (TabCross[indexTabCross].IndSvdA>0)
-                for (indexTabCross2=0;indexTabCross2<indexTabCross;indexTabCross2++)
-                 if (TabCross[indexTabCross2].IndSvdA>0)
-                  {          
-                   sprintf(symbolName,"(%s,%s)",
-                          WorkSpace[TabCross[indexTabCross2].Comp].symbolName,
-                          WorkSpace[TabCross[indexTabCross].Comp].symbolName);
-                   OutputRegister(windowName,"Covar",symbolName,MEMORY_TYPE_DOUBLE,sizeof(double),dim1,dim2,"%#12.4le");
-                  }                                 
-              
-             if (OUTPUT_corrFlag)
-              for (indexTabCross=0;indexTabCross<pTabFeno->NTabCross;indexTabCross++)
-               if (TabCross[indexTabCross].IndSvdA>0)
-                for (indexTabCross2=0;indexTabCross2<indexTabCross;indexTabCross2++)
-                 if (TabCross[indexTabCross2].IndSvdA>0)
-                  {
-                   sprintf(symbolName,"(%s,%s)",
-                          WorkSpace[TabCross[indexTabCross2].Comp].symbolName,
-                          WorkSpace[TabCross[indexTabCross].Comp].symbolName);
-                   OutputRegister(windowName,"Corr",symbolName,MEMORY_TYPE_DOUBLE,sizeof(double),dim1,dim2,"%#12.4le");
-                  }
-            }
-           else if (outputRunCalib)
-            sprintf(windowName,"RunCalib(%d).",indexWin+1);
-
-           if (OUTPUT_chiSquareFlag)
-            OutputRegister(windowName,"Chi","",MEMORY_TYPE_DOUBLE,sizeof(double),dim1,dim2,"%#12.4le");
-           if (OUTPUT_rmsFlag)
-            OutputRegister(windowName,"RMS","",MEMORY_TYPE_DOUBLE,sizeof(double),dim1,dim2,"%#12.4le");
-           if (OUTPUT_iterFlag)
-            OutputRegister(windowName,"iter","",MEMORY_TYPE_INT,sizeof(int),dim1,dim2,"%#6d");
-           if (OUTPUT_omiRejPixelsFlag)
-	    OutputRegister(windowName,"omiRejPixelsQF","",MEMORY_TYPE_STRING,50,dim1,dim2,"%-50s");
-	   if (OUTPUT_spikeFlag)
-	    OutputRegister(windowName,"spikeRemoval","",MEMORY_TYPE_STRING,50,dim1,dim2,"%-50s");
-
-           // Fitted parameters
-
-           for (indexTabCross=0;indexTabCross<pTabFeno->NTabCross;indexTabCross++)
-            {
-             pTabCrossResults=&pTabFeno->TabCrossResults[indexTabCross];
-             sprintf(symbolName,"(%s)",WorkSpace[pTabFeno->TabCross[indexTabCross].Comp].symbolName);
-
-             if (pTabCrossResults->indexAmf!=ITEM_NONE)
-              {
-               if (pTabCrossResults->StoreAmf)              // AMF
-                OutputRegister(windowName,"AMF",symbolName,MEMORY_TYPE_FLOAT,sizeof(double),dim1,dim2,"%#8.3lf");
-               if (pTabCrossResults->StoreVrtCol)           // Vertical column
-                OutputRegister(windowName,"VCol",symbolName,MEMORY_TYPE_DOUBLE,sizeof(double),dim1,dim2,"%#12.4le");
-               if (pTabCrossResults->StoreVrtErr)           // Error on vertical column
-                OutputRegister(windowName,"VErr",symbolName,MEMORY_TYPE_DOUBLE,sizeof(double),dim1,dim2,"%#12.4le");
-              }
-
-             if (pTabCrossResults->StoreSlntCol)                         // Slant column
-              OutputRegister(windowName,"SlCol",symbolName,MEMORY_TYPE_DOUBLE,sizeof(double),dim1,dim2,"%#12.4le");
-             if (pTabCrossResults->StoreSlntErr)                         // Error on slant column
-              OutputRegister(windowName,"SlErr",symbolName,MEMORY_TYPE_DOUBLE,sizeof(double),dim1,dim2,"%#12.4le");
-
-             if (pTabCrossResults->StoreShift)              // Shift
-              {
-               OutputRegister(windowName,"Shift",symbolName,MEMORY_TYPE_DOUBLE,sizeof(double),dim1,dim2,"%#12.4le");
-               if (pTabCrossResults->StoreError)
-                OutputRegister(windowName,"Err Shift",symbolName,MEMORY_TYPE_DOUBLE,sizeof(double),dim1,dim2,"%#12.4le");
-              }
-
-             if (pTabCrossResults->StoreStretch)            // Stretch
-              {
-               OutputRegister(windowName,"Stretch",symbolName,MEMORY_TYPE_DOUBLE,sizeof(double),dim1,dim2,"%#12.4le");
-               if (pTabCrossResults->StoreError)
-                OutputRegister(windowName,"Err Stretch",symbolName,MEMORY_TYPE_DOUBLE,sizeof(double),dim1,dim2,"%#12.4le");
-               OutputRegister(windowName,"Stretch2",symbolName,MEMORY_TYPE_DOUBLE,sizeof(double),dim1,dim2,"%#12.4le");
-               if (pTabCrossResults->StoreError)
-                OutputRegister(windowName,"Err Stretch2",symbolName,MEMORY_TYPE_DOUBLE,sizeof(double),dim1,dim2,"%#12.4le");
-              }
-
-             if (pTabCrossResults->StoreScale)              // Scale
-              {
-               OutputRegister(windowName,"Scale",symbolName,MEMORY_TYPE_DOUBLE,sizeof(double),dim1,dim2,"%#12.4le");
-               if (pTabCrossResults->StoreError)
-                OutputRegister(windowName,"Err Scale",symbolName,MEMORY_TYPE_DOUBLE,sizeof(double),dim1,dim2,"%#12.4le");
-               OutputRegister(windowName,"Scale2",symbolName,MEMORY_TYPE_DOUBLE,sizeof(double),dim1,dim2,"%#12.4le");
-               if (pTabCrossResults->StoreError)
-                OutputRegister(windowName,"Err Scale2",symbolName,MEMORY_TYPE_DOUBLE,sizeof(double),dim1,dim2,"%#12.4le");
-              }
-
-             if (pTabCrossResults->StoreParam)              // Param
-              {
-               OutputRegister(windowName,WorkSpace[pTabFeno->TabCross[indexTabCross].Comp].symbolName,"",MEMORY_TYPE_DOUBLE,sizeof(double),dim1,dim2,"%#12.4le");
-               if (pTabCrossResults->StoreParamError)
-                OutputRegister(windowName,"Err ",WorkSpace[pTabFeno->TabCross[indexTabCross].Comp].symbolName,MEMORY_TYPE_DOUBLE,sizeof(double),dim1,dim2,"%#12.4le");
-              }
-            }  // for (indexTabCross=0;indexTabCross<pTabFeno->NTabCross;indexTabCross++)
-          }  // if (pTabFeno->hidden==hiddenFlag)
-        }  // for (indexFeno=0;indexFeno<NFeno;indexFeno++)
-
-       break; // even for OMI, register param only one time
-     }   // if ((pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_OMI) ||
-   }
- }
-
-// -----------------------------------------------------------------------------
-// FUNCTION      OUTPUT_RegisterData
-// -----------------------------------------------------------------------------
-// PURPOSE       Register all the data to output
-//
-// INPUT         pEngineContext   structure including information on project options
-// -----------------------------------------------------------------------------
-
-RC OUTPUT_RegisterData(ENGINE_CONTEXT *pEngineContext)
- {
- 	// Declarations
-
-  INDEX indexFeno,indexFenoK,indexFeno1;
-  PROJECT *pProject;
-  PRJCT_RESULTS_ASCII *pResults;
-  INDEX indexFenoColumn;
- 	RC rc;
-
-  #if defined(__DEBUG_) && __DEBUG_
-  DEBUG_FunctionBegin("OUTPUT_RegisterData",DEBUG_FCTTYPE_FILE);
-  #endif
+  \param [in] windowName name of the analysis window, with suffix "."
+*/
+static void register_cross_results(const PRJCT_RESULTS *pResults, const FENO *pTabFeno, int indexFeno, int index_calib, const char *windowName) {
+  struct analysis_output {
+    bool register_field;
+    char *symbol_name;
+    struct output_field fieldcontent;
+  };
   
- 	// Initializations
+  // Fitted parameters
+  for (int indexTabCross=0;indexTabCross<pTabFeno->NTabCross;indexTabCross++)
+    { 
+      const CROSS_RESULTS *pTabCrossResults =&pTabFeno->TabCrossResults[indexTabCross];
+      char symbolName[MAX_ITEM_NAME_LEN+1];    // the name of a symbol
+      sprintf(symbolName,"(%s)",WorkSpace[pTabFeno->TabCross[indexTabCross].Comp].symbolName);
 
-  pProject=&pEngineContext->project;
-  pResults=(PRJCT_RESULTS_ASCII *)&pProject->asciiResults;
+      struct field_attribute cross_attribs[1] = {{ "Cross section file", 
+                                                   WorkSpace[pTabFeno->TabCross[indexTabCross].Comp].crossFileName}};
+
+      struct analysis_output symbol_fitparams[] = {
+        { pTabCrossResults->indexAmf!=ITEM_NONE && pTabCrossResults->StoreAmf, symbolName,
+          { .fieldname = "AMF", .format = FORMAT_FLOAT, .resulttype = PRJCT_RESULTS_AMF, .memory_type = OUTPUT_FLOAT, .get_data = (func_void) &get_amf} },
+        { pTabCrossResults->indexAmf!=ITEM_NONE && pTabCrossResults->StoreVrtCol, symbolName,
+          { .fieldname = "VCol", .format = FORMAT_DOUBLE, .resulttype = PRJCT_RESULTS_VERT_COL, .memory_type = OUTPUT_DOUBLE, .get_data = (func_void) &get_vrt_col} },
+        { pTabCrossResults->indexAmf!=ITEM_NONE && pTabCrossResults->StoreVrtErr, symbolName,
+          { .fieldname = "VErr", .format = FORMAT_DOUBLE, .resulttype = PRJCT_RESULTS_VERT_ERR, .memory_type = OUTPUT_DOUBLE, .get_data = (func_void) &get_vrt_err} },
+        { pTabCrossResults->StoreSlntCol, symbolName,
+          { .fieldname = "SlCol", .format = FORMAT_DOUBLE, .resulttype = PRJCT_RESULTS_SLANT_COL, .memory_type = OUTPUT_DOUBLE, .get_data = (func_void) &get_slant_column, .attributes = cross_attribs, .num_attributes = 1} },
+        { pTabCrossResults->StoreSlntErr, symbolName,
+          { .fieldname = "SlErr", .format = FORMAT_DOUBLE, .resulttype = PRJCT_RESULTS_SLANT_ERR, .memory_type = OUTPUT_DOUBLE, .get_data = (func_void) &get_slant_err} },
+        { pTabCrossResults->StoreShift, symbolName,
+          { .fieldname = "Shift", .format = FORMAT_DOUBLE, .resulttype = PRJCT_RESULTS_SHIFT, .memory_type = OUTPUT_DOUBLE, .get_data = (func_void) &get_shift} },
+        { pTabCrossResults->StoreShift && pTabCrossResults->StoreError, symbolName,
+          { .fieldname = "Err Shift", .format = FORMAT_DOUBLE, .resulttype = PRJCT_RESULTS_SHIFT_ERR, .memory_type = OUTPUT_DOUBLE, .get_data = (func_void) &get_shift_err} },
+        { pTabCrossResults->StoreStretch, symbolName,
+          { .fieldname = "Stretch", .format = FORMAT_DOUBLE, .resulttype = PRJCT_RESULTS_STRETCH, .memory_type = OUTPUT_DOUBLE, .get_data = (func_void) &get_stretches,
+            .data_cols=2, .column_number_format="%d"} },
+        { pTabCrossResults->StoreStretch && pTabCrossResults->StoreError, symbolName,
+          { .fieldname = "Err Stretch", .format = FORMAT_DOUBLE, .resulttype = PRJCT_RESULTS_STRETCH_ERR, .memory_type = OUTPUT_DOUBLE, .get_data = (func_void) &get_stretch_errors,
+            .data_cols=2, .column_number_format="%d"} },
+        { pTabCrossResults->StoreScale, symbolName,
+          { .fieldname = "Scale", .format = FORMAT_DOUBLE, .resulttype = PRJCT_RESULTS_SCALE, .memory_type = OUTPUT_DOUBLE, .get_data = (func_void) &get_scales,
+            .data_cols=2, .column_number_format="%d"} },
+        { pTabCrossResults->StoreScale && pTabCrossResults->StoreError, symbolName,
+          { .fieldname = "Err Scale", .format = FORMAT_DOUBLE, .resulttype = PRJCT_RESULTS_SCALE_ERR, .memory_type = OUTPUT_DOUBLE, .get_data = (func_void) &get_scale_err,
+            .data_cols=2, .column_number_format="%d"} },
+        { pTabCrossResults->StoreParam, "",
+          { .fieldname = WorkSpace[pTabFeno->TabCross[indexTabCross].Comp].symbolName, .resulttype = PRJCT_RESULTS_PARAM, .format = FORMAT_DOUBLE, .memory_type = OUTPUT_DOUBLE, .get_data = (func_void) &get_param} },
+        { pTabCrossResults->StoreParam && pTabCrossResults->StoreParamError, symbolName,
+          { .fieldname = "Err", .format = FORMAT_DOUBLE, .resulttype = PRJCT_RESULTS_PARAM_ERR, .memory_type = OUTPUT_DOUBLE, .get_data = (func_void) &get_param_err} }
+      };
+
+      for(unsigned int i=0; i<sizeof(symbol_fitparams)/sizeof(symbol_fitparams[0]); i++) {
+        if(symbol_fitparams[i].register_field) {
+          register_analysis_field(&symbol_fitparams[i].fieldcontent, indexFeno, index_calib, indexTabCross, windowName, symbol_fitparams[i].symbol_name);
+        }
+      }
+    }
+
+  // register correlation and covariance fields
+  for(int i = 0; i<pResults->fieldsNumber; i++) {
+    enum _prjctResults indexField = pResults->fieldsFlag[i];
+    if ( indexField == PRJCT_RESULTS_COVAR || indexField == PRJCT_RESULTS_CORR) {
+      const CROSS_REFERENCE *TabCross = pTabFeno->TabCross;
+      for (int indexTabCross=0;indexTabCross<pTabFeno->NTabCross;indexTabCross++)
+        if (TabCross[indexTabCross].IndSvdA>0)
+          for (int indexTabCross2=0;indexTabCross2<indexTabCross;indexTabCross2++)
+            if (TabCross[indexTabCross2].IndSvdA>0)
+              {
+                char symbolName[MAX_ITEM_NAME_LEN+1];
+                sprintf(symbolName,"(%s,%s)",
+                        WorkSpace[TabCross[indexTabCross2].Comp].symbolName,
+                        WorkSpace[TabCross[indexTabCross].Comp].symbolName);
+                char *fieldname = NULL;
+                func_void get_data = NULL;
+                if (indexField == PRJCT_RESULTS_COVAR) {
+                  fieldname = "Covar";
+                  get_data = (func_void)&get_covar;
+                } else if (indexField == PRJCT_RESULTS_CORR) {
+                  fieldname = "Corr";
+                  get_data = (func_void)&get_corr;
+                } struct output_field newfield = { .resulttype = indexField,
+                                                   .fieldname = fieldname,
+                                                   .format = FORMAT_DOUBLE,
+                                                   .memory_type = OUTPUT_DOUBLE,
+                                                   .get_data = get_data,
+                                                   .index_cross2 = indexTabCross2 };
+                register_analysis_field( &newfield, indexFeno, index_calib, indexTabCross, windowName, symbolName);
+              }
+    }
+  }
+}
+
+/*! \brief Set up #output_data_analysis and #output_data_calib to
+    store data for output according to the user's settings in
+    pEngineContext.
+
+    \sa register_calibration, OutputRegisterFields,
+    OutputRegisterParam, OutputRegisterFluxes */
+RC OUTPUT_RegisterData(const ENGINE_CONTEXT *pEngineContext)
+{
+  INDEX indexFeno,indexFenoK,indexFeno1;
+  //  PROJECT *pProject;
+  PRJCT_RESULTS *pResults;
+  INDEX indexFenoColumn;
+  RC rc;
+
+#if defined(__DEBUG_) && __DEBUG_
+  DEBUG_FunctionBegin("OUTPUT_RegisterData",DEBUG_FCTTYPE_FILE);
+#endif
+
+  // Initializations
+
+  const PROJECT *pProject=&pEngineContext->project;
+  pResults=(PRJCT_RESULTS *)&pProject->asciiResults;
   outputCalibFlag=outputRunCalib=0;
   indexFenoK=indexFeno1=ITEM_NONE;
- 	rc=ERROR_ID_NO;
+  rc=ERROR_ID_NO;
 
   if (pProject->asciiResults.analysisFlag || pProject->asciiResults.calibFlag)
-   {
-    if (THRD_id==THREAD_TYPE_ANALYSIS)
-     {
-      // Satellites measurements and automatic reference selection : save information on the selected reference
+    {
+      if (THRD_id==THREAD_TYPE_ANALYSIS)
+        {
+          // Save information on the calibration
 
-   	  if (((pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_ASCII) ||
-           (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN) ||
-           (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_HDF) ||
-           (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS) ||
-           (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GOME2)) &&
-            pEngineContext->analysisRef.refAuto)                                           // automatic reference is requested for at least one analysis window
-       {
-   	    OutputRegister("Reference file","","",MEMORY_TYPE_STRING,MAX_PATH_LEN+1,1,1,"%s");
-   	    OutputRegister("Number of records selected for the reference","","",MEMORY_TYPE_INT,sizeof(int),1,1,"%d");
-   	   }
+          if (pResults->calibFlag)
+            {
+              for (indexFenoColumn=0;indexFenoColumn<ANALYSE_swathSize;indexFenoColumn++)
+                {
+                  if ((pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_OMI) ||
+                      pEngineContext->project.instrumental.omi.omiTracks[indexFenoColumn])
+                    {
+                      for (indexFeno=0;indexFeno<NFeno;indexFeno++)
+                        if (TabFeno[indexFenoColumn][indexFeno].hidden)
+                          indexFenoK=indexFeno;
+                        else if (!TabFeno[indexFenoColumn][indexFeno].hidden
+                                 && ( TabFeno[indexFenoColumn][indexFeno].useKurucz==ANLYS_KURUCZ_REF
+                                      || TabFeno[indexFenoColumn][indexFeno].useKurucz==ANLYS_KURUCZ_REF_AND_SPEC )
+                                 && !TabFeno[indexFenoColumn][indexFeno].rcKurucz) {
+                          if (indexFeno1==ITEM_NONE)
+                            indexFeno1=indexFeno;
+                          outputCalibFlag++;
+                        }
+                      
+                      if (indexFenoK==ITEM_NONE)
+                        outputCalibFlag=0;
 
-     	// Save information on the calibration
+                      if (outputCalibFlag) {
+                        register_calibration(indexFenoK, indexFenoColumn);
+                      }
+                    }
+                }
+            }
+        }
+      
+      // Run calibration on measurement spectra
 
-     	if (pResults->calibFlag)
-     	 {
-     	 	for (indexFenoColumn=0;indexFenoColumn<ANALYSE_swathSize;indexFenoColumn++)
-     	 	 {
-   	      if ((pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_OMI) ||
-   	           pEngineContext->project.instrumental.omi.omiTracks[indexFenoColumn])
-   	       {
-            for (indexFeno=0;indexFeno<NFeno;indexFeno++)
-             if (TabFeno[indexFenoColumn][indexFeno].hidden)
-              indexFenoK=indexFeno;
-             else if (!TabFeno[indexFenoColumn][indexFeno].hidden &&
-                     ((TabFeno[indexFenoColumn][indexFeno].useKurucz==ANLYS_KURUCZ_REF) ||
-                      (TabFeno[indexFenoColumn][indexFeno].useKurucz==ANLYS_KURUCZ_REF_AND_SPEC)) &&
-                      !TabFeno[indexFenoColumn][indexFeno].rcKurucz)
-              {
-              	if (indexFeno1==ITEM_NONE)
-              	 indexFeno1=indexFeno;
-               outputCalibFlag++;
-              }
+      else if (THRD_id==THREAD_TYPE_KURUCZ)
+        outputRunCalib++;
 
-            if (indexFenoK==ITEM_NONE)
-             outputCalibFlag=0;
+      OutputRegisterFields(pEngineContext);                                       // do not depend on swath size
+      OutputRegisterParam(pEngineContext);
+      OutputRegisterFluxes(pEngineContext);                                       // do not depend on swath size
+    }
 
-            if (outputCalibFlag)
-             OutputRegisterCalib(indexFenoK,indexFenoColumn);
-           }
-         }
-       }
-     }
-
-    // Run calibration on measurement spectra
-
-    else if (THRD_id==THREAD_TYPE_KURUCZ)
-     outputRunCalib++;
-
-    OutputRegisterFields(pEngineContext);                                       // do not depend on swath size
-    OutputRegisterParam(pEngineContext,(THRD_id==THREAD_TYPE_ANALYSIS)?0:1);
-    OutputRegisterFluxes(pEngineContext);                                       // do not depend on swath size
-   }
-
-  #if defined(__DEBUG_) && __DEBUG_
+#if defined(__DEBUG_) && __DEBUG_
   DEBUG_FunctionStop("OUTPUT_RegisterData",rc);
-  #endif     
-  
+#endif
+
   return rc;
- }
+}
 
-// ===================
-// KEEP DATA TO OUTPUT
-// ===================
-
-// -----------------------------------------------------------------------------
-// FUNCTION      OutputCalib
-// -----------------------------------------------------------------------------
-// PURPOSE       Save data related to the wavelength calibration
-//
-// INPUT         pEngineContext   structure including information on project options
-// -----------------------------------------------------------------------------
-
-void OutputCalib(ENGINE_CONTEXT *pEngineContext)
+/*! \brief Save results of the last processed record. */
+static void OutputSaveRecord(const ENGINE_CONTEXT *pEngineContext,INDEX indexFenoColumn)
  {
-  // Declarations
-
-  FENO                *pTabFeno;
-  CROSS_REFERENCE     *TabCross;
-  CROSS_RESULTS       *pTabCrossResults;
-  INDEX                indexFeno,indexFenoColumn,indexFenoK,indexColumnOld,indexColumn,indexTabCross,indexWin;
-  INT                  nbWin;
-  double               defaultValue;
-
-  PRJCT_RESULTS_ASCII *pResults;
-  PROJECT             *pProject;                                                // pointer to project data
-
-  // Initializations
-
-  defaultValue=(double)9999.;
-
-  pProject=(PROJECT *)&pEngineContext->project;
-  pResults=(PRJCT_RESULTS_ASCII *)&pProject->asciiResults;
-
-  indexColumnOld=indexColumn=0;
-
-  for (indexFenoColumn=0;indexFenoColumn<ANALYSE_swathSize;indexFenoColumn++)
-   {
-   	if ((pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_OMI) ||
-   	     pEngineContext->project.instrumental.omi.omiTracks[indexFenoColumn])
-   	 {
-      nbWin=KURUCZ_buffers[indexFenoColumn].Nb_Win;
-      indexFenoK=ITEM_NONE;
-
-      for (indexFeno=0;(indexFeno<NFeno) && (indexFenoK==ITEM_NONE);indexFeno++)
-       if (TabFeno[indexFenoColumn][indexFeno].hidden==1)
-        indexFenoK=indexFeno;
-
-      if (outputCalibFlag && (indexFeno<NFeno))
-       {
-        pTabFeno=&TabFeno[indexFenoColumn][indexFenoK];
-        TabCross=pTabFeno->TabCross;
-
-        for (indexWin=0;indexWin<nbWin;indexWin++)
-         {
-         	// Bypass predefined data (e.g. reference spectrum record)
-
-          for (indexColumn=indexColumnOld;(outputFields[indexColumn].fieldDim2!=ITEM_NONE);indexColumn++);
-
-          // Wavelength
-
-          ((double *)outputColumns[indexColumn++])[indexWin]=KURUCZ_buffers[indexFenoColumn].KuruczFeno[indexFeno].wve[indexWin];
-
-          // RMS
-
-          ((double *)outputColumns[indexColumn++])[indexWin]=KURUCZ_buffers[indexFenoColumn].KuruczFeno[indexFeno].rms[indexWin];
-
-          // Fitted parameters
-
-          for (indexTabCross=0;indexTabCross<pTabFeno->NTabCross;indexTabCross++)
-           {
-            pTabCrossResults=&pTabFeno->TabCrossResults[indexTabCross];
-
-            pTabCrossResults=&KURUCZ_buffers[indexFenoColumn].KuruczFeno[indexFeno].results[indexWin][indexTabCross];
-
-            if (pTabCrossResults->StoreSlntCol)            // Slant column
-             	((double *)outputColumns[indexColumn++])[indexWin]=
-             	(!pTabFeno->rc && (pTabCrossResults->SlntFact!=(double)0.))?
-             	 (double)pTabCrossResults->SlntCol/pTabCrossResults->SlntFact:(double)defaultValue;
-
-            if (pTabCrossResults->StoreSlntErr)            // Error on slant column
-             	((double *)outputColumns[indexColumn++])[indexWin]=
-             	(!pTabFeno->rc && (pTabCrossResults->SlntFact!=(double)0.))?
-             	 (double)pTabCrossResults->SlntErr/pTabCrossResults->SlntFact:(double)defaultValue;
-
-            if (pTabCrossResults->StoreShift)              // Shift
-             {
-              ((double *)outputColumns[indexColumn++])[indexWin]=(!pTabFeno->rc)?(double)pTabCrossResults->Shift:(double)defaultValue;
-              if (pTabCrossResults->StoreError)
-               ((double *)outputColumns[indexColumn++])[indexWin]=(!pTabFeno->rc)?(double)pTabCrossResults->SigmaShift:(double)defaultValue;
-             }
-
-            if (pTabCrossResults->StoreStretch)            // Stretch
-             {
-              ((double *)outputColumns[indexColumn++])[indexWin]=(!pTabFeno->rc)?(double)pTabCrossResults->Stretch:(double)defaultValue;
-              if (pTabCrossResults->StoreError)
-               ((double *)outputColumns[indexColumn++])[indexWin]=(!pTabFeno->rc)?(double)pTabCrossResults->SigmaStretch:(double)defaultValue;
-              ((double *)outputColumns[indexColumn++])[indexWin]=(!pTabFeno->rc)?(double)pTabCrossResults->Stretch2:(double)defaultValue;
-              if (pTabCrossResults->StoreError)
-               ((double *)outputColumns[indexColumn++])[indexWin]=(!pTabFeno->rc)?(double)pTabCrossResults->SigmaStretch2:(double)defaultValue;
-             }
-
-            if (pTabCrossResults->StoreScale)              // Scale
-             {
-              ((double *)outputColumns[indexColumn++])[indexWin]=(!pTabFeno->rc)?(double)pTabCrossResults->Scale:(double)defaultValue;
-              if (pTabCrossResults->StoreError)
-               ((double *)outputColumns[indexColumn++])[indexWin]=(!pTabFeno->rc)?(double)pTabCrossResults->SigmaScale:(double)defaultValue;
-              ((double *)outputColumns[indexColumn++])[indexWin]=(!pTabFeno->rc)?(double)pTabCrossResults->Scale2:(double)defaultValue;
-              if (pTabCrossResults->StoreError)
-               ((double *)outputColumns[indexColumn++])[indexWin]=(!pTabFeno->rc)?(double)pTabCrossResults->SigmaScale2:(double)defaultValue;
-             }
-
-            if (pTabCrossResults->StoreParam)              // Param
-             {
-              ((double *)outputColumns[indexColumn++])[indexWin]=
-               (double)((!pTabFeno->rc)?
-                       ((TabCross[indexTabCross].IndSvdA)?pTabCrossResults->SlntCol:pTabCrossResults->Param):defaultValue);
-              if (pTabCrossResults->StoreParamError)
-              ((double *)outputColumns[indexColumn++])[indexWin]=
-               (double)((!pTabFeno->rc)?
-                       ((TabCross[indexTabCross].IndSvdA)?pTabCrossResults->SlntErr:pTabCrossResults->SigmaParam):(double)defaultValue);
-             }
-           }
-         }
-
-        indexColumnOld=indexColumn;
-       }
-     }
-   }
- }
-
-// -----------------------------------------------------------------------------
-// FUNCTION      OutputSaveRecord
-// -----------------------------------------------------------------------------
-// PURPOSE       Save all the data on the current record (including fitted parameters)
-//
-// INPUT         pEngineContext   structure including information on project options
-//               hiddenFlag  0 to save analysis results, 1 to save calibration results
-// -----------------------------------------------------------------------------
-
-void OutputSaveRecord(ENGINE_CONTEXT *pEngineContext,INT hiddenFlag,INDEX indexFenoColumn)
- {
-  // Declarations
-
-  GOME_ORBIT_FILE *pOrbitFile;                                                  // pointer to the current orbit
-  PRJCT_RESULTS_FIELDS *pField;
-  RECORD_INFO *pRecordInfo;
-
-  FENO                *pTabFeno;
-  CROSS_REFERENCE     *TabCross;
-  CROSS_RESULTS       *pTabCrossResults;
-  PROJECT             *pProject;                                                // pointer to project data
-  PRJCT_RESULTS_ASCII *pResults;                                                // pointer to results part of project
-  INDEX                indexRecord,
-                       indexColumn,
-                       indexFeno,
-                       indexTabCross,indexTabCross2,
-                       indexField,                                              // browse fields of record
-                       indexFluxes,                                             // browse selected wavelengths for fluxes
-                       indexCic,                                                // browse selected wavelengths for color indexes
-                       i;
-  double               flux;                                                    // temporary variable
-  double               defaultValue;
-  INT                  nbWin,indexWin;
-
-  nbWin=(hiddenFlag)?KURUCZ_buffers[indexFenoColumn].Nb_Win:1;
-
-  // Initializations
-
-  pProject=(PROJECT *)&pEngineContext->project;
-  pResults=(PRJCT_RESULTS_ASCII *)&pProject->asciiResults;
-  pRecordInfo=(RECORD_INFO *)&pEngineContext->recordInfo;
-
-  pOrbitFile=(pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN)?&GDP_BIN_orbitFiles[GDP_BIN_currentFileIndex]:NULL;
-
-  if (pResults->analysisFlag)
-   {
-    defaultValue=(double)9999.;
-
-    for (indexColumn=0;(outputFields[indexColumn].fieldDim1!=ITEM_NONE);indexColumn++);
-
-    indexRecord=outputNbRecords++;
-
-    // ---------------------------------
-    // INFORMATION ON THE CURRENT RECORD
-    // ---------------------------------
-
-    for (indexField=0;indexField<pResults->fieldsNumber;indexField++)
-     {
-      pField=&outputFields[indexColumn];
-
-      switch(pResults->fieldsFlag[indexField])
-       {
-     // ----------------------------------------------------------------------
-        case PRJCT_RESULTS_ASCII_SPECNO :
-         ((DoasUS *)outputColumns[indexColumn++])[indexRecord]=(DoasUS)pEngineContext->indexRecord;
-        break;
-     // ----------------------------------------------------------------------
-        case PRJCT_RESULTS_ASCII_NAME :
-         strncpy(&outputColumns[indexColumn++][indexRecord*pField->fieldSize],pRecordInfo->Nom,pField->fieldSize);
-        break;
-     // ----------------------------------------------------------------------
-        case PRJCT_RESULTS_ASCII_DATE :
-
-         sprintf(&outputColumns[indexColumn++][indexRecord*pField->fieldSize],"%02d/%02d/%d",
-                (INT) pRecordInfo->present_day.da_day,
-                (INT) pRecordInfo->present_day.da_mon,
-                (INT) pRecordInfo->present_day.da_year);
-
-        break;
-     // ----------------------------------------------------------------------
-        case PRJCT_RESULTS_ASCII_TIME :
-
-         sprintf(&outputColumns[indexColumn++][indexRecord*pField->fieldSize],"%02d:%02d:%02d",
-                (INT) pRecordInfo->present_time.ti_hour,
-                (INT) pRecordInfo->present_time.ti_min,
-                (INT) pRecordInfo->present_time.ti_sec);
-
-        break;
-     // ----------------------------------------------------------------------
-        case PRJCT_RESULTS_ASCII_YEAR :
-         ((DoasUS *)outputColumns[indexColumn++])[indexRecord]=(DoasUS)pRecordInfo->present_day.da_year;
-        break;
-     // ----------------------------------------------------------------------
-        case PRJCT_RESULTS_ASCII_DATE_TIME :
-
-         memset(&outputColumns[indexColumn][indexRecord*pField->fieldSize],0,pField->fieldSize);
-
-         sprintf(&outputColumns[indexColumn][indexRecord*pField->fieldSize],"%4d%02d%02d%02d%02d%02d",
-                (INT) pRecordInfo->present_day.da_year,
-                (INT) pRecordInfo->present_day.da_mon,
-                (INT) pRecordInfo->present_day.da_day,
-                (INT) pRecordInfo->present_time.ti_hour,
-                (INT) pRecordInfo->present_time.ti_min,
-                (INT) pRecordInfo->present_time.ti_sec);
-
-         if (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS)
-          sprintf(&outputColumns[indexColumn][indexRecord*pField->fieldSize+14],".%03d",(INT)SCIA_ms);
-         else if (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GOME2)
-          sprintf(&outputColumns[indexColumn][indexRecord*pField->fieldSize+14],".%06d",(INT)GOME2_ms);
-
-         indexColumn++;
-
-        break;
-     // ----------------------------------------------------------------------
-        case PRJCT_RESULTS_ASCII_STARTTIME :
-
-         memset(&outputColumns[indexColumn][indexRecord*pField->fieldSize],0,pField->fieldSize);
-
-         sprintf(&outputColumns[indexColumn][indexRecord*pField->fieldSize],"%02d%02d%02d",
-                (INT) pRecordInfo->startTime.ti_hour,
-                (INT) pRecordInfo->startTime.ti_min,
-                (INT) pRecordInfo->startTime.ti_sec);
-
-         indexColumn++;
-
-        break;
-     // ----------------------------------------------------------------------
-        case PRJCT_RESULTS_ASCII_ENDTIME :
-
-         memset(&outputColumns[indexColumn][indexRecord*pField->fieldSize],0,pField->fieldSize);
-
-         sprintf(&outputColumns[indexColumn][indexRecord*pField->fieldSize],"%02d%02d%02d",
-                (INT) pRecordInfo->endTime.ti_hour,
-                (INT) pRecordInfo->endTime.ti_min,
-                (INT) pRecordInfo->endTime.ti_sec);
-
-         indexColumn++;
-
-        break;
-     // ----------------------------------------------------------------------
-        case PRJCT_RESULTS_ASCII_JULIAN :
-         ((DoasUS *)outputColumns[indexColumn++])[indexRecord]=(DoasUS)ZEN_FNCaljda(&pRecordInfo->Tm);
-        break;
-     // ----------------------------------------------------------------------
-        case PRJCT_RESULTS_ASCII_JDFRAC :
-         ((double *)outputColumns[indexColumn++])[indexRecord]=(double)ZEN_FNCaljda(&pRecordInfo->Tm)+ZEN_FNCaldti(&pRecordInfo->Tm)/24.;
-        break;
-     // ----------------------------------------------------------------------
-        case PRJCT_RESULTS_ASCII_TIFRAC :
-
-         if ((pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS) ||
-             (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GOME2))
-          ((double *)outputColumns[indexColumn++])[indexRecord]=(double)pRecordInfo->TimeDec;
-         else
-          ((double *)outputColumns[indexColumn++])[indexRecord]=(double)ZEN_FNCaldti(&pRecordInfo->Tm);
-
-        break;
-     // ----------------------------------------------------------------------
-        case PRJCT_RESULTS_ASCII_SCANS :
-         ((DoasUS *)outputColumns[indexColumn++])[indexRecord]=(DoasUS)pRecordInfo->NSomme;
-        break;
-     // ----------------------------------------------------------------------
-        case PRJCT_RESULTS_ASCII_NREJ :
-         ((DoasUS *)outputColumns[indexColumn++])[indexRecord]=(DoasUS)pRecordInfo->rejected;
-        break;
-     // ----------------------------------------------------------------------
-        case PRJCT_RESULTS_ASCII_TINT :
-         ((double *)outputColumns[indexColumn++])[indexRecord]=(double)pRecordInfo->Tint;
-        break;
-     // ----------------------------------------------------------------------
-        case PRJCT_RESULTS_ASCII_SZA :
-
-         if ((pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_HDF) || (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS))
-          {
-           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->scia.solZen[0];
-           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->scia.solZen[1];
-           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->scia.solZen[2];
-          }
-         else if (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GOME2)
-          {
-           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->gome2.solZen[0];
-           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->gome2.solZen[1];
-           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->gome2.solZen[2];
-          }
-         else if (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN)
-          {
-           if (pOrbitFile->gdpBinHeader.version<40)
-            {
-             ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pOrbitFile->gdpBinSpectrum.geo.geo3.szaArray[0];
-             ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pOrbitFile->gdpBinSpectrum.geo.geo3.szaArray[1];
-             ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pOrbitFile->gdpBinSpectrum.geo.geo3.szaArray[2];
-            }
-           else
-            {
-             ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pOrbitFile->gdpBinSpectrum.geo.geo4.szaArrayBOA[0];
-             ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pOrbitFile->gdpBinSpectrum.geo.geo4.szaArrayBOA[1];
-             ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pOrbitFile->gdpBinSpectrum.geo.geo4.szaArrayBOA[2];
-            }
-          }
-         else if (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_ASCII)
-          {
-           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->gome.sza[0];
-           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->gome.sza[1];
-           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->gome.sza[2];
-          }
-         else
-          ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->Zm;
-
-        break;
-     // ----------------------------------------------------------------------
-        case PRJCT_RESULTS_ASCII_AZIM :
-
-         if ((pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_HDF) ||
-             (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS))
-          {
-           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->scia.solAzi[0];
-           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->scia.solAzi[1];
-           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->scia.solAzi[2];
-          }
-         else if (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GOME2)
-          {
-           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->gome2.solAzi[0];
-           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->gome2.solAzi[1];
-           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->gome2.solAzi[2];
-          }
-         else if (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_ASCII)
-          {
-           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->gome.azim[0];
-           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->gome.azim[1];
-           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->gome.azim[2];
-          }
-         else if ((pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN) && (pOrbitFile->gdpBinHeader.version<40))
-          {
-           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pOrbitFile->gdpBinSpectrum.geo.geo3.aziArray[0];
-           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pOrbitFile->gdpBinSpectrum.geo.geo3.aziArray[1];
-           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pOrbitFile->gdpBinSpectrum.geo.geo3.aziArray[2];
-          }
-         else if ((pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN) && (pOrbitFile->gdpBinHeader.version>=40))
-          {
-           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pOrbitFile->gdpBinSpectrum.geo.geo4.aziArrayBOA[0];
-           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pOrbitFile->gdpBinSpectrum.geo.geo4.aziArrayBOA[1];
-           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pOrbitFile->gdpBinSpectrum.geo.geo4.aziArrayBOA[2];
-          }
-         else
-          ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->Azimuth;
-        break;
-     // ----------------------------------------------------------------------
-        case PRJCT_RESULTS_ASCII_TDET :
-         ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->TDet;
-        break;
-     // ---------------------------------------------------------------------
-        case PRJCT_RESULTS_ASCII_SKY :
-         ((DoasUS *)outputColumns[indexColumn++])[indexRecord]=(DoasUS)pRecordInfo->SkyObs;
-        break;
-     // ----------------------------------------------------------------------
-        case PRJCT_RESULTS_ASCII_BESTSHIFT :
-         ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->BestShift;
-        break;
-     // ----------------------------------------------------------------------
-        case PRJCT_RESULTS_ASCII_PIXEL :
-         ((DoasUS *)outputColumns[indexColumn++])[indexRecord]=
-         ((pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN) || (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN))?(DoasUS)pRecordInfo->gome.pixelNumber:0;
-        break;
-     // ----------------------------------------------------------------------
-        case PRJCT_RESULTS_ASCII_PIXEL_TYPE :
-         ((DoasUS *)outputColumns[indexColumn++])[indexRecord]=
-         ((pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN) || (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN))?(DoasUS)pRecordInfo->gome.pixelType:0;
-        break;
-     // ----------------------------------------------------------------------
-        case PRJCT_RESULTS_ASCII_ORBIT :
-
-         if ((pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN) || (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN))
-          ((INT *)outputColumns[indexColumn++])[indexRecord]=(INT)pRecordInfo->gome.orbitNumber+1;
-         else if (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS)
-          ((INT *)outputColumns[indexColumn++])[indexRecord]=pRecordInfo->scia.orbitNumber;
-         else if (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GOME2)
-          ((INT *)outputColumns[indexColumn++])[indexRecord]=pRecordInfo->gome2.orbitNumber;
-
-        break;
-     // ----------------------------------------------------------------------
-        case PRJCT_RESULTS_ASCII_CLOUD :
-         ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->cloudFraction;
-        break;
-     // ----------------------------------------------------------------------
-        case PRJCT_RESULTS_ASCII_CLOUDTOPP :
-         ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->cloudTopPressure;
-        break;
-     // ----------------------------------------------------------------------
-        case PRJCT_RESULTS_ASCII_COEFF :
-
-         ((DoasUS *)outputColumns[indexColumn++])[indexRecord]=
-          (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN)?
-          (DoasUS)pOrbitFile->gdpBinSpectrum.indexSpectralParam:(DoasUS)defaultValue;
-
-        break;
-     // ----------------------------------------------------------------------
-        case PRJCT_RESULTS_ASCII_SCIA_STATE_INDEX :
-
-         ((DoasUS *)outputColumns[indexColumn++])[indexRecord]=
-          (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS)?
-          (DoasUS)pRecordInfo->scia.stateIndex:(DoasUS)defaultValue;
-
-        break;
-     // ----------------------------------------------------------------------
-        case PRJCT_RESULTS_ASCII_SCIA_STATE_ID :
-
-         ((DoasUS *)outputColumns[indexColumn++])[indexRecord]=
-          (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS)?
-          (DoasUS)pRecordInfo->scia.stateId:(DoasUS)defaultValue;
-
-        break;
-     // ----------------------------------------------------------------------
-        case PRJCT_RESULTS_ASCII_SCIA_QUALITY :
-
-         ((DoasUS *)outputColumns[indexColumn++])[indexRecord]=
-          (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS)?
-          (DoasUS)pRecordInfo->scia.qualityFlag:(DoasUS)defaultValue;
-
-        break;
-     // ----------------------------------------------------------------------
-        case PRJCT_RESULTS_ASCII_SAT_HEIGHT :
-
-         if ((pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN) && (pOrbitFile->gdpBinHeader.version<40))
-           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pOrbitFile->gdpBinSpectrum.geo.geo3.satHeight;
-         else if ((pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN) && (pOrbitFile->gdpBinHeader.version>=40))
-           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pOrbitFile->gdpBinSpectrum.geo.geo4.satHeight;
-         else if (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS)
-          ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->scia.satHeight;
-         else if (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GOME2)
-          ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->gome2.satHeight;
-         else
-          indexColumn++;
-
-        break;
-     // ----------------------------------------------------------------------
-        case PRJCT_RESULTS_ASCII_EARTH_RADIUS :
-
-         if ((pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN) && (pOrbitFile->gdpBinHeader.version<40))
-          ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pOrbitFile->gdpBinSpectrum.geo.geo3.radiusCurve;
-         else if ((pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN) && (pOrbitFile->gdpBinHeader.version>=40))
-          ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pOrbitFile->gdpBinSpectrum.geo.geo4.radiusCurve;
-         else if (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS)
-          ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->scia.earthRadius;
-         else if (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GOME2)
-          ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->gome2.earthRadius;
-         else
-          indexColumn++;
-
-        break;
-     // ----------------------------------------------------------------------
-        case PRJCT_RESULTS_ASCII_VIEW_ELEVATION :
-         ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->elevationViewAngle;
-        break;
-     // ----------------------------------------------------------------------
-        case PRJCT_RESULTS_ASCII_VIEW_ZENITH :
-         ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->zenithViewAngle;
-        break;
-     // ----------------------------------------------------------------------
-        case PRJCT_RESULTS_ASCII_VIEW_AZIMUTH :
-         ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->azimuthViewAngle;
-        break;
-     // ----------------------------------------------------------------------
-        case PRJCT_RESULTS_ASCII_LOS_ZA :
-
-         if ((pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_HDF) || (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS))
-          {
-           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->scia.losZen[0];
-           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->scia.losZen[1];
-           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->scia.losZen[2];
-          }
-         else if (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GOME2)
-          {
-           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->gome2.losZen[0];
-           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->gome2.losZen[1];
-           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->gome2.losZen[2];
-          }
-         else if (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN)
-          {
-           if (pOrbitFile->gdpBinHeader.version<40)
-            {
-             ((float *)outputColumns[indexColumn++])[indexRecord]=(float)(pOrbitFile->gdpBinSpectrum.geo.geo3.losZa[0]*0.01);
-             ((float *)outputColumns[indexColumn++])[indexRecord]=(float)(pOrbitFile->gdpBinSpectrum.geo.geo3.losZa[1]*0.01);
-             ((float *)outputColumns[indexColumn++])[indexRecord]=(float)(pOrbitFile->gdpBinSpectrum.geo.geo3.losZa[2]*0.01);
-            }
-           else if (pOrbitFile->gdpBinHeader.version>=40)
-            {
-             ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pOrbitFile->gdpBinSpectrum.geo.geo4.losZaBOA[0];
-             ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pOrbitFile->gdpBinSpectrum.geo.geo4.losZaBOA[1];
-             ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pOrbitFile->gdpBinSpectrum.geo.geo4.losZaBOA[2];
-            }
-          }
-         else if (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_ASCII)
-          indexColumn+=3;
-         else
-          ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->zenithViewAngle;
-
-        break;
-     // ----------------------------------------------------------------------
-        case PRJCT_RESULTS_ASCII_LOS_AZIMUTH :
-
-         if (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GOME2)
-          {
-           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->gome2.losAzi[0];
-           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->gome2.losAzi[1];
-           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->gome2.losAzi[2];
-          }
-         else if ((pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_HDF) ||
-                  (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS))
-          {
-           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->scia.losAzi[0];
-           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->scia.losAzi[1];
-           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->scia.losAzi[2];
-          }
-         else if (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN)
-          {
-           if (pOrbitFile->gdpBinHeader.version<40)
-            {
-             ((float *)outputColumns[indexColumn++])[indexRecord]=(float)(pOrbitFile->gdpBinSpectrum.geo.geo3.losAzim[0]*0.01);
-             ((float *)outputColumns[indexColumn++])[indexRecord]=(float)(pOrbitFile->gdpBinSpectrum.geo.geo3.losAzim[1]*0.01);
-             ((float *)outputColumns[indexColumn++])[indexRecord]=(float)(pOrbitFile->gdpBinSpectrum.geo.geo3.losAzim[2]*0.01);
-            }
-           else
-            {
-             ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pOrbitFile->gdpBinSpectrum.geo.geo4.losAzimBOA[0];
-             ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pOrbitFile->gdpBinSpectrum.geo.geo4.losAzimBOA[1];
-             ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pOrbitFile->gdpBinSpectrum.geo.geo4.losAzimBOA[2];
-            }
-          }
-         else if (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_ASCII)
-          indexColumn+=3;
-         else
-          ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->azimuthViewAngle;
-
-        break;
-     // ----------------------------------------------------------------------
-        case PRJCT_RESULTS_ASCII_LONGIT :
-
-         if ((pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_HDF) ||
-             (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS))
-          for (i=0;i<4;i++)
-           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->scia.longitudes[i];
-         else if (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GOME2)
-          for (i=0;i<4;i++)
-           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->gome2.longitudes[i];
-         else if (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN)
-          {
-           if (pOrbitFile->gdpBinHeader.version<40)
-            for (i=0;i<4;i++)
-             ((float *)outputColumns[indexColumn++])[indexRecord]=(float)0.01*pOrbitFile->gdpBinSpectrum.geo.geo3.lonArray[i];
-           else
-            for (i=0;i<4;i++)
-             ((float *)outputColumns[indexColumn++])[indexRecord]=(float)0.01*pOrbitFile->gdpBinSpectrum.geo.geo4.lonArray[i];
-          }
-         else if (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_ASCII)
-          for (i=0;i<4;i++)
-           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->gome.longit[i];
-
-         ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->longitude;
-
-        break;
-     // ----------------------------------------------------------------------
-        case PRJCT_RESULTS_ASCII_LATIT :
-
-         if ((pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_HDF) ||
-             (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS))
-          for (i=0;i<4;i++)
-           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->scia.latitudes[i];
-         else if (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GOME2)
-          for (i=0;i<4;i++)
-           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->gome2.latitudes[i];
-         else if (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN)
-          {
-           if (pOrbitFile->gdpBinHeader.version<40)
-            for (i=0;i<4;i++)
-             ((float *)outputColumns[indexColumn++])[indexRecord]=(float)0.01*pOrbitFile->gdpBinSpectrum.geo.geo3.latArray[i];
-           else
-            for (i=0;i<4;i++)
-             ((float *)outputColumns[indexColumn++])[indexRecord]=(float)0.01*pOrbitFile->gdpBinSpectrum.geo.geo4.latArray[i];
-          }
-         else if (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_ASCII)
-          for (i=0;i<4;i++)
-           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->gome.latit[i];
-
-         ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->latitude;
-
-        break;
-     // ----------------------------------------------------------------------
-        case PRJCT_RESULTS_ASCII_ALTIT :
-         ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->altitude;
-        break;
-     // ----------------------------------------------------------------------
-        case PRJCT_RESULTS_ASCII_SCANNING :
-         if (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MKZY)
-          ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->mkzy.scanningAngle;
-         else
-          ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->als.scanningAngle;
-        break;
-     // ---------------------------------------------------------------------
-        case PRJCT_RESULTS_ASCII_COMPASS :
-         ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->als.compassAngle;
-        break;
-     // ---------------------------------------------------------------------
-        case PRJCT_RESULTS_ASCII_PITCH :
-         ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->als.pitchAngle;
-        break;
-     // ---------------------------------------------------------------------
-        case PRJCT_RESULTS_ASCII_ROLL :
-         ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->als.rollAngle;
-        break;
-     // ---------------------------------------------------------------------
-        case PRJCT_RESULTS_ASCII_FILTERNUMBER :
-         ((INT *)outputColumns[indexColumn++])[indexRecord]=(INT)pRecordInfo->ccd.filterNumber;
-        break;
-     // ---------------------------------------------------------------------
-        case PRJCT_RESULTS_ASCII_MEASTYPE :
-         if (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_CCD_EEV)
-          ((INT *)outputColumns[indexColumn++])[indexRecord]=(INT)pRecordInfo->ccd.measureType;
-         else if (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC_BIRA)
-          ((INT *)outputColumns[indexColumn++])[indexRecord]=(INT)pRecordInfo->mfcBira.measurementType;
-         else
-          indexColumn++;
-        break;
-     // ---------------------------------------------------------------------
-        case PRJCT_RESULTS_ASCII_CCD_HEADTEMPERATURE :
-         ((double *)outputColumns[indexColumn++])[indexRecord]=(double)pRecordInfo->ccd.headTemperature;
-        break;
-     // ---------------------------------------------------------------------
-        case PRJCT_RESULTS_ASCII_COOLING_STATUS :
-         ((INT *)outputColumns[indexColumn++])[indexRecord]=(INT)pRecordInfo->coolingStatus;
-        break;
-     // ---------------------------------------------------------------------
-        case PRJCT_RESULTS_ASCII_MIRROR_ERROR :
-         ((INT *)outputColumns[indexColumn++])[indexRecord]=(INT)pRecordInfo->mirrorError;
-        break;
-     // ---------------------------------------------------------------------
-        case PRJCT_RESULTS_ASCII_GOME2_SCANDIRECTION :
-         ((INT *)outputColumns[indexColumn++])[indexRecord]=(INT)pRecordInfo->gome2.scanDirection;
-        break;
-     // ---------------------------------------------------------------------
-        case PRJCT_RESULTS_ASCII_GOME2_SAA :
-         ((INT *)outputColumns[indexColumn++])[indexRecord]=(INT)pRecordInfo->gome2.saaFlag;
-        break;
-     // ---------------------------------------------------------------------
-        case PRJCT_RESULTS_ASCII_GOME2_SUNGLINT_RISK :
-         ((INT *)outputColumns[indexColumn++])[indexRecord]=(INT)pRecordInfo->gome2.sunglintDangerFlag;
-        break;
-     // ---------------------------------------------------------------------
-        case PRJCT_RESULTS_ASCII_GOME2_SUNGLINT_HIGHRISK :
-         ((INT *)outputColumns[indexColumn++])[indexRecord]=(INT)pRecordInfo->gome2.sunglintHighDangerFlag;
-        break;
-     // ---------------------------------------------------------------------
-        case PRJCT_RESULTS_ASCII_GOME2_RAINBOW :
-         ((INT *)outputColumns[indexColumn++])[indexRecord]=(INT)pRecordInfo->gome2.rainbowFlag;
-        break;
-     // ---------------------------------------------------------------------
-        case PRJCT_RESULTS_ASCII_CCD_DIODES :
-
-         if (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_CCD_EEV)
-          for (i=0;i<4;i++)
-           ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->ccd.diodes[i];
-
-        break;
-     // ---------------------------------------------------------------------
-        case PRJCT_RESULTS_ASCII_CCD_TARGETAZIMUTH :
-         ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->ccd.targetAzimuth;
-        break;
-     // ---------------------------------------------------------------------
-        case PRJCT_RESULTS_ASCII_CCD_TARGETELEVATION :
-         ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pRecordInfo->ccd.targetElevation;
-        break;
-     // ---------------------------------------------------------------------
-        case PRJCT_RESULTS_ASCII_SATURATED :
-         ((DoasUS *)outputColumns[indexColumn++])[indexRecord]=(DoasUS)pRecordInfo->ccd.saturatedFlag;
-        break;
-     // ---------------------------------------------------------------------
-        case PRJCT_RESULTS_ASCII_OMI_INDEX_SWATH :
-         ((INT *)outputColumns[indexColumn++])[indexRecord]=(INT)pRecordInfo->omi.omiMeasurementIndex;
-        break;
-     // ---------------------------------------------------------------------
-        case PRJCT_RESULTS_ASCII_OMI_INDEX_ROW :
-         ((INT *)outputColumns[indexColumn++])[indexRecord]=(INT)pRecordInfo->omi.omiRowIndex;
-        break;
-     // ---------------------------------------------------------------------
-        case PRJCT_RESULTS_ASCII_OMI_GROUNDP_QF :
-         ((DoasUS *)outputColumns[indexColumn++])[indexRecord]=(DoasUS)pRecordInfo->omi.omiGroundPQF;
-        break;
-     // ---------------------------------------------------------------------
-        case PRJCT_RESULTS_ASCII_OMI_XTRACK_QF :
-         ((DoasUS *)outputColumns[indexColumn++])[indexRecord]=(DoasUS)pRecordInfo->omi.omiXtrackQF;
-        break;
-     // ---------------------------------------------------------------------
-        case PRJCT_RESULTS_ASCII_UAV_SERVO_BYTE_SENT :
-         ((DoasUS *)outputColumns[indexColumn++])[indexRecord]=(DoasUS)pRecordInfo->uavBira.servoSentPosition;
-        break;
-     // ---------------------------------------------------------------------
-        case PRJCT_RESULTS_ASCII_UAV_SERVO_BYTE_RECEIVED :
-         ((DoasUS *)outputColumns[indexColumn++])[indexRecord]=(DoasUS)pRecordInfo->uavBira.servoReceivedPosition;
-        break;
-     // ----------------------------------------------------------------------
-        default :
-        break;
-     // ----------------------------------------------------------------------
-       }
-     }
-
-    // ----------------
-    // ANALYSIS RESULTS
-    // ----------------
-
-    for (indexWin=0;indexWin<nbWin;indexWin++)
-
-     for (indexFeno=0;indexFeno<NFeno;indexFeno++)
-      {
-      	pTabFeno=(!hiddenFlag)?
-	  &TabFeno[indexFenoColumn][indexFeno]:
-	  &TabFeno[indexFenoColumn][KURUCZ_buffers[indexFenoColumn].indexKurucz];
-      	TabCross=pTabFeno->TabCross;
-
-      	if (pTabFeno->hidden==hiddenFlag)
-      	 {
-      	  if (!pTabFeno->hidden)
-      	   {
-      	   	if (OUTPUT_refZmFlag)
-      	   	 ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pTabFeno->Zm;
-      	   	if (OUTPUT_refShift)
-      	   	 ((float *)outputColumns[indexColumn++])[indexRecord]=(float)pTabFeno->Shift;
-
-           if (OUTPUT_covarFlag && (pTabFeno->svd.covar!=NULL))
-            for (indexTabCross=0;indexTabCross<pTabFeno->NTabCross;indexTabCross++)
-             if (TabCross[indexTabCross].IndSvdA>0)
-              for (indexTabCross2=0;indexTabCross2<indexTabCross;indexTabCross2++)
-               if (TabCross[indexTabCross2].IndSvdA>0)
-                ((double *)outputColumns[indexColumn++])[indexRecord]=
-                (!pTabFeno->rc && (TabCross[indexTabCross].Fact!=(double)0.))?
-                 (double)pTabFeno->svd.covar[TabCross[indexTabCross2].IndSvdA][TabCross[indexTabCross].IndSvdA]*pTabFeno->chiSquare/
-                 (TabCross[indexTabCross].Fact*TabCross[indexTabCross2].Fact):(double)defaultValue;
-                 
-           if (OUTPUT_corrFlag && (pTabFeno->svd.covar!=NULL))
-            for (indexTabCross=0;indexTabCross<pTabFeno->NTabCross;indexTabCross++)
-             if (TabCross[indexTabCross].IndSvdA>0)
-              for (indexTabCross2=0;indexTabCross2<indexTabCross;indexTabCross2++)
-               if (TabCross[indexTabCross2].IndSvdA>0)
-                ((double *)outputColumns[indexColumn++])[indexRecord]=
-                (!pTabFeno->rc && (TabCross[indexTabCross].Fact!=(double)0.))?
-                 (double)pTabFeno->svd.covar[TabCross[indexTabCross2].IndSvdA][TabCross[indexTabCross].IndSvdA]*pTabFeno->chiSquare/
-                 (TabCross[indexTabCross].Fact*TabCross[indexTabCross2].Fact*pTabFeno->TabCrossResults[indexTabCross].SlntErr*pTabFeno->TabCrossResults[indexTabCross2].SlntErr):
-                 (double)defaultValue;
-          }
-
-         if (OUTPUT_chiSquareFlag)
-          ((double *)outputColumns[indexColumn++])[indexRecord]=(!hiddenFlag)?(double)pTabFeno->chiSquare:KURUCZ_buffers[indexFenoColumn].KuruczFeno[indexFeno].chiSquare[indexWin];
-         if (OUTPUT_rmsFlag)
-          ((double *)outputColumns[indexColumn++])[indexRecord]=(!hiddenFlag)?(double)pTabFeno->RMS:KURUCZ_buffers[indexFenoColumn].KuruczFeno[indexFeno].rms[indexWin];
-         if (OUTPUT_iterFlag)
-          ((int *)outputColumns[indexColumn++])[indexRecord]=(!hiddenFlag)?(double)pTabFeno->nIter:KURUCZ_buffers[indexFenoColumn].KuruczFeno[indexFeno].nIter[indexWin];
-         if (OUTPUT_omiRejPixelsFlag)
-          write_spikes(&outputColumns[indexColumn++][indexRecord*PRJCT_resultsAscii[PRJCT_RESULTS_ASCII_OMI_PIXELS_QF].fieldSize], PRJCT_resultsAscii[PRJCT_RESULTS_ASCII_OMI_PIXELS_QF].fieldSize,pTabFeno->omiRejPixelsQF,pTabFeno->NDET);
-	 if (OUTPUT_spikeFlag)
-	  write_spikes(&outputColumns[indexColumn++][indexRecord*PRJCT_resultsAscii[PRJCT_RESULTS_ASCII_SPIKES].fieldSize], PRJCT_resultsAscii[PRJCT_RESULTS_ASCII_SPIKES].fieldSize, pTabFeno->spikes,pTabFeno->NDET);
-
-         // Cross sections results
-
-         for (indexTabCross=0;indexTabCross<pTabFeno->NTabCross;indexTabCross++)
-          {
-           pTabCrossResults=(!hiddenFlag)?&pTabFeno->TabCrossResults[indexTabCross]:&KURUCZ_buffers[indexFenoColumn].KuruczFeno[indexFeno].results[indexWin][indexTabCross];
-
-           if (pTabCrossResults->indexAmf!=ITEM_NONE)
-            {
-             if (pTabCrossResults->StoreAmf)              // AMF
-               ((float *)outputColumns[indexColumn++])[indexRecord]=
-               (!pTabFeno->rc)?(float)pTabCrossResults->Amf:(float)defaultValue;
-             if (pTabCrossResults->StoreVrtCol)           // Vertical column
-               ((double *)outputColumns[indexColumn++])[indexRecord]=
-               (!pTabFeno->rc && (pTabCrossResults->VrtFact!=(double)0.))?
-                (double)pTabCrossResults->VrtCol/pTabCrossResults->VrtFact:(double)defaultValue;
-             if (pTabCrossResults->StoreVrtErr)           // Error on vertical column
-               ((double *)outputColumns[indexColumn++])[indexRecord]=
-               (!pTabFeno->rc && (pTabCrossResults->VrtFact!=(double)0.))?
-                (double)pTabCrossResults->VrtErr/pTabCrossResults->VrtFact:(double)defaultValue;
-            }
-
-           if (pTabCrossResults->StoreSlntCol)            // Slant column
-          	 	((double *)outputColumns[indexColumn++])[indexRecord]=
-          	 	(!pTabFeno->rc && (pTabCrossResults->SlntFact!=(double)0.))?
-          	 	 (double)pTabCrossResults->SlntCol/pTabCrossResults->SlntFact:(double)defaultValue;
-
-           if (pTabCrossResults->StoreSlntErr)            // Error on slant column
-            	((double *)outputColumns[indexColumn++])[indexRecord]=
-            	(!pTabFeno->rc && (pTabCrossResults->SlntFact!=(double)0.))?
-            	 (double)pTabCrossResults->SlntErr/pTabCrossResults->SlntFact:(double)defaultValue;
-
-           if (pTabCrossResults->StoreShift)              // Shift
-            {
-             ((double *)outputColumns[indexColumn++])[indexRecord]=(!pTabFeno->rc)?(double)pTabCrossResults->Shift:(double)defaultValue;
-             if (pTabCrossResults->StoreError)
-              ((double *)outputColumns[indexColumn++])[indexRecord]=(!pTabFeno->rc)?(double)pTabCrossResults->SigmaShift:(double)defaultValue;
-            }
-
-           if (pTabCrossResults->StoreStretch)            // Stretch
-            {
-             ((double *)outputColumns[indexColumn++])[indexRecord]=(!pTabFeno->rc)?(double)pTabCrossResults->Stretch:(double)defaultValue;
-             if (pTabCrossResults->StoreError)
-              ((double *)outputColumns[indexColumn++])[indexRecord]=(!pTabFeno->rc)?(double)pTabCrossResults->SigmaStretch:(double)defaultValue;
-             ((double *)outputColumns[indexColumn++])[indexRecord]=(!pTabFeno->rc)?(double)pTabCrossResults->Stretch2:(double)defaultValue;
-             if (pTabCrossResults->StoreError)
-              ((double *)outputColumns[indexColumn++])[indexRecord]=(!pTabFeno->rc)?(double)pTabCrossResults->SigmaStretch2:(double)defaultValue;
-            }
-
-           if (pTabCrossResults->StoreScale)              // Scale
-            {
-             ((double *)outputColumns[indexColumn++])[indexRecord]=(!pTabFeno->rc)?(double)pTabCrossResults->Scale:(double)defaultValue;
-             if (pTabCrossResults->StoreError)
-              ((double *)outputColumns[indexColumn++])[indexRecord]=(!pTabFeno->rc)?(double)pTabCrossResults->SigmaScale:(double)defaultValue;
-             ((double *)outputColumns[indexColumn++])[indexRecord]=(!pTabFeno->rc)?(double)pTabCrossResults->Scale2:(double)defaultValue;
-             if (pTabCrossResults->StoreError)
-              ((double *)outputColumns[indexColumn++])[indexRecord]=(!pTabFeno->rc)?(double)pTabCrossResults->SigmaScale2:(double)defaultValue;
-            }
-
-           if (pTabCrossResults->StoreParam)              // Param
-            {
-             ((double *)outputColumns[indexColumn++])[indexRecord]=
-              (double)((!pTabFeno->rc)?
-                      ((TabCross[indexTabCross].IndSvdA)?pTabCrossResults->SlntCol:pTabCrossResults->Param):defaultValue);
-             if (pTabCrossResults->StoreParamError)
-             ((double *)outputColumns[indexColumn++])[indexRecord]=
-              (double)((!pTabFeno->rc)?
-                      ((TabCross[indexTabCross].IndSvdA)?pTabCrossResults->SlntErr:pTabCrossResults->SigmaParam):(double)defaultValue);
-            }
-          }
-      	 }
+  RECORD_INFO *pRecordInfo =(RECORD_INFO *)&pEngineContext->recordInfo;
+
+  if (pEngineContext->project.asciiResults.analysisFlag)
+    {
+      int index_record = outputNbRecords++;
+      
+      for(unsigned int i=0; i<output_num_fields; i++) {
+        save_analysis_data(&output_data_analysis[i], index_record, pEngineContext, indexFenoColumn);
       }
-
-    // Color indexes and fluxes
-
-    for (indexFluxes=0;indexFluxes<OUTPUT_NFluxes;indexFluxes++)
-     ((double *)outputColumns[indexColumn++])[indexRecord]=(double)OutputFlux(pEngineContext,OUTPUT_fluxes[indexFluxes]);
-    for (indexCic=0;indexCic<OUTPUT_NCic;indexCic++)
-     ((double *)outputColumns[indexColumn++])[indexRecord]=((flux=OutputFlux(pEngineContext,OUTPUT_cic[indexCic][1]))!=(double)0.)?
-      (double)OutputFlux(pEngineContext,OUTPUT_cic[indexCic][0])/flux:(double)defaultValue;
-
-    outputRecords[indexRecord].nbColumns=indexColumn;
-    outputRecords[indexRecord].year=(int)pRecordInfo->present_day.da_year;
-    outputRecords[indexRecord].month=(int)pRecordInfo->present_day.da_mon;
-    outputRecords[indexRecord].day=(int)pRecordInfo->present_day.da_day;
-    outputRecords[indexRecord].longit=(float)pRecordInfo->longitude;
-    outputRecords[indexRecord].latit=(float)pRecordInfo->latitude;
-   }
+      outputRecords[index_record].specno = pEngineContext->indexRecord;
+      outputRecords[index_record].year=(int)pRecordInfo->present_day.da_year;
+      outputRecords[index_record].month=(int)pRecordInfo->present_day.da_mon;
+      outputRecords[index_record].day=(int)pRecordInfo->present_day.da_day;
+      outputRecords[index_record].longit=(float)pRecordInfo->longitude;
+      outputRecords[index_record].latit=(float)pRecordInfo->latitude;
+    }
  }
 
-// ================
-// OUTPUT FUNCTIONS
-// ================
+/*! \brief Build the output file name using the selected observation site.
 
-// -----------------------------------------------------------------------------
-// FUNCTION      OutputBuildSiteFileName
-// -----------------------------------------------------------------------------
-// PURPOSE       Build the output file name using the selected observation site
-//
-// INPUT         pEngineContext   structure including information on project options
-//               year,month  current date to process (monthly files are created)
-//               indexSite   index of the observation site
-//
-// OUTPUT        outputFileName, the name of the output file
-// -----------------------------------------------------------------------------
+ \param [in] pEngineContext   structure including information on project options
+ \param [in] year, month      current date to process (monthly files are created)
+ \param [in] indexSite        index of the observation site
 
-void OutputBuildSiteFileName(ENGINE_CONTEXT *pEngineContext,DoasCh *outputFileName,INT year,INT month,INDEX indexSite)
+ \param [out] outputFileName  the name of the output file
+*/
+void OutputBuildSiteFileName(const ENGINE_CONTEXT *pEngineContext,DoasCh *outputFileName,INT year,INT month,INDEX indexSite)
  {
   // Declarations
 
   PROJECT             *pProject;                                                // pointer to project data
-  PRJCT_RESULTS_ASCII *pResults;                                                // pointer to results part of project
-  DoasCh               *fileNamePtr;                                             // character pointers used for building output file name
+  PRJCT_RESULTS *pResults;                                                // pointer to results part of project
+  char                *fileNamePtr;                                             // character pointers used for building output file name
 
   // Initializations
 
   pProject=(PROJECT *)&pEngineContext->project;
-  pResults=(PRJCT_RESULTS_ASCII *)&pProject->asciiResults;
+  pResults=(PRJCT_RESULTS *)&pProject->asciiResults;
 
   // Build the complete output path
 
@@ -2113,694 +1420,308 @@ void OutputBuildSiteFileName(ENGINE_CONTEXT *pEngineContext,DoasCh *outputFileNa
   else
    fileNamePtr++;
 
-  sprintf(fileNamePtr,"%s_%04d%02d.%s",
-          (indexSite!=ITEM_NONE)?(DoasCh *)SITES_itemList[indexSite].abbrev:"XX",year,month,"ASC");
+  sprintf(fileNamePtr,"%s_%04d%02d",
+          (indexSite!=ITEM_NONE) ? SITES_itemList[indexSite].abbrev : "XX",year,month);
  }
 
-// -----------------------------------------------------------------------------
-// FUNCTION      OutputBuildFileName
-// -----------------------------------------------------------------------------
-// PURPOSE       For satellites measurements, build automatically a file name
-//               for output and create a directory structure
-//
-// INPUT         pEngineContext       structure including information on project options
-// INPUT/OUTPUT  outputFileName  the original output file name to complete
-//
-// RETURN        ERROR_ID_NOTHING_TO_SAVE if there is nothing to save,
-//               ERROR_ID_NO otherwise
-// -----------------------------------------------------------------------------
+/*! For satellites measurements, automatically build a file name for
+  the output file and create the necessary directory structure.
 
-RC OutputBuildFileName(ENGINE_CONTEXT *pEngineContext,DoasCh *outputFileName)
- {
-  // Declarations
+  \param [in] pEngineContext structure including information on
+  project options
 
-  PROJECT             *pProject;                                                // pointer to project data
-  PRJCT_RESULTS_ASCII *pResults;                                                // pointer to results part of project
+  \param [in,out] outputFileName the original output file name to
+  complete
+
+  \retval ERROR_ID_NOTHING_TO_SAVE if there is nothing to save,
+  \retval ERROR_ID_NO otherwise
+*/
+RC OutputBuildFileName(const ENGINE_CONTEXT *pEngineContext,DoasCh *outputFileName)
+{
   OUTPUT_INFO         *pOutput;
   DoasCh               *fileNamePtr,                                             // character pointers used for building output file name
-                       tmpBuffer[MAX_ITEM_TEXT_LEN+1],
-                      *ptr,*ptr2;
+    tmpBuffer[MAX_ITEM_TEXT_LEN+1];
+  const char *ptr;
   int                  satelliteFlag;
   RC                   rc;
-
+  
   // Initializations
-
-  pProject=(PROJECT *)&pEngineContext->project;
-  pResults=(PRJCT_RESULTS_ASCII *)&pProject->asciiResults;
-
+  
+  const PROJECT *pProject = &pEngineContext->project;
+  const PRJCT_RESULTS *pResults = &pProject->asciiResults;
+  
   rc=ERROR_ID_NO;
-
+  
   if (!outputNbRecords)
-   rc=ERROR_SetLast("OutputBuildFileName",ERROR_TYPE_WARNING,ERROR_ID_NOTHING_TO_SAVE,pEngineContext->fileInfo.fileName);
+    rc=ERROR_SetLast("OutputBuildFileName",ERROR_TYPE_WARNING,ERROR_ID_NOTHING_TO_SAVE,pEngineContext->fileInfo.fileName);
   else
-   {
-    pOutput=&outputRecords[0];
-
-    // Build the complete output path
-
-    strcpy(outputFileName,pResults->path);
-
- //   FILES_RebuildFileName(outputFileName,pResults->path,1);
-
-    if ((fileNamePtr=strrchr(outputFileName,PATH_SEP))==NULL)                   // extract output file name without path
-     fileNamePtr=outputFileName;
-    else
-     fileNamePtr++;
-
-    satelliteFlag=((pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN) ||
-                   (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_ASCII) ||
-                   (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_HDF) ||
-                   (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS) ||
-                   (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_OMI) ||
-                   (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GOME2));
-
-    if ((!strlen(fileNamePtr) || !strcasecmp(fileNamePtr,"automatic")) &&
-       ((satelliteFlag && ((pProject->spectra.mode!=PRJCT_SPECTRA_MODES_OBSLIST) || (pProject->spectra.radius<=1.))) ||
-       (!satelliteFlag && (pResults->fileNameFlag || (SITES_GetIndex(pProject->instrumental.observationSite)==ITEM_NONE)))))
-     {
-      if ((ptr=strrchr(pEngineContext->fileInfo.fileName,PATH_SEP))==NULL)
-       ptr=pEngineContext->fileInfo.fileName;
-      else
-       ptr++;
-
-      // Remove the separator character in order that outputFileName is only the output directory
-
-      fileNamePtr--;
-      *fileNamePtr=0;
-
-      if (satelliteFlag && pResults->dirFlag)
-       {
-        // Create 'year' directory
-
-        strcpy(tmpBuffer,outputFileName);
-        sprintf(outputFileName,"%s%c%d",tmpBuffer,PATH_SEP,(int)pOutput->year);
-        #if defined WIN32
-        mkdir(outputFileName);
-        #else
-        mkdir(outputFileName,0755);
-        #endif
-
-        // Create 'month' directory
-
-        strcpy(tmpBuffer,outputFileName);
-        sprintf(outputFileName,"%s%c%02d",tmpBuffer,PATH_SEP,(int)pOutput->month);
-        #if defined WIN32
-        mkdir(outputFileName);
-        #else
-        mkdir(outputFileName,0755);
-        #endif
-
-        // Create 'day' directory
-
-        strcpy(tmpBuffer,outputFileName);
-        sprintf(outputFileName,"%s%c%02d",tmpBuffer,PATH_SEP,(int)pOutput->day);
-        #if defined WIN32
-        mkdir(outputFileName);
-        #else
-        mkdir(outputFileName,0755);
-        #endif
-       }
-
-      // Build output file name
-
-       strcpy(tmpBuffer,outputFileName);
-
-      if ((pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_HDF) ||
-          (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS))
-
-       sprintf(outputFileName,"%s%cSCIA_%d%02d%02d_%05d",tmpBuffer,PATH_SEP,pOutput->year,pOutput->month,pOutput->day,pEngineContext->recordInfo.scia.orbitNumber);
-
-//      else if (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GOME2)
-//       sprintf(outputFileName,"%s%cGOME_xxx_1B_%d%02d%02d_%05d",tmpBuffer,PATH_SEP,pOutput->year,pOutput->month,pOutput->day,pEngineContext->recordInfo.gome2.orbitNumber);
-      else
-       sprintf(outputFileName,"%s%c%s",tmpBuffer,PATH_SEP,ptr);
-
-      ptr2=strrchr(outputFileName,PATH_SEP);
-
-      if ((pProject->instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_MFC) &&
-          (pProject->instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_MFC_STD) &&
-         ((ptr=strrchr(ptr2+1,'.'))!=NULL))
-       strcpy(ptr,".ASC");
-      else
-       strcat(outputFileName,".ASC");
-     }
-   }
-
-  // Return
-
-  return rc;
- }
-
-// -----------------------------------------------------------------------------
-// FUNCTION      OutputAscPrintTitles
-// -----------------------------------------------------------------------------
-// PURPOSE       Print titles of columns in the output ASCII file
-//
-// INPUT         pEngineContext       structure including information on project options
-//               fp              pointer to the output file
-// -----------------------------------------------------------------------------
-
-void OutputAscPrintTitles(ENGINE_CONTEXT *pEngineContext,FILE *fp)
- {
-  // Declarations
-
-  INDEX indexField,indexLine,indexColumn,indexField2;
-  PRJCT_RESULTS_FIELDS *pField,*pField2;
-  INT nbColumns,nbLines;
-
-  // Initializations
-
-  indexColumn=0;
-
-  for (indexField=0;
-      (indexField<outputNbFields) && (outputFields[indexField].fieldDim1!=ITEM_NONE);)
-   {
-   	pField=&outputFields[indexField];
-
-   	// Case 1 : the number of columns is known
-
-   	if (outputFields[indexField].fieldDim2!=ITEM_NONE)
-   	 {
-   	  fprintf(fp,"%c %s\t\n",COMMENT_CHAR,pField->fieldName);
-   	  for (indexLine=0;indexLine<pField->fieldDim1;indexLine++)
-   	   {
-   	    for (indexColumn=0;indexColumn<pField->fieldDim2;indexColumn++)
-   	     {
-   	     	fprintf(fp,"%c ",COMMENT_CHAR);
-
-          switch(pField->fieldType)
-           {
-         // -------------------------------------------------------------------------
-            case MEMORY_TYPE_STRING :
-             fprintf(fp,pField->fieldFormat,&outputColumns[indexField][(indexColumn*pField->fieldDim1+indexLine)*pField->fieldSize]);
-            break;
-         // -------------------------------------------------------------------------
-            case MEMORY_TYPE_USHORT :
-             fprintf(fp,pField->fieldFormat,(DoasUS)((DoasUS *)outputColumns[indexField])[indexColumn*pField->fieldDim1+indexLine]);
-            break;
-         // -------------------------------------------------------------------------
-            case MEMORY_TYPE_INT :
-             fprintf(fp,pField->fieldFormat,(int)((int *)outputColumns[indexField])[indexColumn*pField->fieldDim1+indexLine]);
-            break;
-         // -------------------------------------------------------------------------
-            case MEMORY_TYPE_FLOAT :
-             fprintf(fp,pField->fieldFormat,(float)((float *)outputColumns[indexField])[indexColumn*pField->fieldDim1+indexLine]);
-            break;
-         // -------------------------------------------------------------------------
-            case MEMORY_TYPE_DOUBLE :
-             fprintf(fp,pField->fieldFormat,(double)((double *)outputColumns[indexField])[indexColumn*pField->fieldDim1+indexLine]);
-            break;
-         // -------------------------------------------------------------------------
-           }
-
-          fprintf(fp," ");
-         }
-   	    fprintf(fp,"\n");
-   	   }
-
-   	  indexField++;
-   	 }
-
-   	// Case 2 : the number of columns is unknown
-
-   	else
-   	 {
-   	 	fprintf(fp,"%c ",COMMENT_CHAR);
-   	 	nbLines=outputFields[indexField].fieldDim1;
-
-   	 	// titles
-
-   	 	for (nbColumns=0,indexField2=indexField;
-   	 	    (indexField2<outputNbFields) && (outputFields[indexField2].fieldDim1==nbLines);indexField2++,nbColumns++)
-   	 	 fprintf(fp,"%s\t",outputFields[indexField2].fieldName);
-
-   	 	 fprintf(fp,"\n");
-
-   	 	// data
-
-   	 	for (indexLine=0;indexLine<pField->fieldDim1;indexLine++)
-   	 	 {
-   	    fprintf(fp,"%c ",COMMENT_CHAR);
-
-   	    for (indexField2=indexField;indexField2<indexField+nbColumns;indexField2++)
-   	     {
-   	     	pField2=&outputFields[indexField2];
-
-          switch(pField2->fieldType)
-           {
-         // -------------------------------------------------------------------------
-            case MEMORY_TYPE_STRING :
-             fprintf(fp,pField2->fieldFormat,&outputColumns[indexField2][indexLine]);
-            break;
-         // -------------------------------------------------------------------------
-            case MEMORY_TYPE_USHORT :
-             fprintf(fp,pField2->fieldFormat,(DoasUS)((DoasUS *)outputColumns[indexField2])[indexLine]);
-            break;
-         // -------------------------------------------------------------------------
-            case MEMORY_TYPE_INT :
-             fprintf(fp,pField2->fieldFormat,(int)((int *)outputColumns[indexField2])[indexLine]);
-            break;
-         // -------------------------------------------------------------------------
-            case MEMORY_TYPE_FLOAT :
-             fprintf(fp,pField2->fieldFormat,(float)((float *)outputColumns[indexField2])[indexLine]);
-            break;
-         // -------------------------------------------------------------------------
-            case MEMORY_TYPE_DOUBLE :
-             fprintf(fp,pField2->fieldFormat,(double)((double *)outputColumns[indexField2])[indexLine]);
-            break;
-         // -------------------------------------------------------------------------
-           }
-
-          fprintf(fp," ");
-         }
-   	    fprintf(fp,"\n");
-   	   }
-
-   	  indexField+=nbColumns;
-   	 }
-   }
-
-  fprintf(fp,"# ");
-  for (;indexField<outputNbFields;indexField++)
-   fprintf(fp,"%s\t",outputFields[indexField].fieldName);
-  fprintf(fp,"\n");
-
- }
-
-// -----------------------------------------------------------------------------
-// FUNCTION      OutputAscPrintDataSet
-// -----------------------------------------------------------------------------
-// PURPOSE       Flush the data set to the output file (ASC format)
-//
-// INPUT         fp              pointer to the output file;
-//               outputData      all the data to save;
-//               nbRecords       the number of records to save.
-// -----------------------------------------------------------------------------
-
-void OutputAscPrintDataSet(FILE *fp,DoasCh **outputData,INT nbRecords)
- {
-  // Declarations
-
-  PRJCT_RESULTS_FIELDS *pField;
-  INDEX indexField,firstRecordField,indexRecord;
-
-  for (firstRecordField=0;(firstRecordField<outputNbFields) && (outputFields[firstRecordField].fieldDim1!=ITEM_NONE);firstRecordField++);
-
-  for (indexRecord=0;indexRecord<nbRecords;indexRecord++)
-   {
-    for (indexField=firstRecordField;indexField<outputNbFields;indexField++)
-     {
-      pField=&outputFields[indexField];
-
-      switch(pField->fieldType)
-       {
-     // -------------------------------------------------------------------------
-        case MEMORY_TYPE_STRING :
-         fprintf(fp,pField->fieldFormat,&outputData[indexField][indexRecord*pField->fieldSize]);
-        break;
-     // -------------------------------------------------------------------------
-        case MEMORY_TYPE_USHORT :
-         fprintf(fp,pField->fieldFormat,(DoasUS)((DoasUS *)outputData[indexField])[indexRecord]);
-        break;
-     // -------------------------------------------------------------------------
-        case MEMORY_TYPE_INT :
-         fprintf(fp,pField->fieldFormat,(int)((int *)outputData[indexField])[indexRecord]);
-        break;
-     // -------------------------------------------------------------------------
-        case MEMORY_TYPE_FLOAT :
-         fprintf(fp,pField->fieldFormat,(float)((float *)outputData[indexField])[indexRecord]);
-        break;
-     // -------------------------------------------------------------------------
-        case MEMORY_TYPE_DOUBLE :
-         fprintf(fp,pField->fieldFormat,(double)((double *)outputData[indexField])[indexRecord]);
-        break;
-     // -------------------------------------------------------------------------
-       }
-
-      fprintf(fp,"\t");
-     }
-
-    fprintf(fp,"\n");
-   }
- }
-
-// write_spikes:
-// concatenate all pixels containing spikes into a single string for output.
-
-RC write_spikes(char *spikestring, unsigned int length, BOOL *spikes,int ndet) {
-  strcpy(spikestring,"");
-  char num[10];
-  RC rc = 0;
-  int nspikes = 0;
-
-  int i;
-
-  if (spikes!=NULL)
-   for (i=0; i< ndet; i++)
     {
-     if (spikes[i])
-      {
-       (nspikes++ > 0 ) ? sprintf(num,",%d",i): sprintf(num,"%d",i);
-       if(strlen(num) + strlen(spikestring) < length) {
-        strcat(spikestring,num);
-       } else {
-        rc = 1;
-        break;
-       }
-      }
+      pOutput=&outputRecords[0];
+      
+      // Build the complete output path
+      
+      strcpy(outputFileName,pResults->path);
+      
+      if ((fileNamePtr=strrchr(outputFileName,PATH_SEP))==NULL)                   // extract output file name without path
+        fileNamePtr=outputFileName;
+      else
+        fileNamePtr++;
+
+      satelliteFlag=((pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN) ||
+                     (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_ASCII) ||
+                     (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS) ||
+                     (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_OMI) ||
+                     (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GOME2));
+
+      if ((!strlen(fileNamePtr) || !strcasecmp(fileNamePtr,"automatic")) &&
+          ((satelliteFlag && ((pProject->spectra.mode!=PRJCT_SPECTRA_MODES_OBSLIST) || (pProject->spectra.radius<=1.))) ||
+           (!satelliteFlag && (pResults->fileNameFlag || (SITES_GetIndex(pProject->instrumental.observationSite)==ITEM_NONE)))))
+        {
+          if ((ptr=strrchr(pEngineContext->fileInfo.fileName,PATH_SEP))==NULL)
+            ptr=pEngineContext->fileInfo.fileName;
+          else
+            ptr++;
+
+          // Remove the separator character in order that outputFileName is only the output directory
+
+          fileNamePtr--;
+          *fileNamePtr=0;
+
+          if (satelliteFlag && pResults->dirFlag)
+            {
+              // Create 'year' directory
+
+              strcpy(tmpBuffer,outputFileName);
+              sprintf(outputFileName,"%s%c%d",tmpBuffer,PATH_SEP,(int)pOutput->year);
+#if defined WIN32
+              mkdir(outputFileName);
+#else
+              mkdir(outputFileName,0755);
+#endif
+
+              // Create 'month' directory
+
+              strcpy(tmpBuffer,outputFileName);
+              sprintf(outputFileName,"%s%c%02d",tmpBuffer,PATH_SEP,(int)pOutput->month);
+#if defined WIN32
+              mkdir(outputFileName);
+#else
+              mkdir(outputFileName,0755);
+#endif
+
+              // Create 'day' directory
+
+              strcpy(tmpBuffer,outputFileName);
+              sprintf(outputFileName,"%s%c%02d",tmpBuffer,PATH_SEP,(int)pOutput->day);
+#if defined WIN32
+              mkdir(outputFileName);
+#else
+              mkdir(outputFileName,0755);
+#endif
+            }
+
+          // Build output file name
+
+          strcpy(tmpBuffer,outputFileName);
+
+          if ( pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS)
+            sprintf(outputFileName,"%s%cSCIA_%d%02d%02d_%05d",tmpBuffer,PATH_SEP,pOutput->year,pOutput->month,pOutput->day,pEngineContext->recordInfo.scia.orbitNumber);
+          else
+            sprintf(outputFileName,"%s%c%s",tmpBuffer,PATH_SEP,ptr);
+      
+        }
+      // remove trailing ".ext" from "[...]/filename.ext", if filename
+      // entered by the user ends in '.ext'.  Proper extension will be
+      // added again when we create  the output file:
+      char *ptr_out=strrchr(outputFileName,PATH_SEP);
+      ptr_out=strrchr(ptr_out+1,'.');
+      if ( ptr_out)
+        *ptr_out='\0';
     }
-
-  if (!nspikes)
-   strcpy(spikestring,"-1");
-
+  
   return rc;
 }
 
-// -----------------------------------------------------------------------------
-// FUNCTION      OutputFileOpen
-// -----------------------------------------------------------------------------
-// PURPOSE       Open the outputFile and save the preliminary information
-//
-// INPUT         pEngineContext       structure including information on project options
-//               outputFileName  the name of the outputFile
-//
-// RETURN        pointer to the output file
-// -----------------------------------------------------------------------------
+RC open_output_file(const ENGINE_CONTEXT *pEngineContext, char *outputFileName)
+{
+  if (pEngineContext->project.asciiResults.calibFlag)
+    save_calibration();
 
-FILE *OutputFileOpen(ENGINE_CONTEXT *pEngineContext,DoasCh *outputFileName)
- {
-  // Declarations
+  switch(selected_format) {
+  case ASCII:
+    return ascii_open(pEngineContext, outputFileName);
+    break;
+  case HDFEOS5:
+    return hdfeos5_open(pEngineContext, outputFileName);
+    break;
+  default:
+    return ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_FILE_BAD_FORMAT);
+  }
+}
 
-  FILE *fp;
-  DoasCh r[4],w[4],a[4];
-  INT newFile;
+void output_close_file() {
+  switch(selected_format) {
+  case ASCII:
+    ascii_close_file();
+    break;
+  case HDFEOS5:
+    hdfeos5_close_file();
+    break;
+  }
+}
 
-  PROJECT             *pProject;                                                // pointer to project data
-  PRJCT_RESULTS_ASCII *pResults;                                                // pointer to results part of project
+void output_write_data(const bool selected_records[]) {
+  switch(selected_format) {
+  case ASCII:
+    ascii_write_analysis_data(selected_records, outputNbRecords);
+    break;
+  case HDFEOS5:
+    hdfeos5_write_analysis_data(selected_records, outputNbRecords, outputRecords);
+    break;
+  default:
+    assert(false);
+    break;
+  }
+}
 
-  // Initializations
+/*! \brief Create an automatic output file, and write the selected
+    records to it.
 
-  pProject=(PROJECT *)&pEngineContext->project;
-  pResults=(PRJCT_RESULTS_ASCII *)&pProject->asciiResults;
-
-  // Initializations
-
-  strcpy(r,"rt");                                               // open the file in read mode
-  strcpy(w,"w+t");                                              // open the file in write mode
-  strcpy(a,"a+t");                                              // open the file in append mode
-
-  outputNbDataSet=0;
-
-  newFile=((fp=fopen(outputFileName,r))==NULL)?1:0;
-
-  // Close the file
-
-  if (fp!=NULL)
-   fclose(fp);
-
-  // Open the file in append mode
-
-  if (((fp=fopen(outputFileName,(newFile)?w:a))!=NULL) && newFile)
-   {
-    if (THRD_id==THREAD_TYPE_ANALYSIS)
-     {
-      // Satellites measurements and automatic reference selection : save information on the selected reference
-
-      if (((pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_ASCII) ||
-           (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN) ||
-           (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_HDF) ||
-           (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS) ||
-           (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GOME2)) &&
-            pEngineContext->analysisRef.refAuto)                                           // automatic reference is requested for at least one analysis window
-       {
-       	strcpy(outputColumns[0],OUTPUT_refFile);
-       	((int *)outputColumns[1])[0]=OUTPUT_nRec;
-       }
-     }
-
-    // Save information on automatic reference spectrum
-    if(pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_OMI
-       && pEngineContext->analysisRef.refAuto
-       && pEngineContext->project.asciiResults.referenceFlag)
-     write_automatic_reference_info(fp, pEngineContext);
-
-    // Save information on the calibration
-    if (pResults->calibFlag)
-     OutputCalib(pEngineContext);
-
-    OutputAscPrintTitles(pEngineContext,fp);
-   }
-
-  // Return
-
-  return fp;
- }
-
-// -----------------------------------------------------------------------------
-// FUNCTION      OUTPUT_FlushBuffers
-// -----------------------------------------------------------------------------
-// PURPOSE       Flusth the buffers in a one shot
-//
-// INPUT         pEngineContext       structure including information on project options
-//
-// RETURN        Non zero value return code if the output failed
-// -----------------------------------------------------------------------------
+  \param [in] selected_records boolean array of length
+  outputNbRecords
+  
+  \param[in] year, month, site_index date and location to be used in
+  the directory structure
+  
+  \param[in] pEngineContext
+  */
+RC output_write_automatic_file(const bool selected_records[], int year, int month, int site_index, const ENGINE_CONTEXT *pEngineContext ) {
+  char filename[MAX_ITEM_TEXT_LEN+1] = {0};
+  OutputBuildSiteFileName(pEngineContext,filename,year, month, site_index);
+  RC rc=open_output_file(pEngineContext,filename);
+  if ( !rc ) {
+    output_write_data(selected_records);
+    output_close_file();
+  } else {
+    rc =  ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_FILE_OPEN, filename);
+  }
+  return rc;
+}
 
 RC OUTPUT_FlushBuffers(ENGINE_CONTEXT *pEngineContext)
- {
-  // Declarations
+{
+  const PROJECT *pProject = &pEngineContext->project; // pointer to project data
+  const PRJCT_RESULTS *pResults = &pProject->asciiResults; // pointer to results part of project
 
-  DoasCh outputFileName[MAX_ITEM_TEXT_LEN+1],
-        outputAutomaticFileName[MAX_ITEM_TEXT_LEN+1];
-  FILE *outputFp;
-  DoasCh **outputData;
+  selected_format = pResults->file_format;
 
-  OBSERVATION_SITE *pSite;
-  PROJECT             *pProject;                     // pointer to project data
-  PRJCT_RESULTS_FIELDS *pField;
-  PRJCT_RESULTS_ASCII *pResults;                     // pointer to results part of project
-  DoasCh               *ptr;
-  INDEX indexSite,indexField,firstRecordField,indexRecord,oldYear,oldMonth,oldRecord;
-  INT fieldDim2;
-  INT automatic,nbRecords;
-  RC rc;
+  RC rc=ERROR_ID_NO;
+  char outputFileName[MAX_ITEM_TEXT_LEN+1] = {0};
 
-  // Initializations
+  // select records for output according to date/site
+  bool selected_records[outputNbRecords];
 
-  pProject=(PROJECT *)&pEngineContext->project;
-  pResults=(PRJCT_RESULTS_ASCII *)&pProject->asciiResults;
-
-  memset(outputFileName,0,MAX_ITEM_TEXT_LEN+1);
-  memset(outputAutomaticFileName,0,MAX_ITEM_TEXT_LEN+1);
-
-  outputFp=NULL;
-  outputData=NULL;
-  firstRecordField=0;
-
-  rc=ERROR_ID_NO;
-
-  if ((pResults->analysisFlag || pResults->calibFlag) && outputNbRecords && !(rc=OutputBuildFileName(pEngineContext,outputFileName)))
-   {
-    if ((ptr=strrchr(outputFileName,PATH_SEP))==NULL)
-     ptr=outputFileName;
+  if ((pResults->analysisFlag || pResults->calibFlag) && outputNbRecords && !(rc=OutputBuildFileName(pEngineContext,outputFileName))) {
+    char *ptr = strrchr(outputFileName,PATH_SEP);
+    if ( ptr==NULL )
+      ptr=outputFileName;
     else
-     ptr++;
-
-    if ((strlen(ptr)==9) && !strcasecmp(ptr,"automatic"))
-     *ptr='\0';
-
-    automatic=!strlen(ptr);
-
-    // ------------------
-    // NOT AUTOMATIC MODE
-    // ------------------
-
-    if (!automatic)
-     {
-      if ((outputFp=OutputFileOpen(pEngineContext,outputFileName)) == NULL )
-       rc=ERROR_SetLast("OUTPUT_FlushBuffers",ERROR_TYPE_FATAL,ERROR_ID_FILE_OPEN,"outputFileName");
-      else
-       OutputAscPrintDataSet(outputFp,outputColumns,outputNbRecords);
-     }
-    else if ((outputData=(DoasCh **)MEMORY_AllocBuffer("OUTPUT_FlushBuffers","outputData",MAX_FIELDS,sizeof(DoasCh *),0,MEMORY_TYPE_PTR))==NULL)
-     rc=ERROR_SetLast("OUTPUT_FlushBuffers",ERROR_TYPE_FATAL,ERROR_ID_ALLOC,"outputData");
-    else
-     {
-    // -------------------
-    // FULL AUTOMATIC MODE
-    // -------------------
-
-     	memset(outputData,0,sizeof(DoasCh *)*MAX_FIELDS);
-
-     	for (firstRecordField=0;(firstRecordField<outputNbFields) && (outputFields[firstRecordField].fieldDim1!=ITEM_NONE) && !rc;firstRecordField++)
-     	 {
-     	 	pField=&outputFields[firstRecordField];
-     	 	fieldDim2=(pField->fieldDim2!=ITEM_NONE)?pField->fieldDim2:1;
-
-     	  if ((outputData[firstRecordField]=(DoasCh *)MEMORY_AllocBuffer("OUTPUT_FlushBuffers",pField->fieldName,
-     	                                             pField->fieldDim1*fieldDim2,pField->fieldSize,0,pField->fieldType))==NULL)
-     	   rc=ERROR_SetLast("OUTPUT_FlushBuffers",ERROR_TYPE_FATAL,ERROR_ID_ALLOC,"outputData[firstRecordField]");
-     	 }
-
-     	for (indexField=firstRecordField;(indexField<outputNbFields) && !rc;indexField++)
-     	 {
-     	 	pField=&outputFields[indexField];
-     	  if ((outputData[indexField]=(DoasCh *)MEMORY_AllocBuffer("OUTPUT_FlushBuffers",pField->fieldName,outputNbRecords,pField->fieldSize,0,pField->fieldType))==NULL)
-     	   rc=ERROR_SetLast("OUTPUT_FlushBuffers",ERROR_TYPE_FATAL,ERROR_ID_ALLOC,"outputData[indexField]");
-     	 }
-
-     	if (!rc)
-     	 {
-     	 	// Overpasses : records are distributed using information on the measurement date and the geolocation
-
-     	 	if ((pProject->spectra.mode==PRJCT_SPECTRA_MODES_OBSLIST) && (pProject->spectra.radius>1.))
-
-         for (indexSite=0;indexSite<SITES_itemN;indexSite++)
-          {
-     	 	 	 indexRecord=0;
-     	 	 	 pSite=&SITES_itemList[indexSite];
-
-     	 	 	 while ((indexRecord<outputNbRecords) && !rc)
-     	 	 	  {
-       	 	 	 oldYear=outputRecords[indexRecord].year;
-       	 	 	 oldMonth=outputRecords[indexRecord].month;
-
-     	 	 	  	for (indexField=0;indexField<firstRecordField;indexField++)
-     	 	 	  	 {
-     	 	 	  	 	pField=&outputFields[indexField];                                // this line was not existing in WinDOAS --- BUG ???
-               fieldDim2=(pField->fieldDim2!=ITEM_NONE)?pField->fieldDim2:1;
-     	 	 	  	  memcpy(outputData[indexField],outputColumns[indexField],outputFields[indexField].fieldDim1*fieldDim2*outputFields[indexField].fieldSize);
-     	 	 	  	 }
-
-     	 	 	  	for (nbRecords=0;(indexRecord<outputNbRecords) && ((outputRecords[indexRecord].year==oldYear) || (outputRecords[indexRecord].month==oldMonth));indexRecord++)
-     	 	 	  	 if (THRD_GetDist((double)outputRecords[indexRecord].longit,(double)outputRecords[indexRecord].latit,
-     	 	 	  	                  (double)pSite->longitude,(double)pSite->latitude)<=(double)pProject->spectra.radius)
-     	 	 	  	  {
-       	 	  	 	 for (indexField=firstRecordField;(indexField<outputNbFields);indexField++)
-       	 	  	 	  {
-       	 	  	 	  	pField=&outputFields[indexField];
-    	   	  	 	    memcpy(&outputData[indexField][nbRecords*pField->fieldSize],&outputColumns[indexField][indexRecord*pField->fieldSize],pField->fieldSize);
-     	 	    	 	  }
-     	 	    	 	 nbRecords++;
-     	 	    	 	}
-
-     	 	 	  	if (nbRecords)
-     	 	 	  	 {
-     	 	 	  	 	OutputBuildSiteFileName(pEngineContext,outputAutomaticFileName,oldYear,oldMonth,indexSite);
-
-               if ((outputFp=OutputFileOpen(pEngineContext,outputAutomaticFileName))==NULL)
-                ERROR_SetLast("OutputFlushBuffers",ERROR_TYPE_FATAL,ERROR_ID_FILE_OPEN,"outputFileName");
-               else
-                OutputAscPrintDataSet(outputFp,outputData,nbRecords);
-
-               if (outputFp!=NULL)
-                {
-                	fclose(outputFp);
-                	outputFp=NULL;
-                }
-     	 	 	  	 }
-     	 	 	  }
+      ptr++;
+    
+    if ( strcasecmp(ptr,"automatic") != 0) {
+      // ------------------
+      // NOT AUTOMATIC MODE
+      // ------------------
+      rc = open_output_file(pEngineContext,outputFileName);
+      if (!rc ) {
+        for(unsigned int i=0; i<outputNbRecords; i++)
+          selected_records[i] = true; // select all records
+        output_write_data(selected_records);
+        output_close_file();
+      } else {
+        rc=ERROR_SetLast("OUTPUT_FlushBuffers",ERROR_TYPE_FATAL,ERROR_ID_FILE_OPEN,outputFileName);
+      }
+    } else {
+      // -------------------
+      // FULL AUTOMATIC MODE
+      // -------------------
+      for(unsigned int i=0; i<outputNbRecords; i++)
+        selected_records[i] = false;
+      
+      // Overpasses: records are distributed using information on the measurement date and the geolocation
+      if ((pProject->spectra.mode==PRJCT_SPECTRA_MODES_OBSLIST) && (pProject->spectra.radius>1.)) {
+        for (int indexSite=0;indexSite<SITES_itemN;indexSite++) {
+          unsigned int indexRecord=0;
+          OBSERVATION_SITE *pSite=&SITES_itemList[indexSite];
+          
+          while ((indexRecord<outputNbRecords) && !rc) {
+            int oldYear=outputRecords[indexRecord].year;
+            int oldMonth=outputRecords[indexRecord].month;
+              
+            int nbRecords=0;
+            while( indexRecord<outputNbRecords
+                   && (outputRecords[indexRecord].year==oldYear || outputRecords[indexRecord].month==oldMonth) ){
+              if (THRD_GetDist((double)outputRecords[indexRecord].longit,(double)outputRecords[indexRecord].latit,
+                               (double)pSite->longitude,(double)pSite->latitude)<=(double)pProject->spectra.radius) {
+                selected_records[indexRecord] = true;
+                nbRecords++;
+                indexRecord++;
+              }
+            }
+            if (nbRecords) {
+              rc = output_write_automatic_file(selected_records, oldYear, oldMonth, indexSite, pEngineContext);
+            }
           }
-
-     	 	// Records are saved using the information on the date only
-
-     	 	else
-     	 	 {
-     	 	 	nbRecords=indexRecord=0;
-     	 	 	oldRecord=0;
-     	 	 	indexSite=SITES_GetIndex(pProject->instrumental.observationSite);
-
-     	 	 	while (indexRecord<outputNbRecords)
-     	 	 	 {
-       	 	 	oldYear=outputRecords[indexRecord].year;
-       	 	 	oldMonth=outputRecords[indexRecord].month;
-
-    	 	 	  	for (indexField=0;indexField<firstRecordField;indexField++)
-    	 	 	  	 {
-    	 	 	  	 	pField=&outputFields[indexField];                                 // this line was not existing in WinDOAS --- BUG ???
-    	 	 	  	 	fieldDim2=(pField->fieldDim2!=ITEM_NONE)?pField->fieldDim2:1;
-    	 	 	  	  memcpy(outputData[indexField],outputColumns[indexField],outputFields[indexField].fieldDim1*fieldDim2*outputFields[indexField].fieldSize);
-    	 	 	  	 }
-
-     	 	 	 	for (;(indexRecord<outputNbRecords) && ((outputRecords[indexRecord].year==oldYear) || (outputRecords[indexRecord].month==oldMonth));indexRecord++);
-
-     	 	 	 	if ((nbRecords=indexRecord-oldRecord)>0)
-     	 	 	 	 {
-       	 	 	 	for (indexField=firstRecordField;(indexField<outputNbFields) && !rc;indexField++)
-       	 	 	 	 {
-       	 	 	 	 	pField=&outputFields[indexField];
-    	   	 	 	   memcpy(&outputData[indexField][0],&outputColumns[indexField][oldRecord*pField->fieldSize],nbRecords*pField->fieldSize);
-     	 	   	 	 }
-
-     	 	 	 	 	OutputBuildSiteFileName(pEngineContext,outputAutomaticFileName,oldYear,oldMonth,indexSite);
-
-              if ((outputFp=OutputFileOpen(pEngineContext,outputAutomaticFileName))==NULL)
-               ERROR_SetLast("OutputFlushBuffers",ERROR_TYPE_FATAL,ERROR_ID_FILE_OPEN,"outputFileName");
-              else
-               OutputAscPrintDataSet(outputFp,outputData,nbRecords);
-
-              if (outputFp!=NULL)
-               {
-               	fclose(outputFp);
-               	outputFp=NULL;
-               }
-     	 	 	 	 }
-
-     	 	 	 	oldRecord=indexRecord;
-     	 	 	 }
-     	 	 }
-     	 }
-     }
-
-    // Close file
-
-    if (outputFp!=NULL)
-     fclose(outputFp);
-   }
-
-//  {
-//  	FILE *fp;
-//  	fp=fopen("qdoas.dbg","a+t");
-//  	fprintf(fp,"   OUTPUT_FlushBuffers (%d records,rc %d)\n",outputNbRecords,rc);
-//  	fclose(fp);
-//  }
-
+        }
+      }      
+      // Records are saved using the information on the date only
+      else {
+        unsigned int indexRecord=0;
+        int indexSite=SITES_GetIndex(pProject->instrumental.observationSite);
+        
+        while (indexRecord<outputNbRecords) {
+          int oldYear=outputRecords[indexRecord].year;
+          int oldMonth=outputRecords[indexRecord].month;
+          
+          int nbRecords = 0;
+          while( indexRecord<outputNbRecords
+                 && (outputRecords[indexRecord].year==oldYear || outputRecords[indexRecord].month==oldMonth) ) {
+            selected_records[indexRecord] = true;
+            indexRecord++;
+            nbRecords++;
+          }
+          
+          if (nbRecords) {
+            rc = output_write_automatic_file(selected_records, oldYear, oldMonth, indexSite, pEngineContext);
+          }
+        }
+      }
+    }
+  }
+    
   outputNbRecords=0;
   pEngineContext->lastSavedRecord=0;
-
-  // Release the allocated buffers
-
-  if (outputData!=NULL)
-   {
-    for (indexField=0;indexField<outputNbFields;indexField++)
-     if (outputData[indexField]!=NULL)
-      MEMORY_ReleaseBuffer("OUTPUT_FlushBuffers",outputFields[indexField].fieldName,outputData[indexField]);
-
-    MEMORY_ReleaseBuffer("OUTPUT_FlushBuffers","outputData",outputData);
-   }
-
-  // Return
-
+  
   return rc;
- }
+}
 
-// -----------------------------------------------------------------------------
-// FUNCTION      OUTPUT_SaveResults
-// -----------------------------------------------------------------------------
-// PURPOSE       save all results (ASC/BIN)
-//
-// INPUT         pEngineContext   structure including information on the current record
-//
-// RETURN        Non zero value return code if the function failed
-//               ERROR_ID_NO on success
-// -----------------------------------------------------------------------------
+/*! \brief Save all calibration data to the calibration output buffers.*/
+void save_calibration() {
+  for(unsigned int i=0; i<calib_num_fields; i++) {
+    struct output_field *cur_field = &output_data_calib[i];
+    int nbWin = KURUCZ_buffers[cur_field->index_row].Nb_Win;
+    for (int indexWin=0;indexWin<nbWin;indexWin++) {
+      save_calib_data(cur_field, indexWin);
+    }
+  }
+}
+
 
 RC OUTPUT_SaveResults(ENGINE_CONTEXT *pEngineContext,INDEX indexFenoColumn)
  {
   // Declarations
 
   CROSS_RESULTS *pTabCrossResults;
-  RECORD_INFO *pRecordInfo;
   INDEX indexFeno,indexTabCross,i;
   double *Spectrum;
   FENO *pTabFeno;
@@ -2808,7 +1729,7 @@ RC OUTPUT_SaveResults(ENGINE_CONTEXT *pEngineContext,INDEX indexFenoColumn)
 
   // Initializations
 
-  pRecordInfo=&pEngineContext->recordInfo;
+  const RECORD_INFO *pRecordInfo=&pEngineContext->recordInfo;
   rc=ERROR_ID_NO;
 
   // AMF computation
@@ -2850,7 +1771,7 @@ RC OUTPUT_SaveResults(ENGINE_CONTEXT *pEngineContext,INDEX indexFenoColumn)
    }
 
   if (outputNbRecords<pEngineContext->recordNumber)
-   OutputSaveRecord(pEngineContext,(THRD_id==THREAD_TYPE_ANALYSIS)?0:1,indexFenoColumn);
+    OutputSaveRecord(pEngineContext,indexFenoColumn);
 
   // Results safe keeping
 
@@ -2865,26 +1786,104 @@ RC OUTPUT_SaveResults(ENGINE_CONTEXT *pEngineContext,INDEX indexFenoColumn)
 // RESOURCES MANAGEMENT
 // ====================
 
-// -----------------------------------------------------------------------------
-// FUNCTION        OUTPUT_LocalAlloc
-// -----------------------------------------------------------------------------
-// PURPOSE         Allocate and initialize buffers for the records to output
-//
-// INPUT           pEngineContext   structure including information on the current project
-//
-// RETURN          ERROR_ID_ALLOC if one of the buffer allocation failed
-//                 ERROR_ID_NO in case of success
-// -----------------------------------------------------------------------------
+/* Return the byte size of a datatype. */
+size_t output_get_size(enum output_datatype datatype) {
+  switch(datatype) {
+  case OUTPUT_STRING:
+    return sizeof(char*);
+    break;
+  case OUTPUT_SHORT:
+    return sizeof(short);
+    break;
+  case OUTPUT_USHORT:
+    return sizeof(unsigned short);
+    break;
+  case OUTPUT_FLOAT:
+    return sizeof(float);
+    break;
+  case OUTPUT_INT:
+    return sizeof(int);
+    break;
+  case OUTPUT_DOUBLE:
+    return sizeof(double);
+    break;
+  case OUTPUT_DATE:
+    return sizeof(struct date);
+    break;
+  case OUTPUT_TIME:
+    return sizeof(struct time);
+    break;
+  case OUTPUT_DATETIME:
+    return sizeof(struct datetime);
+    break;
+  }
+  assert(false);
+  return 0;
+}
 
+/*! \brief Release the output data stored in the buffer of this output
+    field.
+
+    Should be called to clear the results of the previous file while
+    keeping the output configuration intact, when writing the results
+    of a new file to output using the same output settings.*/
+static void output_field_clear(struct output_field *this_field) {
+  if(this_field->data) {
+    
+    if(this_field->memory_type == OUTPUT_STRING) {
+      // if data points to an array of char*, we have to iterate
+      // through the array and free each char* as well.
+      size_t ncols = this_field->data_cols;
+      char* (*data)[ncols] = (char * (*)[ncols]) this_field->data;
+      
+      // assume no strings occur after the first row with a null pointer:
+      for(size_t i = 0;  (*data)[0] != NULL &&  i < outputNbRecords; i++,data++) {
+        char *string = (*data)[0];
+        for(size_t j = 0; string != NULL && j < ncols; j++, string++)
+          free(string);
+      }  
+    }
+    free(this_field->data);
+    this_field->data = NULL;
+  }
+}
+
+/*! \brief Free all memory used by this output field and reset it
+   completely.*/
+static void output_field_free(struct output_field *this_field) {
+  output_field_clear(this_field);
+  if(this_field->fieldname)
+    free(this_field->fieldname);
+  if(this_field->attributes) {
+    for (int i=0; i<this_field->num_attributes; i++) {
+      free(this_field->attributes[i].label);
+      free(this_field->attributes[i].value);
+    }
+    free(this_field->attributes);
+    this_field->attributes = NULL;
+    this_field->num_attributes = 0;
+  }
+
+  this_field->index_cross = ITEM_NONE;
+  this_field->index_feno = ITEM_NONE;
+  this_field->index_calib = ITEM_NONE;
+  this_field->index_row = ITEM_NONE;
+}
+
+/*! \brief Allocate and initialize the buffers to save output data.
+
+  \param [in] pEngineContext structure including information on the current project
+
+  \retval ERROR_ID_ALLOC if allocation of the buffer outputRecords failed
+  \retval ERROR_ID_NONE else
+*/
 RC OUTPUT_LocalAlloc(ENGINE_CONTEXT *pEngineContext)
- {
+{
   // Declarations
 
   PROJECT             *pProject;                     // pointer to project data
-  PRJCT_RESULTS_ASCII *pResults;                     // pointer to results part of project
-  PRJCT_RESULTS_FIELDS *pField;
-  INT newRecordNumber,n;
-  INDEX indexField,i;
+  PRJCT_RESULTS *pResults;                     // pointer to results part of project
+  INT newRecordNumber;
   RC rc;                                                                        // return code
 
   // Initializations
@@ -2894,179 +1893,96 @@ RC OUTPUT_LocalAlloc(ENGINE_CONTEXT *pEngineContext)
   newRecordNumber=pEngineContext->recordNumber;
 
   pProject=(PROJECT *)&pEngineContext->project;
-  pResults=(PRJCT_RESULTS_ASCII *)&pProject->asciiResults;
+  pResults=(PRJCT_RESULTS *)&pProject->asciiResults;
 
   if (pResults->analysisFlag || pResults->calibFlag)
-   {
-    if (!newRecordNumber || (outputMaxRecords<newRecordNumber))
-     {
+    {
+      assert(newRecordNumber > 0);
+
       if (outputRecords!=NULL)
-       MEMORY_ReleaseBuffer("OUTPUT_LocalAlloc","outputRecords",outputRecords);
-
-      for (indexField=0;indexField<outputNbFields;indexField++)
-       if (outputColumns[indexField]!=NULL)
-        MEMORY_ReleaseBuffer("OUTPUT_LocalAlloc",outputFields[indexField].fieldName,outputColumns[indexField]);
-
-      memset(outputColumns,0,sizeof(DoasCh *)*MAX_FIELDS);
+        MEMORY_ReleaseBuffer("OUTPUT_LocalAlloc","outputRecords",outputRecords);
       outputRecords=NULL;
-      outputMaxRecords=0;
-     }
-
-    // Allocate new buffers
-
-    if (newRecordNumber>0)
-     {
-      if ((outputMaxRecords<newRecordNumber) && ((outputRecords=(OUTPUT_INFO *)MEMORY_AllocBuffer("OUTPUT_LocalAlloc","outputRecords",newRecordNumber,sizeof(OUTPUT_INFO),0,MEMORY_TYPE_STRUCT))==NULL))
-       rc=ERROR_ID_ALLOC;
+      
+      // Allocate new buffers
+      outputRecords=(OUTPUT_INFO *)MEMORY_AllocBuffer("OUTPUT_LocalAlloc","outputRecords",newRecordNumber,sizeof(OUTPUT_INFO),0,MEMORY_TYPE_STRUCT);
+      if (!outputRecords)
+        rc = ERROR_ID_ALLOC;
       else
-       {
         memset(outputRecords,0,sizeof(OUTPUT_INFO)*newRecordNumber);
 
-        for (indexField=0;(indexField<outputNbFields) && !rc;indexField++)
-         {
-          pField=&outputFields[indexField];
-
-          if (pField->fieldDim1==ITEM_NONE)
-           n=newRecordNumber;
-          else if (pField->fieldDim2==ITEM_NONE)
-           n=pField->fieldDim1;
-          else
-           n=pField->fieldDim1*pField->fieldDim2;
-
-          if ((outputMaxRecords<newRecordNumber) &&
-             ((outputColumns[indexField]=(DoasCh *)MEMORY_AllocBuffer("OUTPUT_LocalAlloc",outputFields[indexField].fieldName,n,pField->fieldSize,0,pField->fieldType))==NULL))
-
-           rc=ERROR_ID_ALLOC;
-
-          else
-
-           switch(pField->fieldType)
-            {
-          // -------------------------------------------------------------------------
-             case MEMORY_TYPE_STRING :
-              memset(outputColumns[indexField],0,n*pField->fieldSize);
-             break;
-          // -------------------------------------------------------------------------
-             case MEMORY_TYPE_USHORT :
-              for (i=0;i<n;i++)
-               ((DoasUS *)outputColumns[indexField])[i]=9999;
-             break;
-          // -------------------------------------------------------------------------
-             case MEMORY_TYPE_INT :
-              for (i=0;i<n;i++)
-               ((int *)outputColumns[indexField])[i]=9999;
-             break;
-          // -------------------------------------------------------------------------
-             case MEMORY_TYPE_FLOAT :
-              for (i=0;i<n;i++)
-               ((float *)outputColumns[indexField])[i]=9999.;
-             break;
-          // -------------------------------------------------------------------------
-             case MEMORY_TYPE_DOUBLE :
-              for (i=0;i<n;i++)
-               ((double *)outputColumns[indexField])[i]=(double)9999.;
-             break;
-          // -------------------------------------------------------------------------
-            }
-         }
-       }
-
-      if ((outputMaxRecords<newRecordNumber) && !rc)
-       outputMaxRecords=newRecordNumber;
-     }
-
-    outputNbRecords=0;
+      for (unsigned int i=0; i<output_num_fields; i++) {
+        struct output_field *pfield = &output_data_analysis[i];
+        output_field_clear(pfield);
+        pfield->data = calloc(newRecordNumber * pfield->data_cols , output_get_size(pfield->memory_type));
+      }
+      for (unsigned int i=0; i<calib_num_fields; i++) {
+        struct output_field *calib_field = &output_data_calib[i];
+        output_field_clear(calib_field);
+        int nb_win = KURUCZ_buffers[calib_field->index_row].Nb_Win;
+        calib_field->data = calloc(nb_win * calib_field->data_cols, output_get_size(calib_field->memory_type));
+      }
+      
+      outputNbRecords=0;
    }
 
-  // Return
-
   return rc;
- }
+}
 
-// -----------------------------------------------------------------------------
-// FUNCTION        OUTPUT_Alloc
-// -----------------------------------------------------------------------------
-// PURPOSE         Allocate and initialize general use buffers for output
-//
-// RETURN          ERROR_ID_ALLOC if one of the buffer allocation failed
-//                 ERROR_ID_NO in case of success
-// -----------------------------------------------------------------------------
+/*! \brief Allocate and initialize OUTPUT_AmfSpace.
 
+  \retval ERROR_ID_ALLOC if one of the buffer allocation failed
+  \retval ERROR_ID_NO in case of success
+*/
 RC OUTPUT_Alloc(void)
- {
-  // Declarations
-
-  RC rc;
-
-  // Initializations
-
-  rc=ERROR_ID_NO;
-
+{
+  RC rc=ERROR_ID_NO;
+  
   // Allocate buffers resp. for data to output
-
-  if (((outputFields=(PRJCT_RESULTS_FIELDS *)MEMORY_AllocBuffer("OUTPUT_Alloc","outputFields",MAX_FIELDS,sizeof(PRJCT_RESULTS_FIELDS),0,MEMORY_TYPE_STRUCT))==NULL) ||
-      ((outputColumns=(DoasCh **)MEMORY_AllocBuffer("OUTPUT_Alloc","outputColumns",MAX_FIELDS,sizeof(DoasCh *),0,MEMORY_TYPE_PTR))==NULL) ||
-      ((OUTPUT_AmfSpace=(AMF_SYMBOL *)MEMORY_AllocBuffer("OUTPUT_Alloc ","OUTPUT_AmfSpace",MAX_SYMB,sizeof(AMF_SYMBOL),0,MEMORY_TYPE_STRUCT))==NULL))
-
-   rc=ERROR_ID_ALLOC;
-
+  if ( (OUTPUT_AmfSpace=(AMF_SYMBOL *)MEMORY_AllocBuffer("OUTPUT_Alloc ","OUTPUT_AmfSpace",MAX_SYMB,sizeof(AMF_SYMBOL),0,MEMORY_TYPE_STRUCT))==NULL )
+     rc=ERROR_ID_ALLOC;
+  
   else
-   {
-    memset(outputFields,0,sizeof(PRJCT_RESULTS_FIELDS)*MAX_FIELDS);
-    memset(outputColumns,0,sizeof(DoasCh *)*MAX_FIELDS);
-
-    outputNbDataSet=0;
-    outputNbFields=0;
-   }
-
-  // Return
-
-  if (OUTPUT_AmfSpace!=NULL)
-   memset(OUTPUT_AmfSpace,0,sizeof(AMF_SYMBOL)*MAX_SYMB);
-
+    {
+      memset(OUTPUT_AmfSpace,0,sizeof(AMF_SYMBOL)*MAX_SYMB);
+    }
+  
   return rc;
- }
+}
 
-
-// -----------------------------------------------------------------------------
-// FUNCTION        OUTPUT_Free
-// -----------------------------------------------------------------------------
-// PURPOSE         Release buffer allocated for output
-// -----------------------------------------------------------------------------
-
+/*! Release buffers allocated for output.*/
 void OUTPUT_Free(void)
- {
+{
   if (OUTPUT_AmfSpace!=NULL)
    MEMORY_ReleaseBuffer("OUTPUT_Free ","OUTPUT_AmfSpace",OUTPUT_AmfSpace);
 
-  if (outputFields!=NULL)
-   MEMORY_ReleaseBuffer("OUTPUT_Free","outputFields",outputFields);
-  if (outputColumns!=NULL)
-   MEMORY_ReleaseBuffer("OUTPUT_Free","outputColumns",outputColumns);
   if (outputRecords!=NULL)
    MEMORY_ReleaseBuffer("OUTPUT_Free","outputRecords",outputRecords);
 
   OUTPUT_AmfSpace=NULL;
-  outputFields=NULL;
-  outputColumns=NULL;
   outputRecords=NULL;
- }
+}
 
-void write_automatic_reference_info(FILE *fp, ENGINE_CONTEXT *pEngineContext)
-{
-  for(int analysiswindow = 0; analysiswindow < NFeno; analysiswindow++) {
-   for(int row=0; row< OMI_TOTAL_ROWS; row++)
-    {
-     FENO *pTabFeno = &TabFeno[row][analysiswindow];
-     if (!pTabFeno->hidden
-         && pTabFeno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_AUTOMATIC
-         && pTabFeno->ref_description != NULL)
-      {
-       fprintf(fp, "# %s, row %d: automatic reference:\n%s\n",
-               pTabFeno->windowName,
-               row,
-               pTabFeno->ref_description);
-      }
-    }
+/*! \brief Get the format corresponding to a file extension.
+
+  We look for the given extension in the array
+  #output_file_extensions.  If the extension is found, the offset
+  within the array corresponds to the enum value.  If not: return
+  -1.*/
+enum output_format output_get_format(const char *fileext) {
+  size_t num_formats = sizeof(output_file_extensions)/sizeof(output_file_extensions[0]);
+  const char **array_offset = (const char **) lfind(fileext, output_file_extensions, &num_formats, sizeof(output_file_extensions[0]), &compare_string);
+  if (array_offset)
+    return array_offset - output_file_extensions; // offset in the array output_file_extensions corresponds to the enum value
+  else
+    return -1; // not found
+}
+
+/*! \brief Make a deep copy of an attribute list. */
+struct field_attribute *copy_attributes(const struct field_attribute *attributes, int num_attributes) {
+  struct field_attribute *copy = malloc(num_attributes * sizeof(*copy));
+  for (int i=0; i<num_attributes; i++) {
+    copy[i].label = strdup(attributes[i].label);
+    copy[i].value = strdup(attributes[i].value);
   }
+  return copy;
 }

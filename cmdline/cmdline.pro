@@ -18,7 +18,7 @@ INCLUDEPATH  += $$QWT_INC_PATH $$CODA_INC_PATH $$HDF_INC_PATH $$HDFEOS_INC_PATH
 
 unix {
   INCLUDEPATH  += ../mediator ../common ../qdoas ../convolution ../usamp ../engine ../ring
-  LIBS         += -lcoda -lhdfeos -lmfhdf -ldf -lz
+  LIBS         += -lcoda -lhdfeos -lmfhdf -ldf -lz -lhe5_hdfeos -lhdf5 -lhdf5_hl
 }
 
 win32 {
@@ -189,6 +189,8 @@ SOURCES += ../engine/xsconv.c
 SOURCES += ../engine/engine_xsconv.c
 SOURCES += ../engine/zenithal.c
 SOURCES += ../engine/spectral_range.c
+SOURCES += ../engine/output_ascii.c
+SOURCES += ../engine/output_hdfeos5.c
 
 #----------------------------------------------
 # Engine Header files
@@ -204,6 +206,7 @@ HEADERS += ../engine/scia_l1c_lib.h
 HEADERS += ../engine/windoas.h
 HEADERS += ../engine/engine_xsconv.h
 HEADERS += ../engine/spectral_range.h
+HEADERS += ../engine/output.h ../engine/output_private.h ../engine/output_common.h ../engine/output_formats.h
 
 #----------------------------------------------
 # Install

@@ -42,7 +42,7 @@ class CAnalysisWindowConfigItem
   mediate_analysis_window_t* properties(void); // WARNING : allows (by design) poking at the internals ...
   const mediate_analysis_window_t* properties(void) const;
 
-  const int SetProperties(mediate_analysis_window_t *p) const;
+  int SetProperties(mediate_analysis_window_t *p) const;
 
  private:
   QString m_name;
@@ -71,8 +71,7 @@ class CProjectConfigItem
   CProjectConfigTreeNode* rootNode(void); // WARNING : allows (by design) poking at the internals ...
   const CProjectConfigTreeNode* rootNode(void) const;
 
-
-  const int SetProperties(mediate_project_t *p) const;
+  int SetProperties(mediate_project_t *p) const;
 
  private:
   QString m_name;

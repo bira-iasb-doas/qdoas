@@ -1,7 +1,8 @@
 #ifndef SPECTRAL_RANGE_H
 #define SPECTRAL_RANGE_H
 
-/*! \file spectral_range.h A linked list of valid intervals of the spectrum.
+/*! \file spectral_range.h \brief A linked list describing the valid
+ * intervals of the spectrum.
  *  
  * Parts of the spectrum may be excluded for many reasons (not
  * relevant for the analysis, measurement error, ...).  spectral_range

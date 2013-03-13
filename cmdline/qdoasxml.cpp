@@ -341,8 +341,6 @@ RC ParseInstrumental(QStringList &xmlFields,int xmlFieldN,int startingField,QStr
       std::cout << "project/instrumental/gdpascii field can not be changed yet" << std::endl;
      else if (xmlFields.at(indexField)=="gdpbin")
       std::cout << "project/instrumental/gdpbin field can not be changed yet" << std::endl;
-     else if (xmlFields.at(indexField)=="sciahdf")
-      std::cout << "project/instrumental/sciahdf field can not be changed yet" << std::endl;
      else if (xmlFields.at(indexField)=="sciapds")
       std::cout << "project/instrumental/sciapds field can not be changed yet" << std::endl;
      else if (xmlFields.at(indexField)=="uoft")

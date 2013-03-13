@@ -24,6 +24,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "mediate_limits.h"
 #include "mediate_general.h"
 #include "constants.h"
+#include "output_formats.h"
 
 #if defined(_cplusplus) || defined(__cplusplus)
 extern "C" {
@@ -390,7 +391,6 @@ extern "C" {
     struct instrumental_ccdeev ccdeev;
     struct instrumental_gdp gdpascii;
     struct instrumental_gdp gdpbin;
-    struct instrumental_scia sciahdf;
     struct instrumental_scia sciapds;
     struct instrumental_minimum uoft;
     struct instrumental_minimum noaa;
@@ -423,7 +423,8 @@ extern "C" {
     int calibrationFlag;
     int referenceFlag; // write components of automatic reference to output
     int configurationFlag;
-    int binaryFormatFlag;
+    enum output_format file_format;
+    char swath_name[HDFEOS_OBJ_LEN_MAX];  // for HDF-EOS5 output
     int directoryFlag;
     int filenameFlag;
     char flux[FLUX_BUFFER_LENGTH];

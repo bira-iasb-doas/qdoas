@@ -85,6 +85,7 @@
 
 #include "mediate.h"
 #include "engine.h"
+#include "output.h"
 
 // ====================
 // CONSTANTS DEFINITION

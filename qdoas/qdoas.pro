@@ -24,7 +24,7 @@ contains ( HELP_SYSTEM, assistant ) {
 
 unix {
   INCLUDEPATH  += ../mediator ../common ../engine
-  LIBS         += -lcoda -lhdfeos -lmfhdf -ldf -lz
+  LIBS         += -lcoda -lhdfeos -lmfhdf -ldf -lz -lhe5_hdfeos -lhdf5 -lhdf5_hl
 }
 
 win32 {
@@ -279,6 +279,8 @@ SOURCES += ../engine/wvlen_det_pix.c
 SOURCES += ../engine/xsconv.c
 SOURCES += ../engine/zenithal.c
 SOURCES += ../engine/spectral_range.c
+SOURCES += ../engine/output_ascii.c
+SOURCES += ../engine/output_hdfeos5.c
 
 #----------------------------------------------
 # Engine Header files
@@ -294,6 +296,7 @@ HEADERS += ../engine/scia_l1c_lib.h
 HEADERS += ../engine/windoas.h
 HEADERS += ../engine/constants.h
 HEADERS += ../engine/spectral_range.h
+HEADERS += ../engine/output.h ../engine/output_private.h ../engine/output_common.h ../engine/output_formats.h
 
 #----------------------------------------------
 # Install
