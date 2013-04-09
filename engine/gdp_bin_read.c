@@ -491,22 +491,23 @@ RC GDP_BIN_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
 
             if (!fread(&pOrbitFile->gdpBinSpectrum,sizeof(SPECTRUM_RECORD),1,fp))
              rc=ERROR_SetLast("GDP_Bin_Set (2)",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,fileName);
-            else
+            else if (((pOrbitFile->gdpBinHeader.version<40) && !fread(&pOrbitFile->gdpBinGeo3,sizeof(GEO_3),1,fp)) ||
+                     ((pOrbitFile->gdpBinHeader.version>=40) && !fread(&pOrbitFile->gdpBinGeo4,sizeof(GEO_4),1,fp)))    
              {
               pOrbitFile->gdpBinInfo[indexRecord].pixelNumber=pOrbitFile->gdpBinSpectrum.groundPixelID;
               pOrbitFile->gdpBinInfo[indexRecord].pixelType=pOrbitFile->gdpBinSpectrum.groundPixelType;
-
+              
               if (pOrbitFile->gdpBinHeader.version<40)
                {
-                pOrbitFile->gdpBinInfo[indexRecord].sza=(double)pOrbitFile->gdpBinSpectrum.geo.geo3.szaArray[1];
-                pOrbitFile->gdpBinInfo[indexRecord].lat=(double)0.01*pOrbitFile->gdpBinSpectrum.geo.geo3.latArray[4];
-                pOrbitFile->gdpBinInfo[indexRecord].lon=(double)0.01*pOrbitFile->gdpBinSpectrum.geo.geo3.lonArray[4];
+                pOrbitFile->gdpBinInfo[indexRecord].sza=(double)pOrbitFile->gdpBinGeo3.szaArray[1];
+                pOrbitFile->gdpBinInfo[indexRecord].lat=(double)0.01*pOrbitFile->gdpBinGeo3.latArray[4];
+                pOrbitFile->gdpBinInfo[indexRecord].lon=(double)0.01*pOrbitFile->gdpBinGeo3.lonArray[4];
                }
               else
                {
-                pOrbitFile->gdpBinInfo[indexRecord].sza=(double)pOrbitFile->gdpBinSpectrum.geo.geo4.szaArrayBOA[1];
-                pOrbitFile->gdpBinInfo[indexRecord].lat=(double)0.01*pOrbitFile->gdpBinSpectrum.geo.geo4.latArray[4];
-                pOrbitFile->gdpBinInfo[indexRecord].lon=(double)0.01*pOrbitFile->gdpBinSpectrum.geo.geo4.lonArray[4];
+                pOrbitFile->gdpBinInfo[indexRecord].sza=(double)pOrbitFile->gdpBinGeo4.szaArrayBOA[1];
+                pOrbitFile->gdpBinInfo[indexRecord].lat=(double)0.01*pOrbitFile->gdpBinGeo4.latArray[4];
+                pOrbitFile->gdpBinInfo[indexRecord].lon=(double)0.01*pOrbitFile->gdpBinGeo4.lonArray[4];
                }
 
               GdpBinSort(indexRecord,0,indexRecord,indexFile);                 // sort latitudes
@@ -625,8 +626,10 @@ RC GDP_BIN_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,FILE *specFp,INDEX i
     // Complete record read out
 
     fseek(fp,(DoasI32)pOrbitFile->gdpBinHeader.headerSize+(recordNo-1)*pOrbitFile->gdpBinHeader.recordSize,SEEK_SET);
-
+    
     if (!fread(&pOrbitFile->gdpBinSpectrum,sizeof(SPECTRUM_RECORD),1,fp) ||
+       ((pOrbitFile->gdpBinHeader.version<40) && !fread(&pOrbitFile->gdpBinGeo3,sizeof(GEO_3),1,fp)) ||
+       ((pOrbitFile->gdpBinHeader.version>=40) && !fread(&pOrbitFile->gdpBinGeo4,sizeof(GEO_4),1,fp)) ||        
         !fread(pOrbitFile->gdpBinScalingFactor,sizeof(float)*pOrbitFile->gdpBinHeader.nbands,1,fp) ||
         !fread(spectrum,sizeof(unsigned short)*pOrbitFile->gdpBinSpectraSize,1,fp) ||
        (pRecord->useErrors &&
@@ -658,25 +661,25 @@ RC GDP_BIN_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,FILE *specFp,INDEX i
 
       if (pOrbitFile->gdpBinHeader.version<40)
        {
-        pRecord->Zm       = (double)pOrbitFile->gdpBinSpectrum.geo.geo3.szaArray[1];
-        pRecord->Azimuth  = (double)pOrbitFile->gdpBinSpectrum.geo.geo3.aziArray[1];
-        pRecord->longitude=0.01*pOrbitFile->gdpBinSpectrum.geo.geo3.lonArray[4];
-        pRecord->latitude =0.01*pOrbitFile->gdpBinSpectrum.geo.geo3.latArray[4];
-        pRecord->zenithViewAngle=(float)0.01*pOrbitFile->gdpBinSpectrum.geo.geo3.losZa[1];
-        pRecord->azimuthViewAngle=(float)0.01*pOrbitFile->gdpBinSpectrum.geo.geo3.losAzim[1];
-        pRecord->cloudFraction=(float)pOrbitFile->gdpBinSpectrum.geo.geo3.cloudFraction;
-        pRecord->cloudTopPressure=(float)pOrbitFile->gdpBinSpectrum.geo.geo3.cloudTopPressure;
+        pRecord->Zm       = (double)pOrbitFile->gdpBinGeo3.szaArray[1];
+        pRecord->Azimuth  = (double)pOrbitFile->gdpBinGeo3.aziArray[1];
+        pRecord->longitude=0.01*pOrbitFile->gdpBinGeo3.lonArray[4];
+        pRecord->latitude =0.01*pOrbitFile->gdpBinGeo3.latArray[4];
+        pRecord->zenithViewAngle=(float)0.01*pOrbitFile->gdpBinGeo3.losZa[1];
+        pRecord->azimuthViewAngle=(float)0.01*pOrbitFile->gdpBinGeo3.losAzim[1];
+        pRecord->cloudFraction=(float)pOrbitFile->gdpBinGeo3.cloudFraction;
+        pRecord->cloudTopPressure=(float)pOrbitFile->gdpBinGeo3.cloudTopPressure;
        }
       else
        {
-        pRecord->Zm       = (double)pOrbitFile->gdpBinSpectrum.geo.geo4.szaArrayBOA[1];
-        pRecord->Azimuth  = (double)pOrbitFile->gdpBinSpectrum.geo.geo4.aziArrayBOA[1];
-        pRecord->longitude=0.01*pOrbitFile->gdpBinSpectrum.geo.geo4.lonArray[4];
-        pRecord->latitude =0.01*pOrbitFile->gdpBinSpectrum.geo.geo4.latArray[4];
-        pRecord->zenithViewAngle=(float)pOrbitFile->gdpBinSpectrum.geo.geo4.losZaBOA[1];
-        pRecord->azimuthViewAngle=(float)pOrbitFile->gdpBinSpectrum.geo.geo4.losAzimBOA[1];
-        pRecord->cloudFraction=(float)pOrbitFile->gdpBinSpectrum.geo.geo4.cloudInfo.CloudFraction[0];
-        pRecord->cloudTopPressure=(float)pOrbitFile->gdpBinSpectrum.geo.geo4.cloudInfo.CTP[0];
+        pRecord->Zm       = (double)pOrbitFile->gdpBinGeo4.szaArrayBOA[1];
+        pRecord->Azimuth  = (double)pOrbitFile->gdpBinGeo4.aziArrayBOA[1];
+        pRecord->longitude=0.01*pOrbitFile->gdpBinGeo4.lonArray[4];
+        pRecord->latitude =0.01*pOrbitFile->gdpBinGeo4.latArray[4];
+        pRecord->zenithViewAngle=(float)pOrbitFile->gdpBinGeo4.losZaBOA[1];
+        pRecord->azimuthViewAngle=(float)pOrbitFile->gdpBinGeo4.losAzimBOA[1];
+        pRecord->cloudFraction=(float)pOrbitFile->gdpBinGeo4.cloudInfo.CloudFraction[0];
+        pRecord->cloudTopPressure=(float)pOrbitFile->gdpBinGeo4.cloudInfo.CTP[0];
        }
 
       pRecord->present_time.ti_hour=pOrbitFile->gdpBinSpectrum.dateAndTime.ti_hour;
@@ -701,7 +704,7 @@ RC GDP_BIN_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,FILE *specFp,INDEX i
       // Convert spectrum from short integers to double
 
       GdpBinLambda(pBuffers->lambda,pOrbitFile->gdpBinSpectrum.indexSpectralParam,GDP_BIN_currentFileIndex);
-
+      
       for (i=0,j=pOrbitFile->gdpBinStartPixel[pOrbitFile->gdpBinBandIndex],Max=(double)0.;
            j<pOrbitFile->gdpBinStartPixel[pOrbitFile->gdpBinBandIndex]+pOrbitFile->gdpBinBandInfo[pOrbitFile->gdpBinBandIndex].bandSize;i++,j++)
        {

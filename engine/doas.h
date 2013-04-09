@@ -1140,9 +1140,7 @@ typedef struct _usamp
  {
   MATRIX_OBJECT hrSolar;
   INT     *lambdaRange[4];                       // for each analysis window, give the lambda range
-  double **kuruczConvoluted,                     // high resolution kurucz convoluted on its own calibration
-         **kuruczConvoluted2,                    // second derivatives of previous vector
-         **kuruczInterpolated,                   // high resolution and convoluted kurucz on analysis windows calibrations
+  double **kuruczInterpolated,                   // high resolution and convoluted kurucz on analysis windows calibrations
          **kuruczInterpolated2;                  // second derivatives of previous vectors
  }
 USAMP;
@@ -1381,14 +1379,8 @@ typedef struct
   short           groundPixelID;              // ground pixel order
   char            groundPixelType;            // ground pixel type
   char            indexSpectralParam;         // index of set of spectral parameters in reference record to use for building calibration
-  union _geo
-   {
-    GEO_3 geo3;
-    GEO_4 geo4;
-   }
-  geo;
  }
-SPECTRUM_RECORD;
+SPECTRUM_RECORD;        
 
 // Keep useful information for fast access to a record
 
@@ -1412,6 +1404,8 @@ typedef struct _GOMEOrbitFiles                                                  
   GDP_BIN_FILE_HEADER gdpBinHeader;
   GDP_BIN_BAND_HEADER gdpBinBandInfo[SCIENCE_DATA_DEFINED];
   SPECTRUM_RECORD     gdpBinSpectrum;
+  GEO_3               gdpBinGeo3;
+  GEO_4               gdpBinGeo4;  
   int                 gdpBinSpectraSize,                                        // total size of spectra vector GDP_BIN_coeff
                       gdpBinCoeffSize,                                          // number of polynomial coefficients in vector
                       gdpBinStartPixel[SCIENCE_DATA_DEFINED];                   // starting pixels for bands present in the file

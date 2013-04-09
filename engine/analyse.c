@@ -5704,10 +5704,10 @@ RC ANALYSE_UsampBuild(INT analysisFlag,INT gomeFlag)      // OMI ???
 {
   // Declarations
 
-  MATRIX_OBJECT xsKurucz,xsSlit,xsSlit2,slitXs,slitXs2;
+  MATRIX_OBJECT khrConvoluted,xsSlit,xsSlit2;
   INDEX indexFeno,i,indexPixMin,indexPixMax,j;
-  INT slitType;
-  double slitParam2,*lambda,*lambda2,lambda0,x0;
+  INT slitType,indexFenoColumn;
+  double slitParam2,*lambda,*lambda2,lambda0,x0;                                  
   FENO *pTabFeno;
   RC rc;
 
@@ -5716,13 +5716,15 @@ RC ANALYSE_UsampBuild(INT analysisFlag,INT gomeFlag)      // OMI ???
   lambda2=NULL;
   memset(&xsSlit,0,sizeof(MATRIX_OBJECT));
   memset(&xsSlit2,0,sizeof(MATRIX_OBJECT));
-  memset(&slitXs,0,sizeof(MATRIX_OBJECT));
-  memset(&slitXs2,0,sizeof(MATRIX_OBJECT));
-  memset(&xsKurucz,0,sizeof(MATRIX_OBJECT));
-  slitParam2=(double)0.;
-  rc=ERROR_ID_NO;
-
+  memset(&khrConvoluted,0,sizeof(MATRIX_OBJECT));  
+  
+  slitParam2=(pKuruczOptions->fwhmType!=SLIT_TYPE_INVPOLY)?(double)0.:(double)pKuruczOptions->invPolyDegree;
+  
+  
+  rc=ERROR_ID_NO;     
+  
   slitType=pSlitOptions->slitFunction.slitType;
+  indexFenoColumn=0;                                                            // later, use the second dimension of TabFeno (and add a second dimension to undersampling buffers)
 
   // Buffer allocation
 
@@ -5737,7 +5739,7 @@ RC ANALYSE_UsampBuild(INT analysisFlag,INT gomeFlag)      // OMI ???
 
    for (indexFeno=0;(indexFeno<NFeno)&&!rc;indexFeno++)
     {
-     pTabFeno=&TabFeno[0][indexFeno];
+     pTabFeno=&TabFeno[indexFenoColumn][indexFeno];         
 
      // Check options combinations
 
@@ -5769,154 +5771,117 @@ RC ANALYSE_UsampBuild(INT analysisFlag,INT gomeFlag)      // OMI ???
         for (i=indexPixMin+1,lambda2[indexPixMin]=lambda[indexPixMin]-pUsamp->phase;i<indexPixMax;i++)
          lambda2[i]=lambda[i]-pUsamp->phase; //  (double)(1.-pUsamp->phase)*lambda[i-1]+pUsamp->phase*lambda[i];
        else
-        {
-         memcpy(lambda2,ANALYSE_shift,sizeof(double)*pTabFeno->NDET);
-
-         // not used anymore as we work only in nm now if (pAnalysisOptions->units==PRJCT_ANLYS_UNITS_PIXELS)
-         // not used anymore as we work only in nm now  {
-         // not used anymore as we work only in nm now   for (;(indexPixMin<indexPixMax) && (ANALYSE_shift[indexPixMin]<1.e-3);indexPixMin++);
-         // not used anymore as we work only in nm now   for (;(indexPixMax>=indexPixMin) && (ANALYSE_shift[indexPixMax]<1.e-3);indexPixMax--);
-         // not used anymore as we work only in nm now
-         // not used anymore as we work only in nm now   rc=SPLINE_Vector(ANALYSE_splineX,lambda,ANALYSE_splineX2,pTabFeno->NDET,&ANALYSE_shift[indexPixMin],
-         // not used anymore as we work only in nm now                    &lambda2[indexPixMin],(indexPixMax-indexPixMin+1),pAnalysisOptions->interpol,"ANALYSE_UsampBuild ");
-         // not used anymore as we work only in nm now  }
-        }
-
+        memcpy(lambda2,ANALYSE_shift,sizeof(double)*pTabFeno->NDET);
+                        
        // Not allowed combinations :
        //
        //     - fit slit function with calibration and apply calibration on spec only or on ref and spec;
        //     - fwhmCorrectionFlag and no calibration or fit slit function with the calibration
-
-
-       if (MATRIX_Allocate(&xsKurucz,ANALYSE_usampBuffers.lambdaRange[1][indexFeno],2,0,0,1,"Undersampling"))
+       
+       // convolve the high resolution solar spectrum on its own grid
+                 
+       if (MATRIX_Allocate(&khrConvoluted,ANALYSE_usampBuffers.lambdaRange[1][indexFeno],2,0,0,1,"ANALYSE_UsampBuild"))
         rc=ERROR_ID_ALLOC;
 
        else if ((((pTabFeno->useKurucz==ANLYS_KURUCZ_REF_AND_SPEC) || (pTabFeno->useKurucz==ANLYS_KURUCZ_SPEC)) && pKuruczOptions->fwhmFit) ||
                 ((!pTabFeno->useKurucz || pKuruczOptions->fwhmFit) && pSlitOptions->fwhmCorrectionFlag))
 
-        rc=ERROR_SetLast("ANALYSE_UsampBuild",ERROR_TYPE_FATAL,ERROR_ID_OPTIONS,"Undersampling ",pTabFeno->windowName);
+        rc=ERROR_SetLast("ANALYSE_UsampBuild",ERROR_TYPE_FATAL,ERROR_ID_OPTIONS,"ANALYSE_UsampBuild",pTabFeno->windowName);
 
 
        // Convolution with user-defined slit function
 
-       else
+       else if (!pTabFeno->useKurucz ||                                         // don't apply calibration
+             !pKuruczOptions->fwhmFit)                                          // apply calibration but don't fit the slit function
+        {      
+        	memcpy(khrConvoluted.matrix[0],&ANALYSE_usampBuffers.hrSolar.matrix[0][ANALYSE_usampBuffers.lambdaRange[0][indexFeno]],sizeof(double)*khrConvoluted.nl);
+        	
+        	// Convolution with slit function from slit tab page of project properties
+        	
+         rc=XSCONV_TypeStandard(&khrConvoluted,0,khrConvoluted.nl,&ANALYSE_usampBuffers.hrSolar,&ANALYSIS_slit,&ANALYSIS_slit2,&ANALYSE_usampBuffers.hrSolar,NULL,
+                                 pSlitOptions->slitFunction.slitType,pSlitOptions->slitFunction.slitParam,pSlitOptions->slitFunction.slitParam2,pSlitOptions->slitFunction.slitWveDptFlag);
+        }   
+          
+       else if (!(rc=MATRIX_Allocate(&xsSlit,pTabFeno->NDET,(pKuruczOptions->fwhmType!=SLIT_TYPE_FILE)?2:3,0,0,1,"ANALYSE_UsampBuild")) && 
+                ((pTabFeno->fwhmVector[1]==NULL) || (pKuruczOptions->fwhmType==SLIT_TYPE_FILE) || !(rc=MATRIX_Allocate(&xsSlit2,pTabFeno->NDET,2,0,0,1,"ANALYSE_UsampBuild"))))
         {
          // Local initializations
 
-         xsKurucz.nl=ANALYSE_usampBuffers.lambdaRange[1][indexFeno];
-
-         memcpy(xsKurucz.matrix[1],ANALYSE_usampBuffers.kuruczConvoluted[indexFeno],sizeof(double)*xsKurucz.nl);
-         memcpy(xsKurucz.deriv2[1],ANALYSE_usampBuffers.kuruczConvoluted2[indexFeno],sizeof(double)*xsKurucz.nl);
-         memcpy(xsKurucz.matrix[0],&ANALYSE_usampBuffers.hrSolar.matrix[0][ANALYSE_usampBuffers.lambdaRange[0][indexFeno]],sizeof(double)*xsKurucz.nl);
-
-
-         if (!pTabFeno->useKurucz ||                                         // don't apply calibration
-             !pKuruczOptions->fwhmFit)                                       // apply calibration but don't fit the slit function
+         memcpy(khrConvoluted.matrix[0],&ANALYSE_usampBuffers.hrSolar.matrix[0][ANALYSE_usampBuffers.lambdaRange[0][indexFeno]],sizeof(double)*khrConvoluted.nl);
+         
+         memcpy(xsSlit.matrix[0],pTabFeno->LambdaK,sizeof(double)*pTabFeno->NDET);
+         memcpy(xsSlit.matrix[1],pTabFeno->fwhmVector[0],sizeof(double)*pTabFeno->NDET);
+         memcpy(xsSlit.deriv2[1],pTabFeno->fwhmDeriv2[0],sizeof(double)*pTabFeno->NDET);
+         xsSlit.nl=pTabFeno->NDET; 
+         
+         if (pKuruczOptions->fwhmType==SLIT_TYPE_FILE)
           {
-           // Convolution with slit function from slit tab page of project properties
-
-           if ((ANALYSIS_slit.matrix!=NULL) && ANALYSIS_slit.nl && ANALYSIS_slit.nc &&
-               !(rc=MATRIX_Allocate(&xsSlit,ANALYSIS_slit.nl,2,0,0,1,"ANALYSE_UsampBuild")))
-            {
-             memcpy(xsSlit.matrix[0],ANALYSIS_slit.matrix[ANALYSIS_slit.basec]+ANALYSIS_slit.basel,sizeof(double)*ANALYSIS_slit.nl);
-             memcpy(xsSlit.matrix[1],ANALYSIS_slit.matrix[ANALYSIS_slit.basec+1]+ANALYSIS_slit.basel,sizeof(double)*ANALYSIS_slit.nl);
-             memcpy(xsSlit.deriv2[1],ANALYSIS_slit.deriv2[ANALYSIS_slit.basec+1]+ANALYSIS_slit.basel,sizeof(double)*ANALYSIS_slit.nl);
-
-             xsSlit.nl=ANALYSIS_slit.nl;
-            }
-
-           // Convolution with slit function from slit tab page of project properties
-
-           if ((ANALYSIS_slit2.matrix!=NULL) && ANALYSIS_slit2.nl && ANALYSIS_slit2.nc &&
-               !(rc=MATRIX_Allocate(&xsSlit2,ANALYSIS_slit2.nl,2,0,0,1,"ANALYSE_UsampBuild")))
-            {
-             memcpy(xsSlit2.matrix[0],ANALYSIS_slit2.matrix[ANALYSIS_slit2.basec]+ANALYSIS_slit2.basel,sizeof(double)*ANALYSIS_slit2.nl);
-             memcpy(xsSlit2.matrix[1],ANALYSIS_slit2.matrix[ANALYSIS_slit2.basec+1]+ANALYSIS_slit2.basel,sizeof(double)*ANALYSIS_slit2.nl);
-             memcpy(xsSlit2.deriv2[1],ANALYSIS_slit2.deriv2[ANALYSIS_slit2.basec+1]+ANALYSIS_slit2.basel,sizeof(double)*ANALYSIS_slit2.nl);
-
-             xsSlit2.nl=ANALYSIS_slit2.nl;
-            }
-
-           if (!rc && !(rc=XSCONV_TypeStandard(&xsKurucz,0,xsKurucz.nl,&ANALYSE_usampBuffers.hrSolar,&xsSlit,&xsSlit2,&ANALYSE_usampBuffers.hrSolar,NULL,
-                                               pSlitOptions->slitFunction.slitType,
-                                               pSlitOptions->slitFunction.slitParam,pSlitOptions->slitFunction.slitParam2,pSlitOptions->slitFunction.slitWveDptFlag)))
-
-            rc=SPLINE_Deriv2(xsKurucz.matrix[0],xsKurucz.matrix[1],xsKurucz.deriv2[1],xsKurucz.nl,"ANALYSE_UsampBuild (2) ");
+          	memcpy(xsSlit.matrix[2],pTabFeno->fwhmVector[1],sizeof(double)*pTabFeno->NDET);
+           memcpy(xsSlit.deriv2[2],pTabFeno->fwhmDeriv2[1],sizeof(double)*pTabFeno->NDET);
           }
 
-         // Convolution with slit function resulting from Kurucz
-
-         else if (!(rc=MATRIX_Allocate(&xsSlit,pTabFeno->NDET,2,0,0,1,"ANALYSE_UsampBuild")) &&
-                  ((pKuruczOptions->fwhmType==SLIT_TYPE_GAUSS) || (pKuruczOptions->fwhmType==SLIT_TYPE_INVPOLY) ||
-                   !(rc=MATRIX_Allocate(&xsSlit2,pTabFeno->NDET,2,0,0,1,"ANALYSE_UsampBuild"))))
+         if ((pKuruczOptions->fwhmType!=SLIT_TYPE_FILE) && (pTabFeno->fwhmVector[1]!=NULL))
           {
-           memcpy(xsSlit.matrix[0],pTabFeno->LambdaK,sizeof(double)*pTabFeno->NDET);
-           memcpy(xsSlit.matrix[1],pTabFeno->fwhmVector[0],sizeof(double)*pTabFeno->NDET);
-           xsSlit.nl=pTabFeno->NDET;
-
-           if ((pKuruczOptions->fwhmType!=SLIT_TYPE_GAUSS) && (pKuruczOptions->fwhmType!=SLIT_TYPE_INVPOLY))
-            {
-             memcpy(xsSlit2.matrix[0],pTabFeno->LambdaK,sizeof(double)*pTabFeno->NDET);
-             memcpy(xsSlit2.matrix[1],pTabFeno->fwhmVector[1],sizeof(double)*pTabFeno->NDET);
-             xsSlit2.nl=pTabFeno->NDET;
-            }
-
-           if (!(rc=SPLINE_Deriv2(xsSlit.matrix[0],xsSlit.matrix[1],xsSlit.deriv2[1],xsSlit.nl,"ANALYSE_UsampBuild (Slit) ")) &&
-               ((pKuruczOptions->fwhmType==SLIT_TYPE_GAUSS) || (pKuruczOptions->fwhmType==SLIT_TYPE_INVPOLY) || !(rc=SPLINE_Deriv2(xsSlit2.matrix[0],xsSlit2.matrix[1],xsSlit2.deriv2[1],xsSlit2.nl,"ANALYSE_UsampBuild (Slit2) "))))
-            rc=XSCONV_TypeStandard(&xsKurucz,0,xsKurucz.nl,&ANALYSE_usampBuffers.hrSolar,&xsSlit,&xsSlit2,&ANALYSE_usampBuffers.hrSolar,NULL,
-                                   slitType,(double)0.,slitParam2/pTabFeno->NDET,1);
-          }
-
+           memcpy(xsSlit2.matrix[0],pTabFeno->LambdaK,sizeof(double)*pTabFeno->NDET);
+           memcpy(xsSlit2.matrix[1],pTabFeno->fwhmVector[1],sizeof(double)*pTabFeno->NDET);
+           memcpy(xsSlit2.deriv2[1],pTabFeno->fwhmDeriv2[1],sizeof(double)*pTabFeno->NDET);
+           xsSlit2.nl=pTabFeno->NDET;    
+          } 
+         
+         if (pKuruczOptions->fwhmType!=SLIT_TYPE_FILE)
+          rc=XSCONV_TypeStandard(&khrConvoluted,0,khrConvoluted.nl,&ANALYSE_usampBuffers.hrSolar,&xsSlit,&xsSlit2,&ANALYSE_usampBuffers.hrSolar,NULL,
+                                  pKuruczOptions->fwhmType,(double)0.,slitParam2,1);
+         else
+          rc=XSCONV_TypeStandard(&khrConvoluted,0,khrConvoluted.nl,&ANALYSE_usampBuffers.hrSolar,&KURUCZ_buffers[indexFenoColumn].slitFunction,&xsSlit,&ANALYSE_usampBuffers.hrSolar,NULL,
+                                  pKuruczOptions->fwhmType,(double)0.,slitParam2,1);                                           
+                                   
          MATRIX_Free(&xsSlit,"ANALYSE_UsampBuild");
-
-         // Pre-Interpolation on analysis window wavelength scale
-
-         if (!rc &&
-             !(rc=SPLINE_Deriv2(xsKurucz.matrix[0],xsKurucz.matrix[1],xsKurucz.deriv2[1],xsKurucz.nl,"ANALYSE_UsampBuild (1) ")))
-          {
-           memcpy(ANALYSE_usampBuffers.kuruczInterpolated[indexFeno],ANALYSE_zeros,sizeof(double)*pTabFeno->NDET);
-           memcpy(ANALYSE_usampBuffers.kuruczInterpolated2[indexFeno],ANALYSE_zeros,sizeof(double)*pTabFeno->NDET);
-
-           indexPixMin=ANALYSE_usampBuffers.lambdaRange[2][indexFeno]=FNPixel(lambda,xsKurucz.matrix[0][0],pTabFeno->NDET,PIXEL_AFTER);
-           indexPixMax=FNPixel(lambda,xsKurucz.matrix[0][xsKurucz.nl-1],pTabFeno->NDET,PIXEL_BEFORE);
-           ANALYSE_usampBuffers.lambdaRange[3][indexFeno]=indexPixMax-ANALYSE_usampBuffers.lambdaRange[2][indexFeno]+1;
-
-           if (!(rc=SPLINE_Vector(xsKurucz.matrix[0],xsKurucz.matrix[1],xsKurucz.deriv2[1],xsKurucz.nl,
-                                  &lambda[indexPixMin],&ANALYSE_usampBuffers.kuruczInterpolated[indexFeno][indexPixMin],(indexPixMax-indexPixMin+1),
-                                  pAnalysisOptions->interpol,"ANALYSE_UsampBuild ")))
-
-            rc=SPLINE_Deriv2(&lambda[indexPixMin],&ANALYSE_usampBuffers.kuruczInterpolated[indexFeno][indexPixMin],
-                             &ANALYSE_usampBuffers.kuruczInterpolated2[indexFeno][indexPixMin],(indexPixMax-indexPixMin+1),"ANALYSE_UsampBuild (3) ");
-          }
-
-         // Build undersampling correction
-
-         if (!rc)
-
-          rc=USAMP_BuildCrossSections
-            ((pTabFeno->indexUsamp1!=ITEM_NONE)?&pTabFeno->TabCross[pTabFeno->indexUsamp1].vector[ANALYSE_usampBuffers.lambdaRange[2][indexFeno]]:NULL,
-             (pTabFeno->indexUsamp2!=ITEM_NONE)?&pTabFeno->TabCross[pTabFeno->indexUsamp2].vector[ANALYSE_usampBuffers.lambdaRange[2][indexFeno]]:NULL,
-             &lambda[ANALYSE_usampBuffers.lambdaRange[2][indexFeno]],
-             &lambda2[ANALYSE_usampBuffers.lambdaRange[2][indexFeno]],
-             &ANALYSE_usampBuffers.kuruczInterpolated[indexFeno][ANALYSE_usampBuffers.lambdaRange[2][indexFeno]],
-             &ANALYSE_usampBuffers.kuruczInterpolated2[indexFeno][ANALYSE_usampBuffers.lambdaRange[2][indexFeno]],
-             ANALYSE_usampBuffers.lambdaRange[3][indexFeno],
-             xsKurucz.matrix[0],
-             xsKurucz.matrix[1],
-             xsKurucz.deriv2[1],
-             xsKurucz.nl,
-             pTabFeno->analysisMethod);
-
-
-         MATRIX_Free(&xsKurucz,"ANALYSE_UsampBuild");
+         MATRIX_Free(&xsSlit2,"ANALYSE_UsampBuild");
         }
+         
+       // Pre-Interpolation on analysis window wavelength scale
+
+       if (!rc &&
+           !(rc=SPLINE_Deriv2(khrConvoluted.matrix[0],khrConvoluted.matrix[1],khrConvoluted.deriv2[1],khrConvoluted.nl,"ANALYSE_UsampBuild (1) ")))
+        {
+         memcpy(ANALYSE_usampBuffers.kuruczInterpolated[indexFeno],ANALYSE_zeros,sizeof(double)*pTabFeno->NDET);
+         memcpy(ANALYSE_usampBuffers.kuruczInterpolated2[indexFeno],ANALYSE_zeros,sizeof(double)*pTabFeno->NDET);
+
+         indexPixMin=ANALYSE_usampBuffers.lambdaRange[2][indexFeno]=FNPixel(lambda,khrConvoluted.matrix[0][0],pTabFeno->NDET,PIXEL_AFTER);
+         indexPixMax=FNPixel(lambda,khrConvoluted.matrix[0][khrConvoluted.nl-1],pTabFeno->NDET,PIXEL_BEFORE);
+         ANALYSE_usampBuffers.lambdaRange[3][indexFeno]=indexPixMax-ANALYSE_usampBuffers.lambdaRange[2][indexFeno]+1;
+
+         if (!(rc=SPLINE_Vector(khrConvoluted.matrix[0],khrConvoluted.matrix[1],khrConvoluted.deriv2[1],khrConvoluted.nl,
+                                &lambda[indexPixMin],&ANALYSE_usampBuffers.kuruczInterpolated[indexFeno][indexPixMin],(indexPixMax-indexPixMin+1),
+                                pAnalysisOptions->interpol,"ANALYSE_UsampBuild ")))
+
+          rc=SPLINE_Deriv2(&lambda[indexPixMin],&ANALYSE_usampBuffers.kuruczInterpolated[indexFeno][indexPixMin],
+                           &ANALYSE_usampBuffers.kuruczInterpolated2[indexFeno][indexPixMin],(indexPixMax-indexPixMin+1),"ANALYSE_UsampBuild (3) ");
+        }
+
+       // Build undersampling correction
+
+       if (!rc)
+
+        rc=USAMP_BuildCrossSections
+          ((pTabFeno->indexUsamp1!=ITEM_NONE)?&pTabFeno->TabCross[pTabFeno->indexUsamp1].vector[ANALYSE_usampBuffers.lambdaRange[2][indexFeno]]:NULL,
+           (pTabFeno->indexUsamp2!=ITEM_NONE)?&pTabFeno->TabCross[pTabFeno->indexUsamp2].vector[ANALYSE_usampBuffers.lambdaRange[2][indexFeno]]:NULL,
+           &lambda[ANALYSE_usampBuffers.lambdaRange[2][indexFeno]],
+           &lambda2[ANALYSE_usampBuffers.lambdaRange[2][indexFeno]],
+           &ANALYSE_usampBuffers.kuruczInterpolated[indexFeno][ANALYSE_usampBuffers.lambdaRange[2][indexFeno]],
+           &ANALYSE_usampBuffers.kuruczInterpolated2[indexFeno][ANALYSE_usampBuffers.lambdaRange[2][indexFeno]],
+           ANALYSE_usampBuffers.lambdaRange[3][indexFeno],
+           khrConvoluted.matrix[0],
+           khrConvoluted.matrix[1],
+           khrConvoluted.deriv2[1],
+           khrConvoluted.nl,
+           pTabFeno->analysisMethod);
+
+       MATRIX_Free(&khrConvoluted,"ANALYSE_UsampBuild");
       }
     }
 
   // Return
-
-  MATRIX_Free(&slitXs,"ANALYSE_UsampBuild");
-  MATRIX_Free(&slitXs2,"ANALYSE_UsampBuild");
 
   if (lambda!=NULL)
    MEMORY_ReleaseDVector("ANALYSE_UsampBuild ","lambda",lambda,0);
@@ -5924,7 +5889,7 @@ RC ANALYSE_UsampBuild(INT analysisFlag,INT gomeFlag)      // OMI ???
    MEMORY_ReleaseDVector("ANALYSE_UsampBuild ","lambda2",lambda2,0);
 
   return rc;
-}
+ }         
 
 // ==================
 // BUFFERS ALLOCATION
@@ -5989,8 +5954,6 @@ RC ANALYSE_UsampGlobalAlloc(double lambdaMin,double lambdaMax,INT size)
            ((ANALYSE_usampBuffers.lambdaRange[1]=(INT *)MEMORY_AllocBuffer("ANALYSE_UsampGlobalAlloc ","lambdaRange[1]",NFeno,sizeof(INT),0,MEMORY_TYPE_INT))==NULL) ||
            ((ANALYSE_usampBuffers.lambdaRange[2]=(INT *)MEMORY_AllocBuffer("ANALYSE_UsampGlobalAlloc ","lambdaRange[2]",NFeno,sizeof(INT),0,MEMORY_TYPE_INT))==NULL) ||
            ((ANALYSE_usampBuffers.lambdaRange[3]=(INT *)MEMORY_AllocBuffer("ANALYSE_UsampGlobalAlloc ","lambdaRange[3]",NFeno,sizeof(INT),0,MEMORY_TYPE_INT))==NULL) ||
-           ((ANALYSE_usampBuffers.kuruczConvoluted=(double **)MEMORY_AllocBuffer("ANALYSE_UsampGlobalAlloc ","kuruczConvoluted",NFeno,sizeof(double *),0,MEMORY_TYPE_DOUBLE))==NULL) ||
-           ((ANALYSE_usampBuffers.kuruczConvoluted2=(double **)MEMORY_AllocBuffer("ANALYSE_UsampGlobalAlloc ","kuruczConvoluted2",NFeno,sizeof(double *),0,MEMORY_TYPE_DOUBLE))==NULL) ||
            ((ANALYSE_usampBuffers.kuruczInterpolated=(double **)MEMORY_AllocBuffer("ANALYSE_UsampGlobalAlloc ","kuruczInterpolated",NFeno,sizeof(double *),0,MEMORY_TYPE_DOUBLE))==NULL) ||
            ((ANALYSE_usampBuffers.kuruczInterpolated2=(double **)MEMORY_AllocBuffer("ANALYSE_UsampGlobalAlloc ","kuruczInterpolated2",NFeno,sizeof(double *),0,MEMORY_TYPE_DOUBLE))==NULL))
 
@@ -6008,9 +5971,7 @@ RC ANALYSE_UsampGlobalAlloc(double lambdaMin,double lambdaMax,INT size)
          ANALYSE_usampBuffers.lambdaRange[2][indexFeno]=
          ANALYSE_usampBuffers.lambdaRange[3][indexFeno]=ITEM_NONE;
 
-       ANALYSE_usampBuffers.kuruczConvoluted[indexFeno]=
-         ANALYSE_usampBuffers.kuruczConvoluted2[indexFeno]=
-         ANALYSE_usampBuffers.kuruczInterpolated[indexFeno]=
+       ANALYSE_usampBuffers.kuruczInterpolated[indexFeno]=
          ANALYSE_usampBuffers.kuruczInterpolated2[indexFeno]=NULL;
 
        if (!pTabFeno->hidden && pTabFeno->useUsamp &&
@@ -6060,21 +6021,14 @@ RC ANALYSE_UsampLocalAlloc(INT gomeFlag)
   for (indexFenoColumn=0;(indexFenoColumn<ANALYSE_swathSize) && !rc;indexFenoColumn++)
    for (indexFeno=0;(indexFeno<NFeno) && !rc;indexFeno++)
     {
-     pTabFeno=&TabFeno[indexFenoColumn][indexFeno];
+     pTabFeno=&TabFeno[0][indexFeno];
 
-     if (!pTabFeno->hidden && pTabFeno->useUsamp
-         && (pTabFeno->gomeRefFlag==gomeFlag)
-         )
+     if (!pTabFeno->hidden && pTabFeno->useUsamp && (pTabFeno->gomeRefFlag==gomeFlag))
       {
        ANALYSE_usampBuffers.lambdaRange[0][indexFeno]=FNPixel(ANALYSE_usampBuffers.hrSolar.matrix[0],(double)pTabFeno->svd.LFenetre[0][0]-7.,ANALYSE_usampBuffers.hrSolar.nl,PIXEL_AFTER);
        endPixel=FNPixel(ANALYSE_usampBuffers.hrSolar.matrix[0],(double)pTabFeno->svd.LFenetre[pTabFeno->svd.Z-1][1]+7.,ANALYSE_usampBuffers.hrSolar.nl,PIXEL_BEFORE);
 
        lambdaSize=ANALYSE_usampBuffers.lambdaRange[1][indexFeno]=endPixel-ANALYSE_usampBuffers.lambdaRange[0][indexFeno]+1;
-
-       if (((ANALYSE_usampBuffers.kuruczConvoluted[indexFeno]=(double *)MEMORY_AllocDVector("ANALYSE_UsampLocalAlloc ","kuruczConvoluted",0,lambdaSize-1))==NULL) ||
-           ((ANALYSE_usampBuffers.kuruczConvoluted2[indexFeno]=(double *)MEMORY_AllocDVector("ANALYSE_UsampLocalAlloc ","kuruczConvoluted2",0,lambdaSize-1))==NULL))
-
-        rc=ERROR_ID_ALLOC;
       }
     }
 
@@ -6095,27 +6049,6 @@ void ANALYSE_UsampLocalFree(void)
 
   INDEX indexFeno,indexFenoColumn;
 
-  // Release allocated buffers
-
-  if (ANALYSE_usampBuffers.kuruczConvoluted!=NULL)
-   {
-    for (indexFenoColumn=0;(indexFenoColumn<ANALYSE_swathSize);indexFenoColumn++)
-     for (indexFeno=0;indexFeno<NFeno;indexFeno++)
-      if (!TabFeno[indexFenoColumn][indexFeno].hidden && TabFeno[indexFenoColumn][indexFeno].useUsamp && !TabFeno[indexFenoColumn][indexFeno].gomeRefFlag)
-       {
-        if (ANALYSE_usampBuffers.kuruczConvoluted[indexFeno]!=NULL)
-         {
-          MEMORY_ReleaseDVector("ANALYSE_UsampLocalFree ","kuruczConvoluted",ANALYSE_usampBuffers.kuruczConvoluted[indexFeno],0);
-          ANALYSE_usampBuffers.kuruczConvoluted[indexFeno]=NULL;
-         }
-
-        if (ANALYSE_usampBuffers.kuruczConvoluted2[indexFeno]!=NULL)
-         {
-          MEMORY_ReleaseDVector("ANALYSE_UsampLocalFree ","kuruczConvoluted2",ANALYSE_usampBuffers.kuruczConvoluted2[indexFeno],0);
-          ANALYSE_usampBuffers.kuruczConvoluted2[indexFeno]=NULL;
-         }
-      }
-   }
 }
 
 // -----------------------------------------------------------------------------
@@ -6138,24 +6071,6 @@ void ANALYSE_UsampGlobalFree(void)
    MEMORY_ReleaseBuffer("ANALYSE_UsampGlobalFree ","lambdaRange[2]",ANALYSE_usampBuffers.lambdaRange[2]);
   if (ANALYSE_usampBuffers.lambdaRange[3]!=NULL)
    MEMORY_ReleaseBuffer("ANALYSE_UsampGlobalFree ","lambdaRange[3]",ANALYSE_usampBuffers.lambdaRange[3]);
-
-  if (ANALYSE_usampBuffers.kuruczConvoluted!=NULL)
-   {
-    for (indexFeno=0;indexFeno<NFeno;indexFeno++)
-     if (ANALYSE_usampBuffers.kuruczConvoluted[indexFeno]!=NULL)
-      MEMORY_ReleaseDVector("ANALYSE_UsampGlobalFree ","kuruczConvoluted",ANALYSE_usampBuffers.kuruczConvoluted[indexFeno],0);
-
-    MEMORY_ReleaseBuffer("ANALYSE_UsampGlobalFree ","kuruczConvoluted",ANALYSE_usampBuffers.kuruczConvoluted);
-   }
-
-  if (ANALYSE_usampBuffers.kuruczConvoluted2!=NULL)
-   {
-    for (indexFeno=0;indexFeno<NFeno;indexFeno++)
-     if (ANALYSE_usampBuffers.kuruczConvoluted2[indexFeno]!=NULL)
-      MEMORY_ReleaseDVector("ANALYSE_UsampGlobalFree ","kuruczConvoluted2",ANALYSE_usampBuffers.kuruczConvoluted2[indexFeno],0);
-
-    MEMORY_ReleaseBuffer("ANALYSE_UsampGlobalFree ","kuruczConvoluted2",ANALYSE_usampBuffers.kuruczConvoluted2);
-   }
 
   if (ANALYSE_usampBuffers.kuruczInterpolated!=NULL)
    {

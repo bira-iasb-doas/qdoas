@@ -128,7 +128,7 @@ INDEX KuruczSearchReference(INDEX indexRefFeno,INDEX indexRefColumn)
 // OUTPUT          newLambda      new wavelength scale
 //
 // RETURN          return code
-// ----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------      
 
 RC KURUCZ_Spectrum(double *oldLambda,double *newLambda,double *spectrum,double *reference,double *instrFunction,
                    DoasCh displayFlag,DoasCh *windowTitle,double **coeff,double **fwhmVector,double **fwhmDeriv2,INT saveFlag,INDEX indexFeno,void *responseHandle,INDEX indexFenoColumn)
@@ -241,8 +241,8 @@ RC KURUCZ_Spectrum(double *oldLambda,double *newLambda,double *spectrum,double *
        memcpy(solar,pKurucz->hrSolar.matrix[kuruczIndexRow],sizeof(double)*NDET);
       else // 20130208 : a high resolution spectrum is now loaded from the slit page of project properties and convolved
       	rc=ANALYSE_ConvoluteXs(NULL,ANLYS_CROSS_ACTION_CONVOLUTE,(double)0.,&pKurucz->hrSolar,&ANALYSIS_slit,&ANALYSIS_slit2,
-                             pSlitOptions->slitFunction.slitType,&pSlitOptions->slitFunction.slitParam,&pSlitOptions->slitFunction.slitParam2,
-                             oldLambda,solar,0,NDET-1,0,pSlitOptions->slitFunction.slitWveDptFlag);
+                              pSlitOptions->slitFunction.slitType,&pSlitOptions->slitFunction.slitParam,&pSlitOptions->slitFunction.slitParam2,
+                              oldLambda,solar,0,NDET-1,0,pSlitOptions->slitFunction.slitWveDptFlag);
 // 20130208 :     rc=SPLINE_Vector(pKurucz->hrSolar.matrix[0],pKurucz->hrSolar.matrix[kuruczIndexRow],pKurucz->hrSolar.deriv2[kuruczIndexRow],pKurucz->hrSolar.nl,
 //                        oldLambda,solar,NDET,pAnalysisOptions->interpol,"KURUCZ_Spectrum ");
      }

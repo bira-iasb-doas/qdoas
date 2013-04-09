@@ -765,16 +765,17 @@ static void OutputRegisterFields(const ENGINE_CONTEXT *pEngineContext)
       func_los_zenith = &gdp3_get_los_zenith;
       func_earth_radius = &gdp3_get_earth_radius;
       func_sat_height = &gdp3_get_sat_height;
-    } else {
-      func_sza = &gdp4_get_sza;
-      func_azimuth = &gdp4_get_azim;
-      func_corner_longitudes = &gdp4_get_corner_longitudes;
-      func_corner_latitudes = &gdp4_get_corner_latitudes;
-      func_los_azimuth = &gdp4_get_los_azimuth;
-      func_los_zenith = &gdp4_get_los_zenith;
-      func_earth_radius = &gdp4_get_earth_radius;
-      func_sat_height = &gdp4_get_sat_height;
-    }
+    } 
+   else {
+     func_sza = &gdp4_get_sza;
+     func_azimuth = &gdp4_get_azim;
+     func_corner_longitudes = &gdp4_get_corner_longitudes;
+     func_corner_latitudes = &gdp4_get_corner_latitudes;
+     func_los_azimuth = &gdp4_get_los_azimuth;
+     func_los_zenith = &gdp4_get_los_zenith;
+     func_earth_radius = &gdp4_get_earth_radius;
+     func_sat_height = &gdp4_get_sat_height;
+   }
     break;
   case PRJCT_INSTR_FORMAT_GDP_ASCII:
     func_sza = &gdpasc_get_sza;
