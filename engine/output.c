@@ -945,9 +945,6 @@ static void OutputRegisterFields(const ENGINE_CONTEXT *pEngineContext)
      case PRJCT_RESULTS_ROLL:
        register_field( (struct output_field) { .fieldname = "Roll angle", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_roll_angle });
        break;
-     case PRJCT_RESULTS_ITER:
-       register_field( (struct output_field) { .fieldname = "Iterations number", .memory_type = OUTPUT_INT, .resulttype = fieldtype, .format = "%#6d", .get_data = (func_void)&get_n_iter });
-       break;
      case PRJCT_RESULTS_GOME2_SCANDIRECTION:
        register_field( (struct output_field) { .fieldname = "GOME2 scan direction", .memory_type = OUTPUT_INT, .resulttype = fieldtype, .format = "%#6d", .get_data = (func_void)&gome2_get_scan_direction });
        break;
