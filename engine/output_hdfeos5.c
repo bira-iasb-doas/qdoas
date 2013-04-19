@@ -32,6 +32,7 @@ static void get_edge_calibration(hsize_t edge[], const struct output_field *thef
 static void get_edge_analysis(hsize_t edge[], const struct output_field *thefield);
 static int get_rank(const struct output_field *thefield);
 static size_t get_hdfeos_size(enum output_datatype datatype);
+static void replace_chars(char *fieldname);
 
 /*! \brief reference to current output file.*/
 static hid_t output_file;
@@ -269,6 +270,7 @@ RC write_calibration_data(void) {
     struct output_field calibfield = output_data_calib[i];
     char he5fieldname[strlen(calibfield.fieldname) + strlen(calib_prefix) + 1];
     sprintf(he5fieldname, "%s%s", calib_prefix, calibfield.fieldname);
+    replace_chars(he5fieldname);
 
     // define data fields
     /* when nXtrack > 1, output_data_calib contains a copy of each
@@ -319,6 +321,7 @@ RC create_analysis_data_fields(void) {
   char field_dimension[HE5_HDFE_DIMBUFSIZE];
   for(unsigned int i=0; i<output_num_fields; i++) {
     struct output_field thefield = output_data_analysis[i];
+    replace_chars(thefield.fieldname);
 
     get_hdfeos5_dimension_analysis(field_dimension, &thefield);
     hid_t dtype = get_hdfeos5_type(thefield.memory_type);
@@ -756,4 +759,20 @@ static enum fieldtype get_fieldtype(enum _prjctResults output_field) {
     break;
   }
   return result;
+}
+
+/*! \brief Characters "/;," are not allowed in HDF-EOS5 field names.
+    This function replaces them with a '-'. */
+static void replace_chars(char *fieldname) {
+  do {
+    switch(*fieldname) {
+    case ',':
+    case ';':
+    case '/':
+      *fieldname = '-';
+      break;
+    default:
+      break;
+    }
+  } while(*fieldname++ != '\0');
 }
