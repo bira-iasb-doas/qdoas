@@ -802,7 +802,7 @@ static void OutputRegisterFields(const ENGINE_CONTEXT *pEngineContext)
      
      switch(fieldtype) {
      case PRJCT_RESULTS_SPECNO:
-       register_field( (struct output_field) { .fieldname = "Spec No", .resulttype = fieldtype, .format = "%#4d", .memory_type = OUTPUT_USHORT, .get_data = (func_void)&get_specno } );
+       register_field( (struct output_field) { .fieldname = "Spec No", .resulttype = fieldtype, .format = "%#4d", .memory_type = OUTPUT_INT, .get_data = (func_void)&get_specno } );
        break;
      case PRJCT_RESULTS_NAME:
        register_field( (struct output_field) { .fieldname = "Name", .memory_type = OUTPUT_STRING, .resulttype = fieldtype, .format = "%s", .get_data = (func_void)&get_name });
