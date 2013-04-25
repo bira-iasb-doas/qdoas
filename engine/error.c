@@ -170,6 +170,10 @@ ERROR_TABLE errorTable[]=
   { ERROR_ID_OUT_OF_RANGE              , "%s is out of %d..%d range"                                                                                          },
   { ERROR_ID_FILE_AUTOMATIC            , "No automatic reference selection can be perform on this type of file"                                               },
   { ERROR_ID_NO_REF                    , "No reference spectrum found for %s in file %s"                                                                      },
+  { ERROR_ID_CONVOLUTION               , "Convolved solar spectrum and cross sections are expected"                                                           },
+  
+  
+  
   { ERROR_ID_GDP_BANDINDEX             , "The specified band is not present in the file %s"                                                                   },
   { ERROR_ID_PDS                       , "[%s] failed for %s PDS file"                                                                                        },
   { ERROR_ID_BEAT                      , "[%s] failed (file %s, error %s)"                                                                                    },

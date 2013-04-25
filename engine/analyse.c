@@ -4222,30 +4222,34 @@ RC ANALYSE_LoadSlit(PRJCT_SLIT *pSlit,int kuruczFlag)
   pSlitFunction=&pSlit->slitFunction;
   rc=ERROR_ID_NO;
 
-  // Slit type selection
-
-  if ((pSlitFunction->slitType==SLIT_TYPE_FILE) || pSlitFunction->slitWveDptFlag)
+  
+  if (pSlitFunction->slitType!=SLIT_TYPE_NONE)
    {
-    // Load file
-
-    if (!strlen(pSlitFunction->slitFile))
-     rc=ERROR_SetLast("ANALYSE_LoadSlit",ERROR_TYPE_FATAL,ERROR_ID_MSGBOX_FIELDEMPTY,"Slit File");
-    else
-     rc=MATRIX_Load(pSlitFunction->slitFile,&ANALYSIS_slit,0 /* line base */,0 /* column base */,0,0,
-                    -9999.,9999.,
-                    /* ((pSlitFunction->slitType==SLIT_TYPE_GAUSS_T_FILE) ||
-                       (pSlitFunction->slitType==SLIT_TYPE_ERF_T_FILE))?0: */ 1,0,"ANALYSE_LoadSlit ");
-   }
-
-  if (pSlitFunction->slitWveDptFlag && ((pSlitFunction->slitType==SLIT_TYPE_FILE) ||(pSlitFunction->slitType==SLIT_TYPE_ERF) ||(pSlitFunction->slitType==SLIT_TYPE_AGAUSS) || (pSlitFunction->slitType==SLIT_TYPE_VOIGT)))
-   {
-    if (!strlen(pSlitFunction->slitFile2))
-     rc=ERROR_SetLast("ANALYSE_LoadSlit",ERROR_TYPE_FATAL,ERROR_ID_MSGBOX_FIELDEMPTY,"Slit File 2");
-    else
-     rc=MATRIX_Load(pSlitFunction->slitFile2,&ANALYSIS_slit2,0 /* line base */,0 /* column base */,0,0,
-                    -9999.,9999.,1,0,"ANALYSE_LoadSlit 2");
-   }
-
+    // Slit type selection
+    
+    if ((pSlitFunction->slitType==SLIT_TYPE_FILE) || pSlitFunction->slitWveDptFlag)
+     {
+      // Load file
+    
+      if (!strlen(pSlitFunction->slitFile))
+       rc=ERROR_SetLast("ANALYSE_LoadSlit",ERROR_TYPE_FATAL,ERROR_ID_MSGBOX_FIELDEMPTY,"Slit File");
+      else
+       rc=MATRIX_Load(pSlitFunction->slitFile,&ANALYSIS_slit,0 /* line base */,0 /* column base */,0,0,
+                      -9999.,9999.,
+                      /* ((pSlitFunction->slitType==SLIT_TYPE_GAUSS_T_FILE) ||
+                         (pSlitFunction->slitType==SLIT_TYPE_ERF_T_FILE))?0: */ 1,0,"ANALYSE_LoadSlit ");
+     }
+    
+    if (pSlitFunction->slitWveDptFlag && ((pSlitFunction->slitType==SLIT_TYPE_FILE) ||(pSlitFunction->slitType==SLIT_TYPE_ERF) ||(pSlitFunction->slitType==SLIT_TYPE_AGAUSS) || (pSlitFunction->slitType==SLIT_TYPE_VOIGT)))
+     {
+      if (!strlen(pSlitFunction->slitFile2))
+       rc=ERROR_SetLast("ANALYSE_LoadSlit",ERROR_TYPE_FATAL,ERROR_ID_MSGBOX_FIELDEMPTY,"Slit File 2");
+      else
+       rc=MATRIX_Load(pSlitFunction->slitFile2,&ANALYSIS_slit2,0 /* line base */,0 /* column base */,0,0,
+                      -9999.,9999.,1,0,"ANALYSE_LoadSlit 2");
+     }
+   }  
+    
   if (!rc && kuruczFlag)
    {
     if (!strlen(pSlit->kuruczFile))
@@ -4503,7 +4507,10 @@ RC ANALYSE_LoadCross(ENGINE_CONTEXT *pEngineContext,ANALYSIS_CROSS *crossSection
         }
        }
      }
-   }
+   } 
+   
+  if (!rc && pTabFeno->xsToConvolute && (!pTabFeno->useKurucz || !pEngineContext->project.kurucz.fwhmFit) && (pEngineContext->project.slit.slitFunction.slitType==SLIT_TYPE_NONE))
+   rc=ERROR_SetLast("ANALYSE_LoadCross",ERROR_TYPE_FATAL,ERROR_ID_CONVOLUTION);
 
 #if defined(__DEBUG_) && __DEBUG_ && defined(__DEBUG_DOAS_CONFIG_) && __DEBUG_DOAS_CONFIG_
   DEBUG_FunctionStop("ANALYSE_LoadCross",rc);

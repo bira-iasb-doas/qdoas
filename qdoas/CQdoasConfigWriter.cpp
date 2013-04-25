@@ -228,17 +228,8 @@ void CQdoasConfigWriter::writePropertiesAnalysis(FILE *fp, const mediate_project
   default:
     fprintf(fp, "\"none\"");
   }
-  // not used anymore as we work only in nm now fprintf(fp, " unit=");
-  // not used anymore as we work only in nm now switch (d->unitType) {
-  // not used anymore as we work only in nm now case PRJCT_ANLYS_UNITS_PIXELS:
-  // not used anymore as we work only in nm now   fprintf(fp, "\"pixel\"");
-  // not used anymore as we work only in nm now   break;
-  // not used anymore as we work only in nm now case PRJCT_ANLYS_UNITS_NANOMETERS:
-  // not used anymore as we work only in nm now   fprintf(fp, "\"nm\"");
-  // not used anymore as we work only in nm now   break;
-  // not used anymore as we work only in nm now default:
-  // not used anymore as we work only in nm now   fprintf(fp, "\"invalid\"");
-  // not used anymore as we work only in nm now }
+  
+  fprintf(fp, " unit=\"nm\"");         // not used anymore but forced for versions compatibility
   fprintf(fp, " interpolation=");
   switch (d->interpolationType) {
   case PRJCT_ANLYS_INTERPOL_LINEAR:

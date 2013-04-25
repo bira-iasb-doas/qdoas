@@ -237,8 +237,14 @@ RC KURUCZ_Spectrum(double *oldLambda,double *newLambda,double *spectrum,double *
      rc=ERROR_ID_ALLOC;
     else if (!pKuruczOptions->fwhmFit)
      {
-      if ((pKurucz->hrSolar.nl==NDET) && VECTOR_Equal(pKurucz->hrSolar.matrix[0],oldLambda,NDET,(double)1.e-7))
-       memcpy(solar,pKurucz->hrSolar.matrix[kuruczIndexRow],sizeof(double)*NDET);
+      if (pSlitOptions->slitFunction.slitType==SLIT_TYPE_NONE)
+       {
+       	if ((pKurucz->hrSolar.nl==NDET) && (pKurucz->hrSolar.nc>=ANALYSE_swathSize+1))
+         memcpy(solar,pKurucz->hrSolar.matrix[kuruczIndexRow],sizeof(double)*NDET);
+        else 
+         
+         ERROR_SetLast("KURUCZ_Spectrum",ERROR_TYPE_FATAL,(rc=ERROR_ID_CONVOLUTION));
+       } 
       else // 20130208 : a high resolution spectrum is now loaded from the slit page of project properties and convolved
       	rc=ANALYSE_ConvoluteXs(NULL,ANLYS_CROSS_ACTION_CONVOLUTE,(double)0.,&pKurucz->hrSolar,&ANALYSIS_slit,&ANALYSIS_slit2,
                               pSlitOptions->slitFunction.slitType,&pSlitOptions->slitFunction.slitParam,&pSlitOptions->slitFunction.slitParam2,
@@ -248,6 +254,9 @@ RC KURUCZ_Spectrum(double *oldLambda,double *newLambda,double *spectrum,double *
      }
     else
      memcpy(solar,reference,sizeof(double)*NDET);
+     
+    if (rc!=ERROR_ID_NO)
+     goto EndKuruczSpectrum; 
 
     // Buffers for fits initialization
 

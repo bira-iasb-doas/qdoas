@@ -1836,8 +1836,11 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
          for (indexWindow=0;(indexWindow<NFeno) && !rc;indexWindow++)
           {
            pTabFeno=&TabFeno[indexFenoColumn][indexWindow];
-
-           if (pTabFeno->xsToConvolute && /* pTabFeno->useEtalon && */ (pTabFeno->gomeRefFlag || pEngineContext->refFlag) &&
+           
+           if ((pSlitOptions->slitFunction.slitType==SLIT_TYPE_NONE) && pTabFeno->xsToConvolute)
+            ERROR_SetLast("mediateRequestSetAnalysisWindows",ERROR_TYPE_FATAL,(rc=ERROR_ID_CONVOLUTION));
+            // 
+           else if (pTabFeno->xsToConvolute && /* pTabFeno->useEtalon && */ (pTabFeno->gomeRefFlag || pEngineContext->refFlag) &&
              ((rc=ANALYSE_XsConvolution(pTabFeno,pTabFeno->LambdaRef,&ANALYSIS_slit,&ANALYSIS_slit2,pSlitOptions->slitFunction.slitType,&pSlitOptions->slitFunction.slitParam,&pSlitOptions->slitFunction.slitParam2,indexFenoColumn,pSlitOptions->slitFunction.slitWveDptFlag))!=0))
 
             break;

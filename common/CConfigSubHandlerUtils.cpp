@@ -124,7 +124,9 @@ bool CSlitFunctionSubHandler::start(const QXmlAttributes &atts)
 {
   QString str = atts.value("type");
 
-  if (str == "file")
+  if (str == "none")
+    m_function->type = SLIT_TYPE_NONE;
+  else if (str == "file")
     m_function->type = SLIT_TYPE_FILE;
   else if (str == "gaussian")
     m_function->type = SLIT_TYPE_GAUSS;

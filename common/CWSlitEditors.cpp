@@ -97,7 +97,24 @@ void CWSlitFileBase::slotBrowseFile()
 void CWSlitFileBase::slotToggleWavelength(int state)
  {
   m_toggleWavelengthStack->setCurrentIndex((state)?1:0);
- }
+ }     
+ 
+CWSlitNoneEdit::CWSlitNoneEdit(const struct slit_file *d, QWidget *parent) :
+  CWSlitFileBase(parent)
+{ 
+}	  
+
+CWSlitNoneEdit::~CWSlitNoneEdit()
+{
+}
+
+void CWSlitNoneEdit::reset(const struct slit_file *d)
+{
+}
+
+void CWSlitNoneEdit::apply(struct slit_file *d) const
+{
+}
 
 //--------------------------------------------------------
 
@@ -847,7 +864,7 @@ CWSlitSelector::CWSlitSelector(const mediate_slit_function_t *slit, const QStrin
   m_slitCombo = new QComboBox(this);
   m_slitStack = new QStackedWidget(this);
   // insert widgets into the stack and items into the combo in lock-step.
-
+  
   m_fileEdit = new CWSlitFileEdit(&(slit->file));
   m_slitStack->addWidget(m_fileEdit);
   m_slitCombo->addItem("File", QVariant(SLIT_TYPE_FILE));

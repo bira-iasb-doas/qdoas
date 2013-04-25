@@ -915,7 +915,7 @@ enum prjctTabPagesTypes
 
    enum _slitTypes
     {
-  //  	SLIT_TYPE_NONE,
+     SLIT_TYPE_NONE, 
      SLIT_TYPE_FILE,                                                            // user-defined line shape provided in a file
      SLIT_TYPE_GAUSS,                                                           // Gaussian line shape
      SLIT_TYPE_INVPOLY,                                                         // 2n-Lorentz (generalisation of the Lorentzian function

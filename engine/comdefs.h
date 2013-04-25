@@ -264,6 +264,7 @@ SHORT_DATE;
 #define ERROR_ID_OUT_OF_RANGE                  1270                             // field is out of range
 #define ERROR_ID_FILE_AUTOMATIC                1280                             // no automatic reference selection can be perform on this type of file
 #define ERROR_ID_NO_REF                        1290                             // no reference file found in the specified file
+#define ERROR_ID_CONVOLUTION                   1295                             // incompatibility with convolution options
 
 // Specific file format
 

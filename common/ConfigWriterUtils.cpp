@@ -112,6 +112,9 @@ void writeSlitFunction(FILE *fp, size_t nIndent, const mediate_slit_function_t *
   fprintf(fp, "%s<slit_func type=", buf);
 
   switch (d->type) {
+  case SLIT_TYPE_NONE:
+    fprintf(fp, "\"none\"");
+    break;  	
   case SLIT_TYPE_FILE:
     fprintf(fp, "\"file\"");
     break;

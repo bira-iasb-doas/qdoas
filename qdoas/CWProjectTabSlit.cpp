@@ -67,6 +67,10 @@ CWProjectTabSlit::CWProjectTabSlit(const mediate_project_slit_t *slit, QWidget *
   m_slitStack = new QStackedWidget(this);
   // insert widgets into the stack and items into the combo in lock-step.
 
+  m_noneEdit = new CWSlitNoneEdit(&(slit->function.file));
+  m_slitStack->addWidget(m_noneEdit);  
+  m_slitCombo->addItem("None", QVariant(SLIT_TYPE_NONE));    
+
   m_fileEdit = new CWSlitFileEdit(&(slit->function.file));
   m_slitStack->addWidget(m_fileEdit);
   m_slitCombo->addItem("File", QVariant(SLIT_TYPE_FILE));
@@ -157,6 +161,7 @@ void CWProjectTabSlit::apply(mediate_project_slit_t *slit) const
   // slit->applyFwhmCorrection = m_fwhmCorrectionCheck->isChecked() ? 1 : 0;
   strcpy(slit->solarRefFile, m_solarRefFileEdit->text().toAscii().data());
 
+  m_noneEdit->apply(NULL);
   m_fileEdit->apply(&(slit->function.file));
   m_gaussianEdit->apply(&(slit->function.gaussian));
   m_lorentzEdit->apply(&(slit->function.lorentz));

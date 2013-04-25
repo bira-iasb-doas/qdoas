@@ -52,6 +52,9 @@ Q_OBJECT
   QComboBox *m_slitCombo;
   QStackedWidget *m_slitStack;
   // widgets for the configuration of each slit
+  // CWSlitNoneEdit *m_noneEdit;
+  
+  CWSlitNoneEdit *m_noneEdit;
   CWSlitFileEdit *m_fileEdit;
   CWSlitGaussianEdit *m_gaussianEdit;
   CWSlitLorentzEdit *m_lorentzEdit;

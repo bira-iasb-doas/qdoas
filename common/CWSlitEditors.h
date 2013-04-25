@@ -58,7 +58,17 @@ Q_OBJECT
   QStackedLayout *m_toggleWavelengthStack;
 };
 
-//--------------------------------------------------------------------------
+//--------------------------------------------------------------------------    
+
+class CWSlitNoneEdit : public CWSlitFileBase
+{
+ public:
+  CWSlitNoneEdit(const struct slit_file *d, QWidget *parent = 0);
+  virtual ~CWSlitNoneEdit();
+
+  void reset(const struct slit_file *d);
+  void apply(struct slit_file *d) const;
+};
 
 class CWSlitFileEdit : public CWSlitFileBase
 {
