@@ -55,7 +55,8 @@
       <div align="justify"><u>Wavelength dependent analytical slit functions</u> : the input file should contain the FWHM variation with the wavelenth calibration; at a given wavelength, cross-sections will be convolved with the appropriate resolution.</div>
     </li></ul>
     <p align="justify" class="orangelarge">Solar reference file<a name="Solar"></a></p>
-    <p align="justify">      A high-resolution solar spectrum is expected if the  convolution with <em>I<sub>0</sub></em> correction is requested for at least one cross-section(see the <strong>Description of Algorithms</strong> section of the <strong>QDOAS Software User Manual</strong>).</p>
+    <p align="justify">A high-resolution solar spectrum is expected to replace the solar spectrum of the <b>Calibration page</b> if the slit function is not characterized during the calibration procedure and solar spectrum and cross sections have to be convolved with the line shape specified in this page.  
+Otherwise, if the slit function type of this page is <b>None</b>, preconvolved solar spectrum (in this page) and cross sections (in <b>Analysis windows properties</b>) are expected.</p>
     <p align="justify" class="orangelarge">FWHM correction<a name="FWHM_Correction"></a></p>
     <p align="justify">If  the dependence of the slit function with the detector temperature is known (for example, for the SAOZ instrument),  QDOAS can determine the difference of resolution between the control spectrum  and each spectrum to analyze and use this information to convolve cross  sections.&nbsp; If the button <strong>Apply Fwhm correction</strong> is checked,  a  wavelength and temperature dependent  <strong>Slit Function type</strong> has to be selected and the appropriate file has to be specified.&nbsp; This option is processing  time consuming and is practically never used.</p>
     <p align="justify">&nbsp;</p>

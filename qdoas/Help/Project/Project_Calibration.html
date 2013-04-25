@@ -48,10 +48,13 @@
 <area shape="rect" coords="59,166,233,258" href="#Display">
 </map>
     </p>
-    <p align="justify"><a name="Options"></a>The wavelength calibration procedure developed in QDOAS is based on a non-linear least-squares (NLLS)   fitting approach  where the shift between the spectrum to 
-    calibrate and a high-resolution solar atlas spectrum degraded to the resolution  of the instrument is determined on a series of equally spaced short intervals.&nbsp; 
-    The procedure also allows characterising the  instrumental slit function, through fitting of user-defined Slit Function  Parameters (<strong>SFP</strong>), either the full-width at half maximum (FWHM) of a analytical line shape or a stretch factor applied on the grid of a user-defined function. The  <strong>Analysis Method</strong> (optical density fitting or intensity fitting) 
-    can be different from the one selected for the analysis of spectra in the <a href="Project_Analysis.html"><strong>Analysis page</strong></a>.</p>
+    <p align="justify"><a name="Options"></a>
+The wavelength calibration procedure developed in QDOAS is based on a non-linear least-squares (NLLS) fitting approach where the shift between the spectrum to
+calibrate and a high-resolution solar atlas spectrum degraded to the resolution of the instrument is determined on a series of equally spaced short intervals.&nbsp; 
+The <b>Analysis Method</b> (optical density fitting or intensity fitting) can be different from the one selected for the analysis of spectra in the <a href="Project_Analysis.html"><strong>Analysis page</strong></a>.</p>
+
+<p align="justify">The procedure also allows characterising the instrumental slit function, through fitting of user-defined Slit Function Parameters (<strong>SFP</strong>), either the the full-width at half maximum (FWHM) of a analytical line shape or two different stretch factors applied on the grid of a user-defined function (option <b>File</b>).  
+If the slit function is not fitted during the wavelength calibration procedure, the solar spectrum and the instrumental line shape to use for convolutions are defined in the <b><a href="Project_Slit.html">Slit page</a></b>.    
     
     <p align="justify">Further details on the wavelength calibration procedure and examples of configuration of this page can be found in the <strong>QDOAS Software User Manual</strong>.</p>
     <p align="justify" class="orangelarge">Window Limits<a name="Limits"></a></p>
@@ -62,7 +65,7 @@
     <p>There are two cases  to consider :</p>
     <ol>
       <li>
-        <div align="justify">the slit function of  the instrument is known and there is no need to characterise it once again (<strong>Line Shape</strong> not fitted); then the <strong>Solar Ref. File</strong> should contain a solar reference spectrum (e.g. the Kurucz one) previously convolved with the instrument slit  function on the grid of the spectrum to calibrate;<br>
+        <div align="justify">the slit function of the instrument is known and there is no need to characterise it once again (<b>line shape</b> not fitted).  Then the <b>Solar Ref. File</b> in this page is disabled; it should be given in the <b><a href="Project_Slit.html">Slit page</a></b> with the instrumental line shape.<br>
         <br></div></li>
 <li><div align="justify" >the slit function of the instrument need to be characterized (selection  of a analytical <strong>Line Shape</strong>); then the <strong>Solar Ref. File</strong> should contain a  high-resolution solar spectrum.&nbsp; Because QDOAS  uses Fourier transform (FT) in order to make the NLLS algorithm fast enough, a high-resolution solar  spectrum sampled on a constant grid is expected. </div></li>
     </ol>
