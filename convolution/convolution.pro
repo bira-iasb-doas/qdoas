@@ -26,8 +26,7 @@ INCLUDEPATH  += $$QWT_INC_PATH
 
 unix {
   INCLUDEPATH  += ../mediator ../common ../engine
-  LIBS         += -L$$QWT_LIB_PATH -l$$QWT_LIB -lm
-  QMAKE_LFLAGS += -Wl,-rpath=$$QWT_LIB_PATH
+  LIBS         += -lqwt
 }
 
 win32 {

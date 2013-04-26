@@ -13,20 +13,16 @@ QMAKE_CFLAGS += -std=gnu99
 #----------------------------------------------
 
 unix {
-  INSTALL_PREFIX = /home/thomasd
-  CONFIG += qwt
-  INCLUDEPATH += /home/thomasd/include /usr/include/hdf
-  QMAKE_LFLAGS += -Wl,-rpath=/home/thomasd/lib
-  QMAKE_LIBDIR += /home/thomasd/lib
-  QMAKE_LIBS += -lqwt
+  INSTALL_PREFIX = /bira-iasb/proj_dyn/DOAS/Programmes/QDOAS-linux
+
+  INCLUDEPATH += /bira-iasb/proj_dyn/DOAS/Programmes/QDOAS-linux/include /bira-iasb/proj_dyn/DOAS/Programmes/QDOAS-linux/hdfeos/include/ /usr/local/qwt/include
+  QMAKE_LFLAGS += -Wl,-rpath=/bira-iasb/proj_dyn/DOAS/Programmes/QDOAS-linux/lib:/usr/local/lib64
+  QMAKE_LIBDIR += /bira-iasb/proj_dyn/DOAS/Programmes/QDOAS-linux/hdfeos/lib/linux64 /bira-iasb/proj_dyn/DOAS/Programmes/QDOAS-linux/lib /usr/local/lib64
+  LIBS += -lqwt
+
   # QDOAS online help
-
-  #  QDOAS_HELP= '\\"D:/My_Applications/QDoas/trunk/Src/qdoas/release/Help\\"'  # place quotes around the version string
-  # DEFINES += QDOAS_HELP_PATH=\"$${QDOAS_HELP}\"
-
-  # for trace-write debugging ...
-  # DEFINES += DEBUG
-  # DEFINES += LVL4
+  QDOAS_HELP= '\\"/path/to/dir/Help\\"'  # place quotes around the version string
+  DEFINES += QDOAS_HELP_PATH=\"$${QDOAS_HELP}\"
 }
 
 win32 {

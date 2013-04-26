@@ -14,14 +14,13 @@ QT = core xml
 # Platform dependency ... based on ../config.pri
 #----------------------------------------------
 
-INCLUDEPATH  += $$QWT_INC_PATH $$CODA_INC_PATH $$HDF_INC_PATH $$HDFEOS_INC_PATH
-
 unix {
   INCLUDEPATH  += ../mediator ../common ../qdoas ../convolution ../usamp ../engine ../ring
   LIBS         += -lcoda -lhdfeos -lmfhdf -ldf -lz -lhe5_hdfeos -lhdf5 -lhdf5_hl
 }
 
 win32 {
+  INCLUDEPATH  += $$QWT_INC_PATH $$CODA_INC_PATH $$HDF_INC_PATH $$HDFEOS_INC_PATH
   INCLUDEPATH  += ../mediator ../common ../qdoas ../convolution ../usamp ../engine ../ring
 
   contains( QWT_LINKAGE, qwtstatic ) {
