@@ -24,7 +24,7 @@ contains ( HELP_SYSTEM, assistant ) {
 
 unix {
   INCLUDEPATH  += ../mediator ../common ../engine
-  LIBS         += -lcoda -lhdfeos -lmfhdf -ldf -lz -lhe5_hdfeos -lhdf5 -lhdf5_hl
+  LIBS         += -lcoda -lhdfeos -lmfhdf -ldf -lz -ljpeg -lhe5_hdfeos -lhdf5 -lhdf5_hl
 }
 
 win32 {
