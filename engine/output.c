@@ -1211,8 +1211,10 @@ static void register_cross_results(const PRJCT_RESULTS *pResults, const FENO *pT
       char symbolName[MAX_ITEM_NAME_LEN+1];    // the name of a symbol
       sprintf(symbolName,"(%s)",WorkSpace[pTabFeno->TabCross[indexTabCross].Comp].symbolName);
 
-      struct field_attribute cross_attribs[1] = {{ "Cross section file", 
-                                                   WorkSpace[pTabFeno->TabCross[indexTabCross].Comp].crossFileName}};
+      struct field_attribute cross_attribs_file[1] = {{ "Cross section file", 
+                                                        WorkSpace[pTabFeno->TabCross[indexTabCross].Comp].crossFileName}};
+      // don't add "cross_attribs_file" attribute if crossFileName is not a string (e.g. for polynomial components)
+      size_t num_cross_attribs = (cross_attribs_file[0].value != NULL && strlen(cross_attribs_file[0].value)) ? 1 : 0;
 
       struct analysis_output symbol_fitparams[] = {
         { pTabCrossResults->indexAmf!=ITEM_NONE && pTabCrossResults->StoreAmf, symbolName,
@@ -1222,7 +1224,7 @@ static void register_cross_results(const PRJCT_RESULTS *pResults, const FENO *pT
         { pTabCrossResults->indexAmf!=ITEM_NONE && pTabCrossResults->StoreVrtErr, symbolName,
           { .fieldname = "VErr", .format = FORMAT_DOUBLE, .resulttype = PRJCT_RESULTS_VERT_ERR, .memory_type = OUTPUT_DOUBLE, .get_data = (func_void) &get_vrt_err} },
         { pTabCrossResults->StoreSlntCol, symbolName,
-          { .fieldname = "SlCol", .format = FORMAT_DOUBLE, .resulttype = PRJCT_RESULTS_SLANT_COL, .memory_type = OUTPUT_DOUBLE, .get_data = (func_void) &get_slant_column, .attributes = cross_attribs, .num_attributes = 1} },
+          { .fieldname = "SlCol", .format = FORMAT_DOUBLE, .resulttype = PRJCT_RESULTS_SLANT_COL, .memory_type = OUTPUT_DOUBLE, .get_data = (func_void) &get_slant_column, .attributes = cross_attribs_file, .num_attributes = num_cross_attribs} },
         { pTabCrossResults->StoreSlntErr, symbolName,
           { .fieldname = "SlErr", .format = FORMAT_DOUBLE, .resulttype = PRJCT_RESULTS_SLANT_ERR, .memory_type = OUTPUT_DOUBLE, .get_data = (func_void) &get_slant_err} },
         { pTabCrossResults->StoreShift, symbolName,
