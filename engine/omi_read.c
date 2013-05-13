@@ -1027,7 +1027,7 @@ RC OmiOpen(OMI_ORBIT_FILE *pOrbitFile,const char *swathName)
     int32 dims[3];
     int32 rank;
     int32 numbertype;
-    char dimlist[520];
+    char dimlist[520]; // 520 is a safe maximum length, see HDF-EOS ref for SWfieldinfo()
     intn swrc = SWfieldinfo(sw_id, "RadianceMantissa",&rank,dims,&numbertype , dimlist);
     if(swrc == FAIL) {
       rc=ERROR_SetLast("OmiOpen", ERROR_TYPE_WARNING, ERROR_ID_FILE_EMPTY,pOrbitFile->omiFileName);
@@ -1152,7 +1152,7 @@ RC omi_load_spectrum(int spec_type, int32 sw_id, int32 measurement, int32 track,
       // read 5 wavelength coefficients
       edge[2] = OMI_NUM_COEFFICIENTS;
       float32 wavelength_coeff[OMI_NUM_COEFFICIENTS];
-      swrc |= SWreadfield(sw_id, WAVELENGTH_COEFFICIENT, start, NULL, edge, &wavelength_coeff);
+      swrc |= SWreadfield(sw_id, WAVELENGTH_COEFFICIENT, start, NULL, edge, wavelength_coeff);
       
       if (swrc == FAIL) {
         rc = ERROR_SetLast(__func__, ERROR_TYPE_WARNING, ERROR_ID_HDFEOS, "SWreadfield");

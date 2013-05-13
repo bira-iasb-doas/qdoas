@@ -282,25 +282,6 @@ double root_mean_square(double * array, doas_spectrum *ranges) {
   return sqrt(sum_of_squares(array, ranges) / spectrum_length(ranges));
 }
 
-/*! Average magnitude, averaging over valid points of the spectrum.
- *
- * The average of the absolute value is returned, for those pixels
- * which are not excluded from the spectrum.
- *
- * \param array Values to average.
- * \param ranges Describes valid ranges of the spectrum.
- *
- * \return The average of the absolute values.
- */
-double average_magnitude(double * array, doas_spectrum *ranges)
- {
-  double average = 0.;
-  doas_iterator my_iterator;
-  for( int i = iterator_start(&my_iterator, ranges); i != ITERATOR_FINISHED; i=iterator_next(&my_iterator))
-   average += fabs(array[i]);
-  return average / spectrum_length(ranges);
- }
-
 /*! Remove pixels with residuals above a certain threshold.
  *
  * If the array of residuals contains values > (max_residual), exclude
@@ -3628,7 +3609,7 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
           for(i = 0; i<NDET;i++)
            Feno->spikes[i] = 0;
 
-          double av_residual = 0;
+          double rms_residual = 0;
           int num_repeats = 0;
 
           do {
@@ -3646,10 +3627,10 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
            else if (rc>THREAD_EVENT_STOP)
             Feno->rc=rc;
-           av_residual = average_magnitude(residuals, Feno->svd.specrange);
+           rms_residual = root_mean_square(residuals, Feno->svd.specrange);
           }
           while(!Feno->hidden // no spike removal for calibration
-                && remove_spikes(residuals, av_residual * pAnalysisOptions->spike_tolerance, Feno->svd.specrange, Feno->spikes) // repeat as long as spikes are found
+                && remove_spikes(residuals, rms_residual * pAnalysisOptions->spike_tolerance, Feno->svd.specrange, Feno->spikes) // repeat as long as spikes are found
                 && (++num_repeats < MAX_REPEAT_CURFIT)
                 && !(rc=reinit_analysis(Feno))); // SVD matrix must be initialized again when pixels are removed.
 
