@@ -233,17 +233,19 @@ RC KURUCZ_Spectrum(double *oldLambda,double *newLambda,double *spectrum,double *
 
     kuruczIndexRow=(pKurucz->hrSolar.nc>indexFenoColumn+1)?indexFenoColumn+1:1;
 
-    if ((solar=MEMORY_AllocDVector("KURUCZ_Spectrum ","solar",0,NDET-1))==NULL)
+    if ((solar=MEMORY_AllocDVector("KURUCZ_Spectrum ","solar",0,NDET))==NULL)
      rc=ERROR_ID_ALLOC;
     else if (!pKuruczOptions->fwhmFit)
      {
       if (pSlitOptions->slitFunction.slitType==SLIT_TYPE_NONE)
        {
-       	if ((pKurucz->hrSolar.nl==NDET) && (pKurucz->hrSolar.nc>=ANALYSE_swathSize+1))
-         memcpy(solar,pKurucz->hrSolar.matrix[kuruczIndexRow],sizeof(double)*NDET);
-        else 
-         
-         ERROR_SetLast("KURUCZ_Spectrum",ERROR_TYPE_FATAL,(rc=ERROR_ID_CONVOLUTION));
+       	if (pKurucz->hrSolar.nc<ANALYSE_swathSize+1)                                                                         
+       	 rc=ERROR_SetLast("KURUCZ_Spectrum",ERROR_TYPE_FATAL,ERROR_ID_OMI_REFSIZE,"Solar spectrum");
+        else if ((pKurucz->hrSolar.nl==NDET) && VECTOR_Equal(pKurucz->hrSolar.matrix[0],oldLambda,NDET,(double)1.e-7))
+         memcpy(solar,pKurucz->hrSolar.matrix[1],sizeof(double)*NDET);
+        else
+         rc=SPLINE_Vector(pKurucz->hrSolar.matrix[0],pKurucz->hrSolar.matrix[1],pKurucz->hrSolar.deriv2[1],pKurucz->hrSolar.nl,
+                             oldLambda,solar,NDET,pAnalysisOptions->interpol,"KURUCZ_Spectrum ");
        } 
       else // 20130208 : a high resolution spectrum is now loaded from the slit page of project properties and convolved
       	rc=ANALYSE_ConvoluteXs(NULL,ANLYS_CROSS_ACTION_CONVOLUTE,(double)0.,&pKurucz->hrSolar,&ANALYSIS_slit,&ANALYSIS_slit2,
