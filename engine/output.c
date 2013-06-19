@@ -1535,10 +1535,15 @@ RC OutputBuildFileName(const ENGINE_CONTEXT *pEngineContext,DoasCh *outputFileNa
       // remove trailing ".ext" from "[...]/filename.ext", if filename
       // entered by the user ends in '.ext'.  Proper extension will be
       // added again when we create  the output file:
-      char *ptr_out=strrchr(outputFileName,PATH_SEP);
-      ptr_out=strrchr(ptr_out+1,'.');
-      if ( ptr_out)
-        *ptr_out='\0';
+      char *basename_start=strrchr(outputFileName,PATH_SEP);
+      if (basename_start == NULL) {
+        // outputFileName is a name without leading path
+        basename_start = outputFileName;
+      }
+      char *extension_start=strrchr(basename_start,'.');
+      if (extension_start != NULL) {
+        *extension_start ='\0';
+      }
     }
   
   return rc;
