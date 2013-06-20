@@ -434,18 +434,21 @@ int readConfigQdoas(commands_t *cmd, QList<const CProjectConfigItem*> &projectIt
 	if (p->name().toUpper() == cmd->projectName.toUpper())
 
 	  {
-	  	if (xmlSwitch)
-	  	 QDOASXML_Parse(cmd->xmlCommands,p);
-
-	  	projectItems.push_back(p);
+            if (xmlSwitch)
+              QDOASXML_Parse(cmd->xmlCommands,p);
+            
+            projectItems.push_back(p);
 	  }
-
 
 	else
 	  delete p;
       }
     }
-    else {
+    else if(xmlSwitch) {
+      std::cout << "-xml switch can only be used when processing a single project.  Use switch -a <projectname>" << std::endl;
+      retCode = 1;
+    } else {
+      
       while (!tmpItems.isEmpty()) {
 	projectItems.push_back(tmpItems.takeFirst());
       }
@@ -1047,5 +1050,3 @@ int batchProcessUsamp(commands_t *cmd)
 
   return retCode;
 }
-
-
