@@ -140,7 +140,7 @@ typedef struct cameraPicture
 CAMERA_PICTURE;
 
 DoasCh *CCD_measureTypes[PRJCT_INSTR_EEV_TYPE_MAX]=
-     	                            { "None","Off axis","Direct sun","Zenith","Dark","Lamp","Bentham","Almucantar","Offset","Azimuth", "Principal plane" };
+     	                            { "None","Off axis","Direct sun","Zenith","Dark","Lamp","Bentham","Almucantar","Offset","Azimuth", "Principal plane", "Horizon" };
 
 
 // ------------------------------------------------------------------
@@ -525,10 +525,10 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
 
          if (!rcFread)
           rc=ERROR_SetLast("ReliCCD_EEV",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pEngineContext->fileInfo.fileName);
-         else if ((header.nTint<=0) ||
-                  !fread(ccdTabTint,sizeof(double)*header.nTint,1,specFp) ||
+         else if ((header.nTint>0) &&
+                 (!fread(ccdTabTint,sizeof(double)*header.nTint,1,specFp) ||
                   !fread(ccdTabNTint,sizeof(short)*header.nTint,1,specFp) ||
-                  !fread(pBuffers->specMax,sizeof(double)*(header.nacc+header.nrej),1,specFp))
+                  !fread(pBuffers->specMax,sizeof(double)*(header.nacc+header.nrej),1,specFp)))
           rc=ERROR_ID_FILE_RECORD;
          else if (!header.saveTracks)
           {

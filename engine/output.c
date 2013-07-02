@@ -140,14 +140,20 @@ static struct field_attribute *copy_attributes(const struct field_attribute *att
 
 /*! \brief Calculate flux for a given wavelength.*/
 double output_flux(const ENGINE_CONTEXT *pEngineContext, double wavelength) {
-  double flux =0.;
+  double flux =0.;  
+  
   if ( wavelength >= pEngineContext->buffers.lambda[0] &&
        wavelength <= pEngineContext->buffers.lambda[NDET-1] ) {
     int pixel=FNPixel(pEngineContext->buffers.lambda,wavelength,NDET,PIXEL_CLOSEST);
 
     int imin=max(pixel-3,0);
-    int imax=min(pixel+3,NDET-1);
-
+    int imax=min(pixel+3,NDET-1);     
+    
+    // Change for MAINZ (only)
+    
+    imin=max(FNPixel(pEngineContext->buffers.lambda,wavelength-0.5,NDET,PIXEL_CLOSEST),0);
+    imax=min(FNPixel(pEngineContext->buffers.lambda,wavelength+0.5,NDET,PIXEL_CLOSEST),NDET-1);
+    
     // Flux calculation
 
     for (int i=imin; i<=imax; i++)
