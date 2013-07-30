@@ -1616,7 +1616,8 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
      else if (THRD_id==THREAD_TYPE_KURUCZ)
       {
        if (!strlen(pEngineContext->project.instrumental.calibrationFile)) // Project properties ->Instrumental: Calibration File
-        rc=ERROR_SetLast("mediateRequestSetAnalysisWindows",ERROR_TYPE_FATAL,ERROR_ID_FILE_NOT_FOUND,pInstrumental->calibrationFile);
+         rc=ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_FILE_NOT_SPECIFIED,
+                          "please specify an OMI irradiance file in Project properties>Instrumental>Calibration File");
        else
         rc=OMI_LoadReference(pEngineContext,(DoasCh *)pEngineContext->project.instrumental.calibrationFile);
       }

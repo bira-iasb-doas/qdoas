@@ -111,6 +111,7 @@ ERROR_TABLE errorTable[]=
   { ERROR_ID_FILE_BAD_LENGTH           , "records of file %s do not have the expected size"                                                                   },
   { ERROR_ID_FILE_OVERWRITE            , "data not saved; change the output file name"                                                                        },
   { ERROR_ID_WAVELENGTH                , "bad wavelength calibration in file %s"                                                                              },
+  { ERROR_ID_FILE_NOT_SPECIFIED        , "missing file name in configuration: %s"},
 
   // Debug
 
