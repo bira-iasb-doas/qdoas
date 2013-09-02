@@ -1201,6 +1201,9 @@ RC omi_load_spectrum(int spec_type, int32 sw_id, int32 measurement, int32 track,
 
 void omi_calculate_wavelengths(float32 wavelength_coeff[], int16 refcol, int32 n_wavel, double* lambda) {
   int i;
+  // OMI wavelengths provided as a degree 4 polynomial
+  // evaluate lambda = c_4*x^4 +c_3*x^3 ... + c_0,
+  //                 = (((c_4*x + c_3)*x + c_2)*x + c_1)*x + c_0.
   for (i=0; i<n_wavel; i++) {
     double x = (double) i-refcol;
     lambda[i] = 0.;
