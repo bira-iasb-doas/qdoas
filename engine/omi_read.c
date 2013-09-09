@@ -393,10 +393,10 @@ void omi_close_orbit_file(OMI_ORBIT_FILE *pOrbitFile)
 
 void omi_destroy_orbit_file(OMI_ORBIT_FILE *pOrbitFile) {
   omi_close_orbit_file(pOrbitFile);
-  if(pOrbitFile->omiFileName != NULL) {
-    free(pOrbitFile->omiFileName);
-    pOrbitFile->omiFileName = NULL;
-  }
+  
+  free(pOrbitFile->omiFileName);
+  pOrbitFile->omiFileName = NULL;
+
   if(pOrbitFile->omiSwath != NULL) {
     omi_free_swath_data(pOrbitFile->omiSwath);
     pOrbitFile->omiSwath = NULL;
@@ -643,7 +643,6 @@ char *automatic_reference_info(struct omi_ref_list *spectra) {
 }
 
 void free_ref_candidates( struct omi_ref_spectrum *reflist) {
-  int frees = 0;
   while(reflist != NULL) {
     struct omi_ref_spectrum *temp = reflist->next;
     free(reflist->spectrum);
@@ -651,20 +650,17 @@ void free_ref_candidates( struct omi_ref_spectrum *reflist) {
     free(reflist->wavelengths);
     free(reflist);
     reflist = temp;
-    frees++;
   }
 }
 
 void free_row_references(struct omi_ref_list *(*row_references)[NFeno][OMI_TOTAL_ROWS]) 
 {
-  int frees = 0;
   for(int i=0; i<NFeno; i++) {
     for(int j=0; j<OMI_TOTAL_ROWS; j++) {
       struct omi_ref_list *tempref,*omi_ref = (*row_references)[i][j];
       while(omi_ref != NULL) {
         tempref = omi_ref->next;
         free(omi_ref);
-        frees++;
         omi_ref = tempref;
       }
     }
@@ -795,11 +791,10 @@ RC setup_automatic_reference(ENGINE_CONTEXT *pEngineContext, void *responseHandl
   struct omi_ref_spectrum *ref_candidates = NULL;
   // strings describing the selected spectra for each row/analysis window
   for(int row = 0; row < OMI_TOTAL_ROWS; row++)
-    for(int analysis_window = 0; analysis_window < NFeno; analysis_window++)
-      if (TabFeno[row][analysis_window].ref_description != NULL) {
-	free(TabFeno[row][analysis_window].ref_description);
-	TabFeno[row][analysis_window].ref_description = NULL;
-      }
+    for(int analysis_window = 0; analysis_window < NFeno; analysis_window++) {
+      free(TabFeno[row][analysis_window].ref_description);
+      TabFeno[row][analysis_window].ref_description = NULL;
+    }
 
   // create the list of all orbit files used for this automatic reference 
   RC rc = read_reference_orbit_files(pEngineContext->fileInfo.fileName);

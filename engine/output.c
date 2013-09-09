@@ -1865,8 +1865,9 @@ static void output_field_clear(struct output_field *this_field) {
    completely.*/
 static void output_field_free(struct output_field *this_field) {
   output_field_clear(this_field);
-  if(this_field->fieldname)
-    free(this_field->fieldname);
+  
+  free(this_field->fieldname);
+
   if(this_field->attributes) {
     for (int i=0; i<this_field->num_attributes; i++) {
       free(this_field->attributes[i].label);
