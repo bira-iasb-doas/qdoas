@@ -83,6 +83,7 @@ CWOutputSelector::CWOutputSelector(const data_select_list_t *d, QWidget *parent)
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_SKY,                    "Sky Obs"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_BESTSHIFT,              "Best shift"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_REFZM,                  "Ref SZA"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_REFNUMBER,              "Ref number"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_REFSHIFT,               "Ref2/Ref1 shift"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_PIXEL,                  "Pixel number"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_PIXEL_TYPE,             "Pixel type"));
@@ -309,6 +310,7 @@ void getValidFieldFlags(int *validFlags, int instrument)
   validFlags[PRJCT_RESULTS_SPIKES]=1;
 
   validFlags[PRJCT_RESULTS_REFZM]=(satelliteFlag)?0:1;                    // in automatic reference selection, the solar zenith angle of the reference spectrum
+  validFlags[PRJCT_RESULTS_REFNUMBER]=(satelliteFlag)?0:1;                // in automatic reference selection, the index of the reference spectrum
   validFlags[PRJCT_RESULTS_SKY]=0;                                        // information on the sky (never used except EASOE campaign, 1991 !)                                      // for satellite measurements, several spectra are averaged
 
   validFlags[PRJCT_RESULTS_LONGIT]=satelliteFlag;

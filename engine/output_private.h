@@ -28,7 +28,7 @@ static inline CROSS_RESULTS *get_cross_results_calib(struct output_field *this_f
 
 static inline CROSS_RESULTS *get_cross_results(struct output_field *this_field, int indexFenoColumn, int index_calib __attribute__ ((unused)) ) {
   FENO * pTabFeno = &TabFeno[indexFenoColumn][this_field->index_feno];
-  return (pTabFeno->rc) 
+  return (pTabFeno->rc)
     ? NULL
     : &pTabFeno->TabCrossResults[this_field->index_cross];
 }
@@ -472,14 +472,14 @@ static inline void get_uav_servo_byte_received(struct output_field *this_field _
 
 static inline void get_slant_column(struct output_field *this_field, double *slant_column, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn, int index_calib) {
   CROSS_RESULTS *pTabCrossResults = this_field->get_cross_results(this_field, indexFenoColumn, index_calib);
-  *slant_column = ( pTabCrossResults && pTabCrossResults->SlntFact!=(double)0.) 
+  *slant_column = ( pTabCrossResults && pTabCrossResults->SlntFact!=(double)0.)
     ? pTabCrossResults->SlntCol/pTabCrossResults->SlntFact
     : DEFAULT_VALUE;
 }
 
 static inline void get_slant_err(struct output_field *this_field, double *slant_err, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn, int index_calib) {
   CROSS_RESULTS *pTabCrossResults = this_field->get_cross_results(this_field, indexFenoColumn, index_calib);
-  *slant_err = ( pTabCrossResults && pTabCrossResults->SlntFact!=(double)0.) 
+  *slant_err = ( pTabCrossResults && pTabCrossResults->SlntFact!=(double)0.)
     ? pTabCrossResults->SlntErr/pTabCrossResults->SlntFact
     : DEFAULT_VALUE;
 }
@@ -582,7 +582,7 @@ static inline void get_param(struct output_field *this_field, double *param, con
   CROSS_RESULTS *pTabCrossResults = this_field->get_cross_results(this_field, indexFenoColumn, index_calib);
   if (pTabCrossResults) {
     *param = (this_field->get_tabfeno(this_field, indexFenoColumn)->TabCross[this_field->index_cross].IndSvdA)
-      ? pTabCrossResults->SlntCol 
+      ? pTabCrossResults->SlntCol
       : pTabCrossResults->Param;
   } else {
     *param = DEFAULT_VALUE;
@@ -607,7 +607,7 @@ static inline void get_amf(struct output_field *this_field, float *amf, const EN
 
 static inline void get_vrt_col(struct output_field *this_field, double *vrt_col, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn, int index_calib) {
   CROSS_RESULTS *pTabCrossResults = this_field->get_cross_results(this_field, indexFenoColumn, index_calib);
-  *vrt_col = ( pTabCrossResults && (pTabCrossResults->VrtFact != (double)0.) ) 
+  *vrt_col = ( pTabCrossResults && (pTabCrossResults->VrtFact != (double)0.) )
     ? pTabCrossResults->VrtCol/pTabCrossResults->VrtFact
     : DEFAULT_VALUE;
 }
@@ -621,6 +621,10 @@ static inline void get_vrt_err(struct output_field *this_field, double *vrt_err,
 
 static inline void get_refzm(struct output_field *this_field, float *refzm, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn, int index_calib __attribute__ ((unused))) {
   *refzm = (float) this_field->get_tabfeno(this_field, indexFenoColumn)->Zm;
+}
+
+static inline void get_refnumber(struct output_field *this_field, int *refnumber, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn, int index_calib __attribute__ ((unused))) {
+  *refnumber= (float) this_field->get_tabfeno(this_field, indexFenoColumn)->indexRef;
 }
 
 static inline void get_ref_shift(struct output_field *this_field, float *ref_shift, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn, int index_calib __attribute__ ((unused))) {
@@ -642,7 +646,7 @@ static inline void get_covar(struct output_field *this_field, double *covar, con
   if (pTabFeno && pTabFeno->TabCross[this_field->index_cross].Fact != (double) 0.) {
     CROSS_REFERENCE *TabCross = pTabFeno->TabCross;
     *covar = pTabFeno->svd.covar[TabCross[this_field->index_cross2].IndSvdA][TabCross[this_field->index_cross].IndSvdA]*pTabFeno->chiSquare/
-      (TabCross[this_field->index_cross].Fact*TabCross[this_field->index_cross2].Fact 
+      (TabCross[this_field->index_cross].Fact*TabCross[this_field->index_cross2].Fact
        * pTabFeno->TabCrossResults[this_field->index_cross].SlntErr *  pTabFeno->TabCrossResults[this_field->index_cross2].SlntErr);
   }
 }
@@ -678,7 +682,7 @@ static inline void get_wavelength_calib(struct output_field *this_field, double 
 }
 
 static inline void get_n_iter(struct output_field *this_field, int *n_iter, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn, int index_calib __attribute__ ((unused))) {
-  *n_iter = this_field->get_tabfeno(this_field, indexFenoColumn)->nIter; 
+  *n_iter = this_field->get_tabfeno(this_field, indexFenoColumn)->nIter;
 }
 
 static inline void get_n_iter_calib(struct output_field *this_field, int *n_iter, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn, int index_calib) {

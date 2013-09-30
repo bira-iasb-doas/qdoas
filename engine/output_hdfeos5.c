@@ -50,7 +50,7 @@ static size_t nCalibWindows;
  *  - fill values/default values for fields
  *  - try to open output file before running analysis, so user gets error immediately?
  *  - somehow put SFP 1 and SFP 2 in one field?
- */    
+ */
 
 RC hdfeos5_open(const ENGINE_CONTEXT *pEngineContext, char *filename) {
   strcat(filename, ".he5");
@@ -137,7 +137,7 @@ RC create_dimensions(void) {
                              // allow for fields with different number of columns
                              // example: fields such as
                              // azimuth/longitude/... can contain 3-4-5 values
-                             { "2", 2}, { "3", 3}, 
+                             { "2", 2}, { "3", 3},
                              { "4", 4}, { "5", 5}, { "6", 6},
                              { "7", 7}, { "8", 8}, { "9", 9}
   };
@@ -191,7 +191,7 @@ RC write_omi_automatic_reference_info(void) {
 RC write_global_attrs(const ENGINE_CONTEXT *pEngineContext) {
   // Qdoas info
   char *attr_qdoas = "Qdoas";
-  char *descriptionformat = 
+  char *descriptionformat =
     "File created using Qdoas (%s), \n"
     "Belgian Institute for Space Aeronomy (BIRA-IASB)\n"
     "http://uv-vis.bira.be/software/QDOAS";
@@ -214,7 +214,7 @@ RC write_global_attrs(const ENGINE_CONTEXT *pEngineContext) {
   // input file
   const char *attr_input_file = "InputFile";
   const char *input_dir = strrchr(pEngineContext->fileInfo.fileName,PATH_SEP);
-  const char *input_file = input_dir 
+  const char *input_file = input_dir
     ? input_dir + 1
     : pEngineContext->fileInfo.fileName;
   attrlength = strlen(input_file) + 1;
@@ -230,7 +230,7 @@ RC write_automatic_reference_info(const ENGINE_CONTEXT *pEngineContext) {
   const char *attr_reference_num_records = "Automatic reference: number of records";
   int format = pEngineContext->project.instrumental.readOutFormat;
 
-  if ( pEngineContext->project.asciiResults.referenceFlag 
+  if ( pEngineContext->project.asciiResults.referenceFlag
        && pEngineContext->analysisRef.refAuto ) {
     switch(format) {
     case PRJCT_INSTR_FORMAT_GDP_ASCII:
@@ -239,12 +239,12 @@ RC write_automatic_reference_info(const ENGINE_CONTEXT *pEngineContext) {
     case PRJCT_INSTR_FORMAT_GOME2:
       {
         hsize_t charlength = 1+strlen(OUTPUT_refFile);
-        herr_t result = HE5_SWwriteattr(swath_id, attr_reference_file, HE5T_CHARSTRING, 
+        herr_t result = HE5_SWwriteattr(swath_id, attr_reference_file, HE5T_CHARSTRING,
                                         &charlength, OUTPUT_refFile);
         if(result == FAIL)
           return ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_HDFEOS5_WRITEATTR, attr_reference_file);
         hsize_t one = 1;
-        result = HE5_SWwriteattr(swath_id, attr_reference_num_records, HE5T_NATIVE_INT, 
+        result = HE5_SWwriteattr(swath_id, attr_reference_num_records, HE5T_NATIVE_INT,
                                  &one, &OUTPUT_nRec);
         if(result == FAIL)
           return ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_HDFEOS5_WRITEATTR, attr_reference_num_records);
@@ -279,7 +279,7 @@ RC write_calibration_data(void) {
      * field.  Therefore we only call HE5_SWdefdatafield for the first
      * row.
      */
-    if(calibfield.index_row == first_row) { 
+    if(calibfield.index_row == first_row) {
       // TODO: more robust check to see if the field is already defined.
 
       char calib_dimensions[HE5_HDFE_DIMBUFSIZE];
@@ -390,33 +390,33 @@ static void write_to_buffer(void *datbuf, const struct output_field *thefield, i
   switch(thefield->memory_type) {
   case OUTPUT_INT:
     for(size_t i=0; i<ncols; i++)
-      ((int (*)[nXtrack][ncols])datbuf)[index_measurement][index_row][i] 
+      ((int (*)[nXtrack][ncols])datbuf)[index_measurement][index_row][i]
         = ((int (*)[ncols])thefield->data)[recordno][i];
   break;
   case OUTPUT_SHORT:
     for(size_t i=0; i<ncols; i++)
-      ((short (*)[nXtrack][ncols])datbuf)[index_measurement][index_row][i] 
+      ((short (*)[nXtrack][ncols])datbuf)[index_measurement][index_row][i]
         = ((short (*)[ncols])thefield->data)[recordno][i];
     break;
   case OUTPUT_USHORT:
     for(size_t i=0; i<ncols; i++)
-      ((unsigned short (*)[nXtrack][ncols])datbuf)[index_measurement][index_row][i] 
+      ((unsigned short (*)[nXtrack][ncols])datbuf)[index_measurement][index_row][i]
         = ((unsigned short (*)[ncols])thefield->data)[recordno][i];
     break;
   case OUTPUT_STRING:
     for(size_t i=0; i<ncols; i++)
-      ((char* (*)[nXtrack][ncols])datbuf)[index_measurement][index_row][i] 
+      ((char* (*)[nXtrack][ncols])datbuf)[index_measurement][index_row][i]
         = ((char* (*)[ncols])thefield->data)[recordno][i];
     break;
   case OUTPUT_FLOAT:
     for(size_t i=0; i<ncols; i++) {
-      (((float (*)[nXtrack][ncols])datbuf)[index_measurement])[index_row][i] 
+      (((float (*)[nXtrack][ncols])datbuf)[index_measurement])[index_row][i]
               = ((float (*)[ncols])thefield->data)[recordno][i];
     }
     break;
   case OUTPUT_DOUBLE:
     for(size_t i=0; i<ncols; i++)
-      ((double (*)[nXtrack][ncols])datbuf)[index_measurement][index_row][i] 
+      ((double (*)[nXtrack][ncols])datbuf)[index_measurement][index_row][i]
         = ((double (*)[ncols])thefield->data)[recordno][i];
     break;
   case OUTPUT_DATE:
@@ -639,7 +639,7 @@ size_t get_hdfeos_size(enum output_datatype datatype) {
   case OUTPUT_FLOAT:
   case OUTPUT_INT:
   case OUTPUT_DOUBLE:
-    return(output_get_size(datatype)); // for simple fields, output_get_size is enough. 
+    return(output_get_size(datatype)); // for simple fields, output_get_size is enough.
     break;
   case OUTPUT_DATE:
     return 3*sizeof(int); // date: stored as array int year, month, day
@@ -675,6 +675,7 @@ static enum fieldtype get_fieldtype(enum _prjctResults output_field) {
   case PRJCT_RESULTS_TDET:
   case PRJCT_RESULTS_SKY:
   case PRJCT_RESULTS_REFZM:
+  case PRJCT_RESULTS_REFNUMBER:
   case PRJCT_RESULTS_PIXEL:
   case PRJCT_RESULTS_PIXEL_TYPE:
   case PRJCT_RESULTS_ORBIT:

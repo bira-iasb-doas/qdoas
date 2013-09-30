@@ -18,7 +18,7 @@
 //      1180     UCCLE                              2600 AP Delft
 //      BELGIUM                                     THE NETHERLANDS
 //      thomas.danckaert@aeronomie.be               info@stcorp.nl
-// 
+//
 //  This program is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU General Public License
 //  as published by the Free Software Foundation; either version 2
@@ -140,20 +140,20 @@ static struct field_attribute *copy_attributes(const struct field_attribute *att
 
 /*! \brief Calculate flux for a given wavelength.*/
 double output_flux(const ENGINE_CONTEXT *pEngineContext, double wavelength) {
-  double flux =0.;  
-  
+  double flux =0.;
+
   if ( wavelength >= pEngineContext->buffers.lambda[0] &&
        wavelength <= pEngineContext->buffers.lambda[NDET-1] ) {
     int pixel=FNPixel(pEngineContext->buffers.lambda,wavelength,NDET,PIXEL_CLOSEST);
 
     int imin=max(pixel-3,0);
-    int imax=min(pixel+3,NDET-1);     
-    
+    int imax=min(pixel+3,NDET-1);
+
     // Change for MAINZ (only)
-    
+
     imin=max(FNPixel(pEngineContext->buffers.lambda,wavelength-0.5,NDET,PIXEL_CLOSEST),0);
     imax=min(FNPixel(pEngineContext->buffers.lambda,wavelength+0.5,NDET,PIXEL_CLOSEST),NDET-1);
-    
+
     // Flux calculation
 
     for (int i=imin; i<=imax; i++)
@@ -192,7 +192,7 @@ static void save_analysis_data(struct output_field *output_field, int recordno, 
   void *data = output_field->data;
   int index_calib = output_field->index_calib;
   func_void get_data = output_field->get_data;
-  switch(output_field->memory_type) 
+  switch(output_field->memory_type)
     {
     case OUTPUT_INT:
       ((func_int) get_data)(output_field, ((int (*)[ncols])data)[recordno], pEngineContext, indexFenoColumn, index_calib);
@@ -204,10 +204,10 @@ static void save_analysis_data(struct output_field *output_field, int recordno, 
       ((func_ushort) get_data)(output_field, ((unsigned short (*)[ncols])data)[recordno], pEngineContext, indexFenoColumn, index_calib);
       break;
     case OUTPUT_STRING:
-      ((func_string) get_data)(output_field, ((char* (*)[ncols])data)[recordno], pEngineContext, indexFenoColumn, index_calib); 
+      ((func_string) get_data)(output_field, ((char* (*)[ncols])data)[recordno], pEngineContext, indexFenoColumn, index_calib);
       break;
     case OUTPUT_FLOAT:
-      ((func_float) get_data)(output_field, ((float (*)[ncols])data)[recordno], pEngineContext, indexFenoColumn, index_calib); 
+      ((func_float) get_data)(output_field, ((float (*)[ncols])data)[recordno], pEngineContext, indexFenoColumn, index_calib);
       break;
     case OUTPUT_DOUBLE:
       ((func_double) get_data)(output_field, ((double (*)[ncols])data)[recordno], pEngineContext, indexFenoColumn, index_calib);
@@ -227,7 +227,7 @@ static void save_analysis_data(struct output_field *output_field, int recordno, 
 /*! \brief save the calibration data for output_field from the
     calibration subwindow index_calib */
 static void save_calib_data(struct output_field *output_field, int index_calib) {
-  switch(output_field->memory_type) 
+  switch(output_field->memory_type)
     {
     case OUTPUT_INT:
       ((func_int) output_field->get_data)(output_field,  &((int *)output_field->data)[index_calib], NULL, output_field->index_row, index_calib);
@@ -269,7 +269,7 @@ static void register_cross_results(const PRJCT_RESULTS *pResults, const FENO *pT
   \param [in] lambda       the current wavelength calibration
 
   \param [in,out] xs       the cross section to correct by wavelength dependent AMF
-  
+
   \param [out] deriv2      second derivatives of the new cross section
 
   */
@@ -730,7 +730,7 @@ static void OutputRegisterFields(const ENGINE_CONTEXT *pEngineContext)
     num_sza = num_azimuth = num_los_zenith = num_los_azimuth = 3;
     break;
   }
-  
+
   switch(pProject->instrumental.readOutFormat) {
   case PRJCT_INSTR_FORMAT_SCIA_PDS:
     func_frac_time = &get_frac_time_recordinfo;
@@ -771,7 +771,7 @@ static void OutputRegisterFields(const ENGINE_CONTEXT *pEngineContext)
       func_los_zenith = &gdp3_get_los_zenith;
       func_earth_radius = &gdp3_get_earth_radius;
       func_sat_height = &gdp3_get_sat_height;
-    } 
+    }
    else {
      func_sza = &gdp4_get_sza;
      func_azimuth = &gdp4_get_azim;
@@ -805,7 +805,7 @@ static void OutputRegisterFields(const ENGINE_CONTEXT *pEngineContext)
   for (int j=0;j<pResults->fieldsNumber;j++)
    {
      enum _prjctResults fieldtype = pResults->fieldsFlag[j];
-     
+
      switch(fieldtype) {
      case PRJCT_RESULTS_SPECNO:
        register_field( (struct output_field) { .fieldname = "Spec No", .resulttype = fieldtype, .format = "%#4d", .memory_type = OUTPUT_INT, .get_data = (func_void)&get_specno } );
@@ -1012,7 +1012,7 @@ static void register_calibration_field(struct output_field newfield) {
   *calibfield = newfield; // copy all contents
   if(calibfield->data_cols == 0) // data_cols = 1 as default value -> we only need to set data_cols explicitly if we want a multi-column field
     calibfield->data_cols = 1;
-  calibfield->fieldname = strdup(calibfield->fieldname); // each output_field should malloc its own copy of fieldname, so we can always use free() afterwards 
+  calibfield->fieldname = strdup(calibfield->fieldname); // each output_field should malloc its own copy of fieldname, so we can always use free() afterwards
   calibfield->get_tabfeno = &get_tabfeno_calib;
   calibfield->get_cross_results = &get_cross_results_calib;
   calibfield->memory_type = OUTPUT_DOUBLE;
@@ -1034,20 +1034,20 @@ static void register_calibration(int kurucz_index, int index_row) {
     char *symbol_name = WorkSpace[pTabFeno->TabCross[indexTabCross].Comp].symbolName;
     char symbol_name_brackets[strlen(symbol_name)+2+1];
     sprintf(symbol_name_brackets,"(%s)",symbol_name);
-    
+
     struct calibconfig {
       bool register_field;
       char *output_name;
       char *symbol_name;
       struct output_field fieldconfig;
     };
-    
+
     struct calibconfig calibrationfields[] = {
       { pTabCrossResults->StoreSlntCol, "SlCol", symbol_name_brackets,
         { .get_data=(func_void)&get_slant_column, .resulttype = PRJCT_RESULTS_SLANT_COL} },
-      { pTabCrossResults->StoreSlntErr, "SlErr", symbol_name_brackets, 
+      { pTabCrossResults->StoreSlntErr, "SlErr", symbol_name_brackets,
         { .get_data=(func_void)&get_slant_err, .resulttype = PRJCT_RESULTS_SLANT_ERR} },
-      { pTabCrossResults->StoreShift, "Shift", symbol_name_brackets, 
+      { pTabCrossResults->StoreShift, "Shift", symbol_name_brackets,
         { .get_data=(func_void)&get_shift, .resulttype = PRJCT_RESULTS_SHIFT} },
       { pTabCrossResults->StoreShift && pTabCrossResults->StoreError, "Err Shift", symbol_name_brackets,
         { .get_data=(func_void)&get_shift_err, .resulttype = PRJCT_RESULTS_SHIFT_ERR} },
@@ -1064,7 +1064,7 @@ static void register_calibration(int kurucz_index, int index_row) {
       { pTabCrossResults->StoreParam && pTabCrossResults->StoreParamError, "Err ", symbol_name,
         { .get_data=(func_void)&get_param_err, .resulttype = PRJCT_RESULTS_PARAM_ERR} }
     };
-    
+
     for(unsigned int i=0; i<sizeof(calibrationfields)/sizeof(calibrationfields[0]); i++) {
       if(calibrationfields[i].register_field) {
         char fieldname[strlen(calibrationfields[i].output_name) + strlen(calibrationfields[i].symbol_name) +1];
@@ -1100,7 +1100,7 @@ static void OutputRegisterParam(const ENGINE_CONTEXT *pEngineContext)
   }
 
   const PRJCT_RESULTS *pResults= &pEngineContext->project.asciiResults;
-      
+
   // Browse analysis windows
   for (int indexFeno=0;indexFeno<NFeno;indexFeno++) {
     FENO *pTabFeno=&TabFeno[indexFenoColumn][indexFeno];
@@ -1110,8 +1110,8 @@ static void OutputRegisterParam(const ENGINE_CONTEXT *pEngineContext)
       sprintf(window_name,"%s.",pTabFeno->windowName);
       register_analysis_output(pResults, indexFeno, ITEM_NONE, window_name);
       register_cross_results(pResults, pTabFeno, indexFeno, ITEM_NONE, window_name);
-    } 
-    else if (outputRunCalib && pTabFeno->hidden) { 
+    }
+    else if (outputRunCalib && pTabFeno->hidden) {
       // run calibration: use TabFeno with calibration settings, register parameters
       // for each calibration window
       for (int indexWin=0; indexWin<KURUCZ_buffers[indexFenoColumn].Nb_Win; indexWin++) {
@@ -1119,7 +1119,7 @@ static void OutputRegisterParam(const ENGINE_CONTEXT *pEngineContext)
         register_analysis_output(pResults, indexFeno, indexWin, window_name);
         register_cross_results(pResults, pTabFeno, indexFeno, indexWin, window_name);
       }
-    } 
+    }
   }
 }
 
@@ -1158,6 +1158,8 @@ static void register_analysis_output(const PRJCT_RESULTS *pResults, int indexFen
   struct outputconfig analysis_infos[] = {
     { (outputRunCalib) ? -1 : PRJCT_RESULTS_REFZM, // no REFZM in "run calibration" mode
       { .fieldname = "RefZm", .format = FORMAT_FLOAT, .memory_type = OUTPUT_FLOAT, .get_data = (func_void) &get_refzm} },
+    { (outputRunCalib) ? -1 : PRJCT_RESULTS_REFNUMBER, // no REFNUMBER in "run calibration" mode
+      { .fieldname = "RefNumber", .format = FORMAT_INT, .memory_type = OUTPUT_INT, .get_data = (func_void) &get_refnumber} },
     { (outputRunCalib) ? -1 : PRJCT_RESULTS_REFSHIFT, // no REFSHIFT in "run calibration" mode
       { .fieldname = "Ref2/Ref1 Shift", .format = FORMAT_FLOAT, .memory_type = OUTPUT_FLOAT, .get_data = (func_void) &get_ref_shift} },
     { (outputRunCalib) ? -1 : PRJCT_RESULTS_SPIKES, // no spike removal in "run calibration" mode
@@ -1168,7 +1170,7 @@ static void register_analysis_output(const PRJCT_RESULTS *pResults, int indexFen
       { .fieldname = "Chi", .format = FORMAT_DOUBLE, .memory_type = OUTPUT_DOUBLE,
         .get_data = (outputRunCalib) ? (func_void) &get_chisquare_calib : (func_void) &get_chisquare} },
     { PRJCT_RESULTS_RMS,
-      { .fieldname = "RMS", .format = FORMAT_DOUBLE, .memory_type = OUTPUT_DOUBLE, 
+      { .fieldname = "RMS", .format = FORMAT_DOUBLE, .memory_type = OUTPUT_DOUBLE,
         .get_data = (outputRunCalib) ? (func_void) &get_rms_calib : (func_void) &get_rms} },
     { PRJCT_RESULTS_ITER,
       { .fieldname = "iter", .format = FORMAT_INT, .memory_type = OUTPUT_INT,
@@ -1209,19 +1211,19 @@ static void register_cross_results(const PRJCT_RESULTS *pResults, const FENO *pT
     char *symbol_name;
     struct output_field fieldcontent;
   };
-  
+
   // Fitted parameters
   for (int indexTabCross=0;indexTabCross<pTabFeno->NTabCross;indexTabCross++)
-    { 
+    {
       const CROSS_RESULTS *pTabCrossResults =&pTabFeno->TabCrossResults[indexTabCross];
       char symbolName[MAX_ITEM_NAME_LEN+1];    // the name of a symbol
       sprintf(symbolName,"(%s)",WorkSpace[pTabFeno->TabCross[indexTabCross].Comp].symbolName);
 
       char *xs_file = WorkSpace[pTabFeno->TabCross[indexTabCross].Comp].crossFileName;
-      // don't add "cross_attribs_file" attribute if crossFileName is not a string (e.g. for polynomial components)      
+      // don't add "cross_attribs_file" attribute if crossFileName is not a string (e.g. for polynomial components)
       bool has_file = ( xs_file != NULL && strlen(xs_file) );
 
-      struct field_attribute cross_attribs_file[1] = {{ "Cross section file", 
+      struct field_attribute cross_attribs_file[1] = {{ "Cross section file",
                                                         xs_file }};
 
       struct analysis_output symbol_fitparams[] = {
@@ -1348,7 +1350,7 @@ RC OUTPUT_RegisterData(const ENGINE_CONTEXT *pEngineContext)
                             indexFeno1=indexFeno;
                           outputCalibFlag++;
                         }
-                      
+
                       if (indexFenoK==ITEM_NONE)
                         outputCalibFlag=0;
 
@@ -1359,7 +1361,7 @@ RC OUTPUT_RegisterData(const ENGINE_CONTEXT *pEngineContext)
                 }
             }
         }
-      
+
       // Run calibration on measurement spectra
 
       else if (THRD_id==THREAD_TYPE_KURUCZ)
@@ -1385,7 +1387,7 @@ static void OutputSaveRecord(const ENGINE_CONTEXT *pEngineContext,INDEX indexFen
   if (pEngineContext->project.asciiResults.analysisFlag)
     {
       int index_record = outputNbRecords++;
-      
+
       for(unsigned int i=0; i<output_num_fields; i++) {
         save_analysis_data(&output_data_analysis[i], index_record, pEngineContext, indexFenoColumn);
       }
@@ -1452,24 +1454,24 @@ RC OutputBuildFileName(const ENGINE_CONTEXT *pEngineContext,DoasCh *outputFileNa
   const char *ptr;
   int                  satelliteFlag;
   RC                   rc;
-  
+
   // Initializations
-  
+
   const PROJECT *pProject = &pEngineContext->project;
   const PRJCT_RESULTS *pResults = &pProject->asciiResults;
-  
+
   rc=ERROR_ID_NO;
-  
+
   if (!outputNbRecords)
     rc=ERROR_SetLast("OutputBuildFileName",ERROR_TYPE_WARNING,ERROR_ID_NOTHING_TO_SAVE,pEngineContext->fileInfo.fileName);
   else
     {
       pOutput=&outputRecords[0];
-      
+
       // Build the complete output path
-      
+
       strcpy(outputFileName,pResults->path);
-      
+
       if ((fileNamePtr=strrchr(outputFileName,PATH_SEP))==NULL)                   // extract output file name without path
         fileNamePtr=outputFileName;
       else
@@ -1536,7 +1538,7 @@ RC OutputBuildFileName(const ENGINE_CONTEXT *pEngineContext,DoasCh *outputFileNa
             sprintf(outputFileName,"%s%cSCIA_%d%02d%02d_%05d",tmpBuffer,PATH_SEP,pOutput->year,pOutput->month,pOutput->day,pEngineContext->recordInfo.scia.orbitNumber);
           else
             sprintf(outputFileName,"%s%c%s",tmpBuffer,PATH_SEP,ptr);
-      
+
         }
       // remove trailing ".ext" from "[...]/filename.ext", if filename
       // entered by the user ends in '.ext'.  Proper extension will be
@@ -1551,7 +1553,7 @@ RC OutputBuildFileName(const ENGINE_CONTEXT *pEngineContext,DoasCh *outputFileNa
         *extension_start ='\0';
       }
     }
-  
+
   return rc;
 }
 
@@ -1602,10 +1604,10 @@ void output_write_data(const bool selected_records[]) {
 
   \param [in] selected_records boolean array of length
   outputNbRecords
-  
+
   \param[in] year, month, site_index date and location to be used in
   the directory structure
-  
+
   \param[in] pEngineContext
   */
 RC output_write_automatic_file(const bool selected_records[], int year, int month, int site_index, const ENGINE_CONTEXT *pEngineContext ) {
@@ -1640,7 +1642,7 @@ RC OUTPUT_FlushBuffers(ENGINE_CONTEXT *pEngineContext)
       ptr=outputFileName;
     else
       ptr++;
-    
+
     if ( strcasecmp(ptr,"automatic") != 0) {
       // ------------------
       // NOT AUTOMATIC MODE
@@ -1660,17 +1662,17 @@ RC OUTPUT_FlushBuffers(ENGINE_CONTEXT *pEngineContext)
       // -------------------
       for(unsigned int i=0; i<outputNbRecords; i++)
         selected_records[i] = false;
-      
+
       // Overpasses: records are distributed using information on the measurement date and the geolocation
       if ((pProject->spectra.mode==PRJCT_SPECTRA_MODES_OBSLIST) && (pProject->spectra.radius>1.)) {
         for (int indexSite=0;indexSite<SITES_itemN;indexSite++) {
           unsigned int indexRecord=0;
           OBSERVATION_SITE *pSite=&SITES_itemList[indexSite];
-          
+
           while ((indexRecord<outputNbRecords) && !rc) {
             int oldYear=outputRecords[indexRecord].year;
             int oldMonth=outputRecords[indexRecord].month;
-              
+
             int nbRecords=0;
             while( indexRecord<outputNbRecords
                    && (outputRecords[indexRecord].year==oldYear || outputRecords[indexRecord].month==oldMonth) ){
@@ -1686,16 +1688,16 @@ RC OUTPUT_FlushBuffers(ENGINE_CONTEXT *pEngineContext)
             }
           }
         }
-      }      
+      }
       // Records are saved using the information on the date only
       else {
         unsigned int indexRecord=0;
         int indexSite=SITES_GetIndex(pProject->instrumental.observationSite);
-        
+
         while (indexRecord<outputNbRecords) {
           int oldYear=outputRecords[indexRecord].year;
           int oldMonth=outputRecords[indexRecord].month;
-          
+
           int nbRecords = 0;
           while( indexRecord<outputNbRecords
                  && (outputRecords[indexRecord].year==oldYear || outputRecords[indexRecord].month==oldMonth) ) {
@@ -1703,7 +1705,7 @@ RC OUTPUT_FlushBuffers(ENGINE_CONTEXT *pEngineContext)
             indexRecord++;
             nbRecords++;
           }
-          
+
           if (nbRecords) {
             rc = output_write_automatic_file(selected_records, oldYear, oldMonth, indexSite, pEngineContext);
           }
@@ -1711,10 +1713,10 @@ RC OUTPUT_FlushBuffers(ENGINE_CONTEXT *pEngineContext)
       }
     }
   }
-    
+
   outputNbRecords=0;
   pEngineContext->lastSavedRecord=0;
-  
+
   return rc;
 }
 
@@ -1842,19 +1844,19 @@ size_t output_get_size(enum output_datatype datatype) {
     of a new file to output using the same output settings.*/
 static void output_field_clear(struct output_field *this_field) {
   if(this_field->data) {
-    
+
     if(this_field->memory_type == OUTPUT_STRING) {
       // if data points to an array of char*, we have to iterate
       // through the array and free each char* as well.
       size_t ncols = this_field->data_cols;
       char* (*data)[ncols] = (char * (*)[ncols]) this_field->data;
-      
+
       // assume no strings occur after the first row with a null pointer:
       for(size_t i = 0;  (*data)[0] != NULL &&  i < outputNbRecords; i++,data++) {
         char *string = (*data)[0];
         for(size_t j = 0; string != NULL && j < ncols; j++, string++)
           free(string);
-      }  
+      }
     }
     free(this_field->data);
     this_field->data = NULL;
@@ -1865,7 +1867,7 @@ static void output_field_clear(struct output_field *this_field) {
    completely.*/
 static void output_field_free(struct output_field *this_field) {
   output_field_clear(this_field);
-  
+
   free(this_field->fieldname);
 
   if(this_field->attributes) {
@@ -1916,7 +1918,7 @@ RC OUTPUT_LocalAlloc(ENGINE_CONTEXT *pEngineContext)
       if (outputRecords!=NULL)
         MEMORY_ReleaseBuffer("OUTPUT_LocalAlloc","outputRecords",outputRecords);
       outputRecords=NULL;
-      
+
       // Allocate new buffers
       outputRecords=(OUTPUT_INFO *)MEMORY_AllocBuffer("OUTPUT_LocalAlloc","outputRecords",newRecordNumber,sizeof(OUTPUT_INFO),0,MEMORY_TYPE_STRUCT);
       if (!outputRecords)
@@ -1935,7 +1937,7 @@ RC OUTPUT_LocalAlloc(ENGINE_CONTEXT *pEngineContext)
         int nb_win = KURUCZ_buffers[calib_field->index_row].Nb_Win;
         calib_field->data = calloc(nb_win * calib_field->data_cols, output_get_size(calib_field->memory_type));
       }
-      
+
       outputNbRecords=0;
    }
 
@@ -1950,16 +1952,16 @@ RC OUTPUT_LocalAlloc(ENGINE_CONTEXT *pEngineContext)
 RC OUTPUT_Alloc(void)
 {
   RC rc=ERROR_ID_NO;
-  
+
   // Allocate buffers resp. for data to output
   if ( (OUTPUT_AmfSpace=(AMF_SYMBOL *)MEMORY_AllocBuffer("OUTPUT_Alloc ","OUTPUT_AmfSpace",MAX_SYMB,sizeof(AMF_SYMBOL),0,MEMORY_TYPE_STRUCT))==NULL )
      rc=ERROR_ID_ALLOC;
-  
+
   else
     {
       memset(OUTPUT_AmfSpace,0,sizeof(AMF_SYMBOL)*MAX_SYMB);
     }
-  
+
   return rc;
 }
 

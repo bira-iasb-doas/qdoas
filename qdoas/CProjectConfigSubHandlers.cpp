@@ -86,6 +86,8 @@ bool CSelectorSubHandler::start(const QString &element, const QXmlAttributes &at
     d->selected[d->nSelected] = PRJCT_RESULTS_BESTSHIFT;
   else if (str == "refzm")
     d->selected[d->nSelected] = PRJCT_RESULTS_REFZM;
+  else if (str == "refnumber")
+    d->selected[d->nSelected] = PRJCT_RESULTS_REFNUMBER;
   else if (str == "refshift")
     d->selected[d->nSelected] = PRJCT_RESULTS_REFSHIFT;
   else if (str == "pixel")
@@ -333,8 +335,8 @@ bool CProjectAnalysisSubHandler::start(const QXmlAttributes &atts)
     m_analysis->fitType = PRJCT_ANLYS_FIT_WEIGHTING_INSTRUMENTAL;
   else
     return postErrorMessage("Invalid analysis fit");
-    
-  m_analysis->unitType = PRJCT_ANLYS_UNITS_NANOMETERS;    // not used anymore  
+
+  m_analysis->unitType = PRJCT_ANLYS_UNITS_NANOMETERS;    // not used anymore
 
   str = atts.value("interpolation");
   if (str == "linear")
@@ -1018,7 +1020,7 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
 
     str = atts.value("xTrackMode");
     m_instrumental->omi.xtrack_mode = str_to_mode(str.toAscii().constData());
-      
+
     m_instrumental->omi.pixelQFRejectionFlag = (atts.value("pixelQF_rejectionFlag") == "true") ? 1 : 0;
 
     str = atts.value("pixelQF_maxGaps");

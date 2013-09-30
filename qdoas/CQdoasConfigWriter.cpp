@@ -228,7 +228,7 @@ void CQdoasConfigWriter::writePropertiesAnalysis(FILE *fp, const mediate_project
   default:
     fprintf(fp, "\"none\"");
   }
-  
+
   fprintf(fp, " unit=\"nm\"");         // not used anymore but forced for versions compatibility
   fprintf(fp, " interpolation=");
   switch (d->interpolationType) {
@@ -1314,7 +1314,7 @@ void CQdoasConfigWriter::writeNonLinear(FILE *fp, const struct anlyswin_nonlinea
 
   fprintf(fp, "                 resolfit=\"%s\" resolinit=\"%.3f\" resoldelt=\"%.3f\" resolstr=\"%s\" resolestr=\"%s\"\n",
 	  (d->resolFlagFit ? sTrue : sFalse), d->resolInitial, d->resolDelta,
-	  (d->resolFlagFitStore ? sTrue : sFalse), (d->resolFlagErrStore ? sTrue : sFalse));	  
+	  (d->resolFlagFitStore ? sTrue : sFalse), (d->resolFlagErrStore ? sTrue : sFalse));
 
   tmpStr = pathMgr->simplifyPath(QString(d->comFile));
   fprintf(fp, "                 comfile=\"%s\"\n", tmpStr.toAscii().constData());
@@ -1461,6 +1461,7 @@ void CQdoasConfigWriter::writeDataSelectList(FILE *fp, const data_select_list_t 
     case PRJCT_RESULTS_SKY:              fprintf(fp, "sky"); break;
     case PRJCT_RESULTS_BESTSHIFT:        fprintf(fp, "bestshift"); break;
     case PRJCT_RESULTS_REFZM:            fprintf(fp, "refzm"); break;
+    case PRJCT_RESULTS_REFNUMBER:        fprintf(fp, "refnumber"); break;
     case PRJCT_RESULTS_REFSHIFT:         fprintf(fp, "refshift"); break;
     case PRJCT_RESULTS_PIXEL:            fprintf(fp, "pixel"); break;
     case PRJCT_RESULTS_PIXEL_TYPE:       fprintf(fp, "pixel_type"); break;
