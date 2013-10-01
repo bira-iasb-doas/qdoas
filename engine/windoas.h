@@ -107,9 +107,9 @@ void    RESOURCE_Free(void);
 
 typedef struct _fileType
  {
-  DoasCh fileType[MAX_ITEM_DESC_LEN+1];          // type of files
-  DoasCh fileExt[12];                            // extension associated to this type of files
-  DoasCh defaultPath[MAX_PATH_LEN+1];            // default path
+  char fileType[MAX_ITEM_DESC_LEN+1];          // type of files
+  char fileExt[12];                            // extension associated to this type of files
+  char defaultPath[MAX_PATH_LEN+1];            // default path
  }
 FILE_TYPE;
 
@@ -118,7 +118,7 @@ FILE_TYPE;
 
 typedef struct _filePath
  {
-  DoasCh path[MAX_PATH_LEN+1];
+  char path[MAX_PATH_LEN+1];
   INT   count;
  }
 FILES_PATH;
@@ -127,7 +127,7 @@ FILES_PATH;
 // GLOBAL VARIABLES
 // ----------------
 
-EXTERN DoasCh FILES_configuration[];            // configuration file
+EXTERN char FILES_configuration[];            // configuration file
 EXTERN FILE_TYPE FILES_types[];                     // types of files supported by application
 EXTERN INT FILES_version;                           // program version
 EXTERN FILES_PATH *FILES_paths;                     // all paths implied in configuration file
@@ -140,11 +140,11 @@ EXTERN INT FILES_nPaths;                            // the size of the previous 
 // Load data from files
 // --------------------
 
-void   FILES_CompactPath(DoasCh *newPath,DoasCh *path,INT useFileName,INT addFlag);
-DoasCh *FILES_RebuildFileName(DoasCh *newPath,DoasCh *path,INT useFileName);
-void   FILES_ChangePath(DoasCh *oldPath,DoasCh *newPath,INT useFileName);
-void   FILES_RemoveOnePath(DoasCh *path);
-void   FILES_RetrievePath(DoasCh *pathString,SZ_LEN pathStringLength,DoasCh *fullFileName,SZ_LEN fullFileNameLength,INT indexFileType,INT changeDefaultPath);
+void   FILES_CompactPath(char *newPath,char *path,INT useFileName,INT addFlag);
+char *FILES_RebuildFileName(char *newPath,char *path,INT useFileName);
+void   FILES_ChangePath(char *oldPath,char *newPath,INT useFileName);
+void   FILES_RemoveOnePath(char *path);
+void   FILES_RetrievePath(char *pathString,SZ_LEN pathStringLength,char *fullFileName,SZ_LEN fullFileNameLength,INT indexFileType,INT changeDefaultPath);
 
 RC     FILES_GetMatrixDimensions(FILE *fp,const char *fileName,INT *pNl,INT *pNc,const char *callingFunction,INT errorType);
 RC     FILES_LoadMatrix(FILE *fp,const char *fileName,double **matrix,INT base,INT nl,INT nc,const char *callingFunction,INT errorType);
@@ -152,7 +152,7 @@ RC     FILES_LoadMatrix(FILE *fp,const char *fileName,double **matrix,INT base,I
 // Select a file
 // -------------
 
-DoasCh  *FILES_BuildFileName(DoasCh *fileName,MASK fileType);
+char  *FILES_BuildFileName(char *fileName,MASK fileType);
 
 // =================
 // OBSERVATION SITES
@@ -169,8 +169,8 @@ DoasCh  *FILES_BuildFileName(DoasCh *fileName,MASK fileType);
 
    typedef struct _observationSites
     {
-     DoasCh name[SITE_NAME_BUFFER_LENGTH];
-     DoasCh abbrev[SITE_ABBREV_BUFFER_LENGTH];
+     char name[SITE_NAME_BUFFER_LENGTH];
+     char abbrev[SITE_ABBREV_BUFFER_LENGTH];
      double longitude;
      double latitude;
      double altitude;
@@ -191,7 +191,7 @@ DoasCh  *FILES_BuildFileName(DoasCh *fileName,MASK fileType);
    RC      SITES_Alloc(void);
    void    SITES_Free(void);
 
-   INDEX   SITES_GetIndex(const DoasCh *siteName);
+   INDEX   SITES_GetIndex(const char *siteName);
 
 // =======
 // SYMBOLS
@@ -209,8 +209,8 @@ DoasCh  *FILES_BuildFileName(DoasCh *fileName,MASK fileType);
 
    typedef struct _symbol
     {
-     DoasCh name[MAX_ITEM_NAME_LEN+1];
-     DoasCh description[MAX_ITEM_DESC_LEN+1];
+     char name[MAX_ITEM_NAME_LEN+1];
+     char description[MAX_ITEM_DESC_LEN+1];
     }
    SYMBOL;
 
@@ -222,8 +222,8 @@ DoasCh  *FILES_BuildFileName(DoasCh *fileName,MASK fileType);
    EXTERN SYMBOL_CROSS *SYMB_itemCrossList;                                     // pointer to list of cross sections symbols
    EXTERN INT SYMB_itemCrossN;
 
-   INDEX SYMB_GetListIndex(SYMBOL *symbolList,INT symbolNumber,DoasCh *symbolName);
-   RC SYMB_Add(DoasCh *symbolName,DoasCh *symbolDescription);
+   INDEX SYMB_GetListIndex(SYMBOL *symbolList,INT symbolNumber,char *symbolName);
+   RC SYMB_Add(char *symbolName,char *symbolDescription);
 
    RC    SYMB_Alloc(void);
    void  SYMB_Free(void);
@@ -247,10 +247,10 @@ MATRIX_OBJECT;
 // Prototypes
 // ----------
 
-RC   MATRIX_Allocate(MATRIX_OBJECT *pMatrix,INT nl,INT nc,INT basel,INT basec,INT allocateDeriv2,DoasCh *callingFunction);
-void MATRIX_Free(MATRIX_OBJECT *pMatrix,DoasCh *callingFunctionShort);
-RC   MATRIX_Copy(MATRIX_OBJECT *pTarget,MATRIX_OBJECT *pSource,DoasCh *callingFunction);
-RC   MATRIX_Load(DoasCh *fileName,MATRIX_OBJECT *pMatrix,INT basel,INT basec,INT nl,INT nc,double xmin,double xmax,INT allocateDeriv2,INT reverseFlag,DoasCh *callingFunction);
+RC   MATRIX_Allocate(MATRIX_OBJECT *pMatrix,INT nl,INT nc,INT basel,INT basec,INT allocateDeriv2, const char *callingFunction);
+void MATRIX_Free(MATRIX_OBJECT *pMatrix, const char *callingFunctionShort);
+RC   MATRIX_Copy(MATRIX_OBJECT *pTarget,MATRIX_OBJECT *pSource, const char *callingFunction);
+RC   MATRIX_Load(char *fileName,MATRIX_OBJECT *pMatrix,INT basel,INT basec,INT nl,INT nc,double xmin,double xmax,INT allocateDeriv2,INT reverseFlag, const char *callingFunction);
 
 // ===========================
 // ANALYSIS WINDOWS PROPERTIES
@@ -263,7 +263,7 @@ RC   MATRIX_Load(DoasCh *fileName,MATRIX_OBJECT *pMatrix,INT basel,INT basec,INT
 
 typedef struct _analysis
  {
-  DoasCh  windowName[MAX_ITEM_NAME_LEN+1];                   // name of window
+  char  windowName[MAX_ITEM_NAME_LEN+1];                   // name of window
   INT    refSpectrumSelectionMode;                          // reference spectrum selection mode
   INT    useKurucz;                                         // apply Kurucz
   INT    useSref;                                           // obsolete
@@ -276,18 +276,18 @@ typedef struct _analysis
   INT    displayPredefined;                                 // force display of predefined parameters
   INT    displayFits;                                       // force display fits
   INT    bandType;
-  DoasCh  refSpectrumFile[MAX_ITEM_TEXT_LEN+1];              // reference spectrum file in file mode
-  DoasCh  refEtalon[MAX_ITEM_TEXT_LEN+1];                    // reference etalon file
-  DoasCh  residualsFile[MAX_ITEM_TEXT_LEN+1];                // residuals safe keeping
-  DoasCh  lambdaMin[13],lambdaMax[13];                       // wavelengths or pixels range
-  DoasCh  lambdaMinK[13],lambdaMaxK[13];                     // wavelengths or pixels range
+  char  refSpectrumFile[MAX_ITEM_TEXT_LEN+1];              // reference spectrum file in file mode
+  char  refEtalon[MAX_ITEM_TEXT_LEN+1];                    // reference etalon file
+  char  residualsFile[MAX_ITEM_TEXT_LEN+1];                // residuals safe keeping
+  char  lambdaMin[13],lambdaMax[13];                       // wavelengths or pixels range
+  char  lambdaMinK[13],lambdaMaxK[13];                     // wavelengths or pixels range
   INDEX  listEntryPoint[TAB_TYPE_ANLYS_MAX];                // entry points to list for all tab pages
   INT    hidden;                                            // flag set if window is hidden
   double refSZA,refSZADelta;
   double refLatMin,refLatMax,refLonMin,refLonMax;
   INT    pixelType;
   INT    nspectra;
-  DoasCh  gomePixelType[4];
+  char  gomePixelType[4];
  }
 ANALYSIS_WINDOWS;
 
@@ -298,17 +298,17 @@ ANALYSIS_WINDOWS;
 #if defined(__WINDOAS_GUI_) && (__WINDOAS_GUI_)
     LRESULT CALLBACK ANLYS_WndProc(HWND hwndAnlys,UINT msg,WPARAM mp1,LPARAM mp2);
     void  ANLYS_ViewCrossSections(HWND hwndTree);
-    void  ANLYS_DeleteOneListItem(DoasCh *textItem,INDEX indexWindow,INDEX indexTab);
+    void  ANLYS_DeleteOneListItem(char *textItem,INDEX indexWindow,INDEX indexTab);
 #endif
 
 void  ANLYS_CopyItems(ANALYSIS_WINDOWS *pAnlysToPaste,ANALYSIS_WINDOWS *pAnlysToCopy);
 void  ANLYS_PasteItems(ANALYSIS_WINDOWS *pAnlysToPaste,ANALYSIS_WINDOWS *pNewAnlys,INDEX indexParent);
 void  ANLYS_ReleaseListItems(INDEX indexWindow);
 void  ANLYS_ResetConfiguration(void);
-void  ANLYS_LoadConfigurationOld(DoasCh *fileName);
+void  ANLYS_LoadConfigurationOld(char *fileName);
 void  ANLYS_OutputConfiguration(FILE *fp,INDEX indexProject,INDEX indexWindow);
-void  ANLYS_LoadConfiguration(DoasCh *fileLine);
-void  ANLYS_SaveConfiguration(FILE *fp,DoasCh *sectionName);
+void  ANLYS_LoadConfiguration(char *fileLine);
+void  ANLYS_SaveConfiguration(FILE *fp,char *sectionName);
 
 RC ANLYS_Alloc(void);
 void ANLYS_Free(void);
@@ -343,7 +343,7 @@ typedef struct _prjctSpectra
          maxGraphH,                                                             // QDOAS obsolete field !!! : maximum number of graphs in width a graphic page can hold
          mode;
   INT    fieldsNumber;                                                          // number of ascii flags set in the next list
-  DoasCh fieldsFlag[PRJCT_RESULTS_MAX];                                         // fields used in ascii format
+  char fieldsFlag[PRJCT_RESULTS_MAX];                                         // fields used in ascii format
  }
 PRJCT_SPECTRA;
 
@@ -387,8 +387,8 @@ typedef struct _prjctKurucz
   INT              windowsNumber;                      // number of windows
   INT              fwhmPolynomial;                     // security gap in pixels numbers
   INT              shiftPolynomial;                    // degree of polynomial to use
-  DoasCh           file[MAX_ITEM_TEXT_LEN+1];          // kurucz file
-  DoasCh           slfFile[MAX_ITEM_TEXT_LEN+1];       // slit function file
+  char           file[MAX_ITEM_TEXT_LEN+1];          // kurucz file
+  char           slfFile[MAX_ITEM_TEXT_LEN+1];       // slit function file
   INT              displayFit;                         // display fit flag
   INT              displayResidual;                    // display new calibration flag
   INT              displayShift;                       // display shift/Fwhm in each pixel
@@ -408,7 +408,7 @@ PRJCT_KURUCZ;
 
 typedef struct _prjctUsamp
  {
-  DoasCh  kuruczFile[MAX_STR_LEN+1];
+  char  kuruczFile[MAX_STR_LEN+1];
   INT    method;
   double phase;
  }
@@ -468,7 +468,7 @@ typedef struct _prjctSciaFormat
  {
   INT         sciaChannel;
   INT         sciaCluster[6];
-  DoasCh       sciaReference[4];
+  char       sciaReference[4];
  }
 PRJCT_SCIA;
 
@@ -481,7 +481,7 @@ PRJCT_GOME;
 
 typedef struct _prjctOmiFormat
  {
-   DoasCh refPath[MAX_STR_LEN+1];
+   char refPath[MAX_STR_LEN+1];
    INT spectralType;
    INT averageFlag;
    int   omiTracks[MAX_SWATHSIZE];
@@ -492,15 +492,15 @@ PRJCT_OMI;
 
 typedef struct _prjctInstrumental
  {
-  DoasCh       observationSite[MAX_ITEM_NAME_LEN+1];                            // index of observation site in list
-  DoasCh       readOutFormat;                                                   // spectra read out format
+  char       observationSite[MAX_ITEM_NAME_LEN+1];                            // index of observation site in list
+  char       readOutFormat;                                                   // spectra read out format
   INT         user;                                                             // user defined
-  DoasCh       calibrationFile[MAX_ITEM_TEXT_LEN+1];                            // calibration file
-  DoasCh       instrFunction[MAX_ITEM_TEXT_LEN+1];                              // instrumental function
-  DoasCh       vipFile[MAX_ITEM_TEXT_LEN+1];                                    // interpixel variability correction
-  DoasCh       dnlFile[MAX_ITEM_TEXT_LEN+1];                                    // detector not linearity correction
-  DoasCh       offsetFile[MAX_ITEM_TEXT_LEN+1];                                 // offset file
-  DoasCh       imagePath[MAX_ITEM_TEXT_LEN+1];                                  // root path for camera pictures
+  char       calibrationFile[MAX_ITEM_TEXT_LEN+1];                            // calibration file
+  char       instrFunction[MAX_ITEM_TEXT_LEN+1];                              // instrumental function
+  char       vipFile[MAX_ITEM_TEXT_LEN+1];                                    // interpixel variability correction
+  char       dnlFile[MAX_ITEM_TEXT_LEN+1];                                    // detector not linearity correction
+  char       offsetFile[MAX_ITEM_TEXT_LEN+1];                                 // offset file
+  char       imagePath[MAX_ITEM_TEXT_LEN+1];                                  // root path for camera pictures
   INT         detectorSize;                                                     // size of detector in pixels
   INT         azimuthFlag;
   INT         averageFlag;
@@ -519,9 +519,9 @@ typedef struct _prjctInstrumental
   INT         mfcRevert;
   INT         offsetFlag;
   double      lambdaMin,lambdaMax;
-  DoasCh       mfcStdDate[24];
+  char       mfcStdDate[24];
   float       opusTimeShift;
-  DoasCh       fileExt[50];
+  char       fileExt[50];
   float       omiWavelength1,omiWavelength2;
  }
 PRJCT_INSTRUMENTAL;
@@ -534,7 +534,7 @@ typedef struct _prjctSlit
  {
   SLIT  slitFunction;                                  // slit function
   INT   fwhmCorrectionFlag;                            // flag set if fwhm correction is to be applied
-  DoasCh kuruczFile[MAX_STR_LEN+1];
+  char kuruczFile[MAX_STR_LEN+1];
  }
 PRJCT_SLIT;
 
@@ -547,11 +547,11 @@ PRJCT_SLIT;
 
 typedef struct _prjctResultsFields
  {
-  DoasCh   fieldName[2*(MAX_ITEM_NAME_LEN+1)];
+  char   fieldName[2*(MAX_ITEM_NAME_LEN+1)];
   INT     fieldType;
   INT     fieldSize;
   INT     fieldDim1,fieldDim2;
-  DoasCh   fieldFormat[MAX_ITEM_NAME_LEN+1];
+  char   fieldFormat[MAX_ITEM_NAME_LEN+1];
  }
 PRJCT_RESULTS_FIELDS;
 
@@ -560,12 +560,12 @@ PRJCT_RESULTS_FIELDS;
 
 typedef struct _prjctAsciiResults
 {
-  DoasCh path[MAX_ITEM_TEXT_LEN+1];                                         // path for results and fits files
+  char path[MAX_ITEM_TEXT_LEN+1];                                         // path for results and fits files
   INT   analysisFlag,calibFlag,referenceFlag,dirFlag,fileNameFlag;          // store results in ascii format
-  DoasCh fluxes[MAX_ITEM_TEXT_LEN+1];                                       // fluxes
-  DoasCh cic[MAX_ITEM_TEXT_LEN+1];                                          // color indexes
+  char fluxes[MAX_ITEM_TEXT_LEN+1];                                       // fluxes
+  char cic[MAX_ITEM_TEXT_LEN+1];                                          // color indexes
   INT fieldsNumber;                                                         // number of ascii flags set in the next list
-  DoasCh fieldsFlag[PRJCT_RESULTS_MAX];                                     // fields used in output
+  char fieldsFlag[PRJCT_RESULTS_MAX];                                     // fields used in output
   enum output_format file_format;
   char swath_name[HDFEOS_OBJ_LEN_MAX];
  }
@@ -576,12 +576,12 @@ PRJCT_RESULTS;
 
 typedef struct _prjctNasaResults
  {
-  DoasCh path[MAX_ITEM_TEXT_LEN+1];                                          // path for results and fits files
-  DoasCh nasaFlag;                                                           // use NASA-AMES format
-  DoasCh no2RejectionFlag;                                                   // force NO2 rejection test to be applied
-  DoasCh instrument[MAX_ITEM_TEXT_LEN+1];                                    // instrument specification
-  DoasCh experiment[MAX_ITEM_TEXT_LEN+1];                                    // experiment specification
-  DoasCh fields[PRJCT_RESULTS_NASA_MAX][MAX_ITEM_NAME_LEN+1];                // fields used in NASA-AMES format
+  char path[MAX_ITEM_TEXT_LEN+1];                                          // path for results and fits files
+  char nasaFlag;                                                           // use NASA-AMES format
+  char no2RejectionFlag;                                                   // force NO2 rejection test to be applied
+  char instrument[MAX_ITEM_TEXT_LEN+1];                                    // instrument specification
+  char experiment[MAX_ITEM_TEXT_LEN+1];                                    // experiment specification
+  char fields[PRJCT_RESULTS_NASA_MAX][MAX_ITEM_NAME_LEN+1];                // fields used in NASA-AMES format
  }
 PRJCT_RESULTS_NASA;
 
@@ -593,7 +593,7 @@ PRJCT_RESULTS_NASA;
 
 typedef struct _project
  {
-  DoasCh name[MAX_ITEM_NAME_LEN+1];                     // name of window
+  char name[MAX_ITEM_NAME_LEN+1];                     // name of window
   PRJCT_SPECTRA spectra;                               // spectra selection tab page
   PRJCT_ANLYS analysis;                                // analysis tab page
   PRJCT_FILTER lfilter;                                // filter (low pass options) tab page
@@ -612,7 +612,7 @@ PROJECT;
 // ----------------
 
 EXTERN PROJECT *PRJCT_itemList,PRJCT_panelProject;     // list of projects
-EXTERN DoasCh   *PRJCT_AnlysInterpol[],                 // interpolation methods
+EXTERN char   *PRJCT_AnlysInterpol[],                 // interpolation methods
                *PRJCT_AnlysMethods[],                  // analysis methods
                *PRJCT_filterTypes[],
                *PRJCT_filterOutput[];
@@ -630,10 +630,10 @@ RC   PRJCT_Alloc(void);
 void PRJCT_Free(void);
 
 void PRJCT_OutputConfiguration(FILE *fp,INDEX indexProject);
-void PRJCT_LoadFile(DoasCh *fileName);
+void PRJCT_LoadFile(char *fileName);
 void PRJCT_ResetConfiguration(void);
-void PRJCT_LoadConfiguration(DoasCh *fileLine);
-void PRJCT_SaveConfiguration(FILE *fp,DoasCh *sectionName);
+void PRJCT_LoadConfiguration(char *fileLine);
+void PRJCT_SaveConfiguration(FILE *fp,char *sectionName);
 
 // ===============================
 // CROSS SECTIONS CONVOLUTION TOOL
@@ -660,7 +660,7 @@ void PRJCT_SaveConfiguration(FILE *fp,DoasCh *sectionName);
    // GLOBAL VARIABLES
    // ----------------
 
-   EXTERN DoasCh *XSCONV_slitTypes[SLIT_TYPE_MAX];
+   EXTERN char *XSCONV_slitTypes[SLIT_TYPE_MAX];
 
    // ----------
    // PROTOTYPES
@@ -668,9 +668,9 @@ void PRJCT_SaveConfiguration(FILE *fp,DoasCh *sectionName);
 
    // Files processing
 
-   RC   XSCONV_LoadCalibrationFile(MATRIX_OBJECT *pLambda,DoasCh *lambdaFile,INT nextraPixels);
+   RC   XSCONV_LoadCalibrationFile(MATRIX_OBJECT *pLambda,char *lambdaFile,INT nextraPixels);
    RC   XSCONV_LoadSlitFunction(MATRIX_OBJECT *pSlitXs,MATRIX_OBJECT *pSlitXs2,SLIT *pSlit,double *pGaussWidth,INT *pSlitType);
-   RC   XSCONV_LoadCrossSectionFile(MATRIX_OBJECT *pCross,DoasCh *crossFile,double lambdaMin,double lambdaMax,double shift,INT conversionMode);
+   RC   XSCONV_LoadCrossSectionFile(MATRIX_OBJECT *pCross,char *crossFile,double lambdaMin,double lambdaMax,double shift,INT conversionMode);
 
    RC XSCONV_NewSlitFunction(SLIT *pSlitOptions,MATRIX_OBJECT *pSlit,double slitParam,SLIT *pSlit2Options,MATRIX_OBJECT *pSlit2,double slitParam2);
 

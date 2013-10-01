@@ -376,11 +376,11 @@ RC OutputGetAmf(CROSS_RESULTS *pResults,double Zm,double Tm,double *pAmf)
 
  \retval ERROR_ID_NO in case of success, any other value in case of error
 */
-RC OUTPUT_ReadAmf(const char *symbolName,const char *amfFileName,DoasCh amfType,INDEX *pIndexAmf)
+RC OUTPUT_ReadAmf(const char *symbolName,const char *amfFileName,char amfType,INDEX *pIndexAmf)
 {
   // Declarations
 
-  DoasCh  fileType,                                                             // file extension and type
+  char  fileType,                                                             // file extension and type
         *oldColumn,*nextColumn;                                                 // go to the next column in record or the next record
   SZ_LEN symbolLength,fileLength;                                               // length of symbol and lines strings
   AMF_SYMBOL *pAmfSymbol;                                                       // pointer to an AMF symbol
@@ -439,8 +439,8 @@ RC OUTPUT_ReadAmf(const char *symbolName,const char *amfFileName,DoasCh amfType,
          rc=ERROR_SetLast("OUTPUT_ReadAmf",ERROR_TYPE_FATAL,ERROR_ID_FILE_NOT_FOUND,amfFileName);
         else if (!(fileLength=STD_FileLength(amfFp)))
          rc=ERROR_SetLast("OUTPUT_ReadAmf",ERROR_TYPE_FATAL,ERROR_ID_FILE_EMPTY,amfFileName);
-        else if (((nextColumn=(DoasCh *)MEMORY_AllocBuffer("OUTPUT_ReadAmf ","nextColumn",fileLength+1,1,0,MEMORY_TYPE_STRING))==NULL) ||
-                 ((oldColumn=(DoasCh *)MEMORY_AllocBuffer("OUTPUT_ReadAmf ","oldColumn",fileLength+1,1,0,MEMORY_TYPE_STRING))==NULL))
+        else if (((nextColumn=(char *)MEMORY_AllocBuffer("OUTPUT_ReadAmf ","nextColumn",fileLength+1,1,0,MEMORY_TYPE_STRING))==NULL) ||
+                 ((oldColumn=(char *)MEMORY_AllocBuffer("OUTPUT_ReadAmf ","oldColumn",fileLength+1,1,0,MEMORY_TYPE_STRING))==NULL))
          rc=ERROR_ID_ALLOC;
         else
          {
@@ -545,7 +545,7 @@ void OUTPUT_ResetData(void)
         pResults->StoreSlntCol=
         pResults->StoreSlntErr=
         pResults->StoreVrtCol=
-        pResults->StoreVrtErr=(DoasCh)0;
+        pResults->StoreVrtErr=(char)0;
      // -------------------------------------------
         pResults->ResCol=(double)0.;
      // -------------------------------------------
@@ -616,7 +616,7 @@ static void OutputRegisterFluxes(const ENGINE_CONTEXT *pEngineContext)
 {
   // Declarations
 
-   DoasCh  columnTitle[MAX_ITEM_NAME_LEN+1];
+   char  columnTitle[MAX_ITEM_NAME_LEN+1];
    const char *ptrOld,*ptrNew;
 
   // Initializations
@@ -713,14 +713,14 @@ static void OutputRegisterFields(const ENGINE_CONTEXT *pEngineContext)
   size_t num_los_zenith = 1;
   func_float func_los_zenith = &get_los_zenith;
   func_float func_scanning_angle = &get_scanning_angle;
-  char *format_datetime = "%4d%02d%02d%02d%02d%02d"; // year, month, day, hour, min, sec
+  const char *format_datetime = "%4d%02d%02d%02d%02d%02d"; // year, month, day, hour, min, sec
   func_datetime func_datetime = &get_datetime;
   func_double func_frac_time = &get_frac_time;
 
-  char *title_sza = "SZA";
-  char *title_azimuth = "Solar Azimuth Angle";
-  char *title_los_zenith = "LoS ZA";
-  char *title_los_azimuth = "LoS Azimuth";
+  const char *title_sza = "SZA";
+  const char *title_azimuth = "Solar Azimuth Angle";
+  const char *title_los_zenith = "LoS ZA";
+  const char *title_los_azimuth = "LoS Azimuth";
 
   switch(pProject->instrumental.readOutFormat) {
   case PRJCT_INSTR_FORMAT_SCIA_PDS:
@@ -1037,7 +1037,7 @@ static void register_calibration(int kurucz_index, int index_row) {
 
     struct calibconfig {
       bool register_field;
-      char *output_name;
+      const char *output_name;
       char *symbol_name;
       struct output_field fieldconfig;
     };
@@ -1408,7 +1408,7 @@ static void OutputSaveRecord(const ENGINE_CONTEXT *pEngineContext,INDEX indexFen
 
  \param [out] outputFileName  the name of the output file
 */
-void OutputBuildSiteFileName(const ENGINE_CONTEXT *pEngineContext,DoasCh *outputFileName,INT year,INT month,INDEX indexSite)
+void OutputBuildSiteFileName(const ENGINE_CONTEXT *pEngineContext,char *outputFileName,INT year,INT month,INDEX indexSite)
  {
   // Declarations
 
@@ -1446,10 +1446,10 @@ void OutputBuildSiteFileName(const ENGINE_CONTEXT *pEngineContext,DoasCh *output
   \retval ERROR_ID_NOTHING_TO_SAVE if there is nothing to save,
   \retval ERROR_ID_NO otherwise
 */
-RC OutputBuildFileName(const ENGINE_CONTEXT *pEngineContext,DoasCh *outputFileName)
+RC OutputBuildFileName(const ENGINE_CONTEXT *pEngineContext,char *outputFileName)
 {
   OUTPUT_INFO         *pOutput;
-  DoasCh               *fileNamePtr,                                             // character pointers used for building output file name
+  char               *fileNamePtr,                                             // character pointers used for building output file name
     tmpBuffer[MAX_ITEM_TEXT_LEN+1];
   const char *ptr;
   int                  satelliteFlag;
@@ -1574,7 +1574,7 @@ RC open_output_file(const ENGINE_CONTEXT *pEngineContext, char *outputFileName)
   }
 }
 
-void output_close_file() {
+void output_close_file(void) {
   switch(selected_format) {
   case ASCII:
     ascii_close_file();
@@ -1721,7 +1721,7 @@ RC OUTPUT_FlushBuffers(ENGINE_CONTEXT *pEngineContext)
 }
 
 /*! \brief Save all calibration data to the calibration output buffers.*/
-void save_calibration() {
+void save_calibration(void) {
   for(unsigned int i=0; i<calib_num_fields; i++) {
     struct output_field *cur_field = &output_data_calib[i];
     int nbWin = KURUCZ_buffers[cur_field->index_row].Nb_Win;

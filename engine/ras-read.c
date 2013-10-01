@@ -81,7 +81,7 @@ RC SetRAS(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
  {
   // Declarations
 
-  DoasCh  fileName[MAX_PATH_LEN+1],                                              // name of the current file
+  char  fileName[MAX_PATH_LEN+1],                                              // name of the current file
         *ptr,*ptr2;                                                             // pointers to parts in the previous string
   INT    fileLength;                                                            // length of the file
   RC     rc;                                                                    // return code
@@ -137,13 +137,13 @@ RC SetRAS(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
 //               ERROR_ID_NO              otherwise.
 // -----------------------------------------------------------------------------
 
-RC RasReadRecord(DoasCh *fileName,double *spe,double *drk,ENGINE_CONTEXT *pEngineContext)
+RC RasReadRecord(char *fileName,double *spe,double *drk,ENGINE_CONTEXT *pEngineContext)
  {
   // Declarations
 
   RECORD_INFO *pRecord;                                                         // pointer to the record part of the engine context
 
-  DoasCh fileLine[MAX_STR_SHORT_LEN+1],                                          // line of file
+  char fileLine[MAX_STR_SHORT_LEN+1],                                          // line of file
         keyName[MAX_STR_SHORT_LEN+1],                                           // key name for commented lines
         strBuffer[MAX_STR_SHORT_LEN+1];                                         // string buffer
 
@@ -287,7 +287,7 @@ RC ReliRAS(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,INT localDay
 
   RECORD_INFO *pRecord;                                                         // pointer to the record part of the engine context
 
-  DoasCh                fileName[MAX_PATH_LEN+1],                                // name of the current file (the current record)
+  char                fileName[MAX_PATH_LEN+1],                                // name of the current file (the current record)
                       *ptr;                                                     // pointers to parts in the previous string
   RC                   rc;                                                      // return code
   double               tmLocal;                                                 // the measurement time in seconds

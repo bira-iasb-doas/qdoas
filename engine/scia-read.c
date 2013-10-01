@@ -164,7 +164,7 @@ INT SCIA_ms=0;
 
 typedef struct _sciaOrbitFiles                                                  // description of an orbit
  {
- 	DoasCh sciaFileName[MAX_STR_LEN+1];                                           // the name of the file with a part of the orbit
+ 	char sciaFileName[MAX_STR_LEN+1];                                           // the name of the file with a part of the orbit
  	info_l1c        sciaPDSInfo;                                                  // all internal information about the PDS file like data offsets etc.
   float *sciaSunRef,*sciaSunWve;                                                // the sun reference spectrum and calibration
   INDEX *sciaLatIndex,*sciaLonIndex,*sciaSzaIndex;                              // indexes of records sorted resp. by latitude, by longitude and by SZA
@@ -202,7 +202,7 @@ void mds_1c_constant_getbin(FILE* unit, mds_1c_constant *var);
 // PURPOSE       Release buffers allocated by SCIAMACHY readout routines
 // -----------------------------------------------------------------------------
 
-void SCIA_ReleaseBuffers(DoasCh format)
+void SCIA_ReleaseBuffers(char format)
  {
   // Declarations
 
@@ -1076,16 +1076,16 @@ RC SCIA_SetPDS(ENGINE_CONTEXT *pEngineContext)
   // Declarations
 
   SCIA_ORBIT_FILE *pOrbitFile;                                                  // pointer to the current orbit
-  DoasCh filePath[MAX_STR_SHORT_LEN+1];
-  DoasCh fileFilter[MAX_STR_SHORT_LEN+1];
-  DoasCh fileExt[MAX_STR_SHORT_LEN+1];
-  DoasCh filePrefix[MAX_STR_SHORT_LEN+1];
+  char filePath[MAX_STR_SHORT_LEN+1];
+  char fileFilter[MAX_STR_SHORT_LEN+1];
+  char fileExt[MAX_STR_SHORT_LEN+1];
+  char filePrefix[MAX_STR_SHORT_LEN+1];
   struct dirent *fileInfo;
   DIR *hDir;
   INDEX indexFile;
-  DoasCh *ptr,*ptrOld;
+  char *ptr,*ptrOld;
   INT oldCurrentIndex;
-  DoasCh *_nList[10];
+  char *_nList[10];
   INT _n;
   RC rc;                                                                        // return code
 

@@ -78,7 +78,7 @@
 
 typedef struct _debugFunction
  {
- 	DoasCh fctName[MAX_FCT_LEN+1];                                                 // the name of the function
+ 	char fctName[MAX_FCT_LEN+1];                                                 // the name of the function
  	MASK  fctType;                                                                // the type of the function
  	int   fctLevel;                                                               // the debugging level of the function
  }
@@ -93,8 +93,8 @@ DEBUG_FUNCTION;
 static DEBUG_FUNCTION debugFct[DEBUG_MAX_LEVELS];                               // the list of functions registered from the DEBUG_Start call
 static int debugNFct=0;                                                         // the number of functions in the debugFct stack
 
-static DoasCh  debugFileName[MAX_PATH_LEN+1];                                    // name of the debug file
-static DoasCh  debugIndentStr[DEBUG_MAX_LEVELS*4+1];                             // the indentation string (depend on the function level)
+static char  debugFileName[MAX_PATH_LEN+1];                                    // name of the debug file
+static char  debugIndentStr[DEBUG_MAX_LEVELS*4+1];                             // the indentation string (depend on the function level)
 static int    debugFctLevelMax=0;                                               // the maximum number of levels of functions to debug
 static MASK   debugFctMask=0;                                                   // mask to filter the functions according to their type
 static int    debugFlag=0;                                                      // 1 to allow debug, 0 otherwise
@@ -113,7 +113,7 @@ static int    debugVar=0;                                                       
 //               ...            : arguments of the formatted string.
 // -----------------------------------------------------------------------------
 
-void DEBUG_Print(DoasCh *formatString,...)
+void DEBUG_Print(char *formatString,...)
  {
   // Declarations
 
@@ -150,12 +150,12 @@ void DEBUG_Print(DoasCh *formatString,...)
 //               ...     : the list of variables to print out.
 // -----------------------------------------------------------------------------
 
-void DEBUG_PrintVar(DoasCh *message,...)
+void DEBUG_PrintVar(char *message,...)
  {
   // Declarations
 
   va_list argList;                                                              // variable arguments list
-  DoasCh *argPtr;                                                                // pointer to the next argument in the previous list
+  char *argPtr;                                                                // pointer to the next argument in the previous list
   DEBUG_VARIABLE varList[DEBUG_MAX_VARIABLES];                                  // the list of the indexes of variables to debug
   DEBUG_VARIABLE *pVar;                                                         // pointer to the current variable in the previous list
   INT nVar;                                                                     // the number of variables to debug
@@ -177,7 +177,7 @@ void DEBUG_PrintVar(DoasCh *message,...)
 
     va_start(argList,message);
 
-    for (nVar=0;(nVar<DEBUG_MAX_VARIABLES) && ((argPtr=(DoasCh *)va_arg(argList,DoasCh *))!=NULL);)
+    for (nVar=0;(nVar<DEBUG_MAX_VARIABLES) && ((argPtr=(char *)va_arg(argList,char *))!=NULL);)
      {
       pVar=&varList[nVar];
 
@@ -361,7 +361,7 @@ void DEBUG_PrintVar(DoasCh *message,...)
 //               ERROR_ID_NO if the function succeeds
 // -----------------------------------------------------------------------------
 
-RC DEBUG_FunctionBegin(DoasCh *fctName,MASK fctType)
+RC DEBUG_FunctionBegin(char *fctName,MASK fctType)
  {
   // Declarations
 
@@ -468,7 +468,7 @@ RC DEBUG_FunctionBegin(DoasCh *fctName,MASK fctType)
 //               ERROR_ID_NO otherwise
 // -----------------------------------------------------------------------------
 
-RC DEBUG_FunctionStop(DoasCh *fctName,RC rcFct)
+RC DEBUG_FunctionStop(char *fctName,RC rcFct)
  {
   // Declarations
 
@@ -490,7 +490,7 @@ RC DEBUG_FunctionStop(DoasCh *fctName,RC rcFct)
 
 
 rc=ERROR_SetLast("DEBUG_FunctionStop",ERROR_TYPE_DEBUG,ERROR_ID_DEBUG_FCTBLOCK,
-                (debugNFct>=0)?debugFct[debugNFct].fctName:(DoasCh *) "Unknown",fctName);
+                (debugNFct>=0)?debugFct[debugNFct].fctName:(char *) "Unknown",fctName);
 
     else if ((debugFct[debugNFct].fctLevel!=ITEM_NONE) &&
              (debugFct[debugNFct].fctType!=DEBUG_FCTTYPE_MEM) &&
@@ -540,7 +540,7 @@ rc=ERROR_SetLast("DEBUG_FunctionStop",ERROR_TYPE_DEBUG,ERROR_ID_DEBUG_FCTBLOCK,
 //               ERROR_ID_NO otherwise
 // -----------------------------------------------------------------------------
 
-RC DEBUG_Start(DoasCh *fileName,DoasCh *callingFct,MASK fctMask,int nLevels,int varFlag,int resetFlag)
+RC DEBUG_Start(char *fileName,char *callingFct,MASK fctMask,int nLevels,int varFlag,int resetFlag)
  {
   // Declarations
 
@@ -647,7 +647,7 @@ RC DEBUG_Start(DoasCh *fileName,DoasCh *callingFct,MASK fctMask,int nLevels,int 
 //               ERROR_ID_DEBUG_ otherwise
 // -----------------------------------------------------------------------------
 
-RC DEBUG_Stop(DoasCh *callingFct)
+RC DEBUG_Stop(char *callingFct)
  {
   // Declaration
 

@@ -55,8 +55,8 @@ extern "C" {
 // typedef struct _slit
 //  {
 //   INT    slitType;                                                              // type of line shape (see above)
-//   DoasCh slitFile[MAX_STR_LEN+1];                                               // for line shapes provided in file, name of the first file
-//   DoasCh slitFile2[MAX_STR_LEN+1];                                              // for line shapes provided in file, name of the second file
+//   char slitFile[MAX_STR_LEN+1];                                               // for line shapes provided in file, name of the first file
+//   char slitFile2[MAX_STR_LEN+1];                                              // for line shapes provided in file, name of the second file
 //   double slitParam;                                                             // up to 4 parameters can be provided for the line shape
 //   double slitParam2;                                                            //       usually, the first one is the FWHM
 //   double slitParam3;                                                            //       obsolete : the Voigt profile function uses the 4 parameters

@@ -147,7 +147,7 @@
 //               0 otherwise.
 // -----------------------------------------------------------------------------
 
-    RC VECTOR_Log(double *out,double *in,int dim,DoasCh *callingFunction)
+    RC VECTOR_Log(double *out,double *in,int dim,char *callingFunction)
      {
       // Declarations
 
@@ -364,11 +364,11 @@ double VECTOR_Norm(double *v,INT dim)
 // VECTOR_NormalizeVector : Vector normalization
 // ----------------------------------------------------
 
-RC VECTOR_NormalizeVector(double *v,INT dim,double *pFact,const DoasCh *function)
+RC VECTOR_NormalizeVector(double *v,INT dim,double *pFact,const char *function)
  {
   // Declarations
 
-  DoasCh str[MAX_ITEM_TEXT_LEN+1];
+  char str[MAX_ITEM_TEXT_LEN+1];
   double norm;
   INDEX i;
   RC rc;

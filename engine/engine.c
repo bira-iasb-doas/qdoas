@@ -54,7 +54,7 @@ INT  NDET;                                                                      
 
 ENGINE_CONTEXT engineContext,                                                   // engine context used to make the interface between the mediator and the engine
   ENGINE_contextRef;                                               // engine context used for the automatic search of the reference spectrum
-DoasCh ENGINE_dbgFile[MAX_PATH_LEN+1];
+char ENGINE_dbgFile[MAX_PATH_LEN+1];
 double ENGINE_localNoon;
 
 // -----------------------------------------------------------------------------
@@ -284,7 +284,7 @@ RC EngineSetProject(ENGINE_CONTEXT *pEngineContext)
    double *instrDeriv2;                                                          // second derivative for the instrument function
    RC rc;                                                                        // return code
    FILE *fp;                                                                     // file pointer
-   DoasCh str[MAX_ITEM_TEXT_LEN+1];                                              // buffer to read the lines of the file
+   char str[MAX_ITEM_TEXT_LEN+1];                                              // buffer to read the lines of the file
    int i,indexSite;                                                              // index for loops and arrays
 
    // Initializations
@@ -526,7 +526,7 @@ RC EngineSetFile(ENGINE_CONTEXT *pEngineContext,const char *fileName,void *respo
    // Declarations
 
    FILE_INFO *pFile;
-   DoasCh fileTmp[MAX_STR_LEN+1];
+   char fileTmp[MAX_STR_LEN+1];
    RC rc;
 
    // Initializations
@@ -1350,10 +1350,10 @@ RC EngineSetRefIndexesMFC(ENGINE_CONTEXT *pEngineContext)
      indexZmMin,                                               // index of record with SZA minimum
      indexRecord,                                              // browse records
      *indexList;
-   DoasCh              filePath[MAX_ITEM_TEXT_LEN+1];
-   DoasCh              fileName[MAX_ITEM_TEXT_LEN+1];
-   DoasCh             *ptr,fileExt[MAX_ITEM_TEXT_LEN+1];
-   DoasCh            **fileList;
+   char              filePath[MAX_ITEM_TEXT_LEN+1];
+   char              fileName[MAX_ITEM_TEXT_LEN+1];
+   char             *ptr,fileExt[MAX_ITEM_TEXT_LEN+1];
+   char            **fileList;
    struct dirent *fileInfo;
    DIR *hDir;
    INDEX               indexFile;
@@ -1457,25 +1457,25 @@ RC EngineSetRefIndexesMFC(ENGINE_CONTEXT *pEngineContext)
 
      // Memory allocation
 
-     if (((fileList=(DoasCh **)MEMORY_AllocBuffer("EngineSetRefIndexesMFC","fileList",fileNumber,sizeof(DoasCh *),0,MEMORY_TYPE_PTR))==NULL) ||
+     if (((fileList=(char **)MEMORY_AllocBuffer("EngineSetRefIndexesMFC","fileList",fileNumber,sizeof(char *),0,MEMORY_TYPE_PTR))==NULL) ||
          ((indexList=(INDEX *)MEMORY_AllocBuffer("EngineSetRefIndexesMFC","",fileNumber,sizeof(INDEX),0,MEMORY_TYPE_INDEX))==NULL) ||
          ((ZmList=(double *)MEMORY_AllocDVector("EngineSetRefIndexesMFC","ZmList",0,fileNumber-1))==NULL) ||
          ((TimeDec=(double *)MEMORY_AllocDVector("EngineSetRefIndexesMFC","TimeDec",0,fileNumber-1))==NULL) ||
          (pRef->refScan &&
           (((pRef->scanRefIndexes=(INT *)MEMORY_AllocBuffer("EngineSetRefIndexesMFC","scanRefIndexes",fileNumber,sizeof(INT),0,MEMORY_TYPE_INT))==NULL) ||
-           ((pRef->scanRefFiles=(DoasCh *)MEMORY_AllocBuffer("EngineSetRefIndexesMFC","scanRefFiles",fileNumber*(MAX_ITEM_TEXT_LEN+1),1,0,MEMORY_TYPE_STRING))==NULL))))
+           ((pRef->scanRefFiles=(char *)MEMORY_AllocBuffer("EngineSetRefIndexesMFC","scanRefFiles",fileNumber*(MAX_ITEM_TEXT_LEN+1),1,0,MEMORY_TYPE_STRING))==NULL))))
 
       rc=ERROR_ID_ALLOC;
 
      else
       {
-       memset(fileList,0,sizeof(DoasCh *)*fileNumber);
+       memset(fileList,0,sizeof(char *)*fileNumber);
 
        if (pRef->refScan)
         memset(pRef->scanRefFiles,0,fileNumber*(MAX_ITEM_TEXT_LEN+1));
 
        for (indexFile=0;(indexFile<fileNumber) && !rc;indexFile++)
-        if ((fileList[indexFile]=(DoasCh *)MEMORY_AllocBuffer("EngineSetRefIndexesMFC","fileList[indexFile]",MAX_ITEM_TEXT_LEN+1,sizeof(DoasCh),0,MEMORY_TYPE_STRING))==NULL)
+        if ((fileList[indexFile]=(char *)MEMORY_AllocBuffer("EngineSetRefIndexesMFC","fileList[indexFile]",MAX_ITEM_TEXT_LEN+1,sizeof(char),0,MEMORY_TYPE_STRING))==NULL)
          rc=ERROR_SetLast("EngineSetRefIndexesMFC",ERROR_TYPE_FATAL,ERROR_ID_ALLOC,"fileList[indexFile]");
 
        if (!rc)
@@ -1683,7 +1683,7 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
    FENO *pTabFeno;                                                               // pointer to the analysis window
    INT useKurucz,alignRef,useUsamp,saveFlag,newDimL;
    INT *scanRefIndexes;
-   DoasCh *ptr;
+   char *ptr;
    RC rc;
 
    // Initializations

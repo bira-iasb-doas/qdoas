@@ -36,8 +36,8 @@ int mediateRequestDisplaySpecInfo(void *engineContext,int page,void *responseHan
    SHORT_DATE  *pDay;                                                            // pointer to measurement date
    struct time *pTime;                                                           // pointer to measurement date
    int indexLine,indexColumn;
-   DoasCh *fileName;                                                              // the name of the current file
-   DoasCh blankString[256];
+   char *fileName;                                                              // the name of the current file
+   char blankString[256];
 
    // Initializations
 
@@ -328,7 +328,7 @@ void mediateRequestPlotSpectra(ENGINE_CONTEXT *pEngineContext,void *responseHand
    SHORT_DATE  *pDay;                                                            // pointer to measurement date
    struct time *pTime;                                                           // pointer to measurement date
    char tmpString[80];                                                           // buffer for formatted strings
-   DoasCh *fileName;                                                              // the name of the current file
+   char *fileName;                                                              // the name of the current file
    plot_data_t spectrumData;
 
    // Initializations
@@ -564,7 +564,7 @@ void setMediateProjectDisplay(PRJCT_SPECTRA *pEngineSpectra,const mediate_projec
    memset(pEngineSpectra->fieldsFlag,0,PRJCT_RESULTS_MAX);
 
    for (i=0;i<pMediateSpectra->selection.nSelected;i++)
-    pEngineSpectra->fieldsFlag[(int)pMediateSpectra->selection.selected[i]]=(DoasCh)1;
+    pEngineSpectra->fieldsFlag[(int)pMediateSpectra->selection.selected[i]]=(char)1;
  }
 
 // -----------------------------------------------------------------------------
@@ -684,9 +684,9 @@ void setMediateProjectAnalysis(PRJCT_ANLYS *pEngineAnalysis,const mediate_projec
  {
 #if defined(__DEBUG_) && __DEBUG_ && defined(__DEBUG_DOAS_CONFIG_) && __DEBUG_DOAS_CONFIG_
 
-   DoasCh *prjctAnlysMethods[PRJCT_ANLYS_METHOD_MAX]={"Optical density fitting","Intensity fitting (Marquardt-Levenberg+SVD)"};
-   DoasCh *prjctAnlysFitWeighting[PRJCT_ANLYS_FIT_WEIGHTING_MAX]={"No weighting","Instrumental weighting"};
-   DoasCh *prjctAnlysInterpol[PRJCT_ANLYS_INTERPOL_MAX]={"linear","spline"};
+   char *prjctAnlysMethods[PRJCT_ANLYS_METHOD_MAX]={"Optical density fitting","Intensity fitting (Marquardt-Levenberg+SVD)"};
+   char *prjctAnlysFitWeighting[PRJCT_ANLYS_FIT_WEIGHTING_MAX]={"No weighting","Instrumental weighting"};
+   char *prjctAnlysInterpol[PRJCT_ANLYS_INTERPOL_MAX]={"linear","spline"};
 
    DEBUG_FunctionBegin("setMediateProjectAnalysis",DEBUG_FCTTYPE_CONFIG);
 #endif
@@ -720,7 +720,7 @@ void setMediateProjectAnalysis(PRJCT_ANLYS *pEngineAnalysis,const mediate_projec
 void setMediateProjectCalibration(PRJCT_KURUCZ *pEngineCalibration,CALIB_FENO *pEngineCalibFeno,const mediate_project_calibration_t *pMediateCalibration,int displayFitFlag)
  {
 #if defined(__DEBUG_) && __DEBUG_ && defined(__DEBUG_DOAS_CONFIG_) && __DEBUG_DOAS_CONFIG_
-   DoasCh *prjctAnlysMethods[PRJCT_ANLYS_METHOD_MAX]={"Optical density fitting","Intensity fitting (Marquardt-Levenberg+SVD)"};
+   char *prjctAnlysMethods[PRJCT_ANLYS_METHOD_MAX]={"Optical density fitting","Intensity fitting (Marquardt-Levenberg+SVD)"};
    DEBUG_FunctionBegin("setMediateProjectCalibration",DEBUG_FCTTYPE_CONFIG);
 #endif
 
@@ -832,7 +832,7 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
    DEBUG_FunctionBegin("setMediateProjectInstrumental",DEBUG_FCTTYPE_CONFIG);
 #endif
 
-   pEngineInstrumental->readOutFormat=(DoasCh)pMediateInstrumental->format;                           // File format
+   pEngineInstrumental->readOutFormat=(char)pMediateInstrumental->format;                           // File format
    strcpy(pEngineInstrumental->observationSite,pMediateInstrumental->siteName); 		                   // Observation site
    NDET=0;
 
@@ -1161,7 +1161,7 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
       pEngineInstrumental->omi.pixelQFMask=pMediateInstrumental->omi.pixelQFMask;
       pEngineInstrumental->omi.xtrack_mode=pMediateInstrumental->omi.xtrack_mode;
 
-      OMI_TrackSelection((DoasCh *)pMediateInstrumental->omi.trackSelection,pEngineInstrumental->omi.omiTracks);
+      OMI_TrackSelection((char *)pMediateInstrumental->omi.trackSelection,pEngineInstrumental->omi.omiTracks);
 
       break;
       // ----------------------------------------------------------------------------
@@ -1369,8 +1369,8 @@ RC mediateRequestSetAnalysisLinear(struct anlyswin_linear *pLinear,INDEX indexFe
 
 // typedef struct _AnalyseNonLinearParameters
 //  {
-//  	DoasCh symbolName[MAX_ITEM_TEXT_LEN+1];
-//  	DoasCh crossFileName[MAX_ITEM_TEXT_LEN+1];
+//  	char symbolName[MAX_ITEM_TEXT_LEN+1];
+//  	char crossFileName[MAX_ITEM_TEXT_LEN+1];
 //  	int fitFlag;
 //  	double initialValue;
 //  	double deltaValue;
@@ -1609,7 +1609,7 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
        for (indexFeno=0;(indexFeno<numberOfWindows+1) && !rc;indexFeno++)
         if (strlen(analysisWindows[indexFeno].refOneFile)) // Analysis Window properties -> Reference 1.
          {
-          rc=OMI_LoadReference(pEngineContext,(DoasCh *)analysisWindows[indexFeno].refOneFile);
+          rc=OMI_LoadReference(pEngineContext,(char *)analysisWindows[indexFeno].refOneFile);
           break;
          }
       }
@@ -1619,7 +1619,7 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
          rc=ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_FILE_NOT_SPECIFIED,
                           "please specify an OMI irradiance file in Project properties>Instrumental>Calibration File");
        else
-        rc=OMI_LoadReference(pEngineContext,(DoasCh *)pEngineContext->project.instrumental.calibrationFile);
+        rc=OMI_LoadReference(pEngineContext,(char *)pEngineContext->project.instrumental.calibrationFile);
       }
     }
 
@@ -1910,7 +1910,7 @@ int mediateRequestSetSymbols(void *engineContext,
    // Add symbols in the list
 
    for (indexSymbol=0;(indexSymbol<numberOfSymbols) && !rc;indexSymbol++)
-    rc=SYMB_Add((DoasCh *)symbols[indexSymbol].name,(DoasCh *)symbols[indexSymbol].description);
+    rc=SYMB_Add((char *)symbols[indexSymbol].name,(char *)symbols[indexSymbol].description);
 
    // Check for error
 
@@ -2333,7 +2333,7 @@ int mediateRequestViewCrossSections(void *engineContext, char *awName,double min
    // Declarations
 
    ENGINE_CONTEXT *pEngineContext = (ENGINE_CONTEXT *)engineContext;
-   DoasCh symbolName[MAX_ITEM_NAME_LEN+1],*ptr,                                   // the symbol name
+   char symbolName[MAX_ITEM_NAME_LEN+1],*ptr,                                   // the symbol name
      windowTitle[MAX_ITEM_TEXT_LEN+1],                                       // title to display at the top of the page
      tabTitle[MAX_ITEM_TEXT_LEN+1];                                          // title to display on the tab of the page
    MATRIX_OBJECT xs;                                                             // matrix to load the cross section

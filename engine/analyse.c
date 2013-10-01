@@ -1332,12 +1332,12 @@ RC ANALYSE_XsConvolution(FENO *pTabFeno,double *newlambda,
 
 // Rem : not for OMI -> TabFeno[0]
 
-RC AnalyseLoadVector(DoasCh *function,DoasCh *fileName,double *lambda,double *vector,INT refFlag,INT *pNewSize)
+RC AnalyseLoadVector(char *function,char *fileName,double *lambda,double *vector,INT refFlag,INT *pNewSize)
 {
   // Declarations
 
   FILE *fp;
-  DoasCh string[MAX_ITEM_TEXT_LEN+1],fullFileName[MAX_ITEM_TEXT_LEN+1],*str;
+  char string[MAX_ITEM_TEXT_LEN+1],fullFileName[MAX_ITEM_TEXT_LEN+1],*str;
   INT day,month,year,hour,min,sec;
   struct time refTime;
   INDEX i;
@@ -1935,7 +1935,7 @@ RC ANALYSE_AlignReference(ENGINE_CONTEXT *pEngineContext,INT refFlag,INT saveFla
   double *Spectre,*Sref,                                                        // raw spectrum
     x0,lambda0;
   plot_data_t spectrumData[2];
-  DoasCh string[MAX_ITEM_TEXT_LEN+1],tabTitle[MAX_ITEM_TEXT_LEN+1];
+  char string[MAX_ITEM_TEXT_LEN+1],tabTitle[MAX_ITEM_TEXT_LEN+1];
   RC rc;                                                                        // return code
 
 
@@ -2109,10 +2109,10 @@ RC ANALYSE_AlignReference(ENGINE_CONTEXT *pEngineContext,INT refFlag,INT saveFla
   return rc;
 }
 
-RC AnalyseSaveResiduals(DoasCh *fileName,ENGINE_CONTEXT *pEngineContext)
+RC AnalyseSaveResiduals(char *fileName,ENGINE_CONTEXT *pEngineContext)
 {
   RC rc;
-  DoasCh *fileNamePtr,*ptr,resFile[MAX_ITEM_TEXT_LEN+1],ext[MAX_ITEM_TEXT_LEN+1];
+  char *fileNamePtr,*ptr,resFile[MAX_ITEM_TEXT_LEN+1],ext[MAX_ITEM_TEXT_LEN+1];
   FILE *fp;
   doas_iterator my_iterator;
 
@@ -3272,9 +3272,9 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
   CROSS_REFERENCE *TabCross;                 // list of symbols hold by a analysis window
   CROSS_RESULTS *Results;                    // corresponding results
   FENO *pTabFeno;
-  DoasCh windowTitle[MAX_ITEM_TEXT_LEN+1];    // window title for graphs
-  DoasCh tabTitle[MAX_ITEM_TEXT_LEN+1];
-  DoasCh graphTitle[MAX_ITEM_TEXT_LEN+1];     // graph title
+  char windowTitle[MAX_ITEM_TEXT_LEN+1];    // window title for graphs
+  char tabTitle[MAX_ITEM_TEXT_LEN+1];
+  char graphTitle[MAX_ITEM_TEXT_LEN+1];     // graph title
   INDEX WrkFeno,j;                             // index on analysis windows
   INDEX i;                               // indexes for loops and arrays
   INDEX indexFenoColumn;
@@ -4060,7 +4060,7 @@ void ANALYSE_ResetData(void)
         pTabCross->TypeStretch=
           pTabCross->TypeScale=(INT)0;
         // -------------------------------------------
-        pTabCross->display=(DoasCh)0;
+        pTabCross->display=(char)0;
         // -------------------------------------------
         pTabCross->InitConc=
           pTabCross->InitParam=
@@ -4237,11 +4237,11 @@ RC ANALYSE_LoadSlit(PRJCT_SLIT *pSlit,int kuruczFlag)
   return rc;
 }
 
-RC ANALYSE_CheckLambda(WRK_SYMBOL *pWrkSymbol,double *lambda,DoasCh *callingFunction)
+RC ANALYSE_CheckLambda(WRK_SYMBOL *pWrkSymbol,double *lambda,char *callingFunction)
 {
   // Declarations
 
-  DoasCh fileName[MAX_ITEM_TEXT_LEN+1];
+  char fileName[MAX_ITEM_TEXT_LEN+1];
   RC rc;
 
   // Initialization
@@ -4272,7 +4272,7 @@ RC ANALYSE_LoadCross(ENGINE_CONTEXT *pEngineContext,ANALYSIS_CROSS *crossSection
   CROSS_REFERENCE *pEngineCross;                                                // pointer of the current cross section in the engine list
   ANALYSIS_CROSS *pCross;                                                       // pointer of the current cross section in the mediate list
   FENO *pTabFeno;                                                               // pointer to the current analysis window
-  DoasCh *pOrthoSymbol[MAX_FIT],                                                 // for each cross section in list, hold cross section to use for orthogonalization
+  char *pOrthoSymbol[MAX_FIT],                                                 // for each cross section in list, hold cross section to use for orthogonalization
     *symbolName;
   INDEX indexSymbol,indexSvd,                                                   // resp. indexes of item in list and of symbol
     firstTabCross,endTabCross,indexTabCross,i;                              // indexes for browsing list of cross sections symbols
@@ -4507,7 +4507,7 @@ RC ANALYSE_LoadLinear(ANALYSE_LINEAR_PARAMETERS *linearList,INT nLinear,INDEX in
   CROSS_REFERENCE *pTabCross;                                                   // pointer to an element of the symbol cross reference table of an analysis window
   CROSS_RESULTS *pResults;                                                      // pointer to results
   WRK_SYMBOL *pWrkSymbol;                                                       // pointer to a general description of a symbol
-  DoasCh buttonText[10];                                                         // term in polynomial
+  char buttonText[10];                                                         // term in polynomial
   ANALYSE_LINEAR_PARAMETERS *pList;                                             // pointer to description of an item in list
   FENO *pTabFeno;                                                               // pointer to description of the current analysis window
   INDEX indexSvd,indexTabCross;                                                 // extra index for swapping
@@ -4642,7 +4642,7 @@ RC ANALYSE_LoadShiftStretch(ANALYSIS_SHIFT_STRETCH *shiftStretchList,INT nShiftS
 
   INDEX indexItem,indexSymbol,indexTabCross,indexSymbolInList,indexCross,       // indexes for loops and arrays
     indexShift,indexStretch,indexStretch2,indexScale,indexScale2;
-  DoasCh *symbol;                                                                // copy of list of symbols
+  char *symbol;                                                                // copy of list of symbols
   CROSS_REFERENCE *pTabCross;                                                   // pointer to an element of the symbol cross reference table of an analysis window
   CROSS_RESULTS *pResults;                                                      // pointer to results part relative to the symbol
   WRK_SYMBOL *pWrkSymbol;                                                       // pointer to a general description of a symbol
@@ -4801,10 +4801,10 @@ RC ANALYSE_LoadShiftStretch(ANALYSIS_SHIFT_STRETCH *shiftStretchList,INT nShiftS
              pTabFeno->svd.NP++;
            }
 
-          pResults->StoreShift=((!indexSymbolInList) && (pList->shStore==1))?(DoasCh)1:(DoasCh)0;                  // flag set if shift is to be written into output file
-          pResults->StoreStretch=((!indexSymbolInList) && (pList->stStore==1))?(DoasCh)1:(DoasCh)0;                // flag set if stretch is to be written into output file
-          pResults->StoreScale=((!indexSymbolInList) && (pList->scStore==1))?(DoasCh)1:(DoasCh)0;                  // flag set if scaling is to be written into output file
-          pResults->StoreError=((!indexSymbolInList) && (pList->errStore==1))?(DoasCh)1:(DoasCh)0;                 // flag set if errors on linear parameters are to be written into output file
+          pResults->StoreShift=((!indexSymbolInList) && (pList->shStore==1))?(char)1:(char)0;                  // flag set if shift is to be written into output file
+          pResults->StoreStretch=((!indexSymbolInList) && (pList->stStore==1))?(char)1:(char)0;                // flag set if stretch is to be written into output file
+          pResults->StoreScale=((!indexSymbolInList) && (pList->scStore==1))?(char)1:(char)0;                  // flag set if scaling is to be written into output file
+          pResults->StoreError=((!indexSymbolInList) && (pList->errStore==1))?(char)1:(char)0;                 // flag set if errors on linear parameters are to be written into output file
          }
        }
      }
@@ -4829,7 +4829,7 @@ RC ANALYSE_LoadNonLinear(ENGINE_CONTEXT *pEngineContext,ANALYSE_NON_LINEAR_PARAM
   // Declarations
 
   INDEX indexItem,indexSymbol,indexTabCross,indexSvd;                           // indexes for loops and arrays
-  DoasCh *symbol;                                                               // browse symbols
+  char *symbol;                                                               // browse symbols
   CROSS_REFERENCE *pTabCross;                                                   // pointer to an element of the symbol cross reference table of an analysis window
   CROSS_RESULTS *pResults;                                                      // pointer to results part relative to the symbol
   ANALYSE_NON_LINEAR_PARAMETERS *pListItem;                                     // pointer to the current item in the non linear parameters list
@@ -5036,7 +5036,7 @@ RC ANALYSE_LoadNonLinear(ENGINE_CONTEXT *pEngineContext,ANALYSE_NON_LINEAR_PARAM
                  pTabCross->IndSvdA=++pTabFeno->svd.DimC;
 
                 pTabCross->crossAction=ANLYS_CROSS_ACTION_NOTHING; // For raman interpolation ((pTabFeno->indexRing1==pTabFeno->NTabCross)) ? ANLYS_CROSS_ACTION_INTERPOLATE : ANLYS_CROSS_ACTION_NOTHING;
-                pTabCross->display=(DoasCh)pTabFeno->displayPredefined;
+                pTabCross->display=(char)pTabFeno->displayPredefined;
 
                 // DOAS fitting : only the Raman spectrum is fitted non linearly, other parameters are considered as cross sections
 
@@ -5299,7 +5299,7 @@ RC ANALYSE_LoadRef(ENGINE_CONTEXT *pEngineContext,INDEX indexFenoColumn)
   FENO *pTabFeno;
   double *Sref;
   double *SrefEtalon,*lambdaRef,*lambdaRefEtalon;
-  DoasCh *ptr;
+  char *ptr;
   RC rc;
 
   // Initializations
@@ -5892,7 +5892,7 @@ RC ANALYSE_UsampGlobalAlloc(double lambdaMin,double lambdaMax,INT size)
 {
   // Declarations
 
-  DoasCh kuruczFile[MAX_ITEM_TEXT_LEN+1];
+  char kuruczFile[MAX_ITEM_TEXT_LEN+1];
   FENO *pTabFeno;
   INDEX indexFeno,indexFenoColumn;
   RC rc;

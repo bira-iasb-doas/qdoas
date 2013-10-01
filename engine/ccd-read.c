@@ -116,12 +116,12 @@ typedef struct _ccdData
   short       alsFlag;                                                          // 1 for asl measurents (cfr Alexis)
   short       scanIndex;                                                        // scan index for asl measurements
   double      scanningAngle;
-  DoasCh      doubleFlag;                                                       // for Alexis
-  DoasCh      brusagVersion;
+  char      doubleFlag;                                                       // for Alexis
+  char      brusagVersion;
   float       diodes[4];
   float       targetElevation,targetAzimuth;
-  DoasCh      saturatedFlag,ignoredFlag;
-  DoasCh      ignored[926];                                                     // if completed with new data in the future, authorizes compatibility with previous versions
+  char      saturatedFlag,ignoredFlag;
+  char      ignored[926];                                                     // if completed with new data in the future, authorizes compatibility with previous versions
   float       compassAngle;
   float       pitchAngle;
   float       rollAngle;
@@ -135,11 +135,11 @@ CCD_DATA;
 typedef struct cameraPicture
  {
  	int timestamp;
- 	DoasCh fileName[MAX_STR_LEN];
+ 	char fileName[MAX_STR_LEN];
  }
 CAMERA_PICTURE;
 
-DoasCh *CCD_measureTypes[PRJCT_INSTR_EEV_TYPE_MAX]=
+char *CCD_measureTypes[PRJCT_INSTR_EEV_TYPE_MAX]=
      	                            { "None","Off axis","Direct sun","Zenith","Dark","Lamp","Bentham","Almucantar","Offset","Azimuth", "Principal plane", "Horizon" };
 
 
@@ -158,15 +158,15 @@ static double predTint[MAXTPS] =
 static DoasU32 ccdDarkCurrentOffset[MAXTPS];                                      // offset of measured dark currents for each integration time
 
 CAMERA_PICTURE ccdImageFilesList[MAX_CAMERA_PICTURES];
-DoasCh ccdCurrentImagePath[MAX_ITEM_TEXT_LEN+1];
+char ccdCurrentImagePath[MAX_ITEM_TEXT_LEN+1];
 int ccdImageFilesN=0;
 
-void CCD_GetImageFilesList(SHORT_DATE *pFileDate,DoasCh *rootPath)
+void CCD_GetImageFilesList(SHORT_DATE *pFileDate,char *rootPath)
  {
  	// Declarations
 
- 	DoasCh imageFileName[MAX_ITEM_TEXT_LEN+1];
- 	DoasCh dateStr[9],*ptr;
+ 	char imageFileName[MAX_ITEM_TEXT_LEN+1];
+ 	char dateStr[9],*ptr;
   struct dirent *fileInfo;
   int hour,minute,sec,newtimestamp;
   INDEX i;
@@ -325,7 +325,7 @@ RC SetCCD_EEV(ENGINE_CONTEXT *pEngineContext,FILE *specFp,FILE *darkFp)
 
       ccdX=(header.roiWveEnd-header.roiWveStart+1)/header.roiWveGroup;
       ccdY=(header.roiSlitEnd-header.roiSlitStart+1)/header.roiSlitGroup;
-      dataSize=(header.doubleFlag==(DoasCh)1)?sizeof(double):sizeof(DoasUS);
+      dataSize=(header.doubleFlag==(char)1)?sizeof(double):sizeof(DoasUS);
 
       pEngineContext->recordNumber++;
 
@@ -358,7 +358,7 @@ RC SetCCD_EEV(ENGINE_CONTEXT *pEngineContext,FILE *specFp,FILE *darkFp)
        {
         ccdX=(header.roiWveEnd-header.roiWveStart+1)/header.roiWveGroup;
         ccdY=(header.roiSlitEnd-header.roiSlitStart+1)/header.roiSlitGroup;
-        dataSize=(header.doubleFlag==(DoasCh)1)?sizeof(double):sizeof(DoasUS);
+        dataSize=(header.doubleFlag==(char)1)?sizeof(double):sizeof(DoasUS);
 
         if (header.measureType==PRJCT_INSTR_EEV_TYPE_DARK)
          {
@@ -496,7 +496,7 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
 
       ccdX=(header.roiWveEnd-header.roiWveStart+1)/header.roiWveGroup;
       ccdY=(header.roiSlitEnd-header.roiSlitStart+1)/header.roiSlitGroup;
-      dataSize=(header.doubleFlag==(DoasCh)1)?sizeof(double):sizeof(DoasUS);
+      dataSize=(header.doubleFlag==(char)1)?sizeof(double):sizeof(DoasUS);
 
       spSize=(header.saveTracks)?ccdX*ccdY:ccdX;
       nTint=header.nTint;
@@ -519,7 +519,7 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
          for(i=0;i<NDET;i++)
           tmpSpectrum[i]=(double)0.;
 
-         rcFread=(header.doubleFlag==(DoasCh)1)?
+         rcFread=(header.doubleFlag==(char)1)?
                   fread(tmpSpectrum,sizeof(double)*spSize,1,specFp):
                   fread(spectrum,sizeof(DoasUS)*spSize,1,specFp);
 
@@ -532,7 +532,7 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
           rc=ERROR_ID_FILE_RECORD;
          else if (!header.saveTracks)
           {
-          	if (header.doubleFlag==(DoasCh)1)
+          	if (header.doubleFlag==(char)1)
           	 memcpy(dspectrum,tmpSpectrum,sizeof(double)*spSize);
           	else
             for (i=0;i<spSize;i++)
@@ -540,7 +540,7 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
           }
          else
           {
-          	if (header.doubleFlag==(DoasCh)1)
+          	if (header.doubleFlag==(char)1)
           	 {
              // Accumulate spectra
 
@@ -930,7 +930,7 @@ RC ReliCCD(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay
   RECORD_INFO *pRecord;                                                         // pointer to the record part of the engine context
 
   CCD_1024 DetInfo;                                                             // data on the current record retrieved from the spectra file
-  DoasCh names[20];                                                              // name of the current spectrum
+  char names[20];                                                              // name of the current spectrum
   DoasUS *ISpectre,*ISpecMax;                                                   // resp. spectrum and SpecMax retrieved from the file
   double Max,tmLocal;                                                           // the maximum value measured for the current spectrum
   INDEX i;                                                                      // index for browsing pixels in the spectrum
@@ -1068,7 +1068,7 @@ RC ReliCCDTrack(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loc
   RECORD_INFO *pRecord;                                                         // pointer to the record part of the engine context
 
   CCD_1024 DetInfo;                                                             // data on the current spectra retrieved from the spectra file
-  DoasCh names[20],                                                              // name of the current spectrum
+  char names[20],                                                              // name of the current spectrum
         fileName[MAX_PATH_LEN+1];                                               // the complete file name (including path)
   DoasUS *ISpectre,*ISpecMax;                                                   // resp. spectrum and SpecMax retrieved from the file
   float *TabTint,*MaxTrk;                                                       // resp. integration time and track data
@@ -1269,7 +1269,7 @@ RC CCD_LoadInstrumental(ENGINE_CONTEXT *pEngineContext)
   BUFFERS *pBuffers;                                                            // pointer to the buffers part of the engine context
   RECORD_INFO *pRecord;                                                         // pointer to the record part of the engine context
 
-  DoasCh fileName[MAX_STR_LEN+1];                                                // the complete name (including path) of the file to load
+  char fileName[MAX_STR_LEN+1];                                                // the complete name (including path) of the file to load
   RC rc;                                                                        // the return code
 
   // Initializations

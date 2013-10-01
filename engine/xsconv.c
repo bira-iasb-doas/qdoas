@@ -152,7 +152,7 @@
 
 // Slit types
 
-DoasCh *XSCONV_slitTypes[SLIT_TYPE_MAX]=
+char *XSCONV_slitTypes[SLIT_TYPE_MAX]=
  {
 // !!!  	"None",
   "File",
@@ -533,11 +533,11 @@ RC XSCONV_GetFwhm(double *lambda,double *slit,double *deriv2,INT nl,INT slitType
 // XSCONV_LoadCalibrationFile : Final wavelength scale read out
 // ------------------------------------------------------------
 
-RC XSCONV_LoadCalibrationFile(MATRIX_OBJECT *pLambda,DoasCh *lambdaFile,INT nextraPixels)
+RC XSCONV_LoadCalibrationFile(MATRIX_OBJECT *pLambda,char *lambdaFile,INT nextraPixels)
  {
   // Declarations
 
-  DoasCh  lambdaBuffer[MAX_ITEM_TEXT_LEN+1];
+  char  lambdaBuffer[MAX_ITEM_TEXT_LEN+1];
   double step;
   FILE *lambdaFp;
   INT npts;
@@ -616,7 +616,7 @@ RC XSCONV_LoadSlitFunction(MATRIX_OBJECT *pSlitXs,MATRIX_OBJECT *pSlitXs2,SLIT *
  {
   // Declarations
 
-  DoasCh  slitBuffer[MAX_ITEM_TEXT_LEN+1],
+  char  slitBuffer[MAX_ITEM_TEXT_LEN+1],
           slitBuffer2[MAX_ITEM_TEXT_LEN+1];
   RC     rc;
   INDEX  i;
@@ -771,7 +771,7 @@ RC XSCONV_LoadSlitFunction(MATRIX_OBJECT *pSlitXs,MATRIX_OBJECT *pSlitXs2,SLIT *
 // XSCONV_LoadCrossSectionFile : Load a cross section file
 // -------------------------------------------------------
 
-RC XSCONV_LoadCrossSectionFile(MATRIX_OBJECT *pCross,DoasCh *crossFile,double lambdaMin,double lambdaMax,double shift,INT conversionMode)
+RC XSCONV_LoadCrossSectionFile(MATRIX_OBJECT *pCross,char *crossFile,double lambdaMin,double lambdaMax,double shift,INT conversionMode)
  {
  	// Declarations
 
@@ -808,7 +808,7 @@ RC XSCONV_LoadCrossSectionFile(MATRIX_OBJECT *pCross,DoasCh *crossFile,double la
 //  // Declarations
 //
 //  double lambda,crossValue,firstLambda;
-//  DoasCh  crossBuffer[MAX_ITEM_TEXT_LEN+1];
+//  char  crossBuffer[MAX_ITEM_TEXT_LEN+1];
 //  FILE  *crossFp;
 //
 //  INT    found,npts;

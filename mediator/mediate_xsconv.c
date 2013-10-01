@@ -26,14 +26,14 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 // STATIC VARIABLES
 // ================
 
-static DoasCh *mediateConvolutionTypesStr[CONVOLUTION_TYPE_MAX]=
+static char *mediateConvolutionTypesStr[CONVOLUTION_TYPE_MAX]=
  {
   "Interpolation only",
   "Standard convolution",
   "Convolution with I0 correction"
  };
 
-static DoasCh *mediateConvolutionFileExt[CONVOLUTION_TYPE_MAX]=
+static char *mediateConvolutionFileExt[CONVOLUTION_TYPE_MAX]=
    {
     "_none",                                                                      // CONVOLUTION_TYPE_NONE
     "_std",                                                                       // CONVOLUTION_TYPE_STANDARD
@@ -41,8 +41,8 @@ static DoasCh *mediateConvolutionFileExt[CONVOLUTION_TYPE_MAX]=
   //  "_ring"                         // CONVOLUTION_TYPE_RING
    };
 
-DoasCh *mediateConvolutionFilterTypes[PRJCT_FILTER_TYPE_MAX]={"None","Kaiser","Boxcar","Gaussian","Triangular","Savitzky-Golay","Odd-even pixels correction","Binomial"};
-DoasCh *mediateUsampAnalysisMethod[PRJCT_ANLYS_METHOD_MAX]={"Optical density","Intensity fitting"};
+char *mediateConvolutionFilterTypes[PRJCT_FILTER_TYPE_MAX]={"None","Kaiser","Boxcar","Gaussian","Triangular","Savitzky-Golay","Odd-even pixels correction","Binomial"};
+char *mediateUsampAnalysisMethod[PRJCT_ANLYS_METHOD_MAX]={"Optical density","Intensity fitting"};
 
 FFT    usampFFT;
 
@@ -55,10 +55,10 @@ RC mediateConvolutionSave(void *engineContext)
   // Declarations
 
   ENGINE_XSCONV_CONTEXT *pEngineContext=(ENGINE_XSCONV_CONTEXT*)engineContext;
-  DoasCh fileName[MAX_ITEM_TEXT_LEN+1];
+  char fileName[MAX_ITEM_TEXT_LEN+1];
   PRJCT_FILTER *pLFilter,*pHFilter;
   SZ_LEN fileNameLength;
-  DoasCh *ptr,*ptr2;
+  char *ptr,*ptr2;
   FILE *fp;
   INDEX i,slitType;
   MATRIX_OBJECT *pXs;
@@ -307,7 +307,7 @@ RC mediateConvolutionCalculate(void *engineContext,void *responseHandle)
   PRJCT_FILTER *plFilter,*phFilter;                                             // pointers to the low pass and high pass filtering parts of the engine context
   SLIT *pSlitConv,*pSlitDConv;                                                  // pointers to the convolution and deconvolution slit function parts of the engine context
 
-  DoasCh windowTitle[MAX_ITEM_TEXT_LEN+1],pageTitle[MAX_ITEM_TEXT_LEN+1];
+  char windowTitle[MAX_ITEM_TEXT_LEN+1],pageTitle[MAX_ITEM_TEXT_LEN+1];
   double lambdaMin,lambdaMax,slitParam,slitParam2,slitWidth;
 
   INT slitType,slitType2,deconvFlag,dispConv,dispLFilter,dispHFilter,nGraph,iGraph;
@@ -799,7 +799,7 @@ RC mediateRingCalculate(void *engineContext,void *responseHandle)
 
   MATRIX_OBJECT slitTmp;
   ENGINE_XSCONV_CONTEXT *pEngineContext=(ENGINE_XSCONV_CONTEXT*)engineContext;
-  DoasCh   ringFileName[MAX_ITEM_TEXT_LEN+1],                                   // name of the output ring file
+  char   ringFileName[MAX_ITEM_TEXT_LEN+1],                                   // name of the output ring file
            pageTitle[MAX_ITEM_TEXT_LEN+1];
   double *n2xref,*o2xref,*n2pos2,                                               // rotational Raman spectra
           gamman2,sigprimen2,n2xsec,sign2,sumn2xsec,                            // n2 working variables
@@ -1300,7 +1300,7 @@ void UsampWriteHeader(ENGINE_XSCONV_CONTEXT *pEngineContext,FILE *fp,INT phase)
 // mediateUsampSave : Save the undersampling cross sections
 // --------------------------------------------------------
 
-RC mediateUsampSave(ENGINE_XSCONV_CONTEXT *pEngineContext,DoasCh *fileName,int phase,double *lambda,double *usampXS,int nSize,void *responseHandle)
+RC mediateUsampSave(ENGINE_XSCONV_CONTEXT *pEngineContext,char *fileName,int phase,double *lambda,double *usampXS,int nSize,void *responseHandle)
  {
  	// Declarations
 
@@ -1399,7 +1399,7 @@ RC mediateUsampCalculate(void *engineContext,void *responseHandle)
      	// Local declarations
 
      	plot_data_t spectrumData[2];
-     	DoasCh pageTitle[MAX_ITEM_TEXT_LEN+1];
+     	char pageTitle[MAX_ITEM_TEXT_LEN+1];
 
      	// Save
 

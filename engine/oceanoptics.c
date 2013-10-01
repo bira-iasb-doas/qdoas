@@ -55,7 +55,7 @@
 
 #include "doas.h"
 
-DoasCh *oomonth[12]={"Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"};
+char *oomonth[12]={"Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"};
 
 // -----------------------------------------------------------------------------
 // FUNCTION        SetOceanOptics
@@ -126,11 +126,11 @@ RC ReliOceanOptics(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,INT 
   // Declarations
 
   RECORD_INFO *pRecordInfo;                                                     // pointer to the record part of the engine context
-  DoasCh fileLine[MAX_ITEM_TEXT_LEN+1],*str;
+  char fileLine[MAX_ITEM_TEXT_LEN+1],*str;
   double *spectrum,*lambda,                                                     // the spectrum and the wavelength calibration to read
           tmLocal;                                                              // the measurement time in seconds
   INT day,mon,year,hour,minutes,sec;                                            // decomposition of the measurement date
-  DoasCh tmp[100],weekday[100],month[100];
+  char tmp[100],weekday[100],month[100];
   INDEX i;                                                                      // browse items to read
   RC rc;                                                                        // return code
   int spectrumFound;

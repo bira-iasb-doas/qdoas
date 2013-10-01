@@ -123,10 +123,10 @@ void hdfeos5_close_file(void) {
 /*! \brief Create the required dimensions in the current swath.*/
 RC create_dimensions(void) {
   struct dim {
-    char *dimname;
+    const char *dimname;
     hsize_t dimsize;
   };
-
+  
   struct dim swathdims[] = { { "nXtrack", nXtrack},
                              { "nCalibWindows", nCalibWindows},
                              { "nTimes", nTimes },
@@ -142,7 +142,7 @@ RC create_dimensions(void) {
                              { "7", 7}, { "8", 8}, { "9", 9}
   };
   for(size_t i=0; i< (sizeof(swathdims)/sizeof(swathdims[0])); i++) {
-    herr_t result = HE5_SWdefdim(swath_id, swathdims[i].dimname, swathdims[i].dimsize);
+    herr_t result = HE5_SWdefdim(swath_id, (char *) swathdims[i].dimname, swathdims[i].dimsize);
     if(result == FAIL) {
       return ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_HDFEOS5_DEFDIM, swathdims[i].dimname, swathdims[i].dimsize);
     }
@@ -571,7 +571,7 @@ void get_edge_analysis(hsize_t edge[], const struct output_field *thefield) {
   edge[index_dim++] = nTimes;
   if(nXtrack > 1)
     edge[index_dim++] = nXtrack;
-  return get_edge(&edge[index_dim], thefield);
+  get_edge(&edge[index_dim], thefield);
 }
 
 /*! \brief Describe the size of the databuffer for a specific output
@@ -583,7 +583,7 @@ void get_edge_calibration(hsize_t edge[], const struct output_field *thefield) {
   edge[index_dim++] = nCalibWindows;
   if(nXtrack > 1)
     edge[index_dim++] = 1; // write a single row at a time.
-  return get_edge(&edge[index_dim], thefield);
+  get_edge(&edge[index_dim], thefield);
 }
 
 /*! \brief Translate data types defined in output.h to data types used

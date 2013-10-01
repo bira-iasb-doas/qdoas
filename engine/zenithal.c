@@ -182,7 +182,7 @@ int ZEN_FNCaljmon(int Year,int Julian)
   // Calculate the month in the year
 
   if ( (Julian>365+((Year%4)==0)) || (Julian<1) )
-   ERROR_SetLast((DoasCh *)"ZEN_FNCaljmon",ERROR_TYPE_WARNING,ERROR_ID_JULIAN_DAY,Julian,Year);
+   ERROR_SetLast((char *)"ZEN_FNCaljmon",ERROR_TYPE_WARNING,ERROR_ID_JULIAN_DAY,Julian,Year);
   else
    while ( Julian > (First[Month] + (int) (((Year%4)==0) && (Month>1))) ) Month++;
 
@@ -212,7 +212,7 @@ int ZEN_FNCaljday(int Year,int Julian)
   // Calculate the day in the month
 
   if ( (Julian > 365+((Year%4)==0)) || (Julian<1) )
-   ERROR_SetLast((DoasCh *)"ZEN_FNCaljday",ERROR_TYPE_WARNING,ERROR_ID_JULIAN_DAY,Julian,Year);
+   ERROR_SetLast((char *)"ZEN_FNCaljday",ERROR_TYPE_WARNING,ERROR_ID_JULIAN_DAY,Julian,Year);
   else
    while ( Julian > (First[Month] += (int) (((Year%4)==0) && (Month>1))) ) Month++;
 

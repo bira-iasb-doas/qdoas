@@ -131,11 +131,11 @@ INDEX KuruczSearchReference(INDEX indexRefFeno,INDEX indexRefColumn)
 // ----------------------------------------------------------------------------      
 
 RC KURUCZ_Spectrum(double *oldLambda,double *newLambda,double *spectrum,double *reference,double *instrFunction,
-                   DoasCh displayFlag,DoasCh *windowTitle,double **coeff,double **fwhmVector,double **fwhmDeriv2,INT saveFlag,INDEX indexFeno,void *responseHandle,INDEX indexFenoColumn)
+                   char displayFlag,char *windowTitle,double **coeff,double **fwhmVector,double **fwhmDeriv2,INT saveFlag,INDEX indexFeno,void *responseHandle,INDEX indexFenoColumn)
  {
   // Declarations
 
-  DoasCh            string[MAX_ITEM_TEXT_LEN+1],pageTitle[MAX_ITEM_TEXT_LEN+1];
+  char            string[MAX_ITEM_TEXT_LEN+1],pageTitle[MAX_ITEM_TEXT_LEN+1];
   CROSS_REFERENCE *TabCross,*pTabCross;
   CROSS_RESULTS   *pResults,*Results;                                           // pointer to results associated to a symbol
   SVD             *svdFeno;                                                     // svd environments associated to list of little windows
@@ -1048,7 +1048,7 @@ RC KURUCZ_Alloc(PROJECT *pProject,double *lambda,INDEX indexKurucz,double lambda
   FENO            *pKuruczFeno,                                                 // analysis window with Kurucz description
                   *pTabFeno;
 
-  DoasCh  kuruczFile[MAX_ITEM_TEXT_LEN+1],slitFile[MAX_ITEM_TEXT_LEN+1];
+  char  kuruczFile[MAX_ITEM_TEXT_LEN+1],slitFile[MAX_ITEM_TEXT_LEN+1];
   INT    Nb_Win,shiftDegree,fwhmDegree,                                         // substitution variables
          NTabCross,DimLMax;
   INDEX  i,indexFeno,indexWindow,indexParam,indexTabCross;                      // indexes for loops and arrays
@@ -1191,13 +1191,13 @@ RC KURUCZ_Alloc(PROJECT *pProject,double *lambda,INDEX indexKurucz,double lambda
     pKurucz->Nb_Win=Nb_Win;
     pKurucz->shiftDegree=shiftDegree;
 
-    pKurucz->displayFit=(DoasCh)pKuruczOptions->displayFit;                // display fit flag
-    pKurucz->displayResidual=(DoasCh)pKuruczOptions->displayResidual;      // display new calibration flag
-    pKurucz->displayShift=(DoasCh)pKuruczOptions->displayShift;            // display shift in each pixel flag
-    pKurucz->displaySpectra=(DoasCh)pKuruczOptions->displaySpectra;        // display shift in each pixel flag
+    pKurucz->displayFit=(char)pKuruczOptions->displayFit;                // display fit flag
+    pKurucz->displayResidual=(char)pKuruczOptions->displayResidual;      // display new calibration flag
+    pKurucz->displayShift=(char)pKuruczOptions->displayShift;            // display shift in each pixel flag
+    pKurucz->displaySpectra=(char)pKuruczOptions->displaySpectra;        // display shift in each pixel flag
 
     pKurucz->units=pProject->analysis.units;
-    pKurucz->method=(DoasCh)pKuruczOptions->analysisMethod;
+    pKurucz->method=(char)pKuruczOptions->analysisMethod;
 
     // Allocate one svd environment for each little window
 

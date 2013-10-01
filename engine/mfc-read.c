@@ -72,13 +72,13 @@
 // GLOBAL VARIABLES
 // ================
 
-DoasCh MFC_fileInstr[MAX_STR_SHORT_LEN+1],      // instrumental function file name
+char MFC_fileInstr[MAX_STR_SHORT_LEN+1],      // instrumental function file name
       MFC_fileDark[MAX_STR_SHORT_LEN+1],       // dark current file name
       MFC_fileOffset[MAX_STR_SHORT_LEN+1];     // offset file name
 
 INT mfcLastSpectrum=0;
 
-DoasCh *MFCBIRA_measureTypes[PRJCT_INSTR_MFC_TYPE_MAX]=
+char *MFCBIRA_measureTypes[PRJCT_INSTR_MFC_TYPE_MAX]=
      	                            { "Unknown","Measurement","Offset","Dark current" };
 
 RC MFC_LoadOffset(ENGINE_CONTEXT *pEngineContext)
@@ -165,8 +165,8 @@ INDEX MFC_SearchForCurrentFileIndex(ENGINE_CONTEXT *pEngineContext)
  {
  	// Declarations
 
- 	DoasCh  fileName[MAX_ITEM_TEXT_LEN+1];                                        // name of the current file
- 	DoasCh *ptr,*scanRefFiles;
+ 	char  fileName[MAX_ITEM_TEXT_LEN+1];                                        // name of the current file
+ 	char *ptr,*scanRefFiles;
  	INDEX   indexRecord,indexFile;
  	INT     nscanRefFiles;
 
@@ -215,7 +215,7 @@ RC SetMFC(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
   PRJCT_INSTRUMENTAL *pInstrumental;
   BUFFERS *pBuffers;                                                            // pointer to the buffers part of the engine context
 
-  DoasCh  fileName[MAX_STR_SHORT_LEN+1];                                        // name of the current file
+  char  fileName[MAX_STR_SHORT_LEN+1];                                        // name of the current file
   RC rc;
 
   // Initializations
@@ -265,7 +265,7 @@ TBinaryMFC MFC_headerDrk,                                                       
 //               ERROR_ID_NO              otherwise.
 // -----------------------------------------------------------------------------
 
-RC MFC_ReadRecord(DoasCh *fileName,
+RC MFC_ReadRecord(char *fileName,
                   TBinaryMFC *pHeaderSpe,double *spe,
                   TBinaryMFC *pHeaderDrk,double *drk,
                   TBinaryMFC *pHeaderOff,double *off,
@@ -385,7 +385,7 @@ RC ReliMFC(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay
 
   INT                  day,mon,year,hour,min,sec,nsec,nsec1,nsec2,              // date and time fields
                        firstFile;                                               // number of the first file in the current directory
-  DoasCh                fileName[MAX_STR_SHORT_LEN+1],                           // name of the current file (the current record)
+  char                fileName[MAX_STR_SHORT_LEN+1],                           // name of the current file (the current record)
                        format[20],
                       *ptr,*ptr2;                                               // pointers to parts in the previous string
   SHORT_DATE           today;                                                   // date of the current record
@@ -604,7 +604,7 @@ RC ReliMFC(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay
 //               ERROR_ID_NO              otherwise.
 // -----------------------------------------------------------------------------
 
-RC MFC_ReadRecordStd(ENGINE_CONTEXT *pEngineContext,DoasCh *fileName,
+RC MFC_ReadRecordStd(ENGINE_CONTEXT *pEngineContext,char *fileName,
                      TBinaryMFC *pHeaderSpe,double *spe,
                      TBinaryMFC *pHeaderDrk,double *drk,
                      TBinaryMFC *pHeaderOff,double *off)
@@ -617,7 +617,7 @@ RC MFC_ReadRecordStd(ENGINE_CONTEXT *pEngineContext,DoasCh *fileName,
   FILE *fp;         // pointer to the current file
   INT  pixFin,day,mon,year,hour,min,sec,nsec,mfcDate[3],yearN,dateSize,sepN;        // date and time fields
   float                tmp;                                   // temporary variable
-  DoasCh line[MAX_STR_SHORT_LEN+1],             // line of the current file
+  char line[MAX_STR_SHORT_LEN+1],             // line of the current file
         keyWord[MAX_STR_SHORT_LEN+1],keyValue[MAX_STR_SHORT_LEN+1],ctmp;
   SHORT_DATE         today;                                 // date of the current record
 
@@ -836,7 +836,7 @@ RC ReliMFCStd(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int local
   RECORD_INFO *pRecord;                                                         // pointer to the record part of the engine context
   BUFFERS *pBuffers;                                                            // pointer to the buffers part of the engine context
 
-  DoasCh                fileName[MAX_STR_SHORT_LEN+1],                           // name of the current file (the current record)
+  char                fileName[MAX_STR_SHORT_LEN+1],                           // name of the current file (the current record)
                       *ptr;                                                     // pointers to parts in the previous string
 
   double               longit;                                                  // longitude of the current record
@@ -1146,7 +1146,7 @@ RC MFC_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
   BUFFERS *pBuffers;                                                            // pointer to the buffers part of the engine context
 
   PRJCT_INSTRUMENTAL *pInstrumental;
-  DoasCh fileName[MAX_STR_SHORT_LEN+1],*ptr;
+  char fileName[MAX_STR_SHORT_LEN+1],*ptr;
   TBinaryMFC tbinaryRef;
   INDEX indexWindow,indexFeno,indexTabCross;                                    // indexes for loops and array
   CROSS_REFERENCE *pTabCross;                                                   // pointer to the current cross section

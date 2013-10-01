@@ -93,7 +93,7 @@ NOAA_TimeRecordType;
 
 typedef struct PlaceRecordType
  {
-		DoasCh name[256];
+		char name[256];
 		float latitude;		                                                             //	{degrees, North positive }
 		float longitude;	                                                             //	{degrees, East positive  }
 		float height;				                                                             //	{meters above sea level }
@@ -103,7 +103,7 @@ NOAA_PlaceRecordType;
 
 typedef struct	FieldRecordType
  {
-		DoasCh observingConditions[256];
+		char observingConditions[256];
 		short lightSource;                                                            // LightSourceType
 		NOAA_PlaceRecordType placeRecord;
 		float pressure;                                                               // {millibars               }
@@ -126,7 +126,7 @@ NOAA_FieldRecordType;
 
 typedef struct	AircraftRecordType
  {
-		DoasCh observingConditions[256];
+		char observingConditions[256];
 		short lightSource;                                                            // LightSourceType
 		float latitude;                                                               // {degrees, North positive }
 		float longitude;                                                              // {degrees, East positive  }
@@ -152,8 +152,8 @@ NOAA_AircraftRecordType;
 
 typedef struct	LaboratoryRecordType
  {
-		DoasCh observingConditions[256];
-		DoasCh gasName[256];
+		char observingConditions[256];
+		char gasName[256];
 		short lightSource;                                                            // LightSourceType
 		float concentration;                                                          // {Number per cubic cm     }
 		float pathLength;                                                             // {Centimeters             }
@@ -229,7 +229,7 @@ typedef struct	WavelengthRecordType
 		char  wlSpareBool;
 		float wlDispToCenter;
 		float wlCoeff[4];
-		DoasCh wlMethod[12];                                                           // {Program/version used to calibrate.}
+		char wlMethod[12];                                                           // {Program/version used to calibrate.}
 		int   wlID0;                                                                  // {These fields identify the calibration standard,É    }
 		int   wlID1;                                                                  // {using pointers,times, or recNums (to be determined).}
  }
@@ -313,7 +313,7 @@ NOAA_ObservationCaseType;
 
 typedef struct InputDataRecordType
  {
-		DoasCh generalMessage[256];
+		char generalMessage[256];
 		NOAA_TimeRecordType timeRecord;
 		NOAA_ForeOpticsRecordType	foreOpticsRecord;
 		NOAA_SpectrometerRecordType spectrometerRecord;

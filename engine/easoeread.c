@@ -96,7 +96,7 @@ RC SetEASOE(ENGINE_CONTEXT *pEngineContext,FILE *specFp,FILE *namesFp)
  {
   // Declarations
 
-  DoasCh  names[20];                                                             // name of the current spectrum
+  char  names[20];                                                             // name of the current spectrum
   short *indexes,                                                               // size of SpecMax arrays
          curvenum;                                                              // number of spectra in the file
   DoasU32 *recordIndexes;                                                         // save the position of each record in the file
@@ -199,7 +199,7 @@ RC ReliEASOE(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localD
   RECORD_INFO *pRecord;                                                         // pointer to the record part of the engine context
 
   EASOE             speRecord,drkRecord;                                        // resp. spectrum and dark current records
-  DoasCh             names[20];                                                  // name of the current spectrum
+  char             names[20];                                                  // name of the current spectrum
   DoasUS           *ISpecMax;                                                   // scans number for each integration time
   double            tmLocal;                                                    // temporary data
   INDEX             i,j;                                                        // indexes for loops and arrays

@@ -11,7 +11,7 @@
 // GLOBAL DECLARATIONS
 // ===================
 
-EXTERN DoasCh          ENGINE_dbgFile[MAX_PATH_LEN+1];                           // debug file
+EXTERN char          ENGINE_dbgFile[MAX_PATH_LEN+1];                           // debug file
 EXTERN ENGINE_CONTEXT ENGINE_contextRef;                                        // copy of the engine context for the automatic search of the reference spectrum
 EXTERN double         ENGINE_localNoon;                                         // local noon
 

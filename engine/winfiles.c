@@ -151,7 +151,7 @@ FILE_TYPE FILES_typeSpectra[FILE_TYPE_SPECTRA_MAX] =
   { "ASCII Spectra files without header", "asc", "" }                           // WITHOUT COMMENT
  };
 
-DoasCh FILES_configuration[MAX_PATH_LEN+1];                                      // configuration file
+char FILES_configuration[MAX_PATH_LEN+1];                                      // configuration file
 // QDOAS ??? INT FILES_version=HELP_VERSION_MAX-1;                                           // file version
 FILES_PATH *FILES_paths;                                                        // all paths implied in configuration file
 
@@ -173,11 +173,11 @@ INT FILES_nPaths=FILES_PATH_MAX;                                                
 // OUTPUT        newPath       the new path (%x\<file name>)
 // -----------------------------------------------------------------------------
 
-void FILES_CompactPath(DoasCh *newPath,DoasCh *path,INT useFileName,INT addFlag)
+void FILES_CompactPath(char *newPath,char *path,INT useFileName,INT addFlag)
  {
   // Declarations
 
-  DoasCh  pathTmp[MAX_PATH_LEN+1],*ptr;
+  char  pathTmp[MAX_PATH_LEN+1],*ptr;
   INDEX  indexPath,indexFirst;
   SZ_LEN pathLength,pathTmpLength;
 
@@ -246,7 +246,7 @@ void FILES_CompactPath(DoasCh *newPath,DoasCh *path,INT useFileName,INT addFlag)
 // INPUT         path          the original path
 // -----------------------------------------------------------------------------
 
-void FILES_RemoveOnePath(DoasCh *path)
+void FILES_RemoveOnePath(char *path)
  {
   // Declaration
 
@@ -273,9 +273,9 @@ void FILES_RemoveOnePath(DoasCh *path)
 // RETURN        pointer to the new path
 // -----------------------------------------------------------------------------
 
-DoasCh *FILES_RebuildFileName(DoasCh *newPath,DoasCh *path,INT useFileName)
+char *FILES_RebuildFileName(char *newPath,char *path,INT useFileName)
  {
- 	DoasCh pathTmp[MAX_PATH_LEN+1],*ptr;
+ 	char pathTmp[MAX_PATH_LEN+1],*ptr;
 
  	strcpy(pathTmp,path);
 
@@ -291,7 +291,7 @@ DoasCh *FILES_RebuildFileName(DoasCh *newPath,DoasCh *path,INT useFileName)
 
 // QDOAS ???  // Declarations
 // QDOAS ???
-// QDOAS ???  DoasCh pathTmp[MAX_PATH_LEN+1],*ptr;
+// QDOAS ???  char pathTmp[MAX_PATH_LEN+1],*ptr;
 // QDOAS ???  INDEX indexPath;
 // QDOAS ???
 // QDOAS ???  // Initialization
@@ -333,7 +333,7 @@ DoasCh *FILES_RebuildFileName(DoasCh *newPath,DoasCh *path,INT useFileName)
 // OUTPUT        newPath       the new path
 // -----------------------------------------------------------------------------
 
-void FILES_ChangePath(DoasCh *oldPath,DoasCh *newPath,INT useFileName)
+void FILES_ChangePath(char *oldPath,char *newPath,INT useFileName)
  {
   FILES_RemoveOnePath(oldPath);
   FILES_CompactPath(oldPath,newPath,useFileName,1);
@@ -356,14 +356,14 @@ void FILES_ChangePath(DoasCh *oldPath,DoasCh *newPath,INT useFileName)
 // OUTPUT        pathString          the new path
 // -----------------------------------------------------------------------------
 
-void FILES_RetrievePath(DoasCh *pathString,SZ_LEN pathStringLength,
-                        DoasCh *fullFileName,SZ_LEN fullFileNameLength,
+void FILES_RetrievePath(char *pathString,SZ_LEN pathStringLength,
+                        char *fullFileName,SZ_LEN fullFileNameLength,
                         INT    indexFileType,INT changeDefaultPath)
  {
   // Declarations
 
   SZ_LEN currentLength;
-  DoasCh *ptr;
+  char *ptr;
 
   // Initialization
 
@@ -425,11 +425,11 @@ void FilesResetAllPaths(void)
 // INPUT         fileLine  the current line in the wds configuration file
 // -----------------------------------------------------------------------------
 
-void FilesLoadAllPaths(DoasCh *fileLine)
+void FilesLoadAllPaths(char *fileLine)
  {
   // Declarations
 
-  DoasCh path[MAX_PATH_LEN+1];           // path extracted from fileLine
+  char path[MAX_PATH_LEN+1];           // path extracted from fileLine
   INDEX indexPath;
 
   // Initialization
@@ -455,7 +455,7 @@ void FilesLoadAllPaths(DoasCh *fileLine)
 //               sectionName   name of the all paths section in the configuration file
 // -----------------------------------------------------------------------------
 
-void FilesSaveAllPaths(FILE *fp,DoasCh *sectionName)
+void FilesSaveAllPaths(FILE *fp,char *sectionName)
  {
   // Declaration
 
@@ -504,11 +504,11 @@ void FilesResetDefaultPaths(void)
 // INPUT         fileLine  the current line in the wds configuration file
 // -----------------------------------------------------------------------------
 
-void FilesLoadDefaultPaths(DoasCh *fileLine)
+void FilesLoadDefaultPaths(char *fileLine)
  {
   // Declarations
 
-  DoasCh keyName[MAX_ITEM_TEXT_LEN+1],                                           // name on the left of '=' symbol in a wds statement
+  char keyName[MAX_ITEM_TEXT_LEN+1],                                           // name on the left of '=' symbol in a wds statement
         defaultPath[MAX_PATH_LEN+1];                                            // default path extracted from fileLine
   INDEX indexFileType;
 
@@ -536,7 +536,7 @@ void FilesLoadDefaultPaths(DoasCh *fileLine)
 //               sectionName   name of the default paths section in the configuration file
 // -----------------------------------------------------------------------------
 
-void FilesSaveDefaultPaths(FILE *fp,DoasCh *sectionName)
+void FilesSaveDefaultPaths(FILE *fp,char *sectionName)
  {
   // Declaration
 
@@ -580,7 +580,7 @@ RC FILES_GetMatrixDimensions(FILE *fp,const char *fileName,INT *pNl,INT *pNc,con
  {
   // Declarations
 
-  DoasCh *oldColumn,*nextColumn;                                                 // line of files
+  char *oldColumn,*nextColumn;                                                 // line of files
   INT    nl,nc,                                                                 // dimensions of the matrix
          lineLength,                                                            // length of file line
          fileLength;                                                            // total length of file
@@ -598,8 +598,8 @@ RC FILES_GetMatrixDimensions(FILE *fp,const char *fileName,INT *pNl,INT *pNc,con
 
   // Allocate buffers for lines of file
 
-  else if (((oldColumn=(DoasCh *)MEMORY_AllocBuffer("FILES_GetMatrixDimensions ","oldColumn",fileLength,sizeof(DoasCh),0,MEMORY_TYPE_STRING))==NULL) ||
-           ((nextColumn=(DoasCh *)MEMORY_AllocBuffer("FILES_GetMatrixDimensions ","nextColumn",fileLength,sizeof(DoasCh),0,MEMORY_TYPE_STRING))==NULL))
+  else if (((oldColumn=(char *)MEMORY_AllocBuffer("FILES_GetMatrixDimensions ","oldColumn",fileLength,sizeof(char),0,MEMORY_TYPE_STRING))==NULL) ||
+           ((nextColumn=(char *)MEMORY_AllocBuffer("FILES_GetMatrixDimensions ","nextColumn",fileLength,sizeof(char),0,MEMORY_TYPE_STRING))==NULL))
    rc=ERROR_ID_ALLOC;
   else
    {
@@ -666,7 +666,7 @@ RC FILES_LoadMatrix(FILE *fp,const char *fileName,double **matrix,INT base,INT n
  {
   // Declarations
 
-  DoasCh *oldColumn,*nextColumn;                             // buffers for file lines
+  char *oldColumn,*nextColumn;                             // buffers for file lines
   INT    lineLength,                                        // length of a file line
          fileLength;                                        // total length of file
   INDEX  i,j;                                               // index for browsing lines and columns in file
@@ -684,8 +684,8 @@ RC FILES_LoadMatrix(FILE *fp,const char *fileName,double **matrix,INT base,INT n
 
   // Allocate buffers for lines of file
 
-  else if (((oldColumn=(DoasCh *)MEMORY_AllocBuffer("FILES_LoadMatrix ","oldColumn",fileLength,sizeof(DoasCh),0,MEMORY_TYPE_STRING))==NULL) ||
-           ((nextColumn=(DoasCh *)MEMORY_AllocBuffer("FILES_LoadMatrix ","oldColumn",fileLength,sizeof(DoasCh),0,MEMORY_TYPE_STRING))==NULL))
+  else if (((oldColumn=(char *)MEMORY_AllocBuffer("FILES_LoadMatrix ","oldColumn",fileLength,sizeof(char),0,MEMORY_TYPE_STRING))==NULL) ||
+           ((nextColumn=(char *)MEMORY_AllocBuffer("FILES_LoadMatrix ","oldColumn",fileLength,sizeof(char),0,MEMORY_TYPE_STRING))==NULL))
    rc=ERROR_SetLast(callingFunction,errorType,ERROR_ID_ALLOC);
   else
    {
@@ -734,12 +734,12 @@ RC FILES_LoadMatrix(FILE *fp,const char *fileName,double **matrix,INT base,INT n
 // OUTPUT        pointer to the updated file name
 // -----------------------------------------------------------------------------
 
-DoasCh *FILES_BuildFileName(DoasCh *fileName,MASK fileType)
+char *FILES_BuildFileName(char *fileName,MASK fileType)
  {
   // Declarations
 
   SZ_LEN fileNameLength;
-  DoasCh *ptr;
+  char *ptr;
 
   // Replace file extension by the correct one
 

@@ -276,15 +276,15 @@ RC GDP_BIN_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
   // Declarations
 
   GOME_ORBIT_FILE *pOrbitFile;                                                  // pointer to the current orbit
-  DoasCh filePath[MAX_STR_SHORT_LEN+1];
-  DoasCh fileFilter[MAX_STR_SHORT_LEN+1];
-  DoasCh filePrefix[MAX_STR_SHORT_LEN+1];
-  DoasCh fileExt[MAX_STR_SHORT_LEN+1];
+  char filePath[MAX_STR_SHORT_LEN+1];
+  char fileFilter[MAX_STR_SHORT_LEN+1];
+  char filePrefix[MAX_STR_SHORT_LEN+1];
+  char fileExt[MAX_STR_SHORT_LEN+1];
   struct dirent *fileInfo;
   DIR *hDir;
   INDEX indexFile;
-  DoasCh *ptr;
-  DoasCh fileName[MAX_ITEM_TEXT_LEN+1];                                          // file name
+  char *ptr;
+  char fileName[MAX_ITEM_TEXT_LEN+1];                                          // file name
   INDEX i,j,indexRecord;                                                        // indexes for loops and arrays
   int useErrors,errorFlag;                                                      // 0 if errors are saved with spectra, 1 otherwise
   FILE *fp;
@@ -893,7 +893,7 @@ void GdpBinSort(INDEX indexRecord,int flag,int listSize,INDEX fileIndex)
 // RETURN        the number of elements in the refList reference list
 // -----------------------------------------------------------------------------
 
-INT GdpBinRefLat(GDP_BIN_REF *refList,double latMin,double latMax,double lonMin,double lonMax,double sza,double szaDelta,DoasCh *gomePixelType)
+INT GdpBinRefLat(GDP_BIN_REF *refList,double latMin,double latMax,double lonMin,double lonMax,double sza,double szaDelta,char *gomePixelType)
  {
   // Declarations
 
@@ -995,7 +995,7 @@ INT GdpBinRefLat(GDP_BIN_REF *refList,double latMin,double latMax,double lonMin,
 // RETURN        the number of elements in the refList reference list
 // -----------------------------------------------------------------------------
 
-INT GdpBinRefSza(GDP_BIN_REF *refList,double sza,double szaDelta,DoasCh *gomePixelType)
+INT GdpBinRefSza(GDP_BIN_REF *refList,double sza,double szaDelta,char *gomePixelType)
  {
   // Declarations
 
@@ -1217,7 +1217,7 @@ RC GdpBinRefSelection(ENGINE_CONTEXT *pEngineContext,
                       double *lambdaK,double *ref,
                       double *lambdaN,double *refN,double *pRefNormN,
                       double *lambdaS,double *refS,double *pRefNormS,
-                      DoasCh *gomePixelType,
+                      char *gomePixelType,
                       void *responseHandle)
  {
   // Declarations

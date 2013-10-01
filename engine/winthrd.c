@@ -103,7 +103,7 @@
 // GLOBAL VARIABLES
 // ================
 
-DoasCh     THRD_asciiFile[MAX_ITEM_TEXT_LEN+1],*THRD_asciiPtr;        // ascii file for exporting spectra
+char     THRD_asciiFile[MAX_ITEM_TEXT_LEN+1],*THRD_asciiPtr;        // ascii file for exporting spectra
 HANDLE    THRD_hEvents[THREAD_EVENT_MAX];      // list of events
 ENGINE_CONTEXT THRD_specInfo;          // data on current spectra and reference
 UINT      THRD_id=THREAD_TYPE_NONE;            // thread identification number

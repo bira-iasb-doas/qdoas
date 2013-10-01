@@ -582,11 +582,11 @@ RC SVD_Dcmp ( double **a, int m, int n, double *w, double **v, double *SigmaSqr,
 // SVD_Free : Release allocated buffers used for SVD decomposition
 // ----------------------------------------------------------------------
 
-void SVD_Free(DoasCh *callingFunctionShort,SVD *pSvd)
+void SVD_Free(char *callingFunctionShort,SVD *pSvd)
  {
   // Declaration
 
-  DoasCh functionNameShort[MAX_STR_SHORT_LEN+1];
+  char functionNameShort[MAX_STR_SHORT_LEN+1];
 
   #if defined(__DEBUG_) && __DEBUG_
   DEBUG_FunctionBegin("SVD_Free",DEBUG_FCTTYPE_MEM);
@@ -636,11 +636,11 @@ void SVD_Free(DoasCh *callingFunctionShort,SVD *pSvd)
 // --------------------------------------------------------------------
 
 
-RC SVD_LocalAlloc(DoasCh *callingFunctionShort,SVD *pSvd)
+RC SVD_LocalAlloc(char *callingFunctionShort,SVD *pSvd)
  {
   // Declarations
 
-  DoasCh functionNameShort[MAX_STR_SHORT_LEN+1];
+  char functionNameShort[MAX_STR_SHORT_LEN+1];
   INDEX i,j;
   RC rc;
 

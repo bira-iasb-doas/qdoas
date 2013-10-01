@@ -500,7 +500,7 @@ RC SetPDA_EGG(ENGINE_CONTEXT *pEngineContext,FILE *specFp,int newFlag)
    {
    	// Initializations
 
-// !!! */    DoasCh *ptr,fileout[MAX_ITEM_TEXT_LEN+1];
+// !!! */    char *ptr,fileout[MAX_ITEM_TEXT_LEN+1];
 // !!! */    FILE *fp;
 
 // !!! */    ptr=strrchr(fileName,PATH_SEP);
@@ -599,7 +599,7 @@ RC ReliPDA_EGG(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
 
   PDA1453A          header;                                                     // file header
   OBSERVATION_SITE *pSite;                                                      // pointer to the observation sites data
-  DoasCh             fileNameShort[MAX_STR_SHORT_LEN+1],                         // temporary file name
+  char             fileNameShort[MAX_STR_SHORT_LEN+1],                         // temporary file name
                    *ptr,                                                        // pointer to part of the previous string
                     names[20];                                                  // name of the current spectrum
   DoasUS           *ISpectre,                                                   // spectrum in the original format
@@ -619,7 +619,7 @@ RC ReliPDA_EGG(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
   RC                rc;                                                         // return code
 
 // !!! */    FILE *gp;
-// !!! */    DoasCh fileout[MAX_ITEM_TEXT_LEN+1];
+// !!! */    char fileout[MAX_ITEM_TEXT_LEN+1];
 
   // Initializations
 

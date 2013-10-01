@@ -85,7 +85,6 @@ extern "C" {
 #pragma pack(1)
 
 typedef int            INT;
-typedef char           DoasCh;
 typedef unsigned short DoasUS,WORD;
 typedef int            BOOL;
 typedef uint32_t       DoasU32;
@@ -323,8 +322,8 @@ enum { DEBUG_DVAR_NO, DEBUG_DVAR_YES };
 
 typedef union _debugVarPtr                                                      // use a different definition of the pointer according to the type of the variable to debug
  {
-  DoasCh   **ucharArray;                                                         // pointer to a string array
-  DoasCh    *ucharVector;                                                        // pointer to a string
+  char   **ucharArray;                                                         // pointer to a string array
+  char    *ucharVector;                                                        // pointer to a string
   short   **shortArray;                                                         // pointer to a short type array
   short    *shortVector;                                                        // pointer to a short type vector
   DoasUS  **ushortArray;                                                        // pointer to a unsigned short type array
@@ -342,7 +341,7 @@ DEBUG_VARPTR;
 
 typedef struct _debugVariables                                                  // information on variables to debug
  {
-  DoasCh         varName[MAX_VAR_LEN+1];                                         // the name of the variable to debug
+  char         varName[MAX_VAR_LEN+1];                                         // the name of the variable to debug
   DEBUG_VARPTR  varData;                                                        // pointer to the buffer to print out
   INT           varNl,varNc;                                                    // the size of the variable to debug
   INT           varNlOff,varNcOff;                                              // the offset to apply to resp. index of lines and columns
@@ -354,12 +353,12 @@ DEBUG_VARIABLE;
 
 // Prototypes
 
-void DEBUG_Print(DoasCh *formatString,...);
-void DEBUG_PrintVar(DoasCh *message,...);
-RC   DEBUG_FunctionBegin(DoasCh *fctName,MASK fctType);
-RC   DEBUG_FunctionStop(DoasCh *fctName,RC rcFct);
-RC   DEBUG_Start(DoasCh *fileName,DoasCh *fctName,MASK fctMask,int nLevels,int varFlag,int resetFlag);
-RC   DEBUG_Stop(DoasCh *callingFct);
+void DEBUG_Print(char *formatString,...);
+void DEBUG_PrintVar(char *message,...);
+RC   DEBUG_FunctionBegin(char *fctName,MASK fctType);
+RC   DEBUG_FunctionStop(char *fctName,RC rcFct);
+RC   DEBUG_Start(char *fileName,char *fctName,MASK fctMask,int nLevels,int varFlag,int resetFlag);
+RC   DEBUG_Stop(char *callingFct);
 
 // ===============
 // ERRORS HANDLING
@@ -379,15 +378,15 @@ typedef struct _errorDescription
  {
   int   errorType;                                                              // type of error (warning, fatal error, ...)
   int   errorId;                                                                // id number of the error
-  DoasCh errorFunction[MAX_FCT_LEN+1];                                           // name of the calling function that produced the error
-  DoasCh errorString[MAX_MSG_LEN+1];                                             // error message
+  char errorFunction[MAX_FCT_LEN+1];                                           // name of the calling function that produced the error
+  char errorString[MAX_MSG_LEN+1];                                             // error message
  }
 ERROR_DESCRIPTION;
 
 // Prototypes
 
 RC ERROR_DisplayMessage(void *responseHandle);
-RC ERROR_SetLast(const DoasCh *callingFunction,int errorType,RC errorId,...);
+RC ERROR_SetLast(const char *callingFunction,int errorType,RC errorId,...);
 RC ERROR_GetLast(ERROR_DESCRIPTION *pError);
 
 // ===============
@@ -423,9 +422,9 @@ enum _memoryTypes
 
 typedef struct _memory
  {
-  DoasCh  callingFunctionName[MAX_FCT_LEN+1];                                    // name of the calling function
-  DoasCh  bufferName[MAX_VAR_LEN+1];                                             // name of the buffer
-  DoasCh *pBuffer;                                                               // pointer to the allocated buffer
+  char  callingFunctionName[MAX_FCT_LEN+1];                                    // name of the calling function
+  char  bufferName[MAX_VAR_LEN+1];                                             // name of the buffer
+  char *pBuffer;                                                               // pointer to the allocated buffer
   INT    itemNumber;                                                            // number of items in buffer
   INT    itemSize;                                                              // size of item
   INT    offset;                                                                // index of the first item
@@ -436,20 +435,20 @@ MEMORY;
 // Global variables
 
 EXTERN INT MEMORY_stackSize;                                                    // the size of the stack of allocated objects
-EXTERN DoasCh *MEMORY_types[MEMORY_TYPE_MAX];                                    // available types for allocated objects
+EXTERN const char *MEMORY_types[MEMORY_TYPE_MAX];                                    // available types for allocated objects
 
 // Prototypes
-void    *MEMORY_AllocBuffer(const DoasCh *callingFunctionName,DoasCh *bufferName,INT itemNumber,INT itemSize,INT offset,INT type);
-void     MEMORY_ReleaseBuffer(const DoasCh *callingFunctionName,DoasCh *bufferName,void *pBuffer);
-double  *MEMORY_AllocDVector(const DoasCh *callingFunctionName,DoasCh *bufferName,int nl,int nh);
-void     MEMORY_ReleaseDVector(const DoasCh *callingFunctionName,DoasCh *bufferName,double *v,int nl);
-double **MEMORY_AllocDMatrix(const DoasCh *callingFunctionName,DoasCh *bufferName,int nrl,int nrh,int ncl,int nch);
-void     MEMORY_ReleaseDMatrix(const DoasCh *callingFunctionName,DoasCh *bufferName,double **m,int ncl,int nch,int nrl);
+void    *MEMORY_AllocBuffer(const char *callingFunctionName, const char *bufferName,INT itemNumber,INT itemSize,INT offset,INT type);
+void     MEMORY_ReleaseBuffer(const char *callingFunctionName, const char *bufferName,void *pBuffer);
+double  *MEMORY_AllocDVector(const char *callingFunctionName, const char *bufferName,int nl,int nh);
+void     MEMORY_ReleaseDVector(const char *callingFunctionName, const char *bufferName,double *v,int nl);
+double **MEMORY_AllocDMatrix(const char *callingFunctionName, const char *bufferName,int nrl,int nrh,int ncl,int nch);
+void     MEMORY_ReleaseDMatrix(const char *callingFunctionName, const char *bufferName,double **m,int ncl,int nch,int nrl);
 
 RC       MEMORY_Alloc(void);
 RC       MEMORY_End(void);
 
-RC       MEMORY_GetInfo(DEBUG_VARIABLE *pVariable,DoasCh *pBuffer);
+RC       MEMORY_GetInfo(DEBUG_VARIABLE *pVariable,char *pBuffer);
 
 // ======================================
 // STDFUNC.C : STANDARD UTILITY FUNCTIONS
@@ -458,8 +457,8 @@ RC       MEMORY_GetInfo(DEBUG_VARIABLE *pVariable,DoasCh *pBuffer);
 // Prototypes
 
 double      STD_Pow10(int p);
-DoasCh      *STD_StrTrim(DoasCh *str);
-int         STD_Sscanf(DoasCh *line,DoasCh *formatString,...);
+char      *STD_StrTrim(char *str);
+int         STD_Sscanf(char *line,char *formatString,...);
 long        STD_FileLength(FILE *fp);
 
 char       *STD_Strupr(char *n);

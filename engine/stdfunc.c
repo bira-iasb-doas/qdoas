@@ -135,7 +135,7 @@ double STD_Pow10(int p)
 // RETURN        a pointer to the input string
 // -----------------------------------------------------------------------------
 
-DoasCh *STD_StrTrim(DoasCh *str)
+char *STD_StrTrim(char *str)
  {
  	// Declaration
 
@@ -167,7 +167,7 @@ DoasCh *STD_StrTrim(DoasCh *str)
 //               NULL if the end of the format string is reached
 // -----------------------------------------------------------------------------
 
-DoasCh *StrGetFormat(DoasCh *formatString,DoasCh *formatToken)
+char *StrGetFormat(char *formatString,char *formatToken)
  {
   // Declarations
 
@@ -242,12 +242,12 @@ DoasCh *StrGetFormat(DoasCh *formatString,DoasCh *formatToken)
 // QTDOAS ??? //               possible situations may not to have been explored
 // QTDOAS ??? // -----------------------------------------------------------------------------
 // QTDOAS ???
-// QTDOAS ??? int STD_Sscanf(DoasCh *line,DoasCh *formatString,...)
+// QTDOAS ??? int STD_Sscanf(char *line,char *formatString,...)
 // QTDOAS ???  {
 // QTDOAS ???   // Declarations
 // QTDOAS ???
-// QTDOAS ???   DoasCh tokenFormat[MAX_FORMAT_LEN+1];                                          // the expected format for the current token
-// QTDOAS ???   DoasCh *tfPtr,*tkOld,*tkNext;                                                  // pointers to substrings
+// QTDOAS ???   char tokenFormat[MAX_FORMAT_LEN+1];                                          // the expected format for the current token
+// QTDOAS ???   char *tfPtr,*tkOld,*tkNext;                                                  // pointers to substrings
 // QTDOAS ???   INT strFlag,intFlag,doubleFlag;                                               // flag set according to the expected type in the format string
 // QTDOAS ???   va_list argList;                                                              // variable arguments list
 // QTDOAS ???   void  *argPtr;                                                                // pointer to the next argument in the previous list
@@ -294,7 +294,7 @@ DoasCh *StrGetFormat(DoasCh *formatString,DoasCh *formatToken)
 // QTDOAS ???         else if (doubleFlag)
 // QTDOAS ???          *((double *)argPtr)=(double)0.;
 // QTDOAS ???         else
-// QTDOAS ???          *((DoasCh *)argPtr)='\0';
+// QTDOAS ???          *((char *)argPtr)='\0';
 // QTDOAS ???
 // QTDOAS ???         tkNext=tkOld;
 // QTDOAS ???        }
@@ -304,10 +304,10 @@ DoasCh *StrGetFormat(DoasCh *formatString,DoasCh *formatToken)
 // QTDOAS ???         if ((tkNext=strchr(tkOld,','))==NULL)
 // QTDOAS ???          tkNext=strchr(tkOld,'\n');
 // QTDOAS ???        }
-// QTDOAS ???       else if (strlen((DoasCh *)argPtr))
+// QTDOAS ???       else if (strlen((char *)argPtr))
 // QTDOAS ???        {
-// QTDOAS ???         if ((tkNext=strstr(tkOld,(DoasCh *)argPtr))!=NULL)
-// QTDOAS ???          tkNext+=strlen((DoasCh *)argPtr);
+// QTDOAS ???         if ((tkNext=strstr(tkOld,(char *)argPtr))!=NULL)
+// QTDOAS ???          tkNext+=strlen((char *)argPtr);
 // QTDOAS ???        }
 // QTDOAS ???
 // QTDOAS ???       ntoken++;

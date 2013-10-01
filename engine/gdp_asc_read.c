@@ -104,8 +104,8 @@ enum _channels { CHANNEL_1, CHANNEL_2, CHANNEL_3, CHANNEL_4 };
 // STATIC VARIABLES
 // ================
 
-DoasCh *months[12]={"jan","feb","mar","apr","may","jun","jul","aug","sep","oct","nov","dec"};
-DoasCh *bands[MAX_BANDS]={"1a","1b","2a","2b","3","4"};
+char *months[12]={"jan","feb","mar","apr","may","jun","jul","aug","sep","oct","nov","dec"};
+char *bands[MAX_BANDS]={"1a","1b","2a","2b","3","4"};
 
 INDEX gdpLastRecord=ITEM_NONE;                                                  // Record number of the last record read out.
 double *GDP_ASC_refL,*GDP_ASC_ref,*GDP_ASC_refE;                                            // irradiance vectors
@@ -214,7 +214,7 @@ RC ReadERS(FILE *fp,INT *pOrbitNumber)
  {
   // Declarations
 
-  DoasCh  fileLine[STRING_LENGTH+1];                                             // file line
+  char  fileLine[STRING_LENGTH+1];                                             // file line
   UINT utcDay,utcMSec;                                                          // UTC date and time
   RC rc;                                                                        // return code
 
@@ -260,7 +260,7 @@ INT ReadSolarChannel(FILE *fp,INT channel,double *lambda,double *solar,double *s
  {
   // Declarations
 
-  DoasCh  fileLine[STRING_LENGTH+1],                                             // file line
+  char  fileLine[STRING_LENGTH+1],                                             // file line
          channelString[STRING_LENGTH+1];                                        // the channel string to search for
   INT    channelStringLength,                                                   // the length of the channel string
          channelNumber,                                                         // the current channel number
@@ -327,7 +327,7 @@ RC ReadSolar(FILE *fp,INT channel,SHORT_DATE *pDate,struct time *pTime,double *l
  {
   // Declarations
 
-  DoasCh  fileLine[STRING_LENGTH+1],                                             // file line
+  char  fileLine[STRING_LENGTH+1],                                             // file line
          month[16];                                                             // measurement month
   INT    day,year,hour,min;                                                     // integer fields of the measurement date and time
   INDEX  indexMonth;                                                            // browse months
@@ -399,7 +399,7 @@ RC GotoSpectra(FILE *fp)
  {
   // Declarations
 
-  DoasCh  fileLine[STRING_LENGTH+1];                                             // file line
+  char  fileLine[STRING_LENGTH+1];                                             // file line
   RC     rc;                                                                    // return code
 
   // Initializations
@@ -435,8 +435,8 @@ RC GotoSpectraNumber(FILE *fp,INT band,INT recordNo)
  {
   // Declarations
 
-  DoasCh  fileLine[STRING_LENGTH+1];                                             // file line
-  DoasCh  bandStr[10];                                                           // band string to search for
+  char  fileLine[STRING_LENGTH+1];                                             // file line
+  char  bandStr[10];                                                           // band string to search for
   INT    bandStrLen;                                                            // size of the band string
   INDEX  nSpec;                                                                 // number of spectra
   RC     rc;                                                                    // return code
@@ -486,7 +486,7 @@ RC ReadPixelInfo(FILE *fp,ENGINE_CONTEXT *pEngineContext)
 
   RECORD_INFO *pRecord;                                                         // pointer to the record part of the engine context
 
-  DoasCh  fileLine[STRING_LENGTH+1],                                             // file line
+  char  fileLine[STRING_LENGTH+1],                                             // file line
          month[16];                                                             // measurement month
   INT    day,year,hour,min,                                                     // integer fields of the measurement date and time
          nLines;                                                                // number of lines with information about the current pixel
@@ -598,7 +598,7 @@ RC ReadSpectrum(FILE *fp,INT band,ENGINE_CONTEXT *pEngineContext,double *lambda,
 
   RECORD_INFO *pRecord;                                                         // pointer to the record part of the engine context
 
-  DoasCh  fileLine[STRING_LENGTH+1],                                             // file line
+  char  fileLine[STRING_LENGTH+1],                                             // file line
          bandStr[3];                                                            // current band type
   INT    nBands,npts;                                                           // resp. the number of bands in the current record and the number of points in the current band
   float  wavelStart,wavelEnd;                                                   // the wavelength range
@@ -693,7 +693,7 @@ RC GDP_ASC_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
   // Declarations
 
   RECORD_INFO *pRecord;                                                         // pointer to the record part of the engine context
-  DoasCh bandStr[10];                                                            // band string
+  char bandStr[10];                                                            // band string
   GOME_DATA *pGome;                                                             // data specific to GOME
   INT band,                                                                     // the user-requested band for spectra
       npts;                                                                     // the real number of points for GOME spectra

@@ -135,7 +135,7 @@ GOME2_INFO;
 
 typedef struct _GOME2OrbitFiles                                                 // description of an orbit
  {
- 	DoasCh               gome2FileName[MAX_STR_LEN+1];                             // the name of the file with a part of the orbit
+ 	char               gome2FileName[MAX_STR_LEN+1];                             // the name of the file with a part of the orbit
  	GOME2_INFO          gome2Info;                                                // all internal information about the PDS file like data offsets etc.
   double             *gome2SunRef,*gome2SunWve;                                 // the sun reference spectrum and calibration
   INDEX              *gome2LatIndex,*gome2LonIndex,*gome2SzaIndex;              // indexes of records sorted resp. by latitude, by longitude and by SZA
@@ -921,8 +921,8 @@ RC Gome2BrowseMDR(GOME2_ORBIT_FILE *pOrbitFile,INDEX indexBand)
   // Declarations
 
   GOME2_INFO *pGome2Info;
-  DoasCh *ptr,*ptrOld;
-  DoasCh geoFileName[MAX_STR_SHORT_LEN+1];
+  char *ptr,*ptrOld;
+  char geoFileName[MAX_STR_SHORT_LEN+1];
   GOME2_MDR *pMdr;
   FILE *geoFp;
   INDEX i;
@@ -1206,8 +1206,8 @@ RC GOME2_Set(ENGINE_CONTEXT *pEngineContext)
   // Declarations
 
   GOME2_ORBIT_FILE *pOrbitFile;                                                 // pointer to the current orbit
-  DoasCh filePath[MAX_STR_SHORT_LEN+1];
-  DoasCh fileFilter[MAX_STR_SHORT_LEN+1];
+  char filePath[MAX_STR_SHORT_LEN+1];
+  char fileFilter[MAX_STR_SHORT_LEN+1];
   #if defined(__WINDOAS_WIN_) && __WINDOAS_WIN_
   WIN32_FIND_DATA fileInfo,fileInfoSub;                                         // structure returned by FindFirstFile and FindNextFile APIs
   HANDLE hDir,hDirSub;                                                          // handle to use with by FindFirstFile and FindNextFile APIs
@@ -1217,7 +1217,7 @@ RC GOME2_Set(ENGINE_CONTEXT *pEngineContext)
   #endif
   INDEX indexFile;
   INT searchAllOrbits;
-  DoasCh *ptr,*fileExt;
+  char *ptr,*fileExt;
   INT oldCurrentIndex;
   RC rc;                                                                  // return code
 

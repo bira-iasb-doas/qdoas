@@ -76,9 +76,9 @@ struct output_field {
   /*!< The content of this field.*/
   char *fieldname; 
   /*!< title of the field in the output file */
-  char *format;
+  const char *format;
   /*!< format string used to generate an ascii string of the data */
-  char *column_number_format;
+  const char *column_number_format;
   /*!< format string used to generate column number in ascii headers.
      Not used for single-column fields, but must not be NULL for
      multicolumn fields!  e.g. \c "(%d)" to have a number in brackets,

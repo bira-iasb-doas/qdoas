@@ -74,11 +74,11 @@
 //               ERROR_ID_NO otherwise
 // -----------------------------------------------------------------------------
 
-RC MATRIX_Allocate(MATRIX_OBJECT *pMatrix,INT nl,INT nc,INT basel,INT basec,INT allocateDeriv2,DoasCh *callingFunction)
+RC MATRIX_Allocate(MATRIX_OBJECT *pMatrix,INT nl,INT nc,INT basel,INT basec,INT allocateDeriv2, const char *callingFunction)
  {
   // Declarations
 
-  DoasCh functionName[MAX_FCT_LEN+1];                                            // the name of the calling function
+  char functionName[MAX_FCT_LEN+1];                                            // the name of the calling function
   RC rc;                                                                        // the return code
 
   // Initializations
@@ -128,11 +128,11 @@ RC MATRIX_Allocate(MATRIX_OBJECT *pMatrix,INT nl,INT nc,INT basel,INT basec,INT 
 //               callingFunction : the name of the calling function
 // -----------------------------------------------------------------------------
 
-void MATRIX_Free(MATRIX_OBJECT *pMatrix,DoasCh *callingFunction)
+void MATRIX_Free(MATRIX_OBJECT *pMatrix, const char *callingFunction)
  {
   // Declaration
 
-  DoasCh functionName[MAX_FCT_LEN+1];
+  char functionName[MAX_FCT_LEN+1];
 
   // Initialization
 
@@ -172,7 +172,7 @@ void MATRIX_Free(MATRIX_OBJECT *pMatrix,DoasCh *callingFunction)
 //               ERROR_ID_NO otherwise
 // -----------------------------------------------------------------------------
 
-RC MATRIX_Copy(MATRIX_OBJECT *pTarget,MATRIX_OBJECT *pSource,DoasCh *callingFunction)
+RC MATRIX_Copy(MATRIX_OBJECT *pTarget,MATRIX_OBJECT *pSource, const char *callingFunction)
  {
   // Declarations
 
@@ -239,13 +239,13 @@ RC MATRIX_Copy(MATRIX_OBJECT *pTarget,MATRIX_OBJECT *pSource,DoasCh *callingFunc
 //               ERROR_ID_NO otherwise
 // -----------------------------------------------------------------------------
 
-RC MATRIX_Load(DoasCh *fileName,MATRIX_OBJECT *pMatrix,
+RC MATRIX_Load(char *fileName,MATRIX_OBJECT *pMatrix,
                INT basel,INT basec,INT nl,INT nc,double xmin,double xmax,
-               INT allocateDeriv2,INT reverseFlag,DoasCh *callingFunction)
+               INT allocateDeriv2,INT reverseFlag, const char *callingFunction)
  {
   // Declarations
 
-  DoasCh   *oldColumn,*nextColumn,                                               // get lines from the input file
+  char   *oldColumn,*nextColumn,                                               // get lines from the input file
            fullPath[MAX_ITEM_TEXT_LEN+1];                                       // the complete file name to load
   INT      nltmp,nctmp,                                                         // highest indexes for lines and columns
            lineLength,                                                          // length of a file line
@@ -295,8 +295,8 @@ RC MATRIX_Load(DoasCh *fileName,MATRIX_OBJECT *pMatrix,
 
   // Allocate buffers for reading the lines of the file
 
-  else if (((oldColumn=(DoasCh*)MEMORY_AllocBuffer("MATRIX_Load","oldColumn",MAX_ITEM_TEXT_LEN+1,sizeof(DoasCh),0,MEMORY_TYPE_STRING))==NULL) ||
-           ((nextColumn=(DoasCh*)MEMORY_AllocBuffer("MATRIX_Load","nextColumn",MAX_ITEM_TEXT_LEN+1,sizeof(DoasCh),0,MEMORY_TYPE_STRING))==NULL))
+  else if (((oldColumn=(char*)MEMORY_AllocBuffer("MATRIX_Load","oldColumn",MAX_ITEM_TEXT_LEN+1,sizeof(char),0,MEMORY_TYPE_STRING))==NULL) ||
+           ((nextColumn=(char*)MEMORY_AllocBuffer("MATRIX_Load","nextColumn",MAX_ITEM_TEXT_LEN+1,sizeof(char),0,MEMORY_TYPE_STRING))==NULL))
 
    rc=ERROR_ID_ALLOC;
 
