@@ -5989,7 +5989,6 @@ RC ANALYSE_UsampLocalAlloc(INT gomeFlag)
 {
   // Declarations
 
-  INT endPixel;
   INDEX indexFeno,indexFenoColumn;
   FENO *pTabFeno;
   RC rc;
@@ -6006,7 +6005,6 @@ RC ANALYSE_UsampLocalAlloc(INT gomeFlag)
      if (!pTabFeno->hidden && pTabFeno->useUsamp && (pTabFeno->gomeRefFlag==gomeFlag))
       {
        ANALYSE_usampBuffers.lambdaRange[0][indexFeno]=FNPixel(ANALYSE_usampBuffers.hrSolar.matrix[0],(double)pTabFeno->svd.LFenetre[0][0]-7.,ANALYSE_usampBuffers.hrSolar.nl,PIXEL_AFTER);
-       endPixel=FNPixel(ANALYSE_usampBuffers.hrSolar.matrix[0],(double)pTabFeno->svd.LFenetre[pTabFeno->svd.Z-1][1]+7.,ANALYSE_usampBuffers.hrSolar.nl,PIXEL_BEFORE);
 
       }
     }
