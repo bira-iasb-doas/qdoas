@@ -1332,7 +1332,7 @@ RC ANALYSE_XsConvolution(FENO *pTabFeno,double *newlambda,
 
 // Rem : not for OMI -> TabFeno[0]
 
-RC AnalyseLoadVector(char *function,char *fileName,double *lambda,double *vector,INT refFlag,INT *pNewSize)
+RC AnalyseLoadVector(const char *function,char *fileName,double *lambda,double *vector,INT refFlag,INT *pNewSize)
 {
   // Declarations
 
@@ -4237,7 +4237,7 @@ RC ANALYSE_LoadSlit(PRJCT_SLIT *pSlit,int kuruczFlag)
   return rc;
 }
 
-RC ANALYSE_CheckLambda(WRK_SYMBOL *pWrkSymbol,double *lambda,char *callingFunction)
+RC ANALYSE_CheckLambda(WRK_SYMBOL *pWrkSymbol,double *lambda, const char *callingFunction)
 {
   // Declarations
 
@@ -5989,7 +5989,7 @@ RC ANALYSE_UsampLocalAlloc(INT gomeFlag)
 {
   // Declarations
 
-  INT lambdaSize,endPixel;
+  INT endPixel;
   INDEX indexFeno,indexFenoColumn;
   FENO *pTabFeno;
   RC rc;
@@ -6008,7 +6008,6 @@ RC ANALYSE_UsampLocalAlloc(INT gomeFlag)
        ANALYSE_usampBuffers.lambdaRange[0][indexFeno]=FNPixel(ANALYSE_usampBuffers.hrSolar.matrix[0],(double)pTabFeno->svd.LFenetre[0][0]-7.,ANALYSE_usampBuffers.hrSolar.nl,PIXEL_AFTER);
        endPixel=FNPixel(ANALYSE_usampBuffers.hrSolar.matrix[0],(double)pTabFeno->svd.LFenetre[pTabFeno->svd.Z-1][1]+7.,ANALYSE_usampBuffers.hrSolar.nl,PIXEL_BEFORE);
 
-       lambdaSize=ANALYSE_usampBuffers.lambdaRange[1][indexFeno]=endPixel-ANALYSE_usampBuffers.lambdaRange[0][indexFeno]+1;
       }
     }
 

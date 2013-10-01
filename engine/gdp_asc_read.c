@@ -104,8 +104,8 @@ enum _channels { CHANNEL_1, CHANNEL_2, CHANNEL_3, CHANNEL_4 };
 // STATIC VARIABLES
 // ================
 
-char *months[12]={"jan","feb","mar","apr","may","jun","jul","aug","sep","oct","nov","dec"};
-char *bands[MAX_BANDS]={"1a","1b","2a","2b","3","4"};
+const char *months[12]={"jan","feb","mar","apr","may","jun","jul","aug","sep","oct","nov","dec"};
+const char *bands[MAX_BANDS]={"1a","1b","2a","2b","3","4"};
 
 INDEX gdpLastRecord=ITEM_NONE;                                                  // Record number of the last record read out.
 double *GDP_ASC_refL,*GDP_ASC_ref,*GDP_ASC_refE;                                            // irradiance vectors

@@ -582,7 +582,7 @@ RC SVD_Dcmp ( double **a, int m, int n, double *w, double **v, double *SigmaSqr,
 // SVD_Free : Release allocated buffers used for SVD decomposition
 // ----------------------------------------------------------------------
 
-void SVD_Free(char *callingFunctionShort,SVD *pSvd)
+void SVD_Free(const char *callingFunctionShort,SVD *pSvd)
  {
   // Declaration
 
@@ -636,7 +636,7 @@ void SVD_Free(char *callingFunctionShort,SVD *pSvd)
 // --------------------------------------------------------------------
 
 
-RC SVD_LocalAlloc(char *callingFunctionShort,SVD *pSvd)
+RC SVD_LocalAlloc(const char *callingFunctionShort,SVD *pSvd)
  {
   // Declarations
 

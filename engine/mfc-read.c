@@ -78,7 +78,7 @@ char MFC_fileInstr[MAX_STR_SHORT_LEN+1],      // instrumental function file name
 
 INT mfcLastSpectrum=0;
 
-char *MFCBIRA_measureTypes[PRJCT_INSTR_MFC_TYPE_MAX]=
+const char *MFCBIRA_measureTypes[PRJCT_INSTR_MFC_TYPE_MAX]=
      	                            { "Unknown","Measurement","Offset","Dark current" };
 
 RC MFC_LoadOffset(ENGINE_CONTEXT *pEngineContext)

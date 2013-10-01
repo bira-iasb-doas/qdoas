@@ -76,9 +76,9 @@
 // Table of errors (association id number and message)
 
 typedef struct _errorTable
- {
- 	int    errorId;
- 	char *errorMessage;
+{
+  int    errorId;
+  const char *errorMessage;
  }
 ERROR_TABLE;
 

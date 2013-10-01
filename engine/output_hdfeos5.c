@@ -166,7 +166,7 @@ void replace_special_chars(char *attrname) {
 }
 
 RC write_omi_automatic_reference_info(void) {
-  char *format = "%s - row %d automatic reference";
+  const char *format = "%s - row %d automatic reference";
   size_t format_length = strlen(format);
   for(int analysiswindow = 0; analysiswindow < NFeno; analysiswindow++ ){
     for(int row=0; row< OMI_TOTAL_ROWS; row++ ) {
@@ -190,8 +190,8 @@ RC write_omi_automatic_reference_info(void) {
 
 RC write_global_attrs(const ENGINE_CONTEXT *pEngineContext) {
   // Qdoas info
-  char *attr_qdoas = "Qdoas";
-  char *descriptionformat =
+  const char *attr_qdoas = "Qdoas";
+  const char *descriptionformat =
     "File created using Qdoas (%s), \n"
     "Belgian Institute for Space Aeronomy (BIRA-IASB)\n"
     "http://uv-vis.bira.be/software/QDOAS";

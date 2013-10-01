@@ -147,7 +147,7 @@
 //               0 otherwise.
 // -----------------------------------------------------------------------------
 
-    RC VECTOR_Log(double *out,double *in,int dim,char *callingFunction)
+    RC VECTOR_Log(double *out,double *in,int dim, const char *callingFunction)
      {
       // Declarations
 

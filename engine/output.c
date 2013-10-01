@@ -1208,7 +1208,7 @@ static void register_analysis_output(const PRJCT_RESULTS *pResults, int indexFen
 static void register_cross_results(const PRJCT_RESULTS *pResults, const FENO *pTabFeno, int indexFeno, int index_calib, const char *windowName) {
   struct analysis_output {
     bool register_field;
-    char *symbol_name;
+    const char *symbol_name;
     struct output_field fieldcontent;
   };
 

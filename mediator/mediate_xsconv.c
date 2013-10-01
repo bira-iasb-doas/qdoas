@@ -26,14 +26,14 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 // STATIC VARIABLES
 // ================
 
-static char *mediateConvolutionTypesStr[CONVOLUTION_TYPE_MAX]=
+static const char *mediateConvolutionTypesStr[CONVOLUTION_TYPE_MAX]=
  {
   "Interpolation only",
   "Standard convolution",
   "Convolution with I0 correction"
  };
 
-static char *mediateConvolutionFileExt[CONVOLUTION_TYPE_MAX]=
+static const char *mediateConvolutionFileExt[CONVOLUTION_TYPE_MAX]=
    {
     "_none",                                                                      // CONVOLUTION_TYPE_NONE
     "_std",                                                                       // CONVOLUTION_TYPE_STANDARD
@@ -41,7 +41,7 @@ static char *mediateConvolutionFileExt[CONVOLUTION_TYPE_MAX]=
   //  "_ring"                         // CONVOLUTION_TYPE_RING
    };
 
-char *mediateConvolutionFilterTypes[PRJCT_FILTER_TYPE_MAX]={"None","Kaiser","Boxcar","Gaussian","Triangular","Savitzky-Golay","Odd-even pixels correction","Binomial"};
+const char *mediateConvolutionFilterTypes[PRJCT_FILTER_TYPE_MAX]={"None","Kaiser","Boxcar","Gaussian","Triangular","Savitzky-Golay","Odd-even pixels correction","Binomial"};
 char *mediateUsampAnalysisMethod[PRJCT_ANLYS_METHOD_MAX]={"Optical density","Intensity fitting"};
 
 FFT    usampFFT;

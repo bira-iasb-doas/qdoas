@@ -139,7 +139,7 @@ typedef struct cameraPicture
  }
 CAMERA_PICTURE;
 
-char *CCD_measureTypes[PRJCT_INSTR_EEV_TYPE_MAX]=
+const char *CCD_measureTypes[PRJCT_INSTR_EEV_TYPE_MAX]=
      	                            { "None","Off axis","Direct sun","Zenith","Dark","Lamp","Bentham","Almucantar","Offset","Azimuth", "Principal plane", "Horizon" };
 
 

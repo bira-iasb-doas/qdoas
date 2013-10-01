@@ -86,7 +86,7 @@ void   VECTOR_Init(double *vector,double value,int dim);
 int    VECTOR_Equal(double *vector1,double *vector2,int dim,double error);
 double VECTOR_Max(double *vector,int dim);
 double VECTOR_Min(double *vector,int dim);
-RC     VECTOR_Log(double *out,double *in,int dim,char *callingFunction);
+RC     VECTOR_Log(double *out,double *in,int dim,const char *callingFunction);
 int    VECTOR_LocGt(double *vector,double value,int dim);
 void   VECTOR_Invert(double *vector,int dim);
 double VECTOR_Table2_Index1(double **Table,INT Nx,INT Ny,double X,double Y);
@@ -160,8 +160,8 @@ typedef struct _svd
 RC SVD_Bksb(double **u,double *w,double **v,int m,int n,double *b,double *x);
 RC SVD_Dcmp(double **a,int m,int n,double *w,double **v,double *SigmaSqr,double **covar);
 
-void SVD_Free(char *callingFunctionShort,SVD *pSvd);
-RC   SVD_LocalAlloc(char *callingFunctionShort,SVD *pSvd);
+void SVD_Free(const char *callingFunctionShort,SVD *pSvd);
+RC   SVD_LocalAlloc(const char *callingFunctionShort,SVD *pSvd);
 
 // ============================================================
 // CURFIT.C : Least-square fit applied to a non linear function
@@ -1017,7 +1017,7 @@ enum _pixelSelection
 
 RC   FNPixel   ( double *lambdaVector, double lambdaValue, INT npts,INT pixelSelection );
 
-RC   ANALYSE_CheckLambda(WRK_SYMBOL *pWrkSymbol,double *lambda,char *callingFunction);
+RC   ANALYSE_CheckLambda(WRK_SYMBOL *pWrkSymbol,double *lambda, const char *callingFunction);
 RC   ANALYSE_XsInterpolation(FENO *pTabFeno,double *newLambda,INDEX indexFenoColumn);
 RC   ANALYSE_ConvoluteXs(FENO *pTabFeno,INT action,double conc,
                          MATRIX_OBJECT *pXs,
@@ -1125,7 +1125,7 @@ EXTERN INT KURUCZ_indexLine;
 // ----------
 
 RC   KURUCZ_Spectrum(double *oldLambda,double *newLambda,double *spectrum,double *reference,double *instrFunction,
-                     char displayFlag,char *windowTitle,double **coeff,double **fwhmVector,double **fwhmDeriv2,INT saveFlag,INDEX indexFeno,void *responseHandle,INDEX indexFenoColumn);
+                     char displayFlag,const char *windowTitle,double **coeff,double **fwhmVector,double **fwhmDeriv2,INT saveFlag,INDEX indexFeno,void *responseHandle,INDEX indexFenoColumn);
 RC   KURUCZ_ApplyCalibration(FENO *pTabFeno,double *newLambda,INDEX indexFenoColumn);
 RC   KURUCZ_Reference(double *instrFunction,INDEX refFlag,INT saveFlag,INT gomeFlag,void *responseHandle,INDEX indexFenoColumn);
 void KURUCZ_Init(INT gomeFlag,INDEX indexFenoColumn);
@@ -1442,8 +1442,8 @@ RC               GDP_BIN_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,FILE *specF
 // FILES READ OUT
 // ==============
 
-EXTERN char *CCD_measureTypes[];
-EXTERN char *MFCBIRA_measureTypes[];
+EXTERN const char *CCD_measureTypes[];
+EXTERN const char *MFCBIRA_measureTypes[];
 
 RC   SetUofT(ENGINE_CONTEXT *pEngineContext,FILE *specFp);
 RC   ReliUofT(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,INT localDay,FILE *specFp);

@@ -131,7 +131,7 @@ INDEX KuruczSearchReference(INDEX indexRefFeno,INDEX indexRefColumn)
 // ----------------------------------------------------------------------------      
 
 RC KURUCZ_Spectrum(double *oldLambda,double *newLambda,double *spectrum,double *reference,double *instrFunction,
-                   char displayFlag,char *windowTitle,double **coeff,double **fwhmVector,double **fwhmDeriv2,INT saveFlag,INDEX indexFeno,void *responseHandle,INDEX indexFenoColumn)
+                   char displayFlag, const char *windowTitle,double **coeff,double **fwhmVector,double **fwhmDeriv2,INT saveFlag,INDEX indexFeno,void *responseHandle,INDEX indexFenoColumn)
  {
   // Declarations
 
