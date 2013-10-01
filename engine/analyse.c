@@ -250,7 +250,7 @@ void plot_curves( int page,
                   doas_spectrum* specrange)
  {
   int num_segments = num_curves * spectrum_num_windows(specrange);
-  plot_data_t *plotdata = malloc(num_segments * sizeof(plot_data_t));
+  plot_data_t *plotdata = malloc(num_segments * sizeof(*plotdata));
   plot_data_t *plot = plotdata;
   doas_iterator my_iterator;
   for (doas_interval *interval = iterator_start_interval(&my_iterator, specrange);
@@ -2396,14 +2396,10 @@ RC ANALYSE_Function( double *X, double *Y, double *SigmaY, double *Yfit, int Npt
            // 1/x not used anymore   polyFlag=-1;
            // 1/x not used anymore  }
            else if ((strlen(WorkSpace[pTabCross->Comp].symbolName)==5) &&
-                    (WorkSpace[pTabCross->Comp].symbolName[0]=='o') &&
-                    (WorkSpace[pTabCross->Comp].symbolName[1]=='f') &&
-                    (WorkSpace[pTabCross->Comp].symbolName[2]=='f') &&
-                    (WorkSpace[pTabCross->Comp].symbolName[3]=='l'))
-            {
-             polyOrder=WorkSpace[pTabCross->Comp].symbolName[4]-'0';
-             polyFlag=0;
-            }
+                    !strncmp(WorkSpace[pTabCross->Comp].symbolName, "offl", 4)) {
+            polyOrder=WorkSpace[pTabCross->Comp].symbolName[4]-'0';
+            polyFlag=0;
+           }
            else
             polyOrder=ITEM_NONE;
 
@@ -3748,10 +3744,7 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
                  for (int k=1,l=iterator_start(&my_iterator, Feno->svd.specrange); l != ITERATOR_FINISHED; k++,l=iterator_next(&my_iterator))
                   Trend[l]+=x[TabCross[i].IndSvdA]*U[TabCross[i].IndSvdA][k];
                 }
-               else if ((WorkSpace[TabCross[i].Comp].symbolName[0]=='o') ||
-                        (WorkSpace[TabCross[i].Comp].symbolName[1]=='f') ||
-                        (WorkSpace[TabCross[i].Comp].symbolName[2]=='f') ||
-                        (WorkSpace[TabCross[i].Comp].symbolName[3]=='l'))
+               else if (!strncmp( WorkSpace[TabCross[i].Comp].symbolName, "offl", 4) )
                 {
                  for (int k=1,l=iterator_start(&my_iterator, Feno->svd.specrange); l != ITERATOR_FINISHED; k++,l=iterator_next(&my_iterator))
                   offset[l]+=x[TabCross[i].IndSvdA]*U[TabCross[i].IndSvdA][k];
@@ -5694,7 +5687,7 @@ RC ANALYSE_UsampBuild(INT analysisFlag,INT gomeFlag)      // OMI ???
 
   MATRIX_OBJECT khrConvoluted,xsSlit,xsSlit2;
   INDEX indexFeno,i,indexPixMin,indexPixMax,j;
-  INT slitType,indexFenoColumn;
+  INT indexFenoColumn;
   double slitParam2,*lambda,*lambda2,lambda0,x0;                                  
   FENO *pTabFeno;
   RC rc;
@@ -5711,7 +5704,6 @@ RC ANALYSE_UsampBuild(INT analysisFlag,INT gomeFlag)      // OMI ???
   
   rc=ERROR_ID_NO;     
   
-  slitType=pSlitOptions->slitFunction.slitType;
   indexFenoColumn=0;                                                            // later, use the second dimension of TabFeno (and add a second dimension to undersampling buffers)
 
   // Buffer allocation
