@@ -78,7 +78,7 @@ bool spectrum_remove_pixel(doas_spectrum *spectrum, int pixel);
 void spectrum_append(doas_spectrum *spectrum, int start, int end);
 
 /*! Creates a new empty spectrum. */
-doas_spectrum *spectrum_new();
+doas_spectrum *spectrum_new(void);
 
 /*! Creates a separate copy of an existing range.*/
 doas_spectrum *spectrum_copy(doas_spectrum *source);

@@ -1134,8 +1134,6 @@ RC EngineSetRefIndexes(ENGINE_CONTEXT *pEngineContext)
      indexRecord,                                              // browse spectra records in file
      indexZmMin;                                               // index of record with SZA minimum
 
-   PROJECT            *pProject;                                                 // pointer to the project part of the engine
-   PRJCT_SPECTRA      *pSpectra;                                                 // pointer to spectra part of the project
    PRJCT_INSTRUMENTAL *pInstr;                                                   // pointer to the instrumental part of the project
    FENO               *pTabFeno;                                                 // pointer to analysis windows
    double             *ZmList,*TimeDec,                                          // zenith angles and decimal time of records
@@ -1166,8 +1164,6 @@ RC EngineSetRefIndexes(ENGINE_CONTEXT *pEngineContext)
 
    ENGINE_contextRef.analysisRef.refScan=0;  // in order not to have error on zenith sky spectra
 
-   pProject=&ENGINE_contextRef.project;
-   pSpectra=&ENGINE_contextRef.project.spectra;
    pInstr=&ENGINE_contextRef.project.instrumental;
 
    localCalDay=ENGINE_contextRef.recordInfo.localCalDay;
@@ -1362,8 +1358,6 @@ RC EngineSetRefIndexesMFC(ENGINE_CONTEXT *pEngineContext)
    DIR *hDir;
    INDEX               indexFile;
    ANALYSIS_REF *pRef;
-   PROJECT            *pProject;                                                 // pointer to the project part of the engine
-   PRJCT_SPECTRA      *pSpectra;                                                 // pointer to spectra part of the project
    PRJCT_INSTRUMENTAL *pInstr;                                                   // pointer to the instrumental part of the project
    FENO               *pTabFeno;                                                 // pointer to analysis windows
    double             *ZmList,*TimeDec,                                          // zenith angles and decimal time of records
@@ -1373,7 +1367,6 @@ RC EngineSetRefIndexesMFC(ENGINE_CONTEXT *pEngineContext)
    INT                 NRecord;                                                  // number of hold record
    INT                 localCalDay;                                              // local day number
    INT                 fileNumber;                                               // the number of files in the current directory
-   INT                 recordNumber;                                             // the current number of records
    RC                  rc;                                                       // return code
 
    // Initializations
@@ -1412,14 +1405,11 @@ RC EngineSetRefIndexesMFC(ENGINE_CONTEXT *pEngineContext)
 
    ENGINE_contextRef.analysisRef.refScan=0;                                      // in order not to have error on zenith sky spectra
 
-   pProject=&ENGINE_contextRef.project;
-   pSpectra=&ENGINE_contextRef.project.spectra;
    pInstr=&ENGINE_contextRef.project.instrumental;
 
    pRef=&pEngineContext->analysisRef;
 
    localCalDay=ENGINE_contextRef.recordInfo.localCalDay;
-   recordNumber=ENGINE_contextRef.recordNumber;
 
    // Get file path
 

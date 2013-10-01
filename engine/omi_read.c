@@ -79,7 +79,7 @@ enum _omiVdataType { OMI_VDATA_GEO, OMI_VDATA_DATA, OMI_VDATA_ATTR, OMI_VDATA_MA
 enum _omiSpecType  { OMI_SPEC_IRRAD, OMI_SPEC_RAD };
 
 struct omi_buffer {
-  char *buffername;
+  const char *buffername;
   void *bufferptr;
 };
 
@@ -206,7 +206,6 @@ int OMI_ms=0;
 int omiSwathOld=ITEM_NONE;
 
 RC OmiOpen(OMI_ORBIT_FILE *pOrbitFile,const char *swathName);
-void omi_calculate_wavelengths(float32 wavelength_coeff[], int16 refcol, int32 n_wavel, double* lambda);
 void omi_free_swath_data(OMI_SWATH *pSwath);
 void omi_calculate_wavelengths(float32 wavelength_coeff[], int16 refcol, int32 n_wavel, double* lambda);
 void omi_make_double(int16 mantissa[], int8 exponent[], int32 n_wavel, double* result);
@@ -957,7 +956,7 @@ RC OmiGetSwathData(OMI_ORBIT_FILE *pOrbitFile)
   int32 edge[] =  {pOrbitFile->nMeasurements,pOrbitFile->nXtrack };
   intn swrc;
   for (unsigned int i=0; i<sizeof(swathdata)/sizeof(swathdata[0]); i++) {
-    swrc = SWreadfield(pOrbitFile->sw_id, swathdata[i].buffername, start, NULL, edge, swathdata[i].bufferptr);
+    swrc = SWreadfield(pOrbitFile->sw_id, (char *) swathdata[i].buffername, start, NULL, edge, swathdata[i].bufferptr);
     if (swrc == FAIL) {
       rc = ERROR_SetLast("OmiGetSwathData",ERROR_TYPE_WARNING,ERROR_ID_HDFEOS,swathdata[i].buffername,pOrbitFile->omiFileName,"Can not read ", swathdata[i].buffername);
       break;
@@ -1023,7 +1022,7 @@ RC OmiOpen(OMI_ORBIT_FILE *pOrbitFile,const char *swathName)
     int32 rank;
     int32 numbertype;
     char dimlist[520]; // 520 is a safe maximum length, see HDF-EOS ref for SWfieldinfo()
-    intn swrc = SWfieldinfo(sw_id, "RadianceMantissa",&rank,dims,&numbertype , dimlist);
+    intn swrc = SWfieldinfo(sw_id, (char *) "RadianceMantissa",&rank,dims,&numbertype , dimlist);
     if(swrc == FAIL) {
       rc=ERROR_SetLast("OmiOpen", ERROR_TYPE_WARNING, ERROR_ID_FILE_EMPTY,pOrbitFile->omiFileName);
       goto end_OmiOpen;
@@ -1068,12 +1067,12 @@ RC OMI_LoadReference(ENGINE_CONTEXT *pEngineContext,const char *refFile)
     goto end_loadreference;
   }
 
-  int32 n_xtrack = SWdiminfo(sw_id, NXTRACK);
+  int32 n_xtrack = SWdiminfo(sw_id, (char *) NXTRACK);
   if (n_xtrack == FAIL) {
     rc = ERROR_SetLast(__func__, ERROR_TYPE_WARNING, ERROR_ID_HDFEOS, NXTRACK, refFile, "SWdiminfo");
     goto end_loadreference;
   }
-  int32 n_wavel = SWdiminfo(sw_id, NWAVEL);
+  int32 n_wavel = SWdiminfo(sw_id, (char *) NWAVEL);
   if (n_wavel == FAIL) {
     rc = ERROR_SetLast(__func__, ERROR_TYPE_WARNING, ERROR_ID_HDFEOS, NWAVEL, refFile, "SWdiminfo");
     goto end_loadreference;
@@ -1124,9 +1123,9 @@ RC omi_load_spectrum(int spec_type, int32 sw_id, int32 measurement, int32 track,
   int8 *exponent = malloc(n_wavel*sizeof(*exponent));
 
   // names of the fields in omi hdf files.
-  char *s_mantissa = IRRADIANCE_MANTISSA;
-  char *s_precision_mantissa = IRRADIANCE_PRECISION_MANTISSA;
-  char *s_exponent = IRRADIANCE_EXPONENT;
+  const char *s_mantissa = IRRADIANCE_MANTISSA;
+  const char *s_precision_mantissa = IRRADIANCE_PRECISION_MANTISSA;
+  const char *s_exponent = IRRADIANCE_EXPONENT;
 
   if (spec_type == OMI_SPEC_RAD) {
     s_mantissa = RADIANCE_MANTISSA;
@@ -1143,11 +1142,11 @@ RC omi_load_spectrum(int spec_type, int32 sw_id, int32 measurement, int32 track,
     {
       // read reference column
       int16 refcol;
-      swrc = SWreadfield(sw_id, REFERENCE_COLUMN, start, NULL, (int32[]) {1}, &refcol);
+      swrc = SWreadfield(sw_id, (char *) REFERENCE_COLUMN, start, NULL, (int32[]) {1}, &refcol);
       // read 5 wavelength coefficients
       edge[2] = OMI_NUM_COEFFICIENTS;
       float32 wavelength_coeff[OMI_NUM_COEFFICIENTS];
-      swrc |= SWreadfield(sw_id, WAVELENGTH_COEFFICIENT, start, NULL, edge, wavelength_coeff);
+      swrc |= SWreadfield(sw_id,(char *) WAVELENGTH_COEFFICIENT, start, NULL, edge, wavelength_coeff);
       
       if (swrc == FAIL) {
         rc = ERROR_SetLast(__func__, ERROR_TYPE_WARNING, ERROR_ID_HDFEOS, "SWreadfield");
@@ -1161,10 +1160,10 @@ RC omi_load_spectrum(int spec_type, int32 sw_id, int32 measurement, int32 track,
   edge[2] = n_wavel;
 
   if(spectrum != NULL || sigma != NULL) {
-    swrc |= SWreadfield(sw_id, s_exponent, start, NULL, edge, exponent);
+    swrc |= SWreadfield(sw_id, (char *) s_exponent, start, NULL, edge, exponent);
 
     if(spectrum != NULL) {
-      swrc |= SWreadfield(sw_id, s_mantissa, start, NULL, edge, mantissa);
+      swrc |= SWreadfield(sw_id, (char *) s_mantissa, start, NULL, edge, mantissa);
       if(!swrc) {
         omi_make_double(mantissa, exponent, n_wavel, spectrum);
         omi_interpolate_errors(mantissa,n_wavel,lambda,spectrum);
@@ -1172,7 +1171,7 @@ RC omi_load_spectrum(int spec_type, int32 sw_id, int32 measurement, int32 track,
     }
 
     if(sigma != NULL) {
-      swrc |= SWreadfield(sw_id, s_precision_mantissa, start, NULL, edge, precisionmantissa);
+      swrc |= SWreadfield(sw_id, (char *) s_precision_mantissa, start, NULL, edge, precisionmantissa);
       if(!swrc) {
         omi_make_double(precisionmantissa, exponent, n_wavel, sigma);
         omi_interpolate_errors(precisionmantissa,n_wavel,lambda,sigma);
@@ -1181,7 +1180,7 @@ RC omi_load_spectrum(int spec_type, int32 sw_id, int32 measurement, int32 track,
   }
 
   if(pixelQualityFlags != NULL)
-    swrc |= SWreadfield(sw_id, PIXEL_QUALITY_FLAGS, start, NULL, edge, pixelQualityFlags);
+    swrc |= SWreadfield(sw_id, (char *) PIXEL_QUALITY_FLAGS, start, NULL, edge, pixelQualityFlags);
 
   if(swrc) // error reading either mantissa/precision_mantissa/exponent/qualityflags:
     rc = ERROR_SetLast(__func__, ERROR_TYPE_WARNING, ERROR_ID_HDFEOS, "SWreadfield");
@@ -1430,7 +1429,7 @@ RC OMI_Read(ENGINE_CONTEXT *pEngineContext,int recordNo)
   return rc;
 }
 
-void OMI_ReleaseBuffers() {
+void OMI_ReleaseBuffers(void) {
 
   for(int i=0; i< num_reference_orbit_files; i++) {
 
