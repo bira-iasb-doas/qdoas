@@ -113,7 +113,7 @@ static int    debugVar=0;                                                       
 //               ...            : arguments of the formatted string.
 // -----------------------------------------------------------------------------
 
-void DEBUG_Print(char *formatString,...)
+void DEBUG_Print(const char *formatString,...)
  {
   // Declarations
 

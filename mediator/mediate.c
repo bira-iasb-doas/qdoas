@@ -19,6 +19,7 @@
 
 #include "mediate.h"
 #include "engine.h"
+#include "output.h"
 
 #include <stdio.h>
 #include <stdbool.h>
@@ -31,25 +32,20 @@ int mediateRequestDisplaySpecInfo(void *engineContext,int page,void *responseHan
    PROJECT *pProject;                                                            // pointer to the project part of the engine context
    PRJCT_SPECTRA *pSpectra;                                                      // pointer to the spectra part of the project
    PRJCT_INSTRUMENTAL *pInstrumental;                                            // pointer to the instrumental part of the project
-   BUFFERS *pBuffers;                                                            // pointer to the buffers part of the engine context
    RECORD_INFO *pRecord;                                                         // pointer to the record part of the engine context
    SHORT_DATE  *pDay;                                                            // pointer to measurement date
    struct time *pTime;                                                           // pointer to measurement date
    int indexLine,indexColumn;
-   char *fileName;                                                              // the name of the current file
    char blankString[256];
 
    // Initializations
 
    pRecord=&pEngineContext->recordInfo;
-   pBuffers=&pEngineContext->buffers;
    pProject=&pEngineContext->project;
    pSpectra=&pProject->spectra;
    pInstrumental=&pProject->instrumental;
    pDay=&pRecord->present_day;
    pTime=&pRecord->present_time;
-
-   fileName=pEngineContext->fileInfo.fileName;
 
    memset(blankString,' ',256);
    blankString[255]='\0';
@@ -325,8 +321,6 @@ void mediateRequestPlotSpectra(ENGINE_CONTEXT *pEngineContext,void *responseHand
    PRJCT_INSTRUMENTAL *pInstrumental;                                            // pointer to the instrumental part of the project
    BUFFERS *pBuffers;                                                            // pointer to the buffers part of the engine context
    RECORD_INFO *pRecord;                                                         // pointer to the record part of the engine context
-   SHORT_DATE  *pDay;                                                            // pointer to measurement date
-   struct time *pTime;                                                           // pointer to measurement date
    char tmpString[80];                                                           // buffer for formatted strings
    char *fileName;                                                              // the name of the current file
    plot_data_t spectrumData;
@@ -338,8 +332,6 @@ void mediateRequestPlotSpectra(ENGINE_CONTEXT *pEngineContext,void *responseHand
    pProject=&pEngineContext->project;
    pSpectra=&pProject->spectra;
    pInstrumental=&pProject->instrumental;
-   pDay=&pRecord->present_day;
-   pTime=&pRecord->present_time;
 
    fileName=pEngineContext->fileInfo.fileName;
 

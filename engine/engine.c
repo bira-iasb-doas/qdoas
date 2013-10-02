@@ -49,6 +49,7 @@
 #include "mediate.h"
 #include "engine.h"
 #include "coda.h"
+#include "output.h"
 
 INT  NDET;                                                                      // detector size
 

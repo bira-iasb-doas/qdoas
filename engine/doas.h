@@ -44,11 +44,11 @@
 
 /*! \file doas.h main header file */
 
-#include "windoas.h"
-#include "spectral_range.h"
-
 #ifndef DOAS_H
 #define DOAS_H
+
+#include "windoas.h"
+#include "spectral_range.h"
 
 #if defined(_cplusplus) || defined(__cplusplus)
 extern "C" {

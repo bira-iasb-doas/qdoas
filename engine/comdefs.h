@@ -353,7 +353,7 @@ DEBUG_VARIABLE;
 
 // Prototypes
 
-void DEBUG_Print(char *formatString,...);
+void DEBUG_Print(const char *formatString,...);
 void DEBUG_PrintVar(char *message,...);
 RC   DEBUG_FunctionBegin(char *fctName,MASK fctType);
 RC   DEBUG_FunctionStop(char *fctName,RC rcFct);
