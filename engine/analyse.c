@@ -2171,7 +2171,7 @@ RC ANALYSE_Function( double *X, double *Y, double *SigmaY, double *Yfit, int Npt
 {
   // Declarations
 
-  double *XTrav,*YTrav,*newXsTrav,*spectrum_interpolated,*reference_shifted,*preshift,offset,deltaX,tau;
+  double *XTrav,*YTrav,*newXsTrav,*spec_nolog,*spectrum_interpolated,*reference_shifted,*preshift,offset,deltaX,tau;
   CROSS_REFERENCE *TabCross,*pTabCross;
   MATRIX_OBJECT slit0,slit1;
   INT NewDimC,offsetOrder;
@@ -2186,7 +2186,7 @@ RC ANALYSE_Function( double *X, double *Y, double *SigmaY, double *Yfit, int Npt
   // Initializations
 
   TabCross=Feno->TabCross;
-  XTrav=YTrav=newXsTrav=preshift=spectrum_interpolated=reference_shifted=NULL;
+  XTrav=YTrav=newXsTrav=preshift=spectrum_interpolated=reference_shifted=spec_nolog=NULL;
   memset(&slit0,0,sizeof(MATRIX_OBJECT));
   memset(&slit1,0,sizeof(MATRIX_OBJECT));
 
@@ -2218,12 +2218,13 @@ RC ANALYSE_Function( double *X, double *Y, double *SigmaY, double *Yfit, int Npt
 
   // Buffers allocation
 
-  if (((XTrav=MEMORY_AllocDVector("Function ","XTrav",0,Npts-1))==NULL) ||                  // raw spectrum
-      ((YTrav=MEMORY_AllocDVector("Function ","YTrav",0,Npts-1))==NULL) ||                  // reference spectrum
-      ((newXsTrav=MEMORY_AllocDVector("Function ","newXsTrav",0,NDET-1))==NULL) ||
+  if (((XTrav=MEMORY_AllocDVector(__func__,"XTrav",0,Npts-1))==NULL) ||                  // raw spectrum
+      ((YTrav=MEMORY_AllocDVector(__func__,"YTrav",0,Npts-1))==NULL) ||                  // reference spectrum
+      ((spec_nolog=MEMORY_AllocDVector(__func__,"spec_nolog",0,Npts-1))==NULL) ||
+      ((newXsTrav=MEMORY_AllocDVector(__func__,"newXsTrav",0,NDET-1))==NULL) ||
       ((spectrum_interpolated=MEMORY_AllocDVector(__func__,"spectrum_interpolated",0,NDET-1))==NULL) || // spectrum interpolated on reference wavelength grid
       ((reference_shifted=MEMORY_AllocDVector(__func__,"reference_shifted",0,NDET-1))==NULL) ||
-      ((preshift=MEMORY_AllocDVector("Function ","preshift",0,NDET-1))==NULL))            // shifted and stretched cross section
+      ((preshift=MEMORY_AllocDVector(__func__,"preshift",0,NDET-1))==NULL))            // shifted and stretched cross section
 
    rc=ERROR_ID_ALLOC;
 
@@ -2312,6 +2313,13 @@ RC ANALYSE_Function( double *X, double *Y, double *SigmaY, double *Yfit, int Npt
       }
     }
 
+
+   // ------------------------------------------
+   // Backup of spectrum before taking logarithm
+   // ------------------------------------------
+   for( int k=0,l=iterator_start(&my_iterator, global_doas_spectrum); l != ITERATOR_FINISHED; k++,l=iterator_next(&my_iterator))
+     spec_nolog[k]=spectrum_interpolated[l];
+
    // -------------------------------
    // High-pass filtering on spectrum
    // -------------------------------
@@ -2375,8 +2383,8 @@ RC ANALYSE_Function( double *X, double *Y, double *SigmaY, double *Yfit, int Npt
             }
            else if (i==Feno->indexResol)
             {
-            	for( int k=1, l=max(iterator_start(&my_iterator, global_doas_spectrum),1); (l != ITERATOR_FINISHED) && !rc; k++,l=iterator_next(&my_iterator))
-            	 if (!(rc=XSCONV_TypeGauss(ANALYSE_splineX,Y,SplineRef,ANALYSE_splineX[l],ANALYSE_splineX[l]-ANALYSE_splineX[l-1],&pTabCross->vector[l],0.05,(double)0.,SLIT_TYPE_GAUSS)))
+             for( int k=1, l=max(iterator_start(&my_iterator, global_doas_spectrum),1); (l != ITERATOR_FINISHED) && !rc; k++,l=iterator_next(&my_iterator))
+              if (!(rc=XSCONV_TypeGauss(ANALYSE_splineX,Y,SplineRef,ANALYSE_splineX[l],ANALYSE_splineX[l]-ANALYSE_splineX[l-1],&pTabCross->vector[l],0.05,(double)0.,SLIT_TYPE_GAUSS)))
                A[indexSvdA][k]=pTabCross->vector[l]=(Y[l]!=0)?pTabCross->vector[l]/Y[l]:(double)1.;
             }
           }
@@ -2390,11 +2398,6 @@ RC ANALYSE_Function( double *X, double *Y, double *SigmaY, double *Yfit, int Npt
              polyOrder=WorkSpace[pTabCross->Comp].symbolName[1]-'0';
              polyFlag=1;
             }
-           // 1/x not used anymore else if ((strlen(WorkSpace[pTabCross->Comp].symbolName)==4) && (WorkSpace[pTabCross->Comp].symbolName[2]=='x'))
-           // 1/x not used anymore  {
-           // 1/x not used anymore   polyOrder=WorkSpace[pTabCross->Comp].symbolName[3]-'0';
-           // 1/x not used anymore   polyFlag=-1;
-           // 1/x not used anymore  }
            else if ((strlen(WorkSpace[pTabCross->Comp].symbolName)==5) &&
                     !strncmp(WorkSpace[pTabCross->Comp].symbolName, "offl", 4)) {
             polyOrder=WorkSpace[pTabCross->Comp].symbolName[4]-'0';
@@ -2416,16 +2419,14 @@ RC ANALYSE_Function( double *X, double *Y, double *SigmaY, double *Yfit, int Npt
                for( int k=1,l=iterator_start(&my_iterator, global_doas_spectrum); l != ITERATOR_FINISHED; k++,l=iterator_next(&my_iterator))
                 A[indexSvdA][k]=pTabCross->vector[l]=A[indexSvdA-1][k]*(ANALYSE_splineX[l]-lambda0);
               }
-             // 1/x not used anymore else if (polyFlag==-1)
-             // 1/x not used anymore  {
-             // 1/x not used anymore   for( int k=1,l=iterator_start(&my_iterator, global_doas_spectrum); l != ITERATOR_FINISHED; k++,l=iterator_next(&my_iterator))
-             // 1/x not used anymore    A[indexSvdA][k]=pTabCross->vector[l]=A[indexSvdA-1][k]/ANALYSE_splineX[l];
-             // 1/x not used anymore  }
             }
            else if (Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVD)               // linear offset, SVD method -> normalized w.r.t. the spectrum
             {
-             for( int k=1,l=iterator_start(&my_iterator, global_doas_spectrum); l != ITERATOR_FINISHED; k++,l=iterator_next(&my_iterator))
-              A[indexSvdA][k]=pTabCross->vector[l]=(fabs(spectrum_interpolated[l])>(double)1.e-6)?(double)-Feno->xmean/spectrum_interpolated[l]:(double)0.;
+             for( int k=1,l=iterator_start(&my_iterator, global_doas_spectrum); l != ITERATOR_FINISHED; k++,l=iterator_next(&my_iterator)) {
+              A[indexSvdA][k]= pTabCross->vector[l] = (fabs(spec_nolog[k-1])> (double)1.e-6)
+                ? -Feno->xmean/spec_nolog[k-1]
+                : 0.;
+             }
             }
            else                                                                 // linear offset, Marquadt+SVD method -> normalized w.r.t. the reference
             {
@@ -2822,17 +2823,19 @@ RC ANALYSE_Function( double *X, double *Y, double *SigmaY, double *Yfit, int Npt
  EndFunction :
 
   if (XTrav!=NULL)
-   MEMORY_ReleaseDVector("Function ","XTrav",XTrav,0);
+   MEMORY_ReleaseDVector(__func__,"XTrav",XTrav,0);
   if (YTrav!=NULL)
-   MEMORY_ReleaseDVector("Function ","YTrav",YTrav,0);
+   MEMORY_ReleaseDVector(__func__,"YTrav",YTrav,0);
   if (newXsTrav!=NULL)
-   MEMORY_ReleaseDVector("Function ","newXsTrav",newXsTrav,0);
+   MEMORY_ReleaseDVector(__func__,"newXsTrav",newXsTrav,0);
   if (spectrum_interpolated!= NULL)
    MEMORY_ReleaseDVector(__func__,"spectrum_interpolated",spectrum_interpolated,0);
   if (reference_shifted != NULL)
    MEMORY_ReleaseDVector(__func__,"reference_shifted",reference_shifted,0);
   if (preshift!=NULL)
-   MEMORY_ReleaseDVector("Function ","preshift",preshift,0);
+   MEMORY_ReleaseDVector(__func__,"preshift",preshift,0);
+  if (spec_nolog != NULL)
+   MEMORY_ReleaseDVector(__func__,"spec_nolog",spec_nolog,0);
 
   // Return
 
