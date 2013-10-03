@@ -145,7 +145,6 @@ RC KURUCZ_Spectrum(double *oldLambda,double *newLambda,double *spectrum,double *
                  **fwhm,**fwhmSigma,                                            // substitution vectors
                   *solar,                                                       // solar spectrum
                   *offset,                                                      // offset
-                   newPix,
                    Square;                                                      // Chi square returned by 'CurFitMethod'
   INT              Nb_Win,maxParam,                                             // number of little windows
                   *NIter,                                                       // number of iterations
@@ -160,7 +159,6 @@ RC KURUCZ_Spectrum(double *oldLambda,double *newLambda,double *spectrum,double *
   RC               rc;                                                          // return code
   plot_data_t      spectrumData[2];
   KURUCZ *pKurucz;
-  INDEX kuruczIndexRow;
 
   // Initializations
 
@@ -231,7 +229,6 @@ RC KURUCZ_Spectrum(double *oldLambda,double *newLambda,double *spectrum,double *
 
     // Set solar spectrum
 
-    kuruczIndexRow=(pKurucz->hrSolar.nc>indexFenoColumn+1)?indexFenoColumn+1:1;
 
     if ((solar=MEMORY_AllocDVector("KURUCZ_Spectrum ","solar",0,NDET))==NULL)
      rc=ERROR_ID_ALLOC;
@@ -811,7 +808,6 @@ RC KURUCZ_Reference(double *instrFunction,INDEX refFlag,INT saveFlag,INT gomeFla
 {
   // Declarations
 
-  CROSS_REFERENCE *TabCross;                                                    // pointer to a symbol description hold by an analysis window
   FENO            *pTabFeno,*pTabRef,*pTabKurucz;                               // browse analysis windows
   double          *reference;                                                   // reference spectrum to align on Kurucz
 
@@ -830,7 +826,6 @@ RC KURUCZ_Reference(double *instrFunction,INDEX refFlag,INT saveFlag,INT gomeFla
   pKurucz=&KURUCZ_buffers[indexFenoColumn];
 
   pTabKurucz=&TabFeno[indexFenoColumn][pKurucz->indexKurucz];
-  TabCross=pTabKurucz->TabCross;
   rc=ERROR_ID_NO;
   msgCount=0;
 

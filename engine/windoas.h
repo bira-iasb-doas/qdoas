@@ -56,35 +56,11 @@ extern "C" {
 #define ERROR_TYPE_TIME                        0x10
 #define ERROR_TYPE_OWNERDRAWN                  0x20
 
-#pragma pack(1)
-
 // ======================
 // STRUCTURES DEFINITIONS
 // ======================
 
 // for ACVD
-
-// Date in 16 bits format
-
-typedef struct tagNEWDATE
- {
-  short	year;
-  char	day;
-  char	month;
- }
-NEWDATE;
-
-// Time in 16 bits format
-
-typedef struct tagNEWTIME
- {
-  char	min;
-  char	hour;
-  char	hwnd;
-  char	sec;
- }
-NEWTIME;
-
 // ====================
 // RESOURCES MANAGEMENT
 // ====================
@@ -660,7 +636,7 @@ void PRJCT_SaveConfiguration(FILE *fp,char *sectionName);
    // GLOBAL VARIABLES
    // ----------------
 
-   EXTERN char *XSCONV_slitTypes[SLIT_TYPE_MAX];
+   EXTERN const char *XSCONV_slitTypes[SLIT_TYPE_MAX];
 
    // ----------
    // PROTOTYPES

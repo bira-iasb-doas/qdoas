@@ -42,7 +42,7 @@ static const char *mediateConvolutionFileExt[CONVOLUTION_TYPE_MAX]=
    };
 
 const char *mediateConvolutionFilterTypes[PRJCT_FILTER_TYPE_MAX]={"None","Kaiser","Boxcar","Gaussian","Triangular","Savitzky-Golay","Odd-even pixels correction","Binomial"};
-char *mediateUsampAnalysisMethod[PRJCT_ANLYS_METHOD_MAX]={"Optical density","Intensity fitting"};
+const char *mediateUsampAnalysisMethod[PRJCT_ANLYS_METHOD_MAX]={"Optical density","Intensity fitting"};
 
 FFT    usampFFT;
 
@@ -310,7 +310,7 @@ RC mediateConvolutionCalculate(void *engineContext,void *responseHandle)
   char windowTitle[MAX_ITEM_TEXT_LEN+1],pageTitle[MAX_ITEM_TEXT_LEN+1];
   double lambdaMin,lambdaMax,slitParam,slitParam2,slitWidth;
 
-  INT slitType,slitType2,deconvFlag,dispConv,dispLFilter,dispHFilter,nGraph,iGraph;
+  INT slitType,slitType2,deconvFlag,dispConv;
   INT lowFilterType,highFilterType,nFilter;
   RC rc;
 
@@ -413,11 +413,6 @@ RC mediateConvolutionCalculate(void *engineContext,void *responseHandle)
             (XSCONV_xshr.nl!=pXsnew->nl) ||
             !VECTOR_Equal(XSCONV_xshr.matrix[0],pXsnew->matrix[0],pXsnew->nl,(double)1.e-7))?1:0;
 
-      dispLFilter=(lowFilterType!=PRJCT_FILTER_TYPE_NONE)?1:0;
-      dispHFilter=(highFilterType!=PRJCT_FILTER_TYPE_NONE)?1:0;
-
-      nGraph=dispConv+dispLFilter+dispHFilter;
-      iGraph=0;
 
       // -----------
       // Convolution
@@ -814,8 +809,7 @@ RC mediateRingCalculate(void *engineContext,void *responseHandle)
          *ringLambda,*ringVector,                                               // substitution vectors for ring cross section
           temp,                                                                 // approximate average temperature in °K for scattering
           slitParam,                                                            // gaussian full width at half maximum
-          slitParam2,                                                           // other slit function parameters
-          a,invapi,delta,sigma;                                                 // parameters to build a slit function
+          slitParam2;                                                           // other slit function parameters
 
   MATRIX_OBJECT  xsSolar,xsSolarConv,xsSlit,xsSlit2,xsRing,*pSlit,*pSlit2;                     // solar spectrum and slit function
   INT     nsolar,nslit,nslit2,nring,                                            // size of previous vectors
@@ -1015,10 +1009,6 @@ RC mediateRingCalculate(void *engineContext,void *responseHandle)
         if (rc!=0)
          goto EndRing;
 
-        sigma=slitParam*0.5;
-        a=sigma/sqrt(log(2.));
-        delta=slitParam2*0.5;
-        invapi=(double)1./(a*sqrt(PI));
 
         sigsq = (double) 1.e6/(lambda*lambda);
         gamman2 = (double) -0.601466 + 238.557 / (186.099 - sigsq);

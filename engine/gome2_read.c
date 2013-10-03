@@ -173,7 +173,7 @@ INT GOME2_mus=0;
 // STATIC VARIABLES
 // ================
 
-char *const gome2BandName[NBAND] =
+const char *gome2BandName[NBAND] =
  {
   "BAND_1A",
   "BAND_1B",

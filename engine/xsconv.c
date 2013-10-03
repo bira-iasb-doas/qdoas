@@ -152,7 +152,7 @@
 
 // Slit types
 
-char *XSCONV_slitTypes[SLIT_TYPE_MAX]=
+const char *XSCONV_slitTypes[SLIT_TYPE_MAX]=
  {
 // !!!  	"None",
   "File",
@@ -1081,16 +1081,14 @@ RC XSCONV_TypeStandard(MATRIX_OBJECT *pXsnew,INDEX indexLambdaMin,INDEX indexLam
          *IVector,*IDeriv2,
           crossFIntegral,IFIntegral,FIntegral,
           oldF,newF,oldIF,newIF,stepF,h,fwhm,
-          slitCenter,c,si,
+          slitCenter,
           stepXshr,slitStretch1,slitStretch2,
           lambda,lambdaMin,lambdaMax,oldXshr,newXshr;
   INDEX   xshrPixMin,
           xsnewIndex,indexOld,indexNew,
           klo,khi,i;
-  INT     xshrNDET,xsnewNDET,slitNDET,slitNDET2,msgCount;
+  INT     xshrNDET,xsnewNDET,slitNDET,slitNDET2;
   RC      rc;
-
-  int cas;
 
   memset(&slitTmp,0,sizeof(MATRIX_OBJECT));
 
@@ -1200,8 +1198,6 @@ RC XSCONV_TypeStandard(MATRIX_OBJECT *pXsnew,INDEX indexLambdaMin,INDEX indexLam
    stepF=fwhm/50.;
   else
    stepF=fwhm/(double)NFWHM;
-
-  msgCount=0;
 
   rc=ERROR_ID_NO;
 
@@ -1353,7 +1349,6 @@ RC XSCONV_TypeStandard(MATRIX_OBJECT *pXsnew,INDEX indexLambdaMin,INDEX indexLam
 
     else
      {
-      msgCount=1;
 
       // set indexes to browse wavelengths in the grid of the slit function if pre-calculated
 
