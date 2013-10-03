@@ -184,11 +184,11 @@ RC EngineCopyContext(ENGINE_CONTEXT *pEngineContextTarget,ENGINE_CONTEXT *pEngin
        ((pBuffersSource->recordIndexes!=NULL) && (pBuffersTarget->recordIndexes==NULL) &&
         ((pBuffersTarget->recordIndexes=(DoasU32 *)MEMORY_AllocBuffer("THRD_CopySpecInfo","recordIndexes",
          (pEngineContextTarget->recordIndexesSize=pEngineContextSource->recordIndexesSize),sizeof(DoasU32),0,MEMORY_TYPE_ULONG))==NULL)) ||
-       ((pEngineContextTarget->recordInfo.ccd.vip.matrix!=NULL) && (pEngineContextTarget->recordInfo.ccd.vip.matrix==NULL) &&
+       ((pEngineContextSource->recordInfo.ccd.vip.matrix!=NULL) && (pEngineContextTarget->recordInfo.ccd.vip.matrix==NULL) &&
         ((rc=MATRIX_Copy(&pEngineContextTarget->recordInfo.ccd.vip,&pEngineContextSource->recordInfo.ccd.vip,"EngineCopyContext"))!=ERROR_ID_NO)) ||
-       ((pEngineContextTarget->recordInfo.ccd.dnl.matrix!=NULL) && (pEngineContextTarget->recordInfo.ccd.dnl.matrix==NULL) &&
+       ((pEngineContextSource->recordInfo.ccd.dnl.matrix!=NULL) && (pEngineContextTarget->recordInfo.ccd.dnl.matrix==NULL) &&
         ((rc=MATRIX_Copy(&pEngineContextTarget->recordInfo.ccd.dnl,&pEngineContextSource->recordInfo.ccd.dnl,"EngineCopyContext"))!=ERROR_ID_NO)) ||
-       ((pEngineContextTarget->recordInfo.ccd.drk.matrix!=NULL) && (pEngineContextTarget->recordInfo.ccd.drk.matrix==NULL) &&
+       ((pEngineContextSource->recordInfo.ccd.drk.matrix!=NULL) && (pEngineContextTarget->recordInfo.ccd.drk.matrix==NULL) &&
         ((rc=MATRIX_Copy(&pEngineContextTarget->recordInfo.ccd.drk,&pEngineContextSource->recordInfo.ccd.drk,"EngineCopyContext"))!=ERROR_ID_NO)) ||
        ((pBuffersSource->dnl.matrix!=NULL) && (pBuffersTarget->dnl.matrix==NULL) &&
         ((rc=MATRIX_Copy(&pBuffersTarget->dnl,&pBuffersSource->dnl,"EngineCopyContext"))!=ERROR_ID_NO)))
