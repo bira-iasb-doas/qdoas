@@ -6,7 +6,14 @@ HELP_SYSTEM     =      # or empty
 QWT_LINKAGE     = qwtdll        # qwtstatic or qwtdll
 CODE_GENERATION = release         # debug or release
 
-QMAKE_CFLAGS += -std=gnu99
+QMAKE_CFLAGS += -std=gnu99 -Wall -Wextra -pedantic \
+          -Wformat=2 -Wunused -Wno-unused-parameter -Wuninitialized \
+          -Wwrite-strings -Wstrict-prototypes -Wold-style-definition \
+          -Wredundant-decls -Wnested-externs \
+          -Wjump-misses-init -Wlogical-op
+
+LIBS += -L../mediator -lmediator -L../engine -lengine -L../common -lcommon
+DEPENDPATH += ../common ../engine ../mediator
 
 #----------------------------------------------
 # Platform dependency ...
@@ -20,8 +27,6 @@ unix {
   INCLUDEPATH += /usr/include/qwt
   QMAKE_RPATHDIR += $$INSTALL_PREFIX/lib
   QMAKE_LIBDIR += $$INSTALL_PREFIX/lib
-
-  LIBS += -lqwt
 
   # QDOAS online help
   QDOAS_HELP= '\\"/home/username/share/qdoas/Help\\"'
@@ -40,8 +45,6 @@ win32 {
   HDFEOS_INC_PATH = D:/My_Libraries/HDF/hdfeos2_18/hdfeos2.18/hdfeos/include D:/My_Libraries/HDF/hdfeos5_1_14/hdfeos5.1.14/hdfeos5/include
   HDFEOS_LIB_PATH = D:/My_Applications/QDoas/hdfeos
   HDF_INC_PATH    = D:/My_Libraries/HDF/hdf-4.2.8/Src/hdf-4.2.8/hdf/src D:/My_Libraries/HDF/hdf5-1.9.144/src D:/My_Libraries/HDF/hdf5-1.9.144/hl/src
-
-  INSTALL_PREFIX = C:/Qdoas
 
   CODE_GENERATION = release # Override because debug is broken
 }

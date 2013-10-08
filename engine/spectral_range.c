@@ -18,7 +18,7 @@ struct doas_spectrum_private {
 doas_interval *interval_new(int start, int end);
 doas_interval *insert_interval(doas_interval *theinterval, int start, int end, insert_position pos);
 
-doas_spectrum *spectrum_new() {
+doas_spectrum *spectrum_new(void) {
   doas_spectrum *spectrum = malloc(sizeof(doas_spectrum));
   spectrum->first = NULL;
   return spectrum;

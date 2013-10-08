@@ -487,108 +487,108 @@ void AnalysisWindowApplyString(const QList<const CAnalysisWindowConfigItem*>awLi
  }
 
 RC ParseAnalysisWindow(QStringList &xmlFields,int xmlFieldN,int startingField,QString *pXmlKey,QString *pXmlValue,const CProjectConfigItem *p)
- {
- 	// Declarations
-
+{
+  // Declarations
+  
   const QList<const CAnalysisWindowConfigItem*> awList = p->analysisWindowItems();
   mediate_analysis_window_t newAnalysisProperties;
   // QList<const CAnalysisWindowConfigItem*>::const_iterator awIt = awList.begin();
 
   QString windowName=QString();
 
- 	int indexField;
- 	int displayField;
- 	int filesField;
- 	RC  rc;
- 	QList<const CAnalysisWindowConfigItem*>::const_iterator awIt = awList.begin();
+  int indexField;
+  int displayField;
+  int filesField;
+  RC  rc;
+  QList<const CAnalysisWindowConfigItem*>::const_iterator awIt = awList.begin();
 
- 	// Initializations
-
- 	displayField=filesField=0;
- 	rc=ERROR_ID_NO;
-
- 	for (indexField=startingField;indexField<xmlFieldN;indexField++)
- 	 {
- 	 	// top attributes
-
- 	 	if (!displayField && !filesField)
- 	 	 {
- 	 	  if ((xmlFields.at(indexField)=="disable") ||
- 	 	      (xmlFields.at(indexField)=="kurucz"))
-
- 	 	   std::cout << pXmlKey->toAscii().constData() << " can not be changed" << std::endl;
-
- 	 	  // Fitting interval
-
- 	 	  else if (xmlFields.at(indexField)=="min")
- 	 	   AnalysisWindowApplyDouble(awList,&windowName,pXmlKey,pXmlValue,&newAnalysisProperties,&newAnalysisProperties.fitMinWavelength);
- 	 	  else if (xmlFields.at(indexField)=="max")
- 	 	   AnalysisWindowApplyDouble(awList,&windowName,pXmlKey,pXmlValue,&newAnalysisProperties,&newAnalysisProperties.fitMaxWavelength);
- 	 	  else if (xmlFields.at(indexField)=="display")
- 	 	   std::cout << "project/analysis_window/display fields can not be changed" << std::endl;
- 	 	  else if (xmlFields.at(indexField)=="refsel")
- 	 	   {
- 	 	   	if ((*pXmlValue!="auto") && (*pXmlValue!="file"))
- 	 	   	 std::cout << pXmlKey->toAscii().constData() << " do not support " << pXmlValue->toAscii().constData() << std::endl;
- 	 	   	else
- 	 	   	 AnalysisWindowApplyInt(awList,&windowName,pXmlKey,(*pXmlValue=="auto")?ANLYS_REF_SELECTION_MODE_AUTOMATIC:ANLYS_REF_SELECTION_MODE_FILE,&newAnalysisProperties,&newAnalysisProperties.refSpectrumSelection);
- 	 	   }
- 	 	  else if (xmlFields.at(indexField)=="files")
- 	 	   filesField=1;
- 	 	  else
- 	 	   windowName=xmlFields.at(indexField);
- 	 	 }
-
- 	 	// files section
-
- 	 	else if (filesField)
- 	 	 {
- 	 	  if (xmlFields.at(indexField)=="refone")
- 	 	   AnalysisWindowApplyString(awList,&windowName,pXmlKey,pXmlValue,&newAnalysisProperties,newAnalysisProperties.refOneFile);
- 	 	  else if (xmlFields.at(indexField)=="reftwo")
- 	 	   AnalysisWindowApplyString(awList,&windowName,pXmlKey,pXmlValue,&newAnalysisProperties,newAnalysisProperties.refTwoFile);
- 	 	  else if (xmlFields.at(indexField)=="residual")
- 	 	   AnalysisWindowApplyString(awList,&windowName,pXmlKey,pXmlValue,&newAnalysisProperties,newAnalysisProperties.residualFile);
- 	 	  else if (xmlFields.at(indexField)=="szacenter")
- 	 	   AnalysisWindowApplyDouble(awList,&windowName,pXmlKey,pXmlValue,&newAnalysisProperties,&newAnalysisProperties.refSzaCenter);
- 	 	  else if (xmlFields.at(indexField)=="szadelta")
- 	 	   AnalysisWindowApplyDouble(awList,&windowName,pXmlKey,pXmlValue,&newAnalysisProperties,&newAnalysisProperties.refSzaDelta);
- 	 	  else if (xmlFields.at(indexField)=="minlon")
- 	 	   AnalysisWindowApplyDouble(awList,&windowName,pXmlKey,pXmlValue,&newAnalysisProperties,&newAnalysisProperties.refMinLongitude);
- 	 	  else if (xmlFields.at(indexField)=="maxlon")
- 	 	   AnalysisWindowApplyDouble(awList,&windowName,pXmlKey,pXmlValue,&newAnalysisProperties,&newAnalysisProperties.refMaxLongitude);
- 	 	  else if (xmlFields.at(indexField)=="minlat")
- 	 	   AnalysisWindowApplyDouble(awList,&windowName,pXmlKey,pXmlValue,&newAnalysisProperties,&newAnalysisProperties.refMinLatitude);
- 	 	  else if (xmlFields.at(indexField)=="maxlat")
- 	 	   AnalysisWindowApplyDouble(awList,&windowName,pXmlKey,pXmlValue,&newAnalysisProperties,&newAnalysisProperties.refMaxLatitude);
- 	 	  else if (xmlFields.at(indexField)=="refns")
- 	 	   AnalysisWindowApplyInt(awList,&windowName,pXmlKey,atoi(pXmlValue->toAscii().constData()),&newAnalysisProperties,&newAnalysisProperties.refSpectrumSelection);
- 	 	  else if (xmlFields.at(indexField)=="cloudfmin")
- 	 	   AnalysisWindowApplyDouble(awList,&windowName,pXmlKey,pXmlValue,&newAnalysisProperties,&newAnalysisProperties.cloudFractionMin);
- 	 	  else if (xmlFields.at(indexField)=="cloudfmax")
- 	 	   AnalysisWindowApplyDouble(awList,&windowName,pXmlKey,pXmlValue,&newAnalysisProperties,&newAnalysisProperties.cloudFractionMax);
- 	 	  else if (xmlFields.at(indexField)=="maxdoasrefmode")
- 	 	   {
- 	 	   	if ((*pXmlValue!="scan") && (*pXmlValue!="sza"))
- 	 	   	 std::cout << pXmlKey->toAscii().constData() << " do not support " << pXmlValue->toAscii().constData() << std::endl;
- 	 	   	else
- 	 	     AnalysisWindowApplyInt(awList,&windowName,pXmlKey,(*pXmlValue=="scan")?ANLYS_MAXDOAS_REF_SCAN:ANLYS_MAXDOAS_REF_SZA,&newAnalysisProperties,&newAnalysisProperties.refSpectrumSelection);
-       }
-
-      // pixel selection for GOME-ERS2 -> not supported
-
+  // Initializations
+  
+  displayField=filesField=0;
+  rc=ERROR_ID_NO;
+  
+  for (indexField=startingField;indexField<xmlFieldN;indexField++)
+    {
+      // top attributes
+      
+      if (!displayField && !filesField)
+        {
+          if ((xmlFields.at(indexField)=="disable") ||
+              (xmlFields.at(indexField)=="kurucz"))
+            
+            std::cout << pXmlKey->toAscii().constData() << " can not be changed" << std::endl;
+          
+          // Fitting interval
+          
+          else if (xmlFields.at(indexField)=="min")
+            AnalysisWindowApplyDouble(awList,&windowName,pXmlKey,pXmlValue,&newAnalysisProperties,&newAnalysisProperties.fitMinWavelength);
+          else if (xmlFields.at(indexField)=="max")
+            AnalysisWindowApplyDouble(awList,&windowName,pXmlKey,pXmlValue,&newAnalysisProperties,&newAnalysisProperties.fitMaxWavelength);
+          else if (xmlFields.at(indexField)=="display")
+            std::cout << "project/analysis_window/display fields can not be changed" << std::endl;
+          else if (xmlFields.at(indexField)=="refsel")
+            {
+              if ((*pXmlValue!="auto") && (*pXmlValue!="file"))
+                std::cout << pXmlKey->toAscii().constData() << " do not support " << pXmlValue->toAscii().constData() << std::endl;
+              else
+                AnalysisWindowApplyInt(awList,&windowName,pXmlKey,(*pXmlValue=="auto")?ANLYS_REF_SELECTION_MODE_AUTOMATIC:ANLYS_REF_SELECTION_MODE_FILE,&newAnalysisProperties,&newAnalysisProperties.refSpectrumSelection);
+            }
+          else if (xmlFields.at(indexField)=="files")
+            filesField=1;
+          else
+            windowName=xmlFields.at(indexField);
+        }
+      
+      // files section
+      
+      else if (filesField)
+        {
+          if (xmlFields.at(indexField)=="refone")
+            AnalysisWindowApplyString(awList,&windowName,pXmlKey,pXmlValue,&newAnalysisProperties,newAnalysisProperties.refOneFile);
+          else if (xmlFields.at(indexField)=="reftwo")
+            AnalysisWindowApplyString(awList,&windowName,pXmlKey,pXmlValue,&newAnalysisProperties,newAnalysisProperties.refTwoFile);
+          else if (xmlFields.at(indexField)=="residual")
+            AnalysisWindowApplyString(awList,&windowName,pXmlKey,pXmlValue,&newAnalysisProperties,newAnalysisProperties.residualFile);
+          else if (xmlFields.at(indexField)=="szacenter")
+            AnalysisWindowApplyDouble(awList,&windowName,pXmlKey,pXmlValue,&newAnalysisProperties,&newAnalysisProperties.refSzaCenter);
+          else if (xmlFields.at(indexField)=="szadelta")
+            AnalysisWindowApplyDouble(awList,&windowName,pXmlKey,pXmlValue,&newAnalysisProperties,&newAnalysisProperties.refSzaDelta);
+          else if (xmlFields.at(indexField)=="minlon")
+            AnalysisWindowApplyDouble(awList,&windowName,pXmlKey,pXmlValue,&newAnalysisProperties,&newAnalysisProperties.refMinLongitude);
+          else if (xmlFields.at(indexField)=="maxlon")
+            AnalysisWindowApplyDouble(awList,&windowName,pXmlKey,pXmlValue,&newAnalysisProperties,&newAnalysisProperties.refMaxLongitude);
+          else if (xmlFields.at(indexField)=="minlat")
+            AnalysisWindowApplyDouble(awList,&windowName,pXmlKey,pXmlValue,&newAnalysisProperties,&newAnalysisProperties.refMinLatitude);
+          else if (xmlFields.at(indexField)=="maxlat")
+            AnalysisWindowApplyDouble(awList,&windowName,pXmlKey,pXmlValue,&newAnalysisProperties,&newAnalysisProperties.refMaxLatitude);
+          else if (xmlFields.at(indexField)=="refns")
+            AnalysisWindowApplyInt(awList,&windowName,pXmlKey,atoi(pXmlValue->toAscii().constData()),&newAnalysisProperties,&newAnalysisProperties.refSpectrumSelection);
+          else if (xmlFields.at(indexField)=="cloudfmin")
+            AnalysisWindowApplyDouble(awList,&windowName,pXmlKey,pXmlValue,&newAnalysisProperties,&newAnalysisProperties.cloudFractionMin);
+          else if (xmlFields.at(indexField)=="cloudfmax")
+            AnalysisWindowApplyDouble(awList,&windowName,pXmlKey,pXmlValue,&newAnalysisProperties,&newAnalysisProperties.cloudFractionMax);
+          else if (xmlFields.at(indexField)=="maxdoasrefmode")
+            {
+              if ((*pXmlValue!="scan") && (*pXmlValue!="sza"))
+                std::cout << pXmlKey->toAscii().constData() << " do not support " << pXmlValue->toAscii().constData() << std::endl;
+              else
+                AnalysisWindowApplyInt(awList,&windowName,pXmlKey,(*pXmlValue=="scan")?ANLYS_MAXDOAS_REF_SCAN:ANLYS_MAXDOAS_REF_SZA,&newAnalysisProperties,&newAnalysisProperties.refSpectrumSelection);
+            }
+          
+          // pixel selection for GOME-ERS2 -> not supported
+          
  	 	  else if ((xmlFields.at(indexField)=="east") ||
  	 	           (xmlFields.at(indexField)=="center") ||
  	 	           (xmlFields.at(indexField)=="west") ||
  	 	           (xmlFields.at(indexField)=="backscan"))
-
- 	 	   std::cout << pXmlKey->toAscii().constData() << " can not be changed" << std::endl;
- 	 	 }
- 	 }
+                    
+                    std::cout << pXmlKey->toAscii().constData() << " can not be changed" << std::endl;
+        }
+    }
 
 
   // Return
-
+  
   return rc;
  }
 
