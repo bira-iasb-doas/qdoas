@@ -26,6 +26,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "constants.h"
 #include "output_formats.h"
 
+#include "tropomi.h"
+
 #if defined(_cplusplus) || defined(__cplusplus)
 extern "C" {
 #endif
@@ -395,6 +397,7 @@ extern "C" {
     struct instrumental_minimum uoft;
     struct instrumental_minimum noaa;
     struct instrumental_omi omi;
+    struct instrumental_tropomi tropomi;
     struct instrumental_gome2 gome2;
     struct instrumental_minimum mkzy;
     struct instrumental_minimum biraairborne;

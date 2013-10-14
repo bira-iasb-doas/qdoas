@@ -400,6 +400,9 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   case PRJCT_INSTR_FORMAT_OMI:
     fprintf(fp, "\"omi\"");
     break;
+  case PRJCT_INSTR_FORMAT_TROPOMI:
+    fprintf(fp, "\"tropomi\"");
+    break;
   case PRJCT_INSTR_FORMAT_GOME2:
     fprintf(fp, "\"gome2\"");
     break;
@@ -916,6 +919,20 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
 
   tmpStr = pathMgr->simplifyPath(QString(d->omi.instrFunctionFile));
   fprintf(fp, " instr=\"%s\" />\n", tmpStr.toAscii().constData());
+
+  // tropomi
+  const char *tropomiSpectralBand;
+  switch(d->tropomi.spectralBand) {
+    // use macro to generate expression for every value of the
+    // tropomiSpectralBand enum:
+#define EXPAND(LABEL)                           \
+    case LABEL:                                 \
+      tropomiSpectralBand = #LABEL;             \
+      break;
+    TROPOMI_BANDS
+#undef EXPAND
+      }
+  fprintf(fp, "      <tropomi band=\"%s\" />\n", tropomiSpectralBand);
 
   // gome2
   fprintf(fp, "      <gome2 type=");

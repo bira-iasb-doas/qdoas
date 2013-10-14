@@ -2239,7 +2239,7 @@ RC SCIA_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
     if (useUsamp && (THRD_id!=THREAD_TYPE_KURUCZ))
      {
-      ANALYSE_UsampLocalFree();
+       // ANALYSE_UsampLocalFree();
 
       if (((rc=ANALYSE_UsampLocalAlloc(0 /* lambdaMin,lambdaMax,oldNDET */))!=ERROR_ID_NO) ||
           ((rc=ANALYSE_UsampBuild(0,0))!=ERROR_ID_NO) ||

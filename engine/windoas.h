@@ -498,7 +498,6 @@ typedef struct _prjctInstrumental
   char       mfcStdDate[24];
   float       opusTimeShift;
   char       fileExt[50];
-  float       omiWavelength1,omiWavelength2;
  }
 PRJCT_INSTRUMENTAL;
 

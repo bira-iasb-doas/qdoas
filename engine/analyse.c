@@ -3550,7 +3550,7 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
               if (Feno->useUsamp && (THRD_id!=THREAD_TYPE_KURUCZ))
                {
-                ANALYSE_UsampLocalFree();
+                 // ANALYSE_UsampLocalFree();
 
                 if (((rc=ANALYSE_UsampLocalAlloc(0))!=ERROR_ID_NO) ||
                     ((rc=ANALYSE_UsampBuild(2,ITEM_NONE))!=ERROR_ID_NO))
@@ -6023,13 +6023,13 @@ RC ANALYSE_UsampLocalAlloc(INT gomeFlag)
 // PURPOSE       release the buffers previously allocated by the ANALYSE_UsampLocalAlloc function
 // -----------------------------------------------------------------------------
 
-void ANALYSE_UsampLocalFree(void)
-{
-  // Declarations
-
-  INDEX indexFeno,indexFenoColumn;
-
-}
+// void ANALYSE_UsampLocalFree(void)
+// {
+//   // Declarations
+// 
+//   INDEX indexFeno,indexFenoColumn;
+// 
+// }
 
 // -----------------------------------------------------------------------------
 // FUNCTION      ANALYSE_UsampGlobalFree

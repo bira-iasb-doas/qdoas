@@ -1137,7 +1137,7 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
 
       break;
       // ----------------------------------------------------------------------------
-    case PRJCT_INSTR_FORMAT_OMI :                                                               // GOME ASCII format
+    case PRJCT_INSTR_FORMAT_OMI :
 
       NDET=1024;                                                                                  // Could be reduced by Set function
 

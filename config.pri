@@ -20,7 +20,7 @@ DEPENDPATH += ../common ../engine ../mediator
 #----------------------------------------------
 
 unix {
-  INSTALL_PREFIX = /home/username
+  INSTALL_PREFIX = /home/thomasd
 
   INCLUDEPATH += $$INSTALL_PREFIX/include
   INCLUDEPATH += $$INSTALL_PREFIX/include/hdf4

@@ -48,6 +48,7 @@ class CWInstrGdpEdit;
 class CWInstrGome2Edit;
 class CWInstrSciaEdit;
 class CWInstrOmiEdit;
+class CWInstrTropomiEdit;
 class CWInstrMfcEdit;
 class CWInstrMfcStdEdit;
 class CWInstrMfcbiraEdit;
@@ -98,6 +99,7 @@ Q_OBJECT
   CWInstrMinimumEdit *m_uoftEdit;
   CWInstrMinimumEdit *m_noaaEdit;
   CWInstrOmiEdit *m_omiEdit;
+  CWInstrTropomiEdit *m_tropomiEdit;
   CWInstrGome2Edit *m_gome2Edit;
   CWInstrMinimumEdit *m_mkzyEdit;
   CWInstrMinimumEdit *m_biraairborneEdit;
@@ -116,7 +118,7 @@ class CWCalibInstrEdit : public QFrame
 Q_OBJECT
  public:
   CWCalibInstrEdit(QWidget *parent = 0);
-  virtual ~CWCalibInstrEdit();
+  virtual ~CWCalibInstrEdit() {};
 
  protected:
   void helperConstructFileWidget(QLineEdit **fileEdit, QGridLayout *gridLayout, int &row,
@@ -460,6 +462,19 @@ class CWInstrOmiEdit : public CWCalibInstrEdit
   QRadioButton *m_ignoreXTrackQF;
   QRadioButton *m_nonstrictXTrackQF;
   QRadioButton *m_strictXTrackQF;
+};
+
+//--------------------------------------------------------------------------
+
+class CWInstrTropomiEdit : public CWCalibInstrEdit
+{
+ public:
+  CWInstrTropomiEdit(const struct instrumental_tropomi *d, QWidget *parent = 0);
+
+  void apply(struct instrumental_tropomi *d) const;
+
+ private:
+  QComboBox *m_spectralBandCombo;
 };
 
 //--------------------------------------------------------------------------

@@ -628,6 +628,8 @@ bool CProjectInstrumentalSubHandler::start(const QXmlAttributes &atts)
     m_instrumental->format = PRJCT_INSTR_FORMAT_NOAA;
   else if (str == "omi")
     m_instrumental->format = PRJCT_INSTR_FORMAT_OMI;
+  else if (str == "tropomi")
+    m_instrumental->format = PRJCT_INSTR_FORMAT_TROPOMI;
   else if (str == "gome2")
     m_instrumental->format = PRJCT_INSTR_FORMAT_GOME2;
   else if (str == "mkzy")
@@ -1044,6 +1046,17 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
       else
 	return postErrorMessage("Instrument Function Filename too long");
     }
+
+  }
+  else if (element == "tropomi") {
+    QString str = atts.value("band");
+#define EXPAND(LABEL)                           \
+      if(str == #LABEL)                         \
+        m_instrumental->tropomi.spectralBand = LABEL; \
+      else
+      TROPOMI_BANDS
+#undef EXPAND
+      return postErrorMessage("No Tropomi spectral band configured.");
 
   }
   else if (element == "gome2") { // GOME2

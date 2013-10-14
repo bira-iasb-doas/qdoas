@@ -154,6 +154,11 @@ CWProjectTabInstrumental::CWProjectTabInstrumental(const mediate_project_instrum
   index = m_formatStack->addWidget(m_omiEdit);
   m_instrumentToStackIndexMap.insert(std::map<int,int>::value_type(PRJCT_INSTR_FORMAT_OMI, index));
 
+  // tropomi
+  m_tropomiEdit = new CWInstrTropomiEdit(&(instr->tropomi));
+  index = m_formatStack->addWidget(m_tropomiEdit);
+  m_instrumentToStackIndexMap.insert(std::map<int,int>::value_type(PRJCT_INSTR_FORMAT_TROPOMI, index));
+
   // gome2
   m_gome2Edit = new CWInstrGome2Edit(&(instr->gome2));
   index = m_formatStack->addWidget(m_gome2Edit);
@@ -228,6 +233,7 @@ void CWProjectTabInstrumental::apply(mediate_project_instrumental_t *instr) cons
   m_uoftEdit->apply(&(instr->uoft));
   m_noaaEdit->apply(&(instr->noaa));
   m_omiEdit->apply(&(instr->omi));
+  m_tropomiEdit->apply(&(instr->tropomi));
   m_gome2Edit->apply(&(instr->gome2));
   m_mkzyEdit->apply(&(instr->mkzy));
   m_biraairborneEdit->apply(&(instr->biraairborne));
@@ -258,13 +264,7 @@ static const int cStandardEditWidth         = 70;
 //--------------------------------------------------------
 
 CWCalibInstrEdit::CWCalibInstrEdit(QWidget *parent) :
-  QFrame(parent)
-{
-}
-
-CWCalibInstrEdit::~CWCalibInstrEdit()
-{
-}
+  QFrame(parent) {}
 
 void CWCalibInstrEdit::slotCalibOneBrowse()
 {
@@ -2016,28 +2016,6 @@ CWInstrOmiEdit::CWInstrOmiEdit(const struct instrumental_omi *d, QWidget *parent
   
   mainLayout->addWidget(xtrackQFBox);
 
-//  // spectral range
-//  gridLayout->addWidget(new QLabel("Wavelength Range (nm)", this), row, 0);
-//  QHBoxLayout *rangeLayout = new QHBoxLayout;
-//  m_minLambdaEdit = new QLineEdit(this);
-//  m_minLambdaEdit->setFixedWidth(cStandardEditWidth);
-//  m_minLambdaEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 999.9, 1, m_minLambdaEdit));
-//  rangeLayout->addWidget(m_minLambdaEdit);
-//  m_maxLambdaEdit = new QLineEdit(this);
-//  m_maxLambdaEdit->setFixedWidth(cStandardEditWidth);
-//  m_maxLambdaEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 999.9, 1, m_maxLambdaEdit));
-//  rangeLayout->addWidget(m_maxLambdaEdit);
-//  rangeLayout->addStretch(1);
-//  gridLayout->addLayout(rangeLayout, row, 1, 1, 2, Qt::AlignLeft);
-//  ++row;
-//
-//  // average
-//  m_averageCheck = new QCheckBox("Average spectra in tracks", this);
-//  gridLayout->addWidget(m_averageCheck, row, 1, 1, 2, Qt::AlignLeft);
-//  ++row;
-
-
-
   // files
   helperConstructCalInsFileWidgets(gridLayout, row,
 				   d->calibrationFile, sizeof(d->calibrationFile),
@@ -2069,35 +2047,19 @@ CWInstrOmiEdit::CWInstrOmiEdit(const struct instrumental_omi *d, QWidget *parent
   sprintf(str,"%02X",d->pixelQFMask);
   m_pixelQFMaskEdit->setText(QString(str));
 
-  // wavelength range
-//  tmpStr.setNum(d->minimumWavelength);
-//  m_minLambdaEdit->validator()->fixup(tmpStr);
-//  m_minLambdaEdit->setText(tmpStr);
-//  tmpStr.setNum(d->maximumWavelength);
-//  m_maxLambdaEdit->validator()->fixup(tmpStr);
-//  m_maxLambdaEdit->setText(tmpStr);
-//
-//  // average
-//  m_averageCheck->setCheckState(d->flagAverage ? Qt::Checked : Qt::Unchecked);
-
 }
 
 CWInstrOmiEdit::~CWInstrOmiEdit()
 {
+
 }
 
-void CWInstrOmiEdit::apply(struct instrumental_omi *d) const
+void CWInstrOmiEdit::apply(struct instrumental_omi *d) const 
 {
   // spectral
   d->spectralType = m_spectralTypeCombo->itemData(m_spectralTypeCombo->currentIndex()).toInt();
 
-  // wavelength range
-//  d->minimumWavelength = m_minLambdaEdit->text().toDouble();
-//  d->maximumWavelength = m_maxLambdaEdit->text().toDouble();
-//
-//  d->flagAverage = (m_averageCheck->checkState() == Qt::Checked) ? 1 : 0;
-
-   // track selection
+  // track selection
 
   d->pixelQFRejectionFlag=(m_pixelQFCheck->checkState() == Qt::Checked) ? 1 : 0;
   d->pixelQFMaxGaps=m_pixelQFMaxGapsEdit->text().toInt();
@@ -2117,6 +2079,36 @@ void CWInstrOmiEdit::apply(struct instrumental_omi *d) const
   // files
   strcpy(d->calibrationFile, m_fileOneEdit->text().toAscii().data());
   strcpy(d->instrFunctionFile, m_fileTwoEdit->text().toAscii().data());
+}
+
+//--------------------------------------------------------
+
+CWInstrTropomiEdit::CWInstrTropomiEdit(const struct instrumental_tropomi *d, QWidget *parent) : CWCalibInstrEdit(parent) {
+
+  QVBoxLayout *mainLayout = new QVBoxLayout(this);
+  QGridLayout *gridLayout = new QGridLayout;
+  
+  mainLayout->addLayout(gridLayout);
+  
+  // spectral band
+  gridLayout->addWidget(new QLabel("Spectral Band", this));
+  m_spectralBandCombo = new QComboBox(this);
+#define EXPAND(BANDLABEL) m_spectralBandCombo->addItem(#BANDLABEL, QVariant(BANDLABEL));
+  TROPOMI_BANDS
+#undef EXPAND
+    
+  int index = m_spectralBandCombo->findData(QVariant(d->spectralBand));
+  if (index != -1)
+    m_spectralBandCombo->setCurrentIndex(index);
+
+  gridLayout->addWidget(m_spectralBandCombo);
+
+}
+
+void CWInstrTropomiEdit::apply(struct instrumental_tropomi *d) const 
+{
+  // spectral
+  d->spectralBand = static_cast<tropomiSpectralBand>(m_spectralBandCombo->itemData(m_spectralBandCombo->currentIndex()).toInt());
 }
 
 //--------------------------------------------------------
