@@ -1134,7 +1134,7 @@ RC omi_load_spectrum(int spec_type, int32 sw_id, int32 measurement, int32 track,
   }
 
   int32 start[] = {measurement, track, 0};
-  int32 edge[] = {1,0,1}; // read 1 measurement, 1 detector row
+  int32 edge[] = {1,1,0}; // read 1 measurement, 1 detector row
   intn swrc = 0;
 
   // read wavelengths:
@@ -1156,7 +1156,7 @@ RC omi_load_spectrum(int spec_type, int32 sw_id, int32 measurement, int32 track,
       omi_calculate_wavelengths(wavelength_coeff, refcol, n_wavel, lambda);
     }
 
-  // (ir-)radiance mantissae, exponents & pixel quality have dimension (nMeasurement x nWavel x nXtrack)
+  // (ir-)radiance mantissae, exponents & pixel quality have dimension (nMeasurement x nXtrack x nWavel)
   edge[2] = n_wavel;
 
   if(spectrum != NULL || sigma != NULL) {
