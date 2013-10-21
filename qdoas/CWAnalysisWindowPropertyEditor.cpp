@@ -124,7 +124,7 @@ CWAnalysisWindowPropertyEditor::CWAnalysisWindowPropertyEditor(const QString &pr
   displayLayout->addWidget(m_residualCheck, 1, 0);
   m_predefCheck = new QCheckBox("Predefined parameters", displayGroup);
   displayLayout->addWidget(m_predefCheck, 1, 1);
-  m_ratioCheck = new QCheckBox("Alignement of Ref1 on Ref2", displayGroup);
+  m_ratioCheck = new QCheckBox("Alignment of Ref1 on Ref2", displayGroup);
   displayLayout->addWidget(m_ratioCheck, 1, 2);
 
   topLayout->addWidget(displayGroup);
