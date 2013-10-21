@@ -162,7 +162,7 @@ struct time
 
 struct date
  {
-  int  da_year;                                                                 /* Year - 1980      */
+  int  da_year;                                                                 /* Year */
   char da_day;                                                                  /* Day of the month */
   char da_mon;                                                                  /* Month (1 = Jan)  */
  };
@@ -173,7 +173,7 @@ struct date
 
 typedef struct _shortDate
  {
-  short da_year;                                                                /* Year - 1980      */
+  short da_year;                                                                /* Year */
   char  da_day;                                                                 /* Day of the month */
   char  da_mon;                                                                 /* Month (1 = Jan)  */
  }
