@@ -2114,27 +2114,26 @@ RC AnalyseSaveResiduals(char *fileName,ENGINE_CONTEXT *pEngineContext)
   RC rc;
   char *fileNamePtr,*ptr,resFile[MAX_ITEM_TEXT_LEN+1],ext[MAX_ITEM_TEXT_LEN+1];
   FILE *fp;
-  doas_iterator my_iterator;
-
+  
   rc=ERROR_ID_NO;
-
+  
   FILES_RebuildFileName(resFile,fileName,1);
-
+  
   if ((fileNamePtr=strrchr(resFile,PATH_SEP))==NULL)                 // extract output file name without path
    fileNamePtr=resFile;
   else
    fileNamePtr++;
-
+  
   if (!strlen(fileNamePtr) && ((ptr=strrchr(pEngineContext->fileInfo.fileName,PATH_SEP))!=NULL))
    {
     strcpy(fileNamePtr,ptr+1);
     if ((ptr=strrchr(fileNamePtr,'.'))!=NULL)
      *ptr=0;
-
+    
     sprintf(ext,"_%s.%s",Feno->windowName,FILES_types[FILE_TYPE_RES].fileExt);
     strcat(fileNamePtr,ext);
    }
-
+  
   if ((fp=fopen(resFile,"a+t"))==NULL)
    rc=ERROR_SetLast("AnalyseSaveResiduals",ERROR_TYPE_FATAL,ERROR_ID_FILE_OPEN,resFile);
   else
@@ -2143,17 +2142,39 @@ RC AnalyseSaveResiduals(char *fileName,ENGINE_CONTEXT *pEngineContext)
      {
       fprintf(fp,"0 0 0 ");
 
-      for( int i = iterator_start(&my_iterator, Feno->svd.specrange); i != ITERATOR_FINISHED; i=iterator_next(&my_iterator))
+      for(int i=0; i<NDET; ++i) {
        fprintf(fp,"%.14le ",Feno->Lambda[i]);
-
+      }
       fprintf(fp,"\n");
      }
-
+    
     fprintf(fp,"%-5d %.3lf %-8.4lf ",pEngineContext->indexRecord,pEngineContext->recordInfo.Zm,
             (double)ZEN_FNCaljda(&pEngineContext->recordInfo.Tm)+ZEN_FNCaldti(&pEngineContext->recordInfo.Tm)/24.);
-
-    for( int i = iterator_start(&my_iterator, Feno->svd.specrange); i != ITERATOR_FINISHED; i=iterator_next(&my_iterator))
-     fprintf(fp,"%.14le ",ANALYSE_absolu[i]);
+    
+    int curPixel = 0;
+    doas_iterator my_iterator;
+    doas_interval *nextinterval = iterator_start_interval(&my_iterator, Feno->svd.specrange);
+    while (curPixel < NDET) {
+     int stop = (nextinterval != NULL) 
+       ? interval_start(nextinterval)
+       : NDET;
+     
+     // print NaN for every pixel outside the current range.
+     while(curPixel < stop) {
+      fprintf(fp,"%.14le ", NAN);
+      ++curPixel;
+     }
+     if (nextinterval != NULL) {
+      int end = interval_end(nextinterval);
+      
+      // print residual for every pixel inside the current range.
+      while(curPixel <= end) {
+       fprintf(fp,"%.14le ",ANALYSE_absolu[curPixel]);
+       ++curPixel;
+      }
+      nextinterval = iterator_next_interval(&my_iterator);
+     }
+    }
 
     fprintf(fp,"\n");
     fclose(fp);
