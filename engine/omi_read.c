@@ -118,7 +118,6 @@ typedef struct _omi_ref
 {
   double       **omiRefLambda;
   double       **omiRefSpectrum;
-  double       **omiRefLambdaK;
   double       **omiRefSigma;
   char         omiRefFileName[MAX_STR_LEN+1];
   OMI_SPECTRUM   spectrum;
@@ -233,8 +232,6 @@ void OMI_ReleaseReference(void)
 	MEMORY_ReleaseDMatrix(__func__,"omiRefLambda",pRef->omiRefLambda,0,pRef->nXtrack-1,0);
       if (pRef->omiRefSpectrum!=NULL)
 	MEMORY_ReleaseDMatrix(__func__,"omiRefSpectrum",pRef->omiRefSpectrum,0,pRef->nXtrack-1,0);
-      if (pRef->omiRefLambdaK!=NULL)
-	MEMORY_ReleaseDMatrix(__func__,"omiRefLambdaK",pRef->omiRefLambdaK,0,pRef->nXtrack-1,0);
       if (pRef->omiRefFact!=NULL)
 	MEMORY_ReleaseDVector(__func__,"omiRefSpectrumK",pRef->omiRefFact,0);
       if (pRef->omiRefSigma!=NULL)
@@ -263,7 +260,6 @@ RC OMI_AllocateReference(INDEX indexRef,int nSpectra,int nPoints)
 
   if (((pRef->omiRefLambda=(double **)MEMORY_AllocDMatrix(__func__,"omiRefLambda",0,nPoints-1,0,nSpectra-1))==NULL) ||
       ((pRef->omiRefSpectrum=(double **)MEMORY_AllocDMatrix(__func__,"omiRefSpectrum",0,nPoints-1,0,nSpectra-1))==NULL) ||
-      ((pRef->omiRefLambdaK=(double **)MEMORY_AllocDMatrix(__func__,"omiRefLambdaK",0,nPoints-1,0,nSpectra-1))==NULL) ||
       ((pRef->omiRefFact=(double *)MEMORY_AllocDVector(__func__,"omiRefFact",0,nSpectra-1))==NULL) ||
       ((pRef->omiRefSigma=(double **)MEMORY_AllocDMatrix(__func__,"omiRefSigma",0,nPoints-1,0,nSpectra-1))==NULL) ||
 
