@@ -75,7 +75,7 @@ CWProjectTabCalibration::CWProjectTabCalibration(const mediate_project_calibrati
   // line shape
   topLayout->addWidget(new QLabel("Line Shape (SFP)", this), 2, 0);
   m_lineShapeCombo = new QComboBox(this);
-  m_lineShapeCombo->addItem("Dont Fit", QVariant(PRJCT_CALIB_FWHM_TYPE_NONE));
+  m_lineShapeCombo->addItem("Don't Fit", QVariant(PRJCT_CALIB_FWHM_TYPE_NONE));
   m_lineShapeCombo->addItem("File", QVariant(PRJCT_CALIB_FWHM_TYPE_FILE));
   m_lineShapeCombo->addItem("Gaussian", QVariant(PRJCT_CALIB_FWHM_TYPE_GAUSS));
   m_lineShapeCombo->addItem("Error Function", QVariant(PRJCT_CALIB_FWHM_TYPE_ERF));
