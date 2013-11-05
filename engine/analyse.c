@@ -4291,23 +4291,19 @@ RC ANALYSE_CheckLambda(WRK_SYMBOL *pWrkSymbol,double *lambda, const char *callin
 RC is_same_file(const char *file1, const char *file2, bool *result) {
   RC rc = ERROR_ID_NO;
 
-  if(!strcasecmp(file1,file2)) {
+  if(!strcmp(file1,file2)) {
    *result = true;
    return rc;
   }
-
-  int fid1,fid2 = -2;
-  ino_t ino1;
-  struct stat filestat;
-
   *result = false;
 
-  fid1 = open(file1, O_RDONLY);
+  int fid1 = open(file1, O_RDONLY);
   if (fid1 == -1) {
     return ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_FILE_NOT_FOUND, file1);
   }
 
   // we have a valid fid1:
+  struct stat filestat;
   if(fstat(fid1, &filestat) == -1) {
     rc = ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_FILE_STAT, file1);
   }
@@ -4316,9 +4312,9 @@ RC is_same_file(const char *file1, const char *file2, bool *result) {
     return rc;
   }
   // fstat result was valid 
-  ino1 = filestat.st_ino;
+  ino_t ino1 = filestat.st_ino;
 
-  fid2 = open(file2, O_RDONLY);
+  int fid2 = open(file2, O_RDONLY);
   if (fid2 == -1) {
     return ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_FILE_NOT_FOUND, file2);
   }
