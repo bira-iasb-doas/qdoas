@@ -204,6 +204,7 @@ SHORT_DATE;
 #define ERROR_ID_WAVELENGTH                     128                             // bad wavelength calibration in the input file
 #define ERROR_ID_FILE_OVERWRITE                 129                             // data not saved; change the output file name
 #define ERROR_ID_FILE_NOT_SPECIFIED             130                             // a required file name is not missing from the configuration
+#define ERROR_ID_FILE_STAT                      131                             // cannot call fstat on file
 
 
 // Debug
@@ -265,6 +266,7 @@ SHORT_DATE;
 #define ERROR_ID_FILE_AUTOMATIC                1280                             // no automatic reference selection can be perform on this type of file
 #define ERROR_ID_NO_REF                        1290                             // no reference file found in the specified file
 #define ERROR_ID_CONVOLUTION                   1295                             // incompatibility with convolution options
+#define ERROR_ID_NO_RESULT_PREVIOUS_WINDOW     1296                             // when using result from previous window as fixed column value: cannot link molecule with a molecule from a previous analysis window
 
 // Specific file format
 

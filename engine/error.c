@@ -112,6 +112,7 @@ ERROR_TABLE errorTable[]=
   { ERROR_ID_FILE_OVERWRITE            , "data not saved; change the output file name"                                                                        },
   { ERROR_ID_WAVELENGTH                , "bad wavelength calibration in file %s"                                                                              },
   { ERROR_ID_FILE_NOT_SPECIFIED        , "missing file name in configuration: %s"},
+  { ERROR_ID_FILE_STAT                 , "cannot stat %s"},
 
   // Debug
 
@@ -172,6 +173,7 @@ ERROR_TABLE errorTable[]=
   { ERROR_ID_FILE_AUTOMATIC            , "No automatic reference selection can be perform on this type of file"                                               },
   { ERROR_ID_NO_REF                    , "No reference spectrum found for %s in file %s"                                                                      },
   { ERROR_ID_CONVOLUTION               , "Convolved solar spectrum and cross sections are expected"                                                           },
+  { ERROR_ID_NO_RESULT_PREVIOUS_WINDOW , "Cannot use result from previous analysis window for molecule %s in analysis window %s"                             },
   
   
   

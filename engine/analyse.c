@@ -129,6 +129,7 @@
 #include "spectral_range.h"
 #include "output.h"
 #include <stdbool.h>
+#include <sys/stat.h>
 
 // ===================
 // GLOBAL DECLARATIONS
@@ -3070,31 +3071,37 @@ RC ANALYSE_CurFitMethod(INDEX   indexFenoColumn,  // for OMI
             (((Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVD) && (TabCross[i].FitConc==0)) ||
              ((Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVDMARQUARDT) && (TabCross[i].FitConc==ITEM_NONE))))
          {
-          for (indexFeno2=indexFeno-1;indexFeno2>=0;indexFeno2--)
+          bool found_previous = false;
+          for (indexFeno2=indexFeno-1;indexFeno2>=0 && !found_previous; indexFeno2--) {
            if (!TabFeno[indexFenoColumn][indexFeno2].hidden)
             {
-             int j;
-             for (j=0;j<TabFeno[indexFenoColumn][indexFeno2].NTabCross;j++)
+             for (int j=0;j<TabFeno[indexFenoColumn][indexFeno2].NTabCross
+                    && !found_previous ;j++) {
               if (TabFeno[indexFenoColumn][indexFeno2].TabCross[j].Comp==TabCross[i].Comp)
                {
                 double scalingFactor;
-
+                
                 scalingFactor=(double)1.;
-
+                
                 if (!strcasecmp(WorkSpace[TabCross[i].Comp].symbolName,"bro") &&
                     (ANALYSIS_broAmf.matrix!=NULL) &&
                     !SPLINE_Vector(ANALYSIS_broAmf.matrix[0],ANALYSIS_broAmf.matrix[1],ANALYSIS_broAmf.deriv2[1],
                                    ANALYSIS_broAmf.nl,&ZM,&scalingFactor,1,SPLINE_CUBIC,"ANALYSE_CurFitMethod "))
-
+                 
                  fitParamsC[TabCross[i].IndSvdA]=TabFeno[indexFenoColumn][indexFeno2].TabCrossResults[j].SlntCol*scalingFactor;
                 else
                  fitParamsC[TabCross[i].IndSvdA]=TabFeno[indexFenoColumn][indexFeno2].TabCrossResults[j].SlntCol;
-                break;
-               }
 
-             if (j<TabFeno[indexFenoColumn][indexFeno2].NTabCross)
-              break;
+                found_previous = true;
+               }
+             }
             }
+          }
+          if (!found_previous) {
+           rc = ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_NO_RESULT_PREVIOUS_WINDOW,
+                              WorkSpace[TabCross[i].Comp].symbolName, TabFeno[indexFenoColumn][indexFeno].windowName);
+           goto EndCurFitMethod;
+          }
          }
        }
      }
@@ -4279,6 +4286,55 @@ RC ANALYSE_CheckLambda(WRK_SYMBOL *pWrkSymbol,double *lambda, const char *callin
   return rc;
 }
 
+// Check if two paths point to the same file by comparing inodes if
+// the two paths are not equal.
+RC is_same_file(const char *file1, const char *file2, bool *result) {
+  RC rc = ERROR_ID_NO;
+
+  if(!strcasecmp(file1,file2)) {
+   *result = true;
+   return rc;
+  }
+
+  int fid1,fid2 = -2;
+  ino_t ino1;
+  struct stat filestat;
+
+  *result = false;
+
+  fid1 = open(file1, O_RDONLY);
+  if (fid1 == -1) {
+    return ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_FILE_NOT_FOUND, file1);
+  }
+
+  // we have a valid fid1:
+  if(fstat(fid1, &filestat) == -1) {
+    rc = ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_FILE_STAT, file1);
+  }
+  close(fid1);
+  if (rc != ERROR_ID_NO) {
+    return rc;
+  }
+  // fstat result was valid 
+  ino1 = filestat.st_ino;
+
+  fid2 = open(file2, O_RDONLY);
+  if (fid2 == -1) {
+    return ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_FILE_NOT_FOUND, file2);
+  }
+
+  // we have a valid fid2
+  if(fstat(fid2, &filestat) == -1) {
+    rc = ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_FILE_STAT, file2);
+  }
+  close(fid2);
+
+  if (rc == ERROR_ID_NO) { // fstat result for fid2 was valid
+    *result = (ino1 == filestat.st_ino);
+  }
+  return rc;
+}
+
 // -----------------------------------------------------------------------------
 // AnalyseLoadCross : Load cross sections data from cross sections type tab page
 // -----------------------------------------------------------------------------
@@ -4300,7 +4356,7 @@ RC ANALYSE_LoadCross(ENGINE_CONTEXT *pEngineContext,ANALYSIS_CROSS *crossSection
     *symbolName;
   INDEX indexSymbol,indexSvd,                                                   // resp. indexes of item in list and of symbol
     firstTabCross,endTabCross,indexTabCross,i;                              // indexes for browsing list of cross sections symbols
-  SZ_LEN fileLength,symbolLength;                                               // length in characters of file name and symbol name
+  SZ_LEN symbolLength;                                               // length in characters of file name and symbol name
   WRK_SYMBOL *pWrkSymbol;                                                       // pointer to a general description of a symbol
   RC rc;
 
@@ -4327,8 +4383,6 @@ RC ANALYSE_LoadCross(ENGINE_CONTEXT *pEngineContext,ANALYSIS_CROSS *crossSection
     // Get cross section name from analysis properties dialog box
 
     symbolName=pCross->symbol;
-    symbolLength=strlen(symbolName);
-    fileLength=strlen(pCross->crossSectionFile);
 
     // Search for symbol in list
 
@@ -4336,20 +4390,21 @@ RC ANALYSE_LoadCross(ENGINE_CONTEXT *pEngineContext,ANALYSIS_CROSS *crossSection
      {
       pWrkSymbol=&WorkSpace[indexSymbol];
 
+      bool same_file = false;
+
       if ((pWrkSymbol->type==WRK_SYMBOL_CROSS) &&
-          (strlen(pWrkSymbol->symbolName)==symbolLength) &&
-          (strlen(pWrkSymbol->crossFileName)==fileLength) &&
-          (strlen(pWrkSymbol->amfFileName)==strlen(pCross->amfFile)) &&
           !strcasecmp(pWrkSymbol->symbolName,symbolName) &&
-          !strcasecmp(pWrkSymbol->crossFileName,pCross->crossSectionFile) &&
-          !strcasecmp(pWrkSymbol->amfFileName,pCross->amfFile))
+          !strcasecmp(pWrkSymbol->amfFileName,pCross->amfFile) &&
+          ( (rc=is_same_file(pWrkSymbol->crossFileName,pCross->crossSectionFile, &same_file) != ERROR_ID_NO)
+            || same_file ) // stop loop (with error) if file comparison returns error, or (without error) if files are same
+          )
 
        break;
      }
 
     // Add a new cross section
 
-    if ((indexSymbol==NWorkSpace) && (NWorkSpace<MAX_SYMB))
+    if (rc==ERROR_ID_NO && (indexSymbol==NWorkSpace) && (NWorkSpace<MAX_SYMB))
      {
       // Allocate a new symbol
 
