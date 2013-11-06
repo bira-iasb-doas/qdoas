@@ -63,7 +63,6 @@ Q_OBJECT
   void slotPrintPlots();
   void slotExportPlots();
   void slotQdoasHelp();
-  void slotHelpBrowserPreference(bool light);
   void slotAboutQdoas();
   void slotAboutQt();
   void slotErrorMessages(int highestLevel, const QString &messages);

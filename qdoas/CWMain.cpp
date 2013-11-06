@@ -242,14 +242,6 @@ CWMain::CWMain(QWidget *parent) :
   // dual help systems ...
   QSettings &settings = CPreferences::instance()->settings();
 
-  // NOT NEEDED ANYMORE m_helpInterface->preferLightBrowser(settings.value("LightHelpSys", false).toBool());
-
-  // NOT NEEDED ANYMORE QAction *helpCheck = new QAction("Use lightweight help", this);
-  // NOT NEEDED ANYMORE helpCheck->setCheckable(true);
-  // NOT NEEDED ANYMORE helpCheck->setChecked(m_helpInterface->isLightBrowserPreferred());
-  // NOT NEEDED ANYMORE helpCheck->setEnabled(m_helpInterface->supportsQtAssistant());
-  // NOT NEEDED ANYMORE helpMenu->addAction(helpCheck);
-
   helpMenu->addAction("About Qdoas", this, SLOT(slotAboutQdoas()));
   helpMenu->addSeparator();
   helpMenu->addAction("About Qt", this, SLOT(slotAboutQt()));
@@ -322,7 +314,7 @@ CWMain::CWMain(QWidget *parent) :
 
 CWMain::~CWMain()
 {
-  // NOT NEEDED ANYMORE delete m_helpInterface;
+  delete m_helpInterface;
 }
 
 void CWMain::closeEvent(QCloseEvent *e)
@@ -340,8 +332,8 @@ void CWMain::closeEvent(QCloseEvent *e)
 
   if (checkStateAndConsiderSaveFile()) {
     // shutdown the help system
-    // NOT NEEDED ANYMORE delete m_helpInterface;
-    // NOT NEEDED ANYMORE m_helpInterface = NULL;
+    delete m_helpInterface;
+    m_helpInterface = NULL;
 
     e->accept();
     return;
@@ -653,31 +645,7 @@ void CWMain::slotUndersamplingTool()
 
 void CWMain::slotQdoasHelp()
 {
-	// QString helpDir=CPreferences::instance()->directoryName("Help", ".");
-	// QString indexFile=helpDir+"/"+"index.html";
-	// bool storeHelpDir=false;
- //
- //  while (!indexFile.isEmpty() && !QFile::exists(indexFile)) {
- //    indexFile = QFileDialog::getOpenFileName(this, "Help File", QString(), "*.html");
- //    storeHelpDir = true;
- //  }
- //  if (!indexFile.isEmpty()) {
- //    if (storeHelpDir) {
- //      helpDir = CPreferences::dirName(indexFile); // just the directory name
- //      CPreferences::instance()->setDirectoryName("Help", helpDir);
- //    }
- //   }
-
-	CHelpSystem::showHelpTopic(QString(""),QString("index"));
- // NOT NEEDED ANYMORE m_helpInterface->openBrowser();
-}
-
-void CWMain::slotHelpBrowserPreference(bool light)
-{
-  m_helpInterface->preferLightBrowser(light);
-
-  QSettings &settings = CPreferences::instance()->settings();
-  settings.setValue("LightHelpSys", light);
+  CHelpSystem::showHelpTopic(QString(""),QString("index"));
 }
 
 void CWMain::slotAboutQdoas()

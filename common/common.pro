@@ -11,7 +11,6 @@ SOURCES       = CConfigHandler.cpp \
 		CEngineError.cpp \
 		CEngineResponse.cpp \
 		CHelpSystem.cpp \
-		CHelpSystemImpl.cpp \
 		ConfigWriterUtils.cpp \
 		CPathMgr.cpp \
 		CPathSubHandler.cpp \

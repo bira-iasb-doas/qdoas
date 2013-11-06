@@ -73,7 +73,6 @@ Q_OBJECT
   void slotRingTool();
   void slotUndersamplingTool();
   void slotQdoasHelp();
-  void slotHelpBrowserPreference(bool light);
   void slotAboutQdoas();
   void slotAboutQt();
   void slotSetMessageFileLogging(bool logToFile);

@@ -21,8 +21,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #ifndef _CHELPSYSTEM_H_GUARD
 #define _CHELPSYSTEM_H_GUARD
 
-#include <map>
-
 #include <QString>
 #include <QWidget>
 
@@ -34,34 +32,14 @@ class CHelpSystem
   static CHelpSystem* establishHelpSystem(QWidget *parent);
   static void showHelpTopic(const QString &chapter, const QString &key = QString());
 
-  ~CHelpSystem();
-
- public:
-
-  void openBrowser(void);
-  void openBrowser(const QString &chapter, const QString &key = QString());
-
-  void closeBrowser(void);
-
-  void preferLightBrowser(bool light);
-  bool isLightBrowserPreferred(void) const;
-  bool supportsQtAssistant() const;
   bool changeDir(const QString &chapter, const QString &key);
 
  private:
-  void createImplementation(CHelpImpl **impl);
-  CHelpSystem(QWidget *parent);
+  CHelpSystem(QWidget *parent) : m_parentWidget(parent) {};
 
- private:
   static CHelpSystem* m_instance;
 
   QWidget *m_parentWidget;
-  CHelpImpl *m_impl;
-  std::map<QString,int> m_chapterMap;
-  bool m_block;
-  bool m_preferLightBrowser;
 };
-
-inline bool CHelpSystem::isLightBrowserPreferred(void) const { return m_preferLightBrowser; }
 
 #endif
