@@ -341,3 +341,10 @@ RC ERROR_GetLast(ERROR_DESCRIPTION *pError)
   return (pError!=NULL)?pError->errorId:0;
  }
 
+// check if the error stack contains a fatal error
+bool ERROR_Fatal(void) {
+  for(int i=0; i<errorStackN; ++i) {
+    if (errorStack[i].errorType == ERROR_TYPE_FATAL)
+      return true;
+  }
+}

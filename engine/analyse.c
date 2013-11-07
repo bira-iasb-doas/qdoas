@@ -3644,21 +3644,23 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
           int num_repeats = 0;
 
           do {
-           if ((rc=ANALYSE_CurFitMethod(indexFenoColumn,
-                                        (Feno->useKurucz==ANLYS_KURUCZ_REF_AND_SPEC)?SpectreK:Spectre, // raw spectrum
-                                        (pRecord->useErrors)?pBuffers->sigmaSpec:NULL, // error on raw spectrum
-                                        Sref, // reference spectrum
-                                        residuals,
-                                        &Feno->chiSquare, // returned stretch order 2
-                                        &Niter,
-                                        speNormFact,
-                                        Feno->refNormFact)) == THREAD_EVENT_STOP) // number of iterations in Curfit
+            rc=ANALYSE_CurFitMethod(indexFenoColumn,
+                                    (Feno->useKurucz==ANLYS_KURUCZ_REF_AND_SPEC)?SpectreK:Spectre, // raw spectrum
+                                    (pRecord->useErrors)?pBuffers->sigmaSpec:NULL, // error on raw spectrum
+                                    Sref, // reference spectrum
+                                    residuals,
+                                    &Feno->chiSquare, // returned stretch order 2
+                                    &Niter, // number of iterations in Curfit
+                                    speNormFact,
+                                    Feno->refNormFact);
 
-            goto EndAnalysis;  // !!!! Bypass the DEBUG_Stop
+            if (rc == THREAD_EVENT_STOP || ERROR_Fatal()) {
+              goto EndAnalysis;
+            } else if (rc>THREAD_EVENT_STOP) {
+              Feno->rc=rc;
+            }
 
-           else if (rc>THREAD_EVENT_STOP)
-            Feno->rc=rc;
-           rms_residual = root_mean_square(residuals, Feno->svd.specrange);
+            rms_residual = root_mean_square(residuals, Feno->svd.specrange);
           }
           while(!Feno->hidden // no spike removal for calibration
                 && remove_spikes(residuals, rms_residual * pAnalysisOptions->spike_tolerance, Feno->svd.specrange, Feno->spikes) // repeat as long as spikes are found
@@ -3898,10 +3900,12 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
     ANALYSE_oldLatitude=pRecord->latitude;
 
-    if ((pEngineContext->lastSavedRecord!=pEngineContext->indexRecord) && ((THRD_id==THREAD_TYPE_KURUCZ) || nrc) &&
-        (((THRD_id==THREAD_TYPE_ANALYSIS) && pProject->asciiResults.analysisFlag) || ((THRD_id==THREAD_TYPE_KURUCZ) && pProject->asciiResults.calibFlag)))
-
-     rc=OUTPUT_SaveResults(pEngineContext,indexFenoColumn);
+    if ((pEngineContext->lastSavedRecord!=pEngineContext->indexRecord)
+        && ( THRD_id==THREAD_TYPE_KURUCZ || nrc)
+        && ( (THRD_id==THREAD_TYPE_ANALYSIS && pProject->asciiResults.analysisFlag)
+             || (THRD_id==THREAD_TYPE_KURUCZ && pProject->asciiResults.calibFlag) ) ) {
+      rc=OUTPUT_SaveResults(pEngineContext,indexFenoColumn);
+    }
    }
 
   // Return

@@ -69,6 +69,7 @@ extern "C" {
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <string.h>
 #include <errno.h>
 #include <sys/types.h>
@@ -390,6 +391,7 @@ ERROR_DESCRIPTION;
 RC ERROR_DisplayMessage(void *responseHandle);
 RC ERROR_SetLast(const char *callingFunction,int errorType,RC errorId,...);
 RC ERROR_GetLast(ERROR_DESCRIPTION *pError);
+bool ERROR_Fatal(void);
 
 // ===============
 // MEMORY HANDLING
