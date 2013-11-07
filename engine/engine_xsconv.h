@@ -17,9 +17,9 @@ typedef struct _enigneXsconvContext
   INT    convolutionType;                                                       // type of convolution
   INT    conversionMode;                                                        // conversion mode
   double shift;                                                                 // shift to apply to the original high resolution cross section
-  char  crossFile[MAX_PATH_LEN+1];                                            // high resolution cross section file
-  char  path[MAX_PATH_LEN+1];                                                 // output path
-  char  calibrationFile[MAX_PATH_LEN+1];                                      // calibration file
+  char  crossFile[MAX_PATH_LEN+1];                                              // high resolution cross section file
+  char  path[MAX_PATH_LEN+1];                                                   // output path
+  char  calibrationFile[MAX_PATH_LEN+1];                                        // calibration file
   INT    noComment;                                                             // flag, 1 to save the convoluted cross section without comment
 
                                                                                 // I0 CORRECTION
@@ -44,6 +44,8 @@ typedef struct _enigneXsconvContext
 
                                                                                 // RING
   double    temperature;                                                        // temperature
+  int    normalizeFlag;                                                         // normalization of the raman spectru
+
  }
 ENGINE_XSCONV_CONTEXT;
 

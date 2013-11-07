@@ -62,7 +62,7 @@ QString CRingConfigWriter::write(const QString &fileName)
 
   const mediate_ring_t *d = m_properties; // convenience
 
-  fprintf(fp, "  <general temp=\"%.1f\" rmhdr=\"%s\"", d->temperature,
+  fprintf(fp, "  <general temp=\"%.1f\" normalize=\"%s\" rmhdr=\"%s\"", d->temperature,(d->normalize ? sTrue : sFalse),
 	  (d->noheader ? sTrue : sFalse));
 
   tmpStr = pathMgr->simplifyPath(QString(d->outputFile));
@@ -82,7 +82,7 @@ QString CRingConfigWriter::write(const QString &fileName)
 
   if (fclose(fp)) {
     QTextStream stream(&msg);
-    
+
     stream << "Error writing to the project file '" << fileName << "'";
   }
 

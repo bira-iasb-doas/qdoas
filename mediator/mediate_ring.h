@@ -39,6 +39,7 @@ extern "C" {
   typedef struct mediate_ring
   {
     double temperature;
+    int normalize;
     int noheader;
     char outputFile[FILENAME_BUFFER_LENGTH];
     char calibrationFile[FILENAME_BUFFER_LENGTH];

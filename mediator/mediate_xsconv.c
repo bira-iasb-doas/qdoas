@@ -685,6 +685,7 @@ RC mediateRequestRing(void *engineContext,mediate_ring_t *pMediateRing,void *res
   // General information
 
   pEngineContext->noComment=pMediateRing->noheader;
+  pEngineContext->normalizeFlag=pMediateRing->normalize;
   pEngineContext->temperature=pMediateRing->temperature;
 
   strcpy(pEngineContext->path,pMediateRing->outputFile);                        // output path
@@ -1051,7 +1052,8 @@ RC mediateRingCalculate(void *engineContext,void *responseHandle)
 
         // normalization
 
-        raman[i]/=(sumn2xsec+sumo2xsec);
+        if (pEngineContext->normalizeFlag)
+         raman[i]/=(sumn2xsec+sumo2xsec);
        }
 
       strcpy(ringFileName,pEngineContext->path);

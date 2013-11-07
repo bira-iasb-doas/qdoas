@@ -1051,13 +1051,13 @@ RC ANALYSE_ConvoluteXs(FENO *pTabFeno,INT action,double conc,
           !(rc=SPLINE_Vector(pXs->matrix[0],pXs->matrix[1],pXs->deriv2[1],pXs->nl,           // interpolation of XS on the grid of the high resolution solar spectrum
                              hrSolar.matrix[0],xshr.matrix[1],xshr.nl,pAnalysisOptions->interpol,"ANALYSE_ConvoluteXs ")))
        {
-        memcpy(xsI0.matrix[0],hrSolar.matrix[0],xshr.nl*sizeof(double));               // solar spectrum corrected by the cross section
-        memcpy(xshr.matrix[0],hrSolar.matrix[0],xshr.nl*sizeof(double));
+        memcpy(xsI0.matrix[0],hrSolar.matrix[0],xshr.nl*sizeof(double));               // copy of the solar wavelength calibration
+        memcpy(xshr.matrix[0],hrSolar.matrix[0],xshr.nl*sizeof(double));               // copy of the solar wavelength calibration
 
         for (i=0;(i<xshr.nl) && !rc;i++)
          {
-          xsI0.matrix[1][i]=(double)hrSolar.matrix[1][i]*exp(-xshr.matrix[1][i]*conc);
-          xshr.matrix[1][i]=hrSolar.matrix[1][i];
+          xsI0.matrix[1][i]=(double)hrSolar.matrix[1][i]*exp(-xshr.matrix[1][i]*conc); // creation of a synthetic spectrum : I0 exp(-xs*conc)
+          xshr.matrix[1][i]=hrSolar.matrix[1][i];                                      // solar spectrum
          }
 
         if (!(rc=SPLINE_Deriv2(xshr.matrix[0],xshr.matrix[1],xshr.deriv2[1],xshr.nl,"ANALYSE_ConvoluteXs ")))
@@ -1092,6 +1092,10 @@ RC ANALYSE_ConvoluteXs(FENO *pTabFeno,INT action,double conc,
             (slitParam1!=NULL)?slitParam1[j]:(double)0.,(slitParam2!=NULL)?slitParam2[(slitType!=SLIT_TYPE_INVPOLY)?j:0]:(double)0.,0)))
         output[j]=xsNew.matrix[1][j];
      }
+
+    // For I0 convolution, the synthetic spectrum (I0 exp(-xs*conc)) and the solar spectrum are convolved separately
+    // Then we calculate the logarithm of the ratio
+    // Even if the XS is negative, the I0 convolution should work.
 
     if (action==ANLYS_CROSS_ACTION_CONVOLUTE_I0)
      for (j=indexlambdaMin;(j<indexlambdaMax) && !rc;j++)
@@ -2115,26 +2119,26 @@ RC AnalyseSaveResiduals(char *fileName,ENGINE_CONTEXT *pEngineContext)
   RC rc;
   char *fileNamePtr,*ptr,resFile[MAX_ITEM_TEXT_LEN+1],ext[MAX_ITEM_TEXT_LEN+1];
   FILE *fp;
-  
+
   rc=ERROR_ID_NO;
-  
+
   FILES_RebuildFileName(resFile,fileName,1);
-  
+
   if ((fileNamePtr=strrchr(resFile,PATH_SEP))==NULL)                 // extract output file name without path
    fileNamePtr=resFile;
   else
    fileNamePtr++;
-  
+
   if (!strlen(fileNamePtr) && ((ptr=strrchr(pEngineContext->fileInfo.fileName,PATH_SEP))!=NULL))
    {
     strcpy(fileNamePtr,ptr+1);
     if ((ptr=strrchr(fileNamePtr,'.'))!=NULL)
      *ptr=0;
-    
+
     sprintf(ext,"_%s.%s",Feno->windowName,FILES_types[FILE_TYPE_RES].fileExt);
     strcat(fileNamePtr,ext);
    }
-  
+
   if ((fp=fopen(resFile,"a+t"))==NULL)
    rc=ERROR_SetLast("AnalyseSaveResiduals",ERROR_TYPE_FATAL,ERROR_ID_FILE_OPEN,resFile);
   else
@@ -2148,18 +2152,18 @@ RC AnalyseSaveResiduals(char *fileName,ENGINE_CONTEXT *pEngineContext)
       }
       fprintf(fp,"\n");
      }
-    
+
     fprintf(fp,"%-5d %.3lf %-8.4lf ",pEngineContext->indexRecord,pEngineContext->recordInfo.Zm,
             (double)ZEN_FNCaljda(&pEngineContext->recordInfo.Tm)+ZEN_FNCaldti(&pEngineContext->recordInfo.Tm)/24.);
-    
+
     int curPixel = 0;
     doas_iterator my_iterator;
     doas_interval *nextinterval = iterator_start_interval(&my_iterator, Feno->svd.specrange);
     while (curPixel < NDET) {
-     int stop = (nextinterval != NULL) 
+     int stop = (nextinterval != NULL)
        ? interval_start(nextinterval)
        : NDET;
-     
+
      // print NaN for every pixel outside the current range.
      while(curPixel < stop) {
       fprintf(fp,"%.14le ", NAN);
@@ -2167,7 +2171,7 @@ RC AnalyseSaveResiduals(char *fileName,ENGINE_CONTEXT *pEngineContext)
      }
      if (nextinterval != NULL) {
       int end = interval_end(nextinterval);
-      
+
       // print residual for every pixel inside the current range.
       while(curPixel <= end) {
        fprintf(fp,"%.14le ",ANALYSE_absolu[curPixel]);
@@ -3080,14 +3084,14 @@ RC ANALYSE_CurFitMethod(INDEX   indexFenoColumn,  // for OMI
               if (TabFeno[indexFenoColumn][indexFeno2].TabCross[j].Comp==TabCross[i].Comp)
                {
                 double scalingFactor;
-                
+
                 scalingFactor=(double)1.;
-                
+
                 if (!strcasecmp(WorkSpace[TabCross[i].Comp].symbolName,"bro") &&
                     (ANALYSIS_broAmf.matrix!=NULL) &&
                     !SPLINE_Vector(ANALYSIS_broAmf.matrix[0],ANALYSIS_broAmf.matrix[1],ANALYSIS_broAmf.deriv2[1],
                                    ANALYSIS_broAmf.nl,&ZM,&scalingFactor,1,SPLINE_CUBIC,"ANALYSE_CurFitMethod "))
-                 
+
                  fitParamsC[TabCross[i].IndSvdA]=TabFeno[indexFenoColumn][indexFeno2].TabCrossResults[j].SlntCol*scalingFactor;
                 else
                  fitParamsC[TabCross[i].IndSvdA]=TabFeno[indexFenoColumn][indexFeno2].TabCrossResults[j].SlntCol;
@@ -4227,15 +4231,15 @@ RC ANALYSE_LoadSlit(PRJCT_SLIT *pSlit,int kuruczFlag)
   pSlitFunction=&pSlit->slitFunction;
   rc=ERROR_ID_NO;
 
-  
+
   if (pSlitFunction->slitType!=SLIT_TYPE_NONE)
    {
     // Slit type selection
-    
+
     if ((pSlitFunction->slitType==SLIT_TYPE_FILE) || pSlitFunction->slitWveDptFlag)
      {
       // Load file
-    
+
       if (!strlen(pSlitFunction->slitFile))
        rc=ERROR_SetLast("ANALYSE_LoadSlit",ERROR_TYPE_FATAL,ERROR_ID_MSGBOX_FIELDEMPTY,"Slit File");
       else
@@ -4244,7 +4248,7 @@ RC ANALYSE_LoadSlit(PRJCT_SLIT *pSlit,int kuruczFlag)
                       /* ((pSlitFunction->slitType==SLIT_TYPE_GAUSS_T_FILE) ||
                          (pSlitFunction->slitType==SLIT_TYPE_ERF_T_FILE))?0: */ 1,0,"ANALYSE_LoadSlit ");
      }
-    
+
     if (pSlitFunction->slitWveDptFlag && ((pSlitFunction->slitType==SLIT_TYPE_FILE) ||(pSlitFunction->slitType==SLIT_TYPE_ERF) ||(pSlitFunction->slitType==SLIT_TYPE_AGAUSS) || (pSlitFunction->slitType==SLIT_TYPE_VOIGT)))
      {
       if (!strlen(pSlitFunction->slitFile2))
@@ -4253,8 +4257,8 @@ RC ANALYSE_LoadSlit(PRJCT_SLIT *pSlit,int kuruczFlag)
        rc=MATRIX_Load(pSlitFunction->slitFile2,&ANALYSIS_slit2,0 /* line base */,0 /* column base */,0,0,
                       -9999.,9999.,1,0,"ANALYSE_LoadSlit 2");
      }
-   }  
-    
+   }
+
   if (!rc && kuruczFlag)
    {
     if (!strlen(pSlit->kuruczFile))
@@ -4291,6 +4295,60 @@ RC ANALYSE_CheckLambda(WRK_SYMBOL *pWrkSymbol,double *lambda, const char *callin
 RC is_same_file(const char *file1, const char *file2, bool *result) {
   RC rc = ERROR_ID_NO;
 
+  #if defined WIN32
+
+  //
+  // case 0
+  //
+
+  *result=(!strcasecmp(file1,file2))?true:false;
+
+  //
+
+  //
+  //  case 1
+  //
+
+  // FILE *fp;
+  //
+  // if ((fp=fopen(file1,"rb"))==NULL)
+  //  rc=ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_FILE_NOT_FOUND,file1);
+  // else
+  //  fclose(fp);
+  //
+  // if ((fp=fopen(file2,"rb"))==NULL)
+  //  rc=ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_FILE_NOT_FOUND,file2);
+  // else
+  //  fclose(fp);
+  //
+  // *result=((rc==ERROR_ID_NO) && !strcasecmp(file1,file2))?true:false;
+
+  //
+  // case 2
+  //
+
+  // MATRIX_OBJECT xs1,xs2;
+  // int i;
+  //
+  // *result=false;
+  //
+  // memset(&xs1,0,sizeof(MATRIX_OBJECT));
+  // memset(&xs2,0,sizeof(MATRIX_OBJECT));
+  //
+  // if (!(rc=MATRIX_Load((char *)file1,&xs1,0 /* line base */,0 /* column base */,0,0,-9999.,9999.,0,0,"is_same_file")) &&
+  //     !(rc=MATRIX_Load((char *)file2,&xs2,0 /* line base */,0 /* column base */,0,0,-9999.,9999.,0,0,"is_same_file")) &&
+  //      (xs1.nl==xs2.nl) && (xs1.nc==xs2.nc))
+  //  {
+  //   for (i=0;i<xs1.nc;i++)
+  //    if (memcmp((char *)xs1.matrix[i],(char *)xs2.matrix[i],sizeof(double)*xs1.nl)!=0)
+  //      break;
+  //
+  //   if (i==xs1.nc)
+  //    *result=true;
+  //  }
+
+  #else
+
   if(!strcmp(file1,file2)) {
    *result = true;
    return rc;
@@ -4311,7 +4369,7 @@ RC is_same_file(const char *file1, const char *file2, bool *result) {
   if (rc != ERROR_ID_NO) {
     return rc;
   }
-  // fstat result was valid 
+  // fstat result was valid
   ino_t ino1 = filestat.st_ino;
 
   int fid2 = open(file2, O_RDONLY);
@@ -4328,6 +4386,8 @@ RC is_same_file(const char *file1, const char *file2, bool *result) {
   if (rc == ERROR_ID_NO) { // fstat result for fid2 was valid
     *result = (ino1 == filestat.st_ino);
   }
+
+  #endif
   return rc;
 }
 
@@ -4556,8 +4616,8 @@ RC ANALYSE_LoadCross(ENGINE_CONTEXT *pEngineContext,ANALYSIS_CROSS *crossSection
         }
        }
      }
-   } 
-   
+   }
+
   if (!rc && pTabFeno->xsToConvolute && (!pTabFeno->useKurucz || !pEngineContext->project.kurucz.fwhmFit) && (pEngineContext->project.slit.slitFunction.slitType==SLIT_TYPE_NONE))
    rc=ERROR_SetLast("ANALYSE_LoadCross",ERROR_TYPE_FATAL,ERROR_ID_CONVOLUTION);
 
@@ -5763,7 +5823,7 @@ RC ANALYSE_UsampBuild(INT analysisFlag,INT gomeFlag)      // OMI ???
   MATRIX_OBJECT khrConvoluted,xsSlit,xsSlit2;
   INDEX indexFeno,i,indexPixMin,indexPixMax,j;
   INT indexFenoColumn;
-  double slitParam2,*lambda,*lambda2,lambda0,x0;                                  
+  double slitParam2,*lambda,*lambda2,lambda0,x0;
   FENO *pTabFeno;
   RC rc;
 
@@ -5772,13 +5832,13 @@ RC ANALYSE_UsampBuild(INT analysisFlag,INT gomeFlag)      // OMI ???
   lambda2=NULL;
   memset(&xsSlit,0,sizeof(MATRIX_OBJECT));
   memset(&xsSlit2,0,sizeof(MATRIX_OBJECT));
-  memset(&khrConvoluted,0,sizeof(MATRIX_OBJECT));  
-  
+  memset(&khrConvoluted,0,sizeof(MATRIX_OBJECT));
+
   slitParam2=(pKuruczOptions->fwhmType!=SLIT_TYPE_INVPOLY)?(double)0.:(double)pKuruczOptions->invPolyDegree;
-  
-  
-  rc=ERROR_ID_NO;     
-  
+
+
+  rc=ERROR_ID_NO;
+
   indexFenoColumn=0;                                                            // later, use the second dimension of TabFeno (and add a second dimension to undersampling buffers)
 
   // Buffer allocation
@@ -5794,7 +5854,7 @@ RC ANALYSE_UsampBuild(INT analysisFlag,INT gomeFlag)      // OMI ???
 
    for (indexFeno=0;(indexFeno<NFeno)&&!rc;indexFeno++)
     {
-     pTabFeno=&TabFeno[indexFenoColumn][indexFeno];         
+     pTabFeno=&TabFeno[indexFenoColumn][indexFeno];
 
      // Check options combinations
 
@@ -5827,14 +5887,14 @@ RC ANALYSE_UsampBuild(INT analysisFlag,INT gomeFlag)      // OMI ???
          lambda2[i]=lambda[i]-pUsamp->phase; //  (double)(1.-pUsamp->phase)*lambda[i-1]+pUsamp->phase*lambda[i];
        else
         memcpy(lambda2,ANALYSE_shift,sizeof(double)*pTabFeno->NDET);
-                        
+
        // Not allowed combinations :
        //
        //     - fit slit function with calibration and apply calibration on spec only or on ref and spec;
        //     - fwhmCorrectionFlag and no calibration or fit slit function with the calibration
-       
+
        // convolve the high resolution solar spectrum on its own grid
-                 
+
        if (MATRIX_Allocate(&khrConvoluted,ANALYSE_usampBuffers.lambdaRange[1][indexFeno],2,0,0,1,"ANALYSE_UsampBuild"))
         rc=ERROR_ID_ALLOC;
 
@@ -5848,27 +5908,27 @@ RC ANALYSE_UsampBuild(INT analysisFlag,INT gomeFlag)      // OMI ???
 
        else if (!pTabFeno->useKurucz ||                                         // don't apply calibration
              !pKuruczOptions->fwhmFit)                                          // apply calibration but don't fit the slit function
-        {      
+        {
         	memcpy(khrConvoluted.matrix[0],&ANALYSE_usampBuffers.hrSolar.matrix[0][ANALYSE_usampBuffers.lambdaRange[0][indexFeno]],sizeof(double)*khrConvoluted.nl);
-        	
+
         	// Convolution with slit function from slit tab page of project properties
-        	
+
          rc=XSCONV_TypeStandard(&khrConvoluted,0,khrConvoluted.nl,&ANALYSE_usampBuffers.hrSolar,&ANALYSIS_slit,&ANALYSIS_slit2,&ANALYSE_usampBuffers.hrSolar,NULL,
                                  pSlitOptions->slitFunction.slitType,pSlitOptions->slitFunction.slitParam,pSlitOptions->slitFunction.slitParam2,pSlitOptions->slitFunction.slitWveDptFlag);
-        }   
-          
-       else if (!(rc=MATRIX_Allocate(&xsSlit,pTabFeno->NDET,(pKuruczOptions->fwhmType!=SLIT_TYPE_FILE)?2:3,0,0,1,"ANALYSE_UsampBuild")) && 
+        }
+
+       else if (!(rc=MATRIX_Allocate(&xsSlit,pTabFeno->NDET,(pKuruczOptions->fwhmType!=SLIT_TYPE_FILE)?2:3,0,0,1,"ANALYSE_UsampBuild")) &&
                 ((pTabFeno->fwhmVector[1]==NULL) || (pKuruczOptions->fwhmType==SLIT_TYPE_FILE) || !(rc=MATRIX_Allocate(&xsSlit2,pTabFeno->NDET,2,0,0,1,"ANALYSE_UsampBuild"))))
         {
          // Local initializations
 
          memcpy(khrConvoluted.matrix[0],&ANALYSE_usampBuffers.hrSolar.matrix[0][ANALYSE_usampBuffers.lambdaRange[0][indexFeno]],sizeof(double)*khrConvoluted.nl);
-         
+
          memcpy(xsSlit.matrix[0],pTabFeno->LambdaK,sizeof(double)*pTabFeno->NDET);
          memcpy(xsSlit.matrix[1],pTabFeno->fwhmVector[0],sizeof(double)*pTabFeno->NDET);
          memcpy(xsSlit.deriv2[1],pTabFeno->fwhmDeriv2[0],sizeof(double)*pTabFeno->NDET);
-         xsSlit.nl=pTabFeno->NDET; 
-         
+         xsSlit.nl=pTabFeno->NDET;
+
          if (pKuruczOptions->fwhmType==SLIT_TYPE_FILE)
           {
           	memcpy(xsSlit.matrix[2],pTabFeno->fwhmVector[1],sizeof(double)*pTabFeno->NDET);
@@ -5880,20 +5940,20 @@ RC ANALYSE_UsampBuild(INT analysisFlag,INT gomeFlag)      // OMI ???
            memcpy(xsSlit2.matrix[0],pTabFeno->LambdaK,sizeof(double)*pTabFeno->NDET);
            memcpy(xsSlit2.matrix[1],pTabFeno->fwhmVector[1],sizeof(double)*pTabFeno->NDET);
            memcpy(xsSlit2.deriv2[1],pTabFeno->fwhmDeriv2[1],sizeof(double)*pTabFeno->NDET);
-           xsSlit2.nl=pTabFeno->NDET;    
-          } 
-         
+           xsSlit2.nl=pTabFeno->NDET;
+          }
+
          if (pKuruczOptions->fwhmType!=SLIT_TYPE_FILE)
           rc=XSCONV_TypeStandard(&khrConvoluted,0,khrConvoluted.nl,&ANALYSE_usampBuffers.hrSolar,&xsSlit,&xsSlit2,&ANALYSE_usampBuffers.hrSolar,NULL,
                                   pKuruczOptions->fwhmType,(double)0.,slitParam2,1);
          else
           rc=XSCONV_TypeStandard(&khrConvoluted,0,khrConvoluted.nl,&ANALYSE_usampBuffers.hrSolar,&KURUCZ_buffers[indexFenoColumn].slitFunction,&xsSlit,&ANALYSE_usampBuffers.hrSolar,NULL,
-                                  pKuruczOptions->fwhmType,(double)0.,slitParam2,1);                                           
-                                   
+                                  pKuruczOptions->fwhmType,(double)0.,slitParam2,1);
+
          MATRIX_Free(&xsSlit,"ANALYSE_UsampBuild");
          MATRIX_Free(&xsSlit2,"ANALYSE_UsampBuild");
         }
-         
+
        // Pre-Interpolation on analysis window wavelength scale
 
        if (!rc &&
@@ -5944,7 +6004,7 @@ RC ANALYSE_UsampBuild(INT analysisFlag,INT gomeFlag)      // OMI ???
    MEMORY_ReleaseDVector("ANALYSE_UsampBuild ","lambda2",lambda2,0);
 
   return rc;
- }         
+ }
 
 // ==================
 // BUFFERS ALLOCATION
@@ -6098,9 +6158,9 @@ RC ANALYSE_UsampLocalAlloc(INT gomeFlag)
 // void ANALYSE_UsampLocalFree(void)
 // {
 //   // Declarations
-// 
+//
 //   INDEX indexFeno,indexFenoColumn;
-// 
+//
 // }
 
 // -----------------------------------------------------------------------------

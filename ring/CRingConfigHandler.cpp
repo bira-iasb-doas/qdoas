@@ -40,7 +40,7 @@ bool CRingConfigHandler::startElement(const QString &namespaceURI, const QString
 				      const QString &qName, const QXmlAttributes &atts)
 {
   bool result;
-  
+
   if (delegateStartElement(qName, atts, result)) {
     // handled by sub handler ...
     return result;
@@ -81,6 +81,12 @@ bool CRingGeneralSubHandler::start(const QXmlAttributes &atts)
 
   m_d->temperature = atts.value("temp").toDouble();
 
+  str = atts.value("normalize");
+  if (str.isEmpty())
+   m_d->normalize=1;
+  else
+   m_d->normalize = (str == "true") ? 1 : 0;
+
   m_d->noheader = (atts.value("rmhdr") == "true") ? 1 : 0;
 
   str = atts.value("output");
@@ -107,7 +113,7 @@ bool CRingGeneralSubHandler::start(const QXmlAttributes &atts)
     else
       return postErrorMessage("Solar Reference Filename too long");
   }
-  
+
   return true;
 }
 

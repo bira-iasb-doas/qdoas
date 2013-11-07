@@ -26,8 +26,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 void initializeMediateRing(mediate_ring_t *d)
 {
   // Initializations
-  
+
   memset(d, 0, sizeof(mediate_ring_t));
-  
+
+  d->normalize=1;
   d->temperature = 250.0;
 }

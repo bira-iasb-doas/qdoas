@@ -89,6 +89,9 @@ CWRingTabGeneral::CWRingTabGeneral(const mediate_ring_t *properties, QWidget *pa
 
   mainLayout->addStretch(1);
 
+  m_normalizeCheck = new QCheckBox("Apply normalization", this);
+  mainLayout->addWidget(m_normalizeCheck, 0, Qt::AlignLeft);
+
   m_headerCheck = new QCheckBox("Remove Header", this);
   mainLayout->addWidget(m_headerCheck, 0, Qt::AlignLeft);
 
@@ -112,11 +115,12 @@ void CWRingTabGeneral::reset(const mediate_ring_t *properties)
 
   // temp
   QString tmpStr;
-  
+
   tmpStr.setNum(properties->temperature);
   m_tempEdit->validator()->fixup(tmpStr);
   m_tempEdit->setText(tmpStr);
 
+  m_normalizeCheck->setCheckState(properties->normalize ? Qt::Checked : Qt::Unchecked);
   m_headerCheck->setCheckState(properties->noheader ? Qt::Checked : Qt::Unchecked);
 
   // files
@@ -130,8 +134,9 @@ void CWRingTabGeneral::reset(const mediate_ring_t *properties)
 
 void CWRingTabGeneral::apply(mediate_ring_t *properties) const
 {
+ 	properties->normalize = (m_normalizeCheck->checkState() == Qt::Checked) ? 1 : 0;
   properties->noheader = (m_headerCheck->checkState() == Qt::Checked) ? 1 : 0;
-  properties->temperature = m_tempEdit->text().toDouble();  
+  properties->temperature = m_tempEdit->text().toDouble();
 
   strcpy(properties->outputFile, m_outputFileEdit->text().toAscii().constData());
   strcpy(properties->calibrationFile, m_calibFileEdit->text().toAscii().constData());
@@ -143,15 +148,15 @@ void CWRingTabGeneral::apply(mediate_ring_t *properties) const
 void CWRingTabGeneral::slotBrowseOutput()
 {
   CPreferences *pref = CPreferences::instance();
-  
+
   QString filename = QFileDialog::getSaveFileName(this, "Output File",
 						  pref->directoryName("Output"),
 						  "All files (*)");
-  
-  
+
+
   if (!filename.isEmpty()) {
     pref->setDirectoryNameGivenFile("Output", filename);
-    
+
     m_outputFileEdit->setText(filename);
   }
 }
@@ -159,13 +164,13 @@ void CWRingTabGeneral::slotBrowseOutput()
 void CWRingTabGeneral::slotBrowseCalibration()
 {
   CPreferences *pref = CPreferences::instance();
-  
+
   QString filename = QFileDialog::getOpenFileName(this, "Calibration File",
 						  pref->directoryName("Calib"),
 						  "Calibration File (*.clb);;All files (*)");
   if (!filename.isEmpty()) {
     pref->setDirectoryNameGivenFile("Calib", filename);
-    
+
     m_calibFileEdit->setText(filename);
   }
 }
@@ -173,14 +178,14 @@ void CWRingTabGeneral::slotBrowseCalibration()
 void CWRingTabGeneral::slotBrowseSolarReference()
 {
   CPreferences *pref = CPreferences::instance();
-  
+
   QString filename = QFileDialog::getOpenFileName(this, "reference File",
 						  pref->directoryName("Ref"),
 						  "Kurucz File (*.ktz);;All files (*)");
-  
+
   if (!filename.isEmpty()) {
     pref->setDirectoryNameGivenFile("Ref", filename);
-    
+
     m_refFileEdit->setText(filename);
   }
 }
