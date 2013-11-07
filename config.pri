@@ -2,7 +2,6 @@
 # General Configuration for ALL applications
 #----------------------------------------------
 
-HELP_SYSTEM     =      # or empty
 QWT_LINKAGE     = qwtdll        # qwtstatic or qwtdll
 CODE_GENERATION = release         # debug or release
 
@@ -24,13 +23,9 @@ unix {
 
   INCLUDEPATH += $$INSTALL_PREFIX/include
   INCLUDEPATH += $$INSTALL_PREFIX/include/hdf4
-  INCLUDEPATH += /usr/include/qwt
+  INCLUDEPATH += $$INSTALL_PREFIX/include/qwt
   QMAKE_RPATHDIR += $$INSTALL_PREFIX/lib
   QMAKE_LIBDIR += $$INSTALL_PREFIX/lib
-
-  # QDOAS online help
-  QDOAS_HELP= '\\"/home/username/share/qdoas/Help\\"'
-  DEFINES += QDOAS_HELP_PATH=\"$${QDOAS_HELP}\"
 }
 
 win32 {

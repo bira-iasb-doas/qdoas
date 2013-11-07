@@ -13,13 +13,6 @@ QT = core gui xml
 
 DEFINES += APP_QDOAS
 
-
-# Help system to use...
-contains ( HELP_SYSTEM, assistant ) {
-    CONFIG  += assistant
-    DEFINES += HELP_QT_ASSISTANT
-}
-
 #----------------------------------------------
 # Platform dependency ... based on ../config.pri
 #----------------------------------------------
@@ -171,8 +164,8 @@ RESOURCES = ../resources/qdoas.qrc
 #----------------------------------------------
 
 target.path = $${INSTALL_PREFIX}/bin
-doc.path    = $${INSTALL_PREFIX}/doc
+doc.path    = $${INSTALL_PREFIX}/doc/qdoas
 
-doc.files = ../../Doc/Help ../../Doc/RELEASENOTES ../../LICENSE
+doc.files = ./Help ../../Doc/QDOAS_ReleaseNotes.doc ../../LICENSE
 
 INSTALLS += target doc
