@@ -19,16 +19,12 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include <QFile>
 #include <QFileDialog>
-#include <QDesktopServices>
+#include <QMessageBox>
 #include <QUrl>
+#include <QDesktopServices>
 
 #include "CHelpSystem.h"
 #include "CPreferences.h"
-
-#include "debugutil.h"
-
-// relative to the root directory for the help files
-#define HELP_HOME_PAGE "index.html"
 
 CHelpSystem* CHelpSystem::m_instance = NULL;
 
@@ -44,72 +40,48 @@ CHelpSystem* CHelpSystem::establishHelpSystem(QWidget *parent)
   return NULL;
 }
 
-bool CHelpSystem::changeDir(const QString &chapter, const QString &key)
+// Ask the user to locate the Qdoas help files, and update the preferences if found.
+QString CHelpSystem::changeDir(void)
 {
-  QString helpDir=CPreferences::instance()->directoryName("Help", ".");
-  QString indexFile=helpDir+"/"+chapter+"/"+key+".html";
-  QString fileName=key+".html";
-  bool storeHelpDir=false;
-  
-  while (!indexFile.isEmpty() && !QFile::exists(indexFile)) {
-    indexFile = QFileDialog::getOpenFileName(m_parentWidget, "Help File", fileName, "*.html");
-    storeHelpDir = true;
+  QString helpDir = CPreferences::instance()->directoryName("Help", ".");
+
+  QMessageBox::information(m_parentWidget, "Help", "Qdoas can not find the Help directory."
+                           "Please select the directory containing the main Qdoas help file"
+                           "(index.html).");
+
+  helpDir = QFileDialog::getExistingDirectory(m_parentWidget, "Qdoas Help directory", helpDir);
+
+  if (!helpDir.isEmpty() && QFile::exists(helpDir + "/index.html") ) {
+    CPreferences::instance()->setDirectoryName("Help", helpDir);
+  } else {
+    QMessageBox::warning(m_parentWidget, "Help", "Could not find Help files.");
   }
-  
-  if (!indexFile.isEmpty() &&  storeHelpDir)
-    {
-      char rootPath[1024],*ptr;
-      
-      strcpy(rootPath,indexFile.toAscii().constData());
-      if ((ptr=strrchr(rootPath,'/'))!=NULL)
-        *ptr='\0';
-      if (!chapter.isEmpty() && ((ptr=strrchr(rootPath,'/'))!=NULL))
-        *ptr='\0';
-      
-      helpDir = QString(rootPath); // just the directory name
-      
-      CPreferences::instance()->setDirectoryName("Help", helpDir);
-      
-      fileName="file:///"+indexFile;
-      QDesktopServices::openUrl(QUrl(fileName) );
-    }
-  
-  return storeHelpDir;
+  return helpDir;
 }
 
 void CHelpSystem::showHelpTopic(const QString &chapter, const QString &key)
 {
-  
+  QString relPath = "/" + chapter + "/" + key + ".html";
+
+  // If we have the right path in the preferences, that is the first choice
+  QString helpFile = CPreferences::instance()->directoryName("Help", ".")
+    + relPath;
+
 #if defined(QDOAS_HELP_PATH)
-  QString path=QDOAS_HELP_PATH;
-#else
-  QString path=CPreferences::instance()->directoryName("Help", ".");
+  // If QDOAS_HELP_PATH was defined at compile time, try that:
+  if (!QFile::exists(helpFile)) {
+    helpFile = QString(QDOAS_HELP_PATH) + relPath;
+  }
 #endif
 
-  // Load the default browser
-  
-  char strPath[800],strUrl[800];
-  bool pageFound=true;
-  FILE *fp;
-  
-  strcpy(strPath,path.toAscii().constData());
-  
-  if (strlen(chapter.toAscii().constData()))
-    sprintf(strUrl,"%s/%s/%s.html",strPath,chapter.toAscii().constData(),key.toAscii().constData());
-  else
-    sprintf(strUrl,"%s/%s.html",strPath,key.toAscii().constData());
-  
-  if ((fp=fopen(strUrl,"rt"))==NULL)
-    pageFound=false;
-  else
-  fclose(fp);
-  
-  if (m_instance)
-    m_instance->changeDir(chapter,key);
-  
-  if (pageFound)
-    {
-      QString fileName="file:///"+QString(strUrl);
-      QDesktopServices::openUrl(QUrl(fileName) );
+  // If nothing was found, ask the user to point to the Help directory
+  if (!QFile::exists(helpFile)) {
+    if(m_instance) {
+      helpFile = m_instance->changeDir() + relPath;
     }
+  }
+
+  if (QFile::exists(helpFile)) {
+    QDesktopServices::openUrl(QUrl("file:///" + helpFile)); // file: URI with three slashes for windows!
+  }
 }

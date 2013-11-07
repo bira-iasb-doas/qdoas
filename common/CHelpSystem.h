@@ -32,7 +32,7 @@ class CHelpSystem
   static CHelpSystem* establishHelpSystem(QWidget *parent);
   static void showHelpTopic(const QString &chapter, const QString &key = QString());
 
-  bool changeDir(const QString &chapter, const QString &key);
+  QString changeDir(void);
 
  private:
   CHelpSystem(QWidget *parent) : m_parentWidget(parent) {};
