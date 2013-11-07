@@ -173,7 +173,7 @@ ERROR_TABLE errorTable[]=
   { ERROR_ID_FILE_AUTOMATIC            , "No automatic reference selection can be perform on this type of file"                                               },
   { ERROR_ID_NO_REF                    , "No reference spectrum found for %s in file %s"                                                                      },
   { ERROR_ID_CONVOLUTION               , "Convolved solar spectrum and cross sections are expected"                                                           },
-  { ERROR_ID_NO_RESULT_PREVIOUS_WINDOW , "Cannot use result from previous analysis window for molecule %s in analysis window %s"                             },
+  { ERROR_ID_NO_RESULT_PREVIOUS_WINDOW , "Cannot use result from previous analysis window for molecule %s in analysis window %s: can't find the same cross section file" },
   
   
   

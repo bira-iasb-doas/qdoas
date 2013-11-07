@@ -92,10 +92,14 @@ RC hdfeos5_open(const ENGINE_CONTEXT *pEngineContext, char *filename) {
       goto cleanup;
     }
     rc = create_dimensions();
-    rc |= write_global_attrs(pEngineContext);
-    rc |= write_automatic_reference_info(pEngineContext);
-    rc |= write_calibration_data();
-    rc |= create_analysis_data_fields();
+    if (rc == ERROR_ID_NO)
+      rc = write_global_attrs(pEngineContext);
+    if (rc == ERROR_ID_NO)
+      rc = write_automatic_reference_info(pEngineContext);
+    if (rc == ERROR_ID_NO)
+      rc = write_calibration_data();
+    if (rc == ERROR_ID_NO)
+      rc = create_analysis_data_fields();
   }
 
  cleanup:
