@@ -146,9 +146,12 @@ RC create_dimensions(void) {
                              { "7", 7}, { "8", 8}, { "9", 9}
   };
   for(size_t i=0; i< (sizeof(swathdims)/sizeof(swathdims[0])); i++) {
-    herr_t result = HE5_SWdefdim(swath_id, (char *) swathdims[i].dimname, swathdims[i].dimsize);
-    if(result == FAIL) {
-      return ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_HDFEOS5_DEFDIM, swathdims[i].dimname, swathdims[i].dimsize);
+    if(swathdims[i].dimsize > 0) {
+      // for example, nCalibWindows may be 0 when no calibration is used
+      herr_t result = HE5_SWdefdim(swath_id, (char *) swathdims[i].dimname, swathdims[i].dimsize);
+      if(result == FAIL) {
+        return ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_HDFEOS5_DEFDIM, swathdims[i].dimname, swathdims[i].dimsize);
+      }
     }
   }
   return ERROR_ID_NO; // if we get here, all dimensions were created ok
