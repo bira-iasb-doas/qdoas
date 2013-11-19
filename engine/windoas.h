@@ -656,7 +656,7 @@ void PRJCT_SaveConfiguration(FILE *fp,char *sectionName);
    RC   XSCONV_FctGauss(double *pValue,double fwhm,double step,double delta);
    RC   XSCONV_TypeGauss(double *lambda,double *Spec,double *SDeriv2,double lambdaj,double dldj,double *SpecConv,double fwhm,double n,INT slitType);
    RC   XSCONV_TypeStandardFFT(FFT *pFFT,INT fwhmType,double slitParam,double slitParam2,double *lambda,double *target,INT size);
-   RC   XSCONV_TypeStandard(MATRIX_OBJECT *pXsnew,INDEX indexLambdaMin,INDEX indexLambdaMax,MATRIX_OBJECT *pXshr,MATRIX_OBJECT *pSlit,MATRIX_OBJECT *pSlit2,MATRIX_OBJECT *pI,double *Ic,INT slitType,double slitParam,double slitParam2,int wveDptFlag);
+   RC   XSCONV_TypeStandard(MATRIX_OBJECT *pXsnew,INDEX indexLambdaMin,INDEX indexLambdaMax,const MATRIX_OBJECT *pXshr, const MATRIX_OBJECT *pSlit, const MATRIX_OBJECT *pSlit2, const MATRIX_OBJECT *pI, double *Ic,INT slitType,double slitParam,double slitParam2,int wveDptFlag);
    RC   XSCONV_TypeI0Correction(MATRIX_OBJECT *pXsnew,MATRIX_OBJECT *pXshr,MATRIX_OBJECT *pI0,MATRIX_OBJECT *pSlit,MATRIX_OBJECT *pSlit2,double conc,INT slitType,double slitParam,double slitParam2,int wveDptFlag);
    
    // Main types of child windows

@@ -920,7 +920,7 @@ RC XSCONV_TypeNone(MATRIX_OBJECT *pXsnew,MATRIX_OBJECT *pXshr)
  }
 
 
-RC XSCONV_TypeStandardFFT(FFT *pFFT,INT fwhmType,double slitParam,double slitParam2,double *lambda,double *target,INT size)
+RC XSCONV_TypeStandardFFT(FFT *pFFT,INT fwhmType,double slitParam,double slitParam2,double *lambda, double *target,INT size)
  {
   // Declarations
 
@@ -974,37 +974,6 @@ RC XSCONV_TypeStandardFFT(FFT *pFFT,INT fwhmType,double slitParam,double slitPar
 
   return rc;
  }
-
-// --------------------------------------------------------------------------------
-// XSCONV_TypeStandard : Standard convolution of cross section with a slit function
-// --------------------------------------------------------------------------------
-
-//
-// RC XSCONV_TypeStandard(XS *pXsnew,XS *pXshr,XS *pSlit,XS *pI,double *Ic,
-//                        INT slitType,double slitWidth,double slitParam)
-//
-// with :
-//
-//  - pXsnew->lambda : final wavelength scale (input);
-//  - pXsnew->vector : pXshr->vector after convolution (output);
-//
-//  - pXshr : cross section high resolution (wavelength scale,slit vector and second derivatives);
-//  - pSlit : slit function (wavelength scale, slit vector and second derivatives);
-//
-//  - pI,Ic : these extra parameters are mainly used when I0 correction is applied in order to speed up total convolution
-//            work because integrals of I and I0 can be computed simultaneously;
-//
-//    if I0 correction is applied, Ic is the I convoluted vector;
-//    if no I0 correction is applied, Ic is set to NULL but pI is set to pXshr in order to avoid extra tests in loops;
-//
-//    the computed integral is then the same as pXshr's one and is not used;
-//
-//  - slitType : type of slit function;
-//  - slitWidth : slit half base width;
-//  - slitParam : for gaussian slit functions, half way up slit width.
-//
-// NB : pI->lambda==pXshr->lambda.
-//
 
 RC GetNewF(double *pNewF,
            INT     slitType,
@@ -1066,12 +1035,42 @@ RC GetNewF(double *pNewF,
   return rc;
  }
 
-RC XSCONV_TypeStandard(MATRIX_OBJECT *pXsnew,INDEX indexLambdaMin,INDEX indexLambdaMax,MATRIX_OBJECT *pXshr,
-                       MATRIX_OBJECT *pSlit,MATRIX_OBJECT *pSlit2,MATRIX_OBJECT *pI,double *Ic,INT slitType,
+// --------------------------------------------------------------------------------
+// XSCONV_TypeStandard : Standard convolution of cross section with a slit function
+// --------------------------------------------------------------------------------
+
+//
+// RC XSCONV_TypeStandard(XS *pXsnew,XS *pXshr,XS *pSlit,XS *pI,double *Ic,
+//                        INT slitType,double slitWidth,double slitParam)
+//
+// with :
+//
+//  - pXsnew->lambda : final wavelength scale (input);
+//  - pXsnew->vector : pXshr->vector after convolution (output);
+//
+//  - pXshr : cross section high resolution (wavelength scale,slit vector and second derivatives);
+//  - pSlit : slit function (wavelength scale, slit vector and second derivatives);
+//
+//  - pI,Ic : these extra parameters are mainly used when I0 correction is applied in order to speed up total convolution
+//            work because integrals of I and I0 can be computed simultaneously;
+//
+//    if I0 correction is applied, Ic is the I convoluted vector;
+//    if no I0 correction is applied, Ic is set to NULL but pI is set to pXshr in order to avoid extra tests in loops;
+//
+//    the computed integral is then the same as pXshr's one and is not used;
+//
+//  - slitType : type of slit function;
+//  - slitWidth : slit half base width;
+//  - slitParam : for gaussian slit functions, half way up slit width.
+//
+// NB : pI->lambda==pXshr->lambda.
+//
+
+RC XSCONV_TypeStandard(MATRIX_OBJECT *pXsnew,INDEX indexLambdaMin,INDEX indexLambdaMax,const MATRIX_OBJECT *pXshr,
+                       const MATRIX_OBJECT *pSlit, const MATRIX_OBJECT *pSlit2, const MATRIX_OBJECT *pI, double *Ic,INT slitType,
                        double slitParam,double slitParam2,int wveDptFlag)
  {
   // Declarations
-
   MATRIX_OBJECT slitTmp;
   double *xsnewLambda,*xsnewVector,
          *xshrLambda,*xshrVector,*xshrDeriv2,

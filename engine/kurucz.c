@@ -130,7 +130,7 @@ INDEX KuruczSearchReference(INDEX indexRefFeno,INDEX indexRefColumn)
 // RETURN          return code
 // ----------------------------------------------------------------------------      
 
-RC KURUCZ_Spectrum(double *oldLambda,double *newLambda,double *spectrum,double *reference,double *instrFunction,
+RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,const double *reference,double *instrFunction,
                    char displayFlag, const char *windowTitle,double **coeff,double **fwhmVector,double **fwhmDeriv2,INT saveFlag,INDEX indexFeno,void *responseHandle,INDEX indexFenoColumn)
  {
   // Declarations

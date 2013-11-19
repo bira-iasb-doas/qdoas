@@ -89,7 +89,7 @@
 //               1 if vectors are identical regarding the specified tolerance;
 // -----------------------------------------------------------------------------
 
-    int VECTOR_Equal ( double *vector1, double *vector2, int dim, double error )
+    int VECTOR_Equal ( const double *vector1, const double *vector2, int dim, double error )
     { int i;
 
       for ( i=0; i<dim; i++ )

@@ -871,7 +871,7 @@ RC ShiftVector(double *lambda,double *source,double *deriv,double *target,
 // ANALYSE_XsInterpolation : Interpolation of all cross sections in an analysis window
 // ----------------------------------------------------------------------------------
 
-RC ANALYSE_XsInterpolation(FENO *pTabFeno,double *newLambda,INDEX indexFenoColumn)
+RC ANALYSE_XsInterpolation(FENO *pTabFeno, const double *newLambda,INDEX indexFenoColumn)
 {
   // Declarations
 
@@ -1005,10 +1005,10 @@ RC ANALYSE_XsInterpolation(FENO *pTabFeno,double *newLambda,INDEX indexFenoColum
   return rc;
 }
 
-RC ANALYSE_ConvoluteXs(FENO *pTabFeno,INT action,double conc,
-                      MATRIX_OBJECT *pXs,
-                      MATRIX_OBJECT *pSlit,MATRIX_OBJECT *pSlit2,INT slitType,double *slitParam1,double *slitParam2,
-                      double *newlambda,double *output,INDEX indexlambdaMin,INDEX indexlambdaMax,INDEX indexFenoColumn,int wveDptFlag)
+RC ANALYSE_ConvoluteXs(const FENO *pTabFeno,INT action,double conc,
+                       const MATRIX_OBJECT *pXs,
+                       const MATRIX_OBJECT *pSlit, const MATRIX_OBJECT *pSlit2,INT slitType, const double *slitParam1, const double *slitParam2,
+                       const double *newlambda, double *output, INDEX indexlambdaMin, INDEX indexlambdaMax, INDEX indexFenoColumn, int wveDptFlag)
 {
   // Declarations
 

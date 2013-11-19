@@ -83,7 +83,7 @@ extern "C" {
 // ===================================================
 
 void   VECTOR_Init(double *vector,double value,int dim);
-int    VECTOR_Equal(double *vector1,double *vector2,int dim,double error);
+int    VECTOR_Equal(const double *vector1, const double *vector2,int dim,double error);
 double VECTOR_Max(double *vector,int dim);
 double VECTOR_Min(double *vector,int dim);
 RC     VECTOR_Log(double *out,double *in,int dim,const char *callingFunction);
@@ -136,8 +136,8 @@ enum _spline
   SPLINE_MAX
  };
 
-RC SPLINE_Deriv2(double *X,double *Y,double *Y2,int n,const char *callingFunction);
-RC SPLINE_Vector(double *xa,double *ya,double *y2a,int na,double *xb,double *yb,int nb,int type,const char *callingFunction);
+RC SPLINE_Deriv2(const double *X, const double *Y, double *Y2,int n, const char *callingFunction);
+RC SPLINE_Vector(const double *xa, const double *ya,double *y2a,int na, const double *xb,double *yb,int nb,int type,const char *callingFunction);
 
 // ====================================
 // SVD.C : Singular value decomposition
@@ -1018,11 +1018,11 @@ enum _pixelSelection
 RC   FNPixel   ( double *lambdaVector, double lambdaValue, INT npts,INT pixelSelection );
 
 RC   ANALYSE_CheckLambda(WRK_SYMBOL *pWrkSymbol,double *lambda, const char *callingFunction);
-RC   ANALYSE_XsInterpolation(FENO *pTabFeno,double *newLambda,INDEX indexFenoColumn);
-RC   ANALYSE_ConvoluteXs(FENO *pTabFeno,INT action,double conc,
-                         MATRIX_OBJECT *pXs,
-                         MATRIX_OBJECT *pSlit,MATRIX_OBJECT *pSlit2,INT slitType,double *slitParam1,double *slitParam2,
-                         double *newlambda,double *output,INDEX indexlambdaMin,INDEX indexlambdaMax,INDEX indexFenoColumn,INT wveDptFlag);
+RC   ANALYSE_XsInterpolation(FENO *pTabFeno, const double *newLambda,INDEX indexFenoColumn);
+RC   ANALYSE_ConvoluteXs(const FENO *pTabFeno,INT action,double conc,
+                         const MATRIX_OBJECT *pXs,
+                         const MATRIX_OBJECT *pSlit, const MATRIX_OBJECT *pSlit2, INT slitType, const double *slitParam1, const double *slitParam2,
+                         const double *newlambda, double *output, INDEX indexlambdaMin, INDEX indexlambdaMax, INDEX indexFenoColumn, INT wveDptFlag);
 RC   ANALYSE_XsConvolution(FENO *pTabFeno,double *newLambda,MATRIX_OBJECT *pSlit,MATRIX_OBJECT *pSlit2,INT slitType,double *slitParam1,double *slitParam2,INDEX indexFenoColumn,INT wveDptFlag);
 RC   ANALYSE_LinFit(SVD *pSvd,INT Npts,INT Degree,double *a,double *sigma,double *b,double *x);
 void ANALYSE_SvdFree(char *callingFunctionShort,SVD *pSvd);
@@ -1124,7 +1124,7 @@ EXTERN INT KURUCZ_indexLine;
 // PROTOTYPES
 // ----------
 
-RC   KURUCZ_Spectrum(double *oldLambda,double *newLambda,double *spectrum,double *reference,double *instrFunction,
+RC   KURUCZ_Spectrum(const double *oldLambda, double *newLambda, double *spectrum, const double *reference, double *instrFunction,
                      char displayFlag,const char *windowTitle,double **coeff,double **fwhmVector,double **fwhmDeriv2,INT saveFlag,INDEX indexFeno,void *responseHandle,INDEX indexFenoColumn);
 RC   KURUCZ_ApplyCalibration(FENO *pTabFeno,double *newLambda,INDEX indexFenoColumn);
 RC   KURUCZ_Reference(double *instrFunction,INDEX refFlag,INT saveFlag,INT gomeFlag,void *responseHandle,INDEX indexFenoColumn);
