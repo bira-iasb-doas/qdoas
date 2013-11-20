@@ -3403,7 +3403,6 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
       else
        {
         memcpy(SpectreK,Spectre,sizeof(double)*NDET);
-
         if (!(rc=KURUCZ_Spectrum(pBuffers->lambda,LambdaK,SpectreK,KURUCZ_buffers[indexFenoColumn].solar,pBuffers->instrFunction,
                                  1,"Calibration applied on spectrum",KURUCZ_buffers[indexFenoColumn].fwhmPolySpec,KURUCZ_buffers[indexFenoColumn].fwhmVector,KURUCZ_buffers[indexFenoColumn].fwhmDeriv2,saveFlag,
                                  KURUCZ_buffers[indexFenoColumn].indexKurucz,responseHandle,indexFenoColumn)))
@@ -4294,62 +4293,18 @@ RC ANALYSE_CheckLambda(WRK_SYMBOL *pWrkSymbol,double *lambda, const char *callin
   return rc;
 }
 
-// Check if two paths point to the same file by comparing inodes if
-// the two paths are not equal.
+// Check if two files are equal.
+//
+// windows: compare paths
+//
+// unix: compare paths, if paths are different, check if they point to
+// the same file by comparing inodes
 RC is_same_file(const char *file1, const char *file2, bool *result) {
   RC rc = ERROR_ID_NO;
 
   #if defined WIN32
 
-  //
-  // case 0
-  //
-
   *result=(!strcasecmp(file1,file2))?true:false;
-
-  //
-
-  //
-  //  case 1
-  //
-
-  // FILE *fp;
-  //
-  // if ((fp=fopen(file1,"rb"))==NULL)
-  //  rc=ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_FILE_NOT_FOUND,file1);
-  // else
-  //  fclose(fp);
-  //
-  // if ((fp=fopen(file2,"rb"))==NULL)
-  //  rc=ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_FILE_NOT_FOUND,file2);
-  // else
-  //  fclose(fp);
-  //
-  // *result=((rc==ERROR_ID_NO) && !strcasecmp(file1,file2))?true:false;
-
-  //
-  // case 2
-  //
-
-  // MATRIX_OBJECT xs1,xs2;
-  // int i;
-  //
-  // *result=false;
-  //
-  // memset(&xs1,0,sizeof(MATRIX_OBJECT));
-  // memset(&xs2,0,sizeof(MATRIX_OBJECT));
-  //
-  // if (!(rc=MATRIX_Load((char *)file1,&xs1,0 /* line base */,0 /* column base */,0,0,-9999.,9999.,0,0,"is_same_file")) &&
-  //     !(rc=MATRIX_Load((char *)file2,&xs2,0 /* line base */,0 /* column base */,0,0,-9999.,9999.,0,0,"is_same_file")) &&
-  //      (xs1.nl==xs2.nl) && (xs1.nc==xs2.nc))
-  //  {
-  //   for (i=0;i<xs1.nc;i++)
-  //    if (memcmp((char *)xs1.matrix[i],(char *)xs2.matrix[i],sizeof(double)*xs1.nl)!=0)
-  //      break;
-  //
-  //   if (i==xs1.nc)
-  //    *result=true;
-  //  }
 
   #else
 
