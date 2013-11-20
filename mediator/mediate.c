@@ -1570,6 +1570,7 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
    mediate_analysis_window_t calibWindows;                                       // pointer to the calibration parameters
    FENO *pTabFeno;                                                               // pointer to the description of an analysis window
    INT indexFeno,indexFenoColumn,i;                                              // browse analysis windows
+   MATRIX_OBJECT hr_solar_temp; // to preload high res solar spectrum
    RC rc;                                                                        // return code
 
    // Initializations
@@ -1814,58 +1815,78 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
      lambdaMax=pEngineContext->buffers.lambda[NDET-1];
     }
 
-   if (!rc && ((useKurucz && pKuruczOptions->fwhmFit) ||                        // calibration procedure with FWHM fit -> Kurucz (and xs) are convolved with the fitted slit function
-              (!useKurucz && !xsToConvolute) ||                                 // no calibration procedure and no xs to convolve -> nothing to do with the slit function in the slit page
-              !(rc=ANALYSE_LoadSlit(pSlitOptions,useKurucz||xsToConvoluteI0)))) // in other cases : xs to convolve and no calibration procedure
-                                                                                //                  calibration procedure but FWHM not fitted
-                                                                                //      -> use the slit function in the slit page of project properties to convolve solar spectrum and xs
+   if (rc)
+     goto handle_errors;
+     
+   // load slit function from project properties -> slit page?
+   // calibration procedure with FWHM fit -> Kurucz (and xs) are convolved with the fitted slit function
+   // no calibration procedure and no xs to convolve -> nothing to do with the slit function in the slit page
+   // other cases:
+   if ( (useKurucz && !pKuruczOptions->fwhmFit) // calibration procedure but FWHM not fitted
+        || (!useKurucz  && xsToConvolute) ) {   // no calibration procedure and xs to convolve 
+     // -> use the slit function in the slit page of project properties to convolve
+     //    solar spectrum and xs
+     rc=ANALYSE_LoadSlit(pSlitOptions,useKurucz||xsToConvoluteI0); 
+   }
+   if (rc)
+     goto handle_errors;
 
-    for (indexFenoColumn=0;(indexFenoColumn<ANALYSE_swathSize) && !rc;indexFenoColumn++)
-     {
-      if ((pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_OMI) ||
-          pEngineContext->project.instrumental.omi.omiTracks[indexFenoColumn])
-       {
-       	if ((xsToConvolute && !useKurucz) || !pKuruczOptions->fwhmFit)
-         for (indexWindow=0;(indexWindow<NFeno) && !rc;indexWindow++)
-          {
+   if ((THRD_id==THREAD_TYPE_KURUCZ) || useKurucz) {
+     // pre-load multi-row Kurucz reference spectrum one time, reuse it for each indexFenoColumn in KURUCZ_Alloc
+     char kurucz_file[MAX_ITEM_TEXT_LEN+1];
+     FILES_RebuildFileName(kurucz_file,(pKuruczOptions->fwhmFit)?pKuruczOptions->file:pSlitOptions->kuruczFile,1);
+
+     if ( !strlen(kurucz_file) ) {
+       rc = ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_MSGBOX_FIELDEMPTY, "Solar Ref. File");
+     } else {
+       rc = MATRIX_Load(kurucz_file, &hr_solar_temp, 0,0,0,0, lambdaMin, lambdaMax, 1, 0, __func__);
+     }
+   }
+   if (rc)
+     goto handle_errors;
+
+   for (indexFenoColumn=0;(indexFenoColumn<ANALYSE_swathSize) && !rc;indexFenoColumn++) {
+    
+     if ( (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_OMI) ||
+          pEngineContext->project.instrumental.omi.omiTracks[indexFenoColumn]) {
+       if ((xsToConvolute && !useKurucz) || !pKuruczOptions->fwhmFit)
+         for (indexWindow=0;(indexWindow<NFeno) && !rc;indexWindow++) {
            pTabFeno=&TabFeno[indexFenoColumn][indexWindow];
            
            if ((pSlitOptions->slitFunction.slitType==SLIT_TYPE_NONE) && pTabFeno->xsToConvolute)
-            ERROR_SetLast("mediateRequestSetAnalysisWindows",ERROR_TYPE_FATAL,(rc=ERROR_ID_CONVOLUTION));
-            // 
+             rc = ERROR_SetLast("mediateRequestSetAnalysisWindows", ERROR_TYPE_FATAL, ERROR_ID_CONVOLUTION);
+           // 
            else if (pTabFeno->xsToConvolute && /* pTabFeno->useEtalon && */ (pTabFeno->gomeRefFlag || pEngineContext->refFlag) &&
-             ((rc=ANALYSE_XsConvolution(pTabFeno,pTabFeno->LambdaRef,&ANALYSIS_slit,&ANALYSIS_slit2,pSlitOptions->slitFunction.slitType,&pSlitOptions->slitFunction.slitParam,&pSlitOptions->slitFunction.slitParam2,indexFenoColumn,pSlitOptions->slitFunction.slitWveDptFlag))!=0))
-
-            break;
-
-          }
-
-        if (!rc)
-         {
-          // Allocate Kurucz buffers on Run Calibration or
-          //                            Run Analysis and wavelength calibration is different from None at least for one spectral window
-          //
-          // Apply the calibration procedure on the reference spectrum if the wavelength calibration is different from None at least for one spectral window
-
-          if ((THRD_id==THREAD_TYPE_KURUCZ) || useKurucz)
-           {
-            if (!(rc=KURUCZ_Alloc(&pEngineContext->project,pEngineContext->buffers.lambda,indexKurucz,lambdaMin,lambdaMax,indexFenoColumn)) && useKurucz)
+                    ((rc=ANALYSE_XsConvolution(pTabFeno,pTabFeno->LambdaRef,&ANALYSIS_slit,&ANALYSIS_slit2,pSlitOptions->slitFunction.slitType,&pSlitOptions->slitFunction.slitParam,&pSlitOptions->slitFunction.slitParam2,indexFenoColumn,pSlitOptions->slitFunction.slitWveDptFlag))!=0))
+             
+             break;
+         }
+       
+       if (!rc) {
+         // Allocate Kurucz buffers on Run Calibration or
+         //                            Run Analysis and wavelength calibration is different from None at least for one spectral window
+         //
+         // Apply the calibration procedure on the reference spectrum if the wavelength calibration is different from None at least for one spectral window
+         if ((THRD_id==THREAD_TYPE_KURUCZ) || useKurucz) {
+           rc=KURUCZ_Alloc(&pEngineContext->project,pEngineContext->buffers.lambda,indexKurucz,lambdaMin,lambdaMax,indexFenoColumn, &hr_solar_temp);
+           if (useKurucz && !rc)
              rc=KURUCZ_Reference(pEngineContext->buffers.instrFunction,0,saveFlag,1,responseHandle,indexFenoColumn);
-           }
-
-          if (!rc && (THRD_id!=THREAD_TYPE_KURUCZ))
+         }
+         
+         if (!rc && (THRD_id!=THREAD_TYPE_KURUCZ)) { 
            rc=ANALYSE_AlignReference(pEngineContext,0,saveFlag,responseHandle,indexFenoColumn);
          }
-
-        if ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_OMI) && rc)   // Error on one irradiance spectrum shouldn't stop the analysis of other spectra ???
-         {
-          for (indexWindow=0;indexWindow<NFeno;indexWindow++)
+       }
+         
+       if ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_OMI) && rc) {
+         // Error on one irradiance spectrum shouldn't stop the analysis of other spectra
+         for (indexWindow=0;indexWindow<NFeno;indexWindow++)
            TabFeno[indexFenoColumn][indexWindow].rcKurucz=rc;
-          rc=ERROR_ID_NO;
-         }
+         rc=ERROR_ID_NO;
        }
      }
-
+   }
+   
    // OMI SEE LATER
 
    if (!rc && !(rc=OUTPUT_RegisterData(pEngineContext)) &&
@@ -1873,6 +1894,10 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
        !(rc=ANALYSE_UsampGlobalAlloc(lambdaMin,lambdaMax,NDET)) &&
        !(rc=ANALYSE_UsampLocalAlloc(1)))
     rc=ANALYSE_UsampBuild(0,1);
+
+ handle_errors:
+
+   MATRIX_Free(&hr_solar_temp, __func__);
 
    if (rc!=ERROR_ID_NO)
     ERROR_DisplayMessage(responseHandle);

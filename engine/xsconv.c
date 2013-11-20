@@ -767,144 +767,49 @@ RC XSCONV_LoadSlitFunction(MATRIX_OBJECT *pSlitXs,MATRIX_OBJECT *pSlitXs2,SLIT *
   return rc;
  }
 
+RC XSCONV_ConvertCrossSectionFile(MATRIX_OBJECT *pCross, double lambdaMin,double lambdaMax,double shift,INT conversionMode) {
+   // Declarations
+   
+   INDEX i;
+   double lambda;
+   RC rc = ERROR_ID_NO;
+
+   // Load file
+   
+   if ( conversionMode!=CONVOLUTION_CONVERSION_NONE || (fabs(shift)>EPSILON)) {
+     for (i=0;i<pCross->nl;i++) {
+       lambda=pCross->matrix[0][i];
+       
+       // Air <-> vacuum correction
+       
+       if (conversionMode==CONVOLUTION_CONVERSION_VAC2AIR)
+           lambda=(double)0.1*(9.9972683*lambda+0.0107-(19.625/lambda));
+       else if (conversionMode==CONVOLUTION_CONVERSION_AIR2VAC)
+         lambda=(double)0.1*(10.0027325*lambda-0.0107+(19.625/lambda));
+       
+       // Apply shift
+       
+       pCross->matrix[0][i]=lambda+shift;
+     }
+     
+     // Recalculate second derivatives
+     rc = SPLINE_Deriv2(pCross->matrix[0],pCross->matrix[1],pCross->deriv2[1],pCross->nl,"XSCONV_LoadCrossSectionFile");
+   }
+   return rc;
+}
+
 // -------------------------------------------------------
 // XSCONV_LoadCrossSectionFile : Load a cross section file
 // -------------------------------------------------------
 
 RC XSCONV_LoadCrossSectionFile(MATRIX_OBJECT *pCross,char *crossFile,double lambdaMin,double lambdaMax,double shift,INT conversionMode)
- {
- 	// Declarations
-
- 	INDEX i;
- 	double lambda;
- 	RC rc;
-
- 	// Load file
-
- 	if (!(rc=MATRIX_Load(crossFile,pCross,0,0,0,0,lambdaMin,lambdaMax,1,0,"XSCONV_LoadCrossSectionFile")) &&
- 	    ((conversionMode!=CONVOLUTION_CONVERSION_NONE) || (fabs(shift)>EPSILON)))
- 	 {
- 	 	for (i=0;i<pCross->nl;i++)
- 	 	 {
- 	 	 	lambda=pCross->matrix[0][i];
-
- 	 	 	// Air <-> vacuum correction
-
-      if (conversionMode==CONVOLUTION_CONVERSION_VAC2AIR)
-       lambda=(double)0.1*(9.9972683*lambda+0.0107-(19.625/lambda));
-      else if (conversionMode==CONVOLUTION_CONVERSION_AIR2VAC)
-       lambda=(double)0.1*(10.0027325*lambda-0.0107+(19.625/lambda));
-
-      // Apply shift
-
-      pCross->matrix[0][i]=lambda+shift;
-     }
-
-    // Recalculate second derivatives
-
-    rc=SPLINE_Deriv2(pCross->matrix[0],pCross->matrix[1],pCross->deriv2[1],pCross->nl,"XSCONV_LoadCrossSectionFile");
- 	 }
-
-//  // Declarations
-//
-//  double lambda,crossValue,firstLambda;
-//  char  crossBuffer[MAX_ITEM_TEXT_LEN+1];
-//  FILE  *crossFp;
-//
-//  INT    found,npts;
-//  INDEX  i,i0,iN,istep;
-//  RC     rc;
-//
-//  // Initializations
-//
-//  firstLambda=lambda=(double)0.;
-//  XSCONV_Reset(pCross);
-//  npts=found=0;
-//  rc=ERROR_ID_NO;
-//
-//  // Open ASCII file
-//
-//
-//
-//  if ((crossFp=fopen(FILES_RebuildFileName(crossBuffer,crossFile,1),"rt"))==NULL)
-//   rc=ERROR_SetLast("XSCONV_LoadCrossSectionFile",ERROR_TYPE_FATAL,ERROR_ID_FILE_NOT_FOUND,crossBuffer);
-//  else
-//   {
-//    // First, search for data in the specified wavelengths range and determine the correct vector size
-//
-//    while (!feof(crossFp) && fgets(crossBuffer,MAX_ITEM_TEXT_LEN,crossFp) && (!found || ((lambda>=lambdaMin) && (lambda<=lambdaMax))))
-//
-//     if ((strchr(crossBuffer,';')==NULL) && (strchr(crossBuffer,'*')==NULL) && (sscanf(crossBuffer,"%lf %lf",&lambda,&crossValue)==2))
-//      {
-//       if (!found)
-//        firstLambda=lambda;
-//
-//       if ((lambda>=lambdaMin) && (lambda<=lambdaMax))
-//        {
-//         npts++;
-//         found=1;
-//        }
-//     }
-//
-//    if (!npts)
-//     rc=ERROR_SetLast("XSCONV_LoadCrossSectionFile",ERROR_TYPE_FATAL,ERROR_ID_FILE_EMPTY,crossBuffer);
-//
-//    // Buffers allocation
-//
-//    else if (XSCONV_Alloc(pCross,npts,1))
-//     rc=ERROR_ID_ALLOC;
-//
-//    else
-//     {
-//      // Set indexes according to wavelength order
-//
-//      if (firstLambda<=lambda)
-//       {
-//        i0=0;
-//        iN=npts;
-//        istep=1;
-//       }
-//      else
-//       {
-//        i0=npts-1;
-//        iN=-1;
-//        istep=-1;
-//       }
-//
-//      // Fill vectors
-//
-//      fseek(crossFp,0L,SEEK_SET);
-//
-//      for (i=i0;(i!=iN) && !feof(crossFp) && fgets(crossBuffer,MAX_ITEM_TEXT_LEN,crossFp);)
-//
-//       if ((strchr(crossBuffer,';')==NULL) && (strchr(crossBuffer,'*')==NULL) &&
-//           (sscanf(crossBuffer,"%lf %lf",&lambda,&crossValue)==2) &&
-//           (lambda>=lambdaMin) && (lambda<=lambdaMax))
-//        {
-//         if (conversionMode==CONVOLUTION_CONVERSION_VAC2AIR)
-//          lambda=(double)0.1*(9.9972683*lambda+0.0107-(19.625/lambda));
-//         else if (conversionMode==CONVOLUTION_CONVERSION_AIR2VAC)
-//          lambda=(double)0.1*(10.0027325*lambda-0.0107+(19.625/lambda));
-//
-//         pCross->lambda[i]=lambda+shift;
-//         pCross->vector[i]=crossValue;
-//
-//         i+=istep;
-//        }
-//
-//      // Second derivatives computation
-//
-//      rc=SPLINE_Deriv2(pCross->lambda,pCross->vector,pCross->deriv2,npts,"XSCONV_LoadCrossSectionFile ");
-//     }
-//   }
-//
-//  if (crossFp!=NULL)
-//   fclose(crossFp);
-
-  // Return
-
+{
+  RC rc = rc=MATRIX_Load(crossFile,pCross,0,0,0,0,lambdaMin,lambdaMax,1,0,__func__);
+  if(!rc) {
+    rc = XSCONV_ConvertCrossSectionFile(pCross, lambdaMin, lambdaMax, shift, conversionMode);
+  }
   return rc;
- }
+}
 
 // =====================
 // CONVOLUTION FUNCTIONS

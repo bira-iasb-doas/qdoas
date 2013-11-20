@@ -1124,12 +1124,14 @@ EXTERN INT KURUCZ_indexLine;
 // PROTOTYPES
 // ----------
 
-RC   KURUCZ_Spectrum(const double *oldLambda, double *newLambda, double *spectrum, const double *reference, double *instrFunction,
-                     char displayFlag,const char *windowTitle,double **coeff,double **fwhmVector,double **fwhmDeriv2,INT saveFlag,INDEX indexFeno,void *responseHandle,INDEX indexFenoColumn);
+RC KURUCZ_Spectrum(const double *oldLambda, double *newLambda, double *spectrum, const double *reference, double *instrFunction,
+                   char displayFlag,const char *windowTitle,double **coeff,double **fwhmVector,double **fwhmDeriv2,INT saveFlag,
+                   INDEX indexFeno,void *responseHandle,INDEX indexFenoColumn);
 RC   KURUCZ_ApplyCalibration(FENO *pTabFeno,double *newLambda,INDEX indexFenoColumn);
 RC   KURUCZ_Reference(double *instrFunction,INDEX refFlag,INT saveFlag,INT gomeFlag,void *responseHandle,INDEX indexFenoColumn);
 void KURUCZ_Init(INT gomeFlag,INDEX indexFenoColumn);
-RC   KURUCZ_Alloc(PROJECT *pProject,double *lambda,INDEX indexKurucz,double lambdaMin,double lambdaMax,INDEX indexFenoColumn);
+RC   KURUCZ_Alloc(const PROJECT *pProject, const double *lambda, INDEX indexKurucz, double lambdaMin, double lambdaMax,
+                  INDEX indexFenoColumn, const MATRIX_OBJECT *hr_solar);
 void KURUCZ_Free(void);
 
 // ==================================

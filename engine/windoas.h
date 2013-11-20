@@ -645,6 +645,7 @@ void PRJCT_SaveConfiguration(FILE *fp,char *sectionName);
 
    RC   XSCONV_LoadCalibrationFile(MATRIX_OBJECT *pLambda,char *lambdaFile,INT nextraPixels);
    RC   XSCONV_LoadSlitFunction(MATRIX_OBJECT *pSlitXs,MATRIX_OBJECT *pSlitXs2,SLIT *pSlit,double *pGaussWidth,INT *pSlitType);
+   RC XSCONV_ConvertCrossSectionFile(MATRIX_OBJECT *pCross, double lambdaMin,double lambdaMax,double shift,INT conversionMode);
    RC   XSCONV_LoadCrossSectionFile(MATRIX_OBJECT *pCross,char *crossFile,double lambdaMin,double lambdaMax,double shift,INT conversionMode);
 
    RC XSCONV_NewSlitFunction(SLIT *pSlitOptions,MATRIX_OBJECT *pSlit,double slitParam,SLIT *pSlit2Options,MATRIX_OBJECT *pSlit2,double slitParam2);

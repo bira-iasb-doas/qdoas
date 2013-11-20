@@ -247,8 +247,6 @@ RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,co
       	rc=ANALYSE_ConvoluteXs(NULL,ANLYS_CROSS_ACTION_CONVOLUTE,(double)0.,&pKurucz->hrSolar,&ANALYSIS_slit,&ANALYSIS_slit2,
                               pSlitOptions->slitFunction.slitType,&pSlitOptions->slitFunction.slitParam,&pSlitOptions->slitFunction.slitParam2,
                               oldLambda,solar,0,NDET-1,0,pSlitOptions->slitFunction.slitWveDptFlag);
-// 20130208 :     rc=SPLINE_Vector(pKurucz->hrSolar.matrix[0],pKurucz->hrSolar.matrix[kuruczIndexRow],pKurucz->hrSolar.deriv2[kuruczIndexRow],pKurucz->hrSolar.nl,
-//                        oldLambda,solar,NDET,pAnalysisOptions->interpol,"KURUCZ_Spectrum ");
      }
     else
      memcpy(solar,reference,sizeof(double)*NDET);
@@ -895,7 +893,6 @@ RC KURUCZ_Reference(double *instrFunction,INDEX refFlag,INT saveFlag,INT gomeFla
           else
            {
             // Apply Kurucz for building new calibration for reference
-
             if ((rc=pTabFeno->rcKurucz=KURUCZ_Spectrum(pTabFeno->LambdaRef,pTabFeno->LambdaK,reference,pKurucz->solar,instrFunction,
                  1,pTabFeno->windowName,pTabFeno->fwhmPolyRef,pTabFeno->fwhmVector,pTabFeno->fwhmDeriv2,saveFlag,indexFeno,responseHandle,indexFenoColumn))!=ERROR_ID_NO)
 
@@ -1028,11 +1025,12 @@ void KURUCZ_Init(INT gomeFlag,INDEX indexFenoColumn)
 //                 indexKurucz  index of analysis window with Kurucz description for the current project;
 //                 lambdaMin    lower limit of the wavelength calibration interval
 //                 lambdaMax    upper limit of the wavelength calibration interval
+//                 hr_solar     pre-loaded contents of the high-resolution reference spectrum (from calibration or slit page)
 //
 // RETURN          return code
 // ----------------------------------------------------------------------------
 
-RC KURUCZ_Alloc(PROJECT *pProject,double *lambda,INDEX indexKurucz,double lambdaMin,double lambdaMax,INDEX indexFenoColumn)
+RC KURUCZ_Alloc(const PROJECT *pProject, const double *lambda,INDEX indexKurucz,double lambdaMin,double lambdaMax,INDEX indexFenoColumn, const MATRIX_OBJECT *hr_solar)
  {
   // Declarations
 
@@ -1041,7 +1039,7 @@ RC KURUCZ_Alloc(PROJECT *pProject,double *lambda,INDEX indexKurucz,double lambda
   FENO            *pKuruczFeno,                                                 // analysis window with Kurucz description
                   *pTabFeno;
 
-  char  kuruczFile[MAX_ITEM_TEXT_LEN+1],slitFile[MAX_ITEM_TEXT_LEN+1];
+  char   slitFile[MAX_ITEM_TEXT_LEN+1];
   INT    Nb_Win,shiftDegree,                                                    // substitution variables
          NTabCross,DimLMax;
   INDEX  i,indexFeno,indexWindow,indexParam,indexTabCross;                      // indexes for loops and arrays
@@ -1049,7 +1047,6 @@ RC KURUCZ_Alloc(PROJECT *pProject,double *lambda,INDEX indexKurucz,double lambda
          Win_size,step;                                                         // size of a little window in nm
   SVD   *pSvd,*pSvdFwhm;                                                        // pointers to svd environments
   KURUCZ *pKurucz;
-  INDEX kuruczIndexRow;                                                                 // number of columns of the Kurucz Matrix
   RC rc;
 
   // Initializations
@@ -1063,7 +1060,6 @@ RC KURUCZ_Alloc(PROJECT *pProject,double *lambda,INDEX indexKurucz,double lambda
 
   step=(double)0.;
 
-  FILES_RebuildFileName(kuruczFile,(pKuruczOptions->fwhmFit)?pKuruczOptions->file:pSlitOptions->kuruczFile,1);
   FILES_RebuildFileName(slitFile,pKuruczOptions->slfFile,1);
 
   if ((hFilterFlag=((ANALYSE_phFilter->filterFunction!=NULL) &&                 // high pass filtering
@@ -1087,51 +1083,35 @@ RC KURUCZ_Alloc(PROJECT *pProject,double *lambda,INDEX indexKurucz,double lambda
    {
     pKurucz->fwhmDegree=pKuruczOptions->fwhmPolynomial;
 
-// QDOAS ???  TESTS TO MOVE TO THE GUI     if ((fwhmDegree<0) || (fwhmDegree>(UINT)10))
-// QDOAS ???  TESTS TO MOVE TO THE GUI      rc=ERROR_SetLast("KURUCZ_Alloc",ERROR_TYPE_FATAL,ERROR_ID_MSGBOX_OUTOFRANGE,"\'Kurucz fwhm polynomial order\'",0,(UINT)10);
-
     if (pKuruczOptions->fwhmType==SLIT_TYPE_FILE)
      {
       // Load file
 
       if (!strlen(slitFile))
-       rc=ERROR_SetLast("KURUCZ_Alloc",ERROR_TYPE_FATAL,ERROR_ID_MSGBOX_FIELDEMPTY,"Slit File");
+       rc=ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_MSGBOX_FIELDEMPTY,"Slit File");
       else
        rc=MATRIX_Load(slitFile,&pKurucz->slitFunction,0 /* line base */,0 /* column base */,0,0,
-                     -9999.,9999.,1,0,"KURUCZ_Alloc");
+                     -9999.,9999.,1,0,__func__);
      }
 
     if (rc!=ERROR_ID_NO)
      goto EndKuruczAlloc;
    }
 
-// QDOAS ???  TESTS TO MOVE TO THE GUI  if (!strlen(pKuruczOptions->file))
-// QDOAS ???  TESTS TO MOVE TO THE GUI   THRD_Error(ERROR_TYPE_FATAL,(rc=IDS_MSGBOX_FIELDEMPTY),"KURUCZ_Alloc ","Solar reference file");
-// QDOAS ???  TESTS TO MOVE TO THE GUI  else if ((Nb_Win<=0) || (Nb_Win>(UINT)32767))
-// QDOAS ???  TESTS TO MOVE TO THE GUI   THRD_Error(ERROR_TYPE_FATAL,(rc=THREAD_MSGBOX_OUTOFRANGE),"KURUCZ_Alloc ","\'Kurucz number of windows\'",1,(UINT)32767);
-// QDOAS ???  TESTS TO MOVE TO THE GUI  else if ((shiftDegree<0) || (shiftDegree>(UINT)10))
-// QDOAS ???  TESTS TO MOVE TO THE GUI   THRD_Error(ERROR_TYPE_FATAL,(rc=THREAD_MSGBOX_OUTOFRANGE),"KURUCZ_Alloc ","\'Kurucz shift polynomial order\'",0,(UINT)10);
-// QDOAS ???  TESTS TO MOVE TO THE GUI  else if (pKuruczOptions->lambdaLeft>=pKuruczOptions->lambdaRight)
-// QDOAS ???  TESTS TO MOVE TO THE GUI   THRD_Error(ERROR_TYPE_FATAL,(rc=ERROR_ID_GAPS),"KURUCZ_Alloc ",pKuruczOptions->lambdaLeft,pKuruczOptions->lambdaRight);
-// QDOAS ???  TESTS TO MOVE TO THE GUI
-// QDOAS ???  TESTS TO MOVE TO THE GUI  // Allocate buffers
-// QDOAS ???  TESTS TO MOVE TO THE GUI
-// QDOAS ???  TESTS TO MOVE TO THE GUI  else
-
-  if (((pKurucz->KuruczFeno=(KURUCZ_FENO *)MEMORY_AllocBuffer("KURUCZ_Alloc ","KuruczFeno",NFeno,sizeof(KURUCZ_FENO),0,MEMORY_TYPE_STRUCT))==NULL) ||
-      ((pKurucz->solar=(double *)MEMORY_AllocDVector("KURUCZ_Alloc ","solar",0,NDET-1))==NULL) ||           // solar spectrum
-      ((pKurucz->offset=(double *)MEMORY_AllocDVector("KURUCZ_Alloc ","offset",0,NDET-1))==NULL) ||         // offset spectrum
-      ((pKurucz->Pcalib=(double *)MEMORY_AllocDVector("KURUCZ_Alloc ","Pcalib",1,shiftDegree+1))==NULL) ||  // coefficients of the polynomial
-      ((pKurucz->VLambda=(double *)MEMORY_AllocDVector("KURUCZ_Alloc ","VLambda",1,Nb_Win))==NULL) ||       // solution of the system
-      ((pKurucz->pixMid=(double *)MEMORY_AllocDVector("KURUCZ_Alloc ","pixMid",1,Nb_Win))==NULL) ||         // pixels at the middle of little windows
-      ((pKurucz->VShift=(double *)MEMORY_AllocDVector("KURUCZ_Alloc ","VShift",1,Nb_Win))==NULL) ||         // shift applied on pixels
-      ((pKurucz->VSig=(double *)MEMORY_AllocDVector("KURUCZ_Alloc ","VSig",1,Nb_Win))==NULL) ||             // error on shift applied on pixels
-      ((pKurucz->VPix=(double *)MEMORY_AllocDVector("KURUCZ_Alloc ","VPix",1,Nb_Win))==NULL) ||             // pixels with shift correction
-      ((pKurucz->NIter=(INT *)MEMORY_AllocBuffer("KURUCZ_Alloc ","NIter",Nb_Win,sizeof(INT),0,MEMORY_TYPE_INT))==NULL) ||
+  if (((pKurucz->KuruczFeno=(KURUCZ_FENO *)MEMORY_AllocBuffer(__func__,"KuruczFeno",NFeno,sizeof(KURUCZ_FENO),0,MEMORY_TYPE_STRUCT))==NULL) ||
+      ((pKurucz->solar=(double *)MEMORY_AllocDVector(__func__,"solar",0,NDET-1))==NULL) ||           // solar spectrum
+      ((pKurucz->offset=(double *)MEMORY_AllocDVector(__func__,"offset",0,NDET-1))==NULL) ||         // offset spectrum
+      ((pKurucz->Pcalib=(double *)MEMORY_AllocDVector(__func__,"Pcalib",1,shiftDegree+1))==NULL) ||  // coefficients of the polynomial
+      ((pKurucz->VLambda=(double *)MEMORY_AllocDVector(__func__,"VLambda",1,Nb_Win))==NULL) ||       // solution of the system
+      ((pKurucz->pixMid=(double *)MEMORY_AllocDVector(__func__,"pixMid",1,Nb_Win))==NULL) ||         // pixels at the middle of little windows
+      ((pKurucz->VShift=(double *)MEMORY_AllocDVector(__func__,"VShift",1,Nb_Win))==NULL) ||         // shift applied on pixels
+      ((pKurucz->VSig=(double *)MEMORY_AllocDVector(__func__,"VSig",1,Nb_Win))==NULL) ||             // error on shift applied on pixels
+      ((pKurucz->VPix=(double *)MEMORY_AllocDVector(__func__,"VPix",1,Nb_Win))==NULL) ||             // pixels with shift correction
+      ((pKurucz->NIter=(INT *)MEMORY_AllocBuffer(__func__,"NIter",Nb_Win,sizeof(INT),0,MEMORY_TYPE_INT))==NULL) ||
       (hFilterFlag &&
-       (((pKurucz->lambdaF=(double *)MEMORY_AllocDVector("KURUCZ_Alloc ","lambdaF",0,NDET+2*pKurucz->solarFGap-1))==NULL) ||
-        ((pKurucz->solarF=(double *)MEMORY_AllocDVector("KURUCZ_Alloc ","solarF",0,NDET+2*pKurucz->solarFGap-1))==NULL) ||
-        ((pKurucz->solarF2=(double *)MEMORY_AllocDVector("KURUCZ_Alloc ","solarF2",0,NDET+2*pKurucz->solarFGap-1))==NULL))))
+       (((pKurucz->lambdaF=(double *)MEMORY_AllocDVector(__func__,"lambdaF",0,NDET+2*pKurucz->solarFGap-1))==NULL) ||
+        ((pKurucz->solarF=(double *)MEMORY_AllocDVector(__func__,"solarF",0,NDET+2*pKurucz->solarFGap-1))==NULL) ||
+        ((pKurucz->solarF2=(double *)MEMORY_AllocDVector(__func__,"solarF2",0,NDET+2*pKurucz->solarFGap-1))==NULL))))
    {
     rc=ERROR_ID_ALLOC;
     goto EndKuruczAlloc;
@@ -1165,20 +1145,25 @@ RC KURUCZ_Alloc(PROJECT *pProject,double *lambda,INDEX indexKurucz,double lambda
 
   // Load and normalize solar spectrum
 
-  if ( !strlen(kuruczFile) ) {
-   rc = ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_MSGBOX_FIELDEMPTY, "Solar Ref. File");
-  } else if ( !(rc=XSCONV_LoadCrossSectionFile(&pKurucz->hrSolar,kuruczFile,lambdaMin-7.-step*pKurucz->solarFGap,lambdaMax+7.+step*pKurucz->solarFGap,(double)0.,CONVOLUTION_CONVERSION_NONE)))
-   {
-    kuruczIndexRow=(pKurucz->hrSolar.nc>indexFenoColumn+1)?indexFenoColumn+1:1;
+  // allocate matrix for pKurucz->hrSolar: (number of wavelengths)x(2)
+  rc = MATRIX_Allocate(&pKurucz->hrSolar, hr_solar->nl, 2, 0, 0, 1, __func__);
+  if( !rc) {
+    // copy wavelengths and one spectrum column from pre-loaded hr_solar into pKurucz->hrSolar
+    int index_row = (hr_solar->nc > 1+indexFenoColumn) ? 1+indexFenoColumn:1;
+    memcpy(pKurucz->hrSolar.matrix[0], hr_solar->matrix[0], hr_solar->nl * sizeof(hr_solar->matrix[0][0]));
+    memcpy(pKurucz->hrSolar.matrix[1], hr_solar->matrix[index_row], hr_solar->nl * sizeof(hr_solar->matrix[0][0]));
 
-   	               // If the fwhm of the slit function is fitted, then we can use the same high resolution solar
-   	               // spectrum.  If we do not fit the slit function, the solar spectrum has to be preconvoluted.
-   	               // For OMI, the number of rows is 60 and the number of preconvoluted spectra should be 60 too.
-   	               // So in principle, a test if the slit function should be enough but why we couldn't use the
-   	               // same spectrum ?
+    rc=XSCONV_ConvertCrossSectionFile(&pKurucz->hrSolar,lambdaMin-7.-step*pKurucz->solarFGap,lambdaMax+7.+step*pKurucz->solarFGap,(double)0.,CONVOLUTION_CONVERSION_NONE);
+  }
+  if( !rc) {
+    // If the fwhm of the slit function is fitted, then we can use the same high resolution solar
+    // spectrum.  If we do not fit the slit function, the solar spectrum has to be preconvoluted.
+    // For OMI, the number of rows is 60 and the number of preconvoluted spectra should be 60 too.
+    // So in principle, a test if the slit function should be enough but why we couldn't use the
+    // same spectrum ?
 
-    if (((rc=VECTOR_NormalizeVector(pKurucz->hrSolar.matrix[kuruczIndexRow]-1,pKurucz->hrSolar.nl,NULL,"KURUCZ_Alloc "))!=ERROR_ID_NO) ||
-        ((rc=SPLINE_Deriv2(pKurucz->hrSolar.matrix[0],pKurucz->hrSolar.matrix[kuruczIndexRow],pKurucz->hrSolar.deriv2[kuruczIndexRow],pKurucz->hrSolar.nl,"KURUCZ_Alloc "))!=ERROR_ID_NO))
+    if (((rc=VECTOR_NormalizeVector(pKurucz->hrSolar.matrix[1]-1,pKurucz->hrSolar.nl,NULL,__func__))!=ERROR_ID_NO) ||
+        ((rc=SPLINE_Deriv2(pKurucz->hrSolar.matrix[0],pKurucz->hrSolar.matrix[1],pKurucz->hrSolar.deriv2[1],pKurucz->hrSolar.nl,__func__))!=ERROR_ID_NO))
 
      goto EndKuruczAlloc;
 
@@ -1215,21 +1200,21 @@ RC KURUCZ_Alloc(PROJECT *pProject,double *lambda,INDEX indexKurucz,double lambda
         Win_size=(double)(Lambda_max-Lambda_min)/Nb_Win;
         DimLMax=2*NDET/Nb_Win+1;
 
-        if ((pKurucz->KuruczFeno[indexFeno].Grid=(double *)MEMORY_AllocDVector("KURUCZ_Alloc ","Grid",0,Nb_Win-1))==NULL)
+        if ((pKurucz->KuruczFeno[indexFeno].Grid=(double *)MEMORY_AllocDVector(__func__,"Grid",0,Nb_Win-1))==NULL)
          rc=ERROR_ID_ALLOC;
-        else if ((pKurucz->KuruczFeno[indexFeno].svdFeno=(SVD *)MEMORY_AllocBuffer("KURUCZ_Alloc ","svdFeno",Nb_Win,sizeof(SVD),0,MEMORY_TYPE_STRUCT))==NULL)                           // svd environments
+        else if ((pKurucz->KuruczFeno[indexFeno].svdFeno=(SVD *)MEMORY_AllocBuffer(__func__,"svdFeno",Nb_Win,sizeof(SVD),0,MEMORY_TYPE_STRUCT))==NULL)                           // svd environments
          rc=ERROR_ID_ALLOC;
-        else if (pKuruczOptions->fwhmFit && ((pKurucz->KuruczFeno[indexFeno].fft=(FFT *)MEMORY_AllocBuffer("KURUCZ_Alloc ","fft",Nb_Win,sizeof(FFT),0,MEMORY_TYPE_STRUCT))==NULL))                           // svd environments
+        else if (pKuruczOptions->fwhmFit && ((pKurucz->KuruczFeno[indexFeno].fft=(FFT *)MEMORY_AllocBuffer(__func__,"fft",Nb_Win,sizeof(FFT),0,MEMORY_TYPE_STRUCT))==NULL))                           // svd environments
          rc=ERROR_ID_ALLOC;
-        else if ((pKurucz->KuruczFeno[indexFeno].chiSquare=(double *)MEMORY_AllocDVector("KURUCZ_Alloc ","chiSquare",0,Nb_Win-1))==NULL)
+        else if ((pKurucz->KuruczFeno[indexFeno].chiSquare=(double *)MEMORY_AllocDVector(__func__,"chiSquare",0,Nb_Win-1))==NULL)
          rc=ERROR_ID_ALLOC;
-        else if ((pKurucz->KuruczFeno[indexFeno].rms=(double *)MEMORY_AllocDVector("KURUCZ_Alloc ","rms",0,Nb_Win-1))==NULL)
+        else if ((pKurucz->KuruczFeno[indexFeno].rms=(double *)MEMORY_AllocDVector(__func__,"rms",0,Nb_Win-1))==NULL)
          rc=ERROR_ID_ALLOC;
-        else if ((pKurucz->KuruczFeno[indexFeno].wve=(double *)MEMORY_AllocDVector("KURUCZ_Alloc ","wve",0,Nb_Win-1))==NULL)
+        else if ((pKurucz->KuruczFeno[indexFeno].wve=(double *)MEMORY_AllocDVector(__func__,"wve",0,Nb_Win-1))==NULL)
          rc=ERROR_ID_ALLOC;
-        else if ((pKurucz->KuruczFeno[indexFeno].nIter=(int *)MEMORY_AllocBuffer("KURUCZ_Alloc ","nIter",Nb_Win,sizeof(int),0,MEMORY_TYPE_INT))==NULL)                           // svd environments
+        else if ((pKurucz->KuruczFeno[indexFeno].nIter=(int *)MEMORY_AllocBuffer(__func__,"nIter",Nb_Win,sizeof(int),0,MEMORY_TYPE_INT))==NULL)                           // svd environments
          rc=ERROR_ID_ALLOC;
-        else if ((pKurucz->KuruczFeno[indexFeno].results=(CROSS_RESULTS **)MEMORY_AllocBuffer("KURUCZ_Alloc ","results",Nb_Win,sizeof(CROSS_RESULTS *),0,MEMORY_TYPE_STRUCT))==NULL)
+        else if ((pKurucz->KuruczFeno[indexFeno].results=(CROSS_RESULTS **)MEMORY_AllocBuffer(__func__,"results",Nb_Win,sizeof(CROSS_RESULTS *),0,MEMORY_TYPE_STRUCT))==NULL)
          rc=ERROR_ID_ALLOC;
 
         if (rc)
@@ -1254,7 +1239,7 @@ RC KURUCZ_Alloc(PROJECT *pProject,double *lambda,INDEX indexKurucz,double lambda
           Lambda_max=Lambda_min+Win_size;
           pKurucz->KuruczFeno[indexFeno].Grid[indexWindow]=Lambda_max;
 
-          if ((pKurucz->KuruczFeno[indexFeno].results[indexWindow]=(CROSS_RESULTS *)MEMORY_AllocBuffer("KURUCZ_Alloc ","KuruczFeno(results)",pKuruczFeno->NTabCross,sizeof(CROSS_RESULTS),0,MEMORY_TYPE_STRUCT))==NULL)
+          if ((pKurucz->KuruczFeno[indexFeno].results[indexWindow]=(CROSS_RESULTS *)MEMORY_AllocBuffer(__func__,"KuruczFeno(results)",pKuruczFeno->NTabCross,sizeof(CROSS_RESULTS),0,MEMORY_TYPE_STRUCT))==NULL)
            {
             rc=ERROR_ID_ALLOC;
             goto EndKuruczAlloc;
@@ -1282,10 +1267,10 @@ RC KURUCZ_Alloc(PROJECT *pProject,double *lambda,INDEX indexKurucz,double lambda
             hrN=pfft->oldSize=(hrFin-hrDeb+1);
             fftSize=pfft->fftSize=(int)pow((double)2.,ceil(log((double)hrN)/log((double)2.)));
 
-            if (((fftIn=pfft->fftIn=(double *)MEMORY_AllocDVector("KURUCZ_Alloc ","fftIn",1,fftSize))==NULL) ||
-                ((pfft->fftOut=(double *)MEMORY_AllocDVector("KURUCZ_Alloc ","fftOut",1,fftSize))==NULL) ||
-                ((pfft->invFftIn=(double *)MEMORY_AllocDVector("KURUCZ_Alloc ","invFftIn",1,fftSize))==NULL) ||
-                ((pfft->invFftOut=(double *)MEMORY_AllocDVector("KURUCZ_Alloc ","invFftOut",1,fftSize))==NULL))
+            if (((fftIn=pfft->fftIn=(double *)MEMORY_AllocDVector(__func__,"fftIn",1,fftSize))==NULL) ||
+                ((pfft->fftOut=(double *)MEMORY_AllocDVector(__func__,"fftOut",1,fftSize))==NULL) ||
+                ((pfft->invFftIn=(double *)MEMORY_AllocDVector(__func__,"invFftIn",1,fftSize))==NULL) ||
+                ((pfft->invFftOut=(double *)MEMORY_AllocDVector(__func__,"invFftOut",1,fftSize))==NULL))
              {
               rc=ERROR_ID_ALLOC;
               goto EndKuruczAlloc;
@@ -1329,7 +1314,7 @@ RC KURUCZ_Alloc(PROJECT *pProject,double *lambda,INDEX indexKurucz,double lambda
          NTabCross++;
        }
 
-      if (NTabCross && ((rc=MATRIX_Allocate(&pKurucz->crossFits,NDET,NTabCross,0,0,0,"KURUCZ_Alloc "))!=0))
+      if (NTabCross && ((rc=MATRIX_Allocate(&pKurucz->crossFits,NDET,NTabCross,0,0,0,__func__))!=0))
        goto EndKuruczAlloc;
      }
 
@@ -1346,11 +1331,11 @@ RC KURUCZ_Alloc(PROJECT *pProject,double *lambda,INDEX indexKurucz,double lambda
 
       for (indexParam=0;(indexParam<MAX_KURUCZ_FWHM_PARAM) && !rc;indexParam++)
        {
-        if (((pKurucz->fwhm[indexParam]=(double *)MEMORY_AllocDVector("KURUCZ_Alloc ","fwhm",0,Nb_Win-1))==NULL) ||
-            ((pKurucz->fwhmSigma[indexParam]=(double *)MEMORY_AllocDVector("KURUCZ_Alloc ","fwhmSigma",0,Nb_Win-1))==NULL) ||
-            ((pKurucz->fwhmPolySpec[indexParam]=(double *)MEMORY_AllocDVector("KURUCZ_Alloc ","fwhmPolySpec",0,pKurucz->fwhmDegree))==NULL) ||
-            ((pKurucz->fwhmVector[indexParam]=(double *)MEMORY_AllocDVector("KURUCZ_Alloc ","fwhmVector",0,NDET-1))==NULL) ||
-            ((pKurucz->fwhmDeriv2[indexParam]=(double *)MEMORY_AllocDVector("KURUCZ_Alloc ","fwhmVector",0,NDET-1))==NULL))
+        if (((pKurucz->fwhm[indexParam]=(double *)MEMORY_AllocDVector(__func__,"fwhm",0,Nb_Win-1))==NULL) ||
+            ((pKurucz->fwhmSigma[indexParam]=(double *)MEMORY_AllocDVector(__func__,"fwhmSigma",0,Nb_Win-1))==NULL) ||
+            ((pKurucz->fwhmPolySpec[indexParam]=(double *)MEMORY_AllocDVector(__func__,"fwhmPolySpec",0,pKurucz->fwhmDegree))==NULL) ||
+            ((pKurucz->fwhmVector[indexParam]=(double *)MEMORY_AllocDVector(__func__,"fwhmVector",0,NDET-1))==NULL) ||
+            ((pKurucz->fwhmDeriv2[indexParam]=(double *)MEMORY_AllocDVector(__func__,"fwhmVector",0,NDET-1))==NULL))
 
          rc=ERROR_ID_ALLOC;
 
@@ -1364,10 +1349,10 @@ RC KURUCZ_Alloc(PROJECT *pProject,double *lambda,INDEX indexKurucz,double lambda
 
             if ((pKuruczFeno->indexFwhmParam[indexParam]!=ITEM_NONE) &&
                  !pTabFeno->hidden && pTabFeno->useKurucz &&
-              (((pTabFeno->fwhmPolyRef[indexParam]=(double *)MEMORY_AllocDVector("KURUCZ_Alloc ","fwhmPolyRef",0,pKurucz->fwhmDegree))==NULL) ||
-               ((pTabFeno->fwhmVector[indexParam]=(double *)MEMORY_AllocDVector("KURUCZ_Alloc ","fwhmVector",0,NDET-1))==NULL) ||
+              (((pTabFeno->fwhmPolyRef[indexParam]=(double *)MEMORY_AllocDVector(__func__,"fwhmPolyRef",0,pKurucz->fwhmDegree))==NULL) ||
+               ((pTabFeno->fwhmVector[indexParam]=(double *)MEMORY_AllocDVector(__func__,"fwhmVector",0,NDET-1))==NULL) ||
                ((pKuruczFeno->TabCross[pKuruczFeno->indexFwhmParam[indexParam]].FitParam!=ITEM_NONE) &&
-               ((pTabFeno->fwhmDeriv2[indexParam]=(double *)MEMORY_AllocDVector("KURUCZ_Alloc ","fwhmDeriv2",0,NDET-1))==NULL))))
+               ((pTabFeno->fwhmDeriv2[indexParam]=(double *)MEMORY_AllocDVector(__func__,"fwhmDeriv2",0,NDET-1))==NULL))))
 
              rc=ERROR_ID_ALLOC;
            }
@@ -1379,8 +1364,8 @@ RC KURUCZ_Alloc(PROJECT *pProject,double *lambda,INDEX indexKurucz,double lambda
      goto EndKuruczAlloc;
 
     if (hFilterFlag && pKurucz->solarFGap && (lambda[NDET-1]-lambda[0]+1!=NDET) &&
-     (((rc=SPLINE_Vector(pKurucz->hrSolar.matrix[0],pKurucz->hrSolar.matrix[kuruczIndexRow],pKurucz->hrSolar.deriv2[kuruczIndexRow],pKurucz->hrSolar.nl,
-                            pKurucz->lambdaF,pKurucz->solarF,NDET+2*pKurucz->solarFGap,pAnalysisOptions->interpol,"KURUCZ_Alloc "))!=0) ||
+     (((rc=SPLINE_Vector(pKurucz->hrSolar.matrix[0],pKurucz->hrSolar.matrix[1],pKurucz->hrSolar.deriv2[1],pKurucz->hrSolar.nl,
+                            pKurucz->lambdaF,pKurucz->solarF,NDET+2*pKurucz->solarFGap,pAnalysisOptions->interpol,__func__))!=0) ||
       ((rc=FILTER_Vector(ANALYSE_phFilter,pKurucz->solarF,pKurucz->solarF,NDET+2*pKurucz->solarFGap,PRJCT_FILTER_OUTPUT_LOW))!=0) ||
       ((rc=SPLINE_Deriv2(pKurucz->lambdaF,pKurucz->solarF,pKurucz->solarF2,NDET+2*pKurucz->solarFGap,"KURUCZ_Alloc (solarF) "))!=0)))
 
