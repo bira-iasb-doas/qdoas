@@ -235,13 +235,11 @@ RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,co
      {
       if (pSlitOptions->slitFunction.slitType==SLIT_TYPE_NONE)
        {
-       	if (pKurucz->hrSolar.nc<ANALYSE_swathSize+1)                                                                         
-       	 rc=ERROR_SetLast("KURUCZ_Spectrum",ERROR_TYPE_FATAL,ERROR_ID_OMI_REFSIZE,"Solar spectrum");
-        else if ((pKurucz->hrSolar.nl==NDET) && VECTOR_Equal(pKurucz->hrSolar.matrix[0],oldLambda,NDET,(double)1.e-7))
-         memcpy(solar,pKurucz->hrSolar.matrix[1],sizeof(double)*NDET);
-        else
-         rc=SPLINE_Vector(pKurucz->hrSolar.matrix[0],pKurucz->hrSolar.matrix[1],pKurucz->hrSolar.deriv2[1],pKurucz->hrSolar.nl,
-                             oldLambda,solar,NDET,pAnalysisOptions->interpol,"KURUCZ_Spectrum ");
+         if ((pKurucz->hrSolar.nl==NDET) && VECTOR_Equal(pKurucz->hrSolar.matrix[0],oldLambda,NDET,(double)1.e-7))
+           memcpy(solar,pKurucz->hrSolar.matrix[1],sizeof(double)*NDET);
+         else
+           rc=SPLINE_Vector(pKurucz->hrSolar.matrix[0],pKurucz->hrSolar.matrix[1],pKurucz->hrSolar.deriv2[1],pKurucz->hrSolar.nl,
+                            oldLambda,solar,NDET,pAnalysisOptions->interpol,"KURUCZ_Spectrum ");
        } 
       else // 20130208 : a high resolution spectrum is now loaded from the slit page of project properties and convolved
       	rc=ANALYSE_ConvoluteXs(NULL,ANLYS_CROSS_ACTION_CONVOLUTE,(double)0.,&pKurucz->hrSolar,&ANALYSIS_slit,&ANALYSIS_slit2,
@@ -815,7 +813,6 @@ RC KURUCZ_Reference(double *instrFunction,INDEX refFlag,INT saveFlag,INT gomeFla
   INDEX            indexFeno,                                                   // browse analysis windows
                    indexRef;                                                    // index of another analysis window with the same reference spectrum
   KURUCZ *pKurucz;
-  INDEX kuruczIndexRow;
   RC               rc;                                                          // return code
 
   // Initializations
@@ -856,11 +853,9 @@ RC KURUCZ_Reference(double *instrFunction,INDEX refFlag,INT saveFlag,INT gomeFla
        {
        	memcpy(reference,(pTabFeno->useEtalon)?pTabFeno->SrefEtalon:pTabFeno->Sref,sizeof(double)*pTabFeno->NDET);
 
-       	kuruczIndexRow=(pKurucz->hrSolar.nc>indexFenoColumn+1)?indexFenoColumn+1:1;
-
        	if ((pTabFeno->NDET==pKurucz->hrSolar.nl) &&
        	     VECTOR_Equal(pKurucz->hrSolar.matrix[0],pTabFeno->LambdaRef,pTabFeno->NDET,(double)1.e-7) &&
-       	     VECTOR_Equal(pKurucz->hrSolar.matrix[kuruczIndexRow],reference,pTabFeno->NDET,(double)1.e-7))
+       	     VECTOR_Equal(pKurucz->hrSolar.matrix[1],reference,pTabFeno->NDET,(double)1.e-7))
 
        	 pTabFeno->rcKurucz=ERROR_ID_NO;
        	else
