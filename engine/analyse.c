@@ -612,10 +612,10 @@ RC TemperatureCorrection(double *xs,double *A,double *B,double *C,double *newXs,
 // ShiftVector : Apply shift and stretch on vector
 // -----------------------------------------------
 
-RC ShiftVector(double *lambda,double *source,double *deriv,double *target,
+RC ShiftVector(const double *lambda, double *source, const double *deriv, double *target,
                double DSH,double DST,double DST2,                           // first shift and stretch
                double DSH_,double DST_,double DST2_,                        // second shift and stretch
-               double *Param,INT fwhmDir,INT kuruczFlag,double *preshift,INDEX indexFenoColumn)
+               const double *Param,INT fwhmDir,INT kuruczFlag, const double *preshift,INDEX indexFenoColumn)
 {
   // Declarations
 
@@ -629,7 +629,7 @@ RC ShiftVector(double *lambda,double *source,double *deriv,double *target,
   // Initializations
 
 #if defined(__DEBUG_) && __DEBUG_
-  DEBUG_FunctionBegin("ShiftVector",DEBUG_FCTTYPE_APPL);
+  DEBUG_FunctionBegin(__func__,DEBUG_FCTTYPE_APPL);
 #endif
 
   memcpy(ANALYSE_shift,ANALYSE_zeros,sizeof(double)*NDET);
@@ -677,11 +677,13 @@ RC ShiftVector(double *lambda,double *source,double *deriv,double *target,
 
       // Apply shift and stretch
 
-      if ((rc=((fwhm!=(double)0.) && (((fwhmDir>0) && (fwhm>(double)0.)) || ((fwhmDir<0) && (fwhm<(double)0.)))) ?
-	   XSCONV_TypeGauss(lambda,source,deriv,ANALYSE_shift[j],(ANALYSE_splineX[j+1]-ANALYSE_splineX[j]),&target[j],fabs(fwhm),(double)0.,SLIT_TYPE_GAUSS):
-	   SPLINE_Vector(lambda,source,deriv,NDET,&ANALYSE_shift[j],&target[j],1,pAnalysisOptions->interpol,"ShiftVector "))!=ERROR_ID_NO)
-
-       break;
+      rc = ( (fwhm!=(double)0.) &&
+             ( (fwhmDir>0 && fwhm>(double)0.) || (fwhmDir<0 && fwhm<(double)0.) ) )
+        ? XSCONV_TypeGauss(lambda,source,deriv,ANALYSE_shift[j],(ANALYSE_splineX[j+1]-ANALYSE_splineX[j]),
+                           &target[j],fabs(fwhm),(double)0.,SLIT_TYPE_GAUSS)
+        : SPLINE_Vector(lambda,source,deriv,NDET,&ANALYSE_shift[j],&target[j],1,pAnalysisOptions->interpol,__func__);
+      if (rc != ERROR_ID_NO)
+        break;
      }
    }
 
@@ -709,7 +711,7 @@ RC ShiftVector(double *lambda,double *source,double *deriv,double *target,
 							(slitParam2==(double)0.))))
 
      rc=SPLINE_Vector(KURUCZ_buffers[indexFenoColumn].hrSolar.matrix[0],KURUCZ_buffers[indexFenoColumn].hrSolar.matrix[1],KURUCZ_buffers[indexFenoColumn].hrSolar.deriv2[1],KURUCZ_buffers[indexFenoColumn].hrSolar.nl,
-		      ANALYSE_shift,source,NDET,pAnalysisOptions->interpol,"ShiftVector ");
+		      ANALYSE_shift,source,NDET,pAnalysisOptions->interpol,__func__);
 
     // Convolution
 
@@ -751,15 +753,12 @@ RC ShiftVector(double *lambda,double *source,double *deriv,double *target,
         for (i=1;i<=pKURUCZ_fft->fftSize;i++)
          pKURUCZ_fft->invFftOut[i]/=step;
 
-        SPLINE_Deriv2(pKURUCZ_fft->fftIn+1,pKURUCZ_fft->invFftOut+1,pKURUCZ_fft->invFftIn+1,pKURUCZ_fft->oldSize,"ShiftVector ");
+        SPLINE_Deriv2(pKURUCZ_fft->fftIn+1,pKURUCZ_fft->invFftOut+1,pKURUCZ_fft->invFftIn+1,pKURUCZ_fft->oldSize,__func__);
 
         memcpy(&source[LimMin],&ANALYSE_shift[LimMin],sizeof(double)*LimN);
 
-     // not used anymore as we work only in nm now    if ((pAnalysisOptions->units==PRJCT_ANLYS_UNITS_NANOMETERS) ||
-	    // not used anymore as we work only in nm now !(rc=SPLINE_Vector(ANALYSE_splineX,Lambda,ANALYSE_splineX2,NDET,&source[LimMin],&ANALYSE_shift[LimMin],LimN,pAnalysisOptions->interpol,"ShiftVector ")))
-
          SPLINE_Vector(pKURUCZ_fft->fftIn+1,pKURUCZ_fft->invFftOut+1,pKURUCZ_fft->invFftIn+1,pKURUCZ_fft->oldSize,
-		       &ANALYSE_shift[LimMin],&target[LimMin],LimN,pAnalysisOptions->interpol,"ShiftVector ");
+		       &ANALYSE_shift[LimMin],&target[LimMin],LimN,pAnalysisOptions->interpol,__func__);
        }
       else
        {
@@ -774,7 +773,7 @@ RC ShiftVector(double *lambda,double *source,double *deriv,double *target,
         memset(&slitXs,0,sizeof(MATRIX_OBJECT));
         memset(&slitXs2,0,sizeof(MATRIX_OBJECT));
 
-        if (MATRIX_Allocate(&xsNew,NDET,2,0,0,0,"ShiftVector"))
+        if (MATRIX_Allocate(&xsNew,NDET,2,0,0,0,__func__))
          rc=ERROR_ID_ALLOC;
         else
          {
@@ -815,7 +814,7 @@ RC ShiftVector(double *lambda,double *source,double *deriv,double *target,
        	      // Recalculate second derivatives and the FWHM
 
        	      for (i=1;i<slitXs.nc;i++)
-               rc=SPLINE_Deriv2(slitXs.matrix[0]+shiftIndex,slitXs.matrix[1]+shiftIndex,slitXs.deriv2[i]+shiftIndex,slitXs.nl-shiftIndex,"ShiftVector ");
+               rc=SPLINE_Deriv2(slitXs.matrix[0]+shiftIndex,slitXs.matrix[1]+shiftIndex,slitXs.deriv2[i]+shiftIndex,slitXs.nl-shiftIndex,__func__);
        	     }
            }
           else if ((slitType==SLIT_TYPE_VOIGT) || (slitType==SLIT_TYPE_AGAUSS) || (slitType==SLIT_TYPE_INVPOLY))
@@ -831,8 +830,7 @@ RC ShiftVector(double *lambda,double *source,double *deriv,double *target,
             rc=XSCONV_LoadSlitFunction(&slitXs,&slitXs2,&slitOptions,NULL,&slitType);
            }
 
-          if (!rc && // not used anymore as we worked only in nm now ((pAnalysisOptions->units==PRJCT_ANLYS_UNITS_NANOMETERS) ||
-		                   // not used anymore as we worked only in nm now  !(rc=SPLINE_Vector(ANALYSE_splineX,Lambda,ANALYSE_splineX2,NDET,&source[LimMin],&ANALYSE_shift[LimMin],LimN,pAnalysisOptions->interpol,"ShiftVector "))) &&
+          if (!rc &&
 	      !(rc=XSCONV_TypeStandard(&xsNew,LimMin,LimMax+1,&KURUCZ_buffers[indexFenoColumn].hrSolar,
 				       &slitXs,&slitXs2,&KURUCZ_buffers[indexFenoColumn].hrSolar,NULL,
                                        slitType,slitParam,slitParam2,0)))
@@ -840,28 +838,28 @@ RC ShiftVector(double *lambda,double *source,double *deriv,double *target,
            memcpy(target,xsNew.matrix[1],sizeof(double)*NDET);
          }
 
-        MATRIX_Free(&xsNew,"ShiftVector");
-        MATRIX_Free(&slitXs,"ShiftVector");
-        MATRIX_Free(&slitXs2,"ShiftVector");
+        MATRIX_Free(&xsNew,__func__);
+        MATRIX_Free(&slitXs,__func__);
+        MATRIX_Free(&slitXs2,__func__);
        }
      }
 
-    if (hFilterRefLog && !(rc=SPLINE_Vector(KURUCZ_buffers[indexFenoColumn].lambdaF,KURUCZ_buffers[indexFenoColumn].solarF,KURUCZ_buffers[indexFenoColumn].solarF2,NDET+2*KURUCZ_buffers[indexFenoColumn].solarFGap,ANALYSE_shift+LimMin,source+LimMin,LimN,pAnalysisOptions->interpol,"ShiftVector ")))
+    if (hFilterRefLog && !(rc=SPLINE_Vector(KURUCZ_buffers[indexFenoColumn].lambdaF,KURUCZ_buffers[indexFenoColumn].solarF,KURUCZ_buffers[indexFenoColumn].solarF2,NDET+2*KURUCZ_buffers[indexFenoColumn].solarFGap,ANALYSE_shift+LimMin,source+LimMin,LimN,pAnalysisOptions->interpol,__func__)))
      {
       for (i=LimMin;(i<=LimMax) && (source[i]>(double)0.) && (target[i]>(double)0.);i++)
        target[i]=log(target[i]/source[i]);
 
       if (i<=LimMax)
-       rc=ERROR_SetLast("ShiftVector",ERROR_TYPE_WARNING,ERROR_ID_LOG,analyseIndexRecord);
+       rc=ERROR_SetLast(__func__,ERROR_TYPE_WARNING,ERROR_ID_LOG,analyseIndexRecord);
      }
    }
   else if (!fwhmFlag)
-   rc=SPLINE_Vector(lambda,source,deriv,NDET,&ANALYSE_shift[LimMin],&target[LimMin],LimN,pAnalysisOptions->interpol,"ShiftVector ");
+   rc=SPLINE_Vector(lambda,source,deriv,NDET,&ANALYSE_shift[LimMin],&target[LimMin],LimN,pAnalysisOptions->interpol,__func__);
 
   // Return
 
 #if defined(__DEBUG_) && __DEBUG_
-  DEBUG_FunctionStop("ShiftVector",rc);
+  DEBUG_FunctionStop(__func__,rc);
 #endif
 
   return rc;
@@ -984,8 +982,7 @@ RC ANALYSE_XsInterpolation(FENO *pTabFeno, const double *newLambda,INDEX indexFe
 
       // Second derivatives computation
 
-      if ((rc=SPLINE_Deriv2(newLambda, // not used anymore as we work only in nm now (pAnalysisOptions->units==PRJCT_ANLYS_UNITS_PIXELS)?ANALYSE_pixels:newLambda,
-                            pTabCross->vector,pTabCross->Deriv2,pTabFeno->NDET,"ANALYSE_XsInterpolation "))!=0)
+      if ((rc=SPLINE_Deriv2(newLambda,pTabCross->vector,pTabCross->Deriv2,pTabFeno->NDET,"ANALYSE_XsInterpolation "))!=0)
        break;
 
      }
@@ -1132,7 +1129,7 @@ RC ANALYSE_ConvoluteXs(const FENO *pTabFeno,INT action,double conc,
 // XSCONV_TypeGauss : Gaussian convolution with variable half way up width
 // -----------------------------------------------------------------------
 
-RC XSCONV_TypeGauss(double *lambda,double *Spec,double *SDeriv2,double lambdaj,
+RC XSCONV_TypeGauss(const double *lambda, const double *Spec, const double *SDeriv2,double lambdaj,
                     double dldj,double *SpecConv,double fwhm,double slitParam2,INT slitType)
 {
   // Declarations
@@ -1175,7 +1172,7 @@ RC XSCONV_TypeGauss(double *lambda,double *Spec,double *SDeriv2,double lambdaj,
   else if (slitType==SLIT_TYPE_ERF)
    oldF=(double)(ERF_GetValue((dld+delta)/a)-ERF_GetValue((dld-delta)/a))/(4.*delta);
 
-  rc=SPLINE_Vector(lambda,Spec,SDeriv2,NDET,&ldi,&SpecOld,1,SPLINE_CUBIC,"XSCONV_TypeGauss ");
+  rc=SPLINE_Vector(lambda,Spec,SDeriv2,NDET,&ldi,&SpecOld,1,SPLINE_CUBIC,__func__);
 
   while (!rc && (ldi<=lambdaMax))
    {
@@ -1190,7 +1187,7 @@ RC XSCONV_TypeGauss(double *lambda,double *Spec,double *SDeriv2,double lambdaj,
     else if (slitType==SLIT_TYPE_ERF)
      newF=(double)(ERF_GetValue((dld+delta)/a)-ERF_GetValue((dld-delta)/a))/(4.*delta);
 
-    if ((rc=SPLINE_Vector(lambda,Spec,SDeriv2,NDET,&ldi,&SpecNew,1,SPLINE_CUBIC,"XSCONV_TypeGauss "))!=0)
+    if ((rc=SPLINE_Vector(lambda,Spec,SDeriv2,NDET,&ldi,&SpecNew,1,SPLINE_CUBIC,__func__))!=0)
      break;
 
     crossFIntegral += (SpecOld*oldF+SpecNew*newF)*h;
@@ -1306,8 +1303,7 @@ RC ANALYSE_XsConvolution(FENO *pTabFeno,double *newlambda,
 
             // Interpolation
 
-            ((rc=SPLINE_Deriv2(newlambda, // not used anymore as we work only in nm now (pAnalysisOptions->units==PRJCT_ANLYS_UNITS_PIXELS)?ANALYSE_pixels:newlambda,
-                               pTabCross->vector,pTabCross->Deriv2,NDET,"ANALYSE_XsConvolution "))!=ERROR_ID_NO))
+            ((rc=SPLINE_Deriv2(newlambda,pTabCross->vector,pTabCross->Deriv2,NDET,"ANALYSE_XsConvolution "))!=ERROR_ID_NO))
 
         break;
       }
@@ -1505,7 +1501,7 @@ RC ANALYSE_LinFit(SVD *pSvd,INT Npts,INT Degree,double *a,double *sigma,double *
 // AnalyseFwhmCorrectionK : resolution adjustment between spectrum and reference using fwhms fitted by Kurucz
 // ----------------------------------------------------------------------------------------------------------
 
-RC AnalyseFwhmCorrectionK(double *Spectre,double *Sref,double *SpecTrav,double *RefTrav,INDEX indexFenoColumn)
+RC AnalyseFwhmCorrectionK(const double *Spectre, const double *Sref,double *SpecTrav,double *RefTrav,INDEX indexFenoColumn)
 {
   // Declarations
 
@@ -1692,7 +1688,6 @@ RC ANALYSE_SvdInit(SVD *pSvd)
   // Initializations
 
   memcpy(ANALYSE_splineX,Lambda,sizeof(double)*NDET);
-  // not used anymore as we work only in nm now memcpy(ANALYSE_splineX,(pAnalysisOptions->units==PRJCT_ANLYS_UNITS_NANOMETERS)?Lambda:ANALYSE_pixels,sizeof(double)*NDET);
 
   if (!(rc=SPLINE_Deriv2(ANALYSE_pixels,Lambda,ANALYSE_splineX2,NDET,"ANALYSE_SvdInit ")))
    {
@@ -2028,7 +2023,6 @@ RC ANALYSE_AlignReference(ENGINE_CONTEXT *pEngineContext,INT refFlag,INT saveFla
 
          goto EndAlignReference;
 
-        // not used anymore as we work only in nm now if (pAnalysisOptions->units==PRJCT_ANLYS_UNITS_NANOMETERS)
          for (j=0,lambda0=Lambda[(SvdPDeb+SvdPFin)/2];j<NDET;j++) // This is used only for spectra display
           {
            x0=Lambda[j]-lambda0;
@@ -2206,7 +2200,7 @@ RC ANALYSE_Function( double *X, double *Y, double *SigmaY, double *Yfit, int Npt
   RC rc;
 
 #if defined(__DEBUG_) && __DEBUG_
-  DEBUG_FunctionBegin("ANALYSE_Function",DEBUG_FCTTYPE_APPL);
+  DEBUG_FunctionBegin(__func__,DEBUG_FCTTYPE_APPL);
 #endif
 
   // Initializations
@@ -2866,7 +2860,7 @@ RC ANALYSE_Function( double *X, double *Y, double *SigmaY, double *Yfit, int Npt
   // Return
 
 #if defined(__DEBUG_) && __DEBUG_
-  DEBUG_FunctionStop("ANALYSE_Function",rc);
+  DEBUG_FunctionStop(__func__,rc);
 #endif
 
   return rc;
@@ -2887,15 +2881,15 @@ RC ANALYSE_Function( double *X, double *Y, double *SigmaY, double *Yfit, int Npt
 #if defined(__BC32_) && __BC32_
 #pragma argsused
 #endif
-RC ANALYSE_CurFitMethod(INDEX   indexFenoColumn,  // for OMI
-                        double *Spectre,          // raw spectrum
-                        double *SigmaSpec,        // error on raw spectrum
-                        double *Sref,             // reference spectrum
+RC ANALYSE_CurFitMethod(INDEX indexFenoColumn,  // for OMI
+                        const double *Spectre,          // raw spectrum
+                        const double *SigmaSpec,        // error on raw spectrum
+                        const double *Sref,             // reference spectrum
 			double *residuals,        // pointer to store residuals (NULL if not needed)
                         double *Chisqr,           // chi square
-                        INT    *pNiter,           // number of iterations
-                        double  speNormFact,
-                        double  refNormFact)
+                        int *pNiter,           // number of iterations
+                        double speNormFact,
+                        double refNormFact)
 {
   // Declarations
 
@@ -3492,7 +3486,6 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
           // Make a backup of spectral window limits + gaps
 
-          //AnalyseCopyFenetre(oldFenetre,&oldZ,Feno->svd.Fenetre,Feno->svd.Z);
           old_range = spectrum_copy(Feno->svd.specrange);
 
           if ((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_OMI) &&
@@ -3630,9 +3623,6 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
           DEBUG_Start(ENGINE_dbgFile,"Test",(analyseDebugMask=DEBUG_FCTTYPE_MATH|DEBUG_FCTTYPE_APPL),5,(analyseDebugVar=DEBUG_DVAR_YES),0); // !debugResetFlag++);
 #endif
 
-          /*             ((Feno->useKurucz==ANLYS_KURUCZ_REF_AND_SPEC) &&
-                         (((rc=SPLINE_Deriv2(LambdaK,Spectre,SplineSpec,NDET,"Spline(Spectre) "))!=ERROR_ID_NO) ||
-                         ((rc=SPLINE_Vector(LambdaK,Spectre,SplineSpec,NDET,Lambda,SpectreK,NDET,pAnalysisOptions->interpol,"ANALYSE_Spectrum "))!=ERROR_ID_NO))) || */
           double residuals[NDET];
           memcpy(residuals, ANALYSE_zeros, NDET * sizeof(double));
 
@@ -3901,7 +3891,8 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
     if ((pEngineContext->lastSavedRecord!=pEngineContext->indexRecord)
         && ( THRD_id==THREAD_TYPE_KURUCZ || nrc)
-        && ( (THRD_id==THREAD_TYPE_ANALYSIS && pProject->asciiResults.analysisFlag)
+        && ( (THRD_id==THREAD_TYPE_ANALYSIS
+ && pProject->asciiResults.analysisFlag)
              || (THRD_id==THREAD_TYPE_KURUCZ && pProject->asciiResults.calibFlag) ) ) {
       rc=OUTPUT_SaveResults(pEngineContext,indexFenoColumn);
     }
@@ -5410,7 +5401,6 @@ RC ANALYSE_LoadRef(ENGINE_CONTEXT *pEngineContext,INDEX indexFenoColumn)
 
   pTabFeno->gomeRefFlag=((pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_GDP_ASCII)&&
                          (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_GDP_BIN) &&
-                      // (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_OMI) &&     commented on 15/10/2012 : the irradiance is provided in a separate file
                          (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_SCIA_PDS) &&
                          (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_GOME2))?1:0;
 

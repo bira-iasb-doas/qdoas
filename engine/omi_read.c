@@ -1412,7 +1412,6 @@ RC OMI_Read(ENGINE_CONTEXT *pEngineContext,int recordNo)
 	  pRecord->omi.omiMeasurementIndex=indexMeasurement+1;                                  // index of the current measurement
 	  pRecord->omi.omiRowIndex=indexSpectrum+1;                                 // row of the current spectrum in the current measurement
           pRecord->omi.omiXtrackQF = pGeo->xtrackQualityFlags[recordNo-1];
-          //	  memcpy(pRecord->omi.omiPixelQF,pSpectrum->pixelQualityFlags,sizeof(unsigned short)*NDET);
           
 	  OMI_FromTAI1993ToYMD((double)pGeo->time[indexMeasurement],&pRecord->present_day,&pRecord->present_time,&OMI_ms);
           

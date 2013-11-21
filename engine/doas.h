@@ -137,7 +137,7 @@ enum _spline
  };
 
 RC SPLINE_Deriv2(const double *X, const double *Y, double *Y2,int n, const char *callingFunction);
-RC SPLINE_Vector(const double *xa, const double *ya,double *y2a,int na, const double *xb,double *yb,int nb,int type,const char *callingFunction);
+RC SPLINE_Vector(const double *xa, const double *ya, const double *y2a,int na, const double *xb,double *yb,int nb,int type,const char *callingFunction);
 
 // ====================================
 // SVD.C : Singular value decomposition
@@ -1028,7 +1028,7 @@ RC   ANALYSE_LinFit(SVD *pSvd,INT Npts,INT Degree,double *a,double *sigma,double
 void ANALYSE_SvdFree(char *callingFunctionShort,SVD *pSvd);
 RC   ANALYSE_SvdLocalAlloc(char *callingFunctionShort,SVD *pSvd);
 RC   ANALYSE_SvdInit(SVD *pSvd);
-RC   ANALYSE_CurFitMethod(INDEX indexFenoColumn,double *Spectre,double *SigmaSpec,double *Sref, double * residuals,double *Chisqr,INT *pNiter,double speNormFact,double refNormFact);
+RC   ANALYSE_CurFitMethod(INDEX indexFenoColumn, const double *Spectre, const double *SigmaSpec, const double *Sref, double * residuals,double *Chisqr,INT *pNiter,double speNormFact,double refNormFact);
 void ANALYSE_ResetData(void);
 RC   ANALYSE_SetInit(ENGINE_CONTEXT *pEngineContext);
 RC   ANALYSE_AlignReference(ENGINE_CONTEXT *pEngineContext,INT refFlag,INT saveFlag,void *responseHandle,INDEX indexFenoColumn);
