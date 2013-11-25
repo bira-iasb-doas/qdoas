@@ -824,6 +824,84 @@ RC XSCONV_TypeNone(MATRIX_OBJECT *pXsnew,MATRIX_OBJECT *pXshr)
   return SPLINE_Vector(pXshr->matrix[0],pXshr->matrix[1],pXshr->deriv2[1],pXshr->nl,pXsnew->matrix[0],pXsnew->matrix[1],pXsnew->nl,SPLINE_CUBIC,"XSCONV_TypeNone ");
  }
 
+// -----------------------------------------------------------------------
+// XSCONV_TypeGauss : Gaussian convolution with variable half way up width
+// -----------------------------------------------------------------------
+
+ RC XSCONV_TypeGauss(const double *lambda, const double *Spec, const double *SDeriv2,double lambdaj,
+                     double dldj,double *SpecConv,double fwhm,double slitParam2,INT slitType, int ndet)
+ {
+   // Declarations
+ 
+   double h,oldF,newF,Lim,ld_inc,ldi,dld,a,delta,
+     lambdaMax,SpecOld, SpecNew,sigma,
+     crossFIntegral, FIntegral;
+ 
+   RC rc;
+ 
+   // Initializations
+ 
+   fwhm=fabs(fwhm);
+   crossFIntegral=FIntegral=(double)0.;
+   sigma=fwhm*0.5;
+   a=sigma/sqrt(log(2.));
+   delta=slitParam2*0.5;
+ 
+   Lim=(double)2.*fwhm;
+ 
+   if ((ld_inc=(double)fwhm/3.)>dldj)
+    ld_inc=dldj;
+ 
+   h=(double)ld_inc*0.5;
+ 
+   // Browse wavelengths in the final calibration vector
+ 
+   ldi=lambdaj-Lim;
+   lambdaMax=lambdaj+Lim;
+ 
+   // Search for first pixel in high resolution cross section in the wavelength range delimited by slit function
+ 
+   dld = -(ldi-lambdaj);
+ 
+   if (slitType==SLIT_TYPE_GAUSS)
+    //   oldF=(double)exp(-4.*log(2.)*(dld*dld)/(fwhm*fwhm));
+    rc=XSCONV_FctGauss(&oldF,fwhm,ld_inc,dld);
+   else if (slitType==SLIT_TYPE_INVPOLY)
+    oldF=(double)pow(sigma,(double)slitParam2)/(pow(dld,(double)slitParam2)+pow(sigma,(double)slitParam2));
+   else if (slitType==SLIT_TYPE_ERF)
+    oldF=(double)(ERF_GetValue((dld+delta)/a)-ERF_GetValue((dld-delta)/a))/(4.*delta);
+ 
+   rc=SPLINE_Vector(lambda,Spec,SDeriv2,ndet,&ldi,&SpecOld,1,SPLINE_CUBIC,__func__);
+ 
+   while (!rc && (ldi<=lambdaMax))
+    {
+     ldi += (double) ld_inc;
+     dld = -(ldi-lambdaj);
+ 
+     if (slitType==SLIT_TYPE_GAUSS)
+      //     newF=(double)exp(-4.*log(2.)*(dld*dld)/(fwhm*fwhm));
+      rc=XSCONV_FctGauss(&newF,fwhm,ld_inc,dld);
+     else if (slitType==SLIT_TYPE_INVPOLY)
+      newF=(double)pow(sigma,(double)slitParam2)/(pow(dld,(double)slitParam2)+pow(sigma,(double)slitParam2));
+     else if (slitType==SLIT_TYPE_ERF)
+      newF=(double)(ERF_GetValue((dld+delta)/a)-ERF_GetValue((dld-delta)/a))/(4.*delta);
+ 
+     if ((rc=SPLINE_Vector(lambda,Spec,SDeriv2,ndet,&ldi,&SpecNew,1,SPLINE_CUBIC,__func__))!=0)
+      break;
+ 
+     crossFIntegral += (SpecOld*oldF+SpecNew*newF)*h;
+     FIntegral      += (oldF+newF)*h;
+ 
+     oldF=newF;
+     SpecOld=SpecNew;
+    }
+ 
+   *SpecConv=(FIntegral!=(double)0.)?(double)crossFIntegral/FIntegral:(double)1.;
+ 
+   // Return
+ 
+   return rc;
+ }
 
 RC XSCONV_TypeStandardFFT(FFT *pFFT,INT fwhmType,double slitParam,double slitParam2,double *lambda, double *target,INT size)
  {
