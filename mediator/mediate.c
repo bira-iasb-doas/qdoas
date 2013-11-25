@@ -838,7 +838,7 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
       pEngineInstrumental->user=pMediateInstrumental->acton.niluType;                                // old or new format
 
       strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->acton.calibrationFile);      // calibration file
-      strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->acton.instrFunctionFile);      // instrumental function file
+      strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->acton.transmissionFunctionFile);      // instrumental function file
 
       break;
       // ----------------------------------------------------------------------------
@@ -849,7 +849,7 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
       pEngineInstrumental->user=pMediateInstrumental->logger.spectralType;                           // spectrum type (offaxis or zenith)
 
       strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->logger.calibrationFile);     // calibration file
-      strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->logger.instrFunctionFile);     // instrumental function file
+      strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->logger.transmissionFunctionFile);     // instrumental function file
 
       break;
       // ----------------------------------------------------------------------------
@@ -870,7 +870,7 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
       pEngineInstrumental->lambdaMax=pMediateInstrumental->ascii.lambdaMax;
 
       strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->ascii.calibrationFile);      // calibration file
-      strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->ascii.instrFunctionFile);      // instrumental function file
+      strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->ascii.transmissionFunctionFile);      // instrumental function file
 
       break;
       // ----------------------------------------------------------------------------
@@ -882,7 +882,7 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
       pEngineInstrumental->user=PRJCT_INSTR_IASB_TYPE_ALL;                                           // spectrum type (offaxis or zenith)
 
       strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->pdaeggold.calibrationFile);     // calibration file
-      strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->pdaeggold.instrFunctionFile);     // instrumental function file
+      strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->pdaeggold.transmissionFunctionFile);     // instrumental function file
 
       break;
       // ----------------------------------------------------------------------------
@@ -894,7 +894,7 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
       pEngineInstrumental->user=pMediateInstrumental->pdaegg.spectralType;                           // spectrum type (offaxis or zenith)
 
       strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->pdaegg.calibrationFile);     // calibration file
-      strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->pdaegg.instrFunctionFile);     // instrumental function file
+      strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->pdaegg.transmissionFunctionFile);     // instrumental function file
 
       break;
       // ----------------------------------------------------------------------------
@@ -907,7 +907,7 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
       pEngineInstrumental->lambdaMax=pMediateInstrumental->pdasieasoe.lambdaMax;
 
       strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->pdasieasoe.calibrationFile); // calibration file
-      strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->pdasieasoe.instrFunctionFile); // instrumental function file
+      strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->pdasieasoe.transmissionFunctionFile); // instrumental function file
 
       break;
       // ----------------------------------------------------------------------------
@@ -920,7 +920,7 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
       pEngineInstrumental->lambdaMax=pMediateInstrumental->oceanoptics.lambdaMax;
 
       strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->oceanoptics.calibrationFile);      // calibration file
-      strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->oceanoptics.instrFunctionFile);      // instrumental function file
+      strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->oceanoptics.transmissionFunctionFile);      // instrumental function file
 
       break;
       // ----------------------------------------------------------------------------
@@ -932,7 +932,7 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
       pEngineInstrumental->saoz.spectralType=pMediateInstrumental->saozvis.spectralType;             // spectral type (zenith sky or pointed measuremets
 
       strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->saozvis.calibrationFile);    // calibration file
-      strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->saozvis.instrFunctionFile);    // instrumental function file
+      strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->saozvis.transmissionFunctionFile);    // instrumental function file
 
       break;
       // ----------------------------------------------------------------------------
@@ -945,7 +945,7 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
       pEngineInstrumental->lambdaMax=pMediateInstrumental->saozefm.lambdaMax;
 
       strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->saozefm.calibrationFile);    // calibration file
-      strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->saozefm.instrFunctionFile);    // instrumental function file
+      strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->saozefm.transmissionFunctionFile);    // instrumental function file
 
       break;
       // ----------------------------------------------------------------------------
@@ -958,7 +958,7 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
       pEngineInstrumental->lambdaMax=pMediateInstrumental->biraairborne.lambdaMax;
 
       strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->biraairborne.calibrationFile);    // calibration file
-      strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->biraairborne.instrFunctionFile);    // instrumental function file
+      strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->biraairborne.transmissionFunctionFile);    // instrumental function file
 
       break;
       // ----------------------------------------------------------------------------
@@ -971,7 +971,7 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
       pEngineInstrumental->lambdaMax=pMediateInstrumental->rasas.lambdaMax;
 
       strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->rasas.calibrationFile);      // calibration file
-      strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->rasas.instrFunctionFile);      // instrumental function file
+      strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->rasas.transmissionFunctionFile);      // instrumental function file
 
       break;
       // ----------------------------------------------------------------------------
@@ -984,7 +984,7 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
       pEngineInstrumental->lambdaMax=pMediateInstrumental->noaa.lambdaMax;
 
       strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->noaa.calibrationFile);       // calibration file
-      strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->noaa.instrFunctionFile);       // instrumental function file
+      strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->noaa.transmissionFunctionFile);       // instrumental function file
 
       break;
       // ----------------------------------------------------------------------------
@@ -993,7 +993,7 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
       NDET=1024;
 
       strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->sciapds.calibrationFile);    // calibration file
-      strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->sciapds.instrFunctionFile);    // instrumental function file
+      strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->sciapds.transmissionFunctionFile);    // instrumental function file
       strcpy(pEngineInstrumental->dnlFile,pMediateInstrumental->sciapds.detectorNonLinearityFile);   // correction for the non linearity of the detector
 
       pEngineInstrumental->scia.sciaChannel=pMediateInstrumental->sciapds.channel;
@@ -1014,7 +1014,7 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
       NDET=1024;                                                                                     // Could be reduced by Set function
 
       strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->gdpascii.calibrationFile);     // calibration file
-      strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->gdpascii.instrFunctionFile);     // instrumental function file
+      strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->gdpascii.transmissionFunctionFile);     // instrumental function file
 
       pEngineInstrumental->gome.bandType=pMediateInstrumental->gdpascii.bandType;
       pEngineInstrumental->gome.pixelType=pMediateInstrumental->gdpascii.pixelType-1;
@@ -1026,7 +1026,7 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
       NDET=1024;                                                                                     // Could be reduced by Set function
 
       strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->gdpbin.calibrationFile);     // calibration file
-      strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->gdpbin.instrFunctionFile);     // instrumental function file
+      strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->gdpbin.transmissionFunctionFile);     // instrumental function file
 
       pEngineInstrumental->gome.bandType=pMediateInstrumental->gdpbin.bandType;
       pEngineInstrumental->gome.pixelType=pMediateInstrumental->gdpbin.pixelType-1;
@@ -1043,7 +1043,7 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
       pEngineInstrumental->lambdaMax=pMediateInstrumental->ccdeev.lambdaMax;
 
       strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->ccdeev.calibrationFile);     // calibration file
-      strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->ccdeev.instrFunctionFile);     // instrumental function file
+      strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->ccdeev.transmissionFunctionFile);     // instrumental function file
       strcpy(pEngineInstrumental->imagePath,pMediateInstrumental->ccdeev.imagePath);     // instrumental function file
 
       // ---> not used for the moment : pMediateInstrumental->ccdeev.straylightCorrectionFile;
@@ -1054,7 +1054,7 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
     case PRJCT_INSTR_FORMAT_GOME2 :                            // GOME2
 
       strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->gome2.calibrationFile);     // calibration file
-      strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->gome2.instrFunctionFile);     // instrumental function file
+      strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->gome2.transmissionFunctionFile);     // instrumental function file
 
       pEngineInstrumental->user=pMediateInstrumental->gome2.bandType;
 
@@ -1068,7 +1068,7 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
       pEngineInstrumental->lambdaMax=pMediateInstrumental->uoft.lambdaMax;
 
       strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->uoft.calibrationFile);     // calibration file
-      strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->uoft.instrFunctionFile);     // instrumental function file
+      strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->uoft.transmissionFunctionFile);     // instrumental function file
 
       NDET=2048;
       break;
@@ -1088,7 +1088,7 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
       pEngineInstrumental->mfcMaskUse=pMediateInstrumental->mfc.autoFileSelect;
 
       strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->mfc.calibrationFile);     // calibration file
-      strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->mfc.instrFunctionFile);     // instrumental function file
+      strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->mfc.transmissionFunctionFile);     // instrumental function file
       strcpy(pEngineInstrumental->vipFile,pMediateInstrumental->mfc.darkCurrentFile);             // dark current file
       strcpy(pEngineInstrumental->offsetFile,pMediateInstrumental->mfc.offsetFile);               // offset file
 
@@ -1106,7 +1106,7 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
       strcpy(pEngineInstrumental->mfcStdDate,pMediateInstrumental->mfcstd.dateFormat);
 
       strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->mfcstd.calibrationFile);     // calibration file
-      strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->mfcstd.instrFunctionFile);     // instrumental function file
+      strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->mfcstd.transmissionFunctionFile);     // instrumental function file
       strcpy(pEngineInstrumental->vipFile,pMediateInstrumental->mfcstd.darkCurrentFile);             // dark current file
       strcpy(pEngineInstrumental->offsetFile,pMediateInstrumental->mfcstd.offsetFile);               // offset file
 
@@ -1120,7 +1120,7 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
 
       NDET=pEngineInstrumental->detectorSize=pMediateInstrumental->mfcbira.detectorSize;
       strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->mfcbira.calibrationFile);     // calibration file
-      strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->mfcbira.instrFunctionFile);       // instrumental function file
+      strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->mfcbira.transmissionFunctionFile);       // instrumental function file
 
       break;
       // ---------------------------------------------------------------------------
@@ -1133,7 +1133,7 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
       pEngineInstrumental->lambdaMax=pMediateInstrumental->mkzy.lambdaMax;
 
       strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->mkzy.calibrationFile);       // calibration file
-      strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->mkzy.instrFunctionFile);       // instrumental function file
+      strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->mkzy.transmissionFunctionFile);       // instrumental function file
 
       break;
       // ----------------------------------------------------------------------------
@@ -1144,7 +1144,7 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
       memset(pEngineInstrumental->omi.omiTracks,0,sizeof(int)*MAX_SWATHSIZE);
 
       strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->omi.calibrationFile);     // calibration file
-      strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->omi.instrFunctionFile);     // instrumental function file
+      strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->omi.transmissionFunctionFile);     // instrumental function file
 
       pEngineInstrumental->omi.spectralType=pMediateInstrumental->omi.spectralType;
       pEngineInstrumental->omi.averageFlag=pMediateInstrumental->omi.flagAverage;

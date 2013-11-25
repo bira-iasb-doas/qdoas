@@ -565,7 +565,7 @@ CWInstrAsciiEdit::CWInstrAsciiEdit(const struct instrumental_ascii *d, QWidget *
   // files
   helperConstructCalInsFileWidgets(bottomLayout, row,
 				   d->calibrationFile, sizeof(d->calibrationFile),
-				   d->instrFunctionFile, sizeof(d->instrFunctionFile));
+				   d->transmissionFunctionFile, sizeof(d->transmissionFunctionFile));
 
   bottomLayout->setColumnMinimumWidth(0, cSuggestedColumnZeroWidth);
   bottomLayout->setColumnMinimumWidth(2, cSuggestedColumnTwoWidth);
@@ -636,7 +636,7 @@ void CWInstrAsciiEdit::apply(struct instrumental_ascii *d) const
 
   // files
   strcpy(d->calibrationFile, m_fileOneEdit->text().toAscii().data());
-  strcpy(d->instrFunctionFile, m_fileTwoEdit->text().toAscii().data());
+  strcpy(d->transmissionFunctionFile, m_fileTwoEdit->text().toAscii().data());
 
 }
 
@@ -666,7 +666,7 @@ CWInstrLoggerEdit::CWInstrLoggerEdit(const struct instrumental_logger *d, QWidge
   // files
   helperConstructCalInsFileWidgets(gridLayout, row,
 				   d->calibrationFile, sizeof(d->calibrationFile),
-				   d->instrFunctionFile, sizeof(d->instrFunctionFile));
+				   d->transmissionFunctionFile, sizeof(d->transmissionFunctionFile));
 
   gridLayout->setColumnMinimumWidth(0, cSuggestedColumnZeroWidth);
   gridLayout->setColumnMinimumWidth(2, cSuggestedColumnTwoWidth);
@@ -699,7 +699,7 @@ void CWInstrLoggerEdit::apply(struct instrumental_logger *d) const
 
   // files
   strcpy(d->calibrationFile, m_fileOneEdit->text().toAscii().data());
-  strcpy(d->instrFunctionFile, m_fileTwoEdit->text().toAscii().data());
+  strcpy(d->transmissionFunctionFile, m_fileTwoEdit->text().toAscii().data());
 }
 
 //--------------------------------------------------------
@@ -722,7 +722,7 @@ CWInstrActonEdit::CWInstrActonEdit(const struct instrumental_acton *d, QWidget *
   // files
   helperConstructCalInsFileWidgets(gridLayout, row,
 				   d->calibrationFile, sizeof(d->calibrationFile),
-				   d->instrFunctionFile, sizeof(d->instrFunctionFile));
+				   d->transmissionFunctionFile, sizeof(d->transmissionFunctionFile));
 
   gridLayout->setColumnMinimumWidth(0, cSuggestedColumnZeroWidth);
   gridLayout->setColumnMinimumWidth(2, cSuggestedColumnTwoWidth);
@@ -750,7 +750,7 @@ void CWInstrActonEdit::apply(struct instrumental_acton *d) const
 
   // files
   strcpy(d->calibrationFile, m_fileOneEdit->text().toAscii().data());
-  strcpy(d->instrFunctionFile, m_fileTwoEdit->text().toAscii().data());
+  strcpy(d->transmissionFunctionFile, m_fileTwoEdit->text().toAscii().data());
 }
 
 //--------------------------------------------------------
@@ -773,7 +773,7 @@ CWInstrSaozEdit::CWInstrSaozEdit(const struct instrumental_saoz *d, QWidget *par
   // files
   helperConstructCalInsFileWidgets(gridLayout, row,
                                    d->calibrationFile, sizeof(d->calibrationFile),
-                                   d->instrFunctionFile, sizeof(d->instrFunctionFile));
+                                   d->transmissionFunctionFile, sizeof(d->transmissionFunctionFile));
 
   gridLayout->setColumnMinimumWidth(0, cSuggestedColumnZeroWidth);
   gridLayout->setColumnMinimumWidth(2, cSuggestedColumnTwoWidth);
@@ -801,7 +801,7 @@ void CWInstrSaozEdit::apply(struct instrumental_saoz *d) const
 
   // files
   strcpy(d->calibrationFile, m_fileOneEdit->text().toAscii().data());
-  strcpy(d->instrFunctionFile, m_fileTwoEdit->text().toAscii().data());
+  strcpy(d->transmissionFunctionFile, m_fileTwoEdit->text().toAscii().data());
 }
 
 //--------------------------------------------------------------------------
@@ -874,7 +874,7 @@ CWInstrMfcEdit::CWInstrMfcEdit(const struct instrumental_mfc *d, QWidget *parent
   // files
   helperConstructCalInsFileWidgets(gridLayout, row,
 				   d->calibrationFile, sizeof(d->calibrationFile),
-				   d->instrFunctionFile, sizeof(d->instrFunctionFile));
+				   d->transmissionFunctionFile, sizeof(d->transmissionFunctionFile));
 
   // non-standard files...
   helperConstructFileWidget(&m_fileThreeEdit, gridLayout, row,
@@ -950,7 +950,7 @@ void CWInstrMfcEdit::apply(struct instrumental_mfc *d) const
 
   // files
   strcpy(d->calibrationFile, m_fileOneEdit->text().toAscii().data());
-  strcpy(d->instrFunctionFile, m_fileTwoEdit->text().toAscii().data());
+  strcpy(d->transmissionFunctionFile, m_fileTwoEdit->text().toAscii().data());
   strcpy(d->darkCurrentFile, m_fileThreeEdit->text().toAscii().data());
   strcpy(d->offsetFile, m_fileFourEdit->text().toAscii().data());
 }
@@ -1025,7 +1025,7 @@ CWInstrMfcStdEdit::CWInstrMfcStdEdit(const struct instrumental_mfcstd *d, QWidge
   // files
   helperConstructCalInsFileWidgets(gridLayout, row,
 				   d->calibrationFile, sizeof(d->calibrationFile),
-				   d->instrFunctionFile, sizeof(d->instrFunctionFile));
+				   d->transmissionFunctionFile, sizeof(d->transmissionFunctionFile));
 
   // non-standard files...
   helperConstructFileWidget(&m_fileThreeEdit, gridLayout, row,
@@ -1083,7 +1083,7 @@ void CWInstrMfcStdEdit::apply(struct instrumental_mfcstd *d) const
 
   // files
   strcpy(d->calibrationFile, m_fileOneEdit->text().toAscii().data());
-  strcpy(d->instrFunctionFile, m_fileTwoEdit->text().toAscii().data());
+  strcpy(d->transmissionFunctionFile, m_fileTwoEdit->text().toAscii().data());
   strcpy(d->darkCurrentFile, m_fileThreeEdit->text().toAscii().data());
   strcpy(d->offsetFile, m_fileFourEdit->text().toAscii().data());
 }
@@ -1139,7 +1139,7 @@ CWInstrMfcbiraEdit::CWInstrMfcbiraEdit(const struct instrumental_mfcbira *d, QWi
   // files
   helperConstructCalInsFileWidgets(gridLayout, row,
 				   d->calibrationFile, sizeof(d->calibrationFile),
-				   d->instrFunctionFile, sizeof(d->instrFunctionFile));
+				   d->transmissionFunctionFile, sizeof(d->transmissionFunctionFile));
 
   mainLayout->addLayout(groupLayout,0);
   mainLayout->addLayout(gridLayout);
@@ -1174,7 +1174,7 @@ void CWInstrMfcbiraEdit::apply(struct instrumental_mfcbira *d) const
 
   // files
   strcpy(d->calibrationFile, m_fileOneEdit->text().toAscii().data());
-  strcpy(d->instrFunctionFile, m_fileTwoEdit->text().toAscii().data());
+  strcpy(d->transmissionFunctionFile, m_fileTwoEdit->text().toAscii().data());
 
   d->straylight = (m_strayLightCheck->checkState() == Qt::Checked) ? 1 : 0;
   d->lambdaMin = m_lambdaMinEdit->text().toDouble();
@@ -1220,7 +1220,7 @@ CWInstrMinimumEdit::CWInstrMinimumEdit(const struct instrumental_minimum *d, QWi
   // files
   helperConstructCalInsFileWidgets(gridLayout, row,
 				   d->calibrationFile, sizeof(d->calibrationFile),
-				   d->instrFunctionFile, sizeof(d->instrFunctionFile));
+				   d->transmissionFunctionFile, sizeof(d->transmissionFunctionFile));
 
   gridLayout->setColumnMinimumWidth(0, cSuggestedColumnZeroWidth);
   gridLayout->setColumnMinimumWidth(2, cSuggestedColumnTwoWidth);
@@ -1247,7 +1247,7 @@ void CWInstrMinimumEdit::apply(struct instrumental_minimum *d) const
 {
   // files
   strcpy(d->calibrationFile, m_fileOneEdit->text().toAscii().data());
-  strcpy(d->instrFunctionFile, m_fileTwoEdit->text().toAscii().data());
+  strcpy(d->transmissionFunctionFile, m_fileTwoEdit->text().toAscii().data());
 
   // straylight bias
 
@@ -1268,7 +1268,7 @@ CWInstrCcdEdit::CWInstrCcdEdit(const struct instrumental_ccd *d, QWidget *parent
   // files
   helperConstructFileWidgets(gridLayout, row,
 			     d->calibrationFile, sizeof(d->calibrationFile),
-			     d->instrFunctionFile, sizeof(d->instrFunctionFile),
+			     d->transmissionFunctionFile, sizeof(d->transmissionFunctionFile),
 			     d->interPixelVariabilityFile, sizeof(d->interPixelVariabilityFile),
 			     d->detectorNonLinearityFile, sizeof(d->detectorNonLinearityFile));
 
@@ -1287,7 +1287,7 @@ void CWInstrCcdEdit::apply(struct instrumental_ccd *d) const
 {
   // files
   strcpy(d->calibrationFile, m_fileOneEdit->text().toAscii().data());
-  strcpy(d->instrFunctionFile, m_fileTwoEdit->text().toAscii().data());
+  strcpy(d->transmissionFunctionFile, m_fileTwoEdit->text().toAscii().data());
   strcpy(d->interPixelVariabilityFile, m_fileThreeEdit->text().toAscii().data());
   strcpy(d->detectorNonLinearityFile, m_fileFourEdit->text().toAscii().data());
 }
@@ -1382,7 +1382,7 @@ CWInstrPdaEggUlbEdit::CWInstrPdaEggUlbEdit(const struct instrumental_pdaeggulb *
   // files
   helperConstructFileWidgets(gridLayout, row,
 			     d->calibrationFile, sizeof(d->calibrationFile),
-			     d->instrFunctionFile, sizeof(d->instrFunctionFile),
+			     d->transmissionFunctionFile, sizeof(d->transmissionFunctionFile),
 			     d->interPixelVariabilityFile, sizeof(d->interPixelVariabilityFile),
 			     d->detectorNonLinearityFile, sizeof(d->detectorNonLinearityFile));
 
@@ -1412,7 +1412,7 @@ void CWInstrPdaEggUlbEdit::apply(struct instrumental_pdaeggulb *d) const
 
   // files
   strcpy(d->calibrationFile, m_fileOneEdit->text().toAscii().data());
-  strcpy(d->instrFunctionFile, m_fileTwoEdit->text().toAscii().data());
+  strcpy(d->transmissionFunctionFile, m_fileTwoEdit->text().toAscii().data());
   strcpy(d->interPixelVariabilityFile, m_fileThreeEdit->text().toAscii().data());
   strcpy(d->detectorNonLinearityFile, m_fileFourEdit->text().toAscii().data());
 }
@@ -1474,7 +1474,7 @@ CWInstrCcdEevEdit::CWInstrCcdEevEdit(const struct instrumental_ccdeev *d, QWidge
   // files
   helperConstructCalInsFileWidgets(gridLayout, row,
 				   d->calibrationFile, sizeof(d->calibrationFile),
-				   d->instrFunctionFile, sizeof(d->instrFunctionFile));
+				   d->transmissionFunctionFile, sizeof(d->transmissionFunctionFile));
 
   // non-standard files...
 
@@ -1534,7 +1534,7 @@ void CWInstrCcdEevEdit::apply(struct instrumental_ccdeev *d) const
 
   // files
   strcpy(d->calibrationFile, m_fileOneEdit->text().toAscii().data());
-  strcpy(d->instrFunctionFile, m_fileTwoEdit->text().toAscii().data());
+  strcpy(d->transmissionFunctionFile, m_fileTwoEdit->text().toAscii().data());
   strcpy(d->straylightCorrectionFile, m_fileThreeEdit->text().toAscii().data());
   strcpy(d->detectorNonLinearityFile, m_fileFourEdit->text().toAscii().data());
   strcpy(d->imagePath, m_fileFiveEdit->text().toAscii().data());
@@ -1580,7 +1580,7 @@ CWInstrOpusEdit::CWInstrOpusEdit(const struct instrumental_opus *d, QWidget *par
   // files
   helperConstructCalInsFileWidgets(gridLayout, row,
 				   d->calibrationFile, sizeof(d->calibrationFile),
-				   d->instrFunctionFile, sizeof(d->instrFunctionFile));
+				   d->transmissionFunctionFile, sizeof(d->transmissionFunctionFile));
 
   gridLayout->setColumnMinimumWidth(0, cSuggestedColumnZeroWidth);
   gridLayout->setColumnMinimumWidth(2, cSuggestedColumnTwoWidth);
@@ -1622,7 +1622,7 @@ void CWInstrOpusEdit::apply(struct instrumental_opus *d) const
 
   // files
   strcpy(d->calibrationFile, m_fileOneEdit->text().toAscii().data());
-  strcpy(d->instrFunctionFile, m_fileTwoEdit->text().toAscii().data());
+  strcpy(d->transmissionFunctionFile, m_fileTwoEdit->text().toAscii().data());
 }
 
 //--------------------------------------------------------
@@ -1662,7 +1662,7 @@ CWInstrGdpEdit::CWInstrGdpEdit(const struct instrumental_gdp *d, QWidget *parent
   // files
   helperConstructCalInsFileWidgets(gridLayout, row,
 				   d->calibrationFile, sizeof(d->calibrationFile),
-				   d->instrFunctionFile, sizeof(d->instrFunctionFile));
+				   d->transmissionFunctionFile, sizeof(d->transmissionFunctionFile));
 
   gridLayout->setColumnMinimumWidth(0, cSuggestedColumnZeroWidth);
   gridLayout->setColumnMinimumWidth(2, cSuggestedColumnTwoWidth);
@@ -1696,7 +1696,7 @@ void CWInstrGdpEdit::apply(struct instrumental_gdp *d) const
 
   // files
   strcpy(d->calibrationFile, m_fileOneEdit->text().toAscii().data());
-  strcpy(d->instrFunctionFile, m_fileTwoEdit->text().toAscii().data());
+  strcpy(d->transmissionFunctionFile, m_fileTwoEdit->text().toAscii().data());
 }
 
 //--------------------------------------------------------------------------
@@ -1724,7 +1724,7 @@ CWInstrGome2Edit::CWInstrGome2Edit(const struct instrumental_gome2 *d, QWidget *
   // files
   helperConstructCalInsFileWidgets(gridLayout, row,
 				   d->calibrationFile, sizeof(d->calibrationFile),
-				   d->instrFunctionFile, sizeof(d->instrFunctionFile));
+				   d->transmissionFunctionFile, sizeof(d->transmissionFunctionFile));
 
   gridLayout->setColumnMinimumWidth(0, cSuggestedColumnZeroWidth);
   gridLayout->setColumnMinimumWidth(2, cSuggestedColumnTwoWidth);
@@ -1751,7 +1751,7 @@ void CWInstrGome2Edit::apply(struct instrumental_gome2 *d) const
 
   // files
   strcpy(d->calibrationFile, m_fileOneEdit->text().toAscii().data());
-  strcpy(d->instrFunctionFile, m_fileTwoEdit->text().toAscii().data());
+  strcpy(d->transmissionFunctionFile, m_fileTwoEdit->text().toAscii().data());
 }
 
 //--------------------------------------------------------------------------
@@ -1799,7 +1799,7 @@ CWInstrSciaEdit::CWInstrSciaEdit(const struct instrumental_scia *d, QWidget *par
   // files
   helperConstructCalInsFileWidgets(gridLayout, row,
 				   d->calibrationFile, sizeof(d->calibrationFile),
-				   d->instrFunctionFile, sizeof(d->instrFunctionFile));
+				   d->transmissionFunctionFile, sizeof(d->transmissionFunctionFile));
 
   helperConstructFileWidget(&m_fileFourEdit, gridLayout, row, d->detectorNonLinearityFile, sizeof(d->detectorNonLinearityFile),
 			    "Det. Non-Linearity", SLOT(slotDetectorNonLinearityFourBrowse()));
@@ -1852,7 +1852,7 @@ void CWInstrSciaEdit::apply(struct instrumental_scia *d) const
 
   // files
   strcpy(d->calibrationFile, m_fileOneEdit->text().toAscii().data());
-  strcpy(d->instrFunctionFile, m_fileTwoEdit->text().toAscii().data());
+  strcpy(d->transmissionFunctionFile, m_fileTwoEdit->text().toAscii().data());
   strcpy(d->detectorNonLinearityFile, m_fileFourEdit->text().toAscii().data());
 }
 
@@ -2019,7 +2019,7 @@ CWInstrOmiEdit::CWInstrOmiEdit(const struct instrumental_omi *d, QWidget *parent
   // files
   helperConstructCalInsFileWidgets(gridLayout, row,
 				   d->calibrationFile, sizeof(d->calibrationFile),
-				   d->instrFunctionFile, sizeof(d->instrFunctionFile));
+				   d->transmissionFunctionFile, sizeof(d->transmissionFunctionFile));
 
   gridLayout->setColumnMinimumWidth(0, cSuggestedColumnZeroWidth);
   gridLayout->setColumnMinimumWidth(2, cSuggestedColumnTwoWidth);
@@ -2078,7 +2078,7 @@ void CWInstrOmiEdit::apply(struct instrumental_omi *d) const
 
   // files
   strcpy(d->calibrationFile, m_fileOneEdit->text().toAscii().data());
-  strcpy(d->instrFunctionFile, m_fileTwoEdit->text().toAscii().data());
+  strcpy(d->transmissionFunctionFile, m_fileTwoEdit->text().toAscii().data());
 }
 
 //--------------------------------------------------------
@@ -2158,7 +2158,7 @@ CWInstrOceanOpticsEdit::CWInstrOceanOpticsEdit(const struct instrumental_oceanop
   // files
   helperConstructCalInsFileWidgets(bottomLayout, row,
 				   d->calibrationFile, sizeof(d->calibrationFile),
-				   d->instrFunctionFile, sizeof(d->instrFunctionFile));
+				   d->transmissionFunctionFile, sizeof(d->transmissionFunctionFile));
 
   bottomLayout->setColumnMinimumWidth(0, cSuggestedColumnZeroWidth);
   bottomLayout->setColumnMinimumWidth(2, cSuggestedColumnTwoWidth);
@@ -2202,7 +2202,7 @@ void CWInstrOceanOpticsEdit::apply(struct instrumental_oceanoptics *d) const
 
   // files
   strcpy(d->calibrationFile, m_fileOneEdit->text().toAscii().data());
-  strcpy(d->instrFunctionFile, m_fileTwoEdit->text().toAscii().data());
+  strcpy(d->transmissionFunctionFile, m_fileTwoEdit->text().toAscii().data());
 
 }
 

@@ -441,8 +441,8 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   tmpStr = pathMgr->simplifyPath(QString(d->ascii.calibrationFile));
   fprintf(fp, " calib=\"%s\"", tmpStr.toAscii().constData());
 
-  tmpStr = pathMgr->simplifyPath(QString(d->ascii.instrFunctionFile));
-  fprintf(fp, " instr=\"%s\" />\n", tmpStr.toAscii().constData());
+  tmpStr = pathMgr->simplifyPath(QString(d->ascii.transmissionFunctionFile));
+  fprintf(fp, " transmission=\"%s\" />\n", tmpStr.toAscii().constData());
 
   // logger
   fprintf(fp, "      <logger type=");
@@ -464,7 +464,7 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   tmpStr = pathMgr->simplifyPath(QString(d->logger.calibrationFile));
   fprintf(fp, " calib=\"%s\"", tmpStr.toAscii().constData());
 
-  tmpStr = pathMgr->simplifyPath(QString(d->logger.instrFunctionFile));
+  tmpStr = pathMgr->simplifyPath(QString(d->logger.transmissionFunctionFile));
   fprintf(fp, " instr=\"%s\" />\n", tmpStr.toAscii().constData());
 
   // acton
@@ -483,7 +483,7 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   tmpStr = pathMgr->simplifyPath(QString(d->acton.calibrationFile));
   fprintf(fp, " calib=\"%s\"", tmpStr.toAscii().constData());
 
-  tmpStr = pathMgr->simplifyPath(QString(d->acton.instrFunctionFile));
+  tmpStr = pathMgr->simplifyPath(QString(d->acton.transmissionFunctionFile));
   fprintf(fp, " instr=\"%s\" />\n", tmpStr.toAscii().constData());
 
   // pdaegg
@@ -506,7 +506,7 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   tmpStr = pathMgr->simplifyPath(QString(d->pdaegg.calibrationFile));
   fprintf(fp, " calib=\"%s\"", tmpStr.toAscii().constData());
 
-  tmpStr = pathMgr->simplifyPath(QString(d->pdaegg.instrFunctionFile));
+  tmpStr = pathMgr->simplifyPath(QString(d->pdaegg.transmissionFunctionFile));
   fprintf(fp, " instr=\"%s\" />\n", tmpStr.toAscii().constData());
 
   // pdaeggold
@@ -529,7 +529,7 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   tmpStr = pathMgr->simplifyPath(QString(d->pdaeggold.calibrationFile));
   fprintf(fp, " calib=\"%s\"", tmpStr.toAscii().constData());
 
-  tmpStr = pathMgr->simplifyPath(QString(d->pdaeggold.instrFunctionFile));
+  tmpStr = pathMgr->simplifyPath(QString(d->pdaeggold.transmissionFunctionFile));
   fprintf(fp, " instr=\"%s\" />\n", tmpStr.toAscii().constData());
 
   // pdaeggold
@@ -552,14 +552,14 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   tmpStr = pathMgr->simplifyPath(QString(d->pdaeggold.calibrationFile));
   fprintf(fp, " calib=\"%s\"", tmpStr.toAscii().constData());
 
-  tmpStr = pathMgr->simplifyPath(QString(d->pdaeggold.instrFunctionFile));
+  tmpStr = pathMgr->simplifyPath(QString(d->pdaeggold.transmissionFunctionFile));
   fprintf(fp, " instr=\"%s\" />\n", tmpStr.toAscii().constData());
 
   // ccdohp96
   tmpStr = pathMgr->simplifyPath(QString(d->ccdohp96.calibrationFile));
   fprintf(fp, "      <ccdohp96 calib=\"%s\"", tmpStr.toAscii().constData());
 
-  tmpStr = pathMgr->simplifyPath(QString(d->ccdohp96.instrFunctionFile));
+  tmpStr = pathMgr->simplifyPath(QString(d->ccdohp96.transmissionFunctionFile));
   fprintf(fp, " instr=\"%s\"", tmpStr.toAscii().constData());
 
   tmpStr = pathMgr->simplifyPath(QString(d->ccdohp96.interPixelVariabilityFile));
@@ -572,7 +572,7 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   tmpStr = pathMgr->simplifyPath(QString(d->ccdha94.calibrationFile));
   fprintf(fp, "      <ccdha94 calib=\"%s\"", tmpStr.toAscii().constData());
 
-  tmpStr = pathMgr->simplifyPath(QString(d->ccdha94.instrFunctionFile));
+  tmpStr = pathMgr->simplifyPath(QString(d->ccdha94.transmissionFunctionFile));
   fprintf(fp, " instr=\"%s\"", tmpStr.toAscii().constData());
 
   tmpStr = pathMgr->simplifyPath(QString(d->ccdha94.interPixelVariabilityFile));
@@ -588,7 +588,7 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   tmpStr = pathMgr->simplifyPath(QString(d->saozvis.calibrationFile));
   fprintf(fp, " calib=\"%s\"", tmpStr.toAscii().constData());
 
-  tmpStr = pathMgr->simplifyPath(QString(d->saozvis.instrFunctionFile));
+  tmpStr = pathMgr->simplifyPath(QString(d->saozvis.transmissionFunctionFile));
   fprintf(fp, " instr=\"%s\" />\n", tmpStr.toAscii().constData());
 
   fprintf(fp, "      <saozefm straylight=\"%s\" lambda_min=\"%g\" lambda_max=\"%g\"",(d->saozefm.straylight ? sTrue : sFalse),d->saozefm.lambdaMin,d->saozefm.lambdaMax);
@@ -597,7 +597,7 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   tmpStr = pathMgr->simplifyPath(QString(d->saozefm.calibrationFile));
   fprintf(fp, "      calib=\"%s\"", tmpStr.toAscii().constData());
 
-  tmpStr = pathMgr->simplifyPath(QString(d->saozefm.instrFunctionFile));
+  tmpStr = pathMgr->simplifyPath(QString(d->saozefm.transmissionFunctionFile));
   fprintf(fp, " instr=\"%s\" />\n", tmpStr.toAscii().constData());
 
   // mfc
@@ -609,7 +609,7 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   tmpStr = pathMgr->simplifyPath(QString(d->mfc.calibrationFile));
   fprintf(fp, " calib=\"%s\"", tmpStr.toAscii().constData());
 
-  tmpStr = pathMgr->simplifyPath(QString(d->mfc.instrFunctionFile));
+  tmpStr = pathMgr->simplifyPath(QString(d->mfc.transmissionFunctionFile));
   fprintf(fp, " instr=\"%s\"", tmpStr.toAscii().constData());
 
   tmpStr = pathMgr->simplifyPath(QString(d->mfc.darkCurrentFile));
@@ -624,7 +624,7 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
 
   tmpStr = pathMgr->simplifyPath(QString(d->mfcbira.calibrationFile));
   fprintf(fp, " calib=\"%s\"", tmpStr.toAscii().constData());
-  tmpStr = pathMgr->simplifyPath(QString(d->mfcbira.instrFunctionFile));
+  tmpStr = pathMgr->simplifyPath(QString(d->mfcbira.transmissionFunctionFile));
   fprintf(fp, " instr=\"%s\" />\n", tmpStr.toAscii().constData());
 
   // mfcstd
@@ -635,7 +635,7 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   tmpStr = pathMgr->simplifyPath(QString(d->mfcstd.calibrationFile));
   fprintf(fp, " calib=\"%s\"", tmpStr.toAscii().constData());
 
-  tmpStr = pathMgr->simplifyPath(QString(d->mfcstd.instrFunctionFile));
+  tmpStr = pathMgr->simplifyPath(QString(d->mfcstd.transmissionFunctionFile));
   fprintf(fp, " instr=\"%s\"", tmpStr.toAscii().constData());
 
   tmpStr = pathMgr->simplifyPath(QString(d->mfcstd.darkCurrentFile));
@@ -650,7 +650,7 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   tmpStr = pathMgr->simplifyPath(QString(d->rasas.calibrationFile));
   fprintf(fp, " calib=\"%s\"", tmpStr.toAscii().constData());
 
-  tmpStr = pathMgr->simplifyPath(QString(d->rasas.instrFunctionFile));
+  tmpStr = pathMgr->simplifyPath(QString(d->rasas.transmissionFunctionFile));
   fprintf(fp, " instr=\"%s\" />\n", tmpStr.toAscii().constData());
 
   // pdasieasoe
@@ -659,7 +659,7 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   tmpStr = pathMgr->simplifyPath(QString(d->pdasieasoe.calibrationFile));
   fprintf(fp, " calib=\"%s\"", tmpStr.toAscii().constData());
 
-  tmpStr = pathMgr->simplifyPath(QString(d->pdasieasoe.instrFunctionFile));
+  tmpStr = pathMgr->simplifyPath(QString(d->pdasieasoe.transmissionFunctionFile));
   fprintf(fp, " instr=\"%s\" />\n", tmpStr.toAscii().constData());
 
   // ccdeev
@@ -668,7 +668,7 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   tmpStr = pathMgr->simplifyPath(QString(d->ccdeev.calibrationFile));
   fprintf(fp, " calib=\"%s\"", tmpStr.toAscii().constData());
 
-  tmpStr = pathMgr->simplifyPath(QString(d->ccdeev.instrFunctionFile));
+  tmpStr = pathMgr->simplifyPath(QString(d->ccdeev.transmissionFunctionFile));
   fprintf(fp, " instr=\"%s\"", tmpStr.toAscii().constData());
 
   tmpStr = pathMgr->simplifyPath(QString(d->ccdeev.imagePath));
@@ -756,7 +756,7 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   tmpStr = pathMgr->simplifyPath(QString(d->gdpascii.calibrationFile));
   fprintf(fp, " calib=\"%s\"", tmpStr.toAscii().constData());
 
-  tmpStr = pathMgr->simplifyPath(QString(d->gdpascii.instrFunctionFile));
+  tmpStr = pathMgr->simplifyPath(QString(d->gdpascii.transmissionFunctionFile));
   fprintf(fp, " instr=\"%s\" />\n", tmpStr.toAscii().constData());
 
   // gdpbin
@@ -815,7 +815,7 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   tmpStr = pathMgr->simplifyPath(QString(d->gdpbin.calibrationFile));
   fprintf(fp, " calib=\"%s\"", tmpStr.toAscii().constData());
 
-  tmpStr = pathMgr->simplifyPath(QString(d->gdpbin.instrFunctionFile));
+  tmpStr = pathMgr->simplifyPath(QString(d->gdpbin.transmissionFunctionFile));
   fprintf(fp, " instr=\"%s\" />\n", tmpStr.toAscii().constData());
 
   // sciapds
@@ -857,7 +857,7 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   tmpStr = pathMgr->simplifyPath(QString(d->sciapds.calibrationFile));
   fprintf(fp, " calib=\"%s\"", tmpStr.toAscii().constData());
 
-  tmpStr = pathMgr->simplifyPath(QString(d->sciapds.instrFunctionFile));
+  tmpStr = pathMgr->simplifyPath(QString(d->sciapds.transmissionFunctionFile));
   fprintf(fp, " instr=\"%s\"", tmpStr.toAscii().constData());
 
   tmpStr = pathMgr->simplifyPath(QString(d->sciapds.detectorNonLinearityFile));
@@ -869,7 +869,7 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   tmpStr = pathMgr->simplifyPath(QString(d->uoft.calibrationFile));
   fprintf(fp, "      calib=\"%s\"", tmpStr.toAscii().constData());
 
-  tmpStr = pathMgr->simplifyPath(QString(d->uoft.instrFunctionFile));
+  tmpStr = pathMgr->simplifyPath(QString(d->uoft.transmissionFunctionFile));
   fprintf(fp, " instr=\"%s\" />\n", tmpStr.toAscii().constData());
 
   // noaa
@@ -877,7 +877,7 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   tmpStr = pathMgr->simplifyPath(QString(d->noaa.calibrationFile));
   fprintf(fp, " calib=\"%s\"", tmpStr.toAscii().constData());
 
-  tmpStr = pathMgr->simplifyPath(QString(d->noaa.instrFunctionFile));
+  tmpStr = pathMgr->simplifyPath(QString(d->noaa.transmissionFunctionFile));
   fprintf(fp, " instr=\"%s\" />\n", tmpStr.toAscii().constData());
 
   // omi
@@ -917,7 +917,7 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   tmpStr = pathMgr->simplifyPath(QString(d->omi.calibrationFile));
   fprintf(fp, " calib=\"%s\"", tmpStr.toAscii().constData());
 
-  tmpStr = pathMgr->simplifyPath(QString(d->omi.instrFunctionFile));
+  tmpStr = pathMgr->simplifyPath(QString(d->omi.transmissionFunctionFile));
   fprintf(fp, " instr=\"%s\" />\n", tmpStr.toAscii().constData());
 
   // tropomi
@@ -962,7 +962,7 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   tmpStr = pathMgr->simplifyPath(QString(d->gome2.calibrationFile));
   fprintf(fp, " calib=\"%s\"", tmpStr.toAscii().constData());
 
-  tmpStr = pathMgr->simplifyPath(QString(d->gome2.instrFunctionFile));
+  tmpStr = pathMgr->simplifyPath(QString(d->gome2.transmissionFunctionFile));
   fprintf(fp, " instr=\"%s\" />\n", tmpStr.toAscii().constData());
 
   // mkzy
@@ -970,7 +970,7 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   tmpStr = pathMgr->simplifyPath(QString(d->mkzy.calibrationFile));
   fprintf(fp, " calib=\"%s\"", tmpStr.toAscii().constData());
 
-  tmpStr = pathMgr->simplifyPath(QString(d->mkzy.instrFunctionFile));
+  tmpStr = pathMgr->simplifyPath(QString(d->mkzy.transmissionFunctionFile));
   fprintf(fp, " instr=\"%s\" />\n", tmpStr.toAscii().constData());
 
   // biraairborne
@@ -978,7 +978,7 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   tmpStr = pathMgr->simplifyPath(QString(d->biraairborne.calibrationFile));
   fprintf(fp, " calib=\"%s\"", tmpStr.toAscii().constData());
 
-  tmpStr = pathMgr->simplifyPath(QString(d->biraairborne.instrFunctionFile));
+  tmpStr = pathMgr->simplifyPath(QString(d->biraairborne.transmissionFunctionFile));
   fprintf(fp, " instr=\"%s\" />\n", tmpStr.toAscii().constData());
 
   // ocean optics
@@ -988,7 +988,7 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   tmpStr = pathMgr->simplifyPath(QString(d->oceanoptics.calibrationFile));
   fprintf(fp, " calib=\"%s\"", tmpStr.toAscii().constData());
 
-  tmpStr = pathMgr->simplifyPath(QString(d->oceanoptics.instrFunctionFile));
+  tmpStr = pathMgr->simplifyPath(QString(d->oceanoptics.transmissionFunctionFile));
   fprintf(fp, " instr=\"%s\" />\n", tmpStr.toAscii().constData());
 
   fprintf(fp, "    </instrumental>\n");

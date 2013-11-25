@@ -219,27 +219,27 @@ extern "C" {
     int  straylight;
     double lambdaMin,lambdaMax;
     char calibrationFile[FILENAME_BUFFER_LENGTH];
-    char instrFunctionFile[FILENAME_BUFFER_LENGTH];
+    char transmissionFunctionFile[FILENAME_BUFFER_LENGTH];
   };
 
   struct instrumental_logger {
     int spectralType;
     int flagAzimuthAngle;
     char calibrationFile[FILENAME_BUFFER_LENGTH];
-    char instrFunctionFile[FILENAME_BUFFER_LENGTH];
+    char transmissionFunctionFile[FILENAME_BUFFER_LENGTH];
   };
 
   struct instrumental_acton {
     int niluType;
     char calibrationFile[FILENAME_BUFFER_LENGTH];
-    char instrFunctionFile[FILENAME_BUFFER_LENGTH];
+    char transmissionFunctionFile[FILENAME_BUFFER_LENGTH];
   };
 
   struct instrumental_saoz {
     int spectralRegion;
     int spectralType;
     char calibrationFile[FILENAME_BUFFER_LENGTH];
-    char instrFunctionFile[FILENAME_BUFFER_LENGTH];
+    char transmissionFunctionFile[FILENAME_BUFFER_LENGTH];
   };
 
   struct instrumental_mfc {
@@ -252,7 +252,7 @@ extern "C" {
     unsigned int spectraMask;
     unsigned int darkCurrentMask;
     char calibrationFile[FILENAME_BUFFER_LENGTH];
-    char instrFunctionFile[FILENAME_BUFFER_LENGTH];
+    char transmissionFunctionFile[FILENAME_BUFFER_LENGTH];
     char darkCurrentFile[FILENAME_BUFFER_LENGTH];
     char offsetFile[FILENAME_BUFFER_LENGTH];
   };
@@ -264,7 +264,7 @@ extern "C" {
     char dateFormat[24];
     double lambdaMin,lambdaMax;
     char calibrationFile[FILENAME_BUFFER_LENGTH];
-    char instrFunctionFile[FILENAME_BUFFER_LENGTH];
+    char transmissionFunctionFile[FILENAME_BUFFER_LENGTH];
     char darkCurrentFile[FILENAME_BUFFER_LENGTH];
     char offsetFile[FILENAME_BUFFER_LENGTH];
   };
@@ -272,21 +272,21 @@ extern "C" {
   struct instrumental_mfcbira {
     int  detectorSize;
     char calibrationFile[FILENAME_BUFFER_LENGTH];
-    char instrFunctionFile[FILENAME_BUFFER_LENGTH];
+    char transmissionFunctionFile[FILENAME_BUFFER_LENGTH];
     int  straylight;
     double lambdaMin,lambdaMax;
   };
 
   struct instrumental_minimum {
     char calibrationFile[FILENAME_BUFFER_LENGTH];
-    char instrFunctionFile[FILENAME_BUFFER_LENGTH];
+    char transmissionFunctionFile[FILENAME_BUFFER_LENGTH];
     int  straylight;
     double lambdaMin,lambdaMax;
   };
 
   struct instrumental_ccd {
     char calibrationFile[FILENAME_BUFFER_LENGTH];
-    char instrFunctionFile[FILENAME_BUFFER_LENGTH];
+    char transmissionFunctionFile[FILENAME_BUFFER_LENGTH];
     char interPixelVariabilityFile[FILENAME_BUFFER_LENGTH];
     char detectorNonLinearityFile[FILENAME_BUFFER_LENGTH];
   };
@@ -303,7 +303,7 @@ extern "C" {
   struct instrumental_pdaeggulb {
     int curveType;
     char calibrationFile[FILENAME_BUFFER_LENGTH];
-    char instrFunctionFile[FILENAME_BUFFER_LENGTH];
+    char transmissionFunctionFile[FILENAME_BUFFER_LENGTH];
     char interPixelVariabilityFile[FILENAME_BUFFER_LENGTH];
     char detectorNonLinearityFile[FILENAME_BUFFER_LENGTH];
   };
@@ -312,7 +312,7 @@ extern "C" {
     int  detectorSize;
     int  spectralType;
     char calibrationFile[FILENAME_BUFFER_LENGTH];
-    char instrFunctionFile[FILENAME_BUFFER_LENGTH];
+    char transmissionFunctionFile[FILENAME_BUFFER_LENGTH];
     char imagePath[FILENAME_BUFFER_LENGTH];
     char straylightCorrectionFile[FILENAME_BUFFER_LENGTH];
     char detectorNonLinearityFile[FILENAME_BUFFER_LENGTH];
@@ -325,20 +325,20 @@ extern "C" {
     double timeShift;
     int flagTransmittance;
     char calibrationFile[FILENAME_BUFFER_LENGTH];
-    char instrFunctionFile[FILENAME_BUFFER_LENGTH];
+    char transmissionFunctionFile[FILENAME_BUFFER_LENGTH];
   };
 
   struct instrumental_gdp {
     int bandType;
     int pixelType;
     char calibrationFile[FILENAME_BUFFER_LENGTH];
-    char instrFunctionFile[FILENAME_BUFFER_LENGTH];
+    char transmissionFunctionFile[FILENAME_BUFFER_LENGTH];
   };
 
   struct instrumental_gome2 {
     int bandType;
     char calibrationFile[FILENAME_BUFFER_LENGTH];
-    char instrFunctionFile[FILENAME_BUFFER_LENGTH];
+    char transmissionFunctionFile[FILENAME_BUFFER_LENGTH];
   };
 
   struct instrumental_scia {
@@ -346,7 +346,7 @@ extern "C" {
     char clusters[32];                      // flags with cluster number as index
     char sunReference[4];                            // 2 characters plus terminator
     char calibrationFile[FILENAME_BUFFER_LENGTH];
-    char instrFunctionFile[FILENAME_BUFFER_LENGTH];
+    char transmissionFunctionFile[FILENAME_BUFFER_LENGTH];
     char detectorNonLinearityFile[FILENAME_BUFFER_LENGTH];
   };
 
@@ -360,14 +360,14 @@ extern "C" {
     int  pixelQFMask;
     enum omi_xtrack_mode xtrack_mode;
     char calibrationFile[FILENAME_BUFFER_LENGTH];
-    char instrFunctionFile[FILENAME_BUFFER_LENGTH];
+    char transmissionFunctionFile[FILENAME_BUFFER_LENGTH];
     char trackSelection[TRACK_SELECTION_LENGTH];
   };
 
   struct instrumental_oceanoptics {
     int  detectorSize;
     char calibrationFile[FILENAME_BUFFER_LENGTH];
-    char instrFunctionFile[FILENAME_BUFFER_LENGTH];
+    char transmissionFunctionFile[FILENAME_BUFFER_LENGTH];
     int  straylight;
     double lambdaMin,lambdaMax;
   };
