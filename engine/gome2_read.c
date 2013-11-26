@@ -140,12 +140,12 @@ typedef struct _GOME2OrbitFiles                                                 
   double             *gome2SunRef,*gome2SunWve;                                 // the sun reference spectrum and calibration
   INDEX              *gome2LatIndex,*gome2LonIndex,*gome2SzaIndex;              // indexes of records sorted resp. by latitude, by longitude and by SZA
   SATELLITE_GEOLOC   *gome2Geolocations;                                        // geolocations
-  INT                 specNumber;
+  int                 specNumber;
   coda_ProductFile   *gome2Pf;                                                  // GOME2 product file pointer
   coda_Cursor         gome2Cursor;                                              // GOME2 file cursor
   coda_Cursor         gome2CursorMDR;                                           // GOME2 file cursor on MDR
   int                 version;
-  INT                 rc;
+  int                 rc;
  }
 GOME2_ORBIT_FILE;
 
@@ -167,7 +167,7 @@ GOME2_REF;
 // GLOBAL VARIABLES
 // ================
 
-INT GOME2_mus=0;
+int GOME2_mus=0;
 
 // ================
 // STATIC VARIABLES
@@ -191,8 +191,8 @@ static GOME2_ORBIT_FILE gome2OrbitFiles[MAX_GOME2_FILES];                       
 static int gome2OrbitFilesN=0;                                                  // the total number of files to browse in one shot
 static INDEX gome2CurrentFileIndex=ITEM_NONE;                                   // index of the current file in the list
 int GOME2_beatLoaded=0;
-static INT gome2LoadReferenceFlag=0;
-static INT gome2TotalRecordNumber=0;
+static int gome2LoadReferenceFlag=0;
+static int gome2TotalRecordNumber=0;
 
 // =========
 // FUNCTIONS
@@ -366,7 +366,7 @@ void Gome2GotoOBS(GOME2_ORBIT_FILE *pOrbitFile,INDEX indexBand,INDEX indexMDR,IN
  {
  	// Declarations
 
- 	INT obsToBypass;
+ 	int obsToBypass;
 
  	// Initializations
 
@@ -398,12 +398,12 @@ void Gome2GotoOBS(GOME2_ORBIT_FILE *pOrbitFile,INDEX indexBand,INDEX indexMDR,IN
 // RETURN        the index of the MDR
 // -----------------------------------------------------------------------------
 
-INDEX Gome2GetMDRIndex(GOME2_ORBIT_FILE *pOrbitFile,INDEX indexBand,int recordNo,INT *pObs)
+INDEX Gome2GetMDRIndex(GOME2_ORBIT_FILE *pOrbitFile,INDEX indexBand,int recordNo,int *pObs)
  {
   // Declarations
 
   INDEX indexMDR;                                                               // browse MDR
-  INT sumObs;                                                                   // accumulate the number of observations in the different states
+  int sumObs;                                                                   // accumulate the number of observations in the different states
 
   // Search for the state
 
@@ -999,7 +999,7 @@ void Gome2ReadGeoloc(GOME2_ORBIT_FILE *pOrbitFile,INDEX indexBand)
  	// Declarations
 
  	INDEX indexRecord,indexMDR,indexObs,indexTint;
- 	INT mdrObs;
+ 	int mdrObs;
  	GOME2_MDR *pMdr;
  	GOME2_INFO *pGome2Info;
 
@@ -1210,15 +1210,15 @@ RC GOME2_Set(ENGINE_CONTEXT *pEngineContext)
   char fileFilter[MAX_STR_SHORT_LEN+1];
   #if defined(__WINDOAS_WIN_) && __WINDOAS_WIN_
   WIN32_FIND_DATA fileInfo,fileInfoSub;                                         // structure returned by FindFirstFile and FindNextFile APIs
-  HANDLE hDir,hDirSub;                                                          // handle to use with by FindFirstFile and FindNextFile APIs
+  void * hDir,hDirSub;                                                          // handle to use with by FindFirstFile and FindNextFile APIs
   #else
   struct dirent *fileInfo;
   DIR *hDir;
   #endif
   INDEX indexFile;
-  INT searchAllOrbits;
+  int searchAllOrbits;
   char *ptr,*fileExt;
-  INT oldCurrentIndex;
+  int oldCurrentIndex;
   RC rc;                                                                  // return code
 
   #if defined(__DEBUG_) && __DEBUG_
@@ -1452,9 +1452,9 @@ RC GOME2_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,INDEX fileIndex)
   double tint;
   double *spectrum,*sigma;                                                      // radiances and errors
   INDEX indexMDR;
-  INT mdrObs;
+  int mdrObs;
   INDEX indexBand;
-  INT year,month,day,hour,min,sec,musec;
+  int year,month,day,hour,min,sec,musec;
   double utcTime;
   GOME2_ORBIT_FILE *pOrbitFile;                                                  // pointer to the current orbit
   SATELLITE_GEOLOC *pGeoloc;
@@ -1786,7 +1786,7 @@ void Gome2Sort(GOME2_ORBIT_FILE *pOrbitFile,INDEX indexRecord,int flag,int listS
 // RETURN        the number of elements in the refList reference list
 // -----------------------------------------------------------------------------
 
-INT Gome2RefLat(GOME2_REF *refList,INT maxRefSize,double latMin,double latMax,double lonMin,double lonMax,double sza,double szaDelta,double cloudMin,double cloudMax)
+int Gome2RefLat(GOME2_REF *refList,int maxRefSize,double latMin,double latMax,double lonMin,double lonMax,double sza,double szaDelta,double cloudMin,double cloudMax)
  {
   // Declarations
 
@@ -1796,7 +1796,7 @@ INT Gome2RefLat(GOME2_REF *refList,INT maxRefSize,double latMin,double latMax,do
         ilatIndex,                                                              // browse records with latitudes in the specified range
         indexRef;                                                               // browse reference already registered in order to keep the list sorted
 
-  INT nRef;                                                                     // the number of spectra matching latitudes and SZA conditions
+  int nRef;                                                                     // the number of spectra matching latitudes and SZA conditions
   double szaDist,latDist;                                                       // distance with latitude and sza centers
   double lon;                                                                   // converts the longitude in the -180:180 range
   SATELLITE_GEOLOC *pRecord;
@@ -1893,7 +1893,7 @@ INT Gome2RefLat(GOME2_REF *refList,INT maxRefSize,double latMin,double latMax,do
 // RETURN        the number of elements in the refList reference list
 // -----------------------------------------------------------------------------
 
-INT Gome2RefSza(GOME2_REF *refList,INT maxRefSize,double sza,double szaDelta,double cloudMin,double cloudMax)
+int Gome2RefSza(GOME2_REF *refList,int maxRefSize,double sza,double szaDelta,double cloudMin,double cloudMax)
  {
   // Declarations
 
@@ -1903,7 +1903,7 @@ INT Gome2RefSza(GOME2_REF *refList,INT maxRefSize,double sza,double szaDelta,dou
         iszaIndex,                                                              // browse records with SZA in the specified SZA range
         indexRef;                                                               // browse reference already registered in order to keep the list sorted
 
-  INT nRef;                                                                     // the number of spectra matching latitudes and SZA conditions
+  int nRef;                                                                     // the number of spectra matching latitudes and SZA conditions
   double szaDist;                                                               // distance with sza center
   SATELLITE_GEOLOC *pRecord;
 
@@ -1999,7 +1999,7 @@ INT Gome2RefSza(GOME2_REF *refList,INT maxRefSize,double sza,double szaDelta,dou
 //               ERROR_ID_NO otherwise.
 // -----------------------------------------------------------------------------
 
-RC Gome2BuildRef(GOME2_REF *refList,INT nRef,INT nSpectra,double *lambda,double *ref,ENGINE_CONTEXT *pEngineContext,INDEX *pIndexLine,void *responseHandle)
+RC Gome2BuildRef(GOME2_REF *refList,int nRef,int nSpectra,double *lambda,double *ref,ENGINE_CONTEXT *pEngineContext,INDEX *pIndexLine,void *responseHandle)
  {
   // Declarations
 
@@ -2009,8 +2009,8 @@ RC Gome2BuildRef(GOME2_REF *refList,INT nRef,INT nSpectra,double *lambda,double 
   INDEX     indexRef,                                                           // browse reference in the list
             indexFile,                                                          // browse files
             i;                                                                  // index for loop and arrays
-  INT       nRec;                                                               // number of records use for the average
-  INT       alreadyOpen;
+  int       nRec;                                                               // number of records use for the average
+  int       alreadyOpen;
   INDEX     indexColumn;
   RC        rc;                                                                 // return code
 
@@ -2139,7 +2139,7 @@ RC Gome2RefSelection(ENGINE_CONTEXT *pEngineContext,
 
   GOME2_REF *refList;                                                            // list of potential reference spectra
   double latDelta,tmp;
-  INT nRefN,nRefS;                                                              // number of reference spectra in the previous list resp. for Northern and Southern hemisphere
+  int nRefN,nRefS;                                                              // number of reference spectra in the previous list resp. for Northern and Southern hemisphere
   INDEX indexLine,indexColumn;
   RC rc;                                                                        // return code
 
@@ -2351,7 +2351,7 @@ RC GOME2_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
   WRK_SYMBOL *pWrkSymbol;                                                       // pointer to a symbol
   FENO *pTabFeno;                                                               // pointer to the current spectral analysis window
   double lambdaMin,lambdaMax;                                                   // working variables
-  INT DimL,useUsamp,useKurucz,saveFlag;                                         // working variables
+  int DimL,useUsamp,useKurucz,saveFlag;                                         // working variables
   RC rc;                                                                        // return code
 
   // Initializations
@@ -2359,7 +2359,7 @@ RC GOME2_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 //  DEBUG_Print(DOAS_logFile,"Enter GOME2_LoadAnalysis\n");
 
   pOrbitFile=&gome2OrbitFiles[gome2CurrentFileIndex];
-  saveFlag=(INT)pEngineContext->project.spectra.displayDataFlag;
+  saveFlag=(int)pEngineContext->project.spectra.displayDataFlag;
 
   if (!(rc=pOrbitFile->rc) && (gome2LoadReferenceFlag || !pEngineContext->analysisRef.refAuto))
    {

@@ -197,8 +197,8 @@ RC SetSAOZ (ENGINE_CONTEXT *pEngineContext,FILE *specFp)
  {
   // Declarations
 
-  INT recordSize;                                                               // size of record
-  INT domain;
+  int recordSize;                                                               // size of record
+  int domain;
   SAOZ saoz;                                                                    // data record
   RC rc;                                                                        // return code
 
@@ -240,7 +240,7 @@ RC SetSAOZ (ENGINE_CONTEXT *pEngineContext,FILE *specFp)
      // -----------------------------------------------------------------------
        }
 
-      pEngineContext->recordNumber=(int)((DoasI32)STD_FileLength(specFp)-256L)/pEngineContext->recordSize;
+      pEngineContext->recordNumber=(int)((int32_t)STD_FileLength(specFp)-256L)/pEngineContext->recordSize;
      }
    }
 
@@ -337,9 +337,9 @@ RC ReliSAOZ(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDa
   else
    {
     if (namesFp!=NULL)
-     fseek(namesFp,(DoasI32)20L*(recordNo-1)+260L,SEEK_SET);
+     fseek(namesFp,(int32_t)20L*(recordNo-1)+260L,SEEK_SET);
 
-    fseek(specFp,(DoasI32)pEngineContext->recordSize*(recordNo-1)+256L,SEEK_SET);
+    fseek(specFp,(int32_t)pEngineContext->recordSize*(recordNo-1)+256L,SEEK_SET);
 
     // Record read out
 
@@ -523,24 +523,24 @@ RC ReliSAOZ(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDa
 
 typedef struct
  {
-  BYTE            Exist,TailleHead;
-  WORD            TailleSpec;
-  WORD            NumSpec,Code;
-  BYTE            M_An,M_Mois,M_Jour;
-  BYTE            M_Heur,M_Min,M_Sec;
+  unsigned char            Exist,TailleHead;
+  unsigned short TailleSpec;
+  unsigned short NumSpec,Code;
+  unsigned char            M_An,M_Mois,M_Jour;
+  unsigned char            M_Heur,M_Min,M_Sec;
   short int       Longi,Latid;
-  WORD            Altit,N_somm;
-  BYTE            iT_int,CrcS;
+  unsigned short           Altit,N_somm;
+  unsigned char            iT_int,CrcS;
   short int       T_det,T_cais;
   short int       Dizen,Shift;
-  BYTE            P_com;
-  BYTE            R_Heur,R_Min,R_Sec;
-  WORD            Param[8];
-  DoasI32            GPStim;
+  unsigned char            P_com;
+  unsigned char            R_Heur,R_Min,R_Sec;
+  unsigned short            Param[8];
+  int32_t            GPStim;
   short int       Tout,Tsond;
-  WORD            Press;
-  BYTE            Humid;
-  BYTE            Libre;
+  unsigned short            Press;
+  unsigned char            Humid;
+  unsigned char            Libre;
  }
 RCHEADER;
 
@@ -575,7 +575,7 @@ RC SetSAOZEfm(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
  {
   // Declarations
 
-  UINT curvenum;                    // number of spectra in the file
+  unsigned int curvenum;                    // number of spectra in the file
   RC rc;                            // return code
   
   // Initializations
@@ -615,7 +615,7 @@ RC SetSAOZEfm(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
 //               ERROR_ID_NO             : otherwise.
 // -----------------------------------------------------------------------------
 
-RC ReliSAOZEfm(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,INT localDay,FILE *specFp)
+RC ReliSAOZEfm(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp)
  {
   // Declarations
 
@@ -644,9 +644,9 @@ RC ReliSAOZEfm(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,INT loca
    {
     // Complete the reading of the record
 
-    fseek(specFp,(DoasI32)sizeof(UINT)+(recordNo-1)*sizeof(RCHEADER),SEEK_SET);
+    fseek(specFp,(int32_t)sizeof(unsigned int)+(recordNo-1)*sizeof(RCHEADER),SEEK_SET);
     fread(&header,sizeof(RCHEADER),1,specFp);
-    fseek(specFp,(DoasI32)sizeof(UINT)+(recordNo-1)*sizeof(double)*NDET+pEngineContext->recordNumber*sizeof(RCHEADER),SEEK_SET);
+    fseek(specFp,(int32_t)sizeof(unsigned int)+(recordNo-1)*sizeof(double)*NDET+pEngineContext->recordNumber*sizeof(RCHEADER),SEEK_SET);
     fread(spectrum,sizeof(double)*NDET,1,specFp);
 
     if ((today.da_year=header.M_An)<30)

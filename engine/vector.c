@@ -222,7 +222,7 @@
 // RETURN        interpolated value from Table in X and Y coordinates
 // -----------------------------------------------------------------------------
 
-    double VECTOR_Table2_Index1 ( double **Table, INT Nx, INT Ny, double X, double Y )
+    double VECTOR_Table2_Index1 ( double **Table, int Nx, int Ny, double X, double Y )
     {
        int Ix, Iy;
        double Zi, Tab1, Tab2, LUTable;
@@ -274,7 +274,7 @@
 // RETURN        interpolated value from Table in X and Y coordinates
 // -----------------------------------------------------------------------------
 
-    double VECTOR_Table2 ( double **Table, INT Nx, INT Ny, double X, double Y )
+    double VECTOR_Table2 ( double **Table, int Nx, int Ny, double X, double Y )
     {
        int Ix, Iy;
        double Zi, Tab1, Tab2, LUTable;
@@ -335,7 +335,7 @@
 // VECTOR_Norm : Vector norm computation
 // -------------------------------------
 
-double VECTOR_Norm(double *v,INT dim)
+double VECTOR_Norm(double *v,int dim)
  {
   // Declarations
 
@@ -364,7 +364,7 @@ double VECTOR_Norm(double *v,INT dim)
 // VECTOR_NormalizeVector : Vector normalization
 // ----------------------------------------------------
 
-RC VECTOR_NormalizeVector(double *v,INT dim,double *pFact,const char *function)
+RC VECTOR_NormalizeVector(double *v,int dim,double *pFact,const char *function)
  {
   // Declarations
 

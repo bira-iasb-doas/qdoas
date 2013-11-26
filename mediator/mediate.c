@@ -61,7 +61,7 @@ int mediateRequestDisplaySpecInfo(void *engineContext,int page,void *responseHan
       mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Dark Current","%s",pInstrumental->instrFunction);
      else if (pInstrumental->readOutFormat!=PRJCT_INSTR_FORMAT_MFC)
       mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Transmission file","%s",pInstrumental->instrFunction);
-     else if (((pInstrumental->mfcMaskSpec!=0) && ((UINT)MFC_header.ty==pInstrumental->mfcMaskSpec)) ||
+     else if (((pInstrumental->mfcMaskSpec!=0) && ((unsigned int)MFC_header.ty==pInstrumental->mfcMaskSpec)) ||
               ((pInstrumental->mfcMaskSpec==0) &&
                ((MFC_header.wavelength1==pInstrumental->mfcMaskInstr) ||
                 (fabs((double)(MFC_header.wavelength1-(float)pInstrumental->wavelength))<(double)5.))))
@@ -73,7 +73,7 @@ int mediateRequestDisplaySpecInfo(void *engineContext,int page,void *responseHan
      if (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC_STD)
       mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Dark current","%s",MFC_fileDark);
      else if ((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC) &&
-              (((pInstrumental->mfcMaskSpec!=0) && (((UINT)MFC_header.ty==pInstrumental->mfcMaskSpec) || ((UINT)MFC_header.ty==pInstrumental->mfcMaskInstr))) ||
+              (((pInstrumental->mfcMaskSpec!=0) && (((unsigned int)MFC_header.ty==pInstrumental->mfcMaskSpec) || ((unsigned int)MFC_header.ty==pInstrumental->mfcMaskInstr))) ||
                ((pInstrumental->mfcMaskSpec==0) &&
                 ((MFC_header.wavelength1==pInstrumental->mfcMaskInstr) ||
                  (fabs((double)(MFC_header.wavelength1-(float)pInstrumental->wavelength))<(double)5.)))))
@@ -90,9 +90,9 @@ int mediateRequestDisplaySpecInfo(void *engineContext,int page,void *responseHan
         mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Offset","%s",MFC_fileOffset);
       else if ((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC) &&
                (((MFC_header.ty!=0) &&
-                 (((UINT)MFC_header.ty==pInstrumental->mfcMaskSpec) ||
-                  ((UINT)MFC_header.ty==pInstrumental->mfcMaskDark) ||
-                  ((UINT)MFC_header.ty==pInstrumental->mfcMaskInstr))) ||
+                 (((unsigned int)MFC_header.ty==pInstrumental->mfcMaskSpec) ||
+                  ((unsigned int)MFC_header.ty==pInstrumental->mfcMaskDark) ||
+                  ((unsigned int)MFC_header.ty==pInstrumental->mfcMaskInstr))) ||
                 ((pInstrumental->mfcMaskSpec==0) &&
                  ((MFC_header.wavelength1==pInstrumental->mfcMaskDark) ||
                   (MFC_header.wavelength1==pInstrumental->mfcMaskInstr)||
@@ -1558,7 +1558,7 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
    // Declarations
 
    double lambdaMin,lambdaMax;
-   INT useKurucz,                                                               // flag set if Kurucz is to be used in at least one analysis window
+   int useKurucz,                                                               // flag set if Kurucz is to be used in at least one analysis window
        useUsamp,                                                                // flag set if undersampling correction is requested in at least one analysis window
        xsToConvolute,                                                           // flag set if at least one cross section has to be convolved in at least one analysis window
        xsToConvoluteI0,                                                         // flag set if at least one cross section has to be I0-convolved in at least one analysis window
@@ -1569,7 +1569,7 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
    mediate_analysis_window_t *pAnalysisWindows;                                  // pointer to the current analysis window from the user interface
    mediate_analysis_window_t calibWindows;                                       // pointer to the calibration parameters
    FENO *pTabFeno;                                                               // pointer to the description of an analysis window
-   INT indexFeno,indexFenoColumn,i;                                              // browse analysis windows
+   int indexFeno,indexFenoColumn,i;                                              // browse analysis windows
    MATRIX_OBJECT hr_solar_temp; // to preload high res solar spectrum
    RC rc;                                                                        // return code
 
@@ -1579,7 +1579,7 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
    lambdaMax=0;
    pEngineContext=(ENGINE_CONTEXT *)engineContext;
    pInstrumental=&pEngineContext->project.instrumental;
-   saveFlag=(INT)pEngineContext->project.spectra.displayDataFlag;
+   saveFlag=(int)pEngineContext->project.spectra.displayDataFlag;
    useKurucz=useUsamp=xsToConvolute=xsToConvoluteI0=0;
    indexKurucz=ITEM_NONE;
 
@@ -1722,7 +1722,7 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
 
            // spikes buffer
            if ((pTabFeno->spikes == NULL) &&
-               ((pTabFeno->spikes=(BOOL *)MEMORY_AllocBuffer("mediateRequestSetAnalysisWindows ","spikes",NDET,sizeof(int),0,MEMORY_TYPE_INT))==NULL))
+               ((pTabFeno->spikes=(bool *)MEMORY_AllocBuffer("mediateRequestSetAnalysisWindows ","spikes",NDET,sizeof(int),0,MEMORY_TYPE_INT))==NULL))
             {
              rc = ERROR_ID_ALLOC;
              break;
@@ -1737,7 +1737,7 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
                // omi rejected pixels
 
                ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_OMI) && pEngineContext->project.instrumental.omi.pixelQFRejectionFlag &&
-                (pTabFeno->omiRejPixelsQF == NULL) && ((pTabFeno->omiRejPixelsQF=(BOOL *)MEMORY_AllocBuffer("mediateRequestSetAnalysisWindows ","omiRejPixelsQF",NDET,sizeof(int),0,MEMORY_TYPE_INT))==NULL)))
+                (pTabFeno->omiRejPixelsQF == NULL) && ((pTabFeno->omiRejPixelsQF=(bool *)MEMORY_AllocBuffer("mediateRequestSetAnalysisWindows ","omiRejPixelsQF",NDET,sizeof(int),0,MEMORY_TYPE_INT))==NULL)))
             {
              rc=ERROR_ID_ALLOC;
              break;
@@ -1983,7 +1983,7 @@ int mediateRequestBeginBrowseSpectra(void *engineContext,
 				     void *responseHandle)
  {
    ENGINE_CONTEXT *pEngineContext = (ENGINE_CONTEXT *)engineContext;
-   INT rc;
+   int rc;
 
    rc=ERROR_ID_NO;
 

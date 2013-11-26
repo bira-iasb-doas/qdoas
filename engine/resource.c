@@ -45,7 +45,7 @@
 //
 //  FUNCTIONS
 //
-//  FOR EXTERNAL USE :
+//  FOR externAL USE :
 //
 //  RESOURCE_Alloc - memory allocation;
 //  RESOURCE_Free - free memory allocated for resources.

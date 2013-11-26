@@ -8,7 +8,7 @@
 
 #define DEFAULT_VALUE 9999.
 
-RC write_spikes(char *spikestring, unsigned int length, BOOL *spikes,int ndet);
+RC write_spikes(char *spikestring, unsigned int length, bool *spikes,int ndet);
 double output_flux(const ENGINE_CONTEXT *pEngineContext, double wavelength);
 
 static inline FENO *get_tabfeno_calib(struct output_field *this_field __attribute__ ((unused)), int indexFenoColumn) {
@@ -711,7 +711,7 @@ static inline void get_cic(struct output_field *this_field, double *cic, const E
 // write_spikes:
 // concatenate all pixels containing spikes into a single string for output.
 
-RC write_spikes(char *spikestring, unsigned int length, BOOL *spikes,int ndet) {
+RC write_spikes(char *spikestring, unsigned int length, bool *spikes,int ndet) {
   strcpy(spikestring,"");
   char num[10];
   RC rc = 0;

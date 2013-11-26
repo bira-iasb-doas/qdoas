@@ -74,7 +74,7 @@
 //               ERROR_ID_NO otherwise
 // -----------------------------------------------------------------------------
 
-RC MATRIX_Allocate(MATRIX_OBJECT *pMatrix,INT nl,INT nc,INT basel,INT basec,INT allocateDeriv2, const char *callingFunction)
+RC MATRIX_Allocate(MATRIX_OBJECT *pMatrix,int nl,int nc,int basel,int basec,int allocateDeriv2, const char *callingFunction)
  {
   // Declarations
 
@@ -240,14 +240,14 @@ RC MATRIX_Copy(MATRIX_OBJECT *pTarget,MATRIX_OBJECT *pSource, const char *callin
 // -----------------------------------------------------------------------------
 
 RC MATRIX_Load(char *fileName,MATRIX_OBJECT *pMatrix,
-               INT basel,INT basec,INT nl,INT nc,double xmin,double xmax,
-               INT allocateDeriv2,INT reverseFlag, const char *callingFunction)
+               int basel,int basec,int nl,int nc,double xmin,double xmax,
+               int allocateDeriv2,int reverseFlag, const char *callingFunction)
  {
   // Declarations
 
   char   *oldColumn,*nextColumn,                                               // get lines from the input file
            fullPath[MAX_ITEM_TEXT_LEN+1];                                       // the complete file name to load
-  INT      nltmp,nctmp,                                                         // highest indexes for lines and columns
+  int      nltmp,nctmp,                                                         // highest indexes for lines and columns
            lineLength,                                                          // length of a file line
            fileLength,                                                          // length of the file (in bytes)
            nlMin,ncMin;                                                         // resp. the minimum numbers of lines and columns to load from the file

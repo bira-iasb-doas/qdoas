@@ -88,12 +88,12 @@ RC USAMP_BuildCrossSections(double *phase1,                                     
                             double *gomeLambda2,                                // shifted GOME calibration
                             double *kuruczInterpolated,                         // preconvoluted Kurucz spectrum interpolated on gome calibration
                             double *kuruczInterpolatedDeriv2,                   // interpolated Kurucz spectrum second derivatives
-                            INT     nGome,                                      // size of GOME calibration
+                            int     nGome,                                      // size of GOME calibration
                             double *kuruczLambda,                               // Kurucz high resolution wavelength scale
                             double *kuruczConvolved,                            // preconvoluted Kurucz spectrum on high resolution wavelength scale
                             double *kuruczConvolvedDeriv2,                      // preconvoluted Kurucz second derivatives
-                            INT     nKurucz,                                    // size of Kurucz vectors
-                            INT     analysisMethod)                             // analysis method
+                            int     nKurucz,                                    // size of Kurucz vectors
+                            int     analysisMethod)                             // analysis method
  {
   // Declarations
 
@@ -183,18 +183,18 @@ RC USAMP_BuildCrossSections(double *phase1,                                     
 RC USAMP_Build(double *phase1,                                                  // OUTPUT : phase 1 calculation
                double *phase2,                                                  // OUTPUT : phase 2 calculation
                double *gomeLambda,                                              // GOME calibration
-               INT     nGome,                                                   // size of GOME calibration
+               int     nGome,                                                   // size of GOME calibration
                MATRIX_OBJECT *pKuruczMatrix,                                    // Kurucz matrix
                SLIT   *pSlit,                                                   // slit function
                double  fraction,                                                // tunes the phase
-               INT     analysisMethod)                                          // analysis method
+               int     analysisMethod)                                          // analysis method
  {
   // Declarations
 
   MATRIX_OBJECT xsnew,slitFunction,slitFunction2;
   double *gomeLambda2,*kuruczLambda,slitParam,
          *resample,*d2res;
-  INT     slitType,nKurucz;
+  int     slitType,nKurucz;
   INDEX   i;
   RC      rc;
 

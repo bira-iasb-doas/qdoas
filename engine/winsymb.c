@@ -92,7 +92,7 @@
 // =================
 
 SYMBOL_CROSS *SYMB_itemCrossList=NULL;                                          // pointer to the list of user-defined symbols
-INT SYMB_itemCrossN;                                                            // the number of items in the previous list
+int SYMB_itemCrossN;                                                            // the number of items in the previous list
 
 // QDOAS ???
 // QDOAS ??? // ===================
@@ -112,7 +112,7 @@ INT SYMB_itemCrossN;                                                            
 // QDOAS ??? //                 ITEM_NONE if not found
 // QDOAS ??? // -----------------------------------------------------------------------------
 // QDOAS ???
-// QDOAS ??? INDEX SYMB_GetListIndex(SYMBOL *symbolList,INT symbolNumber,char *fileName)
+// QDOAS ??? INDEX SYMB_GetListIndex(SYMBOL *symbolList,int symbolNumber,char *fileName)
 // QDOAS ???  {
 // QDOAS ???   // Declarations
 // QDOAS ???

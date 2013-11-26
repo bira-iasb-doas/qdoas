@@ -62,9 +62,9 @@ RC mediateConvolutionSave(void *engineContext)
   FILE *fp;
   INDEX i,slitType;
   MATRIX_OBJECT *pXs;
-  INT nextraPixels;
+  int nextraPixels;
   double *filterVector;
-  INT nsize;
+  int nsize;
   RC rc;
 
   pXs=&pEngineContext->xsNew;
@@ -310,8 +310,8 @@ RC mediateConvolutionCalculate(void *engineContext,void *responseHandle)
   char windowTitle[MAX_ITEM_TEXT_LEN+1],pageTitle[MAX_ITEM_TEXT_LEN+1];
   double lambdaMin,lambdaMax,slitParam,slitParam2,slitWidth;
 
-  INT slitType,slitType2,deconvFlag,dispConv;
-  INT lowFilterType,highFilterType,nFilter;
+  int slitType,slitType2,deconvFlag,dispConv;
+  int lowFilterType,highFilterType,nFilter;
   RC rc;
 
   // Slit function
@@ -734,7 +734,7 @@ void mediateRingHeader(ENGINE_XSCONV_CONTEXT *pEngineContext,FILE *fp)
  {
   // Declaration
 
-  INT     slitType;                                                 // type of the slit function
+  int     slitType;                                                 // type of the slit function
 
   // Header
 
@@ -813,7 +813,7 @@ RC mediateRingCalculate(void *engineContext,void *responseHandle)
           slitParam2;                                                           // other slit function parameters
 
   MATRIX_OBJECT  xsSolar,xsSolarConv,xsSlit,xsSlit2,xsRing,*pSlit,*pSlit2;                     // solar spectrum and slit function
-  INT     nsolar,nslit,nslit2,nring,                                            // size of previous vectors
+  int     nsolar,nslit,nslit2,nring,                                            // size of previous vectors
           wveDptFlag,
           slitType;                                                             // type of the slit function
   INDEX   i,j;                                                                  // indexes for loops and arrays
@@ -1231,11 +1231,11 @@ RC mediateRequestUsamp(void *engineContext,mediate_usamp_t *pMediateUsamp,void *
 //               phase : phase of the undersampling
 // -----------------------------------------------------------------------------
 
-void UsampWriteHeader(ENGINE_XSCONV_CONTEXT *pEngineContext,FILE *fp,INT phase)
+void UsampWriteHeader(ENGINE_XSCONV_CONTEXT *pEngineContext,FILE *fp,int phase)
  {
  	// Declaration
 
-  INT slitType;
+  int slitType;
 
   // Initialization
 
@@ -1333,7 +1333,7 @@ RC mediateUsampCalculate(void *engineContext,void *responseHandle)
  	ENGINE_XSCONV_CONTEXT *pEngineContext=(ENGINE_XSCONV_CONTEXT*)engineContext;
   MATRIX_OBJECT calibrationMatrix,kuruczMatrix;
   double *phase1,*phase2;
-  INT hrN,fftSize,nSize;
+  int hrN,fftSize,nSize;
   double *fftIn;
   INDEX i;
   RC rc;

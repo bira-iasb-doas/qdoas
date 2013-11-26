@@ -158,8 +158,8 @@ void DEBUG_PrintVar(char *message,...)
   char *argPtr;                                                                // pointer to the next argument in the previous list
   DEBUG_VARIABLE varList[DEBUG_MAX_VARIABLES];                                  // the list of the indexes of variables to debug
   DEBUG_VARIABLE *pVar;                                                         // pointer to the current variable in the previous list
-  INT nVar;                                                                     // the number of variables to debug
-  INT nl;                                                                       // the number of lines
+  int nVar;                                                                     // the number of variables to debug
+  int nl;                                                                       // the number of lines
   INDEX indexVar,indexLine,indexCol,indexNewLine;                               // indexes for loops and arrays
   FILE *fp;                                                                     // file pointer
   RC rc;                                                                        // return code

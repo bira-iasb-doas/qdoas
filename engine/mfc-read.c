@@ -76,7 +76,7 @@ char MFC_fileInstr[MAX_STR_SHORT_LEN+1],      // instrumental function file name
       MFC_fileDark[MAX_STR_SHORT_LEN+1],       // dark current file name
       MFC_fileOffset[MAX_STR_SHORT_LEN+1];     // offset file name
 
-INT mfcLastSpectrum=0;
+int mfcLastSpectrum=0;
 
 const char *MFCBIRA_measureTypes[PRJCT_INSTR_MFC_TYPE_MAX]=
      	                            { "Unknown","Measurement","Offset","Dark current" };
@@ -168,7 +168,7 @@ INDEX MFC_SearchForCurrentFileIndex(ENGINE_CONTEXT *pEngineContext)
  	char  fileName[MAX_ITEM_TEXT_LEN+1];                                        // name of the current file
  	char *ptr,*scanRefFiles;
  	INDEX   indexRecord,indexFile;
- 	INT     nscanRefFiles;
+ 	int     nscanRefFiles;
 
  	// Initializations
 
@@ -269,7 +269,7 @@ RC MFC_ReadRecord(char *fileName,
                   TBinaryMFC *pHeaderSpe,double *spe,
                   TBinaryMFC *pHeaderDrk,double *drk,
                   TBinaryMFC *pHeaderOff,double *off,
-                  UINT mask,UINT maskSpec,UINT revertFlag)
+                  unsigned int mask,unsigned int maskSpec,unsigned int revertFlag)
  {
   // Declarations
 
@@ -303,7 +303,7 @@ RC MFC_ReadRecord(char *fileName,
     // Complete record read out
 
     if (!fread(pHeaderSpe,sizeof(TBinaryMFC),1,fp) ||                  // header
-       ((mask!=maskSpec) && ((pHeaderSpe->ty&mask)==0) && ((UINT)pHeaderSpe->wavelength1!=mask)) ||                    // spectrum selection
+       ((mask!=maskSpec) && ((pHeaderSpe->ty&mask)==0) && ((unsigned int)pHeaderSpe->wavelength1!=mask)) ||                    // spectrum selection
         (pHeaderSpe->no_chan==0) || (pHeaderSpe->no_chan>NDET) ||      // verify the size of the spectrum
         !fread(specTmp,sizeof(float)*pHeaderSpe->no_chan,1,fp))        // spectrum read out
      {
@@ -376,14 +376,14 @@ RC MFC_ReadRecord(char *fileName,
 #if defined(__BC32_) && __BC32_
 #pragma argsused
 #endif
-RC ReliMFC(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp,UINT mfcMask)
+RC ReliMFC(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp,unsigned int mfcMask)
  {
   // Declarations
 
   BUFFERS *pBuffers;                                                            // pointer to the buffers part of the engine context
   RECORD_INFO *pRecord;                                                         // pointer to the record part of the engine context
 
-  INT                  day,mon,year,hour,min,sec,nsec,nsec1,nsec2,              // date and time fields
+  int                  day,mon,year,hour,min,sec,nsec,nsec1,nsec2,              // date and time fields
                        firstFile;                                               // number of the first file in the current directory
   char                fileName[MAX_STR_SHORT_LEN+1],                           // name of the current file (the current record)
                        format[20],
@@ -428,8 +428,8 @@ RC ReliMFC(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay
     if (!(rc=MFC_ReadRecord(fileName,&MFC_header,pBuffers->spectrum,&MFC_headerDrk,pBuffers->varPix,&MFC_headerOff,pBuffers->offset,mfcMask,pInstrumental->mfcMaskSpec,pInstrumental->mfcRevert)))
      {
       if ((mfcMask==pInstrumental->mfcMaskSpec) &&
-         (((pInstrumental->mfcMaskSpec!=(UINT)0) && ((UINT)MFC_header.ty==mfcMask)) ||
-		  ((pInstrumental->mfcMaskSpec==(UINT)0) && ((UINT)MFC_header.ty==pInstrumental->mfcMaskSpec))) &&
+         (((pInstrumental->mfcMaskSpec!=(unsigned int)0) && ((unsigned int)MFC_header.ty==mfcMask)) ||
+		  ((pInstrumental->mfcMaskSpec==(unsigned int)0) && ((unsigned int)MFC_header.ty==pInstrumental->mfcMaskSpec))) &&
         (((double)pInstrumental->wavelength>(double)100.) && ((MFC_header.wavelength1<(double)pInstrumental->wavelength-5.) || (MFC_header.wavelength1>(double)pInstrumental->wavelength+5.))))
 
        rc=ERROR_ID_FILE_RECORD;
@@ -437,7 +437,7 @@ RC ReliMFC(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay
       // In automatic file selection, replace instrumental functions with new ones if found
 
       if ((mfcMask==pInstrumental->mfcMaskSpec) &&
-        (((mfcMask!=(UINT)0) && ((UINT)MFC_header.ty!=mfcMask)) || ((mfcMask==(UINT)0) && (rc==ERROR_ID_FILE_RECORD) && ((UINT)MFC_header.wavelength1!=mfcMask))))
+        (((mfcMask!=(unsigned int)0) && ((unsigned int)MFC_header.ty!=mfcMask)) || ((mfcMask==(unsigned int)0) && (rc==ERROR_ID_FILE_RECORD) && ((unsigned int)MFC_header.wavelength1!=mfcMask))))
        {
         if (pInstrumental->mfcMaskUse)
          {
@@ -615,7 +615,7 @@ RC MFC_ReadRecordStd(ENGINE_CONTEXT *pEngineContext,char *fileName,
   RECORD_INFO *pRecord;                                                         // pointer to the record part of the engine context
 
   FILE *fp;         // pointer to the current file
-  INT  pixFin,day,mon,year,hour,min,sec,nsec,mfcDate[3],yearN,dateSize,sepN;        // date and time fields
+  int  pixFin,day,mon,year,hour,min,sec,nsec,mfcDate[3],yearN,dateSize,sepN;        // date and time fields
   float                tmp;                                   // temporary variable
   char line[MAX_STR_SHORT_LEN+1],             // line of the current file
         keyWord[MAX_STR_SHORT_LEN+1],keyValue[MAX_STR_SHORT_LEN+1],ctmp;
@@ -630,7 +630,7 @@ RC MFC_ReadRecordStd(ENGINE_CONTEXT *pEngineContext,char *fileName,
 
   pRecord=&pEngineContext->recordInfo;
   pInstrumental=&pEngineContext->project.instrumental;
-  memset(mfcDate,0,sizeof(INT)*3);
+  memset(mfcDate,0,sizeof(int)*3);
   iDay=iMon=iYear=-1;
   yearN=sepN=0;
   memset(line,0,MAX_STR_SHORT_LEN+1);
@@ -745,7 +745,7 @@ RC MFC_ReadRecordStd(ENGINE_CONTEXT *pEngineContext,char *fileName,
     fscanf(fp,"%f\n",&tmp);
     fscanf(fp,"%f\n",&tmp);
     fscanf(fp,"SCANS %d\n",&pRecord->NSomme);
-    fscanf(fp,"INT_TIME %lf\n",&pRecord->TotalExpTime);
+    fscanf(fp,"int_TIME %lf\n",&pRecord->TotalExpTime);
     fgets(line,MAX_STR_SHORT_LEN,fp);
     fscanf(fp,"LONGITUDE %lf\n",&pRecord->longitude);
     fscanf(fp,"LATITUDE %lf\n",&pRecord->latitude);
@@ -1020,7 +1020,7 @@ RC MFCBIRA_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
 // FUNCTION MFCBIRA_Reli
 // -----------------------------------------------------------------------------
 /*!
-   \fn      RC MFCBIRA_Reli(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,INT localDay,FILE *specFp)
+   \fn      RC MFCBIRA_Reli(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp)
    \details
    \param   [in]  pEngineContext  pointer to the engine context; some fields are affected by this function.
    \param   [in]  recordNo        the index of the record to read
@@ -1033,7 +1033,7 @@ RC MFCBIRA_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
 */
 // -----------------------------------------------------------------------------
 
-RC MFCBIRA_Reli(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,INT localDay,FILE *specFp)
+RC MFCBIRA_Reli(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp)
  {
   // Declarations
 
@@ -1152,14 +1152,14 @@ RC MFC_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
   CROSS_REFERENCE *pTabCross;                                                   // pointer to the current cross section
   WRK_SYMBOL *pWrkSymbol;                                                       // pointer to a symbol
   FENO *pTabFeno;                                                               // pointer to the current spectral analysis window
-  INT DimL,useKurucz,saveFlag;                                                       // working variables
+  int DimL,useKurucz,saveFlag;                                                       // working variables
   RC rc;                                                                        // return code
 
   // Initializations
 
   pBuffers=&pEngineContext->buffers;
 
-  saveFlag=(INT)pEngineContext->project.spectra.displayDataFlag;
+  saveFlag=(int)pEngineContext->project.spectra.displayDataFlag;
   pInstrumental=&pEngineContext->project.instrumental;
   memset(fileName,0,MAX_STR_SHORT_LEN+1);
   strncpy(fileName,pEngineContext->fileInfo.fileName,MAX_STR_SHORT_LEN);

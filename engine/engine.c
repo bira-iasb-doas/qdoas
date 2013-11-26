@@ -51,7 +51,7 @@
 #include "coda.h"
 #include "output.h"
 
-INT  NDET;                                                                      // detector size
+int  NDET;                                                                      // detector size
 
 ENGINE_CONTEXT engineContext,                                                   // engine context used to make the interface between the mediator and the engine
   ENGINE_contextRef;                                               // engine context used for the automatic search of the reference spectrum
@@ -178,12 +178,12 @@ RC EngineCopyContext(ENGINE_CONTEXT *pEngineContextTarget,ENGINE_CONTEXT *pEngin
        ((pBuffersSource->specMax!=NULL) && (pBuffersTarget->specMax==NULL) &&
         ((pBuffersTarget->specMax=(double *)MEMORY_AllocDVector("EngineCopyContext","specMax",0,MAX_SPECMAX-1))==NULL)) ||
        ((pEngineContextSource->analysisRef.scanRefIndexes!=NULL) && (pEngineContextTarget->analysisRef.scanRefIndexes==NULL) &&
-        ((pEngineContextTarget->analysisRef.scanRefIndexes=(INT *)MEMORY_AllocBuffer("EngineCopyContext","scanRefIndexes",pEngineContextSource->recordNumber,sizeof(INT),0,MEMORY_TYPE_INT))==NULL)) ||
+        ((pEngineContextTarget->analysisRef.scanRefIndexes=(int *)MEMORY_AllocBuffer("EngineCopyContext","scanRefIndexes",pEngineContextSource->recordNumber,sizeof(int),0,MEMORY_TYPE_INT))==NULL)) ||
        ((pEngineContextSource->recordInfo.omi.omiPixelQF!=NULL) && (pEngineContextTarget->recordInfo.omi.omiPixelQF==NULL) &&
         ((pEngineContextTarget->recordInfo.omi.omiPixelQF=(unsigned short *)MEMORY_AllocBuffer("EngineCopyContext","omiPixelQF",NDET,sizeof(unsigned short),0,MEMORY_TYPE_USHORT))==NULL)) ||
        ((pBuffersSource->recordIndexes!=NULL) && (pBuffersTarget->recordIndexes==NULL) &&
-        ((pBuffersTarget->recordIndexes=(DoasU32 *)MEMORY_AllocBuffer("THRD_CopySpecInfo","recordIndexes",
-         (pEngineContextTarget->recordIndexesSize=pEngineContextSource->recordIndexesSize),sizeof(DoasU32),0,MEMORY_TYPE_ULONG))==NULL)) ||
+        ((pBuffersTarget->recordIndexes=(uint32_t *)MEMORY_AllocBuffer("THRD_CopySpecInfo","recordIndexes",
+         (pEngineContextTarget->recordIndexesSize=pEngineContextSource->recordIndexesSize),sizeof(uint32_t),0,MEMORY_TYPE_ULONG))==NULL)) ||
        ((pEngineContextSource->recordInfo.ccd.vip.matrix!=NULL) && (pEngineContextTarget->recordInfo.ccd.vip.matrix==NULL) &&
         ((rc=MATRIX_Copy(&pEngineContextTarget->recordInfo.ccd.vip,&pEngineContextSource->recordInfo.ccd.vip,"EngineCopyContext"))!=ERROR_ID_NO)) ||
        ((pEngineContextSource->recordInfo.ccd.dnl.matrix!=NULL) && (pEngineContextTarget->recordInfo.ccd.dnl.matrix==NULL) &&
@@ -222,9 +222,9 @@ RC EngineCopyContext(ENGINE_CONTEXT *pEngineContextTarget,ENGINE_CONTEXT *pEngin
      if ((pEngineContextTarget->recordInfo.omi.omiPixelQF!=NULL) && (pEngineContextSource->recordInfo.omi.omiPixelQF!=NULL))
       memcpy(pEngineContextTarget->recordInfo.omi.omiPixelQF,pEngineContextSource->recordInfo.omi.omiPixelQF,sizeof(unsigned short)*NDET);
      if ((pEngineContextTarget->analysisRef.scanRefIndexes!=NULL) && (pEngineContextSource->analysisRef.scanRefIndexes!=NULL))
-      memcpy(pEngineContextTarget->analysisRef.scanRefIndexes,pEngineContextSource->analysisRef.scanRefIndexes,sizeof(INT)*pEngineContextSource->fileInfo.nScanRef);
+      memcpy(pEngineContextTarget->analysisRef.scanRefIndexes,pEngineContextSource->analysisRef.scanRefIndexes,sizeof(int)*pEngineContextSource->fileInfo.nScanRef);
      if ((pBuffersTarget->recordIndexes!=NULL) && (pBuffersSource->recordIndexes!=NULL))
-      memcpy(pBuffersTarget->recordIndexes,pBuffersSource->recordIndexes,sizeof(DoasU32)*pEngineContextSource->recordIndexesSize);
+      memcpy(pBuffersTarget->recordIndexes,pBuffersSource->recordIndexes,sizeof(uint32_t)*pEngineContextSource->recordIndexesSize);
 
      // Other structures
 
@@ -326,7 +326,7 @@ RC EngineSetProject(ENGINE_CONTEXT *pEngineContext)
          (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_PDASI_EASOE) ||
          (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MKZY)) &&
 
-        ((pBuffers->recordIndexes=(DoasU32 *)MEMORY_AllocBuffer("EngineSetProject","recordIndexes",2001,sizeof(DoasU32),0,MEMORY_TYPE_ULONG))==NULL)) ||
+        ((pBuffers->recordIndexes=(uint32_t *)MEMORY_AllocBuffer("EngineSetProject","recordIndexes",2001,sizeof(uint32_t),0,MEMORY_TYPE_ULONG))==NULL)) ||
 
        (((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_CCD_EEV) ||
          (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_CCD_OHP_96) ||
@@ -575,7 +575,7 @@ RC EngineSetFile(ENGINE_CONTEXT *pEngineContext,const char *fileName,void *respo
 
    else
 
-    switch((INT)pEngineContext->project.instrumental.readOutFormat)
+    switch((int)pEngineContext->project.instrumental.readOutFormat)
      {
       // ---------------------------------------------------------------------------
      case PRJCT_INSTR_FORMAT_ASCII :
@@ -706,7 +706,7 @@ RC EngineSetFile(ENGINE_CONTEXT *pEngineContext,const char *fileName,void *respo
 //                                  reference spectrum to search for
 // -----------------------------------------------------------------------------
 
-RC EngineReadFile(ENGINE_CONTEXT *pEngineContext,int indexRecord,INT dateFlag,INT localCalDay)
+RC EngineReadFile(ENGINE_CONTEXT *pEngineContext,int indexRecord,int dateFlag,int localCalDay)
  {
    // Declarations
 
@@ -746,7 +746,7 @@ RC EngineReadFile(ENGINE_CONTEXT *pEngineContext,int indexRecord,INT dateFlag,IN
    pRecord->hMoon=0.;
    pRecord->fracMoon=0.;
 
-   switch((INT)pEngineContext->project.instrumental.readOutFormat)
+   switch((int)pEngineContext->project.instrumental.readOutFormat)
     {
      // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_ASCII :
@@ -1141,9 +1141,9 @@ RC EngineSetRefIndexes(ENGINE_CONTEXT *pEngineContext)
      ZmMin,ZmMax,                                              // extrema zenith angles found in file
      deltaZmMorning,                                           // select record in the morning with SZA the closest by SZA base
      deltaZmAfternoon;                                         // select record in the afternoon with SZA the closest by SZA base
-   INT                 NRecord;                                                  // number of hold record
-   INT                 localCalDay;                                              // local day number
-   INT                 recordNumber;                                             // the current number of records
+   int                 NRecord;                                                  // number of hold record
+   int                 localCalDay;                                              // local day number
+   int                 recordNumber;                                             // the current number of records
    RC                  rc;                                                       // return code
 
    // Initializations
@@ -1233,7 +1233,7 @@ RC EngineSetRefIndexes(ENGINE_CONTEXT *pEngineContext)
 
          if (NRecord && pEngineContext->analysisRef.refScan && (pEngineContext->analysisRef.scanRefIndexes!=NULL))
           {
-           memcpy(pEngineContext->analysisRef.scanRefIndexes,indexList,sizeof(INT)*NRecord);
+           memcpy(pEngineContext->analysisRef.scanRefIndexes,indexList,sizeof(int)*NRecord);
            pEngineContext->fileInfo.nScanRef=NRecord;
           }
 
@@ -1365,9 +1365,9 @@ RC EngineSetRefIndexesMFC(ENGINE_CONTEXT *pEngineContext)
      ZmMin,ZmMax,                                              // extrema zenith angles found in file
      deltaZmMorning,                                           // select record in the morning with SZA the closest by SZA base
      deltaZmAfternoon;                                         // select record in the afternoon with SZA the closest by SZA base
-   INT                 NRecord;                                                  // number of hold record
-   INT                 localCalDay;                                              // local day number
-   INT                 fileNumber;                                               // the number of files in the current directory
+   int                 NRecord;                                                  // number of hold record
+   int                 localCalDay;                                              // local day number
+   int                 fileNumber;                                               // the number of files in the current directory
    RC                  rc;                                                       // return code
 
    // Initializations
@@ -1463,7 +1463,7 @@ RC EngineSetRefIndexesMFC(ENGINE_CONTEXT *pEngineContext)
          ((ZmList=(double *)MEMORY_AllocDVector("EngineSetRefIndexesMFC","ZmList",0,fileNumber-1))==NULL) ||
          ((TimeDec=(double *)MEMORY_AllocDVector("EngineSetRefIndexesMFC","TimeDec",0,fileNumber-1))==NULL) ||
          (pRef->refScan &&
-          (((pRef->scanRefIndexes=(INT *)MEMORY_AllocBuffer("EngineSetRefIndexesMFC","scanRefIndexes",fileNumber,sizeof(INT),0,MEMORY_TYPE_INT))==NULL) ||
+          (((pRef->scanRefIndexes=(int *)MEMORY_AllocBuffer("EngineSetRefIndexesMFC","scanRefIndexes",fileNumber,sizeof(int),0,MEMORY_TYPE_INT))==NULL) ||
            ((pRef->scanRefFiles=(char *)MEMORY_AllocBuffer("EngineSetRefIndexesMFC","scanRefFiles",fileNumber*(MAX_ITEM_TEXT_LEN+1),1,0,MEMORY_TYPE_STRING))==NULL))))
 
       rc=ERROR_ID_ALLOC;
@@ -1542,7 +1542,7 @@ RC EngineSetRefIndexesMFC(ENGINE_CONTEXT *pEngineContext)
 
          if (NRecord && pEngineContext->analysisRef.refScan)
           {
-           memcpy(pEngineContext->analysisRef.scanRefIndexes,indexList,sizeof(INT)*NRecord);
+           memcpy(pEngineContext->analysisRef.scanRefIndexes,indexList,sizeof(int)*NRecord);
            pEngineContext->fileInfo.nScanRef=NRecord;
           }
 
@@ -1682,8 +1682,8 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
      indexScanRecord;
 
    FENO *pTabFeno;                                                               // pointer to the analysis window
-   INT useKurucz,alignRef,useUsamp,saveFlag,newDimL;
-   INT *scanRefIndexes;
+   int useKurucz,alignRef,useUsamp,saveFlag,newDimL;
+   int *scanRefIndexes;
    char *ptr;
    RC rc;
 
@@ -1691,7 +1691,7 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
    pRecord=&pEngineContext->recordInfo;
    rc=ERROR_ID_NO;
-   saveFlag=(INT)pEngineContext->project.spectra.displayDataFlag;
+   saveFlag=(int)pEngineContext->project.spectra.displayDataFlag;
    useKurucz=alignRef=useUsamp=0;
    indexRefRecord=indexScanRecord=ITEM_NONE;
    indexColumn=2;

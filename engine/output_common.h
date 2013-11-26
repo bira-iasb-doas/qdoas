@@ -138,8 +138,8 @@ struct output_field {
 typedef struct _outputInfo
 {
   int specno; // number of the spectrum in the file, 1 based
-  INT nbColumns;
-  INT year,month,day;
+  int nbColumns;
+  int year,month,day;
   float longit,latit;
 } OUTPUT_INFO;
 

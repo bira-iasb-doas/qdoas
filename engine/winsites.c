@@ -94,7 +94,7 @@
 // ================
 
 OBSERVATION_SITE *SITES_itemList=NULL;                                          // pointer to the list of sites objects
-INT SITES_itemN=0;                                                              // the number of items in the previous list
+int SITES_itemN=0;                                                              // the number of items in the previous list
 
 // ================
 // STATIC VARIABLES

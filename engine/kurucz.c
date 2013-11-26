@@ -64,7 +64,7 @@
 
 KURUCZ KURUCZ_buffers[MAX_SWATHSIZE];
 FFT *pKURUCZ_fft;
-INT KURUCZ_indexLine=1;
+int KURUCZ_indexLine=1;
 
 // =================
 // KURUCZ PROCEDURES
@@ -131,7 +131,7 @@ INDEX KuruczSearchReference(INDEX indexRefFeno,INDEX indexRefColumn)
 // ----------------------------------------------------------------------------      
 
 RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,const double *reference,double *instrFunction,
-                   char displayFlag, const char *windowTitle,double **coeff,double **fwhmVector,double **fwhmDeriv2,INT saveFlag,INDEX indexFeno,void *responseHandle,INDEX indexFenoColumn)
+                   char displayFlag, const char *windowTitle,double **coeff,double **fwhmVector,double **fwhmDeriv2,int saveFlag,INDEX indexFeno,void *responseHandle,INDEX indexFenoColumn)
  {
   // Declarations
 
@@ -146,7 +146,7 @@ RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,co
                   *solar,                                                       // solar spectrum
                   *offset,                                                      // offset
                    Square;                                                      // Chi square returned by 'CurFitMethod'
-  INT              Nb_Win,maxParam,                                             // number of little windows
+  int              Nb_Win,maxParam,                                             // number of little windows
                   *NIter,                                                       // number of iterations
                    oldNDET;
   INDEX            indexWindow,                                                 // browse little windows
@@ -707,7 +707,7 @@ RC KURUCZ_ApplyCalibration(FENO *pTabFeno,double *newLambda,INDEX indexFenoColum
   MATRIX_OBJECT wveDptStretch;    // for slit function file type, the wavelength dependent stretch is saved as a slit matrix
   double slitParam2;
   INDEX indexWindow;
-  INT newDimL = 0;
+  int newDimL = 0;
   RC rc;
 
   // Initializations
@@ -799,14 +799,14 @@ RC KURUCZ_ApplyCalibration(FENO *pTabFeno,double *newLambda,INDEX indexFenoColum
 #if defined(__BC32_) && __BC32_
 #pragma argsused
 #endif
-RC KURUCZ_Reference(double *instrFunction,INDEX refFlag,INT saveFlag,INT gomeFlag,void *responseHandle,INDEX indexFenoColumn)
+RC KURUCZ_Reference(double *instrFunction,INDEX refFlag,int saveFlag,int gomeFlag,void *responseHandle,INDEX indexFenoColumn)
 {
   // Declarations
 
   FENO            *pTabFeno,*pTabRef;                               // browse analysis windows
   double          *reference;                                                   // reference spectrum to align on Kurucz
 
-  INT              maxParam,
+  int              maxParam,
                    msgCount,
                    nKuruczFeno,
                    nBadKuruczFeno;
@@ -962,12 +962,12 @@ RC KURUCZ_Reference(double *instrFunction,INDEX refFlag,INT saveFlag,INT gomeFla
 #if defined(__BC32_) && __BC32_
 #pragma argsused
 #endif
-void KURUCZ_Init(INT gomeFlag,INDEX indexFenoColumn)
+void KURUCZ_Init(int gomeFlag,INDEX indexFenoColumn)
  {
   // Declarations
 
   INDEX indexFeno,indexWindow;
-  INT nbWin;
+  int nbWin;
   double Lambda_min,Lambda_max,Win_size;
   FENO *pTabFeno;
   SVD *pSvd;
@@ -1029,13 +1029,13 @@ RC KURUCZ_Alloc(const PROJECT *pProject, const double *lambda,INDEX indexKurucz,
  {
   // Declarations
 
-  INT hFilterFlag;
+  int hFilterFlag;
   CROSS_REFERENCE *pTabCross;                                                   // cross sections list
   FENO            *pKuruczFeno,                                                 // analysis window with Kurucz description
                   *pTabFeno;
 
   char   slitFile[MAX_ITEM_TEXT_LEN+1];
-  INT    Nb_Win,shiftDegree,                                                    // substitution variables
+  int    Nb_Win,shiftDegree,                                                    // substitution variables
          NTabCross,DimLMax;
   INDEX  i,indexFeno,indexWindow,indexParam,indexTabCross;                      // indexes for loops and arrays
   double Lambda_min,Lambda_max,                                                 // extrema in nm of a little window
@@ -1102,7 +1102,7 @@ RC KURUCZ_Alloc(const PROJECT *pProject, const double *lambda,INDEX indexKurucz,
       ((pKurucz->VShift=(double *)MEMORY_AllocDVector(__func__,"VShift",1,Nb_Win))==NULL) ||         // shift applied on pixels
       ((pKurucz->VSig=(double *)MEMORY_AllocDVector(__func__,"VSig",1,Nb_Win))==NULL) ||             // error on shift applied on pixels
       ((pKurucz->VPix=(double *)MEMORY_AllocDVector(__func__,"VPix",1,Nb_Win))==NULL) ||             // pixels with shift correction
-      ((pKurucz->NIter=(INT *)MEMORY_AllocBuffer(__func__,"NIter",Nb_Win,sizeof(INT),0,MEMORY_TYPE_INT))==NULL) ||
+      ((pKurucz->NIter=(int *)MEMORY_AllocBuffer(__func__,"NIter",Nb_Win,sizeof(int),0,MEMORY_TYPE_INT))==NULL) ||
       (hFilterFlag &&
        (((pKurucz->lambdaF=(double *)MEMORY_AllocDVector(__func__,"lambdaF",0,NDET+2*pKurucz->solarFGap-1))==NULL) ||
         ((pKurucz->solarF=(double *)MEMORY_AllocDVector(__func__,"solarF",0,NDET+2*pKurucz->solarFGap-1))==NULL) ||
@@ -1243,7 +1243,7 @@ RC KURUCZ_Alloc(const PROJECT *pProject, const double *lambda,INDEX indexKurucz,
            goto EndKuruczAlloc;
           else if (pKuruczOptions->fwhmFit)
            {
-            INT hrDeb,hrFin,hrN,fftSize;
+            int hrDeb,hrFin,hrN,fftSize;
             double *fftIn;
             FFT *pfft;
             INDEX i;

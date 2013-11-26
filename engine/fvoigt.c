@@ -300,20 +300,20 @@ t39+(-0.556001184E5*t1+2002.0*t23-0.48153268E5*t2+0.101279E4*t12+0.7094609824E5
  *            from 'xinf', to 'xsup'.                   ¨                                       *
  *                                                                                              *
  ***********************************************************************************************/
-void VoigtCase1(double xinf, double xsup, double y, DoasI32 Nbp, double *lpVoigt)
+void VoigtCase1(double xinf, double xsup, double y, int32_t Nbp, double *lpVoigt)
 {
  double Disp;
- DoasI32   i,i1,i2,i3,i4,i5,i6;
+ int32_t   i,i1,i2,i3,i4,i5,i6;
 
  Disp=(xsup-xinf)/(double)(Nbp-1);
 
  // Limit points
- i1=(DoasI32)((y-15.0-xinf)/Disp);
- i2=(DoasI32)((y-5.5-xinf)/Disp);
- i3=(DoasI32)((-(15.4*y+2.7)/3.0-xinf)/Disp);
- i4=(DoasI32)((+(15.4*y+2.7)/3.0-xinf)/Disp);
- i5=(DoasI32)((5.5-y-xinf)/Disp);
- i6=(DoasI32)((15.0-y-xinf)/Disp);
+ i1=(int32_t)((y-15.0-xinf)/Disp);
+ i2=(int32_t)((y-5.5-xinf)/Disp);
+ i3=(int32_t)((-(15.4*y+2.7)/3.0-xinf)/Disp);
+ i4=(int32_t)((+(15.4*y+2.7)/3.0-xinf)/Disp);
+ i5=(int32_t)((5.5-y-xinf)/Disp);
+ i6=(int32_t)((15.0-y-xinf)/Disp);
 
  // Bounds to physical limits
  i1=min(max(0,i1),Nbp-1);
@@ -348,18 +348,18 @@ void VoigtCase1(double xinf, double xsup, double y, DoasI32 Nbp, double *lpVoigt
  *            points from 'xinf', to 'xsup'.                   ¨                                *
  *                                                                                              *
  ***********************************************************************************************/
-void VoigtCase2(double xinf, double xsup, double y, DoasI32 Nbp, double *lpVoigt)
+void VoigtCase2(double xinf, double xsup, double y, int32_t Nbp, double *lpVoigt)
 {
  double Disp;
- DoasI32   i,i1,i2,i3,i4;
+ int32_t   i,i1,i2,i3,i4;
 
  Disp=(xsup-xinf)/(double)(Nbp-1);
 
  // Limit points
- i1=(DoasI32)((y-15.0-xinf)/Disp);
- i2=(DoasI32)((y-5.5-xinf)/Disp);
- i3=(DoasI32)((5.5-y-xinf)/Disp);
- i4=(DoasI32)((15.0-y-xinf)/Disp);
+ i1=(int32_t)((y-15.0-xinf)/Disp);
+ i2=(int32_t)((y-5.5-xinf)/Disp);
+ i3=(int32_t)((5.5-y-xinf)/Disp);
+ i4=(int32_t)((15.0-y-xinf)/Disp);
 
  // Bounds to physical limits
  i1=min(max(0,i1),Nbp-1);
@@ -388,16 +388,16 @@ void VoigtCase2(double xinf, double xsup, double y, DoasI32 Nbp, double *lpVoigt
  *            from 'xinf', to 'xsup'.                   ¨                                       *
  *                                                                                              *
  ***********************************************************************************************/
-void VoigtCase3(double xinf, double xsup, double y, DoasI32 Nbp, double *lpVoigt)
+void VoigtCase3(double xinf, double xsup, double y, int32_t Nbp, double *lpVoigt)
 {
  double Disp;
- DoasI32   i,i1,i2;
+ int32_t   i,i1,i2;
 
  Disp=(xsup-xinf)/(double)(Nbp-1);
 
  // Limit points
- i1=(DoasI32)((y-15.0-xinf)/Disp);
- i2=(DoasI32)((15.0-y-xinf)/Disp);
+ i1=(int32_t)((y-15.0-xinf)/Disp);
+ i2=(int32_t)((15.0-y-xinf)/Disp);
 
  // Bounds to physical limits
  i1=min(max(0,i1),Nbp-1);
@@ -420,10 +420,10 @@ void VoigtCase3(double xinf, double xsup, double y, DoasI32 Nbp, double *lpVoigt
  *            from 'xinf', to 'xsup'.                   ¨                                       *
  *                                                                                              *
  ***********************************************************************************************/
-void VoigtCase4(double xinf, double xsup, double y, DoasI32 Nbp, double *lpVoigt)
+void VoigtCase4(double xinf, double xsup, double y, int32_t Nbp, double *lpVoigt)
 {
  double Disp;
- DoasI32   i;
+ int32_t   i;
 
  Disp=(xsup-xinf)/(double)(Nbp-1);
 
@@ -485,9 +485,9 @@ double Voigtx(double x,double y)
  *            'xinf', to 'xsup'.                   ¨                                            *
  *                                                                                              *
  ***********************************************************************************************/
-void Voigt(double xinf, double xsup, double y, DoasI32 Nbp, double *lpVoigt)
+void Voigt(double xinf, double xsup, double y, int32_t Nbp, double *lpVoigt)
 {
- DoasI32 i;
+ int32_t i;
 
  // Clean-up the vector
  for (i=0;i<Nbp;++i)

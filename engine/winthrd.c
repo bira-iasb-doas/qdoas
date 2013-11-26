@@ -104,17 +104,17 @@
 // ================
 
 char     THRD_asciiFile[MAX_ITEM_TEXT_LEN+1],*THRD_asciiPtr;        // ascii file for exporting spectra
-HANDLE    THRD_hEvents[THREAD_EVENT_MAX];      // list of events
+void *    THRD_hEvents[THREAD_EVENT_MAX];      // list of events
 ENGINE_CONTEXT THRD_specInfo;          // data on current spectra and reference
-UINT      THRD_id=THREAD_TYPE_NONE;            // thread identification number
+unsigned int      THRD_id=THREAD_TYPE_NONE;            // thread identification number
 double    THRD_localNoon;                      // local noon
-INT       THRD_localShift;
-DWORD     THRD_delay;
-INT       THRD_correction;
-INT       THRD_browseType;
-INT       THRD_treeCallFlag;
-INT       THRD_isFolder;
-INT       THRD_recordLast;
+int       THRD_localShift;
+unsigned long     THRD_delay;
+int       THRD_correction;
+int       THRD_browseType;
+int       THRD_treeCallFlag;
+int       THRD_isFolder;
+int       THRD_recordLast;
 
 // ================
 // STATIC VARIABLES
@@ -124,15 +124,15 @@ INDEX  THRD_indexCaller,
        THRD_indexProjectOld,THRD_indexProjectCurrent,
        THRD_indexFileOld,THRD_indexFileCurrent,
        THRD_indexRecordOld,THRD_indexRecordCurrent,THRD_indexPathFileCurrent,THRD_indexPathFileOld;
-INT    THRD_lastEvent=ITEM_NONE,THRD_increment,THRD_levelMax,
+int    THRD_lastEvent=ITEM_NONE,THRD_increment,THRD_levelMax,
        THRD_resetFlag,THRD_setOriginalFlag,
        THRD_recordFirst;
 INDEX *THRD_dataIndexes;
-INT    THRD_dataIndexesNumber;
+int    THRD_dataIndexesNumber;
 FILE  *THRD_asciiFp;
-INT    THRD_pathOK;
-INT    THRD_endProgram;
-INT    thrdRefFlag;
+int    THRD_pathOK;
+int    THRD_endProgram;
+int    thrdRefFlag;
 
 // ===============
 // DATA PROCESSING

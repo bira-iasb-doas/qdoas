@@ -78,7 +78,7 @@
 // FILTER_OddEvenCorrection : Odd/Even pixels correction
 // -----------------------------------------------------
 
-RC FILTER_OddEvenCorrection(double *lambdaData,double *specData,double *output,INT vectorSize)
+RC FILTER_OddEvenCorrection(double *lambdaData,double *specData,double *output,int vectorSize)
  {
   // Declarations
 
@@ -523,13 +523,13 @@ RC FilterPinv(SVD *pSvd)
 // RETURN        ERROR_ID_ALLOC if buffer allocation failed, 0 on success
 // -----------------------------------------------------------------------------
 
-RC FilterSavitskyGolay(PRJCT_FILTER *pFilter,INT filterWidth,INT filterOrder)
+RC FilterSavitskyGolay(PRJCT_FILTER *pFilter,int filterWidth,int filterOrder)
  {
   // Declarations
 
   INDEX i,j;
   SVD svd;
-  INT lc;
+  int lc;
   RC rc;
 
   // Initializations
@@ -641,7 +641,7 @@ RC FILTER_Build(PRJCT_FILTER *pFilter,double fa1,double fa2,double fa3)
  {
   // Declarations
 
-  INT filterType;
+  int filterType;
   double sum;
   INDEX i;
   RC rc;
@@ -670,7 +670,7 @@ RC FILTER_Build(PRJCT_FILTER *pFilter,double fa1,double fa2,double fa3)
    // -------------------------------------------------------------------------
       case PRJCT_FILTER_TYPE_BOXCAR :
       case PRJCT_FILTER_TYPE_TRIANGLE :
-       pFilter->filterSize=(((INT)fa1-1)>>1)+1;
+       pFilter->filterSize=(((int)fa1-1)>>1)+1;
       break;
    // -------------------------------------------------------------------------
       case PRJCT_FILTER_TYPE_BINOMIAL :
@@ -819,7 +819,7 @@ RC FilterConv(PRJCT_FILTER *pFilter,double *Input,double *Output,int Size)
 //               0 on success
 // -----------------------------------------------------------------------------
 
-RC FILTER_Vector(PRJCT_FILTER *pFilter,double *Input,double *Output,int Size,INT outputType)
+RC FILTER_Vector(PRJCT_FILTER *pFilter,double *Input,double *Output,int Size,int outputType)
  {
   // Declarations
 

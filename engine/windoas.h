@@ -95,7 +95,7 @@ FILE_TYPE;
 typedef struct _filePath
  {
   char path[MAX_PATH_LEN+1];
-  INT   count;
+  int   count;
  }
 FILES_PATH;
 
@@ -103,11 +103,11 @@ FILES_PATH;
 // GLOBAL VARIABLES
 // ----------------
 
-EXTERN char FILES_configuration[];            // configuration file
-EXTERN FILE_TYPE FILES_types[];                     // types of files supported by application
-EXTERN INT FILES_version;                           // program version
-EXTERN FILES_PATH *FILES_paths;                     // all paths implied in configuration file
-EXTERN INT FILES_nPaths;                            // the size of the previous buffer
+extern char FILES_configuration[];            // configuration file
+extern FILE_TYPE FILES_types[];                     // types of files supported by application
+extern int FILES_version;                           // program version
+extern FILES_PATH *FILES_paths;                     // all paths implied in configuration file
+extern int FILES_nPaths;                            // the size of the previous buffer
 
 // ----------
 // PROTOTYPES
@@ -116,14 +116,14 @@ EXTERN INT FILES_nPaths;                            // the size of the previous 
 // Load data from files
 // --------------------
 
-void   FILES_CompactPath(char *newPath,char *path,INT useFileName,INT addFlag);
-char *FILES_RebuildFileName(char *newPath,char *path,INT useFileName);
-void   FILES_ChangePath(char *oldPath,char *newPath,INT useFileName);
+void   FILES_CompactPath(char *newPath,char *path,int useFileName,int addFlag);
+char *FILES_RebuildFileName(char *newPath,char *path,int useFileName);
+void   FILES_ChangePath(char *oldPath,char *newPath,int useFileName);
 void   FILES_RemoveOnePath(char *path);
-void   FILES_RetrievePath(char *pathString,SZ_LEN pathStringLength,char *fullFileName,SZ_LEN fullFileNameLength,INT indexFileType,INT changeDefaultPath);
+void   FILES_RetrievePath(char *pathString,SZ_LEN pathStringLength,char *fullFileName,SZ_LEN fullFileNameLength,int indexFileType,int changeDefaultPath);
 
-RC     FILES_GetMatrixDimensions(FILE *fp,const char *fileName,INT *pNl,INT *pNc,const char *callingFunction,INT errorType);
-RC     FILES_LoadMatrix(FILE *fp,const char *fileName,double **matrix,INT base,INT nl,INT nc,const char *callingFunction,INT errorType);
+RC     FILES_GetMatrixDimensions(FILE *fp,const char *fileName,int *pNl,int *pNc,const char *callingFunction,int errorType);
+RC     FILES_LoadMatrix(FILE *fp,const char *fileName,double **matrix,int base,int nl,int nc,const char *callingFunction,int errorType);
 
 // Select a file
 // -------------
@@ -150,15 +150,15 @@ char  *FILES_BuildFileName(char *fileName,MASK fileType);
      double longitude;
      double latitude;
      double altitude;
-     // QDOAS ??? INT gmtShift;
+     // QDOAS ??? int gmtShift;
     }
    OBSERVATION_SITE;
 
    // Global variables
    // ----------------
 
-   EXTERN OBSERVATION_SITE  *SITES_itemList;                                    // pointer to the list of sites objects
-   EXTERN INT SITES_itemN;                                                      // the number of items in the previous list
+   extern OBSERVATION_SITE  *SITES_itemList;                                    // pointer to the list of sites objects
+   extern int SITES_itemN;                                                      // the number of items in the previous list
 
    // Prototypes
    // ----------
@@ -195,10 +195,10 @@ char  *FILES_BuildFileName(char *fileName,MASK fileType);
    // Global variables
    // ----------------
 
-   EXTERN SYMBOL_CROSS *SYMB_itemCrossList;                                     // pointer to list of cross sections symbols
-   EXTERN INT SYMB_itemCrossN;
+   extern SYMBOL_CROSS *SYMB_itemCrossList;                                     // pointer to list of cross sections symbols
+   extern int SYMB_itemCrossN;
 
-   INDEX SYMB_GetListIndex(SYMBOL *symbolList,INT symbolNumber,char *symbolName);
+   INDEX SYMB_GetListIndex(SYMBOL *symbolList,int symbolNumber,char *symbolName);
    RC SYMB_Add(char *symbolName,char *symbolDescription);
 
    RC    SYMB_Alloc(void);
@@ -213,7 +213,7 @@ char  *FILES_BuildFileName(char *fileName,MASK fileType);
 
 typedef struct _matrix
  {
-  INT      nl,nc;           // resp. numbers of lines and columns of matrix
+  int      nl,nc;           // resp. numbers of lines and columns of matrix
   INDEX    basel,basec;     // resp. base indexes for lines and columns in matrix
   double **matrix,          // pointer to columns in the matrix
          **deriv2;          // pointer to second derivatives
@@ -223,10 +223,10 @@ MATRIX_OBJECT;
 // Prototypes
 // ----------
 
-RC   MATRIX_Allocate(MATRIX_OBJECT *pMatrix,INT nl,INT nc,INT basel,INT basec,INT allocateDeriv2, const char *callingFunction);
+RC   MATRIX_Allocate(MATRIX_OBJECT *pMatrix,int nl,int nc,int basel,int basec,int allocateDeriv2, const char *callingFunction);
 void MATRIX_Free(MATRIX_OBJECT *pMatrix, const char *callingFunctionShort);
 RC   MATRIX_Copy(MATRIX_OBJECT *pTarget,MATRIX_OBJECT *pSource, const char *callingFunction);
-RC   MATRIX_Load(char *fileName,MATRIX_OBJECT *pMatrix,INT basel,INT basec,INT nl,INT nc,double xmin,double xmax,INT allocateDeriv2,INT reverseFlag, const char *callingFunction);
+RC   MATRIX_Load(char *fileName,MATRIX_OBJECT *pMatrix,int basel,int basec,int nl,int nc,double xmin,double xmax,int allocateDeriv2,int reverseFlag, const char *callingFunction);
 
 // ===========================
 // ANALYSIS WINDOWS PROPERTIES
@@ -240,29 +240,29 @@ RC   MATRIX_Load(char *fileName,MATRIX_OBJECT *pMatrix,INT basel,INT basec,INT n
 typedef struct _analysis
  {
   char  windowName[MAX_ITEM_NAME_LEN+1];                   // name of window
-  INT    refSpectrumSelectionMode;                          // reference spectrum selection mode
-  INT    useKurucz;                                         // apply Kurucz
-  INT    useSref;                                           // obsolete
-  INT    applyGrid;                                         // if calibration is performed, apply new grid
-  INT    applySFP;                                          // if calibration is performed with SFP fitting, use fitted SFP for convoluting Real time cross sections
-  INT    displaySpectrum;                                   // force display spectrum
-  INT    displayResidue;                                    // force display residue
-  INT    displayTrend;                                      // force display trend
-  INT    displayRefEtalon;                                  // force display alignment of reference on etalon
-  INT    displayPredefined;                                 // force display of predefined parameters
-  INT    displayFits;                                       // force display fits
-  INT    bandType;
+  int    refSpectrumSelectionMode;                          // reference spectrum selection mode
+  int    useKurucz;                                         // apply Kurucz
+  int    useSref;                                           // obsolete
+  int    applyGrid;                                         // if calibration is performed, apply new grid
+  int    applySFP;                                          // if calibration is performed with SFP fitting, use fitted SFP for convoluting Real time cross sections
+  int    displaySpectrum;                                   // force display spectrum
+  int    displayResidue;                                    // force display residue
+  int    displayTrend;                                      // force display trend
+  int    displayRefEtalon;                                  // force display alignment of reference on etalon
+  int    displayPredefined;                                 // force display of predefined parameters
+  int    displayFits;                                       // force display fits
+  int    bandType;
   char  refSpectrumFile[MAX_ITEM_TEXT_LEN+1];              // reference spectrum file in file mode
   char  refEtalon[MAX_ITEM_TEXT_LEN+1];                    // reference etalon file
   char  residualsFile[MAX_ITEM_TEXT_LEN+1];                // residuals safe keeping
   char  lambdaMin[13],lambdaMax[13];                       // wavelengths or pixels range
   char  lambdaMinK[13],lambdaMaxK[13];                     // wavelengths or pixels range
   INDEX  listEntryPoint[TAB_TYPE_ANLYS_MAX];                // entry points to list for all tab pages
-  INT    hidden;                                            // flag set if window is hidden
+  int    hidden;                                            // flag set if window is hidden
   double refSZA,refSZADelta;
   double refLatMin,refLatMax,refLonMin,refLonMax;
-  INT    pixelType;
-  INT    nspectra;
+  int    pixelType;
+  int    nspectra;
   char  gomePixelType[4];
  }
 ANALYSIS_WINDOWS;
@@ -272,7 +272,7 @@ ANALYSIS_WINDOWS;
 // ----------
 
 #if defined(__WINDOAS_GUI_) && (__WINDOAS_GUI_)
-    LRESULT CALLBACK ANLYS_WndProc(HWND hwndAnlys,UINT msg,WPARAM mp1,LPARAM mp2);
+    LRESULT CALLBACK ANLYS_WndProc(HWND hwndAnlys,unsigned int msg,WPARAM mp1,LPARAM mp2);
     void  ANLYS_ViewCrossSections(HWND hwndTree);
     void  ANLYS_DeleteOneListItem(char *textItem,INDEX indexWindow,INDEX indexTab);
 #endif
@@ -302,12 +302,12 @@ void ANLYS_Free(void);
 
 typedef struct _prjctSpectra
  {
-  INT    noMin,noMax;                                                           // spectra numbers range
+  int    noMin,noMax;                                                           // spectra numbers range
   float  SZAMin,SZAMax,SZADelta;                                                // SZA range
   float  cloudMin,cloudMax;                                                     // cloud fraction range (for satellite measurements)
   float  longMin,longMax,latMin,latMax,                                         // resp. longitude and latitude ranges
          radius;                                                                // radius if circle mode is used
-  INT    namesFlag,                                                             // use names
+  int    namesFlag,                                                             // use names
          darkFlag,                                                              // use dark current
          displaySpectraFlag,                                                    // display complete spectra
          displayDataFlag,                                                       // display data on spectra
@@ -318,7 +318,7 @@ typedef struct _prjctSpectra
          maxGraphV,                                                             // QDOAS obsolete field !!! : maximum number of graphs in height a graphic page can hold
          maxGraphH,                                                             // QDOAS obsolete field !!! : maximum number of graphs in width a graphic page can hold
          mode;
-  INT    fieldsNumber;                                                          // number of ascii flags set in the next list
+  int    fieldsNumber;                                                          // number of ascii flags set in the next list
   char fieldsFlag[PRJCT_RESULTS_MAX];                                         // fields used in ascii format
  }
 PRJCT_SPECTRA;
@@ -332,10 +332,10 @@ PRJCT_SPECTRA;
 
   typedef struct _prjctAnlys
   {
-    INT method;                                        // analysis method
-    INT fitWeighting;                                  // least-squares fit weighting
-    INT units;                                         // units for shift and stretch
-    INT interpol;                                      // interpolation
+    int method;                                        // analysis method
+    int fitWeighting;                                  // least-squares fit weighting
+    int units;                                         // units for shift and stretch
+    int interpol;                                      // interpolation
     double convergence;                                // convergence criterion
     double spike_tolerance;                            // max ratio of (pixel residual)/(average residual)
 
@@ -360,21 +360,21 @@ PRJCT_SPECTRA;
 
 typedef struct _prjctKurucz
  {
-  INT              windowsNumber;                      // number of windows
-  INT              fwhmPolynomial;                     // security gap in pixels numbers
-  INT              shiftPolynomial;                    // degree of polynomial to use
+  int              windowsNumber;                      // number of windows
+  int              fwhmPolynomial;                     // security gap in pixels numbers
+  int              shiftPolynomial;                    // degree of polynomial to use
   char           file[MAX_ITEM_TEXT_LEN+1];          // kurucz file
   char           slfFile[MAX_ITEM_TEXT_LEN+1];       // slit function file
-  INT              displayFit;                         // display fit flag
-  INT              displayResidual;                    // display new calibration flag
-  INT              displayShift;                       // display shift/Fwhm in each pixel
-  INT              displaySpectra;                     // display fwhm in each pixel
-  INT              fwhmFit;                            // force fit of fwhm while applying Kurucz
-  INT              fwhmType;                           // type of slit function to fit
+  int              displayFit;                         // display fit flag
+  int              displayResidual;                    // display new calibration flag
+  int              displayShift;                       // display shift/Fwhm in each pixel
+  int              displaySpectra;                     // display fwhm in each pixel
+  int              fwhmFit;                            // force fit of fwhm while applying Kurucz
+  int              fwhmType;                           // type of slit function to fit
   double           lambdaLeft;
   double           lambdaRight;
-  INT              invPolyDegree;
-  INT              analysisMethod;
+  int              invPolyDegree;
+  int              analysisMethod;
  }
 PRJCT_KURUCZ;
 
@@ -385,7 +385,7 @@ PRJCT_KURUCZ;
 typedef struct _prjctUsamp
  {
   char  kuruczFile[MAX_STR_LEN+1];
-  INT    method;
+  int    method;
   double phase;
  }
 PRJCT_USAMP;
@@ -419,17 +419,17 @@ PRJCT_USAMP;
 #define SCIA_REFERENCE_ASM   6
 #define SCIA_REFERENCE_ASMBU 9
 
-EXTERN int SCIA_clusters[PRJCT_INSTR_SCIA_CHANNEL_MAX][2];
-EXTERN int SCIA_ms; // number of milliseconds
+extern int SCIA_clusters[PRJCT_INSTR_SCIA_CHANNEL_MAX][2];
+extern int SCIA_ms; // number of milliseconds
 
-EXTERN int GOME2_mus; //number of microseconds
+extern int GOME2_mus; //number of microseconds
 
 // Instrumental tab page description
 // ---------------------------------
 
 typedef struct _prjctAsciiFormat
  {
-  INT   format,szaSaveFlag,azimSaveFlag,elevSaveFlag,timeSaveFlag,dateSaveFlag,lambdaSaveFlag;
+  int   format,szaSaveFlag,azimSaveFlag,elevSaveFlag,timeSaveFlag,dateSaveFlag,lambdaSaveFlag;
  }
 PRJCT_ASCII;
 
@@ -442,24 +442,24 @@ PRJCT_SAOZ;
 
 typedef struct _prjctSciaFormat
  {
-  INT         sciaChannel;
-  INT         sciaCluster[6];
+  int         sciaChannel;
+  int         sciaCluster[6];
   char       sciaReference[4];
  }
 PRJCT_SCIA;
 
 typedef struct _prjctGomeFormat
  {
- 	INT bandType;
- 	INT pixelType;
+ 	int bandType;
+ 	int pixelType;
  }
 PRJCT_GOME;
 
 typedef struct _prjctOmiFormat
  {
    char refPath[MAX_STR_LEN+1];
-   INT spectralType;
-   INT averageFlag;
+   int spectralType;
+   int averageFlag;
    int   omiTracks[MAX_SWATHSIZE];
    int   pixelQFRejectionFlag,pixelQFMaxGaps,pixelQFMask;                       // pixel quality flags rejection
    enum omi_xtrack_mode xtrack_mode;                                            // how to use XTrackQualityFlags
@@ -470,30 +470,30 @@ typedef struct _prjctInstrumental
  {
   char       observationSite[MAX_ITEM_NAME_LEN+1];                            // index of observation site in list
   char       readOutFormat;                                                   // spectra read out format
-  INT         user;                                                             // user defined
+  int         user;                                                             // user defined
   char       calibrationFile[MAX_ITEM_TEXT_LEN+1];                            // calibration file
   char       instrFunction[MAX_ITEM_TEXT_LEN+1];                              // instrumental function
   char       vipFile[MAX_ITEM_TEXT_LEN+1];                                    // interpixel variability correction
   char       dnlFile[MAX_ITEM_TEXT_LEN+1];                                    // detector not linearity correction
   char       offsetFile[MAX_ITEM_TEXT_LEN+1];                                 // offset file
   char       imagePath[MAX_ITEM_TEXT_LEN+1];                                  // root path for camera pictures
-  INT         detectorSize;                                                     // size of detector in pixels
-  INT         azimuthFlag;
-  INT         averageFlag;
+  int         detectorSize;                                                     // size of detector in pixels
+  int         azimuthFlag;
+  int         averageFlag;
   PRJCT_ASCII ascii;
   PRJCT_SAOZ  saoz;
   PRJCT_GOME  gome;
   PRJCT_SCIA  scia;
   PRJCT_OMI   omi;
-  INT         wavelength;
-  UINT        mfcMaskOffset;
-  UINT        mfcMaskDark;
-  UINT        mfcMaskInstr;
-  UINT        mfcMaskSpec;
-  INT         mfcMaskUse;
-  INT         mfcMaxSpectra;
-  INT         mfcRevert;
-  INT         offsetFlag;
+  int         wavelength;
+  unsigned int        mfcMaskOffset;
+  unsigned int        mfcMaskDark;
+  unsigned int        mfcMaskInstr;
+  unsigned int        mfcMaskSpec;
+  int         mfcMaskUse;
+  int         mfcMaxSpectra;
+  int         mfcRevert;
+  int         offsetFlag;
   double      lambdaMin,lambdaMax;
   char       mfcStdDate[24];
   float       opusTimeShift;
@@ -508,7 +508,7 @@ PRJCT_INSTRUMENTAL;
 typedef struct _prjctSlit
  {
   SLIT  slitFunction;                                  // slit function
-  INT   fwhmCorrectionFlag;                            // flag set if fwhm correction is to be applied
+  int   fwhmCorrectionFlag;                            // flag set if fwhm correction is to be applied
   char kuruczFile[MAX_STR_LEN+1];
  }
 PRJCT_SLIT;
@@ -523,9 +523,9 @@ PRJCT_SLIT;
 typedef struct _prjctResultsFields
  {
   char   fieldName[2*(MAX_ITEM_NAME_LEN+1)];
-  INT     fieldType;
-  INT     fieldSize;
-  INT     fieldDim1,fieldDim2;
+  int     fieldType;
+  int     fieldSize;
+  int     fieldDim1,fieldDim2;
   char   fieldFormat[MAX_ITEM_NAME_LEN+1];
  }
 PRJCT_RESULTS_FIELDS;
@@ -536,10 +536,10 @@ PRJCT_RESULTS_FIELDS;
 typedef struct _prjctAsciiResults
 {
   char path[MAX_ITEM_TEXT_LEN+1];                                         // path for results and fits files
-  INT   analysisFlag,calibFlag,referenceFlag,dirFlag,fileNameFlag;          // store results in ascii format
+  int   analysisFlag,calibFlag,referenceFlag,dirFlag,fileNameFlag;          // store results in ascii format
   char fluxes[MAX_ITEM_TEXT_LEN+1];                                       // fluxes
   char cic[MAX_ITEM_TEXT_LEN+1];                                          // color indexes
-  INT fieldsNumber;                                                         // number of ascii flags set in the next list
+  int fieldsNumber;                                                         // number of ascii flags set in the next list
   char fieldsFlag[PRJCT_RESULTS_MAX];                                     // fields used in output
   enum output_format file_format;
   char swath_name[HDFEOS_OBJ_LEN_MAX];
@@ -586,8 +586,8 @@ PROJECT;
 // GLOBAL VARIABLES
 // ----------------
 
-EXTERN PROJECT *PRJCT_itemList,PRJCT_panelProject;     // list of projects
-EXTERN char   *PRJCT_AnlysInterpol[],                 // interpolation methods
+extern PROJECT *PRJCT_itemList,PRJCT_panelProject;     // list of projects
+extern char   *PRJCT_AnlysInterpol[],                 // interpolation methods
                *PRJCT_AnlysMethods[],                  // analysis methods
                *PRJCT_filterTypes[],
                *PRJCT_filterOutput[];
@@ -626,8 +626,8 @@ void PRJCT_SaveConfiguration(FILE *fp,char *sectionName);
      double *fftOut;
      double *invFftIn;
      double *invFftOut;
-     INT     fftSize;
-     INT     oldSize;
+     int     fftSize;
+     int     oldSize;
     }
    FFT;
 
@@ -635,7 +635,7 @@ void PRJCT_SaveConfiguration(FILE *fp,char *sectionName);
    // GLOBAL VARIABLES
    // ----------------
 
-   EXTERN const char *XSCONV_slitTypes[SLIT_TYPE_MAX];
+   extern const char *XSCONV_slitTypes[SLIT_TYPE_MAX];
 
    // ----------
    // PROTOTYPES
@@ -643,28 +643,28 @@ void PRJCT_SaveConfiguration(FILE *fp,char *sectionName);
 
    // Files processing
 
-   RC   XSCONV_LoadCalibrationFile(MATRIX_OBJECT *pLambda,char *lambdaFile,INT nextraPixels);
-   RC   XSCONV_LoadSlitFunction(MATRIX_OBJECT *pSlitXs,MATRIX_OBJECT *pSlitXs2,SLIT *pSlit,double *pGaussWidth,INT *pSlitType);
-   RC XSCONV_ConvertCrossSectionFile(MATRIX_OBJECT *pCross, double lambdaMin,double lambdaMax,double shift,INT conversionMode);
-   RC   XSCONV_LoadCrossSectionFile(MATRIX_OBJECT *pCross,char *crossFile,double lambdaMin,double lambdaMax,double shift,INT conversionMode);
+   RC   XSCONV_LoadCalibrationFile(MATRIX_OBJECT *pLambda,char *lambdaFile,int nextraPixels);
+   RC   XSCONV_LoadSlitFunction(MATRIX_OBJECT *pSlitXs,MATRIX_OBJECT *pSlitXs2,SLIT *pSlit,double *pGaussWidth,int *pSlitType);
+   RC XSCONV_ConvertCrossSectionFile(MATRIX_OBJECT *pCross, double lambdaMin,double lambdaMax,double shift,int conversionMode);
+   RC   XSCONV_LoadCrossSectionFile(MATRIX_OBJECT *pCross,char *crossFile,double lambdaMin,double lambdaMax,double shift,int conversionMode);
 
    RC XSCONV_NewSlitFunction(SLIT *pSlitOptions,MATRIX_OBJECT *pSlit,double slitParam,SLIT *pSlit2Options,MATRIX_OBJECT *pSlit2,double slitParam2);
 
    // Convolution functions
 
-   RC   XSCONV_GetFwhm(double *lambda,double *slit,double *deriv2,INT nl,INT slitType,double *slitParam);
+   RC   XSCONV_GetFwhm(double *lambda,double *slit,double *deriv2,int nl,int slitType,double *slitParam);
    RC   XSCONV_TypeNone(MATRIX_OBJECT *pXsnew,MATRIX_OBJECT *pXshr);
    RC   XSCONV_FctGauss(double *pValue,double fwhm,double step,double delta);
-   RC   XSCONV_TypeGauss(const double *lambda, const double *Spec, const double *SDeriv2,double lambdaj,double dldj,double *SpecConv,double fwhm,double n,INT slitType, int ndet);
-   RC   XSCONV_TypeStandardFFT(FFT *pFFT,INT fwhmType,double slitParam,double slitParam2,double *lambda,double *target,INT size);
-   RC   XSCONV_TypeStandard(MATRIX_OBJECT *pXsnew,INDEX indexLambdaMin,INDEX indexLambdaMax,const MATRIX_OBJECT *pXshr, const MATRIX_OBJECT *pSlit, const MATRIX_OBJECT *pSlit2, const MATRIX_OBJECT *pI, double *Ic,INT slitType,double slitParam,double slitParam2,int wveDptFlag);
-   RC   XSCONV_TypeI0Correction(MATRIX_OBJECT *pXsnew,MATRIX_OBJECT *pXshr,MATRIX_OBJECT *pI0,MATRIX_OBJECT *pSlit,MATRIX_OBJECT *pSlit2,double conc,INT slitType,double slitParam,double slitParam2,int wveDptFlag);
+   RC   XSCONV_TypeGauss(const double *lambda, const double *Spec, const double *SDeriv2,double lambdaj,double dldj,double *SpecConv,double fwhm,double n,int slitType, int ndet);
+   RC   XSCONV_TypeStandardFFT(FFT *pFFT,int fwhmType,double slitParam,double slitParam2,double *lambda,double *target,int size);
+   RC   XSCONV_TypeStandard(MATRIX_OBJECT *pXsnew,INDEX indexLambdaMin,INDEX indexLambdaMax,const MATRIX_OBJECT *pXshr, const MATRIX_OBJECT *pSlit, const MATRIX_OBJECT *pSlit2, const MATRIX_OBJECT *pI, double *Ic,int slitType,double slitParam,double slitParam2,int wveDptFlag);
+   RC   XSCONV_TypeI0Correction(MATRIX_OBJECT *pXsnew,MATRIX_OBJECT *pXshr,MATRIX_OBJECT *pI0,MATRIX_OBJECT *pSlit,MATRIX_OBJECT *pSlit2,double conc,int slitType,double slitParam,double slitParam2,int wveDptFlag);
    
    // Main types of child windows
    // ---------------------------
 
-EXTERN PRJCT_ASCII ASCII_options;
-EXTERN ANALYSIS_WINDOWS  *ANLYS_windowsList;       // analysis windows list
+extern PRJCT_ASCII ASCII_options;
+extern ANALYSIS_WINDOWS  *ANLYS_windowsList;       // analysis windows list
 
 #if defined(_cplusplus) || defined(__cplusplus)
 }

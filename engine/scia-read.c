@@ -116,11 +116,11 @@
 
 typedef struct _sciaClusDef
  {
-  INT mdsOffset;                                                                // offset of the current measurement data set from the beginning of the file
-  INT nobs;                                                                     // total number of observations in the measurement data set
-  INT startPix;                                                                 // starting pixels
-  INT npixels;                                                                  // number of pixels in the cluster
-  INT coadd;                                                                    // coadd factor
+  int mdsOffset;                                                                // offset of the current measurement data set from the beginning of the file
+  int nobs;                                                                     // total number of observations in the measurement data set
+  int startPix;                                                                 // starting pixels
+  int npixels;                                                                  // number of pixels in the cluster
+  int coadd;                                                                    // coadd factor
  }
 SCIA_CLUSDEF;
 
@@ -128,10 +128,10 @@ SCIA_CLUSDEF;
 
 typedef struct _sciaNadirState                                                  // information on a NADIR state
  {
-  INT stateId;                                                                  // id of the state
-  INT int_time;                                                                 // highest integration time (accounting for clusters)
-  INT clusId;                                                                   // id of the cluster with the highest integration time
-  INT nobs;                                                                     // real number of observations accounting for coadd factors
+  int stateId;                                                                  // id of the state
+  int int_time;                                                                 // highest integration time (accounting for clusters)
+  int clusId;                                                                   // id of the cluster with the highest integration time
+  int nobs;                                                                     // real number of observations accounting for coadd factors
   double dsrTime;                                                               // starting dsr time
  }
 SCIA_NADIR_STATE;
@@ -140,7 +140,7 @@ SCIA_NADIR_STATE;
 
 typedef struct _sciaClusters
  {
-  INT clusId;                                                                   // id of the selected cluster
+  int clusId;                                                                   // id of the selected cluster
   float *spe,*err;                                                              // buffers to read out
   SCIA_CLUSDEF *clusDef;                                                        // get the definition of this cluster in the different states
  }
@@ -154,7 +154,7 @@ int SCIA_clusters[PRJCT_INSTR_SCIA_CHANNEL_MAX][2]=
   { 22, 27 }
  };
 
-INT SCIA_ms=0;
+int SCIA_ms=0;
 
 // ================
 // STATIC VARIABLES
@@ -172,18 +172,18 @@ typedef struct _sciaOrbitFiles                                                  
   SCIA_NADIR_STATE *sciaNadirStates;                                            // NADIR states
   SCIA_CLUSTER   *sciaNadirClusters;                                            // definition of NADIR clusters to select
   INDEX           sciaNadirClustersIdx[MAX_CLUSTER];                            // get the indexes of clusters in the previous structure
-  INT             sciaNadirStatesN,                                             // number of NADIR states
+  int             sciaNadirStatesN,                                             // number of NADIR states
                   sciaNadirClustersN;                                           // number of NADIR clusters to select
-  INT specNumber;
-  INT rc;
+  int specNumber;
+  int rc;
  }
 SCIA_ORBIT_FILE;
 
 static SCIA_ORBIT_FILE sciaOrbitFiles[MAX_SCIA_FILES];                          // list of files for an orbit
 static int sciaOrbitFilesN=0;                                                   // the total number of files for the current orbit
 static INDEX sciaCurrentFileIndex=ITEM_NONE;                                    // index of the current file in the list
-static INT sciaTotalRecordNumber;                                               // total number of records for an orbit
-static INT sciaLoadReferenceFlag=0;
+static int sciaTotalRecordNumber;                                               // total number of records for an orbit
+static int sciaLoadReferenceFlag=0;
 
 // ==========
 // PROTOTYPES
@@ -439,13 +439,13 @@ void SCIA_FromMJD2000ToYMD(double mjd,SHORT_DATE *pDate,struct time *pTime)
 // RETURN        the index of the state
 // -----------------------------------------------------------------------------
 
-INDEX SciaGetStateIndex(int recordNo,INT *pObs,INDEX fileIndex)
+INDEX SciaGetStateIndex(int recordNo,int *pObs,INDEX fileIndex)
  {
   // Declarations
 
   SCIA_ORBIT_FILE *pOrbitFile;                                                  // pointer to the current orbit file
   INDEX indexState;                                                             // browse states
-  INT sumObs;                                                                   // accumulate the number of observations in the different states
+  int sumObs;                                                                   // accumulate the number of observations in the different states
 
   // Initialization
 
@@ -487,7 +487,7 @@ RC SciaNadirStates(ENGINE_CONTEXT *pEngineContext,INDEX fileIndex)
   SCIA_CLUSTER *pCluster;                                                       // pointer to the definition of the current cluster
   SCIA_CLUSDEF *pClusDef;                                                       // pointer to the definition of the current cluster
   INDEX indexState,indexCluster;                                                // browse resp. NADIR states and clusters
-  INT   maxPix[MAX_CLUSTER],                                                    // for the set of selected clusters to read, get the maximum number of pixels and
+  int   maxPix[MAX_CLUSTER],                                                    // for the set of selected clusters to read, get the maximum number of pixels and
         maxCoadd[MAX_CLUSTER];                                                  // the maximum coadd factor in order to further determine the maximum size of vectors to allocate
   RC rc;                                                                        // return code
 
@@ -503,8 +503,8 @@ RC SciaNadirStates(ENGINE_CONTEXT *pEngineContext,INDEX fileIndex)
   pOrbitFile->sciaNadirStatesN=pOrbitFile->sciaPDSInfo.n_states[MDS_NADIR];         // number of NADIR states
   pOrbitFile->specNumber=0;
 
-  memset(maxPix,0,sizeof(INT)*MAX_CLUSTER);
-  memset(maxCoadd,0,sizeof(INT)*MAX_CLUSTER);
+  memset(maxPix,0,sizeof(int)*MAX_CLUSTER);
+  memset(maxCoadd,0,sizeof(int)*MAX_CLUSTER);
 
   rc=ERROR_ID_NO;
 
@@ -617,7 +617,7 @@ RC SciaNadirGeolocations(ENGINE_CONTEXT *pEngineContext,INDEX fileIndex)
   SATELLITE_GEOLOC *pSciaGeoloc;                                                // geolocations in the WinDOAS format
   SCIA_NADIR_STATE *pState;                                                     // pointer to the current state
   SCIA_CLUSDEF *pClusDef;                                                       // pointer to the definition of the cluster with the highest integration time in the current state
-  DoasU32 offset;                                                                 // offset of geolocation data from the beginning of file
+  uint32_t offset;                                                                 // offset of geolocation data from the beginning of file
   INDEX indexRecord;                                                            // browse records
   INDEX indexObs;                                                               // browse observations in the current NADIR MDS
   INDEX indexState;                                                             // browse states
@@ -657,7 +657,7 @@ RC SciaNadirGeolocations(ENGINE_CONTEXT *pEngineContext,INDEX fileIndex)
             2*sizeof(char)+                                                     // quality+unit_flag
             1*sizeof(float)+                                                    // orbit_phase
             5*sizeof(short)+                                                    // category+state_id+cluster_id+nobs+npixels
-           (sizeof(DoasUS)+                                                     // pixels id
+           (sizeof(unsigned short)+                                                     // pixels id
           2*sizeof(float))*pClusDef->npixels+                                   // wavelength+wavelength errors
           2*pClusDef->npixels*pClusDef->nobs*sizeof(float);                     // signal+error
 
@@ -742,7 +742,7 @@ RC SciaReadSunRefPDS(ENGINE_CONTEXT *pEngineContext,INDEX fileIndex)
 
   BUFFERS *pBuffers;                                                            // pointer to the buffers part of the engine context
   SCIA_ORBIT_FILE *pOrbitFile;                                                  // pointer to the current orbit
-  DoasU32 offset;                                                                 // offset of reference spectra from the beginning of the PDS file
+  uint32_t offset;                                                                 // offset of reference spectra from the beginning of the PDS file
   INDEX indexRef;                                                               // browse reference spectra in the file
   char refId[2];                                                                // id of the reference spectra
   FILE *fp;                                                                     // pointer to the current file
@@ -876,7 +876,7 @@ RC SciaReadNadirMDSInfo(ENGINE_CONTEXT *pEngineContext,INDEX fileIndex)
   INDEX indexNadirMDS,                                                          // browse NADIR measurement data sets
         indexCluster,                                                           // browse clusters to account for
         indexState;                                                             // index of the current state
-  DoasU32 offset;                                                                 // offset in file
+  uint32_t offset;                                                                 // offset in file
   RC rc;
 
   // DEBUG                                                                        // return code
@@ -958,7 +958,7 @@ RC SciaReadNadirMDS(ENGINE_CONTEXT *pEngineContext,INDEX indexState,INDEX indexR
   BUFFERS *pBuffers;                                                            // pointer to the buffers part of the engine context
 
   SCIA_ORBIT_FILE *pOrbitFile;                                                  // pointer to the current orbit
-  DoasU32 offset;                                                                 // offset from the beginning of file for data to read
+  uint32_t offset;                                                                 // offset from the beginning of file for data to read
   SCIA_CLUSTER *pCluster;                                                       // pointer to the current cluster
   SCIA_CLUSDEF *pClusDef;                                                       // pointer to the definition of the cluster in the current state
   INDEX indexCluster;                                                           // browse cluster to read out
@@ -995,7 +995,7 @@ RC SciaReadNadirMDS(ENGINE_CONTEXT *pEngineContext,INDEX indexState,INDEX indexR
 
     // don't need pixels id and wavelength+wavelength errors
 
-          (sizeof(DoasUS)+                                                      // pixels id
+          (sizeof(unsigned short)+                                                      // pixels id
          2*sizeof(float))*pClusDef->npixels;                                    // wavelength+wavelength errors
 
     // Spectra read out
@@ -1084,9 +1084,9 @@ RC SCIA_SetPDS(ENGINE_CONTEXT *pEngineContext)
   DIR *hDir;
   INDEX indexFile;
   char *ptr,*ptrOld;
-  INT oldCurrentIndex;
+  int oldCurrentIndex;
   char *_nList[10];
-  INT _n;
+  int _n;
   RC rc;                                                                        // return code
 
   // DEBUG
@@ -1304,7 +1304,7 @@ RC SCIA_ReadPDS(ENGINE_CONTEXT *pEngineContext,int recordNo)
   RECORD_INFO *pRecord;                                                         // pointer to the record part of the engine context
   SCIA_ORBIT_FILE *pOrbitFile;                                                  // pointer to the current orbit
   SATELLITE_GEOLOC *pSciaData;                                                  // data (geolocation+angles) of the current record
-  INT stateObs;                                                                 // total number of observations covered by previous states
+  int stateObs;                                                                 // total number of observations covered by previous states
   INDEX indexState;                                                             // index of the current state
 //   double tmp;
   RC rc;                                                                        // return code
@@ -1562,7 +1562,7 @@ void SciaSort(INDEX indexRecord,int flag,int listSize,INDEX fileIndex)
 // RETURN        the number of elements in the refList reference list
 // -----------------------------------------------------------------------------
 
-INT SciaRefLat(SATELLITE_REF *refList,INT maxRefSize,double latMin,double latMax,double lonMin,double lonMax,double sza,double szaDelta)
+int SciaRefLat(SATELLITE_REF *refList,int maxRefSize,double latMin,double latMax,double lonMin,double lonMax,double sza,double szaDelta)
  {
   // Declarations
 
@@ -1572,7 +1572,7 @@ INT SciaRefLat(SATELLITE_REF *refList,INT maxRefSize,double latMin,double latMax
         ilatIndex,                                                              // browse records with latitudes in the specified range
         indexRef;                                                               // browse reference already registered in order to keep the list sorted
 
-  INT nRef;                                                                     // the number of spectra matching latitudes and SZA conditions
+  int nRef;                                                                     // the number of spectra matching latitudes and SZA conditions
   double szaDist,latDist;                                                       // distance with latitude and sza centers
   double lon;                                                                   // converts the longitude in the -180:180 range
   SATELLITE_GEOLOC *pRecord;
@@ -1666,7 +1666,7 @@ INT SciaRefLat(SATELLITE_REF *refList,INT maxRefSize,double latMin,double latMax
 // RETURN        the number of elements in the refList reference list
 // -----------------------------------------------------------------------------
 
-INT SciaRefSza(SATELLITE_REF *refList,INT maxRefSize,double sza,double szaDelta)
+int SciaRefSza(SATELLITE_REF *refList,int maxRefSize,double sza,double szaDelta)
  {
   // Declarations
 
@@ -1676,7 +1676,7 @@ INT SciaRefSza(SATELLITE_REF *refList,INT maxRefSize,double sza,double szaDelta)
         iszaIndex,                                                              // browse records with SZA in the specified SZA range
         indexRef;                                                               // browse reference already registered in order to keep the list sorted
 
-  INT nRef;                                                                     // the number of spectra matching latitudes and SZA conditions
+  int nRef;                                                                     // the number of spectra matching latitudes and SZA conditions
   double szaDist;                                                               // distance with sza center
   SATELLITE_GEOLOC *pRecord;
 
@@ -1768,7 +1768,7 @@ INT SciaRefSza(SATELLITE_REF *refList,INT maxRefSize,double sza,double szaDelta)
 //               ERROR_ID_NO otherwise.
 // -----------------------------------------------------------------------------
 
-RC SciaBuildRef(SATELLITE_REF *refList,INT nRef,INT nSpectra,double *lambda,double *ref,ENGINE_CONTEXT *pEngineContext,INDEX *pIndexLine,void *responseHandle)
+RC SciaBuildRef(SATELLITE_REF *refList,int nRef,int nSpectra,double *lambda,double *ref,ENGINE_CONTEXT *pEngineContext,INDEX *pIndexLine,void *responseHandle)
  {
   // Declarations
 
@@ -1780,8 +1780,8 @@ RC SciaBuildRef(SATELLITE_REF *refList,INT nRef,INT nSpectra,double *lambda,doub
             indexState,indexObs,                                                // state index and observation number of the current record
             indexColumn,                                                        // index of the current column in the cell page associated to the ref plot page
             i;                                                                  // index for loop and arrays
-  INT       nRec;                                                               // number of records use for the average
-  INT       alreadyOpen;
+  int       nRec;                                                               // number of records use for the average
+  int       alreadyOpen;
   RC        rc;                                                                 // return code
 
   // Initializations
@@ -1909,7 +1909,7 @@ RC SciaRefSelection(ENGINE_CONTEXT *pEngineContext,
 
   SATELLITE_REF *refList;                                                            // list of potential reference spectra
   double latDelta,tmp;
-  INT nRefN,nRefS;                                                              // number of reference spectra in the previous list resp. for Northern and Southern hemisphere
+  int nRefN,nRefS;                                                              // number of reference spectra in the previous list resp. for Northern and Southern hemisphere
   INDEX indexLine,indexColumn;                                                  // current position in the cell page associated to the ref page
   RC rc;                                                                        // return code
 
@@ -2116,7 +2116,7 @@ RC SCIA_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
   WRK_SYMBOL *pWrkSymbol;                                                       // pointer to a symbol
   FENO *pTabFeno;                                                               // pointer to the current spectral analysis window
   double lambdaMin,lambdaMax;                                                   // working variables
-  INT DimL,useUsamp,useKurucz,saveFlag;                                         // working variables
+  int DimL,useUsamp,useKurucz,saveFlag;                                         // working variables
   RC rc;                                                                        // return code
 
   // Initializations
@@ -2124,7 +2124,7 @@ RC SCIA_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 //  DEBUG_Print(DOAS_logFile,"Enter SCIA_LoadAnalysis\n");
 
   pOrbitFile=&sciaOrbitFiles[sciaCurrentFileIndex];
-  saveFlag=(INT)pEngineContext->project.spectra.displayDataFlag;
+  saveFlag=(int)pEngineContext->project.spectra.displayDataFlag;
 
   if (!(rc=pOrbitFile->rc) && (sciaLoadReferenceFlag || !pEngineContext->analysisRef.refAuto))
    {

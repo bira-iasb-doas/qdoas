@@ -56,8 +56,6 @@ extern "C" {
 // COMPILATION CONTROL
 // ===================
 
-#define __INCLUDE_HDF_ 0                                                        // 1 to include HDF
-
 // ===============
 // INCLUDE HEADERS
 // ===============
@@ -82,31 +80,10 @@ extern "C" {
 #define strnicmp strncasecmp
 #endif
 
-
 #pragma pack(1)
 
-typedef int            INT;
-typedef unsigned short DoasUS,WORD;
-typedef int            BOOL;
-typedef uint32_t       DoasU32;
-typedef int32_t        DoasI32;
-typedef unsigned char  BYTE;
-typedef unsigned int   UINT;
-//typedef unsigned long  HWND;
-typedef unsigned long  DWORD;
-typedef void *         HANDLE;
-
-#if !defined(TRUE)
-#define TRUE  1
-#endif
-
-#if !defined(FALSE)
-#define FALSE 0
-#endif
-
-#define EXTERN      extern
 typedef int         INDEX,RC;                                            // RC holds for return code
-typedef UINT        MASK,SZ_LEN;
+typedef unsigned int MASK,SZ_LEN;
 
 // Macros
 
@@ -329,8 +306,8 @@ typedef union _debugVarPtr                                                      
   char    *ucharVector;                                                        // pointer to a string
   short   **shortArray;                                                         // pointer to a short type array
   short    *shortVector;                                                        // pointer to a short type vector
-  DoasUS  **ushortArray;                                                        // pointer to a unsigned short type array
-  DoasUS   *ushortVector;                                                       // pointer to a unsigned short type vector
+  unsigned short  **ushortArray;                                                        // pointer to a unsigned short type array
+  unsigned short   *ushortVector;                                                       // pointer to a unsigned short type vector
   int     **intArray;                                                           // pointer to a integer type array
   int      *intVector;                                                          // pointer to a integer type vector
   long    **longArray;                                                          // pointer to a long type array
@@ -346,11 +323,11 @@ typedef struct _debugVariables                                                  
  {
   char         varName[MAX_VAR_LEN+1];                                         // the name of the variable to debug
   DEBUG_VARPTR  varData;                                                        // pointer to the buffer to print out
-  INT           varNl,varNc;                                                    // the size of the variable to debug
-  INT           varNlOff,varNcOff;                                              // the offset to apply to resp. index of lines and columns
+  int           varNl,varNc;                                                    // the size of the variable to debug
+  int           varNlOff,varNcOff;                                              // the offset to apply to resp. index of lines and columns
   INDEX         varNlMin,varNlMax,varNcMin,varNcMax;                            // these indexes define the area of the vector or the matrix to print out
-  INT           varType;                                                        // the type of the variable to debug
-  INT           varMatrixFlag;                                                  // 1 if the object to debug is a matrix, 0 for a vector
+  int           varType;                                                        // the type of the variable to debug
+  int           varMatrixFlag;                                                  // 1 if the object to debug is a matrix, 0 for a vector
  }
 DEBUG_VARIABLE;
 
@@ -429,20 +406,20 @@ typedef struct _memory
   char  callingFunctionName[MAX_FCT_LEN+1];                                    // name of the calling function
   char  bufferName[MAX_VAR_LEN+1];                                             // name of the buffer
   char *pBuffer;                                                               // pointer to the allocated buffer
-  INT    itemNumber;                                                            // number of items in buffer
-  INT    itemSize;                                                              // size of item
-  INT    offset;                                                                // index of the first item
-  INT    type;                                                                  // type of object
+  int    itemNumber;                                                            // number of items in buffer
+  int    itemSize;                                                              // size of item
+  int    offset;                                                                // index of the first item
+  int    type;                                                                  // type of object
  }
 MEMORY;
 
 // Global variables
 
-EXTERN INT MEMORY_stackSize;                                                    // the size of the stack of allocated objects
-EXTERN const char *MEMORY_types[MEMORY_TYPE_MAX];                                    // available types for allocated objects
+extern int MEMORY_stackSize;                                                    // the size of the stack of allocated objects
+extern const char *MEMORY_types[MEMORY_TYPE_MAX];                                    // available types for allocated objects
 
 // Prototypes
-void    *MEMORY_AllocBuffer(const char *callingFunctionName, const char *bufferName,INT itemNumber,INT itemSize,INT offset,INT type);
+void    *MEMORY_AllocBuffer(const char *callingFunctionName, const char *bufferName,int itemNumber,int itemSize,int offset,int type);
 void     MEMORY_ReleaseBuffer(const char *callingFunctionName, const char *bufferName,void *pBuffer);
 double  *MEMORY_AllocDVector(const char *callingFunctionName, const char *bufferName,int nl,int nh);
 void     MEMORY_ReleaseDVector(const char *callingFunctionName, const char *bufferName,double *v,int nl);

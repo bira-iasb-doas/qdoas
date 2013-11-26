@@ -54,7 +54,7 @@ extern "C" {
 
 // typedef struct _slit
 //  {
-//   INT    slitType;                                                              // type of line shape (see above)
+//   int    slitType;                                                              // type of line shape (see above)
 //   char slitFile[MAX_STR_LEN+1];                                               // for line shapes provided in file, name of the first file
 //   char slitFile2[MAX_STR_LEN+1];                                              // for line shapes provided in file, name of the second file
 //   double slitParam;                                                             // up to 4 parameters can be provided for the line shape
@@ -66,20 +66,20 @@ extern "C" {
 
 typedef struct _filter
  {
-  INT     type;                                          // type of filter
+  int     type;                                          // type of filter
   float   fwhmWidth;                                     // fwhm width for gaussian
   float   kaiserCutoff;                                  // cutoff frequency for kaiser filter type
   float   kaiserPassBand;                                // pass band for kaiser filter type
   float   kaiserTolerance;                               // tolerance for kaiser filter type
-  INT     filterOrder;                                   // filter order
-  INT     filterWidth;                                   // filter width for boxcar, triangle or Savitsky-Golay filters
-  INT     filterNTimes;                                  // the number of times to apply the filter
-  INT     filterAction;
+  int     filterOrder;                                   // filter order
+  int     filterWidth;                                   // filter width for boxcar, triangle or Savitsky-Golay filters
+  int     filterNTimes;                                  // the number of times to apply the filter
+  int     filterAction;
   double *filterFunction;
-  INT     filterSize;
+  int     filterSize;
   double  filterEffWidth;
-  INT     hpFilterCalib;
-  INT     hpFilterAnalysis;
+  int     hpFilterCalib;
+  int     hpFilterAnalysis;
  }
 PRJCT_FILTER;
 

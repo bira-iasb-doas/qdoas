@@ -143,20 +143,20 @@ PROJECT *PRJCT_itemList;
 
 doas_spectrum *global_doas_spectrum; // Should better remove this global variable.
 
-INT    ANALYSE_plotKurucz,ANALYSE_plotRef,ANALYSE_indexLine;
-// INT    ANALYSE_maxIter=0;
+int    ANALYSE_plotKurucz,ANALYSE_plotRef,ANALYSE_indexLine;
+// int    ANALYSE_maxIter=0;
 
-INT NFeno,                             // number of analysis windows
+int NFeno,                             // number of analysis windows
   DimC;                              // number of columns in SVD matrix == number of symbols to take into account for SVD decomposition
 
-INT SvdPDeb,SvdPFin,                   // analysis window limits
+int SvdPDeb,SvdPFin,                   // analysis window limits
   LimMin,LimMax,LimN;
 
 WRK_SYMBOL *WorkSpace;                 // list of symbols in a project
-INT NWorkSpace;
+int NWorkSpace;
 FENO **TabFeno,*Feno;                  // list of analysis windows in a project
 
-INT ANALYSE_swathSize=0;
+int ANALYSE_swathSize=0;
 
 double **U,*x,*Lambda,*LambdaSpec,
   *ANALYSE_pixels,
@@ -181,7 +181,7 @@ USAMP  ANALYSE_usampBuffers;
 // STATIC DECLARATIONS
 // ===================
 
-INT NOrtho,
+int NOrtho,
   *OrthoSet,
   ANALYSE_ignoreAll,
   hFilterSpecLog,hFilterRefLog,
@@ -220,7 +220,7 @@ double **A,**V,*W,**P,                 // SVD matrices
 
 // Internal variables
 
-INT KuruczUseRef=0;   // 0 if spectrum is shifted, 1 if reference is shifted
+int KuruczUseRef=0;   // 0 if spectrum is shifted, 1 if reference is shifted
 int debugResetFlag=0;
 int analyseDebugMask=0;
 int analyseDebugVar=0;
@@ -299,12 +299,12 @@ double root_mean_square(double * array, doas_spectrum *ranges) {
  *
  * \return True if pixels were removed.
  */
-BOOL remove_spikes(double *residuals,
+bool remove_spikes(double *residuals,
 		   double max_residual,
 		   doas_spectrum *pspecrange, // updated to exclude pixels with spikes
-		   BOOL * spike_arr) // array to store value of residiuals for pixels with spikes
+		   bool * spike_arr) // array to store value of residiuals for pixels with spikes
  {
-  BOOL spikes = 0;
+  bool spikes = 0;
 
   doas_spectrum *temprange = spectrum_copy(pspecrange);
   doas_iterator my_iterator;
@@ -334,7 +334,7 @@ int reinit_analysis(FENO *pFeno)
 
 void AnalyseGetFenoLim(FENO *pFeno,INDEX *pLimMin,INDEX *pLimMax)
 {
-  INT deb,fin,Dim;
+  int deb,fin,Dim;
 
   // Debugging
 
@@ -377,7 +377,7 @@ void AnalyseGetFenoLim(FENO *pFeno,INDEX *pLimMin,INDEX *pLimMax)
 // FNPixel : Get a pixel from a wavelength
 // ---------------------------------------
 
-RC FNPixel(double *lambdaVector,double lambdaValue,INT npts,INT pixelSelection)
+RC FNPixel(double *lambdaVector,double lambdaValue,int npts,int pixelSelection)
 {
   // Declarations
 
@@ -451,7 +451,7 @@ RC FNPixel(double *lambdaVector,double lambdaValue,INT npts,INT pixelSelection)
 // OrthogonalizeVector : Orthogonalize a column in A matrix to a set of other columns of A
 // ---------------------------------------------------------------------------------------
 
-void OrthogonalizeVector(INT *OrthoSet,double *NormSet,INT NOrthoSet,INDEX indexColumn)
+void OrthogonalizeVector(int *OrthoSet,double *NormSet,int NOrthoSet,INDEX indexColumn)
 {
   // Declarations
 
@@ -485,7 +485,7 @@ void OrthogonalizeVector(INT *OrthoSet,double *NormSet,INT NOrthoSet,INDEX index
 #endif
 }
 
-void OrthogonalizeToCross(INT indexCross,double *NormSet,INT currentNOrtho)
+void OrthogonalizeToCross(int indexCross,double *NormSet,int currentNOrtho)
 {
   // Declarations
 
@@ -615,7 +615,7 @@ RC TemperatureCorrection(double *xs,double *A,double *B,double *C,double *newXs,
 RC ShiftVector(const double *lambda, double *source, const double *deriv, double *target,
                double DSH,double DST,double DST2,                           // first shift and stretch
                double DSH_,double DST_,double DST2_,                        // second shift and stretch
-               const double *Param,INT fwhmDir,INT kuruczFlag, const double *preshift,INDEX indexFenoColumn)
+               const double *Param,int fwhmDir,int kuruczFlag, const double *preshift,INDEX indexFenoColumn)
 {
   // Declarations
 
@@ -623,7 +623,7 @@ RC ShiftVector(const double *lambda, double *source, const double *deriv, double
   INDEX i,j;
   double j0,lambda0;
   double x0,y,fwhm,deltaX;
-  INT fwhmFlag;
+  int fwhmFlag;
   RC rc;
 
   // Initializations
@@ -718,7 +718,7 @@ RC ShiftVector(const double *lambda, double *source, const double *deriv, double
       if ((pKuruczOptions->fwhmType==SLIT_TYPE_GAUSS) || (pKuruczOptions->fwhmType==SLIT_TYPE_ERF)) {
         double F,G,w,a,sigma,delta,step;
         INDEX i;
-        INT ndemi;
+        int ndemi;
         
         ndemi=pKURUCZ_fft->fftSize>>1;
         step=(pKURUCZ_fft->fftIn[pKURUCZ_fft->oldSize]-pKURUCZ_fft->fftIn[1])/(pKURUCZ_fft->oldSize-1.);
@@ -761,7 +761,7 @@ RC ShiftVector(const double *lambda, double *source, const double *deriv, double
         MATRIX_OBJECT slitXs;
         MATRIX_OBJECT slitXs2;
         SLIT slitOptions;
-        INT slitType;
+        int slitType;
         int shiftIndex;
 
         memset(&xsNew,0,sizeof(MATRIX_OBJECT));
@@ -832,6 +832,7 @@ RC ShiftVector(const double *lambda, double *source, const double *deriv, double
         MATRIX_Free(&slitXs,__func__);
         MATRIX_Free(&slitXs2,__func__);
        }
+
     }
     
     if (hFilterRefLog && !(rc=SPLINE_Vector(KURUCZ_buffers[indexFenoColumn].lambdaF,KURUCZ_buffers[indexFenoColumn].solarF,KURUCZ_buffers[indexFenoColumn].solarF2,NDET+2*KURUCZ_buffers[indexFenoColumn].solarFGap,ANALYSE_shift+LimMin,source+LimMin,LimN,pAnalysisOptions->interpol,__func__)))
@@ -866,7 +867,7 @@ RC ANALYSE_XsInterpolation(FENO *pTabFeno, const double *newLambda,INDEX indexFe
   double *filtCross,*filtDeriv2;
   INDEX indexTabCross,i,icolumn;
   MATRIX_OBJECT *pXs;
-  INT oldNl;
+  int oldNl;
   RC rc;
 
 #if defined(__DEBUG_) && __DEBUG_
@@ -991,9 +992,9 @@ RC ANALYSE_XsInterpolation(FENO *pTabFeno, const double *newLambda,INDEX indexFe
   return rc;
 }
 
-RC ANALYSE_ConvoluteXs(const FENO *pTabFeno,INT action,double conc,
+RC ANALYSE_ConvoluteXs(const FENO *pTabFeno,int action,double conc,
                        const MATRIX_OBJECT *pXs,
-                       const MATRIX_OBJECT *pSlit, const MATRIX_OBJECT *pSlit2,INT slitType, const double *slitParam1, const double *slitParam2,
+                       const MATRIX_OBJECT *pSlit, const MATRIX_OBJECT *pSlit2,int slitType, const double *slitParam1, const double *slitParam2,
                        const double *newlambda, double *output, INDEX indexlambdaMin, INDEX indexlambdaMax, INDEX indexFenoColumn, int wveDptFlag)
 {
   // Declarations
@@ -1119,8 +1120,8 @@ RC ANALYSE_ConvoluteXs(const FENO *pTabFeno,INT action,double conc,
 // -------------------------------------------------------------------------------
 
 RC ANALYSE_XsConvolution(FENO *pTabFeno,double *newlambda,
-                         MATRIX_OBJECT *pSlit,MATRIX_OBJECT *pSlit2,INT slitType,
-                         double *slitParam1,double *slitParam2,INDEX indexFenoColumn,INT wveDptFlag)
+                         MATRIX_OBJECT *pSlit,MATRIX_OBJECT *pSlit2,int slitType,
+                         double *slitParam1,double *slitParam2,INDEX indexFenoColumn,int wveDptFlag)
 {
   // Declarations
 
@@ -1243,13 +1244,13 @@ RC ANALYSE_XsConvolution(FENO *pTabFeno,double *newlambda,
 
 // Rem : not for OMI -> TabFeno[0]
 
-RC AnalyseLoadVector(const char *function,char *fileName,double *lambda,double *vector,INT refFlag,INT *pNewSize)
+RC AnalyseLoadVector(const char *function,char *fileName,double *lambda,double *vector,int refFlag,int *pNewSize)
 {
   // Declarations
 
   FILE *fp;
   char string[MAX_ITEM_TEXT_LEN+1],fullFileName[MAX_ITEM_TEXT_LEN+1],*str;
-  INT day,month,year,hour,min,sec;
+  int day,month,year,hour,min,sec;
   struct time refTime;
   INDEX i;
   RC rc;
@@ -1321,7 +1322,7 @@ RC AnalyseLoadVector(const char *function,char *fileName,double *lambda,double *
 // ANALYSE_LinFit : Use svd facilities for linear regressions
 // ----------------------------------------------------------
 
-RC ANALYSE_LinFit(SVD *pSvd,INT Npts,INT Degree,double *a,double *sigma,double *b,double *x)
+RC ANALYSE_LinFit(SVD *pSvd,int Npts,int Degree,double *a,double *sigma,double *b,double *x)
 {
   // Declarations
 
@@ -1823,7 +1824,7 @@ RC ANALYSE_SvdInit(SVD *pSvd)
 // ANALYSE_AlignReference : Align reference spectrum on etalon
 // ----------------------------------------------------------
 
-RC ANALYSE_AlignReference(ENGINE_CONTEXT *pEngineContext,INT refFlag,INT saveFlag,void *responseHandle,INDEX indexFenoColumn)
+RC ANALYSE_AlignReference(ENGINE_CONTEXT *pEngineContext,int refFlag,int saveFlag,void *responseHandle,INDEX indexFenoColumn)
 
 //
 //  refFlag==0 : GB, file mode selection        refFlag==2 : GOME, refN
@@ -2104,7 +2105,7 @@ RC ANALYSE_Function( double *spectrum_orig, double *reference, double *SigmaY, d
   double *XTrav,*YTrav,*newXsTrav,*spec_nolog,*spectrum_interpolated,*reference_shifted,*preshift,offset,deltaX,tau;
   CROSS_REFERENCE *TabCross,*pTabCross;
   MATRIX_OBJECT slit0,slit1;
-  INT NewDimC,offsetOrder;
+  int NewDimC,offsetOrder;
   INDEX indexSvdA,indexSvdP,polyOrder,polyFlag;
   double j0,lambda0;
   RC rc;
@@ -2190,7 +2191,7 @@ RC ANALYSE_Function( double *spectrum_orig, double *reference, double *SigmaY, d
     } else {
       shift_rad = stretch_rad = stretch2_rad = 0.;
     }
-    
+
     if ( (rc=ShiftVector(LambdaSpec,spectrum_orig,SplineSpec,spectrum_interpolated, shift_rad, stretch_rad, stretch2_rad,
                          (double)0.,(double)0.,(double)0., fitParamsF,-1,0,NULL,indexFenoColumn))!=ERROR_ID_NO ||
          (Feno->useUsamp && pUsamp->method==PRJCT_USAMP_AUTOMATIC && (rc=ANALYSE_UsampBuild(2,ITEM_NONE))!=ERROR_ID_NO) )
@@ -3254,7 +3255,7 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
     newVal,
     speNormFact;                          // normalization factor
 
-  INT NbFeno,Niter,
+  int NbFeno,Niter,
     displayFlag,                           // number of MDI child windows used for display analysis fits
     useKurucz,                             // flag set if Kurucz should be applied on spectra
     saveFlag;
@@ -3283,7 +3284,7 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
   ZM=pRecord->Zm;
   TDET=pRecord->TDet;
 
-  saveFlag=(INT)pEngineContext->project.spectra.displayDataFlag;
+  saveFlag=(int)pEngineContext->project.spectra.displayDataFlag;
   SpectreK=LambdaK=Sref=Trend=offset=NULL;
   useKurucz=0;
 
@@ -3424,7 +3425,7 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
               pInstrumental->omi.pixelQFRejectionFlag &&
               (pEngineContext->recordInfo.omi.omiPixelQF!=NULL) && (Feno->omiRejPixelsQF!=NULL))
            {
-            DoasUS *pixelQF=(DoasUS *)pEngineContext->recordInfo.omi.omiPixelQF;
+            unsigned short *pixelQF=(unsigned short *)pEngineContext->recordInfo.omi.omiPixelQF;
 
             memset(Feno->omiRejPixelsQF,0,sizeof(int)*Feno->NDET);
             int start = spectrum_start(old_range);
@@ -4019,7 +4020,7 @@ void ANALYSE_ResetData(void)
           pTabCross->amfType=ITEM_NONE;
         // -------------------------------------------
         pTabCross->TypeStretch=
-          pTabCross->TypeScale=(INT)0;
+          pTabCross->TypeScale=(int)0;
         // -------------------------------------------
         pTabCross->display=(char)0;
         // -------------------------------------------
@@ -4283,7 +4284,7 @@ RC is_same_file(const char *file1, const char *file2, bool *result) {
 // PURPOSE       Load data from the molecules pages
 // -----------------------------------------------------------------------------
 
-RC ANALYSE_LoadCross(ENGINE_CONTEXT *pEngineContext,ANALYSIS_CROSS *crossSectionList,INT nCross,INT hidden,double *lambda,INDEX indexFenoColumn)
+RC ANALYSE_LoadCross(ENGINE_CONTEXT *pEngineContext,ANALYSIS_CROSS *crossSectionList,int nCross,int hidden,double *lambda,INDEX indexFenoColumn)
 {
   // Declarations
 
@@ -4516,7 +4517,7 @@ RC ANALYSE_LoadCross(ENGINE_CONTEXT *pEngineContext,ANALYSIS_CROSS *crossSection
 // ANALYSE_LoadLinear : Load continuous functions
 // -------------------------------------------------
 
-RC ANALYSE_LoadLinear(ANALYSE_LINEAR_PARAMETERS *linearList,INT nLinear,INDEX indexFenoColumn)
+RC ANALYSE_LoadLinear(ANALYSE_LINEAR_PARAMETERS *linearList,int nLinear,INDEX indexFenoColumn)
 {
   // Declarations
 
@@ -4528,8 +4529,8 @@ RC ANALYSE_LoadLinear(ANALYSE_LINEAR_PARAMETERS *linearList,INT nLinear,INDEX in
   ANALYSE_LINEAR_PARAMETERS *pList;                                             // pointer to description of an item in list
   FENO *pTabFeno;                                                               // pointer to description of the current analysis window
   INDEX indexSvd,indexTabCross;                                                 // extra index for swapping
-  INT polyFlag;                                                                 // polynomial flag (-1 for invpoly, 0 for offset, 1 for poly)
-  INT polyOrder,baseOrder;                                                      // polynomial order, base order
+  int polyFlag;                                                                 // polynomial flag (-1 for invpoly, 0 for offset, 1 for poly)
+  int polyOrder,baseOrder;                                                      // polynomial order, base order
   RC rc;                                                                        // return code
 
   // Initializations
@@ -4653,7 +4654,7 @@ RC ANALYSE_LoadLinear(ANALYSE_LINEAR_PARAMETERS *linearList,INT nLinear,INDEX in
 // ANALYSE_LoadShiftStretch : Load shift and stretch for cross sections implied in SVD decomposition
 // ------------------------------------------------------------------------------------------------
 
-RC ANALYSE_LoadShiftStretch(ANALYSIS_SHIFT_STRETCH *shiftStretchList,INT nShiftStretch,INDEX indexFenoColumn)
+RC ANALYSE_LoadShiftStretch(ANALYSIS_SHIFT_STRETCH *shiftStretchList,int nShiftStretch,INDEX indexFenoColumn)
 {
   // Declarations
 
@@ -4666,7 +4667,7 @@ RC ANALYSE_LoadShiftStretch(ANALYSIS_SHIFT_STRETCH *shiftStretchList,INT nShiftS
   SZ_LEN symbolLength;                                                          // length in characters of a symbol name
   ANALYSIS_SHIFT_STRETCH *pList;                                                // pointer to description of an item in list
   FENO *pTabFeno;                                                               // pointer to description of the current analysis window
-  INT oldNF;
+  int oldNF;
   RC rc;                                                                        // return code
 
   // Initializations
@@ -4841,7 +4842,7 @@ RC ANALYSE_LoadShiftStretch(ANALYSIS_SHIFT_STRETCH *shiftStretchList,INT nShiftS
 #if defined(__BC32_) && __BC32_
 #pragma argsused
 #endif
-RC ANALYSE_LoadNonLinear(ENGINE_CONTEXT *pEngineContext,ANALYSE_NON_LINEAR_PARAMETERS *nonLinearList,INT nNonLinear,double *lambda,INDEX indexFenoColumn)
+RC ANALYSE_LoadNonLinear(ENGINE_CONTEXT *pEngineContext,ANALYSE_NON_LINEAR_PARAMETERS *nonLinearList,int nNonLinear,double *lambda,INDEX indexFenoColumn)
 {
   // Declarations
 
@@ -5052,7 +5053,7 @@ RC ANALYSE_LoadNonLinear(ENGINE_CONTEXT *pEngineContext,ANALYSE_NON_LINEAR_PARAM
                 if (((pTabFeno->analysisMethod!=PRJCT_ANLYS_METHOD_SVDMARQUARDT) || (pTabCross->FitParam==ITEM_NONE)))
                  pTabCross->IndSvdA=++pTabFeno->svd.DimC;
 
-                pTabCross->crossAction=ANLYS_CROSS_ACTION_NOTHING; // For raman interpolation ((pTabFeno->indexRing1==pTabFeno->NTabCross)) ? ANLYS_CROSS_ACTION_INTERPOLATE : ANLYS_CROSS_ACTION_NOTHING;
+                pTabCross->crossAction=ANLYS_CROSS_ACTION_NOTHING; // For raman interpolation ((pTabFeno->indexRing1==pTabFeno->NTabCross)) ? ANLYS_CROSS_ACTION_intERPOLATE : ANLYS_CROSS_ACTION_NOTHING;
                 pTabCross->display=(char)pTabFeno->displayPredefined;
 
                 // DOAS fitting : only the Raman spectrum is fitted non linearly, other parameters are considered as cross sections
@@ -5130,12 +5131,12 @@ RC ANALYSE_LoadNonLinear(ENGINE_CONTEXT *pEngineContext,ANALYSE_NON_LINEAR_PARAM
 #if defined(__BC32_) && __BC32_
 #pragma argsused
 #endif
-RC ANALYSE_LoadGaps(ENGINE_CONTEXT *pEngineContext,ANALYSIS_GAP *gapList,INT nGaps,double *lambda,double lambdaMin,double lambdaMax,INDEX indexFenoColumn)
+RC ANALYSE_LoadGaps(ENGINE_CONTEXT *pEngineContext,ANALYSIS_GAP *gapList,int nGaps,double *lambda,double lambdaMin,double lambdaMax,INDEX indexFenoColumn)
 {
   // Declarations
 
   ANALYSIS_GAP *pGap;
-  INT Z;
+  int Z;
   INDEX indexItem,indexWindow,i;
   double swap,lambda1,lambda2,(*LFenetre)[2];
   FENO *pTabFeno;
@@ -5234,7 +5235,7 @@ RC ANALYSE_LoadGaps(ENGINE_CONTEXT *pEngineContext,ANALYSIS_GAP *gapList,INT nGa
 // RETURN        return code
 // -----------------------------------------------------------------------------
 
-RC ANALYSE_LoadOutput(ANALYSIS_OUTPUT *outputList,INT nOutput,INDEX indexFenoColumn)
+RC ANALYSE_LoadOutput(ANALYSIS_OUTPUT *outputList,int nOutput,INDEX indexFenoColumn)
 {
   // Declarations
 
@@ -5697,13 +5698,13 @@ void ANALYSE_Free(void)
 #if defined(__BC32_) && __BC32_
 #pragma argsused
 #endif
-RC ANALYSE_UsampBuild(INT analysisFlag,INT gomeFlag)      // OMI ???
+RC ANALYSE_UsampBuild(int analysisFlag,int gomeFlag)      // OMI ???
 {
   // Declarations
 
   MATRIX_OBJECT khrConvoluted,xsSlit,xsSlit2;
   INDEX indexFeno,i,indexPixMin,indexPixMax,j;
-  INT indexFenoColumn;
+  int indexFenoColumn;
   double slitParam2,*lambda,*lambda2,lambda0,x0;
   FENO *pTabFeno;
   RC rc;
@@ -5904,7 +5905,7 @@ RC ANALYSE_UsampBuild(INT analysisFlag,INT gomeFlag)      // OMI ???
 //               ERROR_ID_NO on success
 // -----------------------------------------------------------------------------
 
-RC ANALYSE_UsampGlobalAlloc(double lambdaMin,double lambdaMax,INT size)
+RC ANALYSE_UsampGlobalAlloc(double lambdaMin,double lambdaMax,int size)
 {
   // Declarations
 
@@ -5946,10 +5947,10 @@ RC ANALYSE_UsampGlobalAlloc(double lambdaMin,double lambdaMax,INT size)
 
   // Buffers allocation
 
-  else if (((ANALYSE_usampBuffers.lambdaRange[0]=(INT *)MEMORY_AllocBuffer("ANALYSE_UsampGlobalAlloc ","lambdaRange[0]",NFeno,sizeof(INT),0,MEMORY_TYPE_INT))==NULL) ||
-           ((ANALYSE_usampBuffers.lambdaRange[1]=(INT *)MEMORY_AllocBuffer("ANALYSE_UsampGlobalAlloc ","lambdaRange[1]",NFeno,sizeof(INT),0,MEMORY_TYPE_INT))==NULL) ||
-           ((ANALYSE_usampBuffers.lambdaRange[2]=(INT *)MEMORY_AllocBuffer("ANALYSE_UsampGlobalAlloc ","lambdaRange[2]",NFeno,sizeof(INT),0,MEMORY_TYPE_INT))==NULL) ||
-           ((ANALYSE_usampBuffers.lambdaRange[3]=(INT *)MEMORY_AllocBuffer("ANALYSE_UsampGlobalAlloc ","lambdaRange[3]",NFeno,sizeof(INT),0,MEMORY_TYPE_INT))==NULL) ||
+  else if (((ANALYSE_usampBuffers.lambdaRange[0]=(int *)MEMORY_AllocBuffer("ANALYSE_UsampGlobalAlloc ","lambdaRange[0]",NFeno,sizeof(int),0,MEMORY_TYPE_INT))==NULL) ||
+           ((ANALYSE_usampBuffers.lambdaRange[1]=(int *)MEMORY_AllocBuffer("ANALYSE_UsampGlobalAlloc ","lambdaRange[1]",NFeno,sizeof(int),0,MEMORY_TYPE_INT))==NULL) ||
+           ((ANALYSE_usampBuffers.lambdaRange[2]=(int *)MEMORY_AllocBuffer("ANALYSE_UsampGlobalAlloc ","lambdaRange[2]",NFeno,sizeof(int),0,MEMORY_TYPE_INT))==NULL) ||
+           ((ANALYSE_usampBuffers.lambdaRange[3]=(int *)MEMORY_AllocBuffer("ANALYSE_UsampGlobalAlloc ","lambdaRange[3]",NFeno,sizeof(int),0,MEMORY_TYPE_INT))==NULL) ||
            ((ANALYSE_usampBuffers.kuruczInterpolated=(double **)MEMORY_AllocBuffer("ANALYSE_UsampGlobalAlloc ","kuruczInterpolated",NFeno,sizeof(double *),0,MEMORY_TYPE_DOUBLE))==NULL) ||
            ((ANALYSE_usampBuffers.kuruczInterpolated2=(double **)MEMORY_AllocBuffer("ANALYSE_UsampGlobalAlloc ","kuruczInterpolated2",NFeno,sizeof(double *),0,MEMORY_TYPE_DOUBLE))==NULL))
 
@@ -6001,7 +6002,7 @@ RC ANALYSE_UsampGlobalAlloc(double lambdaMin,double lambdaMax,INT size)
 #if defined(__BC32_) && __BC32_
 #pragma argsused
 #endif
-RC ANALYSE_UsampLocalAlloc(INT gomeFlag)
+RC ANALYSE_UsampLocalAlloc(int gomeFlag)
 {
   // Declarations
 

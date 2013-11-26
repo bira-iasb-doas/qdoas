@@ -103,7 +103,7 @@ static int outputRunCalib, /*!< \brief ==1 in run calibration mode */
   outputCalibFlag; /*!< \brief <> 0 to save wavelength calibration parameters */
 static double OUTPUT_fluxes[MAX_FLUXES], /*!< \brief fluxes */
   OUTPUT_cic[MAX_CIC][2];  /*!< \brief color indexes */
-static INT OUTPUT_NFluxes, /*!< \brief number of fluxes in OUTPUT_fluxes array */
+static int OUTPUT_NFluxes, /*!< \brief number of fluxes in OUTPUT_fluxes array */
   OUTPUT_NCic; /*!< \brief number of color indexes in OUTPUT_cic array */
 
 #define output_c
@@ -385,7 +385,7 @@ RC OUTPUT_ReadAmf(const char *symbolName,const char *amfFileName,char amfType,IN
   SZ_LEN symbolLength,fileLength;                                               // length of symbol and lines strings
   AMF_SYMBOL *pAmfSymbol;                                                       // pointer to an AMF symbol
   INDEX indexSymbol,indexColumn;                                                // indexes for loops and arrays
-  INT PhiLines,PhiColumns,xsLines,xsColumns;                                    // dimensions of the AMF matrix
+  int PhiLines,PhiColumns,xsLines,xsColumns;                                    // dimensions of the AMF matrix
   FILE *amfFp;                                                                  // pointer to AMF file
   double **Phi,**deriv2,**xs,**xsDeriv2;                                        // pointers to resp. AMF buffer and second derivatives
   RC rc;                                                                        // return code
@@ -1408,7 +1408,7 @@ static void OutputSaveRecord(const ENGINE_CONTEXT *pEngineContext,INDEX indexFen
 
  \param [out] outputFileName  the name of the output file
 */
-void OutputBuildSiteFileName(const ENGINE_CONTEXT *pEngineContext,char *outputFileName,INT year,INT month,INDEX indexSite)
+void OutputBuildSiteFileName(const ENGINE_CONTEXT *pEngineContext,char *outputFileName,int year,int month,INDEX indexSite)
  {
   // Declarations
 
@@ -1899,7 +1899,7 @@ RC OUTPUT_LocalAlloc(ENGINE_CONTEXT *pEngineContext)
 
   PROJECT             *pProject;                     // pointer to project data
   PRJCT_RESULTS *pResults;                     // pointer to results part of project
-  INT newRecordNumber;
+  int newRecordNumber;
   RC rc;                                                                        // return code
 
   // Initializations

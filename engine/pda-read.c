@@ -185,9 +185,9 @@ RC GotoPDA_EGG_Logger(FILE *specFp,int recordNo)
 
     fgets(record,8000,specFp);                             // read out the first record for calculating its size
     recordSize=strlen(record);                             // each record has the same size in despite this is an ASCII format
-    fseek(specFp,(DoasI32)recordSize*recordNo,SEEK_SET);      // move the file pointer to the requested record
+    fseek(specFp,(int32_t)recordSize*recordNo,SEEK_SET);      // move the file pointer to the requested record
 
-//    fseek(specFp,(DoasI32)LOG_LENGTH*recordNo,SEEK_SET);      // move the file pointer to the requested record
+//    fseek(specFp,(int32_t)LOG_LENGTH*recordNo,SEEK_SET);      // move the file pointer to the requested record
    }
 
   // Release the allocated buffer
@@ -232,7 +232,7 @@ RC ReliPDA_EGG_Logger(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,i
   double     *spectrum,tmLocal,                                                 // current spectrum
               Max;                                                              // maximum value used for normalizing spectra during safe keeping
   SHORT_DATE  day;                                                              // date of the current spectrum
-  INT         iday,imonth,iyear,ihour,imin,isec,                                // substitution variable for current measurement date and time read out
+  int         iday,imonth,iyear,ihour,imin,isec,                                // substitution variable for current measurement date and time read out
               ccdFlag;                                                          // 0 for RETICON detector, 1 for CCD detector
   INDEX       i;                                                                // index for browsing pixels in spectrum
   SZ_LEN      nameLen;
@@ -309,7 +309,7 @@ RC ReliPDA_EGG_Logger(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,i
       // Build date and time of the current measurement
 
 /*      { // !!!!!!!!!!!!
-       INT inc,dayMonth[13]={0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365}, maxDay;
+       int inc,dayMonth[13]={0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365}, maxDay;
 
        ihour+=13;
        maxDay=dayMonth[imonth];
@@ -474,7 +474,7 @@ RC SetPDA_EGG(ENGINE_CONTEXT *pEngineContext,FILE *specFp,int newFlag)
   PDA1453A header;                                                              // record header
   short *indexes,                                                               // size of SpecMax arrays
          curvenum;                                                              // number of spectra in the file
-  DoasU32  recordSize,                                                            // size of a record without SpecMax
+  uint32_t  recordSize,                                                            // size of a record without SpecMax
         *recordIndexes;                                                         // save the position of each record in the file
   INDEX i;                                                                      // browse spectra in the file
   RC rc;                                                                        // return code
@@ -527,7 +527,7 @@ RC SetPDA_EGG(ENGINE_CONTEXT *pEngineContext,FILE *specFp,int newFlag)
 
       pEngineContext->recordNumber=curvenum;
 
-      pEngineContext->recordSize=recordSize=(DoasI32)sizeof(PDA1453A)-
+      pEngineContext->recordSize=recordSize=(int32_t)sizeof(PDA1453A)-
                                              sizeof(double)-                    // azimuth (only since dec 2000)
                                              sizeof(float);                     // elevation (only since 2003)
 
@@ -540,17 +540,17 @@ RC SetPDA_EGG(ENGINE_CONTEXT *pEngineContext,FILE *specFp,int newFlag)
          pEngineContext->recordSize+=sizeof(float);
        }
 
-      fseek(specFp,-((DoasI32)recordSize),SEEK_CUR);
+      fseek(specFp,-((int32_t)recordSize),SEEK_CUR);
 
-      recordSize=pEngineContext->recordSize+(DoasI32)sizeof(DoasUS)*NDET+(300L*(sizeof(short)+sizeof(float))+8L)*newFlag;
+      recordSize=pEngineContext->recordSize+(int32_t)sizeof(unsigned short)*NDET+(300L*(sizeof(short)+sizeof(float))+8L)*newFlag;
 
-//      recordSize=(DoasI32)sizeof(PDA1453A)-((!pEngineContext->project.instrumental.azimuthFlag)?
-//                       sizeof(double):0)+(DoasI32)sizeof(DoasUS)*NDET+(300L*(sizeof(short)+sizeof(float))+8L)*newFlag;
+//      recordSize=(int32_t)sizeof(PDA1453A)-((!pEngineContext->project.instrumental.azimuthFlag)?
+//                       sizeof(double):0)+(int32_t)sizeof(unsigned short)*NDET+(300L*(sizeof(short)+sizeof(float))+8L)*newFlag;
 
-      recordIndexes[0]=(DoasI32)(pEngineContext->recordIndexesSize+1)*sizeof(short);      // file header : size of indexes table + curvenum
+      recordIndexes[0]=(int32_t)(pEngineContext->recordIndexesSize+1)*sizeof(short);      // file header : size of indexes table + curvenum
 
       for (i=1;i<curvenum;i++)
-       recordIndexes[i]=recordIndexes[i-1]+recordSize+indexes[i]*sizeof(DoasUS);  // take size of SpecMax arrays into account
+       recordIndexes[i]=recordIndexes[i-1]+recordSize+indexes[i]*sizeof(unsigned short);  // take size of SpecMax arrays into account
      }
    }
 
@@ -602,14 +602,14 @@ RC ReliPDA_EGG(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
   char             fileNameShort[MAX_STR_SHORT_LEN+1],                         // temporary file name
                    *ptr,                                                        // pointer to part of the previous string
                     names[20];                                                  // name of the current spectrum
-  DoasUS           *ISpectre,                                                   // spectrum in the original format
+  unsigned short           *ISpectre,                                                   // spectrum in the original format
                    *ISpecMax,                                                   // maximum values for each scan
                    *TabNSomme;                                                  // scans number for each integration time
   double            SMax,                                                       // maximum value of the current not normalized spectrum
                     Max,                                                        // scaling factor used for normalizing spectrum before safe keeping in the file
                    *ObsScan,                                                    // dark current spectrum
                     longit,latit,azimuth,Tm,tmLocal;                            // temporary data
-  INT               azimuthFlag,                                                // 1 if format with azimuth angle; 0 otherwise
+  int               azimuthFlag,                                                // 1 if format with azimuth angle; 0 otherwise
                     MAXTPS,                                                     // size of the integration time array to use
                     indexSite;                                                  // index of the observation site in the sites list
   float            *TabTint,*Tps;                                               // integration time arrays
@@ -652,11 +652,11 @@ RC ReliPDA_EGG(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
 
   // Buffers allocation
 
-  else if (((ISpectre=(DoasUS *)MEMORY_AllocBuffer("ReliPDA_EGG ","ISpectre",NDET,sizeof(DoasUS),0,MEMORY_TYPE_USHORT))==NULL) ||
+  else if (((ISpectre=(unsigned short *)MEMORY_AllocBuffer("ReliPDA_EGG ","ISpectre",NDET,sizeof(unsigned short),0,MEMORY_TYPE_USHORT))==NULL) ||
            ((ObsScan=(double *)MEMORY_AllocBuffer("ReliPDA_EGG ","ObsScan",NDET,sizeof(double),0,MEMORY_TYPE_DOUBLE))==NULL) ||
-           ((ISpecMax=(DoasUS *)MEMORY_AllocBuffer("ReliPDA_EGG ","ISpecMax",2000,sizeof(DoasUS),0,MEMORY_TYPE_USHORT))==NULL) ||
+           ((ISpecMax=(unsigned short *)MEMORY_AllocBuffer("ReliPDA_EGG ","ISpecMax",2000,sizeof(unsigned short),0,MEMORY_TYPE_USHORT))==NULL) ||
            ((TabTint=(float *)MEMORY_AllocBuffer("ReliPDA_EGG ","TabTint",300,sizeof(float),0,MEMORY_TYPE_FLOAT))==NULL) ||
-           ((TabNSomme=(DoasUS *)MEMORY_AllocBuffer("ReliPDA_EGG ","TabNSomme",300,sizeof(DoasUS),0,MEMORY_TYPE_USHORT))==NULL))
+           ((TabNSomme=(unsigned short *)MEMORY_AllocBuffer("ReliPDA_EGG ","TabNSomme",300,sizeof(unsigned short),0,MEMORY_TYPE_USHORT))==NULL))
 
    rc=ERROR_ID_ALLOC;
 
@@ -665,20 +665,20 @@ RC ReliPDA_EGG(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
     // Set file pointers
 
     if (namesFp!=NULL)
-     fseek(namesFp,(DoasI32)20L*((recordNo-1)*(1+!newFlag)+!newFlag),SEEK_SET);
+     fseek(namesFp,(int32_t)20L*((recordNo-1)*(1+!newFlag)+!newFlag),SEEK_SET);
 
-    fseek(specFp,(DoasI32)pBuffers->recordIndexes[recordNo-1],SEEK_SET);
+    fseek(specFp,(int32_t)pBuffers->recordIndexes[recordNo-1],SEEK_SET);
 
     // Complete record read out
 
     if (((namesFp!=NULL) && !fread(names,20,1,namesFp)) ||
          !fread(&header,pEngineContext->recordSize,1,specFp) ||
-         !fread(ISpectre,sizeof(DoasUS)*NDET,1,specFp) ||
+         !fread(ISpectre,sizeof(unsigned short)*NDET,1,specFp) ||
          (newFlag &&
         (!fread(TabTint,sizeof(float)*300,1,specFp) ||
-         !fread(TabNSomme,sizeof(DoasUS)*300,1,specFp) ||
+         !fread(TabNSomme,sizeof(unsigned short)*300,1,specFp) ||
          !fread(&Max,sizeof(double),1,specFp))) ||
-         !fread(ISpecMax,sizeof(DoasUS)*(header.Rejected+header.ScansNumber),1,specFp))
+         !fread(ISpecMax,sizeof(unsigned short)*(header.Rejected+header.ScansNumber),1,specFp))
 
      rc=ERROR_ID_FILE_END;
 
@@ -760,11 +760,11 @@ RC ReliPDA_EGG(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
         }
 
 // ! ***/           fwrite(&header,sizeof(PDA1453A),1,gp);
-// ! ***/           fwrite(ISpectre,sizeof(DoasUS)*NDET,1,gp);
+// ! ***/           fwrite(ISpectre,sizeof(unsigned short)*NDET,1,gp);
 // ! ***/           fwrite(TabTint,sizeof(float)*300,1,gp);
-// ! ***/           fwrite(TabNSomme,sizeof(DoasUS)*300,1,gp);
+// ! ***/           fwrite(TabNSomme,sizeof(unsigned short)*300,1,gp);
 // ! ***/           fwrite(&Max,sizeof(double),1,gp);
-// ! ***/           fwrite(ISpecMax,sizeof(DoasUS)*(header.Rejected+header.ScansNumber),1,gp);
+// ! ***/           fwrite(ISpecMax,sizeof(unsigned short)*(header.Rejected+header.ScansNumber),1,gp);
 // ! ***/           fclose(gp);
 
         memcpy(&pRecord->present_day, &header.today, sizeof(SHORT_DATE));
@@ -848,7 +848,7 @@ RC ReliPDA_EGG(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
               if ((j!=MAXTPS) && (pBuffers->darkCurrent!=NULL) && (darkFp!=NULL) &&
                   ((int)STD_FileLength(darkFp)>=(int)((j+1)*sizeof(double)*NDET)))
                {
-                fseek(darkFp,(DoasI32)j*NDET*sizeof(double),SEEK_SET);
+                fseek(darkFp,(int32_t)j*NDET*sizeof(double),SEEK_SET);
                 fread(ObsScan,sizeof(double)*NDET,1,darkFp);
 
                 for (i=0;i<NDET;i++)
@@ -860,10 +860,10 @@ RC ReliPDA_EGG(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
            }
           else if (pBuffers->darkCurrent!=NULL)
            {
-            fseek(darkFp,(DoasI32)(pEngineContext->recordIndexesSize+1)*sizeof(short)+(pEngineContext->recordSize+(DoasI32)sizeof(DoasUS)*NDET)*(recordNo-1),SEEK_SET);
+            fseek(darkFp,(int32_t)(pEngineContext->recordIndexesSize+1)*sizeof(short)+(pEngineContext->recordSize+(int32_t)sizeof(unsigned short)*NDET)*(recordNo-1),SEEK_SET);
 
             fread(&header,pEngineContext->recordSize,1,darkFp);
-            fread(ISpectre,sizeof(DoasUS)*NDET,1,darkFp);
+            fread(ISpectre,sizeof(unsigned short)*NDET,1,darkFp);
 
             for (i=0;i<NDET;i++)
              pBuffers->darkCurrent[i]=(double)ISpectre[i];
@@ -885,7 +885,7 @@ RC ReliPDA_EGG(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
    }
 
 //  **********************************
-//  CONVERSION INTO DATA LOGGER FORMAT
+//  CONVERSION intO DATA LOGGER FORMAT
 //  **********************************
 
   if (!rc)

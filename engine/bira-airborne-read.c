@@ -130,7 +130,7 @@ RC AIRBORNE_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
 // FUNCTION AIRBORNE_Reli
 // -----------------------------------------------------------------------------
 /*!
-   \fn      RC AIRBORNE_Reli(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,INT localDay,FILE *specFp)
+   \fn      RC AIRBORNE_Reli(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp)
    \param   [in]  pEngineContext  pointer to the engine context; some fields are affected by this function.
    \param   [in]  recordNo        the index of the record to read
    \param   [in]  dateFlag        1 to search for a reference spectrum; 0 otherwise
@@ -142,7 +142,7 @@ RC AIRBORNE_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
 */
 // -----------------------------------------------------------------------------
 
-RC AIRBORNE_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,INT localDay,FILE *specFp)
+RC AIRBORNE_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp)
  {
   // Declarations
 

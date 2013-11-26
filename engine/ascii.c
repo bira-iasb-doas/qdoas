@@ -197,7 +197,7 @@ RC ASCII_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
   // Declarations
 
   char *lineRecord,line[MAX_ITEM_TEXT_LEN+1];                                  // get lines from the ASCII file
-  INT itemCount,maxCount;                                                       // counters
+  int itemCount,maxCount;                                                       // counters
   PRJCT_INSTRUMENTAL *pInstr;                                                   // pointer to the instrumental part of the pEngineContext structure
   ANALYSIS_REF *pRef;
   RC rc;                                                                        // return code
@@ -259,7 +259,7 @@ RC ASCII_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
   pRef->scanRefIndexes=NULL;
 
   if (pEngineContext->analysisRef.refScan && pEngineContext->recordNumber &&
-    ((pRef->scanRefIndexes=(INT *)MEMORY_AllocBuffer("EngineSetFile","scanRefIndexes",pEngineContext->recordNumber,sizeof(INT),0,MEMORY_TYPE_INT))==NULL))
+    ((pRef->scanRefIndexes=(int *)MEMORY_AllocBuffer("EngineSetFile","scanRefIndexes",pEngineContext->recordNumber,sizeof(int),0,MEMORY_TYPE_INT))==NULL))
 
    rc=ERROR_ID_ALLOC;
 
@@ -290,7 +290,7 @@ RC ASCII_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
 //                 ERROR_ID_NO in case of success.
 // -----------------------------------------------------------------------------
 
-RC ASCII_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,INT localDay,FILE *specFp)
+RC ASCII_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp)
  {
   // Declarations
 
@@ -299,7 +299,7 @@ RC ASCII_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,INT local
   char *lineRecord,*pRecord,line[MAX_ITEM_TEXT_LEN+1];                         // get lines from the ASCII file
   double *spectrum,*lambda,                                                     // the spectrum and the wavelength calibration to read
           tmLocal;                                                              // the measurement time in seconds
-  INT lambdaFlag,zmFlag,timeFlag,dateSaveFlag,azimFlag,elevFlag,                // flags to select items to read according to the format options
+  int lambdaFlag,zmFlag,timeFlag,dateSaveFlag,azimFlag,elevFlag,                // flags to select items to read according to the format options
       day,mon,year;                                                             // decomposition of the measurement date
   INDEX i;                                                                      // browse items to read
   RC rc;                                                                        // return code
@@ -341,7 +341,7 @@ RC ASCII_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,INT local
 
     if (pInstr->ascii.format==PRJCT_INSTR_ASCII_FORMAT_LINE)
      {
-     	// Allocate buffer for DoasI32 lines
+     	// Allocate buffer for int32_t lines
 
       if ((lineRecord=(char *)MEMORY_AllocBuffer("ASCII_Read ","lineRecord",1,MAX_LINE_LENGTH,0,MEMORY_TYPE_STRING))==NULL)
        rc=ERROR_ID_ALLOC;

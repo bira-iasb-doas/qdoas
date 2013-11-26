@@ -78,7 +78,7 @@
 // GLOBAL VARIABLES
 // ================
 
-INT MEMORY_stackSize=MEMORY_STACK_SIZE;                                         // the size of the stack of allocated objects
+int MEMORY_stackSize=MEMORY_STACK_SIZE;                                         // the size of the stack of allocated objects
 const char *MEMORY_types[MEMORY_TYPE_MAX]=                                           // available types for allocated objects
  {
  	"unknown",                                                                    // unknown
@@ -98,11 +98,11 @@ const char *MEMORY_types[MEMORY_TYPE_MAX]=                                      
 // ================
 
 static MEMORY *memoryStack=NULL;                                                // stack with current allocated objects
-static INT     memoryStackObjectsNumber=0;                                      // number of objects currently in the stack
-static DoasI32    memoryStackBytesNumber=0;                                        // total size used by objects currently in the stack
-static DoasI32    memoryMaxBytes=0;                                                // maximum number of bytes allocated in one time
-static INT     memoryMaxObjects=0;                                              // maximum number of objects allocated in one time
-static DoasI32    memoryMaxObjectsSize=0;                                          // total size used when maximum number of objects is reached
+static int     memoryStackObjectsNumber=0;                                      // number of objects currently in the stack
+static int32_t    memoryStackBytesNumber=0;                                        // total size used by objects currently in the stack
+static int32_t    memoryMaxBytes=0;                                                // maximum number of bytes allocated in one time
+static int     memoryMaxObjects=0;                                              // maximum number of objects allocated in one time
+static int32_t    memoryMaxObjectsSize=0;                                          // total size used when maximum number of objects is reached
 
 // =========
 // FUNCTIONS
@@ -124,11 +124,11 @@ static DoasI32    memoryMaxObjectsSize=0;                                       
 // RETURN        pointer to the allocated buffer;
 // -----------------------------------------------------------------------------
 
-void *MEMORY_AllocBuffer(const char *callingFunctionName, const char *bufferName,INT itemNumber,INT itemSize,INT offset,INT type)
+void *MEMORY_AllocBuffer(const char *callingFunctionName, const char *bufferName,int itemNumber,int itemSize,int offset,int type)
  {
   // Declarations
 
-  INT totalSize;                                                                // requested total size in bytes number for the object
+  int totalSize;                                                                // requested total size in bytes number for the object
   char *pBuffer;                                                               // pointer to the new allocated buffer
   MEMORY *pMemory;                                                              // pointer to the new allocated object
 
@@ -141,7 +141,7 @@ void *MEMORY_AllocBuffer(const char *callingFunctionName, const char *bufferName
   // Initializations
 
   pBuffer=NULL;
-  totalSize=(INT)itemNumber*itemSize;
+  totalSize=(int)itemNumber*itemSize;
 
   // Allocate the buffer
 
@@ -224,7 +224,7 @@ void MEMORY_ReleaseBuffer(const char *callingFunctionName, const char *bufferNam
 
   INDEX   indexObjects;                                                         // Browse objects in the stack
   MEMORY *pMemory;                                                              // pointer to an object in the stack
-  DoasU32   totalSize;                                                            // total size in bytes of the pointed object
+  uint32_t   totalSize;                                                            // total size in bytes of the pointed object
 
   // Debugging
 
@@ -288,7 +288,7 @@ void MEMORY_ReleaseBuffer(const char *callingFunctionName, const char *bufferNam
 //               MEMORY_ReleaseDVector.
 // -----------------------------------------------------------------------------
 
-double *MEMORY_AllocDVector(const char *callingFunctionName, const char *bufferName,INT nl,INT nh)
+double *MEMORY_AllocDVector(const char *callingFunctionName, const char *bufferName,int nl,int nh)
  {
   // Declaration
 
@@ -334,7 +334,7 @@ double *MEMORY_AllocDVector(const char *callingFunctionName, const char *bufferN
 //               nl                   : lower index in use;
 // -----------------------------------------------------------------------------
 
-void MEMORY_ReleaseDVector(const char *callingFunctionName, const char *bufferName,double *v,INT nl)
+void MEMORY_ReleaseDVector(const char *callingFunctionName, const char *bufferName,double *v,int nl)
  {
  	// Register the function in debugging mode
 
@@ -372,12 +372,12 @@ void MEMORY_ReleaseDVector(const char *callingFunctionName, const char *bufferNa
 //               MEMORY_ReleaseDMatrix.
 // -----------------------------------------------------------------------------
 
-double **MEMORY_AllocDMatrix(const char *callingFunctionName, const char *bufferName,INT nrl,INT nrh,INT ncl,INT nch)
+double **MEMORY_AllocDMatrix(const char *callingFunctionName, const char *bufferName,int nrl,int nrh,int ncl,int nch)
  {
   // Declarations
 
   double **m;                                     // pointer to the allocated matrix
-  INT i;                                          // browse columns in the matrix
+  int i;                                          // browse columns in the matrix
 
   // Register the function in debugging mode
 
@@ -435,11 +435,11 @@ double **MEMORY_AllocDMatrix(const char *callingFunctionName, const char *buffer
 //               nrl                  : lower index in use for rows;
 // -----------------------------------------------------------------------------
 
-void MEMORY_ReleaseDMatrix(const char *callingFunctionName,const char *bufferName,double **m,INT ncl,INT nch,INT nrl)
+void MEMORY_ReleaseDMatrix(const char *callingFunctionName,const char *bufferName,double **m,int ncl,int nch,int nrl)
  {
   // Declaration
 
-  INT i;                                          // Browse columns in the matrix
+  int i;                                          // Browse columns in the matrix
 
   // Register the function in debugging mode
 

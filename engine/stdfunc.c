@@ -108,7 +108,7 @@ double STD_Pow10(int p)
 
  	double powValue;                                                              // the calculated power of 10
  	double factor;                                                                // multiplicative factor
- 	INT i;                                                                        // browse powers of 10
+ 	int i;                                                                        // browse powers of 10
 
  	// Calculate the power of 10
 
@@ -139,7 +139,7 @@ char *STD_StrTrim(char *str)
  {
  	// Declaration
 
- 	INT i;
+ 	int i;
 
  	// Browse characters from the end of the string
 
@@ -171,7 +171,7 @@ char *StrGetFormat(char *formatString,char *formatToken)
  {
   // Declarations
 
-  INT   typeSpecified=0,                                                        // flag : 1 is the type has been specified in the format token, 0 otherwise
+  int   typeSpecified=0,                                                        // flag : 1 is the type has been specified in the format token, 0 otherwise
         percentFlag=0,                                                          // flag : 1 when the percent character is met
         bracketOpen=0,                                                          // flag : 1 if the bracket is open after a percent character
         bracketEnd=0,                                                           // flag : 1 to close the bracket
@@ -419,8 +419,8 @@ long STD_FileLength(FILE *fp)
  {
  	// Declarations
 
-  DoasI32 fileSize=0L;                                                             // the size of the file
-  DoasI32 oldPos;                                                                  // the position of the file pointer
+  int32_t fileSize=0L;                                                             // the size of the file
+  int32_t oldPos;                                                                  // the position of the file pointer
 
   // Calculate the file size
 

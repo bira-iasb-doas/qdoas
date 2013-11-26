@@ -14,13 +14,13 @@ extern "C" {
 
 typedef struct _enigneXsconvContext
  {                                                                              // GENERAL OPTIONS
-  INT    convolutionType;                                                       // type of convolution
-  INT    conversionMode;                                                        // conversion mode
+  int    convolutionType;                                                       // type of convolution
+  int    conversionMode;                                                        // conversion mode
   double shift;                                                                 // shift to apply to the original high resolution cross section
   char  crossFile[MAX_PATH_LEN+1];                                              // high resolution cross section file
   char  path[MAX_PATH_LEN+1];                                                   // output path
   char  calibrationFile[MAX_PATH_LEN+1];                                        // calibration file
-  INT    noComment;                                                             // flag, 1 to save the convoluted cross section without comment
+  int    noComment;                                                             // flag, 1 to save the convoluted cross section without comment
 
                                                                                 // I0 CORRECTION
   char  kuruczFile[MAX_PATH_LEN+1];                                           // Kurucz file used when I0 correction is applied
@@ -34,11 +34,11 @@ typedef struct _enigneXsconvContext
   PRJCT_FILTER lfilter;                                                         // low filtering options
   PRJCT_FILTER hfilter;                                                         // high filtering options
   double *filterVector;
-  INT nFilter;
+  int nFilter;
                                                                                 // New cross section
   MATRIX_OBJECT xsNew;
                                                                                 // UNDERSAMPLING
-  INT    analysisMethod;                                                        // analysis method
+  int    analysisMethod;                                                        // analysis method
   char  path2[MAX_PATH_LEN+1];                                                // output path for the second phase
   double fraction;                                                              // tunes the phase
 
@@ -71,8 +71,8 @@ RC                     XSCONV_Convolution(ENGINE_XSCONV_CONTEXT *pEngineContext,
 
 // Global declarations
 
-EXTERN double n2pos[N2_SIZE];
-EXTERN double o2pos[O2_SIZE];
+extern double n2pos[N2_SIZE];
+extern double o2pos[O2_SIZE];
 
 // Prototypes
 

@@ -119,8 +119,8 @@ GDP_BIN_REF;
 GOME_ORBIT_FILE GDP_BIN_orbitFiles[MAX_GOME_FILES];                             // list of files for an orbit
 INDEX GDP_BIN_currentFileIndex=ITEM_NONE;                                       // index of the current file in the list
 static int gdpBinOrbitFilesN=0;                                                 // the total number of files for the current orbit
-static INT gdpBinTotalRecordNumber;                                             // total number of records for an orbit
-static INT gdpBinLoadReferenceFlag=0;
+static int gdpBinTotalRecordNumber;                                             // total number of records for an orbit
+static int gdpBinLoadReferenceFlag=0;
 
 // ==========
 // PROTOTYPES
@@ -193,7 +193,7 @@ void GDP_BIN_ReleaseBuffers(void)
 // RETURN        the record number of the GOME record
 // -----------------------------------------------------------------------------
 
-INDEX GDP_BIN_GetRecordNumber(INT pixelNumber)
+INDEX GDP_BIN_GetRecordNumber(int pixelNumber)
  {
   return GdpBinSortGetIndex(pixelNumber,2,GDP_BIN_orbitFiles[GDP_BIN_currentFileIndex].gdpBinHeader.nspectra,GDP_BIN_currentFileIndex)+1;
  }
@@ -210,11 +210,11 @@ INDEX GDP_BIN_GetRecordNumber(INT pixelNumber)
 // OUTPUT        lambda        the wavelength calibration
 // -----------------------------------------------------------------------------
 
-void GdpBinLambda(double *lambda,INT indexParam,INDEX fileIndex)
+void GdpBinLambda(double *lambda,int indexParam,INDEX fileIndex)
  {
   // Declarations
 
-  INT offset;                                                                   // offset in bytes
+  int offset;                                                                   // offset in bytes
   double lambdax;                                                               // wavelength evaluated by polynomial for a given pixel
   INDEX i,j;
   GOME_ORBIT_FILE *pOrbitFile;
@@ -461,8 +461,8 @@ RC GDP_BIN_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
          rc=ERROR_SetLast("GDP_Bin_Set (1)",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,fileName);
 
         else if (((pOrbitFile->gdpBinCoeff=(double *)MEMORY_AllocDVector("GDP_BIN_Set ","pOrbitFile->gdpBinCoeff",0,pOrbitFile->gdpBinCoeffSize-1))==NULL) ||
-                 ((pOrbitFile->gdpBinReference=(DoasUS *)MEMORY_AllocBuffer("GDP_BIN_Set ","pOrbitFile->gdpBinReference",pOrbitFile->gdpBinSpectraSize,sizeof(DoasUS),0,MEMORY_TYPE_USHORT))==NULL) ||
-                 ((pOrbitFile->gdpBinRefError=(DoasUS *)MEMORY_AllocBuffer("GDP_BIN_Set ","pOrbitFile->gdpBinRefError",pOrbitFile->gdpBinSpectraSize,sizeof(DoasUS),0,MEMORY_TYPE_USHORT))==NULL) ||
+                 ((pOrbitFile->gdpBinReference=(unsigned short *)MEMORY_AllocBuffer("GDP_BIN_Set ","pOrbitFile->gdpBinReference",pOrbitFile->gdpBinSpectraSize,sizeof(unsigned short),0,MEMORY_TYPE_USHORT))==NULL) ||
+                 ((pOrbitFile->gdpBinRefError=(unsigned short *)MEMORY_AllocBuffer("GDP_BIN_Set ","pOrbitFile->gdpBinRefError",pOrbitFile->gdpBinSpectraSize,sizeof(unsigned short),0,MEMORY_TYPE_USHORT))==NULL) ||
                  ((pOrbitFile->gdpBinInfo=(GDP_BIN_INFO *)MEMORY_AllocBuffer("GDP_BIN_Set ","pOrbitFile->gdpBinInfo",pOrbitFile->gdpBinHeader.nspectra,sizeof(GDP_BIN_INFO),0,MEMORY_TYPE_STRUCT))==NULL) ||
                  ((pOrbitFile->gdpBinSzaIndex=(INDEX *)MEMORY_AllocBuffer("GDP_BIN_Set ","pOrbitFile->gdpBinSzaIndex",pOrbitFile->gdpBinHeader.nspectra,sizeof(INDEX),0,MEMORY_TYPE_INDEX))==NULL) ||
                  ((pOrbitFile->gdpBinLatIndex=(INDEX *)MEMORY_AllocBuffer("GDP_BIN_Set ","pOrbitFile->gdpBinLatIndex",pOrbitFile->gdpBinHeader.nspectra,sizeof(INDEX),0,MEMORY_TYPE_INDEX))==NULL) ||
@@ -487,7 +487,7 @@ RC GDP_BIN_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
 
           for (indexRecord=0;indexRecord<pOrbitFile->specNumber;indexRecord++)
            {
-            fseek(fp,(DoasI32)pOrbitFile->gdpBinHeader.headerSize+indexRecord*pOrbitFile->gdpBinHeader.recordSize,SEEK_SET);
+            fseek(fp,(int32_t)pOrbitFile->gdpBinHeader.headerSize+indexRecord*pOrbitFile->gdpBinHeader.recordSize,SEEK_SET);
 
             if (!fread(&pOrbitFile->gdpBinSpectrum,sizeof(SPECTRUM_RECORD),1,fp))
              rc=ERROR_SetLast("GDP_Bin_Set (2)",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,fileName);
@@ -625,7 +625,7 @@ RC GDP_BIN_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,FILE *specFp,INDEX i
    {
     // Complete record read out
 
-    fseek(fp,(DoasI32)pOrbitFile->gdpBinHeader.headerSize+(recordNo-1)*pOrbitFile->gdpBinHeader.recordSize,SEEK_SET);
+    fseek(fp,(int32_t)pOrbitFile->gdpBinHeader.headerSize+(recordNo-1)*pOrbitFile->gdpBinHeader.recordSize,SEEK_SET);
     
     if (!fread(&pOrbitFile->gdpBinSpectrum,sizeof(SPECTRUM_RECORD),1,fp) ||
        ((pOrbitFile->gdpBinHeader.version<40) && !fread(&pOrbitFile->gdpBinGeo3,sizeof(GEO_3),1,fp)) ||
@@ -893,7 +893,7 @@ void GdpBinSort(INDEX indexRecord,int flag,int listSize,INDEX fileIndex)
 // RETURN        the number of elements in the refList reference list
 // -----------------------------------------------------------------------------
 
-INT GdpBinRefLat(GDP_BIN_REF *refList,double latMin,double latMax,double lonMin,double lonMax,double sza,double szaDelta,char *gomePixelType)
+int GdpBinRefLat(GDP_BIN_REF *refList,double latMin,double latMax,double lonMin,double lonMax,double sza,double szaDelta,char *gomePixelType)
  {
   // Declarations
 
@@ -903,7 +903,7 @@ INT GdpBinRefLat(GDP_BIN_REF *refList,double latMin,double latMax,double lonMin,
         ilatIndex,                                                              // browse records with latitudes in the specified range
         indexRef;                                                               // browse reference already registered in order to keep the list sorted
 
-  INT nRef;                                                                     // the number of spectra matching latitudes and SZA conditions
+  int nRef;                                                                     // the number of spectra matching latitudes and SZA conditions
   double szaDist,latDist;                                                       // distance with latitude and sza centers
   double lon;                                                                   // converts the longitude in the -180:180 range
   GDP_BIN_INFO *pRecord;
@@ -995,7 +995,7 @@ INT GdpBinRefLat(GDP_BIN_REF *refList,double latMin,double latMax,double lonMin,
 // RETURN        the number of elements in the refList reference list
 // -----------------------------------------------------------------------------
 
-INT GdpBinRefSza(GDP_BIN_REF *refList,double sza,double szaDelta,char *gomePixelType)
+int GdpBinRefSza(GDP_BIN_REF *refList,double sza,double szaDelta,char *gomePixelType)
  {
   // Declarations
 
@@ -1005,7 +1005,7 @@ INT GdpBinRefSza(GDP_BIN_REF *refList,double sza,double szaDelta,char *gomePixel
         iszaIndex,                                                              // browse records with SZA in the specified SZA range
         indexRef;                                                               // browse reference already registered in order to keep the list sorted
 
-  INT nRef;                                                                     // the number of spectra matching latitudes and SZA conditions
+  int nRef;                                                                     // the number of spectra matching latitudes and SZA conditions
   double szaDist;                                                               // distance with sza center
   GDP_BIN_INFO *pRecord;
 
@@ -1098,7 +1098,7 @@ INT GdpBinRefSza(GDP_BIN_REF *refList,double sza,double szaDelta,char *gomePixel
 //               ERROR_ID_NO otherwise.
 // -----------------------------------------------------------------------------
 
-RC GdpBinBuildRef(GDP_BIN_REF *refList,INT nRef,INT nSpectra,double *lambda,double *ref,ENGINE_CONTEXT *pEngineContext,FILE *specFp,INDEX *pIndexLine,void *responseHandle)
+RC GdpBinBuildRef(GDP_BIN_REF *refList,int nRef,int nSpectra,double *lambda,double *ref,ENGINE_CONTEXT *pEngineContext,FILE *specFp,INDEX *pIndexLine,void *responseHandle)
  {
   // Declarations
 
@@ -1109,7 +1109,7 @@ RC GdpBinBuildRef(GDP_BIN_REF *refList,INT nRef,INT nSpectra,double *lambda,doub
             indexColumn,                                                        // index of the current column in the cell page associated to the ref plot page
             i;                                                                  // index for loop and arrays
 
-  INT       nRec;                                                               // number of records used for the average
+  int       nRec;                                                               // number of records used for the average
   RC        rc;                                                                 // return code
 
   // Initializations
@@ -1223,7 +1223,7 @@ RC GdpBinRefSelection(ENGINE_CONTEXT *pEngineContext,
   // Declarations
 
   GDP_BIN_REF *refList;                                                         // list of potential reference spectra
-  INT nRefN,nRefS;                                                              // number of reference spectra in the previous list resp. for Northern and Southern hemisphere
+  int nRefN,nRefS;                                                              // number of reference spectra in the previous list resp. for Northern and Southern hemisphere
   INDEX indexLine,indexColumn;
   double latDelta,tmp;
   RC rc;                                                                        // return code
@@ -1423,14 +1423,14 @@ RC GDP_BIN_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,FILE *specFp,void *respon
   WRK_SYMBOL *pWrkSymbol;                                                       // pointer to a symbol
   FENO *pTabFeno;                                                               // pointer to the current spectral analysis window
   double factTemp,lambdaMin,lambdaMax;                                          // working variables
-  INT DimL,useUsamp,useKurucz,saveFlag;                                         // working variables
+  int DimL,useUsamp,useKurucz,saveFlag;                                         // working variables
   RC rc;                                                                        // return code
 
   // Initializations
 
   pRecord=&pEngineContext->recordInfo;
 
-  saveFlag=(INT)pEngineContext->project.spectra.displayDataFlag;
+  saveFlag=(int)pEngineContext->project.spectra.displayDataFlag;
   pOrbitFile=&GDP_BIN_orbitFiles[GDP_BIN_currentFileIndex];
 
   if (!(rc=pOrbitFile->rc) && (gdpBinLoadReferenceFlag || !pEngineContext->analysisRef.refAuto))

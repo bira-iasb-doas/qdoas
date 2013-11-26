@@ -151,7 +151,7 @@ int Band2Channel(int band)
  {
   // Declaration
 
-  INT channel;
+  int channel;
 
   // Select a channel according to the specified band
 
@@ -210,12 +210,12 @@ int Band2Channel(int band)
 // is used.
 // -----------------------------------------------------------------------------
 
-RC ReadERS(FILE *fp,INT *pOrbitNumber)
+RC ReadERS(FILE *fp,int *pOrbitNumber)
  {
   // Declarations
 
   char  fileLine[STRING_LENGTH+1];                                             // file line
-  UINT utcDay,utcMSec;                                                          // UTC date and time
+  unsigned int utcDay,utcMSec;                                                          // UTC date and time
   RC rc;                                                                        // return code
 
   // Initializations
@@ -256,13 +256,13 @@ RC ReadERS(FILE *fp,INT *pOrbitNumber)
 // RETURN        the size of returned vectors
 // -----------------------------------------------------------------------------
 
-INT ReadSolarChannel(FILE *fp,INT channel,double *lambda,double *solar,double *solarE)
+int ReadSolarChannel(FILE *fp,int channel,double *lambda,double *solar,double *solarE)
  {
   // Declarations
 
   char  fileLine[STRING_LENGTH+1],                                             // file line
          channelString[STRING_LENGTH+1];                                        // the channel string to search for
-  INT    channelStringLength,                                                   // the length of the channel string
+  int    channelStringLength,                                                   // the length of the channel string
          channelNumber,                                                         // the current channel number
          npts;                                                                  // the number of points of vectors to return
   float  wavelStart,wavelEnd;                                                   // starting and ending wavelengths
@@ -323,13 +323,13 @@ INT ReadSolarChannel(FILE *fp,INT channel,double *lambda,double *solar,double *s
 // RETURN        1 if read out operation failed; 0 if success.
 // -----------------------------------------------------------------------------
 
-RC ReadSolar(FILE *fp,INT channel,SHORT_DATE *pDate,struct time *pTime,double *lambda,double *solar,double *solarE,INT *pNpts)
+RC ReadSolar(FILE *fp,int channel,SHORT_DATE *pDate,struct time *pTime,double *lambda,double *solar,double *solarE,int *pNpts)
  {
   // Declarations
 
   char  fileLine[STRING_LENGTH+1],                                             // file line
          month[16];                                                             // measurement month
-  INT    day,year,hour,min;                                                     // integer fields of the measurement date and time
+  int    day,year,hour,min;                                                     // integer fields of the measurement date and time
   INDEX  indexMonth;                                                            // browse months
   float  sec;                                                                   // number of seconds
   RC     rc;                                                                    // return code
@@ -369,7 +369,7 @@ RC ReadSolar(FILE *fp,INT channel,SHORT_DATE *pDate,struct time *pTime,double *l
 
     pTime->ti_hour=(unsigned char)hour;
     pTime->ti_min=(unsigned char)min;
-    pTime->ti_sec=(unsigned char)(INT)(sec+0.5);
+    pTime->ti_sec=(unsigned char)(int)(sec+0.5);
 
     // Read the irradiance spectrum measured at the requested channel
 
@@ -431,13 +431,13 @@ RC GotoSpectra(FILE *fp)
 // RETURN        1 if read out operation failed; 0 if success.
 // -----------------------------------------------------------------------------
 
-RC GotoSpectraNumber(FILE *fp,INT band,INT recordNo)
+RC GotoSpectraNumber(FILE *fp,int band,int recordNo)
  {
   // Declarations
 
   char  fileLine[STRING_LENGTH+1];                                             // file line
   char  bandStr[10];                                                           // band string to search for
-  INT    bandStrLen;                                                            // size of the band string
+  int    bandStrLen;                                                            // size of the band string
   INDEX  nSpec;                                                                 // number of spectra
   RC     rc;                                                                    // return code
 
@@ -488,7 +488,7 @@ RC ReadPixelInfo(FILE *fp,ENGINE_CONTEXT *pEngineContext)
 
   char  fileLine[STRING_LENGTH+1],                                             // file line
          month[16];                                                             // measurement month
-  INT    day,year,hour,min,                                                     // integer fields of the measurement date and time
+  int    day,year,hour,min,                                                     // integer fields of the measurement date and time
          nLines;                                                                // number of lines with information about the current pixel
   INDEX  indexMonth;                                                            // browse months
   float  sec;                                                                   // number of seconds
@@ -525,7 +525,7 @@ RC ReadPixelInfo(FILE *fp,ENGINE_CONTEXT *pEngineContext)
 
     pRecord->present_time.ti_hour=(unsigned char)hour;
     pRecord->present_time.ti_min=(unsigned char)min;
-    pRecord->present_time.ti_sec=(unsigned char)(INT)(sec+0.5);
+    pRecord->present_time.ti_sec=(unsigned char)(int)(sec+0.5);
 
     nLines++;
    }
@@ -592,7 +592,7 @@ RC ReadPixelInfo(FILE *fp,ENGINE_CONTEXT *pEngineContext)
 // RETURN        1 if read out operation failed; 0 if success.
 // -----------------------------------------------------------------------------
 
-RC ReadSpectrum(FILE *fp,INT band,ENGINE_CONTEXT *pEngineContext,double *lambda,double *earth,double *earthE,INT *pNpts)
+RC ReadSpectrum(FILE *fp,int band,ENGINE_CONTEXT *pEngineContext,double *lambda,double *earth,double *earthE,int *pNpts)
  {
   // Declarations
 
@@ -600,7 +600,7 @@ RC ReadSpectrum(FILE *fp,INT band,ENGINE_CONTEXT *pEngineContext,double *lambda,
 
   char  fileLine[STRING_LENGTH+1],                                             // file line
          bandStr[3];                                                            // current band type
-  INT    nBands,npts;                                                           // resp. the number of bands in the current record and the number of points in the current band
+  int    nBands,npts;                                                           // resp. the number of bands in the current record and the number of points in the current band
   float  wavelStart,wavelEnd;                                                   // the wavelength range
   INDEX  i;                                                                     // browse elements of vectors
   RC     rc;                                                                    // return code
@@ -695,7 +695,7 @@ RC GDP_ASC_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
   RECORD_INFO *pRecord;                                                         // pointer to the record part of the engine context
   char bandStr[10];                                                            // band string
   GOME_DATA *pGome;                                                             // data specific to GOME
-  INT band,                                                                     // the user-requested band for spectra
+  int band,                                                                     // the user-requested band for spectra
       npts;                                                                     // the real number of points for GOME spectra
 
   RC rc;                                                                        // return code
@@ -791,8 +791,8 @@ RC GDP_ASC_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,FILE *s
   double *lambda,*spectrum,*errors,                                             // use substitution variables
          *spectrum2,*specInt;                                                   // temporary buffers
   GOME_DATA *pGome;                                                             // pointer to the GOME part of the pEngineContext structure
-  INT band;                                                                     // the band to read out
-  INT npts;                                                                     // the size of returned vectors
+  int band;                                                                     // the band to read out
+  int npts;                                                                     // the size of returned vectors
   RC rc;                                                                        // return code
 
   // Initializations
@@ -894,12 +894,12 @@ RC GDP_ASC_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
   WRK_SYMBOL *pWrkSymbol;
   FENO *pTabFeno;
   double factTemp,lambdaMin,lambdaMax;
-  INT DimL,degree,invFlag,useUsamp,useKurucz,saveFlag,refSelectionFlag;
+  int DimL,degree,invFlag,useUsamp,useKurucz,saveFlag,refSelectionFlag;
   RC rc;
 
   // Initializations
 
-  saveFlag=(INT)pEngineContext->project.spectra.displayDataFlag;
+  saveFlag=(int)pEngineContext->project.spectra.displayDataFlag;
   refSelectionFlag=0;
 
   lambdaMin=(double)9999.;

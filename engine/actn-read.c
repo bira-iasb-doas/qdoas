@@ -229,7 +229,7 @@ RC ReliActon_Logger(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int
 
   int         i,                                                                // browse pixels in the current spectrum
               length;                                                           // string length
-  UINT        help;                                                             // kjk oktober 1995
+  unsigned int        help;                                                             // kjk oktober 1995
   double      dark_Tint;                                                        // kjk 251095
   int         found;                                                            // kjk 251095
   double     *spectrum;                                                         // kjk 251095

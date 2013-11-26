@@ -121,7 +121,7 @@ RC SetOceanOptics(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
 //                 ERROR_ID_NO in case of success.
 // -----------------------------------------------------------------------------
 
-RC ReliOceanOptics(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,INT localDay,FILE *specFp)
+RC ReliOceanOptics(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp)
  {
   // Declarations
 
@@ -129,7 +129,7 @@ RC ReliOceanOptics(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,INT 
   char fileLine[MAX_ITEM_TEXT_LEN+1],*str;
   double *spectrum,*lambda,                                                     // the spectrum and the wavelength calibration to read
           tmLocal;                                                              // the measurement time in seconds
-  INT day,mon,year,hour,minutes,sec;                                            // decomposition of the measurement date
+  int day,mon,year,hour,minutes,sec;                                            // decomposition of the measurement date
   char tmp[100],weekday[100],month[100];
   INDEX i;                                                                      // browse items to read
   RC rc;                                                                        // return code

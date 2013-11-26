@@ -108,7 +108,7 @@ typedef struct _omi_geo
 
 typedef struct _omi_spectrum
 {
-  DoasUS *pixelQualityFlags;
+  unsigned short *pixelQualityFlags;
   float   wavelengthCoefficient[5];
   float   wavelengthCoefficientPrecision[5];
 }
@@ -130,7 +130,7 @@ typedef struct _omi_ref
 typedef struct _omi_data_fields
 {
   short   *wavelengthReferenceColumn;
-  DoasUS  *measurementQualityFlags;
+  unsigned short  *measurementQualityFlags;
 }
   OMI_DATA_FIELDS;
 
@@ -146,13 +146,13 @@ typedef struct _OMIOrbitFiles // description of an orbit
 {
   char      *omiFileName;       // the name of the file with a part of the orbit
   OMI_SWATH *omiSwath;          // all information about the swath
-  INT        specNumber;
+  int        specNumber;
   int32      swf_id,            // hdfeos swath file id
     sw_id;                      // hdfeos swath id
   long       nMeasurements,
     nXtrack,                    // number of detector tracks (normally 60)
     nWavel;
-  INT        rc;
+  int        rc;
 }
   OMI_ORBIT_FILE;
 
@@ -194,7 +194,7 @@ const char *OMI_SunSwaths[OMI_SWATH_MAX]={"Sun Volume UV-1 Swath","Sun Volume UV
 
 static OMI_ORBIT_FILE current_orbit_file;
 static int omiRefFilesN=0; // the total number of files to browse in one shot
-static INT omiTotalRecordNumber=0;
+static int omiTotalRecordNumber=0;
 static OMI_REF OMI_ref[MAX_FENO]; // the number of reference spectra is limited to the maximum number of analysis windows in a project
 
 static OMI_ORBIT_FILE* reference_orbit_files[MAX_OMI_FILES]; // List of filenames for which the current automatic reference spectrum is valid. -> all spectra from the same day/same directory.
@@ -209,7 +209,7 @@ void omi_free_swath_data(OMI_SWATH *pSwath);
 void omi_calculate_wavelengths(float32 wavelength_coeff[], int16 refcol, int32 n_wavel, double* lambda);
 void omi_make_double(int16 mantissa[], int8 exponent[], int32 n_wavel, double* result);
 void omi_interpolate_errors(int16 mantissa[], int32 n_wavel, double wavelengths[], double y[] );
-RC omi_load_spectrum(int spec_type, int32 sw_id, int32 measurement, int32 track, int32 n_wavel, double *lambda, double *spectrum, double *sigma, DoasUS *pixelQualityFlags);
+RC omi_load_spectrum(int spec_type, int32 sw_id, int32 measurement, int32 track, int32 n_wavel, double *lambda, double *spectrum, double *sigma, unsigned short *pixelQualityFlags);
 void average_spectrum(double *average, double *errors, struct omi_ref_list *spectra, double *wavelength_grid);
 
 // ===================
@@ -1111,7 +1111,7 @@ RC OMI_LoadReference(ENGINE_CONTEXT *pEngineContext,const char *refFile)
  * spectrum and sigma.  If any of these pointers is NULL, the
  * corresponding data is not read.
  */
-RC omi_load_spectrum(int spec_type, int32 sw_id, int32 measurement, int32 track, int32 n_wavel, double *lambda, double *spectrum, double *sigma, DoasUS *pixelQualityFlags) {
+RC omi_load_spectrum(int spec_type, int32 sw_id, int32 measurement, int32 track, int32 n_wavel, double *lambda, double *spectrum, double *sigma, unsigned short *pixelQualityFlags) {
   RC rc = ERROR_ID_NO;
 
   int16 *mantissa = malloc(n_wavel*sizeof(*mantissa));

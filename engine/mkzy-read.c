@@ -90,7 +90,7 @@ typedef struct MKZY_RECORDINFO
  	        //! The checksum can be calculated with the following routine in C :\n\n
  	        //! \code
  	        //!      MKZY_RECORDINFO mkzy;
- 	        //!      DoasU32 spec[];              // containing the spectral data points
+ 	        //!      uint32_t spec[];              // containing the spectral data points
  	        //!      int speclen;                 // containing the number of datapoints stored in the previous vector
  	        //!      int i;
  	        //!      unsigned short checksum;
@@ -126,11 +126,11 @@ typedef struct MKZY_RECORDINFO
   unsigned char  flag;
           //! \details Date in \a DDMMYY format. Dates and times are given as GMT (Greenwitch Mean Time).\n
           //! Use \ref MKZY_ParseDate to decompose the date in separate year, month and day fields.
-  DoasU32  date;
+  uint32_t  date;
           //! \details time when the scanning was started
-  DoasU32  starttime;
+  uint32_t  starttime;
           //! \details time when the scanning was finished
-  DoasU32  stoptime;
+  uint32_t  stoptime;
           //! \details GPS latitude in degrees
   double         lat;
           //! \details GPS longitude in degrees
@@ -249,7 +249,7 @@ int MKZY_UnPack(unsigned char *inpek,int kvar,int *ut)
 // FUNCTION MKZY_ParseDate
 // -----------------------------------------------------------------------------
 /*!
-   \fn      void MKZY_ParseDate(DoasU32 d,SHORT_DATE *pDate)
+   \fn      void MKZY_ParseDate(uint32_t d,SHORT_DATE *pDate)
    \details Decompose a date in the MKZY file format.\n
             The date field in the header \ref MKZY_RECORDINFO::date is an unsigned long.\n
             Dates are represented on 6 digits in the \a DDMMYY file format.\n\n
@@ -260,10 +260,10 @@ int MKZY_UnPack(unsigned char *inpek,int kvar,int *ut)
 */
 // -----------------------------------------------------------------------------
 
-void MKZY_ParseDate(DoasU32 d,SHORT_DATE *pDate)
+void MKZY_ParseDate(uint32_t d,SHORT_DATE *pDate)
  {
   pDate->da_day=(char)(d/10000L);                                               // the day
-  pDate->da_mon=(char)((d-(DoasU32)pDate->da_day*10000L)/100L);           // the month
+  pDate->da_mon=(char)((d-(uint32_t)pDate->da_day*10000L)/100L);           // the month
   pDate->da_year=(short)(d%100);                                                // the year
 
   if(pDate->da_year<100)
@@ -274,7 +274,7 @@ void MKZY_ParseDate(DoasU32 d,SHORT_DATE *pDate)
 // FUNCTION MKZY_ParseTime
 // -----------------------------------------------------------------------------
 /*!
-   \fn      void MKZY_ParseTime(DoasU32 t,struct time *pTime)
+   \fn      void MKZY_ParseTime(uint32_t t,struct time *pTime)
    \details Decompose a time in the MKZY file format.\n
             Time fields in the header are unsigned long numbers.\n
             They are represented on 8 digits in the \a hhmmssdd file format where \a dd are the decimal milliseconds.\n\n
@@ -285,11 +285,11 @@ void MKZY_ParseDate(DoasU32 d,SHORT_DATE *pDate)
 */
 // -----------------------------------------------------------------------------
 
-void MKZY_ParseTime(DoasU32 t,struct time *pTime)
+void MKZY_ParseTime(uint32_t t,struct time *pTime)
  {
   pTime->ti_hour=(unsigned char)(t/1000000L);
-  pTime->ti_min=(unsigned char)((t-(DoasU32)pTime->ti_hour*1000000L)/10000L);
-  pTime->ti_sec=(unsigned char)((t-(DoasU32)pTime->ti_hour*1000000L-(DoasU32)pTime->ti_min*10000L)/100L);
+  pTime->ti_min=(unsigned char)((t-(uint32_t)pTime->ti_hour*1000000L)/10000L);
+  pTime->ti_sec=(unsigned char)((t-(uint32_t)pTime->ti_hour*1000000L-(uint32_t)pTime->ti_min*10000L)/100L);
  }
 
 // -----------------------------------------------------------------------------
@@ -321,9 +321,9 @@ RC MKZY_ReadRecord(ENGINE_CONTEXT *pEngineContext,int recordNo,FILE *specFp)
   SHORT_DATE      today;
   double          Tm1,Tm2;
   unsigned char  *buffer;                                                       // buffer for the spectrum before unpacking
-  DoasU32  *lbuffer;                                                            // buffer for the spectrum after unpacking
+  uint32_t  *lbuffer;                                                            // buffer for the spectrum after unpacking
   unsigned short  checksum,*p;                                                  // check sum
-  DoasU32   chk;                                                                // for the calculation of the check sum
+  uint32_t   chk;                                                                // for the calculation of the check sum
   double          longitude;
   int             npixels;                                                      // number of pixels returned
   double         *spectrum;                                                     // the current spectrum and its maximum value
@@ -353,13 +353,13 @@ RC MKZY_ReadRecord(ENGINE_CONTEXT *pEngineContext,int recordNo,FILE *specFp)
   else if ((recordNo<=0) || (recordNo>pEngineContext->recordInfo.mkzy.recordNumber))
    rc=ERROR_ID_FILE_END;
   else if (((buffer=MEMORY_AllocBuffer("MKZY_ReadRecord","buffer",pBuffers->recordIndexes[recordNo]-pBuffers->recordIndexes[recordNo-1],1,0,MEMORY_TYPE_STRING))==NULL) ||
-           ((lbuffer=(DoasU32 *)MEMORY_AllocBuffer("MKZY_ReadRecord","lbuffer",MAX_SPECTRUM_LENGTH,sizeof(DoasU32),0,MEMORY_TYPE_ULONG))==NULL))
+           ((lbuffer=(uint32_t *)MEMORY_AllocBuffer("MKZY_ReadRecord","lbuffer",MAX_SPECTRUM_LENGTH,sizeof(uint32_t),0,MEMORY_TYPE_ULONG))==NULL))
    rc=ERROR_ID_ALLOC;
   else
    {
    	// Goto the requested record
 
-    fseek(specFp,(DoasI32)pBuffers->recordIndexes[recordNo-1],SEEK_SET);
+    fseek(specFp,(int32_t)pBuffers->recordIndexes[recordNo-1],SEEK_SET);
 
     // Read the first bytes (including MKZY sequence and the size of the header)
 
@@ -440,7 +440,7 @@ RC MKZY_ReadRecord(ENGINE_CONTEXT *pEngineContext,int recordNo,FILE *specFp)
 
     // Be sure to be at the beginning of the data
 
-    fseek(specFp,(DoasI32)pBuffers->recordIndexes[recordNo-1]+header.hdrsize,SEEK_SET);
+    fseek(specFp,(int32_t)pBuffers->recordIndexes[recordNo-1]+header.hdrsize,SEEK_SET);
 
     // Read compressed data and uncompress them
 
@@ -592,7 +592,7 @@ RC MKZY_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
   // Declarations
 
   BUFFERS *pBuffers;                                                            // pointer to the buffers part of the engine context
-  DoasU32 *recordIndexes;                                                       // save the position of each record in the file
+  uint32_t *recordIndexes;                                                       // save the position of each record in the file
   unsigned char *buffer,*ptr;                                                   // buffer to load the file
   SZ_LEN fileLength;                                                            // the length of the file to load
   int i;                                                                        // index for loops and arrays
@@ -657,7 +657,7 @@ RC MKZY_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
 // FUNCTION MKZY_Reli
 // -----------------------------------------------------------------------------
 /*!
-   \fn      RC MKZY_Reli(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,INT localDay,FILE *specFp)
+   \fn      RC MKZY_Reli(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp)
    \details call \ref MKZY_ReadRecord to read a specified record from a file in MKZY format and check that it is a spectrum to analyze (spectrum name should be 'other').\n
    \param   [in]  pEngineContext  pointer to the engine context; some fields are affected by this function.
    \param   [in]  recordNo        the index of the record to read
@@ -670,7 +670,7 @@ RC MKZY_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
 */
 // -----------------------------------------------------------------------------
 
-RC MKZY_Reli(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,INT localDay,FILE *specFp)
+RC MKZY_Reli(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp)
  {
   // Declarations
 
@@ -808,14 +808,14 @@ RC MKZY_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
   CROSS_REFERENCE *pTabCross;                                                   // pointer to the current cross section
   WRK_SYMBOL *pWrkSymbol;                                                       // pointer to a symbol
   FENO *pTabFeno;                                                               // pointer to the current spectral analysis window
-  INT DimL,useKurucz,saveFlag;                                                  // working variables
+  int DimL,useKurucz,saveFlag;                                                  // working variables
   RC rc;                                                                        // return code
 
   // Initializations
 
   pBuffers=&pEngineContext->buffers;
 
-  saveFlag=(INT)pEngineContext->project.spectra.displayDataFlag;
+  saveFlag=(int)pEngineContext->project.spectra.displayDataFlag;
   pInstrumental=&pEngineContext->project.instrumental;
   rc=ERROR_ID_NO;
 

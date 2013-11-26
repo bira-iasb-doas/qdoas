@@ -11,9 +11,9 @@
 // GLOBAL DECLARATIONS
 // ===================
 
-EXTERN char          ENGINE_dbgFile[MAX_PATH_LEN+1];                           // debug file
-EXTERN ENGINE_CONTEXT ENGINE_contextRef;                                        // copy of the engine context for the automatic search of the reference spectrum
-EXTERN double         ENGINE_localNoon;                                         // local noon
+extern char          ENGINE_dbgFile[MAX_PATH_LEN+1];                           // debug file
+extern ENGINE_CONTEXT ENGINE_contextRef;                                        // copy of the engine context for the automatic search of the reference spectrum
+extern double         ENGINE_localNoon;                                         // local noon
 
 
 // ==========
@@ -22,7 +22,7 @@ EXTERN double         ENGINE_localNoon;                                         
 
 RC              EngineCopyContext(ENGINE_CONTEXT *pEngineContextTarget,ENGINE_CONTEXT *pEngineContextSource);
 RC              EngineSetProject(ENGINE_CONTEXT *pEngineContext);
-RC              EngineReadFile(ENGINE_CONTEXT *pEngineContext,int indexRecord,INT dateFlag,INT localCalDay);
+RC              EngineReadFile(ENGINE_CONTEXT *pEngineContext,int indexRecord,int dateFlag,int localCalDay);
 RC              EngineRequestBeginBrowseSpectra(ENGINE_CONTEXT *pEngineContext,const char *spectraFileName,void *responseHandle);
 RC              EngineRequestEndBrowseSpectra(ENGINE_CONTEXT *pEngineContext);
 RC              EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle);

@@ -368,7 +368,7 @@ RC XsconvFctApodNBS(double *pValue,double resolution,double phase,double dispers
 // RETURN        rc          : return code
 // -----------------------------------------------------------------------------
 
-RC XsconvFctBuild(double *slitLambda,double *slitVector,INT slitSize,INT slitType,double *slitParam,INT nSlitParam)
+RC XsconvFctBuild(double *slitLambda,double *slitVector,int slitSize,int slitType,double *slitParam,int nSlitParam)
  {
   // Declarations
 
@@ -464,7 +464,7 @@ RC XsconvFctBuild(double *slitLambda,double *slitVector,INT slitSize,INT slitTyp
 // XSCONV_GetFwhm : Get slit function full width half way up
 // --------------------------------------------------------
 
-RC XSCONV_GetFwhm(double *lambda,double *slit,double *deriv2,INT nl,INT slitType,double *slitParam)
+RC XSCONV_GetFwhm(double *lambda,double *slit,double *deriv2,int nl,int slitType,double *slitParam)
  {
   // Declarations
 
@@ -533,14 +533,14 @@ RC XSCONV_GetFwhm(double *lambda,double *slit,double *deriv2,INT nl,INT slitType
 // XSCONV_LoadCalibrationFile : Final wavelength scale read out
 // ------------------------------------------------------------
 
-RC XSCONV_LoadCalibrationFile(MATRIX_OBJECT *pLambda,char *lambdaFile,INT nextraPixels)
+RC XSCONV_LoadCalibrationFile(MATRIX_OBJECT *pLambda,char *lambdaFile,int nextraPixels)
  {
   // Declarations
 
   char  lambdaBuffer[MAX_ITEM_TEXT_LEN+1];
   double step;
   FILE *lambdaFp;
-  INT npts;
+  int npts;
   INDEX i;
   RC rc;
 
@@ -612,7 +612,7 @@ RC XSCONV_LoadCalibrationFile(MATRIX_OBJECT *pLambda,char *lambdaFile,INT nextra
 // XSCONV_LoadSlitFunction : Slit function read out
 // ------------------------------------------------
 
-RC XSCONV_LoadSlitFunction(MATRIX_OBJECT *pSlitXs,MATRIX_OBJECT *pSlitXs2,SLIT *pSlit,double *pGaussWidth,INT *pSlitType)
+RC XSCONV_LoadSlitFunction(MATRIX_OBJECT *pSlitXs,MATRIX_OBJECT *pSlitXs2,SLIT *pSlit,double *pGaussWidth,int *pSlitType)
  {
   // Declarations
 
@@ -621,7 +621,7 @@ RC XSCONV_LoadSlitFunction(MATRIX_OBJECT *pSlitXs,MATRIX_OBJECT *pSlitXs2,SLIT *
   RC     rc;
   INDEX  i;
   double x,a,a2,delta,sigma,invapi,sumPoly,slitStep,norm1,slitParam[4],fwhm;
-  INT    slitType,slitSize,nFwhm;
+  int    slitType,slitSize,nFwhm;
 
   // Initializations
 
@@ -767,7 +767,7 @@ RC XSCONV_LoadSlitFunction(MATRIX_OBJECT *pSlitXs,MATRIX_OBJECT *pSlitXs2,SLIT *
   return rc;
  }
 
-RC XSCONV_ConvertCrossSectionFile(MATRIX_OBJECT *pCross, double lambdaMin,double lambdaMax,double shift,INT conversionMode) {
+RC XSCONV_ConvertCrossSectionFile(MATRIX_OBJECT *pCross, double lambdaMin,double lambdaMax,double shift,int conversionMode) {
    // Declarations
    
    INDEX i;
@@ -802,7 +802,7 @@ RC XSCONV_ConvertCrossSectionFile(MATRIX_OBJECT *pCross, double lambdaMin,double
 // XSCONV_LoadCrossSectionFile : Load a cross section file
 // -------------------------------------------------------
 
-RC XSCONV_LoadCrossSectionFile(MATRIX_OBJECT *pCross,char *crossFile,double lambdaMin,double lambdaMax,double shift,INT conversionMode)
+RC XSCONV_LoadCrossSectionFile(MATRIX_OBJECT *pCross,char *crossFile,double lambdaMin,double lambdaMax,double shift,int conversionMode)
 {
   RC rc = rc=MATRIX_Load(crossFile,pCross,0,0,0,0,lambdaMin,lambdaMax,1,0,__func__);
   if(!rc) {
@@ -829,7 +829,7 @@ RC XSCONV_TypeNone(MATRIX_OBJECT *pXsnew,MATRIX_OBJECT *pXshr)
 // -----------------------------------------------------------------------
 
  RC XSCONV_TypeGauss(const double *lambda, const double *Spec, const double *SDeriv2,double lambdaj,
-                     double dldj,double *SpecConv,double fwhm,double slitParam2,INT slitType, int ndet)
+                     double dldj,double *SpecConv,double fwhm,double slitParam2,int slitType, int ndet)
  {
    // Declarations
  
@@ -838,7 +838,9 @@ RC XSCONV_TypeNone(MATRIX_OBJECT *pXsnew,MATRIX_OBJECT *pXshr)
      crossFIntegral, FIntegral;
  
    RC rc;
- 
+
+  printf("%s\n", __func__);
+
    // Initializations
  
    fwhm=fabs(fwhm);
@@ -903,13 +905,13 @@ RC XSCONV_TypeNone(MATRIX_OBJECT *pXsnew,MATRIX_OBJECT *pXshr)
    return rc;
  }
 
-RC XSCONV_TypeStandardFFT(FFT *pFFT,INT fwhmType,double slitParam,double slitParam2,double *lambda, double *target,INT size)
+RC XSCONV_TypeStandardFFT(FFT *pFFT,int fwhmType,double slitParam,double slitParam2,double *lambda, double *target,int size)
  {
   // Declarations
 
   double F,G,w,a,sigma,delta,step;
   INDEX i;
-  INT ndemi;
+  int ndemi;
   RC rc;
 
   // Initializations
@@ -959,18 +961,18 @@ RC XSCONV_TypeStandardFFT(FFT *pFFT,INT fwhmType,double slitParam,double slitPar
  }
 
 RC GetNewF(double *pNewF,
-           INT     slitType,
+           int     slitType,
            double *slitLambda,
            double *slitVector,
            double *slitDeriv2,
-           INT     slitNDET,
+           int     slitNDET,
            double  dist,
            double  slitParam,
            double  slitParam2,
            double  step)
  {
   double sigma,a,a2,newF,norm1,delta;
-  INT rc;
+  int rc;
 
   newF=(double)0.;
   sigma=(double)slitParam*0.5;
@@ -1024,7 +1026,7 @@ RC GetNewF(double *pNewF,
 
 //
 // RC XSCONV_TypeStandard(XS *pXsnew,XS *pXshr,XS *pSlit,XS *pI,double *Ic,
-//                        INT slitType,double slitWidth,double slitParam)
+//                        int slitType,double slitWidth,double slitParam)
 //
 // with :
 //
@@ -1050,7 +1052,7 @@ RC GetNewF(double *pNewF,
 //
 
 RC XSCONV_TypeStandard(MATRIX_OBJECT *pXsnew,INDEX indexLambdaMin,INDEX indexLambdaMax,const MATRIX_OBJECT *pXshr,
-                       const MATRIX_OBJECT *pSlit, const MATRIX_OBJECT *pSlit2, const MATRIX_OBJECT *pI, double *Ic,INT slitType,
+                       const MATRIX_OBJECT *pSlit, const MATRIX_OBJECT *pSlit2, const MATRIX_OBJECT *pI, double *Ic,int slitType,
                        double slitParam,double slitParam2,int wveDptFlag)
  {
   // Declarations
@@ -1069,7 +1071,7 @@ RC XSCONV_TypeStandard(MATRIX_OBJECT *pXsnew,INDEX indexLambdaMin,INDEX indexLam
   INDEX   xshrPixMin,
           xsnewIndex,indexOld,indexNew,
           klo,khi,i;
-  INT     xshrNDET,xsnewNDET,slitNDET,slitNDET2;
+  int     xshrNDET,xsnewNDET,slitNDET,slitNDET2;
   RC      rc;
 
   memset(&slitTmp,0,sizeof(MATRIX_OBJECT));
@@ -1442,7 +1444,7 @@ RC XSCONV_TypeStandard(MATRIX_OBJECT *pXsnew,INDEX indexLambdaMin,INDEX indexLam
 // -------------------------------------------------------------------------
 
 RC XSCONV_TypeI0Correction(MATRIX_OBJECT *pXsnew,MATRIX_OBJECT *pXshr,MATRIX_OBJECT *pI0,MATRIX_OBJECT *pSlit,MATRIX_OBJECT *pSlit2,
-                           double conc,INT slitType,double slitParam,double slitParam2,int wveDptFlag)
+                           double conc,int slitType,double slitParam,double slitParam2,int wveDptFlag)
  {
   // Declarations
 
@@ -1452,7 +1454,7 @@ RC XSCONV_TypeI0Correction(MATRIX_OBJECT *pXsnew,MATRIX_OBJECT *pXshr,MATRIX_OBJ
          *ILambda,*IVector,*IDeriv2,
          *I0Lambda,*I0Vector,*I0cVector,*IcVector;
 
-  INT INDET,xshrNDET,xsnewNDET;
+  int INDET,xshrNDET,xsnewNDET;
   INDEX i;
   MATRIX_OBJECT I,I0c;
   RC rc;
@@ -1558,9 +1560,9 @@ RC XSCONV_TypeI0Correction(MATRIX_OBJECT *pXsnew,MATRIX_OBJECT *pXshr,MATRIX_OBJ
 // --------------------------------------------------------
 
 // NOT used anymore RC XSCONV_RealTimeXs(MATRIX_OBJECT *pXshr,MATRIX_OBJECT *pXsI0,MATRIX_OBJECT *pSlit,MATRIX_OBJECT *pSlit2,double *IcVector,                         // high resolution cross section
-// NOT used anymore                      double *lambda,INT NDET,INDEX indexLambdaMin,INDEX indexLambdaMax,               // final calibration wavelength scale
+// NOT used anymore                      double *lambda,int NDET,INDEX indexLambdaMin,INDEX indexLambdaMax,               // final calibration wavelength scale
 // NOT used anymore                      double *newXs,                                                          // convoluted cross section
-// NOT used anymore                      INT slitType,double slitParam,double slitParam2,int wveDptFlag)      // slit options
+// NOT used anymore                      int slitType,double slitParam,double slitParam2,int wveDptFlag)      // slit options
 // NOT used anymore  {
 // NOT used anymore   // Declarations
 // NOT used anymore
@@ -1602,7 +1604,7 @@ RC XSCONV_TypeI0Correction(MATRIX_OBJECT *pXsnew,MATRIX_OBJECT *pXshr,MATRIX_OBJ
 // XsconvRebuildSlitFunction : Rebuild slit function onto a regular wavelength scale
 // ---------------------------------------------------------------------------------
 
-RC XsconvRebuildSlitFunction(double *lambda,double *slit,INT nslit,SLIT *pSlit,MATRIX_OBJECT *pSlitXs)
+RC XsconvRebuildSlitFunction(double *lambda,double *slit,int nslit,SLIT *pSlit,MATRIX_OBJECT *pSlitXs)
  {
   // Declarations
 
@@ -1647,7 +1649,7 @@ RC XsconvRebuildSlitFunction(double *lambda,double *slit,INT nslit,SLIT *pSlit,M
 // XsconvPowFFTMin : return index of the first minimum found in the power spectrum obtained by FFT
 // -----------------------------------------------------------------------------------------------
 
-INDEX XsconvPowFFTMin(double *fft,INT n2)
+INDEX XsconvPowFFTMin(double *fft,int n2)
  {
   // Declarations
 
@@ -1708,7 +1710,7 @@ RC XSCONV_NewSlitFunction(SLIT *pSlitOptions,MATRIX_OBJECT *pSlit,double slitPar
           norm,norm2,                                // normalization
           a,b,c,d,div;                               // substitution variables for complex calculation
   INDEX i,i0;
-  INT n2,ndemi,nslit,nslitOld;
+  int n2,ndemi,nslit,nslitOld;
   RC rc;
 
   // Initializations

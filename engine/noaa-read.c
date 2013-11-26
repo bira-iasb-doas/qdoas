@@ -196,7 +196,7 @@ typedef struct	SpectrometerRecordType
 	}
 NOAA_SpectrometerRecordType;
 
-//	{*Note: After a DoasI32 hiatus, temperature measurements were resumed, starting with
+//	{*Note: After a int32_t hiatus, temperature measurements were resumed, starting with
 //	 BlackSG2.23. The "Bottom" temp is now the ROOM temperature outside the instrument case!}
 //	 {**Until13 Apr 93, the space used by 'spacer' and 'band' was used for a Real named
 //	  'finalMagnification'. This was never properly used, and was always defaulted to 1.00,
@@ -358,7 +358,7 @@ RC SetNOAA(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
   // Declarations
 
   SZ_LEN fileLength;                                                            // the length in bytes of the file
-  DoasU32 offset;                                                                 // offset in the file
+  uint32_t offset;                                                                 // offset in the file
   short observationType;                                                        // observation type
   RC rc;                                                                        // return code
 
@@ -379,8 +379,8 @@ RC SetNOAA(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
 
   else if (!(fileLength=STD_FileLength(specFp)))
    rc=ERROR_SetLast("SetNOAA",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pEngineContext->fileInfo.fileName);
-  else if ((pEngineContext->buffers.recordIndexes=(DoasU32 *)MEMORY_AllocBuffer("SetNOAA","recordIndexes",
-           (pEngineContext->recordIndexesSize=(int)(fileLength/NOAA_OFFSET+2L)),sizeof(DoasU32),0,MEMORY_TYPE_ULONG))==NULL)
+  else if ((pEngineContext->buffers.recordIndexes=(uint32_t *)MEMORY_AllocBuffer("SetNOAA","recordIndexes",
+           (pEngineContext->recordIndexesSize=(int)(fileLength/NOAA_OFFSET+2L)),sizeof(uint32_t),0,MEMORY_TYPE_ULONG))==NULL)
    rc=ERROR_ID_ALLOC;
   else
    {
@@ -500,7 +500,7 @@ void NOAA_Date(double sec,SHORT_DATE *pDate,struct time *pTime)
 //               ERROR_ID_NO otherwise.
 // -----------------------------------------------------------------------------
 
-RC ReliNOAA(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,INT localDay,FILE *specFp)
+RC ReliNOAA(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp)
  {
   // Declarations
 
@@ -508,7 +508,7 @@ RC ReliNOAA(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,INT localDa
   RECORD_INFO *pRecord;                                                         // pointer to the record part of the engine context
 
   NOAA_InputDataRecordType *pRecordNoaa;                                        // pointer to the current record
-  INT obsType;                                                                  // observation type
+  int obsType;                                                                  // observation type
   INDEX   i;
   RC      rc;                                                                   // return code
   double  tmLocal;                                                              // local time

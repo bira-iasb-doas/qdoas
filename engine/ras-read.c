@@ -61,7 +61,7 @@
 
 #include "doas.h"
 
-static INT rasDirFlag;                                                          // 1 to process a directory, 0 to process only one file
+static int rasDirFlag;                                                          // 1 to process a directory, 0 to process only one file
 
 // -----------------------------------------------------------------------------
 // FUNCTION      SetRAS
@@ -83,7 +83,7 @@ RC SetRAS(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
 
   char  fileName[MAX_PATH_LEN+1],                                              // name of the current file
         *ptr,*ptr2;                                                             // pointers to parts in the previous string
-  INT    fileLength;                                                            // length of the file
+  int    fileLength;                                                            // length of the file
   RC     rc;                                                                    // return code
 
   // Initializations
@@ -149,7 +149,7 @@ RC RasReadRecord(char *fileName,double *spe,double *drk,ENGINE_CONTEXT *pEngineC
 
   FILE *fp;                                                                     // pointer to the current file
   INDEX i;                                                                      // browse pixels in the spectrum
-  INT   field1,field2,field3;                                                   // fields
+  int   field1,field2,field3;                                                   // fields
   RC rc;                                                                        // return code
 
   // Initializations
@@ -281,7 +281,7 @@ RC RasReadRecord(char *fileName,double *spe,double *drk,ENGINE_CONTEXT *pEngineC
 //               ERROR_ID_NO             : otherwise.
 // -----------------------------------------------------------------------------
 
-RC ReliRAS(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,INT localDay,FILE *specFp)
+RC ReliRAS(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp)
  {
   // Declarations
 

@@ -323,7 +323,7 @@ RC UofTReadRecord(UOFT_DATA *pUofTData,double *spectrum,FILE *specFp,char *fileN
 //               ERROR_ID_NO otherwise.
 // -----------------------------------------------------------------------------
 
-RC ReliUofT(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,INT localDay,FILE *specFp)
+RC ReliUofT(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp)
  {
   // Declarations
 

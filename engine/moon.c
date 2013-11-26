@@ -85,7 +85,7 @@
 
 typedef struct _string2date
  {
-  INT    year,
+  int    year,
          month,
          day,
          hour,
@@ -126,7 +126,7 @@ STRING2DATE;
 
 #define Deg2Rad(X) ((double) fmod(RAD*X,PI2))
 
-static INT dayMonth[]={0,31,59,90,120,151,181,212,243,273,304,334};
+static int dayMonth[]={0,31,59,90,120,151,181,212,243,273,304,334};
 
 // ====================
 // CONVERSION FUNCTIONS
@@ -147,7 +147,7 @@ double DiffTime(STRING2DATE *pStartDate,STRING2DATE *pEndDate)
   // Declarations
 
   double nbSec;
-  INT nbBis;
+  int nbBis;
 
   // number of leap years
 
@@ -172,12 +172,12 @@ double DiffTime(STRING2DATE *pStartDate,STRING2DATE *pEndDate)
 // OUTPUT        pDate      the components of the date in a structure
 // -----------------------------------------------------------------------------
 
-void Sec2Date(INT refYear, double nbSec, STRING2DATE *pDate)
+void Sec2Date(int refYear, double nbSec, STRING2DATE *pDate)
  {
   // Declarations
 
   double nbDay;
-  INT nbYear,nbBis;
+  int nbYear,nbBis;
   INDEX i;
 
   // Time decomposition
@@ -192,7 +192,7 @@ void Sec2Date(INT refYear, double nbSec, STRING2DATE *pDate)
   nbYear = (int) floor(nbDay/365.);                                             // number of julian years
   nbDay  = (double) nbDay-nbYear*365.+1.;                                       // number of days in the remaining year
 
-  nbBis  = (INT)(nbYear+(INT)(((refYear%4)+3)%4))/4;                            // number of extra days for leap years
+  nbBis  = (int)(nbYear+(int)(((refYear%4)+3)%4))/4;                            // number of extra days for leap years
   nbDay -= nbBis;
 
   for (i=1;i<12;i++)
@@ -336,8 +336,8 @@ double JulianDay(double year,double month,double day)
 
   // Gregorian calendar correction
 
-  A = floor(year*0.01);         // A = INT(year/100)
-  B = 2.-A+floor(A*0.25);       // B = 2-A+INT(A/4)
+  A = floor(year*0.01);         // A = int(year/100)
+  B = 2.-A+floor(A*0.25);       // B = 2-A+int(A/4)
 
   // Julian day computation with correction
 

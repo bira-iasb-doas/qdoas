@@ -152,10 +152,10 @@ FILE_TYPE FILES_typeSpectra[FILE_TYPE_SPECTRA_MAX] =
  };
 
 char FILES_configuration[MAX_PATH_LEN+1];                                      // configuration file
-// QDOAS ??? INT FILES_version=HELP_VERSION_MAX-1;                                           // file version
+// QDOAS ??? int FILES_version=HELP_VERSION_MAX-1;                                           // file version
 FILES_PATH *FILES_paths;                                                        // all paths implied in configuration file
 
-INT FILES_nPaths=FILES_PATH_MAX;                                                // the size of the FILES_paths
+int FILES_nPaths=FILES_PATH_MAX;                                                // the size of the FILES_paths
 
 // ================
 // PATHS PROCESSING
@@ -173,7 +173,7 @@ INT FILES_nPaths=FILES_PATH_MAX;                                                
 // OUTPUT        newPath       the new path (%x\<file name>)
 // -----------------------------------------------------------------------------
 
-void FILES_CompactPath(char *newPath,char *path,INT useFileName,INT addFlag)
+void FILES_CompactPath(char *newPath,char *path,int useFileName,int addFlag)
  {
   // Declarations
 
@@ -273,7 +273,7 @@ void FILES_RemoveOnePath(char *path)
 // RETURN        pointer to the new path
 // -----------------------------------------------------------------------------
 
-char *FILES_RebuildFileName(char *newPath,char *path,INT useFileName)
+char *FILES_RebuildFileName(char *newPath,char *path,int useFileName)
  {
  	char pathTmp[MAX_PATH_LEN+1],*ptr;
 
@@ -333,7 +333,7 @@ char *FILES_RebuildFileName(char *newPath,char *path,INT useFileName)
 // OUTPUT        newPath       the new path
 // -----------------------------------------------------------------------------
 
-void FILES_ChangePath(char *oldPath,char *newPath,INT useFileName)
+void FILES_ChangePath(char *oldPath,char *newPath,int useFileName)
  {
   FILES_RemoveOnePath(oldPath);
   FILES_CompactPath(oldPath,newPath,useFileName,1);
@@ -358,7 +358,7 @@ void FILES_ChangePath(char *oldPath,char *newPath,INT useFileName)
 
 void FILES_RetrievePath(char *pathString,SZ_LEN pathStringLength,
                         char *fullFileName,SZ_LEN fullFileNameLength,
-                        INT    indexFileType,INT changeDefaultPath)
+                        int    indexFileType,int changeDefaultPath)
  {
   // Declarations
 
@@ -576,12 +576,12 @@ void FilesSaveDefaultPaths(FILE *fp,char *sectionName)
 //               ERROR_ID_FILE_EMPTY if the input file is empty
 // -----------------------------------------------------------------------------
 
-RC FILES_GetMatrixDimensions(FILE *fp,const char *fileName,INT *pNl,INT *pNc,const char *callingFunction,INT errorType)
+RC FILES_GetMatrixDimensions(FILE *fp,const char *fileName,int *pNl,int *pNc,const char *callingFunction,int errorType)
  {
   // Declarations
 
   char *oldColumn,*nextColumn;                                                 // line of files
-  INT    nl,nc,                                                                 // dimensions of the matrix
+  int    nl,nc,                                                                 // dimensions of the matrix
          lineLength,                                                            // length of file line
          fileLength;                                                            // total length of file
   double tempValue;                                                             // temporary value
@@ -662,12 +662,12 @@ RC FILES_GetMatrixDimensions(FILE *fp,const char *fileName,INT *pNl,INT *pNc,con
 //               ERROR_ID_FILE_NOT_FOUND if can not open the input file
 // -----------------------------------------------------------------------------
 
-RC FILES_LoadMatrix(FILE *fp,const char *fileName,double **matrix,INT base,INT nl,INT nc,const char *callingFunction,INT errorType)
+RC FILES_LoadMatrix(FILE *fp,const char *fileName,double **matrix,int base,int nl,int nc,const char *callingFunction,int errorType)
  {
   // Declarations
 
   char *oldColumn,*nextColumn;                             // buffers for file lines
-  INT    lineLength,                                        // length of a file line
+  int    lineLength,                                        // length of a file line
          fileLength;                                        // total length of file
   INDEX  i,j;                                               // index for browsing lines and columns in file
   RC     rc;                                                // return code

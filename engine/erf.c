@@ -219,8 +219,8 @@ double ERF_GetValue(double newX)
   // Get value from vector
 
   if ((ERF_x!=NULL) && (ERF_y!=NULL) && (ERF_y2!=NULL) &&
-      (absX>=ERF_x[0]) && (absX<=ERF_x[(INT)(ERF_N)-1]) &&
-      !SPLINE_Vector(ERF_x,ERF_y,ERF_y2,(INT)(ERF_N),&absX,&newY,1,SPLINE_CUBIC,"ERF_GetValue "))
+      (absX>=ERF_x[0]) && (absX<=ERF_x[(int)(ERF_N)-1]) &&
+      !SPLINE_Vector(ERF_x,ERF_y,ERF_y2,(int)(ERF_N),&absX,&newY,1,SPLINE_CUBIC,"ERF_GetValue "))
    {
     if (newX<0)
      newY=-newY;
@@ -252,9 +252,9 @@ RC ERF_Alloc(void)
 
   // Buffers allocation
 
-  if (((ERF_x=MEMORY_AllocDVector("ERF_Alloc","ERF_x",0,(INT)(ERF_N)-1))==NULL) ||
-      ((ERF_y=MEMORY_AllocDVector("ERF_Alloc","ERF_y",0,(INT)(ERF_N)-1))==NULL) ||
-      ((ERF_y2=MEMORY_AllocDVector("ERF_Alloc","ERF_y2",0,(INT)(ERF_N)-1))==NULL))
+  if (((ERF_x=MEMORY_AllocDVector("ERF_Alloc","ERF_x",0,(int)(ERF_N)-1))==NULL) ||
+      ((ERF_y=MEMORY_AllocDVector("ERF_Alloc","ERF_y",0,(int)(ERF_N)-1))==NULL) ||
+      ((ERF_y2=MEMORY_AllocDVector("ERF_Alloc","ERF_y2",0,(int)(ERF_N)-1))==NULL))
 
    rc=ERROR_ID_ALLOC;
 
@@ -270,7 +270,7 @@ RC ERF_Alloc(void)
 
     // Calculate the second derivatives for future interpolation
 
-    rc=SPLINE_Deriv2(ERF_x,ERF_y,ERF_y2,(INT)(ERF_N),"ERF_Alloc");
+    rc=SPLINE_Deriv2(ERF_x,ERF_y,ERF_y2,(int)(ERF_N),"ERF_Alloc");
    }
 
   // Return
