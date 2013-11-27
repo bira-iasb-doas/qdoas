@@ -28,8 +28,18 @@ unix {
   QMAKE_LIBDIR += $$INSTALL_PREFIX/lib
 }
 
+# portable executable for linux using Linux Standard Base (LSB)
+# requires static Qt and Qwt libraries compiled using LSB, as well as
+# static hdf/hdf5/coda... libraries
+#
+# to build, run 'qmake all.pro CONFIG+=linux_package CONFIG-=unix
+#
+# lsbcc and lsbc++ must be on the PATH, and you must use the version
+# of qmake installed with the static Qt libraries
 linux_package {
-  INSTALL_PREFIX = /home/thomasd/Code/LSB/
+  QMAKE_CXX = lsbc++
+  QMAKE_CC = lsbcc
+  INSTALL_PREFIX = /home/thomasd/Code/LSB
   INCLUDEPATH += $$INSTALL_PREFIX/include
   INCLUDEPATH += $$INSTALL_PREFIX/include/hdf4
   INCLUDEPATH += $$INSTALL_PREFIX/include/qwt
