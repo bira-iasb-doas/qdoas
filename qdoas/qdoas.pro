@@ -11,6 +11,8 @@ PRE_TARGETDEPS += ../common/libcommon.a ../engine/libengine.a ../mediator/libmed
 CONFIG += qt thread $$CODE_GENERATION
 QT = core gui xml
 
+INCLUDEPATH  += ../mediator ../common ../engine
+
 DEFINES += APP_QDOAS
 
 #----------------------------------------------
@@ -18,8 +20,16 @@ DEFINES += APP_QDOAS
 #----------------------------------------------
 
 unix {
-  INCLUDEPATH  += ../mediator ../common ../engine
   LIBS += -lcoda -lhdfeos -lmfhdf -ldf -lz -ljpeg -lhe5_hdfeos -lhdf5 -lhdf5_hl -lqwt
+}
+
+linux_package {
+  LIBS += -Wl,-Bstatic -lcoda -lhdfeos -lmfhdf -ldf -Wl,-Bdynamic -lz -Wl,-Bstatic -lhe5_hdfeos -lhdf5_hl -lhdf5 -lqwt -Wl,-Bdynamic
+}
+
+mxe {
+  LIBS += -Wl,-Bstatic -lcoda -lhdfeos -lmfhdf -ldf -lz -ljpeg -lhe5_hdfeos -lhdf5_hl -lhdf5  -lqwt
+  LIBS += -lportablexdr
 }
 
 win32 {

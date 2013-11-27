@@ -28,6 +28,22 @@ unix {
   QMAKE_LIBDIR += $$INSTALL_PREFIX/lib
 }
 
+linux_package {
+  INSTALL_PREFIX = /home/thomasd/Code/LSB/
+  INCLUDEPATH += $$INSTALL_PREFIX/include
+  INCLUDEPATH += $$INSTALL_PREFIX/include/hdf4
+  INCLUDEPATH += $$INSTALL_PREFIX/include/qwt
+  QMAKE_RPATHDIR += $$INSTALL_PREFIX/lib
+  QMAKE_LIBDIR += $$INSTALL_PREFIX/lib
+}
+
+# linux -> windows cross-compilation using MXE
+mxe {
+  INSTALL_PREFIX = /home/thomasd/Code/cross
+  INCLUDEPATH += $$INSTALL_PREFIX/include
+  QMAKE_LIBDIR += $$INSTALL_PREFIX/lib
+}
+
 win32 {
   QWT_INC_PATH    = C:/Qwt-6.0.0/src
   QWT_LIB_PATH    = C:/Qwt-6.0.0/lib

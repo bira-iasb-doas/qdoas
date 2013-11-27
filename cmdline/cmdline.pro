@@ -11,13 +11,23 @@ PRE_TARGETDEPS += ../common/libcommon.a ../engine/libengine.a ../mediator/libmed
 CONFIG += qt thread $$CODE_GENERATION
 QT = core xml
 
+INCLUDEPATH  += ../mediator ../common ../qdoas ../convolution ../usamp ../engine ../ring
+
 #----------------------------------------------
 # Platform dependency ... based on ../config.pri
 #----------------------------------------------
 
 unix {
-  INCLUDEPATH  += ../mediator ../common ../qdoas ../convolution ../usamp ../engine ../ring
   LIBS         += -lcoda -lhdfeos -lmfhdf -ldf -lz -ljpeg -lhe5_hdfeos -lhdf5 -lhdf5_hl
+}
+
+linux_package {
+  LIBS         += -Wl,-Bstatic -lcoda -lhdfeos -lmfhdf -ldf -ljpeg -Wl,-Bdynamic -lz -Wl,-Bstatic -lhe5_hdfeos -lhdf5_hl -lhdf5 -Wl,-Bdynamic
+}
+
+mxe {
+  LIBS += -lcoda -lhdfeos -lmfhdf -ldf -lz -ljpeg -lhe5_hdfeos -lhdf5_hl -lhdf5
+  LIBS += -lportablexdr
 }
 
 win32 {
