@@ -1584,6 +1584,7 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
    indexKurucz=ITEM_NONE;
 
    memset(&calibWindows,0,sizeof(mediate_analysis_window_t));
+   memset(&hr_solar_temp, 0, sizeof(hr_solar_temp));
 
    memcpy(&calibWindows.crossSectionList,&pEngineContext->calibFeno.crossSectionList,sizeof(cross_section_list_t));
    memcpy(&calibWindows.linear,&pEngineContext->calibFeno.linear,sizeof(struct anlyswin_linear));
