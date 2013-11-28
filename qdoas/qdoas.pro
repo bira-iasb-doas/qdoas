@@ -24,7 +24,8 @@ unix {
 }
 
 linux_package {
-  LIBS += -Wl,-Bstatic -lcoda -lhdfeos -lmfhdf -ldf -Wl,-Bdynamic -lz -Wl,-Bstatic -lhe5_hdfeos -lhdf5_hl -lhdf5 -lqwt -Wl,-Bdynamic
+  TARGET = ../../linux_package/qdoas.bin
+  LIBS += -lcoda -lhdfeos -lmfhdf -ldf -lz -lhe5_hdfeos -lhdf5_hl -lhdf5 -lqwt
 }
 
 mxe {

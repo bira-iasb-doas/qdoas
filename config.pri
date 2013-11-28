@@ -43,7 +43,6 @@ linux_package {
   INCLUDEPATH += $$INSTALL_PREFIX/include
   INCLUDEPATH += $$INSTALL_PREFIX/include/hdf4
   INCLUDEPATH += $$INSTALL_PREFIX/include/qwt
-  QMAKE_RPATHDIR += $$INSTALL_PREFIX/lib
   QMAKE_LIBDIR += $$INSTALL_PREFIX/lib
 }
 

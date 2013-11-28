@@ -30,6 +30,10 @@ unix {
   LIBS += -L$$INSTALL_PREFIX -lqwt
 }
 
+linux_package {
+  TARGET = ../../linux_package/convolution.bin
+}
+
 win32 {
   INCLUDEPATH  += ../mediator ../common ../engine
 

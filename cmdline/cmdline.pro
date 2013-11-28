@@ -22,7 +22,8 @@ unix {
 }
 
 linux_package {
-  LIBS         += -Wl,-Bstatic -lcoda -lhdfeos -lmfhdf -ldf -ljpeg -Wl,-Bdynamic -lz -Wl,-Bstatic -lhe5_hdfeos -lhdf5_hl -lhdf5 -Wl,-Bdynamic
+  TARGET = ../../linux_package/doas_cl.bin
+  LIBS         += -lcoda -lhdfeos -lmfhdf -ldf -ljpeg -lz -lhe5_hdfeos -lhdf5_hl -lhdf5
 }
 
 mxe {

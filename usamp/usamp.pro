@@ -30,6 +30,10 @@ unix {
   LIBS += -lqwt
 }
 
+linux_package {
+  TARGET = ../../linux_package/usamp.bin
+}
+
 win32 {
   INCLUDEPATH  += ../mediator ../common ../engine
 
