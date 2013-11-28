@@ -39,6 +39,8 @@ unix {
 linux_package {
   QMAKE_CXX = lsbc++
   QMAKE_CC = lsbcc
+  # clear RPATH so we can distribute our own libQt*.so's
+  QMAKE_RPATH = 
   INSTALL_PREFIX = /home/thomasd/Code/LSB
   INCLUDEPATH += $$INSTALL_PREFIX/include
   INCLUDEPATH += $$INSTALL_PREFIX/include/hdf4
