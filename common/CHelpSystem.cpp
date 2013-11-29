@@ -67,12 +67,12 @@ void CHelpSystem::showHelpTopic(const QString &chapter, const QString &key)
   QString helpFile = CPreferences::instance()->directoryName("Help", ".")
     + relPath;
 
-  // check for "DOASDIR" environment variable, which is set if we are
+  // check for "QDOAS_HELP_DIR" environment variable, which is set if we are
   // running the linux package.
   if (!QFile::exists(helpFile)) {
-    const char *doasdirPath = std::getenv("DOASDIR");
-    if (doasdirPath != NULL) {
-      helpFile = QDir(doasdirPath).absolutePath() + "/Help" + relPath;
+    const char *helpDir = std::getenv("QDOAS_HELP_DIR");
+    if (helpDir != NULL) {
+      helpFile = QDir(helpDir).absolutePath() + relPath;
     }
   }
 

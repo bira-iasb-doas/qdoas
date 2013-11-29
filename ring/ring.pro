@@ -31,7 +31,7 @@ unix {
 }
 
 linux_package {
-  TARGET = ../../linux_package/ring.bin
+  TARGET = ../../linux_package/bin/ring.bin
 }
 
 win32 {

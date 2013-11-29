@@ -24,7 +24,7 @@ unix {
 }
 
 linux_package {
-  TARGET = ../../linux_package/qdoas.bin
+  TARGET = ../../linux_package/bin/qdoas.bin
   LIBS += -lcoda -lhdfeos -lmfhdf -ldf -lz -lhe5_hdfeos -lhdf5_hl -lhdf5 -lqwt
 }
 

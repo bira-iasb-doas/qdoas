@@ -31,7 +31,7 @@ unix {
 }
 
 linux_package {
-  TARGET = ../../linux_package/usamp.bin
+  TARGET = ../../linux_package/bin/usamp.bin
 }
 
 win32 {

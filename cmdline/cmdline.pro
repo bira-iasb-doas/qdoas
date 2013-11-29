@@ -22,7 +22,7 @@ unix {
 }
 
 linux_package {
-  TARGET = ../../linux_package/doas_cl.bin
+  TARGET = ../../linux_package/bin/doas_cl.bin
   LIBS         += -lcoda -lhdfeos -lmfhdf -ldf -ljpeg -lz -lhe5_hdfeos -lhdf5_hl -lhdf5
 }
 

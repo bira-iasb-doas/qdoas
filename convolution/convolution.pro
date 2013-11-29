@@ -31,7 +31,7 @@ unix {
 }
 
 linux_package {
-  TARGET = ../../linux_package/convolution.bin
+  TARGET = ../../linux_package/bin/convolution.bin
 }
 
 win32 {
