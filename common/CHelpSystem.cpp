@@ -23,6 +23,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QUrl>
 #include <QDesktopServices>
 
+#include <stdlib.h>
+
 #include "CHelpSystem.h"
 #include "CPreferences.h"
 
@@ -70,7 +72,11 @@ void CHelpSystem::showHelpTopic(const QString &chapter, const QString &key)
   // check for "QDOAS_HELP_DIR" environment variable, which is set if we are
   // running the linux package.
   if (!QFile::exists(helpFile)) {
+  	 #if defined(WIN32)
+    const char *helpDir = getenv("QDOAS_HELP_DIR");
+    #else
     const char *helpDir = std::getenv("QDOAS_HELP_DIR");
+    #endif
     if (helpDir != NULL) {
       helpFile = QDir(helpDir).absolutePath() + relPath;
     }

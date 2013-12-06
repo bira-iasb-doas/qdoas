@@ -590,7 +590,7 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
            pRecord->als.rollAngle=(float)0.;
 
            pRecord->ccd.diodes[0]=pRecord->ccd.diodes[1]=pRecord->ccd.diodes[2]=pRecord->ccd.diodes[3]=(float)0.;
-           pRecord->ccd.targetElevation=header.brusagElevation;
+           pRecord->ccd.targetElevation=header.targetElevation;
            pRecord->ccd.targetAzimuth=header.Azimuth;
            pRecord->ccd.saturatedFlag=0;
            pRecord->ccd.indexImage=CCD_SearchForImage((int)header.now.ti_hour*3600+header.now.ti_min*60+header.now.ti_sec);
@@ -638,7 +638,7 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
                 ((pRecord->present_day.da_year>2003) ||
                 ((pRecord->present_day.da_year==2003) && (pRecord->present_day.da_mon>2)) ||
                 ((pRecord->present_day.da_year==2003) && (pRecord->present_day.da_mon==2) && (pRecord->present_day.da_day>20)))?
-                 (float)header.brusagElevation:(float)-1.;
+                 (float)header.targetElevation:(float)-1.;
 
            pRecord->Azimuth=header.Azimuth;
 
