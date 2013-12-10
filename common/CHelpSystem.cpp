@@ -72,11 +72,7 @@ void CHelpSystem::showHelpTopic(const QString &chapter, const QString &key)
   // check for "QDOAS_HELP_DIR" environment variable, which is set if we are
   // running the linux package.
   if (!QFile::exists(helpFile)) {
-  	 #if defined(WIN32)
     const char *helpDir = getenv("QDOAS_HELP_DIR");
-    #else
-    const char *helpDir = std::getenv("QDOAS_HELP_DIR");
-    #endif
     if (helpDir != NULL) {
       helpFile = QDir(helpDir).absolutePath() + relPath;
     }
