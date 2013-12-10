@@ -183,6 +183,7 @@ SHORT_DATE;
 #define ERROR_ID_FILE_OVERWRITE                 129                             // data not saved; change the output file name
 #define ERROR_ID_FILE_NOT_SPECIFIED             130                             // a required file name is not missing from the configuration
 #define ERROR_ID_FILE_STAT                      131                             // cannot call fstat on file
+#define ERROR_ID_DIR_NOT_FOUND                  132                             // directory does not exist
 
 
 // Debug

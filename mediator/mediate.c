@@ -302,6 +302,40 @@ int mediateRequestDisplaySpecInfo(void *engineContext,int page,void *responseHan
   return indexLine;
  }
 
+// check if an output path is valid.
+//
+// for output file name: check if we can write to the file
+//
+// for automatic file names: just check if the root directory exists
+RC check_output_path(const char* output_path) {
+
+  RC rc = ERROR_ID_NO;
+
+  const char *output_path_end = strrchr(output_path, PATH_SEP);
+  
+  if ( strcmp("automatic", output_path_end + 1) != 0 ) {
+    // if no automatic output filenames are chosen: check we can write to the file
+    FILE *test = fopen(output_path, "a");
+    if (test == NULL) {
+      rc = ERROR_SetLast("Output Path configuration error" , ERROR_TYPE_FATAL, ERROR_ID_FILE_OPEN, output_path);
+    } else {
+      fclose(test);
+    }
+  } else // otherwise: automatic output files: just check if the directory exists
+    if (output_path_end != NULL) { 
+      // if no path separator given, the output path is current working dir and we don't test
+      char path[MAX_ITEM_TEXT_LEN + 1];
+      size_t pathlen = output_path_end - output_path;
+      strncpy(path, output_path, pathlen);
+      path[pathlen]='\0';
+      if ( STD_IsDir(path) != 1 ) {
+        rc = ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_DIR_NOT_FOUND, path, ", please create the directory of change the Output Path ");
+      }
+    }
+
+  return rc;
+}
+
 // -----------------------------------------------------------------------------
 // FUNCTION      MediateRequestPlotSpectra
 // -----------------------------------------------------------------------------
@@ -1596,6 +1630,14 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
    KURUCZ_indexLine=1;
    rc=ANALYSE_SetInit(pEngineContext);
 
+   // if the user wants to write output to a file, check if the path is valid before starting analysis
+   if ( (THRD_id==THREAD_TYPE_ANALYSIS && pEngineContext->project.asciiResults.analysisFlag) ||
+        (THRD_id==THREAD_TYPE_KURUCZ && pEngineContext->project.asciiResults.calibFlag) ) {
+     rc = check_output_path(pEngineContext->project.asciiResults.path);
+     if (rc != ERROR_ID_NO)
+       goto handle_errors;
+   }
+
    if (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_OMI)
     {
      if ((THRD_id==THREAD_TYPE_ANALYSIS) && numberOfWindows)
@@ -2202,12 +2244,16 @@ int mediateRequestBeginAnalyseSpectra(void *engineContext,
 				      void *responseHandle)
  {
    ENGINE_CONTEXT *pEngineContext = (ENGINE_CONTEXT *)engineContext;
-   RC rc;
+   RC rc = ERROR_ID_NO;
 
-   if ((rc=EngineRequestBeginBrowseSpectra(pEngineContext,spectraFileName,responseHandle))!=ERROR_ID_NO)
-    ERROR_DisplayMessage(responseHandle);
+   rc=EngineRequestBeginBrowseSpectra(pEngineContext,spectraFileName,responseHandle);
 
-   return (rc==ERROR_ID_NO)?((ENGINE_CONTEXT *)engineContext)->recordNumber:-1;
+   if (rc != ERROR_ID_NO) {
+     ERROR_DisplayMessage(responseHandle);
+     return -1;
+   } else {
+     return pEngineContext->recordNumber;
+   }
  }
 
 int mediateRequestNextMatchingAnalyseSpectrum(void *engineContext,

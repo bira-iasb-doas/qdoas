@@ -113,6 +113,7 @@ ERROR_TABLE errorTable[]=
   { ERROR_ID_WAVELENGTH                , "bad wavelength calibration in file %s"                                                                              },
   { ERROR_ID_FILE_NOT_SPECIFIED        , "missing file name in configuration: %s"},
   { ERROR_ID_FILE_STAT                 , "cannot stat %s"},
+  { ERROR_ID_DIR_NOT_FOUND             , "directory %s does not exist %s"}, 
 
   // Debug
 

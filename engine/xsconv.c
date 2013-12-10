@@ -839,8 +839,6 @@ RC XSCONV_TypeNone(MATRIX_OBJECT *pXsnew,MATRIX_OBJECT *pXshr)
  
    RC rc;
 
-  printf("%s\n", __func__);
-
    // Initializations
  
    fwhm=fabs(fwhm);
