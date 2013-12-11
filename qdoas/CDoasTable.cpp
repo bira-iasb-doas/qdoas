@@ -32,10 +32,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "debugutil.h"
 
-CDoasTable::CDoasTable(const QString &label, int columnWidth, int headerHeight, QWidget *parent) :
+CDoasTable::CDoasTable(const QString &label, int headerHeight, QWidget *parent) :
   QFrame(parent),
   m_titleHeight(headerHeight),
-  m_labelWidth(columnWidth),
   m_sbThickness(16),
   m_columnOffset(0)
 {
@@ -45,18 +44,16 @@ CDoasTable::CDoasTable(const QString &label, int columnWidth, int headerHeight, 
 
   m_vsb->move(0, 0);
 
-  // default minimum size
-  m_centralWidth = 200;
-  m_centralHeight = 100;
-
-  setMinimumSize(QSize(m_labelWidth + m_sbThickness + m_centralWidth,
-		       m_titleHeight + m_sbThickness + m_centralHeight));
-  
-  m_header = new CDoasTableColumnHeader(label, this, m_labelWidth);
+  m_header = new CDoasTableColumnHeader(label, this);
   m_header->setColumnHorizontalPosition(m_sbThickness);
 
-  m_labelWidth = m_header->columnWidth();
+  // default minimum size
+  m_centralWidth = 100;
+  m_centralHeight = 100;
 
+  setMinimumSize(QSize(m_header->columnWidth() + m_sbThickness + m_centralWidth,
+		       m_titleHeight + m_sbThickness + m_centralHeight));
+  
   m_hsb->setRange(0, 0);
   m_hsb->setValue(0);
 
@@ -163,7 +160,7 @@ void CDoasTable::addRow(int rowHeight, const QString &label, QList<QVariant> &ce
   }
 
   m_header->addRow(rowHeight, label);
-  this->m_labelWidth = m_header->columnWidth();
+  //  this->m_labelWidth = m_header->columnWidth();
   
   QList<QVariant>::const_iterator cdIt = cellData.begin();
   QList<CDoasTableColumn*>::iterator it = m_columnList.begin();
@@ -215,7 +212,7 @@ void CDoasTable::setColumnOffset(int offset)
 
     CDoasTableColumn *tmp;
     int index = 0;
-    int x = m_sbThickness + m_labelWidth;
+    int x = m_sbThickness + m_header->columnWidth();
     
     while (index < m_columnList.count()) {
       tmp = m_columnList.at(index);
@@ -325,7 +322,7 @@ void CDoasTable::resizeEvent(QResizeEvent *e)
   int wid = e->size().width();
   int hei = e->size().height();
 
-  m_centralWidth = wid - m_sbThickness - m_labelWidth;
+  m_centralWidth = wid - m_sbThickness - m_header->columnWidth();
   m_centralHeight = hei - m_titleHeight - m_sbThickness;
 
   m_vsb->resize(m_sbThickness, m_titleHeight + m_centralHeight);
@@ -339,7 +336,7 @@ void CDoasTable::resizeEvent(QResizeEvent *e)
 
   CDoasTableColumn *tmp;
   int index = 0;
-  int x = m_sbThickness + m_labelWidth;
+  int x = m_sbThickness + m_header->columnWidth();
 
   while (index < m_columnList.count()) {
     tmp = m_columnList.at(index);
@@ -636,8 +633,8 @@ void CDoasTableColumn::setCellData(int rowIndex, const QVariant &cellData)
 
 //-------------------------------------
 
-CDoasTableColumnHeader::CDoasTableColumnHeader(const QString &label, CDoasTable *owner, int columnWidth) :
-  CDoasTableColumn(label, owner, columnWidth)
+CDoasTableColumnHeader::CDoasTableColumnHeader(const QString &label, CDoasTable *owner) :
+  CDoasTableColumn(label, owner, 0)
 {
 }
 

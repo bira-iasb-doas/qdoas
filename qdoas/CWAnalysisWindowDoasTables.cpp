@@ -145,7 +145,7 @@ QWidget* CMoleculeDoasTableColumnDiffOrtho::createCellWidget(const QVariant &cel
 
 CWMoleculesDoasTable::CWMoleculesDoasTable(const QString &label, int columnWidth,
 					   int headerHeight, QWidget *parent) :
-  CDoasTable(label, columnWidth, headerHeight, parent),
+  CDoasTable(label, headerHeight, parent),
   m_selectedRow(-1)
 {
   CMoleculeDoasTableColumnDiffOrtho *tmp = new CMoleculeDoasTableColumnDiffOrtho("Diff/Ortho", this, columnWidth);
@@ -580,9 +580,9 @@ void CWMoleculesDoasTable::slotFitColumnCheckable(int state)
 
 //------------------------------------------------------------
 
-CWLinearParametersDoasTable::CWLinearParametersDoasTable(const QString &label, int columnWidth,
+CWLinearParametersDoasTable::CWLinearParametersDoasTable(const QString &label,
 							 int headerHeight, QWidget *parent) :
-  CDoasTable(label, columnWidth, headerHeight, parent)
+  CDoasTable(label, headerHeight, parent)
 {
   // construct and populate the table
   QStringList comboItems;
@@ -708,9 +708,9 @@ int CWLinearParametersDoasTable::mapComboStringToOrder(const QString &str)
 
 //------------------------------------------------------------
 
-CWNonLinearParametersDoasTable::CWNonLinearParametersDoasTable(const QString &label, int columnWidth,
+CWNonLinearParametersDoasTable::CWNonLinearParametersDoasTable(const QString &label,
 							       int headerHeight, QWidget *parent) :
-  CDoasTable(label, columnWidth, headerHeight, parent),
+  CDoasTable(label, headerHeight, parent),
   m_selectedRow(-1)
 {
   // construct and populate the table
@@ -997,9 +997,9 @@ QStringList CWShiftAndStretchDialog::selectedSymbols(void) const
 
 //------------------------------------------------------------
 
-CWShiftAndStretchDoasTable::CWShiftAndStretchDoasTable(const QString &label, int columnWidth,
+CWShiftAndStretchDoasTable::CWShiftAndStretchDoasTable(const QString &label,
 						       int headerHeight, QWidget *parent) :
-  CDoasTable(label, columnWidth, headerHeight, parent),
+  CDoasTable(label, headerHeight, parent),
   m_selectedRow(-1)
 {
   m_specialSymbols << "Spectrum" << "Ref";
@@ -1374,8 +1374,8 @@ void CWShiftAndStretchDoasTable::slotModifyRow()
 
 //------------------------------------------------------------
 
-CWGapDoasTable::CWGapDoasTable(const QString &label, int columnWidth, int headerHeight, QWidget *parent) :
-  CDoasTable(label, columnWidth, headerHeight, parent),
+CWGapDoasTable::CWGapDoasTable(const QString &label, int headerHeight, QWidget *parent) :
+  CDoasTable(label, headerHeight, parent),
   m_selectedRow(-1)
 {
   // two columns
@@ -1489,8 +1489,8 @@ void CWGapDoasTable::slotRemoveRow()
 
 //------------------------------------------------------------
 
-CWOutputDoasTable::CWOutputDoasTable(const QString &label, int columnWidth, int headerHeight, QWidget *parent) :
-  CDoasTable(label, columnWidth, headerHeight, parent)
+CWOutputDoasTable::CWOutputDoasTable(const QString &label, int headerHeight, QWidget *parent) :
+  CDoasTable(label, headerHeight, parent)
 {
   // columns
   createColumnCheck("AMFs", 60);                          // col 0
@@ -1619,8 +1619,8 @@ void CWOutputDoasTable::slotSymbolListChanged(const QStringList &symbols)
 
 
 //------------------------------------------------------------
-CWSfpParametersDoasTable::CWSfpParametersDoasTable(const QString &label, int columnWidth, int headerHeight, QWidget *parent) :
-  CDoasTable(label, columnWidth, headerHeight, parent)
+CWSfpParametersDoasTable::CWSfpParametersDoasTable(const QString &label, int headerHeight, QWidget *parent) :
+  CDoasTable(label, headerHeight, parent)
 {
   // 4 fixed row
   createColumnCheck("Fit", 60);

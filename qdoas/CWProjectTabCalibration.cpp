@@ -200,15 +200,15 @@ CWProjectTabCalibration::CWProjectTabCalibration(const mediate_project_calibrati
 
   m_moleculesTab = new CWMoleculesDoasTable("Molecules", 120);
   m_tabs->addTab(m_moleculesTab, "Molecules");
-  m_linearTab = new CWLinearParametersDoasTable("Linear Parameters", 120);
+  m_linearTab = new CWLinearParametersDoasTable("Linear Parameters");
   m_tabs->addTab(m_linearTab, "Linear Parameters");
-  m_sfpTab = new CWSfpParametersDoasTable("SFP Parameters", 120);
+  m_sfpTab = new CWSfpParametersDoasTable("SFP Parameters");
   m_tabs->addTab(m_sfpTab, "SFP Parameters");
-  m_shiftAndStretchTab = new CWShiftAndStretchDoasTable("Cross sections and spectrum", 180);
+  m_shiftAndStretchTab = new CWShiftAndStretchDoasTable("Cross sections and spectrum");
   m_tabs->addTab(m_shiftAndStretchTab, "Shift and Stretch");
-  m_gapTab = new CWGapDoasTable("Gaps", 240);
+  m_gapTab = new CWGapDoasTable("Gaps");
   m_tabs->addTab(m_gapTab, "Gaps");
-  m_outputTab = new CWOutputDoasTable("Output", 120);
+  m_outputTab = new CWOutputDoasTable("Output");
   m_tabs->addTab(m_outputTab, "Output");
 
   mainLayout->addWidget(m_tabs, 1);

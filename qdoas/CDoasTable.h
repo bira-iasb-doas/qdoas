@@ -41,7 +41,7 @@ class CDoasTable : public QFrame
 {
 Q_OBJECT
  public:
-  CDoasTable(const QString &label, int columnWidth, int headerHeight = 24, QWidget *parent = 0);
+  CDoasTable(const QString &label, int headerHeight = 24, QWidget *parent = 0);
   virtual ~CDoasTable();
   
   int headerHeight(void) const;
@@ -94,7 +94,7 @@ Q_OBJECT
  private:
   QScrollBar *m_hsb, *m_vsb;
   
-  int m_titleHeight, m_labelWidth, m_sbThickness, m_centralWidth, m_centralHeight;
+  int m_titleHeight, m_sbThickness, m_centralWidth, m_centralHeight;
 
   CDoasTableColumnHeader *m_header;
   QList<CDoasTableColumn*> m_columnList;
@@ -174,7 +174,7 @@ inline QWidget* CDoasTableColumn::directAccessToCellWidget(int rowIndex) { retur
 class CDoasTableColumnHeader : public CDoasTableColumn
 {
  public:
-  CDoasTableColumnHeader(const QString &label, CDoasTable *owner, int columnWidth);
+  CDoasTableColumnHeader(const QString &label, CDoasTable *owner);
   virtual ~CDoasTableColumnHeader();
 
   virtual QVariant getCellData(int rowIndex) const;

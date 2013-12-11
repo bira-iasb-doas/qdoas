@@ -122,7 +122,7 @@ Q_OBJECT
 class CWLinearParametersDoasTable : public CDoasTable
 {
  public:
-  CWLinearParametersDoasTable(const QString &label, int columnWidth, int headerHeight = 24, QWidget *parent = 0);
+  CWLinearParametersDoasTable(const QString &label, int headerHeight = 24, QWidget *parent = 0);
   virtual ~CWLinearParametersDoasTable();
 
   // virtual void cellDataChanged(int row, int column, const QVariant &cellData); // no cell-coupling required
@@ -143,7 +143,7 @@ class CWNonLinearParametersDoasTable : public CDoasTable
 {
 Q_OBJECT
  public:
-  CWNonLinearParametersDoasTable(const QString &label, int columnWidth, int headerHeight = 24, QWidget *parent = 0);
+  CWNonLinearParametersDoasTable(const QString &label, int headerHeight = 24, QWidget *parent = 0);
   virtual ~CWNonLinearParametersDoasTable();
 
   void populate(const struct anlyswin_nonlinear *data);
@@ -181,7 +181,7 @@ class CWShiftAndStretchDoasTable : public CDoasTable
 {
 Q_OBJECT
  public:
-  CWShiftAndStretchDoasTable(const QString &label, int columnWidth, int headerHeight = 24, QWidget *parent = 0);
+  CWShiftAndStretchDoasTable(const QString &label, int headerHeight = 24, QWidget *parent = 0);
   virtual ~CWShiftAndStretchDoasTable();
 
   void populate(const shift_stretch_list_t *d);
@@ -221,7 +221,7 @@ class CWGapDoasTable : public CDoasTable
 {
 Q_OBJECT
  public:
-  CWGapDoasTable(const QString &label, int columnWidth, int headerHeight = 24, QWidget *parent = 0);
+  CWGapDoasTable(const QString &label, int headerHeight = 24, QWidget *parent = 0);
   virtual ~CWGapDoasTable();
 
   void populate(const gap_list_t *d);
@@ -247,7 +247,7 @@ class CWOutputDoasTable : public CDoasTable
 {
 Q_OBJECT
  public:
-  CWOutputDoasTable(const QString &label, int columnWidth, int headerHeight = 24, QWidget *parent = 0);
+  CWOutputDoasTable(const QString &label, int headerHeight = 24, QWidget *parent = 0);
   virtual ~CWOutputDoasTable();
 
   void populate(const output_list_t *d);
@@ -273,7 +273,7 @@ Q_OBJECT
 class CWSfpParametersDoasTable : public CDoasTable
 {
  public:
-  CWSfpParametersDoasTable(const QString &label, int columnWidth, int headerHeight = 24, QWidget *parent = 0);
+  CWSfpParametersDoasTable(const QString &label, int headerHeight = 24, QWidget *parent = 0);
   virtual ~CWSfpParametersDoasTable();
 
   // virtual void cellDataChanged(int row, int column, const QVariant &cellData); // no cell-coupling required

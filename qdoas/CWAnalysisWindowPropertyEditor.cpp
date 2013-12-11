@@ -361,15 +361,15 @@ CWAnalysisWindowPropertyEditor::CWAnalysisWindowPropertyEditor(const QString &pr
 
   m_moleculesTab = new CWMoleculesDoasTable("Molecules", 120);
   m_tabs->addTab(m_moleculesTab, "Molecules");
-  m_linearTab = new CWLinearParametersDoasTable("Linear Parameters", 120);
+  m_linearTab = new CWLinearParametersDoasTable("Linear Parameters");
   m_tabs->addTab(m_linearTab, "Polynomial");
-  m_nonLinearTab = new CWNonLinearParametersDoasTable("NL Parameters", 120);
+  m_nonLinearTab = new CWNonLinearParametersDoasTable("NL Parameters");
   m_tabs->addTab(m_nonLinearTab, "Predefined Parameters");
-  m_shiftAndStretchTab = new CWShiftAndStretchDoasTable("Cross sections and spectrum", 180);
+  m_shiftAndStretchTab = new CWShiftAndStretchDoasTable("Cross sections and spectrum");
   m_tabs->addTab(m_shiftAndStretchTab, "Shift and Stretch");
-  m_gapTab = new CWGapDoasTable("Gaps", 240);
+  m_gapTab = new CWGapDoasTable("Gaps");
   m_tabs->addTab(m_gapTab, "Gaps");
-  m_outputTab = new CWOutputDoasTable("Output", 120);
+  m_outputTab = new CWOutputDoasTable("Output");
   m_tabs->addTab(m_outputTab, "Output");
 
   connect(m_fitsCheck, SIGNAL(stateChanged(int)),  m_moleculesTab, SLOT(slotFitColumnCheckable(int)));
