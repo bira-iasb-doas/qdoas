@@ -67,6 +67,7 @@ Q_OBJECT
   QList<QVariant> getCellData(int rowIndex) const;
   QVariant getCellData(int rowIndex, int columnIndex) const;
 
+  void headerChanged(void);
   virtual void cellDataChanged(int row, int column, const QVariant &cellData);
 
   void notifyCellDataChanged(int row, const CDoasTableColumn *column, const QVariant &cellData);
@@ -80,6 +81,8 @@ Q_OBJECT
 
   QWidget* directAccessToCellWidget(int rowIndex, int columnIndex); // Try NOT to use this
 
+  void updateCols(int wid, int hei);
+  void updateCols(void);
   virtual void resizeEvent(QResizeEvent *e);
   //  virtual void contextMenuEvent(QContextMenuEvent *e);
   //  virtual void keyPressEvent(QKeyEvent *e);
