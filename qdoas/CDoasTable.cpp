@@ -55,6 +55,8 @@ CDoasTable::CDoasTable(const QString &label, int columnWidth, int headerHeight, 
   m_header = new CDoasTableColumnHeader(label, this, m_labelWidth);
   m_header->setColumnHorizontalPosition(m_sbThickness);
 
+  m_labelWidth = m_header->columnWidth();
+
   m_hsb->setRange(0, 0);
   m_hsb->setValue(0);
 
@@ -160,8 +162,9 @@ void CDoasTable::addRow(int rowHeight, const QString &label, QList<QVariant> &ce
     cellData.push_back(QVariant());
   }
 
-  m_header->addRow(rowHeight, QVariant(label));
-
+  m_header->addRow(rowHeight, label);
+  this->m_labelWidth = m_header->columnWidth();
+  
   QList<QVariant>::const_iterator cdIt = cellData.begin();
   QList<CDoasTableColumn*>::iterator it = m_columnList.begin();
   while (it != m_columnList.end()) {
@@ -422,7 +425,6 @@ void CDoasTable::slotMovedVerticalScrollBar(int value)
 CDoasTableColumn::CDoasTableColumn(const QString &label, CDoasTable *owner, int columnWidth) :
   QObject(owner),
   m_owner(owner),
-  m_columnWidth(columnWidth),
   m_rowOffset(0),
   m_xPosition(0),
   m_xBorder(0),
@@ -434,6 +436,9 @@ CDoasTableColumn::CDoasTableColumn(const QString &label, CDoasTable *owner, int 
   m_header = new QLabel(label, owner);
   m_header->setFrameStyle(QFrame::Panel | QFrame::Raised);
   m_header->setLineWidth(2);
+
+  m_columnWidth = std::max( columnWidth,
+                            10 + m_header->fontMetrics().boundingRect(m_header->text()).width() );
 
   m_header->resize(m_columnWidth, m_owner->headerHeight());
   m_header->show();
@@ -638,6 +643,22 @@ CDoasTableColumnHeader::CDoasTableColumnHeader(const QString &label, CDoasTable 
 
 CDoasTableColumnHeader::~CDoasTableColumnHeader()
 {
+}
+
+void CDoasTableColumnHeader::addRow(int height, const QString &label) {
+
+  CDoasTableColumn::addRow(height, QVariant(label));
+
+  size_t maxwidth = std::max( m_columnWidth,
+                              m_header->fontMetrics().boundingRect(label+ 10).width() );
+  m_columnWidth = maxwidth;
+  m_header->resize(maxwidth,height);
+
+  // update width of previous cells:
+  for(int i=0; i<rowCount(); ++i) {
+      QLabel *l = dynamic_cast<QLabel *>(getWidgetNonConst(i));
+      l->resize(maxwidth, l->height());
+  }
 }
 
 QWidget* CDoasTableColumnHeader::createCellWidget(const QVariant &cellData)

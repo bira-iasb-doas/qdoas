@@ -146,6 +146,9 @@ Q_OBJECT
   QWidget* getWidgetNonConst(int rowIndex);
   CDoasTable* owner(void) const;
 
+  QLabel *m_header;
+  int m_columnWidth;
+
  private:
   void layoutAndDisplay(void);
 
@@ -154,14 +157,12 @@ Q_OBJECT
 
  private:
   CDoasTable *m_owner;
-  int m_columnWidth;
   int m_rowOffset;
   int m_xPosition;
   int m_xBorder, m_yBorder;
 
   QList<QWidget*> m_widgetList;
   QFrame *m_viewport; // visible region for the child widgets - parented to the viewport
-  QLabel *m_header;
 };
 
 inline CDoasTable* CDoasTableColumn::owner(void) const { return m_owner; }
@@ -179,6 +180,8 @@ class CDoasTableColumnHeader : public CDoasTableColumn
   virtual QVariant getCellData(int rowIndex) const;
 
   void setLabel(int rowIndex, const QString &label);
+
+  void addRow(int height, const QString &label);
 
  protected:
   virtual void setCellData(int rowIndex, const QVariant &cellData);
