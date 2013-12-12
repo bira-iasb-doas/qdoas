@@ -451,7 +451,8 @@ CDoasTableColumn::CDoasTableColumn(const QString &label, CDoasTable *owner, int 
   m_header->setLineWidth(2);
 
   m_columnWidth = std::max( columnWidth,
-                            10 + m_header->fontMetrics().boundingRect(m_header->text()).width() );
+                            m_header->fontMetrics().boundingRect(m_header->text()).width() 
+                            + 2*m_header->fontMetrics().averageCharWidth() );
 
   m_header->resize(m_columnWidth, m_owner->headerHeight());
   m_header->show();
@@ -693,7 +694,7 @@ void CDoasTableColumnHeader::setLabel(int rowIndex, const QString &label)
     QLabel *tmp = dynamic_cast<QLabel*>(p);
     if (tmp) {
       tmp->setText(label);
-      labelWidth = 10 + tmp->fontMetrics().boundingRect(label).width();
+      labelWidth = tmp->fontMetrics().boundingRect(label).width() + 2*m_header->fontMetrics().averageCharWidth();
       m_columnWidth = std::max(m_columnWidth, labelWidth);
       tmp->resize(m_columnWidth,tmp->height());
     }
