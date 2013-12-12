@@ -191,28 +191,28 @@ void CCD_GetImageFilesList(SHORT_DATE *pFileDate,char *rootPath)
 
      if (!STD_IsDir(imageFileName) && ((ptr=strstr(fileInfo->d_name,dateStr))!=NULL))
       {
-      	sscanf(ptr+8,"%02d%02d%02d",&hour,&minute,&sec);
+      	sscanf(ptr+9,"%02d%02d%02d",&hour,&minute,&sec);
       	newtimestamp=hour*3600+minute*60+sec;
 
-      	if (!ccdImageFilesN || (newtimestamp>ccdImageFilesList[ccdImageFilesN-1].timestamp))
-      	 {
-         for (i=ccdImageFilesN;(i>0) && (newtimestamp<ccdImageFilesList[i-1].timestamp);i--)
-          memcpy(&ccdImageFilesList[i],&ccdImageFilesList[i-1],sizeof(CAMERA_PICTURE));
+       for (i=ccdImageFilesN;(i>0) && (newtimestamp<ccdImageFilesList[i-1].timestamp);i--)
+        memcpy(&ccdImageFilesList[i],&ccdImageFilesList[i-1],sizeof(CAMERA_PICTURE));
 
-      	  ccdImageFilesList[i].timestamp=newtimestamp;
-         strcpy(ccdImageFilesList[i].fileName,imageFileName);
-        }
+      	ccdImageFilesList[i].timestamp=newtimestamp;
+       strcpy(ccdImageFilesList[i].fileName,imageFileName);
 
        ccdImageFilesN++;
       }
     }
  }
 
-INDEX CCD_SearchForImage(int timestamp)
+INDEX CCD_SearchForImage(int timestampMin,int timestampMax)
  {
   // Declarations
 
   INDEX i,imin,imax;
+  int timestamp;
+
+  timestamp=(timestampMin+timestampMax)>>1;
 
   // Initializations
 
@@ -237,8 +237,11 @@ INDEX CCD_SearchForImage(int timestamp)
 
   if ((imax>=imin) && (i>=imin) && (i<=imax))
    {
-    i=((timestamp-ccdImageFilesList[imin].timestamp)<=(ccdImageFilesList[imax].timestamp-timestamp))?imin:imax;
-    if (abs(timestamp-ccdImageFilesList[i].timestamp)>60)
+    if ((ccdImageFilesList[imin].timestamp>=timestampMin) && (ccdImageFilesList[imin].timestamp<=timestampMax))
+     i=imin;
+    else if ((ccdImageFilesList[imax].timestamp>=timestampMin) && (ccdImageFilesList[imax].timestamp<=timestampMax))
+     i=imax;
+    else
      i=ITEM_NONE;
    }
   else
@@ -320,12 +323,12 @@ RC SetCCD_EEV(ENGINE_CONTEXT *pEngineContext,FILE *specFp,FILE *darkFp)
 
     while (!feof(specFp) && fread(&header,sizeof(CCD_DATA),1,specFp))
      {
-     	if (!pEngineContext->recordNumber)
-     	 CCD_GetImageFilesList(&header.today,pEngineContext->project.instrumental.imagePath);
-
       ccdX=(header.roiWveEnd-header.roiWveStart+1)/header.roiWveGroup;
       ccdY=(header.roiSlitEnd-header.roiSlitStart+1)/header.roiSlitGroup;
       dataSize=(header.doubleFlag==(char)1)?sizeof(double):sizeof(unsigned short);
+
+      if (!pEngineContext->recordNumber)
+       CCD_GetImageFilesList(&header.today,pEngineContext->project.instrumental.imagePath);
 
       pEngineContext->recordNumber++;
 
@@ -593,7 +596,6 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
            pRecord->ccd.targetElevation=header.targetElevation;
            pRecord->ccd.targetAzimuth=header.Azimuth;
            pRecord->ccd.saturatedFlag=0;
-           pRecord->ccd.indexImage=CCD_SearchForImage((int)header.now.ti_hour*3600+header.now.ti_min*60+header.now.ti_sec);
 
            if (header.alsFlag)
             {
@@ -622,6 +624,8 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
                 pRecord->ccd.targetAzimuth=header.targetAzimuth;
                 pRecord->ccd.saturatedFlag=header.saturatedFlag;
                }
+              else if (fabs(header.brusagElevation-header.targetElevation)>1.)                // be careful : should work only for Xianghe
+              	pRecord->ccd.targetElevation=header.targetElevation=header.brusagElevation;
             }
 
            memcpy(&pRecord->present_day,&header.today,sizeof(SHORT_DATE));
@@ -633,6 +637,8 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
 
            memcpy(&pRecord->startTime,&header.startTime,sizeof(struct time));
            memcpy(&pRecord->endTime,&header.endTime,sizeof(struct time));
+
+           pRecord->ccd.indexImage=CCD_SearchForImage((int)header.startTime.ti_hour*3600+header.startTime.ti_min*60+header.startTime.ti_sec,(int)header.endTime.ti_hour*3600+header.endTime.ti_min*60+header.endTime.ti_sec);
 
            pRecord->elevationViewAngle=
                 ((pRecord->present_day.da_year>2003) ||
