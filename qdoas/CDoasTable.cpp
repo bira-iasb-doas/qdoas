@@ -52,7 +52,7 @@ CDoasTable::CDoasTable(const QString &label, int headerHeight, QWidget *parent) 
   m_centralHeight = 100;
 
   setMinimumSize(QSize(m_header->columnWidth() + m_sbThickness + m_centralWidth,
-		       m_titleHeight + m_sbThickness + m_centralHeight));
+                       m_titleHeight + m_sbThickness + m_centralHeight));
   
   m_hsb->setRange(0, 0);
   m_hsb->setValue(0);
@@ -580,7 +580,7 @@ void CDoasTableColumn::resizeWidgets(void) {
   int width = columnWidth();
 
   // update width of header and widgets for all rows:
-  m_header->resize(width,m_header->height() );
+  m_header->resize(width,m_owner->headerHeight() );
   for (QList<QWidget *>::iterator i = m_widgetList.begin();
        i != m_widgetList.end(); ++i) {
     (*i)->resize(width, (*i)->height());
