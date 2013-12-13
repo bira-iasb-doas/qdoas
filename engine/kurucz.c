@@ -243,8 +243,8 @@ RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,co
        } 
       else // 20130208 : a high resolution spectrum is now loaded from the slit page of project properties and convolved
       	rc=ANALYSE_ConvoluteXs(NULL,ANLYS_CROSS_ACTION_CONVOLUTE,(double)0.,&pKurucz->hrSolar,&ANALYSIS_slit,&ANALYSIS_slit2,
-                              pSlitOptions->slitFunction.slitType,&pSlitOptions->slitFunction.slitParam,&pSlitOptions->slitFunction.slitParam2,
-                              oldLambda,solar,0,NDET-1,0,pSlitOptions->slitFunction.slitWveDptFlag);
+                               pSlitOptions->slitFunction.slitType,&pSlitOptions->slitFunction.slitParam,&pSlitOptions->slitFunction.slitParam2,
+                               oldLambda,solar,0,NDET,0,pSlitOptions->slitFunction.slitWveDptFlag);
      }
     else
      memcpy(solar,reference,sizeof(double)*NDET);
