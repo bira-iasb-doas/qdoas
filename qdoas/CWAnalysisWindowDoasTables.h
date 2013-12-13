@@ -58,6 +58,7 @@ class CMoleculeDoasTableColumnDiffOrtho : public CDoasTableColumn
   virtual ~CMoleculeDoasTableColumnDiffOrtho();
 
   virtual QVariant getCellData(int rowIndex) const;
+  virtual void setCellData(int, const QVariant& v) { }; // do nothing
 
  protected:
   virtual QWidget* createCellWidget(const QVariant &cellData);

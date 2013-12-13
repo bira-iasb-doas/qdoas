@@ -113,7 +113,7 @@ class CDoasTableColumn : public QObject
 {
 Q_OBJECT
  public:
-  CDoasTableColumn(const QString &label, CDoasTable *owner, int columnWidth);
+  CDoasTableColumn(const QString &label, CDoasTable *owner, int minimumWidth);
   virtual ~CDoasTableColumn();
 
   void setColumnHorizontalPosition(int xPosition);
@@ -139,8 +139,9 @@ Q_OBJECT
   QWidget* directAccessToCellWidget(int rowIndex); // do NOT use this
 
  protected:
-  virtual void setCellData(int rowIndex, const QVariant &cellData);
+  virtual void setCellData(int rowIndex, const QVariant &cellData) = 0;
   virtual QWidget* createCellWidget(const QVariant &cellData) = 0;
+  void resizeWidgets(void);
   
   void setViewportBackgroundColour(const QColor &c);
   void setCellBorders(int xB, int yB);
@@ -150,7 +151,6 @@ Q_OBJECT
   CDoasTable* owner(void) const;
 
   QLabel *m_header;
-  int m_columnWidth;
 
  private:
   void layoutAndDisplay(void);
@@ -163,6 +163,8 @@ Q_OBJECT
   int m_rowOffset;
   int m_xPosition;
   int m_xBorder, m_yBorder;
+
+  const int m_minimumWidth; // minimal width of the column, in pixels.
 
   QList<QWidget*> m_widgetList;
   QFrame *m_viewport; // visible region for the child widgets - parented to the viewport
