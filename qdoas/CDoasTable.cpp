@@ -64,10 +64,6 @@ CDoasTable::CDoasTable(const QString &label, int headerHeight, QWidget *parent) 
   connect(m_vsb, SIGNAL(valueChanged(int)), this, SLOT(slotMovedVerticalScrollBar(int)));
 }
 
-CDoasTable::~CDoasTable()
-{
-}
-
 void CDoasTable::addColumn(CDoasTableColumn *column)
 {
   if (m_rowHeightList.count() == 0) {
@@ -462,10 +458,6 @@ CDoasTableColumn::CDoasTableColumn(const QString &label, CDoasTable *owner, int 
   m_header->show();
 }
 
-CDoasTableColumn::~CDoasTableColumn()
-{
-}
-
 void CDoasTableColumn::setColumnHorizontalPosition(int xPosition)
 {
   m_xPosition = xPosition;
@@ -678,10 +670,6 @@ CDoasTableColumnHeader::CDoasTableColumnHeader(const QString &label, CDoasTable 
 {
 }
 
-CDoasTableColumnHeader::~CDoasTableColumnHeader()
-{
-}
-
 void CDoasTableColumnHeader::addRow(int height, const QString &label) {
   CDoasTableColumn::addRow(height, QVariant(label));
   setLabel(rowCount()-1, label);
@@ -741,10 +729,6 @@ CDoasTableColumnLineEdit::CDoasTableColumnLineEdit(QWidget *parent) :
   setFrame(false);
 }
 
-CDoasTableColumnLineEdit::~CDoasTableColumnLineEdit()
-{
-}
-
 void CDoasTableColumnLineEdit::slotTextChanged(const QString &newText)
 {
   QVariant cellData(newText);
@@ -757,10 +741,6 @@ CDoasTableColumnEdit::CDoasTableColumnEdit(const QString &label, CDoasTable *own
 {
   setViewportBackgroundColour(QColor(0xFFFFFFFF));
   setCellBorders(1,1);
-}
-
-CDoasTableColumnEdit::~CDoasTableColumnEdit()
-{
 }
 
 QWidget* CDoasTableColumnEdit::createCellWidget(const QVariant &cellData)
@@ -808,10 +788,6 @@ CDoasTableColumnIntEdit::CDoasTableColumnIntEdit(int minimum, int maximum,
 {
 }
 
-CDoasTableColumnIntEdit::~CDoasTableColumnIntEdit()
-{
-}
-
 QWidget* CDoasTableColumnIntEdit::createCellWidget(const QVariant &cellData)
 {
   QLineEdit *tmp = dynamic_cast<QLineEdit*>(CDoasTableColumnEdit::createCellWidget(cellData));
@@ -850,10 +826,6 @@ CDoasTableColumnDoubleEdit::CDoasTableColumnDoubleEdit(double minimum, double ma
 {
 }
 
-CDoasTableColumnDoubleEdit::~CDoasTableColumnDoubleEdit()
-{
-}
-
 QWidget* CDoasTableColumnDoubleEdit::createCellWidget(const QVariant &cellData)
 {
   QLineEdit *tmp = dynamic_cast<QLineEdit*>(CDoasTableColumnEdit::createCellWidget(cellData));
@@ -888,10 +860,6 @@ CDoasTableColumnComboBox::CDoasTableColumnComboBox(QWidget *parent) :
 {
 }
 
-CDoasTableColumnComboBox::~CDoasTableColumnComboBox()
-{
-}
-
 void CDoasTableColumnComboBox::slotTextChanged(const QString &newText)
 {
   QVariant cellData(newText);
@@ -906,10 +874,6 @@ CDoasTableColumnCombo::CDoasTableColumnCombo(const QStringList &tags, const QStr
 {
   setViewportBackgroundColour(QColor(0xFFFFFFFF));
   setCellBorders(1,1);
-}
-
-CDoasTableColumnCombo::~CDoasTableColumnCombo()
-{
 }
 
 QWidget* CDoasTableColumnCombo::createCellWidget(const QVariant &cellData)
@@ -965,10 +929,6 @@ CDoasTableColumnCheckBox::CDoasTableColumnCheckBox(QWidget *parent) :
 {
 }
 
-CDoasTableColumnCheckBox::~CDoasTableColumnCheckBox()
-{
-}
-
 void CDoasTableColumnCheckBox::slotStateChanged(int state)
 {
   QVariant cellData(state == Qt::Checked);
@@ -981,10 +941,6 @@ CDoasTableColumnCheck::CDoasTableColumnCheck(const QString &label, CDoasTable *o
 {
   setViewportBackgroundColour(QColor(0xFFFFFFFF));
   setCellBorders(minimumWidth / 3, 0);
-}
-
-CDoasTableColumnCheck::~CDoasTableColumnCheck()
-{
 }
 
 QWidget* CDoasTableColumnCheck::createCellWidget(const QVariant &cellData)

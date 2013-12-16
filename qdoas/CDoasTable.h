@@ -42,7 +42,6 @@ class CDoasTable : public QFrame
 Q_OBJECT
  public:
   CDoasTable(const QString &label, int headerHeight = 24, QWidget *parent = 0);
-  virtual ~CDoasTable();
   
   int headerHeight(void) const;
 
@@ -84,8 +83,6 @@ Q_OBJECT
   void updateCols(int wid, int hei);
   void updateCols(void);
   virtual void resizeEvent(QResizeEvent *e);
-  //  virtual void contextMenuEvent(QContextMenuEvent *e);
-  //  virtual void keyPressEvent(QKeyEvent *e);
 
   void calcHorizontalScrollRange(void);
   void calcVerticalScrollRange(void);
@@ -114,7 +111,6 @@ class CDoasTableColumn : public QObject
 Q_OBJECT
  public:
   CDoasTableColumn(const QString &label, CDoasTable *owner, int minimumWidth);
-  virtual ~CDoasTableColumn();
 
   void setColumnHorizontalPosition(int xPosition);
 
@@ -180,7 +176,6 @@ class CDoasTableColumnHeader : public CDoasTableColumn
 {
  public:
   CDoasTableColumnHeader(const QString &label, CDoasTable *owner);
-  virtual ~CDoasTableColumnHeader();
 
   virtual QVariant getCellData(int rowIndex) const;
 
@@ -198,7 +193,6 @@ class CDoasTableColumnLineEdit : public QLineEdit
 Q_OBJECT
  public:
   CDoasTableColumnLineEdit(QWidget *parent = 0);
-  virtual ~CDoasTableColumnLineEdit();
 
  public slots:
   void slotTextChanged(const QString &newText);
@@ -211,7 +205,6 @@ class CDoasTableColumnEdit : public CDoasTableColumn
 {
  public:
   CDoasTableColumnEdit(const QString &label, CDoasTable *owner, int width);
-  virtual ~CDoasTableColumnEdit();
 
   virtual QVariant getCellData(int rowIndex) const;
 
@@ -224,7 +217,6 @@ class CDoasTableColumnIntEdit : public CDoasTableColumnEdit
 {
  public:
   CDoasTableColumnIntEdit(int minimum, int maximum, const QString &label, CDoasTable *owner, int width);
-  virtual ~CDoasTableColumnIntEdit();
 
   virtual QVariant getCellData(int rowIndex) const;
 
@@ -240,7 +232,6 @@ class CDoasTableColumnDoubleEdit : public CDoasTableColumnEdit
  public:
   CDoasTableColumnDoubleEdit(double minimum, double maximum, int decimals,
 			     const QString &label, CDoasTable *owner, int width);
-  virtual ~CDoasTableColumnDoubleEdit();
 
   virtual QVariant getCellData(int rowIndex) const;
 
@@ -257,7 +248,6 @@ class CDoasTableColumnComboBox : public QComboBox
 Q_OBJECT
  public:
   CDoasTableColumnComboBox(QWidget *parent = 0);
-  virtual ~CDoasTableColumnComboBox();
 
  public slots:
   void slotTextChanged(const QString &newText);
@@ -270,7 +260,6 @@ class CDoasTableColumnCombo : public CDoasTableColumn
 {
  public:
   CDoasTableColumnCombo(const QStringList &tags, const QString &label, CDoasTable *owner, int width);
-  virtual ~CDoasTableColumnCombo();
 
   virtual QVariant getCellData(int rowIndex) const;
 
@@ -287,7 +276,6 @@ class CDoasTableColumnCheckBox : public QCheckBox
 Q_OBJECT
  public:
   CDoasTableColumnCheckBox(QWidget *parent = 0);
-  virtual ~CDoasTableColumnCheckBox();
 
  public slots:
   void slotStateChanged(int);
@@ -300,7 +288,6 @@ class CDoasTableColumnCheck : public CDoasTableColumn
 {
  public:
   CDoasTableColumnCheck(const QString &label, CDoasTable *owner, int width);
-  virtual ~CDoasTableColumnCheck();
 
   virtual QVariant getCellData(int rowIndex) const;
 
