@@ -1200,9 +1200,8 @@ RC XSCONV_TypeStandard(MATRIX_OBJECT *pXsnew,INDEX indexLambdaMin,INDEX indexLam
 
   slitWidth=(fabs(fwhm)>EPSILON)?(double)0.5*NFWHM*fwhm:(double)3.; // 3.*fwhm;
 
-  for (i=1,stepXshr=(double)0.;i<xshrNDET;i++)
-   stepXshr+=(xshrLambda[i]-xshrLambda[i-1]);
-  stepXshr/=(xshrNDET-1);
+  // average wavelength step in Xshr:
+  stepXshr = (xshrLambda[xshrNDET-1] - xshrLambda[0])/(xshrNDET-1);
 
   // Browse wavelengths in the final calibration vector
 

@@ -231,18 +231,19 @@ RC SPLINE_Vector(const double *xa, const double *ya, const double *y2a,int na, c
      yb[indexb]=ya[0];
     else if (x>=xa[na-1])
      yb[indexb]=ya[na-1];
-    else
-     {
+    else {
       // set boundaries
-   
-      // when interpolating a range of x's, often klo and/or khi will not change from one x to the next
-      // therefore, we save some time by reusing klo and khi when possible
+      
+      // when interpolating a range of x's, often klo and/or khi will
+      // not change from one x to the next.  Therefore, we save some
+      // time by reusing klo and khi from the previous indexb
+      // iteration when possible.
+      //
+      // If x is outside the range (xlo,xhi), we must reset klo or khi
       if(x > xhi) {
-       khi=na-1; //risky?
-       xhi=xa[na-1];
+       khi=na-1;
       } else if(x < xlo) {
-       klo=0; //risky
-       xlo=xa[0];
+       klo=0;
       }
 
       // dichotomic search for an interval including the new absissa
@@ -253,14 +254,15 @@ RC SPLINE_Vector(const double *xa, const double *ya, const double *y2a,int na, c
 
 	if (xa[k]>x) {
 	 khi=k;
-	 xhi=xa[k];
+
 	} else {
 	 klo=k;
-	 xlo=xa[k];
 	}
        }
 
-      h=xa[khi]-xa[klo];
+      xlo=xa[klo];
+      xhi=xa[khi];
+      h=xhi-xlo;
 
       if (h<=(double)0.)
        rc=ERROR_SetLast(callingFunction,ERROR_TYPE_WARNING,ERROR_ID_SPLINE,klo,khi,xa[klo],xa[khi]);
@@ -268,8 +270,8 @@ RC SPLINE_Vector(const double *xa, const double *ya, const double *y2a,int na, c
        {
 	// get ratios
 
-	a = (xa[khi]-x)/h;
-	b = (x-xa[klo])/h;
+	a = (xhi-x)/h;
+	b = (x-xlo)/h;
 
 	// interpolation
 
