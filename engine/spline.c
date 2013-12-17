@@ -224,65 +224,63 @@ RC SPLINE_Vector(const double *xa, const double *ya, const double *y2a,int na, c
   for (indexb=0;indexb<nb;indexb++)
    {
     x=xb[indexb];
-
+    
     // new absissae is out of boundaries
-
+    
     if (x<=xa[0])
      yb[indexb]=ya[0];
     else if (x>=xa[na-1])
      yb[indexb]=ya[na-1];
     else {
-      // set boundaries
-      
-      // when interpolating a range of x's, often klo and/or khi will
-      // not change from one x to the next.  Therefore, we save some
-      // time by reusing klo and khi from the previous indexb
-      // iteration when possible.
-      //
-      // If x is outside the range (xlo,xhi), we must reset klo or khi
-      if(x > xhi) {
-       khi=na-1;
-      } else if(x < xlo) {
-       klo=0;
-      }
-
-      // dichotomic search for an interval including the new absissa
-
-      while (khi-klo>1)
-       {
+     // set boundaries
+     
+     // when interpolating a range of x's, often klo and/or khi will
+     // not change from one x to the next.  Therefore, we save some
+     // time by reusing klo and khi from the previous indexb
+     // iteration when possible.
+     //
+     // If x is outside the range (xlo,xhi), we must reset klo or khi
+     if(x > xhi) {
+      khi=na-1;
+     } else if(x < xlo) {
+      klo=0;
+     }
+     
+     // dichotomic search for an interval including the new absissa
+     
+     while (khi-klo>1)
+      {
 	k=(khi+klo)>>1;
-
+        
 	if (xa[k]>x) {
 	 khi=k;
-
 	} else {
 	 klo=k;
 	}
-       }
+      }
 
-      xlo=xa[klo];
-      xhi=xa[khi];
-      h=xhi-xlo;
-
-      if (h<=(double)0.)
-       rc=ERROR_SetLast(callingFunction,ERROR_TYPE_WARNING,ERROR_ID_SPLINE,klo,khi,xa[klo],xa[khi]);
-      else
-       {
-	// get ratios
-
-	a = (xhi-x)/h;
-	b = (x-xlo)/h;
-
-	// interpolation
-
-	if (type==SPLINE_LINEAR)
-	 yb[indexb]=a*ya[klo]+b*ya[khi];
-	else if (type==SPLINE_CUBIC)
-	 yb[indexb]=a*ya[klo]+b*ya[khi]+((a*a*a-a)*y2a[klo]+(b*b*b-b)*y2a[khi])*(h*h)/6.;
-       }
-     }
+     xlo=xa[klo];
+     xhi=xa[khi];
+     h=xhi-xlo;
+     
+     if (h<=(double)0.)
+      rc=ERROR_SetLast(callingFunction,ERROR_TYPE_WARNING,ERROR_ID_SPLINE,klo,khi,xa[klo],xa[khi]);
+     else
+      {
+       // get ratios
+       
+       a = (xhi-x)/h;
+       b = 1.-a; // (x-xlo)/h;
+       
+       // interpolation
+       
+       yb[indexb] = a*ya[klo]+b*ya[khi]; // assume type == SPLINE_LINEAR or SPLINE_CUBIC
+       if (type==SPLINE_CUBIC)
+        yb[indexb] += ((a*a*a-a)*y2a[klo]+(b*b*b-b)*y2a[khi])*(h*h)/6.;
+      }
+    }
    }
-
+  
   // Return
 
 #if defined(__DEBUG_) && __DEBUG_ && defined(__DEBUG_DOAS_SHIFT_) && __DEBUG_DOAS_SHIFT_
