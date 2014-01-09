@@ -676,7 +676,7 @@ RC ShiftVector(const double *lambda, double *source, const double *deriv, double
 
       // Apply shift and stretch
 
-      if ( fwhm!=(double)0. && 
+      if ( fwhm!=(double)0. &&
            ( (fwhmDir>0 && fwhm>(double)0.) || (fwhmDir<0 && fwhm<(double)0.) ) ) {
         rc = XSCONV_TypeGauss(lambda,source,deriv,ANALYSE_shift[j],(ANALYSE_splineX[j+1]-ANALYSE_splineX[j]),
                               &target[j],fabs(fwhm),(double)0.,SLIT_TYPE_GAUSS, NDET);
@@ -706,7 +706,7 @@ RC ShiftVector(const double *lambda, double *source, const double *deriv, double
 
     // Interpolation
     if ( pKuruczOptions->fwhmType!=SLIT_TYPE_FILE &&
-         ( slitParam==(double)0. || 
+         ( slitParam==(double)0. ||
            ( ( pKuruczOptions->fwhmType==SLIT_TYPE_ERF || pKuruczOptions->fwhmType==SLIT_TYPE_INVPOLY) &&
              slitParam2==(double)0. ))) {
 
@@ -719,39 +719,39 @@ RC ShiftVector(const double *lambda, double *source, const double *deriv, double
         double F,G,w,a,sigma,delta,step;
         INDEX i;
         int ndemi;
-        
+
         ndemi=pKURUCZ_fft->fftSize>>1;
         step=(pKURUCZ_fft->fftIn[pKURUCZ_fft->oldSize]-pKURUCZ_fft->fftIn[1])/(pKURUCZ_fft->oldSize-1.);
 
         sigma=slitParam*0.5;
         a=sigma/sqrt(log(2.));
         delta=slitParam2*0.5;
-        
+
         w=(double)PI/step;
         F=exp(-a*a*w*w*0.25);
         G=(pKuruczOptions->fwhmType==SLIT_TYPE_GAUSS)?(double)1.:sin(w*delta)/(w*delta);
-        
+
         pKURUCZ_fft->invFftIn[1]=pKURUCZ_fft->fftOut[1];
         pKURUCZ_fft->invFftIn[2]=pKURUCZ_fft->fftOut[2]*F*G;
-        
+
         for (i=2;i<=ndemi;i++)
          {
            w=(double)PI*(i-1.)/(ndemi*step);
-           
+
            F=(double)exp(-a*a*w*w*0.25);
            G=(double)(pKuruczOptions->fwhmType==SLIT_TYPE_GAUSS)?(double)1.:(double)sin(w*delta)/(w*delta);
-           
+
            pKURUCZ_fft->invFftIn[(i<<1) /* i*2 */-1]=pKURUCZ_fft->fftOut[(i<<1) /* i*2 */-1]*F*G;      // Real part
            pKURUCZ_fft->invFftIn[(i<<1) /* i*2 */]=pKURUCZ_fft->fftOut[(i<<1) /* i*2 */]*F*G;          // Imaginary part
          }
-        
+
         realft(pKURUCZ_fft->invFftIn,pKURUCZ_fft->invFftOut,pKURUCZ_fft->fftSize,-1);
-        
+
         for (i=1;i<=pKURUCZ_fft->fftSize;i++)
           pKURUCZ_fft->invFftOut[i]/=step;
-        
+
         SPLINE_Deriv2(pKURUCZ_fft->fftIn+1,pKURUCZ_fft->invFftOut+1,pKURUCZ_fft->invFftIn+1,pKURUCZ_fft->oldSize,__func__);
-        
+
         memcpy(&source[LimMin],&ANALYSE_shift[LimMin],sizeof(double)*LimN);
 
         SPLINE_Vector(pKURUCZ_fft->fftIn+1,pKURUCZ_fft->invFftOut+1,pKURUCZ_fft->invFftIn+1,pKURUCZ_fft->oldSize,
@@ -773,49 +773,49 @@ RC ShiftVector(const double *lambda, double *source, const double *deriv, double
         } else {
           memcpy(xsNew.matrix[0],ANALYSE_shift,sizeof(double)*NDET);
           memcpy(xsNew.matrix[1],target,sizeof(double)*NDET);
-          
+
           slitType=pKuruczOptions->fwhmType;
-          
+
           if (slitType==SLIT_TYPE_FILE) {
             int nc=KURUCZ_buffers[indexFenoColumn].slitFunction.nc;
             int nl=KURUCZ_buffers[indexFenoColumn].slitFunction.nl;
-            
+
             shiftIndex=(nc==2)?0:1;
-            
+
             fwhmStretch1=(Feno->indexFwhmParam[0]!=ITEM_NONE)?
               ((TabCross[Feno->indexFwhmParam[0]].FitParam!=ITEM_NONE)?(double)Param[TabCross[Feno->indexFwhmParam[0]].FitParam]:(double)TabCross[Feno->indexFwhmParam[0]].InitParam)
               :(double)1.;
-            
+
             fwhmStretch2=(Feno->indexFwhmParam[1]!=ITEM_NONE)?
               ((TabCross[Feno->indexFwhmParam[1]].FitParam!=ITEM_NONE)?(double)Param[TabCross[Feno->indexFwhmParam[1]].FitParam]:(double)TabCross[Feno->indexFwhmParam[1]].InitParam)
               :(double)1.;
-            
+
        	    if (MATRIX_Allocate(&slitXs,nl,nc,0,0,1,"ShiftVector (slitXs)")) {
               rc=ERROR_ID_ALLOC;
             } else {
               // make a backup of the matrix
-              
+
               for (i=0;i<nc;i++)
                 memcpy(slitXs.matrix[i],KURUCZ_buffers[indexFenoColumn].slitFunction.matrix[i],sizeof(double)*nl);
-              
+
        	      // Apply the stretch on the slit wavelength calibration
-              
+
        	      for (i=shiftIndex;i<slitXs.nl;i++)
                 slitXs.matrix[0][i]=(slitXs.matrix[0][i]<(double)0.)?fwhmStretch1*KURUCZ_buffers[indexFenoColumn].slitFunction.matrix[0][i]:fwhmStretch2*KURUCZ_buffers[indexFenoColumn].slitFunction.matrix[0][i];
-              
+
        	      // Recalculate second derivatives and the FWHM
-              
+
        	      for (i=1;i<slitXs.nc;i++)
                 rc=SPLINE_Deriv2(slitXs.matrix[0]+shiftIndex,slitXs.matrix[1]+shiftIndex,slitXs.deriv2[i]+shiftIndex,slitXs.nl-shiftIndex,__func__);
             }
           } else if ((slitType==SLIT_TYPE_VOIGT) || (slitType==SLIT_TYPE_AGAUSS) || (slitType==SLIT_TYPE_INVPOLY)) {
             memset(&slitOptions,0,sizeof(SLIT));
-            
+
             slitOptions.slitType=slitType;
             slitOptions.slitFile[0]=0;
             slitOptions.slitParam=slitParam;
             slitOptions.slitParam2=slitParam2;
-            
+
             memcpy(&source[LimMin],&ANALYSE_shift[LimMin],sizeof(double)*LimN);
             rc=XSCONV_LoadSlitFunction(&slitXs,&slitXs2,&slitOptions,NULL,&slitType);
           }
@@ -834,12 +834,12 @@ RC ShiftVector(const double *lambda, double *source, const double *deriv, double
        }
 
     }
-    
+
     if (hFilterRefLog && !(rc=SPLINE_Vector(KURUCZ_buffers[indexFenoColumn].lambdaF,KURUCZ_buffers[indexFenoColumn].solarF,KURUCZ_buffers[indexFenoColumn].solarF2,NDET+2*KURUCZ_buffers[indexFenoColumn].solarFGap,ANALYSE_shift+LimMin,source+LimMin,LimN,pAnalysisOptions->interpol,__func__)))
       {
         for (i=LimMin;(i<=LimMax) && (source[i]>(double)0.) && (target[i]>(double)0.);i++)
           target[i]=log(target[i]/source[i]);
-        
+
         if (i<=LimMax)
           rc=ERROR_SetLast(__func__,ERROR_TYPE_WARNING,ERROR_ID_LOG,analyseIndexRecord);
       }

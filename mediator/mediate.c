@@ -312,7 +312,7 @@ RC check_output_path(const char* output_path) {
   RC rc = ERROR_ID_NO;
 
   const char *output_path_end = strrchr(output_path, PATH_SEP);
-  
+
   if ( strcmp("automatic", output_path_end + 1) != 0 ) {
     // if no automatic output filenames are chosen: check we can write to the file
     FILE *test = fopen(output_path, "a");
@@ -322,7 +322,7 @@ RC check_output_path(const char* output_path) {
       fclose(test);
     }
   } else // otherwise: automatic output files: just check if the directory exists
-    if (output_path_end != NULL) { 
+    if (output_path_end != NULL) {
       // if no path separator given, the output path is current working dir and we don't test
       char path[MAX_ITEM_TEXT_LEN + 1];
       size_t pathlen = output_path_end - output_path;
@@ -450,7 +450,7 @@ void mediateRequestPlotSpectra(ENGINE_CONTEXT *pEngineContext,void *responseHand
        mediateResponseLabelPage(plotPageDarkCurrent, fileName, tmpString, responseHandle);
       }
 
-     if ((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_CCD_EEV) && (strlen(pInstrumental->imagePath)>0))
+     if ((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_CCD_EEV) && (strlen(pInstrumental->imagePath)>0) && (pRecord->ccd.indexImage!=ITEM_NONE))
       {
        sprintf(tmpString,"Camera picture (%d/%d)",pEngineContext->indexRecord,pEngineContext->recordNumber);
 
@@ -1755,6 +1755,14 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
                  pTabFeno->displayPredefined;
               }
 
+              {
+              	FILE *fp;
+              	fp=fopen("toto.dat","a+t");
+              	fprintf(fp,"KuruczMode %d\n",pAnalysisWindows->kuruczMode);
+              	fclose(fp);
+              }
+
+
              pTabFeno->useKurucz=pAnalysisWindows->kuruczMode;
 
              pTabFeno->analysisMethod=pAnalysisOptions->method;
@@ -1860,16 +1868,16 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
 
    if (rc)
      goto handle_errors;
-     
+
    // load slit function from project properties -> slit page?
    // calibration procedure with FWHM fit -> Kurucz (and xs) are convolved with the fitted slit function
    // no calibration procedure and no xs to convolve -> nothing to do with the slit function in the slit page
    // other cases:
    if ( (useKurucz && !pKuruczOptions->fwhmFit) // calibration procedure but FWHM not fitted
-        || (!useKurucz  && xsToConvolute) ) {   // no calibration procedure and xs to convolve 
+        || (!useKurucz  && xsToConvolute) ) {   // no calibration procedure and xs to convolve
      // -> use the slit function in the slit page of project properties to convolve
      //    solar spectrum and xs
-     rc=ANALYSE_LoadSlit(pSlitOptions,useKurucz||xsToConvoluteI0); 
+     rc=ANALYSE_LoadSlit(pSlitOptions,useKurucz||xsToConvoluteI0);
    }
    if (rc)
      goto handle_errors;
@@ -1885,26 +1893,27 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
        rc = MATRIX_Load(kurucz_file, &hr_solar_temp, 0,0,0,0, lambdaMin, lambdaMax, 1, 0, __func__);
      }
    }
+
    if (rc)
      goto handle_errors;
 
    for (indexFenoColumn=0;(indexFenoColumn<ANALYSE_swathSize) && !rc;indexFenoColumn++) {
-    
+
      if ( (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_OMI) ||
           pEngineContext->project.instrumental.omi.omiTracks[indexFenoColumn]) {
        if ((xsToConvolute && !useKurucz) || !pKuruczOptions->fwhmFit)
          for (indexWindow=0;(indexWindow<NFeno) && !rc;indexWindow++) {
            pTabFeno=&TabFeno[indexFenoColumn][indexWindow];
-           
+
            if ((pSlitOptions->slitFunction.slitType==SLIT_TYPE_NONE) && pTabFeno->xsToConvolute)
              rc = ERROR_SetLast("mediateRequestSetAnalysisWindows", ERROR_TYPE_FATAL, ERROR_ID_CONVOLUTION);
-           // 
+           //
            else if (pTabFeno->xsToConvolute && /* pTabFeno->useEtalon && */ (pTabFeno->gomeRefFlag || pEngineContext->refFlag) &&
                     ((rc=ANALYSE_XsConvolution(pTabFeno,pTabFeno->LambdaRef,&ANALYSIS_slit,&ANALYSIS_slit2,pSlitOptions->slitFunction.slitType,&pSlitOptions->slitFunction.slitParam,&pSlitOptions->slitFunction.slitParam2,indexFenoColumn,pSlitOptions->slitFunction.slitWveDptFlag))!=0))
-             
+
              break;
          }
-       
+
        if (!rc) {
          // Allocate Kurucz buffers on Run Calibration or
          //                            Run Analysis and wavelength calibration is different from None at least for one spectral window
@@ -1916,12 +1925,12 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
              rc=KURUCZ_Reference(pEngineContext->buffers.instrFunction,0,saveFlag,1,responseHandle,indexFenoColumn);
            }
          }
-         
-         if (!rc && (THRD_id!=THREAD_TYPE_KURUCZ)) { 
+
+         if (!rc && (THRD_id!=THREAD_TYPE_KURUCZ)) {
            rc=ANALYSE_AlignReference(pEngineContext,0,saveFlag,responseHandle,indexFenoColumn);
          }
        }
-         
+
        if ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_OMI) && rc) {
          // Error on one irradiance spectrum shouldn't stop the analysis of other spectra
          for (indexWindow=0;indexWindow<NFeno;indexWindow++)

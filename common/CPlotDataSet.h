@@ -23,6 +23,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include <QString>
 #include <QList>
+// #include <QImage>
 
 #include "mediate_types.h"
 
@@ -116,6 +117,16 @@ struct STitleTag
   QString tag;
 
   STitleTag(int p, const QString &ti, const QString &ta) : page(p), title(ti), tag(ta) {}
+};
+
+struct SImage
+{
+//  int page;
+//  QString imageFilename;
+//  QImage image;
+//
+//  SImage(int p,const QString &fn,const QImage &img) : page(p),imageFilename(fn),image(img) {}
+
 };
 
 #endif

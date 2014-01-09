@@ -154,7 +154,7 @@
 
 const char *XSCONV_slitTypes[SLIT_TYPE_MAX]=
  {
-// !!!  	"None",
+ 	"None",
   "File",
   "Gaussian (FTS)",
   "2n-Lorentz",
@@ -635,6 +635,10 @@ RC XSCONV_LoadSlitFunction(MATRIX_OBJECT *pSlitXs,MATRIX_OBJECT *pSlitXs2,SLIT *
   slitParam[1]=pSlit->slitParam2;
 
   slitType=pSlit->slitType;
+
+  if (*pSlitType!=NULL)
+   *pSlitType=slitType;
+
   nFwhm=NFWHM;         // number of pixels by FWHM
   rc=ERROR_ID_NO;
 
@@ -754,13 +758,13 @@ RC XSCONV_LoadSlitFunction(MATRIX_OBJECT *pSlitXs,MATRIX_OBJECT *pSlitXs2,SLIT *
   else if (pGaussWidth!=NULL)
    *pGaussWidth=pSlit->slitParam;
 
-  // {
-  // 	FILE *fp;
-  // 	fp=fopen("slit.dat","w+t");
-  // 	for (i=0;i<pSlitXs->nl;i++)
-  // 	 fprintf(fp,"%g %g %g\n",pSlitXs->matrix[0][i],pSlitXs->matrix[1][i],pSlitXs->deriv2[1][i]);
-  // 	fclose(fp);
-  // }
+//  {
+//  	FILE *fp;
+//  	fp=fopen("slit.dat","w+t");
+//  	for (i=0;i<pSlitXs->nl;i++)
+//  	 fprintf(fp,"%g %g %g\n",pSlitXs->matrix[0][i],pSlitXs->matrix[1][i],pSlitXs->deriv2[1][i]);
+//  	fclose(fp);
+//  }
 
   // Return
 
@@ -769,29 +773,29 @@ RC XSCONV_LoadSlitFunction(MATRIX_OBJECT *pSlitXs,MATRIX_OBJECT *pSlitXs2,SLIT *
 
 RC XSCONV_ConvertCrossSectionFile(MATRIX_OBJECT *pCross, double lambdaMin,double lambdaMax,double shift,int conversionMode) {
    // Declarations
-   
+
    INDEX i;
    double lambda;
    RC rc = ERROR_ID_NO;
 
    // Load file
-   
+
    if ( conversionMode!=CONVOLUTION_CONVERSION_NONE || (fabs(shift)>EPSILON)) {
      for (i=0;i<pCross->nl;i++) {
        lambda=pCross->matrix[0][i];
-       
+
        // Air <-> vacuum correction
-       
+
        if (conversionMode==CONVOLUTION_CONVERSION_VAC2AIR)
            lambda=(double)0.1*(9.9972683*lambda+0.0107-(19.625/lambda));
        else if (conversionMode==CONVOLUTION_CONVERSION_AIR2VAC)
          lambda=(double)0.1*(10.0027325*lambda-0.0107+(19.625/lambda));
-       
+
        // Apply shift
-       
+
        pCross->matrix[0][i]=lambda+shift;
      }
-     
+
      // Recalculate second derivatives
      rc = SPLINE_Deriv2(pCross->matrix[0],pCross->matrix[1],pCross->deriv2[1],pCross->nl,"XSCONV_LoadCrossSectionFile");
    }
@@ -832,37 +836,37 @@ RC XSCONV_TypeNone(MATRIX_OBJECT *pXsnew,MATRIX_OBJECT *pXshr)
                      double dldj,double *SpecConv,double fwhm,double slitParam2,int slitType, int ndet)
  {
    // Declarations
- 
+
    double h,oldF,newF,Lim,ld_inc,ldi,dld,a,delta,
      lambdaMax,SpecOld, SpecNew,sigma,
      crossFIntegral, FIntegral;
- 
+
    RC rc;
 
    // Initializations
- 
+
    fwhm=fabs(fwhm);
    crossFIntegral=FIntegral=(double)0.;
    sigma=fwhm*0.5;
    a=sigma/sqrt(log(2.));
    delta=slitParam2*0.5;
- 
+
    Lim=(double)2.*fwhm;
- 
+
    if ((ld_inc=(double)fwhm/3.)>dldj)
     ld_inc=dldj;
- 
+
    h=(double)ld_inc*0.5;
- 
+
    // Browse wavelengths in the final calibration vector
- 
+
    ldi=lambdaj-Lim;
    lambdaMax=lambdaj+Lim;
- 
+
    // Search for first pixel in high resolution cross section in the wavelength range delimited by slit function
- 
+
    dld = -(ldi-lambdaj);
- 
+
    if (slitType==SLIT_TYPE_GAUSS)
     //   oldF=(double)exp(-4.*log(2.)*(dld*dld)/(fwhm*fwhm));
     rc=XSCONV_FctGauss(&oldF,fwhm,ld_inc,dld);
@@ -870,14 +874,14 @@ RC XSCONV_TypeNone(MATRIX_OBJECT *pXsnew,MATRIX_OBJECT *pXshr)
     oldF=(double)pow(sigma,(double)slitParam2)/(pow(dld,(double)slitParam2)+pow(sigma,(double)slitParam2));
    else if (slitType==SLIT_TYPE_ERF)
     oldF=(double)(ERF_GetValue((dld+delta)/a)-ERF_GetValue((dld-delta)/a))/(4.*delta);
- 
+
    rc=SPLINE_Vector(lambda,Spec,SDeriv2,ndet,&ldi,&SpecOld,1,SPLINE_CUBIC,__func__);
- 
+
    while (!rc && (ldi<=lambdaMax))
     {
      ldi += (double) ld_inc;
      dld = -(ldi-lambdaj);
- 
+
      if (slitType==SLIT_TYPE_GAUSS)
       //     newF=(double)exp(-4.*log(2.)*(dld*dld)/(fwhm*fwhm));
       rc=XSCONV_FctGauss(&newF,fwhm,ld_inc,dld);
@@ -885,21 +889,21 @@ RC XSCONV_TypeNone(MATRIX_OBJECT *pXsnew,MATRIX_OBJECT *pXshr)
       newF=(double)pow(sigma,(double)slitParam2)/(pow(dld,(double)slitParam2)+pow(sigma,(double)slitParam2));
      else if (slitType==SLIT_TYPE_ERF)
       newF=(double)(ERF_GetValue((dld+delta)/a)-ERF_GetValue((dld-delta)/a))/(4.*delta);
- 
+
      if ((rc=SPLINE_Vector(lambda,Spec,SDeriv2,ndet,&ldi,&SpecNew,1,SPLINE_CUBIC,__func__))!=0)
       break;
- 
+
      crossFIntegral += (SpecOld*oldF+SpecNew*newF)*h;
      FIntegral      += (oldF+newF)*h;
- 
+
      oldF=newF;
      SpecOld=SpecNew;
     }
- 
+
    *SpecConv=(FIntegral!=(double)0.)?(double)crossFIntegral/FIntegral:(double)1.;
- 
+
    // Return
- 
+
    return rc;
  }
 
@@ -1082,14 +1086,6 @@ RC XSCONV_TypeStandard(MATRIX_OBJECT *pXsnew,INDEX indexLambdaMin,INDEX indexLam
   xshrLambda=pXshr->matrix[0];
   xshrVector=pXshr->matrix[1];
   xshrDeriv2=pXshr->deriv2[1];
-
-//  {
-//  	FILE *fp;
-//  	fp=fopen("toto.dat","a+t");
-//  	fprintf(fp,"Standard %d %d %d %d\n",no2Flag,wveDptFlag,slitType,(int)pSlit2);
-//  	fclose(fp);
-//  }
-
 
   // Wavelength dependent functions that require two parameters
 
@@ -1330,7 +1326,6 @@ RC XSCONV_TypeStandard(MATRIX_OBJECT *pXsnew,INDEX indexLambdaMin,INDEX indexLam
 
     else
      {
-
       // set indexes to browse wavelengths in the grid of the slit function if pre-calculated
 
       indexOld=0;
