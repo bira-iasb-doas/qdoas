@@ -625,7 +625,14 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
                 pRecord->ccd.saturatedFlag=header.saturatedFlag;
                }
               else if (fabs(header.brusagElevation-header.targetElevation)>1.)                // be careful : should work only for Xianghe
-              	pRecord->ccd.targetElevation=header.targetElevation=header.brusagElevation;
+               {
+              	 pRecord->ccd.targetElevation=header.targetElevation=header.brusagElevation;
+              	}
+              else if (fabs(header.brusagElevation+1.)<EPSILON)                               // be careful : should work only for Xianghe
+               {
+              	 pRecord->ccd.targetElevation=header.targetElevation=header.brusagElevation;
+              	 pRecord->ccd.measureType=PRJCT_INSTR_EEV_TYPE_ZENITH;
+              	}
             }
 
            memcpy(&pRecord->present_day,&header.today,sizeof(SHORT_DATE));

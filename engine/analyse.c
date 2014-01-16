@@ -2326,7 +2326,7 @@ RC ANALYSE_Function( double *spectrum_orig, double *reference, double *SigmaY, d
             {
              for( int k=1, l=max(iterator_start(&my_iterator, global_doas_spectrum),1); (l != ITERATOR_FINISHED) && !rc; k++,l=iterator_next(&my_iterator))
                if (!(rc=XSCONV_TypeGauss(ANALYSE_splineX,reference,SplineRef,ANALYSE_splineX[l],ANALYSE_splineX[l]-ANALYSE_splineX[l-1],&pTabCross->vector[l],0.05,(double)0.,SLIT_TYPE_GAUSS, NDET)))
-               A[indexSvdA][k]=pTabCross->vector[l]=(reference[l]!=0)?pTabCross->vector[l]/reference[l]:(double)1.;
+               A[indexSvdA][k]=pTabCross->vector[l]=(reference[l]!=0)?pTabCross->vector[l]/reference[l]-1:(double)0.; // the resol cross section has to be around 0 and not 1
             }
           }
 

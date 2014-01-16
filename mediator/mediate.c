@@ -1755,14 +1755,6 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
                  pTabFeno->displayPredefined;
               }
 
-              {
-              	FILE *fp;
-              	fp=fopen("toto.dat","a+t");
-              	fprintf(fp,"KuruczMode %d\n",pAnalysisWindows->kuruczMode);
-              	fclose(fp);
-              }
-
-
              pTabFeno->useKurucz=pAnalysisWindows->kuruczMode;
 
              pTabFeno->analysisMethod=pAnalysisOptions->method;
