@@ -24,7 +24,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QGridLayout>
 #include <QLabel>
 #include <QPushButton>
-#include <QFontMetrics>
+//#include <QFontMetrics>
 #include <QFileDialog>
 
 #include "CWSlitEditors.h"
@@ -37,9 +37,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 //--------------------------------------------------------
 
-static const int cSuggestedColumnZeroWidth = 120; // try and keep editor layout
+static const int cSuggestedColumnZeroWidth = 115; // try and keep editor layout
 static const int cSuggestedColumnTwoWidth  = 100; // consistent
 static const int cStandardEditWidth         = 70;
+
 
 //--------------------------------------------------------
 
@@ -52,32 +53,32 @@ CWSlitFileBase::~CWSlitFileBase()
 {
 }
 
-void CWSlitFileBase::helperConstructFileEdit(QGridLayout *gridLayout, int &row, const char *label,const char *str, int len)
-{
-	if (row<2)
-	 {
-   QLabel *labelfwhm = new QLabel(label);
-   labelfwhm->setFixedWidth(115);
-   labelfwhm->setAlignment(Qt::AlignVCenter|Qt::AlignRight);
+QLineEdit *CWSlitFileBase::helperConstructFileEdit(QGridLayout *gridLayout, int row, const char *labelText, const char *fileName, int len) {
 
-   gridLayout->addWidget(labelfwhm, row, 0, Qt::AlignRight);
-   m_filenameEdit[row] = new QLineEdit(this);
-   m_filenameEdit[row]->setMaxLength(len-1);
-   gridLayout->addWidget(m_filenameEdit[row], row, 1);
-   m_browseBtn[row] = new QPushButton("Browse", this);
-   gridLayout->addWidget(m_browseBtn[row], row, 2);
+  QLabel *label = new QLabel(labelText);
+  label->setAlignment(Qt::AlignVCenter|Qt::AlignRight);
+  label->setMinimumSize(cSuggestedColumnZeroWidth, 0);
+  gridLayout->addWidget(label, row, 0, Qt::AlignRight);
 
-   // initialise
-   m_filenameEdit[row]->setText(str);
+  QLineEdit *fileEdit = new QLineEdit(this);
+  fileEdit->setMaxLength(len);
+  fileEdit->setText(fileName);
+  gridLayout->addWidget(fileEdit, row, 1);
 
-   connect(m_browseBtn[row], SIGNAL(clicked()), this, SLOT(slotBrowseFile()));
-   ++row;
-  }
+  QPushButton *browseButton = new QPushButton("Browse");
+  gridLayout->addWidget(browseButton, row, 2);
+  // store a pointer to the fileEdit in browseButton's properties, so
+  // we can find the fileEdit when the button is clicked
+  browseButton->setProperty("lineEdit", QVariant(QMetaType::QObjectStar,&fileEdit));
+  connect(browseButton, SIGNAL(clicked()), this, SLOT(slotBrowseFile()));
+
+  return fileEdit;
 }
 
 void CWSlitFileBase::slotBrowseFile()
 {
- 	QPushButton *button = (QPushButton *)sender();
+  QPushButton *button = qobject_cast<QPushButton *>(sender());
+  QLineEdit *fileEdit = qobject_cast<QLineEdit *>(qvariant_cast<QObject *>(button->property("lineEdit")));
 
   CPreferences *pref = CPreferences::instance();
   QString filename = QFileDialog::getOpenFileName(this, "Select Slit Function File",
@@ -86,17 +87,17 @@ void CWSlitFileBase::slotBrowseFile()
 
   if (!filename.isEmpty()) {
     pref->setDirectoryNameGivenFile("Slit", filename);
-
-  if (button==m_browseBtn[1])
-   m_filenameEdit[1]->setText(filename);
-  else
-   m_filenameEdit[0]->setText(filename);
+    fileEdit->setText(filename);
   }
+}
+
+void CWSlitFileBase::toggleVisible(int state) {
+  m_toggleWavelengthStack->setCurrentIndex((state)?1:0);
 }
 
 void CWSlitFileBase::slotToggleWavelength(int state)
  {
-  m_toggleWavelengthStack->setCurrentIndex((state)?1:0);
+   toggleVisible(state);
  }     
  
 CWSlitNoneEdit::CWSlitNoneEdit(const struct slit_file *d, QWidget *parent) :
@@ -116,64 +117,37 @@ void CWSlitNoneEdit::apply(struct slit_file *d) const
 {
 }
 
+void CWSlitFileEdit::toggleVisible(int state) {
+
+  for(int row=0; row<m_wvlDependentGrid->rowCount(); ++row) {
+    for(int col=0; col<m_wvlDependentGrid->columnCount(); ++col) {
+      QLayoutItem *item = m_wvlDependentGrid->itemAtPosition(row,col);
+      item->widget()->setVisible(m_wavelengthDependent->isChecked());
+    }
+  }
+
+}
+
 //--------------------------------------------------------
 
 CWSlitFileEdit::CWSlitFileEdit(const struct slit_file *d, QWidget *parent) :
-  CWSlitFileBase(parent)
-{
-  int row = 0;
+  CWSlitFileBase(parent) {
   QVBoxLayout *mainLayout = new QVBoxLayout(this);
-  QGridLayout *gridLayout = new QGridLayout;
-
+  
   // Wavelength dependent
-
   m_wavelengthDependent = new QCheckBox("Wavelength dependent", this);
-  gridLayout->addWidget(m_wavelengthDependent, 0, 1, Qt::AlignLeft);
-  connect(m_wavelengthDependent, SIGNAL(stateChanged(int)), this, SLOT (slotToggleWavelength(int)));
+  mainLayout->addWidget(m_wavelengthDependent, Qt::AlignLeft);
+  connect (m_wavelengthDependent, SIGNAL(stateChanged(int)), this, SLOT (slotToggleWavelength(int)));
 
-   QLabel *labelfwhm = new QLabel("Slit Function File");
-   labelfwhm->setFixedWidth(115);
-   labelfwhm->setAlignment(Qt::AlignVCenter|Qt::AlignRight);
+  QGridLayout *slitFileGrid = new QGridLayout;
+  mainLayout->addLayout(slitFileGrid);
+  m_slitFileEdit = helperConstructFileEdit(slitFileGrid, 0, "Slit Function File", d->filename, sizeof(d->filename)-1);
 
-   gridLayout->addWidget(labelfwhm, 1, 0, Qt::AlignRight);
-   m_filenameEdit[0] = new QLineEdit(this);
-   m_filenameEdit[0]->setMaxLength(sizeof(d->filename));
-   gridLayout->addWidget(m_filenameEdit[0], 1, 1);
-   m_browseBtn[0] = new QPushButton("Browse", this);
-   // m_browseBtn[0]->setMaxLength(sizeof("Browse")-1);
-    gridLayout->addWidget(m_browseBtn[0], 1, 2);
-
-   // initialise
-   m_filenameEdit[0]->setText(d->filename);
-
-   connect(m_browseBtn[0], SIGNAL(clicked()), this, SLOT(slotBrowseFile()));
-
-  QFrame *fileFrame = new QFrame(this);
-  fileFrame->setFrameStyle(QFrame::NoFrame);
-  QGridLayout *fileFrameLayout = new QGridLayout(fileFrame);
-  fileFrameLayout->setMargin(0);
-
-  QFrame *fileFrameWve = new QFrame(this);
-  fileFrameWve->setFrameStyle(QFrame::NoFrame);
-  QGridLayout *fileFrameLayoutWve = new QGridLayout(fileFrameWve);
-  fileFrameLayoutWve->setMargin(0);
-
-  row=1;
-
-  helperConstructFileEdit(fileFrameLayoutWve, row, "Stretch on wavelength",d->filename2, sizeof(d->filename2));
-
-  m_toggleWavelengthStack = new QStackedLayout;
-  m_toggleWavelengthStack->setMargin(0);
-  m_toggleWavelengthStack->addWidget(fileFrame);
-  m_toggleWavelengthStack->addWidget(fileFrameWve);
-
-  mainLayout->addLayout(gridLayout);
-  mainLayout->addLayout(m_toggleWavelengthStack);
+  m_wvlDependentGrid = new QGridLayout;
+  mainLayout->addLayout(m_wvlDependentGrid);
+  m_stretchEdit = helperConstructFileEdit(m_wvlDependentGrid, 0, "Stretch on wavelength", d->filename2, sizeof(d->filename2)-1);
 
   reset(d);
-
-  gridLayout->setColumnMinimumWidth(0, cSuggestedColumnZeroWidth);
-  gridLayout->setColumnStretch(1, 1);
 
   mainLayout->addStretch(1);
 }
@@ -184,22 +158,23 @@ CWSlitFileEdit::~CWSlitFileEdit()
 
 void CWSlitFileEdit::reset(const struct slit_file *d)
 {
-	 m_filenameEdit[0]->setText(d->filename);
-
-	 if (d->wveDptFlag)
-   m_filenameEdit[1]->setText(d->filename2);
-
+  m_slitFileEdit->setText(d->filename);
+  
+  if (d->wveDptFlag)
+      m_stretchEdit->setText(d->filename2);
+  
   m_wavelengthDependent->setCheckState(d->wveDptFlag ? Qt::Checked : Qt::Unchecked);
+  this->toggleVisible(m_wavelengthDependent->checkState());
 
 }
 
 void CWSlitFileEdit::apply(struct slit_file *d) const
 {
-	 d->wveDptFlag = m_wavelengthDependent->isChecked() ? 1 : 0;
-	 strcpy(d->filename, m_filenameEdit[0]->text().toAscii().data());
+  d->wveDptFlag = m_wavelengthDependent->isChecked() ? 1 : 0;
+  strcpy(d->filename, m_slitFileEdit->text().toAscii().data());
 
   if (d->wveDptFlag)
-   strcpy(d->filename2, m_filenameEdit[1]->text().toAscii().data());
+   strcpy(d->filename2, m_stretchEdit->text().toAscii().data());
 }
 
 //--------------------------------------------------------
@@ -207,15 +182,11 @@ void CWSlitFileEdit::apply(struct slit_file *d) const
 CWSlitGaussianEdit::CWSlitGaussianEdit(const struct slit_gaussian *d, QWidget *parent) :
   CWSlitFileBase(parent)
 {
-	 int row=0;
-
   QVBoxLayout *mainLayout = new QVBoxLayout(this);
-  QGridLayout *gridLayout = new QGridLayout;
 
   // Wavelength dependent
-
   m_wavelengthDependent = new QCheckBox("Wavelength dependent", this);
-  gridLayout->addWidget(m_wavelengthDependent, 0, 1, Qt::AlignLeft);
+  mainLayout->addWidget(m_wavelengthDependent, Qt::AlignLeft);
   connect(m_wavelengthDependent, SIGNAL(stateChanged(int)), this, SLOT (slotToggleWavelength(int)));
 
   QFrame *fwhmFrame = new QFrame(this);
@@ -223,9 +194,8 @@ CWSlitGaussianEdit::CWSlitGaussianEdit(const struct slit_gaussian *d, QWidget *p
   QHBoxLayout *fwhmFrameLayout = new QHBoxLayout(fwhmFrame);
   fwhmFrameLayout->setMargin(0);
   QLabel *labelfwhm = new QLabel("FWHM (nm)", fwhmFrame);
-  labelfwhm->setFixedWidth(115);
   labelfwhm->setAlignment(Qt::AlignVCenter|Qt::AlignRight);
-
+  labelfwhm->setMinimumSize(cSuggestedColumnZeroWidth, 0);
 
   m_fwhmEdit = new QLineEdit(this);
   m_fwhmEdit->setFixedWidth(cStandardEditWidth);
@@ -240,21 +210,17 @@ CWSlitGaussianEdit::CWSlitGaussianEdit(const struct slit_gaussian *d, QWidget *p
   QGridLayout *fileFrameLayout = new QGridLayout(fileFrame);
   fileFrameLayout->setMargin(0);
 
-  helperConstructFileEdit(fileFrameLayout, row, "Slit Function File",d->filename, sizeof(d->filename));
+  m_slitFileEdit = helperConstructFileEdit(fileFrameLayout, 0, "Slit Function File",d->filename, sizeof(d->filename)-1);
 
   m_toggleWavelengthStack = new QStackedLayout;
   m_toggleWavelengthStack->setMargin(0);
   m_toggleWavelengthStack->addWidget(fwhmFrame);
   m_toggleWavelengthStack->addWidget(fileFrame);
 
-  mainLayout->addLayout(gridLayout);
   mainLayout->addLayout(m_toggleWavelengthStack);
 
   // initialise
   reset(d);
-
-  gridLayout->setColumnMinimumWidth(0, cSuggestedColumnZeroWidth);
-  gridLayout->setColumnStretch(1, 1);
 
   mainLayout->addStretch(1);
 }
@@ -269,8 +235,6 @@ void CWSlitGaussianEdit::reset(const struct slit_gaussian *d)
   m_fwhmEdit->validator()->fixup(tmpStr.setNum(d->fwhm));
   m_fwhmEdit->setText(tmpStr);
   m_wavelengthDependent->setCheckState(d->wveDptFlag ? Qt::Checked : Qt::Unchecked);
-  m_filenameEdit[0]->setText(d->filename);
-
   m_toggleWavelengthStack->setCurrentIndex(d->wveDptFlag);
 }
 
@@ -278,7 +242,7 @@ void CWSlitGaussianEdit::apply(struct slit_gaussian *d) const
 {
   d->fwhm = m_fwhmEdit->text().toDouble();
   d->wveDptFlag = m_wavelengthDependent->isChecked() ? 1 : 0;
-  strcpy(d->filename, m_filenameEdit[0]->text().toAscii().data());
+  strcpy(d->filename, m_slitFileEdit->text().toAscii().data());
 
   m_toggleWavelengthStack->setCurrentIndex(d->wveDptFlag);
 }
@@ -288,14 +252,11 @@ void CWSlitGaussianEdit::apply(struct slit_gaussian *d) const
 CWSlitLorentzEdit::CWSlitLorentzEdit(const struct slit_lorentz *d, QWidget *parent) :
   CWSlitFileBase(parent)
 {
-  int row = 0;
-
   QVBoxLayout *mainLayout = new QVBoxLayout(this);
-  QGridLayout *gridLayout = new QGridLayout;
   QGridLayout *degreeLayout = new QGridLayout;
 
   m_wavelengthDependent = new QCheckBox("Wavelength dependent", this);
-  gridLayout->addWidget(m_wavelengthDependent, 0, 1, Qt::AlignLeft);
+  mainLayout->addWidget(m_wavelengthDependent, Qt::AlignLeft);
   connect(m_wavelengthDependent, SIGNAL(stateChanged(int)), this, SLOT (slotToggleWavelength(int)));
 
   QFrame *fwhmFrame = new QFrame(this);
@@ -306,8 +267,8 @@ CWSlitLorentzEdit::CWSlitLorentzEdit(const struct slit_lorentz *d, QWidget *pare
   // width
 
   QLabel *labelWidth = new QLabel("Width (nm)", fwhmFrame);
-  labelWidth->setFixedWidth(115);
   labelWidth->setAlignment(Qt::AlignVCenter|Qt::AlignRight);
+  labelWidth->setMinimumSize(cSuggestedColumnZeroWidth, 0);
 
   m_widthEdit = new QLineEdit(this);
   m_widthEdit->setFixedWidth(cStandardEditWidth);
@@ -322,7 +283,7 @@ CWSlitLorentzEdit::CWSlitLorentzEdit(const struct slit_lorentz *d, QWidget *pare
   QGridLayout *fileFrameLayout = new QGridLayout(fileFrame);
   fileFrameLayout->setMargin(0);
 
-  helperConstructFileEdit(fileFrameLayout, row, "Slit Function File",d->filename, sizeof(d->filename));
+  m_slitFileEdit = helperConstructFileEdit(fileFrameLayout, 0, "Slit Function File",d->filename, sizeof(d->filename));
 
   m_toggleWavelengthStack = new QStackedLayout;
   m_toggleWavelengthStack->setMargin(0);
@@ -332,8 +293,8 @@ CWSlitLorentzEdit::CWSlitLorentzEdit(const struct slit_lorentz *d, QWidget *pare
   // degree
 
   QLabel *labelDegree = new QLabel("Degree", fwhmFrame);
-  labelDegree->setFixedWidth(115);
   labelDegree->setAlignment(Qt::AlignVCenter|Qt::AlignRight);
+  labelDegree->setMinimumSize(cSuggestedColumnZeroWidth, 0);
 
   degreeLayout->addWidget(labelDegree, 0, 0, Qt::AlignRight);
   m_degreeSpin = new QSpinBox(this);
@@ -341,18 +302,14 @@ CWSlitLorentzEdit::CWSlitLorentzEdit(const struct slit_lorentz *d, QWidget *pare
   m_degreeSpin->setSingleStep(2);
   m_degreeSpin->setFixedWidth(cStandardEditWidth);
   degreeLayout->addWidget(m_degreeSpin, 0, 1, Qt::AlignLeft);
-  ++row;
 
-  mainLayout->addLayout(gridLayout);
   mainLayout->addLayout(m_toggleWavelengthStack);
   mainLayout->addLayout(degreeLayout);
 
   // initialise
   reset(d);
 
-  gridLayout->setColumnMinimumWidth(0, cSuggestedColumnZeroWidth);
-  gridLayout->setColumnStretch(1, 1);
-  degreeLayout->setColumnMinimumWidth(0, 115); // cSuggestedColumnZeroWidth);
+  degreeLayout->setColumnMinimumWidth(0, cSuggestedColumnZeroWidth); // cSuggestedColumnZeroWidth);
   degreeLayout->setColumnMinimumWidth(2, cSuggestedColumnTwoWidth);
   degreeLayout->setColumnStretch(1, 1);
 
@@ -371,7 +328,7 @@ void CWSlitLorentzEdit::reset(const struct slit_lorentz *d)
   m_degreeSpin->setValue(d->degree);
 
   m_wavelengthDependent->setCheckState(d->wveDptFlag ? Qt::Checked : Qt::Unchecked);
-  m_filenameEdit[0]->setText(d->filename);
+  m_slitFileEdit->setText(d->filename);
 
   m_toggleWavelengthStack->setCurrentIndex(d->wveDptFlag);
 }
@@ -382,7 +339,7 @@ void CWSlitLorentzEdit::apply(struct slit_lorentz *d) const
   d->degree = m_degreeSpin->value();
 
   d->wveDptFlag = m_wavelengthDependent->isChecked() ? 1 : 0;
-  strcpy(d->filename, m_filenameEdit[0]->text().toAscii().data());
+  strcpy(d->filename, m_slitFileEdit->text().toAscii().data());
 
   m_toggleWavelengthStack->setCurrentIndex(d->wveDptFlag);
 }
@@ -392,13 +349,10 @@ void CWSlitLorentzEdit::apply(struct slit_lorentz *d) const
 CWSlitVoigtEdit::CWSlitVoigtEdit(const struct slit_voigt *d, QWidget *parent) :
   CWSlitFileBase(parent)
 {
-  int row = 0;
-
   QVBoxLayout *mainLayout = new QVBoxLayout(this);
-  QGridLayout *gridLayout = new QGridLayout;
 
   m_wavelengthDependent = new QCheckBox("Wavelength dependent", this);
-  gridLayout->addWidget(m_wavelengthDependent, 0, 1, Qt::AlignLeft);
+  mainLayout->addWidget(m_wavelengthDependent, Qt::AlignLeft);
   connect(m_wavelengthDependent, SIGNAL(stateChanged(int)), this, SLOT (slotToggleWavelength(int)));
 
   QFrame *fwhmFrame = new QFrame(this);
@@ -407,18 +361,17 @@ CWSlitVoigtEdit::CWSlitVoigtEdit(const struct slit_voigt *d, QWidget *parent) :
   fwhmFrameLayout->setMargin(0);
 
   // left FWHM
-
   QLabel *labelFwhm = new QLabel("Gaussian FWHM (nm)", fwhmFrame);
-  labelFwhm->setFixedWidth(115);
   labelFwhm->setAlignment(Qt::AlignVCenter|Qt::AlignRight);
+  labelFwhm->setMinimumSize(cSuggestedColumnZeroWidth, 0);
 
   m_fwhmLeftEdit = new QLineEdit(this);
   m_fwhmLeftEdit->setFixedWidth(cStandardEditWidth);
   m_fwhmLeftEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 50.0, 3, m_fwhmLeftEdit));
 
   QLabel *labelRatio = new QLabel("Lorentz/Gaussian ratio", fwhmFrame);
-  labelRatio->setFixedWidth(115);
   labelRatio->setAlignment(Qt::AlignVCenter|Qt::AlignRight);
+  labelRatio->setMinimumSize(cSuggestedColumnZeroWidth, 0);
 
   m_ratioLeftEdit = new QLineEdit(this);
   m_ratioLeftEdit->setFixedWidth(cStandardEditWidth);
@@ -428,31 +381,27 @@ CWSlitVoigtEdit::CWSlitVoigtEdit(const struct slit_voigt *d, QWidget *parent) :
   fwhmFrameLayout->addWidget(m_fwhmLeftEdit,0,1,Qt::AlignLeft);
   fwhmFrameLayout->addWidget(labelRatio,1,0,Qt::AlignRight);
   fwhmFrameLayout->addWidget(m_ratioLeftEdit,1, 1,Qt::AlignLeft);
-  // fwhmFrameLayout->addStretch(0);
 
   QFrame *fileFrame = new QFrame(this);
   fileFrame->setFrameStyle(QFrame::NoFrame);
   QGridLayout *fileFrameLayout = new QGridLayout(fileFrame);
   fileFrameLayout->setMargin(0);
 
-  helperConstructFileEdit(fileFrameLayout, row, "Gaussian FWHM File",d->filename, sizeof(d->filename));
-  helperConstructFileEdit(fileFrameLayout, row, "Lorentz/Gaussian ratio",d->filename2, sizeof(d->filename2));
+  m_fwhmFileEdit = helperConstructFileEdit(fileFrameLayout, 0, "Gaussian FWHM File",d->filename, sizeof(d->filename)-1);
+  m_ratioFileEdit = helperConstructFileEdit(fileFrameLayout, 1, "Lorentz/Gaussian ratio",d->filename2, sizeof(d->filename2)-1);
 
   m_toggleWavelengthStack = new QStackedLayout;
   m_toggleWavelengthStack->setMargin(0);
+  m_toggleWavelengthStack->addItem(fileFrameLayout);
   m_toggleWavelengthStack->addWidget(fwhmFrame);
   m_toggleWavelengthStack->addWidget(fileFrame);
 
-  mainLayout->addLayout(gridLayout);
   mainLayout->addLayout(m_toggleWavelengthStack);
 
   // initialise
   reset(d);
 
-  gridLayout->setColumnMinimumWidth(0, cSuggestedColumnZeroWidth);
-  gridLayout->setColumnStretch(2, 1);
-
-  fwhmFrameLayout->setColumnMinimumWidth(0, 115);
+  fwhmFrameLayout->setColumnMinimumWidth(0, cSuggestedColumnZeroWidth);
   fwhmFrameLayout->setColumnStretch(1, 1);
 
   mainLayout->addStretch(1);
@@ -471,8 +420,8 @@ void CWSlitVoigtEdit::reset(const struct slit_voigt *d)
   m_ratioLeftEdit->setText(tmpStr);
 
   m_wavelengthDependent->setCheckState(d->wveDptFlag ? Qt::Checked : Qt::Unchecked);
-  m_filenameEdit[0]->setText(d->filename);
-  m_filenameEdit[1]->setText(d->filename2);
+  m_fwhmFileEdit->setText(d->filename);
+  m_ratioFileEdit->setText(d->filename2);
 
   m_toggleWavelengthStack->setCurrentIndex(d->wveDptFlag);
 }
@@ -483,8 +432,8 @@ void CWSlitVoigtEdit::apply(struct slit_voigt *d) const
   d->glRatioL = m_ratioLeftEdit->text().toDouble();
 
   d->wveDptFlag = m_wavelengthDependent->isChecked() ? 1 : 0;
-  strcpy(d->filename, m_filenameEdit[0]->text().toAscii().data());
-  strcpy(d->filename2, m_filenameEdit[1]->text().toAscii().data());
+  strcpy(d->filename, m_fwhmFileEdit->text().toAscii().data());
+  strcpy(d->filename2, m_ratioFileEdit->text().toAscii().data());
 
   m_toggleWavelengthStack->setCurrentIndex(d->wveDptFlag);
 }
@@ -494,13 +443,10 @@ void CWSlitVoigtEdit::apply(struct slit_voigt *d) const
 CWSlitErrorEdit::CWSlitErrorEdit(const struct slit_error *d, QWidget *parent) :
   CWSlitFileBase(parent)
 {
-  int row = 0;
-
   QVBoxLayout *mainLayout = new QVBoxLayout(this);
-  QGridLayout *gridLayout = new QGridLayout;
 
   m_wavelengthDependent = new QCheckBox("Wavelength dependent", this);
-  gridLayout->addWidget(m_wavelengthDependent, 0, 1, Qt::AlignLeft);
+  mainLayout->addWidget(m_wavelengthDependent, Qt::AlignLeft);
   connect(m_wavelengthDependent, SIGNAL(stateChanged(int)), this, SLOT (slotToggleWavelength(int)));
 
   QFrame *fwhmFrame = new QFrame(this);
@@ -511,8 +457,8 @@ CWSlitErrorEdit::CWSlitErrorEdit(const struct slit_error *d, QWidget *parent) :
   // fwhm
 
   QLabel *labelFwhm = new QLabel("Gaussian FWHM (nm)", fwhmFrame);
-  labelFwhm->setFixedWidth(115);
   labelFwhm->setAlignment(Qt::AlignVCenter|Qt::AlignRight);
+  labelFwhm->setMinimumSize(cSuggestedColumnZeroWidth, 0);
 
   m_fwhmEdit = new QLineEdit(this);
   m_fwhmEdit->setFixedWidth(cStandardEditWidth);
@@ -521,8 +467,8 @@ CWSlitErrorEdit::CWSlitErrorEdit(const struct slit_error *d, QWidget *parent) :
   // width
 
   QLabel *labelWidth = new QLabel("Boxcar width", fwhmFrame);
-  labelWidth->setFixedWidth(115);
   labelWidth->setAlignment(Qt::AlignVCenter|Qt::AlignRight);
+  labelWidth->setMinimumSize(cSuggestedColumnZeroWidth, 0);
 
   m_widthEdit = new QLineEdit(this);
   m_widthEdit->setFixedWidth(cStandardEditWidth);
@@ -538,25 +484,21 @@ CWSlitErrorEdit::CWSlitErrorEdit(const struct slit_error *d, QWidget *parent) :
   QGridLayout *fileFrameLayout = new QGridLayout(fileFrame);
   fileFrameLayout->setMargin(0);
 
-  helperConstructFileEdit(fileFrameLayout, row, "Gaussian FWHM File",d->filename, sizeof(d->filename));
-  helperConstructFileEdit(fileFrameLayout, row, "Boxcar width File",d->filename2, sizeof(d->filename2));
+  m_fwhmFileEdit = helperConstructFileEdit(fileFrameLayout, 0, "Gaussian FWHM File",d->filename, sizeof(d->filename)-1);
+  m_ratioFileEdit = helperConstructFileEdit(fileFrameLayout, 1, "Boxcar width File",d->filename2, sizeof(d->filename2)-1);
 
   m_toggleWavelengthStack = new QStackedLayout;
   m_toggleWavelengthStack->setMargin(0);
   m_toggleWavelengthStack->addWidget(fwhmFrame);
   m_toggleWavelengthStack->addWidget(fileFrame);
 
-  gridLayout->setColumnMinimumWidth(0, cSuggestedColumnZeroWidth);
-  gridLayout->setColumnStretch(1, 1);
-
-  mainLayout->addLayout(gridLayout);
   mainLayout->addLayout(m_toggleWavelengthStack);
   mainLayout->addStretch(1);
 
   // initialise
   reset(d);
 
-  fwhmFrameLayout->setColumnMinimumWidth(0, 115);
+  fwhmFrameLayout->setColumnMinimumWidth(0, cSuggestedColumnZeroWidth);
   fwhmFrameLayout->setColumnStretch(1, 1);
 }
 
@@ -573,8 +515,8 @@ void CWSlitErrorEdit::reset(const struct slit_error *d)
   m_widthEdit->setText(tmpStr);
 
   m_wavelengthDependent->setCheckState(d->wveDptFlag ? Qt::Checked : Qt::Unchecked);
-  m_filenameEdit[0]->setText(d->filename);
-  m_filenameEdit[1]->setText(d->filename2);
+  m_fwhmFileEdit->setText(d->filename);
+  m_ratioFileEdit->setText(d->filename2);
 
   m_toggleWavelengthStack->setCurrentIndex(d->wveDptFlag);
 }
@@ -585,8 +527,8 @@ void CWSlitErrorEdit::apply(struct slit_error *d) const
   d->width = m_widthEdit->text().toDouble();
 
   d->wveDptFlag = m_wavelengthDependent->isChecked() ? 1 : 0;
-  strcpy(d->filename, m_filenameEdit[0]->text().toAscii().data());
-  strcpy(d->filename2, m_filenameEdit[1]->text().toAscii().data());
+  strcpy(d->filename, m_fwhmFileEdit->text().toAscii().data());
+  strcpy(d->filename2, m_ratioFileEdit->text().toAscii().data());
 
   m_toggleWavelengthStack->setCurrentIndex(d->wveDptFlag);
 }
@@ -645,121 +587,13 @@ void CWSlitApodEdit::apply(struct slit_apod *d) const
   d->phase = m_phaseEdit->text().toDouble();
 }
 
-//--------------------------------------------------------
-
-CWSlitLorentzFileEdit::CWSlitLorentzFileEdit(const struct slit_lorentz_file *d, QWidget *parent) :
-  CWSlitFileBase(parent)
-{
-  int row = 0;
-
-  QVBoxLayout *mainLayout = new QVBoxLayout(this);
-  QGridLayout *gridLayout = new QGridLayout;
-
-  helperConstructFileEdit(gridLayout, row, "Slit Function File",d->filename, sizeof(d->filename));
-
-  // degree
-  gridLayout->addWidget(new QLabel("Degree"), row, 0, Qt::AlignRight);
-  m_degreeSpin = new QSpinBox(this);
-  m_degreeSpin->setRange(0,10);
-  m_degreeSpin->setSingleStep(2);
-  m_degreeSpin->setFixedWidth(cStandardEditWidth);
-  gridLayout->addWidget(m_degreeSpin, row, 1, Qt::AlignLeft);
-  ++row;
-
-  // initialize
-  m_degreeSpin->setValue(d->degree);
-
-  gridLayout->setColumnMinimumWidth(0, cSuggestedColumnZeroWidth);
-  gridLayout->setColumnMinimumWidth(2, cSuggestedColumnTwoWidth);
-  gridLayout->setColumnStretch(1, 1);
-
-  mainLayout->addLayout(gridLayout);
-  mainLayout->addStretch(1);
-}
-
-CWSlitLorentzFileEdit::~CWSlitLorentzFileEdit()
-{
-}
-
-void CWSlitLorentzFileEdit::reset(const struct slit_lorentz_file *d)
-{
-  m_degreeSpin->setValue(d->degree);
-
-  m_filenameEdit[0]->setText(d->filename);
-}
-
-void CWSlitLorentzFileEdit::apply(struct slit_lorentz_file *d) const
-{
-  strcpy(d->filename, m_filenameEdit[0]->text().toAscii().data());
-  d->degree = m_degreeSpin->value();
-}
-
-//--------------------------------------------------------
-
-CWSlitErrorFileEdit::CWSlitErrorFileEdit(const struct slit_error_file *d, QWidget *parent) :
-  CWSlitFileBase(parent)
-{
-  int row = 0;
-
-  QVBoxLayout *mainLayout = new QVBoxLayout(this);
-  QGridLayout *gridLayout = new QGridLayout;
-
-  helperConstructFileEdit(gridLayout, row, "Gaussian Width (nm)",d->filename, sizeof(d->filename));
-  helperConstructFileEdit(gridLayout, row, "Boxcar Width (nm)",d->filename2, sizeof(d->filename2));
-
-  // width
-  // gridLayout->addWidget(new QLabel("Boxcar Width (nm)"), row, 0, Qt::AlignRight);
-  // m_widthEdit = new QLineEdit(this);
-  // m_widthEdit->setFixedWidth(cStandardEditWidth);
-  // m_widthEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 50.0, 3, m_widthEdit));
-  // gridLayout->addWidget(m_widthEdit, row, 1, Qt::AlignLeft);
-  // ++row;
-  //
-  // // initialise
-  // QString tmpStr;
-  // m_widthEdit->validator()->fixup(tmpStr.setNum(d->width));
-  // m_widthEdit->setText(tmpStr);
-
-  gridLayout->setColumnMinimumWidth(0, cSuggestedColumnZeroWidth);
-  gridLayout->setColumnMinimumWidth(2, cSuggestedColumnTwoWidth);
-  gridLayout->setColumnStretch(1, 1);
-
-  mainLayout->addLayout(gridLayout);
-  mainLayout->addStretch(1);
-}
-
-CWSlitErrorFileEdit::~CWSlitErrorFileEdit()
-{
-}
-
-void CWSlitErrorFileEdit::reset(const struct slit_error_file *d)
-{
-  // QString tmpStr;
-  // m_widthEdit->validator()->fixup(tmpStr.setNum(d->width));
-  // m_widthEdit->setText(tmpStr);
-
-  m_filenameEdit[0]->setText(d->filename);
-  m_filenameEdit[1]->setText(d->filename2);
-}
-
-void CWSlitErrorFileEdit::apply(struct slit_error_file *d) const
-{
-  strcpy(d->filename, m_filenameEdit[0]->text().toAscii().data());
-  strcpy(d->filename2, m_filenameEdit[1]->text().toAscii().data());
-}
-
-//--------------------------------------------------------
-
 CWSlitAGaussEdit::CWSlitAGaussEdit(const struct slit_agauss *d, QWidget *parent) :
   CWSlitFileBase(parent)
 {
-  int row = 0;
-
   QVBoxLayout *mainLayout = new QVBoxLayout(this);
-  QGridLayout *gridLayout = new QGridLayout;
 
   m_wavelengthDependent = new QCheckBox("Wavelength dependent", this);
-  gridLayout->addWidget(m_wavelengthDependent, 0, 1, Qt::AlignLeft);
+  mainLayout->addWidget(m_wavelengthDependent, Qt::AlignLeft);
   connect(m_wavelengthDependent, SIGNAL(stateChanged(int)), this, SLOT (slotToggleWavelength(int)));
 
   QFrame *fwhmFrame = new QFrame(this);
@@ -770,16 +604,16 @@ CWSlitAGaussEdit::CWSlitAGaussEdit(const struct slit_agauss *d, QWidget *parent)
   // fwhm
 
   QLabel *labelFwhm = new QLabel("Gaussian FWHM (nm)", fwhmFrame);
-  labelFwhm->setFixedWidth(115);
   labelFwhm->setAlignment(Qt::AlignVCenter|Qt::AlignRight);
+  labelFwhm->setMinimumSize(cSuggestedColumnZeroWidth, 0);
 
   m_fwhmEdit = new QLineEdit(this);
   m_fwhmEdit->setFixedWidth(cStandardEditWidth);
   m_fwhmEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 50.0, 3, m_fwhmEdit));
 
   QLabel *labelAsym = new QLabel("Asymmetry factor", fwhmFrame);
-  labelAsym->setFixedWidth(115);
   labelAsym->setAlignment(Qt::AlignVCenter|Qt::AlignRight);
+  labelAsym->setMinimumSize(cSuggestedColumnZeroWidth, 0);
 
   // asymmetry factor
 
@@ -797,25 +631,21 @@ CWSlitAGaussEdit::CWSlitAGaussEdit(const struct slit_agauss *d, QWidget *parent)
   QGridLayout *fileFrameLayout = new QGridLayout(fileFrame);
   fileFrameLayout->setMargin(0);
 
-  helperConstructFileEdit(fileFrameLayout, row, "Gaussian FWHM File",d->filename, sizeof(d->filename));
-  helperConstructFileEdit(fileFrameLayout, row, "Boxcar width File",d->filename2, sizeof(d->filename2));
+  m_fwhmFileEdit = helperConstructFileEdit(fileFrameLayout, 0, "Gaussian FWHM File",d->filename, sizeof(d->filename)-1);
+  m_boxcarFileEdit = helperConstructFileEdit(fileFrameLayout, 1, "Boxcar width File",d->filename2, sizeof(d->filename2)-1);
 
   m_toggleWavelengthStack = new QStackedLayout;
   m_toggleWavelengthStack->setMargin(0);
   m_toggleWavelengthStack->addWidget(fwhmFrame);
   m_toggleWavelengthStack->addWidget(fileFrame);
 
-  gridLayout->setColumnMinimumWidth(0, cSuggestedColumnZeroWidth);
-  gridLayout->setColumnStretch(1, 1);
-
-  mainLayout->addLayout(gridLayout);
   mainLayout->addLayout(m_toggleWavelengthStack);
   mainLayout->addStretch(1);
 
   // initialise
   reset(d);
 
-  fwhmFrameLayout->setColumnMinimumWidth(0, 115);
+  fwhmFrameLayout->setColumnMinimumWidth(0, cSuggestedColumnZeroWidth);
   fwhmFrameLayout->setColumnStretch(1, 1);
 }
 
@@ -832,8 +662,8 @@ void CWSlitAGaussEdit::reset(const struct slit_agauss *d)
   m_asymEdit->setText(tmpStr);
 
   m_wavelengthDependent->setCheckState(d->wveDptFlag ? Qt::Checked : Qt::Unchecked);
-  m_filenameEdit[0]->setText(d->filename);
-  m_filenameEdit[1]->setText(d->filename2);
+  m_fwhmFileEdit->setText(d->filename);
+  m_boxcarFileEdit->setText(d->filename2);
 
   m_toggleWavelengthStack->setCurrentIndex(d->wveDptFlag);
 }
@@ -844,8 +674,8 @@ void CWSlitAGaussEdit::apply(struct slit_agauss *d) const
   d->asym = m_asymEdit->text().toDouble();
 
   d->wveDptFlag = m_wavelengthDependent->isChecked() ? 1 : 0;
-  strcpy(d->filename, m_filenameEdit[0]->text().toAscii().data());
-  strcpy(d->filename2, m_filenameEdit[1]->text().toAscii().data());
+  strcpy(d->filename, m_fwhmFileEdit->text().toAscii().data());
+  strcpy(d->filename2, m_boxcarFileEdit->text().toAscii().data());
 
   m_toggleWavelengthStack->setCurrentIndex(d->wveDptFlag);
 }
@@ -897,27 +727,6 @@ CWSlitSelector::CWSlitSelector(const mediate_slit_function_t *slit, const QStrin
   m_slitStack->addWidget(m_nbsApodEdit);
   m_slitCombo->addItem("Norton Beer Strong (FTS)", QVariant(SLIT_TYPE_APODNBS));
 
-  // not used anymore commented on 01/02/2012 m_gaussianFileEdit = new CWSlitFileEdit(&(slit->gaussianfile));
-  // not used anymore commented on 01/02/2012 m_slitStack->addWidget(m_gaussianFileEdit);
-  // not used anymore commented on 01/02/2012 m_slitCombo->addItem("Gaussian, wavelength dependent", QVariant(SLIT_TYPE_GAUSS_FILE));
-  // not used anymore commented on 01/02/2012
-  // not used anymore commented on 01/02/2012 m_lorentzFileEdit = new CWSlitLorentzFileEdit(&(slit->lorentzfile));
-  // not used anymore commented on 01/02/2012 m_slitStack->addWidget(m_lorentzFileEdit);
-  // not used anymore commented on 01/02/2012 m_slitCombo->addItem("2n-Lorentz, wavelength dependent", QVariant(SLIT_TYPE_INVPOLY_FILE));
-  // not used anymore commented on 01/02/2012
-  // not used anymore commented on 01/02/2012 m_errorFileEdit = new CWSlitErrorFileEdit(&(slit->errorfile));
-  // not used anymore commented on 01/02/2012 m_slitStack->addWidget(m_errorFileEdit);
-  // not used anymore commented on 01/02/2012 m_slitCombo->addItem("Error Function, wavelength dependent", QVariant(SLIT_TYPE_ERF_FILE));
-
-  // not used anymore : commented on 12/01/2012 m_gaussianTempFileEdit = new CWSlitFileEdit(&(slit->gaussiantempfile));
-  // not used anymore : commented on 12/01/2012 m_slitStack->addWidget(m_gaussianTempFileEdit);
-  // not used anymore : commented on 12/01/2012 m_slitCombo->addItem("Gaussian, wavelength + Temp. dependent", QVariant(SLIT_TYPE_GAUSS_T_FILE));
-  // not used anymore : commented on 12/01/2012
-  // not used anymore : commented on 12/01/2012 m_errorTempFileEdit = new CWSlitErrorFileEdit(&(slit->errortempfile));
-  // not used anymore : commented on 12/01/2012 m_slitStack->addWidget(m_errorTempFileEdit);
-  // not used anymore : commented on 12/01/2012 m_slitCombo->addItem("Error Function, wavelength + Temp. dependent", QVariant(SLIT_TYPE_ERF_T_FILE));
-
-
   mainLayout->addWidget(new QLabel("Slit Function Type", this), 0, 0);
   mainLayout->addWidget(m_slitCombo, 0, 1);
 
@@ -955,11 +764,6 @@ void CWSlitSelector::reset(const mediate_slit_function_t *slit)
   m_agaussEdit->reset(&(slit->agauss));
   m_boxcarApodEdit->reset(&(slit->boxcarapod));
   m_nbsApodEdit->reset(&(slit->nbsapod));
-  // not used anymore : commented on 01/02/2012 m_gaussianFileEdit->reset(&(slit->gaussianfile));
-  // not used anymore : commented on 01/02/2012 m_lorentzFileEdit->reset(&(slit->lorentzfile));
-  // not used anymore : commented on 01/02/2012 m_errorFileEdit->reset(&(slit->errorfile));
-  // not used anymore : commented on 12/01/2012 m_gaussianTempFileEdit->reset(&(slit->gaussiantempfile));
-  // not used anymore : commented on 12/01/2012 m_errorTempFileEdit->reset(&(slit->errortempfile));
 }
 
 void CWSlitSelector::apply(mediate_slit_function_t *slit) const
@@ -976,9 +780,4 @@ void CWSlitSelector::apply(mediate_slit_function_t *slit) const
   m_agaussEdit->apply(&(slit->agauss));
   m_boxcarApodEdit->apply(&(slit->boxcarapod));
   m_nbsApodEdit->apply(&(slit->nbsapod));
-  // not used anymore : commented on 01/02/2012 m_gaussianFileEdit->apply(&(slit->gaussianfile));
-  // not used anymore : commented on 01/02/2012 m_lorentzFileEdit->apply(&(slit->lorentzfile));
-  // not used anymore : commented on 01/02/2012 m_errorFileEdit->apply(&(slit->errorfile));
-  // not used anymore : commented on 12/01/2012 m_gaussianTempFileEdit->apply(&(slit->gaussiantempfile));
-  // not used anymore : commented on 12/01/2012 m_errorTempFileEdit->apply(&(slit->errortempfile));
 }

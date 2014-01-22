@@ -52,7 +52,6 @@ Q_OBJECT
   QComboBox *m_slitCombo;
   QStackedWidget *m_slitStack;
   // widgets for the configuration of each slit
-  // CWSlitNoneEdit *m_noneEdit;
   
   CWSlitNoneEdit *m_noneEdit;
   CWSlitFileEdit *m_fileEdit;
@@ -63,10 +62,7 @@ Q_OBJECT
   CWSlitAGaussEdit *m_agaussEdit;
   CWSlitApodEdit *m_boxcarApodEdit, *m_nbsApodEdit;
   CWSlitFileEdit *m_gaussianFileEdit;
-  CWSlitLorentzFileEdit *m_lorentzFileEdit;
-  CWSlitErrorFileEdit *m_errorFileEdit;
   CWSlitFileEdit *m_gaussianTempFileEdit;
-  CWSlitErrorFileEdit *m_errorTempFileEdit;
 };
 
 #endif
