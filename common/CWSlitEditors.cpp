@@ -24,7 +24,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QGridLayout>
 #include <QLabel>
 #include <QPushButton>
-//#include <QFontMetrics>
 #include <QFileDialog>
 
 #include "CWSlitEditors.h"
@@ -392,7 +391,6 @@ CWSlitVoigtEdit::CWSlitVoigtEdit(const struct slit_voigt *d, QWidget *parent) :
 
   m_toggleWavelengthStack = new QStackedLayout;
   m_toggleWavelengthStack->setMargin(0);
-  m_toggleWavelengthStack->addItem(fileFrameLayout);
   m_toggleWavelengthStack->addWidget(fwhmFrame);
   m_toggleWavelengthStack->addWidget(fileFrame);
 
