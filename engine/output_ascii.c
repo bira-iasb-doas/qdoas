@@ -7,9 +7,6 @@
 #include "output.h"
 
 #define ASC_EXTENSION ".ASC"
-#define READ_MODE "rt"
-#define WRITE_MODE "w+t"
-#define APPEND_MODE "a+t"
 
 /*! current output file (NULL if no file is open) */
 static FILE *output_file;
@@ -23,16 +20,16 @@ RC ascii_open(const ENGINE_CONTEXT *pEngineContext,char *filename) {
   
   const PROJECT *pProject= &pEngineContext->project;
 
-  output_file = fopen(filename, READ_MODE);
-  bool new_file = (output_file == NULL);
-  
-  if (!new_file) { // close existing file, open in append mode
-    fclose(output_file);
-    output_file = fopen(filename, APPEND_MODE);
-  } else { // new file
-    output_file = fopen(filename, WRITE_MODE);
-    
-    if(output_file != NULL) {
+  output_file = fopen(filename, "a+t");
+  if (output_file == NULL) {
+    return ERROR_ID_FILE_OPEN;
+  }
+  int rc = fseek(output_file, 0, SEEK_END);
+  if ( rc != 0) {
+    return ERROR_ID_FILE_OPEN; // shouldn't happen...
+  } else {
+    size_t size = ftell(output_file);
+    if (size != 0) { // we have a new output file -> print column titles etc
       // Satellites measurements and automatic reference selection : save information on the selected reference
       if ( ( pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_ASCII ||
              pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN ||
@@ -52,8 +49,7 @@ RC ascii_open(const ENGINE_CONTEXT *pEngineContext,char *filename) {
       OutputAscPrintTitles(output_file);
     }
   }
-  
-  return (output_file != NULL) ? ERROR_ID_NO : ERROR_ID_FILE_OPEN;
+  return ERROR_ID_NO;
 }
 
 void ascii_close_file(void) {
