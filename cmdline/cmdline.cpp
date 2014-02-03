@@ -591,11 +591,20 @@ int analyseProjectQdoasPrepare(void **engineContext, const CProjectConfigItem *p
     mediate_analysis_window_t *awCursor = awDataList;
 
     QList<const CAnalysisWindowConfigItem*>::const_iterator awIt = awList.begin();
-    while (awIt != awList.end()) {
-      *awCursor = *((*awIt)->properties());
-      // mask any display flags ...
-      ++awCursor;
-      ++awIt;
+    while (awIt != awList.end()) {      
+    	
+    	 // Do not account for disabled analysis windows
+
+    	 if ((*awIt)->isEnabled())         
+    	  {
+        *awCursor = *((*awIt)->properties());
+        // mask any display flags ...
+        ++awCursor;
+       }
+      else
+       nWindows--;
+       
+      ++awIt;  
     }
 
     if (mediateRequestSetAnalysisWindows(*engineContext, nWindows, awDataList, (!calibSwitch)?THREAD_TYPE_ANALYSIS:THREAD_TYPE_KURUCZ, msgResp) != 0) {

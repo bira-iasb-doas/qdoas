@@ -1560,8 +1560,8 @@ RC OutputBuildFileName(const ENGINE_CONTEXT *pEngineContext,char *outputFileName
 RC open_output_file(const ENGINE_CONTEXT *pEngineContext, char *outputFileName)
 {
   if (pEngineContext->project.asciiResults.calibFlag)
-    save_calibration();
-
+    save_calibration();    
+    
   switch(selected_format) {
   case ASCII:
     return ascii_open(pEngineContext, outputFileName);
@@ -1647,6 +1647,7 @@ RC OUTPUT_FlushBuffers(ENGINE_CONTEXT *pEngineContext)
       // ------------------
       // NOT AUTOMATIC MODE
       // ------------------
+      
       rc = open_output_file(pEngineContext,outputFileName);
       if (!rc ) {
         for(unsigned int i=0; i<outputNbRecords; i++)

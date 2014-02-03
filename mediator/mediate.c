@@ -313,15 +313,19 @@ RC check_output_path(const char* output_path) {
 
   const char *output_path_end = strrchr(output_path, PATH_SEP);
 
-  if ( strcmp("automatic", output_path_end + 1) != 0 ) {
-    // if no automatic output filenames are chosen: check we can write to the file
-    FILE *test = fopen(output_path, "a");
-    if (test == NULL) {
-      rc = ERROR_SetLast("Output Path configuration error" , ERROR_TYPE_FATAL, ERROR_ID_FILE_OPEN, output_path);
-    } else {
-      fclose(test);
-    }
-  } else // otherwise: automatic output files: just check if the directory exists
+  // Just test that the output path exists (otherwise, "a" create new files and titles are not output
+
+  // if ( strcmp("automatic", output_path_end + 1) != 0 ) {
+  //   // if no automatic output filenames are chosen: check we can write to the file
+  //   FILE *test = fopen(output_path, "a");
+  //
+  //   if (test == NULL) {
+  //     rc = ERROR_SetLast("Output Path configuration error" , ERROR_TYPE_FATAL, ERROR_ID_FILE_OPEN, output_path);
+  //   } else {
+  //     fclose(test);
+  //   }
+  // } else // otherwise: automatic output files: just check if the directory exists
+
     if (output_path_end != NULL) {
       // if no path separator given, the output path is current working dir and we don't test
       char path[MAX_ITEM_TEXT_LEN + 1];
@@ -1606,7 +1610,7 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
    int indexFeno,indexFenoColumn,i;                                              // browse analysis windows
    MATRIX_OBJECT hr_solar_temp; // to preload high res solar spectrum
    RC rc;                                                                        // return code
-
+   
    // Initializations
 
    lambdaMin=1000;
@@ -2161,7 +2165,7 @@ int mediateRequestNextMatchingSpectrum(ENGINE_CONTEXT *pEngineContext,void *resp
        }
 
       }
-
+      
      // try the next record
      rec+=inc;
     }
@@ -2282,23 +2286,19 @@ int mediateRequestNextMatchingAnalyseSpectrum(void *engineContext,
 
    if (rec > 0 && (pEngineContext->indexRecord<=pEngineContext->recordNumber))
     {
-     mediateRequestPlotSpectra(pEngineContext,responseHandle);
+     mediateRequestPlotSpectra(pEngineContext,responseHandle);       
+     
+     if (!pEngineContext->analysisRef.refAuto || pEngineContext->satelliteFlag || ((rc=EngineNewRef(pEngineContext,responseHandle))==ERROR_ID_NO) )
+      rc=ANALYSE_Spectrum(pEngineContext,responseHandle);
 
-     if ((pEngineContext->analysisRef.refAuto && !pEngineContext->satelliteFlag && (EngineNewRef(pEngineContext,responseHandle)!=ERROR_ID_NO) )  ||
-         ((rc=ANALYSE_Spectrum(pEngineContext,responseHandle))!=ERROR_ID_NO) )
+     if (rc!=ERROR_ID_NO)
       ERROR_DisplayMessage(responseHandle);
     }
 
-   //  {
-   //  	FILE *fp;
-   //  	fp=fopen("qdoas.dbg","a+t");
-   //  	fprintf(fp,"   mediateRequestNextMatchingAnalyseSpectrum %d/%d (rc %d)\n",pEngineContext->indexRecord,pEngineContext->recordNumber,rc);
-   //  	fclose(fp);
-   //  }
    // NB if the function returns -1, the problem is that it is not possible to process
    // next records.
 
-   return rec; // (rc == ERROR_ID_NO) ? rec : -1;
+   return (rc != ERROR_ID_REF_ALIGNMENT) ? rec : -1;
  }
 
 int mediateRequestPrevMatchingAnalyseSpectrum(void *engineContext,

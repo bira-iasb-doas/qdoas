@@ -901,7 +901,8 @@ RC ReliMFCStd(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int local
 
       // User constraints
 
-      if (rc || (dateFlag && ((pRecord->localCalDay!=localDay) || (pRecord->elevationViewAngle<80.))))                  // reference spectra are zenith only
+      if (rc || (dateFlag && ((pRecord->localCalDay!=localDay) || (pRecord->elevationViewAngle<80.))) ||                     // reference spectra are zenith only
+                (!dateFlag && pEngineContext->analysisRef.refScan && !pEngineContext->analysisRef.refSza && (pRecord->elevationViewAngle>80.)))
        rc=ERROR_ID_FILE_RECORD;
       else if (pEngineContext->project.instrumental.mfcRevert)
        VECTOR_Invert(pBuffers->spectrum,NDET);

@@ -478,6 +478,7 @@ typedef struct _feno
   int             offlFlag;                            // non zero if linear offset is fitted
   int             longPathFlag;                                                 // for Anoop
   INDEX           indexRefOmi;
+  int             newrefFlag;
 }
 FENO;
 

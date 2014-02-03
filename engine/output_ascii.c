@@ -25,13 +25,13 @@ RC ascii_open(const ENGINE_CONTEXT *pEngineContext,char *filename) {
 
   output_file = fopen(filename, READ_MODE);
   bool new_file = (output_file == NULL);
-
+  
   if (!new_file) { // close existing file, open in append mode
     fclose(output_file);
     output_file = fopen(filename, APPEND_MODE);
   } else { // new file
     output_file = fopen(filename, WRITE_MODE);
-
+    
     if(output_file != NULL) {
       // Satellites measurements and automatic reference selection : save information on the selected reference
       if ( ( pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_ASCII ||
@@ -52,6 +52,7 @@ RC ascii_open(const ENGINE_CONTEXT *pEngineContext,char *filename) {
       OutputAscPrintTitles(output_file);
     }
   }
+  
   return (output_file != NULL) ? ERROR_ID_NO : ERROR_ID_FILE_OPEN;
 }
 

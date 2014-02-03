@@ -384,7 +384,10 @@ RC SetCCD_EEV(ENGINE_CONTEXT *pEngineContext,FILE *specFp,FILE *darkFp)
     if (pEngineContext->analysisRef.refScan && pEngineContext->recordNumber &&
       ((pRef->scanRefIndexes=(int *)MEMORY_AllocBuffer("SetCCD_EEV","scanRefIndexes",pEngineContext->recordNumber,sizeof(int),0,MEMORY_TYPE_INT))==NULL))
 
-     rc=ERROR_ID_ALLOC;
+     rc=ERROR_ID_ALLOC;    
+     
+    else
+     pEngineContext->fileInfo.nScanRef=0;
 
     // Eclipse 99
 

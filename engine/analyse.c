@@ -1873,7 +1873,7 @@ RC ANALYSE_AlignReference(ENGINE_CONTEXT *pEngineContext,int refFlag,int saveFla
     memcpy(ANALYSE_t,ANALYSE_zeros,sizeof(double)*NDET);
     memcpy(ANALYSE_tc,ANALYSE_zeros,sizeof(double)*NDET);
 
-    for (WrkFeno=0;(WrkFeno<NFeno)&&!rc;WrkFeno++)
+    for (WrkFeno=0;(WrkFeno<NFeno) && !rc;WrkFeno++)
      {
       indexPage=(pEngineContext->satelliteFlag)?plotPageRef:WrkFeno+plotPageAnalysis;
 
@@ -1902,7 +1902,7 @@ RC ANALYSE_AlignReference(ENGINE_CONTEXT *pEngineContext,int refFlag,int saveFla
         Lambda=Feno->Lambda;
        }
 
-      if (!Feno->hidden && (Feno->useKurucz!=ANLYS_KURUCZ_NONE) && (Feno->useKurucz!=ANLYS_KURUCZ_SPEC) && (Feno->useKurucz!=ANLYS_KURUCZ_REF_AND_SPEC) &&
+      if (!Feno->hidden && (Feno->useKurucz!=ANLYS_KURUCZ_NONE) && (Feno->useKurucz!=ANLYS_KURUCZ_SPEC) && (Feno->useKurucz!=ANLYS_KURUCZ_REF_AND_SPEC) && Feno->newrefFlag &&
           ((!refFlag && (Feno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_FILE)) ||
            (refFlag && (Feno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_AUTOMATIC))) &&
           Feno->useEtalon && !VECTOR_Equal(Feno->SrefEtalon,Sref,NDET,(double)0.) &&
@@ -1931,14 +1931,16 @@ RC ANALYSE_AlignReference(ENGINE_CONTEXT *pEngineContext,int refFlag,int saveFla
                                       &Square,                      // returned stretch order 2
                                       NULL,                        // number of iterations in Curfit
                                       (double)1.,(double)1.))>=THREAD_EVENT_STOP))
-
-         goto EndAlignReference;
-
-         for (j=0,lambda0=Lambda[(SvdPDeb+SvdPFin)/2];j<NDET;j++) // This is used only for spectra display
           {
-           x0=Lambda[j]-lambda0;
-           Lambda[j]=Lambda[j]-(pResults->Shift+(pResults->Stretch+pResults->Stretch2*x0)*x0);
+          	rc=ERROR_SetLast("ANALYSE_AlignReference",ERROR_TYPE_WARNING,ERROR_ID_REF_ALIGNMENT,Feno->windowName);
+           goto EndAlignReference;
           }
+
+        for (j=0,lambda0=Lambda[(SvdPDeb+SvdPFin)/2];j<NDET;j++) // This is used only for spectra display
+         {
+          x0=Lambda[j]-lambda0;
+          Lambda[j]=Lambda[j]-(pResults->Shift+(pResults->Stretch+pResults->Stretch2*x0)*x0);
+         }
 
         if (refFlag==2)
          {
@@ -1969,10 +1971,10 @@ RC ANALYSE_AlignReference(ENGINE_CONTEXT *pEngineContext,int refFlag,int saveFla
            ANALYSE_secX[i]=exp(log(Spectre[i])+ANALYSE_absolu[i]);
 
           if (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_OMI)
-           sprintf(tabTitle,"%s results (%d/%d)",Feno->windowName,pEngineContext->indexRecord,pEngineContext->recordNumber);
+           sprintf(tabTitle,"%s results (%d/%d)",Feno->windowName,TabFeno[indexFenoColumn][WrkFeno].indexRef,pEngineContext->recordNumber);
           else
            sprintf(tabTitle,"%s results (record %d/%d, measurement %d/%d, row %d/%d)",
-                   Feno->windowName,pEngineContext->indexRecord,pEngineContext->recordNumber,
+                   Feno->windowName,TabFeno[indexFenoColumn][WrkFeno].indexRef,pEngineContext->recordNumber,
                    pEngineContext->recordInfo.omi.omiMeasurementIndex,pEngineContext->recordInfo.omi.nMeasurements,
                    pEngineContext->recordInfo.omi.omiRowIndex,pEngineContext->recordInfo.omi.nXtrack);
 
@@ -3822,18 +3824,15 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
     ANALYSE_oldLatitude=pRecord->latitude;
 
-    if ((pEngineContext->lastSavedRecord!=pEngineContext->indexRecord)
-        && ( THRD_id==THREAD_TYPE_KURUCZ || nrc)
-        && ( (THRD_id==THREAD_TYPE_ANALYSIS
- && pProject->asciiResults.analysisFlag)
-             || (THRD_id==THREAD_TYPE_KURUCZ && pProject->asciiResults.calibFlag) ) ) {
-      rc=OUTPUT_SaveResults(pEngineContext,indexFenoColumn);
-    }
+    if ((pEngineContext->lastSavedRecord!=pEngineContext->indexRecord) && ((THRD_id==THREAD_TYPE_KURUCZ) || nrc) &&
+        (((THRD_id==THREAD_TYPE_ANALYSIS) && pProject->asciiResults.analysisFlag) || ((THRD_id==THREAD_TYPE_KURUCZ) && pProject->asciiResults.calibFlag)))
+
+     rc=OUTPUT_SaveResults(pEngineContext,indexFenoColumn);
    }
 
   // Return
 
- EndAnalysis :
+  EndAnalysis :
 
   if (Spectre!=NULL)
    MEMORY_ReleaseDVector("ANALYSE_Spectrum ","Spectre",Spectre,0);

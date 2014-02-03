@@ -163,11 +163,11 @@ RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,co
   // Initializations
 
   pKurucz=&KURUCZ_buffers[indexFenoColumn];
-  indexLine=(ANALYSE_swathSize==1)?1:KURUCZ_indexLine;
+  indexLine=KURUCZ_indexLine;
   indexColumn=2;
   solar=NULL;
-  oldNDET    = NDET;
-
+  oldNDET    = NDET;   
+  
   if ((shiftPoly=(double *)MEMORY_AllocDVector("KURUCZ_Spectrum ","shiftPoly",0,NDET-1))==NULL)
     rc=ERROR_ID_ALLOC;
   else
@@ -672,8 +672,7 @@ RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,co
 
   EndKuruczSpectrum :
 
-  if (ANALYSE_swathSize>1)
-   KURUCZ_indexLine=indexLine+1;
+  KURUCZ_indexLine=indexLine+1;       
 
   if (solar!=NULL)
    MEMORY_ReleaseDVector("KURUCZ_Spectrum ","solar",solar,0);
@@ -818,7 +817,8 @@ RC KURUCZ_Reference(double *instrFunction,INDEX refFlag,int saveFlag,int gomeFla
   // Initializations
 
   pKurucz=&KURUCZ_buffers[indexFenoColumn];
-
+  
+  KURUCZ_indexLine=1;
   rc=ERROR_ID_NO;
   msgCount=0;
 

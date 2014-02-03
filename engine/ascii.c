@@ -261,7 +261,10 @@ RC ASCII_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
   if (pEngineContext->analysisRef.refScan && pEngineContext->recordNumber &&
     ((pRef->scanRefIndexes=(int *)MEMORY_AllocBuffer("EngineSetFile","scanRefIndexes",pEngineContext->recordNumber,sizeof(int),0,MEMORY_TYPE_INT))==NULL))
 
-   rc=ERROR_ID_ALLOC;
+   rc=ERROR_ID_ALLOC;     
+   
+  else 
+   pEngineContext->fileInfo.nScanRef=0; 
 
   // Return
 
@@ -553,9 +556,9 @@ RC ASCII_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int local
       else
        pRecordInfo->Tm=(double)0.;
 
-      if ((dateFlag && ((pRecordInfo->localCalDay!=localDay) || elevFlag && (pRecordInfo->elevationViewAngle<80.))) ||                                                                                 // reference spectra are zenith only
+      if ((dateFlag && ((pRecordInfo->localCalDay!=localDay) || (elevFlag && (pRecordInfo->elevationViewAngle<80.)))) ||                                                                                 // reference spectra are zenith only
           (!dateFlag && pEngineContext->analysisRef.refScan && !pEngineContext->analysisRef.refSza && (pRecordInfo->elevationViewAngle>80.)))    // zenith sky spectra are not analyzed in scan reference selection mode
-       rc=ERROR_ID_FILE_RECORD;
+       rc=ERROR_ID_FILE_RECORD; 
      }
    }
 
