@@ -1383,7 +1383,7 @@ typedef struct
   char            groundPixelType;            // ground pixel type
   char            indexSpectralParam;         // index of set of spectral parameters in reference record to use for building calibration
  }
-SPECTRUM_RECORD;        
+SPECTRUM_RECORD;
 
 // Keep useful information for fast access to a record
 
@@ -1408,7 +1408,7 @@ typedef struct _GOMEOrbitFiles                                                  
   GDP_BIN_BAND_HEADER gdpBinBandInfo[SCIENCE_DATA_DEFINED];
   SPECTRUM_RECORD     gdpBinSpectrum;
   GEO_3               gdpBinGeo3;
-  GEO_4               gdpBinGeo4;  
+  GEO_4               gdpBinGeo4;
   int                 gdpBinSpectraSize,                                        // total size of spectra vector GDP_BIN_coeff
                       gdpBinCoeffSize,                                          // number of polynomial coefficients in vector
                       gdpBinStartPixel[SCIENCE_DATA_DEFINED];                   // starting pixels for bands present in the file
@@ -1481,6 +1481,7 @@ RC   SetOceanOptics(ENGINE_CONTEXT *pEngineContext,FILE *specFp);
 RC   ReliOceanOptics(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp);
 RC   ASCII_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp);
 RC   ASCII_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp);
+void ASCII_Free(const char *functionStr);
 RC   SetRAS(ENGINE_CONTEXT *pEngineContext,FILE *specFp);
 RC   ReliRAS(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp);
 

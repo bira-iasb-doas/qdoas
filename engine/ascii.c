@@ -87,6 +87,7 @@ PRJCT_ASCII ASCII_options;                                                      
 // ================
 
 static INDEX asciiLastRecord=ITEM_NONE;                                         // keep the index of the last record
+MATRIX_OBJECT asciiMatrix;
 
 // ===============
 // FILE PROCESSING
@@ -196,10 +197,13 @@ RC ASCII_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
  {
   // Declarations
 
-  char *lineRecord,line[MAX_ITEM_TEXT_LEN+1];                                  // get lines from the ASCII file
-  int itemCount,maxCount;                                                       // counters
+  char *lineRecord,line[MAX_ITEM_TEXT_LEN+1],                                   // get lines from the ASCII file
+        oldColumn[MAX_ITEM_TEXT_LEN+1],nextColumn[MAX_ITEM_TEXT_LEN+1];         // columns decomposition
+  int itemCount,startCount,maxCount,lineLength,indexColumn;                     // counters
   PRJCT_INSTRUMENTAL *pInstr;                                                   // pointer to the instrumental part of the pEngineContext structure
   ANALYSIS_REF *pRef;
+  double tempValue;
+  int nc;
   RC rc;                                                                        // return code
 
   // Initializations
@@ -209,8 +213,12 @@ RC ASCII_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
   lineRecord=NULL;
   pInstr=&pEngineContext->project.instrumental;
   pRef=&pEngineContext->analysisRef;
-  maxCount=NDET+pInstr->ascii.szaSaveFlag+pInstr->ascii.timeSaveFlag+pInstr->ascii.dateSaveFlag;
+  startCount=pInstr->ascii.szaSaveFlag+pInstr->ascii.timeSaveFlag+pInstr->ascii.dateSaveFlag;
+  maxCount=NDET;
   rc=ERROR_ID_NO;
+  nc=0;
+
+  ASCII_Free("ASCII_Set");
 
   // Check the file pointer
 
@@ -238,12 +246,59 @@ RC ASCII_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
 
      // Spectra records are saved in successive columns
 
-     while (fgets(line,MAX_ITEM_TEXT_LEN,specFp))
+     while (fgets(line,MAX_ITEM_TEXT_LEN,specFp) && !rc)
 
-      if ((strchr(line,';')==NULL) && (strchr(line,'*')==NULL) && (++itemCount==maxCount))
+      if ((strchr(line,';')==NULL) && (strchr(line,'*')==NULL))
        {
-        pEngineContext->recordNumber++;
-        itemCount=0;
+       	// Get the number of columns
+
+       	if ((itemCount==startCount) && !pEngineContext->recordNumber)
+       	 {
+         	strcpy(oldColumn,line);
+
+          for (nc=0;strlen(oldColumn);nc++)
+           {
+            lineLength=strlen(oldColumn);
+            oldColumn[lineLength++]='\n';
+            oldColumn[lineLength]=0;
+
+            memset(nextColumn,0,MAX_ITEM_TEXT_LEN);
+            sscanf(oldColumn,"%lf %[^'\n']",(double *)&tempValue,nextColumn);
+            strcpy(oldColumn,nextColumn);
+           }
+
+          if ((nc>pInstr->ascii.lambdaSaveFlag+1) && (rc=MATRIX_Allocate(&asciiMatrix,NDET,nc,0,0,0,"ASCII_Set"))!=ERROR_ID_ALLOC)
+           pEngineContext->recordNumber+=nc-pInstr->ascii.lambdaSaveFlag;
+         }
+
+        ++itemCount;
+
+        // Matrix mode
+
+        if ((itemCount>startCount) && (nc>pInstr->ascii.lambdaSaveFlag+1))
+         {
+          strcpy(oldColumn,line);
+
+          for (indexColumn=0;strlen(oldColumn) && (indexColumn<nc);indexColumn++)
+           {
+            lineLength=strlen(oldColumn);
+            oldColumn[lineLength++]='\n';
+            oldColumn[lineLength]=0;
+
+            memset(nextColumn,0,MAX_ITEM_TEXT_LEN);
+            sscanf(oldColumn,"%lf %[^'\n']",(double *)&tempValue,nextColumn);
+            asciiMatrix.matrix[indexColumn][itemCount-startCount-1]=tempValue;
+            strcpy(oldColumn,nextColumn);
+           }
+
+          if (itemCount==maxCount)
+           break;
+         }
+        else if (itemCount==maxCount)
+         {
+          pEngineContext->recordNumber++;
+          itemCount=0;
+         }
        }
    }
 
@@ -261,10 +316,10 @@ RC ASCII_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
   if (pEngineContext->analysisRef.refScan && pEngineContext->recordNumber &&
     ((pRef->scanRefIndexes=(int *)MEMORY_AllocBuffer("EngineSetFile","scanRefIndexes",pEngineContext->recordNumber,sizeof(int),0,MEMORY_TYPE_INT))==NULL))
 
-   rc=ERROR_ID_ALLOC;     
-   
-  else 
-   pEngineContext->fileInfo.nScanRef=0; 
+   rc=ERROR_ID_ALLOC;
+
+  else
+   pEngineContext->fileInfo.nScanRef=0;
 
   // Return
 
@@ -433,7 +488,14 @@ RC ASCII_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int local
     // SPECTRA RECORDS ARE SAVED IN SUCCESSIVE COLUMNS
     // -----------------------------------------------
 
+    else if ((asciiMatrix.nl==NDET) && (asciiMatrix.nc>lambdaFlag))
+     {
+      if (lambdaFlag)
+       memcpy(lambda,asciiMatrix.matrix[0],sizeof(double)*NDET);
+      memcpy(spectrum,asciiMatrix.matrix[recordNo+lambdaFlag-1],sizeof(double)*NDET);
+     }
     else
+
      {
       // Read the solar zenith angle
 
@@ -558,7 +620,7 @@ RC ASCII_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int local
 
       if ((dateFlag && ((pRecordInfo->localCalDay!=localDay) || (elevFlag && (pRecordInfo->elevationViewAngle<80.)))) ||                                                                                 // reference spectra are zenith only
           (!dateFlag && pEngineContext->analysisRef.refScan && !pEngineContext->analysisRef.refSza && (pRecordInfo->elevationViewAngle>80.)))    // zenith sky spectra are not analyzed in scan reference selection mode
-       rc=ERROR_ID_FILE_RECORD; 
+       rc=ERROR_ID_FILE_RECORD;
      }
    }
 
@@ -571,3 +633,9 @@ RC ASCII_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int local
   return rc;
  }
 
+void ASCII_Free(const char *functionStr)
+ {
+ 	MATRIX_Free(&asciiMatrix,functionStr);
+
+ 	memset(&asciiMatrix,0,sizeof(MATRIX_OBJECT));
+ }

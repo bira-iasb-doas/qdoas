@@ -121,6 +121,7 @@ void EngineResetContext(ENGINE_CONTEXT *pEngineContext)
     MEMORY_ReleaseBuffer("EngineResetContext","omiPixelQF",pRecord->omi.omiPixelQF);
 
    CCD_ResetInstrumental(&pRecord->ccd);
+   ASCII_Free("EngineResetContext");
 
    // Reset structure
 

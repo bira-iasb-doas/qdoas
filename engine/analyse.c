@@ -135,7 +135,7 @@
 // GLOBAL DECLARATIONS
 // ===================
 
-#define ANALYSE_LONGPATH 0                                                      // !!! Anoop
+#define ANALYSE_LONGPATH 0                                                      // 0 normal mode, 1 for Anoop specific needs
 #define MAX_REPEAT_CURFIT 3
 
 ANALYSIS_WINDOWS  *ANLYS_windowsList;       // analysis windows list
