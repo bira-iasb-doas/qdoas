@@ -312,16 +312,16 @@ RC check_output_path(const char* output_path) {
 
   const char *output_path_end = strrchr(output_path, PATH_SEP);
 
-  if ( strcmp("automatic", output_path_end + 1) != 0 ) {
-    // if no automatic output filenames are chosen: check we can write to the file
-    FILE *test = fopen(output_path, "a");
-    
-    if (test == NULL) {
-      rc = ERROR_SetLast("Output Path configuration error" , ERROR_TYPE_FATAL, ERROR_ID_FILE_OPEN, output_path);
-    } else {
-      fclose(test);
-    }
-  } else // otherwise: automatic output files: file names will be generated based on the input files.
+//  if ( strcmp("automatic", output_path_end + 1) != 0 ) {
+//    // if no automatic output filenames are chosen: check we can write to the file
+//    FILE *test = fopen(output_path, "a");
+//
+//    if (test == NULL) {
+//      rc = ERROR_SetLast("Output Path configuration error" , ERROR_TYPE_FATAL, ERROR_ID_FILE_OPEN, output_path);
+//    } else {
+//      fclose(test);
+//    }
+//  } else // otherwise: automatic output files: file names will be generated based on the input files.
          // We can only check if the target directory exists
 
     if (output_path_end != NULL) {
@@ -1610,7 +1610,7 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
    int indexFeno,indexFenoColumn,i;                                              // browse analysis windows
    MATRIX_OBJECT hr_solar_temp; // to preload high res solar spectrum
    RC rc;                                                                        // return code
-   
+
    // Initializations
 
    lambdaMin=1000;
@@ -2165,7 +2165,7 @@ int mediateRequestNextMatchingSpectrum(ENGINE_CONTEXT *pEngineContext,void *resp
        }
 
       }
-      
+
      // try the next record
      rec+=inc;
     }
@@ -2286,8 +2286,8 @@ int mediateRequestNextMatchingAnalyseSpectrum(void *engineContext,
 
    if (rec > 0 && (pEngineContext->indexRecord<=pEngineContext->recordNumber))
     {
-     mediateRequestPlotSpectra(pEngineContext,responseHandle);       
-     
+     mediateRequestPlotSpectra(pEngineContext,responseHandle);
+
      if (!pEngineContext->analysisRef.refAuto || pEngineContext->satelliteFlag || ((rc=EngineNewRef(pEngineContext,responseHandle))==ERROR_ID_NO) )
       rc=ANALYSE_Spectrum(pEngineContext,responseHandle);
 
