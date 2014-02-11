@@ -29,7 +29,7 @@ RC ascii_open(const ENGINE_CONTEXT *pEngineContext,char *filename) {
     return ERROR_ID_FILE_OPEN; // shouldn't happen...
   } else {
     size_t size = ftell(output_file);
-    if (size != 0) { // we have a new output file -> print column titles etc
+    if (size == 0) { // we have a new output file -> print column titles etc
       // Satellites measurements and automatic reference selection : save information on the selected reference
       if ( ( pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_ASCII ||
              pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN ||
