@@ -6,8 +6,6 @@
 #include "output_common.h"
 #include "output.h"
 
-#define ASC_EXTENSION ".ASC"
-
 /*! current output file (NULL if no file is open) */
 static FILE *output_file;
 
@@ -16,7 +14,7 @@ static void write_calib_output(FILE *fp);
 static void OutputAscPrintTitles(FILE *fp);
 
 RC ascii_open(const ENGINE_CONTEXT *pEngineContext,char *filename) {
-  strcat(filename, ASC_EXTENSION);
+  strcat(filename, output_file_extensions[ASCII]);
   
   const PROJECT *pProject= &pEngineContext->project;
 

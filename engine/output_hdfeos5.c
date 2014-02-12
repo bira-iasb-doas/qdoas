@@ -53,7 +53,7 @@ static size_t nCalibWindows;
  */
 
 RC hdfeos5_open(const ENGINE_CONTEXT *pEngineContext, char *filename) {
-  strcat(filename, ".he5");
+  strcat(filename, output_file_extensions[HDFEOS5]);
   RC rc = ERROR_ID_NO;
 
   const char *swath_name = pEngineContext->project.asciiResults.swath_name;

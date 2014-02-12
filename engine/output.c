@@ -85,7 +85,7 @@ int OUTPUT_nRec;
 /*! \brief Array matching enum output_format values with strings
     containing their filename extension.  The position in the array
     must correspond to the value of the enum.*/
-const char *output_file_extensions[] = { [ASCII] = ".asc",
+const char *output_file_extensions[] = { [ASCII] = ".ASC",
                                          [HDFEOS5] = ".he5"};
 
 struct output_field output_data_analysis[MAX_FIELDS]; // todo: allocate dynamically?
@@ -1423,7 +1423,7 @@ void OutputBuildSiteFileName(const ENGINE_CONTEXT *pEngineContext,char *outputFi
 
   // Build the complete output path
 
-  FILES_RebuildFileName(outputFileName,pResults->path,1);
+  strcpy(outputFileName,pResults->path);
 
   if ((fileNamePtr=strrchr(outputFileName,PATH_SEP))==NULL)                     // extract output file name without path
    fileNamePtr=outputFileName;
@@ -1433,6 +1433,27 @@ void OutputBuildSiteFileName(const ENGINE_CONTEXT *pEngineContext,char *outputFi
   sprintf(fileNamePtr,"%s_%04d%02d",
           (indexSite!=ITEM_NONE) ? SITES_itemList[indexSite].abbrev : "XX",year,month);
  }
+
+/*! remove filename extension ".ext" from "[...]/filename.ext", if
+  filename entered by the user ends with one of the possible file
+  extensions for Qdoas output files (".ASC"/".HE5").
+
+  \param[in] filename filename, will be updated in-place if an
+             extension is found.
+ */
+void remove_extension(char *filename) {
+  char * extension = strrchr(filename, '.');
+  if (extension != NULL) {   
+    // compare to known output file extensions
+    size_t num_extensions = sizeof(output_file_extensions)/sizeof(output_file_extensions[0]);
+    for(size_t i=0; i < num_extensions; ++i) {
+      if (!strcasecmp(extension, output_file_extensions[i])) {
+        *extension ='\0';
+        break;
+      }
+    }
+  }
+}
 
 /*! For satellites measurements, automatically build a file name for
   the output file and create the necessary directory structure.
@@ -1446,114 +1467,89 @@ void OutputBuildSiteFileName(const ENGINE_CONTEXT *pEngineContext,char *outputFi
   \retval ERROR_ID_NOTHING_TO_SAVE if there is nothing to save,
   \retval ERROR_ID_NO otherwise
 */
-RC OutputBuildFileName(const ENGINE_CONTEXT *pEngineContext,char *outputFileName)
+RC OutputBuildFileName(const ENGINE_CONTEXT *pEngineContext,char *outputPath)
 {
-  OUTPUT_INFO         *pOutput;
-  char               *fileNamePtr,                                             // character pointers used for building output file name
-    tmpBuffer[MAX_ITEM_TEXT_LEN+1];
-  const char *ptr;
-  int                  satelliteFlag;
-  RC                   rc;
-
-  // Initializations
-
   const PROJECT *pProject = &pEngineContext->project;
   const PRJCT_RESULTS *pResults = &pProject->asciiResults;
 
-  rc=ERROR_ID_NO;
+  RC rc=ERROR_ID_NO;
 
-  if (!outputNbRecords)
-    rc=ERROR_SetLast("OutputBuildFileName",ERROR_TYPE_WARNING,ERROR_ID_NOTHING_TO_SAVE,pEngineContext->fileInfo.fileName);
-  else
-    {
-      pOutput=&outputRecords[0];
+  const OUTPUT_INFO* pOutput=&outputRecords[0];
+  
+  // Build the complete output path  
+  strcpy(outputPath,pResults->path);
 
-      // Build the complete output path
+  char *fileNameStart;
+  // extract output file name without path
+  if ((fileNameStart=strrchr(outputPath,PATH_SEP))==NULL) {
+    // outputPath doesn't contain any path separators -> only contains a file name (in current working dir)
+    fileNameStart=outputPath;
+  } else {
+    // skip the separator character
+    ++fileNameStart;
+  }
 
-      strcpy(outputFileName,pResults->path);
+  int satelliteFlag=((pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN) ||
+                 (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_ASCII) ||
+                 (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS) ||
+                 (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_OMI) ||
+                 (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GOME2));
+  
+  if ((!strlen(fileNameStart) || !strcasecmp(fileNameStart,"automatic")) &&
+      ((satelliteFlag && ((pProject->spectra.mode!=PRJCT_SPECTRA_MODES_OBSLIST) || (pProject->spectra.radius<=1.))) ||
+       (!satelliteFlag && (pResults->fileNameFlag || (SITES_GetIndex(pProject->instrumental.observationSite)==ITEM_NONE))))) {
+    
+    const char *inputFileName;
+    
+    if ((inputFileName=strrchr(pEngineContext->fileInfo.fileName,PATH_SEP))==NULL) {
+      inputFileName=pEngineContext->fileInfo.fileName;
+    } else {
+      inputFileName++;
+    }
 
-      if ((fileNamePtr=strrchr(outputFileName,PATH_SEP))==NULL)                   // extract output file name without path
-        fileNamePtr=outputFileName;
-      else
-        fileNamePtr++;
-
-      satelliteFlag=((pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN) ||
-                     (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_ASCII) ||
-                     (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS) ||
-                     (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_OMI) ||
-                     (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GOME2));
-
-      if ((!strlen(fileNamePtr) || !strcasecmp(fileNamePtr,"automatic")) &&
-          ((satelliteFlag && ((pProject->spectra.mode!=PRJCT_SPECTRA_MODES_OBSLIST) || (pProject->spectra.radius<=1.))) ||
-           (!satelliteFlag && (pResults->fileNameFlag || (SITES_GetIndex(pProject->instrumental.observationSite)==ITEM_NONE)))))
-        {
-          if ((ptr=strrchr(pEngineContext->fileInfo.fileName,PATH_SEP))==NULL)
-            ptr=pEngineContext->fileInfo.fileName;
-          else
-            ptr++;
-
-          // Remove the separator character in order that outputFileName is only the output directory
-
-          fileNamePtr--;
-          *fileNamePtr=0;
-
-          if (satelliteFlag && pResults->dirFlag)
-            {
-              // Create 'year' directory
-
-              strcpy(tmpBuffer,outputFileName);
-              sprintf(outputFileName,"%s%c%d",tmpBuffer,PATH_SEP,(int)pOutput->year);
+    if (satelliteFlag && pResults->dirFlag) {
+      // Create 'year' directory
+      int nwritten = sprintf(fileNameStart,"%d%c",(int)pOutput->year, PATH_SEP);
+      fileNameStart += nwritten;
 #if defined WIN32
-              mkdir(outputFileName);
+      mkdir(outputPath);
 #else
-              mkdir(outputFileName,0755);
+      mkdir(outputPath,0755);
 #endif
-
-              // Create 'month' directory
-
-              strcpy(tmpBuffer,outputFileName);
-              sprintf(outputFileName,"%s%c%02d",tmpBuffer,PATH_SEP,(int)pOutput->month);
+      // Create 'month' directory
+      nwritten = sprintf(fileNameStart,"%02d%c",(int)pOutput->month, PATH_SEP);
+      fileNameStart += nwritten;
 #if defined WIN32
-              mkdir(outputFileName);
+      mkdir(outputPath);
 #else
-              mkdir(outputFileName,0755);
+      mkdir(outputPath,0755);
 #endif
-
-              // Create 'day' directory
-
-              strcpy(tmpBuffer,outputFileName);
-              sprintf(outputFileName,"%s%c%02d",tmpBuffer,PATH_SEP,(int)pOutput->day);
+      // Create 'day' directory
+      nwritten = sprintf(fileNameStart,"%02d%c",(int)pOutput->day, PATH_SEP);
+      fileNameStart += nwritten;
 #if defined WIN32
-              mkdir(outputFileName);
+      mkdir(outputPath);
 #else
-              mkdir(outputFileName,0755);
+      mkdir(outputPath,0755);
 #endif
-            }
+    }
+  
+    // Build output file name    
+    if ( pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS)
+      sprintf(fileNameStart,"SCIA_%d%02d%02d_%05d",pOutput->year,pOutput->month,pOutput->day,pEngineContext->recordInfo.scia.orbitNumber);
+    else {
+      sprintf(fileNameStart,"%s",inputFileName);
 
-          // Build output file name
-
-          strcpy(tmpBuffer,outputFileName);
-
-          if ( pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS)
-            sprintf(outputFileName,"%s%cSCIA_%d%02d%02d_%05d",tmpBuffer,PATH_SEP,pOutput->year,pOutput->month,pOutput->day,pEngineContext->recordInfo.scia.orbitNumber);
-          else
-            sprintf(outputFileName,"%s%c%s",tmpBuffer,PATH_SEP,ptr);
-
-        }
-      // remove trailing ".ext" from "[...]/filename.ext", if filename
-      // entered by the user ends in '.ext'.  Proper extension will be
-      // added again when we create  the output file:
-      char *basename_start=strrchr(outputFileName,PATH_SEP);
-      if (basename_start == NULL) {
-        // outputFileName is a name without leading path
-        basename_start = outputFileName;
-      }
-      char *extension_start=strrchr(basename_start,'.');
+      // remove original level1 filename extension, if present
+      char *extension_start=strrchr(fileNameStart, '.');
       if (extension_start != NULL) {
         *extension_start ='\0';
       }
     }
-
+    
+  } else { // user-chosen filename
+    remove_extension(fileNameStart);
+  }
   return rc;
 }
 
@@ -1623,6 +1619,70 @@ RC output_write_automatic_file(const bool selected_records[], int year, int mont
   return rc;
 }
 
+/* \brief Check if the configured Output Path is valid.
+
+ for user-chosen output file name: check if we can write to the file
+ for automatic file names: just check if the root directory exists.
+
+ \retval ERROR_ID_FILE_OPEN We can not open the configured file.
+ \retval ERROR_ID_DIR_NOT_FOUND The directory selected for automatic output doesn't exist.
+ \retval ERROR_ID_NONE Ok
+
+*/
+RC OUTPUT_CheckPath(const PRJCT_RESULTS *pResults) {
+
+  RC rc = ERROR_ID_NO;
+
+  const char *output_path = pResults->path;
+  const char *output_path_end = strrchr(output_path, PATH_SEP);
+  const char *fileName;
+  if (output_path_end == NULL) {
+    fileName = output_path;
+  } else {
+    fileName = output_path_end + 1; // skip path separator
+  }
+
+  if ( strlen(fileName) != 0 && strcmp("automatic", fileName) != 0 ) {
+    // if an output filename is specified and it is not 'automatic':
+    // check if we can write to the file
+
+    // create the filename as it will be generated in the output routines:
+    const char *extension = output_file_extensions[pResults->file_format];
+    size_t namelen = strlen(output_path) + strlen(extension);
+    char filename[1+namelen];
+    strcpy(filename, output_path);
+    remove_extension(filename); // if user has added a filename extension .asc/.he5/..., remove it
+    strcat(filename, extension); // add proper extension
+    FILE *test = fopen(filename, "a");
+
+    if (test == NULL) {
+      rc = ERROR_SetLast("Output Path configuration error" , ERROR_TYPE_FATAL, ERROR_ID_FILE_OPEN, filename);
+    } else {
+      fclose(test);
+    }
+  } else // otherwise: automatic output files: file names will be generated based on the input files.
+         // We can only check if the target directory exists
+
+    if (output_path_end != NULL) {
+      // only test when a path is specified using a path separator;
+      char path[MAX_ITEM_TEXT_LEN + 1];
+      size_t pathlen = output_path_end - output_path;
+      strncpy(path, output_path, pathlen);
+      path[pathlen]='\0';
+      if ( STD_IsDir(path) != 1 ) {
+        rc = ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_DIR_NOT_FOUND, path, ", please create the directory or change the project's Output Path.");
+      }
+    } else {
+      // when no path separator is given and the user has chosen to
+      // generate year/month/day directories, automatic output files
+      // will be generated as "/year/month/day/..." in the root
+      // directory -> will not work, throw error
+      rc = ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_DIR_NOT_FOUND, "\"\"", ", please specify a directory in the project's Output Path");
+    }
+
+  return rc;
+}
+
 RC OUTPUT_FlushBuffers(ENGINE_CONTEXT *pEngineContext)
 {
   const PROJECT *pProject = &pEngineContext->project; // pointer to project data
@@ -1636,7 +1696,9 @@ RC OUTPUT_FlushBuffers(ENGINE_CONTEXT *pEngineContext)
   // select records for output according to date/site
   bool selected_records[outputNbRecords];
 
-  if ((pResults->analysisFlag || pResults->calibFlag) && outputNbRecords && !(rc=OutputBuildFileName(pEngineContext,outputFileName))) {
+  if ((pResults->analysisFlag || pResults->calibFlag) 
+      && outputNbRecords 
+      && !(rc=OutputBuildFileName(pEngineContext,outputFileName))) {
     char *ptr = strrchr(outputFileName,PATH_SEP);
     if ( ptr==NULL )
       ptr=outputFileName;
@@ -1644,9 +1706,13 @@ RC OUTPUT_FlushBuffers(ENGINE_CONTEXT *pEngineContext)
       ptr++;
 
     if ( strcasecmp(ptr,"automatic") != 0) {
-      // ------------------
-      // NOT AUTOMATIC MODE
-      // ------------------
+      // - we have a user-specified filename (not 'automatic'), or
+      //
+      // the complete filename was already built in 'OutputBuildFileName' because we have
+      //   
+      // - satellite measurements, not in overpass mode, or
+      //
+      // - groundbased measurements, not in "observation site mode"
       
       rc = open_output_file(pEngineContext,outputFileName);
       if (!rc ) {
@@ -1664,7 +1730,7 @@ RC OUTPUT_FlushBuffers(ENGINE_CONTEXT *pEngineContext)
       for(unsigned int i=0; i<outputNbRecords; i++)
         selected_records[i] = false;
 
-      // Overpasses: records are distributed using information on the measurement date and the geolocation
+      // satellite, overpasses: records are distributed using information on the measurement date and the geolocation
       if ((pProject->spectra.mode==PRJCT_SPECTRA_MODES_OBSLIST) && (pProject->spectra.radius>1.)) {
         for (int indexSite=0;indexSite<SITES_itemN;indexSite++) {
           unsigned int indexRecord=0;
@@ -1689,9 +1755,8 @@ RC OUTPUT_FlushBuffers(ENGINE_CONTEXT *pEngineContext)
             }
           }
         }
-      }
-      // Records are saved using the information on the date only
-      else {
+      } else {
+        // Groundbased, records are saved using the information on the date only
         unsigned int indexRecord=0;
         int indexSite=SITES_GetIndex(pProject->instrumental.observationSite);
 
@@ -1843,7 +1908,7 @@ size_t output_get_size(enum output_datatype datatype) {
     Should be called to clear the results of the previous file while
     keeping the output configuration intact, when writing the results
     of a new file to output using the same output settings.*/
-static void output_field_clear(struct output_field *this_field) {
+ static void output_field_clear(struct output_field *this_field) {
   if(this_field->data) {
 
     if(this_field->memory_type == OUTPUT_STRING) {

@@ -8,6 +8,8 @@
 
 void OUTPUT_ResetData(void);
 
+RC OUTPUT_CheckPath(const PRJCT_RESULTS *pResults);
+
 RC OUTPUT_RegisterData(const ENGINE_CONTEXT *pEngineContext);
 
 /*! \brief Write all saved output data to disk. */
