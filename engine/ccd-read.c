@@ -327,14 +327,6 @@ RC SetCCD_EEV(ENGINE_CONTEXT *pEngineContext,FILE *specFp,FILE *darkFp)
       ccdY=(header.roiSlitEnd-header.roiSlitStart+1)/header.roiSlitGroup;
       dataSize=(header.doubleFlag==(char)1)?sizeof(double):sizeof(unsigned short);
 
-{
-	FILE *fp;
-	fp=fopen("toto.dat","a+t");
-	fprintf(fp,"%d %d x %d %d\n",pEngineContext->recordNumber,ccdX,ccdY,dataSize);
-	fclose(fp);
-}
-
-
       if (!pEngineContext->recordNumber)
        CCD_GetImageFilesList(&header.today,pEngineContext->project.instrumental.imagePath);
 
