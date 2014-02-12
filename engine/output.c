@@ -1659,6 +1659,11 @@ RC OUTPUT_CheckPath(const PRJCT_RESULTS *pResults) {
       rc = ERROR_SetLast("Output Path configuration error" , ERROR_TYPE_FATAL, ERROR_ID_FILE_OPEN, filename);
     } else {
       fclose(test);
+      if(pResults->file_format == HDFEOS5) {
+        // for HDFEOS-5, we do not append to existing files
+        // -> if the file already exists, its size should be 0
+        rc = hdfeos5_allow_file(filename);
+      }
     }
   } else // otherwise: automatic output files: file names will be generated based on the input files.
          // We can only check if the target directory exists

@@ -70,13 +70,10 @@ RC hdfeos5_open(const ENGINE_CONTEXT *pEngineContext, char *filename) {
     }
   }
 
-  // test if file exists
-  FILE *fp = fopen(filename, "rb");
-
-  if(fp) { // file already exists!
-    fclose(fp);
-    rc = ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_HDFEOS5_FILE_EXISTS, filename);
-  } else { // new file, go ahead
+  // test if file exists; if it already exists, size should be 0.
+  rc = hdfeos5_allow_file(filename);
+  if (rc == ERROR_ID_NO) {
+    // new file, go ahead
     hid_t result_open = HE5_SWopen(filename, H5F_ACC_TRUNC);
     if(result_open != FAIL) {
       output_file = result_open;
@@ -122,6 +119,20 @@ void hdfeos5_close_file(void) {
   HE5_SWdetach(swath_id);
   HE5_SWclose(output_file);
   output_file = 0;
+}
+
+// test if a file of non-zero size already exists at a given location
+// if a file already exists, we will not write to this location
+RC hdfeos5_allow_file(const char *filename) {
+  RC rc = ERROR_ID_NO;
+  struct stat stat_output;
+  int statrc = stat(filename, &stat_output);
+  // if stat returns -1, we assume the file didn't exist, which is ok
+  // if stat is successfull, current size of file should be 0
+  if (statrc == 0 && stat_output.st_size != 0) {
+    rc = ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_HDFEOS5_FILE_EXISTS, filename);
+  }
+  return rc;
 }
 
 /*! \brief Create the required dimensions in the current swath.*/
