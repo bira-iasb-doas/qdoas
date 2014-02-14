@@ -183,11 +183,11 @@ ERROR_TABLE errorTable[]=
   { ERROR_ID_PDS                       , "[%s] failed for %s PDS file"                                                                                        },
   { ERROR_ID_BEAT                      , "[%s] failed (file %s, error %s)"                                                                                    },
   { ERROR_ID_OMI_SWATH                 , "[%s] swath not present in %s"                                                                                       },
-  { ERROR_ID_OMI_REF                   , "Incompatibility of reference between analysis windows"                                                              },
+  { ERROR_ID_OMI_REF                   , "Couldn't load reference spectrum"                                                              },
   { ERROR_ID_OMI_REFSIZE               , "%s and spectra swaths do not have the same size"                                                            },
   { ERROR_ID_FILE_FORMAT               , "File format is unknown"                                                                                             },
   { ERROR_ID_OMI_PIXELQF               , "Spectrum rejected based on pixels quality flags"                                                                    },
-  { ERROR_ID_HDFEOS                    , "[%s] failed (file %s, error %s)"
+  { ERROR_ID_HDFEOS                    , "[%s] %s%s"
   },
   { ERROR_ID_HDFEOS5_SWATH             , "Could not create swath %s in file %s"
   },

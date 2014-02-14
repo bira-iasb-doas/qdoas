@@ -954,7 +954,7 @@ RC OmiGetSwathData(OMI_ORBIT_FILE *pOrbitFile)
   for (unsigned int i=0; i<sizeof(swathdata)/sizeof(swathdata[0]); i++) {
     swrc = SWreadfield(pOrbitFile->sw_id, (char *) swathdata[i].buffername, start, NULL, edge, swathdata[i].bufferptr);
     if (swrc == FAIL) {
-      rc = ERROR_SetLast("OmiGetSwathData",ERROR_TYPE_WARNING,ERROR_ID_HDFEOS,swathdata[i].buffername,pOrbitFile->omiFileName,"Can not read ", swathdata[i].buffername);
+      rc = ERROR_SetLast("OmiGetSwathData",ERROR_TYPE_FATAL,ERROR_ID_HDFEOS,swathdata[i].buffername,pOrbitFile->omiFileName,"Can not read ", swathdata[i].buffername);
       break;
     }
   }
@@ -977,7 +977,7 @@ RC OmiOpen(OMI_ORBIT_FILE *pOrbitFile,const char *swathName)
   // Open the file
   int32 swf_id = SWopen(pOrbitFile->omiFileName, DFACC_READ);
   if (swf_id == FAIL) {
-    rc = ERROR_SetLast("OmiOpen",ERROR_TYPE_WARNING,ERROR_ID_HDFEOS,"OmiOpen",pOrbitFile->omiFileName,"SWopen");
+    rc = ERROR_SetLast("OmiOpen",ERROR_TYPE_FATAL,ERROR_ID_HDFEOS,"OmiOpen",pOrbitFile->omiFileName,"SWopen");
     goto end_OmiOpen;
   }
   pOrbitFile->swf_id = swf_id;
@@ -986,7 +986,7 @@ RC OmiOpen(OMI_ORBIT_FILE *pOrbitFile,const char *swathName)
   int32 strbufsize = 0;
   int nswath = SWinqswath(pOrbitFile->omiFileName, NULL, &strbufsize);
   if(nswath == FAIL) {
-    rc = ERROR_SetLast("OmiOpen", ERROR_TYPE_WARNING, ERROR_ID_HDFEOS, "SWinqswath", pOrbitFile->omiFileName);
+    rc = ERROR_SetLast("OmiOpen", ERROR_TYPE_FATAL, ERROR_ID_HDFEOS, "SWinqswath", pOrbitFile->omiFileName);
     goto end_OmiOpen;
   } else {
     char swathlist[strbufsize+1];
@@ -999,7 +999,7 @@ RC OmiOpen(OMI_ORBIT_FILE *pOrbitFile,const char *swathName)
     // (the complete name is needed to open the swath with SWattach)
     char *swath_full_name = strstr(swathlist,swathName);
     if (swath_full_name == NULL) {
-    rc = ERROR_SetLast("OmiOpen",ERROR_TYPE_WARNING,ERROR_ID_HDFEOS,"OmiOpen",pOrbitFile->omiFileName,"find swath");
+    rc = ERROR_SetLast("OmiOpen",ERROR_TYPE_FATAL,ERROR_ID_HDFEOS,"OmiOpen",pOrbitFile->omiFileName,"find swath");
     goto end_OmiOpen;
     }
     char *end_name = strpbrk(swath_full_name,",");
@@ -1009,7 +1009,7 @@ RC OmiOpen(OMI_ORBIT_FILE *pOrbitFile,const char *swathName)
     
     int32 sw_id = SWattach(swf_id, swath_full_name); // attach the swath
     if (sw_id == FAIL) {
-      rc = ERROR_SetLast("OmiOpen", ERROR_TYPE_WARNING,ERROR_ID_HDFEOS,"OmiOpen",pOrbitFile->omiFileName,"SWattach");
+      rc = ERROR_SetLast("OmiOpen", ERROR_TYPE_FATAL,ERROR_ID_HDFEOS,"OmiOpen",pOrbitFile->omiFileName,"SWattach");
       goto end_OmiOpen;
     }
     pOrbitFile->sw_id = sw_id;
@@ -1020,7 +1020,7 @@ RC OmiOpen(OMI_ORBIT_FILE *pOrbitFile,const char *swathName)
     char dimlist[520]; // 520 is a safe maximum length, see HDF-EOS ref for SWfieldinfo()
     intn swrc = SWfieldinfo(sw_id, (char *) "RadianceMantissa",&rank,dims,&numbertype , dimlist);
     if(swrc == FAIL) {
-      rc=ERROR_SetLast("OmiOpen", ERROR_TYPE_WARNING, ERROR_ID_FILE_EMPTY,pOrbitFile->omiFileName);
+      rc=ERROR_SetLast("OmiOpen", ERROR_TYPE_FATAL, ERROR_ID_FILE_EMPTY,pOrbitFile->omiFileName);
       goto end_OmiOpen;
     }
 
@@ -1030,7 +1030,7 @@ RC OmiOpen(OMI_ORBIT_FILE *pOrbitFile,const char *swathName)
     
     pOrbitFile->specNumber=pOrbitFile->nMeasurements*pOrbitFile->nXtrack;
     if (!pOrbitFile->specNumber)
-      rc=ERROR_SetLast("OmiOpen",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pOrbitFile->omiFileName);
+      rc=ERROR_SetLast("OmiOpen",ERROR_TYPE_FATAL,ERROR_ID_FILE_EMPTY,pOrbitFile->omiFileName);
 
     // Allocate data
     rc=OMI_AllocateSwath(&pOrbitFile->omiSwath,pOrbitFile->nMeasurements,pOrbitFile->nXtrack);
@@ -1053,23 +1053,23 @@ RC OMI_LoadReference(int spectralType, const char *refFile, OMI_REF **return_ref
 
   swf_id = SWopen((char *)refFile, DFACC_READ); // library header doesn't contain const modifier
   if (swf_id == FAIL) {
-    rc=ERROR_SetLast(__func__,ERROR_TYPE_WARNING,ERROR_ID_HDFEOS,__func__,refFile,"SWopen");
+    rc=ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_HDFEOS,refFile,"can't open file ","");
     goto end_loadreference;
   }
   sw_id = SWattach(swf_id, (char *) OMI_SunSwaths[spectralType]); // library header doesn't contain const modifier
   if (sw_id  == FAIL) {
-    rc=ERROR_SetLast(__func__,ERROR_TYPE_WARNING,ERROR_ID_HDFEOS,__func__,refFile,"SWattach");
+    rc=ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_HDFEOS,OMI_SunSwaths[spectralType],"swath not found in file ", refFile);
     goto end_loadreference;
   }
 
   int32 n_xtrack = SWdiminfo(sw_id, (char *) NXTRACK);
   if (n_xtrack == FAIL) {
-    rc = ERROR_SetLast(__func__, ERROR_TYPE_WARNING, ERROR_ID_HDFEOS, NXTRACK, refFile, "SWdiminfo");
+    rc = ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_HDFEOS, NXTRACK, "can't access dimension in file ", refFile);
     goto end_loadreference;
   }
   int32 n_wavel = SWdiminfo(sw_id, (char *) NWAVEL);
   if (n_wavel == FAIL) {
-    rc = ERROR_SetLast(__func__, ERROR_TYPE_WARNING, ERROR_ID_HDFEOS, NWAVEL, refFile, "SWdiminfo");
+    rc = ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_HDFEOS, NWAVEL, "can't access dimension in file ", refFile);
     goto end_loadreference;
   }
 
@@ -1144,7 +1144,7 @@ RC omi_load_spectrum(int spec_type, int32 sw_id, int32 measurement, int32 track,
       swrc |= SWreadfield(sw_id,(char *) WAVELENGTH_COEFFICIENT, start, NULL, edge, wavelength_coeff);
       
       if (swrc == FAIL) {
-        rc = ERROR_SetLast(__func__, ERROR_TYPE_WARNING, ERROR_ID_HDFEOS, "SWreadfield");
+        rc = ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_HDFEOS, "SWreadfield");
         goto end_load_spectrum;
       }
       // store wavelength in lambda
@@ -1178,7 +1178,7 @@ RC omi_load_spectrum(int spec_type, int32 sw_id, int32 measurement, int32 track,
     swrc |= SWreadfield(sw_id, (char *) PIXEL_QUALITY_FLAGS, start, NULL, edge, pixelQualityFlags);
 
   if(swrc) // error reading either mantissa/precision_mantissa/exponent/qualityflags:
-    rc = ERROR_SetLast(__func__, ERROR_TYPE_WARNING, ERROR_ID_HDFEOS, "SWreadfield");
+    rc = ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_HDFEOS, "SWreadfield");
 
  end_load_spectrum:
   free(mantissa);
@@ -1249,7 +1249,7 @@ RC OMI_GetReference(int spectralType, const char *refFile, INDEX indexColumn, do
     memcpy(ref,pRef->omiRefSpectrum[indexColumn],sizeof(double)*pRef->nWavel);
     memcpy(refSigma,pRef->omiRefSigma[indexColumn],sizeof(double)*pRef->nWavel);
   } else {
-    rc=ERROR_SetLast(__func__,ERROR_TYPE_WARNING,ERROR_ID_OMI_REF,__func__);
+    rc=ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_OMI_REF,__func__);
   }
 
   return rc;
