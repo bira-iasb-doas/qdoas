@@ -5405,11 +5405,12 @@ RC ANALYSE_LoadRef(ENGINE_CONTEXT *pEngineContext,INDEX indexFenoColumn)
         (pTabFeno->useKurucz!=ANLYS_KURUCZ_REF_AND_SPEC) &&                     // spectrum, the ref1 has no sense.
         strlen(pTabFeno->ref1))
      {
-      if ((((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_OMI) && !(rc=OMI_GetReference(pTabFeno->ref1,indexFenoColumn,lambdaRefEtalon,SrefEtalon,pTabFeno->SrefSigma))) ||
+       if ((((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_OMI) && !(rc=OMI_GetReference(pEngineContext->project.instrumental.omi.spectralType, pTabFeno->ref1,indexFenoColumn,lambdaRefEtalon,SrefEtalon,pTabFeno->SrefSigma))) ||
            ((pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_OMI) && !(rc=AnalyseLoadVector("ANALYSE_LoadRef (SrefEtalon) ",pTabFeno->ref1,lambdaRefEtalon,SrefEtalon,1,NULL)))) &&
           !(rc=THRD_SpectrumCorrection(pEngineContext,SrefEtalon)) &&
           !(rc=VECTOR_NormalizeVector(SrefEtalon-1,NDET,&pTabFeno->refNormFact,"ANALYSE_LoadRef (SrefEtalon) ")))
        {
+        pTabFeno->NDET = NDET;
         pTabFeno->displayRef=pTabFeno->useEtalon=pTabFeno->gomeRefFlag=1;
         strcpy(pTabFeno->refFile,pTabFeno->ref1);
        }

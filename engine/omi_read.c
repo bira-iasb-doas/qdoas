@@ -1043,10 +1043,9 @@ RC OmiOpen(OMI_ORBIT_FILE *pOrbitFile,const char *swathName)
   return rc;
 }
 
-RC OMI_LoadReference(ENGINE_CONTEXT *pEngineContext,const char *refFile)
+RC OMI_LoadReference(int spectralType, const char *refFile, OMI_REF **return_ref)
 {
-  OMI_REF * pRef=&OMI_ref[omiRefFilesN];
-  int spectralType=pEngineContext->project.instrumental.omi.spectralType;
+  OMI_REF *pRef=&OMI_ref[omiRefFilesN];
   RC rc=ERROR_ID_NO;
 
   int32 swf_id = 0;
@@ -1090,12 +1089,12 @@ RC OMI_LoadReference(ENGINE_CONTEXT *pEngineContext,const char *refFile)
       goto end_loadreference;
   }
 
-  if (!rc)
-    {
-      omiRefFilesN++;
-      NDET=pRef->nWavel;
-      ANALYSE_swathSize=pRef->nXtrack;
-    }
+  if (!rc) {
+    ++omiRefFilesN;
+    NDET=pRef->nWavel;
+    ANALYSE_swathSize=pRef->nXtrack;
+    *return_ref = pRef;
+  }
 
  end_loadreference:
 
@@ -1226,30 +1225,32 @@ void omi_interpolate_errors(int16 mantissa[], int32 n_wavel, double wavelengths[
   }
 }
 
-RC OMI_GetReference(char *refFile,INDEX indexColumn,double *lambda,double *ref,double *refSigma)
+RC OMI_GetReference(int spectralType, const char *refFile, INDEX indexColumn, double *lambda, double *ref, double *refSigma)
 {
+  
   RC rc=ERROR_ID_NO; 
 
+  OMI_REF *pRef= NULL;
+
   // Browse existing references
-  int indexRef;
-  for (indexRef=0;indexRef<omiRefFilesN;indexRef++)
+  for (int indexRef=0; indexRef<omiRefFilesN && (pRef == NULL); ++indexRef) {
     if (!strcasecmp(OMI_ref[indexRef].omiRefFileName,refFile))
-      break;
+      pRef = &OMI_ref[indexRef];
+  }
+  if (pRef == NULL) {
+    // if not found, load the reference now
+    rc = OMI_LoadReference(spectralType, refFile, &pRef);
+    if (rc != ERROR_ID_NO)
+      pRef = NULL;
+  }
 
-  // Get
-
-  if ((indexRef<omiRefFilesN) && (indexColumn>=0) && (indexColumn<OMI_ref[indexRef].nXtrack))
-    {
-      OMI_REF *pRef=&OMI_ref[indexRef];
-
-      memcpy(lambda,pRef->omiRefLambda[indexColumn],sizeof(double)*pRef->nWavel);
-      memcpy(ref,pRef->omiRefSpectrum[indexColumn],sizeof(double)*pRef->nWavel);
-      memcpy(refSigma,pRef->omiRefSigma[indexColumn],sizeof(double)*pRef->nWavel);
-    }
-  else
+  if ((pRef != NULL) && (indexColumn>=0) && (indexColumn< pRef->nXtrack)) {
+    memcpy(lambda,pRef->omiRefLambda[indexColumn],sizeof(double)*pRef->nWavel);
+    memcpy(ref,pRef->omiRefSpectrum[indexColumn],sizeof(double)*pRef->nWavel);
+    memcpy(refSigma,pRef->omiRefSigma[indexColumn],sizeof(double)*pRef->nWavel);
+  } else {
     rc=ERROR_SetLast(__func__,ERROR_TYPE_WARNING,ERROR_ID_OMI_REF,__func__);
-
-  // Return
+  }
 
   return rc;
 }

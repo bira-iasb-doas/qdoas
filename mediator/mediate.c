@@ -1604,26 +1604,9 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
        goto handle_errors;
    }
 
-   if (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_OMI)
-    {
-     if ((THRD_id==THREAD_TYPE_ANALYSIS) && numberOfWindows)
-      {
-       for (indexFeno=0;(indexFeno<numberOfWindows+1) && !rc;indexFeno++)
-        if (strlen(analysisWindows[indexFeno].refOneFile)) // Analysis Window properties -> Reference 1.
-         {
-          rc=OMI_LoadReference(pEngineContext,(char *)analysisWindows[indexFeno].refOneFile);
-          break;
-         }
-      }
-     else if (THRD_id==THREAD_TYPE_KURUCZ)
-      {
-       if (!strlen(pEngineContext->project.instrumental.calibrationFile)) // Project properties ->Instrumental: Calibration File
-         rc=ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_FILE_NOT_SPECIFIED,
-                          "please specify an OMI irradiance file in Project properties>Instrumental>Calibration File");
-       else
-        rc=OMI_LoadReference(pEngineContext,(char *)pEngineContext->project.instrumental.calibrationFile);
-      }
-    }
+   if (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_OMI) {
+     ANALYSE_swathSize = 60;
+   }
 
    // Load analysis windows
 
@@ -1755,14 +1738,15 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
            for (i=0;i<NDET;i++)
             pTabFeno->LambdaRef[i]=i;  // NB : for satellites measurements, irradiance is retrieved later from spectra files
 
-           //           if ((pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_GDP_ASCII) &&
-           //               (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_GDP_BIN) &&
-           //               (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_SCIA_HDF) &&
-           //               (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_SCIA_PDS))
+           if ( pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_OMI
+                && strlen(pInstrumental->calibrationFile) ) {
+             rc=OMI_GetReference(pInstrumental->omi.spectralType,pInstrumental->calibrationFile,indexFenoColumn,pEngineContext->buffers.lambda,pEngineContext->buffers.spectrum,pEngineContext->buffers.sigmaSpec);
 
-           if ((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_OMI) && strlen(pInstrumental->calibrationFile) &&
-               ((rc=OMI_GetReference(pInstrumental->calibrationFile,indexFenoColumn,pEngineContext->buffers.lambda,pEngineContext->buffers.spectrum,pEngineContext->buffers.sigmaSpec))!=ERROR_ID_NO))
-            break;
+             if (rc != 0) {
+               break;
+             }
+             
+           }
 
            memcpy(pTabFeno->LambdaRef,pEngineContext->buffers.lambda,sizeof(double)*NDET);
            memcpy(pTabFeno->Lambda,pEngineContext->buffers.lambda,sizeof(double)*NDET);
