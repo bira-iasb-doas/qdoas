@@ -76,16 +76,11 @@ RC RESOURCE_Alloc(void)
   if (!(rc=ERF_Alloc()) &&         // Error function
       !(rc=SITES_Alloc()) &&       // Observation sites
       !(rc=SYMB_Alloc()) &&        // Symbols
-// QDOAS ???       !(rc=ANLYS_Alloc()) &&       // Analysis windows
-// QDOAS ???       !(rc=PRJCT_Alloc()) &&       // Projects
-// QDOAS ???       !(rc=RAW_Alloc()) &&         // Raw spectra files
       !(rc=ANALYSE_Alloc()) &&     // Analysis
       !(rc=OUTPUT_Alloc()))        // Output
-// QDOAS ???       !(rc=PATH_Alloc()))          // Path
 
   // Initializations
    {
-// QDOAS ???    PATH_Init();
    }
 
   // Return;
@@ -100,15 +95,10 @@ RC RESOURCE_Alloc(void)
 void RESOURCE_Free(void)
  {
   ERF_Free();                 // Error function
-// QDOAS ???   FILES_Free();               // Paths
   SITES_Free();               // Observation sites
   SYMB_Free();                // Symbols
-// QDOAS ???   ANLYS_Free();               // Analysis windows
-// QDOAS ???   PRJCT_Free();               // Projects
-// QDOAS ???   RAW_Free();                 // Raw spectra files
   ANALYSE_Free();             // Analysis
   OUTPUT_Free();              // Output
-// QDOAS ???   PATH_Free();                // Path
 
   #if defined(__DEBUG_) && __DEBUG_
   DEBUG_Start(ENGINE_dbgFile,"RESOURCE_Free > MEMORY_End",DEBUG_FCTTYPE_MEM,5,DEBUG_DVAR_NO,0);

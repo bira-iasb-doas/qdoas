@@ -369,11 +369,11 @@ RC EngineSetProject(ENGINE_CONTEXT *pEngineContext)
          (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC_BIRA)) &&
         ((pBuffers->offset=MEMORY_AllocDVector("EngineSetProject","offset",0,NDET-1))==NULL)) ||
 
-       (((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC) ||
-         (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC_STD) ||
-         (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC_BIRA)) &&
+       ( ((((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC) ||
+            (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC_STD)) && strlen(pInstrumental->vipFile)) ||
+            (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC_BIRA)) &&
 
-        (strlen(pInstrumental->vipFile) && ((pBuffers->varPix=MEMORY_AllocDVector("EngineSetProject","varPix",0,NDET-1))==NULL))) ||
+         ((pBuffers->varPix=MEMORY_AllocDVector("EngineSetProject","varPix",0,NDET-1))==NULL)) ||
 
        // Load the detector non linearity file
 

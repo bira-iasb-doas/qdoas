@@ -316,12 +316,12 @@ void mediateRequestPlotSpectra(ENGINE_CONTEXT *pEngineContext,void *responseHand
  {
    // Declarations
 
-   PROJECT *pProject;                                                            // pointer to the project part of the engine context
-   PRJCT_SPECTRA *pSpectra;                                                      // pointer to the spectra part of the project
-   PRJCT_INSTRUMENTAL *pInstrumental;                                            // pointer to the instrumental part of the project
-   BUFFERS *pBuffers;                                                            // pointer to the buffers part of the engine context
-   RECORD_INFO *pRecord;                                                         // pointer to the record part of the engine context
-   char tmpString[80];                                                           // buffer for formatted strings
+   PROJECT *pProject;                                                           // pointer to the project part of the engine context
+   PRJCT_SPECTRA *pSpectra;                                                     // pointer to the spectra part of the project
+   PRJCT_INSTRUMENTAL *pInstrumental;                                           // pointer to the instrumental part of the project
+   BUFFERS *pBuffers;                                                           // pointer to the buffers part of the engine context
+   RECORD_INFO *pRecord;                                                        // pointer to the record part of the engine context
+   char tmpString[80],tmpTitle[80];                                             // buffer for formatted strings
    char *fileName;                                                              // the name of the current file
    plot_data_t spectrumData;
 
@@ -360,8 +360,16 @@ void mediateRequestPlotSpectra(ENGINE_CONTEXT *pEngineContext,void *responseHand
            tempSpectrum[i]/=pBuffers->instrFunction[i];
         }
 
-       mediateAllocateAndSetPlotData(&spectrumData, "Spectrum",pBuffers->lambda, tempSpectrum, NDET, Line);
-       mediateResponsePlotData(plotPageSpectrum, &spectrumData, 1, Spectrum, allowFixedScale, "Spectrum", "Wavelength (nm)", "Counts", responseHandle);
+       if ((pInstrumental->readOutFormat!=PRJCT_INSTR_FORMAT_MFC_BIRA) || (pEngineContext->recordInfo.mfcBira.measurementType==PRJCT_INSTR_MFC_TYPE_MEASUREMENT) || (pEngineContext->recordInfo.mfcBira.measurementType==PRJCT_INSTR_MFC_TYPE_UNKNOWN))
+        sprintf(tmpTitle,"Spectrum");
+       else if (pEngineContext->recordInfo.mfcBira.measurementType==PRJCT_INSTR_MFC_TYPE_DARK)
+        sprintf(tmpTitle,"Dark Current");
+       else if (pEngineContext->recordInfo.mfcBira.measurementType==PRJCT_INSTR_MFC_TYPE_OFFSET)
+        sprintf(tmpTitle,"Offset");
+
+       mediateAllocateAndSetPlotData(&spectrumData,tmpTitle,pBuffers->lambda, tempSpectrum, NDET, Line);
+
+       mediateResponsePlotData(plotPageSpectrum, &spectrumData, 1, Spectrum, allowFixedScale, tmpTitle, "Wavelength (nm)", "Counts", responseHandle);
        mediateReleasePlotData(&spectrumData);
        mediateResponseLabelPage(plotPageSpectrum, fileName, tmpString, responseHandle);
 
@@ -1745,7 +1753,7 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
              if (rc != 0) {
                break;
              }
-             
+
            }
 
            memcpy(pTabFeno->LambdaRef,pEngineContext->buffers.lambda,sizeof(double)*NDET);
