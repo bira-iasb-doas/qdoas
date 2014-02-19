@@ -1012,7 +1012,13 @@ static void register_calibration_field(struct output_field newfield) {
   *calibfield = newfield; // copy all contents
   if(calibfield->data_cols == 0) // data_cols = 1 as default value -> we only need to set data_cols explicitly if we want a multi-column field
     calibfield->data_cols = 1;
-  calibfield->fieldname = strdup(calibfield->fieldname); // each output_field should malloc its own copy of fieldname, so we can always use free() afterwards
+
+  // calibration field name starts with the analysis window. This is
+  // useful when different analysis windows use different reference
+  // spectra, and therefore have different calibration settings.
+  const char *window_name = TabFeno[newfield.index_row][newfield.index_feno].windowName;
+  calibfield->fieldname = malloc(2 + strlen(window_name) + strlen(newfield.fieldname));
+  sprintf(calibfield->fieldname, "%s.%s", window_name, newfield.fieldname);
   calibfield->get_tabfeno = &get_tabfeno_calib;
   calibfield->get_cross_results = &get_cross_results_calib;
   calibfield->memory_type = OUTPUT_DOUBLE;
@@ -1021,10 +1027,8 @@ static void register_calibration_field(struct output_field newfield) {
 
 /*! \brief Register selected output fields for the reference spectrum
     calibration.*/
-static void register_calibration(int kurucz_index, int index_row) {
+static void register_calibration(int kurucz_index, int index_row, int index_feno) {
   FENO *pTabFeno=&TabFeno[index_row][kurucz_index];
-
-  int index_feno = KURUCZ_buffers[index_row].indexKurucz +1;
 
   register_calibration_field((struct output_field){.fieldname="Wavelength", .resulttype = PRJCT_RESULTS_WAVELENGTH, .index_feno=index_feno, .index_row=index_row, .index_cross=ITEM_NONE, .get_data=(func_void)&get_wavelength_calib });
   register_calibration_field((struct output_field){.fieldname="RMS", .resulttype = PRJCT_RESULTS_RMS, .index_feno=index_feno, .index_row=index_row, .index_cross=ITEM_NONE, .get_data=(func_void)&get_rms_calib });
@@ -1137,7 +1141,7 @@ static void register_analysis_field(const struct output_field* fieldcontent, int
   newfield->get_tabfeno = (outputRunCalib) ? &get_tabfeno_calib : &get_tabfeno_analysis;
   newfield->index_calib = (outputRunCalib) ? index_calib : ITEM_NONE;
   newfield->index_cross = index_cross;
-  newfield->get_cross_results = (outputRunCalib) ? &get_cross_results_calib : &get_cross_results;
+  newfield->get_cross_results = (outputRunCalib) ? &get_cross_results_calib : &get_cross_results_analysis;
   if(newfield->num_attributes) // create own heap-allocated copy of attributes
     newfield->attributes = copy_attributes(newfield->attributes, newfield->num_attributes);
 }
@@ -1308,8 +1312,6 @@ static void register_cross_results(const PRJCT_RESULTS *pResults, const FENO *pT
     OutputRegisterParam, OutputRegisterFluxes */
 RC OUTPUT_RegisterData(const ENGINE_CONTEXT *pEngineContext)
 {
-  INDEX indexFeno,indexFenoK,indexFeno1;
-  //  PROJECT *pProject;
   PRJCT_RESULTS *pResults;
   INDEX indexFenoColumn;
   RC rc;
@@ -1323,7 +1325,6 @@ RC OUTPUT_RegisterData(const ENGINE_CONTEXT *pEngineContext)
   const PROJECT *pProject=&pEngineContext->project;
   pResults=(PRJCT_RESULTS *)&pProject->asciiResults;
   outputCalibFlag=outputRunCalib=0;
-  indexFenoK=indexFeno1=ITEM_NONE;
   rc=ERROR_ID_NO;
 
   if (pProject->asciiResults.analysisFlag || pProject->asciiResults.calibFlag)
@@ -1332,36 +1333,29 @@ RC OUTPUT_RegisterData(const ENGINE_CONTEXT *pEngineContext)
         {
           // Save information on the calibration
 
-          if (pResults->calibFlag)
-            {
-              for (indexFenoColumn=0;indexFenoColumn<ANALYSE_swathSize;indexFenoColumn++)
-                {
-                  if ((pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_OMI) ||
-                      pEngineContext->project.instrumental.omi.omiTracks[indexFenoColumn])
-                    {
-                      for (indexFeno=0;indexFeno<NFeno;indexFeno++)
-                        if (TabFeno[indexFenoColumn][indexFeno].hidden)
-                          indexFenoK=indexFeno;
-                        else if (!TabFeno[indexFenoColumn][indexFeno].hidden
-                                 && ( TabFeno[indexFenoColumn][indexFeno].useKurucz==ANLYS_KURUCZ_REF
-                                      || TabFeno[indexFenoColumn][indexFeno].useKurucz==ANLYS_KURUCZ_REF_AND_SPEC )
-                                 && !TabFeno[indexFenoColumn][indexFeno].rcKurucz) {
-                          if (indexFeno1==ITEM_NONE)
-                            indexFeno1=indexFeno;
-                          outputCalibFlag++;
-                        }
+          if (pResults->calibFlag) {
+            for (indexFenoColumn=0;indexFenoColumn<ANALYSE_swathSize;indexFenoColumn++) {
+              if ((pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_OMI) ||
+                  pEngineContext->project.instrumental.omi.omiTracks[indexFenoColumn]) {
 
-                      if (indexFenoK==ITEM_NONE)
-                        outputCalibFlag=0;
-
-                      if (outputCalibFlag) {
-                        register_calibration(indexFenoK, indexFenoColumn);
-                      }
-                    }
+                int indexFenoK=ITEM_NONE;
+                for (int indexFeno=0;indexFeno<NFeno && indexFenoK==ITEM_NONE; ++indexFeno) {
+                  if (TabFeno[indexFenoColumn][indexFeno].hidden) {
+                    indexFenoK=indexFeno;
+                  }
                 }
+                if (indexFenoK != ITEM_NONE) {
+                  for (int indexFeno=0;indexFeno<NFeno;indexFeno++) {
+                    if ( !TabFeno[indexFenoColumn][indexFeno].hidden
+                         && KURUCZ_buffers[indexFenoColumn].KuruczFeno[indexFeno].have_calibration) {
+                      register_calibration(indexFenoK, indexFenoColumn, indexFeno);
+                    }
+                  }
+                }
+              }
             }
+          }
         }
-
       // Run calibration on measurement spectra
 
       else if (THRD_id==THREAD_TYPE_KURUCZ)

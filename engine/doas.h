@@ -1072,6 +1072,7 @@ typedef struct _KuruczFeno
   double         *rms;
   double         *wve;
   int            *nIter;
+  bool           have_calibration; // "true" if this struct contains results.
  }
 KURUCZ_FENO;
 
@@ -1130,7 +1131,6 @@ RC KURUCZ_Spectrum(const double *oldLambda, double *newLambda, double *spectrum,
                    INDEX indexFeno,void *responseHandle,INDEX indexFenoColumn);
 RC   KURUCZ_ApplyCalibration(FENO *pTabFeno,double *newLambda,INDEX indexFenoColumn);
 RC   KURUCZ_Reference(double *instrFunction,INDEX refFlag,int saveFlag,int gomeFlag,void *responseHandle,INDEX indexFenoColumn);
-void KURUCZ_Init(int gomeFlag,INDEX indexFenoColumn);
 RC   KURUCZ_Alloc(const PROJECT *pProject, const double *lambda, INDEX indexKurucz, double lambdaMin, double lambdaMax,
                   INDEX indexFenoColumn, const MATRIX_OBJECT *hr_solar);
 void KURUCZ_Free(void);

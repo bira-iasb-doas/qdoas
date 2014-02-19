@@ -1,4 +1,3 @@
-
 //  ----------------------------------------------------------------------------
 //
 //  Product/Project   :  QDOAS
@@ -57,6 +56,9 @@
 
 #include "mediate.h"
 #include "engine.h"
+
+//void KURUCZ_Init(int gomeFlag,INDEX indexFenoColumn, int indexFeno);
+void KURUCZ_Init(int gomeFlag,INDEX indexFenoColumn);
 
 // ================
 // GLOBAL VARIABLES
@@ -166,7 +168,9 @@ RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,co
   indexLine=KURUCZ_indexLine;
   indexColumn=2;
   solar=NULL;
-  oldNDET    = NDET;   
+  oldNDET    = NDET;
+
+  pKurucz->KuruczFeno[indexFeno].have_calibration = true;
   
   if ((shiftPoly=(double *)MEMORY_AllocDVector("KURUCZ_Spectrum ","shiftPoly",0,NDET-1))==NULL)
     rc=ERROR_ID_ALLOC;
@@ -267,8 +271,8 @@ RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,co
      {
      	if (ANALYSE_swathSize>1)
      	 {
-     	 	sprintf(string,"Row %d/%d",indexFenoColumn+1,ANALYSE_swathSize);
-     	  mediateResponseCellDataString(plotPageCalib,indexLine++,1,string,responseHandle);
+           sprintf(string,"Row %d/%d",indexFenoColumn+1,ANALYSE_swathSize);
+           mediateResponseCellDataString(plotPageCalib,indexLine++,1,string,responseHandle);
      	 }
 
       if (!TabFeno[indexFenoColumn][indexFeno].hidden)
@@ -962,11 +966,10 @@ RC KURUCZ_Reference(double *instrFunction,INDEX refFlag,int saveFlag,int gomeFla
 #if defined(__BC32_) && __BC32_
 #pragma argsused
 #endif
-void KURUCZ_Init(int gomeFlag,INDEX indexFenoColumn)
- {
+void KURUCZ_Init(int gomeFlag,INDEX indexFenoColumn) {
   // Declarations
-
-  INDEX indexFeno,indexWindow;
+  
+  INDEX indexWindow;
   int nbWin;
   double Lambda_min,Lambda_max,Win_size;
   FENO *pTabFeno;
@@ -978,37 +981,34 @@ void KURUCZ_Init(int gomeFlag,INDEX indexFenoColumn)
 
   // Browse analysis windows
 
-  for (indexFeno=0;indexFeno<NFeno;indexFeno++)
-   {
+  for (int indexFeno=0;indexFeno<NFeno;indexFeno++) {
     pTabFeno=&TabFeno[indexFenoColumn][indexFeno];
-
+    
     if ((pTabFeno->gomeRefFlag==gomeFlag) &&
-        (KURUCZ_buffers[indexFenoColumn].KuruczFeno[indexFeno].svdFeno!=NULL))
-     {
+        (KURUCZ_buffers[indexFenoColumn].KuruczFeno[indexFeno].svdFeno!=NULL)) {
       Lambda_min=pKuruczOptions->lambdaLeft;
       Lambda_max=pKuruczOptions->lambdaRight;
-
+      
       Win_size=(double)(Lambda_max-Lambda_min)/nbWin;
-
-      for (indexWindow=0;indexWindow<nbWin;indexWindow++)
-       {
+      
+      for (indexWindow=0;indexWindow<nbWin;indexWindow++) {
         pSvd=&KURUCZ_buffers[indexFenoColumn].KuruczFeno[indexFeno].svdFeno[indexWindow];
-
+        
         Lambda_max=Lambda_min+Win_size;
-
+        
         int pixel_start=FNPixel(pTabFeno->LambdaRef,Lambda_min,pTabFeno->NDET,PIXEL_AFTER);
         int pixel_end=FNPixel(pTabFeno->LambdaRef,Lambda_max,pTabFeno->NDET,PIXEL_BEFORE);
-
+        
         pSvd->specrange = spectrum_new();
         spectrum_append(pSvd->specrange, pixel_start, pixel_end);
-
+        
         pSvd->DimL=pixel_end - pixel_start + 1;
-
+        
         Lambda_min=Lambda_max;
-       }
-     }
-   }
- }
+      }
+    }
+  }
+}
 
 // ----------------------------------------------------------------------------
 // FUNCTION        KURUCZ_Alloc
@@ -1036,10 +1036,11 @@ RC KURUCZ_Alloc(const PROJECT *pProject, const double *lambda,INDEX indexKurucz,
 
   char   slitFile[MAX_ITEM_TEXT_LEN+1];
   int    Nb_Win,shiftDegree,                                                    // substitution variables
-         NTabCross,DimLMax;
-  INDEX  i,indexFeno,indexWindow,indexParam,indexTabCross;                      // indexes for loops and arrays
-  double Lambda_min,Lambda_max,                                                 // extrema in nm of a little window
-         Win_size,step;                                                         // size of a little window in nm
+         NTabCross;
+  INDEX  i,indexFeno,indexParam,indexTabCross;                      // indexes for loops and arrays
+  //  double Lambda_min,Lambda_max,                                                 // extrema in nm of a little window
+  //         Win_size,step;                                                         // size of a little window in nm
+  double step;
   SVD   *pSvd,*pSvdFwhm;                                                        // pointers to svd environments
   KURUCZ *pKurucz;
   RC rc;
@@ -1181,116 +1182,117 @@ RC KURUCZ_Alloc(const PROJECT *pProject, const double *lambda,INDEX indexKurucz,
 
     // Allocate one svd environment for each little window
 
-    for (indexFeno=0;indexFeno<NFeno;indexFeno++)
-     {
-      memset(&pKurucz->KuruczFeno[indexFeno],0,sizeof(KURUCZ_FENO));
-      pTabFeno=&TabFeno[indexFenoColumn][indexFeno];
+   for (indexFeno=0;indexFeno<NFeno;indexFeno++)
+    {
+     memset(&pKurucz->KuruczFeno[indexFeno],0,sizeof(KURUCZ_FENO));
+     pTabFeno=&TabFeno[indexFenoColumn][indexFeno];
 
-      if ((pTabFeno->hidden==1) ||
-         ((THRD_id!=THREAD_TYPE_KURUCZ) && !pTabFeno->hidden && pTabFeno->useKurucz))
-       {
-        Lambda_min=pKuruczOptions->lambdaLeft;
-        Lambda_max=pKuruczOptions->lambdaRight;
+     if ((pTabFeno->hidden==1) ||
+        ((THRD_id!=THREAD_TYPE_KURUCZ) && !pTabFeno->hidden && pTabFeno->useKurucz))
+      {
+       double Lambda_min=pKuruczOptions->lambdaLeft;
+       double Lambda_max=pKuruczOptions->lambdaRight;
 
-        Win_size=(double)(Lambda_max-Lambda_min)/Nb_Win;
-        DimLMax=2*NDET/Nb_Win+1;
+       int Win_size=(double)(Lambda_max-Lambda_min)/Nb_Win;
+       int DimLMax=2*NDET/Nb_Win+1;
 
-        if ((pKurucz->KuruczFeno[indexFeno].Grid=(double *)MEMORY_AllocDVector(__func__,"Grid",0,Nb_Win-1))==NULL)
-         rc=ERROR_ID_ALLOC;
-        else if ((pKurucz->KuruczFeno[indexFeno].svdFeno=(SVD *)MEMORY_AllocBuffer(__func__,"svdFeno",Nb_Win,sizeof(SVD),0,MEMORY_TYPE_STRUCT))==NULL)                           // svd environments
-         rc=ERROR_ID_ALLOC;
-        else if (pKuruczOptions->fwhmFit && ((pKurucz->KuruczFeno[indexFeno].fft=(FFT *)MEMORY_AllocBuffer(__func__,"fft",Nb_Win,sizeof(FFT),0,MEMORY_TYPE_STRUCT))==NULL))                           // svd environments
-         rc=ERROR_ID_ALLOC;
-        else if ((pKurucz->KuruczFeno[indexFeno].chiSquare=(double *)MEMORY_AllocDVector(__func__,"chiSquare",0,Nb_Win-1))==NULL)
-         rc=ERROR_ID_ALLOC;
-        else if ((pKurucz->KuruczFeno[indexFeno].rms=(double *)MEMORY_AllocDVector(__func__,"rms",0,Nb_Win-1))==NULL)
-         rc=ERROR_ID_ALLOC;
-        else if ((pKurucz->KuruczFeno[indexFeno].wve=(double *)MEMORY_AllocDVector(__func__,"wve",0,Nb_Win-1))==NULL)
-         rc=ERROR_ID_ALLOC;
-        else if ((pKurucz->KuruczFeno[indexFeno].nIter=(int *)MEMORY_AllocBuffer(__func__,"nIter",Nb_Win,sizeof(int),0,MEMORY_TYPE_INT))==NULL)                           // svd environments
-         rc=ERROR_ID_ALLOC;
-        else if ((pKurucz->KuruczFeno[indexFeno].results=(CROSS_RESULTS **)MEMORY_AllocBuffer(__func__,"results",Nb_Win,sizeof(CROSS_RESULTS *),0,MEMORY_TYPE_STRUCT))==NULL)
-         rc=ERROR_ID_ALLOC;
+       if ((pKurucz->KuruczFeno[indexFeno].Grid=(double *)MEMORY_AllocDVector(__func__,"Grid",0,Nb_Win-1))==NULL)
+        rc=ERROR_ID_ALLOC;
+       else if ((pKurucz->KuruczFeno[indexFeno].svdFeno=(SVD *)MEMORY_AllocBuffer(__func__,"svdFeno",Nb_Win,sizeof(SVD),0,MEMORY_TYPE_STRUCT))==NULL)                           // svd environments
+        rc=ERROR_ID_ALLOC;
+       else if (pKuruczOptions->fwhmFit && ((pKurucz->KuruczFeno[indexFeno].fft=(FFT *)MEMORY_AllocBuffer(__func__,"fft",Nb_Win,sizeof(FFT),0,MEMORY_TYPE_STRUCT))==NULL))                           // svd environments
+        rc=ERROR_ID_ALLOC;
+       else if ((pKurucz->KuruczFeno[indexFeno].chiSquare=(double *)MEMORY_AllocDVector(__func__,"chiSquare",0,Nb_Win-1))==NULL)
+        rc=ERROR_ID_ALLOC;
+       else if ((pKurucz->KuruczFeno[indexFeno].rms=(double *)MEMORY_AllocDVector(__func__,"rms",0,Nb_Win-1))==NULL)
+        rc=ERROR_ID_ALLOC;
+       else if ((pKurucz->KuruczFeno[indexFeno].wve=(double *)MEMORY_AllocDVector(__func__,"wve",0,Nb_Win-1))==NULL)
+        rc=ERROR_ID_ALLOC;
+       else if ((pKurucz->KuruczFeno[indexFeno].nIter=(int *)MEMORY_AllocBuffer(__func__,"nIter",Nb_Win,sizeof(int),0,MEMORY_TYPE_INT))==NULL)                           // svd environments
+        rc=ERROR_ID_ALLOC;
+       else if ((pKurucz->KuruczFeno[indexFeno].results=(CROSS_RESULTS **)MEMORY_AllocBuffer(__func__,"results",Nb_Win,sizeof(CROSS_RESULTS *),0,MEMORY_TYPE_STRUCT))==NULL)
+        rc=ERROR_ID_ALLOC;
 
-        if (rc)
-         goto EndKuruczAlloc;
-        else
-         {
-          if (pKurucz->KuruczFeno[indexFeno].svdFeno!=NULL)
-           memset(pKurucz->KuruczFeno[indexFeno].svdFeno,0,Nb_Win*sizeof(SVD));
-          if (pKurucz->KuruczFeno[indexFeno].fft!=NULL)
-           memset(pKurucz->KuruczFeno[indexFeno].fft,0,Nb_Win*sizeof(FFT));
-          if (pKurucz->KuruczFeno[indexFeno].results!=NULL)
-           memset(pKurucz->KuruczFeno[indexFeno].results,0,Nb_Win*sizeof(CROSS_RESULTS *));
-         }
+       if (rc)
+        goto EndKuruczAlloc;
+       else
+        {
+         if (pKurucz->KuruczFeno[indexFeno].svdFeno!=NULL)
+          memset(pKurucz->KuruczFeno[indexFeno].svdFeno,0,Nb_Win*sizeof(SVD));
+         if (pKurucz->KuruczFeno[indexFeno].fft!=NULL)
+          memset(pKurucz->KuruczFeno[indexFeno].fft,0,Nb_Win*sizeof(FFT));
+         if (pKurucz->KuruczFeno[indexFeno].results!=NULL)
+          memset(pKurucz->KuruczFeno[indexFeno].results,0,Nb_Win*sizeof(CROSS_RESULTS *));
+        }
 
-        for (indexWindow=0;indexWindow<Nb_Win;indexWindow++)
-         {
-          pSvd=&pKurucz->KuruczFeno[indexFeno].svdFeno[indexWindow];
-          memcpy(pSvd,&pKuruczFeno->svd,sizeof(SVD));
-          pSvd->Z=1;
-          pSvd->DimL=DimLMax;
+       for (int indexWindow=0;indexWindow<Nb_Win;indexWindow++)
+        {
+         pSvd=&pKurucz->KuruczFeno[indexFeno].svdFeno[indexWindow];
+         memcpy(pSvd,&pKuruczFeno->svd,sizeof(SVD));
+         pSvd->Z=1;
+         pSvd->DimL=DimLMax;
 
-          Lambda_max=Lambda_min+Win_size;
-          pKurucz->KuruczFeno[indexFeno].Grid[indexWindow]=Lambda_max;
+         Lambda_max=Lambda_min+Win_size;
+         pKurucz->KuruczFeno[indexFeno].Grid[indexWindow]=Lambda_max;
 
-          if ((pKurucz->KuruczFeno[indexFeno].results[indexWindow]=(CROSS_RESULTS *)MEMORY_AllocBuffer(__func__,"KuruczFeno(results)",pKuruczFeno->NTabCross,sizeof(CROSS_RESULTS),0,MEMORY_TYPE_STRUCT))==NULL)
-           {
-            rc=ERROR_ID_ALLOC;
-            goto EndKuruczAlloc;
-           }
-          else if ((rc=SVD_LocalAlloc("KURUCZ_Alloc (1)",pSvd))!=ERROR_ID_NO)
+         if ((pKurucz->KuruczFeno[indexFeno].results[indexWindow]=(CROSS_RESULTS *)MEMORY_AllocBuffer(__func__,"KuruczFeno(results)",pKuruczFeno->NTabCross,sizeof(CROSS_RESULTS),0,MEMORY_TYPE_STRUCT))==NULL)
+          {
+           rc=ERROR_ID_ALLOC;
            goto EndKuruczAlloc;
-          else if (pKuruczOptions->fwhmFit)
-           {
-            int hrDeb,hrFin,hrN,fftSize;
-            double *fftIn;
-            FFT *pfft;
-            INDEX i;
+          }
+         else if ((rc=SVD_LocalAlloc("KURUCZ_Alloc (1)",pSvd))!=ERROR_ID_NO)
+          goto EndKuruczAlloc;
+         else if (pKuruczOptions->fwhmFit)
+          {
+           int hrDeb,hrFin,hrN,fftSize;
+           double *fftIn;
+           FFT *pfft;
+           INDEX i;
 
-            pfft=&pKurucz->KuruczFeno[indexFeno].fft[indexWindow];
+           pfft=&pKurucz->KuruczFeno[indexFeno].fft[indexWindow];
 
-            hrDeb=FNPixel(pKurucz->hrSolar.matrix[0],Lambda_min-3.,pKurucz->hrSolar.nl,PIXEL_AFTER);
-            hrFin=FNPixel(pKurucz->hrSolar.matrix[0],Lambda_max+3.,pKurucz->hrSolar.nl,PIXEL_BEFORE);
+           hrDeb=FNPixel(pKurucz->hrSolar.matrix[0],Lambda_min-3.,pKurucz->hrSolar.nl,PIXEL_AFTER);
+           hrFin=FNPixel(pKurucz->hrSolar.matrix[0],Lambda_max+3.,pKurucz->hrSolar.nl,PIXEL_BEFORE);
 
-            if (hrDeb==hrFin)
-             {
-              rc=ERROR_ID_POW;
-              goto EndKuruczAlloc;
-             }
+           if (hrDeb==hrFin)
+            {
+             rc=ERROR_ID_POW;
+             goto EndKuruczAlloc;
+            }
 
-            hrN=pfft->oldSize=(hrFin-hrDeb+1);
-            fftSize=pfft->fftSize=(int)pow((double)2.,ceil(log((double)hrN)/log((double)2.)));
+           hrN=pfft->oldSize=(hrFin-hrDeb+1);
+           fftSize=pfft->fftSize=(int)pow((double)2.,ceil(log((double)hrN)/log((double)2.)));
 
-            if (((fftIn=pfft->fftIn=(double *)MEMORY_AllocDVector(__func__,"fftIn",1,fftSize))==NULL) ||
-                ((pfft->fftOut=(double *)MEMORY_AllocDVector(__func__,"fftOut",1,fftSize))==NULL) ||
-                ((pfft->invFftIn=(double *)MEMORY_AllocDVector(__func__,"invFftIn",1,fftSize))==NULL) ||
-                ((pfft->invFftOut=(double *)MEMORY_AllocDVector(__func__,"invFftOut",1,fftSize))==NULL))
-             {
-              rc=ERROR_ID_ALLOC;
-              goto EndKuruczAlloc;
-             }
+           if (((fftIn=pfft->fftIn=(double *)MEMORY_AllocDVector(__func__,"fftIn",1,fftSize))==NULL) ||
+               ((pfft->fftOut=(double *)MEMORY_AllocDVector(__func__,"fftOut",1,fftSize))==NULL) ||
+               ((pfft->invFftIn=(double *)MEMORY_AllocDVector(__func__,"invFftIn",1,fftSize))==NULL) ||
+               ((pfft->invFftOut=(double *)MEMORY_AllocDVector(__func__,"invFftOut",1,fftSize))==NULL))
+            {
+             rc=ERROR_ID_ALLOC;
+             goto EndKuruczAlloc;
+            }
 
-            memcpy(fftIn+1,pKurucz->hrSolar.matrix[1]+hrDeb,sizeof(double)*hrN);   // When the slit function is fitted, we use a high resolution solar spectrum (2 columns only)
+           memcpy(fftIn+1,pKurucz->hrSolar.matrix[1]+hrDeb,sizeof(double)*hrN);   // When the slit function is fitted, we use a high resolution solar spectrum (2 columns only)
 
-            for (i=hrN+1;i<=fftSize;i++)
-             fftIn[i]=fftIn[2*hrN-i];
+           for (i=hrN+1;i<=fftSize;i++)
+            fftIn[i]=fftIn[2*hrN-i];
 
-            realft(pfft->fftIn,pfft->fftOut,fftSize,1);
+           realft(pfft->fftIn,pfft->fftOut,fftSize,1);
 
-            memcpy(fftIn+1,pKurucz->hrSolar.matrix[0]+hrDeb,sizeof(double)*hrN);  // Reuse fftIn for high resolution wavelength safe keeping
-           }
+           memcpy(fftIn+1,pKurucz->hrSolar.matrix[0]+hrDeb,sizeof(double)*hrN);  // Reuse fftIn for high resolution wavelength safe keeping
+          }
 
-          Lambda_min=Lambda_max;
-         }
-       }
-     }
+         Lambda_min=Lambda_max;
+        }
+      }
+    }
 
     // Allocate svd environment for Kurucz analysis window
 
     pSvd=&pKuruczFeno->svd;
 
     pSvd->DimL=Nb_Win;
+
     pSvd->DimC=shiftDegree+1;
 
     if ((rc=SVD_LocalAlloc("KURUCZ_Alloc (2)",pSvd))!=ERROR_ID_NO)

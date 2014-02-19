@@ -201,7 +201,7 @@ void ascii_close_file(void);
     */
 void output_write_data(const bool selected_records[]);
 RC hdfeos5_write_analysis_data(const bool selected_records[], int num_records, const OUTPUT_INFO *outputRecords);
-RC hdfeos5_allow_file(filename);
+RC hdfeos5_allow_file(const char *filename);
 void ascii_write_analysis_data(const bool selected_records[], int num_records);
 //!@}
 
