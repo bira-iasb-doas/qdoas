@@ -57,9 +57,6 @@
 #include "mediate.h"
 #include "engine.h"
 
-//void KURUCZ_Init(int gomeFlag,INDEX indexFenoColumn, int indexFeno);
-void KURUCZ_Init(int gomeFlag,INDEX indexFenoColumn);
-
 // ================
 // GLOBAL VARIABLES
 // ================
@@ -822,7 +819,6 @@ RC KURUCZ_Reference(double *instrFunction,INDEX refFlag,int saveFlag,int gomeFla
 
   pKurucz=&KURUCZ_buffers[indexFenoColumn];
   
-  KURUCZ_indexLine=1;
   rc=ERROR_ID_NO;
   msgCount=0;
 
