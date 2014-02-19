@@ -26,7 +26,7 @@ static inline CROSS_RESULTS *get_cross_results_calib(struct output_field *this_f
     : &KURUCZ_buffers[indexFenoColumn].KuruczFeno[this_field->index_feno].results[index_calib][this_field->index_cross];
 }
 
-static inline CROSS_RESULTS *get_cross_results(struct output_field *this_field, int indexFenoColumn, int index_calib __attribute__ ((unused)) ) {
+static inline CROSS_RESULTS *get_cross_results_analysis(struct output_field *this_field, int indexFenoColumn, int index_calib __attribute__ ((unused)) ) {
   FENO * pTabFeno = &TabFeno[indexFenoColumn][this_field->index_feno];
   return (pTabFeno->rc)
     ? NULL
