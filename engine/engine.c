@@ -626,8 +626,10 @@ RC EngineSetFile(ENGINE_CONTEXT *pEngineContext,const char *fileName,void *respo
        break;
        // ---------------------------------------------------------------------------
      case PRJCT_INSTR_FORMAT_MFC_BIRA :
-       if (!(rc=MFCBIRA_Set(pEngineContext,pFile->specFp)) && (THRD_id!=THREAD_TYPE_SPECTRA) && (THRD_id!=THREAD_TYPE_NONE))
-        rc=MFC_LoadAnalysis(pEngineContext,responseHandle);
+       rc=MFCBIRA_Set(pEngineContext,pFile->specFp);
+
+      // if (!(rc=MFCBIRA_Set(pEngineContext,pFile->specFp)) && (THRD_id!=THREAD_TYPE_SPECTRA) && (THRD_id!=THREAD_TYPE_NONE))
+      //  rc=MFC_LoadAnalysis(pEngineContext,responseHandle);
        break;
        // ---------------------------------------------------------------------------
      case PRJCT_INSTR_FORMAT_RASAS :
@@ -1715,8 +1717,7 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
    else if (pEngineContext->analysisRef.refScan || (pRecord->localCalDay!=ENGINE_contextRef.recordInfo.localCalDay))
     {
     	if ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC_STD) ||
-         (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC) ||
-         (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC_BIRA))
+         (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC))
 
       rc=EngineSetRefIndexesMFC(pEngineContext,&newref,&indexRecord);
 
@@ -1727,8 +1728,7 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
    if (pEngineContext->analysisRef.refScan && ((scanRefIndexes=pEngineContext->analysisRef.scanRefIndexes)!=NULL))
     {
     	if ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC_STD) ||
-         (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC) ||
-         (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC_BIRA))
+         (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC))
 
       rc=EngineSetRefIndexesMFC(pEngineContext,&newref,&indexRecord);
 
@@ -1775,13 +1775,12 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
        // There is a reference spectrum for the requested twilight
 
-       else if (newref || (indexRefRecord!=pTabFeno->indexRef) ) // !!! test refscan || (indexRefRecord!=ENGINE_contextRef.indexRecord))
+       else if (newref || (indexRefRecord!=pTabFeno->indexRef)) // !!! test refscan || (indexRefRecord!=ENGINE_contextRef.indexRecord))
         {
         	pTabFeno->newrefFlag=1;
 
          if ((pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_MFC) &&
-             (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_MFC_STD) &&
-             (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_MFC_BIRA))
+             (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_MFC_STD))
 
           rc=EngineReadFile(&ENGINE_contextRef,indexRefRecord,0,0);
 
@@ -1893,8 +1892,7 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
            mediateResponseCellInfo(indexPage,indexLine++,indexColumn,responseHandle,"Selected reference for window","%s",pTabFeno->windowName);
 
            if ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC_STD) ||
-               (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC) ||
-               (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC_BIRA))
+               (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC))
             mediateResponseCellInfo(indexPage,indexLine++,indexColumn,responseHandle,"Reference file","%s",ENGINE_contextRef.fileInfo.fileName);
            else
             mediateResponseCellInfo(indexPage,indexLine++,indexColumn,responseHandle,"Record number","%d/%d",pTabFeno->indexRef,ENGINE_contextRef.recordNumber);

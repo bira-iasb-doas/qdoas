@@ -379,7 +379,7 @@ RC SetCCD_EEV(ENGINE_CONTEXT *pEngineContext,FILE *specFp,FILE *darkFp)
        }
      }
 
-    // Allocate a buffer to display the variation of the signal along the acquisitions
+    // Allocate a buffer for the indexes of selected reference spectra (scan mode)
 
     if (pEngineContext->analysisRef.refScan && pEngineContext->recordNumber &&
       ((pRef->scanRefIndexes=(int *)MEMORY_AllocBuffer("SetCCD_EEV","scanRefIndexes",pEngineContext->recordNumber,sizeof(int),0,MEMORY_TYPE_INT))==NULL))

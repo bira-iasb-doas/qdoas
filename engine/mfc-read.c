@@ -988,6 +988,7 @@ RC MFCBIRA_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
 
   MFCBIRA_HEADER header;
   MFC_BIRA *pMfcInfo;
+  ANALYSIS_REF *pRef;
   double *offset,*darkCurrent;
   float *spectrum,drkTint;
   int detectorSize;
@@ -1000,7 +1001,14 @@ RC MFCBIRA_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
   offset=pEngineContext->buffers.offset;
   darkCurrent=pEngineContext->buffers.varPix;
   pMfcInfo=&pEngineContext->recordInfo.mfcBira;
+  pRef=&pEngineContext->analysisRef;
   spectrum=NULL;
+
+  // Release scanref buffer
+
+  if (pRef->scanRefIndexes!=NULL)
+   MEMORY_ReleaseBuffer("SetCCD_EEV","scanRefIndexes",pRef->scanRefIndexes);
+  pRef->scanRefIndexes=NULL;
 
   rc=ERROR_ID_NO;
 
@@ -1022,59 +1030,72 @@ RC MFCBIRA_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
    	else if ((spectrum=MEMORY_AllocBuffer("MFCBIRA_Reli","spectrum",sizeof(float)*NDET,1,0,MEMORY_TYPE_FLOAT))==NULL)
    	 rc=ERROR_ID_ALLOC;
 
-   	// Load offset and dark current
-
-   	else if ((offset!=NULL) && (darkCurrent!=NULL))
+   	else
    	 {
-   	 	// Initialize vectors
+      // Allocate a buffer for the indexes of selected reference spectra (scan mode)
 
-      VECTOR_Init(offset,(double)0.,NDET);
-      VECTOR_Init(darkCurrent,(double)0.,NDET);
+      if (pEngineContext->analysisRef.refScan && pEngineContext->recordNumber &&
+        ((pRef->scanRefIndexes=(int *)MEMORY_AllocBuffer("SetCCD_EEV","scanRefIndexes",pEngineContext->recordNumber,sizeof(int),0,MEMORY_TYPE_INT))==NULL))
 
-      drkTint=0.;
+       rc=ERROR_ID_ALLOC;
 
-      // Browse records
+      else
+       pEngineContext->fileInfo.nScanRef=0;
 
-      for (i=nOff=nDrk=0;i<pEngineContext->recordNumber;i++)
+       // Load offset and dark current
+
+      if (!rc && (offset!=NULL) && (darkCurrent!=NULL))
        {
-       	fseek(specFp,2L*sizeof(int)+i*(sizeof(MFCBIRA_HEADER)+NDET*sizeof(float)),SEEK_SET);
-   	    fread(&header,sizeof(MFCBIRA_HEADER),1,specFp);
+   	 	  // Initialize vectors
 
-   	    // Load offset
+        VECTOR_Init(offset,(double)0.,NDET);
+        VECTOR_Init(darkCurrent,(double)0.,NDET);
 
-   	    if (header.measurementType==PRJCT_INSTR_MFC_TYPE_OFFSET)
-   	     {
-   	      fread(spectrum,sizeof(float)*NDET,1,specFp);
-   	      for (j=0;j<NDET;j++)
-   	       offset[j]+=(double)spectrum[j];
+        drkTint=0.;
 
-   	      nOff+=header.scansNumber;                                             // all offset should have the same exposure time
-   	     }
+        // Browse records
 
-   	    // Load dark current
+        for (i=nOff=nDrk=0;i<pEngineContext->recordNumber;i++)
+         {
+         	fseek(specFp,2L*sizeof(int)+i*(sizeof(MFCBIRA_HEADER)+NDET*sizeof(float)),SEEK_SET);
+   	      fread(&header,sizeof(MFCBIRA_HEADER),1,specFp);
 
-   	    else if (header.measurementType==PRJCT_INSTR_MFC_TYPE_DARK)
-   	     {
-   	      fread(spectrum,sizeof(float)*NDET,1,specFp);
-   	      for (j=0;j<NDET;j++)
-   	       darkCurrent[j]+=(double)spectrum[j];
+   	      // Load offset
 
-   	      drkTint=header.exposureTime;                                          // all dark current should have the same exposure time
-   	      nDrk++;
-   	     }
+   	      if (header.measurementType==PRJCT_INSTR_MFC_TYPE_OFFSET)
+   	       {
+   	        fread(spectrum,sizeof(float)*NDET,1,specFp);
+   	        for (j=0;j<NDET;j++)
+   	         offset[j]+=(double)spectrum[j];
+
+   	        nOff+=header.scansNumber;                                             // all offset should have the same exposure time
+   	       }
+
+   	      // Load dark current
+
+   	      else if (header.measurementType==PRJCT_INSTR_MFC_TYPE_DARK)
+   	       {
+   	        fread(spectrum,sizeof(float)*NDET,1,specFp);
+   	        for (j=0;j<NDET;j++)
+   	         darkCurrent[j]+=(double)spectrum[j];
+
+   	        drkTint=header.exposureTime;                                          // all dark current should have the same exposure time
+   	        nDrk++;
+   	       }
+         }
+
+        // Average offset (account for the number of spectra and the number of scans)
+
+        if (nOff)
+        	for (j=0;j<NDET;j++)
+        	 offset[j]/=nOff;
+
+        // Average dark current and correct by the offset
+
+        if (nDrk)
+        	for (j=0;j<NDET;j++)                                                     // drk=drk-offset*drkScans/offScans
+        	 darkCurrent[j]=(darkCurrent[j]-offset[j])/((double)nDrk*drkTint);       // number of scans for the dark current should be 1
        }
-
-      // Average offset (account for the number of spectra and the number of scans)
-
-      if (nOff)
-      	for (j=0;j<NDET;j++)
-      	 offset[j]/=nOff;
-
-      // Average dark current and correct by the offset
-
-      if (nDrk)
-      	for (j=0;j<NDET;j++)                                                     // drk=drk-offset*drkScans/offScans
-      	 darkCurrent[j]=(darkCurrent[j]-offset[j])/((double)nDrk*drkTint);       // number of scans for the dark current should be 1
    	 }
   }
 
@@ -1134,7 +1155,7 @@ RC MFCBIRA_Reli(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loc
    	fread(&header,sizeof(MFCBIRA_HEADER),1,specFp);
    	fread(spectrum,sizeof(float)*NDET,1,specFp);
 
-   	if (((THRD_id==THREAD_TYPE_KURUCZ) || (THRD_id==THREAD_TYPE_ANALYSIS)) && (header.measurementType!=PRJCT_INSTR_MFC_TYPE_MEASUREMENT) && (header.measurementType!=PRJCT_INSTR_MFC_TYPE_UNKNOWN))
+   	if (/*((THRD_id==THREAD_TYPE_KURUCZ) || (THRD_id==THREAD_TYPE_ANALYSIS)) && */ (header.measurementType!=PRJCT_INSTR_MFC_TYPE_MEASUREMENT) && (header.measurementType!=PRJCT_INSTR_MFC_TYPE_UNKNOWN))
    	 rc=ERROR_ID_FILE_RECORD;
    	else
    	 {

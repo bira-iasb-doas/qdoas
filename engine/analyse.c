@@ -5379,8 +5379,7 @@ RC ANALYSE_LoadRef(ENGINE_CONTEXT *pEngineContext,INDEX indexFenoColumn)
   // Load reference spectra  ---> to check !!! seems never to pass there  (!strrchr(pTabFeno->ref1,PATH_SEP) maybe a problem)
 
   else if (((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC) ||
-            (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC_STD) ||
-            (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC_BIRA)) &&
+            (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC_STD)) &&
            (strlen(pTabFeno->ref1) && !strrchr(pTabFeno->ref1,PATH_SEP)))
    {
     strcpy(pTabFeno->refFile,pTabFeno->ref1);
