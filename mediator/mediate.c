@@ -252,9 +252,9 @@ int mediateRequestDisplaySpecInfo(void *engineContext,int page,void *responseHan
    }
 
   if (pSpectra->fieldsFlag[PRJCT_RESULTS_MEASTYPE] && (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_CCD_EEV))
-   mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Measurement type","%s",CCD_measureTypes[pRecord->ccd.measureType]);
+   mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Measurement type","%s",MAXDOAS_measureTypes[pRecord->ccd.measureType]);
   if (pSpectra->fieldsFlag[PRJCT_RESULTS_MEASTYPE] && (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC_BIRA))
-   mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Measurement type","%s",MFCBIRA_measureTypes[pRecord->mfcBira.measurementType]);
+   mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Measurement type","%s",MAXDOAS_measureTypes[pRecord->mfcBira.measurementType]);
 
   if (pSpectra->fieldsFlag[PRJCT_RESULTS_TDET])
    mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Detector temperature","%.3f",pRecord->TDet);
@@ -360,11 +360,11 @@ void mediateRequestPlotSpectra(ENGINE_CONTEXT *pEngineContext,void *responseHand
            tempSpectrum[i]/=pBuffers->instrFunction[i];
         }
 
-       if ((pInstrumental->readOutFormat!=PRJCT_INSTR_FORMAT_MFC_BIRA) || (pEngineContext->recordInfo.mfcBira.measurementType==PRJCT_INSTR_MFC_TYPE_MEASUREMENT) || (pEngineContext->recordInfo.mfcBira.measurementType==PRJCT_INSTR_MFC_TYPE_UNKNOWN))
+       if ((pInstrumental->readOutFormat!=PRJCT_INSTR_FORMAT_MFC_BIRA) || ((pEngineContext->recordInfo.mfcBira.measurementType!=PRJCT_INSTR_MAXDOAS_TYPE_DARK) && (pEngineContext->recordInfo.mfcBira.measurementType!=PRJCT_INSTR_MAXDOAS_TYPE_OFFSET)))
         sprintf(tmpTitle,"Spectrum");
-       else if (pEngineContext->recordInfo.mfcBira.measurementType==PRJCT_INSTR_MFC_TYPE_DARK)
+       else if (pEngineContext->recordInfo.mfcBira.measurementType==PRJCT_INSTR_MAXDOAS_TYPE_DARK)
         sprintf(tmpTitle,"Dark Current");
-       else if (pEngineContext->recordInfo.mfcBira.measurementType==PRJCT_INSTR_MFC_TYPE_OFFSET)
+       else if (pEngineContext->recordInfo.mfcBira.measurementType==PRJCT_INSTR_MAXDOAS_TYPE_OFFSET)
         sprintf(tmpTitle,"Offset");
 
        mediateAllocateAndSetPlotData(&spectrumData,tmpTitle,pBuffers->lambda, tempSpectrum, NDET, Line);
@@ -2022,6 +2022,7 @@ int mediateRequestNextMatchingSpectrum(ENGINE_CONTEXT *pEngineContext,void *resp
    int rec=pEngineContext->currentRecord;
    int upperLimit=pEngineContext->recordNumber;
    int inc,geoFlag;
+   int outputFlag;
    double longit,latit;
    INDEX indexSite;
    OBSERVATION_SITE *pSite;
@@ -2031,6 +2032,7 @@ int mediateRequestNextMatchingSpectrum(ENGINE_CONTEXT *pEngineContext,void *resp
 
    pProject=&pEngineContext->project;
    pRecord=&pEngineContext->recordInfo;
+   outputFlag=((THRD_id==THREAD_TYPE_KURUCZ) || (THRD_id==THREAD_TYPE_ANALYSIS))?1:0;
    inc=1;
    geoFlag=1;
 
@@ -2064,7 +2066,7 @@ int mediateRequestNextMatchingSpectrum(ENGINE_CONTEXT *pEngineContext,void *resp
    while (rc == ERROR_ID_NO && rec <= upperLimit)
     {
      // read the 'next' record
-     if ((rc=EngineReadFile(pEngineContext,rec,0,0))!=ERROR_ID_NO)
+     if ((rc=EngineReadFile(pEngineContext,rec,0,0,outputFlag))!=ERROR_ID_NO)
       {
        // reset the rc based on the severity of the failure - for non fatal errors keep searching
        rc = ERROR_DisplayMessage(responseHandle);
@@ -2133,7 +2135,7 @@ int mediateRequestNextMatchingSpectrum(ENGINE_CONTEXT *pEngineContext,void *resp
     // and return 0 to indicate the end of records.
 
     if (orec != 0) {
-     if ((rc=EngineReadFile(pEngineContext,orec,0,0))!=ERROR_ID_NO)
+     if ((rc=EngineReadFile(pEngineContext,orec,0,0,outputFlag))!=ERROR_ID_NO)
       {
        ERROR_DisplayMessage(responseHandle);
        return -1; // error
@@ -2242,7 +2244,7 @@ int mediateRequestNextMatchingAnalyseSpectrum(void *engineContext,
     {
      mediateRequestPlotSpectra(pEngineContext,responseHandle);
 
-     if (!pEngineContext->analysisRef.refAuto || pEngineContext->satelliteFlag || ((rc=EngineNewRef(pEngineContext,responseHandle))==ERROR_ID_NO) )
+     if (!pEngineContext->analysisRef.refAuto || pEngineContext->satelliteFlag || ((rc=EngineNewRef(pEngineContext,responseHandle))==ERROR_ID_NO))
       rc=ANALYSE_Spectrum(pEngineContext,responseHandle);
 
      if (rc!=ERROR_ID_NO)

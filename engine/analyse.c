@@ -3263,7 +3263,7 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
     saveFlag;
 
   INDEX indexPage,indexLine,indexColumn;
-  RC  rc;                                    // return code
+  RC  rc,rcOutput;                                    // return code
   int nrc;
 
 #if defined(__DEBUG_) && __DEBUG_
@@ -3290,10 +3290,10 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
   SpectreK=LambdaK=Sref=Trend=offset=NULL;
   useKurucz=0;
 
+
   NbFeno=0;
   nrc=0;
-
-  rc=ERROR_ID_NO;
+  rc=rcOutput=ERROR_ID_NO;
 
   // Buffers allocation
 
@@ -3824,15 +3824,30 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
     ANALYSE_oldLatitude=pRecord->latitude;
 
-    if ((pEngineContext->lastSavedRecord!=pEngineContext->indexRecord) && ((THRD_id==THREAD_TYPE_KURUCZ) || nrc) &&
+    // Output : save all records (including those with a not null return code for all analysis windows - for example : log error on spectrum)
+    //
+    // OUTPUT_SaveResults : moved after EndAnalysis
+    // test on nrc (no return code due to fatal error) removed but in this case, initialize the return code to -1 in order to force the output
+
+    EndAnalysis :
+
+    if (!nrc)
+     for (WrkFeno=0;WrkFeno<NFeno;WrkFeno++)
+      if (!TabFeno[indexFenoColumn][WrkFeno].hidden)
+       TabFeno[indexFenoColumn][WrkFeno].rc=-1;
+
+    if ((pEngineContext->lastSavedRecord!=pEngineContext->indexRecord) && /* !!! 25/02/2014 ((THRD_id==THREAD_TYPE_KURUCZ) || nrc) && */
         (((THRD_id==THREAD_TYPE_ANALYSIS) && pProject->asciiResults.analysisFlag) || ((THRD_id==THREAD_TYPE_KURUCZ) && pProject->asciiResults.calibFlag)))
 
-     rc=OUTPUT_SaveResults(pEngineContext,indexFenoColumn);
+     rcOutput=OUTPUT_SaveResults(pEngineContext,indexFenoColumn);
+
+    if (!rc)
+     rc=rcOutput;
    }
 
   // Return
 
-  EndAnalysis :
+  // EndAnalysis :
 
   if (Spectre!=NULL)
    MEMORY_ReleaseDVector("ANALYSE_Spectrum ","Spectre",Spectre,0);
@@ -4341,6 +4356,7 @@ RC ANALYSE_LoadCross(ENGINE_CONTEXT *pEngineContext,ANALYSIS_CROSS *crossSection
      }
 
     // Add a new cross section
+
 
     if (rc==ERROR_ID_NO && (indexSymbol==NWorkSpace) && (NWorkSpace<MAX_SYMB))
      {

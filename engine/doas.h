@@ -1446,7 +1446,7 @@ RC               GDP_BIN_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,FILE *specF
 // FILES READ OUT
 // ==============
 
-extern const char *CCD_measureTypes[];
+extern const char *MAXDOAS_measureTypes[];
 extern const char *MFCBIRA_measureTypes[];
 
 RC   SetUofT(ENGINE_CONTEXT *pEngineContext,FILE *specFp);

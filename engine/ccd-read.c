@@ -139,7 +139,7 @@ typedef struct cameraPicture
  }
 CAMERA_PICTURE;
 
-const char *CCD_measureTypes[PRJCT_INSTR_EEV_TYPE_MAX]=
+const char *MAXDOAS_measureTypes[PRJCT_INSTR_MAXDOAS_TYPE_MAX]=
      	                            { "None","Off axis","Direct sun","Zenith","Dark","Lamp","Bentham","Almucantar","Offset","Azimuth", "Principal plane", "Horizon" };
 
 
@@ -363,7 +363,7 @@ RC SetCCD_EEV(ENGINE_CONTEXT *pEngineContext,FILE *specFp,FILE *darkFp)
         ccdY=(header.roiSlitEnd-header.roiSlitStart+1)/header.roiSlitGroup;
         dataSize=(header.doubleFlag==(char)1)?sizeof(double):sizeof(unsigned short);
 
-        if (header.measureType==PRJCT_INSTR_EEV_TYPE_DARK)
+        if (header.measureType==PRJCT_INSTR_MAXDOAS_TYPE_DARK)
          {
           for (indexTps=0;indexTps<MAXTPS;indexTps++)
            if (header.exposureTime==predTint[indexTps])
@@ -535,7 +535,7 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
                  (!fread(ccdTabTint,sizeof(double)*header.nTint,1,specFp) ||
                   !fread(ccdTabNTint,sizeof(short)*header.nTint,1,specFp) ||
                   !fread(pBuffers->specMax,sizeof(double)*(header.nacc+header.nrej),1,specFp)))
-          rc=ERROR_ID_FILE_RECORD;
+          rc=ERROR_ID_FILE_END;
          else if (!header.saveTracks)
           {
           	if (header.doubleFlag==(char)1)
@@ -634,7 +634,7 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
               else if (fabs(header.brusagElevation+1.)<EPSILON)                               // be careful : should work only for Xianghe
                {
               	 pRecord->ccd.targetElevation=header.targetElevation=header.brusagElevation;
-              	 pRecord->ccd.measureType=PRJCT_INSTR_EEV_TYPE_ZENITH;
+              	 pRecord->ccd.measureType=PRJCT_INSTR_MAXDOAS_TYPE_ZENITH;
               	}
             }
 
@@ -735,15 +735,15 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
 
            if (rc ||
               (dateFlag && (((pRecord->elevationViewAngle>0.) && (pRecord->elevationViewAngle<80.)) ||
-                            ((pRecord->ccd.measureType!=PRJCT_INSTR_EEV_TYPE_NONE) && (pRecord->ccd.measureType!=PRJCT_INSTR_EEV_TYPE_ZENITH)))) ||                    // reference spectra are zenith only
+                            ((pRecord->ccd.measureType!=PRJCT_INSTR_MAXDOAS_TYPE_NONE) && (pRecord->ccd.measureType!=PRJCT_INSTR_MAXDOAS_TYPE_ZENITH)))) ||                    // reference spectra are zenith only
               (!dateFlag && pEngineContext->analysisRef.refScan && !pEngineContext->analysisRef.refSza && (pRecord->elevationViewAngle>80.)))    // zenith sky spectra are not analyzed in scan reference selection mode
 
             rc=ERROR_ID_FILE_RECORD;
 
-           else if (!dateFlag && (measurementType!=PRJCT_INSTR_EEV_TYPE_NONE))
+           else if (!dateFlag && (measurementType!=PRJCT_INSTR_MAXDOAS_TYPE_NONE))
             {
-            	if (((measurementType==PRJCT_INSTR_EEV_TYPE_OFFAXIS) && (pRecord->ccd.measureType!=PRJCT_INSTR_EEV_TYPE_OFFAXIS) && (pRecord->ccd.measureType!=PRJCT_INSTR_EEV_TYPE_ZENITH)) ||
-            	    ((measurementType!=PRJCT_INSTR_EEV_TYPE_OFFAXIS) && (pRecord->ccd.measureType!=measurementType)))
+            	if (((measurementType==PRJCT_INSTR_MAXDOAS_TYPE_OFFAXIS) && (pRecord->ccd.measureType!=PRJCT_INSTR_MAXDOAS_TYPE_OFFAXIS) && (pRecord->ccd.measureType!=PRJCT_INSTR_MAXDOAS_TYPE_ZENITH)) ||
+            	    ((measurementType!=PRJCT_INSTR_MAXDOAS_TYPE_OFFAXIS) && (pRecord->ccd.measureType!=measurementType)))
 
             	 rc=ERROR_ID_FILE_RECORD;
             }
@@ -990,8 +990,6 @@ RC ReliCCD(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay
 
      rc=ERROR_ID_FILE_END;
 
-    else if (DetInfo.Scans<=0)
-     rc=ERROR_ID_FILE_RECORD;
     else
      {
       // Data on the current spectrum
@@ -1036,7 +1034,7 @@ RC ReliCCD(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay
       for (i=0;i<NDET;i++)
        pBuffers->spectrum[NDET-i-1]=(double)ISpectre[i]*Max/65000.*176.-908.25*44.;
 
-      if (dateFlag && (pRecord->localCalDay!=localDay))
+      if ((DetInfo.Scans<=0) || (dateFlag && (pRecord->localCalDay!=localDay)))
        rc=ERROR_ID_FILE_RECORD;
      }
    }
@@ -1180,8 +1178,6 @@ RC ReliCCDTrack(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loc
 
          rc=ERROR_ID_FILE_END;
 
-        else if (DetInfo.Scans<=0)
-         rc=ERROR_ID_FILE_RECORD;
         else
          {
           // Data on the current spectrum
@@ -1233,7 +1229,7 @@ RC ReliCCDTrack(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loc
            for (i=0;i<NDET;i++)
             pBuffers->spectrum[i]/=(double)(44.*pRecord->NSomme);
 
-          if (dateFlag && (pRecord->localCalDay!=localDay))
+          if ((DetInfo.Scans<=0) || (dateFlag && (pRecord->localCalDay!=localDay)))
            rc=ERROR_ID_FILE_RECORD;
          }
        }

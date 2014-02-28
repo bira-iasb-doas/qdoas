@@ -74,7 +74,7 @@
 // CONSTANT DEFINITION
 // ===================
 
-#define MAX_LINE_LENGTH 40000
+#define MAX_LINE_LENGTH 4096
 
 // ================
 // GLOBAL VARIABLES
@@ -87,6 +87,7 @@ PRJCT_ASCII ASCII_options;                                                      
 // ================
 
 static INDEX asciiLastRecord=ITEM_NONE;                                         // keep the index of the last record
+static INDEX asciiLastDataSet=ITEM_NONE;
 MATRIX_OBJECT asciiMatrix;
 
 // ===============
@@ -100,7 +101,7 @@ MATRIX_OBJECT asciiMatrix;
 //
 // INPUT           pEngineContext : information on the file to read out
 //                 specFp    : pointer to the ASCII file
-//                 nSkip     : number of records to skip
+//                 nSkip     : number of records/data set to skip
 //
 // RETURN          ERROR_ID_FILE_NOT_FOUND if the input file pointer is NULL;
 //                 ERROR_ID_FILE_END if the end of file is reached;
@@ -120,7 +121,7 @@ RC AsciiSkip(ENGINE_CONTEXT *pEngineContext,FILE *specFp,int nSkip)
   // Initializations
 
   pInstr=&pEngineContext->project.instrumental;
-  maxCount=NDET+pInstr->ascii.szaSaveFlag+pInstr->ascii.timeSaveFlag+pInstr->ascii.dateSaveFlag;
+  maxCount=NDET+pInstr->ascii.szaSaveFlag+pInstr->ascii.azimSaveFlag+pInstr->ascii.elevSaveFlag+pInstr->ascii.timeSaveFlag+pInstr->ascii.dateSaveFlag;
   lineRecord=NULL;
   rc=ERROR_ID_NO;
 
@@ -199,9 +200,10 @@ RC ASCII_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
 
   char *lineRecord,line[MAX_ITEM_TEXT_LEN+1],                                   // get lines from the ASCII file
         oldColumn[MAX_ITEM_TEXT_LEN+1],nextColumn[MAX_ITEM_TEXT_LEN+1];         // columns decomposition
-  int itemCount,startCount,maxCount,lineLength,indexColumn;                     // counters
+  int itemCount,startCount,maxCount;                                            // counters
   PRJCT_INSTRUMENTAL *pInstr;                                                   // pointer to the instrumental part of the pEngineContext structure
   ANALYSIS_REF *pRef;
+  int lineLength;
   double tempValue;
   int nc;
   RC rc;                                                                        // return code
@@ -209,11 +211,13 @@ RC ASCII_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
   // Initializations
 
   asciiLastRecord=ITEM_NONE;                                                    // reset the index of the last record
+  asciiLastDataSet=ITEM_NONE;                                                   // data set (for column/matrix modes)
+
   pEngineContext->recordNumber=0;
   lineRecord=NULL;
   pInstr=&pEngineContext->project.instrumental;
   pRef=&pEngineContext->analysisRef;
-  startCount=pInstr->ascii.szaSaveFlag+pInstr->ascii.timeSaveFlag+pInstr->ascii.dateSaveFlag;
+  startCount=pInstr->ascii.szaSaveFlag+pInstr->ascii.azimSaveFlag+pInstr->ascii.elevSaveFlag+pInstr->ascii.timeSaveFlag+pInstr->ascii.dateSaveFlag;
   maxCount=NDET;
   rc=ERROR_ID_NO;
   nc=0;
@@ -267,36 +271,21 @@ RC ASCII_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
             strcpy(oldColumn,nextColumn);
            }
 
-          if ((nc>pInstr->ascii.lambdaSaveFlag+1) && (rc=MATRIX_Allocate(&asciiMatrix,NDET,nc,0,0,0,"ASCII_Set"))!=ERROR_ID_ALLOC)
-           pEngineContext->recordNumber+=nc-pInstr->ascii.lambdaSaveFlag;
+          if (nc>pInstr->ascii.lambdaSaveFlag+1)
+           rc=MATRIX_Allocate(&asciiMatrix,NDET+startCount,nc,0,0,0,"ASCII_Set");
          }
 
         ++itemCount;
 
         // Matrix mode
 
-        if ((itemCount>startCount) && (nc>pInstr->ascii.lambdaSaveFlag+1))
+        if (itemCount==maxCount)
          {
-          strcpy(oldColumn,line);
+          if (nc>pInstr->ascii.lambdaSaveFlag+1)
+           pEngineContext->recordNumber+=nc-pInstr->ascii.lambdaSaveFlag;
+          else
+           pEngineContext->recordNumber++;
 
-          for (indexColumn=0;strlen(oldColumn) && (indexColumn<nc);indexColumn++)
-           {
-            lineLength=strlen(oldColumn);
-            oldColumn[lineLength++]='\n';
-            oldColumn[lineLength]=0;
-
-            memset(nextColumn,0,MAX_ITEM_TEXT_LEN);
-            sscanf(oldColumn,"%lf %[^'\n']",(double *)&tempValue,nextColumn);
-            asciiMatrix.matrix[indexColumn][itemCount-startCount-1]=tempValue;
-            strcpy(oldColumn,nextColumn);
-           }
-
-          if (itemCount==maxCount)
-           break;
-         }
-        else if (itemCount==maxCount)
-         {
-          pEngineContext->recordNumber++;
           itemCount=0;
          }
        }
@@ -354,12 +343,17 @@ RC ASCII_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int local
 
   RECORD_INFO *pRecordInfo;                                                         // pointer to the record part of the engine context
   PRJCT_INSTRUMENTAL *pInstr;                                                   // pointer to the instrumental part of the pEngineContext structure
-  char *lineRecord,*pRecord,line[MAX_ITEM_TEXT_LEN+1];                         // get lines from the ASCII file
+  char *lineRecord,*pRecord,line[MAX_ITEM_TEXT_LEN+1],                          // get lines from the ASCII file
+        oldColumn[MAX_ITEM_TEXT_LEN+1],nextColumn[MAX_ITEM_TEXT_LEN+1];
   double *spectrum,*lambda,                                                     // the spectrum and the wavelength calibration to read
           tmLocal;                                                              // the measurement time in seconds
   int lambdaFlag,zmFlag,timeFlag,dateSaveFlag,azimFlag,elevFlag,                // flags to select items to read according to the format options
       day,mon,year;                                                             // decomposition of the measurement date
-  INDEX i;                                                                      // browse items to read
+  INDEX i,indexColumn;                                                          // browse items to read
+  int ndataSet,ndataRecord;                                                     // number of data set to bypass (column + matrix modes)
+  int lineLength;
+  double tempValue;
+  int dateCount;
   RC rc;                                                                        // return code
   int count;
 
@@ -378,6 +372,12 @@ RC ASCII_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int local
   lineRecord=NULL;
   rc=ERROR_ID_NO;
 
+  day=mon=year=ITEM_NONE;
+
+  dateCount=(dateSaveFlag)?zmFlag+azimFlag+elevFlag:ITEM_NONE;
+  ndataSet=(asciiMatrix.nc)?(recordNo-1)/(asciiMatrix.nc-lambdaFlag):ITEM_NONE;
+  ndataRecord=recordNo-ndataSet*(asciiMatrix.nc-lambdaFlag)+lambdaFlag-1;
+
   memset(&pRecordInfo->present_day,0,sizeof(SHORT_DATE));
   memset(&pRecordInfo->present_time,0,sizeof(struct time));
 
@@ -389,7 +389,7 @@ RC ASCII_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int local
    rc=ERROR_SetLast("ASCII_Read",ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pEngineContext->fileInfo.fileName);
   else if ((recordNo<=0) || (recordNo>pEngineContext->recordNumber))
    rc=ERROR_ID_FILE_END;
-  else if ((recordNo-asciiLastRecord==1) || !(rc=AsciiSkip(pEngineContext,specFp,recordNo-1)))
+  else if (((ndataSet!=ITEM_NONE) && (ndataSet==asciiLastDataSet)) || (recordNo-asciiLastRecord==1) || !(rc=AsciiSkip(pEngineContext,specFp,(ndataSet!=ITEM_NONE)?ndataSet:recordNo-1)))
    {
     asciiLastRecord=recordNo;
 
@@ -488,49 +488,88 @@ RC ASCII_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int local
     // SPECTRA RECORDS ARE SAVED IN SUCCESSIVE COLUMNS
     // -----------------------------------------------
 
-    else if ((asciiMatrix.nl==NDET) && (asciiMatrix.nc>lambdaFlag))
+    else if ((asciiMatrix.nl>=NDET) && (asciiMatrix.nc>lambdaFlag))
      {
+     	if (ndataSet!=asciiLastDataSet)
+     	 {
+     	 	asciiLastDataSet=ndataSet;
+
+     	 	for (i=0;i<asciiMatrix.nl;i++)
+     	 	 {
+     	 	  while (fgets(line,MAX_ITEM_TEXT_LEN,specFp) && ((strchr(line,';')!=NULL) || (strchr(line,'*')!=NULL)));
+
+          // Matrix mode
+
+          strcpy(oldColumn,line);
+
+          for (indexColumn=0;strlen(oldColumn) && (indexColumn<asciiMatrix.nc);indexColumn++)
+           {
+            lineLength=strlen(oldColumn);
+            oldColumn[lineLength++]='\n';
+            oldColumn[lineLength]=0;
+
+            memset(nextColumn,0,MAX_ITEM_TEXT_LEN);
+            if (i==dateCount)
+             {
+              sscanf(oldColumn,"%d/%d/%d %[^'\n']",(int *)&day,(int *)&mon,(int *)&year,nextColumn);
+              tempValue=(double)day*1.e6+mon*1e4+year;
+             }
+            else
+             sscanf(oldColumn,"%lf %[^'\n']",(double *)&tempValue,nextColumn);
+
+            asciiMatrix.matrix[indexColumn][i]=tempValue;
+            strcpy(oldColumn,nextColumn);
+           }
+         }
+     	 }
+
+     	count=0;
+     	if (zmFlag)
+     	 pRecordInfo->Zm=asciiMatrix.matrix[ndataRecord][count++];
+     	if (azimFlag)
+     	 pRecordInfo->azimuthViewAngle=asciiMatrix.matrix[ndataRecord][count++];
+     	if (elevFlag)
+     	 pRecordInfo->elevationViewAngle=asciiMatrix.matrix[ndataRecord][count++];
+      if (dateSaveFlag)
+       {
+       	tempValue=asciiMatrix.matrix[ndataRecord][count++];
+
+       	day=(int)floor(tempValue*1e-6);
+       	mon=(int)floor((tempValue-day*1.e6)*1e-4);
+       	year=(int)(tempValue-day*1.e6-mon*1.e4);
+       }
+     	if (timeFlag)
+     	 pRecordInfo->TimeDec=asciiMatrix.matrix[ndataRecord][count++];
+
       if (lambdaFlag)
-       memcpy(lambda,asciiMatrix.matrix[0],sizeof(double)*NDET);
-      memcpy(spectrum,asciiMatrix.matrix[recordNo+lambdaFlag-1],sizeof(double)*NDET);
+       memcpy(lambda,asciiMatrix.matrix[0]+count,sizeof(double)*NDET);
+
+      memcpy(spectrum,asciiMatrix.matrix[ndataRecord]+count,sizeof(double)*NDET);
      }
     else
 
      {
       // Read the solar zenith angle
 
-      count = 0;
-      if (zmFlag) ++count;
-      if (azimFlag) ++count;
-      if (elevFlag) ++count;
-
-      if (count)
+      if (zmFlag)
        {
-        while (fgets(line,MAX_ITEM_TEXT_LEN,specFp) && ((strchr(line,';')!=NULL) || (strchr(line,'*')!=NULL)));
-        pRecord=line;
-	// locate the start of the first value
-	for (;(pRecord!=NULL) && (*pRecord==' ');pRecord++);
+       	while (fgets(line,MAX_ITEM_TEXT_LEN,specFp) && ((strchr(line,';')!=NULL) || (strchr(line,'*')!=NULL)));
+       	if (sscanf(line,"%lf",&pRecordInfo->Zm)!=1)
+         rc = ERROR_ID_FILE_END;
+       }
 
-        if (zmFlag && (pRecord != NULL))
-         {
- 	   if (sscanf(pRecord,"%lf",&pRecordInfo->Zm) == 1) --count;
- 	   for (pRecord=strchr(pRecord,' ');(pRecord!=NULL) && (*pRecord==' ');pRecord++);
-         }
+      if (azimFlag)
+       {
+       	while (fgets(line,MAX_ITEM_TEXT_LEN,specFp) && ((strchr(line,';')!=NULL) || (strchr(line,'*')!=NULL)));
+       	if (sscanf(line,"%f",&pRecordInfo->azimuthViewAngle)!=1)
+         rc = ERROR_ID_FILE_END;
+       }
 
-        if (azimFlag && (pRecord != NULL))
-         {
- 	   if (sscanf(pRecord,"%f",&pRecordInfo->azimuthViewAngle) == 1) --count;
- 	   for (pRecord=strchr(pRecord,' ');(pRecord!=NULL) && (*pRecord==' ');pRecord++);
-         }
-
-        if (elevFlag && (pRecord != NULL))
-         {
- 	   if (sscanf(pRecord,"%f",&pRecordInfo->elevationViewAngle) == 1) --count;
- 	   for (pRecord=strchr(pRecord,' ');(pRecord!=NULL) && (*pRecord==' ');pRecord++);
-         }
-
-	       // // should be at the end of the line and read ALL of the data
-	       // if (pRecord != NULL || count) rc = ERROR_ID_FILE_END;
+      if (elevFlag)
+       {
+       	while (fgets(line,MAX_ITEM_TEXT_LEN,specFp) && ((strchr(line,';')!=NULL) || (strchr(line,'*')!=NULL)));
+       	if (sscanf(line,"%f",&pRecordInfo->elevationViewAngle)!=1)
+         rc = ERROR_ID_FILE_END;
        }
 
       // Read the measurement date
@@ -552,38 +591,38 @@ RC ASCII_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int local
 
       // Read the spectrum and if selected, the wavelength calibration
       if (!rc)
-      {
-	if (lambdaFlag) // wavelength and spectrum
-	{
-	  for (i=0;(i<NDET) && !rc; )
-	  {
-	    if (!fgets(line,MAX_ITEM_TEXT_LEN,specFp))
-	    {
-	      rc=ERROR_SetLast("ASCII_Read",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pEngineContext->fileInfo.fileName);
-	    }
-	    else if ((strchr(line,';')==NULL) && (strchr(line,'*')==NULL))
-	    {
-	      if (sscanf(line,"%lf %lf",&lambda[i],&spectrum[i]) != 2) rc = ERROR_ID_FILE_END;
-	      ++i;
-	    }
-	  }
-	}
-	else // just spectrum
-	{
-	  for (i=0;(i<NDET) && !rc; )
-	  {
-	    if (!fgets(line,MAX_ITEM_TEXT_LEN,specFp))
-	    {
-	      rc=ERROR_SetLast("ASCII_Read",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pEngineContext->fileInfo.fileName);
-	    }
-	    else if ((strchr(line,';')==NULL) && (strchr(line,'*')==NULL))
-	      {
-	      if (sscanf(line,"%lf",&spectrum[i]) != 1) rc = ERROR_ID_FILE_END;
-	      ++i;
-	    }
-	  }
-	}
-      }
+       {
+       	if (lambdaFlag) // wavelength and spectrum
+        	{
+       	  for (i=0;(i<NDET) && !rc; )
+       	   {
+       	    if (!fgets(line,MAX_ITEM_TEXT_LEN,specFp))
+       	     {
+       	      rc=ERROR_SetLast("ASCII_Read",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pEngineContext->fileInfo.fileName);
+       	     }
+       	    else if ((strchr(line,';')==NULL) && (strchr(line,'*')==NULL))
+       	     {
+       	      if (sscanf(line,"%lf %lf",&lambda[i],&spectrum[i]) != 2) rc = ERROR_ID_FILE_END;
+       	      ++i;
+       	     }
+       	  }
+       	}
+       	else // just spectrum
+        	{
+       	  for (i=0;(i<NDET) && !rc; )
+       	   {
+       	    if (!fgets(line,MAX_ITEM_TEXT_LEN,specFp))
+       	     {
+       	      rc=ERROR_SetLast("ASCII_Read",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pEngineContext->fileInfo.fileName);
+       	     }
+       	    else if ((strchr(line,';')==NULL) && (strchr(line,'*')==NULL))
+       	     {
+       	      if (sscanf(line,"%lf",&spectrum[i]) != 1) rc = ERROR_ID_FILE_END;
+       	      ++i;
+       	     }
+       	   }
+       	 }
+       }
      }
 
     if (!rc)
@@ -636,6 +675,5 @@ RC ASCII_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int local
 void ASCII_Free(const char *functionStr)
  {
  	MATRIX_Free(&asciiMatrix,functionStr);
-
  	memset(&asciiMatrix,0,sizeof(MATRIX_OBJECT));
  }

@@ -709,7 +709,7 @@ RC EngineSetFile(ENGINE_CONTEXT *pEngineContext,const char *fileName,void *respo
 //                                  reference spectrum to search for
 // -----------------------------------------------------------------------------
 
-RC EngineReadFile(ENGINE_CONTEXT *pEngineContext,int indexRecord,int dateFlag,int localCalDay)
+RC EngineReadFile(ENGINE_CONTEXT *pEngineContext,int indexRecord,int dateFlag,int localCalDay,int outputFlag)
  {
    // Declarations
 
@@ -718,12 +718,14 @@ RC EngineReadFile(ENGINE_CONTEXT *pEngineContext,int indexRecord,int dateFlag,in
    INDEX indexSite;
    OBSERVATION_SITE *pSite;
    double longit,latit;
+   int indexFeno,indexFenoColumn;
    int rc;                                                                       // Return code
 
    // Initializations
 
    pFile=&pEngineContext->fileInfo;
    pRecord=&pEngineContext->recordInfo;
+   indexFenoColumn=0;
 
    memset(pRecord->Nom,0,20);
 
@@ -748,6 +750,8 @@ RC EngineReadFile(ENGINE_CONTEXT *pEngineContext,int indexRecord,int dateFlag,in
    pRecord->aMoon=0.;
    pRecord->hMoon=0.;
    pRecord->fracMoon=0.;
+
+   pEngineContext->indexRecord=indexRecord;  // !!! for the output
 
    switch((int)pEngineContext->project.instrumental.readOutFormat)
     {
@@ -841,6 +845,7 @@ RC EngineReadFile(ENGINE_CONTEXT *pEngineContext,int indexRecord,int dateFlag,in
       // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_OMI :
       rc=OMI_Read(pEngineContext,indexRecord);
+      indexFenoColumn=pEngineContext->recordInfo.omi.omiRowIndex-1;
       break;
       // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_CCD_EEV :
@@ -903,6 +908,17 @@ RC EngineReadFile(ENGINE_CONTEXT *pEngineContext,int indexRecord,int dateFlag,in
 
        pRecord->Zm=(pRecord->Tm!=(double)0.)?ZEN_FNTdiz(ZEN_FNCrtjul(&pRecord->Tm),&longit,&latit,&pRecord->Azimuth):(double)-1.;
       }
+    }
+
+   // Output : save all records (including those that are not analyzed -> for example, reference spectra)
+
+   if (outputFlag && (rc==ERROR_ID_FILE_RECORD))
+    {
+    	for (indexFeno=0;indexFeno<NFeno;indexFeno++)
+    	 if (!TabFeno[indexFenoColumn][indexFeno].hidden)
+    	  TabFeno[indexFenoColumn][indexFeno].rc=ERROR_ID_FILE_RECORD;             // force the output to default values
+
+     OUTPUT_SaveResults(pEngineContext,indexFenoColumn);
     }
 
    return rc;
@@ -1195,7 +1211,7 @@ RC EngineSetRefIndexes(ENGINE_CONTEXT *pEngineContext)
 
        for (indexRecord=ENGINE_contextRef.lastRefRecord+1;indexRecord<=recordNumber;indexRecord++)
         {
-         if (!(rc=EngineReadFile(&ENGINE_contextRef,indexRecord,1,localCalDay)) &&
+         if (!(rc=EngineReadFile(&ENGINE_contextRef,indexRecord,1,localCalDay,0)) &&
              (ENGINE_contextRef.recordInfo.Zm>(double)0.))
           {
            if (rc==ITEM_NONE)
@@ -1512,7 +1528,7 @@ RC EngineSetRefIndexesMFC(ENGINE_CONTEXT *pEngineContext,int *pNewRef,INDEX *pIn
 
                strcpy(fileList[indexFile],ENGINE_contextRef.fileInfo.fileName);    // index of record
 
-               if (!(rc=EngineReadFile(&ENGINE_contextRef,1,1,localCalDay)) && (ENGINE_contextRef.recordInfo.Zm>(double)0.))
+               if (!(rc=EngineReadFile(&ENGINE_contextRef,1,1,localCalDay,0)) && (ENGINE_contextRef.recordInfo.Zm>(double)0.))
                 {
                  indexList[NRecord]=indexFile;                                       // index of record
                  ZmList[NRecord]=ENGINE_contextRef.recordInfo.Zm;                    // zenith angle
@@ -1782,7 +1798,7 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
          if ((pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_MFC) &&
              (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_MFC_STD))
 
-          rc=EngineReadFile(&ENGINE_contextRef,indexRefRecord,0,0);
+          rc=EngineReadFile(&ENGINE_contextRef,indexRefRecord,0,0,0);
 
          else
           {
@@ -1798,7 +1814,7 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
            else
             strcpy(ENGINE_contextRef.fileInfo.fileName,(pRecord->localTimeDec<=ENGINE_localNoon)?pTabFeno->refAM:pTabFeno->refPM);
 
-           rc=EngineReadFile(&ENGINE_contextRef,1,0,0);
+           rc=EngineReadFile(&ENGINE_contextRef,1,0,0,0);
           }
 
          if (!rc)

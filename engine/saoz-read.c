@@ -346,10 +346,6 @@ RC ReliSAOZ(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDa
     if (((namesFp!=NULL) && !fread(names,20,1,namesFp)) ||
          !Ht_Reli(specFp,pSaoz,((domain==PRJCT_INSTR_SAOZ_REGION_VIS)?sizeof(SAOZ_V):sizeof(SAOZ_UV))-16,2))
      rc=ERROR_ID_FILE_END;
-    else if ((strlen(names)>0) &&
-            (((pEngineContext->project.instrumental.saoz.spectralType==PRJCT_INSTR_SAOZ_TYPE_ZENITHAL) && (names[11]!='Z')) ||
-             ((pEngineContext->project.instrumental.saoz.spectralType==PRJCT_INSTR_SAOZ_TYPE_POINTED) && (names[11]!='P'))))
-     rc=ERROR_ID_FILE_RECORD;
     else
      {
       // Measurement data
@@ -506,6 +502,11 @@ RC ReliSAOZ(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDa
          }
        }
      }
+
+    if ((strlen(names)>0) &&
+      (((pEngineContext->project.instrumental.saoz.spectralType==PRJCT_INSTR_SAOZ_TYPE_ZENITHAL) && (names[11]!='Z')) ||
+       ((pEngineContext->project.instrumental.saoz.spectralType==PRJCT_INSTR_SAOZ_TYPE_POINTED) && (names[11]!='P'))))
+     rc=ERROR_ID_FILE_RECORD;
    }
 
   // Return
@@ -577,12 +578,12 @@ RC SetSAOZEfm(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
 
   unsigned int curvenum;                    // number of spectra in the file
   RC rc;                            // return code
-  
+
   // Initializations
 
   rc=ERROR_ID_NO;
   pEngineContext->recordNumber=0;
-  
+
   // Get the number of spectra in the file
 
   if (specFp==NULL)
@@ -633,9 +634,9 @@ RC ReliSAOZEfm(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
   spectrum=(double *)pEngineContext->buffers.spectrum;
   SMax=(double)0.;
   rc=ERROR_ID_NO;
-  
+
   // Verify input
-  
+
   if (specFp==NULL)
    rc=ERROR_SetLast("ReliSAOZEfm",ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pEngineContext->fileInfo.fileName);
   else if ((recordNo<=0) || (recordNo>pEngineContext->recordNumber))
@@ -669,43 +670,34 @@ RC ReliSAOZEfm(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
        spectrum[i]/=header.N_somm;
       }
 
-    // User criteria
+    // Data on the current spectrum
 
-    if ((SMax<=(double)1000.) || (header.N_somm<=0))
+    pRecord->TDet = (double)header.T_det*0.01;
+    pRecord->Tint = (double)Texpos[header.iT_int];
+    pRecord->NSomme = header.N_somm;
+    pRecord->Zm = (double)header.Dizen*0.01;
 
+    pRecord->present_time.ti_hour=header.M_Heur;
+    pRecord->present_time.ti_min=header.M_Min;
+    pRecord->present_time.ti_sec=header.M_Sec;
+
+    memcpy(&pRecord->present_day, &today, sizeof(SHORT_DATE));
+
+    pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_day,&pRecord->present_time,0);
+    pRecord->TotalExpTime=(double)0.;
+    pRecord->TimeDec=(double)header.M_Heur+header.M_Min/60.+header.M_Sec/3600.;
+
+    pRecord->longitude=(double)-header.Longi/100.;
+    pRecord->latitude=(double)header.Latid/100.;
+    pRecord->altitude=(double)header.Altit;
+
+    tmLocal=pRecord->Tm+THRD_localShift*3600.;
+
+    pRecord->localCalDay=ZEN_FNCaljda(&tmLocal);
+    pRecord->localTimeDec=fmod(pRecord->TimeDec+24.+THRD_localShift,(double)24.);
+
+    if ((SMax<=(double)1000.) || (header.N_somm<=0) || (dateFlag && (pRecord->localCalDay!=localDay)))
      rc=ERROR_ID_FILE_RECORD;
-
-    else
-     {
-      // Data on the current spectrum
-
-      pRecord->TDet = (double)header.T_det*0.01;
-      pRecord->Tint = (double)Texpos[header.iT_int];
-      pRecord->NSomme = header.N_somm;
-      pRecord->Zm = (double)header.Dizen*0.01;
-
-      pRecord->present_time.ti_hour=header.M_Heur;
-      pRecord->present_time.ti_min=header.M_Min;
-      pRecord->present_time.ti_sec=header.M_Sec;
-
-      memcpy(&pRecord->present_day, &today, sizeof(SHORT_DATE));
-
-      pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_day,&pRecord->present_time,0);
-      pRecord->TotalExpTime=(double)0.;
-      pRecord->TimeDec=(double)header.M_Heur+header.M_Min/60.+header.M_Sec/3600.;
-
-      pRecord->longitude=(double)-header.Longi/100.;
-      pRecord->latitude=(double)header.Latid/100.;
-      pRecord->altitude=(double)header.Altit;
-
-      tmLocal=pRecord->Tm+THRD_localShift*3600.;
-
-      pRecord->localCalDay=ZEN_FNCaljda(&tmLocal);
-      pRecord->localTimeDec=fmod(pRecord->TimeDec+24.+THRD_localShift,(double)24.);
-
-      if (dateFlag && (pRecord->localCalDay!=localDay))
-       rc=ERROR_ID_FILE_RECORD;
-     }
    }
 
   // Return

@@ -1464,10 +1464,10 @@ CWInstrCcdEevEdit::CWInstrCcdEevEdit(const struct instrumental_ccdeev *d, QWidge
   // Spectral Type
   gridLayout->addWidget(new QLabel("Spectral Type", this), row, 0);
   m_spectralTypeCombo = new QComboBox(this);
-  m_spectralTypeCombo->addItem("All", QVariant(PRJCT_INSTR_EEV_TYPE_NONE));
-  m_spectralTypeCombo->addItem("Off-axis", QVariant(PRJCT_INSTR_EEV_TYPE_OFFAXIS));
-  m_spectralTypeCombo->addItem("Direct sun", QVariant(PRJCT_INSTR_EEV_TYPE_DIRECTSUN));
-  m_spectralTypeCombo->addItem("Almucantar", QVariant(PRJCT_INSTR_EEV_TYPE_ALMUCANTAR));
+  m_spectralTypeCombo->addItem("All", QVariant(PRJCT_INSTR_MAXDOAS_TYPE_NONE));
+  m_spectralTypeCombo->addItem("Off-axis", QVariant(PRJCT_INSTR_MAXDOAS_TYPE_OFFAXIS));
+  m_spectralTypeCombo->addItem("Direct sun", QVariant(PRJCT_INSTR_MAXDOAS_TYPE_DIRECTSUN));
+  m_spectralTypeCombo->addItem("Almucantar", QVariant(PRJCT_INSTR_MAXDOAS_TYPE_ALMUCANTAR));
   gridLayout->addWidget(m_spectralTypeCombo, row, 1);
   ++row;
 
@@ -2013,7 +2013,7 @@ CWInstrOmiEdit::CWInstrOmiEdit(const struct instrumental_omi *d, QWidget *parent
   xtrackQFBoxLayout->addWidget(m_strictXTrackQF);
   xtrackQFBoxLayout->addStretch(1);
   xtrackQFBox->setLayout(xtrackQFBoxLayout);
-  
+
   mainLayout->addWidget(xtrackQFBox);
 
   // files
@@ -2054,7 +2054,7 @@ CWInstrOmiEdit::~CWInstrOmiEdit()
 
 }
 
-void CWInstrOmiEdit::apply(struct instrumental_omi *d) const 
+void CWInstrOmiEdit::apply(struct instrumental_omi *d) const
 {
   // spectral
   d->spectralType = m_spectralTypeCombo->itemData(m_spectralTypeCombo->currentIndex()).toInt();
@@ -2087,16 +2087,16 @@ CWInstrTropomiEdit::CWInstrTropomiEdit(const struct instrumental_tropomi *d, QWi
 
   QVBoxLayout *mainLayout = new QVBoxLayout(this);
   QGridLayout *gridLayout = new QGridLayout;
-  
+
   mainLayout->addLayout(gridLayout);
-  
+
   // spectral band
   gridLayout->addWidget(new QLabel("Spectral Band", this));
   m_spectralBandCombo = new QComboBox(this);
 #define EXPAND(BANDLABEL) m_spectralBandCombo->addItem(#BANDLABEL, QVariant(BANDLABEL));
   TROPOMI_BANDS
 #undef EXPAND
-    
+
   int index = m_spectralBandCombo->findData(QVariant(d->spectralBand));
   if (index != -1)
     m_spectralBandCombo->setCurrentIndex(index);
@@ -2105,7 +2105,7 @@ CWInstrTropomiEdit::CWInstrTropomiEdit(const struct instrumental_tropomi *d, QWi
 
 }
 
-void CWInstrTropomiEdit::apply(struct instrumental_tropomi *d) const 
+void CWInstrTropomiEdit::apply(struct instrumental_tropomi *d) const
 {
   // spectral
   d->spectralBand = static_cast<tropomiSpectralBand>(m_spectralBandCombo->itemData(m_spectralBandCombo->currentIndex()).toInt());

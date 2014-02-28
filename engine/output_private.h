@@ -670,7 +670,8 @@ static inline void get_omi_rejected_pixels(struct output_field *this_field, char
 }
 
 static inline void get_rms(struct output_field *this_field, double *rms, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn, int index_calib __attribute__ ((unused))) {
-  *rms = this_field->get_tabfeno(this_field, indexFenoColumn)->RMS;
+	 FENO *pTabFeno = this_field->get_tabfeno(this_field, indexFenoColumn);
+  *rms = (!pTabFeno->rc)?pTabFeno->RMS:DEFAULT_VALUE;
 }
 
 static inline void get_rms_calib(struct output_field *this_field, double *rms, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn, int index_calib) {
@@ -682,7 +683,8 @@ static inline void get_wavelength_calib(struct output_field *this_field, double 
 }
 
 static inline void get_n_iter(struct output_field *this_field, int *n_iter, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn, int index_calib __attribute__ ((unused))) {
-  *n_iter = this_field->get_tabfeno(this_field, indexFenoColumn)->nIter;
+	 FENO *pTabFeno = this_field->get_tabfeno(this_field, indexFenoColumn);
+  *n_iter = (!pTabFeno->rc)?pTabFeno->nIter:DEFAULT_VALUE;
 }
 
 static inline void get_n_iter_calib(struct output_field *this_field, int *n_iter, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn, int index_calib) {
@@ -690,7 +692,8 @@ static inline void get_n_iter_calib(struct output_field *this_field, int *n_iter
 }
 
 static inline void get_chisquare(struct output_field *this_field, double *chisquare, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn, int index_calib __attribute__ ((unused))) {
-  *chisquare = this_field->get_tabfeno(this_field, indexFenoColumn)->chiSquare;
+	 FENO *pTabFeno = this_field->get_tabfeno(this_field, indexFenoColumn);
+  *chisquare = (!pTabFeno->rc)?pTabFeno->chiSquare:DEFAULT_VALUE;
 }
 
 static inline void get_chisquare_calib(struct output_field *this_field, double *chisquare, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn, int index_calib) {

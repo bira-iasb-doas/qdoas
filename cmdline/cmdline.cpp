@@ -436,7 +436,7 @@ int readConfigQdoas(commands_t *cmd, QList<const CProjectConfigItem*> &projectIt
 	  {
             if (xmlSwitch)
               QDOASXML_Parse(cmd->xmlCommands,p);
-            
+
             projectItems.push_back(p);
 	  }
 
@@ -448,7 +448,7 @@ int readConfigQdoas(commands_t *cmd, QList<const CProjectConfigItem*> &projectIt
       std::cout << "-xml switch can only be used when processing a single project.  Use switch -a <projectname>" << std::endl;
       retCode = 1;
     } else {
-      
+
       while (!tmpItems.isEmpty()) {
 	projectItems.push_back(tmpItems.takeFirst());
       }
@@ -591,11 +591,11 @@ int analyseProjectQdoasPrepare(void **engineContext, const CProjectConfigItem *p
     mediate_analysis_window_t *awCursor = awDataList;
 
     QList<const CAnalysisWindowConfigItem*>::const_iterator awIt = awList.begin();
-    while (awIt != awList.end()) {      
-    	
+    while (awIt != awList.end()) {
+
     	 // Do not account for disabled analysis windows
 
-    	 if ((*awIt)->isEnabled())         
+    	 if ((*awIt)->isEnabled())
     	  {
         *awCursor = *((*awIt)->properties());
         // mask any display flags ...
@@ -603,8 +603,8 @@ int analyseProjectQdoasPrepare(void **engineContext, const CProjectConfigItem *p
        }
       else
        nWindows--;
-       
-      ++awIt;  
+
+      ++awIt;
     }
 
     if (mediateRequestSetAnalysisWindows(*engineContext, nWindows, awDataList, (!calibSwitch)?THREAD_TYPE_ANALYSIS:THREAD_TYPE_KURUCZ, msgResp) != 0) {

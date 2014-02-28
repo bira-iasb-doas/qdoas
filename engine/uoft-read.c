@@ -342,7 +342,7 @@ RC ReliUofT(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDa
 
   if ((recordNo>0) && (recordNo<=pEngineContext->recordNumber) &&
      !(rc=UofTGotoRecord(specFp,recordNo)) &&
-     !(rc=UofTReadRecord(pUofT,pEngineContext->buffers.spectrum,specFp,pEngineContext->fileInfo.fileName)))
+     (!(rc=UofTReadRecord(pUofT,pEngineContext->buffers.spectrum,specFp,pEngineContext->fileInfo.fileName)) || (rc==ERROR_ID_FILE_RECORD)))
    {
     memcpy(&pRecord->present_day,&pUofT->meanDate,sizeof(SHORT_DATE));
     memcpy(&pRecord->present_time,&pUofT->meanTime,sizeof(struct time));

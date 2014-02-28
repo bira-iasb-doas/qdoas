@@ -78,9 +78,6 @@ char MFC_fileInstr[MAX_STR_SHORT_LEN+1],      // instrumental function file name
 
 int mfcLastSpectrum=0;
 
-const char *MFCBIRA_measureTypes[PRJCT_INSTR_MFC_TYPE_MAX]=
-     	                            { "Unknown","Measurement","Offset","Dark current" };
-
 RC MFC_LoadOffset(ENGINE_CONTEXT *pEngineContext)
  {
  	// Declarations
@@ -286,7 +283,6 @@ RC MFC_ReadRecord(char *fileName,
   // Open file
 
   if ((fp=fopen(fileName,"rb"))==NULL)
-//   rc=ERROR_ID_FILE_RECORD;
    rc=ERROR_ID_FILE_NOT_FOUND;
   else if (!STD_FileLength(fp))
    rc=ERROR_SetLast("ReadMFCRecord",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,fileName);
@@ -1062,7 +1058,7 @@ RC MFCBIRA_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
 
    	      // Load offset
 
-   	      if (header.measurementType==PRJCT_INSTR_MFC_TYPE_OFFSET)
+   	      if (header.measurementType==PRJCT_INSTR_MAXDOAS_TYPE_OFFSET)
    	       {
    	        fread(spectrum,sizeof(float)*NDET,1,specFp);
    	        for (j=0;j<NDET;j++)
@@ -1073,7 +1069,7 @@ RC MFCBIRA_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
 
    	      // Load dark current
 
-   	      else if (header.measurementType==PRJCT_INSTR_MFC_TYPE_DARK)
+   	      else if (header.measurementType==PRJCT_INSTR_MAXDOAS_TYPE_DARK)
    	       {
    	        fread(spectrum,sizeof(float)*NDET,1,specFp);
    	        for (j=0;j<NDET;j++)
@@ -1155,104 +1151,96 @@ RC MFCBIRA_Reli(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loc
    	fread(&header,sizeof(MFCBIRA_HEADER),1,specFp);
    	fread(spectrum,sizeof(float)*NDET,1,specFp);
 
-   	if (/*((THRD_id==THREAD_TYPE_KURUCZ) || (THRD_id==THREAD_TYPE_ANALYSIS)) && */ (header.measurementType!=PRJCT_INSTR_MFC_TYPE_MEASUREMENT) && (header.measurementType!=PRJCT_INSTR_MFC_TYPE_UNKNOWN))
-   	 rc=ERROR_ID_FILE_RECORD;
-   	else
+   	// Retrieve the main information from the header
+
+   	pRecordInfo->NSomme=header.scansNumber;
+   	pRecordInfo->Tint=header.exposureTime;
+   	pRecordInfo->latitude=header.latitude;
+   	pRecordInfo->longitude=header.longitude;
+   	pRecordInfo->TotalExpTime=header.totalExpTime;
+    pRecordInfo->elevationViewAngle=header.elevationAngle;
+    pRecordInfo->azimuthViewAngle=header.azimuthAngle;
+    pRecordInfo->TDet=header.temperature;
+
+    strcpy(pRecordInfo->mfcBira.originalFileName,header.fileName);
+    pRecordInfo->mfcBira.measurementType=header.measurementType;
+
+    // Calculate the date and time at half of the measurement
+
+    memcpy(&pRecordInfo->startTime,&header.startTime,sizeof(struct time));
+    memcpy(&pRecordInfo->endTime,&header.endTime,sizeof(struct time));
+
+    Tm1=(double)ZEN_NbSec(&header.measurementDate,&pRecordInfo->startTime,0);
+    Tm2=(double)ZEN_NbSec(&header.measurementDate,&pRecordInfo->endTime,0);
+
+    Tm1=(Tm1+Tm2)*0.5;
+
+    pRecordInfo->present_day.da_year  = (short) ZEN_FNCaljye (&Tm1);
+    pRecordInfo->present_day.da_mon   = (char) ZEN_FNCaljmon (ZEN_FNCaljye(&Tm1),ZEN_FNCaljda(&Tm1));
+    pRecordInfo->present_day.da_day   = (char) ZEN_FNCaljday (ZEN_FNCaljye(&Tm1),ZEN_FNCaljda(&Tm1));
+
+    // Data on the current spectrum
+
+    nsec1=pRecordInfo->startTime.ti_hour*3600+pRecordInfo->startTime.ti_min*60+pRecordInfo->startTime.ti_sec;
+    nsec2=pRecordInfo->endTime.ti_hour*3600+pRecordInfo->endTime.ti_min*60+pRecordInfo->endTime.ti_sec;
+
+    if (nsec2<nsec1)
+     nsec2+=86400;
+
+    nsec=(nsec1+nsec2)/2;
+
+    pRecordInfo->present_time.ti_hour=(unsigned char)(nsec/3600);
+    pRecordInfo->present_time.ti_min=(unsigned char)((nsec%3600)/60);
+    pRecordInfo->present_time.ti_sec=(unsigned char)((nsec%3600)%60);
+
+    longit=-header.longitude;
+
+    pRecordInfo->Tm=(double)ZEN_NbSec(&pRecordInfo->present_day,&pRecordInfo->present_time,0);
+    pRecordInfo->Zm=ZEN_FNTdiz(ZEN_FNCrtjul(&pRecordInfo->Tm),&longit,&pRecordInfo->latitude,&pRecordInfo->Azimuth);
+
+    pRecordInfo->TimeDec=(double)pRecordInfo->present_time.ti_hour+pRecordInfo->present_time.ti_min/60.+pRecordInfo->present_time.ti_sec/3600.;
+
+    tmLocal=pRecordInfo->Tm+THRD_localShift*3600.;
+    pRecordInfo->localCalDay=ZEN_FNCaljda(&tmLocal);
+    pRecordInfo->localTimeDec=fmod(pRecordInfo->TimeDec+24.+THRD_localShift,(double)24.);
+
+   	for (i=0;i<NDET;i++)
+   	 pBuffers->spectrum[i]=(double)spectrum[i];
+
+   	if ((header.measurementType!=PRJCT_INSTR_MAXDOAS_TYPE_DARK) && (header.measurementType!=PRJCT_INSTR_MAXDOAS_TYPE_OFFSET))
    	 {
-   	  // Retrieve the main information from the header
+     	// Offset correction
 
-   	  pRecordInfo->NSomme=header.scansNumber;
-   	  pRecordInfo->Tint=header.exposureTime;
-   	  pRecordInfo->latitude=header.latitude;
-   	  pRecordInfo->longitude=header.longitude;
-   	  pRecordInfo->TotalExpTime=header.totalExpTime;
-      pRecordInfo->elevationViewAngle=header.elevationAngle;
-      pRecordInfo->azimuthViewAngle=header.azimuthAngle;
-      pRecordInfo->TDet=header.temperature;
-
-      strcpy(pRecordInfo->mfcBira.originalFileName,header.fileName);
-      pRecordInfo->mfcBira.measurementType=header.measurementType;
-
-      // Calculate the date and time at half of the measurement
-
-      memcpy(&pRecordInfo->startTime,&header.startTime,sizeof(struct time));
-      memcpy(&pRecordInfo->endTime,&header.endTime,sizeof(struct time));
-
-      Tm1=(double)ZEN_NbSec(&header.measurementDate,&pRecordInfo->startTime,0);
-      Tm2=(double)ZEN_NbSec(&header.measurementDate,&pRecordInfo->endTime,0);
-
-      Tm1=(Tm1+Tm2)*0.5;
-
-      pRecordInfo->present_day.da_year  = (short) ZEN_FNCaljye (&Tm1);
-      pRecordInfo->present_day.da_mon   = (char) ZEN_FNCaljmon (ZEN_FNCaljye(&Tm1),ZEN_FNCaljda(&Tm1));
-      pRecordInfo->present_day.da_day   = (char) ZEN_FNCaljday (ZEN_FNCaljye(&Tm1),ZEN_FNCaljda(&Tm1));
-
-      // Data on the current spectrum
-
-      nsec1=pRecordInfo->startTime.ti_hour*3600+pRecordInfo->startTime.ti_min*60+pRecordInfo->startTime.ti_sec;
-      nsec2=pRecordInfo->endTime.ti_hour*3600+pRecordInfo->endTime.ti_min*60+pRecordInfo->endTime.ti_sec;
-
-      if (nsec2<nsec1)
-       nsec2+=86400;
-
-      nsec=(nsec1+nsec2)/2;
-
-      pRecordInfo->present_time.ti_hour=(unsigned char)(nsec/3600);
-      pRecordInfo->present_time.ti_min=(unsigned char)((nsec%3600)/60);
-      pRecordInfo->present_time.ti_sec=(unsigned char)((nsec%3600)%60);
-
-      longit=-header.longitude;
-
-      pRecordInfo->Tm=(double)ZEN_NbSec(&pRecordInfo->present_day,&pRecordInfo->present_time,0);
-      pRecordInfo->Zm=ZEN_FNTdiz(ZEN_FNCrtjul(&pRecordInfo->Tm),&longit,&pRecordInfo->latitude,&pRecordInfo->Azimuth);
-
-      pRecordInfo->TimeDec=(double)pRecordInfo->present_time.ti_hour+pRecordInfo->present_time.ti_min/60.+pRecordInfo->present_time.ti_sec/3600.;
-
-      tmLocal=pRecordInfo->Tm+THRD_localShift*3600.;
-      pRecordInfo->localCalDay=ZEN_FNCaljda(&tmLocal);
-      pRecordInfo->localTimeDec=fmod(pRecordInfo->TimeDec+24.+THRD_localShift,(double)24.);
-
-   	  for (i=0;i<NDET;i++)
-   	   pBuffers->spectrum[i]=(double)spectrum[i];
-
-   	  // Offset correction
-
-   	  if ((header.measurementType!=PRJCT_INSTR_MFC_TYPE_OFFSET) && (header.measurementType!=PRJCT_INSTR_MFC_TYPE_UNKNOWN) && (pBuffers->offset!=NULL))
+   	  if (pBuffers->offset!=NULL)
    	   for (i=0;i<NDET;i++)
    	    pBuffers->spectrum[i]-=pBuffers->offset[i]*header.scansNumber;          // offset is already divided by its number of scans
 
    	  // Dark current correction                                                // dark current is already divided by it integration time
 
-   	  if ((header.measurementType!=PRJCT_INSTR_MFC_TYPE_DARK) && (header.measurementType!=PRJCT_INSTR_MFC_TYPE_UNKNOWN) && (pBuffers->varPix!=NULL))
+   	  if (pBuffers->varPix!=NULL)
    	   for (i=0;i<NDET;i++)
    	    pBuffers->spectrum[i]-=pBuffers->varPix[i]*header.scansNumber*header.exposureTime;
 
-   	  // Offset
+   	  // Average
 
   	   for (i=0;i<NDET;i++)
   	    pBuffers->spectrum[i]/=header.scansNumber;
 
-      if (rc ||
-         (dateFlag && ((pRecordInfo->elevationViewAngle>0.) && (pRecordInfo->elevationViewAngle<80.))) ||                    // reference spectra are zenith only
+      if ((dateFlag && ((pRecordInfo->elevationViewAngle>0.) && (pRecordInfo->elevationViewAngle<80.))) ||                    // reference spectra are zenith only
          (!dateFlag && pEngineContext->analysisRef.refScan && !pEngineContext->analysisRef.refSza && (pRecordInfo->elevationViewAngle>80.)))    // zenith sky spectra are not analyzed in scan reference selection mode
 
        rc=ERROR_ID_FILE_RECORD;
-
-      // else if (!dateFlag && (measurementType!=PRJCT_INSTR_EEV_TYPE_NONE))
-      //  {
-      //  	if (((measurementType==PRJCT_INSTR_EEV_TYPE_OFFAXIS) && (pRecordInfo->ccd.measureType!=PRJCT_INSTR_EEV_TYPE_OFFAXIS) && (pRecordInfo->ccd.measureType!=PRJCT_INSTR_EEV_TYPE_ZENITH)) ||
-      //  	    ((measurementType!=PRJCT_INSTR_EEV_TYPE_OFFAXIS) && (pRecordInfo->ccd.measureType!=measurementType)))
-      //
-      //  	 rc=ERROR_ID_FILE_RECORD;
-      //  }
-
      }
+    else
+     rc=ERROR_ID_FILE_RECORD;
    }
 
   // Release allocated buffer
 
   if (spectrum!=NULL)
    MEMORY_ReleaseBuffer("MFCBIRA_Reli","spectrum",spectrum);
+
+
 
   // Return
 
