@@ -141,18 +141,19 @@ static struct field_attribute *copy_attributes(const struct field_attribute *att
 /*! \brief Calculate flux for a given wavelength.*/
 double output_flux(const ENGINE_CONTEXT *pEngineContext, double wavelength) {
   double flux =0.;
+  double bandWidth=pEngineContext->project.asciiResults.bandWidth;
 
   if ( wavelength >= pEngineContext->buffers.lambda[0] &&
        wavelength <= pEngineContext->buffers.lambda[NDET-1] ) {
     int pixel=FNPixel(pEngineContext->buffers.lambda,wavelength,NDET,PIXEL_CLOSEST);
 
-    int imin=max(pixel-3,0);
-    int imax=min(pixel+3,NDET-1);
+    int imin;
+    int imax;
 
-    // Change for MAINZ (only)
+    // The interval is defined in nm
 
-    imin=max(FNPixel(pEngineContext->buffers.lambda,wavelength-0.5,NDET,PIXEL_CLOSEST),0);
-    imax=min(FNPixel(pEngineContext->buffers.lambda,wavelength+0.5,NDET,PIXEL_CLOSEST),NDET-1);
+    imin=max(FNPixel(pEngineContext->buffers.lambda,wavelength-0.5*bandWidth,NDET,PIXEL_CLOSEST),0);
+    imax=min(FNPixel(pEngineContext->buffers.lambda,wavelength+0.5*bandWidth,NDET,PIXEL_CLOSEST),NDET-1);
 
     // Flux calculation
 
@@ -650,28 +651,28 @@ static void OutputRegisterFluxes(const ENGINE_CONTEXT *pEngineContext)
 
   // Color indexes
 
-  for (ptrOld=pEngineContext->project.asciiResults.cic;(ptrOld!=NULL) && (strlen(ptrOld)!=0);ptrOld=ptrNew)
-   {
-    if (OUTPUT_NCic>=MAX_CIC)
-     break;
-
-    if (sscanf(ptrOld,"%lf/%lf",&OUTPUT_cic[OUTPUT_NCic][0],&OUTPUT_cic[OUTPUT_NCic][1])>=2)
-     {
-      sprintf(columnTitle,"%g/%g",OUTPUT_cic[OUTPUT_NCic][0],OUTPUT_cic[OUTPUT_NCic][1]);
-      struct output_field *output_cic = &output_data_analysis[output_num_fields++];
-      output_cic->resulttype = PRJCT_RESULTS_CIC;
-      output_cic->fieldname = strdup(columnTitle);
-      output_cic->memory_type = OUTPUT_DOUBLE;
-      output_cic->format = "%#15.6le";
-      output_cic->index_cic = OUTPUT_NCic;
-      output_cic->get_data = (func_void)&get_cic;
-      output_cic->data_cols = 1;
-      OUTPUT_NCic++;
-     }
-
-    if ((ptrNew=strchr(ptrOld,';'))!=NULL)
-     ptrNew++;
-   }
+  // for (ptrOld=pEngineContext->project.asciiResults.cic;(ptrOld!=NULL) && (strlen(ptrOld)!=0);ptrOld=ptrNew)
+  //  {
+  //   if (OUTPUT_NCic>=MAX_CIC)
+  //    break;
+  //
+  //   if (sscanf(ptrOld,"%lf/%lf",&OUTPUT_cic[OUTPUT_NCic][0],&OUTPUT_cic[OUTPUT_NCic][1])>=2)
+  //    {
+  //     sprintf(columnTitle,"%g/%g",OUTPUT_cic[OUTPUT_NCic][0],OUTPUT_cic[OUTPUT_NCic][1]);
+  //     struct output_field *output_cic = &output_data_analysis[output_num_fields++];
+  //     output_cic->resulttype = PRJCT_RESULTS_CIC;
+  //     output_cic->fieldname = strdup(columnTitle);
+  //     output_cic->memory_type = OUTPUT_DOUBLE;
+  //     output_cic->format = "%#15.6le";
+  //     output_cic->index_cic = OUTPUT_NCic;
+  //     output_cic->get_data = (func_void)&get_cic;
+  //     output_cic->data_cols = 1;
+  //     OUTPUT_NCic++;
+  //    }
+  //
+  //   if ((ptrNew=strchr(ptrOld,';'))!=NULL)
+  //    ptrNew++;
+  //  }
 }
 
 static void register_field(struct output_field field) {
@@ -1437,7 +1438,7 @@ void OutputBuildSiteFileName(const ENGINE_CONTEXT *pEngineContext,char *outputFi
  */
 void remove_extension(char *filename) {
   char * extension = strrchr(filename, '.');
-  if (extension != NULL) {   
+  if (extension != NULL) {
     // compare to known output file extensions
     size_t num_extensions = sizeof(output_file_extensions)/sizeof(output_file_extensions[0]);
     for(size_t i=0; i < num_extensions; ++i) {
@@ -1469,8 +1470,8 @@ RC OutputBuildFileName(const ENGINE_CONTEXT *pEngineContext,char *outputPath)
   RC rc=ERROR_ID_NO;
 
   const OUTPUT_INFO* pOutput=&outputRecords[0];
-  
-  // Build the complete output path  
+
+  // Build the complete output path
   strcpy(outputPath,pResults->path);
 
   char *fileNameStart;
@@ -1488,13 +1489,13 @@ RC OutputBuildFileName(const ENGINE_CONTEXT *pEngineContext,char *outputPath)
                  (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS) ||
                  (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_OMI) ||
                  (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GOME2));
-  
+
   if ((!strlen(fileNameStart) || !strcasecmp(fileNameStart,"automatic")) &&
       ((satelliteFlag && ((pProject->spectra.mode!=PRJCT_SPECTRA_MODES_OBSLIST) || (pProject->spectra.radius<=1.))) ||
        (!satelliteFlag && (pResults->fileNameFlag || (SITES_GetIndex(pProject->instrumental.observationSite)==ITEM_NONE))))) {
-    
+
     const char *inputFileName;
-    
+
     if ((inputFileName=strrchr(pEngineContext->fileInfo.fileName,PATH_SEP))==NULL) {
       inputFileName=pEngineContext->fileInfo.fileName;
     } else {
@@ -1527,8 +1528,8 @@ RC OutputBuildFileName(const ENGINE_CONTEXT *pEngineContext,char *outputPath)
       mkdir(outputPath,0755);
 #endif
     }
-  
-    // Build output file name    
+
+    // Build output file name
     if ( pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS)
       sprintf(fileNameStart,"SCIA_%d%02d%02d_%05d",pOutput->year,pOutput->month,pOutput->day,pEngineContext->recordInfo.scia.orbitNumber);
     else {
@@ -1540,7 +1541,7 @@ RC OutputBuildFileName(const ENGINE_CONTEXT *pEngineContext,char *outputPath)
         *extension_start ='\0';
       }
     }
-    
+
   } else { // user-chosen filename
     remove_extension(fileNameStart);
   }
@@ -1550,8 +1551,8 @@ RC OutputBuildFileName(const ENGINE_CONTEXT *pEngineContext,char *outputPath)
 RC open_output_file(const ENGINE_CONTEXT *pEngineContext, char *outputFileName)
 {
   if (pEngineContext->project.asciiResults.calibFlag)
-    save_calibration();    
-    
+    save_calibration();
+
   switch(selected_format) {
   case ASCII:
     return ascii_open(pEngineContext, outputFileName);
@@ -1695,8 +1696,8 @@ RC OUTPUT_FlushBuffers(ENGINE_CONTEXT *pEngineContext)
   // select records for output according to date/site
   bool selected_records[outputNbRecords];
 
-  if ((pResults->analysisFlag || pResults->calibFlag) 
-      && outputNbRecords 
+  if ((pResults->analysisFlag || pResults->calibFlag)
+      && outputNbRecords
       && !(rc=OutputBuildFileName(pEngineContext,outputFileName))) {
     char *ptr = strrchr(outputFileName,PATH_SEP);
     if ( ptr==NULL )
@@ -1708,11 +1709,11 @@ RC OUTPUT_FlushBuffers(ENGINE_CONTEXT *pEngineContext)
       // - we have a user-specified filename (not 'automatic'), or
       //
       // the complete filename was already built in 'OutputBuildFileName' because we have
-      //   
+      //
       // - satellite measurements, not in overpass mode, or
       //
       // - groundbased measurements, not in "observation site mode"
-      
+
       rc = open_output_file(pEngineContext,outputFileName);
       if (!rc ) {
         for(unsigned int i=0; i<outputNbRecords; i++)

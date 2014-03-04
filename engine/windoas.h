@@ -535,12 +535,13 @@ PRJCT_RESULTS_FIELDS;
 
 typedef struct _prjctAsciiResults
 {
-  char path[MAX_ITEM_TEXT_LEN+1];                                         // path for results and fits files
-  int   analysisFlag,calibFlag,referenceFlag,dirFlag,fileNameFlag;          // store results in ascii format
-  char fluxes[MAX_ITEM_TEXT_LEN+1];                                       // fluxes
-  char cic[MAX_ITEM_TEXT_LEN+1];                                          // color indexes
-  int fieldsNumber;                                                         // number of ascii flags set in the next list
-  char fieldsFlag[PRJCT_RESULTS_MAX];                                     // fields used in output
+  char path[MAX_ITEM_TEXT_LEN+1];                                               // path for results and fits files
+  int   analysisFlag,calibFlag,referenceFlag,dirFlag,fileNameFlag,successFlag;  // store results in ascii format
+  char fluxes[MAX_ITEM_TEXT_LEN+1];                                             // fluxes
+  double bandWidth;                                                             // averaging bandwidth for fluxes
+  // char cic[MAX_ITEM_TEXT_LEN+1];                                                // color indexes
+  int fieldsNumber;                                                             // number of ascii flags set in the next list
+  char fieldsFlag[PRJCT_RESULTS_MAX];                                           // fields used in output
   enum output_format file_format;
   char swath_name[HDFEOS_OBJ_LEN_MAX];
  }
@@ -659,7 +660,7 @@ void PRJCT_SaveConfiguration(FILE *fp,char *sectionName);
    RC   XSCONV_TypeStandardFFT(FFT *pFFT,int fwhmType,double slitParam,double slitParam2,double *lambda,double *target,int size);
    RC   XSCONV_TypeStandard(MATRIX_OBJECT *pXsnew,INDEX indexLambdaMin,INDEX indexLambdaMax,const MATRIX_OBJECT *pXshr, const MATRIX_OBJECT *pSlit, const MATRIX_OBJECT *pSlit2, const MATRIX_OBJECT *pI, double *Ic,int slitType,double slitParam,double slitParam2,int wveDptFlag);
    RC   XSCONV_TypeI0Correction(MATRIX_OBJECT *pXsnew,MATRIX_OBJECT *pXshr,MATRIX_OBJECT *pI0,MATRIX_OBJECT *pSlit,MATRIX_OBJECT *pSlit2,double conc,int slitType,double slitParam,double slitParam2,int wveDptFlag);
-   
+
    // Main types of child windows
    // ---------------------------
 

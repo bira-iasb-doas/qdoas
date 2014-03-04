@@ -1530,6 +1530,13 @@ bool CProjectOutputSubHandler::start(const QXmlAttributes &atts)
   m_output->directoryFlag = (atts.value("dirs") == "true") ? 1 : 0;
   m_output->filenameFlag = (atts.value("file") == "true") ? 1 : 0;
 
+  str = atts.value("success");
+  if (str.isEmpty())
+   m_output->successFlag=1;
+  else
+   m_output->successFlag = (str == "true") ? 1 : 0;
+
+
   str = atts.value("flux");
   if (!str.isEmpty()) {
     if (str.length()+1 < (int)sizeof(m_output->flux))
@@ -1538,13 +1545,11 @@ bool CProjectOutputSubHandler::start(const QXmlAttributes &atts)
       return postErrorMessage("Output flux too long");
   }
 
-  str = atts.value("cic");
-  if (!str.isEmpty()) {
-    if (str.length()+1 < (int)sizeof(m_output->colourIndex))
-      strcpy(m_output->colourIndex, str.toAscii().data());
-    else
-      return postErrorMessage("Output colour index too long");
-  }
+  str = atts.value("bandWidth");
+  if (str.isEmpty())
+   m_output->bandWidth=1.;
+  else
+   m_output->bandWidth = str.toDouble();
 
   str = atts.value("swathName");
   if (!str.isEmpty()) {

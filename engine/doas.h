@@ -783,7 +783,7 @@ typedef struct _engineRecordInfo
   double TimeDec;                                                               // decimal time
   double localTimeDec;                                                          // local decimal time
   int    localCalDay;                                                           // local calendar day
-  double Cic;                                                                   // color index
+  double bandWidth;                                                             // color index
 
   double aMoon,hMoon,fracMoon;                                                  // moon information
 

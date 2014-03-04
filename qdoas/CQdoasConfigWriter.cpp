@@ -1010,13 +1010,14 @@ void CQdoasConfigWriter::writePropertiesOutput(FILE *fp, const mediate_project_o
 {
   QString tmpStr = CPathMgr::instance()->simplifyPath(QString(d->path));
 
-  fprintf(fp, "    <output path=\"%s\" anlys=\"%s\" calib=\"%s\" ref=\"%s\" conf=\"%s\" dirs=\"%s\" file=\"%s\" flux=\"%s\" cic=\"%s\" swathName=\"%s\" fileFormat=\"%s\">\n",
+  fprintf(fp, "    <output path=\"%s\" anlys=\"%s\" calib=\"%s\" ref=\"%s\" conf=\"%s\" dirs=\"%s\" file=\"%s\" success=\"%s\" flux=\"%s\" cic=\" \" bandWidth=\"%f\" swathName=\"%s\" fileFormat=\"%s\">\n",
           tmpStr.toAscii().constData(), (d->analysisFlag ? sTrue : sFalse),
           (d->calibrationFlag ? sTrue : sFalse), (d->referenceFlag ? sTrue : sFalse),
           (d->configurationFlag ? sTrue : sFalse),
           (d->directoryFlag ? sTrue : sFalse),
           (d->filenameFlag ? sTrue : sFalse),
-          d->flux, d->colourIndex,
+          (d->successFlag ? sTrue : sFalse),
+          d->flux, d->bandWidth,
           d->swath_name,
           output_file_extensions[d->file_format]);
 

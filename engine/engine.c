@@ -737,7 +737,6 @@ RC EngineReadFile(ENGINE_CONTEXT *pEngineContext,int indexRecord,int dateFlag,in
    pRecord->BestShift=0.;
    pRecord->rejected=0;
    pRecord->NTracks=0;
-   pRecord->Cic=0.;
    pRecord->elevationViewAngle=-1.;
    pRecord->azimuthViewAngle=-1.;
 

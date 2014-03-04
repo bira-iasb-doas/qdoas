@@ -61,8 +61,9 @@ Q_OBJECT
   QCheckBox *m_analysisCheck, *m_calibrationCheck, *m_referenceCheck;
   QCheckBox *m_directoryCheck;
   QCheckBox *m_useFileName;
+  QCheckBox *m_successCheck;
   QGroupBox *m_editGroup;
-  QLineEdit *m_fluxEdit, *m_colourIndexEdit;
+  QLineEdit *m_fluxEdit, *m_bandWidthEdit;
   QComboBox *m_selectFileFormat;
   QLineEdit *m_swathNameEdit;
   CWOutputSelector *m_selector;

@@ -31,6 +31,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "CWProjectTabOutput.h"
 #include "CWOutputSelector.h"
 #include "CPreferences.h"
+#include "CValidator.h"
 
 #include "constants.h"
 #include "output_formats.h"
@@ -109,21 +110,26 @@ CWProjectTabOutput::CWProjectTabOutput(const mediate_project_output_t *propertie
   m_useFileName = new QCheckBox("Use file name");
   checkLayout->addWidget(m_useFileName, 1, 1);
 
+  m_successCheck = new QCheckBox("Successful records only");
+  checkLayout->addWidget(m_successCheck, 2, 1);
+
   middleLayout->addWidget(checkGroup);
 
   // edits
-  m_editGroup = new QGroupBox("Flux / Colour Index", this);
+  m_editGroup = new QGroupBox("Fluxes (nm)", this);
   QGridLayout *editLayout = new QGridLayout(m_editGroup);
 
-  editLayout->addWidget(new QLabel("Fluxes"), 0, 0);
+  editLayout->addWidget(new QLabel("Central wavelengths"), 0, 0);
   m_fluxEdit = new QLineEdit(this);
   m_fluxEdit->setMaxLength(sizeof(properties->flux)-1);
   editLayout->addWidget(m_fluxEdit, 0, 1);
 
-  editLayout->addWidget(new QLabel("Cic"), 1, 0);
-  m_colourIndexEdit = new QLineEdit(this);
-  m_colourIndexEdit->setMaxLength(sizeof(properties->colourIndex)-1);
-  editLayout->addWidget(m_colourIndexEdit, 1, 1);
+  editLayout->addWidget(new QLabel("Averaging bandwidth"), 1, 0);
+  m_bandWidthEdit = new QLineEdit(this);
+  m_bandWidthEdit->setFixedWidth(50);
+  m_bandWidthEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 10.0, 2, m_bandWidthEdit));
+
+  editLayout->addWidget(m_bandWidthEdit, 1, 1);
 
   middleLayout->addWidget(m_editGroup);
 
@@ -147,9 +153,17 @@ CWProjectTabOutput::CWProjectTabOutput(const mediate_project_output_t *propertie
   m_referenceCheck->setCheckState(properties->referenceFlag ? Qt::Checked : Qt::Unchecked);
   m_directoryCheck->setCheckState(properties->directoryFlag ? Qt::Checked : Qt::Unchecked);
   m_useFileName->setCheckState(properties->filenameFlag ? Qt::Checked : Qt::Unchecked);
+  m_successCheck->setCheckState(properties->successFlag ? Qt::Checked : Qt::Unchecked);
 
   m_fluxEdit->setText(QString(properties->flux));
-  m_colourIndexEdit->setText(QString(properties->colourIndex));
+
+  // Averaging band width for calculating fluxes
+
+  QString tmpStr;
+
+  tmpStr.setNum(properties->bandWidth);
+  m_bandWidthEdit->validator()->fixup(tmpStr);
+  m_bandWidthEdit->setText(tmpStr);
 
   setComponentsEnabled((m_analysisCheck->checkState() == Qt::Checked),
                        (m_calibrationCheck->checkState() == Qt::Checked) || (m_referenceCheck->checkState() == Qt::Checked) );
@@ -173,13 +187,14 @@ void CWProjectTabOutput::apply(mediate_project_output_t *properties) const
   properties->referenceFlag = (m_referenceCheck->checkState() == Qt::Checked);
   properties->directoryFlag = (m_directoryCheck->checkState() == Qt::Checked) ? 1 : 0;
   properties->filenameFlag = (m_useFileName->checkState() == Qt::Checked) ? 1 : 0;
+  properties->successFlag = (m_successCheck->checkState() == Qt::Checked) ? 1 : 0;
 
   properties->file_format = static_cast<enum output_format>(m_selectFileFormat->currentIndex());
 
   strcpy(properties->flux, m_fluxEdit->text().toAscii().data());
-  strcpy(properties->colourIndex, m_colourIndexEdit->text().toAscii().data());
+  properties->bandWidth = m_bandWidthEdit->text().toDouble();
   strcpy(properties->path, m_pathEdit->text().toAscii().data());
-  
+
   strcpy(properties->swath_name, m_swathNameEdit->hasAcceptableInput()
          ? m_swathNameEdit->text().toAscii().data()
          : OUTPUT_HDFEOS_DEFAULT_SWATH);
@@ -241,6 +256,7 @@ void CWProjectTabOutput::setComponentsEnabled(bool analysisEnabled, bool calibra
 
   m_directoryCheck->setEnabled(allEnabled);
   m_useFileName->setEnabled(allEnabled);
+  m_successCheck->setEnabled(allEnabled);
 
   m_pathFrame->setEnabled(allEnabled);
 

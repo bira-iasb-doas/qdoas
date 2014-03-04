@@ -138,6 +138,9 @@ void initializeMediateProjectOutput(mediate_project_output_t *d)
 
   // non-zero defaults:
   strcpy(d->swath_name, OUTPUT_HDFEOS_DEFAULT_SWATH);
+
+  d->successFlag=1;
+  d->bandWidth=1.;
 }
 
 /* TODO JUST REMOVE */

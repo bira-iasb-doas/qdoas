@@ -430,8 +430,10 @@ extern "C" {
     char swath_name[HDFEOS_OBJ_LEN_MAX];  // for HDF-EOS5 output
     int directoryFlag;
     int filenameFlag;
+    int successFlag;      // write only successful records (default)
     char flux[FLUX_BUFFER_LENGTH];
-    char colourIndex[COLOUR_INDEX_BUFFER_LENGTH];
+    double bandWidth;
+    char colourIndex[COLOUR_INDEX_BUFFER_LENGTH]; // colour index is the ratio of two fluxes
     char path[FILENAME_BUFFER_LENGTH];
     /* result field flags. A list of PRJCT_RESULTS_ASCII_*** ... */
     data_select_list_t selection;

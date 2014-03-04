@@ -1211,9 +1211,13 @@ void setMediateProjectOutput(PRJCT_RESULTS *pEngineOutput,const mediate_project_
    DEBUG_FunctionBegin("setMediateProjectOutput",DEBUG_FCTTYPE_CONFIG);
 #endif
 
-   strcpy(pEngineOutput->path,pMediateOutput->path);                             // path for results and fits files
-   strcpy(pEngineOutput->fluxes,pMediateOutput->flux);                           // fluxes
-   strcpy(pEngineOutput->cic,pMediateOutput->colourIndex);                       // color indexes
+   strcpy(pEngineOutput->path,pMediateOutput->path);                            // path for results and fits files
+   strcpy(pEngineOutput->fluxes,pMediateOutput->flux);                          // fluxes
+
+   // strcpy(pEngineOutput->cic,pMediateOutput->colourIndex);                      // color indexes    -> not used anymore
+
+   pEngineOutput->bandWidth=pMediateOutput->bandWidth;
+
    strcpy(pEngineOutput->swath_name,pMediateOutput->swath_name);
 
    pEngineOutput->file_format=pMediateOutput->file_format;
@@ -1223,6 +1227,7 @@ void setMediateProjectOutput(PRJCT_RESULTS *pEngineOutput,const mediate_project_
    pEngineOutput->referenceFlag=pMediateOutput->referenceFlag;
    pEngineOutput->dirFlag=pMediateOutput->directoryFlag;
    pEngineOutput->fileNameFlag=pMediateOutput->filenameFlag;
+   pEngineOutput->successFlag=pMediateOutput->successFlag;
 
    if (!(pEngineOutput->fieldsNumber=pMediateOutput->selection.nSelected))
     memset(pEngineOutput->fieldsFlag,0,PRJCT_RESULTS_MAX);
@@ -1232,7 +1237,7 @@ void setMediateProjectOutput(PRJCT_RESULTS *pEngineOutput,const mediate_project_
 #if defined(__DEBUG_) && __DEBUG_ && defined(__DEBUG_DOAS_CONFIG_) && __DEBUG_DOAS_CONFIG_
    DEBUG_Print("Path %s",pEngineOutput->path);
    DEBUG_Print("Fluxes %s",pEngineOutput->fluxes);
-   DEBUG_Print("Cic %s",pEngineOutput->cic);
+   DEBUG_Print("BandWidth %g",pEngineOutput->bandWidth);
    DEBUG_FunctionStop("setMediateProjectOutput",0);
 #endif
  }
@@ -2032,7 +2037,8 @@ int mediateRequestNextMatchingSpectrum(ENGINE_CONTEXT *pEngineContext,void *resp
 
    pProject=&pEngineContext->project;
    pRecord=&pEngineContext->recordInfo;
-   outputFlag=((THRD_id==THREAD_TYPE_KURUCZ) || (THRD_id==THREAD_TYPE_ANALYSIS))?1:0;
+   outputFlag=(!pEngineContext->project.asciiResults.successFlag && (((THRD_id==THREAD_TYPE_KURUCZ) && pProject->asciiResults.calibFlag) || ((THRD_id==THREAD_TYPE_ANALYSIS)) && pProject->asciiResults.analysisFlag))?1:0;
+
    inc=1;
    geoFlag=1;
 
