@@ -195,7 +195,9 @@ RC XSCONV_FctGauss(double *pValue,double fwhm,double step,double delta)
  {
   // Declarations
 
-  double sigma,a,ia;                                                            // temporary variables
+  // use sigma2=fwhm/2 because in the S/W user manual sigma=fwhm
+
+  double sigma2,a,ia;                                                           // temporary variables
   RC rc;                                                                        // return code
 
   // Initializations
@@ -211,8 +213,8 @@ RC XSCONV_FctGauss(double *pValue,double fwhm,double step,double delta)
    rc=ERROR_SetLast("XSCONV_FctGauss",ERROR_TYPE_FATAL,ERROR_ID_BAD_ARGUMENTS,"step<=0");
   else
    {
-    sigma=fwhm*0.5;
-    a=sigma/sqrt(log(2.));
+    sigma2=fwhm*0.5;
+    a=sigma2/sqrt(log(2.));
     ia=(double)step/(a*sqrt(PI));
 
     *pValue=ia*exp(-(delta*delta)/(a*a));
@@ -620,7 +622,7 @@ RC XSCONV_LoadSlitFunction(MATRIX_OBJECT *pSlitXs,MATRIX_OBJECT *pSlitXs2,SLIT *
           slitBuffer2[MAX_ITEM_TEXT_LEN+1];
   RC     rc;
   INDEX  i;
-  double x,a,a2,delta,sigma,invapi,sumPoly,slitStep,norm1,slitParam[4],fwhm;
+  double x,a,a2,delta,sigma2,invapi,sumPoly,slitStep,norm1,slitParam[4],fwhm;
   int    slitType,slitSize,nFwhm;
 
   // Initializations
@@ -692,8 +694,10 @@ RC XSCONV_LoadSlitFunction(MATRIX_OBJECT *pSlitXs,MATRIX_OBJECT *pSlitXs2,SLIT *
 
     if ((pSlitType!=NULL) && !MATRIX_Allocate(pSlitXs,slitSize,2,0,0,1,"XSCONV_LoadSlitFunction"))
      {
-      sigma=pSlit->slitParam*0.5;
-      a=sigma/sqrt(log(2.));
+     	// use sigma2=fwhm/2 because in the S/W user manual sigma=fwhm
+
+      sigma2=pSlit->slitParam*0.5;
+      a=sigma2/sqrt(log(2.));
       delta=pSlit->slitParam2*0.5;
 
       if (slitType==SLIT_TYPE_GAUSS)
@@ -715,7 +719,7 @@ RC XSCONV_LoadSlitFunction(MATRIX_OBJECT *pSlitXs,MATRIX_OBJECT *pSlitXs2,SLIT *
         pSlitXs->matrix[0][i]=(double)x;
 
         if (slitType==SLIT_TYPE_INVPOLY)
-         sumPoly+=pSlitXs->matrix[1][i]=(double)pow(sigma,pSlit->slitParam2)/(pow(x,pSlit->slitParam2)+pow(sigma,pSlit->slitParam2));
+         sumPoly+=pSlitXs->matrix[1][i]=(double)pow(sigma2,pSlit->slitParam2)/(pow(x,pSlit->slitParam2)+pow(sigma2,pSlit->slitParam2));
         else if (slitType==SLIT_TYPE_ERF)
          pSlitXs->matrix[1][i]=(double)(ERF_GetValue((x+delta)/a)-ERF_GetValue((x-delta)/a))/(4.*delta)*slitStep;
         else if (slitType==SLIT_TYPE_AGAUSS)
@@ -838,7 +842,7 @@ RC XSCONV_TypeNone(MATRIX_OBJECT *pXsnew,MATRIX_OBJECT *pXshr)
    // Declarations
 
    double h,oldF,newF,Lim,ld_inc,ldi,dld,a,delta,
-     lambdaMax,SpecOld, SpecNew,sigma,
+     lambdaMax,SpecOld, SpecNew,sigma2,
      crossFIntegral, FIntegral;
 
    RC rc;
@@ -847,8 +851,8 @@ RC XSCONV_TypeNone(MATRIX_OBJECT *pXsnew,MATRIX_OBJECT *pXshr)
 
    fwhm=fabs(fwhm);
    crossFIntegral=FIntegral=(double)0.;
-   sigma=fwhm*0.5;
-   a=sigma/sqrt(log(2.));
+   sigma2=fwhm*0.5;                                                             // use sigma2=fwhm/2 because in the S/W user manual sigma=fwhm
+   a=sigma2/sqrt(log(2.));
    delta=slitParam2*0.5;
 
    Lim=(double)2.*fwhm;
@@ -871,7 +875,7 @@ RC XSCONV_TypeNone(MATRIX_OBJECT *pXsnew,MATRIX_OBJECT *pXshr)
     //   oldF=(double)exp(-4.*log(2.)*(dld*dld)/(fwhm*fwhm));
     rc=XSCONV_FctGauss(&oldF,fwhm,ld_inc,dld);
    else if (slitType==SLIT_TYPE_INVPOLY)
-    oldF=(double)pow(sigma,(double)slitParam2)/(pow(dld,(double)slitParam2)+pow(sigma,(double)slitParam2));
+    oldF=(double)pow(sigma2,(double)slitParam2)/(pow(dld,(double)slitParam2)+pow(sigma2,(double)slitParam2));
    else if (slitType==SLIT_TYPE_ERF)
     oldF=(double)(ERF_GetValue((dld+delta)/a)-ERF_GetValue((dld-delta)/a))/(4.*delta);
 
@@ -886,7 +890,7 @@ RC XSCONV_TypeNone(MATRIX_OBJECT *pXsnew,MATRIX_OBJECT *pXshr)
       //     newF=(double)exp(-4.*log(2.)*(dld*dld)/(fwhm*fwhm));
       rc=XSCONV_FctGauss(&newF,fwhm,ld_inc,dld);
      else if (slitType==SLIT_TYPE_INVPOLY)
-      newF=(double)pow(sigma,(double)slitParam2)/(pow(dld,(double)slitParam2)+pow(sigma,(double)slitParam2));
+      newF=(double)pow(sigma2,(double)slitParam2)/(pow(dld,(double)slitParam2)+pow(sigma2,(double)slitParam2));
      else if (slitType==SLIT_TYPE_ERF)
       newF=(double)(ERF_GetValue((dld+delta)/a)-ERF_GetValue((dld-delta)/a))/(4.*delta);
 
@@ -911,7 +915,7 @@ RC XSCONV_TypeStandardFFT(FFT *pFFT,int fwhmType,double slitParam,double slitPar
  {
   // Declarations
 
-  double F,G,w,a,sigma,delta,step;
+  double F,G,w,a,sigma2,delta,step;
   INDEX i;
   int ndemi;
   RC rc;
@@ -924,8 +928,8 @@ RC XSCONV_TypeStandardFFT(FFT *pFFT,int fwhmType,double slitParam,double slitPar
     ndemi=pFFT->fftSize>>1;
     step=(pFFT->fftIn[pFFT->oldSize]-pFFT->fftIn[1])/(pFFT->oldSize-1.);
 
-    sigma=slitParam*0.5;
-    a=sigma/sqrt(log(2.));
+    sigma2=slitParam*0.5;                                                       // use sigma2=fwhm/2 because in the S/W user manual sigma=fwhm
+    a=sigma2/sqrt(log(2.));
     delta=slitParam2*0.5;
 
     w=(double)PI/step;
@@ -973,12 +977,12 @@ RC GetNewF(double *pNewF,
            double  slitParam2,
            double  step)
  {
-  double sigma,a,a2,newF,norm1,delta;
+  double sigma2,a,a2,newF,norm1,delta;
   int rc;
 
   newF=(double)0.;
-  sigma=(double)slitParam*0.5;
-  a=(double)sigma/sqrt(log(2.));
+  sigma2=(double)slitParam*0.5;                                                 // use sigma2=fwhm/2 because in the S/W user manual sigma=fwhm
+  a=(double)sigma2/sqrt(log(2.));
   delta=(double)slitParam2*0.5;
 
   rc=ERROR_ID_NO;
@@ -996,7 +1000,7 @@ RC GetNewF(double *pNewF,
    norm1=(double)1.;
 
   if (slitType==SLIT_TYPE_INVPOLY)
-   newF=(double)pow(sigma,slitParam2)/(pow(dist,slitParam2)+pow(sigma,slitParam2));
+   newF=(double)pow(sigma2,slitParam2)/(pow(dist,slitParam2)+pow(sigma2,slitParam2));
   else if ((slitType==SLIT_TYPE_ERF) && (slitParam2!=(double)0.))
    newF=(double)(ERF_GetValue((dist+delta)/a)-ERF_GetValue((dist-delta)/a))/(4.*delta);
   else if (slitType==SLIT_TYPE_AGAUSS)
@@ -1600,7 +1604,7 @@ RC XsconvRebuildSlitFunction(double *lambda,double *slit,int nslit,SLIT *pSlit,M
  {
   // Declarations
 
-  double slitParam,n,sigma,delta,a,a2;
+  double slitParam,n,sigma2,delta,a,a2;                                         // use sigma2=fwhm/2 because in the S/W user manual sigma=fwhm
   INDEX i;
   RC rc;
 
@@ -1615,11 +1619,11 @@ RC XsconvRebuildSlitFunction(double *lambda,double *slit,int nslit,SLIT *pSlit,M
     slit[i]=(double)exp(-4.*log(2.)*(lambda[i]*lambda[i])/(slitParam*slitParam));
 
   else if (pSlit->slitType==SLIT_TYPE_INVPOLY)
-   for (i=0,sigma=pSlit->slitParam*0.5,n=(double)pSlit->slitParam2;i<nslit;i++)
-    slit[i]=(double)pow(sigma,n)/(pow(lambda[i],n)+pow(sigma,n));
+   for (i=0,sigma2=pSlit->slitParam*0.5,n=(double)pSlit->slitParam2;i<nslit;i++)
+    slit[i]=(double)pow(sigma2,n)/(pow(lambda[i],n)+pow(sigma2,n));
 
   else if (pSlit->slitType==SLIT_TYPE_ERF)
-   for (i=0,sigma=pSlit->slitParam*0.5,a=(double)sigma/sqrt(log(2.)),delta=(double)pSlit->slitParam2*0.5;i<nslit;i++)
+   for (i=0,sigma2=pSlit->slitParam*0.5,a=(double)sigma2/sqrt(log(2.)),delta=(double)pSlit->slitParam2*0.5;i<nslit;i++)
     slit[i]=(double)(ERF_GetValue((lambda[i]+delta)/a)-ERF_GetValue((lambda[i]-delta)/a))/(4.*delta);
 
   else if (pSlit->slitType==SLIT_TYPE_AGAUSS)
