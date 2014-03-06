@@ -12,7 +12,7 @@
 
   <tr>
     <td width="200" valign="top" bgcolor="#F3F3F3">
-<p align="center"><a href="../index.html"><img src="../QDOAS_IcoTransparent2_Small.png" alt="QDOAS_logo" width="80" height="71"></a></p>    
+<p align="center"><a href="../index.html"><img src="../QDOAS_IcoTransparent2_Small.png" alt="QDOAS_logo" width="80" height="71"></a></p>
 <p class="menu-left"><span class="menu-left-sub"><img src="../spacer_orange.jpg" width="2" height="2" alt="orange layout spacer"></span><a href="../GUI/GUI.html" style="text-decoration: none; color: #336699">&nbsp;The&nbsp;user&nbsp;interface</a></p>
     <p class="menu-left"><span class="menu-left-sub"><img src="../spacer_orange.jpg" width="2" height="2" alt="orange layout spacer"></span><a href="Project.html" style="text-decoration: none; color: #336699">&nbsp;Projects Properties</a></p>
     <p class="menu-left" align="right"><a href="Project_Display.html" style="text-decoration: none; color: #336699">Display</a></p>
@@ -47,15 +47,21 @@
     </p>
     <p align="justify" ><a name="Options"></a>Input cross-sections have to be degraded to the resolution of the instrument before the analysis. This can be done using the <strong><a href="../Tools/Tools_Convolution.html">convolution tool</a></strong>. However the programme also authorizes the  direct use of high-resolution cross-sections which will be convolved in real time using information provided in this page <strong><u>if and only</u></strong> if the slit function is not characterized  by the <strong>wavelength calibration procedure</strong> (see the <a href="Project_Calibration.html"><strong>Calibration page</strong></a> of <strong>Projects Properties</strong>).</p>
     <p align="justify" class="orangelarge">Slit function type<a name="Type"></a></p>
-    <p align="justify">Several analytic line shapes are proposed including line shapes supported by the wavelength calibration procedure (gaussian, lorentzian, error function, voigt and asymmetric line shapes). Different fields have to be completed according to the selected slit function. ASCII file is requested for slit functions measured in laboratory (option File) or when the <strong>&laquo; Wavelength dependent &raquo;</strong> button is checked (analytical line shapes). </p>
+    <p align="justify">Several analytic line shapes are proposed including line shapes supported by the wavelength calibration procedure (gaussian, lorentzian, error function, voigt and asymmetric gaussian line shapes). Different fields have to be completed according to the selected slit function. ASCII file is requested for slit functions measured in laboratory (option File) or when the <strong>&laquo; Wavelength dependent &raquo;</strong> button is checked (analytical line shapes). </p>
     <ul><li>
       <div align="justify"><u>Slit functions measured in laboratory</u> : the first column should be the wavelength grid of the line shape; the maximum of the line shape is expected around 0 nm;  look-up tables can be specified for line shapes defined  at different wavelength (in this case, the first line gives the individual wavelength);</div>
     </li>
     <li>
       <div align="justify"><u>Wavelength dependent analytical slit functions</u> : the input file should contain the FWHM variation with the wavelenth calibration; at a given wavelength, cross-sections will be convolved with the appropriate resolution.</div>
-    </li></ul>
+    </li>
+        <li>
+      <div align="justify"><u>Wavelength dependent stretch factors on a user-defined slit function</u> : To account for an asymmetry of the slit function that varies with the wavelength, a three columns ASCII file can be specified in addition to the slit function file.
+This <strong>Stretch on wavelength</strong> file should contain the wavelength calibration and the two values of the stretch to apply on the grid of the line shape, one for each side of the slit function.
+Such a file can be obtained by merging in one file the parameters SFP1 and SFP2 resulting of the wavelength calibration (use the <strong>Save As</strong> option from the title of the plots to save the curves in an ASCII file).
+    </li>
+    </ul>
     <p align="justify" class="orangelarge">Solar reference file<a name="Solar"></a></p>
-    <p align="justify">A high-resolution solar spectrum is expected to replace the solar spectrum of the <b>Calibration page</b> if the slit function is not characterized during the calibration procedure and solar spectrum and cross sections have to be convolved with the line shape specified in this page.  
+    <p align="justify">A high-resolution solar spectrum is expected to replace the solar spectrum of the <b>Calibration page</b> if the slit function is not characterized during the calibration procedure and solar spectrum and cross sections have to be convolved with the line shape specified in this page.
 Otherwise, if the slit function type of this page is <b>None</b>, preconvolved solar spectrum (in this page) and cross sections (in <b>Analysis windows properties</b>) are expected.</p>
     <p align="justify" class="orangelarge">FWHM correction<a name="FWHM_Correction"></a></p>
     <p align="justify">If  the dependence of the slit function with the detector temperature is known (for example, for the SAOZ instrument),  QDOAS can determine the difference of resolution between the control spectrum  and each spectrum to analyze and use this information to convolve cross  sections.&nbsp; If the button <strong>Apply Fwhm correction</strong> is checked,  a  wavelength and temperature dependent  <strong>Slit Function type</strong> has to be selected and the appropriate file has to be specified.&nbsp; This option is processing  time consuming and is practically never used.</p>

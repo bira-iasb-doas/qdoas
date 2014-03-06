@@ -11,7 +11,7 @@
 
   <tr>
     <td width="200" valign="top" bgcolor="#F3F3F3">
-<p align="center"><a href="../index.html"><img src="../QDOAS_IcoTransparent2_Small.png" alt="QDOAS_logo" width="80" height="71"></a></p>    
+<p align="center"><a href="../index.html"><img src="../QDOAS_IcoTransparent2_Small.png" alt="QDOAS_logo" width="80" height="71"></a></p>
 <p class="menu-left"><span class="menu-left-sub"><img src="../spacer_orange.jpg" width="2" height="2" alt="orange layout spacer"></span><a href="GUI.html" style="text-decoration: none; color: #336699">&nbsp;The&nbsp;user&nbsp;interface</a></p>
     <p class="menu-left" align="right"><a href="GUI_Projects.html" style="text-decoration: none; color: #336699">Projects Tree</a></p>
     <p class="menu-left" align="right"><a href="GUI_Sites.html" style="text-decoration: none; color: #336699">Sites</a></p>
@@ -31,7 +31,13 @@
         <li>latitudes are positive  northwards; negative southwards.</li>
       </ul>
     </div>
-    <p align="justify">For ground-based measurements, information on the observation site  can help to [re-]calculate the solar zenith angle as far as the measurement  date and time are correct (see the <strong><a href="../Project/Project_Instrumental.html">Instrumental  page</a></strong> of <strong>Projects Properties</strong>).&nbsp; For satellite measurements, this page can be  used to define a list of overpasses (see the <strong><a href="../Project/Project_Selection.html">Selection page</a></strong> of <strong>Project  properties</strong>).&nbsp; In both cases, the <strong>Abbreviation </strong>is used as prefix of the  name of the output files when the automatic creation of the output file name is  requested. The <strong>Altitude</strong> information is just for the  user.    </p>
+    <p align="justify">For ground-based measurements, information on the observation site  can help to [re-]calculate the solar zenith angle as far as the measurement date and time are correct (see the <strong><a href="../Project/Project_Instrumental.html">Instrumental  page</a></strong> of <strong>Projects Properties</strong>).&nbsp;
+    The longitude is also accounted to correctly select the
+reference spectrum of the day using the local time instead of the UT time
+in the case fractional days and times given in UT are distributed on two
+days (for example, for China).</p>
+<p>For satellite measurements, this page can be  used to define a list of overpasses (see the <strong><a href="../Project/Project_Selection.html">Selection page</a></strong> of <strong>Project  properties</strong>).&nbsp; In both cases, the <strong>Abbreviation </strong>is used as prefix of the  name of the output files when the automatic creation of the output file name is  requested.</p>
+<p>The <strong>Altitude</strong> information is just for the  user.</p>
     <p align="justify" >&nbsp;</p>
     </tr>
 </table>
