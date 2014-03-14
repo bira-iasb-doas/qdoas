@@ -620,6 +620,8 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
               pRecord->ccd.measureType=header.measureType;
               pRecord->ccd.headTemperature=header.headTemperature;
 
+              // This part is not elegant at all but the code should be more consistent in the acquisition program according to the different situations with the pointing mode
+
               if (header.brusagVersion==2)
                {
                 memcpy(pRecord->ccd.diodes,header.diodes,sizeof(float)*4);
@@ -627,13 +629,17 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
                 pRecord->ccd.targetAzimuth=header.targetAzimuth;
                 pRecord->ccd.saturatedFlag=header.saturatedFlag;
                }
-              else if (fabs(header.brusagElevation-header.targetElevation)>1.)                // be careful : should work only for Xianghe
+
+              if (fabs(header.brusagElevation-header.targetElevation)>1.)
                {
               	 pRecord->ccd.targetElevation=header.targetElevation=header.brusagElevation;
               	}
-              else if (fabs(header.brusagElevation+1.)<EPSILON)                               // be careful : should work only for Xianghe
+
+              if ((fabs(header.brusagElevation+1.)<EPSILON) && (fabs(header.mirrorAzimuth+1.)<EPSILON))
                {
               	 pRecord->ccd.targetElevation=header.targetElevation=header.brusagElevation;
+              	 pRecord->ccd.targetAzimuth=header.targetAzimuth=header.mirrorAzimuth;
+
               	 pRecord->ccd.measureType=PRJCT_INSTR_MAXDOAS_TYPE_ZENITH;
               	}
             }

@@ -11,7 +11,7 @@
 
   <tr>
     <td width="200" valign="top" bgcolor="#F3F3F3">
-<p align="center"><a href="../index.html"><img src="../QDOAS_IcoTransparent2_Small.png" alt="QDOAS_logo" width="80" height="71"></a></p>    
+<p align="center"><a href="../index.html"><img src="../QDOAS_IcoTransparent2_Small.png" alt="QDOAS_logo" width="80" height="71"></a></p>
 <p class="menu-left"><span class="menu-left-sub"><img src="../spacer_orange.jpg" width="2" height="2" alt="orange layout spacer"></span><a href="../GUI/GUI.html" style="text-decoration: none; color: #336699">&nbsp;The&nbsp;user&nbsp;interface</a></p>
     <p class="menu-left"><span class="menu-left-sub"><img src="../spacer_orange.jpg" width="2" height="2" alt="orange layout spacer"></span><a href="../Project/Project.html" style="text-decoration: none; color: #336699">&nbsp;Projects Properties</a></p>
     <p class="menu-left"><span class="menu-left-sub"><img src="../spacer_orange.jpg" width="2" height="2" alt="orange layout spacer"></span><a href="Analysis.html" style="text-decoration: none; color: #336699">&nbsp;Analysis&nbsp;windows&nbsp;properties</a></p>
@@ -43,6 +43,7 @@
     </ol>
     <strong><p align="justify" class="orangelarge">Automatic reference selection<a name="AutomaticSelection"></a></p></strong>
     <p align="justify">The information on the solar zenith angle is present in most ground-based file formats. According to the SZA range, a reference spectrum with the SZA the closest to the given value is selected for each twilight or the spectrum with the minimum SZA of the day is selected (both values initialized to 0 or the SZA range below all SZA values of the file).</p>
+    <p align="justify">For <strong>MAXDOAS measurements</strong>, it is also possible to select the zenith spectrum of the scan.  Currently, <strong>Scans/SZA radio buttons</strong> appear to make this selection possible with the CCD EEV, MFC STD, MFC BIRA and ASCII formats.  If this option is necessary for other file formats, please, contact authors.</p>
     <p align="justify">For satellite measurements, if no <strong>Reference 1</strong> is specified (field kept empty),  the irradiance of the current file is always implicitely used. This means that if a <strong>Reference 2</strong> is provided, the wavelength calibration is  applied on the irradiance spectrum (<strong>Reference 1</strong>) of the file and the control spectrum (<strong>Reference 2</strong>) will be aligned on the irradiance before the analysis of earthshine spectra. For satellite measurements, the <strong>Reference 2</strong> spectrum could be an average of spectra selected in a specific region given by its minimum and maximum latitudes and longitudes. Other information such as  the cloud fraction (GOME2) could also be used to refine the reference selection.</p>
 <strong>
 <p align="justify" class="orangelarge">Wavelength calibration<a name="WavelengthCalibration"></a></p>
