@@ -127,7 +127,7 @@ INDEX KuruczSearchReference(INDEX indexRefFeno,INDEX indexRefColumn)
 // OUTPUT          newLambda      new wavelength scale
 //
 // RETURN          return code
-// ----------------------------------------------------------------------------      
+// ----------------------------------------------------------------------------
 
 RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,const double *reference,double *instrFunction,
                    char displayFlag, const char *windowTitle,double **coeff,double **fwhmVector,double **fwhmDeriv2,int saveFlag,INDEX indexFeno,void *responseHandle,INDEX indexFenoColumn)
@@ -168,7 +168,7 @@ RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,co
   oldNDET    = NDET;
 
   pKurucz->KuruczFeno[indexFeno].have_calibration = true;
-  
+
   if ((shiftPoly=(double *)MEMORY_AllocDVector("KURUCZ_Spectrum ","shiftPoly",0,NDET-1))==NULL)
     rc=ERROR_ID_ALLOC;
   else
@@ -241,7 +241,7 @@ RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,co
          else
            rc=SPLINE_Vector(pKurucz->hrSolar.matrix[0],pKurucz->hrSolar.matrix[1],pKurucz->hrSolar.deriv2[1],pKurucz->hrSolar.nl,
                             oldLambda,solar,NDET,pAnalysisOptions->interpol,"KURUCZ_Spectrum ");
-       } 
+       }
       else // 20130208 : a high resolution spectrum is now loaded from the slit page of project properties and convolved
       	rc=ANALYSE_ConvoluteXs(NULL,ANLYS_CROSS_ACTION_CONVOLUTE,(double)0.,&pKurucz->hrSolar,&ANALYSIS_slit,&ANALYSIS_slit2,
                                pSlitOptions->slitFunction.slitType,&pSlitOptions->slitFunction.slitParam,&pSlitOptions->slitFunction.slitParam2,
@@ -249,9 +249,9 @@ RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,co
      }
     else
      memcpy(solar,reference,sizeof(double)*NDET);
-     
+
     if (rc!=ERROR_ID_NO)
-     goto EndKuruczSpectrum; 
+     goto EndKuruczSpectrum;
 
     // Buffers for fits initialization
 
@@ -673,7 +673,7 @@ RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,co
 
   EndKuruczSpectrum :
 
-  KURUCZ_indexLine=indexLine+1;       
+  KURUCZ_indexLine=indexLine+1;
 
   if (solar!=NULL)
    MEMORY_ReleaseDVector("KURUCZ_Spectrum ","solar",solar,0);
@@ -818,7 +818,7 @@ RC KURUCZ_Reference(double *instrFunction,INDEX refFlag,int saveFlag,int gomeFla
   // Initializations
 
   pKurucz=&KURUCZ_buffers[indexFenoColumn];
-  
+
   rc=ERROR_ID_NO;
   msgCount=0;
 
@@ -964,7 +964,7 @@ RC KURUCZ_Reference(double *instrFunction,INDEX refFlag,int saveFlag,int gomeFla
 #endif
 void KURUCZ_Init(int gomeFlag,INDEX indexFenoColumn) {
   // Declarations
-  
+
   INDEX indexWindow;
   int nbWin;
   double Lambda_min,Lambda_max,Win_size;
@@ -979,27 +979,27 @@ void KURUCZ_Init(int gomeFlag,INDEX indexFenoColumn) {
 
   for (int indexFeno=0;indexFeno<NFeno;indexFeno++) {
     pTabFeno=&TabFeno[indexFenoColumn][indexFeno];
-    
+
     if ((pTabFeno->gomeRefFlag==gomeFlag) &&
         (KURUCZ_buffers[indexFenoColumn].KuruczFeno[indexFeno].svdFeno!=NULL)) {
       Lambda_min=pKuruczOptions->lambdaLeft;
       Lambda_max=pKuruczOptions->lambdaRight;
-      
+
       Win_size=(double)(Lambda_max-Lambda_min)/nbWin;
-      
+
       for (indexWindow=0;indexWindow<nbWin;indexWindow++) {
         pSvd=&KURUCZ_buffers[indexFenoColumn].KuruczFeno[indexFeno].svdFeno[indexWindow];
-        
+
         Lambda_max=Lambda_min+Win_size;
-        
+
         int pixel_start=FNPixel(pTabFeno->LambdaRef,Lambda_min,pTabFeno->NDET,PIXEL_AFTER);
         int pixel_end=FNPixel(pTabFeno->LambdaRef,Lambda_max,pTabFeno->NDET,PIXEL_BEFORE);
-        
+
         pSvd->specrange = spectrum_new();
         spectrum_append(pSvd->specrange, pixel_start, pixel_end);
-        
+
         pSvd->DimL=pixel_end - pixel_start + 1;
-        
+
         Lambda_min=Lambda_max;
       }
     }
@@ -1252,7 +1252,7 @@ RC KURUCZ_Alloc(const PROJECT *pProject, const double *lambda,INDEX indexKurucz,
 
            if (hrDeb==hrFin)
             {
-             rc=ERROR_ID_POW;
+            	rc=ERROR_SetLast(__func__,ERROR_TYPE_WARNING,ERROR_ID_POW);
              goto EndKuruczAlloc;
             }
 

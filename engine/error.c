@@ -146,7 +146,7 @@ ERROR_TABLE errorTable[]=
   { ERROR_ID_BAD_ARGUMENTS             , "bad argument (%s)"                                                                                                  },
   { ERROR_ID_MATRIX_DIMENSION          , "matrix dimensions must agree"                                                                                       },
   { ERROR_ID_SQRT_ARG                  , "sqrt argument error"                                                                                                },
-  { ERROR_ID_POW                       , "Pow Overflow"                                                                                                       },
+  { ERROR_ID_POW                       , "Pow Overflow (check your reference spectrum)"                                                                       },
 
   // High-level math functions
 
