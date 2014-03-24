@@ -43,14 +43,12 @@
 //
 //  ----------------------------------------------------------------------------
 
-// ========
-// INCLUDES
-// ========
-
 #include "mediate.h"
 #include "engine.h"
 #include "hdf.h"
 #include "HdfEosDef.h"
+
+#include <time.h>
 
 #define MAX_OMI_FILES 500
 
@@ -851,62 +849,32 @@ RC setup_automatic_reference(ENGINE_CONTEXT *pEngineContext, void *responseHandl
   return rc;
 }
 
-// =====================
-// OMI READ OUT ROUTINES
-// =====================
+// Convert number of seconds since 01/01/1993 00:00:00 to date
+void tai_to_ymd(double tai, SHORT_DATE *pDate, struct time *pTime, int *pMs) {
+  static struct tm start_iat = { .tm_sec = 0,
+                                 .tm_min = 0,
+                                 .tm_hour = 0,
+                                 .tm_mday = 1,
+                                 .tm_mon = 0, // month since jan (-> 0-11)
+                                 .tm_year = 93, // year since 1900
+                                 .tm_isdst = 0 };
 
-// -----------------------------------------------------------------------------
-// FUNCTION      OMI_FromTAI1993ToYMD
-// -----------------------------------------------------------------------------
-// PURPOSE       Convert a International Atomic Time (TAI 1993 date) in the
-//               equivalent YYYY/MM/DD hh:mm:ss format
-//
-// INPUT         tai          the number of seconds since 1993/01/01
-// OUTPUT        pDate,pTime  pointers to resp. date and time in usual format
-//               pms          pointer to the number of milliseconds
-// -----------------------------------------------------------------------------
+  // get seconds since epoch of 1/1/1993 00:00:00 (GMT)
+  time_t time_epoch = timegm(&start_iat);
 
-void OMI_FromTAI1993ToYMD(double tai,SHORT_DATE *pDate,struct time *pTime,int *pms)
-{
-  // Declarations
+  int seconds = floor(tai); // seconds since 1/1/1993 (GMT)
+  time_epoch += seconds;
+  struct tm result;
+  gmtime_r(&time_epoch, &result);
 
-  int year;
-  int sumDays,nDaysInYear;
-  int mjd;
+  pTime->ti_hour = (char)(result.tm_hour);
+  pTime->ti_min = (char)(result.tm_min);
+  pTime->ti_sec = (char)(result.tm_sec);
+  *pMs = (int)(1000*(tai - seconds));
 
-  // Initializations
-
-  memset(pDate,0,sizeof(SHORT_DATE));
-  memset(pTime,0,sizeof(struct time));
-
-  mjd=(int)floor(tai/86400.);
-
-  // get the number of years since 2000
-
-  for (year=1993,sumDays=0,nDaysInYear=365;
-       sumDays+nDaysInYear<mjd;)
-    {
-      year++;
-      sumDays+=nDaysInYear;
-      nDaysInYear=((year%4)==0)?366:365;
-    }
-
-  // Get date from the year and the calendar day
-
-  pDate->da_year=(short)year;
-  pDate->da_mon=(char)ZEN_FNCaljmon(year,mjd-sumDays+1);
-  pDate->da_day=(char)ZEN_FNCaljday(year,mjd-sumDays+1);
-
-  // Get time
-
-  tai-=(double)mjd*86400.;
-  pTime->ti_hour=(char)(floor(tai/3600.));
-  tai-=(double)3600.*pTime->ti_hour;
-  pTime->ti_min=(char)(floor(tai/60.));
-  tai-=(double)60.*pTime->ti_min;
-  pTime->ti_sec=(char)(floor(tai));
-
-  *pms=(int)((double)(tai-floor(tai))*1000.);
+  pDate->da_year = (short)(result.tm_year + 1900);
+  pDate->da_mon = (char)(result.tm_mon + 1);
+  pDate->da_day = (char)(result.tm_mday);
 }
 
 // -----------------------------------------------------------------------------
@@ -1414,7 +1382,7 @@ RC OMI_Read(ENGINE_CONTEXT *pEngineContext,int recordNo)
 	  pRecord->omi.omiRowIndex=indexSpectrum+1;                                 // row of the current spectrum in the current measurement
           pRecord->omi.omiXtrackQF = pGeo->xtrackQualityFlags[recordNo-1];
           
-	  OMI_FromTAI1993ToYMD((double)pGeo->time[indexMeasurement],&pRecord->present_day,&pRecord->present_time,&OMI_ms);
+	  tai_to_ymd((double)pGeo->time[indexMeasurement],&pRecord->present_day,&pRecord->present_time,&OMI_ms);
           
 	  pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_day,&pRecord->present_time,0);
 	}
