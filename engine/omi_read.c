@@ -202,13 +202,13 @@ static bool automatic_reference_ok[OMI_NUM_ROWS]; // array to keep track if auto
 int OMI_ms=0;
 int omiSwathOld=ITEM_NONE;
 
-RC OmiOpen(OMI_ORBIT_FILE *pOrbitFile,const char *swathName);
-void omi_free_swath_data(OMI_SWATH *pSwath);
-void omi_calculate_wavelengths(float32 wavelength_coeff[], int16 refcol, int32 n_wavel, double* lambda);
-void omi_make_double(int16 mantissa[], int8 exponent[], int32 n_wavel, double* result);
-void omi_interpolate_errors(int16 mantissa[], int32 n_wavel, double wavelengths[], double y[] );
-RC omi_load_spectrum(int spec_type, int32 sw_id, int32 measurement, int32 track, int32 n_wavel, double *lambda, double *spectrum, double *sigma, unsigned short *pixelQualityFlags);
-void average_spectrum(double *average, double *errors, struct omi_ref_list *spectra, double *wavelength_grid);
+static RC OmiOpen(OMI_ORBIT_FILE *pOrbitFile,const char *swathName);
+static void omi_free_swath_data(OMI_SWATH *pSwath);
+static void omi_calculate_wavelengths(float32 wavelength_coeff[], int16 refcol, int32 n_wavel, double* lambda);
+static void omi_make_double(int16 mantissa[], int8 exponent[], int32 n_wavel, double* result);
+static void omi_interpolate_errors(int16 mantissa[], int32 n_wavel, double wavelengths[], double y[] );
+static RC omi_load_spectrum(int spec_type, int32 sw_id, int32 measurement, int32 track, int32 n_wavel, double *lambda, double *spectrum, double *sigma, unsigned short *pixelQualityFlags);
+static void average_spectrum(double *average, double *errors, struct omi_ref_list *spectra, double *wavelength_grid);
 
 // ===================
 // ALLOCATION ROUTINES
@@ -244,7 +244,7 @@ void OMI_ReleaseReference(void)
   omiRefFilesN=0;
 }
 
-RC OMI_AllocateReference(INDEX indexRef,int nSpectra,int nPoints)
+static RC OMI_AllocateReference(INDEX indexRef,int nSpectra,int nPoints)
 {
   // Declarations
 
@@ -272,8 +272,6 @@ RC OMI_AllocateReference(INDEX indexRef,int nSpectra,int nPoints)
 
   return rc;
 }
-
-
 
 /*! Use a detector row or not, based on XTrackQualityFlags and the
  *  chosen settings in the analysis configuration.
@@ -333,7 +331,7 @@ bool omi_has_automatic_reference(int row)
 }
 
 /*! \brief release the allocated buffers with swath attributes. */
-void omi_free_swath_data(OMI_SWATH *pSwath)
+static void omi_free_swath_data(OMI_SWATH *pSwath)
 {
   if(pSwath != NULL) {
     struct omi_buffer omi_swath_buffers[] = {
@@ -372,7 +370,7 @@ void omi_free_swath_data(OMI_SWATH *pSwath)
 #endif
 }
 
-void omi_close_orbit_file(OMI_ORBIT_FILE *pOrbitFile)
+static void omi_close_orbit_file(OMI_ORBIT_FILE *pOrbitFile)
 {
   if(pOrbitFile->sw_id != 0) {
     SWdetach(pOrbitFile->sw_id);
@@ -384,7 +382,7 @@ void omi_close_orbit_file(OMI_ORBIT_FILE *pOrbitFile)
   }
 }
 
-void omi_destroy_orbit_file(OMI_ORBIT_FILE *pOrbitFile) {
+static void omi_destroy_orbit_file(OMI_ORBIT_FILE *pOrbitFile) {
   omi_close_orbit_file(pOrbitFile);
   
   free(pOrbitFile->omiFileName);
@@ -470,7 +468,7 @@ void OMI_TrackSelection(const char *omiTrackSelection,int *omiTracks)
 //               ERROR_ID_NO otherwise
 // -----------------------------------------------------------------------------
 
-RC OMI_AllocateSwath(OMI_SWATH **swath,int nSwaths,int nSpectra)
+static RC OMI_AllocateSwath(OMI_SWATH **swath,int nSwaths,int nSpectra)
 {
   // Declarations
 
@@ -516,7 +514,7 @@ RC OMI_AllocateSwath(OMI_SWATH **swath,int nSwaths,int nSpectra)
 }
 
 // Check if the current automatic reference spectrum is still valid for the requested file name
-bool valid_reference_file(char *spectrum_file)
+static bool valid_reference_file(char *spectrum_file)
 {
   for (int i=0; i < num_reference_orbit_files; i++ ) {
     if(!strcasecmp(spectrum_file, reference_orbit_files[i]->omiFileName))
@@ -526,7 +524,7 @@ bool valid_reference_file(char *spectrum_file)
 }
 
 // Create the  of all orbit files in the same directory as the given file.
-RC read_reference_orbit_files(const char *spectrum_file) {
+static RC read_reference_orbit_files(const char *spectrum_file) {
   RC rc = ERROR_ID_NO;
 
   // clear old reference_orbit_files array
@@ -572,7 +570,7 @@ RC read_reference_orbit_files(const char *spectrum_file) {
 }
 
 // check if a given spectrum matches the criteria to use it in the automatic reference spectrum
-bool use_as_reference(OMI_ORBIT_FILE *orbit_file, int recordnumber, FENO *pTabFeno, enum omi_xtrack_mode xtrack_mode) {
+static bool use_as_reference(OMI_ORBIT_FILE *orbit_file, int recordnumber, FENO *pTabFeno, enum omi_xtrack_mode xtrack_mode) {
   float lon_min = pTabFeno->refLonMin;
   float lon_max = pTabFeno->refLonMax;
   float lat_min = pTabFeno->refLatMin;
@@ -599,7 +597,7 @@ bool use_as_reference(OMI_ORBIT_FILE *orbit_file, int recordnumber, FENO *pTabFe
     && ((sza_min <= sza && sza_max >= sza) || !use_sza);
 }
 
-char *automatic_reference_info(struct omi_ref_list *spectra) {
+static char *automatic_reference_info(struct omi_ref_list *spectra) {
   char *filename = spectra->reference->orbit_file->omiFileName;
   struct omi_ref_list *current = spectra;
   int length = strlen(filename);
@@ -635,7 +633,7 @@ char *automatic_reference_info(struct omi_ref_list *spectra) {
   return result;
 }
 
-void free_ref_candidates( struct omi_ref_spectrum *reflist) {
+static void free_ref_candidates( struct omi_ref_spectrum *reflist) {
   while(reflist != NULL) {
     struct omi_ref_spectrum *temp = reflist->next;
     free(reflist->spectrum);
@@ -646,7 +644,7 @@ void free_ref_candidates( struct omi_ref_spectrum *reflist) {
   }
 }
 
-void free_row_references(struct omi_ref_list *(*row_references)[NFeno][OMI_TOTAL_ROWS]) 
+static void free_row_references(struct omi_ref_list *(*row_references)[NFeno][OMI_TOTAL_ROWS]) 
 {
   for(int i=0; i<NFeno; i++) {
     for(int j=0; j<OMI_TOTAL_ROWS; j++) {
@@ -665,7 +663,7 @@ void free_row_references(struct omi_ref_list *(*row_references)[NFeno][OMI_TOTAL
  * spectra matching the search criteria for the automatic reference
  * spectrum for one or more analysis windows in a list.
  */
-RC find_matching_spectra(ENGINE_CONTEXT *pEngineContext, OMI_ORBIT_FILE *orbit_file, struct omi_ref_list *(*row_references)[NFeno][OMI_TOTAL_ROWS], struct omi_ref_spectrum **first)
+static RC find_matching_spectra(ENGINE_CONTEXT *pEngineContext, OMI_ORBIT_FILE *orbit_file, struct omi_ref_list *(*row_references)[NFeno][OMI_TOTAL_ROWS], struct omi_ref_spectrum **first)
 {
   RC rc = 0;
   int allocs = 0;
@@ -730,7 +728,7 @@ RC find_matching_spectra(ENGINE_CONTEXT *pEngineContext, OMI_ORBIT_FILE *orbit_f
    in the list.  The error on the automatic reference (for each pixel)
    is calculated as 1/n_spectra * sqrt(sum (sigma_i)^2)
    */
-void average_spectrum( double *average, double *errors, struct omi_ref_list *spectra, double *wavelength_grid) {
+static void average_spectrum( double *average, double *errors, struct omi_ref_list *spectra, double *wavelength_grid) {
   int nWavel = spectra->reference->orbit_file->nWavel;
 
   double tempspectrum[nWavel];
@@ -770,7 +768,7 @@ void average_spectrum( double *average, double *errors, struct omi_ref_list *spe
   }
 }
 
-RC setup_automatic_reference(ENGINE_CONTEXT *pEngineContext, void *responseHandle)
+static RC setup_automatic_reference(ENGINE_CONTEXT *pEngineContext, void *responseHandle)
 {
   // keep a NFeno*OMI_TOTAL_ROWS array of matching spectra for every detector row & analysis window
   struct omi_ref_list *(*row_references)[NFeno][OMI_TOTAL_ROWS] = malloc(NFeno * OMI_TOTAL_ROWS * sizeof(struct omi_ref_list*));
@@ -850,8 +848,8 @@ RC setup_automatic_reference(ENGINE_CONTEXT *pEngineContext, void *responseHandl
 }
 
 // Convert number of seconds since 01/01/1993 00:00:00 to date
-void tai_to_ymd(double tai, SHORT_DATE *pDate, struct time *pTime, int *pMs) {
-  static struct tm start_iat = { .tm_sec = 0,
+static void tai_to_ymd(double tai, struct tm *result, int *ms) {
+  static struct tm start_tai = { .tm_sec = 0,
                                  .tm_min = 0,
                                  .tm_hour = 0,
                                  .tm_mday = 1,
@@ -860,21 +858,15 @@ void tai_to_ymd(double tai, SHORT_DATE *pDate, struct time *pTime, int *pMs) {
                                  .tm_isdst = 0 };
 
   // get seconds since epoch of 1/1/1993 00:00:00 (GMT)
-  time_t time_epoch = timegm(&start_iat);
+  time_t time_epoch = timegm(&start_tai);
 
   int seconds = floor(tai); // seconds since 1/1/1993 (GMT)
   time_epoch += seconds;
-  struct tm result;
-  gmtime_r(&time_epoch, &result);
+  gmtime_r(&time_epoch, result);
 
-  pTime->ti_hour = (char)(result.tm_hour);
-  pTime->ti_min = (char)(result.tm_min);
-  pTime->ti_sec = (char)(result.tm_sec);
-  *pMs = (int)(1000*(tai - seconds));
-
-  pDate->da_year = (short)(result.tm_year + 1900);
-  pDate->da_mon = (char)(result.tm_mon + 1);
-  pDate->da_day = (char)(result.tm_mday);
+  if (ms != NULL) {
+    *ms = (int)(1000*(tai - seconds));
+  }
 }
 
 // -----------------------------------------------------------------------------
@@ -889,7 +881,7 @@ void tai_to_ymd(double tai, SHORT_DATE *pDate, struct time *pTime, int *pMs) {
 //               ERROR_ID_BEAT otherwise
 // -----------------------------------------------------------------------------
 
-RC OmiGetSwathData(OMI_ORBIT_FILE *pOrbitFile)
+static RC OmiGetSwathData(OMI_ORBIT_FILE *pOrbitFile)
 {
   // Initializations
   OMI_DATA_FIELDS *pData = &pOrbitFile->omiSwath->dataFields;
@@ -938,7 +930,7 @@ RC OmiGetSwathData(OMI_ORBIT_FILE *pOrbitFile)
   return rc;
 }
 
-RC OmiOpen(OMI_ORBIT_FILE *pOrbitFile,const char *swathName)
+static RC OmiOpen(OMI_ORBIT_FILE *pOrbitFile,const char *swathName)
 {
   RC rc = ERROR_ID_NO;
 
@@ -1011,7 +1003,7 @@ RC OmiOpen(OMI_ORBIT_FILE *pOrbitFile,const char *swathName)
   return rc;
 }
 
-RC OMI_LoadReference(int spectralType, const char *refFile, OMI_REF **return_ref)
+static RC OMI_LoadReference(int spectralType, const char *refFile, OMI_REF **return_ref)
 {
   OMI_REF *pRef=&OMI_ref[omiRefFilesN];
   RC rc=ERROR_ID_NO;
@@ -1078,7 +1070,7 @@ RC OMI_LoadReference(int spectralType, const char *refFile, OMI_REF **return_ref
  * spectrum and sigma.  If any of these pointers is NULL, the
  * corresponding data is not read.
  */
-RC omi_load_spectrum(int spec_type, int32 sw_id, int32 measurement, int32 track, int32 n_wavel, double *lambda, double *spectrum, double *sigma, unsigned short *pixelQualityFlags) {
+static RC omi_load_spectrum(int spec_type, int32 sw_id, int32 measurement, int32 track, int32 n_wavel, double *lambda, double *spectrum, double *sigma, unsigned short *pixelQualityFlags) {
   RC rc = ERROR_ID_NO;
 
   int16 *mantissa = malloc(n_wavel*sizeof(*mantissa));
@@ -1156,7 +1148,7 @@ RC omi_load_spectrum(int spec_type, int32 sw_id, int32 measurement, int32 track,
   return rc;
 }
 
-void omi_calculate_wavelengths(float32 wavelength_coeff[], int16 refcol, int32 n_wavel, double* lambda) {
+static void omi_calculate_wavelengths(float32 wavelength_coeff[], int16 refcol, int32 n_wavel, double* lambda) {
   int i;
   // OMI wavelengths provided as a degree 4 polynomial
   // evaluate lambda = c_4*x^4 +c_3*x^3 ... + c_0,
@@ -1171,14 +1163,14 @@ void omi_calculate_wavelengths(float32 wavelength_coeff[], int16 refcol, int32 n
   }
 }
 
-void omi_make_double(int16 mantissa[], int8 exponent[], int32 n_wavel, double* result) {
+static void omi_make_double(int16 mantissa[], int8 exponent[], int32 n_wavel, double* result) {
   int i;
   for (i=0; i<n_wavel; i++) {
     result[i] = (double)mantissa[i] * STD_Pow10((int)exponent[i]);
   }
 }
 
-void omi_interpolate_errors(int16 mantissa[], int32 n_wavel, double wavelengths[], double y[] ){
+static void omi_interpolate_errors(int16 mantissa[], int32 n_wavel, double wavelengths[], double y[] ){
 
   int i;
   for (i=1; i<n_wavel -1; i++) {
@@ -1382,7 +1374,19 @@ RC OMI_Read(ENGINE_CONTEXT *pEngineContext,int recordNo)
 	  pRecord->omi.omiRowIndex=indexSpectrum+1;                                 // row of the current spectrum in the current measurement
           pRecord->omi.omiXtrackQF = pGeo->xtrackQualityFlags[recordNo-1];
           
-	  tai_to_ymd((double)pGeo->time[indexMeasurement],&pRecord->present_day,&pRecord->present_time,&OMI_ms);
+          struct tm time_record;
+	  tai_to_ymd((double)pGeo->time[indexMeasurement],&time_record, &OMI_ms);
+
+          SHORT_DATE* pDate = &pRecord->present_day;
+          struct time *pTime = &pRecord->present_time;
+
+          pTime->ti_hour = (char)(time_record.tm_hour);
+          pTime->ti_min = (char)(time_record.tm_min);
+          pTime->ti_sec = (char)(time_record.tm_sec);
+          
+          pDate->da_year = (short)(time_record.tm_year + 1900);
+          pDate->da_mon = (char)(time_record.tm_mon + 1);
+          pDate->da_day = (char)(time_record.tm_mday);
           
 	  pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_day,&pRecord->present_time,0);
 	}
@@ -1391,6 +1395,14 @@ RC OMI_Read(ENGINE_CONTEXT *pEngineContext,int recordNo)
   // Return
 
   return rc;
+}
+
+void OMI_get_orbit_date(int *year, int *month, int *day) {
+  struct tm start_time;
+  tai_to_ymd(current_orbit_file.omiSwath->geolocationFields.time[0], &start_time, NULL);
+  *year = start_time.tm_year + 1900;
+  *month = start_time.tm_mon + 1;
+  *day = start_time.tm_mday;
 }
 
 void OMI_ReleaseBuffers(void) {

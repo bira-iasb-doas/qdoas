@@ -145,7 +145,6 @@ double output_flux(const ENGINE_CONTEXT *pEngineContext, double wavelength) {
 
   if ( wavelength >= pEngineContext->buffers.lambda[0] &&
        wavelength <= pEngineContext->buffers.lambda[NDET-1] ) {
-    int pixel=FNPixel(pEngineContext->buffers.lambda,wavelength,NDET,PIXEL_CLOSEST);
 
     int imin;
     int imax;
@@ -1450,7 +1449,36 @@ void remove_extension(char *filename) {
   }
 }
 
-/*! For satellites measurements, automatically build a file name for
+/*! For satellite measurements, get the date of the orbit file */
+static RC get_orbit_date(const ENGINE_CONTEXT *pEngineContext, int *orbit_year, int *orbit_month, int *orbit_day) {
+  RC rc = ERROR_ID_NO;
+
+  switch (pEngineContext->project.instrumental.readOutFormat) {
+  case PRJCT_INSTR_FORMAT_OMI:
+    OMI_get_orbit_date(orbit_year, orbit_month, orbit_day);
+    break;
+  case PRJCT_INSTR_FORMAT_GDP_BIN:
+    GDP_BIN_get_orbit_date(orbit_year, orbit_month, orbit_day);
+    break;
+  case PRJCT_INSTR_FORMAT_GDP_ASCII:
+    GDP_ASC_get_orbit_date(orbit_year, orbit_month, orbit_day);
+    break;
+  case PRJCT_INSTR_FORMAT_GOME2:
+    rc = GOME2_get_orbit_date(pEngineContext, orbit_year, orbit_month, orbit_day);
+    break;
+  case PRJCT_INSTR_FORMAT_SCIA_PDS:
+    SCIA_get_orbit_date(orbit_year, orbit_month, orbit_day);
+    break;
+  default:
+    // we should never get here:
+    assert(false && "Can't create year/month/day directories: get_orbit_date() "
+           "is not implemented for the file format you are using.");
+    break;
+  }
+  return rc;
+}
+
+/*! For satellite measurements, automatically build a file name for
   the output file and create the necessary directory structure.
 
   \param [in] pEngineContext structure including information on
@@ -1503,8 +1531,15 @@ RC OutputBuildFileName(const ENGINE_CONTEXT *pEngineContext,char *outputPath)
     }
 
     if (satelliteFlag && pResults->dirFlag) {
+      // get date for the current orbit file
+      int orbit_year, orbit_month, orbit_day;
+      rc = get_orbit_date(pEngineContext, &orbit_year, &orbit_month, &orbit_day);
+      if (rc != ERROR_ID_NO) {
+        return rc;
+      } 
+
       // Create 'year' directory
-      int nwritten = sprintf(fileNameStart,"%d%c",(int)pOutput->year, PATH_SEP);
+      int nwritten = sprintf(fileNameStart,"%d%c", orbit_year, PATH_SEP);
       fileNameStart += nwritten;
 #if defined WIN32
       mkdir(outputPath);
@@ -1512,7 +1547,7 @@ RC OutputBuildFileName(const ENGINE_CONTEXT *pEngineContext,char *outputPath)
       mkdir(outputPath,0755);
 #endif
       // Create 'month' directory
-      nwritten = sprintf(fileNameStart,"%02d%c",(int)pOutput->month, PATH_SEP);
+      nwritten = sprintf(fileNameStart,"%02d%c", orbit_month, PATH_SEP);
       fileNameStart += nwritten;
 #if defined WIN32
       mkdir(outputPath);
@@ -1520,7 +1555,7 @@ RC OutputBuildFileName(const ENGINE_CONTEXT *pEngineContext,char *outputPath)
       mkdir(outputPath,0755);
 #endif
       // Create 'day' directory
-      nwritten = sprintf(fileNameStart,"%02d%c",(int)pOutput->day, PATH_SEP);
+      nwritten = sprintf(fileNameStart,"%02d%c", orbit_day, PATH_SEP);
       fileNameStart += nwritten;
 #if defined WIN32
       mkdir(outputPath);

@@ -2266,3 +2266,15 @@ RC SCIA_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
   return rc;
  }
+
+void SCIA_get_orbit_date(int *year, int *month, int *day) {
+  SHORT_DATE curDate;
+  struct time curTime;
+
+  SCIA_FromMJD2000ToYMD( sciaOrbitFiles[sciaCurrentFileIndex].sciaNadirStates[0].dsrTime,
+                         &curDate, &curTime);
+
+  *year = (int) curDate.da_year;
+  *month = (int) curDate.da_mon;
+  *day = (int) curDate.da_day;
+}

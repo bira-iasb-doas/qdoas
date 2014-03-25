@@ -1490,6 +1490,7 @@ void SCIA_ReleaseBuffers(char format);
 RC   SCIA_SetPDS(ENGINE_CONTEXT *pEngineContext);
 RC   SCIA_ReadPDS(ENGINE_CONTEXT *pEngineContext,int recordNo);
 INDEX SCIA_GetRecordNumber(int hdfRecord,int obsNumber);
+void SCIA_get_orbit_date(int *year, int *month, int *day);
 RC SCIA_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle);
 
 RC   CCD_LoadInstrumental(ENGINE_CONTEXT *pEngineContext);
@@ -1593,11 +1594,13 @@ extern double *GDP_refL,*GDP_ref,*GDP_refE;
 void GDP_ASC_ReleaseBuffers(void);
 RC   GDP_ASC_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp);
 RC   GDP_ASC_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,FILE *specFp);
+void GDP_ASC_get_orbit_date(int *year, int *month, int *day);
 RC   GDP_ASC_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,FILE *specFp);
 
 void GDP_BIN_ReleaseBuffers(void);
 RC   GDP_BIN_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp);
 RC   GDP_BIN_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,FILE *specFp,INDEX indexFile);
+void GDP_BIN_get_orbit_date(int *year, int *month, int *day);
 
 // GOME2
 
@@ -1607,6 +1610,7 @@ void GOME2_ReleaseBuffers(void);
 
 RC GOME2_Set(ENGINE_CONTEXT *pEngineContext);
 RC GOME2_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,INDEX fileIndex);
+RC GOME2_get_orbit_date(const ENGINE_CONTEXT *pEngineContext, int *year, int *month, int *day);
 RC GOME2_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle);
 
 // OMI
@@ -1618,6 +1622,7 @@ RC   OMI_GetReference(int spectralType, const char *refFile,INDEX indexColumn,do
 RC   OMI_Set(ENGINE_CONTEXT *pEngineContext);
 RC   OMI_Read(ENGINE_CONTEXT *pEngineContext,int recordNo);
 RC   OMI_load_analysis(ENGINE_CONTEXT *pEngineContext, void *responseHandle);
+void OMI_get_orbit_date(int *year, int *month, int *day);
 bool omi_use_track(int quality_flag, enum omi_xtrack_mode mode);
 bool omi_has_automatic_reference(int row);
 

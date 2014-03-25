@@ -89,6 +89,7 @@
 // =====================
 
 #include "doas.h"
+#include <time.h>
 
 // ====================
 // CONSTANTS DEFINITION
@@ -109,6 +110,7 @@ const char *bands[MAX_BANDS]={"1a","1b","2a","2b","3","4"};
 
 INDEX gdpLastRecord=ITEM_NONE;                                                  // Record number of the last record read out.
 double *GDP_ASC_refL,*GDP_ASC_ref,*GDP_ASC_refE;                                            // irradiance vectors
+static int curr_utc_day; // #days from 01/01/1950 00:00:00 UTC until start of current L1B file
 
 // =========================
 // GLOBAL VECTORS ALLOCATION
@@ -120,7 +122,7 @@ double *GDP_ASC_refL,*GDP_ASC_ref,*GDP_ASC_refE;                                
 // PURPOSE       release allocated vectors
 // -----------------------------------------------------------------------------
 
-void GDP_ASC_ReleaseBuffers()
+void GDP_ASC_ReleaseBuffers(void)
  {
   if (GDP_ASC_refL!=NULL)
    MEMORY_ReleaseDVector("GDP_ASC_ReleaseBuffers ","GDP_ASC_refL",GDP_ASC_refL,0);
@@ -211,12 +213,12 @@ int Band2Channel(int band)
 // -----------------------------------------------------------------------------
 
 RC ReadERS(FILE *fp,int *pOrbitNumber)
- {
+{
   // Declarations
 
-  char  fileLine[STRING_LENGTH+1];                                             // file line
-  unsigned int utcDay,utcMSec;                                                          // UTC date and time
-  RC rc;                                                                        // return code
+  char  fileLine[STRING_LENGTH+1]; // file line
+  int utcMSec;                     // UTC time
+  RC rc;                           // return code
 
   // Initializations
 
@@ -232,7 +234,7 @@ RC ReadERS(FILE *fp,int *pOrbitNumber)
 
   if (fgets(fileLine,STRING_LENGTH,fp))
    {
-    sscanf(fileLine,"%d %d %d",&utcDay,&utcMSec,pOrbitNumber);
+    sscanf(fileLine,"%d %d %d",&curr_utc_day,&utcMSec,pOrbitNumber);
     rc=0;
    }
 
@@ -1045,3 +1047,25 @@ RC GDP_ASC_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
 
   return rc;
  }
+
+// use curr_utc_day, taken from the ERS header of the current orbit
+// file, to get the date
+void GDP_ASC_get_orbit_date(int *year, int *month, int *day) {
+  struct tm start_utc = { .tm_sec = 0,
+                          .tm_min = 0,
+                          .tm_hour = 0,
+                          .tm_mday = 1,
+                          .tm_mon = 0, // month since jan (-> 0-11)
+                          .tm_year = 50, // year since 1900
+                          .tm_isdst = 0 };
+
+  // get seconds since epoch of 1/1/1950 00:00:00 (GMT)
+  time_t time_epoch = timegm(&start_utc);
+
+  time_epoch += curr_utc_day * 24 * 3600;
+  struct tm result;
+  gmtime_r(&time_epoch, &result);
+  *year = result.tm_year + 1900;
+  *month = result.tm_mon + 1;
+  *day = result.tm_mday;
+}

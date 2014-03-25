@@ -253,6 +253,13 @@ void GdpBinLambda(double *lambda,int indexParam,INDEX fileIndex)
 	  }
 	}
 
+void GDP_BIN_get_orbit_date(int *year, int *month, int *day) {
+  SHORT_DATETIME *orbit_date = &GDP_BIN_orbitFiles[GDP_BIN_currentFileIndex].gdpBinHeader.dateAndTime;
+  *year = (int)orbit_date->da_year;
+  *month = (int)orbit_date->da_mon;
+  *day = (int)orbit_date->da_day;
+}
+
 // -----------------------------------------------------------------------------
 // FUNCTION      GDP_BIN_Set
 // -----------------------------------------------------------------------------
