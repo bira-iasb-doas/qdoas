@@ -2496,14 +2496,10 @@ RC GOME2_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
   return rc;
  }
 
-RC GOME2_get_orbit_date(const ENGINE_CONTEXT *pEngineContext, int *year, int *month, int *day) {
+void GOME2_get_orbit_date(int *year, int *month, int *day) {
   int hour, min, sec, musec;
-  GOME2_MDR curr_mdr;
-  int indexBand=(INDEX)pEngineContext->project.instrumental.user; 
 
-  RC rc = Gome2ReadMDRInfo(&gome2OrbitFiles[gome2CurrentFileIndex], &curr_mdr, indexBand);
-  if (!rc) {
-    coda_double_to_datetime(curr_mdr.startTime,year,month,day,&hour,&min,&sec,&musec);
-  }
-  return rc;
+  GOME2_MDR* curr_mdr = gome2OrbitFiles[gome2CurrentFileIndex].gome2Info.mdr;
+
+  coda_double_to_datetime(curr_mdr->startTime,year,month,day,&hour,&min,&sec,&musec);
 }
