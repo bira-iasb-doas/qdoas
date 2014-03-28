@@ -1450,7 +1450,7 @@ void remove_extension(char *filename) {
 }
 
 /*! For satellite measurements, get the date of the orbit file */
-static void get_orbit_date(const ENGINE_CONTEXT *pEngineContext, int *orbit_year, int *orbit_month, int *orbit_day) {
+static RC get_orbit_date(const ENGINE_CONTEXT *pEngineContext, int *orbit_year, int *orbit_month, int *orbit_day) {
   RC rc = ERROR_ID_NO;
 
   switch (pEngineContext->project.instrumental.readOutFormat) {
@@ -1458,7 +1458,7 @@ static void get_orbit_date(const ENGINE_CONTEXT *pEngineContext, int *orbit_year
     OMI_get_orbit_date(orbit_year, orbit_month, orbit_day);
     break;
   case PRJCT_INSTR_FORMAT_GDP_BIN:
-    GDP_BIN_get_orbit_date(orbit_year, orbit_month, orbit_day);
+    rc = GDP_BIN_get_orbit_date(orbit_year, orbit_month, orbit_day);
     break;
   case PRJCT_INSTR_FORMAT_GDP_ASCII:
     GDP_ASC_get_orbit_date(orbit_year, orbit_month, orbit_day);
@@ -1533,7 +1533,10 @@ RC OutputBuildFileName(const ENGINE_CONTEXT *pEngineContext,char *outputPath)
     if (satelliteFlag && pResults->dirFlag) {
       // get date for the current orbit file
       int orbit_year, orbit_month, orbit_day;
-      get_orbit_date(pEngineContext, &orbit_year, &orbit_month, &orbit_day);
+      rc = get_orbit_date(pEngineContext, &orbit_year, &orbit_month, &orbit_day);
+      if (rc != ERROR_ID_NO) {
+        return rc;
+      }
 
       // Create 'year' directory
       int nwritten = sprintf(fileNameStart,"%d%c", orbit_year, PATH_SEP);

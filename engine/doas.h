@@ -1600,7 +1600,7 @@ RC   GDP_ASC_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,FILE *specFp);
 void GDP_BIN_ReleaseBuffers(void);
 RC   GDP_BIN_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp);
 RC   GDP_BIN_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,FILE *specFp,INDEX indexFile);
-void GDP_BIN_get_orbit_date(int *year, int *month, int *day);
+RC   GDP_BIN_get_orbit_date(int *year, int *month, int *day);
 
 // GOME2
 

@@ -182,6 +182,18 @@ void GDP_BIN_ReleaseBuffers(void)
 // READ OUT ROUTINES
 // =================
 
+// get real year from a SHORT_DATE encoded year
+static inline int get_year(int year_in) {
+  if (year_in<30) {
+    year_in+=(short)2000;
+  } else if (year_in<130) {
+    year_in+=(short)1900;
+  } else if (year_in<1930) {
+    year_in+=(short)100;
+  }
+  return year_in;
+}
+
 // -----------------------------------------------------------------------------
 // FUNCTION      GDP_BIN_GetRecordNumber
 // -----------------------------------------------------------------------------
@@ -253,11 +265,42 @@ void GdpBinLambda(double *lambda,int indexParam,INDEX fileIndex)
 	  }
 	}
 
-void GDP_BIN_get_orbit_date(int *year, int *month, int *day) {
-  SHORT_DATETIME *orbit_date = &GDP_BIN_orbitFiles[GDP_BIN_currentFileIndex].gdpBinHeader.dateAndTime;
-  *year = (int)orbit_date->da_year;
-  *month = (int)orbit_date->da_mon;
-  *day = (int)orbit_date->da_day;
+RC GDP_BIN_get_orbit_date(int *year, int *month, int *day) {
+
+  FILE *fp = NULL;
+  RC rc = ERROR_ID_NO;
+
+  const GOME_ORBIT_FILE *pOrbitFile = &GDP_BIN_orbitFiles[GDP_BIN_currentFileIndex];
+
+  if ((fp=fopen(pOrbitFile->gdpBinFileName,"rb"))==NULL) {
+    return ERROR_SetLast("GDP_Bin_Set",ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pOrbitFile->gdpBinFileName);
+  }
+
+  GDP_BIN_FILE_HEADER tempHeader;
+
+  // perhaps can use header from pOrbitFile
+  if (!fread(&tempHeader,sizeof(GDP_BIN_FILE_HEADER),1,fp)) {
+    rc=ERROR_SetLast("GDP_Bin_Set",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pOrbitFile->gdpBinFileName);
+  } else {
+    // goto first spectrum, right after header
+    fseek(fp,(int32_t)pOrbitFile->gdpBinHeader.headerSize,SEEK_SET);
+    
+    SPECTRUM_RECORD tempSpectrum;
+    
+    if (!fread(&tempSpectrum,sizeof(SPECTRUM_RECORD),1,fp)) {
+      rc=ERROR_ID_FILE_END;
+    } else {
+      *year = get_year((int) tempSpectrum.dateAndTime.da_year);
+      *month = (int) tempSpectrum.dateAndTime.da_mon;
+      *day = (int) tempSpectrum.dateAndTime.da_day;
+    }
+  }
+
+  if(fp != NULL) {
+    fclose(fp);
+  }
+
+  return rc;
 }
 
 // -----------------------------------------------------------------------------
@@ -654,12 +697,7 @@ RC GDP_BIN_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,FILE *specFp,INDEX i
       today.da_mon=pOrbitFile->gdpBinSpectrum.dateAndTime.da_mon;
       today.da_day=pOrbitFile->gdpBinSpectrum.dateAndTime.da_day;
 
-      if (today.da_year<30)
-       today.da_year+=(short)2000;
-      else if (today.da_year<130)
-       today.da_year+=(short)1900;
-      else if (today.da_year<1930)
-       today.da_year+=(short)100;
+      today.da_year = (short) get_year((int)today.da_year);
 
       // Fill fields of structure
 
