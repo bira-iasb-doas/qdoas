@@ -862,8 +862,19 @@ static void tai_to_ymd(double tai, struct tm *result, int *ms) {
   time_t time_epoch = timegm(&start_tai);
 #else
   // get UTC time on MinGW32:
+
+  // get current timezone setting
+  char *timezone_old = getenv("TZ");
+  // set timezone to UTC for mktime
   putenv("TZ=UTC");
   time_t time_epoch = mktime(&start_tai);
+  if (timezone_old != NULL) {
+    // restore environment
+    putenv(timezone_old);
+  } else {
+    // no timezone was set, just remove our setting
+    putenv("TZ="); // for MinGW32, we use this instead of unsetenv("TZ") 
+  }
 #endif
 
   int seconds = floor(tai); // seconds since 1/1/1993 (GMT)

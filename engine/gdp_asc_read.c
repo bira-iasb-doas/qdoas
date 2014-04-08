@@ -1064,8 +1064,19 @@ void GDP_ASC_get_orbit_date(int *year, int *month, int *day) {
   time_t time_epoch = timegm(&start_utc);
 #else
   // get UTC time on MinGW32:
+
+  // get current timezone setting
+  char *timezone_old = getenv("TZ");
+  // set timezone to UTC for mktime
   putenv("TZ=UTC");
   time_t time_epoch = mktime(&start_utc);
+  if (timezone_old != NULL) {
+    // restore environment
+    putenv(timezone_old);
+  } else {
+    // no timezone was set, just remove our setting
+    putenv("TZ="); // for MinGW32, we use this instead of unsetenv("TZ") 
+  }
 #endif
 
   time_epoch += curr_utc_day * 24 * 3600;
