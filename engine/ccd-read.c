@@ -622,26 +622,24 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
 
               // This part is not elegant at all but the code should be more consistent in the acquisition program according to the different situations with the pointing mode
 
-              if (header.brusagVersion==2)
-               {
-                memcpy(pRecord->ccd.diodes,header.diodes,sizeof(float)*4);
-                pRecord->ccd.targetElevation=header.targetElevation;
-                pRecord->ccd.targetAzimuth=header.targetAzimuth;
-                pRecord->ccd.saturatedFlag=header.saturatedFlag;
-               }
-
-              if (fabs(header.brusagElevation-header.targetElevation)>1.)
-               {
-              	 pRecord->ccd.targetElevation=header.targetElevation=header.brusagElevation;
-              	}
-
               if ((fabs(header.brusagElevation+1.)<EPSILON) && (fabs(header.mirrorAzimuth+1.)<EPSILON))
                {
-              	 pRecord->ccd.targetElevation=header.targetElevation=header.brusagElevation;
-              	 pRecord->ccd.targetAzimuth=header.targetAzimuth=header.mirrorAzimuth;
+               	pRecord->ccd.targetElevation=header.targetElevation=-1.;
+               	pRecord->ccd.targetAzimuth=header.targetAzimuth=-1.;
 
-              	 pRecord->ccd.measureType=PRJCT_INSTR_MAXDOAS_TYPE_ZENITH;
-              	}
+               	pRecord->ccd.measureType=header.measureType=PRJCT_INSTR_MAXDOAS_TYPE_ZENITH;
+               }
+              else
+               {
+               	if (fabs(header.targetElevation-header.targetAzimuth)<EPSILON)
+               	 {
+               	 	header.targetElevation=floor(header.brusagElevation+0.5);
+               	 	header.targetAzimuth=floor(header.mirrorAzimuth+0.5);
+               	 }
+
+               	pRecord->ccd.targetElevation=header.targetElevation;
+               	pRecord->ccd.targetAzimuth=header.targetElevation;
+               }
             }
 
            memcpy(&pRecord->present_day,&header.today,sizeof(SHORT_DATE));
