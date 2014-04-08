@@ -858,11 +858,23 @@ static void tai_to_ymd(double tai, struct tm *result, int *ms) {
                                  .tm_isdst = 0 };
 
   // get seconds since epoch of 1/1/1993 00:00:00 (GMT)
+#ifndef _WIN32
   time_t time_epoch = timegm(&start_tai);
+#else
+  // get UTC time on MinGW32:
+  putenv("TZ=UTC");
+  time_t time_epoch = mktime(&start_tai);
+#endif
 
   int seconds = floor(tai); // seconds since 1/1/1993 (GMT)
   time_epoch += seconds;
+
+#ifndef _WIN32
   gmtime_r(&time_epoch, result);
+#else
+  struct tm *time = gmtime(&time_epoch);
+  *result = *time;
+#endif
 
   if (ms != NULL) {
     *ms = (int)(1000*(tai - seconds));

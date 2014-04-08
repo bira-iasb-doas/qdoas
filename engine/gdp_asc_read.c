@@ -1060,11 +1060,24 @@ void GDP_ASC_get_orbit_date(int *year, int *month, int *day) {
                           .tm_isdst = 0 };
 
   // get seconds since epoch of 1/1/1950 00:00:00 (GMT)
+#ifndef _WIN32
   time_t time_epoch = timegm(&start_utc);
+#else
+  // get UTC time on MinGW32:
+  putenv("TZ=UTC");
+  time_t time_epoch = mktime(&start_utc);
+#endif
 
   time_epoch += curr_utc_day * 24 * 3600;
   struct tm result;
+
+#ifndef _WIN32
   gmtime_r(&time_epoch, &result);
+#else
+  struct tm *time = gmtime(&time_epoch);
+  result = *time;
+#endif
+
   *year = result.tm_year + 1900;
   *month = result.tm_mon + 1;
   *day = result.tm_mday;
