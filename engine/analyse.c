@@ -931,11 +931,8 @@ RC ANALYSE_XsInterpolation(FENO *pTabFeno, const double *newLambda,INDEX indexFe
          break;
        }
 
-      if ((pTabCross->crossAction==ANLYS_CROSS_ACTION_NOTHING) ||
-          ((pXs->nl==pTabFeno->NDET) && VECTOR_Equal(pXs->matrix[0],newLambda,pTabFeno->NDET,(double)1.e-7)))          // wavelength scale is the same as new one
-
+      if ((pTabCross->crossAction==ANLYS_CROSS_ACTION_NOTHING) || ((pXs->nl==pTabFeno->NDET) && VECTOR_Equal(pXs->matrix[0],newLambda,pTabFeno->NDET,(double)1.e-7)))          // wavelength scale is the same as new one
        memcpy(filtCross,pXs->matrix[icolumn],sizeof(double)*pTabFeno->NDET);
-
       else
        if ((rc=SPLINE_Vector(pXs->matrix[0],pXs->matrix[icolumn],pXs->deriv2[icolumn],pXs->nl,newLambda,filtCross,pTabFeno->NDET,pAnalysisOptions->interpol,"ANALYSE_XsInterpolation "))!=0)           // interpolation processing
         break;
@@ -974,7 +971,6 @@ RC ANALYSE_XsInterpolation(FENO *pTabFeno, const double *newLambda,INDEX indexFe
 
       if ((rc=SPLINE_Deriv2(newLambda,pTabCross->vector,pTabCross->Deriv2,pTabFeno->NDET,"ANALYSE_XsInterpolation "))!=0)
        break;
-
      }
    }
 
@@ -989,7 +985,7 @@ RC ANALYSE_XsInterpolation(FENO *pTabFeno, const double *newLambda,INDEX indexFe
   DEBUG_FunctionStop("ANALYSE_XsInterpolation",rc);
 #endif
 
-  return rc;
+ return rc;
 }
 
 RC ANALYSE_ConvoluteXs(const FENO *pTabFeno,int action,double conc,
@@ -4225,6 +4221,9 @@ RC ANALYSE_CheckLambda(WRK_SYMBOL *pWrkSymbol,double *lambda, const char *callin
   rc=ERROR_ID_NO;
 
   FILES_RebuildFileName(fileName,pWrkSymbol->crossFileName,1);
+
+  if ((pWrkSymbol->xs.nl!=NDET) || !VECTOR_Equal(pWrkSymbol->xs.matrix[0],lambda,NDET,(double)1.e-7))
+   rc=ERROR_SetLast("ANALYSE_CheckLambda",ERROR_TYPE_FATAL,ERROR_ID_XS_BAD_WAVELENGTH,pWrkSymbol->crossFileName);
 
   // Return
 

@@ -114,6 +114,7 @@ ERROR_TABLE errorTable[]=
   { ERROR_ID_FILE_NOT_SPECIFIED        , "missing file name in configuration: %s"},
   { ERROR_ID_FILE_STAT                 , "cannot stat %s"},
   { ERROR_ID_DIR_NOT_FOUND             , "directory %s does not exist %s"},
+  { ERROR_ID_XS_BAD_WAVELENGTH         , "the cross section %s should be defined on the same grid as the reference one when 'None' is selected as Interp/conv action"},
 
   // Debug
 
@@ -349,4 +350,5 @@ bool ERROR_Fatal(void) {
     if (errorStack[i].errorType == ERROR_TYPE_FATAL)
       return true;
   }
+ return false;
 }

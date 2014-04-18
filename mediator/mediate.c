@@ -2072,12 +2072,12 @@ int mediateRequestNextMatchingSpectrum(ENGINE_CONTEXT *pEngineContext,void *resp
    while (rc == ERROR_ID_NO && rec <= upperLimit)
     {
      // read the 'next' record
-     if ((rc=EngineReadFile(pEngineContext,rec,0,0,outputFlag))!=ERROR_ID_NO)
+     if ((rc=EngineReadFile(pEngineContext,rec,0,0))!=ERROR_ID_NO)
       {
        // reset the rc based on the severity of the failure - for non fatal errors keep searching
        rc = ERROR_DisplayMessage(responseHandle);
       }
-     else if ( pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_OMI &&
+     else if ( (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_OMI) &&
                !omi_use_track(pRecord->omi.omiXtrackQF, pProject->instrumental.omi.xtrack_mode) ) {
       // skip this spectrum
      } else
@@ -2128,6 +2128,19 @@ int mediateRequestNextMatchingSpectrum(ENGINE_CONTEXT *pEngineContext,void *resp
 
       }
 
+     if (outputFlag)
+      {
+      	int indexFeno,indexFenoColumn;
+
+      	indexFenoColumn=(pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_OMI)?pEngineContext->recordInfo.omi.omiRowIndex-1:0;
+
+      	for (indexFeno=0;indexFeno<NFeno;indexFeno++)
+      	 if (!TabFeno[indexFenoColumn][indexFeno].hidden)
+      	  TabFeno[indexFenoColumn][indexFeno].rc=ERROR_ID_FILE_RECORD;             // force the output to default values
+
+       OUTPUT_SaveResults(pEngineContext,indexFenoColumn);
+      }
+
      // try the next record
      rec+=inc;
     }
@@ -2141,8 +2154,21 @@ int mediateRequestNextMatchingSpectrum(ENGINE_CONTEXT *pEngineContext,void *resp
     // and return 0 to indicate the end of records.
 
     if (orec != 0) {
-     if ((rc=EngineReadFile(pEngineContext,orec,0,0,outputFlag))!=ERROR_ID_NO)
+     if ((rc=EngineReadFile(pEngineContext,orec,0,0))!=ERROR_ID_NO)
       {
+       if (outputFlag)
+        {
+        	int indexFeno,indexFenoColumn;
+
+        	indexFenoColumn=(pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_OMI)?pEngineContext->recordInfo.omi.omiRowIndex-1:0;
+
+        	for (indexFeno=0;indexFeno<NFeno;indexFeno++)
+        	 if (!TabFeno[indexFenoColumn][indexFeno].hidden)
+        	  TabFeno[indexFenoColumn][indexFeno].rc=ERROR_ID_FILE_RECORD;             // force the output to default values
+
+         OUTPUT_SaveResults(pEngineContext,indexFenoColumn);
+        }
+
        ERROR_DisplayMessage(responseHandle);
        return -1; // error
       }

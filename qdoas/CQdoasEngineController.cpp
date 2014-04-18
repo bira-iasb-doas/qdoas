@@ -223,6 +223,7 @@ void CQdoasEngineController::notifyErrorMessages(int highestErrorLevel, const QL
     case InformationEngineError:
       stream << "INFO    (";
       break;
+
     case WarningEngineError:
       stream << "WARNING (";
       break;
@@ -234,9 +235,9 @@ void CQdoasEngineController::notifyErrorMessages(int highestErrorLevel, const QL
     stream << it->tag() << ") " << it->message() << ".\n";
 
     ++it;
-  }
 
-  emit signalErrorMessages(highestErrorLevel, msg);
+    emit signalErrorMessages(highestErrorLevel, msg);
+  }
 }
 
 bool CQdoasEngineController::event(QEvent *e)

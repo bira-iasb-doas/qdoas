@@ -184,6 +184,7 @@ SHORT_DATE;
 #define ERROR_ID_FILE_NOT_SPECIFIED             130                             // a required file name is not missing from the configuration
 #define ERROR_ID_FILE_STAT                      131                             // cannot call fstat on file
 #define ERROR_ID_DIR_NOT_FOUND                  132                             // directory does not exist
+#define ERROR_ID_XS_BAD_WAVELENGTH              133                             // the cross section should be defined on the same grid as the reference one when 'None' is selected as Interp/conv action
 
 
 // Debug
@@ -360,8 +361,8 @@ typedef struct _errorDescription
  {
   int   errorType;                                                              // type of error (warning, fatal error, ...)
   int   errorId;                                                                // id number of the error
-  char errorFunction[MAX_FCT_LEN+1];                                           // name of the calling function that produced the error
-  char errorString[MAX_MSG_LEN+1];                                             // error message
+  char errorFunction[MAX_FCT_LEN+1];                                            // name of the calling function that produced the error
+  char errorString[MAX_MSG_LEN+1];                                              // error message
  }
 ERROR_DESCRIPTION;
 
