@@ -999,6 +999,9 @@ static void OutputRegisterFields(const ENGINE_CONTEXT *pEngineContext)
      case PRJCT_RESULTS_UAV_SERVO_BYTE_RECEIVED:
        register_field( (struct output_field) { .fieldname = "UAV servo received position byte", .memory_type = OUTPUT_USHORT, .resulttype = fieldtype, .format = "%#3d", .get_data = (func_void)&get_uav_servo_byte_received });
        break;
+     case PRJCT_RESULTS_PRECALCULATED_FLUXES:
+       register_field( (struct output_field) { .fieldname = "Precalculated flux", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_precalculated_flux, .data_cols = 4, .column_number_format="(%d)" });
+       break;
      default:
        break;
      }

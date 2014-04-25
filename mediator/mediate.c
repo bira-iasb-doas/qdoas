@@ -249,6 +249,17 @@ int mediateRequestDisplaySpecInfo(void *engineContext,int page,void *responseHan
      mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Target elevation","%.3f deg",pRecord->ccd.targetElevation);
     if (pSpectra->fieldsFlag[PRJCT_RESULTS_SATURATED])
      mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Saturated","%s",(pRecord->ccd.saturatedFlag)?"yes":"no");
+
+    if (pSpectra->fieldsFlag[PRJCT_RESULTS_PRECALCULATED_FLUXES])
+     {
+     	char str1[80],str2[80];
+
+     	sprintf(str1,"Flux (%g)",pRecord->ccd.wve1);
+     	sprintf(str2,"Flux (%g)",pRecord->ccd.wve2);
+
+      mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,str1,"%.3f",pRecord->ccd.flux1);
+      mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,str2,"%.3f",pRecord->ccd.flux2);
+     }
    }
 
   if (pSpectra->fieldsFlag[PRJCT_RESULTS_MEASTYPE] && (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_CCD_EEV))

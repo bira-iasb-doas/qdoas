@@ -1538,6 +1538,7 @@ void CQdoasConfigWriter::writeDataSelectList(FILE *fp, const data_select_list_t 
     case PRJCT_RESULTS_SPIKES: fprintf(fp,"spike_pixels"); break;
     case PRJCT_RESULTS_UAV_SERVO_BYTE_SENT :      fprintf(fp, "servo_byte_sent"); break;
     case PRJCT_RESULTS_UAV_SERVO_BYTE_RECEIVED :      fprintf(fp, "servo_byte_received"); break;
+    case PRJCT_RESULTS_PRECALCULATED_FLUXES:            fprintf(fp, "precalculated_fluxes"); break;
 
     default: fprintf(fp, "Invalid");
     }

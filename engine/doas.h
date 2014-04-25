@@ -585,6 +585,7 @@ typedef struct _ccd
   float         targetElevation,targetAzimuth;
   int           saturatedFlag;
   INDEX         indexImage;
+  float         wve1,wve2,flux1,flux2;
  }
 CCD;
 

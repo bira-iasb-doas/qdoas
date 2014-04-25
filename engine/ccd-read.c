@@ -121,7 +121,8 @@ typedef struct _ccdData
   float       diodes[4];
   float       targetElevation,targetAzimuth;
   char      saturatedFlag,ignoredFlag;
-  char      ignored[926];                                                     // if completed with new data in the future, authorizes compatibility with previous versions
+  float       wve1,wve2,flux1,flux2;
+  char      ignored[910];                                                     // if completed with new data in the future, authorizes compatibility with previous versions
   float       compassAngle;
   float       pitchAngle;
   float       rollAngle;
@@ -598,7 +599,23 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
            pRecord->ccd.diodes[0]=pRecord->ccd.diodes[1]=pRecord->ccd.diodes[2]=pRecord->ccd.diodes[3]=(float)0.;
            pRecord->ccd.targetElevation=header.targetElevation;
            pRecord->ccd.targetAzimuth=header.Azimuth;
+
            pRecord->ccd.saturatedFlag=0;
+
+           if ((header.wve1>=200.) && (header.wve1<=1000.))
+            {
+             pRecord->ccd.wve1=header.wve1;
+             pRecord->ccd.wve2=header.wve2;
+             pRecord->ccd.flux1=header.flux1;
+             pRecord->ccd.flux2=header.flux2;
+            }
+           else
+            {
+             pRecord->ccd.wve1=
+             pRecord->ccd.wve2=
+             pRecord->ccd.flux1=
+             pRecord->ccd.flux2=0.;
+            }
 
            if (header.alsFlag)
             {

@@ -139,6 +139,7 @@ CWOutputSelector::CWOutputSelector(const data_select_list_t *d, QWidget *parent)
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_SPIKES,                 "Pixels with spikes in residual"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_UAV_SERVO_BYTE_SENT,    "Servo position byte sent"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_UAV_SERVO_BYTE_RECEIVED,"Servo position byte received"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_PRECALCULATED_FLUXES,   "Precalculated fluxes"));
 
   // populate the selected list by key-reference to the available list ...
 
@@ -430,6 +431,7 @@ void getValidFieldFlags(int *validFlags, int instrument)
       validFlags[PRJCT_RESULTS_CCD_TARGETAZIMUTH]=1;
       validFlags[PRJCT_RESULTS_CCD_TARGETELEVATION]=1;
       validFlags[PRJCT_RESULTS_SATURATED]=1;
+      validFlags[PRJCT_RESULTS_PRECALCULATED_FLUXES]=1;
      }
     break;
  // ----------------------------------------------------------------------------

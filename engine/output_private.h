@@ -434,6 +434,13 @@ static inline void get_diodes(struct output_field *this_field __attribute__ ((un
   memcpy(diodes, pEngineContext->recordInfo.ccd.diodes, 4 * sizeof(*diodes));
 }
 
+static inline void get_precalculated_flux(struct output_field *this_field __attribute__ ((unused)), float *fluxes, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
+	 fluxes[0]=pEngineContext->recordInfo.ccd.wve1;
+	 fluxes[1]=pEngineContext->recordInfo.ccd.flux1;
+	 fluxes[2]=pEngineContext->recordInfo.ccd.wve2;
+	 fluxes[3]=pEngineContext->recordInfo.ccd.flux2;
+}
+
 static inline void get_target_azimuth(struct output_field *this_field __attribute__ ((unused)), float *azimuth, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
   *azimuth = pEngineContext->recordInfo.ccd.targetAzimuth;
 }
