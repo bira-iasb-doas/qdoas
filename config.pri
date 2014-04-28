@@ -40,7 +40,7 @@ linux_package {
   QMAKE_CXX = lsbc++
   QMAKE_CC = lsbcc
   # clear RPATH so we can distribute our own libQt*.so's
-  QMAKE_RPATH = 
+  QMAKE_RPATH =
   INSTALL_PREFIX = /home/thomasd/Code/LSB
   INCLUDEPATH += $$INSTALL_PREFIX/include
   INCLUDEPATH += $$INSTALL_PREFIX/include/hdf4
@@ -56,8 +56,8 @@ mxe {
 }
 
 win32 {
-  QWT_INC_PATH    = C:/Qwt-6.0.0/src
-  QWT_LIB_PATH    = C:/Qwt-6.0.0/lib
+  QWT_INC_PATH    = C:/Qwt-6.1.0/src
+  QWT_LIB_PATH    = C:/Qwt-6.1.0/lib
   QWT_LIB         = qwt
   QWT_LIB_VERSION =
   CODA_INC_PATH   = C:/coda
