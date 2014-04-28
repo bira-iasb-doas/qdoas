@@ -161,6 +161,7 @@ RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,co
 
   // Initializations
 
+  rc=ERROR_ID_NO;
   pKurucz=&KURUCZ_buffers[indexFenoColumn];
   indexLine=KURUCZ_indexLine;
   indexColumn=2;
@@ -185,8 +186,6 @@ RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,co
 
     Results=Feno->TabCrossResults;
     pResults=&Feno->TabCrossResults[(Feno->indexSpectrum!=ITEM_NONE)?Feno->indexSpectrum:Feno->indexReference];
-
-    rc=ERROR_ID_NO;
 
     VPix       = pKurucz->VPix;
     VSig       = pKurucz->VSig;

@@ -2131,11 +2131,15 @@ RC ANALYSE_Function( double *spectrum_orig, double *reference, double *SigmaY, d
 
   // Real time convolution for Kurucz
 
-  if ((Feno->hidden==1) && Feno->xsToConvolute && pKuruczOptions->fwhmFit)
+  if ((Feno->hidden==1) && Feno->xsToConvolute && pKuruczOptions->fwhmFit) {
 
-   rc=ANALYSE_XsConvolution(Feno,Lambda,&slit0,&slit1,pKuruczOptions->fwhmType,
-                            (TabCross[Feno->indexFwhmParam[0]].FitParam!=ITEM_NONE)?&fitParamsF[TabCross[Feno->indexFwhmParam[0]].FitParam]:&TabCross[Feno->indexFwhmParam[0]].InitParam,
-                            (TabCross[Feno->indexFwhmParam[1]].FitParam!=ITEM_NONE)?&fitParamsF[TabCross[Feno->indexFwhmParam[1]].FitParam]:&TabCross[Feno->indexFwhmParam[1]].InitParam,indexFenoColumn,(pKuruczOptions->fwhmType==SLIT_TYPE_FILE)?1:0);
+    rc=ANALYSE_XsConvolution(Feno,Lambda,&slit0,&slit1,pKuruczOptions->fwhmType,
+                             (TabCross[Feno->indexFwhmParam[0]].FitParam!=ITEM_NONE)?&fitParamsF[TabCross[Feno->indexFwhmParam[0]].FitParam]:&TabCross[Feno->indexFwhmParam[0]].InitParam,
+                             (TabCross[Feno->indexFwhmParam[1]].FitParam!=ITEM_NONE)?&fitParamsF[TabCross[Feno->indexFwhmParam[1]].FitParam]:&TabCross[Feno->indexFwhmParam[1]].InitParam,indexFenoColumn,(pKuruczOptions->fwhmType==SLIT_TYPE_FILE)?1:0);
+    if(rc) {
+      goto EndFunction;
+    }
+  }
 
   // Don't take fixed concentrations into account for singular value decomposition
 
@@ -2839,7 +2843,7 @@ RC ANALYSE_CurFitMethod(INDEX indexFenoColumn,  // for OMI
     scalingFactor;
 
   //  int i,j,k,l;                                             // indexes for loops and arrays
-  INDEX indexFeno,indexFeno2;
+  INDEX indexFeno;
   int useErrors;
   int niter;
   RC rc;                                                 // return code
@@ -2989,8 +2993,6 @@ RC ANALYSE_CurFitMethod(INDEX indexFenoColumn,  // for OMI
 
     for (int i=0;i<Feno->NTabCross;i++)                        // parameters initialization
      {
-      indexFeno2=ITEM_NONE;
-
       if (TabCross[i].IndSvdA)
        {
         fitParamsC[TabCross[i].IndSvdA]=TabCross[i].InitConc;
@@ -3001,7 +3003,7 @@ RC ANALYSE_CurFitMethod(INDEX indexFenoColumn,  // for OMI
              ((Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVDMARQUARDT) && (TabCross[i].FitConc==ITEM_NONE))))
          {
           bool found_previous = false;
-          for (indexFeno2=indexFeno-1;indexFeno2>=0 && !found_previous; indexFeno2--) {
+          for (int indexFeno2=indexFeno-1;indexFeno2>=0 && !found_previous; indexFeno2--) {
            if (!TabFeno[indexFenoColumn][indexFeno2].hidden)
             {
              for (int j=0;j<TabFeno[indexFenoColumn][indexFeno2].NTabCross

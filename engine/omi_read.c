@@ -435,7 +435,6 @@ void OMI_TrackSelection(const char *omiTrackSelection,int *omiTracks)
 	  else if ((*ptr==',') || (*ptr==';') || (*ptr=='\0'))
 	    {
 	      number2=atoi(str);
-	      resetFlag=1;
 
 	      if (!rangeFlag)
 		number1=number2;
@@ -1012,8 +1011,9 @@ static RC OmiOpen(OMI_ORBIT_FILE *pOrbitFile,const char *swathName)
     pOrbitFile->nWavel=(long)dims[2];
     
     pOrbitFile->specNumber=pOrbitFile->nMeasurements*pOrbitFile->nXtrack;
-    if (!pOrbitFile->specNumber)
-      rc=ERROR_SetLast("OmiOpen",ERROR_TYPE_FATAL,ERROR_ID_FILE_EMPTY,pOrbitFile->omiFileName);
+    if (!pOrbitFile->specNumber) {
+      return ERROR_SetLast("OmiOpen",ERROR_TYPE_FATAL,ERROR_ID_FILE_EMPTY,pOrbitFile->omiFileName);
+    }
 
     // Allocate data
     rc=OMI_AllocateSwath(&pOrbitFile->omiSwath,pOrbitFile->nMeasurements,pOrbitFile->nXtrack);

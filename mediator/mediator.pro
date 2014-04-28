@@ -2,7 +2,7 @@ TEMPLATE = lib
 
 include( ../config.pri )
 
-CONFIG += staticlib
+CONFIG += staticlib $$CODE_GENERATION
 
 SOURCES += *.c *.cpp
 HEADERS += *.h

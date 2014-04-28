@@ -871,15 +871,18 @@ RC XSCONV_TypeNone(MATRIX_OBJECT *pXsnew,MATRIX_OBJECT *pXshr)
 
    dld = -(ldi-lambdaj);
 
-   if (slitType==SLIT_TYPE_GAUSS)
+   if (slitType==SLIT_TYPE_GAUSS) {
     //   oldF=(double)exp(-4.*log(2.)*(dld*dld)/(fwhm*fwhm));
-    rc=XSCONV_FctGauss(&oldF,fwhm,ld_inc,dld);
-   else if (slitType==SLIT_TYPE_INVPOLY)
+     rc=XSCONV_FctGauss(&oldF,fwhm,ld_inc,dld);
+   } else if (slitType==SLIT_TYPE_INVPOLY) {
     oldF=(double)pow(sigma2,(double)slitParam2)/(pow(dld,(double)slitParam2)+pow(sigma2,(double)slitParam2));
-   else if (slitType==SLIT_TYPE_ERF)
+   } else if (slitType==SLIT_TYPE_ERF) {
     oldF=(double)(ERF_GetValue((dld+delta)/a)-ERF_GetValue((dld-delta)/a))/(4.*delta);
+   }
 
-   rc=SPLINE_Vector(lambda,Spec,SDeriv2,ndet,&ldi,&SpecOld,1,SPLINE_CUBIC,__func__);
+   if (!rc) {
+     rc=SPLINE_Vector(lambda,Spec,SDeriv2,ndet,&ldi,&SpecOld,1,SPLINE_CUBIC,__func__);
+   }
 
    while (!rc && (ldi<=lambdaMax))
     {
@@ -1197,8 +1200,6 @@ RC XSCONV_TypeStandard(MATRIX_OBJECT *pXsnew,INDEX indexLambdaMin,INDEX indexLam
 // Add an option later   }
 // Add an option later  else
    slitCenter=(double)0.;
-
-  slitWidth=(fabs(fwhm)>EPSILON)?(double)0.5*NFWHM*fwhm:(double)3.; // 3.*fwhm;
 
   // average wavelength step in Xshr:
   stepXshr = (xshrLambda[xshrNDET-1] - xshrLambda[0])/(xshrNDET-1);

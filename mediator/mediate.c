@@ -2035,7 +2035,7 @@ int mediateRequestNextMatchingSpectrum(ENGINE_CONTEXT *pEngineContext,void *resp
    PROJECT *pProject;                                                            // pointer to the project part of the engine context
    RECORD_INFO *pRecord;                                                         // pointer to the record part of the engine context
    int orec=pEngineContext->indexRecord;
-   int rec=pEngineContext->currentRecord;
+   int rec;
    int upperLimit=pEngineContext->recordNumber;
    int inc,geoFlag;
    int outputFlag;

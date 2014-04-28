@@ -718,14 +718,13 @@ RC EngineReadFile(ENGINE_CONTEXT *pEngineContext,int indexRecord,int dateFlag,in
    INDEX indexSite;
    OBSERVATION_SITE *pSite;
    double longit,latit;
-   int indexFeno,indexFenoColumn;
+   int indexFeno;
    int rc;                                                                       // Return code
 
    // Initializations
 
    pFile=&pEngineContext->fileInfo;
    pRecord=&pEngineContext->recordInfo;
-   indexFenoColumn=0;
 
    memset(pRecord->Nom,0,20);
 
@@ -844,7 +843,6 @@ RC EngineReadFile(ENGINE_CONTEXT *pEngineContext,int indexRecord,int dateFlag,in
       // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_OMI :
       rc=OMI_Read(pEngineContext,indexRecord);
-      indexFenoColumn=pEngineContext->recordInfo.omi.omiRowIndex-1;
       break;
       // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_CCD_EEV :

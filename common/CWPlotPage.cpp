@@ -384,22 +384,6 @@ void CWPlot::slotPrint()
   }
 }
 
-// QWT 5.0.2 -> QWT 6.0.0 void CWPlot::slotExportAsImage()
-// QWT 5.0.2 -> QWT 6.0.0 {
-// QWT 5.0.2 -> QWT 6.0.0   QString fileName;
-// QWT 5.0.2 -> QWT 6.0.0   QString format;
-// QWT 5.0.2 -> QWT 6.0.0
-// QWT 5.0.2 -> QWT 6.0.0   if (CWPlot::getImageSaveNameAndFormat(this, fileName, format)) {
-// QWT 5.0.2 -> QWT 6.0.0
-// QWT 5.0.2 -> QWT 6.0.0     QImage img(size(), QImage::Format_RGB32); // image the same size as the plot widget.
-// QWT 5.0.2 -> QWT 6.0.0     img.fill(0xffffffff);
-// QWT 5.0.2 -> QWT 6.0.0
-// QWT 5.0.2 -> QWT 6.0.0     print(img);
-// QWT 5.0.2 -> QWT 6.0.0
-// QWT 5.0.2 -> QWT 6.0.0     img.save(fileName, format.toAscii().constData());
-// QWT 5.0.2 -> QWT 6.0.0   }
-// QWT 5.0.2 -> QWT 6.0.0 }
-
 void CWPlot::slotExportAsImage()
 {
     QStringList filter;
