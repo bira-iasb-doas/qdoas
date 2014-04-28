@@ -32,7 +32,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include <qwt_plot_curve.h>
 #include <qwt_symbol.h>
-#include <qwt_legend_item.h>
+#include <qwt_plot_canvas.h>
 #include <qwt_plot_grid.h>
 #include <qwt_plot_renderer.h>
 
@@ -366,7 +366,6 @@ void CWPlot::slotPrint()
     QPainter p(&printer);
     p.setPen(QPen(QColor(Qt::black)));
 
-    QRect paper = printer.paperRect();
     QRect page = printer.pageRect();
 
     const int cPageBorder = 150;
@@ -377,12 +376,11 @@ void CWPlot::slotPrint()
 
     tmp.adjust(20, 20, -20, -20);
 
-        QwtPlotRenderer renderer;
+    QwtPlotRenderer renderer;
 
-        renderer.setDiscardFlag(QwtPlotRenderer::DiscardBackground, false);
-        renderer.setLayoutFlag(QwtPlotRenderer::KeepFrames, false);
+    renderer.setDiscardFlag(QwtPlotRenderer::DiscardBackground, false);
 
-        renderer.render(this, &p,tmp);
+    renderer.render(this, &p,tmp);
   }
 }
 
@@ -416,19 +414,18 @@ void CWPlot::slotExportAsImage()
 
     if ( !fileName.isEmpty() )
     {
-        QwtPlotRenderer renderer;
-
-        // flags to make the document look like the widget
-        renderer.setDiscardFlag(QwtPlotRenderer::DiscardBackground, false);
-        renderer.setLayoutFlag(QwtPlotRenderer::KeepFrames, false);
-
-        renderer.renderDocument(this, fileName, QSizeF(300, 200), 85);
+      QwtPlotRenderer renderer;
+      
+      // flags to make the document look like the widget
+      renderer.setDiscardFlag(QwtPlotRenderer::DiscardBackground, false);
+      
+      renderer.renderDocument(this, fileName, QSizeF(300, 200), 85);
     }
 }
 
 void CWPlot::slotToggleInteraction()
 {
-  QwtPlotCanvas *c = canvas();
+  QwtPlotCanvas *c = qobject_cast<QwtPlotCanvas *>(canvas());
 
   if (m_zoomer) {
     c->setCursor(Qt::CrossCursor);
@@ -514,14 +511,6 @@ void CWPlotPage::layoutPlots(const QSize &visibleSize)
     unitSize.setHeight(3 * unitSize.width() / 4);
   }
 
- // // respect the minimum size                  Commented out by Caroline FAYT (3rd June 2008 on Ian's recommendation)
- // if (minUnitSize.isValid()) {                  -> Do not respect the minimum size anymore (so the user is responsible to select the number
- //   if (unitSize.isValid())                        of plots per column that fits the page
- //     unitSize = unitSize.expandedTo(minUnitSize);
- //   else
- //     unitSize = minUnitSize;
- // }
-
   // position and resize
   int fitWidth = unitSize.width() + cBorderSize;
   int fitHeight = unitSize.height() + cBorderSize;
@@ -552,8 +541,7 @@ void CWPlotPage::slotPrintAllPlots()
   QPrinter printer(QPrinter::HighResolution);
   QwtPlotRenderer renderer;
 
-        renderer.setDiscardFlag(QwtPlotRenderer::DiscardBackground, false);
-        renderer.setLayoutFlag(QwtPlotRenderer::KeepFrames, false);
+  renderer.setDiscardFlag(QwtPlotRenderer::DiscardBackground, false);
 
   printer.setPageSize(m_plotProperties.printPaperSize());
   printer.setOrientation(m_plotProperties.printPaperOrientation());
@@ -628,9 +616,8 @@ void CWPlotPage::slotExportAsImageAllPlots()
   QString format;
   QwtPlotRenderer renderer;
 
-        // flags to make the document look like the widget
-        renderer.setDiscardFlag(QwtPlotRenderer::DiscardBackground, false);
-        renderer.setLayoutFlag(QwtPlotRenderer::KeepFrames, false);
+  // flags to make the document look like the widget
+  renderer.setDiscardFlag(QwtPlotRenderer::DiscardBackground, false);
 
   if (CWPlot::getImageSaveNameAndFormat(this, fileName, format)) {
 
