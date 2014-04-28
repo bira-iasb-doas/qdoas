@@ -845,7 +845,7 @@ RC XSCONV_TypeNone(MATRIX_OBJECT *pXsnew,MATRIX_OBJECT *pXshr)
      lambdaMax,SpecOld, SpecNew,sigma2,
      crossFIntegral, FIntegral;
 
-   RC rc;
+   RC rc = ERROR_ID_NO;
 
    // Initializations
 
