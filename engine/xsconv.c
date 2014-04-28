@@ -889,13 +889,16 @@ RC XSCONV_TypeNone(MATRIX_OBJECT *pXsnew,MATRIX_OBJECT *pXshr)
      ldi += (double) ld_inc;
      dld = -(ldi-lambdaj);
 
-     if (slitType==SLIT_TYPE_GAUSS)
+     if (slitType==SLIT_TYPE_GAUSS) {
       //     newF=(double)exp(-4.*log(2.)*(dld*dld)/(fwhm*fwhm));
       rc=XSCONV_FctGauss(&newF,fwhm,ld_inc,dld);
-     else if (slitType==SLIT_TYPE_INVPOLY)
+      if (rc != 0)
+        return rc;
+     } else if (slitType==SLIT_TYPE_INVPOLY) {
       newF=(double)pow(sigma2,(double)slitParam2)/(pow(dld,(double)slitParam2)+pow(sigma2,(double)slitParam2));
-     else if (slitType==SLIT_TYPE_ERF)
+     } else if (slitType==SLIT_TYPE_ERF) {
       newF=(double)(ERF_GetValue((dld+delta)/a)-ERF_GetValue((dld-delta)/a))/(4.*delta);
+     }
 
      if ((rc=SPLINE_Vector(lambda,Spec,SDeriv2,ndet,&ldi,&SpecNew,1,SPLINE_CUBIC,__func__))!=0)
       break;
@@ -1084,6 +1087,7 @@ RC XSCONV_TypeStandard(MATRIX_OBJECT *pXsnew,INDEX indexLambdaMin,INDEX indexLam
   RC      rc;
 
   memset(&slitTmp,0,sizeof(MATRIX_OBJECT));
+  rc=ERROR_ID_NO;
 
   // Use substitution variables
 
@@ -1183,8 +1187,6 @@ RC XSCONV_TypeStandard(MATRIX_OBJECT *pXsnew,INDEX indexLambdaMin,INDEX indexLam
    stepF=fwhm/50.;
   else
    stepF=fwhm/(double)NFWHM;
-
-  rc=ERROR_ID_NO;
 
 // Add an option later  if ((slitType==SLIT_TYPE_FILE) || (slitType==SLIT_TYPE_VOIGT) || (slitType==SLIT_TYPE_AGAUSS))
 // Add an option later   {

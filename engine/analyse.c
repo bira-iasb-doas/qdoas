@@ -5124,7 +5124,7 @@ RC ANALYSE_LoadNonLinear(ENGINE_CONTEXT *pEngineContext,ANALYSE_NON_LINEAR_PARAM
                  (pTabFeno->indexOffsetOrder2==pTabFeno->NTabCross)) && pTabFeno->offlFlag &&
                 ((pTabCross->FitParam!=ITEM_NONE) || (fabs(pTabCross->InitConc)>(double)1.e-6)))
 
-             rcTmp=rc=ERROR_SetLast("ANALYSE_LoadNonLinear",ERROR_TYPE_FATAL,ERROR_ID_OPTIONS,"Offset (linear <-> non linear fit)",pTabFeno->windowName);
+             rc=ERROR_SetLast("ANALYSE_LoadNonLinear",ERROR_TYPE_FATAL,ERROR_ID_OPTIONS,"Offset (linear <-> non linear fit)",pTabFeno->windowName);
 
             pTabFeno->NTabCross++;
            }
