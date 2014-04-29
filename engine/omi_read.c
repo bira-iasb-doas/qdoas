@@ -972,7 +972,7 @@ static RC OmiOpen(OMI_ORBIT_FILE *pOrbitFile,const char *swathName)
     goto end_OmiOpen;
   } else {
     char swathlist[strbufsize+1];
-    //    nswath = SWinqswath(pOrbitFile->omiFileName, swathlist, &strbufsize);
+    SWinqswath(pOrbitFile->omiFileName, swathlist, &strbufsize);
 
     // Look for requested swath in the list, and extract the complete
     // name e.g. look for "Earth UV-1 Swath" and extract "Earth UV-1
