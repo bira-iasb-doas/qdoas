@@ -386,25 +386,25 @@ void CWPlot::slotPrint()
 
 void CWPlot::slotExportAsImage()
 {
-    QStringList filter;
-    QString fileName;
+  QFileDialog dialog(this, "export file name", "", 
+                     "Images (*.png *.pdf *.ps *.svg *.bmp *.jpg)");
+  dialog.setFileMode(QFileDialog::AnyFile);
+  dialog.setAcceptMode(QFileDialog::AcceptSave);
+  dialog.setDefaultSuffix("png");
 
-    fileName="";
-    filter += "PNG Documents (*.png)";
+  QString fileName;
+  if(dialog.exec()) {
+    fileName = dialog.selectedFiles().first();
+  }
 
-    fileName = QFileDialog::getSaveFileName(
-        this, "Export File Name", fileName,
-        filter.join(";;"), NULL, 0);
-
-    if ( !fileName.isEmpty() )
-    {
-      QwtPlotRenderer renderer;
-      
-      // flags to make the document look like the widget
-      renderer.setDiscardFlag(QwtPlotRenderer::DiscardBackground, false);
-      
-      renderer.renderDocument(this, fileName, QSizeF(300, 200), 85);
-    }
+  if ( !fileName.isEmpty() ) {
+    QwtPlotRenderer renderer;
+    
+    // flags to make the document look like the widget
+    renderer.setDiscardFlag(QwtPlotRenderer::DiscardBackground, false);
+    
+    renderer.renderDocument(this, fileName, QSizeF(300, 200), 85);
+  }
 }
 
 void CWPlot::slotToggleInteraction()
@@ -420,7 +420,7 @@ void CWPlot::slotToggleInteraction()
     m_zoomer = new QwtPlotZoomer(c);
     c->setCursor(Qt::PointingHandCursor); // change the cursor to indicate that zooming is active
     // contrasting colour ...
-    m_zoomer->setRubberBandPen(QPen((canvasBackground().color().value() < 128) ? Qt::white : Qt::black));   // QWT 5.0.2 -> QWT 6.0.0
+    m_zoomer->setRubberBandPen(QPen((canvasBackground().color().value() < 128) ? Qt::white : Qt::black));
   }
 }
 
