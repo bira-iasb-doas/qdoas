@@ -1089,7 +1089,7 @@ RC ANALYSE_ConvoluteXs(const FENO *pTabFeno,int action,double conc,
         rc=ERROR_SetLast("ANALYSE_ConvoluteXs",ERROR_TYPE_WARNING,ERROR_ID_LOG,-1);
        else
         output[j]=(double)log(output[j]/IcVector[j])/conc;
-      }
+      } 
    }
 
   // Return
@@ -2273,8 +2273,8 @@ RC ANALYSE_Function( double *spectrum_orig, double *reference, double *SigmaY, d
          ((!Feno->hidden && ANALYSE_phFilter->hpFilterAnalysis) || ((Feno->hidden==1) && ANALYSE_phFilter->hpFilterCalib)) &&
          ((rc=FILTER_Vector(ANALYSE_phFilter,&spectrum_interpolated[LimMin],&spectrum_interpolated[LimMin],LimN,PRJCT_FILTER_OUTPUT_HIGH_SUB))!=0))))
 
-    goto EndFunction;
-
+    goto EndFunction;  
+    
    // ----------------------------
    // Transfer to working variable
    // ----------------------------
@@ -2793,7 +2793,7 @@ RC ANALYSE_Function( double *spectrum_orig, double *reference, double *SigmaY, d
    MEMORY_ReleaseDVector(__func__,"spec_nolog",spec_nolog,0);
 
   // Return
-
+  
 #if defined(__DEBUG_) && __DEBUG_
   DEBUG_FunctionStop(__func__,rc);
 #endif
@@ -3179,8 +3179,8 @@ RC ANALYSE_CurFitMethod(INDEX indexFenoColumn,  // for OMI
   /*  Free Memory  */
   /*  ===========  */
 
- EndCurFitMethod :
-
+ EndCurFitMethod :       
+ 
   for (int i=0;i<Feno->NTabCross;i++)
    {
     pTabCross=&TabCross[i];
@@ -3262,7 +3262,7 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
   INDEX indexPage,indexLine,indexColumn;
   RC  rc,rcOutput;                                    // return code
-  int nrc;
+  int nrc,irc;
 
 #if defined(__DEBUG_) && __DEBUG_
   DEBUG_FunctionBegin("ANALYSE_Spectrum",DEBUG_FCTTYPE_APPL);
@@ -3290,7 +3290,7 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
 
   NbFeno=0;
-  nrc=0;
+  nrc=irc=0;
   rc=rcOutput=ERROR_ID_NO;
 
   // Buffers allocation
@@ -3746,6 +3746,8 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
           if (!Feno->rc)
            nrc++;
+          else
+           irc++; 
 
           if (displayFlag && saveFlag)
            {
@@ -3868,7 +3870,7 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
   //  if ((pEngineContext->indexRecord%2)==0)
   //   rc=ERROR_SetLast("ShiftVector",ERROR_TYPE_WARNING,ERROR_ID_LOG,analyseIndexRecord);
 
-  return rc;
+  return (irc)?-1:rc;
 }
 
 // ===============
