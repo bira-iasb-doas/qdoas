@@ -74,7 +74,7 @@
 // CONSTANT DEFINITION
 // ===================
 
-#define MAX_LINE_LENGTH 4096
+#define MAX_LINE_LENGTH 40000
 
 // ================
 // GLOBAL VARIABLES
