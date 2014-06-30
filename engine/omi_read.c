@@ -47,6 +47,7 @@
 #include "engine.h"
 #include "hdf.h"
 #include "HdfEosDef.h"
+#include "mfhdf.h"
 
 #include <time.h>
 
@@ -1470,7 +1471,7 @@ RC OMI_get_orbit_date(int *year, int *month, int *day) {
 error:
   SDend(sd_id);
 
-  exit(1);
+  return rc;
 }
 
 void OMI_ReleaseBuffers(void) {
