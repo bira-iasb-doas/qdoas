@@ -1420,12 +1420,57 @@ RC OMI_Read(ENGINE_CONTEXT *pEngineContext,int recordNo)
   return rc;
 }
 
-void OMI_get_orbit_date(int *year, int *month, int *day) {
-  struct tm start_time;
-  tai_to_ymd(current_orbit_file.omiSwath->geolocationFields.time[0], &start_time, NULL);
-  *year = start_time.tm_year + 1900;
-  *month = start_time.tm_mon + 1;
-  *day = start_time.tm_mday;
+/*! read the orbit start date from the HDF4 file attribute
+    "CoreMetadata.0" */
+RC OMI_get_orbit_date(int *year, int *month, int *day) {
+  RC rc = ERROR_ID_NO;
+
+  /* OMI files have metadata storred as a formatted text string in an
+   * HDF SD attribute field. NASA provides the "SDP Toolkit" library
+   * to read this metadata format.  However, we only need to read one
+   * field, so we prefer to use an ad-hoc parsing method for this
+   * attribute, instead of including another library in Qdoas.
+   */
+  int32 sd_id = SDstart(current_orbit_file.omiFileName, DFACC_READ);
+
+  if(sd_id == FAIL) {
+    rc = ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_HDFEOS, current_orbit_file.omiFileName, "Can not open orbit file.", "");
+    goto error;
+  }
+  char attr_name[] = "CoreMetadata.0"; // contains orbit start date & time
+  int32 attr_index = SDfindattr (sd_id, attr_name);
+  int32 data_type, n_values;
+  int32 status = SDattrinfo (sd_id, attr_index, attr_name, &data_type, &n_values);
+  if(status == FAIL) {
+    rc = ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_HDFEOS, attr_name, "Can not read SD attribute info from file ", current_orbit_file.omiFileName);
+    goto error;
+  }
+   
+  char *metadata = malloc (1+n_values); 
+  status = SDreadattr (sd_id, attr_index, metadata); 
+  if(status == FAIL) {
+    rc = ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_HDFEOS, attr_name, "Can not read SD attribute data from file ", current_orbit_file.omiFileName);
+  } else {
+    /* metadata is a string containing all kinds of metadata.  We are
+     * interested in the part containing the orbit start date, which has
+     * the following format:
+     *
+     * OBJECT                 = RANGEBEGINNINGDATE
+     *   NUM_VAL              = 1
+     *   VALUE                = "2008-05-21"
+     * END_OBJECT             = RANGEBEGINNINGDATE
+     * 
+     */
+    char *datestart = strstr(metadata, "RANGEBEGINNINGDATE"); 
+    datestart = strstr(datestart, "VALUE");
+    datestart = strstr(datestart, "=");
+    sscanf(datestart + 3, "%d-%02d-%02d", year, month, day);
+  }
+  free(metadata);
+error:
+  SDend(sd_id);
+
+  exit(1);
 }
 
 void OMI_ReleaseBuffers(void) {

@@ -1623,7 +1623,7 @@ RC   OMI_GetReference(int spectralType, const char *refFile,INDEX indexColumn,do
 RC   OMI_Set(ENGINE_CONTEXT *pEngineContext);
 RC   OMI_Read(ENGINE_CONTEXT *pEngineContext,int recordNo);
 RC   OMI_load_analysis(ENGINE_CONTEXT *pEngineContext, void *responseHandle);
-void OMI_get_orbit_date(int *year, int *month, int *day);
+RC   OMI_get_orbit_date(int *year, int *month, int *day);
 bool omi_use_track(int quality_flag, enum omi_xtrack_mode mode);
 bool omi_has_automatic_reference(int row);
 
