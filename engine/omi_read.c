@@ -56,7 +56,7 @@
 // Omi field names for readout routines:
 #define REFERENCE_COLUMN "WavelengthReferenceColumn"
 #define WAVELENGTH_COEFFICIENT "WavelengthCoefficient"
-#define OMI_NUM_COEFFICIENTS 5 // 5 coefficients in wavelenght polynomial
+#define OMI_NUM_COEFFICIENTS 5 // 5 coefficients in wavelength polynomial
 #define OMI_NUM_ROWS 60
 #define OMI_XTRACK_NOTUSED 255 // XTrackQualityFlags = 255 is used to label unused rows in the detector during special zoom mode.
 #define RADIANCE_MANTISSA "RadianceMantissa"
@@ -151,7 +151,9 @@ typedef struct _OMIOrbitFiles // description of an orbit
   long       nMeasurements,
     nXtrack,                    // number of detector tracks (normally 60)
     nWavel;
-  int        rc;
+  int        year;
+  int        month;
+  int        day;
 }
   OMI_ORBIT_FILE;
 
@@ -847,19 +849,20 @@ static RC setup_automatic_reference(ENGINE_CONTEXT *pEngineContext, void *respon
   return rc;
 }
 
-// Convert number of seconds since 01/01/1993 00:00:00 to date
-static void tai_to_ymd(double tai, struct tm *result, int *ms) {
-  static struct tm start_tai = { .tm_sec = 0,
-                                 .tm_min = 0,
-                                 .tm_hour = 0,
-                                 .tm_mday = 1,
-                                 .tm_mon = 0, // month since jan (-> 0-11)
-                                 .tm_year = 93, // year since 1900
-                                 .tm_isdst = 0 };
+// Create a datetime from a date given as year/month/day, and a number
+// of seconds since 00:00:00 on that day.
+static void add_seconds_in_day(int year, int month, int day, double seconds, struct tm *result, int *ms) {
+  struct tm start_day = { .tm_sec = 0,
+                          .tm_min = 0,
+                          .tm_hour = 0,
+                          .tm_mday = day,
+                          .tm_mon = month-1, // month since jan (-> 0-11)
+                          .tm_year = year - 1900, // year since 1900
+                          .tm_isdst = 0 };
 
   // get seconds since epoch of 1/1/1993 00:00:00 (GMT)
 #ifndef _WIN32
-  time_t time_epoch = timegm(&start_tai);
+  time_t time_epoch = timegm(&start_day);
 #else
   // get UTC time on MinGW32:
 
@@ -867,7 +870,7 @@ static void tai_to_ymd(double tai, struct tm *result, int *ms) {
   char *timezone_old = getenv("TZ");
   // set timezone to UTC for mktime
   putenv("TZ=UTC");
-  time_t time_epoch = mktime(&start_tai);
+  time_t time_epoch = mktime(&start_day);
   if (timezone_old != NULL) {
     // restore environment
     putenv(timezone_old);
@@ -877,8 +880,8 @@ static void tai_to_ymd(double tai, struct tm *result, int *ms) {
   }
 #endif
 
-  int seconds = floor(tai); // seconds since 1/1/1993 (GMT)
-  time_epoch += seconds;
+  int i_seconds = floor(seconds); // seconds since 1/1/1993 (GMT)
+  time_epoch += i_seconds;
 
 #ifndef _WIN32
   gmtime_r(&time_epoch, result);
@@ -888,7 +891,7 @@ static void tai_to_ymd(double tai, struct tm *result, int *ms) {
 #endif
 
   if (ms != NULL) {
-    *ms = (int)(1000*(tai - seconds));
+    *ms = (int)(1000*(seconds - i_seconds));
   }
 }
 
@@ -1306,7 +1309,9 @@ RC OMI_Set(ENGINE_CONTEXT *pEngineContext)
 
       omiTotalRecordNumber+=current_orbit_file.nMeasurements;
 
-      NDET=current_orbit_file.nWavel;
+      OMI_get_orbit_date(&current_orbit_file.year, &current_orbit_file.month, &current_orbit_file.day);
+
+      NDET = current_orbit_file.nWavel;
     }
   else
     {
@@ -1399,7 +1404,14 @@ RC OMI_Read(ENGINE_CONTEXT *pEngineContext,int recordNo)
           pRecord->omi.omiXtrackQF = pGeo->xtrackQualityFlags[recordNo-1];
           
           struct tm time_record;
-	  tai_to_ymd((double)pGeo->time[indexMeasurement],&time_record, &OMI_ms);
+          // use UTC date from orbit file and "secondsInDay" to get UTC time of current measurement
+          // this will give us the correct UTC time, except for those orbits during which a leap
+          // second occurred. In those orbits, after midnight the obtained time will be 1 second
+          // ahead of the correct UTC time value
+          add_seconds_in_day(current_orbit_file.year, current_orbit_file.month, current_orbit_file.day, pGeo->secondsInDay[indexMeasurement],&time_record,NULL);
+
+          // get milliseconds from TAI value "time", which is more accurate (and differs from UTC by an integer number of seconds)
+          OMI_ms = (int)(1000*(pGeo->time[indexMeasurement] - floor(pGeo->time[indexMeasurement])));
 
           SHORT_DATE* pDate = &pRecord->present_day;
           struct time *pTime = &pRecord->present_time;
