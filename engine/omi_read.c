@@ -151,9 +151,6 @@ typedef struct _OMIOrbitFiles // description of an orbit
   long       nMeasurements,
     nXtrack,                    // number of detector tracks (normally 60)
     nWavel;
-  int        year;
-  int        month;
-  int        day;
 }
   OMI_ORBIT_FILE;
 
@@ -849,20 +846,21 @@ static RC setup_automatic_reference(ENGINE_CONTEXT *pEngineContext, void *respon
   return rc;
 }
 
-// Create a datetime from a date given as year/month/day, and a number
-// of seconds since 00:00:00 on that day.
-static void add_seconds_in_day(int year, int month, int day, double seconds, struct tm *result, int *ms) {
-  struct tm start_day = { .tm_sec = 0,
-                          .tm_min = 0,
-                          .tm_hour = 0,
-                          .tm_mday = day,
-                          .tm_mon = month-1, // month since jan (-> 0-11)
-                          .tm_year = year - 1900, // year since 1900
-                          .tm_isdst = 0 };
+// Convert TAI number of seconds since 01/01/1993 00:00:00 to a UTC datetime.  We use the
+// number of UTC seconds in the current day to get the number of UTC
+// leap seconds we have to subtract from the TAI value.
+static void tai_to_utc(double tai, float utc_seconds_in_day, struct tm *result, int *ms) {
+  static struct tm start_tai = { .tm_sec = 0,
+                                 .tm_min = 0,
+                                 .tm_hour = 0,
+                                 .tm_mday = 1,
+                                 .tm_mon = 0, // month since jan (-> 0-11)
+                                 .tm_year = 93, // year since 1900
+                                 .tm_isdst = 0 };
 
   // get seconds since epoch of 1/1/1993 00:00:00 (GMT)
 #ifndef _WIN32
-  time_t time_epoch = timegm(&start_day);
+  time_t time_epoch = timegm(&start_tai);
 #else
   // get UTC time on MinGW32:
 
@@ -870,7 +868,7 @@ static void add_seconds_in_day(int year, int month, int day, double seconds, str
   char *timezone_old = getenv("TZ");
   // set timezone to UTC for mktime
   putenv("TZ=UTC");
-  time_t time_epoch = mktime(&start_day);
+  time_t time_epoch = mktime(&start_tai);
   if (timezone_old != NULL) {
     // restore environment
     putenv(timezone_old);
@@ -880,9 +878,31 @@ static void add_seconds_in_day(int year, int month, int day, double seconds, str
   }
 #endif
 
-  int i_seconds = floor(seconds); // seconds since 1/1/1993 (GMT)
+  // for observations after the leap second (for example the last observation
+  // from 2012/06/30, 23:59:60), the number of seconds in the UTC day can be
+  // higher than 24*3600.
+  int extrasecs = 0;
+  if(utc_seconds_in_day >= (24*3600-1) ) {
+    // take the integer number of seconds past 23:59:59
+    extrasecs = floor(utc_seconds_in_day - (24*3600-1)) ;
+  }
+  utc_seconds_in_day -= extrasecs;
+  tai -= extrasecs;
+
+  // the number of leap seconds until now can be obtained from the difference
+  // of the number of TAI seconds in this day and UTC  seconds in this day:
+  // difference of tai and utc_seconds_in_day modulo 24*3600
+  long int leap_seconds = lround(tai -utc_seconds_in_day) % (24*3600);
+  if(leap_seconds < 0)
+    leap_seconds += 24*3600;
+
+  double utc_seconds = tai - leap_seconds; // subtract leap seconds to get UTC seconds since 1/1/1993
+  long int i_seconds = floor(utc_seconds);
+
+  // add integer number of "UTC seconds" since 1/1/1993 to the epoch time
   time_epoch += i_seconds;
 
+  // convert back to a datetime
 #ifndef _WIN32
   gmtime_r(&time_epoch, result);
 #else
@@ -890,9 +910,13 @@ static void add_seconds_in_day(int year, int month, int day, double seconds, str
   *result = *time;
 #endif
 
+  // add seconds past 23:59:59
+  result->tm_sec += extrasecs;
+
   if (ms != NULL) {
-    *ms = (int)(1000*(seconds - i_seconds));
+    *ms = (int)(1000*(utc_seconds - i_seconds));
   }
+
 }
 
 // -----------------------------------------------------------------------------
@@ -1309,8 +1333,6 @@ RC OMI_Set(ENGINE_CONTEXT *pEngineContext)
 
       omiTotalRecordNumber+=current_orbit_file.nMeasurements;
 
-      OMI_get_orbit_date(&current_orbit_file.year, &current_orbit_file.month, &current_orbit_file.day);
-
       NDET = current_orbit_file.nWavel;
     }
   else
@@ -1404,14 +1426,8 @@ RC OMI_Read(ENGINE_CONTEXT *pEngineContext,int recordNo)
           pRecord->omi.omiXtrackQF = pGeo->xtrackQualityFlags[recordNo-1];
           
           struct tm time_record;
-          // use UTC date from orbit file and "secondsInDay" to get UTC time of current measurement
-          // this will give us the correct UTC time, except for those orbits during which a leap
-          // second occurred. In those orbits, after midnight the obtained time will be 1 second
-          // ahead of the correct UTC time value
-          add_seconds_in_day(current_orbit_file.year, current_orbit_file.month, current_orbit_file.day, pGeo->secondsInDay[indexMeasurement],&time_record,NULL);
-
-          // get milliseconds from TAI value "time", which is more accurate (and differs from UTC by an integer number of seconds)
-          OMI_ms = (int)(1000*(pGeo->time[indexMeasurement] - floor(pGeo->time[indexMeasurement])));
+          // use TAI-93 "time" and UTC "secondsInDay" to get UTC date-time of current measurement:
+          tai_to_utc(pGeo->time[indexMeasurement], pGeo->secondsInDay[indexMeasurement], &time_record, &OMI_ms);
 
           SHORT_DATE* pDate = &pRecord->present_day;
           struct time *pTime = &pRecord->present_time;
