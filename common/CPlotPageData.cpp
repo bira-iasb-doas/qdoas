@@ -18,11 +18,14 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
 
+#include <stdio.h>
+#include <stdlib.h>
 #include "CPlotPageData.h"
 
 
-CPlotPageData::CPlotPageData(int pageNumber) :
-  m_pageNumber(pageNumber)
+CPlotPageData::CPlotPageData(int pageNumber,int pageType) :
+  m_pageNumber(pageNumber),
+  m_pageType(pageType)
 {
   // default tag
   m_tag.sprintf("Tag-%d", pageNumber);
@@ -39,9 +42,9 @@ int CPlotPageData::pageNumber(void) const
 }
 
 int CPlotPageData::size(void) const
-{
-  return m_dataSets.size();
-}
+{                   
+  return (m_pageType==PLOTPAGE_DATASET)?m_dataSets.size():m_dataImages.size();
+}       
 
 const QString& CPlotPageData::title(void) const
 {
@@ -51,7 +54,12 @@ const QString& CPlotPageData::title(void) const
 const QString& CPlotPageData::tag(void) const
 {
   return m_tag;
-}
+}   
+
+int CPlotPageData::type(void) const
+{
+	  return m_pageType;
+}  
 
 RefCountConstPtr<CPlotDataSet> CPlotPageData::dataSet(int index) const
 {
@@ -59,6 +67,14 @@ RefCountConstPtr<CPlotDataSet> CPlotPageData::dataSet(int index) const
     return RefCountConstPtr<CPlotDataSet>();
 
   return m_dataSets.at(index);
+}
+
+RefCountConstPtr<CPlotImage> CPlotPageData::dataImage(int index) const
+{
+  if (index < 0 || index > m_dataImages.size())
+    return RefCountConstPtr<CPlotImage>();
+
+  return m_dataImages.at(index);
 }
 
 void CPlotPageData::setTitle(const QString &title)
@@ -75,7 +91,16 @@ void CPlotPageData::addPlotDataSet(const CPlotDataSet *dataSet)
 {
   // page takes ownership responsibility, which means it is safe
   // to wrap it in a reference counting pointer
-
+  
   m_dataSets.push_back(RefCountConstPtr<CPlotDataSet>(dataSet));
 }
+
+void CPlotPageData::addPlotImage(const CPlotImage *image)
+{
+  // page takes ownership responsibility, which means it is safe
+  // to wrap it in a reference counting pointer
+
+  m_dataImages.push_back(RefCountConstPtr<CPlotImage>(image));
+}         
+
 

@@ -106,7 +106,7 @@ void CQdoasEngineController::notifyEndOfRecords(void)
   emit signalCurrentRecordChanged(m_currentRecord, 1);
 }
 
-void CQdoasEngineController::notifyPlotData(QList<SPlotData> &plotDataList, QList<STitleTag> &titleList)
+void CQdoasEngineController::notifyPlotData(QList<SPlotData> &plotDataList, QList<STitleTag> &titleList, QList<SPlotImage> &plotImageList)
 {
   // the controller takes the data in plotDataList and titleList
   // and organises the data-sets into a set of pages. Each page is
@@ -114,21 +114,30 @@ void CQdoasEngineController::notifyPlotData(QList<SPlotData> &plotDataList, QLis
 
   std::map<int,CPlotPageData*> pageMap;
   std::map<int,CPlotPageData*>::iterator mIt;
-  int pageNo;
-
+  int pageNo;  
+  
+  {
+  	FILE *fp;
+  	fp=fopen("toto.dat","a+t");
+  	fprintf(fp,"CQdoasEngineController::notifyPlotData\n");
+  	fclose(fp);
+  }
+              
+  
   while (!plotDataList.isEmpty()) {
     // existing page?
-    pageNo = plotDataList.front().page;
+    pageNo = plotDataList.front().page;  
 
     mIt = pageMap.find(pageNo);
     if (mIt == pageMap.end()) {
       // need a new page
-      CPlotPageData *newPage = new CPlotPageData(pageNo);
-      if (plotDataList.front().data != NULL)
+      CPlotPageData *newPage = new CPlotPageData(pageNo,PLOTPAGE_DATASET);   
+
+      if (plotDataList.front().data != NULL) 
 	newPage->addPlotDataSet(plotDataList.front().data);
       pageMap.insert(std::map<int,CPlotPageData*>::value_type(pageNo, newPage));
     }
-    else {
+    else {     
       // exists
       if (plotDataList.front().data != NULL)
 	(mIt->second)->addPlotDataSet(plotDataList.front().data);
@@ -138,6 +147,37 @@ void CQdoasEngineController::notifyPlotData(QList<SPlotData> &plotDataList, QLis
 
   // built a map of pages and emptied the plotDataList list (argument).
 
+  while (!plotImageList.isEmpty()) 
+   {
+    // existing page?
+    pageNo = plotImageList.front().page;   
+    
+    mIt = pageMap.find(pageNo);
+    if (mIt == pageMap.end()) 
+     {
+      // need a new page
+      CPlotPageData *newPage = new CPlotPageData(pageNo,PLOTPAGE_IMAGE);  
+      CPlotImage myImage=*plotImageList.front().plotImage;   
+      QString	 str=myImage.GetFile();
+      QString titleStr=myImage.GetTitle();  
+      
+      if (plotImageList.front().plotImage != NULL) 
+       {
+        newPage->addPlotImage(plotImageList.front().plotImage);
+        newPage->setTitle(titleStr); 
+        newPage->setTag(titleStr); 
+       }
+          pageMap.insert(std::map<int,CPlotPageData*>::value_type(pageNo, newPage));
+     }
+    else 
+     {      
+     // exists
+     if (plotImageList.front().plotImage != NULL)
+      (mIt->second)->addPlotImage(plotImageList.front().plotImage);
+     }
+    plotImageList.pop_front();  
+  }
+  
   // set page titles and tags if specified ... emptying the list as we go
   while (!titleList.isEmpty()) {
     mIt = pageMap.find(titleList.front().page);
@@ -146,7 +186,10 @@ void CQdoasEngineController::notifyPlotData(QList<SPlotData> &plotDataList, QLis
       (mIt->second)->setTag(titleList.front().tag);
     }
     titleList.pop_front();
+
+   
   }
+  
 
   // shift the items in the pageMap to a QList for cheap and safe dispatch.
 

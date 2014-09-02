@@ -87,23 +87,32 @@ CEngineResponseVisual::~CEngineResponseVisual()
     delete m_plotDataList.front().data;
     m_plotDataList.pop_front();
   }
+  
+  while (!m_plotImageList.isEmpty()) {
+    m_plotImageList.pop_front();
+  }  
 }
 
 void CEngineResponseVisual::process(CEngineController *engineController)
 {
   // consider the error messages first - if fatal stop here
   if (processErrors(engineController))
-    return;
-
-  if (!m_cellList.isEmpty() || !m_plotDataList.isEmpty()) {
+    return;     
+    
+  if (!m_cellList.isEmpty() || !m_plotDataList.isEmpty() || !m_plotImageList.isEmpty()) {  
     engineController->notifyTableData(m_cellList);
-    engineController->notifyPlotData(m_plotDataList, m_titleList);
-  }
+    engineController->notifyPlotData(m_plotDataList, m_titleList, m_plotImageList);
+  }                         
 }
 
 void CEngineResponseVisual::addDataSet(int pageNumber, const CPlotDataSet *dataSet)
-{
+{                    
   m_plotDataList.push_back(SPlotData(pageNumber, dataSet));
+}        
+
+void CEngineResponseVisual::addImage(int pageNumber, const CPlotImage *plotImage)
+{ 
+  m_plotImageList.push_back(SPlotImage(pageNumber, plotImage));
 }
 
 void CEngineResponseVisual::addPageTitleAndTag(int pageNumber, const QString &title, const QString &tag)
@@ -134,10 +143,10 @@ void CEngineResponseBeginAccessFile::process(CEngineController *engineController
   // consider the error messages first - if fatal stop here
   if (processErrors(engineController))
     return;
-
-  if (!m_cellList.isEmpty() || !m_plotDataList.isEmpty()) {
+    
+  if (!m_cellList.isEmpty() || !m_plotDataList.isEmpty() || !m_plotImageList.isEmpty()) {
     engineController->notifyTableData(m_cellList);
-    engineController->notifyPlotData(m_plotDataList, m_titleList);
+    engineController->notifyPlotData(m_plotDataList, m_titleList, m_plotImageList);
   }
 
 // QFile file("qdoas.dbg");
@@ -181,8 +190,8 @@ void CEngineResponseSpecificRecord::process(CEngineController *engineController)
 {
   // consider the error messages first - if fatal stop here
   if (processErrors(engineController))
-    return;
-
+    return;        
+    
   if (m_recordNumber <= 0) {    // 20090113 Caroline : If the record number is -1, do not stop the automatic process
     // EOF
     engineController->notifyEndOfRecords();
@@ -190,7 +199,7 @@ void CEngineResponseSpecificRecord::process(CEngineController *engineController)
   else if (m_recordNumber > 0) {
     // display ... table data MUST be before plot data
     engineController->notifyTableData(m_cellList);
-    engineController->notifyPlotData(m_plotDataList, m_titleList);
+    engineController->notifyPlotData(m_plotDataList, m_titleList, m_plotImageList);
 
     engineController->notifyCurrentRecord(m_recordNumber);
   }

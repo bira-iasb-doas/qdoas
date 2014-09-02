@@ -13,25 +13,25 @@ CConvEngineController::~CConvEngineController()
 {
 }
 
-void CConvEngineController::notifyPlotData(QList<SPlotData> &plotDataList, QList<STitleTag> &titleList)
+void CConvEngineController::notifyPlotData(QList<SPlotData> &plotDataList, QList<STitleTag> &titleList,QList<SPlotImage> &plotImageList)
 {
   // the controller takes the data in plotDataList and titleList
   // and organises the data-sets into a single pages. The page is
-  // then (safely) dispatched.
+  // then (safely) dispatched.            
 
   if (!plotDataList.isEmpty()) {
 
     // create a page ... give it page number 0
-    CPlotPageData *plotPage = new CPlotPageData(0);
+    CPlotPageData *plotPage = new CPlotPageData(0,PLOTPAGE_DATASET);
     
-    while (!plotDataList.isEmpty()) {
+    while (!plotDataList.isEmpty()) {                      
       plotPage->addPlotDataSet(plotDataList.front().data);
       plotDataList.pop_front();
     }
 
     // built a page and emptied the plotDataList list (argument).
     
-    if (!titleList.isEmpty()) {
+    if (!titleList.isEmpty()) {            
       // take the first title ...
       plotPage->setTitle(titleList.front().title);
       plotPage->setTag(titleList.front().tag);

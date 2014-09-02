@@ -1496,6 +1496,7 @@ RC SCIA_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle);
 
 RC   CCD_LoadInstrumental(ENGINE_CONTEXT *pEngineContext);
 void CCD_ResetInstrumental(CCD *pCCD);
+char *CCD_GetImageFile(INDEX indexImage);
 
 typedef struct _TOldFlags
  {

@@ -435,16 +435,6 @@ void mediateRequestPlotSpectra(ENGINE_CONTEXT *pEngineContext,void *responseHand
        mediateResponseLabelPage(plotPageDarkCurrent, fileName, tmpString, responseHandle);
       }
 
-     if ((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_CCD_EEV) && (strlen(pInstrumental->imagePath)>0) && (pRecord->ccd.indexImage!=ITEM_NONE))
-      {
-       sprintf(tmpString,"Camera picture (%d/%d)",pEngineContext->indexRecord,pEngineContext->recordNumber);
-
-       mediateAllocateAndSetPlotData(&spectrumData, "Camera picture",pBuffers->lambda, pBuffers->spectrum, NDET, Line);
-       mediateResponsePlotData(plotPageImage, &spectrumData, 1, Spectrum, forceAutoScale, "Camera picture", "Wavelength (nm)", "Counts", responseHandle);
-       mediateReleasePlotData(&spectrumData);
-       mediateResponseLabelPage(plotPageImage, fileName, tmpString, responseHandle);
-      }
-
      if (pBuffers->sigmaSpec!=NULL)
       {
        sprintf(tmpString,"Error (%d/%d)",pEngineContext->indexRecord,pEngineContext->recordNumber);
@@ -476,6 +466,13 @@ void mediateRequestPlotSpectra(ENGINE_CONTEXT *pEngineContext,void *responseHand
        mediateReleasePlotData(&spectrumData);
        mediateResponseLabelPage(plotPageSpecMax, fileName, tmpString, responseHandle);
       }
+      
+    if ((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_CCD_EEV) && (strlen(pInstrumental->imagePath)>0))
+     {     
+     	sprintf(tmpString,"Sky picture (%d/%d)",pEngineContext->indexRecord,pEngineContext->recordNumber);
+      mediateResponsePlotImage(plotPageImage,(pRecord->ccd.indexImage!=ITEM_NONE)?CCD_GetImageFile(pRecord->ccd.indexImage):"./no-image-available.jpg","Sky picture",responseHandle);   
+      mediateResponseLabelPage(plotPageImage, fileName, tmpString, responseHandle);
+     }          
     }
 
    if (pSpectra->displaySpectraFlag && pSpectra->displayDataFlag)
@@ -2048,7 +2045,10 @@ int mediateRequestNextMatchingSpectrum(ENGINE_CONTEXT *pEngineContext,void *resp
 
    pProject=&pEngineContext->project;
    pRecord=&pEngineContext->recordInfo;
-   outputFlag=(!pEngineContext->project.asciiResults.successFlag && (((THRD_id==THREAD_TYPE_KURUCZ) && pProject->asciiResults.calibFlag) || ((THRD_id==THREAD_TYPE_ANALYSIS)) && pProject->asciiResults.analysisFlag))?1:0;
+   outputFlag=(!pEngineContext->project.asciiResults.successFlag && 
+   
+    (((THRD_id==THREAD_TYPE_KURUCZ) && pProject->asciiResults.calibFlag) || 
+     ((THRD_id==THREAD_TYPE_ANALYSIS) && pProject->asciiResults.analysisFlag)))?1:0;
 
    inc=1;
    geoFlag=1;

@@ -35,7 +35,7 @@ static const char *mediateConvolutionTypesStr[CONVOLUTION_TYPE_MAX]=
 
 static const char *mediateConvolutionFileExt[CONVOLUTION_TYPE_MAX]=
    {
-    "_none",                                                                      // CONVOLUTION_TYPE_NONE
+    "_none",                                                                     // CONVOLUTION_TYPE_NONE
     "_std",                                                                       // CONVOLUTION_TYPE_STANDARD
     "_i0",                                                                        // CONVOLUTION_TYPE_I0_CORRECTION
   //  "_ring"                         // CONVOLUTION_TYPE_RING
@@ -444,8 +444,8 @@ RC mediateConvolutionCalculate(void *engineContext,void *responseHandle)
       if ((lowFilterType==PRJCT_FILTER_TYPE_NONE) && (highFilterType==PRJCT_FILTER_TYPE_NONE))
        sprintf(pageTitle,(pEngineContext->convolutionType!=CONVOLUTION_TYPE_NONE)?"Spectrum after convolution":"Spectrum after interpolation");
       else
-       sprintf(pageTitle,(pEngineContext->convolutionType!=CONVOLUTION_TYPE_NONE)?"Spectrum after convolution and filtering":"Spectrum after interpolation and filtering");
-
+       sprintf(pageTitle,(pEngineContext->convolutionType!=CONVOLUTION_TYPE_NONE)?"Spectrum after convolution and filtering":"Spectrum after interpolation and filtering");       
+       
       if (!rc && dispConv)
        {
        	plot_data_t spectrumData[2];

@@ -66,7 +66,7 @@ win32 {
 
   HDFEOS_INC_PATH = D:/My_Libraries/HDF/hdfeos2_18/hdfeos2.18/hdfeos/include D:/My_Libraries/HDF/hdfeos5_1_14/hdfeos5.1.14/hdfeos5/include
   HDFEOS_LIB_PATH = D:/My_Applications/QDoas/hdfeos
-  HDF_INC_PATH    = D:/My_Libraries/HDF/hdf-4.2.8/Src/hdf-4.2.8/hdf/src D:/My_Libraries/HDF/hdf5-1.9.144/src D:/My_Libraries/HDF/hdf5-1.9.144/hl/src
+  HDF_INC_PATH    = D:/My_Libraries/HDF/hdf-4.2.8/include D:/My_Libraries/HDF/hdf5-1.9.144/src D:/My_Libraries/HDF/hdf5-1.9.144/hl/src
 
   CODE_GENERATION = release # Override because debug is broken
 }

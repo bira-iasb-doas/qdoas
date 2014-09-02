@@ -30,17 +30,10 @@ void CEngineController::notifyCurrentRecord(int recordNumber)
 
 void CEngineController::notifyEndOfRecords(void)
 {
-// QFile file("qdoas.dbg");
-// if (file.open(QIODevice::Append | QIODevice::Text)!=0)
-//  {
-//   QTextStream out(&file);
-//   out << "   CEngineController::notifyCurrentRecord " <<"\n";
-//   file.close();
-//  }
 }
 
-void CEngineController::notifyPlotData(QList<SPlotData> &plotDataList, QList<STitleTag> &titleList)
-{
+void CEngineController::notifyPlotData(QList<SPlotData> &plotDataList, QList<STitleTag> &titleList,QList<SPlotImage> &plotImageList)
+{                    
 }
 
 void CEngineController::notifyTableData(QList<SCell> &cellList)

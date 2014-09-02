@@ -52,7 +52,7 @@ Q_OBJECT
   virtual void notifyReadyToNavigateRecords(const QString &filename, int numberOfRecords);
   virtual void notifyCurrentRecord(int recordNumber);
   virtual void notifyEndOfRecords(void);
-  virtual void notifyPlotData(QList<SPlotData> &plotDataList, QList<STitleTag> &titleList);
+  virtual void notifyPlotData(QList<SPlotData> &plotDataList, QList<STitleTag> &titleList,QList<SPlotImage> &plotDataImage);
   virtual void notifyTableData(QList<SCell> &cellList);
 
   virtual void notifyErrorMessages(int highestErrorLevel, const QList<CEngineError> &errorMessages);
@@ -85,7 +85,7 @@ Q_OBJECT
   void signalCurrentFileChanged(const QString &filename);
   void signalCurrentRecordChanged(int recordNumber, int firstMiddleLast);
 
-  void signalPlotPages(const QList< RefCountConstPtr<CPlotPageData> > &pageList);
+  void signalPlotPages(const QList< RefCountConstPtr<CPlotPageData> > &pageList);  
   void signalTablePages(const QList< RefCountConstPtr<CTablePageData> > &pageList);
 
   void signalErrorMessages(int highestErrorLevel, const QString &messages);

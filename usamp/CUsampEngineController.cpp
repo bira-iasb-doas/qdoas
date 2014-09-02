@@ -13,7 +13,7 @@ CUsampEngineController::~CUsampEngineController()
 {
 }
 
-void CUsampEngineController::notifyPlotData(QList<SPlotData> &plotDataList, QList<STitleTag> &titleList)
+void CUsampEngineController::notifyPlotData(QList<SPlotData> &plotDataList, QList<STitleTag> &titleList,QList<SPlotImage> &plotDataImage)
 {
   // the controller takes the data in plotDataList and titleList
   // and organises the data-sets into a single pages. The page is
@@ -22,7 +22,7 @@ void CUsampEngineController::notifyPlotData(QList<SPlotData> &plotDataList, QLis
   if (!plotDataList.isEmpty()) {
 
     // create a page ... give it page number 0
-    CPlotPageData *plotPage = new CPlotPageData(0);
+    CPlotPageData *plotPage = new CPlotPageData(0,PLOTPAGE_DATASET);
     
     while (!plotDataList.isEmpty()) {
       plotPage->addPlotDataSet(plotDataList.front().data);

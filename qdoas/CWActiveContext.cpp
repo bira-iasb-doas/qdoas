@@ -16,7 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
-
+                    
 
 #include <QResizeEvent>
 #include <QPalette>
@@ -24,7 +24,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QBrush>
 #include <QList>
 
-#include "CWEditor.h"
+#include "CWEditor.h"                
 #include "CWActiveContext.h"
 #include "CWPlotPage.h"
 #include "CWPlotRegion.h"
@@ -441,7 +441,6 @@ void CWActiveContext::slotAcceptOk(bool canDoOk)
 
 void CWActiveContext::slotPlotPages(const QList< RefCountConstPtr<CPlotPageData> > &pageList)
 {
-
   int pageNumber;
 
   int activePageNumber = m_plotRegion->pageDisplayed();
@@ -449,26 +448,29 @@ void CWActiveContext::slotPlotPages(const QList< RefCountConstPtr<CPlotPageData>
 
   // adjust the number of tabs
   int nPages = pageList.count();
-  int index = m_graphTab->count();
-
-  while (index > nPages)
-    m_graphTab->removeTab(--index);
-  while (nPages > index)
-    index = m_graphTab->addTab(QString()) + 1;
-
+  int index = m_graphTab->count();  
+   while (index > nPages)
+      m_graphTab->removeTab(--index); 
+      
+      
+  while (pageList.count() > index)
+      index = m_graphTab->addTab(QString()) + 1;
+      
   // build a list of pages that are to be retained (those in pageList that are 'empty')
   // and reset the tabs...
-  index = 0;
+  index = 0; 
   QList<int> retainedList;
-  QList< RefCountConstPtr<CPlotPageData> >::const_iterator it = pageList.begin();
+  QList< RefCountConstPtr<CPlotPageData> >::const_iterator it = pageList.begin();       
+  
   while (it !=  pageList.end()) {
-    pageNumber = (*it)->pageNumber();
-
+    pageNumber = (*it)->pageNumber(); 
+    
     if ((*it)->isEmpty()) {
       // if must already exist for this to be meaningful ...
       QString tmpTag;
       if (m_plotRegion->pageExists(pageNumber, tmpTag)) {
-	retainedList.push_back(pageNumber);
+	retainedList.push_back(pageNumber);      
+	
       }
       m_graphTab->setTabText(index, tmpTag);
     }
@@ -487,18 +489,19 @@ void CWActiveContext::slotPlotPages(const QList< RefCountConstPtr<CPlotPageData>
   }
 
   m_plotRegion->removePagesExcept(retainedList);
-
+  
   // add the additional pages (non empty)
   it = pageList.begin();
   while (it != pageList.end()) {
     pageNumber = (*it)->pageNumber();
-    if (!(*it)->isEmpty()) {
-      m_plotRegion->addPage(*it);
+    if (!(*it)->isEmpty()) {  
+      m_plotRegion->addPage(*it);  
     }
     ++it;
   }
 
-  if (m_graphTab->count()) {
+  if (m_graphTab->count()) {  
+  	
     if (!m_activeEditor)
       m_graphTab->show();
     if (m_graphTab->currentIndex() == activeTabIndex) {
@@ -509,11 +512,11 @@ void CWActiveContext::slotPlotPages(const QList< RefCountConstPtr<CPlotPageData>
     }
   }
   else
-    m_graphTab->hide();
-}
+    m_graphTab->hide(); 
+}     
 
 void CWActiveContext::slotCurrentGraphTabChanged(int index)
-{
+{                                
   int pageNumber = (index == -1) ? -1 : m_graphTab->tabData(index).toInt();
 
   m_plotRegion->displayPage(pageNumber);
@@ -523,7 +526,7 @@ void CWActiveContext::slotCurrentGraphTabChanged(int index)
   if (!m_activeEditor)
     m_title->setText(m_graphTitleStr);
 
-  emit signalActivePageChanged(pageNumber);
+  emit signalActivePageChanged(pageNumber); 
 }
 
 void CWActiveContext::slotCurrentActiveTabChanged(int index)

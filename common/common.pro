@@ -15,6 +15,7 @@ SOURCES       = CConfigHandler.cpp \
 		CPathMgr.cpp \
 		CPathSubHandler.cpp \
 		CPlotDataSet.cpp \
+		CPlotImage.cpp \
 		CPlotPageData.cpp \
 		CPlotProperties.cpp \
 		CScaleControl.cpp \
@@ -51,4 +52,4 @@ win32 {
   LIBS         += -L$$CODA_LIB_PATH -lcoda -L$$HDFEOS_LIB_PATH -lhdf -L$$HDFEOS_LIB_PATH -lmfhdf -L$$HDFEOS_LIB_PATH -lhdf5 -L$$HDFEOS_LIB_PATH -lhdfeos -L$$HDFEOS_LIB_PATH -lhdfeos5 -lm
 
   CONFIG      += windows
-}                                        
+}

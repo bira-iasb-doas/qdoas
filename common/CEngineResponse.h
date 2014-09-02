@@ -25,6 +25,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QString>
 
 #include "CPlotDataSet.h"
+#include "CPlotImage.h"
 #include "CTablePageData.h"
 #include "CEngineError.h"
 #include "mediate_types.h"
@@ -90,6 +91,7 @@ class CEngineResponseVisual : public CEngineResponse
   virtual void process(CEngineController *engineController);
 
   void addDataSet(int pageNumber, const CPlotDataSet *dataSet);
+  void addImage(int pageNumber,const CPlotImage *plotImage);
   void addPageTitleAndTag(int pageNumber, const QString &title, const QString &tag);
   void addCell(int pageNumber, int row, int col, const QVariant &data);
 
@@ -97,6 +99,7 @@ class CEngineResponseVisual : public CEngineResponse
   QList<SPlotData> m_plotDataList;
   QList<STitleTag> m_titleList;
   QList<SCell> m_cellList;
+  QList<SPlotImage> m_plotImageList;
 };
 
 //------------------------------------------------------------

@@ -30,7 +30,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QFileDialog>
 #include <QCloseEvent>
 #include <QApplication>
-#include <QLocale>
+#include <QLocale>    
 
 #include "CWMain.h"
 #include "CWProjectTree.h"
@@ -53,12 +53,12 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "mediate_types.h"
 
-#include "debugutil.h"
+#include "debugutil.h"   
 
 CWMain::CWMain(QWidget *parent) :
   QFrame(parent),
   m_logToFile(false)
-{
+{     
 	// ----------------------------------------------------------------------------
 
 	// to avoid that a thousands comma separator (QT 4.7.3)
@@ -286,8 +286,8 @@ CWMain::CWMain(QWidget *parent) :
 
   // plot data transfer
   connect(m_controller, SIGNAL(signalPlotPages(const QList< RefCountConstPtr<CPlotPageData> >&)),
-          m_activeContext, SLOT(slotPlotPages(const QList< RefCountConstPtr<CPlotPageData> >&)));
-
+          m_activeContext, SLOT(slotPlotPages(const QList< RefCountConstPtr<CPlotPageData> >&)));          
+          
   // table data transfer
   connect(m_controller, SIGNAL(signalTablePages(const QList< RefCountConstPtr<CTablePageData> > &)),
           m_tableRegion, SLOT(slotTablePages(const QList< RefCountConstPtr<CTablePageData> > &)));

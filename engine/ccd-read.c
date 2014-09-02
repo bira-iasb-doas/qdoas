@@ -204,7 +204,13 @@ void CCD_GetImageFilesList(SHORT_DATE *pFileDate,char *rootPath)
        ccdImageFilesN++;
       }
     }
+ }  
+ 
+char *CCD_GetImageFile(INDEX indexImage)   
+ {    
+ 	return (indexImage==ITEM_NONE)?NULL:ccdImageFilesList[indexImage].fileName;
  }
+ 
 
 INDEX CCD_SearchForImage(int timestampMin,int timestampMax)
  {

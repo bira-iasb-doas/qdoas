@@ -115,6 +115,15 @@ void mediateResponsePlotData(int page,
   resp->addDataSet(page, dataSet);
 }
 
+void mediateResponsePlotImage(int page,const char *imageFile,const char *title,void *responseHandle)
+ {
+  CEngineResponseVisual *resp = static_cast<CEngineResponseVisual*>(responseHandle);
+ 
+  CPlotImage *plotImage = new CPlotImage(imageFile,title);
+
+  resp->addImage(page,plotImage);
+ }
+
 void mediateResponseCellDataDouble(int page,
 				   int row,
 				   int column,

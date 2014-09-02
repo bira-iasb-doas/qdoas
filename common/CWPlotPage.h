@@ -23,13 +23,18 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include <QFrame>
 #include <QList>
-#include <QSize>
+#include <QSize>  
+#include <QPixmap>  
+#include <QGraphicsView>   
+#include <QGraphicsScene>  
+#include <QGraphicsPixmapItem>
 
 #include <qwt_plot.h>
 #include <qwt_plot_zoomer.h>
 
 #include "CPlotProperties.h"
-#include "CPlotDataSet.h"
+#include "CPlotDataSet.h"     
+#include "CPlotImage.h"
 #include "CPlotPageData.h"
 #include "RefCountPtr.h"
 
@@ -45,9 +50,11 @@ class CWPlot : public QwtPlot
 Q_OBJECT
  public:
   CWPlot(const RefCountConstPtr<CPlotDataSet> &dataSet, CPlotProperties &plotProperties, QWidget *parent = 0);
+  CWPlot(const RefCountConstPtr<CPlotImage> &dataImage, CPlotProperties &plotProperties, QWidget *parent = 0);
   virtual ~CWPlot();
 
-  static bool getImageSaveNameAndFormat(QWidget *parent, QString &fileName, QString &saveFormat);
+  static bool getImageSaveNameAndFormat(QWidget *parent, QString &fileName, QString &saveFormat);     
+  void imageresize(QSize visibleSize,int row,int column);
 
  protected:
   virtual void contextMenuEvent(QContextMenuEvent *e);
@@ -61,8 +68,14 @@ Q_OBJECT
 
  private:
   RefCountConstPtr<CPlotDataSet> m_dataSet;
+  RefCountConstPtr<CPlotImage> m_dataImage;    
   CPlotProperties &m_plotProperties;
-  QwtPlotZoomer *m_zoomer;
+  QwtPlotZoomer *m_zoomer;   
+  int m_type;                
+	 QGraphicsView *m_dataView; 
+	 QGraphicsScene *m_dataScene;
+	 QPixmap m_dataPixmap,m_dataPixmapScaled;  
+	 QGraphicsPixmapItem *m_dataPixmapItem;
 };
 
 class CWPlotPage : public QFrame
@@ -74,7 +87,6 @@ Q_OBJECT
 	     const RefCountConstPtr<CPlotPageData> &page, QWidget *parent = 0);
   virtual ~CWPlotPage();
 
-  void addPlot(const RefCountConstPtr<CPlotDataSet> &dataSet);
   void layoutPlots(const QSize &visibleSize);
 
  public slots:
@@ -82,8 +94,10 @@ Q_OBJECT
   void slotExportAsImageAllPlots();
 
  private:
-  CPlotProperties &m_plotProperties;
-  QList<CWPlot*> m_plots;
+  CPlotProperties &m_plotProperties;  
+  int m_pageType;
+  
+  QList<CWPlot*> m_plots; 
 };
 
 #endif
