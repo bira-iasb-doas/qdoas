@@ -74,7 +74,7 @@ CWRingTabGeneral::CWRingTabGeneral(const mediate_ring_t *properties, QWidget *pa
 
   mainLayout->addLayout(fileLayout);
 
-  m_slitEdit = new CWSlitSelector(&(properties->slit), "Slit Function", this);
+  m_slitEdit = new CWSlitSelector(&(properties->slit), "Slit Function", true,this);
   mainLayout->addWidget(m_slitEdit);
 
   QHBoxLayout *tempLayout = new QHBoxLayout;

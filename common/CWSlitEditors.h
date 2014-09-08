@@ -58,7 +58,7 @@ Q_OBJECT
   QStackedLayout *m_toggleWavelengthStack;
 };
 
-//--------------------------------------------------------------------------    
+//--------------------------------------------------------------------------
 
 class CWSlitNoneEdit : public CWSlitFileBase
 {
@@ -178,16 +178,20 @@ class CWSlitApodEdit : public QFrame
 class CWSlitSelector : public QGroupBox
 {
  public:
-  CWSlitSelector(const mediate_slit_function_t *slit, const QString &title, QWidget *parent = 0);
+  CWSlitSelector(const mediate_slit_function_t *slit, const QString &title, bool noneFlag,QWidget *parent = 0);
   virtual ~CWSlitSelector();
 
   void reset(const mediate_slit_function_t *slit);
   void apply(mediate_slit_function_t *slit) const;
 
  private:
+
+  bool m_noneFlag;
+
   QComboBox *m_slitCombo;
   QStackedWidget *m_slitStack;
   // widgets for the configuration of each slit
+  CWSlitNoneEdit *m_noneEdit;
   CWSlitFileEdit *m_fileEdit;
   CWSlitGaussianEdit *m_gaussianEdit;
   CWSlitLorentzEdit *m_lorentzEdit;

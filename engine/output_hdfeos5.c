@@ -141,7 +141,7 @@ RC create_dimensions(void) {
     const char *dimname;
     hsize_t dimsize;
   };
-  
+
   struct dim swathdims[] = { { "nXtrack", nXtrack},
                              { "nCalibWindows", nCalibWindows},
                              { "nTimes", nTimes },
@@ -738,6 +738,8 @@ static enum fieldtype get_fieldtype(enum _prjctResults output_field) {
   case PRJCT_RESULTS_OMI_INDEX_ROW:
   case PRJCT_RESULTS_UAV_SERVO_BYTE_SENT:
   case PRJCT_RESULTS_UAV_SERVO_BYTE_RECEIVED:
+  case PRJCT_RESULTS_UAV_TEMPERATURE:
+  case PRJCT_RESULTS_UAV_PRESSURE:
     result = GEO;
     break;
     // Data fields:

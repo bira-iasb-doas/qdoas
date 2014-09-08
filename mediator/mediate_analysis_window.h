@@ -45,6 +45,7 @@ extern "C" {
     char residualFile[FILENAME_BUFFER_LENGTH];
     double fitMinWavelength;
     double fitMaxWavelength;
+    double resolFwhm;
     double refSzaCenter;
     double refSzaDelta;
     double refMinLongitude;

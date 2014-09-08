@@ -200,6 +200,10 @@ bool CSelectorSubHandler::start(const QString &element, const QXmlAttributes &at
     d->selected[d->nSelected] = PRJCT_RESULTS_UAV_SERVO_BYTE_SENT;
   else if (str == "servo_byte_received")
     d->selected[d->nSelected] = PRJCT_RESULTS_UAV_SERVO_BYTE_RECEIVED;
+  else if (str == "uav_temperature")
+    d->selected[d->nSelected] = PRJCT_RESULTS_UAV_TEMPERATURE;
+  else if (str == "uav_pressure")
+    d->selected[d->nSelected] = PRJCT_RESULTS_UAV_PRESSURE;
   else if (str == "precalculated_fluxes")
     d->selected[d->nSelected] = PRJCT_RESULTS_PRECALCULATED_FLUXES;
   else

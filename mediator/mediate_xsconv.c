@@ -444,8 +444,8 @@ RC mediateConvolutionCalculate(void *engineContext,void *responseHandle)
       if ((lowFilterType==PRJCT_FILTER_TYPE_NONE) && (highFilterType==PRJCT_FILTER_TYPE_NONE))
        sprintf(pageTitle,(pEngineContext->convolutionType!=CONVOLUTION_TYPE_NONE)?"Spectrum after convolution":"Spectrum after interpolation");
       else
-       sprintf(pageTitle,(pEngineContext->convolutionType!=CONVOLUTION_TYPE_NONE)?"Spectrum after convolution and filtering":"Spectrum after interpolation and filtering");       
-       
+       sprintf(pageTitle,(pEngineContext->convolutionType!=CONVOLUTION_TYPE_NONE)?"Spectrum after convolution and filtering":"Spectrum after interpolation and filtering");
+
       if (!rc && dispConv)
        {
        	plot_data_t spectrumData[2];
@@ -698,7 +698,7 @@ RC mediateRequestRing(void *engineContext,mediate_ring_t *pMediateRing,void *res
 
   if (!strlen(pEngineContext->calibrationFile))
    rc=ERROR_SetLast("mediateRequestRing",ERROR_TYPE_FATAL,ERROR_ID_MEDIATE,"Calibration","Calibration file name is missing");
-  else if (pEngineContext->convolutionType!=CONVOLUTION_TYPE_NONE)
+  else
    {
    	pSlitConv=&pEngineContext->slitConv;
 
@@ -875,7 +875,7 @@ RC mediateRingCalculate(void *engineContext,void *responseHandle)
 
   // Load slit function from file or pre-calculate the slit function
 
-           !(rc=XSCONV_LoadSlitFunction(&xsSlit,&xsSlit2,&pEngineContext->slitConv,&slitParam,&slitType)) &&
+          ((slitType==SLIT_TYPE_NONE) || !(rc=XSCONV_LoadSlitFunction(&xsSlit,&xsSlit2,&pEngineContext->slitConv,&slitParam,&slitType))) &&
 
   // Load solar spectrum in the range of wavelengths covered by the end wavelength scale corrected by the slit function
 
@@ -894,8 +894,8 @@ RC mediateRingCalculate(void *engineContext,void *responseHandle)
     for (i=0;i<xsSolarConv.nl;i++)
      xsSolarConv.matrix[0][i]=xsSolar.matrix[0][i];
 
-     pSlit=&xsSlit;
-     pSlit2=&xsSlit2;
+    pSlit=&xsSlit;
+    pSlit2=&xsSlit2;
 
     solarLambda=xsSolarConv.matrix[0];
     solarVector=xsSolarConv.matrix[1];
@@ -904,50 +904,58 @@ RC mediateRingCalculate(void *engineContext,void *responseHandle)
 
     wveDptFlag=pEngineContext->slitConv.slitWveDptFlag;
 
-   	if ((slitType!=SLIT_TYPE_FILE) || (pSlit->nc==2))
-   	 {
-      slitLambda=pSlit->matrix[0];
-      slitVector=pSlit->matrix[1];
-      slitDeriv2=pSlit->deriv2[1];
-      nslit=pSlit->nl;
+    if (slitType!=SLIT_TYPE_NONE)
+     {
+   	  if ((slitType!=SLIT_TYPE_FILE) || (pSlit->nc==2))
+   	   {
+        slitLambda=pSlit->matrix[0];
+        slitVector=pSlit->matrix[1];
+        slitDeriv2=pSlit->deriv2[1];
+        nslit=pSlit->nl;
 
-      if (wveDptFlag)
-       {
-       	// Make a backup of the slit function
-
-        if ((rc=MATRIX_Allocate(&slitTmp,pSlit->nl,2,0,0,1,"XSCONV_TypeStandard"))!=0)
-         goto EndRing;
-        else
+        if (wveDptFlag)
          {
-         	memcpy(slitTmp.matrix[0],slitLambda,sizeof(double)*pSlit->nl);
-         	memcpy(slitTmp.matrix[1],slitVector,sizeof(double)*pSlit->nl);
-         	memcpy(slitTmp.deriv2[1],slitDeriv2,sizeof(double)*pSlit->nl);
+         	// Make a backup of the slit function
+
+          if ((rc=MATRIX_Allocate(&slitTmp,pSlit->nl,2,0,0,1,"XSCONV_TypeStandard"))!=0)
+           goto EndRing;
+          else
+           {
+           	memcpy(slitTmp.matrix[0],slitLambda,sizeof(double)*pSlit->nl);
+           	memcpy(slitTmp.matrix[1],slitVector,sizeof(double)*pSlit->nl);
+           	memcpy(slitTmp.deriv2[1],slitDeriv2,sizeof(double)*pSlit->nl);
+           }
          }
        }
+      else if ((rc=MATRIX_Allocate(&slitTmp,pSlit->nl-1,2,0,0,1,"XSCONV_TypeStandard"))!=0)
+       goto EndRing;
+      else
+       {
+        slitLambda=slitTmp.matrix[0];
+        slitVector=slitTmp.matrix[1];
+        slitDeriv2=slitTmp.deriv2[1];
+        nslit=slitTmp.nl;
+
+        memcpy(slitTmp.matrix[0],(double *)pSlit->matrix[0]+1,sizeof(double)*(pSlit->nl-1));
+       }
+
+      if (wveDptFlag && ((slitType==SLIT_TYPE_FILE) || (slitType==SLIT_TYPE_ERF) || (slitType==SLIT_TYPE_VOIGT) || (slitType==SLIT_TYPE_AGAUSS)))
+       {
+        slitLambda2=pSlit2->matrix[0];
+        slitVector2=pSlit2->matrix[1];
+        slitDeriv22=pSlit2->deriv2[1];
+        nslit2=pSlit2->nl;
+       }
+      else
+       {
+       	slitLambda2=slitVector2=slitDeriv22=NULL;
+       	nslit2=0;
+       }
      }
-    else if ((rc=MATRIX_Allocate(&slitTmp,pSlit->nl-1,2,0,0,1,"XSCONV_TypeStandard"))!=0)
-     goto EndRing;
     else
      {
-      slitLambda=slitTmp.matrix[0];
-      slitVector=slitTmp.matrix[1];
-      slitDeriv2=slitTmp.deriv2[1];
-      nslit=slitTmp.nl;
-
-      memcpy(slitTmp.matrix[0],(double *)pSlit->matrix[0]+1,sizeof(double)*(pSlit->nl-1));
-     }
-
-    if (wveDptFlag && ((slitType==SLIT_TYPE_FILE) || (slitType==SLIT_TYPE_ERF) || (slitType==SLIT_TYPE_VOIGT) || (slitType==SLIT_TYPE_AGAUSS)))
-     {
-      slitLambda2=pSlit2->matrix[0];
-      slitVector2=pSlit2->matrix[1];
-      slitDeriv22=pSlit2->deriv2[1];
-      nslit2=pSlit2->nl;
-     }
-    else
-     {
-     	slitLambda2=slitVector2=slitDeriv22=NULL;
-     	nslit2=0;
+     	memcpy(xsSolarConv.matrix[0],xsSolar.matrix[0],sizeof(double)*xsSolar.nl);
+     	memcpy(xsSolarConv.matrix[1],xsSolar.matrix[1],sizeof(double)*xsSolar.nl);
      }
 
     ringLambda=xsRing.matrix[0];
@@ -963,7 +971,7 @@ RC mediateRingCalculate(void *engineContext,void *responseHandle)
      {
      	// Start convolving the solar spectrum
 
-      if (((rc=XSCONV_TypeStandard(&xsSolarConv,0,xsSolarConv.nl,&xsSolar,&xsSlit,&xsSlit2,&xsSolar,NULL,slitType,slitParam,slitParam2,pEngineContext->slitConv.slitWveDptFlag))!=ERROR_ID_NO) ||
+      if (((slitType!=SLIT_TYPE_NONE) && ((rc=XSCONV_TypeStandard(&xsSolarConv,0,xsSolarConv.nl,&xsSolar,&xsSlit,&xsSlit2,&xsSolar,NULL,slitType,slitParam,slitParam2,pEngineContext->slitConv.slitWveDptFlag))!=ERROR_ID_NO)) ||
           ((rc=SPLINE_Deriv2(solarLambda,solarVector,solarDeriv2,nsolar,"mediateRingCalculate"))!=0))
        goto EndRing;
 
@@ -980,31 +988,34 @@ RC mediateRingCalculate(void *engineContext,void *responseHandle)
         sumn2xsec=(double)0.;
         sumo2xsec=(double)0.;
 
-        if (wveDptFlag)
+        if (slitType!=SLIT_TYPE_NONE)
          {
-          if ((slitLambda2!=NULL) &&
-             ((rc=SPLINE_Vector(slitLambda2,slitVector2,slitDeriv22,nslit2,&lambda,&slitParam2,1,SPLINE_CUBIC,"mediateRingCalculate"))!=0))
-           goto EndRing;
-
-          if (slitType==SLIT_TYPE_FILE)
+          if (wveDptFlag)
            {
-           	for (j=0;j<slitTmp.nl;j++)
-             slitLambda[j]=slitTmp.matrix[0][j]*slitParam2;
+            if ((slitLambda2!=NULL) &&
+               ((rc=SPLINE_Vector(slitLambda2,slitVector2,slitDeriv22,nslit2,&lambda,&slitParam2,1,SPLINE_CUBIC,"mediateRingCalculate"))!=0))
+             goto EndRing;
 
-            // Recalculate second derivatives and the FWHM
+            if (slitType==SLIT_TYPE_FILE)
+             {
+             	for (j=0;j<slitTmp.nl;j++)
+               slitLambda[j]=slitTmp.matrix[0][j]*slitParam2;
 
-            if (!(rc=SPLINE_Deriv2(slitLambda,slitVector,slitDeriv2,slitTmp.nl,"mediateRingCalculate ")))
-             rc=XSCONV_GetFwhm(slitLambda,slitVector,slitDeriv2,slitTmp.nl,SLIT_TYPE_FILE,&slitParam);
+              // Recalculate second derivatives and the FWHM
+
+              if (!(rc=SPLINE_Deriv2(slitLambda,slitVector,slitDeriv2,slitTmp.nl,"mediateRingCalculate ")))
+               rc=XSCONV_GetFwhm(slitLambda,slitVector,slitDeriv2,slitTmp.nl,SLIT_TYPE_FILE,&slitParam);
+             }
+            else
+            	rc=SPLINE_Vector(slitLambda,slitVector,slitDeriv2,nslit,&lambda,&slitParam,1,SPLINE_CUBIC,"mediateRingCalculate ");
            }
-          else
-          	rc=SPLINE_Vector(slitLambda,slitVector,slitDeriv2,nslit,&lambda,&slitParam,1,SPLINE_CUBIC,"mediateRingCalculate ");
-         }
-        else if ((slitType==SLIT_TYPE_FILE) && (pSlit->nc>2))
-         {
-          for (j=0;j<slitTmp.nl;j++)
-           slitTmp.matrix[1][j]=(double)VECTOR_Table2(pSlit->matrix,pSlit->nl,pSlit->nc,slitTmp.matrix[0][j],lambda);
+          else if ((slitType==SLIT_TYPE_FILE) && (pSlit->nc>2))
+           {
+            for (j=0;j<slitTmp.nl;j++)
+             slitTmp.matrix[1][j]=(double)VECTOR_Table2(pSlit->matrix,pSlit->nl,pSlit->nc,slitTmp.matrix[0][j],lambda);
 
-          SPLINE_Deriv2(slitTmp.matrix[0],slitTmp.matrix[1],slitTmp.deriv2[1],slitTmp.nl,"mediateRingCalculate");
+            SPLINE_Deriv2(slitTmp.matrix[0],slitTmp.matrix[1],slitTmp.deriv2[1],slitTmp.nl,"mediateRingCalculate");
+           }
          }
 
         if (rc!=0)
@@ -1199,7 +1210,7 @@ RC mediateRequestUsamp(void *engineContext,mediate_usamp_t *pMediateUsamp,void *
 
   if (!strlen(pEngineContext->calibrationFile))
    rc=ERROR_SetLast("mediateRequestUsamp",ERROR_TYPE_FATAL,ERROR_ID_MEDIATE,"Calibration","Calibration file name is missing");
-  else if (pEngineContext->convolutionType!=CONVOLUTION_TYPE_NONE)
+  else
    {
    	pSlitConv=&pEngineContext->slitConv;
 

@@ -59,6 +59,7 @@ bool CAnalysisWindowSubHandler::start(const QXmlAttributes &atts)
 
   d->fitMinWavelength = atts.value("min").toDouble();
   d->fitMaxWavelength = atts.value("max").toDouble();
+  d->resolFwhm=(!atts.value("resol_fwhm").isEmpty())?atts.value("resol_fwhm").toDouble():0.5;
 
   // MUST have a valid name
   return !m_item->name().isEmpty();

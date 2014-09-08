@@ -47,6 +47,8 @@ void initializeMediateAnalysisWindow(mediate_analysis_window_t *d)
   d->cloudFractionMin=(double)0.;
   d->cloudFractionMax=(double)1.;
 
+  d->resolFwhm=(double)0.5;
+
   d->refNs=1;
 
   // Cross sections
@@ -109,10 +111,10 @@ void initializeMediateAnalysisWindow(mediate_analysis_window_t *d)
 
   // Output
 
-  for (i=0;i<MAX_AW_CROSS_SECTION;i++)  
+  for (i=0;i<MAX_AW_CROSS_SECTION;i++)
    {
     d->outputList.output[i].slantFactor=(double)1.;
     d->outputList.output[i].slantCol=
     d->outputList.output[i].slantErr=1;
-   } 
+   }
  }

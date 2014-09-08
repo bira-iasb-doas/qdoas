@@ -306,6 +306,10 @@ int mediateRequestDisplaySpecInfo(void *engineContext,int page,void *responseHan
      mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Servo position byte sent","%d",(int)pRecord->uavBira.servoSentPosition);
     if (pSpectra->fieldsFlag[PRJCT_RESULTS_UAV_SERVO_BYTE_RECEIVED])
      mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Servo position byte received","%d",(int)pRecord->uavBira.servoReceivedPosition);
+    if (pSpectra->fieldsFlag[PRJCT_RESULTS_UAV_TEMPERATURE])
+     mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Temperature","%.3f",(int)pRecord->uavBira.temperature);
+    if (pSpectra->fieldsFlag[PRJCT_RESULTS_UAV_PRESSURE])
+     mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Pressure","%.3f",(int)pRecord->uavBira.pressure);
    }
 
   // Return
@@ -466,13 +470,13 @@ void mediateRequestPlotSpectra(ENGINE_CONTEXT *pEngineContext,void *responseHand
        mediateReleasePlotData(&spectrumData);
        mediateResponseLabelPage(plotPageSpecMax, fileName, tmpString, responseHandle);
       }
-      
+
     if ((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_CCD_EEV) && (strlen(pInstrumental->imagePath)>0))
-     {     
+     {
      	sprintf(tmpString,"Sky picture (%d/%d)",pEngineContext->indexRecord,pEngineContext->recordNumber);
-      mediateResponsePlotImage(plotPageImage,(pRecord->ccd.indexImage!=ITEM_NONE)?CCD_GetImageFile(pRecord->ccd.indexImage):"./no-image-available.jpg","Sky picture",responseHandle);   
+      mediateResponsePlotImage(plotPageImage,(pRecord->ccd.indexImage!=ITEM_NONE)?CCD_GetImageFile(pRecord->ccd.indexImage):"./no-image-available.jpg","Sky picture",responseHandle);
       mediateResponseLabelPage(plotPageImage, fileName, tmpString, responseHandle);
-     }          
+     }
     }
 
    if (pSpectra->displaySpectraFlag && pSpectra->displayDataFlag)
@@ -1665,6 +1669,8 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
              strcpy(pTabFeno->ref1,pAnalysisWindows->refOneFile);
              strcpy(pTabFeno->ref2,pAnalysisWindows->refTwoFile);
 
+             pTabFeno->resolFwhm=pAnalysisWindows->resolFwhm;
+
              if ((pTabFeno->refSpectrumSelectionMode=pAnalysisWindows->refSpectrumSelection)==ANLYS_REF_SELECTION_MODE_AUTOMATIC)
               {
                if ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_CCD_EEV) || (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC_STD) || (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC_BIRA) ||
@@ -2045,9 +2051,9 @@ int mediateRequestNextMatchingSpectrum(ENGINE_CONTEXT *pEngineContext,void *resp
 
    pProject=&pEngineContext->project;
    pRecord=&pEngineContext->recordInfo;
-   outputFlag=(!pEngineContext->project.asciiResults.successFlag && 
-   
-    (((THRD_id==THREAD_TYPE_KURUCZ) && pProject->asciiResults.calibFlag) || 
+   outputFlag=(!pEngineContext->project.asciiResults.successFlag &&
+
+    (((THRD_id==THREAD_TYPE_KURUCZ) && pProject->asciiResults.calibFlag) ||
      ((THRD_id==THREAD_TYPE_ANALYSIS) && pProject->asciiResults.analysisFlag)))?1:0;
 
    inc=1;

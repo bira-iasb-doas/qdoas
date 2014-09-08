@@ -1089,7 +1089,7 @@ RC ANALYSE_ConvoluteXs(const FENO *pTabFeno,int action,double conc,
         rc=ERROR_SetLast("ANALYSE_ConvoluteXs",ERROR_TYPE_WARNING,ERROR_ID_LOG,-1);
        else
         output[j]=(double)log(output[j]/IcVector[j])/conc;
-      } 
+      }
    }
 
   // Return
@@ -2273,8 +2273,8 @@ RC ANALYSE_Function( double *spectrum_orig, double *reference, double *SigmaY, d
          ((!Feno->hidden && ANALYSE_phFilter->hpFilterAnalysis) || ((Feno->hidden==1) && ANALYSE_phFilter->hpFilterCalib)) &&
          ((rc=FILTER_Vector(ANALYSE_phFilter,&spectrum_interpolated[LimMin],&spectrum_interpolated[LimMin],LimN,PRJCT_FILTER_OUTPUT_HIGH_SUB))!=0))))
 
-    goto EndFunction;  
-    
+    goto EndFunction;
+
    // ----------------------------
    // Transfer to working variable
    // ----------------------------
@@ -2326,9 +2326,19 @@ RC ANALYSE_Function( double *spectrum_orig, double *reference, double *SigmaY, d
             }
            else if (i==Feno->indexResol)
             {
+            	double resolX,resolDelta,resolCoeff;
+
+            	resolDelta=0.05;                                                   // small increment to calculate the derivative
+            	resolCoeff=Feno->resolFwhm/resolDelta;
+            	resolX=resolDelta*sqrt((double)1.+2.*resolCoeff);
+
              for( int k=1, l=max(iterator_start(&my_iterator, global_doas_spectrum),1); (l != ITERATOR_FINISHED) && !rc; k++,l=iterator_next(&my_iterator))
-               if (!(rc=XSCONV_TypeGauss(ANALYSE_splineX,reference,SplineRef,ANALYSE_splineX[l],ANALYSE_splineX[l]-ANALYSE_splineX[l-1],&pTabCross->vector[l],0.05,(double)0.,SLIT_TYPE_GAUSS, NDET)))
-               A[indexSvdA][k]=pTabCross->vector[l]=(reference[l]!=0)?pTabCross->vector[l]/reference[l]-1:(double)0.; // the resol cross section has to be around 0 and not 1
+              if (!(rc=XSCONV_TypeGauss(ANALYSE_splineX,reference,SplineRef,ANALYSE_splineX[l],ANALYSE_splineX[l]-ANALYSE_splineX[l-1],&pTabCross->vector[l],resolX,(double)0.,SLIT_TYPE_GAUSS, NDET)))
+               A[indexSvdA][k]=pTabCross->vector[l]=(reference[l]!=0)?resolCoeff*(pTabCross->vector[l]/reference[l]-1):(double)0.;
+
+ //            for( int k=1, l=max(iterator_start(&my_iterator, global_doas_spectrum),1); (l != ITERATOR_FINISHED) && !rc; k++,l=iterator_next(&my_iterator))
+ //             if (!(rc=XSCONV_TypeGauss(ANALYSE_splineX,reference,SplineRef,ANALYSE_splineX[l],ANALYSE_splineX[l]-ANALYSE_splineX[l-1],&pTabCross->vector[l],0.05,(double)0.,SLIT_TYPE_GAUSS, NDET)))
+ //              A[indexSvdA][k]=pTabCross->vector[l]=(reference[l]!=0)?pTabCross->vector[l]/reference[l]-1:(double)0.; // the resol cross section has to be around 0 and not 1
             }
           }
 
@@ -2793,7 +2803,7 @@ RC ANALYSE_Function( double *spectrum_orig, double *reference, double *SigmaY, d
    MEMORY_ReleaseDVector(__func__,"spec_nolog",spec_nolog,0);
 
   // Return
-  
+
 #if defined(__DEBUG_) && __DEBUG_
   DEBUG_FunctionStop(__func__,rc);
 #endif
@@ -3179,8 +3189,8 @@ RC ANALYSE_CurFitMethod(INDEX indexFenoColumn,  // for OMI
   /*  Free Memory  */
   /*  ===========  */
 
- EndCurFitMethod :       
- 
+ EndCurFitMethod :
+
   for (int i=0;i<Feno->NTabCross;i++)
    {
     pTabCross=&TabCross[i];
@@ -3747,7 +3757,7 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
           if (!Feno->rc)
            nrc++;
           else
-           irc++; 
+           irc++;
 
           if (displayFlag && saveFlag)
            {

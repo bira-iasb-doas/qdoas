@@ -91,17 +91,32 @@ CWAnalysisWindowPropertyEditor::CWAnalysisWindowPropertyEditor(const QString &pr
 
   topLayout->addWidget(refSelectGroup);
 
+  // resol
+
+  QGroupBox *resolGroup = new QGroupBox("Ref. Resol", this);
+  QGridLayout *resolLayout=new QGridLayout(resolGroup);
+  resolLayout->setMargin(3);
+  resolLayout->setSpacing(0);
+  resolLayout->addWidget(new QLabel("FWHM (nm) ", resolGroup), 0, 0);
+  m_resolEdit = new QLineEdit(resolGroup);
+  m_resolEdit->setFixedWidth(cDoubleEditWidth);
+  m_resolEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 999.0, 3, m_resolEdit));
+  resolLayout->addWidget(m_resolEdit, 0, 1);
+  resolLayout->addWidget(new QLabel("", resolGroup), 1, 0);
+
+  topLayout->addWidget(resolGroup);
+
   // fitting interval
   QGroupBox *fitIntervalGroup = new QGroupBox("Fitting Interval", this);
   QGridLayout *fitIntervalLayout = new QGridLayout(fitIntervalGroup);
   fitIntervalLayout->setMargin(3);
   fitIntervalLayout->setSpacing(0);
-  fitIntervalLayout->addWidget(new QLabel("Min", fitIntervalGroup), 0, 0);
+  fitIntervalLayout->addWidget(new QLabel("Min ", fitIntervalGroup), 0, 0);
   m_fitMinEdit = new QLineEdit(fitIntervalGroup);
   m_fitMinEdit->setFixedWidth(cDoubleEditWidth);
   m_fitMinEdit->setValidator(new CDoubleFixedFmtValidator(100.0, 999.0, 3, m_fitMinEdit));
   fitIntervalLayout->addWidget(m_fitMinEdit, 0, 1);
-  fitIntervalLayout->addWidget(new QLabel("Max", fitIntervalGroup), 1, 0);
+  fitIntervalLayout->addWidget(new QLabel("Max ", fitIntervalGroup), 1, 0);
   m_fitMaxEdit = new QLineEdit(fitIntervalGroup);
   m_fitMaxEdit->setFixedWidth(cDoubleEditWidth);
   m_fitMaxEdit->setValidator(new CDoubleFixedFmtValidator(100.0, 999.0, 3, m_fitMaxEdit));
@@ -128,6 +143,7 @@ CWAnalysisWindowPropertyEditor::CWAnalysisWindowPropertyEditor(const QString &pr
   displayLayout->addWidget(m_ratioCheck, 1, 2);
 
   topLayout->addWidget(displayGroup);
+
   topLayout->addStretch(1);
 
   mainLayout->addLayout(topLayout);
@@ -414,6 +430,7 @@ CWAnalysisWindowPropertyEditor::CWAnalysisWindowPropertyEditor(const QString &pr
 
   m_fitMinEdit->setText(tmpStr.setNum(d->fitMinWavelength));
   m_fitMaxEdit->setText(tmpStr.setNum(d->fitMaxWavelength));
+  m_resolEdit->setText(tmpStr.setNum(d->resolFwhm));
 
   m_spectrumCheck->setChecked(d->requireSpectrum ? Qt::Checked : Qt::Unchecked);
   m_polyCheck->setChecked(d->requirePolynomial ? Qt::Checked : Qt::Unchecked);
@@ -498,6 +515,8 @@ bool CWAnalysisWindowPropertyEditor::actionOk(void)
 
     d->fitMinWavelength = m_fitMinEdit->text().toDouble();
     d->fitMaxWavelength = m_fitMaxEdit->text().toDouble();
+
+    d->resolFwhm = m_resolEdit->text().toDouble();
 
     d->requireSpectrum = (m_spectrumCheck->checkState() == Qt::Checked) ? 1 : 0;
     d->requirePolynomial = (m_polyCheck->checkState() == Qt::Checked) ? 1 : 0;

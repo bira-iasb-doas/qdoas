@@ -83,7 +83,7 @@ CWUsampTabGeneral::CWUsampTabGeneral(const mediate_usamp_t *properties, QWidget 
 
   mainLayout->addLayout(fileLayout);
 
-  m_slitEdit = new CWSlitSelector(&(properties->slit), "Slit Function", this);
+  m_slitEdit = new CWSlitSelector(&(properties->slit), "Slit Function", false,this);
   mainLayout->addWidget(m_slitEdit);
 
   // analysis
@@ -100,7 +100,7 @@ CWUsampTabGeneral::CWUsampTabGeneral(const mediate_usamp_t *properties, QWidget 
   m_shiftEdit->setFixedWidth(100);
   m_shiftEdit->setValidator(new CDoubleFixedFmtValidator(-100.0, 100.0, 3, m_shiftEdit));
   analysisLayout->addWidget(m_shiftEdit, 1, 1);
-  
+
 
   mainLayout->addWidget(analysisGroup);
 
@@ -130,7 +130,7 @@ void CWUsampTabGeneral::reset(const mediate_usamp_t *properties)
 
   int index;
   QString tmpStr;
-  
+
   index = m_analysisCombo->findData(QVariant(properties->methodType));
   if (index != -1)
     m_analysisCombo->setCurrentIndex(index);
@@ -155,7 +155,7 @@ void CWUsampTabGeneral::apply(mediate_usamp_t *properties) const
 {
   properties->noheader = (m_headerCheck->checkState() == Qt::Checked) ? 1 : 0;
   properties->methodType = m_analysisCombo->itemData(m_analysisCombo->currentIndex()).toInt();
-  properties->shift = m_shiftEdit->text().toDouble();  
+  properties->shift = m_shiftEdit->text().toDouble();
 
   strcpy(properties->outputPhaseOneFile, m_outputPhaseOneFileEdit->text().toAscii().constData());
   strcpy(properties->outputPhaseTwoFile, m_outputPhaseTwoFileEdit->text().toAscii().constData());
@@ -172,11 +172,11 @@ void CWUsampTabGeneral::slotBrowseOutputPhaseOne()
   QString filename = QFileDialog::getSaveFileName(this, "Output File (Phase 1)",
 						  pref->directoryName("Output"),
 						  "All files (*)");
-  
-  
+
+
   if (!filename.isEmpty()) {
     pref->setDirectoryNameGivenFile("Output", filename);
-    
+
     m_outputPhaseOneFileEdit->setText(filename);
   }
 }
@@ -189,7 +189,7 @@ void CWUsampTabGeneral::slotBrowseOutputPhaseTwo()
 						  pref->directoryName("Output"),
 						  "All files (*)");
 
-  
+
   if (!filename.isEmpty()) {
     pref->setDirectoryNameGivenFile("Output", filename);
 
@@ -200,13 +200,13 @@ void CWUsampTabGeneral::slotBrowseOutputPhaseTwo()
 void CWUsampTabGeneral::slotBrowseCalibration()
 {
   CPreferences *pref = CPreferences::instance();
-  
+
   QString filename = QFileDialog::getOpenFileName(this, "Calibration File",
 						  pref->directoryName("Calib"),
 						  "Calibration File (*.clb);;All files (*)");
   if (!filename.isEmpty()) {
     pref->setDirectoryNameGivenFile("Calib", filename);
-    
+
     m_calibFileEdit->setText(filename);
   }
 }
@@ -214,14 +214,14 @@ void CWUsampTabGeneral::slotBrowseCalibration()
 void CWUsampTabGeneral::slotBrowseSolarReference()
 {
   CPreferences *pref = CPreferences::instance();
-  
+
   QString filename = QFileDialog::getOpenFileName(this, "reference File",
 						  pref->directoryName("Ref"),
 						  "Kurucz File (*.ktz);;All files (*)");
-  
+
   if (!filename.isEmpty()) {
     pref->setDirectoryNameGivenFile("Ref", filename);
-    
+
     m_refFileEdit->setText(filename);
   }
 }

@@ -388,6 +388,8 @@ typedef struct _feno
                   TimeDec,Tm,                                                   // in automatic reference selection mode, measurement time of selected record
                   TDet;                                                         // temperature of reference
 
+  double          resolFwhm;
+
   SHORT_DATE      refDate;                                                      // in automatic reference selection mode, date of selected record
   int             displaySpectrum;                                              // force display spectrum
   int             displayResidue;                                               // force display residue
@@ -724,6 +726,8 @@ typedef struct _airborneBira
  {
  	unsigned char servoSentPosition;
  	unsigned char servoReceivedPosition;
+ 	float temperature;
+ 	float pressure;
  }
 UAVBIRA_DATA;
 

@@ -97,12 +97,12 @@ void CWSlitFileBase::toggleVisible(int state) {
 void CWSlitFileBase::slotToggleWavelength(int state)
  {
    toggleVisible(state);
- }     
- 
+ }
+
 CWSlitNoneEdit::CWSlitNoneEdit(const struct slit_file *d, QWidget *parent) :
   CWSlitFileBase(parent)
-{ 
-}	  
+{
+}
 
 CWSlitNoneEdit::~CWSlitNoneEdit()
 {
@@ -132,7 +132,7 @@ void CWSlitFileEdit::toggleVisible(int state) {
 CWSlitFileEdit::CWSlitFileEdit(const struct slit_file *d, QWidget *parent) :
   CWSlitFileBase(parent) {
   QVBoxLayout *mainLayout = new QVBoxLayout(this);
-  
+
   // Wavelength dependent
   m_wavelengthDependent = new QCheckBox("Wavelength dependent", this);
   mainLayout->addWidget(m_wavelengthDependent, Qt::AlignLeft);
@@ -158,10 +158,10 @@ CWSlitFileEdit::~CWSlitFileEdit()
 void CWSlitFileEdit::reset(const struct slit_file *d)
 {
   m_slitFileEdit->setText(d->filename);
-  
+
   if (d->wveDptFlag)
       m_stretchEdit->setText(d->filename2);
-  
+
   m_wavelengthDependent->setCheckState(d->wveDptFlag ? Qt::Checked : Qt::Unchecked);
   this->toggleVisible(m_wavelengthDependent->checkState());
 
@@ -682,8 +682,9 @@ void CWSlitAGaussEdit::apply(struct slit_agauss *d) const
 
 
 
-CWSlitSelector::CWSlitSelector(const mediate_slit_function_t *slit, const QString &title, QWidget *parent) :
-  QGroupBox(title, parent)
+CWSlitSelector::CWSlitSelector(const mediate_slit_function_t *slit, const QString &title, bool noneFlag,QWidget *parent) :
+  QGroupBox(title, parent),
+  m_noneFlag(noneFlag)
 {
 
   QGridLayout *mainLayout = new QGridLayout(this);
@@ -692,7 +693,14 @@ CWSlitSelector::CWSlitSelector(const mediate_slit_function_t *slit, const QStrin
   m_slitCombo = new QComboBox(this);
   m_slitStack = new QStackedWidget(this);
   // insert widgets into the stack and items into the combo in lock-step.
-  
+
+  if (m_noneFlag)
+   {
+    m_noneEdit = new CWSlitNoneEdit(&(slit->file));
+    m_slitStack->addWidget(m_noneEdit);
+    m_slitCombo->addItem("None", QVariant(SLIT_TYPE_NONE));
+   }
+
   m_fileEdit = new CWSlitFileEdit(&(slit->file));
   m_slitStack->addWidget(m_fileEdit);
   m_slitCombo->addItem("File", QVariant(SLIT_TYPE_FILE));
@@ -754,6 +762,9 @@ void CWSlitSelector::reset(const mediate_slit_function_t *slit)
     // stack will follow ...
   }
 
+  if (m_noneFlag)
+   m_noneEdit->reset(NULL);
+
   m_fileEdit->reset(&(slit->file));
   m_gaussianEdit->reset(&(slit->gaussian));
   m_lorentzEdit->reset(&(slit->lorentz));
@@ -769,6 +780,9 @@ void CWSlitSelector::apply(mediate_slit_function_t *slit) const
   // set values for ALL slits ... and the selected slit type
 
   slit->type = m_slitCombo->itemData(m_slitCombo->currentIndex()).toInt();
+
+  if (m_noneFlag)
+   m_noneEdit->apply(NULL);
 
   m_fileEdit->apply(&(slit->file));
   m_gaussianEdit->apply(&(slit->gaussian));

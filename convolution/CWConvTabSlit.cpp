@@ -39,10 +39,10 @@ CWConvTabSlit::CWConvTabSlit(const mediate_slit_function_t *conv, const mediate_
   mainLayout->setMargin(25);
   mainLayout->setSpacing(15);
 
-  m_convEdit = new CWSlitSelector(conv, "Convolution", this);
+  m_convEdit = new CWSlitSelector(conv, "Convolution", false,this);
   mainLayout->addWidget(m_convEdit);
 
-  m_deconvEdit = new CWSlitSelector(deconv, "Deconvolution", this);
+  m_deconvEdit = new CWSlitSelector(deconv, "Deconvolution", false,this);
   mainLayout->addWidget(m_deconvEdit);
 }
 

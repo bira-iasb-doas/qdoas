@@ -477,6 +477,14 @@ static inline void get_uav_servo_byte_received(struct output_field *this_field _
   *servo_received_position = pEngineContext->recordInfo.uavBira.servoReceivedPosition;
 }
 
+static inline void get_uav_temperature(struct output_field *this_field __attribute__ ((unused)), float *uav_temperature, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
+  *uav_temperature = pEngineContext->recordInfo.uavBira.temperature;
+}
+
+static inline void get_uav_pressure(struct output_field *this_field __attribute__ ((unused)), float *uav_pressure, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
+  *uav_pressure = pEngineContext->recordInfo.uavBira.pressure;
+}
+
 static inline void get_slant_column(struct output_field *this_field, double *slant_column, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn, int index_calib) {
   CROSS_RESULTS *pTabCrossResults = this_field->get_cross_results(this_field, indexFenoColumn, index_calib);
   *slant_column = ( pTabCrossResults && pTabCrossResults->SlntFact!=(double)0.)

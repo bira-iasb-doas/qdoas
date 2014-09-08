@@ -60,7 +60,7 @@
 // CONSTANTS DEFINITION
 // ====================
 
-#define IGNORED_BYTES 153
+#define IGNORED_BYTES 144
 
 // ====================
 // STRUCTURE DEFINITION
@@ -81,6 +81,9 @@ typedef struct _airborneData
   unsigned char floatflag;
   unsigned char sentPosition;
   unsigned char receivedPosition;
+  unsigned char ignoredChar;
+  float         temperature;
+  float         pressure;
   unsigned char ignoredBytes[IGNORED_BYTES];
  }
 AIRBORNE_DATA;
@@ -187,6 +190,8 @@ RC AIRBORNE_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int lo
 
     pRecord->uavBira.servoSentPosition=(unsigned char)header.sentPosition;                     // UAV servo control : position byte sent to the PIC
     pRecord->uavBira.servoReceivedPosition=(unsigned char)header.receivedPosition;             // UAV servo control : position byte received by the PIC
+    pRecord->uavBira.temperature=(float)header.temperature;
+    pRecord->uavBira.pressure=(float)header.pressure;
 
     pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_day,&pRecord->present_time,0);
     pRecord->Zm=(double)ZEN_FNTdiz(ZEN_FNCrtjul(&pRecord->Tm),&pRecord->longitude,&pRecord->latitude,&pRecord->Azimuth);

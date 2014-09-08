@@ -1152,7 +1152,7 @@ void CQdoasConfigWriter::writeAnalysisWindows(FILE *fp, const QString &projectNa
 	else
 	  fprintf(fp, " refsel=\"file\"");
 
-	fprintf(fp, " min=\"%.3f\" max=\"%.3f\" >\n", properties->fitMinWavelength, properties->fitMaxWavelength);
+	fprintf(fp, " min=\"%.3f\" max=\"%.3f\" resol_fwhm=\"%.3f\" >\n", properties->fitMinWavelength, properties->fitMaxWavelength, properties->resolFwhm);
 
 	fprintf(fp, "      <display spectrum=\"%s\" poly=\"%s\" fits=\"%s\" residual=\"%s\" predef=\"%s\" ratio=\"%s\" />\n",
 		(properties->requireSpectrum ? sTrue : sFalse),
@@ -1538,6 +1538,8 @@ void CQdoasConfigWriter::writeDataSelectList(FILE *fp, const data_select_list_t 
     case PRJCT_RESULTS_SPIKES: fprintf(fp,"spike_pixels"); break;
     case PRJCT_RESULTS_UAV_SERVO_BYTE_SENT :      fprintf(fp, "servo_byte_sent"); break;
     case PRJCT_RESULTS_UAV_SERVO_BYTE_RECEIVED :      fprintf(fp, "servo_byte_received"); break;
+    case PRJCT_RESULTS_UAV_TEMPERATURE :      fprintf(fp, "uav_temperature"); break;
+    case PRJCT_RESULTS_UAV_PRESSURE :      fprintf(fp, "uav_pressure"); break;
     case PRJCT_RESULTS_PRECALCULATED_FLUXES:            fprintf(fp, "precalculated_fluxes"); break;
 
     default: fprintf(fp, "Invalid");

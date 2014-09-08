@@ -59,6 +59,9 @@ void setMediateSlit(SLIT *pEngineSlit,const mediate_slit_function_t *pMediateSli
   switch(pEngineSlit->slitType)
    {
  // ----------------------------------------------------------------------------
+    case SLIT_TYPE_NONE :
+    break;
+ // ----------------------------------------------------------------------------
     case SLIT_TYPE_GAUSS :                                                      // Gaussian line shape
 
      pEngineSlit->slitParam=pMediateSlit->gaussian.fwhm;
