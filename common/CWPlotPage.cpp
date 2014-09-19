@@ -196,7 +196,7 @@ CWPlot::CWPlot(const RefCountConstPtr<CPlotImage> &dataImage,
  {
   QString filename=m_dataImage->GetFile(); 
   QwtText tmpTitle=title();   
-  char *ptr=strrchr(filename.toAscii().constData(),'/')+1;
+  const char *ptr=strrchr(filename.toAscii().constData(),'/')+1;
    
   // Example code for font changes ... TODO
  
