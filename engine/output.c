@@ -1356,6 +1356,7 @@ RC OUTPUT_RegisterData(const ENGINE_CONTEXT *pEngineContext)
                 if (indexFenoK != ITEM_NONE) {
                   for (int indexFeno=0;indexFeno<NFeno;indexFeno++) {
                     if ( !TabFeno[indexFenoColumn][indexFeno].hidden
+                         && KURUCZ_buffers[indexFenoColumn].KuruczFeno != NULL
                          && KURUCZ_buffers[indexFenoColumn].KuruczFeno[indexFeno].have_calibration) {
                       register_calibration(indexFenoK, indexFenoColumn, indexFeno);
                     }
