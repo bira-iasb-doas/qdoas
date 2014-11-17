@@ -1087,6 +1087,7 @@ static void register_calibration(int kurucz_index, int index_row, int index_feno
         newfield.index_feno=index_feno;
         newfield.index_row=index_row;
         newfield.index_cross=indexTabCross;
+        printf("%s: %s\n", __func__, fieldname);
         register_calibration_field(newfield);
       }
     }
@@ -1356,8 +1357,9 @@ RC OUTPUT_RegisterData(const ENGINE_CONTEXT *pEngineContext)
                 if (indexFenoK != ITEM_NONE) {
                   for (int indexFeno=0;indexFeno<NFeno;indexFeno++) {
                     if ( !TabFeno[indexFenoColumn][indexFeno].hidden
-                         && KURUCZ_buffers[indexFenoColumn].KuruczFeno != NULL
-                         && KURUCZ_buffers[indexFenoColumn].KuruczFeno[indexFeno].have_calibration) {
+                         && KURUCZ_buffers[indexFenoColumn].KuruczFeno != NULL 
+                         && (TabFeno[indexFenoColumn][indexFeno].useKurucz == ANLYS_KURUCZ_REF_AND_SPEC
+                             || TabFeno[indexFenoColumn][indexFeno].useKurucz == ANLYS_KURUCZ_REF ) ) {
                       register_calibration(indexFenoK, indexFenoColumn, indexFeno);
                     }
                   }
