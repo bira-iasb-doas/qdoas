@@ -116,14 +116,6 @@ void CQdoasEngineController::notifyPlotData(QList<SPlotData> &plotDataList, QLis
   std::map<int,CPlotPageData*>::iterator mIt;
   int pageNo;  
   
-  {
-  	FILE *fp;
-  	fp=fopen("toto.dat","a+t");
-  	fprintf(fp,"CQdoasEngineController::notifyPlotData\n");
-  	fclose(fp);
-  }
-              
-  
   while (!plotDataList.isEmpty()) {
     // existing page?
     pageNo = plotDataList.front().page;  
