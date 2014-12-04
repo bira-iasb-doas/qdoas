@@ -59,15 +59,15 @@ CWMain::CWMain(QWidget *parent) :
   QFrame(parent),
   m_logToFile(false)
 {     
-	// ----------------------------------------------------------------------------
+  // ----------------------------------------------------------------------------
 
-	// to avoid that a thousands comma separator (QT 4.7.3)
+  // to avoid that a thousands comma separator (QT 4.7.3)
 
-	   QLocale qlocale=QLocale::system();
-	   qlocale.setNumberOptions(QLocale::OmitGroupSeparator);
-	   QLocale::setDefault(qlocale);
+  QLocale qlocale=QLocale::c();
+  qlocale.setNumberOptions(QLocale::OmitGroupSeparator);
+  QLocale::setDefault(qlocale);
 
-	// ----------------------------------------------------------------------------
+  // ----------------------------------------------------------------------------
 
   setProjectFileName(QString());
 
