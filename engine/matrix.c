@@ -54,6 +54,8 @@
 
 #include "doas.h"
 
+#include <stdbool.h>
+
 // ==================
 // BUFFERS PROCESSING
 // ==================
@@ -241,19 +243,14 @@ RC MATRIX_Copy(MATRIX_OBJECT *pTarget,MATRIX_OBJECT *pSource, const char *callin
 
 RC MATRIX_Load(char *fileName,MATRIX_OBJECT *pMatrix,
                int basel,int basec,int nl,int nc,double xmin,double xmax,
-               int allocateDeriv2,int reverseFlag, const char *callingFunction)
- {
+               int allocateDeriv2,int reverseFlag, const char *callingFunction) {
   // Declarations
 
-  char   *oldColumn,*nextColumn,                                               // get lines from the input file
-           fullPath[MAX_ITEM_TEXT_LEN+1];                                       // the complete file name to load
+  char     fullPath[MAX_ITEM_TEXT_LEN+1];                                       // the complete file name to load
   int      nltmp,nctmp,                                                         // highest indexes for lines and columns
-           lineLength,                                                          // length of a file line
-           fileLength,                                                          // length of the file (in bytes)
            nlMin,ncMin;                                                         // resp. the minimum numbers of lines and columns to load from the file
   INDEX    i,j;                                                                 // indexes for browsing lines and columns in matrix
   double **matrix,**deriv2,                                                     // resp. pointers to the matrix to load and to the second derivatives
-         **col,                                                                 // a column in the matrix to load
            xMin,xMax,                                                           // define the range of values to load for the first column of the matrix
            tempValue;                                                           // a value of the matrix to load
   FILE    *fp;                                                                  // file pointer
@@ -262,7 +259,7 @@ RC MATRIX_Load(char *fileName,MATRIX_OBJECT *pMatrix,
   // Debugging
 
   #if defined(__DEBUG_) && __DEBUG_
-  DEBUG_FunctionBegin("MATRIX_Load",DEBUG_FCTTYPE_FILE);
+  DEBUG_FunctionBegin(__func__,DEBUG_FCTTYPE_FILE);
   #endif
 
   // Initializations
@@ -273,8 +270,6 @@ RC MATRIX_Load(char *fileName,MATRIX_OBJECT *pMatrix,
   DEBUG_Print("File to load : %s\n",fullPath);
   #endif
 
-  oldColumn=nextColumn=NULL;                                                    // initialize pointers
-  col=NULL;
   nlMin=nl;
   ncMin=nc;
   rc=ERROR_ID_NO;
@@ -284,69 +279,56 @@ RC MATRIX_Load(char *fileName,MATRIX_OBJECT *pMatrix,
 
   // Reset matrix
 
-  MATRIX_Free(pMatrix,"MATRIX_Load");
+  MATRIX_Free(pMatrix, __func__);
 
   // File open
 
   if ((fp=fopen(fullPath,"rt"))==NULL)
-   rc=ERROR_SetLast("MATRIX_Load",ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,fullPath);
-  else if (!(fileLength=STD_FileLength(fp)))
-   rc=ERROR_SetLast("MATRIX_Load (1)",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,fullPath);
-
-  // Allocate buffers for reading the lines of the file
-
-  else if (((oldColumn=(char*)MEMORY_AllocBuffer("MATRIX_Load","oldColumn",MAX_ITEM_TEXT_LEN+1,sizeof(char),0,MEMORY_TYPE_STRING))==NULL) ||
-           ((nextColumn=(char*)MEMORY_AllocBuffer("MATRIX_Load","nextColumn",MAX_ITEM_TEXT_LEN+1,sizeof(char),0,MEMORY_TYPE_STRING))==NULL))
-
-   rc=ERROR_ID_ALLOC;
-
-  else
-   {
-   	// The function has to determine the number of lines and columns
-
-    if (!nl || !nc)
-     {
-      // Bypass commented lines (assumed to start with character ';' or '*')
-
-      while (fgets(oldColumn,MAX_ITEM_TEXT_LEN,fp) && ((strchr(oldColumn,';')!=NULL) || (strchr(oldColumn,'*')!=NULL)));
-
+   rc=ERROR_SetLast(__func__,ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,fullPath);
+  else if (!STD_FileLength(fp) )
+   rc=ERROR_SetLast(__func__,ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,fullPath);
+  else {
+    // The function has to determine the number of lines and columns
+    if (!nl || !nc) {
+      char c;
+      while (fscanf(fp, " %1[*;]%*[^\n]\n", &c) == 1) { 
+        // skip spaces and comment lines (assumed to start with character ';' or '*')
+      }
+      
       // Determine the number of columns
-
-      sscanf(oldColumn,"%lf",(double *)&tempValue);
-      nl=((xMin==xMax) || ((tempValue>=xMin)&&(tempValue<=xMax)))?1:0;
-
-      for (nc=0;strlen(oldColumn);nc++)
-       {
-        lineLength=strlen(oldColumn);
-        oldColumn[lineLength++]='\n';
-        oldColumn[lineLength]=0;
-
-        memset(nextColumn,0,MAX_ITEM_TEXT_LEN);
-        sscanf(oldColumn,"%lf %[^'\n']",(double *)&tempValue,nextColumn);
-        strcpy(oldColumn,nextColumn);
-       }
-
-      // Determine the number of lines
-
-      for (;!feof(fp) && fgets(oldColumn,MAX_ITEM_TEXT_LEN,fp);)
-       if ((strchr(oldColumn,';')==NULL) && (strchr(oldColumn,'*')==NULL) && strlen(STD_StrTrim(oldColumn)))
-        {
-         sscanf(oldColumn,"%lf",(double *)&tempValue);
-         if ((xMin==xMax) || ((tempValue>=xMin)&&(tempValue<=xMax)))
-          nl++;
+      
+      int n_scan = fscanf(fp, " %lf", &tempValue);
+      nl= n_scan && ( (xMin==xMax) || ((tempValue>=xMin)&&(tempValue<=xMax)) ) ? 1 : 0;
+      
+      nc = 1;
+      // in each iteration of the loop, read a number and skip
+      // following whitespace (except newline)
+      while (fscanf(fp, "%lf%*[^0-9.\n]", &tempValue) == 1) {
+        ++nc;
+        char next = fgetc(fp); // look ahead to detect end of line
+        if (next == '\n') {
+          break;
+        } else { // put back the character we read
+          ungetc(next, fp);
         }
-     }
-
+      }
+      
+      // Determine the number of lines
+      while (fscanf(fp, "%lf%*[^\n]\n", &tempValue) == 1) {
+        if ((xMin==xMax) || ((tempValue>=xMin)&&(tempValue<=xMax))) {
+          ++nl;
+        }
+      }
+    }
+    
     // File read out
-
-    #if defined(__DEBUG_) && __DEBUG_
+    
+#if defined(__DEBUG_) && __DEBUG_
     DEBUG_Print("Size of the matrix to load : %d x %d last Value %g\n",nl,nc,tempValue);
-    #endif
-
+#endif
+    
     if (!nl || !nc || (nl<nlMin) || (nc<ncMin))
-     rc=ERROR_SetLast("MATRIX_Load (2)",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,fullPath);
-    else if ((col=(double **)MEMORY_AllocDMatrix("MATRIX_Load","col",basel,nl+basel-1,basec,basec+4 /* 5 columns */))==NULL)
-     rc=ERROR_ID_ALLOC;
+      rc=ERROR_SetLast(__func__,ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,fullPath);
     else if (!(rc=MATRIX_Allocate(pMatrix,nl,nc,basel,basec,allocateDeriv2,callingFunction)))
      {
       matrix=pMatrix->matrix;
@@ -356,62 +338,33 @@ RC MATRIX_Load(char *fileName,MATRIX_OBJECT *pMatrix,
 
       fseek(fp,0L,SEEK_SET);
 
-      // if the number of columns to read is no higher than 5, read all the columns in one sscanf operation
+      for (i=basel; i<=nltmp  && !rc;) {
 
-      if (nc<=5)
-       {
-        for (i=basel;(i<=nltmp) && fgets(oldColumn,MAX_ITEM_TEXT_LEN,fp);)
-         {
-          if ((strchr(oldColumn,';')==NULL) && (strchr(oldColumn,'*')==NULL) &&
-              (sscanf(oldColumn,"%lf %lf %lf %lf %lf",
-                     (double *)&tempValue,
-                     (double *)&col[basec+1][i],
-                     (double *)&col[basec+2][i],
-                     (double *)&col[basec+3][i],
-                     (double *)&col[basec+4][i])>=nc) &&
-             ((xMin==xMax) || ((tempValue>=xMin) && (tempValue<=xMax))))
-           {
-            col[basec][i]=tempValue;
-            i++;
-           }
-         }
+        char c;
+        while (fscanf(fp, " %1[*;]%*[^\n]\n", &c) == 1) { 
+          // skip spaces and comment lines (assumed to start with character ';' or '*')
+        }
 
-        for (j=basec;j<=nctmp;j++)
-         memcpy(matrix[j]+basel,col[j]+basel,sizeof(double)*nl);
-       }
-
-      // for files with a number of columns higher than 5, loop on lines AND columns
-
-      else
-
-       for (i=basel;(i<=nltmp) && fgets(oldColumn,MAX_ITEM_TEXT_LEN,fp);)
-
-        if ((strchr(oldColumn,';')==NULL) && (strchr(oldColumn,'*')==NULL))
-         {
-          sscanf(oldColumn,"%lf",(double *)&tempValue);
-
-          if ((xMin==xMax) || ((tempValue>=xMin)&&(tempValue<=xMax)))
-           {
-            for (j=basec;j<=nctmp;j++)
-             {
-              lineLength=strlen(oldColumn);
-
-              oldColumn[lineLength++]='\n';
-              oldColumn[lineLength]=0;
-
-              memset(nextColumn,0,MAX_ITEM_TEXT_LEN);
-              sscanf(oldColumn,"%lf %[^'\n']",(double *)&matrix[j][i],nextColumn);
-              strcpy(oldColumn,nextColumn);
-             }
-
-            i++;
-           }
-         }
-
+        // read first column
+        int n_read = fscanf(fp,"%lf",&tempValue);
+        if (n_read != 1) {
+          rc=ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_FILE_BAD_LENGTH,fullPath);
+        } else if ( (xMin==xMax) || ((tempValue>=xMin)&&(tempValue<=xMax)) ) {
+          matrix[basec][i] = tempValue;
+          for (j=basec+1; j<=nctmp && !rc; ++j) {
+            n_read = fscanf(fp, "%lf", &matrix[j][i]);
+            if (n_read != 1) {
+              rc=ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_FILE_BAD_LENGTH,fullPath);
+            }
+          }
+          ++i;
+        }
+      }
+      
       // Found no lines with a starting values in the range [xmin..xmax]
 
       if (i==0)
-       rc=ERROR_SetLast("MATRIX_Load",ERROR_TYPE_WARNING,ERROR_ID_WAVELENGTH,fullPath);
+       rc=ERROR_SetLast(__func__,ERROR_TYPE_WARNING,ERROR_ID_WAVELENGTH,fullPath);
 
       // Flip up/down the matrix
 
@@ -444,14 +397,7 @@ RC MATRIX_Load(char *fileName,MATRIX_OBJECT *pMatrix,
   // Release allocated buffers
 
   if (rc)
-   MATRIX_Free(pMatrix,"MATRIX_Load");
-
-  if (oldColumn!=NULL)
-   MEMORY_ReleaseBuffer("MATRIX_Load","oldColumn",oldColumn);
-  if (nextColumn!=NULL)
-   MEMORY_ReleaseBuffer("MATRIX_Load","nextColumn",nextColumn);
-  if (col!=NULL)
-   MEMORY_ReleaseDMatrix("MATRIX_Load","col",col,basec,basec+4,basel);
+   MATRIX_Free(pMatrix,__func__);
 
   // Debugging
 
@@ -462,10 +408,10 @@ RC MATRIX_Load(char *fileName,MATRIX_OBJECT *pMatrix,
     if (allocateDeriv2)
      DEBUG_PrintVar("the 2nd derivatives",pMatrix->deriv2,basel,basel+nl-1,basec+1,basec+nc-1,NULL);
    }
-  DEBUG_FunctionStop("MATRIX_Load",(RC)rc);
+  DEBUG_FunctionStop(__func__, rc);
   #endif
 
   // Return
 
   return rc;
- }
+}
