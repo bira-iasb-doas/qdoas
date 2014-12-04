@@ -7,7 +7,7 @@
 //
 //  Software Engineer :  Caroline FAYT and Dr. Michel VAN ROOZENDAEL
 //
-//        Copyright  (C) Institut d'A‚ronomie Spatiale de Belgique
+//        Copyright  (C) Institut d'Aeronomie Spatiale de Belgique
 //                       Avenue Circulaire, 3
 //                       1180     UCCLE
 //                       BELGIUM
@@ -68,67 +68,7 @@ extern "C" {
 RC      RESOURCE_Alloc(void);
 void    RESOURCE_Free(void);
 
-// ================
-// FILES PROCESSING
-// ================
-
-// ------------------------------------
-// CONSTANTS AND STRUCTURES DEFINITIONS
-// ------------------------------------
-
-#define FILES_PATH_MAX 100
-
-// Base for building file filter
-// -----------------------------
-
-typedef struct _fileType
- {
-  char fileType[MAX_ITEM_DESC_LEN+1];          // type of files
-  char fileExt[12];                            // extension associated to this type of files
-  char defaultPath[MAX_PATH_LEN+1];            // default path
- }
-FILE_TYPE;
-
-// Paths for files
-// ---------------
-
-typedef struct _filePath
- {
-  char path[MAX_PATH_LEN+1];
-  int   count;
- }
-FILES_PATH;
-
-// ----------------
-// GLOBAL VARIABLES
-// ----------------
-
-extern char FILES_configuration[];            // configuration file
-extern FILE_TYPE FILES_types[];                     // types of files supported by application
-extern int FILES_version;                           // program version
-extern FILES_PATH *FILES_paths;                     // all paths implied in configuration file
-extern int FILES_nPaths;                            // the size of the previous buffer
-
-// ----------
-// PROTOTYPES
-// ----------
-
-// Load data from files
-// --------------------
-
-void   FILES_CompactPath(char *newPath,char *path,int useFileName,int addFlag);
-char *FILES_RebuildFileName(char *newPath,char *path,int useFileName);
-void   FILES_ChangePath(char *oldPath,char *newPath,int useFileName);
-void   FILES_RemoveOnePath(char *path);
-void   FILES_RetrievePath(char *pathString,SZ_LEN pathStringLength,char *fullFileName,SZ_LEN fullFileNameLength,int indexFileType,int changeDefaultPath);
-
-RC     FILES_GetMatrixDimensions(FILE *fp,const char *fileName,int *pNl,int *pNc,const char *callingFunction,int errorType);
-RC     FILES_LoadMatrix(FILE *fp,const char *fileName,double **matrix,int base,int nl,int nc,const char *callingFunction,int errorType);
-
-// Select a file
-// -------------
-
-char  *FILES_BuildFileName(char *fileName,MASK fileType);
+#include "files.h"
 
 // =================
 // OBSERVATION SITES
@@ -208,25 +148,7 @@ char  *FILES_BuildFileName(char *fileName,MASK fileType);
 // MATRIX PROCESSING
 // =================
 
-// Structures definitions
-// ----------------------
-
-typedef struct _matrix
- {
-  int      nl,nc;           // resp. numbers of lines and columns of matrix
-  INDEX    basel,basec;     // resp. base indexes for lines and columns in matrix
-  double **matrix,          // pointer to columns in the matrix
-         **deriv2;          // pointer to second derivatives
- }
-MATRIX_OBJECT;
-
-// Prototypes
-// ----------
-
-RC   MATRIX_Allocate(MATRIX_OBJECT *pMatrix,int nl,int nc,int basel,int basec,int allocateDeriv2, const char *callingFunction);
-void MATRIX_Free(MATRIX_OBJECT *pMatrix, const char *callingFunctionShort);
-RC   MATRIX_Copy(MATRIX_OBJECT *pTarget,MATRIX_OBJECT *pSource, const char *callingFunction);
-RC   MATRIX_Load(char *fileName,MATRIX_OBJECT *pMatrix,int basel,int basec,int nl,int nc,double xmin,double xmax,int allocateDeriv2,int reverseFlag, const char *callingFunction);
+#include "matrix.h"
 
 // ===========================
 // ANALYSIS WINDOWS PROPERTIES
@@ -470,7 +392,7 @@ typedef struct _prjctInstrumental
  {
   char       observationSite[MAX_ITEM_NAME_LEN+1];                            // index of observation site in list
   char       readOutFormat;                                                   // spectra read out format
-  int         user;                                                             // user defined
+   int         user;                                                             // user defined
   char       calibrationFile[MAX_ITEM_TEXT_LEN+1];                            // calibration file
   char       instrFunction[MAX_ITEM_TEXT_LEN+1];                              // instrumental function
   char       vipFile[MAX_ITEM_TEXT_LEN+1];                                    // interpixel variability correction

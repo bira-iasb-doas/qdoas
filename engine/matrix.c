@@ -52,7 +52,11 @@
 //
 //  ----------------------------------------------------------------------------
 
-#include "doas.h"
+#include "comdefs.h"
+
+#include "matrix.h"
+#include "spline.h"
+#include "files.h"
 
 #include <stdbool.h>
 

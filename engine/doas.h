@@ -129,15 +129,7 @@ RC   FILTER_LoadFilter(PRJCT_FILTER *pFilter);
 // SPLINE.C : linear and cubic interpolation
 // =========================================
 
-enum _spline
- {
-  SPLINE_LINEAR,                                                             // linear interpolation
-  SPLINE_CUBIC,                                                             // spline interpolation
-  SPLINE_MAX
- };
-
-RC SPLINE_Deriv2(const double *X, const double *Y, double *Y2,int n, const char *callingFunction);
-RC SPLINE_Vector(const double *xa, const double *ya, const double *y2a,int na, const double *xb,double *yb,int nb,int type,const char *callingFunction);
+#include "spline.h"
 
 // ====================================
 // SVD.C : Singular value decomposition
