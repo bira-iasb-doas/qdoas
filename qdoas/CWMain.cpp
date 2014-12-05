@@ -63,9 +63,11 @@ CWMain::CWMain(QWidget *parent) :
 
   // to avoid that a thousands comma separator (QT 4.7.3)
 
-  QLocale qlocale=QLocale::c();
+  QLocale qlocale=QLocale::system();
   qlocale.setNumberOptions(QLocale::OmitGroupSeparator);
   QLocale::setDefault(qlocale);
+
+  setlocale(LC_NUMERIC, "C");
 
   // ----------------------------------------------------------------------------
 
