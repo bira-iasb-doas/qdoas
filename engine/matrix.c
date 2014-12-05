@@ -246,13 +246,12 @@ RC MATRIX_Copy(MATRIX_OBJECT *pTarget,MATRIX_OBJECT *pSource, const char *callin
 // -----------------------------------------------------------------------------
 
 RC MATRIX_Load(char *fileName,MATRIX_OBJECT *pMatrix,
-               int basel,int basec,int nl,int nc,double xmin,double xmax,
+               int nl,int nc,double xmin,double xmax,
                int allocateDeriv2,int reverseFlag, const char *callingFunction) {
   // Declarations
 
   char     fullPath[MAX_ITEM_TEXT_LEN+1];                                       // the complete file name to load
-  int      nltmp,nctmp,                                                         // highest indexes for lines and columns
-           nlMin,ncMin;                                                         // resp. the minimum numbers of lines and columns to load from the file
+  int      nlMin,ncMin;                                                         // resp. the minimum numbers of lines and columns to load from the file
   INDEX    i,j;                                                                 // indexes for browsing lines and columns in matrix
   double **matrix,**deriv2,                                                     // resp. pointers to the matrix to load and to the second derivatives
            xMin,xMax,                                                           // define the range of values to load for the first column of the matrix
@@ -333,16 +332,14 @@ RC MATRIX_Load(char *fileName,MATRIX_OBJECT *pMatrix,
     
     if (!nl || !nc || (nl<nlMin) || (nc<ncMin))
       rc=ERROR_SetLast(__func__,ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,fullPath);
-    else if (!(rc=MATRIX_Allocate(pMatrix,nl,nc,basel,basec,allocateDeriv2,callingFunction)))
+    else if (!(rc=MATRIX_Allocate(pMatrix,nl,nc,0,0,allocateDeriv2,callingFunction)))
      {
       matrix=pMatrix->matrix;
       deriv2=pMatrix->deriv2;
-      nltmp=nl+basel-1;
-      nctmp=nc+basec-1;
 
       fseek(fp,0L,SEEK_SET);
 
-      for (i=basel; i<=nltmp  && !rc;) {
+      for (i=0; i<nl && !rc;) {
 
         char c;
         while (fscanf(fp, " %1[*;]%*[^\n]\n", &c) == 1) { 
@@ -354,14 +351,21 @@ RC MATRIX_Load(char *fileName,MATRIX_OBJECT *pMatrix,
         if (n_read != 1) {
           rc=ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_FILE_BAD_LENGTH,fullPath);
         } else if ( (xMin==xMax) || ((tempValue>=xMin)&&(tempValue<=xMax)) ) {
-          matrix[basec][i] = tempValue;
-          for (j=basec+1; j<=nctmp && !rc; ++j) {
-            n_read = fscanf(fp, "%lf", &matrix[j][i]);
+          matrix[0][i] = tempValue;
+          for (j=1; j<nc && !rc; ++j) {
+            n_read = fscanf(fp, "%lf%*[^0-9.\n]", &matrix[j][i]);
             if (n_read != 1) {
               rc=ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_FILE_BAD_LENGTH,fullPath);
             }
           }
           ++i;
+
+          // check each column has same length 'nc'. we should now find a newline or the end of the file:
+          int next = fgetc(fp);
+          if ( next != '\n' && next != EOF) {
+            printf("file %s (%s), found character '%c'\n", fullPath, fileName, next);
+            rc=ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_FILE_BAD_LENGTH,fullPath);
+          }
         }
       }
       
@@ -372,24 +376,24 @@ RC MATRIX_Load(char *fileName,MATRIX_OBJECT *pMatrix,
 
       // Flip up/down the matrix
 
-      else if (reverseFlag && (matrix[basec][basel]>matrix[basec][basel+1]))
-       for (i=basel;i<=nltmp/2;i++)
-        for (j=basec;j<=nctmp;j++)
+      else if (reverseFlag && (matrix[0][0]>matrix[0][1]))
+       for (i=0; i<nl/2 ; ++i)
+         for (j=0; j<nc; ++j)
          {
           tempValue=matrix[j][i];
-          matrix[j][i]=matrix[j][nltmp-i];
-          matrix[j][nltmp-i]=tempValue;
+          matrix[j][i]=matrix[j][nl-1-i];
+          matrix[j][nl-1-i]=tempValue;
          }
 
       // Calculate second derivatives of the columns of the matrix for future interpolation
 
       if (allocateDeriv2)
-       for (j=basec+1;(j<=nctmp)&&!rc;j++)
-        rc=SPLINE_Deriv2(((double *)matrix[basec])+basel,
-                         ((double *)matrix[j])+basel,
-                         ((double *)deriv2[j])+basel,
-                                    pMatrix->nl,
-                                    callingFunction);
+        for (j=1; (j<nc) && !rc; ++j)
+        rc=SPLINE_Deriv2(((double *)matrix[0]),
+                         ((double *)matrix[j]),
+                         ((double *)deriv2[j]),
+                         pMatrix->nl,
+                         callingFunction);
      }
    }
 

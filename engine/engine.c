@@ -380,7 +380,7 @@ RC EngineSetProject(ENGINE_CONTEXT *pEngineContext)
        ((strlen(pInstrumental->dnlFile)>0) && (pBuffers->dnl.matrix==NULL) &&
         ((rc=MATRIX_Load(pInstrumental->dnlFile,
                          &pBuffers->dnl,
-                         0 /* line base */,0 /* column base */,0,0,
+                         0,0,
                          0.,0.,
                          1,0,"EngineSetProject (dnl)"))!=ERROR_ID_NO)))
 

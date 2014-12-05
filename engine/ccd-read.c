@@ -1325,7 +1325,7 @@ RC CCD_LoadInstrumental(ENGINE_CONTEXT *pEngineContext)
   if ((strlen(pInstrumental->instrFunction)>0) && (pRecord->ccd.drk.matrix==NULL) &&
      ((rc=MATRIX_Load(FILES_RebuildFileName(fileName,pInstrumental->instrFunction,1),
                      &pRecord->ccd.drk,
-                      0 /* line base */,0 /* column base */,NDET,NCURVE,
+                      NDET,NCURVE,
                       0.,0.,
                       0,0,"CCD_LoadInstrumental (offset)"))!=ERROR_ID_NO))
 
@@ -1336,7 +1336,7 @@ RC CCD_LoadInstrumental(ENGINE_CONTEXT *pEngineContext)
   if ((strlen(pInstrumental->vipFile)>0) && (pRecord->ccd.vip.matrix==NULL) &&
      ((rc=MATRIX_Load(FILES_RebuildFileName(fileName,pInstrumental->vipFile,1),
                      &pRecord->ccd.vip,
-                      0 /* line base */,0 /* column base */,0,NCURVE,
+                      0,NCURVE,
                       0.,0.,
                       0,0,"CCD_LoadInstrumental (vip)"))!=ERROR_ID_NO))
 
@@ -1347,7 +1347,7 @@ RC CCD_LoadInstrumental(ENGINE_CONTEXT *pEngineContext)
   if ((strlen(pInstrumental->dnlFile)>0) && (pRecord->ccd.dnl.matrix==NULL) &&
      ((rc=MATRIX_Load(FILES_RebuildFileName(fileName,pInstrumental->dnlFile,1),
                      &pRecord->ccd.dnl,
-                      0 /* line base */,0 /* column base */,0,0,
+                      0,0,
                       0.,0.,
                       1,0,"CCD_LoadInstrumental (dnl)"))!=ERROR_ID_NO))
 

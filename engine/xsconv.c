@@ -653,8 +653,8 @@ RC XSCONV_LoadSlitFunction(MATRIX_OBJECT *pSlitXs,MATRIX_OBJECT *pSlitXs2,SLIT *
 
     // Load the file
 
-    if (!(rc=MATRIX_Load(slitBuffer,pSlitXs,0,0,0,0,-9999.,9999.,1,0,"XSCONV_LoadSlitFunction")) &&
-        (!strlen(pSlit->slitFile2) || !(rc=MATRIX_Load(slitBuffer2,pSlitXs2,0,0,0,0,-9999.,9999.,1,0,"XSCONV_LoadSlitFunction"))) &&
+    if (!(rc=MATRIX_Load(slitBuffer,pSlitXs,0,0,-9999.,9999.,1,0,"XSCONV_LoadSlitFunction")) &&
+        (!strlen(pSlit->slitFile2) || !(rc=MATRIX_Load(slitBuffer2,pSlitXs2,0,0,-9999.,9999.,1,0,"XSCONV_LoadSlitFunction"))) &&
          (slitType==SLIT_TYPE_FILE))
      {
       for (i=1,sumPoly=(double)0.;i<pSlitXs->nl;i++)
@@ -812,7 +812,7 @@ RC XSCONV_ConvertCrossSectionFile(MATRIX_OBJECT *pCross, double lambdaMin,double
 
 RC XSCONV_LoadCrossSectionFile(MATRIX_OBJECT *pCross,char *crossFile,double lambdaMin,double lambdaMax,double shift,int conversionMode)
 {
-  RC rc = rc=MATRIX_Load(crossFile,pCross,0,0,0,0,lambdaMin,lambdaMax,1,0,__func__);
+  RC rc = rc=MATRIX_Load(crossFile,pCross,0,0,lambdaMin,lambdaMax,1,0,__func__);
   if(!rc) {
     rc = XSCONV_ConvertCrossSectionFile(pCross, lambdaMin, lambdaMax, shift, conversionMode);
   }
@@ -1115,8 +1115,8 @@ RC XSCONV_TypeStandard(MATRIX_OBJECT *pXsnew,INDEX indexLambdaMin,INDEX indexLam
 
   if ((pSlit!=NULL) && (pSlit->nl>0))
    {
-   	if ((slitType!=SLIT_TYPE_FILE) || (pSlit->nc==2))
-   	 {
+     if ((slitType!=SLIT_TYPE_FILE) || (pSlit->nc==2))
+       {
       slitLambda=pSlit->matrix[0];
       slitVector=pSlit->matrix[1];
       slitDeriv2=pSlit->deriv2[1];

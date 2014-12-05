@@ -1859,7 +1859,7 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
      if ( !strlen(kurucz_file) ) {
        rc = ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_MSGBOX_FIELDEMPTY, "Solar Ref. File");
      } else {
-       rc = MATRIX_Load(kurucz_file, &hr_solar_temp, 0,0,0,0, lambdaMin, lambdaMax, 1, 0, __func__);
+       rc = MATRIX_Load(kurucz_file, &hr_solar_temp, 0, 0, lambdaMin, lambdaMax, 1, 0, __func__);
      }
    }
 
@@ -2439,7 +2439,7 @@ int mediateRequestViewCrossSections(void *engineContext, char *awName,double min
 
      // Load the file
 
-     if (!MATRIX_Load(filenames[indexFile],&xs,0 /* line base */,0 /* column base */,0,0,
+     if (!MATRIX_Load(filenames[indexFile],&xs,0,0,
                       minWavelength,maxWavelength,
                       0,   // no derivatives
                       1,   // reverse vectors if needed

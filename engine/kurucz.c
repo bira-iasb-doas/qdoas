@@ -1081,7 +1081,7 @@ RC KURUCZ_Alloc(const PROJECT *pProject, const double *lambda,INDEX indexKurucz,
       if (!strlen(slitFile))
        rc=ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_MSGBOX_FIELDEMPTY,"Slit File");
       else
-       rc=MATRIX_Load(slitFile,&pKurucz->slitFunction,0 /* line base */,0 /* column base */,0,0,
+       rc=MATRIX_Load(slitFile,&pKurucz->slitFunction,0,0,
                      -9999.,9999.,1,0,__func__);
      }
 

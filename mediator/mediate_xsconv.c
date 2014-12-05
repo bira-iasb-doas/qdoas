@@ -1358,8 +1358,8 @@ RC mediateUsampCalculate(void *engineContext,void *responseHandle)
 
   // Files read out
 
-  if (!(rc=MATRIX_Load(pEngineContext->calibrationFile,&calibrationMatrix,0,0,0,0,(double)0.,(double)0.,0,1,"mediateUsampCalculate (calibration file) ")) &&
-      !(rc=MATRIX_Load(pEngineContext->kuruczFile,&kuruczMatrix,0,0,0,0,(double)calibrationMatrix.matrix[0][0]-7.,
+  if (!(rc=MATRIX_Load(pEngineContext->calibrationFile,&calibrationMatrix,0,0,(double)0.,(double)0.,0,1,"mediateUsampCalculate (calibration file) ")) &&
+      !(rc=MATRIX_Load(pEngineContext->kuruczFile,&kuruczMatrix,0,0,(double)calibrationMatrix.matrix[0][0]-7.,
        (double)calibrationMatrix.matrix[0][calibrationMatrix.nl-1]+7.,1,1,"mediateUsampCalculate (Kurucz) ")) &&
       !(rc=VECTOR_NormalizeVector(kuruczMatrix.matrix[1]-1,kuruczMatrix.nl,NULL,"mediateUsampCalculate ")))
    {
