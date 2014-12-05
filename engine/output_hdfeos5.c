@@ -168,21 +168,6 @@ RC create_dimensions(void) {
   return ERROR_ID_NO; // if we get here, all dimensions were created ok
 }
 
-/*! \brief Replace characters that are not allowed in field names (as
-    per HDF-EOS5 reference).*/
-void replace_special_chars(char *attrname) {
-  while(*attrname != '\0') {
-    switch(*attrname) {
-    case ',':
-    case ';':
-    case '/':
-      *attrname = '_';
-      break;
-    }
-    attrname++;
-  }
-}
-
 RC write_omi_automatic_reference_info(void) {
   const char *format = "%s - row %d automatic reference";
   size_t format_length = strlen(format);
@@ -195,7 +180,7 @@ RC write_omi_automatic_reference_info(void) {
         size_t length = strlen(pTabFeno->windowName) + format_length + 3;
         char attrname[length];
         sprintf(attrname, format, pTabFeno->windowName, row);
-        replace_special_chars(attrname);
+        replace_chars(attrname);
         size_t attrlength = strlen(pTabFeno->ref_description) + 1;
         herr_t result = HE5_SWwriteattr(swath_id, attrname, HE5T_CHARSTRING, (hsize_t*) &attrlength, pTabFeno->ref_description);
         if(result == FAIL)
@@ -790,6 +775,7 @@ static void replace_chars(char *fieldname) {
     case ',':
     case ';':
     case '/':
+    case ':':
       *fieldname = '-';
       break;
     default:
