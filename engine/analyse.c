@@ -3427,6 +3427,27 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
           Lambda=Feno->LambdaK;
           LambdaSpec=Feno->Lambda;
 
+          // For OMI using solar reference, interpolate earthshine
+          // spectrum onto the solar reference wavelength grid
+          if (pInstrumental->readOutFormat == PRJCT_INSTR_FORMAT_OMI
+              && Feno->refSpectrumSelectionMode != ANLYS_REF_SELECTION_MODE_AUTOMATIC) {
+
+            double *spec_deriv2 = malloc(NDET * sizeof(*spec_deriv2));
+            rc = SPLINE_Deriv2(pBuffers->lambda, pBuffers->spectrum, spec_deriv2, NDET, __func__);
+            if (rc == ERROR_ID_NO)
+              rc = SPLINE_Vector(pBuffers->lambda, pBuffers->spectrum, spec_deriv2, NDET, Feno->LambdaRef, Spectre, NDET, SPLINE_CUBIC, __func__);
+            free(spec_deriv2);
+            if (rc == ERROR_ID_NO)
+              rc=VECTOR_NormalizeVector(Spectre-1,NDET,&speNormFact,__func__);
+            if (rc != ERROR_ID_NO)
+              goto EndAnalysis;
+
+            // after putting earthshine on reference grid, assign the
+            // Kurucz-corrected reference grid LambdaK to the
+            // earthshine spectrum as well
+            LambdaSpec = Feno->LambdaK;
+          }
+
           // Make a backup of spectral window limits + gaps
 
           old_range = spectrum_copy(Feno->svd.specrange);
@@ -3531,7 +3552,6 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
           memcpy(Sref,Feno->Sref,sizeof(double)*NDET);
           Lambda=Feno->LambdaK;
-          LambdaSpec=Feno->Lambda;
 
           // TD: end remove
 
