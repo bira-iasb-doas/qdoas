@@ -1896,7 +1896,7 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
          }
 
          if (!rc && (THRD_id!=THREAD_TYPE_KURUCZ)) {
-           rc=ANALYSE_AlignReference(pEngineContext,0,saveFlag,responseHandle,indexFenoColumn);
+           rc=ANALYSE_AlignReference(pEngineContext,0,responseHandle,indexFenoColumn);
          }
        }
 
