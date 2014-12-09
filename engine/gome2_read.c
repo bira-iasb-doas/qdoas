@@ -2480,8 +2480,8 @@ RC GOME2_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
     // Automatic reference selection
 
     if (gome2LoadReferenceFlag && !(rc=Gome2NewRef(pEngineContext,responseHandle)) &&
-       !(rc=ANALYSE_AlignReference(pEngineContext,2,pEngineContext->project.spectra.displayDataFlag,responseHandle,0))) // automatic ref selection for Northern hemisphere
-         rc=ANALYSE_AlignReference(pEngineContext,3,pEngineContext->project.spectra.displayDataFlag,responseHandle,0);     // automatic ref selection for Southern hemisphere
+       !(rc=ANALYSE_AlignReference(pEngineContext,2,responseHandle,0))) // automatic ref selection for Northern hemisphere
+         rc=ANALYSE_AlignReference(pEngineContext,3,responseHandle,0);     // automatic ref selection for Southern hemisphere
 
     if (!rc)
      gome2LoadReferenceFlag=0;

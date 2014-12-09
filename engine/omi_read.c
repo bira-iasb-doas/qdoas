@@ -820,7 +820,7 @@ static RC setup_automatic_reference(ENGINE_CONTEXT *pEngineContext, void *respon
         struct omi_ref_list *reflist = (*row_references)[analysis_window][row];
         
         if(reflist != NULL) {
-          average_spectrum(pTabFeno->SrefN, pTabFeno->SrefSigma, reflist, pTabFeno->LambdaK);
+          average_spectrum(pTabFeno->SrefN, pTabFeno->SrefSigma, reflist, pTabFeno->LambdaRef);
           VECTOR_NormalizeVector(pTabFeno->SrefN-1,NDET,&pTabFeno->refNormFactN, __func__);
           // copy SrefN to SrefS...
           memcpy(pTabFeno->SrefS,pTabFeno->SrefN,sizeof(double)* NDET);
@@ -1281,7 +1281,7 @@ RC OMI_load_analysis(ENGINE_CONTEXT *pEngineContext, void *responseHandle) {
         // fit wavelength shift between calibrated solar irradiance
         // and automatic reference spectrum and apply this shift to
         // absorption crosssections
-        rc = ANALYSE_AlignReference(pEngineContext,2,pEngineContext->project.spectra.displayDataFlag,responseHandle,i);
+        rc = ANALYSE_AlignReference(pEngineContext,2,responseHandle,i);
       }
     }
 
@@ -1349,9 +1349,9 @@ RC OMI_Set(ENGINE_CONTEXT *pEngineContext)
 }
 
 // -----------------------------------------------------------------------------
-// FUNCTION      OMI_Read
+// FUNCTION      OMI_read_earth
 // -----------------------------------------------------------------------------
-// PURPOSE       OMI level 1 data read out
+// PURPOSE       OMI level 1 earthshine read out
 //
 // INPUT         recordNo     index of the record to read
 //
@@ -1362,7 +1362,7 @@ RC OMI_Set(ENGINE_CONTEXT *pEngineContext)
 //               ERROR_ID_NO              otherwise.
 // -----------------------------------------------------------------------------
 
-RC OMI_Read(ENGINE_CONTEXT *pEngineContext,int recordNo)
+RC OMI_read_earth(ENGINE_CONTEXT *pEngineContext,int recordNo)
 {
   // Initializations
   
@@ -1386,8 +1386,8 @@ RC OMI_Read(ENGINE_CONTEXT *pEngineContext,int recordNo)
       for (int i=0;i<NDET;i++)
 	spectrum[i]=sigma[i]=(double)0.;
       
-      int indexMeasurement=floor((recordNo-1)/pOrbitFile->nXtrack);      // index of the swath
-      int indexSpectrum=(recordNo-1)%pOrbitFile->nXtrack;          // index of the spectrum in the swath
+      int indexMeasurement=(recordNo-1)/pOrbitFile->nXtrack; // index of the swath
+      int indexSpectrum=(recordNo-1)%pOrbitFile->nXtrack; // index of the spectrum in the swath
 
       if (!pEngineContext->project.instrumental.omi.omiTracks[indexSpectrum]) {
 	rc=ERROR_ID_FILE_RECORD;
@@ -1421,7 +1421,7 @@ RC OMI_Read(ENGINE_CONTEXT *pEngineContext,int recordNo)
           
 	  // Complete information on the current spectrum
           
-	  pRecord->omi.omiMeasurementIndex=indexMeasurement+1;                                  // index of the current measurement
+	  pRecord->omi.omiMeasurementIndex=indexMeasurement+1;                      // index of the current measurement
 	  pRecord->omi.omiRowIndex=indexSpectrum+1;                                 // row of the current spectrum in the current measurement
           pRecord->omi.omiXtrackQF = pGeo->xtrackQualityFlags[recordNo-1];
           

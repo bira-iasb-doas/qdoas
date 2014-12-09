@@ -842,7 +842,7 @@ RC EngineReadFile(ENGINE_CONTEXT *pEngineContext,int indexRecord,int dateFlag,in
       break;
       // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_OMI :
-      rc=OMI_Read(pEngineContext,indexRecord);
+      rc=OMI_read_earth(pEngineContext,indexRecord);
       break;
       // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_CCD_EEV :
@@ -1915,7 +1915,7 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
     rc=KURUCZ_Reference(ENGINE_contextRef.buffers.instrFunction,1,saveFlag,1,responseHandle,0);
 
    if (!rc && alignRef)
-    rc=ANALYSE_AlignReference(pEngineContext,1,saveFlag,responseHandle,0);
+    rc=ANALYSE_AlignReference(pEngineContext,1,responseHandle,0);
 
    if (!rc && useUsamp)
     rc=ANALYSE_UsampBuild(1,ITEM_NONE);

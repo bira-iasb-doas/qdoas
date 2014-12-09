@@ -1604,8 +1604,8 @@ RC GDP_BIN_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,FILE *specFp,void *respon
     // Reference
 
     if ((THRD_id==THREAD_TYPE_ANALYSIS) && gdpBinLoadReferenceFlag && !(rc=GdpBinNewRef(pEngineContext,specFp,responseHandle)) &&
-       !(rc=ANALYSE_AlignReference(pEngineContext,2,pEngineContext->project.spectra.displayDataFlag,responseHandle,0)))  // automatic ref selection for Northern hemisphere
-     rc=ANALYSE_AlignReference(pEngineContext,3,pEngineContext->project.spectra.displayDataFlag,responseHandle,0);       // automatic ref selection for Southern hemisphere
+       !(rc=ANALYSE_AlignReference(pEngineContext,2,responseHandle,0)))  // automatic ref selection for Northern hemisphere
+     rc=ANALYSE_AlignReference(pEngineContext,3,responseHandle,0);       // automatic ref selection for Southern hemisphere
 
     if (rc==ERROR_ID_NO_REF)
      for (i=GDP_BIN_currentFileIndex+1;i<gdpBinOrbitFilesN;i++)

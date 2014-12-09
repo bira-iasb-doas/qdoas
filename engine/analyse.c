@@ -1820,7 +1820,7 @@ RC ANALYSE_SvdInit(SVD *pSvd)
 // ANALYSE_AlignReference : Align reference spectrum on etalon
 // ----------------------------------------------------------
 
-RC ANALYSE_AlignReference(ENGINE_CONTEXT *pEngineContext,int refFlag,int saveFlag,void *responseHandle,INDEX indexFenoColumn)
+RC ANALYSE_AlignReference(ENGINE_CONTEXT *pEngineContext,int refFlag,void *responseHandle,INDEX indexFenoColumn)
 
 //
 //  refFlag==0 : GB, file mode selection        refFlag==2 : GOME, refN
@@ -1845,6 +1845,7 @@ RC ANALYSE_AlignReference(ENGINE_CONTEXT *pEngineContext,int refFlag,int saveFla
   char string[MAX_ITEM_TEXT_LEN+1],tabTitle[MAX_ITEM_TEXT_LEN+1];
   RC rc;                                                                        // return code
 
+  printf("%s: %d\n", __func__, indexFenoColumn);
 
   // Initializations
 
@@ -1898,11 +1899,14 @@ RC ANALYSE_AlignReference(ENGINE_CONTEXT *pEngineContext,int refFlag,int saveFla
         Lambda=Feno->Lambda;
        }
 
-      if (!Feno->hidden && (Feno->useKurucz!=ANLYS_KURUCZ_NONE) && (Feno->useKurucz!=ANLYS_KURUCZ_SPEC) && (Feno->useKurucz!=ANLYS_KURUCZ_REF_AND_SPEC) && Feno->newrefFlag &&
-          ((!refFlag && (Feno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_FILE)) ||
-           (refFlag && (Feno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_AUTOMATIC))) &&
-          Feno->useEtalon && !VECTOR_Equal(Feno->SrefEtalon,Sref,NDET,(double)0.) &&
-          ((refFlag!=3) || !VECTOR_Equal(Feno->SrefN,Sref,NDET,(double)0.)))
+      if (!Feno->hidden 
+          && (Feno->useKurucz!=ANLYS_KURUCZ_NONE) && (Feno->useKurucz!=ANLYS_KURUCZ_SPEC) && (Feno->useKurucz!=ANLYS_KURUCZ_REF_AND_SPEC)
+          && (Feno->newrefFlag || pEngineContext->satelliteFlag)
+          && ((!refFlag && (Feno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_FILE)) ||
+              (refFlag && (Feno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_AUTOMATIC))) 
+          && Feno->useEtalon
+          && !VECTOR_Equal(Feno->SrefEtalon,Sref,NDET,(double)0.)
+          && ((refFlag!=3) || !VECTOR_Equal(Feno->SrefN,Sref,NDET,(double)0.)))
        {
         memcpy(Lambda,Feno->LambdaK,sizeof(double)*NDET);
         LambdaSpec=Feno->Lambda;
@@ -3427,10 +3431,9 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
           Lambda=Feno->LambdaK;
           LambdaSpec=Feno->Lambda;
 
-          // For OMI using solar reference, interpolate earthshine
+          // For OMI, interpolate earthshine
           // spectrum onto the solar reference wavelength grid
-          if (pInstrumental->readOutFormat == PRJCT_INSTR_FORMAT_OMI
-              && Feno->refSpectrumSelectionMode != ANLYS_REF_SELECTION_MODE_AUTOMATIC) {
+          if (pInstrumental->readOutFormat == PRJCT_INSTR_FORMAT_OMI ) {
 
             double *spec_deriv2 = malloc(NDET * sizeof(*spec_deriv2));
             rc = SPLINE_Deriv2(pBuffers->lambda, pBuffers->spectrum, spec_deriv2, NDET, __func__);
