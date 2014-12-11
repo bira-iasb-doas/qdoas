@@ -1512,7 +1512,7 @@ RC GOME2_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,INDEX fileIndex)
       coda_set_option_bypass_special_types(1);
 
       Gome2GotoOBS(pOrbitFile,(INDEX)indexBand,indexMDR,recordNo-mdrObs-1);
-      for (i=0; i < pGome2Info->no_of_pixels && !rc; ++i) {
+      for (i=pGome2Info->startPixel; i < (pGome2Info->no_of_pixels+pGome2Info->startPixel) && !rc; ++i) {
         coda_cursor_goto_first_record_field(&pOrbitFile->gome2Cursor); // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.BAND[i].RAD
 
         coda_cursor_goto_first_record_field(&pOrbitFile->gome2Cursor); // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.BAND[i].RAD.scale
