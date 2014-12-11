@@ -363,7 +363,6 @@ RC MATRIX_Load(char *fileName,MATRIX_OBJECT *pMatrix,
           // check each column has same length 'nc'. we should now find a newline or the end of the file:
           int next = fgetc(fp);
           if ( next != '\n' && next != EOF) {
-            printf("file %s (%s), found character '%c'\n", fullPath, fileName, next);
             rc=ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_FILE_BAD_LENGTH,fullPath);
           }
         }

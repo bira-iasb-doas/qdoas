@@ -1087,7 +1087,6 @@ static void register_calibration(int kurucz_index, int index_row, int index_feno
         newfield.index_feno=index_feno;
         newfield.index_row=index_row;
         newfield.index_cross=indexTabCross;
-        printf("%s: %s\n", __func__, fieldname);
         register_calibration_field(newfield);
       }
     }

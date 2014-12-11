@@ -1845,8 +1845,6 @@ RC ANALYSE_AlignReference(ENGINE_CONTEXT *pEngineContext,int refFlag,void *respo
   char string[MAX_ITEM_TEXT_LEN+1],tabTitle[MAX_ITEM_TEXT_LEN+1];
   RC rc;                                                                        // return code
 
-  printf("%s: %d\n", __func__, indexFenoColumn);
-
   // Initializations
 
 #if defined(__DEBUG_) && __DEBUG_
