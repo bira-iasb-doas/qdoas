@@ -1237,7 +1237,7 @@ RC GOME2_Set(ENGINE_CONTEXT *pEngineContext)
   if (!GOME2_beatLoaded)
    {
     coda_init();
-    coda_set_option_perform_boundary_checks(1);
+    coda_set_option_perform_boundary_checks(0);
     GOME2_beatLoaded=1;
    }
 
@@ -1447,7 +1447,6 @@ RC GOME2_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,INDEX fileIndex)
 
   double   *unique_int;                                                         // integration time
   uint8_t  *int_index;                                                          // index of the integration time
-  uint32_t  spe32;
   int i;
   double tint;
   double *spectrum,*sigma;                                                      // radiances and errors
@@ -1491,33 +1490,55 @@ RC GOME2_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,INDEX fileIndex)
      spectrum[i]=sigma[i]=(double)0.;
 
     if ((indexMDR=Gome2GetMDRIndex(pOrbitFile,indexBand,recordNo-1,&mdrObs))==ITEM_NONE)
-     rc=ERROR_ID_FILE_RECORD;
-    else
-     {
-     	unique_int=pGome2Info->mdr[indexMDR].unique_int;
-     	int_index=pGome2Info->mdr[indexMDR].int_index;
+      rc=ERROR_ID_FILE_RECORD;
+    else {
+      
+      unique_int=pGome2Info->mdr[indexMDR].unique_int;
+      int_index=pGome2Info->mdr[indexMDR].int_index;
+      
+      tint=(pOrbitFile->version<=11)?unique_int[int_index[indexBand]]:pGome2Info->mdr[indexMDR].integration_times[indexBand];
 
-     	tint=(pOrbitFile->version<=11)?unique_int[int_index[indexBand]]:pGome2Info->mdr[indexMDR].integration_times[indexBand];
+      // Rear radiance & error ('RAD' and 'ERR_RAD')
+      // RAD and ERR_RAD fields are 'vsf_integers', consisting of a
+      // 'value' and 'scale' integer pair.  CODA will automatically
+      // convert these to one number value * 10^(-scale), but it's
+      // slightly faster to disable this conversion and perform the
+      // conversion to double ourselves
+      int32_t radval;
+      int16_t errval;
+      int8_t radscale, errscale;
+      // disable conversion of "special types" in order to access
+      // value and scale integers separately:
+      coda_set_option_bypass_special_types(1);
 
-     	Gome2GotoOBS(pOrbitFile,(INDEX)indexBand,indexMDR,recordNo-mdrObs-1);
+      Gome2GotoOBS(pOrbitFile,(INDEX)indexBand,indexMDR,recordNo-mdrObs-1);
+      for (i=0; i < pGome2Info->no_of_pixels && !rc; ++i) {
+        coda_cursor_goto_first_record_field(&pOrbitFile->gome2Cursor); // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.BAND[i].RAD
 
-     	for (i=pGome2Info->startPixel;(i<pGome2Info->startPixel+pGome2Info->no_of_pixels) && !rc;i++)
-     	 {
-     	 	coda_cursor_goto_first_record_field(&pOrbitFile->gome2Cursor);                      // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.BAND[i].RAD
+        coda_cursor_goto_first_record_field(&pOrbitFile->gome2Cursor); // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.BAND[i].RAD.scale
+        coda_cursor_read_int8(&pOrbitFile->gome2Cursor, &radscale);
+        coda_cursor_goto_next_record_field(&pOrbitFile->gome2Cursor);  // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.BAND[i].RAD.val
+        coda_cursor_read_int32(&pOrbitFile->gome2Cursor, &radval);
 
+        coda_cursor_goto_parent(&pOrbitFile->gome2Cursor); // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.BAND[i].RAD
+        coda_cursor_goto_next_record_field(&pOrbitFile->gome2Cursor); // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.BAND[i].ERR_RAD
+        coda_cursor_goto_first_record_field(&pOrbitFile->gome2Cursor); // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.BAND[i].ERR_RAD.scale
+        coda_cursor_read_int8(&pOrbitFile->gome2Cursor, &errscale);
+        coda_cursor_goto_next_record_field(&pOrbitFile->gome2Cursor); // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.BAND[i].ERR_RAD.val
+        coda_cursor_read_int16(&pOrbitFile->gome2Cursor, &errval);
 
-     	 	coda_cursor_read_uint32(&pOrbitFile->gome2Cursor,&spe32);
-     	  coda_cursor_read_double(&pOrbitFile->gome2Cursor,&spectrum[i]);
+        coda_cursor_goto_parent(&pOrbitFile->gome2Cursor); // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.BAND[i].ERR_RAD
+        coda_cursor_goto_parent(&pOrbitFile->gome2Cursor); // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.BAND[i]
+        coda_cursor_goto_next_array_element(&pOrbitFile->gome2Cursor); // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.BAND[i+1]
 
+        spectrum[i] = ((double)radval) * pow(10, -radscale);
+        sigma[i] = ((double)errval) * pow(10, -errscale);
 
-     	  coda_cursor_goto_next_record_field(&pOrbitFile->gome2Cursor);                       // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.BAND[i].ERR_RAD
-     	  coda_cursor_read_double(&pOrbitFile->gome2Cursor,&sigma[i]);
-     	  coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                  // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.BAND[i]
-     	  coda_cursor_goto_next_array_element(&pOrbitFile->gome2Cursor);                      // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.BAND[i+1]
-
-     	  if (fabs(spectrum[i])>(double)1.e20)
-     	   rc=ERROR_ID_FILE_RECORD;
-     	 }
+        if (fabs(spectrum[i])>(double)1.e20)
+          rc=ERROR_ID_FILE_RECORD;
+      }
+      // re-enable CODA handling of "special types"
+      coda_set_option_bypass_special_types(0);
 
       if (!rc)
        {
