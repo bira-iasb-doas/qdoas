@@ -60,6 +60,11 @@
 
 #include <stdbool.h>
 
+// format string for fscanf: read a single number and skip over any
+// following characters that are not part of a number and not a
+// newline:
+#define NEXT_NUMBER_ON_THIS_LINE "%lf%*[^0-9.\n-]"
+
 // ==================
 // BUFFERS PROCESSING
 // ==================
@@ -304,9 +309,8 @@ RC MATRIX_Load(char *fileName,MATRIX_OBJECT *pMatrix,
       nl= n_scan && ( (xMin==xMax) || ((tempValue>=xMin)&&(tempValue<=xMax)) ) ? 1 : 0;
       
       nc = 1;
-      // in each iteration of the loop, read a number and skip
-      // following whitespace (except newline)
-      while (fscanf(fp, "%lf%*[^0-9.\n]", &tempValue) == 1) {
+      // in each iteration of the loop, read a number
+      while (fscanf(fp, NEXT_NUMBER_ON_THIS_LINE, &tempValue) == 1) {
         ++nc;
         char next = fgetc(fp); // look ahead to detect end of line
         if (next == '\n') {
@@ -353,7 +357,7 @@ RC MATRIX_Load(char *fileName,MATRIX_OBJECT *pMatrix,
         } else if ( (xMin==xMax) || ((tempValue>=xMin)&&(tempValue<=xMax)) ) {
           matrix[0][i] = tempValue;
           for (j=1; j<nc && !rc; ++j) {
-            n_read = fscanf(fp, "%lf%*[^0-9.\n]", &matrix[j][i]);
+            n_read = fscanf(fp, NEXT_NUMBER_ON_THIS_LINE, &matrix[j][i]);
             if (n_read != 1) {
               rc=ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_FILE_BAD_LENGTH,fullPath);
             }
