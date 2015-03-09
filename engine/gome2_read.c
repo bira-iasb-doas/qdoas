@@ -458,17 +458,18 @@ int Gome2Open(coda_ProductFile **productFile, char *fileName,int *version)
    }
 
   if (rc!=0)
-   rc=ERROR_SetLast("Gome2Init",ERROR_TYPE_WARNING,ERROR_ID_BEAT,"coda_open",fileName,""); //coda_errno_to_string(coda_errno));
+   rc=ERROR_SetLast(__func__,ERROR_TYPE_WARNING,ERROR_ID_BEAT,"coda_open",fileName,""); //coda_errno_to_string(coda_errno));
   else
    {
    	// Retrieve the product class and type
 
-    coda_get_product_class((const coda_ProductFile *)*productFile,(const char **)&productClass);
-    coda_get_product_type((const coda_ProductFile *)*productFile,(const char **)&productType);
-    coda_get_product_version((const coda_ProductFile *)*productFile, version);
+     coda_get_product_class((const coda_ProductFile *)*productFile,(const char **)&productClass);
+     coda_get_product_type((const coda_ProductFile *)*productFile,(const char **)&productType);
+     coda_get_product_version((const coda_ProductFile *)*productFile, version);
 
-    if (strcmp(productClass,"EPS") || strcmp(productType,"GOME_xxx_1B"))
-     rc=ERROR_SetLast("Gome2Init",ERROR_TYPE_WARNING,ERROR_ID_BEAT,"coda_get_product_class or coda_get_product_type",fileName,"Not a GOME2 Level-1B file");
+     if (!productClass || strcmp(productClass,"EPS") || 
+         !productType || strcmp(productType,"GOME_xxx_1B") )
+       rc=ERROR_SetLast(__func__,ERROR_TYPE_WARNING,ERROR_ID_BEAT,"coda_get_product_class or coda_get_product_type",fileName,"Not a GOME2 Level-1B file");
    }
 
   // Return
