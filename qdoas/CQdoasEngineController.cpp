@@ -444,14 +444,6 @@ void CQdoasEngineController::slotStep()
   m_engineCurrentRecord=m_currentRecord;
   m_engineCurrentFile=m_currentIt.file().filePath();
 
-// QFile file("qdoas.dbg");
-// if (file.open(QIODevice::Append | QIODevice::Text)!=0)
-//  {
-//   QTextStream out(&file);
-//   out << "   CQdoasEngineController::slotStep " << m_currentRecord << "\n";
-//   file.close();
-//  }
-
   // If the m_atEndOfCurrentFile flag is set, then the previous request indicated that no
   // more records matched. Advance to the next file if possible
 
@@ -504,6 +496,8 @@ void CQdoasEngineController::slotStep()
       }
 
       if (endOfSession) {
+        // Close current session, save output files
+        slotStopSession();
         // Post end of .... notificatons
         if (m_session->mode()==CSession::Analyse)
           QMessageBox::information((QWidget *)this->parent(),"QDOAS : Run Analysis","End of analysis");
