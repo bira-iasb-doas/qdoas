@@ -40,7 +40,6 @@ Q_OBJECT
  public:
 
   CWMain(QWidget *parent = 0);
-  virtual ~CWMain();
 
   virtual void closeEvent(QCloseEvent *e);
  
@@ -85,9 +84,6 @@ Q_OBJECT
   QAction *m_saveAsAction;
 
   mediate_ring_t m_properties, m_guiProperties;
-
-  // help interface ...
-  CHelpSystem *m_helpInterface;
 };
 
 #endif

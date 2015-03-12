@@ -72,9 +72,6 @@ CWMain::CWMain(QWidget *parent) :
   // controller
   m_controller = new CUsampEngineController(this);
 
-  // Help system
-  m_helpInterface = CHelpSystem::establishHelpSystem(this); // this is the 'controller'
-
   QVBoxLayout *mainLayout = new QVBoxLayout(this);
   mainLayout->setMargin(0);
   mainLayout->setSpacing(0);
@@ -182,10 +179,6 @@ CWMain::CWMain(QWidget *parent) :
 	  this, SLOT(slotPlotPage(const RefCountConstPtr<CPlotPageData> &)));
   connect(m_controller, SIGNAL(signalErrorMessages(int, const QString &)),
 	  this, SLOT(slotErrorMessages(int, const QString &)));
-}
-
-CWMain::~CWMain()
-{
 }
 
 void CWMain::closeEvent(QCloseEvent *e)

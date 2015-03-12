@@ -29,17 +29,8 @@ class CHelpImpl;
 class CHelpSystem
 {
  public:
-  static CHelpSystem* establishHelpSystem(QWidget *parent);
   static void showHelpTopic(const QString &chapter, const QString &key = QString());
-
-  QString changeDir(void);
-
- private:
-  CHelpSystem(QWidget *parent) : m_parentWidget(parent) {};
-
-  static CHelpSystem* m_instance;
-
-  QWidget *m_parentWidget;
+  static QString changeDir(void);
 };
 
 #endif

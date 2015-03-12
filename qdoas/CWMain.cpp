@@ -151,10 +151,6 @@ CWMain::CWMain(QWidget *parent) :
   connect(m_projTree, SIGNAL(signalViewCrossSections(const RefCountPtr<CViewCrossSectionData>&)),
 	  m_controller, SLOT(slotViewCrossSections(const RefCountPtr<CViewCrossSectionData>&)));
 
-
-  // Help system
-  m_helpInterface = CHelpSystem::establishHelpSystem(this); // this is the 'controller'
-
   // Menu and toolbar actions
 
   // File Menu
@@ -314,11 +310,6 @@ CWMain::CWMain(QWidget *parent) :
   resize(CPreferences::instance()->windowSize("Main", QSize(600,450)));
 }
 
-CWMain::~CWMain()
-{
-  delete m_helpInterface;
-}
-
 void CWMain::closeEvent(QCloseEvent *e)
 {
   // save preferences ...
@@ -333,10 +324,6 @@ void CWMain::closeEvent(QCloseEvent *e)
   delete CPreferences::instance();
 
   if (checkStateAndConsiderSaveFile()) {
-    // shutdown the help system
-    delete m_helpInterface;
-    m_helpInterface = NULL;
-
     e->accept();
     return;
   }

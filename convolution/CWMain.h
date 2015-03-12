@@ -90,8 +90,6 @@ Q_OBJECT
 
   mediate_convolution_t m_properties, m_guiProperties;
 
-  // help interface ...
-  CHelpSystem *m_helpInterface;
 };
 
 #endif

@@ -63,9 +63,6 @@ CWMain::CWMain(QWidget *parent) :
   // controller
   m_controller = new CConvEngineController(this);
 
-  // Help system
-  m_helpInterface = CHelpSystem::establishHelpSystem(this);
-
   QVBoxLayout *mainLayout = new QVBoxLayout(this);
   mainLayout->setMargin(0);
   mainLayout->setSpacing(0);

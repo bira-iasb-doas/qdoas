@@ -28,35 +28,21 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "CHelpSystem.h"
 #include "CPreferences.h"
 
-CHelpSystem* CHelpSystem::m_instance = NULL;
-
-CHelpSystem* CHelpSystem::establishHelpSystem(QWidget *parent)
-{
- if (m_instance == NULL && parent != NULL) {
-   m_instance = new CHelpSystem(parent);
-   return m_instance;
- }
-
-  // only want one object to create this system and control it...
-  // All others use the static showHelpTopic method and hope for the best.
-  return NULL;
-}
-
 // Ask the user to locate the Qdoas help files, and update the preferences if found.
 QString CHelpSystem::changeDir(void)
 {
   QString helpDir = CPreferences::instance()->directoryName("Help", ".");
 
-  QMessageBox::information(m_parentWidget, "Help", "Qdoas can not find the Help directory."
+  QMessageBox::information(NULL, "Help", "Qdoas can not find the Help directory."
                            "Please select the directory containing the main Qdoas help file"
                            "(index.html).");
 
-  helpDir = QFileDialog::getExistingDirectory(m_parentWidget, "Qdoas Help directory", helpDir);
+  helpDir = QFileDialog::getExistingDirectory(NULL, "Qdoas Help directory", helpDir);
 
   if (!helpDir.isEmpty() && QFile::exists(helpDir + "/index.html") ) {
     CPreferences::instance()->setDirectoryName("Help", helpDir);
   } else {
-    QMessageBox::warning(m_parentWidget, "Help", "Could not find Help files.");
+    QMessageBox::warning(NULL, "Help", "Could not find Help files.");
   }
   return helpDir;
 }
@@ -87,9 +73,7 @@ void CHelpSystem::showHelpTopic(const QString &chapter, const QString &key)
 
   // If nothing was found, ask the user to point to the Help directory
   if (!QFile::exists(helpFile)) {
-    if(m_instance) {
-      helpFile = m_instance->changeDir() + relPath;
-    }
+    helpFile = changeDir() + relPath;
   }
 
   if (QFile::exists(helpFile)) {
