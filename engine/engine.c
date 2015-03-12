@@ -939,19 +939,9 @@ RC EngineRequestBeginBrowseSpectra(ENGINE_CONTEXT *pEngineContext,const char *sp
      pEngineContext->currentRecord=1;
     }
 
-   //  {
-   //  	FILE *fp;
-   //  	char *ptr;
-   //  	fp=fopen("qdoas.dbg","a+t");
-   //  	if ((ptr=strrchr(spectraFileName,'/'))!=NULL)
-   //  	 ptr=ptr+1;
-   //  	else
-   //  	 ptr=(char *)spectraFileName;
-   //
-   //  	fprintf(fp,"EngineRequestBeginBrowseSpectra %s (%d records,rc %d)\n",ptr,pEngineContext->recordNumber,rc);
-   //  	fclose(fp);
-   //  }
-
+   // retain calibration plot in case it is already there (e.g. for OMI)
+   if (ANALYSE_plotKurucz)
+     mediateResponseRetainPage(plotPageCalib,responseHandle);
 
    // Return
 
