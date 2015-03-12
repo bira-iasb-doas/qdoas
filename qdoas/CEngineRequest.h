@@ -32,44 +32,18 @@ class CEngineThread;
 class CEngineRequest
 {
  public:
-  enum RequestType {
-    eEngineRequestCompoundType,
-    eEngineRequestSetSymbolsType,
-    eEngineRequestSetSitesType,
-    eEngineRequestSetProjectType,
-    eEngineRequestSetAnalysisWindowType,
-    eEngineRequestBeginBrowseFileType,
-    eEngineRequestBrowseNextRecordType,
-    eEngineRequestBrowseSpecificRecordType,
-    eEngineRequestBeginAnalyseFileType,
-    eEngineRequestAnalyseNextRecordType,
-    eEngineRequestAnalyseSpecificRecordType,
-    eEngineRequestBeginCalibrateFileType,
-    eEngineRequestCalibrateNextRecordType,
-    eEngineRequestCalibrateSpecificRecordType,
-    eEngineRequestStop,
-    eEngineRequestViewCrossSectionsType
-  };
-
-  CEngineRequest(enum RequestType type) : m_type(type) {};
   virtual ~CEngineRequest() {};
 
   virtual bool process(CEngineThread *engineThread) = 0;
 
-  enum RequestType type(void) const;
-
  protected:
-  enum RequestType m_type;
 };
-
-inline CEngineRequest::RequestType CEngineRequest::type(void) const { return m_type; }
 
 //------------------------------------------------------------
 
 class CEngineRequestCompound : public CEngineRequest
 {
  public:
-  CEngineRequestCompound() : CEngineRequest(eEngineRequestCompoundType) {};
   virtual ~CEngineRequestCompound();
 
   virtual bool process(CEngineThread *engineThread);
@@ -144,8 +118,7 @@ class CEngineRequestSetSites : public CEngineRequest
 class CEngineRequestBeginBrowseFile : public CEngineRequest
 {
  public:
-  CEngineRequestBeginBrowseFile(const QString &fileName) : CEngineRequest(eEngineRequestBeginBrowseFileType),
-                                                           m_fileName(fileName) {};
+  CEngineRequestBeginBrowseFile(const QString &fileName) : m_fileName(fileName) {};
 
   virtual bool process(CEngineThread *engineThread);
 
@@ -158,8 +131,6 @@ class CEngineRequestBeginBrowseFile : public CEngineRequest
 class CEngineRequestBrowseNextRecord : public CEngineRequest
 {
  public:
-  CEngineRequestBrowseNextRecord() : CEngineRequest(eEngineRequestBrowseNextRecordType) {};
-
   virtual bool process(CEngineThread *engineThread);
 };
 
@@ -168,8 +139,7 @@ class CEngineRequestBrowseNextRecord : public CEngineRequest
 class CEngineRequestBrowseSpecificRecord : public CEngineRequest
 {
  public:
-  CEngineRequestBrowseSpecificRecord(int recordNumber) : CEngineRequest(eEngineRequestBrowseSpecificRecordType),
-                                                         m_recordNumber(recordNumber) {};
+  CEngineRequestBrowseSpecificRecord(int recordNumber) : m_recordNumber(recordNumber) {};
 
   virtual bool process(CEngineThread *engineThread);
 
@@ -182,8 +152,7 @@ class CEngineRequestBrowseSpecificRecord : public CEngineRequest
 class CEngineRequestBeginAnalyseFile : public CEngineRequest
 {
  public:
-  CEngineRequestBeginAnalyseFile(const QString &fileName) : CEngineRequest(eEngineRequestBeginAnalyseFileType),
-                                                            m_fileName(fileName) {};
+  CEngineRequestBeginAnalyseFile(const QString &fileName) : m_fileName(fileName) {};
 
   virtual bool process(CEngineThread *engineThread);
 
@@ -196,8 +165,6 @@ class CEngineRequestBeginAnalyseFile : public CEngineRequest
 class CEngineRequestAnalyseNextRecord : public CEngineRequest
 {
  public:
-  CEngineRequestAnalyseNextRecord() : CEngineRequest(eEngineRequestAnalyseNextRecordType) {};
-
   virtual bool process(CEngineThread *engineThread);
 };
 
@@ -206,8 +173,7 @@ class CEngineRequestAnalyseNextRecord : public CEngineRequest
 class CEngineRequestAnalyseSpecificRecord : public CEngineRequest
 {
  public:
-  CEngineRequestAnalyseSpecificRecord(int recordNumber) : CEngineRequest(eEngineRequestAnalyseSpecificRecordType),
-                                                          m_recordNumber(recordNumber) {};
+  CEngineRequestAnalyseSpecificRecord(int recordNumber) : m_recordNumber(recordNumber) {};
 
   virtual bool process(CEngineThread *engineThread);
 
@@ -220,8 +186,7 @@ class CEngineRequestAnalyseSpecificRecord : public CEngineRequest
 class CEngineRequestBeginCalibrateFile : public CEngineRequest
 {
  public:
-  CEngineRequestBeginCalibrateFile(const QString &fileName) : CEngineRequest(eEngineRequestBeginCalibrateFileType),
-                                                              m_fileName(fileName) {};
+  CEngineRequestBeginCalibrateFile(const QString &fileName) : m_fileName(fileName) {};
   virtual bool process(CEngineThread *engineThread);
 
  private:
@@ -233,8 +198,6 @@ class CEngineRequestBeginCalibrateFile : public CEngineRequest
 class CEngineRequestCalibrateNextRecord : public CEngineRequest
 {
  public:
-  CEngineRequestCalibrateNextRecord() : CEngineRequest(eEngineRequestCalibrateNextRecordType) {};
-
   virtual bool process(CEngineThread *engineThread);
 };
 
@@ -243,8 +206,7 @@ class CEngineRequestCalibrateNextRecord : public CEngineRequest
 class CEngineRequestCalibrateSpecificRecord : public CEngineRequest
 {
  public:
-  CEngineRequestCalibrateSpecificRecord(int recordNumber) : CEngineRequest(eEngineRequestCalibrateSpecificRecordType),
-                                                            m_recordNumber(recordNumber) {};
+  CEngineRequestCalibrateSpecificRecord(int recordNumber) : m_recordNumber(recordNumber) {};
 
   virtual bool process(CEngineThread *engineThread);
 
@@ -257,8 +219,6 @@ class CEngineRequestCalibrateSpecificRecord : public CEngineRequest
 class CEngineRequestStop : public CEngineRequest
 {
  public:
-  CEngineRequestStop() : CEngineRequest(eEngineRequestStop) {};
-
   virtual bool process(CEngineThread *engineThread);
 
 };

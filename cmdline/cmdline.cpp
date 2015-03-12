@@ -549,7 +549,7 @@ int analyseProjectQdoasPrepare(void **engineContext, const CProjectConfigItem *p
 	 int n;
 	 const mediate_site_t *siteList = ws->siteList(n);
   int retCode = 0;
-  CEngineResponseTool *msgResp = new CEngineResponseTool;
+  CEngineResponseVisual *msgResp = new CEngineResponseVisual;
 
   // copy the project data and mask out any display flags (do not want
   // the engine to create and return visualization data)
@@ -579,7 +579,7 @@ int analyseProjectQdoasPrepare(void **engineContext, const CProjectConfigItem *p
     msgResp->process(controller);
     delete msgResp;
     // create a new response ready for the destroy engine context request
-    msgResp = new CEngineResponseTool;
+    msgResp = new CEngineResponseVisual;
     retCode = 1;
   }
 
@@ -610,7 +610,7 @@ int analyseProjectQdoasPrepare(void **engineContext, const CProjectConfigItem *p
     if (mediateRequestSetAnalysisWindows(*engineContext, nWindows, awDataList, (!calibSwitch)?THREAD_TYPE_ANALYSIS:THREAD_TYPE_KURUCZ, msgResp) != 0) {
       msgResp->process(controller);
       delete msgResp;
-      msgResp = new CEngineResponseTool;
+      msgResp = new CEngineResponseVisual;
       retCode = 1;
     }
   }
@@ -654,7 +654,7 @@ int analyseProjectQdoasFile(void *engineContext, CBatchEngineController *control
   // loop based on the controller ...
   while (!retCode && controller->active() && (result!=oldResult)) {
 
-    CEngineResponseAccessRecord *resp = new CEngineResponseAccessRecord;
+    CEngineResponseSpecificRecord *resp = new CEngineResponseSpecificRecord;
 
     oldResult=result;
     result = (!calibSwitch) ? mediateRequestNextMatchingAnalyseSpectrum(engineContext, resp) :
@@ -774,7 +774,7 @@ int batchProcessConvolution(commands_t *cmd)
   if (ok) {
     void *engineContext = NULL;
 
-    CEngineResponseTool *resp = new CEngineResponseTool;
+    CEngineResponseVisual *resp = new CEngineResponseVisual;
     CBatchEngineController *controller = new CBatchEngineController;
 
     // copy the properties data ...
@@ -872,7 +872,7 @@ int batchProcessRing(commands_t *cmd)
    {
     void *engineContext = NULL;
 
-    CEngineResponseTool *resp = new CEngineResponseTool;
+    CEngineResponseVisual *resp = new CEngineResponseVisual;
     CBatchEngineController *controller = new CBatchEngineController;
 
     // copy the properties data ...
@@ -971,7 +971,7 @@ int batchProcessUsamp(commands_t *cmd)
    {
     void *engineContext = NULL;
 
-    CEngineResponseTool *resp = new CEngineResponseTool;
+    CEngineResponseVisual *resp = new CEngineResponseVisual;
     CBatchEngineController *controller = new CBatchEngineController;
 
     // copy the properties data ...

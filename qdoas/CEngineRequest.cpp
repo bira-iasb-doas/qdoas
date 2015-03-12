@@ -59,7 +59,6 @@ void CEngineRequestCompound::addRequest(CEngineRequest *req)
 //------------------------------------------------------------
 
 CEngineRequestSetProject::CEngineRequestSetProject(const mediate_project_t *project, int opMode) :
-  CEngineRequest(eEngineRequestSetProjectType),
   m_opMode(opMode)
 {
   // deep copy the data from project.
@@ -71,7 +70,7 @@ bool CEngineRequestSetProject::process(CEngineThread *engineThread)
   // process is called from the thread and drives the engine through the
   // mediator interface.
 
-  CEngineResponse *resp = new CEngineResponseSet;
+  CEngineResponse *resp = new CEngineResponseVisual;
 
   int rc = mediateRequestSetProject(engineThread->engineContext(),
 				    &m_project, m_opMode, resp);
@@ -87,7 +86,6 @@ bool CEngineRequestSetProject::process(CEngineThread *engineThread)
 
 CEngineRequestSetAnalysisWindows::CEngineRequestSetAnalysisWindows(const mediate_analysis_window_t *windowList, int nWindows,
 								   int opMode) :
-  CEngineRequest(eEngineRequestSetAnalysisWindowType),
   m_windowList(NULL),
   m_nWindows(0),
   m_opMode(opMode)
@@ -110,7 +108,7 @@ bool CEngineRequestSetAnalysisWindows::process(CEngineThread *engineThread)
   // process is called from the thread and drives the engine through the
   // mediator interface.
 
-  CEngineResponse *resp = new CEngineResponseSet;
+  CEngineResponse *resp = new CEngineResponseVisual;
 
   int rc = mediateRequestSetAnalysisWindows(engineThread->engineContext(),
 					    m_nWindows, m_windowList, m_opMode, resp);
@@ -124,7 +122,6 @@ bool CEngineRequestSetAnalysisWindows::process(CEngineThread *engineThread)
 //------------------------------------------------------------
 
 CEngineRequestSetSymbols::CEngineRequestSetSymbols(mediate_symbol_t *symbolList, int nSymbols) :
-  CEngineRequest(eEngineRequestSetSymbolsType),
   m_symbolList(symbolList),
   m_nSymbols(nSymbols)
 {
@@ -141,7 +138,7 @@ bool CEngineRequestSetSymbols::process(CEngineThread *engineThread)
   // process is called from the thread and drives the engine through the
   // mediator interface.
 
-  CEngineResponse *resp = new CEngineResponseSet;
+  CEngineResponse *resp = new CEngineResponseVisual;
 
   int rc = mediateRequestSetSymbols(engineThread->engineContext(),
 				    m_nSymbols, m_symbolList, resp);
@@ -155,7 +152,6 @@ bool CEngineRequestSetSymbols::process(CEngineThread *engineThread)
 //------------------------------------------------------------
 
 CEngineRequestSetSites::CEngineRequestSetSites(mediate_site_t *siteList, int nSites) :
-  CEngineRequest(eEngineRequestSetSitesType),
   m_siteList(siteList),
   m_nSites(nSites)
 {
@@ -172,7 +168,7 @@ bool CEngineRequestSetSites::process(CEngineThread *engineThread)
   // process is called from the thread and drives the engine through the
   // mediator interface.
 
-  CEngineResponse *resp = new CEngineResponseSet;
+  CEngineResponse *resp = new CEngineResponseVisual;
 
   int rc = mediateRequestSetSites(engineThread->engineContext(),
 				  m_nSites, m_siteList, resp);
@@ -208,7 +204,7 @@ bool CEngineRequestBeginBrowseFile::process(CEngineThread *engineThread)
 bool CEngineRequestBrowseNextRecord::process(CEngineThread *engineThread)
 {
   // create a response as the handle
-  CEngineResponseAccessRecord *resp = new CEngineResponseAccessRecord;
+  CEngineResponseSpecificRecord *resp = new CEngineResponseSpecificRecord;
 
   int rc = mediateRequestNextMatchingBrowseSpectrum(engineThread->engineContext(),
 						    resp);
@@ -226,7 +222,7 @@ bool CEngineRequestBrowseNextRecord::process(CEngineThread *engineThread)
 bool CEngineRequestBrowseSpecificRecord::process(CEngineThread *engineThread)
 {
   // create a response as the handle
-  CEngineResponseAccessRecord *resp = new CEngineResponseAccessRecord;
+  CEngineResponseSpecificRecord *resp = new CEngineResponseSpecificRecord;
 
   int rc = mediateRequestGotoSpectrum(engineThread->engineContext(),
 				      m_recordNumber, resp);
@@ -270,7 +266,7 @@ bool CEngineRequestBeginAnalyseFile::process(CEngineThread *engineThread)
 bool CEngineRequestAnalyseNextRecord::process(CEngineThread *engineThread)
 {
   // create a response as the handle
-  CEngineResponseAccessRecord *resp = new CEngineResponseAccessRecord;
+  CEngineResponseSpecificRecord *resp = new CEngineResponseSpecificRecord;
 
   int rc = mediateRequestNextMatchingAnalyseSpectrum(engineThread->engineContext(),
 						     resp);
@@ -288,7 +284,7 @@ bool CEngineRequestAnalyseNextRecord::process(CEngineThread *engineThread)
 bool CEngineRequestAnalyseSpecificRecord::process(CEngineThread *engineThread)
 {
   // create a response as the handle
-  CEngineResponseAccessRecord *resp = new CEngineResponseAccessRecord;
+  CEngineResponseSpecificRecord *resp = new CEngineResponseSpecificRecord;
 
   int rc = mediateRequestGotoSpectrum(engineThread->engineContext(),
 				      m_recordNumber, resp);
@@ -332,7 +328,7 @@ bool CEngineRequestBeginCalibrateFile::process(CEngineThread *engineThread)
 bool CEngineRequestCalibrateNextRecord::process(CEngineThread *engineThread)
 {
   // create a response as the handle
-  CEngineResponseAccessRecord *resp = new CEngineResponseAccessRecord;
+  CEngineResponseSpecificRecord *resp = new CEngineResponseSpecificRecord;
 
   int rc = mediateRequestNextMatchingCalibrateSpectrum(engineThread->engineContext(),
 						    resp);
@@ -350,7 +346,7 @@ bool CEngineRequestCalibrateNextRecord::process(CEngineThread *engineThread)
 bool CEngineRequestCalibrateSpecificRecord::process(CEngineThread *engineThread)
 {
   // create a response as the handle
-  CEngineResponseAccessRecord *resp = new CEngineResponseAccessRecord;
+  CEngineResponseSpecificRecord *resp = new CEngineResponseSpecificRecord;
 
   int rc = mediateRequestGotoSpectrum(engineThread->engineContext(),
 				      m_recordNumber, resp);
@@ -388,7 +384,6 @@ bool CEngineRequestStop::process(CEngineThread *engineThread)
 
 CEngineRequestViewCrossSections::CEngineRequestViewCrossSections(char *awName,double minWavelength, double maxWavelength,
                                                                  int nFiles, char **filenames) :
-  CEngineRequest(eEngineRequestViewCrossSectionsType),
   m_awName(awName),
   m_minWavelength(minWavelength),
   m_maxWavelength(maxWavelength),
@@ -409,7 +404,7 @@ CEngineRequestViewCrossSections::~CEngineRequestViewCrossSections()
 
 bool CEngineRequestViewCrossSections::process(CEngineThread *engineThread)
 {
-  CEngineResponseTool *resp = new CEngineResponseTool;
+  CEngineResponseVisual *resp = new CEngineResponseVisual;
 
   int rc = mediateRequestViewCrossSections(engineThread->engineContext(),
                                            m_awName, m_minWavelength, m_maxWavelength,

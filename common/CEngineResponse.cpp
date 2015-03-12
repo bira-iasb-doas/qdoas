@@ -56,11 +56,6 @@ void CEngineResponseMessage::process(CEngineController *engineController)
 
 //------------------------------------------------------------
 
-CEngineResponseVisual::CEngineResponseVisual(CEngineResponse::ResponseType type) :
-  CEngineResponse(type)
-{
-}
-
 CEngineResponseVisual::~CEngineResponseVisual()
 {
   while (!m_plotDataList.isEmpty()) {

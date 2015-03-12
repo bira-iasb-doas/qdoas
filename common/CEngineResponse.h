@@ -37,19 +37,9 @@ class CEngineController;
 class CEngineResponse
 {
  public:
-  enum ResponseType {
-    eEngineResponseMessageType,
-    eEngineResponseBeginAccessFileType,
-    eEngineResponseAccessRecordType,
-    eEngineResponseGotoRecordType,
-    eEngineResponseSetType,
-    eEngineResponseToolType
-  };
-
-  CEngineResponse(enum ResponseType type) : m_type(type), m_highestErrorLevel(0) {};
+  CEngineResponse() : m_highestErrorLevel(0) {};
   virtual ~CEngineResponse() {};
 
-  enum ResponseType type(void) const;
   void addErrorMessage(const QString &tag, const QString &msg, int errorLevel);
 
   virtual void process(CEngineController *engineController) = 0;
@@ -60,12 +50,10 @@ class CEngineResponse
   bool hasFatalError(void) const;
 
  protected:
-  enum ResponseType m_type;
   int m_highestErrorLevel;
   QList<CEngineError> m_errorMessages;
 };
 
-inline CEngineResponse::ResponseType CEngineResponse::type(void) const { return m_type; }
 inline bool CEngineResponse::hasErrors(void) const { return !m_errorMessages.isEmpty(); }
 inline bool CEngineResponse::hasFatalError(void) const { return (m_highestErrorLevel == FatalEngineError); }
 
@@ -74,8 +62,6 @@ inline bool CEngineResponse::hasFatalError(void) const { return (m_highestErrorL
 class CEngineResponseMessage : public CEngineResponse
 {
  public:
-  CEngineResponseMessage() : CEngineResponse(eEngineResponseMessageType) {};
-
   virtual void process(CEngineController *engineController);
 };
 
@@ -84,7 +70,6 @@ class CEngineResponseMessage : public CEngineResponse
 class CEngineResponseVisual : public CEngineResponse
 {
  public:
-  CEngineResponseVisual(CEngineResponse::ResponseType type);
   virtual ~CEngineResponseVisual();
 
   virtual void process(CEngineController *engineController);
@@ -106,8 +91,7 @@ class CEngineResponseVisual : public CEngineResponse
 class CEngineResponseBeginAccessFile : public CEngineResponseVisual
 {
  public:
-  CEngineResponseBeginAccessFile(const QString &fileName) : CEngineResponseVisual(eEngineResponseBeginAccessFileType),
-                                                            m_fileName(fileName),
+  CEngineResponseBeginAccessFile(const QString &fileName) : m_fileName(fileName),
                                                             m_numberOfRecords(-1) {};
 
   virtual void process(CEngineController *engineController);
@@ -124,8 +108,7 @@ class CEngineResponseBeginAccessFile : public CEngineResponseVisual
 class CEngineResponseSpecificRecord : public CEngineResponseVisual
 {
  public:
-  CEngineResponseSpecificRecord(CEngineResponse::ResponseType type) : CEngineResponseVisual(type),
-                                                                      m_recordNumber(-1) {};
+  CEngineResponseSpecificRecord() : m_recordNumber(-1) {};
 
   virtual void process(CEngineController *engineController);
 
@@ -134,34 +117,6 @@ class CEngineResponseSpecificRecord : public CEngineResponseVisual
  private:
   int m_recordNumber;
 };
-
-//------------------------------------------------------------
-
-class CEngineResponseAccessRecord : public CEngineResponseSpecificRecord
-{
- public:
-  CEngineResponseAccessRecord() : CEngineResponseSpecificRecord(eEngineResponseAccessRecordType) {};
-};
-
-//------------------------------------------------------------
-
-class CEngineResponseSet : public CEngineResponseVisual
-{
- public:
-  CEngineResponseSet() : CEngineResponseVisual(eEngineResponseSetType) {};
-};
-
-//------------------------------------------------------------
-
-class CEngineResponseTool : public CEngineResponseVisual
-{
- public:
-  CEngineResponseTool() : CEngineResponseVisual(eEngineResponseToolType) {};
-};
-
-//------------------------------------------------------------
-
-
 
 #endif
 

@@ -497,7 +497,7 @@ void CWMain::slotRunRing()
 
   // get an engine context
   void *engineContext;
-  CEngineResponseTool *resp = new CEngineResponseTool;
+  CEngineResponseVisual *resp = new CEngineResponseVisual;
 
   if (mediateXsconvCreateContext(&engineContext, resp) != 0) {
     delete resp;
