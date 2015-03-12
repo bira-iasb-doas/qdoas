@@ -46,8 +46,8 @@ class CEngineResponse
     eEngineResponseToolType
   };
 
-  CEngineResponse(enum ResponseType type);
-  virtual ~CEngineResponse();
+  CEngineResponse(enum ResponseType type) : m_type(type), m_highestErrorLevel(0) {};
+  virtual ~CEngineResponse() {};
 
   enum ResponseType type(void) const;
   void addErrorMessage(const QString &tag, const QString &msg, int errorLevel);
@@ -74,8 +74,7 @@ inline bool CEngineResponse::hasFatalError(void) const { return (m_highestErrorL
 class CEngineResponseMessage : public CEngineResponse
 {
  public:
-  CEngineResponseMessage();
-  virtual ~CEngineResponseMessage();
+  CEngineResponseMessage() : CEngineResponse(eEngineResponseMessageType) {};
 
   virtual void process(CEngineController *engineController);
 };
@@ -107,8 +106,9 @@ class CEngineResponseVisual : public CEngineResponse
 class CEngineResponseBeginAccessFile : public CEngineResponseVisual
 {
  public:
-  CEngineResponseBeginAccessFile(const QString &fileName);
-  virtual ~CEngineResponseBeginAccessFile();
+  CEngineResponseBeginAccessFile(const QString &fileName) : CEngineResponseVisual(eEngineResponseBeginAccessFileType),
+                                                            m_fileName(fileName),
+                                                            m_numberOfRecords(-1) {};
 
   virtual void process(CEngineController *engineController);
 
@@ -124,8 +124,8 @@ class CEngineResponseBeginAccessFile : public CEngineResponseVisual
 class CEngineResponseSpecificRecord : public CEngineResponseVisual
 {
  public:
-  CEngineResponseSpecificRecord(CEngineResponse::ResponseType type);
-  virtual ~CEngineResponseSpecificRecord();
+  CEngineResponseSpecificRecord(CEngineResponse::ResponseType type) : CEngineResponseVisual(type),
+                                                                      m_recordNumber(-1) {};
 
   virtual void process(CEngineController *engineController);
 
@@ -140,8 +140,7 @@ class CEngineResponseSpecificRecord : public CEngineResponseVisual
 class CEngineResponseAccessRecord : public CEngineResponseSpecificRecord
 {
  public:
-  CEngineResponseAccessRecord();
-  virtual ~CEngineResponseAccessRecord();
+  CEngineResponseAccessRecord() : CEngineResponseSpecificRecord(eEngineResponseAccessRecordType) {};
 };
 
 //------------------------------------------------------------
@@ -149,8 +148,7 @@ class CEngineResponseAccessRecord : public CEngineResponseSpecificRecord
 class CEngineResponseSet : public CEngineResponseVisual
 {
  public:
-  CEngineResponseSet();
-  virtual ~CEngineResponseSet();
+  CEngineResponseSet() : CEngineResponseVisual(eEngineResponseSetType) {};
 };
 
 //------------------------------------------------------------
@@ -158,8 +156,7 @@ class CEngineResponseSet : public CEngineResponseVisual
 class CEngineResponseTool : public CEngineResponseVisual
 {
  public:
-  CEngineResponseTool();
-  virtual ~CEngineResponseTool();
+  CEngineResponseTool() : CEngineResponseVisual(eEngineResponseToolType) {};
 };
 
 //------------------------------------------------------------

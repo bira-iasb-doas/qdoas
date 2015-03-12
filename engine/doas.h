@@ -1270,7 +1270,7 @@ enum _gomeGetCommand
 
 typedef struct _SHORTDateTime
  {
-  char  da_year;        /* Year - 1980      */
+  char  da_year;        /* Year - 1900      */
   char  da_day;         /* Day of the month */
   char  da_mon;         /* Month (1 = Jan)  */
   char  ti_hour;

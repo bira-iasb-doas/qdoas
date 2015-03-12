@@ -30,7 +30,6 @@ class CWTableRegion : public QTableView
 Q_OBJECT
  public:
   CWTableRegion(QWidget *parent = 0);
-  virtual ~CWTableRegion();
 
   void contextMenuEvent(QContextMenuEvent *e);
 

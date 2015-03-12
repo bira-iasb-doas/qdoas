@@ -21,15 +21,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "debugutil.h"
 
-CMultiPageTableModel::CMultiPageTableModel(QObject *parent) :
-  QAbstractTableModel(parent)
-{
-}
-
-CMultiPageTableModel::~CMultiPageTableModel()
-{
-}
-
 void CMultiPageTableModel::addPage(const RefCountConstPtr<CTablePageData> &page)
 {
   if (page == 0) return;
@@ -38,7 +29,6 @@ void CMultiPageTableModel::addPage(const RefCountConstPtr<CTablePageData> &page)
   std::map< int,RefCountConstPtr<CTablePageData> >::iterator it = m_pageMap.find(page->pageNumber());
   if (it == m_pageMap.end())
     m_pageMap.insert(std::map< int,RefCountConstPtr<CTablePageData> >::value_type(page->pageNumber(), page));
-
 }
 
 void CMultiPageTableModel::removeAllPages(void)

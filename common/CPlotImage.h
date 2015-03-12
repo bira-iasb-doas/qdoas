@@ -29,8 +29,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 class CPlotImage
 {
  public:
-  CPlotImage(const char *filename,const char *title);
-  ~CPlotImage();
+  CPlotImage(const char *filename,const char *title) : m_file(filename), m_title(title) {};
   
  const QString& GetFile(void) const; 
  const QString& GetTitle(void) const;

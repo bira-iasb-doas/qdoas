@@ -7,15 +7,12 @@ QT = core gui xml
 
 SOURCES       = CConfigHandler.cpp \
 		CConfigSubHandlerUtils.cpp \
-		CEngineController.cpp \
-		CEngineError.cpp \
 		CEngineResponse.cpp \
 		CHelpSystem.cpp \
 		ConfigWriterUtils.cpp \
 		CPathMgr.cpp \
 		CPathSubHandler.cpp \
 		CPlotDataSet.cpp \
-		CPlotImage.cpp \
 		CPlotPageData.cpp \
 		CPlotProperties.cpp \
 		CScaleControl.cpp \

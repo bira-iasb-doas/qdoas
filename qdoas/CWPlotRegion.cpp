@@ -44,14 +44,9 @@ CWPlotRegion::CWPlotRegion(QWidget *parent) :
   setWidget(splash);
 }
 
-CWPlotRegion::~CWPlotRegion()
-{
-
-}
-
 void CWPlotRegion::removeAllPages()
 {        
-  m_pageMap.clear();  
+  m_pageMap.clear();
   
   m_plotPage = NULL;
   //setWidget(m_plotPage); // deletes the current 'viewport widget'
@@ -100,9 +95,8 @@ void CWPlotRegion::addPage(const RefCountConstPtr<CPlotPageData> &page)
 } 
 
 // Display active page
-
 void CWPlotRegion::displayPage(int pageNumber)
-{                     
+{
   std::map< int,RefCountConstPtr<CPlotPageData> >::iterator it = m_pageMap.find(pageNumber);  
   
   if (it != m_pageMap.end()) {

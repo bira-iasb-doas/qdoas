@@ -16,7 +16,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-
 #include <QFile>
 #include <QTextStream>
 #include <QMessageBox>
@@ -46,10 +45,6 @@ CQdoasEngineController::CQdoasEngineController(QObject *parent) :
   m_thread->setRunState(true);
 }
 
-CQdoasEngineController::~CQdoasEngineController()
-{
-}
-
 void CQdoasEngineController::notifyReadyToNavigateRecords(const QString &filename, int numberOfRecords)
 {
   // sanity check - currentIt and filename must be consistent
@@ -73,14 +68,6 @@ void CQdoasEngineController::notifyReadyToNavigateRecords(const QString &filenam
 
 void CQdoasEngineController::notifyCurrentRecord(int recordNumber)
 {
-// QFile file("qdoas.dbg");
-// if (file.open(QIODevice::Append | QIODevice::Text)!=0)
-//  {
-//   QTextStream out(&file);
-//   out << "   CQdoasEngineController::notifyCurrentRecord " << recordNumber <<"\n";
-//   file.close();
-//  }
-
   int firstMiddleLast = 0;
 
   m_currentRecord = recordNumber;
@@ -114,25 +101,22 @@ void CQdoasEngineController::notifyPlotData(QList<SPlotData> &plotDataList, QLis
 
   std::map<int,CPlotPageData*> pageMap;
   std::map<int,CPlotPageData*>::iterator mIt;
-  int pageNo;  
+  int pageNo;
   
   while (!plotDataList.isEmpty()) {
     // existing page?
-    pageNo = plotDataList.front().page;  
+    pageNo = plotDataList.front().page;
 
     mIt = pageMap.find(pageNo);
+
     if (mIt == pageMap.end()) {
       // need a new page
-      CPlotPageData *newPage = new CPlotPageData(pageNo,PLOTPAGE_DATASET);   
+      CPlotPageData *newPage = new CPlotPageData(pageNo,PLOTPAGE_DATASET);
 
-      if (plotDataList.front().data != NULL) 
-	newPage->addPlotDataSet(plotDataList.front().data);
-      pageMap.insert(std::map<int,CPlotPageData*>::value_type(pageNo, newPage));
+      mIt = pageMap.insert(std::map<int,CPlotPageData*>::value_type(pageNo, newPage)).first;
     }
-    else {     
-      // exists
-      if (plotDataList.front().data != NULL)
-	(mIt->second)->addPlotDataSet(plotDataList.front().data);
+    if (plotDataList.front().data != NULL) {
+      (mIt->second)->addPlotDataSet(plotDataList.front().data);
     }
     plotDataList.pop_front();
   }
@@ -179,9 +163,7 @@ void CQdoasEngineController::notifyPlotData(QList<SPlotData> &plotDataList, QLis
     }
     titleList.pop_front();
 
-   
   }
-  
 
   // shift the items in the pageMap to a QList for cheap and safe dispatch.
 

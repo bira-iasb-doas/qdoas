@@ -26,8 +26,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 class CEngineError
 {
  public:
-  CEngineError(const QString &tag, const QString &msg, int errorLevel);
-  ~CEngineError();
+  CEngineError(const QString &tag, const QString &msg, int errorLevel) : m_tag(tag),
+                                                                         m_message(msg),
+                                                                         m_errorLevel(errorLevel) {};
 
   const QString& message(void) const;
   const QString& tag(void) const;

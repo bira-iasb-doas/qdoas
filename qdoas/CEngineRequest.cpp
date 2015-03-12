@@ -30,22 +30,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 //------------------------------------------------------------
 
-CEngineRequest::CEngineRequest(CEngineRequest::RequestType type) :
-  m_type(type)
-{
-}
-
-CEngineRequest::~CEngineRequest()
-{
-}
-
-//------------------------------------------------------------
-
-CEngineRequestCompound::CEngineRequestCompound() :
-  CEngineRequest(eEngineRequestCompoundType)
-{
-}
-
 CEngineRequestCompound::~CEngineRequestCompound()
 {
   // delete all requests
@@ -80,10 +64,6 @@ CEngineRequestSetProject::CEngineRequestSetProject(const mediate_project_t *proj
 {
   // deep copy the data from project.
   m_project = *project;
-}
-
-CEngineRequestSetProject::~CEngineRequestSetProject()
-{
 }
 
 bool CEngineRequestSetProject::process(CEngineThread *engineThread)
@@ -205,16 +185,6 @@ bool CEngineRequestSetSites::process(CEngineThread *engineThread)
 
 //------------------------------------------------------------
 
-CEngineRequestBeginBrowseFile::CEngineRequestBeginBrowseFile(const QString &fileName) :
-  CEngineRequest(eEngineRequestBeginBrowseFileType),
-  m_fileName(fileName)
-{
-}
-
-CEngineRequestBeginBrowseFile::~CEngineRequestBeginBrowseFile()
-{
-}
-
 bool CEngineRequestBeginBrowseFile::process(CEngineThread *engineThread)
 {
   // open the file and get back the number of records (and calibration data?)
@@ -235,15 +205,6 @@ bool CEngineRequestBeginBrowseFile::process(CEngineThread *engineThread)
 
 //------------------------------------------------------------
 
-CEngineRequestBrowseNextRecord::CEngineRequestBrowseNextRecord() :
-  CEngineRequest(eEngineRequestBrowseNextRecordType)
-{
-}
-
-CEngineRequestBrowseNextRecord::~CEngineRequestBrowseNextRecord()
-{
-}
-
 bool CEngineRequestBrowseNextRecord::process(CEngineThread *engineThread)
 {
   // create a response as the handle
@@ -261,16 +222,6 @@ bool CEngineRequestBrowseNextRecord::process(CEngineThread *engineThread)
 }
 
 //------------------------------------------------------------
-
-CEngineRequestBrowseSpecificRecord::CEngineRequestBrowseSpecificRecord(int recordNumber) :
-  CEngineRequest(eEngineRequestBrowseSpecificRecordType),
-  m_recordNumber(recordNumber)
-{
-}
-
-CEngineRequestBrowseSpecificRecord::~CEngineRequestBrowseSpecificRecord()
-{
-}
 
 bool CEngineRequestBrowseSpecificRecord::process(CEngineThread *engineThread)
 {
@@ -296,16 +247,6 @@ bool CEngineRequestBrowseSpecificRecord::process(CEngineThread *engineThread)
 
 //------------------------------------------------------------
 
-CEngineRequestBeginAnalyseFile::CEngineRequestBeginAnalyseFile(const QString &fileName) :
-  CEngineRequest(eEngineRequestBeginAnalyseFileType),
-  m_fileName(fileName)
-{
-}
-
-CEngineRequestBeginAnalyseFile::~CEngineRequestBeginAnalyseFile()
-{
-}
-
 bool CEngineRequestBeginAnalyseFile::process(CEngineThread *engineThread)
 {
   // open the file and get back the number of records (and calibration data?)
@@ -326,25 +267,8 @@ bool CEngineRequestBeginAnalyseFile::process(CEngineThread *engineThread)
 
 //------------------------------------------------------------
 
-CEngineRequestAnalyseNextRecord::CEngineRequestAnalyseNextRecord() :
-  CEngineRequest(eEngineRequestAnalyseNextRecordType)
-{
-}
-
-CEngineRequestAnalyseNextRecord::~CEngineRequestAnalyseNextRecord()
-{
-}
-
 bool CEngineRequestAnalyseNextRecord::process(CEngineThread *engineThread)
 {
-// QFile file("qdoas.dbg");
-// if (file.open(QIODevice::Append | QIODevice::Text)!=0)
-//  {
-//   QTextStream out(&file);
-//   out << "   CEngineRequestAnalyseNextRecord::process\n";
-//   file.close();
-//  }
-
   // create a response as the handle
   CEngineResponseAccessRecord *resp = new CEngineResponseAccessRecord;
 
@@ -361,28 +285,10 @@ bool CEngineRequestAnalyseNextRecord::process(CEngineThread *engineThread)
 
 //------------------------------------------------------------
 
-CEngineRequestAnalyseSpecificRecord::CEngineRequestAnalyseSpecificRecord(int recordNumber) :
-  CEngineRequest(eEngineRequestAnalyseSpecificRecordType),
-  m_recordNumber(recordNumber)
-{
-}
-
-CEngineRequestAnalyseSpecificRecord::~CEngineRequestAnalyseSpecificRecord()
-{
-}
-
 bool CEngineRequestAnalyseSpecificRecord::process(CEngineThread *engineThread)
 {
   // create a response as the handle
   CEngineResponseAccessRecord *resp = new CEngineResponseAccessRecord;
-
-// QFile file("qdoas.dbg");
-// if (file.open(QIODevice::Append | QIODevice::Text)!=0)
-//  {
-//   QTextStream out(&file);
-//   out << "   CEngineRequestAnalyseSpecificRecord::process\n";
-//   file.close();
-//  }
 
   int rc = mediateRequestGotoSpectrum(engineThread->engineContext(),
 				      m_recordNumber, resp);
@@ -402,16 +308,6 @@ bool CEngineRequestAnalyseSpecificRecord::process(CEngineThread *engineThread)
 }
 
 //------------------------------------------------------------
-
-CEngineRequestBeginCalibrateFile::CEngineRequestBeginCalibrateFile(const QString &fileName) :
-  CEngineRequest(eEngineRequestBeginCalibrateFileType),
-  m_fileName(fileName)
-{
-}
-
-CEngineRequestBeginCalibrateFile::~CEngineRequestBeginCalibrateFile()
-{
-}
 
 bool CEngineRequestBeginCalibrateFile::process(CEngineThread *engineThread)
 {
@@ -433,15 +329,6 @@ bool CEngineRequestBeginCalibrateFile::process(CEngineThread *engineThread)
 
 //------------------------------------------------------------
 
-CEngineRequestCalibrateNextRecord::CEngineRequestCalibrateNextRecord() :
-  CEngineRequest(eEngineRequestCalibrateNextRecordType)
-{
-}
-
-CEngineRequestCalibrateNextRecord::~CEngineRequestCalibrateNextRecord()
-{
-}
-
 bool CEngineRequestCalibrateNextRecord::process(CEngineThread *engineThread)
 {
   // create a response as the handle
@@ -459,16 +346,6 @@ bool CEngineRequestCalibrateNextRecord::process(CEngineThread *engineThread)
 }
 
 //------------------------------------------------------------
-
-CEngineRequestCalibrateSpecificRecord::CEngineRequestCalibrateSpecificRecord(int recordNumber) :
-  CEngineRequest(eEngineRequestCalibrateSpecificRecordType),
-  m_recordNumber(recordNumber)
-{
-}
-
-CEngineRequestCalibrateSpecificRecord::~CEngineRequestCalibrateSpecificRecord()
-{
-}
 
 bool CEngineRequestCalibrateSpecificRecord::process(CEngineThread *engineThread)
 {
@@ -493,15 +370,6 @@ bool CEngineRequestCalibrateSpecificRecord::process(CEngineThread *engineThread)
 }
 
 //------------------------------------------------------------
-
-CEngineRequestStop::CEngineRequestStop() :
-  CEngineRequest(eEngineRequestStop)
-{
-}
-
-CEngineRequestStop::~CEngineRequestStop()
-{
-}
 
 bool CEngineRequestStop::process(CEngineThread *engineThread)
 {
@@ -552,4 +420,3 @@ bool CEngineRequestViewCrossSections::process(CEngineThread *engineThread)
 
   return (rc != -1);
 }
-

@@ -51,7 +51,7 @@ Q_OBJECT
  public:
   CWPlot(const RefCountConstPtr<CPlotDataSet> &dataSet, CPlotProperties &plotProperties, QWidget *parent = 0);
   CWPlot(const RefCountConstPtr<CPlotImage> &dataImage, CPlotProperties &plotProperties, QWidget *parent = 0);
-  virtual ~CWPlot();
+  virtual ~CWPlot() {};
 
   static bool getImageSaveNameAndFormat(QWidget *parent, QString &fileName, QString &saveFormat);     
   void imageresize(QSize visibleSize,int row,int column);
@@ -85,7 +85,7 @@ Q_OBJECT
   CWPlotPage(CPlotProperties &plotProperties, QWidget *parent = 0);
   CWPlotPage(CPlotProperties &plotProperties,
 	     const RefCountConstPtr<CPlotPageData> &page, QWidget *parent = 0);
-  virtual ~CWPlotPage();
+  virtual ~CWPlotPage() {};
 
   void layoutPlots(const QSize &visibleSize);
 

@@ -43,7 +43,6 @@ Q_OBJECT
   QString m_engineCurrentFile;
 
   CQdoasEngineController(QObject *parent = 0);
-  virtual ~CQdoasEngineController();
 
   // query interface
   bool isSessionRunning(void) const;

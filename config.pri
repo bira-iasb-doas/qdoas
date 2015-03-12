@@ -3,13 +3,12 @@
 #----------------------------------------------
 
 QWT_LINKAGE     = qwtdll        # qwtstatic or qwtdll
-CODE_GENERATION = release         # debug or release
+CODE_GENERATION = debug       # debug or release
 
 QMAKE_CFLAGS += -std=gnu99 -Wall -Wextra -pedantic \
           -Wformat=2 -Wunused -Wno-unused-parameter -Wuninitialized \
           -Wwrite-strings -Wstrict-prototypes -Wold-style-definition \
-          -Wredundant-decls -Wnested-externs \
-          -Wjump-misses-init -Wlogical-op
+          -Wredundant-decls -Wnested-externs -Wlogical-op
 
 LIBS += -L../mediator -lmediator -L../engine -lengine -L../common -lcommon
 DEPENDPATH += ../common ../engine ../mediator
@@ -19,13 +18,16 @@ DEPENDPATH += ../common ../engine ../mediator
 #----------------------------------------------
 
 unix {
-  INSTALL_PREFIX = /home/thomasd
+  INSTALL_PREFIX = /bira-iasb/projects/DOAS/Programmes/QDOAS-linux
 
   INCLUDEPATH += $$INSTALL_PREFIX/include
-  INCLUDEPATH += $$INSTALL_PREFIX/include/hdf4
+#  INCLUDEPATH += $$INSTALL_PREFIX/include/hdf4
+  QMAKE_RPATHDIR += /usr/local/hdf5-1.8.10-64/lib64
+  QMAKE_RPATHDIR += /usr/local/hdf-4.2.8-64/lib64
   INCLUDEPATH += $$INSTALL_PREFIX/include/qwt
   QMAKE_RPATHDIR += $$INSTALL_PREFIX/lib
-  QMAKE_LIBDIR += $$INSTALL_PREFIX/lib
+  QMAKE_RPATHLIBDIR += $$INSTALL_PREFIX/lib
+  QMAKE_LIBDIR += $$INSTALL_PREFIX/lib /usr/local/lib64
 }
 
 # portable executable for linux using Linux Standard Base (LSB)

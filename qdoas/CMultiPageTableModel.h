@@ -32,8 +32,7 @@ class CMultiPageTableModel : public QAbstractTableModel
 {
 Q_OBJECT
  public:
-  CMultiPageTableModel(QObject *parent = 0);
-  virtual ~CMultiPageTableModel();
+  CMultiPageTableModel(QObject *parent = 0) : QAbstractTableModel(parent) {};
 
   void addPage(const RefCountConstPtr<CTablePageData> &page);
   void removeAllPages(void);

@@ -37,7 +37,6 @@ class CWPlotRegion : public QScrollArea
 {
  public:
   CWPlotRegion(QWidget *parent = 0);
-  virtual ~CWPlotRegion();
 
   void removeAllPages();
   void removePagesExcept(const QList<int> pageNumberList);

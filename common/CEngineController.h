@@ -38,19 +38,19 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 class CEngineController
 {
  public:
-  CEngineController();
-  virtual ~CEngineController() = 0;
+  CEngineController() {};
+  virtual ~CEngineController() {};
 
   // notify interface is for use by response classes
-  virtual void notifyNumberOfFiles(int nFiles);
-  virtual void notifyCurrentFile(int fileNumber);
-  virtual void notifyReadyToNavigateRecords(const QString &filename, int numberOfRecords);
-  virtual void notifyCurrentRecord(int recordNumber);
-  virtual void notifyEndOfRecords(void);
-  virtual void notifyPlotData(QList<SPlotData> &plotDataList, QList<STitleTag> &titleList,QList<SPlotImage> &plotImageList);
-  virtual void notifyTableData(QList<SCell> &cellList);
+  virtual void notifyNumberOfFiles(int nFiles) {};
+  virtual void notifyCurrentFile(int fileNumber) {};
+  virtual void notifyReadyToNavigateRecords(const QString &filename, int numberOfRecords) {};
+  virtual void notifyCurrentRecord(int recordNumber) {};
+  virtual void notifyEndOfRecords(void) {};
+  virtual void notifyPlotData(QList<SPlotData> &plotDataList, QList<STitleTag> &titleList,QList<SPlotImage> &plotImageList) {};
+  virtual void notifyTableData(QList<SCell> &cellList) {};
 
-  virtual void notifyErrorMessages(int highestErrorLevel, const QList<CEngineError> &errorMessages);
+  virtual void notifyErrorMessages(int highestErrorLevel, const QList<CEngineError> &errorMessages) {};
 };
 
 #endif

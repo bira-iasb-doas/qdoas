@@ -236,10 +236,6 @@ void CWPlot::imageresize(QSize visibleSize,int row,int column)
   m_dataPixmapItem->setPixmap(m_dataPixmapScaled);         
  }
 
-CWPlot::~CWPlot()
-{
-}
-
 void CWPlot::contextMenuEvent(QContextMenuEvent *e)
 {
   // position dependent
@@ -528,11 +524,6 @@ CWPlotPage::CWPlotPage(CPlotProperties &plotProperties,
     }                                                                                         	
    } 
  }  
-
-
-CWPlotPage::~CWPlotPage()
-{
-}
 
 void CWPlotPage::layoutPlots(const QSize &visibleSize)
 {

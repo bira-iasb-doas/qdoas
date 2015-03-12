@@ -16,7 +16,6 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
-                    
 
 #include <QResizeEvent>
 #include <QPalette>
@@ -178,11 +177,6 @@ CWActiveContext::CWActiveContext(QWidget *parent) :
 
   // explicitly hide the active tab
   m_activeTab->hide();
-}
-
-CWActiveContext::~CWActiveContext()
-{
-  // all widgets in the stack are parented to this so they will get deleted automagically.
 }
 
 void CWActiveContext::addEditor(CWEditor *editor)
@@ -451,8 +445,7 @@ void CWActiveContext::slotPlotPages(const QList< RefCountConstPtr<CPlotPageData>
   int index = m_graphTab->count();  
    while (index > nPages)
       m_graphTab->removeTab(--index); 
-      
-      
+
   while (pageList.count() > index)
       index = m_graphTab->addTab(QString()) + 1;
       
@@ -463,14 +456,13 @@ void CWActiveContext::slotPlotPages(const QList< RefCountConstPtr<CPlotPageData>
   QList< RefCountConstPtr<CPlotPageData> >::const_iterator it = pageList.begin();       
   
   while (it !=  pageList.end()) {
-    pageNumber = (*it)->pageNumber(); 
+    pageNumber = (*it)->pageNumber();
     
     if ((*it)->isEmpty()) {
       // if must already exist for this to be meaningful ...
       QString tmpTag;
       if (m_plotRegion->pageExists(pageNumber, tmpTag)) {
-	retainedList.push_back(pageNumber);      
-	
+	retainedList.push_back(pageNumber);
       }
       m_graphTab->setTabText(index, tmpTag);
     }

@@ -18,9 +18,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
 #include <cstdlib>
-
 #include <cmath>
-
 #include <stdio.h>
 
 #include "mediate_response.h"
@@ -81,11 +79,11 @@ void mediateAllocateAndSetNumberedPlotData(plot_data_t *d, const char *curveName
 
 void mediateReleasePlotData(plot_data_t *d)
 {
-	 d->length=0;
-	 strcpy(d->curveName,"");
+  d->length=0;
+  strcpy(d->curveName,"");
 
-  if (d->x) free(d->x);
-  if (d->y) free(d->y);
+  free(d->x);
+  free(d->y);
 }
 
 
@@ -217,5 +215,3 @@ void mediateResponseErrorMessage(const char *function,
   CEngineResponse *resp = static_cast<CEngineResponse*>(responseHandle);
   resp->addErrorMessage(QString(function), QString(messageString), errorType);
 }
-
-

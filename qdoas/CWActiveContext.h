@@ -38,7 +38,7 @@ class CWActiveContext : public QFrame
 Q_OBJECT
  public:
   CWActiveContext(QWidget *parent = 0);
-  virtual ~CWActiveContext();
+  virtual ~CWActiveContext() {};
 
   void addEditor(CWEditor *editor); // reparents and takes ownership of editor.
   

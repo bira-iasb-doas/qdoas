@@ -17,7 +17,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-
 #include <QFile>
 #include <QTextStream>
 
@@ -27,16 +26,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "debugutil.h"
 
 //------------------------------------------------------------
-
-CEngineResponse::CEngineResponse(CEngineResponse::ResponseType type) :
-  m_type(type),
-  m_highestErrorLevel(0)
-{
-}
-
-CEngineResponse::~CEngineResponse()
-{
-}
 
 void CEngineResponse::addErrorMessage(const QString &tag, const QString &msg, int errorLevel)
 {
@@ -59,15 +48,6 @@ bool CEngineResponse::processErrors(CEngineController *engineController)
 }
 
 //------------------------------------------------------------
-
-CEngineResponseMessage::CEngineResponseMessage() :
-  CEngineResponse(eEngineResponseMessageType)
-{
-}
-
-CEngineResponseMessage::~CEngineResponseMessage()
-{
-}
 
 void CEngineResponseMessage::process(CEngineController *engineController)
 {
@@ -106,9 +86,9 @@ void CEngineResponseVisual::process(CEngineController *engineController)
 }
 
 void CEngineResponseVisual::addDataSet(int pageNumber, const CPlotDataSet *dataSet)
-{                    
+{
   m_plotDataList.push_back(SPlotData(pageNumber, dataSet));
-}        
+}
 
 void CEngineResponseVisual::addImage(int pageNumber, const CPlotImage *plotImage)
 { 
@@ -127,17 +107,6 @@ void CEngineResponseVisual::addCell(int pageNumber, int row, int col, const QVar
 
 //------------------------------------------------------------
 
-CEngineResponseBeginAccessFile::CEngineResponseBeginAccessFile(const QString &fileName) :
-  CEngineResponseVisual(eEngineResponseBeginAccessFileType),
-  m_fileName(fileName),
-  m_numberOfRecords(-1)
-{
-}
-
-CEngineResponseBeginAccessFile::~CEngineResponseBeginAccessFile()
-{
-}
-
 void CEngineResponseBeginAccessFile::process(CEngineController *engineController)
 {
   // consider the error messages first - if fatal stop here
@@ -148,14 +117,6 @@ void CEngineResponseBeginAccessFile::process(CEngineController *engineController
     engineController->notifyTableData(m_cellList);
     engineController->notifyPlotData(m_plotDataList, m_titleList, m_plotImageList);
   }
-
-// QFile file("qdoas.dbg");
-// if (file.open(QIODevice::Append | QIODevice::Text)!=0)
-//  {
-//   QTextStream out(&file);
-//   out << "   CEngineResponseBeginAccessFile::process " << m_numberOfRecords <<"\n";
-//   file.close();
-//  }
 
   if (m_numberOfRecords > 0) {
     // calibration data ... TODO ...
@@ -175,16 +136,6 @@ void CEngineResponseBeginAccessFile::setNumberOfRecords(int numberOfRecords)
 }
 
 //------------------------------------------------------------
-
-CEngineResponseSpecificRecord::CEngineResponseSpecificRecord(CEngineResponse::ResponseType type) :
-  CEngineResponseVisual(type),
-  m_recordNumber(-1)
-{
-}
-
-CEngineResponseSpecificRecord::~CEngineResponseSpecificRecord()
-{
-}
 
 void CEngineResponseSpecificRecord::process(CEngineController *engineController)
 {
@@ -215,39 +166,3 @@ void CEngineResponseSpecificRecord::setRecordNumber(int recordNumber)
 {
   m_recordNumber = recordNumber;
 }
-
-//------------------------------------------------------------
-
-CEngineResponseAccessRecord::CEngineResponseAccessRecord() :
-  CEngineResponseSpecificRecord(eEngineResponseAccessRecordType)
-{
-}
-
-CEngineResponseAccessRecord::~CEngineResponseAccessRecord()
-{
-}
-
-//------------------------------------------------------------
-
-CEngineResponseSet::CEngineResponseSet() :
-  CEngineResponseVisual(eEngineResponseSetType)
-{
-}
-
-CEngineResponseSet::~CEngineResponseSet()
-{
-}
-
-//------------------------------------------------------------
-
-CEngineResponseTool::CEngineResponseTool() :
-  CEngineResponseVisual(eEngineResponseToolType)
-{
-}
-
-CEngineResponseTool::~CEngineResponseTool()
-{
-}
-
-//------------------------------------------------------------
-
