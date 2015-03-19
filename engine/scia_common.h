@@ -336,7 +336,7 @@ extern void ASCII_2_UTC( const char *,
      /*@globals errno;@*/;
 extern int ASCII_2_MJD( const char ASCII_DateTime[],
 			 /*@out@*/ MJD *mjd );
-     /*@globals errno;@*/;
+     /*@globals errno;@*/
 extern void UTC_2_ASCII( int, unsigned int, /*@out@*/ char * );
 extern void MJD_2_ASCII( int, unsigned int, unsigned int, /*@out@*/ char * );
 

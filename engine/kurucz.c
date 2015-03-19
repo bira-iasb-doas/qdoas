@@ -84,13 +84,12 @@ INDEX KuruczSearchReference(INDEX indexRefFeno,INDEX indexRefColumn)
  {
   // Declarations
 
-  double *reference;
   INDEX indexFeno;
   FENO *pTabFeno;
 
   // Initialization
 
-  reference=(TabFeno[indexRefColumn][indexRefFeno].useEtalon)?TabFeno[indexRefColumn][indexRefFeno].SrefEtalon:TabFeno[indexRefColumn][indexRefFeno].Sref;
+  const double * const reference=(TabFeno[indexRefColumn][indexRefFeno].useEtalon)?TabFeno[indexRefColumn][indexRefFeno].SrefEtalon:TabFeno[indexRefColumn][indexRefFeno].Sref;
 
   // Search for reference in analysis windows
 

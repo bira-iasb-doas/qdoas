@@ -46,8 +46,8 @@ typedef struct plot_data {
 } plot_data_t;
 
 
-void mediateAllocateAndSetPlotData(plot_data_t *d, const char *curveName,double *xData, double *yData, int len, enum eCurveStyleType type);
-void mediateAllocateAndSetNumberedPlotData(plot_data_t *d, const char *curveName,double *xData, double *yData, int len, enum eCurveStyleType type, int curveNumber);
+void mediateAllocateAndSetPlotData(plot_data_t *d, const char *curveName, const double *xData, const double *yData, int len, enum eCurveStyleType type);
+void mediateAllocateAndSetNumberedPlotData(plot_data_t *d, const char *curveName, const double *xData, const double *yData, int len, enum eCurveStyleType type, int curveNumber);
 void mediateReleasePlotData(plot_data_t *d);
 
 void mediateResponseAddImage(int page,const char *imageFile,void *responseHandle);

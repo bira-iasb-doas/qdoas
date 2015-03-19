@@ -26,7 +26,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "CEngineResponse.h"
 #include "CPlotDataSet.h"
 
-void mediateAllocateAndSetPlotData(plot_data_t *d, const char *curveName,double *xData, double *yData, int len, enum eCurveStyleType type)
+void mediateAllocateAndSetPlotData(plot_data_t *d, const char *curveName, const double *xData, const double *yData, int len, enum eCurveStyleType type)
 {
   d->curveNumber = -1;
 
@@ -52,7 +52,7 @@ void mediateAllocateAndSetPlotData(plot_data_t *d, const char *curveName,double 
   }
 }
 
-void mediateAllocateAndSetNumberedPlotData(plot_data_t *d, const char *curveName,double *xData, double *yData, int len, enum eCurveStyleType type, int curveNumber)
+void mediateAllocateAndSetNumberedPlotData(plot_data_t *d, const char *curveName, const double *xData, const double *yData, int len, enum eCurveStyleType type, int curveNumber)
 {
   d->curveNumber = curveNumber;
   int byteLen = len * sizeof(double);
