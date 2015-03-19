@@ -61,7 +61,7 @@ CWAnalysisWindowPropertyEditor::CWAnalysisWindowPropertyEditor(const QString &pr
   QVBoxLayout *mainLayout = new QVBoxLayout(this);
   mainLayout->setMargin(10);
   mainLayout->setSpacing(5);
-
+  
   QHBoxLayout *topLayout = new QHBoxLayout;
 
   // calibration combo ... group
@@ -133,14 +133,14 @@ CWAnalysisWindowPropertyEditor::CWAnalysisWindowPropertyEditor(const QString &pr
   displayLayout->addWidget(m_spectrumCheck, 0, 0);
   m_polyCheck = new QCheckBox("Polynomial", displayGroup);
   displayLayout->addWidget(m_polyCheck, 0, 1);
-  m_fitsCheck = new QCheckBox("Fits", displayGroup);
-  displayLayout->addWidget(m_fitsCheck, 0, 2);
+  m_ratioCheck = new QCheckBox("Ref1/Ref2 Alignment", displayGroup);
+  displayLayout->addWidget(m_ratioCheck, 1, 0);
   m_residualCheck = new QCheckBox("Residual", displayGroup);
-  displayLayout->addWidget(m_residualCheck, 1, 0);
+  displayLayout->addWidget(m_residualCheck, 1, 1);
   m_predefCheck = new QCheckBox("Predefined parameters", displayGroup);
-  displayLayout->addWidget(m_predefCheck, 1, 1);
-  m_ratioCheck = new QCheckBox("Alignment of Ref1 on Ref2", displayGroup);
-  displayLayout->addWidget(m_ratioCheck, 1, 2);
+  displayLayout->addWidget(m_predefCheck, 2, 0);
+  m_fitsCheck = new QCheckBox("Fits", displayGroup);
+  displayLayout->addWidget(m_fitsCheck, 2, 1);
 
   topLayout->addWidget(displayGroup);
 
