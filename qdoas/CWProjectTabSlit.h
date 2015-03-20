@@ -39,7 +39,6 @@ class CWProjectTabSlit : public QFrame
 Q_OBJECT
  public:
   CWProjectTabSlit(const mediate_project_slit_t *instr, QWidget *parent = 0);
-  virtual ~CWProjectTabSlit();
 
   void apply(mediate_project_slit_t *slit) const;
 

@@ -54,10 +54,6 @@ CWMoleculesDiffOrthoCombo::CWMoleculesDiffOrthoCombo(const QString &excludedSymb
   }
 }
 
-CWMoleculesDiffOrthoCombo::~CWMoleculesDiffOrthoCombo()
-{
-}
-
 void CWMoleculesDiffOrthoCombo::slotSymbolListChanged(const QStringList &symbols)
 {
   // if an initial value is set, then try and select it ...
@@ -102,10 +98,6 @@ CMoleculeDoasTableColumnDiffOrtho::CMoleculeDoasTableColumnDiffOrtho(const QStri
 {
   setViewportBackgroundColour(QColor(0xFFFFFFFF));
   setCellBorders(1,1);
-}
-
-CMoleculeDoasTableColumnDiffOrtho::~CMoleculeDoasTableColumnDiffOrtho()
-{
 }
 
 QVariant CMoleculeDoasTableColumnDiffOrtho::getCellData(int rowIndex) const
@@ -168,10 +160,6 @@ CWMoleculesDoasTable::CWMoleculesDoasTable(const QString &label, int columnWidth
   createColumnEdit("SCD Io", 80);
   createColumnEdit("SCD min", 80);           // columnIndex = 10
   createColumnEdit("SCD max", 80);
-}
-
-CWMoleculesDoasTable::~CWMoleculesDoasTable()
-{
 }
 
 void CWMoleculesDoasTable::populate(const cross_section_list_t *data)
@@ -596,10 +584,6 @@ CWLinearParametersDoasTable::CWLinearParametersDoasTable(const QString &label,
   createColumnCheck("Err store", 60);
 }
 
-CWLinearParametersDoasTable::~CWLinearParametersDoasTable()
-{
-}
-
 void CWLinearParametersDoasTable::populate(const struct anlyswin_linear *data)
 {
   // predefined rows
@@ -721,10 +705,6 @@ CWNonLinearParametersDoasTable::CWNonLinearParametersDoasTable(const QString &la
   createColumnEdit("Val. Delta", 80);
   createColumnCheck("Fit store", 60);
   createColumnCheck("Err store", 60);
-}
-
-CWNonLinearParametersDoasTable::~CWNonLinearParametersDoasTable()
-{
 }
 
 void CWNonLinearParametersDoasTable::populate(const struct anlyswin_nonlinear *data)
@@ -975,10 +955,6 @@ CWShiftAndStretchDialog::CWShiftAndStretchDialog(const QStringList &freeSymbols,
   connect(buttonBox, SIGNAL(rejected()), this, SLOT(reject()));
 }
 
-CWShiftAndStretchDialog::~CWShiftAndStretchDialog()
-{
-}
-
 QStringList CWShiftAndStretchDialog::selectedSymbols(void) const
 {
   QStringList selection;
@@ -1032,10 +1008,6 @@ CWShiftAndStretchDoasTable::CWShiftAndStretchDoasTable(const QString &label,
 
   createColumnEdit("Sh min (nm)", 80);
   createColumnEdit("Sh max (nm)", 80);
-}
-
-CWShiftAndStretchDoasTable::~CWShiftAndStretchDoasTable()
-{
 }
 
 void CWShiftAndStretchDoasTable::populate(const shift_stretch_list_t *data)
@@ -1383,10 +1355,6 @@ CWGapDoasTable::CWGapDoasTable(const QString &label, int headerHeight, QWidget *
   createColumnEdit("Max (nm)", 80);
 }
 
-CWGapDoasTable::~CWGapDoasTable()
-{
-}
-
 void CWGapDoasTable::populate(const gap_list_t *data)
 {
   int row = 0;
@@ -1501,10 +1469,6 @@ CWOutputDoasTable::CWOutputDoasTable(const QString &label, int headerHeight, QWi
   createColumnCheck("Vrt Col", 60);
   createColumnCheck("Vrt Err", 60);                       // col 6
   createColumnEdit("Vrt Fact", 80);
-}
-
-CWOutputDoasTable::~CWOutputDoasTable()
-{
 }
 
 void CWOutputDoasTable::populate(const output_list_t *data)
@@ -1630,10 +1594,6 @@ CWSfpParametersDoasTable::CWSfpParametersDoasTable(const QString &label, int hea
   createColumnCheck("Err store", 60);
 }
 
-CWSfpParametersDoasTable::~CWSfpParametersDoasTable()
-{
-}
-
 // virtual void cellDataChanged(int row, int column, const QVariant &cellData); // no cell-coupling required
 
 void CWSfpParametersDoasTable::populate(const struct calibration_sfp *data)
@@ -1670,4 +1630,3 @@ void CWSfpParametersDoasTable::apply(struct calibration_sfp *data) const
     ++data;
   }
 }
-

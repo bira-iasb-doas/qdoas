@@ -49,11 +49,10 @@ inline const mediate_convolution_t* CConvConfigHandler::properties(void) const {
 
 //------------------------------------------------------------------
 
-class CConvGeneralSubHandler : public CBasicConfigSubHandler
+class CConvGeneralSubHandler : public CConfigSubHandler
 {
  public:
   CConvGeneralSubHandler(CConfigHandler *master, mediate_conv_general_t *d);
-  virtual ~CConvGeneralSubHandler();
 
   virtual bool start(const QXmlAttributes &atts);
 
@@ -63,11 +62,10 @@ class CConvGeneralSubHandler : public CBasicConfigSubHandler
 
 //------------------------------------------------------------------
 
-class CConvSlitSubHandler : public CBasicConfigSubHandler
+class CConvSlitSubHandler : public CConfigSubHandler
 {
  public:
   CConvSlitSubHandler(CConfigHandler *master, mediate_slit_function_t *d);
-  virtual ~CConvSlitSubHandler();
 
   virtual bool start(const QString &element, const QXmlAttributes &atts);
 

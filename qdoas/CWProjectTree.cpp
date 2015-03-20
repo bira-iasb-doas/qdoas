@@ -1752,10 +1752,6 @@ CProjectTreeItem::CProjectTreeItem(const CProjectTreeItem &other) :
 {
 }
 
-CProjectTreeItem::~CProjectTreeItem()
-{
-}
-
 void CProjectTreeItem::setEnabled(bool enable)
 {
   m_enabled = enable;
@@ -1790,12 +1786,12 @@ void CProjectItem::destroyItem(QTreeWidget *tree, QTreeWidgetItem *projItem)
   delete tree->takeTopLevelItem(tree->indexOfTopLevelItem(projItem));
 }
 
-CProjectItem::~CProjectItem()
-{
-  // This will recursively destroy all child items, including any analysis window items.
-  // Since destroyProject has removed the items in the workspace, it is OK that
-  // the CAnalysisWindowItem destructor is called, and not the destroyItem function.
-}
+//CProjectItem::~CProjectItem()
+//{
+//  // This will recursively destroy all child items, including any analysis window items.
+//  // Since destroyProject has removed the items in the workspace, it is OK that
+//  // the CAnalysisWindowItem destructor is called, and not the destroyItem function.
+//}
 
 QVariant CProjectItem::data(int column, int role) const
 {
@@ -1814,18 +1810,10 @@ CAnalysisWindowBranchItem::CAnalysisWindowBranchItem(QTreeWidgetItem *parent) :
 {
 }
 
-CAnalysisWindowBranchItem::~CAnalysisWindowBranchItem()
-{
-}
-
 //------------------------------------------------------------------------------
 
 CSpectraBranchItem::CSpectraBranchItem(QTreeWidgetItem *parent) :
   CProjectTreeItem(parent, QStringList("Raw Spectra"), cSpectraBranchItemType)
-{
-}
-
-CSpectraBranchItem::~CSpectraBranchItem()
 {
 }
 
@@ -1842,10 +1830,6 @@ CSpectraFolderItem::CSpectraFolderItem(const CSpectraFolderItem &other) :
 {
   setText(0, other.text(0)); // copy the folder name
   setIcon(0, CWProjectTree::getIcon(cSpectraFolderItemType));
-}
-
-CSpectraFolderItem::~CSpectraFolderItem()
-{
 }
 
 QVariant CSpectraFolderItem::data(int column, int role) const
@@ -1903,10 +1887,6 @@ CSpectraDirectoryItem::CSpectraDirectoryItem(const CSpectraDirectoryItem &other)
 
   // build the file and directory tree for this directory (recursive)
   loadBranch();
-}
-
-CSpectraDirectoryItem::~CSpectraDirectoryItem()
-{
 }
 
 QVariant CSpectraDirectoryItem::data(int column, int role) const
@@ -2045,10 +2025,6 @@ CSpectraFileItem::CSpectraFileItem(const CSpectraFileItem &other) :
   setIcon(0, CWProjectTree::getIcon(cSpectraFileItemType));
 }
 
-CSpectraFileItem::~CSpectraFileItem()
-{
-}
-
 QString CSpectraFileItem::fullFileName(void) const
 {
   return m_fileInfo.absoluteFilePath();
@@ -2153,10 +2129,6 @@ void CAnalysisWindowItem::destroyItem(QTreeWidgetItem *awItem)
   // remove the item from the tree and delete it.
   QTreeWidgetItem *p = awItem->parent();
   delete p->takeChild(p->indexOfChild(awItem));
-}
-
-CAnalysisWindowItem::~CAnalysisWindowItem()
-{
 }
 
 void CAnalysisWindowItem::setEnabled(bool enable)

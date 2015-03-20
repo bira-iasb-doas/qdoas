@@ -30,7 +30,6 @@ class CWSymbolEditor : public CWEditor
 Q_OBJECT
  public:
   CWSymbolEditor(const QString &symbolName = QString(), const QString &description = QString(), QWidget *parent = 0);
-  virtual ~CWSymbolEditor();
 
   virtual bool actionOk(void);
   virtual void actionHelp(void);

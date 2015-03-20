@@ -88,10 +88,6 @@ CWProjectTabUndersampling::CWProjectTabUndersampling(const mediate_project_under
   
 }
 
-CWProjectTabUndersampling::~CWProjectTabUndersampling()
-{
-}
-
 void CWProjectTabUndersampling::apply(mediate_project_undersampling_t *properties) const
 {
   // a safe text length is assured.

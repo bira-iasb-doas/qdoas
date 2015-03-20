@@ -31,33 +31,22 @@ class CConfigHandler;
 class CConfigSubHandler
 {
  public:
-  CConfigSubHandler();
-  virtual ~CConfigSubHandler() = 0;
+  CConfigSubHandler(CConfigHandler *master) : m_master(master) {};
+  virtual ~CConfigSubHandler() {};
 
-  virtual bool start(const QXmlAttributes &atts);
-  virtual bool start(const QString &element, const QXmlAttributes &atts);
-  virtual bool character(const QString &ch);
-  virtual bool end(const QString &element);
-  virtual bool end(void);
+  virtual bool start(const QXmlAttributes &atts) { return true; };
+  virtual bool start(const QString &element, const QXmlAttributes &atts) { return true; };
+  virtual bool character(const QString &ch) { return true; };
+  virtual bool end(const QString &element) { return true; };
+  virtual bool end() {return true; };
 
-  virtual CConfigHandler* master(void) = 0;
-
- protected:
-  bool postErrorMessage(const QString &msg); // always returns false
-};
-
-class CBasicConfigSubHandler : public CConfigSubHandler
-{
- public:
-  CBasicConfigSubHandler(CConfigHandler *master);
-  virtual ~CBasicConfigSubHandler();
-
-  virtual CConfigHandler* master(void);
+  virtual CConfigHandler* master() { return m_master; };
 
  protected:
   CConfigHandler *m_master;
-};
 
+  bool postErrorMessage(const QString &msg); // always returns false
+};
 
 struct SSubHandlerItem
 {

@@ -149,10 +149,6 @@ CWProjectTabSlit::CWProjectTabSlit(const mediate_project_slit_t *slit, QWidget *
 
  }
 
-CWProjectTabSlit::~CWProjectTabSlit()
-{
-}
-
 void CWProjectTabSlit::apply(mediate_project_slit_t *slit) const
 {
   // set values for ALL slits ... and the selected slit type

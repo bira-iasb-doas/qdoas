@@ -205,10 +205,6 @@ CSessionIterator::CSessionIterator(const CSessionIterator &other) :
 {
 }
 
-CSessionIterator::~CSessionIterator()
-{
-}
-
 CSessionIterator& CSessionIterator::operator=(const CSessionIterator &rhs)
 {
   m_session = rhs.m_session;

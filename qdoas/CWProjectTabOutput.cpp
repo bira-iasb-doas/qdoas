@@ -176,10 +176,6 @@ CWProjectTabOutput::CWProjectTabOutput(const mediate_project_output_t *propertie
   connect(m_selectFileFormat, SIGNAL(currentIndexChanged(int)), this, SLOT(slotSelectFileFormatChanged(int)));
 }
 
-CWProjectTabOutput::~CWProjectTabOutput()
-{
-}
-
 void CWProjectTabOutput::apply(mediate_project_output_t *properties) const
 {
   properties->analysisFlag = (m_analysisCheck->checkState() == Qt::Checked) ? 1 : 0;

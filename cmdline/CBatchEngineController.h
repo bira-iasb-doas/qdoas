@@ -35,7 +35,6 @@ class CBatchEngineController : public CEngineController
 {
  public:
   CBatchEngineController();
-  virtual ~CBatchEngineController();
 
   // query interface
   bool active(void) const;

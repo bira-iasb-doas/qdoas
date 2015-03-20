@@ -28,8 +28,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 class CViewCrossSectionData
 {
  public:
-  CViewCrossSectionData(const mediate_analysis_window_t *aw);
-  ~CViewCrossSectionData();
+  CViewCrossSectionData(const mediate_analysis_window_t *aw) : m_aw(*aw) {}; // deep copy
 
   const mediate_analysis_window_t* analysisWindow(void) const;
 

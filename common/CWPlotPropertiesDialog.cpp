@@ -39,10 +39,6 @@ CWPlotPropertiesDialog::CWPlotPropertiesDialog(CPlotProperties &prop, QWidget *p
   connect(buttonBox, SIGNAL(rejected()), this, SLOT(reject()));
 }
 
-CWPlotPropertiesDialog::~CWPlotPropertiesDialog()
-{
-}
-
 void CWPlotPropertiesDialog::accept()
 {
   m_config->apply(m_properties);

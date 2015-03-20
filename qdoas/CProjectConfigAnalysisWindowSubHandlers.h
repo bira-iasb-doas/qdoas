@@ -26,12 +26,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 class CAnalysisWindowConfigItem;
 
-class CAnalysisWindowSubHandler : public CBasicConfigSubHandler
+class CAnalysisWindowSubHandler : public CConfigSubHandler
 {
  public:
   CAnalysisWindowSubHandler(CConfigHandler *master,
 			    CAnalysisWindowConfigItem *item);
-  virtual ~CAnalysisWindowSubHandler();
 
   virtual bool start(const QXmlAttributes &atts);
   virtual bool start(const QString &element, const QXmlAttributes &atts);
@@ -42,12 +41,11 @@ class CAnalysisWindowSubHandler : public CBasicConfigSubHandler
   CAnalysisWindowConfigItem *m_item; // does not own this item
 };
 
-class CAnalysisWindowCrossSectionSubHandler : public CBasicConfigSubHandler
+class CAnalysisWindowCrossSectionSubHandler : public CConfigSubHandler
 {
  public:
   CAnalysisWindowCrossSectionSubHandler(CConfigHandler *master,
 					cross_section_list_t *d);
-  virtual ~CAnalysisWindowCrossSectionSubHandler();
 
   virtual bool start(const QXmlAttributes &atts);
 
@@ -55,12 +53,11 @@ class CAnalysisWindowCrossSectionSubHandler : public CBasicConfigSubHandler
   cross_section_list_t *m_d;
 };
 
-class CAnalysisWindowLinearSubHandler : public CBasicConfigSubHandler
+class CAnalysisWindowLinearSubHandler : public CConfigSubHandler
 {
  public:
   CAnalysisWindowLinearSubHandler(CConfigHandler *master,
 				  struct anlyswin_linear *d);
-  virtual ~CAnalysisWindowLinearSubHandler();
 
   virtual bool start(const QXmlAttributes &atts);
 
@@ -68,12 +65,11 @@ class CAnalysisWindowLinearSubHandler : public CBasicConfigSubHandler
   struct anlyswin_linear *m_d;
 };
 
-class CAnalysisWindowNonLinearSubHandler : public CBasicConfigSubHandler
+class CAnalysisWindowNonLinearSubHandler : public CConfigSubHandler
 {
  public:
   CAnalysisWindowNonLinearSubHandler(CConfigHandler *master,
 				     struct anlyswin_nonlinear *d);
-  virtual ~CAnalysisWindowNonLinearSubHandler();
 
   virtual bool start(const QXmlAttributes &atts);
 
@@ -81,12 +77,11 @@ class CAnalysisWindowNonLinearSubHandler : public CBasicConfigSubHandler
   struct anlyswin_nonlinear *m_d;
 };
 
-class CAnalysisWindowShiftStretchSubHandler : public CBasicConfigSubHandler
+class CAnalysisWindowShiftStretchSubHandler : public CConfigSubHandler
 {
  public:
   CAnalysisWindowShiftStretchSubHandler(CConfigHandler *master,
 					shift_stretch_list_t *d);
-  virtual ~CAnalysisWindowShiftStretchSubHandler();
 
   virtual bool start(const QXmlAttributes &atts);
   virtual bool start(const QString &element, const QXmlAttributes &atts);
@@ -96,12 +91,11 @@ class CAnalysisWindowShiftStretchSubHandler : public CBasicConfigSubHandler
   shift_stretch_list_t *m_d;
 };
 
-class CAnalysisWindowGapSubHandler : public CBasicConfigSubHandler
+class CAnalysisWindowGapSubHandler : public CConfigSubHandler
 {
  public:
   CAnalysisWindowGapSubHandler(CConfigHandler *master,
 			       gap_list_t *d);
-  virtual ~CAnalysisWindowGapSubHandler();
 
   virtual bool start(const QXmlAttributes &atts);
 
@@ -109,12 +103,11 @@ class CAnalysisWindowGapSubHandler : public CBasicConfigSubHandler
   gap_list_t *m_d;
 };
 
-class CAnalysisWindowOutputSubHandler : public CBasicConfigSubHandler
+class CAnalysisWindowOutputSubHandler : public CConfigSubHandler
 {
  public:
   CAnalysisWindowOutputSubHandler(CConfigHandler *master,
 				  output_list_t *d);
-  virtual ~CAnalysisWindowOutputSubHandler();
 
   virtual bool start(const QXmlAttributes &atts);
 
@@ -122,12 +115,11 @@ class CAnalysisWindowOutputSubHandler : public CBasicConfigSubHandler
   output_list_t *m_d;
 };
 
-class CAnalysisWindowSfpSubHandler : public CBasicConfigSubHandler
+class CAnalysisWindowSfpSubHandler : public CConfigSubHandler
 {
  public:
   CAnalysisWindowSfpSubHandler(CConfigHandler *master,
 			       struct calibration_sfp *d);
-  virtual ~CAnalysisWindowSfpSubHandler();
 
   virtual bool start(const QXmlAttributes &atts);
 

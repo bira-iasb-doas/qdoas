@@ -34,7 +34,6 @@ class CRingConfigHandler : public CConfigHandler
 {
  public:
   CRingConfigHandler();
-  virtual ~CRingConfigHandler();
 
   virtual bool startElement(const QString &namespaceURI, const QString &localName,
 			    const QString &qName, const QXmlAttributes &atts);
@@ -49,11 +48,10 @@ inline const mediate_ring_t* CRingConfigHandler::properties(void) const { return
 
 //------------------------------------------------------------------
 
-class CRingGeneralSubHandler : public CBasicConfigSubHandler
+class CRingGeneralSubHandler : public CConfigSubHandler
 {
  public:
   CRingGeneralSubHandler(CConfigHandler *master, mediate_ring_t *d);
-  virtual ~CRingGeneralSubHandler();
 
   virtual bool start(const QXmlAttributes &atts);
   virtual bool start(const QString &element, const QXmlAttributes &atts);

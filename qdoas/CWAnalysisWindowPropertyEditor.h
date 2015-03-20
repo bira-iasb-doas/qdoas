@@ -39,7 +39,6 @@ class CWAnalysisWindowPropertyEditor : public CWEditor, public CProjectObserver
 Q_OBJECT
  public:
   CWAnalysisWindowPropertyEditor(const QString &projectName, const QString &analysisWindowName, QWidget *parent = 0);
-  virtual ~CWAnalysisWindowPropertyEditor();
 
   virtual bool actionOk();
   virtual void actionHelp();

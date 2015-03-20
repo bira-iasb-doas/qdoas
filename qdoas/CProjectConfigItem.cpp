@@ -8,10 +8,6 @@ CAnalysisWindowConfigItem::CAnalysisWindowConfigItem() :
   initializeMediateAnalysisWindow(&m_awProp);
 }
 
-CAnalysisWindowConfigItem::~CAnalysisWindowConfigItem()
-{
-}
-
 bool CAnalysisWindowConfigItem::setName(const QString &name)
 {
   if (name.length() < (int)sizeof(m_awProp.name)) {
@@ -153,10 +149,6 @@ CSiteConfigItem::CSiteConfigItem() :
 {
 }
 
-CSiteConfigItem::~CSiteConfigItem()
-{
-}
-
 //------------------------------------------------------------
 
 CSymbolConfigItem::CSymbolConfigItem(const QString &name, const QString &description) :
@@ -164,8 +156,3 @@ CSymbolConfigItem::CSymbolConfigItem(const QString &name, const QString &descrip
   m_description(description)
 {
 }
-
-CSymbolConfigItem::~CSymbolConfigItem()
-{
-}
-

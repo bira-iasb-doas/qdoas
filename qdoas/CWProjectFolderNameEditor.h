@@ -34,7 +34,6 @@ Q_OBJECT
  public:
   CWProjectFolderNameEditor(CWProjectTree *projectTree, QTreeWidgetItem *item, bool newFolder,
                             QWidget *parent = 0);
-  virtual ~CWProjectFolderNameEditor();
 
   virtual bool actionOk(void);
   virtual void actionHelp(void);

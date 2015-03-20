@@ -34,7 +34,6 @@ Q_OBJECT
  public:
   CWProjectNameEditor(CWProjectTree *projectTree, QTreeWidgetItem *item = 0,
                       QWidget *parent = 0);
-  virtual ~CWProjectNameEditor();
 
   virtual bool actionOk(void);
   virtual void actionHelp(void);

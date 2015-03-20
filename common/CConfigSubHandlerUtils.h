@@ -26,12 +26,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 //-------------------------------------------------------------------
 
-class CFilteringSubHandler : public CBasicConfigSubHandler
+class CFilteringSubHandler : public CConfigSubHandler
 {
  public:
   CFilteringSubHandler(CConfigHandler *master,
 		       mediate_filter_t *filter);
-  virtual ~CFilteringSubHandler();
 
   virtual bool start(const QXmlAttributes &atts);
   virtual bool start(const QString &element, const QXmlAttributes &atts);
@@ -42,12 +41,11 @@ class CFilteringSubHandler : public CBasicConfigSubHandler
 
 //-------------------------------------------------------------------
 
-class CSlitFunctionSubHandler : public CBasicConfigSubHandler
+class CSlitFunctionSubHandler : public CConfigSubHandler
 {
  public:
   CSlitFunctionSubHandler(CConfigHandler *master,
 			  mediate_slit_function_t *function);
-  virtual ~CSlitFunctionSubHandler();
 
   virtual bool start(const QXmlAttributes &atts);
   virtual bool start(const QString &element, const QXmlAttributes &atts);

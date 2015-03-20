@@ -494,9 +494,6 @@ CWAnalysisWindowPropertyEditor::CWAnalysisWindowPropertyEditor(const QString &pr
 
   notifyAcceptActionOk(true);
 }
-CWAnalysisWindowPropertyEditor::~CWAnalysisWindowPropertyEditor()
-{
-}
 
 bool CWAnalysisWindowPropertyEditor::actionOk(void)
 {

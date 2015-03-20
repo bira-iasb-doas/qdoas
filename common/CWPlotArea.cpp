@@ -38,11 +38,6 @@ CWPlotArea::CWPlotArea(QWidget *parent) :
   setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
 }
 
-CWPlotArea::~CWPlotArea()
-{
-
-}
-
 void CWPlotArea::setPage(const RefCountConstPtr<CPlotPageData> &page)
 {
   if (page != 0) {

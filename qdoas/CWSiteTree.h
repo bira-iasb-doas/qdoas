@@ -32,7 +32,6 @@ class CWSiteTree : public QTreeWidget, public CSitesObserver
 Q_OBJECT
  public:
   CWSiteTree(CWActiveContext *activeContext, QWidget *parent = 0);
-  virtual ~CWSiteTree();
 
   void savePreferences(void);
 

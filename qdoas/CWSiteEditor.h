@@ -30,7 +30,6 @@ class CWSiteEditor : public CWEditor
 Q_OBJECT
  public:
   CWSiteEditor(QTreeWidgetItem *editItem = 0, QWidget *parent = 0);
-  virtual ~CWSiteEditor();
 
   virtual bool actionOk(void);
   virtual void actionHelp(void);

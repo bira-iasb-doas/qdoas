@@ -35,7 +35,6 @@ class CWProjectTabNasaAmes : public QFrame
 Q_OBJECT
  public:
   CWProjectTabNasaAmes(const QString &projectName, const mediate_project_nasa_ames_t *properties, QWidget *parent = 0);
-  virtual ~CWProjectTabNasaAmes();
 
   void apply(mediate_project_nasa_ames_t *properties) const;
 

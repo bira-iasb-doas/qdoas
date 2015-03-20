@@ -136,10 +136,6 @@ CWSiteEditor::CWSiteEditor(QTreeWidgetItem *editItem, QWidget *parent) :
 
 }
 
-CWSiteEditor::~CWSiteEditor()
-{
-}
-
 bool CWSiteEditor::actionOk(void)
 {
   // should only be possible if all valid bits are set ...

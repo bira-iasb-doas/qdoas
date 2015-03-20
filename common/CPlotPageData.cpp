@@ -31,11 +31,6 @@ CPlotPageData::CPlotPageData(int pageNumber,int pageType) :
   m_tag.sprintf("Tag-%d", pageNumber);
 }
 
-CPlotPageData::~CPlotPageData()
-{
-  // the list destructor and ref-counting ensure safe handling of the plot data.
-}
-
 int CPlotPageData::pageNumber(void) const
 {
   return m_pageNumber;

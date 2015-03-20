@@ -72,10 +72,6 @@ CWProjectNameEditor::CWProjectNameEditor(CWProjectTree *projectTree, QTreeWidget
 
 }
 
-CWProjectNameEditor::~CWProjectNameEditor()
-{
-}
-
 bool CWProjectNameEditor::actionOk(void)
 {
   if (m_projectName->text().isEmpty())

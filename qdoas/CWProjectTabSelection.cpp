@@ -146,10 +146,6 @@ CWProjectTabSelection::CWProjectTabSelection(const mediate_project_selection_t *
   mainLayout->addStretch(1);
 }
 
-CWProjectTabSelection::~CWProjectTabSelection()
-{
-}
-
 void CWProjectTabSelection::apply(mediate_project_selection_t *properties) const
 {
   // extract state from the GUI and set properties
@@ -324,10 +320,6 @@ CWGeolocation::CWGeolocation(const struct geolocation *geo, QWidget *parent) :
 
   if (index != -1)
     m_modeCombo->setCurrentIndex(index);
-}
-
-CWGeolocation::~CWGeolocation()
-{
 }
 
 void CWGeolocation::apply(struct geolocation *geo) const

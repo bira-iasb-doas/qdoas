@@ -35,7 +35,6 @@ class CWProjectTabUndersampling : public QFrame
 Q_OBJECT
  public:
   CWProjectTabUndersampling(const mediate_project_undersampling_t *properties, QWidget *parent = 0);
-  virtual ~CWProjectTabUndersampling();
 
   void apply(mediate_project_undersampling_t *properties) const;
 

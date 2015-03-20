@@ -29,7 +29,6 @@ class CWSiteListCombo : public QComboBox, public CSitesObserver
 {
  public:
   CWSiteListCombo(QWidget *parent = 0);
-  virtual ~CWSiteListCombo();
 
   virtual void updateNewSite(const QString &newSiteName);
   virtual void updateDeleteSite(const QString &siteName);

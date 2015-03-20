@@ -32,10 +32,6 @@ CUsampConfigHandler::CUsampConfigHandler() :
   initializeMediateUsamp(&m_properties);
 }
 
-CUsampConfigHandler::~CUsampConfigHandler()
-{
-}
-
 bool CUsampConfigHandler::startElement(const QString &namespaceURI, const QString &localName,
 				       const QString &qName, const QXmlAttributes &atts)
 {
@@ -66,12 +62,8 @@ bool CUsampConfigHandler::startElement(const QString &namespaceURI, const QStrin
 // Handler for <general> element (and sub elements)
 
 CUsampGeneralSubHandler::CUsampGeneralSubHandler(CConfigHandler *master, mediate_usamp_t *d) :
-  CBasicConfigSubHandler(master),
+  CConfigSubHandler(master),
   m_d(d)
-{
-}
-
-CUsampGeneralSubHandler::~CUsampGeneralSubHandler()
 {
 }
 

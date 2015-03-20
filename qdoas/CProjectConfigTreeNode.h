@@ -54,7 +54,6 @@ class CProjectConfigFile : public CProjectConfigTreeNode
 {
  public:
   CProjectConfigFile(const QString &name, bool enabled);
-  virtual ~CProjectConfigFile();
 
   virtual Type type(void) const;
 };
@@ -63,7 +62,6 @@ class CProjectConfigFolder : public CProjectConfigTreeNode
 {
  public:
   CProjectConfigFolder(const QString &name, bool enabled);
-  virtual ~CProjectConfigFolder();
 
   virtual Type type(void) const;
 };
@@ -72,7 +70,6 @@ class CProjectConfigDirectory : public CProjectConfigTreeNode
 {
  public:
   CProjectConfigDirectory(const QString &name, const QString &filter, bool recurse, bool enabled);
-  virtual ~CProjectConfigDirectory();
 
   virtual Type type(void) const;
   virtual QString filter(void) const;

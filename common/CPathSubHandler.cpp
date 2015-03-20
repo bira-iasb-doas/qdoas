@@ -8,16 +8,6 @@
 //
 // Handler for <paths> element (and sub elements)
 
-CPathSubHandler::CPathSubHandler(CConfigHandler *master) :
-  m_master(master),
-  m_index(-1)
-{
-}
-
-CPathSubHandler::~CPathSubHandler()
-{
-}
-
 bool CPathSubHandler::start(const QString &element, const QXmlAttributes &atts)
 {
   // should be a path element <path index="?">/this/is/the/path</path>
@@ -54,9 +44,4 @@ bool CPathSubHandler::end(const QString &element)
     m_master->setPath(m_index, m_path);
 
   return true;
-}
-
-CConfigHandler* CPathSubHandler::master(void)
-{
-  return m_master;
 }

@@ -79,10 +79,6 @@ CWProjectFolderNameEditor::CWProjectFolderNameEditor(CWProjectTree *projectTree,
           this, SLOT(slotReturnPressed()));
 }
 
-CWProjectFolderNameEditor::~CWProjectFolderNameEditor()
-{
-}
-
 bool CWProjectFolderNameEditor::actionOk(void)
 {
   // use the path to locate the correct place in the tree

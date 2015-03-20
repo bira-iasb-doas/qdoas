@@ -48,10 +48,6 @@ CWSlitFileBase::CWSlitFileBase(QWidget *parent) :
 {
 }
 
-CWSlitFileBase::~CWSlitFileBase()
-{
-}
-
 QLineEdit *CWSlitFileBase::helperConstructFileEdit(QGridLayout *gridLayout, int row, const char *labelText, const char *fileName, int len) {
 
   QLabel *label = new QLabel(labelText);
@@ -104,10 +100,6 @@ CWSlitNoneEdit::CWSlitNoneEdit(const struct slit_file *d, QWidget *parent) :
 {
 }
 
-CWSlitNoneEdit::~CWSlitNoneEdit()
-{
-}
-
 void CWSlitNoneEdit::reset(const struct slit_file *d)
 {
 }
@@ -149,10 +141,6 @@ CWSlitFileEdit::CWSlitFileEdit(const struct slit_file *d, QWidget *parent) :
   reset(d);
 
   mainLayout->addStretch(1);
-}
-
-CWSlitFileEdit::~CWSlitFileEdit()
-{
 }
 
 void CWSlitFileEdit::reset(const struct slit_file *d)
@@ -222,10 +210,6 @@ CWSlitGaussianEdit::CWSlitGaussianEdit(const struct slit_gaussian *d, QWidget *p
   reset(d);
 
   mainLayout->addStretch(1);
-}
-
-CWSlitGaussianEdit::~CWSlitGaussianEdit()
-{
 }
 
 void CWSlitGaussianEdit::reset(const struct slit_gaussian *d)
@@ -315,10 +299,6 @@ CWSlitLorentzEdit::CWSlitLorentzEdit(const struct slit_lorentz *d, QWidget *pare
   mainLayout->addStretch(1);
 }
 
-CWSlitLorentzEdit::~CWSlitLorentzEdit()
-{
-}
-
 void CWSlitLorentzEdit::reset(const struct slit_lorentz *d)
 {
   QString tmpStr;
@@ -403,10 +383,6 @@ CWSlitVoigtEdit::CWSlitVoigtEdit(const struct slit_voigt *d, QWidget *parent) :
   fwhmFrameLayout->setColumnStretch(1, 1);
 
   mainLayout->addStretch(1);
-}
-
-CWSlitVoigtEdit::~CWSlitVoigtEdit()
-{
 }
 
 void CWSlitVoigtEdit::reset(const struct slit_voigt *d)
@@ -500,10 +476,6 @@ CWSlitErrorEdit::CWSlitErrorEdit(const struct slit_error *d, QWidget *parent) :
   fwhmFrameLayout->setColumnStretch(1, 1);
 }
 
-CWSlitErrorEdit::~CWSlitErrorEdit()
-{
-}
-
 void CWSlitErrorEdit::reset(const struct slit_error *d)
 {
   QString tmpStr;
@@ -564,10 +536,6 @@ CWSlitApodEdit::CWSlitApodEdit(const struct slit_apod *d, QWidget *parent) :
 
   mainLayout->addLayout(gridLayout);
   mainLayout->addStretch(1);
-}
-
-CWSlitApodEdit::~CWSlitApodEdit()
-{
 }
 
 void CWSlitApodEdit::reset(const struct slit_apod *d)
@@ -645,10 +613,6 @@ CWSlitAGaussEdit::CWSlitAGaussEdit(const struct slit_agauss *d, QWidget *parent)
 
   fwhmFrameLayout->setColumnMinimumWidth(0, cSuggestedColumnZeroWidth);
   fwhmFrameLayout->setColumnStretch(1, 1);
-}
-
-CWSlitAGaussEdit::~CWSlitAGaussEdit()
-{
 }
 
 void CWSlitAGaussEdit::reset(const struct slit_agauss *d)
@@ -748,10 +712,6 @@ CWSlitSelector::CWSlitSelector(const mediate_slit_function_t *slit, const QStrin
 
   // connections
   connect(m_slitCombo, SIGNAL(currentIndexChanged(int)), m_slitStack, SLOT(setCurrentIndex(int)));
-}
-
-CWSlitSelector::~CWSlitSelector()
-{
 }
 
 void CWSlitSelector::reset(const mediate_slit_function_t *slit)

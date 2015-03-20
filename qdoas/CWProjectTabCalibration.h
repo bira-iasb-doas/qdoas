@@ -40,7 +40,6 @@ class CWProjectTabCalibration : public QFrame
 Q_OBJECT
  public:
   CWProjectTabCalibration(const mediate_project_calibration_t *properties, QWidget *parent = 0);
-  virtual ~CWProjectTabCalibration();
 
   void apply(mediate_project_calibration_t *properties) const;
 

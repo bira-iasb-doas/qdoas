@@ -225,58 +225,8 @@ bool CConfigHandler::delegateStartElement(const QString &qName, const QXmlAttrib
 
 //------------------------------------------------------------------------
 
-CConfigSubHandler::CConfigSubHandler()
-{
-}
-
-CConfigSubHandler::~CConfigSubHandler()
-{
-}
-
-bool CConfigSubHandler::start(const QXmlAttributes &atts)
-{
-  return true;
-}
-
-bool CConfigSubHandler::start(const QString &element, const QXmlAttributes &atts)
-{
-  return true;
-}
-
-bool CConfigSubHandler::character(const QString &ch)
-{
-  return true;
-}
-
-bool CConfigSubHandler::end(const QString &element)
-{
-  return true;
-}
-
-bool CConfigSubHandler::end()
-{
-  return true;
-}
-
 bool CConfigSubHandler::postErrorMessage(const QString &msg)
 {
   master()->setSubErrorMessage(msg);
   return false;
 }
-
-//------------------------------------------------------------------------
-
-CBasicConfigSubHandler::CBasicConfigSubHandler(CConfigHandler *master) :
-  m_master(master)
-{
-}
-
-CBasicConfigSubHandler::~CBasicConfigSubHandler()
-{
-}
-
-CConfigHandler* CBasicConfigSubHandler::master(void)
-{
-  return m_master;
-}
-

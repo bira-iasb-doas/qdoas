@@ -51,10 +51,6 @@ CWPlotPropertySample::CWPlotPropertySample(const QPen &pen, const QColor &bgColo
   setMinimumSize(QSize(128,32));
 }
 
-CWPlotPropertySample::~CWPlotPropertySample()
-{
-}
-
 void CWPlotPropertySample::setBackgroundColour(const QColor &c)
 {
   QPalette p(palette());
@@ -134,10 +130,6 @@ CWPlotPropertyScale::CWPlotPropertyScale(const CScaleControl &scaleControl, cons
   
   // connections
   connect(m_fixedCheck, SIGNAL(stateChanged(int)), this, SLOT(slotFixedCheckChanged(int)));
-}
-
-CWPlotPropertyScale::~CWPlotPropertyScale()
-{
 }
 
 const CScaleControl& CWPlotPropertyScale::scaleControl(void) const
@@ -292,10 +284,6 @@ CWPlotPropertiesConfig::CWPlotPropertiesConfig(const CPlotProperties &prop, QWid
 
   // connections
   connect(bgColourBtn, SIGNAL(clicked()), this, SLOT(slotSelectBackgroundColour()));
-}
-
-CWPlotPropertiesConfig::~CWPlotPropertiesConfig()
-{
 }
 
 void CWPlotPropertiesConfig::apply(CPlotProperties &prop) const

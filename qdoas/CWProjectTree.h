@@ -163,7 +163,6 @@ class CProjectTreeItem : public QTreeWidgetItem
   CProjectTreeItem(QTreeWidgetItem *parent, const QStringList &strings, int type);
   CProjectTreeItem(QTreeWidgetItem *parent, QTreeWidgetItem *preceedingSibling, const QStringList &strings, int type);
   CProjectTreeItem(const CProjectTreeItem &other); // for cloning the family of raw spectra items
-  virtual ~CProjectTreeItem();
 
   virtual void setEnabled(bool enable);
   bool isEnabled(void) const;
@@ -179,7 +178,6 @@ class CProjectItem : public CProjectTreeItem
  public:
   CProjectItem(const QString &projectName);
   CProjectItem(CWProjectTree *parent, QTreeWidgetItem *preceedingSibling, const QString &projectName);
-  virtual ~CProjectItem();
 
   virtual QVariant data(int column, int role) const;
 
@@ -190,14 +188,12 @@ class CAnalysisWindowBranchItem : public CProjectTreeItem
 {
  public:
   CAnalysisWindowBranchItem(QTreeWidgetItem *parent);
-  virtual ~CAnalysisWindowBranchItem();
 };
 
 class CSpectraBranchItem : public CProjectTreeItem
 {
  public:
   CSpectraBranchItem(QTreeWidgetItem *parent);
-  virtual ~CSpectraBranchItem();
 };
 
 // Folder can have abitrary children (files, folders, directories)
@@ -207,7 +203,6 @@ class CSpectraFolderItem : public CProjectTreeItem
  public:
   CSpectraFolderItem(QTreeWidgetItem *parent, const QString &folderName);
   CSpectraFolderItem(const CSpectraFolderItem &other); // used by clone
-  virtual ~CSpectraFolderItem();
 
   virtual QVariant data(int column, int role) const;
   virtual QTreeWidgetItem* clone() const;
@@ -222,7 +217,6 @@ class CSpectraDirectoryItem : public CProjectTreeItem
                         const QStringList &fileFilters, bool includesSubDirectories,
                         int *fileCount = 0);
   CSpectraDirectoryItem(const CSpectraDirectoryItem &other); // used by clone
-  virtual ~CSpectraDirectoryItem();
 
   virtual QVariant data(int column, int role) const;
   virtual QTreeWidgetItem* clone() const;
@@ -251,7 +245,6 @@ class CSpectraFileItem : public CProjectTreeItem
  public:
   CSpectraFileItem(QTreeWidgetItem *parent, const QFileInfo &fileInfo);
   CSpectraFileItem(const CSpectraFileItem &other);
-  virtual ~CSpectraFileItem();
 
   QString fullFileName(void) const;
   QString dateLastModified(void) const;
@@ -273,7 +266,6 @@ class CAnalysisWindowItem : public CProjectTreeItem
  public:
   CAnalysisWindowItem(QTreeWidgetItem *parent, const QString &windowName);
   CAnalysisWindowItem(QTreeWidgetItem *parent, QTreeWidgetItem *preceedingSibling, const QString &windowName);
-  virtual ~CAnalysisWindowItem(); // DO NOT USE THIS - use destroyItem instead.
 
   virtual void setEnabled(bool enable);
 

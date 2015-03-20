@@ -10,12 +10,8 @@
 
 CFilteringSubHandler::CFilteringSubHandler(CConfigHandler *master,
 					   mediate_filter_t *filter) :
-  CBasicConfigSubHandler(master),
+  CConfigSubHandler(master),
   m_filter(filter)
-{
-}
-
-CFilteringSubHandler::~CFilteringSubHandler()
 {
 }
 
@@ -111,12 +107,8 @@ bool CFilteringSubHandler::start(const QString &element, const QXmlAttributes &a
 
 CSlitFunctionSubHandler::CSlitFunctionSubHandler(CConfigHandler *master,
 						 mediate_slit_function_t *function) :
-  CBasicConfigSubHandler(master),
+  CConfigSubHandler(master),
   m_function(function)
-{
-}
-
-CSlitFunctionSubHandler::~CSlitFunctionSubHandler()
 {
 }
 

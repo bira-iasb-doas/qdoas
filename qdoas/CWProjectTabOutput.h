@@ -38,7 +38,6 @@ class CWProjectTabOutput : public QFrame
 Q_OBJECT
  public:
   CWProjectTabOutput(const mediate_project_output_t *properties, QWidget *parent = 0);
-  virtual ~CWProjectTabOutput();
 
   void apply(mediate_project_output_t *properties) const;
 

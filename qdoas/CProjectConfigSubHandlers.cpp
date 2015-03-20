@@ -29,12 +29,8 @@ enum omi_xtrack_mode str_to_mode(const char *configstr) {
 //------------------------------------------------------------------------
 
 CSelectorSubHandler::CSelectorSubHandler(CConfigHandler *master, data_select_list_t *selectList) :
-  CBasicConfigSubHandler(master),
+  CConfigSubHandler(master),
   m_selectList(selectList)
-{
-}
-
-CSelectorSubHandler::~CSelectorSubHandler()
 {
 }
 
@@ -225,10 +221,6 @@ CProjectDisplaySubHandler::CProjectDisplaySubHandler(CConfigHandler *master, med
 {
 }
 
-CProjectDisplaySubHandler::~CProjectDisplaySubHandler()
-{
-}
-
 bool CProjectDisplaySubHandler::start(const QXmlAttributes &atts)
 {
   m_display->requireSpectra = (atts.value("spectra") == "true") ? 1 : 0;
@@ -243,12 +235,8 @@ bool CProjectDisplaySubHandler::start(const QXmlAttributes &atts)
 // handler for <selection> (child of project)
 
 CProjectSelectionSubHandler::CProjectSelectionSubHandler(CConfigHandler *master, mediate_project_selection_t *selection) :
-  CBasicConfigSubHandler(master),
+  CConfigSubHandler(master),
   m_selection(selection)
-{
-}
-
-CProjectSelectionSubHandler::~CProjectSelectionSubHandler()
 {
 }
 
@@ -313,12 +301,8 @@ bool CProjectSelectionSubHandler::start(const QString &element, const QXmlAttrib
 
 CProjectAnalysisSubHandler::CProjectAnalysisSubHandler(CConfigHandler *master,
 						       mediate_project_analysis_t *analysis) :
-  CBasicConfigSubHandler(master),
+  CConfigSubHandler(master),
   m_analysis(analysis)
-{
-}
-
-CProjectAnalysisSubHandler::~CProjectAnalysisSubHandler()
 {
 }
 
@@ -369,12 +353,8 @@ bool CProjectAnalysisSubHandler::start(const QXmlAttributes &atts)
 
 CProjectRawSpectraSubHandler::CProjectRawSpectraSubHandler(CConfigHandler *master,
 							   CProjectConfigTreeNode *node) :
-  CBasicConfigSubHandler(master),
+  CConfigSubHandler(master),
   m_node(node)
-{
-}
-
-CProjectRawSpectraSubHandler::~CProjectRawSpectraSubHandler()
 {
 }
 
@@ -419,12 +399,8 @@ bool CProjectRawSpectraSubHandler::start(const QString &element, const QXmlAttri
 
 CProjectCalibrationSubHandler::CProjectCalibrationSubHandler(CConfigHandler *master,
 							     mediate_project_calibration_t *calibration) :
-  CBasicConfigSubHandler(master),
+  CConfigSubHandler(master),
   m_calibration(calibration)
-{
-}
-
-CProjectCalibrationSubHandler::~CProjectCalibrationSubHandler()
 {
 }
 
@@ -534,12 +510,8 @@ bool CProjectCalibrationSubHandler::start(const QString &element, const QXmlAttr
 
 CProjectUndersamplingSubHandler::CProjectUndersamplingSubHandler(CConfigHandler *master,
 								 mediate_project_undersampling_t *undersampling) :
-  CBasicConfigSubHandler(master),
+  CConfigSubHandler(master),
   m_undersampling(undersampling)
-{
-}
-
-CProjectUndersamplingSubHandler::~CProjectUndersamplingSubHandler()
 {
 }
 
@@ -576,12 +548,8 @@ bool CProjectUndersamplingSubHandler::start(const QXmlAttributes &atts)
 
 CProjectInstrumentalSubHandler::CProjectInstrumentalSubHandler(CConfigHandler *master,
 							       mediate_project_instrumental_t *instrumental) :
-  CBasicConfigSubHandler(master),
+  CConfigSubHandler(master),
   m_instrumental(instrumental)
-{
-}
-
-CProjectInstrumentalSubHandler::~CProjectInstrumentalSubHandler()
 {
 }
 
@@ -1464,12 +1432,8 @@ bool CProjectInstrumentalSubHandler::helperLoadScia(const QXmlAttributes &atts, 
 
 CProjectSlitSubHandler::CProjectSlitSubHandler(CConfigHandler *master,
 					       mediate_project_slit_t *slit) :
-  CBasicConfigSubHandler(master),
+  CConfigSubHandler(master),
   m_slit(slit)
-{
-}
-
-CProjectSlitSubHandler::~CProjectSlitSubHandler()
 {
 }
 
@@ -1508,10 +1472,6 @@ CProjectOutputSubHandler::CProjectOutputSubHandler(CConfigHandler *master,
 						   mediate_project_output_t *output) :
   CSelectorSubHandler(master, &(output->selection)),
   m_output(output)
-{
-}
-
-CProjectOutputSubHandler::~CProjectOutputSubHandler()
 {
 }
 
@@ -1580,12 +1540,8 @@ bool CProjectOutputSubHandler::start(const QXmlAttributes &atts)
 
 CProjectNasaAmesSubHandler::CProjectNasaAmesSubHandler(CConfigHandler *master,
 						       mediate_project_nasa_ames_t *nasaames) :
-  CBasicConfigSubHandler(master),
+  CConfigSubHandler(master),
   m_nasaames(nasaames)
-{
-}
-
-CProjectNasaAmesSubHandler::~CProjectNasaAmesSubHandler()
 {
 }
 

@@ -31,7 +31,6 @@ class CWProjectTabAnalysis : public QFrame
 {
  public:
   CWProjectTabAnalysis(const mediate_project_analysis_t *properties, QWidget *parent = 0);
-  virtual ~CWProjectTabAnalysis();
 
   void apply(mediate_project_analysis_t *properties) const;
 

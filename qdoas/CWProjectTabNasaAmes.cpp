@@ -154,10 +154,6 @@ CWProjectTabNasaAmes::CWProjectTabNasaAmes(const QString &projectName, const med
   connect(browseBtn, SIGNAL(clicked()), this, SLOT(slotBrowsePath()));
 }
 
-CWProjectTabNasaAmes::~CWProjectTabNasaAmes()
-{
-}
-
 void CWProjectTabNasaAmes::apply(mediate_project_nasa_ames_t *properties) const
 {
   properties->saveFlag = (m_saveCheck->checkState() == Qt::Checked) ? 1 : 0;

@@ -32,8 +32,7 @@ class CWProjectTree;
 class CQdoasConfigWriter
 {
  public:
-  CQdoasConfigWriter(const CWProjectTree *projectTree);
-  ~CQdoasConfigWriter();
+  CQdoasConfigWriter(const CWProjectTree *projectTree) : m_projectTree(projectTree) {};
 
   QString write(const QString &fileName);
 

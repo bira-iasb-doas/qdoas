@@ -31,7 +31,6 @@ class CWOutputSelector : public QFrame
 Q_OBJECT
  public:
   CWOutputSelector(const data_select_list_t *d, QWidget *parent = 0);
-  virtual ~CWOutputSelector();
 
   void apply(data_select_list_t *d);
   void setInstrument(int instrument);
@@ -50,7 +49,6 @@ class CWOutputFieldItem : public QListWidgetItem
 {
  public:
   CWOutputFieldItem(int key, const QString &text, QListWidget *parent = 0);
-  virtual ~CWOutputFieldItem();
 
   virtual QVariant data(int role) const; // implement Qt::UserRole to get key
   

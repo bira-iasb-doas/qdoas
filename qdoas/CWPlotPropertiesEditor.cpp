@@ -57,10 +57,6 @@ CWPlotPropertiesEditor::CWPlotPropertiesEditor(CWPlotRegion *plotRegion, QWidget
   notifyAcceptActionOk(true);
 }
 
-CWPlotPropertiesEditor::~CWPlotPropertiesEditor()
-{
-}
-
 bool CWPlotPropertiesEditor::actionOk(void)
 {
   // set the properties in the plot region.

@@ -200,10 +200,6 @@ CWProjectTabInstrumental::CWProjectTabInstrumental(const mediate_project_instrum
     m_siteCombo->setCurrentIndex(index);
  }
 
-CWProjectTabInstrumental::~CWProjectTabInstrumental()
-{
-}
-
 void CWProjectTabInstrumental::apply(mediate_project_instrumental_t *instr) const
 {
   // set values for ALL instruments ... the selected mode is handled elsewhere (by the parent).
@@ -355,10 +351,6 @@ void CWCalibInstrEdit::helperConstructCalInsFileWidgets(QGridLayout *gridLayout,
 
 CWAllFilesEdit::CWAllFilesEdit(QWidget *parent) :
   CWCalibInstrEdit(parent)
-{
-}
-
-CWAllFilesEdit::~CWAllFilesEdit()
 {
 }
 
@@ -607,10 +599,6 @@ CWInstrAsciiEdit::CWInstrAsciiEdit(const struct instrumental_ascii *d, QWidget *
   m_lambdaMaxEdit->setText(tmpStr);
 }
 
-CWInstrAsciiEdit::~CWInstrAsciiEdit()
-{
-}
-
 void CWInstrAsciiEdit::apply(struct instrumental_ascii *d) const
 {
   // detected size
@@ -685,10 +673,6 @@ CWInstrLoggerEdit::CWInstrLoggerEdit(const struct instrumental_logger *d, QWidge
   m_aziCheck->setCheckState(d->flagAzimuthAngle ? Qt::Checked : Qt::Unchecked);
 }
 
-CWInstrLoggerEdit::~CWInstrLoggerEdit()
-{
-}
-
 void CWInstrLoggerEdit::apply(struct instrumental_logger *d) const
 {
   // spectral type
@@ -739,10 +723,6 @@ CWInstrActonEdit::CWInstrActonEdit(const struct instrumental_acton *d, QWidget *
 
 }
 
-CWInstrActonEdit::~CWInstrActonEdit()
-{
-}
-
 void CWInstrActonEdit::apply(struct instrumental_acton *d) const
 {
   // nilu type
@@ -788,10 +768,6 @@ CWInstrSaozEdit::CWInstrSaozEdit(const struct instrumental_saoz *d, QWidget *par
   if (index != -1)
     m_spectralTypeCombo->setCurrentIndex(index);
 
-}
-
-CWInstrSaozEdit::~CWInstrSaozEdit()
-{
 }
 
 void CWInstrSaozEdit::apply(struct instrumental_saoz *d) const
@@ -924,10 +900,6 @@ CWInstrMfcEdit::CWInstrMfcEdit(const struct instrumental_mfc *d, QWidget *parent
   m_spectraMaskEdit->validator()->fixup(tmpStr);
   m_spectraMaskEdit->setText(tmpStr);
 
-}
-
-CWInstrMfcEdit::~CWInstrMfcEdit()
-{
 }
 
 void CWInstrMfcEdit::apply(struct instrumental_mfc *d) const
@@ -1064,10 +1036,6 @@ CWInstrMfcStdEdit::CWInstrMfcStdEdit(const struct instrumental_mfcstd *d, QWidge
   m_lambdaMaxEdit->setText(tmpStr);
 }
 
-CWInstrMfcStdEdit::~CWInstrMfcStdEdit()
-{
-}
-
 void CWInstrMfcStdEdit::apply(struct instrumental_mfcstd *d) const
 {
   // detector size
@@ -1163,10 +1131,6 @@ CWInstrMfcbiraEdit::CWInstrMfcbiraEdit(const struct instrumental_mfcbira *d, QWi
   m_lambdaMaxEdit->setText(tmpStr);
 }
 
-CWInstrMfcbiraEdit::~CWInstrMfcbiraEdit()
-{
-}
-
 void CWInstrMfcbiraEdit::apply(struct instrumental_mfcbira *d) const
 {
   // detector size
@@ -1239,10 +1203,6 @@ CWInstrMinimumEdit::CWInstrMinimumEdit(const struct instrumental_minimum *d, QWi
   m_lambdaMaxEdit->setText(tmpStr);
 }
 
-CWInstrMinimumEdit::~CWInstrMinimumEdit()
-{
-}
-
 void CWInstrMinimumEdit::apply(struct instrumental_minimum *d) const
 {
   // files
@@ -1277,10 +1237,6 @@ CWInstrCcdEdit::CWInstrCcdEdit(const struct instrumental_ccd *d, QWidget *parent
 
   mainLayout->addLayout(gridLayout);
   mainLayout->addStretch(1);
-}
-
-CWInstrCcdEdit::~CWInstrCcdEdit()
-{
 }
 
 void CWInstrCcdEdit::apply(struct instrumental_ccd *d) const
@@ -1342,10 +1298,6 @@ CWInstrCcdUlbEdit::CWInstrCcdUlbEdit(const struct instrumental_ccdulb *d, QWidge
   m_cenLambdaEdit->setText(tmpStr.setNum(d->centralWavelength));
 }
 
-CWInstrCcdUlbEdit::~CWInstrCcdUlbEdit()
-{
-}
-
 void CWInstrCcdUlbEdit::apply(struct instrumental_ccdulb *d) const
 {
   // grating
@@ -1399,10 +1351,6 @@ CWInstrPdaEggUlbEdit::CWInstrPdaEggUlbEdit(const struct instrumental_pdaeggulb *
   if (index != -1)
     m_curveTypeCombo->setCurrentIndex(index);
 
-}
-
-CWInstrPdaEggUlbEdit::~CWInstrPdaEggUlbEdit()
-{
 }
 
 void CWInstrPdaEggUlbEdit::apply(struct instrumental_pdaeggulb *d) const
@@ -1520,10 +1468,6 @@ CWInstrCcdEevEdit::CWInstrCcdEevEdit(const struct instrumental_ccdeev *d, QWidge
   m_lambdaMaxEdit->setText(tmpStr);
 }
 
-CWInstrCcdEevEdit::~CWInstrCcdEevEdit()
-{
-}
-
 void CWInstrCcdEevEdit::apply(struct instrumental_ccdeev *d) const
 {
   // detector size
@@ -1605,10 +1549,6 @@ CWInstrOpusEdit::CWInstrOpusEdit(const struct instrumental_opus *d, QWidget *par
 
 }
 
-CWInstrOpusEdit::~CWInstrOpusEdit()
-{
-}
-
 void CWInstrOpusEdit::apply(struct instrumental_opus *d) const
 {
   // detector size
@@ -1683,10 +1623,6 @@ CWInstrGdpEdit::CWInstrGdpEdit(const struct instrumental_gdp *d, QWidget *parent
     m_pixelTypeCombo->setCurrentIndex(index);
 }
 
-CWInstrGdpEdit::~CWInstrGdpEdit()
-{
-}
-
 void CWInstrGdpEdit::apply(struct instrumental_gdp *d) const
 {
   // band
@@ -1738,10 +1674,6 @@ CWInstrGome2Edit::CWInstrGome2Edit(const struct instrumental_gome2 *d, QWidget *
   int index = m_bandTypeCombo->findData(QVariant(d->bandType));
   if (index != -1)
     m_bandTypeCombo->setCurrentIndex(index);
-}
-
-CWInstrGome2Edit::~CWInstrGome2Edit()
-{
 }
 
 void CWInstrGome2Edit::apply(struct instrumental_gome2 *d) const
@@ -1833,10 +1765,6 @@ CWInstrSciaEdit::CWInstrSciaEdit(const struct instrumental_scia *d, QWidget *par
   connect(m_clusterCheck[3], SIGNAL(stateChanged(int)), this, SLOT(slotCluster3Changed(int)));
   connect(m_clusterCheck[4], SIGNAL(stateChanged(int)), this, SLOT(slotCluster4Changed(int)));
   connect(m_clusterCheck[5], SIGNAL(stateChanged(int)), this, SLOT(slotCluster5Changed(int)));
-}
-
-CWInstrSciaEdit::~CWInstrSciaEdit()
-{
 }
 
 void CWInstrSciaEdit::apply(struct instrumental_scia *d) const
@@ -2049,11 +1977,6 @@ CWInstrOmiEdit::CWInstrOmiEdit(const struct instrumental_omi *d, QWidget *parent
 
 }
 
-CWInstrOmiEdit::~CWInstrOmiEdit()
-{
-
-}
-
 void CWInstrOmiEdit::apply(struct instrumental_omi *d) const
 {
   // spectral
@@ -2183,10 +2106,6 @@ CWInstrOceanOpticsEdit::CWInstrOceanOpticsEdit(const struct instrumental_oceanop
   tmpStr.setNum(d->lambdaMax);
   m_lambdaMaxEdit->validator()->fixup(tmpStr);
   m_lambdaMaxEdit->setText(tmpStr);
-}
-
-CWInstrOceanOpticsEdit::~CWInstrOceanOpticsEdit()
-{
 }
 
 void CWInstrOceanOpticsEdit::apply(struct instrumental_oceanoptics *d) const

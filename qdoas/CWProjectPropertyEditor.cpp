@@ -206,10 +206,6 @@ CWProjectPropertyEditor::CWProjectPropertyEditor(const QString &projectName, QWi
   notifyAcceptActionOk(true);
 }
 
-CWProjectPropertyEditor::~CWProjectPropertyEditor()
-{
-}
-
 bool CWProjectPropertyEditor::actionOk(void)
 {
   // call apply for all tabs ...

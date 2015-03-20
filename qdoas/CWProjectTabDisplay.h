@@ -33,7 +33,6 @@ class CWProjectTabDisplay : public QFrame
 Q_OBJECT
  public:
   CWProjectTabDisplay(const mediate_project_display_t *properties, QWidget *parent = 0);
-  virtual ~CWProjectTabDisplay();
 
   void apply(mediate_project_display_t *properties) const;
 

@@ -27,17 +27,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 class CPathSubHandler : public CConfigSubHandler
 {
  public:
-  CPathSubHandler(CConfigHandler *master);
-  virtual ~CPathSubHandler();
+  CPathSubHandler(CConfigHandler *master) : CConfigSubHandler(master), m_index(-1) {};
 
   virtual bool start(const QString &element, const QXmlAttributes &atts);
   virtual bool character(const QString &ch);
   virtual bool end(const QString &element);
 
-  virtual CConfigHandler* master(void);
-
  private:
-  CConfigHandler *m_master;
   int m_index;
   QString m_path;
 };

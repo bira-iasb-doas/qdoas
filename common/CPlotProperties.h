@@ -35,7 +35,6 @@ class CPlotProperties
  public:
   CPlotProperties();
   CPlotProperties(const CPlotProperties &other);
-  ~CPlotProperties();
 
   CPlotProperties& operator=(const CPlotProperties &rhs);
 

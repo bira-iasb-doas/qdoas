@@ -34,7 +34,6 @@ class CUsampConfigHandler : public CConfigHandler
 {
  public:
   CUsampConfigHandler();
-  virtual ~CUsampConfigHandler();
 
   virtual bool startElement(const QString &namespaceURI, const QString &localName,
 			    const QString &qName, const QXmlAttributes &atts);
@@ -49,11 +48,10 @@ inline const mediate_usamp_t* CUsampConfigHandler::properties(void) const { retu
 
 //------------------------------------------------------------------
 
-class CUsampGeneralSubHandler : public CBasicConfigSubHandler
+class CUsampGeneralSubHandler : public CConfigSubHandler
 {
  public:
   CUsampGeneralSubHandler(CConfigHandler *master, mediate_usamp_t *d);
-  virtual ~CUsampGeneralSubHandler();
 
   virtual bool start(const QXmlAttributes &atts);
   virtual bool start(const QString &element, const QXmlAttributes &atts);

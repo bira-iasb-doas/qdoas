@@ -34,7 +34,6 @@ class CWSplitter : public QSplitter
 Q_OBJECT
  public:
   CWSplitter(Qt::Orientation orientation, const char *settingsGroupName, QWidget *parent = 0);
-  virtual ~CWSplitter();
 
   void savePreferences(void);
 

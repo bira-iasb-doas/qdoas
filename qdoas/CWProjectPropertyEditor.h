@@ -43,7 +43,6 @@ class CWProjectPropertyEditor : public CWEditor
 Q_OBJECT
  public:
   CWProjectPropertyEditor(const QString &projectName, QWidget *parent = 0);
-  virtual ~CWProjectPropertyEditor();
 
   virtual bool actionOk();
   virtual void actionHelp();

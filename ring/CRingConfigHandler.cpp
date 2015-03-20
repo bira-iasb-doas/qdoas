@@ -32,10 +32,6 @@ CRingConfigHandler::CRingConfigHandler() :
   initializeMediateRing(&m_properties);
 }
 
-CRingConfigHandler::~CRingConfigHandler()
-{
-}
-
 bool CRingConfigHandler::startElement(const QString &namespaceURI, const QString &localName,
 				      const QString &qName, const QXmlAttributes &atts)
 {
@@ -66,12 +62,8 @@ bool CRingConfigHandler::startElement(const QString &namespaceURI, const QString
 // Handler for <general> element (and sub elements)
 
 CRingGeneralSubHandler::CRingGeneralSubHandler(CConfigHandler *master, mediate_ring_t *d) :
-  CBasicConfigSubHandler(master),
+  CConfigSubHandler(master),
   m_d(d)
-{
-}
-
-CRingGeneralSubHandler::~CRingGeneralSubHandler()
 {
 }
 

@@ -60,7 +60,6 @@ class CWProjectTabInstrumental : public QFrame
 Q_OBJECT
  public:
   CWProjectTabInstrumental(const mediate_project_instrumental_t *instr, QWidget *parent = 0);
-  virtual ~CWProjectTabInstrumental();
 
   void apply(mediate_project_instrumental_t *instr) const;
 
@@ -118,7 +117,6 @@ class CWCalibInstrEdit : public QFrame
 Q_OBJECT
  public:
   CWCalibInstrEdit(QWidget *parent = 0);
-  virtual ~CWCalibInstrEdit() {};
 
  protected:
   void helperConstructFileWidget(QLineEdit **fileEdit, QGridLayout *gridLayout, int &row,
@@ -150,7 +148,6 @@ class CWAllFilesEdit : public CWCalibInstrEdit
 Q_OBJECT
  public:
   CWAllFilesEdit(QWidget *parent = 0);
-  virtual ~CWAllFilesEdit();
 
  protected:
   void helperConstructIpvDnlFileWidgets(QGridLayout *gridLayout, int &row,
@@ -180,7 +177,6 @@ class CWInstrAsciiEdit : public CWCalibInstrEdit
 {
  public:
   CWInstrAsciiEdit(const struct instrumental_ascii *d, QWidget *parent = 0);
-  virtual ~CWInstrAsciiEdit();
 
   void apply(struct instrumental_ascii *d) const;
 
@@ -199,7 +195,6 @@ class CWInstrLoggerEdit : public CWCalibInstrEdit
 {
  public:
   CWInstrLoggerEdit(const struct instrumental_logger *d, QWidget *parent = 0);
-  virtual ~CWInstrLoggerEdit();
 
   void apply(struct instrumental_logger *d) const;
 
@@ -214,7 +209,6 @@ class CWInstrActonEdit : public CWCalibInstrEdit
 {
  public:
   CWInstrActonEdit(const struct instrumental_acton *d, QWidget *parent = 0);
-  virtual ~CWInstrActonEdit();
 
   void apply(struct instrumental_acton *d) const;
 
@@ -228,7 +222,6 @@ class CWInstrSaozEdit : public CWCalibInstrEdit
 {
  public:
   CWInstrSaozEdit(const struct instrumental_saoz *d, QWidget *parent = 0);
-  virtual ~CWInstrSaozEdit();
 
   void apply(struct instrumental_saoz *d) const;
 
@@ -242,7 +235,6 @@ class CWInstrMfcEdit : public CWAllFilesEdit
 {
  public:
   CWInstrMfcEdit(const struct instrumental_mfc *d, QWidget *parent = 0);
-  virtual ~CWInstrMfcEdit();
 
   void apply(struct instrumental_mfc *d) const;
 
@@ -258,7 +250,6 @@ class CWInstrMfcStdEdit : public CWAllFilesEdit
 {
  public:
   CWInstrMfcStdEdit(const struct instrumental_mfcstd *d, QWidget *parent = 0);
-  virtual ~CWInstrMfcStdEdit();
 
   void apply(struct instrumental_mfcstd *d) const;
 
@@ -278,7 +269,6 @@ class CWInstrMfcbiraEdit : public CWAllFilesEdit
  public:
 
   CWInstrMfcbiraEdit(const struct instrumental_mfcbira *d, QWidget *parent = 0);
-  virtual ~CWInstrMfcbiraEdit();
 
   void apply(struct instrumental_mfcbira *d) const;
 
@@ -295,7 +285,6 @@ class CWInstrMinimumEdit : public CWCalibInstrEdit
 {
  public:
   CWInstrMinimumEdit(const struct instrumental_minimum *d, QWidget *parent = 0);
-  virtual ~CWInstrMinimumEdit();
 
   void apply(struct instrumental_minimum *d) const;
 
@@ -311,7 +300,6 @@ class CWInstrCcdEdit : public CWAllFilesEdit
 {
  public:
   CWInstrCcdEdit(const struct instrumental_ccd *d, QWidget *parent = 0);
-  virtual ~CWInstrCcdEdit();
 
   void apply(struct instrumental_ccd *d) const;
 };
@@ -322,7 +310,6 @@ class CWInstrCcdUlbEdit : public CWAllFilesEdit
 {
  public:
   CWInstrCcdUlbEdit(const struct instrumental_ccdulb *d, QWidget *parent = 0);
-  virtual ~CWInstrCcdUlbEdit();
 
   void apply(struct instrumental_ccdulb *d) const;
 
@@ -339,7 +326,6 @@ class CWInstrPdaEggUlbEdit : public CWAllFilesEdit
 {
  public:
   CWInstrPdaEggUlbEdit(const struct instrumental_pdaeggulb *d, QWidget *parent = 0);
-  virtual ~CWInstrPdaEggUlbEdit();
 
   void apply(struct instrumental_pdaeggulb *d) const;
 
@@ -353,7 +339,6 @@ class CWInstrCcdEevEdit : public CWAllFilesEdit
 {
  public:
   CWInstrCcdEevEdit(const struct instrumental_ccdeev *d, QWidget *parent = 0);
-  virtual ~CWInstrCcdEevEdit();
 
   void apply(struct instrumental_ccdeev *d) const;
 
@@ -371,7 +356,6 @@ class CWInstrOpusEdit : public CWCalibInstrEdit
 {
  public:
   CWInstrOpusEdit(const struct instrumental_opus *d, QWidget *parent = 0);
-  virtual ~CWInstrOpusEdit();
 
   void apply(struct instrumental_opus *d) const;
 
@@ -389,7 +373,6 @@ class CWInstrGdpEdit : public CWCalibInstrEdit
 {
  public:
   CWInstrGdpEdit(const struct instrumental_gdp *d, QWidget *parent = 0);
-  virtual ~CWInstrGdpEdit();
 
   void apply(struct instrumental_gdp *d) const;
 
@@ -404,7 +387,6 @@ class CWInstrGome2Edit : public CWCalibInstrEdit
 {
  public:
   CWInstrGome2Edit(const struct instrumental_gome2 *d, QWidget *parent = 0);
-  virtual ~CWInstrGome2Edit();
 
   void apply(struct instrumental_gome2 *d) const;
 
@@ -420,7 +402,6 @@ class CWInstrSciaEdit : public CWAllFilesEdit
 Q_OBJECT
  public:
   CWInstrSciaEdit(const struct instrumental_scia *d, QWidget *parent = 0);
-  virtual ~CWInstrSciaEdit();
 
   void apply(struct instrumental_scia *d) const;
 
@@ -448,7 +429,6 @@ class CWInstrOmiEdit : public CWCalibInstrEdit
 {
  public:
   CWInstrOmiEdit(const struct instrumental_omi *d, QWidget *parent = 0);
-  virtual ~CWInstrOmiEdit();
 
   void apply(struct instrumental_omi *d) const;
 
@@ -483,7 +463,6 @@ class CWInstrOceanOpticsEdit : public CWCalibInstrEdit
 {
  public:
   CWInstrOceanOpticsEdit(const struct instrumental_oceanoptics *d, QWidget *parent = 0);
-  virtual ~CWInstrOceanOpticsEdit();
 
   void apply(struct instrumental_oceanoptics *d) const;
 

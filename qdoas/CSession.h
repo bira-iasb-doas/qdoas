@@ -101,7 +101,6 @@ class CSessionIterator
   CSessionIterator();
   CSessionIterator(const RefCountConstPtr<CSession> &session);
   CSessionIterator(const CSessionIterator &other);
-  ~CSessionIterator();
   
   CSessionIterator& operator=(const CSessionIterator &rhs);
 

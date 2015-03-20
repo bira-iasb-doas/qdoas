@@ -166,10 +166,6 @@ CWFilteringEditor::CWFilteringEditor(const mediate_filter_t *lowpass,
 
  }
 
-CWFilteringEditor::~CWFilteringEditor()
-{
-}
-
 void CWFilteringEditor::reset(const mediate_filter_t *lowpass, const mediate_filter_t *highpass)
 {
   int index;
@@ -271,10 +267,6 @@ CWFilterUsageEdit::CWFilterUsageEdit(const struct filter_usage *d, CWFilteringEd
   case CWFilteringEditor::None:
     break; // an empty widget ...
   }
-}
-
-CWFilterUsageEdit::~CWFilterUsageEdit()
-{
 }
 
 void CWFilterUsageEdit::reset(const struct filter_usage *d)
@@ -386,10 +378,6 @@ CWKaiserEdit::CWKaiserEdit(const struct filter_kaiser *d, CWFilteringEditor::Usa
   reset(d);
 }
 
-CWKaiserEdit::~CWKaiserEdit()
-{
-}
-
 void CWKaiserEdit::reset(const struct filter_kaiser *d)
 {
   QString tmpStr;
@@ -483,10 +471,6 @@ void CWBoxcarTriangularBinomialEdit::init(int filterWidth, int nIterations, cons
   m_iterationsSpinBox->setValue(nIterations);
 }
 
-CWBoxcarTriangularBinomialEdit::~CWBoxcarTriangularBinomialEdit()
-{
-}
-
 void CWBoxcarTriangularBinomialEdit::reset(const struct filter_boxcar *d)
 {
   m_widthSpinBox->setValue(d->width);
@@ -570,10 +554,6 @@ CWGaussianEdit::CWGaussianEdit(const struct filter_gaussian *d, CWFilteringEdito
   reset(d);
 }
 
-CWGaussianEdit::~CWGaussianEdit()
-{
-}
-
 void CWGaussianEdit::reset(const struct filter_gaussian *d)
 {
   QString tmpStr;
@@ -646,10 +626,6 @@ CWSavitzkyGolayEdit::CWSavitzkyGolayEdit(const struct filter_savitzky_golay *d, 
 
   // initialize
   reset(d);
-}
-
-CWSavitzkyGolayEdit::~CWSavitzkyGolayEdit()
-{
 }
 
 void CWSavitzkyGolayEdit::reset(const struct filter_savitzky_golay *d)

@@ -78,12 +78,8 @@ bool CConvConfigHandler::startElement(const QString &namespaceURI, const QString
 // Handler for <general> element (and sub elements)
 
 CConvGeneralSubHandler::CConvGeneralSubHandler(CConfigHandler *master, mediate_conv_general_t *d) :
-  CBasicConfigSubHandler(master),
+  CConfigSubHandler(master),
   m_d(d)
-{
-}
-
-CConvGeneralSubHandler::~CConvGeneralSubHandler()
 {
 }
 
@@ -155,12 +151,8 @@ bool CConvGeneralSubHandler::start(const QXmlAttributes &atts)
 // Handler for <con_slit> and <dec_slit> elements.
 
 CConvSlitSubHandler::CConvSlitSubHandler(CConfigHandler *master, mediate_slit_function_t *d) :
-  CBasicConfigSubHandler(master),
+  CConfigSubHandler(master),
   m_d(d)
-{
-}
-
-CConvSlitSubHandler::~CConvSlitSubHandler()
 {
 }
 

@@ -134,11 +134,6 @@ CWProjectTabAnalysis::CWProjectTabAnalysis(const mediate_project_analysis_t *pro
 
 }
 
-CWProjectTabAnalysis::~CWProjectTabAnalysis()
-{
-
-}
-
 void CWProjectTabAnalysis::apply(mediate_project_analysis_t *properties) const
 {
   bool ok;

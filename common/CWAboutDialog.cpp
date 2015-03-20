@@ -80,7 +80,3 @@ CWAboutDialog::CWAboutDialog(QWidget *parent) :
 
   connect(okButton, SIGNAL(clicked()), this, SLOT(accept()));
 }
-
-CWAboutDialog::~CWAboutDialog()
-{
-}

@@ -163,10 +163,6 @@ CWOutputSelector::CWOutputSelector(const data_select_list_t *d, QWidget *parent)
   connect(toAvailableBtn, SIGNAL(clicked()), this, SLOT(slotToAvailableList()));
 }
 
-CWOutputSelector::~CWOutputSelector()
-{
-}
-
 void CWOutputSelector::apply(data_select_list_t *d)
 {
   int n = 0;
@@ -256,10 +252,6 @@ QListWidgetItem* CWOutputSelector::locateItemByKey(QListWidget *listWidget, int 
 CWOutputFieldItem::CWOutputFieldItem(int key, const QString &text, QListWidget * parent) :
   QListWidgetItem(text, parent),
   m_key(key)
-{
-}
-
-CWOutputFieldItem::~CWOutputFieldItem()
 {
 }
 

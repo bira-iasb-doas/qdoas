@@ -27,7 +27,6 @@ class CWAboutDialog : public QDialog
 {
  public:
   CWAboutDialog(QWidget *parent = 0);
-  virtual ~CWAboutDialog();
 };
 
 #endif

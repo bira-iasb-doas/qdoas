@@ -33,15 +33,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 const char sTrue[] = "true";
 const char sFalse[] = "false";
 
-CQdoasConfigWriter::CQdoasConfigWriter(const CWProjectTree *projectTree) :
-  m_projectTree(projectTree)
-{
-}
-
-CQdoasConfigWriter::~CQdoasConfigWriter()
-{
-}
-
 QString CQdoasConfigWriter::write(const QString &fileName)
 {
   QString msg;
@@ -1548,4 +1539,3 @@ void CQdoasConfigWriter::writeDataSelectList(FILE *fp, const data_select_list_t 
     ++i;
   }
 }
-

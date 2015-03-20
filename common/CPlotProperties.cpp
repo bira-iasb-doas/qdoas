@@ -61,10 +61,6 @@ CPlotProperties& CPlotProperties::operator=(const CPlotProperties &rhs)
   return *this;
 }
 
-CPlotProperties::~CPlotProperties()
-{
-}
-
 const QPen& CPlotProperties::pen(int curveNumber) const
 {
   size_t index = --curveNumber;

@@ -42,7 +42,6 @@ class CWSlitFileBase : public QFrame
 Q_OBJECT
  public:
   CWSlitFileBase(QWidget *parent = 0);
-  virtual ~CWSlitFileBase();
 
   virtual void toggleVisible(int state);
 
@@ -64,7 +63,6 @@ class CWSlitNoneEdit : public CWSlitFileBase
 {
  public:
   CWSlitNoneEdit(const struct slit_file *d, QWidget *parent = 0);
-  virtual ~CWSlitNoneEdit();
 
   void reset(const struct slit_file *d);
   void apply(struct slit_file *d) const;
@@ -75,7 +73,6 @@ class CWSlitFileEdit : public CWSlitFileBase
 {
  public:
   CWSlitFileEdit(const struct slit_file *d, QWidget *parent = 0);
-  virtual ~CWSlitFileEdit();
 
   void reset(const struct slit_file *d);
   void apply(struct slit_file *d) const;
@@ -91,7 +88,6 @@ class CWSlitGaussianEdit : public CWSlitFileBase
 {
  public:
   CWSlitGaussianEdit(const struct slit_gaussian *d, QWidget *parent = 0);
-  virtual ~CWSlitGaussianEdit();
 
   void reset(const struct slit_gaussian *d);
   void apply(struct slit_gaussian *d) const;
@@ -104,7 +100,6 @@ class CWSlitLorentzEdit : public CWSlitFileBase
 {
  public:
   CWSlitLorentzEdit(const struct slit_lorentz *d, QWidget *parent = 0);
-  virtual ~CWSlitLorentzEdit();
 
   void reset(const struct slit_lorentz *d);
   void apply(struct slit_lorentz *d) const;
@@ -118,7 +113,6 @@ class CWSlitVoigtEdit : public CWSlitFileBase
 {
  public:
   CWSlitVoigtEdit(const struct slit_voigt *d, QWidget *parent = 0);
-  virtual ~CWSlitVoigtEdit();
 
   void reset(const struct slit_voigt *d);
   void apply(struct slit_voigt *d) const;
@@ -133,7 +127,6 @@ class CWSlitErrorEdit : public CWSlitFileBase
 {
  public:
   CWSlitErrorEdit(const struct slit_error *d, QWidget *parent = 0);
-  virtual ~CWSlitErrorEdit();
 
   void reset(const struct slit_error *d);
   void apply(struct slit_error *d) const;
@@ -148,7 +141,6 @@ class CWSlitAGaussEdit : public CWSlitFileBase
 {
  public:
   CWSlitAGaussEdit(const struct slit_agauss *d, QWidget *parent = 0);
-  virtual ~CWSlitAGaussEdit();
 
   void reset(const struct slit_agauss *d);
   void apply(struct slit_agauss *d) const;
@@ -163,7 +155,6 @@ class CWSlitApodEdit : public QFrame
 {
  public:
   CWSlitApodEdit(const struct slit_apod *d, QWidget *parent = 0);
-  virtual ~CWSlitApodEdit();
 
   void reset(const struct slit_apod *d);
   void apply(struct slit_apod *d) const;
@@ -179,7 +170,6 @@ class CWSlitSelector : public QGroupBox
 {
  public:
   CWSlitSelector(const mediate_slit_function_t *slit, const QString &title, bool noneFlag,QWidget *parent = 0);
-  virtual ~CWSlitSelector();
 
   void reset(const mediate_slit_function_t *slit);
   void apply(mediate_slit_function_t *slit) const;

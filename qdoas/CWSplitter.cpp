@@ -48,10 +48,6 @@ CWSplitter::CWSplitter(Qt::Orientation orientation, const char *settingsGroupNam
   settings.endGroup();
 }
 
-CWSplitter::~CWSplitter()
-{
-}
-
 void CWSplitter::savePreferences(void)
 {
   // store the map as an array of settings

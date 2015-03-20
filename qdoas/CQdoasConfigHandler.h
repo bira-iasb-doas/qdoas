@@ -33,23 +33,9 @@ class CSiteConfigItem;
 class CSymbolConfigItem;
 class CQdoasConfigHandler;
 
-class CQdoasConfigSubHandler : public CConfigSubHandler
-{
- public:
-  CQdoasConfigSubHandler(CQdoasConfigHandler *master);
-  virtual ~CQdoasConfigSubHandler();
-
-  virtual CConfigHandler* master(void);
-  
- protected:
-  CQdoasConfigHandler *m_master;
-};
-
-
 class CQdoasConfigHandler : public CConfigHandler
 {
  public:
-  CQdoasConfigHandler();
   virtual ~CQdoasConfigHandler();
 
   virtual bool startElement(const QString &namespaceURI, const QString &localName,
@@ -71,6 +57,16 @@ class CQdoasConfigHandler : public CConfigHandler
   QList<const CSymbolConfigItem*> m_symbolList;
 };
 
+//-------------------------------------------------------------------
+
+class CQdoasConfigSubHandler : public CConfigSubHandler
+{
+public:
+  CQdoasConfigSubHandler(CQdoasConfigHandler *master) : CConfigSubHandler(master) {};
+
+  virtual CQdoasConfigHandler *master() { return static_cast<CQdoasConfigHandler *>(m_master); };
+  
+};
 
 //-------------------------------------------------------------------
 // specfic handlers that need the CQdoasConfigHandler interface
@@ -79,7 +75,6 @@ class CSiteSubHandler : public CQdoasConfigSubHandler
 {
  public:
   CSiteSubHandler(CQdoasConfigHandler *master);
-  virtual ~CSiteSubHandler();
 
   virtual bool start(const QString &element, const QXmlAttributes &atts);
 };
@@ -90,7 +85,6 @@ class CSymbolSubHandler : public CQdoasConfigSubHandler
 {
  public:
   CSymbolSubHandler(CQdoasConfigHandler *master);
-  virtual ~CSymbolSubHandler();
 
   virtual bool start(const QString &element, const QXmlAttributes &atts);
 };
@@ -110,6 +104,5 @@ class CProjectSubHandler : public CQdoasConfigSubHandler
  private:
   CProjectConfigItem *m_project;
 };
-
 
 #endif

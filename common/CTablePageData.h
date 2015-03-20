@@ -44,7 +44,6 @@ class CTablePageData
 {
  public:
   CTablePageData(int pageNumber);
-  ~CTablePageData();
 
   void addCell(int row, int col, const QVariant &data);
   

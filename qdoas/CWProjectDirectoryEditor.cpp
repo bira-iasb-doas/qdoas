@@ -105,10 +105,6 @@ CWProjectDirectoryEditor::CWProjectDirectoryEditor(CWProjectTree *projectTree, Q
   notifyAcceptActionOk(dirItem != NULL);
 }
 
-CWProjectDirectoryEditor::~CWProjectDirectoryEditor()
-{
-}
-
 bool CWProjectDirectoryEditor::actionOk(void)
 {
   // use the path to locate the correct place in the tree

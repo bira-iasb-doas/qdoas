@@ -31,7 +31,6 @@ class CWPlotPropertiesDialog : public QDialog
 {
  public:
   CWPlotPropertiesDialog(CPlotProperties &prop, QWidget *parent = 0);
-  virtual ~CWPlotPropertiesDialog();
 
   virtual void accept(); 
 

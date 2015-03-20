@@ -27,11 +27,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "debugutil.h"
 
-CQdoasConfigHandler::CQdoasConfigHandler() :
-  CConfigHandler()
-{
-}
-
 CQdoasConfigHandler::~CQdoasConfigHandler()
 {
   while (!m_projectItemList.isEmpty()) {
@@ -119,33 +114,12 @@ QList<const CSymbolConfigItem*> CQdoasConfigHandler::symbolItems(void) const
   return m_symbolList;
 }
 
-
-//------------------------------------------------------------------------
-
-CQdoasConfigSubHandler::CQdoasConfigSubHandler(CQdoasConfigHandler *master) :
-  m_master(master)
-{
-}
-
-CQdoasConfigSubHandler::~CQdoasConfigSubHandler()
-{
-}
-
-CConfigHandler* CQdoasConfigSubHandler::master(void)
-{
-  return m_master;
-}
-
 //------------------------------------------------------------------------
 //
 // Handler for <sites> element (and sub elements)
 
 CSiteSubHandler::CSiteSubHandler(CQdoasConfigHandler *master) :
   CQdoasConfigSubHandler(master)
-{
-}
-
-CSiteSubHandler::~CSiteSubHandler()
 {
 }
 
@@ -183,7 +157,7 @@ bool CSiteSubHandler::start(const QString &element, const QXmlAttributes &atts)
     if (ok)
       item->setAltitude(tmpDouble);
 
-    m_master->addSiteItem(item);
+    master()->addSiteItem(item);
 
     return true;
   }
@@ -200,10 +174,6 @@ CSymbolSubHandler::CSymbolSubHandler(CQdoasConfigHandler *master) :
 {
 }
 
-CSymbolSubHandler::~CSymbolSubHandler()
-{
-}
-
 bool CSymbolSubHandler::start(const QString &element, const QXmlAttributes &atts)
 {
   if (element == "symbol") {
@@ -214,7 +184,7 @@ bool CSymbolSubHandler::start(const QString &element, const QXmlAttributes &atts
       return postErrorMessage("Missing symbol name");
     }
 
-    m_master->addSymbol(name, atts.value("descr"));
+    master()->addSymbol(name, atts.value("descr"));
 
     return true;
   }
@@ -302,9 +272,8 @@ bool CProjectSubHandler::end()
 {
   // end of project ... hand project data over to the master handler
 
-  m_master->addProjectItem(m_project);
+  master()->addProjectItem(m_project);
   m_project = NULL; // releases ownership responsibility
 
   return true;
 }
-

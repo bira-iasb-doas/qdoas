@@ -85,10 +85,6 @@ CWProjectAnalysisWindowNameEditor::CWProjectAnalysisWindowNameEditor(CWProjectTr
 
 }
 
-CWProjectAnalysisWindowNameEditor::~CWProjectAnalysisWindowNameEditor()
-{
-}
-
 bool CWProjectAnalysisWindowNameEditor::actionOk()
 {
   // use the path to locate the correct place in the tree

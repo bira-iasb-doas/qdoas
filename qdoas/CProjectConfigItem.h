@@ -31,7 +31,6 @@ class CAnalysisWindowConfigItem
 {
  public:
   CAnalysisWindowConfigItem();
-  ~CAnalysisWindowConfigItem();
 
   bool setName(const QString &name);
   const QString& name(void) const;
@@ -53,8 +52,8 @@ class CAnalysisWindowConfigItem
 class CProjectConfigItem
 {
  public:
-  CProjectConfigItem();
   ~CProjectConfigItem();
+  CProjectConfigItem();
 
   void setName(const QString &name);
   const QString& name(void) const;
@@ -85,7 +84,6 @@ class CSiteConfigItem
 {
  public:
   CSiteConfigItem();
-  ~CSiteConfigItem();
 
   void setSiteName(const QString &name);
   void setAbbreviation(const QString &abbreviation);
@@ -108,7 +106,6 @@ class CSymbolConfigItem
 {
  public:
   CSymbolConfigItem(const QString &name, const QString &description);
-  ~CSymbolConfigItem();
 
   const QString& symbolName(void) const;
   const QString& symbolDescription(void) const;

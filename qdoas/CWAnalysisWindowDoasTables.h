@@ -40,7 +40,6 @@ class CWMoleculesDiffOrthoCombo : public CDoasTableColumnComboBox
 Q_OBJECT
  public:
   CWMoleculesDiffOrthoCombo(const QString &excludedSymbol, const QStringList &symbols, QWidget *parent = 0);
-  virtual ~CWMoleculesDiffOrthoCombo();
 
   void initialSelection(const QString &text);
 
@@ -55,7 +54,6 @@ class CMoleculeDoasTableColumnDiffOrtho : public CDoasTableColumn
 {
  public:
   CMoleculeDoasTableColumnDiffOrtho(const QString &label, CDoasTable *owner, int width);
-  virtual ~CMoleculeDoasTableColumnDiffOrtho();
 
   virtual QVariant getCellData(int rowIndex) const;
   virtual void setCellData(int, const QVariant& v) { }; // do nothing
@@ -69,7 +67,6 @@ class CWMoleculesDoasTable : public CDoasTable
 Q_OBJECT
  public:
   CWMoleculesDoasTable(const QString &label, int columnWidth, int headerHeight = 24, QWidget *parent = 0);
-  virtual ~CWMoleculesDoasTable();
 
   void populate(const cross_section_list_t *d);
   void apply(cross_section_list_t *d) const;
@@ -124,7 +121,6 @@ class CWLinearParametersDoasTable : public CDoasTable
 {
  public:
   CWLinearParametersDoasTable(const QString &label, int headerHeight = 24, QWidget *parent = 0);
-  virtual ~CWLinearParametersDoasTable();
 
   // virtual void cellDataChanged(int row, int column, const QVariant &cellData); // no cell-coupling required
 
@@ -145,7 +141,6 @@ class CWNonLinearParametersDoasTable : public CDoasTable
 Q_OBJECT
  public:
   CWNonLinearParametersDoasTable(const QString &label, int headerHeight = 24, QWidget *parent = 0);
-  virtual ~CWNonLinearParametersDoasTable();
 
   void populate(const struct anlyswin_nonlinear *data);
   void apply(struct anlyswin_nonlinear *data) const;
@@ -170,7 +165,6 @@ class CWShiftAndStretchDialog : public QDialog
 {
  public:
   CWShiftAndStretchDialog(const QStringList &availableSymbols, const QStringList &selectedSymbols, QWidget *parent = 0);
-  virtual ~CWShiftAndStretchDialog();
 
   QStringList selectedSymbols(void) const;
 
@@ -183,7 +177,6 @@ class CWShiftAndStretchDoasTable : public CDoasTable
 Q_OBJECT
  public:
   CWShiftAndStretchDoasTable(const QString &label, int headerHeight = 24, QWidget *parent = 0);
-  virtual ~CWShiftAndStretchDoasTable();
 
   void populate(const shift_stretch_list_t *d);
   void apply(shift_stretch_list_t *d) const;
@@ -223,7 +216,6 @@ class CWGapDoasTable : public CDoasTable
 Q_OBJECT
  public:
   CWGapDoasTable(const QString &label, int headerHeight = 24, QWidget *parent = 0);
-  virtual ~CWGapDoasTable();
 
   void populate(const gap_list_t *d);
   void apply(gap_list_t *d) const;
@@ -249,7 +241,6 @@ class CWOutputDoasTable : public CDoasTable
 Q_OBJECT
  public:
   CWOutputDoasTable(const QString &label, int headerHeight = 24, QWidget *parent = 0);
-  virtual ~CWOutputDoasTable();
 
   void populate(const output_list_t *d);
   void apply(output_list_t *d) const;
@@ -275,7 +266,6 @@ class CWSfpParametersDoasTable : public CDoasTable
 {
  public:
   CWSfpParametersDoasTable(const QString &label, int headerHeight = 24, QWidget *parent = 0);
-  virtual ~CWSfpParametersDoasTable();
 
   // virtual void cellDataChanged(int row, int column, const QVariant &cellData); // no cell-coupling required
 

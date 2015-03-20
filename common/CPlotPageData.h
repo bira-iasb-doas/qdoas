@@ -35,7 +35,6 @@ class CPlotPageData
 {
  public:
   CPlotPageData(int pageNumber,int pageType);
-  ~CPlotPageData();
 
   bool isEmpty(void) const;
   int pageNumber(void) const;

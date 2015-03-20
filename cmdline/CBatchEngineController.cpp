@@ -33,10 +33,6 @@ CBatchEngineController::CBatchEngineController() :
 {
 }
 
-CBatchEngineController::~CBatchEngineController()
-{
-}
-
 void CBatchEngineController::notifyReadyToNavigateRecords(const QString &filename, int numberOfRecords)
 {
   m_active = (numberOfRecords > 0);
@@ -77,4 +73,3 @@ void CBatchEngineController::notifyErrorMessages(int highestErrorLevel, const QL
   if (highestErrorLevel == FatalEngineError)
     m_active = false;
 }
-

@@ -280,10 +280,6 @@ CWProjectTabCalibration::CWProjectTabCalibration(const mediate_project_calibrati
 
 }
 
-CWProjectTabCalibration::~CWProjectTabCalibration()
-{
-}
-
 void CWProjectTabCalibration::apply(mediate_project_calibration_t *properties) const
 {
   // a safe text length is assured.

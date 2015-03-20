@@ -33,7 +33,6 @@ class CWPlotPropertiesEditor : public CWEditor
 {
  public:
   CWPlotPropertiesEditor(CWPlotRegion *plotRegion, QWidget *parent = 0);
-  virtual ~CWPlotPropertiesEditor();
 
   virtual bool actionOk(void);
   virtual void actionHelp(void);

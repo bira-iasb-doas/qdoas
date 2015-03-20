@@ -29,10 +29,6 @@ CTablePageData::CTablePageData(int pageNumber) :
 {
 }
 
-CTablePageData::~CTablePageData()
-{
-}
-
 void CTablePageData::addCell(int row, int col, const QVariant &data)
 {
   // dont care if the cell already exists ... overwrite it ...

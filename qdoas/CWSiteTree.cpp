@@ -65,10 +65,6 @@ CWSiteTree::CWSiteTree(CWActiveContext *activeContext, QWidget *parent) :
   }
 }
 
-CWSiteTree::~CWSiteTree()
-{
-}
-
 void CWSiteTree::savePreferences(void)
 {
   QList<int> widthList;

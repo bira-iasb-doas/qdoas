@@ -90,10 +90,6 @@ CWSymbolEditor::CWSymbolEditor(const QString &symbolName, const QString &descrip
   notifyAcceptActionOk(modifying);
 }
 
-CWSymbolEditor::~CWSymbolEditor()
-{
-}
-
 bool CWSymbolEditor::actionOk(void)
 {
   if (m_symbolName->isEnabled()) {

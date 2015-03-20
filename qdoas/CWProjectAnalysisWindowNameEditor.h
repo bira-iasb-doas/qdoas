@@ -35,7 +35,6 @@ Q_OBJECT
   CWProjectAnalysisWindowNameEditor(CWProjectTree *projectTree, QTreeWidgetItem *item,
 				    const QString &preceedingWindowName, bool newAnalysisWindow,
                                     QWidget *parent = 0);
-  virtual ~CWProjectAnalysisWindowNameEditor();
 
   virtual bool actionOk(void);
   virtual void actionHelp(void);

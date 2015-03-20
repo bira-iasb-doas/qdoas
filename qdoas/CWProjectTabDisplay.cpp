@@ -68,10 +68,6 @@ CWProjectTabDisplay::CWProjectTabDisplay(const mediate_project_display_t *proper
 
 }
 
-CWProjectTabDisplay::~CWProjectTabDisplay()
-{
-}
-
 void CWProjectTabDisplay::apply(mediate_project_display_t *properties) const
 {
   // extract state from the GUI and set properties

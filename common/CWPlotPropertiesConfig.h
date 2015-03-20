@@ -33,7 +33,6 @@ class CWPlotPropertySample : public QFrame
 Q_OBJECT
  public:
   CWPlotPropertySample(const QPen &pen, const QColor &bgColour, QWidget *parent = 0);
-  virtual ~CWPlotPropertySample();
 
   const QPen& pen(void) const;
 
@@ -55,7 +54,6 @@ class CWPlotPropertyScale : public QFrame
 Q_OBJECT
  public:
   CWPlotPropertyScale(const CScaleControl &scaleControl, const QString &name, QWidget *parent = 0);
-  virtual ~CWPlotPropertyScale();
 
   const CScaleControl& scaleControl(void) const;
 
@@ -73,7 +71,6 @@ class CWPlotPropertiesConfig : public QFrame
 Q_OBJECT
  public:
   CWPlotPropertiesConfig(const CPlotProperties &prop, QWidget *parent = 0);
-  virtual ~CWPlotPropertiesConfig();
 
   void apply(CPlotProperties &prop) const;
 

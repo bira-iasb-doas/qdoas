@@ -37,7 +37,6 @@ class CWProjectTabSelection : public QFrame
 	Q_OBJECT
  public:
   CWProjectTabSelection(const mediate_project_selection_t *properties, QWidget *parent = 0);
-  virtual ~CWProjectTabSelection();
 
   void apply(mediate_project_selection_t *properties) const;
 
@@ -56,7 +55,6 @@ class CWGeolocation : public QFrame
 {
  public:
   CWGeolocation(const struct geolocation *geo, QWidget *parent = 0);
-  virtual ~CWGeolocation();
 
   void apply(struct geolocation *geo) const;
 
