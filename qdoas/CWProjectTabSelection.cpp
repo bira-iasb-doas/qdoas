@@ -137,6 +137,7 @@ CWProjectTabSelection::CWProjectTabSelection(const mediate_project_selection_t *
   // Gelocation selection - also in a group box
   QGroupBox *geoGroup = new QGroupBox("Geolocations", this);
   QVBoxLayout *geoGroupLayout = new QVBoxLayout;
+  geoGroupLayout->setMargin(0);
   m_geolocationEdit = new CWGeolocation(&(properties->geo));
   geoGroupLayout->addWidget(m_geolocationEdit);
   geoGroup->setLayout(geoGroupLayout);
@@ -208,6 +209,7 @@ CWGeolocation::CWGeolocation(const struct geolocation *geo, QWidget *parent) :
   // circle
   QFrame *circleFrame = new QFrame;
   QGridLayout *circleLayout = new QGridLayout;
+  circleLayout->setMargin(0);
 
   // row 0
   circleLayout->addWidget(new QLabel("Radius (km)", circleFrame), 0, 0);
@@ -224,11 +226,11 @@ CWGeolocation::CWGeolocation(const struct geolocation *geo, QWidget *parent) :
   circleLayout->addWidget(m_cenLongEdit, 1, 1);
 
   // row 2
-  circleLayout->addWidget(new QLabel("Center Latitude (degrees)", circleFrame) , 2, 0);
+  circleLayout->addWidget(new QLabel("Center Latitude (degrees)", circleFrame) , 1, 2);
   m_cenLatEdit = new QLineEdit(this);
   m_cenLatEdit->setValidator(new CDoubleFixedFmtValidator(-90.0, 90.0, 3, m_cenLatEdit));
   m_cenLatEdit->setFixedWidth(pixels);
-  circleLayout->addWidget(m_cenLatEdit, 2, 1);
+  circleLayout->addWidget(m_cenLatEdit, 1, 3);
 
   circleFrame->setLayout(circleLayout);
   m_modeStack->addWidget(circleFrame);
@@ -237,6 +239,7 @@ CWGeolocation::CWGeolocation(const struct geolocation *geo, QWidget *parent) :
   // rectangle
   QFrame *rectangleFrame = new QFrame;
   QGridLayout *rectangleLayout = new QGridLayout;
+  rectangleLayout->setMargin(0);
 
   // row 0
   rectangleLayout->addWidget(new QLabel("Western Limit (long. degrees)", rectangleFrame), 0, 0);
@@ -245,26 +248,24 @@ CWGeolocation::CWGeolocation(const struct geolocation *geo, QWidget *parent) :
   m_westEdit->setFixedWidth(pixels);
   rectangleLayout->addWidget(m_westEdit, 0, 1);
 
-  // row 1
-  rectangleLayout->addWidget(new QLabel("Eastern Limit (long. degrees)", rectangleFrame), 1, 0);
+  rectangleLayout->addWidget(new QLabel("Eastern Limit (long. degrees)", rectangleFrame), 0, 2);
   m_eastEdit = new QLineEdit(this);
   m_eastEdit->setValidator(new CDoubleFixedFmtValidator(-180.0, 180.0, 3, m_eastEdit));
   m_eastEdit->setFixedWidth(pixels);
-  rectangleLayout->addWidget(m_eastEdit, 1, 1);
+  rectangleLayout->addWidget(m_eastEdit, 0, 3);
 
-  // row 2
-  rectangleLayout->addWidget(new QLabel("Southern Limit (lat. degrees)", rectangleFrame) , 2, 0);
-  m_southEdit = new QLineEdit(this);
-  m_southEdit->setValidator(new CDoubleFixedFmtValidator(-90.0, 90.0, 3, m_southEdit));
-  m_southEdit->setFixedWidth(pixels);
-  rectangleLayout->addWidget(m_southEdit, 2, 1);
-
-  // row 3
-  rectangleLayout->addWidget( new QLabel("Northern Limit (lat. degrees)", rectangleFrame), 3, 0);
+  // row 1
+  rectangleLayout->addWidget( new QLabel("Northern Limit (lat. degrees)", rectangleFrame), 1, 0);
   m_northEdit = new QLineEdit(this);
   m_northEdit->setValidator(new CDoubleFixedFmtValidator(-90.0, 90.0, 3, m_northEdit));
   m_northEdit->setFixedWidth(pixels);
-  rectangleLayout->addWidget(m_northEdit, 3, 1);
+  rectangleLayout->addWidget(m_northEdit, 1, 1);
+
+  rectangleLayout->addWidget(new QLabel("Southern Limit (lat. degrees)", rectangleFrame) , 1, 2);
+  m_southEdit = new QLineEdit(this);
+  m_southEdit->setValidator(new CDoubleFixedFmtValidator(-90.0, 90.0, 3, m_southEdit));
+  m_southEdit->setFixedWidth(pixels);
+  rectangleLayout->addWidget(m_southEdit, 1, 3);
 
   rectangleFrame->setLayout(rectangleLayout);
   m_modeStack->addWidget(rectangleFrame);
@@ -273,6 +274,7 @@ CWGeolocation::CWGeolocation(const struct geolocation *geo, QWidget *parent) :
   // sites
   QFrame *sitesFrame = new QFrame;
   QGridLayout *sitesLayout = new QGridLayout;
+  sitesLayout->setMargin(0);
 
   sitesLayout->addWidget(new QLabel("Radius (km)", sitesFrame), 0, 0);
   m_sitesRadiusEdit = new QLineEdit(this);

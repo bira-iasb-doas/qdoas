@@ -36,6 +36,58 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "debugutil.h"
 
+StrayLightConfig::StrayLightConfig(Qt::Orientation orientation, QWidget *parent) : QGroupBox("Correct straylight bias", parent), 
+                                                                                   m_lambdaMinEdit(new QLineEdit(this) ),
+                                                                                   m_lambdaMaxEdit(new QLineEdit(this) ) {
+  this->setCheckable(true);
+  m_lambdaMinEdit->setFixedWidth(50);
+  CDoubleFixedFmtValidator *validator = new CDoubleFixedFmtValidator(0.0, 900.0, 2, this);
+  m_lambdaMinEdit->setValidator(validator);
+  m_lambdaMaxEdit->setFixedWidth(50);
+  m_lambdaMaxEdit->setValidator(validator);
+
+  QLabel *minLabel = new QLabel("Wavelength min", this);
+  QLabel *maxLabel = new QLabel("Wavelength max", this);
+
+  if (orientation == Qt::Vertical) {
+    QGridLayout *layout = new QGridLayout(this);
+    layout->addWidget(minLabel, 0, 0, Qt::AlignRight);
+    layout->addWidget(m_lambdaMinEdit, 0, 1, Qt::AlignLeft);
+    layout->addWidget(maxLabel, 1, 0, Qt::AlignRight);
+    layout->addWidget(m_lambdaMaxEdit, 1, 1, Qt::AlignLeft);
+  } else {
+    QHBoxLayout *layout = new QHBoxLayout(this);
+    layout->addWidget(minLabel);
+    layout->addWidget(m_lambdaMinEdit);
+    layout->addWidget(maxLabel);
+    layout->addWidget(m_lambdaMaxEdit);
+    layout->addStretch(1);
+  }
+}
+
+static void setDouble(QLineEdit &lineEdit, double lambda) {
+  QString tmp;
+  tmp.setNum(lambda);
+  lineEdit.validator()->fixup(tmp);
+  lineEdit.setText(tmp);
+}
+
+void StrayLightConfig::setLambdaMin(double lambda) {
+  setDouble(*m_lambdaMinEdit, lambda);
+};
+
+void StrayLightConfig::setLambdaMax(double lambda) {
+  setDouble(*m_lambdaMaxEdit, lambda);
+}
+
+double StrayLightConfig::getLambdaMax() const {
+  return m_lambdaMaxEdit->text().toDouble();
+}
+
+double StrayLightConfig::getLambdaMin() const {
+  return m_lambdaMinEdit->text().toDouble();
+}
+
 CWProjectTabInstrumental::CWProjectTabInstrumental(const mediate_project_instrumental_t *instr, QWidget *parent) :
   QFrame(parent)
 {
@@ -253,8 +305,8 @@ void CWProjectTabInstrumental::slotInstrumentTypeChanged(int instrumentType)
 //--------------------------------------------------------
 // Specific Instrument Editors...
 
-static const int cSuggestedColumnZeroWidth = 120; // try and keep editor layout
-static const int cSuggestedColumnTwoWidth  = 100; // consistent
+static const int cSuggestedColumnZeroWidth = 10; //120; // try and keep editor layout
+static const int cSuggestedColumnTwoWidth  = 10; //100; // consistent
 static const int cStandardEditWidth         = 70;
 
 //--------------------------------------------------------
@@ -474,9 +526,10 @@ void CWAllFilesEdit::helperConstructFileWidgets(QGridLayout *gridLayout, int &ro
 //--------------------------------------------------------
 
 CWInstrAsciiEdit::CWInstrAsciiEdit(const struct instrumental_ascii *d, QWidget *parent) :
-  CWCalibInstrEdit(parent)
+  CWCalibInstrEdit(parent),
+  m_strayLightConfig(new StrayLightConfig(Qt::Vertical, this) )
 {
-	 int row;
+  int row;
   QVBoxLayout *mainLayout = new QVBoxLayout(this);
 
   // Format and Flags group
@@ -515,32 +568,9 @@ CWInstrAsciiEdit::CWInstrAsciiEdit(const struct instrumental_ascii *d, QWidget *
 
   groupLayout->addWidget(flagsGroup);
 
-  QGroupBox *straylightGroup = new QGroupBox("Straylight bias", this);
-  QGridLayout *straylightLayout = new QGridLayout(straylightGroup);
-
   row=0;
 
-  m_strayLightCheck = new QCheckBox("Correct straylight bias", straylightGroup);
-  straylightLayout->addWidget(m_strayLightCheck, row, 0);
-
-  ++row;
-
-  straylightLayout->addWidget(new QLabel("Wavelength min", straylightGroup), row, 0);             // detector size label
-  m_lambdaMinEdit = new QLineEdit(straylightGroup);
-  m_lambdaMinEdit->setFixedWidth(50);
-  m_lambdaMinEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 900.0, 2, m_lambdaMinEdit));
-  straylightLayout->addWidget(m_lambdaMinEdit, row, 1);
-
-  ++row;
-
-  straylightLayout->addWidget(new QLabel("Wavelength max", straylightGroup), row, 0);             // detector size label
-  m_lambdaMaxEdit = new QLineEdit(straylightGroup);
-  m_lambdaMaxEdit->setFixedWidth(50);
-  m_lambdaMaxEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 900.0, 2, m_lambdaMaxEdit));
-  straylightLayout->addWidget(m_lambdaMaxEdit, row, 1);
-
-  groupLayout->addWidget(straylightGroup);
-
+  groupLayout->addWidget(m_strayLightConfig);
   mainLayout->addLayout(groupLayout);
 
   // bottom layout - det. size and files
@@ -588,15 +618,10 @@ CWInstrAsciiEdit::CWInstrAsciiEdit(const struct instrumental_ascii *d, QWidget *
   m_timeCheck->setCheckState(d->flagTime ? Qt::Checked : Qt::Unchecked);
   m_lambdaCheck->setCheckState(d->flagWavelength ? Qt::Checked : Qt::Unchecked);
 
-  m_strayLightCheck->setCheckState(d->straylight ? Qt::Checked : Qt::Unchecked);
-
   // straylight bias
-  tmpStr.setNum(d->lambdaMin);
-  m_lambdaMinEdit->validator()->fixup(tmpStr);
-  m_lambdaMinEdit->setText(tmpStr);
-  tmpStr.setNum(d->lambdaMax);
-  m_lambdaMaxEdit->validator()->fixup(tmpStr);
-  m_lambdaMaxEdit->setText(tmpStr);
+  m_strayLightConfig->setChecked(d->straylight ? true : false);
+  m_strayLightConfig->setLambdaMin(d->lambdaMin);
+  m_strayLightConfig->setLambdaMax(d->lambdaMax);
 }
 
 void CWInstrAsciiEdit::apply(struct instrumental_ascii *d) const
@@ -618,9 +643,9 @@ void CWInstrAsciiEdit::apply(struct instrumental_ascii *d) const
 
   // straylight
 
-  d->straylight = (m_strayLightCheck->checkState() == Qt::Checked) ? 1 : 0;
-  d->lambdaMin = m_lambdaMinEdit->text().toDouble();
-  d->lambdaMax = m_lambdaMaxEdit->text().toDouble();
+  d->straylight = m_strayLightConfig->isChecked() ? 1 : 0;
+  d->lambdaMin = m_strayLightConfig->getLambdaMin();
+  d->lambdaMax = m_strayLightConfig->getLambdaMax();
 
   // files
   strcpy(d->calibrationFile, m_fileOneEdit->text().toAscii().data());
@@ -930,7 +955,8 @@ void CWInstrMfcEdit::apply(struct instrumental_mfc *d) const
 //--------------------------------------------------------------------------
 
 CWInstrMfcStdEdit::CWInstrMfcStdEdit(const struct instrumental_mfcstd *d, QWidget *parent) :
-  CWAllFilesEdit(parent)
+  CWAllFilesEdit(parent),
+  m_strayLightConfig(new StrayLightConfig(Qt::Vertical, this) )
 {
   QVBoxLayout *mainLayout = new QVBoxLayout(this);
   QHBoxLayout *groupLayout = new QHBoxLayout;
@@ -965,31 +991,7 @@ CWInstrMfcStdEdit::CWInstrMfcStdEdit(const struct instrumental_mfcstd *d, QWidge
 
   groupLayout->addWidget(formatGroup);
 
-  QGroupBox *straylightGroup = new QGroupBox("Straylight bias", this);
-  QGridLayout *straylightLayout = new QGridLayout(straylightGroup);
-
-  row=0;
-
-  m_strayLightCheck = new QCheckBox("Correct straylight bias", straylightGroup);
-  straylightLayout->addWidget(m_strayLightCheck, row, 0);
-
-  ++row;
-
-  straylightLayout->addWidget(new QLabel("Wavelength min", straylightGroup), row, 0);             // detector size label
-  m_lambdaMinEdit = new QLineEdit(straylightGroup);
-  m_lambdaMinEdit->setFixedWidth(50);
-  m_lambdaMinEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 900.0, 2, m_lambdaMinEdit));
-  straylightLayout->addWidget(m_lambdaMinEdit, row, 1);
-
-  ++row;
-
-  straylightLayout->addWidget(new QLabel("Wavelength max", straylightGroup), row, 0);             // detector size label
-  m_lambdaMaxEdit = new QLineEdit(straylightGroup);
-  m_lambdaMaxEdit->setFixedWidth(50);
-  m_lambdaMaxEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 900.0, 2, m_lambdaMaxEdit));
-  straylightLayout->addWidget(m_lambdaMaxEdit, row, 1);
-
-  groupLayout->addWidget(straylightGroup);
+  groupLayout->addWidget(m_strayLightConfig);
   mainLayout->addLayout(groupLayout);
 
   row=0;
@@ -1025,15 +1027,11 @@ CWInstrMfcStdEdit::CWInstrMfcStdEdit(const struct instrumental_mfcstd *d, QWidge
 
   // revert
   m_revertCheck->setCheckState(d->revert ? Qt::Checked : Qt::Unchecked);
-  m_strayLightCheck->setCheckState(d->straylight ? Qt::Checked : Qt::Unchecked);
 
   // straylight bias
-  tmpStr.setNum(d->lambdaMin);
-  m_lambdaMinEdit->validator()->fixup(tmpStr);
-  m_lambdaMinEdit->setText(tmpStr);
-  tmpStr.setNum(d->lambdaMax);
-  m_lambdaMaxEdit->validator()->fixup(tmpStr);
-  m_lambdaMaxEdit->setText(tmpStr);
+  m_strayLightConfig->setChecked(d->straylight ? true : false);
+  m_strayLightConfig->setLambdaMin(d->lambdaMin);
+  m_strayLightConfig->setLambdaMax(d->lambdaMax);
 }
 
 void CWInstrMfcStdEdit::apply(struct instrumental_mfcstd *d) const
@@ -1043,9 +1041,9 @@ void CWInstrMfcStdEdit::apply(struct instrumental_mfcstd *d) const
 
   // revert
   d->revert = (m_revertCheck->checkState() == Qt::Checked) ? 1 : 0;
-  d->straylight = (m_strayLightCheck->checkState() == Qt::Checked) ? 1 : 0;
-  d->lambdaMin = m_lambdaMinEdit->text().toDouble();
-  d->lambdaMax = m_lambdaMaxEdit->text().toDouble();
+  d->straylight = m_strayLightConfig->isChecked() ? 1 : 0;
+  d->lambdaMin = m_strayLightConfig->getLambdaMin();
+  d->lambdaMax = m_strayLightConfig->getLambdaMax();
 
   strcpy(d->dateFormat,m_dateFormatEdit->text().toAscii().data());
 
@@ -1059,48 +1057,22 @@ void CWInstrMfcStdEdit::apply(struct instrumental_mfcstd *d) const
 //--------------------------------------------------------------------------
 
 CWInstrMfcbiraEdit::CWInstrMfcbiraEdit(const struct instrumental_mfcbira *d, QWidget *parent) :
-  CWAllFilesEdit(parent)
+  CWAllFilesEdit(parent),
+  m_strayLightConfig(new StrayLightConfig(Qt::Horizontal, this))
 {
   QString tmpStr;
   int row = 0;
   QVBoxLayout *mainLayout = new QVBoxLayout(this);
-  QHBoxLayout *groupLayout = new QHBoxLayout;
+  //  QHBoxLayout *groupLayout = new QHBoxLayout;
   QGridLayout *gridLayout = new QGridLayout;
 
-  QGroupBox *straylightGroup = new QGroupBox("Straylight bias", this);
-  QGridLayout *straylightLayout = new QGridLayout(straylightGroup);
+  mainLayout->addWidget(m_strayLightConfig);
 
-  m_strayLightCheck = new QCheckBox("Correct straylight bias", straylightGroup);
-  straylightLayout->addWidget(m_strayLightCheck, row, 0);
-
-  ++row;
-
-  straylightLayout->addWidget(new QLabel("Wavelength min", straylightGroup), row, 0);             // detector size label
-  m_lambdaMinEdit = new QLineEdit(straylightGroup);
-  m_lambdaMinEdit->setFixedWidth(50);
-  m_lambdaMinEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 900.0, 2, m_lambdaMinEdit));
-  straylightLayout->addWidget(m_lambdaMinEdit, row, 1);
-
-  ++row;
-
-  straylightLayout->addWidget(new QLabel("Wavelength max", straylightGroup), row, 0);             // detector size label
-  m_lambdaMaxEdit = new QLineEdit(straylightGroup);
-  m_lambdaMaxEdit->setFixedWidth(50);
-  m_lambdaMaxEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 900.0, 2, m_lambdaMaxEdit));
-  straylightLayout->addWidget(m_lambdaMaxEdit, row, 1);
-
-  groupLayout->addWidget(straylightGroup);
-  groupLayout->addStretch(0);
-
-  gridLayout->addWidget(new QLabel("Detector Size", this), row, 0);             // detector size label
-  ++row;
-
-  // Second line
-
+  gridLayout->addWidget(new QLabel("Detector Size", this), row, 0, Qt::AlignRight);             // detector size label
   m_detSizeEdit = new QLineEdit(this);
   m_detSizeEdit->setFixedWidth(cStandardEditWidth);
   m_detSizeEdit->setValidator(new QIntValidator(0, 8192, m_detSizeEdit));
-  gridLayout->addWidget(m_detSizeEdit, row, 0, Qt::AlignLeft);
+  gridLayout->addWidget(m_detSizeEdit, row, 1, Qt::AlignLeft);
 
   ++row;
 
@@ -1109,7 +1081,6 @@ CWInstrMfcbiraEdit::CWInstrMfcbiraEdit(const struct instrumental_mfcbira *d, QWi
 				   d->calibrationFile, sizeof(d->calibrationFile),
 				   d->transmissionFunctionFile, sizeof(d->transmissionFunctionFile));
 
-  mainLayout->addLayout(groupLayout,0);
   mainLayout->addLayout(gridLayout);
   mainLayout->addStretch(1);
 
@@ -1120,15 +1091,10 @@ CWInstrMfcbiraEdit::CWInstrMfcbiraEdit(const struct instrumental_mfcbira *d, QWi
   m_detSizeEdit->validator()->fixup(tmpStr);
   m_detSizeEdit->setText(tmpStr);
 
-  m_strayLightCheck->setCheckState(d->straylight ? Qt::Checked : Qt::Unchecked);
-
   // straylight bias
-  tmpStr.setNum(d->lambdaMin);
-  m_lambdaMinEdit->validator()->fixup(tmpStr);
-  m_lambdaMinEdit->setText(tmpStr);
-  tmpStr.setNum(d->lambdaMax);
-  m_lambdaMaxEdit->validator()->fixup(tmpStr);
-  m_lambdaMaxEdit->setText(tmpStr);
+  m_strayLightConfig->setChecked(d->straylight ? true : false);
+  m_strayLightConfig->setLambdaMin(d->lambdaMin);
+  m_strayLightConfig->setLambdaMax(d->lambdaMax);
 }
 
 void CWInstrMfcbiraEdit::apply(struct instrumental_mfcbira *d) const
@@ -1140,46 +1106,23 @@ void CWInstrMfcbiraEdit::apply(struct instrumental_mfcbira *d) const
   strcpy(d->calibrationFile, m_fileOneEdit->text().toAscii().data());
   strcpy(d->transmissionFunctionFile, m_fileTwoEdit->text().toAscii().data());
 
-  d->straylight = (m_strayLightCheck->checkState() == Qt::Checked) ? 1 : 0;
-  d->lambdaMin = m_lambdaMinEdit->text().toDouble();
-  d->lambdaMax = m_lambdaMaxEdit->text().toDouble();
+  d->straylight = m_strayLightConfig->isChecked() ? 1 : 0;
+  d->lambdaMin = m_strayLightConfig->getLambdaMin();
+  d->lambdaMax = m_strayLightConfig->getLambdaMax();
 }
 
 //--------------------------------------------------------
 
 CWInstrMinimumEdit::CWInstrMinimumEdit(const struct instrumental_minimum *d, QWidget *parent) :
-  CWCalibInstrEdit(parent)
+  CWCalibInstrEdit(parent),
+  m_strayLightConfig(new StrayLightConfig(Qt::Horizontal, this))
 {
-	 QString tmpStr;
+  QString tmpStr;
   int row = 0;
   QVBoxLayout *mainLayout = new QVBoxLayout(this);
   QGridLayout *gridLayout = new QGridLayout;
-  QHBoxLayout *groupLayout = new QHBoxLayout;
 
-  QGroupBox *straylightGroup = new QGroupBox("Straylight bias", this);
-  QGridLayout *straylightLayout = new QGridLayout(straylightGroup);
-
-  m_strayLightCheck = new QCheckBox("Correct straylight bias", straylightGroup);
-  straylightLayout->addWidget(m_strayLightCheck, row, 0);
-
-  ++row;
-
-  straylightLayout->addWidget(new QLabel("Wavelength min", straylightGroup), row, 0);             // detector size label
-  m_lambdaMinEdit = new QLineEdit(straylightGroup);
-  m_lambdaMinEdit->setFixedWidth(50);
-  m_lambdaMinEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 900.0, 2, m_lambdaMinEdit));
-  straylightLayout->addWidget(m_lambdaMinEdit, row, 1);
-
-  ++row;
-
-  straylightLayout->addWidget(new QLabel("Wavelength max", straylightGroup), row, 0);             // detector size label
-  m_lambdaMaxEdit = new QLineEdit(straylightGroup);
-  m_lambdaMaxEdit->setFixedWidth(50);
-  m_lambdaMaxEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 900.0, 2, m_lambdaMaxEdit));
-  straylightLayout->addWidget(m_lambdaMaxEdit, row, 1);
-
-  groupLayout->addWidget(straylightGroup);
-  groupLayout->addStretch(0);
+  mainLayout->addWidget(m_strayLightConfig);
 
   // files
   helperConstructCalInsFileWidgets(gridLayout, row,
@@ -1189,18 +1132,13 @@ CWInstrMinimumEdit::CWInstrMinimumEdit(const struct instrumental_minimum *d, QWi
   gridLayout->setColumnMinimumWidth(0, cSuggestedColumnZeroWidth);
   gridLayout->setColumnMinimumWidth(2, cSuggestedColumnTwoWidth);
 
-  mainLayout->addLayout(groupLayout);
   mainLayout->addLayout(gridLayout);
   mainLayout->addStretch(1);
 
   // straylight bias
-  m_strayLightCheck->setCheckState(d->straylight ? Qt::Checked : Qt::Unchecked);
-  tmpStr.setNum(d->lambdaMin);
-  m_lambdaMinEdit->validator()->fixup(tmpStr);
-  m_lambdaMinEdit->setText(tmpStr);
-  tmpStr.setNum(d->lambdaMax);
-  m_lambdaMaxEdit->validator()->fixup(tmpStr);
-  m_lambdaMaxEdit->setText(tmpStr);
+  m_strayLightConfig->setChecked(d->straylight ? true : false);
+  m_strayLightConfig->setLambdaMin(d->lambdaMin);
+  m_strayLightConfig->setLambdaMax(d->lambdaMax);
 }
 
 void CWInstrMinimumEdit::apply(struct instrumental_minimum *d) const
@@ -1210,10 +1148,9 @@ void CWInstrMinimumEdit::apply(struct instrumental_minimum *d) const
   strcpy(d->transmissionFunctionFile, m_fileTwoEdit->text().toAscii().data());
 
   // straylight bias
-
-  d->straylight = (m_strayLightCheck->checkState() == Qt::Checked) ? 1 : 0;
-  d->lambdaMin = m_lambdaMinEdit->text().toDouble();
-  d->lambdaMax = m_lambdaMaxEdit->text().toDouble();
+  d->straylight = m_strayLightConfig->isChecked() ? 1 : 0;
+  d->lambdaMin = m_strayLightConfig->getLambdaMin();
+  d->lambdaMax = m_strayLightConfig->getLambdaMax();
 }
 
 //--------------------------------------------------------
@@ -1368,38 +1305,16 @@ void CWInstrPdaEggUlbEdit::apply(struct instrumental_pdaeggulb *d) const
 //--------------------------------------------------------
 
 CWInstrCcdEevEdit::CWInstrCcdEevEdit(const struct instrumental_ccdeev *d, QWidget *parent) :
-  CWAllFilesEdit(parent)
+  CWAllFilesEdit(parent),
+  m_strayLightConfig(new StrayLightConfig(Qt::Horizontal, this))
 {
   QString tmpStr;
   int row = 0;
   QVBoxLayout *mainLayout = new QVBoxLayout(this);
+  mainLayout->setMargin(0);
   QGridLayout *gridLayout = new QGridLayout;
-  QHBoxLayout *groupLayout = new QHBoxLayout;
 
-  QGroupBox *straylightGroup = new QGroupBox("Straylight bias", this);
-  QGridLayout *straylightLayout = new QGridLayout(straylightGroup);
-
-  m_strayLightCheck = new QCheckBox("Correct straylight bias", straylightGroup);
-  straylightLayout->addWidget(m_strayLightCheck, row, 0);
-
-  ++row;
-
-  straylightLayout->addWidget(new QLabel("Wavelength min", straylightGroup), row, 0);             // detector size label
-  m_lambdaMinEdit = new QLineEdit(straylightGroup);
-  m_lambdaMinEdit->setFixedWidth(50);
-  m_lambdaMinEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 900.0, 2, m_lambdaMinEdit));
-  straylightLayout->addWidget(m_lambdaMinEdit, row, 1);
-
-  ++row;
-
-  straylightLayout->addWidget(new QLabel("Wavelength max", straylightGroup), row, 0);             // detector size label
-  m_lambdaMaxEdit = new QLineEdit(straylightGroup);
-  m_lambdaMaxEdit->setFixedWidth(50);
-  m_lambdaMaxEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 900.0, 2, m_lambdaMaxEdit));
-  straylightLayout->addWidget(m_lambdaMaxEdit, row, 1);
-
-  groupLayout->addWidget(straylightGroup);
-  groupLayout->addStretch(0);
+  mainLayout->addWidget(m_strayLightConfig);
 
   // detector size
   gridLayout->addWidget(new QLabel("Detector Size", this), row, 0);
@@ -1441,9 +1356,7 @@ CWInstrCcdEevEdit::CWInstrCcdEevEdit(const struct instrumental_ccdeev *d, QWidge
   gridLayout->setColumnMinimumWidth(0, cSuggestedColumnZeroWidth);
   gridLayout->setColumnMinimumWidth(2, cSuggestedColumnTwoWidth);
 
-  mainLayout->addLayout(groupLayout);
   mainLayout->addLayout(gridLayout);
-  mainLayout->addStretch(1);
 
   // initialise the values
 
@@ -1459,13 +1372,9 @@ CWInstrCcdEevEdit::CWInstrCcdEevEdit(const struct instrumental_ccdeev *d, QWidge
     m_spectralTypeCombo->setCurrentIndex(index);
 
   // straylight bias
-  m_strayLightCheck->setCheckState(d->straylight ? Qt::Checked : Qt::Unchecked);
-  tmpStr.setNum(d->lambdaMin);
-  m_lambdaMinEdit->validator()->fixup(tmpStr);
-  m_lambdaMinEdit->setText(tmpStr);
-  tmpStr.setNum(d->lambdaMax);
-  m_lambdaMaxEdit->validator()->fixup(tmpStr);
-  m_lambdaMaxEdit->setText(tmpStr);
+  m_strayLightConfig->setChecked(d->straylight ? true : false);
+  m_strayLightConfig->setLambdaMin(d->lambdaMin);
+  m_strayLightConfig->setLambdaMax(d->lambdaMax);
 }
 
 void CWInstrCcdEevEdit::apply(struct instrumental_ccdeev *d) const
@@ -1484,10 +1393,9 @@ void CWInstrCcdEevEdit::apply(struct instrumental_ccdeev *d) const
   strcpy(d->imagePath, m_fileFiveEdit->text().toAscii().data());
 
   // straylight bias
-
-  d->straylight = (m_strayLightCheck->checkState() == Qt::Checked) ? 1 : 0;
-  d->lambdaMin = m_lambdaMinEdit->text().toDouble();
-  d->lambdaMax = m_lambdaMaxEdit->text().toDouble();
+  d->straylight = m_strayLightConfig->isChecked() ? 1 : 0;
+  d->lambdaMin = m_strayLightConfig->getLambdaMin();
+  d->lambdaMax = m_strayLightConfig->getLambdaMax();
 }
 
 //--------------------------------------------------------
@@ -1867,13 +1775,44 @@ void CWInstrSciaEdit::slotCluster5Changed(int state)
 CWInstrOmiEdit::CWInstrOmiEdit(const struct instrumental_omi *d, QWidget *parent) :
   CWCalibInstrEdit(parent)
 {
-  QString tmpStr;
-  char str[80];
   int row = 0;
   QVBoxLayout *mainLayout = new QVBoxLayout(this);
+  mainLayout->setMargin(5);
+  mainLayout->setSpacing(5);
+
+  QHBoxLayout *qualityFlagsLayout = new QHBoxLayout;
+  mainLayout->addLayout(qualityFlagsLayout);
+
+  // Pixel quality flags
+  m_pixelQFGroup = new QGroupBox("Use Pixel Quality Flags", this);
+  qualityFlagsLayout->addWidget(m_pixelQFGroup);
+  m_pixelQFGroup->setCheckable(true);  
+
+  QGridLayout *pixelQFLayout = new QGridLayout(m_pixelQFGroup);
+  pixelQFLayout->addWidget(new QLabel("Mask for pixel rejection", m_pixelQFGroup), 1, 0, Qt::AlignRight);
+  m_pixelQFMaskEdit = new QLineEdit(m_pixelQFGroup);
+  m_pixelQFMaskEdit->setFixedWidth(50);
+  pixelQFLayout->addWidget(m_pixelQFMaskEdit, 1, 1, Qt::AlignLeft);
+  pixelQFLayout->addWidget(new QLabel("Maximum number of gaps", m_pixelQFGroup), 2, 0, Qt::AlignRight);
+  m_pixelQFMaxGapsEdit = new QLineEdit(m_pixelQFGroup);
+  m_pixelQFMaxGapsEdit->setFixedWidth(50);
+  m_pixelQFMaxGapsEdit->setValidator(new QIntValidator(0, 20, m_pixelQFMaxGapsEdit));
+  pixelQFLayout->addWidget(m_pixelQFMaxGapsEdit, 2, 1, Qt::AlignLeft);
+
+
+  // XTrack quality flags
+  m_xtrackQFBox = new QGroupBox("Use Cross-track Quality Flags", this);
+  qualityFlagsLayout->addWidget(m_xtrackQFBox);
+  m_xtrackQFBox->setCheckable(true);
+
+  QVBoxLayout *xtrackQFBoxLayout = new QVBoxLayout(m_xtrackQFBox);
+  xtrackQFBoxLayout->setAlignment(Qt::AlignCenter);
+  m_nonstrictXTrackQF = new QRadioButton("Exclude bad pixels");
+  xtrackQFBoxLayout->addWidget(m_nonstrictXTrackQF);
+  m_strictXTrackQF = new QRadioButton("Exclude all affected pixels");
+  xtrackQFBoxLayout->addWidget(m_strictXTrackQF);
+
   QGridLayout *gridLayout = new QGridLayout;
-  // Format and Flags group
-  QHBoxLayout *groupLayout = new QHBoxLayout;
 
   // spectral
   gridLayout->addWidget(new QLabel("Spectral Type", this), row, 0);
@@ -1885,72 +1824,15 @@ CWInstrOmiEdit::CWInstrOmiEdit(const struct instrumental_omi *d, QWidget *parent
   ++row;
 
   // Track selection
-  gridLayout->addWidget(new QLabel("Row selection (for example : 5-15,20-30)", this), row, 0);
+  gridLayout->addWidget(new QLabel("Row selection", this), row, 0);
   m_trackSelection = new QLineEdit(this);
   gridLayout->addWidget(m_trackSelection, row, 1);
   ++row;
-
-  // Pixels quality flags
-
-  QGroupBox *pixelQFGroup = new QGroupBox("Pixel Quality Flags", this);
-  QGridLayout *pixelQFLayout = new QGridLayout(pixelQFGroup);
-
-  m_pixelQFCheck = new QCheckBox("Pixel rejection based on quality flags", pixelQFGroup);
-  pixelQFLayout->addWidget(m_pixelQFCheck, row, 0);
-
-  ++row;
-
-  pixelQFLayout->addWidget(new QLabel("Mask for pixel rejection", pixelQFGroup), row, 0);             // detector size label
-  m_pixelQFMaskEdit = new QLineEdit(pixelQFGroup);
-  m_pixelQFMaskEdit->setFixedWidth(50);
-  pixelQFLayout->addWidget(m_pixelQFMaskEdit, row, 1);
-
-  ++row;
-
-  pixelQFLayout->addWidget(new QLabel("Maximum number of gaps", pixelQFGroup), row, 0);             // detector size label
-  m_pixelQFMaxGapsEdit = new QLineEdit(pixelQFGroup);
-  m_pixelQFMaxGapsEdit->setFixedWidth(50);
-  m_pixelQFMaxGapsEdit->setValidator(new QIntValidator(0, 20, m_pixelQFMaxGapsEdit));
-  pixelQFLayout->addWidget(m_pixelQFMaxGapsEdit, row, 1);
-
-  groupLayout->addWidget(pixelQFGroup);
-  mainLayout->addLayout(groupLayout);
-
-  // XTrack Quality Flag handling:
-  QGroupBox *xtrackQFBox = new QGroupBox("Cross-track Quality Flags", this);
-  m_ignoreXTrackQF = new QRadioButton("Ignore");
-  m_nonstrictXTrackQF = new QRadioButton("Exclude bad pixels");
-  m_strictXTrackQF = new QRadioButton("Exclude all affected pixels");
-
-  switch(d->xtrack_mode) {
-  case XTRACKQF_IGNORE:
-    m_ignoreXTrackQF->setChecked(true);
-    break;
-  case XTRACKQF_NONSTRICT:
-    m_nonstrictXTrackQF->setChecked(true);
-    break;
-  case XTRACKQF_STRICT:
-    m_strictXTrackQF->setChecked(true);
-    break;
-  }
-
-  QVBoxLayout *xtrackQFBoxLayout = new QVBoxLayout;
-  xtrackQFBoxLayout->setAlignment(Qt::AlignCenter);
-  xtrackQFBoxLayout->addWidget(m_ignoreXTrackQF);
-  xtrackQFBoxLayout->addWidget(m_nonstrictXTrackQF);
-  xtrackQFBoxLayout->addWidget(m_strictXTrackQF);
-  xtrackQFBoxLayout->addStretch(1);
-  xtrackQFBox->setLayout(xtrackQFBoxLayout);
-
-  mainLayout->addWidget(xtrackQFBox);
 
   // files
   helperConstructCalInsFileWidgets(gridLayout, row,
 				   d->calibrationFile, sizeof(d->calibrationFile),
 				   d->transmissionFunctionFile, sizeof(d->transmissionFunctionFile));
-
-  gridLayout->setColumnMinimumWidth(0, cSuggestedColumnZeroWidth);
-  gridLayout->setColumnMinimumWidth(2, cSuggestedColumnTwoWidth);
 
   mainLayout->addLayout(gridLayout);
   mainLayout->addStretch(1);
@@ -1966,14 +1848,31 @@ CWInstrOmiEdit::CWInstrOmiEdit(const struct instrumental_omi *d, QWidget *parent
 
   // pixel quality flag
 
-  m_pixelQFCheck->setCheckState(d->pixelQFRejectionFlag ? Qt::Checked : Qt::Unchecked);
+  m_pixelQFGroup->setChecked(d->pixelQFRejectionFlag);
 
+  QString tmpStr;
+  char str[80];
   tmpStr.setNum(d->pixelQFMaxGaps);
   m_pixelQFMaxGapsEdit->validator()->fixup(tmpStr);
   m_pixelQFMaxGapsEdit->setText(tmpStr);
 
   sprintf(str,"%02X",d->pixelQFMask);
   m_pixelQFMaskEdit->setText(QString(str));
+
+  // xtrack quality flag
+  switch(d->xtrack_mode) {
+  case XTRACKQF_IGNORE:
+    m_xtrackQFBox->setChecked(false);
+    break;
+  case XTRACKQF_NONSTRICT:
+    m_xtrackQFBox->setChecked(true);
+    m_nonstrictXTrackQF->setChecked(true);
+    break;
+  case XTRACKQF_STRICT:
+    m_xtrackQFBox->setChecked(true);
+    m_strictXTrackQF->setChecked(true);
+    break;
+  }
 
 }
 
@@ -1984,7 +1883,7 @@ void CWInstrOmiEdit::apply(struct instrumental_omi *d) const
 
   // track selection
 
-  d->pixelQFRejectionFlag=(m_pixelQFCheck->checkState() == Qt::Checked) ? 1 : 0;
+  d->pixelQFRejectionFlag= m_pixelQFGroup->isChecked() ? 1 : 0;
   d->pixelQFMaxGaps=m_pixelQFMaxGapsEdit->text().toInt();
 
   sscanf(m_pixelQFMaskEdit->text().toAscii().data(),"%02X",&d->pixelQFMask);
@@ -1992,12 +1891,14 @@ void CWInstrOmiEdit::apply(struct instrumental_omi *d) const
   strcpy(d->trackSelection, m_trackSelection->text().toAscii().data());
 
   // XTrack Quality Flags:
-  if (m_strictXTrackQF->isChecked() )
-    d->xtrack_mode = XTRACKQF_STRICT;
-  else if (m_nonstrictXTrackQF->isChecked() )
-    d->xtrack_mode = XTRACKQF_NONSTRICT;
-  else
+  if(m_xtrackQFBox->isChecked() ) {
+    if (m_strictXTrackQF->isChecked() )
+      d->xtrack_mode = XTRACKQF_STRICT;
+    else if (m_nonstrictXTrackQF->isChecked() )
+      d->xtrack_mode = XTRACKQF_NONSTRICT;
+  } else {
     d->xtrack_mode = XTRACKQF_IGNORE;
+  }
 
   // files
   strcpy(d->calibrationFile, m_fileOneEdit->text().toAscii().data());
@@ -2037,39 +1938,15 @@ void CWInstrTropomiEdit::apply(struct instrumental_tropomi *d) const
 //--------------------------------------------------------
 
 CWInstrOceanOpticsEdit::CWInstrOceanOpticsEdit(const struct instrumental_oceanoptics *d, QWidget *parent) :
-  CWCalibInstrEdit(parent)
+  CWCalibInstrEdit(parent),
+  m_strayLightConfig(new StrayLightConfig(Qt::Horizontal, this) )
 {
   QVBoxLayout *mainLayout = new QVBoxLayout(this);
 
   int row = 0;
   QGridLayout *bottomLayout = new QGridLayout;
 
-  QHBoxLayout *groupLayout = new QHBoxLayout;
-
-  QGroupBox *straylightGroup = new QGroupBox("Straylight bias", this);
-  QGridLayout *straylightLayout = new QGridLayout(straylightGroup);
-
-  m_strayLightCheck = new QCheckBox("Correct straylight bias", straylightGroup);
-  straylightLayout->addWidget(m_strayLightCheck, row, 0);
-
-  ++row;
-
-  straylightLayout->addWidget(new QLabel("Wavelength min", straylightGroup), row, 0);             // detector size label
-  m_lambdaMinEdit = new QLineEdit(straylightGroup);
-  m_lambdaMinEdit->setFixedWidth(50);
-  m_lambdaMinEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 900.0, 2, m_lambdaMinEdit));
-  straylightLayout->addWidget(m_lambdaMinEdit, row, 1);
-
-  ++row;
-
-  straylightLayout->addWidget(new QLabel("Wavelength max", straylightGroup), row, 0);             // detector size label
-  m_lambdaMaxEdit = new QLineEdit(straylightGroup);
-  m_lambdaMaxEdit->setFixedWidth(50);
-  m_lambdaMaxEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 900.0, 2, m_lambdaMaxEdit));
-  straylightLayout->addWidget(m_lambdaMaxEdit, row, 1);
-
-  groupLayout->addWidget(straylightGroup);
-  groupLayout->addStretch(0);
+  mainLayout->addWidget(m_strayLightConfig);
 
   bottomLayout->addWidget(new QLabel("Detector Size", this), row, 0);
   m_detSizeEdit = new QLineEdit(this);
@@ -2086,7 +1963,6 @@ CWInstrOceanOpticsEdit::CWInstrOceanOpticsEdit(const struct instrumental_oceanop
   bottomLayout->setColumnMinimumWidth(0, cSuggestedColumnZeroWidth);
   bottomLayout->setColumnMinimumWidth(2, cSuggestedColumnTwoWidth);
 
-  mainLayout->addLayout(groupLayout);
   mainLayout->addLayout(bottomLayout);
   mainLayout->addStretch(1);
 
@@ -2099,22 +1975,17 @@ CWInstrOceanOpticsEdit::CWInstrOceanOpticsEdit(const struct instrumental_oceanop
   m_detSizeEdit->setText(tmpStr);
 
   // straylight bias
-  m_strayLightCheck->setCheckState(d->straylight ? Qt::Checked : Qt::Unchecked);
-  tmpStr.setNum(d->lambdaMin);
-  m_lambdaMinEdit->validator()->fixup(tmpStr);
-  m_lambdaMinEdit->setText(tmpStr);
-  tmpStr.setNum(d->lambdaMax);
-  m_lambdaMaxEdit->validator()->fixup(tmpStr);
-  m_lambdaMaxEdit->setText(tmpStr);
+  m_strayLightConfig->setChecked(d->straylight ? true : false);
+  m_strayLightConfig->setLambdaMin(d->lambdaMin);
+  m_strayLightConfig->setLambdaMax(d->lambdaMax);
 }
 
 void CWInstrOceanOpticsEdit::apply(struct instrumental_oceanoptics *d) const
 {
   // straylight bias
-
-  d->straylight = (m_strayLightCheck->checkState() == Qt::Checked) ? 1 : 0;
-  d->lambdaMin = m_lambdaMinEdit->text().toDouble();
-  d->lambdaMax = m_lambdaMaxEdit->text().toDouble();
+  d->straylight = m_strayLightConfig->isChecked() ? 1 : 0;
+  d->lambdaMin = m_strayLightConfig->getLambdaMin();
+  d->lambdaMax = m_strayLightConfig->getLambdaMax();
 
   // detected size
   d->detectorSize = m_detSizeEdit->text().toInt();
@@ -2122,7 +1993,6 @@ void CWInstrOceanOpticsEdit::apply(struct instrumental_oceanoptics *d) const
   // files
   strcpy(d->calibrationFile, m_fileOneEdit->text().toAscii().data());
   strcpy(d->transmissionFunctionFile, m_fileTwoEdit->text().toAscii().data());
-
 }
 
 //--------------------------------------------------------

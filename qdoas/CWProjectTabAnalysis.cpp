@@ -37,8 +37,7 @@ CWProjectTabAnalysis::CWProjectTabAnalysis(const mediate_project_analysis_t *pro
   QString tmpStr;
 
   QGridLayout *mainLayout = new QGridLayout(this);
-  mainLayout->setSpacing(15);
-
+  mainLayout->setSpacing(5);
 
   int row = 0;
   mainLayout->setRowStretch(row, 1);

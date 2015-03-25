@@ -24,6 +24,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <map>
 
 #include <QFrame>
+#include <QGroupBox>
 #include <QComboBox>
 #include <QStackedWidget>
 #include <QLineEdit>
@@ -136,6 +137,20 @@ Q_OBJECT
   QLineEdit *m_fileOneEdit, *m_fileTwoEdit;
 };
 
+class StrayLightConfig : public QGroupBox {
+  Q_OBJECT
+  public:
+  StrayLightConfig(Qt::Orientation orientation, QWidget *parent = 0);
+  void setLambdaMin(double lambda);
+  void setLambdaMax(double lambda);
+  double getLambdaMin() const;
+  double getLambdaMax() const;
+
+  private:
+  QLineEdit *m_lambdaMinEdit;
+  QLineEdit *m_lambdaMaxEdit;
+};
+
 //--------------------------------------------------------------------------
 
 // base class for editors with all instrument files. Only provides
@@ -175,18 +190,16 @@ Q_OBJECT
 //--------------------------------------------------------------------------
 class CWInstrAsciiEdit : public CWCalibInstrEdit
 {
- public:
+public:
   CWInstrAsciiEdit(const struct instrumental_ascii *d, QWidget *parent = 0);
 
   void apply(struct instrumental_ascii *d) const;
-
- private:
-   QLineEdit *m_detSizeEdit;
-   QRadioButton *m_lineRadioButton, *m_columnRadioButton;
-   QCheckBox *m_zenCheck, *m_aziCheck, *m_eleCheck, *m_dateCheck, *m_timeCheck, *m_lambdaCheck;
-   QCheckBox *m_strayLightCheck;
-   QLineEdit *m_lambdaMinEdit;
-   QLineEdit *m_lambdaMaxEdit;
+  
+private:
+  QLineEdit *m_detSizeEdit;
+  QRadioButton *m_lineRadioButton, *m_columnRadioButton;
+  QCheckBox *m_zenCheck, *m_aziCheck, *m_eleCheck, *m_dateCheck, *m_timeCheck, *m_lambdaCheck;
+  StrayLightConfig *m_strayLightConfig;
 };
 
 //--------------------------------------------------------------------------
@@ -257,9 +270,7 @@ class CWInstrMfcStdEdit : public CWAllFilesEdit
   QLineEdit *m_detSizeEdit;
   QLineEdit *m_dateFormatEdit;
   QCheckBox *m_revertCheck;
-  QCheckBox *m_strayLightCheck;
-  QLineEdit *m_lambdaMinEdit;
-  QLineEdit *m_lambdaMaxEdit;
+  StrayLightConfig *m_strayLightConfig;
 };
 
 //--------------------------------------------------------------------------
@@ -274,9 +285,7 @@ class CWInstrMfcbiraEdit : public CWAllFilesEdit
 
  private:
   QLineEdit *m_detSizeEdit;
-  QCheckBox *m_strayLightCheck;
-  QLineEdit *m_lambdaMinEdit;
-  QLineEdit *m_lambdaMaxEdit;
+  StrayLightConfig *m_strayLightConfig;
 };
 
 //--------------------------------------------------------------------------
@@ -289,9 +298,7 @@ class CWInstrMinimumEdit : public CWCalibInstrEdit
   void apply(struct instrumental_minimum *d) const;
 
  private:
-  QCheckBox *m_strayLightCheck;
-  QLineEdit *m_lambdaMinEdit;
-  QLineEdit *m_lambdaMaxEdit;
+  StrayLightConfig *m_strayLightConfig;
 };
 
 //--------------------------------------------------------------------------
@@ -315,9 +322,7 @@ class CWInstrCcdUlbEdit : public CWAllFilesEdit
 
  private:
   QLineEdit *m_gratingEdit, *m_cenLambdaEdit;
-  QCheckBox *m_strayLightCheck;
-  QLineEdit *m_lambdaMinEdit;
-  QLineEdit *m_lambdaMaxEdit;
+  StrayLightConfig *m_strayLightConfig;
 };
 
 //--------------------------------------------------------------------------
@@ -345,9 +350,7 @@ class CWInstrCcdEevEdit : public CWAllFilesEdit
  private:
   QLineEdit *m_detSizeEdit;
   QComboBox *m_spectralTypeCombo;
-  QCheckBox *m_strayLightCheck;
-  QLineEdit *m_lambdaMinEdit;
-  QLineEdit *m_lambdaMaxEdit;
+  StrayLightConfig *m_strayLightConfig;
 };
 
 //--------------------------------------------------------------------------
@@ -362,9 +365,7 @@ class CWInstrOpusEdit : public CWCalibInstrEdit
  private:
   QLineEdit *m_detSizeEdit, *m_timeShiftEdit;
   QCheckBox *m_transmittanceCheck;
-  QCheckBox *m_strayLightCheck;
-  QLineEdit *m_lambdaMinEdit;
-  QLineEdit *m_lambdaMaxEdit;
+  StrayLightConfig *m_strayLightConfig;
 };
 
 //--------------------------------------------------------------------------
@@ -436,10 +437,10 @@ class CWInstrOmiEdit : public CWCalibInstrEdit
   QComboBox *m_spectralTypeCombo;
   QLineEdit *m_minLambdaEdit, *m_maxLambdaEdit,*m_trackSelection;
   QCheckBox *m_averageCheck;
-  QCheckBox *m_pixelQFCheck;
+  QGroupBox *m_pixelQFGroup;
+  QGroupBox *m_xtrackQFBox;
   QLineEdit *m_pixelQFMaskEdit;
   QLineEdit *m_pixelQFMaxGapsEdit;
-  QRadioButton *m_ignoreXTrackQF;
   QRadioButton *m_nonstrictXTrackQF;
   QRadioButton *m_strictXTrackQF;
 };
@@ -468,9 +469,7 @@ class CWInstrOceanOpticsEdit : public CWCalibInstrEdit
 
  private:
   QLineEdit *m_detSizeEdit;
-  QCheckBox *m_strayLightCheck;
-  QLineEdit *m_lambdaMinEdit;
-  QLineEdit *m_lambdaMaxEdit;
+  StrayLightConfig *m_strayLightConfig;
 };
 
 

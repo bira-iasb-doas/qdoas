@@ -48,29 +48,19 @@ CWProjectTabCalibration::CWProjectTabCalibration(const mediate_project_calibrati
   mainLayout->addSpacing(5);     
   
   // ref file    
-  
-  m_refWidget = new QFrame(this);                              
-  m_refWidget->setFrameStyle(QFrame::NoFrame);                 
-  QHBoxLayout *refLayout = new QHBoxLayout(m_refWidget);       
-  refLayout->setMargin(0);                                     
-    
-  refLayout->addWidget((refLabel=new QLabel("Solar Ref. File", this)), 0, 0);  
-  
+  topLayout->addWidget((refLabel=new QLabel("Solar Ref. File", this)), 0, 0);  
   m_refFileEdit  = new QLineEdit(this);
   m_refFileEdit->setMaxLength(sizeof(properties->solarRefFile) - 1); // limit test length to buffer size
-
-  refLayout->addWidget(m_refFileEdit); // !!! , 0, 1, 1, 4);
-  QPushButton *browseBtn = new QPushButton("Browse", this);
-  refLayout->addWidget(browseBtn);
-  
-  topLayout->addWidget(m_refWidget,0, 0, 1, 6);           
+  m_refBrowseBtn = new QPushButton("Browse", this);
+  topLayout->addWidget(m_refFileEdit, 0, 1, 1, 2);
+  topLayout->addWidget(m_refBrowseBtn, 0, 3);
   
   // methodType
   topLayout->addWidget((methodLabel=new QLabel("Analysis Method", this)), 1, 0);
   m_methodCombo = new QComboBox(this);
   m_methodCombo->addItem("Optical Density Fitting", QVariant(PRJCT_ANLYS_METHOD_SVD));
   m_methodCombo->addItem("Intensity fitting (Marquardt-Levenberg+SVD)", QVariant(PRJCT_ANLYS_METHOD_SVDMARQUARDT));
-  topLayout->addWidget(m_methodCombo, 1, 1, 1, 4); // spans two columns
+  topLayout->addWidget(m_methodCombo, 1, 1, 1, 3); // spans 3 columns
 
   // line shape
   topLayout->addWidget(new QLabel("Line Shape (SFP)", this), 2, 0);
@@ -82,24 +72,19 @@ CWProjectTabCalibration::CWProjectTabCalibration(const mediate_project_calibrati
   m_lineShapeCombo->addItem("2n-Lorentz", QVariant(PRJCT_CALIB_FWHM_TYPE_INVPOLY));
   m_lineShapeCombo->addItem("Voigt", QVariant(PRJCT_CALIB_FWHM_TYPE_VOIGT));
   m_lineShapeCombo->addItem("Asymmetric Gaussian", QVariant(PRJCT_CALIB_FWHM_TYPE_AGAUSS));
-  m_lineShapeCombo->setFixedWidth(160);
   topLayout->addWidget(m_lineShapeCombo, 2, 1);
 
   // File
+  m_slfFileEdit  = new QLineEdit(this);
+  QPushButton *fileBrowseBtn = new QPushButton("Browse", this);
   m_fileWidget = new QFrame(this);
   m_fileWidget->setFrameStyle(QFrame::NoFrame);
   QHBoxLayout *fileLayout = new QHBoxLayout(m_fileWidget);
   fileLayout->setMargin(0);
-  m_slfFileEdit  = new QLineEdit(this);
-  // m_slfFileEdit->setMaxLength(sizeof(properties->solarRefFile) - 1); // limit test length to buffer size
-
   fileLayout->addWidget(m_slfFileEdit);
-  QPushButton *fileBrowseBtn = new QPushButton("Browse", this);
   fileLayout->addWidget(fileBrowseBtn);
 
-
-  topLayout->addWidget(m_fileWidget, 2, 2, 2,4);
-  //topLayout->addWidget(fileBrowseBtn,2,5);
+  topLayout->addWidget(m_fileWidget, 2, 2, 1, 2);
   m_fileWidget->hide(); // show when lineshape combo is File
 
   // degree of 2n-Lorentz
@@ -107,36 +92,35 @@ CWProjectTabCalibration::CWProjectTabCalibration(const mediate_project_calibrati
   m_degreeWidget->setFrameStyle(QFrame::NoFrame);
   QHBoxLayout *degreeLayout = new QHBoxLayout(m_degreeWidget);
   degreeLayout->setMargin(0);
+  degreeLayout->setAlignment(Qt::AlignLeft);
   degreeLayout->addWidget(new QLabel("Degree", this));
   m_degreeSpinBox = new QSpinBox(this);
   m_degreeSpinBox->setRange(0, 10);
   degreeLayout->addWidget(m_degreeSpinBox);
-  topLayout->addWidget(m_degreeWidget, 2, 5);
+  topLayout->addWidget(m_degreeWidget, 2, 2, 1, 2);
   m_degreeWidget->hide(); // show when lineshape combo is cSpectralLineShapeLorentz
+
+  topLayout->setColumnStretch(0, 0);
+  topLayout->setColumnStretch(1, 0);
+  topLayout->setColumnStretch(2, 1);
+  topLayout->setColumnStretch(3, 0);
 
   // force some sizes to prevent 'jumpy' display.
   m_degreeSpinBox->setFixedHeight(m_lineShapeCombo->sizeHint().height());
-  browseBtn->setFixedWidth(m_degreeWidget->sizeHint().width());
-  fileBrowseBtn->setFixedWidth(m_degreeWidget->sizeHint().width());
-
-  // force some sizes to prevent 'jumpy' display.
   m_slfFileEdit->setFixedHeight(m_lineShapeCombo->sizeHint().height());
-  // m_slfFileEdit->setFixedWidth(m_fileWidget->sizeHint().width());
-  
-  refLabel->setFixedWidth(methodLabel->sizeHint().width()+7);      
-  // m_refFileEdit->setFixedWidth(m_methodCombo->sizeHint().width());        
-
 
   mainLayout->addLayout(topLayout);
 
-  mainLayout->addSpacing(5);
-
   // middle
   QHBoxLayout *groupLayout = new QHBoxLayout;
+  groupLayout->setMargin(0);
+  groupLayout->setSpacing(5);
 
   // display
   QGroupBox *displayGroup = new QGroupBox("Display", this);
   QGridLayout *displayLayout = new QGridLayout(displayGroup);
+  displayLayout->setMargin(3);
+  displayLayout->setSpacing(0);
 
   m_spectraCheck = new QCheckBox("Spectra", displayGroup);
   displayLayout->addWidget(m_spectraCheck, 0, 0);
@@ -152,48 +136,50 @@ CWProjectTabCalibration::CWProjectTabCalibration(const mediate_project_calibrati
   // Polynomial Degree
   QGroupBox *polyGroup = new QGroupBox("Polynomial Degree", this);
   QGridLayout *polyLayout = new QGridLayout(polyGroup);
+  polyLayout->setMargin(3);
+  polyLayout->setAlignment(Qt::AlignLeft);
 
-  polyLayout->addWidget(new QLabel("Shift", polyGroup), 0, 0);
+  polyLayout->addWidget(new QLabel("Shift", polyGroup), 0, 0, Qt::AlignRight);
   m_shiftDegreeSpinBox = new QSpinBox(polyGroup);
   m_shiftDegreeSpinBox->setRange(0,5);
-  polyLayout->addWidget(m_shiftDegreeSpinBox, 0, 1);
+  m_shiftDegreeSpinBox->setFixedWidth(50);
+  polyLayout->addWidget(m_shiftDegreeSpinBox, 0, 1, Qt::AlignLeft);
 
-  polyLayout->addWidget(new QLabel("SFP", polyGroup), 1, 0);
+  polyLayout->addWidget(new QLabel("SFP", polyGroup), 1, 0, Qt::AlignRight);
   m_sfpDegreeSpinBox = new QSpinBox(polyGroup);
   m_sfpDegreeSpinBox->setRange(0,5);
-  polyLayout->addWidget(m_sfpDegreeSpinBox, 1, 1);
+  m_sfpDegreeSpinBox->setFixedWidth(50);
+  polyLayout->addWidget(m_sfpDegreeSpinBox, 1, 1, Qt::AlignLeft);
 
   groupLayout->addWidget(polyGroup);
 
-  // window limts
+  // window limits
   QGroupBox *windowGroup = new QGroupBox("Window Limits (nm)", this);
   QGridLayout *windowLayout = new QGridLayout(windowGroup);
   windowLayout->setMargin(5);
-  windowLayout->setSpacing(3);
+  windowLayout->setAlignment(Qt::AlignLeft);
 
-  windowLayout->addWidget(new QLabel("Min", windowGroup), 0, 0);
+  windowLayout->addWidget(new QLabel("Min", windowGroup), 0, 0, Qt::AlignRight);
   m_lambdaMinEdit = new QLineEdit(windowGroup);
-  m_lambdaMinEdit->setFixedWidth(50);
+  //  m_lambdaMinEdit->setFixedWidth(50);
   m_lambdaMinEdit->setValidator(new CDoubleFixedFmtValidator(100.0, 900.0, 2, m_lambdaMinEdit));
-  windowLayout->addWidget(m_lambdaMinEdit, 0, 1);
+  windowLayout->addWidget(m_lambdaMinEdit, 0, 1, Qt::AlignLeft);
 
-  windowLayout->addWidget(new QLabel("Max", windowGroup), 1, 0);
+  windowLayout->addWidget(new QLabel("Max", windowGroup), 0, 2, Qt::AlignRight);
   m_lambdaMaxEdit = new QLineEdit(windowGroup);
-  m_lambdaMaxEdit->setFixedWidth(50);
+  //  m_lambdaMaxEdit->setFixedWidth(50);
   m_lambdaMaxEdit->setValidator(new CDoubleFixedFmtValidator(100.0, 900.0, 2, m_lambdaMaxEdit));
-  windowLayout->addWidget(m_lambdaMaxEdit, 1, 1);
+  windowLayout->addWidget(m_lambdaMaxEdit, 0, 3, Qt::AlignLeft);
 
-  windowLayout->addWidget(new QLabel("Sub-windows", windowGroup), 2, 0);
+  windowLayout->addWidget(new QLabel("Sub-windows", windowGroup), 1, 0, 1, 3, Qt::AlignRight);
   m_subWindowsSpinBox = new QSpinBox(this);
   m_subWindowsSpinBox->setFixedWidth(50);
   m_subWindowsSpinBox->setRange(1, 50);
-  windowLayout->addWidget(m_subWindowsSpinBox, 2, 1);
+  windowLayout->addWidget(m_subWindowsSpinBox, 1, 3, Qt::AlignLeft);
 
   groupLayout->addWidget(windowGroup);
 
   mainLayout->addLayout(groupLayout);
-
-  mainLayout->addSpacing(5);
 
   // fit paramters tables
   m_tabs = new QTabWidget(this);
@@ -275,7 +261,7 @@ CWProjectTabCalibration::CWProjectTabCalibration(const mediate_project_calibrati
 
   // connections
   connect(m_lineShapeCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(slotLineShapeSelectionChanged(int)));
-  connect(browseBtn, SIGNAL(clicked()), this, SLOT(slotBrowseSolarRefFile()));
+  connect(m_refBrowseBtn, SIGNAL(clicked()), this, SLOT(slotBrowseSolarRefFile()));
   connect(fileBrowseBtn, SIGNAL(clicked()), this, SLOT(slotBrowseSlfFile()));
 
 }
@@ -326,10 +312,13 @@ void CWProjectTabCalibration::slotLineShapeSelectionChanged(int index)
   else
     m_degreeWidget->hide();
     
-  if (tmp==PRJCT_CALIB_FWHM_TYPE_NONE)
-   m_refWidget->setEnabled(false);
-  else  
-   m_refWidget->setEnabled(true);
+  if (tmp==PRJCT_CALIB_FWHM_TYPE_NONE) {
+    m_refFileEdit->setEnabled(false);
+    m_refBrowseBtn->setEnabled(false);
+  } else {
+    m_refFileEdit->setEnabled(true);
+    m_refBrowseBtn->setEnabled(true);
+  }
    
   m_sfpDegreeSpinBox->setEnabled(tmp != PRJCT_CALIB_FWHM_TYPE_NONE);
 

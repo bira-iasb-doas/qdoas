@@ -471,7 +471,7 @@ void getValidFieldFlags(int *validFlags, int instrument)
     case PRJCT_INSTR_FORMAT_MFC_STD :
     case PRJCT_INSTR_FORMAT_MFC_BIRA :
      {
-     	validFlags[PRJCT_RESULTS_NAME]=1;
+      validFlags[PRJCT_RESULTS_NAME]=1;
       validFlags[PRJCT_RESULTS_SCANS]=1;
       validFlags[PRJCT_RESULTS_VIEW_ELEVATION]=1;
       validFlags[PRJCT_RESULTS_VIEW_AZIMUTH]=1;
@@ -569,15 +569,8 @@ void getValidFieldFlags(int *validFlags, int instrument)
  // ----------------------------------------------------------------------------
 
    default:
-     // PRJCT_INSTR_FORMAT_CCD_OHP_96 & PRJCT_INSTR_FORMAT_CCD_HA_94
      break;
  // ----------------------------------------------------------------------------
    }
 
-// GOME 1st versions when Level-2 data were merged into Level-1 data  PRJCT_RESULTS_COVAR,
-// GOME 1st versions when Level-2 data were merged into Level-1 data  PRJCT_RESULTS_CORR,
-// GOME 1st versions when Level-2 data were merged into Level-1 data  PRJCT_RESULTS_CLOUD,
-// GOME 1st versions when Level-2 data were merged into Level-1 data  PRJCT_RESULTS_COEFF,
-// GOME 1st versions when Level-2 data were merged into Level-1 data  PRJCT_RESULTS_O3,
-// GOME 1st versions when Level-2 data were merged into Level-1 data  PRJCT_RESULTS_NO2,
  }

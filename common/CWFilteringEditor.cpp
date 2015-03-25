@@ -45,6 +45,8 @@ CWFilteringEditor::CWFilteringEditor(const mediate_filter_t *lowpass,
   // Low Pass Filter
   QGroupBox *lowGroup = new QGroupBox("Low Pass Filter", this);
   QVBoxLayout *lowLayout = new QVBoxLayout(lowGroup);
+  lowLayout->setMargin(0);
+  lowLayout->addSpacing(5);
   m_lowCombo = new QComboBox;
   m_lowStack = new QStackedWidget;
   // insert widgets into the stack and items into the combo in lock-step.
@@ -87,7 +89,6 @@ CWFilteringEditor::CWFilteringEditor(const mediate_filter_t *lowpass,
   m_lowStack->addWidget(m_lowBinomial);
   m_lowCombo->addItem("Binomial Filter", QVariant(PRJCT_FILTER_TYPE_BINOMIAL));
 
-
   // low pass group organisation
   lowLayout->addWidget(m_lowCombo);
   lowLayout->addWidget(m_lowStack);
@@ -97,6 +98,8 @@ CWFilteringEditor::CWFilteringEditor(const mediate_filter_t *lowpass,
   // High Pass Filter
   QGroupBox *highGroup = new QGroupBox("High Pass Filter", this);
   QVBoxLayout *highLayout = new QVBoxLayout(highGroup);
+  highLayout->setMargin(0);
+  highLayout->addSpacing(5);
   m_highCombo = new QComboBox;
   m_highStack = new QStackedWidget;
   // insert widgets into the stack and items into the combo in lock-step.
@@ -142,12 +145,11 @@ CWFilteringEditor::CWFilteringEditor(const mediate_filter_t *lowpass,
   // high pass group organisation
   highLayout->addWidget(m_highCombo);
   highLayout->addWidget(m_highStack);
-  highLayout->addStretch(1);
-
 
   // equal space to both groups
   mainLayout->addWidget(lowGroup, 1);
   mainLayout->addWidget(highGroup, 1);
+  mainLayout->addStretch(1);
 
   // connections
   connect(m_lowCombo, SIGNAL(currentIndexChanged(int)), m_lowStack, SLOT(setCurrentIndex(int)));
@@ -325,7 +327,7 @@ CWKaiserEdit::CWKaiserEdit(const struct filter_kaiser *d, CWFilteringEditor::Usa
   QGridLayout *mainLayout = new QGridLayout(this);
 
   // row 0
-  mainLayout->addWidget(new QLabel("Cut-Off Frequency", this), row, 0, cLabelAlign);
+  mainLayout->addWidget(new QLabel("Cut-Off Freq.", this), row, 0, cLabelAlign);
 
   m_cutoffEdit = new QLineEdit(this);
   m_cutoffEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 100.0, 4, m_cutoffEdit));
@@ -366,12 +368,10 @@ CWKaiserEdit::CWKaiserEdit(const struct filter_kaiser *d, CWFilteringEditor::Usa
   ++row;
 
   m_usageEdit = new CWFilterUsageEdit(&(d->usage), type, this);
-  mainLayout->addWidget(m_usageEdit, row, 2, 1, 2);
+  mainLayout->addWidget(m_usageEdit, row, 0, 1, 4);
 
   // layout control
-  mainLayout->setColumnMinimumWidth(0, cSuggestedColumnZeroWidth);
   mainLayout->setColumnStretch(1, 1);
-  mainLayout->setColumnMinimumWidth(2, cSuggestedColumnZeroWidth);
   mainLayout->setColumnStretch(3, 1);
 
   // initialize
@@ -460,7 +460,7 @@ void CWBoxcarTriangularBinomialEdit::init(int filterWidth, int nIterations, cons
   ++row;
 
   m_usageEdit = new CWFilterUsageEdit(d, type, this);
-  mainLayout->addWidget(m_usageEdit, row, 1);
+  mainLayout->addWidget(m_usageEdit, row, 0, 1, 2);
 
   // layout control
   mainLayout->setColumnMinimumWidth(0, cSuggestedColumnZeroWidth);
@@ -544,10 +544,9 @@ CWGaussianEdit::CWGaussianEdit(const struct filter_gaussian *d, CWFilteringEdito
   ++row;
 
   m_usageEdit = new CWFilterUsageEdit(&(d->usage), type, this);
-  mainLayout->addWidget(m_usageEdit, row, 1);
+  mainLayout->addWidget(m_usageEdit, row, 0, 1, 2);
 
   // layout control
-  mainLayout->setColumnMinimumWidth(0, cSuggestedColumnZeroWidth);
   mainLayout->setColumnStretch(1, 1);
 
   // initialize
@@ -618,10 +617,9 @@ CWSavitzkyGolayEdit::CWSavitzkyGolayEdit(const struct filter_savitzky_golay *d, 
   ++row;
 
   m_usageEdit = new CWFilterUsageEdit(&(d->usage), type, this);
-  mainLayout->addWidget(m_usageEdit, row, 1);
+  mainLayout->addWidget(m_usageEdit, row, 0, 1, 2);
 
   // layout control
-  mainLayout->setColumnMinimumWidth(0, cSuggestedColumnZeroWidth);
   mainLayout->setColumnStretch(1, 1);
 
   // initialize

@@ -42,7 +42,7 @@ CWProjectPropertyEditor::CWProjectPropertyEditor(const QString &projectName, QWi
   QGridLayout *mainLayout = new QGridLayout(this);
 
   //QVBoxLayout *mainLayout = new QVBoxLayout(this);
-  mainLayout->setMargin(25);
+  mainLayout->setMargin(10);
   mainLayout->setSpacing(5);
 
   // Instrument selection combos
@@ -55,7 +55,6 @@ CWProjectPropertyEditor::CWProjectPropertyEditor(const QString &projectName, QWi
   m_instrTypeCombo->addItem("Satellites", QVariant(PRJCT_INSTR_TYPE_SATELLITE));
 
   instrLayout->addWidget(m_instrTypeCombo);
-  instrLayout->addSpacing(30);
   instrLayout->addWidget(new QLabel("Instr. Format", this));
 
   // create and populate ground based
@@ -95,7 +94,6 @@ CWProjectPropertyEditor::CWProjectPropertyEditor(const QString &projectName, QWi
   instrLayout->addWidget(m_satelliteFormatCombo, 1);
 
   mainLayout->addLayout(instrLayout, 0, 1);
-
 
   m_tabs = new QTabWidget(this);
 
@@ -137,20 +135,13 @@ CWProjectPropertyEditor::CWProjectPropertyEditor(const QString &projectName, QWi
   m_outputTab->slotInstrumentChanged(projectData->instrumental.format);
   m_tabs->addTab(m_outputTab, "Output");
 
-  /* TODO JUST REMOVE
-  // NASA AMES Tab
-  m_nasaAmesTab = new CWProjectTabNasaAmes(projectName, &(projectData->nasaames));
-  m_tabs->addTab(m_nasaAmesTab, "NASA-AMES Results");
-  */
-
-  // try and keep the complete tab widget set at the smallest possible size.
+  // try and keep the complete tab widget at the smallest possibled width.
   mainLayout->setColumnMinimumWidth(0, 0);
   mainLayout->addWidget(m_tabs, 1, 1);
   mainLayout->setColumnMinimumWidth(2, 0);
   mainLayout->setRowMinimumHeight(2, 0);
   mainLayout->setColumnStretch(0, 1);
   mainLayout->setColumnStretch(2, 1);
-  mainLayout->setRowStretch(2, 1);
 
   // caption string and context tag
   m_captionStr = "Properties of Project : ";
@@ -235,8 +226,6 @@ bool CWProjectPropertyEditor::actionOk(void)
     m_outputTab->apply(&(projectData->output));
 
     projectData->instrumental.format = m_selectedInstrument;
-
-    // m_nasaAmesTab->apply(&(projectData->nasaames)); TODO JUST REMOVE
 
     CWorkSpace::instance()->modifiedProjectProperties(m_projectName);
 
