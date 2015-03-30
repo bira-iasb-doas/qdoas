@@ -358,6 +358,12 @@ typedef struct _satellite_ref_
  }
 SATELLITE_REF;
 
+enum linear_offset_mode {
+  NO_LINEAR_OFFSET,  // no linear offset fit
+  LINEAR_OFFSET_RAD, // linear offset normalized by 1/I
+  LINEAR_OFFSET_REF  // linear offset normalized by 1/I0
+};
+
   /*! \brief Configuration data related to an analysis window. */
 typedef struct _feno
 {
@@ -469,7 +475,7 @@ typedef struct _feno
   int             SvdPDeb,SvdPFin,Dim,LimMin,LimMax,LimN;
   int             rc;
   char           gomePixelType[4];
-  int             offlFlag;                            // non zero if linear offset is fitted
+  enum linear_offset_mode linear_offset_mode;
   int             longPathFlag;                                                 // for Anoop
   INDEX           indexRefOmi;
   int             newrefFlag;
@@ -1003,7 +1009,7 @@ extern double      **U,*x,*Lambda,*LambdaSpec,
 // PROTOTYPES
 // ----------
 
-RC ANALYSE_Function ( double *X, double *Y, double *SigmaY, double *Yfit, int Npts,
+RC ANALYSE_Function ( double * const X, double * const Y, double *SigmaY, double *Yfit, int Npts,
               double *fitParamsC, double *fitParamsF,INDEX indexFenoColumn);
 
 enum _pixelSelection

@@ -220,22 +220,23 @@ extern "C" {
     double ccMax;
   };
 
-  struct anlyswin_linear
+  
+struct anlyswin_linear
   {
     int xPolyOrder;
     int xBaseOrder;
     int xFlagFitStore;
     int xFlagErrStore;
 
-    int xinvPolyOrder;
-    int xinvBaseOrder;
-    int xinvFlagFitStore;
-    int xinvFlagErrStore;
-
     int offsetPolyOrder;
     int offsetBaseOrder;
     int offsetFlagFitStore;
     int offsetFlagErrStore;
+
+    int offsetI0PolyOrder;
+    int offsetI0BaseOrder;
+    int offsetI0FlagFitStore;
+    int offsetI0FlagErrStore;
   };
 
 // Caro : would be nice to replace struct calibration_sfp with an array of structures of this type

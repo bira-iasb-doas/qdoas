@@ -17,6 +17,8 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
+#include <iostream>
+using std::cout; using std::endl;
 
 #include <QMenu>
 #include <QContextMenuEvent>
@@ -596,43 +598,18 @@ void CWLinearParametersDoasTable::populate(const struct anlyswin_linear *data)
   addRow(cStandardRowHeight, "Polynomial (x)", initialValues);
 
   initialValues.clear();
-
-  // not used anymore 2013/01/10 initialValues.push_back(mapOrderToComboString(data->xinvPolyOrder));
-  // not used anymore 2013/01/10 initialValues.push_back(mapOrderToComboString(data->xinvBaseOrder));
-  // not used anymore 2013/01/10 initialValues.push_back(data->xinvFlagFitStore); // bool
-  // not used anymore 2013/01/10 initialValues.push_back(data->xinvFlagErrStore); // bool
-  // not used anymore 2013/01/10 addRow(cStandardRowHeight, "Polynomial (1/x)", initialValues);
-  // not used anymore 2013/01/10
-  // not used anymore 2013/01/10 initialValues.clear();
-
   initialValues.push_back(mapOrderToComboString(data->offsetPolyOrder));
   initialValues.push_back(mapOrderToComboString(data->offsetBaseOrder));
   initialValues.push_back(data->offsetFlagFitStore); // bool
   initialValues.push_back(data->offsetFlagErrStore); // bool
-  addRow(cStandardRowHeight, "Offset (linearized)", initialValues);
+  addRow(cStandardRowHeight, "Offset (1/I)", initialValues);
 
-  // WARNING ... The following is a hack that requires access to the cell widgets in
-  // a way that was not really intended. This is a result of these two columns
-  // NOT being homogeneous.
-
-  QWidget *tmp;
-  QComboBox *p;
-
-  if ((tmp = directAccessToCellWidget(1, 0)) != NULL) {
-    p = dynamic_cast<QComboBox*>(tmp);
-    if (p) {
-      for (int index=6; index>3; --index)
-	p->removeItem(index);
-    }
-  }
-
-  if ((tmp = directAccessToCellWidget(1, 1)) != NULL) {
-    p = dynamic_cast<QComboBox*>(tmp);
-    if (p) {
-      for (int index=6; index>3; --index)
-	p->removeItem(index);
-    }
-  }
+  initialValues.clear();
+  initialValues.push_back(mapOrderToComboString(data->offsetI0PolyOrder));
+  initialValues.push_back(mapOrderToComboString(data->offsetI0BaseOrder));
+  initialValues.push_back(data->offsetI0FlagFitStore); // bool
+  initialValues.push_back(data->offsetI0FlagErrStore); // bool
+  addRow(cStandardRowHeight, "Offset (1/I<sub>0</sub>)", initialValues);
 }
 
 void CWLinearParametersDoasTable::apply(struct anlyswin_linear *data) const
@@ -645,17 +622,18 @@ void CWLinearParametersDoasTable::apply(struct anlyswin_linear *data) const
   data->xFlagFitStore = state.at(2).toBool() ? 1 : 0;
   data->xFlagErrStore = state.at(3).toBool() ? 1 : 0;
 
-  // not used anymore 2013/01/10 state = getCellData(1); // xinvPoly
-  // not used anymore 2013/01/10 data->xinvPolyOrder = mapComboStringToOrder(state.at(0).toString());
-  // not used anymore 2013/01/10 data->xinvBaseOrder = mapComboStringToOrder(state.at(1).toString());
-  // not used anymore 2013/01/10 data->xinvFlagFitStore = state.at(2).toBool() ? 1 : 0;
-  // not used anymore 2013/01/10 data->xinvFlagErrStore = state.at(3).toBool() ? 1 : 0;
-
-  state = getCellData(1); // offset
+  state = getCellData(1); // offset 1/I
   data->offsetPolyOrder = mapComboStringToOrder(state.at(0).toString());
   data->offsetBaseOrder = mapComboStringToOrder(state.at(1).toString());
   data->offsetFlagFitStore = state.at(2).toBool() ? 1 : 0;
   data->offsetFlagErrStore = state.at(3).toBool() ? 1 : 0;
+
+  state = getCellData(2); // offset 1/I0
+  data->offsetI0PolyOrder = mapComboStringToOrder(state.at(0).toString());
+  data->offsetI0BaseOrder = mapComboStringToOrder(state.at(1).toString());
+  data->offsetI0FlagFitStore = state.at(2).toBool() ? 1 : 0;
+  data->offsetI0FlagErrStore = state.at(3).toBool() ? 1 : 0;
+
 }
 
 QString CWLinearParametersDoasTable::mapOrderToComboString(int order)

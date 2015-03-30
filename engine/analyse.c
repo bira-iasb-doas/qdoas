@@ -1,4 +1,3 @@
-
 //  ----------------------------------------------------------------------------
 //
 //  Product/Project   :  QDOAS
@@ -130,6 +129,7 @@
 #include "output.h"
 #include <stdbool.h>
 #include <sys/stat.h>
+#include <assert.h>
 
 // ===================
 // GLOBAL DECLARATIONS
@@ -1826,9 +1826,6 @@ RC ANALYSE_AlignReference(ENGINE_CONTEXT *pEngineContext,int refFlag,void *respo
 //  refFlag==0 : GB, file mode selection        refFlag==2 : GOME, refN
 //  refFlag==1 : GB, automatic mode selection   refFlag==3 : GOME, refS
 //
-
-// Currently : not for OMI
-
 {
   // Declarations
 
@@ -1839,7 +1836,7 @@ RC ANALYSE_AlignReference(ENGINE_CONTEXT *pEngineContext,int refFlag,void *respo
     indexPage,
     i,j;                                                                        // indexes for loops and arrays
 
-  double *Spectre,*Sref,                                                        // raw spectrum
+  double *Sref,
     x0,lambda0;
   plot_data_t spectrumData[2];
   char string[MAX_ITEM_TEXT_LEN+1],tabTitle[MAX_ITEM_TEXT_LEN+1];
@@ -1911,7 +1908,7 @@ RC ANALYSE_AlignReference(ENGINE_CONTEXT *pEngineContext,int refFlag,void *respo
 
         // Pointers initializations
 
-        Spectre=Feno->SrefEtalon;
+        const double * const Spectre=Feno->SrefEtalon;
 
         Feno->Decomp=1;
         Feno->amfFlag=0;
@@ -1930,8 +1927,8 @@ RC ANALYSE_AlignReference(ENGINE_CONTEXT *pEngineContext,int refFlag,void *respo
                                       NULL,                        // number of iterations in Curfit
                                       (double)1.,(double)1.))>=THREAD_EVENT_STOP))
           {
-          	rc=ERROR_SetLast("ANALYSE_AlignReference",ERROR_TYPE_WARNING,ERROR_ID_REF_ALIGNMENT,Feno->windowName);
-           goto EndAlignReference;
+            rc=ERROR_SetLast("ANALYSE_AlignReference",ERROR_TYPE_WARNING,ERROR_ID_REF_ALIGNMENT,Feno->windowName);
+            goto EndAlignReference;
           }
 
         for (j=0,lambda0=Lambda[(SvdPDeb+SvdPFin)/2];j<NDET;j++) // This is used only for spectra display
@@ -2097,7 +2094,7 @@ RC AnalyseSaveResiduals(char *fileName,ENGINE_CONTEXT *pEngineContext)
 // Function : Cross sections and spectrum alignment using spline fitting functions and new Yfit computation
 // --------------------------------------------------------------------------------------------------------
 
-RC ANALYSE_Function( double *spectrum_orig, double *reference, double *SigmaY, double *Yfit, int Npts,
+RC ANALYSE_Function( double * const spectrum_orig, double * const reference, double *SigmaY, double *Yfit, int Npts,
                      double *fitParamsC, double *fitParamsF,INDEX indexFenoColumn)
 {
   // Declarations
@@ -2328,26 +2325,21 @@ RC ANALYSE_Function( double *spectrum_orig, double *reference, double *SigmaY, d
             }
            else if (i==Feno->indexResol)
             {
-            	double resolX,resolDelta,resolCoeff;
+              double resolX,resolDelta,resolCoeff;
 
-            	resolDelta=0.05;                                                   // small increment to calculate the derivative
-            	resolCoeff=Feno->resolFwhm/resolDelta;
-            	resolX=resolDelta*sqrt((double)1.+2.*resolCoeff);
-
-             for( int k=1, l=max(iterator_start(&my_iterator, global_doas_spectrum),1); (l != ITERATOR_FINISHED) && !rc; k++,l=iterator_next(&my_iterator))
-              if (!(rc=XSCONV_TypeGauss(ANALYSE_splineX,reference,SplineRef,ANALYSE_splineX[l],ANALYSE_splineX[l]-ANALYSE_splineX[l-1],&pTabCross->vector[l],resolX,(double)0.,SLIT_TYPE_GAUSS, NDET)))
-               A[indexSvdA][k]=pTabCross->vector[l]=(reference[l]!=0)?resolCoeff*(pTabCross->vector[l]/reference[l]-1):(double)0.;
-
- //            for( int k=1, l=max(iterator_start(&my_iterator, global_doas_spectrum),1); (l != ITERATOR_FINISHED) && !rc; k++,l=iterator_next(&my_iterator))
- //             if (!(rc=XSCONV_TypeGauss(ANALYSE_splineX,reference,SplineRef,ANALYSE_splineX[l],ANALYSE_splineX[l]-ANALYSE_splineX[l-1],&pTabCross->vector[l],0.05,(double)0.,SLIT_TYPE_GAUSS, NDET)))
- //              A[indexSvdA][k]=pTabCross->vector[l]=(reference[l]!=0)?pTabCross->vector[l]/reference[l]-1:(double)0.; // the resol cross section has to be around 0 and not 1
+              resolDelta=0.05;                                                   // small increment to calculate the derivative
+              resolCoeff=Feno->resolFwhm/resolDelta;
+              resolX=resolDelta*sqrt((double)1.+2.*resolCoeff);
+              
+              for( int k=1, l=max(iterator_start(&my_iterator, global_doas_spectrum),1); (l != ITERATOR_FINISHED) && !rc; k++,l=iterator_next(&my_iterator))
+                if (!(rc=XSCONV_TypeGauss(ANALYSE_splineX,reference,SplineRef,ANALYSE_splineX[l],ANALYSE_splineX[l]-ANALYSE_splineX[l-1],&pTabCross->vector[l],resolX,(double)0.,SLIT_TYPE_GAUSS, NDET)))
+                  A[indexSvdA][k]=pTabCross->vector[l]=(reference[l]!=0)?resolCoeff*(pTabCross->vector[l]/reference[l]-1):(double)0.;
             }
           }
 
          // Fill SVD matrix with polynomial components
 
-         else if (WorkSpace[pTabCross->Comp].type==WRK_SYMBOL_CONTINUOUS)
-          {
+         else if (WorkSpace[pTabCross->Comp].type==WRK_SYMBOL_CONTINUOUS) {
            if ((strlen(WorkSpace[pTabCross->Comp].symbolName)==2) && (WorkSpace[pTabCross->Comp].symbolName[0]=='x'))
             {
              polyOrder=WorkSpace[pTabCross->Comp].symbolName[1]-'0';
@@ -2361,34 +2353,50 @@ RC ANALYSE_Function( double *spectrum_orig, double *reference, double *SigmaY, d
            else
             polyOrder=ITEM_NONE;
 
-           if (polyFlag || polyOrder)
-            {
-             doas_iterator my_iterator;
-             if (!polyOrder)
-              {
-               for( int k=1,l=iterator_start(&my_iterator, global_doas_spectrum); l != ITERATOR_FINISHED; k++,l=iterator_next(&my_iterator))
-                A[indexSvdA][k]=pTabCross->vector[l];
-              }
-             else if (polyFlag>=0)                             // in order to have geophysical values of the polynomial in output,
-              {
-               for( int k=1,l=iterator_start(&my_iterator, global_doas_spectrum); l != ITERATOR_FINISHED; k++,l=iterator_next(&my_iterator))
-                A[indexSvdA][k]=pTabCross->vector[l]=A[indexSvdA-1][k]*(ANALYSE_splineX[l]-lambda0);
-              }
-            }
-           else if (Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVD)               // linear offset, SVD method -> normalized w.r.t. the spectrum
-            {
-             for( int k=1,l=iterator_start(&my_iterator, global_doas_spectrum); l != ITERATOR_FINISHED; k++,l=iterator_next(&my_iterator)) {
-              A[indexSvdA][k]= pTabCross->vector[l] = (fabs(spec_nolog[k-1])> (double)1.e-6)
-                ? -Feno->xmean/spec_nolog[k-1]
-                : 0.;
-             }
-            }
-           else                                                                 // linear offset, Marquadt+SVD method -> normalized w.r.t. the reference
-            {
+           if (polyFlag && polyOrder == 0 ) {
              for( int k=1,l=iterator_start(&my_iterator, global_doas_spectrum); l != ITERATOR_FINISHED; k++,l=iterator_next(&my_iterator))
-              A[indexSvdA][k]=pTabCross->vector[l]=(fabs(reference[l])>(double)1.e-6)?(double)Feno->xmean/reference[l] :(double)0.;
-            }
-          }
+               A[indexSvdA][k]=pTabCross->vector[l];
+           } 
+           else if (polyOrder > 0) {
+             // in order to have geophysical values of the polynomial in output,
+             for( int k=1,l=iterator_start(&my_iterator, global_doas_spectrum); l != ITERATOR_FINISHED; k++,l=iterator_next(&my_iterator))
+               A[indexSvdA][k]=pTabCross->vector[l]=A[indexSvdA-1][k]*(ANALYSE_splineX[l]-lambda0);
+           }
+           else if (Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVD) { // SVD method, polyOrder == 0, polyFlag == 0 -> linear offset, order 0
+             switch (Feno->linear_offset_mode) {
+             case LINEAR_OFFSET_RAD: // normalized w.r.t. the spectrum
+               for( int k=1,l=iterator_start(&my_iterator, global_doas_spectrum); l != ITERATOR_FINISHED; k++,l=iterator_next(&my_iterator)) {
+                 A[indexSvdA][k]= pTabCross->vector[l] = (fabs(spec_nolog[k-1])> 1.e-6)
+                   ? -Feno->xmean/spec_nolog[k-1]
+                   : 0.;
+               }
+               break;
+             case LINEAR_OFFSET_REF: {
+               // offset normalized w.r.t. the reference. We want to
+               // use "ref1" if available, the irradiance (from "ref1" or embedded in L1
+               // file) for satellites, or the automatic reference spectrum
+
+               // if "SrefEtalon" is available, it contains
+               // user-chosen ref1, ref2, or the satellite irradiance. Otherwise, use current reference
+               const double * const offset_ref = Feno->useEtalon ? Feno->SrefEtalon : reference;
+               for( int k=1,l=iterator_start(&my_iterator, global_doas_spectrum); l != ITERATOR_FINISHED; k++,l=iterator_next(&my_iterator)) {
+                 A[indexSvdA][k]=pTabCross->vector[l]= (fabs(offset_ref[l])> 1.e-6)
+                   ? Feno->xmean/offset_ref[l]
+                   : 0.;
+               }
+             }
+               break;
+             default:
+               // we should have either linear_offset_rad or linear_offset_ref
+               assert(false);
+               break;
+             }
+           } else { // linear offset, Marquadt+SVD method -> normalized w.r.t. the reference
+
+             for( int k=1,l=iterator_start(&my_iterator, global_doas_spectrum); l != ITERATOR_FINISHED; k++,l=iterator_next(&my_iterator))
+               A[indexSvdA][k]=pTabCross->vector[l]=(fabs(reference[l])>(double)1.e-6)?(double)Feno->xmean/reference[l] :(double)0.;
+           }
+         }
 
          // Fill SVD matrix with cross sections
 
@@ -2540,8 +2548,9 @@ RC ANALYSE_Function( double *spectrum_orig, double *reference, double *SigmaY, d
           ((rc=SVD_Dcmp(A,Npts,NewDimC /* don't take fixed concentrations into account */ ,W,V,SigmaSqr,covar))!=ERROR_ID_NO))
        goto EndFunction;
 
-      if (FAST && (SigmaY==NULL) && (!Feno->offlFlag || (Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVDMARQUARDT)))
-       Feno->Decomp=0;
+      if (FAST && (SigmaY==NULL) && ( (Feno->linear_offset_mode != LINEAR_OFFSET_RAD) || (Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVDMARQUARDT))) {
+        Feno->Decomp=0;
+      }
      }
 
     // =========
@@ -3412,7 +3421,7 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
           if (Feno->amfFlag ||
               ((Feno->useKurucz==ANLYS_KURUCZ_REF_AND_SPEC) && Feno->xsToConvolute) ||
-              (Feno->offlFlag && (Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVD)))   // fit a linear offset using the inverse of the spectrum
+              ( (Feno->linear_offset_mode == LINEAR_OFFSET_RAD) && (Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVD)))   // fit a linear offset using the inverse of the spectrum
 
            Feno->Decomp=1;
 
@@ -4587,32 +4596,43 @@ RC ANALYSE_LoadLinear(ANALYSE_LINEAR_PARAMETERS *linearList,int nLinear,INDEX in
   pTabFeno=&TabFeno[indexFenoColumn][NFeno];
   rc=ERROR_ID_NO;
 
+  bool have_linear_offset_rad = false;
+  bool have_linear_offset_ref = false;
+
   // Browse lines
 
-  for (indexItem=0;(indexItem<nLinear) && !rc;indexItem++)
-   {
+  for (indexItem=0;(indexItem<nLinear) && !rc;indexItem++) {
     pList=&linearList[indexItem];
 
-    if (!strcasecmp(pList->symbolName,"Polynomial (x)"))
-     polyFlag=1;
-    // Not used anymore else if (!strcasecmp(pList->symbolName,"Polynomial (1/x)"))
-    // Not used anymore  polyFlag=-1;
-    else
-     polyFlag=0;
-
+    polyFlag=0;
     polyOrder=pList->polyOrder;
     baseOrder=pList->baseOrder;
 
-    if (!polyFlag && (polyOrder>=0))
-     pTabFeno->offlFlag++;
+    if (polyOrder < 0) {
+      // if polyorder is "none", do nothing for this linear component
+      continue;
+    }
 
-    for (indexOrder=0;indexOrder<=polyOrder;indexOrder++)
-     {
+    if (!strcasecmp(pList->symbolName,"Polynomial (x)")) {
+      polyFlag=1;
+    } else if (!strcasecmp(pList->symbolName, "Offset (rad)") ) {
+      pTabFeno->linear_offset_mode = LINEAR_OFFSET_RAD;
+      have_linear_offset_rad = true;
+    } else if (!strcasecmp(pList->symbolName, "Offset (ref)") ) {
+      pTabFeno->linear_offset_mode = LINEAR_OFFSET_REF;
+      have_linear_offset_ref = true;
+    }
+
+    if (have_linear_offset_ref && have_linear_offset_rad) {
+      // only include one kind of linear offset in the fit.  Choosing both is an error:
+      return ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_OPTIONS,"Can't include multiple types of linear offset in fit",pTabFeno->windowName);
+    }
+
+    for (indexOrder=0;indexOrder<=polyOrder;indexOrder++) {
       // Set symbol name
 
       if (polyFlag!=0)
        sprintf(buttonText,"x%d",indexOrder);
-       // 1/x not used anymore sprintf(buttonText,(polyFlag==1)?"x%d":"1/x%d",indexOrder);
       else
        sprintf(buttonText,"offl%d",indexOrder);
 
@@ -4645,8 +4665,8 @@ RC ANALYSE_LoadLinear(ANALYSE_LINEAR_PARAMETERS *linearList,int nLinear,INDEX in
         pTabCross=&pTabFeno->TabCross[pTabFeno->NTabCross];
         pResults=&pTabFeno->TabCrossResults[pTabFeno->NTabCross];
 
-        if ((pTabCross->vector=(double *)MEMORY_AllocDVector("ANALYSE_LoadLinear ","vector",0,NDET-1))==NULL)
-         rc=ERROR_ID_ALLOC;
+        if ((pTabCross->vector=(double *)MEMORY_AllocDVector(__func__,"vector",0,NDET-1))==NULL)
+          rc=ERROR_ID_ALLOC;
 
         else
          {
@@ -4695,7 +4715,6 @@ RC ANALYSE_LoadLinear(ANALYSE_LINEAR_PARAMETERS *linearList,int nLinear,INDEX in
    }
 
   // Return
-
   return rc;
 }
 
@@ -5154,7 +5173,7 @@ RC ANALYSE_LoadNonLinear(ENGINE_CONTEXT *pEngineContext,ANALYSE_NON_LINEAR_PARAM
 
             if (((pTabFeno->indexOffsetConst==pTabFeno->NTabCross) ||
                  (pTabFeno->indexOffsetOrder1==pTabFeno->NTabCross) ||
-                 (pTabFeno->indexOffsetOrder2==pTabFeno->NTabCross)) && pTabFeno->offlFlag &&
+                 (pTabFeno->indexOffsetOrder2==pTabFeno->NTabCross)) && (pTabFeno->linear_offset_mode != NO_LINEAR_OFFSET) &&
                 ((pTabCross->FitParam!=ITEM_NONE) || (fabs(pTabCross->InitConc)>(double)1.e-6)))
 
              rc=ERROR_SetLast("ANALYSE_LoadNonLinear",ERROR_TYPE_FATAL,ERROR_ID_OPTIONS,"Offset (linear <-> non linear fit)",pTabFeno->windowName);
@@ -5169,7 +5188,6 @@ RC ANALYSE_LoadNonLinear(ENGINE_CONTEXT *pEngineContext,ANALYSE_NON_LINEAR_PARAM
  EndLoadPredefined :
 
   // Return
-
   return rc;
 }
 
@@ -5426,8 +5444,6 @@ RC ANALYSE_LoadRef(ENGINE_CONTEXT *pEngineContext,INDEX indexFenoColumn)
 
    rc=ERROR_ID_ALLOC;
 
-  // Load reference spectra  ---> to check !!! seems never to pass there  (!strrchr(pTabFeno->ref1,PATH_SEP) maybe a problem)
-
   else if (((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC) ||
             (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC_STD)) &&
            (strlen(pTabFeno->ref1) && !strrchr(pTabFeno->ref1,PATH_SEP)))
@@ -5471,6 +5487,7 @@ RC ANALYSE_LoadRef(ENGINE_CONTEXT *pEngineContext,INDEX indexFenoColumn)
 
     memcpy(lambdaRef,lambdaRefEtalon,sizeof(double)*NDET);
     memcpy(Sref,SrefEtalon,sizeof(double)*NDET);
+    
 
     if (!rc &&
         (pTabFeno->useKurucz!=ANLYS_KURUCZ_SPEC) &&
