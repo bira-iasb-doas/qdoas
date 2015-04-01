@@ -174,6 +174,9 @@ RESOURCES = ../resources/qdoas.qrc
 
 target.path = $${INSTALL_PREFIX}/bin
 doc.path    = $${INSTALL_PREFIX}/doc/qdoas
+linux_package {
+    doc.path = $${INSTALL_PREFIX}/doc
+}
 
 doc.files = ./Help ../../Doc/QDOAS_ReleaseNotes.doc ../../LICENSE
 

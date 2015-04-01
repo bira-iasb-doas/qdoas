@@ -51,17 +51,15 @@ void CHelpSystem::showHelpTopic(const QString &chapter, const QString &key)
 {
   QString relPath = "/" + chapter + "/" + key + ".html";
 
-  // If we have the right path in the preferences, that is the first choice
-  QString helpFile = CPreferences::instance()->directoryName("Help", ".")
-    + relPath;
-
-  // check for "QDOAS_HELP_DIR" environment variable, which is set if we are
-  // running the linux package.
-  if (!QFile::exists(helpFile)) {
-    const char *helpDir = getenv("QDOAS_HELP_DIR");
-    if (helpDir != NULL) {
-      helpFile = QDir(helpDir).absolutePath() + relPath;
-    }
+  QString helpFile;
+  const char *helpDir = getenv("QDOAS_HELP_DIR");
+  if (helpDir != NULL) {
+    // check for "QDOAS_HELP_DIR" environment variable, which is set if we are
+    // running the linux package.
+    helpFile = QDir(helpDir).absolutePath() + relPath;
+  } else {
+    // If we have the right path in the preferences use that
+    helpFile = CPreferences::instance()->directoryName("Help", ".") + helpFile;
   }
 
 #if defined(QDOAS_HELP_PATH)
