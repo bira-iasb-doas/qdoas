@@ -3,7 +3,7 @@
 #----------------------------------------------
 
 QWT_LINKAGE     = qwtdll        # qwtstatic or qwtdll
-CODE_GENERATION = debug       # debug or release
+CODE_GENERATION = release       # debug or release
 
 QMAKE_CFLAGS += -std=gnu99 -Wall -Wextra -pedantic \
           -Wformat=2 -Wunused -Wno-unused-parameter -Wuninitialized \
@@ -18,16 +18,20 @@ DEPENDPATH += ../common ../engine ../mediator
 #----------------------------------------------
 
 unix {
-  INSTALL_PREFIX = /bira-iasb/projects/DOAS/Programmes/QDOAS-linux
+  INSTALL_PREFIX = /home/username
 
   INCLUDEPATH += $$INSTALL_PREFIX/include
-#  INCLUDEPATH += $$INSTALL_PREFIX/include/hdf4
-  QMAKE_RPATHDIR += /usr/local/hdf5-1.8.10-64/lib64
-  QMAKE_RPATHDIR += /usr/local/hdf-4.2.8-64/lib64
+  INCLUDEPATH += $$INSTALL_PREFIX/include/hdf4
   INCLUDEPATH += $$INSTALL_PREFIX/include/qwt
-  QMAKE_RPATHDIR += $$INSTALL_PREFIX/lib
-  QMAKE_RPATHLIBDIR += $$INSTALL_PREFIX/lib
-  QMAKE_LIBDIR += $$INSTALL_PREFIX/lib /usr/local/lib64
+  QMAKE_LIBDIR += $$INSTALL_PREFIX/lib
+}
+
+bira {
+  INSTALL_PREFIX = /bira-iasb/projects/DOAS/Programmes/QDOAS-linux
+  QMAKE_LFLAGS_RPATH += $$INSTALL_PREFIX/lib
+  QMAKE_LFLAGS_RPATH += /usr/local/hdf5-1.8.10-64/lib64
+  QMAKE_LFLAGS_RPATH += /usr/local/hdf-4.2.8-64/lib64
+  QMAKE_LIBDIR += /usr/local/lib64
 }
 
 # portable executable for linux using Linux Standard Base (LSB)
@@ -39,15 +43,24 @@ unix {
 # lsbcc and lsbc++ must be on the PATH, and you must use the version
 # of qmake installed with the static Qt libraries
 linux_package {
-  QMAKE_CXX = lsbc++
-  QMAKE_CC = lsbcc
+  QMAKE_CXX = g++
+  QMAKE_CC = gcc
   # clear RPATH so we can distribute our own libQt*.so's
-  QMAKE_RPATH =
-  INSTALL_PREFIX = /home/thomasd/Code/LSB
-  INCLUDEPATH += $$INSTALL_PREFIX/include
-  INCLUDEPATH += $$INSTALL_PREFIX/include/hdf4
-  INCLUDEPATH += $$INSTALL_PREFIX/include/qwt
-  QMAKE_LIBDIR += $$INSTALL_PREFIX/lib
+  QMAKE_LFLAGS_RPATH =
+
+  # install prefix is set so we can "make install" to copy executables
+  # and html documentation to the folder containing the package
+  #
+  # for package distribution:
+  # cd /home/thomasd/Code/Qdoas-package/src/Qdoas/linux_package \
+  #    && tar --exclude-vcs --exclude=.directory --exclude-backups \
+  #    -czf ../qdoas_linux_x64.tar.gz .
+  INSTALL_PREFIX = /home/thomasd/Code/Qdoas-package/src/Qdoas/linux_package
+  PREFIX = /home/thomasd/Code/Qdoas-package
+  INCLUDEPATH += $$PREFIX/include
+  INCLUDEPATH += $$PREFIX/include/hdf4
+  INCLUDEPATH += $$PREFIX/include/qwt
+  QMAKE_LIBDIR += $$PREFIX/lib
 }
 
 # linux -> windows cross-compilation using MXE
