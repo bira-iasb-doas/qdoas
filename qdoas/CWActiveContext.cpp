@@ -443,11 +443,11 @@ void CWActiveContext::slotPlotPages(const QList< RefCountConstPtr<CPlotPageData>
   // adjust the number of tabs
   int nPages = pageList.count();
   int index = m_graphTab->count();  
-   while (index > nPages)
-      m_graphTab->removeTab(--index); 
+  while (index > nPages)
+    m_graphTab->removeTab(--index); 
 
   while (pageList.count() > index)
-      index = m_graphTab->addTab(QString()) + 1;
+    index = m_graphTab->addTab(QString()) + 1;
       
   // build a list of pages that are to be retained (those in pageList that are 'empty')
   // and reset the tabs...

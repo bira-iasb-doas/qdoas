@@ -37,30 +37,19 @@
 //
 //  MODULE DESCRIPTION
 //
-//  Functions of this module perform the ASCII operations (reading of spectra
-//  files in ASCII format, export of spectra from a given file format to ASCII).
+//  Functions to read spectra from ASCII files.
 //
 //  ----------------------------------------------------------------------------
 //
 //  FUNCTIONS
 //
-//  =======================
-//  ASCII EXPORT DIALOG BOX
-//  =======================
-//
-//  AsciiDlgInit - initialization of the 'export dialog box;
-//  AsciiSet - retrieve the selected options from the dialog box;
-//  ASCII_WndProc - dispatch messages from the 'Export ASCII' dialog box;
-//
 //  ===============
 //  FILE PROCESSING
 //  ===============
 //
-//  ASCII_SaveSpectra - MENU_CONTEXT_SAVE_ASCII message processing;
 //  AsciiSkip - skip a given number of records in ASCII files;
 //  ASCII_Set - set file pointers for ASCII files and get the number of records;
 //  ASCII_Read - read a record from the ASCII file;
-//  ASCII_ResetOptions - reset ASCII export options.
 //
 //  ----------------------------------------------------------------------------
 
@@ -74,7 +63,11 @@
 // CONSTANT DEFINITION
 // ===================
 
-#define MAX_LINE_LENGTH 40000
+// format strings for fscanf
+#define NEXT_DOUBLE "%lf%*[^0-9.\n-]"
+#define NEXT_FLOAT "%f%*[^0-9.\n-]"
+#define NEXT_DATE "%d/%d/%d%*[^\n0-9.-]"
+#define COMMENT_LINE " %1[*;]%*[^\n]"
 
 // ================
 // GLOBAL VARIABLES
@@ -94,6 +87,18 @@ MATRIX_OBJECT asciiMatrix;
 // FILE PROCESSING
 // ===============
 
+
+// Helper function to check if the next character in a file is '\n' or EOF
+static inline bool line_ends(FILE *fp) {
+  int next = fgetc(fp);
+  if (next == '\n' || next == EOF) {
+    return true;
+  } else {
+    ungetc(next, fp);
+    return false;
+  }
+}
+
 // -----------------------------------------------------------------------------
 // FUNCTION        AsciiSkip
 // -----------------------------------------------------------------------------
@@ -112,8 +117,6 @@ MATRIX_OBJECT asciiMatrix;
 RC AsciiSkip(ENGINE_CONTEXT *pEngineContext,FILE *specFp,int nSkip)
  {
   // Declarations
-
-  char *lineRecord,line[MAX_ITEM_TEXT_LEN+1];                                  // read the lines from the ASCII file
   int itemCount,recordCount,maxCount;                                           // counters
   PRJCT_INSTRUMENTAL *pInstr;                                                   // pointer to the instrumental part of the pEngineContext structure
   RC rc;                                                                        // return code
@@ -122,7 +125,6 @@ RC AsciiSkip(ENGINE_CONTEXT *pEngineContext,FILE *specFp,int nSkip)
 
   pInstr=&pEngineContext->project.instrumental;
   maxCount=NDET+pInstr->ascii.szaSaveFlag+pInstr->ascii.azimSaveFlag+pInstr->ascii.elevSaveFlag+pInstr->ascii.timeSaveFlag+pInstr->ascii.dateSaveFlag;
-  lineRecord=NULL;
   rc=ERROR_ID_NO;
 
   // Buffer allocation
@@ -139,40 +141,29 @@ RC AsciiSkip(ENGINE_CONTEXT *pEngineContext,FILE *specFp,int nSkip)
     recordCount=0;
     itemCount=0;
 
-    // Each line of the file is a spectrum record
-
-    if (pInstr->ascii.format==PRJCT_INSTR_ASCII_FORMAT_LINE)
-     {
-      if ((lineRecord=(char *)MEMORY_AllocBuffer("AsciiSkip","lineRecord",1,MAX_LINE_LENGTH,0,MEMORY_TYPE_STRING))==NULL)
-       rc=ERROR_ID_ALLOC;
-      else
-       while ((recordCount<nSkip) && fgets(lineRecord,MAX_LINE_LENGTH,specFp))  // browse lines of the file
-        if ((strchr(lineRecord,';')==NULL) && (strchr(lineRecord,'*')==NULL))   // do not take comment lines into account
-         recordCount++;
-     }
-
-    // Spectra records are saved in successive columns
-
-    else
-
-     while ((recordCount<nSkip) && fgets(line,MAX_ITEM_TEXT_LEN,specFp))
-
-      if ((strchr(line,';')==NULL) && (strchr(line,'*')==NULL) && (++itemCount==maxCount))
-       {
-        recordCount++;
-        itemCount=0;
-       }
-
+    char c;
+    int n_scan = 0;
+    while (recordCount<nSkip 
+           && (n_scan = fscanf(specFp, " %1[^*;\n]%*[^\n]", &c) ) != EOF ) {
+      if (n_scan == 1) {
+        // no * or ; at start -> line is (part of) a record
+        if (pInstr->ascii.format==PRJCT_INSTR_ASCII_FORMAT_LINE) {
+          // Each line of the file is a spectrum record
+          ++recordCount;
+        } else {
+          // Spectra records are saved in successive columns
+          ++itemCount;
+          if (itemCount == maxCount) {
+            ++recordCount;
+            itemCount=0;
+          }
+        }
+      }
+    }
     // Reach the end of the file
-
     if (recordCount<nSkip)
-     rc=ERROR_ID_FILE_END;
+      rc=ERROR_ID_FILE_END;
    }
-
-  // Release the allocated buffer
-
-  if (lineRecord!=NULL)
-   MEMORY_ReleaseBuffer("AsciiSkip","lineRecord",lineRecord);
 
   // Return
 
@@ -197,13 +188,9 @@ RC AsciiSkip(ENGINE_CONTEXT *pEngineContext,FILE *specFp,int nSkip)
 RC ASCII_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
  {
   // Declarations
-
-  char *lineRecord,line[MAX_ITEM_TEXT_LEN+1],                                   // get lines from the ASCII file
-        oldColumn[MAX_ITEM_TEXT_LEN+1],nextColumn[MAX_ITEM_TEXT_LEN+1];         // columns decomposition
   int itemCount,startCount,maxCount;                                            // counters
   PRJCT_INSTRUMENTAL *pInstr;                                                   // pointer to the instrumental part of the pEngineContext structure
   ANALYSIS_REF *pRef;
-  int lineLength;
   double tempValue;
   int nc;
   RC rc;                                                                        // return code
@@ -214,7 +201,6 @@ RC ASCII_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
   asciiLastDataSet=ITEM_NONE;                                                   // data set (for column/matrix modes)
 
   pEngineContext->recordNumber=0;
-  lineRecord=NULL;
   pInstr=&pEngineContext->project.instrumental;
   pRef=&pEngineContext->analysisRef;
   startCount=pInstr->ascii.szaSaveFlag+pInstr->ascii.azimSaveFlag+pInstr->ascii.elevSaveFlag+pInstr->ascii.timeSaveFlag+pInstr->ascii.dateSaveFlag;
@@ -222,96 +208,81 @@ RC ASCII_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
   rc=ERROR_ID_NO;
   nc=0;
 
-  ASCII_Free("ASCII_Set");
+  ASCII_Free(__func__);
 
   // Check the file pointer
 
   if (specFp==NULL)
-   rc=ERROR_SetLast("ASCII_Set",ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pEngineContext->fileInfo.fileName);
-  else
-   {
-   	// Get the number of records in the file
-
+    rc=ERROR_SetLast(__func__,ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pEngineContext->fileInfo.fileName);
+  else {
+    // Get the number of records in the file
     fseek(specFp,0L,SEEK_SET);
     itemCount=0;
+    
+    char c;
+    int n_scan = 0;
+    while ( (n_scan = fscanf(specFp, " %1[^*;\n]", &c) ) != EOF) {
+      if (n_scan == 0) {
+        // commment, ignore and scan ahead until end of line
+        fscanf(specFp, "%*[^\n]");
+        continue;
+      }
+      // no * or ; at start -> line is (part of) a record
+      ungetc(c, specFp); // put back character we read
+      if (pInstr->ascii.format==PRJCT_INSTR_ASCII_FORMAT_LINE) {
+        // Each line of the file is a spectrum record
+        pEngineContext->recordNumber++;
+        fscanf(specFp, "%*[^\n]");
+      } else {
+        // Spectra records are saved in successive columns
 
-    // Each line of the file is a spectrum record
-
-    if (pInstr->ascii.format==PRJCT_INSTR_ASCII_FORMAT_LINE)
-     {
-      if ((lineRecord=(char *)MEMORY_AllocBuffer("ASCII_Set","lineRecord",1,MAX_LINE_LENGTH,0,MEMORY_TYPE_STRING))==NULL)
-       rc=ERROR_ID_ALLOC;
-      else
-       while (fgets(lineRecord,MAX_LINE_LENGTH,specFp))
-        if ((strchr(lineRecord,';')==NULL) && (strchr(lineRecord,'*')==NULL))
-         pEngineContext->recordNumber++;
-     }
-    else
-
-     // Spectra records are saved in successive columns
-
-     while (fgets(line,MAX_ITEM_TEXT_LEN,specFp) && !rc)
-
-      if ((strchr(line,';')==NULL) && (strchr(line,'*')==NULL))
-       {
-       	// Get the number of columns
-
-       	if ((itemCount==startCount) && !pEngineContext->recordNumber)
-       	 {
-         	strcpy(oldColumn,line);
-
-          for (nc=0;strlen(oldColumn);nc++)
-           {
-            lineLength=strlen(oldColumn);
-            oldColumn[lineLength++]='\n';
-            oldColumn[lineLength]=0;
-
-            memset(nextColumn,0,MAX_ITEM_TEXT_LEN);
-            sscanf(oldColumn,"%lf %[^'\n']",(double *)&tempValue,nextColumn);
-            strcpy(oldColumn,nextColumn);
-           }
-
+        // Get the number of columns
+        if ((itemCount==startCount) && !pEngineContext->recordNumber) {
+          bool eol = false;
+          while (!eol) {
+            n_scan = fscanf(specFp, NEXT_DOUBLE, &tempValue);
+            if (n_scan == 1) {
+              ++nc;
+              eol = line_ends(specFp);
+            } else {
+              return ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_FILE_BAD_FORMAT,pEngineContext->fileInfo.fileName);
+            }
+          }
           if (nc>pInstr->ascii.lambdaSaveFlag+1)
-           rc=MATRIX_Allocate(&asciiMatrix,NDET+startCount,nc,0,0,0,"ASCII_Set");
-         }
-
+            rc=MATRIX_Allocate(&asciiMatrix,NDET+startCount,nc,0,0,0,__func__);
+        } else {
+          // scan ahead until end of line
+          fscanf(specFp, "%*[^\n]");          
+        }
         ++itemCount;
-
+        
         // Matrix mode
-
-        if (itemCount==maxCount)
-         {
-          if (nc>pInstr->ascii.lambdaSaveFlag+1)
-           pEngineContext->recordNumber+=nc-pInstr->ascii.lambdaSaveFlag;
-          else
-           pEngineContext->recordNumber++;
-
+        if (itemCount==maxCount) {
           itemCount=0;
-         }
-       }
-   }
-
-  // Release the allocated buffer
-
-  if (lineRecord!=NULL)
-   MEMORY_ReleaseBuffer("ASCII_Set","lineRecord",lineRecord);
+          if (nc>pInstr->ascii.lambdaSaveFlag+1)
+            pEngineContext->recordNumber+=nc-pInstr->ascii.lambdaSaveFlag;
+          else
+            pEngineContext->recordNumber++;
+        }
+      } 
+    }
+  }
 
   // Release scanref buffer
 
   if (pRef->scanRefIndexes!=NULL)
-   MEMORY_ReleaseBuffer("SetCCD_EEV","scanRefIndexes",pRef->scanRefIndexes);
+    MEMORY_ReleaseBuffer(__func__,"scanRefIndexes",pRef->scanRefIndexes);
   pRef->scanRefIndexes=NULL;
 
   if (pEngineContext->analysisRef.refScan && pEngineContext->recordNumber &&
-    ((pRef->scanRefIndexes=(int *)MEMORY_AllocBuffer("EngineSetFile","scanRefIndexes",pEngineContext->recordNumber,sizeof(int),0,MEMORY_TYPE_INT))==NULL))
+      (pRef->scanRefIndexes=(int *)MEMORY_AllocBuffer(__func__,"scanRefIndexes",pEngineContext->recordNumber,sizeof(int),0,MEMORY_TYPE_INT) )==NULL )
 
-   rc=ERROR_ID_ALLOC;
+    rc=ERROR_ID_ALLOC;
 
   else
-   pEngineContext->fileInfo.nScanRef=0;
-
+    pEngineContext->fileInfo.nScanRef=0;
+  
   // Return
-
   return rc;
  }
 
@@ -343,15 +314,12 @@ RC ASCII_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int local
 
   RECORD_INFO *pRecordInfo;                                                         // pointer to the record part of the engine context
   PRJCT_INSTRUMENTAL *pInstr;                                                   // pointer to the instrumental part of the pEngineContext structure
-  char *lineRecord,*pRecord,line[MAX_ITEM_TEXT_LEN+1],                          // get lines from the ASCII file
-        oldColumn[MAX_ITEM_TEXT_LEN+1],nextColumn[MAX_ITEM_TEXT_LEN+1];
   double *spectrum,*lambda,                                                     // the spectrum and the wavelength calibration to read
           tmLocal;                                                              // the measurement time in seconds
   int lambdaFlag,zmFlag,timeFlag,dateSaveFlag,azimFlag,elevFlag,                // flags to select items to read according to the format options
       day,mon,year;                                                             // decomposition of the measurement date
   INDEX i,indexColumn;                                                          // browse items to read
   int ndataSet,ndataRecord;                                                     // number of data set to bypass (column + matrix modes)
-  int lineLength;
   double tempValue;
   int dateCount;
   RC rc;                                                                        // return code
@@ -369,7 +337,6 @@ RC ASCII_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int local
   timeFlag=pInstr->ascii.timeSaveFlag;
   dateSaveFlag=pInstr->ascii.dateSaveFlag;
   lambdaFlag=pInstr->ascii.lambdaSaveFlag;
-  lineRecord=NULL;
   rc=ERROR_ID_NO;
 
   day=mon=year=ITEM_NONE;
@@ -386,294 +353,235 @@ RC ASCII_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int local
   // Set file pointers
 
   if (specFp==NULL)
-   rc=ERROR_SetLast("ASCII_Read",ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pEngineContext->fileInfo.fileName);
+    rc=ERROR_SetLast(__func__,ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pEngineContext->fileInfo.fileName);
   else if ((recordNo<=0) || (recordNo>pEngineContext->recordNumber))
-   rc=ERROR_ID_FILE_END;
+    rc=ERROR_ID_FILE_END;
   else if (((ndataSet!=ITEM_NONE) && (ndataSet==asciiLastDataSet)) || (recordNo-asciiLastRecord==1) || !(rc=AsciiSkip(pEngineContext,specFp,(ndataSet!=ITEM_NONE)?ndataSet:recordNo-1)))
    {
     asciiLastRecord=recordNo;
+
 
     // ------------------------------------------
     // EACH LINE OF THE FILE IS A SPECTRUM RECORD
     // ------------------------------------------
 
-    if (pInstr->ascii.format==PRJCT_INSTR_ASCII_FORMAT_LINE)
-     {
-     	// Allocate buffer for int32_t lines
+    int n_scan = 0;
+    char c;
+    if (pInstr->ascii.format==PRJCT_INSTR_ASCII_FORMAT_LINE) {
 
-      if ((lineRecord=(char *)MEMORY_AllocBuffer("ASCII_Read ","lineRecord",1,MAX_LINE_LENGTH,0,MEMORY_TYPE_STRING))==NULL)
-       rc=ERROR_ID_ALLOC;
+      // skip comment lines:
+      while (fscanf(specFp, COMMENT_LINE, &c) == 1);
 
-      else
-       {
-       	do
-       	 {
-          if (!fgets(lineRecord,MAX_LINE_LENGTH,specFp))
-           rc=ERROR_SetLast("ASCII_Read",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pEngineContext->fileInfo.fileName);
-       	 }
-       	while (!rc && ((strchr(lineRecord,';')!=NULL) || (strchr(lineRecord,'*')!=NULL)));
+      // Read the solar zenith angle
+      if (zmFlag) {
+        n_scan = fscanf(specFp,NEXT_DOUBLE,&pRecordInfo->Zm);
+        if (n_scan != 1)
+          return ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_FILE_BAD_FORMAT,pEngineContext->fileInfo.fileName);
+      }
+      
+      if (azimFlag) {
+        if (line_ends(specFp) )
+          return ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_FILE_BAD_FORMAT,pEngineContext->fileInfo.fileName);
 
-       	if (!rc)
-       	 {
-          pRecord=lineRecord;
+        n_scan = fscanf(specFp,NEXT_FLOAT,&pRecordInfo->azimuthViewAngle);
+        if (n_scan != 1) 
+          return ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_FILE_BAD_FORMAT,pEngineContext->fileInfo.fileName);
+      }
+      
+      if (elevFlag) {
+        if (line_ends(specFp) )
+          return ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_FILE_BAD_FORMAT,pEngineContext->fileInfo.fileName);
 
-	  // locate the start of first value
-          for (;(pRecord!=NULL) && (*pRecord==' ');pRecord++);
-	         if (pRecord == NULL)
-	          rc = ERROR_ID_FILE_END;
+        n_scan = fscanf(specFp,NEXT_FLOAT,&pRecordInfo->elevationViewAngle);
+        if (n_scan != 1)
+          return ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_FILE_BAD_FORMAT,pEngineContext->fileInfo.fileName);
+      }
+      
+      // Read the measurement date
+      if (dateSaveFlag) {
+        if (line_ends(specFp) )
+          return ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_FILE_BAD_FORMAT,pEngineContext->fileInfo.fileName);
 
-          // Read the solar zenith angle
+        n_scan = fscanf(specFp,NEXT_DATE,&day,&mon,&year);
+        if (n_scan != 3)
+          return ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_FILE_BAD_FORMAT,pEngineContext->fileInfo.fileName);
+      }
+          
+      // Read the measurement time
+      if (timeFlag) {
+        if (line_ends(specFp) )
+          return ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_FILE_BAD_FORMAT,pEngineContext->fileInfo.fileName);
 
-          if (!rc && zmFlag)
-           {
-            sscanf(pRecord,"%lf",&pRecordInfo->Zm);
-            for (pRecord=strchr(pRecord,' ');(pRecord!=NULL) && (*pRecord==' ');pRecord++);
-	           if (pRecord == NULL)
-	            rc = ERROR_ID_FILE_END;
-           }
-
-          if (!rc && azimFlag)
-           {
-            sscanf(pRecord,"%f",&pRecordInfo->azimuthViewAngle);
-            for (pRecord=strchr(pRecord,' ');(pRecord!=NULL) && (*pRecord==' ');pRecord++);
-	           if (pRecord == NULL)
-	            rc = ERROR_ID_FILE_END;
-           }
-
-          if (!rc && elevFlag)
-           {
-            sscanf(pRecord,"%f",&pRecordInfo->elevationViewAngle);
-            for (pRecord=strchr(pRecord,' ');(pRecord!=NULL) && (*pRecord==' ');pRecord++);
-	           if (pRecord == NULL)
-	            rc = ERROR_ID_FILE_END;
-           }
-
-          // Read the measurement date
-
-          if (!rc && dateSaveFlag)
-           {
-            sscanf(pRecord,"%d/%d/%d",&day,&mon,&year);
-            for (pRecord=strchr(pRecord,' ');(pRecord!=NULL) && (*pRecord==' ');pRecord++);
-	           if (pRecord == NULL)
-	            rc = ERROR_ID_FILE_END;
-           }
-
-          // Read the measurement time
-
-          if (!rc && timeFlag)
-           {
-            sscanf(pRecord,"%lf",&pRecordInfo->TimeDec);
-            for (pRecord=strchr(pRecord,' ');(pRecord!=NULL) && (*pRecord==' ');pRecord++);
-	    if (pRecord == NULL) rc = ERROR_ID_FILE_END;
-           }
-
-          // Read the spectrum
-
-	  if (!rc)
-	   {
-	    for (i=0;(i<NDET) && (pRecord != NULL); ++i)
-	     {
-              sscanf(pRecord,"%lf",&spectrum[i]);
-	      for (pRecord=strchr(pRecord,' ');(pRecord!=NULL) && (*pRecord==' ');pRecord++);
-	     }
-	    // i is NDET if all data in the line was read
-	    if (i != NDET)                            // Caro 08/11/2007 maybe there are extra characters after the spectrum so do not check the pRecord here
-	      rc = ERROR_ID_FILE_END;
-	   }
-	 }
-       }
-     }
+        n_scan = fscanf(specFp,NEXT_DOUBLE,&pRecordInfo->TimeDec);
+        if (n_scan != 1)
+          return ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_FILE_BAD_FORMAT,pEngineContext->fileInfo.fileName);
+      }
+      
+      // Read the spectrum
+      for (i=0; i<NDET; ++i) {
+        if (line_ends(specFp) )
+          return ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_FILE_BAD_FORMAT,pEngineContext->fileInfo.fileName);
+        
+        n_scan = fscanf(specFp,NEXT_DOUBLE,&spectrum[i]);
+        if (n_scan != 1)
+          return ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_FILE_BAD_FORMAT,pEngineContext->fileInfo.fileName);
+      }
+    }
 
     // -----------------------------------------------
     // SPECTRA RECORDS ARE SAVED IN SUCCESSIVE COLUMNS
     // -----------------------------------------------
 
-    else if ((asciiMatrix.nl>=NDET) && (asciiMatrix.nc>lambdaFlag))
-     {
-     	if (ndataSet!=asciiLastDataSet)
-     	 {
-     	 	asciiLastDataSet=ndataSet;
-
-     	 	for (i=0;i<asciiMatrix.nl;i++)
-     	 	 {
-     	 	  while (fgets(line,MAX_ITEM_TEXT_LEN,specFp) && ((strchr(line,';')!=NULL) || (strchr(line,'*')!=NULL)));
-
+    else if ((asciiMatrix.nl>=NDET) && (asciiMatrix.nc>lambdaFlag)) {
+      if (ndataSet!=asciiLastDataSet) {
+        asciiLastDataSet=ndataSet;
+        
+        for (i=0;i<asciiMatrix.nl;i++) {
+          while (fscanf(specFp, COMMENT_LINE, &c) == 1);
+          
           // Matrix mode
-
-          strcpy(oldColumn,line);
-
-          for (indexColumn=0;strlen(oldColumn) && (indexColumn<asciiMatrix.nc);indexColumn++)
-           {
-            lineLength=strlen(oldColumn);
-            oldColumn[lineLength++]='\n';
-            oldColumn[lineLength]=0;
-
-            memset(nextColumn,0,MAX_ITEM_TEXT_LEN);
-            if (i==dateCount)
-             {
-              sscanf(oldColumn,"%d/%d/%d %[^'\n']",(int *)&day,(int *)&mon,(int *)&year,nextColumn);
+          for (indexColumn=0; indexColumn <asciiMatrix.nc; indexColumn++) {
+            if (line_ends(specFp) )
+              return ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_FILE_BAD_FORMAT,pEngineContext->fileInfo.fileName);
+            
+            if (i==dateCount) {
+              n_scan = fscanf(specFp,NEXT_DATE, &day, &mon, &year);
+              if (n_scan != 3)
+                return ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_FILE_BAD_FORMAT,pEngineContext->fileInfo.fileName); 
               tempValue=(double)day*1.e6+mon*1e4+year;
-             }
-            else
-             sscanf(oldColumn,"%lf %[^'\n']",(double *)&tempValue,nextColumn);
-
+            } else {
+              n_scan = fscanf(specFp,NEXT_DOUBLE, &tempValue);
+              if (n_scan != 1)
+                return ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_FILE_BAD_FORMAT,pEngineContext->fileInfo.fileName);
+            }
             asciiMatrix.matrix[indexColumn][i]=tempValue;
-            strcpy(oldColumn,nextColumn);
-           }
-         }
-     	 }
-
-     	count=0;
-     	if (zmFlag)
-     	 pRecordInfo->Zm=asciiMatrix.matrix[ndataRecord][count++];
-     	if (azimFlag)
-     	 pRecordInfo->azimuthViewAngle=asciiMatrix.matrix[ndataRecord][count++];
-     	if (elevFlag)
-     	 pRecordInfo->elevationViewAngle=asciiMatrix.matrix[ndataRecord][count++];
-      if (dateSaveFlag)
-       {
-       	tempValue=asciiMatrix.matrix[ndataRecord][count++];
-
+          }
+          // a new line should start here now
+          if (!line_ends(specFp) )
+            return ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_FILE_BAD_FORMAT,pEngineContext->fileInfo.fileName);
+        }
+      }
+      
+      count=0;
+      if (zmFlag)
+        pRecordInfo->Zm=asciiMatrix.matrix[ndataRecord][count++];
+      if (azimFlag)
+        pRecordInfo->azimuthViewAngle=asciiMatrix.matrix[ndataRecord][count++];
+      if (elevFlag)
+        pRecordInfo->elevationViewAngle=asciiMatrix.matrix[ndataRecord][count++];
+      if (dateSaveFlag) {
+        tempValue=asciiMatrix.matrix[ndataRecord][count++];
+        
        	day=(int)floor(tempValue*1e-6);
        	mon=(int)floor((tempValue-day*1.e6)*1e-4);
        	year=(int)(tempValue-day*1.e6-mon*1.e4);
-       }
-     	if (timeFlag)
-     	 pRecordInfo->TimeDec=asciiMatrix.matrix[ndataRecord][count++];
-
+      }
+      if (timeFlag)
+        pRecordInfo->TimeDec=asciiMatrix.matrix[ndataRecord][count++];
+      
       if (lambdaFlag)
-       memcpy(lambda,asciiMatrix.matrix[0]+count,sizeof(double)*NDET);
-
+        memcpy(lambda,asciiMatrix.matrix[0]+count,sizeof(double)*NDET);
+      
       memcpy(spectrum,asciiMatrix.matrix[ndataRecord]+count,sizeof(double)*NDET);
-     }
-    else
-
-     {
+    } else {
       // Read the solar zenith angle
 
-      if (zmFlag)
-       {
-       	while (fgets(line,MAX_ITEM_TEXT_LEN,specFp) && ((strchr(line,';')!=NULL) || (strchr(line,'*')!=NULL)));
-       	if (sscanf(line,"%lf",&pRecordInfo->Zm)!=1)
-         rc = ERROR_ID_FILE_END;
-       }
-
-      if (azimFlag)
-       {
-       	while (fgets(line,MAX_ITEM_TEXT_LEN,specFp) && ((strchr(line,';')!=NULL) || (strchr(line,'*')!=NULL)));
-       	if (sscanf(line,"%f",&pRecordInfo->azimuthViewAngle)!=1)
-         rc = ERROR_ID_FILE_END;
-       }
-
-      if (elevFlag)
-       {
-       	while (fgets(line,MAX_ITEM_TEXT_LEN,specFp) && ((strchr(line,';')!=NULL) || (strchr(line,'*')!=NULL)));
-       	if (sscanf(line,"%f",&pRecordInfo->elevationViewAngle)!=1)
-         rc = ERROR_ID_FILE_END;
-       }
-
+      if (zmFlag) {
+        while (fscanf(specFp, COMMENT_LINE, &c) == 1);
+        if (fscanf(specFp,NEXT_DOUBLE,&pRecordInfo->Zm) !=1
+            || !line_ends(specFp) )
+          return ERROR_ID_FILE_END;
+      }
+      
+      if (azimFlag) {
+        while (fscanf(specFp, COMMENT_LINE, &c) == 1);
+        if (fscanf(specFp,NEXT_FLOAT,&pRecordInfo->azimuthViewAngle)!=1
+            || !line_ends(specFp) )
+          return ERROR_ID_FILE_END;
+      }
+      
+      if (elevFlag) {
+        while (fscanf(specFp, COMMENT_LINE, &c) == 1);
+        if (fscanf(specFp,NEXT_FLOAT,&pRecordInfo->elevationViewAngle)!=1
+            || !line_ends(specFp) )
+          return ERROR_ID_FILE_END;
+      }
+      
       // Read the measurement date
-
-      if (!rc && dateSaveFlag)
-       {
-       	int k;
-        while (fgets(line,MAX_ITEM_TEXT_LEN,specFp) && ((strchr(line,';')!=NULL) || (strchr(line,'*')!=NULL)));
-        if ((k=sscanf(line,"%d/%d/%d",&day,&mon,&year)) != 3) rc = ERROR_ID_FILE_END;
-       }
+      if (dateSaveFlag) {
+        while (fscanf(specFp, COMMENT_LINE, &c) == 1);
+        if (fscanf(specFp,NEXT_DATE,&day,&mon,&year) != 3
+            || !line_ends(specFp) )
+          return ERROR_ID_FILE_END;
+      }
 
       // Read the measurement time
-
-      if (!rc && timeFlag)
-       {
-        while (fgets(line,MAX_ITEM_TEXT_LEN,specFp) && ((strchr(line,';')!=NULL) || (strchr(line,'*')!=NULL)));
-         if (sscanf(line,"%lf",&pRecordInfo->TimeDec) != 1) rc = ERROR_ID_FILE_END;
-       }
-
+      if (timeFlag) {
+        while (fscanf(specFp, COMMENT_LINE, &c) == 1);
+        if (fscanf(specFp,NEXT_DOUBLE,&pRecordInfo->TimeDec) != 1
+            || !line_ends(specFp) )
+          return ERROR_ID_FILE_END;
+      }
+      
       // Read the spectrum and if selected, the wavelength calibration
-      if (!rc)
-       {
-       	if (lambdaFlag) // wavelength and spectrum
-        	{
-       	  for (i=0;(i<NDET) && !rc; )
-       	   {
-       	    if (!fgets(line,MAX_ITEM_TEXT_LEN,specFp))
-       	     {
-       	      rc=ERROR_SetLast("ASCII_Read",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pEngineContext->fileInfo.fileName);
-       	     }
-       	    else if ((strchr(line,';')==NULL) && (strchr(line,'*')==NULL))
-       	     {
-       	      if (sscanf(line,"%lf %lf",&lambda[i],&spectrum[i]) != 2) rc = ERROR_ID_FILE_END;
-       	      ++i;
-       	     }
-       	  }
-       	}
-       	else // just spectrum
-        	{
-       	  for (i=0;(i<NDET) && !rc; )
-       	   {
-       	    if (!fgets(line,MAX_ITEM_TEXT_LEN,specFp))
-       	     {
-       	      rc=ERROR_SetLast("ASCII_Read",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pEngineContext->fileInfo.fileName);
-       	     }
-       	    else if ((strchr(line,';')==NULL) && (strchr(line,'*')==NULL))
-       	     {
-       	      if (sscanf(line,"%lf",&spectrum[i]) != 1) rc = ERROR_ID_FILE_END;
-       	      ++i;
-       	     }
-       	   }
-       	 }
-       }
-     }
+      if (lambdaFlag) {
+        // wavelength and spectrum
+        for (i=0; i<NDET;) {
+          if (fscanf(specFp, COMMENT_LINE, &c) == 1)
+            continue;
+          // read two doubles before end of line:
+          if (fscanf(specFp, NEXT_DOUBLE, &lambda[i]) != 1 || line_ends(specFp) )
+            return ERROR_ID_FILE_END;
+          if (fscanf(specFp, NEXT_DOUBLE, &spectrum[i]) != 1 || !line_ends(specFp) )
+            return ERROR_ID_FILE_END;
+          ++i;
+        }
+      } else {
+        // just spectrum
+        for (i=0; i<NDET; ) {
+          if (fscanf(specFp, COMMENT_LINE, &c) == 1)
+            continue;
+          if (fscanf(specFp,NEXT_DOUBLE,&spectrum[i]) != 1
+              || !line_ends(specFp) )
+            return ERROR_ID_FILE_END;
+          ++i;
+        }
+      }
+    }
 
-    if (!rc)
-     {
-      // Get information on the current record
-
-      if (timeFlag)
-       {
-        pRecordInfo->present_time.ti_hour=(unsigned char)pRecordInfo->TimeDec;
-        pRecordInfo->present_time.ti_min=(unsigned char)((pRecordInfo->TimeDec-pRecordInfo->present_time.ti_hour)*60.);
-        pRecordInfo->present_time.ti_sec=(unsigned char)(((pRecordInfo->TimeDec-pRecordInfo->present_time.ti_hour)*60.-pRecordInfo->present_time.ti_min)*60.);
-       }
-
-      if (dateSaveFlag)
-       {
-        pRecordInfo->present_day.da_day=(char)day;
-        pRecordInfo->present_day.da_mon=(char)mon;
-        pRecordInfo->present_day.da_year=(short)year;
-       }
+    // Get information on the current record
+    if (timeFlag) {
+      pRecordInfo->present_time.ti_hour=(unsigned char)pRecordInfo->TimeDec;
+      pRecordInfo->present_time.ti_min=(unsigned char)((pRecordInfo->TimeDec-pRecordInfo->present_time.ti_hour)*60.);
+      pRecordInfo->present_time.ti_sec=(unsigned char)(((pRecordInfo->TimeDec-pRecordInfo->present_time.ti_hour)*60.-pRecordInfo->present_time.ti_min)*60.);
+    }
+        
+    if (dateSaveFlag) {
+      pRecordInfo->present_day.da_day=(char)day;
+      pRecordInfo->present_day.da_mon=(char)mon;
+      pRecordInfo->present_day.da_year=(short)year;
 
       // Daily automatic reference spectrum
-
-      if (!rc && dateSaveFlag)
-       {
-        pRecordInfo->Tm=(double)ZEN_NbSec(&pRecordInfo->present_day,&pRecordInfo->present_time,0);
-
-        tmLocal=pRecordInfo->Tm+THRD_localShift*3600.;
-
-        pRecordInfo->localCalDay=ZEN_FNCaljda(&tmLocal);
-        pRecordInfo->localTimeDec=fmod(pRecordInfo->TimeDec+24.+THRD_localShift,(double)24.);
-       }
-      else
-       pRecordInfo->Tm=(double)0.;
-
-      if ((dateFlag && ((pRecordInfo->localCalDay!=localDay) || (elevFlag && (pRecordInfo->elevationViewAngle<80.)))) ||                                                                                 // reference spectra are zenith only
-          (!dateFlag && pEngineContext->analysisRef.refScan && !pEngineContext->analysisRef.refSza && (pRecordInfo->elevationViewAngle>80.)))    // zenith sky spectra are not analyzed in scan reference selection mode
-       rc=ERROR_ID_FILE_RECORD;
-     }
+      pRecordInfo->Tm=(double)ZEN_NbSec(&pRecordInfo->present_day,&pRecordInfo->present_time,0);
+            
+      tmLocal=pRecordInfo->Tm+THRD_localShift*3600.;
+        
+      pRecordInfo->localCalDay=ZEN_FNCaljda(&tmLocal);
+      pRecordInfo->localTimeDec=fmod(pRecordInfo->TimeDec+24.+THRD_localShift,(double)24.);
+ 
+    } else {
+      pRecordInfo->Tm=(double)0.;
+    }
+        
+    if ((dateFlag && ((pRecordInfo->localCalDay!=localDay) || (elevFlag && (pRecordInfo->elevationViewAngle<80.)))) ||                                                                                 // reference spectra are zenith only
+        (!dateFlag && pEngineContext->analysisRef.refScan && !pEngineContext->analysisRef.refSza && (pRecordInfo->elevationViewAngle>80.)))    // zenith sky spectra are not analyzed in scan reference selection mode
+      return ERROR_ID_FILE_RECORD;
    }
-
-  // Return
-
-
-  if (lineRecord!=NULL)
-   MEMORY_ReleaseBuffer("ASCII_Read","lineRecord",lineRecord);
 
   return rc;
  }
 
-void ASCII_Free(const char *functionStr)
- {
- 	MATRIX_Free(&asciiMatrix,functionStr);
- 	memset(&asciiMatrix,0,sizeof(MATRIX_OBJECT));
- }
+void ASCII_Free(const char *functionStr) {
+  MATRIX_Free(&asciiMatrix,functionStr);
+  memset(&asciiMatrix,0,sizeof(MATRIX_OBJECT));
+}

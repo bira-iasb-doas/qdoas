@@ -21,10 +21,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #ifndef _CHELPSYSTEM_H_GUARD
 #define _CHELPSYSTEM_H_GUARD
 
-#include <QString>
-#include <QWidget>
-
-class CHelpImpl;
+class QString;
 
 class CHelpSystem
 {
