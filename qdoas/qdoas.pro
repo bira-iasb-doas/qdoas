@@ -29,11 +29,12 @@ linux_package {
 }
 
 mxe {
-  LIBS += -Wl,-Bstatic -lcoda -lhdfeos -lmfhdf -ldf -lz -ljpeg -lhe5_hdfeos -lhdf5_hl -lhdf5  -lqwt
+  LIBS += -Wl,-Bstatic -lcoda -lhdfeos -lmfhdf -ldf -lz -ljpeg -lhe5_hdfeos -lhdf5_hl -lhdf5 -lqwt
   LIBS += -lportablexdr
+  CONFIG += windows
 }
 
-win32 {
+caro {
 
   INCLUDEPATH  += ../mediator ../common ../engine $$QWT_INC_PATH $$CODA_INC_PATH $$HDF_INC_PATH $$HDFEOS_INC_PATH
 

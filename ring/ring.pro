@@ -5,6 +5,8 @@
 TEMPLATE = app
 TARGET   = ../../qdoas/release/ring
 
+INCLUDEPATH  += ../mediator ../common ../engine
+
 include( ../config.pri )
 PRE_TARGETDEPS += ../common/libcommon.a ../engine/libengine.a ../mediator/libmediator.a
 
@@ -26,7 +28,6 @@ contains ( HELP_SYSTEM, assistant ) {
 INCLUDEPATH  += $$QWT_INC_PATH
 
 unix {
-  INCLUDEPATH  += ../mediator ../common ../engine
   LIBS += -lqwt
 }
 
@@ -34,8 +35,12 @@ linux_package {
   TARGET = ../../linux_package/bin/ring.bin
 }
 
-win32 {
-  INCLUDEPATH  += ../mediator ../common ../engine
+mxe {
+  LIBS += -Wl,-Bstatic -lqwt
+  CONFIG += windows
+}
+
+caro {
 
   contains( QWT_LINKAGE, qwtstatic ) {
     LIBS        += -L$$QWT_LIB_PATH -l$$QWT_LIB

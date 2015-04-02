@@ -2,7 +2,6 @@
 # General Configuration for ALL applications
 #----------------------------------------------
 
-QWT_LINKAGE     = qwtdll        # qwtstatic or qwtdll
 CODE_GENERATION = release       # debug or release
 
 QMAKE_CFLAGS += -std=gnu99 -Wall -Wextra -pedantic \
@@ -64,13 +63,16 @@ linux_package {
 }
 
 # linux -> windows cross-compilation using MXE
+# run <path-to-mxe-root>/usr/i686-pc-mingw32/qt/bin/qmake all.pro CONFIG+=mxe
 mxe {
-  INSTALL_PREFIX = /home/thomasd/Code/cross
+  # qwt, coda, hdf-eos2 and hdf-eos5 libraries should be installed here:
+  INSTALL_PREFIX = /bira-iasb/projects/DOAS/Programmes/QDOAS-cross
   INCLUDEPATH += $$INSTALL_PREFIX/include
   QMAKE_LIBDIR += $$INSTALL_PREFIX/lib
 }
 
-win32 {
+caro {
+  QWT_LINKAGE     = qwtdll        # qwtstatic or qwtdll
   QWT_INC_PATH    = C:/Qwt-6.1.0/src
   QWT_LIB_PATH    = C:/Qwt-6.1.0/lib
   QWT_LIB         = qwt

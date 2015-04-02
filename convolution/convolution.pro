@@ -8,6 +8,8 @@ TARGET   = ../../qdoas/release/convolution
 include( ../config.pri )
 PRE_TARGETDEPS += ../common/libcommon.a ../engine/libengine.a ../mediator/libmediator.a
 
+INCLUDEPATH  += ../mediator ../common ../engine
+
 CONFIG += qt thread $$CODE_GENERATION
 QT = core gui xml
 
@@ -24,9 +26,7 @@ contains ( HELP_SYSTEM, assistant ) {
 #----------------------------------------------
 
 INCLUDEPATH  += $$QWT_INC_PATH
-
 unix {
-  INCLUDEPATH  += ../mediator ../common ../engine
   LIBS += -L$$INSTALL_PREFIX -lqwt
 }
 
@@ -34,8 +34,12 @@ linux_package {
   TARGET = ../../linux_package/bin/convolution.bin
 }
 
-win32 {
-  INCLUDEPATH  += ../mediator ../common ../engine
+mxe {
+  LIBS += -Wl,-Bstatic -lqwt
+  CONFIG += windows
+}
+
+caro {
 
   contains( QWT_LINKAGE, qwtstatic ) {
     LIBS        += -L$$QWT_LIB_PATH -l$$QWT_LIB

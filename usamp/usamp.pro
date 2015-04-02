@@ -5,6 +5,8 @@
 TEMPLATE = app
 TARGET   = ../../qdoas/release/usamp
 
+INCLUDEPATH  += ../mediator ../common ../engine
+
 include( ../config.pri )
 
 CONFIG += qt thread $$CODE_GENERATION
@@ -26,7 +28,6 @@ contains ( HELP_SYSTEM, assistant ) {
 INCLUDEPATH  += $$QWT_INC_PATH
 
 unix {
-  INCLUDEPATH  += ../mediator ../common ../engine
   LIBS += -lqwt
 }
 
@@ -34,8 +35,12 @@ linux_package {
   TARGET = ../../linux_package/bin/usamp.bin
 }
 
-win32 {
-  INCLUDEPATH  += ../mediator ../common ../engine
+mxe {
+  LIBS += -Wl,-Bstatic -lqwt
+  CONFIG += windows
+}
+
+caro {
 
   contains( QWT_LINKAGE, qwtstatic ) {
     LIBS        += -L$$QWT_LIB_PATH -l$$QWT_LIB
