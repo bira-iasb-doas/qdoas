@@ -66,7 +66,6 @@ CWMain::CWMain(QWidget *parent) :
   QLocale qlocale=QLocale::system();
   qlocale.setNumberOptions(QLocale::OmitGroupSeparator);
   QLocale::setDefault(qlocale);
-
   setlocale(LC_NUMERIC, "C");
 
   // ----------------------------------------------------------------------------

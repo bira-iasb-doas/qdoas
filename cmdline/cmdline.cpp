@@ -102,9 +102,11 @@ int main(int argc, char **argv)
 
 	// to avoid that a thousands comma separator (QT 4.7.3)
 
-	   QLocale qlocale=QLocale::system();
-	   qlocale.setNumberOptions(QLocale::OmitGroupSeparator);
-	   QLocale::setDefault(qlocale);
+  QLocale qlocale=QLocale::system();
+  qlocale.setNumberOptions(QLocale::OmitGroupSeparator);
+  QLocale::setDefault(qlocale);
+
+  setlocale(LC_NUMERIC, "C");
 
 	// ----------------------------------------------------------------------------
 
