@@ -27,6 +27,8 @@ unix {
 
 bira {
   INSTALL_PREFIX = /bira-iasb/projects/DOAS/Programmes/QDOAS-linux
+  INCLUDEPATH += $$INSTALL_PREFIX/include
+  QMAKE_LIBDIR += $$INSTALL_PREFIX/lib
   QMAKE_LFLAGS_RPATH += $$INSTALL_PREFIX/lib
   QMAKE_LFLAGS_RPATH += /usr/local/hdf5-1.8.10-64/lib64
   QMAKE_LFLAGS_RPATH += /usr/local/hdf-4.2.8-64/lib64
