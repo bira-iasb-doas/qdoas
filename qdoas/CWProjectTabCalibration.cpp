@@ -29,6 +29,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "CWProjectTabCalibration.h"
 #include "CPreferences.h"
 #include "CValidator.h"
+#include "PolynomialTab.h"
 
 #include "constants.h"
 
@@ -186,7 +187,7 @@ CWProjectTabCalibration::CWProjectTabCalibration(const mediate_project_calibrati
 
   m_moleculesTab = new CWMoleculesDoasTable("Molecules", 120);
   m_tabs->addTab(m_moleculesTab, "Molecules");
-  m_linearTab = new CWLinearParametersDoasTable("Linear Parameters");
+  m_linearTab = new PolynomialTab;
   m_tabs->addTab(m_linearTab, "Linear Parameters");
   m_sfpTab = new CWSfpParametersDoasTable("SFP Parameters");
   m_tabs->addTab(m_sfpTab, "SFP Parameters");

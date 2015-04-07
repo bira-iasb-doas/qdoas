@@ -32,6 +32,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "CPreferences.h"
 #include "CValidator.h"
 
+#include "PolynomialTab.h"
+
 #include "CHelpSystem.h"
 
 #include "constants.h"
@@ -377,8 +379,8 @@ CWAnalysisWindowPropertyEditor::CWAnalysisWindowPropertyEditor(const QString &pr
 
   m_moleculesTab = new CWMoleculesDoasTable("Molecules", 120);
   m_tabs->addTab(m_moleculesTab, "Molecules");
-  m_linearTab = new CWLinearParametersDoasTable("Linear Parameters");
-  m_tabs->addTab(m_linearTab, "Polynomial");
+  m_linearTab = new PolynomialTab();
+  m_tabs->addTab(m_linearTab, "Polynomials");
   m_nonLinearTab = new CWNonLinearParametersDoasTable("NL Parameters");
   m_tabs->addTab(m_nonLinearTab, "Predefined Parameters");
   m_shiftAndStretchTab = new CWShiftAndStretchDoasTable("Cross sections and spectrum");

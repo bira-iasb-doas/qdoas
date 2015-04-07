@@ -1276,15 +1276,10 @@ void CQdoasConfigWriter::writeLinear(FILE *fp, const struct anlyswin_linear *d)
 	  (d->xFlagFitStore ? sTrue : sFalse),
 	  (d->xFlagErrStore ? sTrue : sFalse));
   writePolyType(fp, "offpoly", d->offsetPolyOrder);
-  writePolyType(fp, "offbase", d->offsetBaseOrder);
-  fprintf(fp, " offfit=\"%s\" offerr=\"%s\"",
+  fprintf(fp, " offfit=\"%s\" offerr=\"%s\" offizero=\"%s\"",
 	  (d->offsetFlagFitStore ? sTrue : sFalse),
-	  (d->offsetFlagErrStore ? sTrue : sFalse));
-  writePolyType(fp, "offI0poly", d->offsetI0PolyOrder);
-  writePolyType(fp, "offI0base", d->offsetI0BaseOrder);
-  fprintf(fp, " offI0fit=\"%s\" offI0err=\"%s\"",
-	  (d->offsetI0FlagFitStore ? sTrue : sFalse),
-	  (d->offsetI0FlagErrStore ? sTrue : sFalse));
+	  (d->offsetFlagErrStore ? sTrue : sFalse),
+          (d->offsetI0 ? sTrue : sFalse) );
   fprintf(fp, " />\n");
 }
 

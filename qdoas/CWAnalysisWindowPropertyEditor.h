@@ -34,6 +34,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "CWorkSpace.h"
 #include "CWAnalysisWindowDoasTables.h"
 
+class PolynomialTab;
+
 class CWAnalysisWindowPropertyEditor : public CWEditor, public CProjectObserver
 {
 Q_OBJECT
@@ -82,7 +84,7 @@ Q_OBJECT
   QTabWidget *m_tabs;
   // specialized DoasTables for each tab ...
   CWMoleculesDoasTable *m_moleculesTab;
-  CWLinearParametersDoasTable *m_linearTab;
+  PolynomialTab *m_linearTab;
   CWNonLinearParametersDoasTable *m_nonLinearTab;
   CWShiftAndStretchDoasTable *m_shiftAndStretchTab;
   CWGapDoasTable *m_gapTab;

@@ -4596,9 +4596,6 @@ RC ANALYSE_LoadLinear(ANALYSE_LINEAR_PARAMETERS *linearList,int nLinear,INDEX in
   pTabFeno=&TabFeno[indexFenoColumn][NFeno];
   rc=ERROR_ID_NO;
 
-  bool have_linear_offset_rad = false;
-  bool have_linear_offset_ref = false;
-
   // Browse lines
 
   for (indexItem=0;(indexItem<nLinear) && !rc;indexItem++) {
@@ -4617,15 +4614,8 @@ RC ANALYSE_LoadLinear(ANALYSE_LINEAR_PARAMETERS *linearList,int nLinear,INDEX in
       polyFlag=1;
     } else if (!strcasecmp(pList->symbolName, "Offset (rad)") ) {
       pTabFeno->linear_offset_mode = LINEAR_OFFSET_RAD;
-      have_linear_offset_rad = true;
     } else if (!strcasecmp(pList->symbolName, "Offset (ref)") ) {
       pTabFeno->linear_offset_mode = LINEAR_OFFSET_REF;
-      have_linear_offset_ref = true;
-    }
-
-    if (have_linear_offset_ref && have_linear_offset_rad) {
-      // only include one kind of linear offset in the fit.  Choosing both is an error:
-      return ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_OPTIONS,"Can't include multiple types of linear offset in fit",pTabFeno->windowName);
     }
 
     for (indexOrder=0;indexOrder<=polyOrder;indexOrder++) {

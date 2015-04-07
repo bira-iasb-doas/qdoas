@@ -115,25 +115,6 @@ Q_OBJECT
 };
 
 //----------------------------------------------------------------------
-// fixed size (3 row x 3 column) table ...
-
-class CWLinearParametersDoasTable : public CDoasTable
-{
- public:
-  CWLinearParametersDoasTable(const QString &label, int headerHeight = 24, QWidget *parent = 0);
-
-  // virtual void cellDataChanged(int row, int column, const QVariant &cellData); // no cell-coupling required
-
-  void populate(const struct anlyswin_linear *data);
-  void apply(struct anlyswin_linear *data) const;
-
- private:
-  static QString mapOrderToComboString(int order);
-  static int mapComboStringToOrder(const QString &str);
-};
-
-
-//----------------------------------------------------------------------
 // fixed size (8 row x 5 column) table ...
 
 class CWNonLinearParametersDoasTable : public CDoasTable

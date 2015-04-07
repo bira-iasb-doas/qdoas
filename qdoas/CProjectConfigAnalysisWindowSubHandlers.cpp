@@ -275,14 +275,10 @@ bool CAnalysisWindowLinearSubHandler::start(const QXmlAttributes &atts)
   m_d->xFlagErrStore = (atts.value("xerr") == "true") ? 1 : 0;
 
   m_d->offsetPolyOrder = CAnalysisWindowSubHandler::mapToPolyType(atts.value("offpoly"));
-  m_d->offsetBaseOrder = CAnalysisWindowSubHandler::mapToPolyType(atts.value("offbase"));
   m_d->offsetFlagFitStore = (atts.value("offfit") == "true") ? 1 : 0;
   m_d->offsetFlagErrStore = (atts.value("offerr") == "true") ? 1 : 0;
 
-  m_d->offsetI0PolyOrder = CAnalysisWindowSubHandler::mapToPolyType(atts.value("offI0poly"));
-  m_d->offsetI0BaseOrder = CAnalysisWindowSubHandler::mapToPolyType(atts.value("offI0base"));
-  m_d->offsetI0FlagFitStore = (atts.value("offI0fit") == "true") ? 1 : 0;
-  m_d->offsetI0FlagErrStore = (atts.value("offI0err") == "true") ? 1 : 0;
+  m_d->offsetI0 = (atts.value("offizero") == "true") ?  1 : 0;
 
   return true;
 }

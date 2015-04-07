@@ -229,14 +229,10 @@ struct anlyswin_linear
     int xFlagErrStore;
 
     int offsetPolyOrder;
-    int offsetBaseOrder;
     int offsetFlagFitStore;
     int offsetFlagErrStore;
 
-    int offsetI0PolyOrder;
-    int offsetI0BaseOrder;
-    int offsetI0FlagFitStore;
-    int offsetI0FlagErrStore;
+    int offsetI0;
   };
 
 // Caro : would be nice to replace struct calibration_sfp with an array of structures of this type

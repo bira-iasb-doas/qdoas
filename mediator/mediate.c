@@ -1333,7 +1333,7 @@ RC mediateRequestSetAnalysisLinear(struct anlyswin_linear *pLinear,INDEX indexFe
  {
    // Declarations
 
-   ANALYSE_LINEAR_PARAMETERS linear[3];
+   ANALYSE_LINEAR_PARAMETERS linear[2];
    RC rc;
 
    // Debug
@@ -1351,25 +1351,16 @@ RC mediateRequestSetAnalysisLinear(struct anlyswin_linear *pLinear,INDEX indexFe
    linear[0].storeFit=pLinear->xFlagFitStore;
    linear[0].storeError=pLinear->xFlagErrStore;
 
-   // Linear offset (1/I)
+   // Linear offset
 
-   strcpy(linear[1].symbolName,"Offset (rad)");
+   strcpy(linear[1].symbolName, pLinear->offsetI0 ? "Offset (rad)" : "Offset(ref)");
 
    linear[1].polyOrder=pLinear->offsetPolyOrder-1;
-   linear[1].baseOrder=pLinear->offsetBaseOrder-1;
+   linear[1].baseOrder= -1;
    linear[1].storeFit=pLinear->offsetFlagFitStore;
    linear[1].storeError=pLinear->offsetFlagErrStore;
 
-   // Linear Offset (1/I0)
-
-   strcpy(linear[2].symbolName,"Offset (ref)");
-
-   linear[2].polyOrder=pLinear->offsetI0PolyOrder-1;
-   linear[2].baseOrder=pLinear->offsetI0BaseOrder-1;
-   linear[2].storeFit=pLinear->offsetI0FlagFitStore;
-   linear[2].storeError=pLinear->offsetI0FlagErrStore;
-
-   rc=ANALYSE_LoadLinear(linear,3,indexFenoColumn);
+   rc=ANALYSE_LoadLinear(linear, 2, indexFenoColumn);
 
    // Debug
 
