@@ -20,7 +20,7 @@ DEFINES += APP_QDOAS
 #----------------------------------------------
 
 unix {
-  LIBS += -lcoda -lhdfeos -lmfhdf -ldf -lGctp -lz -ljpeg -lhe5_hdfeos -lhdf5 -lhdf5_hl -lqwt
+  LIBS += -lcoda -lhdfeos -lmfhdf -ldf -lz -ljpeg -lhe5_hdfeos -lhdf5 -lhdf5_hl -lqwt
 }
 
 linux_package {

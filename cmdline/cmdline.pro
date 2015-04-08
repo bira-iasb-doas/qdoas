@@ -18,7 +18,7 @@ INCLUDEPATH  += ../mediator ../common ../qdoas ../convolution ../usamp ../engine
 #----------------------------------------------
 
 unix {
-  LIBS         += -lcoda -lhdfeos -lmfhdf -ldf -lGctp -lz -ljpeg -lhe5_hdfeos -lhdf5 -lhdf5_hl
+  LIBS         += -lcoda -lhdfeos -lmfhdf -ldf -lz -ljpeg -lhe5_hdfeos -lhdf5 -lhdf5_hl
 }
 
 linux_package {

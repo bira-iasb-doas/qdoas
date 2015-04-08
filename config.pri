@@ -3,6 +3,7 @@
 #----------------------------------------------
 
 CODE_GENERATION = release       # debug or release
+CONFIG += release
 
 QMAKE_CFLAGS += -std=gnu99 -Wall -Wextra -pedantic \
           -Wformat=2 -Wunused -Wno-unused-parameter -Wuninitialized \
@@ -26,13 +27,12 @@ unix {
 }
 
 bira {
-  INSTALL_PREFIX = /bira-iasb/projects/DOAS/Programmes/QDOAS-linux
-  INCLUDEPATH += $$INSTALL_PREFIX/include
+  INSTALL_PREFIX = /bira-iasb/projects/DOAS/Programmes/QDOAS
+  QMAKE_CFLAGS_RELEASE -= -g
+  QMAKE_CXXFLAGS_RELEASE -= -g
   QMAKE_LIBDIR += $$INSTALL_PREFIX/lib
-  QMAKE_LFLAGS_RPATH += $$INSTALL_PREFIX/lib
-  QMAKE_LFLAGS_RPATH += /usr/local/hdf5-1.8.10-64/lib64
-  QMAKE_LFLAGS_RPATH += /usr/local/hdf-4.2.8-64/lib64
-  QMAKE_LIBDIR += /usr/local/lib64
+  INCLUDEPATH += $$INSTALL_PREFIX/include
+  INCLUDEPATH += /usr/local/include64 # for qwt headers
 }
 
 # portable executable for linux using Linux Standard Base (LSB)
@@ -47,7 +47,7 @@ linux_package {
   QMAKE_CXX = g++
   QMAKE_CC = gcc
   # clear RPATH so we can distribute our own libQt*.so's
-  QMAKE_LFLAGS_RPATH =
+  QMAKE_LFLAGS_RPATH =    
 
   # install prefix is set so we can "make install" to copy executables
   # and html documentation to the folder containing the package
