@@ -141,9 +141,10 @@ CWPlot::CWPlot(const RefCountConstPtr<CPlotDataSet> &dataSet,
 
     if (curveData.size() > 0) {
       QwtPlotCurve *curve = new QwtPlotCurve();
+      curve->setRenderHint(QwtPlotItem::RenderAntialiased);
 
       // the data is guaranteed to be valid for the life of this object
-      curve->setRawSamples(curveData.xRawData(), curveData.yRawData(), curveData.size());     // QWT 5.0.2 (setRawData) -> QWT 6.0.0
+      curve->setRawSamples(curveData.xRawData(), curveData.yRawData(), curveData.size());
 
       // configure curve's pen color based on index
       curve->setPen(m_plotProperties.pen(( curveData.curveNumber() %4) + 1));
@@ -152,9 +153,9 @@ CWPlot::CWPlot(const RefCountConstPtr<CPlotDataSet> &dataSet,
 
 	curve->setStyle(QwtPlotCurve::NoCurve);
 
-	QwtSymbol *sym = new QwtSymbol(QwtSymbol::Ellipse);                       // QWT 5.0.2 -> QWT 6.0.0
- sym->setSize(4);
-	curve->setSymbol(sym);                                     // QWT 5.0.2 -> QWT 6.0.0
+	QwtSymbol *sym = new QwtSymbol(QwtSymbol::Ellipse);
+        sym->setSize(4);
+	curve->setSymbol(sym);
       }
 
       curve->attach(this);
@@ -267,10 +268,9 @@ void CWPlot::contextMenuEvent(QContextMenuEvent *e)
 
 void CWPlot::slotOverlay()
 {             
-	 if (m_type==PLOTPAGE_DATASET)
-	  {
+  if (m_type==PLOTPAGE_DATASET) {
     CPreferences *pref = CPreferences::instance();
-  
+    
     QString dirName = pref->directoryName("ASCII_Plot");
   
     QString filename = QFileDialog::getOpenFileName(this, "Overlay Plot(s)", dirName, "*.asc");
@@ -284,50 +284,48 @@ void CWPlot::slotOverlay()
       if (fp != NULL) {
         char buffer[32];
         int nCurves, nPoints, i, j;
-  
+        
         int curveCount = m_dataSet->count(); // number of 'original' curves ...
   
         double *xData = NULL;
         double *yData = NULL;
-  
+
         // skip the header
         fgets(buffer, sizeof(buffer), fp);
-  
+
         if (fscanf(fp, "%d", &nCurves) == 1 && nCurves > 0) {
+          i = 0;
+          while (!failed && i < nCurves) {
+            if (fscanf(fp, "%d", &nPoints) == 1) {
+              xData = new double[nPoints];
+              yData = new double[nPoints];
+              j = 0;
+              while (j<nPoints && fscanf(fp, "%lf %lf", (xData+j), (yData+j)) == 2)
+                ++j;
+              if (j == nPoints) {
+                QwtPlotCurve *curve = new QwtPlotCurve();
+                curve->setRenderHint(QwtPlotItem::RenderAntialiased);
+                curve->setSamples(xData, yData, nPoints);
+                // configure curve's pen color based on index
+                curve->setPen(m_plotProperties.pen((curveCount % 4) + 1));
+                curve->attach(this);
+                ++curveCount;
+              } else {
+                failed = true;
+              }
   
-  	i = 0;
-  	while (!failed && i < nCurves) {
+              delete [] xData;
+              delete [] yData;
+              xData = yData = NULL;
+            }
+            else
+              failed  = true;
   
-  	  if (fscanf(fp, "%d", &nPoints) == 1) {
-  	    xData = new double[nPoints];
-  	    yData = new double[nPoints];
-  
-  	    j = 0;
-  	    while (j<nPoints && fscanf(fp, "%lf %lf", (xData+j), (yData+j)) == 2)
-  	      ++j;
-  	    if (j == nPoints) {
-  	      QwtPlotCurve *curve = new QwtPlotCurve();
-  	      curve->setSamples(xData, yData, nPoints);                                // QWT 5.0.2 -> QWT 6.0.0
-  	      // configure curve's pen color based on index
-  	      curve->setPen(m_plotProperties.pen((curveCount % 4) + 1));
-  	      curve->attach(this);
-  	      ++curveCount;
-  	    }
-  	    else
-  	      failed = true;
-  
-  	    delete [] xData;
-  	    delete [] yData;
-  	    xData = yData = NULL;
-  	  }
-  	  else
-  	    failed  = true;
-  
-  	  ++i;
-  	}
+            ++i;
+          }
         }
         else
-  	failed = true;
+          failed = true;
   
         fclose(fp);
       }
@@ -347,10 +345,8 @@ void CWPlot::slotOverlay()
   }
 }
 
-void CWPlot::slotSaveAs()
- {                       
- 	if (m_type==PLOTPAGE_DATASET)
- 	 {
+void CWPlot::slotSaveAs() {                       
+  if (m_type==PLOTPAGE_DATASET) {
     CPreferences *pref = CPreferences::instance();
     QString dirName = pref->directoryName("ASCII_Plot")+"/undefined.asc";
     QString filename = QFileDialog::getSaveFileName(this, "Save Plot", dirName, "All files (*);;Ascii file (*.asc)");
@@ -445,25 +441,19 @@ void CWPlot::slotPrint()
 
 void CWPlot::slotExportAsImage()
 {
-    QStringList filter;
-    QString fileName;
+  QStringList filter;
+  QString fileName;
 
-    fileName="";
-    filter += "PNG Documents (*.png)";
+  fileName="";
+  filter += "PNG Documents (*.png)";
 
-    fileName = QFileDialog::getSaveFileName(
-        this, "Export File Name", fileName,
-        filter.join(";;"), NULL, 0);
+  fileName = QFileDialog::getSaveFileName(this, "Export File Name", fileName,
+                                          filter.join(";;"), NULL, 0);
 
-    if ( !fileName.isEmpty() )
-    {
-      QwtPlotRenderer renderer;
-
-      // flags to make the document look like the widget
-      renderer.setDiscardFlag(QwtPlotRenderer::DiscardBackground, false);
-
-      renderer.renderDocument(this, fileName, QSizeF(300, 200), 85);
-    }
+  if (!fileName.isEmpty() ) {
+    QwtPlotRenderer renderer;
+    renderer.renderDocument(this, fileName, QSizeF(100, 75), 300);
+  }
 }
 
 void CWPlot::slotToggleInteraction()
@@ -479,7 +469,7 @@ void CWPlot::slotToggleInteraction()
     m_zoomer = new QwtPlotZoomer(c);
     c->setCursor(Qt::PointingHandCursor); // change the cursor to indicate that zooming is active
     // contrasting colour ...
-    m_zoomer->setRubberBandPen(QPen((canvasBackground().color().value() < 128) ? Qt::white : Qt::black));   // QWT 5.0.2 -> QWT 6.0.0
+    m_zoomer->setRubberBandPen(QPen((canvasBackground().color().value() < 128) ? Qt::white : Qt::black));
   }
 }
 
@@ -633,7 +623,6 @@ void CWPlotPage::slotPrintAllPlots()
     if (m_plots.size() == 1) {
       // only one plot ...
       tmp.adjust(cPlotBorder, cPlotBorder, -cPlotBorder, -cPlotBorder);
-      // QWT 5.0.2 -> QWT 6.0.0 : SEE LATER m_plots.front()->print(&p, tmp);
     }
     else {
 
@@ -714,7 +703,6 @@ void CWPlotPage::slotExportAsImageAllPlots()
 
       renderer.render(*it,&p,tmp);
 
-      // QWT 5.0.2 -> QWT 6.0.0 : SEE LATER (*it)->print(&p, tmp);
       if (++col == columns) {
         col = 0;
         ++row;
