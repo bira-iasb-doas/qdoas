@@ -13,6 +13,10 @@ QMAKE_CFLAGS += -std=gnu99 -Wall -Wextra -pedantic \
 LIBS += -L../mediator -lmediator -L../engine -lengine -L../common -lcommon
 DEPENDPATH += ../common ../engine ../mediator
 
+QDOAS_VERSION=2.109
+
+DEFINES += QDOAS_VERSION=\"\\\"$${QDOAS_VERSION}\\\"\" QDOAS_DATE="\"\\\"9 April 2015\\\"\""
+
 #----------------------------------------------
 # Platform dependency ...
 #----------------------------------------------

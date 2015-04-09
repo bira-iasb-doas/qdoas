@@ -21,6 +21,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #ifndef _QDOASVERSION_H_GUARD
 #define _QDOASVERSION_H_GUARD
 
-const char cQdoasVersionString[] = "Qdoas version 2.109 - 1 April 2015";
+const char cQdoasVersionString[] = "Qdoas version " QDOAS_VERSION " - " QDOAS_DATE;
 
 #endif

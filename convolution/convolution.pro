@@ -90,4 +90,7 @@ RESOURCES = ../resources/convolution.qrc
 #----------------------------------------------
 
 target.path = $${INSTALL_PREFIX}/bin
+bira {
+  target.path = $${INSTALL_PREFIX}/bin_$${QDOAS_VERSION}
+}
 INSTALLS += target

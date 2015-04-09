@@ -181,6 +181,11 @@ linux_package {
     doc.path = $${INSTALL_PREFIX}/doc
 }
 
+bira {
+  target.path = $${INSTALL_PREFIX}/bin_$${QDOAS_VERSION}
+  doc.path = $${INSTALL_PREFIX}/doc_$${QDOAS_VERSION}
+}
+
 doc.files = ./Help ../../Doc/QDOAS_ReleaseNotes.doc ../../LICENSE
 
 INSTALLS += target doc
