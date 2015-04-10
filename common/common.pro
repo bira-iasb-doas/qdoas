@@ -28,15 +28,16 @@ SOURCES       = CConfigHandler.cpp \
 
 HEADERS += *.h
 
-INCLUDEPATH  += ../mediator ../common ../engine
-
 unix {
   DEFINES += QDOAS_HELP_PATH=\"\\\"$${INSTALL_PREFIX}/doc/qdoas/Help\"\\\"
 }
 
+windows {
+  TARGET = ../common
+}
+
 caro {
   INCLUDEPATH  +=  $$QWT_INC_PATH $$CODA_INC_PATH $$HDF_INC_PATH $$HDFEOS_INC_PATH
-  TARGET   = ../common
 
   contains( QWT_LINKAGE, qwtstatic ) {
     LIBS        += -L$$QWT_LIB_PATH -l$$QWT_LIB

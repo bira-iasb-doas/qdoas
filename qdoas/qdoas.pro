@@ -178,7 +178,7 @@ RESOURCES = ../resources/qdoas.qrc
 target.path = $${INSTALL_PREFIX}/bin
 doc.path    = $${INSTALL_PREFIX}/doc/qdoas
 linux_package {
-    doc.path = $${INSTALL_PREFIX}/doc
+  doc.path = $${INSTALL_PREFIX}/doc
 }
 
 bira {
@@ -186,6 +186,10 @@ bira {
   doc.path = $${INSTALL_PREFIX}/doc_$${QDOAS_VERSION}
 }
 
-doc.files = ./Help ../../Doc/QDOAS_ReleaseNotes.doc ../../LICENSE
+doc.files = ../../Doc/QDOAS_ReleaseNotes.doc ../../LICENSE ./Help
+
+mxe {
+  doc.files -= ./Help
+}
 
 INSTALLS += target doc

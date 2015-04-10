@@ -9,9 +9,12 @@ HEADERS += *.h
 
 INCLUDEPATH  += ../engine ../common
 
-win32 {
-  INCLUDEPATH  += ../mediator $$QWT_INC_PATH $$CODA_INC_PATH $$HDF_INC_PATH $$HDFEOS_INC_PATH
+windows {
   TARGET   = ../mediator
+}
+
+caro {
+  INCLUDEPATH  += ../mediator $$QWT_INC_PATH $$CODA_INC_PATH $$HDF_INC_PATH $$HDFEOS_INC_PATH
 
   contains( QWT_LINKAGE, qwtstatic ) {
     LIBS        += -L$$QWT_LIB_PATH -l$$QWT_LIB
