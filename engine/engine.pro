@@ -14,6 +14,10 @@ windows {
   TARGET   = ../engine
 }
 
+mxe {
+  DEFINES += "H4_BUILT_AS_STATIC_LIB=1"
+}
+
 caro {
   INCLUDEPATH  += ../engine $$QWT_INC_PATH $$CODA_INC_PATH $$HDF_INC_PATH $$HDFEOS_INC_PATH
 
