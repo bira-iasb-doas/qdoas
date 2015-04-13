@@ -28,7 +28,7 @@ class CWEditor : public QFrame
 Q_OBJECT
  public:
   CWEditor(QWidget *parent = 0) : QFrame(parent), m_captionStr("No Title"), m_lastNotification(false) {
-    m_contextTag.setNum(reinterpret_cast<unsigned long>(this)); // unique by default
+    m_contextTag.sprintf("%p", this); // unique by default
   };
 
   const QString& editCaption(void) const { return m_captionStr; };
