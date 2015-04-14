@@ -12,7 +12,11 @@ QMAKE_CFLAGS += -std=gnu99 -Wall -Wextra -pedantic \
 
 QDOAS_VERSION=2.109
 
-DEFINES += QDOAS_VERSION=\"\\\"$${QDOAS_VERSION}\\\"\" QDOAS_DATE="\"\\\"9 April 2015\\\"\""
+win64 {
+  QDOAS_VERSION = "$${QDOAS_VERSION}_x86_64"
+}
+
+DEFINES += QDOAS_VERSION="\"\\\"$${QDOAS_VERSION}\\\"\"" QDOAS_DATE="\"\\\"9 April 2015\\\"\""
 
 LIBS += -L../mediator -lmediator -L../engine -lengine -L../common -lcommon
 DEPENDPATH += ../common ../engine ../mediator
@@ -75,8 +79,15 @@ mxe {
   # cross-compiled qwt, coda, hdf-eos2 and hdf-eos5 libraries should
   # be installed here:
   INSTALL_PREFIX = /bira-iasb/projects/DOAS/Programmes/QDOAS-cross
-  INCLUDEPATH += $$INSTALL_PREFIX/include
-  QMAKE_LIBDIR += $$INSTALL_PREFIX/lib
+
+  # use "CONFIG+=mxe win64" to build a 64 bit windows version
+  win64 {
+    INCLUDEPATH += $$INSTALL_PREFIX/include64
+    QMAKE_LIBDIR += $$INSTALL_PREFIX/lib64
+  } else {
+    INCLUDEPATH += $$INSTALL_PREFIX/include32
+    QMAKE_LIBDIR += $$INSTALL_PREFIX/lib32
+  }
 }
 
 caro {
