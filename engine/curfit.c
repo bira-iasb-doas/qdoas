@@ -71,6 +71,8 @@
 
 #include "doas.h"
 
+#define CURFIT_MAX_ITER 100
+
 // -----------------------------------------------------------------------------
 // FUNCTION      Fchisq
 // -----------------------------------------------------------------------------
@@ -804,9 +806,9 @@ RC Curfit(int     mode,                                                         
        *pLambda*=(double)10.;
       niter++;
 
-      if (niter>100)
+      if (niter> CURFIT_MAX_ITER)
        {
-       	rc=ERROR_SetLast("Curfit",ERROR_TYPE_WARNING,ERROR_ID_CONVERGENCE,100);
+       	rc=ERROR_SetLast("Curfit",ERROR_TYPE_WARNING,ERROR_ID_CONVERGENCE, CURFIT_MAX_ITER);
         goto EndCurfit;
        }
      }

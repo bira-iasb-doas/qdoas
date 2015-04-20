@@ -527,7 +527,7 @@ int mediateRequestCreateEngineContext(void **engineContext, void *responseHandle
  {
    ENGINE_CONTEXT *pEngineContext;
 
-   if ((pEngineContext=*engineContext=(void *)EngineCreateContext())==NULL)
+   if ( (pEngineContext=(ENGINE_CONTEXT *)(*engineContext=EngineCreateContext() ) ) ==NULL )
     ERROR_DisplayMessage(responseHandle);
 
    return (pEngineContext!=NULL)?0:-1;
@@ -543,7 +543,7 @@ int mediateRequestCreateEngineContext(void **engineContext, void *responseHandle
 
 int mediateRequestDestroyEngineContext(void *engineContext, void *responseHandle)
  {
-   return (!EngineDestroyContext(engineContext))?0:-1;
+   return (!EngineDestroyContext((ENGINE_CONTEXT *)engineContext))?0:-1;
  }
 
 // ==============================================================
