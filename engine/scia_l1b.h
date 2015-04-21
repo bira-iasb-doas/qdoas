@@ -70,8 +70,7 @@ enum Cluster_Data_Type_enum {
 
 /* MDS type  */
 
-#pragma pack(1)
-
+#pragma pack(push,1)
 
 typedef struct SPH_SCI_NL__1P {
         /*  SPH descriptor */
@@ -1062,6 +1061,7 @@ typedef struct Sun_Reference {
     float dopp_shift_500nm;
 } Sun_Reference ;
 
+#pragma pack(pop)
 
 /* Reading routines */
 void Auxiliary_Packets_getbin (FILE* unit, Auxiliary_Packets *var);

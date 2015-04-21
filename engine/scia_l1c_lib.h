@@ -48,7 +48,7 @@ typedef enum solar_type {
   SUN_D9=10,
 } solar_type;
 
-#pragma pack(1)
+#pragma pack(push,1)
 
 typedef struct User_File_Info
 {
@@ -303,7 +303,7 @@ typedef struct info_l1c
     int cfi_limb_flag;
 } info_l1c;
 
-
+#pragma pack(pop)
 
 /*************************************************************
  * User routines

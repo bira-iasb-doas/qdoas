@@ -54,7 +54,7 @@ typedef enum DSD_SCI_NLC_1C
     MAX_DS_NAME_SCI_NLC_1C
 } DSD_SCI_NLC_1C;
 
-#pragma pack(1)
+#pragma pack(push,1)
 
 typedef struct SPH_SCI_NLC_1C {
         /*  SPH descriptor */
@@ -246,7 +246,6 @@ typedef struct Nadir_Pmd {
     GeoL *geo_limb;
  } Nadir_Pmd ;
 
- #pragma pack(1)
 
 /* 1C structures as available in 1c: names to be adapted */
 typedef struct ClCon
@@ -366,7 +365,7 @@ typedef struct mds_1c_pol_constant
 }
 mds_1c_pol_constant;
 
-
+#pragma pack(pop)
 
 // void Cal_Options_getbin (FILE* unit, Cal_Options *var);
 //

@@ -85,6 +85,8 @@
 // Description of records
 // ----------------------
 
+#pragma pack(push,1)
+
 typedef struct _saozUV
  {
   short  Spec[201],                                                             // encrypted spectrum
@@ -109,6 +111,8 @@ typedef union _saoz
   SAOZ_UV Suv;                                                                  // UV
  }
 SAOZ;
+
+#pragma pack(pop)
 
 // ---------------------------------------
 // Arrays with available integration times

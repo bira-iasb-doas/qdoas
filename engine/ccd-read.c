@@ -83,6 +83,8 @@
 // Description of the header of a record
 // -------------------------------------
 
+#pragma pack(push,1)
+
 typedef struct _ccdData
  {
   double      exposureTime;                                                     // exposure time
@@ -855,6 +857,8 @@ typedef struct _ccd_1024
   char         SkyObs;                                                          //  sky observation
  }
 CCD_1024;
+
+#pragma pack(pop)
 
 // -----------------------------------------------------------------------------
 // FUNCTION      SetCCD

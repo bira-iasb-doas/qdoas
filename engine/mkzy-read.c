@@ -70,6 +70,8 @@
 // STRUCTURE DEFINITION
 // ====================
 
+#pragma pack(push, 1)
+
 typedef struct MKZYhdr
  {
   char           ident[4];                                                      // "MKZY"
@@ -157,6 +159,8 @@ typedef struct MKZY_RECORDINFO
   unsigned short ADC[8];
  }
 MKZY_RECORDINFO;
+
+#pragma pack(pop)
 
 // -----------------------------------------------------------------------------
 // FUNCTION MKZY_UnPack

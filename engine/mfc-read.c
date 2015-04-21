@@ -925,6 +925,8 @@ RC ReliMFCStd(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int local
 //! \brief Description of a record in the new MFC binary file format developed
 //!        at BIRA-IASB to make the processing of MFC files by QDOAS easier
 
+#pragma pack(push,1)
+
 typedef struct
  {
   //! \details the measurement type
@@ -961,6 +963,8 @@ typedef struct
   float        temperature;
  }
 MFCBIRA_HEADER;
+
+#pragma pack(pop)
 
 // -----------------------------------------------------------------------------
 // FUNCTION MFCBIRA_Set

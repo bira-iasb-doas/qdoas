@@ -80,8 +80,6 @@ extern "C" {
 #define strnicmp strncasecmp
 #endif
 
-#pragma pack(1)
-
 typedef int         INDEX,RC;                                            // RC holds for return code
 typedef unsigned int MASK,SZ_LEN;
 
@@ -130,6 +128,8 @@ typedef unsigned int MASK,SZ_LEN;
 // with the Turbo/Borland compilers. As it seems that these are not supported
 // by all compilers and OS, we define them below but do not include the dos.h
 
+#pragma pack(push,1)
+
 struct time
  {
   unsigned char ti_min;                                                         /* Minutes */
@@ -156,6 +156,9 @@ typedef struct _shortDate
   char  da_mon;                                                                 /* Month (1 = Jan)  */
  }
 SHORT_DATE;
+
+#pragma pack(pop)
+
 // ===============
 // TABLE OF ERRORS
 // ===============

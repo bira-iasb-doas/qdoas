@@ -18,7 +18,7 @@ typedef enum  SCIA_PRODUCT {SCIA_L2N,
 
 extern char SCIA_PRODUCT_ACR [SCIA_MAX_PRODUCT][12];
 
-#pragma pack(1)
+#pragma pack(push,1)
 
 
 typedef struct MPH {
@@ -260,7 +260,7 @@ Coord_deg cen_coor_nad ;      /* Centre coordinate of the nadir ground pixel */
 
 } GeoN_L2_user;
 
-
+#pragma pack(pop)
 
 /* Reading routines for the above structures */
 /* Defined in scia_common.c */
