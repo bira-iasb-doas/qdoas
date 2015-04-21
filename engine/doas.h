@@ -104,7 +104,7 @@ double Voigtx(double x,double y);
 // ERF.C : error function
 // ======================
 
-double erf ( double x );
+double doas_erf ( double x );
 
 double ERF_GetValue(double newX);
 RC     ERF_Alloc(void);

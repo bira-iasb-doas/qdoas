@@ -190,7 +190,7 @@ double gammp ( double a, double x )
        }
 }
 
-double erf ( double x )
+double doas_erf ( double x )
 {
     return ( x < 0.0 ) ? -gammp(0.5,x*x) : gammp(0.5,x*x);
 }
@@ -226,7 +226,7 @@ double ERF_GetValue(double newX)
      newY=-newY;
    }
   else
-   newY=erf(newX);
+   newY=doas_erf(newX);
 
   // Return
 
@@ -265,7 +265,7 @@ RC ERF_Alloc(void)
     for (i=0,x=(double)0.;i<(INDEX)(ERF_N);i++,x+=(double)0.01)
      {
       ERF_x[i]=(double)x;
-      ERF_y[i]=erf(x);
+      ERF_y[i]=doas_erf(x);
      }
 
     // Calculate the second derivatives for future interpolation
