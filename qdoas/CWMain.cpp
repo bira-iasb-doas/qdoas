@@ -55,6 +55,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "debugutil.h"   
 
+const static int max_recent_files = 10;
+
 CWMain::CWMain(QWidget *parent) :
   QFrame(parent),
   m_logToFile(false)
@@ -182,6 +184,19 @@ CWMain::CWMain(QWidget *parent) :
   fileMenu->addAction(m_saveAsAction);
   m_toolBar->addAction(m_saveAsAction);
 
+  // Open recent
+  fileMenu->addSeparator();
+  m_openRecentMenu = fileMenu->addMenu("Open Recent...");
+  for (int i = 0; i < max_recent_files; ++i) {
+    QAction *act = new QAction(this);
+    m_recentFileActs.push_back(act);
+    m_openRecentMenu->addAction(act);
+    act->setVisible(false);
+    connect(act, SIGNAL(triggered()),
+            this, SLOT(slotOpenRecent()));
+  }
+  updateRecentFileMenu();
+
   // Quit
   fileMenu->addSeparator();
   QAction *exitAct = new QAction(QIcon(QPixmap(":/icons/file_exit_16.png")), "Quit", this);
@@ -236,9 +251,8 @@ CWMain::CWMain(QWidget *parent) :
 
   // About
   helpMenu->addAction("Qdoas Help", this, SLOT(slotQdoasHelp()));
-  // dual help systems ...
-  QSettings &settings = CPreferences::instance()->settings();
 
+  // dual help systems ...
   helpMenu->addAction("About Qdoas", this, SLOT(slotAboutQdoas()));
   helpMenu->addSeparator();
   helpMenu->addAction("About Qt", this, SLOT(slotAboutQt()));
@@ -399,6 +413,11 @@ void CWMain::slotOpenFile()
   // save the last directory
   prefs->setDirectoryNameGivenFile("QdoasConf", fileName);
 
+  openFile(fileName);
+}
+
+void CWMain::openFile(const QString &fileName) {
+
   QString errMsg;
   QFile *file = new QFile(fileName);
 
@@ -459,6 +478,8 @@ void CWMain::slotOpenFile()
     m_stateMonitor->slotValidate();
     m_saveAction->setEnabled(false);
     m_saveAsAction->setEnabled(true);
+
+    updateRecentFiles(fileName);
   }
   else {
     errMsg = handler->messages();
@@ -523,6 +544,48 @@ void CWMain::slotSaveAsFile()
       }
     }
   }
+}
+
+void CWMain::slotOpenRecent() {
+  if (!checkStateAndConsiderSaveFile())
+    return;
+
+  QAction *action = qobject_cast<QAction *>(sender());
+  if (action)
+    openFile(action->data().toString());
+}
+
+void CWMain::updateRecentFileMenu() {
+  
+  QStringList files = CPreferences::instance()->settings().value("recentFiles").toStringList();
+
+  int numRecentFiles = qMin(files.size(), max_recent_files);
+
+  for (int i = 0; i < numRecentFiles; ++i) {
+    QString text;
+    QTextStream(&text) << "&" << i+1 << " " << QFileInfo(files[i]).fileName();
+    m_recentFileActs[i]->setText(text);
+    m_recentFileActs[i]->setData(files[i]);
+    m_recentFileActs[i]->setVisible(true);
+  }
+  for (int j = numRecentFiles; j < max_recent_files; ++j)
+    m_recentFileActs[j]->setVisible(false);
+
+  m_openRecentMenu->setEnabled(numRecentFiles > 0);  
+}
+
+void CWMain::updateRecentFiles(const QString &fileName) {
+
+  QSettings &settings = CPreferences::instance()->settings();
+  QStringList files = settings.value("recentFiles").toStringList();
+  files.removeAll(fileName);
+  files.prepend(fileName);
+  while (files.size() > max_recent_files)
+    files.removeLast();
+  
+  settings.setValue("recentFiles", files);
+
+  updateRecentFileMenu();
 }
 
 void CWMain::slotSaveFile()

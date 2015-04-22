@@ -76,6 +76,7 @@ Q_OBJECT
   void slotAboutQt();
   void slotSetMessageFileLogging(bool logToFile);
   void slotErrorMessages(int highestLevel, const QString &messages);
+  void slotOpenRecent();
   
  private:
   QMenuBar *m_menuBar;
@@ -104,7 +105,14 @@ Q_OBJECT
   QAction *m_saveAction;
   QAction *m_saveAsAction;
 
+  QList <QAction *>  m_recentFileActs;
+  QMenu *m_openRecentMenu;
+
   bool m_logToFile;
+
+  void openFile(const QString& fileName);
+  void updateRecentFiles(const QString &fileName);
+  void updateRecentFileMenu();
 };
 
 inline bool CWMain::isMessageFileLogging(void) const { return m_logToFile; }
