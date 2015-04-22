@@ -1353,7 +1353,7 @@ RC mediateRequestSetAnalysisLinear(struct anlyswin_linear *pLinear,INDEX indexFe
 
    // Linear offset
 
-   strcpy(linear[1].symbolName, pLinear->offsetI0 ? "Offset (rad)" : "Offset(ref)");
+   strcpy(linear[1].symbolName, pLinear->offsetI0 ? "Offset (ref)" : "Offset (rad)");
 
    linear[1].polyOrder=pLinear->offsetPolyOrder-1;
    linear[1].baseOrder= -1;
