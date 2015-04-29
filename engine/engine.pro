@@ -4,11 +4,13 @@ include( ../config.pri )
 
 CONFIG += staticlib $$CODE_GENERATION
 
-SOURCES += *.c
+SOURCES += *.c *.cpp
 HEADERS += *.h
 
 DEPENDPATH += ../mediator
 INCLUDEPATH += ../mediator ../common
+
+QMAKE_CXXFLAGS += -std=c++0x
 
 windows {
   TARGET   = ../engine

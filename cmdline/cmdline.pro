@@ -18,16 +18,16 @@ INCLUDEPATH  += ../mediator ../common ../qdoas ../convolution ../usamp ../engine
 #----------------------------------------------
 
 unix {
-  LIBS         += -lcoda -lhdfeos -lmfhdf -ldf -lz -ljpeg -lhe5_hdfeos -lhdf5 -lhdf5_hl
+  LIBS         += -lcoda -lhdfeos -lnetcdf -lmfhdf -ldf -lz -ljpeg -lhe5_hdfeos -lhdf5 -lhdf5_hl
 }
 
 linux_package {
   TARGET = ../../linux_package/bin/doas_cl.bin
-  LIBS         += -lcoda -lhdfeos -lmfhdf -ldf -ljpeg -lz -lhe5_hdfeos -lhdf5_hl -lhdf5
+  LIBS         += -lcoda -lhdfeos -lnetcdf -lmfhdf -ldf -ljpeg -lz -lhe5_hdfeos -lhdf5_hl -lhdf5
 }
 
 mxe {
-  LIBS += -lcoda -lhdfeos -lmfhdf -ldf -lz -ljpeg -lhe5_hdfeos -lhdf5_hl -lhdf5
+  LIBS += -lcoda -lhdfeos -lnetcdf -lmfhdf -ldf -lz -ljpeg -lhe5_hdfeos -lhdf5_hl -lhdf5
   LIBS += -lportablexdr
 }
 
