@@ -137,7 +137,7 @@ ERROR_TABLE errorTable[]=
 
   { ERROR_ID_AMF                       , "Zenith angle %.2f not found in file %s; AMF not calculated"                                                         },
   { ERROR_ID_NOTHING_TO_SAVE           , "%s : nothing to save "                                                                                              },
-  { ERROR_ID_OUTPUT                    , "Output file %s already exists but doesn't have the same configuration"                                              },
+  { ERROR_ID_OUTPUT_NETCDF             , "File %s already contains group '%s' "                                              },
 
   // Low-level math operations
 
@@ -190,18 +190,13 @@ ERROR_TABLE errorTable[]=
   { ERROR_ID_OMI_PIXELQF               , "Spectrum rejected based on pixels quality flags"                                                                    },
   { ERROR_ID_HDFEOS                    , "[%s] %s%s"
   },
-  { ERROR_ID_HDFEOS5_SWATH             , "Could not create swath %s in file %s"
-  },
-  { ERROR_ID_HDFEOS5_FILE_EXISTS       , "Can not write to existing HDF-EOS5 file %s"
-  },
-  { ERROR_ID_HDFEOS5_DEFFIELD          , "HDF-EOS5: error creating field %s"
-  },
-  { ERROR_ID_HDFEOS5_DEFDIM            , "HDF-EOS5: error creating dimension %s of size %d"
-  },
-  { ERROR_ID_HDFEOS5_WRITEFIELD        , "HDF-EOS5: error writing to field %s"
-  },
-  { ERROR_ID_HDFEOS5_WRITEATTR         , "HDF-EOS5: error writing to attribute %s"
-  },
+  { ERROR_ID_HDFEOS5_SWATH             , "Could not create swath %s in file %s" },
+  { ERROR_ID_HDFEOS5_FILE_EXISTS       , "Can not write to existing HDF-EOS5 file %s" },
+  { ERROR_ID_HDFEOS5_DEFFIELD          , "HDF-EOS5: error creating field %s" },
+  { ERROR_ID_HDFEOS5_DEFDIM            , "HDF-EOS5: error creating dimension %s of size %d" },
+  { ERROR_ID_HDFEOS5_WRITEFIELD        , "HDF-EOS5: error writing to field %s" },
+  { ERROR_ID_HDFEOS5_WRITEATTR         , "HDF-EOS5: error writing to attribute %s"},
+  { ERROR_ID_NETCDF                    , "%s"},
   // End of the table
 
   { ITEM_NONE                          , "Unknown error (%d)"                                                                                           }

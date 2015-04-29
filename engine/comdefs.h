@@ -221,7 +221,7 @@ SHORT_DATE;
 
 #define ERROR_ID_AMF                            801                             // AMF not calculated
 #define ERROR_ID_NOTHING_TO_SAVE                802                             // nothing to save
-#define ERROR_ID_OUTPUT                         803
+#define ERROR_ID_OUTPUT_NETCDF                  803                             // NetCDF file already contains the group we want to write to
 
 // High-level math functions
 
@@ -269,6 +269,7 @@ SHORT_DATE;
 #define ERROR_ID_HDFEOS5_DEFDIM                1410                             // error creating dimension
 #define ERROR_ID_HDFEOS5_WRITEFIELD            1411                             // error writing to field
 #define ERROR_ID_HDFEOS5_WRITEATTR             1412                             // error writing attribute
+#define ERROR_ID_NETCDF                        1500
 #define ERROR_ID_FILE_FORMAT                   2000                             // bad file format
 
 // =========

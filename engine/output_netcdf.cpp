@@ -1,0 +1,399 @@
+#include "output_netcdf.h"
+
+#include "netcdfwrapper.h"
+#include "QdoasVersion.h"
+
+#include <array>
+#include <cassert>
+
+#include <sstream>
+
+using std::string;
+using std::vector;
+using std::array;
+
+static NetCDFFile output_file;
+static NetCDFGroup output_group;
+
+static size_t n_alongtrack, n_crosstrack, n_calib;
+
+static int dim_crosstrack, dim_alongtrack, dim_calib, dim_date, dim_time, dim_datetime, 
+  dim_2, dim_3, dim_4, dim_5, dim_6, dim_7, dim_8, dim_9;
+
+static void create_dimensions(NetCDFFile &file) {
+  struct dim {
+    string name;
+    size_t size;
+    int &id;
+  };
+
+  const array<struct dim,14> swathdims  {
+    { { "n_crosstrack", n_crosstrack, dim_crosstrack},
+        { "n_alongtrack", n_alongtrack, dim_alongtrack },
+          { "n_calib", n_calib, dim_calib},
+            { "date", 3, dim_date}, // year, month, day
+              { "time", 3, dim_time}, // hour, min, secs
+                { "datetime", 7, dim_datetime}, // hour, min, secs, milliseconds
+        // allow for fields with different number of columns
+        // example: fields such as
+        // azimuth/longitude/... can contain 3-4-5 values
+                  { "2", 2, dim_2}, 
+                    { "3", 3, dim_3}, 
+                      { "4", 4, dim_4},
+                        { "5", 5, dim_5},
+                          { "6", 6, dim_6},
+                            { "7", 7, dim_7},
+                              { "8", 8, dim_8},
+                                { "9", 9, dim_9} } };
+ 
+  for (auto& dim : swathdims) {
+    dim.id = file.defDim(dim.name, dim.size);
+  }
+}
+
+static void getDims(const struct output_field& thefield, vector<int>& dimids, vector<size_t>& chunkdims) {
+  // for dimensions simply numbered "2, 3, ... 9"
+  static const array<int, 8> dimnumbers { { dim_2, dim_3, dim_4, dim_5, dim_6, dim_7, dim_8, dim_9 } };
+
+  dimids.push_back(dim_alongtrack);
+  chunkdims.push_back(std::min<size_t>(100, n_alongtrack));
+
+  if (n_crosstrack > 1) {
+    dimids.push_back(dim_crosstrack);
+    chunkdims.push_back(std::min<size_t>(100, n_crosstrack));
+  }
+  if (thefield.data_cols > 1) {
+    assert(thefield.data_cols < 10);
+    dimids.push_back(dimnumbers[thefield.data_cols -2]);
+    chunkdims.push_back(thefield.data_cols);
+  }
+  switch (thefield.memory_type) {
+  case OUTPUT_DATE:
+    dimids.push_back(dim_date);
+    chunkdims.push_back(3);
+    break;
+  case OUTPUT_TIME:
+    dimids.push_back(dim_time);
+    chunkdims.push_back(3);
+    break;
+  case OUTPUT_DATETIME:
+    dimids.push_back(dim_datetime);
+    chunkdims.push_back(7);
+    break;
+  default:
+    break;
+  }
+}
+
+static nc_type getNCType(enum output_datatype xtype) {
+  switch(xtype) {
+  case OUTPUT_STRING:
+    return NC_STRING;
+    break;
+  case OUTPUT_SHORT:
+    return NC_SHORT;
+    break;
+  case OUTPUT_USHORT:
+    return NC_USHORT;
+    break;
+  case OUTPUT_FLOAT:
+    return NC_FLOAT;
+    break;
+  case OUTPUT_INT:
+    return NC_INT;
+    break;
+  case OUTPUT_DOUBLE:
+    return NC_DOUBLE;
+    break;
+  case OUTPUT_TIME:
+  case OUTPUT_DATE:
+  case OUTPUT_DATETIME:
+    return NC_INT; // date/time/datetime are stored as a set of integers in NetCDF
+    break;
+  default:
+  assert(false);
+  return 0;
+  }
+}
+
+static void define_variable(NetCDFGroup &group, const struct output_field& thefield, string varname="") {
+    vector<int> dimids;
+    vector<size_t>chunkdims;
+    getDims(thefield, dimids, chunkdims);
+
+    if (!varname.length() )
+      varname=thefield.fieldname;
+
+    group.defVar(varname , dimids, getNCType(thefield.memory_type) );
+    group.defVarChunking(varname, NC_CHUNKED, chunkdims.data());
+    group.defVarDeflate(varname);
+}
+
+static void write_global_attrs(const ENGINE_CONTEXT*pEngineContext, NetCDFGroup &group) {
+  static const string qdoas_attr = string("Results obtained using Qdoas (")
+    + cQdoasVersionString + "), \n"
+    "Belgian Institute for Space Aeronomy (BIRA-IASB)\n"
+    "http://uv-vis.bira.be/software/QDOAS";
+
+  group.putAttr("Qdoas", qdoas_attr);
+
+  time_t curtime = time(NULL);
+  group.putAttr("CreationTime",string(ctime(&curtime) ) );
+
+  const char *input_filename = strrchr(pEngineContext->fileInfo.fileName,PATH_SEP);
+  if (!input_filename)
+    input_filename = pEngineContext->fileInfo.fileName;
+  group.putAttr("InputFile", input_filename);
+}
+
+static void write_calibration_field(const struct output_field& calibfield, NetCDFGroup &group, const string& varname,
+                                    const vector<size_t> start, const vector<size_t> count) {
+  switch (calibfield.memory_type) {
+  case OUTPUT_INT:
+    group.putVar(varname, start.data(), count.data(), static_cast<const int *>(calibfield.data));
+    break;
+  case OUTPUT_SHORT:
+    group.putVar(varname, start.data(), count.data(), static_cast<const short *>(calibfield.data));
+    break;
+  case OUTPUT_USHORT:
+    group.putVar(varname, start.data(), count.data(), static_cast<const unsigned short *>(calibfield.data));
+    break;
+  case OUTPUT_STRING:
+    group.putVar(varname, start.data(), count.data(), static_cast<const char **>(calibfield.data));
+    break;
+  case OUTPUT_FLOAT:
+    group.putVar(varname, start.data(), count.data(), static_cast<const float *>(calibfield.data));
+    break;
+  case OUTPUT_DOUBLE:
+    group.putVar(varname, start.data(), count.data(), static_cast<const double *>(calibfield.data));
+    break;
+  case OUTPUT_DATE:
+  case OUTPUT_TIME:
+  case OUTPUT_DATETIME:
+    assert(false && "date, time or datetime output for calibration not supported");
+    break;
+  }
+}
+
+static void write_calibration_data(NetCDFGroup& group) {
+  static const string calib_prefix = "Calib.";
+
+  for (unsigned int i=0; i<calib_num_fields; ++i) {
+    const struct output_field &calibfield = output_data_calib[i];
+
+    string varname = calib_prefix + calibfield.fieldname;
+    if ( !group.hasVar(varname)) {
+      /* when crosstrack dimension is > 1, output_data_calib contains
+       * a copy of each calibration field for each detector row.  We
+       * want to define one variable with n_crosstrack columns for
+       * each calibration field.  -> check if variable already exists
+       * and create it if needed. */
+      define_variable(group, calibfield, varname);
+    }
+
+    vector<int> dimids(group.dimIDs(varname));
+    vector<size_t> start(dimids.size());
+    start[1] = calibfield.index_row;
+    vector<size_t> count;
+    for (auto dim : dimids) {
+      if (dim == dim_crosstrack) {
+        count.push_back(1);
+      } else { // we want to write across full extent of each dimension, except crosstrack
+        count.push_back(group.dimLen(dim));
+      }
+    }
+    write_calibration_field(calibfield, group, varname, start, count);
+  }
+  
+}
+
+void write_automatic_reference_info(const ENGINE_CONTEXT *pEngineContext, NetCDFGroup& group) {
+  if ( pEngineContext->project.asciiResults.referenceFlag
+       && pEngineContext->analysisRef.refAuto ) {
+    switch(pEngineContext->project.instrumental.readOutFormat) {
+    case PRJCT_INSTR_FORMAT_GDP_ASCII:
+    case PRJCT_INSTR_FORMAT_GDP_BIN:
+    case PRJCT_INSTR_FORMAT_SCIA_PDS:
+    case PRJCT_INSTR_FORMAT_GOME2: {
+      const char *reffile = OUTPUT_refFile;
+      group.putAttr("Automatic reference file", reffile);
+      group.putAttr("Automatic reference: number of records", OUTPUT_nRec);
+    }
+      break;
+    case PRJCT_INSTR_FORMAT_OMI:
+      for(int analysiswindow=0; analysiswindow < NFeno; ++analysiswindow) {
+        for(int row=0; row< OMI_TOTAL_ROWS; row++ ) {
+          const FENO *pTabFeno = &TabFeno[row][analysiswindow];
+          if (!pTabFeno->hidden
+              && pTabFeno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_AUTOMATIC
+              && pTabFeno->ref_description != NULL) {
+            std::stringstream attrname;
+            attrname << pTabFeno->windowName << " - row " << row << " automatic reference";
+            const char *ref_description = pTabFeno->ref_description;
+            group.putAttr(attrname.str().c_str(), ref_description);
+          }
+        }
+      }
+      break;
+    default:
+      break;
+    }
+  }
+}
+
+RC netcdf_open(const ENGINE_CONTEXT *pEngineContext, const char *filename) {
+  try {
+    NetCDFFile output(filename + string(output_file_extensions[NETCDF]), NC_WRITE );
+    output_group = output.defGroup(pEngineContext->project.asciiResults.swath_name);
+
+    n_crosstrack = ANALYSE_swathSize;
+    n_alongtrack = pEngineContext->recordNumber / n_crosstrack;
+    n_calib = 0;
+    for(int firstrow = 0; firstrow<ANALYSE_swathSize; firstrow++) {
+      if ( pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_OMI ||
+           pEngineContext->project.instrumental.omi.omiTracks[firstrow] ) {
+        n_calib = KURUCZ_buffers[firstrow].Nb_Win;
+        break;
+      }
+    }
+    create_dimensions(output);
+    write_global_attrs(pEngineContext, output_group);
+    write_automatic_reference_info(pEngineContext, output_group);
+    write_calibration_data(output_group);
+
+    for (unsigned int i=0; i<output_num_fields; ++i) {
+      define_variable(output_group, output_data_analysis[i]);
+    }
+
+    output_file = std::move(output);
+  } catch (std::runtime_error & e) {
+    return ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_NETCDF, e.what() );
+  }
+  return 0;
+}
+
+void netcdf_close_file() {
+  output_file.close();
+}
+
+template<typename T>
+static void write_buffer(const struct output_field *thefield, const bool selected[], int num_records) {
+  size_t ncols = thefield->data_cols;
+  vector<T> buffer(n_alongtrack * n_crosstrack * ncols);
+  for (int record=0; record < num_records; ++record) {
+    if (selected[record]) {
+      for (size_t i=0; i< ncols; ++i) {
+        buffer[record*ncols + i] = (static_cast<T*>(thefield->data))[record*ncols + i];
+      }
+    }
+  }
+  output_group.putVar(thefield->fieldname, buffer.data() );
+}
+
+template<>
+void write_buffer<struct time>(const struct output_field *thefield, const bool selected[], int num_records) {
+  size_t ncols = thefield->data_cols;
+  vector<int> buffer(n_alongtrack * n_crosstrack * ncols * 3);
+  for (int record=0; record < num_records; ++record) {
+    if (selected[record]) {
+    for (size_t i=0; i< ncols; ++i) {
+      struct time t = (static_cast<struct time*>(thefield->data))[record*ncols + i];
+      buffer[record*ncols + i] = t.ti_hour;
+      buffer[record*ncols + i+1] = t.ti_min;
+      buffer[record*ncols + i+2] = t.ti_sec;
+      }
+    }
+  }
+  output_group.putVar(thefield->fieldname, buffer.data() );
+}
+
+template<>
+void write_buffer<struct date>(const struct output_field *thefield, const bool selected[], int num_records) {
+  size_t ncols = thefield->data_cols;
+  vector<int> buffer(n_alongtrack * n_crosstrack * ncols * 3);
+  for (int record=0; record < num_records; ++record) {
+    if (selected[record]) {
+    for (size_t i=0; i< ncols; ++i) {
+      struct date d = (static_cast<struct date*>(thefield->data))[record*ncols + i];
+      buffer[record*ncols + i] = d.da_year;
+      buffer[record*ncols + i+1] = d.da_mon;
+      buffer[record*ncols + i+2] = d.da_day;
+      }
+    }
+  }
+  output_group.putVar(thefield->fieldname, buffer.data() );
+}
+
+template<>
+void write_buffer<struct datetime>(const struct output_field *thefield, const bool selected[], int num_records) {
+  size_t ncols = thefield->data_cols;
+  vector<int> buffer(n_alongtrack * n_crosstrack * ncols * 3);
+  for (int record=0; record < num_records; ++record) {
+    if (selected[record]) {
+    for (size_t i=0; i< ncols; ++i) {
+      struct datetime d = (static_cast<struct datetime*>(thefield->data))[record*ncols + i];
+      buffer[record*ncols + i] = d.thedate.da_year;
+      buffer[record*ncols + i+1] = d.thedate.da_mon;
+      buffer[record*ncols + i+2] = d.thedate.da_day;
+      buffer[record*ncols + i+3] = d.thetime.ti_hour;
+      buffer[record*ncols + i+4] = d.thetime.ti_min;
+      buffer[record*ncols + i+5] = d.thetime.ti_sec;
+      buffer[record*ncols + i+6] = (d.microseconds != -1)
+        ? d.microseconds // GOME-2: microseconds
+        : d.millis * 1000; // SCIA: milliseconds->convert to micro
+      }
+    }
+  }
+  output_group.putVar(thefield->fieldname, buffer.data() );
+}
+
+RC netcdf_write_analysis_data(const bool selected_records[], int num_records) {
+  for (unsigned int i=0; i<output_num_fields; ++i) {
+    struct output_field *thefield = &output_data_analysis[i];
+
+    switch(thefield->memory_type) {
+    case OUTPUT_INT:
+      write_buffer<int>(thefield, selected_records, num_records);
+      break;
+    case OUTPUT_SHORT:
+      write_buffer<short>(thefield, selected_records, num_records);
+      break;
+    case OUTPUT_USHORT:
+      write_buffer<unsigned short>(thefield, selected_records, num_records);
+      break;
+    case OUTPUT_STRING:
+      write_buffer<const char*>(thefield, selected_records, num_records);
+      break;
+    case OUTPUT_FLOAT:
+      write_buffer<float>(thefield, selected_records, num_records);
+      break;
+    case OUTPUT_DOUBLE:
+      write_buffer<double>(thefield, selected_records, num_records);
+      break;
+    case OUTPUT_DATE:
+      write_buffer<struct date>(thefield, selected_records, num_records);
+      break;
+    case OUTPUT_TIME:
+      write_buffer<struct time>(thefield, selected_records, num_records);
+      break;
+    case OUTPUT_DATETIME:
+      write_buffer<struct datetime>(thefield, selected_records, num_records);
+      break;
+    }
+  }
+
+  return 0;
+}
+
+RC netcdf_allow_file(const char *filename, const PRJCT_RESULTS *results) {
+  int rc = ERROR_ID_NO;
+  try {
+    NetCDFFile test(filename, NC_WRITE);
+    if (test.groupID(results->swath_name) ) {
+      rc = ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_OUTPUT_NETCDF, filename, results->swath_name);
+    }
+  } catch (std::runtime_error &e) {
+    rc = ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_NETCDF, e.what());
+  }
+  return rc;
+}

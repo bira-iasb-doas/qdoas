@@ -63,9 +63,8 @@
   selected analysis variable and for each analysis window.
   */
 
-/* TODO todo : fix memory corruption with multidimensional calibration fields !? ?! see gome2 example */
-
 #include "output.h"
+#include "output_netcdf.h"
 #include "output_common.h"
 #include <string.h>
 #include <stdbool.h>
@@ -86,9 +85,10 @@ int OUTPUT_nRec;
     containing their filename extension.  The position in the array
     must correspond to the value of the enum.*/
 const char *output_file_extensions[] = { [ASCII] = ".ASC",
-                                         [HDFEOS5] = ".he5"};
+                                         [HDFEOS5] = ".he5",
+                                         [NETCDF] = ".nc" };
 
-struct output_field output_data_analysis[MAX_FIELDS]; // todo: allocate dynamically?
+struct output_field output_data_analysis[MAX_FIELDS];
 unsigned int output_num_fields = 0;
 struct output_field output_data_calib[MAX_FIELDS];
 unsigned int calib_num_fields = 0;
@@ -1026,8 +1026,9 @@ static void register_calibration_field(struct output_field newfield) {
   // useful when different analysis windows use different reference
   // spectra, and therefore have different calibration settings.
   const char *window_name = TabFeno[newfield.index_row][newfield.index_feno].windowName;
-  calibfield->fieldname = malloc(2 + strlen(window_name) + strlen(newfield.fieldname));
-  sprintf(calibfield->fieldname, "%s.%s", window_name, newfield.fieldname);
+  char *fieldname = malloc(2 + strlen(window_name) + strlen(newfield.fieldname));
+  sprintf(fieldname, "%s.%s", window_name, newfield.fieldname);
+  calibfield->fieldname = fieldname;
   calibfield->get_tabfeno = &get_tabfeno_calib;
   calibfield->get_cross_results = &get_cross_results_calib;
   calibfield->memory_type = OUTPUT_DOUBLE;
@@ -1293,7 +1294,7 @@ static void register_cross_results(const PRJCT_RESULTS *pResults, const FENO *pT
                 sprintf(symbolName,"(%s,%s)",
                         WorkSpace[TabCross[indexTabCross2].Comp].symbolName,
                         WorkSpace[TabCross[indexTabCross].Comp].symbolName);
-                char *fieldname = NULL;
+                const char *fieldname = NULL;
                 func_void get_data = NULL;
                 if (indexField == PRJCT_RESULTS_COVAR) {
                   fieldname = "Covar";
@@ -1606,18 +1607,25 @@ RC open_output_file(const ENGINE_CONTEXT *pEngineContext, char *outputFileName)
   case HDFEOS5:
     return hdfeos5_open(pEngineContext, outputFileName);
     break;
+  case NETCDF:
+    return netcdf_open(pEngineContext, outputFileName);
+    break;
   default:
     return ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_FILE_BAD_FORMAT);
   }
 }
 
 void output_close_file(void) {
+  puts(__func__);
   switch(selected_format) {
   case ASCII:
     ascii_close_file();
     break;
   case HDFEOS5:
     hdfeos5_close_file();
+    break;
+  case NETCDF:
+    netcdf_close_file();
     break;
   }
 }
@@ -1629,6 +1637,9 @@ void output_write_data(const bool selected_records[]) {
     break;
   case HDFEOS5:
     hdfeos5_write_analysis_data(selected_records, outputNbRecords, outputRecords);
+    break;
+  case NETCDF:
+    netcdf_write_analysis_data(selected_records, outputNbRecords);
     break;
   default:
     assert(false);
@@ -1700,10 +1711,17 @@ RC OUTPUT_CheckPath(const PRJCT_RESULTS *pResults) {
       rc = ERROR_SetLast("Output Path configuration error" , ERROR_TYPE_FATAL, ERROR_ID_FILE_OPEN, filename);
     } else {
       fclose(test);
-      if(pResults->file_format == HDFEOS5) {
+      switch (pResults->file_format) {
+      case HDFEOS5:
         // for HDFEOS-5, we do not append to existing files
         // -> if the file already exists, its size should be 0
         rc = hdfeos5_allow_file(filename);
+        break;
+      case NETCDF:
+        rc = netcdf_allow_file(filename, pResults);
+        break;
+      case ASCII: // writing to ASCII is always ok (append)
+        break;
       }
     }
   } else // otherwise: automatic output files: file names will be generated based on the input files.

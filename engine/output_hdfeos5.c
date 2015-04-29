@@ -48,8 +48,6 @@ static size_t nCalibWindows;
 
 /* todo:
  *  - fill values/default values for fields
- *  - try to open output file before running analysis, so user gets error immediately?
- *  - somehow put SFP 1 and SFP 2 in one field?
  */
 
 RC hdfeos5_open(const ENGINE_CONTEXT *pEngineContext, char *filename) {
@@ -148,14 +146,13 @@ RC create_dimensions(void) {
                              { "date", 3}, // year, month, day
                              { "time", 3}, // hour, min, secs
                              { "datetime", 7}, // hour, min, secs, milliseconds
-                             { "string", 51}, // test
                              // allow for fields with different number of columns
                              // example: fields such as
                              // azimuth/longitude/... can contain 3-4-5 values
                              { "2", 2}, { "3", 3},
                              { "4", 4}, { "5", 5}, { "6", 6},
-                             { "7", 7}, { "8", 8}, { "9", 9}
-  };
+                             { "7", 7}, { "8", 8}, { "9", 9} };
+
   for(size_t i=0; i< (sizeof(swathdims)/sizeof(swathdims[0])); i++) {
     if(swathdims[i].dimsize > 0) {
       // for example, nCalibWindows may be 0 when no calibration is used
@@ -265,7 +262,8 @@ RC write_automatic_reference_info(const ENGINE_CONTEXT *pEngineContext) {
 
 /*! \brief Write calibration data to the current swath.*/
 RC write_calibration_data(void) {
-  static const char *calib_prefix = "Calib."; // create fields named "Calib.RMS", "Calib.Shift", etc
+  static const char *calib_prefix = "Calib."; // create fields named
+  // "Calib.windowname.RMS", "Calib.windowname.Shift", etc
 
   int first_row = output_data_calib[0].index_row;
 
@@ -276,15 +274,13 @@ RC write_calibration_data(void) {
     replace_chars(he5fieldname);
 
     // define data fields
-    /* when nXtrack > 1, output_data_calib contains a copy of each
-     * calibration field for each detector row.  We want to define one
-     * HDF-EOS5 datafield with nXtrack columns for each calibration
-     * field.  Therefore we only call HE5_SWdefdatafield for the first
-     * row.
+    /* when crosstrack dimension > 1, output_data_calib contains a
+     * copy of each calibration field for each detector row.  We want
+     * to define one HDF-EOS5 datafield with n_crosstrack columns for
+     * each calibration field.  Therefore we only call
+     * HE5_SWdefdatafield for the first row.
      */
     if(calibfield.index_row == first_row) {
-      // TODO: more robust check to see if the field is already defined.
-
       char calib_dimensions[HE5_HDFE_DIMBUFSIZE];
       get_hdfeos5_dimension_calibration(calib_dimensions, &calibfield);
 
@@ -322,7 +318,7 @@ RC write_calibration_data(void) {
     registered output fields.*/
 RC create_analysis_data_fields(void) {
   char field_dimension[HE5_HDFE_DIMBUFSIZE];
-  for(unsigned int i=0; i<output_num_fields; i++) {
+  for(unsigned int i=0; i<output_num_fields; ++i) {
     struct output_field thefield = output_data_analysis[i];
     replace_chars(thefield.fieldname);
 
