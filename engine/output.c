@@ -1616,7 +1616,6 @@ RC open_output_file(const ENGINE_CONTEXT *pEngineContext, char *outputFileName)
 }
 
 void output_close_file(void) {
-  puts(__func__);
   switch(selected_format) {
   case ASCII:
     ascii_close_file();
@@ -1639,7 +1638,7 @@ void output_write_data(const bool selected_records[]) {
     hdfeos5_write_analysis_data(selected_records, outputNbRecords, outputRecords);
     break;
   case NETCDF:
-    netcdf_write_analysis_data(selected_records, outputNbRecords);
+    netcdf_write_analysis_data(selected_records, outputNbRecords, outputRecords);
     break;
   default:
     assert(false);

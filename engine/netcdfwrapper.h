@@ -80,10 +80,10 @@ public:
     }
     putAttr(name, charvec.size(), charvec.data(), varid);
   }
-  inline void putAttr(const char *attrname, const char *attrval, int varid=NC_GLOBAL) {
-    ncPutAttr(varid, attrname, strlen(attrval), attrval);
+  inline void putAttr(const std::string&name, char *in, int varid=NC_GLOBAL) {
+    ncPutAttr(varid, name.c_str(), strlen(in), in);
   }
-  
+
   int groupID(const std::string& groupName) const;
   int groupID() const {return groupid;} ;
   NetCDFGroup getGroup(const std::string& groupName) const;
