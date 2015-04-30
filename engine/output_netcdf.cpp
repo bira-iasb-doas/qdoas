@@ -339,7 +339,7 @@ static void write_buffer(const struct output_field *thefield, const bool selecte
 }
 
 RC netcdf_write_analysis_data(const bool selected_records[], int num_records, const OUTPUT_INFO *recordinfo) {
-  int rc = ERRRO_ID_NO;
+  int rc = ERROR_ID_NO;
   try {
     for (unsigned int i=0; i<output_num_fields; ++i) {
       struct output_field *thefield = &output_data_analysis[i];

@@ -12,16 +12,16 @@
 class NetCDFGroup {
   
 public:
-  NetCDFGroup(int id=0, std::string groupName="") :  groupid(id), name(groupName) {};
+  NetCDFGroup(int id=0, const std::string& groupName ="") :  groupid(id), name(groupName) {};
 
   template<typename T>
   void getFillValue(const std::string& varName, T *fill) const;
 
   bool hasVar(const std::string& varName) const;
   int varID(const std::string& varName) const;
-  int numDims(const std::string &varName) const;
+  int numDims(const std::string& varName) const;
   int numDims(int varid) const;
-  std::vector<int> dimIDs(const std::string &varName) const;
+  std::vector<int> dimIDs(const std::string& varName) const;
   std::vector<int> dimIDs(int varid) const;
   std::string varName(int varid) const;
   int defVar(const std::string& name, const std::vector<int>& dimids, nc_type xtype);
@@ -63,17 +63,17 @@ public:
     }
   }
   template<typename T>
-  inline void putAttr(const std::string&name, const std::vector<T>& in, int varid=NC_GLOBAL) {
+  inline void putAttr(const std::string& name, const std::vector<T>& in, int varid=NC_GLOBAL) {
     putAttr(name, in.size(), in.data(), varid);
   }
   template<typename T>
-  inline void putAttr(const std::string&name, T in, int varid=NC_GLOBAL) {
+  inline void putAttr(const std::string& name, T in, int varid=NC_GLOBAL) {
     putAttr(name, 1, &in, varid);
   }
-  inline void putAttr(const std::string&name, const std::string&value, int varid=NC_GLOBAL) {
+  inline void putAttr(const std::string& name, const std::string& value, int varid=NC_GLOBAL) {
     putAttr(name, value.length(), value.c_str(), varid);
   }
-  inline void putAttr(const std::string&name, const std::vector<std::string>strings, int varid=NC_GLOBAL) {
+  inline void putAttr(const std::string&name, const std::vector<std::string>& strings, int varid=NC_GLOBAL) {
     std::vector<const char*> charvec;
     for (const auto &s : strings) {
       charvec.push_back(s.c_str() );
