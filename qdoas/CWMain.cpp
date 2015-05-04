@@ -541,6 +541,8 @@ void CWMain::slotSaveAsFile()
 	// wrote the file ... change the project filename and validate
 	setProjectFileName(fileName);
 	m_stateMonitor->slotValidate();
+        // add the new file name to the "Open Recent" menu
+        updateRecentFiles(fileName);
       }
     }
   }
