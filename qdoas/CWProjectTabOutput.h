@@ -64,7 +64,7 @@ Q_OBJECT
   QGroupBox *m_editGroup;
   QLineEdit *m_fluxEdit, *m_bandWidthEdit;
   QComboBox *m_selectFileFormat;
-  QLineEdit *m_swathNameEdit;
+  QLineEdit *m_groupNameEdit;
   CWOutputSelector *m_selector;
 };
 

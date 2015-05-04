@@ -30,6 +30,7 @@ public:
   void defVarChunking(const std::string& name, int storage, size_t *chunksizes);
   void defVarDeflate(int varid, int shuffle=1, int deflate=1, int deflate_level=7);
   void defVarDeflate(const std::string& name, int shuffle=1, int deflate=1, int deflate_level=7);
+
   template<typename T>
   inline void getVar(int varid, const size_t start[], const size_t count[], T *out) const {
     if (ncGetVar(varid, start, count, out) != NC_NOERR) {
@@ -38,6 +39,7 @@ public:
   template<typename T>
   inline void getVar(const std::string& name, const size_t start[], const size_t count[], T *out) const {
     getVar(varID(name), start, count, out);  };
+
   template<typename T>
   inline void putVar(int varid, const size_t start[], const size_t count[], T *in) {
     if (ncPutVar(varid, start, count, in) != NC_NOERR) {

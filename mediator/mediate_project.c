@@ -137,7 +137,7 @@ void initializeMediateProjectOutput(mediate_project_output_t *d)
   memset(d, 0, sizeof(mediate_project_output_t));
 
   // non-zero defaults:
-  strcpy(d->swath_name, OUTPUT_HDFEOS_DEFAULT_SWATH);
+  strcpy(d->swath_name, OUTPUT_HDF5_DEFAULT_GROUP);
 
   d->successFlag=1;
   d->bandWidth=1.;

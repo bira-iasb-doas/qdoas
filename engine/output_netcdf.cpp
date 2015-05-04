@@ -22,7 +22,7 @@ static int dim_crosstrack, dim_alongtrack, dim_calib, dim_date, dim_time, dim_da
 
 enum vartype { Analysis, Calibration};
 
-static void create_dimensions(NetCDFFile &file) {
+static void create_dimensions(NetCDFGroup &group) {
   struct dim {
     string name;
     size_t size;
@@ -49,7 +49,7 @@ static void create_dimensions(NetCDFFile &file) {
                                 { "9", 9, dim_9} } };
  
   for (auto& dim : swathdims) {
-    dim.id = file.defDim(dim.name, dim.size);
+    dim.id = group.defDim(dim.name, dim.size);
   }
 }
 
@@ -262,14 +262,14 @@ RC netcdf_open(const ENGINE_CONTEXT *pEngineContext, const char *filename) {
     n_crosstrack = ANALYSE_swathSize;
     n_alongtrack = pEngineContext->recordNumber / n_crosstrack;
     n_calib = 0;
-    for(int firstrow = 0; firstrow<ANALYSE_swathSize; firstrow++) {
-      if ( pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_OMI ||
-           pEngineContext->project.instrumental.omi.omiTracks[firstrow] ) {
+    for (int firstrow = 0; firstrow<ANALYSE_swathSize; firstrow++) {
+      if (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_OMI ||
+          pEngineContext->project.instrumental.omi.omiTracks[firstrow] ) {
         n_calib = KURUCZ_buffers[firstrow].Nb_Win;
         break;
       }
     }
-    create_dimensions(output);
+    create_dimensions(output_group);
     write_global_attrs(pEngineContext, output_group);
     write_automatic_reference_info(pEngineContext, output_group);
     write_calibration_data(output_group);
@@ -279,7 +279,7 @@ RC netcdf_open(const ENGINE_CONTEXT *pEngineContext, const char *filename) {
     }
 
     output_file = std::move(output);
-  } catch (std::runtime_error & e) {
+  } catch (std::runtime_error& e) {
     return ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_NETCDF, e.what() );
   }
   return 0;
@@ -374,7 +374,7 @@ RC netcdf_write_analysis_data(const bool selected_records[], int num_records, co
         break;
       }
     }
-  } catch (std::runtime_error &e) {
+  } catch (std::runtime_error& e) {
     rc =  ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_NETCDF, e.what());
   }
   return rc;
@@ -387,7 +387,7 @@ RC netcdf_allow_file(const char *filename, const PRJCT_RESULTS *results) {
     if (test.groupID(results->swath_name) ) {
       rc = ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_OUTPUT_NETCDF, filename, results->swath_name);
     }
-  } catch (std::runtime_error &e) {
+  } catch (std::runtime_error& e) {
     rc = ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_NETCDF, e.what());
   }
   return rc;

@@ -6,7 +6,7 @@
 #define OUTPUT_FORMATS_H
 
 #define HDFEOS_OBJ_LEN_MAX 256 // taken from HE5_HdfEosDef.h
-#define OUTPUT_HDFEOS_DEFAULT_SWATH "QDOAS Results"
+#define OUTPUT_HDF5_DEFAULT_GROUP "QDOAS Results"
 
 #if defined(_cplusplus) || defined(__cplusplus)
 extern "C" {

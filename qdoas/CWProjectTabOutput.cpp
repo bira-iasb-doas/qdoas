@@ -62,11 +62,11 @@ CWProjectTabOutput::CWProjectTabOutput(const mediate_project_output_t *propertie
     m_selectFileFormat->addItem(output_file_extensions[i]);
   }
 
-  QFrame *swathFrame = new QFrame(m_pathFrame);
-  swathFrame->setFrameStyle(QFrame::NoFrame);
-  m_swathNameEdit = new QLineEdit("QDOAS_results", swathFrame);
-  QRegExp validSwathName("[^/]{1,255}"); // Swath name may not contain "/" and can be 1 to 255 characters long.
-  m_swathNameEdit->setValidator(new QRegExpValidator(validSwathName, m_swathNameEdit));
+  QFrame *groupFrame = new QFrame(m_pathFrame);
+  groupFrame->setFrameStyle(QFrame::NoFrame);
+  m_groupNameEdit = new QLineEdit("QDOAS results", groupFrame);
+  QRegExp validGroupName("[^/]{1,255}"); // Swath name may not contain "/" and can be 1 to 255 characters long.
+  m_groupNameEdit->setValidator(new QRegExpValidator(validGroupName, m_groupNameEdit));
 
   // Layout for output file/format widgets:
   QHBoxLayout *pathLayout = new QHBoxLayout();
@@ -78,12 +78,12 @@ CWProjectTabOutput::CWProjectTabOutput(const mediate_project_output_t *propertie
 
   QVBoxLayout *outputFileLayout = new QVBoxLayout(m_pathFrame);
   outputFileLayout->addLayout(pathLayout, 0);
-  outputFileLayout->addWidget(swathFrame);
+  outputFileLayout->addWidget(groupFrame);
 
-  QHBoxLayout *swathLayout = new QHBoxLayout(swathFrame);
+  QHBoxLayout *swathLayout = new QHBoxLayout(groupFrame);
   swathLayout->setContentsMargins(0, 0, 0, 0);
-  swathLayout->addWidget(new QLabel("HDF-EOS Swath Name", swathFrame),0);
-  swathLayout->addWidget(m_swathNameEdit, 1);
+  swathLayout->addWidget(new QLabel("HDF5 group name", groupFrame),0);
+  swathLayout->addWidget(m_groupNameEdit, 1);
 
   mainLayout->addWidget(m_pathFrame);
   mainLayout->addSpacing(5);
@@ -143,10 +143,11 @@ CWProjectTabOutput::CWProjectTabOutput(const mediate_project_output_t *propertie
   // initialize ...
   m_pathEdit->setText(QString(properties->path));
 
-  m_swathNameEdit->setText(properties->swath_name);
+  m_groupNameEdit->setText(properties->swath_name);
 
   m_selectFileFormat->setCurrentIndex(properties->file_format);
-  swathFrame->setVisible(properties->file_format == HDFEOS5); // swath frame is hidden unless HDF-EOS5 output is selected
+  // swath frame is hidden unless HDF5 output is selected
+  groupFrame->setVisible(properties->file_format == HDFEOS5 || properties->file_format == NETCDF);
 
   m_analysisCheck->setCheckState(properties->analysisFlag ? Qt::Checked : Qt::Unchecked);
   m_calibrationCheck->setCheckState(properties->calibrationFlag ? Qt::Checked : Qt::Unchecked);
@@ -191,19 +192,19 @@ void CWProjectTabOutput::apply(mediate_project_output_t *properties) const
   properties->bandWidth = m_bandWidthEdit->text().toDouble();
   strcpy(properties->path, m_pathEdit->text().toAscii().data());
 
-  strcpy(properties->swath_name, m_swathNameEdit->hasAcceptableInput()
-         ? m_swathNameEdit->text().toAscii().data()
-         : OUTPUT_HDFEOS_DEFAULT_SWATH);
+  strcpy(properties->swath_name, m_groupNameEdit->hasAcceptableInput()
+         ? m_groupNameEdit->text().toAscii().data()
+         : "QDOAS results");
 
   m_selector->apply(&(properties->selection));
 }
 
 void CWProjectTabOutput::slotSelectFileFormatChanged(int index)
 {
-  // parent widget of m_swathNameEdit contains the label and the text
+  // parent widget of m_groupNameEdit contains the label and the text
   // field -> set both to visible/invisible if HDF-EOS5 output is
   // selected/unselected
-  m_swathNameEdit->parentWidget()->setVisible(index==HDFEOS5);
+  m_groupNameEdit->parentWidget()->setVisible(index == HDFEOS5 || index == NETCDF);
 }
 
 void CWProjectTabOutput::slotBrowsePath()
