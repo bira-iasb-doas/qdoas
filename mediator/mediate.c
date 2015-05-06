@@ -152,30 +152,6 @@ int mediateRequestDisplaySpecInfo(void *engineContext,int page,void *responseHan
   if (strlen(pRecord->Nom) && (pSpectra->fieldsFlag[PRJCT_RESULTS_NAME]))
    mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Record name","%s",pRecord->Nom);
 
-  // QDOAS ???
-  // QDOAS ???     if (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC)
-  // QDOAS ???      {
-  // QDOAS ???       if (strlen(MFC_header.FileName))
-  // QDOAS ???        sprintf(tmpString,"Spectrum\t\t\t%s\n",MFC_header.FileName);
-  // QDOAS ???       if (strlen(MFC_header.specname))
-  // QDOAS ???        sprintf(tmpString,"Record name\t\t%s\n",MFC_header.specname);
-  // QDOAS ???       if (strlen(MFC_header.site))
-  // QDOAS ???        sprintf(tmpString,"Site\t\t\t%s\n",MFC_header.site);
-  // QDOAS ???       if (strlen(MFC_header.spectroname))
-  // QDOAS ???        sprintf(tmpString,"Spectro name\t\t%s\n",MFC_header.spectroname);
-  // QDOAS ???       if (strlen(MFC_header.scan_dev))
-  // QDOAS ???        sprintf(tmpString,"Scan device\t\t%s\n",MFC_header.scan_dev);
-  // QDOAS ???       if (strlen(MFC_header.first_line))
-  // QDOAS ???        sprintf(tmpString,"%s\n",MFC_header.first_line);
-  // QDOAS ???       if (strlen(MFC_header.spaeter))
-  // QDOAS ???        sprintf(tmpString,"%s\n",MFC_header.spaeter);
-  // QDOAS ???
-  // QDOAS ???       if (strlen(MFC_header.backgrnd))
-  // QDOAS ???        sprintf(tmpString,"Background\t\t%s\n",MFC_header.backgrnd);
-  // QDOAS ???
-  // QDOAS ???       sprintf(tmpString,"ty mask\t\t\t%d\n",MFC_header.ty);
-  // QDOAS ???      }
-
   if (pSpectra->fieldsFlag[PRJCT_RESULTS_PIXEL])
    mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Pixel number","%d",pRecord->gome.pixelNumber);
   if (pSpectra->fieldsFlag[PRJCT_RESULTS_PIXEL_TYPE])
@@ -187,11 +163,6 @@ int mediateRequestDisplaySpecInfo(void *engineContext,int page,void *responseHan
     else if (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS)
      mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Orbit number","%d",pRecord->scia.orbitNumber);
    }
-
-  // QDOAS ???     if (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC)
-  // QDOAS ???      sprintf(tmpString,"Calibration parameters\t%.2f %.3e %.3e %.3e\n",pRecord->wavelength1,pRecord->dispersion[0],
-  // QDOAS ???                  pRecord->dispersion[1],pRecord->dispersion[2]);
-  // QDOAS ???
 
   if (pSpectra->fieldsFlag[PRJCT_RESULTS_TINT])
    mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Exposure time","%.3f sec",pRecord->Tint);
@@ -2069,19 +2040,16 @@ int mediateRequestNextMatchingSpectrum(ENGINE_CONTEXT *pEngineContext,void *resp
    // Loop in search of a matching record - respect the min and max limits
    // in general 'break' to exit the loop
 
-   while (rc == ERROR_ID_NO && rec <= upperLimit)
-    {
+   while (rc == ERROR_ID_NO && rec <= upperLimit) {
+
      // read the 'next' record
-     if ((rc=EngineReadFile(pEngineContext,rec,0,0))!=ERROR_ID_NO)
-      {
+     if ((rc=EngineReadFile(pEngineContext,rec,0,0))!=ERROR_ID_NO) {
        // reset the rc based on the severity of the failure - for non fatal errors keep searching
        rc = ERROR_DisplayMessage(responseHandle);
-      }
-     else if ( (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_OMI) &&
-               !omi_use_track(pRecord->omi.omiXtrackQF, pProject->instrumental.omi.xtrack_mode) ) {
-      // skip this spectrum
-     } else
-      {
+     } else if ( (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_OMI) &&
+                 !omi_use_track(pRecord->omi.omiXtrackQF, pProject->instrumental.omi.xtrack_mode) ) {
+       // skip this spectrum
+     } else {
        longit=pRecord->longitude;
        latit=pRecord->latitude;
        geoFlag=1;
@@ -2089,57 +2057,50 @@ int mediateRequestNextMatchingSpectrum(ENGINE_CONTEXT *pEngineContext,void *resp
        if ((pProject->spectra.mode==PRJCT_SPECTRA_MODES_CIRCLE) && (pProject->spectra.radius>1.) &&
            (THRD_GetDist(longit,latit,pProject->spectra.longMin,pProject->spectra.latMin)>(double)pProject->spectra.radius))
         geoFlag=0;
-       else if ((pProject->spectra.mode==PRJCT_SPECTRA_MODES_OBSLIST) && (pProject->spectra.radius>1.))
-        {
-         for (indexSite=0;indexSite<SITES_itemN;indexSite++)
-          {
+       else if ((pProject->spectra.mode==PRJCT_SPECTRA_MODES_OBSLIST) && (pProject->spectra.radius>1.)) {
+
+         for (indexSite=0;indexSite<SITES_itemN;indexSite++) {
            pSite=&SITES_itemList[indexSite];
 
-           // QDOAS ???           if (!pSite->hidden)
-           {
-            if (THRD_GetDist(longit,latit,pSite->longitude,pSite->latitude)<=(double)pProject->spectra.radius)
+           if (THRD_GetDist(longit,latit,pSite->longitude,pSite->latitude)<=(double)pProject->spectra.radius)
              break;
-           }
-          }
-         if (indexSite==SITES_itemN)
+         }
+         if (indexSite==SITES_itemN) {
           geoFlag=0;
-        }
-       else if ((pProject->spectra.mode==PRJCT_SPECTRA_MODES_RECTANGLE) &&
+         }
+       } else if ((pProject->spectra.mode==PRJCT_SPECTRA_MODES_RECTANGLE) &&
 
-                (((pProject->spectra.longMin!=pProject->spectra.longMax) &&
-                  ((longit>max(pProject->spectra.longMin,pProject->spectra.longMax)) ||
-                   (longit<min(pProject->spectra.longMin,pProject->spectra.longMax)))) ||
-
-                 ((pProject->spectra.latMin!=pProject->spectra.latMax) &&
-                  ((latit>max(pProject->spectra.latMin,pProject->spectra.latMax)) ||
-                   (latit<min(pProject->spectra.latMin,pProject->spectra.latMax))))))
-
-        geoFlag=0;
-
-       if (geoFlag) {
-        if (((fabs(pProject->spectra.SZAMin-pProject->spectra.SZAMax)<(double)1.e-4) ||
-             ((pRecord->Zm>=pProject->spectra.SZAMin) && (pRecord->Zm<=pProject->spectra.SZAMax))) &&
-            ((fabs(pProject->spectra.SZADelta)<(double)1.e-4) ||
-             (fabs(pRecord->Zm-pRecord->oldZm)>pProject->spectra.SZADelta))) {
-         // this record matches - exit the search loop
-         break;
-        }
+                  (((pProject->spectra.longMin!=pProject->spectra.longMax) &&
+                    ((longit>max(pProject->spectra.longMin,pProject->spectra.longMax)) ||
+                     (longit<min(pProject->spectra.longMin,pProject->spectra.longMax)))) ||
+                   
+                   ((pProject->spectra.latMin!=pProject->spectra.latMax) &&
+                    ((latit>max(pProject->spectra.latMin,pProject->spectra.latMax)) ||
+                     (latit<min(pProject->spectra.latMin,pProject->spectra.latMax)))))) {
+         geoFlag=0;
        }
 
-      }
+       if (geoFlag) {
+         if (((fabs(pProject->spectra.SZAMin-pProject->spectra.SZAMax)<(double)1.e-4) ||
+              ((pRecord->Zm>=pProject->spectra.SZAMin) && (pRecord->Zm<=pProject->spectra.SZAMax))) &&
+             ((fabs(pProject->spectra.SZADelta)<(double)1.e-4) ||
+              (fabs(pRecord->Zm-pRecord->oldZm)>pProject->spectra.SZADelta))) {
+           // this record matches - exit the search loop
+           break;
+         }
+       }
+     }
 
-     if (outputFlag)
-      {
-      	int indexFeno,indexFenoColumn;
+     if (outputFlag) {
 
-      	indexFenoColumn=(pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_OMI)?pEngineContext->recordInfo.omi.omiRowIndex-1:0;
+       int indexFenoColumn=(pEngineContext->recordNumber - 1) % ANALYSE_swathSize;
 
-      	for (indexFeno=0;indexFeno<NFeno;indexFeno++)
+       for (int indexFeno=0;indexFeno<NFeno;indexFeno++)
       	 if (!TabFeno[indexFenoColumn][indexFeno].hidden)
-      	  TabFeno[indexFenoColumn][indexFeno].rc=ERROR_ID_FILE_RECORD;             // force the output to default values
-
+           TabFeno[indexFenoColumn][indexFeno].rc=ERROR_ID_FILE_RECORD;             // force the output to default values
+       
        OUTPUT_SaveResults(pEngineContext,indexFenoColumn);
-      }
+     }
 
      // try the next record
      rec+=inc;
@@ -2153,27 +2114,23 @@ int mediateRequestNextMatchingSpectrum(ENGINE_CONTEXT *pEngineContext,void *resp
     // did not find a matching record ... reread the last matching index (if there was one)
     // and return 0 to indicate the end of records.
 
-    if (orec != 0) {
-     if ((rc=EngineReadFile(pEngineContext,orec,0,0))!=ERROR_ID_NO)
-      {
-       if (outputFlag)
-        {
-        	int indexFeno,indexFenoColumn;
+    if (orec != 0
+        && (rc=EngineReadFile(pEngineContext,orec,0,0))!=ERROR_ID_NO) {
 
-        	indexFenoColumn=(pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_OMI)?pEngineContext->recordInfo.omi.omiRowIndex-1:0;
+      if (outputFlag) {
 
-        	for (indexFeno=0;indexFeno<NFeno;indexFeno++)
-        	 if (!TabFeno[indexFenoColumn][indexFeno].hidden)
-        	  TabFeno[indexFenoColumn][indexFeno].rc=ERROR_ID_FILE_RECORD;             // force the output to default values
-
-         OUTPUT_SaveResults(pEngineContext,indexFenoColumn);
-        }
-
-       ERROR_DisplayMessage(responseHandle);
-       return -1; // error
+        int indexFenoColumn = (pEngineContext->recordNumber - 1) % ANALYSE_swathSize;
+        
+        for (int indexFeno=0;indexFeno<NFeno;indexFeno++)
+          if (!TabFeno[indexFenoColumn][indexFeno].hidden)
+            TabFeno[indexFenoColumn][indexFeno].rc=ERROR_ID_FILE_RECORD;             // force the output to default values
+          
+        OUTPUT_SaveResults(pEngineContext,indexFenoColumn);
       }
-    }
 
+      ERROR_DisplayMessage(responseHandle);
+      return -1; // error
+    }
     return 0; // No more matching records
    }
 
