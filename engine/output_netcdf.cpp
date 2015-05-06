@@ -53,27 +53,27 @@ static void create_dimensions(NetCDFGroup &group) {
   }
 }
 
-static void getDims(const struct output_field& thefield, vector<int>& dimids, vector<size_t>& chunkdims) {
+static void getDims(const struct output_field& thefield, vector<int>& dimids, vector<size_t>& chunksizes) {
   // for dimensions simply numbered "2, 3, ... 9"
-  static const array<int, 8> dimnumbers { { dim_2, dim_3, dim_4, dim_5, dim_6, dim_7, dim_8, dim_9 } };
+  const array<int, 8> dimnumbers { { dim_2, dim_3, dim_4, dim_5, dim_6, dim_7, dim_8, dim_9 } };
 
   if (thefield.data_cols > 1) {
     assert(thefield.data_cols < 10);
     dimids.push_back(dimnumbers[thefield.data_cols -2]);
-    chunkdims.push_back(thefield.data_cols);
+    chunksizes.push_back(thefield.data_cols);
   }
   switch (thefield.memory_type) {
   case OUTPUT_DATE:
     dimids.push_back(dim_date);
-    chunkdims.push_back(3);
+    chunksizes.push_back(3);
     break;
   case OUTPUT_TIME:
     dimids.push_back(dim_time);
-    chunkdims.push_back(3);
+    chunksizes.push_back(3);
     break;
   case OUTPUT_DATETIME:
     dimids.push_back(dim_datetime);
-    chunkdims.push_back(7);
+    chunksizes.push_back(7);
     break;
   default:
     break;
@@ -114,29 +114,29 @@ static nc_type getNCType(enum output_datatype xtype) {
 static void define_variable(NetCDFGroup &group, const struct output_field& thefield, const string& varname, enum vartype vtype) {
 
   vector<int> dimids;
-  vector<size_t>chunkdims;
+  vector<size_t>chunksizes;
 
   if (vtype == Calibration) {
     if (n_crosstrack > 1) {
       dimids.push_back(dim_crosstrack);
-      chunkdims.push_back(std::min<size_t>(100, n_crosstrack));
+      chunksizes.push_back(std::min<size_t>(100, n_crosstrack));
     }
   
     dimids.push_back(dim_calib);
-    chunkdims.push_back(std::min<size_t>(100, n_calib));
+    chunksizes.push_back(std::min<size_t>(100, n_calib));
   } else {
     dimids.push_back(dim_alongtrack);
-    chunkdims.push_back(std::min<size_t>(100, n_alongtrack));
+    chunksizes.push_back(std::min<size_t>(100, n_alongtrack));
 
     if (n_crosstrack > 1) {
       dimids.push_back(dim_crosstrack);
-      chunkdims.push_back(std::min<size_t>(100, n_crosstrack));
+      chunksizes.push_back(std::min<size_t>(100, n_crosstrack));
     }
   }
-  getDims(thefield, dimids, chunkdims);
+  getDims(thefield, dimids, chunksizes);
 
   group.defVar(varname , dimids, getNCType(thefield.memory_type) );
-  group.defVarChunking(varname, NC_CHUNKED, chunkdims.data());
+  group.defVarChunking(varname, NC_CHUNKED, chunksizes.data());
   group.defVarDeflate(varname);
 }
 

@@ -194,13 +194,13 @@ int NetCDFGroup::defDim(const string& dimname, size_t len) {
   }    
 }
 
-int NetCDFGroup::defVar(const string& name, const vector<int>& dimids, nc_type xtype) {
+int NetCDFGroup::defVar(const string& varname, const vector<int>& dimids, nc_type xtype) {
   int varid;
-  int rc = nc_def_var(groupid, name.c_str(), xtype, dimids.size(), dimids.data(), &varid);
+  int rc = nc_def_var(groupid, varname.c_str(), xtype, dimids.size(), dimids.data(), &varid);
   if (rc == NC_NOERR) {
     return varid;
   } else {
-    throw std::runtime_error("Error creating variable '" + name + "' in group '" + name + "'");
+    throw std::runtime_error("Error creating variable '" + varname + "' in group '" + name + "'");
   }
 }
 
