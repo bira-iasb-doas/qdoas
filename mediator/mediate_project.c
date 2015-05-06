@@ -73,7 +73,7 @@ void initializeMediateProjectFiltering(mediate_filter_t *d)
 
 void initializeMediateProjectCalibration(mediate_project_calibration_t *d)
 {
-	int i;
+  int i;
   memset(d, 0, sizeof(mediate_project_calibration_t));
 
   // any non-zero defaults...
@@ -143,14 +143,6 @@ void initializeMediateProjectOutput(mediate_project_output_t *d)
   d->bandWidth=1.;
 }
 
-/* TODO JUST REMOVE */
-void initializeMediateProjectNasaAmes(mediate_project_nasa_ames_t *d)
-{
-  memset(d, 0, sizeof(mediate_project_nasa_ames_t));
-
-  // any non-zero defaults...
-}
-
 void initializeMediateProject(mediate_project_t *d)
 {
   /* delegate to sub component initialization functions */
@@ -164,5 +156,4 @@ void initializeMediateProject(mediate_project_t *d)
   initializeMediateProjectInstrumental(&(d->instrumental));
   initializeMediateProjectSlit(&(d->slit));
   initializeMediateProjectOutput(&(d->output));
-//  initializeMediateProjectNasaAmes(&(d->nasaames)); /* TODO JUST REMOVE */
 }
