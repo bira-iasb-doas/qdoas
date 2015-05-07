@@ -678,6 +678,7 @@ static void register_field(struct output_field field) {
   struct output_field *newfield = &output_data_analysis[output_num_fields++];
   *newfield = field;
   newfield->fieldname = strdup(newfield->fieldname);  // allocate a new buffer for the name so we can free() all output_field data later on.
+  newfield->windowname = NULL;
   if (newfield->data_cols == 0) // default number of columns is 1
     newfield->data_cols = 1;
   newfield->index_feno = ITEM_NONE;
@@ -1025,10 +1026,9 @@ static void register_calibration_field(struct output_field newfield) {
   // calibration field name starts with the analysis window. This is
   // useful when different analysis windows use different reference
   // spectra, and therefore have different calibration settings.
-  const char *window_name = TabFeno[newfield.index_row][newfield.index_feno].windowName;
-  char *fieldname = malloc(2 + strlen(window_name) + strlen(newfield.fieldname));
-  sprintf(fieldname, "%s.%s", window_name, newfield.fieldname);
-  calibfield->fieldname = fieldname;
+
+  calibfield->fieldname = strdup(newfield.fieldname);
+  calibfield->windowname = strdup(TabFeno[newfield.index_row][newfield.index_feno].windowName);
   calibfield->get_tabfeno = &get_tabfeno_calib;
   calibfield->get_cross_results = &get_cross_results_calib;
   calibfield->memory_type = OUTPUT_DOUBLE;
@@ -1117,19 +1117,18 @@ static void OutputRegisterParam(const ENGINE_CONTEXT *pEngineContext)
 
   // Browse analysis windows
   for (int indexFeno=0;indexFeno<NFeno;indexFeno++) {
-    FENO *pTabFeno=&TabFeno[indexFenoColumn][indexFeno];
-    char window_name[MAX_ITEM_NAME_LEN+1];
+    const FENO *pTabFeno=&TabFeno[indexFenoColumn][indexFeno];
     if(!outputRunCalib && !pTabFeno->hidden) {
       // run analysis: skip calibration settings
-      sprintf(window_name,"%s.",pTabFeno->windowName);
-      register_analysis_output(pResults, indexFeno, ITEM_NONE, window_name);
-      register_cross_results(pResults, pTabFeno, indexFeno, ITEM_NONE, window_name);
+      register_analysis_output(pResults, indexFeno, ITEM_NONE, pTabFeno->windowName);
+      register_cross_results(pResults, pTabFeno, indexFeno, ITEM_NONE, pTabFeno->windowName);
     }
     else if (outputRunCalib && pTabFeno->hidden) {
       // run calibration: use TabFeno with calibration settings, register parameters
       // for each calibration window
       for (int indexWin=0; indexWin<KURUCZ_buffers[indexFenoColumn].Nb_Win; indexWin++) {
-        sprintf(window_name,"RunCalib(%d).",indexWin+1);
+        char window_name[MAX_ITEM_NAME_LEN+1];
+        sprintf(window_name,"RunCalib(%d)",indexWin+1);
         register_analysis_output(pResults, indexFeno, indexWin, window_name);
         register_cross_results(pResults, pTabFeno, indexFeno, indexWin, window_name);
       }
@@ -1139,11 +1138,13 @@ static void OutputRegisterParam(const ENGINE_CONTEXT *pEngineContext)
 
 /*! \brief helper function to initialize an output_field containing analysis results. */
 static void register_analysis_field(const struct output_field* fieldcontent, int index_feno, int index_calib, int index_cross, const char *window_name, const char *symbol_name) {
+
   struct output_field *newfield = &output_data_analysis[output_num_fields++];
   *newfield = *fieldcontent;
-  char *full_fieldname = malloc(strlen(newfield->fieldname) + strlen(window_name) + strlen(symbol_name) +1);
-  sprintf(full_fieldname, "%s%s%s", window_name, newfield->fieldname, symbol_name);
+  char *full_fieldname = malloc(strlen(newfield->fieldname) + strlen(symbol_name) +1);
+  sprintf(full_fieldname, "%s%s", newfield->fieldname, symbol_name);
   newfield->fieldname = full_fieldname;
+  newfield->windowname = strdup(window_name);
   newfield->data = NULL;
   if (newfield->data_cols == 0) // data_cols = 1 as a default
     newfield->data_cols = 1;
@@ -1971,7 +1972,7 @@ size_t output_get_size(enum output_datatype datatype) {
     Should be called to clear the results of the previous file while
     keeping the output configuration intact, when writing the results
     of a new file to output using the same output settings.*/
- static void output_field_clear(struct output_field *this_field) {
+static void output_field_clear(struct output_field *this_field) {
   if(this_field->data) {
 
     if(this_field->memory_type == OUTPUT_STRING) {
@@ -1998,6 +1999,7 @@ static void output_field_free(struct output_field *this_field) {
   output_field_clear(this_field);
 
   free(this_field->fieldname);
+  free(this_field->windowname);
 
   if(this_field->attributes) {
     for (int i=0; i<this_field->num_attributes; i++) {

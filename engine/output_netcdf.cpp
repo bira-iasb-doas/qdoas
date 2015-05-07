@@ -20,6 +20,8 @@ static size_t n_alongtrack, n_crosstrack, n_calib;
 static int dim_crosstrack, dim_alongtrack, dim_calib, dim_date, dim_time, dim_datetime, 
   dim_2, dim_3, dim_4, dim_5, dim_6, dim_7, dim_8, dim_9;
 
+const static string calib_subgroup_name = "Calib";
+
 enum vartype { Analysis, Calibration};
 
 static void create_dimensions(NetCDFGroup &group) {
@@ -190,22 +192,24 @@ static void write_calibration_field(const struct output_field& calibfield, NetCD
 }
 
 static void write_calibration_data(NetCDFGroup& group) {
-  static const string calib_prefix = "Calib.";
 
   for (unsigned int i=0; i<calib_num_fields; ++i) {
     const struct output_field& calibfield = output_data_calib[i];
-    string varname = calib_prefix + calibfield.fieldname;
 
-    if ( !group.hasVar(varname)) {
+    NetCDFGroup calib_group = group.getGroup(calibfield.windowname).getGroup(calib_subgroup_name);
+
+    string varname = calibfield.fieldname;
+
+    if ( !calib_group.hasVar(varname)) {
       /* when crosstrack dimension is > 1, output_data_calib contains
        * a copy of each calibration field for each detector row.  We
        * want to define one variable with n_crosstrack columns for
        * each calibration field.  -> check if variable already exists
        * and create it if needed. */
-      define_variable(group, calibfield, varname, Calibration);
+      define_variable(calib_group, calibfield, varname, Calibration);
     }
 
-    vector<int> dimids(group.dimIDs(varname));
+    vector<int> dimids(calib_group.dimIDs(varname));
     vector<size_t> start(dimids.size());
     start[0] = calibfield.index_row;
     vector<size_t> count;
@@ -216,7 +220,7 @@ static void write_calibration_data(NetCDFGroup& group) {
         count.push_back(group.dimLen(dim));
       }
     }
-    write_calibration_field(calibfield, group, varname, start, count);
+    write_calibration_field(calibfield, calib_group, varname, start, count);
   }
   
 }
@@ -254,6 +258,25 @@ void write_automatic_reference_info(const ENGINE_CONTEXT *pEngineContext, NetCDF
   }
 }
 
+// create a subgroup for each analysis window, and for the calibration
+// data belonging to that window
+void create_subgroups(NetCDFGroup &group) {
+
+  for (unsigned int i=0; i<calib_num_fields; ++i) {
+    if (group.groupID(output_data_calib[i].windowname) < 0) {
+      // group not yet created
+      auto subgroup = group.defGroup(output_data_calib[i].windowname);
+      subgroup.defGroup(calib_subgroup_name);
+    }
+  }
+  for (unsigned int i=0; i<output_num_fields; ++i) {
+    if (output_data_analysis[i].windowname &&
+        group.groupID(output_data_analysis[i].windowname) < 0) {
+      group.defGroup(output_data_analysis[i].windowname);
+    }
+  }
+}
+
 RC netcdf_open(const ENGINE_CONTEXT *pEngineContext, const char *filename) {
   try {
     NetCDFFile output(filename + string(output_file_extensions[NETCDF]), NC_WRITE );
@@ -270,12 +293,15 @@ RC netcdf_open(const ENGINE_CONTEXT *pEngineContext, const char *filename) {
       }
     }
     create_dimensions(output_group);
+    create_subgroups(output_group);
     write_global_attrs(pEngineContext, output_group);
     write_automatic_reference_info(pEngineContext, output_group);
     write_calibration_data(output_group);
 
     for (unsigned int i=0; i<output_num_fields; ++i) {
-      define_variable(output_group, output_data_analysis[i], output_data_analysis[i].fieldname, Analysis);
+      NetCDFGroup group = output_data_analysis[i].windowname ? 
+        output_group.getGroup(output_data_analysis[i].windowname) : output_group;
+      define_variable(group, output_data_analysis[i], output_data_analysis[i].fieldname, Analysis);
     }
 
     output_file = std::move(output);
@@ -335,7 +361,8 @@ static void write_buffer(const struct output_field *thefield, const bool selecte
       }
     }
   }
-  output_group.putVar(thefield->fieldname, buffer.data() );
+  NetCDFGroup group = thefield->windowname ? output_group.getGroup(thefield->windowname) : output_group;
+  group.putVar(thefield->fieldname, buffer.data() );
 }
 
 RC netcdf_write_analysis_data(const bool selected_records[], int num_records, const OUTPUT_INFO *recordinfo) {
@@ -384,7 +411,7 @@ RC netcdf_allow_file(const char *filename, const PRJCT_RESULTS *results) {
   int rc = ERROR_ID_NO;
   try {
     NetCDFFile test(filename, NC_WRITE);
-    if (test.groupID(results->swath_name) ) {
+    if (test.groupID(results->swath_name) >= 0 ) {
       rc = ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_OUTPUT_NETCDF, filename, results->swath_name);
     }
   } catch (std::runtime_error& e) {

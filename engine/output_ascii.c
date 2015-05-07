@@ -64,6 +64,9 @@ static void OutputAscPrintTitles(FILE *fp)
   for(unsigned int i=0; i<output_num_fields; i++) {
     struct output_field thefield = output_data_analysis[i];
     for(unsigned int col=0; col<thefield.data_cols; col++) {
+      if (thefield.windowname) {
+        fprintf(fp, "%s.", thefield.windowname);
+      }
       fprintf(fp, "%s",thefield.fieldname);
       if(thefield.data_cols > 1) {
         // in ascii format: print field name for each column, followed
@@ -169,13 +172,15 @@ static void write_calib_output(FILE *fp)
   for(unsigned int i=0; i<calib_num_fields; i++) {
     struct output_field thefield = output_data_calib[i];
 
-    char window_name[MAX_ITEM_NAME_LEN +1];
     if (ANALYSE_swathSize > 1)
-      sprintf(window_name,"Calib(%d/%d).", thefield.index_row+1, ANALYSE_swathSize);
+      fprintf(fp,"Calib(%d/%d).", thefield.index_row+1, ANALYSE_swathSize);
     else
-      sprintf(window_name,"Calib.");
+      fprintf(fp,"Calib.");
     
-    fprintf(fp, "%s%s\t",window_name, thefield.fieldname);
+    if (thefield.windowname) {
+      fprintf(fp, "%s.", thefield.windowname);
+    }
+    fprintf(fp, "%s\t", thefield.fieldname);
   }
   fprintf(fp, "\n");
 

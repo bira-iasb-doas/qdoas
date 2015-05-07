@@ -13,7 +13,7 @@ int NetCDFGroup::groupID(const string& groupName) const {
   if(rc == NC_NOERR) {
     return grpid;
   } else {
-    return 0;
+    return -1;
   }
 }
 
@@ -155,7 +155,7 @@ NetCDFFile::~NetCDFFile() {
 NetCDFGroup NetCDFGroup::getGroup(const string& groupname) const {
   int id = groupID(groupname);
 
-  if(id)
+  if (id >= 0)
     return NetCDFGroup(groupID(groupname), groupname);
   else
     throw std::runtime_error("Cannot open NetCDF group '" + groupname + "'");

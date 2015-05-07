@@ -74,6 +74,8 @@ typedef CROSS_RESULTS *(*func_cross_results)(struct output_field *this_field, in
 struct output_field {
   enum _prjctResults resulttype;
   /*!< The content of this field.*/
+  const char *windowname;
+  /*!< Name of the analysis window the data is from.*/
   char *fieldname; 
   /*!< title of the field in the output file */
   const char *format;

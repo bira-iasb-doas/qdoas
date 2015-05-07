@@ -269,8 +269,8 @@ RC write_calibration_data(void) {
 
   for(unsigned int i=0; i<calib_num_fields; i++) {
     struct output_field calibfield = output_data_calib[i];
-    char he5fieldname[strlen(calibfield.fieldname) + strlen(calib_prefix) + 1];
-    sprintf(he5fieldname, "%s%s", calib_prefix, calibfield.fieldname);
+    char he5fieldname[strlen(calib_prefix) + strlen(calibfield.windowname) + 1 + strlen(calibfield.fieldname) + 1];
+    sprintf(he5fieldname, "%s%s.%s", calib_prefix, calibfield.windowname, calibfield.fieldname);
     replace_chars(he5fieldname);
 
     // define data fields
@@ -320,7 +320,15 @@ RC create_analysis_data_fields(void) {
   char field_dimension[HE5_HDFE_DIMBUFSIZE];
   for(unsigned int i=0; i<output_num_fields; ++i) {
     struct output_field thefield = output_data_analysis[i];
-    replace_chars(thefield.fieldname);
+
+    size_t length = 1 + strlen(thefield.fieldname)
+      + (thefield.windowname ? 1 + strlen(thefield.windowname) : 0);
+    char he5_fieldname[length];
+    if (thefield.windowname)
+      sprintf(he5_fieldname, "%s.%s", thefield.windowname, thefield.fieldname);
+    else
+      sprintf(he5_fieldname, "%s", thefield.fieldname);
+    replace_chars(he5_fieldname);
 
     get_hdfeos5_dimension_analysis(field_dimension, &thefield);
     hid_t dtype = get_hdfeos5_type(thefield.memory_type);
@@ -339,14 +347,14 @@ RC create_analysis_data_fields(void) {
 
     enum fieldtype type = get_fieldtype(thefield.resulttype);
     herr_t result = (type == DATA)
-      ? HE5_SWdefdatafield(swath_id, thefield.fieldname, field_dimension, NULL, dtype, 0)
-      : HE5_SWdefgeofield(swath_id, thefield.fieldname, field_dimension, NULL, dtype, 0);
+      ? HE5_SWdefdatafield(swath_id, he5_fieldname, field_dimension, NULL, dtype, 0)
+      : HE5_SWdefgeofield(swath_id, he5_fieldname, field_dimension, NULL, dtype, 0);
     if(result == FAIL)
-      return ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_HDFEOS5_DEFFIELD, thefield.fieldname);
+      return ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_HDFEOS5_DEFFIELD, he5_fieldname);
     if(thefield.attributes) {
       for(int i=0; i<thefield.num_attributes; i++) {
         hsize_t count[1] = {strlen(thefield.attributes[i].value)+1};
-        result = HE5_SWwritelocattr(swath_id, thefield.fieldname, thefield.attributes[i].label, HE5T_CHARSTRING, count, thefield.attributes[i].value);
+        result = HE5_SWwritelocattr(swath_id, he5_fieldname, thefield.attributes[i].label, HE5T_CHARSTRING, count, thefield.attributes[i].value);
         if (result == FAIL)
           return ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_HDFEOS5_WRITEATTR, thefield.attributes[i].label);
       }
@@ -358,6 +366,16 @@ RC create_analysis_data_fields(void) {
 RC hdfeos5_write_analysis_data(const bool selected[], int num_records, const OUTPUT_INFO *outputRecords) {
   for(unsigned int i=0; i<output_num_fields; i++) {
     struct output_field thefield = output_data_analysis[i];
+    
+    size_t length = 1 + strlen(thefield.fieldname)
+      + (thefield.windowname ? 1 + strlen(thefield.windowname) : 0);
+    char he5_fieldname[length];
+    if (thefield.windowname)
+      sprintf(he5_fieldname, "%s.%s", thefield.windowname, thefield.fieldname);
+    else
+      sprintf(he5_fieldname, "%s", thefield.fieldname);
+    replace_chars(he5_fieldname);
+
     void *datbuf = calloc(nTimes * nXtrack * thefield.data_cols, get_hdfeos_size(thefield.memory_type) ); // todo: write default values
     // fill datbuf
     for(int record=0; record<num_records; record++) {
@@ -369,10 +387,10 @@ RC hdfeos5_write_analysis_data(const bool selected[], int num_records, const OUT
     hssize_t start[HE5_DTSETRANKMAX] = {0};
     hsize_t edge[HE5_DTSETRANKMAX];
     get_edge_analysis(edge, &thefield);
-    herr_t result = HE5_SWwritefield(swath_id, thefield.fieldname, start, NULL, edge, datbuf);
+    herr_t result = HE5_SWwritefield(swath_id, he5_fieldname, start, NULL, edge, datbuf);
     free(datbuf);
     if(result == FAIL)
-      return ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_HDFEOS5_WRITEFIELD, thefield.fieldname);
+      return ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_HDFEOS5_WRITEFIELD, he5_fieldname);
   }
   return ERROR_ID_NO;
 }
