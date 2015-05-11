@@ -3,9 +3,11 @@
 #include <stdexcept>
 #include <cassert>
 #include <iostream>
+#include <sstream>
 
 using std::string;
 using std::vector;
+using std::stringstream;
 
 int NetCDFGroup::groupID(const string& groupName) const {
   int grpid;
@@ -62,7 +64,9 @@ string NetCDFGroup::varName(int varid) const {
   if (nc_inq_varname(groupid, varid, varname) == NC_NOERR) {
     return string(varname);
   } else {
-    throw std::runtime_error("Cannot find NetCDF variable with id '"+std::to_string(varid)+"' in group '"+name+"'");
+    stringstream ss;
+    ss << "Cannot find NetCDF variable with id '" << varid << "' in group '"  << name << "'";
+    throw std::runtime_error(ss.str());
   }
 }
 
@@ -95,7 +99,9 @@ string NetCDFGroup::dimName(int dimid) const {
   if (nc_inq_dimname(groupid, dimid, dimname) == NC_NOERR) {
     return(dimname);
   } else {
-    throw std::runtime_error("Cannot get name of NetCDF dimension '"+ std::to_string(dimid)+"' in group '"+name+"'");
+    stringstream ss;
+    ss << "Cannot get name of NetCDF dimension '" << dimid << "' in group '" << name << "'";
+    throw std::runtime_error(ss.str());
   }
 }
 
