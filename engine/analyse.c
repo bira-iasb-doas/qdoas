@@ -135,6 +135,11 @@
 #include <math.h>
 #include <assert.h>
 
+#ifndef WIN32
+// for "is_same_file" implementation on unix:
+#include <fcntl.h>
+#endif
+
 // ===================
 // GLOBAL DECLARATIONS
 // ===================
