@@ -72,6 +72,7 @@
 
 #include "doas.h"
 #include <dirent.h>
+#include <string.h>
 #include <math.h>
 #include "stdfunc.h"
 

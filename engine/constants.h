@@ -320,7 +320,7 @@ enum _continuousFunctionsColumns
   COLUMN_CONTINUOUS_X3,           // terms in x3 and 1/x3
   COLUMN_CONTINUOUS_X4,           // terms in x4 and 1/x4
   COLUMN_CONTINUOUS_X5,           // terms in x5 and 1/x5
-  COLUMN_CONTINUOUS_MAX,          // terms in x0 and 1/x0
+  COLUMN_CONTINUOUS_MAX           // terms in x0 and 1/x0
  };
 
 // Columns description of the ListView in "linear parameters" tab page

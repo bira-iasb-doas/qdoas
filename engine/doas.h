@@ -2,7 +2,6 @@
 //  ----------------------------------------------------------------------------
 //
 //  Product/Project   :  QDOAS
-//  Module purpose    :  GEOCENTRIC MOON POSITIONS COMPUTATION
 //  Name of module    :  DOAS.H
 //  Creation date     :  1997
 //

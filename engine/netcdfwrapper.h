@@ -35,27 +35,27 @@ public:
   inline void getVar(int varid, const size_t start[], const size_t count[], T *out) const {
     if (ncGetVar(varid, start, count, out) != NC_NOERR) {
       throw std::runtime_error("Cannot read NetCDF variable '"+name+"/"+varName(varid)+"'");
-    } };
+    } }
   template<typename T>
   inline void getVar(const std::string& name, const size_t start[], const size_t count[], T *out) const {
-    getVar(varID(name), start, count, out);  };
+    getVar(varID(name), start, count, out);  }
 
   template<typename T>
   inline void putVar(int varid, const size_t start[], const size_t count[], T *in) {
     if (ncPutVar(varid, start, count, in) != NC_NOERR) {
       throw std::runtime_error("Cannot write NetCDF variable '"+name+"/"+varName(varid)+"'");
-    } };
+    } }
   template<typename T>
   inline void putVar(const std::string& name, const size_t start[], const size_t count[], T *in) { 
-    putVar(varID(name), start, count, in); };
+    putVar(varID(name), start, count, in); }
   template<typename T>
   inline void putVar(int varid, T *in) {
     if (ncPutVar(varid,in) != NC_NOERR) {
       throw std::runtime_error("Cannot write NetCDF variable '"+name+"/"+varName(varid)+"'");
-    } };
+    } }
   template<typename T>
   inline void putVar(const std::string& name, T *in) { 
-    putVar(varID(name), in); };
+    putVar(varID(name), in); }
 
   template<typename T>
   inline void putAttr(const std::string& name, size_t len, T*in, int varid=NC_GLOBAL) {

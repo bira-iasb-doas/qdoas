@@ -137,6 +137,7 @@
 
 #ifndef WIN32
 // for "is_same_file" implementation on unix:
+#include <sys/stat.h>
 #include <fcntl.h>
 #endif
 

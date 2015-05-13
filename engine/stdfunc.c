@@ -84,10 +84,12 @@
 // INCLUDE
 // =======
 
-#include "doas.h"
 #include <ctype.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <string.h>
+
+#include "doas.h"
 
 #define MAX_FORMAT_LEN    15                                                    // maximum number of characters for a string describing the format of a token
 

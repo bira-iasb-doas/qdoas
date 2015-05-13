@@ -355,7 +355,7 @@ RC create_analysis_data_fields(void) {
     if(thefield.attributes) {
       for(int i=0; i<thefield.num_attributes; i++) {
         hsize_t count[1] = {strlen(thefield.attributes[i].value)+1};
-        result = HE5_SWwritelocattr(swath_id, he5_fieldname, thefield.attributes[i].label, HE5T_CHARSTRING, count, thefield.attributes[i].value);
+        result = HE5_SWwritelocattr(swath_id, he5_fieldname, thefield.attributes[i].label, HE5T_CHARSTRING, count, (char *)thefield.attributes[i].value);
         if (result == FAIL)
           return ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_HDFEOS5_WRITEATTR, thefield.attributes[i].label);
       }
