@@ -21,8 +21,10 @@
 #include "engine.h"
 #include "output.h"
 
+#include <string.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include <math.h>
 
 int mediateRequestDisplaySpecInfo(void *engineContext,int page,void *responseHandle)
  {
@@ -1300,7 +1302,7 @@ int mediateRequestSetProject(void *engineContext,
 // PURPOSE       Load linear parameters
 // -----------------------------------------------------------------------------
 
-RC mediateRequestSetAnalysisLinear(struct anlyswin_linear *pLinear,INDEX indexFenoColumn)
+RC mediateRequestSetAnalysisLinear(const struct anlyswin_linear *pLinear,INDEX indexFenoColumn)
  {
    // Declarations
 
@@ -1419,7 +1421,7 @@ RC mediateRequestSetAnalysisNonLinearCalib(ENGINE_CONTEXT *pEngineContext,struct
 
 #define NNONLINEAR_DOAS 8
 
-RC mediateRequestSetAnalysisNonLinearDoas(ENGINE_CONTEXT *pEngineContext,struct anlyswin_nonlinear *pNonLinear,double *lambda, INDEX indexFenoColumn)
+RC mediateRequestSetAnalysisNonLinearDoas(ENGINE_CONTEXT *pEngineContext, const struct anlyswin_nonlinear *pNonLinear,double *lambda, INDEX indexFenoColumn)
  {
    // Declarations
 
@@ -1553,7 +1555,7 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
    INDEX indexKurucz,indexWindow;
    ENGINE_CONTEXT *pEngineContext;                                               // engine context
    PRJCT_INSTRUMENTAL *pInstrumental;
-   mediate_analysis_window_t *pAnalysisWindows;                                  // pointer to the current analysis window from the user interface
+   const mediate_analysis_window_t *pAnalysisWindows;                                  // pointer to the current analysis window from the user interface
    mediate_analysis_window_t calibWindows;                                       // pointer to the calibration parameters
    FENO *pTabFeno;                                                               // pointer to the description of an analysis window
    int indexFeno,indexFenoColumn,i;                                              // browse analysis windows

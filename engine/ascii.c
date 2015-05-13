@@ -58,6 +58,8 @@
 // =======
 
 #include "doas.h"
+#include <math.h>
+#include <string.h>
 
 // ===================
 // CONSTANT DEFINITION

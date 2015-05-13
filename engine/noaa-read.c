@@ -57,6 +57,7 @@
 
 #include "doas.h"
 #include "bin_read.h"
+#include "stdfunc.h"
 
 // =======================
 // DEFINITION OF CONSTANTS

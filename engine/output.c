@@ -66,11 +66,15 @@
 #include "output.h"
 #include "output_netcdf.h"
 #include "output_common.h"
+
+#include "stdfunc.h"
+
 #include <string.h>
 #include <stdbool.h>
 #include <assert.h>
 #include <search.h>
 #include <stdlib.h>
+#include <sys/stat.h>
 
 // ===================
 // GLOBAL DEFINITIONS

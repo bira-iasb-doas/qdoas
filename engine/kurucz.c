@@ -57,6 +57,9 @@
 #include "mediate.h"
 #include "engine.h"
 
+#include <string.h>
+#include <math.h>
+
 // ================
 // GLOBAL VARIABLES
 // ================

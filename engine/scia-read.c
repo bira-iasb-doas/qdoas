@@ -98,9 +98,12 @@
 #include "mediate.h"
 #include "engine.h"
 #include "output.h"
+#include "stdfunc.h"
 
 #include "bin_read.h"
 #include "scia_l1c_lib.h"
+
+#include <dirent.h>
 
 // ====================
 // CONSTANTS DEFINITION
@@ -190,7 +193,6 @@ static int sciaLoadReferenceFlag=0;
 // ==========
 
 void SciaSort(INDEX indexRecord,int flag,int listSize,INDEX fileIndex);
-void mds_1c_constant_getbin(FILE* unit, mds_1c_constant *var);
 
 // ===================
 // ALLOCATION ROUTINES

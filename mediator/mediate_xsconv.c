@@ -22,6 +22,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "../mediator/mediate_types.h"
 #include "../mediator/mediate_xsconv.h"
 
+#include <string.h>
+#include <math.h>
+
 // ================
 // STATIC VARIABLES
 // ================

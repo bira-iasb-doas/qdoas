@@ -10,8 +10,6 @@ void swap_bytes_short(unsigned char *var);
 void ushort_array_getbin (FILE* unit, unsigned short *var, int nr);
 void float_array_getbin (FILE* unit, float *var, int nr);
 
-void GeoN_array_getbin (FILE* unit, GeoN *var, int nr);
-void GeoL_array_getbin (FILE* unit, GeoL *var, int nr);
 void ads_states_getbin (FILE* unit, ADS_STATES *var);
 void gads_sun_ref_getbin (FILE* unit, gads_sun_ref *var);
 void mds_1c_constant_getbin (FILE* unit, mds_1c_constant *var);

@@ -1,6 +1,8 @@
 #ifndef FILES_H
 #define FILES_H
 
+#include <stdio.h>
+
 #if defined(_cplusplus) || defined(__cplusplus)
 extern "C" {
 #endif
@@ -54,7 +56,7 @@ extern int FILES_nPaths;                            // the size of the previous 
 // --------------------
 
 void   FILES_CompactPath(char *newPath,char *path,int useFileName,int addFlag);
-char *FILES_RebuildFileName(char *newPath,char *path,int useFileName);
+char *FILES_RebuildFileName(char *newPath,const char *path,int useFileName);
 void   FILES_ChangePath(char *oldPath,char *newPath,int useFileName);
 void   FILES_RemoveOnePath(char *path);
 void   FILES_RetrievePath(char *pathString,SZ_LEN pathStringLength,char *fullFileName,SZ_LEN fullFileNameLength,int indexFileType,int changeDefaultPath);

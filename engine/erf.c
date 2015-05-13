@@ -60,6 +60,7 @@
 // =======
 
 #include "doas.h"
+#include <math.h>
 
 // ====================
 // CONSTANTS DEFINITION

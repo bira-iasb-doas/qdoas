@@ -67,6 +67,11 @@
 // =======
 
 #include "doas.h"
+#include "stdfunc.h"
+
+#include <string.h>
+#include <math.h>
+#include <ctype.h>
 
 // ================
 // GLOBAL VARIABLES

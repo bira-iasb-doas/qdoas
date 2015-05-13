@@ -74,6 +74,10 @@
 // =======
 
 #include "doas.h"
+#include "stdfunc.h"
+
+#include <string.h>
+#include <math.h>
 
 // ===============
 // 512 SAOZ FORMAT
@@ -286,9 +290,10 @@ RC ReliSAOZ(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDa
   int               IndSec[100], N, IndMin, Base, Co1, Co2,                     // data read out from the input file
                     i, j, k;                                                    // indexes for loops and arrays
   int               domain;                                                     // spectral region
-  char              str[6], *string, *DIGITS="0123456789",                      // string buffers and pointers
+  char              str[6], *string,                                            // string buffers and pointers
                    *pSaoz,                                                      // pointer to the current record
                     names[20];                                                  // names of the current record
+  const char *DIGITS="0123456789";
 
   SHORT_DATE        day;                                                        // date of measurement in terms of day, month and year
   OBSERVATION_SITE *pSite;                                                      // pointer to the observation site in list

@@ -25,6 +25,8 @@
 #include "../mediator/mediate_common.h"
 #include "../engine/output_formats.h"
 
+#include <stdio.h>
+
 #if defined(_cplusplus) || defined(__cplusplus)
 extern "C" {
 #endif

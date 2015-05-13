@@ -70,6 +70,8 @@
 // ===============
 
 #include "doas.h"
+#include <string.h>
+#include <math.h>
 
 #define   MAXNP            150
 #define   EPS     (double)   2.2204e-016
@@ -255,7 +257,7 @@ void realft(double *source,double *buffer,int nn,int is)
   // Initializations
 
   ndemi=nn/2;
-  theta=PI/(double)ndemi;
+  theta=DOAS_PI/(double)ndemi;
   c1=0.5;
 
   // Forward transform
@@ -429,7 +431,7 @@ RC FilterNeqRipple (PRJCT_FILTER *pFilter,double *Beta, double *Delta,double *dB
     for ( k=1; k<=Nterm; k++ )
        {
            Dk   = (double) k;
-           Gk   = (double) PI * Dk;
+           Gk   = (double) DOAS_PI * Dk;
            Geta = (double) Eta * sqrt ( 1. - pow((double) Dk/DNp, (double) 2.) );
 
            Be2  = (double) ModBessel ( Geta );

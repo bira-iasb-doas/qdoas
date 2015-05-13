@@ -62,6 +62,8 @@
 
 #include "doas.h"
 #include "mediate_response.h"
+#include <stdarg.h>
+#include <string.h>
 
 // ====================
 // CONSTANTS DEFINITION

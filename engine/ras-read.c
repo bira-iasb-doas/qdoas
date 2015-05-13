@@ -60,6 +60,10 @@
 // =======
 
 #include "doas.h"
+#include "stdfunc.h"
+
+#include <string.h>
+#include <math.h>
 
 static int rasDirFlag;                                                          // 1 to process a directory, 0 to process only one file
 

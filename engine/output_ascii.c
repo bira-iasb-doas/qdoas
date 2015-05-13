@@ -2,6 +2,7 @@
 
 #include <stdbool.h>
 #include <assert.h>
+#include <string.h>
 
 #include "output_common.h"
 #include "output.h"

@@ -115,6 +115,8 @@
 
 #include "engine_xsconv.h"
 
+#include <math.h>
+
 // =================
 // N2 RAMAN FUNCTION
 // =================

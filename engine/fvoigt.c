@@ -63,6 +63,7 @@
 // =======
 
 #include "doas.h"
+#include <math.h>
 
 // =========
 // FUNCTIONS

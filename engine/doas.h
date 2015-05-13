@@ -50,13 +50,12 @@
 #include "windoas.h"
 #include "spectral_range.h"
 
+#include <stdio.h>
+#include <stdint.h>
+
 #if defined(_cplusplus) || defined(__cplusplus)
 extern "C" {
 #endif
-
-// ==================
-// HEADERS TO INCLUDE
-// ==================
 
 // =====================
 // CONSTANTS DEFINITIONS
@@ -74,7 +73,7 @@ extern "C" {
 
 #define STOP      ITEM_NONE
 
-#define PI          (double) 3.14159265358979323846
+#define DOAS_PI          (double) 3.14159265358979323846
 #define PI2         (double) 6.28318530717958647692
 #define PIDEMI      (double) 1.57079632679489661923
 
@@ -1040,13 +1039,13 @@ RC   ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle);
 
 void ANALYSE_SetAnalysisType(INDEX indexFenoColumn);
 RC   ANALYSE_LoadRef(ENGINE_CONTEXT *pEngineContext,INDEX indexFenoColumn);
-RC   ANALYSE_LoadCross(ENGINE_CONTEXT *pEngineContext,ANALYSIS_CROSS *crossSectionList,int nCross,int hidden,double *lambda,INDEX indexFenoColumn);
+RC   ANALYSE_LoadCross(ENGINE_CONTEXT *pEngineContext, const ANALYSIS_CROSS *crossSectionList,int nCross,int hidden,double *lambda,INDEX indexFenoColumn);
 RC   ANALYSE_LoadLinear(ANALYSE_LINEAR_PARAMETERS *linearList,int nLinear,INDEX indexFenoColumn);
 RC   ANALYSE_LoadNonLinear(ENGINE_CONTEXT *pEngineContext,ANALYSE_NON_LINEAR_PARAMETERS *nonLinearList,int nNonLinear,double *lambda,INDEX indexFenoColumn);
-RC   ANALYSE_LoadShiftStretch(ANALYSIS_SHIFT_STRETCH *shiftStretchList,int nShiftStretch,INDEX indexFenoColumn);
-RC   ANALYSE_LoadGaps(ENGINE_CONTEXT *pEngineContext,ANALYSIS_GAP *gapList,int nGaps,double *lambda,double lambdaMin,double lambdaMax,INDEX indexFenoColumn);
-RC   ANALYSE_LoadOutput(ANALYSIS_OUTPUT *outputList,int nOutput,INDEX indexFenoColumn);
-RC   ANALYSE_LoadSlit(PRJCT_SLIT *pSlit,int kuruczFlag);
+RC   ANALYSE_LoadShiftStretch(const ANALYSIS_SHIFT_STRETCH *shiftStretchList,int nShiftStretch,INDEX indexFenoColumn);
+RC   ANALYSE_LoadGaps(ENGINE_CONTEXT *pEngineContext,const ANALYSIS_GAP *gapList,int nGaps,double *lambda,double lambdaMin,double lambdaMax,INDEX indexFenoColumn);
+RC   ANALYSE_LoadOutput(const ANALYSIS_OUTPUT *outputList,int nOutput,INDEX indexFenoColumn);
+RC   ANALYSE_LoadSlit(const PRJCT_SLIT *pSlit,int kuruczFlag);
 
 RC   ANALYSE_Alloc(void);
 void ANALYSE_Free(void);

@@ -25,7 +25,7 @@ MATRIX_OBJECT;
 RC   MATRIX_Allocate(MATRIX_OBJECT *pMatrix,int nl,int nc,int basel,int basec,int allocateDeriv2, const char *callingFunction);
 void MATRIX_Free(MATRIX_OBJECT *pMatrix, const char *callingFunctionShort);
 RC   MATRIX_Copy(MATRIX_OBJECT *pTarget,MATRIX_OBJECT *pSource, const char *callingFunction);
-RC   MATRIX_Load(char *fileName,MATRIX_OBJECT *pMatrix,int nl,int nc,double xmin,double xmax,int allocateDeriv2,int reverseFlag, const char *callingFunction);
+RC   MATRIX_Load(const char *fileName,MATRIX_OBJECT *pMatrix,int nl,int nc,double xmin,double xmax,int allocateDeriv2,int reverseFlag, const char *callingFunction);
 
 #if defined(_cplusplus) || defined(__cplusplus)
 }

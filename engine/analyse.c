@@ -127,8 +127,12 @@
 #include "engine.h"
 #include "spectral_range.h"
 #include "output.h"
+#include "stdfunc.h"
+
 #include <stdbool.h>
-#include <sys/stat.h>
+#include <string.h>
+#include <ctype.h>
+#include <math.h>
 #include <assert.h>
 
 // ===================
@@ -727,7 +731,7 @@ RC ShiftVector(const double *lambda, double *source, const double *deriv, double
         a=sigma/sqrt(log(2.));
         delta=slitParam2*0.5;
 
-        w=(double)PI/step;
+        w=(double)DOAS_PI/step;
         F=exp(-a*a*w*w*0.25);
         G=(pKuruczOptions->fwhmType==SLIT_TYPE_GAUSS)?(double)1.:sin(w*delta)/(w*delta);
 
@@ -736,7 +740,7 @@ RC ShiftVector(const double *lambda, double *source, const double *deriv, double
 
         for (i=2;i<=ndemi;i++)
          {
-           w=(double)PI*(i-1.)/(ndemi*step);
+           w=(double)DOAS_PI*(i-1.)/(ndemi*step);
 
            F=(double)exp(-a*a*w*w*0.25);
            G=(double)(pKuruczOptions->fwhmType==SLIT_TYPE_GAUSS)?(double)1.:(double)sin(w*delta)/(w*delta);
@@ -4200,11 +4204,11 @@ void ANALYSE_ResetData(void)
 // ANALYSE_LoadSlit : Load slit function for fwhm correction
 // --------------------------------------------------------
 
-RC ANALYSE_LoadSlit(PRJCT_SLIT *pSlit,int kuruczFlag)
+RC ANALYSE_LoadSlit(const PRJCT_SLIT *pSlit,int kuruczFlag)
 {
   // Declarations
 
-  SLIT *pSlitFunction;
+  const SLIT *pSlitFunction;
   RC    rc;
 
   // Initializations
@@ -4341,15 +4345,14 @@ RC is_same_file(const char *file1, const char *file2, bool *result) {
 // PURPOSE       Load data from the molecules pages
 // -----------------------------------------------------------------------------
 
-RC ANALYSE_LoadCross(ENGINE_CONTEXT *pEngineContext,ANALYSIS_CROSS *crossSectionList,int nCross,int hidden,double *lambda,INDEX indexFenoColumn)
+RC ANALYSE_LoadCross(ENGINE_CONTEXT *pEngineContext, const ANALYSIS_CROSS *crossSectionList,int nCross,int hidden,double *lambda,INDEX indexFenoColumn)
 {
   // Declarations
 
   CROSS_REFERENCE *pEngineCross;                                                // pointer of the current cross section in the engine list
-  ANALYSIS_CROSS *pCross;                                                       // pointer of the current cross section in the mediate list
+  const ANALYSIS_CROSS *pCross;                                                       // pointer of the current cross section in the mediate list
   FENO *pTabFeno;                                                               // pointer to the current analysis window
-  char *pOrthoSymbol[MAX_FIT],                                                 // for each cross section in list, hold cross section to use for orthogonalization
-    *symbolName;
+  const char *pOrthoSymbol[MAX_FIT], *symbolName;                                                 // for each cross section in list, hold cross section to use for orthogonalization
   INDEX indexSymbol,indexSvd,                                                   // resp. indexes of item in list and of symbol
     firstTabCross,endTabCross,indexTabCross,i;                              // indexes for browsing list of cross sections symbols
   SZ_LEN symbolLength;                                               // length in characters of file name and symbol name
@@ -4712,18 +4715,18 @@ RC ANALYSE_LoadLinear(ANALYSE_LINEAR_PARAMETERS *linearList,int nLinear,INDEX in
 // ANALYSE_LoadShiftStretch : Load shift and stretch for cross sections implied in SVD decomposition
 // ------------------------------------------------------------------------------------------------
 
-RC ANALYSE_LoadShiftStretch(ANALYSIS_SHIFT_STRETCH *shiftStretchList,int nShiftStretch,INDEX indexFenoColumn)
+RC ANALYSE_LoadShiftStretch(const ANALYSIS_SHIFT_STRETCH *shiftStretchList,int nShiftStretch,INDEX indexFenoColumn)
 {
   // Declarations
 
   INDEX indexItem,indexSymbol,indexTabCross,indexSymbolInList,indexCross,       // indexes for loops and arrays
     indexShift,indexStretch,indexStretch2,indexScale,indexScale2;
-  char *symbol;                                                                // copy of list of symbols
+  const char *symbol;                                                                // copy of list of symbols
   CROSS_REFERENCE *pTabCross;                                                   // pointer to an element of the symbol cross reference table of an analysis window
   CROSS_RESULTS *pResults;                                                      // pointer to results part relative to the symbol
   WRK_SYMBOL *pWrkSymbol;                                                       // pointer to a general description of a symbol
   SZ_LEN symbolLength;                                                          // length in characters of a symbol name
-  ANALYSIS_SHIFT_STRETCH *pList;                                                // pointer to description of an item in list
+  const ANALYSIS_SHIFT_STRETCH *pList;                                          // pointer to description of an item in list
   FENO *pTabFeno;                                                               // pointer to description of the current analysis window
   int oldNF;
   RC rc;                                                                        // return code
@@ -5188,11 +5191,11 @@ RC ANALYSE_LoadNonLinear(ENGINE_CONTEXT *pEngineContext,ANALYSE_NON_LINEAR_PARAM
 #if defined(__BC32_) && __BC32_
 #pragma argsused
 #endif
-RC ANALYSE_LoadGaps(ENGINE_CONTEXT *pEngineContext,ANALYSIS_GAP *gapList,int nGaps,double *lambda,double lambdaMin,double lambdaMax,INDEX indexFenoColumn)
+RC ANALYSE_LoadGaps(ENGINE_CONTEXT *pEngineContext, const ANALYSIS_GAP *gapList,int nGaps,double *lambda,double lambdaMin,double lambdaMax,INDEX indexFenoColumn)
 {
   // Declarations
 
-  ANALYSIS_GAP *pGap;
+  const ANALYSIS_GAP *pGap;
   int Z;
   INDEX indexItem,indexWindow,i;
   double swap,lambda1,lambda2,(*LFenetre)[2];
@@ -5292,11 +5295,11 @@ RC ANALYSE_LoadGaps(ENGINE_CONTEXT *pEngineContext,ANALYSIS_GAP *gapList,int nGa
 // RETURN        return code
 // -----------------------------------------------------------------------------
 
-RC ANALYSE_LoadOutput(ANALYSIS_OUTPUT *outputList,int nOutput,INDEX indexFenoColumn)
+RC ANALYSE_LoadOutput(const ANALYSIS_OUTPUT *outputList,int nOutput,INDEX indexFenoColumn)
 {
   // Declarations
 
-  ANALYSIS_OUTPUT *pOutput;
+  const ANALYSIS_OUTPUT *pOutput;
   INDEX indexOutput,indexTabCross;
   CROSS_REFERENCE *TabCross,*pTabCross;                                         //  symbol cross reference
   CROSS_RESULTS   *TabCrossResults,*pResults;                                   //  results stored per symbol in previous list

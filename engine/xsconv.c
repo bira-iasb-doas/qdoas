@@ -137,11 +137,10 @@
 // INCLUDE
 // =======
 
-// #include "../mediator/mediate_response.h"
-// #include "../mediator/mediate_types.h"
-// #include "../mediator/mediate_xsconv.h"
-
 #include "doas.h"
+
+#include <string.h>
+#include <math.h>
 
 // =====================
 // CONSTANTS DEFINITIONS
@@ -215,7 +214,7 @@ RC XSCONV_FctGauss(double *pValue,double fwhm,double step,double delta)
    {
     sigma2=fwhm*0.5;
     a=sigma2/sqrt(log(2.));
-    ia=(double)step/(a*sqrt(PI));
+    ia=(double)step/(a*sqrt(DOAS_PI));
 
     *pValue=ia*exp(-(delta*delta)/(a*a));
    }
@@ -266,9 +265,9 @@ RC XsconvFctApod(double *pValue,double resolution,double phase,double dispersion
    rc=ERROR_SetLast("XsconvFctApod",ERROR_TYPE_FATAL,ERROR_ID_BAD_ARGUMENTS,"resolution<=0");
   else
    {
-    phi=(double)phase*PI/180.0;                                                 // degree -> radians
+    phi=(double)phase*DOAS_PI/180.0;                                                 // degree -> radians
     d=(double)1.8*dispersion/resolution;
-    a1=(double)PI*1.8/resolution;
+    a1=(double)DOAS_PI*1.8/resolution;
     sinphi=sin(phi);
     cosphi=cos(phi);
     b=a1*delta;
@@ -325,9 +324,9 @@ RC XsconvFctApodNBS(double *pValue,double resolution,double phase,double dispers
    rc=ERROR_SetLast("XsconvFctApodNBS",ERROR_TYPE_FATAL,ERROR_ID_BAD_ARGUMENTS,"resolution<=0");
   else
    {
-    phi=(double)phase*PI/180.0;                                                 // degree -> radians
+    phi=(double)phase*DOAS_PI/180.0;                                                 // degree -> radians
     d=(double)1.8*dispersion/resolution;
-    a1=(double)PI*1.8/resolution;
+    a1=(double)DOAS_PI*1.8/resolution;
     sinphi=sin(phi);
     cosphi=cos(phi);
     b=a1*delta;
@@ -638,7 +637,7 @@ RC XSCONV_LoadSlitFunction(MATRIX_OBJECT *pSlitXs,MATRIX_OBJECT *pSlitXs2,SLIT *
 
   slitType=pSlit->slitType;
 
-  if (*pSlitType!=NULL)
+  if (pSlitType!=NULL)
    *pSlitType=slitType;
 
   nFwhm=NFWHM;         // number of pixels by FWHM
@@ -701,7 +700,7 @@ RC XSCONV_LoadSlitFunction(MATRIX_OBJECT *pSlitXs,MATRIX_OBJECT *pSlitXs2,SLIT *
       delta=pSlit->slitParam2*0.5;
 
       if (slitType==SLIT_TYPE_GAUSS)
-       invapi=(double)1./(a*sqrt(PI))*slitStep;
+       invapi=(double)1./(a*sqrt(DOAS_PI))*slitStep;
       else if (slitType==SLIT_TYPE_VOIGT)
        {
         norm1=(double)Voigtx((double)0.,pSlit->slitParam2);
@@ -938,7 +937,7 @@ RC XSCONV_TypeStandardFFT(FFT *pFFT,int fwhmType,double slitParam,double slitPar
     a=sigma2/sqrt(log(2.));
     delta=slitParam2*0.5;
 
-    w=(double)PI/step;
+    w=(double)DOAS_PI/step;
     F=exp(-a*a*w*w*0.25);
     G=(fwhmType==SLIT_TYPE_GAUSS)?(double)1.:sin(w*delta)/(w*delta);
 
@@ -947,7 +946,7 @@ RC XSCONV_TypeStandardFFT(FFT *pFFT,int fwhmType,double slitParam,double slitPar
 
     for (i=2;i<=ndemi;i++)
      {
-      w=(double)PI*(i-1.)/(ndemi*step);
+      w=(double)DOAS_PI*(i-1.)/(ndemi*step);
 
       F=(double)exp(-a*a*w*w*0.25);
       G=(double)(fwhmType==SLIT_TYPE_GAUSS)?(double)1.:(double)sin(w*delta)/(w*delta);

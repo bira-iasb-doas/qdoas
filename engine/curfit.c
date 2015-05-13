@@ -70,6 +70,8 @@
 //  ----------------------------------------------------------------------------
 
 #include "doas.h"
+#include <math.h>
+#include <string.h>
 
 #define CURFIT_MAX_ITER 100
 

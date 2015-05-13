@@ -55,6 +55,8 @@
 // =======
 
 #include "doas.h"
+#include <string.h>
+#include <math.h>
 
 // ==========
 // DEFINITION

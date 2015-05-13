@@ -71,6 +71,9 @@
 // =======
 
 #include "doas.h"
+#include <dirent.h>
+#include <math.h>
+#include "stdfunc.h"
 
 #define NCURVE      20
 #define MAX_CAMERA_PICTURES 2000                                                // a picture should be captured every minute.  So 60x24 = 1440 pictures max per day

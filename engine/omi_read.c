@@ -45,11 +45,14 @@
 
 #include "mediate.h"
 #include "engine.h"
+#include "stdfunc.h"
+
 #include "hdf.h"
 #include "HdfEosDef.h"
 #include "mfhdf.h"
 
 #include <time.h>
+#include <dirent.h>
 
 #define MAX_OMI_FILES 500
 

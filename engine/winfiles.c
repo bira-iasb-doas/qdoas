@@ -116,6 +116,10 @@
 // ===========
 
 #include "doas.h"
+#include "stdfunc.h"
+
+#include <unistd.h>
+#include <string.h>
 
 FILE_TYPE FILES_types[FILE_TYPE_MAX] =
  {
@@ -273,7 +277,7 @@ void FILES_RemoveOnePath(char *path)
 // RETURN        pointer to the new path
 // -----------------------------------------------------------------------------
 
-char *FILES_RebuildFileName(char *newPath,char *path,int useFileName)
+char *FILES_RebuildFileName(char *newPath,const char *path,int useFileName)
  {
  	char pathTmp[MAX_PATH_LEN+1],*ptr;
 

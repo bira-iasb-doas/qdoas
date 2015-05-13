@@ -54,8 +54,10 @@
 // =======
 
 #include "doas.h"
+#include <string.h>
+#include <math.h>
 
-char *oomonth[12]={"Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"};
+const char *oomonth[12]={"Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"};
 
 // -----------------------------------------------------------------------------
 // FUNCTION        SetOceanOptics

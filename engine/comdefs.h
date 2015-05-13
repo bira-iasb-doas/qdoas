@@ -48,6 +48,13 @@
 #if !defined(__COMDEFS_)
 #define __COMDEFS_
 
+#include <stdbool.h>
+
+#ifndef WIN32
+#include <unistd.h>
+#define strnicmp strncasecmp
+#endif
+
 #if defined(_cplusplus) || defined(__cplusplus)
 extern "C" {
 #endif
@@ -59,26 +66,6 @@ extern "C" {
 // ===============
 // INCLUDE HEADERS
 // ===============
-
-#include <ctype.h>
-#include <fcntl.h>
-#include <math.h>
-#include <sys/stat.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdbool.h>
-#include <string.h>
-#include <errno.h>
-#include <sys/types.h>
-#include <dirent.h>
-#include <time.h>
-#include <stdint.h>
-
-#ifndef WIN32
-#include <unistd.h>
-#define strnicmp strncasecmp
-#endif
 
 typedef int         INDEX,RC;                                            // RC holds for return code
 typedef unsigned int MASK,SZ_LEN;
@@ -437,22 +424,6 @@ RC       MEMORY_Alloc(void);
 RC       MEMORY_End(void);
 
 RC       MEMORY_GetInfo(DEBUG_VARIABLE *pVariable,char *pBuffer);
-
-// ======================================
-// STDFUNC.C : STANDARD UTILITY FUNCTIONS
-// ======================================
-
-// Prototypes
-
-double      STD_Pow10(int p);
-char      *STD_StrTrim(char *str);
-int         STD_Sscanf(char *line,char *formatString,...);
-long        STD_FileLength(FILE *fp);
-
-char       *STD_Strupr(char *n);
-char       *STD_Strlwr(char *n);
-
-int         STD_IsDir(char *filename);
 
 #if defined(_cplusplus) || defined(__cplusplus)
 }

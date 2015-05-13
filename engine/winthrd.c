@@ -99,6 +99,8 @@
 
 #include "doas.h"
 
+#include <math.h>
+
 // ================
 // GLOBAL VARIABLES
 // ================
@@ -209,7 +211,7 @@ double THRD_GetDist(double longit, double latit, double longitRef, double latitR
   if ((double)1.-fabs(argCos)>(double)1.e-12)
    dist=(double)6370.*acos(argCos);
   else
-   dist=(argCos>(double)0.)?(double)0.:(double)6370.*PI;
+   dist=(argCos>(double)0.)?(double)0.:(double)6370.*DOAS_PI;
 
   return dist;
  }

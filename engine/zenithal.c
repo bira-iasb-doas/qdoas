@@ -102,6 +102,9 @@
 
 #include "doas.h"
 
+#include <math.h>
+#include <time.h>
+
 // =====================
 // CONSTANTS DEFINITIONS
 // =====================
@@ -270,7 +273,7 @@ char *ZEN_FNCaljti(double *Tm,char *str)
   // Declarations
 
   double    Jc, NbreSec, NHeures, NMinut;
-  static   char *DIGITS = "0123456789";
+  static const char *DIGITS = "0123456789";
   double Tm1980;
 
   // Calculate the time in hours and minutes from the number of seconds since 01/01/1970

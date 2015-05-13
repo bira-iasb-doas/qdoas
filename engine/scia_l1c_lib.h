@@ -381,15 +381,6 @@ void ReadClusterInfo(ADS_STATES * state);
 
 SCIA_err Fixed_Wavelength_grid (info_l1c *info);
 
-
-				/* only for internal use, will vanish
-				 next release */
-SCIA_err read_solar_complete (info_l1c *info,
-			       solar_type sol,
-			       float *wl[],
-			       float *irr[],
-			       float *irr_err[]);
-
 SCIA_err Read_cal_options_GADS (info_l1c *info);
 
 SCIA_err calc_cluster_window (info_l1c *info, L1_MDS_TYPE type);

@@ -57,7 +57,9 @@
 #include "matrix.h"
 #include "spline.h"
 #include "files.h"
+#include "stdfunc.h"
 
+#include <string.h>
 #include <stdbool.h>
 
 // format string for fscanf: read a single number and skip over any
@@ -250,7 +252,7 @@ RC MATRIX_Copy(MATRIX_OBJECT *pTarget,MATRIX_OBJECT *pSource, const char *callin
 //               ERROR_ID_NO otherwise
 // -----------------------------------------------------------------------------
 
-RC MATRIX_Load(char *fileName,MATRIX_OBJECT *pMatrix,
+RC MATRIX_Load(const char *fileName,MATRIX_OBJECT *pMatrix,
                int nl,int nc,double xmin,double xmax,
                int allocateDeriv2,int reverseFlag, const char *callingFunction) {
   // Declarations

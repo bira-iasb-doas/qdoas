@@ -89,6 +89,8 @@
 
 #include "windoas.h"
 
+#include <string.h>
+
 // ================
 // GLOBAL VARIABLES
 // ================

@@ -46,10 +46,18 @@
 //
 //  ----------------------------------------------------------------------------
 
+#include <math.h>
+#include <dirent.h>
+
 #include "mediate.h"
+
 #include "engine.h"
-#include "coda.h"
+
+
+
+#include "stdfunc.h"
 #include "output.h"
+#include "coda.h"
 
 int  NDET;                                                                      // detector size
 

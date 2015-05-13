@@ -39,6 +39,11 @@
 // INCLUDES
 // ========
 
+#include <math.h>
+#include <string.h>
+#include <dirent.h>
+#include "stdfunc.h"
+
 #include "mediate.h"
 #include "engine.h"
 #include "coda.h"

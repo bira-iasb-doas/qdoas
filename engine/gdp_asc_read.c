@@ -89,7 +89,10 @@
 // =====================
 
 #include "doas.h"
+#include "stdfunc.h"
 #include <time.h>
+#include <string.h>
+#include <math.h>
 
 // ====================
 // CONSTANTS DEFINITION

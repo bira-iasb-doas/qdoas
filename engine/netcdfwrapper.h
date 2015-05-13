@@ -1,12 +1,12 @@
 #ifndef NETCDFWRAPPER_H
 #define NETCDFWRAPPER_H
 
-#include <netcdf.h>
-
 #include <string>
 #include <vector>
 #include <stdexcept>
 #include <cstring>
+
+#include <netcdf.h>
 
 // simple wrapper class around NetCDF C API calls.
 class NetCDFGroup {

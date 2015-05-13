@@ -8,6 +8,7 @@
 
 #include <stdbool.h>
 #include <assert.h>
+#include <sys/stat.h>
 #include <time.h>
 
 #include "QdoasVersion.h"

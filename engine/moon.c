@@ -79,6 +79,8 @@
 
 #include "doas.h"
 
+#include <math.h>
+
 // ====================
 // STRUCTURE DEFINITION
 // ====================
@@ -779,9 +781,9 @@ double MoonFraction(double T,double lambda,double beta)
 
   // Initializations
 
-  deg_to_rad = (double) PI/180.;
-  rad_to_deg = (double) 180./PI;
-  pi2 = (double) 2.*PI;
+  deg_to_rad = (double) DOAS_PI/180.;
+  rad_to_deg = (double) 180./DOAS_PI;
+  pi2 = (double) 2.*DOAS_PI;
 
   // Sun's true longitude
 
