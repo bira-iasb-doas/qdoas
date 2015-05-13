@@ -35,8 +35,8 @@ struct datetime{
 };
 
 struct field_attribute{
-  char *label;
-  char *value;
+  const char *label;
+  const char *value;
 };
 
 struct output_field;
@@ -74,8 +74,9 @@ typedef CROSS_RESULTS *(*func_cross_results)(struct output_field *this_field, in
 struct output_field {
   enum _prjctResults resulttype;
   /*!< The content of this field.*/
-  const char *windowname;
+  char *windowname;
   /*!< Name of the analysis window the data is from.*/
+  const char *basic_fieldname;
   char *fieldname; 
   /*!< title of the field in the output file */
   const char *format;
