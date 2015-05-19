@@ -72,12 +72,18 @@ typedef unsigned int MASK,SZ_LEN;
 
 // Macros
 
+// min and max macros conflict with some c++ headers. In c++ we can
+// use std::min and std::max.
+#ifndef __cplusplus 
+
 #ifndef max
 #define max(a,b) ( ( (a) >= (b) ) ? (a) : (b) )                                 // returns the maximum between two numbers
 #endif
 #ifndef min
 #define min(a,b) ( ( (a) <= (b) ) ? (a) : (b) )                                 // returns the minimum between two numbers
 #endif
+
+#endif // __cplusplus
 
 // Standard arrays dimensions
 
