@@ -1,3 +1,5 @@
+#ifndef QDOASXML_H
+#define QDOASXML_H
 
 #include <cstdio>
 #include <cstring>
@@ -15,3 +17,5 @@
 #include "comdefs.h"
 
 RC QDOASXML_Parse(QList<QString> &xmlCommands,const CProjectConfigItem *p);
+
+#endif

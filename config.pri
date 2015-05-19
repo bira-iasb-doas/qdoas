@@ -36,6 +36,7 @@ unix {
 }
 
 bira {
+  QMAKE_CXX = g++-4.7
   INSTALL_PREFIX = /bira-iasb/projects/DOAS/Programmes/QDOAS
   QMAKE_CFLAGS_RELEASE -= -g
   QMAKE_CXXFLAGS_RELEASE -= -g

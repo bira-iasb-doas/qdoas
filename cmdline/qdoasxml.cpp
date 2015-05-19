@@ -67,6 +67,7 @@
 //  ----------------------------------------------------------------------------
 
 #include "qdoasxml.h"
+#include <cstdlib>
 
 void ProjectApplyDouble(const CProjectConfigItem *p,                            // project to modify
                         QString *pXmlKey,                                       // the path of the field to replace
@@ -107,7 +108,7 @@ void ProjectApplyInt(const CProjectConfigItem *p,                               
 
   // Replace the old value by the new one
 
-  *pIntField=(double)atoi(pXmlValue->toAscii().constData());
+  *pIntField=atoi(pXmlValue->toAscii().constData());
  }
 
 void ProjectApplyChoice(const CProjectConfigItem *p,                            // project to modify
@@ -500,7 +501,6 @@ RC ParseAnalysisWindow(QStringList &xmlFields,int xmlFieldN,int startingField,QS
   int displayField;
   int filesField;
   RC  rc;
-  QList<const CAnalysisWindowConfigItem*>::const_iterator awIt = awList.begin();
 
   // Initializations
 
