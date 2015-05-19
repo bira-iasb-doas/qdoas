@@ -54,10 +54,17 @@
 //  Kelly Chance, from Harvard Smithsonian Institute
 //  ----------------------------------------------------------------------------
 
-#include "doas.h"
-
 #include <string.h>
 #include <math.h>
+
+#include "usamp.h"
+
+#include "engine_context.h"
+#include "doas.h"
+#include "vector.h"
+#include "matrix.h"
+#include "spline.h"
+#include "xsconv.h"
 
 // =====================
 // CONSTANTS DEFINITIONS

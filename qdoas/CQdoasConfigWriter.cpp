@@ -1017,15 +1017,6 @@ void CQdoasConfigWriter::writePropertiesOutput(FILE *fp, const mediate_project_o
   fprintf(fp, "    </output>\n");
 }
 
-void CQdoasConfigWriter::writePropertiesNasaAmes(FILE *fp, const mediate_project_nasa_ames_t *d)
-{
-  QString tmpStr = CPathMgr::instance()->simplifyPath(QString(d->path));
-
-  fprintf(fp, "    <nasa_ames path=\"%s\" save=\"%s\" reject=\"%s\" instr=\"%s\" exp=\"%s\" no2=\"%s\" o3=\"%s\" bro=\"%s\" oclo=\"%s\" />\n",
-	  tmpStr.toAscii().constData(), (d->saveFlag ? sTrue : sFalse), (d->rejectTestFlag ? sTrue : sFalse),
-	  d->instrument, d->experiment, d->anlysWinNO2, d->anlysWinO3, d->anlysWinBrO, d->anlysWinOClO);
-}
-
 void CQdoasConfigWriter::writeRawSpectraTree(FILE *fp, const QTreeWidgetItem *rawSpectraItem)
 {
   fprintf(fp, "    <raw_spectra>\n"

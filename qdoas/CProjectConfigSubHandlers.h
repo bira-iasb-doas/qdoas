@@ -179,20 +179,6 @@ class CProjectOutputSubHandler : public CSelectorSubHandler
 
 //-------------------------------------------------------------------
 
-class CProjectNasaAmesSubHandler : public CConfigSubHandler
-{
- public:
-  CProjectNasaAmesSubHandler(CConfigHandler *master,
-			   mediate_project_nasa_ames_t *nasaames);
-
-  virtual bool start(const QXmlAttributes &atts);
-
- private:
-  mediate_project_nasa_ames_t *m_nasaames;
-};
-
-//-------------------------------------------------------------------
-
 
 
 #endif

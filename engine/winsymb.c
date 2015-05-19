@@ -85,9 +85,9 @@
 // INCLUDE
 // =======
 
-#include "windoas.h"
-
 #include <string.h>
+
+#include "winsymb.h"
 
 // =================
 // GLOBALS VARIABLES

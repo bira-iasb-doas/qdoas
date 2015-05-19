@@ -59,9 +59,10 @@
 // INCLUDE
 // =======
 
-#include "doas.h"
-
 #include <math.h>
+#include <stdio.h>
+
+#include "doas.h"
 
 // -----------------------------------------------------------------------------
 // FUNCTION      VECTOR_Init

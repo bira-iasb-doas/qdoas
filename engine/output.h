@@ -2,6 +2,7 @@
 #define OUTPUT_H
 
 #include "engine.h"
+#include "doas.h"
 #include "output_formats.h"
 
 /*! \file output.h \brief Output module interface.*/
@@ -33,11 +34,33 @@ void OUTPUT_Free(void);
 
 /*! \brief For GOME-2/Sciamachy automatic reference spectrum: file
     from which the reference was generated. */
-extern char OUTPUT_refFile[MAX_PATH_LEN+1];
+extern char OUTPUT_refFile[DOAS_MAX_PATH_LEN+1];
 /*! \brief For GOME-2/Sciamachy automatic reference spectrum: number
     of spectra used. */
 extern int         OUTPUT_nRec;
+
+// Air Mass Factors (AMF) table cross reference
+// --------------------------------------------
+typedef struct _amfReference {
+  char    type,                          // type of symbol
+           symbolName[MAX_STR_LEN+1],      // name of symbol
+           amfFileName[MAX_STR_LEN+1];     // name of AMF file
+  double **Phi;                           // AMF data
+  double **deriv2;                        // AMF second derivatives for spline calculations
+  double **xs;                            // cross sections
+  double **xsDeriv2;                      // cross sections second derivatives
+  int      PhiLines,                      // number of lines in Phi matrix
+           PhiColumns,                    // number of columns in Phi matrix
+           xsLines,                       // number of lines in Param matrix
+           xsColumns;                     // number of columns in Param matrix
+} AMF_SYMBOL;
+
 /*! \brief List of cross sections with associated AMF file */
 extern AMF_SYMBOL *OUTPUT_AmfSpace;
+
+#define     MAX_FLUXES    20
+#define     MAX_CIC       20
+#define     MAX_RESULTS  500   // 250 measurements the morning; 250 measurements the afternoon.
+#define     MAX_FIELDS   1600
 
 #endif

@@ -115,11 +115,13 @@
 // DEFINITIONS
 // ===========
 
-#include "doas.h"
-#include "stdfunc.h"
-
 #include <unistd.h>
 #include <string.h>
+
+#include "winfiles.h"
+
+#include "doas.h"
+#include "stdfunc.h"
 
 FILE_TYPE FILES_types[FILE_TYPE_MAX] =
  {
@@ -155,7 +157,7 @@ FILE_TYPE FILES_typeSpectra[FILE_TYPE_SPECTRA_MAX] =
   { "ASCII Spectra files without header", "asc", "" }                           // WITHOUT COMMENT
  };
 
-char FILES_configuration[MAX_PATH_LEN+1];                                      // configuration file
+char FILES_configuration[DOAS_MAX_PATH_LEN+1];                                      // configuration file
 // QDOAS ??? int FILES_version=HELP_VERSION_MAX-1;                                           // file version
 FILES_PATH *FILES_paths;                                                        // all paths implied in configuration file
 
@@ -181,7 +183,7 @@ void FILES_CompactPath(char *newPath,char *path,int useFileName,int addFlag)
  {
   // Declarations
 
-  char  pathTmp[MAX_PATH_LEN+1],*ptr;
+  char  pathTmp[DOAS_MAX_PATH_LEN+1],*ptr;
   INDEX  indexPath,indexFirst;
   SZ_LEN pathLength,pathTmpLength;
 
@@ -193,7 +195,7 @@ void FILES_CompactPath(char *newPath,char *path,int useFileName,int addFlag)
    {
     // Initializations
 
-    memcpy(pathTmp,path,MAX_PATH_LEN+1);
+    memcpy(pathTmp,path,DOAS_MAX_PATH_LEN+1);
     indexFirst=ITEM_NONE;
 
     // Extract file name
@@ -215,7 +217,7 @@ void FILES_CompactPath(char *newPath,char *path,int useFileName,int addFlag)
 
       if ((indexPath==FILES_nPaths) && (indexFirst!=ITEM_NONE))
        {
-        memcpy(FILES_paths[indexFirst].path,pathTmp,MAX_PATH_LEN+1);
+        memcpy(FILES_paths[indexFirst].path,pathTmp,DOAS_MAX_PATH_LEN+1);
         FILES_paths[indexFirst].count=0;
         indexPath=indexFirst;
        }
@@ -236,10 +238,10 @@ void FILES_CompactPath(char *newPath,char *path,int useFileName,int addFlag)
        FILES_paths[indexPath].count++;
      }
     else if (newPath!=path)
-     memcpy(newPath,path,MAX_PATH_LEN+1);
+     memcpy(newPath,path,DOAS_MAX_PATH_LEN+1);
    }
   else
-   memset(newPath,0,MAX_PATH_LEN);
+   memset(newPath,0,DOAS_MAX_PATH_LEN);
  }
 
 // -----------------------------------------------------------------------------
@@ -279,7 +281,7 @@ void FILES_RemoveOnePath(char *path)
 
 char *FILES_RebuildFileName(char *newPath,const char *path,int useFileName)
  {
- 	char pathTmp[MAX_PATH_LEN+1],*ptr;
+ 	char pathTmp[DOAS_MAX_PATH_LEN+1],*ptr;
 
  	strcpy(pathTmp,path);
 
@@ -295,7 +297,7 @@ char *FILES_RebuildFileName(char *newPath,const char *path,int useFileName)
 
 // QDOAS ???  // Declarations
 // QDOAS ???
-// QDOAS ???  char pathTmp[MAX_PATH_LEN+1],*ptr;
+// QDOAS ???  char pathTmp[DOAS_MAX_PATH_LEN+1],*ptr;
 // QDOAS ???  INDEX indexPath;
 // QDOAS ???
 // QDOAS ???  // Initialization
@@ -376,13 +378,13 @@ void FILES_RetrievePath(char *pathString,SZ_LEN pathStringLength,
   // Set path to the default one associated to the type of selected file
 
   if (pathString!=FILES_types[indexFileType].defaultPath)
-   memcpy(pathString,FILES_types[indexFileType].defaultPath,MAX_PATH_LEN+1);
+   memcpy(pathString,FILES_types[indexFileType].defaultPath,DOAS_MAX_PATH_LEN+1);
 
   if ((fullFileName!=NULL) && (fullFileNameLength>0) && (fullFileNameLength<=pathStringLength))
    {
     // Use the selected file path as the default one
 
-    memcpy(pathString,fullFileName,MAX_PATH_LEN+1);
+    memcpy(pathString,fullFileName,DOAS_MAX_PATH_LEN+1);
 
     if ((ptr=strrchr(pathString,PATH_SEP))!=NULL)
      {
@@ -433,12 +435,12 @@ void FilesLoadAllPaths(char *fileLine)
  {
   // Declarations
 
-  char path[MAX_PATH_LEN+1];           // path extracted from fileLine
+  char path[DOAS_MAX_PATH_LEN+1];           // path extracted from fileLine
   INDEX indexPath;
 
   // Initialization
 
-  memset(path,0,MAX_PATH_LEN+1);
+  memset(path,0,DOAS_MAX_PATH_LEN+1);
 
   // Line decomposition
 
@@ -447,7 +449,7 @@ void FilesLoadAllPaths(char *fileLine)
   // Path safe keeping
 
   if ((indexPath>=0) && (indexPath<FILES_nPaths))
-   memcpy(FILES_paths[indexPath].path,path,MAX_PATH_LEN+1);
+   memcpy(FILES_paths[indexPath].path,path,DOAS_MAX_PATH_LEN+1);
  }
 
 // -----------------------------------------------------------------------------
@@ -497,7 +499,7 @@ void FilesResetDefaultPaths(void)
   // Browse the different file types
 
   for (indexFileType=0;indexFileType<FILE_TYPE_MAX;indexFileType++)
-   memset(FILES_types[indexFileType].defaultPath,0,MAX_PATH_LEN+1);
+   memset(FILES_types[indexFileType].defaultPath,0,DOAS_MAX_PATH_LEN+1);
  }
 
 // -----------------------------------------------------------------------------
@@ -513,12 +515,12 @@ void FilesLoadDefaultPaths(char *fileLine)
   // Declarations
 
   char keyName[MAX_ITEM_TEXT_LEN+1],                                           // name on the left of '=' symbol in a wds statement
-        defaultPath[MAX_PATH_LEN+1];                                            // default path extracted from fileLine
+        defaultPath[DOAS_MAX_PATH_LEN+1];                                            // default path extracted from fileLine
   INDEX indexFileType;
 
   // Initialization
 
-  memset(defaultPath,0,MAX_PATH_LEN);
+  memset(defaultPath,0,DOAS_MAX_PATH_LEN);
 
   // Line decomposition
 

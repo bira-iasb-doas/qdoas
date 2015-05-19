@@ -6,6 +6,9 @@
 
 #include "engine.h"
 #include "output.h"
+#include "QdoasVersion.h"
+#include "kurucz.h"
+#include "analyse.h"
 
 /*! \brief The different data types that can be stored in an \ref
     output_field structure.

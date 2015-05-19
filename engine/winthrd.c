@@ -97,9 +97,14 @@
 //  ANALYSE_Kurucz,ANALYSE_AlignReference,ANALYSE_Spectrum for reference processing and spectra analysis;
 //  ----------------------------------------------------------------------------
 
-#include "doas.h"
-
 #include <math.h>
+
+#include "winthrd.h"
+
+#include "doas.h"
+#include "engine_context.h"
+#include "analyse.h"
+#include "filter.h"
 
 // ================
 // GLOBAL VARIABLES

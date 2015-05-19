@@ -100,10 +100,12 @@
 // INCLUDE
 // =======
 
-#include "doas.h"
-
 #include <math.h>
 #include <time.h>
+#include <stdio.h>
+
+#include "zenithal.h"
+#include "doas.h"
 
 // =====================
 // CONSTANTS DEFINITIONS

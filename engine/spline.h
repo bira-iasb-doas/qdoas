@@ -1,6 +1,8 @@
 #ifndef SPLINE_H
 #define SPLINE_H
 
+#include "doas.h"
+
 #if defined(_cplusplus) || defined(__cplusplus)
 extern "C" {
 #endif

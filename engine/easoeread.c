@@ -54,9 +54,14 @@
 // INCLUDE
 // =======
 
-#include "doas.h"
 #include <string.h>
 #include <math.h>
+
+#include "winthrd.h"
+#include "zenithal.h"
+
+#include "doas.h"
+#include "engine_context.h"
 
 // ==========
 // DEFINITION

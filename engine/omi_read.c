@@ -43,16 +43,25 @@
 //
 //  ----------------------------------------------------------------------------
 
-#include "mediate.h"
-#include "engine.h"
-#include "stdfunc.h"
+#include <time.h>
+#include <dirent.h>
 
 #include "hdf.h"
 #include "HdfEosDef.h"
 #include "mfhdf.h"
 
-#include <time.h>
-#include <dirent.h>
+#include "omi_read.h"
+
+#include "engine_context.h"
+#include "spline.h"
+#include "mediate.h"
+#include "engine.h"
+#include "kurucz.h"
+#include "analyse.h"
+#include "vector.h"
+#include "zenithal.h"
+#include "winthrd.h"
+#include "stdfunc.h"
 
 #define MAX_OMI_FILES 500
 

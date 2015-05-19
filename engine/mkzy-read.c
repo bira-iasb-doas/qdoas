@@ -57,11 +57,19 @@
 // INCLUDE
 // =======
 
-#include "doas.h"
-#include "stdfunc.h"
-
 #include <string.h>
 #include <math.h>
+
+#include "doas.h"
+#include "engine_context.h"
+#include "analyse.h"
+#include "svd.h"
+#include "stdfunc.h"
+#include "vector.h"
+#include "zenithal.h"
+#include "winthrd.h"
+#include "kurucz.h"
+
 
 // ====================
 // CONSTANTS DEFINITION

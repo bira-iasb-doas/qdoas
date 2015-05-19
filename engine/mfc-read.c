@@ -66,12 +66,22 @@
 // INCLUDE
 // =======
 
-#include "doas.h"
-#include "stdfunc.h"
-
 #include <string.h>
 #include <math.h>
 #include <ctype.h>
+
+#include "spectrum_files.h"
+
+#include "doas.h"
+#include "winfiles.h"
+#include "engine_context.h"
+#include "kurucz.h"
+#include "analyse.h"
+#include "vector.h"
+#include "zenithal.h"
+#include "winthrd.h"
+#include "svd.h"
+#include "stdfunc.h"
 
 // ================
 // GLOBAL VARIABLES

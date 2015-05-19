@@ -59,11 +59,14 @@
 // INCLUDE
 // =======
 
-#include "doas.h"
-#include "stdfunc.h"
-
 #include <string.h>
 #include <math.h>
+
+#include "doas.h"
+#include "engine_context.h"
+#include "winthrd.h"
+#include "zenithal.h"
+#include "stdfunc.h"
 
 static int rasDirFlag;                                                          // 1 to process a directory, 0 to process only one file
 
@@ -85,15 +88,15 @@ RC SetRAS(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
  {
   // Declarations
 
-  char  fileName[MAX_PATH_LEN+1],                                              // name of the current file
+  char  fileName[DOAS_MAX_PATH_LEN+1],                                              // name of the current file
         *ptr,*ptr2;                                                             // pointers to parts in the previous string
   int    fileLength;                                                            // length of the file
   RC     rc;                                                                    // return code
 
   // Initializations
 
-  memset(fileName,0,MAX_PATH_LEN+1);
-  strncpy(fileName,pEngineContext->fileInfo.fileName,MAX_PATH_LEN);
+  memset(fileName,0,DOAS_MAX_PATH_LEN+1);
+  strncpy(fileName,pEngineContext->fileInfo.fileName,DOAS_MAX_PATH_LEN);
   pEngineContext->lastRefRecord=0;
   rasDirFlag=0;
   rc=ERROR_ID_NO;
@@ -291,7 +294,7 @@ RC ReliRAS(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay
 
   RECORD_INFO *pRecord;                                                         // pointer to the record part of the engine context
 
-  char                fileName[MAX_PATH_LEN+1],                                // name of the current file (the current record)
+  char                fileName[DOAS_MAX_PATH_LEN+1],                                // name of the current file (the current record)
                       *ptr;                                                     // pointers to parts in the previous string
   RC                   rc;                                                      // return code
   double               tmLocal;                                                 // the measurement time in seconds
@@ -300,8 +303,8 @@ RC ReliRAS(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay
 
   pRecord=&pEngineContext->recordInfo;
 
-  memset(fileName,0,MAX_PATH_LEN+1);
-  strncpy(fileName,pEngineContext->fileInfo.fileName,MAX_PATH_LEN);
+  memset(fileName,0,DOAS_MAX_PATH_LEN+1);
+  strncpy(fileName,pEngineContext->fileInfo.fileName,DOAS_MAX_PATH_LEN);
   rc=ERROR_ID_NO;
 
   if ((ptr=strrchr(fileName,PATH_SEP))==NULL)

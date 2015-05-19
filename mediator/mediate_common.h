@@ -40,48 +40,12 @@
 #ifndef _MEDIATE_COMMON_
 #define _MEDIATE_COMMON_
 
-#include "mediate_limits.h"
 #include "mediate_general.h"
 #include "../engine/comdefs.h"
-#include "../engine/constants.h"
-#include "../engine/engine_common.h"
 
 #if defined(_cplusplus) || defined(__cplusplus)
 extern "C" {
 #endif
-
-// Description of the slit function
-
-// typedef struct _slit
-//  {
-//   int    slitType;                                                              // type of line shape (see above)
-//   char slitFile[MAX_STR_LEN+1];                                               // for line shapes provided in file, name of the first file
-//   char slitFile2[MAX_STR_LEN+1];                                              // for line shapes provided in file, name of the second file
-//   double slitParam;                                                             // up to 4 parameters can be provided for the line shape
-//   double slitParam2;                                                            //       usually, the first one is the FWHM
-//   double slitParam3;                                                            //       obsolete : the Voigt profile function uses the 4 parameters
-//   double slitParam4;
-//  }
-// SLIT;
-
-typedef struct _filter
- {
-  int     type;                                          // type of filter
-  float   fwhmWidth;                                     // fwhm width for gaussian
-  float   kaiserCutoff;                                  // cutoff frequency for kaiser filter type
-  float   kaiserPassBand;                                // pass band for kaiser filter type
-  float   kaiserTolerance;                               // tolerance for kaiser filter type
-  int     filterOrder;                                   // filter order
-  int     filterWidth;                                   // filter width for boxcar, triangle or Savitsky-Golay filters
-  int     filterNTimes;                                  // the number of times to apply the filter
-  int     filterAction;
-  double *filterFunction;
-  int     filterSize;
-  double  filterEffWidth;
-  int     hpFilterCalib;
-  int     hpFilterAnalysis;
- }
-PRJCT_FILTER;
 
 void setMediateSlit(SLIT *pEngineSlit,const mediate_slit_function_t *pMediateSlit);
 void setMediateFilter(PRJCT_FILTER *pEngineFilter,const mediate_filter_t *pMediateFilter,int hpFilterFlag,int convoluteFlag);

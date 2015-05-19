@@ -69,9 +69,16 @@
 // INCLUDE HEADERS
 // ===============
 
-#include "doas.h"
 #include <string.h>
 #include <math.h>
+
+#include "filter.h"
+#include "engine_context.h"
+
+#include "doas.h"
+#include "svd.h"
+#include "vector.h"
+#include "spline.h"
 
 #define   MAXNP            150
 #define   EPS     (double)   2.2204e-016

@@ -439,24 +439,6 @@ extern "C" {
     data_select_list_t selection;
   } mediate_project_output_t;
 
-  /****************************************************/
-  /* Project NASA AMES */
-  /* TODO JUST REMOVE */
-
-  typedef struct mediate_project_nasa_ames
-  {
-    int saveFlag;
-    int rejectTestFlag;
-    char anlysWinNO2[ANLYSWIN_NAME_BUFFER_LENGTH];
-    char anlysWinO3[ANLYSWIN_NAME_BUFFER_LENGTH];
-    char anlysWinBrO[ANLYSWIN_NAME_BUFFER_LENGTH];
-    char anlysWinOClO[ANLYSWIN_NAME_BUFFER_LENGTH];
-    char path[FILENAME_BUFFER_LENGTH];
-    char instrument[NASA_AMES_VAR_BUFFER_LENGTH];
-    char experiment[NASA_AMES_VAR_BUFFER_LENGTH];
-  } mediate_project_nasa_ames_t;
-
-
   /* mediate_project_t
    *
    * Contains all user-specified information about a project. It allows the GUI to

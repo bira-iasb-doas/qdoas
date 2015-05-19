@@ -17,14 +17,27 @@
   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#include "mediate.h"
-#include "engine.h"
-#include "output.h"
-
 #include <string.h>
 #include <stdio.h>
 #include <stdbool.h>
 #include <math.h>
+
+#include "mediate.h"
+
+#include "mediate_common.h"
+#include "engine_context.h"
+#include "winsites.h"
+#include "winsymb.h"
+#include "winfiles.h"
+#include "engine.h"
+#include "analyse.h"
+#include "spectrum_files.h"
+#include "output.h"
+#include "kurucz.h"
+#include "svd.h"
+#include "winthrd.h"
+
+#include "omi_read.h"
 
 int mediateRequestDisplaySpecInfo(void *engineContext,int page,void *responseHandle)
  {

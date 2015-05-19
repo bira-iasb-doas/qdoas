@@ -54,11 +54,21 @@
 //  KURUCZ_Free - release buffers allocated for Kurucz procedures;
 //  ----------------------------------------------------------------------------
 
-#include "mediate.h"
-#include "engine.h"
-
 #include <string.h>
 #include <math.h>
+
+#include "kurucz.h"
+#include "analyse.h"
+#include "mediate.h"
+#include "xsconv.h"
+#include "engine.h"
+#include "spline.h"
+#include "filter.h"
+#include "winfiles.h"
+#include "xsconv.h"
+#include "vector.h"
+#include "winthrd.h"
+#include "svd.h"
 
 // ================
 // GLOBAL VARIABLES

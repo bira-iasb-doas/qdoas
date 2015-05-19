@@ -88,10 +88,12 @@
 // INCLUDE
 // =======
 
-#include "doas.h"
-
 #include <string.h>
 #include <math.h>
+#include <stdio.h>
+
+#include "doas.h"
+#include "svd.h"
 
 // ===========
 // INLINE CODE

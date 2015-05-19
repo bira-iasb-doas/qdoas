@@ -57,10 +57,16 @@
 // INCLUDE
 // =======
 
-#include "doas.h"
 #include <math.h>
 #include <string.h>
 
+#include "engine_context.h"
+#include "spectrum_files.h"
+#include "winthrd.h"
+#include "vector.h"
+#include "zenithal.h"
+
+#include "doas.h"
 // ===================
 // CONSTANT DEFINITION
 // ===================
@@ -75,7 +81,7 @@
 // GLOBAL VARIABLES
 // ================
 
-PRJCT_ASCII ASCII_options;                                                      // options from the 'Export in Ascii' dialog box
+//PRJCT_ASCII ASCII_options;                                                      // options from the 'Export in Ascii' dialog box
 
 // ================
 // STATIC VARIABLES

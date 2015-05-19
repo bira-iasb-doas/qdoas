@@ -49,9 +49,8 @@
 //
 //  ----------------------------------------------------------------------------
 
-// ============
-// HEADER FILES
-// ============
+#ifndef MOON_H
+#define MOON_H
 
 #include "doas.h"
 
@@ -63,3 +62,4 @@ void MOON_GetPosition(char  *inputDate,                                        /
                       double *ph,                                               // altitude above the horizon
                       double *pFrac);                                           // illuminated fraction of the moon
 
+#endif

@@ -67,11 +67,16 @@
 // INCLUDE
 // =======
 
-#include "doas.h"
-#include "stdfunc.h"
-
 #include <string.h>
 #include <math.h>
+
+#include "doas.h"
+#include "engine_context.h"
+#include "winsites.h"
+#include "vector.h"
+#include "zenithal.h"
+#include "stdfunc.h"
+#include "winthrd.h"
 
 // ====================
 // CONSTANTS DEFINITION

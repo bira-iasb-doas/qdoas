@@ -73,11 +73,17 @@
 // INCLUDE
 // =======
 
-#include "doas.h"
-#include "stdfunc.h"
-
 #include <string.h>
+#include <stdlib.h>
 #include <math.h>
+
+#include "doas.h"
+#include "engine_context.h"
+#include "winsites.h"
+#include "winthrd.h"
+#include "vector.h"
+#include "zenithal.h"
+#include "stdfunc.h"
 
 // ===============
 // 512 SAOZ FORMAT

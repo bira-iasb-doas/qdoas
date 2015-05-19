@@ -87,9 +87,18 @@
 #include <string.h>
 #include <dirent.h>
 
+#include "gdp_bin_read.h"
+
+#include "engine_context.h"
+#include "svd.h"
+#include "kurucz.h"
 #include "stdfunc.h"
 #include "mediate.h"
+#include "analyse.h"
 #include "engine.h"
+#include "vector.h"
+#include "winthrd.h"
+#include "zenithal.h"
 #include "output.h"
 
 // ====================
@@ -133,6 +142,64 @@ static int gdpBinLoadReferenceFlag=0;
 
 INDEX GdpBinSortGetIndex(double value,int flag,int listSize,INDEX fileIndex);
 void GdpBinSort(INDEX indexRecord,int flag,int listSize,INDEX fileIndex);
+
+/*----------------------------------------------------------------------------*\
+**                                EvalPolynom_f
+**  Input parameters:
+**    X: The point to evaluate the polynom
+**    Coefficient: Describe the polynom
+**    Grad: grad of the polynom
+**  Output parameters:
+**  Other interfaces:
+**  Description:
+**    This function evaluates a polynom of grad Grad described by Coefficient
+**    in the value x
+**  References:
+**  Libraries:
+**  Created:    22.3.94
+**  Author: 	Diego Loyola, DLR/WT-DA-BS
+\*----------------------------------------------------------------------------*/
+float EvalPolynom_f(float X, const float *Coefficient, short Grad)
+{
+    float Result = 0.0, Mult = 1.0;
+	short i;
+
+    for (i=0; i<Grad; i++)
+	{
+        Result += Coefficient[i]*Mult;
+        Mult *= X;
+    }
+    return Result;
+}
+
+/*----------------------------------------------------------------------------*\
+**                                EvalPolynom_d
+**  Input parameters:
+**    X: The point to evaluate the polynom
+**    Coefficient: Describe the polynom
+**    Grad: grad of the polynom
+**  Output parameters:
+**  Other interfaces:
+**  Description:
+**    This function evaluates a polynom of grad Grad described by Coefficient
+**    in the value x
+**  References:
+**  Libraries:
+**  Created:    22.3.94
+**  Author: 	Diego Loyola, DLR/WT-DA-BS
+\*----------------------------------------------------------------------------*/
+double EvalPolynom_d(double X, const double *Coefficient, short Grad)
+{
+    double Result = 0.0, Mult = 1.0;
+	short i;
+
+    for (i=0; i<Grad; i++)
+	{
+        Result += Coefficient[i]*Mult;
+        Mult *= X;
+    }
+    return Result;
+}
 
 // ===================
 // ALLOCATION ROUTINES
@@ -1409,7 +1476,7 @@ RC GdpBinNewRef(ENGINE_CONTEXT *pEngineContext,FILE *specFp,void *responseHandle
 
   rc=EngineCopyContext(&ENGINE_contextRef,pEngineContext);                     // perform a backup of the pEngineContext structure
 
-  memset(OUTPUT_refFile,0,MAX_PATH_LEN+1);
+  memset(OUTPUT_refFile,0,DOAS_MAX_PATH_LEN+1);
   OUTPUT_nRec=0;
 
   if (ENGINE_contextRef.recordNumber==0)

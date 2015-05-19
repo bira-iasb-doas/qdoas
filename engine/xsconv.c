@@ -137,10 +137,18 @@
 // INCLUDE
 // =======
 
-#include "doas.h"
-
 #include <string.h>
 #include <math.h>
+
+#include "xsconv.h"
+
+#include "engine_context.h"
+#include "doas.h"
+#include "winfiles.h"
+#include "spline.h"
+#include "filter.h"
+#include "erf.h"
+#include "vector.h"
 
 // =====================
 // CONSTANTS DEFINITIONS
@@ -148,6 +156,8 @@
 
 #define XSCONV_SECTION "Convolution"
 #define NFWHM          18                 // number of pixels/FWHM
+
+double Voigtx(double x,double y);
 
 // Slit types
 

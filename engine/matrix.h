@@ -2,6 +2,7 @@
 #define MATRIX_H
 
 #include "comdefs.h"
+#include "doas.h"
 
 #if defined(_cplusplus) || defined(__cplusplus)
 extern "C" {
@@ -10,14 +11,12 @@ extern "C" {
 // Structures definitions
 // ----------------------
 
-typedef struct _matrix
- {
+struct _matrix {
   int      nl,nc;           // resp. numbers of lines and columns of matrix
   INDEX    basel,basec;     // resp. base indexes for lines and columns in matrix
   double **matrix,          // pointer to columns in the matrix
          **deriv2;          // pointer to second derivatives
- }
-MATRIX_OBJECT;
+};
 
 // Prototypes
 // ----------

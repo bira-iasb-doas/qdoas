@@ -1,4 +1,4 @@
-
+#
 //  ----------------------------------------------------------------------------
 //
 //  Product/Project   :  DOAS ANALYSIS PROGRAM FOR WINDOWS
@@ -42,12 +42,22 @@
 #include <math.h>
 #include <string.h>
 #include <dirent.h>
-#include "stdfunc.h"
 
+#include "coda.h"
+
+#include "spectrum_files.h"
+#include "satellite.h"
+#include "engine_context.h"
+#include "stdfunc.h"
 #include "mediate.h"
 #include "engine.h"
-#include "coda.h"
 #include "output.h"
+#include "kurucz.h"
+#include "analyse.h"
+#include "vector.h"
+#include "zenithal.h"
+#include "winthrd.h"
+#include "svd.h"
 
 // ====================
 // CONSTANTS DEFINITION
@@ -2308,10 +2318,10 @@ RC Gome2NewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
 //  DEBUG_Print(DOAS_logFile,"Enter Gome2NewRef\n");
 
-  memset(OUTPUT_refFile,0,MAX_PATH_LEN+1);
+  memset(OUTPUT_refFile,0,DOAS_MAX_PATH_LEN+1);
   OUTPUT_nRec=0;
 
-  memset(pEngineContext->recordInfo.refFileName,0,MAX_PATH_LEN+1);
+  memset(pEngineContext->recordInfo.refFileName,0,DOAS_MAX_PATH_LEN+1);
   pEngineContext->recordInfo.refRecord=ITEM_NONE;
 
   rc=EngineCopyContext(&ENGINE_contextRef,pEngineContext);

@@ -62,6 +62,7 @@
 // =======
 
 #include "comdefs.h"
+#include "winfiles.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdarg.h>
@@ -96,7 +97,7 @@ DEBUG_FUNCTION;
 static DEBUG_FUNCTION debugFct[DEBUG_MAX_LEVELS];                               // the list of functions registered from the DEBUG_Start call
 static int debugNFct=0;                                                         // the number of functions in the debugFct stack
 
-static char  debugFileName[MAX_PATH_LEN+1];                                    // name of the debug file
+static char  debugFileName[DOAS_MAX_PATH_LEN+1];                                    // name of the debug file
 static char  debugIndentStr[DEBUG_MAX_LEVELS*4+1];                             // the indentation string (depend on the function level)
 static int    debugFctLevelMax=0;                                               // the maximum number of levels of functions to debug
 static MASK   debugFctMask=0;                                                   // mask to filter the functions according to their type
@@ -558,8 +559,8 @@ RC DEBUG_Start(char *fileName,char *callingFct,MASK fctMask,int nLevels,int varF
 
   // Cut the name of the file to the maximum size allowed
 
-  if (strlen(fileName)>MAX_PATH_LEN)
-   *(fileName+MAX_PATH_LEN)='\0';
+  if (strlen(fileName)>DOAS_MAX_PATH_LEN)
+   *(fileName+DOAS_MAX_PATH_LEN)='\0';
 
   // Debug mode already running
 
@@ -674,7 +675,7 @@ RC DEBUG_Stop(char *callingFct)
 
  	  // Reset debug variables
 
-    memset(debugFileName,0,MAX_PATH_LEN+1);
+    memset(debugFileName,0,DOAS_MAX_PATH_LEN+1);
 
     debugFctMask=0;
     debugFctLevelMax=0;

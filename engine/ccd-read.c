@@ -70,11 +70,17 @@
 // INCLUDE
 // =======
 
-#include "doas.h"
 #include <dirent.h>
 #include <string.h>
 #include <math.h>
+
+#include "doas.h"
+#include "winfiles.h"
+#include "engine_context.h"
 #include "stdfunc.h"
+#include "vector.h"
+#include "zenithal.h"
+#include "winthrd.h"
 
 #define NCURVE      20
 #define MAX_CAMERA_PICTURES 2000                                                // a picture should be captured every minute.  So 60x24 = 1440 pictures max per day
@@ -1118,7 +1124,7 @@ RC ReliCCDTrack(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loc
 
   CCD_1024 DetInfo;                                                             // data on the current spectra retrieved from the spectra file
   char names[20],                                                              // name of the current spectrum
-        fileName[MAX_PATH_LEN+1];                                               // the complete file name (including path)
+        fileName[DOAS_MAX_PATH_LEN+1];                                               // the complete file name (including path)
   unsigned short *ISpectre,*ISpecMax;                                                   // resp. spectrum and SpecMax retrieved from the file
   float *TabTint,*MaxTrk;                                                       // resp. integration time and track data
   int *TabNSomme;                                                               // scans data

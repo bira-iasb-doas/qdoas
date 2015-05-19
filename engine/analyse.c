@@ -123,12 +123,6 @@
 
 /*! \file analyse.c Main doas analysis code.*/
 
-#include "mediate.h"
-#include "engine.h"
-#include "spectral_range.h"
-#include "output.h"
-#include "stdfunc.h"
-
 #include <stdbool.h>
 #include <string.h>
 #include <ctype.h>
@@ -141,14 +135,35 @@
 #include <fcntl.h>
 #endif
 
+#include "analyse.h"
+
+#include "engine_context.h"
+#include "mediate.h"
+#include "winfiles.h"
+#include "winsymb.h"
+#include "engine.h"
+#include "kurucz.h"
+#include "spline.h"
+#include "xsconv.h"
+#include "filter.h"
+#include "usamp.h"
+#include "svd.h"
+#include "spectral_range.h"
+#include "output.h"
+#include "stdfunc.h"
+#include "winthrd.h"
+#include "curfit.h"
+#include "vector.h"
+#include "zenithal.h"
+#include "omi_read.h"
+
 // ===================
-// GLOBAL DECLARATIONS
+// Global DECLARATIONS
 // ===================
 
 #define ANALYSE_LONGPATH 0                                                      // 0 normal mode, 1 for Anoop specific needs
 #define MAX_REPEAT_CURFIT 3
 
-ANALYSIS_WINDOWS  *ANLYS_windowsList;       // analysis windows list
 PROJECT *PRJCT_itemList;
 
 doas_spectrum *global_doas_spectrum; // Should better remove this global variable.

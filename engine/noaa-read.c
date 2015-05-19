@@ -56,7 +56,10 @@
 // =======
 
 #include "doas.h"
+#include "engine_context.h"
 #include "bin_read.h"
+#include "winthrd.h"
+#include "zenithal.h"
 #include "stdfunc.h"
 
 // =======================

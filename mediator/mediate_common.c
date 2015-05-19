@@ -36,9 +36,10 @@
 //  Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //
 
-#include "mediate_common.h"
-
 #include <string.h>
+
+#include "mediate_common.h"
+#include "engine_context.h"
 
 // -----------------------------------------------------------------------------
 // FUNCTION      setMediateSlit

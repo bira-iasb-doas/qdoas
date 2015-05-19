@@ -68,10 +68,13 @@
 // INCLUDE
 // =======
 
-#include "doas.h"
-
 #include <string.h>
 #include <math.h>
+
+#include "doas.h"
+#include "engine_context.h"
+#include "zenithal.h"
+#include "winthrd.h"
 
 // ========================
 // DEFINITION OF STRUCTURES

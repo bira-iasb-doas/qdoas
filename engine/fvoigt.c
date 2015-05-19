@@ -62,8 +62,10 @@
 // INCLUDE
 // =======
 
-#include "doas.h"
 #include <math.h>
+#include <stdint.h>
+
+#include "doas.h"
 
 // =========
 // FUNCTIONS

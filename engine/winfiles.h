@@ -3,6 +3,8 @@
 
 #include <stdio.h>
 
+#include "doas.h"
+
 #if defined(_cplusplus) || defined(__cplusplus)
 extern "C" {
 #endif
@@ -15,8 +17,6 @@ extern "C" {
 // CONSTANTS AND STRUCTURES DEFINITIONS
 // ------------------------------------
 
-#define FILES_PATH_MAX 100
-
 // Base for building file filter
 // -----------------------------
 
@@ -24,7 +24,7 @@ typedef struct _fileType
  {
   char fileType[MAX_ITEM_DESC_LEN+1];          // type of files
   char fileExt[12];                            // extension associated to this type of files
-  char defaultPath[MAX_PATH_LEN+1];            // default path
+  char defaultPath[DOAS_MAX_PATH_LEN+1];            // default path
  }
 FILE_TYPE;
 
@@ -33,7 +33,7 @@ FILE_TYPE;
 
 typedef struct _filePath
  {
-  char path[MAX_PATH_LEN+1];
+  char path[DOAS_MAX_PATH_LEN+1];
   int   count;
  }
 FILES_PATH;

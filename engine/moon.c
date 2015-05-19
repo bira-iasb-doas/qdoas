@@ -77,9 +77,11 @@
 // HEADER FILES
 // ============
 
-#include "doas.h"
-
 #include <math.h>
+#include <stdlib.h>
+#include <stdio.h>
+
+#include "doas.h"
 
 // ====================
 // STRUCTURE DEFINITION

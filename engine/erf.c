@@ -59,8 +59,11 @@
 // INCLUDE
 // =======
 
-#include "doas.h"
 #include <math.h>
+
+#include "doas.h"
+#include "spline.h"
+#include "erf.h"
 
 // ====================
 // CONSTANTS DEFINITION

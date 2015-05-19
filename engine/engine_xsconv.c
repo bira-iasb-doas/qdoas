@@ -46,8 +46,10 @@
 //
 //  ----------------------------------------------------------------------------
 
-#include "engine_xsconv.h"
 #include <string.h>
+#include <stdlib.h>
+
+#include "engine_xsconv.h"
 
 // ======================================================================================
 // CREATE/DESTROY ENGINE CONTEXT FOR CONVOLUTION TOOLS (convolution, ring, undersampling)

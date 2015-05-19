@@ -88,11 +88,20 @@
 // INCLUDE USUAL HEADERS
 // =====================
 
-#include "doas.h"
-#include "stdfunc.h"
 #include <time.h>
 #include <string.h>
 #include <math.h>
+
+#include "doas.h"
+#include "engine_context.h"
+#include "analyse.h"
+#include "kurucz.h"
+#include "vector.h"
+#include "svd.h"
+#include "zenithal.h"
+#include "spline.h"
+#include "stdfunc.h"
+#include "winthrd.h"
 
 // ====================
 // CONSTANTS DEFINITION

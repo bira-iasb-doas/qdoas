@@ -88,7 +88,7 @@ typedef unsigned int MASK,SZ_LEN;
 #define MAX_STR_LEN                            1023                             // usual length for string buffers
 #define MAX_STR_SHORT_LEN                      1023     // Before 511           // usual length for short strings
 #define MAX_MSG_LEN                            1023                             // maximum length for messages
-#define MAX_PATH_LEN                           1023                             // maximum length for path and file names
+#define DOAS_MAX_PATH_LEN                           1023                             // maximum length for path and file names
 #define MAX_FCT_LEN                              63                             // maximum length for the names of functions
 #define MAX_VAR_LEN                              63                             // maximum length for the names of variables
 #define MAX_ITEM_TEXT_LEN                      4192     // Before 511           // item text length
@@ -131,6 +131,9 @@ struct date
   char da_day;                                                                  /* Day of the month */
   char da_mon;                                                                  /* Month (1 = Jan)  */
  };
+
+typedef struct _slit SLIT;
+typedef struct _filter PRJCT_FILTER;
 
 // The structure below supports the year in short format instead of integer.
 // This is useful to support files with records including this struct date but

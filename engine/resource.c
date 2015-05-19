@@ -52,8 +52,14 @@
 //
 //  ----------------------------------------------------------------------------
 
+#include "resource.h"
+
 #include "engine.h"
 #include "output.h"
+#include "erf.h"
+#include "analyse.h"
+#include "winsites.h"
+#include "winsymb.h"
 
 // -------------------------------------
 // RESOURCE_Alloc : resources allocation

@@ -47,8 +47,6 @@ class CQdoasConfigWriter
   void writePropertiesInstrumental(FILE *fp, const mediate_project_instrumental_t *d);
   void writePropertiesSlit(FILE *fp, const mediate_project_slit_t *d);
   void writePropertiesOutput(FILE *fp, const mediate_project_output_t *d);
-  void writePropertiesNasaAmes(FILE *fp, const mediate_project_nasa_ames_t *d);
-
   
   void writeRawSpectraTree(FILE *fp, const QTreeWidgetItem *rawSpectraItem);
   void writeSpectraTreeNode(FILE *fp, const QTreeWidgetItem *item, int depth);

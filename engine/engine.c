@@ -1,5 +1,4 @@
 
-
 //  ----------------------------------------------------------------------------
 //
 //  Product/Project   :  QDOAS
@@ -52,16 +51,33 @@
 
 #include "coda.h"
 
-#include "mediate.h"
 #include "engine.h"
+
+#include "spline.h"
+#include "engine_context.h"
+#include "winsites.h"
+#include "winsymb.h"
+#include "winfiles.h"
+#include "resource.h"
+#include "svd.h"
+#include "analyse.h"
+#include "vector.h"
+#include "winthrd.h"
+#include "kurucz.h"
+#include "mediate.h"
 #include "stdfunc.h"
+#include "zenithal.h"
 #include "output.h"
+
+#include "omi_read.h"
+#include "gdp_bin_read.h"
+#include "spectrum_files.h"
 
 int  NDET;                                                                      // detector size
 
 ENGINE_CONTEXT engineContext,                                                   // engine context used to make the interface between the mediator and the engine
   ENGINE_contextRef;                                               // engine context used for the automatic search of the reference spectrum
-char ENGINE_dbgFile[MAX_PATH_LEN+1];
+char ENGINE_dbgFile[DOAS_MAX_PATH_LEN+1];
 double ENGINE_localNoon;
 
 // -----------------------------------------------------------------------------

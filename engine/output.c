@@ -63,12 +63,6 @@
   selected analysis variable and for each analysis window.
   */
 
-#include "output.h"
-#include "output_netcdf.h"
-#include "output_common.h"
-
-#include "stdfunc.h"
-
 #include <string.h>
 #include <stdbool.h>
 #include <assert.h>
@@ -76,13 +70,28 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 
-// ===================
-// GLOBAL DEFINITIONS
-// ===================
+#include "output.h"
+#include "output_netcdf.h"
+#include "output_common.h"
+
+#include "engine_context.h"
+#include "winsites.h"
+#include "winfiles.h"
+#include "kurucz.h"
+#include "analyse.h"
+#include "stdfunc.h"
+#include "spline.h"
+#include "omi_read.h"
+#include "vector.h"
+#include "winthrd.h"
+#include "zenithal.h"
+
+#include "gdp_bin_read.h"
+#include "spectrum_files.h"
 
 AMF_SYMBOL    *OUTPUT_AmfSpace;                                                 // list of cross sections with associated AMF file
 
-char OUTPUT_refFile[MAX_PATH_LEN+1];
+char OUTPUT_refFile[DOAS_MAX_PATH_LEN+1];
 int OUTPUT_nRec;
 
 /*! \brief Array matching enum output_format values with strings

@@ -59,9 +59,16 @@
 // INCLUDE
 // =======
 
-#include "doas.h"
 #include <string.h>
+#include <stdlib.h>
 #include <math.h>
+
+#include "doas.h"
+#include "spectrum_files.h"
+#include "engine_context.h"
+#include "zenithal.h"
+#include "winthrd.h"
+
 // ================
 // STATIC VARIABLES
 // ================

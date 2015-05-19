@@ -53,9 +53,14 @@
 // INCLUDE
 // =======
 
-#include "doas.h"
 #include <string.h>
 #include <math.h>
+
+#include "doas.h"
+#include "engine_context.h"
+#include "vector.h"
+#include "winthrd.h"
+#include "zenithal.h"
 
 const char *oomonth[12]={"Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"};
 

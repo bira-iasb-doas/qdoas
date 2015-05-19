@@ -60,9 +60,10 @@
 // INCLUDE
 // =======
 
-#include "doas.h"
-
 #include <math.h>
+
+#include "spline.h"
+#include "doas.h"
 
 // -----------------------------------------------------------------------------
 // FUNCTION      SPLINE_Deriv2

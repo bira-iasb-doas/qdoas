@@ -56,7 +56,7 @@
 
 #include "matrix.h"
 #include "spline.h"
-#include "files.h"
+#include "winfiles.h"
 #include "stdfunc.h"
 
 #include <string.h>

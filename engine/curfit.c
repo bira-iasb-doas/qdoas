@@ -68,10 +68,15 @@
 //           linearization of the fitting function
 //
 //  ----------------------------------------------------------------------------
-
-#include "doas.h"
 #include <math.h>
 #include <string.h>
+#include <stdio.h>
+
+#include "curfit.h"
+
+#include "doas.h"
+#include "winthrd.h"
+#include "analyse.h"
 
 #define CURFIT_MAX_ITER 100
 

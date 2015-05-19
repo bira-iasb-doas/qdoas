@@ -87,9 +87,11 @@
 // INCLUDE
 // =======
 
-#include "windoas.h"
-
 #include <string.h>
+
+#include "winsites.h"
+
+#define MAX_SITES              60
 
 // ================
 // GLOBAL VARIABLES

@@ -60,10 +60,12 @@
 // INCLUDE
 // =======
 
-#include "doas.h"
-#include "mediate_response.h"
 #include <stdarg.h>
 #include <string.h>
+#include <stdio.h>
+
+#include "doas.h"
+#include "mediate_response.h"
 
 // ====================
 // CONSTANTS DEFINITION

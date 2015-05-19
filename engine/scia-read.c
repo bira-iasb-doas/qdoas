@@ -95,15 +95,25 @@
 // INCLUDE HEADERS
 // ===============
 
+#include <dirent.h>
+
 #include "mediate.h"
 #include "engine.h"
+#include "kurucz.h"
+#include "analyse.h"
 #include "output.h"
 #include "stdfunc.h"
+#include "spline.h"
+#include "svd.h"
+#include "vector.h"
+#include "zenithal.h"
+#include "winthrd.h"
 
+#include "spectrum_files.h"
+#include "satellite.h"
+#include "engine_context.h"
 #include "bin_read.h"
 #include "scia_l1c_lib.h"
-
-#include <dirent.h>
 
 // ====================
 // CONSTANTS DEFINITION
@@ -114,6 +124,18 @@
 // =====================
 // STRUCTURES DEFINITION
 // =====================
+
+struct _satellite_ref_ {
+  INDEX  indexFile;
+  INDEX  indexRecord;
+  INDEX  pixelNumber;
+  INDEX  pixelType;
+  double sza;
+  double latitude;
+  double longitude;
+  double szaDist;
+  double latDist;
+};
 
 // Get the definition of clusters for a given state
 
@@ -2048,10 +2070,10 @@ RC SciaNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 //  DEBUG_Print(DOAS_logFile,"Enter SciaNewRef\n");
 
   pRecord=&pEngineContext->recordInfo;
-  memset(OUTPUT_refFile,0,MAX_PATH_LEN+1);
+  memset(OUTPUT_refFile,0,DOAS_MAX_PATH_LEN+1);
   OUTPUT_nRec=0;
 
-  memset(pRecord->refFileName,0,MAX_PATH_LEN+1);
+  memset(pRecord->refFileName,0,DOAS_MAX_PATH_LEN+1);
   pRecord->refRecord=ITEM_NONE;
 
   rc=EngineCopyContext(&ENGINE_contextRef,pEngineContext);                                // perform a backup of the pEngineContext structure

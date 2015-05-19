@@ -18,12 +18,19 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
+#include <string.h>
+#include <math.h>
+
 #include "../mediator/mediate_response.h"
 #include "../mediator/mediate_types.h"
 #include "../mediator/mediate_xsconv.h"
+#include "mediate_common.h"
 
-#include <string.h>
-#include <math.h>
+#include "xsconv.h"
+#include "filter.h"
+#include "vector.h"
+#include "spline.h"
+#include "usamp.h"
 
 // ================
 // STATIC VARIABLES

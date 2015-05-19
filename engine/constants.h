@@ -57,11 +57,9 @@
 
 // Standard arrays dimensions
 
-#define BUFFER_SIZE   4096                                                      // any buffer allocation
 #define STRING_LENGTH 1023                                                      // maximum size for strings
 
 #define EPSILON     (double)   1.e-6
-
 
 // ================
 // OPERATING MODES
@@ -74,7 +72,6 @@ enum _thrdId
     THREAD_TYPE_ANALYSIS,    // for run analysis
     THREAD_TYPE_KURUCZ       // for run calibration
   };
-
 
 // ================
 // FILES PROCESSING
@@ -137,35 +134,6 @@ enum _filesTypesSpectra
   FILE_TYPE_SPECTRA_MAX
  };
 
-// =================
-// OBSERVATION SITES
-// =================
-
-   #define MAX_SITES              60
-   #define MAX_SITES_ABBREVIATION  2
-
-// =======
-// SYMBOLS
-// =======
-
-   // Definitions
-   // -----------
-
-   #define MAX_SYMBOL_CROSS         60                                          // default maximum number of cross sections symbols
-
-   #define SYMBOL_ALREADY_USED    0x01                                          // mask set if a symbol is used or referenced
-
-   enum _predefinedSymbols
-    {
-     SYMBOL_PREDEFINED_SPECTRUM,                                                // spectrum
-     SYMBOL_PREDEFINED_REF,                                                     // reference
-     SYMBOL_PREDEFINED_COM,                                                     // common residual
-     SYMBOL_PREDEFINED_USAMP1,                                                  // undersampling phase 1
-     SYMBOL_PREDEFINED_USAMP2,                                                  // undersampling phase 2
-     SYMBOL_PREDEFINED_RESOL,                                                   // resol synthetic spectrum (reference spectrum convolved with a very thin slit function)
-     SYMBOL_PREDEFINED_MAX
-    };
-
 // ============================
 // RAW SPECTRA FILES PROPERTIES
 // ============================
@@ -174,7 +142,6 @@ enum _filesTypesSpectra
    // CONSTANTS AND STRUCTURES DEFINITIONS
    // ------------------------------------
 
-   #define MAX_RAW_SPECTRA 1000
 
    enum _folderFlagType
     {
@@ -195,18 +162,6 @@ enum _filesTypesSpectra
 // -----------
 // DEFINITIONS
 // -----------
-
-// Description of columns in ListView control
-// ------------------------------------------
-
-#define MAX_LIST_COLUMNS 30
-
-#define COMBOBOX_ITEM_TYPE_NONE           0x0000           // not a combobox control
-#define COMBOBOX_ITEM_TYPE_EXCLUSIVE      0x0001           // combobox to fill with symbols that are not used yet
-#define COMBOBOX_ITEM_TYPE_ORTHOGONAL     0x0002           // combobox to fill with all available symbols except the one selected
-#define COMBOBOX_ITEM_TYPE_POLYNOME       0x0008           // polynomial modes
-#define COMBOBOX_ITEM_TYPE_AMF            0x0010           // types of AMF files
-#define COMBOBOX_ITEM_TYPE_XS             0x0020           // types of AMF files
 
 enum _orthogonalTypes
  {
@@ -257,135 +212,6 @@ enum _amfTypes
   ANLYS_AMF_TYPE_MAX
  };
 
-// Columns enumeration per tab page
-// --------------------------------
-
-// Columns description of the ListView in "cross sections" tab page
-
-enum _crossSectionsColumns
- {
-  // Cross Sections
-
-  COLUMN_CROSS_FILE,              // Cross Sections
-  COLUMN_CROSS_ORTHOGONAL,        // Orthogonalization
-  COLUMN_CROSS_XS_TYPE,           // Cross section type
-  COLUMN_CROSS_AMF_TYPE,          // AMF dependence to use
-  COLUMN_CROSS_DISPLAY,           // Fit display
-  COLUMN_CROSS_FILTER,            // Filter flag
-  COLUMN_CROSS_CCFIT,             // Cc fit
-  COLUMN_CROSS_CCINIT,            // Cc init
-  COLUMN_CROSS_CCDELTA,           // Cc delta
-
-  // Output
-
-  COLUMN_CROSS_AMF_OUTPUT,        // Store AMF
-  COLUMN_CROSS_RESIDUAL,          // Res Col
-  COLUMN_CROSS_SLNTCOL,           // Slnt Col
-  COLUMN_CROSS_SLNTERR,           // Slnt Err
-  COLUMN_CROSS_SLNTFACT,          // Slnt Fact
-  COLUMN_CROSS_VRTCOL,            // Vrt Col
-  COLUMN_CROSS_VRTERR,            // Vrt Err
-  COLUMN_CROSS_VRTFACT,           // Vrt Fact
-
-  // Kurucz SVD matrix composition for reference alignment
-
-  COLUMN_CROSS_SVD_ORTHOGONAL,    // Orthogonalization
-  COLUMN_CROSS_SVD_DISPLAY,       // Fit display
-  COLUMN_CROSS_SVD_XS_TYPE,       // Cross section type
-  COLUMN_CROSS_SVD_CCFIT,         // Cc fit
-  COLUMN_CROSS_SVD_CCINIT,        // Cc init
-  COLUMN_CROSS_SVD_CCDELTA,       // Cc delta
-
-  // Kurucz output
-
-  COLUMN_CROSS_SVD_SLNTCOL,       // Slnt Col
-  COLUMN_CROSS_SVD_SLNTERR,       // Slnt Err
-  COLUMN_CROSS_SVD_SLNTFACT,      // Slnt Fact
-
-  // I0 convolution
-
-  COLUMN_CROSS_CCI0,              // Cc I0 convolution
-  COLUMN_CROSS_SVD_CCI0,          // Cc I0 convolution (calibration)
-
-  COLUMN_CROSS_MAX
- };
-
-// Columns description of the ListView in "continuous functions" tab page
-
-enum _continuousFunctionsColumns
- {
-  COLUMN_CONTINUOUS_X0,           // terms in x0 and 1/x0
-  COLUMN_CONTINUOUS_X1,           // terms in x1 and 1/x1
-  COLUMN_CONTINUOUS_X2,           // terms in x2 and 1/x2
-  COLUMN_CONTINUOUS_X3,           // terms in x3 and 1/x3
-  COLUMN_CONTINUOUS_X4,           // terms in x4 and 1/x4
-  COLUMN_CONTINUOUS_X5,           // terms in x5 and 1/x5
-  COLUMN_CONTINUOUS_MAX           // terms in x0 and 1/x0
- };
-
-// Columns description of the ListView in "linear parameters" tab page
-
-enum _linearColumns
- {
-  COLUMN_POLY_PARAMS,        // Linear params
-  COLUMN_POLY_POLYORDER,     // Polynomial order
-  COLUMN_POLY_BASEORDER,     // Orthogonal base order
-  COLUMN_POLY_STORE_FIT,     // Store fit
-  COLUMN_POLY_STORE_ERROR,   // Store error
-  COLUMN_POLY_MAX
- };
-
-// Columns description of the ListView in "non linear parameters" tab page
-
-enum _notLinearColumns
- {
-  COLUMN_OTHERS_PARAMS,        // Non linear params
-  COLUMN_OTHERS_FIT,           // Fit flag
-  COLUMN_OTHERS_VALINIT,       // Val init
-  COLUMN_OTHERS_VALDELTA,      // Val del
-  COLUMN_OTHERS_STORE_FIT,     // Store fit
-  COLUMN_OTHERS_STORE_ERROR,   // Store error
-  COLUMN_OTHERS_VALMIN,        // Val min
-  COLUMN_OTHERS_VALMAX,        // Val max
-  COLUMN_OTHERS_MAX
- };
-
-// Columns description of the ListView in "Shift and Stretch" tab page
-
-enum _shiftStretchColumns
- {
-  COLUMN_CROSS_TO_FIT,            // Cross Sections and spectrum
-  COLUMN_SH_FIT,                  // Sh fit
-  COLUMN_ST_FIT,                  // St fit
-  COLUMN_SC_FIT,                  // Sc fit
-  COLUMN_SH_STORE,                // Sh store
-  COLUMN_ST_STORE,                // St store
-  COLUMN_SC_STORE,                // Sc store
-  COLUMN_ERR_STORE,               // Err store
-  COLUMN_SH_INIT,                 // Sh init
-  COLUMN_ST_INIT,                 // St init
-  COLUMN_ST_INIT2,                // St init
-  COLUMN_SC_INIT,                 // St init
-  COLUMN_SC_INIT2,                // St init
-  COLUMN_SH_DELTA,                // Sh delta
-  COLUMN_ST_DELTA,                // St delta
-  COLUMN_ST_DELTA2,               // St delta
-  COLUMN_SC_DELTA,                // St delta
-  COLUMN_SC_DELTA2,               // St delta
-  COLUMN_SH_MIN,                  // Sh min
-  COLUMN_SH_MAX,                  // Sh max
-  COLUMN_SHST_MAX
- };
-
-// Columns description of the ListView in "gaps" tab page
-
-enum _gapsColumns
- {
-  COLUMN_GAPS_TEXT,
-  COLUMN_GAPS_MINVAL,             // Min Value
-  COLUMN_GAPS_MAXVAL,             // Max Value
-  COLUMN_GAPS_MAX
- };
 
 // Analysis tab pages description
 // ------------------------------
@@ -399,21 +225,6 @@ enum anlysTabPagesTypes
   TAB_TYPE_ANLYS_GAPS,
   TAB_TYPE_ANLYS_OUTPUT,
   TAB_TYPE_ANLYS_MAX
- };
-
-#define MAX_ANLYS 50
-
-enum _nonLinearParameters
- {
- 	ANLYS_NL_SOL,
- 	ANLYS_NL_OFF0,
- 	ANLYS_NL_OFF1,
- 	ANLYS_NL_OFF2,
- 	ANLYS_NL_COM,
- 	ANLYS_NL_USAMP1,
- 	ANLYS_NL_USAMP2,
- 	ANLYS_NL_RAMAN,
- 	ANLYS_NL_MAX
  };
 
 enum _refSpectrumSelectionMode
@@ -530,26 +341,6 @@ enum prjctFilterOutput
   PRJCT_FILTER_OUTPUT_HIGH_SUB,
   PRJCT_FILTER_OUTPUT_HIGH_DIV,
   PRJCT_FILTER_OUTPUT_MAX
- };
-
-enum prjctFilterFields
- {
-  PRJCT_FILTER_FIELD_TYPE,
-  PRJCT_FILTER_FIELD_CUTOFF_TEXT,
-  PRJCT_FILTER_FIELD_CUTOFF,
-  PRJCT_FILTER_FIELD_PASS_TEXT,
-  PRJCT_FILTER_FIELD_PASS,
-  PRJCT_FILTER_FIELD_TOLERANCE_TEXT,
-  PRJCT_FILTER_FIELD_TOLERANCE,
-  PRJCT_FILTER_FIELD_FWHM_TEXT,
-  PRJCT_FILTER_FIELD_FWHM,
-  PRJCT_FILTER_FIELD_WIDTH,
-  PRJCT_FILTER_FIELD_PIXELS,
-  PRJCT_FILTER_FIELD_ORDER_TEXT,
-  PRJCT_FILTER_FIELD_ORDER,
-  PRJCT_FILTER_FIELD_ORDER_EVEN,
-  PRJCT_FILTER_FIELD_NITER_TEXT,
-  PRJCT_FILTER_FIELD_NITER
  };
 
 // --------------------
@@ -736,31 +527,6 @@ enum _omiSpectralTypes
 #define MAX_SWATHSIZE         200    // maximum number of tracks per swath (for satellites)
 #define OMI_TOTAL_ROWS 60 // 60 detector rows for OMI
 
-// Types of irradiances for SCIAMACHY
-
-// D0 ESM diffuser -  neutral density filter in (regularly updated)
-//
-//        this is the only calibrated irradiance
-//
-// D1 ESM diffuser -  neutral density filter out
-//
-//        In principle as good as D0, but taken only once per month.  At the beginning,
-//        some occasions for updating were missed.  So it starts with 999 values like
-//        the other placeholders.
-//
-// D6 ASM diffuser (regularly updated)
-//
-//        All D6 data from 2002 cannot be used due to wront measurement geometry !
-//
-// D9 ASM diffuser spectrum in B.U. from 09.04.2003; not updated
-//
-//        Not in operational products but only validation masterset !  Can be used for DOAS.
-
-
-#define SCIA_REFERENCE_ESM   0
-#define SCIA_REFERENCE_ASM   6
-#define SCIA_REFERENCE_ASMBU 9
-
 // ----------------
 // RESULTS TAB PAGE
 // ----------------
@@ -882,8 +648,6 @@ enum _prjctResultsNasaFields
 // --------------------------
 // PROPERTY SHEET DESCRIPTION
 // --------------------------
-
-#define MAX_PROJECT 10
 
 enum prjctTabPagesTypes
  {
