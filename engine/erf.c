@@ -60,6 +60,7 @@
 // =======
 
 #include <math.h>
+#include <stdlib.h>
 
 #include "doas.h"
 #include "spline.h"

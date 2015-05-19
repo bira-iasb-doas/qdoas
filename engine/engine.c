@@ -49,8 +49,6 @@
 #include <math.h>
 #include <dirent.h>
 
-#include "coda.h"
-
 #include "engine.h"
 
 #include "spline.h"
@@ -72,6 +70,8 @@
 #include "omi_read.h"
 #include "gdp_bin_read.h"
 #include "spectrum_files.h"
+
+#include "coda.h"
 
 int  NDET;                                                                      // detector size
 

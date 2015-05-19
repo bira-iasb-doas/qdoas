@@ -43,8 +43,6 @@
 #include <string.h>
 #include <dirent.h>
 
-#include "coda.h"
-
 #include "spectrum_files.h"
 #include "satellite.h"
 #include "engine_context.h"
@@ -58,6 +56,8 @@
 #include "zenithal.h"
 #include "winthrd.h"
 #include "svd.h"
+
+#include "coda.h"
 
 // ====================
 // CONSTANTS DEFINITION
