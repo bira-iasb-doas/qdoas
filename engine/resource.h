@@ -1,7 +1,7 @@
 #ifndef RESOURCE_H
 #define RESOURCE_H
 
-#include "doas.h"
+#include "comdefs.h"
 
 RC      RESOURCE_Alloc(void);
 void    RESOURCE_Free(void);

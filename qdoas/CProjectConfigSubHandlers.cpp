@@ -328,8 +328,6 @@ bool CProjectAnalysisSubHandler::start(const QXmlAttributes &atts)
   else
     return postErrorMessage("Invalid analysis fit");
 
-  m_analysis->unitType = PRJCT_ANLYS_UNITS_NANOMETERS;    // not used anymore
-
   str = atts.value("interpolation");
   if (str == "linear")
     m_analysis->interpolationType = PRJCT_ANLYS_INTERPOL_LINEAR;

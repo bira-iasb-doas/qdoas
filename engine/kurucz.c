@@ -1184,7 +1184,6 @@ RC KURUCZ_Alloc(const PROJECT *pProject, const double *lambda,INDEX indexKurucz,
     pKurucz->displayShift=(char)pKuruczOptions->displayShift;            // display shift in each pixel flag
     pKurucz->displaySpectra=(char)pKuruczOptions->displaySpectra;        // display shift in each pixel flag
 
-    pKurucz->units=pProject->analysis.units;
     pKurucz->method=(char)pKuruczOptions->analysisMethod;
 
     // Allocate one svd environment for each little window

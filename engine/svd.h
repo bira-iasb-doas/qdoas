@@ -1,7 +1,7 @@
 #ifndef SVD_H
 #define SVD_H
 
-#include "doas.h"
+#include "comdefs.h"
 #include "spectral_range.h"
 
 typedef struct _svd {

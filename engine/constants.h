@@ -65,13 +65,12 @@
 // OPERATING MODES
 // ================
 
-enum _thrdId
-  {
-    THREAD_TYPE_NONE,
-    THREAD_TYPE_SPECTRA,     // for browse spectra
-    THREAD_TYPE_ANALYSIS,    // for run analysis
-    THREAD_TYPE_KURUCZ       // for run calibration
-  };
+enum _thrdId {
+  THREAD_TYPE_NONE,
+  THREAD_TYPE_SPECTRA,     // for browse spectra
+  THREAD_TYPE_ANALYSIS,    // for run analysis
+  THREAD_TYPE_KURUCZ       // for run calibration
+};
 
 // ================
 // FILES PROCESSING
@@ -127,30 +126,11 @@ enum _filesTypes
 // Individual spectra safe keeping
 // -------------------------------
 
-enum _filesTypesSpectra
- {
+enum _filesTypesSpectra {
   FILE_TYPE_SPECTRA_COMMENT,
   FILE_TYPE_SPECTRA_NOCOMMENT,
   FILE_TYPE_SPECTRA_MAX
- };
-
-// ============================
-// RAW SPECTRA FILES PROPERTIES
-// ============================
-
-   // ------------------------------------
-   // CONSTANTS AND STRUCTURES DEFINITIONS
-   // ------------------------------------
-
-
-   enum _folderFlagType
-    {
-     RAW_FOLDER_TYPE_NONE,           // file type
-     RAW_FOLDER_TYPE_USER,           // user folder type
-     RAW_FOLDER_TYPE_PATH,           // directory folder type
-     RAW_FOLDER_TYPE_PATHSUB         // directory folder type, include subfolders
-    };
-
+};
 
 // ===========================
 // ANALYSIS WINDOWS PROPERTIES
@@ -163,90 +143,64 @@ enum _filesTypesSpectra
 // DEFINITIONS
 // -----------
 
-enum _orthogonalTypes
- {
-  ANLYS_ORTHOGONAL_TYPE_NONE,
-  ANLYS_ORTHOGONAL_TYPE_BASE,
-  ANLYS_ORTHOGONAL_TYPE_MAX
- };
+enum _polynomeTypes {
+  ANLYS_POLY_TYPE_NONE,
+  ANLYS_POLY_TYPE_0,
+  ANLYS_POLY_TYPE_1,
+  ANLYS_POLY_TYPE_2,
+  ANLYS_POLY_TYPE_3,
+  ANLYS_POLY_TYPE_4,
+  ANLYS_POLY_TYPE_5,
+  ANLYS_POLY_TYPE_6,
+  ANLYS_POLY_TYPE_7,
+  ANLYS_POLY_TYPE_8,
+  ANLYS_POLY_TYPE_MAX
+};
 
-enum _polynomeTypes
- {
- 	ANLYS_POLY_TYPE_NONE,
- 	ANLYS_POLY_TYPE_0,
- 	ANLYS_POLY_TYPE_1,
- 	ANLYS_POLY_TYPE_2,
- 	ANLYS_POLY_TYPE_3,
- 	ANLYS_POLY_TYPE_4,
- 	ANLYS_POLY_TYPE_5,
- 	ANLYS_POLY_TYPE_6,
- 	ANLYS_POLY_TYPE_7,
- 	ANLYS_POLY_TYPE_8,
- 	ANLYS_POLY_TYPE_MAX
- };
-
-enum _stretchTypes
- {
+enum _stretchTypes {
   ANLYS_STRETCH_TYPE_NONE,
   ANLYS_STRETCH_TYPE_FIRST_ORDER,
   ANLYS_STRETCH_TYPE_SECOND_ORDER,
   ANLYS_STRETCH_TYPE_MAX
- };
+};
 
-enum _crossTypes
- {
+enum _crossTypes {
   ANLYS_CROSS_ACTION_NOTHING,
   ANLYS_CROSS_ACTION_INTERPOLATE,
   ANLYS_CROSS_ACTION_CONVOLUTE,
   ANLYS_CROSS_ACTION_CONVOLUTE_I0,
   ANLYS_CROSS_ACTION_CONVOLUTE_RING,
   ANLYS_CROSS_ACTION_MAX
- };
+};
 
-enum _amfTypes
- {
+enum _amfTypes {
   ANLYS_AMF_TYPE_NONE,
   ANLYS_AMF_TYPE_SZA,
   ANLYS_AMF_TYPE_CLIMATOLOGY,
   ANLYS_AMF_TYPE_WAVELENGTH,
   ANLYS_AMF_TYPE_MAX
- };
-
+};
 
 // Analysis tab pages description
 // ------------------------------
 
-enum anlysTabPagesTypes
- {
-  TAB_TYPE_ANLYS_CROSS,
-  TAB_TYPE_ANLYS_LINEAR,
-  TAB_TYPE_ANLYS_NOTLINEAR,
-  TAB_TYPE_ANLYS_SHIFT_AND_STRETCH,
-  TAB_TYPE_ANLYS_GAPS,
-  TAB_TYPE_ANLYS_OUTPUT,
-  TAB_TYPE_ANLYS_MAX
- };
-
-enum _refSpectrumSelectionMode
- {
+enum _refSpectrumSelectionMode {
   ANLYS_REF_SELECTION_MODE_AUTOMATIC,                      // automatic selection from spectra files
   ANLYS_REF_SELECTION_MODE_FILE                            // reference spectrum in a specific file
- };
+};
 
-enum _maxdoasRefSelectionMode
- {
+enum _maxdoasRefSelectionMode {
   ANLYS_MAXDOAS_REF_SZA,
   ANLYS_MAXDOAS_REF_SCAN
- };
+};
 
-enum _kuruczMode
- {
+enum _kuruczMode {
   ANLYS_KURUCZ_NONE,
   ANLYS_KURUCZ_REF,
   ANLYS_KURUCZ_SPEC,
   ANLYS_KURUCZ_REF_AND_SPEC,
   ANLYS_KURUCZ_MAX
- };
+};
 
 // ===================
 // PROJECTS PROPERTIES
@@ -259,14 +213,13 @@ enum _kuruczMode
 // Spectra tab page description
 // ----------------------------
 
-enum _prjctSpectraModes
- {
+enum _prjctSpectraModes {
   PRJCT_SPECTRA_MODES_NONE,
   PRJCT_SPECTRA_MODES_CIRCLE,
   PRJCT_SPECTRA_MODES_RECTANGLE,
   PRJCT_SPECTRA_MODES_OBSLIST,
   PRJCT_SPECTRA_MODES_MAX
- };
+};
 
 // -----------------
 // ANALYSIS TAB PAGE
@@ -275,42 +228,29 @@ enum _prjctSpectraModes
 // Analysis methods
 // ----------------
 
-enum prjctAnlysMethod
- {
+enum prjctAnlysMethod {
   PRJCT_ANLYS_METHOD_SVD,                              // Optical thickness fitting (SVD)
   PRJCT_ANLYS_METHOD_SVDMARQUARDT,                     // Intensity fitting (Marquardt-Levenberg+SVD)
   PRJCT_ANLYS_METHOD_MAX
- };
+};
 
 // Least-squares fit weighting
 // ---------------------------
 
-enum prjctAnlysFitWeighting
- {
+enum prjctAnlysFitWeighting {
   PRJCT_ANLYS_FIT_WEIGHTING_NONE,                      // no weighting
   PRJCT_ANLYS_FIT_WEIGHTING_INSTRUMENTAL,              // instrumental weighting
   PRJCT_ANLYS_FIT_WEIGHTING_MAX
- };
-
-// Units for shift and stretch
-// ---------------------------
-
-enum prjctAnlysUnits
- {
-  PRJCT_ANLYS_UNITS_PIXELS,                            // pixels
-  PRJCT_ANLYS_UNITS_NANOMETERS,                        // nanometers
-  PRJCT_ANLYS_UNITS_MAX
- };
+};
 
 // Interpolation
 // -------------
 
-enum prjctAnlysInterpol
- {
+enum prjctAnlysInterpol {
   PRJCT_ANLYS_INTERPOL_LINEAR,                         // linear interpolation
   PRJCT_ANLYS_INTERPOL_SPLINE,                         // spline interpolation
   PRJCT_ANLYS_INTERPOL_MAX
- };
+};
 
 // ---------------
 // FILTER TAB PAGE
@@ -319,8 +259,7 @@ enum prjctAnlysInterpol
 // Filter types
 // ------------
 
-enum prjctFilterTypes
- {
+enum prjctFilterTypes {
   PRJCT_FILTER_TYPE_NONE,                              // use no filter
   PRJCT_FILTER_TYPE_KAISER,                            // kaiser filter
   PRJCT_FILTER_TYPE_BOXCAR,                            // box car filter
@@ -330,18 +269,17 @@ enum prjctFilterTypes
   PRJCT_FILTER_TYPE_ODDEVEN,                           // odd-even pixel correction
   PRJCT_FILTER_TYPE_BINOMIAL,                          // binomial filter
   PRJCT_FILTER_TYPE_MAX
- };
+};
 
 // Filter action
 // -------------
 
-enum prjctFilterOutput
- {
+enum prjctFilterOutput {
   PRJCT_FILTER_OUTPUT_LOW,
   PRJCT_FILTER_OUTPUT_HIGH_SUB,
   PRJCT_FILTER_OUTPUT_HIGH_DIV,
   PRJCT_FILTER_OUTPUT_MAX
- };
+};
 
 // --------------------
 // CALIBRATION TAB PAGE
@@ -352,8 +290,7 @@ enum prjctFilterOutput
 
 #define NSFP 2
 
-enum _prjctFwhmTypes
- {
+enum _prjctFwhmTypes {
   PRJCT_CALIB_FWHM_TYPE_NONE,
   PRJCT_CALIB_FWHM_TYPE_FILE,
   PRJCT_CALIB_FWHM_TYPE_GAUSS,
@@ -362,19 +299,18 @@ enum _prjctFwhmTypes
   PRJCT_CALIB_FWHM_TYPE_VOIGT,
   PRJCT_CALIB_FWHM_TYPE_AGAUSS,
   PRJCT_CALIB_FWHM_TYPE_MAX
- };
+};
 
 // ----------------------
 // UNDERSAMPLING TAB PAGE
 // ----------------------
 
-enum _prjctUsampMethod
- {
+enum _prjctUsampMethod {
   PRJCT_USAMP_FILE,                                    // no undersampling fitting
   PRJCT_USAMP_FIXED,                                   // undersampling fitting, fixed phase
   PRJCT_USAMP_AUTOMATIC,                               // undersampling fitting, automatic phase
   PRJCT_USAMP_MAX
- };
+};
 
 // ---------------------
 // INSTRUMENTAL TAB PAGE
@@ -383,8 +319,7 @@ enum _prjctUsampMethod
 // type of read out format
 // -----------------------
 
-enum _prjctInstrFormat
- {
+enum _prjctInstrFormat {
   PRJCT_INSTR_FORMAT_ASCII,                                                     // ASCII
   PRJCT_INSTR_FORMAT_LOGGER,                                                    // Logger (PDA,CCD or HAMAMATSU)
   PRJCT_INSTR_FORMAT_ACTON,                                                     // Acton (NILU)
@@ -417,31 +352,29 @@ enum _prjctInstrFormat
   PRJCT_INSTR_FORMAT_BIRA_AIRBORNE,                                             // MOBILEDOAS and ULMDOAS (BIRA-IASB)
   PRJCT_INSTR_FORMAT_OCEAN_OPTICS,                                              // Ocean optics
   PRJCT_INSTR_FORMAT_MAX
- };
+};
 
-enum _prjctInstrType
-  {
-    PRJCT_INSTR_TYPE_GROUND_BASED,
-    PRJCT_INSTR_TYPE_SATELLITE,
-    PRJCT_INSTR_TYPE_MAX
-  };
+enum _prjctInstrType  {
+  PRJCT_INSTR_TYPE_GROUND_BASED,
+  PRJCT_INSTR_TYPE_SATELLITE,
+  PRJCT_INSTR_TYPE_MAX
+};
 
-enum _maxdoasSpectrumTypes
- {
- 	PRJCT_INSTR_MAXDOAS_TYPE_NONE,
- 	PRJCT_INSTR_MAXDOAS_TYPE_OFFAXIS,
- 	PRJCT_INSTR_MAXDOAS_TYPE_DIRECTSUN,
- 	PRJCT_INSTR_MAXDOAS_TYPE_ZENITH,
- 	PRJCT_INSTR_MAXDOAS_TYPE_DARK,
- 	PRJCT_INSTR_MAXDOAS_TYPE_LAMP,
- 	PRJCT_INSTR_MAXDOAS_TYPE_BENTHAM,
- 	PRJCT_INSTR_MAXDOAS_TYPE_ALMUCANTAR,
- 	PRJCT_INSTR_MAXDOAS_TYPE_OFFSET,
- 	PRJCT_INSTR_MAXDOAS_TYPE_AZIMUTH,
- 	PRJCT_INSTR_MAXDOAS_TYPE_PRINCIPALPLANE,
- 	PRJCT_INSTR_MAXDOAS_TYPE_HORIZON,
- 	PRJCT_INSTR_MAXDOAS_TYPE_MAX
- };
+enum _maxdoasSpectrumTypes {
+  PRJCT_INSTR_MAXDOAS_TYPE_NONE,
+  PRJCT_INSTR_MAXDOAS_TYPE_OFFAXIS,
+  PRJCT_INSTR_MAXDOAS_TYPE_DIRECTSUN,
+  PRJCT_INSTR_MAXDOAS_TYPE_ZENITH,
+  PRJCT_INSTR_MAXDOAS_TYPE_DARK,
+  PRJCT_INSTR_MAXDOAS_TYPE_LAMP,
+  PRJCT_INSTR_MAXDOAS_TYPE_BENTHAM,
+  PRJCT_INSTR_MAXDOAS_TYPE_ALMUCANTAR,
+  PRJCT_INSTR_MAXDOAS_TYPE_OFFSET,
+  PRJCT_INSTR_MAXDOAS_TYPE_AZIMUTH,
+  PRJCT_INSTR_MAXDOAS_TYPE_PRINCIPALPLANE,
+  PRJCT_INSTR_MAXDOAS_TYPE_HORIZON,
+  PRJCT_INSTR_MAXDOAS_TYPE_MAX
+};
 
 enum _ulbCurveTypes
  {
@@ -451,33 +384,29 @@ enum _ulbCurveTypes
   PRJCT_INSTR_ULB_TYPE_MAX
  };
 
-enum _saozSpectrumRegion
- {
- 	PRJCT_INSTR_SAOZ_REGION_UV,
- 	PRJCT_INSTR_SAOZ_REGION_VIS
- };
+enum _saozSpectrumRegion {
+   PRJCT_INSTR_SAOZ_REGION_UV,
+   PRJCT_INSTR_SAOZ_REGION_VIS
+};
 
-enum _saozSpectrumTypes
- {
+enum _saozSpectrumTypes {
   PRJCT_INSTR_SAOZ_TYPE_ZENITHAL,
   PRJCT_INSTR_SAOZ_TYPE_POINTED,
   PRJCT_INSTR_SAOZ_TYPE_MAX
- };
+};
 
-enum _iasbSpectrumTypes
- {
+enum _iasbSpectrumTypes {
   PRJCT_INSTR_IASB_TYPE_ALL,
   PRJCT_INSTR_IASB_TYPE_ZENITHAL,
   PRJCT_INSTR_IASB_TYPE_OFFAXIS,
   PRJCT_INSTR_IASB_TYPE_MAX
- };
+};
 
-enum _niluFormatTypes
- {
+enum _niluFormatTypes {
   PRJCT_INSTR_NILU_FORMAT_OLD,
   PRJCT_INSTR_NILU_FORMAT_NEW,
   PRJCT_INSTR_NILU_FORMAT_MAX
- };
+};
 
 enum _asciiFormat
  {
@@ -496,33 +425,29 @@ enum _gdpBandTypes
   PRJCT_INSTR_GDP_BAND_MAX
  };
 
-enum _gdpPixelTypes
- {
- 	PRJCT_INSTR_GDP_PIXEL_ALL,
- 	PRJCT_INSTR_GDP_PIXEL_EAST,
- 	PRJCT_INSTR_GDP_PIXEL_CENTER,
- 	PRJCT_INSTR_GDP_PIXEL_WEST,
- 	PRJCT_INSTR_GDP_PIXEL_BACKSCAN,
- 	PRJCT_INSTR_GDP_PIXEL_MAX
+enum _gdpPixelTypes {
+  PRJCT_INSTR_GDP_PIXEL_ALL,
+  PRJCT_INSTR_GDP_PIXEL_EAST,
+  PRJCT_INSTR_GDP_PIXEL_CENTER,
+  PRJCT_INSTR_GDP_PIXEL_WEST,
+  PRJCT_INSTR_GDP_PIXEL_BACKSCAN,
+  PRJCT_INSTR_GDP_PIXEL_MAX
+};
 
- };
-
-enum _sciaChannels
- {
+enum _sciaChannels {
   PRJCT_INSTR_SCIA_CHANNEL_1,
   PRJCT_INSTR_SCIA_CHANNEL_2,
   PRJCT_INSTR_SCIA_CHANNEL_3,
   PRJCT_INSTR_SCIA_CHANNEL_4,
   PRJCT_INSTR_SCIA_CHANNEL_MAX
- };
+};
 
-enum _omiSpectralTypes
- {
+enum _omiSpectralTypes {
   PRJCT_INSTR_OMI_TYPE_UV1,
   PRJCT_INSTR_OMI_TYPE_UV2,
   PRJCT_INSTR_OMI_TYPE_VIS,
   PRJCT_INSTR_OMI_TYPE_MAX
- };
+};
 
 #define MAX_SWATHSIZE         200    // maximum number of tracks per swath (for satellites)
 #define OMI_TOTAL_ROWS 60 // 60 detector rows for OMI
@@ -633,18 +558,6 @@ enum _prjctResults
   PRJCT_RESULTS_MAX
  };
 
-// Fields to store when using NASA-AMES format
-// -------------------------------------------
-
-enum _prjctResultsNasaFields
- {
-  PRJCT_RESULTS_NASA_NO2,
-  PRJCT_RESULTS_NASA_O3,
-  PRJCT_RESULTS_NASA_OCLO,
-  PRJCT_RESULTS_NASA_BRO,
-  PRJCT_RESULTS_NASA_MAX
- };
-
 // --------------------------
 // PROPERTY SHEET DESCRIPTION
 // --------------------------
@@ -659,7 +572,6 @@ enum prjctTabPagesTypes
   TAB_TYPE_PRJCT_INSTRUMENTAL,                         // Instrumental tab page
   TAB_TYPE_PRJCT_SLIT,                                 // Slit function tab page
   TAB_TYPE_PRJCT_ASCII_RESULTS,                        // ASCII Results tab page
-  TAB_TYPE_PRJCT_NASA_RESULTS,                         // NASA-AMES Results tab page
   TAB_TYPE_PRJCT_MAX
  };
 
@@ -667,67 +579,56 @@ enum prjctTabPagesTypes
 // CROSS SECTIONS CONVOLUTION TOOL
 // ===============================
 
-   // ---------------------
-   // CONSTANTS DEFINITIONS
-   // ---------------------
+// ---------------------
+// CONSTANTS DEFINITIONS
+// ---------------------
 
-   // Supported line shapes for convolution
-   // -------------------------------------
+// Supported line shapes for convolution
+// -------------------------------------
 
-   enum _slitTypes
-    {
-     SLIT_TYPE_NONE,
-     SLIT_TYPE_FILE,                                                            // user-defined line shape provided in a file
-     SLIT_TYPE_GAUSS,                                                           // Gaussian line shape
-     SLIT_TYPE_INVPOLY,                                                         // 2n-Lorentz (generalisation of the Lorentzian function
-     SLIT_TYPE_VOIGT,                                                           // Voigt profile function
-     SLIT_TYPE_ERF,                                                             // error function (convolution of a Gaussian and a boxcar)
-     SLIT_TYPE_AGAUSS,                                                          // asymmetric gaussian line shape
-     SLIT_TYPE_APOD,                                                            // apodisation function (used with FTS)
-     SLIT_TYPE_APODNBS,                                                         // apodisation function (Norton Beer Strong function)
-   //  SLIT_TYPE_GAUSS_FILE,                                                      // Gaussian line shape, wavelength dependent (provided in a file)
-   //  SLIT_TYPE_INVPOLY_FILE,                                                    // 2n-Lorentz line shape, wavelength dependent (file)
-   //  SLIT_TYPE_VOIGT_FILE,                                                    // Voigt profile function, wavelength dependent (file)
-   //  SLIT_TYPE_ERF_FILE,                                                        // error function, wavelength dependent (file)
-   //  SLIT_TYPE_GAUSS_T_FILE,                                                    // Gaussian line shape, wavelength and temperature dependent (file)
-   //  SLIT_TYPE_ERF_T_FILE,                                                      // error function, wavelength and temperature dependent (file)
-     SLIT_TYPE_MAX
-    };
+enum _slitTypes {
+  SLIT_TYPE_NONE,
+  SLIT_TYPE_FILE,                                                            // user-defined line shape provided in a file
+  SLIT_TYPE_GAUSS,                                                           // Gaussian line shape
+  SLIT_TYPE_INVPOLY,                                                         // 2n-Lorentz (generalisation of the Lorentzian function
+  SLIT_TYPE_VOIGT,                                                           // Voigt profile function
+  SLIT_TYPE_ERF,                                                             // error function (convolution of a Gaussian and a boxcar)
+  SLIT_TYPE_AGAUSS,                                                          // asymmetric gaussian line shape
+  SLIT_TYPE_APOD,                                                            // apodisation function (used with FTS)
+  SLIT_TYPE_APODNBS,                                                         // apodisation function (Norton Beer Strong function)
+  SLIT_TYPE_MAX
+};
 
-   // Convolution type
-   // ----------------
+// Convolution type
+// ----------------
 
-   enum _convolutionTypes
-    {
-     CONVOLUTION_TYPE_NONE,                                                     // no convolution, interpolation only
-     CONVOLUTION_TYPE_STANDARD,                                                 // standard convolution
-     CONVOLUTION_TYPE_I0_CORRECTION,                                            // convolution using I0 correction
-   // CONVOLUTION_TYPE_RING,                                                    // creation of a ring xs using high-resoluted solar and raman spectra
-     CONVOLUTION_TYPE_MAX
-    };
+enum _convolutionTypes {
+  CONVOLUTION_TYPE_NONE,                                                     // no convolution, interpolation only
+  CONVOLUTION_TYPE_STANDARD,                                                 // standard convolution
+  CONVOLUTION_TYPE_I0_CORRECTION,                                            // convolution using I0 correction
+  // CONVOLUTION_TYPE_RING,                                                    // creation of a ring xs using high-resoluted solar and raman spectra
+  CONVOLUTION_TYPE_MAX
+};
 
-   // Conversion modes
-   // ----------------
+// Conversion modes
+// ----------------
 
-   enum _conversionModes
-    {
-     CONVOLUTION_CONVERSION_NONE,                                               // no conversion
-     CONVOLUTION_CONVERSION_AIR2VAC,                                            // air to vacuum
-     CONVOLUTION_CONVERSION_VAC2AIR,                                            // vacuum to air
-     CONVOLUTION_CONVERSION_MAX
-    };
+enum _conversionModes {
+  CONVOLUTION_CONVERSION_NONE,                                               // no conversion
+  CONVOLUTION_CONVERSION_AIR2VAC,                                            // air to vacuum
+  CONVOLUTION_CONVERSION_VAC2AIR,                                            // vacuum to air
+  CONVOLUTION_CONVERSION_MAX
+};
 
-  // Pages of the dialog box
-  // -----------------------
+// Pages of the dialog box
+// -----------------------
 
-   enum _convolutionTabPages
-    {
-     TAB_TYPE_XSCONV_GENERAL,                                                   // general information (files names, convolution type...)
-     TAB_TYPE_XSCONV_SLIT,                                                      // information on the slit function
-     TAB_TYPE_XSCONV_FILTER,                                                    // information on the filter to apply
-     TAB_TYPE_XSCONV_MAX
-    };
-
+enum _convolutionTabPages {
+  TAB_TYPE_XSCONV_GENERAL,                                                   // general information (files names, convolution type...)
+  TAB_TYPE_XSCONV_SLIT,                                                      // information on the slit function
+  TAB_TYPE_XSCONV_FILTER,                                                    // information on the filter to apply
+  TAB_TYPE_XSCONV_MAX
+};
 
 enum omi_xtrack_mode {
   XTRACKQF_IGNORE = 0,

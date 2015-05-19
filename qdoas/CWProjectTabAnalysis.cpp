@@ -146,8 +146,6 @@ void CWProjectTabAnalysis::apply(mediate_project_analysis_t *properties) const
   index = m_fitCombo->currentIndex();
   properties->fitType = m_fitCombo->itemData(index).toInt();
 
-  properties->unitType = PRJCT_ANLYS_UNITS_NANOMETERS; // Always nanometers
-
   index = m_interpCombo->currentIndex();
   properties->interpolationType = m_interpCombo->itemData(index).toInt();
 

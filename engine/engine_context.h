@@ -47,7 +47,6 @@ typedef struct _prjctSpectra {
 struct _prjctAnlys {
     int method;                                        // analysis method
     int fitWeighting;                                  // least-squares fit weighting
-    int units;                                         // units for shift and stretch
     int interpol;                                      // interpolation
     double convergence;                                // convergence criterion
     double spike_tolerance;                            // max ratio of (pixel residual)/(average residual)

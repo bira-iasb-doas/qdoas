@@ -52,8 +52,6 @@
 #ifndef MOON_H
 #define MOON_H
 
-#include "doas.h"
-
 void MOON_GetPosition(char  *inputDate,                                        // input date and time for moon positions calculation
                       double  longitude,                                        // longitude of the observation site
                       double  latitude,                                         // latitude of the observation site

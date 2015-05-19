@@ -691,7 +691,6 @@ void setMediateProjectAnalysis(PRJCT_ANLYS *pEngineAnalysis,const mediate_projec
 
    pEngineAnalysis->method=pMediateAnalysis->methodType;                         // analysis method
    pEngineAnalysis->fitWeighting=pMediateAnalysis->fitType;                      // least-squares fit weighting
-   pEngineAnalysis->units=PRJCT_ANLYS_UNITS_NANOMETERS;                          // units for shift and stretch : force nm with QDOAS !!!
    pEngineAnalysis->interpol=pMediateAnalysis->interpolationType;                // interpolation
    pEngineAnalysis->convergence=pMediateAnalysis->convergenceCriterion;          // convergence criterion
    pEngineAnalysis->spike_tolerance=pMediateAnalysis->spike_tolerance;

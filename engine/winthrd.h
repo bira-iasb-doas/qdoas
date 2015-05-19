@@ -5,7 +5,6 @@
 
 extern char      THRD_asciiFile[];             // ASCII file for exporting spectra
 extern void *    THRD_hEvents[];               // list of events
-extern ENGINE_CONTEXT THRD_specInfo;           // data on current spectra and reference
 extern unsigned int THRD_id;                   // thread identification number
 extern int       THRD_levelMax;                // level of thread
 extern int       THRD_lastEvent;               // last event

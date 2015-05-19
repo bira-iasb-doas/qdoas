@@ -1,7 +1,7 @@
 #ifndef CURFIT_H
 #define CURFIT_H
 
-#include "doas.h"
+#include "comdefs.h"
 
 double Fchisq(int mode,int nFree,double *Y,double *Yfit,double *sigmay,int nY);
 

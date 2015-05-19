@@ -149,7 +149,6 @@ extern "C" {
   {
     int methodType;
     int fitType;
-    int unitType;
     int interpolationType;
     int interpolationSecurityGap;
     double convergenceCriterion;

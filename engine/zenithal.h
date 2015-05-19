@@ -1,7 +1,7 @@
 #ifndef ZENITHAL_H
 #define ZENITHAL_H
 
-#include "doas.h"
+#include "comdefs.h"
 
 double  ZEN_NbSec     ( SHORT_DATE *today, struct time *now, int flag);
 double  ZEN_FNTdiz    ( double NbreJours, double *ObsLong, double *ObsLat,double *pAzimuth );

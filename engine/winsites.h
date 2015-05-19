@@ -1,7 +1,7 @@
 #ifndef WINSITES_H
 #define WINSITES_H
 
-#include "doas.h"
+#include "comdefs.h"
 #include "mediate_limits.h"
 // Observation site properties
 

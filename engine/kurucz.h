@@ -17,8 +17,7 @@ struct _KuruczFeno {
   bool           have_calibration; // "true" if this struct contains results.
 };
 
-struct _Kurucz
- {
+struct _Kurucz {
   KURUCZ_FENO *KuruczFeno;
   MATRIX_OBJECT hrSolar;                        // high resolution kurucz spectrum for convolution
   MATRIX_OBJECT slitFunction;                   // user-defined slit function (file option)
@@ -51,7 +50,6 @@ struct _Kurucz
   char   displayShift;                         // display shift in each pixel flag
   char   displaySpectra;                       // display complete spectra
   char   method;                               // analysis method (Marquadt,SVD)
-  char   units;                                // units selected for analysis (pixel/nm)
 };
 
 extern KURUCZ KURUCZ_buffers[MAX_SWATHSIZE];

@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 
-#include "doas.h"
+#include "comdefs.h"
 
 #if defined(_cplusplus) || defined(__cplusplus)
 extern "C" {
