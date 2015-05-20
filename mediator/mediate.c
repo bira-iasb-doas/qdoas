@@ -141,31 +141,32 @@ int mediateRequestDisplaySpecInfo(void *engineContext,int page,void *responseHan
 
   if (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS)
     mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Record","%d/%d",pEngineContext->indexRecord,pEngineContext->recordNumber);
-  else if (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_OMI)
+  else if (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_OMI || pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_APEX)
     {
       if (pInstrumental->averageFlag)
         mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Record","%d/%d (%d spectra averaged)",
-                                pEngineContext->indexRecord,pEngineContext->recordNumber,pRecord->omi.nMeasurements);
+                                pEngineContext->indexRecord,pEngineContext->recordNumber,pRecord->n_alongtrack);
       else
        mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Record","%d/%d (measurement %d/%d, row %d/%d)",
                                pEngineContext->indexRecord,pEngineContext->recordNumber,
-                               pRecord->omi.omiMeasurementIndex,pRecord->omi.nMeasurements,
-                               pRecord->omi.omiRowIndex,pRecord->omi.nXtrack);
+                               1+pRecord->i_alongtrack,pRecord->n_alongtrack,
+                               1+pRecord->i_crosstrack,pRecord->n_crosstrack);
 
-      if (pSpectra->fieldsFlag[PRJCT_RESULTS_OMI_INDEX_SWATH])
-       mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Index of measurement","%d",pRecord->omi.omiMeasurementIndex);
-      if (pSpectra->fieldsFlag[PRJCT_RESULTS_OMI_INDEX_ROW])
-       mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Index of row","%d",pRecord->omi.omiRowIndex);
-      if (pSpectra->fieldsFlag[PRJCT_RESULTS_OMI_GROUNDP_QF])
-       mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"GroundPixel QF","%d",pRecord->omi.omiGroundPQF);
-      if (pSpectra->fieldsFlag[PRJCT_RESULTS_OMI_XTRACK_QF])
-       mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"XTrack QF","%d",pRecord->omi.omiXtrackQF);
+      if (pSpectra->fieldsFlag[PRJCT_RESULTS_INDEX_ALONGTRACK])
+       mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Along-track index","%d",pRecord->i_alongtrack);
+      if (pSpectra->fieldsFlag[PRJCT_RESULTS_INDEX_CROSSTRACK])
+       mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Cross-track index","%d",pRecord->i_crosstrack);
     }
   else
    mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Record","%d/%d",pEngineContext->indexRecord,pEngineContext->recordNumber);
 
   if (strlen(pRecord->Nom) && (pSpectra->fieldsFlag[PRJCT_RESULTS_NAME]))
    mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Record name","%s",pRecord->Nom);
+
+  if (pSpectra->fieldsFlag[PRJCT_RESULTS_OMI_GROUNDP_QF])
+    mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"GroundPixel QF","%d",pRecord->omi.omiGroundPQF);
+  if (pSpectra->fieldsFlag[PRJCT_RESULTS_OMI_XTRACK_QF])
+    mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"XTrack QF","%d",pRecord->omi.omiXtrackQF);
 
   if (pSpectra->fieldsFlag[PRJCT_RESULTS_PIXEL])
    mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Pixel number","%d",pRecord->gome.pixelNumber);
@@ -967,6 +968,13 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
 
       break;
       // ----------------------------------------------------------------------------
+    case PRJCT_INSTR_FORMAT_APEX:
+      NDET = 1024;
+
+      strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->apex.calibrationFile);
+      strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->apex.transmissionFunctionFile);
+     
+      break;
     case PRJCT_INSTR_FORMAT_RASAS :                                                                 // Format RASAS (INTA)
 
       NDET=1024;                                                                                     // size of the detector
@@ -2106,7 +2114,6 @@ int mediateRequestNextMatchingSpectrum(ENGINE_CONTEXT *pEngineContext,void *resp
      }
 
      if (outputFlag) {
-
        int indexFenoColumn=(pEngineContext->recordNumber - 1) % ANALYSE_swathSize;
 
        for (int indexFeno=0;indexFeno<NFeno;indexFeno++)
@@ -2132,13 +2139,12 @@ int mediateRequestNextMatchingSpectrum(ENGINE_CONTEXT *pEngineContext,void *resp
         && (rc=EngineReadFile(pEngineContext,orec,0,0))!=ERROR_ID_NO) {
 
       if (outputFlag) {
+        int indexFenoColumn=(pEngineContext->recordNumber - 1) % ANALYSE_swathSize;
 
-        int indexFenoColumn = (pEngineContext->recordNumber - 1) % ANALYSE_swathSize;
-        
         for (int indexFeno=0;indexFeno<NFeno;indexFeno++)
           if (!TabFeno[indexFenoColumn][indexFeno].hidden)
             TabFeno[indexFenoColumn][indexFeno].rc=ERROR_ID_FILE_RECORD;             // force the output to default values
-          
+
         OUTPUT_SaveResults(pEngineContext,indexFenoColumn);
       }
 
@@ -2178,14 +2184,6 @@ int mediateRequestNextMatchingBrowseSpectrum(void *engineContext,
 
     mediateRequestPlotSpectra(pEngineContext,responseHandle);
    }
-
-   //  {
-   //  	FILE *fp;
-   //  	fp=fopen("qdoas.dbg","a+t");
-   //  	fprintf(fp,"   mediateRequestNextMatchingBrowseSpectrum %d/%d\n",pEngineContext->indexRecord,pEngineContext->recordNumber);
-   //  	fclose(fp);
-   //  }
-
 
    return rec;
  }
@@ -2236,7 +2234,7 @@ int mediateRequestNextMatchingAnalyseSpectrum(void *engineContext,
      // for omi, when using automatic reference selection for one or
      // more analysis windows, check if automatic reference spectrum is
      // ok for this detector row, if not: get next spectrum.
-     while( !omi_has_automatic_reference(pEngineContext->recordInfo.omi.omiRowIndex-1)
+     while( !omi_has_automatic_reference(pEngineContext->recordInfo.i_crosstrack)
             && rec > 0 )
       {
        rec = mediateRequestNextMatchingSpectrum(pEngineContext,responseHandle);

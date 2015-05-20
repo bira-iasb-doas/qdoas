@@ -69,6 +69,7 @@
 
 #include "omi_read.h"
 #include "gdp_bin_read.h"
+#include "apex_read.h"
 #include "spectrum_files.h"
 
 #include "coda.h"
@@ -322,6 +323,7 @@ RC EngineSetProject(ENGINE_CONTEXT *pEngineContext)
 
    pEngineContext->lastRefRecord=0;
    pRecord->nSpecMax=0;
+   pRecord->i_crosstrack=0;
 
    pEngineContext->satelliteFlag=((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_GDP_ASCII) ||
                                   (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN) ||
@@ -640,6 +642,9 @@ RC EngineSetFile(ENGINE_CONTEXT *pEngineContext,const char *fileName,void *respo
      case PRJCT_INSTR_FORMAT_BIRA_AIRBORNE :
        rc=AIRBORNE_Set(pEngineContext,pFile->specFp);
        break;
+     case PRJCT_INSTR_FORMAT_APEX :
+       rc=apex_set(pEngineContext);
+       break;
        // ---------------------------------------------------------------------------
      case PRJCT_INSTR_FORMAT_MFC :
      case PRJCT_INSTR_FORMAT_MFC_STD :
@@ -740,7 +745,6 @@ RC EngineReadFile(ENGINE_CONTEXT *pEngineContext,int indexRecord,int dateFlag,in
    INDEX indexSite;
    OBSERVATION_SITE *pSite;
    double longit,latit;
-   int indexFeno;
    int rc;                                                                       // Return code
 
    // Initializations
@@ -816,32 +820,9 @@ RC EngineReadFile(ENGINE_CONTEXT *pEngineContext,int indexRecord,int dateFlag,in
       rc=AIRBORNE_Read(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp);
       break;
       // ---------------------------------------------------------------------------
-      // QDOAS ???    case PRJCT_INSTR_FORMAT_MFC :
-      // QDOAS ???
-      // QDOAS ???     switch(THRD_browseType)
-      // QDOAS ???      {
-      // QDOAS ???    // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-      // QDOAS ???       case THREAD_BROWSE_MFC_OFFSET :
-      // QDOAS ???        mfcMask=pInstrumental->mfcMaskOffset;
-      // QDOAS ???       break;
-      // QDOAS ???    // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-      // QDOAS ???       case THREAD_BROWSE_MFC_DARK :
-      // QDOAS ???        mfcMask=pInstrumental->mfcMaskDark;
-      // QDOAS ???       break;
-      // QDOAS ???    // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-      // QDOAS ???       case THREAD_BROWSE_MFC_INSTR :
-      // QDOAS ???        mfcMask=pInstrumental->mfcMaskInstr;
-      // QDOAS ???       break;
-      // QDOAS ???    // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-      // QDOAS ???       default :
-      // QDOAS ???        mfcMask=pInstrumental->mfcMaskSpec;
-      // QDOAS ???       break;
-      // QDOAS ???    // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-      // QDOAS ???     }
-      // QDOAS ???
-      // QDOAS ???     rc=ReliMFC(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp,mfcMask);
-      // QDOAS ???
-      // QDOAS ???    break;
+    case PRJCT_INSTR_FORMAT_APEX :
+      rc=apex_read(pEngineContext,indexRecord);
+      break;
       // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_MFC_STD :
       rc=ReliMFCStd(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp);
@@ -1041,10 +1022,10 @@ RC EngineEndCurrentSession(ENGINE_CONTEXT *pEngineContext)
 
      GDP_ASC_ReleaseBuffers();
      GDP_BIN_ReleaseBuffers();
-
      GOME2_ReleaseBuffers();
      OMI_ReleaseBuffers();
      SCIA_ReleaseBuffers(pEngineContext->project.instrumental.readOutFormat);
+     apex_clean();
 
      if ((THRD_id!=THREAD_TYPE_NONE) && (THRD_id!=THREAD_TYPE_SPECTRA))
       {

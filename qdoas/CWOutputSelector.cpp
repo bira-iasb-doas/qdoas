@@ -131,8 +131,8 @@ CWOutputSelector::CWOutputSelector(const data_select_list_t *d, QWidget *parent)
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_CCD_TARGETAZIMUTH,      "Target azimuth"           ));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_CCD_TARGETELEVATION,    "Target elevation"          ));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_SATURATED,              "Saturated flag"           ));
-  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_OMI_INDEX_SWATH,        "Index of the swath"           ));
-  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_OMI_INDEX_ROW,          "Index of the row in the swath"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_INDEX_ALONGTRACK,       "Along-track index"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_INDEX_CROSSTRACK,       "Cross-track index"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_OMI_GROUNDP_QF,         "Ground pixel quality flags"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_OMI_XTRACK_QF,          "Xtrack quality flags"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_OMI_PIXELS_QF,          "Rejected pixels based on quality flags"));
@@ -559,15 +559,20 @@ void getValidFieldFlags(int *validFlags, int instrument)
       validFlags[PRJCT_RESULTS_VIEW_AZIMUTH]=1;
       validFlags[PRJCT_RESULTS_LOS_ZA]=1;
       validFlags[PRJCT_RESULTS_LOS_AZIMUTH]=1;
-      validFlags[PRJCT_RESULTS_OMI_INDEX_SWATH]=1;
-      validFlags[PRJCT_RESULTS_OMI_INDEX_ROW]=1;
+      validFlags[PRJCT_RESULTS_INDEX_ALONGTRACK]=1;
+      validFlags[PRJCT_RESULTS_INDEX_CROSSTRACK]=1;
       validFlags[PRJCT_RESULTS_OMI_GROUNDP_QF]=1;
       validFlags[PRJCT_RESULTS_OMI_XTRACK_QF]=1;
       validFlags[PRJCT_RESULTS_OMI_PIXELS_QF]=1;
      }
     break;
  // ----------------------------------------------------------------------------
-
+   case PRJCT_INSTR_FORMAT_APEX :
+     {
+       validFlags[PRJCT_RESULTS_INDEX_ALONGTRACK]=1;
+       validFlags[PRJCT_RESULTS_INDEX_CROSSTRACK]=1;
+     }
+     break;
    default:
      break;
  // ----------------------------------------------------------------------------

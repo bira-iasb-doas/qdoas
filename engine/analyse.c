@@ -156,6 +156,7 @@
 #include "vector.h"
 #include "zenithal.h"
 #include "omi_read.h"
+#include "apex_read.h"
 
 // ===================
 // Global DECLARATIONS
@@ -1995,8 +1996,8 @@ RC ANALYSE_AlignReference(ENGINE_CONTEXT *pEngineContext,int refFlag,void *respo
           else
            sprintf(tabTitle,"%s results (record %d/%d, measurement %d/%d, row %d/%d)",
                    Feno->windowName,TabFeno[indexFenoColumn][WrkFeno].indexRef,pEngineContext->recordNumber,
-                   pEngineContext->recordInfo.omi.omiMeasurementIndex,pEngineContext->recordInfo.omi.nMeasurements,
-                   pEngineContext->recordInfo.omi.omiRowIndex,pEngineContext->recordInfo.omi.nXtrack);
+                   1+pEngineContext->recordInfo.i_alongtrack,pEngineContext->recordInfo.n_alongtrack,
+                   1+pEngineContext->recordInfo.i_crosstrack,pEngineContext->recordInfo.n_crosstrack);
 
           sprintf(string,"Alignment Ref1/Ref2");
 
@@ -3321,7 +3322,7 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
   pProject=&pEngineContext->project;
   pInstrumental=&pProject->instrumental;
 
-  indexFenoColumn=(pInstrumental->readOutFormat!=PRJCT_INSTR_FORMAT_OMI)?0:pRecord->omi.omiRowIndex-1;
+  indexFenoColumn=pRecord->i_crosstrack;
 
   memcpy(ANALYSE_t,ANALYSE_zeros,sizeof(double)*NDET);
   memcpy(ANALYSE_tc,ANALYSE_zeros,sizeof(double)*NDET);
@@ -3424,8 +3425,8 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
           sprintf(tabTitle,"%s results (record %d/%d, measurement %d/%d, row %d/%d)",
                   Feno->windowName,pEngineContext->indexRecord,pEngineContext->recordNumber,
-                  pEngineContext->recordInfo.omi.omiMeasurementIndex,pEngineContext->recordInfo.omi.nMeasurements,
-                  pEngineContext->recordInfo.omi.omiRowIndex,pEngineContext->recordInfo.omi.nXtrack);
+                  pEngineContext->recordInfo.i_alongtrack,pEngineContext->recordInfo.n_alongtrack,
+                  pEngineContext->recordInfo.i_crosstrack,pEngineContext->recordInfo.n_crosstrack);
          }
 
         displayFlag=Feno->displaySpectrum+                                      //  force display spectrum
@@ -5482,18 +5483,27 @@ RC ANALYSE_LoadRef(ENGINE_CONTEXT *pEngineContext,INDEX indexFenoColumn)
 
     if ((pTabFeno->useKurucz!=ANLYS_KURUCZ_SPEC) &&                             // if the wavelength calibration procedure is applied on the measured
         (pTabFeno->useKurucz!=ANLYS_KURUCZ_REF_AND_SPEC) &&                     // spectrum, the ref1 has no sense.
-        strlen(pTabFeno->ref1))
-     {
-       if ((((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_OMI) && !(rc=OMI_GetReference(pEngineContext->project.instrumental.omi.spectralType, pTabFeno->ref1,indexFenoColumn,lambdaRefEtalon,SrefEtalon,pTabFeno->SrefSigma))) ||
-           ((pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_OMI) && !(rc=AnalyseLoadVector("ANALYSE_LoadRef (SrefEtalon) ",pTabFeno->ref1,lambdaRefEtalon,SrefEtalon,1,NULL)))) &&
+        strlen(pTabFeno->ref1)) {
+      
+      switch(pEngineContext->project.instrumental.readOutFormat) {
+      case PRJCT_INSTR_FORMAT_OMI:
+        rc=OMI_GetReference(pEngineContext->project.instrumental.omi.spectralType,pTabFeno->ref1,indexFenoColumn,lambdaRefEtalon,SrefEtalon,pTabFeno->SrefSigma);
+        break;
+      case PRJCT_INSTR_FORMAT_APEX:
+        rc=apex_get_reference(pTabFeno->ref1,indexFenoColumn,lambdaRefEtalon,SrefEtalon);
+        break;
+      default:
+        rc=AnalyseLoadVector("ANALYSE_LoadRef (SrefEtalon) ",pTabFeno->ref1,lambdaRefEtalon,SrefEtalon,1,NULL);
+        break;
+      }
+      if (!rc &&
           !(rc=THRD_SpectrumCorrection(pEngineContext,SrefEtalon)) &&
-          !(rc=VECTOR_NormalizeVector(SrefEtalon-1,NDET,&pTabFeno->refNormFact,"ANALYSE_LoadRef (SrefEtalon) ")))
-       {
+          !(rc=VECTOR_NormalizeVector(SrefEtalon-1,NDET,&pTabFeno->refNormFact,"ANALYSE_LoadRef (SrefEtalon) "))) {
         pTabFeno->NDET = NDET;
         pTabFeno->displayRef=pTabFeno->useEtalon=pTabFeno->gomeRefFlag=1;
         strcpy(pTabFeno->refFile,pTabFeno->ref1);
-       }
-     }
+      }
+    }
 
     // ====
     // Ref2

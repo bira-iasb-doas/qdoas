@@ -692,6 +692,7 @@ static void register_field(struct output_field field) {
   *newfield = field;
   newfield->fieldname = strdup(newfield->basic_fieldname);  // allocate a new buffer for the name so we can free() all output_field data later on.
   newfield->windowname = NULL;
+  newfield->windowname = NULL;
   if (newfield->data_cols == 0) // default number of columns is 1
     newfield->data_cols = 1;
   newfield->index_feno = ITEM_NONE;
@@ -992,11 +993,11 @@ static void OutputRegisterFields(const ENGINE_CONTEXT *pEngineContext)
      case PRJCT_RESULTS_SATURATED:
        register_field( (struct output_field) { .basic_fieldname = "Saturated", .memory_type = OUTPUT_USHORT, .resulttype = fieldtype, .format = "%#5d", .get_data = (func_void)&get_saturated_flag });
        break;
-     case PRJCT_RESULTS_OMI_INDEX_SWATH:
-       register_field( (struct output_field) { .basic_fieldname = "OMI index swath", .memory_type = OUTPUT_INT, .resulttype = fieldtype, .format = "%#6d", .get_data = (func_void)&get_omi_measurement_number });
+     case PRJCT_RESULTS_INDEX_ALONGTRACK:
+       register_field( (struct output_field) { .basic_fieldname = "along-track index", .memory_type = OUTPUT_INT, .resulttype = fieldtype, .format = "%#6d", .get_data = (func_void)&get_alongtrack_index });
        break;
-     case PRJCT_RESULTS_OMI_INDEX_ROW:
-       register_field( (struct output_field) { .basic_fieldname = "OMI index row", .memory_type = OUTPUT_INT, .resulttype = fieldtype, .format = "%#3d", .get_data = (func_void)&get_omi_row });
+     case PRJCT_RESULTS_INDEX_CROSSTRACK:
+       register_field( (struct output_field) { .basic_fieldname = "cross-track index", .memory_type = OUTPUT_INT, .resulttype = fieldtype, .format = "%#3d", .get_data = (func_void)&get_crosstrack_index });
        break;
      case PRJCT_RESULTS_OMI_GROUNDP_QF:
        register_field( (struct output_field) { .basic_fieldname = "OMI groundpixel quality flag", .memory_type = OUTPUT_USHORT, .resulttype = fieldtype, .format = "%#6d", .get_data = (func_void)&get_omi_groundpixelqf });

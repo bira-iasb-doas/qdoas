@@ -271,15 +271,10 @@ GOME2_DATA;
 
 // Record information specific to OMI
 
-typedef struct _omi
- {
-   INDEX   omiMeasurementIndex;                                                        // index of the measurement
-   INDEX   omiRowIndex;                                                          // index of the current row in the current measurement
-   unsigned short  omiGroundPQF;                                                         // ground pixel quality flags
-   unsigned short  omiXtrackQF;                                                          // xtrack quality flags
-   int nMeasurements,                                                    // total number of tracks
-     nXtrack;                                                      // total number of spectra in tracks
-   unsigned short *omiPixelQF; 	                                                         // pixel quality flag
+typedef struct _omi {
+  unsigned short  omiGroundPQF;                                                 // ground pixel quality flags
+  unsigned short  omiXtrackQF;                                                  // xtrack quality flags
+  unsigned short *omiPixelQF; 	                                                // pixel quality flag
 }
 OMI_DATA;
 
@@ -431,6 +426,7 @@ typedef struct _engineRecordInfo
 
   int    useErrors;                                                             // 1 if errors are present in the files (GOME)
   int    coolingStatus,mirrorError;                                             // only for OHP measurements (September 2008)
+  int    i_alongtrack, i_crosstrack, n_alongtrack, n_crosstrack;                // for imagers (OMI/APEX/Tropomi/...)
   INDEX  indexBand;                                                             // index of the band
 
   GOME_DATA gome;                                                               // GOME format

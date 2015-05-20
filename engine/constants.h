@@ -350,13 +350,15 @@ enum _prjctInstrFormat {
   PRJCT_INSTR_FORMAT_GOME2,                                                     // GOME2
   PRJCT_INSTR_FORMAT_MKZY,                                                      // MANNE Kihlman and ZHANG Yan pak format
   PRJCT_INSTR_FORMAT_BIRA_AIRBORNE,                                             // MOBILEDOAS and ULMDOAS (BIRA-IASB)
+  PRJCT_INSTR_FORMAT_APEX,                                                      // APEX NetCDF files (BIRA-IASB/VITO)
   PRJCT_INSTR_FORMAT_OCEAN_OPTICS,                                              // Ocean optics
   PRJCT_INSTR_FORMAT_MAX
 };
 
-enum _prjctInstrType  {
+enum _prjctInstrType {
   PRJCT_INSTR_TYPE_GROUND_BASED,
   PRJCT_INSTR_TYPE_SATELLITE,
+  PRJCT_INSTR_TYPE_AIRBORNE,
   PRJCT_INSTR_TYPE_MAX
 };
 
@@ -528,8 +530,8 @@ enum _prjctResults
   PRJCT_RESULTS_CCD_TARGETAZIMUTH,
   PRJCT_RESULTS_CCD_TARGETELEVATION,
   PRJCT_RESULTS_SATURATED,
-  PRJCT_RESULTS_OMI_INDEX_SWATH,
-  PRJCT_RESULTS_OMI_INDEX_ROW,
+  PRJCT_RESULTS_INDEX_CROSSTRACK,
+  PRJCT_RESULTS_INDEX_ALONGTRACK,
   PRJCT_RESULTS_OMI_GROUNDP_QF,
   PRJCT_RESULTS_OMI_XTRACK_QF,
   PRJCT_RESULTS_OMI_PIXELS_QF,

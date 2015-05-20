@@ -453,12 +453,12 @@ static inline void get_saturated_flag(struct output_field *this_field __attribut
   *saturated_flag = pEngineContext->recordInfo.ccd.saturatedFlag;
 }
 
-static inline void get_omi_measurement_number(struct output_field *this_field __attribute__ ((unused)), int *row, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
-  *row = pEngineContext->recordInfo.omi.omiMeasurementIndex;
+static inline void get_alongtrack_index(struct output_field *this_field __attribute__ ((unused)), int *row, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
+  *row = 1 + pEngineContext->recordInfo.i_alongtrack;
 }
 
-static inline void get_omi_row(struct output_field *this_field __attribute__ ((unused)), int *row, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
-  *row = pEngineContext->recordInfo.omi.omiRowIndex;
+static inline void get_crosstrack_index(struct output_field *this_field __attribute__ ((unused)), int *row, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
+  *row = 1 + pEngineContext->recordInfo.i_crosstrack;
 }
 
 static inline void get_omi_groundpixelqf(struct output_field *this_field __attribute__ ((unused)), unsigned short *groundpixelqf, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {

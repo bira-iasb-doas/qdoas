@@ -180,10 +180,10 @@ bool CSelectorSubHandler::start(const QString &element, const QXmlAttributes &at
     d->selected[d->nSelected] = PRJCT_RESULTS_CCD_TARGETELEVATION;
   else if (str == "saturated")
     d->selected[d->nSelected] = PRJCT_RESULTS_SATURATED;
-  else if (str == "omi_index_swath")
-    d->selected[d->nSelected] = PRJCT_RESULTS_OMI_INDEX_SWATH;
-  else if (str == "omi_index_row")
-    d->selected[d->nSelected] = PRJCT_RESULTS_OMI_INDEX_ROW;
+  else if (str == "omi_index_swath" || str == "index_alongtrack")
+    d->selected[d->nSelected] = PRJCT_RESULTS_INDEX_ALONGTRACK;
+  else if (str == "omi_index_row" || str == "index_crosstrack")
+    d->selected[d->nSelected] = PRJCT_RESULTS_INDEX_CROSSTRACK;
   else if (str == "omi_groundp_qf")
     d->selected[d->nSelected] = PRJCT_RESULTS_OMI_GROUNDP_QF;
   else if (str == "omi_xtrack_qf")
@@ -578,6 +578,8 @@ bool CProjectInstrumentalSubHandler::start(const QXmlAttributes &atts)
     m_instrumental->format = PRJCT_INSTR_FORMAT_SAOZ_EFM;
   else if (str == "biraairborne")
     m_instrumental->format = PRJCT_INSTR_FORMAT_BIRA_AIRBORNE;
+  else if (str == "apex")
+    m_instrumental->format = PRJCT_INSTR_FORMAT_APEX;
   else if (str == "mfc")
     m_instrumental->format = PRJCT_INSTR_FORMAT_MFC;
   else if (str == "mfcstd")

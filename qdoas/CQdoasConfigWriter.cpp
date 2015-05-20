@@ -403,6 +403,9 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   case PRJCT_INSTR_FORMAT_BIRA_AIRBORNE:
     fprintf(fp, "\"biraairborne\"");
     break;
+  case PRJCT_INSTR_FORMAT_APEX:
+    fprintf(fp, "\"apex\"");
+    break;
   case PRJCT_INSTR_FORMAT_OCEAN_OPTICS:
     fprintf(fp, "\"oceanoptics\"");
     break;
@@ -1507,8 +1510,8 @@ void CQdoasConfigWriter::writeDataSelectList(FILE *fp, const data_select_list_t 
     case PRJCT_RESULTS_CCD_TARGETAZIMUTH : fprintf(fp,"target_azimuth"); break;
     case PRJCT_RESULTS_CCD_TARGETELEVATION : fprintf(fp,"target_elevation"); break;
     case PRJCT_RESULTS_SATURATED : fprintf(fp,"saturated"); break;
-    case PRJCT_RESULTS_OMI_INDEX_SWATH : fprintf(fp,"omi_index_swath"); break;
-    case PRJCT_RESULTS_OMI_INDEX_ROW : fprintf(fp,"omi_index_row"); break;
+    case PRJCT_RESULTS_INDEX_ALONGTRACK : fprintf(fp,"index_alongtrack"); break;
+    case PRJCT_RESULTS_INDEX_CROSSTRACK : fprintf(fp,"index_crosstrack"); break;
     case PRJCT_RESULTS_OMI_GROUNDP_QF : fprintf(fp,"omi_groundp_qf"); break;
     case PRJCT_RESULTS_OMI_XTRACK_QF		: fprintf(fp,"omi_xtrack_qf"); break;
     case PRJCT_RESULTS_OMI_PIXELS_QF		: fprintf(fp,"omi_pixels_qf"); break;

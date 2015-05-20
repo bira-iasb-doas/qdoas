@@ -53,6 +53,7 @@ CWProjectPropertyEditor::CWProjectPropertyEditor(const QString &projectName, QWi
   m_instrTypeCombo = new QComboBox(this);
   m_instrTypeCombo->addItem("Ground-Based", QVariant(PRJCT_INSTR_TYPE_GROUND_BASED));
   m_instrTypeCombo->addItem("Satellites", QVariant(PRJCT_INSTR_TYPE_SATELLITE));
+  m_instrTypeCombo->addItem("Airborne", QVariant(PRJCT_INSTR_TYPE_AIRBORNE));
 
   instrLayout->addWidget(m_instrTypeCombo);
   instrLayout->addWidget(new QLabel("Instr. Format", this));
@@ -61,7 +62,6 @@ CWProjectPropertyEditor::CWProjectPropertyEditor(const QString &projectName, QWi
   m_groundFormatCombo = new QComboBox(this);
   m_groundFormatCombo->addItem("Acton (NILU)", QVariant(PRJCT_INSTR_FORMAT_ACTON));
   m_groundFormatCombo->addItem("ASCII", QVariant(PRJCT_INSTR_FORMAT_ASCII));
-  m_groundFormatCombo->addItem("BIRA-IASB Airborne", QVariant(PRJCT_INSTR_FORMAT_BIRA_AIRBORNE));
   m_groundFormatCombo->addItem("CCD all tracks", QVariant(PRJCT_INSTR_FORMAT_CCD_OHP_96));
   m_groundFormatCombo->addItem("CCD EEV (BIRA-IASB, NILU)", QVariant(PRJCT_INSTR_FORMAT_CCD_EEV));
   m_groundFormatCombo->addItem("CCD Sesame I", QVariant(PRJCT_INSTR_FORMAT_CCD_HA_94));
@@ -88,10 +88,16 @@ CWProjectPropertyEditor::CWProjectPropertyEditor(const QString &projectName, QWi
   //  m_satelliteFormatCombo->addItem("Tropomi", QVariant(PRJCT_INSTR_FORMAT_TROPOMI));
   m_satelliteFormatCombo->addItem("SCIAMACHY L1C (PDS format)", QVariant(PRJCT_INSTR_FORMAT_SCIA_PDS));
   m_satelliteFormatCombo->hide();
+  // create and populate airborne
+  m_airborneFormatCombo = new QComboBox(this);
+  m_airborneFormatCombo->addItem("BIRA-IASB Airborne", QVariant(PRJCT_INSTR_FORMAT_BIRA_AIRBORNE));
+  m_airborneFormatCombo->addItem("APEX", QVariant(PRJCT_INSTR_FORMAT_APEX));
+  m_airborneFormatCombo->hide();
 
-  // insert both instrument combos ... one will always be hidden ...
+  // insert all instrument combos ... one will always be hidden ...
   instrLayout->addWidget(m_groundFormatCombo, 1);
   instrLayout->addWidget(m_satelliteFormatCombo, 1);
+  instrLayout->addWidget(m_airborneFormatCombo, 1);
 
   mainLayout->addLayout(instrLayout, 0, 1);
 
@@ -157,17 +163,19 @@ CWProjectPropertyEditor::CWProjectPropertyEditor(const QString &projectName, QWi
 
   index = m_groundFormatCombo->findData(QVariant(m_selectedInstrument));
   if (index != -1) {
-    // Is Ground-Based instrument
+    // Ground-Based instrument
     m_groundFormatCombo->setCurrentIndex(index);
     m_instrTypeCombo->setCurrentIndex(0);
-  }
-  else {
-    index = m_satelliteFormatCombo->findData(QVariant(m_selectedInstrument));
-    if (index != -1) {
-      // Is Satellite instrument
-      m_satelliteFormatCombo->setCurrentIndex(index);
-      m_instrTypeCombo->setCurrentIndex(1);
-    }
+  } else if ( (index = m_satelliteFormatCombo->findData(QVariant(m_selectedInstrument) ) )
+              != -1) {
+    // Satellite instrument
+    m_satelliteFormatCombo->setCurrentIndex(index);
+    m_instrTypeCombo->setCurrentIndex(1);
+  } else if ( (index = m_airborneFormatCombo->findData(QVariant(m_selectedInstrument) ) )
+              != -1) {
+    // Airborne instrument
+    m_airborneFormatCombo->setCurrentIndex(index);
+    m_instrTypeCombo->setCurrentIndex(2);
   }
   // this makes everything consistent ... and resets m_slectedInstrument
   slotInstrumentTypeChanged(m_instrTypeCombo->currentIndex());
@@ -183,6 +191,7 @@ CWProjectPropertyEditor::CWProjectPropertyEditor(const QString &projectName, QWi
   connect(m_instrTypeCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(slotInstrumentTypeChanged(int)));
   connect(m_groundFormatCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(slotGroundInstrumentChanged(int)));
   connect(m_satelliteFormatCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(slotSatelliteInstrumentChanged(int)));
+  connect(m_airborneFormatCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(slotAirborneInstrumentChanged(int)));
 
   connect(this, SIGNAL(signalInstrumentChanged(int)), m_displayTab, SLOT(slotInstrumentChanged(int)));
   connect(this, SIGNAL(signalInstrumentChanged(int)), m_selectionTab, SLOT(slotInstrumentChanged(int)));
@@ -254,23 +263,31 @@ void CWProjectPropertyEditor::actionHelp(void)
 
 void CWProjectPropertyEditor::slotInstrumentTypeChanged(int index)
 {
-  // Ground = 0 : Satellite = 1
-
-  if (index == 0) {
-    // Ground-Based ...
+  switch (index) {
+  case 0: // Ground-Based ...
     m_satelliteFormatCombo->hide();
     m_groundFormatCombo->show();
+    m_airborneFormatCombo->hide();
 
     // the instrument also changes to the selected instrument
     slotGroundInstrumentChanged(m_groundFormatCombo->currentIndex());
-  }
-  else {
-    // Satellite ...
+    break;
+  case 1: // Satellite
     m_groundFormatCombo->hide();
     m_satelliteFormatCombo->show();
+    m_airborneFormatCombo->hide();
 
     // the instrument also changes to the selected instrument
     slotSatelliteInstrumentChanged(m_satelliteFormatCombo->currentIndex());
+    break;
+  case 2: // Airborne
+    m_satelliteFormatCombo->hide();
+    m_groundFormatCombo->hide();
+    m_airborneFormatCombo->show();
+
+    // the instrument also changes to the selected instrument
+    slotAirborneInstrumentChanged(m_airborneFormatCombo->currentIndex());
+    break;
   }
 
   emit signalInstrumentTypeChanged(m_instrTypeCombo->itemData(index).toInt());
@@ -286,6 +303,12 @@ void CWProjectPropertyEditor::slotGroundInstrumentChanged(int index)
 void CWProjectPropertyEditor::slotSatelliteInstrumentChanged(int index)
 {
   m_selectedInstrument = m_satelliteFormatCombo->itemData(index).toInt();
+
+  emit signalInstrumentChanged(m_selectedInstrument);
+}
+void CWProjectPropertyEditor::slotAirborneInstrumentChanged(int index)
+{
+  m_selectedInstrument = m_airborneFormatCombo->itemData(index).toInt();
 
   emit signalInstrumentChanged(m_selectedInstrument);
 }

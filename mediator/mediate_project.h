@@ -400,6 +400,7 @@ extern "C" {
     struct instrumental_gome2 gome2;
     struct instrumental_minimum mkzy;
     struct instrumental_minimum biraairborne;
+    struct instrumental_minimum apex;
     struct instrumental_oceanoptics oceanoptics;
    }
   mediate_project_instrumental_t;

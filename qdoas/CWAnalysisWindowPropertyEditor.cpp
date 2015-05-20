@@ -767,7 +767,7 @@ void CWAnalysisWindowPropertyEditor::slotBrowseRefOne()
 
   QString filename = QFileDialog::getOpenFileName(this, "Select Reference 1",
 						  pref->directoryName("Ref"),
-						  "Reference File (*.ref);;All Files (*)");
+						  "Reference File (*.ref *.he4 *.he5 *.nc);;All Files (*)");
 
   if (!filename.isEmpty()) {
     pref->setDirectoryNameGivenFile("Ref", filename);
@@ -782,7 +782,7 @@ void CWAnalysisWindowPropertyEditor::slotBrowseRefTwo()
 
   QString filename = QFileDialog::getOpenFileName(this, "Select Reference 2",
 						  pref->directoryName("Ref"),
-						  "Reference File (*.ref);;All Files (*)");
+						  "Reference File (*.ref *.he4 *.he5 *.nc);;All Files (*)");
 
   if (!filename.isEmpty()) {
     pref->setDirectoryNameGivenFile("Ref", filename);

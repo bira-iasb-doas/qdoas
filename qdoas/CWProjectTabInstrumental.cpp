@@ -226,6 +226,11 @@ CWProjectTabInstrumental::CWProjectTabInstrumental(const mediate_project_instrum
   index = m_formatStack->addWidget(m_biraairborneEdit);
   m_instrumentToStackIndexMap.insert(std::map<int,int>::value_type(PRJCT_INSTR_FORMAT_BIRA_AIRBORNE, index));
 
+  // apex
+  m_apexEdit = new CWInstrMinimumEdit(&(instr->apex));
+  index = m_formatStack->addWidget(m_apexEdit);
+  m_instrumentToStackIndexMap.insert(std::map<int,int>::value_type(PRJCT_INSTR_FORMAT_APEX, index));
+
   // ocean optics
   m_oceanOpticsEdit = new CWInstrOceanOpticsEdit(&(instr->oceanoptics));
   index = m_formatStack->addWidget(m_oceanOpticsEdit);

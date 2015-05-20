@@ -1340,8 +1340,8 @@ RC OMI_Set(ENGINE_CONTEXT *pEngineContext)
   if (!(rc=OmiOpen(&current_orbit_file,OMI_EarthSwaths[pEngineContext->project.instrumental.omi.spectralType])))
     {
       pEngineContext->recordNumber=current_orbit_file.specNumber;
-      pEngineContext->recordInfo.omi.nMeasurements=current_orbit_file.nMeasurements;
-      pEngineContext->recordInfo.omi.nXtrack=current_orbit_file.nXtrack;
+      pEngineContext->recordInfo.n_alongtrack=current_orbit_file.nMeasurements;
+      pEngineContext->recordInfo.n_crosstrack=current_orbit_file.nXtrack;
 
       omiTotalRecordNumber+=current_orbit_file.nMeasurements;
 
@@ -1433,8 +1433,8 @@ RC OMI_read_earth(ENGINE_CONTEXT *pEngineContext,int recordNo)
           
 	  // Complete information on the current spectrum
           
-	  pRecord->omi.omiMeasurementIndex=indexMeasurement+1;                      // index of the current measurement
-	  pRecord->omi.omiRowIndex=indexSpectrum+1;                                 // row of the current spectrum in the current measurement
+          pRecord->i_alongtrack=indexMeasurement;
+          pRecord->i_crosstrack=indexSpectrum;
           pRecord->omi.omiXtrackQF = pGeo->xtrackQualityFlags[recordNo-1];
           
           struct tm time_record;

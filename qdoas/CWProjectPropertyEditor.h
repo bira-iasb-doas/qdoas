@@ -34,7 +34,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "CWProjectTabInstrumental.h"
 #include "CWProjectTabSlit.h"
 #include "CWProjectTabOutput.h"
-//#include "CWProjectTabNasaAmes.h" - TODO JUST REMOVE
 
 #include "constants.h"
 
@@ -51,6 +50,7 @@ Q_OBJECT
    void slotInstrumentTypeChanged(int index);
    void slotGroundInstrumentChanged(int index);
    void slotSatelliteInstrumentChanged(int index);
+   void slotAirborneInstrumentChanged(int index);
    void slotPageChanged(int index);
 
  signals:
@@ -58,7 +58,7 @@ Q_OBJECT
    void signalInstrumentTypeChanged(int);
 
  private:
-  QComboBox *m_instrTypeCombo, *m_groundFormatCombo, *m_satelliteFormatCombo;
+  QComboBox *m_instrTypeCombo, *m_groundFormatCombo, *m_satelliteFormatCombo, *m_airborneFormatCombo;
   QTabWidget *m_tabs;
   CWProjectTabDisplay *m_displayTab;
   CWProjectTabSelection *m_selectionTab;
@@ -69,7 +69,6 @@ Q_OBJECT
   CWProjectTabInstrumental *m_instrumentalTab;
   CWProjectTabSlit *m_slitTab;
   CWProjectTabOutput *m_outputTab;
-  //  CWProjectTabNasaAmes *m_nasaAmesTab;
 
   QString m_projectName;
   int m_selectedInstrument,m_selectedPage;
