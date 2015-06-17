@@ -171,7 +171,7 @@ extern "C" {
     int methodType;
     int subWindows;
     int lineShape;
-    int lorentzDegree;
+    int lorentzOrder;
     int shiftDegree;
     int sfpDegree;
     double wavelengthMin;

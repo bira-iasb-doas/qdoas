@@ -88,18 +88,18 @@ CWProjectTabCalibration::CWProjectTabCalibration(const mediate_project_calibrati
   topLayout->addWidget(m_fileWidget, 2, 2, 1, 2);
   m_fileWidget->hide(); // show when lineshape combo is File
 
-  // degree of 2n-Lorentz
-  m_degreeWidget = new QFrame(this);
-  m_degreeWidget->setFrameStyle(QFrame::NoFrame);
-  QHBoxLayout *degreeLayout = new QHBoxLayout(m_degreeWidget);
-  degreeLayout->setMargin(0);
-  degreeLayout->setAlignment(Qt::AlignLeft);
-  degreeLayout->addWidget(new QLabel("Degree", this));
-  m_degreeSpinBox = new QSpinBox(this);
-  m_degreeSpinBox->setRange(0, 10);
-  degreeLayout->addWidget(m_degreeSpinBox);
-  topLayout->addWidget(m_degreeWidget, 2, 2, 1, 2);
-  m_degreeWidget->hide(); // show when lineshape combo is cSpectralLineShapeLorentz
+  // order of 2n-Lorentz
+  m_orderWidget = new QFrame(this);
+  m_orderWidget->setFrameStyle(QFrame::NoFrame);
+  QHBoxLayout *orderLayout = new QHBoxLayout(m_orderWidget);
+  orderLayout->setMargin(0);
+  orderLayout->setAlignment(Qt::AlignLeft);
+  orderLayout->addWidget(new QLabel("Order", this));
+  m_orderSpinBox = new QSpinBox(this);
+  m_orderSpinBox->setRange(1, 10); 
+  orderLayout->addWidget(m_orderSpinBox);
+  topLayout->addWidget(m_orderWidget, 2, 2, 1, 2);
+  m_orderWidget->hide(); // show when lineshape combo is cSpectralLineShapeLorentz
 
   topLayout->setColumnStretch(0, 0);
   topLayout->setColumnStretch(1, 0);
@@ -107,7 +107,7 @@ CWProjectTabCalibration::CWProjectTabCalibration(const mediate_project_calibrati
   topLayout->setColumnStretch(3, 0);
 
   // force some sizes to prevent 'jumpy' display.
-  m_degreeSpinBox->setFixedHeight(m_lineShapeCombo->sizeHint().height());
+  m_orderSpinBox->setFixedHeight(m_lineShapeCombo->sizeHint().height());
   m_slfFileEdit->setFixedHeight(m_lineShapeCombo->sizeHint().height());
 
   mainLayout->addLayout(topLayout);
@@ -219,7 +219,7 @@ CWProjectTabCalibration::CWProjectTabCalibration(const mediate_project_calibrati
   if (index != -1)
     m_methodCombo->setCurrentIndex(index);
 
-  m_degreeSpinBox->setValue(properties->lorentzDegree);
+  m_orderSpinBox->setValue(properties->lorentzOrder);
 
   index = m_lineShapeCombo->findData(QVariant(properties->lineShape));
   if (index != -1) {
@@ -276,7 +276,7 @@ void CWProjectTabCalibration::apply(mediate_project_calibration_t *properties) c
   properties->methodType = m_methodCombo->itemData(m_methodCombo->currentIndex()).toInt();
 
   properties->lineShape = m_lineShapeCombo->itemData(m_lineShapeCombo->currentIndex()).toInt();
-  properties->lorentzDegree = m_degreeSpinBox->value();
+  properties->lorentzOrder = m_orderSpinBox->value();
 
   properties->requireSpectra = (m_spectraCheck->checkState() == Qt::Checked) ? 1 : 0;
   properties->requireFits = (m_fitsCheck->checkState() == Qt::Checked) ? 1 : 0;
@@ -309,9 +309,9 @@ void CWProjectTabCalibration::slotLineShapeSelectionChanged(int index)
     m_fileWidget->hide();
 
   if (tmp == PRJCT_CALIB_FWHM_TYPE_INVPOLY)
-    m_degreeWidget->show();
+    m_orderWidget->show();
   else
-    m_degreeWidget->hide();
+    m_orderWidget->hide();
     
   if (tmp==PRJCT_CALIB_FWHM_TYPE_NONE) {
     m_refFileEdit->setEnabled(false);

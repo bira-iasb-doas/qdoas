@@ -67,9 +67,9 @@ extern "C" {
   };
 
   struct slit_lorentz {
-  	 int wveDptFlag;
+    int wveDptFlag;
     double width;
-    int degree;
+    int order;
     char filename[FILENAME_BUFFER_LENGTH];
   };
 

@@ -77,7 +77,7 @@ void setMediateSlit(SLIT *pEngineSlit,const mediate_slit_function_t *pMediateSli
     case SLIT_TYPE_INVPOLY :
                                               // 2n-Lorentz (generalisation of the Lorentzian function
      pEngineSlit->slitParam=pMediateSlit->lorentz.width;
-     pEngineSlit->slitParam2=pMediateSlit->lorentz.degree;
+     pEngineSlit->slitParam2=2*pMediateSlit->lorentz.order;
      pEngineSlit->slitWveDptFlag=pMediateSlit->lorentz.wveDptFlag;
 
      strcpy(pEngineSlit->slitFile,pMediateSlit->lorentz.filename);

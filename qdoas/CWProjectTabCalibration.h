@@ -56,9 +56,9 @@ Q_OBJECT
   QPushButton *m_refBrowseBtn;
   QComboBox *m_methodCombo;
   QComboBox *m_lineShapeCombo;
-  QFrame *m_degreeWidget,*m_fileWidget;
+  QFrame *m_orderWidget,*m_fileWidget;
   QCheckBox *m_spectraCheck, *m_fitsCheck, *m_residualCheck, *m_shiftSfpCheck;
-  QSpinBox *m_degreeSpinBox, *m_shiftDegreeSpinBox, *m_sfpDegreeSpinBox;
+  QSpinBox *m_orderSpinBox, *m_shiftDegreeSpinBox, *m_sfpDegreeSpinBox;
   QLineEdit *m_lambdaMinEdit, *m_lambdaMaxEdit;
   QSpinBox *m_subWindowsSpinBox;
 

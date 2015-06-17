@@ -743,7 +743,7 @@ void setMediateProjectCalibration(PRJCT_KURUCZ *pEngineCalibration,CALIB_FENO *p
    pEngineCalibration->fwhmFit=(pMediateCalibration->lineShape>0)?1:0;           // force fit of fwhm while applying Kurucz
    pEngineCalibration->lambdaLeft=pMediateCalibration->wavelengthMin;            // minimum wavelength for the spectral interval
    pEngineCalibration->lambdaRight=pMediateCalibration->wavelengthMax;           // maximum wavelength for the spectral interval
-   pEngineCalibration->invPolyDegree=pMediateCalibration->lorentzDegree;         // degree of the lorentzian  �
+   pEngineCalibration->invPolyDegree=2*pMediateCalibration->lorentzOrder;        // degree of the lorentzian
 
    switch(pMediateCalibration->lineShape)
     {

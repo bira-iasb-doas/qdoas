@@ -236,7 +236,6 @@ CWSlitLorentzEdit::CWSlitLorentzEdit(const struct slit_lorentz *d, QWidget *pare
   CWSlitFileBase(parent)
 {
   QVBoxLayout *mainLayout = new QVBoxLayout(this);
-  QGridLayout *degreeLayout = new QGridLayout;
 
   m_wavelengthDependent = new QCheckBox("Wavelength dependent", this);
   mainLayout->addWidget(m_wavelengthDependent, Qt::AlignLeft);
@@ -273,28 +272,28 @@ CWSlitLorentzEdit::CWSlitLorentzEdit(const struct slit_lorentz *d, QWidget *pare
   m_toggleWavelengthStack->addWidget(fwhmFrame);
   m_toggleWavelengthStack->addWidget(fileFrame);
 
-  // degree
+  // order
+  QGridLayout *orderLayout = new QGridLayout;
 
-  QLabel *labelDegree = new QLabel("Degree", fwhmFrame);
-  labelDegree->setAlignment(Qt::AlignVCenter|Qt::AlignRight);
-  labelDegree->setMinimumSize(cSuggestedColumnZeroWidth, 0);
+  QLabel *labelOrder = new QLabel("Order", fwhmFrame);
+  labelOrder->setAlignment(Qt::AlignVCenter|Qt::AlignRight);
+  labelOrder->setMinimumSize(cSuggestedColumnZeroWidth, 0);
+  orderLayout->addWidget(labelOrder, 0, 0, Qt::AlignRight);
 
-  degreeLayout->addWidget(labelDegree, 0, 0, Qt::AlignRight);
-  m_degreeSpin = new QSpinBox(this);
-  m_degreeSpin->setRange(0,10);
-  m_degreeSpin->setSingleStep(2);
-  m_degreeSpin->setFixedWidth(cStandardEditWidth);
-  degreeLayout->addWidget(m_degreeSpin, 0, 1, Qt::AlignLeft);
+  m_orderSpin = new QSpinBox(this);
+  m_orderSpin->setRange(1,10);
+  m_orderSpin->setFixedWidth(cStandardEditWidth);
+  orderLayout->addWidget(m_orderSpin, 0, 1, Qt::AlignLeft);
 
   mainLayout->addLayout(m_toggleWavelengthStack);
-  mainLayout->addLayout(degreeLayout);
+  mainLayout->addLayout(orderLayout);
 
   // initialise
   reset(d);
 
-  degreeLayout->setColumnMinimumWidth(0, cSuggestedColumnZeroWidth); // cSuggestedColumnZeroWidth);
-  degreeLayout->setColumnMinimumWidth(2, cSuggestedColumnTwoWidth);
-  degreeLayout->setColumnStretch(1, 1);
+  orderLayout->setColumnMinimumWidth(0, cSuggestedColumnZeroWidth);
+  orderLayout->setColumnMinimumWidth(2, cSuggestedColumnTwoWidth);
+  orderLayout->setColumnStretch(1, 1);
 
   mainLayout->addStretch(1);
 }
@@ -304,7 +303,7 @@ void CWSlitLorentzEdit::reset(const struct slit_lorentz *d)
   QString tmpStr;
   m_widthEdit->validator()->fixup(tmpStr.setNum(d->width));
   m_widthEdit->setText(tmpStr);
-  m_degreeSpin->setValue(d->degree);
+  m_orderSpin->setValue(d->order);
 
   m_wavelengthDependent->setCheckState(d->wveDptFlag ? Qt::Checked : Qt::Unchecked);
   m_slitFileEdit->setText(d->filename);
@@ -315,7 +314,7 @@ void CWSlitLorentzEdit::reset(const struct slit_lorentz *d)
 void CWSlitLorentzEdit::apply(struct slit_lorentz *d) const
 {
   d->width = m_widthEdit->text().toDouble();
-  d->degree = m_degreeSpin->value();
+  d->order = m_orderSpin->value();
 
   d->wveDptFlag = m_wavelengthDependent->isChecked() ? 1 : 0;
   strcpy(d->filename, m_slitFileEdit->text().toAscii().data());

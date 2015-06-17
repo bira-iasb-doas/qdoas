@@ -140,10 +140,6 @@ bool CSlitFunctionSubHandler::start(const QXmlAttributes &atts)
     m_function->type = SLIT_TYPE_INVPOLY;
   else if (str == "errorfile")
     m_function->type = SLIT_TYPE_ERF;
-  // Not used anymore : commented on 12/01/2012 else if (str == "gaussiantempfile")
-  // Not used anymore : commented on 12/01/2012   m_function->type = SLIT_TYPE_GAUSS_T_FILE;
-  // Not used anymore : commented on 12/01/2012 else if (str == "errortempfile")
-  // Not used anymore : commented on 12/01/2012   m_function->type = SLIT_TYPE_ERF_T_FILE;
   else
     return postErrorMessage("Invalid slit type");
 
@@ -197,10 +193,15 @@ bool CSlitFunctionSubHandler::start(const QString &element, const QXmlAttributes
   }
   else if (element == "lorentz") {
 
-  	 QString str = atts.value("file");
+    QString str = atts.value("file");
 
     m_function->lorentz.width = atts.value("width").toDouble();
-    m_function->lorentz.degree = atts.value("degree").toInt();
+
+    if (atts.value("order") != "") {
+      m_function->lorentz.order = atts.value("order").toInt();
+    } else { // in older versions, 2n-lorentz was specified by the value "2n"
+      m_function->lorentz.order = atts.value("degree").toInt() / 2;
+    }
 
     m_function->lorentz.wveDptFlag=(atts.value("wveDptFlag") == "true") ? 1 : 0;
     if (!str.isEmpty())
@@ -351,7 +352,11 @@ bool CSlitFunctionSubHandler::start(const QString &element, const QXmlAttributes
 	return postErrorMessage("Slit Function Filename too long");
     }
 
-    m_function->lorentz.degree = atts.value("degree").toInt();
+    if (atts.value("order") != "") {
+      m_function->lorentz.order = atts.value("order").toInt();
+    } else {
+      m_function->lorentz.order = atts.value("degree").toInt() / 2;
+    }
   }
   else if (element == "errorfile") {
 

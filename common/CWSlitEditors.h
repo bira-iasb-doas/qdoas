@@ -106,7 +106,7 @@ class CWSlitLorentzEdit : public CWSlitFileBase
 
  private:
   QLineEdit *m_slitFileEdit, *m_widthEdit;
-  QSpinBox *m_degreeSpin;
+  QSpinBox *m_orderSpin;
 };
 
 class CWSlitVoigtEdit : public CWSlitFileBase
