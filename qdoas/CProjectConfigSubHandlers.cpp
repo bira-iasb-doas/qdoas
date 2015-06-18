@@ -451,7 +451,11 @@ bool CProjectCalibrationSubHandler::start(const QString &element, const QXmlAttr
     else
       postErrorMessage("Invalid line shape");
 
-    m_calibration->lorentzDegree = atts.value("lorentzdegree").toInt();
+    if (atts.value("lorentzorder") != "") {
+      m_calibration->lorentzOrder = atts.value("lorentzorder").toInt();
+    } else {
+      m_calibration->lorentzOrder = atts.value("lorentzdegree").toInt()/2;
+    }
 
     str = atts.value("slfFile");
     if (!str.isEmpty())

@@ -281,7 +281,7 @@ void CQdoasConfigWriter::writePropertiesCalibration(FILE *fp, const mediate_proj
   default:
     fprintf(fp, "\"none\"");
   }
-  fprintf(fp, " lorentzdegree=\"%d\"", d->lorentzDegree);
+  fprintf(fp, " lorentzorder=\"%d\"", d->lorentzOrder);
   fprintf(fp, " slfFile=\"%s\" />\n", d->slfFile);
 
   fprintf(fp, "      <display spectra=\"%s\" fits=\"%s\" residual=\"%s\" shiftsfp=\"%s\" />\n",
