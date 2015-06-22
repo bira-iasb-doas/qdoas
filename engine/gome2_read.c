@@ -121,7 +121,7 @@ typedef struct _gome2MdrInfo
   uint8_t  cloudFitMode[N_SCAN_MAX];
   double   cloudTopPressure[N_SCAN_MAX];
   double   cloudFraction[N_SCAN_MAX];
-  uint8_t  scanDirection;
+  uint8_t  scanDirection[N_SCAN_MAX];
   uint8_t  saaFlag[N_SCAN_MAX];
   uint8_t  sunglintDangerFlag[N_SCAN_MAX];
   uint8_t  sunglintHighDangerFlag[N_SCAN_MAX];
@@ -746,7 +746,9 @@ int Gome2ReadMDRInfo(GOME2_ORBIT_FILE *pOrbitFile,GOME2_MDR *pMdr,int indexBand)
 
     if (pOrbitFile->version<=11)
      {
-     	pMdr->scanDirection=255;                                                                  // Not defined
+       for (unsigned int i=0; i<sizeof(pMdr->scanDirection)/sizeof(pMdr->scanDirection[0]); ++i) {
+         pMdr->scanDirection[i]=255;                                                                  // Not defined
+       }
 
       // Additional geolocation record for the actual integration time of the earthshine measurements
 
@@ -844,7 +846,7 @@ int Gome2ReadMDRInfo(GOME2_ORBIT_FILE *pOrbitFile,GOME2_MDR *pMdr,int indexBand)
         // actual scanner angles
 
         coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor, "SCAN_DIRECTION");        // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL.SCAN_DIRECTION
-        coda_cursor_read_uint8(&pOrbitFile->gome2Cursor,&pMdr->scanDirection);
+        coda_cursor_read_uint8(&pOrbitFile->gome2Cursor,&pMdr->scanDirection[i]);
         coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                        // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL
 
         // actual scanner angles
@@ -1124,7 +1126,7 @@ void Gome2ReadGeoloc(GOME2_ORBIT_FILE *pOrbitFile,INDEX indexBand)
  	 	pOrbitFile->gome2Geolocations[indexRecord].cloudTopPressure=(float)((pMdr->cloudFitMode[indexObs]==0)?pMdr->cloudTopPressure[indexObs]:-1.);
  	 	pOrbitFile->gome2Geolocations[indexRecord].cloudFraction=(float)((pMdr->cloudFitMode[indexObs]==0)?pMdr->cloudFraction[indexObs]:-1.);
 
-    pOrbitFile->gome2Geolocations[indexRecord].scanDirection=(int)pMdr->scanDirection;
+    pOrbitFile->gome2Geolocations[indexRecord].scanDirection=(int)pMdr->scanDirection[indexObs];
     pOrbitFile->gome2Geolocations[indexRecord].saaFlag=(int)pMdr->saaFlag[indexObs];
     pOrbitFile->gome2Geolocations[indexRecord].sunglintDangerFlag=(int)pMdr->sunglintDangerFlag[indexObs];
     pOrbitFile->gome2Geolocations[indexRecord].sunglintHighDangerFlag=(int)pMdr->sunglintHighDangerFlag[indexObs];
@@ -1609,26 +1611,6 @@ RC GOME2_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,INDEX fileIndex)
         pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_day,&pRecord->present_time,0);
 
         pRecord->gome2.orbitNumber=(int)pOrbitFile->gome2Info.orbitStart;
-
- 	 	  // {
- 	 	  // 	FILE *fp;
- 	 	  // 	fp=fopen("toto.dat","a+t");
- 	 	  // 	fprintf(fp,"%-2d %-2d %02d%02d%02d.%03d %-10.4f %-10.4f %-10.4f %-10.4f %-10.4f %-10.4f %-10.4f %-10.4f %-10.4f %-10.4f \n",indexMDR,recordNo-mdrObs,
- 	 	  // 	            hour,min,sec,(int)floor(msec/1000+0.5),
-      //
- 	 	  // 	            pGeoloc->latCorners[0],
- 	 	  // 	            pGeoloc->latCorners[1],
- 	 	  // 	            pGeoloc->latCorners[2],
- 	 	  // 	            pGeoloc->latCorners[3],
- 	 	  // 	            pGeoloc->latCenter,
- 	 	  // 	            pGeoloc->lonCorners[0],
- 	 	  // 	            pGeoloc->lonCorners[1],
- 	 	  // 	            pGeoloc->lonCorners[2],
- 	 	  // 	            pGeoloc->lonCorners[3],
- 	 	  // 	            pGeoloc->lonCenter);
-      //
- 	 	  // 	fclose(fp);
- 	 	  // }
 
         if ((pEngineContext->project.spectra.cloudMin>=0.) &&
             (pEngineContext->project.spectra.cloudMax<=1.) &&
