@@ -326,7 +326,7 @@ void showUsage()
   std::cout << "                        in the configuration file by new ones." << std::endl;
   std::cout << "------------------------------------------------------------------------------" << std::endl;
   std::cout << "doas_cl is a tool of QDoas, a product jointly developed by BIRA-IASB and S[&]T" << std::endl;
-  std::cout << "Last version : " << cQdoasVersionString << std::endl ;
+  std::cout << "version: " << cQdoasVersionString << std::endl ;
 }
 
 void showHelp()
