@@ -57,7 +57,6 @@ void SCIA_get_orbit_date(int *year, int *month, int *day);
 RC SCIA_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle);
 
 extern int SCIA_clusters[PRJCT_INSTR_SCIA_CHANNEL_MAX][2];
-extern int SCIA_ms; // number of milliseconds
 
 RC   CCD_LoadInstrumental(ENGINE_CONTEXT *pEngineContext);
 void CCD_ResetInstrumental(CCD *pCCD);
@@ -167,7 +166,6 @@ RC   GDP_BIN_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,FILE *specFp,INDEX
 // GOME2
 
 extern int GOME2_beatLoaded;
-extern int GOME2_mus; //number of microseconds
 
 void GOME2_ReleaseBuffers(void);
 

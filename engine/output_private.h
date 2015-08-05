@@ -42,36 +42,23 @@ static inline void get_name(struct output_field *this_field __attribute__ ((unus
 }
 
 static inline void get_date(struct output_field *this_field __attribute__ ((unused)), struct date *date, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
-  SHORT_DATE datein = pEngineContext->recordInfo.present_day;
-  date->da_day = datein.da_day;
-  date->da_mon = datein.da_mon;
-  date->da_year = datein.da_year;
+  const struct date *datein = &pEngineContext->recordInfo.present_datetime.thedate;
+  date->da_day = datein->da_day;
+  date->da_mon = datein->da_mon;
+  date->da_year = datein->da_year;
 }
 
 static inline void get_time(struct output_field *this_field __attribute__ ((unused)), struct time *time, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
-  *time = pEngineContext->recordInfo.present_time;
+  *time = pEngineContext->recordInfo.present_datetime.thetime;
 }
 
 static inline void get_datetime(struct output_field *this_field __attribute__ ((unused)), struct datetime *datetime, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
   get_date(this_field, &datetime->thedate, pEngineContext, indexFenoColumn, index_calib);
-  datetime->thetime = pEngineContext->recordInfo.present_time;
-  datetime->millis = -1;
-}
-
-static inline void scia_get_datetime(struct output_field *this_field __attribute__ ((unused)), struct datetime *datetime, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
-  get_datetime(this_field, datetime, pEngineContext, indexFenoColumn, index_calib);
-  datetime->millis =  SCIA_ms;
-  datetime->microseconds = -1;
-}
-
-static inline void gome2_get_datetime(struct output_field *this_field, struct datetime *datetime, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn, int index_calib __attribute__ ((unused))) {
-  get_datetime(this_field, datetime, pEngineContext, indexFenoColumn, index_calib);
-  datetime->microseconds = GOME2_mus;
-  datetime->millis = -1;
+  *datetime = pEngineContext->recordInfo.present_datetime;
 }
 
 static inline void get_year(struct output_field *this_field __attribute__ ((unused)), unsigned short *year, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
-  *year = pEngineContext->recordInfo.present_day.da_year;
+  *year = pEngineContext->recordInfo.present_datetime.thedate.da_year;
 }
 
 static inline void get_start_time(struct output_field *this_field __attribute__ ((unused)), struct time *time, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {

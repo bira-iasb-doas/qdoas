@@ -405,8 +405,7 @@ typedef struct _engineRecordInfo
   float  ReguTemp;                                                              // temperature regulation
   double TotalExpTime;                                                          // total experiment time
 
-  SHORT_DATE present_day;                                                       // measurement date
-  struct time present_time;                                                     // measurement time
+  struct datetime present_datetime;                                             // measurement date and time
 
   double TimeDec;                                                               // decimal time
   double localTimeDec;                                                          // local decimal time
@@ -421,7 +420,6 @@ typedef struct _engineRecordInfo
   float  scanningAngle;                                                         // scanning angle
 
   // Data related to specific formats
-
                                                                                 // SATELLITES MEASUREMENTS
 
   int    useErrors;                                                             // 1 if errors are present in the files (GOME)
@@ -455,8 +453,8 @@ typedef struct _engineRecordInfo
 
                                                                                 // MFC format
 
-  SHORT_DATE startDate;
-  SHORT_DATE endDate;
+  struct date startDate;
+  struct date endDate;
   struct time startTime;                                                        // starting time
   struct time endTime;                                                          // ending time
   float wavelength1;                                                            // first wavelength

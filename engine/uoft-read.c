@@ -350,12 +350,18 @@ RC ReliUofT(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDa
      !(rc=UofTGotoRecord(specFp,recordNo)) &&
      (!(rc=UofTReadRecord(pUofT,pEngineContext->buffers.spectrum,specFp,pEngineContext->fileInfo.fileName)) || (rc==ERROR_ID_FILE_RECORD)))
    {
-    memcpy(&pRecord->present_day,&pUofT->meanDate,sizeof(SHORT_DATE));
-    memcpy(&pRecord->present_time,&pUofT->meanTime,sizeof(struct time));
+    memcpy(&pRecord->present_datetime.thedate,&pUofT->meanDate,sizeof(SHORT_DATE));
+    memcpy(&pRecord->present_datetime.thetime,&pUofT->meanTime,sizeof(struct time));
     memcpy(&pRecord->startTime,&pUofT->startTime,sizeof(struct time));
     memcpy(&pRecord->endTime,&pUofT->endTime,sizeof(struct time));
-    memcpy(&pRecord->startDate,&pUofT->startDate,sizeof(SHORT_DATE));
-    memcpy(&pRecord->endDate,&pUofT->endDate,sizeof(SHORT_DATE));
+
+    pRecord->startDate.da_year = pUofT->startDate.da_year;
+    pRecord->startDate.da_mon = pUofT->startDate.da_mon;
+    pRecord->startDate.da_day = pUofT->startDate.da_day;
+    
+    pRecord->endDate.da_year = pUofT->endDate.da_year;
+    pRecord->endDate.da_mon = pUofT->endDate.da_mon;
+    pRecord->endDate.da_day = pUofT->endDate.da_day;
 
     // Get information on the current record
 
@@ -365,9 +371,9 @@ RC ReliUofT(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDa
     pRecord->ReguTemp=pUofT->meanBoxT;                                          // box temperature
     pRecord->TDet=(double)pUofT->meanCCDT;                                      // detector temperature
 
-    pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_day,&pRecord->present_time,0);
+    pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_datetime.thedate,&pRecord->present_datetime.thetime,0);
     pRecord->TotalExpTime=(double)0.;
-    pRecord->TimeDec=(double)pRecord->present_time.ti_hour+pRecord->present_time.ti_min/60.+pRecord->present_time.ti_sec/3600.;
+    pRecord->TimeDec=(double)pRecord->present_datetime.thetime.ti_hour+pRecord->present_datetime.thetime.ti_min/60.+pRecord->present_datetime.thetime.ti_sec/3600.;
 
     pRecord->elevationViewAngle=pUofT->viewElev;
     pRecord->azimuthViewAngle=pUofT->viewAzim;

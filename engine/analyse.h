@@ -181,7 +181,7 @@ struct _feno {
 
   double          resolFwhm;
 
-  SHORT_DATE      refDate;                                                      // in automatic reference selection mode, date of selected record
+  struct date     refDate;                                                      // in automatic reference selection mode, date of selected record
   int             displaySpectrum;                                              // force display spectrum
   int             displayResidue;                                               // force display residue
   int             displayTrend;                                                 // force display trend

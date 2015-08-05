@@ -211,7 +211,6 @@ static OMI_ORBIT_FILE* reference_orbit_files[MAX_OMI_FILES]; // List of filename
 static int num_reference_orbit_files = 0;
 static bool automatic_reference_ok[OMI_NUM_ROWS]; // array to keep track if automatic reference creation spectrum failed for one of the detector rows
 
-int OMI_ms=0;
 int omiSwathOld=ITEM_NONE;
 
 static RC OmiOpen(OMI_ORBIT_FILE *pOrbitFile,const char *swathName);
@@ -1438,21 +1437,24 @@ RC OMI_read_earth(ENGINE_CONTEXT *pEngineContext,int recordNo)
           pRecord->omi.omiXtrackQF = pGeo->xtrackQualityFlags[recordNo-1];
           
           struct tm time_record;
+          int omi_ms=0;
           // use TAI-93 "time" and UTC "secondsInDay" to get UTC date-time of current measurement:
-          tai_to_utc(pGeo->time[indexMeasurement], pGeo->secondsInDay[indexMeasurement], &time_record, &OMI_ms);
+          tai_to_utc(pGeo->time[indexMeasurement], pGeo->secondsInDay[indexMeasurement], &time_record, &omi_ms);
 
-          SHORT_DATE* pDate = &pRecord->present_day;
-          struct time *pTime = &pRecord->present_time;
+          struct date *pDate = &pRecord->present_datetime.thedate;
+          struct time *pTime = &pRecord->present_datetime.thetime;
 
           pTime->ti_hour = (char)(time_record.tm_hour);
           pTime->ti_min = (char)(time_record.tm_min);
           pTime->ti_sec = (char)(time_record.tm_sec);
           
-          pDate->da_year = (short)(time_record.tm_year + 1900);
+          pDate->da_year = time_record.tm_year + 1900;
           pDate->da_mon = (char)(time_record.tm_mon + 1);
           pDate->da_day = (char)(time_record.tm_mday);
+
+          pRecord->present_datetime.microseconds = omi_ms;
           
-	  pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_day,&pRecord->present_time,0);
+	  pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_datetime.thedate,&pRecord->present_datetime.thetime,0);
 	}
     }
   

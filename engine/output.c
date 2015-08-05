@@ -757,7 +757,6 @@ static void OutputRegisterFields(const ENGINE_CONTEXT *pEngineContext)
     func_azimuth = &scia_get_azim;
     func_earth_radius = &scia_get_earth_radius;
     func_sat_height = &scia_get_sat_height;
-    func_datetime = &scia_get_datetime;
     format_datetime = "%4d%02d%02d%02d%02d%02d.%03d"; // year, month, day, hour, min, sec, milliseconds
     func_orbit_number = &scia_get_orbit_number;
     break;
@@ -770,8 +769,7 @@ static void OutputRegisterFields(const ENGINE_CONTEXT *pEngineContext)
     func_los_zenith = &gome2_get_los_zenith;
     func_earth_radius = &gome2_get_earth_radius;
     func_sat_height = &gome2_get_sat_height;
-    func_datetime = &gome2_get_datetime;
-    format_datetime = "%4d%02d%02d%02d%02d%02d.%06d"; // year, month, day, hour, min, sec, milliseconds
+    format_datetime = "%4d%02d%02d%02d%02d%02d.%06d"; // year, month, day, hour, min, sec, microseconds
     func_orbit_number = &gome2_get_orbit_number;
     func_frac_time = &get_frac_time_recordinfo;
     break;
@@ -1411,9 +1409,9 @@ static void OutputSaveRecord(const ENGINE_CONTEXT *pEngineContext,INDEX indexFen
         save_analysis_data(&output_data_analysis[i], index_record, pEngineContext, indexFenoColumn);
       }
       outputRecords[index_record].specno = pEngineContext->indexRecord;
-      outputRecords[index_record].year=(int)pRecordInfo->present_day.da_year;
-      outputRecords[index_record].month=(int)pRecordInfo->present_day.da_mon;
-      outputRecords[index_record].day=(int)pRecordInfo->present_day.da_day;
+      outputRecords[index_record].year=(int)pRecordInfo->present_datetime.thedate.da_year;
+      outputRecords[index_record].month=(int)pRecordInfo->present_datetime.thedate.da_mon;
+      outputRecords[index_record].day=(int)pRecordInfo->present_datetime.thedate.da_day;
       outputRecords[index_record].longit=(float)pRecordInfo->longitude;
       outputRecords[index_record].latit=(float)pRecordInfo->latitude;
     }

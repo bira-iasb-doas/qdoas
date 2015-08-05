@@ -48,7 +48,7 @@ int mediateRequestDisplaySpecInfo(void *engineContext,int page,void *responseHan
    PRJCT_SPECTRA *pSpectra;                                                      // pointer to the spectra part of the project
    PRJCT_INSTRUMENTAL *pInstrumental;                                            // pointer to the instrumental part of the project
    RECORD_INFO *pRecord;                                                         // pointer to the record part of the engine context
-   SHORT_DATE  *pDay;                                                            // pointer to measurement date
+   struct date *pDay;                                                            // pointer to measurement date
    struct time *pTime;                                                           // pointer to measurement date
    int indexLine,indexColumn;
    char blankString[256];
@@ -59,8 +59,8 @@ int mediateRequestDisplaySpecInfo(void *engineContext,int page,void *responseHan
    pProject=&pEngineContext->project;
    pSpectra=&pProject->spectra;
    pInstrumental=&pProject->instrumental;
-   pDay=&pRecord->present_day;
-   pTime=&pRecord->present_time;
+   pDay=&pRecord->present_datetime.thedate;
+   pTime=&pRecord->present_datetime.thetime;
 
    memset(blankString,' ',256);
    blankString[255]='\0';
@@ -121,7 +121,7 @@ int mediateRequestDisplaySpecInfo(void *engineContext,int page,void *responseHan
   if (pInstrumental->readOutFormat!=PRJCT_INSTR_FORMAT_GOME2)
     mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Date and Time","%02d/%02d/%d %02d:%02d:%02d",pDay->da_day,pDay->da_mon,pDay->da_year,pTime->ti_hour,pTime->ti_min,pTime->ti_sec);
   else
-    mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Date and Time","%02d/%02d/%d %02d:%02d:%02d.%06d",pDay->da_day,pDay->da_mon,pDay->da_year,pTime->ti_hour,pTime->ti_min,pTime->ti_sec,GOME2_mus);
+    mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Date and Time","%02d/%02d/%d %02d:%02d:%02d.%06d",pDay->da_day,pDay->da_mon,pDay->da_year,pTime->ti_hour,pTime->ti_min,pTime->ti_sec,&pRecord->present_datetime.microseconds);
 
   //      sprintf(tmpString,"%.3f -> %.3f \n",pRecord->TimeDec,pRecord->localTimeDec);
 

@@ -301,7 +301,7 @@ RC ReliSAOZ(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDa
                     names[20];                                                  // names of the current record
   const char *DIGITS="0123456789";
 
-  SHORT_DATE        day;                                                        // date of measurement in terms of day, month and year
+  struct date       day;                                                        // date of measurement in terms of day, month and year
   OBSERVATION_SITE *pSite;                                                      // pointer to the observation site in list
   double            longit,latit,azimuth,                                       // geolocation coordinates of observation site
                    *spectrum,                                                   // substitution variable for spectrum
@@ -441,7 +441,7 @@ RC ReliSAOZ(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDa
 
       // Date and time of the current measurement
 
-      day.da_year  = (short) ZEN_FNCaljye (&pRecord->Tm);
+      day.da_year  = ZEN_FNCaljye (&pRecord->Tm);
       day.da_mon   = (char) ZEN_FNCaljmon (ZEN_FNCaljye(&pRecord->Tm),ZEN_FNCaljda(&pRecord->Tm));
       day.da_day   = (char) ZEN_FNCaljday (ZEN_FNCaljye(&pRecord->Tm),ZEN_FNCaljda(&pRecord->Tm));
 
@@ -449,15 +449,15 @@ RC ReliSAOZ(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDa
 
       string = ZEN_FNCaljti ( &pRecord->Tm, str );
 
-      memcpy(&pRecord->present_day, &day, sizeof(SHORT_DATE));
+      memcpy(&pRecord->present_datetime.thedate, &day, sizeof(day));
 
-      pRecord->present_time.ti_hour = (unsigned char)( ( strchr(DIGITS,string[0]) - DIGITS ) * 10 + ( strchr(DIGITS,string[1]) - DIGITS ) );
-      pRecord->present_time.ti_min  = (unsigned char)( ( strchr(DIGITS,string[3]) - DIGITS ) * 10 + ( strchr(DIGITS,string[4]) - DIGITS ) );
-      pRecord->present_time.ti_sec  = (unsigned char)0;
+      pRecord->present_datetime.thetime.ti_hour = (unsigned char)( ( strchr(DIGITS,string[0]) - DIGITS ) * 10 + ( strchr(DIGITS,string[1]) - DIGITS ) );
+      pRecord->present_datetime.thetime.ti_min  = (unsigned char)( ( strchr(DIGITS,string[3]) - DIGITS ) * 10 + ( strchr(DIGITS,string[4]) - DIGITS ) );
+      pRecord->present_datetime.thetime.ti_sec  = (unsigned char)0;
 
       pRecord->TDet = (double) param[0] * 0.08138 - 273.1;
       pRecord->TotalExpTime = (double) pRecord->NSomme*pRecord->Tint;
-      pRecord->TimeDec=(double)pRecord->present_time.ti_hour+pRecord->present_time.ti_min/60.;
+      pRecord->TimeDec=(double)pRecord->present_datetime.thetime.ti_hour+pRecord->present_datetime.thetime.ti_min/60.;
 
       tmLocal=pRecord->Tm+THRD_localShift*3600.;
 
@@ -639,7 +639,7 @@ RC ReliSAOZEfm(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
   RCHEADER     header;                                                          // record header
   double      *spectrum,SMax;                                                   // the current spectrum and its maximum value
   double       tmLocal;                                                         // measurement local time
-  SHORT_DATE   today;                                                           // date of the current measurement
+  struct date  today;                                                           // date of the current measurement
   INDEX        i;                                                               // browse pixels in the spectrum
   RC           rc;                                                              // return code
 
@@ -666,11 +666,11 @@ RC ReliSAOZEfm(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
     fread(spectrum,sizeof(double)*NDET,1,specFp);
 
     if ((today.da_year=header.M_An)<30)
-     today.da_year+=(short)2000;
+     today.da_year+= 2000;
     else if (today.da_year<130)
-     today.da_year+=(short)1900;
+     today.da_year+= 1900;
     else if (today.da_year<1930)
-     today.da_year+=(short)100;
+     today.da_year+= 100;
 
     today.da_mon=header.M_Mois;
     today.da_day=header.M_Jour;
@@ -692,13 +692,13 @@ RC ReliSAOZEfm(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
     pRecord->NSomme = header.N_somm;
     pRecord->Zm = (double)header.Dizen*0.01;
 
-    pRecord->present_time.ti_hour=header.M_Heur;
-    pRecord->present_time.ti_min=header.M_Min;
-    pRecord->present_time.ti_sec=header.M_Sec;
+    pRecord->present_datetime.thetime.ti_hour=header.M_Heur;
+    pRecord->present_datetime.thetime.ti_min=header.M_Min;
+    pRecord->present_datetime.thetime.ti_sec=header.M_Sec;
 
-    memcpy(&pRecord->present_day, &today, sizeof(SHORT_DATE));
+    memcpy(&pRecord->present_datetime.thedate, &today, sizeof(today));
 
-    pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_day,&pRecord->present_time,0);
+    pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_datetime.thedate,&pRecord->present_datetime.thetime,0);
     pRecord->TotalExpTime=(double)0.;
     pRecord->TimeDec=(double)header.M_Heur+header.M_Min/60.+header.M_Sec/3600.;
 

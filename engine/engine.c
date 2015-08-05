@@ -1764,7 +1764,7 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
        if (indexRefRecord==ITEM_NONE)
         {
-         memcpy((char *)&ENGINE_contextRef.recordInfo.present_day,(char *)&pRecord->present_day,sizeof(SHORT_DATE));
+         memcpy(&ENGINE_contextRef.recordInfo.present_datetime.thedate,&pRecord->present_datetime.thedate,sizeof(pRecord->present_datetime.thedate));
          rc=ERROR_ID_FILE_RECORD;
         }
 
@@ -1851,7 +1851,7 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
            pTabFeno->TimeDec=ENGINE_contextRef.recordInfo.TimeDec;
            pTabFeno->displayRef=1;
 
-           memcpy(&pTabFeno->refDate,&ENGINE_contextRef.recordInfo.present_day,sizeof(SHORT_DATE));
+           pTabFeno->refDate = ENGINE_contextRef.recordInfo.present_datetime.thedate;
           }
          else if (indexRefRecord==pTabFeno->indexRef)
           pTabFeno->displayRef=1;
@@ -1859,7 +1859,7 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
        if (indexRefRecord!=ITEM_NONE && pEngineContext->project.spectra.displayFitFlag)
         {
-         SHORT_DATE  *pDay;                                                      // pointer to measurement date
+         struct date *pDay;                                                      // pointer to measurement date
          struct time *pTime;                                                     // pointer to measurement date
          char string[80],tabTitle[80];
          plot_data_t spectrumData;
@@ -1868,8 +1868,8 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
          SvdPDeb=spectrum_start(pTabFeno->svd.specrange);
          SvdPFin=spectrum_end(pTabFeno->svd.specrange);
-         pDay=&ENGINE_contextRef.recordInfo.present_day;
-         pTime=&ENGINE_contextRef.recordInfo.present_time;
+         pDay=&ENGINE_contextRef.recordInfo.present_datetime.thedate;
+         pTime=&ENGINE_contextRef.recordInfo.present_datetime.thetime;
 
          sprintf(string,"Selected reference (%d/%d, SZA %.2f)",pTabFeno->indexRef,ENGINE_contextRef.recordNumber,ENGINE_contextRef.recordInfo.Zm);
          sprintf(tabTitle,"%s results (%d/%d)",pTabFeno->windowName,pEngineContext->indexRecord,pEngineContext->recordNumber);

@@ -276,7 +276,7 @@ int MKZY_UnPack(unsigned char *inpek,int kvar,int *ut)
 */
 // -----------------------------------------------------------------------------
 
-void MKZY_ParseDate(uint32_t d,SHORT_DATE *pDate)
+void MKZY_ParseDate(uint32_t d, struct date *pDate)
  {
   pDate->da_day=(char)(d/10000L);                                               // the day
   pDate->da_mon=(char)((d-(uint32_t)pDate->da_day*10000L)/100L);           // the month
@@ -334,7 +334,7 @@ RC MKZY_ReadRecord(ENGINE_CONTEXT *pEngineContext,int recordNo,FILE *specFp)
   RECORD_INFO    *pRecord;                                                      // pointer to the record part of the engine context
   MKZY_HEADER     header;                                                       // record header
   MKZY_RECORDINFO recordInfo;                                                   // information on the record
-  SHORT_DATE      today;
+  struct date     today;
   double          Tm1,Tm2;
   unsigned char  *buffer;                                                       // buffer for the spectrum before unpacking
   uint32_t  *lbuffer;                                                            // buffer for the spectrum after unpacking
@@ -418,9 +418,9 @@ RC MKZY_ReadRecord(ENGINE_CONTEXT *pEngineContext,int recordNo,FILE *specFp)
 
     Tm1=(Tm1+Tm2)*0.5;
 
-    pRecord->present_day.da_year  = (short) ZEN_FNCaljye (&Tm1);
-    pRecord->present_day.da_mon   = (char) ZEN_FNCaljmon (ZEN_FNCaljye(&Tm1),ZEN_FNCaljda(&Tm1));
-    pRecord->present_day.da_day   = (char) ZEN_FNCaljday (ZEN_FNCaljye(&Tm1),ZEN_FNCaljda(&Tm1));
+    pRecord->present_datetime.thedate.da_year  = (short) ZEN_FNCaljye (&Tm1);
+    pRecord->present_datetime.thedate.da_mon   = (char) ZEN_FNCaljmon (ZEN_FNCaljye(&Tm1),ZEN_FNCaljda(&Tm1));
+    pRecord->present_datetime.thedate.da_day   = (char) ZEN_FNCaljday (ZEN_FNCaljye(&Tm1),ZEN_FNCaljda(&Tm1));
 
     // Data on the current spectrum
 
@@ -432,13 +432,13 @@ RC MKZY_ReadRecord(ENGINE_CONTEXT *pEngineContext,int recordNo,FILE *specFp)
 
     nsec=(nsec1+nsec2)/2;
 
-    pRecord->present_time.ti_hour=(unsigned char)(nsec/3600);
-    pRecord->present_time.ti_min=(unsigned char)((nsec%3600)/60);
-    pRecord->present_time.ti_sec=(unsigned char)((nsec%3600)%60);
+    pRecord->present_datetime.thetime.ti_hour=(unsigned char)(nsec/3600);
+    pRecord->present_datetime.thetime.ti_min=(unsigned char)((nsec%3600)/60);
+    pRecord->present_datetime.thetime.ti_sec=(unsigned char)((nsec%3600)%60);
 
-    pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_day,&pRecord->present_time,0);
+    pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_datetime.thedate,&pRecord->present_datetime.thetime,0);
     pRecord->TotalExpTime=(double)0.;
-    pRecord->TimeDec=(double)pRecord->present_time.ti_hour+pRecord->present_time.ti_min/60.+pRecord->present_time.ti_sec/3600.;
+    pRecord->TimeDec=(double)pRecord->present_datetime.thetime.ti_hour+pRecord->present_datetime.thetime.ti_min/60.+pRecord->present_datetime.thetime.ti_sec/3600.;
     pRecord->Zm=ZEN_FNTdiz(ZEN_FNCrtjul(&pRecord->Tm),&longitude,&pRecord->latitude,&pRecord->Azimuth);
 
     tmLocal=pRecord->Tm+THRD_localShift*3600.;
@@ -692,7 +692,6 @@ RC MKZY_Reli(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localD
 
   double *spectrum,*offset,*dark;                                               // pointer to spectrum, offset and dark current
   double *cumSpectrum;
-  double Tm1,Tm2;
   double averagedPixels;
   INDEX   i,indexRecord,nRecord;                                                // browse pixels of the detector
   RC      rc;                                                                   // return code
@@ -748,48 +747,15 @@ RC MKZY_Reli(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localD
           for (i=0;i<NDET;i++)
            cumSpectrum[i]+=spectrum[i];
 
-          if (!nRecord)
-           Tm1=(double)ZEN_NbSec(&pEngineContext->recordInfo.present_day,&pEngineContext->recordInfo.startTime,0);
-          else
-           Tm2=(double)ZEN_NbSec(&pEngineContext->recordInfo.present_day,&pEngineContext->recordInfo.endTime,0);
+      //    if (!nRecord)
+      //     Tm1=(double)ZEN_NbSec(&pEngineContext->recordInfo.present_day,&pEngineContext->recordInfo.startTime,0);
+      //    else
+      //     Tm2=(double)ZEN_NbSec(&pEngineContext->recordInfo.present_day,&pEngineContext->recordInfo.endTime,0);
 
           nRecord++;
          }
        }
      }
-
-    // Tm1=(Tm1+Tm2)*0.5;
-    //
-    // pEngineContext->recordInfo.present_day.da_year  = (short) ZEN_FNCaljye (&Tm1);
-    // pEngineContext->recordInfo.present_day.da_mon   = (char) ZEN_FNCaljmon (ZEN_FNCaljye(&Tm1),ZEN_FNCaljda(&Tm1));
-    // pEngineContext->recordInfo.present_day.da_day   = (char) ZEN_FNCaljday (ZEN_FNCaljye(&Tm1),ZEN_FNCaljda(&Tm1));
-    //
-    // // Data on the current spectrum
-    //
-    // nsec1=pEngineContext->recordInfo.startTime.ti_hour*3600+pEngineContext->recordInfo.startTime.ti_min*60+pEngineContext->recordInfo.startTime.ti_sec;
-    // nsec2=pEngineContext->recordInfo.endTime.ti_hour*3600+pEngineContext->recordInfo.endTime.ti_min*60+pEngineContext->recordInfo.endTime.ti_sec;
-    //
-    // if (nsec2<nsec1)
-    //  nsec2+=86400;
-    //
-    // nsec=(nsec1+nsec2)/2;
-    //
-    // pEngineContext->recordInfo.present_time.ti_hour=(unsigned char)(nsec/3600);
-    // pEngineContext->recordInfo.present_time.ti_min=(unsigned char)((nsec%3600)/60);
-    // pEngineContext->recordInfo.present_time.ti_sec=(unsigned char)((nsec%3600)%60);
-    //
-    // longitude=-pEngineContext->recordInfo.longitude;
-    //
-    // pEngineContext->recordInfo.Tm=(double)ZEN_NbSec(&pEngineContext->recordInfo.present_day,&pEngineContext->recordInfo.present_time,0);
-    // pEngineContext->recordInfo.TimeDec=(double)pEngineContext->recordInfo.present_time.ti_hour+pEngineContext->recordInfo.present_time.ti_min/60.+pEngineContext->recordInfo.present_time.ti_sec/3600.;
-    // pEngineContext->recordInfo.Zm=ZEN_FNTdiz(ZEN_FNCrtjul(&pEngineContext->recordInfo.Tm),&longitude,&pEngineContext->recordInfo.latitude,&pEngineContext->recordInfo.Azimuth);
-    //
-    // if (nRecord)
-    //  for (i=0;i<NDET;i++)
-    //   spectrum[i]=cumSpectrum[i]/nRecord;
-    // else
-    //  for (i=0;i<NDET;i++)
-    //   spectrum[i]=(double)0.;
 
     if (cumSpectrum!=NULL)
      MEMORY_ReleaseDVector("MKZY_Reli ","cumSpectrum",cumSpectrum,0);
@@ -819,7 +785,6 @@ RC MKZY_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
   BUFFERS *pBuffers;                                                            // pointer to the buffers part of the engine context
 
-  PRJCT_INSTRUMENTAL *pInstrumental;
   INDEX indexWindow,indexFeno,indexTabCross;                                    // indexes for loops and array
   CROSS_REFERENCE *pTabCross;                                                   // pointer to the current cross section
   WRK_SYMBOL *pWrkSymbol;                                                       // pointer to a symbol
@@ -832,7 +797,6 @@ RC MKZY_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
   pBuffers=&pEngineContext->buffers;
 
   saveFlag=(int)pEngineContext->project.spectra.displayDataFlag;
-  pInstrumental=&pEngineContext->project.instrumental;
   rc=ERROR_ID_NO;
 
   if (!pEngineContext->recordInfo.mkzy.skyFlag && (THRD_id==THREAD_TYPE_ANALYSIS))

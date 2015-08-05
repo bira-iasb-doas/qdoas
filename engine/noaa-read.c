@@ -445,7 +445,7 @@ RC SetNOAA(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
 // INPUT/OUTPUT  pDate,pTime  pointers to resp. date and time in usual format
 // -----------------------------------------------------------------------------
 
-void NOAA_Date(double sec,SHORT_DATE *pDate,struct time *pTime)
+void NOAA_Date(double sec, struct date *pDate, struct time *pTime)
  {
   // Declarations
 
@@ -469,7 +469,7 @@ void NOAA_Date(double sec,SHORT_DATE *pDate,struct time *pTime)
 
   // Get date from the year and the calendar day
 
-  pDate->da_year=(short)year;
+  pDate->da_year= year;
   pDate->da_mon=(char)ZEN_FNCaljmon(year,(int)floor((sec-sumSec)/86400+1.));
   pDate->da_day=(char)ZEN_FNCaljday(year,(int)floor((sec-sumSec)/86400+1.));
 
@@ -714,16 +714,16 @@ RC ReliNOAA(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDa
      // ------------------------------------------------------------------------
    	 }
 
-   	NOAA_Date(pRecordNoaa->timeRecord.macTime+pRecordNoaa->timeRecord.zone*3600.,&pRecord->present_day,&pRecord->present_time);
+   	NOAA_Date(pRecordNoaa->timeRecord.macTime+pRecordNoaa->timeRecord.zone*3600.,&pRecord->present_datetime.thedate,&pRecord->present_datetime.thetime);
 
     // Get information on the current record
 
     pRecord->NSomme=(int)pRecordNoaa->dataRecord.integrationCycles;               // number of accumulations
     pRecord->Tint=(double)pRecordNoaa->dataRecord.integrationTime;                // integration time
     pRecord->TDet=(double)pRecordNoaa->detectorRecord.detectorTemperature;        // detector temperature
-    pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_day,&pRecord->present_time,0);
+    pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_datetime.thedate,&pRecord->present_datetime.thetime,0);
     pRecord->TotalExpTime=(double)pRecordNoaa->dataRecord.exposureTime;
-    pRecord->TimeDec=(double)pRecord->present_time.ti_hour+pRecord->present_time.ti_min/60.+pRecord->present_time.ti_sec/3600.;
+    pRecord->TimeDec=(double)pRecord->present_datetime.thetime.ti_hour+pRecord->present_datetime.thetime.ti_min/60.+pRecord->present_datetime.thetime.ti_sec/3600.;
 
     // The spectrum
 

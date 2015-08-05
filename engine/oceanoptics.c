@@ -152,8 +152,7 @@ RC ReliOceanOptics(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int 
   mon=0;
   rc=ERROR_ID_NO;
 
-  memset(&pRecordInfo->present_day,0,sizeof(SHORT_DATE));
-  memset(&pRecordInfo->present_time,0,sizeof(struct time));
+  memset(&pRecordInfo->present_datetime,0,sizeof(pRecordInfo->present_datetime));
 
   memset(month,0,100);
 
@@ -207,15 +206,15 @@ RC ReliOceanOptics(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int 
 
    	 	if (mon<12)
    	 	 {
-   	 	 	pRecordInfo->present_day.da_day=(char)day;
-   	 	 	pRecordInfo->present_day.da_mon=(char)mon+1;
-   	 	 	pRecordInfo->present_day.da_year=year;
+   	 	 	pRecordInfo->present_datetime.thedate.da_day=(char)day;
+   	 	 	pRecordInfo->present_datetime.thedate.da_mon=(char)mon+1;
+   	 	 	pRecordInfo->present_datetime.thedate.da_year=year;
 
-   	 	 	pRecordInfo->present_time.ti_hour=(char)hour;
-   	 	 	pRecordInfo->present_time.ti_min=(char)minutes;
-   	 	 	pRecordInfo->present_time.ti_sec=(char)sec;
+   	 	 	pRecordInfo->present_datetime.thetime.ti_hour=(char)hour;
+   	 	 	pRecordInfo->present_datetime.thetime.ti_min=(char)minutes;
+   	 	 	pRecordInfo->present_datetime.thetime.ti_sec=(char)sec;
 
-        pRecordInfo->Tm=(double)ZEN_NbSec(&pRecordInfo->present_day,&pRecordInfo->present_time,0);
+        pRecordInfo->Tm=(double)ZEN_NbSec(&pRecordInfo->present_datetime.thedate,&pRecordInfo->present_datetime.thetime,0);
 
         tmLocal=pRecordInfo->Tm+THRD_localShift*3600.;
 

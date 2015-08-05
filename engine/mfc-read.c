@@ -224,19 +224,13 @@ RC SetMFC(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
  {
   // Declarations
 
-  PRJCT_INSTRUMENTAL *pInstrumental;
-  BUFFERS *pBuffers;                                                            // pointer to the buffers part of the engine context
-
   char  fileName[MAX_STR_SHORT_LEN+1];                                        // name of the current file
   RC rc;
 
   // Initializations
 
-  pBuffers=&pEngineContext->buffers;
-
   memset(fileName,0,MAX_STR_SHORT_LEN+1);
   strncpy(fileName,pEngineContext->fileInfo.fileName,MAX_STR_SHORT_LEN);
-  pInstrumental=&pEngineContext->project.instrumental;
   pEngineContext->lastRefRecord=0;
   mfcLastSpectrum=0;
   rc=ERROR_ID_NO;
@@ -399,7 +393,7 @@ RC ReliMFC(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay
   char                fileName[MAX_STR_SHORT_LEN+1],                           // name of the current file (the current record)
                        format[20],
                       *ptr,*ptr2;                                               // pointers to parts in the previous string
-  SHORT_DATE           today;                                                   // date of the current record
+  struct date          today;                                                   // date of the current record
   PRJCT_INSTRUMENTAL  *pInstrumental;                                           // pointer to the instrumental part of the project
   RC                   rc;                                                      // return code
   double tmLocal,Tm1,Tm2;
@@ -498,14 +492,14 @@ RC ReliMFC(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay
 
         today.da_day=(char)day;
         today.da_mon=(char)mon;
-        today.da_year=(short)year;
+        today.da_year=year;
 
         if (today.da_year<30)
-         today.da_year+=(short)2000;
+         today.da_year+= 2000;
         else if (today.da_year<130)
-         today.da_year+=(short)1900;
+         today.da_year+= 1900;
         else if (today.da_year<1930)
-         today.da_year+=(short)100;
+         today.da_year+= 100;
 
         pRecord->startTime.ti_hour=(unsigned char)hour;
         pRecord->startTime.ti_min=(unsigned char)min;
@@ -522,9 +516,9 @@ RC ReliMFC(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay
 
         Tm1=(Tm1+Tm2)*0.5;
 
-        pRecord->present_day.da_year  = (short) ZEN_FNCaljye (&Tm1);
-        pRecord->present_day.da_mon   = (char) ZEN_FNCaljmon (ZEN_FNCaljye(&Tm1),ZEN_FNCaljda(&Tm1));
-        pRecord->present_day.da_day   = (char) ZEN_FNCaljday (ZEN_FNCaljye(&Tm1),ZEN_FNCaljda(&Tm1));
+        pRecord->present_datetime.thedate.da_year  = ZEN_FNCaljye (&Tm1);
+        pRecord->present_datetime.thedate.da_mon   = (char) ZEN_FNCaljmon (ZEN_FNCaljye(&Tm1),ZEN_FNCaljda(&Tm1));
+        pRecord->present_datetime.thedate.da_day   = (char) ZEN_FNCaljday (ZEN_FNCaljye(&Tm1),ZEN_FNCaljda(&Tm1));
 
         // Data on the current spectrum
 
@@ -536,9 +530,9 @@ RC ReliMFC(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay
 
         nsec=(nsec1+nsec2)/2;
 
-        pRecord->present_time.ti_hour=(unsigned char)(nsec/3600);
-        pRecord->present_time.ti_min=(unsigned char)((nsec%3600)/60);
-        pRecord->present_time.ti_sec=(unsigned char)((nsec%3600)%60);
+        pRecord->present_datetime.thetime.ti_hour=(unsigned char)(nsec/3600);
+        pRecord->present_datetime.thetime.ti_min=(unsigned char)((nsec%3600)/60);
+        pRecord->present_datetime.thetime.ti_sec=(unsigned char)((nsec%3600)%60);
 
         pRecord->TDet     = 0;
         pRecord->Tint     = MFC_header.int_time*0.001;
@@ -548,9 +542,9 @@ RC ReliMFC(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay
         memcpy(pRecord->dispersion,MFC_header.dispersion,sizeof(float)*3);
         memcpy(pRecord->Nom,MFC_header.specname,20);
 
-        pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_day,&pRecord->present_time,0);
+        pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_datetime.thedate,&pRecord->present_datetime.thetime,0);
         pRecord->TotalExpTime=(double)0.;
-        pRecord->TimeDec=(double)pRecord->present_time.ti_hour+pRecord->present_time.ti_min/60.+pRecord->present_time.ti_sec/3600.;
+        pRecord->TimeDec=(double)pRecord->present_datetime.thetime.ti_hour+pRecord->present_datetime.thetime.ti_min/60.+pRecord->present_datetime.thetime.ti_sec/3600.;
 
         pRecord->longitude=-MFC_header.longitude;  // !!!
         pRecord->latitude=MFC_header.latitude;
@@ -559,7 +553,7 @@ RC ReliMFC(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay
 
         MFC_header.longitude=-MFC_header.longitude;
 
-        pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_day,&pRecord->present_time,0);
+        pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_datetime.thedate,&pRecord->present_datetime.thetime,0);
         pRecord->Zm=ZEN_FNTdiz(ZEN_FNCrtjul(&pRecord->Tm),&pRecord->longitude,&pRecord->latitude,&pRecord->Azimuth);
         tmLocal=pRecord->Tm+THRD_localShift*3600.;
 
@@ -630,7 +624,7 @@ RC MFC_ReadRecordStd(ENGINE_CONTEXT *pEngineContext,char *fileName,
   float                tmp;                                   // temporary variable
   char line[MAX_STR_SHORT_LEN+1],             // line of the current file
         keyWord[MAX_STR_SHORT_LEN+1],keyValue[MAX_STR_SHORT_LEN+1],ctmp;
-  SHORT_DATE         today;                                 // date of the current record
+  struct date         today;                                 // date of the current record
 
   INDEX i,iDay,iMon,iYear;          // browse pixels in the spectrum
   double Tm1,Tm2;
@@ -709,14 +703,14 @@ RC MFC_ReadRecordStd(ENGINE_CONTEXT *pEngineContext,char *fileName,
 
     today.da_day=(char)day;
     today.da_mon=(char)mon;
-    today.da_year=(int)year;
+    today.da_year= year;
 
     if (today.da_year<30)
-     today.da_year+=(short)2000;
+     today.da_year+= 2000;
     else if (today.da_year<130)
-     today.da_year+=(short)1900;
+     today.da_year+= 1900;
     else if (today.da_year<1930)
-     today.da_year+=(short)100;
+     today.da_year+= 100;
 
     pRecord->startTime.ti_hour=(unsigned char)hour;
     pRecord->startTime.ti_min=(unsigned char)min;
@@ -733,9 +727,9 @@ RC MFC_ReadRecordStd(ENGINE_CONTEXT *pEngineContext,char *fileName,
 
     Tm1=(Tm1+Tm2)*0.5;
 
-    pRecord->present_day.da_year  = (short) ZEN_FNCaljye (&Tm1);
-    pRecord->present_day.da_mon   = (char) ZEN_FNCaljmon (ZEN_FNCaljye(&Tm1),ZEN_FNCaljda(&Tm1));
-    pRecord->present_day.da_day   = (char) ZEN_FNCaljday (ZEN_FNCaljye(&Tm1),ZEN_FNCaljda(&Tm1));
+    pRecord->present_datetime.thedate.da_year = ZEN_FNCaljye (&Tm1);
+    pRecord->present_datetime.thedate.da_mon  = ZEN_FNCaljmon (ZEN_FNCaljye(&Tm1),ZEN_FNCaljda(&Tm1));
+    pRecord->present_datetime.thedate.da_day  = ZEN_FNCaljday (ZEN_FNCaljye(&Tm1),ZEN_FNCaljda(&Tm1));
 
     // Data on the current spectrum
 
@@ -747,9 +741,9 @@ RC MFC_ReadRecordStd(ENGINE_CONTEXT *pEngineContext,char *fileName,
 
     nsec=(nsec1+nsec2)/2;
 
-    pRecord->present_time.ti_hour=(unsigned char)(nsec/3600);
-    pRecord->present_time.ti_min=(unsigned char)((nsec%3600)/60);
-    pRecord->present_time.ti_sec=(unsigned char)((nsec%3600)%60);
+    pRecord->present_datetime.thetime.ti_hour=(unsigned char)(nsec/3600);
+    pRecord->present_datetime.thetime.ti_min=(unsigned char)((nsec%3600)/60);
+    pRecord->present_datetime.thetime.ti_sec=(unsigned char)((nsec%3600)%60);
 
     pRecord->TDet     = 0;
 
@@ -898,9 +892,9 @@ RC ReliMFCStd(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int local
       pRecord->BestShift=(double)0.;
       pRecord->NTracks=0;
 
-      pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_day,&pRecord->present_time,0);
+      pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_datetime.thedate,&pRecord->present_datetime.thetime,0);
       pRecord->Zm=ZEN_FNTdiz(ZEN_FNCrtjul(&pRecord->Tm),&longit,&pRecord->latitude,NULL);
-      pRecord->TimeDec=(double)pRecord->present_time.ti_hour+pRecord->present_time.ti_min/60.+pRecord->present_time.ti_sec/3600.;
+      pRecord->TimeDec=(double)pRecord->present_datetime.thetime.ti_hour+pRecord->present_datetime.thetime.ti_min/60.+pRecord->present_datetime.thetime.ti_sec/3600.;
 
       pRecord->altitude=(double)0.;
       longit=-pRecord->longitude;
@@ -1002,7 +996,6 @@ RC MFCBIRA_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
   // Declarations
 
   MFCBIRA_HEADER header;
-  MFC_BIRA *pMfcInfo;
   ANALYSIS_REF *pRef;
   double *offset,*darkCurrent;
   float *spectrum,drkTint;
@@ -1015,7 +1008,6 @@ RC MFCBIRA_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
   pEngineContext->recordNumber=0;
   offset=pEngineContext->buffers.offset;
   darkCurrent=pEngineContext->buffers.varPix;
-  pMfcInfo=&pEngineContext->recordInfo.mfcBira;
   pRef=&pEngineContext->analysisRef;
   spectrum=NULL;
 
@@ -1151,6 +1143,7 @@ RC MFCBIRA_Reli(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loc
   float *spectrum;                                                              // pointer to spectrum and offset
   double Tm1,Tm2,tmLocal,longit;
   int nsec,nsec1,nsec2;
+  struct date measurement_date;
   INDEX   i;                                                                    // browse pixels of the detector
   RC      rc;                                                                   // return code
 
@@ -1189,14 +1182,17 @@ RC MFCBIRA_Reli(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loc
     memcpy(&pRecordInfo->startTime,&header.startTime,sizeof(struct time));
     memcpy(&pRecordInfo->endTime,&header.endTime,sizeof(struct time));
 
-    Tm1=(double)ZEN_NbSec(&header.measurementDate,&pRecordInfo->startTime,0);
-    Tm2=(double)ZEN_NbSec(&header.measurementDate,&pRecordInfo->endTime,0);
+    measurement_date.da_year = header.measurementDate.da_year;
+    measurement_date.da_mon = header.measurementDate.da_mon;
+    measurement_date.da_day = header.measurementDate.da_day;
+    Tm1=(double)ZEN_NbSec(&measurement_date,&pRecordInfo->startTime,0);
+    Tm2=(double)ZEN_NbSec(&measurement_date,&pRecordInfo->endTime,0);
 
     Tm1=(Tm1+Tm2)*0.5;
 
-    pRecordInfo->present_day.da_year  = (short) ZEN_FNCaljye (&Tm1);
-    pRecordInfo->present_day.da_mon   = (char) ZEN_FNCaljmon (ZEN_FNCaljye(&Tm1),ZEN_FNCaljda(&Tm1));
-    pRecordInfo->present_day.da_day   = (char) ZEN_FNCaljday (ZEN_FNCaljye(&Tm1),ZEN_FNCaljda(&Tm1));
+    pRecordInfo->present_datetime.thedate.da_year = ZEN_FNCaljye (&Tm1);
+    pRecordInfo->present_datetime.thedate.da_mon  = ZEN_FNCaljmon (ZEN_FNCaljye(&Tm1),ZEN_FNCaljda(&Tm1));
+    pRecordInfo->present_datetime.thedate.da_day  = ZEN_FNCaljday (ZEN_FNCaljye(&Tm1),ZEN_FNCaljda(&Tm1));
 
     // Data on the current spectrum
 
@@ -1208,16 +1204,16 @@ RC MFCBIRA_Reli(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loc
 
     nsec=(nsec1+nsec2)/2;
 
-    pRecordInfo->present_time.ti_hour=(unsigned char)(nsec/3600);
-    pRecordInfo->present_time.ti_min=(unsigned char)((nsec%3600)/60);
-    pRecordInfo->present_time.ti_sec=(unsigned char)((nsec%3600)%60);
+    pRecordInfo->present_datetime.thetime.ti_hour=(unsigned char)(nsec/3600);
+    pRecordInfo->present_datetime.thetime.ti_min=(unsigned char)((nsec%3600)/60);
+    pRecordInfo->present_datetime.thetime.ti_sec=(unsigned char)((nsec%3600)%60);
 
     longit=-header.longitude;
 
-    pRecordInfo->Tm=(double)ZEN_NbSec(&pRecordInfo->present_day,&pRecordInfo->present_time,0);
+    pRecordInfo->Tm=(double)ZEN_NbSec(&pRecordInfo->present_datetime.thedate,&pRecordInfo->present_datetime.thetime,0);
     pRecordInfo->Zm=ZEN_FNTdiz(ZEN_FNCrtjul(&pRecordInfo->Tm),&longit,&pRecordInfo->latitude,&pRecordInfo->Azimuth);
 
-    pRecordInfo->TimeDec=(double)pRecordInfo->present_time.ti_hour+pRecordInfo->present_time.ti_min/60.+pRecordInfo->present_time.ti_sec/3600.;
+    pRecordInfo->TimeDec=(double)pRecordInfo->present_datetime.thetime.ti_hour+pRecordInfo->present_datetime.thetime.ti_min/60.+pRecordInfo->present_datetime.thetime.ti_sec/3600.;
 
     tmLocal=pRecordInfo->Tm+THRD_localShift*3600.;
     pRecordInfo->localCalDay=ZEN_FNCaljda(&tmLocal);

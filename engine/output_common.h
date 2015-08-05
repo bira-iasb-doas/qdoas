@@ -30,13 +30,6 @@ enum output_datatype {
   OUTPUT_DATETIME /*!< \ref datetime structure */
 };
 
-struct datetime{
-  struct time thetime;
-  struct date thedate;
-  int millis; // for SCIA
-  int microseconds; // for GOME2
-};
-
 struct field_attribute{
   const char *label;
   const char *value;

@@ -533,13 +533,13 @@ RC ReadPixelInfo(FILE *fp,ENGINE_CONTEXT *pEngineContext)
 
     // Fill measurement date and time fields
 
-    pRecord->present_day.da_day=(char)day;
-    pRecord->present_day.da_mon=(char)(indexMonth+1);
-    pRecord->present_day.da_year=(short)year;
+    pRecord->present_datetime.thedate.da_day=(char)day;
+    pRecord->present_datetime.thedate.da_mon=(char)(indexMonth+1);
+    pRecord->present_datetime.thedate.da_year=(short)year;
 
-    pRecord->present_time.ti_hour=(unsigned char)hour;
-    pRecord->present_time.ti_min=(unsigned char)min;
-    pRecord->present_time.ti_sec=(unsigned char)(int)(sec+0.5);
+    pRecord->present_datetime.thetime.ti_hour=(unsigned char)hour;
+    pRecord->present_datetime.thetime.ti_min=(unsigned char)min;
+    pRecord->present_datetime.thetime.ti_sec=(unsigned char)(int)(sec+0.5);
 
     nLines++;
    }
@@ -861,8 +861,8 @@ RC GDP_ASC_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,FILE *s
       pRecord->rejected     = 0;
       pRecord->ReguTemp     = 0.;
       pRecord->TotalExpTime = pRecord->Tint*pRecord->NSomme;
-      pRecord->Tm           =(double)ZEN_NbSec(&pRecord->present_day,&pRecord->present_time,0);
-      pRecord->TimeDec      =(double)pRecord->present_time.ti_hour+pRecord->present_time.ti_min/60.;
+      pRecord->Tm           =(double)ZEN_NbSec(&pRecord->present_datetime.thedate,&pRecord->present_datetime.thetime,0);
+      pRecord->TimeDec      =(double)pRecord->present_datetime.thetime.ti_hour+pRecord->present_datetime.thetime.ti_min/60.;
       pRecord->longitude    = pGome->longit[4];
       pRecord->latitude     = pGome->latit[4];
       pRecord->altitude     = (double) 0.;

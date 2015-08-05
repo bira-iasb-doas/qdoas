@@ -799,14 +799,16 @@ RC GDP_BIN_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,FILE *specFp,INDEX i
         pRecord->cloudTopPressure=(float)pOrbitFile->gdpBinGeo4.cloudInfo.CTP[0];
        }
 
-      pRecord->present_time.ti_hour=pOrbitFile->gdpBinSpectrum.dateAndTime.ti_hour;
-      pRecord->present_time.ti_min=pOrbitFile->gdpBinSpectrum.dateAndTime.ti_min;
-      pRecord->present_time.ti_sec=pOrbitFile->gdpBinSpectrum.dateAndTime.ti_sec;
+      pRecord->present_datetime.thetime.ti_hour=pOrbitFile->gdpBinSpectrum.dateAndTime.ti_hour;
+      pRecord->present_datetime.thetime.ti_min=pOrbitFile->gdpBinSpectrum.dateAndTime.ti_min;
+      pRecord->present_datetime.thetime.ti_sec=pOrbitFile->gdpBinSpectrum.dateAndTime.ti_sec;
 
       memset(pRecord->Nom,0,20);
-      memcpy((char *)&pRecord->present_day,(char *)&today,sizeof(SHORT_DATE));
+      pRecord->present_datetime.thedate.da_day = today.da_day;
+      pRecord->present_datetime.thedate.da_mon = today.da_mon;
+      pRecord->present_datetime.thedate.da_year = today.da_year;
 
-      pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_day,&pRecord->present_time,0);
+      pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_datetime.thedate,&pRecord->present_datetime.thetime,0);
       pRecord->localCalDay=ZEN_FNCaljda(&pRecord->Tm);
       pRecord->TotalExpTime=(double)0.;
       pRecord->TimeDec=(double)pOrbitFile->gdpBinSpectrum.dateAndTime.ti_hour+

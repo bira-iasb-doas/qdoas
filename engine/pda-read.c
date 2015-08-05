@@ -240,7 +240,7 @@ RC ReliPDA_EGG_Logger(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,i
              *p;                                                                // pointer to characters in the previous string buffer
   double     *spectrum,tmLocal,                                                 // current spectrum
               Max;                                                              // maximum value used for normalizing spectra during safe keeping
-  SHORT_DATE  day;                                                              // date of the current spectrum
+  struct date day;                                                              // date of the current spectrum
   int         iday,imonth,iyear,ihour,imin,isec,                                // substitution variable for current measurement date and time read out
               ccdFlag;                                                          // 0 for RETICON detector, 1 for CCD detector
   INDEX       i;                                                                // index for browsing pixels in spectrum
@@ -346,27 +346,27 @@ RC ReliPDA_EGG_Logger(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,i
 
       day.da_day=(char)iday;
       day.da_mon=(char)imonth;
-      day.da_year=(short)iyear;
+      day.da_year= iyear;
 
       if (day.da_year<30)
-       day.da_year+=(short)2000;
+       day.da_year+= 2000;
       else if (day.da_year<130)
-       day.da_year+=(short)1900;
+       day.da_year+= 1900;
       else if (day.da_year<1930)
-       day.da_year+=(short)100;
+       day.da_year+= 100;
 
-      pRecord->present_time.ti_hour=(unsigned char)ihour;
-      pRecord->present_time.ti_min=(unsigned char)imin;
-      pRecord->present_time.ti_sec=(unsigned char)isec;
+      pRecord->present_datetime.thetime.ti_hour=(unsigned char)ihour;
+      pRecord->present_datetime.thetime.ti_min=(unsigned char)imin;
+      pRecord->present_datetime.thetime.ti_sec=(unsigned char)isec;
 //      pRecord->Azimuth=(double)-1.;
 
-      memcpy(&pRecord->present_day,&day,sizeof(SHORT_DATE));
+      memcpy(&pRecord->present_datetime.thedate,&day,sizeof(day));
 
       // Available data on the current spectrum
 
-      pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_day,&pRecord->present_time,0);
+      pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_datetime.thedate,&pRecord->present_datetime.thetime,0);
       pRecord->TotalExpTime=(double)0.;
-      pRecord->TimeDec=(double)pRecord->present_time.ti_hour+pRecord->present_time.ti_min/60.+pRecord->present_time.ti_sec/3600.;
+      pRecord->TimeDec=(double)pRecord->present_datetime.thetime.ti_hour+pRecord->present_datetime.thetime.ti_min/60.+pRecord->present_datetime.thetime.ti_sec/3600.;
 
       tmLocal=pRecord->Tm+THRD_localShift*3600.;
 
@@ -725,7 +725,12 @@ RC ReliPDA_EGG(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
           strcpy(ptr,"Drift.ret");
 
          DHour = (double) header.now.ti_hour+header.now.ti_min/60.+header.now.ti_sec/3600.;
-         Tm=ZEN_NbSec(&header.today,&header.now,0);
+
+         struct date today;
+         today.da_year = header.today.da_year;
+         today.da_mon = header.today.da_mon;
+         today.da_day = header.today.da_day;
+         Tm=ZEN_NbSec(&today,&header.now,0);
 
          fp = fopen ( fileNameShort, "rt" );
 
@@ -751,7 +756,7 @@ RC ReliPDA_EGG(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
                  header.now.ti_min  = (unsigned char)Min;
                  header.now.ti_sec  = (unsigned char)Sec;
 
-                 Tm = (double) ZEN_NbSec ( &header.today, &header.now, 0 );
+                 Tm = ZEN_NbSec (&today, &header.now, 0 );
 
                  if ((indexSite=SITES_GetIndex(pEngineContext->project.instrumental.observationSite))!=ITEM_NONE)
                   {
@@ -776,10 +781,12 @@ RC ReliPDA_EGG(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
 // ! ***/           fwrite(ISpecMax,sizeof(unsigned short)*(header.Rejected+header.ScansNumber),1,gp);
 // ! ***/           fclose(gp);
 
-        memcpy(&pRecord->present_day, &header.today, sizeof(SHORT_DATE));
-        memcpy(&pRecord->present_time, &header.now, sizeof(struct time));
+        pRecord->present_datetime.thedate.da_day = header.today.da_day;
+        pRecord->present_datetime.thedate.da_mon = header.today.da_mon;
+        pRecord->present_datetime.thedate.da_year = header.today.da_year;
+        memcpy(&pRecord->present_datetime.thetime, &header.now, sizeof(struct time));
 
-        pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_day,&pRecord->present_time,0);
+        pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_datetime.thedate,&pRecord->present_datetime.thetime,0);
         pRecord->TotalExpTime=(double)0.;
         pRecord->TimeDec=(double)header.now.ti_hour+header.now.ti_min/60.+header.now.ti_sec/3600.;
 
@@ -787,7 +794,7 @@ RC ReliPDA_EGG(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
 
         pRecord->localCalDay=ZEN_FNCaljda(&tmLocal);
         pRecord->localTimeDec=fmod(pRecord->TimeDec+24.+THRD_localShift,(double)24.);
-        pRecord->elevationViewAngle=(pRecord->present_day.da_year>=2003)?header.mirrorElv:(float)-1.;
+        pRecord->elevationViewAngle=(pRecord->present_datetime.thedate.da_year>=2003)?header.mirrorElv:(float)-1.;
 
         // User constraints
 
@@ -903,7 +910,7 @@ RC ReliPDA_EGG(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
     char fileName[40];
                                 // U for Hamamatsu
                                 // V for Reticon
-    sprintf(fileName,"ZARD%03d.%02dU",ZEN_FNCaljda(&pRecord->Tm),pRecord->present_day.da_year%100);
+    sprintf(fileName,"ZARD%03d.%02dU",ZEN_FNCaljda(&pRecord->Tm),pRecord->present_datetime.thedate.da_year%100);
 
     if ((logFp=fopen(fileName,"a+t"))!=NULL)
      {
@@ -914,25 +921,25 @@ RC ReliPDA_EGG(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
         Max=(double)pBuffers->spectrum[i];
                                  // H for Hamamatsu
                                  // R for Reticon
-      sprintf(pRecord->Nom,"%-3d%02dHA%02d%02dZ%03d    ",ZEN_FNCaljda(&pRecord->Tm),pRecord->present_day.da_year%100,
-                      pRecord->present_time.ti_hour,
-                      pRecord->present_time.ti_min,
+      sprintf(pRecord->Nom,"%-3d%02dHA%02d%02dZ%03d    ",ZEN_FNCaljda(&pRecord->Tm),pRecord->present_datetime.thedate.da_year%100,
+                      pRecord->present_datetime.thetime.ti_hour,
+                      pRecord->present_datetime.thetime.ti_min,
                 (int)(pRecord->Zm*10.));
                                            // H for Hamamatsu
                                            // R for Reticon
       fprintf(logFp,"%04d/%02d/%02d %02d:%02d H %-20s %02d/%02d/%02d %02d:%02d:%02d %05d %05d %07.3f %4.1f %05d ",
-                      pRecord->present_day.da_year,
-                      pRecord->present_day.da_mon,
-                      pRecord->present_day.da_day,
-                      pRecord->present_time.ti_hour,
-                      pRecord->present_time.ti_min,
+                      pRecord->present_datetime.thedate.da_year,
+                      pRecord->present_datetime.thedate.da_mon,
+                      pRecord->present_datetime.thedate.da_day,
+                      pRecord->present_datetime.thetime.ti_hour,
+                      pRecord->present_datetime.thetime.ti_min,
                       pRecord->Nom,
-                      pRecord->present_day.da_day,
-                      pRecord->present_day.da_mon,
-                      pRecord->present_day.da_year%100,
-                      pRecord->present_time.ti_hour,
-                      pRecord->present_time.ti_min,
-                      pRecord->present_time.ti_sec,
+                      pRecord->present_datetime.thedate.da_day,
+                      pRecord->present_datetime.thedate.da_mon,
+                      pRecord->present_datetime.thedate.da_year%100,
+                      pRecord->present_datetime.thetime.ti_hour,
+                      pRecord->present_datetime.thetime.ti_min,
+                      pRecord->present_datetime.thetime.ti_sec,
                       pRecord->NSomme,                           // number of saved scans
                       pRecord->rejected,                         // number of rejected scans
                       pRecord->Tint,                             // integration time
@@ -958,13 +965,6 @@ RC ReliPDA_EGG(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
 
   if (fp!=NULL)
    fclose(fp);
-
-/*        {
-         FILE *fp;
-         fp=fopen("C:\\My Data\\Stations\\OHP\\Analysis\\ohp_Tint.dat","a+t");
-         fprintf(fp,"%#5d %#3d %.3f %.2f %.2f\n",pRecord->present_day.da_year,ZEN_FNCaljda(&pRecord->Tm),pRecord->TimeDec,pRecord->Zm,pRecord->Tint);
-         fclose(fp);
-        }    */
 
   // Release allocated buffers
 

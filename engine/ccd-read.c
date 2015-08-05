@@ -294,7 +294,6 @@ RC SetCCD_EEV(ENGINE_CONTEXT *pEngineContext,FILE *specFp,FILE *darkFp)
  {
   // Declarations
 
-  BUFFERS *pBuffers;                                                            // pointer to the buffers part of the engine context
   ANALYSIS_REF *pRef;
 
   CCD_DATA header;                                                              // header of a record
@@ -312,7 +311,6 @@ RC SetCCD_EEV(ENGINE_CONTEXT *pEngineContext,FILE *specFp,FILE *darkFp)
 
   // Initializations
 
-  pBuffers=&pEngineContext->buffers;
   pRef=&pEngineContext->analysisRef;
 
   recordIndexes=pEngineContext->buffers.recordIndexes;
@@ -467,7 +465,7 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
   CCD_DATA header;                                                              // header of the current record
   double *dspectrum,*tmpSpectrum;                                               // pointer to the vector in 'pEngineContext' to fill with the current spectrum
   unsigned short *spectrum;                                                             // spectrum to retrieve from the current record in the original format
-  int ccdX,ccdY,spSize,dataSize;                                                // dimensions of the CCD detector
+  int ccdX,ccdY,spSize;                                                // dimensions of the CCD detector
   unsigned short *ccdTabNTint;                                                          // number of scans per different integration times
   double *ccdTabTint;                                                           // the different integration times used for the current measurement
   unsigned short *darkCurrent;                                                          // the dark current
@@ -521,7 +519,6 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
 
       ccdX=(header.roiWveEnd-header.roiWveStart+1)/header.roiWveGroup;
       ccdY=(header.roiSlitEnd-header.roiSlitStart+1)/header.roiSlitGroup;
-      dataSize=(header.doubleFlag==(char)1)?sizeof(double):sizeof(unsigned short);
 
       spSize=(header.saveTracks)?ccdX*ccdY:ccdX;
       nTint=header.nTint;
@@ -677,12 +674,14 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
                }
             }
 
-           memcpy(&pRecord->present_day,&header.today,sizeof(SHORT_DATE));
-           memcpy(&pRecord->present_time,&header.now,sizeof(struct time));
+           pRecord->present_datetime.thedate.da_day = header.today.da_day;
+           pRecord->present_datetime.thedate.da_mon = header.today.da_mon;
+           pRecord->present_datetime.thedate.da_year = header.today.da_year;
+
+           memcpy(&pRecord->present_datetime.thetime,&header.now,sizeof(struct time));
 
            if (header.Tm<EPSILON)
-            pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_day,&pRecord->present_time,0);
-
+            pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_datetime.thedate,&pRecord->present_datetime.thetime,0);
 
            memcpy(&pRecord->startTime,&header.startTime,sizeof(struct time));
            memcpy(&pRecord->endTime,&header.endTime,sizeof(struct time));
@@ -690,17 +689,17 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
            pRecord->ccd.indexImage=CCD_SearchForImage((int)header.startTime.ti_hour*3600+header.startTime.ti_min*60+header.startTime.ti_sec,(int)header.endTime.ti_hour*3600+header.endTime.ti_min*60+header.endTime.ti_sec);
 
            pRecord->elevationViewAngle=
-                ((pRecord->present_day.da_year>2003) ||
-                ((pRecord->present_day.da_year==2003) && (pRecord->present_day.da_mon>2)) ||
-                ((pRecord->present_day.da_year==2003) && (pRecord->present_day.da_mon==2) && (pRecord->present_day.da_day>20)))?
+                ((pRecord->present_datetime.thedate.da_year>2003) ||
+                ((pRecord->present_datetime.thedate.da_year==2003) && (pRecord->present_datetime.thedate.da_mon>2)) ||
+                ((pRecord->present_datetime.thedate.da_year==2003) && (pRecord->present_datetime.thedate.da_mon==2) && (pRecord->present_datetime.thedate.da_day>20)))?
                  (float)header.targetElevation:(float)-1.;
 
            pRecord->Azimuth=header.Azimuth;
 
            if (!header.alsFlag)
             pRecord->azimuthViewAngle=
-                 ((pRecord->present_day.da_year>2008) ||
-                 ((pRecord->present_day.da_year==2008) && (pRecord->present_day.da_mon>4)))?
+                 ((pRecord->present_datetime.thedate.da_year>2008) ||
+                 ((pRecord->present_datetime.thedate.da_year==2008) && (pRecord->present_datetime.thedate.da_mon>4)))?
                   (float)header.mirrorAzimuth:(float)-1.;
 
            pRecord->TimeDec=(double)header.now.ti_hour+header.now.ti_min/60.+header.now.ti_sec/3600.;
@@ -1047,15 +1046,15 @@ RC ReliCCD(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay
       pRecord->TotalExpTime=(double)0.;
       pRecord->TimeDec=(double)DetInfo.Hour.ti_hour+DetInfo.Hour.ti_min/60.;
 
-      pRecord->present_day.da_year  = DetInfo.Day.da_year;
-      pRecord->present_day.da_mon   = DetInfo.Day.da_mon;
-      pRecord->present_day.da_day   = DetInfo.Day.da_day;
+      pRecord->present_datetime.thedate.da_year  = DetInfo.Day.da_year;
+      pRecord->present_datetime.thedate.da_mon   = DetInfo.Day.da_mon;
+      pRecord->present_datetime.thedate.da_day   = DetInfo.Day.da_day;
 
-      pRecord->present_time.ti_hour = DetInfo.Hour.ti_hour;
-      pRecord->present_time.ti_min  = DetInfo.Hour.ti_min;
-      pRecord->present_time.ti_sec  = DetInfo.Hour.ti_sec;
+      pRecord->present_datetime.thetime.ti_hour = DetInfo.Hour.ti_hour;
+      pRecord->present_datetime.thetime.ti_min  = DetInfo.Hour.ti_min;
+      pRecord->present_datetime.thetime.ti_sec  = DetInfo.Hour.ti_sec;
 
-      pRecord->Tm = (double) ZEN_NbSec(&pRecord->present_day,&pRecord->present_time,0);
+      pRecord->Tm = (double) ZEN_NbSec(&pRecord->present_datetime.thedate,&pRecord->present_datetime.thetime,0);
 
       tmLocal=pRecord->Tm+THRD_localShift*3600.;
 
@@ -1245,15 +1244,15 @@ RC ReliCCDTrack(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loc
           pRecord->TotalExpTime=(double)0.;
           pRecord->TimeDec=(double)DetInfo.Hour.ti_hour+DetInfo.Hour.ti_min/60.;
 
-          pRecord->present_day.da_year  = DetInfo.Day.da_year;
-          pRecord->present_day.da_mon   = DetInfo.Day.da_mon;
-          pRecord->present_day.da_day   = DetInfo.Day.da_day;
+          pRecord->present_datetime.thedate.da_year  = DetInfo.Day.da_year;
+          pRecord->present_datetime.thedate.da_mon   = DetInfo.Day.da_mon;
+          pRecord->present_datetime.thedate.da_day   = DetInfo.Day.da_day;
 
-          pRecord->present_time.ti_hour = DetInfo.Hour.ti_hour;
-          pRecord->present_time.ti_min  = DetInfo.Hour.ti_min;
-          pRecord->present_time.ti_sec  = DetInfo.Hour.ti_sec;
+          pRecord->present_datetime.thetime.ti_hour = DetInfo.Hour.ti_hour;
+          pRecord->present_datetime.thetime.ti_min  = DetInfo.Hour.ti_min;
+          pRecord->present_datetime.thetime.ti_sec  = DetInfo.Hour.ti_sec;
 
-          pRecord->Tm = (double) ZEN_NbSec(&pRecord->present_day,&pRecord->present_time,0);
+          pRecord->Tm = (double) ZEN_NbSec(&pRecord->present_datetime.thedate,&pRecord->present_datetime.thetime,0);
 
           tmLocal=pRecord->Tm+THRD_localShift*3600.;
 
@@ -1319,7 +1318,6 @@ RC CCD_LoadInstrumental(ENGINE_CONTEXT *pEngineContext)
 
   PROJECT *pProject;                                                            // pointer to the project part of the engine context
   PRJCT_INSTRUMENTAL *pInstrumental;                                            // pointer to the instrumental part of the project
-  BUFFERS *pBuffers;                                                            // pointer to the buffers part of the engine context
   RECORD_INFO *pRecord;                                                         // pointer to the record part of the engine context
 
   char fileName[MAX_STR_LEN+1];                                                // the complete name (including path) of the file to load
@@ -1328,7 +1326,6 @@ RC CCD_LoadInstrumental(ENGINE_CONTEXT *pEngineContext)
   // Initializations
 
   pRecord=&pEngineContext->recordInfo;
-  pBuffers=&pEngineContext->buffers;
   pProject=&pEngineContext->project;
   pInstrumental=&pProject->instrumental;
 

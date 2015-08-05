@@ -138,6 +138,13 @@ struct date
   char da_mon;                                                                  /* Month (1 = Jan)  */
  };
 
+struct datetime {
+  struct time thetime;
+  struct date thedate;
+  int millis;
+  int microseconds;
+};
+
 typedef struct _slit SLIT;
 typedef struct _filter PRJCT_FILTER;
 

@@ -179,8 +179,6 @@ int SCIA_clusters[PRJCT_INSTR_SCIA_CHANNEL_MAX][2]=
   { 22, 27 }
  };
 
-int SCIA_ms=0;
-
 // ================
 // STATIC VARIABLES
 // ================
@@ -376,7 +374,7 @@ RC SciaAllocateClusters(ENGINE_CONTEXT *pEngineContext,int *clustersList,int nCl
 // INPUT/OUTPUT  pDate,pTime  pointers to resp. date and time in usual format
 // -----------------------------------------------------------------------------
 
-void SCIA_FromMJD2000ToYMD(double mjd,SHORT_DATE *pDate,struct time *pTime)
+void SCIA_FromMJD2000ToYMD(double mjd,struct datetime *datetime)
  {
   // Declarations
 
@@ -384,10 +382,13 @@ void SCIA_FromMJD2000ToYMD(double mjd,SHORT_DATE *pDate,struct time *pTime)
   double sumDays,nDaysInYear,nDaysInMonth;
   int daysInMonth[]={31,28,31,30,31,30,31,31,30,31,30,31};
 
+  struct date *pDate = &datetime->thedate;
+  struct time *pTime = &datetime->thetime;
+
   // Initializations
 
-  memset(pDate,0,sizeof(SHORT_DATE));
-  memset(pTime,0,sizeof(struct time));
+  memset(pDate,0,sizeof(*pDate));
+  memset(pTime,0,sizeof(*pTime));
 
   // get the number of years since 2000
 
@@ -417,7 +418,7 @@ void SCIA_FromMJD2000ToYMD(double mjd,SHORT_DATE *pDate,struct time *pTime)
 
   // Round the number of milliseconds and correct date and time if the rounded number of milliseconds is exactly 1000
 
-  SCIA_ms=(int)floor(mjd*1000+0.5);
+  int SCIA_ms=(int)floor(mjd*1000+0.5);
 
   if (SCIA_ms>=1000)
    {
@@ -447,6 +448,7 @@ void SCIA_FromMJD2000ToYMD(double mjd,SHORT_DATE *pDate,struct time *pTime)
    	 	 }
    	 }
    }
+  datetime->millis = SCIA_ms;
  }
 
 // -----------------------------------------------------------------------------
@@ -772,7 +774,6 @@ RC SciaReadSunRefPDS(ENGINE_CONTEXT *pEngineContext,INDEX fileIndex)
   FILE *fp;                                                                     // pointer to the current file
   INDEX i;                                                                      // browse positions in calibration and reference vectors
   double version;
-  int dlrFlag;
   double dnl;
   RC rc;                                                                        // return code
 
@@ -784,7 +785,6 @@ RC SciaReadSunRefPDS(ENGINE_CONTEXT *pEngineContext,INDEX fileIndex)
 
   pOrbitFile=&sciaOrbitFiles[fileIndex];
   fp=pOrbitFile->sciaPDSInfo.FILE_l1c;
-  dlrFlag=0;
   rc=ERROR_ID_NO;
 
   // Buffers allocation
@@ -813,7 +813,6 @@ RC SciaReadSunRefPDS(ENGINE_CONTEXT *pEngineContext,INDEX fileIndex)
       else
        {
         sscanf(pOrbitFile->sciaPDSInfo.user_file_info.software_ver,"%lf",&version);
-        dlrFlag=1;
        }
 
       if ((refId[0]==toupper(pEngineContext->project.instrumental.scia.sciaReference[0])) && (refId[1]==pEngineContext->project.instrumental.scia.sciaReference[1]))
@@ -1389,7 +1388,7 @@ RC SCIA_ReadPDS(ENGINE_CONTEXT *pEngineContext,int recordNo)
       // Get date and time
 
       SCIA_FromMJD2000ToYMD((double)pOrbitFile->sciaNadirStates[indexState].dsrTime+
-                            (double)(recordNo-stateObs-1)*pOrbitFile->sciaNadirStates[indexState].int_time/16./86400.,&pRecord->present_day,&pRecord->present_time);
+                            (double)(recordNo-stateObs-1)*pOrbitFile->sciaNadirStates[indexState].int_time/16./86400.,&pRecord->present_datetime);
 
 //      tmp=(pRecord->TimeDec-floor(pRecord->TimeDec))*60.;                   // fractional minutes
 //      tmp=(tmp-floor(tmp))*60.;                                                 // fractional seconds
@@ -1397,7 +1396,7 @@ RC SCIA_ReadPDS(ENGINE_CONTEXT *pEngineContext,int recordNo)
 
 //      SCIA_ms=(int)floor(tmp+0.5);
 
-      pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_day,&pRecord->present_time,0);  // !!!
+      pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_datetime.thedate,&pRecord->present_datetime.thetime,0);  // !!!
      }
    }
 
@@ -2292,13 +2291,11 @@ RC SCIA_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
  }
 
 void SCIA_get_orbit_date(int *year, int *month, int *day) {
-  SHORT_DATE curDate;
-  struct time curTime;
+  struct datetime dt = {0};
 
-  SCIA_FromMJD2000ToYMD( sciaOrbitFiles[sciaCurrentFileIndex].sciaNadirStates[0].dsrTime,
-                         &curDate, &curTime);
+  SCIA_FromMJD2000ToYMD( sciaOrbitFiles[sciaCurrentFileIndex].sciaNadirStates[0].dsrTime, &dt);
 
-  *year = (int) curDate.da_year;
-  *month = (int) curDate.da_mon;
-  *day = (int) curDate.da_day;
+  *year = dt.thedate.da_year;
+  *month = dt.thedate.da_mon;
+  *day = dt.thedate.da_day;
 }

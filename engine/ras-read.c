@@ -205,9 +205,9 @@ RC RasReadRecord(char *fileName,double *spe,double *drk,ENGINE_CONTEXT *pEngineC
         {
          sscanf(strBuffer,"%d:%d:%d",&field1,&field2,&field3);
 
-         pRecord->present_time.ti_hour=(unsigned char)field1;
-         pRecord->present_time.ti_min=(unsigned char)field2;
-         pRecord->present_time.ti_sec=(unsigned char)field3;
+         pRecord->present_datetime.thetime.ti_hour=(unsigned char)field1;
+         pRecord->present_datetime.thetime.ti_min=(unsigned char)field2;
+         pRecord->present_datetime.thetime.ti_sec=(unsigned char)field3;
         }
 
        // Date
@@ -223,9 +223,9 @@ RC RasReadRecord(char *fileName,double *spe,double *drk,ENGINE_CONTEXT *pEngineC
          else if (field3<1930)
           field3+=(short)100;
 
-         pRecord->present_day.da_day=(char)field1;
-         pRecord->present_day.da_mon=(char)field2;
-         pRecord->present_day.da_year=(short)field3;
+         pRecord->present_datetime.thedate.da_day=(char)field1;
+         pRecord->present_datetime.thedate.da_mon=(char)field2;
+         pRecord->present_datetime.thedate.da_year=(short)field3;
         }
 
        // Exposure time
@@ -327,8 +327,8 @@ RC ReliRAS(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay
       pRecord->rejected-=pRecord->NSomme;
 
       pRecord->TotalExpTime=(double)0.;
-      pRecord->TimeDec=(double)pRecord->present_time.ti_hour+pRecord->present_time.ti_min/60.+pRecord->present_time.ti_sec/3600.;
-      pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_day,&pRecord->present_time,0);
+      pRecord->TimeDec=(double)pRecord->present_datetime.thetime.ti_hour+pRecord->present_datetime.thetime.ti_min/60.+pRecord->present_datetime.thetime.ti_sec/3600.;
+      pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_datetime.thedate,&pRecord->present_datetime.thetime,0);
 //      pRecord->Zm=ZEN_FNTdiz(ZEN_FNCrtjul(&pRecord->Tm),&pRecord->longitude,&pRecord->latitude,&pRecord->Azimuth);
 
       tmLocal=pRecord->Tm+THRD_localShift*3600.;

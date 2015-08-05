@@ -387,7 +387,7 @@ double ZenFNCjulrt(double *NbreJours)
 //               respectively pointed by pToday and pNow.
 // -----------------------------------------------------------------------------
 
-double ZEN_NbSec(SHORT_DATE *pToday,struct time *pNow,int flag)
+double ZEN_NbSec(struct date *pToday,struct time *pNow,int flag)
  {
   // Declarations
 
@@ -416,7 +416,7 @@ double ZEN_NbSec(SHORT_DATE *pToday,struct time *pNow,int flag)
 
     // Fill the input structure
 
-    pToday->da_year=(short)year;
+    pToday->da_year=year;
     pToday->da_mon=(char)mon;
     pToday->da_day=(char)day;
 

@@ -289,10 +289,12 @@ RC ReliEASOE(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localD
     // Data on the current record
 
     memcpy(pRecord->Nom,names,20);
-    memcpy((char *)&pRecord->present_day,(char *)&speRecord.present_day,sizeof(SHORT_DATE));
-    memcpy((char *)&pRecord->present_time,(char *)&drkRecord.present_time,sizeof(struct time));
+    pRecord->present_datetime.thedate.da_day = speRecord.present_day.da_day;
+    pRecord->present_datetime.thedate.da_mon = speRecord.present_day.da_mon;
+    pRecord->present_datetime.thedate.da_year = speRecord.present_day.da_year;
+    memcpy(&pRecord->present_datetime.thetime,&drkRecord.present_time,sizeof(struct time));
 
-    pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_day,&pRecord->present_time,0);
+    pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_datetime.thedate,&pRecord->present_datetime.thetime,0);
     pRecord->TotalExpTime=(double)0.;
     pRecord->TimeDec=(double)speRecord.present_time.ti_hour+speRecord.present_time.ti_min/60.+speRecord.present_time.ti_sec/3600.;
 

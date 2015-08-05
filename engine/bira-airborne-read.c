@@ -161,7 +161,6 @@ RC AIRBORNE_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int lo
   AIRBORNE_DATA  header;                                                        // record header
   double        *spectrum;                                                      // the current spectrum
   double         tmLocal;                                                       // measurement local time
-  double         offset;
   RC             rc;                                                            // return code
 
   // Initializations
@@ -184,8 +183,10 @@ RC AIRBORNE_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int lo
     fread(&header,sizeof(AIRBORNE_DATA),1,specFp);
     fread(spectrum,sizeof(double)*NDET,1,specFp);
 
-    memcpy(&pRecord->present_day,&header.today,sizeof(SHORT_DATE));
-    memcpy(&pRecord->present_time,&header.now,sizeof(SHORT_DATE));
+    pRecord->present_datetime.thedate.da_day = header.today.da_day;
+    pRecord->present_datetime.thedate.da_mon = header.today.da_mon;
+    pRecord->present_datetime.thedate.da_year = header.today.da_year;
+    pRecord->present_datetime.thetime = header.now;
 
     pRecord->TDet=(double)-1.;
     pRecord->rejected=header.nrejMeas;
@@ -201,7 +202,7 @@ RC AIRBORNE_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int lo
     pRecord->uavBira.temperature=(float)header.temperature;
     pRecord->uavBira.pressure=(float)header.pressure;
 
-    pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_day,&pRecord->present_time,0);
+    pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_datetime.thedate,&pRecord->present_datetime.thetime,0);
     pRecord->Zm=(double)ZEN_FNTdiz(ZEN_FNCrtjul(&pRecord->Tm),&pRecord->longitude,&pRecord->latitude,&pRecord->Azimuth);
     pRecord->TotalExpTime=(double)header.totalTime;
     pRecord->TimeDec=(double)header.now.ti_hour+header.now.ti_min/60.+header.now.ti_sec/3600.;

@@ -353,8 +353,7 @@ RC ASCII_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int local
   ndataSet=(asciiMatrix.nc)?(recordNo-1)/(asciiMatrix.nc-lambdaFlag):ITEM_NONE;
   ndataRecord=recordNo-ndataSet*(asciiMatrix.nc-lambdaFlag)+lambdaFlag-1;
 
-  memset(&pRecordInfo->present_day,0,sizeof(SHORT_DATE));
-  memset(&pRecordInfo->present_time,0,sizeof(struct time));
+  memset(&pRecordInfo->present_datetime,0,sizeof(pRecordInfo->present_datetime));
 
   VECTOR_Init(spectrum,(double)0.,NDET);
 
@@ -559,18 +558,18 @@ RC ASCII_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int local
 
     // Get information on the current record
     if (timeFlag) {
-      pRecordInfo->present_time.ti_hour=(unsigned char)pRecordInfo->TimeDec;
-      pRecordInfo->present_time.ti_min=(unsigned char)((pRecordInfo->TimeDec-pRecordInfo->present_time.ti_hour)*60.);
-      pRecordInfo->present_time.ti_sec=(unsigned char)(((pRecordInfo->TimeDec-pRecordInfo->present_time.ti_hour)*60.-pRecordInfo->present_time.ti_min)*60.);
+      pRecordInfo->present_datetime.thetime.ti_hour=(unsigned char)pRecordInfo->TimeDec;
+      pRecordInfo->present_datetime.thetime.ti_min=(unsigned char)((pRecordInfo->TimeDec-pRecordInfo->present_datetime.thetime.ti_hour)*60.);
+      pRecordInfo->present_datetime.thetime.ti_sec=(unsigned char)(((pRecordInfo->TimeDec-pRecordInfo->present_datetime.thetime.ti_hour)*60.-pRecordInfo->present_datetime.thetime.ti_min)*60.);
     }
         
     if (dateSaveFlag) {
-      pRecordInfo->present_day.da_day=(char)day;
-      pRecordInfo->present_day.da_mon=(char)mon;
-      pRecordInfo->present_day.da_year=(short)year;
+      pRecordInfo->present_datetime.thedate.da_day=(char)day;
+      pRecordInfo->present_datetime.thedate.da_mon=(char)mon;
+      pRecordInfo->present_datetime.thedate.da_year= year;
 
       // Daily automatic reference spectrum
-      pRecordInfo->Tm=(double)ZEN_NbSec(&pRecordInfo->present_day,&pRecordInfo->present_time,0);
+      pRecordInfo->Tm=(double)ZEN_NbSec(&pRecordInfo->present_datetime.thedate,&pRecordInfo->present_datetime.thetime,0);
             
       tmLocal=pRecordInfo->Tm+THRD_localShift*3600.;
         

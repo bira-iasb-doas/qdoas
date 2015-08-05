@@ -182,8 +182,6 @@ GOME2_REF;
 // GLOBAL VARIABLES
 // ================
 
-int GOME2_mus=0;
-
 // ================
 // STATIC VARIABLES
 // ================
@@ -557,9 +555,7 @@ RC Gome2ReadSunRef(GOME2_ORBIT_FILE *pOrbitFile,INDEX bandIndex)
 
 RC Gome2ReadOrbitInfo(GOME2_ORBIT_FILE *pOrbitFile,int bandIndex)
  {
- 	// Declarations
-
-  int status;
+   // Declarations
 
   uint8_t  channel_index[NBAND];
   uint16_t startPixel[NBAND];
@@ -579,7 +575,7 @@ RC Gome2ReadOrbitInfo(GOME2_ORBIT_FILE *pOrbitFile,int bandIndex)
 
   // Retrieve the MPHR
 
-  status = coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"MPHR");          // MPHR
+  int status = coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"MPHR");          // MPHR
 
   status = coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"ORBIT_START");   // MPHR.orbitStart
   coda_cursor_read_uint16 (&pOrbitFile->gome2Cursor, &pGome2Info->orbitStart);
@@ -1234,7 +1230,6 @@ RC GOME2_Set(ENGINE_CONTEXT *pEngineContext)
   DIR *hDir;
   #endif
   INDEX indexFile;
-  int searchAllOrbits;
   char *ptr,*fileExt;
   int oldCurrentIndex;
   RC rc;                                                                  // return code
@@ -1285,7 +1280,6 @@ RC GOME2_Set(ENGINE_CONTEXT *pEngineContext)
 
   if (gome2CurrentFileIndex==ITEM_NONE)
    {
-   	searchAllOrbits=0;
 
    	// Release old buffers
 
@@ -1331,7 +1325,6 @@ RC GOME2_Set(ENGINE_CONTEXT *pEngineContext)
 	 	      sprintf(fileFilter,"*.nadir");
 	 	     else
 	 	      {
-	 	      	searchAllOrbits=1;
 	 	      	*ptr='\0';
 	 	      	strcpy(filePath,fileFilter);
  	 	      sprintf(ptr,"%c*.*",PATH_SEP);
@@ -1558,22 +1551,22 @@ RC GOME2_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,INDEX fileIndex)
       // re-enable CODA handling of "special types"
       coda_set_option_bypass_special_types(0);
 
-      if (!rc)
-       {
-     	  utcTime=pGome2Info->mdr[indexMDR].startTime+tint*(recordNo-mdrObs-2);     // NOV 2011 : problem with integration time (FRESCO comparison)
-     	  coda_double_to_datetime(utcTime,&year,&month,&day,&hour,&min,&sec,&musec);
+      if (!rc) {
+        utcTime=pGome2Info->mdr[indexMDR].startTime+tint*(recordNo-mdrObs-2);     // NOV 2011 : problem with integration time (FRESCO comparison)
+        coda_double_to_datetime(utcTime,&year,&month,&day,&hour,&min,&sec,&musec);
 
-     	  // Output information on the current record
+        // Output information on the current record
 
-     	  pRecord->present_day.da_day=(char)day;
-        pRecord->present_day.da_mon=(char)month;
-        pRecord->present_day.da_year=(short)year;
+        pRecord->present_datetime.thedate.da_day=(char)day;
+        pRecord->present_datetime.thedate.da_mon=(char)month;
+        pRecord->present_datetime.thedate.da_year=year;
 
-        pRecord->present_time.ti_hour=(unsigned char)hour;
-        pRecord->present_time.ti_min=(unsigned char)min;
-        pRecord->present_time.ti_sec=(unsigned char)sec;
-
-        GOME2_mus=musec;
+        pRecord->present_datetime.thetime.ti_hour=(unsigned char)hour;
+        pRecord->present_datetime.thetime.ti_min=(unsigned char)min;
+        pRecord->present_datetime.thetime.ti_sec=(unsigned char)sec;
+        
+        pRecord->present_datetime.millis = -1;
+        pRecord->present_datetime.microseconds = musec;
 
         // Geolocation
 
@@ -1608,7 +1601,7 @@ RC GOME2_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,INDEX fileIndex)
         pRecord->Tint=tint;
 
         pRecord->TimeDec=(double)hour+min/60.+(sec+musec*1.e-6)/(60.*60.);
-        pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_day,&pRecord->present_time,0);
+        pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_datetime.thedate,&pRecord->present_datetime.thetime,0);
 
         pRecord->gome2.orbitNumber=(int)pOrbitFile->gome2Info.orbitStart;
 

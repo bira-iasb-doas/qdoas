@@ -319,15 +319,15 @@ RC ReliActon_Logger(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int
       pRecord=pRecord+20;
       pTemp=strcpy(pTemp,"                    \0");
       strncpy(pTemp,pRecord,2);
-      pRecordInfo->present_time.ti_hour=(char)atoi(pTemp);
+      pRecordInfo->present_datetime.thetime.ti_hour=(char)atoi(pTemp);
       pRecord=pRecord+3;
       pTemp=strcpy(pTemp,"                    \0");
       strncpy(pTemp,pRecord,2);
-      pRecordInfo->present_time.ti_min=(char)atoi(pTemp);
+      pRecordInfo->present_datetime.thetime.ti_min=(char)atoi(pTemp);
       pRecord=pRecord+3;
       pTemp=strcpy(pTemp,"                    \0");
       strncpy(pTemp,pRecord,2);
-      pRecordInfo->present_time.ti_sec=(char)atoi(pTemp);
+      pRecordInfo->present_datetime.thetime.ti_sec=(char)atoi(pTemp);
       pRecord=pRecord+3;
       pTemp=strcpy(pTemp,"                    \0");
       pRecordInfo->ReguTemp=(float)atof(pRecord);
@@ -339,12 +339,14 @@ RC ReliActon_Logger(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int
       pRecord=pRecord+4;
       pRecordInfo->rejected=atoi(pRecord);
 
-      memcpy(&pRecordInfo->present_day,&day,sizeof(SHORT_DATE));
+      pRecordInfo->present_datetime.thedate.da_day = day.da_day;
+      pRecordInfo->present_datetime.thedate.da_mon = day.da_mon;
+      pRecordInfo->present_datetime.thedate.da_year = day.da_year;
 
-      pRecordInfo->Tm=(double)ZEN_NbSec(&pRecordInfo->present_day,&pRecordInfo->present_time,0);
+      pRecordInfo->Tm=(double)ZEN_NbSec(&pRecordInfo->present_datetime.thedate,&pRecordInfo->present_datetime.thetime,0);
 
-      pRecordInfo->TotalExpTime         = (double)pRecordInfo->NSomme*pRecordInfo->Tint;
-      pRecordInfo->TimeDec              = (double)pRecordInfo->present_time.ti_hour+pRecordInfo->present_time.ti_min/60.;
+      pRecordInfo->TotalExpTime = (double)pRecordInfo->NSomme*pRecordInfo->Tint;
+      pRecordInfo->TimeDec = (double)pRecordInfo->present_datetime.thetime.ti_hour+pRecordInfo->present_datetime.thetime.ti_min/60.;
 
       // Spectrum read out
 

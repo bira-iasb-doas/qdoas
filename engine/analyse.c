@@ -1317,7 +1317,7 @@ RC AnalyseLoadVector(const char *function,char *fileName,double *lambda,double *
 
            TabFeno[0][NFeno].refDate.da_day=(char)day;
            TabFeno[0][NFeno].refDate.da_mon=(char)month;
-           TabFeno[0][NFeno].refDate.da_year=(short)year;
+           TabFeno[0][NFeno].refDate.da_year= year;
 
            TabFeno[0][NFeno].Tm=(double)ZEN_NbSec(&TabFeno[0][NFeno].refDate,&refTime,0);
            TabFeno[0][NFeno].TimeDec=(double)hour+min/60.;
@@ -4080,7 +4080,7 @@ void ANALYSE_ResetData(void)
         pTabFeno->Tm=
         pTabFeno->TimeDec=(double)9999.;
 
-      memset(&pTabFeno->refDate,0,sizeof(SHORT_DATE));
+      memset(&pTabFeno->refDate,0,sizeof(&pTabFeno->refDate));
 
       // Cross reference
 
