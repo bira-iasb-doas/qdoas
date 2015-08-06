@@ -1,4 +1,5 @@
 #include <array>
+#include <algorithm>
 #include <cassert>
 #include <sstream>
 #include <ctime>
@@ -19,7 +20,7 @@ static NetCDFGroup output_group;
 static size_t n_alongtrack, n_crosstrack, n_calib;
 
 static int dim_crosstrack, dim_alongtrack, dim_calib, dim_date, dim_time, dim_datetime, 
-  dim_2, dim_3, dim_4, dim_5, dim_6, dim_7, dim_8, dim_9;
+  dim_2, dim_3, dim_4, dim_5, dim_6, dim_7, dim_8, dim_9; // dimids
 
 const static string calib_subgroup_name = "Calib";
 
@@ -114,6 +115,12 @@ static nc_type getNCType(enum output_datatype xtype) {
   }
 }
 
+static string get_netcdf_varname(const char *varname_in) {
+  string result {varname_in};
+  std::replace(result.begin(), result.end(), '/', '-');
+  return result;
+}
+
 static void define_variable(NetCDFGroup &group, const struct output_field& thefield, const string& varname, enum vartype vtype) {
 
   vector<int> dimids;
@@ -138,7 +145,7 @@ static void define_variable(NetCDFGroup &group, const struct output_field& thefi
   }
   getDims(thefield, dimids, chunksizes);
 
-  group.defVar(varname , dimids, getNCType(thefield.memory_type) );
+  group.defVar(varname, dimids, getNCType(thefield.memory_type) );
   group.defVarChunking(varname, NC_CHUNKED, chunksizes.data());
   group.defVarDeflate(varname);
 }
@@ -199,7 +206,7 @@ static void write_calibration_data(NetCDFGroup& group) {
 
     NetCDFGroup calib_group = group.getGroup(calibfield.windowname).getGroup(calib_subgroup_name);
 
-    string varname = calibfield.fieldname;
+    string varname = get_netcdf_varname(calibfield.fieldname);
 
     if ( !calib_group.hasVar(varname)) {
       /* when crosstrack dimension is > 1, output_data_calib contains
@@ -302,7 +309,7 @@ RC netcdf_open(const ENGINE_CONTEXT *pEngineContext, const char *filename) {
     for (unsigned int i=0; i<output_num_fields; ++i) {
       NetCDFGroup group = output_data_analysis[i].windowname ? 
         output_group.getGroup(output_data_analysis[i].windowname) : output_group;
-      define_variable(group, output_data_analysis[i], output_data_analysis[i].fieldname, Analysis);
+      define_variable(group, output_data_analysis[i], get_netcdf_varname(output_data_analysis[i].fieldname), Analysis);
     }
 
     output_file = std::move(output);
@@ -340,16 +347,39 @@ inline static void assign_buffer(int *buffer, const struct datetime& d) {
   buffer[3] = d.thetime.ti_hour;
   buffer[4] = d.thetime.ti_min;
   buffer[5] = d.thetime.ti_sec;
-  buffer[6] = (d.microseconds != -1)
-    ? d.microseconds // GOME-2: microseconds
-    : d.millis * 1000; // SCIA: milliseconds->convert to micro
+  buffer[6] = (d.millis != -1)
+    ? d.millis * 1000 // SCIA: milliseconds->convert to micro
+    : d.microseconds; // GOME-2: microseconds
+}
+
+template<typename T>
+inline static size_t vardimension() {
+  return 1;
+}
+
+template<>
+size_t vardimension<struct date>() {
+  return 3;
+}
+
+template<>
+size_t vardimension<struct time>() {
+  return 3;
+}
+
+template<>
+size_t vardimension<struct datetime>() {
+  return 7;
 }
 
 template<typename T, typename U = T>
 static void write_buffer(const struct output_field *thefield, const bool selected[], int num_records, const OUTPUT_INFO *recordinfo, const T fill_value=0) {
 
   size_t ncols = thefield->data_cols;
-  vector<T> buffer(n_alongtrack * n_crosstrack * ncols, fill_value);
+  size_t dimension = vardimension<U>();
+
+  // buffer will hold all output data for this variable
+  vector<T> buffer(n_alongtrack * n_crosstrack * ncols * dimension, fill_value);
   for (int record=0; record < num_records; ++record) {
     if (selected[record]) {
 
@@ -357,13 +387,18 @@ static void write_buffer(const struct output_field *thefield, const bool selecte
       int i_alongtrack = (recordinfo[record].specno-1) / n_crosstrack;
 
       for (size_t i=0; i< ncols; ++i) {
+        // write into the buffer at the correct index position, using
+        // the correct layout for the type of data stored:
         int index = i_alongtrack*n_crosstrack*ncols + i_crosstrack*ncols + i;
-        assign_buffer(&buffer[index], static_cast<U*>(thefield->data)[record*ncols+i]);
+        assign_buffer(&buffer[dimension*index], static_cast<U*>(thefield->data)[record*ncols+i]);
       }
     }
   }
+
+  // variables that depend on the analysis window go the the
+  // appropriate subgroup for their analysis window:
   NetCDFGroup group = thefield->windowname ? output_group.getGroup(thefield->windowname) : output_group;
-  group.putVar(thefield->fieldname, buffer.data() );
+  group.putVar(get_netcdf_varname(thefield->fieldname), buffer.data() );
 }
 
 RC netcdf_write_analysis_data(const bool selected_records[], int num_records, const OUTPUT_INFO *recordinfo) {
