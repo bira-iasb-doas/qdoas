@@ -1452,7 +1452,7 @@ RC OMI_read_earth(ENGINE_CONTEXT *pEngineContext,int recordNo)
           pDate->da_mon = (char)(time_record.tm_mon + 1);
           pDate->da_day = (char)(time_record.tm_mday);
 
-          pRecord->present_datetime.microseconds = omi_ms;
+          pRecord->present_datetime.millis = omi_ms;
           
 	  pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_datetime.thedate,&pRecord->present_datetime.thetime,0);
 	}

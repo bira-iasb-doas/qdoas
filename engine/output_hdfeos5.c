@@ -466,9 +466,9 @@ static void write_to_buffer(void *datbuf, const struct output_field *thefield, i
       datetime_out[3] = datetime_in.thetime.ti_hour;
       datetime_out[4] = datetime_in.thetime.ti_min;
       datetime_out[5] = datetime_in.thetime.ti_sec;
-      datetime_out[6] = (datetime_in.microseconds != -1) // alternatively: specify units of milliseconds/microseconds in the field attributes?
-        ? datetime_in.microseconds // GOME2 has microseconds
-        : datetime_in.millis * 1000; // SCIA has milliseconds
+      datetime_out[6] = (datetime_in.millis != -1)
+        ? datetime_in.millis * 1000 // SCIA/OMI/...: milliseconds
+        : datetime_in.microseconds; // GOME2 has microseconds
     }
     break;
   }
