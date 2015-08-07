@@ -373,13 +373,18 @@ size_t vardimension<struct datetime>() {
 }
 
 template<typename T, typename U = T>
-static void write_buffer(const struct output_field *thefield, const bool selected[], int num_records, const OUTPUT_INFO *recordinfo, const T fill_value=0) {
+static void write_buffer(const struct output_field *thefield, const bool selected[], int num_records, const OUTPUT_INFO *recordinfo) {
 
   size_t ncols = thefield->data_cols;
   size_t dimension = vardimension<U>();
 
+  // variables that depend on the analysis window go the the
+  // appropriate subgroup for their analysis window:
+  NetCDFGroup group = thefield->windowname ? output_group.getGroup(thefield->windowname) : output_group;
+  string varname { get_netcdf_varname(thefield->fieldname) };
+  
   // buffer will hold all output data for this variable
-  vector<T> buffer(n_alongtrack * n_crosstrack * ncols * dimension, fill_value);
+  vector<T> buffer(n_alongtrack * n_crosstrack * ncols * dimension, default_fillvalue<T>());
   for (int record=0; record < num_records; ++record) {
     if (selected[record]) {
 
@@ -394,11 +399,7 @@ static void write_buffer(const struct output_field *thefield, const bool selecte
       }
     }
   }
-
-  // variables that depend on the analysis window go the the
-  // appropriate subgroup for their analysis window:
-  NetCDFGroup group = thefield->windowname ? output_group.getGroup(thefield->windowname) : output_group;
-  group.putVar(get_netcdf_varname(thefield->fieldname), buffer.data() );
+  group.putVar(varname, buffer.data() );
 }
 
 RC netcdf_write_analysis_data(const bool selected_records[], int num_records, const OUTPUT_INFO *recordinfo) {
@@ -418,7 +419,7 @@ RC netcdf_write_analysis_data(const bool selected_records[], int num_records, co
         write_buffer<unsigned short>(thefield, selected_records, num_records, recordinfo);
         break;
       case OUTPUT_STRING:
-        write_buffer<const char*>(thefield, selected_records, num_records, recordinfo, "");
+        write_buffer<const char*>(thefield, selected_records, num_records, recordinfo);
         break;
       case OUTPUT_FLOAT:
         write_buffer<float>(thefield, selected_records, num_records, recordinfo);

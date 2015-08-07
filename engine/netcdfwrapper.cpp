@@ -50,12 +50,13 @@ int NetCDFGroup::numDims(const string& varName) const {
 vector<int> NetCDFGroup::dimIDs(const std::string &varName) const {
   return dimIDs(varID(varName));
 }
+
 vector<int> NetCDFGroup::dimIDs(int varid) const {
   vector<int> dimids(numDims(varid));
   if (nc_inq_vardimid(groupid, varid, dimids.data()) == NC_NOERR) {
     return dimids;
   } else {
-    throw std::runtime_error("Cannot dimension ids for variable '" + varName(varid) + "'");
+    throw std::runtime_error("Cannot get dimension ids for variable '" + varName(varid) + "'");
   }
 }
 
@@ -239,3 +240,39 @@ void NetCDFGroup::defVarDeflate(int varid, int shuffle, int deflate, int deflate
 void NetCDFGroup::defVarDeflate(const string& name, int shuffle, int deflate, int deflate_level) {
   defVarDeflate(varID(name), shuffle, deflate, deflate_level);
 }
+
+template<>
+double default_fillvalue() {
+  return NC_FILL_DOUBLE;
+}
+
+template<>
+float default_fillvalue() {
+  return NC_FILL_FLOAT;
+}
+
+template<>
+int default_fillvalue() {
+  return NC_FILL_INT;
+}
+
+template<>
+short default_fillvalue() {
+  return NC_FILL_SHORT;
+}
+
+template<>
+unsigned short default_fillvalue() {
+  return NC_FILL_USHORT;
+}
+
+template<>
+char default_fillvalue() {
+  return NC_FILL_CHAR;
+}
+
+template<>
+const char* default_fillvalue() {
+  return NC_FILL_STRING;
+}
+

@@ -14,9 +14,6 @@ class NetCDFGroup {
 public:
   NetCDFGroup(int id=0, const std::string& groupName ="") :  groupid(id), name(groupName) {};
 
-  template<typename T>
-  void getFillValue(const std::string& varName, T *fill) const;
-
   bool hasVar(const std::string& varName) const;
   int varID(const std::string& varName) const;
   int numDims(const std::string& varName) const;
@@ -169,5 +166,7 @@ public:
 private:
   std::string filename;
 };
+
+template<typename T> T default_fillvalue();
 
 #endif
