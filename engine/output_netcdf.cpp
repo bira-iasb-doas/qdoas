@@ -145,9 +145,35 @@ static void define_variable(NetCDFGroup &group, const struct output_field& thefi
   }
   getDims(thefield, dimids, chunksizes);
 
-  group.defVar(varname, dimids, getNCType(thefield.memory_type) );
+  int varid = group.defVar(varname, dimids, getNCType(thefield.memory_type));
   group.defVarChunking(varname, NC_CHUNKED, chunksizes.data());
   group.defVarDeflate(varname);
+  
+  switch (thefield.memory_type) {
+  case OUTPUT_STRING:
+    group.putAttr("_FillValue", QDOAS_FILL_STRING, varid);
+    break;
+  case OUTPUT_SHORT:
+    group.putAttr<short>("_FillValue", QDOAS_FILL_SHORT, varid);
+    break;
+  case OUTPUT_USHORT:
+    group.putAttr<unsigned short>("_FillValue", QDOAS_FILL_USHORT, varid);
+    break;
+  case OUTPUT_FLOAT:
+    group.putAttr("_FillValue", QDOAS_FILL_FLOAT, varid);
+    break;
+  case OUTPUT_DOUBLE:
+    group.putAttr("_FillValue", QDOAS_FILL_DOUBLE, varid);
+    break;
+  case OUTPUT_INT:
+  case OUTPUT_TIME:     // date/time/datetime are stored as a set of integers in our NetCDF files
+  case OUTPUT_DATE:
+  case OUTPUT_DATETIME:
+    group.putAttr("_FillValue", QDOAS_FILL_INT, varid);
+    break;
+  default:
+    assert(false);
+  }
 }
 
 static void write_global_attrs(const ENGINE_CONTEXT*pEngineContext, NetCDFGroup &group) {
@@ -382,9 +408,10 @@ static void write_buffer(const struct output_field *thefield, const bool selecte
   // appropriate subgroup for their analysis window:
   NetCDFGroup group = thefield->windowname ? output_group.getGroup(thefield->windowname) : output_group;
   string varname { get_netcdf_varname(thefield->fieldname) };
+  T fill = group.getFillValue<T>(group.varID(varname));
   
   // buffer will hold all output data for this variable
-  vector<T> buffer(n_alongtrack * n_crosstrack * ncols * dimension, default_fillvalue<T>());
+  vector<T> buffer(n_alongtrack * n_crosstrack * ncols * dimension, fill);
   for (int record=0; record < num_records; ++record) {
     if (selected[record]) {
 
@@ -396,6 +423,37 @@ static void write_buffer(const struct output_field *thefield, const bool selecte
         // the correct layout for the type of data stored:
         int index = i_alongtrack*n_crosstrack*ncols + i_crosstrack*ncols + i;
         assign_buffer(&buffer[dimension*index], static_cast<U*>(thefield->data)[record*ncols+i]);
+      }
+    }
+  }
+  group.putVar(varname, buffer.data() );
+}
+
+// specialization to deal with string variable types...
+template<>
+void write_buffer<const char*>(const struct output_field *thefield, const bool selected[], int num_records, const OUTPUT_INFO *recordinfo) {
+
+  size_t ncols = thefield->data_cols;
+
+  // variables that depend on the analysis window go the the
+  // appropriate subgroup for their analysis window:
+  NetCDFGroup group = thefield->windowname ? output_group.getGroup(thefield->windowname) : output_group;
+  string varname { get_netcdf_varname(thefield->fieldname) };
+  string fill = group.getFillValue<string>(group.varID(varname));
+  
+  // buffer will hold all output data for this variable
+  vector<const char*> buffer(n_alongtrack * n_crosstrack * ncols, fill.c_str());
+  for (int record=0; record < num_records; ++record) {
+    if (selected[record]) {
+
+      int i_crosstrack = (recordinfo[record].specno-1) % n_crosstrack; //specno is 1-based
+      int i_alongtrack = (recordinfo[record].specno-1) / n_crosstrack;
+
+      for (size_t i=0; i< ncols; ++i) {
+        // write into the buffer at the correct index position, using
+        // the correct layout for the type of data stored:
+        int index = i_alongtrack*n_crosstrack*ncols + i_crosstrack*ncols + i;
+        assign_buffer(&buffer[index], static_cast<const char**>(thefield->data)[record*ncols+i]);
       }
     }
   }

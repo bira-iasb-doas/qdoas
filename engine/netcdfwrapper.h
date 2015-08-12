@@ -5,8 +5,20 @@
 #include <vector>
 #include <stdexcept>
 #include <cstring>
+#include <sstream>
+#include <memory>
 
 #include <netcdf.h>
+
+struct free_nc_string {
+  void operator() (char *string) {
+    nc_free_string(1, &string);
+  }
+};
+
+typedef std::unique_ptr<char,free_nc_string> nc_string;
+
+template<typename T> T default_fillvalue();
 
 // simple wrapper class around NetCDF C API calls.
 class NetCDFGroup {
@@ -27,6 +39,38 @@ public:
   void defVarChunking(const std::string& name, int storage, size_t *chunksizes);
   void defVarDeflate(int varid, int shuffle=1, int deflate=1, int deflate_level=7);
   void defVarDeflate(const std::string& name, int shuffle=1, int deflate=1, int deflate_level=7);
+
+  bool hasAttr(const std::string& name, int varid=NC_GLOBAL) const;
+
+  template<typename T>
+  inline std::vector<T> getAttr(const std::string& attr_name, int varid=NC_GLOBAL) {
+    size_t len;
+    int rc = nc_inq_attlen (groupid, varid, attr_name.c_str(), &len);
+    if (rc != NC_NOERR) {
+      std::stringstream ss;
+      ss << "Cannot find netCDF attribute '"+attr_name+"' for varid " << varid << " in group " << name;
+      throw std::runtime_error(ss.str() );
+    }
+
+    std::vector<T> result(len);
+    rc = ncGetAttr(varid, attr_name.c_str(), result);
+    if (rc != NC_NOERR) {
+      std::stringstream ss;
+      ss << "Cannot read netCDF attribute '"+attr_name+"' for varid " << varid << " in group " << name;
+      throw std::runtime_error(ss.str() );
+    } else {
+      return result;
+    }
+  }
+
+  template<typename T>
+  inline T getFillValue(int varid) {
+    if (hasAttr("_FillValue", varid)) {
+      return getAttr<T>("_FillValue", varid)[0];
+    } else {
+      return default_fillvalue<T>();
+    }
+  }
 
   template<typename T>
   inline void getVar(int varid, const size_t start[], const size_t count[], T *out) const {
@@ -56,10 +100,33 @@ public:
 
   template<typename T>
   inline void putAttr(const std::string& name, size_t len, T*in, int varid=NC_GLOBAL) {
-    if (ncPutAttr(varid, name.c_str(), len, in) != NC_NOERR) {
-      throw std::runtime_error("Cannot write NetCDF attribute '" + name + "'" 
-                               + (varid == NC_GLOBAL ? "" : " for variable '"+ varName(varid) + "'") );
+    int rc = ncPutAttr(varid, name.c_str(), len, in);
+    std::string errval;
+    switch (rc) {
+    case NC_NOERR:
+      return;
+      break;
+    case NC_EINVAL:
+      errval = "NC_EINVAL";
+      break;
+    case NC_ENOTVAR:
+      errval = "NC_ENOTVAR";
+      break;
+    case NC_EBADTYPE:
+      errval = "NC_EBADTYPE";
+      break;
+    case NC_ENOMEM:
+      errval = "NC_ENOMEM";
+      break;
+    case NC_ELATEFILL:
+      errval = "NC_ELATEFILL";
+      break;
+    default:
+      errval = std::to_string(rc);
+      break;
     }
+    throw std::runtime_error("Cannot write NetCDF attribute '" + name + "'" 
+                             + (varid == NC_GLOBAL ? "" : " for variable '"+ varName(varid) + "': " + errval) );
   }
   template<typename T>
   inline void putAttr(const std::string& name, const std::vector<T>& in, int varid=NC_GLOBAL) {
@@ -135,15 +202,71 @@ private:
   inline int ncPutAttr(int varid, char const *name, size_t len, const char *text) {
     return nc_put_att_text(groupid, varid, name, len, text);
   }
+  inline int ncPutAttr(int varid, char const *name, size_t len, const float *d) {
+    return nc_put_att_float(groupid, varid, name, NC_FLOAT, len, d);
+  }
   inline int ncPutAttr(int varid, char const *name, size_t len, const double *d) {
     return nc_put_att_double(groupid, varid, name, NC_DOUBLE, len, d);
   }
+  inline int ncPutAttr(int varid, char const *name, size_t len, const short *d) {
+    return nc_put_att_short(groupid, varid, name, NC_SHORT, len, d);
+  }
+  inline int ncPutAttr(int varid, char const *name, size_t len, const unsigned short *d) {
+    return nc_put_att_ushort(groupid, varid, name, NC_USHORT, len, d);
+  }
   inline int ncPutAttr(int varid, char const *name, size_t len, const int *i) {
-    return nc_put_att_int(groupid, varid, name, NC_DOUBLE, len, i);
+    return nc_put_att_int(groupid, varid, name, NC_INT, len, i);
   }
   inline int ncPutAttr(int varid, char const *name, size_t len, const char **s) {
     return nc_put_att_string(groupid, varid, name, len, s);
   }
+
+  // get string attributes as vector of std::strings (somewhat wasteful).
+  inline int ncGetAttr(int varid, char const *name, std::vector<std::string>& strings) const {
+    std::vector<char *> c_strings(strings.size());
+    int rc = nc_get_att_string(groupid, varid, name, c_strings.data());
+    if (rc == NC_NOERR) {
+      for (size_t i=0; i<strings.size(); ++i) {
+        strings[i] = c_strings[i];
+      }
+    }
+    nc_free_string(c_strings.size(),c_strings.data());
+    return rc;
+  }
+
+  // get string attributes as vector of nc_strings.
+  inline int ncGetAttr(int varid, char const *name, std::vector<nc_string>& strings) const {
+    std::vector<char *> c_strings(strings.size());
+    int rc = nc_get_att_string(groupid, varid, name, c_strings.data());
+    if (rc == NC_NOERR) {
+      for (size_t i=0; i<strings.size(); ++i) {
+        strings[i] = nc_string(c_strings[i]);
+      }
+    } else {
+      nc_free_string(c_strings.size(),c_strings.data());
+    }
+    return rc;
+  }
+
+  inline int ncGetAttr(int varid, char const *name, std::vector<char>& text) const {
+    return nc_get_att_text(groupid, varid, name, text.data());
+  }
+  inline int ncGetAttr(int varid, char const *name, std::vector<float>& d) const {
+    return nc_get_att_float(groupid, varid, name, d.data());
+  }
+  inline int ncGetAttr(int varid, char const *name, std::vector<double>& d) const {
+    return nc_get_att_double(groupid, varid, name, d.data());
+  }
+  inline int ncGetAttr(int varid, char const *name, std::vector<short>& d) const {
+    return nc_get_att_short(groupid, varid, name, d.data());
+  }
+  inline int ncGetAttr(int varid, char const *name, std::vector<unsigned short>& d) const {
+    return nc_get_att_ushort(groupid, varid, name, d.data());
+  }
+  inline int ncGetAttr(int varid, char const *name, std::vector<int>& i) const {
+    return nc_get_att_int(groupid, varid, name, i.data());
+  }
+
 };
 
 // NetCDF file with root group.
@@ -167,6 +290,44 @@ private:
   std::string filename;
 };
 
-template<typename T> T default_fillvalue();
+template<>
+inline double default_fillvalue() {
+  return NC_FILL_DOUBLE;
+}
+
+template<>
+inline float default_fillvalue() {
+  return NC_FILL_FLOAT;
+}
+
+template<>
+inline int default_fillvalue() {
+  return NC_FILL_INT;
+}
+
+template<>
+inline short default_fillvalue() {
+  return NC_FILL_SHORT;
+}
+
+template<>
+inline unsigned short default_fillvalue() {
+  return NC_FILL_USHORT;
+}
+
+template<>
+inline char default_fillvalue() {
+  return NC_FILL_CHAR;
+}
+
+template<>
+inline const char* default_fillvalue() {
+  return NC_FILL_STRING;
+}
+
+template<>
+inline std::string default_fillvalue() {
+  return NC_FILL_STRING;
+}
 
 #endif

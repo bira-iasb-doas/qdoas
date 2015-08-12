@@ -6,8 +6,6 @@
 #ifdef output_c //only include this file in output_c
 #include "engine.h"
 
-#define DEFAULT_VALUE 9999.
-
 RC write_spikes(char *spikestring, unsigned int length, bool *spikes,int ndet);
 double output_flux(const ENGINE_CONTEXT *pEngineContext, double wavelength);
 
@@ -476,34 +474,34 @@ static inline void get_slant_column(struct output_field *this_field, double *sla
   CROSS_RESULTS *pTabCrossResults = this_field->get_cross_results(this_field, indexFenoColumn, index_calib);
   *slant_column = ( pTabCrossResults && pTabCrossResults->SlntFact!=(double)0.)
     ? pTabCrossResults->SlntCol/pTabCrossResults->SlntFact
-    : DEFAULT_VALUE;
+    : QDOAS_FILL_DOUBLE;
 }
 
 static inline void get_slant_err(struct output_field *this_field, double *slant_err, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn, int index_calib) {
   CROSS_RESULTS *pTabCrossResults = this_field->get_cross_results(this_field, indexFenoColumn, index_calib);
   *slant_err = ( pTabCrossResults && pTabCrossResults->SlntFact!=(double)0.)
     ? pTabCrossResults->SlntErr/pTabCrossResults->SlntFact
-    : DEFAULT_VALUE;
+    : QDOAS_FILL_DOUBLE;
 }
 
 static inline void get_shift(struct output_field *this_field, double *shift, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn, int index_calib) {
   CROSS_RESULTS *pTabCrossResults = this_field->get_cross_results(this_field, indexFenoColumn, index_calib);
-  *shift = ( pTabCrossResults ) ? pTabCrossResults->Shift : DEFAULT_VALUE;
+  *shift = ( pTabCrossResults ) ? pTabCrossResults->Shift : QDOAS_FILL_DOUBLE;
 }
 
 static inline void get_shift_err(struct output_field *this_field, double *shift_err, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn, int index_calib) {
   CROSS_RESULTS *pTabCrossResults = this_field->get_cross_results(this_field, indexFenoColumn, index_calib);
-  *shift_err = ( pTabCrossResults ) ? pTabCrossResults->SigmaShift : DEFAULT_VALUE;
+  *shift_err = ( pTabCrossResults ) ? pTabCrossResults->SigmaShift : QDOAS_FILL_DOUBLE;
 }
 
 static inline void get_stretch(struct output_field *this_field, double *stretch, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn, int index_calib) {
   CROSS_RESULTS *pTabCrossResults = this_field->get_cross_results(this_field, indexFenoColumn, index_calib);
-  *stretch = ( pTabCrossResults ) ? pTabCrossResults->Stretch : DEFAULT_VALUE;
+  *stretch = ( pTabCrossResults ) ? pTabCrossResults->Stretch : QDOAS_FILL_DOUBLE;
 }
 
 static inline void get_stretch2(struct output_field *this_field, double *stretch, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn, int index_calib) {
   CROSS_RESULTS *pTabCrossResults = this_field->get_cross_results(this_field, indexFenoColumn, index_calib);
-  *stretch = ( pTabCrossResults ) ? pTabCrossResults->Stretch2 : DEFAULT_VALUE;
+  *stretch = ( pTabCrossResults ) ? pTabCrossResults->Stretch2 : QDOAS_FILL_DOUBLE;
 }
 
 static inline void get_stretches(struct output_field *this_field, double *stretch, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn, int index_calib) {
@@ -512,18 +510,18 @@ static inline void get_stretches(struct output_field *this_field, double *stretc
     stretch[0] = pTabCrossResults->Stretch;
     stretch[1] = pTabCrossResults->Stretch2;
   } else {
-    stretch[0] = stretch[1] = DEFAULT_VALUE;
+    stretch[0] = stretch[1] = QDOAS_FILL_DOUBLE;
   }
 }
 
 static inline void get_stretch_err(struct output_field *this_field, double *stretch_error, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn, int index_calib) {
   CROSS_RESULTS *pTabCrossResults = this_field->get_cross_results(this_field, indexFenoColumn, index_calib);
-  *stretch_error = (pTabCrossResults) ? pTabCrossResults->SigmaStretch : DEFAULT_VALUE;
+  *stretch_error = (pTabCrossResults) ? pTabCrossResults->SigmaStretch : QDOAS_FILL_DOUBLE;
 }
 
 static inline void get_stretch2_err(struct output_field *this_field, double *stretch_error, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn, int index_calib) {
   CROSS_RESULTS *pTabCrossResults = this_field->get_cross_results(this_field, indexFenoColumn, index_calib);
-  *stretch_error = (pTabCrossResults) ? pTabCrossResults->SigmaStretch2 : DEFAULT_VALUE;
+  *stretch_error = (pTabCrossResults) ? pTabCrossResults->SigmaStretch2 : QDOAS_FILL_DOUBLE;
 }
 
 static inline void get_stretch_errors(struct output_field *this_field, double *stretch_errors, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn, int index_calib) {
@@ -532,18 +530,18 @@ static inline void get_stretch_errors(struct output_field *this_field, double *s
     stretch_errors[0] = pTabCrossResults->SigmaStretch;
     stretch_errors[1] = pTabCrossResults->SigmaStretch2;
   } else {
-    stretch_errors[0] = stretch_errors[1] = DEFAULT_VALUE;
+    stretch_errors[0] = stretch_errors[1] = QDOAS_FILL_DOUBLE;
   }
 }
 
 static inline void get_scale(struct output_field *this_field, double *scale, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn, int index_calib) {
   CROSS_RESULTS *pTabCrossResults = this_field->get_cross_results(this_field, indexFenoColumn, index_calib);
-  *scale = ( pTabCrossResults ) ? pTabCrossResults->Scale : DEFAULT_VALUE;
+  *scale = ( pTabCrossResults ) ? pTabCrossResults->Scale : QDOAS_FILL_DOUBLE;
 }
 
 static inline void get_scale2(struct output_field *this_field, double *scale, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn, int index_calib) {
   CROSS_RESULTS *pTabCrossResults = this_field->get_cross_results(this_field, indexFenoColumn, index_calib);
-  *scale = ( pTabCrossResults ) ? pTabCrossResults->Scale2 : DEFAULT_VALUE;
+  *scale = ( pTabCrossResults ) ? pTabCrossResults->Scale2 : QDOAS_FILL_DOUBLE;
 }
 
 static inline void get_scales(struct output_field *this_field, double *scales, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn, int index_calib) {
@@ -552,7 +550,7 @@ static inline void get_scales(struct output_field *this_field, double *scales, c
     scales[0] = pTabCrossResults->Scale;
     scales[1] = pTabCrossResults->Scale2;
   } else {
-    scales[0] = scales[1] = DEFAULT_VALUE;
+    scales[0] = scales[1] = QDOAS_FILL_DOUBLE;
   }
 }
 
@@ -560,14 +558,14 @@ static inline void get_scale_err(struct output_field *this_field, double *scale_
   CROSS_RESULTS *pTabCrossResults = this_field->get_cross_results(this_field, indexFenoColumn, index_calib);
   *scale_error = (pTabCrossResults)
     ? pTabCrossResults->SigmaScale
-    : DEFAULT_VALUE;
+    : QDOAS_FILL_DOUBLE;
 }
 
 static inline void get_scale2_err(struct output_field *this_field, double *scale_error, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn, int index_calib) {
   CROSS_RESULTS *pTabCrossResults = this_field->get_cross_results(this_field, indexFenoColumn, index_calib);
   *scale_error = (pTabCrossResults)
     ? pTabCrossResults->SigmaScale2
-    : DEFAULT_VALUE;
+    : QDOAS_FILL_DOUBLE;
 }
 
 static inline void get_scale_errors(struct output_field *this_field, double *scale_errors, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn, int index_calib) {
@@ -576,7 +574,7 @@ static inline void get_scale_errors(struct output_field *this_field, double *sca
     scale_errors[0] = pTabCrossResults->SigmaScale;
     scale_errors[1] = pTabCrossResults->SigmaScale2;
   } else {
-    scale_errors[0] = scale_errors[1] = DEFAULT_VALUE;
+    scale_errors[0] = scale_errors[1] = QDOAS_FILL_DOUBLE;
   }
 }
 
@@ -587,7 +585,7 @@ static inline void get_param(struct output_field *this_field, double *param, con
       ? pTabCrossResults->SlntCol
       : pTabCrossResults->Param;
   } else {
-    *param = DEFAULT_VALUE;
+    *param = QDOAS_FILL_DOUBLE;
   }
 }
 
@@ -598,27 +596,27 @@ static inline void get_param_err(struct output_field *this_field, double *param_
       ? pTabCrossResults->SlntErr
       : pTabCrossResults->SigmaParam;
   } else {
-    *param_err = DEFAULT_VALUE;
+    *param_err = QDOAS_FILL_DOUBLE;
   }
 }
 
 static inline void get_amf(struct output_field *this_field, float *amf, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn, int index_calib) {
   CROSS_RESULTS *pTabCrossResults = this_field->get_cross_results(this_field, indexFenoColumn, index_calib);
-  *amf = pTabCrossResults ? pTabCrossResults->Amf : DEFAULT_VALUE;
+  *amf = pTabCrossResults ? pTabCrossResults->Amf : QDOAS_FILL_FLOAT;
 }
 
 static inline void get_vrt_col(struct output_field *this_field, double *vrt_col, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn, int index_calib) {
   CROSS_RESULTS *pTabCrossResults = this_field->get_cross_results(this_field, indexFenoColumn, index_calib);
   *vrt_col = ( pTabCrossResults && (pTabCrossResults->VrtFact != (double)0.) )
     ? pTabCrossResults->VrtCol/pTabCrossResults->VrtFact
-    : DEFAULT_VALUE;
+    : QDOAS_FILL_DOUBLE;
 }
 
 static inline void get_vrt_err(struct output_field *this_field, double *vrt_err, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn, int index_calib) {
   CROSS_RESULTS *pTabCrossResults = this_field->get_cross_results(this_field, indexFenoColumn, index_calib);
   *vrt_err = ( pTabCrossResults && (pTabCrossResults->VrtFact!=(double)0.) )
     ? pTabCrossResults->VrtErr/pTabCrossResults->VrtFact
-    : DEFAULT_VALUE;
+    : QDOAS_FILL_DOUBLE;
 }
 
 static inline void get_refzm(struct output_field *this_field, float *refzm, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn, int index_calib __attribute__ ((unused))) {
@@ -640,7 +638,7 @@ static inline void get_corr(struct output_field *this_field, double *corr, const
     *corr = pTabFeno->svd.covar[TabCross[this_field->index_cross2].IndSvdA][TabCross[this_field->index_cross].IndSvdA]*pTabFeno->chiSquare/
       (TabCross[this_field->index_cross].Fact*TabCross[this_field->index_cross2].Fact);
   } else
-    *corr = DEFAULT_VALUE;
+    *corr = QDOAS_FILL_DOUBLE;
 }
 
 static inline void get_covar(struct output_field *this_field, double *covar, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn, int index_calib __attribute__ ((unused))) {
@@ -673,7 +671,7 @@ static inline void get_omi_rejected_pixels(struct output_field *this_field, char
 
 static inline void get_rms(struct output_field *this_field, double *rms, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn, int index_calib __attribute__ ((unused))) {
 	 FENO *pTabFeno = this_field->get_tabfeno(this_field, indexFenoColumn);
-  *rms = (!pTabFeno->rc)?pTabFeno->RMS:DEFAULT_VALUE;
+  *rms = (!pTabFeno->rc)?pTabFeno->RMS:QDOAS_FILL_DOUBLE;
 }
 
 static inline void get_rms_calib(struct output_field *this_field, double *rms, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn, int index_calib) {
@@ -685,8 +683,8 @@ static inline void get_wavelength_calib(struct output_field *this_field, double 
 }
 
 static inline void get_n_iter(struct output_field *this_field, int *n_iter, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn, int index_calib __attribute__ ((unused))) {
-	 FENO *pTabFeno = this_field->get_tabfeno(this_field, indexFenoColumn);
-  *n_iter = (!pTabFeno->rc)?pTabFeno->nIter:DEFAULT_VALUE;
+  FENO *pTabFeno = this_field->get_tabfeno(this_field, indexFenoColumn);
+  *n_iter = (!pTabFeno->rc) ? pTabFeno->nIter : QDOAS_FILL_INT;
 }
 
 static inline void get_n_iter_calib(struct output_field *this_field, int *n_iter, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn, int index_calib) {
@@ -695,7 +693,7 @@ static inline void get_n_iter_calib(struct output_field *this_field, int *n_iter
 
 static inline void get_chisquare(struct output_field *this_field, double *chisquare, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn, int index_calib __attribute__ ((unused))) {
 	 FENO *pTabFeno = this_field->get_tabfeno(this_field, indexFenoColumn);
-  *chisquare = (!pTabFeno->rc)?pTabFeno->chiSquare:DEFAULT_VALUE;
+  *chisquare = (!pTabFeno->rc)?pTabFeno->chiSquare : QDOAS_FILL_DOUBLE;
 }
 
 static inline void get_chisquare_calib(struct output_field *this_field, double *chisquare, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn, int index_calib) {
@@ -710,7 +708,7 @@ static inline void get_cic(struct output_field *this_field, double *cic, const E
   double flux1 = output_flux(pEngineContext, OUTPUT_cic[this_field->index_cic][1]);
   *cic = (flux1 != (double) 0.)
     ? output_flux(pEngineContext, OUTPUT_cic[this_field->index_cic][0])/flux1
-    : DEFAULT_VALUE;
+    : QDOAS_FILL_DOUBLE;
 }
 
 // write_spikes:

@@ -89,7 +89,7 @@
 #include "gdp_bin_read.h"
 #include "spectrum_files.h"
 
-AMF_SYMBOL    *OUTPUT_AmfSpace;                                                 // list of cross sections with associated AMF file
+AMF_SYMBOL *OUTPUT_AmfSpace;                                                 // list of cross sections with associated AMF file
 
 char OUTPUT_refFile[DOAS_MAX_PATH_LEN+1];
 int OUTPUT_nRec;
@@ -1397,8 +1397,8 @@ RC OUTPUT_RegisterData(const ENGINE_CONTEXT *pEngineContext)
 }
 
 /*! \brief Save results of the last processed record. */
-static void OutputSaveRecord(const ENGINE_CONTEXT *pEngineContext,INDEX indexFenoColumn)
- {
+static void OutputSaveRecord(const ENGINE_CONTEXT *pEngineContext,INDEX indexFenoColumn) {
+
   RECORD_INFO *pRecordInfo =(RECORD_INFO *)&pEngineContext->recordInfo;
 
   if (pEngineContext->project.asciiResults.analysisFlag)
@@ -1889,41 +1889,36 @@ RC OUTPUT_SaveResults(ENGINE_CONTEXT *pEngineContext,INDEX indexFenoColumn)
 
   // AMF computation
 
-  if (OUTPUT_AmfSpace!=NULL)
+  if (OUTPUT_AmfSpace!=NULL) {
 
-   for (indexFeno=0;indexFeno<NFeno;indexFeno++)
-    {
-     pTabFeno=&TabFeno[indexFenoColumn][indexFeno];
-
-     if ((THRD_id!=THREAD_TYPE_KURUCZ) && !pTabFeno->hidden && !pTabFeno->rcKurucz)
-      {
-       for (indexTabCross=0;indexTabCross<pTabFeno->NTabCross;indexTabCross++)
-        {
-         pTabCrossResults=&pTabFeno->TabCrossResults[indexTabCross];
-
-         if (pTabCrossResults->indexAmf!=ITEM_NONE)
-          {
-           if (OutputGetAmf(pTabCrossResults,pRecordInfo->Zm,pRecordInfo->Tm,&pTabCrossResults->Amf))
-            rc=ERROR_SetLast("OutputSaveResults",ERROR_TYPE_WARNING,ERROR_ID_AMF,pRecordInfo->Zm,OUTPUT_AmfSpace[pTabCrossResults->indexAmf].amfFileName);
-           else if (pTabCrossResults->Amf!=(double)0.)
-            {
-             pTabCrossResults->VrtCol=(pTabCrossResults->SlntCol+pTabCrossResults->ResCol)/pTabCrossResults->Amf;
-             pTabCrossResults->VrtErr=pTabCrossResults->SlntErr/pTabCrossResults->Amf;
+    for (indexFeno=0;indexFeno<NFeno;indexFeno++) {
+      pTabFeno=&TabFeno[indexFenoColumn][indexFeno];
+      
+      if ((THRD_id!=THREAD_TYPE_KURUCZ) && !pTabFeno->hidden && !pTabFeno->rcKurucz) {
+        for (indexTabCross=0;indexTabCross<pTabFeno->NTabCross;indexTabCross++) {
+          pTabCrossResults=&pTabFeno->TabCrossResults[indexTabCross];
+          
+          if (pTabCrossResults->indexAmf!=ITEM_NONE) {
+            if (OutputGetAmf(pTabCrossResults,pRecordInfo->Zm,pRecordInfo->Tm,&pTabCrossResults->Amf)) {
+              rc=ERROR_SetLast("OutputSaveResults",ERROR_TYPE_WARNING,ERROR_ID_AMF,pRecordInfo->Zm,OUTPUT_AmfSpace[pTabCrossResults->indexAmf].amfFileName);
+            } else if (pTabCrossResults->Amf!=(double)0.) {
+              pTabCrossResults->VrtCol=(pTabCrossResults->SlntCol+pTabCrossResults->ResCol)/pTabCrossResults->Amf;
+              pTabCrossResults->VrtErr=pTabCrossResults->SlntErr/pTabCrossResults->Amf;
             }
           }
         }
       }
     }
+  }
 
   // Rebuild spectrum for fluxes and color indexes computation
 
-  if ((pRecordInfo->NSomme!=0) && (pRecordInfo->TotalExpTime!=(double)0.))
-   {
+  if ((pRecordInfo->NSomme!=0) && (pRecordInfo->TotalExpTime!=(double)0.)) {
     Spectrum=(double *)pEngineContext->buffers.spectrum;
 
     for (i=0;i<NDET;i++)
-     Spectrum[i]*=(double)pRecordInfo->NSomme/pRecordInfo->TotalExpTime;
-   }
+      Spectrum[i]*=(double)pRecordInfo->NSomme/pRecordInfo->TotalExpTime;
+  }
 
   if (outputNbRecords<pEngineContext->recordNumber)
     OutputSaveRecord(pEngineContext,indexFenoColumn);

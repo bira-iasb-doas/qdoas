@@ -63,4 +63,18 @@ extern AMF_SYMBOL *OUTPUT_AmfSpace;
 #define     MAX_RESULTS  500   // 250 measurements the morning; 250 measurements the afternoon.
 #define     MAX_FIELDS   1600
 
+// Fill values, copied from the netCDF default fill values (NC_FILL_BYTE etc in netcdf.h)
+#define QDOAS_FILL_BYTE	((signed char)-127)
+#define QDOAS_FILL_CHAR	((char)0)
+#define QDOAS_FILL_SHORT	((short)-32767)
+#define QDOAS_FILL_INT	(-2147483647)
+#define QDOAS_FILL_FLOAT	(9.9692099683868690e+36f) /* near 15 * 2^119 */
+#define QDOAS_FILL_DOUBLE	(9.9692099683868690e+36)
+#define QDOAS_FILL_UBYTE   (255)
+#define QDOAS_FILL_USHORT  (65535)
+#define QDOAS_FILL_UINT    (4294967295U)
+#define QDOAS_FILL_INT64   ((long long)-9223372036854775806LL)
+#define QDOAS_FILL_UINT64  ((unsigned long long)18446744073709551614ULL)
+#define QDOAS_FILL_STRING  ""
+
 #endif

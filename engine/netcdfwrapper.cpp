@@ -24,13 +24,27 @@ bool NetCDFGroup::hasVar(const string& varName) const {
   return (nc_inq_varid(groupid, varName.c_str(), &id) == NC_NOERR);
 }
 
+bool NetCDFGroup::hasAttr(const string& attrName, int varid) const {
+  int result = nc_inq_att(groupid, varid, attrName.c_str(), nullptr, nullptr);
+
+  if (result == NC_NOERR) {
+    return true;
+  } else if (result == NC_ENOTVAR) {
+    stringstream ss;
+    ss << "looking for attribute " << attrName << ", cannot find netCDF variable with id '" << varid << "' in group '"  << name << "'";
+    throw std::runtime_error(ss.str());
+  } else {
+    return false;
+  }
+}
+
 int NetCDFGroup::varID(const string& varName) const {
   int id;
   int rc = nc_inq_varid(groupid, varName.c_str(), &id);
   if(rc == NC_NOERR) {
     return id;
   } else {
-    throw std::runtime_error("Cannot find NetCDF variable '"+name+"/"+varName+"'");
+    throw std::runtime_error("Cannot find netCDF variable '"+name+"/"+varName+"'");
   }
 }
 
@@ -66,7 +80,7 @@ string NetCDFGroup::varName(int varid) const {
     return string(varname);
   } else {
     stringstream ss;
-    ss << "Cannot find NetCDF variable with id '" << varid << "' in group '"  << name << "'";
+    ss << "Cannot find netCDF variable with id '" << varid << "' in group '"  << name << "'";
     throw std::runtime_error(ss.str());
   }
 }
@@ -77,7 +91,7 @@ int NetCDFGroup::dimID(const string& dimName) const {
   if(rc == NC_NOERR) {
     return id;
   } else {
-    throw std::runtime_error("Cannot find NetCDF dimension '"+dimName+"' in group '"+name+"'");
+    throw std::runtime_error("Cannot find netCDF dimension '"+dimName+"' in group '"+name+"'");
   }
 }
 
@@ -91,7 +105,7 @@ size_t NetCDFGroup::dimLen(int dimid) const {
   if (nc_inq_dimlen(groupid, dimid, &len) == NC_NOERR) {
     return len;
   } else {
-    throw std::runtime_error("Cannot get length of NetCDF dimension '"+dimName(dimid)+"' in group '"+name+"'");
+    throw std::runtime_error("Cannot get length of netCDF dimension '"+dimName(dimid)+"' in group '"+name+"'");
   }
 }
 
@@ -101,7 +115,7 @@ string NetCDFGroup::dimName(int dimid) const {
     return(dimname);
   } else {
     stringstream ss;
-    ss << "Cannot get name of NetCDF dimension '" << dimid << "' in group '" << name << "'";
+    ss << "Cannot get name of netCDF dimension '" << dimid << "' in group '" << name << "'";
     throw std::runtime_error(ss.str());
   }
 }
@@ -110,7 +124,7 @@ void NetCDFFile::close() {
   if (groupid) {
     int rc = nc_close(groupid);
     if(rc != NC_NOERR) {
-      throw std::runtime_error("Error closing NetCDF file '" + filename + "'");
+      throw std::runtime_error("Error closing netCDF file '" + filename + "'");
     }
     groupid = 0;
     filename = "";
@@ -143,7 +157,7 @@ static int openNetCDF(const string &filename, int mode) {
   if (rc == NC_NOERR) {
     return groupid;
   } else {
-    throw std::runtime_error("Error opening NetCDF file '" + filename + "'");
+    throw std::runtime_error("Error opening netCDF file '" + filename + "'");
   }
 }
 
@@ -165,7 +179,7 @@ NetCDFGroup NetCDFGroup::getGroup(const string& groupname) const {
   if (id >= 0)
     return NetCDFGroup(groupID(groupname), groupname);
   else
-    throw std::runtime_error("Cannot open NetCDF group '" + groupname + "'");
+    throw std::runtime_error("Cannot open netCDF group '" + groupname + "'");
 }
 
 NetCDFGroup NetCDFGroup::defGroup(const string& groupname) {
@@ -240,39 +254,3 @@ void NetCDFGroup::defVarDeflate(int varid, int shuffle, int deflate, int deflate
 void NetCDFGroup::defVarDeflate(const string& name, int shuffle, int deflate, int deflate_level) {
   defVarDeflate(varID(name), shuffle, deflate, deflate_level);
 }
-
-template<>
-double default_fillvalue() {
-  return NC_FILL_DOUBLE;
-}
-
-template<>
-float default_fillvalue() {
-  return NC_FILL_FLOAT;
-}
-
-template<>
-int default_fillvalue() {
-  return NC_FILL_INT;
-}
-
-template<>
-short default_fillvalue() {
-  return NC_FILL_SHORT;
-}
-
-template<>
-unsigned short default_fillvalue() {
-  return NC_FILL_USHORT;
-}
-
-template<>
-char default_fillvalue() {
-  return NC_FILL_CHAR;
-}
-
-template<>
-const char* default_fillvalue() {
-  return NC_FILL_STRING;
-}
-

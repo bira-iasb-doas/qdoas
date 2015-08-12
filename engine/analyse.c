@@ -3902,11 +3902,10 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
       if (!TabFeno[indexFenoColumn][WrkFeno].hidden)
        TabFeno[indexFenoColumn][WrkFeno].rc=-1;
 
-    if ((pEngineContext->lastSavedRecord!=pEngineContext->indexRecord) && /* !!! 25/02/2014 ((THRD_id==THREAD_TYPE_KURUCZ) || nrc) && */
-        (((THRD_id==THREAD_TYPE_ANALYSIS) && pProject->asciiResults.analysisFlag && (!pEngineContext->project.asciiResults.successFlag || nrc)) || ((THRD_id==THREAD_TYPE_KURUCZ) && pProject->asciiResults.calibFlag)))
-
+    if ((pEngineContext->lastSavedRecord!=pEngineContext->indexRecord) &&
+        (   ((THRD_id==THREAD_TYPE_ANALYSIS) && pProject->asciiResults.analysisFlag && (!pEngineContext->project.asciiResults.successFlag || nrc))
+            || ((THRD_id==THREAD_TYPE_KURUCZ) && pProject->asciiResults.calibFlag) ) ) 
      rcOutput=OUTPUT_SaveResults(pEngineContext,indexFenoColumn);
-
     if (!rc)
      rc=rcOutput;
    }
