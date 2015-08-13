@@ -134,7 +134,7 @@ CWPlot::CWPlot(const RefCountConstPtr<CPlotDataSet> &dataSet,
 
   int n = m_dataSet->count();
   int i = 0;
-  
+
   while (i < n) {
 
     const CXYPlotData &curveData = m_dataSet->rawData(i);
@@ -484,36 +484,30 @@ CWPlotPage::CWPlotPage(CPlotProperties &plotProperties,
   QFrame(parent),
   m_plotProperties(plotProperties),
   m_pageType(page->type())
- {
-  if (page != 0) 
-   {  
-   	int nplots=page->size(); 
+{
+  if (page != 0) {  
+    int nplots=page->size(); 
 
-    if (page->type()==PLOTPAGE_DATASET)   
-     {
+    if (page->type()==PLOTPAGE_DATASET) {
       int i = 0;
-      while (i < nplots ) 
-       {    
+      while (i < nplots ) {
         CWPlot *tmp = new CWPlot(page->dataSet(i), m_plotProperties, this);
         tmp->hide();
         m_plots.push_back(tmp);
         ++i; 
-       }  
-     }
-   else
-    {  
+      }  
+    } else {  
       int i = 0;       
       
-      while (i < nplots)    
-       {    
+      while (i < nplots) {    
         CWPlot *tmp = new CWPlot(page->dataImage(i), m_plotProperties, this); 
         tmp->hide();       
         m_plots.push_back(tmp);  
         ++i; 
-       }       
-    }                                                                                         	
-   } 
- }  
+      }       
+    }
+  } 
+}  
 
 void CWPlotPage::layoutPlots(const QSize &visibleSize)
 {

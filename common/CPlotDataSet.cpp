@@ -25,8 +25,8 @@ CXYPlotData::CXYPlotData(const char *curveName,const double *x, const double *y,
   m_xData(NULL),
   m_yData(NULL),
   m_nSamples(0),
-  m_curveType(curveType),
-  m_curveNumber(curveNumber)
+  m_curveNumber(curveNumber),
+  m_curveType(curveType)
 {
   if (n > 0) {
 

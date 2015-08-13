@@ -3425,8 +3425,8 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
           sprintf(tabTitle,"%s results (record %d/%d, measurement %d/%d, row %d/%d)",
                   Feno->windowName,pEngineContext->indexRecord,pEngineContext->recordNumber,
-                  pEngineContext->recordInfo.i_alongtrack,pEngineContext->recordInfo.n_alongtrack,
-                  pEngineContext->recordInfo.i_crosstrack,pEngineContext->recordInfo.n_crosstrack);
+                  1+pEngineContext->recordInfo.i_alongtrack,pEngineContext->recordInfo.n_alongtrack,
+                  1+pEngineContext->recordInfo.i_crosstrack,pEngineContext->recordInfo.n_crosstrack);
          }
 
         displayFlag=Feno->displaySpectrum+                                      //  force display spectrum
@@ -3701,6 +3701,10 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
           memcpy(offset,ANALYSE_zeros,sizeof(double)*NDET);
           maxOffset=(double)0.;
 
+          // if analysis has failed, don't try to plot results (some
+          // buffers contain garbage data which can make Qwt crash)
+          if (Feno->rc) goto SKIP_PLOTS;
+
           // Display Offset
 
           if  (Feno->displayPredefined &&
@@ -3809,6 +3813,8 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
               plot_curves(indexPage, curves, 2, Residual, allowFixedScale, "Linear offset",responseHandle, Feno->svd.specrange);
              }
            }  // end displayTrend
+
+         SKIP_PLOTS:
 
           if (!Feno->rc)
            nrc++;
