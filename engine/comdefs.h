@@ -272,6 +272,8 @@ SHORT_DATE;
 #define ERROR_ID_HDFEOS5_DEFDIM                1410                             // error creating dimension
 #define ERROR_ID_HDFEOS5_WRITEFIELD            1411                             // error writing to field
 #define ERROR_ID_HDFEOS5_WRITEATTR             1412                             // error writing attribute
+#define ERROR_ID_HDFEOS5_SETFILL               1409                             // error setting fill value for field
+#define ERROR_ID_HDFEOS5_GETFILL               1410                             // error getting fill value for field
 #define ERROR_ID_NETCDF                        1500
 #define ERROR_ID_FILE_FORMAT                   2000                             // bad file format
 

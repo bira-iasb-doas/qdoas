@@ -154,10 +154,10 @@ static void define_variable(NetCDFGroup &group, const struct output_field& thefi
     group.putAttr("_FillValue", QDOAS_FILL_STRING, varid);
     break;
   case OUTPUT_SHORT:
-    group.putAttr<short>("_FillValue", QDOAS_FILL_SHORT, varid);
+    group.putAttr("_FillValue", QDOAS_FILL_SHORT, varid);
     break;
   case OUTPUT_USHORT:
-    group.putAttr<unsigned short>("_FillValue", QDOAS_FILL_USHORT, varid);
+    group.putAttr("_FillValue", QDOAS_FILL_USHORT, varid);
     break;
   case OUTPUT_FLOAT:
     group.putAttr("_FillValue", QDOAS_FILL_FLOAT, varid);

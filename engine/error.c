@@ -200,6 +200,8 @@ ERROR_TABLE errorTable[]=
   { ERROR_ID_HDFEOS5_DEFDIM            , "HDF-EOS5: error creating dimension %s of size %d" },
   { ERROR_ID_HDFEOS5_WRITEFIELD        , "HDF-EOS5: error writing to field %s" },
   { ERROR_ID_HDFEOS5_WRITEATTR         , "HDF-EOS5: error writing to attribute %s"},
+  { ERROR_ID_HDFEOS5_SETFILL           , "HDF-EOS5: error setting fill value for field %s"},
+  { ERROR_ID_HDFEOS5_GETFILL           , "HDF-EOS5: error setting fill value for field %s"},
   { ERROR_ID_NETCDF                    , "%s"},
   // End of the table
 

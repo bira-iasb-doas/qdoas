@@ -94,6 +94,19 @@ AMF_SYMBOL *OUTPUT_AmfSpace;                                                 // 
 char OUTPUT_refFile[DOAS_MAX_PATH_LEN+1];
 int OUTPUT_nRec;
 
+const char *QDOAS_FILL_STRING = "";
+const char QDOAS_FILL_BYTE = -127;
+const char QDOAS_FILL_CHAR = 0;
+const short QDOAS_FILL_SHORT = -32767;
+const int QDOAS_FILL_INT = -2147483647;
+const float QDOAS_FILL_FLOAT = 9.9692099683868690e+36f; /* near 15 * 2^119 */
+const double QDOAS_FILL_DOUBLE = 9.9692099683868690e+36;
+const unsigned char QDOAS_FILL_UBYTE = 255;
+const unsigned short QDOAS_FILL_USHORT = 65535;
+const unsigned int QDOAS_FILL_UINT = 4294967295U;
+const long long QDOAS_FILL_INT64 = -9223372036854775806LL;
+const unsigned long long QDOAS_FILL_UINT64 = 18446744073709551614ULL;
+
 /*! \brief Array matching enum output_format values with strings
     containing their filename extension.  The position in the array
     must correspond to the value of the enum.*/

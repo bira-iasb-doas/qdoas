@@ -64,17 +64,17 @@ extern AMF_SYMBOL *OUTPUT_AmfSpace;
 #define     MAX_FIELDS   1600
 
 // Fill values, copied from the netCDF default fill values (NC_FILL_BYTE etc in netcdf.h)
-#define QDOAS_FILL_BYTE	((signed char)-127)
-#define QDOAS_FILL_CHAR	((char)0)
-#define QDOAS_FILL_SHORT	((short)-32767)
-#define QDOAS_FILL_INT	(-2147483647)
-#define QDOAS_FILL_FLOAT	(9.9692099683868690e+36f) /* near 15 * 2^119 */
-#define QDOAS_FILL_DOUBLE	(9.9692099683868690e+36)
-#define QDOAS_FILL_UBYTE   (255)
-#define QDOAS_FILL_USHORT  (65535)
-#define QDOAS_FILL_UINT    (4294967295U)
-#define QDOAS_FILL_INT64   ((long long)-9223372036854775806LL)
-#define QDOAS_FILL_UINT64  ((unsigned long long)18446744073709551614ULL)
-#define QDOAS_FILL_STRING  ""
+extern const char QDOAS_FILL_BYTE;
+extern const char QDOAS_FILL_CHAR;
+extern const short QDOAS_FILL_SHORT;
+extern const int QDOAS_FILL_INT;
+extern const float QDOAS_FILL_FLOAT;
+extern const double QDOAS_FILL_DOUBLE;
+extern const unsigned char QDOAS_FILL_UBYTE;
+extern const unsigned short QDOAS_FILL_USHORT;
+extern const unsigned int QDOAS_FILL_UINT;
+extern const long long QDOAS_FILL_INT64;
+extern const unsigned long long QDOAS_FILL_UINT64;
+extern const char *QDOAS_FILL_STRING;
 
 #endif

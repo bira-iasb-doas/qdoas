@@ -33,7 +33,6 @@ static void get_chunkdims(hsize_t chunkdims[], const struct output_field *thefie
 static void get_edge_calibration(hsize_t edge[], const struct output_field *thefield);
 static void get_edge_analysis(hsize_t edge[], const struct output_field *thefield);
 static int get_rank(const struct output_field *thefield);
-static size_t get_hdfeos_size(enum output_datatype datatype);
 static void replace_chars(char *fieldname);
 
 /*! \brief reference to current output file.*/
@@ -159,7 +158,7 @@ RC create_dimensions(void) {
     if(swathdims[i].dimsize > 0) {
       // for example, nCalibWindows may be 0 when no calibration is used
       herr_t result = HE5_SWdefdim(swath_id, (char *) swathdims[i].dimname, swathdims[i].dimsize);
-      if(result == FAIL) {
+      if(result) {
         return ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_HDFEOS5_DEFDIM, swathdims[i].dimname, swathdims[i].dimsize);
       }
     }
@@ -182,7 +181,7 @@ RC write_omi_automatic_reference_info(void) {
         replace_chars(attrname);
         size_t attrlength = strlen(pTabFeno->ref_description) + 1;
         herr_t result = HE5_SWwriteattr(swath_id, attrname, HE5T_CHARSTRING, (hsize_t*) &attrlength, pTabFeno->ref_description);
-        if(result == FAIL)
+        if(result)
           return ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_HDFEOS5_WRITEATTR, attrname);
       }
     }
@@ -201,7 +200,7 @@ RC write_global_attrs(const ENGINE_CONTEXT *pEngineContext) {
   char descriptionstring[attrlength];
   sprintf(descriptionstring, descriptionformat, cQdoasVersionString);
   herr_t result = HE5_EHwriteglbattr(output_file, attr_qdoas, HE5T_CHARSTRING, &attrlength, descriptionstring);
-  if (result == FAIL)
+  if (result)
     return ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_HDFEOS5_WRITEATTR, attr_qdoas);
 
   // creation time
@@ -210,7 +209,7 @@ RC write_global_attrs(const ENGINE_CONTEXT *pEngineContext) {
   const char *attr_time = "CreationTime";
   attrlength = strlen(time_string) + 1;
   result = HE5_EHwriteglbattr(output_file, attr_time, HE5T_CHARSTRING, &attrlength, time_string);
-  if (result == FAIL)
+  if (result)
     return ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_HDFEOS5_WRITEATTR, attr_time);
 
   // input file
@@ -221,7 +220,7 @@ RC write_global_attrs(const ENGINE_CONTEXT *pEngineContext) {
     : pEngineContext->fileInfo.fileName;
   attrlength = strlen(input_file) + 1;
   result = HE5_EHwriteglbattr(output_file, attr_input_file, HE5T_CHARSTRING, &attrlength, (char *)input_file); // cast away const to avoid compiler warning HDF-EOS5
-  if (result == FAIL)
+  if (result)
     return ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_HDFEOS5_WRITEATTR, attr_input_file);
   return ERROR_ID_NO;
 }
@@ -243,12 +242,12 @@ RC write_automatic_reference_info(const ENGINE_CONTEXT *pEngineContext) {
         hsize_t charlength = 1+strlen(OUTPUT_refFile);
         herr_t result = HE5_SWwriteattr(swath_id, attr_reference_file, HE5T_CHARSTRING,
                                         &charlength, OUTPUT_refFile);
-        if(result == FAIL)
+        if(result)
           return ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_HDFEOS5_WRITEATTR, attr_reference_file);
         hsize_t one = 1;
         result = HE5_SWwriteattr(swath_id, attr_reference_num_records, HE5T_NATIVE_INT,
                                  &one, &OUTPUT_nRec);
-        if(result == FAIL)
+        if(result)
           return ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_HDFEOS5_WRITEATTR, attr_reference_num_records);
       }
       break;
@@ -260,6 +259,51 @@ RC write_automatic_reference_info(const ENGINE_CONTEXT *pEngineContext) {
     }
   }
   return rc;
+}
+
+herr_t set_fill_value(hid_t swath_id, const char *fieldname, const struct output_field *calibfield) {
+  const void *fill;
+  hid_t he5type;
+  switch(calibfield->memory_type) {
+  case OUTPUT_STRING:
+    // HDF-EOS5 currently does not support fill values for string variables (!?)
+    return 0;
+    break;
+  case OUTPUT_SHORT:
+    he5type = HE5T_NATIVE_SHORT;
+    fill = &QDOAS_FILL_SHORT;
+    break;
+  case OUTPUT_USHORT:
+    he5type = HE5T_NATIVE_USHORT;
+    fill = &QDOAS_FILL_USHORT;
+    break;
+  case OUTPUT_FLOAT:
+    he5type = HE5T_NATIVE_FLOAT;
+    fill = &QDOAS_FILL_FLOAT;
+    break;
+  case OUTPUT_INT:
+    he5type = HE5T_NATIVE_INT;
+    fill = &QDOAS_FILL_INT;
+    break;
+  case OUTPUT_DOUBLE:
+    he5type = HE5T_NATIVE_DOUBLE;
+    fill = &QDOAS_FILL_DOUBLE;
+    break;
+  case OUTPUT_TIME:
+    he5type = HE5T_NATIVE_UCHAR; // time is stored using 3 unsigned chars
+    fill = &QDOAS_FILL_UBYTE;
+    break;
+  case OUTPUT_DATE:
+  case OUTPUT_DATETIME:
+    he5type = HE5T_NATIVE_INT; // date/datetime are stored as a set of integers
+    fill = &QDOAS_FILL_INT;
+    break;
+  default:
+  assert(false); // should never get here
+  return 0;
+  }
+  // cast to (char *) and (void *) to avoid warnings about constness
+  return HE5_SWsetfillvalue(swath_id, (char *)fieldname, he5type, (void *)fill);
 }
 
 /*! \brief Write calibration data to the current swath.*/
@@ -296,10 +340,11 @@ RC write_calibration_data(void) {
 
       hid_t dtype = get_hdfeos5_type(calibfield.memory_type);
       enum fieldtype type = get_fieldtype(calibfield.resulttype);
+      result |= set_fill_value(swath_id, he5fieldname, &calibfield);
       result |= (type == DATA)
         ? HE5_SWdefdatafield(swath_id, he5fieldname, calib_dimensions, NULL, dtype, 0)
         : HE5_SWdefgeofield(swath_id, he5fieldname, calib_dimensions, NULL, dtype, 0);
-      if(result == FAIL)
+      if(result)
         return ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_HDFEOS5_DEFFIELD, he5fieldname);
     }
 
@@ -309,7 +354,7 @@ RC write_calibration_data(void) {
     hsize_t edge[HE5_DTSETRANKMAX];
     get_edge_calibration(edge, &calibfield);
     herr_t result = HE5_SWwritefield(swath_id, he5fieldname, start, NULL, edge, calibfield.data);
-    if(result == FAIL)
+    if(result)
       return ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_HDFEOS5_WRITEFIELD, he5fieldname);
   }
 
@@ -347,22 +392,132 @@ RC create_analysis_data_fields(void) {
     HE5_SWdefchunk(swath_id, chunkrank, chunkdims);
     HE5_SWdefcomp(swath_id, HE5_HDFE_COMP_SHUF_DEFLATE, compparm);
 
+    herr_t result = set_fill_value(swath_id, he5_fieldname, &thefield);
+    if(result)
+      return ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_HDFEOS5_SETFILL, he5_fieldname);
+
     enum fieldtype type = get_fieldtype(thefield.resulttype);
-    herr_t result = (type == DATA)
+    result = (type == DATA)
       ? HE5_SWdefdatafield(swath_id, he5_fieldname, field_dimension, NULL, dtype, 0)
       : HE5_SWdefgeofield(swath_id, he5_fieldname, field_dimension, NULL, dtype, 0);
-    if(result == FAIL)
+    if(result)
       return ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_HDFEOS5_DEFFIELD, he5_fieldname);
     if(thefield.attributes) {
       for(int i=0; i<thefield.num_attributes; i++) {
         hsize_t count[1] = {strlen(thefield.attributes[i].value)+1};
         result = HE5_SWwritelocattr(swath_id, he5_fieldname, thefield.attributes[i].label, HE5T_CHARSTRING, count, (char *)thefield.attributes[i].value);
-        if (result == FAIL)
+        if (result)
           return ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_HDFEOS5_WRITEATTR, thefield.attributes[i].label);
       }
     }
   }
   return ERROR_ID_NO;
+}
+
+
+/*! \brief Allocate a buffer to hold output data for a HDF-EOS5
+ *  variable, and initialize it to the fill value for that variable
+ */
+static RC initialize_data_buffer(void **datbuf, size_t len, const char *he5_fieldname, enum output_datatype datatype) {
+
+  herr_t result;
+
+  switch (datatype) {
+  case OUTPUT_STRING:
+    *datbuf = calloc(len, sizeof(char*));
+    return 0;
+    break;
+  case OUTPUT_SHORT: {
+    short fill_short;
+    short *shortbuf = malloc(len * sizeof(*shortbuf));
+    *datbuf = shortbuf;
+    result = HE5_SWgetfillvalue(swath_id, he5_fieldname, &fill_short);
+    for (unsigned int i=0; i< len; ++i) {
+      shortbuf[i] = fill_short;
+    }
+  }
+    break;
+  case OUTPUT_USHORT: {
+    unsigned short fill_ushort;
+    unsigned short *ushortbuf = malloc(len * sizeof(*ushortbuf));
+    *datbuf = ushortbuf;
+    result = HE5_SWgetfillvalue(swath_id, he5_fieldname, &fill_ushort);
+    for (unsigned int i=0; i< len; ++i) {
+      ushortbuf[i] = fill_ushort;
+    }
+  }
+    break;
+  case OUTPUT_FLOAT: {
+    float fill_float;
+    float *floatbuf = malloc(len * sizeof(*floatbuf));
+    *datbuf = floatbuf;
+    result = HE5_SWgetfillvalue(swath_id, he5_fieldname, &fill_float);
+    for (unsigned int i=0; i< len; ++i) {
+      floatbuf[i] = fill_float;
+    }
+  }
+    break;
+  case OUTPUT_INT: {
+    int fill_int;
+    int *intbuf = malloc(len * sizeof(*intbuf));
+    *datbuf = intbuf;
+    result = HE5_SWgetfillvalue(swath_id, he5_fieldname, &fill_int);
+    for (unsigned int i=0; i< len; ++i) {
+      intbuf[i] = fill_int;
+    }
+  }
+    break;
+  case OUTPUT_DOUBLE: {
+    double fill_double;
+    double *doublebuf = malloc(len * sizeof(*doublebuf));
+    *datbuf = doublebuf;
+    result = HE5_SWgetfillvalue(swath_id, he5_fieldname, &fill_double);
+    for (unsigned int i=0; i< len; ++i) {
+      doublebuf[i] = fill_double;
+    }
+  }
+    break;
+    // time is stored using 3 unsigned chars
+  case OUTPUT_TIME: {
+    unsigned char fill_uchar;
+    unsigned char *ucharbuf = malloc(3 * len * sizeof(*ucharbuf));
+    *datbuf = ucharbuf;
+    result = HE5_SWgetfillvalue(swath_id, he5_fieldname, &fill_uchar);
+    for (unsigned int i=0; i< 3*len; ++i) {
+      ucharbuf[i] = fill_uchar;
+    }
+  }
+    break;
+    // date/datetime are stored as a set of integers:
+  case OUTPUT_DATE: {
+    int fill_int;
+    int *intbuf = malloc(3 * len * sizeof(*intbuf));
+    *datbuf = intbuf;
+    result = HE5_SWgetfillvalue(swath_id, he5_fieldname, &fill_int);
+    for (unsigned int i=0; i< 3*len; ++i) {
+      intbuf[i] = fill_int;
+    }
+  }
+    break;
+  case OUTPUT_DATETIME: {
+    int fill_int;
+    int *intbuf = malloc(7 * len * sizeof(*intbuf));
+    *datbuf = intbuf;
+    result = HE5_SWgetfillvalue(swath_id, he5_fieldname, &fill_int);
+    for (unsigned int i=0; i< 7*len; ++i) {
+      intbuf[i] = fill_int;
+    }
+  }
+    break;
+  default:
+  assert(false); // should never get here
+  return 0;
+  }
+  if (result == FAIL) {
+    free(*datbuf);
+    return ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_HDFEOS5_GETFILL, he5_fieldname);
+  }
+  return 0;
 }
 
 RC hdfeos5_write_analysis_data(const bool selected[], int num_records, const OUTPUT_INFO *outputRecords) {
@@ -378,8 +533,11 @@ RC hdfeos5_write_analysis_data(const bool selected[], int num_records, const OUT
       sprintf(he5_fieldname, "%s", thefield.fieldname);
     replace_chars(he5_fieldname);
 
-    void *datbuf = calloc(nTimes * nXtrack * thefield.data_cols, get_hdfeos_size(thefield.memory_type) ); // todo: write default values
-    // fill datbuf
+    void *datbuf;
+    RC rc = initialize_data_buffer(&datbuf, nTimes * nXtrack * thefield.data_cols, he5_fieldname, thefield.memory_type);
+    if (rc)
+      return rc;
+
     for(int record=0; record<num_records; record++) {
       if(selected[record]) {
         write_to_buffer(datbuf, &thefield, record, &outputRecords[record]);
@@ -391,7 +549,7 @@ RC hdfeos5_write_analysis_data(const bool selected[], int num_records, const OUT
     get_edge_analysis(edge, &thefield);
     herr_t result = HE5_SWwritefield(swath_id, he5_fieldname, start, NULL, edge, datbuf);
     free(datbuf);
-    if(result == FAIL)
+    if(result)
       return ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_HDFEOS5_WRITEFIELD, he5_fieldname);
   }
   return ERROR_ID_NO;
@@ -638,40 +796,6 @@ hid_t get_hdfeos5_type(enum output_datatype datatype) {
   assert(false); // should never get here
   return 0;
   }
-}
-
-/*! \brief The size used by an output field datatype when writing to a
- * HDF-EOS5 file.
- *
- * This can be different from the size used by the datatype in memory
- * (given by output_get_size) when we are using a struct:
- *
- * example: a struct such as time/date/datetime is stored as a series
- * of int's in HDF-EOS5.  sizeof(struct) is not always equal to the sum of
- * sizeof(struct components)
- */
-size_t get_hdfeos_size(enum output_datatype datatype) {
-  switch(datatype) {
-  case OUTPUT_STRING:
-  case OUTPUT_SHORT:
-  case OUTPUT_USHORT:
-  case OUTPUT_FLOAT:
-  case OUTPUT_INT:
-  case OUTPUT_DOUBLE:
-    return(output_get_size(datatype)); // for simple fields, output_get_size is enough.
-    break;
-  case OUTPUT_DATE:
-    return 3*sizeof(int); // date: stored as array int year, month, day
-    break;
-  case OUTPUT_TIME:
-    return 3*sizeof(unsigned char); // time: stored as array uchar hour, min, sec
-    break;
-  case OUTPUT_DATETIME:
-    return 7*sizeof(int); // datetime: stored as int year, month, day, hour, min, sec, microseconds
-    break;
-  }
-  assert(false);
-  return 0;
 }
 
 static enum fieldtype get_fieldtype(enum _prjctResults output_field) {
