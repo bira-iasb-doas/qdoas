@@ -349,13 +349,15 @@ RC write_calibration_data(void) {
     }
 
     // write calibration data
-    int index_row = calibfield.index_row;
-    hssize_t start[HE5_DTSETRANKMAX] = {0, index_row};
-    hsize_t edge[HE5_DTSETRANKMAX];
-    get_edge_calibration(edge, &calibfield);
-    herr_t result = HE5_SWwritefield(swath_id, he5fieldname, start, NULL, edge, calibfield.data);
-    if(result)
-      return ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_HDFEOS5_WRITEFIELD, he5fieldname);
+    if (calibfield.data) {
+      int index_row = calibfield.index_row;
+      hssize_t start[HE5_DTSETRANKMAX] = {0, index_row};
+      hsize_t edge[HE5_DTSETRANKMAX];
+      get_edge_calibration(edge, &calibfield);
+      herr_t result = HE5_SWwritefield(swath_id, he5fieldname, start, NULL, edge, calibfield.data);
+      if(result)
+        return ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_HDFEOS5_WRITEFIELD, he5fieldname);
+    }
   }
 
   return ERROR_ID_NO;
@@ -413,7 +415,6 @@ RC create_analysis_data_fields(void) {
   }
   return ERROR_ID_NO;
 }
-
 
 /*! \brief Allocate a buffer to hold output data for a HDF-EOS5
  *  variable, and initialize it to the fill value for that variable

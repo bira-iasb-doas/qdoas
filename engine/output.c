@@ -1984,6 +1984,61 @@ size_t output_get_size(enum output_datatype datatype) {
   return 0;
 }
 
+static void* initialize_calibration_buffer(size_t len, enum output_datatype datatype) {
+
+  if (!len) return NULL;
+
+  switch (datatype) {
+  case OUTPUT_STRING:
+    return calloc(len, sizeof(char*));
+    break;
+  case OUTPUT_SHORT: {
+    short *shortbuf = malloc(len * sizeof(*shortbuf));
+    for (size_t i=0; i< len; ++i) {
+      shortbuf[i] = QDOAS_FILL_SHORT;
+    }
+    return shortbuf;
+  }
+    break;
+  case OUTPUT_USHORT: {
+    unsigned short *shortbuf = malloc(len * sizeof(*shortbuf));
+    for (size_t i=0; i< len; ++i) {
+      shortbuf[i] = QDOAS_FILL_USHORT;
+    }
+    return shortbuf;
+  }
+    break;
+  case OUTPUT_INT: {
+    int *intbuf = malloc(len * sizeof(*intbuf));
+    for (size_t i=0; i< len; ++i) {
+      intbuf[i] = QDOAS_FILL_INT;
+    }
+    return intbuf;
+  }
+    break;
+  case OUTPUT_FLOAT: {
+    float *floatbuf = malloc(len * sizeof(*floatbuf));
+    for (size_t i=0; i< len; ++i) {
+      floatbuf[i] = QDOAS_FILL_FLOAT;
+    }
+    return floatbuf;
+  }
+    break;
+  case OUTPUT_DOUBLE: {
+    double *doublebuf = malloc(len * sizeof(*doublebuf));
+    for (size_t i=0; i< len; ++i) {
+      doublebuf[i] = QDOAS_FILL_DOUBLE;
+    }
+    printf("%s: doublebuf[0] = %e\n", __func__, doublebuf[0]);
+    return doublebuf;
+  }
+    break;
+  default:
+    // calibration data should not contain date/time/datetime
+    assert(false);
+  }
+}
+
 /*! \brief Release the output data stored in the buffer of this output
     field.
 
@@ -2056,35 +2111,36 @@ RC OUTPUT_LocalAlloc(ENGINE_CONTEXT *pEngineContext)
   pProject=(PROJECT *)&pEngineContext->project;
   pResults=(PRJCT_RESULTS *)&pProject->asciiResults;
 
-  if (pResults->analysisFlag || pResults->calibFlag)
-    {
-      assert(newRecordNumber > 0);
+  if (pResults->analysisFlag || pResults->calibFlag) {
+    assert(newRecordNumber > 0);
+    
+    if (outputRecords!=NULL)
+      MEMORY_ReleaseBuffer(__func__,"outputRecords",outputRecords);
+    outputRecords=NULL;
 
-      if (outputRecords!=NULL)
-        MEMORY_ReleaseBuffer("OUTPUT_LocalAlloc","outputRecords",outputRecords);
-      outputRecords=NULL;
+    // Allocate new buffers
+    outputRecords=(OUTPUT_INFO *)MEMORY_AllocBuffer(__func__,"outputRecords",newRecordNumber,sizeof(OUTPUT_INFO),0,MEMORY_TYPE_STRUCT);
+    if (!outputRecords)
+      rc = ERROR_ID_ALLOC;
+    else
+      memset(outputRecords,0,sizeof(OUTPUT_INFO)*newRecordNumber);
+    
+    for (unsigned int i=0; i<output_num_fields; i++) {
+      struct output_field *pfield = &output_data_analysis[i];
+      output_field_clear(pfield);
+      pfield->data = calloc(newRecordNumber * pfield->data_cols , output_get_size(pfield->memory_type));
+    }
+    for (unsigned int i=0; i<calib_num_fields; i++) {
+      struct output_field *calib_field = &output_data_calib[i];
+      output_field_clear(calib_field);
+      int nb_win = KURUCZ_buffers[calib_field->index_row].Nb_Win;
+      printf("%s: initialize calibration buffer for %s row %d, nb_win %d, data_cols %d\n", __func__, calib_field->fieldname, calib_field->index_row, nb_win, calib_field->data_cols);
+      // todo: check if nb_win > 0 ? check rcKurucz?
+      calib_field->data = initialize_calibration_buffer(nb_win * calib_field->data_cols, calib_field->memory_type);
+    }
 
-      // Allocate new buffers
-      outputRecords=(OUTPUT_INFO *)MEMORY_AllocBuffer("OUTPUT_LocalAlloc","outputRecords",newRecordNumber,sizeof(OUTPUT_INFO),0,MEMORY_TYPE_STRUCT);
-      if (!outputRecords)
-        rc = ERROR_ID_ALLOC;
-      else
-        memset(outputRecords,0,sizeof(OUTPUT_INFO)*newRecordNumber);
-
-      for (unsigned int i=0; i<output_num_fields; i++) {
-        struct output_field *pfield = &output_data_analysis[i];
-        output_field_clear(pfield);
-        pfield->data = calloc(newRecordNumber * pfield->data_cols , output_get_size(pfield->memory_type));
-      }
-      for (unsigned int i=0; i<calib_num_fields; i++) {
-        struct output_field *calib_field = &output_data_calib[i];
-        output_field_clear(calib_field);
-        int nb_win = KURUCZ_buffers[calib_field->index_row].Nb_Win;
-        calib_field->data = calloc(nb_win * calib_field->data_cols, output_get_size(calib_field->memory_type));
-      }
-
-      outputNbRecords=0;
-   }
+    outputNbRecords=0;
+  }
 
   return rc;
 }
