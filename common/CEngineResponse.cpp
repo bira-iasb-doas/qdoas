@@ -20,6 +20,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QFile>
 #include <QTextStream>
 
+#include <iostream>
+
 #include "CEngineResponse.h"
 #include "CEngineController.h"
 
@@ -70,14 +72,13 @@ CEngineResponseVisual::~CEngineResponseVisual()
 
 void CEngineResponseVisual::process(CEngineController *engineController)
 {
-  // consider the error messages first - if fatal stop here
-  if (processErrors(engineController))
-    return;     
-    
-  if (!m_cellList.isEmpty() || !m_plotDataList.isEmpty() || !m_plotImageList.isEmpty()) {  
+  if (!hasFatalError() 
+      && !(m_cellList.isEmpty() && m_plotDataList.isEmpty() && m_plotImageList.isEmpty() ) ) {
     engineController->notifyTableData(m_cellList);
     engineController->notifyPlotData(m_plotDataList, m_titleList, m_plotImageList);
-  }                         
+  }
+
+  processErrors(engineController);
 }
 
 void CEngineResponseVisual::addDataSet(int pageNumber, const CPlotDataSet *dataSet)
@@ -104,13 +105,14 @@ void CEngineResponseVisual::addCell(int pageNumber, int row, int col, const QVar
 
 void CEngineResponseBeginAccessFile::process(CEngineController *engineController)
 {
-  // consider the error messages first - if fatal stop here
-  if (processErrors(engineController))
-    return;
-    
-  if (!m_cellList.isEmpty() || !m_plotDataList.isEmpty() || !m_plotImageList.isEmpty()) {
+  if (!hasFatalError() &&
+      !(m_cellList.isEmpty() && m_plotDataList.isEmpty() && m_plotImageList.isEmpty()) ) {
     engineController->notifyTableData(m_cellList);
     engineController->notifyPlotData(m_plotDataList, m_titleList, m_plotImageList);
+  }
+
+  if (processErrors(engineController)) {
+    return;
   }
 
   if (m_numberOfRecords > 0) {
@@ -134,27 +136,21 @@ void CEngineResponseBeginAccessFile::setNumberOfRecords(int numberOfRecords)
 
 void CEngineResponseSpecificRecord::process(CEngineController *engineController)
 {
-  // consider the error messages first - if fatal stop here
-  if (processErrors(engineController))
-    return;        
-    
-  if (m_recordNumber <= 0) {    // 20090113 Caroline : If the record number is -1, do not stop the automatic process
-    // EOF
-    engineController->notifyEndOfRecords();
+  if (!hasFatalError()) {
+    if (m_recordNumber <= 0) {    // 20090113 Caroline : If the record number is -1, do not stop the automatic process
+      // EOF
+      engineController->notifyEndOfRecords();
+    }
+    else if (m_recordNumber > 0) {
+      // display ... table data MUST be before plot data
+      engineController->notifyTableData(m_cellList);
+      engineController->notifyPlotData(m_plotDataList, m_titleList, m_plotImageList);
+      
+      engineController->notifyCurrentRecord(m_recordNumber);
+    }
   }
-  else if (m_recordNumber > 0) {
-    // display ... table data MUST be before plot data
-    engineController->notifyTableData(m_cellList);
-    engineController->notifyPlotData(m_plotDataList, m_titleList, m_plotImageList);
 
-    engineController->notifyCurrentRecord(m_recordNumber);
-  }
- /* else {
-    // some error condition ... Treat it as fatal ...
-    addErrorMessage("CEngineResponseSpecificRecord", "Unknown Error - Treated as fatal", FatalEngineError);
-    processErrors(engineController);
-  }   */
-
+  processErrors(engineController);
 }
 
 void CEngineResponseSpecificRecord::setRecordNumber(int recordNumber)

@@ -337,10 +337,12 @@ void mediateRequestPlotSpectra(ENGINE_CONTEXT *pEngineContext,void *responseHand
 
    fileName=pEngineContext->fileInfo.fileName;
 
-   if (ANALYSE_plotRef)
+   if (ANALYSE_plotRef) {
     mediateResponseRetainPage(plotPageRef,responseHandle);
-   if (ANALYSE_plotKurucz)
+   }
+   if (ANALYSE_plotKurucz) {
     mediateResponseRetainPage(plotPageCalib,responseHandle);
+   }
 
    sprintf(tmpString,"Spectrum (%d/%d)",pEngineContext->indexRecord,pEngineContext->recordNumber);
 
@@ -1842,6 +1844,11 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
    if (rc)
      goto handle_errors;
 
+   // for imagers, it is possible that errors occur for only some of
+   // the rows.  In that case, analysis can continue for the other
+   // rows, but we still want to display a warning message.
+   bool imager_err = false;
+
    for (indexFenoColumn=0;(indexFenoColumn<ANALYSE_swathSize) && !rc;indexFenoColumn++) {
 
      if ( (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_OMI) ||
@@ -1869,15 +1876,18 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
            if (!rc && useKurucz) {
              rc=KURUCZ_Reference(pEngineContext->buffers.instrFunction,0,saveFlag,1,responseHandle,indexFenoColumn);
            }
+           // make failure of KURUCZ_Alloc on any row a fatal error? (only possible for configurations with errors/bad input files?) 
          }
 
          if (!rc && (THRD_id!=THREAD_TYPE_KURUCZ)) {
            rc=ANALYSE_AlignReference(pEngineContext,0,responseHandle,indexFenoColumn);
          }
        }
-
-       if ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_OMI) && rc) {
+       
+       if ( (ANALYSE_swathSize > 1) && rc) {
          // Error on one irradiance spectrum shouldn't stop the analysis of other spectra
+         ERROR_SetLast(__func__, ERROR_TYPE_WARNING, ERROR_ID_IMAGER_CALIB, 1+indexFenoColumn);
+         imager_err = true;
          for (indexWindow=0;indexWindow<NFeno;indexWindow++)
            TabFeno[indexFenoColumn][indexWindow].rcKurucz=rc;
          rc=ERROR_ID_NO;
@@ -1897,9 +1907,11 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
 
    MATRIX_Free(&hr_solar_temp, __func__);
 
-   if (rc!=ERROR_ID_NO)
-    ERROR_DisplayMessage(responseHandle);
-
+   if (rc!=ERROR_ID_NO) {
+     ERROR_DisplayMessage(responseHandle);
+   } else if (imager_err) {
+     ERROR_DisplayMessage(responseHandle);
+   }
    return (rc!=ERROR_ID_NO)?-1:0;    // supposed that an error at the level of the load of projects stops the current session
  }
 

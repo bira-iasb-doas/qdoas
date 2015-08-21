@@ -2029,7 +2029,6 @@ static void* initialize_calibration_buffer(size_t len, enum output_datatype data
     for (size_t i=0; i< len; ++i) {
       doublebuf[i] = QDOAS_FILL_DOUBLE;
     }
-    printf("%s: doublebuf[0] = %e\n", __func__, doublebuf[0]);
     return doublebuf;
   }
     break;
@@ -2134,7 +2133,6 @@ RC OUTPUT_LocalAlloc(ENGINE_CONTEXT *pEngineContext)
       struct output_field *calib_field = &output_data_calib[i];
       output_field_clear(calib_field);
       int nb_win = KURUCZ_buffers[calib_field->index_row].Nb_Win;
-      printf("%s: initialize calibration buffer for %s row %d, nb_win %d, data_cols %d\n", __func__, calib_field->fieldname, calib_field->index_row, nb_win, calib_field->data_cols);
       // todo: check if nb_win > 0 ? check rcKurucz?
       calib_field->data = initialize_calibration_buffer(nb_win * calib_field->data_cols, calib_field->memory_type);
     }

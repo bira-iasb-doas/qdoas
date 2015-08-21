@@ -233,14 +233,13 @@ void CQdoasEngineController::notifyErrorMessages(int highestErrorLevel, const QL
     emit signalSessionRunning(false);
   }
 
-  QList<CEngineError>::const_iterator it = errorMessages.begin();
-  while (it != errorMessages.end()) {
+  for (QList<CEngineError>::const_iterator it = errorMessages.begin();
+       it != errorMessages.end(); ++it) {
     // one message per line
     switch (it->errorLevel()) {
     case InformationEngineError:
       stream << "INFO    (";
       break;
-
     case WarningEngineError:
       stream << "WARNING (";
       break;
@@ -248,13 +247,9 @@ void CQdoasEngineController::notifyErrorMessages(int highestErrorLevel, const QL
       stream << "FATAL   (";
       break;
     }
-
     stream << it->tag() << ") " << it->message() << ".\n";
-
-    ++it;
-
-    emit signalErrorMessages(highestErrorLevel, msg);
   }
+  emit signalErrorMessages(highestErrorLevel, msg);
 }
 
 bool CQdoasEngineController::event(QEvent *e)
