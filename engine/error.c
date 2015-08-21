@@ -152,6 +152,7 @@ ERROR_TABLE errorTable[]=
   { ERROR_ID_MATRIX_DIMENSION          , "matrix dimensions must agree"                                                                                       },
   { ERROR_ID_SQRT_ARG                  , "sqrt argument error"                                                                                                },
   { ERROR_ID_POW                       , "Pow Overflow (check your reference spectrum)"                                                                       },
+  { ERROR_ID_NORMALIZE                 , "Vector is 0., cannot normalize"                                                                                     },
 
   // High-level math functions
 
@@ -181,7 +182,7 @@ ERROR_TABLE errorTable[]=
   { ERROR_ID_REF_ALIGNMENT             , "Impossible to align reference spectrum in %s analysis window"                                                       },
   { ERROR_ID_CONVOLUTION               , "Convolved solar spectrum and cross sections are expected"                                                           },
   { ERROR_ID_NO_RESULT_PREVIOUS_WINDOW , "Cannot use result from previous analysis window for molecule %s in analysis window %s: can't find the same cross section file" },
-
+  { ERROR_ID_IMAGER_CALIB              , "Calibration failed for detector row %d"},
 
 
   { ERROR_ID_GDP_BANDINDEX             , "The specified band is not present in the file %s"                                                                   },

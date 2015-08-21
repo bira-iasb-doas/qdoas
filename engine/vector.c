@@ -369,40 +369,27 @@ double VECTOR_Norm(double *v,int dim)
 
 RC VECTOR_NormalizeVector(double *v,int dim,double *pFact,const char *function)
  {
-  // Declarations
-
-  char str[MAX_ITEM_TEXT_LEN+1];
-  double norm;
-  INDEX i;
-  RC rc;
-
   #if defined(__DEBUG_) && __DEBUG_
-  DEBUG_FunctionBegin("VECTOR_NormalizeVector",DEBUG_FCTTYPE_UTIL);
+  DEBUG_FunctionBegin(__func__,DEBUG_FCTTYPE_UTIL);
   #endif
 
-  // Initializations
+  RC rc=ERROR_ID_NO;
 
-  sprintf(str,"VECTOR_NormalizeVector (%s) ",function);
-  rc=ERROR_ID_NO;
-
-  // Vector normalization
-
-  if (VECTOR_Norm(v,dim)<=(double)0.)
-   rc=ERROR_SetLast(function,ERROR_TYPE_WARNING,ERROR_ID_SQRT_ARG);
-  else if ((norm=(double)sqrt(VECTOR_Norm(v,dim)))!=(double)0.)
-   {
+  const double normsq = VECTOR_Norm(v,dim);
+  if (normsq == 0.) {
+   rc=ERROR_SetLast(function,ERROR_TYPE_WARNING,ERROR_ID_NORMALIZE);
+  } else {
+    double norm = sqrt(normsq);
     if (pFact!=NULL)
-     *pFact=norm;
+      *pFact=norm;
 
-    for (i=1,norm=(double)1./norm;i<=dim;i++)
-     v[i]*=norm;
-   }
+    for (int i=1;i<=dim;i++)
+      v[i] /= norm;
+  }
 
   #if defined(__DEBUG_) && __DEBUG_
-  DEBUG_FunctionStop("VECTOR_NormalizeVector",rc);
+  DEBUG_FunctionStop(__func__,rc);
   #endif
-
-  // Return
 
   return rc;
  }

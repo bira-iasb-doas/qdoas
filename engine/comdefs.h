@@ -219,6 +219,7 @@ SHORT_DATE;
 #define ERROR_ID_MATRIX_DIMENSION               505                             // matrix dimensions must agree
 #define ERROR_ID_SQRT_ARG                       506                             // sqrt argument error
 #define ERROR_ID_POW                            507                             // pow overflow
+#define ERROR_ID_NORMALIZE                      508                             // vector norm is zero
 
 // Output
 
@@ -254,6 +255,7 @@ SHORT_DATE;
 #define ERROR_ID_NO_REF                        1290                             // no reference file found in the specified file
 #define ERROR_ID_CONVOLUTION                   1295                             // incompatibility with convolution options
 #define ERROR_ID_NO_RESULT_PREVIOUS_WINDOW     1296                             // when using result from previous window as fixed column value: cannot link molecule with a molecule from a previous analysis window
+#define ERROR_ID_IMAGER_CALIB                  1297                             // calibration error for imager row
 
 // Specific file format
 
@@ -272,8 +274,8 @@ SHORT_DATE;
 #define ERROR_ID_HDFEOS5_DEFDIM                1410                             // error creating dimension
 #define ERROR_ID_HDFEOS5_WRITEFIELD            1411                             // error writing to field
 #define ERROR_ID_HDFEOS5_WRITEATTR             1412                             // error writing attribute
-#define ERROR_ID_HDFEOS5_SETFILL               1409                             // error setting fill value for field
-#define ERROR_ID_HDFEOS5_GETFILL               1410                             // error getting fill value for field
+#define ERROR_ID_HDFEOS5_SETFILL               1413                             // error setting fill value for field
+#define ERROR_ID_HDFEOS5_GETFILL               1414                             // error getting fill value for field
 #define ERROR_ID_NETCDF                        1500
 #define ERROR_ID_FILE_FORMAT                   2000                             // bad file format
 
