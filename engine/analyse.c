@@ -4456,10 +4456,11 @@ RC ANALYSE_LoadCross(ENGINE_CONTEXT *pEngineContext, const ANALYSIS_CROSS *cross
        }
 
       // cross sections should either have 1 wavelength column and 1
-      // data absorption column, or 1 wavelength column + 1
-      // absorption column per detector row (for imagers, like OMI):
+      // absorption column, or 1 wavelength column + 1 absorption
+      // column per detector row (for imagers like OMI):
       if ( !(pWrkSymbol->xs.nc == 2 || pWrkSymbol->xs.nc == (1 + ANALYSE_swathSize) ) ) {
-        rc = ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_XS_COLUMNS, pCross->crossSectionFile);
+        rc = ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_XS_COLUMNS, pCross->crossSectionFile, 
+                           pWrkSymbol->xs.nc, 2,  1+ANALYSE_swathSize);
       }
 
      }
