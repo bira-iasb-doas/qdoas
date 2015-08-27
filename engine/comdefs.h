@@ -191,6 +191,7 @@ SHORT_DATE;
 #define ERROR_ID_FILE_STAT                      131                             // cannot call fstat on file
 #define ERROR_ID_DIR_NOT_FOUND                  132                             // directory does not exist
 #define ERROR_ID_XS_BAD_WAVELENGTH              133                             // the cross section should be defined on the same grid as the reference one when 'None' is selected as Interp/conv action
+#define ERROR_ID_XS_COLUMNS                     134                             // the cross section does not have the right number of columns
 
 
 // Debug

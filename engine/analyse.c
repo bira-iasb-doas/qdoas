@@ -4389,7 +4389,7 @@ RC ANALYSE_LoadCross(ENGINE_CONTEXT *pEngineContext, const ANALYSIS_CROSS *cross
   // Debug
 
 #if defined(__DEBUG_) && __DEBUG_ && defined(__DEBUG_DOAS_CONFIG_) && __DEBUG_DOAS_CONFIG_
-  DEBUG_FunctionBegin("ANALYSE_LoadCross",DEBUG_FCTTYPE_CONFIG);
+  DEBUG_FunctionBegin(__func__,DEBUG_FCTTYPE_CONFIG);
 #endif
 
   // Initializations
@@ -4430,7 +4430,6 @@ RC ANALYSE_LoadCross(ENGINE_CONTEXT *pEngineContext, const ANALYSIS_CROSS *cross
 
     // Add a new cross section
 
-
     if (rc==ERROR_ID_NO && (indexSymbol==NWorkSpace) && (NWorkSpace<MAX_SYMB))
      {
       // Allocate a new symbol
@@ -4451,10 +4450,18 @@ RC ANALYSE_LoadCross(ENGINE_CONTEXT *pEngineContext, const ANALYSIS_CROSS *cross
                            (pCross->crossType!=ANLYS_CROSS_ACTION_NOTHING)?1:0,1,"ANALYSE_LoadCross ")))
        {
         if (!strcasecmp(pWrkSymbol->symbolName,"O3TD"))
-         rc=MATRIX_Allocate(&O3TD,NDET,pWrkSymbol->xs.nc,0,0,0,"ANALYSE_LoadCross");
+         rc=MATRIX_Allocate(&O3TD,NDET,pWrkSymbol->xs.nc,0,0,0,__func__);
 
         NWorkSpace++;
        }
+
+      // cross sections should either have 1 wavelength column and 1
+      // data absorption column, or 1 wavelength column + 1
+      // absorption column per detector row (for imagers, like OMI):
+      if ( !(pWrkSymbol->xs.nc == 2 || pWrkSymbol->xs.nc == (1 + ANALYSE_swathSize) ) ) {
+        rc = ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_XS_COLUMNS, pCross->crossSectionFile);
+      }
+
      }
 
     if ((rc==ERROR_ID_NO) && (indexSymbol<NWorkSpace) && (pTabFeno->NTabCross<MAX_FIT))
@@ -4578,7 +4585,7 @@ RC ANALYSE_LoadCross(ENGINE_CONTEXT *pEngineContext, const ANALYSIS_CROSS *cross
         {
          if (pEngineCross[pEngineCross[indexTabCross].IndOrthog].IndOrthog==ITEM_NONE)
           {
-           rc=ERROR_SetLast("ANALYSE_LoadCross",ERROR_TYPE_WARNING,ERROR_ID_ORTHOGONAL_BASE,
+           rc=ERROR_SetLast(__func__,ERROR_TYPE_WARNING,ERROR_ID_ORTHOGONAL_BASE,
                             WorkSpace[pEngineCross[pEngineCross[indexTabCross].IndOrthog].Comp].symbolName,
                             WorkSpace[pEngineCross[indexTabCross].Comp].symbolName);
 
@@ -4590,10 +4597,10 @@ RC ANALYSE_LoadCross(ENGINE_CONTEXT *pEngineContext, const ANALYSIS_CROSS *cross
    }
 
   if (!rc && pTabFeno->xsToConvolute && (!pTabFeno->useKurucz || !pEngineContext->project.kurucz.fwhmFit) && (pEngineContext->project.slit.slitFunction.slitType==SLIT_TYPE_NONE))
-   rc=ERROR_SetLast("ANALYSE_LoadCross",ERROR_TYPE_FATAL,ERROR_ID_CONVOLUTION);
+   rc=ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_CONVOLUTION);
 
 #if defined(__DEBUG_) && __DEBUG_ && defined(__DEBUG_DOAS_CONFIG_) && __DEBUG_DOAS_CONFIG_
-  DEBUG_FunctionStop("ANALYSE_LoadCross",rc);
+  DEBUG_FunctionStop(__func__,rc);
 #endif
 
   // Return
