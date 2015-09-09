@@ -101,32 +101,35 @@ public:
   template<typename T>
   inline void putAttr(const std::string& name, size_t len, T*in, int varid=NC_GLOBAL) {
     int rc = ncPutAttr(varid, name.c_str(), len, in);
-    std::string errval;
-    switch (rc) {
-    case NC_NOERR:
-      return;
-      break;
-    case NC_EINVAL:
-      errval = "NC_EINVAL";
-      break;
-    case NC_ENOTVAR:
-      errval = "NC_ENOTVAR";
-      break;
-    case NC_EBADTYPE:
-      errval = "NC_EBADTYPE";
-      break;
-    case NC_ENOMEM:
-      errval = "NC_ENOMEM";
-      break;
-    case NC_ELATEFILL:
-      errval = "NC_ELATEFILL";
-      break;
-    default:
-      errval = std::to_string(rc);
-      break;
+
+    if (rc != NC_NOERR) {
+      std::stringstream errstream;
+      errstream << "Cannot write NetCDF attribute '" << name << "'" 
+                << (varid == NC_GLOBAL 
+                    ? ""
+                    : " for variable '"+ varName(varid)) << ": ";
+      switch (rc) {
+      case NC_EINVAL:
+        errstream << "NC_EINVAL";
+        break;
+      case NC_ENOTVAR:
+        errstream << "NC_ENOTVAR";
+        break;
+      case NC_EBADTYPE:
+        errstream << "NC_EBADTYPE";
+        break;
+      case NC_ENOMEM:
+        errstream << "NC_ENOMEM";
+        break;
+      case NC_ELATEFILL:
+        errstream << "NC_ELATEFILL";
+        break;
+      default:
+        errstream << rc;
+        break;
+      }
+      throw std::runtime_error(errstream.str() );
     }
-    throw std::runtime_error("Cannot write NetCDF attribute '" + name + "'" 
-                             + (varid == NC_GLOBAL ? "" : " for variable '"+ varName(varid) + "': " + errval) );
   }
   template<typename T>
   inline void putAttr(const std::string& name, const std::vector<T>& in, int varid=NC_GLOBAL) {
