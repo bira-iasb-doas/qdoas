@@ -671,8 +671,8 @@ RC ShiftVector(const double *lambda, double *source, const double *deriv, double
 
   // Buffer allocation for second derivative
 
-  for (j=LimMin;j<=LimMax;j++) {                                                        // !! p'=p-(DSH+DST*(p-p0)+DST2*(p-p0)^2
-    // Second shift and stretch                             //    p''=p'-(DSH'+DST'*(p'-p0')+DST2'*(p'-p0')^2
+  for (j=LimMin;j<=LimMax;j++) {             // !! p'=p-(DSH+DST*(p-p0)+DST2*(p-p0)^2
+    // Second shift and stretch              //    p''=p'-(DSH'+DST'*(p'-p0')+DST2'*(p'-p0')^2
     // with   p=ANALYSE_splineX (Lambda if unit is nm;pixels if unit is pixels)
     x0=(ANALYSE_splineX[j]-lambda0);        //        p0'=p0-DSH
     y=ANALYSE_splineX[j]-(DSH_+DST_*x0+DST2_*x0*x0);
@@ -4457,10 +4457,13 @@ RC ANALYSE_LoadCross(ENGINE_CONTEXT *pEngineContext, const ANALYSIS_CROSS *cross
 
       // cross sections should either have 1 wavelength column and 1
       // absorption column, or 1 wavelength column + 1 absorption
-      // column per detector row (for imagers like OMI):
-      if ( !(pWrkSymbol->xs.nc == 2 || pWrkSymbol->xs.nc == (1 + ANALYSE_swathSize) ) ) {
-        rc = ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_XS_COLUMNS, pCross->crossSectionFile, 
-                           pWrkSymbol->xs.nc, 2,  1+ANALYSE_swathSize);
+      // column per detector row (for imagers like OMI), or 4 columns
+      // when it is a Ring cross section to be used with the "convolve
+      // ring" option:
+      if ( !(pWrkSymbol->xs.nc == 2 
+             || pWrkSymbol->xs.nc == (1 + ANALYSE_swathSize) 
+             || (pWrkSymbol->xs.nc == 4 && pCross->crossType == ANLYS_CROSS_ACTION_CONVOLUTE_RING) ) ) {
+        rc = ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_XS_COLUMNS, pCross->crossSectionFile, pWrkSymbol->xs.nc);
       }
 
      }

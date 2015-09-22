@@ -119,7 +119,7 @@ ERROR_TABLE errorTable[]=
   { ERROR_ID_FILE_STAT                 , "cannot stat %s"},
   { ERROR_ID_DIR_NOT_FOUND             , "directory %s does not exist %s"},
   { ERROR_ID_XS_BAD_WAVELENGTH         , "the cross section %s should be defined on the same grid as the reference one when 'None' is selected as Interp/conv action"},
-  { ERROR_ID_XS_COLUMNS                , "the cross section file %s has %d columns. Expected %d or %d columns"},
+  { ERROR_ID_XS_COLUMNS                , "the cross section file %s does not have the correct format (%d columns)."},
 
   // Debug
 
