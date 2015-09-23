@@ -643,8 +643,8 @@ RC EngineSetFile(ENGINE_CONTEXT *pEngineContext,const char *fileName,void *respo
        rc=AIRBORNE_Set(pEngineContext,pFile->specFp);
        break;
      case PRJCT_INSTR_FORMAT_APEX :
-       rc=apex_set(pEngineContext);
-       break;
+      rc=apex_set(pEngineContext);
+     break;
        // ---------------------------------------------------------------------------
      case PRJCT_INSTR_FORMAT_MFC :
      case PRJCT_INSTR_FORMAT_MFC_STD :
@@ -822,6 +822,10 @@ RC EngineReadFile(ENGINE_CONTEXT *pEngineContext,int indexRecord,int dateFlag,in
       // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_APEX :
       rc=apex_read(pEngineContext,indexRecord);
+      break;
+      // ---------------------------------------------------------------------------
+    case PRJCT_INSTR_FORMAT_MFC :
+      rc=ReliMFC(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp,pEngineContext->project.instrumental.mfcMaskSpec);
       break;
       // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_MFC_STD :
@@ -1025,7 +1029,7 @@ RC EngineEndCurrentSession(ENGINE_CONTEXT *pEngineContext)
      GOME2_ReleaseBuffers();
      OMI_ReleaseBuffers();
      SCIA_ReleaseBuffers(pEngineContext->project.instrumental.readOutFormat);
-     apex_clean();
+// !!! APEX     apex_clean();
 
      if ((THRD_id!=THREAD_TYPE_NONE) && (THRD_id!=THREAD_TYPE_SPECTRA))
       {
