@@ -196,10 +196,22 @@ bool CSelectorSubHandler::start(const QString &element, const QXmlAttributes &at
     d->selected[d->nSelected] = PRJCT_RESULTS_UAV_SERVO_BYTE_SENT;
   else if (str == "servo_byte_received")
     d->selected[d->nSelected] = PRJCT_RESULTS_UAV_SERVO_BYTE_RECEIVED;
-  else if (str == "uav_temperature")
-    d->selected[d->nSelected] = PRJCT_RESULTS_UAV_TEMPERATURE;
+  else if (str == "uav_inside_temp")
+    d->selected[d->nSelected] = PRJCT_RESULTS_UAV_INSIDE_TEMP;
+  else if (str == "uav_outside_temp")
+    d->selected[d->nSelected] = PRJCT_RESULTS_UAV_OUTSIDE_TEMP;
   else if (str == "uav_pressure")
     d->selected[d->nSelected] = PRJCT_RESULTS_UAV_PRESSURE;
+  else if (str == "uav_humidity")
+    d->selected[d->nSelected] = PRJCT_RESULTS_UAV_HUMIDITY;
+  else if (str == "uav_dewpoint")
+    d->selected[d->nSelected] = PRJCT_RESULTS_UAV_DEWPOINT;
+  else if (str == "uav_pitch")
+    d->selected[d->nSelected] = PRJCT_RESULTS_UAV_PITCH;
+  else if (str == "uav_roll")
+    d->selected[d->nSelected] = PRJCT_RESULTS_UAV_ROLL;
+  else if (str == "uav_heading")
+    d->selected[d->nSelected] = PRJCT_RESULTS_UAV_HEADING;
   else if (str == "precalculated_fluxes")
     d->selected[d->nSelected] = PRJCT_RESULTS_PRECALCULATED_FLUXES;
   else
@@ -582,6 +594,8 @@ bool CProjectInstrumentalSubHandler::start(const QXmlAttributes &atts)
     m_instrumental->format = PRJCT_INSTR_FORMAT_SAOZ_EFM;
   else if (str == "biraairborne")
     m_instrumental->format = PRJCT_INSTR_FORMAT_BIRA_AIRBORNE;
+  else if (str == "biramobile")
+    m_instrumental->format = PRJCT_INSTR_FORMAT_BIRA_MOBILE;
   else if (str == "apex")
     m_instrumental->format = PRJCT_INSTR_FORMAT_APEX;
   else if (str == "mfc")
@@ -1062,7 +1076,8 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
     m_instrumental->mkzy.lambdaMax = atts.value("lambda_max").toDouble();
     return helperLoadMinimum(atts, &(m_instrumental->mkzy));
   }
-  else if (element == "biraairborne") { // BIRA AIRBORNE
+  else if (element == "biraairborne")   // BIRA AIRBORNE
+   {
     m_instrumental->biraairborne.straylight = (atts.value("straylight") == "true") ? 1 : 0;
     m_instrumental->biraairborne.lambdaMin = atts.value("lambda_min").toDouble();
     m_instrumental->biraairborne.lambdaMax = atts.value("lambda_max").toDouble();

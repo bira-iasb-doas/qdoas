@@ -350,8 +350,16 @@ typedef struct _airborneBira
  {
  	unsigned char servoSentPosition;
  	unsigned char servoReceivedPosition;
- 	float temperature;
+ 	float outsideTemp;                                                            // outside temperature
+ 	float insideTemp;                                                             // inside temperature
+ 	float dewPoint;
+ 	float humidity;
+ 	float altitudeP;
  	float pressure;
+ 	float longitudeEnd,latitudeEnd,altitudeEnd;
+ 	struct time gpsTime;
+ 	struct time gpsTimeEnd;
+ 	float  pitch,roll,heading;                                                   // airborne
  }
 UAVBIRA_DATA;
 

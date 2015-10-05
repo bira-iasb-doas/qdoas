@@ -51,7 +51,7 @@ class CWOutputFieldItem : public QListWidgetItem
   CWOutputFieldItem(int key, const QString &text, QListWidget *parent = 0);
 
   virtual QVariant data(int role) const; // implement Qt::UserRole to get key
-  
+
  private:
   int m_key;
 };

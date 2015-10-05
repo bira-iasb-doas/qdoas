@@ -57,7 +57,7 @@ linux_package {
   QMAKE_CXX = g++
   QMAKE_CC = gcc
   # clear RPATH so we can distribute our own libQt*.so's
-  QMAKE_LFLAGS_RPATH =    
+  QMAKE_LFLAGS_RPATH =
 
   # install prefix is set so we can "make install" to copy executables
   # and html documentation to the folder containing the package
@@ -92,18 +92,28 @@ mxe {
 }
 
 caro {
-  QWT_LINKAGE     = qwtdll        # qwtstatic or qwtdll
+  QWT_LINKAGE     = qwtstatic        # qwtstatic or qwtdll
   QWT_INC_PATH    = C:/Qwt-6.1.0/src
   QWT_LIB_PATH    = C:/Qwt-6.1.0/lib
   QWT_LIB         = qwt
   QWT_LIB_VERSION =
-  CODA_INC_PATH   = C:/coda
-  CODA_LIB_PATH   = C:/coda
+  CODA_INC_PATH   = D:/My_Applications/QDOAS/winlibs/coda/include
+  CODA_LIB_PATH   = D:/My_Applications/QDOAS/winlibs/coda/lib
   CODA_LIB        = coda
 
-  HDFEOS_INC_PATH = D:/My_Libraries/HDF/hdfeos2_18/hdfeos2.18/hdfeos/include D:/My_Libraries/HDF/hdfeos5_1_14/hdfeos5.1.14/hdfeos5/include
-  HDFEOS_LIB_PATH = D:/My_Applications/QDoas/hdfeos
-  HDF_INC_PATH    = D:/My_Libraries/HDF/hdf-4.2.8/include D:/My_Libraries/HDF/hdf5-1.9.144/src D:/My_Libraries/HDF/hdf5-1.9.144/hl/src
+  QT += core gui svg
+
+  DEFINES += QT_NODLL
+
+  HDFEOS_INC_PATH  = D:/My_Libraries/HDF/hdfeos2_18/hdfeos2.18/hdfeos/include D:/My_Applications/QDOAS/winlibs/hdfeos5/include D:/My_Libraries/HDF/hdfeos5_1_15/hdfeos5.1.15/hdfeos5/include_qdoas
+  HDFEOS_LIB_PATH  = D:/My_Libraries/HDF/hdfeos2_18/hdfeos2.18/hdfeos/src
+  HDFEOS5_LIB_PATH = D:/My_Applications/QDOAS/winlibs/hdfeos5/lib
+  HDF_INC_PATH     = D:/My_Libraries/HDF/hdf-4.2.8/include D:/My_Applications/QDOAS/winlibs/hdf5-1.8.15/include
+  HDF_LIB_PATH     = D:/My_Libraries/HDF/hdf-4.2.8/Src/hdf-4.2.8/hdf/src
+  MFHDF_LIB_PATH   = D:/My_Libraries/HDF/hdf-4.2.8/Src/hdf-4.2.8/mfhdf/libsrc
+  HDF5_LIB_PATH    = D:/My_Applications/QDOAS/winlibs/hdf5-1.8.15/lib
+  NETCDF_INC_PATH  = D:/My_Applications/QDOAS/winlibs/netCDF/include
+  NETCDF_LIB_PATH  = D:/My_Applications/QDOAS/winlibs/netCDF/lib
 
   CODE_GENERATION = release # Override because debug is broken
 }

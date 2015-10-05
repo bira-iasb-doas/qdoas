@@ -639,6 +639,7 @@ RC EngineSetFile(ENGINE_CONTEXT *pEngineContext,const char *fileName,void *respo
        rc=SetSAOZEfm(pEngineContext,pFile->specFp);
        break;
        // ---------------------------------------------------------------------------
+     case PRJCT_INSTR_FORMAT_BIRA_MOBILE :
      case PRJCT_INSTR_FORMAT_BIRA_AIRBORNE :
        rc=AIRBORNE_Set(pEngineContext,pFile->specFp);
        break;
@@ -816,6 +817,7 @@ RC EngineReadFile(ENGINE_CONTEXT *pEngineContext,int indexRecord,int dateFlag,in
       rc=ReliSAOZEfm(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp);
       break;
       // ---------------------------------------------------------------------------
+    case PRJCT_INSTR_FORMAT_BIRA_MOBILE :
     case PRJCT_INSTR_FORMAT_BIRA_AIRBORNE :
       rc=AIRBORNE_Read(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp);
       break;

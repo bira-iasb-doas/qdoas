@@ -463,12 +463,36 @@ static inline void get_uav_servo_byte_received(struct output_field *this_field _
   *servo_received_position = pEngineContext->recordInfo.uavBira.servoReceivedPosition;
 }
 
-static inline void get_uav_temperature(struct output_field *this_field __attribute__ ((unused)), float *uav_temperature, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
-  *uav_temperature = pEngineContext->recordInfo.uavBira.temperature;
+static inline void get_uav_insideTemp(struct output_field *this_field __attribute__ ((unused)), float *uav_insideTemp, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
+  *uav_insideTemp = pEngineContext->recordInfo.uavBira.insideTemp;
+}
+
+static inline void get_uav_outsideTemp(struct output_field *this_field __attribute__ ((unused)), float *uav_outsideTemp, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
+  *uav_outsideTemp = pEngineContext->recordInfo.uavBira.outsideTemp;
 }
 
 static inline void get_uav_pressure(struct output_field *this_field __attribute__ ((unused)), float *uav_pressure, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
   *uav_pressure = pEngineContext->recordInfo.uavBira.pressure;
+}
+
+static inline void get_uav_humidity(struct output_field *this_field __attribute__ ((unused)), float *uav_humidity, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
+  *uav_humidity = pEngineContext->recordInfo.uavBira.humidity;
+}
+
+static inline void get_uav_dewpoint(struct output_field *this_field __attribute__ ((unused)), float *uav_dewpoint, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
+  *uav_dewpoint = pEngineContext->recordInfo.uavBira.dewPoint;
+}
+
+static inline void get_uav_pitch(struct output_field *this_field __attribute__ ((unused)), float *uav_pitch, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
+  *uav_pitch = pEngineContext->recordInfo.uavBira.pitch;
+}
+
+static inline void get_uav_roll(struct output_field *this_field __attribute__ ((unused)), float *uav_roll, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
+  *uav_roll = pEngineContext->recordInfo.uavBira.roll;
+}
+
+static inline void get_uav_heading(struct output_field *this_field __attribute__ ((unused)), float *uav_heading, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
+  *uav_heading = pEngineContext->recordInfo.uavBira.heading;
 }
 
 static inline void get_slant_column(struct output_field *this_field, double *slant_column, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn, int index_calib) {
@@ -680,7 +704,7 @@ static inline void get_rms_calib(struct output_field *this_field, double *rms, c
 }
 
 static inline void get_wavelength_calib(struct output_field *this_field, double *wavelength, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn, int index_calib) {
-  
+
   *wavelength = KURUCZ_buffers[indexFenoColumn].KuruczFeno[this_field->index_feno].wve[index_calib];
 }
 

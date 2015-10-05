@@ -968,11 +968,21 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   fprintf(fp, " instr=\"%s\" />\n", tmpStr.toAscii().constData());
 
   // biraairborne
-  fprintf(fp, "      <biraairborne straylight=\"%s\" lambda_min=\"%g\" lambda_max=\"%g\"",(d->biraairborne.straylight ? sTrue : sFalse),d->biraairborne.lambdaMin,d->biraairborne.lambdaMax);
+  fprintf(fp, "      <biraairborne straylight=\"%s\" lambda_min=\"%g\" lambda_max=\"%g\"",
+    (d->biraairborne.straylight ? sTrue : sFalse),d->biraairborne.lambdaMin,d->biraairborne.lambdaMax);
   tmpStr = pathMgr->simplifyPath(QString(d->biraairborne.calibrationFile));
   fprintf(fp, " calib=\"%s\"", tmpStr.toAscii().constData());
 
   tmpStr = pathMgr->simplifyPath(QString(d->biraairborne.transmissionFunctionFile));
+  fprintf(fp, " instr=\"%s\" />\n", tmpStr.toAscii().constData());
+
+  // biramobile
+  fprintf(fp, "      <biramobile straylight=\"%s\" lambda_min=\"%g\" lambda_max=\"%g\"",
+    (d->biramobile.straylight ? sTrue : sFalse),d->biramobile.lambdaMin,d->biramobile.lambdaMax);
+  tmpStr = pathMgr->simplifyPath(QString(d->biramobile.calibrationFile));
+  fprintf(fp, " calib=\"%s\"", tmpStr.toAscii().constData());
+
+  tmpStr = pathMgr->simplifyPath(QString(d->biramobile.transmissionFunctionFile));
   fprintf(fp, " instr=\"%s\" />\n", tmpStr.toAscii().constData());
 
   // ocean optics
@@ -1518,8 +1528,15 @@ void CQdoasConfigWriter::writeDataSelectList(FILE *fp, const data_select_list_t 
     case PRJCT_RESULTS_SPIKES: fprintf(fp,"spike_pixels"); break;
     case PRJCT_RESULTS_UAV_SERVO_BYTE_SENT :      fprintf(fp, "servo_byte_sent"); break;
     case PRJCT_RESULTS_UAV_SERVO_BYTE_RECEIVED :      fprintf(fp, "servo_byte_received"); break;
-    case PRJCT_RESULTS_UAV_TEMPERATURE :      fprintf(fp, "uav_temperature"); break;
+    case PRJCT_RESULTS_UAV_INSIDE_TEMP :      fprintf(fp, "uav_inside_temp"); break;
+    case PRJCT_RESULTS_UAV_OUTSIDE_TEMP :      fprintf(fp, "uav_outside_temp"); break;
     case PRJCT_RESULTS_UAV_PRESSURE :      fprintf(fp, "uav_pressure"); break;
+    case PRJCT_RESULTS_UAV_HUMIDITY: fprintf(fp, "uav_humidity"); break;
+    case PRJCT_RESULTS_UAV_DEWPOINT: fprintf(fp, "uav_dewpoint"); break;
+    case PRJCT_RESULTS_UAV_PITCH: fprintf(fp, "uav_pitch"); break;
+    case PRJCT_RESULTS_UAV_ROLL: fprintf(fp, "uav_roll"); break;
+    case PRJCT_RESULTS_UAV_HEADING: fprintf(fp, "uav_heading"); break;
+
     case PRJCT_RESULTS_PRECALCULATED_FLUXES:            fprintf(fp, "precalculated_fluxes"); break;
 
     default: fprintf(fp, "Invalid");

@@ -1025,11 +1025,29 @@ static void OutputRegisterFields(const ENGINE_CONTEXT *pEngineContext)
      case PRJCT_RESULTS_UAV_SERVO_BYTE_RECEIVED:
        register_field( (struct output_field) { .basic_fieldname = "UAV servo received position byte", .memory_type = OUTPUT_USHORT, .resulttype = fieldtype, .format = "%#3d", .get_data = (func_void)&get_uav_servo_byte_received });
        break;
-     case PRJCT_RESULTS_UAV_TEMPERATURE:
-       register_field( (struct output_field) { .basic_fieldname = "Temperature", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#9.3f", .get_data = (func_void)&get_uav_temperature });
+     case PRJCT_RESULTS_UAV_INSIDE_TEMP:
+       register_field( (struct output_field) { .basic_fieldname = "Inside temperature", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#9.3f", .get_data = (func_void)&get_uav_insideTemp });
+       break;
+     case PRJCT_RESULTS_UAV_OUTSIDE_TEMP:
+       register_field( (struct output_field) { .basic_fieldname = "Outside temperature", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#9.3f", .get_data = (func_void)&get_uav_outsideTemp });
        break;
      case PRJCT_RESULTS_UAV_PRESSURE:
        register_field( (struct output_field) { .basic_fieldname = "Pressure", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#9.3f", .get_data = (func_void)&get_uav_pressure });
+       break;
+     case PRJCT_RESULTS_UAV_HUMIDITY:
+       register_field( (struct output_field) { .basic_fieldname = "Humidity", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#9.3f", .get_data = (func_void)&get_uav_humidity });
+       break;
+     case PRJCT_RESULTS_UAV_DEWPOINT:
+       register_field( (struct output_field) { .basic_fieldname = "Dewpoint", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#9.3f", .get_data = (func_void)&get_uav_dewpoint });
+       break;
+     case PRJCT_RESULTS_UAV_PITCH:
+       register_field( (struct output_field) { .basic_fieldname = "Pitch", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#9.3f", .get_data = (func_void)&get_uav_pitch });
+       break;
+     case PRJCT_RESULTS_UAV_ROLL:
+       register_field( (struct output_field) { .basic_fieldname = "Roll", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#9.3f", .get_data = (func_void)&get_uav_roll });
+       break;
+     case PRJCT_RESULTS_UAV_HEADING:
+       register_field( (struct output_field) { .basic_fieldname = "Heading", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#9.3f", .get_data = (func_void)&get_uav_heading });
        break;
      case PRJCT_RESULTS_PRECALCULATED_FLUXES:
        register_field( (struct output_field) { .basic_fieldname = "Precalculated flux", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_precalculated_flux, .data_cols = 4, .column_number_format="(%d)" });
@@ -1381,7 +1399,7 @@ RC OUTPUT_RegisterData(const ENGINE_CONTEXT *pEngineContext)
                 if (indexFenoK != ITEM_NONE) {
                   for (int indexFeno=0;indexFeno<NFeno;indexFeno++) {
                     if ( !TabFeno[indexFenoColumn][indexFeno].hidden
-                         && KURUCZ_buffers[indexFenoColumn].KuruczFeno != NULL 
+                         && KURUCZ_buffers[indexFenoColumn].KuruczFeno != NULL
                          && (TabFeno[indexFenoColumn][indexFeno].useKurucz == ANLYS_KURUCZ_REF_AND_SPEC
                              || TabFeno[indexFenoColumn][indexFeno].useKurucz == ANLYS_KURUCZ_REF ) ) {
                       register_calibration(indexFenoK, indexFenoColumn, indexFeno);
@@ -1906,11 +1924,11 @@ RC OUTPUT_SaveResults(ENGINE_CONTEXT *pEngineContext,INDEX indexFenoColumn)
 
     for (indexFeno=0;indexFeno<NFeno;indexFeno++) {
       pTabFeno=&TabFeno[indexFenoColumn][indexFeno];
-      
+
       if ((THRD_id!=THREAD_TYPE_KURUCZ) && !pTabFeno->hidden && !pTabFeno->rcKurucz) {
         for (indexTabCross=0;indexTabCross<pTabFeno->NTabCross;indexTabCross++) {
           pTabCrossResults=&pTabFeno->TabCrossResults[indexTabCross];
-          
+
           if (pTabCrossResults->indexAmf!=ITEM_NONE) {
             if (OutputGetAmf(pTabCrossResults,pRecordInfo->Zm,pRecordInfo->Tm,&pTabCrossResults->Amf)) {
               rc=ERROR_SetLast("OutputSaveResults",ERROR_TYPE_WARNING,ERROR_ID_AMF,pRecordInfo->Zm,OUTPUT_AmfSpace[pTabCrossResults->indexAmf].amfFileName);
@@ -2112,7 +2130,7 @@ RC OUTPUT_LocalAlloc(ENGINE_CONTEXT *pEngineContext)
 
   if (pResults->analysisFlag || pResults->calibFlag) {
     assert(newRecordNumber > 0);
-    
+
     if (outputRecords!=NULL)
       MEMORY_ReleaseBuffer(__func__,"outputRecords",outputRecords);
     outputRecords=NULL;
@@ -2123,7 +2141,7 @@ RC OUTPUT_LocalAlloc(ENGINE_CONTEXT *pEngineContext)
       rc = ERROR_ID_ALLOC;
     else
       memset(outputRecords,0,sizeof(OUTPUT_INFO)*newRecordNumber);
-    
+
     for (unsigned int i=0; i<output_num_fields; i++) {
       struct output_field *pfield = &output_data_analysis[i];
       output_field_clear(pfield);

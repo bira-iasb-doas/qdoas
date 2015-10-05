@@ -139,8 +139,15 @@ CWOutputSelector::CWOutputSelector(const data_select_list_t *d, QWidget *parent)
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_SPIKES,                 "Pixels with spikes in residual"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_UAV_SERVO_BYTE_SENT,    "Servo position byte sent"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_UAV_SERVO_BYTE_RECEIVED,"Servo position byte received"));
-  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_UAV_TEMPERATURE,        "Temperature (°C)"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_UAV_INSIDE_TEMP,        "Inside Temperature (°C)"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_UAV_OUTSIDE_TEMP,       "Outside Temperature (°C)"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_UAV_PRESSURE,           "Pressure (hPa)"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_UAV_HUMIDITY,           "Humidity"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_UAV_DEWPOINT,           "Dewpoint"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_UAV_PITCH,              "Pitch"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_UAV_ROLL,               "Roll"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_UAV_HEADING,            "Heading"));
+
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_PRECALCULATED_FLUXES,   "Precalculated fluxes"));
 
   // populate the selected list by key-reference to the available list ...
@@ -390,8 +397,23 @@ void getValidFieldFlags(int *validFlags, int instrument)
       validFlags[PRJCT_RESULTS_ALTIT]=1;
       validFlags[PRJCT_RESULTS_UAV_SERVO_BYTE_SENT]=1;
       validFlags[PRJCT_RESULTS_UAV_SERVO_BYTE_RECEIVED]=1;
-      validFlags[PRJCT_RESULTS_UAV_TEMPERATURE]=1;
+      validFlags[PRJCT_RESULTS_UAV_INSIDE_TEMP]=1;
+      validFlags[PRJCT_RESULTS_UAV_OUTSIDE_TEMP]=1;
       validFlags[PRJCT_RESULTS_UAV_PRESSURE]=1;
+      validFlags[PRJCT_RESULTS_UAV_HUMIDITY]=1;
+      validFlags[PRJCT_RESULTS_UAV_DEWPOINT]=1;
+      validFlags[PRJCT_RESULTS_UAV_PITCH]=1;
+      validFlags[PRJCT_RESULTS_UAV_ROLL]=1;
+      validFlags[PRJCT_RESULTS_UAV_HEADING]=1;
+     }
+    break;
+ // ----------------------------------------------------------------------------
+    case PRJCT_INSTR_FORMAT_BIRA_MOBILE :
+     {
+      validFlags[PRJCT_RESULTS_SCANS]=1;
+      validFlags[PRJCT_RESULTS_NREJ]=1;
+      validFlags[PRJCT_RESULTS_LONGIT]=1;
+      validFlags[PRJCT_RESULTS_LATIT]=1;
      }
     break;
  // ----------------------------------------------------------------------------

@@ -293,10 +293,22 @@ int mediateRequestDisplaySpecInfo(void *engineContext,int page,void *responseHan
      mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Servo position byte sent","%d",(int)pRecord->uavBira.servoSentPosition);
     if (pSpectra->fieldsFlag[PRJCT_RESULTS_UAV_SERVO_BYTE_RECEIVED])
      mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Servo position byte received","%d",(int)pRecord->uavBira.servoReceivedPosition);
-    if (pSpectra->fieldsFlag[PRJCT_RESULTS_UAV_TEMPERATURE])
-     mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Temperature","%.3f",(int)pRecord->uavBira.temperature);
+    if (pSpectra->fieldsFlag[PRJCT_RESULTS_UAV_INSIDE_TEMP])
+     mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Inside temperature","%.3f",(float)pRecord->uavBira.insideTemp);
+    if (pSpectra->fieldsFlag[PRJCT_RESULTS_UAV_OUTSIDE_TEMP])
+     mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Outside temperature","%.3f",(float)pRecord->uavBira.outsideTemp);
     if (pSpectra->fieldsFlag[PRJCT_RESULTS_UAV_PRESSURE])
-     mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Pressure","%.3f",(int)pRecord->uavBira.pressure);
+     mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Pressure","%.3f",(float)pRecord->uavBira.pressure);
+    if (pSpectra->fieldsFlag[PRJCT_RESULTS_UAV_HUMIDITY])
+     mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Humidity","%.3f",(float)pRecord->uavBira.humidity);
+    if (pSpectra->fieldsFlag[PRJCT_RESULTS_UAV_DEWPOINT])
+     mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Dewpoint","%.3f",(float)pRecord->uavBira.dewPoint);
+    if (pSpectra->fieldsFlag[PRJCT_RESULTS_UAV_PITCH])
+     mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"pitch","%.3f",(float)pRecord->uavBira.pitch);
+    if (pSpectra->fieldsFlag[PRJCT_RESULTS_UAV_ROLL])
+     mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Roll","%.3f",(float)pRecord->uavBira.roll);
+    if (pSpectra->fieldsFlag[PRJCT_RESULTS_UAV_HEADING])
+     mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Heading","%.3f",(float)pRecord->uavBira.heading);
    }
 
   // Return
@@ -957,6 +969,7 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
 
       break;
       // ----------------------------------------------------------------------------
+    case PRJCT_INSTR_FORMAT_BIRA_MOBILE :                                                              // BIRA MOBILE
     case PRJCT_INSTR_FORMAT_BIRA_AIRBORNE :                                                              // BIRA AIRBORNE
 
       NDET=2048;                                                                                     // size of the detector
@@ -975,7 +988,7 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
 
       strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->apex.calibrationFile);
       strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->apex.transmissionFunctionFile);
-     
+
       break;
     case PRJCT_INSTR_FORMAT_RASAS :                                                                 // Format RASAS (INTA)
 
@@ -1643,20 +1656,20 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
 
        if ((pTabFeno->hidden<2) && ((THRD_id==THREAD_TYPE_ANALYSIS) || (pTabFeno->hidden==1))) {
          // QDOAS : avoid the load of disabled analysis windows with hidden==2
-         
+
          if (pTabFeno->hidden) {                                                     // if indexFeno==0, load calibration parameters
            strcpy(pTabFeno->windowName,"Calibration description");                   // like WinDOAS
            pTabFeno->analysisMethod=pKuruczOptions->analysisMethod;
          } else {                                                                    // otherwise, load analysis windows from analysisWindows[indexFeno-1]
            // Load data from analysis windows panels
-             
+
            strcpy(pTabFeno->windowName,pAnalysisWindows->name);
            strcpy(pTabFeno->residualsFile,pAnalysisWindows->residualFile);
            strcpy(pTabFeno->ref1,pAnalysisWindows->refOneFile);
            strcpy(pTabFeno->ref2,pAnalysisWindows->refTwoFile);
-           
+
            pTabFeno->resolFwhm=pAnalysisWindows->resolFwhm;
-             
+
            if ((pTabFeno->refSpectrumSelectionMode=pAnalysisWindows->refSpectrumSelection)==ANLYS_REF_SELECTION_MODE_AUTOMATIC) {
              if ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_CCD_EEV) || (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC_STD) || (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC_BIRA) ||
                  ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_ASCII) && pEngineContext->project.instrumental.ascii.elevSaveFlag)) {
@@ -1666,10 +1679,10 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
                else if (pTabFeno->refMaxdoasSelectionMode==ANLYS_MAXDOAS_REF_SZA)
                  pEngineContext->analysisRef.refSza++;
              }
-             
+
              pTabFeno->refSZA=(double)pAnalysisWindows->refSzaCenter;
              pTabFeno->refSZADelta=(double)pAnalysisWindows->refSzaDelta;
-             
+
              pTabFeno->refLatMin=pAnalysisWindows->refMinLatitude;
              pTabFeno->refLatMax=pAnalysisWindows->refMaxLatitude;
              pTabFeno->refLonMin=pAnalysisWindows->refMinLongitude;
@@ -1684,7 +1697,7 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
 
              if ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_ASCII) ||
                  (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN)) {
-               
+
                pTabFeno->gomePixelType[0]=pAnalysisWindows->pixelTypeEast;
                pTabFeno->gomePixelType[1]=pAnalysisWindows->pixelTypeCenter;
                pTabFeno->gomePixelType[2]=pAnalysisWindows->pixelTypeWest;
@@ -1698,7 +1711,7 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
              if ((fabs(pTabFeno->refLonMax-pTabFeno->refLonMin)>1.e-5) ) // && (fabs(pTabFeno->refLonMax-pTabFeno->refLonMin)<359.))
                pEngineContext->analysisRef.refLon++;
            }
-           
+
            if (pEngineContext->project.spectra.displayFitFlag) {
 
              pTabFeno->displaySpectrum=pAnalysisWindows->requireSpectrum;
@@ -1751,7 +1764,7 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
          if ( pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_OMI
               && strlen(pInstrumental->calibrationFile) ) {
            rc=OMI_GetReference(pInstrumental->omi.spectralType,pInstrumental->calibrationFile,indexFenoColumn,pEngineContext->buffers.lambda,pEngineContext->buffers.spectrum,pEngineContext->buffers.sigmaSpec);
-           
+
            if (rc != 0) {
              break;
            }
@@ -1764,13 +1777,13 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
          if (!(rc=ANALYSE_LoadRef(pEngineContext,indexFenoColumn)) &&   // eventually, modify LambdaRef for continuous functions
              !(rc=ANALYSE_LoadCross(pEngineContext,pAnalysisWindows->crossSectionList.crossSection,pAnalysisWindows->crossSectionList.nCrossSection,pTabFeno->hidden,pTabFeno->LambdaRef,indexFenoColumn)) &&
              !(rc=mediateRequestSetAnalysisLinear(&pAnalysisWindows->linear,indexFenoColumn)) &&
-             
+
              // Caro : int the future, replace structures anlyswin_nonlinear and calibration_sfp with the following one more flexible
              //        mediateRequestSetAnalysisNonLinearDoas and mediateRequestSetAnalysisNonLinearCalib would be replaced by only one call to ANALYSE_LoadNonLinear
 
              ((!pTabFeno->hidden && !(rc=mediateRequestSetAnalysisNonLinearDoas(pEngineContext,&pAnalysisWindows->nonlinear,pTabFeno->LambdaRef,indexFenoColumn))) ||
               (pTabFeno->hidden && !(rc=mediateRequestSetAnalysisNonLinearCalib(pEngineContext,pEngineContext->calibFeno.sfp,pTabFeno->LambdaRef,indexFenoColumn)))) &&
-             
+
              !(rc=ANALYSE_LoadShiftStretch(pAnalysisWindows->shiftStretchList.shiftStretch,pAnalysisWindows->shiftStretchList.nShiftStretch,indexFenoColumn)) &&
              !(rc=ANALYSE_LoadOutput(pAnalysisWindows->outputList.output,pAnalysisWindows->outputList.nOutput,indexFenoColumn)) &&
              (pTabFeno->hidden ||
@@ -1785,7 +1798,7 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
              useUsamp+=pTabFeno->useUsamp;
              xsToConvolute+=pTabFeno->xsToConvolute;
              xsToConvoluteI0+=pTabFeno->xsToConvoluteI0;
-             
+
              if (pTabFeno->gomeRefFlag || pEngineContext->refFlag) {
                memcpy(pTabFeno->Lambda,pTabFeno->LambdaRef,sizeof(double)*NDET);
                memcpy(pTabFeno->LambdaK,pTabFeno->LambdaRef,sizeof(double)*NDET);
@@ -1796,7 +1809,7 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
            }
 
            ANALYSE_SetAnalysisType(indexFenoColumn);
-           
+
            if (!pTabFeno->hidden) {
              lambdaMin=min(lambdaMin,pTabFeno->LambdaRef[0]);
              lambdaMax=max(lambdaMax,pTabFeno->LambdaRef[NDET-1]);
@@ -1876,14 +1889,14 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
            if (!rc && useKurucz) {
              rc=KURUCZ_Reference(pEngineContext->buffers.instrFunction,0,saveFlag,1,responseHandle,indexFenoColumn);
            }
-           // make failure of KURUCZ_Alloc on any row a fatal error? (only possible for configurations with errors/bad input files?) 
+           // make failure of KURUCZ_Alloc on any row a fatal error? (only possible for configurations with errors/bad input files?)
          }
 
          if (!rc && (THRD_id!=THREAD_TYPE_KURUCZ)) {
            rc=ANALYSE_AlignReference(pEngineContext,0,responseHandle,indexFenoColumn);
          }
        }
-       
+
        if ( (ANALYSE_swathSize > 1) && rc) {
          // Error on one irradiance spectrum shouldn't stop the analysis of other spectra
          ERROR_SetLast(__func__, ERROR_TYPE_WARNING, ERROR_ID_IMAGER_CALIB, 1+indexFenoColumn);
@@ -2107,7 +2120,7 @@ int mediateRequestNextMatchingSpectrum(ENGINE_CONTEXT *pEngineContext,void *resp
                   (((pProject->spectra.longMin!=pProject->spectra.longMax) &&
                     ((longit>max(pProject->spectra.longMin,pProject->spectra.longMax)) ||
                      (longit<min(pProject->spectra.longMin,pProject->spectra.longMax)))) ||
-                   
+
                    ((pProject->spectra.latMin!=pProject->spectra.latMax) &&
                     ((latit>max(pProject->spectra.latMin,pProject->spectra.latMax)) ||
                      (latit<min(pProject->spectra.latMin,pProject->spectra.latMax)))))) {
@@ -2131,7 +2144,7 @@ int mediateRequestNextMatchingSpectrum(ENGINE_CONTEXT *pEngineContext,void *resp
        for (int indexFeno=0;indexFeno<NFeno;indexFeno++)
       	 if (!TabFeno[indexFenoColumn][indexFeno].hidden)
            TabFeno[indexFenoColumn][indexFeno].rc=ERROR_ID_FILE_RECORD;             // force the output to default values
-       
+
        OUTPUT_SaveResults(pEngineContext,indexFenoColumn);
      }
 

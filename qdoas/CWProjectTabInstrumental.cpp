@@ -36,7 +36,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "debugutil.h"
 
-StrayLightConfig::StrayLightConfig(Qt::Orientation orientation, QWidget *parent) : QGroupBox("Correct straylight bias", parent), 
+StrayLightConfig::StrayLightConfig(Qt::Orientation orientation, QWidget *parent) : QGroupBox("Correct straylight bias", parent),
                                                                                    m_lambdaMinEdit(new QLineEdit(this) ),
                                                                                    m_lambdaMaxEdit(new QLineEdit(this) ) {
   this->setCheckable(true);
@@ -226,6 +226,11 @@ CWProjectTabInstrumental::CWProjectTabInstrumental(const mediate_project_instrum
   index = m_formatStack->addWidget(m_biraairborneEdit);
   m_instrumentToStackIndexMap.insert(std::map<int,int>::value_type(PRJCT_INSTR_FORMAT_BIRA_AIRBORNE, index));
 
+  // bira mobile
+  m_biramobileEdit = new CWInstrMinimumEdit(&(instr->biramobile));
+  index = m_formatStack->addWidget(m_biramobileEdit);
+  m_instrumentToStackIndexMap.insert(std::map<int,int>::value_type(PRJCT_INSTR_FORMAT_BIRA_MOBILE, index));
+
   // apex
   m_apexEdit = new CWInstrMinimumEdit(&(instr->apex));
   index = m_formatStack->addWidget(m_apexEdit);
@@ -290,6 +295,7 @@ void CWProjectTabInstrumental::apply(mediate_project_instrumental_t *instr) cons
   m_gome2Edit->apply(&(instr->gome2));
   m_mkzyEdit->apply(&(instr->mkzy));
   m_biraairborneEdit->apply(&(instr->biraairborne));
+  m_biramobileEdit->apply(&(instr->biramobile));
   m_oceanOpticsEdit->apply(&(instr->oceanoptics));
 }
 
@@ -1791,7 +1797,7 @@ CWInstrOmiEdit::CWInstrOmiEdit(const struct instrumental_omi *d, QWidget *parent
   // Pixel quality flags
   m_pixelQFGroup = new QGroupBox("Use Pixel Quality Flags", this);
   qualityFlagsLayout->addWidget(m_pixelQFGroup);
-  m_pixelQFGroup->setCheckable(true);  
+  m_pixelQFGroup->setCheckable(true);
 
   QGridLayout *pixelQFLayout = new QGridLayout(m_pixelQFGroup);
   pixelQFLayout->addWidget(new QLabel("Mask for pixel rejection", m_pixelQFGroup), 1, 0, Qt::AlignRight);

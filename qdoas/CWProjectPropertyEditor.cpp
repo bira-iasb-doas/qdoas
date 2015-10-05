@@ -79,6 +79,7 @@ CWProjectPropertyEditor::CWProjectPropertyEditor(const QString &projectName, QWi
   m_groundFormatCombo->addItem("RASAS (INTA)", QVariant(PRJCT_INSTR_FORMAT_RASAS));
   m_groundFormatCombo->addItem("SAOZ EFM (1024)", QVariant(PRJCT_INSTR_FORMAT_SAOZ_EFM));
   m_groundFormatCombo->addItem("SAOZ PCD/NMOS (512)", QVariant(PRJCT_INSTR_FORMAT_SAOZ_VIS));
+  m_groundFormatCombo->addItem("BIRA Mobile", QVariant(PRJCT_INSTR_FORMAT_BIRA_MOBILE));
   m_groundFormatCombo->hide();
   // create and populate satellite
   m_satelliteFormatCombo = new QComboBox(this);

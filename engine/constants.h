@@ -349,7 +349,8 @@ enum _prjctInstrFormat {
   PRJCT_INSTR_FORMAT_TROPOMI,                                                   // Tropomi
   PRJCT_INSTR_FORMAT_GOME2,                                                     // GOME2
   PRJCT_INSTR_FORMAT_MKZY,                                                      // MANNE Kihlman and ZHANG Yan pak format
-  PRJCT_INSTR_FORMAT_BIRA_AIRBORNE,                                             // MOBILEDOAS and ULMDOAS (BIRA-IASB)
+  PRJCT_INSTR_FORMAT_BIRA_AIRBORNE,                                             // ULMDOAS (BIRA-IASB)
+  PRJCT_INSTR_FORMAT_BIRA_MOBILE,                                               // MOBILEDOAS (BIRA-IASB)
   PRJCT_INSTR_FORMAT_APEX,                                                      // APEX NetCDF files (BIRA-IASB/VITO)
   PRJCT_INSTR_FORMAT_OCEAN_OPTICS,                                              // Ocean optics
   PRJCT_INSTR_FORMAT_MAX
@@ -538,8 +539,14 @@ enum _prjctResults
   PRJCT_RESULTS_SPIKES,
   PRJCT_RESULTS_UAV_SERVO_BYTE_SENT,
   PRJCT_RESULTS_UAV_SERVO_BYTE_RECEIVED,
-  PRJCT_RESULTS_UAV_TEMPERATURE,
+  PRJCT_RESULTS_UAV_INSIDE_TEMP,
+  PRJCT_RESULTS_UAV_OUTSIDE_TEMP,
   PRJCT_RESULTS_UAV_PRESSURE,
+  PRJCT_RESULTS_UAV_HUMIDITY,
+  PRJCT_RESULTS_UAV_DEWPOINT,
+  PRJCT_RESULTS_UAV_PITCH,
+  PRJCT_RESULTS_UAV_ROLL,
+  PRJCT_RESULTS_UAV_HEADING,
   PRJCT_RESULTS_SLANT_COL,
   PRJCT_RESULTS_SLANT_ERR,
   PRJCT_RESULTS_SHIFT,

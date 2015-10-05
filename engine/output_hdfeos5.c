@@ -524,7 +524,7 @@ static RC initialize_data_buffer(void **datbuf, size_t len, const char *he5_fiel
 RC hdfeos5_write_analysis_data(const bool selected[], int num_records, const OUTPUT_INFO *outputRecords) {
   for(unsigned int i=0; i<output_num_fields; i++) {
     struct output_field thefield = output_data_analysis[i];
-    
+
     size_t length = 1 + strlen(thefield.fieldname)
       + (thefield.windowname ? 1 + strlen(thefield.windowname) : 0);
     char he5_fieldname[length];
@@ -864,8 +864,14 @@ static enum fieldtype get_fieldtype(enum _prjctResults output_field) {
   case PRJCT_RESULTS_INDEX_CROSSTRACK:
   case PRJCT_RESULTS_UAV_SERVO_BYTE_SENT:
   case PRJCT_RESULTS_UAV_SERVO_BYTE_RECEIVED:
-  case PRJCT_RESULTS_UAV_TEMPERATURE:
+  case PRJCT_RESULTS_UAV_INSIDE_TEMP:
+  case PRJCT_RESULTS_UAV_OUTSIDE_TEMP:
   case PRJCT_RESULTS_UAV_PRESSURE:
+  case PRJCT_RESULTS_UAV_HUMIDITY:
+  case PRJCT_RESULTS_UAV_DEWPOINT:
+  case PRJCT_RESULTS_UAV_PITCH:
+  case PRJCT_RESULTS_UAV_ROLL:
+  case PRJCT_RESULTS_UAV_HEADING:
     result = GEO;
     break;
     // Data fields:

@@ -371,6 +371,22 @@ extern "C" {
     double lambdaMin,lambdaMax;
   };
 
+  struct instrumental_bira_airborne
+  {
+    int  straylight;
+    double lambdaMin,lambdaMax;
+    char calibrationFile[FILENAME_BUFFER_LENGTH];
+    char transmissionFunctionFile[FILENAME_BUFFER_LENGTH];
+  };
+
+  struct instrumental_bira_mobile
+  {
+    int  straylight;
+    double lambdaMin,lambdaMax;
+    char calibrationFile[FILENAME_BUFFER_LENGTH];
+    char transmissionFunctionFile[FILENAME_BUFFER_LENGTH];
+  };
+
   typedef struct mediate_project_instrumental
    {
     int format;
@@ -400,6 +416,7 @@ extern "C" {
     struct instrumental_gome2 gome2;
     struct instrumental_minimum mkzy;
     struct instrumental_minimum biraairborne;
+    struct instrumental_minimum biramobile;
     struct instrumental_minimum apex;
     struct instrumental_oceanoptics oceanoptics;
    }

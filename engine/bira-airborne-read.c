@@ -68,7 +68,7 @@
 // CONSTANTS DEFINITION
 // ====================
 
-#define IGNORED_BYTES 144
+#define IGNORED_BYTES 96
 
 // ====================
 // STRUCTURE DEFINITION
@@ -78,20 +78,30 @@
 
 typedef struct _airborneData
  {
-  SHORT_DATE  today;                                                            // measurement date and time
-  struct time now;
-  int         averagedSpectra;                                                  // number of averaged spectra
-  int         totalTime;                                                        // the total measurement time
-  int         nrejMeas,naccMeas;                                                // resp. number of rejected spectra and number of accumulation
-  float       longitude,latitude,altitude;                                      // GPS data
-  float       exposureTime;                                                     // exposure time (in milliseconds)
-  struct time gpsTime;
+  SHORT_DATE    today;                                                          // measurement date and time
+  struct time   now;
+  int           averagedSpectra;                                                // number of averaged spectra
+  int           totalTime;                                                      // the total measurement time
+  int           nrejMeas,naccMeas;                                              // resp. number of rejected spectra and number of accumulation
+  float         longitude,latitude,altitude;                                    // GPS data
+  float         exposureTime;                                                   // exposure time (in milliseconds)
+  struct time   gpsTime;
   unsigned char floatflag;
   unsigned char sentPosition;
   unsigned char receivedPosition;
-  unsigned char ignoredChar;
-  float         temperature;
-  float         pressure;
+  unsigned char instrumentType;                                                 // 0 for MobileDOAS, 1 for airborne measurements;
+  float         outsideTemp,
+	               humidity,
+	               dewPoint,
+	               pressure,
+	               altitudeP,
+	               insideTemp;
+
+  struct time   endMeas;
+
+  float         longitudeEnd,latitudeEnd,altitudeEnd;
+  struct time   gpsTimeEnd;
+  float         pitch,roll,heading;                          // airborne
   unsigned char ignoredBytes[IGNORED_BYTES];
  }
 AIRBORNE_DATA;
@@ -199,8 +209,22 @@ RC AIRBORNE_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int lo
 
     pRecord->uavBira.servoSentPosition=(unsigned char)header.sentPosition;                     // UAV servo control : position byte sent to the PIC
     pRecord->uavBira.servoReceivedPosition=(unsigned char)header.receivedPosition;             // UAV servo control : position byte received by the PIC
-    pRecord->uavBira.temperature=(float)header.temperature;
+    pRecord->uavBira.insideTemp=(float)header.insideTemp;
+    pRecord->uavBira.outsideTemp=(float)header.outsideTemp;
+
     pRecord->uavBira.pressure=(float)header.pressure;
+ 	  pRecord->uavBira.dewPoint=(float)header.dewPoint;
+ 	  pRecord->uavBira.humidity=(float)header.humidity;
+ 	  pRecord->uavBira.altitudeP=(float)header.altitudeP;
+ 	  pRecord->uavBira.longitudeEnd=(float)header.longitudeEnd;
+ 	  pRecord->uavBira.latitudeEnd=(float)header.latitudeEnd;
+ 	  pRecord->uavBira.altitudeEnd=(float)header.altitudeEnd;
+ 	  pRecord->uavBira.pitch=(float)header.pitch;
+ 	  pRecord->uavBira.roll=(float)header.roll;
+ 	  pRecord->uavBira.heading=(float)header.heading;
+
+ 	  memcpy(&pRecord->uavBira.gpsTime,&header.gpsTime,sizeof(struct time));
+ 	  memcpy(&pRecord->uavBira.gpsTimeEnd,&header.gpsTimeEnd,sizeof(struct time));
 
     pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_datetime.thedate,&pRecord->present_datetime.thetime,0);
     pRecord->Zm=(double)ZEN_FNTdiz(ZEN_FNCrtjul(&pRecord->Tm),&pRecord->longitude,&pRecord->latitude,&pRecord->Azimuth);
