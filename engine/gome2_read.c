@@ -46,6 +46,7 @@
 #include "spectrum_files.h"
 #include "satellite.h"
 #include "engine_context.h"
+#include "spline.h"
 #include "stdfunc.h"
 #include "mediate.h"
 #include "engine.h"
@@ -86,8 +87,8 @@ typedef struct _gome2MdrInfo
  {
   uint16_t num_recs[NBAND];                                                     // number of records for the requested band
   uint16_t rec_length[NBAND];                                                   // record length for the requested band
- 	INDEX    indexMDR;                                                            // index of the MDR in the file
- 	double   startTime;                                                           // starting time of the MDR
+  INDEX    indexMDR;                                                            // index of the MDR in the file
+  double   startTime;                                                           // starting time of the MDR
 
  	// !!! version < 12 : NCHANNEL
 
@@ -117,6 +118,8 @@ typedef struct _gome2MdrInfo
   double   lza12[N_SCAN_MAX][3];                                                // line of sight zenith angles
   double   laa12[N_SCAN_MAX][3];                                                // line of sight azimuth angles
 
+  double   earthshine_wavelength[1024];
+
   uint16_t geo_rec_length[NBAND];
   uint8_t  cloudFitMode[N_SCAN_MAX];
   double   cloudTopPressure[N_SCAN_MAX];
@@ -131,7 +134,7 @@ GOME2_MDR;
 
 typedef struct _gome2Info
  {
- 	uint8_t  channelIndex;
+  uint8_t  channelIndex;
   uint16_t startPixel;
   uint16_t no_of_pixels;
   uint16_t orbitStart;
@@ -150,8 +153,8 @@ GOME2_INFO;
 
 typedef struct _GOME2OrbitFiles                                                 // description of an orbit
  {
- 	char               gome2FileName[MAX_STR_LEN+1];                             // the name of the file with a part of the orbit
- 	GOME2_INFO          gome2Info;                                                // all internal information about the PDS file like data offsets etc.
+  char                gome2FileName[MAX_STR_LEN+1];                             // the name of the file with a part of the orbit
+  GOME2_INFO          gome2Info;                                                // all internal information about the PDS file like data offsets etc.
   double             *gome2SunRef,*gome2SunWve;                                 // the sun reference spectrum and calibration
   INDEX              *gome2LatIndex,*gome2LonIndex,*gome2SzaIndex;              // indexes of records sorted resp. by latitude, by longitude and by SZA
   SATELLITE_GEOLOC   *gome2Geolocations;                                        // geolocations
@@ -166,7 +169,7 @@ GOME2_ORBIT_FILE;
 
 typedef struct _gome2RefSelection
  {
- 	INDEX  indexFile;
+  INDEX  indexFile;
   INDEX  indexRecord;
   double sza;
   double latitude;
@@ -199,6 +202,19 @@ const char *gome2BandName[NBAND] =
   "BAND_SWPP",
   "BAND_SWPS"
  };
+
+const char *gome2WavelengthField[NBAND] = {
+  "WAVELENGTH_1A",
+  "WAVELENGTH_1B",
+  "WAVELENGTH_2A",
+  "WAVELENGTH_2B",
+  "WAVELENGTH_3",
+  "WAVELENGTH_4",
+  "WAVELENGTH_PP",
+  "WAVELENGTH_PS",
+  "WAVELENGTH_SWPP",
+  "WAVELENGTH_SWPS"
+};
 
 static GOME2_ORBIT_FILE gome2OrbitFiles[MAX_GOME2_FILES];                       // list of files per day
 static int gome2OrbitFilesN=0;                                                  // the total number of files to browse in one shot
@@ -377,11 +393,11 @@ int read_utc_string(coda_Cursor* cursor, char * utc_string, double * data)
 
 void Gome2GotoOBS(GOME2_ORBIT_FILE *pOrbitFile,INDEX indexBand,INDEX indexMDR,INDEX indexObs)
  {
- 	// Declarations
+   // Declarations
 
- 	int obsToBypass;
+   int obsToBypass;
 
- 	// Initializations
+   // Initializations
 
   obsToBypass=indexObs*pOrbitFile->gome2Info.mdr[indexMDR].rec_length[indexBand];
 
@@ -391,10 +407,10 @@ void Gome2GotoOBS(GOME2_ORBIT_FILE *pOrbitFile,INDEX indexBand,INDEX indexMDR,IN
   coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"MDR");
   coda_cursor_goto_array_element_by_index(&pOrbitFile->gome2Cursor,pOrbitFile->gome2Info.mdr[indexMDR].indexMDR);
 
- 	coda_cursor_goto_available_union_field(&pOrbitFile->gome2Cursor);                         // MDR.GOME2_MDR_L1B_EARTHSHINE_V1
- 	coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,gome2BandName[indexBand]); // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.band(indexBand)
+  coda_cursor_goto_available_union_field(&pOrbitFile->gome2Cursor);                         // MDR.GOME2_MDR_L1B_EARTHSHINE_V1
+  coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,gome2BandName[indexBand]); // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.band(indexBand)
 
- 	coda_cursor_goto_array_element_by_index(&pOrbitFile->gome2Cursor,obsToBypass);
+  coda_cursor_goto_array_element_by_index(&pOrbitFile->gome2Cursor,obsToBypass);
  }
 
 // -----------------------------------------------------------------------------
@@ -674,6 +690,11 @@ int Gome2ReadMDRInfo(GOME2_ORBIT_FILE *pOrbitFile,GOME2_MDR *pMdr,int indexBand)
 
   if (subclass==EARTHSHINE)
    {
+    // Earthshine Wavelength grid for this band
+    coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor, gome2WavelengthField[indexBand]);
+    coda_cursor_read_double_array(&pOrbitFile->gome2Cursor, pMdr->earthshine_wavelength, coda_array_ordering_c);
+    coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);
+
     // Observation mode (NADIR is expected)
 
     coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"OBSERVATION_MODE");       // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.OBSERVATION_MODE
@@ -976,33 +997,22 @@ RC Gome2BrowseMDR(GOME2_ORBIT_FILE *pOrbitFile,INDEX indexBand)
 
     for (i=0;(uint32_t)i<pGome2Info->total_mdr;i++)
      {
-      coda_cursor_goto_array_element_by_index(&pOrbitFile->gome2Cursor,i);
-      pMdr=&pGome2Info->mdr[pGome2Info->total_nadir_mdr];
-
-     	if (!(rc=Gome2ReadMDRInfo(pOrbitFile,pMdr,indexBand)))
+       coda_cursor_goto_array_element_by_index(&pOrbitFile->gome2Cursor,i);
+       pMdr=&pGome2Info->mdr[pGome2Info->total_nadir_mdr];
+       
+       
+       if (!(rc=Gome2ReadMDRInfo(pOrbitFile,pMdr,indexBand)))
      	 {
-     	 	pGome2Info->total_nadir_obs+=pMdr->num_recs[indexBand];
-     	 	pMdr->indexMDR=i;
-
-     	// 	{
-     	// 		FILE *fp;
-      //
-     	// 		fp=fopen("toto.dat","a+t");
-      //
-     	// 		fprintf(fp,"version %d MDR %-2d  Obs %-2d  Int %-12.6f\n",pOrbitFile->version,i,pGome2Info->mdr[pGome2Info->total_nadir_mdr].num_recs[indexBand],
-      //
-     	// 		 	 	(pOrbitFile->version<=11)?pMdr->unique_int[pMdr->int_index[indexBand]]:pMdr->integration_times[indexBand]);
-      //
-     	// 		fclose(fp);
-     	// 	}
-
-     	  pGome2Info->total_nadir_mdr++;
+           pGome2Info->total_nadir_obs+=pMdr->num_recs[indexBand];
+           pMdr->indexMDR=i;
+           
+           pGome2Info->total_nadir_mdr++;
      	 }
-
-     	coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);
+       
+       coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);
      }
    }
-
+  
   // Return
 
   return rc;
@@ -1381,6 +1391,7 @@ RC GOME2_Set(ENGINE_CONTEXT *pEngineContext)
        	coda_cursor_set_product(&pOrbitFile->gome2Cursor,pOrbitFile->gome2Pf);
 
        	Gome2ReadOrbitInfo(pOrbitFile,(int)pEngineContext->project.instrumental.user);
+        NDET = pOrbitFile->gome2Info.no_of_pixels;
        	Gome2BrowseMDR(pOrbitFile,(int)pEngineContext->project.instrumental.user);
 
        	if ((pOrbitFile->specNumber=(THRD_browseType==THREAD_BROWSE_DARK)?1:pOrbitFile->gome2Info.total_nadir_obs)>0)
@@ -1420,15 +1431,14 @@ RC GOME2_Set(ENGINE_CONTEXT *pEngineContext)
   else
    {
     if (!(rc=pOrbitFile->rc) && (pOrbitFile->gome2Pf==NULL) &&
-        !(rc=Gome2Open(&pOrbitFile->gome2Pf,pEngineContext->fileInfo.fileName,&pOrbitFile->version)))
-     {
-     	coda_cursor_set_product(&pOrbitFile->gome2Cursor,pOrbitFile->gome2Pf);
+        !(rc=Gome2Open(&pOrbitFile->gome2Pf,pEngineContext->fileInfo.fileName,&pOrbitFile->version))) {
+      coda_cursor_set_product(&pOrbitFile->gome2Cursor,pOrbitFile->gome2Pf);
       memcpy(pEngineContext->buffers.lambda,pOrbitFile->gome2SunWve,sizeof(double)*NDET);
-
-     	memcpy(pEngineContext->buffers.irrad,pOrbitFile->gome2SunRef,sizeof(double)*NDET);
-     }
+      
+      memcpy(pEngineContext->buffers.irrad,pOrbitFile->gome2SunRef,sizeof(double)*NDET);
+    }
    }
-
+  
   #if defined(__DEBUG_) && __DEBUG_
   DEBUG_FunctionStop("GOME2_Set",rc);
   #endif
@@ -1470,36 +1480,35 @@ RC GOME2_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,INDEX fileIndex)
   SATELLITE_GEOLOC *pGeoloc;
   GOME2_INFO *pGome2Info;
   RECORD_INFO *pRecord;
- 	RC rc;                                                                        // return code
+  RC rc;                                                                        // return code
 
- 	// Debug
+  // Debug
 
   #if defined(__DEBUG_) && __DEBUG_
   DEBUG_FunctionBegin("GOME2_Read",DEBUG_FCTTYPE_FILE);
   #endif
 
- 	// Initializations
+  // Initializations
 
- 	pOrbitFile=&gome2OrbitFiles[(fileIndex==ITEM_NONE)?gome2CurrentFileIndex:fileIndex];
- 	pGome2Info=&pOrbitFile->gome2Info;
- 	spectrum=pEngineContext->buffers.spectrum;
- 	sigma=pEngineContext->buffers.sigmaSpec;
- 	indexBand=(INDEX)pEngineContext->project.instrumental.user;
- 	pRecord=&pEngineContext->recordInfo;
-
- 	rc=ERROR_ID_NO;
+  pOrbitFile=&gome2OrbitFiles[(fileIndex==ITEM_NONE)?gome2CurrentFileIndex:fileIndex];
+  pGome2Info=&pOrbitFile->gome2Info;
+  spectrum=pEngineContext->buffers.spectrum;
+  sigma=pEngineContext->buffers.sigmaSpec;
+  indexBand=(INDEX)pEngineContext->project.instrumental.user;
+  pRecord=&pEngineContext->recordInfo;
+  
+  rc=ERROR_ID_NO;
 
   // Goto the requested record
 
   if (!pOrbitFile->specNumber)
-   rc=ERROR_ID_FILE_EMPTY;
+    rc=ERROR_ID_FILE_EMPTY;
   else if ((recordNo<=0) || (recordNo>pOrbitFile->specNumber))
-   rc=ERROR_ID_FILE_END;
-  else if ((THRD_id!=THREAD_TYPE_SPECTRA) || (THRD_browseType!=THREAD_BROWSE_DARK))
-   {
+    rc=ERROR_ID_FILE_END;
+  else if ((THRD_id!=THREAD_TYPE_SPECTRA) || (THRD_browseType!=THREAD_BROWSE_DARK)) {
     for (i=0;i<NDET;i++)
-     spectrum[i]=sigma[i]=(double)0.;
-
+      spectrum[i]=sigma[i]=(double)0.;
+    
     if ((indexMDR=Gome2GetMDRIndex(pOrbitFile,indexBand,recordNo-1,&mdrObs))==ITEM_NONE)
       rc=ERROR_ID_FILE_RECORD;
     else {
@@ -1540,13 +1549,16 @@ RC GOME2_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,INDEX fileIndex)
 
         coda_cursor_goto_parent(&pOrbitFile->gome2Cursor); // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.BAND[i].ERR_RAD
         coda_cursor_goto_parent(&pOrbitFile->gome2Cursor); // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.BAND[i]
-        coda_cursor_goto_next_array_element(&pOrbitFile->gome2Cursor); // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.BAND[i+1]
 
         spectrum[i] = ((double)radval) * pow(10, -radscale);
         sigma[i] = ((double)errval) * pow(10, -errscale);
 
         if (fabs(spectrum[i])>(double)1.e20)
           rc=ERROR_ID_FILE_RECORD;
+
+        if (i < (pGome2Info->no_of_pixels - 1) ) { // without CODA bounds checking, this check is necessary to avoid memory corruption when jumping past the last element, according to S Niemeijer at S&T
+          coda_cursor_goto_next_array_element(&pOrbitFile->gome2Cursor); // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.BAND[i+1]
+        }
       }
       // re-enable CODA handling of "special types"
       coda_set_option_bypass_special_types(0);
@@ -1567,29 +1579,29 @@ RC GOME2_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,INDEX fileIndex)
         
         pRecord->present_datetime.millis = -1;
         pRecord->present_datetime.microseconds = musec;
-
+        
         // Geolocation
-
+        
         pGeoloc=&pOrbitFile->gome2Geolocations[recordNo-1];
-
+        
         memcpy(pRecord->gome2.latitudes,pGeoloc->latCorners,sizeof(double)*4);
         memcpy(pRecord->gome2.longitudes,pGeoloc->lonCorners,sizeof(double)*4);
         memcpy(pRecord->gome2.solZen,pGeoloc->solZen,sizeof(float)*3);
         memcpy(pRecord->gome2.solAzi,pGeoloc->solAzi,sizeof(float)*3);
         memcpy(pRecord->gome2.losZen,pGeoloc->losZen,sizeof(float)*3);
         memcpy(pRecord->gome2.losAzi,pGeoloc->losAzi,sizeof(float)*3);
-
+        
         pRecord->cloudTopPressure=pGeoloc->cloudTopPressure;
         pRecord->cloudFraction=pGeoloc->cloudFraction;
-
+          
         pRecord->gome2.scanDirection=pGeoloc->scanDirection;
         pRecord->gome2.saaFlag=pGeoloc->saaFlag;
         pRecord->gome2.sunglintDangerFlag=pGeoloc->sunglintDangerFlag;
         pRecord->gome2.sunglintHighDangerFlag=pGeoloc->sunglintHighDangerFlag;
         pRecord->gome2.rainbowFlag=pGeoloc->rainbowFlag;
-
+        
         // Miscellaneous data (for TEMIS)
-
+        
         pRecord->latitude=pGeoloc->latCenter;
         pRecord->longitude=pGeoloc->lonCenter;
 
@@ -1597,7 +1609,7 @@ RC GOME2_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,INDEX fileIndex)
         pRecord->Azimuth=pGeoloc->solAzi[1];
         pRecord->zenithViewAngle=pGeoloc->losZen[1];
         pRecord->azimuthViewAngle=pGeoloc->losAzi[1];
-
+        
         pRecord->Tint=tint;
 
         pRecord->TimeDec=(double)hour+min/60.+(sec+musec*1.e-6)/(60.*60.);
@@ -1609,11 +1621,11 @@ RC GOME2_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,INDEX fileIndex)
             (pEngineContext->project.spectra.cloudMax<=1.) &&
             (fabs((double)(pEngineContext->project.spectra.cloudMax-pEngineContext->project.spectra.cloudMin))>EPSILON) &&
             (fabs((double)(pEngineContext->project.spectra.cloudMax-pEngineContext->project.spectra.cloudMin))<1.-EPSILON) &&
-           ((pRecord->cloudFraction<pEngineContext->project.spectra.cloudMin-EPSILON) || (pRecord->cloudFraction>pEngineContext->project.spectra.cloudMax+EPSILON)))
-
-         rc=ERROR_ID_FILE_RECORD;
-       }
-     }
+            ((pRecord->cloudFraction<pEngineContext->project.spectra.cloudMin-EPSILON) || (pRecord->cloudFraction>pEngineContext->project.spectra.cloudMax+EPSILON)))
+          
+          rc=ERROR_ID_FILE_RECORD;
+      }
+    }
    }
 
   #if defined(__DEBUG_) && __DEBUG_
@@ -2012,108 +2024,115 @@ int Gome2RefSza(GOME2_REF *refList,int maxRefSize,double sza,double szaDelta,dou
 // -----------------------------------------------------------------------------
 
 RC Gome2BuildRef(GOME2_REF *refList,int nRef,int nSpectra,double *lambda,double *ref,ENGINE_CONTEXT *pEngineContext,INDEX *pIndexLine,void *responseHandle)
- {
+{
   // Declarations
+   
+   RECORD_INFO *pRecord;
+   GOME2_ORBIT_FILE *pOrbitFile;                                                  // pointer to the current orbit
+   GOME2_REF *pRef;                                                               // pointer to the current reference spectrum
+   INDEX     indexRef,                                                           // browse reference in the list
+     indexFile,                                                          // browse files
+     i;                                                                  // index for loop and arrays
+   int       nRec;                                                               // number of records use for the average
+   int       alreadyOpen;
+   INDEX     indexColumn;
+   RC        rc;                                                                 // return code
 
-  RECORD_INFO *pRecord;
-  GOME2_ORBIT_FILE *pOrbitFile;                                                  // pointer to the current orbit
-  GOME2_REF *pRef;                                                               // pointer to the current reference spectrum
-  INDEX     indexRef,                                                           // browse reference in the list
-            indexFile,                                                          // browse files
-            i;                                                                  // index for loop and arrays
-  int       nRec;                                                               // number of records use for the average
-  int       alreadyOpen;
-  INDEX     indexColumn;
-  RC        rc;                                                                 // return code
+   // buffers to store interpolated spectra & derivatives.
+   double *tempspectrum = malloc(1024*sizeof(*tempspectrum));
+   double *derivs = malloc(NDET*sizeof(*derivs));
+   
+   // Initializations
+   
+   pRecord=&pEngineContext->recordInfo;
+   for (i=0;i<NDET;i++)
+     ref[i]=(double)0.;
 
-  // Initializations
-
-  pRecord=&pEngineContext->recordInfo;
-  for (i=0;i<NDET;i++)
-   ref[i]=(double)0.;
-
-  indexColumn=2;
-  rc=ERROR_ID_NO;
-
-  // Search for spectra matching latitudes and SZA conditions
-
-  for (nRec=0,indexRef=0,indexFile=ITEM_NONE;
-      (indexRef<nRef) && (nRec<nSpectra) && !rc;indexRef++)
-   {
-    pRef=&refList[indexRef];
-
-    if ((indexFile==ITEM_NONE) || (pRef->indexFile==indexFile))
-     {
-      pOrbitFile=&gome2OrbitFiles[pRef->indexFile];
-
-      if (pOrbitFile->rc==ERROR_ID_NO)
-       {
-        alreadyOpen=(pOrbitFile->gome2Pf!=NULL)?1:0;
-
-        if (!alreadyOpen && !(rc=Gome2Open(&pOrbitFile->gome2Pf,pOrbitFile->gome2FileName,&pOrbitFile->version)))
-        	coda_cursor_set_product(&pOrbitFile->gome2Cursor,pOrbitFile->gome2Pf);
-
-        if (!(rc=GOME2_Read(pEngineContext,pRef->indexRecord,pRef->indexFile)))
-         {
-          if (indexFile==ITEM_NONE)
-           {
-            mediateResponseCellDataString(plotPageRef,(*pIndexLine)++,indexColumn,"Ref Selection",responseHandle);
-            mediateResponseCellInfo(plotPageRef,(*pIndexLine)++,indexColumn,responseHandle,"Ref File","%s",gome2OrbitFiles[refList[0].indexFile].gome2FileName);
-            mediateResponseCellDataString(plotPageRef,(*pIndexLine),indexColumn,"Record",responseHandle);
-            mediateResponseCellDataString(plotPageRef,(*pIndexLine),indexColumn+1,"SZA",responseHandle);
-            mediateResponseCellDataString(plotPageRef,(*pIndexLine),indexColumn+2,"Lat",responseHandle);
-            mediateResponseCellDataString(plotPageRef,(*pIndexLine),indexColumn+3,"Lon",responseHandle);
-            mediateResponseCellDataString(plotPageRef,(*pIndexLine),indexColumn+4,"CF",responseHandle);
-
-            (*pIndexLine)++;
-
-            strcpy(pRecord->refFileName,gome2OrbitFiles[pRef->indexFile].gome2FileName);
-            pRecord->refRecord=pRef->indexRecord+1;
+   indexColumn=2;
+   rc=ERROR_ID_NO;
+   
+   // Search for spectra matching latitudes and SZA conditions
+   
+   for (nRec=0,indexRef=0,indexFile=ITEM_NONE; (indexRef<nRef) && (nRec<nSpectra) && !rc;indexRef++) {
+     
+     pRef=&refList[indexRef];
+   
+     if ((indexFile==ITEM_NONE) || (pRef->indexFile==indexFile)) {
+   
+       pOrbitFile=&gome2OrbitFiles[pRef->indexFile];
+       
+       if (pOrbitFile->rc==ERROR_ID_NO) {
+         
+         alreadyOpen=(pOrbitFile->gome2Pf!=NULL)?1:0;
+         
+         if (!alreadyOpen && !(rc=Gome2Open(&pOrbitFile->gome2Pf,pOrbitFile->gome2FileName,&pOrbitFile->version)))
+           coda_cursor_set_product(&pOrbitFile->gome2Cursor,pOrbitFile->gome2Pf);
+         
+         if (!(rc=GOME2_Read(pEngineContext,pRef->indexRecord,pRef->indexFile))) {
+           if (indexFile==ITEM_NONE) {
+             mediateResponseCellDataString(plotPageRef,(*pIndexLine)++,indexColumn,"Ref Selection",responseHandle);
+             mediateResponseCellInfo(plotPageRef,(*pIndexLine)++,indexColumn,responseHandle,"Ref File","%s",gome2OrbitFiles[refList[0].indexFile].gome2FileName);
+             mediateResponseCellDataString(plotPageRef,(*pIndexLine),indexColumn,"Record",responseHandle);
+             mediateResponseCellDataString(plotPageRef,(*pIndexLine),indexColumn+1,"SZA",responseHandle);
+             mediateResponseCellDataString(plotPageRef,(*pIndexLine),indexColumn+2,"Lat",responseHandle);
+             mediateResponseCellDataString(plotPageRef,(*pIndexLine),indexColumn+3,"Lon",responseHandle);
+             mediateResponseCellDataString(plotPageRef,(*pIndexLine),indexColumn+4,"CF",responseHandle);
+             
+             (*pIndexLine)++;
+   
+             strcpy(pRecord->refFileName,gome2OrbitFiles[pRef->indexFile].gome2FileName);
+             pRecord->refRecord=pRef->indexRecord+1;
            }
 
-         	mediateResponseCellDataInteger(plotPageRef,(*pIndexLine),indexColumn,pRef->indexRecord+1,responseHandle);
-         	mediateResponseCellDataDouble(plotPageRef,(*pIndexLine),indexColumn+1,pRef->sza,responseHandle);
-         	mediateResponseCellDataDouble(plotPageRef,(*pIndexLine),indexColumn+2,pRef->latitude,responseHandle);
-         	mediateResponseCellDataDouble(plotPageRef,(*pIndexLine),indexColumn+3,pRef->longitude,responseHandle);
-         	mediateResponseCellDataDouble(plotPageRef,(*pIndexLine),indexColumn+4,pRef->cloudFraction,responseHandle);
+           mediateResponseCellDataInteger(plotPageRef,(*pIndexLine),indexColumn,pRef->indexRecord+1,responseHandle);
+           mediateResponseCellDataDouble(plotPageRef,(*pIndexLine),indexColumn+1,pRef->sza,responseHandle);
+           mediateResponseCellDataDouble(plotPageRef,(*pIndexLine),indexColumn+2,pRef->latitude,responseHandle);
+           mediateResponseCellDataDouble(plotPageRef,(*pIndexLine),indexColumn+3,pRef->longitude,responseHandle);
+           mediateResponseCellDataDouble(plotPageRef,(*pIndexLine),indexColumn+4,pRef->cloudFraction,responseHandle);
+           
+           (*pIndexLine)++;
 
-         	(*pIndexLine)++;
+           // interpolate reference on wavelength_grid
+           int rc = SPLINE_Deriv2(pEngineContext->buffers.lambda,pEngineContext->buffers.spectrum,derivs,NDET,__func__);
+           rc |= SPLINE_Vector(pEngineContext->buffers.lambda,pEngineContext->buffers.spectrum,derivs,NDET,lambda,tempspectrum,1024,SPLINE_CUBIC,__func__);
+           if (rc) {
+             break;
+           }
 
-          for (i=0;i<NDET;i++)
-           ref[i]+=(double)pEngineContext->buffers.spectrum[i];
+           for (i=0;i<NDET;i++)
+             ref[i]+=tempspectrum[i];
 
-          nRec++;
-          indexFile=pRef->indexFile;
+           nRec++;
+           indexFile=pRef->indexFile;
          }
 
-        if (!alreadyOpen)
-         {
-          if (pOrbitFile->gome2Pf!=NULL)
-           coda_close(pOrbitFile->gome2Pf);
+         if (!alreadyOpen) {
+           if (pOrbitFile->gome2Pf!=NULL)
+             coda_close(pOrbitFile->gome2Pf);
 
-          pOrbitFile->gome2Pf=NULL;
+           pOrbitFile->gome2Pf=NULL;
          }
        }
      }
    }
+   
+   if (nRec==0)
+     rc=ERROR_ID_NO_REF;
+   else if (!rc || (rc==ERROR_ID_FILE_RECORD)) {
 
-  if (nRec==0)
-   rc=ERROR_ID_NO_REF;
-  else if (!rc || (rc==ERROR_ID_FILE_RECORD))
-   {
-   	strcpy(OUTPUT_refFile,gome2OrbitFiles[indexFile].gome2FileName);
-   	OUTPUT_nRec=nRec;
+     strcpy(OUTPUT_refFile,gome2OrbitFiles[indexFile].gome2FileName);
+     OUTPUT_nRec=nRec;
 
-    for (i=0;i<NDET;i++)
-     ref[i]/=nRec;
+     for (i=0;i<NDET;i++)
+       ref[i]/=nRec;
 
-    rc=ERROR_ID_NO;
+     rc=ERROR_ID_NO;
    }
 
-  // Return
+   // Return
 
-  return rc;
- }
+   return rc;
+}
 
 // -----------------------------------------------------------------------------
 // FUNCTION      Gome2RefSelection
@@ -2127,6 +2146,7 @@ RC Gome2BuildRef(GOME2_REF *refList,int nRef,int nSpectra,double *lambda,double 
 //               cloudMin,cloudMax determine the range of cloud fraction
 //
 //               nSpectra     the number of spectra to average to build the reference spectrum;
+//               lambdaRef1   original wavelength calibration of Ref1 (i.e. solar grid before Kurucz correction)
 //               lambdaK,ref  reference spectrum to use if no spectrum in the orbit matches the sza and latitudes conditions;
 //
 // OUTPUT        lambdaN,refN reference spectrum for northern hemisphere;
@@ -2137,16 +2157,17 @@ RC Gome2BuildRef(GOME2_REF *refList,int nRef,int nSpectra,double *lambda,double 
 // -----------------------------------------------------------------------------
 
 RC Gome2RefSelection(ENGINE_CONTEXT *pEngineContext,
-                    double latMin,double latMax,
-                    double lonMin,double lonMax,
-                    double sza,double szaDelta,
-                    double cloudMin,double cloudMax,
-                    int nSpectra,
-                    double *lambdaK,double *ref,
-                    double *lambdaN,double *refN,double *pRefNormN,
-                    double *lambdaS,double *refS,double *pRefNormS,
-                    void *responseHandle)
- {
+                     double latMin,double latMax,
+                     double lonMin,double lonMax,
+                     double sza,double szaDelta,
+                     double cloudMin,double cloudMax,
+                     int nSpectra,
+                     double *lambdaRef1,
+                     double *lambdaK,double *ref,
+                     double *lambdaN,double *refN,double *pRefNormN,
+                     double *lambdaS,double *refS,double *pRefNormS,
+                     void *responseHandle)
+{
   // Declarations
 
   GOME2_REF *refList;                                                            // list of potential reference spectra
@@ -2210,7 +2231,7 @@ RC Gome2RefSelection(ENGINE_CONTEXT *pEngineContext,
       // search for potential reference spectra in northern hemisphere
 
       if ((nRefN=nRefS=Gome2RefLat(refList,gome2TotalRecordNumber,latMin,latMax,lonMin,lonMax,sza,szaDelta,cloudMin,cloudMax))>0)
-       rc=Gome2BuildRef(refList,nRefN,nSpectra,lambdaN,refN,pEngineContext,&indexLine,responseHandle);
+       rc=Gome2BuildRef(refList,nRefN,nSpectra,lambdaRef1,refN,pEngineContext,&indexLine,responseHandle);
 
       if (!rc)
        memcpy(refS,refN,sizeof(double)*NDET);
@@ -2221,7 +2242,7 @@ RC Gome2RefSelection(ENGINE_CONTEXT *pEngineContext,
     else
      {
       if ((nRefN=nRefS=Gome2RefSza(refList,gome2TotalRecordNumber,sza,szaDelta,cloudMin,cloudMax))>0)
-       rc=Gome2BuildRef(refList,nRefN,nSpectra,lambdaN,refN,pEngineContext,&indexLine,responseHandle);
+       rc=Gome2BuildRef(refList,nRefN,nSpectra,lambdaRef1,refN,pEngineContext,&indexLine,responseHandle);
 
       if (!rc)
        memcpy(refS,refN,sizeof(double)*NDET);
@@ -2291,47 +2312,47 @@ RC Gome2NewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
   // Initializations
 
-//  DEBUG_Print(DOAS_logFile,"Enter Gome2NewRef\n");
+  //  DEBUG_Print(DOAS_logFile,"Enter Gome2NewRef\n");
 
   memset(OUTPUT_refFile,0,DOAS_MAX_PATH_LEN+1);
   OUTPUT_nRec=0;
-
+  
   memset(pEngineContext->recordInfo.refFileName,0,DOAS_MAX_PATH_LEN+1);
   pEngineContext->recordInfo.refRecord=ITEM_NONE;
-
+  
   rc=EngineCopyContext(&ENGINE_contextRef,pEngineContext);
-
+  
   if (ENGINE_contextRef.recordNumber==0)
-   rc=ERROR_ID_ALLOC;
-  else
+    rc=ERROR_ID_ALLOC;
+  else {
 
-   // Browse analysis windows
+    // Browse analysis windows
 
-   for (indexFeno=0;(indexFeno<NFeno) && !rc;indexFeno++)
-    {
-     pTabFeno=&TabFeno[0][indexFeno];
+    for (indexFeno=0;(indexFeno<NFeno) && !rc;indexFeno++) {
+      pTabFeno=&TabFeno[0][indexFeno];
 
-     if ((pTabFeno->hidden!=1) &&
-         (pTabFeno->useKurucz!=ANLYS_KURUCZ_SPEC) &&
-         (pTabFeno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_AUTOMATIC))
-
-      // Build reference spectra according to latitudes and SZA conditions
-
-      rc=Gome2RefSelection(&ENGINE_contextRef,
-                          pTabFeno->refLatMin,pTabFeno->refLatMax,
-                          pTabFeno->refLonMin,pTabFeno->refLonMax,
-                          pTabFeno->refSZA,pTabFeno->refSZADelta,
-                          pTabFeno->cloudFractionMin,pTabFeno->cloudFractionMax,
-                          pTabFeno->nspectra,
-                          pTabFeno->LambdaK,pTabFeno->Sref,
-                          pTabFeno->LambdaN,pTabFeno->SrefN,&pTabFeno->refNormFactN,
-                          pTabFeno->LambdaS,pTabFeno->SrefS,&pTabFeno->refNormFactS,
-                          responseHandle);
+      if ((pTabFeno->hidden!=1) &&
+          (pTabFeno->useKurucz!=ANLYS_KURUCZ_SPEC) &&
+          (pTabFeno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_AUTOMATIC)) {
+        
+        // Build reference spectra according to latitudes and SZA conditions
+     
+        rc=Gome2RefSelection(&ENGINE_contextRef,
+                             pTabFeno->refLatMin,pTabFeno->refLatMax,
+                             pTabFeno->refLonMin,pTabFeno->refLonMax,
+                             pTabFeno->refSZA,pTabFeno->refSZADelta,
+                             pTabFeno->cloudFractionMin,pTabFeno->cloudFractionMax,
+                             pTabFeno->nspectra,
+                             pTabFeno->LambdaRef,   
+                             pTabFeno->LambdaK,pTabFeno->Sref,
+                             pTabFeno->LambdaN,pTabFeno->SrefN,&pTabFeno->refNormFactN,
+                             pTabFeno->LambdaS,pTabFeno->SrefS,&pTabFeno->refNormFactS,
+                             responseHandle);
+      }
     }
+  }
 
   // Return
-
-//  DEBUG_Print(DOAS_logFile,"End Gome2NewRef %d\n",rc);
 
   strcpy(pEngineContext->recordInfo.refFileName,ENGINE_contextRef.recordInfo.refFileName);
   pEngineContext->recordInfo.refRecord=ENGINE_contextRef.recordInfo.refRecord;

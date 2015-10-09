@@ -2,10 +2,10 @@
 # General Configuration for ALL applications
 #----------------------------------------------
 
-CODE_GENERATION = release       # debug or release
-CONFIG += release
+CODE_GENERATION = debug       # debug or release
+CONFIG += debug
 
-QMAKE_CFLAGS += -std=gnu99 -Wall -Wextra -pedantic \
+QMAKE_CFLAGS += -g -std=gnu99 -Wall -Wextra -pedantic \
           -Wformat=2 -Wunused -Wno-unused-parameter -Wuninitialized \
           -Wwrite-strings -Wstrict-prototypes -Wold-style-definition \
           -Wredundant-decls -Wnested-externs -Wlogical-op
