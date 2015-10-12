@@ -1230,7 +1230,10 @@ static void register_analysis_output(const PRJCT_RESULTS *pResults, int indexFen
         .get_data = (outputRunCalib) ? (func_void) &get_rms_calib : (func_void) &get_rms} },
     { PRJCT_RESULTS_ITER,
       { .basic_fieldname = "iter", .format = FORMAT_INT, .memory_type = OUTPUT_INT,
-        .get_data = (outputRunCalib) ? (func_void) &get_n_iter_calib : (func_void) &get_n_iter} }
+        .get_data = (outputRunCalib) ? (func_void) &get_n_iter_calib : (func_void) &get_n_iter} },
+    { PRJCT_RESULTS_NUM_BANDS,
+      { .basic_fieldname = "numbands", .format = FORMAT_INT, .memory_type = OUTPUT_INT,
+        .get_data = &get_num_bands} }
   };
 
   size_t arr_length = sizeof(analysis_infos)/sizeof(analysis_infos[0]);

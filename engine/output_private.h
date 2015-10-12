@@ -695,7 +695,7 @@ static inline void get_omi_rejected_pixels(struct output_field *this_field, char
 }
 
 static inline void get_rms(struct output_field *this_field, double *rms, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn, int index_calib __attribute__ ((unused))) {
-	 FENO *pTabFeno = this_field->get_tabfeno(this_field, indexFenoColumn);
+  FENO *pTabFeno = this_field->get_tabfeno(this_field, indexFenoColumn);
   *rms = (!pTabFeno->rc)?pTabFeno->RMS:QDOAS_FILL_DOUBLE;
 }
 
@@ -717,8 +717,15 @@ static inline void get_n_iter_calib(struct output_field *this_field, int *n_iter
   *n_iter = KURUCZ_buffers[indexFenoColumn].KuruczFeno[this_field->index_feno].nIter[index_calib];
 }
 
+static inline void get_num_bands(struct output_field *this_field, int *num_bands, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn, int index_calib __attribute__ ((unused))) {
+  SVD *svd = (index_calib == ITEM_NONE) 
+    ? &this_field->get_tabfeno(this_field, indexFenoColumn)->svd 
+    : &KURUCZ_buffers[indexFenoColumn].KuruczFeno[this_field->index_feno].svdFeno[index_calib];
+  *num_bands = svd ? svd->DimL : QDOAS_FILL_INT;
+}
+
 static inline void get_chisquare(struct output_field *this_field, double *chisquare, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn, int index_calib __attribute__ ((unused))) {
-	 FENO *pTabFeno = this_field->get_tabfeno(this_field, indexFenoColumn);
+  FENO *pTabFeno = this_field->get_tabfeno(this_field, indexFenoColumn);
   *chisquare = (!pTabFeno->rc)?pTabFeno->chiSquare : QDOAS_FILL_DOUBLE;
 }
 
