@@ -1509,8 +1509,10 @@ void CQdoasConfigWriter::writeDataSelectList(FILE *fp, const data_select_list_t 
     case PRJCT_RESULTS_PITCH               :      fprintf(fp, "pitch_angle"); break;
     case PRJCT_RESULTS_ROLL                :      fprintf(fp, "roll_angle"); break;
     case PRJCT_RESULTS_ITER                :      fprintf(fp, "iter_number"); break;
+    case PRJCT_RESULTS_ERROR_FLAG          :      fprintf(fp, "error_flag"); break;
+    case PRJCT_RESULTS_NUM_BANDS           :      fprintf(fp, "num_bands"); break;
 
-    case PRJCT_RESULTS_GOME2_SCANDIRECTION                :      fprintf(fp, "scan_direction"); break;
+    case PRJCT_RESULTS_GOME2_SCANDIRECTION      :      fprintf(fp, "scan_direction"); break;
     case PRJCT_RESULTS_GOME2_SAA                :      fprintf(fp, "saa_flag"); break;
     case PRJCT_RESULTS_GOME2_SUNGLINT_RISK      :      fprintf(fp, "sunglint_danger_flag"); break;
     case PRJCT_RESULTS_GOME2_SUNGLINT_HIGHRISK  :      fprintf(fp, "sunglint_highdanger_flag"); break;

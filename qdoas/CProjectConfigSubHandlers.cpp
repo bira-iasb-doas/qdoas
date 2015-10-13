@@ -162,6 +162,10 @@ bool CSelectorSubHandler::start(const QString &element, const QXmlAttributes &at
     d->selected[d->nSelected] = PRJCT_RESULTS_ROLL;
   else if (str == "iter_number")
     d->selected[d->nSelected] = PRJCT_RESULTS_ITER;
+  else if (str == "error_flag")
+    d->selected[d->nSelected] = PRJCT_RESULTS_ERROR_FLAG;
+  else if (str == "num_bands")
+    d->selected[d->nSelected] = PRJCT_RESULTS_NUM_BANDS;
   else if (str == "scan_direction")
     d->selected[d->nSelected] = PRJCT_RESULTS_GOME2_SCANDIRECTION;
   else if (str == "saa_flag")
