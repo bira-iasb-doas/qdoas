@@ -104,7 +104,6 @@ int apex_get_reference(const char *filename, int i_crosstrack,
 
       reference_radiance = radiance;
       reference_wavelengths = temp_wavelengths;
-      reference_file.getVar("reference_wavelength", start, &reference_spectral_dim, temp_wavelengths.data());
       reference_filename = filename;
     } catch(std::runtime_error& e) {
       return ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_NETCDF, e.what());
