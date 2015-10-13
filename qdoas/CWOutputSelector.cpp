@@ -121,6 +121,7 @@ CWOutputSelector::CWOutputSelector(const data_select_list_t *d, QWidget *parent)
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_PITCH,                  "Pitch angle"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ROLL,                   "Roll angle"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ITER,                   "Iteration number"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ERROR_FLAG,             "Processing error flag"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_NUM_BANDS,              "Number of wavelength bands used"));
 
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_GOME2_SCANDIRECTION,    "Scan direction"         ));
@@ -307,6 +308,7 @@ void getValidFieldFlags(int *validFlags, int instrument)
   validFlags[PRJCT_RESULTS_RMS]=                                          // RMS
   validFlags[PRJCT_RESULTS_REFSHIFT]=                                     // in automatic reference selection, shift of the reference spectrum
   validFlags[PRJCT_RESULTS_ITER]=
+  validFlags[PRJCT_RESULTS_ERROR_FLAG]=
   validFlags[PRJCT_RESULTS_NUM_BANDS]=
   validFlags[PRJCT_RESULTS_COVAR]=
   validFlags[PRJCT_RESULTS_CORR]=

@@ -717,11 +717,16 @@ static inline void get_n_iter_calib(struct output_field *this_field, int *n_iter
   *n_iter = KURUCZ_buffers[indexFenoColumn].KuruczFeno[this_field->index_feno].nIter[index_calib];
 }
 
-static inline void get_num_bands(struct output_field *this_field, int *num_bands, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn, int index_calib __attribute__ ((unused))) {
+static inline void get_num_bands(struct output_field *this_field, int *num_bands, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn, int index_calib) {
   SVD *svd = (index_calib == ITEM_NONE) 
     ? &this_field->get_tabfeno(this_field, indexFenoColumn)->svd 
     : &KURUCZ_buffers[indexFenoColumn].KuruczFeno[this_field->index_feno].svdFeno[index_calib];
   *num_bands = svd ? svd->DimL : QDOAS_FILL_INT;
+}
+
+static inline void get_processing_error_flag(struct output_field *this_field, int *error_flag, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn, int index_calib) {
+  FENO *pTabFeno = this_field->get_tabfeno(this_field, indexFenoColumn);
+  *error_flag = (pTabFeno == NULL || pTabFeno->rc) ? 1 : 0;
 }
 
 static inline void get_chisquare(struct output_field *this_field, double *chisquare, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn, int index_calib __attribute__ ((unused))) {

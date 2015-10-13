@@ -1233,7 +1233,11 @@ static void register_analysis_output(const PRJCT_RESULTS *pResults, int indexFen
         .get_data = (outputRunCalib) ? (func_void) &get_n_iter_calib : (func_void) &get_n_iter} },
     { PRJCT_RESULTS_NUM_BANDS,
       { .basic_fieldname = "numbands", .format = FORMAT_INT, .memory_type = OUTPUT_INT,
-        .get_data = &get_num_bands} }
+        .get_data = (func_void) &get_num_bands} },
+    { PRJCT_RESULTS_ERROR_FLAG,
+      { .basic_fieldname = "processing_error", .format = FORMAT_INT, .memory_type = OUTPUT_INT,
+        .get_data = (func_void) &get_processing_error_flag} }
+
   };
 
   size_t arr_length = sizeof(analysis_infos)/sizeof(analysis_infos[0]);
