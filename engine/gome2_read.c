@@ -1,4 +1,3 @@
-#
 //  ----------------------------------------------------------------------------
 //
 //  Product/Project   :  DOAS ANALYSIS PROGRAM FOR WINDOWS
@@ -31,7 +30,7 @@
 //
 //  This module uses read out routines written by Stefan Noel (Stefan.Noel@iup.physik.uni.bremen.de)
 //  and Andreas Richter (richter@iup.physik.uni-bremen.de) from IFE/IUP Uni Bremen.  These routines
-//  are based on based on BEAT library.
+//  are based on based on the CODA library.
 //
 //  ----------------------------------------------------------------------------
 
@@ -81,10 +80,8 @@
 // STRUCTURES DEFINITION
 // =====================
 
-#pragma pack(1)
-
 typedef struct _gome2MdrInfo
- {
+{
   uint16_t num_recs[NBAND];                                                     // number of records for the requested band
   uint16_t rec_length[NBAND];                                                   // record length for the requested band
   INDEX    indexMDR;                                                            // index of the MDR in the file
@@ -129,11 +126,11 @@ typedef struct _gome2MdrInfo
   uint8_t  sunglintDangerFlag[N_SCAN_MAX];
   uint8_t  sunglintHighDangerFlag[N_SCAN_MAX];
   uint8_t  rainbowFlag[N_SCAN_MAX];
- }
+}
 GOME2_MDR;
 
 typedef struct _gome2Info
- {
+{
   uint8_t  channelIndex;
   uint16_t startPixel;
   uint16_t no_of_pixels;
@@ -148,11 +145,11 @@ typedef struct _gome2Info
   double start_lambda;
   double end_lambda;
   GOME2_MDR *mdr;
- }
+}
 GOME2_INFO;
 
 typedef struct _GOME2OrbitFiles                                                 // description of an orbit
- {
+{
   char                gome2FileName[MAX_STR_LEN+1];                             // the name of the file with a part of the orbit
   GOME2_INFO          gome2Info;                                                // all internal information about the PDS file like data offsets etc.
   double             *gome2SunRef,*gome2SunWve;                                 // the sun reference spectrum and calibration
@@ -164,11 +161,11 @@ typedef struct _GOME2OrbitFiles                                                 
   coda_Cursor         gome2CursorMDR;                                           // GOME2 file cursor on MDR
   int                 version;
   int                 rc;
- }
+}
 GOME2_ORBIT_FILE;
 
 typedef struct _gome2RefSelection
- {
+{
   INDEX  indexFile;
   INDEX  indexRecord;
   double sza;
@@ -178,7 +175,7 @@ typedef struct _gome2RefSelection
   double szaDist;
   double latDist;
   double lonDist;
- }
+}
 GOME2_REF;
 
 // ================
@@ -189,8 +186,7 @@ GOME2_REF;
 // STATIC VARIABLES
 // ================
 
-const char *gome2BandName[NBAND] =
- {
+const char *gome2BandName[NBAND] = {
   "BAND_1A",
   "BAND_1B",
   "BAND_2A",
@@ -201,7 +197,7 @@ const char *gome2BandName[NBAND] =
   "BAND_PS",
   "BAND_SWPP",
   "BAND_SWPS"
- };
+};
 
 const char *gome2WavelengthField[NBAND] = {
   "WAVELENGTH_1A",
@@ -1352,22 +1348,8 @@ RC GOME2_Set(ENGINE_CONTEXT *pEngineContext)
 
       if ( hDir != NULL ) closedir(hDir);
 
-     //   for (hDir=opendir(filePath);(hDir!=NULL) && ((fileInfo=readdir(hDir))!=NULL);)
-     //    {
-     //     sprintf(GDP_BIN_orbitFiles[gdpBinOrbitFilesN].gdpBinFileName,"%s/%s",filePath,fileInfo->d_name);
-     //     if (!STD_IsDir(GDP_BIN_orbitFiles[gdpBinOrbitFilesN].gdpBinFileName))
-     //      {
-     //      	strcpy(filePrefix,fileInfo->d_name);
-     //      	filePrefix[6]='\0';
-     //
-     //       if (((ptr=strrchr(fileInfo->d_name,'.'))!=NULL) && (strlen(ptr+1)==strlen(fileExt)) && !strcasecmp(ptr+1,fileExt) &&
-     //            (strlen(filePrefix)==strlen(fileFilter)) && !strcasecmp(filePrefix,fileFilter))
-     //        gdpBinOrbitFilesN++;
-     //      }
-     //    }
-
       rc=ERROR_ID_NO;
-   	 }
+        }
    	else
      {
      	gome2OrbitFilesN=1;
@@ -1463,9 +1445,9 @@ RC GOME2_Set(ENGINE_CONTEXT *pEngineContext)
 // -----------------------------------------------------------------------------
 
 RC GOME2_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,INDEX fileIndex)
- {
- 	// Declarations
-
+{
+  // Declarations
+  
   double   *unique_int;                                                         // integration time
   uint8_t  *int_index;                                                          // index of the integration time
   int i;
@@ -1481,15 +1463,15 @@ RC GOME2_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,INDEX fileIndex)
   GOME2_INFO *pGome2Info;
   RECORD_INFO *pRecord;
   RC rc;                                                                        // return code
-
+  
   // Debug
-
-  #if defined(__DEBUG_) && __DEBUG_
-  DEBUG_FunctionBegin("GOME2_Read",DEBUG_FCTTYPE_FILE);
-  #endif
-
+  
+#if defined(__DEBUG_) && __DEBUG_
+  DEBUG_FunctionBegin(__func__,DEBUG_FCTTYPE_FILE);
+#endif
+  
   // Initializations
-
+  
   pOrbitFile=&gome2OrbitFiles[(fileIndex==ITEM_NONE)?gome2CurrentFileIndex:fileIndex];
   pGome2Info=&pOrbitFile->gome2Info;
   spectrum=pEngineContext->buffers.spectrum;
@@ -1498,9 +1480,9 @@ RC GOME2_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,INDEX fileIndex)
   pRecord=&pEngineContext->recordInfo;
   
   rc=ERROR_ID_NO;
-
+  
   // Goto the requested record
-
+  
   if (!pOrbitFile->specNumber)
     rc=ERROR_ID_FILE_EMPTY;
   else if ((recordNo<=0) || (recordNo>pOrbitFile->specNumber))
@@ -1517,7 +1499,12 @@ RC GOME2_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,INDEX fileIndex)
       int_index=pGome2Info->mdr[indexMDR].int_index;
       
       tint=(pOrbitFile->version<=11)?unique_int[int_index[indexBand]]:pGome2Info->mdr[indexMDR].integration_times[indexBand];
-
+      
+      // Assign earthshine wavelength grid
+      for (int i=0; i<NDET; ++i) {
+        pEngineContext->buffers.lambda[i] = pGome2Info->mdr[indexMDR].earthshine_wavelength[i];
+      }
+      
       // Rear radiance & error ('RAD' and 'ERR_RAD')
       // RAD and ERR_RAD fields are 'vsf_integers', consisting of a
       // 'value' and 'scale' integer pair.  CODA will automatically
@@ -1530,49 +1517,49 @@ RC GOME2_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,INDEX fileIndex)
       // disable conversion of "special types" in order to access
       // value and scale integers separately:
       coda_set_option_bypass_special_types(1);
-
+      
       Gome2GotoOBS(pOrbitFile,(INDEX)indexBand,indexMDR,recordNo-mdrObs-1);
       for (i=pGome2Info->startPixel; i < (pGome2Info->no_of_pixels+pGome2Info->startPixel) && !rc; ++i) {
         coda_cursor_goto_first_record_field(&pOrbitFile->gome2Cursor); // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.BAND[i].RAD
-
+        
         coda_cursor_goto_first_record_field(&pOrbitFile->gome2Cursor); // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.BAND[i].RAD.scale
         coda_cursor_read_int8(&pOrbitFile->gome2Cursor, &radscale);
         coda_cursor_goto_next_record_field(&pOrbitFile->gome2Cursor);  // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.BAND[i].RAD.val
         coda_cursor_read_int32(&pOrbitFile->gome2Cursor, &radval);
-
+        
         coda_cursor_goto_parent(&pOrbitFile->gome2Cursor); // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.BAND[i].RAD
         coda_cursor_goto_next_record_field(&pOrbitFile->gome2Cursor); // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.BAND[i].ERR_RAD
         coda_cursor_goto_first_record_field(&pOrbitFile->gome2Cursor); // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.BAND[i].ERR_RAD.scale
         coda_cursor_read_int8(&pOrbitFile->gome2Cursor, &errscale);
         coda_cursor_goto_next_record_field(&pOrbitFile->gome2Cursor); // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.BAND[i].ERR_RAD.val
         coda_cursor_read_int16(&pOrbitFile->gome2Cursor, &errval);
-
+        
         coda_cursor_goto_parent(&pOrbitFile->gome2Cursor); // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.BAND[i].ERR_RAD
         coda_cursor_goto_parent(&pOrbitFile->gome2Cursor); // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.BAND[i]
-
+        
         spectrum[i] = ((double)radval) * pow(10, -radscale);
         sigma[i] = ((double)errval) * pow(10, -errscale);
 
         if (fabs(spectrum[i])>(double)1.e20)
           rc=ERROR_ID_FILE_RECORD;
-
+        
         if (i < (pGome2Info->no_of_pixels - 1) ) { // without CODA bounds checking, this check is necessary to avoid memory corruption when jumping past the last element, according to S Niemeijer at S&T
           coda_cursor_goto_next_array_element(&pOrbitFile->gome2Cursor); // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.BAND[i+1]
         }
       }
       // re-enable CODA handling of "special types"
       coda_set_option_bypass_special_types(0);
-
+      
       if (!rc) {
         utcTime=pGome2Info->mdr[indexMDR].startTime+tint*(recordNo-mdrObs-2);     // NOV 2011 : problem with integration time (FRESCO comparison)
         coda_double_to_datetime(utcTime,&year,&month,&day,&hour,&min,&sec,&musec);
-
+        
         // Output information on the current record
-
+        
         pRecord->present_datetime.thedate.da_day=(char)day;
         pRecord->present_datetime.thedate.da_mon=(char)month;
         pRecord->present_datetime.thedate.da_year=year;
-
+        
         pRecord->present_datetime.thetime.ti_hour=(unsigned char)hour;
         pRecord->present_datetime.thetime.ti_min=(unsigned char)min;
         pRecord->present_datetime.thetime.ti_sec=(unsigned char)sec;
@@ -1614,9 +1601,9 @@ RC GOME2_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,INDEX fileIndex)
 
         pRecord->TimeDec=(double)hour+min/60.+(sec+musec*1.e-6)/(60.*60.);
         pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_datetime.thedate,&pRecord->present_datetime.thetime,0);
-
+        
         pRecord->gome2.orbitNumber=(int)pOrbitFile->gome2Info.orbitStart;
-
+        
         if ((pEngineContext->project.spectra.cloudMin>=0.) &&
             (pEngineContext->project.spectra.cloudMax<=1.) &&
             (fabs((double)(pEngineContext->project.spectra.cloudMax-pEngineContext->project.spectra.cloudMin))>EPSILON) &&
@@ -1626,16 +1613,16 @@ RC GOME2_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,INDEX fileIndex)
           rc=ERROR_ID_FILE_RECORD;
       }
     }
-   }
-
-  #if defined(__DEBUG_) && __DEBUG_
+  }
+  
+#if defined(__DEBUG_) && __DEBUG_
   DEBUG_FunctionStop("GOME2_Read",rc);
-  #endif
-
- 	// Return
-
- 	return rc;
- }
+#endif
+  
+  // Return
+  
+  return rc;
+}
 
 // =============================
 // AUTOMATIC REFERENCE SELECTION
@@ -2523,8 +2510,6 @@ RC GOME2_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
   // Return
 
   EndGOME2_LoadAnalysis :
-
-//  DEBUG_Print(DOAS_logFile,"End GOME2_LoadAnalysis %d\n",rc);
 
   return rc;
  }
