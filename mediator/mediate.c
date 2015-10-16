@@ -327,7 +327,7 @@ int mediateRequestDisplaySpecInfo(void *engineContext,int page,void *responseHan
 // -----------------------------------------------------------------------------
 
 void mediateRequestPlotSpectra(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
- {
+{
    // Declarations
 
    PROJECT *pProject;                                                           // pointer to the project part of the engine context
@@ -363,7 +363,7 @@ void mediateRequestPlotSpectra(ENGINE_CONTEXT *pEngineContext,void *responseHand
      double *tempSpectrum;
      int i;
 
-     if ((tempSpectrum=(double *)MEMORY_AllocDVector("mediateRequestPlotSpectra","tempSpectrum",0,NDET-1))!=NULL)
+     if ((tempSpectrum=(double *)MEMORY_AllocDVector(__func__,"tempSpectrum",0,NDET-1))!=NULL)
       {
        memcpy(tempSpectrum,pBuffers->spectrum,sizeof(double)*NDET);
 
@@ -385,11 +385,26 @@ void mediateRequestPlotSpectra(ENGINE_CONTEXT *pEngineContext,void *responseHand
 
        mediateAllocateAndSetPlotData(&spectrumData,tmpTitle,pBuffers->lambda, tempSpectrum, NDET, Line);
 
-       mediateResponsePlotData(plotPageSpectrum, &spectrumData, 1, Spectrum, allowFixedScale, tmpTitle, "Wavelength (nm)", "Counts", responseHandle);
+       const char* y_units;
+       switch (pInstrumental->readOutFormat) {
+         // satellite formats have calibrated radiances:
+       case PRJCT_INSTR_FORMAT_GDP_ASCII:
+       case PRJCT_INSTR_FORMAT_GDP_BIN:
+       case PRJCT_INSTR_FORMAT_SCIA_PDS:
+       case PRJCT_INSTR_FORMAT_GOME2:
+       case PRJCT_INSTR_FORMAT_OMI:
+         y_units = "photons / (nm s cm<sup>2</sup> sr)";
+         break;
+       default:
+         y_units = "Counts";
+         break;
+       }
+
+       mediateResponsePlotData(plotPageSpectrum, &spectrumData, 1, Spectrum, allowFixedScale, tmpTitle, "Wavelength (nm)", y_units, responseHandle);
        mediateReleasePlotData(&spectrumData);
        mediateResponseLabelPage(plotPageSpectrum, fileName, tmpString, responseHandle);
 
-       MEMORY_ReleaseDVector("mediateRequestPlotSpectra","spectrum",tempSpectrum,0);
+       MEMORY_ReleaseDVector(__func__,"spectrum",tempSpectrum,0);
       }
 
      if (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MKZY)
@@ -450,13 +465,20 @@ void mediateRequestPlotSpectra(ENGINE_CONTEXT *pEngineContext,void *responseHand
        mediateResponseLabelPage(plotPageErrors, fileName, tmpString, responseHandle);
       }
 
-     if ((pBuffers->irrad!=NULL) && ((pInstrumental->readOutFormat!=PRJCT_INSTR_FORMAT_OMI) || (THRD_id==THREAD_TYPE_ANALYSIS)))
-      {
-       mediateAllocateAndSetPlotData(&spectrumData, "Irradiance spectrum",pBuffers->lambda, pBuffers->irrad, NDET, Line);
-       mediateResponsePlotData(plotPageIrrad, &spectrumData, 1, Spectrum, forceAutoScale, "Irradiance spectrum", "Wavelength (nm)", "Counts", responseHandle);
+     // satellite formats have an irradiance spectrum
+     if (pBuffers->irrad!=NULL && 
+         // for OMI, irradiance is stored in separate file, which is only read during analysis
+         (pInstrumental->readOutFormat!=PRJCT_INSTR_FORMAT_OMI || THRD_id==THREAD_TYPE_ANALYSIS) ) {
+
+       // Feno->LambdaRef contains the original L1B irradiance wavelength grid.
+       const double *lambda_ref = TabFeno[pEngineContext->recordInfo.i_crosstrack][0].LambdaRef;
+
+       mediateAllocateAndSetPlotData(&spectrumData, "Irradiance spectrum", lambda_ref, pBuffers->irrad, NDET, Line);
+       mediateResponsePlotData(plotPageIrrad, &spectrumData, 1, Spectrum, forceAutoScale, 
+                               "Irradiance spectrum", "Wavelength/(nm)", "photons/(nm s cm<sup>2</sup>)", responseHandle);
        mediateReleasePlotData(&spectrumData);
        mediateResponseLabelPage(plotPageIrrad, fileName, "Irradiance", responseHandle);
-      }
+     }
 
      if (((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_PDAEGG) ||
           (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_PDAEGG_OLD) ||
@@ -483,29 +505,6 @@ void mediateRequestPlotSpectra(ENGINE_CONTEXT *pEngineContext,void *responseHand
    if (pSpectra->displaySpectraFlag && pSpectra->displayDataFlag)
     mediateRequestDisplaySpecInfo(pEngineContext,plotPageSpectrum,responseHandle);
 
-   //   QDOAS ???
-   //   QDOAS ???     if (((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC) ||
-   //   QDOAS ???          (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC_STD)) &&
-   //   QDOAS ???         ((pRecord->aMoon!=(double)0.) || (pRecord->hMoon!=(double)0.) || (pRecord->fracMoon!=(double)0.)))
-   //   QDOAS ???      {
-   //   QDOAS ???       sprintf(tmpString,"Moon azimuthal angle\t%.3f\n",pRecord->aMoon);
-   //   QDOAS ???       sprintf(tmpString,"Moon elevation\t\t%.3f\n",pRecord->hMoon);
-   //   QDOAS ???       sprintf(tmpString,"Moon illuminated fraction\t%.3f\n",pRecord->fracMoon);
-   //   QDOAS ???      }
-   //   QDOAS ???     else if (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN)
-   //   QDOAS ???      {
-   //   QDOAS ???       GOME_ORBIT_FILE *pOrbitFile;
-   //   QDOAS ???       pOrbitFile=&GDP_BIN_orbitFiles[GDP_BIN_currentFileIndex];
-   //   QDOAS ???
-   //   QDOAS ???       sprintf(tmpString,"Cloud fraction\t\t%.2f\n",(float)pOrbitFile->gdpBinSpectrum.cloudFraction*0.01);
-   //   QDOAS ???       sprintf(tmpString,"Cloud top pressure\t\t%.2f\n",(float)pOrbitFile->gdpBinSpectrum.cloudTopPressure*0.01);
-   //   QDOAS ???       sprintf(tmpString,"[O3 VCD]\t\t\t%.2f DU\n",(float)pOrbitFile->gdpBinSpectrum.o3*0.01);
-   //   QDOAS ???       sprintf(tmpString,"[No2 VCD]\t\t%.2e mol/cm2\n",(float)pOrbitFile->gdpBinSpectrum.no2*1.e13);
-   //   QDOAS ???      }
-   //   QDOAS ???
-   //   QDOAS ???     sprintf(tmpString,"\n\n");
-   //   QDOAS ???     fclose(fp);
-   //   QDOAS ???    }
  }
 
 // =================================
