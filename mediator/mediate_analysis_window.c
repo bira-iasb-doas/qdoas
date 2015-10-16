@@ -55,7 +55,7 @@ void initializeMediateAnalysisWindow(mediate_analysis_window_t *d)
 
   for (i=0;i<MAX_AW_CROSS_SECTION;i++)
    {
-   	 d->crossSectionList.crossSection[i].crossType=ANLYS_CROSS_ACTION_INTERPOLATE;
+     d->crossSectionList.crossSection[i].crossType=ANLYS_CROSS_ACTION_INTERPOLATE;
      d->crossSectionList.crossSection[i].requireFit=1;
      d->crossSectionList.crossSection[i].requireCcFit=1;
      d->crossSectionList.crossSection[i].initialCc=(double)0.;

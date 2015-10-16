@@ -403,18 +403,16 @@ void AnalysisWindowApplyInt(const QList<const CAnalysisWindowConfigItem*>awList,
                                int newValue,                                            // new value
                                mediate_analysis_window_t *pNewAnalysisWindow,           // target structure for analysis windows properties
                                int *pIntField)                                          // pointer to the field to change (should point within the previous target structure)
- {
- 	// Declarations
+{
+  // Declarations
 
- 	QList<const CAnalysisWindowConfigItem*>::const_iterator awIt = awList.begin();
- 	char msgString[MAX_STR_LEN+1];
-
- 	// Browse
-
-  while (awIt!=awList.end())
-   {
-   	if (pWindowName->isEmpty() || (*pWindowName==(*awIt)->name()))
-   	 {
+  QList<const CAnalysisWindowConfigItem*>::const_iterator awIt = awList.begin();
+  char msgString[MAX_STR_LEN+1];
+  
+  // Browse
+  
+  while (awIt!=awList.end()) {
+    if (pWindowName->isEmpty() || (*pWindowName==(*awIt)->name())) {
       memcpy(pNewAnalysisWindow,(mediate_analysis_window_t *)((*awIt)->properties()),sizeof(mediate_analysis_window_t));
       sprintf(msgString,"%s : %d replaced by %d (%s)",
               pXmlKey->toAscii().constData(),
@@ -422,10 +420,10 @@ void AnalysisWindowApplyInt(const QList<const CAnalysisWindowConfigItem*>awList,
       std::cout << msgString << std::endl;
       *pIntField=newValue;
       (*awIt)->SetProperties(( mediate_analysis_window_t *)pNewAnalysisWindow);
-     }
+    }
     ++awIt;
-   }
- }
+  }
+}
 
 void AnalysisWindowApplyDouble(const QList<const CAnalysisWindowConfigItem*>awList,     // list of analysis windows
                                QString *pWindowName,                                    // the name of a specific analysis window (all windows will be modified if this string is empty)
@@ -433,18 +431,16 @@ void AnalysisWindowApplyDouble(const QList<const CAnalysisWindowConfigItem*>awLi
                                QString *pXmlValue,                                      // string with the new value
                                mediate_analysis_window_t *pNewAnalysisWindow,           // target structure for analysis windows properties
                                double *pDoubleField)                                    // pointer to the field to change (should point within the previous target structure)
- {
- 	// Declarations
+{
+  // Declarations
+  
+  QList<const CAnalysisWindowConfigItem*>::const_iterator awIt = awList.begin();
+  char msgString[MAX_STR_LEN+1];
 
- 	QList<const CAnalysisWindowConfigItem*>::const_iterator awIt = awList.begin();
- 	char msgString[MAX_STR_LEN+1];
-
- 	// Browse
-
-  while (awIt!=awList.end())
-   {
-   	if (pWindowName->isEmpty() || (*pWindowName==(*awIt)->name()))
-   	 {
+  // Browse
+  
+  while (awIt!=awList.end()) {
+    if (pWindowName->isEmpty() || (*pWindowName==(*awIt)->name())) {
       memcpy(pNewAnalysisWindow,(mediate_analysis_window_t *)((*awIt)->properties()),sizeof(mediate_analysis_window_t));
       sprintf(msgString,"%s : %.2lf replaced by %s (%s)",
               pXmlKey->toAscii().constData(),
@@ -452,10 +448,10 @@ void AnalysisWindowApplyDouble(const QList<const CAnalysisWindowConfigItem*>awLi
       std::cout << msgString << std::endl;
       *pDoubleField=(double)atof(pXmlValue->toAscii().constData());
       (*awIt)->SetProperties(( mediate_analysis_window_t *)pNewAnalysisWindow);
-     }
+    }
     ++awIt;
-   }
- }
+  }
+}
 
 void AnalysisWindowApplyString(const QList<const CAnalysisWindowConfigItem*>awList,     // list of analysis windows
                                QString *pWindowName,                                    // the name of a specific analysis window (all windows will be modified if this string is empty)

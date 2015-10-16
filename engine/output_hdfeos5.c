@@ -874,36 +874,7 @@ static enum fieldtype get_fieldtype(enum _prjctResults output_field) {
   case PRJCT_RESULTS_UAV_HEADING:
     result = GEO;
     break;
-    // Data fields:
-  case PRJCT_RESULTS_BESTSHIFT:
-  case PRJCT_RESULTS_O3:
-  case PRJCT_RESULTS_NO2:
-  case PRJCT_RESULTS_ITER:
-  case PRJCT_RESULTS_OMI_GROUNDP_QF:
-  case PRJCT_RESULTS_OMI_XTRACK_QF:
-  case PRJCT_RESULTS_OMI_PIXELS_QF:
-  case PRJCT_RESULTS_RMS:
-  case PRJCT_RESULTS_CHI:
-  case PRJCT_RESULTS_COVAR:
-  case PRJCT_RESULTS_CORR:
-  case PRJCT_RESULTS_REFSHIFT:
-  case PRJCT_RESULTS_SPIKES:
-  case PRJCT_RESULTS_SLANT_COL:
-  case PRJCT_RESULTS_SLANT_ERR:
-  case PRJCT_RESULTS_SHIFT:
-  case PRJCT_RESULTS_SHIFT_ERR:
-  case PRJCT_RESULTS_STRETCH:
-  case PRJCT_RESULTS_STRETCH_ERR:
-  case PRJCT_RESULTS_SCALE:
-  case PRJCT_RESULTS_SCALE_ERR:
-  case PRJCT_RESULTS_PARAM:
-  case PRJCT_RESULTS_PARAM_ERR:
-  case PRJCT_RESULTS_AMF:
-  case PRJCT_RESULTS_VERT_COL:
-  case PRJCT_RESULTS_VERT_ERR:
-  case PRJCT_RESULTS_FLUX:
-  case PRJCT_RESULTS_CIC:
-  case PRJCT_RESULTS_WAVELENGTH:
+    // all other fields are Data fields:
   default:
     result = DATA;
     break;

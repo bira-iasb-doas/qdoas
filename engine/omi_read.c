@@ -233,24 +233,23 @@ void OMI_ReleaseReference(void)
 
   // Initialization
 
-  for (int i=0;i<omiRefFilesN;i++)
-    {
-      pRef=&OMI_ref[i];
+  for (int i=0;i<omiRefFilesN;i++) {
+    pRef=&OMI_ref[i];
 
-      if (pRef->omiRefLambda!=NULL)
-	MEMORY_ReleaseDMatrix(__func__,"omiRefLambda",pRef->omiRefLambda,0,pRef->nXtrack-1,0);
-      if (pRef->omiRefSpectrum!=NULL)
-	MEMORY_ReleaseDMatrix(__func__,"omiRefSpectrum",pRef->omiRefSpectrum,0,pRef->nXtrack-1,0);
-      if (pRef->omiRefFact!=NULL)
-	MEMORY_ReleaseDVector(__func__,"omiRefSpectrumK",pRef->omiRefFact,0);
-      if (pRef->omiRefSigma!=NULL)
-	MEMORY_ReleaseDMatrix(__func__,"omiRefSigma",pRef->omiRefSigma,0,pRef->nXtrack-1,0);
+    if (pRef->omiRefLambda!=NULL)
+      MEMORY_ReleaseDMatrix(__func__,"omiRefLambda",pRef->omiRefLambda,0,pRef->nXtrack-1,0);
+    if (pRef->omiRefSpectrum!=NULL)
+      MEMORY_ReleaseDMatrix(__func__,"omiRefSpectrum",pRef->omiRefSpectrum,0,pRef->nXtrack-1,0);
+    if (pRef->omiRefFact!=NULL)
+      MEMORY_ReleaseDVector(__func__,"omiRefSpectrumK",pRef->omiRefFact,0);
+    if (pRef->omiRefSigma!=NULL)
+      MEMORY_ReleaseDMatrix(__func__,"omiRefSigma",pRef->omiRefSigma,0,pRef->nXtrack-1,0);
 
-      if (pRef->spectrum.pixelQualityFlags!=NULL)                                          // pixelquality
-	MEMORY_ReleaseBuffer(__func__,"pRef->spectrum.pixelQualityFlags",pRef->spectrum.pixelQualityFlags);
+    if (pRef->spectrum.pixelQualityFlags!=NULL)                                          // pixelquality
+      MEMORY_ReleaseBuffer(__func__,"pRef->spectrum.pixelQualityFlags",pRef->spectrum.pixelQualityFlags);
 
-      memset(pRef,0,sizeof(OMI_ref[i]));
-    }
+    memset(pRef,0,sizeof(OMI_ref[i]));
+  }
 
   omiRefFilesN=0;
 }
@@ -493,14 +492,8 @@ static RC OMI_AllocateSwath(OMI_SWATH **swath,int nSwaths,int nSpectra)
 
   if (
       ((pSpectrum->pixelQualityFlags=(unsigned short *)MEMORY_AllocBuffer(__func__,"pixelQualityFlags",NDET,sizeof(unsigned short),0,MEMORY_TYPE_USHORT))==NULL) ||
-
-      // Earth swath
-
       ((pData->measurementQualityFlags=(unsigned short *)MEMORY_AllocBuffer(__func__,"measurementQualityFlags",nSwaths,sizeof(unsigned short),0,MEMORY_TYPE_USHORT))==NULL) ||
       ((pData->wavelengthReferenceColumn=(short *)MEMORY_AllocBuffer(__func__,"wavelengthReferenceColumn",nSwaths,sizeof(short),0,MEMORY_TYPE_SHORT))==NULL) ||
-
-      // Geolocation
-
       ((pGeo->time=(double *)MEMORY_AllocDVector(__func__,"time",0,nSwaths))==NULL) ||
       ((pGeo->secondsInDay=(float *)MEMORY_AllocBuffer(__func__,"secondsInDay",nSwaths,sizeof(float),0,MEMORY_TYPE_FLOAT))==NULL) ||
       ((pGeo->spacecraftLatitude=(float *)MEMORY_AllocBuffer(__func__,"spacecraftLatitude",nSwaths,sizeof(float),0,MEMORY_TYPE_FLOAT))==NULL) ||
@@ -1155,23 +1148,22 @@ static RC omi_load_spectrum(int spec_type, int32 sw_id, int32 measurement, int32
   intn swrc = 0;
 
   // read wavelengths:
-  if(lambda != NULL) 
-    {
-      // read reference column
-      int16 refcol;
-      swrc = SWreadfield(sw_id, (char *) REFERENCE_COLUMN, start, NULL, (int32[]) {1}, &refcol);
-      // read 5 wavelength coefficients
-      edge[2] = OMI_NUM_COEFFICIENTS;
-      float32 wavelength_coeff[OMI_NUM_COEFFICIENTS];
-      swrc |= SWreadfield(sw_id,(char *) WAVELENGTH_COEFFICIENT, start, NULL, edge, wavelength_coeff);
-      
-      if (swrc == FAIL) {
-        rc = ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_HDFEOS, "SWreadfield");
-        goto end_load_spectrum;
-      }
-      // store wavelength in lambda
-      omi_calculate_wavelengths(wavelength_coeff, refcol, n_wavel, lambda);
+  if(lambda != NULL) {
+    // read reference column
+    int16 refcol;
+    swrc = SWreadfield(sw_id, (char *) REFERENCE_COLUMN, start, NULL, (int32[]) {1}, &refcol);
+    // read 5 wavelength coefficients
+    edge[2] = OMI_NUM_COEFFICIENTS;
+    float32 wavelength_coeff[OMI_NUM_COEFFICIENTS];
+    swrc |= SWreadfield(sw_id,(char *) WAVELENGTH_COEFFICIENT, start, NULL, edge, wavelength_coeff);
+    
+    if (swrc == FAIL) {
+      rc = ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_HDFEOS, "SWreadfield");
+      goto end_load_spectrum;
     }
+    // store wavelength in lambda
+    omi_calculate_wavelengths(wavelength_coeff, refcol, n_wavel, lambda);
+  }
 
   // (ir-)radiance mantissae, exponents & pixel quality have dimension (nMeasurement x nXtrack x nWavel)
   edge[2] = n_wavel;
@@ -1234,8 +1226,7 @@ static void omi_make_double(int16 mantissa[], int8 exponent[], int32 n_wavel, do
 
 static void omi_interpolate_errors(int16 mantissa[], int32 n_wavel, double wavelengths[], double y[] ){
 
-  int i;
-  for (i=1; i<n_wavel -1; i++) {
+  for (int i=1; i<n_wavel -1; i++) {
     if(mantissa[i] == -32767) {
       double lambda = wavelengths[i];
       double lambda1 = wavelengths[i-1];
@@ -1392,73 +1383,67 @@ RC OMI_read_earth(ENGINE_CONTEXT *pEngineContext,int recordNo)
     rc=ERROR_ID_FILE_EMPTY;
   else if ((recordNo<=0) || (recordNo>pOrbitFile->specNumber))
     rc=ERROR_ID_FILE_END;
-  else
-    {
-      for (int i=0;i<NDET;i++)
-	spectrum[i]=sigma[i]=(double)0.;
+  else {
+    for (int i=0;i<NDET;i++)
+      spectrum[i]=sigma[i]=(double)0.;
+    
+    int indexMeasurement=(recordNo-1)/pOrbitFile->nXtrack; // index of the swath
+    int indexSpectrum=(recordNo-1)%pOrbitFile->nXtrack; // index of the spectrum in the swath
+    
+    if (!pEngineContext->project.instrumental.omi.omiTracks[indexSpectrum]) {
+      rc=ERROR_ID_FILE_RECORD;
+    } else if (!(rc=
+                 omi_load_spectrum(OMI_SPEC_RAD,
+                                   pOrbitFile->sw_id,
+                                   indexMeasurement,
+                                   indexSpectrum,
+                                   pOrbitFile->nWavel,
+                                   lambda,spectrum,sigma,
+                                   pRecord->omi.omiPixelQF)))	{
+      if ((THRD_id==THREAD_TYPE_ANALYSIS) && omiRefFilesN) {
+        if (omiSwathOld!=indexMeasurement) {
+          KURUCZ_indexLine=1;
+          omiSwathOld=indexMeasurement;
+        }
+        
+        memcpy(pEngineContext->buffers.irrad,OMI_ref[0].omiRefSpectrum[indexSpectrum],sizeof(double)*NDET);
+      }
       
-      int indexMeasurement=(recordNo-1)/pOrbitFile->nXtrack; // index of the swath
-      int indexSpectrum=(recordNo-1)%pOrbitFile->nXtrack; // index of the spectrum in the swath
-
-      if (!pEngineContext->project.instrumental.omi.omiTracks[indexSpectrum]) {
-	rc=ERROR_ID_FILE_RECORD;
-      } else if (!(rc=
-                   omi_load_spectrum(OMI_SPEC_RAD,
-                                     pOrbitFile->sw_id,
-                                     indexMeasurement,
-                                     indexSpectrum,
-                                     pOrbitFile->nWavel,
-                                     lambda,spectrum,sigma,
-                                     pRecord->omi.omiPixelQF)))
-	{
-	  if ((THRD_id==THREAD_TYPE_ANALYSIS) && omiRefFilesN)
-	    {
-	      if (omiSwathOld!=indexMeasurement)
-		{
-		  KURUCZ_indexLine=1;
-		  omiSwathOld=indexMeasurement;
-		}
-              
-	      memcpy(pEngineContext->buffers.irrad,OMI_ref[0].omiRefSpectrum[indexSpectrum],sizeof(double)*NDET);
-	    }
+      pRecord->latitude=pGeo->latitude[recordNo-1];
+      pRecord->longitude=pGeo->longitude[recordNo-1];
+      pRecord->Zm=pGeo->solarZenithAngle[recordNo-1];
+      pRecord->Azimuth=pGeo->solarAzimuthAngle[recordNo-1];
+      pRecord->zenithViewAngle=pGeo->viewingZenithAngle[recordNo-1];
+      pRecord->azimuthViewAngle=pGeo->viewingAzimuthAngle[recordNo-1];
+      pRecord->useErrors=1;                                                     // Errors are available for OMI
           
-	  pRecord->latitude=pGeo->latitude[recordNo-1];
-	  pRecord->longitude=pGeo->longitude[recordNo-1];
-	  pRecord->Zm=pGeo->solarZenithAngle[recordNo-1];
-	  pRecord->Azimuth=pGeo->solarAzimuthAngle[recordNo-1];
-	  pRecord->zenithViewAngle=pGeo->viewingZenithAngle[recordNo-1];
-	  pRecord->azimuthViewAngle=pGeo->viewingAzimuthAngle[recordNo-1];
-	  pRecord->useErrors=1;                                                     // Errors are available for OMI
+      // Complete information on the current spectrum
+      
+      pRecord->i_alongtrack=indexMeasurement;
+      pRecord->i_crosstrack=indexSpectrum;
+      pRecord->omi.omiXtrackQF = pGeo->xtrackQualityFlags[recordNo-1];
           
-	  // Complete information on the current spectrum
+      struct tm time_record;
+      int omi_ms=0;
+      // use TAI-93 "time" and UTC "secondsInDay" to get UTC date-time of current measurement:
+      tai_to_utc(pGeo->time[indexMeasurement], pGeo->secondsInDay[indexMeasurement], &time_record, &omi_ms);
+      
+      struct date *pDate = &pRecord->present_datetime.thedate;
+      struct time *pTime = &pRecord->present_datetime.thetime;
+      
+      pTime->ti_hour = (char)(time_record.tm_hour);
+      pTime->ti_min = (char)(time_record.tm_min);
+      pTime->ti_sec = (char)(time_record.tm_sec);
+      
+      pDate->da_year = time_record.tm_year + 1900;
+      pDate->da_mon = (char)(time_record.tm_mon + 1);
+      pDate->da_day = (char)(time_record.tm_mday);
+      
+      pRecord->present_datetime.millis = omi_ms;
           
-          pRecord->i_alongtrack=indexMeasurement;
-          pRecord->i_crosstrack=indexSpectrum;
-          pRecord->omi.omiXtrackQF = pGeo->xtrackQualityFlags[recordNo-1];
-          
-          struct tm time_record;
-          int omi_ms=0;
-          // use TAI-93 "time" and UTC "secondsInDay" to get UTC date-time of current measurement:
-          tai_to_utc(pGeo->time[indexMeasurement], pGeo->secondsInDay[indexMeasurement], &time_record, &omi_ms);
-
-          struct date *pDate = &pRecord->present_datetime.thedate;
-          struct time *pTime = &pRecord->present_datetime.thetime;
-
-          pTime->ti_hour = (char)(time_record.tm_hour);
-          pTime->ti_min = (char)(time_record.tm_min);
-          pTime->ti_sec = (char)(time_record.tm_sec);
-          
-          pDate->da_year = time_record.tm_year + 1900;
-          pDate->da_mon = (char)(time_record.tm_mon + 1);
-          pDate->da_day = (char)(time_record.tm_mday);
-
-          pRecord->present_datetime.millis = omi_ms;
-          
-	  pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_datetime.thedate,&pRecord->present_datetime.thetime,0);
-	}
+      pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_datetime.thedate,&pRecord->present_datetime.thetime,0);
     }
-  
-  // Return
+  }
 
   return rc;
 }
