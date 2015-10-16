@@ -1199,7 +1199,7 @@ RC KURUCZ_Alloc(const PROJECT *pProject, const double *lambda,INDEX indexKurucz,
        double Lambda_min=pKuruczOptions->lambdaLeft;
        double Lambda_max=pKuruczOptions->lambdaRight;
 
-       int Win_size=(double)(Lambda_max-Lambda_min)/Nb_Win;
+       double Win_size=(double)(Lambda_max-Lambda_min)/Nb_Win;
        int DimLMax=2*NDET/Nb_Win+1;
 
        if ((pKurucz->KuruczFeno[indexFeno].Grid=(double *)MEMORY_AllocDVector(__func__,"Grid",0,Nb_Win-1))==NULL)
