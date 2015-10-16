@@ -132,7 +132,6 @@ GOME2_MDR;
 typedef struct _gome2Info
 {
   uint8_t  channelIndex;
-  uint16_t startPixel;
   uint16_t no_of_pixels;
   uint16_t orbitStart;
   uint16_t orbitEnd;
@@ -502,7 +501,7 @@ int Gome2Open(coda_ProductFile **productFile, char *fileName,int *version)
   return rc;
  }
 
-RC Gome2ReadSunRef(GOME2_ORBIT_FILE *pOrbitFile,INDEX bandIndex)
+RC Gome2ReadSunRef(GOME2_ORBIT_FILE *pOrbitFile)
  {
  	// Declarations
 
@@ -570,7 +569,6 @@ RC Gome2ReadOrbitInfo(GOME2_ORBIT_FILE *pOrbitFile,int bandIndex)
    // Declarations
 
   uint8_t  channel_index[NBAND];
-  uint16_t startPixel[NBAND];
   uint16_t no_of_pixels[NBAND];
 
   double start_lambda[NBAND];
@@ -615,10 +613,6 @@ RC Gome2ReadOrbitInfo(GOME2_ORBIT_FILE *pOrbitFile,int bandIndex)
   status = coda_cursor_read_uint8_array (&pOrbitFile->gome2Cursor, channel_index, coda_array_ordering_c);
   coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);
 
-  status = coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"START_PIXEL");
-  status = coda_cursor_read_uint16_array (&pOrbitFile->gome2Cursor, startPixel, coda_array_ordering_c);
-  coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);
-
   status = coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"NUMBER_OF_PIXELS");
   status = coda_cursor_read_uint16_array (&pOrbitFile->gome2Cursor, no_of_pixels, coda_array_ordering_c);
   coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);
@@ -636,7 +630,6 @@ RC Gome2ReadOrbitInfo(GOME2_ORBIT_FILE *pOrbitFile,int bandIndex)
   // Output
 
   pGome2Info->channelIndex=channel_index[bandIndex]-1;
-  pGome2Info->startPixel = startPixel[bandIndex];
   pGome2Info->no_of_pixels = no_of_pixels[bandIndex];
   pGome2Info->start_lambda = start_lambda[bandIndex];
   pGome2Info->end_lambda = end_lambda[bandIndex];
@@ -1384,8 +1377,8 @@ RC GOME2_Set(ENGINE_CONTEXT *pEngineContext)
               ((pOrbitFile->gome2SzaIndex=(INDEX *)MEMORY_AllocBuffer("GOME2_Set","gome2SzaIndex",pOrbitFile->specNumber,sizeof(INDEX),0,MEMORY_TYPE_INDEX))==NULL))
 
        	   rc=ERROR_ID_ALLOC;
-       	  else if (!(rc=Gome2ReadSunRef(pOrbitFile,(int)pEngineContext->project.instrumental.user)))
-     	   	 Gome2ReadGeoloc(pOrbitFile,(int)pEngineContext->project.instrumental.user);
+       	  else if (!(rc=Gome2ReadSunRef(pOrbitFile)))
+            Gome2ReadGeoloc(pOrbitFile,(int)pEngineContext->project.instrumental.user);
          }
 
         if (pOrbitFile->gome2Pf!=NULL)
@@ -1450,7 +1443,6 @@ RC GOME2_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,INDEX fileIndex)
   
   double   *unique_int;                                                         // integration time
   uint8_t  *int_index;                                                          // index of the integration time
-  int i;
   double tint;
   double *spectrum,*sigma;                                                      // radiances and errors
   INDEX indexMDR;
@@ -1488,7 +1480,7 @@ RC GOME2_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,INDEX fileIndex)
   else if ((recordNo<=0) || (recordNo>pOrbitFile->specNumber))
     rc=ERROR_ID_FILE_END;
   else if ((THRD_id!=THREAD_TYPE_SPECTRA) || (THRD_browseType!=THREAD_BROWSE_DARK)) {
-    for (i=0;i<NDET;i++)
+    for (int i=0;i<NDET;i++)
       spectrum[i]=sigma[i]=(double)0.;
     
     if ((indexMDR=Gome2GetMDRIndex(pOrbitFile,indexBand,recordNo-1,&mdrObs))==ITEM_NONE)
@@ -1519,7 +1511,7 @@ RC GOME2_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,INDEX fileIndex)
       coda_set_option_bypass_special_types(1);
       
       Gome2GotoOBS(pOrbitFile,(INDEX)indexBand,indexMDR,recordNo-mdrObs-1);
-      for (i=pGome2Info->startPixel; i < (pGome2Info->no_of_pixels+pGome2Info->startPixel) && !rc; ++i) {
+      for (int i=0; i < pGome2Info->no_of_pixels && !rc; ++i) {
         coda_cursor_goto_first_record_field(&pOrbitFile->gome2Cursor); // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.BAND[i].RAD
         
         coda_cursor_goto_first_record_field(&pOrbitFile->gome2Cursor); // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.BAND[i].RAD.scale

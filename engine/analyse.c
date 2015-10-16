@@ -4402,8 +4402,7 @@ RC ANALYSE_LoadCross(ENGINE_CONTEXT *pEngineContext, const ANALYSIS_CROSS *cross
 
   for (indexTabCross=0;
        (indexTabCross<nCross) && (pTabFeno->NTabCross<MAX_FIT) && !rc;
-       indexTabCross++)
-   {
+       indexTabCross++) {
     pEngineCross=&pTabFeno->TabCross[pTabFeno->NTabCross];
     pCross=&crossSectionList[indexTabCross];
 
@@ -4413,12 +4412,11 @@ RC ANALYSE_LoadCross(ENGINE_CONTEXT *pEngineContext, const ANALYSIS_CROSS *cross
 
     // Search for symbol in list
 
-    for (indexSymbol=0;indexSymbol<NWorkSpace;indexSymbol++)
-     {
+    for (indexSymbol=0;indexSymbol<NWorkSpace;indexSymbol++) {
       pWrkSymbol=&WorkSpace[indexSymbol];
-
+      
       bool same_file = false;
-
+      
       if ((pWrkSymbol->type==WRK_SYMBOL_CROSS) &&
           !strcasecmp(pWrkSymbol->symbolName,symbolName) &&
           !strcasecmp(pWrkSymbol->amfFileName,pCross->amfFile) &&
@@ -4426,17 +4424,16 @@ RC ANALYSE_LoadCross(ENGINE_CONTEXT *pEngineContext, const ANALYSIS_CROSS *cross
             || same_file ) // stop loop (with error) if file comparison returns error, or (without error) if files are same
           )
 
-       break;
-     }
+        break;
+    }
 
     // Add a new cross section
 
-    if (rc==ERROR_ID_NO && (indexSymbol==NWorkSpace) && (NWorkSpace<MAX_SYMB))
-     {
+    if (rc==ERROR_ID_NO && (indexSymbol==NWorkSpace) && (NWorkSpace<MAX_SYMB)) {
       // Allocate a new symbol
 
       pWrkSymbol=&WorkSpace[indexSymbol];
-
+      
       pWrkSymbol->type=WRK_SYMBOL_CROSS;
       strcpy(pWrkSymbol->symbolName,symbolName);
       strcpy(pWrkSymbol->crossFileName,pCross->crossSectionFile);
@@ -4448,13 +4445,12 @@ RC ANALYSE_LoadCross(ENGINE_CONTEXT *pEngineContext, const ANALYSIS_CROSS *cross
           !(rc=MATRIX_Load(pCross->crossSectionFile,&pWrkSymbol->xs,0,0,
                            (pCross->crossType==ANLYS_CROSS_ACTION_NOTHING)?(double)0.:lambda[0]-7.,      // max(lambda[0]-7.,(double)290.), - changed on october 2006
                            (pCross->crossType==ANLYS_CROSS_ACTION_NOTHING)?(double)0.:lambda[NDET-1]+7., // min(lambda[NDET-1]+7.,(double)600.), - changed on october 2006
-                           (pCross->crossType!=ANLYS_CROSS_ACTION_NOTHING)?1:0,1,"ANALYSE_LoadCross ")))
-       {
+                           (pCross->crossType!=ANLYS_CROSS_ACTION_NOTHING)?1:0,1,"ANALYSE_LoadCross "))) {
         if (!strcasecmp(pWrkSymbol->symbolName,"O3TD"))
-         rc=MATRIX_Allocate(&O3TD,NDET,pWrkSymbol->xs.nc,0,0,0,__func__);
-
+          rc=MATRIX_Allocate(&O3TD,NDET,pWrkSymbol->xs.nc,0,0,0,__func__);
+        
         NWorkSpace++;
-       }
+      }
 
       // cross sections should either have 1 wavelength column and 1
       // absorption column, or 1 wavelength column + 1 absorption
@@ -4462,12 +4458,12 @@ RC ANALYSE_LoadCross(ENGINE_CONTEXT *pEngineContext, const ANALYSIS_CROSS *cross
       // when it is a Ring cross section to be used with the "convolve
       // ring" option:
       if ( !(pWrkSymbol->xs.nc == 2 
-             || pWrkSymbol->xs.nc == (1 + ANALYSE_swathSize) 
+             || pWrkSymbol->xs.nc == (1 + ANALYSE_swathSize)
              || (pWrkSymbol->xs.nc == 4 && pCross->crossType == ANLYS_CROSS_ACTION_CONVOLUTE_RING) ) ) {
         rc = ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_XS_COLUMNS, pCross->crossSectionFile, pWrkSymbol->xs.nc);
       }
 
-     }
+    }
 
     if ((rc==ERROR_ID_NO) && (indexSymbol<NWorkSpace) && (pTabFeno->NTabCross<MAX_FIT))
      {
