@@ -11,7 +11,6 @@ using std::vector;
 using std::string;
 
 static NetCDFFile radiance_file;
-static vector<double> radiance_wavelengths;
 
 static string reference_filename;
 static vector<double> reference_radiance;
@@ -46,10 +45,9 @@ int apex_set(ENGINE_CONTEXT *pEngineContext) {
     
     NDET = spectral_dim;
 
-    radiance_wavelengths.resize(spectral_dim);
     size_t start[] = {0, 0};
     size_t count[] = {spectral_dim, 1};
-    radiance_file.getVar("radiance_wavelength", start, count, radiance_wavelengths.data());
+    radiance_file.getVar("radiance_wavelength", start, count, pEngineContext->buffers.lambda);
 
   } catch(std::runtime_error& e) {
     rc = ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_NETCDF, e.what());
@@ -68,8 +66,6 @@ int apex_read(ENGINE_CONTEXT *pEngineContext, int record) {
 
   try {
     radiance_file.getVar("radiance", start, count, pEngineContext->buffers.spectrum);
-    for (unsigned int i=0; i<radiance_wavelengths.size(); ++i)
-      pEngineContext->buffers.lambda[i] = radiance_wavelengths[i];
   } catch(std::runtime_error& e) {
     return ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_NETCDF, e.what());
   }
@@ -119,7 +115,6 @@ int apex_get_reference(const char *filename, int i_crosstrack,
 void apex_clean() {
   radiance_file.close();
 
-  radiance_wavelengths.clear();
   reference_wavelengths.clear();
   reference_radiance.clear();
   reference_filename = "";
