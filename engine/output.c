@@ -809,6 +809,9 @@ static void OutputRegisterFields(const ENGINE_CONTEXT *pEngineContext)
      func_sat_height = &gdp4_get_sat_height;
    }
     break;
+  case PRJCT_INSTR_FORMAT_BIRA_AIRBORNE :
+  case PRJCT_INSTR_FORMAT_BIRA_MOBILE :
+    func_frac_time = &get_frac_time_recordinfo;
   case PRJCT_INSTR_FORMAT_GDP_ASCII:
     func_sza = &gdpasc_get_sza;
     func_azimuth = &gdpasc_get_azim;
