@@ -336,7 +336,7 @@ RC MFC_ReadRecord(char *fileName,
       if ((drk!=NULL) && (pHeaderDrk->int_time!=(float)0.) && (THRD_browseType!=THREAD_BROWSE_MFC_OFFSET) && (THRD_browseType!=THREAD_BROWSE_MFC_DARK))
        {
         for (i=0;i<NDET;i++)
-         spe[i]-=(double)pHeaderSpe->noscans*drk[i]*pHeaderSpe->int_time/(pHeaderDrk->int_time*pHeaderDrk->noscans);
+         spe[i]-=(double)drk[i]*pHeaderSpe->int_time/pHeaderDrk->int_time;  // The int_time field should contain the number of scans * the exposure time
        }
 
       if (revertFlag && (THRD_browseType!=THREAD_BROWSE_MFC_OFFSET) && (THRD_browseType!=THREAD_BROWSE_MFC_DARK))
@@ -535,7 +535,7 @@ RC ReliMFC(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay
         pRecord->present_datetime.thetime.ti_sec=(unsigned char)((nsec%3600)%60);
 
         pRecord->TDet     = 0;
-        pRecord->Tint     = MFC_header.int_time*0.001;
+        pRecord->Tint     = MFC_header.int_time/MFC_header.noscans;
         pRecord->NSomme   = MFC_header.noscans;
 
         pRecord->wavelength1=MFC_header.wavelength1;
@@ -1062,7 +1062,7 @@ RC MFCBIRA_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
 
         // Browse records
 
-        for (i=nOff=nDrk=0;i<pEngineContext->recordNumber;i++)
+        for (i=nOff=nDrk=0,drkTint=0.;i<pEngineContext->recordNumber;i++)
          {
          	fseek(specFp,2L*sizeof(int)+i*(sizeof(MFCBIRA_HEADER)+NDET*sizeof(float)),SEEK_SET);
    	      fread(&header,sizeof(MFCBIRA_HEADER),1,specFp);
@@ -1086,10 +1086,12 @@ RC MFCBIRA_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
    	        for (j=0;j<NDET;j++)
    	         darkCurrent[j]+=(double)spectrum[j];
 
-   	        drkTint=header.exposureTime;                                          // all dark current should have the same exposure time
-   	        nDrk++;
+   	        nDrk+=header.scansNumber;
+   	        drkTint=header.exposureTime;                                        // all dark current should have the same exposure time
    	       }
          }
+
+
 
         // Average offset (account for the number of spectra and the number of scans)
 
@@ -1100,8 +1102,8 @@ RC MFCBIRA_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
         // Average dark current and correct by the offset
 
         if (nDrk)
-        	for (j=0;j<NDET;j++)                                                     // drk=drk-offset*drkScans/offScans
-        	 darkCurrent[j]=(darkCurrent[j]-offset[j])/((double)nDrk*drkTint);       // number of scans for the dark current should be 1
+        	for (j=0;j<NDET;j++)                                                   // drk=drk-offset*drkScans/offScans
+        	 darkCurrent[j]=(darkCurrent[j]-offset[j]*nDrk)/(nDrk*drkTint);               // number of scans for the dark current should be 1
        }
    	 }
   }
@@ -1238,8 +1240,8 @@ RC MFCBIRA_Reli(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loc
 
    	  // Average
 
-  	   for (i=0;i<NDET;i++)
-  	    pBuffers->spectrum[i]/=header.scansNumber;
+  	   // for (i=0;i<NDET;i++)
+  	   // pBuffers->spectrum[i]/=header.scansNumber;
 
       if ((dateFlag && ((pRecordInfo->elevationViewAngle>0.) && (pRecordInfo->elevationViewAngle<80.))) ||                    // reference spectra are zenith only
          (!dateFlag && pEngineContext->analysisRef.refScan && !pEngineContext->analysisRef.refSza && (pRecordInfo->elevationViewAngle>80.)))    // zenith sky spectra are not analyzed in scan reference selection mode

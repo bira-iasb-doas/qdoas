@@ -230,6 +230,7 @@ RC AIRBORNE_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int lo
     pRecord->Zm=(double)ZEN_FNTdiz(ZEN_FNCrtjul(&pRecord->Tm),&pRecord->longitude,&pRecord->latitude,&pRecord->Azimuth);
     pRecord->TotalExpTime=(double)header.totalTime;
     pRecord->TimeDec=(double)header.now.ti_hour+header.now.ti_min/60.+(header.now.ti_sec+0.01*header.now.ti_hund)/3600.;
+
     tmLocal=pRecord->Tm+THRD_localShift*3600.;
 
     pRecord->localCalDay=ZEN_FNCaljda(&tmLocal);
