@@ -1391,60 +1391,70 @@ RC OMI_read_earth(ENGINE_CONTEXT *pEngineContext,int recordNo)
     int indexSpectrum=(recordNo-1)%pOrbitFile->nXtrack; // index of the spectrum in the swath
     
     if (!pEngineContext->project.instrumental.omi.omiTracks[indexSpectrum]) {
-      rc=ERROR_ID_FILE_RECORD;
-    } else if (!(rc=
-                 omi_load_spectrum(OMI_SPEC_RAD,
-                                   pOrbitFile->sw_id,
-                                   indexMeasurement,
-                                   indexSpectrum,
-                                   pOrbitFile->nWavel,
-                                   lambda,spectrum,sigma,
-                                   pRecord->omi.omiPixelQF)))	{
-      if ((THRD_id==THREAD_TYPE_ANALYSIS) && omiRefFilesN) {
-        if (omiSwathOld!=indexMeasurement) {
-          KURUCZ_indexLine=1;
-          omiSwathOld=indexMeasurement;
-        }
-        
-        memcpy(pEngineContext->buffers.irrad,OMI_ref[0].omiRefSpectrum[indexSpectrum],sizeof(double)*NDET);
+      return ERROR_ID_FILE_RECORD;
+    }
+    rc= omi_load_spectrum(OMI_SPEC_RAD,
+                          pOrbitFile->sw_id,
+                          indexMeasurement,
+                          indexSpectrum,
+                          pOrbitFile->nWavel,
+                          lambda,spectrum,sigma,
+                          pRecord->omi.omiPixelQF);
+    if (rc)
+      return rc;
+
+    // check L1 wavelength calibration
+    // might be good to check that lambda covers the current analysis window, as well
+    for (int i=1; i<pOrbitFile->nWavel; ++i) {
+      // check lambda increases:
+      if (lambda[i] <= lambda[i-1]) {
+        return ERROR_SetLast(__func__, ERROR_TYPE_WARNING, ERROR_ID_L1WAVELENGTH, recordNo);
+      }
+    }
+
+    if ((THRD_id==THREAD_TYPE_ANALYSIS) && omiRefFilesN) {
+      if (omiSwathOld!=indexMeasurement) {
+        KURUCZ_indexLine=1;
+        omiSwathOld=indexMeasurement;
       }
       
-      pRecord->latitude=pGeo->latitude[recordNo-1];
-      pRecord->longitude=pGeo->longitude[recordNo-1];
-      pRecord->Zm=pGeo->solarZenithAngle[recordNo-1];
-      pRecord->Azimuth=pGeo->solarAzimuthAngle[recordNo-1];
-      pRecord->zenithViewAngle=pGeo->viewingZenithAngle[recordNo-1];
-      pRecord->azimuthViewAngle=pGeo->viewingAzimuthAngle[recordNo-1];
-      pRecord->useErrors=1;                                                     // Errors are available for OMI
-          
-      // Complete information on the current spectrum
-      
-      pRecord->i_alongtrack=indexMeasurement;
-      pRecord->i_crosstrack=indexSpectrum;
-      pRecord->omi.omiXtrackQF = pGeo->xtrackQualityFlags[recordNo-1];
-          
-      struct tm time_record;
-      int omi_ms=0;
-      // use TAI-93 "time" and UTC "secondsInDay" to get UTC date-time of current measurement:
-      tai_to_utc(pGeo->time[indexMeasurement], pGeo->secondsInDay[indexMeasurement], &time_record, &omi_ms);
-      
-      struct date *pDate = &pRecord->present_datetime.thedate;
-      struct time *pTime = &pRecord->present_datetime.thetime;
-      
-      pTime->ti_hour = (char)(time_record.tm_hour);
-      pTime->ti_min = (char)(time_record.tm_min);
-      pTime->ti_sec = (char)(time_record.tm_sec);
-      
-      pDate->da_year = time_record.tm_year + 1900;
-      pDate->da_mon = (char)(time_record.tm_mon + 1);
-      pDate->da_day = (char)(time_record.tm_mday);
-      
-      pRecord->present_datetime.millis = omi_ms;
-          
-      pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_datetime.thedate,&pRecord->present_datetime.thetime,0);
+      memcpy(pEngineContext->buffers.irrad,OMI_ref[0].omiRefSpectrum[indexSpectrum],sizeof(double)*NDET);
     }
+      
+    pRecord->latitude=pGeo->latitude[recordNo-1];
+    pRecord->longitude=pGeo->longitude[recordNo-1];
+    pRecord->Zm=pGeo->solarZenithAngle[recordNo-1];
+    pRecord->Azimuth=pGeo->solarAzimuthAngle[recordNo-1];
+    pRecord->zenithViewAngle=pGeo->viewingZenithAngle[recordNo-1];
+    pRecord->azimuthViewAngle=pGeo->viewingAzimuthAngle[recordNo-1];
+    pRecord->useErrors=1;                                                     // Errors are available for OMI
+          
+    // Complete information on the current spectrum
+      
+    pRecord->i_alongtrack=indexMeasurement;
+    pRecord->i_crosstrack=indexSpectrum;
+    pRecord->omi.omiXtrackQF = pGeo->xtrackQualityFlags[recordNo-1];
+          
+    struct tm time_record;
+    int omi_ms=0;
+    // use TAI-93 "time" and UTC "secondsInDay" to get UTC date-time of current measurement:
+    tai_to_utc(pGeo->time[indexMeasurement], pGeo->secondsInDay[indexMeasurement], &time_record, &omi_ms);
+      
+    struct date *pDate = &pRecord->present_datetime.thedate;
+    struct time *pTime = &pRecord->present_datetime.thetime;
+      
+    pTime->ti_hour = (char)(time_record.tm_hour);
+    pTime->ti_min = (char)(time_record.tm_min);
+    pTime->ti_sec = (char)(time_record.tm_sec);
+      
+    pDate->da_year = time_record.tm_year + 1900;
+    pDate->da_mon = (char)(time_record.tm_mon + 1);
+    pDate->da_day = (char)(time_record.tm_mday);
+    
+    pRecord->present_datetime.millis = omi_ms;
+    
+    pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_datetime.thedate,&pRecord->present_datetime.thetime,0);
   }
-
   return rc;
 }
 
