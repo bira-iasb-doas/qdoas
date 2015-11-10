@@ -1920,20 +1920,20 @@ RC OUTPUT_SaveResults(ENGINE_CONTEXT *pEngineContext,INDEX indexFenoColumn)
   CROSS_RESULTS *pTabCrossResults;
   INDEX indexFeno,indexTabCross,i;
   double *Spectrum;
-  FENO *pTabFeno;
-  RC rc;
+
+  printf("%s\n",__func__);
 
   // Initializations
 
   const RECORD_INFO *pRecordInfo=&pEngineContext->recordInfo;
-  rc=ERROR_ID_NO;
+  RC rc=ERROR_ID_NO;
 
   // AMF computation
 
   if (OUTPUT_AmfSpace!=NULL) {
 
     for (indexFeno=0;indexFeno<NFeno;indexFeno++) {
-      pTabFeno=&TabFeno[indexFenoColumn][indexFeno];
+      FENO *pTabFeno=&TabFeno[indexFenoColumn][indexFeno];
 
       if ((THRD_id!=THREAD_TYPE_KURUCZ) && !pTabFeno->hidden && !pTabFeno->rcKurucz) {
         for (indexTabCross=0;indexTabCross<pTabFeno->NTabCross;indexTabCross++) {

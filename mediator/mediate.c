@@ -471,7 +471,7 @@ void mediateRequestPlotSpectra(ENGINE_CONTEXT *pEngineContext,void *responseHand
          (pInstrumental->readOutFormat!=PRJCT_INSTR_FORMAT_OMI || THRD_id==THREAD_TYPE_ANALYSIS) ) {
 
        // Feno->LambdaRef contains the original L1B irradiance wavelength grid.
-       const double *lambda_ref = TabFeno[pEngineContext->recordInfo.i_crosstrack][0].LambdaRef;
+       const double *lambda_ref = TabFeno[pEngineContext->recordInfo.i_crosstrack][1].LambdaRef;
 
        mediateAllocateAndSetPlotData(&spectrumData, "Irradiance spectrum", lambda_ref, pBuffers->irrad, NDET, Line);
        mediateResponsePlotData(plotPageIrrad, &spectrumData, 1, Spectrum, forceAutoScale, 

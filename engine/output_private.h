@@ -724,7 +724,7 @@ static inline void get_num_bands(struct output_field *this_field, int *num_bands
   *num_bands = svd ? svd->DimL : QDOAS_FILL_INT;
 }
 
-static inline void get_processing_error_flag(struct output_field *this_field, int *error_flag, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn, int index_calib) {
+static inline void get_processing_error_flag(struct output_field *this_field, int *error_flag, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn, int index_calib __attribute__ ((unused))) {
   FENO *pTabFeno = this_field->get_tabfeno(this_field, indexFenoColumn);
   *error_flag = (pTabFeno == NULL || pTabFeno->rc) ? 1 : 0;
 }
