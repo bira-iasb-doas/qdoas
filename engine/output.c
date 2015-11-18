@@ -1921,8 +1921,6 @@ RC OUTPUT_SaveResults(ENGINE_CONTEXT *pEngineContext,INDEX indexFenoColumn)
   INDEX indexFeno,indexTabCross,i;
   double *Spectrum;
 
-  printf("%s\n",__func__);
-
   // Initializations
 
   const RECORD_INFO *pRecordInfo=&pEngineContext->recordInfo;
