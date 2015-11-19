@@ -356,9 +356,9 @@ RC GDP_BIN_get_orbit_date(int *year, int *month, int *day) {
   } else {
     // goto first spectrum, right after header
     fseek(fp,(int32_t)pOrbitFile->gdpBinHeader.headerSize,SEEK_SET);
-    
+
     SPECTRUM_RECORD tempSpectrum;
-    
+
     if (!fread(&tempSpectrum,sizeof(SPECTRUM_RECORD),1,fp)) {
       rc=ERROR_ID_FILE_END;
     } else {
@@ -614,11 +614,11 @@ RC GDP_BIN_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
             if (!fread(&pOrbitFile->gdpBinSpectrum,sizeof(SPECTRUM_RECORD),1,fp))
              rc=ERROR_SetLast("GDP_Bin_Set (2)",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,fileName);
             else if (((pOrbitFile->gdpBinHeader.version<40) && !fread(&pOrbitFile->gdpBinGeo3,sizeof(GEO_3),1,fp)) ||
-                     ((pOrbitFile->gdpBinHeader.version>=40) && !fread(&pOrbitFile->gdpBinGeo4,sizeof(GEO_4),1,fp)))    
+                     ((pOrbitFile->gdpBinHeader.version>=40) && !fread(&pOrbitFile->gdpBinGeo4,sizeof(GEO_4),1,fp)))
              {
               pOrbitFile->gdpBinInfo[indexRecord].pixelNumber=pOrbitFile->gdpBinSpectrum.groundPixelID;
               pOrbitFile->gdpBinInfo[indexRecord].pixelType=pOrbitFile->gdpBinSpectrum.groundPixelType;
-              
+
               if (pOrbitFile->gdpBinHeader.version<40)
                {
                 pOrbitFile->gdpBinInfo[indexRecord].sza=(double)pOrbitFile->gdpBinGeo3.szaArray[1];
@@ -748,10 +748,10 @@ RC GDP_BIN_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,FILE *specFp,INDEX i
     // Complete record read out
 
     fseek(fp,(int32_t)pOrbitFile->gdpBinHeader.headerSize+(recordNo-1)*pOrbitFile->gdpBinHeader.recordSize,SEEK_SET);
-    
+
     if (!fread(&pOrbitFile->gdpBinSpectrum,sizeof(SPECTRUM_RECORD),1,fp) ||
        ((pOrbitFile->gdpBinHeader.version<40) && !fread(&pOrbitFile->gdpBinGeo3,sizeof(GEO_3),1,fp)) ||
-       ((pOrbitFile->gdpBinHeader.version>=40) && !fread(&pOrbitFile->gdpBinGeo4,sizeof(GEO_4),1,fp)) ||        
+       ((pOrbitFile->gdpBinHeader.version>=40) && !fread(&pOrbitFile->gdpBinGeo4,sizeof(GEO_4),1,fp)) ||
         !fread(pOrbitFile->gdpBinScalingFactor,sizeof(float)*pOrbitFile->gdpBinHeader.nbands,1,fp) ||
         !fread(spectrum,sizeof(unsigned short)*pOrbitFile->gdpBinSpectraSize,1,fp) ||
        (pRecord->useErrors &&
@@ -823,7 +823,7 @@ RC GDP_BIN_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,FILE *specFp,INDEX i
       // Convert spectrum from short integers to double
 
       GdpBinLambda(pBuffers->lambda,pOrbitFile->gdpBinSpectrum.indexSpectralParam,GDP_BIN_currentFileIndex);
-      
+
       for (i=0,j=pOrbitFile->gdpBinStartPixel[pOrbitFile->gdpBinBandIndex],Max=(double)0.;
            j<pOrbitFile->gdpBinStartPixel[pOrbitFile->gdpBinBandIndex]+pOrbitFile->gdpBinBandInfo[pOrbitFile->gdpBinBandIndex].bandSize;i++,j++)
        {

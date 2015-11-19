@@ -17,6 +17,8 @@ enum _gomeGetCommand
   GOME_GET_REFERENCE
  };
 
+#pragma pack(push,1)
+
 // Date in short format
 typedef struct _SHORTDateTime
  {
@@ -168,6 +170,8 @@ typedef struct _GOMEOrbitFiles                                                  
   RC rc;
  }
 GOME_ORBIT_FILE;
+
+#pragma pack(pop)
 
 // ---------------------
 // VARIABLES DECLARATION
