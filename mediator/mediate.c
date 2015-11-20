@@ -470,10 +470,7 @@ void mediateRequestPlotSpectra(ENGINE_CONTEXT *pEngineContext,void *responseHand
          // for OMI, irradiance is stored in separate file, which is only read during analysis
          (pInstrumental->readOutFormat!=PRJCT_INSTR_FORMAT_OMI || THRD_id==THREAD_TYPE_ANALYSIS) ) {
 
-       // Feno->LambdaRef contains the original L1B irradiance wavelength grid.
-       const double *lambda_ref = TabFeno[pEngineContext->recordInfo.i_crosstrack][1].LambdaRef;
-
-       mediateAllocateAndSetPlotData(&spectrumData, "Irradiance spectrum", lambda_ref, pBuffers->irrad, NDET, Line);
+       mediateAllocateAndSetPlotData(&spectrumData, "Irradiance spectrum", pBuffers->lambda_irrad, pBuffers->irrad, NDET, Line);
        mediateResponsePlotData(plotPageIrrad, &spectrumData, 1, Spectrum, forceAutoScale, 
                                "Irradiance spectrum", "Wavelength/(nm)", "photons/(nm s cm<sup>2</sup>)", responseHandle);
        mediateReleasePlotData(&spectrumData);

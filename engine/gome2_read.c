@@ -1409,7 +1409,7 @@ RC GOME2_Set(ENGINE_CONTEXT *pEngineContext)
         !(rc=Gome2Open(&pOrbitFile->gome2Pf,pEngineContext->fileInfo.fileName,&pOrbitFile->version))) {
       coda_cursor_set_product(&pOrbitFile->gome2Cursor,pOrbitFile->gome2Pf);
       memcpy(pEngineContext->buffers.lambda,pOrbitFile->gome2SunWve,sizeof(double)*NDET);
-      
+      memcpy(pEngineContext->buffers.lambda_irrad,pOrbitFile->gome2SunWve,sizeof(double)*NDET);
       memcpy(pEngineContext->buffers.irrad,pOrbitFile->gome2SunRef,sizeof(double)*NDET);
     }
    }

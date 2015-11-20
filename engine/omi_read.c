@@ -1240,7 +1240,6 @@ static void omi_interpolate_errors(int16 mantissa[], int32 n_wavel, double wavel
 
 RC OMI_GetReference(int spectralType, const char *refFile, INDEX indexColumn, double *lambda, double *ref, double *refSigma)
 {
-  
   RC rc=ERROR_ID_NO; 
 
   OMI_REF *pRef= NULL;
@@ -1418,6 +1417,7 @@ RC OMI_read_earth(ENGINE_CONTEXT *pEngineContext,int recordNo)
         omiSwathOld=indexMeasurement;
       }
       
+      memcpy(pEngineContext->buffers.lambda_irrad,OMI_ref[0].omiRefLambda[indexSpectrum],sizeof(double)*NDET);
       memcpy(pEngineContext->buffers.irrad,OMI_ref[0].omiRefSpectrum[indexSpectrum],sizeof(double)*NDET);
     }
       

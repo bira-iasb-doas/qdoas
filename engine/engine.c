@@ -116,6 +116,8 @@ void EngineResetContext(ENGINE_CONTEXT *pEngineContext)
     MEMORY_ReleaseDVector("EngineResetContext ","spectrum",pBuffers->spectrum,0);
    if (pBuffers->sigmaSpec!=NULL)
     MEMORY_ReleaseDVector("EngineResetContext ","sigmaSpec",pBuffers->sigmaSpec,0);
+   if (pBuffers->lambda_irrad!=NULL)
+    MEMORY_ReleaseDVector("EngineResetContext ","lambda_irrad",pBuffers->lambda_irrad,0);
    if (pBuffers->irrad!=NULL)
     MEMORY_ReleaseDVector("EngineResetContext ","irrad",pBuffers->irrad,0);
    if (pBuffers->darkCurrent!=NULL)
@@ -340,8 +342,8 @@ RC EngineSetProject(ENGINE_CONTEXT *pEngineContext)
 
    // Allocate buffers
 
-   if (((pBuffers->lambda=MEMORY_AllocDVector("EngineSetProject","lambda",0,NDET-1))==NULL) ||
-       ((pBuffers->spectrum=MEMORY_AllocDVector("EngineSetProject","spectrum",0,NDET-1))==NULL) ||
+   if (((pBuffers->lambda=MEMORY_AllocDVector(__func__,"lambda",0,NDET-1))==NULL) ||
+       ((pBuffers->spectrum=MEMORY_AllocDVector(__func__,"spectrum",0,NDET-1))==NULL) ||
 
        (((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_CCD_EEV) ||
          (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_CCD_OHP_96) ||
@@ -351,7 +353,7 @@ RC EngineSetProject(ENGINE_CONTEXT *pEngineContext)
          (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_PDASI_EASOE) ||
          (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MKZY)) &&
 
-        ((pBuffers->recordIndexes=(uint32_t *)MEMORY_AllocBuffer("EngineSetProject","recordIndexes",2001,sizeof(uint32_t),0,MEMORY_TYPE_ULONG))==NULL)) ||
+        ((pBuffers->recordIndexes=(uint32_t *)MEMORY_AllocBuffer(__func__,"recordIndexes",2001,sizeof(uint32_t),0,MEMORY_TYPE_ULONG))==NULL)) ||
 
        (((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_CCD_EEV) ||
          (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_CCD_OHP_96) ||
@@ -360,24 +362,27 @@ RC EngineSetProject(ENGINE_CONTEXT *pEngineContext)
          (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_PDAEGG_OLD) ||
          (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_PDASI_EASOE)) &&
 
-        (((pBuffers->specMaxx=(double *)MEMORY_AllocDVector("EngineSetProject","specMaxx",0,MAX_SPECMAX-1))==NULL) ||
-        ((pBuffers->specMax=(double *)MEMORY_AllocDVector("EngineSetProject","specMax",0,MAX_SPECMAX-1))==NULL))) ||
+        (((pBuffers->specMaxx=(double *)MEMORY_AllocDVector(__func__,"specMaxx",0,MAX_SPECMAX-1))==NULL) ||
+        ((pBuffers->specMax=(double *)MEMORY_AllocDVector(__func__,"specMax",0,MAX_SPECMAX-1))==NULL))) ||
 
 
-       (((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_GDP_ASCII) ||
-         (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN) ||
-         (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS) ||
-         (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_OMI) ||
-         (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_GOME2)) &&
-
-        (((pBuffers->sigmaSpec=MEMORY_AllocDVector("EngineSetProject","sigmaSpec",0,NDET-1))==NULL) ||
-         ((pBuffers->irrad=MEMORY_AllocDVector("EngineSetProject","irrad",0,NDET-1))==NULL))) ||
+       ( ( pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_GDP_ASCII ||
+           pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN ||
+           pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS ||
+           pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_OMI ||
+           pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_GOME2 ) &&
+         
+         ( (pBuffers->sigmaSpec=MEMORY_AllocDVector(__func__,"sigmaSpec",0,NDET-1))==NULL ||
+           (pBuffers->lambda_irrad=MEMORY_AllocDVector(__func__,"lambda_irrad",0,NDET-1))==NULL ||
+           (pBuffers->irrad=MEMORY_AllocDVector(__func__,"irrad",0,NDET-1))==NULL
+           )
+         ) ||
 
        ((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_OMI) &&
-        ((pRecord->omi.omiPixelQF=(unsigned short *)MEMORY_AllocBuffer("EngineSetProject","omiPixelQF",NDET,sizeof(unsigned short),0,MEMORY_TYPE_USHORT))==NULL)) ||
+        ((pRecord->omi.omiPixelQF=(unsigned short *)MEMORY_AllocBuffer(__func__,"omiPixelQF",NDET,sizeof(unsigned short),0,MEMORY_TYPE_USHORT))==NULL)) ||
 
        ((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MKZY) &&
-        ((pBuffers->scanRef=MEMORY_AllocDVector("EngineSetProject","scanRef",0,NDET-1))==NULL)) ||
+        ((pBuffers->scanRef=MEMORY_AllocDVector(__func__,"scanRef",0,NDET-1))==NULL)) ||
 
        (((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_ACTON) ||
          (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_PDAEGG) ||
@@ -385,19 +390,19 @@ RC EngineSetProject(ENGINE_CONTEXT *pEngineContext)
          (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_PDASI_EASOE) ||
          (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MKZY) ||
          (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_CCD_EEV)) &&
-        ((pBuffers->darkCurrent=MEMORY_AllocDVector("EngineSetProject","darkCurrent",0,NDET-1))==NULL)) ||
+        ((pBuffers->darkCurrent=MEMORY_AllocDVector(__func__,"darkCurrent",0,NDET-1))==NULL)) ||
 
        (((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MKZY) ||
          (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC) ||
          (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC_STD)||
          (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC_BIRA)) &&
-        ((pBuffers->offset=MEMORY_AllocDVector("EngineSetProject","offset",0,NDET-1))==NULL)) ||
+        ((pBuffers->offset=MEMORY_AllocDVector(__func__,"offset",0,NDET-1))==NULL)) ||
 
        ( ((((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC) ||
             (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC_STD)) && strlen(pInstrumental->vipFile)) ||
             (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC_BIRA)) &&
 
-         ((pBuffers->varPix=MEMORY_AllocDVector("EngineSetProject","varPix",0,NDET-1))==NULL)) ||
+         ((pBuffers->varPix=MEMORY_AllocDVector(__func__,"varPix",0,NDET-1))==NULL)) ||
 
        // Load the detector non linearity file
 
@@ -424,7 +429,7 @@ RC EngineSetProject(ENGINE_CONTEXT *pEngineContext)
       for (i=0;i<NDET;i++)
        pBuffers->lambda[i]=i+1;
      else if ((fp=fopen(pInstrumental->calibrationFile,"rt"))==NULL)
-      rc=ERROR_SetLast("EngineSetProject",ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pInstrumental->calibrationFile);
+      rc=ERROR_SetLast(__func__,ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pInstrumental->calibrationFile);
      else
       {
        for (i=0;i<NDET;)
@@ -439,7 +444,7 @@ RC EngineSetProject(ENGINE_CONTEXT *pEngineContext)
          }
 
        if (i!=NDET)
-        rc=ERROR_SetLast("EngineSetProject",ERROR_TYPE_FATAL,ERROR_ID_FILE_EMPTY,pInstrumental->calibrationFile);
+        rc=ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_FILE_EMPTY,pInstrumental->calibrationFile);
 
        fclose(fp);
       }
@@ -462,11 +467,11 @@ RC EngineSetProject(ENGINE_CONTEXT *pEngineContext)
          lambdaInstr=instrFunction=instrDeriv2=NULL;
 
          if ((fp=fopen(pInstrumental->instrFunction,"rt"))==NULL)
-          rc=ERROR_SetLast("EngineSetProject",ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pInstrumental->instrFunction);
-         else if (((pBuffers->instrFunction=MEMORY_AllocDVector("EngineSetProject","instrFunction",0,NDET-1))==NULL) ||
-                  ((lambdaInstr=MEMORY_AllocDVector("EngineSetProject","lambdaInstr",0,NDET-1))==NULL) ||
-                  ((instrFunction=MEMORY_AllocDVector("EngineSetProject","instrFunction",0,NDET-1))==NULL) ||
-                  ((instrDeriv2=MEMORY_AllocDVector("EngineSetProject","instrDeriv2",0,NDET-1))==NULL))
+          rc=ERROR_SetLast(__func__,ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pInstrumental->instrFunction);
+         else if (((pBuffers->instrFunction=MEMORY_AllocDVector(__func__,"instrFunction",0,NDET-1))==NULL) ||
+                  ((lambdaInstr=MEMORY_AllocDVector(__func__,"lambdaInstr",0,NDET-1))==NULL) ||
+                  ((instrFunction=MEMORY_AllocDVector(__func__,"instrFunction",0,NDET-1))==NULL) ||
+                  ((instrDeriv2=MEMORY_AllocDVector(__func__,"instrDeriv2",0,NDET-1))==NULL))
 
           rc=ERROR_ID_ALLOC;
 
@@ -479,8 +484,8 @@ RC EngineSetProject(ENGINE_CONTEXT *pEngineContext)
               i++;
              }
 
-           if (!SPLINE_Deriv2(lambdaInstr,instrFunction,instrDeriv2,NDET,"EngineSetProject"))
-            rc=SPLINE_Vector(lambdaInstr,instrFunction,instrDeriv2,NDET,pBuffers->lambda,pBuffers->instrFunction,NDET,SPLINE_CUBIC,"EngineSetProject");
+           if (!SPLINE_Deriv2(lambdaInstr,instrFunction,instrDeriv2,NDET,__func__))
+            rc=SPLINE_Vector(lambdaInstr,instrFunction,instrDeriv2,NDET,pBuffers->lambda,pBuffers->instrFunction,NDET,SPLINE_CUBIC,__func__);
           }
 
          if (fp!=NULL)
@@ -489,11 +494,11 @@ RC EngineSetProject(ENGINE_CONTEXT *pEngineContext)
          // Release the allocated buffers
 
          if (lambdaInstr!=NULL)
-          MEMORY_ReleaseDVector("EngineSetProject","lambdaInstr",lambdaInstr,0);
+          MEMORY_ReleaseDVector(__func__,"lambdaInstr",lambdaInstr,0);
          if (instrFunction!=NULL)
-          MEMORY_ReleaseDVector("EngineSetProject","instrFunction",instrFunction,0);
+          MEMORY_ReleaseDVector(__func__,"instrFunction",instrFunction,0);
          if (instrDeriv2!=NULL)
-          MEMORY_ReleaseDVector("EngineSetProject","instrDeriv2",instrDeriv2,0);
+          MEMORY_ReleaseDVector(__func__,"instrDeriv2",instrDeriv2,0);
         }
 
        // MFC : load dark current and offset

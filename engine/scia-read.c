@@ -847,8 +847,10 @@ RC SciaReadSunRefPDS(ENGINE_CONTEXT *pEngineContext,INDEX fileIndex)
       for (i=0;i<NDET;i++)
        pBuffers->lambda[i]=(double)(((float *)pOrbitFile->sciaSunWve)[i]);
 
-      for (i=0;i<NDET;i++)
-       pBuffers->irrad[i]=(double)(((float *)pOrbitFile->sciaSunRef)[i]);
+      for (i=0;i<NDET;i++) {
+        pBuffers->lambda_irrad[i]=(double)(pOrbitFile->sciaSunWve[i]);
+        pBuffers->irrad[i]=(double)(pOrbitFile->sciaSunRef[i]);
+      }
 
       if ((pBuffers->dnl.matrix!=NULL) && (pBuffers->dnl.deriv2!=NULL))
        {

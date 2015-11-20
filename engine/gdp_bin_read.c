@@ -658,22 +658,26 @@ RC GDP_BIN_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
 
   if ((GDP_BIN_currentFileIndex!=ITEM_NONE) &&
      ((pEngineContext->recordNumber=GDP_BIN_orbitFiles[GDP_BIN_currentFileIndex].specNumber)>0) &&
-     !rc)
-   {
+     !rc) {
+
     pOrbitFile=&GDP_BIN_orbitFiles[GDP_BIN_currentFileIndex];
 
     // Irradiance spectrum
 
     for (i=0,j=pOrbitFile->gdpBinStartPixel[pOrbitFile->gdpBinBandIndex];
-         j<pOrbitFile->gdpBinStartPixel[pOrbitFile->gdpBinBandIndex]+pOrbitFile->gdpBinBandInfo[pOrbitFile->gdpBinBandIndex].bandSize;i++,j++)
+         j<pOrbitFile->gdpBinStartPixel[pOrbitFile->gdpBinBandIndex]+pOrbitFile->gdpBinBandInfo[pOrbitFile->gdpBinBandIndex].bandSize;i++,j++) {
 
-     pEngineContext->buffers.irrad[i]=(double)pOrbitFile->gdpBinReference[j]/pOrbitFile->gdpBinBandInfo[pOrbitFile->gdpBinBandIndex].scalingFactor;
+      pEngineContext->buffers.irrad[i]=(double)pOrbitFile->gdpBinReference[j]/pOrbitFile->gdpBinBandInfo[pOrbitFile->gdpBinBandIndex].scalingFactor;
+    }
 
     pEngineContext->recordInfo.gome.orbitNumber=pOrbitFile->gdpBinHeader.orbitNumber;
     pEngineContext->recordInfo.useErrors=((pOrbitFile->gdpBinHeader.mask&GDP_BIN_ERROR_ID_MASK)==GDP_BIN_ERROR_ID_MASK)?1:0;
     NDET=pOrbitFile->gdpBinBandInfo[pOrbitFile->gdpBinBandIndex].bandSize;
 
     GdpBinLambda(pEngineContext->buffers.lambda,GDP_BIN_orbitFiles[GDP_BIN_currentFileIndex].gdpBinHeader.indexSpectralParam,GDP_BIN_currentFileIndex);
+    for (i=0; i<NDET; ++i) {
+      pEngineContext->buffers.lambda_irrad[i]=pEngineContext->buffers.lambda[i];
+    }
 
     rc=GDP_BIN_orbitFiles[GDP_BIN_currentFileIndex].rc;
    }

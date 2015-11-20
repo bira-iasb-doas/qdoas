@@ -372,7 +372,8 @@ typedef struct _engineBuffers
   double *lambda,                                                               // wavelengths
          *spectrum,                                                             // raw spectrum
          *sigmaSpec,                                                            // error on raw spectrum if any
-         *irrad,                                                                // irradiance spectrum (for satellites measurements)
+         *lambda_irrad,                                                         // irradiance spectrum wavelength (for satellite measurements)
+         *irrad,                                                                // irradiance spectrum
          *darkCurrent,                                                          // dark current
          *offset,                                                               // offset
          *specMaxx,                                                             // scans numbers to use as absissae for the plot of specMax
