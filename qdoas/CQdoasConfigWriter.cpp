@@ -1486,6 +1486,8 @@ void CQdoasConfigWriter::writeDataSelectList(FILE *fp, const data_select_list_t 
     case PRJCT_RESULTS_LOS_ZA:           fprintf(fp, "los_za"); break;
     case PRJCT_RESULTS_LOS_AZIMUTH:      fprintf(fp, "los_azimuth"); break;
     case PRJCT_RESULTS_SAT_HEIGHT:       fprintf(fp, "sat_height"); break;
+    case PRJCT_RESULTS_SAT_LON:          fprintf(fp, "sat_latitude"); break;
+    case PRJCT_RESULTS_SAT_LAT:          fprintf(fp, "sat_longitude"); break;
     case PRJCT_RESULTS_EARTH_RADIUS:     fprintf(fp, "earth_radius"); break;
     case PRJCT_RESULTS_VIEW_ELEVATION:   fprintf(fp, "view_elevation"); break;
     case PRJCT_RESULTS_VIEW_ZENITH:      fprintf(fp, "view_zenith"); break;
@@ -1546,7 +1548,7 @@ void CQdoasConfigWriter::writeDataSelectList(FILE *fp, const data_select_list_t 
 
     case PRJCT_RESULTS_PRECALCULATED_FLUXES:            fprintf(fp, "precalculated_fluxes"); break;
 
-    default: fprintf(fp, "Invalid");
+    default: assert(false && "BUG: no configuration string defined for output field");
     }
     fprintf(fp, "\" />\n");
     ++i;

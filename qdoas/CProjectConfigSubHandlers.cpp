@@ -119,6 +119,10 @@ bool CSelectorSubHandler::start(const QString &element, const QXmlAttributes &at
     d->selected[d->nSelected] = PRJCT_RESULTS_LOS_AZIMUTH;
   else if (str == "sat_height")
     d->selected[d->nSelected] = PRJCT_RESULTS_SAT_HEIGHT;
+  else if (str == "sat_longitude")
+    d->selected[d->nSelected] = PRJCT_RESULTS_SAT_LON;
+  else if (str == "sat_latitude")
+    d->selected[d->nSelected] = PRJCT_RESULTS_SAT_LAT;
   else if (str == "earth_radius")
     d->selected[d->nSelected] = PRJCT_RESULTS_EARTH_RADIUS;
   else if (str == "view_elevation")
