@@ -258,9 +258,14 @@ SCIA_DATA;
 typedef struct _gome2
  {
   int    orbitNumber;                                                           // orbit number
+  
   double longitudes[4],latitudes[4];                                            // geolocations at the 4 corners of the pixels
-  float  solZen[3],solAzi[3],losZen[3],losAzi[3];                               // resp. solar and line of sight zenith and azimuth angles
-  float  earthRadius,satHeight;                                                 // for satellite to TOA angles correction
+  double solZen[3],solAzi[3],losZen[3],losAzi[3];                               // resp. solar and line of sight zenith and azimuth angles
+  double earth_radius;
+  
+  double sat_alt;
+  double sat_sza, sat_saa; // solar zenith/azimuth angles at satellite height
+  double sat_lat, sat_lon; // coordinates of sub-satellite point
   int    saaFlag;
   int    sunglintDangerFlag;
   int    sunglintHighDangerFlag;

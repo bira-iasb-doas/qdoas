@@ -213,7 +213,7 @@ static inline void scia_get_sat_height(struct output_field *this_field __attribu
 }
 
 static inline void gome2_get_sat_height(struct output_field *this_field __attribute__ ((unused)), float *sat_height, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
-  *sat_height = pEngineContext->recordInfo.gome2.satHeight;
+  *sat_height = pEngineContext->recordInfo.gome2.sat_alt;
 }
 
 static inline void gdp3_get_earth_radius(struct output_field *this_field __attribute__ ((unused)), float *earth_radius, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
@@ -229,7 +229,7 @@ static inline void scia_get_earth_radius(struct output_field *this_field __attri
 }
 
 static inline void gome2_get_earth_radius(struct output_field *this_field __attribute__ ((unused)), float *earth_radius, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
-  *earth_radius = pEngineContext->recordInfo.gome2.earthRadius;
+  *earth_radius = pEngineContext->recordInfo.gome2.earth_radius;
 }
 
 static inline void get_view_elevation(struct output_field *this_field __attribute__ ((unused)), float *view_elevation, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
