@@ -11,7 +11,7 @@ include( ../config.pri )
 PRE_TARGETDEPS += ../common/libcommon.a ../engine/libengine.a ../mediator/libmediator.a
 
 CONFIG += qt thread $$CODE_GENERATION
-QT = core gui xml svg
+QT = core gui xml
 
 DEFINES += APP_RING
 
@@ -51,6 +51,7 @@ caro {
   }
 
   CONFIG      += windows
+  QT += svg
 }
 
 #----------------------------------------------

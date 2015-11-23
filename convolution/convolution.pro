@@ -11,7 +11,7 @@ PRE_TARGETDEPS += ../common/libcommon.a ../engine/libengine.a ../mediator/libmed
 INCLUDEPATH  += ../mediator ../common ../engine
 
 CONFIG += qt thread $$CODE_GENERATION
-QT = core gui xml svg
+QT = core gui xml
 
 DEFINES += APP_CONV
 
@@ -53,6 +53,7 @@ caro {
   LIBS         += -L$$CODA_LIB_PATH -lcoda -L$$HDF_LIB_PATH -lhdf -L$$MFHDF_LIB_PATH -lmfhdf -L$$HDF5_LIB_PATH -lhdf5 -lhdf5_hl -lhdf5_tools  -L$$HDFEOS_LIB_PATH -lhdfeos -L$$HDFEOS5_LIB_PATH -lhe5_hdfeos -L$$NETCDF_LIB_PATH -lnetcdf -lm
 
   CONFIG      += windows
+  QT += svg
 }
 
 #----------------------------------------------

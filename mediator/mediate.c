@@ -1849,8 +1849,9 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
    // calibration procedure with FWHM fit -> Kurucz (and xs) are convolved with the fitted slit function
    // no calibration procedure and no xs to convolve -> nothing to do with the slit function in the slit page
    // other cases:
-   if ( ( (useKurucz || THRD_id==THREAD_TYPE_KURUCZ) && !pKuruczOptions->fwhmFit) // calibration procedure but FWHM not fitted
-        || (!useKurucz  && xsToConvolute) ) {   // no calibration procedure and xs to convolve
+   if ( xsToConvolute &&
+      ((useKurucz || THRD_id==THREAD_TYPE_KURUCZ) && !pKuruczOptions->fwhmFit) || // calibration procedure but FWHM not fitted and cross sections to convolve
+       !useKurucz ) {   // no calibration procedure and xs to convolve
      // -> use the slit function in the slit page of project properties to convolve
      //    solar spectrum and xs
      rc=ANALYSE_LoadSlit(pSlitOptions,useKurucz||xsToConvoluteI0);
