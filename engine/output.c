@@ -812,6 +812,7 @@ static void OutputRegisterFields(const ENGINE_CONTEXT *pEngineContext)
   case PRJCT_INSTR_FORMAT_BIRA_AIRBORNE :
   case PRJCT_INSTR_FORMAT_BIRA_MOBILE :
     func_frac_time = &get_frac_time_recordinfo;
+    break;
   case PRJCT_INSTR_FORMAT_GDP_ASCII:
     func_sza = &gdpasc_get_sza;
     func_azimuth = &gdpasc_get_azim;
@@ -900,13 +901,13 @@ static void OutputRegisterFields(const ENGINE_CONTEXT *pEngineContext)
        if(func_corner_longitudes) { // we have pixel corners
          register_field( (struct output_field) { .basic_fieldname = "Longitude", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)func_corner_longitudes, .data_cols = 4, .column_number_format="(%d)" });
        }
-       register_field( (struct output_field) { .basic_fieldname = "Longitude(pixel center)", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_longitude }); // pixel centre
+       register_field( (struct output_field) { .basic_fieldname = (func_corner_longitudes)?"Longitude(pixel center)":"Longitude", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_longitude }); // pixel centre
        break;
      case PRJCT_RESULTS_LATIT:
        if(func_corner_latitudes) { // we have pixel corners
          register_field( (struct output_field) { .basic_fieldname = "Latitude", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)func_corner_latitudes, .data_cols = 4, .column_number_format="(%d)" });
        }
-       register_field( (struct output_field) { .basic_fieldname = "Latitude(pixel center)", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_latitude });
+       register_field( (struct output_field) { .basic_fieldname = (func_corner_latitudes)?"Latitude(pixel center)":"Latitude", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_latitude });
        break;
      case PRJCT_RESULTS_ALTIT:
        register_field( (struct output_field) { .basic_fieldname = "Altitude", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_altitude });
@@ -1054,6 +1055,21 @@ static void OutputRegisterFields(const ENGINE_CONTEXT *pEngineContext)
        break;
      case PRJCT_RESULTS_PRECALCULATED_FLUXES:
        register_field( (struct output_field) { .basic_fieldname = "Precalculated flux", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_precalculated_flux, .data_cols = 4, .column_number_format="(%d)" });
+       break;
+     case PRJCT_RESULTS_STARTGPSTIME:
+       register_field( (struct output_field) { .basic_fieldname = "GPS Start Time (hhmmss)", .memory_type = OUTPUT_TIME, .resulttype = fieldtype, .format = "%02d%02d%02d", .get_data = (func_void)&get_gps_start_time });
+       break;
+     case PRJCT_RESULTS_ENDGPSTIME:
+       register_field( (struct output_field) { .basic_fieldname = "GPS Stop Time (hhmmss)", .memory_type = OUTPUT_TIME, .resulttype = fieldtype, .format = "%02d%02d%02d", .get_data = (func_void)&get_gps_end_time });
+       break;
+     case PRJCT_RESULTS_LONGITEND:
+       register_field( (struct output_field) { .basic_fieldname = "Longitude End", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_longitude_end });
+       break;
+     case PRJCT_RESULTS_LATITEND:
+       register_field( (struct output_field) { .basic_fieldname = "Latitude End", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_latitude_end });
+       break;
+     case PRJCT_RESULTS_ALTITEND:
+       register_field( (struct output_field) { .basic_fieldname = "AltitudeEnd", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_altitude_end });
        break;
      default:
        break;

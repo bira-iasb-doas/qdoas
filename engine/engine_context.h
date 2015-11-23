@@ -357,8 +357,8 @@ typedef struct _airborneBira
  	float altitudeP;
  	float pressure;
  	float longitudeEnd,latitudeEnd,altitudeEnd;
- 	struct time gpsTime;
- 	struct time gpsTimeEnd;
+ 	struct time gpsStartTime;
+ 	struct time gpsEndTime;
  	float  pitch,roll,heading;                                                   // airborne
  }
 UAVBIRA_DATA;

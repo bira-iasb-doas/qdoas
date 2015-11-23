@@ -216,6 +216,20 @@ bool CSelectorSubHandler::start(const QString &element, const QXmlAttributes &at
     d->selected[d->nSelected] = PRJCT_RESULTS_UAV_ROLL;
   else if (str == "uav_heading")
     d->selected[d->nSelected] = PRJCT_RESULTS_UAV_HEADING;
+
+  else if (str == "gps_starttime")
+    d->selected[d->nSelected] = PRJCT_RESULTS_STARTGPSTIME;
+  else if (str == "gps_endtime")
+    d->selected[d->nSelected] = PRJCT_RESULTS_ENDGPSTIME;
+  else if (str == "longitude_end")
+    d->selected[d->nSelected] = PRJCT_RESULTS_LONGITEND;
+  else if (str == "latitude_end")
+    d->selected[d->nSelected] = PRJCT_RESULTS_LATITEND;
+  else if (str == "altitude_end")
+    d->selected[d->nSelected] = PRJCT_RESULTS_ALTITEND;
+
+
+
   else if (str == "precalculated_fluxes")
     d->selected[d->nSelected] = PRJCT_RESULTS_PRECALCULATED_FLUXES;
   else

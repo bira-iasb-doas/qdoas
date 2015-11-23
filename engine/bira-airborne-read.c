@@ -74,7 +74,7 @@
 // STRUCTURE DEFINITION
 // ====================
 
-#pragma pack(1)
+#pragma pack(push,1)
 
 typedef struct _airborneData
  {
@@ -105,6 +105,8 @@ typedef struct _airborneData
   unsigned char ignoredBytes[IGNORED_BYTES];
  }
 AIRBORNE_DATA;
+
+#pragma(pop);
 
 // -----------------------------------------------------------------------------
 // FUNCTION AIRBORNE_Set
@@ -223,8 +225,8 @@ RC AIRBORNE_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int lo
  	  pRecord->uavBira.roll=(float)header.roll;
  	  pRecord->uavBira.heading=(float)header.heading;
 
- 	  memcpy(&pRecord->uavBira.gpsTime,&header.gpsTime,sizeof(struct time));
- 	  memcpy(&pRecord->uavBira.gpsTimeEnd,&header.gpsTimeEnd,sizeof(struct time));
+ 	  memcpy(&pRecord->uavBira.gpsStartTime,&header.gpsTime,sizeof(struct time));
+ 	  memcpy(&pRecord->uavBira.gpsEndTime,&header.gpsTimeEnd,sizeof(struct time));
 
     pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_datetime.thedate,&pRecord->present_datetime.thetime,0);
     pRecord->Zm=(double)ZEN_FNTdiz(ZEN_FNCrtjul(&pRecord->Tm),&pRecord->longitude,&pRecord->latitude,&pRecord->Azimuth);

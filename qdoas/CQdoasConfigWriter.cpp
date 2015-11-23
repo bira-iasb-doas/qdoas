@@ -1533,11 +1533,16 @@ void CQdoasConfigWriter::writeDataSelectList(FILE *fp, const data_select_list_t 
     case PRJCT_RESULTS_UAV_INSIDE_TEMP :      fprintf(fp, "uav_inside_temp"); break;
     case PRJCT_RESULTS_UAV_OUTSIDE_TEMP :      fprintf(fp, "uav_outside_temp"); break;
     case PRJCT_RESULTS_UAV_PRESSURE :      fprintf(fp, "uav_pressure"); break;
-    case PRJCT_RESULTS_UAV_HUMIDITY: fprintf(fp, "uav_humidity"); break;
-    case PRJCT_RESULTS_UAV_DEWPOINT: fprintf(fp, "uav_dewpoint"); break;
+    case PRJCT_RESULTS_UAV_HUMIDITY : fprintf(fp, "uav_humidity"); break;
+    case PRJCT_RESULTS_UAV_DEWPOINT : fprintf(fp, "uav_dewpoint"); break;
     case PRJCT_RESULTS_UAV_PITCH: fprintf(fp, "uav_pitch"); break;
     case PRJCT_RESULTS_UAV_ROLL: fprintf(fp, "uav_roll"); break;
     case PRJCT_RESULTS_UAV_HEADING: fprintf(fp, "uav_heading"); break;
+    case PRJCT_RESULTS_STARTGPSTIME : fprintf(fp, "gps_starttime"); break;
+    case PRJCT_RESULTS_ENDGPSTIME : fprintf(fp, "gps_endtime"); break;
+    case PRJCT_RESULTS_LONGITEND : fprintf(fp, "longitude_end"); break;
+    case PRJCT_RESULTS_LATITEND : fprintf(fp, "latitude_end"); break;
+    case PRJCT_RESULTS_ALTITEND : fprintf(fp, "altitude_end"); break;
 
     case PRJCT_RESULTS_PRECALCULATED_FLUXES:            fprintf(fp, "precalculated_fluxes"); break;
 

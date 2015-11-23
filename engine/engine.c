@@ -183,6 +183,8 @@ RC EngineCopyContext(ENGINE_CONTEXT *pEngineContextTarget,ENGINE_CONTEXT *pEngin
 
    if (((pBuffersSource->lambda!=NULL) && (pBuffersTarget->lambda==NULL) &&
         ((pBuffersTarget->lambda=(double *)MEMORY_AllocDVector("EngineCopyContext","lambda",0,NDET-1))==NULL)) ||
+       ((pBuffersSource->lambda_irrad!=NULL) && (pBuffersTarget->lambda_irrad==NULL) &&
+        ((pBuffersTarget->lambda_irrad=(double *)MEMORY_AllocDVector("EngineCopyContext","lambda_irrad",0,NDET-1))==NULL)) ||
        ((pBuffersSource->instrFunction!=NULL) && (pBuffersTarget->instrFunction==NULL) &&
         ((pBuffersTarget->instrFunction=(double *)MEMORY_AllocDVector("EngineCopyContext","instrFunction",0,NDET-1))==NULL)) ||
        ((pBuffersSource->spectrum!=NULL) && (pBuffersTarget->spectrum==NULL) &&
@@ -225,6 +227,8 @@ RC EngineCopyContext(ENGINE_CONTEXT *pEngineContextTarget,ENGINE_CONTEXT *pEngin
     {
      if ((pBuffersTarget->lambda!=NULL) && (pBuffersSource->lambda!=NULL))
       memcpy(pBuffersTarget->lambda,pBuffersSource->lambda,sizeof(double)*NDET);
+     if ((pBuffersTarget->lambda_irrad!=NULL) && (pBuffersSource->lambda_irrad!=NULL))
+      memcpy(pBuffersTarget->lambda_irrad,pBuffersSource->lambda_irrad,sizeof(double)*NDET);
      if ((pBuffersTarget->instrFunction!=NULL) && (pBuffersSource->instrFunction!=NULL))
       memcpy(pBuffersTarget->instrFunction,pBuffersSource->instrFunction,sizeof(double)*NDET);
      if ((pBuffersTarget->spectrum!=NULL) && (pBuffersSource->spectrum!=NULL))
@@ -371,7 +375,7 @@ RC EngineSetProject(ENGINE_CONTEXT *pEngineContext)
            pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS ||
            pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_OMI ||
            pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_GOME2 ) &&
-         
+
          ( (pBuffers->sigmaSpec=MEMORY_AllocDVector(__func__,"sigmaSpec",0,NDET-1))==NULL ||
            (pBuffers->lambda_irrad=MEMORY_AllocDVector(__func__,"lambda_irrad",0,NDET-1))==NULL ||
            (pBuffers->irrad=MEMORY_AllocDVector(__func__,"irrad",0,NDET-1))==NULL

@@ -139,6 +139,16 @@ int mediateRequestDisplaySpecInfo(void *engineContext,int page,void *responseHan
   if (pSpectra->fieldsFlag[PRJCT_RESULTS_ENDTIME])
     mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"End time","%02d:%02d:%02d",pTime->ti_hour,pTime->ti_min,pTime->ti_sec);
 
+  if ((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_BIRA_AIRBORNE) || (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_BIRA_MOBILE))
+   {
+    pTime=&pRecord->uavBira.gpsStartTime;
+    if (pSpectra->fieldsFlag[PRJCT_RESULTS_STARTGPSTIME])
+      mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Start time","%02d:%02d:%02d",pTime->ti_hour,pTime->ti_min,pTime->ti_sec);
+    pTime=&pRecord->uavBira.gpsEndTime;
+    if (pSpectra->fieldsFlag[PRJCT_RESULTS_ENDGPSTIME])
+      mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"End time","%02d:%02d:%02d",pTime->ti_hour,pTime->ti_min,pTime->ti_sec);
+   }
+
   if (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS)
     mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Record","%d/%d",pEngineContext->indexRecord,pEngineContext->recordNumber);
   else if (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_OMI || pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_APEX)
@@ -267,6 +277,16 @@ int mediateRequestDisplaySpecInfo(void *engineContext,int page,void *responseHan
    mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Latitude","%.3f",pRecord->latitude);
   if (pSpectra->fieldsFlag[PRJCT_RESULTS_ALTIT])
    mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Altitude","%.3f",pRecord->altitude);
+
+  if ((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_BIRA_AIRBORNE) || (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_BIRA_MOBILE))
+   {
+    if (pSpectra->fieldsFlag[PRJCT_RESULTS_LONGITEND])
+     mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Longitude End","%.3f",pRecord->uavBira.longitudeEnd);
+    if (pSpectra->fieldsFlag[PRJCT_RESULTS_LATITEND])
+     mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Latitude End","%.3f",pRecord->uavBira.latitudeEnd);
+    if (pSpectra->fieldsFlag[PRJCT_RESULTS_ALTITEND])
+     mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Altitude End","%.3f",pRecord->uavBira.altitudeEnd);
+   }
 
   if (pSpectra->fieldsFlag[PRJCT_RESULTS_CLOUD])
    mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Cloud fraction","%.3f",pRecord->cloudFraction);
@@ -466,12 +486,12 @@ void mediateRequestPlotSpectra(ENGINE_CONTEXT *pEngineContext,void *responseHand
       }
 
      // satellite formats have an irradiance spectrum
-     if (pBuffers->irrad!=NULL && 
+     if (pBuffers->irrad!=NULL &&
          // for OMI, irradiance is stored in separate file, which is only read during analysis
          (pInstrumental->readOutFormat!=PRJCT_INSTR_FORMAT_OMI || THRD_id==THREAD_TYPE_ANALYSIS) ) {
 
        mediateAllocateAndSetPlotData(&spectrumData, "Irradiance spectrum", pBuffers->lambda_irrad, pBuffers->irrad, NDET, Line);
-       mediateResponsePlotData(plotPageIrrad, &spectrumData, 1, Spectrum, forceAutoScale, 
+       mediateResponsePlotData(plotPageIrrad, &spectrumData, 1, Spectrum, forceAutoScale,
                                "Irradiance spectrum", "Wavelength/(nm)", "photons/(nm s cm<sup>2</sup>)", responseHandle);
        mediateReleasePlotData(&spectrumData);
        mediateResponseLabelPage(plotPageIrrad, fileName, "Irradiance", responseHandle);

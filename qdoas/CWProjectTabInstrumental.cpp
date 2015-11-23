@@ -1546,6 +1546,7 @@ void CWInstrGdpEdit::apply(struct instrumental_gdp *d) const
 {
   // band
   d->bandType = m_bandTypeCombo->itemData(m_bandTypeCombo->currentIndex()).toInt();
+
   // pixel type
   d->pixelType = m_pixelTypeCombo->itemData(m_pixelTypeCombo->currentIndex()).toInt();
 

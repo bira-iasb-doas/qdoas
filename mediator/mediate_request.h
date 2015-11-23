@@ -188,6 +188,55 @@ int mediateRequestEndBrowseSpectra(void *engineContext, void *responseHandle);
 
 //----------------------------------------------------------
 
+//----------------------------------------------------------
+// Export Spectra Interface
+//----------------------------------------------------------
+
+// mediateRequestBeginExportSpectra
+//
+// prepare the engine for controlled stepping through the spectra file in order to return
+// spectral data. spectraFileName is the file that contains the spectral data. This file is
+// implicitly associated with the current project. On exit (and success), it is expected
+// that a subsequent call to mediateRequestNextMatchingExportSpectrum will retrieve the first
+// record (if it matched the filter conditions in the current project).
+//
+// The number of spectral records in the spectraFileName is returned on success, -1 otherwise.
+// An error message should be posted with
+//    mediateResponseErrorMessage(functionName, messageString, errorLevel, responseHandle);
+//
+// On success, spectraFileName becomes the 'current spectra file'.
+
+int mediateRequestBeginExportSpectra(void *engineContext, const char *spectraFileName, void *responseHandle);
+
+
+// mediateRequestNextMatchingExportSpectrum
+//
+// attempt to locate and extract the data for the next spectral record in the current
+// spectra file that matches the filter conditions of the current project. The search
+// begins with the current spectral record. On success the data is extracted and
+// pre-processed based on the settings of the current project. The spectrum data is
+// returned with a call to
+//    mediateResponsePlotData(page, plotDataArray, arrayLength, title, xLabel, yLabel, responseHandle);
+//
+// On success, the actual record number of the matching spectrum is returned. Zero is returned
+// if a matching spectrum is not found. -1 is returned for all other errors and an error message
+// should be posted with
+//    mediateResponseErrorMessage(functionName, messageString, errorLevel, responseHandle);
+
+int mediateRequestNextMatchingExportSpectrum(void *engineContext, void *responseHandle);
+
+
+// mediateRequestEndExportSpectra
+//
+// notifies the engine that any resources DIRECTLY associated with the current spectra file
+// may be released.
+//
+// On success, 0 is returned, -1 otherwise and an error message should be posted with
+//    mediateResponseErrorMessage(functionName, messageString, errorLevel, responseHandle);
+
+int mediateRequestEndExportSpectra(void *engineContext, void *responseHandle);
+
+//----------------------------------------------------------
 
 //----------------------------------------------------------
 // Analysis Interface

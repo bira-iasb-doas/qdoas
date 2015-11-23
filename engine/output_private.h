@@ -718,8 +718,8 @@ static inline void get_n_iter_calib(struct output_field *this_field, int *n_iter
 }
 
 static inline void get_num_bands(struct output_field *this_field, int *num_bands, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn, int index_calib) {
-  SVD *svd = (index_calib == ITEM_NONE) 
-    ? &this_field->get_tabfeno(this_field, indexFenoColumn)->svd 
+  SVD *svd = (index_calib == ITEM_NONE)
+    ? &this_field->get_tabfeno(this_field, indexFenoColumn)->svd
     : &KURUCZ_buffers[indexFenoColumn].KuruczFeno[this_field->index_feno].svdFeno[index_calib];
   *num_bands = svd ? svd->DimL : QDOAS_FILL_INT;
 }
@@ -747,6 +747,26 @@ static inline void get_cic(struct output_field *this_field, double *cic, const E
   *cic = (flux1 != (double) 0.)
     ? output_flux(pEngineContext, OUTPUT_cic[this_field->index_cic][0])/flux1
     : QDOAS_FILL_DOUBLE;
+}
+
+static inline void get_gps_start_time(struct output_field *this_field __attribute__ ((unused)), struct time *time, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
+  *time = pEngineContext->recordInfo.uavBira.gpsStartTime;
+}
+
+static inline void get_gps_end_time(struct output_field *this_field __attribute__ ((unused)), struct time *time, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
+  *time = pEngineContext->recordInfo.uavBira.gpsEndTime;
+}
+
+static inline void get_longitude_end (struct output_field *this_field __attribute__ ((unused)), float *longitude, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
+  *longitude = pEngineContext->recordInfo.uavBira.longitudeEnd;
+}
+
+static inline void get_latitude_end (struct output_field *this_field __attribute__ ((unused)), float *latitude, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
+  *latitude = pEngineContext->recordInfo.uavBira.latitudeEnd;
+}
+
+static inline void get_altitude_end (struct output_field *this_field __attribute__ ((unused)), float *altitude, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
+  *altitude = pEngineContext->recordInfo.uavBira.altitudeEnd;
 }
 
 // write_spikes:

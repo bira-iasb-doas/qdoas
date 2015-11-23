@@ -872,6 +872,11 @@ static enum fieldtype get_fieldtype(enum _prjctResults output_field) {
   case PRJCT_RESULTS_UAV_PITCH:
   case PRJCT_RESULTS_UAV_ROLL:
   case PRJCT_RESULTS_UAV_HEADING:
+  case PRJCT_RESULTS_STARTGPSTIME :
+  case PRJCT_RESULTS_ENDGPSTIME :
+  case PRJCT_RESULTS_LONGITEND :
+  case PRJCT_RESULTS_LATITEND :
+  case PRJCT_RESULTS_ALTITEND :
     result = GEO;
     break;
     // all other fields are Data fields:
