@@ -1920,11 +1920,11 @@ RC ANALYSE_AlignReference(ENGINE_CONTEXT *pEngineContext,int refFlag,void *respo
         Lambda=Feno->Lambda;
        }
 
-      if (!Feno->hidden 
+      if (!Feno->hidden
           && (Feno->useKurucz!=ANLYS_KURUCZ_NONE) && (Feno->useKurucz!=ANLYS_KURUCZ_SPEC) && (Feno->useKurucz!=ANLYS_KURUCZ_REF_AND_SPEC)
           && (Feno->newrefFlag || pEngineContext->satelliteFlag)
           && ((!refFlag && (Feno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_FILE)) ||
-              (refFlag && (Feno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_AUTOMATIC))) 
+              (refFlag && (Feno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_AUTOMATIC)))
           && Feno->useEtalon
           && !VECTOR_Equal(Feno->SrefEtalon,Sref,NDET,(double)0.)
           && ((refFlag!=3) || !VECTOR_Equal(Feno->SrefN,Sref,NDET,(double)0.)))
@@ -2356,7 +2356,7 @@ RC ANALYSE_Function( double * const spectrum_orig, double * const reference, dou
               resolDelta=0.05;                                                   // small increment to calculate the derivative
               resolCoeff=Feno->resolFwhm/resolDelta;
               resolX=resolDelta*sqrt((double)1.+2.*resolCoeff);
-              
+
               for( int k=1, l=max(iterator_start(&my_iterator, global_doas_spectrum),1); (l != ITERATOR_FINISHED) && !rc; k++,l=iterator_next(&my_iterator))
                 if (!(rc=XSCONV_TypeGauss(ANALYSE_splineX,reference,SplineRef,ANALYSE_splineX[l],ANALYSE_splineX[l]-ANALYSE_splineX[l-1],&pTabCross->vector[l],resolX,(double)0.,SLIT_TYPE_GAUSS, NDET)))
                   A[indexSvdA][k]=pTabCross->vector[l]=(reference[l]!=0)?resolCoeff*(pTabCross->vector[l]/reference[l]-1):(double)0.;
@@ -2382,7 +2382,7 @@ RC ANALYSE_Function( double * const spectrum_orig, double * const reference, dou
            if (polyFlag && polyOrder == 0 ) {
              for( int k=1,l=iterator_start(&my_iterator, global_doas_spectrum); l != ITERATOR_FINISHED; k++,l=iterator_next(&my_iterator))
                A[indexSvdA][k]=pTabCross->vector[l];
-           } 
+           }
            else if (polyOrder > 0) {
              // in order to have geophysical values of the polynomial in output,
              for( int k=1,l=iterator_start(&my_iterator, global_doas_spectrum); l != ITERATOR_FINISHED; k++,l=iterator_next(&my_iterator))
@@ -3466,7 +3466,7 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
           // For OMI and GOME-2, interpolate earthshine
           // spectrum onto the solar reference wavelength grid
-          if (pInstrumental->readOutFormat == PRJCT_INSTR_FORMAT_OMI 
+          if (pInstrumental->readOutFormat == PRJCT_INSTR_FORMAT_OMI
               || pInstrumental->readOutFormat == PRJCT_INSTR_FORMAT_GOME2 ) {
 
             double *spec_deriv2 = malloc(NDET * sizeof(*spec_deriv2));
@@ -3911,7 +3911,7 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
     if ((pEngineContext->lastSavedRecord!=pEngineContext->indexRecord) &&
         (   ((THRD_id==THREAD_TYPE_ANALYSIS) && pProject->asciiResults.analysisFlag && (!pEngineContext->project.asciiResults.successFlag || nrc))
-            || ((THRD_id==THREAD_TYPE_KURUCZ) && pProject->asciiResults.calibFlag) ) ) 
+            || ((THRD_id==THREAD_TYPE_KURUCZ) && pProject->asciiResults.calibFlag) ) )
      rcOutput=OUTPUT_SaveResults(pEngineContext,indexFenoColumn);
     if (!rc)
      rc=rcOutput;
@@ -4414,9 +4414,9 @@ RC ANALYSE_LoadCross(ENGINE_CONTEXT *pEngineContext, const ANALYSIS_CROSS *cross
 
     for (indexSymbol=0;indexSymbol<NWorkSpace;indexSymbol++) {
       pWrkSymbol=&WorkSpace[indexSymbol];
-      
+
       bool same_file = false;
-      
+
       if ((pWrkSymbol->type==WRK_SYMBOL_CROSS) &&
           !strcasecmp(pWrkSymbol->symbolName,symbolName) &&
           !strcasecmp(pWrkSymbol->amfFileName,pCross->amfFile) &&
@@ -4433,7 +4433,7 @@ RC ANALYSE_LoadCross(ENGINE_CONTEXT *pEngineContext, const ANALYSIS_CROSS *cross
       // Allocate a new symbol
 
       pWrkSymbol=&WorkSpace[indexSymbol];
-      
+
       pWrkSymbol->type=WRK_SYMBOL_CROSS;
       strcpy(pWrkSymbol->symbolName,symbolName);
       strcpy(pWrkSymbol->crossFileName,pCross->crossSectionFile);
@@ -4448,7 +4448,7 @@ RC ANALYSE_LoadCross(ENGINE_CONTEXT *pEngineContext, const ANALYSIS_CROSS *cross
                            (pCross->crossType!=ANLYS_CROSS_ACTION_NOTHING)?1:0,1,"ANALYSE_LoadCross "))) {
         if (!strcasecmp(pWrkSymbol->symbolName,"O3TD"))
           rc=MATRIX_Allocate(&O3TD,NDET,pWrkSymbol->xs.nc,0,0,0,__func__);
-        
+
         NWorkSpace++;
       }
 
@@ -4457,7 +4457,7 @@ RC ANALYSE_LoadCross(ENGINE_CONTEXT *pEngineContext, const ANALYSIS_CROSS *cross
       // column per detector row (for imagers like OMI), or 4 columns
       // when it is a Ring cross section to be used with the "convolve
       // ring" option:
-      if ( !(pWrkSymbol->xs.nc == 2 
+      if ( !(pWrkSymbol->xs.nc == 2
              || pWrkSymbol->xs.nc == (1 + ANALYSE_swathSize)
              || (pWrkSymbol->xs.nc == 4 && pCross->crossType == ANLYS_CROSS_ACTION_CONVOLUTE_RING) ) ) {
         rc = ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_XS_COLUMNS, pCross->crossSectionFile, pWrkSymbol->xs.nc);
@@ -5490,7 +5490,7 @@ RC ANALYSE_LoadRef(ENGINE_CONTEXT *pEngineContext,INDEX indexFenoColumn)
     if ((pTabFeno->useKurucz!=ANLYS_KURUCZ_SPEC) &&                             // if the wavelength calibration procedure is applied on the measured
         (pTabFeno->useKurucz!=ANLYS_KURUCZ_REF_AND_SPEC) &&                     // spectrum, the ref1 has no sense.
         strlen(pTabFeno->ref1)) {
-      
+
       switch(pEngineContext->project.instrumental.readOutFormat) {
       case PRJCT_INSTR_FORMAT_OMI:
         rc=OMI_GetReference(pEngineContext->project.instrumental.omi.spectralType,pTabFeno->ref1,indexFenoColumn,lambdaRefEtalon,SrefEtalon,pTabFeno->SrefSigma);
@@ -5517,7 +5517,7 @@ RC ANALYSE_LoadRef(ENGINE_CONTEXT *pEngineContext,INDEX indexFenoColumn)
 
     memcpy(lambdaRef,lambdaRefEtalon,sizeof(double)*NDET);
     memcpy(Sref,SrefEtalon,sizeof(double)*NDET);
-    
+
 
     if (!rc &&
         (pTabFeno->useKurucz!=ANLYS_KURUCZ_SPEC) &&
@@ -5814,7 +5814,6 @@ RC ANALYSE_UsampBuild(int analysisFlag,int gomeFlag)      // OMI ???
 
   slitParam2=(pKuruczOptions->fwhmType!=SLIT_TYPE_INVPOLY)?(double)0.:(double)pKuruczOptions->invPolyDegree;
 
-
   rc=ERROR_ID_NO;
 
   indexFenoColumn=0;                                                            // later, use the second dimension of TabFeno (and add a second dimension to undersampling buffers)
@@ -6103,6 +6102,7 @@ RC ANALYSE_UsampLocalAlloc(int gomeFlag)
   // Declarations
 
   INDEX indexFeno,indexFenoColumn;
+  int endPixel;
   FENO *pTabFeno;
   RC rc;
 
@@ -6119,6 +6119,8 @@ RC ANALYSE_UsampLocalAlloc(int gomeFlag)
       {
        ANALYSE_usampBuffers.lambdaRange[0][indexFeno]=FNPixel(ANALYSE_usampBuffers.hrSolar.matrix[0],(double)pTabFeno->svd.LFenetre[0][0]-7.,ANALYSE_usampBuffers.hrSolar.nl,PIXEL_AFTER);
 
+       endPixel=FNPixel(ANALYSE_usampBuffers.hrSolar.matrix[0],(double)pTabFeno->svd.LFenetre[pTabFeno->svd.Z-1][1]+7.,ANALYSE_usampBuffers.hrSolar.nl,PIXEL_BEFORE);
+       ANALYSE_usampBuffers.lambdaRange[1][indexFeno]=endPixel-ANALYSE_usampBuffers.lambdaRange[0][indexFeno]+1;
       }
     }
 
