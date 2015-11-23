@@ -692,7 +692,6 @@ RC MKZY_Reli(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localD
 
   double *spectrum,*offset,*dark;                                               // pointer to spectrum, offset and dark current
   double *cumSpectrum;
-  double averagedPixels;
   INDEX   i,indexRecord,nRecord;                                                // browse pixels of the detector
   RC      rc;                                                                   // return code
 

@@ -4086,7 +4086,7 @@ void ANALYSE_ResetData(void)
         pTabFeno->Tm=
         pTabFeno->TimeDec=(double)9999.;
 
-      memset(&pTabFeno->refDate,0,sizeof(&pTabFeno->refDate));
+      memset(&pTabFeno->refDate,0,sizeof(pTabFeno->refDate));
 
       // Cross reference
 
