@@ -100,6 +100,8 @@ CWOutputSelector::CWOutputSelector(const data_select_list_t *d, QWidget *parent)
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_LOS_ZA,                 "LoS ZA"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_LOS_AZIMUTH,            "LoS Azimuth"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_SAT_HEIGHT,             "Satellite height"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_SAT_LAT,                "Satellite latitude"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_SAT_LON,                "Satellite longitude"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_EARTH_RADIUS,           "Earth radius"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_VIEW_ELEVATION,         "Elev. viewing angle"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_VIEW_AZIMUTH,           "Azim. viewing angle"));
@@ -566,6 +568,8 @@ void getValidFieldFlags(int *validFlags, int instrument)
       validFlags[PRJCT_RESULTS_GOME2_SUNGLINT_RISK]=1;
       validFlags[PRJCT_RESULTS_GOME2_SUNGLINT_HIGHRISK]=1;
       validFlags[PRJCT_RESULTS_GOME2_RAINBOW]=1;
+      validFlags[PRJCT_RESULTS_SAT_LAT]=1;
+      validFlags[PRJCT_RESULTS_SAT_LON]=1;
      }
     break;
  // ----------------------------------------------------------------------------
@@ -603,6 +607,9 @@ void getValidFieldFlags(int *validFlags, int instrument)
       validFlags[PRJCT_RESULTS_OMI_GROUNDP_QF]=1;
       validFlags[PRJCT_RESULTS_OMI_XTRACK_QF]=1;
       validFlags[PRJCT_RESULTS_OMI_PIXELS_QF]=1;
+      validFlags[PRJCT_RESULTS_SAT_LAT]=1;
+      validFlags[PRJCT_RESULTS_SAT_LON]=1;
+      validFlags[PRJCT_RESULTS_SAT_HEIGHT]=1;
      }
     break;
  // ----------------------------------------------------------------------------

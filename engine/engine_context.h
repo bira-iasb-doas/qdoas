@@ -220,6 +220,13 @@ struct _ccd {
   float         wve1,wve2,flux1,flux2;
 };
 
+// common location data for satellite instruments
+struct satellite_location {
+    double latitude, longitude; // coordinates of sub-satellite point
+    double altitude;
+    double earth_radius;
+};
+
 // Record information specific to the GOME format
 
 typedef struct _gomeData                                                        // data on the current GOME pixel
@@ -247,7 +254,6 @@ typedef struct _sciamachy
   int    orbitNumber;                                                           // orbit number
   double longitudes[4],latitudes[4];                                            // geolocations at the 4 corners of the pixels
   float  solZen[3],solAzi[3],losZen[3],losAzi[3];                               // resp. solar and line of sight zenith and azimuth angles
-  float  earthRadius,satHeight;                                                 // for satellite to TOA angles correction
   INDEX  stateIndex,stateId;                                                    // information on the state
   int    qualityFlag;
  }
@@ -261,11 +267,8 @@ typedef struct _gome2
   
   double longitudes[4],latitudes[4];                                            // geolocations at the 4 corners of the pixels
   double solZen[3],solAzi[3],losZen[3],losAzi[3];                               // resp. solar and line of sight zenith and azimuth angles
-  double earth_radius;
   
-  double sat_alt;
   double sat_sza, sat_saa; // solar zenith/azimuth angles at satellite height
-  double sat_lat, sat_lon; // coordinates of sub-satellite point
   int    saaFlag;
   int    sunglintDangerFlag;
   int    sunglintHighDangerFlag;
@@ -441,6 +444,7 @@ typedef struct _engineRecordInfo
   int    i_alongtrack, i_crosstrack, n_alongtrack, n_crosstrack;                // for imagers (OMI/APEX/Tropomi/...)
   INDEX  indexBand;                                                             // index of the band
 
+  struct satellite_location satellite;                                          // satellite location data
   GOME_DATA gome;                                                               // GOME format
   SCIA_DATA scia;                                                               // SCIAMACHY format
   GOME2_DATA gome2;                                                             // GOME2 format

@@ -1565,7 +1565,7 @@ RC GOME2_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,INDEX fileIndex) {
         pRecord->gome2.sunglintHighDangerFlag=pGeoloc->sunglintHighDangerFlag;
         pRecord->gome2.rainbowFlag=pGeoloc->rainbowFlag;
 
-        // Miscellaneous data (for TEMIS)
+        // Miscellaneous data
 
         pRecord->latitude=pGeoloc->latCenter;
         pRecord->longitude=pGeoloc->lonCenter;
@@ -1574,6 +1574,14 @@ RC GOME2_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,INDEX fileIndex) {
         pRecord->Azimuth=pGeoloc->solAzi[1];
         pRecord->zenithViewAngle=pGeoloc->losZen[1];
         pRecord->azimuthViewAngle=pGeoloc->losAzi[1];
+        
+        pRecord->satellite.earth_radius = pGeoloc->earth_radius;
+        
+        pRecord->satellite.altitude = pGeoloc->sat_alt;
+        pRecord->satellite.latitude = pGeoloc->sat_lat;
+        pRecord->satellite.longitude = pGeoloc->sat_lon;
+        pRecord->gome2.sat_saa = pGeoloc->sat_saa;
+        pRecord->gome2.sat_sza = pGeoloc->sat_sza;        
 
         pRecord->Tint=tint;
 

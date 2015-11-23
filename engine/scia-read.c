@@ -1369,8 +1369,8 @@ RC SCIA_ReadPDS(ENGINE_CONTEXT *pEngineContext,int recordNo)
 
       // Misecellaneous data (for TEMIS)
 
-      pRecord->scia.earthRadius=pSciaData->earthRadius;
-      pRecord->scia.satHeight=pSciaData->satHeight;
+      pRecord->satellite.earth_radius=pSciaData->earthRadius;
+      pRecord->satellite.altitude=pSciaData->satHeight;
       pRecord->scia.stateIndex=indexState;
       pRecord->scia.stateId=pOrbitFile->sciaNadirStates[indexState].stateId;
 
@@ -1391,12 +1391,6 @@ RC SCIA_ReadPDS(ENGINE_CONTEXT *pEngineContext,int recordNo)
 
       SCIA_FromMJD2000ToYMD((double)pOrbitFile->sciaNadirStates[indexState].dsrTime+
                             (double)(recordNo-stateObs-1)*pOrbitFile->sciaNadirStates[indexState].int_time/16./86400.,&pRecord->present_datetime);
-
-//      tmp=(pRecord->TimeDec-floor(pRecord->TimeDec))*60.;                   // fractional minutes
-//      tmp=(tmp-floor(tmp))*60.;                                                 // fractional seconds
-//      tmp=(tmp-floor(tmp))*1000.;                                               // fractional ms
-
-//      SCIA_ms=(int)floor(tmp+0.5);
 
       pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_datetime.thedate,&pRecord->present_datetime.thetime,0);  // !!!
      }

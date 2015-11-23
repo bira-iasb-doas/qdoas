@@ -1434,6 +1434,12 @@ RC OMI_read_earth(ENGINE_CONTEXT *pEngineContext,int recordNo)
     pRecord->i_alongtrack=indexMeasurement;
     pRecord->i_crosstrack=indexSpectrum;
     pRecord->omi.omiXtrackQF = pGeo->xtrackQualityFlags[recordNo-1];
+    
+    // Satellite location data
+    
+    pRecord->satellite.altitude = pGeo->spacecraftAltitude[indexMeasurement];
+    pRecord->satellite.latitude = pGeo->spacecraftLatitude[indexMeasurement];
+    pRecord->satellite.longitude = pGeo->spacecraftLongitude[indexMeasurement];
           
     struct tm time_record;
     int omi_ms=0;
