@@ -83,27 +83,23 @@
 // Geolocations and angles
 struct gome2_geolocation {
   // Geolocations
-
   double lonCorners[4],
          latCorners[4],
          lonCenter,
          latCenter;
 
   // Angles
-
   double solZen[3],
          solAzi[3],
          losZen[3],
          losAzi[3];
 
   // Satellite position & angles (GEO_BASIC)
-
   double sat_lat, sat_lon; // coordinates of sub-satellite point
   double sat_alt;
   double sat_sza, sat_saa; // solar zenith/azimuth angle at satellite height
 
   // Miscellaneous
-
   double cloudTopPressure,cloudFraction;                                         // information on clouds
   double earth_radius;
   int   saaFlag;
@@ -120,9 +116,10 @@ typedef struct _gome2MdrInfo {
   double   startTime;                                                           // starting time of the MDR
 
   // GEO_BASIC data
-  double sat_lon, sat_lat, sat_alt,
-         sat_sza, sat_saa; // solar zenith and azimuth angle (satellite relative actual CS)
+  double sat_lon[N_SCAN_MAX], sat_lat[N_SCAN_MAX], sat_alt[N_SCAN_MAX],
+         sat_sza[N_SCAN_MAX], sat_saa[N_SCAN_MAX]; // solar zenith and azimuth angle (satellite relative actual CS)
 
+  // GEO_EARTH
   double earth_radius;
 
   // !!! version < 12 : NCHANNEL
@@ -135,7 +132,7 @@ typedef struct _gome2MdrInfo {
   double   centre_lat[N_TINT_MAX][N_SCAN_MAX];                                  // latitude at the centre of the pixels
   double   centre_lon[N_TINT_MAX][N_SCAN_MAX];                                  // longitude at the centre of the pixels
   double   sza[N_TINT_MAX][3][N_SCAN_MAX];                                      // solar zenith angles
-  double   saa[N_TINT_MAX][3][N_SCAN_MAX];                                   // solar azimuth angles
+  double   saa[N_TINT_MAX][3][N_SCAN_MAX];                                      // solar azimuth angles
   double   lza[N_TINT_MAX][3][N_SCAN_MAX];                                      // line of sight zenith angles
   double   laa[N_TINT_MAX][3][N_SCAN_MAX];                                      // line of sight azimuth angles
 
@@ -299,25 +296,20 @@ int beat_get_utc_string_from_time(double time, char *utc_string) {
   return 0;
 }
 
-int beat_cursor_read_geolocation_double_split(const coda_Cursor *cursor, double *dst_latitude,
-    double *dst_longitude) {
-  coda_Cursor pair_cursor;
+int beat_cursor_read_geolocation_double_split(const coda_cursor *cursor, double *dst_latitude,
+                                              double *dst_longitude) {
+  coda_cursor pair_cursor = *cursor;
 
-  pair_cursor = * (coda_Cursor *) cursor;
   if (coda_cursor_goto_record_field_by_index(&pair_cursor, 0) != 0) {
-    // beat_errno = coda_errno_to_beat_errno(coda_errno);
     return -1;
   }
   if (coda_cursor_read_double(&pair_cursor, dst_latitude) != 0) {
-    // beat_errno = coda_errno_to_beat_errno(coda_errno);
     return -1;
   }
   if (coda_cursor_goto_next_record_field(&pair_cursor) != 0) {
-    // beat_errno = coda_errno_to_beat_errno(coda_errno);
     return -1;
   }
   if (coda_cursor_read_double(&pair_cursor, dst_longitude) != 0) {
-    // beat_errno = coda_errno_to_beat_errno(coda_errno);
     return -1;
   }
 
@@ -331,17 +323,14 @@ int beat_cursor_read_geolocation_double_split_array(coda_cursor *cursor, double 
   long i;
 
   if (coda_cursor_get_num_elements(cursor, &num_elements) != 0) {
-    // beat_errno = = coda_errno_to_beat_errno(coda_errno);
     return -1;
   }
   if (coda_cursor_get_array_dim(cursor, &num_dims, dim) != 0) {
-    // beat_errno = = coda_errno_to_beat_errno(coda_errno);
     return -1;
   }
 
   if (num_elements > 0) {
     if (coda_cursor_goto_first_array_element(cursor) != 0) {
-      // beat_errno = = coda_errno_to_beat_errno(coda_errno);
       return -1;
     }
 
@@ -353,7 +342,6 @@ int beat_cursor_read_geolocation_double_split_array(coda_cursor *cursor, double 
       }
       if (i < num_elements - 1) {
         if (coda_cursor_goto_next_array_element(cursor) != 0) {
-          // beat_errno = = coda_errno_to_beat_errno(coda_errno);
           return -1;
         }
       }
@@ -741,23 +729,22 @@ int Gome2ReadMDRInfo(GOME2_ORBIT_FILE *pOrbitFile,GOME2_MDR *pMdr,int indexBand)
     coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                        // MDR.GOME2_MDR_L1B_EARTHSHINE_V1
 
     // GEO_BASIC: satellite coordinates and angles
-
     coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor, "GEO_BASIC");
 
     coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor, "SUB_SATELLITE_POINT");
-    beat_cursor_read_geolocation_double_split(&pOrbitFile->gome2Cursor, &pMdr->sat_lat, &pMdr->sat_lon);
+    beat_cursor_read_geolocation_double_split_array(&pOrbitFile->gome2Cursor, pMdr->sat_lat, pMdr->sat_lon);
     coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);
 
     coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor, "SATELLITE_ALTITUDE");
-    coda_cursor_read_double(&pOrbitFile->gome2Cursor, &pMdr->sat_alt);
+    coda_cursor_read_double_array(&pOrbitFile->gome2Cursor, pMdr->sat_alt, coda_array_ordering_c);
     coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);
 
     coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor, "SOLAR_ZENITH_ANGLE");
-    coda_cursor_read_double(&pOrbitFile->gome2Cursor, &pMdr->sat_sza);
+    coda_cursor_read_double_array(&pOrbitFile->gome2Cursor, pMdr->sat_sza, coda_array_ordering_c);
     coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);
 
     coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor, "SOLAR_AZIMUTH_ANGLE");
-    coda_cursor_read_double(&pOrbitFile->gome2Cursor, &pMdr->sat_saa);
+    coda_cursor_read_double_array(&pOrbitFile->gome2Cursor, pMdr->sat_saa, coda_array_ordering_c);
     coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);
 
     coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);  // MDR.GOME2_MDR_L1B_EARTHSHINE
@@ -1128,14 +1115,22 @@ void Gome2ReadGeoloc(GOME2_ORBIT_FILE *pOrbitFile,INDEX indexBand) {
     geolocation->sunglintHighDangerFlag= (int) pMdr->sunglintHighDangerFlag[indexObs];
     geolocation->rainbowFlag= (int) pMdr->rainbowFlag[indexObs];
     
-    geolocation->sat_alt = pMdr->sat_alt;
-    geolocation->sat_lat = pMdr->sat_lat;
-    geolocation->sat_lon = pMdr->sat_lon;
-    geolocation->sat_sza = pMdr->sat_sza;
-    geolocation->sat_saa = pMdr->sat_saa;
-    
     geolocation->earth_radius = pMdr->earth_radius;
-    
+
+    // GEO_BASIC data are "calculated in granules of the shortest effective 
+    // integration time for the main channels (187.5 ms, 32 times per scan)"
+    // therefore, we calculate the index corresponding to the actual integration 
+    // time as follows:
+    const double *unique_int=pGome2Info->mdr[indexMDR].unique_int;
+    const uint8_t *int_index=pGome2Info->mdr[indexMDR].int_index;
+    const double tint= (pOrbitFile->version<=11) ?unique_int[int_index[indexBand]]:pGome2Info->mdr[indexMDR].integration_times[indexBand];
+    const int index_actual = indexObs * floor(0.5 + tint / 0.1875);
+
+    geolocation->sat_alt = pMdr->sat_alt[index_actual];
+    geolocation->sat_lat = pMdr->sat_lat[index_actual];
+    geolocation->sat_lon = pMdr->sat_lon[index_actual];
+    geolocation->sat_sza = pMdr->sat_sza[index_actual];
+    geolocation->sat_saa = pMdr->sat_saa[index_actual];
 
     if (geolocation->cloudFraction < -1.) {
       geolocation->cloudFraction=geolocation->cloudTopPressure= -1.;
