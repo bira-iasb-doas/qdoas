@@ -724,9 +724,7 @@ static void OutputRegisterFields(const ENGINE_CONTEXT *pEngineContext)
   PROJECT *pProject=(PROJECT *)&pEngineContext->project;
   PRJCT_RESULTS *pResults=(PRJCT_RESULTS *)&pProject->asciiResults;
 
-  // earth_radius/sat_height/orbit_number: depends on satellite data format
-  func_float func_earth_radius = &get_earth_radius;
-  func_float func_sat_altitude = &get_sat_altitude;
+  // orbit_number: depends on satellite data format
   func_int func_orbit_number = NULL;
 
   // default values for instrument-dependent output functions:
@@ -792,8 +790,6 @@ static void OutputRegisterFields(const ENGINE_CONTEXT *pEngineContext)
       func_corner_latitudes = &gdp3_get_corner_latitudes;
       func_los_azimuth = &gdp3_get_los_azimuth;
       func_los_zenith = &gdp3_get_los_zenith;
-      func_earth_radius = &gdp3_get_earth_radius;
-      func_sat_altitude = &gdp3_get_sat_height;
     }
    else {
      func_sza = &gdp4_get_sza;
@@ -802,8 +798,6 @@ static void OutputRegisterFields(const ENGINE_CONTEXT *pEngineContext)
      func_corner_latitudes = &gdp4_get_corner_latitudes;
      func_los_azimuth = &gdp4_get_los_azimuth;
      func_los_zenith = &gdp4_get_los_zenith;
-     func_earth_radius = &gdp4_get_earth_radius;
-     func_sat_altitude = &gdp4_get_sat_height;
    }
     break;
   case PRJCT_INSTR_FORMAT_BIRA_AIRBORNE :
@@ -922,7 +916,7 @@ static void OutputRegisterFields(const ENGINE_CONTEXT *pEngineContext)
        register_field( (struct output_field) { .basic_fieldname = title_los_azimuth, .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)func_los_azimuth, .data_cols = num_los_azimuth, .column_number_format="(%c)", .column_number_alphabetic = true });
        break;
      case PRJCT_RESULTS_SAT_HEIGHT:
-       register_field( (struct output_field) { .basic_fieldname = "Satellite height", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)func_sat_altitude });
+       register_field( (struct output_field) { .basic_fieldname = "Satellite height", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_sat_altitude });
        break;
      case PRJCT_RESULTS_SAT_LAT:
        register_field( (struct output_field) { .basic_fieldname = "Satellite latitude", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_sat_latitude });
@@ -931,7 +925,7 @@ static void OutputRegisterFields(const ENGINE_CONTEXT *pEngineContext)
        register_field( (struct output_field) { .basic_fieldname = "Satellite longitude", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_sat_longitude });
        break;
      case PRJCT_RESULTS_EARTH_RADIUS:
-       register_field( (struct output_field) { .basic_fieldname = "Earth radius", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)func_earth_radius });
+       register_field( (struct output_field) { .basic_fieldname = "Earth radius", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_earth_radius });
        break;
      case PRJCT_RESULTS_VIEW_ELEVATION:
        register_field( (struct output_field) { .basic_fieldname = "Elev. viewing angle", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_view_elevation });

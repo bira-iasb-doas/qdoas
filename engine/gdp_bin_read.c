@@ -345,14 +345,14 @@ RC GDP_BIN_get_orbit_date(int *year, int *month, int *day) {
   const GOME_ORBIT_FILE *pOrbitFile = &GDP_BIN_orbitFiles[GDP_BIN_currentFileIndex];
 
   if ((fp=fopen(pOrbitFile->gdpBinFileName,"rb"))==NULL) {
-    return ERROR_SetLast("GDP_Bin_Set",ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pOrbitFile->gdpBinFileName);
+    return ERROR_SetLast(__func__,ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pOrbitFile->gdpBinFileName);
   }
 
   GDP_BIN_FILE_HEADER tempHeader;
 
   // perhaps can use header from pOrbitFile
   if (!fread(&tempHeader,sizeof(GDP_BIN_FILE_HEADER),1,fp)) {
-    rc=ERROR_SetLast("GDP_Bin_Set",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pOrbitFile->gdpBinFileName);
+    rc=ERROR_SetLast(__func__,ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pOrbitFile->gdpBinFileName);
   } else {
     // goto first spectrum, right after header
     fseek(fp,(int32_t)pOrbitFile->gdpBinHeader.headerSize,SEEK_SET);
@@ -790,6 +790,8 @@ RC GDP_BIN_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,FILE *specFp,INDEX i
         pRecord->azimuthViewAngle=(float)0.01*pOrbitFile->gdpBinGeo3.losAzim[1];
         pRecord->cloudFraction=(float)pOrbitFile->gdpBinGeo3.cloudFraction;
         pRecord->cloudTopPressure=(float)pOrbitFile->gdpBinGeo3.cloudTopPressure;
+        pRecord->satellite.altitude = pOrbitFile->gdpBinGeo3.satHeight;
+        pRecord->satellite.earth_radius = pOrbitFile->gdpBinGeo3.radiusCurve;        
        }
       else
        {
@@ -801,6 +803,8 @@ RC GDP_BIN_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,FILE *specFp,INDEX i
         pRecord->azimuthViewAngle=(float)pOrbitFile->gdpBinGeo4.losAzimBOA[1];
         pRecord->cloudFraction=(float)pOrbitFile->gdpBinGeo4.cloudInfo.CloudFraction[0];
         pRecord->cloudTopPressure=(float)pOrbitFile->gdpBinGeo4.cloudInfo.CTP[0];
+        pRecord->satellite.altitude = pOrbitFile->gdpBinGeo4.satHeight;
+        pRecord->satellite.earth_radius = pOrbitFile->gdpBinGeo4.radiusCurve;
        }
 
       pRecord->present_datetime.thetime.ti_hour=pOrbitFile->gdpBinSpectrum.dateAndTime.ti_hour;

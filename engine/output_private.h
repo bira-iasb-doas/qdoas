@@ -216,22 +216,6 @@ static inline void get_earth_radius(struct output_field *this_field __attribute_
   *radius = pEngineContext->recordInfo.satellite.earth_radius;
 }
 
-static inline void gdp3_get_sat_height(struct output_field *this_field __attribute__ ((unused)), float *sat_height, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
-  *sat_height = GDP_BIN_orbitFiles[GDP_BIN_currentFileIndex].gdpBinGeo3.satHeight;
-}
-
-static inline void gdp4_get_sat_height(struct output_field *this_field __attribute__ ((unused)), float *sat_height, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
-  *sat_height = GDP_BIN_orbitFiles[GDP_BIN_currentFileIndex].gdpBinGeo4.satHeight;
-}
-
-static inline void gdp3_get_earth_radius(struct output_field *this_field __attribute__ ((unused)), float *earth_radius, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
-  *earth_radius = GDP_BIN_orbitFiles[GDP_BIN_currentFileIndex].gdpBinGeo3.radiusCurve;
-}
-
-static inline void gdp4_get_earth_radius(struct output_field *this_field __attribute__ ((unused)), float *earth_radius, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
-  *earth_radius = GDP_BIN_orbitFiles[GDP_BIN_currentFileIndex].gdpBinGeo4.radiusCurve;
-}
-
 static inline void get_view_elevation(struct output_field *this_field __attribute__ ((unused)), float *view_elevation, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
   *view_elevation = pEngineContext->recordInfo.elevationViewAngle;
 }
