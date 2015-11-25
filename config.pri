@@ -117,3 +117,17 @@ caro {
 
   CODE_GENERATION = release # Override because debug is broken
 }
+
+thomas {
+
+  CONFIG += qwt
+
+  INCLUDEPATH += /home/thomasd/include
+  INCLUDEPATH += /usr/include/hdf
+  INCLUDEPATH += /usr/include/hdf5/serial
+  INCLUDEPATH += /usr/include/hdf-eos5
+  INCLUDEPATH += /usr/include/x86_64-linux-gnu/hdf
+  
+  QMAKE_LIBDIR += /usr/lib/x86_64-linux-gnu/hdf5/serial/
+  QMAKE_RPATHDIR += /home/thomasd/lib
+}

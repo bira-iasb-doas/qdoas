@@ -134,7 +134,7 @@ void DEBUG_Print(const char *formatString,...)
 
     if ((fp=fopen(debugFileName,"a+t"))!=NULL)
      {
-      fprintf(fp,debugIndentStr);                                               // indentation according to the function level
+      fprintf(fp,"%s",debugIndentStr);                                          // indentation according to the function level
       vfprintf(fp,formatString,argList);                                        // print out the list of arguments
       fclose(fp);                                                               // close the file
      }
