@@ -321,7 +321,7 @@ RC netcdf_open(const ENGINE_CONTEXT *pEngineContext, const char *filename) {
     n_calib = 0;
     for (int firstrow = 0; firstrow<ANALYSE_swathSize; firstrow++) {
       if (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_OMI ||
-          pEngineContext->project.instrumental.use_row[firstrow] ) {
+          pEngineContext->project.instrumental.omi.omiTracks[firstrow] ) {
         n_calib = KURUCZ_buffers[firstrow].Nb_Win;
         break;
       }
