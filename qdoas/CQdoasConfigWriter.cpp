@@ -1444,81 +1444,81 @@ void CQdoasConfigWriter::writeSfps(FILE *fp, const struct calibration_sfp *d)
 
 void CQdoasConfigWriter::writeDataSelectList(FILE *fp, const data_select_list_t *d)
 {
-  int i = 0;
-  while (i < d->nSelected) {
-
-    fprintf(fp, "      <field name=\"");
+  for (int i=0; i<d->nSelected; ++i) {
+    
+    const char *config_string = NULL;
+    
     switch (d->selected[i]) {
-    case PRJCT_RESULTS_SPECNO:           fprintf(fp, "specno"); break;
-    case PRJCT_RESULTS_NAME:             fprintf(fp, "name"); break;
-    case PRJCT_RESULTS_DATE_TIME:        fprintf(fp, "date_time"); break;
-    case PRJCT_RESULTS_DATE:             fprintf(fp, "date"); break;
-    case PRJCT_RESULTS_TIME:             fprintf(fp, "time"); break;
-    case PRJCT_RESULTS_YEAR:             fprintf(fp, "year"); break;
-    case PRJCT_RESULTS_JULIAN:           fprintf(fp, "julian"); break;
-    case PRJCT_RESULTS_JDFRAC:           fprintf(fp, "jdfrac"); break;
-    case PRJCT_RESULTS_TIFRAC:           fprintf(fp, "tifrac"); break;
-    case PRJCT_RESULTS_SCANS:            fprintf(fp, "scans"); break;
-    case PRJCT_RESULTS_NREJ:             fprintf(fp, "rejected"); break;
-    case PRJCT_RESULTS_TINT:             fprintf(fp, "tint"); break;
-    case PRJCT_RESULTS_SZA:              fprintf(fp, "sza"); break;
-    case PRJCT_RESULTS_CHI:              fprintf(fp, "chi"); break;
-    case PRJCT_RESULTS_RMS:              fprintf(fp, "rms"); break;
-    case PRJCT_RESULTS_AZIM:             fprintf(fp, "azim"); break;
-    case PRJCT_RESULTS_TDET:             fprintf(fp, "tdet"); break;
-    case PRJCT_RESULTS_SKY:              fprintf(fp, "sky"); break;
-    case PRJCT_RESULTS_BESTSHIFT:        fprintf(fp, "bestshift"); break;
-    case PRJCT_RESULTS_REFZM:            fprintf(fp, "refzm"); break;
-    case PRJCT_RESULTS_REFNUMBER:        fprintf(fp, "refnumber"); break;
-    case PRJCT_RESULTS_REFSHIFT:         fprintf(fp, "refshift"); break;
-    case PRJCT_RESULTS_PIXEL:            fprintf(fp, "pixel"); break;
-    case PRJCT_RESULTS_PIXEL_TYPE:       fprintf(fp, "pixel_type"); break;
-    case PRJCT_RESULTS_ORBIT:            fprintf(fp, "orbit"); break;
-    case PRJCT_RESULTS_LONGIT:           fprintf(fp, "longit"); break;
-    case PRJCT_RESULTS_LATIT:            fprintf(fp, "latit"); break;
-    case PRJCT_RESULTS_ALTIT:            fprintf(fp, "altit"); break;
-    case PRJCT_RESULTS_COVAR:            fprintf(fp, "covar"); break;
-    case PRJCT_RESULTS_CORR:             fprintf(fp, "corr"); break;
-    case PRJCT_RESULTS_CLOUD:            fprintf(fp, "cloud"); break;
-    case PRJCT_RESULTS_O3:               fprintf(fp, "o3"); break;
-    case PRJCT_RESULTS_NO2:              fprintf(fp, "no2"); break;
-    case PRJCT_RESULTS_CLOUDTOPP:        fprintf(fp, "cloudtopp"); break;
-    case PRJCT_RESULTS_LOS_ZA:           fprintf(fp, "los_za"); break;
-    case PRJCT_RESULTS_LOS_AZIMUTH:      fprintf(fp, "los_azimuth"); break;
-    case PRJCT_RESULTS_SAT_HEIGHT:       fprintf(fp, "sat_height"); break;
-    case PRJCT_RESULTS_SAT_LON:          fprintf(fp, "sat_latitude"); break;
-    case PRJCT_RESULTS_SAT_LAT:          fprintf(fp, "sat_longitude"); break;
-    case PRJCT_RESULTS_EARTH_RADIUS:     fprintf(fp, "earth_radius"); break;
-    case PRJCT_RESULTS_VIEW_ELEVATION:   fprintf(fp, "view_elevation"); break;
-    case PRJCT_RESULTS_VIEW_ZENITH:      fprintf(fp, "view_zenith"); break;
-    case PRJCT_RESULTS_VIEW_AZIMUTH:     fprintf(fp, "view_azimuth"); break;
-    case PRJCT_RESULTS_SCIA_QUALITY:     fprintf(fp, "scia_quality"); break;
-    case PRJCT_RESULTS_SCIA_STATE_INDEX: fprintf(fp, "scia_state_index"); break;
-    case PRJCT_RESULTS_SCIA_STATE_ID:    fprintf(fp, "scia_state_id"); break;
-    case PRJCT_RESULTS_STARTDATE:        fprintf(fp, "startdate"); break;
-    case PRJCT_RESULTS_ENDDATE:          fprintf(fp, "enddate"); break;
-    case PRJCT_RESULTS_STARTTIME:        fprintf(fp, "starttime"); break;
-    case PRJCT_RESULTS_ENDTIME:          fprintf(fp, "endtime"); break;
+    case PRJCT_RESULTS_SPECNO:           config_string = "specno"; break;
+    case PRJCT_RESULTS_NAME:             config_string = "name"; break;
+    case PRJCT_RESULTS_DATE_TIME:        config_string = "date_time"; break;
+    case PRJCT_RESULTS_DATE:             config_string = "date"; break;
+    case PRJCT_RESULTS_TIME:             config_string = "time"; break;
+    case PRJCT_RESULTS_YEAR:             config_string = "year"; break;
+    case PRJCT_RESULTS_JULIAN:           config_string = "julian"; break;
+    case PRJCT_RESULTS_JDFRAC:           config_string = "jdfrac"; break;
+    case PRJCT_RESULTS_TIFRAC:           config_string = "tifrac"; break;
+    case PRJCT_RESULTS_SCANS:            config_string = "scans"; break;
+    case PRJCT_RESULTS_NREJ:             config_string = "rejected"; break;
+    case PRJCT_RESULTS_TINT:             config_string = "tint"; break;
+    case PRJCT_RESULTS_SZA:              config_string = "sza"; break;
+    case PRJCT_RESULTS_CHI:              config_string = "chi"; break;
+    case PRJCT_RESULTS_RMS:              config_string = "rms"; break;
+    case PRJCT_RESULTS_AZIM:             config_string = "azim"; break;
+    case PRJCT_RESULTS_TDET:             config_string = "tdet"; break;
+    case PRJCT_RESULTS_SKY:              config_string = "sky"; break;
+    case PRJCT_RESULTS_BESTSHIFT:        config_string = "bestshift"; break;
+    case PRJCT_RESULTS_REFZM:            config_string = "refzm"; break;
+    case PRJCT_RESULTS_REFNUMBER:        config_string = "refnumber"; break;
+    case PRJCT_RESULTS_REFSHIFT:         config_string = "refshift"; break;
+    case PRJCT_RESULTS_PIXEL:            config_string = "pixel"; break;
+    case PRJCT_RESULTS_PIXEL_TYPE:       config_string = "pixel_type"; break;
+    case PRJCT_RESULTS_ORBIT:            config_string = "orbit"; break;
+    case PRJCT_RESULTS_LONGIT:           config_string = "longit"; break;
+    case PRJCT_RESULTS_LATIT:            config_string = "latit"; break;
+    case PRJCT_RESULTS_ALTIT:            config_string = "altit"; break;
+    case PRJCT_RESULTS_COVAR:            config_string = "covar"; break;
+    case PRJCT_RESULTS_CORR:             config_string = "corr"; break;
+    case PRJCT_RESULTS_CLOUD:            config_string = "cloud"; break;
+    case PRJCT_RESULTS_O3:               config_string = "o3"; break;
+    case PRJCT_RESULTS_NO2:              config_string = "no2"; break;
+    case PRJCT_RESULTS_CLOUDTOPP:        config_string = "cloudtopp"; break;
+    case PRJCT_RESULTS_LOS_ZA:           config_string = "los_za"; break;
+    case PRJCT_RESULTS_LOS_AZIMUTH:      config_string = "los_azimuth"; break;
+    case PRJCT_RESULTS_SAT_HEIGHT:       config_string = "sat_height"; break;
+    case PRJCT_RESULTS_SAT_LON:          config_string = "sat_latitude"; break;
+    case PRJCT_RESULTS_SAT_LAT:          config_string = "sat_longitude"; break;
+    case PRJCT_RESULTS_EARTH_RADIUS:     config_string = "earth_radius"; break;
+    case PRJCT_RESULTS_VIEW_ELEVATION:   config_string = "view_elevation"; break;
+    case PRJCT_RESULTS_VIEW_ZENITH:      config_string = "view_zenith"; break;
+    case PRJCT_RESULTS_VIEW_AZIMUTH:     config_string = "view_azimuth"; break;
+    case PRJCT_RESULTS_SCIA_QUALITY:     config_string = "scia_quality"; break;
+    case PRJCT_RESULTS_SCIA_STATE_INDEX: config_string = "scia_state_index"; break;
+    case PRJCT_RESULTS_SCIA_STATE_ID:    config_string = "scia_state_id"; break;
+    case PRJCT_RESULTS_STARTDATE:        config_string = "startdate"; break;
+    case PRJCT_RESULTS_ENDDATE:          config_string = "enddate"; break;
+    case PRJCT_RESULTS_STARTTIME:        config_string = "starttime"; break;
+    case PRJCT_RESULTS_ENDTIME:          config_string = "endtime"; break;
 
-    case PRJCT_RESULTS_SCANNING            :      fprintf(fp, "scanning_angle"); break;
-    case PRJCT_RESULTS_FILTERNUMBER        :      fprintf(fp, "filterNumber"); break;
-    case PRJCT_RESULTS_MEASTYPE            :      fprintf(fp, "measType"); break;
-    case PRJCT_RESULTS_CCD_HEADTEMPERATURE :      fprintf(fp, "ccd_headTemp"); break;
+    case PRJCT_RESULTS_SCANNING            :      config_string = "scanning_angle"; break;
+    case PRJCT_RESULTS_FILTERNUMBER        :      config_string = "filterNumber"; break;
+    case PRJCT_RESULTS_MEASTYPE            :      config_string = "measType"; break;
+    case PRJCT_RESULTS_CCD_HEADTEMPERATURE :      config_string = "ccd_headTemp"; break;
 
-    case PRJCT_RESULTS_COOLING_STATUS      :      fprintf(fp, "cooler_status"); break;
-    case PRJCT_RESULTS_MIRROR_ERROR        :      fprintf(fp, "mirror_status"); break;
-    case PRJCT_RESULTS_COMPASS             :      fprintf(fp, "compass_angle"); break;
-    case PRJCT_RESULTS_PITCH               :      fprintf(fp, "pitch_angle"); break;
-    case PRJCT_RESULTS_ROLL                :      fprintf(fp, "roll_angle"); break;
-    case PRJCT_RESULTS_ITER                :      fprintf(fp, "iter_number"); break;
-    case PRJCT_RESULTS_ERROR_FLAG          :      fprintf(fp, "error_flag"); break;
-    case PRJCT_RESULTS_NUM_BANDS           :      fprintf(fp, "num_bands"); break;
+    case PRJCT_RESULTS_COOLING_STATUS      :      config_string = "cooler_status"; break;
+    case PRJCT_RESULTS_MIRROR_ERROR        :      config_string = "mirror_status"; break;
+    case PRJCT_RESULTS_COMPASS             :      config_string = "compass_angle"; break;
+    case PRJCT_RESULTS_PITCH               :      config_string = "pitch_angle"; break;
+    case PRJCT_RESULTS_ROLL                :      config_string = "roll_angle"; break;
+    case PRJCT_RESULTS_ITER                :      config_string = "iter_number"; break;
+    case PRJCT_RESULTS_ERROR_FLAG          :      config_string = "error_flag"; break;
+    case PRJCT_RESULTS_NUM_BANDS           :      config_string = "num_bands"; break;
 
-    case PRJCT_RESULTS_GOME2_SCANDIRECTION      :      fprintf(fp, "scan_direction"); break;
-    case PRJCT_RESULTS_GOME2_SAA                :      fprintf(fp, "saa_flag"); break;
-    case PRJCT_RESULTS_GOME2_SUNGLINT_RISK      :      fprintf(fp, "sunglint_danger_flag"); break;
-    case PRJCT_RESULTS_GOME2_SUNGLINT_HIGHRISK  :      fprintf(fp, "sunglint_highdanger_flag"); break;
-    case PRJCT_RESULTS_GOME2_RAINBOW            :      fprintf(fp, "rainbow_flag"); break;
+    case PRJCT_RESULTS_GOME2_SCANDIRECTION      :      config_string = "scan_direction"; break;
+    case PRJCT_RESULTS_GOME2_SAA                :      config_string = "saa_flag"; break;
+    case PRJCT_RESULTS_GOME2_SUNGLINT_RISK      :      config_string = "sunglint_danger_flag"; break;
+    case PRJCT_RESULTS_GOME2_SUNGLINT_HIGHRISK  :      config_string = "sunglint_highdanger_flag"; break;
+    case PRJCT_RESULTS_GOME2_RAINBOW            :      config_string = "rainbow_flag"; break;
 
     case PRJCT_RESULTS_CCD_DIODES : fprintf(fp,"diodes"); break;
     case PRJCT_RESULTS_CCD_TARGETAZIMUTH : fprintf(fp,"target_azimuth"); break;
@@ -1530,27 +1530,29 @@ void CQdoasConfigWriter::writeDataSelectList(FILE *fp, const data_select_list_t 
     case PRJCT_RESULTS_OMI_XTRACK_QF		: fprintf(fp,"omi_xtrack_qf"); break;
     case PRJCT_RESULTS_OMI_PIXELS_QF		: fprintf(fp,"omi_pixels_qf"); break;
     case PRJCT_RESULTS_SPIKES: fprintf(fp,"spike_pixels"); break;
-    case PRJCT_RESULTS_UAV_SERVO_BYTE_SENT :      fprintf(fp, "servo_byte_sent"); break;
-    case PRJCT_RESULTS_UAV_SERVO_BYTE_RECEIVED :      fprintf(fp, "servo_byte_received"); break;
-    case PRJCT_RESULTS_UAV_INSIDE_TEMP :      fprintf(fp, "uav_inside_temp"); break;
-    case PRJCT_RESULTS_UAV_OUTSIDE_TEMP :      fprintf(fp, "uav_outside_temp"); break;
-    case PRJCT_RESULTS_UAV_PRESSURE :      fprintf(fp, "uav_pressure"); break;
-    case PRJCT_RESULTS_UAV_HUMIDITY : fprintf(fp, "uav_humidity"); break;
-    case PRJCT_RESULTS_UAV_DEWPOINT : fprintf(fp, "uav_dewpoint"); break;
-    case PRJCT_RESULTS_UAV_PITCH: fprintf(fp, "uav_pitch"); break;
-    case PRJCT_RESULTS_UAV_ROLL: fprintf(fp, "uav_roll"); break;
-    case PRJCT_RESULTS_UAV_HEADING: fprintf(fp, "uav_heading"); break;
-    case PRJCT_RESULTS_STARTGPSTIME : fprintf(fp, "gps_starttime"); break;
-    case PRJCT_RESULTS_ENDGPSTIME : fprintf(fp, "gps_endtime"); break;
-    case PRJCT_RESULTS_LONGITEND : fprintf(fp, "longitude_end"); break;
-    case PRJCT_RESULTS_LATITEND : fprintf(fp, "latitude_end"); break;
-    case PRJCT_RESULTS_ALTITEND : fprintf(fp, "altitude_end"); break;
+    case PRJCT_RESULTS_UAV_SERVO_BYTE_SENT :      config_string = "servo_byte_sent"; break;
+    case PRJCT_RESULTS_UAV_SERVO_BYTE_RECEIVED :      config_string = "servo_byte_received"; break;
+    case PRJCT_RESULTS_UAV_INSIDE_TEMP :      config_string = "uav_inside_temp"; break;
+    case PRJCT_RESULTS_UAV_OUTSIDE_TEMP :      config_string = "uav_outside_temp"; break;
+    case PRJCT_RESULTS_UAV_PRESSURE :      config_string = "uav_pressure"; break;
+    case PRJCT_RESULTS_UAV_HUMIDITY : config_string = "uav_humidity"; break;
+    case PRJCT_RESULTS_UAV_DEWPOINT : config_string = "uav_dewpoint"; break;
+    case PRJCT_RESULTS_UAV_PITCH: config_string = "uav_pitch"; break;
+    case PRJCT_RESULTS_UAV_ROLL: config_string = "uav_roll"; break;
+    case PRJCT_RESULTS_UAV_HEADING: config_string = "uav_heading"; break;
+    case PRJCT_RESULTS_STARTGPSTIME : config_string = "gps_starttime"; break;
+    case PRJCT_RESULTS_ENDGPSTIME : config_string = "gps_endtime"; break;
+    case PRJCT_RESULTS_LONGITEND : config_string = "longitude_end"; break;
+    case PRJCT_RESULTS_LATITEND : config_string = "latitude_end"; break;
+    case PRJCT_RESULTS_ALTITEND : config_string = "altitude_end"; break;
 
-    case PRJCT_RESULTS_PRECALCULATED_FLUXES:            fprintf(fp, "precalculated_fluxes"); break;
+    case PRJCT_RESULTS_PRECALCULATED_FLUXES:            config_string = "precalculated_fluxes"; break;
 
-    default: assert(false && "BUG: no configuration string defined for output field");
+    default: puts("ERROR: no configuration string defined for output field. This is a bug, please contact Qdoas developers.");
     }
-    fprintf(fp, "\" />\n");
-    ++i;
+    
+    if (config_string) {
+      fprintf(fp, "      <field name=\"%s\" />\n", config_string);
+    }
   }
 }
