@@ -102,6 +102,8 @@ CWOutputSelector::CWOutputSelector(const data_select_list_t *d, QWidget *parent)
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_SAT_HEIGHT,             "Satellite height"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_SAT_LAT,                "Satellite latitude"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_SAT_LON,                "Satellite longitude"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_SAT_SZA,                "Solar zenith angle at satellite"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_SAT_SAA,                "Solar azimuth angle at satellite"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_EARTH_RADIUS,           "Earth radius"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_VIEW_ELEVATION,         "Elev. viewing angle"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_VIEW_AZIMUTH,           "Azim. viewing angle"));
@@ -570,6 +572,8 @@ void getValidFieldFlags(int *validFlags, int instrument)
       validFlags[PRJCT_RESULTS_GOME2_RAINBOW]=1;
       validFlags[PRJCT_RESULTS_SAT_LAT]=1;
       validFlags[PRJCT_RESULTS_SAT_LON]=1;
+      validFlags[PRJCT_RESULTS_SAT_SAA]=1;
+      validFlags[PRJCT_RESULTS_SAT_SZA]=1;
      }
     break;
  // ----------------------------------------------------------------------------

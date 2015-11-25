@@ -1488,6 +1488,8 @@ void CQdoasConfigWriter::writeDataSelectList(FILE *fp, const data_select_list_t 
     case PRJCT_RESULTS_SAT_HEIGHT:       config_string = "sat_height"; break;
     case PRJCT_RESULTS_SAT_LON:          config_string = "sat_latitude"; break;
     case PRJCT_RESULTS_SAT_LAT:          config_string = "sat_longitude"; break;
+    case PRJCT_RESULTS_SAT_SAA:          config_string = "sat_saa"; break;
+    case PRJCT_RESULTS_SAT_SZA:          config_string = "sat_sza"; break;
     case PRJCT_RESULTS_EARTH_RADIUS:     config_string = "earth_radius"; break;
     case PRJCT_RESULTS_VIEW_ELEVATION:   config_string = "view_elevation"; break;
     case PRJCT_RESULTS_VIEW_ZENITH:      config_string = "view_zenith"; break;

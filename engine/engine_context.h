@@ -225,6 +225,7 @@ struct satellite_location {
     double latitude, longitude; // coordinates of sub-satellite point
     double altitude;
     double earth_radius;
+    double sza, saa; // solar zenith/azimuth angles at satellite height
 };
 
 // Record information specific to the GOME format
@@ -268,7 +269,6 @@ typedef struct _gome2
   double longitudes[4],latitudes[4];                                            // geolocations at the 4 corners of the pixels
   double solZen[3],solAzi[3],losZen[3],losAzi[3];                               // resp. solar and line of sight zenith and azimuth angles
   
-  double sat_sza, sat_saa; // solar zenith/azimuth angles at satellite height
   int    saaFlag;
   int    sunglintDangerFlag;
   int    sunglintHighDangerFlag;

@@ -924,6 +924,12 @@ static void OutputRegisterFields(const ENGINE_CONTEXT *pEngineContext)
      case PRJCT_RESULTS_SAT_LON:
        register_field( (struct output_field) { .basic_fieldname = "Satellite longitude", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_sat_longitude });
        break;
+     case PRJCT_RESULTS_SAT_SZA:
+       register_field( (struct output_field) { .basic_fieldname = "Solar zenith angle at satellite", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_sat_sza });
+       break;
+     case PRJCT_RESULTS_SAT_SAA:
+       register_field( (struct output_field) { .basic_fieldname = "Solar azimuth angle at satellite", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_sat_saa });
+       break;
      case PRJCT_RESULTS_EARTH_RADIUS:
        register_field( (struct output_field) { .basic_fieldname = "Earth radius", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_earth_radius });
        break;
