@@ -114,6 +114,9 @@ void CEngineThread::run()
   //
   // m_terminated, m_requests and are protected by
   // m_reqQueueMutex
+  
+  // set the locale to "C" to avoid parsing problems when the system locale uses a different decimal separator
+  setlocale(LC_NUMERIC, "C");
 
   CEngineRequest *activeRequest;
 
