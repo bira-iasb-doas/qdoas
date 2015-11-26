@@ -101,7 +101,9 @@ static inline void scia_get_sza(struct output_field *this_field __attribute__ ((
 }
 
 static inline void gome2_get_sza(struct output_field *this_field __attribute__ ((unused)), float *sza, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
-  memcpy(sza, pEngineContext->recordInfo.gome2.solZen, 3 * sizeof(*sza));
+  for (int i=0; i<3; ++i) {
+    sza[i] = pEngineContext->recordInfo.gome2.solZen[i];
+  }
 }
 
 static inline void gdp3_get_sza(struct output_field *this_field __attribute__ ((unused)), float *sza, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
@@ -127,7 +129,9 @@ static inline void scia_get_azim(struct output_field *this_field __attribute__ (
 }
 
 static inline void gome2_get_azim(struct output_field *this_field __attribute__ ((unused)), float *azim, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
-  memcpy(azim, pEngineContext->recordInfo.gome2.solAzi, 3 * sizeof(*azim));
+  for (int i=0; i<3; ++i) {
+    azim[i] = pEngineContext->recordInfo.gome2.solAzi[i];
+  }
 }
 
 static inline void gdp3_get_azim(struct output_field *this_field __attribute__ ((unused)), float *azim, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
@@ -241,7 +245,9 @@ static inline void scia_get_los_zenith(struct output_field *this_field __attribu
 }
 
 static inline void gome2_get_los_zenith(struct output_field *this_field __attribute__ ((unused)), float *los_zenith, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
-  memcpy(los_zenith, pEngineContext->recordInfo.gome2.losZen, 3 * sizeof(*los_zenith));
+  for (int i=0; i<3; ++i) {
+    los_zenith[i] = pEngineContext->recordInfo.gome2.losZen[i];
+  }
 }
 
 static inline void gdp3_get_los_zenith(struct output_field *this_field __attribute__ ((unused)), float *los_zenith, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
@@ -263,7 +269,9 @@ static inline void scia_get_los_azimuth(struct output_field *this_field __attrib
 }
 
 static inline void gome2_get_los_azimuth(struct output_field *this_field __attribute__ ((unused)), float *los_azimuth, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
-  memcpy(los_azimuth, pEngineContext->recordInfo.gome2.losAzi, 3 * sizeof(*los_azimuth));
+  for (int i=0; i<3; ++i) {
+    los_azimuth[i] = pEngineContext->recordInfo.gome2.losAzi[i];
+  }
 }
 
 static inline void gdp3_get_los_azimuth(struct output_field *this_field __attribute__ ((unused)), float *los_azimuth, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {

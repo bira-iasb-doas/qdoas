@@ -1544,12 +1544,16 @@ RC GOME2_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,INDEX fileIndex) {
 
         struct gome2_geolocation *pGeoloc=&pOrbitFile->gome2Geolocations[recordNo-1];
 
-        memcpy(pRecord->gome2.latitudes,pGeoloc->latCorners,sizeof(double) *4);
-        memcpy(pRecord->gome2.longitudes,pGeoloc->lonCorners,sizeof(double) *4);
-        memcpy(pRecord->gome2.solZen,pGeoloc->solZen,sizeof(float) *3);
-        memcpy(pRecord->gome2.solAzi,pGeoloc->solAzi,sizeof(float) *3);
-        memcpy(pRecord->gome2.losZen,pGeoloc->losZen,sizeof(float) *3);
-        memcpy(pRecord->gome2.losAzi,pGeoloc->losAzi,sizeof(float) *3);
+        for (int i=0; i<4; ++i) {
+          pRecord->gome2.latitudes[i] = pGeoloc->latCorners[i];
+          pRecord->gome2.longitudes[i] = pGeoloc->lonCorners[i];
+        }
+        for (int i=0; i<3; ++i) {
+          pRecord->gome2.solZen[i] = pGeoloc->solZen[i];
+          pRecord->gome2.solAzi[i] = pGeoloc->solAzi[i];
+          pRecord->gome2.losZen[i] = pGeoloc->losZen[i];
+          pRecord->gome2.losAzi[i] = pGeoloc->losAzi[i];
+        }
 
         pRecord->cloudTopPressure=pGeoloc->cloudTopPressure;
         pRecord->cloudFraction=pGeoloc->cloudFraction;
