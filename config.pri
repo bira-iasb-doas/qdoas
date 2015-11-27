@@ -129,5 +129,6 @@ thomas {
   INCLUDEPATH += /usr/include/x86_64-linux-gnu/hdf
   
   QMAKE_LIBDIR += /usr/lib/x86_64-linux-gnu/hdf5/serial/
+  QMAKE_LIBDIR += /home/thomasd/lib
   QMAKE_RPATHDIR += /home/thomasd/lib
 }
