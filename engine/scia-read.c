@@ -1265,7 +1265,7 @@ RC SCIA_SetPDS(ENGINE_CONTEXT *pEngineContext)
                  !(rc=SciaNadirStates(pEngineContext,indexFile)) &&                                // determine the number of records from the cluster with highest integration time in the different states
                  !(rc=SciaNadirGeolocations(pEngineContext,indexFile)))                            // Read geolocations
 
-         pEngineContext->recordInfo.scia.orbitNumber=atoi(pOrbitFile->sciaPDSInfo.mph.abs_orbit);
+         pEngineContext->recordInfo.satellite.orbit_number=atoi(pOrbitFile->sciaPDSInfo.mph.abs_orbit);
        }
 
       if (pOrbitFile->sciaPDSInfo.FILE_l1c!=NULL)
@@ -1289,7 +1289,7 @@ RC SCIA_SetPDS(ENGINE_CONTEXT *pEngineContext)
    rc=ERROR_SetLast("SCIA_SetPDS",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pOrbitFile->sciaFileName);
   else
    {
-    pEngineContext->recordInfo.scia.orbitNumber=atoi(pOrbitFile->sciaPDSInfo.mph.abs_orbit);
+    pEngineContext->recordInfo.satellite.orbit_number=atoi(pOrbitFile->sciaPDSInfo.mph.abs_orbit);
     if (!(rc=pOrbitFile->rc) && (pOrbitFile->sciaPDSInfo.FILE_l1c==NULL))
      pOrbitFile->sciaPDSInfo.FILE_l1c=fopen(pOrbitFile->sciaFileName,"rb");
    }

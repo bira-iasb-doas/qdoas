@@ -183,12 +183,7 @@ int mediateRequestDisplaySpecInfo(void *engineContext,int page,void *responseHan
   if (pSpectra->fieldsFlag[PRJCT_RESULTS_PIXEL_TYPE])
    mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Pixel type","%d",pRecord->gome.pixelType);
   if (pSpectra->fieldsFlag[PRJCT_RESULTS_ORBIT])
-   {
-    if ((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_GDP_ASCII) || (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN))
-     mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Orbit number","%d",pRecord->gome.orbitNumber+1);
-    else if (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS)
-     mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Orbit number","%d",pRecord->scia.orbitNumber);
-   }
+     mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Orbit number","%d",pRecord->satellite.orbit_number);
 
   if (pSpectra->fieldsFlag[PRJCT_RESULTS_TINT])
    mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Exposure time","%.3f sec",pRecord->Tint);

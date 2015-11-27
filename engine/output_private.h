@@ -172,16 +172,8 @@ static inline void get_pixel_type(struct output_field *this_field __attribute__ 
   *pixel_type = pEngineContext->recordInfo.gome.pixelType;
 }
 
-static inline void gdp_get_orbit_number(struct output_field *this_field __attribute__ ((unused)), int *orbit_number, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
-  *orbit_number = pEngineContext->recordInfo.gome.orbitNumber+1;
-}
-
-static inline void scia_get_orbit_number(struct output_field *this_field __attribute__ ((unused)), int *orbit_number, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
-  *orbit_number = pEngineContext->recordInfo.scia.orbitNumber;
-}
-
-static inline void gome2_get_orbit_number(struct output_field *this_field __attribute__ ((unused)), int *orbit_number, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
-  *orbit_number = pEngineContext->recordInfo.gome2.orbitNumber;
+static inline void get_orbit_number(struct output_field *this_field __attribute__ ((unused)), int *orbit_number, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
+  *orbit_number = pEngineContext->recordInfo.satellite.orbit_number;
 }
 
 static inline void get_cloud_fraction(struct output_field *this_field __attribute__ ((unused)), float *cloud_fraction, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {

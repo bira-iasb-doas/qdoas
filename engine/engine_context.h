@@ -226,13 +226,13 @@ struct satellite_location {
     double altitude;
     double earth_radius;
     double sza, saa; // solar zenith/azimuth angles at satellite height
+    int orbit_number;
 };
 
 // Record information specific to the GOME format
 
 typedef struct _gomeData                                                        // data on the current GOME pixel
  {
-  int   orbitNumber;                                                            // orbit number
   int   pixelNumber;                                                            // pixel number
   int   pixelType;                                                              // pixel type
 
@@ -252,7 +252,6 @@ GOME_DATA;
 
 typedef struct _sciamachy
  {
-  int    orbitNumber;                                                           // orbit number
   double longitudes[4],latitudes[4];                                            // geolocations at the 4 corners of the pixels
   float  solZen[3],solAzi[3],losZen[3],losAzi[3];                               // resp. solar and line of sight zenith and azimuth angles
   INDEX  stateIndex,stateId;                                                    // information on the state
@@ -263,9 +262,7 @@ SCIA_DATA;
 // Record information specific to GOME2
 
 typedef struct _gome2
- {
-  int    orbitNumber;                                                           // orbit number
-  
+ {  
   double longitudes[4],latitudes[4];                                            // geolocations at the 4 corners of the pixels
   double solZen[3],solAzi[3],losZen[3],losAzi[3];                               // resp. solar and line of sight zenith and azimuth angles
   

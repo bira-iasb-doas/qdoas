@@ -724,9 +724,6 @@ static void OutputRegisterFields(const ENGINE_CONTEXT *pEngineContext)
   PROJECT *pProject=(PROJECT *)&pEngineContext->project;
   PRJCT_RESULTS *pResults=(PRJCT_RESULTS *)&pProject->asciiResults;
 
-  // orbit_number: depends on satellite data format
-  func_int func_orbit_number = NULL;
-
   // default values for instrument-dependent output functions:
   func_int func_meastype = &mfc_get_meastype;
   func_float func_corner_latitudes = NULL;
@@ -768,7 +765,6 @@ static void OutputRegisterFields(const ENGINE_CONTEXT *pEngineContext)
     func_sza = &scia_get_sza;
     func_azimuth = &scia_get_azim;
     format_datetime = "%4d%02d%02d%02d%02d%02d.%03d"; // year, month, day, hour, min, sec, milliseconds
-    func_orbit_number = &scia_get_orbit_number;
     break;
   case PRJCT_INSTR_FORMAT_GOME2:
     func_sza = &gome2_get_sza;
@@ -778,11 +774,9 @@ static void OutputRegisterFields(const ENGINE_CONTEXT *pEngineContext)
     func_los_azimuth = &gome2_get_los_azimuth;
     func_los_zenith = &gome2_get_los_zenith;
     format_datetime = "%4d%02d%02d%02d%02d%02d.%06d"; // year, month, day, hour, min, sec, microseconds
-    func_orbit_number = &gome2_get_orbit_number;
     func_frac_time = &get_frac_time_recordinfo;
     break;
   case PRJCT_INSTR_FORMAT_GDP_BIN:
-    func_orbit_number = gdp_get_orbit_number;
     if (GDP_BIN_orbitFiles[GDP_BIN_currentFileIndex].gdpBinHeader.version<40) {
       func_sza = &gdp3_get_sza;
       func_azimuth = &gdp3_get_azim;
@@ -809,7 +803,6 @@ static void OutputRegisterFields(const ENGINE_CONTEXT *pEngineContext)
     func_azimuth = &gdpasc_get_azim;
     func_corner_longitudes = &gdpasc_get_corner_longitudes;
     func_corner_latitudes = &gdpasc_get_corner_latitudes;
-    func_orbit_number = gdp_get_orbit_number;
     break;
   case PRJCT_INSTR_FORMAT_MKZY:
     func_scanning_angle = &mkzy_get_scanning_angle;
@@ -886,7 +879,7 @@ static void OutputRegisterFields(const ENGINE_CONTEXT *pEngineContext)
        register_field( (struct output_field) { .basic_fieldname = "Pixel type", .memory_type = OUTPUT_USHORT, .resulttype = fieldtype, .format = "%#5d" , .get_data = (func_void)&get_pixel_type});
        break;
      case PRJCT_RESULTS_ORBIT:
-       register_field( (struct output_field) { .basic_fieldname = "Orbit number", .memory_type = OUTPUT_INT, .resulttype = fieldtype, .format = "%#8d", .get_data = (func_void)func_orbit_number });
+       register_field( (struct output_field) { .basic_fieldname = "Orbit number", .memory_type = OUTPUT_INT, .resulttype = fieldtype, .format = "%#8d", .get_data = (func_void)&get_orbit_number});
        break;
      case PRJCT_RESULTS_LONGIT:
        if(func_corner_longitudes) { // we have pixel corners
@@ -1649,7 +1642,7 @@ RC OutputBuildFileName(const ENGINE_CONTEXT *pEngineContext,char *outputPath)
 
     // Build output file name
     if ( pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS)
-      sprintf(fileNameStart,"SCIA_%d%02d%02d_%05d",pOutput->year,pOutput->month,pOutput->day,pEngineContext->recordInfo.scia.orbitNumber);
+      sprintf(fileNameStart,"SCIA_%d%02d%02d_%05d",pOutput->year,pOutput->month,pOutput->day,pEngineContext->recordInfo.satellite.orbit_number);
     else {
       sprintf(fileNameStart,"%s",inputFileName);
 

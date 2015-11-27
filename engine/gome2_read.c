@@ -1587,7 +1587,7 @@ RC GOME2_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,INDEX fileIndex) {
         pRecord->TimeDec= (double) hour+min/60.+ (sec+musec*1.e-6) / (60.*60.);
         pRecord->Tm= (double) ZEN_NbSec(&pRecord->present_datetime.thedate,&pRecord->present_datetime.thetime,0);
 
-        pRecord->gome2.orbitNumber= (int) pOrbitFile->gome2Info.orbitStart;
+        pRecord->satellite.orbit_number= pOrbitFile->gome2Info.orbitStart;
 
         if ((pEngineContext->project.spectra.cloudMin>=0.) &&
             (pEngineContext->project.spectra.cloudMax<=1.) &&

@@ -163,6 +163,8 @@ typedef struct _OMIOrbitFiles // description of an orbit
   long       nMeasurements,
     nXtrack,                    // number of detector tracks (normally 60)
     nWavel;
+  int year, month, day;         // orbit date
+  int number;                   // orbit number
 }
   OMI_ORBIT_FILE;
 
@@ -220,6 +222,7 @@ static void omi_make_double(int16 mantissa[], int8 exponent[], int32 n_wavel, do
 static void omi_interpolate_errors(int16 mantissa[], int32 n_wavel, double wavelengths[], double y[] );
 static RC omi_load_spectrum(int spec_type, int32 sw_id, int32 measurement, int32 track, int32 n_wavel, double *lambda, double *spectrum, double *sigma, unsigned short *pixelQualityFlags);
 static void average_spectrum(double *average, double *errors, struct omi_ref_list *spectra, double *wavelength_grid);
+static RC read_orbit_metadata(OMI_ORBIT_FILE *orbit);
 
 // ===================
 // ALLOCATION ROUTINES
@@ -1049,9 +1052,16 @@ static RC OmiOpen(OMI_ORBIT_FILE *pOrbitFile,const char *swathName)
 
     // Allocate data
     rc=OMI_AllocateSwath(&pOrbitFile->omiSwath,pOrbitFile->nMeasurements,pOrbitFile->nXtrack);
-    if(!rc)
+    
+    if (!rc) {
       // Retrieve information on records from Data fields and Geolocation fields
       rc=OmiGetSwathData(pOrbitFile);
+    }
+    
+    if (!rc) {
+      // Read orbit number and date from HDF-EOS metadata
+      rc=read_orbit_metadata(pOrbitFile);
+    }
   }
 
  end_OmiOpen:
@@ -1440,6 +1450,8 @@ RC OMI_read_earth(ENGINE_CONTEXT *pEngineContext,int recordNo)
     pRecord->satellite.altitude = pGeo->spacecraftAltitude[indexMeasurement];
     pRecord->satellite.latitude = pGeo->spacecraftLatitude[indexMeasurement];
     pRecord->satellite.longitude = pGeo->spacecraftLongitude[indexMeasurement];
+    
+    pRecord->satellite.orbit_number = current_orbit_file.number;
           
     struct tm time_record;
     int omi_ms=0;
@@ -1464,54 +1476,91 @@ RC OMI_read_earth(ENGINE_CONTEXT *pEngineContext,int recordNo)
   return rc;
 }
 
-/*! read the orbit start date from the HDF4 file attribute
-    "CoreMetadata.0" */
 RC OMI_get_orbit_date(int *year, int *month, int *day) {
-  RC rc = ERROR_ID_NO;
+  *year = current_orbit_file.year;
+  *month = current_orbit_file.month;
+  *day = current_orbit_file.day;
+  return ERROR_ID_NO;
+}
 
-  /* OMI files have metadata storred as a formatted text string in an
+/*! read the orbit number and start date from the HDF4 file attribute
+    "CoreMetadata.0" */
+static RC read_orbit_metadata(OMI_ORBIT_FILE *orbit) {
+  /* OMI files have metadata stored as a formatted text string in an
    * HDF SD attribute field. NASA provides the "SDP Toolkit" library
-   * to read this metadata format.  However, we only need to read one
-   * field, so we prefer to use an ad-hoc parsing method for this
+   * to read this metadata format.  However, we only need to read a
+   * few fields, so we prefer to use an ad-hoc parsing method for this
    * attribute, instead of including another library in Qdoas.
    */
-  int32 sd_id = SDstart(current_orbit_file.omiFileName, DFACC_READ);
+  orbit->year=orbit->month=orbit->day=orbit->number=0;
+  RC rc = ERROR_ID_NO;
+  
+  int32 sd_id = SDstart(orbit->omiFileName, DFACC_READ);
 
   if(sd_id == FAIL) {
-    rc = ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_HDFEOS, current_orbit_file.omiFileName, "Can not open orbit file.", "");
+    rc = ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_HDFEOS, orbit->omiFileName, "Can not open orbit file.", "");
     goto error;
   }
-  char attr_name[] = "CoreMetadata.0"; // contains orbit start date & time
-  int32 attr_index = SDfindattr (sd_id, attr_name);
+  const char attr_name[] = "CoreMetadata.0";
+  int32 attr_index = SDfindattr(sd_id, attr_name);
   int32 data_type, n_values;
-  int32 status = SDattrinfo (sd_id, attr_index, attr_name, &data_type, &n_values);
+  char attr_name_out[sizeof(attr_name)]; // output parameter for SDattrinfo must be specified, even though we already know the attribute name...
+  int32 status = SDattrinfo (sd_id, attr_index, attr_name_out, &data_type, &n_values);
   if(status == FAIL) {
-    rc = ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_HDFEOS, attr_name, "Can not read SD attribute info from file ", current_orbit_file.omiFileName);
+    rc = ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_HDFEOS, attr_name, "Can not read SD attribute info from file ", orbit->omiFileName);
     goto error;
   }
    
   char *metadata = malloc (1+n_values); 
   status = SDreadattr (sd_id, attr_index, metadata); 
   if(status == FAIL) {
-    rc = ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_HDFEOS, attr_name, "Can not read SD attribute data from file ", current_orbit_file.omiFileName);
-  } else {
-    /* metadata is a string containing all kinds of metadata.  We are
-     * interested in the part containing the orbit start date, which has
-     * the following format:
-     *
-     * OBJECT                 = RANGEBEGINNINGDATE
-     *   NUM_VAL              = 1
-     *   VALUE                = "2008-05-21"
-     * END_OBJECT             = RANGEBEGINNINGDATE
-     * 
-     */
-    char *datestart = strstr(metadata, "RANGEBEGINNINGDATE"); 
-    datestart = strstr(datestart, "VALUE");
-    datestart = strstr(datestart, "=");
-    sscanf(datestart + 3, "%d-%02d-%02d", year, month, day);
+    rc = ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_HDFEOS, attr_name, "Can not read SD attribute data from file ", orbit->omiFileName);
+    goto error_free;
   }
+  /* metadata is a string containing all kinds of information.  We are
+   * interested in the parts containing the orbit start date and orbit
+   * number, which have the following format:
+   *
+   * OBJECT                 = RANGEBEGINNINGDATE
+   *   NUM_VAL              = 1
+   *   VALUE                = "2008-05-21"
+   * END_OBJECT             = RANGEBEGINNINGDATE
+   * 
+   * OBJECT                 = ORBITNUMBER
+   *   CLASS                = "1"
+   *   NUM_VAL              = 1
+   *   VALUE                = (15945)
+   *  END_OBJECT             = ORBITNUMBER
+   * 
+   */
+
+  int n_scan_date = 0;
+  const char *str_date = strstr(metadata, "RANGEBEGINNINGDATE");
+  str_date = str_date ? strstr(str_date, "VALUE") : NULL;
+  if (str_date) {
+    str_date +=5; // skip to end of "VALUE"
+    n_scan_date = sscanf(str_date, " = \"%d-%02d-%02d\"", &orbit->year, &orbit->month, &orbit->day);
+  }
+  if (!str_date || n_scan_date != 3) {
+    rc = ERROR_SetLast(__func__,ERROR_TYPE_WARNING,ERROR_ID_HDFEOS, attr_name, "Failed to find orbit date of file ", orbit->omiFileName);
+    goto error_free;
+  }
+
+  int n_scan_orbit = 0;
+  const char *str_orbitnumber = strstr(metadata, "ORBITNUMBER");
+  str_orbitnumber = str_orbitnumber ? strstr(str_orbitnumber, "VALUE") : NULL;
+  if (str_orbitnumber) {
+    str_orbitnumber += 5;  // skip to end of "VALUE"
+    n_scan_orbit = sscanf(str_orbitnumber, " = (%d)", &orbit->number);
+  }
+  if (!str_orbitnumber || n_scan_orbit != 1) {
+    rc = ERROR_SetLast(__func__,ERROR_TYPE_WARNING,ERROR_ID_HDFEOS, attr_name, "Failed to find orbit number of file ", orbit->omiFileName);
+    goto error_free;
+  }
+
+ error_free:
   free(metadata);
-error:
+ error:
   SDend(sd_id);
 
   return rc;

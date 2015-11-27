@@ -749,11 +749,12 @@ RC GDP_ASC_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
 
     // Load the irradiance spectrum
 
-    else if (!ReadERS(specFp,&pGome->orbitNumber) &&
+    else if (!ReadERS(specFp,&pRecord->satellite.orbit_number) &&
              !ReadSolar(specFp,Band2Channel(band),&pGome->irradDate,&pGome->irradTime,
                         GDP_ASC_refL,GDP_ASC_ref,GDP_ASC_refE,&pGome->nRef) &&
              !GotoSpectra(specFp))
      {
+       pRecord->satellite.orbit_number += 1; // 0-based?
       if ((THRD_id==THREAD_TYPE_SPECTRA) && (THRD_browseType==THREAD_BROWSE_DARK))
        pEngineContext->recordNumber=1;
       else

@@ -670,7 +670,7 @@ RC GDP_BIN_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
       pEngineContext->buffers.irrad[i]=(double)pOrbitFile->gdpBinReference[j]/pOrbitFile->gdpBinBandInfo[pOrbitFile->gdpBinBandIndex].scalingFactor;
     }
 
-    pEngineContext->recordInfo.gome.orbitNumber=pOrbitFile->gdpBinHeader.orbitNumber;
+    pEngineContext->recordInfo.satellite.orbit_number= 1+pOrbitFile->gdpBinHeader.orbitNumber;
     pEngineContext->recordInfo.useErrors=((pOrbitFile->gdpBinHeader.mask&GDP_BIN_ERROR_ID_MASK)==GDP_BIN_ERROR_ID_MASK)?1:0;
     NDET=pOrbitFile->gdpBinBandInfo[pOrbitFile->gdpBinBandIndex].bandSize;
 

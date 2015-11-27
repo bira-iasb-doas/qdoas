@@ -291,6 +291,7 @@ void getValidFieldFlags(int *validFlags, int instrument)
  	  ((instrument==PRJCT_INSTR_FORMAT_GDP_ASCII) ||
      (instrument==PRJCT_INSTR_FORMAT_GDP_BIN) ||
      (instrument==PRJCT_INSTR_FORMAT_SCIA_PDS) ||
+     (instrument==PRJCT_INSTR_FORMAT_OMI) ||
      (instrument==PRJCT_INSTR_FORMAT_GOME2))?1:0;
 
   // validFlags is indexed by the PRJCT_RESULTS_* enumerated values. A non-zero
@@ -600,10 +601,6 @@ void getValidFieldFlags(int *validFlags, int instrument)
  // ----------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_OMI :
      {
-      validFlags[PRJCT_RESULTS_LONGIT]=1;
-      validFlags[PRJCT_RESULTS_LATIT]=1;
-      validFlags[PRJCT_RESULTS_VIEW_ZENITH]=1;
-      validFlags[PRJCT_RESULTS_VIEW_AZIMUTH]=1;
       validFlags[PRJCT_RESULTS_LOS_ZA]=1;
       validFlags[PRJCT_RESULTS_LOS_AZIMUTH]=1;
       validFlags[PRJCT_RESULTS_INDEX_ALONGTRACK]=1;
@@ -613,7 +610,6 @@ void getValidFieldFlags(int *validFlags, int instrument)
       validFlags[PRJCT_RESULTS_OMI_PIXELS_QF]=1;
       validFlags[PRJCT_RESULTS_SAT_LAT]=1;
       validFlags[PRJCT_RESULTS_SAT_LON]=1;
-      validFlags[PRJCT_RESULTS_SAT_HEIGHT]=1;
      }
     break;
  // ----------------------------------------------------------------------------
