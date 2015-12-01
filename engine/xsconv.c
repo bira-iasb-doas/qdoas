@@ -1266,12 +1266,12 @@ RC XSCONV_TypeStandard(MATRIX_OBJECT *pXsnew,INDEX indexLambdaMin,INDEX indexLam
        SPLINE_Vector(slitLambda,slitVector,slitDeriv2,slitNDET,&lambda,&slitParam,1,SPLINE_CUBIC,"XSCONV_TypeStandard ");
      }
 
-    fwhm=(slitType!=SLIT_TYPE_ERF)?slitParam:sqrt(slitParam*slitParam+slitParam2*slitParam2);
-    stepF=fwhm/(double)NFWHM;            // number of points/FWHM
-    slitWidth=(double)0.5*NFWHM*fwhm; // 3.*fwhm; // slitWidth=(double)3.*fwhm;
-
     if (slitType!=SLIT_TYPE_FILE)
      {
+      fwhm=(slitType!=SLIT_TYPE_ERF)?slitParam:sqrt(slitParam*slitParam+slitParam2*slitParam2);
+      stepF=fwhm/(double)NFWHM;            // number of points/FWHM
+      slitWidth=(double)0.5*NFWHM*fwhm; // 3.*fwhm; // slitWidth=(double)3.*fwhm;
+
       lambdaMin=lambda-slitWidth;
       lambdaMax=lambda+slitWidth;
      }
