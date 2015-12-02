@@ -45,10 +45,11 @@
 
 #include <time.h>
 #include <dirent.h>
+#include <stdio.h>
 
-#include "hdf.h"
-#include "HdfEosDef.h"
-#include "mfhdf.h"
+#include <hdf.h>
+#include <HdfEosDef.h>
+#include <mfhdf.h>
 
 #include "omi_read.h"
 
@@ -1106,10 +1107,10 @@ static RC OMI_LoadReference(int spectralType, const char *refFile, OMI_REF **ret
   
   for (int indexSpectrum=0; indexSpectrum < pRef->nXtrack; indexSpectrum++) {
     rc = omi_load_spectrum(OMI_SPEC_IRRAD, sw_id, 0, indexSpectrum, n_wavel,
-			   pRef->omiRefLambda[indexSpectrum],
-			   pRef->omiRefSpectrum[indexSpectrum],
-			   pRef->omiRefSigma[indexSpectrum],
-			   pRef->spectrum.pixelQualityFlags);
+                           pRef->omiRefLambda[indexSpectrum],
+                           pRef->omiRefSpectrum[indexSpectrum],
+                           pRef->omiRefSigma[indexSpectrum],
+                           pRef->spectrum.pixelQualityFlags);
     if (rc)
       goto end_loadreference;
   }

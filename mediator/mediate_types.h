@@ -28,15 +28,6 @@ enum eEngineErrorType {
   FatalEngineError
 };
 
-//* TODO - remove ePlotDataType */
-enum ePlotDataType {
-  PlotDataType_Spectrum,
-  PlotDataType_Fit,
-  PlotDataType_Shift,
-  PlotDataType_Fwhm,
-  PlotDataType_Points
-};
-
 enum eCurveStyleType {
   Line,
   Point
