@@ -222,11 +222,12 @@ struct _ccd {
 
 // common location data for satellite instruments
 struct satellite_location {
-    double latitude, longitude; // coordinates of sub-satellite point
-    double altitude;
-    double earth_radius;
-    double sza, saa; // solar zenith/azimuth angles at satellite height
-    int orbit_number;
+  double latitude, longitude; // coordinates of sub-satellite point
+  double altitude;
+  double earth_radius;
+  double sza, saa; // solar zenith/azimuth angles at satellite height
+  double vza;
+  int orbit_number;
 };
 
 // Record information specific to the GOME format

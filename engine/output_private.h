@@ -216,6 +216,10 @@ static inline void get_sat_saa(struct output_field *this_field __attribute__ ((u
   *saa = pEngineContext->recordInfo.satellite.saa;
 }
 
+static inline void get_sat_vza(struct output_field *this_field __attribute__ ((unused)), float *vza, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
+  *vza = pEngineContext->recordInfo.satellite.vza;
+}
+
 static inline void get_earth_radius(struct output_field *this_field __attribute__ ((unused)), float *radius, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
   *radius = pEngineContext->recordInfo.satellite.earth_radius;
 }

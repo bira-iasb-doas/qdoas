@@ -98,6 +98,7 @@ struct gome2_geolocation {
   double sat_lat, sat_lon; // coordinates of sub-satellite point
   double sat_alt;
   double sat_sza, sat_saa; // solar zenith/azimuth angle at satellite height
+  double sat_vza; // viewing zenith angle at satellite
 
   // Miscellaneous
   double cloudTopPressure,cloudFraction;                                         // information on clouds
@@ -860,7 +861,7 @@ int Gome2ReadMDRInfo(GOME2_ORBIT_FILE *pOrbitFile,GOME2_MDR *pMdr,int indexBand)
         // actual scanner angles
 
         coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor, "SCANNER_ANGLE_ACTUAL");    // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL.SCANNER_ANGLE_ACTUAL
-        coda_cursor_read_double_array(&pOrbitFile->gome2Cursor,&pMdr->scanner_angle12[i],coda_array_ordering_c);
+        coda_cursor_read_double(&pOrbitFile->gome2Cursor,&pMdr->scanner_angle12[i]);       
         coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                        // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL
 
         // 4 corner coordinates @ points ABCD
@@ -1039,6 +1040,9 @@ void Gome2ReadGeoloc(GOME2_ORBIT_FILE *pOrbitFile,INDEX indexBand) {
       geolocation->losZen[1]= pMdr->lza[indexTint][1][indexObs];
       geolocation->losZen[2]= pMdr->lza[indexTint][2][indexObs];
 
+      // viewing zenith angle in satellite coordinates (scanner angle)
+      geolocation->sat_vza = pMdr->scanner_angle[indexTint][indexObs];
+
       // Line of sight azimuth angles
 
       geolocation->losAzi[0]= pMdr->laa[indexTint][0][indexObs];
@@ -1080,6 +1084,9 @@ void Gome2ReadGeoloc(GOME2_ORBIT_FILE *pOrbitFile,INDEX indexBand) {
       geolocation->losZen[0]= pMdr->lza12[indexObs][0];
       geolocation->losZen[1]= pMdr->lza12[indexObs][1];
       geolocation->losZen[2]= pMdr->lza12[indexObs][2];
+
+      // viewing zenith angle in satellite coordinates (scanner angle)
+      geolocation->sat_vza = pMdr->scanner_angle12[indexObs];
 
       // Line of sight azimuth angles
 
@@ -1580,7 +1587,8 @@ RC GOME2_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,INDEX fileIndex) {
         pRecord->satellite.latitude = pGeoloc->sat_lat;
         pRecord->satellite.longitude = pGeoloc->sat_lon;
         pRecord->satellite.saa = pGeoloc->sat_saa;
-        pRecord->satellite.sza = pGeoloc->sat_sza;        
+        pRecord->satellite.sza = pGeoloc->sat_sza;
+        pRecord->satellite.vza = pGeoloc->sat_vza;
 
         pRecord->Tint=tint;
 

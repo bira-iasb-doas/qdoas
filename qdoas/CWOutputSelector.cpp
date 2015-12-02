@@ -104,6 +104,7 @@ CWOutputSelector::CWOutputSelector(const data_select_list_t *d, QWidget *parent)
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_SAT_LON,                "Satellite longitude"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_SAT_SZA,                "Solar zenith angle at satellite"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_SAT_SAA,                "Solar azimuth angle at satellite"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_SAT_VZA,                "Viewing zenith angle at satellite"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_EARTH_RADIUS,           "Earth radius"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_VIEW_ELEVATION,         "Elev. viewing angle"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_VIEW_AZIMUTH,           "Azim. viewing angle"));
@@ -338,6 +339,8 @@ void getValidFieldFlags(int *validFlags, int instrument)
   validFlags[PRJCT_RESULTS_VIEW_ELEVATION]=0;
   validFlags[PRJCT_RESULTS_VIEW_ZENITH]=satelliteFlag;
   validFlags[PRJCT_RESULTS_VIEW_AZIMUTH]=satelliteFlag;
+  validFlags[PRJCT_RESULTS_LOS_ZA]=satelliteFlag;
+  validFlags[PRJCT_RESULTS_LOS_AZIMUTH]=satelliteFlag;
 
   // set the appropriate flags
 
@@ -539,8 +542,6 @@ void getValidFieldFlags(int *validFlags, int instrument)
  // ----------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_GDP_BIN :
      {
-      validFlags[PRJCT_RESULTS_LOS_ZA]=1;
-      validFlags[PRJCT_RESULTS_LOS_AZIMUTH]=1;
       validFlags[PRJCT_RESULTS_PIXEL]=1;
       validFlags[PRJCT_RESULTS_PIXEL_TYPE]=1;
       validFlags[PRJCT_RESULTS_TINT]=0;
@@ -551,8 +552,6 @@ void getValidFieldFlags(int *validFlags, int instrument)
  // ----------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_SCIA_PDS :
      {
-      validFlags[PRJCT_RESULTS_LOS_ZA]=1;
-      validFlags[PRJCT_RESULTS_LOS_AZIMUTH]=1;
       validFlags[PRJCT_RESULTS_SCIA_STATE_INDEX]=1;
       validFlags[PRJCT_RESULTS_SCIA_STATE_ID]=1;
       validFlags[PRJCT_RESULTS_SCIA_QUALITY]=1;
@@ -561,8 +560,6 @@ void getValidFieldFlags(int *validFlags, int instrument)
  // ----------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_GOME2 :
      {
-      validFlags[PRJCT_RESULTS_LOS_ZA]=1;
-      validFlags[PRJCT_RESULTS_LOS_AZIMUTH]=1;
       validFlags[PRJCT_RESULTS_CLOUD]=1;
       validFlags[PRJCT_RESULTS_CLOUDTOPP]=1;
 
@@ -575,6 +572,7 @@ void getValidFieldFlags(int *validFlags, int instrument)
       validFlags[PRJCT_RESULTS_SAT_LON]=1;
       validFlags[PRJCT_RESULTS_SAT_SAA]=1;
       validFlags[PRJCT_RESULTS_SAT_SZA]=1;
+      validFlags[PRJCT_RESULTS_SAT_VZA]=1;
      }
     break;
  // ----------------------------------------------------------------------------
@@ -601,8 +599,6 @@ void getValidFieldFlags(int *validFlags, int instrument)
  // ----------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_OMI :
      {
-      validFlags[PRJCT_RESULTS_LOS_ZA]=1;
-      validFlags[PRJCT_RESULTS_LOS_AZIMUTH]=1;
       validFlags[PRJCT_RESULTS_INDEX_ALONGTRACK]=1;
       validFlags[PRJCT_RESULTS_INDEX_CROSSTRACK]=1;
       validFlags[PRJCT_RESULTS_OMI_GROUNDP_QF]=1;

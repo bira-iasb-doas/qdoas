@@ -127,6 +127,8 @@ bool CSelectorSubHandler::start(const QString &element, const QXmlAttributes &at
     d->selected[d->nSelected] = PRJCT_RESULTS_SAT_SAA;
   else if (str == "sat_sza")
     d->selected[d->nSelected] = PRJCT_RESULTS_SAT_SZA;
+  else if (str == "sat_vza")
+    d->selected[d->nSelected] = PRJCT_RESULTS_SAT_VZA;
   else if (str == "earth_radius")
     d->selected[d->nSelected] = PRJCT_RESULTS_EARTH_RADIUS;
   else if (str == "view_elevation")
