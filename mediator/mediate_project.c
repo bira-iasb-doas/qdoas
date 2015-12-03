@@ -143,6 +143,16 @@ void initializeMediateProjectOutput(mediate_project_output_t *d)
   d->bandWidth=1.;
 }
 
+void initializeMediateProjectExport(mediate_project_export_t *d)
+{
+  memset(d, 0, sizeof(mediate_project_export_t));
+
+  // any non-zero defaults...
+
+  d->titlesFlag = 1;
+  d->directoryFlag = 1;
+}
+
 void initializeMediateProject(mediate_project_t *d)
 {
   /* delegate to sub component initialization functions */
@@ -156,4 +166,5 @@ void initializeMediateProject(mediate_project_t *d)
   initializeMediateProjectInstrumental(&(d->instrumental));
   initializeMediateProjectSlit(&(d->slit));
   initializeMediateProjectOutput(&(d->output));
+  initializeMediateProjectExport(&(d->export_spectra));
 }

@@ -66,7 +66,7 @@ CSession::CSession(eMode mode) :
     m_symbols = CWorkSpace::instance()->symbolList(m_nSymbols);
     m_sites = CWorkSpace::instance()->siteList(m_nSites);
   }
-  else if (m_mode == CSession::Browse)
+  else if ((m_mode == CSession::Browse) || (m_mode == CSession::Export))
    m_sites = CWorkSpace::instance()->siteList(m_nSites);
 }
 

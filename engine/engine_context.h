@@ -204,6 +204,16 @@ struct _prjctAsciiResults {
   char swath_name[HDFEOS_OBJ_LEN_MAX];
 };
 
+// Export spectra
+// --------------
+
+struct _prjctExport {
+  char path[MAX_ITEM_TEXT_LEN+1];                                               // path for ASCII files
+  int   lambdaFlag,spectraFlag,titlesFlag,directoryFlag;                        // additional options
+  int fieldsNumber;                                                             // number of ascii flags set in the next list
+  char fieldsFlag[PRJCT_RESULTS_MAX];                                           // fields used in output
+} ;
+
 // Buffers specific to CCD
 
 struct _ccd {
@@ -263,10 +273,10 @@ SCIA_DATA;
 // Record information specific to GOME2
 
 typedef struct _gome2
- {  
+ {
   double longitudes[4],latitudes[4];                                            // geolocations at the 4 corners of the pixels
   double solZen[3],solAzi[3],losZen[3],losAzi[3];                               // resp. solar and line of sight zenith and azimuth angles
-  
+
   int    saaFlag;
   int    sunglintDangerFlag;
   int    sunglintHighDangerFlag;
@@ -547,7 +557,7 @@ ANALYSIS_REF;
 
   typedef struct _project
  {
-  char name[MAX_ITEM_NAME_LEN+1];                     // name of window
+  char name[MAX_ITEM_NAME_LEN+1];                      // name of window
   PRJCT_SPECTRA spectra;                               // spectra selection tab page
   PRJCT_ANLYS analysis;                                // analysis tab page
   PRJCT_FILTER lfilter;                                // filter (low pass options) tab page
@@ -555,8 +565,9 @@ ANALYSIS_REF;
   PRJCT_KURUCZ kurucz;                                 // Kurucz tab page
   PRJCT_USAMP usamp;                                   // undersampling tab page
   PRJCT_INSTRUMENTAL instrumental;                     // instrumental tab page
-  PRJCT_RESULTS asciiResults;                    // ASCII results tab page
+  PRJCT_RESULTS asciiResults;                          // ASCII results tab page
   PRJCT_SLIT slit;                                     // slit function tab page
+  PRJCT_EXPORT exportSpectra;                          // export spectra
  } PROJECT;
 
 struct _engineContext
@@ -581,6 +592,7 @@ struct _engineContext
   int     refFlag;                                                              // this flag is set when the reference spectrum is retrieved from spectra files
 
   CALIB_FENO        calibFeno;                                                  // transfer of wavelength calibration options from the project mediator to the analysis mediator
+  char   *outputPath;                                                           // pointer to the output path (from export or output part of the project)
 };
 
 #ifdef __cplusplus

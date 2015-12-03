@@ -19,6 +19,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include <QFile>
 #include <QTextStream>
+#include <QFileDialog>
+
+#include "CPreferences.h"
 
 #include "CEngineRequest.h"
 #include "CEngineResponse.h"
@@ -230,6 +233,68 @@ bool CEngineRequestBrowseSpecificRecord::process(CEngineThread *engineThread)
   if (rc > 0) {
     // successfully positioned .. now browse
     rc = mediateRequestNextMatchingBrowseSpectrum(engineThread->engineContext(),
+						  resp);
+
+    resp->setRecordNumber(rc); // -1 if an error occurred
+  }
+
+  // post the response
+  engineThread->respond(resp);
+
+  return (rc != -1);
+}
+
+//------------------------------------------------------------
+
+bool CEngineRequestBeginExportFile::process(CEngineThread *engineThread)
+{
+  // open the file and get back the number of records (and calibration data?)
+
+  // create a response as the handle
+  CEngineResponseBeginAccessFile *resp = new CEngineResponseBeginAccessFile(m_fileName);
+
+  int rc = mediateRequestBeginExportSpectra(engineThread->engineContext(),
+					    m_fileName.toAscii().constData(), resp);
+
+  resp->setNumberOfRecords(rc); // -1 if an error occurred
+
+  // post the response
+  engineThread->respond(resp);
+
+  return (rc != -1);
+}
+
+//------------------------------------------------------------
+
+bool CEngineRequestExportNextRecord::process(CEngineThread *engineThread)
+{
+  // create a response as the handle
+  CEngineResponseSpecificRecord *resp = new CEngineResponseSpecificRecord;
+
+  int rc = mediateRequestNextMatchingExportSpectrum(engineThread->engineContext(),
+						    resp);
+
+  resp->setRecordNumber(rc); // -1 if an error occurred
+
+  // post the response
+  engineThread->respond(resp);
+
+  return (rc != -1);
+}
+
+//------------------------------------------------------------
+
+bool CEngineRequestExportSpecificRecord::process(CEngineThread *engineThread)
+{
+  // create a response as the handle
+  CEngineResponseSpecificRecord *resp = new CEngineResponseSpecificRecord;
+
+  int rc = mediateRequestGotoSpectrum(engineThread->engineContext(),
+				      m_recordNumber, resp);
+
+  if (rc > 0) {
+    // successfully positioned .. now Export
+    rc = mediateRequestNextMatchingExportSpectrum(engineThread->engineContext(),
 						  resp);
 
     resp->setRecordNumber(rc); // -1 if an error occurred

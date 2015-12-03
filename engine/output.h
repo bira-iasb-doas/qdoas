@@ -9,9 +9,10 @@
 
 void OUTPUT_ResetData(void);
 
-RC OUTPUT_CheckPath(const PRJCT_RESULTS *pResults);
+RC OUTPUT_CheckPath(ENGINE_CONTEXT *pEngineContext,char *path,int format);
 
 RC OUTPUT_RegisterData(const ENGINE_CONTEXT *pEngineContext);
+RC OUTPUT_RegisterSpectra(const ENGINE_CONTEXT *pEngineContext);
 
 /*! \brief Write all saved output data to disk. */
 RC OUTPUT_FlushBuffers(ENGINE_CONTEXT *pEngineContext);

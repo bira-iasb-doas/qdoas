@@ -456,6 +456,14 @@ extern "C" {
     data_select_list_t selection;
   } mediate_project_output_t;
 
+  typedef struct mediate_project_export
+   {
+    int titlesFlag; // write components of automatic reference to output
+    int directoryFlag;
+    char path[FILENAME_BUFFER_LENGTH];
+    data_select_list_t selection;
+   } mediate_project_export_t;
+
   /* mediate_project_t
    *
    * Contains all user-specified information about a project. It allows the GUI to
@@ -476,6 +484,7 @@ extern "C" {
     mediate_project_instrumental_t instrumental;
     mediate_project_slit_t slit;
     mediate_project_output_t output;
+    mediate_project_export_t export_spectra;
   } mediate_project_t;
 
 

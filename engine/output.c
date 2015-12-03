@@ -546,7 +546,7 @@ RC OUTPUT_ReadAmf(const char *symbolName,const char *amfFileName,char amfType,IN
 
 /*! \brief release and reset all data used for output */
 void OUTPUT_ResetData(void)
-{
+ {
   // Reset output part of data in analysis windows
 
   for (int indexFenoColumn=0;indexFenoColumn<MAX_SWATHSIZE;indexFenoColumn++)
@@ -615,6 +615,7 @@ void OUTPUT_ResetData(void)
   for (size_t i=0; i<output_num_fields; i++) {
     output_field_free(&output_data_analysis[i]);
   }
+
   for (size_t i=0; i<calib_num_fields; i++) {
     output_field_free(&output_data_calib[i]);
   }
@@ -718,11 +719,12 @@ static void register_field(struct output_field field) {
     and therefore do not depend on an analysis window.
 
   \param [in] pEngineContext   structure including information on project options
+  \param [in] fieldsFlag       list of fields to output
+  \param [in] fieldsNumber     the number of fields in the previous list
 */
-static void OutputRegisterFields(const ENGINE_CONTEXT *pEngineContext)
+static void OutputRegisterFields(const ENGINE_CONTEXT *pEngineContext,char *fieldsFlag,int fieldsNumber)
 {
   PROJECT *pProject=(PROJECT *)&pEngineContext->project;
-  PRJCT_RESULTS *pResults=(PRJCT_RESULTS *)&pProject->asciiResults;
 
   // default values for instrument-dependent output functions:
   func_int func_meastype = &mfc_get_meastype;
@@ -816,9 +818,9 @@ static void OutputRegisterFields(const ENGINE_CONTEXT *pEngineContext)
   }
 
   // Browse fields
-  for (int j=0;j<pResults->fieldsNumber;j++)
+  for (int j=0;j<fieldsNumber;j++)
    {
-     enum _prjctResults fieldtype = pResults->fieldsFlag[j];
+     enum _prjctResults fieldtype = fieldsFlag[j];
 
      switch(fieldtype) {
      case PRJCT_RESULTS_SPECNO:
@@ -1069,6 +1071,12 @@ static void OutputRegisterFields(const ENGINE_CONTEXT *pEngineContext)
        break;
      case PRJCT_RESULTS_ALTITEND:
        register_field( (struct output_field) { .basic_fieldname = "AltitudeEnd", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_altitude_end });
+       break;
+     case PRJCT_RESULTS_LAMBDA:
+       register_field( (struct output_field) { .basic_fieldname = "Lambda", .memory_type = OUTPUT_DOUBLE, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_lambda, .data_cols = NDET, .column_number_format="(%d)" });
+       break;
+     case PRJCT_RESULTS_SPECTRA:
+       register_field( (struct output_field) { .basic_fieldname = "Spec", .memory_type = OUTPUT_DOUBLE, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_spectrum, .data_cols = NDET, .column_number_format="(%d)" });
        break;
      default:
        break;
@@ -1440,7 +1448,7 @@ RC OUTPUT_RegisterData(const ENGINE_CONTEXT *pEngineContext)
       else if (THRD_id==THREAD_TYPE_KURUCZ)
         outputRunCalib++;
 
-      OutputRegisterFields(pEngineContext);                                       // do not depend on swath size
+      OutputRegisterFields(pEngineContext,pResults->fieldsFlag,pResults->fieldsNumber);  // do not depend on swath size
       OutputRegisterParam(pEngineContext);
       OutputRegisterFluxes(pEngineContext);                                       // do not depend on swath size
     }
@@ -1452,12 +1460,20 @@ RC OUTPUT_RegisterData(const ENGINE_CONTEXT *pEngineContext)
   return rc;
 }
 
+RC OUTPUT_RegisterSpectra(const ENGINE_CONTEXT *pEngineContext)
+ {
+ 	if (THRD_id==THREAD_TYPE_EXPORT)
+ 	 OutputRegisterFields(pEngineContext,pEngineContext->project.exportSpectra.fieldsFlag,pEngineContext->project.exportSpectra.fieldsNumber);  // do not depend on swath size
+
+ 	return ERROR_ID_NO;
+ }
+
 /*! \brief Save results of the last processed record. */
 static void OutputSaveRecord(const ENGINE_CONTEXT *pEngineContext,INDEX indexFenoColumn) {
 
   RECORD_INFO *pRecordInfo =(RECORD_INFO *)&pEngineContext->recordInfo;
 
-  if (pEngineContext->project.asciiResults.analysisFlag)
+  if ((THRD_id==THREAD_TYPE_EXPORT) || (pEngineContext->project.asciiResults.analysisFlag))
     {
       int index_record = outputNbRecords++;
 
@@ -1486,17 +1502,15 @@ void OutputBuildSiteFileName(const ENGINE_CONTEXT *pEngineContext,char *outputFi
   // Declarations
 
   PROJECT             *pProject;                                                // pointer to project data
-  PRJCT_RESULTS *pResults;                                                // pointer to results part of project
   char                *fileNamePtr;                                             // character pointers used for building output file name
 
   // Initializations
 
   pProject=(PROJECT *)&pEngineContext->project;
-  pResults=(PRJCT_RESULTS *)&pProject->asciiResults;
 
   // Build the complete output path
 
-  strcpy(outputFileName,pResults->path);
+  strcpy(outputFileName,pEngineContext->outputPath);
 
   if ((fileNamePtr=strrchr(outputFileName,PATH_SEP))==NULL)                     // extract output file name without path
    fileNamePtr=outputFileName;
@@ -1572,14 +1586,15 @@ static RC get_orbit_date(const ENGINE_CONTEXT *pEngineContext, int *orbit_year, 
 RC OutputBuildFileName(const ENGINE_CONTEXT *pEngineContext,char *outputPath)
 {
   const PROJECT *pProject = &pEngineContext->project;
-  const PRJCT_RESULTS *pResults = &pProject->asciiResults;
-
+  const PRJCT_EXPORT *pExport = &pProject->exportSpectra;
+  const PRJCT_RESULTS *pResults=&pProject->asciiResults;
+  int dirFlag;
   RC rc=ERROR_ID_NO;
 
   const OUTPUT_INFO* pOutput=&outputRecords[0];
 
   // Build the complete output path
-  strcpy(outputPath,pResults->path);
+  strcpy(outputPath,pEngineContext->outputPath);
 
   char *fileNameStart;
   // extract output file name without path
@@ -1597,8 +1612,11 @@ RC OutputBuildFileName(const ENGINE_CONTEXT *pEngineContext,char *outputPath)
                  (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_OMI) ||
                  (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GOME2));
 
+  dirFlag=(THRD_id==THREAD_TYPE_EXPORT)?pExport->directoryFlag:pResults->dirFlag;
+
   if ((!strlen(fileNameStart) || !strcasecmp(fileNameStart,"automatic")) &&
-      ((satelliteFlag && ((pProject->spectra.mode!=PRJCT_SPECTRA_MODES_OBSLIST) || (pProject->spectra.radius<=1.))) ||
+      ((THRD_id==THREAD_TYPE_EXPORT) ||
+       (satelliteFlag && ((pProject->spectra.mode!=PRJCT_SPECTRA_MODES_OBSLIST) || (pProject->spectra.radius<=1.))) ||
        (!satelliteFlag && (pResults->fileNameFlag || (SITES_GetIndex(pProject->instrumental.observationSite)==ITEM_NONE))))) {
 
     const char *inputFileName;
@@ -1609,7 +1627,7 @@ RC OutputBuildFileName(const ENGINE_CONTEXT *pEngineContext,char *outputPath)
       inputFileName++;
     }
 
-    if (satelliteFlag && pResults->dirFlag) {
+    if (satelliteFlag && dirFlag) {
       // get date for the current orbit file
       int orbit_year, orbit_month, orbit_day;
       rc = get_orbit_date(pEngineContext, &orbit_year, &orbit_month, &orbit_day);
@@ -1657,7 +1675,8 @@ RC OutputBuildFileName(const ENGINE_CONTEXT *pEngineContext,char *outputPath)
     }
 
   } else { // user-chosen filename
-    remove_extension(fileNameStart);
+  	 if ((THRD_id!=THREAD_TYPE_EXPORT) && (pEngineContext->project.asciiResults.file_format!=ASCII))
+     remove_extension(fileNameStart);
   }
   return rc;
 }
@@ -1747,11 +1766,11 @@ RC output_write_automatic_file(const bool selected_records[], int year, int mont
  \retval ERROR_ID_NONE Ok
 
 */
-RC OUTPUT_CheckPath(const PRJCT_RESULTS *pResults) {
+RC OUTPUT_CheckPath(ENGINE_CONTEXT *pEngineContext,char *path,int format) {
 
   RC rc = ERROR_ID_NO;
 
-  const char *output_path = pResults->path;
+  const char *output_path = path;
   const char *output_path_end = strrchr(output_path, PATH_SEP);
   const char *fileName;
   if (output_path_end == NULL) {
@@ -1765,26 +1784,31 @@ RC OUTPUT_CheckPath(const PRJCT_RESULTS *pResults) {
     // check if we can write to the file
 
     // create the filename as it will be generated in the output routines:
-    const char *extension = output_file_extensions[pResults->file_format];
+    const char *extension = output_file_extensions[format];
     size_t namelen = strlen(output_path) + strlen(extension);
     char filename[1+namelen];
     strcpy(filename, output_path);
-    remove_extension(filename); // if user has added a filename extension .asc/.he5/..., remove it
-    strcat(filename, extension); // add proper extension
+
+    if ((format!=ASCII) || (strrchr(fileName,'.')==NULL))     // ASCII should accept any extensions (.dat, .txt, ...)
+     {
+      remove_extension(filename); // if user has added a filename extension .asc/.he5/..., remove it
+      strcat(filename, extension); // add proper extension
+     }
+
     FILE *test = fopen(filename, "a");
 
     if (test == NULL) {
       rc = ERROR_SetLast("Output Path configuration error" , ERROR_TYPE_FATAL, ERROR_ID_FILE_OPEN, filename);
     } else {
       fclose(test);
-      switch (pResults->file_format) {
+      switch (format) {
       case HDFEOS5:
         // for HDFEOS-5, we do not append to existing files
         // -> if the file already exists, its size should be 0
         rc = hdfeos5_allow_file(filename);
         break;
       case NETCDF:
-        rc = netcdf_allow_file(filename, pResults);
+        rc = netcdf_allow_file(filename, &pEngineContext->project.asciiResults);
         break;
       case ASCII: // writing to ASCII is always ok (append)
         break;
@@ -1816,6 +1840,7 @@ RC OUTPUT_CheckPath(const PRJCT_RESULTS *pResults) {
 RC OUTPUT_FlushBuffers(ENGINE_CONTEXT *pEngineContext)
 {
   const PROJECT *pProject = &pEngineContext->project; // pointer to project data
+  const PRJCT_EXPORT *pExport = &pProject->exportSpectra;
   const PRJCT_RESULTS *pResults = &pProject->asciiResults; // pointer to results part of project
 
   selected_format = pResults->file_format;
@@ -1823,10 +1848,13 @@ RC OUTPUT_FlushBuffers(ENGINE_CONTEXT *pEngineContext)
   RC rc=ERROR_ID_NO;
   char outputFileName[MAX_ITEM_TEXT_LEN+1] = {0};
 
+
+  pEngineContext->outputPath=(THRD_id==THREAD_TYPE_EXPORT)?(char *)pExport->path:(char *)pResults->path;
+
   // select records for output according to date/site
   bool selected_records[outputNbRecords];
 
-  if ((pResults->analysisFlag || pResults->calibFlag)
+  if (((THRD_id==THREAD_TYPE_EXPORT) || pResults->analysisFlag || pResults->calibFlag)
       && outputNbRecords
       && !(rc=OutputBuildFileName(pEngineContext,outputFileName))) {
     char *ptr = strrchr(outputFileName,PATH_SEP);
@@ -2151,7 +2179,7 @@ RC OUTPUT_LocalAlloc(ENGINE_CONTEXT *pEngineContext)
   pProject=(PROJECT *)&pEngineContext->project;
   pResults=(PRJCT_RESULTS *)&pProject->asciiResults;
 
-  if (pResults->analysisFlag || pResults->calibFlag) {
+  if ((THRD_id==THREAD_TYPE_EXPORT) || pResults->analysisFlag || pResults->calibFlag) {
     assert(newRecordNumber > 0);
 
     if (outputRecords!=NULL)

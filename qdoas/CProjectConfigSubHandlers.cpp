@@ -237,8 +237,10 @@ bool CSelectorSubHandler::start(const QString &element, const QXmlAttributes &at
     d->selected[d->nSelected] = PRJCT_RESULTS_LATITEND;
   else if (str == "altitude_end")
     d->selected[d->nSelected] = PRJCT_RESULTS_ALTITEND;
-
-
+  else if (str == "lambda")
+    d->selected[d->nSelected] = PRJCT_RESULTS_LAMBDA;
+  else if (str == "spectra")
+    d->selected[d->nSelected] = PRJCT_RESULTS_SPECTRA;
 
   else if (str == "precalculated_fluxes")
     d->selected[d->nSelected] = PRJCT_RESULTS_PRECALCULATED_FLUXES;
@@ -1577,6 +1579,35 @@ bool CProjectOutputSubHandler::start(const QXmlAttributes &atts)
     if (format != -1)
       m_output->file_format = format;
   }
+
+  return true;
+}
+
+//------------------------------------------------------------------------
+// handler for <export> (child of project)
+
+CProjectExportSubHandler::CProjectExportSubHandler(CConfigHandler *master,
+						   mediate_project_export_t *exportSpectra) :
+  CSelectorSubHandler(master, &(exportSpectra->selection)),
+  m_export(exportSpectra)
+{
+}
+
+bool CProjectExportSubHandler::start(const QXmlAttributes &atts)
+{
+  QString str;
+
+  str = atts.value("path");
+  if (!str.isEmpty()) {
+    str = m_master->pathExpand(str);
+    if (str.length() < (int)sizeof(m_export->path))
+      strcpy(m_export->path, str.toAscii().data());
+    else
+      return postErrorMessage("Export path too long");
+  }
+
+  m_export->titlesFlag = (atts.value("titles") == "true") ? 1 : 0;
+  m_export->directoryFlag = (atts.value("dir") == "true") ? 1 : 0;
 
   return true;
 }

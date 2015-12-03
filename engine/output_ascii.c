@@ -16,8 +16,10 @@ static void write_calib_output(FILE *fp);
 static void OutputAscPrintTitles(FILE *fp);
 
 RC ascii_open(const ENGINE_CONTEXT *pEngineContext,char *filename) {
-  strcat(filename, output_file_extensions[ASCII]);
-  
+
+	 if (!strchr(filename,'.'))                            // ASCII format should accept any extension
+   strcat(filename, output_file_extensions[ASCII]);
+
   const PROJECT *pProject= &pEngineContext->project;
 
   output_file = fopen(filename, "a+t");
@@ -147,7 +149,7 @@ void ascii_write_analysis_data(const bool selected_records[], int num_records) {
   Write the file name of each L1B file used in the automatic reference
   generation, with a comma-separated list of the spectra from that
   file that were used. */
-static void write_automatic_reference_info(FILE *fp) 
+static void write_automatic_reference_info(FILE *fp)
 {
   for(int analysiswindow = 0; analysiswindow < NFeno; analysiswindow++ ){
     for(int row=0; row< OMI_TOTAL_ROWS; row++ )
@@ -159,7 +161,7 @@ static void write_automatic_reference_info(FILE *fp)
           {
             fprintf(fp, "%c %s, row %d: automatic reference:\n%s\n",
                     COMMENT_CHAR,
-                    pTabFeno->windowName, 
+                    pTabFeno->windowName,
                     row,
                     pTabFeno->ref_description);
           }
@@ -178,7 +180,7 @@ static void write_calib_output(FILE *fp)
       fprintf(fp,"Calib(%d/%d).", thefield.index_row+1, ANALYSE_swathSize);
     else
       fprintf(fp,"Calib.");
-    
+
     if (thefield.windowname) {
       fprintf(fp, "%s.", thefield.windowname);
     }

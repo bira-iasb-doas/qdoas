@@ -61,7 +61,7 @@ class CSessionItem
 class CSession
 {
  public:
-  enum eMode { Browse = 0x1, Calibrate = 0x2, Analyse = 0x4 };
+  enum eMode { Browse = 0x1, Calibrate = 0x2, Analyse = 0x4, Export = 0x8 };
 
   CSession(CSession::eMode mode);
   ~CSession();
@@ -75,7 +75,7 @@ class CSession
 
   mediate_symbol_t* takeSymbolList(int &nSymbols);
   mediate_site_t* takeSiteList(int &nSites);
-  
+
  private:
   CSession(const CSession &);
   CSession& operator=(const CSession&);
@@ -91,6 +91,7 @@ class CSession
   int m_nSites;
 
   eMode m_mode;
+  QString m_asciiFile;
 
   friend class CSessionIterator;
 };
@@ -101,7 +102,7 @@ class CSessionIterator
   CSessionIterator();
   CSessionIterator(const RefCountConstPtr<CSession> &session);
   CSessionIterator(const CSessionIterator &other);
-  
+
   CSessionIterator& operator=(const CSessionIterator &rhs);
 
   CSessionIterator& operator++(void);

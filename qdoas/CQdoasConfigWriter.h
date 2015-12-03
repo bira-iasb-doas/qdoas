@@ -47,14 +47,15 @@ class CQdoasConfigWriter
   void writePropertiesInstrumental(FILE *fp, const mediate_project_instrumental_t *d);
   void writePropertiesSlit(FILE *fp, const mediate_project_slit_t *d);
   void writePropertiesOutput(FILE *fp, const mediate_project_output_t *d);
-  
+  void writePropertiesExport(FILE *fp, const mediate_project_export_t *d);
+
   void writeRawSpectraTree(FILE *fp, const QTreeWidgetItem *rawSpectraItem);
   void writeSpectraTreeNode(FILE *fp, const QTreeWidgetItem *item, int depth);
 
   void writeAnalysisWindows(FILE *fp, const QString &projectName, const QTreeWidgetItem *item);
 
   void writePolyType(FILE *fp, const char *attr, int type);
-  
+
   void writeCrossSectionList(FILE *fp, const cross_section_list_t *d);
   void writeLinear(FILE *fp, const struct anlyswin_linear *d);
   void writeNonLinear(FILE *fp, const struct anlyswin_nonlinear *d);
@@ -63,7 +64,7 @@ class CQdoasConfigWriter
   void writeOutputList(FILE *fp, const output_list_t *d);
   void writeSfps(FILE *fp, const struct calibration_sfp *d);
   void writeDataSelectList(FILE *fp, const data_select_list_t *d);
-  
+
  private:
   const CWProjectTree *m_projectTree;
 };

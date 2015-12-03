@@ -861,7 +861,7 @@ int Gome2ReadMDRInfo(GOME2_ORBIT_FILE *pOrbitFile,GOME2_MDR *pMdr,int indexBand)
         // actual scanner angles
 
         coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor, "SCANNER_ANGLE_ACTUAL");    // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL.SCANNER_ANGLE_ACTUAL
-        coda_cursor_read_double(&pOrbitFile->gome2Cursor,&pMdr->scanner_angle12[i]);       
+        coda_cursor_read_double(&pOrbitFile->gome2Cursor,&pMdr->scanner_angle12[i]);
         coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                        // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.GEO_EARTH_ACTUAL
 
         // 4 corner coordinates @ points ABCD
@@ -1121,12 +1121,12 @@ void Gome2ReadGeoloc(GOME2_ORBIT_FILE *pOrbitFile,INDEX indexBand) {
     geolocation->sunglintDangerFlag= (int) pMdr->sunglintDangerFlag[indexObs];
     geolocation->sunglintHighDangerFlag= (int) pMdr->sunglintHighDangerFlag[indexObs];
     geolocation->rainbowFlag= (int) pMdr->rainbowFlag[indexObs];
-    
+
     geolocation->earth_radius = pMdr->earth_radius;
 
-    // GEO_BASIC data are "calculated in granules of the shortest effective 
+    // GEO_BASIC data are "calculated in granules of the shortest effective
     // integration time for the main channels (187.5 ms, 32 times per scan)"
-    // therefore, we calculate the index corresponding to the actual integration 
+    // therefore, we calculate the index corresponding to the actual integration
     // time as follows:
     const double *unique_int=pGome2Info->mdr[indexMDR].unique_int;
     const uint8_t *int_index=pGome2Info->mdr[indexMDR].int_index;
@@ -1467,7 +1467,7 @@ RC GOME2_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,INDEX fileIndex) {
     rc=ERROR_ID_FILE_EMPTY;
   else if ((recordNo<=0) || (recordNo>pOrbitFile->specNumber))
     rc=ERROR_ID_FILE_END;
-  else if ((THRD_id!=THREAD_TYPE_SPECTRA) || (THRD_browseType!=THREAD_BROWSE_DARK)) {
+  else {   // if ((THRD_id!=THREAD_TYPE_SPECTRA) || (THRD_browseType!=THREAD_BROWSE_DARK)) always true :-)
     for (int i=0; i<NDET; i++)
       spectrum[i]=sigma[i]= (double) 0.;
 
@@ -1580,9 +1580,9 @@ RC GOME2_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,INDEX fileIndex) {
         pRecord->Azimuth=pGeoloc->solAzi[1];
         pRecord->zenithViewAngle=pGeoloc->losZen[1];
         pRecord->azimuthViewAngle=pGeoloc->losAzi[1];
-        
+
         pRecord->satellite.earth_radius = pGeoloc->earth_radius;
-        
+
         pRecord->satellite.altitude = pGeoloc->sat_alt;
         pRecord->satellite.latitude = pGeoloc->sat_lat;
         pRecord->satellite.longitude = pGeoloc->sat_lon;

@@ -155,7 +155,7 @@ void CQdoasConfigWriter::writeProperties(FILE *fp, const mediate_project_t *d)
   writePropertiesInstrumental(fp, &(d->instrumental));
   writePropertiesSlit(fp, &(d->slit));
   writePropertiesOutput(fp, &(d->output));
-//  writePropertiesNasaAmes(fp, &(d->nasaames));
+  writePropertiesExport(fp, &(d->export_spectra));
 }
 
 void CQdoasConfigWriter::writePropertiesDisplay(FILE *fp, const mediate_project_display_t *d)
@@ -1030,6 +1030,19 @@ void CQdoasConfigWriter::writePropertiesOutput(FILE *fp, const mediate_project_o
   fprintf(fp, "    </output>\n");
 }
 
+void CQdoasConfigWriter::writePropertiesExport(FILE *fp, const mediate_project_export_t *d)
+{
+  QString tmpStr = CPathMgr::instance()->simplifyPath(QString(d->path));
+
+  fprintf(fp, "    <export path=\"%s\" titles=\"%s\" dir=\"%s\" >\n",
+          tmpStr.toAscii().constData(),
+          (d->titlesFlag ? sTrue : sFalse),(d->directoryFlag ? sTrue : sFalse));
+
+  writeDataSelectList(fp, &(d->selection));
+
+  fprintf(fp, "    </export>\n");
+}
+
 void CQdoasConfigWriter::writeRawSpectraTree(FILE *fp, const QTreeWidgetItem *rawSpectraItem)
 {
   fprintf(fp, "    <raw_spectra>\n"
@@ -1445,9 +1458,9 @@ void CQdoasConfigWriter::writeSfps(FILE *fp, const struct calibration_sfp *d)
 void CQdoasConfigWriter::writeDataSelectList(FILE *fp, const data_select_list_t *d)
 {
   for (int i=0; i<d->nSelected; ++i) {
-    
+
     const char *config_string = NULL;
-    
+
     switch (d->selected[i]) {
     case PRJCT_RESULTS_SPECNO:           config_string = "specno"; break;
     case PRJCT_RESULTS_NAME:             config_string = "name"; break;
@@ -1548,12 +1561,14 @@ void CQdoasConfigWriter::writeDataSelectList(FILE *fp, const data_select_list_t 
     case PRJCT_RESULTS_LONGITEND : config_string = "longitude_end"; break;
     case PRJCT_RESULTS_LATITEND : config_string = "latitude_end"; break;
     case PRJCT_RESULTS_ALTITEND : config_string = "altitude_end"; break;
+    case PRJCT_RESULTS_LAMBDA : config_string = "labmda"; break;
+    case PRJCT_RESULTS_SPECTRA : config_string = "spectra"; break;
 
     case PRJCT_RESULTS_PRECALCULATED_FLUXES:            config_string = "precalculated_fluxes"; break;
 
     default: puts("ERROR: no configuration string defined for output field. This is a bug, please contact Qdoas developers.");
     }
-    
+
     if (config_string) {
       fprintf(fp, "      <field name=\"%s\" />\n", config_string);
     }

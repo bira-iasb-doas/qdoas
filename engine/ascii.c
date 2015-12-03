@@ -75,7 +75,7 @@
 #define NEXT_DOUBLE "%lf%*[^0-9.\n-]"
 #define NEXT_FLOAT "%f%*[^0-9.\n-]"
 #define NEXT_DATE "%d/%d/%d%*[^\n0-9.-]"
-#define COMMENT_LINE " %1[*;]%*[^\n]"
+#define COMMENT_LINE " %1[*;#]%*[^\n]"
 
 // ================
 // GLOBAL VARIABLES
@@ -151,7 +151,7 @@ RC AsciiSkip(ENGINE_CONTEXT *pEngineContext,FILE *specFp,int nSkip)
 
     char c;
     int n_scan = 0;
-    while (recordCount<nSkip 
+    while (recordCount<nSkip
            && (n_scan = fscanf(specFp, " %1[^*;\n]%*[^\n]", &c) ) != EOF ) {
       if (n_scan == 1) {
         // no * or ; at start -> line is (part of) a record
@@ -226,10 +226,10 @@ RC ASCII_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
     // Get the number of records in the file
     fseek(specFp,0L,SEEK_SET);
     itemCount=0;
-    
+
     char c;
     int n_scan = 0;
-    while ( (n_scan = fscanf(specFp, " %1[^*;\n]", &c) ) != EOF) {
+    while ( (n_scan = fscanf(specFp, " %1[^*;#\n]", &c) ) != EOF) {
       if (n_scan == 0) {
         // commment, ignore and scan ahead until end of line
         fscanf(specFp, "%*[^\n]");
@@ -260,10 +260,10 @@ RC ASCII_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
             rc=MATRIX_Allocate(&asciiMatrix,NDET+startCount,nc,0,0,0,__func__);
         } else {
           // scan ahead until end of line
-          fscanf(specFp, "%*[^\n]");          
+          fscanf(specFp, "%*[^\n]");
         }
         ++itemCount;
-        
+
         // Matrix mode
         if (itemCount==maxCount) {
           itemCount=0;
@@ -272,7 +272,7 @@ RC ASCII_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
           else
             pEngineContext->recordNumber++;
         }
-      } 
+      }
     }
   }
 
@@ -289,7 +289,7 @@ RC ASCII_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
 
   else
     pEngineContext->fileInfo.nScanRef=0;
-  
+
   // Return
   return rc;
  }
@@ -367,7 +367,6 @@ RC ASCII_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int local
    {
     asciiLastRecord=recordNo;
 
-
     // ------------------------------------------
     // EACH LINE OF THE FILE IS A SPECTRUM RECORD
     // ------------------------------------------
@@ -382,19 +381,20 @@ RC ASCII_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int local
       // Read the solar zenith angle
       if (zmFlag) {
         n_scan = fscanf(specFp,NEXT_DOUBLE,&pRecordInfo->Zm);
+
         if (n_scan != 1)
           return ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_FILE_BAD_FORMAT,pEngineContext->fileInfo.fileName);
       }
-      
+
       if (azimFlag) {
         if (line_ends(specFp) )
           return ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_FILE_BAD_FORMAT,pEngineContext->fileInfo.fileName);
 
         n_scan = fscanf(specFp,NEXT_FLOAT,&pRecordInfo->azimuthViewAngle);
-        if (n_scan != 1) 
+        if (n_scan != 1)
           return ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_FILE_BAD_FORMAT,pEngineContext->fileInfo.fileName);
       }
-      
+
       if (elevFlag) {
         if (line_ends(specFp) )
           return ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_FILE_BAD_FORMAT,pEngineContext->fileInfo.fileName);
@@ -403,33 +403,36 @@ RC ASCII_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int local
         if (n_scan != 1)
           return ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_FILE_BAD_FORMAT,pEngineContext->fileInfo.fileName);
       }
-      
+
       // Read the measurement date
       if (dateSaveFlag) {
         if (line_ends(specFp) )
           return ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_FILE_BAD_FORMAT,pEngineContext->fileInfo.fileName);
 
         n_scan = fscanf(specFp,NEXT_DATE,&day,&mon,&year);
+
         if (n_scan != 3)
           return ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_FILE_BAD_FORMAT,pEngineContext->fileInfo.fileName);
       }
-          
+
       // Read the measurement time
       if (timeFlag) {
         if (line_ends(specFp) )
           return ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_FILE_BAD_FORMAT,pEngineContext->fileInfo.fileName);
 
         n_scan = fscanf(specFp,NEXT_DOUBLE,&pRecordInfo->TimeDec);
+
         if (n_scan != 1)
           return ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_FILE_BAD_FORMAT,pEngineContext->fileInfo.fileName);
       }
-      
+
       // Read the spectrum
       for (i=0; i<NDET; ++i) {
         if (line_ends(specFp) )
           return ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_FILE_BAD_FORMAT,pEngineContext->fileInfo.fileName);
-        
+
         n_scan = fscanf(specFp,NEXT_DOUBLE,&spectrum[i]);
+
         if (n_scan != 1)
           return ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_FILE_BAD_FORMAT,pEngineContext->fileInfo.fileName);
       }
@@ -442,19 +445,19 @@ RC ASCII_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int local
     else if ((asciiMatrix.nl>=NDET) && (asciiMatrix.nc>lambdaFlag)) {
       if (ndataSet!=asciiLastDataSet) {
         asciiLastDataSet=ndataSet;
-        
+
         for (i=0;i<asciiMatrix.nl;i++) {
           while (fscanf(specFp, COMMENT_LINE, &c) == 1);
-          
+
           // Matrix mode
           for (indexColumn=0; indexColumn <asciiMatrix.nc; indexColumn++) {
             if (line_ends(specFp) )
               return ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_FILE_BAD_FORMAT,pEngineContext->fileInfo.fileName);
-            
+
             if (i==dateCount) {
               n_scan = fscanf(specFp,NEXT_DATE, &day, &mon, &year);
               if (n_scan != 3)
-                return ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_FILE_BAD_FORMAT,pEngineContext->fileInfo.fileName); 
+                return ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_FILE_BAD_FORMAT,pEngineContext->fileInfo.fileName);
               tempValue=(double)day*1.e6+mon*1e4+year;
             } else {
               n_scan = fscanf(specFp,NEXT_DOUBLE, &tempValue);
@@ -468,7 +471,7 @@ RC ASCII_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int local
             return ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_FILE_BAD_FORMAT,pEngineContext->fileInfo.fileName);
         }
       }
-      
+
       count=0;
       if (zmFlag)
         pRecordInfo->Zm=asciiMatrix.matrix[ndataRecord][count++];
@@ -478,17 +481,17 @@ RC ASCII_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int local
         pRecordInfo->elevationViewAngle=asciiMatrix.matrix[ndataRecord][count++];
       if (dateSaveFlag) {
         tempValue=asciiMatrix.matrix[ndataRecord][count++];
-        
+
        	day=(int)floor(tempValue*1e-6);
        	mon=(int)floor((tempValue-day*1.e6)*1e-4);
        	year=(int)(tempValue-day*1.e6-mon*1.e4);
       }
       if (timeFlag)
         pRecordInfo->TimeDec=asciiMatrix.matrix[ndataRecord][count++];
-      
+
       if (lambdaFlag)
         memcpy(lambda,asciiMatrix.matrix[0]+count,sizeof(double)*NDET);
-      
+
       memcpy(spectrum,asciiMatrix.matrix[ndataRecord]+count,sizeof(double)*NDET);
     } else {
       // Read the solar zenith angle
@@ -499,21 +502,21 @@ RC ASCII_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int local
             || !line_ends(specFp) )
           return ERROR_ID_FILE_END;
       }
-      
+
       if (azimFlag) {
         while (fscanf(specFp, COMMENT_LINE, &c) == 1);
         if (fscanf(specFp,NEXT_FLOAT,&pRecordInfo->azimuthViewAngle)!=1
             || !line_ends(specFp) )
           return ERROR_ID_FILE_END;
       }
-      
+
       if (elevFlag) {
         while (fscanf(specFp, COMMENT_LINE, &c) == 1);
         if (fscanf(specFp,NEXT_FLOAT,&pRecordInfo->elevationViewAngle)!=1
             || !line_ends(specFp) )
           return ERROR_ID_FILE_END;
       }
-      
+
       // Read the measurement date
       if (dateSaveFlag) {
         while (fscanf(specFp, COMMENT_LINE, &c) == 1);
@@ -529,7 +532,7 @@ RC ASCII_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int local
             || !line_ends(specFp) )
           return ERROR_ID_FILE_END;
       }
-      
+
       // Read the spectrum and if selected, the wavelength calibration
       if (lambdaFlag) {
         // wavelength and spectrum
@@ -548,8 +551,8 @@ RC ASCII_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int local
         for (i=0; i<NDET; ) {
           if (fscanf(specFp, COMMENT_LINE, &c) == 1)
             continue;
-          if (fscanf(specFp,NEXT_DOUBLE,&spectrum[i]) != 1
-              || !line_ends(specFp) )
+          if ((fscanf(specFp,NEXT_DOUBLE,&spectrum[i]) != 1)
+              || (!line_ends(specFp) && !feof(specFp)) )
             return ERROR_ID_FILE_END;
           ++i;
         }
@@ -562,7 +565,7 @@ RC ASCII_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int local
       pRecordInfo->present_datetime.thetime.ti_min=(unsigned char)((pRecordInfo->TimeDec-pRecordInfo->present_datetime.thetime.ti_hour)*60.);
       pRecordInfo->present_datetime.thetime.ti_sec=(unsigned char)(((pRecordInfo->TimeDec-pRecordInfo->present_datetime.thetime.ti_hour)*60.-pRecordInfo->present_datetime.thetime.ti_min)*60.);
     }
-        
+
     if (dateSaveFlag) {
       pRecordInfo->present_datetime.thedate.da_day=(char)day;
       pRecordInfo->present_datetime.thedate.da_mon=(char)mon;
@@ -570,16 +573,16 @@ RC ASCII_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int local
 
       // Daily automatic reference spectrum
       pRecordInfo->Tm=(double)ZEN_NbSec(&pRecordInfo->present_datetime.thedate,&pRecordInfo->present_datetime.thetime,0);
-            
+
       tmLocal=pRecordInfo->Tm+THRD_localShift*3600.;
-        
+
       pRecordInfo->localCalDay=ZEN_FNCaljda(&tmLocal);
       pRecordInfo->localTimeDec=fmod(pRecordInfo->TimeDec+24.+THRD_localShift,(double)24.);
- 
+
     } else {
       pRecordInfo->Tm=(double)0.;
     }
-        
+
     if ((dateFlag && ((pRecordInfo->localCalDay!=localDay) || (elevFlag && (pRecordInfo->elevationViewAngle<80.)))) ||                                                                                 // reference spectra are zenith only
         (!dateFlag && pEngineContext->analysisRef.refScan && !pEngineContext->analysisRef.refSza && (pRecordInfo->elevationViewAngle>80.)))    // zenith sky spectra are not analyzed in scan reference selection mode
       return ERROR_ID_FILE_RECORD;

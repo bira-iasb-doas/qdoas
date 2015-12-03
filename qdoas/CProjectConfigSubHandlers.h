@@ -179,6 +179,20 @@ class CProjectOutputSubHandler : public CSelectorSubHandler
 
 //-------------------------------------------------------------------
 
+class CProjectExportSubHandler : public CSelectorSubHandler
+{
+ public:
+  CProjectExportSubHandler(CConfigHandler *master,
+			   mediate_project_export_t *exportSpectra);
+
+  virtual bool start(const QXmlAttributes &atts);
+
+ private:
+  mediate_project_export_t *m_export;
+};
+
+//-------------------------------------------------------------------
+
 
 
 #endif

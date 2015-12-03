@@ -29,7 +29,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "debugutil.h"
 
 
-void getValidFieldFlags(int *validFlags, int instrument);
+void getValidFieldFlags(int *validFlags, int instrument,bool exportFlag);
 
 
 CWOutputSelector::CWOutputSelector(const data_select_list_t *d, QWidget *parent) :
@@ -159,6 +159,8 @@ CWOutputSelector::CWOutputSelector(const data_select_list_t *d, QWidget *parent)
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_LONGITEND,              "Longitude End"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_LATITEND,               "Latitude End"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ALTITEND,               "Altitude End"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_LAMBDA,               "Lambda"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_SPECTRA,               "Spectra"));
 
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_PRECALCULATED_FLUXES,   "Precalculated fluxes"));
 
@@ -197,12 +199,12 @@ void CWOutputSelector::apply(data_select_list_t *d)
   d->nSelected = n;
 }
 
-void CWOutputSelector::setInstrument(int instrument)
+void CWOutputSelector::setInstrument(int instrument,bool exportFlag)
 {
   int validFlags[PRJCT_RESULTS_MAX];
 
   // get this information from somewhere ...
-  getValidFieldFlags(validFlags, instrument);
+  getValidFieldFlags(validFlags, instrument,exportFlag);
 
   for (int key=0; key<PRJCT_RESULTS_MAX; ++key) {
     bool hideItems = (validFlags[key] == 0);
@@ -284,7 +286,7 @@ QVariant CWOutputFieldItem::data(int role) const
 
 //------------------------------------------------------
 
-void getValidFieldFlags(int *validFlags, int instrument)
+void getValidFieldFlags(int *validFlags, int instrument,bool exportFlag)
  {
  	int satelliteFlag;
 
@@ -315,19 +317,25 @@ void getValidFieldFlags(int *validFlags, int instrument)
   validFlags[PRJCT_RESULTS_TIFRAC]=                                       // fractional time
   validFlags[PRJCT_RESULTS_SZA]=                                          // solar zenith angle (can be calculated if date, time and observation site specified)
   validFlags[PRJCT_RESULTS_AZIM]=                                         // solar azimuth angle (can be calculated if date, time and observation site specified)
-  validFlags[PRJCT_RESULTS_CHI]=                                          // chi square
-  validFlags[PRJCT_RESULTS_RMS]=                                          // RMS
-  validFlags[PRJCT_RESULTS_REFSHIFT]=                                     // in automatic reference selection, shift of the reference spectrum
-  validFlags[PRJCT_RESULTS_ITER]=
-  validFlags[PRJCT_RESULTS_ERROR_FLAG]=
-  validFlags[PRJCT_RESULTS_NUM_BANDS]=
   validFlags[PRJCT_RESULTS_COVAR]=
   validFlags[PRJCT_RESULTS_CORR]=
-  validFlags[PRJCT_RESULTS_TINT]=                                         // the integration time
-  validFlags[PRJCT_RESULTS_SPIKES]=1;
+  validFlags[PRJCT_RESULTS_TINT]=1;                                       // the integration time
 
-  validFlags[PRJCT_RESULTS_REFZM]=(satelliteFlag)?0:1;                    // in automatic reference selection, the solar zenith angle of the reference spectrum
-  validFlags[PRJCT_RESULTS_REFNUMBER]=(satelliteFlag)?0:1;                // in automatic reference selection, the index of the reference spectrum
+  // Output fields related to overall analysis (or run calibration) results (per analysis window)
+
+  if (!exportFlag)
+   {
+    validFlags[PRJCT_RESULTS_REFZM]=(satelliteFlag)?0:1;                    // in automatic reference selection, the solar zenith angle of the reference spectrum
+    validFlags[PRJCT_RESULTS_REFNUMBER]=(satelliteFlag)?0:1;                // in automatic reference selection, the index of the reference spectrum
+    validFlags[PRJCT_RESULTS_CHI]=                                          // chi square
+    validFlags[PRJCT_RESULTS_RMS]=                                          // RMS
+    validFlags[PRJCT_RESULTS_REFSHIFT]=                                     // in automatic reference selection, shift of the reference spectrum
+    validFlags[PRJCT_RESULTS_ITER]=
+    validFlags[PRJCT_RESULTS_ERROR_FLAG]=
+    validFlags[PRJCT_RESULTS_NUM_BANDS]=
+    validFlags[PRJCT_RESULTS_SPIKES]=1;
+   }
+
   validFlags[PRJCT_RESULTS_SKY]=0;                                        // information on the sky (never used except EASOE campaign, 1991 !)                                      // for satellite measurements, several spectra are averaged
 
   validFlags[PRJCT_RESULTS_LONGIT]=satelliteFlag;
@@ -603,7 +611,10 @@ void getValidFieldFlags(int *validFlags, int instrument)
       validFlags[PRJCT_RESULTS_INDEX_CROSSTRACK]=1;
       validFlags[PRJCT_RESULTS_OMI_GROUNDP_QF]=1;
       validFlags[PRJCT_RESULTS_OMI_XTRACK_QF]=1;
-      validFlags[PRJCT_RESULTS_OMI_PIXELS_QF]=1;
+
+      if (!exportFlag)
+       validFlags[PRJCT_RESULTS_OMI_PIXELS_QF]=1;
+
       validFlags[PRJCT_RESULTS_SAT_LAT]=1;
       validFlags[PRJCT_RESULTS_SAT_LON]=1;
      }
@@ -620,4 +631,9 @@ void getValidFieldFlags(int *validFlags, int instrument)
  // ----------------------------------------------------------------------------
    }
 
+  if (exportFlag)
+   {
+   	validFlags[PRJCT_RESULTS_LAMBDA]=1;
+   	validFlags[PRJCT_RESULTS_SPECTRA]=1;
+   }
  }

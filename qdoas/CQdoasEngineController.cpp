@@ -102,7 +102,7 @@ void CQdoasEngineController::notifyPlotData(QList<SPlotData> &plotDataList, QLis
   std::map<int,CPlotPageData*> pageMap;
   std::map<int,CPlotPageData*>::iterator mIt;
   int pageNo;
-  
+
   while (!plotDataList.isEmpty()) {
     // existing page?
     pageNo = plotDataList.front().page;
@@ -123,37 +123,37 @@ void CQdoasEngineController::notifyPlotData(QList<SPlotData> &plotDataList, QLis
 
   // built a map of pages and emptied the plotDataList list (argument).
 
-  while (!plotImageList.isEmpty()) 
+  while (!plotImageList.isEmpty())
    {
     // existing page?
-    pageNo = plotImageList.front().page;   
-    
+    pageNo = plotImageList.front().page;
+
     mIt = pageMap.find(pageNo);
-    if (mIt == pageMap.end()) 
+    if (mIt == pageMap.end())
      {
       // need a new page
-      CPlotPageData *newPage = new CPlotPageData(pageNo,PLOTPAGE_IMAGE);  
-      CPlotImage myImage=*plotImageList.front().plotImage;   
+      CPlotPageData *newPage = new CPlotPageData(pageNo,PLOTPAGE_IMAGE);
+      CPlotImage myImage=*plotImageList.front().plotImage;
       QString	 str=myImage.GetFile();
-      QString titleStr=myImage.GetTitle();  
-      
-      if (plotImageList.front().plotImage != NULL) 
+      QString titleStr=myImage.GetTitle();
+
+      if (plotImageList.front().plotImage != NULL)
        {
         newPage->addPlotImage(plotImageList.front().plotImage);
-        newPage->setTitle(titleStr); 
-        newPage->setTag(titleStr); 
+        newPage->setTitle(titleStr);
+        newPage->setTag(titleStr);
        }
           pageMap.insert(std::map<int,CPlotPageData*>::value_type(pageNo, newPage));
      }
-    else 
-     {      
+    else
+     {
      // exists
      if (plotImageList.front().plotImage != NULL)
       (mIt->second)->addPlotImage(plotImageList.front().plotImage);
      }
-    plotImageList.pop_front();  
+    plotImageList.pop_front();
   }
-  
+
   // set page titles and tags if specified ... emptying the list as we go
   while (!titleList.isEmpty()) {
     mIt = pageMap.find(titleList.front().page);
@@ -291,6 +291,7 @@ void CQdoasEngineController::slotNextFile()
 	int opMode = THREAD_TYPE_NONE;
 	switch (m_session->mode()) {
 	case CSession::Browse: opMode = THREAD_TYPE_SPECTRA; break;
+	case CSession::Export: opMode = THREAD_TYPE_EXPORT; break;
 	case CSession::Calibrate: opMode = THREAD_TYPE_KURUCZ; break;
 	case CSession::Analyse: opMode = THREAD_TYPE_ANALYSIS; break;
 	}
@@ -308,6 +309,9 @@ void CQdoasEngineController::slotNextFile()
       case CSession::Browse:
 	req->addRequest(new CEngineRequestBeginBrowseFile(m_currentIt.file().filePath()));
 	break;
+      case CSession::Export:
+	req->addRequest(new CEngineRequestBeginExportFile(m_currentIt.file().filePath()));
+	break;
       case CSession::Calibrate:
 	req->addRequest(new CEngineRequestBeginCalibrateFile(m_currentIt.file().filePath()));
 	break;
@@ -320,6 +324,7 @@ void CQdoasEngineController::slotNextFile()
   }
 
   m_thread->request(req);
+
 }
 
 void CQdoasEngineController::slotGotoFile(int number)
@@ -334,6 +339,7 @@ void CQdoasEngineController::slotGotoFile(int number)
       int opMode = THREAD_TYPE_NONE;
       switch (m_session->mode()) {
       case CSession::Browse: opMode = THREAD_TYPE_SPECTRA; break;
+      case CSession::Export: opMode = THREAD_TYPE_EXPORT; break;
       case CSession::Calibrate: opMode = THREAD_TYPE_KURUCZ; break;
       case CSession::Analyse: opMode = THREAD_TYPE_ANALYSIS; break;
       }
@@ -350,6 +356,9 @@ void CQdoasEngineController::slotGotoFile(int number)
     switch (m_session->mode()) {
     case CSession::Browse:
       req->addRequest(new CEngineRequestBeginBrowseFile(m_currentIt.file().filePath()));
+      break;
+    case CSession::Export:
+      req->addRequest(new CEngineRequestBeginExportFile(m_currentIt.file().filePath()));
       break;
     case CSession::Calibrate:
       req->addRequest(new CEngineRequestBeginCalibrateFile(m_currentIt.file().filePath()));
@@ -382,6 +391,9 @@ void CQdoasEngineController::slotNextRecord()
     case CSession::Browse:
       m_thread->request(new CEngineRequestBrowseNextRecord);
       break;
+    case CSession::Export:
+      m_thread->request(new CEngineRequestExportNextRecord);
+      break;
     case CSession::Calibrate:
       m_thread->request(new CEngineRequestCalibrateNextRecord);
       break;
@@ -404,6 +416,9 @@ void CQdoasEngineController::slotGotoRecord(int recordNumber)
     switch (m_session->mode()) {
     case CSession::Browse:
       m_thread->request(new CEngineRequestBrowseSpecificRecord(recordNumber));
+      break;
+    case CSession::Export:
+      m_thread->request(new CEngineRequestExportSpecificRecord(recordNumber));
       break;
     case CSession::Calibrate:
       m_thread->request(new CEngineRequestCalibrateSpecificRecord(recordNumber));
@@ -449,6 +464,7 @@ void CQdoasEngineController::slotStep()
                   int opMode = THREAD_TYPE_NONE;
                   switch (m_session->mode()) {
                       case CSession::Browse: opMode = THREAD_TYPE_SPECTRA; break;
+                      case CSession::Export: opMode = THREAD_TYPE_EXPORT; break;
                       case CSession::Calibrate: opMode = THREAD_TYPE_KURUCZ; break;
                       case CSession::Analyse: opMode = THREAD_TYPE_ANALYSIS; break;
                   }
@@ -459,6 +475,9 @@ void CQdoasEngineController::slotStep()
               switch (m_session->mode()) {
                   case CSession::Browse:
                       req->addRequest(new CEngineRequestBeginBrowseFile(m_currentIt.file().filePath()));
+                      break;
+                  case CSession::Export:
+                      req->addRequest(new CEngineRequestBeginExportFile(m_currentIt.file().filePath()));
                       break;
                   case CSession::Calibrate:
                       req->addRequest(new CEngineRequestBeginCalibrateFile(m_currentIt.file().filePath()));
@@ -490,6 +509,9 @@ void CQdoasEngineController::slotStep()
           case CSession::Browse:
               m_thread->request(new CEngineRequestBrowseNextRecord);
               break;
+          case CSession::Export:
+              m_thread->request(new CEngineRequestExportNextRecord);
+              break;
           case CSession::Calibrate:
               m_thread->request(new CEngineRequestCalibrateNextRecord);
               break;
@@ -519,16 +541,24 @@ void CQdoasEngineController::slotStartSession(const RefCountPtr<CSession> &sessi
     m_currentProject = m_currentIt.project();
 
     // mode dependent parts of the request
-    if (m_session->mode() == CSession::Browse) {
+    if ((m_session->mode() == CSession::Browse) || (m_session->mode() == CSession::Export)) {
 
     	 int nSites;
     	 mediate_site_t *sites = m_session->takeSiteList(nSites);                  // Added by Caroline : need observation sites for spectra selection (overpasses)
 
     	 if (sites)
-	req->addRequest(new CEngineRequestSetSites(sites, nSites));
+	      req->addRequest(new CEngineRequestSetSites(sites, nSites));
 
-      req->addRequest(new CEngineRequestSetProject(m_currentProject, THREAD_TYPE_SPECTRA));
-      req->addRequest(new CEngineRequestBeginBrowseFile(m_currentIt.file().filePath()));
+      if (m_session->mode() == CSession::Browse)
+       {
+        req->addRequest(new CEngineRequestSetProject(m_currentProject, THREAD_TYPE_SPECTRA));
+        req->addRequest(new CEngineRequestBeginBrowseFile(m_currentIt.file().filePath()));
+       }
+      else
+       {
+       	req->addRequest(new CEngineRequestSetProject(m_currentProject, THREAD_TYPE_EXPORT));
+        req->addRequest(new CEngineRequestBeginExportFile(m_currentIt.file().filePath()));
+       }
     }
     else {
       // take the site and symbol lists from the session ... and hand responsibility over to request objects.

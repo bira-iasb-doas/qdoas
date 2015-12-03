@@ -256,6 +256,9 @@ bool CProjectSubHandler::start(const QString &element, const QXmlAttributes &att
   else if (element == "output") {
     return m_master->installSubHandler(new CProjectOutputSubHandler(m_master, &(prop->output)), atts);
   }
+  else if (element == "export") {
+    return m_master->installSubHandler(new CProjectExportSubHandler(m_master, &(prop->export_spectra)), atts);
+  }
   else if (element == "analysis_window") {
     // allocate a new item in the project for this AW
     CAnalysisWindowConfigItem *awItem = m_project->issueNewAnalysisWindowItem();

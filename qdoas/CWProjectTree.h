@@ -61,6 +61,7 @@ Q_OBJECT
   QTreeWidgetItem *locateByPath(const QStringList &path);
 
   void buildAndStartSession(CSession::eMode sessionType);
+  void ExportSpectra();
 
   void savePreferences(void);
 
@@ -79,7 +80,7 @@ Q_OBJECT
   QString editInsertDirectory(QTreeWidgetItem *parent, const QString &directoryPath,
 			      const QString &fileFilters, bool includeSubDirs, CSpectraDirectoryItem **itemCreated = NULL);
   QString editChangeDirectoryProperties(QTreeWidgetItem *item, const QString &fileFilters, bool includeSubDirs);
-  
+
   // static methods
 
   static const QIcon& getIcon(int type);
@@ -121,6 +122,7 @@ Q_OBJECT
   void slotRunAnalysis();
   void slotRunCalibration();
   void slotBrowseSpectra();
+  void slotExportSpectra();
   void slotViewCrossSections();
   void slotDeleteSelection();
   void slotCutSelection();

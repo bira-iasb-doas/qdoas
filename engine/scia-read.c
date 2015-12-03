@@ -1252,8 +1252,7 @@ RC SCIA_SetPDS(ENGINE_CONTEXT *pEngineContext)
 
       // Read the irradiance data set to get the wavelength calibration
 
-      else if (!(rc=SciaReadSunRefPDS(pEngineContext,indexFile)) &&
-               ((THRD_id!=THREAD_TYPE_SPECTRA) || (THRD_browseType!=THREAD_BROWSE_DARK)))
+      else if (!(rc=SciaReadSunRefPDS(pEngineContext,indexFile)))
        {
         // Read information on radiances spectra
 
@@ -1348,7 +1347,7 @@ RC SCIA_ReadPDS(ENGINE_CONTEXT *pEngineContext,int recordNo)
    rc=ERROR_ID_FILE_EMPTY;
   else if ((recordNo<=0) || (recordNo>pOrbitFile->specNumber))
    rc=ERROR_ID_FILE_END;
-  else if ((THRD_id!=THREAD_TYPE_SPECTRA) || (THRD_browseType!=THREAD_BROWSE_DARK))
+  else
    {
     if ((indexState=SciaGetStateIndex(recordNo-1,&stateObs,sciaCurrentFileIndex))==ITEM_NONE)
      rc=ERROR_ID_FILE_RECORD;

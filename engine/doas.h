@@ -79,6 +79,7 @@ typedef struct _prjctUsamp PRJCT_USAMP;
 typedef struct _prjctSlit PRJCT_SLIT;
 
 typedef struct _prjctAsciiResults PRJCT_RESULTS;
+typedef struct _prjctExport PRJCT_EXPORT;
 
 typedef struct _matrix MATRIX_OBJECT;
 

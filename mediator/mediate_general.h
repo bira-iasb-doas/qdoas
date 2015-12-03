@@ -220,7 +220,7 @@ extern "C" {
     double ccMax;
   };
 
-  
+
 struct anlyswin_linear
   {
     int xPolyOrder;
@@ -300,7 +300,7 @@ struct anlyswin_linear
     double resolInitial;
     double resolDelta;
     int resolFlagFitStore;
-    int resolFlagErrStore;    
+    int resolFlagErrStore;
 
     char comFile[FILENAME_BUFFER_LENGTH];
     char usamp1File[FILENAME_BUFFER_LENGTH];

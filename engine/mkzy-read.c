@@ -714,7 +714,7 @@ RC MKZY_Reli(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localD
    	 {
       if (!(rc=MKZY_ReadRecord(pEngineContext,indexRecord,specFp)))
        {
-       	if ((THRD_id!=THREAD_TYPE_SPECTRA) &&
+       	if ((THRD_id!=THREAD_TYPE_SPECTRA) && (THRD_id!=THREAD_TYPE_EXPORT) &&
        	   (!strncasecmp(pEngineContext->recordInfo.Nom,"dark",4) ||
        	    !strncasecmp(pEngineContext->recordInfo.Nom,"sky",3) ||
        	    !strncasecmp(pEngineContext->recordInfo.Nom,"offset",6)))

@@ -765,6 +765,14 @@ static inline void get_altitude_end (struct output_field *this_field __attribute
   *altitude = pEngineContext->recordInfo.uavBira.altitudeEnd;
 }
 
+static inline void get_lambda(struct output_field *this_field __attribute__ ((unused)), double *lambda, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
+	 memcpy(lambda,pEngineContext->buffers.lambda,sizeof(double)*NDET);
+}
+
+static inline void get_spectrum(struct output_field *this_field __attribute__ ((unused)), double *spectrum, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
+	 memcpy(spectrum,pEngineContext->buffers.spectrum,sizeof(double)*NDET);
+}
+
 // write_spikes:
 // concatenate all pixels containing spikes into a single string for output.
 

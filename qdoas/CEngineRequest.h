@@ -149,6 +149,40 @@ class CEngineRequestBrowseSpecificRecord : public CEngineRequest
 
 //------------------------------------------------------------
 
+class CEngineRequestBeginExportFile : public CEngineRequest
+{
+ public:
+  CEngineRequestBeginExportFile(const QString &fileName) : m_fileName(fileName) {};
+
+  virtual bool process(CEngineThread *engineThread);
+
+ private:
+  QString m_fileName;
+};
+
+//------------------------------------------------------------
+
+class CEngineRequestExportNextRecord : public CEngineRequest
+{
+ public:
+  virtual bool process(CEngineThread *engineThread);
+};
+
+//------------------------------------------------------------
+
+class CEngineRequestExportSpecificRecord : public CEngineRequest
+{
+ public:
+  CEngineRequestExportSpecificRecord(int recordNumber) : m_recordNumber(recordNumber) {};
+
+  virtual bool process(CEngineThread *engineThread);
+
+ private:
+  int m_recordNumber;
+};
+
+//------------------------------------------------------------
+
 class CEngineRequestBeginAnalyseFile : public CEngineRequest
 {
  public:

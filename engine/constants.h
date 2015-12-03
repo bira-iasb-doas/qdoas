@@ -68,6 +68,7 @@
 enum _thrdId {
   THREAD_TYPE_NONE,
   THREAD_TYPE_SPECTRA,     // for browse spectra
+  THREAD_TYPE_EXPORT,      // for export spectra
   THREAD_TYPE_ANALYSIS,    // for run analysis
   THREAD_TYPE_KURUCZ       // for run calibration
 };
@@ -320,39 +321,39 @@ enum _prjctUsampMethod {
 // -----------------------
 
 enum _prjctInstrFormat {
-  PRJCT_INSTR_FORMAT_ASCII,                                                     // ASCII
-  PRJCT_INSTR_FORMAT_LOGGER,                                                    // Logger (PDA,CCD or HAMAMATSU)
-  PRJCT_INSTR_FORMAT_ACTON,                                                     // Acton (NILU)
-  PRJCT_INSTR_FORMAT_PDAEGG,                                                    // PDA EG&G (sept. 94 until now)
-  PRJCT_INSTR_FORMAT_PDAEGG_OLD,                                                // PDA EG&G (spring 94)
-  PRJCT_INSTR_FORMAT_PDAEGG_ULB,                                                // PDA EG&G (ULB)
-  PRJCT_INSTR_FORMAT_CCD_OHP_96,                                                // CCD (OHP 96)
-  PRJCT_INSTR_FORMAT_CCD_HA_94,                                                 // CCD (HARESTUA 94)
-  PRJCT_INSTR_FORMAT_CCD_ULB,                                                   // CCD (ULB)
-  PRJCT_INSTR_FORMAT_SAOZ_VIS,                                                  // SAOZ visible
-  PRJCT_INSTR_FORMAT_SAOZ_UV,                                                   // SAOZ UV
-  PRJCT_INSTR_FORMAT_SAOZ_EFM,                                                  // SAOZ EFM (1024)
-  PRJCT_INSTR_FORMAT_MFC,                                                       // MFC Heidelberg
-  PRJCT_INSTR_FORMAT_MFC_STD,                                                   // MFC Heidelberg
-  PRJCT_INSTR_FORMAT_MFC_BIRA,                                                  // MFC BIRA-IASB
-  PRJCT_INSTR_FORMAT_RASAS,                                                     // RASAS (INTA)
-  PRJCT_INSTR_FORMAT_PDASI_EASOE,                                               // EASOE
-  PRJCT_INSTR_FORMAT_PDASI_OSMA,                                                // PDA SI (OSMA)
-  PRJCT_INSTR_FORMAT_CCD_EEV,                                                   // CCD EEV
-  PRJCT_INSTR_FORMAT_OPUS,                                                      // FOURIER,OPUS format
-  PRJCT_INSTR_FORMAT_GDP_ASCII,                                                 // GOME GDP ASCII format
-  PRJCT_INSTR_FORMAT_GDP_BIN,                                                   // GOME GDP BINARY format
-  PRJCT_INSTR_FORMAT_SCIA_PDS,                                                  // SCIAMACHY Calibrated Level 1 data in PDS format
-  PRJCT_INSTR_FORMAT_UOFT,                                                      // University of Toronto
-  PRJCT_INSTR_FORMAT_NOAA,                                                      // NOAA
-  PRJCT_INSTR_FORMAT_OMI,                                                       // OMI
-  PRJCT_INSTR_FORMAT_TROPOMI,                                                   // Tropomi
-  PRJCT_INSTR_FORMAT_GOME2,                                                     // GOME2
-  PRJCT_INSTR_FORMAT_MKZY,                                                      // MANNE Kihlman and ZHANG Yan pak format
-  PRJCT_INSTR_FORMAT_BIRA_AIRBORNE,                                             // ULMDOAS (BIRA-IASB)
-  PRJCT_INSTR_FORMAT_BIRA_MOBILE,                                               // MOBILEDOAS (BIRA-IASB)
-  PRJCT_INSTR_FORMAT_APEX,                                                      // APEX NetCDF files (BIRA-IASB/VITO)
-  PRJCT_INSTR_FORMAT_OCEAN_OPTICS,                                              // Ocean optics
+  PRJCT_INSTR_FORMAT_ASCII,                                                     //  0 ASCII
+  PRJCT_INSTR_FORMAT_LOGGER,                                                    //  1 Logger (PDA,CCD or HAMAMATSU)
+  PRJCT_INSTR_FORMAT_ACTON,                                                     //  2 Acton (NILU)
+  PRJCT_INSTR_FORMAT_PDAEGG,                                                    //  3 PDA EG&G (sept. 94 until now)
+  PRJCT_INSTR_FORMAT_PDAEGG_OLD,                                                //  4 PDA EG&G (spring 94)
+  PRJCT_INSTR_FORMAT_PDAEGG_ULB,                                                //  5 PDA EG&G (ULB)
+  PRJCT_INSTR_FORMAT_CCD_OHP_96,                                                //  6 CCD (OHP 96)
+  PRJCT_INSTR_FORMAT_CCD_HA_94,                                                 //  7 CCD (HARESTUA 94)
+  PRJCT_INSTR_FORMAT_CCD_ULB,                                                   //  8 CCD (ULB)
+  PRJCT_INSTR_FORMAT_SAOZ_VIS,                                                  //  9 SAOZ visible
+  PRJCT_INSTR_FORMAT_SAOZ_UV,                                                   // 10 SAOZ UV
+  PRJCT_INSTR_FORMAT_SAOZ_EFM,                                                  // 11 SAOZ EFM (1024)
+  PRJCT_INSTR_FORMAT_MFC,                                                       // 12 MFC Heidelberg
+  PRJCT_INSTR_FORMAT_MFC_STD,                                                   // 13 MFC Heidelberg
+  PRJCT_INSTR_FORMAT_MFC_BIRA,                                                  // 14 MFC BIRA-IASB
+  PRJCT_INSTR_FORMAT_RASAS,                                                     // 15 RASAS (INTA)
+  PRJCT_INSTR_FORMAT_PDASI_EASOE,                                               // 16 EASOE
+  PRJCT_INSTR_FORMAT_PDASI_OSMA,                                                // 17 PDA SI (OSMA)
+  PRJCT_INSTR_FORMAT_CCD_EEV,                                                   // 18 CCD EEV
+  PRJCT_INSTR_FORMAT_OPUS,                                                      // 19 FOURIER,OPUS format
+  PRJCT_INSTR_FORMAT_GDP_ASCII,                                                 // 20 GOME GDP ASCII format
+  PRJCT_INSTR_FORMAT_GDP_BIN,                                                   // 21 GOME GDP BINARY format
+  PRJCT_INSTR_FORMAT_SCIA_PDS,                                                  // 22 SCIAMACHY Calibrated Level 1 data in PDS format
+  PRJCT_INSTR_FORMAT_UOFT,                                                      // 23 University of Toronto
+  PRJCT_INSTR_FORMAT_NOAA,                                                      // 24 NOAA
+  PRJCT_INSTR_FORMAT_OMI,                                                       // 25 OMI
+  PRJCT_INSTR_FORMAT_TROPOMI,                                                   // 26 Tropomi
+  PRJCT_INSTR_FORMAT_GOME2,                                                     // 27 GOME2
+  PRJCT_INSTR_FORMAT_MKZY,                                                      // 28 MANNE Kihlman and ZHANG Yan pak format
+  PRJCT_INSTR_FORMAT_BIRA_AIRBORNE,                                             // 29 ULMDOAS (BIRA-IASB)
+  PRJCT_INSTR_FORMAT_BIRA_MOBILE,                                               // 30 MOBILEDOAS (BIRA-IASB)
+  PRJCT_INSTR_FORMAT_APEX,                                                      // 31 APEX NetCDF files (BIRA-IASB/VITO)
+  PRJCT_INSTR_FORMAT_OCEAN_OPTICS,                                              // 32 Ocean optics
   PRJCT_INSTR_FORMAT_MAX
 };
 
@@ -576,6 +577,8 @@ enum _prjctResults
   PRJCT_RESULTS_LONGITEND,
   PRJCT_RESULTS_LATITEND,
   PRJCT_RESULTS_ALTITEND,
+  PRJCT_RESULTS_LAMBDA,
+  PRJCT_RESULTS_SPECTRA,
   PRJCT_RESULTS_MAX
  };
 
