@@ -722,7 +722,7 @@ static void register_field(struct output_field field) {
   \param [in] fieldsFlag       list of fields to output
   \param [in] fieldsNumber     the number of fields in the previous list
 */
-static void OutputRegisterFields(const ENGINE_CONTEXT *pEngineContext,char *fieldsFlag,int fieldsNumber)
+static void OutputRegisterFields(const ENGINE_CONTEXT *pEngineContext, const char *fieldsFlag,int fieldsNumber)
 {
   PROJECT *pProject=(PROJECT *)&pEngineContext->project;
 
@@ -1501,12 +1501,7 @@ void OutputBuildSiteFileName(const ENGINE_CONTEXT *pEngineContext,char *outputFi
  {
   // Declarations
 
-  PROJECT             *pProject;                                                // pointer to project data
   char                *fileNamePtr;                                             // character pointers used for building output file name
-
-  // Initializations
-
-  pProject=(PROJECT *)&pEngineContext->project;
 
   // Build the complete output path
 
