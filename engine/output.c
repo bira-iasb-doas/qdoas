@@ -817,6 +817,19 @@ static void OutputRegisterFields(const ENGINE_CONTEXT *pEngineContext, const cha
     break;
   }
 
+  const char *lat_fieldname, *lon_fieldname;
+  if (is_satellite(pProject->instrumental.readOutFormat) ) {
+    // for satellites, we keep the convention that
+    // "Latitude/Longitude" means "pixel corner latitude/longitude",
+    // and the latitudes/longitudes of the observations are called
+    // "Latitude(pixel center)"
+    lat_fieldname = "Latitude(pixel center)";
+    lon_fieldname = "Longitude(pixel center)";
+  } else {
+    lat_fieldname = "Latitude";
+    lon_fieldname = "Longitude";
+  }
+
   // Browse fields
   for (int j=0;j<fieldsNumber;j++)
    {
@@ -887,13 +900,13 @@ static void OutputRegisterFields(const ENGINE_CONTEXT *pEngineContext, const cha
        if(func_corner_longitudes) { // we have pixel corners
          register_field( (struct output_field) { .basic_fieldname = "Longitude", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)func_corner_longitudes, .data_cols = 4, .column_number_format="(%d)" });
        }
-       register_field( (struct output_field) { .basic_fieldname = (func_corner_longitudes)?"Longitude(pixel center)":"Longitude", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_longitude }); // pixel centre
+       register_field( (struct output_field) { .basic_fieldname = lon_fieldname, .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_longitude }); // pixel centre
        break;
      case PRJCT_RESULTS_LATIT:
        if(func_corner_latitudes) { // we have pixel corners
          register_field( (struct output_field) { .basic_fieldname = "Latitude", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)func_corner_latitudes, .data_cols = 4, .column_number_format="(%d)" });
        }
-       register_field( (struct output_field) { .basic_fieldname = (func_corner_latitudes)?"Latitude(pixel center)":"Latitude", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_latitude });
+       register_field( (struct output_field) { .basic_fieldname = lat_fieldname, .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_latitude });
        break;
      case PRJCT_RESULTS_ALTIT:
        register_field( (struct output_field) { .basic_fieldname = "Altitude", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_altitude });
@@ -1601,11 +1614,7 @@ RC OutputBuildFileName(const ENGINE_CONTEXT *pEngineContext,char *outputPath)
     ++fileNameStart;
   }
 
-  int satelliteFlag=((pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN) ||
-                 (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_ASCII) ||
-                 (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS) ||
-                 (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_OMI) ||
-                 (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GOME2));
+  int satelliteFlag= is_satellite(pProject->instrumental.readOutFormat);
 
   dirFlag=(THRD_id==THREAD_TYPE_EXPORT)?pExport->directoryFlag:pResults->dirFlag;
 

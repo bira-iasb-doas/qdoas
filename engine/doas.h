@@ -107,6 +107,15 @@ extern PRJCT_KURUCZ *pKuruczOptions;               // Kurucz options
 extern PRJCT_SLIT   *pSlitOptions;                 // slit function options
 extern PRJCT_USAMP  *pUsamp;
 
+inline bool is_satellite(enum _prjctInstrFormat format) {
+  return (format==PRJCT_INSTR_FORMAT_GDP_BIN ||
+          format==PRJCT_INSTR_FORMAT_GDP_ASCII ||
+          format==PRJCT_INSTR_FORMAT_SCIA_PDS ||
+          format==PRJCT_INSTR_FORMAT_OMI ||
+          format==PRJCT_INSTR_FORMAT_TROPOMI ||
+          format==PRJCT_INSTR_FORMAT_GOME2);
+}
+
 #if defined(_cplusplus) || defined(__cplusplus)
 }
 #endif
