@@ -116,6 +116,7 @@ void hdfeos5_close_file(void) {
   assert(output_file); // function should only be called when a file is open
   assert(swath_id); // and when a swath is attached
   HE5_SWdetach(swath_id);
+  swath_id = 0;
   HE5_SWclose(output_file);
   output_file = 0;
 }
