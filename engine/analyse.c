@@ -3379,7 +3379,7 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
         memcpy(SpectreK,Spectre,sizeof(double)*NDET);
         if (!(rc=KURUCZ_Spectrum(pBuffers->lambda,LambdaK,SpectreK,KURUCZ_buffers[indexFenoColumn].solar,pBuffers->instrFunction,
                                  1,"Calibration applied on spectrum",KURUCZ_buffers[indexFenoColumn].fwhmPolySpec,KURUCZ_buffers[indexFenoColumn].fwhmVector,KURUCZ_buffers[indexFenoColumn].fwhmDeriv2,saveFlag,
-                                 KURUCZ_buffers[indexFenoColumn].indexKurucz,responseHandle,indexFenoColumn)))
+                                 KURUCZ_buffers[indexFenoColumn].indexKurucz,responseHandle,indexFenoColumn))) {
 
          for (WrkFeno=0,pTabFeno=&TabFeno[indexFenoColumn][WrkFeno];WrkFeno<NFeno;pTabFeno=&TabFeno[indexFenoColumn][++WrkFeno])
           if (!pTabFeno->hidden && (pTabFeno->useKurucz==ANLYS_KURUCZ_SPEC))
@@ -3390,6 +3390,7 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
             if ((rc=KURUCZ_ApplyCalibration(pTabFeno,LambdaK,indexFenoColumn))!=ERROR_ID_NO)
              goto EndAnalysis;
            }
+        }
 
         memcpy(SpectreK,Spectre,sizeof(double)*NDET); // !!!
        }
@@ -4452,15 +4453,38 @@ RC ANALYSE_LoadCross(ENGINE_CONTEXT *pEngineContext, const ANALYSIS_CROSS *cross
         NWorkSpace++;
       }
 
-      // cross sections should either have 1 wavelength column and 1
-      // absorption column, or 1 wavelength column + 1 absorption
-      // column per detector row (for imagers like OMI), or 4 columns
-      // when it is a Ring cross section to be used with the "convolve
-      // ring" option:
-      if ( !(pWrkSymbol->xs.nc == 2
-             || pWrkSymbol->xs.nc == (1 + ANALYSE_swathSize)
-             || (pWrkSymbol->xs.nc == 4 && pCross->crossType == ANLYS_CROSS_ACTION_CONVOLUTE_RING) ) ) {
-        rc = ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_XS_COLUMNS, pCross->crossSectionFile, pWrkSymbol->xs.nc);
+      // Check cross sections have the correct number of columns.
+      // We have the following possibilities:
+      //
+      //  - normal or I0 convolution: 2 columns
+      //  - ring convolution: 4 columns
+      //  - no convolution:  1 + ANALYSE_swathSize columns
+      //    (preconvolved xs for each detector row)
+      if ( (pTabFeno->useKurucz && pEngineContext->project.kurucz.fwhmFit)
+           || pEngineContext->project.slit.slitFunction.slitType != SLIT_TYPE_NONE) {
+        // the analysis uses convolution (Kurucz-fitted slit function or slit function set in slit tab):
+        switch (pCross->crossType) {
+        case ANLYS_CROSS_ACTION_CONVOLUTE:
+        case ANLYS_CROSS_ACTION_CONVOLUTE_I0:
+          if (pWrkSymbol->xs.nc != 2) {
+            rc = ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_XS_COLUMNS, pCross->crossSectionFile, pWrkSymbol->xs.nc, 2);
+          }
+          break;
+        case ANLYS_CROSS_ACTION_CONVOLUTE_RING:
+          if (pWrkSymbol->xs.nc != 4) {
+            rc = ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_XS_RING, pCross->crossSectionFile);
+          }
+          break;
+        }
+      } else {
+        // analysis uses preconvolved cross sections
+        if (pWrkSymbol->xs.nc != (1+ANALYSE_swathSize) ) {
+          rc = ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_XS_COLUMNS, pCross->crossSectionFile, pWrkSymbol->xs.nc, 1+ANALYSE_swathSize);
+        } else if (pCross->crossType == ANLYS_CROSS_ACTION_CONVOLUTE ||
+                   pCross->crossType == ANLYS_CROSS_ACTION_CONVOLUTE_I0 ||
+                   pCross->crossType == ANLYS_CROSS_ACTION_CONVOLUTE_RING) {
+          rc=ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_CONVOLUTION, pCross->crossSectionFile);
+        }
       }
 
     }
@@ -4596,9 +4620,6 @@ RC ANALYSE_LoadCross(ENGINE_CONTEXT *pEngineContext, const ANALYSIS_CROSS *cross
        }
      }
    }
-
-  if (!rc && pTabFeno->xsToConvolute && (!pTabFeno->useKurucz || !pEngineContext->project.kurucz.fwhmFit) && (pEngineContext->project.slit.slitFunction.slitType==SLIT_TYPE_NONE))
-   rc=ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_CONVOLUTION);
 
 #if defined(__DEBUG_) && __DEBUG_ && defined(__DEBUG_DOAS_CONFIG_) && __DEBUG_DOAS_CONFIG_
   DEBUG_FunctionStop(__func__,rc);
