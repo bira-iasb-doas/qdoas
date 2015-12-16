@@ -420,7 +420,7 @@ RC ReliPDA_EGG_Logger(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,i
 // Record description
 // ------------------
 
-#pragma pack(1)
+#pragma pack(push,1)
 
 #define PDA1453A struct PDA1453A
 PDA1453A
@@ -437,6 +437,8 @@ PDA1453A
   double      azimuth;
   float       mirrorElv;
  };
+
+#pragma pack(pop)
 
 // ---------------------------------------------------------
 // Arrays of integration times used by the real time program

@@ -106,7 +106,7 @@ typedef struct _airborneData
  }
 AIRBORNE_DATA;
 
-#pragma(pop);
+#pragma pack(pop)
 
 // -----------------------------------------------------------------------------
 // FUNCTION AIRBORNE_Set

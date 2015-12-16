@@ -67,7 +67,7 @@
 // DEFINITION
 // ==========
 
-#pragma pack(1)
+#pragma pack(push,1)
 
 typedef struct easoe
  {
@@ -79,6 +79,8 @@ typedef struct easoe
   char   SkyObs;                                                                // information on the sky
  }
 EASOE;
+
+#pragma pack(pop)
 
 // =========
 // FUNCTIONS
