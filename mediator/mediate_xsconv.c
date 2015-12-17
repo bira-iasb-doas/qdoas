@@ -1350,8 +1350,8 @@ RC mediateUsampSave(ENGINE_XSCONV_CONTEXT *pEngineContext,char *fileName,int pha
 // ---------------------------------------------------------------------------
 
 RC mediateUsampCalculate(void *engineContext,void *responseHandle)
- {
- 	ENGINE_XSCONV_CONTEXT *pEngineContext=(ENGINE_XSCONV_CONTEXT*)engineContext;
+{
+  ENGINE_XSCONV_CONTEXT *pEngineContext=(ENGINE_XSCONV_CONTEXT*)engineContext;
   MATRIX_OBJECT calibrationMatrix,kuruczMatrix;
   double *phase1,*phase2;
   int hrN,fftSize,nSize;
@@ -1368,6 +1368,13 @@ RC mediateUsampCalculate(void *engineContext,void *responseHandle)
 
   // Files read out
 
+  if (!strlen(pEngineContext->calibrationFile) ) {
+    return ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_FILE_NOT_SPECIFIED,"calibration file");
+  }
+  if (!strlen(pEngineContext->kuruczFile) ) {
+    return ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_FILE_NOT_SPECIFIED,"high resolution solar reference");
+  }
+  
   if (!(rc=MATRIX_Load(pEngineContext->calibrationFile,&calibrationMatrix,0,0,(double)0.,(double)0.,0,1,"mediateUsampCalculate (calibration file) ")) &&
       !(rc=MATRIX_Load(pEngineContext->kuruczFile,&kuruczMatrix,0,0,(double)calibrationMatrix.matrix[0][0]-7.,
        (double)calibrationMatrix.matrix[0][calibrationMatrix.nl-1]+7.,1,1,"mediateUsampCalculate (Kurucz) ")) &&

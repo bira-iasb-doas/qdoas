@@ -192,7 +192,8 @@ SHORT_DATE;
 #define ERROR_ID_DIR_NOT_FOUND                  132                             // directory does not exist
 #define ERROR_ID_XS_BAD_WAVELENGTH              133                             // the cross section should be defined on the same grid as the reference one when 'None' is selected as Interp/conv action
 #define ERROR_ID_XS_COLUMNS                     134                             // the cross section does not have the expected number of columns
-#define ERROR_ID_XS_RING                       1286                             // ring cross section does not contain 4 columns
+#define ERROR_ID_XS_RING                        135                             // ring cross section does not contain 4 columns
+#define ERROR_ID_XS_FILENAME                    136                             // no file name for cross section
 
 // Debug
 

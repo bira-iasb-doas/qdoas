@@ -4275,7 +4275,7 @@ RC ANALYSE_LoadSlit(const PRJCT_SLIT *pSlit,int kuruczFlag)
   if (!rc && kuruczFlag)
    {
     if (!strlen(pSlit->kuruczFile))
-     rc=ERROR_SetLast("ANALYSE_LoadSlit",ERROR_TYPE_FATAL,ERROR_ID_MSGBOX_FIELDEMPTY,"Slit Kurucz File");
+      rc=ERROR_SetLast("ANALYSE_LoadSlit",ERROR_TYPE_FATAL,ERROR_ID_MSGBOX_FIELDEMPTY,"Slit solar ref. file");
     else
      rc=MATRIX_Load(pSlit->kuruczFile,&ANALYSIS_slitK,0,2,-9999.,9999.,1,0,"ANALYSE_LoadSlit ");
    }
@@ -4438,17 +4438,22 @@ RC ANALYSE_LoadCross(ENGINE_CONTEXT *pEngineContext, const ANALYSIS_CROSS *cross
       strcpy(pWrkSymbol->symbolName,symbolName);
       strcpy(pWrkSymbol->crossFileName,pCross->crossSectionFile);
       strcpy(pWrkSymbol->amfFileName,pCross->amfFile);
-
+      
       // Load cross section from file
-
-      if (((strlen(pWrkSymbol->symbolName)==strlen("1/Ref")) && !strcasecmp(pWrkSymbol->symbolName,"1/Ref")) ||
-          !(rc=MATRIX_Load(pCross->crossSectionFile,&pWrkSymbol->xs,0,0,
-                           (pCross->crossType==ANLYS_CROSS_ACTION_NOTHING)?(double)0.:lambda[0]-7.,      // max(lambda[0]-7.,(double)290.), - changed on october 2006
-                           (pCross->crossType==ANLYS_CROSS_ACTION_NOTHING)?(double)0.:lambda[NDET-1]+7., // min(lambda[NDET-1]+7.,(double)600.), - changed on october 2006
-                           (pCross->crossType!=ANLYS_CROSS_ACTION_NOTHING)?1:0,1,__func__))) {
-        if (!strcasecmp(pWrkSymbol->symbolName,"O3TD"))
+      
+      if (strcasecmp(pWrkSymbol->symbolName,"1/Ref")) {
+        if (!strlen(pWrkSymbol->crossFileName)) {
+          return ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_XS_FILENAME,pWrkSymbol->symbolName);
+        }
+        if ( (rc=MATRIX_Load(pCross->crossSectionFile,&pWrkSymbol->xs,0,0,
+                             (pCross->crossType==ANLYS_CROSS_ACTION_NOTHING) ? 0. : lambda[0]-7.,
+                             (pCross->crossType==ANLYS_CROSS_ACTION_NOTHING) ? 0. : lambda[NDET-1]+7.,
+                             (pCross->crossType!=ANLYS_CROSS_ACTION_NOTHING) ? 1 : 0, 1, __func__) ) ) {
+          return rc;
+        }
+        
+        if (!strcasecmp(pWrkSymbol->symbolName,"O3TD") )
           rc=MATRIX_Allocate(&O3TD,NDET,pWrkSymbol->xs.nc,0,0,0,__func__);
-
         NWorkSpace++;
       }
 
@@ -4494,11 +4499,9 @@ RC ANALYSE_LoadCross(ENGINE_CONTEXT *pEngineContext, const ANALYSIS_CROSS *cross
           rc=ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_CONVOLUTION, pCross->symbol);
         }
       }
-
     }
 
-    if ((rc==ERROR_ID_NO) && (indexSymbol<NWorkSpace) && (pTabFeno->NTabCross<MAX_FIT))
-     {
+    if ((rc==ERROR_ID_NO) && (indexSymbol<NWorkSpace) && (pTabFeno->NTabCross<MAX_FIT)) {
       // Allocate vectors for cross section and its second derivative for analysis processing
 
       if (((pEngineCross->vector=(double *)MEMORY_AllocDVector(__func__,"vector",0,NDET-1))==NULL) ||
@@ -5116,21 +5119,19 @@ RC ANALYSE_LoadNonLinear(ENGINE_CONTEXT *pEngineContext,ANALYSE_NON_LINEAR_PARAM
                  (pTabFeno->indexResol==pTabFeno->NTabCross) ||                   // resol
                  (pTabFeno->indexUsamp1==pTabFeno->NTabCross) ||                  // undersampling phase 1
                  (pTabFeno->indexUsamp2==pTabFeno->NTabCross)) &&                 // undersampling phase 2
-                ((pTabCross->FitParam!=ITEM_NONE) || (pTabCross->InitParam!=(double)0.)))
-             {
-              if ((pTabFeno->indexCommonResidual==pTabFeno->NTabCross) ||
-                (((pTabFeno->indexUsamp1==pTabFeno->NTabCross) ||                  // undersampling phase 1
-                  (pTabFeno->indexUsamp2==pTabFeno->NTabCross)) &&                 // undersampling phase 2
-                  (pUsamp->method==PRJCT_USAMP_FILE)))
-               {
-                if (((rc=MATRIX_Load(pListItem->crossFileName,&pWrkSymbol->xs,0,0,
-                                     (double)0.,(double)0.,0,0,"ANALYSE_LoadNonLinear "))!=0)
+                ((pTabCross->FitParam!=ITEM_NONE) || (pTabCross->InitParam!=(double)0.))) {
+              if (pTabFeno->indexCommonResidual==pTabFeno->NTabCross ||
+                  ( (pTabFeno->indexUsamp1==pTabFeno->NTabCross ||                  // undersampling phase 1
+                     pTabFeno->indexUsamp2==pTabFeno->NTabCross) &&                 // undersampling phase 2
+                    pUsamp->method==PRJCT_USAMP_FILE) ) {
 
-                    ||((pTabFeno->gomeRefFlag || pEngineContext->refFlag) &&
-                      ((rc=ANALYSE_CheckLambda(pWrkSymbol,lambda,"ANALYSE_LoadNonLinear "))!=0))    // grid of the reference spectrum
-                    )
-
-                 goto EndLoadPredefined;
+                if (!strlen(pListItem->crossFileName) ) {
+                  return ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_FILE_NOT_SPECIFIED,"undersampling cross section");
+                }
+                if ( (rc=MATRIX_Load(pListItem->crossFileName,&pWrkSymbol->xs,0,0,0.,0.,0,0,__func__) )
+                     || ( (pTabFeno->gomeRefFlag || pEngineContext->refFlag) &&
+                          (rc=ANALYSE_CheckLambda(pWrkSymbol,lambda,__func__) ) ) )   // grid of the reference spectrum
+                  goto EndLoadPredefined;
                }
               else if ((pTabFeno->indexUsamp1==pTabFeno->NTabCross) || (pTabFeno->indexUsamp2==pTabFeno->NTabCross))
                pTabFeno->useUsamp=1;
