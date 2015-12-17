@@ -273,7 +273,7 @@ SCIA_DATA;
 // Record information specific to GOME2
 
 typedef struct _gome2
- {
+{
   double longitudes[4],latitudes[4];                                            // geolocations at the 4 corners of the pixels
   double solZen[3],solAzi[3],losZen[3],losAzi[3];                               // resp. solar and line of sight zenith and azimuth angles
 
@@ -282,7 +282,8 @@ typedef struct _gome2
   int    sunglintHighDangerFlag;
   int    rainbowFlag;
   int    scanDirection;
- }
+  int    observationMode;
+}
 GOME2_DATA;
 
 // Record information specific to OMI

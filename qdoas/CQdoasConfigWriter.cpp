@@ -1531,6 +1531,7 @@ void CQdoasConfigWriter::writeDataSelectList(FILE *fp, const data_select_list_t 
     case PRJCT_RESULTS_NUM_BANDS           :      config_string = "num_bands"; break;
 
     case PRJCT_RESULTS_GOME2_SCANDIRECTION      :      config_string = "scan_direction"; break;
+    case PRJCT_RESULTS_GOME2_OBSERVATION_MODE   :      config_string = "gome2_observation_mode"; break;
     case PRJCT_RESULTS_GOME2_SAA                :      config_string = "saa_flag"; break;
     case PRJCT_RESULTS_GOME2_SUNGLINT_RISK      :      config_string = "sunglint_danger_flag"; break;
     case PRJCT_RESULTS_GOME2_SUNGLINT_HIGHRISK  :      config_string = "sunglint_highdanger_flag"; break;

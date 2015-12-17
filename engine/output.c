@@ -998,6 +998,9 @@ static void OutputRegisterFields(const ENGINE_CONTEXT *pEngineContext, const cha
      case PRJCT_RESULTS_GOME2_SCANDIRECTION:
        register_field( (struct output_field) { .basic_fieldname = "GOME2 scan direction", .memory_type = OUTPUT_INT, .resulttype = fieldtype, .format = "%#6d", .get_data = (func_void)&gome2_get_scan_direction });
        break;
+     case PRJCT_RESULTS_GOME2_OBSERVATION_MODE:
+       register_field( (struct output_field) { .basic_fieldname = "GOME2 observation mode", .memory_type = OUTPUT_USHORT, .resulttype = fieldtype, .format = "%#5d", .get_data = (func_void)&gome2_get_observation_mode });
+       break;       
      case PRJCT_RESULTS_GOME2_SAA:
        register_field( (struct output_field) { .basic_fieldname = "GOME2 SAA flag", .memory_type = OUTPUT_INT, .resulttype = fieldtype, .format = "%#6d", .get_data = (func_void)&gome2_get_saa });
        break;

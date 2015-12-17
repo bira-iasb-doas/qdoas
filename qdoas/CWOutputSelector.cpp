@@ -130,6 +130,7 @@ CWOutputSelector::CWOutputSelector(const data_select_list_t *d, QWidget *parent)
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_NUM_BANDS,              "Number of wavelength bands used"));
 
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_GOME2_SCANDIRECTION,    "Scan direction"         ));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_GOME2_OBSERVATION_MODE, "Observation mode"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_GOME2_SAA,              "SAA flag"               ));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_GOME2_SUNGLINT_RISK,    "Sunglint risk flag"     ));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_GOME2_SUNGLINT_HIGHRISK,"Sunglint high risk flag"));
@@ -572,6 +573,7 @@ void getValidFieldFlags(int *validFlags, int instrument,bool exportFlag)
       validFlags[PRJCT_RESULTS_CLOUDTOPP]=1;
 
       validFlags[PRJCT_RESULTS_GOME2_SCANDIRECTION]=1;
+      validFlags[PRJCT_RESULTS_GOME2_OBSERVATION_MODE]=1;
       validFlags[PRJCT_RESULTS_GOME2_SAA]=1;
       validFlags[PRJCT_RESULTS_GOME2_SUNGLINT_RISK]=1;
       validFlags[PRJCT_RESULTS_GOME2_SUNGLINT_HIGHRISK]=1;

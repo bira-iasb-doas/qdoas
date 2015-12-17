@@ -108,6 +108,7 @@ struct gome2_geolocation {
   int   sunglintHighDangerFlag;
   int   rainbowFlag;
   int   scanDirection;
+  int   observationMode;
 };
 
 typedef struct _gome2MdrInfo {
@@ -162,23 +163,25 @@ typedef struct _gome2MdrInfo {
   uint8_t  sunglintDangerFlag[N_SCAN_MAX];
   uint8_t  sunglintHighDangerFlag[N_SCAN_MAX];
   uint8_t  rainbowFlag[N_SCAN_MAX];
+  uint8_t  observationMode;
 }
 GOME2_MDR;
 
 typedef struct _gome2Info {
-  uint8_t  channelIndex;
-  uint16_t no_of_pixels;
-  uint16_t orbitStart;
-  uint16_t orbitEnd;
-  uint32_t total_viadr;
-  uint32_t total_mdr;
-
-  int      total_nadir_mdr;
-  int      total_nadir_obs;
-
   double start_lambda;
   double end_lambda;
   GOME2_MDR *mdr;
+
+  uint32_t total_viadr;
+  uint32_t total_mdr;
+
+  int total_nadir_mdr;
+  int total_nadir_obs;
+
+  uint16_t no_of_pixels;
+  uint16_t orbitStart;
+  uint16_t orbitEnd;
+  uint8_t channelIndex;
 }
 GOME2_INFO;
 
@@ -637,7 +640,7 @@ RC Gome2ReadOrbitInfo(GOME2_ORBIT_FILE *pOrbitFile,int bandIndex) {
 int Gome2ReadMDRInfo(GOME2_ORBIT_FILE *pOrbitFile,GOME2_MDR *pMdr,int indexBand) {
   // Declarations
 
-  uint8_t subclass,observationMode;
+  uint8_t subclass;
   char start_time[40];
   double utc_start_double;
   int indexActual,i;
@@ -671,7 +674,7 @@ int Gome2ReadMDRInfo(GOME2_ORBIT_FILE *pOrbitFile,GOME2_MDR *pMdr,int indexBand)
     // Observation mode (NADIR is expected)
 
     coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"OBSERVATION_MODE");       // MDR.GOME2_MDR_L1B_EARTHSHINE_V1.OBSERVATION_MODE
-    coda_cursor_read_uint8(&pOrbitFile->gome2Cursor,&observationMode);
+    coda_cursor_read_uint8(&pOrbitFile->gome2Cursor,&pMdr->observationMode);
     coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);                                        // MDR.GOME2_MDR_L1B_EARTHSHINE_V1
 
     // number of records in each band
@@ -1117,6 +1120,7 @@ void Gome2ReadGeoloc(GOME2_ORBIT_FILE *pOrbitFile,INDEX indexBand) {
     geolocation->cloudFraction= (pMdr->cloudFitMode[indexObs]==0) ?pMdr->cloudFraction[indexObs]:-1.;
 
     geolocation->scanDirection= (int) pMdr->scanDirection[indexObs];
+    geolocation->observationMode = pMdr->observationMode;
     geolocation->saaFlag= (int) pMdr->saaFlag[indexObs];
     geolocation->sunglintDangerFlag= (int) pMdr->sunglintDangerFlag[indexObs];
     geolocation->sunglintHighDangerFlag= (int) pMdr->sunglintHighDangerFlag[indexObs];
@@ -1566,6 +1570,7 @@ RC GOME2_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,INDEX fileIndex) {
         pRecord->cloudFraction=pGeoloc->cloudFraction;
 
         pRecord->gome2.scanDirection=pGeoloc->scanDirection;
+        pRecord->gome2.observationMode=pGeoloc->observationMode;
         pRecord->gome2.saaFlag=pGeoloc->saaFlag;
         pRecord->gome2.sunglintDangerFlag=pGeoloc->sunglintDangerFlag;
         pRecord->gome2.sunglintHighDangerFlag=pGeoloc->sunglintHighDangerFlag;

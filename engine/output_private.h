@@ -396,6 +396,10 @@ static inline void gome2_get_scan_direction(struct output_field *this_field __at
   *scan_direction = pEngineContext->recordInfo.gome2.scanDirection;
 }
 
+static inline void gome2_get_observation_mode(struct output_field *this_field __attribute__ ((unused)), unsigned short *observation_mode, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
+  *observation_mode = pEngineContext->recordInfo.gome2.observationMode;
+}
+
 static inline void gome2_get_saa(struct output_field *this_field __attribute__ ((unused)), int *saa, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
   *saa = pEngineContext->recordInfo.gome2.saaFlag;
 }
