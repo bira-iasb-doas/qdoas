@@ -4479,7 +4479,9 @@ RC ANALYSE_LoadCross(ENGINE_CONTEXT *pEngineContext, const ANALYSIS_CROSS *cross
           // interpolated/preset cross section is allowed in a project
           // using online convolution, but there should be 1 column for
           // each detector row:
-          rc = ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_XS_COLUMNS, pCross->symbol, pWrkSymbol->xs.nc, 1+ANALYSE_swathSize);
+          if (pWrkSymbol->xs.nc != (1+ANALYSE_swathSize) ) {
+            rc = ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_XS_COLUMNS, pCross->symbol, pWrkSymbol->xs.nc, 1+ANALYSE_swathSize);
+          }
           break;
         }
       } else {
