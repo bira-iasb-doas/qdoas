@@ -912,14 +912,13 @@ RC ANALYSE_XsInterpolation(FENO *pTabFeno, const double *newLambda,INDEX indexFe
    {
     pTabCross=&pTabFeno->TabCross[indexTabCross];
 
-    if ((((WorkSpace[pTabCross->Comp].type==WRK_SYMBOL_CROSS) &&   // take only cross sections into account
-          ((pTabCross->crossAction==ANLYS_CROSS_ACTION_NOTHING) ||
-           (pTabCross->crossAction==ANLYS_CROSS_ACTION_INTERPOLATE))) ||
-         ((WorkSpace[pTabCross->Comp].type==WRK_SYMBOL_PREDEFINED) &&   // take only cross sections into account
-          (pTabCross->crossAction==ANLYS_CROSS_ACTION_INTERPOLATE))))
-     {
+    if ( (WorkSpace[pTabCross->Comp].type==WRK_SYMBOL_CROSS &&   // take only cross sections into account
+          (pTabCross->crossAction==ANLYS_CROSS_ACTION_NOTHING ||
+           pTabCross->crossAction==ANLYS_CROSS_ACTION_INTERPOLATE) ) ||
+         (WorkSpace[pTabCross->Comp].type==WRK_SYMBOL_PREDEFINED &&   // take only cross sections into account
+          pTabCross->crossAction==ANLYS_CROSS_ACTION_INTERPOLATE) ) {
       pXs=&WorkSpace[pTabCross->Comp].xs;
-      icolumn=((ANALYSE_swathSize==1) || (pXs->nc<=ANALYSE_swathSize))?1:indexFenoColumn+1;
+      icolumn=1+indexFenoColumn;
 
       // Buffer allocation
 
@@ -4446,7 +4445,7 @@ RC ANALYSE_LoadCross(ENGINE_CONTEXT *pEngineContext, const ANALYSIS_CROSS *cross
           !(rc=MATRIX_Load(pCross->crossSectionFile,&pWrkSymbol->xs,0,0,
                            (pCross->crossType==ANLYS_CROSS_ACTION_NOTHING)?(double)0.:lambda[0]-7.,      // max(lambda[0]-7.,(double)290.), - changed on october 2006
                            (pCross->crossType==ANLYS_CROSS_ACTION_NOTHING)?(double)0.:lambda[NDET-1]+7., // min(lambda[NDET-1]+7.,(double)600.), - changed on october 2006
-                           (pCross->crossType!=ANLYS_CROSS_ACTION_NOTHING)?1:0,1,"ANALYSE_LoadCross "))) {
+                           (pCross->crossType!=ANLYS_CROSS_ACTION_NOTHING)?1:0,1,__func__))) {
         if (!strcasecmp(pWrkSymbol->symbolName,"O3TD"))
           rc=MATRIX_Allocate(&O3TD,NDET,pWrkSymbol->xs.nc,0,0,0,__func__);
 
@@ -4467,13 +4466,20 @@ RC ANALYSE_LoadCross(ENGINE_CONTEXT *pEngineContext, const ANALYSIS_CROSS *cross
         case ANLYS_CROSS_ACTION_CONVOLUTE:
         case ANLYS_CROSS_ACTION_CONVOLUTE_I0:
           if (pWrkSymbol->xs.nc != 2) {
-            rc = ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_XS_COLUMNS, pCross->crossSectionFile, pWrkSymbol->xs.nc, 2);
+            rc = ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_XS_COLUMNS, pCross->symbol, pWrkSymbol->xs.nc, 2);
           }
           break;
         case ANLYS_CROSS_ACTION_CONVOLUTE_RING:
           if (pWrkSymbol->xs.nc != 4) {
-            rc = ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_XS_RING, pCross->crossSectionFile);
+            rc = ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_XS_RING, pCross->symbol);
           }
+          break;
+        case ANLYS_CROSS_ACTION_NOTHING:
+        case ANLYS_CROSS_ACTION_INTERPOLATE:
+          // interpolated/preset cross section is allowed in a project
+          // using online convolution, but there should be 1 column for
+          // each detector row:
+          rc = ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_XS_COLUMNS, pCross->symbol, pWrkSymbol->xs.nc, 1+ANALYSE_swathSize);
           break;
         }
       } else {
@@ -4483,7 +4489,7 @@ RC ANALYSE_LoadCross(ENGINE_CONTEXT *pEngineContext, const ANALYSIS_CROSS *cross
         } else if (pCross->crossType == ANLYS_CROSS_ACTION_CONVOLUTE ||
                    pCross->crossType == ANLYS_CROSS_ACTION_CONVOLUTE_I0 ||
                    pCross->crossType == ANLYS_CROSS_ACTION_CONVOLUTE_RING) {
-          rc=ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_CONVOLUTION, pCross->crossSectionFile);
+          rc=ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_CONVOLUTION, pCross->symbol);
         }
       }
 
@@ -4493,8 +4499,8 @@ RC ANALYSE_LoadCross(ENGINE_CONTEXT *pEngineContext, const ANALYSIS_CROSS *cross
      {
       // Allocate vectors for cross section and its second derivative for analysis processing
 
-      if (((pEngineCross->vector=(double *)MEMORY_AllocDVector("ANALYSE_LoadCross ","vector",0,NDET-1))==NULL) ||
-          ((pEngineCross->Deriv2=(double *)MEMORY_AllocDVector("ANALYSE_LoadCross ","Deriv2",0,NDET-1))==NULL))
+      if (((pEngineCross->vector=(double *)MEMORY_AllocDVector(__func__,"vector",0,NDET-1))==NULL) ||
+          ((pEngineCross->Deriv2=(double *)MEMORY_AllocDVector(__func__,"Deriv2",0,NDET-1))==NULL))
 
        rc=ERROR_ID_ALLOC;
 
@@ -4505,7 +4511,7 @@ RC ANALYSE_LoadCross(ENGINE_CONTEXT *pEngineContext, const ANALYSIS_CROSS *cross
         pEngineCross->filterFlag=pCross->requireFilter;
 
         if ((pEngineCross->crossAction==ANLYS_CROSS_ACTION_NOTHING) && (pTabFeno->gomeRefFlag || pEngineContext->refFlag))
-         rc=ANALYSE_CheckLambda(pWrkSymbol,lambda,"ANALYSE_LoadCross ");
+         rc=ANALYSE_CheckLambda(pWrkSymbol,lambda,__func__);
 
         if (rc==ERROR_ID_NO)
          {
@@ -4556,12 +4562,10 @@ RC ANALYSE_LoadCross(ENGINE_CONTEXT *pEngineContext, const ANALYSIS_CROSS *cross
 
   // Orthogonalization data
 
-  if (rc==ERROR_ID_NO)
-   {
+  if (rc==ERROR_ID_NO) {
     pEngineCross=pTabFeno->TabCross;
 
-    for (indexTabCross=firstTabCross,endTabCross=pTabFeno->NTabCross;indexTabCross<endTabCross;indexTabCross++)
-     {
+    for (indexTabCross=firstTabCross,endTabCross=pTabFeno->NTabCross;indexTabCross<endTabCross;indexTabCross++) {
       symbolLength=strlen(pOrthoSymbol[indexTabCross]);
 
       // No orthogonalization
@@ -4576,50 +4580,31 @@ RC ANALYSE_LoadCross(ENGINE_CONTEXT *pEngineContext, const ANALYSIS_CROSS *cross
 
       // Orthogonalization to another cross section
 
-      else
-       {
+      else {
         // Search for symbol in list
-
         for (indexSymbol=firstTabCross;indexSymbol<endTabCross;indexSymbol++)
-         if ((indexTabCross!=indexSymbol) &&
-             (symbolLength==strlen(WorkSpace[pEngineCross[indexSymbol].Comp].symbolName)) &&
-             !strcasecmp(pOrthoSymbol[indexTabCross],WorkSpace[pEngineCross[indexSymbol].Comp].symbolName))
-          break;
+          if ((indexTabCross!=indexSymbol) &&
+              (symbolLength==strlen(WorkSpace[pEngineCross[indexSymbol].Comp].symbolName)) &&
+              !strcasecmp(pOrthoSymbol[indexTabCross],WorkSpace[pEngineCross[indexSymbol].Comp].symbolName))
+            break;
 
         pEngineCross[indexTabCross].IndOrthog=(indexSymbol<endTabCross)?indexSymbol:ITEM_NONE;
-       }
-     }
+      }
+    }
 
-    for (indexTabCross=firstTabCross,endTabCross=pTabFeno->NTabCross;indexTabCross<endTabCross;indexTabCross++)
-     {
+    for (indexTabCross=firstTabCross,endTabCross=pTabFeno->NTabCross;indexTabCross<endTabCross;indexTabCross++) {
       // Symbol should be set to be orthogonalized to base
-
-      if (pEngineCross[indexTabCross].IndOrthog>=0)
-       {
-        // if orthogonalization in succession, orthogonalization is ignored
-
-        /* !!!!!        if (pEngineCross[pEngineCross[indexTabCross].IndOrthog].IndOrthog>=0)  // != ORTHOGONAL_BASE
-           {
-           THRD_Error(ERROR_TYPE_WARNING,ERROR_ID_ORTHOGONAL_CASCADE,"",WorkSpace[pEngineCross[indexTabCross].Comp].symbolName);
-           pEngineCross[indexTabCross].IndOrthog=ITEM_NONE;
-           }
-
-           // Force to be orthogonalized to base
-
-           else  */
-        {
-         if (pEngineCross[pEngineCross[indexTabCross].IndOrthog].IndOrthog==ITEM_NONE)
-          {
-           rc=ERROR_SetLast(__func__,ERROR_TYPE_WARNING,ERROR_ID_ORTHOGONAL_BASE,
-                            WorkSpace[pEngineCross[pEngineCross[indexTabCross].IndOrthog].Comp].symbolName,
-                            WorkSpace[pEngineCross[indexTabCross].Comp].symbolName);
-
-           pEngineCross[pEngineCross[indexTabCross].IndOrthog].IndOrthog=ORTHOGONAL_BASE;
-          }
+      if (pEngineCross[indexTabCross].IndOrthog>=0) {
+        if (pEngineCross[pEngineCross[indexTabCross].IndOrthog].IndOrthog==ITEM_NONE) {
+          rc=ERROR_SetLast(__func__,ERROR_TYPE_WARNING,ERROR_ID_ORTHOGONAL_BASE,
+                           WorkSpace[pEngineCross[pEngineCross[indexTabCross].IndOrthog].Comp].symbolName,
+                           WorkSpace[pEngineCross[indexTabCross].Comp].symbolName);
+          
+          pEngineCross[pEngineCross[indexTabCross].IndOrthog].IndOrthog=ORTHOGONAL_BASE;
         }
-       }
-     }
-   }
+      }
+    }
+  }
 
 #if defined(__DEBUG_) && __DEBUG_ && defined(__DEBUG_DOAS_CONFIG_) && __DEBUG_DOAS_CONFIG_
   DEBUG_FunctionStop(__func__,rc);
