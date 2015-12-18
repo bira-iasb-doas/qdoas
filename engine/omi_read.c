@@ -97,7 +97,7 @@ struct omi_buffer {
 
 // Geolocation fields
 
-struct omi_geo {
+struct omi_data {
   double         *time;
   float          *secondsInDay;
   float          *spacecraftLatitude;
@@ -112,6 +112,9 @@ struct omi_geo {
   short          *terrainHeight;
   unsigned short *groundPixelQualityFlags;
   uint8_t        *xtrackQualityFlags;
+  short *wavelengthReferenceColumn;
+  unsigned short *measurementQualityFlags;
+  unsigned char *instrumentConfigurationId;
 };
 
 struct omi_spectrum {
@@ -131,16 +134,9 @@ struct omi_ref {
   char         omiRefFileName[MAX_STR_LEN+1];
 };
 
-struct omi_data_fields {
-  short *wavelengthReferenceColumn;
-  unsigned short *measurementQualityFlags;
-  unsigned char *instrumentConfigurationId;
-};
-
 struct omi_swath_earth {
-  struct omi_geo geolocationFields;
   struct omi_spectrum spectrum;
-  struct omi_data_fields dataFields;
+  struct omi_data dataFields;
 };
 
 struct omi_orbit_file { // description of an orbit
@@ -333,24 +329,26 @@ bool omi_has_automatic_reference(int row)
 static void omi_free_swath_data(struct omi_swath_earth *pSwath)
 {
   if(pSwath != NULL) {
+    struct omi_data *data = &pSwath->dataFields;
     struct omi_buffer omi_swath_buffers[] = {
       {"pixelQualityFlags",pSwath->spectrum.pixelQualityFlags},
-      {"measurementQualityFlags",pSwath->dataFields.measurementQualityFlags},
-      {"wavelengthReferenceColumn",pSwath->dataFields.wavelengthReferenceColumn},
-      {"instrumentConfigurationId",pSwath->dataFields.instrumentConfigurationId},
-      {"secondsInDay",pSwath->geolocationFields.secondsInDay},
-      {"spacecraftLatitude",pSwath->geolocationFields.spacecraftLatitude},
-      {"spacecraftLongitude",pSwath->geolocationFields.spacecraftLongitude},
-      {"spacecraftAltitude",pSwath->geolocationFields.spacecraftAltitude},
-      {"latitude",pSwath->geolocationFields.latitude},
-      {"longitude",pSwath->geolocationFields.longitude},
-      {"solarZenithAngle",pSwath->geolocationFields.solarZenithAngle},
-      {"solarAzimuthAngle",pSwath->geolocationFields.solarAzimuthAngle},
-      {"viewingZenithAngle",pSwath->geolocationFields.viewingZenithAngle},
-      {"viewingAzimuthAngle",pSwath->geolocationFields.viewingAzimuthAngle},
-      {"terrainHeight",pSwath->geolocationFields.terrainHeight},
-      {"groundPixelQualityFlags",pSwath->geolocationFields.groundPixelQualityFlags},
-      {"xtrackQualityFlags",pSwath->geolocationFields.xtrackQualityFlags},
+      {"measurementQualityFlags",data->measurementQualityFlags},
+      {"wavelengthReferenceColumn",data->wavelengthReferenceColumn},
+      {"instrumentConfigurationId",data->instrumentConfigurationId},
+      {"secondsInDay",data->secondsInDay},
+      {"spacecraftLatitude",data->spacecraftLatitude},
+      {"spacecraftLongitude",data->spacecraftLongitude},
+      {"spacecraftAltitude",data->spacecraftAltitude},
+      {"latitude",data->latitude},
+      {"longitude",data->longitude},
+      {"solarZenithAngle",data->solarZenithAngle},
+      {"solarAzimuthAngle",data->solarAzimuthAngle},
+      {"viewingZenithAngle",data->viewingZenithAngle},
+      {"viewingAzimuthAngle",data->viewingAzimuthAngle},
+      {"terrainHeight",data->terrainHeight},
+      {"time",data->time},
+      {"groundPixelQualityFlags",data->groundPixelQualityFlags},
+      {"xtrackQualityFlags",data->xtrackQualityFlags},
     };
     
     for(unsigned int i=0; i<sizeof(omi_swath_buffers)/sizeof(omi_swath_buffers[0]); i++) {
@@ -358,9 +356,6 @@ static void omi_free_swath_data(struct omi_swath_earth *pSwath)
       if (ptr != NULL)
         MEMORY_ReleaseBuffer(__func__, omi_swath_buffers[i].buffername, ptr);
     }
-    
-    if (pSwath->geolocationFields.time!=NULL)
-      MEMORY_ReleaseDVector(__func__, "time",pSwath->geolocationFields.time,0);
 
     free(pSwath);
   }
@@ -475,8 +470,7 @@ static RC OMI_AllocateSwath(struct omi_swath_earth **swath,int n_alongtrack,int 
   *swath = pSwath;
 
   struct omi_spectrum *pSpectrum = &pSwath->spectrum;  // spectrum in earth swath
-  struct omi_data_fields *pData = &pSwath->dataFields; // data on earth swath
-  struct omi_geo *pGeo = &pSwath->geolocationFields;   // geolocations
+  struct omi_data *pData = &pSwath->dataFields; // data on earth swath
   int nRecords = n_alongtrack*n_crosstrack;            // total number of spectra
   RC rc = ERROR_ID_NO;                          // Return code
 
@@ -485,20 +479,20 @@ static RC OMI_AllocateSwath(struct omi_swath_earth **swath,int n_alongtrack,int 
       ((pData->measurementQualityFlags=(unsigned short *)MEMORY_AllocBuffer(__func__,"measurementQualityFlags",n_alongtrack,sizeof(unsigned short),0,MEMORY_TYPE_USHORT))==NULL) ||
       ((pData->instrumentConfigurationId=(unsigned char*)MEMORY_AllocBuffer(__func__,"instrumentConfigurationId",n_alongtrack,sizeof(unsigned short),0,MEMORY_TYPE_UNKNOWN))==NULL) ||
       ((pData->wavelengthReferenceColumn=(short *)MEMORY_AllocBuffer(__func__,"wavelengthReferenceColumn",n_alongtrack,sizeof(short),0,MEMORY_TYPE_SHORT))==NULL) ||
-      ((pGeo->time=(double *)MEMORY_AllocDVector(__func__,"time",0,n_alongtrack))==NULL) ||
-      ((pGeo->secondsInDay=(float *)MEMORY_AllocBuffer(__func__,"secondsInDay",n_alongtrack,sizeof(float),0,MEMORY_TYPE_FLOAT))==NULL) ||
-      ((pGeo->spacecraftLatitude=(float *)MEMORY_AllocBuffer(__func__,"spacecraftLatitude",n_alongtrack,sizeof(float),0,MEMORY_TYPE_FLOAT))==NULL) ||
-      ((pGeo->spacecraftLongitude=(float *)MEMORY_AllocBuffer(__func__,"spacecraftLongitude",n_alongtrack,sizeof(float),0,MEMORY_TYPE_FLOAT))==NULL) ||
-      ((pGeo->spacecraftAltitude=(float *)MEMORY_AllocBuffer(__func__,"spacecraftAltitude",n_alongtrack,sizeof(float),0,MEMORY_TYPE_FLOAT))==NULL) ||
-      ((pGeo->latitude=(float *)MEMORY_AllocBuffer(__func__,"latitude",nRecords,sizeof(float),0,MEMORY_TYPE_FLOAT))==NULL) ||
-      ((pGeo->longitude=(float *)MEMORY_AllocBuffer(__func__,"longitude",nRecords,sizeof(float),0,MEMORY_TYPE_FLOAT))==NULL) ||
-      ((pGeo->solarZenithAngle=(float *)MEMORY_AllocBuffer(__func__,"solarZenithAngle",nRecords,sizeof(float),0,MEMORY_TYPE_FLOAT))==NULL) ||
-      ((pGeo->solarAzimuthAngle=(float *)MEMORY_AllocBuffer(__func__,"solarAzimuthAngle",nRecords,sizeof(float),0,MEMORY_TYPE_FLOAT))==NULL) ||
-      ((pGeo->viewingZenithAngle=(float *)MEMORY_AllocBuffer(__func__,"viewingZenithAngle",nRecords,sizeof(float),0,MEMORY_TYPE_FLOAT))==NULL) ||
-      ((pGeo->viewingAzimuthAngle=(float *)MEMORY_AllocBuffer(__func__,"viewingAzimuthAngle",nRecords,sizeof(float),0,MEMORY_TYPE_FLOAT))==NULL) ||
-      ((pGeo->terrainHeight=(short *)MEMORY_AllocBuffer(__func__,"terrainHeight",nRecords,sizeof(short),0,MEMORY_TYPE_SHORT))==NULL) ||
-      ((pGeo->groundPixelQualityFlags=(unsigned short *)MEMORY_AllocBuffer(__func__,"groundPixelQualityFlags",nRecords,sizeof(unsigned short),0,MEMORY_TYPE_USHORT))==NULL) ||
-      ((pGeo->xtrackQualityFlags=(uint8_t *)MEMORY_AllocBuffer(__func__,"xtrackQualityFlags",nRecords,sizeof(unsigned short),0,MEMORY_TYPE_STRING))==NULL))
+      ((pData->time=MEMORY_AllocBuffer(__func__,"time",n_alongtrack,sizeof(*pData->time),0,MEMORY_TYPE_DOUBLE))==NULL) ||
+      ((pData->secondsInDay=(float *)MEMORY_AllocBuffer(__func__,"secondsInDay",n_alongtrack,sizeof(float),0,MEMORY_TYPE_FLOAT))==NULL) ||
+      ((pData->spacecraftLatitude=(float *)MEMORY_AllocBuffer(__func__,"spacecraftLatitude",n_alongtrack,sizeof(float),0,MEMORY_TYPE_FLOAT))==NULL) ||
+      ((pData->spacecraftLongitude=(float *)MEMORY_AllocBuffer(__func__,"spacecraftLongitude",n_alongtrack,sizeof(float),0,MEMORY_TYPE_FLOAT))==NULL) ||
+      ((pData->spacecraftAltitude=(float *)MEMORY_AllocBuffer(__func__,"spacecraftAltitude",n_alongtrack,sizeof(float),0,MEMORY_TYPE_FLOAT))==NULL) ||
+      ((pData->latitude=(float *)MEMORY_AllocBuffer(__func__,"latitude",nRecords,sizeof(float),0,MEMORY_TYPE_FLOAT))==NULL) ||
+      ((pData->longitude=(float *)MEMORY_AllocBuffer(__func__,"longitude",nRecords,sizeof(float),0,MEMORY_TYPE_FLOAT))==NULL) ||
+      ((pData->solarZenithAngle=(float *)MEMORY_AllocBuffer(__func__,"solarZenithAngle",nRecords,sizeof(float),0,MEMORY_TYPE_FLOAT))==NULL) ||
+      ((pData->solarAzimuthAngle=(float *)MEMORY_AllocBuffer(__func__,"solarAzimuthAngle",nRecords,sizeof(float),0,MEMORY_TYPE_FLOAT))==NULL) ||
+      ((pData->viewingZenithAngle=(float *)MEMORY_AllocBuffer(__func__,"viewingZenithAngle",nRecords,sizeof(float),0,MEMORY_TYPE_FLOAT))==NULL) ||
+      ((pData->viewingAzimuthAngle=(float *)MEMORY_AllocBuffer(__func__,"viewingAzimuthAngle",nRecords,sizeof(float),0,MEMORY_TYPE_FLOAT))==NULL) ||
+      ((pData->terrainHeight=(short *)MEMORY_AllocBuffer(__func__,"terrainHeight",nRecords,sizeof(short),0,MEMORY_TYPE_SHORT))==NULL) ||
+      ((pData->groundPixelQualityFlags=(unsigned short *)MEMORY_AllocBuffer(__func__,"groundPixelQualityFlags",nRecords,sizeof(unsigned short),0,MEMORY_TYPE_USHORT))==NULL) ||
+      ((pData->xtrackQualityFlags=(uint8_t *)MEMORY_AllocBuffer(__func__,"xtrackQualityFlags",nRecords,sizeof(unsigned short),0,MEMORY_TYPE_STRING))==NULL))
 
     rc=ERROR_ID_ALLOC;
 
@@ -572,11 +566,11 @@ static bool use_as_reference(struct omi_orbit_file *orbit_file, int recordnumber
   float sza_min = pTabFeno->refSZA - pTabFeno->refSZADelta;
   float sza_max = pTabFeno->refSZA + pTabFeno->refSZADelta;
 
-  float lon = orbit_file->omiSwath->geolocationFields.longitude[recordnumber];
-  float lat = orbit_file->omiSwath->geolocationFields.latitude[recordnumber];
-  float sza = orbit_file->omiSwath->geolocationFields.solarZenithAngle[recordnumber];
+  float lon = orbit_file->omiSwath->dataFields.longitude[recordnumber];
+  float lat = orbit_file->omiSwath->dataFields.latitude[recordnumber];
+  float sza = orbit_file->omiSwath->dataFields.solarZenithAngle[recordnumber];
 
-  int xTrackQF = orbit_file->omiSwath->geolocationFields.xtrackQualityFlags[recordnumber];
+  int xTrackQF = orbit_file->omiSwath->dataFields.xtrackQualityFlags[recordnumber];
 
   bool use_row = omi_use_track(xTrackQF, xtrack_mode);
   
@@ -686,9 +680,9 @@ static RC find_matching_spectra(ENGINE_CONTEXT *pEngineContext, struct omi_orbit
             if(newref == NULL) {
               newref = malloc(sizeof (struct omi_ref_spectrum));
               allocs++;
-              newref->solarZenithAngle = orbit_file->omiSwath->geolocationFields.solarZenithAngle[recordnumber];
-              newref->longitude = orbit_file->omiSwath->geolocationFields.longitude[recordnumber];
-              newref->latitude = orbit_file->omiSwath->geolocationFields.latitude[recordnumber];
+              newref->solarZenithAngle = orbit_file->omiSwath->dataFields.solarZenithAngle[recordnumber];
+              newref->longitude = orbit_file->omiSwath->dataFields.longitude[recordnumber];
+              newref->latitude = orbit_file->omiSwath->dataFields.latitude[recordnumber];
               newref->measurement_number = measurement;
               newref->detector_row = row;
               newref->next = *first;
@@ -929,8 +923,7 @@ static void tai_to_utc(double tai, float utc_seconds_in_day, struct tm *result, 
 static RC OmiGetSwathData(struct omi_orbit_file *pOrbitFile)
 {
   // Initializations
-  struct omi_data_fields *pData = &pOrbitFile->omiSwath->dataFields;
-  struct omi_geo *pGeo = &pOrbitFile->omiSwath->geolocationFields;
+  struct omi_data *pData = &pOrbitFile->omiSwath->dataFields;
   RC rc=ERROR_ID_NO;
 
   struct omi_buffer swathdata[] =
@@ -938,20 +931,20 @@ static RC OmiGetSwathData(struct omi_orbit_file *pOrbitFile)
       {"MeasurementQualityFlags", pData->measurementQualityFlags},
       {"InstrumentConfigurationId", pData->instrumentConfigurationId},
       {"WavelengthReferenceColumn", pData->wavelengthReferenceColumn},
-      {"Time",pGeo->time},
-      {"SecondsInDay",pGeo->secondsInDay},
-      {"SpacecraftLatitude", pGeo->spacecraftLatitude},
-      {"SpacecraftLongitude", pGeo->spacecraftLongitude},
-      {"SpacecraftAltitude", pGeo->spacecraftAltitude},
-      {"Latitude", pGeo->latitude},
-      {"Longitude", pGeo->longitude},
-      {"SolarZenithAngle", pGeo->solarZenithAngle},
-      {"SolarAzimuthAngle", pGeo->solarAzimuthAngle},
-      {"ViewingZenithAngle", pGeo->viewingZenithAngle},
-      {"ViewingAzimuthAngle", pGeo->viewingAzimuthAngle},
-      {"TerrainHeight", pGeo->terrainHeight},
-      {"GroundPixelQualityFlags", pGeo->groundPixelQualityFlags},
-      {"XTrackQualityFlags",pGeo->xtrackQualityFlags}
+      {"Time",pData->time},
+      {"SecondsInDay",pData->secondsInDay},
+      {"SpacecraftLatitude", pData->spacecraftLatitude},
+      {"SpacecraftLongitude", pData->spacecraftLongitude},
+      {"SpacecraftAltitude", pData->spacecraftAltitude},
+      {"Latitude", pData->latitude},
+      {"Longitude", pData->longitude},
+      {"SolarZenithAngle", pData->solarZenithAngle},
+      {"SolarAzimuthAngle", pData->solarAzimuthAngle},
+      {"ViewingZenithAngle", pData->viewingZenithAngle},
+      {"ViewingAzimuthAngle", pData->viewingAzimuthAngle},
+      {"TerrainHeight", pData->terrainHeight},
+      {"GroundPixelQualityFlags", pData->groundPixelQualityFlags},
+      {"XTrackQualityFlags",pData->xtrackQualityFlags}
     };
 
   int32 start[] = {0,0};
@@ -967,8 +960,8 @@ static RC OmiGetSwathData(struct omi_orbit_file *pOrbitFile)
 
   // normalize longitudes: should be in the range 0-360
   for (int i=0; i< (pOrbitFile->nMeasurements * pOrbitFile->nXtrack); i++) {
-    if(pGeo->longitude[i] < 0.)
-      pGeo->longitude[i] += 360.;
+    if(pData->longitude[i] < 0.)
+      pData->longitude[i] += 360.;
   }
 
   // Return
@@ -1348,6 +1341,54 @@ RC OMI_Set(ENGINE_CONTEXT *pEngineContext)
   return rc;
 }
 
+// transfer all OMI auxiliary data such as geolocation, time, ... to a
+// RECORD_INFO structure
+static void get_omi_record_data(RECORD_INFO *pRecord, const struct omi_orbit_file *orbit_file, int i_alongtrack, int i_crosstrack) {
+  const struct omi_data *pData = &orbit_file->omiSwath->dataFields;
+  
+  const int i_record = i_alongtrack * orbit_file->nXtrack + i_crosstrack;
+
+  pRecord->i_alongtrack=i_alongtrack;
+  pRecord->i_crosstrack=i_crosstrack;
+  
+  pRecord->latitude=pData->latitude[i_record];
+  pRecord->longitude=pData->longitude[i_record];
+  pRecord->Zm=pData->solarZenithAngle[i_record];
+  pRecord->Azimuth=pData->solarAzimuthAngle[i_record];
+  pRecord->zenithViewAngle=pData->viewingZenithAngle[i_record];
+  pRecord->azimuthViewAngle=pData->viewingAzimuthAngle[i_record];
+  pRecord->useErrors=1;                                                     // Errors are available for OMI
+  
+  pRecord->omi.omiXtrackQF = pData->xtrackQualityFlags[i_record];
+  pRecord->omi.instrumentConfigurationId = pData->instrumentConfigurationId[i_alongtrack];
+
+  pRecord->satellite.altitude = pData->spacecraftAltitude[i_alongtrack];
+  pRecord->satellite.latitude = pData->spacecraftLatitude[i_alongtrack];
+  pRecord->satellite.longitude = pData->spacecraftLongitude[i_alongtrack];
+    
+  pRecord->satellite.orbit_number = current_orbit_file.number;
+          
+  struct tm time_record;
+  int omi_ms=0;
+  // use TAI-93 "time" and UTC "secondsInDay" to get UTC date-time of current measurement:
+  tai_to_utc(pData->time[i_alongtrack], pData->secondsInDay[i_alongtrack], &time_record, &omi_ms);
+  
+  struct date *pDate = &pRecord->present_datetime.thedate;
+  struct time *pTime = &pRecord->present_datetime.thetime;
+      
+  pTime->ti_hour = (char)(time_record.tm_hour);
+  pTime->ti_min = (char)(time_record.tm_min);
+  pTime->ti_sec = (char)(time_record.tm_sec);
+      
+  pDate->da_year = time_record.tm_year + 1900;
+  pDate->da_mon = (char)(time_record.tm_mon + 1);
+  pDate->da_day = (char)(time_record.tm_mday);
+  
+  pRecord->present_datetime.millis = omi_ms;
+    
+  pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_datetime.thedate,&pRecord->present_datetime.thetime,0);
+}
+
 // -----------------------------------------------------------------------------
 // FUNCTION      OMI_read_earth
 // -----------------------------------------------------------------------------
@@ -1365,15 +1406,11 @@ RC OMI_Set(ENGINE_CONTEXT *pEngineContext)
 RC OMI_read_earth(ENGINE_CONTEXT *pEngineContext,int recordNo)
 {
   // Initializations
-  
-  struct omi_orbit_file *pOrbitFile = &current_orbit_file; // pointer to the current orbit
-  const struct omi_geo *pGeo= &pOrbitFile->omiSwath->geolocationFields;
-  const struct omi_data_fields *pData = &pOrbitFile->omiSwath->dataFields;
+  const struct omi_orbit_file *pOrbitFile = &current_orbit_file; // pointer to the current orbit
 
   double *spectrum=pEngineContext->buffers.spectrum;
   double *sigma=pEngineContext->buffers.sigmaSpec;
   double *lambda=pEngineContext->buffers.lambda;
-  RECORD_INFO *pRecord=&pEngineContext->recordInfo;
   RC rc=ERROR_ID_NO;
 
   // Goto the requested record
@@ -1385,20 +1422,22 @@ RC OMI_read_earth(ENGINE_CONTEXT *pEngineContext,int recordNo)
   else {
     for (int i=0;i<NDET;i++)
       spectrum[i]=sigma[i]=(double)0.;
+
+    int i_alongtrack=(recordNo-1)/pOrbitFile->nXtrack;
+    int i_crosstrack=(recordNo-1)%pOrbitFile->nXtrack;
+
+    get_omi_record_data(&pEngineContext->recordInfo, pOrbitFile, i_alongtrack, i_crosstrack);
     
-    int indexMeasurement=(recordNo-1)/pOrbitFile->nXtrack; // index of the swath
-    int indexSpectrum=(recordNo-1)%pOrbitFile->nXtrack; // index of the spectrum in the swath
-    
-    if (!pEngineContext->project.instrumental.omi.omiTracks[indexSpectrum]) {
+    if (!pEngineContext->project.instrumental.omi.omiTracks[i_crosstrack]) {
       return ERROR_ID_FILE_RECORD;
     }
     rc= omi_load_spectrum(OMI_SPEC_RAD,
                           pOrbitFile->sw_id,
-                          indexMeasurement,
-                          indexSpectrum,
+                          i_alongtrack,
+                          i_crosstrack,
                           pOrbitFile->nWavel,
                           lambda,spectrum,sigma,
-                          pRecord->omi.omiPixelQF);
+                          pEngineContext->recordInfo.omi.omiPixelQF);
     if (rc)
       return rc;
 
@@ -1412,58 +1451,13 @@ RC OMI_read_earth(ENGINE_CONTEXT *pEngineContext,int recordNo)
     }
 
     if ((THRD_id==THREAD_TYPE_ANALYSIS) && omiRefFilesN) {
-      if (omiSwathOld!=indexMeasurement) {
+      if (omiSwathOld!=i_alongtrack) {
         KURUCZ_indexLine=1;
-        omiSwathOld=indexMeasurement;
-      }
-      
-      memcpy(pEngineContext->buffers.lambda_irrad,OMI_ref[0].omiRefLambda[indexSpectrum],sizeof(double)*NDET);
-      memcpy(pEngineContext->buffers.irrad,OMI_ref[0].omiRefSpectrum[indexSpectrum],sizeof(double)*NDET);
+        omiSwathOld=i_alongtrack;
+      }      
+      memcpy(pEngineContext->buffers.lambda_irrad,OMI_ref[0].omiRefLambda[i_crosstrack],sizeof(double)*NDET);
+      memcpy(pEngineContext->buffers.irrad,OMI_ref[0].omiRefSpectrum[i_crosstrack],sizeof(double)*NDET);
     }
-      
-    pRecord->latitude=pGeo->latitude[recordNo-1];
-    pRecord->longitude=pGeo->longitude[recordNo-1];
-    pRecord->Zm=pGeo->solarZenithAngle[recordNo-1];
-    pRecord->Azimuth=pGeo->solarAzimuthAngle[recordNo-1];
-    pRecord->zenithViewAngle=pGeo->viewingZenithAngle[recordNo-1];
-    pRecord->azimuthViewAngle=pGeo->viewingAzimuthAngle[recordNo-1];
-    pRecord->useErrors=1;                                                     // Errors are available for OMI
-          
-    // Complete information on the current spectrum
-      
-    pRecord->i_alongtrack=indexMeasurement;
-    pRecord->i_crosstrack=indexSpectrum;
-    pRecord->omi.omiXtrackQF = pGeo->xtrackQualityFlags[recordNo-1];
-    pRecord->omi.instrumentConfigurationId = pData->instrumentConfigurationId[indexMeasurement];
-    printf("record %d, measurement %d, config id %d\n", recordNo, indexMeasurement, pData->instrumentConfigurationId[indexMeasurement]);
-
-    // Satellite location data
-    
-    pRecord->satellite.altitude = pGeo->spacecraftAltitude[indexMeasurement];
-    pRecord->satellite.latitude = pGeo->spacecraftLatitude[indexMeasurement];
-    pRecord->satellite.longitude = pGeo->spacecraftLongitude[indexMeasurement];
-    
-    pRecord->satellite.orbit_number = current_orbit_file.number;
-          
-    struct tm time_record;
-    int omi_ms=0;
-    // use TAI-93 "time" and UTC "secondsInDay" to get UTC date-time of current measurement:
-    tai_to_utc(pGeo->time[indexMeasurement], pGeo->secondsInDay[indexMeasurement], &time_record, &omi_ms);
-      
-    struct date *pDate = &pRecord->present_datetime.thedate;
-    struct time *pTime = &pRecord->present_datetime.thetime;
-      
-    pTime->ti_hour = (char)(time_record.tm_hour);
-    pTime->ti_min = (char)(time_record.tm_min);
-    pTime->ti_sec = (char)(time_record.tm_sec);
-      
-    pDate->da_year = time_record.tm_year + 1900;
-    pDate->da_mon = (char)(time_record.tm_mon + 1);
-    pDate->da_day = (char)(time_record.tm_mday);
-    
-    pRecord->present_datetime.millis = omi_ms;
-    
-    pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_datetime.thedate,&pRecord->present_datetime.thetime,0);
   }
   return rc;
 }
