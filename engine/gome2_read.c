@@ -949,59 +949,25 @@ int Gome2ReadMDRInfo(GOME2_ORBIT_FILE *pOrbitFile,GOME2_MDR *pMdr,int indexBand)
 }
 
 RC Gome2BrowseMDR(GOME2_ORBIT_FILE *pOrbitFile,INDEX indexBand) {
-  // Declarations
 
-  GOME2_INFO *pGome2Info;
-  char *ptr,*ptrOld;
-  char geoFileName[MAX_STR_SHORT_LEN+1];
-  GOME2_MDR *pMdr;
-  FILE *geoFp;
-  INDEX i;
-  RC  rc;
+  GOME2_INFO *pGome2Info=&pOrbitFile->gome2Info;
+  RC rc=ERROR_ID_NO;
 
-  // Initializations
+  coda_cursor_goto_root(&pOrbitFile->gome2Cursor);
+  coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"MDR");
 
-  pGome2Info=&pOrbitFile->gome2Info;
-  rc=ERROR_ID_NO;
+  for (unsigned int i=0; i<pGome2Info->total_mdr; i++) {
+    coda_cursor_goto_array_element_by_index(&pOrbitFile->gome2Cursor,i);
+    GOME2_MDR *pMdr=&pGome2Info->mdr[pGome2Info->total_nadir_mdr];
 
-  // Search for the equivalent geolocation file
+    if (!(rc=Gome2ReadMDRInfo(pOrbitFile,pMdr,indexBand))) {
+      pGome2Info->total_nadir_obs+=pMdr->num_recs[indexBand];
+      pMdr->indexMDR=i;
 
-  strcpy(geoFileName,pOrbitFile->gome2FileName);
-  if ((ptrOld=strrchr(geoFileName,PATH_SEP)) ==NULL)
-    ptrOld=geoFileName;
-  else
-    ptrOld++;
-
-  if ((ptr=strrchr(ptrOld,'.')) ==NULL)
-    strcat(geoFileName,".geo");
-  else
-    strcpy(ptr,".geo");
-
-  if ((geoFp=fopen(geoFileName,"rb")) !=NULL) {
-    pGome2Info->total_nadir_mdr=STD_FileLength(geoFp) /sizeof(GOME2_MDR);
-    fread(pGome2Info->mdr,sizeof(GOME2_MDR),pGome2Info->total_nadir_mdr,geoFp);
-    fclose(geoFp);
-
-    for (i=0; i<pGome2Info->total_nadir_mdr; i++)
-      pGome2Info->total_nadir_obs+=pGome2Info->mdr[i].num_recs[indexBand];
-  } else {
-    coda_cursor_goto_root(&pOrbitFile->gome2Cursor);
-    coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"MDR");
-
-    for (i=0; (uint32_t) i<pGome2Info->total_mdr; i++) {
-      coda_cursor_goto_array_element_by_index(&pOrbitFile->gome2Cursor,i);
-      pMdr=&pGome2Info->mdr[pGome2Info->total_nadir_mdr];
-
-
-      if (!(rc=Gome2ReadMDRInfo(pOrbitFile,pMdr,indexBand))) {
-        pGome2Info->total_nadir_obs+=pMdr->num_recs[indexBand];
-        pMdr->indexMDR=i;
-
-        pGome2Info->total_nadir_mdr++;
-      }
-
-      coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);
+      pGome2Info->total_nadir_mdr++;
     }
+    
+    coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);
   }
 
   // Return
