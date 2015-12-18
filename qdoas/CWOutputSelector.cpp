@@ -144,6 +144,7 @@ CWOutputSelector::CWOutputSelector(const data_select_list_t *d, QWidget *parent)
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_OMI_GROUNDP_QF,         "Ground pixel quality flags"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_OMI_XTRACK_QF,          "Xtrack quality flags"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_OMI_PIXELS_QF,          "Rejected pixels based on quality flags"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_OMI_CONFIGURATION_ID,   "Instrument configuration id"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_SPIKES,                 "Pixels with spikes in residual"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_UAV_SERVO_BYTE_SENT,    "Servo position byte sent"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_UAV_SERVO_BYTE_RECEIVED,"Servo position byte received"));
@@ -613,6 +614,7 @@ void getValidFieldFlags(int *validFlags, int instrument,bool exportFlag)
       validFlags[PRJCT_RESULTS_INDEX_CROSSTRACK]=1;
       validFlags[PRJCT_RESULTS_OMI_GROUNDP_QF]=1;
       validFlags[PRJCT_RESULTS_OMI_XTRACK_QF]=1;
+      validFlags[PRJCT_RESULTS_OMI_CONFIGURATION_ID]=1;
 
       if (!exportFlag)
        validFlags[PRJCT_RESULTS_OMI_PIXELS_QF]=1;

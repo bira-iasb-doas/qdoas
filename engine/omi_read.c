@@ -97,8 +97,7 @@ struct omi_buffer {
 
 // Geolocation fields
 
-typedef struct _omi_geo
-{
+struct omi_geo {
   double         *time;
   float          *secondsInDay;
   float          *spacecraftLatitude;
@@ -113,51 +112,40 @@ typedef struct _omi_geo
   short          *terrainHeight;
   unsigned short *groundPixelQualityFlags;
   uint8_t        *xtrackQualityFlags;
-}
-  OMI_GEO;
+};
 
-// Data fields
-
-typedef struct _omi_spectrum
-{
+struct omi_spectrum {
   unsigned short *pixelQualityFlags;
   float   wavelengthCoefficient[5];
   float   wavelengthCoefficientPrecision[5];
-}
-  OMI_SPECTRUM;
+};
 
-typedef struct _omi_ref
-{
+struct omi_ref {
   double       **omiRefLambda;
   double       **omiRefSpectrum;
   double       **omiRefSigma;
-  char         omiRefFileName[MAX_STR_LEN+1];
-  OMI_SPECTRUM   spectrum;
-  long           nXtrack,nWavel;
   double        *omiRefFact;
+  long           nXtrack,nWavel;
+  struct omi_spectrum spectrum;
   int            year,cday;
-}
-  OMI_REF;
+  char         omiRefFileName[MAX_STR_LEN+1];
+};
 
-typedef struct _omi_data_fields
-{
-  short   *wavelengthReferenceColumn;
-  unsigned short  *measurementQualityFlags;
-}
-  OMI_DATA_FIELDS;
+struct omi_data_fields {
+  short *wavelengthReferenceColumn;
+  unsigned short *measurementQualityFlags;
+  unsigned char *instrumentConfigurationId;
+};
 
-typedef struct _omi_swath_earth
-{
-  OMI_GEO         geolocationFields;
-  OMI_SPECTRUM    spectrum;
-  OMI_DATA_FIELDS dataFields;
-}
-  OMI_SWATH;
+struct omi_swath_earth {
+  struct omi_geo geolocationFields;
+  struct omi_spectrum spectrum;
+  struct omi_data_fields dataFields;
+};
 
-typedef struct _OMIOrbitFiles // description of an orbit
-{
+struct omi_orbit_file { // description of an orbit
   char      *omiFileName;       // the name of the file with a part of the orbit
-  OMI_SWATH *omiSwath;          // all information about the swath
+  struct omi_swath_earth *omiSwath;          // all information about the swath
   int        specNumber;
   int32      swf_id,            // hdfeos swath file id
     sw_id;                      // hdfeos swath id
@@ -166,8 +154,7 @@ typedef struct _OMIOrbitFiles // description of an orbit
     nWavel;
   int year, month, day;         // orbit date
   int number;                   // orbit number
-}
-  OMI_ORBIT_FILE;
+};
 
 /* Before calculating the automatic reference spectrum, we build a
  * list of all spectra matching the search criteria for one of the
@@ -175,25 +162,23 @@ typedef struct _OMIOrbitFiles // description of an orbit
  * reading the same spectrum twice when it is used in the reference
  * calculation for multiple analysis windows.
  */
-struct omi_ref_spectrum
-{
-  float                    solarZenithAngle;
-  float                    latitude;
-  float                    longitude;
-  int                      measurement_number;
-  int                      detector_row;
-  double                  *wavelengths;
-  double                  *spectrum;
-  double                  *errors;
-  OMI_ORBIT_FILE          *orbit_file; // orbit file containing this spectrum
+struct omi_ref_spectrum {
+  double *wavelengths;
+  double *spectrum;
+  double *errors;
+  struct omi_orbit_file *orbit_file; // orbit file containing this spectrum
   struct omi_ref_spectrum *next; // next in the list;
+  float solarZenithAngle;
+  float latitude;
+  float longitude;
+  int measurement_number;
+  int detector_row;
 };
 
 /* List of spectra to be used in the automatic reference calculation
  * for a single pair (analysiswindow, detector row).
  */
-struct omi_ref_list
-{
+struct omi_ref_list {
   struct omi_ref_spectrum *reference;
   struct omi_ref_list *next;
 };
@@ -205,25 +190,25 @@ const char *OMI_SunSwaths[OMI_SWATH_MAX]={"Sun Volume UV-1 Swath","Sun Volume UV
 // STATIC VARIABLES
 // ================
 
-static OMI_ORBIT_FILE current_orbit_file;
+static struct omi_orbit_file current_orbit_file;
 static int omiRefFilesN=0; // the total number of files to browse in one shot
 static int omiTotalRecordNumber=0;
-static OMI_REF OMI_ref[MAX_FENO]; // the number of reference spectra is limited to the maximum number of analysis windows in a project
+static struct omi_ref OMI_ref[MAX_FENO]; // the number of reference spectra is limited to the maximum number of analysis windows in a project
 
-static OMI_ORBIT_FILE* reference_orbit_files[MAX_OMI_FILES]; // List of filenames for which the current automatic reference spectrum is valid. -> all spectra from the same day/same directory.
+static struct omi_orbit_file* reference_orbit_files[MAX_OMI_FILES]; // List of filenames for which the current automatic reference spectrum is valid. -> all spectra from the same day/same directory.
 static int num_reference_orbit_files = 0;
 static bool automatic_reference_ok[OMI_NUM_ROWS]; // array to keep track if automatic reference creation spectrum failed for one of the detector rows
 
 int omiSwathOld=ITEM_NONE;
 
-static RC OmiOpen(OMI_ORBIT_FILE *pOrbitFile,const char *swathName);
-static void omi_free_swath_data(OMI_SWATH *pSwath);
+static RC OmiOpen(struct omi_orbit_file *pOrbitFile,const char *swathName);
+static void omi_free_swath_data(struct omi_swath_earth *pSwath);
 static void omi_calculate_wavelengths(float32 wavelength_coeff[], int16 refcol, int32 n_wavel, double* lambda);
 static void omi_make_double(int16 mantissa[], int8 exponent[], int32 n_wavel, double* result);
 static void omi_interpolate_errors(int16 mantissa[], int32 n_wavel, double wavelengths[], double y[] );
 static RC omi_load_spectrum(int spec_type, int32 sw_id, int32 measurement, int32 track, int32 n_wavel, double *lambda, double *spectrum, double *sigma, unsigned short *pixelQualityFlags);
 static void average_spectrum(double *average, double *errors, struct omi_ref_list *spectra, double *wavelength_grid);
-static RC read_orbit_metadata(OMI_ORBIT_FILE *orbit);
+static RC read_orbit_metadata(struct omi_orbit_file *orbit);
 
 // ===================
 // ALLOCATION ROUTINES
@@ -233,7 +218,7 @@ void OMI_ReleaseReference(void)
 {
   // Declarations
 
-  OMI_REF *pRef;
+  struct omi_ref *pRef;
 
   // Initialization
 
@@ -262,7 +247,7 @@ static RC OMI_AllocateReference(INDEX indexRef,int nSpectra,int nPoints)
 {
   // Declarations
 
-  OMI_REF *pRef;
+  struct omi_ref *pRef;
   RC rc;
 
   // Initializations
@@ -345,13 +330,14 @@ bool omi_has_automatic_reference(int row)
 }
 
 /*! \brief release the allocated buffers with swath attributes. */
-static void omi_free_swath_data(OMI_SWATH *pSwath)
+static void omi_free_swath_data(struct omi_swath_earth *pSwath)
 {
   if(pSwath != NULL) {
     struct omi_buffer omi_swath_buffers[] = {
       {"pixelQualityFlags",pSwath->spectrum.pixelQualityFlags},
       {"measurementQualityFlags",pSwath->dataFields.measurementQualityFlags},
       {"wavelengthReferenceColumn",pSwath->dataFields.wavelengthReferenceColumn},
+      {"instrumentConfigurationId",pSwath->dataFields.instrumentConfigurationId},
       {"secondsInDay",pSwath->geolocationFields.secondsInDay},
       {"spacecraftLatitude",pSwath->geolocationFields.spacecraftLatitude},
       {"spacecraftLongitude",pSwath->geolocationFields.spacecraftLongitude},
@@ -384,7 +370,7 @@ static void omi_free_swath_data(OMI_SWATH *pSwath)
 #endif
 }
 
-static void omi_close_orbit_file(OMI_ORBIT_FILE *pOrbitFile)
+static void omi_close_orbit_file(struct omi_orbit_file *pOrbitFile)
 {
   if(pOrbitFile->sw_id != 0) {
     SWdetach(pOrbitFile->sw_id);
@@ -396,7 +382,7 @@ static void omi_close_orbit_file(OMI_ORBIT_FILE *pOrbitFile)
   }
 }
 
-static void omi_destroy_orbit_file(OMI_ORBIT_FILE *pOrbitFile) {
+static void omi_destroy_orbit_file(struct omi_orbit_file *pOrbitFile) {
   omi_close_orbit_file(pOrbitFile);
   
   free(pOrbitFile->omiFileName);
@@ -474,35 +460,36 @@ void OMI_TrackSelection(const char *omiTrackSelection,int *omiTracks)
 // PURPOSE       Allocated buffers to load OMI data
 //
 // INPUT         pSwath     the structures with the buffers to allocate
-//               nSwaths    the number of swaths
-//               nSpectra   the number of spectra per swath
+//               n_alongtrack 
+//               n_crosstrack
 //
 // RETURN        ERROR_ID_ALLOC if the allocation of a buffer fails
 //               ERROR_ID_NO otherwise
 // -----------------------------------------------------------------------------
 
-static RC OMI_AllocateSwath(OMI_SWATH **swath,int nSwaths,int nSpectra)
+static RC OMI_AllocateSwath(struct omi_swath_earth **swath,int n_alongtrack,int n_crosstrack)
 {
   // Declarations
 
-  OMI_SWATH *pSwath = malloc(sizeof(OMI_SWATH));
+  struct omi_swath_earth *pSwath = malloc(sizeof(*pSwath));
   *swath = pSwath;
 
-  OMI_SPECTRUM *pSpectrum = &pSwath->spectrum;  // spectrum in earth swath
-  OMI_DATA_FIELDS *pData = &pSwath->dataFields; // data on earth swath
-  OMI_GEO *pGeo = &pSwath->geolocationFields;   // geolocations
-  int nRecords = nSwaths*nSpectra;              // total number of spectra
+  struct omi_spectrum *pSpectrum = &pSwath->spectrum;  // spectrum in earth swath
+  struct omi_data_fields *pData = &pSwath->dataFields; // data on earth swath
+  struct omi_geo *pGeo = &pSwath->geolocationFields;   // geolocations
+  int nRecords = n_alongtrack*n_crosstrack;            // total number of spectra
   RC rc = ERROR_ID_NO;                          // Return code
 
   if (
       ((pSpectrum->pixelQualityFlags=(unsigned short *)MEMORY_AllocBuffer(__func__,"pixelQualityFlags",NDET,sizeof(unsigned short),0,MEMORY_TYPE_USHORT))==NULL) ||
-      ((pData->measurementQualityFlags=(unsigned short *)MEMORY_AllocBuffer(__func__,"measurementQualityFlags",nSwaths,sizeof(unsigned short),0,MEMORY_TYPE_USHORT))==NULL) ||
-      ((pData->wavelengthReferenceColumn=(short *)MEMORY_AllocBuffer(__func__,"wavelengthReferenceColumn",nSwaths,sizeof(short),0,MEMORY_TYPE_SHORT))==NULL) ||
-      ((pGeo->time=(double *)MEMORY_AllocDVector(__func__,"time",0,nSwaths))==NULL) ||
-      ((pGeo->secondsInDay=(float *)MEMORY_AllocBuffer(__func__,"secondsInDay",nSwaths,sizeof(float),0,MEMORY_TYPE_FLOAT))==NULL) ||
-      ((pGeo->spacecraftLatitude=(float *)MEMORY_AllocBuffer(__func__,"spacecraftLatitude",nSwaths,sizeof(float),0,MEMORY_TYPE_FLOAT))==NULL) ||
-      ((pGeo->spacecraftLongitude=(float *)MEMORY_AllocBuffer(__func__,"spacecraftLongitude",nSwaths,sizeof(float),0,MEMORY_TYPE_FLOAT))==NULL) ||
-      ((pGeo->spacecraftAltitude=(float *)MEMORY_AllocBuffer(__func__,"spacecraftAltitude",nSwaths,sizeof(float),0,MEMORY_TYPE_FLOAT))==NULL) ||
+      ((pData->measurementQualityFlags=(unsigned short *)MEMORY_AllocBuffer(__func__,"measurementQualityFlags",n_alongtrack,sizeof(unsigned short),0,MEMORY_TYPE_USHORT))==NULL) ||
+      ((pData->instrumentConfigurationId=(unsigned char*)MEMORY_AllocBuffer(__func__,"instrumentConfigurationId",n_alongtrack,sizeof(unsigned short),0,MEMORY_TYPE_UNKNOWN))==NULL) ||
+      ((pData->wavelengthReferenceColumn=(short *)MEMORY_AllocBuffer(__func__,"wavelengthReferenceColumn",n_alongtrack,sizeof(short),0,MEMORY_TYPE_SHORT))==NULL) ||
+      ((pGeo->time=(double *)MEMORY_AllocDVector(__func__,"time",0,n_alongtrack))==NULL) ||
+      ((pGeo->secondsInDay=(float *)MEMORY_AllocBuffer(__func__,"secondsInDay",n_alongtrack,sizeof(float),0,MEMORY_TYPE_FLOAT))==NULL) ||
+      ((pGeo->spacecraftLatitude=(float *)MEMORY_AllocBuffer(__func__,"spacecraftLatitude",n_alongtrack,sizeof(float),0,MEMORY_TYPE_FLOAT))==NULL) ||
+      ((pGeo->spacecraftLongitude=(float *)MEMORY_AllocBuffer(__func__,"spacecraftLongitude",n_alongtrack,sizeof(float),0,MEMORY_TYPE_FLOAT))==NULL) ||
+      ((pGeo->spacecraftAltitude=(float *)MEMORY_AllocBuffer(__func__,"spacecraftAltitude",n_alongtrack,sizeof(float),0,MEMORY_TYPE_FLOAT))==NULL) ||
       ((pGeo->latitude=(float *)MEMORY_AllocBuffer(__func__,"latitude",nRecords,sizeof(float),0,MEMORY_TYPE_FLOAT))==NULL) ||
       ((pGeo->longitude=(float *)MEMORY_AllocBuffer(__func__,"longitude",nRecords,sizeof(float),0,MEMORY_TYPE_FLOAT))==NULL) ||
       ((pGeo->solarZenithAngle=(float *)MEMORY_AllocBuffer(__func__,"solarZenithAngle",nRecords,sizeof(float),0,MEMORY_TYPE_FLOAT))==NULL) ||
@@ -560,7 +547,7 @@ static RC read_reference_orbit_files(const char *spectrum_file) {
       while( (fileInfo=readdir(hDir)) && num_reference_orbit_files < MAX_OMI_FILES ) {
         if(fileInfo->d_name[0] !='.') // better to use 'if (fileInfo->d_type == DT_REG)' ?
           {
-            reference_orbit_files[num_reference_orbit_files] = malloc(sizeof(OMI_ORBIT_FILE));
+            reference_orbit_files[num_reference_orbit_files] = malloc(sizeof(struct omi_orbit_file));
             char *file_name = malloc(strlen(current_dir)+strlen(fileInfo->d_name) +2); //directory + path_sep + filename + trailing \0
             sprintf(file_name,"%s%c%s",current_dir,PATH_SEP,fileInfo->d_name);
             reference_orbit_files[num_reference_orbit_files]->omiFileName = file_name;
@@ -577,7 +564,7 @@ static RC read_reference_orbit_files(const char *spectrum_file) {
 }
 
 // check if a given spectrum matches the criteria to use it in the automatic reference spectrum
-static bool use_as_reference(OMI_ORBIT_FILE *orbit_file, int recordnumber, FENO *pTabFeno, enum omi_xtrack_mode xtrack_mode) {
+static bool use_as_reference(struct omi_orbit_file *orbit_file, int recordnumber, FENO *pTabFeno, enum omi_xtrack_mode xtrack_mode) {
   float lon_min = pTabFeno->refLonMin;
   float lon_max = pTabFeno->refLonMax;
   float lat_min = pTabFeno->refLatMin;
@@ -670,7 +657,7 @@ static void free_row_references(struct omi_ref_list *(*row_references)[NFeno][OM
  * spectra matching the search criteria for the automatic reference
  * spectrum for one or more analysis windows in a list.
  */
-static RC find_matching_spectra(ENGINE_CONTEXT *pEngineContext, OMI_ORBIT_FILE *orbit_file, struct omi_ref_list *(*row_references)[NFeno][OMI_TOTAL_ROWS], struct omi_ref_spectrum **first)
+static RC find_matching_spectra(ENGINE_CONTEXT *pEngineContext, struct omi_orbit_file *orbit_file, struct omi_ref_list *(*row_references)[NFeno][OMI_TOTAL_ROWS], struct omi_ref_spectrum **first)
 {
   RC rc = 0;
   int allocs = 0;
@@ -801,7 +788,7 @@ static RC setup_automatic_reference(ENGINE_CONTEXT *pEngineContext, void *respon
   
   // open each reference orbit file; find & read matching spectra in the file
   for(int i = 0; i < num_reference_orbit_files; i++) {
-    OMI_ORBIT_FILE *orbit_file = reference_orbit_files[i];
+    struct omi_orbit_file *orbit_file = reference_orbit_files[i];
     rc = OmiOpen(orbit_file,OMI_EarthSwaths[pEngineContext->project.instrumental.omi.spectralType]);
     if (rc)
       goto end_setup_automatic_reference;
@@ -939,16 +926,17 @@ static void tai_to_utc(double tai, float utc_seconds_in_day, struct tm *result, 
 //               ERROR_ID_BEAT otherwise
 // -----------------------------------------------------------------------------
 
-static RC OmiGetSwathData(OMI_ORBIT_FILE *pOrbitFile)
+static RC OmiGetSwathData(struct omi_orbit_file *pOrbitFile)
 {
   // Initializations
-  OMI_DATA_FIELDS *pData = &pOrbitFile->omiSwath->dataFields;
-  OMI_GEO *pGeo = &pOrbitFile->omiSwath->geolocationFields;
+  struct omi_data_fields *pData = &pOrbitFile->omiSwath->dataFields;
+  struct omi_geo *pGeo = &pOrbitFile->omiSwath->geolocationFields;
   RC rc=ERROR_ID_NO;
 
   struct omi_buffer swathdata[] =
     {
       {"MeasurementQualityFlags", pData->measurementQualityFlags},
+      {"InstrumentConfigurationId", pData->instrumentConfigurationId},
       {"WavelengthReferenceColumn", pData->wavelengthReferenceColumn},
       {"Time",pGeo->time},
       {"SecondsInDay",pGeo->secondsInDay},
@@ -988,7 +976,7 @@ static RC OmiGetSwathData(OMI_ORBIT_FILE *pOrbitFile)
   return rc;
 }
 
-static RC OmiOpen(OMI_ORBIT_FILE *pOrbitFile,const char *swathName)
+static RC OmiOpen(struct omi_orbit_file *pOrbitFile,const char *swathName)
 {
   RC rc = ERROR_ID_NO;
 
@@ -1069,9 +1057,9 @@ static RC OmiOpen(OMI_ORBIT_FILE *pOrbitFile,const char *swathName)
   return rc;
 }
 
-static RC OMI_LoadReference(int spectralType, const char *refFile, OMI_REF **return_ref)
+static RC OMI_LoadReference(int spectralType, const char *refFile, struct omi_ref **return_ref)
 {
-  OMI_REF *pRef=&OMI_ref[omiRefFilesN];
+  struct omi_ref *pRef=&OMI_ref[omiRefFilesN];
   RC rc=ERROR_ID_NO;
 
   int32 swf_id = 0;
@@ -1253,7 +1241,7 @@ RC OMI_GetReference(int spectralType, const char *refFile, INDEX indexColumn, do
 {
   RC rc=ERROR_ID_NO; 
 
-  OMI_REF *pRef= NULL;
+  struct omi_ref *pRef= NULL;
 
   // Browse existing references
   for (int indexRef=0; indexRef<omiRefFilesN && (pRef == NULL); ++indexRef) {
@@ -1378,8 +1366,9 @@ RC OMI_read_earth(ENGINE_CONTEXT *pEngineContext,int recordNo)
 {
   // Initializations
   
-  OMI_ORBIT_FILE *pOrbitFile = &current_orbit_file; // pointer to the current orbit
-  OMI_GEO *pGeo= &pOrbitFile->omiSwath->geolocationFields;
+  struct omi_orbit_file *pOrbitFile = &current_orbit_file; // pointer to the current orbit
+  const struct omi_geo *pGeo= &pOrbitFile->omiSwath->geolocationFields;
+  const struct omi_data_fields *pData = &pOrbitFile->omiSwath->dataFields;
 
   double *spectrum=pEngineContext->buffers.spectrum;
   double *sigma=pEngineContext->buffers.sigmaSpec;
@@ -1445,7 +1434,9 @@ RC OMI_read_earth(ENGINE_CONTEXT *pEngineContext,int recordNo)
     pRecord->i_alongtrack=indexMeasurement;
     pRecord->i_crosstrack=indexSpectrum;
     pRecord->omi.omiXtrackQF = pGeo->xtrackQualityFlags[recordNo-1];
-    
+    pRecord->omi.instrumentConfigurationId = pData->instrumentConfigurationId[indexMeasurement];
+    printf("record %d, measurement %d, config id %d\n", recordNo, indexMeasurement, pData->instrumentConfigurationId[indexMeasurement]);
+
     // Satellite location data
     
     pRecord->satellite.altitude = pGeo->spacecraftAltitude[indexMeasurement];
@@ -1486,7 +1477,7 @@ RC OMI_get_orbit_date(int *year, int *month, int *day) {
 
 /*! read the orbit number and start date from the HDF4 file attribute
     "CoreMetadata.0" */
-static RC read_orbit_metadata(OMI_ORBIT_FILE *orbit) {
+static RC read_orbit_metadata(struct omi_orbit_file *orbit) {
   /* OMI files have metadata stored as a formatted text string in an
    * HDF SD attribute field. NASA provides the "SDP Toolkit" library
    * to read this metadata format.  However, we only need to read a
@@ -1582,5 +1573,4 @@ void OMI_ReleaseBuffers(void) {
   omiRefFilesN=0; // the total number of files to browse in one shot
   omiTotalRecordNumber=0;
   omiSwathOld=ITEM_NONE;
-
 }

@@ -206,6 +206,8 @@ bool CSelectorSubHandler::start(const QString &element, const QXmlAttributes &at
     d->selected[d->nSelected] = PRJCT_RESULTS_OMI_XTRACK_QF;
   else if (str == "omi_pixels_qf")
     d->selected[d->nSelected] = PRJCT_RESULTS_OMI_PIXELS_QF;
+  else if (str == "omi_configuration_id")
+    d->selected[d->nSelected] = PRJCT_RESULTS_OMI_CONFIGURATION_ID;
   else if (str == "spike_pixels")
     d->selected[d->nSelected] = PRJCT_RESULTS_SPIKES;
   else if (str == "servo_byte_sent")

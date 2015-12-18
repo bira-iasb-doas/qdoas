@@ -1037,6 +1037,9 @@ static void OutputRegisterFields(const ENGINE_CONTEXT *pEngineContext, const cha
      case PRJCT_RESULTS_OMI_XTRACK_QF:
        register_field( (struct output_field) { .basic_fieldname = "OMI xtrack quality flag", .memory_type = OUTPUT_USHORT, .resulttype = fieldtype, .format = "%#6d", .get_data = (func_void)&get_omi_xtrackqf });
        break;
+     case PRJCT_RESULTS_OMI_CONFIGURATION_ID:
+       register_field( (struct output_field) { .basic_fieldname = "OMI instrument configuration id", .memory_type = OUTPUT_USHORT, .resulttype = fieldtype, .format = "%#6d", .get_data = (func_void)&get_omi_configuration_id });
+       break;       
      case PRJCT_RESULTS_OMI_PIXELS_QF:
        register_field( (struct output_field) { .basic_fieldname = "OMI rejected pixels based on QF", .memory_type = OUTPUT_STRING, .resulttype = fieldtype, .format = "%-50s", .get_data = (func_void)&omi_get_rejected_pixels });
        break;

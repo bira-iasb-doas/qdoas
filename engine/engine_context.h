@@ -289,9 +289,10 @@ GOME2_DATA;
 // Record information specific to OMI
 
 typedef struct _omi {
+  unsigned short *omiPixelQF; 	                                                // pixel quality flag
   unsigned short  omiGroundPQF;                                                 // ground pixel quality flags
   unsigned short  omiXtrackQF;                                                  // xtrack quality flags
-  unsigned short *omiPixelQF; 	                                                // pixel quality flag
+  unsigned short  instrumentConfigurationId;
 }
 OMI_DATA;
 

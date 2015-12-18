@@ -455,6 +455,10 @@ static inline void get_omi_xtrackqf(struct output_field *this_field __attribute_
   *xtrackqf = pEngineContext->recordInfo.omi.omiXtrackQF;
 }
 
+static inline void get_omi_configuration_id(struct output_field *this_field __attribute__ ((unused)), unsigned short *configuration_id, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
+  *configuration_id = pEngineContext->recordInfo.omi.instrumentConfigurationId;
+}
+
 static inline void get_uav_servo_byte_sent(struct output_field *this_field __attribute__ ((unused)), unsigned short *servo_sent_position, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
   *servo_sent_position = pEngineContext->recordInfo.uavBira.servoSentPosition;
 }
