@@ -1243,8 +1243,8 @@ RC MFCBIRA_Reli(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loc
   	   // for (i=0;i<NDET;i++)
   	   // pBuffers->spectrum[i]/=header.scansNumber;
 
-      if ((dateFlag && ((pRecordInfo->elevationViewAngle>0.) && (pRecordInfo->elevationViewAngle<80.))) ||                    // reference spectra are zenith only
-         (!dateFlag && pEngineContext->analysisRef.refScan && !pEngineContext->analysisRef.refSza && (pRecordInfo->elevationViewAngle>80.)))    // zenith sky spectra are not analyzed in scan reference selection mode
+      if (rc || (dateFlag && ((pRecordInfo->elevationViewAngle<80.) || (header.measurementType!=PRJCT_INSTR_MAXDOAS_TYPE_ZENITH))) ||                     // reference spectra are zenith only
+                (!dateFlag && pEngineContext->analysisRef.refScan && !pEngineContext->analysisRef.refSza && (pRecordInfo->elevationViewAngle>80.)))
 
        rc=ERROR_ID_FILE_RECORD;
      }

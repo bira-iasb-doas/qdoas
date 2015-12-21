@@ -663,10 +663,7 @@ RC EngineSetFile(ENGINE_CONTEXT *pEngineContext,const char *fileName,void *respo
        break;
        // ---------------------------------------------------------------------------
      case PRJCT_INSTR_FORMAT_MFC_BIRA :
-       rc=MFCBIRA_Set(pEngineContext,pFile->specFp);
-
-      // if (!(rc=MFCBIRA_Set(pEngineContext,pFile->specFp)) && (THRD_id!=THREAD_TYPE_SPECTRA) && (THRD_id!=THREAD_TYPE_EXPORT) && (THRD_id!=THREAD_TYPE_NONE))
-      //  rc=MFC_LoadAnalysis(pEngineContext,responseHandle);
+        rc=MFCBIRA_Set(pEngineContext,pFile->specFp);
        break;
        // ---------------------------------------------------------------------------
      case PRJCT_INSTR_FORMAT_RASAS :
