@@ -186,7 +186,7 @@ ERROR_TABLE errorTable[]=
   { ERROR_ID_CONVOLUTION               , "Cross section %s is configured to use online convolution, but the project is configured for preconvolved cross sections"},
   { ERROR_ID_NO_RESULT_PREVIOUS_WINDOW , "Cannot use result from previous analysis window for molecule %s in analysis window %s: can't find the same cross section file" },
   { ERROR_ID_IMAGER_CALIB              , "Calibration failed for detector row %d"},
-  { ERROR_ID_L1WAVELENGTH              , "Error in L1 wavelength calibration for recordx %d"},
+  { ERROR_ID_L1WAVELENGTH              , "Error in L1 wavelength calibration for record %d"},
 
 
   { ERROR_ID_GDP_BANDINDEX             , "The specified band is not present in the file %s"                                                                   },
