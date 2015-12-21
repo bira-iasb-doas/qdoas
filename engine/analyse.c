@@ -918,7 +918,7 @@ RC ANALYSE_XsInterpolation(FENO *pTabFeno, const double *newLambda,INDEX indexFe
          (WorkSpace[pTabCross->Comp].type==WRK_SYMBOL_PREDEFINED &&   // take only cross sections into account
           pTabCross->crossAction==ANLYS_CROSS_ACTION_INTERPOLATE) ) {
       pXs=&WorkSpace[pTabCross->Comp].xs;
-      icolumn=1+indexFenoColumn;
+      icolumn= (pXs->nc==2) ? 1 : 1+indexFenoColumn;
 
       // Buffer allocation
 
@@ -4482,17 +4482,32 @@ RC ANALYSE_LoadCross(ENGINE_CONTEXT *pEngineContext, const ANALYSIS_CROSS *cross
         case ANLYS_CROSS_ACTION_NOTHING:
         case ANLYS_CROSS_ACTION_INTERPOLATE:
           // interpolated/preset cross section is allowed in a project
-          // using online convolution, but there should be 1 column for
-          // each detector row:
+          // using online convolution, but normally there should be 1
+          // column for each detector row:
           if (pWrkSymbol->xs.nc != (1+ANALYSE_swathSize) ) {
-            rc = ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_XS_COLUMNS, pCross->symbol, pWrkSymbol->xs.nc, 1+ANALYSE_swathSize);
+            int tmp_rc = ERROR_SetLast(__func__, ERROR_TYPE_WARNING, ERROR_ID_XS_COLUMNS, pCross->symbol, pWrkSymbol->xs.nc, 1+ANALYSE_swathSize);
+            if (pWrkSymbol->xs.nc != 2) {
+              // we allow cross sections with 2 columns, but give a
+              // warning. When the number of columns does not match 2
+              // or (1+ANALYSE_swathSize), something is not right =>
+              // return the error:
+              rc = tmp_rc;
+            }
           }
           break;
         }
       } else {
         // analysis uses preconvolved cross sections
         if (pWrkSymbol->xs.nc != (1+ANALYSE_swathSize) ) {
-          rc = ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_XS_COLUMNS, pCross->crossSectionFile, pWrkSymbol->xs.nc, 1+ANALYSE_swathSize);
+          int tmp_rc = ERROR_SetLast(__func__, ERROR_TYPE_WARNING, ERROR_ID_XS_COLUMNS, pCross->crossSectionFile, pWrkSymbol->xs.nc, 1+ANALYSE_swathSize);
+          if (pWrkSymbol->xs.nc != 2) {
+            // same as above for ACTION_NOTHING/ACTION_INTERPOLATE:
+            // for preconvolved cross sections, if the number of
+            // columns does not match 1+indexFenocolumn, we allow
+            // 2-column cross sections with a warning, otherwise,
+            // return an error
+            rc = tmp_rc;
+          }
         } else if (pCross->crossType == ANLYS_CROSS_ACTION_CONVOLUTE ||
                    pCross->crossType == ANLYS_CROSS_ACTION_CONVOLUTE_I0 ||
                    pCross->crossType == ANLYS_CROSS_ACTION_CONVOLUTE_RING) {
