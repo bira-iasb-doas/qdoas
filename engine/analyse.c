@@ -4272,13 +4272,17 @@ RC ANALYSE_LoadSlit(const PRJCT_SLIT *pSlit,int kuruczFlag)
      }
    }
 
-  if (!rc && kuruczFlag)
-   {
+  if (!rc && kuruczFlag) {
     if (!strlen(pSlit->kuruczFile))
       rc=ERROR_SetLast("ANALYSE_LoadSlit",ERROR_TYPE_FATAL,ERROR_ID_MSGBOX_FIELDEMPTY,"Slit solar ref. file");
-    else
-     rc=MATRIX_Load(pSlit->kuruczFile,&ANALYSIS_slitK,0,2,-9999.,9999.,1,0,"ANALYSE_LoadSlit ");
-   }
+    else {
+      rc=MATRIX_Load(pSlit->kuruczFile,&ANALYSIS_slitK,0,0,-9999.,9999.,1,0,"ANALYSE_LoadSlit ");
+      int n_columns = (pSlitFunction->slitType==SLIT_TYPE_NONE) ? 1+ANALYSE_swathSize : 2;
+      if (ANALYSIS_slitK.nc != n_columns) {
+        rc=ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_XS_COLUMNS, "Slit solar ref. file", ANALYSIS_slitK.nc, n_columns);
+      }
+    }
+  }
 
   // Return
 
