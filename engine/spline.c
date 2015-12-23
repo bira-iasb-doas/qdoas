@@ -200,96 +200,87 @@ RC SPLINE_Deriv2(const double *X, const double *Y,double *Y2,int n,const char *c
 
 RC SPLINE_Vector(const double *xa, const double *ya, const double *y2a,int na, const double *xb,double *yb,int nb,int type,const char *callingFunction)
 {
-  // Declarations
-
-  INDEX indexb,                                                                 // index for browsing new absissae
-    klo,khi,k;                                                              // indexes for dichotomic search in original absissae
-
-  double h,b,a,x;                                                               // variables
-  RC rc;                                                                        // return code
-
-  // Debugging
-
-#if defined(__DEBUG_) && __DEBUG_ && defined(__DEBUG_DOAS_SHIFT_) && __DEBUG_DOAS_SHIFT_
-  DEBUG_FunctionBegin("SPLINE_Vector",DEBUG_FCTTYPE_MATH);
-#endif
-
-  // Initialization
-
-  rc=ERROR_ID_NO;
+  RC rc=ERROR_ID_NO;
 
   double xlo = xa[0];
   double xhi = xa[na-1];
-  klo=0;
-  khi=na-1;
+
+  int k=0;
 
   // Browse new absissae
 
-  for (indexb=0;indexb<nb;indexb++)
-   {
-    x=xb[indexb];
+  for (int indexb=0;indexb<nb;indexb++) {
+    double x=xb[indexb];
     
     // new absissae is out of boundaries
-    
     if (x<=xa[0])
-     yb[indexb]=ya[0];
+      yb[indexb]=ya[0];
     else if (x>=xa[na-1])
-     yb[indexb]=ya[na-1];
+      yb[indexb]=ya[na-1];
     else {
-     // set boundaries
-     
-     // when interpolating a range of x's, often klo and/or khi will
-     // not change from one x to the next.  Therefore, we save some
-     // time by reusing klo and khi from the previous indexb
-     // iteration when possible.
-     //
-     // If x is outside the range (xlo,xhi), we must reset klo or khi
-     if(x > xhi) {
-      khi=na-1;
-     } else if(x < xlo) {
-      klo=0;
-     }
-     
-     // dichotomic search for an interval including the new absissa
-     
-     while (khi-klo>1)
-      {
-	k=(khi+klo)>>1;
-        
-	if (xa[k]>x) {
-	 khi=k;
-	} else {
-	 klo=k;
-	}
+
+      // search for k such that xa[k-1] < x <= xa[k],
+      //
+      // because we often interpolate many successive xa in a row, we
+      // keep the 'k' value from the previous iteration and start from
+      // there.  This als makes linear search faster than binary
+      // search (we usually only have to search a few steps)
+      
+      if (k && xa[k-1] >= x) {
+        // if this x is smaller than the one from the previous
+        // iteration, reset k=0 and look from there.
+        k = 0;
       }
 
-     xlo=xa[klo];
-     xhi=xa[khi];
-     h=xhi-xlo;
-     
-     if (h<=(double)0.)
-      rc=ERROR_SetLast(callingFunction,ERROR_TYPE_WARNING,ERROR_ID_SPLINE,klo,khi,xa[klo],xa[khi]);
-     else
-      {
-       // get ratios
+      // 8-fold hand-unrolled loop seems to work well here...
+      while (k+7 < na) {
+        if (xa[k] >= x) {
+          goto foundk;
+        }
+        if (xa[k+1] >= x) {
+          k+=1; goto foundk;
+        }
+        if (xa[k+2] >= x) {
+          k+=2; goto foundk;
+        }
+        if (xa[k+3] >= x) {
+          k+=3; goto foundk;
+        }
+        if (xa[k+4] >= x) {
+          k+=4; goto foundk;
+        }
+        if (xa[k+5] >= x) {
+          k+=5; goto foundk;
+        }
+        if (xa[k+6] >= x) {
+          k+=6; goto foundk;
+        }
+        if (xa[k+7] >= x) {
+          k+=7; goto foundk;
+        }
+        k+=8;
+      }
+      for (; k<na && xa[k] < x; ++k);
+    foundk:
+      xlo=xa[k-1];
+      xhi=xa[k];
+      double h=xhi-xlo;
+
+      if (h<=(double)0.)
+        rc=ERROR_SetLast(callingFunction,ERROR_TYPE_WARNING,ERROR_ID_SPLINE,k-1,k,xa[k-1],xa[k]);
+      else {
+        // get ratios        
+        double a = (xhi-x)/h;
+        double b = 1.-a; // (x-xlo)/h;
        
-       a = (xhi-x)/h;
-       b = 1.-a; // (x-xlo)/h;
+        // interpolation
        
-       // interpolation
-       
-       yb[indexb] = a*ya[klo]+b*ya[khi]; // assume type == SPLINE_LINEAR or SPLINE_CUBIC
+       yb[indexb] = a*ya[k-1]+b*ya[k]; // assume type == SPLINE_LINEAR or SPLINE_CUBIC
        if (type==SPLINE_CUBIC)
-        yb[indexb] += ((a*a*a-a)*y2a[klo]+(b*b*b-b)*y2a[khi])*(h*h)/6.;
+         yb[indexb] += ((a*a*a-a)*y2a[k-1]+(b*b*b-b)*y2a[k])*(h*h)/6.;
       }
     }
-   }
-  
-  // Return
-
-#if defined(__DEBUG_) && __DEBUG_ && defined(__DEBUG_DOAS_SHIFT_) && __DEBUG_DOAS_SHIFT_
-  DEBUG_FunctionStop("SPLINE_Vector",rc);
-#endif
+  }
 
   return rc;
 }
