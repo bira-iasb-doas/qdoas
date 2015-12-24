@@ -89,7 +89,7 @@ RC SPLINE_Deriv2(const double *X, const double *Y,double *Y2,int n,const char *c
   // Declarations
 
   int i, k;
-  double p, qn, sig, un, *u, yp1,ypn;
+  double qn, un, *u, yp1,ypn;
   RC rc;
 
   // Debugging
@@ -123,21 +123,28 @@ RC SPLINE_Deriv2(const double *X, const double *Y,double *Y2,int n,const char *c
 
     // decomposition loop of the tridiagonal algorithm
 
+    double dx_old=X[1]-X[0];
+    double dydx_old = (Y[1]-Y[0])/dx_old;
+
     for (i=1;(i<n-1)&&!rc;i++)
 
      if (X[i+1]-X[i]<=0)
       rc=ERROR_SetLast(callingFunction,ERROR_TYPE_FATAL,ERROR_ID_SPLINE,i,i+1,X[i],X[i+1]);
-     else
-      {
-       sig=(double)(X[i]-X[i-1])/(X[i+1]-X[i-1]);
-       p=(double)sig*Y2[i-1]+2.;
-       Y2[i]=(double)(sig-1.)/p;
-       u[i]=(double)(Y[i+1]-Y[i])/(X[i+1]-X[i])-(Y[i]-Y[i-1])/(X[i]-X[i-1]);
-       u[i]=(double)(6.*u[i]/(X[i+1]-X[i-1])-sig*u[i-1])/p;
+     else {
+       const double d2x = 1.0/(X[i+1]-X[i-1]);
+       double sig= dx_old*d2x;
+       double dp=1.0/(sig*Y2[i-1]+2.);
+       Y2[i]=(sig-1.0)*dp;
+       const double dx=X[i+1]-X[i];
+       const double dydx = (Y[i+1]-Y[i])/dx;
+       u[i]=dydx-dydx_old;
+       u[i]=(6.0*u[i]*d2x-sig*u[i-1])*dp;
 
        if (fabs(u[i])<(double)1.e-300)
-	u[i]=(double)0.;
-      }
+         u[i]=(double)0.;
+       dx_old = dx;
+       dydx_old = dydx;
+     }
 
     // consider upper boundary :
 
@@ -202,84 +209,50 @@ RC SPLINE_Vector(const double *xa, const double *ya, const double *y2a,int na, c
 {
   RC rc=ERROR_ID_NO;
 
-  double xlo = xa[0];
-  double xhi = xa[na-1];
-
-  int k=0;
-
+  const double *xlo=xa;
   // Browse new absissae
-
   for (int indexb=0;indexb<nb;indexb++) {
     double x=xb[indexb];
-    
+
     // new absissae is out of boundaries
-    if (x<=xa[0])
+    if (x<=xa[0]) {
       yb[indexb]=ya[0];
-    else if (x>=xa[na-1])
+      continue;
+    } else if (x>=xa[na-1]) {
       yb[indexb]=ya[na-1];
-    else {
-
-      // search for k such that xa[k-1] < x <= xa[k],
-      //
-      // because we often interpolate many successive xa in a row, we
-      // keep the 'k' value from the previous iteration and start from
-      // there.  This als makes linear search faster than binary
-      // search (we usually only have to search a few steps)
-      
-      if (k && xa[k-1] >= x) {
-        // if this x is smaller than the one from the previous
-        // iteration, reset k=0 and look from there.
-        k = 0;
-      }
-
-      // 8-fold hand-unrolled loop seems to work well here...
-      while (k+7 < na) {
-        if (xa[k] >= x) {
-          goto foundk;
-        }
-        if (xa[k+1] >= x) {
-          k+=1; goto foundk;
-        }
-        if (xa[k+2] >= x) {
-          k+=2; goto foundk;
-        }
-        if (xa[k+3] >= x) {
-          k+=3; goto foundk;
-        }
-        if (xa[k+4] >= x) {
-          k+=4; goto foundk;
-        }
-        if (xa[k+5] >= x) {
-          k+=5; goto foundk;
-        }
-        if (xa[k+6] >= x) {
-          k+=6; goto foundk;
-        }
-        if (xa[k+7] >= x) {
-          k+=7; goto foundk;
-        }
-        k+=8;
-      }
-      for (; k<na && xa[k] < x; ++k);
-    foundk:
-      xlo=xa[k-1];
-      xhi=xa[k];
-      double h=xhi-xlo;
-
-      if (h<=(double)0.)
-        rc=ERROR_SetLast(callingFunction,ERROR_TYPE_WARNING,ERROR_ID_SPLINE,k-1,k,xa[k-1],xa[k]);
-      else {
-        // get ratios        
-        double a = (xhi-x)/h;
-        double b = 1.-a; // (x-xlo)/h;
-       
-        // interpolation
-       
-       yb[indexb] = a*ya[k-1]+b*ya[k]; // assume type == SPLINE_LINEAR or SPLINE_CUBIC
-       if (type==SPLINE_CUBIC)
-         yb[indexb] += ((a*a*a-a)*y2a[k-1]+(b*b*b-b)*y2a[k])*(h*h)/6.;
-      }
+      continue;
     }
+
+    // search for xlo such that *xlo < x <= xlo[1],
+    //
+    // because we often interpolate many successive xa in a row, we
+    // keep the 'xlo' value from the previous iteration and start
+    // from there.  This makes linear search faster than binary
+    // search (we usually only have to search a few steps)
+    
+    if (*xlo >= x) {
+      // if this x is smaller than the one from the previous
+      // iteration, reset xlo to the start of the array xa
+      xlo=xa;
+    }
+    for (int i=0; i<na-1; ++i) {
+      if(xlo[1] >= x)
+        break;
+      ++xlo;
+    }
+    int k = xlo-xa;
+    double xhi=xlo[1];
+    double h=xhi-*xlo;
+    
+    // get ratios        
+    double a = (xhi-x)/h;
+    double b = 1.-a; // (x-(*xlo) )/h;
+      
+    // interpolation
+       
+    yb[indexb] = a*ya[k]+b*ya[k+1]; // assume type == SPLINE_LINEAR or SPLINE_CUBIC
+    if (type==SPLINE_CUBIC)
+      yb[indexb] += ((a*a*a-a)*y2a[k]+(b*b*b-b)*y2a[k+1])*(h*h)/6.;
   }
 
   return rc;
