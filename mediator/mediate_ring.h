@@ -41,6 +41,7 @@ extern "C" {
     double temperature;
     int normalize;
     int noheader;
+    int saveraman;
     char outputFile[FILENAME_BUFFER_LENGTH];
     char calibrationFile[FILENAME_BUFFER_LENGTH];
     char solarRefFile[FILENAME_BUFFER_LENGTH];

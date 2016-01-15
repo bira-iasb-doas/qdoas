@@ -39,6 +39,7 @@ extern "C" {
     char name[ANLYSWIN_NAME_BUFFER_LENGTH];
     int kuruczMode;
     int refSpectrumSelection;
+    int refSpectrumSelectionScanMode;
     int refMaxdoasSelection;
     char refOneFile[FILENAME_BUFFER_LENGTH];
     char refTwoFile[FILENAME_BUFFER_LENGTH];

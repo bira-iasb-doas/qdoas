@@ -11,7 +11,8 @@
 // GLOBAL DECLARATIONS
 // ===================
 
-extern char          ENGINE_dbgFile[DOAS_MAX_PATH_LEN+1];                           // debug file
+extern int            ENGINE_refStartDate;                                      // automatic reference selection : 0 use localday of records, 1 use starting date and time of the first measurements
+extern char           ENGINE_dbgFile[DOAS_MAX_PATH_LEN+1];                      // debug file
 extern ENGINE_CONTEXT ENGINE_contextRef;                                        // copy of the engine context for the automatic search of the reference spectrum
 extern double         ENGINE_localNoon;                                         // local noon
 

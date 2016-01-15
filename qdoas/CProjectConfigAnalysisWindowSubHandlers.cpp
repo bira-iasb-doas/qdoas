@@ -119,6 +119,16 @@ bool CAnalysisWindowSubHandler::start(const QString &element, const QXmlAttribut
 
     d->refMaxdoasSelection = (atts.value("maxdoasrefmode") == "scan") ? ANLYS_MAXDOAS_REF_SCAN :  ANLYS_MAXDOAS_REF_SZA;
 
+    str = atts.value("scanmode");
+    if (str == "before")
+     d->refSpectrumSelectionScanMode = ANLYS_MAXDOAS_REF_SCAN_BEFORE;
+    else if (str == "average")
+     d->refSpectrumSelectionScanMode = ANLYS_MAXDOAS_REF_SCAN_AVERAGE;
+    else if (str == "interpolate")
+     d->refSpectrumSelectionScanMode = ANLYS_MAXDOAS_REF_SCAN_INTERPOLATE;
+    else
+     d->refSpectrumSelectionScanMode = ANLYS_MAXDOAS_REF_SCAN_AFTER;
+
     if (d->refMaxdoasSelection==ANLYS_MAXDOAS_REF_SCAN)
      {
       d->refSzaCenter = atts.value("maxdoasszacenter").toDouble();

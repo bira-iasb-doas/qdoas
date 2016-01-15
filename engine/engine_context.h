@@ -408,9 +408,11 @@ BUFFERS;
 // Information related to the file
 
 typedef struct _engineFileInfo {
-  char   fileName[MAX_STR_LEN+1];                                             // the name of the file
+  char   fileName[MAX_STR_LEN+1];                                               // the name of the file
   FILE   *specFp,*darkFp,*namesFp;                                              // file pointers for the engine
   int nScanRef;                                                                 // number of reference spectra in the scanRefIndexes buffer
+  SHORT_DATE  startDate;                                                        // date and time of the first record (useful for automatic reference selection when the file covers two days)
+  struct time startTime;
 }
   FILE_INFO;
 

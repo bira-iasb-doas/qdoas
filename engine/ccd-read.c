@@ -76,6 +76,7 @@
 
 #include "doas.h"
 #include "winfiles.h"
+#include "engine.h"
 #include "engine_context.h"
 #include "stdfunc.h"
 #include "vector.h"
@@ -216,13 +217,13 @@ void CCD_GetImageFilesList(SHORT_DATE *pFileDate,char *rootPath)
        ccdImageFilesN++;
       }
     }
- }  
- 
-char *CCD_GetImageFile(INDEX indexImage)   
- {    
+ }
+
+char *CCD_GetImageFile(INDEX indexImage)
+ {
  	return (indexImage==ITEM_NONE)?NULL:ccdImageFilesList[indexImage].fileName;
  }
- 
+
 
 INDEX CCD_SearchForImage(int timestampMin,int timestampMax)
  {
@@ -318,6 +319,7 @@ RC SetCCD_EEV(ENGINE_CONTEXT *pEngineContext,FILE *specFp,FILE *darkFp)
   memset(ccdDarkCurrentOffset,-1L,sizeof(uint32_t)*MAXTPS);
   pEngineContext->recordIndexesSize=2001;
   pEngineContext->recordNumber=0;
+  ENGINE_refStartDate=1;
 
   rc=ERROR_ID_NO;
 
@@ -337,6 +339,13 @@ RC SetCCD_EEV(ENGINE_CONTEXT *pEngineContext,FILE *specFp,FILE *darkFp)
 
     fseek(specFp,0L,SEEK_SET);
     memset(recordIndexes,0L,sizeof(uint32_t)*pEngineContext->recordIndexesSize);
+
+    fread(&header,sizeof(CCD_DATA),1,specFp);                             // Get date and time of the first record
+
+   	memcpy(&pEngineContext->fileInfo.startDate,&header.today,sizeof(SHORT_DATE));
+   	memcpy(&pEngineContext->fileInfo.startTime,&header.now,sizeof(struct time));
+
+   	fseek(specFp,0L,SEEK_SET);
 
     while (!feof(specFp) && fread(&header,sizeof(CCD_DATA),1,specFp))
      {

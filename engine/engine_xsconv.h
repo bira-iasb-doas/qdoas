@@ -33,12 +33,12 @@ typedef struct _enigneXsconvContext
   PRJCT_FILTER hfilter;                                                         // high filtering options
   double *filterVector;
   int nFilter;
-                                                                                
-  MATRIX_OBJECT xsNew;                                                          // New cross section 
-                                                                                
+
+  MATRIX_OBJECT xsNew;                                                          // New cross section
+
                                                                                 // CALIBRATION
-  char   calibReference[DOAS_MAX_PATH_LEN+1];                                   // reference file                                     
-  
+  char   calibReference[DOAS_MAX_PATH_LEN+1];                                   // reference file
+
                                                                                 // UNDERSAMPLING
   int    analysisMethod;                                                        // analysis method
   char  path2[DOAS_MAX_PATH_LEN+1];                                                  // output path for the second phase
@@ -47,7 +47,7 @@ typedef struct _enigneXsconvContext
                                                                                 // RING
   double    temperature;                                                        // temperature
   int    normalizeFlag;                                                         // normalization of the raman spectru
-
+  int saveRaman;
  }
 ENGINE_XSCONV_CONTEXT;
 

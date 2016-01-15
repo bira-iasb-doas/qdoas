@@ -50,6 +50,7 @@ void initializeMediateAnalysisWindow(mediate_analysis_window_t *d)
   d->resolFwhm=(double)0.5;
 
   d->refNs=1;
+  d->refSpectrumSelectionScanMode=ANLYS_MAXDOAS_REF_SCAN_AFTER;
 
   // Cross sections
 

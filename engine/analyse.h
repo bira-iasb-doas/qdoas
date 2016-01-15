@@ -162,21 +162,24 @@ typedef struct _satellite_ref_ SATELLITE_REF;
 struct _feno {
                                                                                 // copy of data from analysis window panel
 
-  char          windowName[MAX_ITEM_NAME_LEN+1];                              // name of analysis window
-  char          refFile[MAX_ITEM_TEXT_LEN+1],                                 // reference file in reference file selection mode
+  char          windowName[MAX_ITEM_NAME_LEN+1];                                // name of analysis window
+  char          refFile[MAX_ITEM_TEXT_LEN+1],                                   // reference file in reference file selection mode
                   ref1[MAX_ITEM_TEXT_LEN+1],                                    // first reference spectrum (in order to replace the SrefEtalon in the old ANALYSIS_WINDOWS structure)
                   ref2[MAX_ITEM_TEXT_LEN+1],                                    // second reference spectrum (in order to replace the SrefEtalon in the old ANALYSIS_WINDOWS structure)
                   residualsFile[MAX_ITEM_TEXT_LEN+1];
   double          refSZA,refSZADelta,refMaxdoasSZA,refMaxdoasSZADelta;          // in automatic reference selection mode, SZA constraints
   int             refSpectrumSelectionMode;                                     // reference spectrum selection mode
+  int             refSpectrumSelectionScanMode;
   int             refMaxdoasSelectionMode;                                      // for MAXDOAS measurements, selection of the reference spectrum based on the scan or the SZA
   double          cloudFractionMin,cloudFractionMax;
-  char          refAM[MAX_ITEM_TEXT_LEN+1],refPM[MAX_ITEM_TEXT_LEN+1];        // in automatic reference selection mode, names of the spectra files selected for the reference spectra (specific file format : MFC)
+  // char            refAM[MAX_ITEM_TEXT_LEN+1],refPM[MAX_ITEM_TEXT_LEN+1];        // in automatic reference selection mode, names of the spectra files selected for the reference spectra (specific file format : MFC)
   INDEX           indexRefMorning,indexRefAfternoon,                            // in automatic reference selection mode, index of selected records
-                  indexRef;                                                     // in automatic reference selection mode, index of current selected record
-  double          ZmRefMorning,ZmRefAfternoon,Zm,                               // in automatic reference selection mode, zenithal angles of selected records
+                  indexRef,                                                     // in automatic reference selection mode, index of current selected record
+                  indexRefScanBefore,indexRefScanAfter;
+
+  double          ZmRefMorning,ZmRefAfternoon,Zm,Zm2,                           // in automatic reference selection mode, zenithal angles of selected records
                   oldZmRefMorning,oldZmRefAfternoon,                            // make a copy of previous zenithal angles
-                  TimeDec,Tm,                                                   // in automatic reference selection mode, measurement time of selected record
+                  TimeDec,Tm,TimeDec2,Tm2,                                      // in automatic reference selection mode, measurement time of selected record
                   TDet;                                                         // temperature of reference
 
   double          resolFwhm;

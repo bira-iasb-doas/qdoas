@@ -63,7 +63,7 @@ CWAnalysisWindowPropertyEditor::CWAnalysisWindowPropertyEditor(const QString &pr
   QVBoxLayout *mainLayout = new QVBoxLayout(this);
   mainLayout->setMargin(10);
   mainLayout->setSpacing(5);
-  
+
   QHBoxLayout *topLayout = new QHBoxLayout;
 
   // calibration combo ... group
@@ -198,6 +198,21 @@ CWAnalysisWindowPropertyEditor::CWAnalysisWindowPropertyEditor(const QString &pr
   maxdoasSzaLayout->addWidget(new QLabel("+/-", m_maxdoasSzaFrame));
   maxdoasSzaLayout->addWidget(m_maxdoasSzaDeltaEdit);
 
+  // Option for scan
+
+  m_maxdoasScanFrame=new QFrame(m_maxdoasFrame);
+  m_maxdoasScanFrame->setFrameStyle(QFrame::NoFrame);
+  QHBoxLayout *maxdoasScanLayout = new QHBoxLayout(m_maxdoasScanFrame);
+  maxdoasScanLayout->setMargin(0);
+
+  m_scanCombo = new QComboBox(m_maxdoasScanFrame);
+  m_scanCombo->addItem("Zenith before", QVariant(ANLYS_MAXDOAS_REF_SCAN_BEFORE));
+  m_scanCombo->addItem("Zenith after", QVariant(ANLYS_MAXDOAS_REF_SCAN_AFTER));
+  m_scanCombo->addItem("Average zeniths after and before", QVariant(ANLYS_MAXDOAS_REF_SCAN_AVERAGE));
+  m_scanCombo->addItem("Interpolate zeniths after and before", QVariant(ANLYS_MAXDOAS_REF_SCAN_INTERPOLATE));
+  maxdoasScanLayout->addWidget(m_scanCombo);
+  maxdoasScanLayout->addStretch(1);
+
   QRadioButton *refScan = new QRadioButton("Scans",  m_maxdoasFrame);
   QRadioButton *refSza = new QRadioButton("SZA",  m_maxdoasFrame);
 
@@ -208,6 +223,7 @@ CWAnalysisWindowPropertyEditor::CWAnalysisWindowPropertyEditor(const QString &pr
   maxdoasLayout->addWidget(refScan);
   maxdoasLayout->addWidget(refSza);
   maxdoasLayout->addWidget(m_maxdoasSzaFrame);
+  maxdoasLayout->addWidget(m_maxdoasScanFrame);
 
   maxdoasLayout->addSpacing(10);
   maxdoasLayout->addStretch(1);
@@ -221,7 +237,8 @@ CWAnalysisWindowPropertyEditor::CWAnalysisWindowPropertyEditor(const QString &pr
   slotMaxdoasSelectionChanged(maxdoasRefScan);
 
   // row 1 - Ref2
-  // Option for automatic
+  // Option for SZA
+
   m_refTwoSzaFrame = new QFrame(filesGroup);
   m_refTwoSzaFrame->setFrameStyle(QFrame::NoFrame);
   QHBoxLayout *szaLayout = new QHBoxLayout(m_refTwoSzaFrame);
@@ -453,6 +470,7 @@ CWAnalysisWindowPropertyEditor::CWAnalysisWindowPropertyEditor(const QString &pr
   m_szaCenterEdit->setText(tmpStr);
   m_szaDeltaEdit->validator()->fixup(tmpStr.setNum(d->refSzaDelta));
   m_szaDeltaEdit->setText(tmpStr);
+  m_scanCombo->setCurrentIndex(d->refSpectrumSelectionScanMode);
   m_refTwoLonMinEdit->validator()->fixup(tmpStr.setNum(d->refMinLongitude));
   m_refTwoLonMinEdit->setText(tmpStr);
   m_refTwoLonMaxEdit->validator()->fixup(tmpStr.setNum(d->refMaxLongitude));
@@ -510,6 +528,7 @@ bool CWAnalysisWindowPropertyEditor::actionOk(void)
 
     d->kuruczMode = m_calibrationCombo->itemData(m_calibrationCombo->currentIndex()).toInt();
     d->refSpectrumSelection = m_refTwoStack->currentIndex() ? ANLYS_REF_SELECTION_MODE_FILE : ANLYS_REF_SELECTION_MODE_AUTOMATIC;
+    d->refSpectrumSelectionScanMode=m_scanCombo->itemData(m_scanCombo->currentIndex()).toInt();
     d->refMaxdoasSelection = (m_scanSelection) ? ANLYS_MAXDOAS_REF_SCAN : ANLYS_MAXDOAS_REF_SZA;
 
     d->fitMinWavelength = m_fitMinEdit->text().toDouble();
@@ -704,9 +723,15 @@ void CWAnalysisWindowPropertyEditor::slotMaxdoasSelectionChanged(bool checked)
   m_scanSelection = checked;
 
   if (m_scanSelection)
-   m_maxdoasSzaFrame->hide();
+   {
+    m_maxdoasSzaFrame->hide();
+    m_maxdoasScanFrame->show();
+   }
   else
-   m_maxdoasSzaFrame->show();
+   {
+    m_maxdoasSzaFrame->show();
+    m_maxdoasScanFrame->hide();
+   }
 }
 
 void CWAnalysisWindowPropertyEditor::slotRefSelectionChanged(bool checked)

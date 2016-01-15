@@ -695,6 +695,7 @@ RC mediateRequestRing(void *engineContext,mediate_ring_t *pMediateRing,void *res
   // General information
 
   pEngineContext->noComment=pMediateRing->noheader;
+  pEngineContext->saveRaman=pMediateRing->saveraman;
   pEngineContext->normalizeFlag=pMediateRing->normalize;
   pEngineContext->temperature=pMediateRing->temperature;
 
@@ -789,8 +790,12 @@ void mediateRingHeader(ENGINE_XSCONV_CONTEXT *pEngineContext,FILE *fp)
 
   fprintf(fp,"; column 1 : wavelength\n");
   fprintf(fp,"; column 2 : ring (raman/solar spectrum)\n");
-  fprintf(fp,"; column 3 : interpolated raman\n");
-  fprintf(fp,"; column 4 : convoluted solar spectrum\n");
+
+  if (pEngineContext->saveRaman)
+   {
+    fprintf(fp,"; column 3 : interpolated raman\n");
+    fprintf(fp,"; column 4 : convoluted solar spectrum\n");
+   }
 
   fprintf(fp,";\n");
  }
@@ -1108,8 +1113,12 @@ RC mediateRingCalculate(void *engineContext,void *responseHandle)
 
           strcpy(pageTitle,"Ring");
 
-          for (i=0;i<nring;i++)
-           fprintf(fp,"%.14le %.14le %.14le %.14le\n",ringLambda[i],ringEnd[i],ramanint[i],ringVector[i]);
+          if (pEngineContext->saveRaman)
+           for (i=0;i<nring;i++)
+            fprintf(fp,"%.14le %.14le %.14le %.14le\n",ringLambda[i],ringEnd[i],ramanint[i],ringVector[i]);
+          else
+           for (i=0;i<nring;i++)
+            fprintf(fp,"%.14le %.14le\n",ringLambda[i],ringEnd[i]);
 
           mediateAllocateAndSetPlotData(&spectrumData[0],"Calculated ring cross section",ringLambda,ringEnd,nring,Line);
           mediateResponsePlotData(0,spectrumData,1,Spectrum,forceAutoScale,"Calculated ring cross section","Wavelength (nm)","",responseHandle);
@@ -1374,7 +1383,7 @@ RC mediateUsampCalculate(void *engineContext,void *responseHandle)
   if (!strlen(pEngineContext->kuruczFile) ) {
     return ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_FILE_NOT_SPECIFIED,"high resolution solar reference");
   }
-  
+
   if (!(rc=MATRIX_Load(pEngineContext->calibrationFile,&calibrationMatrix,0,0,(double)0.,(double)0.,0,1,"mediateUsampCalculate (calibration file) ")) &&
       !(rc=MATRIX_Load(pEngineContext->kuruczFile,&kuruczMatrix,0,0,(double)calibrationMatrix.matrix[0][0]-7.,
        (double)calibrationMatrix.matrix[0][calibrationMatrix.nl-1]+7.,1,1,"mediateUsampCalculate (Kurucz) ")) &&

@@ -1602,6 +1602,8 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
                  pEngineContext->analysisRef.refSza++;
              }
 
+             pTabFeno->refSpectrumSelectionScanMode=pAnalysisWindows->refSpectrumSelectionScanMode;
+
              pTabFeno->refSZA=(double)pAnalysisWindows->refSzaCenter;
              pTabFeno->refSZADelta=(double)pAnalysisWindows->refSzaDelta;
 

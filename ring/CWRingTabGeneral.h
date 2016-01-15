@@ -51,6 +51,7 @@ Q_OBJECT
   QLineEdit *m_tempEdit;
   QCheckBox *m_normalizeCheck;
   QCheckBox *m_headerCheck;
+  QCheckBox *m_ramanCheck;
 };
 
 #endif

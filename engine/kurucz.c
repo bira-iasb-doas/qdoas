@@ -833,6 +833,9 @@ RC KURUCZ_Reference(double *instrFunction,INDEX refFlag,int saveFlag,int gomeFla
   rc=ERROR_ID_NO;
   msgCount=0;
 
+  if (indexFenoColumn==0)
+   KURUCZ_indexLine=1;
+
   // Allocate buffers
 
   if ((reference=(double *)MEMORY_AllocDVector("KURUCZ_Reference ","spectrum",0,NDET-1))==NULL)

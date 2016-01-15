@@ -80,6 +80,7 @@ bool CRingGeneralSubHandler::start(const QXmlAttributes &atts)
    m_d->normalize = (str == "true") ? 1 : 0;
 
   m_d->noheader = (atts.value("rmhdr") == "true") ? 1 : 0;
+  m_d->saveraman = (atts.value("save_raman") == "true") ? 1 : 0;
 
   str = atts.value("output");
   if (!str.isEmpty()) {

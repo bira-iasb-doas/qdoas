@@ -95,6 +95,9 @@ CWRingTabGeneral::CWRingTabGeneral(const mediate_ring_t *properties, QWidget *pa
   m_headerCheck = new QCheckBox("Remove Header", this);
   mainLayout->addWidget(m_headerCheck, 0, Qt::AlignLeft);
 
+  m_ramanCheck = new QCheckBox("Save Raman and solar spectra", this);
+  mainLayout->addWidget(m_ramanCheck, 0, Qt::AlignLeft);
+
   // initialize
   reset(properties);
 
@@ -122,6 +125,7 @@ void CWRingTabGeneral::reset(const mediate_ring_t *properties)
 
   m_normalizeCheck->setCheckState(properties->normalize ? Qt::Checked : Qt::Unchecked);
   m_headerCheck->setCheckState(properties->noheader ? Qt::Checked : Qt::Unchecked);
+  m_ramanCheck->setCheckState(properties->saveraman ? Qt::Checked : Qt::Unchecked);
 
   // files
   m_outputFileEdit->setText(properties->outputFile);
@@ -136,6 +140,7 @@ void CWRingTabGeneral::apply(mediate_ring_t *properties) const
 {
  	properties->normalize = (m_normalizeCheck->checkState() == Qt::Checked) ? 1 : 0;
   properties->noheader = (m_headerCheck->checkState() == Qt::Checked) ? 1 : 0;
+  properties->saveraman = (m_ramanCheck->checkState() == Qt::Checked) ? 1 : 0;
   properties->temperature = m_tempEdit->text().toDouble();
 
   strcpy(properties->outputFile, m_outputFileEdit->text().toAscii().constData());

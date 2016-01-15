@@ -66,10 +66,12 @@ Q_OBJECT
   QCheckBox *m_residualCheck, *m_predefCheck, *m_ratioCheck;
 
   QFrame *m_refOneFrame;
-  QFrame *m_refTwoEditFrame, *m_refTwoSzaFrame, *m_satelliteFrame, *m_maxdoasFrame, *m_maxdoasSzaFrame;
+  QFrame *m_refTwoEditFrame, *m_refTwoSzaFrame, *m_satelliteFrame, *m_maxdoasFrame, *m_maxdoasSzaFrame, *m_maxdoasScanFrame;
   QLineEdit *m_refOneEdit, *m_refTwoEdit, *m_residualEdit;
   QLineEdit *m_szaCenterEdit, *m_szaDeltaEdit;
   QLineEdit *m_maxdoasSzaCenterEdit, *m_maxdoasSzaDeltaEdit;
+
+  QComboBox *m_scanCombo;
   // satellite only ...
   QLineEdit *m_refTwoLonMinEdit, *m_refTwoLonMaxEdit;
   QLineEdit *m_refTwoLatMinEdit, *m_refTwoLatMaxEdit;

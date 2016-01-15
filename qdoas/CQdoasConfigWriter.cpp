@@ -1175,12 +1175,38 @@ void CQdoasConfigWriter::writeAnalysisWindows(FILE *fp, const QString &projectNa
 	tmpStr = pathMgr->simplifyPath(QString(properties->refTwoFile));
 	fprintf(fp, "             reftwo=\"%s\"\n", tmpStr.toAscii().constData());
 	tmpStr = pathMgr->simplifyPath(QString(properties->residualFile));
-	fprintf(fp, "             residual=\"%s\"\nszacenter=\"%.3f\" szadelta=\"%.3f\" minlon=\"%.3f\" maxlon=\"%.3f\" minlat=\"%.3f\" maxlat=\"%.3f\" refns=\"%d\" cloudfmin=\"%.3f\" cloudfmax=\"%.3f\" \n",
-                tmpStr.toAscii().constData(),
-		properties->refSzaCenter , properties->refSzaDelta,
+
+	fprintf(fp, "             residual=\"%s\"\nszacenter=\"%.3f\" szadelta=\"%.3f\" scanmode=",tmpStr.toAscii().constData(),properties->refSzaCenter , properties->refSzaDelta);
+
+	switch(properties->refSpectrumSelectionScanMode)
+	 {
+	 	case ANLYS_MAXDOAS_REF_SCAN_BEFORE :
+	 	 fprintf(fp,"\"before\" ");
+	 	break;
+
+	 	case ANLYS_MAXDOAS_REF_SCAN_AVERAGE :
+	 	 fprintf(fp,"\"average\" ");
+	 	break;
+
+	 	case ANLYS_MAXDOAS_REF_SCAN_INTERPOLATE :
+	 	 fprintf(fp,"\"interpolate\" ");
+	 	break;
+
+	 	default :
+	 	 fprintf(fp,"\"after\" ");
+	 	break;
+	 }
+
+
+
+
+
+
+ fprintf(fp,"minlon=\"%.3f\" maxlon=\"%.3f\" minlat=\"%.3f\" maxlat=\"%.3f\" refns=\"%d\" cloudfmin=\"%.3f\" cloudfmax=\"%.3f\" \n",
                 properties->refMinLongitude, properties->refMaxLongitude,
                 properties->refMinLatitude, properties->refMaxLatitude, properties->refNs,
                 properties->cloudFractionMin,properties->cloudFractionMax);
+
 	fprintf(fp,"              maxdoasrefmode=\"%s\" \n",
 	           (properties->refMaxdoasSelection==ANLYS_MAXDOAS_REF_SCAN)?"scan":"sza");
 	fprintf(fp, "             east=\"%s\" center=\"%s\" west=\"%s\" backscan=\"%s\" />\n",

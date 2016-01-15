@@ -75,9 +75,10 @@
 #include "coda.h"
 
 int  NDET;                                                                      // detector size
+int ENGINE_refStartDate=0;                                                      // automatic reference selection : 0 use localday of records, 1 use starting date and time of the first measurements
 
 ENGINE_CONTEXT engineContext,                                                   // engine context used to make the interface between the mediator and the engine
-  ENGINE_contextRef;                                               // engine context used for the automatic search of the reference spectrum
+  ENGINE_contextRef,ENGINE_contextRef2;                                               // engine context used for the automatic search of the reference spectrum
 char ENGINE_dbgFile[DOAS_MAX_PATH_LEN+1];
 double ENGINE_localNoon;
 
@@ -566,6 +567,8 @@ RC EngineSetFile(ENGINE_CONTEXT *pEngineContext,const char *fileName,void *respo
 
    // Initializations
 
+   ENGINE_refStartDate=0;
+
    pFile=&pEngineContext->fileInfo;
    pEngineContext->recordInfo.oldZm=(double)-1;
 
@@ -1038,6 +1041,7 @@ RC EngineEndCurrentSession(ENGINE_CONTEXT *pEngineContext)
 
      EngineResetContext(pEngineContext);
      EngineResetContext(&ENGINE_contextRef);
+     EngineResetContext(&ENGINE_contextRef2);
 
      THRD_id=THREAD_TYPE_NONE;
      SYMB_itemCrossN=SYMBOL_PREDEFINED_MAX;
@@ -1070,6 +1074,7 @@ ENGINE_CONTEXT *EngineCreateContext(void)
 
    memset(pEngineContext,0,sizeof(ENGINE_CONTEXT));                              // main engine context
    memset(&ENGINE_contextRef,0,sizeof(ENGINE_CONTEXT));                          // copy of the engine context for the automatic search of the reference spectrum
+   memset(&ENGINE_contextRef2,0,sizeof(ENGINE_CONTEXT));                         // copy of the engine context for the automatic search of the reference spectrum (scan mode)
 
    THRD_id=THREAD_TYPE_NONE;
 
@@ -1116,7 +1121,8 @@ RC EngineDestroyContext(ENGINE_CONTEXT *pEngineContext)
 // -----------------------------------------------------------------------------
 // FUNCTION      EngineSetRefIndexes
 // -----------------------------------------------------------------------------
-// PURPOSE       Browse spectra and search for a reference spectrum
+// PURPOSE       Browse spectra and search for zenith sky spectra that can be used
+//               as reference.  Keep SZA, record number and time of measurements.
 //
 // INPUT         pEngineContext     pointer to the engine context
 //
@@ -1159,8 +1165,10 @@ RC EngineSetRefIndexes(ENGINE_CONTEXT *pEngineContext)
    // Make a backup of the spectra part of the engine context
 
    EngineCopyContext(&ENGINE_contextRef,pEngineContext);
+   EngineCopyContext(&ENGINE_contextRef2,pEngineContext);
 
-   ENGINE_contextRef.analysisRef.refScan=0;  // in order not to have error on zenith sky spectra
+   ENGINE_contextRef.analysisRef.refScan=
+   ENGINE_contextRef2.analysisRef.refScan=0;  // in order not to have error on zenith sky spectra
 
    pInstr=&ENGINE_contextRef.project.instrumental;
 
@@ -1171,7 +1179,10 @@ RC EngineSetRefIndexes(ENGINE_CONTEXT *pEngineContext)
        (pInstr->readOutFormat==PRJCT_INSTR_FORMAT_PDAEGG) ||
        (pInstr->readOutFormat==PRJCT_INSTR_FORMAT_PDAEGG_OLD))
 
-    pInstr->user=PRJCT_INSTR_IASB_TYPE_ZENITHAL;
+    {
+    	ENGINE_contextRef.project.instrumental.user=
+    	ENGINE_contextRef2.project.instrumental.user=PRJCT_INSTR_IASB_TYPE_ZENITHAL;
+    }
 
    if (ENGINE_contextRef.recordNumber>0)
     {
@@ -1333,7 +1344,7 @@ RC EngineSetRefIndexes(ENGINE_CONTEXT *pEngineContext)
 // -----------------------------------------------------------------------------
 // FUNCTION      EngineSetRefIndexesMFC
 // -----------------------------------------------------------------------------
-// PURPOSE       Browse spectra and search for a reference spectrum
+// PURPOSE       Same routine as EngineSetRefIndexes but adapted for MFC format
 //
 // INPUT         pEngineContext     pointer to the engine context
 //
@@ -1407,8 +1418,10 @@ RC EngineSetRefIndexesMFC(ENGINE_CONTEXT *pEngineContext,int *pNewRef,INDEX *pIn
      // Make a backup of the spectra part of the engine context
 
      EngineCopyContext(&ENGINE_contextRef,pEngineContext);
+     EngineCopyContext(&ENGINE_contextRef2,pEngineContext);
 
-     ENGINE_contextRef.analysisRef.refScan=0;                                      // in order not to have error on zenith sky spectra
+     ENGINE_contextRef.analysisRef.refScan=
+     ENGINE_contextRef2.analysisRef.refScan=0;                                      // in order not to have error on zenith sky spectra
 
      pInstr=&ENGINE_contextRef.project.instrumental;
 
@@ -1623,8 +1636,8 @@ RC EngineSetRefIndexesMFC(ENGINE_CONTEXT *pEngineContext,int *pNewRef,INDEX *pIn
                pTabFeno->ZmRefMorning=(pTabFeno->indexRefMorning!=ITEM_NONE)?ZmList[pTabFeno->indexRefMorning]:(double)-1.;
                pTabFeno->ZmRefAfternoon=(pTabFeno->indexRefAfternoon!=ITEM_NONE)?ZmList[pTabFeno->indexRefAfternoon]:(double)-1.;
 
-               strcpy(pTabFeno->refAM,(pTabFeno->indexRefMorning!=ITEM_NONE)?fileList[indexList[pTabFeno->indexRefMorning]]:"");
-               strcpy(pTabFeno->refPM,(pTabFeno->indexRefAfternoon!=ITEM_NONE)?fileList[indexList[pTabFeno->indexRefAfternoon]]:"");
+               //strcpy(pTabFeno->refAM,(pTabFeno->indexRefMorning!=ITEM_NONE)?fileList[indexList[pTabFeno->indexRefMorning]]:"");
+               //strcpy(pTabFeno->refPM,(pTabFeno->indexRefAfternoon!=ITEM_NONE)?fileList[indexList[pTabFeno->indexRefAfternoon]]:"");
               }
             }
           }
@@ -1662,6 +1675,37 @@ RC EngineSetRefIndexesMFC(ENGINE_CONTEXT *pEngineContext,int *pNewRef,INDEX *pIn
    return rc;
  }
 
+
+RC EngineLoadRefMFC(ENGINE_CONTEXT *pEngineContextRef,ENGINE_CONTEXT *pEngineContext,INDEX indexRefRecord)
+ {
+ 	// Declarations
+
+ 	char *ptr;
+ 	RC rc;
+
+ 	// Initialization
+
+ 	rc=ERROR_ID_NO;
+
+ 	// Build reference file name
+
+  strcpy(pEngineContextRef->fileInfo.fileName,pEngineContext->fileInfo.fileName);
+
+  if ((ptr=strrchr(pEngineContextRef->fileInfo.fileName,'/'))!=NULL)
+   strcpy(ptr+1,&pEngineContext->analysisRef.scanRefFiles[indexRefRecord*(MAX_ITEM_TEXT_LEN+1)]);
+  else
+   strcpy(pEngineContextRef->fileInfo.fileName,&pEngineContext->analysisRef.scanRefFiles[indexRefRecord*(MAX_ITEM_TEXT_LEN+1)]);
+
+  // Load file
+
+  rc=EngineReadFile(pEngineContextRef,1,0,0);
+
+  // Return
+
+  return rc;
+ }
+
+
 // -----------------------------------------------------------------------------
 // FUNCTION      EngineNewRef
 // -----------------------------------------------------------------------------
@@ -1684,13 +1728,13 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
      indexPage,
      indexColumn,
      indexRecord,
-     indexScanRecord;
+     indexScanRecord,
+     indexScanBefore,indexScanAfter,indexScanMin,indexScanMax;
 
    FENO *pTabFeno;                                                               // pointer to the analysis window
    int useKurucz,alignRef,useUsamp,saveFlag,newDimL;
    int newref;
    int *scanRefIndexes;
-   char *ptr;
    RC rc;
 
    // Initializations
@@ -1699,7 +1743,7 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
    rc=ERROR_ID_NO;
    saveFlag=(int)pEngineContext->project.spectra.displayDataFlag;
    useKurucz=alignRef=useUsamp=0;
-   indexRecord=indexRefRecord=indexScanRecord=ITEM_NONE;
+   indexRecord=indexRefRecord=indexScanRecord=indexScanBefore=indexScanAfter=ITEM_NONE;
    indexColumn=2;
    newref=0;
 
@@ -1708,37 +1752,63 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
    if ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_ASCII) && !pEngineContext->project.instrumental.ascii.szaSaveFlag)
     rc=ERROR_SetLast("EngineNewRef",ERROR_TYPE_WARNING,ERROR_ID_FILE_AUTOMATIC);
 
-   else if (pEngineContext->analysisRef.refScan || (pRecord->localCalDay!=ENGINE_contextRef.recordInfo.localCalDay))
+   else if (pEngineContext->analysisRef.refScan || ENGINE_refStartDate || (pRecord->localCalDay!=ENGINE_contextRef.recordInfo.localCalDay))
     {
     	if ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC_STD) ||
          (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC))
 
       rc=EngineSetRefIndexesMFC(pEngineContext,&newref,&indexRecord);
 
-     else if (((pRecord->localCalDay!=ENGINE_contextRef.recordInfo.localCalDay) || (!pEngineContext->fileInfo.nScanRef && (pEngineContext->analysisRef.scanRefIndexes!=NULL))) && !(rc=EngineSetRefIndexes(pEngineContext)))
+     else if (((ENGINE_refStartDate && (memcmp(&pEngineContext->fileInfo.startDate,&ENGINE_contextRef.fileInfo.startDate,sizeof(SHORT_DATE)) || memcmp(&pEngineContext->fileInfo.startTime,&ENGINE_contextRef.fileInfo.startTime,sizeof(struct time)))) ||
+              (!ENGINE_refStartDate && (pRecord->localCalDay!=ENGINE_contextRef.recordInfo.localCalDay))  ||
+              (!pEngineContext->fileInfo.nScanRef && (pEngineContext->analysisRef.scanRefIndexes!=NULL))) && !(rc=EngineSetRefIndexes(pEngineContext)))
+
       newref=1;
     }
 
-   if (pEngineContext->analysisRef.refScan && ((scanRefIndexes=pEngineContext->analysisRef.scanRefIndexes)!=NULL))
+   if (pEngineContext->analysisRef.refScan && ((scanRefIndexes=pEngineContext->analysisRef.scanRefIndexes)!=NULL) && (pEngineContext->fileInfo.nScanRef>0))
     {
-    	if ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC_STD) ||
-         (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC))
+    	indexRecord=pEngineContext->indexRecord;
 
-      rc=EngineSetRefIndexesMFC(pEngineContext,&newref,&indexRecord);
+    	// if ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC_STD) ||
+     //     (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC))
+     //
+     //  rc=EngineSetRefIndexesMFC(pEngineContext,&newref,&indexRecord);
+     //
+     // else
+     //  indexRecord=pEngineContext->indexRecord;
 
+     // Dichotomic search of the reference spectrum
+
+     if (indexRecord<scanRefIndexes[0])
+      indexScanAfter=scanRefIndexes[0];
+     else if (indexRecord>scanRefIndexes[pEngineContext->fileInfo.nScanRef-1])
+      indexScanBefore=scanRefIndexes[pEngineContext->fileInfo.nScanRef-1];
      else
-      indexRecord=pEngineContext->indexRecord;
-
-     if (indexRecord!=ITEM_NONE)
       {
-       for (indexScanRecord=0;indexScanRecord<pEngineContext->fileInfo.nScanRef;indexScanRecord++)
-        if (scanRefIndexes[indexScanRecord]>=indexRecord)
-         break;
+       indexScanMin=indexScanRecord=0;
+       indexScanMax=pEngineContext->fileInfo.nScanRef;
 
-       indexScanRecord=(indexScanRecord>=pEngineContext->fileInfo.nScanRef)?ITEM_NONE:scanRefIndexes[indexScanRecord];
+       // Dichotomic search
+
+       while (indexScanMax-indexScanMin>1)
+        {
+         indexScanRecord=(indexScanMin+indexScanMax)>>1;
+
+         if (scanRefIndexes[indexScanRecord]==indexRecord)
+          indexScanMin=indexScanMax=ITEM_NONE;                                  // the current record is also a zenith (-> in the list of possible reference spectra)
+         else if (scanRefIndexes[indexScanRecord]<indexRecord)
+          indexScanMin=indexScanRecord;
+         else
+          indexScanMax=indexScanRecord;
+        }
+
+       if ((indexScanMin!=ITEM_NONE) && (indexScanMin<pEngineContext->fileInfo.nScanRef) && (scanRefIndexes[indexScanMin]<=indexRecord))
+        indexScanBefore=scanRefIndexes[indexScanMin];
+
+       if ((indexScanMax!=ITEM_NONE) && (indexScanMax<pEngineContext->fileInfo.nScanRef) && (scanRefIndexes[indexScanMax]>=indexRecord))
+        indexScanAfter=scanRefIndexes[indexScanMax];
       }
-     else
-      indexScanRecord=ITEM_NONE;
     }
 
    for (indexTabFeno=0;(indexTabFeno<NFeno) && !rc;indexTabFeno++)
@@ -1752,16 +1822,28 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
       {
        pTabFeno->displayRef=0;
 
+       indexRefRecord=ITEM_NONE;
+
        // Reference spectrum selected on the SZA
 
        if (pTabFeno->refMaxdoasSelectionMode==ANLYS_MAXDOAS_REF_SZA)
         indexRefRecord=(pRecord->localTimeDec<=ENGINE_localNoon)?pTabFeno->indexRefMorning:pTabFeno->indexRefAfternoon;
-       else
-        indexRefRecord=indexScanRecord;
+       else if (pTabFeno->refSpectrumSelectionScanMode==ANLYS_MAXDOAS_REF_SCAN_BEFORE)
+        indexRefRecord=(indexScanBefore!=ITEM_NONE)?indexScanBefore:indexScanAfter;
+       else if (pTabFeno->refSpectrumSelectionScanMode==ANLYS_MAXDOAS_REF_SCAN_AFTER)
+        indexRefRecord=(indexScanAfter!=ITEM_NONE)?indexScanAfter:indexScanBefore;
+
+       // ANLYS_MAXDOAS_REF_SCAN_AVERAGE && ANLYS_MAXDOAS_REF_SCAN_INTERPOLATE
+       // Should load both reference spectra (zenith before and after the scan) but one is missing
+
+       else if (indexScanBefore==ITEM_NONE)
+        indexRefRecord=indexScanAfter;
+       else if (indexScanAfter==ITEM_NONE)
+        indexRefRecord=indexScanBefore;
 
        // There is no reference spectrum for the requested twilight
 
-       if (indexRefRecord==ITEM_NONE)
+       if ((indexRefRecord==ITEM_NONE) && (indexScanBefore==ITEM_NONE) && (indexScanAfter==ITEM_NONE))
         {
          memcpy(&ENGINE_contextRef.recordInfo.present_datetime.thedate,&pRecord->present_datetime.thedate,sizeof(pRecord->present_datetime.thedate));
          rc=ERROR_ID_FILE_RECORD;
@@ -1769,35 +1851,51 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
        // There is a reference spectrum for the requested twilight
 
-       else if (newref || (indexRefRecord!=pTabFeno->indexRef)) // !!! test refscan || (indexRefRecord!=ENGINE_contextRef.indexRecord))
+       else if  (newref ||
+               ((indexRefRecord!=ITEM_NONE) && (indexRefRecord!=pTabFeno->indexRef)) ||
+               ((indexRefRecord==ITEM_NONE) && ((pTabFeno->refSpectrumSelectionScanMode==ANLYS_MAXDOAS_REF_SCAN_INTERPOLATE) || (indexScanBefore!=pTabFeno->indexRefScanBefore) || (indexScanAfter!=pTabFeno->indexRefScanAfter))))
         {
         	pTabFeno->newrefFlag=1;
 
          if ((pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_MFC) &&
              (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_MFC_STD))
-
-          rc=EngineReadFile(&ENGINE_contextRef,indexRefRecord,0,0);
-
+          {
+          	if (indexRefRecord!=ITEM_NONE)
+            rc=EngineReadFile(&ENGINE_contextRef,indexRefRecord,0,0);
+           else if (!(rc=EngineReadFile(&ENGINE_contextRef,indexScanBefore,0,0)))
+            rc=EngineReadFile(&ENGINE_contextRef2,indexScanAfter,0,0);
+          }
          else
           {
-           if (pEngineContext->analysisRef.refScan)
-            {
-             strcpy(ENGINE_contextRef.fileInfo.fileName,pEngineContext->fileInfo.fileName);
-
-             if ((ptr=strrchr(ENGINE_contextRef.fileInfo.fileName,'/'))!=NULL)
-              strcpy(ptr+1,&pEngineContext->analysisRef.scanRefFiles[indexRefRecord*(MAX_ITEM_TEXT_LEN+1)]);
-             else
-              strcpy(ENGINE_contextRef.fileInfo.fileName,&pEngineContext->analysisRef.scanRefFiles[indexRefRecord*(MAX_ITEM_TEXT_LEN+1)]);
-            }
-           else
-            strcpy(ENGINE_contextRef.fileInfo.fileName,(pRecord->localTimeDec<=ENGINE_localNoon)?pTabFeno->refAM:pTabFeno->refPM);
-
-           rc=EngineReadFile(&ENGINE_contextRef,1,0,0);
+          	if (indexRefRecord!=ITEM_NONE)
+          	 rc=EngineLoadRefMFC(&ENGINE_contextRef,pEngineContext,indexRefRecord);
+          	else if (!(rc=EngineLoadRefMFC(&ENGINE_contextRef,pEngineContext,indexScanBefore)))
+          	 rc=EngineLoadRefMFC(&ENGINE_contextRef2,pEngineContext,indexScanAfter);
           }
 
          if (!rc)
           {
            alignRef++;
+
+           if (indexRefRecord!=ITEM_NONE)
+            memcpy(pTabFeno->Sref,ENGINE_contextRef.buffers.spectrum,sizeof(double)*NDET);
+           else
+            {
+            	double *sref1,*sref2;
+
+            	sref1=ENGINE_contextRef.buffers.spectrum;
+            	sref2=ENGINE_contextRef2.buffers.spectrum;
+
+            	if (pTabFeno->refSpectrumSelectionScanMode==ANLYS_MAXDOAS_REF_SCAN_AVERAGE)
+           	 	for (int i=0;i<NDET;i++)
+           	 	 pTabFeno->Sref[i]=(sref1[i]+sref2[i])*0.5;
+           	 else if (pTabFeno->refSpectrumSelectionScanMode==ANLYS_MAXDOAS_REF_SCAN_INTERPOLATE)
+           	  {
+           	 	 for (int i=0;i<NDET;i++)
+           	 	  pTabFeno->Sref[i]=sref1[i]+(pEngineContext->recordInfo.Tm-ENGINE_contextRef.recordInfo.Tm)*(sref2[i]-sref1[i])/(ENGINE_contextRef2.recordInfo.Tm-ENGINE_contextRef.recordInfo.Tm);
+           	  }
+            }
+
 
            if (!pTabFeno->useEtalon)
             {
@@ -1839,7 +1937,7 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
            if (pTabFeno->useUsamp)
             useUsamp++;
 
-           memcpy(pTabFeno->Sref,ENGINE_contextRef.buffers.spectrum,sizeof(double)*NDET);
+
 
            if ((rc=VECTOR_NormalizeVector(pTabFeno->Sref-1,NDET,&pTabFeno->refNormFact,"EngineNewRef"))!=ERROR_ID_NO)
             break;
@@ -1848,15 +1946,31 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
            pTabFeno->Zm=ENGINE_contextRef.recordInfo.Zm;
            pTabFeno->Tm=ENGINE_contextRef.recordInfo.Tm;
            pTabFeno->TimeDec=ENGINE_contextRef.recordInfo.TimeDec;
+
+           if (indexRefRecord==ITEM_NONE)
+            {
+             pTabFeno->indexRefScanBefore=indexScanBefore;
+             pTabFeno->indexRefScanAfter=indexScanAfter;
+
+             pTabFeno->Zm2=ENGINE_contextRef2.recordInfo.Zm;
+             pTabFeno->Tm2=ENGINE_contextRef2.recordInfo.Tm;
+             pTabFeno->TimeDec2=ENGINE_contextRef2.recordInfo.TimeDec;
+            }
+           else
+            pTabFeno->indexRefScanBefore=pTabFeno->indexRefScanAfter=ITEM_NONE;
+
            pTabFeno->displayRef=1;
 
            pTabFeno->refDate = ENGINE_contextRef.recordInfo.present_datetime.thedate;
           }
-         else if (indexRefRecord==pTabFeno->indexRef)
+         else if (((indexRefRecord!=ITEM_NONE) && (indexRefRecord==pTabFeno->indexRef)) ||
+                  ((indexScanBefore!=ITEM_NONE) && (indexScanBefore==pTabFeno->indexRefScanBefore)) ||
+                  ((indexScanAfter!=ITEM_NONE) && (indexScanAfter==pTabFeno->indexRefScanAfter)))
+
           pTabFeno->displayRef=1;
         }
 
-       if (indexRefRecord!=ITEM_NONE && pEngineContext->project.spectra.displayFitFlag)
+       if (pEngineContext->project.spectra.displayFitFlag && ((indexRefRecord!=ITEM_NONE) || (indexScanBefore!=ITEM_NONE) || (indexScanAfter!=ITEM_NONE)))
         {
          struct date *pDay;                                                      // pointer to measurement date
          struct time *pTime;                                                     // pointer to measurement date
@@ -1870,7 +1984,13 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
          pDay=&ENGINE_contextRef.recordInfo.present_datetime.thedate;
          pTime=&ENGINE_contextRef.recordInfo.present_datetime.thetime;
 
-         sprintf(string,"Selected reference (%d/%d, SZA %.2f)",pTabFeno->indexRef,ENGINE_contextRef.recordNumber,ENGINE_contextRef.recordInfo.Zm);
+         if (pTabFeno->refMaxdoasSelectionMode==ANLYS_MAXDOAS_REF_SZA)
+          sprintf(string,"Selected reference (%d, SZA %.2f)",pTabFeno->indexRef,ENGINE_contextRef.recordInfo.Zm);
+         else if (pTabFeno->indexRef!=ITEM_NONE)
+          sprintf(string,"Selected reference (%d)",pTabFeno->indexRef);
+         else if ((pTabFeno->indexRefScanBefore!=ITEM_NONE) && (pTabFeno->indexRefScanAfter!=ITEM_NONE))
+          sprintf(string,"Selected references (%d & %d)",pTabFeno->indexRefScanBefore,pTabFeno->indexRefScanAfter);
+
          sprintf(tabTitle,"%s results (%d/%d)",pTabFeno->windowName,pEngineContext->indexRecord,pEngineContext->recordNumber);
 
          mediateAllocateAndSetPlotData(&spectrumData,"Measured",&pTabFeno->LambdaRef[SvdPDeb],&pTabFeno->Sref[SvdPDeb],SvdPFin-SvdPDeb+1,Line);
@@ -1889,10 +2009,24 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
                (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC))
             mediateResponseCellInfo(indexPage,indexLine++,indexColumn,responseHandle,"Reference file","%s",ENGINE_contextRef.fileInfo.fileName);
            else
-            mediateResponseCellInfo(indexPage,indexLine++,indexColumn,responseHandle,"Record number","%d/%d",pTabFeno->indexRef,ENGINE_contextRef.recordNumber);
+            mediateResponseCellInfo(indexPage,indexLine++,indexColumn,responseHandle,"Record number","%d/%d",(pTabFeno->indexRef!=ITEM_NONE)?pTabFeno->indexRef:pTabFeno->indexRefScanBefore,ENGINE_contextRef.recordNumber);
 
            mediateResponseCellInfo(indexPage,indexLine++,indexColumn,responseHandle,"Date and Time","%02d/%02d/%d %02d:%02d:%02d",pDay->da_day,pDay->da_mon,pDay->da_year,pTime->ti_hour,pTime->ti_min,pTime->ti_sec);
            mediateResponseCellInfo(indexPage,indexLine++,indexColumn,responseHandle,"SZA","%g",ENGINE_contextRef.recordInfo.Zm);
+
+           if ((pTabFeno->indexRefScanBefore!=ITEM_NONE) && (pTabFeno->indexRefScanAfter!=ITEM_NONE))
+            {
+            	pDay=&ENGINE_contextRef2.recordInfo.present_datetime.thedate;
+
+             if ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC_STD) ||
+                 (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC))
+              mediateResponseCellInfo(indexPage,indexLine++,indexColumn,responseHandle,"Reference file (2)","%s",ENGINE_contextRef2.fileInfo.fileName);
+             else
+              mediateResponseCellInfo(indexPage,indexLine++,indexColumn,responseHandle,"Record number (2)","%d/%d",pTabFeno->indexRefScanAfter,ENGINE_contextRef2.recordNumber);
+
+             mediateResponseCellInfo(indexPage,indexLine++,indexColumn,responseHandle,"Date and Time (2)","%02d/%02d/%d %02d:%02d:%02d",pDay->da_day,pDay->da_mon,pDay->da_year,pTime->ti_hour,pTime->ti_min,pTime->ti_sec);
+             mediateResponseCellInfo(indexPage,indexLine++,indexColumn,responseHandle,"SZA (2)","%g",ENGINE_contextRef2.recordInfo.Zm);
+            }
 
            pTabFeno->displayLineIndex=indexLine+1;
           }

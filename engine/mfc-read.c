@@ -74,6 +74,7 @@
 
 #include "doas.h"
 #include "winfiles.h"
+#include "engine.h"
 #include "engine_context.h"
 #include "kurucz.h"
 #include "analyse.h"
@@ -1005,6 +1006,7 @@ RC MFCBIRA_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
 
   // Initializations
 
+  ENGINE_refStartDate=1;
   pEngineContext->recordNumber=0;
   offset=pEngineContext->buffers.offset;
   darkCurrent=pEngineContext->buffers.varPix;
@@ -1014,7 +1016,7 @@ RC MFCBIRA_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
   // Release scanref buffer
 
   if (pRef->scanRefIndexes!=NULL)
-   MEMORY_ReleaseBuffer("SetCCD_EEV","scanRefIndexes",pRef->scanRefIndexes);
+   MEMORY_ReleaseBuffer("MFCBIRA_Set","scanRefIndexes",pRef->scanRefIndexes);
   pRef->scanRefIndexes=NULL;
 
   rc=ERROR_ID_NO;
@@ -1029,6 +1031,10 @@ RC MFCBIRA_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
    {
    	fread(&pEngineContext->recordNumber,sizeof(int),1,specFp);
    	fread(&detectorSize,sizeof(int),1,specFp);
+    fread(&header,sizeof(MFCBIRA_HEADER),1,specFp);                             // Get date and time of the first record
+
+   	memcpy(&pEngineContext->fileInfo.startDate,&header.measurementDate,sizeof(SHORT_DATE));
+   	memcpy(&pEngineContext->fileInfo.startTime,&header.startTime,sizeof(struct time));
 
    	if (pEngineContext->recordNumber<=0)
    	 rc=ERROR_SetLast("MFCBIRA_Set",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pEngineContext->fileInfo.fileName);
@@ -1042,7 +1048,7 @@ RC MFCBIRA_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
       // Allocate a buffer for the indexes of selected reference spectra (scan mode)
 
       if (pEngineContext->analysisRef.refScan && pEngineContext->recordNumber &&
-        ((pRef->scanRefIndexes=(int *)MEMORY_AllocBuffer("SetCCD_EEV","scanRefIndexes",pEngineContext->recordNumber,sizeof(int),0,MEMORY_TYPE_INT))==NULL))
+        ((pRef->scanRefIndexes=(int *)MEMORY_AllocBuffer("MFCBIRA_Set","scanRefIndexes",pEngineContext->recordNumber,sizeof(int),0,MEMORY_TYPE_INT))==NULL))
 
        rc=ERROR_ID_ALLOC;
 

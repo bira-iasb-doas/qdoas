@@ -195,6 +195,15 @@ enum _maxdoasRefSelectionMode {
   ANLYS_MAXDOAS_REF_SCAN
 };
 
+// Additional options for the reference of the scan selection mode
+
+enum _maxdoasScanMode {
+	 ANLYS_MAXDOAS_REF_SCAN_BEFORE,                                                // use the zenith before the scan
+	 ANLYS_MAXDOAS_REF_SCAN_AFTER,                                                 // use the zenith after the scan
+	 ANLYS_MAXDOAS_REF_SCAN_AVERAGE,                                               // average the zenith spectra before and after the scan
+	 ANLYS_MAXDOAS_REF_SCAN_INTERPOLATE                                            // interpolate the zenith spectra before and after the scan at the current measurement time
+};
+
 enum _kuruczMode {
   ANLYS_KURUCZ_NONE,
   ANLYS_KURUCZ_REF,

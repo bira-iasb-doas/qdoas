@@ -408,9 +408,9 @@ void AnalysisWindowApplyInt(const QList<const CAnalysisWindowConfigItem*>awList,
 
   QList<const CAnalysisWindowConfigItem*>::const_iterator awIt = awList.begin();
   char msgString[MAX_STR_LEN+1];
-  
+
   // Browse
-  
+
   while (awIt!=awList.end()) {
     if (pWindowName->isEmpty() || (*pWindowName==(*awIt)->name())) {
       memcpy(pNewAnalysisWindow,(mediate_analysis_window_t *)((*awIt)->properties()),sizeof(mediate_analysis_window_t));
@@ -433,12 +433,12 @@ void AnalysisWindowApplyDouble(const QList<const CAnalysisWindowConfigItem*>awLi
                                double *pDoubleField)                                    // pointer to the field to change (should point within the previous target structure)
 {
   // Declarations
-  
+
   QList<const CAnalysisWindowConfigItem*>::const_iterator awIt = awList.begin();
   char msgString[MAX_STR_LEN+1];
 
   // Browse
-  
+
   while (awIt!=awList.end()) {
     if (pWindowName->isEmpty() || (*pWindowName==(*awIt)->name())) {
       memcpy(pNewAnalysisWindow,(mediate_analysis_window_t *)((*awIt)->properties()),sizeof(mediate_analysis_window_t));
@@ -571,6 +571,19 @@ RC ParseAnalysisWindow(QStringList &xmlFields,int xmlFieldN,int startingField,QS
                 std::cout << pXmlKey->toAscii().constData() << " do not support " << pXmlValue->toAscii().constData() << std::endl;
               else
                 AnalysisWindowApplyInt(awList,&windowName,pXmlKey,(*pXmlValue=="scan")?ANLYS_MAXDOAS_REF_SCAN:ANLYS_MAXDOAS_REF_SZA,&newAnalysisProperties,&newAnalysisProperties.refSpectrumSelection);
+            }
+          else if (xmlFields.at(indexField)=="scanmode")
+            {
+            	 if (*pXmlValue=="before")
+            	  AnalysisWindowApplyInt(awList,&windowName,pXmlKey,ANLYS_MAXDOAS_REF_SCAN_BEFORE,&newAnalysisProperties,&newAnalysisProperties.refSpectrumSelection);
+            	 else if (*pXmlValue=="after")
+            	  AnalysisWindowApplyInt(awList,&windowName,pXmlKey,ANLYS_MAXDOAS_REF_SCAN_AFTER,&newAnalysisProperties,&newAnalysisProperties.refSpectrumSelection);
+            	 else if (*pXmlValue=="average")
+            	  AnalysisWindowApplyInt(awList,&windowName,pXmlKey,ANLYS_MAXDOAS_REF_SCAN_AVERAGE,&newAnalysisProperties,&newAnalysisProperties.refSpectrumSelection);
+            	 else if (*pXmlValue=="interpolate")
+            	  AnalysisWindowApplyInt(awList,&windowName,pXmlKey,ANLYS_MAXDOAS_REF_SCAN_INTERPOLATE,&newAnalysisProperties,&newAnalysisProperties.refSpectrumSelection);
+            	 else
+               std::cout << pXmlKey->toAscii().constData() << " do not support " << pXmlValue->toAscii().constData() << std::endl;
             }
 
           // pixel selection for GOME-ERS2 -> not supported
