@@ -568,8 +568,9 @@ RC ReliMFC(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay
 //        if (dateFlag && (pRecord->localCalDay>localDay))
 //         rc=ERROR_ID_FILE_END;
 
-        if (rc || (dateFlag && ((pRecord->localCalDay!=localDay) || (pRecord->elevationViewAngle<88.))))                  // reference spectra are zenith only
+        if (rc || (dateFlag && ((pRecord->localCalDay!=localDay) || (pRecord->elevationViewAngle<80.))))                  // reference spectra are zenith only
            rc=ERROR_ID_FILE_RECORD;
+
 //        else if (pInstrumental->mfcRevert)
 //         VECTOR_Invert(pBuffers->spectrum,NDET);
 //        else if (dateFlag)
@@ -803,7 +804,6 @@ RC MFC_ReadRecordStd(ENGINE_CONTEXT *pEngineContext,char *fileName,
      }
    }
 
-
   // Close file
 
   if (fp!=NULL)
@@ -912,6 +912,9 @@ RC ReliMFCStd(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int local
        rc=ERROR_ID_FILE_RECORD;
       else if (pEngineContext->project.instrumental.mfcRevert)
        VECTOR_Invert(pBuffers->spectrum,NDET);
+
+        if (rc || (dateFlag && ((pRecord->localCalDay!=localDay) || (pRecord->elevationViewAngle<80.))))                  // reference spectra are zenith only
+           rc=ERROR_ID_FILE_RECORD;
      }
    }
   else

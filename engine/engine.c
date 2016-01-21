@@ -1616,7 +1616,7 @@ RC EngineSetRefIndexesMFC(ENGINE_CONTEXT *pEngineContext,int *pNewRef,INDEX *pIn
 
                  if ((pTabFeno->indexRefMorning==ITEM_NONE) && (pTabFeno->indexRefAfternoon==ITEM_NONE))
                   rc=ERROR_SetLast("EngineSetRefIndexesMFC",ERROR_TYPE_WARNING,ERROR_ID_NO_REF,"all the day",pEngineContext->fileInfo.fileName);
-                 else if (pInstr->readOutFormat!=PRJCT_INSTR_FORMAT_ASCII)
+                 else
                   {
                    if (pTabFeno->indexRefMorning==ITEM_NONE)
                     {
@@ -1636,8 +1636,10 @@ RC EngineSetRefIndexesMFC(ENGINE_CONTEXT *pEngineContext,int *pNewRef,INDEX *pIn
                pTabFeno->ZmRefMorning=(pTabFeno->indexRefMorning!=ITEM_NONE)?ZmList[pTabFeno->indexRefMorning]:(double)-1.;
                pTabFeno->ZmRefAfternoon=(pTabFeno->indexRefAfternoon!=ITEM_NONE)?ZmList[pTabFeno->indexRefAfternoon]:(double)-1.;
 
-               //strcpy(pTabFeno->refAM,(pTabFeno->indexRefMorning!=ITEM_NONE)?fileList[indexList[pTabFeno->indexRefMorning]]:"");
-               //strcpy(pTabFeno->refPM,(pTabFeno->indexRefAfternoon!=ITEM_NONE)?fileList[indexList[pTabFeno->indexRefAfternoon]]:"");
+               if (pTabFeno->indexRefMorning!=ITEM_NONE)
+                pTabFeno->indexRefMorning=pEngineContext->analysisRef.scanRefIndexes[pTabFeno->indexRefMorning];
+               if (pTabFeno->indexRefAfternoon!=ITEM_NONE)
+                pTabFeno->indexRefAfternoon=pEngineContext->analysisRef.scanRefIndexes[pTabFeno->indexRefAfternoon];
               }
             }
           }
@@ -1680,7 +1682,7 @@ RC EngineLoadRefMFC(ENGINE_CONTEXT *pEngineContextRef,ENGINE_CONTEXT *pEngineCon
  {
  	// Declarations
 
- 	char *ptr;
+  char *ptr;
  	RC rc;
 
  	// Initialization
@@ -1689,16 +1691,21 @@ RC EngineLoadRefMFC(ENGINE_CONTEXT *pEngineContextRef,ENGINE_CONTEXT *pEngineCon
 
  	// Build reference file name
 
-  strcpy(pEngineContextRef->fileInfo.fileName,pEngineContext->fileInfo.fileName);
+ 	if ((indexRefRecord!=ITEM_NONE) && (indexRefRecord<pEngineContext->analysisRef.nscanRefFiles))
+ 	 {
+    strcpy(pEngineContextRef->fileInfo.fileName,pEngineContext->fileInfo.fileName);
 
-  if ((ptr=strrchr(pEngineContextRef->fileInfo.fileName,'/'))!=NULL)
-   strcpy(ptr+1,&pEngineContext->analysisRef.scanRefFiles[indexRefRecord*(MAX_ITEM_TEXT_LEN+1)]);
+ 	  if ((ptr=strrchr(pEngineContextRef->fileInfo.fileName,'/'))==NULL)
+     strcpy(pEngineContextRef->fileInfo.fileName,&pEngineContext->analysisRef.scanRefFiles[indexRefRecord*(MAX_ITEM_TEXT_LEN+1)]);
+    else
+     strcpy(ptr+1,&pEngineContext->analysisRef.scanRefFiles[indexRefRecord*(MAX_ITEM_TEXT_LEN+1)]);
+
+    // Load file
+
+    rc=EngineReadFile(pEngineContextRef,1,0,0);
+   }
   else
-   strcpy(pEngineContextRef->fileInfo.fileName,&pEngineContext->analysisRef.scanRefFiles[indexRefRecord*(MAX_ITEM_TEXT_LEN+1)]);
-
-  // Load file
-
-  rc=EngineReadFile(pEngineContextRef,1,0,0);
+   rc=ERROR_ID_NO_REF;
 
   // Return
 
@@ -1768,7 +1775,27 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
    if (pEngineContext->analysisRef.refScan && ((scanRefIndexes=pEngineContext->analysisRef.scanRefIndexes)!=NULL) && (pEngineContext->fileInfo.nScanRef>0))
     {
-    	indexRecord=pEngineContext->indexRecord;
+     if ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC_STD) ||
+         (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC))
+      {
+      	char *specList,*pSpec;
+
+      	specList=(char *)pEngineContext->analysisRef.scanRefFiles;
+
+      	if ((pSpec=strrchr(pEngineContext->fileInfo.fileName,'/'))==NULL)
+      	 pSpec=pEngineContext->fileInfo.fileName;
+      	else
+      	 pSpec++;
+
+       for (indexRecord=0;indexRecord<pEngineContext->analysisRef.nscanRefFiles;indexRecord++)
+        if (!stricmp(specList+indexRecord*(MAX_ITEM_TEXT_LEN+1),pSpec))
+         break;
+
+       if (indexRecord>=pEngineContext->analysisRef.nscanRefFiles)
+        indexRecord=ITEM_NONE;
+      }
+     else
+     	indexRecord=pEngineContext->indexRecord;
 
     	// if ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC_STD) ||
      //     (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC))
@@ -1985,11 +2012,11 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
          pTime=&ENGINE_contextRef.recordInfo.present_datetime.thetime;
 
          if (pTabFeno->refMaxdoasSelectionMode==ANLYS_MAXDOAS_REF_SZA)
-          sprintf(string,"Selected reference (%d, SZA %.2f)",pTabFeno->indexRef,ENGINE_contextRef.recordInfo.Zm);
+          sprintf(string,"Selected ref (%d, SZA %.2f)",pTabFeno->indexRef,ENGINE_contextRef.recordInfo.Zm);
          else if (pTabFeno->indexRef!=ITEM_NONE)
-          sprintf(string,"Selected reference (%d)",pTabFeno->indexRef);
+          sprintf(string,"Selected ref (%d)",pTabFeno->indexRef);
          else if ((pTabFeno->indexRefScanBefore!=ITEM_NONE) && (pTabFeno->indexRefScanAfter!=ITEM_NONE))
-          sprintf(string,"Selected references (%d & %d)",pTabFeno->indexRefScanBefore,pTabFeno->indexRefScanAfter);
+          sprintf(string,"%s ref (%d & %d)",(pTabFeno->refSpectrumSelectionScanMode==ANLYS_MAXDOAS_REF_SCAN_INTERPOLATE)?"Interpolated":"Averaged",pTabFeno->indexRefScanBefore,pTabFeno->indexRefScanAfter);
 
          sprintf(tabTitle,"%s results (%d/%d)",pTabFeno->windowName,pEngineContext->indexRecord,pEngineContext->recordNumber);
 
@@ -2007,7 +2034,7 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
            if ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC_STD) ||
                (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC))
-            mediateResponseCellInfo(indexPage,indexLine++,indexColumn,responseHandle,"Reference file","%s",ENGINE_contextRef.fileInfo.fileName);
+            mediateResponseCellInfo(indexPage,indexLine++,indexColumn,responseHandle,"Reference file","%s",(pTabFeno->indexRef!=ITEM_NONE)?&pEngineContext->analysisRef.scanRefFiles[pTabFeno->indexRef*(MAX_ITEM_TEXT_LEN+1)]:&pEngineContext->analysisRef.scanRefFiles[pTabFeno->indexRefScanBefore*(MAX_ITEM_TEXT_LEN+1)]);
            else
             mediateResponseCellInfo(indexPage,indexLine++,indexColumn,responseHandle,"Record number","%d/%d",(pTabFeno->indexRef!=ITEM_NONE)?pTabFeno->indexRef:pTabFeno->indexRefScanBefore,ENGINE_contextRef.recordNumber);
 
@@ -2020,7 +2047,7 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
              if ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC_STD) ||
                  (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC))
-              mediateResponseCellInfo(indexPage,indexLine++,indexColumn,responseHandle,"Reference file (2)","%s",ENGINE_contextRef2.fileInfo.fileName);
+              mediateResponseCellInfo(indexPage,indexLine++,indexColumn,responseHandle,"Reference file (2)","%s",&pEngineContext->analysisRef.scanRefFiles[pTabFeno->indexRefScanAfter*(MAX_ITEM_TEXT_LEN+1)]);
              else
               mediateResponseCellInfo(indexPage,indexLine++,indexColumn,responseHandle,"Record number (2)","%d/%d",pTabFeno->indexRefScanAfter,ENGINE_contextRef2.recordNumber);
 

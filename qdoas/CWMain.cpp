@@ -30,7 +30,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QFileDialog>
 #include <QCloseEvent>
 #include <QApplication>
-#include <QLocale>    
+#include <QLocale>
 
 #include "CWMain.h"
 #include "CWProjectTree.h"
@@ -53,14 +53,14 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "mediate_types.h"
 
-#include "debugutil.h"   
+#include "debugutil.h"
 
 const static int max_recent_files = 10;
 
 CWMain::CWMain(QWidget *parent) :
   QFrame(parent),
   m_logToFile(false)
-{     
+{
   // ----------------------------------------------------------------------------
 
   // to avoid that a thousands comma separator (QT 4.7.3)
@@ -297,8 +297,8 @@ CWMain::CWMain(QWidget *parent) :
 
   // plot data transfer
   connect(m_controller, SIGNAL(signalPlotPages(const QList< RefCountConstPtr<CPlotPageData> >&)),
-          m_activeContext, SLOT(slotPlotPages(const QList< RefCountConstPtr<CPlotPageData> >&)));          
-          
+          m_activeContext, SLOT(slotPlotPages(const QList< RefCountConstPtr<CPlotPageData> >&)));
+
   // table data transfer
   connect(m_controller, SIGNAL(signalTablePages(const QList< RefCountConstPtr<CTablePageData> > &)),
           m_tableRegion, SLOT(slotTablePages(const QList< RefCountConstPtr<CTablePageData> > &)));
@@ -558,7 +558,7 @@ void CWMain::slotOpenRecent() {
 }
 
 void CWMain::updateRecentFileMenu() {
-  
+
   QStringList files = CPreferences::instance()->settings().value("recentFiles").toStringList();
 
   int numRecentFiles = qMin(files.size(), max_recent_files);
@@ -573,7 +573,7 @@ void CWMain::updateRecentFileMenu() {
   for (int j = numRecentFiles; j < max_recent_files; ++j)
     m_recentFileActs[j]->setVisible(false);
 
-  m_openRecentMenu->setEnabled(numRecentFiles > 0);  
+  m_openRecentMenu->setEnabled(numRecentFiles > 0);
 }
 
 void CWMain::updateRecentFiles(const QString &fileName) {
@@ -584,7 +584,7 @@ void CWMain::updateRecentFiles(const QString &fileName) {
   files.prepend(fileName);
   while (files.size() > max_recent_files)
     files.removeLast();
-  
+
   settings.setValue("recentFiles", files);
 
   updateRecentFileMenu();
@@ -646,7 +646,12 @@ void CWMain::slotDeleteButtonClicked()
   case 0: // project
     m_projTree->slotDeleteSelection();
     break;
-    // TODO
+  case 1 : // site
+    m_siteTree->slotDeleteSite();
+    break;
+  case 2 : // symbols
+   m_userSymbolTree->slotDeleteSymbol();
+   break;
   }
 }
 
