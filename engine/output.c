@@ -253,34 +253,39 @@ static void save_analysis_data(struct output_field *output_field, int recordno, 
 /*! \brief save the calibration data for output_field from the
     calibration subwindow index_calib */
 static void save_calib_data(struct output_field *output_field, int index_calib) {
+  size_t ncols = output_field->data_cols;
+  void *data = output_field->data;
+  func_void get_data = output_field->get_data;
+  int row = output_field ->index_row;
+
   switch(output_field->memory_type)
     {
     case OUTPUT_INT:
-      ((func_int) output_field->get_data)(output_field,  &((int *)output_field->data)[index_calib], NULL, output_field->index_row, index_calib);
+      ((func_int) get_data)(output_field,  ((int (*)[ncols])data)[index_calib], NULL, row, index_calib);
       break;
     case OUTPUT_SHORT:
-      ((func_short) output_field->get_data)(output_field,  &((short *)output_field->data)[index_calib], NULL, output_field->index_row, index_calib);
+      ((func_short) get_data)(output_field,  ((short (*)[ncols])data)[index_calib], NULL, row, index_calib);
       break;
     case OUTPUT_USHORT:
-      ((func_ushort) output_field->get_data)(output_field,  &((unsigned short *)output_field->data)[index_calib], NULL, output_field->index_row, index_calib);
+      ((func_ushort) get_data)(output_field,  ((unsigned short (*)[ncols])data)[index_calib], NULL, row, index_calib);
       break;
     case OUTPUT_STRING:
-      ((func_string) output_field->get_data)(output_field,  &((char **)output_field->data)[index_calib], NULL, output_field->index_row, index_calib);
+      ((func_string) get_data)(output_field,  ((char* (*)[ncols])data)[index_calib], NULL, row, index_calib);
       break;
     case OUTPUT_FLOAT:
-      ((func_float) output_field->get_data)(output_field,  &((float *)output_field->data)[index_calib], NULL, output_field->index_row, index_calib);
+      ((func_float) get_data)(output_field,  ((float (*)[ncols])data)[index_calib], NULL, row, index_calib);
       break;
     case OUTPUT_DOUBLE:
-      ((func_double) output_field->get_data)(output_field,  &((double *)output_field->data)[index_calib], NULL, output_field->index_row, index_calib);
+      ((func_double) get_data)(output_field,  ((double (*)[ncols])data)[index_calib], NULL, row, index_calib);
       break;
     case OUTPUT_DATE:
-      ((func_date) output_field->get_data)(output_field,  &((struct date *)output_field->data)[index_calib], NULL, output_field->index_row, index_calib);
+      ((func_date) get_data)(output_field,  ((struct date (*)[ncols])data)[index_calib], NULL, row, index_calib);
       break;
     case OUTPUT_TIME:
-      ((func_time) output_field->get_data)(output_field,  &((struct time *)output_field->data)[index_calib], NULL, output_field->index_row, index_calib);
+      ((func_time) get_data)(output_field,  ((struct time (*)[ncols])data)[index_calib], NULL, row, index_calib);
       break;
     case OUTPUT_DATETIME:
-      ((func_datetime) output_field->get_data)(output_field,  &((struct datetime *)output_field->data)[index_calib], NULL, output_field->index_row, index_calib);
+      ((func_datetime) get_data)(output_field,  ((struct datetime (*)[ncols])data)[index_calib], NULL, row, index_calib);
       break;
   }
 }
