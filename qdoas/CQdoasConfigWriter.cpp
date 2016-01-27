@@ -1401,15 +1401,15 @@ void CQdoasConfigWriter::writeShiftStretchList(FILE *fp, const shift_stretch_lis
 	    (d->stStore ? sTrue : sFalse),
 	    (d->scStore ? sTrue : sFalse),
 	    (d->errStore ? sTrue : sFalse));
-    fprintf(fp, " shini=\"%.3f\" stini=\"%.3f\" stini2=\"%.3f\" scini=\"%.3f\" scini2=\"%.3f\"",
+    fprintf(fp, " shini=\"%.3e\" stini=\"%.3e\" stini2=\"%.3e\" scini=\"%.3e\" scini2=\"%.3e\"",
 	    d->shInit,
 	    d->stInit, d->stInit2,
 	    d->scInit, d->scInit2);
-    fprintf(fp, " shdel=\"%.4f\" stdel=\"%.4f\" stdel2=\"%.4f\" scdel=\"%.4f\" scdel2=\"%.4f\"",
+    fprintf(fp, " shdel=\"%.4e\" stdel=\"%.4e\" stdel2=\"%.4e\" scdel=\"%.4e\" scdel2=\"%.4e\"",
 	    d->shDelta,
 	    d->stDelta, d->stDelta2,
 	    d->scDelta, d->scDelta2);
-    fprintf(fp, " shmin=\"%.3f\" shmax=\"%.3f\" >\n",
+    fprintf(fp, " shmin=\"%.3e\" shmax=\"%.3e\" >\n",
 	    d->shMin, d->shMax);
 
     k = 0;
