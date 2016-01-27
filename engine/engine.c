@@ -1788,7 +1788,7 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
       	 pSpec++;
 
        for (indexRecord=0;indexRecord<pEngineContext->analysisRef.nscanRefFiles;indexRecord++)
-        if (!stricmp(specList+indexRecord*(MAX_ITEM_TEXT_LEN+1),pSpec))
+        if (!strcasecmp(specList+indexRecord*(MAX_ITEM_TEXT_LEN+1),pSpec))
          break;
 
        if (indexRecord>=pEngineContext->analysisRef.nscanRefFiles)
