@@ -548,7 +548,7 @@ RC XSCONV_LoadCalibrationFile(MATRIX_OBJECT *pLambda,char *lambdaFile,int nextra
  {
   // Declarations
 
-  char  lambdaBuffer[MAX_ITEM_TEXT_LEN+1];
+  char  lambdaBuffer[MAX_ITEM_TEXT_LEN];
   double step;
   FILE *lambdaFp;
   int npts;
@@ -627,8 +627,8 @@ RC XSCONV_LoadSlitFunction(MATRIX_OBJECT *pSlitXs,MATRIX_OBJECT *pSlitXs2,SLIT *
  {
   // Declarations
 
-  char  slitBuffer[MAX_ITEM_TEXT_LEN+1],
-          slitBuffer2[MAX_ITEM_TEXT_LEN+1];
+  char  slitBuffer[MAX_ITEM_TEXT_LEN],
+          slitBuffer2[MAX_ITEM_TEXT_LEN];
   RC     rc;
   INDEX  i;
   double x,a,a2,delta,sigma2,invapi,sumPoly,slitStep,norm1,slitParam[4],fwhm;

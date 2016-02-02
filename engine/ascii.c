@@ -276,20 +276,6 @@ RC ASCII_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
     }
   }
 
-  // Release scanref buffer
-
-  if (pRef->scanRefIndexes!=NULL)
-    MEMORY_ReleaseBuffer(__func__,"scanRefIndexes",pRef->scanRefIndexes);
-  pRef->scanRefIndexes=NULL;
-
-  if (pEngineContext->analysisRef.refScan && pEngineContext->recordNumber &&
-      (pRef->scanRefIndexes=(int *)MEMORY_AllocBuffer(__func__,"scanRefIndexes",pEngineContext->recordNumber,sizeof(int),0,MEMORY_TYPE_INT) )==NULL )
-
-    rc=ERROR_ID_ALLOC;
-
-  else
-    pEngineContext->fileInfo.nScanRef=0;
-
   // Return
   return rc;
  }

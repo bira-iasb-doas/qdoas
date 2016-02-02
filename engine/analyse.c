@@ -1270,7 +1270,7 @@ RC AnalyseLoadVector(const char *function,char *fileName,double *lambda,double *
   // Declarations
 
   FILE *fp;
-  char string[MAX_ITEM_TEXT_LEN+1],fullFileName[MAX_ITEM_TEXT_LEN+1],*str;
+  char string[MAX_ITEM_TEXT_LEN],fullFileName[MAX_ITEM_TEXT_LEN],*str;
   int day,month,year,hour,min,sec;
   struct time refTime;
   INDEX i;
@@ -1282,7 +1282,7 @@ RC AnalyseLoadVector(const char *function,char *fileName,double *lambda,double *
 
   // Initializations
 
-  memset(string,0,MAX_ITEM_TEXT_LEN+1);
+  memset(string,0,MAX_ITEM_TEXT_LEN);
   rc=ERROR_ID_NO;
 
   if (strlen(FILES_RebuildFileName(fullFileName,fileName,1)) && (vector!=NULL))
@@ -1864,7 +1864,7 @@ RC ANALYSE_AlignReference(ENGINE_CONTEXT *pEngineContext,int refFlag,void *respo
   double *Sref,
     x0,lambda0;
   plot_data_t spectrumData[2];
-  char string[MAX_ITEM_TEXT_LEN+1],tabTitle[MAX_ITEM_TEXT_LEN+1];
+  char string[MAX_ITEM_TEXT_LEN],tabTitle[MAX_ITEM_TEXT_LEN];
   RC rc;                                                                        // return code
 
   // Initializations
@@ -2044,7 +2044,7 @@ RC ANALYSE_AlignReference(ENGINE_CONTEXT *pEngineContext,int refFlag,void *respo
 RC AnalyseSaveResiduals(char *fileName,ENGINE_CONTEXT *pEngineContext)
 {
   RC rc;
-  char *fileNamePtr,*ptr,resFile[MAX_ITEM_TEXT_LEN+1],ext[MAX_ITEM_TEXT_LEN+1];
+  char *fileNamePtr,*ptr,resFile[MAX_ITEM_TEXT_LEN],ext[MAX_ITEM_TEXT_LEN];
   FILE *fp;
 
   rc=ERROR_ID_NO;
@@ -3280,9 +3280,9 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
   CROSS_REFERENCE *TabCross;                 // list of symbols hold by a analysis window
   CROSS_RESULTS *Results;                    // corresponding results
   FENO *pTabFeno;
-  char windowTitle[MAX_ITEM_TEXT_LEN+1];    // window title for graphs
-  char tabTitle[MAX_ITEM_TEXT_LEN+1];
-  char graphTitle[MAX_ITEM_TEXT_LEN+1];     // graph title
+  char windowTitle[MAX_ITEM_TEXT_LEN];    // window title for graphs
+  char tabTitle[MAX_ITEM_TEXT_LEN];
+  char graphTitle[MAX_ITEM_TEXT_LEN];     // graph title
   INDEX WrkFeno,j;                             // index on analysis windows
   INDEX i;                               // indexes for loops and arrays
   INDEX indexFenoColumn;
@@ -3410,7 +3410,10 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
        	indexPage=WrkFeno+plotPageAnalysis;
         Feno=&TabFeno[indexFenoColumn][WrkFeno];
 
-        Feno->rc=(!Feno->hidden && VECTOR_Equal(Spectre,Feno->Sref,NDET,(double)1.e-7))?-1:ERROR_ID_NO;
+        Feno->rc=ERROR_ID_NO;
+
+        Feno->rc=(!Feno->hidden && (VECTOR_Equal(Spectre,Feno->Sref,NDET,(double)1.e-7) ||
+                 ((Feno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_AUTOMATIC) && (Feno->refMaxdoasSelectionMode==ANLYS_MAXDOAS_REF_SCAN) && (pRecord->elevationViewAngle>80.))))?-1:ERROR_ID_NO;
 
         sprintf(windowTitle,"Analysis results for %s window",Feno->windowName);
 
@@ -4293,7 +4296,7 @@ RC ANALYSE_CheckLambda(WRK_SYMBOL *pWrkSymbol,double *lambda, const char *callin
 {
   // Declarations
 
-  char fileName[MAX_ITEM_TEXT_LEN+1];
+  char fileName[MAX_ITEM_TEXT_LEN];
   RC rc;
 
   // Initialization
@@ -4442,9 +4445,9 @@ RC ANALYSE_LoadCross(ENGINE_CONTEXT *pEngineContext, const ANALYSIS_CROSS *cross
       strcpy(pWrkSymbol->symbolName,symbolName);
       strcpy(pWrkSymbol->crossFileName,pCross->crossSectionFile);
       strcpy(pWrkSymbol->amfFileName,pCross->amfFile);
-      
+
       // Load cross section from file
-      
+
       if (strcasecmp(pWrkSymbol->symbolName,"1/Ref")) {
         if (!strlen(pWrkSymbol->crossFileName)) {
           return ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_XS_FILENAME,pWrkSymbol->symbolName);
@@ -4455,7 +4458,7 @@ RC ANALYSE_LoadCross(ENGINE_CONTEXT *pEngineContext, const ANALYSIS_CROSS *cross
                              (pCross->crossType!=ANLYS_CROSS_ACTION_NOTHING) ? 1 : 0, 1, __func__) ) ) {
           return rc;
         }
-        
+
         if (!strcasecmp(pWrkSymbol->symbolName,"O3TD") )
           rc=MATRIX_Allocate(&O3TD,NDET,pWrkSymbol->xs.nc,0,0,0,__func__);
         NWorkSpace++;
@@ -4623,7 +4626,7 @@ RC ANALYSE_LoadCross(ENGINE_CONTEXT *pEngineContext, const ANALYSIS_CROSS *cross
           rc=ERROR_SetLast(__func__,ERROR_TYPE_WARNING,ERROR_ID_ORTHOGONAL_BASE,
                            WorkSpace[pEngineCross[pEngineCross[indexTabCross].IndOrthog].Comp].symbolName,
                            WorkSpace[pEngineCross[indexTabCross].Comp].symbolName);
-          
+
           pEngineCross[pEngineCross[indexTabCross].IndOrthog].IndOrthog=ORTHOGONAL_BASE;
         }
       }
@@ -5463,7 +5466,7 @@ RC ANALYSE_LoadRef(ENGINE_CONTEXT *pEngineContext,INDEX indexFenoColumn)
   // reference is given (tropospheric measurements)
   //
 
-  memset(pTabFeno->refFile,0,MAX_ITEM_TEXT_LEN+1);
+  memset(pTabFeno->refFile,0,MAX_ITEM_TEXT_LEN);
   rc=0;
 
   // Allocate memory for reference spectra
@@ -6032,7 +6035,7 @@ RC ANALYSE_UsampGlobalAlloc(double lambdaMin,double lambdaMax,int size)
 {
   // Declarations
 
-  char kuruczFile[MAX_ITEM_TEXT_LEN+1];
+  char kuruczFile[MAX_ITEM_TEXT_LEN];
   FENO *pTabFeno;
   INDEX indexFeno,indexFenoColumn;
   RC rc;

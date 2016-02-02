@@ -139,12 +139,14 @@ RC MFC_ReadRecordStd(ENGINE_CONTEXT *pEngineContext,char *fileName,
                      TBinaryMFC *pHeaderSpe,double *spe,
                      TBinaryMFC *pHeaderDrk,double *drk,
                      TBinaryMFC *pHeaderOff,double *off);
-INDEX MFC_SearchForCurrentFileIndex(ENGINE_CONTEXT *pEngineContext)  ;
-RC   SetMFC(ENGINE_CONTEXT *pEngineContext,FILE *specFp);
-RC   ReliMFC(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp,unsigned int mfcMask);
-RC   ReliMFCStd(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp);
-RC   MFCBIRA_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp);
-RC   MFCBIRA_Reli(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp);
+RC    MFC_ResetFiles(ENGINE_CONTEXT *pEngineContext);
+INDEX MFC_SearchForCurrentFileIndex(ENGINE_CONTEXT *pEngineContext);
+int   MFC_AllocFiles(ENGINE_CONTEXT *pEngineContext);
+RC    SetMFC(ENGINE_CONTEXT *pEngineContext,FILE *specFp);
+RC    ReliMFC(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp,unsigned int mfcMask);
+RC    ReliMFCStd(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp);
+RC    MFCBIRA_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp);
+RC    MFCBIRA_Reli(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp);
 
 RC MFC_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle);
 

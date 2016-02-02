@@ -346,7 +346,7 @@ char *CurfitError(char *string,INDEX indexError,double *p,double *deltap)
   // Initializations
 
   memset(param,0,MAX_ITEM_NAME_LEN+1);
-  memset(string,0,MAX_ITEM_TEXT_LEN+1);
+  memset(string,0,MAX_ITEM_TEXT_LEN);
 
   // Browse parameters to fit
 
@@ -660,7 +660,7 @@ RC Curfit(int     mode,                                                         
  {
   // Declarations
 
-  char   string[MAX_ITEM_TEXT_LEN+1];                                         // error message string
+  char   string[MAX_ITEM_TEXT_LEN];                                         // error message string
 
   int      i,j,k,                                                               // indexes for loops and arrays
            outOfRange,                                                          // flag set if a parameter is out of the defined range

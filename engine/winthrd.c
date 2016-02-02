@@ -110,7 +110,7 @@
 // GLOBAL VARIABLES
 // ================
 
-char     THRD_asciiFile[MAX_ITEM_TEXT_LEN+1],*THRD_asciiPtr;        // ascii file for exporting spectra
+char     THRD_asciiFile[MAX_ITEM_TEXT_LEN],*THRD_asciiPtr;        // ascii file for exporting spectra
 void *    THRD_hEvents[THREAD_EVENT_MAX];      // list of events
 unsigned int      THRD_id=THREAD_TYPE_NONE;            // thread identification number
 double    THRD_localNoon;                      // local noon

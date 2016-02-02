@@ -1005,7 +1005,7 @@ static void OutputRegisterFields(const ENGINE_CONTEXT *pEngineContext, const cha
        break;
      case PRJCT_RESULTS_GOME2_OBSERVATION_MODE:
        register_field( (struct output_field) { .basic_fieldname = "GOME2 observation mode", .memory_type = OUTPUT_USHORT, .resulttype = fieldtype, .format = "%#5d", .get_data = (func_void)&gome2_get_observation_mode });
-       break;       
+       break;
      case PRJCT_RESULTS_GOME2_SAA:
        register_field( (struct output_field) { .basic_fieldname = "GOME2 SAA flag", .memory_type = OUTPUT_INT, .resulttype = fieldtype, .format = "%#6d", .get_data = (func_void)&gome2_get_saa });
        break;
@@ -1044,7 +1044,7 @@ static void OutputRegisterFields(const ENGINE_CONTEXT *pEngineContext, const cha
        break;
      case PRJCT_RESULTS_OMI_CONFIGURATION_ID:
        register_field( (struct output_field) { .basic_fieldname = "OMI instrument configuration id", .memory_type = OUTPUT_USHORT, .resulttype = fieldtype, .format = "%#6d", .get_data = (func_void)&get_omi_configuration_id });
-       break;       
+       break;
      case PRJCT_RESULTS_OMI_PIXELS_QF:
        register_field( (struct output_field) { .basic_fieldname = "OMI rejected pixels based on QF", .memory_type = OUTPUT_STRING, .resulttype = fieldtype, .format = "%-50s", .get_data = (func_void)&omi_get_rejected_pixels });
        break;
@@ -1759,7 +1759,7 @@ void output_write_data(const bool selected_records[]) {
   \param[in] pEngineContext
   */
 RC output_write_automatic_file(const bool selected_records[], int year, int month, int site_index, const ENGINE_CONTEXT *pEngineContext ) {
-  char filename[MAX_ITEM_TEXT_LEN+1] = {0};
+  char filename[MAX_ITEM_TEXT_LEN] = {0};
   OutputBuildSiteFileName(pEngineContext,filename,year, month, site_index);
   RC rc=open_output_file(pEngineContext,filename);
   if ( !rc ) {
@@ -1861,7 +1861,7 @@ RC OUTPUT_FlushBuffers(ENGINE_CONTEXT *pEngineContext)
   selected_format = pResults->file_format;
 
   RC rc=ERROR_ID_NO;
-  char outputFileName[MAX_ITEM_TEXT_LEN+1] = {0};
+  char outputFileName[MAX_ITEM_TEXT_LEN] = {0};
 
 
   pEngineContext->outputPath=(THRD_id==THREAD_TYPE_EXPORT)?(char *)pExport->path:(char *)pResults->path;

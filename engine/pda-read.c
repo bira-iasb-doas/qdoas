@@ -511,7 +511,7 @@ RC SetPDA_EGG(ENGINE_CONTEXT *pEngineContext,FILE *specFp,int newFlag)
    {
    	// Initializations
 
-// !!! */    char *ptr,fileout[MAX_ITEM_TEXT_LEN+1];
+// !!! */    char *ptr,fileout[MAX_ITEM_TEXT_LEN];
 // !!! */    FILE *fp;
 
 // !!! */    ptr=strrchr(fileName,PATH_SEP);
@@ -630,7 +630,7 @@ RC ReliPDA_EGG(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
   RC                rc;                                                         // return code
 
 // !!! */    FILE *gp;
-// !!! */    char fileout[MAX_ITEM_TEXT_LEN+1];
+// !!! */    char fileout[MAX_ITEM_TEXT_LEN];
 
   // Initializations
 

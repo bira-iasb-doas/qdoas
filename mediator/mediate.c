@@ -1331,8 +1331,8 @@ RC mediateRequestSetAnalysisLinear(const struct anlyswin_linear *pLinear,INDEX i
 
 // typedef struct _AnalyseNonLinearParameters
 //  {
-//  	char symbolName[MAX_ITEM_TEXT_LEN+1];
-//  	char crossFileName[MAX_ITEM_TEXT_LEN+1];
+//  	char symbolName[MAX_ITEM_TEXT_LEN];
+//  	char crossFileName[MAX_ITEM_TEXT_LEN];
 //  	int fitFlag;
 //  	double initialValue;
 //  	double deltaValue;
@@ -1768,7 +1768,7 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
 
    if ((THRD_id==THREAD_TYPE_KURUCZ) || useKurucz) {
      // pre-load multi-row Kurucz reference spectrum one time, reuse it for each indexFenoColumn in KURUCZ_Alloc
-     char kurucz_file[MAX_ITEM_TEXT_LEN+1];
+     char kurucz_file[MAX_ITEM_TEXT_LEN];
      FILES_RebuildFileName(kurucz_file,(pKuruczOptions->fwhmFit)?pKuruczOptions->file:pSlitOptions->kuruczFile,1);
 
      if ( !strlen(kurucz_file) ) {
@@ -2374,8 +2374,8 @@ int mediateRequestViewCrossSections(void *engineContext, char *awName,double min
 
    ENGINE_CONTEXT *pEngineContext = (ENGINE_CONTEXT *)engineContext;
    char symbolName[MAX_ITEM_NAME_LEN+1],*ptr,                                   // the symbol name
-     windowTitle[MAX_ITEM_TEXT_LEN+1],                                       // title to display at the top of the page
-     tabTitle[MAX_ITEM_TEXT_LEN+1];                                          // title to display on the tab of the page
+     windowTitle[MAX_ITEM_TEXT_LEN],                                       // title to display at the top of the page
+     tabTitle[MAX_ITEM_TEXT_LEN];                                          // title to display on the tab of the page
    MATRIX_OBJECT xs;                                                             // matrix to load the cross section
    INDEX indexFile;                                                              // browse files
    int   indexLine,indexColumn;                                                  // browse lines and column in the data page

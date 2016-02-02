@@ -406,7 +406,7 @@ RC GDP_BIN_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
   DIR *hDir;
   INDEX indexFile;
   char *ptr;
-  char fileName[MAX_ITEM_TEXT_LEN+1];                                          // file name
+  char fileName[MAX_ITEM_TEXT_LEN];                                          // file name
   INDEX i,j,indexRecord;                                                        // indexes for loops and arrays
   int useErrors,errorFlag;                                                      // 0 if errors are saved with spectra, 1 otherwise
   FILE *fp;
@@ -791,7 +791,7 @@ RC GDP_BIN_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,FILE *specFp,INDEX i
         pRecord->cloudFraction=(float)pOrbitFile->gdpBinGeo3.cloudFraction;
         pRecord->cloudTopPressure=(float)pOrbitFile->gdpBinGeo3.cloudTopPressure;
         pRecord->satellite.altitude = pOrbitFile->gdpBinGeo3.satHeight;
-        pRecord->satellite.earth_radius = pOrbitFile->gdpBinGeo3.radiusCurve;        
+        pRecord->satellite.earth_radius = pOrbitFile->gdpBinGeo3.radiusCurve;
        }
       else
        {

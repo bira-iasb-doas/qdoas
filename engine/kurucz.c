@@ -146,7 +146,7 @@ RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,co
  {
   // Declarations
 
-  char            string[MAX_ITEM_TEXT_LEN+1],pageTitle[MAX_ITEM_TEXT_LEN+1];
+  char            string[MAX_ITEM_TEXT_LEN],pageTitle[MAX_ITEM_TEXT_LEN];
   CROSS_REFERENCE *TabCross,*pTabCross;
   CROSS_RESULTS   *pResults,*Results;                                           // pointer to results associated to a symbol
   SVD             *svdFeno;                                                     // svd environments associated to list of little windows
@@ -1044,7 +1044,7 @@ RC KURUCZ_Alloc(const PROJECT *pProject, const double *lambda,INDEX indexKurucz,
   FENO            *pKuruczFeno,                                                 // analysis window with Kurucz description
                   *pTabFeno;
 
-  char   slitFile[MAX_ITEM_TEXT_LEN+1];
+  char   slitFile[MAX_ITEM_TEXT_LEN];
   int    Nb_Win,shiftDegree,                                                    // substitution variables
          NTabCross;
   INDEX  i,indexFeno,indexParam,indexTabCross;                      // indexes for loops and arrays

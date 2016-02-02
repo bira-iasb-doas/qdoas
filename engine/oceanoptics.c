@@ -133,7 +133,7 @@ RC ReliOceanOptics(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int 
   // Declarations
 
   RECORD_INFO *pRecordInfo;                                                     // pointer to the record part of the engine context
-  char fileLine[MAX_ITEM_TEXT_LEN+1],*str;
+  char fileLine[MAX_ITEM_TEXT_LEN],*str;
   double *spectrum,*lambda,                                                     // the spectrum and the wavelength calibration to read
           tmLocal;                                                              // the measurement time in seconds
   int day,mon,year,hour,minutes,sec;                                            // decomposition of the measurement date

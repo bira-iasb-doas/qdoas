@@ -65,7 +65,7 @@ RC mediateConvolutionSave(void *engineContext)
   // Declarations
 
   ENGINE_XSCONV_CONTEXT *pEngineContext=(ENGINE_XSCONV_CONTEXT*)engineContext;
-  char fileName[MAX_ITEM_TEXT_LEN+1];
+  char fileName[MAX_ITEM_TEXT_LEN];
   PRJCT_FILTER *pLFilter,*pHFilter;
   SZ_LEN fileNameLength;
   char *ptr,*ptr2;
@@ -317,7 +317,7 @@ RC mediateConvolutionCalculate(void *engineContext,void *responseHandle)
   PRJCT_FILTER *plFilter,*phFilter;                                             // pointers to the low pass and high pass filtering parts of the engine context
   SLIT *pSlitConv,*pSlitDConv;                                                  // pointers to the convolution and deconvolution slit function parts of the engine context
 
-  char windowTitle[MAX_ITEM_TEXT_LEN+1],pageTitle[MAX_ITEM_TEXT_LEN+1];
+  char windowTitle[MAX_ITEM_TEXT_LEN],pageTitle[MAX_ITEM_TEXT_LEN];
   double lambdaMin,lambdaMax,slitParam,slitParam2,slitWidth;
 
   int slitType,slitType2,deconvFlag,dispConv;
@@ -810,8 +810,8 @@ RC mediateRingCalculate(void *engineContext,void *responseHandle)
 
   MATRIX_OBJECT slitTmp;
   ENGINE_XSCONV_CONTEXT *pEngineContext=(ENGINE_XSCONV_CONTEXT*)engineContext;
-  char   ringFileName[MAX_ITEM_TEXT_LEN+1],                                   // name of the output ring file
-           pageTitle[MAX_ITEM_TEXT_LEN+1];
+  char   ringFileName[MAX_ITEM_TEXT_LEN],                                   // name of the output ring file
+           pageTitle[MAX_ITEM_TEXT_LEN];
   double *n2xref,*o2xref,*n2pos2,                                               // rotational Raman spectra
           gamman2,sigprimen2,n2xsec,sign2,sumn2xsec,                            // n2 working variables
           gammao2,sigprimeo2,o2xsec,sigo2,sumo2xsec,                            // o2 working variables
@@ -1428,7 +1428,7 @@ RC mediateUsampCalculate(void *engineContext,void *responseHandle)
      	// Local declarations
 
      	plot_data_t spectrumData[2];
-     	char pageTitle[MAX_ITEM_TEXT_LEN+1];
+     	char pageTitle[MAX_ITEM_TEXT_LEN];
 
      	// Save
 

@@ -257,7 +257,7 @@ RC MATRIX_Load(const char *fileName,MATRIX_OBJECT *pMatrix,
                int allocateDeriv2,int reverseFlag, const char *callingFunction) {
   // Declarations
 
-  char     fullPath[MAX_ITEM_TEXT_LEN+1];                                       // the complete file name to load
+  char     fullPath[MAX_ITEM_TEXT_LEN];                                       // the complete file name to load
   int      nlMin,ncMin;                                                         // resp. the minimum numbers of lines and columns to load from the file
   INDEX    i,j;                                                                 // indexes for browsing lines and columns in matrix
   double **matrix,**deriv2,                                                     // resp. pointers to the matrix to load and to the second derivatives
@@ -301,15 +301,15 @@ RC MATRIX_Load(const char *fileName,MATRIX_OBJECT *pMatrix,
     // The function has to determine the number of lines and columns
     if (!nl || !nc) {
       char c;
-      while (fscanf(fp, " %1[*;]%*[^\n]\n", &c) == 1) { 
+      while (fscanf(fp, " %1[*;]%*[^\n]\n", &c) == 1) {
         // skip spaces and comment lines (assumed to start with character ';' or '*')
       }
-      
+
       // Determine the number of columns
-      
+
       int n_scan = fscanf(fp, " %lf", &tempValue);
       nl= n_scan && ( (xMin==xMax) || ((tempValue>=xMin)&&(tempValue<=xMax)) ) ? 1 : 0;
-      
+
       nc = 1;
       // in each iteration of the loop, read a number
       while (fscanf(fp, NEXT_DOUBLE, &tempValue) == 1) {
@@ -321,7 +321,7 @@ RC MATRIX_Load(const char *fileName,MATRIX_OBJECT *pMatrix,
           ungetc(next, fp);
         }
       }
-      
+
       // Determine the number of lines
       while (fscanf(fp, "%lf%*[^\n]\n", &tempValue) == 1) {
         if ((xMin==xMax) || ((tempValue>=xMin)&&(tempValue<=xMax))) {
@@ -329,13 +329,13 @@ RC MATRIX_Load(const char *fileName,MATRIX_OBJECT *pMatrix,
         }
       }
     }
-    
+
     // File read out
-    
+
 #if defined(__DEBUG_) && __DEBUG_
     DEBUG_Print("Size of the matrix to load : %d x %d last Value %g\n",nl,nc,tempValue);
 #endif
-    
+
     if (!nl || !nc || (nl<nlMin) || (nc<ncMin))
       rc=ERROR_SetLast(__func__,ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,fullPath);
     else if (!(rc=MATRIX_Allocate(pMatrix,nl,nc,0,0,allocateDeriv2,callingFunction)))
@@ -348,7 +348,7 @@ RC MATRIX_Load(const char *fileName,MATRIX_OBJECT *pMatrix,
       for (i=0; i<nl && !rc;) {
 
         char c;
-        while (fscanf(fp, " %1[*;]%*[^\n]\n", &c) == 1) { 
+        while (fscanf(fp, " %1[*;]%*[^\n]\n", &c) == 1) {
           // skip spaces and comment lines (assumed to start with character ';' or '*')
         }
 
@@ -373,7 +373,7 @@ RC MATRIX_Load(const char *fileName,MATRIX_OBJECT *pMatrix,
           }
         }
       }
-      
+
       // Found no lines with a starting values in the range [xmin..xmax]
 
       if (i==0)

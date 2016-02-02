@@ -514,7 +514,7 @@ void FilesLoadDefaultPaths(char *fileLine)
  {
   // Declarations
 
-  char keyName[MAX_ITEM_TEXT_LEN+1],                                           // name on the left of '=' symbol in a wds statement
+  char keyName[MAX_ITEM_TEXT_LEN],                                           // name on the left of '=' symbol in a wds statement
         defaultPath[DOAS_MAX_PATH_LEN+1];                                            // default path extracted from fileLine
   INDEX indexFileType;
 

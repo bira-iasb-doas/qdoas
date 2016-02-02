@@ -66,8 +66,8 @@ struct _prjctKurucz {
   int              windowsNumber;                      // number of windows
   int              fwhmPolynomial;                     // security gap in pixels numbers
   int              shiftPolynomial;                    // degree of polynomial to use
-  char           file[MAX_ITEM_TEXT_LEN+1];          // kurucz file
-  char           slfFile[MAX_ITEM_TEXT_LEN+1];       // slit function file
+  char           file[MAX_ITEM_TEXT_LEN];          // kurucz file
+  char           slfFile[MAX_ITEM_TEXT_LEN];       // slit function file
   int              displayFit;                         // display fit flag
   int              displayResidual;                    // display new calibration flag
   int              displayShift;                       // display shift/Fwhm in each pixel
@@ -142,12 +142,12 @@ typedef struct _prjctInstrumental
   char       observationSite[MAX_ITEM_NAME_LEN+1];                            // index of observation site in list
   char       readOutFormat;                                                   // spectra read out format
    int         user;                                                             // user defined
-  char       calibrationFile[MAX_ITEM_TEXT_LEN+1];                            // calibration file
-  char       instrFunction[MAX_ITEM_TEXT_LEN+1];                              // instrumental function
-  char       vipFile[MAX_ITEM_TEXT_LEN+1];                                    // interpixel variability correction
-  char       dnlFile[MAX_ITEM_TEXT_LEN+1];                                    // detector not linearity correction
-  char       offsetFile[MAX_ITEM_TEXT_LEN+1];                                 // offset file
-  char       imagePath[MAX_ITEM_TEXT_LEN+1];                                  // root path for camera pictures
+  char       calibrationFile[MAX_ITEM_TEXT_LEN];                            // calibration file
+  char       instrFunction[MAX_ITEM_TEXT_LEN];                              // instrumental function
+  char       vipFile[MAX_ITEM_TEXT_LEN];                                    // interpixel variability correction
+  char       dnlFile[MAX_ITEM_TEXT_LEN];                                    // detector not linearity correction
+  char       offsetFile[MAX_ITEM_TEXT_LEN];                                 // offset file
+  char       imagePath[MAX_ITEM_TEXT_LEN];                                  // root path for camera pictures
   int         detectorSize;                                                     // size of detector in pixels
   int         azimuthFlag;
   int         averageFlag;
@@ -193,11 +193,11 @@ PRJCT_RESULTS_FIELDS;
 // ----------------------------------
 
 struct _prjctAsciiResults {
-  char path[MAX_ITEM_TEXT_LEN+1];                                               // path for results and fits files
+  char path[MAX_ITEM_TEXT_LEN];                                               // path for results and fits files
   int   analysisFlag,calibFlag,referenceFlag,dirFlag,fileNameFlag,successFlag;  // store results in ascii format
-  char fluxes[MAX_ITEM_TEXT_LEN+1];                                             // fluxes
+  char fluxes[MAX_ITEM_TEXT_LEN];                                             // fluxes
   double bandWidth;                                                             // averaging bandwidth for fluxes
-  // char cic[MAX_ITEM_TEXT_LEN+1];                                                // color indexes
+  // char cic[MAX_ITEM_TEXT_LEN];                                                // color indexes
   int fieldsNumber;                                                             // number of ascii flags set in the next list
   char fieldsFlag[PRJCT_RESULTS_MAX];                                           // fields used in output
   enum output_format file_format;
@@ -208,7 +208,7 @@ struct _prjctAsciiResults {
 // --------------
 
 struct _prjctExport {
-  char path[MAX_ITEM_TEXT_LEN+1];                                               // path for ASCII files
+  char path[MAX_ITEM_TEXT_LEN];                                               // path for ASCII files
   int   lambdaFlag,spectraFlag,titlesFlag,directoryFlag;                        // additional options
   int fieldsNumber;                                                             // number of ascii flags set in the next list
   char fieldsFlag[PRJCT_RESULTS_MAX];                                           // fields used in output
@@ -323,6 +323,14 @@ typedef struct _mkzy
   int            recordNumber;
  }
 MKZY_DATA;
+
+typedef struct _mfc
+ {
+ 	char    filePath[DOAS_MAX_PATH_LEN+1];
+ 	char   *fileNames;                                                            // in automatic selection of the reference spectrum, maxdoas measurements in MFC format (DOASIS binary or STD), it is important to save
+ 	int     nFiles;                                                               // the names of all files in the directory
+ }
+MFC_DOASIS;
 
 typedef struct _mfcBira
  {
@@ -463,7 +471,9 @@ typedef struct _engineRecordInfo
   OMI_DATA omi;
   ALS_DATA als;
   MKZY_DATA mkzy;
+  MFC_DOASIS mfcDoasis;
   MFC_BIRA mfcBira;
+
   UOFT_DATA uoft;
   UAVBIRA_DATA uavBira;
 
@@ -513,10 +523,16 @@ CALIB_FENO;
 
 typedef struct _analysisRef
  {
- 	char   *scanRefFiles;                                                       // in automatic selection of the reference spectrum, maxdoas measurements, scan mode, it is important to save the name of the reference file
- 	int      *scanRefIndexes;                                                     // in automatic selection of the reference spectrum, maxdoas measurements, scan mode, indexes of zenith spectra of the scan
+ 	int    *refIndexes;
+ 	double *zmList;
+ 	double *timeDec;
 
- 	int nscanRefFiles;
+ 	int nRef;
+ 	int zmMinIndex;
+ 	int zmMaxIndex;
+
+ 	int indexScanBefore;
+ 	int indexScanAfter;
 
  	int refAuto;
  	int refScan;
@@ -592,6 +608,7 @@ struct _engineContext
   INDEX   lastRefRecord;
   int     lastSavedRecord;
   int     satelliteFlag;
+  int     mfcDoasisFlag;                                                        // MFC original format generated by DOASIS is very specific with individual files per spectrum
 
   int     refFlag;                                                              // this flag is set when the reference spectrum is retrieved from spectra files
 

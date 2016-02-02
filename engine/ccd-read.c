@@ -172,14 +172,14 @@ static double predTint[MAXTPS] =
 static uint32_t ccdDarkCurrentOffset[MAXTPS];                                      // offset of measured dark currents for each integration time
 
 CAMERA_PICTURE ccdImageFilesList[MAX_CAMERA_PICTURES];
-char ccdCurrentImagePath[MAX_ITEM_TEXT_LEN+1];
+char ccdCurrentImagePath[MAX_ITEM_TEXT_LEN];
 int ccdImageFilesN=0;
 
 void CCD_GetImageFilesList(SHORT_DATE *pFileDate,char *rootPath)
  {
  	// Declarations
 
- 	char imageFileName[MAX_ITEM_TEXT_LEN+1];
+ 	char imageFileName[MAX_ITEM_TEXT_LEN];
  	char dateStr[9],*ptr;
   struct dirent *fileInfo;
   int hour,minute,sec,newtimestamp;
@@ -323,12 +323,6 @@ RC SetCCD_EEV(ENGINE_CONTEXT *pEngineContext,FILE *specFp,FILE *darkFp)
 
   rc=ERROR_ID_NO;
 
-  // Release scanref buffer
-
-  if (pRef->scanRefIndexes!=NULL)
-   MEMORY_ReleaseBuffer("SetCCD_EEV","scanRefIndexes",pRef->scanRefIndexes);
-  pRef->scanRefIndexes=NULL;
-
   // Check the input file pointer
 
   if (specFp==NULL)
@@ -404,16 +398,6 @@ RC SetCCD_EEV(ENGINE_CONTEXT *pEngineContext,FILE *specFp,FILE *darkFp)
         fseek(darkFp,offset,SEEK_SET);
        }
      }
-
-    // Allocate a buffer for the indexes of selected reference spectra (scan mode)
-
-    if (pEngineContext->analysisRef.refScan && pEngineContext->recordNumber &&
-      ((pRef->scanRefIndexes=(int *)MEMORY_AllocBuffer("SetCCD_EEV","scanRefIndexes",pEngineContext->recordNumber,sizeof(int),0,MEMORY_TYPE_INT))==NULL))
-
-     rc=ERROR_ID_ALLOC;
-
-    else
-     pEngineContext->fileInfo.nScanRef=0;
 
     // Eclipse 99
 
@@ -780,10 +764,12 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
            pRecord->localCalDay=ZEN_FNCaljda(&tmLocal);
            measurementType=pEngineContext->project.instrumental.user;
 
-           if (rc ||
-              (dateFlag && (((pRecord->elevationViewAngle>0.) && (pRecord->elevationViewAngle<80.)) ||
-                            ((pRecord->ccd.measureType!=PRJCT_INSTR_MAXDOAS_TYPE_NONE) && (pRecord->ccd.measureType!=PRJCT_INSTR_MAXDOAS_TYPE_ZENITH)))) ||                    // reference spectra are zenith only
-              (!dateFlag && pEngineContext->analysisRef.refScan && !pEngineContext->analysisRef.refSza && (pRecord->elevationViewAngle>80.)))    // zenith sky spectra are not analyzed in scan reference selection mode
+           // before 02/02/2016 if (rc ||
+           // before 02/02/2016    (dateFlag && (((pRecord->elevationViewAngle>0.) && (pRecord->elevationViewAngle<80.)) ||
+           // before 02/02/2016                  ((pRecord->ccd.measureType!=PRJCT_INSTR_MAXDOAS_TYPE_NONE) && (pRecord->ccd.measureType!=PRJCT_INSTR_MAXDOAS_TYPE_ZENITH)))) ||                    // reference spectra are zenith only
+           // before 02/02/2016    (!dateFlag && pEngineContext->analysisRef.refScan && !pEngineContext->analysisRef.refSza && (pRecord->elevationViewAngle>80.)))    // zenith sky spectra are not analyzed in scan reference selection mode
+
+           if (rc || (dateFlag && ((pRecord->elevationViewAngle<80.) || (pRecord->ccd.measureType!=PRJCT_INSTR_MAXDOAS_TYPE_ZENITH))) )
 
             rc=ERROR_ID_FILE_RECORD;
 

@@ -69,6 +69,7 @@
 #include <string.h>
 #include <math.h>
 #include <ctype.h>
+#include <dirent.h>
 
 #include "spectrum_files.h"
 
@@ -93,6 +94,19 @@ char MFC_fileInstr[MAX_STR_SHORT_LEN+1],      // instrumental function file name
       MFC_fileOffset[MAX_STR_SHORT_LEN+1];     // offset file name
 
 int mfcLastSpectrum=0;
+
+RC MFC_ResetFiles(ENGINE_CONTEXT *pEngineContext)
+ {
+ 	MFC_DOASIS *pMfc=&pEngineContext->recordInfo.mfcDoasis;
+
+  if (pMfc->fileNames!=NULL)
+   MEMORY_ReleaseBuffer("MFC_ResetFiles","fileNames",pMfc->fileNames);
+  pMfc->fileNames=NULL;
+
+  pMfc->nFiles=0;
+
+  return 0;
+ }
 
 RC MFC_LoadOffset(ENGINE_CONTEXT *pEngineContext)
  {
@@ -174,33 +188,151 @@ RC MFC_LoadDark(ENGINE_CONTEXT *pEngineContext)
   return rc;
  }
 
+RC MFC_AllocFiles(ENGINE_CONTEXT *pEngineContext)
+ {
+ 	// Declarations
+
+  char           filePath[DOAS_MAX_PATH_LEN+1];
+  char           fileName[DOAS_MAX_PATH_LEN+1];
+  char          *ptr,fileExt[DOAS_MAX_PATH_LEN+1];
+  char          *fileList;
+  struct dirent *fileInfo;
+  DIR *          hDir;
+  int            fileNumber,indexFile;
+  RC             rc;
+
+  // Initialization
+
+  fileNumber=0;
+
+  if (!(rc=MFC_ResetFiles(pEngineContext)))
+   {
+    // Get file path
+
+    strcpy(filePath,pEngineContext->fileInfo.fileName);
+
+    if ((ptr=strrchr(filePath,PATH_SEP))==NULL)
+     {
+      strcpy(filePath,".");
+      ptr=pEngineContext->fileInfo.fileName;
+     }
+    else
+     *ptr++=0;
+
+    strcpy(pEngineContext->recordInfo.mfcDoasis.filePath,filePath);
+
+    // Retrieve file extension
+
+    if ((ptr=strrchr(ptr,'.'))!=NULL)
+     strcpy(fileExt,ptr+1);
+    else if (strlen(pEngineContext->project.instrumental.fileExt))
+     strcpy(fileExt,pEngineContext->project.instrumental.fileExt);
+    else
+     memset(fileExt,0,MAX_STR_SHORT_LEN+1);
+
+    // Browse files in the folder to get the file number
+
+    for (hDir=opendir(filePath),fileNumber=0;(hDir!=NULL) && ((fileInfo=readdir(hDir))!=NULL);)
+     {
+      sprintf(fileName,"%s%c%s",filePath,PATH_SEP,fileInfo->d_name);
+
+      if (!STD_IsDir(fileName) &&
+          ((((ptr=strrchr(fileInfo->d_name,'.'))==NULL) && !strlen(fileExt)) ||
+           ((strlen(ptr+1)==strlen(fileExt)) && !strcasecmp(ptr+1,fileExt))))
+
+       fileNumber++;
+     }
+
+    if (hDir!=NULL)
+     {
+      closedir(hDir);
+      hDir=NULL;
+     }
+
+    if (!fileNumber || ((pEngineContext->recordInfo.mfcDoasis.fileNames=(char *)MEMORY_AllocBuffer("MFC_AllocFiles","fileNames",fileNumber*(DOAS_MAX_PATH_LEN+1),1,0,MEMORY_TYPE_STRING))==NULL))
+     rc=ERROR_ID_ALLOC;
+    else
+     {
+     	memset(pEngineContext->recordInfo.mfcDoasis.fileNames,0,fileNumber*(DOAS_MAX_PATH_LEN+1));
+     	pEngineContext->recordInfo.mfcDoasis.nFiles=fileNumber;
+     	fileList=pEngineContext->recordInfo.mfcDoasis.fileNames;
+
+     	// Browse files in the folder a second time and save the file names
+
+      for (hDir=opendir(filePath),indexFile=0;(hDir!=NULL) && ((fileInfo=readdir(hDir))!=NULL);)
+       {
+        sprintf(fileName,"%s%c%s",filePath,PATH_SEP,fileInfo->d_name);
+
+        if (!STD_IsDir(fileName) &&
+            ((((ptr=strrchr(fileInfo->d_name,'.'))==NULL) && !strlen(fileExt)) ||
+             ((strlen(ptr+1)==strlen(fileExt)) && !strcasecmp(ptr+1,fileExt))))
+         {
+          strcpy(&fileList[indexFile*(DOAS_MAX_PATH_LEN+1)],fileInfo->d_name);
+          indexFile++;
+         }
+       }
+
+      if (hDir!=NULL)
+       {
+        closedir(hDir);
+        hDir=NULL;
+       }
+     }
+   }
+
+  // Return
+
+  return rc;
+ }
+
 INDEX MFC_SearchForCurrentFileIndex(ENGINE_CONTEXT *pEngineContext)
  {
  	// Declarations
 
- 	char  fileName[MAX_ITEM_TEXT_LEN+1];                                        // name of the current file
- 	char *ptr,*scanRefFiles;
- 	INDEX   indexRecord,indexFile;
- 	int     nscanRefFiles;
+ 	char  fileName[DOAS_MAX_PATH_LEN+1];                                        // name of the current file
+ 	char *ptr,*filesList;
+ 	INDEX   indexRecord,indexRecordLow,indexRecordCur,indexRecordHigh;
+ 	int nFiles;
+ 	RC rcCmp;
 
  	// Initializations
 
  	indexRecord=ITEM_NONE;
- 	scanRefFiles=pEngineContext->analysisRef.scanRefFiles;
- 	nscanRefFiles=pEngineContext->analysisRef.nscanRefFiles;
+ 	filesList=pEngineContext->recordInfo.mfcDoasis.fileNames;
+ 	nFiles=pEngineContext->recordInfo.mfcDoasis.nFiles;
 
  	//  Browse files
 
- 	if (pEngineContext->analysisRef.refScan && (scanRefFiles!=NULL) && ((ptr=strrchr(pEngineContext->fileInfo.fileName,'/'))!=NULL) && (strlen(ptr+1)>0))
+ 	if (pEngineContext->analysisRef.refScan && (filesList!=NULL) && ((ptr=strrchr(pEngineContext->fileInfo.fileName,'/'))!=NULL) && (strlen(ptr+1)>0))
  	 {
  	  strcpy(fileName,ptr+1);
 
- 	 	for (indexFile=0;indexFile<nscanRefFiles;indexFile++)
- 	 	 if (!strcasecmp(fileName,&scanRefFiles[indexFile*(MAX_ITEM_TEXT_LEN+1)]))
- 	 	  break;
+    // the record is not in the list
 
- 	 	if (indexFile<nscanRefFiles)
- 	 	 indexRecord=indexFile;
+    if ((strcasecmp(filesList,fileName)>0) || (strcasecmp(filesList+(nFiles-1)*(DOAS_MAX_PATH_LEN+1),fileName)<0))
+     indexRecord=ITEM_NONE;
+    else
+     {
+      indexRecordLow=0;
+      indexRecordHigh=nFiles;
+
+      while (indexRecordHigh-indexRecordLow>1)
+       {
+       	indexRecordCur=(indexRecordLow+indexRecordHigh)>>1;
+
+       	if (!(rcCmp=strcasecmp(filesList+indexRecordCur*(DOAS_MAX_PATH_LEN+1),fileName)))
+         {
+       	  indexRecord=indexRecordCur;
+       	  break;
+       	 }
+       	else if (rcCmp<0)
+       	 indexRecordLow=indexRecordCur;
+       	else
+       	 indexRecordHigh=indexRecordCur;
+       }
+
+      indexRecord++;   // because recordNo starts at 1 !!!
+     }
  	 }
 
  	// Return
@@ -400,6 +532,7 @@ RC ReliMFC(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay
   double tmLocal,Tm1,Tm2;
 
   // Initializations
+
 
   pRecord=&pEngineContext->recordInfo;
   pBuffers=&pEngineContext->buffers;
@@ -865,22 +998,6 @@ RC ReliMFCStd(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int local
    rc=ERROR_ID_FILE_RECORD;
   else if ((recordNo>0) && (recordNo<=pEngineContext->recordNumber))
    {
-    // Build the right file name
-
-// QDOAS ??? //    if (THRD_treeCallFlag)
-// QDOAS ???      {
-// QDOAS ??? //      ptr+=2;
-// QDOAS ??? //      sscanf(ptr,"%d",&firstFile);
-// QDOAS ???       if ((ptr2=strrchr(ptr,'.'))==NULL)
-// QDOAS ???        ptr2=strrchr(ptr,'\0');
-// QDOAS ???       for (ptr=ptr2;isdigit(*(ptr-1));ptr--);
-// QDOAS ??? //      ptr=ptr2-5;
-// QDOAS ???
-// QDOAS ???       sscanf(ptr,"%d",&firstFile);
-// QDOAS ???       sprintf(format,"%%0%dd%%s",ptr2-ptr);
-// QDOAS ???       sprintf(ptr,format,firstFile+recordNo-1,ptr2);
-// QDOAS ???      }
-
     // open the file
 
     if (!(rc=MFC_ReadRecordStd(pEngineContext,fileName,&MFC_header,pBuffers->spectrum,&MFC_headerDrk,pBuffers->varPix,&MFC_headerOff,pBuffers->offset)))
@@ -907,14 +1024,10 @@ RC ReliMFCStd(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int local
 
       // User constraints
 
-      if (rc || (dateFlag && ((pRecord->localCalDay!=localDay) || (pRecord->elevationViewAngle<80.))) ||                     // reference spectra are zenith only
-                (!dateFlag && pEngineContext->analysisRef.refScan && !pEngineContext->analysisRef.refSza && (pRecord->elevationViewAngle>80.)))
+      if (rc || (dateFlag && ((pRecord->localCalDay!=localDay) || (pRecord->elevationViewAngle<80.))) )                     // reference spectra are zenith only
        rc=ERROR_ID_FILE_RECORD;
       else if (pEngineContext->project.instrumental.mfcRevert)
        VECTOR_Invert(pBuffers->spectrum,NDET);
-
-        if (rc || (dateFlag && ((pRecord->localCalDay!=localDay) || (pRecord->elevationViewAngle<80.))))                  // reference spectra are zenith only
-           rc=ERROR_ID_FILE_RECORD;
      }
    }
   else
@@ -1000,7 +1113,6 @@ RC MFCBIRA_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
   // Declarations
 
   MFCBIRA_HEADER header;
-  ANALYSIS_REF *pRef;
   double *offset,*darkCurrent;
   float *spectrum,drkTint;
   int detectorSize;
@@ -1013,14 +1125,7 @@ RC MFCBIRA_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
   pEngineContext->recordNumber=0;
   offset=pEngineContext->buffers.offset;
   darkCurrent=pEngineContext->buffers.varPix;
-  pRef=&pEngineContext->analysisRef;
   spectrum=NULL;
-
-  // Release scanref buffer
-
-  if (pRef->scanRefIndexes!=NULL)
-   MEMORY_ReleaseBuffer("MFCBIRA_Set","scanRefIndexes",pRef->scanRefIndexes);
-  pRef->scanRefIndexes=NULL;
 
   rc=ERROR_ID_NO;
 
@@ -1048,16 +1153,6 @@ RC MFCBIRA_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
 
    	else
    	 {
-      // Allocate a buffer for the indexes of selected reference spectra (scan mode)
-
-      if (pEngineContext->analysisRef.refScan && pEngineContext->recordNumber &&
-        ((pRef->scanRefIndexes=(int *)MEMORY_AllocBuffer("MFCBIRA_Set","scanRefIndexes",pEngineContext->recordNumber,sizeof(int),0,MEMORY_TYPE_INT))==NULL))
-
-       rc=ERROR_ID_ALLOC;
-
-      else
-       pEngineContext->fileInfo.nScanRef=0;
-
        // Load offset and dark current
 
       if (!rc && (offset!=NULL) && (darkCurrent!=NULL))
@@ -1252,8 +1347,8 @@ RC MFCBIRA_Reli(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loc
   	   // for (i=0;i<NDET;i++)
   	   // pBuffers->spectrum[i]/=header.scansNumber;
 
-      if (rc || (dateFlag && ((pRecordInfo->elevationViewAngle<80.) || (header.measurementType!=PRJCT_INSTR_MAXDOAS_TYPE_ZENITH))) ||                     // reference spectra are zenith only
-                (!dateFlag && pEngineContext->analysisRef.refScan && !pEngineContext->analysisRef.refSza && (pRecordInfo->elevationViewAngle>80.)))
+      if (rc || (dateFlag && ((pRecordInfo->elevationViewAngle<80.) || (header.measurementType!=PRJCT_INSTR_MAXDOAS_TYPE_ZENITH))) ) //||                     // reference spectra are zenith only
+                //(!dateFlag && pEngineContext->analysisRef.refScan && !pEngineContext->analysisRef.refSza && (pRecordInfo->elevationViewAngle>80.)))
 
        rc=ERROR_ID_FILE_RECORD;
      }
@@ -1265,8 +1360,6 @@ RC MFCBIRA_Reli(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loc
 
   if (spectrum!=NULL)
    MEMORY_ReleaseBuffer("MFCBIRA_Reli","spectrum",spectrum);
-
-
 
   // Return
 
