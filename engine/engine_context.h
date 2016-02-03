@@ -283,6 +283,7 @@ typedef struct _gome2
   int    rainbowFlag;
   int    scanDirection;
   int    observationMode;
+  int    mdrNumber;
 }
 GOME2_DATA;
 

@@ -852,6 +852,7 @@ static enum fieldtype get_fieldtype(enum _prjctResults output_field) {
   case PRJCT_RESULTS_COMPASS:
   case PRJCT_RESULTS_PITCH:
   case PRJCT_RESULTS_ROLL:
+  case PRJCT_RESULTS_GOME2_MDR_NUMBER:
   case PRJCT_RESULTS_GOME2_SCANDIRECTION:
   case PRJCT_RESULTS_GOME2_OBSERVATION_MODE:
   case PRJCT_RESULTS_GOME2_SAA:

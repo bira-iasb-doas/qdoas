@@ -3,7 +3,6 @@
   buffers.  For a registered output field, output_field::get_data will
   normally contain a pointer to one ofthese functions.*/
 
-#ifdef output_c //only include this file in output_c
 #include "engine.h"
 
 RC write_spikes(char *spikestring, unsigned int length, bool *spikes,int ndet);
@@ -390,6 +389,10 @@ static inline void get_cooling_status(struct output_field *this_field __attribut
 
 static inline void get_mirror_error(struct output_field *this_field __attribute__ ((unused)), int *mirror_error, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
   *mirror_error = pEngineContext->recordInfo.mirrorError;
+}
+
+static inline void gome2_get_mdr_number(struct output_field *this_field __attribute__ ((unused)), int *mdr_number, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
+  *mdr_number = pEngineContext->recordInfo.gome2.mdrNumber;
 }
 
 static inline void gome2_get_scan_direction(struct output_field *this_field __attribute__ ((unused)), int *scan_direction, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
@@ -812,4 +815,3 @@ RC write_spikes(char *spikestring, unsigned int length, bool *spikes,int ndet) {
 
   return rc;
 }
-#endif
