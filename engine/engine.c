@@ -1566,16 +1566,10 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
    // For scan mode, determine the indexes of the zenith records before and after the current record
 
-<<<<<<< .mine
    if (pEngineContext->analysisRef.refScan)
     {
     	if (newref || ((pRef->indexScanBefore==ITEM_NONE) && (pRef->indexScanAfter==ITEM_NONE)) || (indexRecord<=pRef->indexScanBefore) || ((pRef->indexScanAfter!=ITEM_NONE) && (indexRecord>=pRef->indexScanAfter)))
     	 EngineScanSetRefIndexes(pEngineContext,indexRecord);
-=======
-       for (indexRecord=0;indexRecord<pEngineContext->analysisRef.nscanRefFiles;indexRecord++)
-        if (!strcasecmp(specList+indexRecord*(MAX_ITEM_TEXT_LEN+1),pSpec))
-         break;
->>>>>>> .r1351
 
   	  indexScanBefore=pRef->indexScanBefore;
   	  indexScanAfter=pRef->indexScanAfter;
