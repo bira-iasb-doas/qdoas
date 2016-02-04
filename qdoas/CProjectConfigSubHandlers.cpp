@@ -152,6 +152,9 @@ bool CSelectorSubHandler::start(const QString &element, const QXmlAttributes &at
   else if ((str == "mfc_endtime") || (str=="endtime"))
     d->selected[d->nSelected] = PRJCT_RESULTS_ENDTIME;
 
+  else if (str == "center_wavelength")
+    d->selected[d->nSelected] = PRJCT_RESULTS_LAMBDA_CENTER;
+
   else if (str == "scanning_angle")
     d->selected[d->nSelected] = PRJCT_RESULTS_SCANNING;
   else if ((str == "ccd_filterNumber") || (str=="filterNumber"))

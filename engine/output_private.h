@@ -4,6 +4,7 @@
   normally contain a pointer to one ofthese functions.*/
 
 #include "engine.h"
+#include "analyse.h"
 
 RC write_spikes(char *spikestring, unsigned int length, bool *spikes,int ndet);
 double output_flux(const ENGINE_CONTEXT *pEngineContext, double wavelength);
@@ -519,6 +520,14 @@ static inline void get_slant_err(struct output_field *this_field, double *slant_
 static inline void get_shift(struct output_field *this_field, double *shift, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn, int index_calib) {
   CROSS_RESULTS *pTabCrossResults = this_field->get_cross_results(this_field, indexFenoColumn, index_calib);
   *shift = ( pTabCrossResults ) ? pTabCrossResults->Shift : QDOAS_FILL_DOUBLE;
+}
+
+static inline void get_center_wavelength(struct output_field *this_field, double *lambda, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn, int index_calib) {
+  CROSS_RESULTS *pTabCrossResults = this_field->get_cross_results(this_field, indexFenoColumn, index_calib);
+  SVD *svd  = &this_field->get_tabfeno(this_field, indexFenoColumn)->svd;
+  *lambda  =pTabCrossResults
+    ? center_pixel_wavelength(spectrum_start(svd->specrange), spectrum_end(svd->specrange))
+    : QDOAS_FILL_DOUBLE;
 }
 
 static inline void get_shift_err(struct output_field *this_field, double *shift_err, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn, int index_calib) {

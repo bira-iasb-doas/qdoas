@@ -352,4 +352,6 @@ enum _pixelSelection {
 
 RC FNPixel (double *lambdaVector, double lambdaValue, int npts,int pixelSelection);
 
+extern double center_pixel_wavelength(int first, int last);
+
 #endif

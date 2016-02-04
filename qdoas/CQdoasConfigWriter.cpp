@@ -1542,6 +1542,8 @@ void CQdoasConfigWriter::writeDataSelectList(FILE *fp, const data_select_list_t 
     case PRJCT_RESULTS_STARTTIME:        config_string = "starttime"; break;
     case PRJCT_RESULTS_ENDTIME:          config_string = "endtime"; break;
 
+    case PRJCT_RESULTS_LAMBDA_CENTER : config_string = "center_wavelength"; break;
+
     case PRJCT_RESULTS_SCANNING            :      config_string = "scanning_angle"; break;
     case PRJCT_RESULTS_FILTERNUMBER        :      config_string = "filterNumber"; break;
     case PRJCT_RESULTS_MEASTYPE            :      config_string = "measType"; break;

@@ -308,12 +308,12 @@ static inline double root_mean_square(const double * array, const doas_spectrum 
 // Return the wavelength of the center pixel of the analysis window
 // (SvdPDeb + SvdPFin)/2.  If this is in the middle of 2 pixels,
 // return the average wavelength of those pixels.
-static inline double svd_center_pixel_wavelength(void) {
-  int i_centre = (SvdPDeb + SvdPFin)/2;
-  if ( (SvdPDeb + SvdPFin) %2) {
-    return 0.5*(ANALYSE_splineX[i_centre] + ANALYSE_splineX[1+i_centre]);
+inline double center_pixel_wavelength(int first, int last) {
+  int center = (first + last)/2;
+  if ( (first + last) %2) {
+    return 0.5*(ANALYSE_splineX[center] + ANALYSE_splineX[1+center]);
   } else {
-    return ANALYSE_splineX[i_centre];
+    return ANALYSE_splineX[center];
   }
 }
 
@@ -670,7 +670,7 @@ RC ShiftVector(const double *lambda, double *source, const double *deriv, double
   fwhmFlag=((Feno->analysisType==ANALYSIS_TYPE_FWHM_NLFIT) && (fwhmDir!=0) && (Param!=NULL))?1:0;
   TabCross=Feno->TabCross;
 
-  lambda0 = svd_center_pixel_wavelength();
+  lambda0 = center_pixel_wavelength(SvdPDeb, SvdPFin);
 
   rc=ERROR_ID_NO;
 
@@ -1666,7 +1666,7 @@ RC ANALYSE_SvdInit(SVD *pSvd)
       SvdPDeb=spectrum_start(pSvd->specrange);
       SvdPFin=spectrum_end(pSvd->specrange);
 
-      lambda0 = svd_center_pixel_wavelength();
+      lambda0 = center_pixel_wavelength(SvdPDeb, SvdPFin);
 
       Dim=0;
 
@@ -2148,7 +2148,7 @@ RC ANALYSE_Function( double * const spectrum_orig, double * const reference, dou
   polyFlag=0;
   NewDimC=DimC;
 
-  lambda0 = svd_center_pixel_wavelength();
+  lambda0 = center_pixel_wavelength(SvdPDeb, SvdPFin);
 
   rc=ERROR_ID_NO;
 
@@ -3203,7 +3203,7 @@ RC ANALYSE_CurFitMethod(INDEX indexFenoColumn,  // for OMI
          pResults->Param=(double)fitParamsF[pTabCross->FitParam]/pTabCross->Fact;
         else
          pResults->Param=pTabCross->InitParam;
-
+        
         pResults->Shift = ( pTabCross->FitShift != ITEM_NONE ) ? (double) fitParamsF[pTabCross->FitShift] : pTabCross->InitShift;
         pResults->Stretch = ( pTabCross->FitStretch != ITEM_NONE ) ? (double) fitParamsF[pTabCross->FitStretch]*StretchFact1 : pTabCross->InitStretch*StretchFact1;
         pResults->Stretch2 = ( pTabCross->FitStretch2 != ITEM_NONE ) ? (double) fitParamsF[pTabCross->FitStretch2]*StretchFact2 : pTabCross->InitStretch2*StretchFact2;
@@ -3722,7 +3722,7 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
                 (TabCross[Feno->indexOffsetOrder1].InitParam!=(double)0.) ||
                 (TabCross[Feno->indexOffsetOrder2].InitParam!=(double)0.)))
            {
-             lambda0=svd_center_pixel_wavelength();
+             lambda0=center_pixel_wavelength(SvdPDeb, SvdPFin);
 
             doas_iterator my_iterator;
             for (int l=iterator_start(&my_iterator, Feno->svd.specrange); l != ITERATOR_FINISHED; l=iterator_next(&my_iterator)) // log(I+offset)=log(I)+log(1+offset/I)

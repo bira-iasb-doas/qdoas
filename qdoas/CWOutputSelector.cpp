@@ -24,13 +24,12 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "CWOutputSelector.h"
 
+#include "doas.h"
 #include "constants.h"
 
 #include "debugutil.h"
 
-
-void getValidFieldFlags(int *validFlags, int instrument,bool exportFlag);
-
+static void getValidFieldFlags(int *validFlags, int instrument,bool exportFlag);
 
 CWOutputSelector::CWOutputSelector(const data_select_list_t *d, QWidget *parent) :
   QFrame(parent)
@@ -128,6 +127,7 @@ CWOutputSelector::CWOutputSelector(const data_select_list_t *d, QWidget *parent)
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ITER,                   "Iteration number"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ERROR_FLAG,             "Processing error flag"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_NUM_BANDS,              "Number of wavelength bands used"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_LAMBDA_CENTER, "Central pixel wavelength"));
 
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_GOME2_MDR_NUMBER,    "MDR number"         ));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_GOME2_SCANDIRECTION,    "Scan direction"         ));
@@ -291,14 +291,7 @@ QVariant CWOutputFieldItem::data(int role) const
 
 void getValidFieldFlags(int *validFlags, int instrument,bool exportFlag)
  {
- 	int satelliteFlag;
-
- 	satelliteFlag=
- 	  ((instrument==PRJCT_INSTR_FORMAT_GDP_ASCII) ||
-     (instrument==PRJCT_INSTR_FORMAT_GDP_BIN) ||
-     (instrument==PRJCT_INSTR_FORMAT_SCIA_PDS) ||
-     (instrument==PRJCT_INSTR_FORMAT_OMI) ||
-     (instrument==PRJCT_INSTR_FORMAT_GOME2))?1:0;
+   int satelliteFlag = is_satellite(static_cast<enum _prjctInstrFormat>(instrument));
 
   // validFlags is indexed by the PRJCT_RESULTS_* enumerated values. A non-zero
   // value means that the corresponding field is valid for the instrument. The value of
@@ -328,15 +321,16 @@ void getValidFieldFlags(int *validFlags, int instrument,bool exportFlag)
 
   if (!exportFlag)
    {
-    validFlags[PRJCT_RESULTS_REFZM]=(satelliteFlag)?0:1;                    // in automatic reference selection, the solar zenith angle of the reference spectrum
-    validFlags[PRJCT_RESULTS_REFNUMBER]=(satelliteFlag)?0:1;                // in automatic reference selection, the index of the reference spectrum
-    validFlags[PRJCT_RESULTS_CHI]=                                          // chi square
-    validFlags[PRJCT_RESULTS_RMS]=                                          // RMS
-    validFlags[PRJCT_RESULTS_REFSHIFT]=                                     // in automatic reference selection, shift of the reference spectrum
-    validFlags[PRJCT_RESULTS_ITER]=
-    validFlags[PRJCT_RESULTS_ERROR_FLAG]=
-    validFlags[PRJCT_RESULTS_NUM_BANDS]=
-    validFlags[PRJCT_RESULTS_SPIKES]=1;
+     validFlags[PRJCT_RESULTS_REFZM]=(satelliteFlag)?0:1;                    // in automatic reference selection, the solar zenith angle of the reference spectrum
+     validFlags[PRJCT_RESULTS_REFNUMBER]=(satelliteFlag)?0:1;                // in automatic reference selection, the index of the reference spectrum
+     validFlags[PRJCT_RESULTS_CHI]=                                          // chi square
+       validFlags[PRJCT_RESULTS_RMS]=                                          // RMS
+       validFlags[PRJCT_RESULTS_REFSHIFT]=                                     // in automatic reference selection, shift of the reference spectrum
+       validFlags[PRJCT_RESULTS_ITER]=
+       validFlags[PRJCT_RESULTS_ERROR_FLAG]=
+       validFlags[PRJCT_RESULTS_NUM_BANDS]=
+       validFlags[PRJCT_RESULTS_LAMBDA_CENTER] =
+       validFlags[PRJCT_RESULTS_SPIKES]=1;
    }
 
   validFlags[PRJCT_RESULTS_SKY]=0;                                        // information on the sky (never used except EASOE campaign, 1991 !)                                      // for satellite measurements, several spectra are averaged

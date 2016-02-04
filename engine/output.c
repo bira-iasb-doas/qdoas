@@ -1286,6 +1286,9 @@ static void register_analysis_output(const PRJCT_RESULTS *pResults, int indexFen
     { PRJCT_RESULTS_NUM_BANDS,
       { .basic_fieldname = "numbands", .format = FORMAT_INT, .memory_type = OUTPUT_INT,
         .get_data = (func_void) &get_num_bands} },
+    { PRJCT_RESULTS_LAMBDA_CENTER,
+      { .basic_fieldname = "center_wavelength", .format = FORMAT_DOUBLE, .memory_type = OUTPUT_DOUBLE,
+        .get_data = (func_void) &get_center_wavelength } },
     { PRJCT_RESULTS_ERROR_FLAG,
       { .basic_fieldname = "processing_error", .format = FORMAT_INT, .memory_type = OUTPUT_INT,
         .get_data = (func_void) &get_processing_error_flag} }
@@ -1999,7 +2002,7 @@ RC OUTPUT_SaveResults(ENGINE_CONTEXT *pEngineContext,INDEX indexFenoColumn)
 
           if (pTabCrossResults->indexAmf!=ITEM_NONE) {
             if (OutputGetAmf(pTabCrossResults,pRecordInfo->Zm,pRecordInfo->Tm,&pTabCrossResults->Amf)) {
-              rc=ERROR_SetLast("OutputSaveResults",ERROR_TYPE_WARNING,ERROR_ID_AMF,pRecordInfo->Zm,OUTPUT_AmfSpace[pTabCrossResults->indexAmf].amfFileName);
+              rc=ERROR_SetLast(__func__,ERROR_TYPE_WARNING,ERROR_ID_AMF,pRecordInfo->Zm,OUTPUT_AmfSpace[pTabCrossResults->indexAmf].amfFileName);
             } else if (pTabCrossResults->Amf!=(double)0.) {
               pTabCrossResults->VrtCol=(pTabCrossResults->SlntCol+pTabCrossResults->ResCol)/pTabCrossResults->Amf;
               pTabCrossResults->VrtErr=pTabCrossResults->SlntErr/pTabCrossResults->Amf;
