@@ -526,21 +526,12 @@ static inline void get_shift_err(struct output_field *this_field, double *shift_
   *shift_err = ( pTabCrossResults ) ? pTabCrossResults->SigmaShift : QDOAS_FILL_DOUBLE;
 }
 
-static inline void get_stretch(struct output_field *this_field, double *stretch, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn, int index_calib) {
-  CROSS_RESULTS *pTabCrossResults = this_field->get_cross_results(this_field, indexFenoColumn, index_calib);
-  *stretch = ( pTabCrossResults ) ? pTabCrossResults->Stretch : QDOAS_FILL_DOUBLE;
-}
-
-static inline void get_stretch2(struct output_field *this_field, double *stretch, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn, int index_calib) {
-  CROSS_RESULTS *pTabCrossResults = this_field->get_cross_results(this_field, indexFenoColumn, index_calib);
-  *stretch = ( pTabCrossResults ) ? pTabCrossResults->Stretch2 : QDOAS_FILL_DOUBLE;
-}
-
 static inline void get_stretches(struct output_field *this_field, double *stretch, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn, int index_calib) {
   CROSS_RESULTS *pTabCrossResults = this_field->get_cross_results(this_field, indexFenoColumn, index_calib);
+  CROSS_REFERENCE *pTabCross = this_field->get_tabfeno(this_field, indexFenoColumn)->TabCross;
   if (pTabCrossResults) {
-    stretch[0] = pTabCrossResults->Stretch;
-    stretch[1] = pTabCrossResults->Stretch2;
+    stretch[0] = pTabCross->FitStretch ? pTabCrossResults->Stretch : QDOAS_FILL_DOUBLE;
+    stretch[1] = pTabCross->FitStretch2 ? pTabCrossResults->Stretch2 : QDOAS_FILL_DOUBLE;
   } else {
     stretch[0] = stretch[1] = QDOAS_FILL_DOUBLE;
   }
