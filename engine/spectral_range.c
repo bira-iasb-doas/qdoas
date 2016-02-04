@@ -99,7 +99,7 @@ doas_interval *insert_interval(doas_interval *theinterval, int start, int end, i
   return new_interval;
 }
 
-doas_spectrum *spectrum_copy(doas_spectrum *source) {
+doas_spectrum *spectrum_copy(const doas_spectrum *source) {
   doas_spectrum *spectrum = spectrum_new();
   doas_interval **next_pointer  = &(spectrum->first); // pointer to the 'next' pointer of the last interval of the new spectrum
   doas_interval *current = source->first;
@@ -111,7 +111,7 @@ doas_spectrum *spectrum_copy(doas_spectrum *source) {
   return spectrum;
 }
 
-int spectrum_length(doas_spectrum *spectrum) {
+int spectrum_length(const doas_spectrum *spectrum) {
   int result = 0;
   doas_interval *current = spectrum->first;
   while(current != NULL) {
@@ -121,7 +121,7 @@ int spectrum_length(doas_spectrum *spectrum) {
   return result;
 }
 
-int spectrum_num_windows(doas_spectrum *spectrum) {
+int spectrum_num_windows(const doas_spectrum *spectrum) {
   int result = 0;
   doas_interval *current = spectrum->first;
   while(current != NULL) {
@@ -131,14 +131,14 @@ int spectrum_num_windows(doas_spectrum *spectrum) {
   return result;
 }
 
-int spectrum_start(doas_spectrum *spectrum) {
+int spectrum_start(const doas_spectrum *spectrum) {
   int result = -1;
   if(spectrum->first != NULL)
     result = spectrum->first->start;
   return result;
 }
 
-int spectrum_end(doas_spectrum *spectrum) {
+int spectrum_end(const doas_spectrum *spectrum) {
   int result = -1;
   doas_interval *current = spectrum->first;
   while(current != NULL) {
@@ -148,7 +148,7 @@ int spectrum_end(doas_spectrum *spectrum) {
   return result;
 }
 
-int iterator_start(doas_iterator *theiterator, doas_spectrum *spectrum) {
+int iterator_start(doas_iterator *theiterator, const doas_spectrum *spectrum) {
   theiterator->current_interval = spectrum->first; // TODO avoid that current_range is NULL for empty spectrum?
   theiterator->current_pixel = theiterator->current_interval->start;
   return theiterator->current_pixel;
@@ -175,7 +175,7 @@ doas_interval *iterator_next_interval(doas_iterator *theiterator) {
   return result;
 }
 
-doas_interval *iterator_start_interval(doas_iterator *theiterator, doas_spectrum *spectrum) {
+doas_interval *iterator_start_interval(doas_iterator *theiterator, const doas_spectrum *spectrum) {
   doas_interval *result = NULL;
   if(spectrum != NULL) {
     result = spectrum->first;
@@ -186,15 +186,15 @@ doas_interval *iterator_start_interval(doas_iterator *theiterator, doas_spectrum
   return result;
 }
 
-int interval_start(doas_interval *interval) {
+int interval_start(const doas_interval *interval) {
   return interval->start;
 }
 
-int interval_end(doas_interval *interval) {
+int interval_end(const doas_interval *interval) {
   return interval->end;
 }
 
-bool spectrum_isequal(doas_spectrum *one, doas_spectrum *two) {
+bool spectrum_isequal(const doas_spectrum *one, const doas_spectrum *two) {
   bool isequal = true;
   doas_interval *interval1 = one->first;
   doas_interval *interval2 = two->first;

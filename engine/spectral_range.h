@@ -81,7 +81,7 @@ void spectrum_append(doas_spectrum *spectrum, int start, int end);
 doas_spectrum *spectrum_new(void);
 
 /*! Creates a separate copy of an existing range.*/
-doas_spectrum *spectrum_copy(doas_spectrum *source);
+doas_spectrum *spectrum_copy(const doas_spectrum *source);
 
 /*! Cleans up memory 
  *
@@ -91,16 +91,16 @@ doas_spectrum *spectrum_copy(doas_spectrum *source);
 void spectrum_destroy(doas_spectrum *spectrum);
 
 /*! Returns the sum of the length of all intervals in the spectrum.*/
-int spectrum_length(doas_spectrum *spectrum);
+int spectrum_length(const doas_spectrum *spectrum);
 
 /*! Returns the number of intervals in the spectrum.*/
-int spectrum_num_windows(doas_spectrum *spectrum);
+int spectrum_num_windows(const doas_spectrum *spectrum);
 
 /*! Returns the last pixel in the spectrum. */
-int spectrum_end(doas_spectrum *spectrum);
+int spectrum_end(const doas_spectrum *spectrum);
 
 /*! Returns the first pixel of the spectrum */
-int spectrum_start(doas_spectrum *spectrum);
+int spectrum_start(const doas_spectrum *spectrum);
 
 /*! Initializes an iterator to point at the first pixel of a range. 
  *
@@ -112,7 +112,7 @@ int spectrum_start(doas_spectrum *spectrum);
  *
  * \return The first pixel in \a range.
  */
-int iterator_start(doas_iterator *theiterator, doas_spectrum *spectrum);
+int iterator_start(doas_iterator *theiterator, const doas_spectrum *spectrum);
 
 /*! \brief Returns the next pixel in the range of the iterator.
  *
@@ -128,15 +128,15 @@ int iterator_start(doas_iterator *theiterator, doas_spectrum *spectrum);
 int iterator_next(doas_iterator *theiterator);
 
 /*! \brief Compares two spectra for equality.*/
-bool spectrum_isequal(doas_spectrum *one, doas_spectrum *two);
+bool spectrum_isequal(const doas_spectrum *one, const doas_spectrum *two);
 
 doas_interval *iterator_next_interval(doas_iterator *theiterator);
 
-doas_interval *iterator_start_interval(doas_iterator *theiterator, doas_spectrum *spectrum);
+doas_interval *iterator_start_interval(doas_iterator *theiterator, const doas_spectrum *spectrum);
 
-int interval_start(doas_interval *interval);
+int interval_start(const doas_interval *interval);
 
-int interval_end(doas_interval *interval);
+int interval_end(const doas_interval *interval);
 
 void spectrum_debug(doas_spectrum *spectrum);
 

@@ -170,7 +170,6 @@ PROJECT *PRJCT_itemList;
 doas_spectrum *global_doas_spectrum; // Should better remove this global variable.
 
 int    ANALYSE_plotKurucz,ANALYSE_plotRef,ANALYSE_indexLine;
-// int    ANALYSE_maxIter=0;
 
 int NFeno,                             // number of analysis windows
   DimC;                              // number of columns in SVD matrix == number of symbols to take into account for SVD decomposition
@@ -241,9 +240,6 @@ double **A,**V,*W,**P,                 // SVD matrices
   Square,
   ZM,TDET;
 
-// QDOAS ??? INDEX AnalyseChildWindows[MAX_MDI_WINDOWS];
-
-
 // Internal variables
 
 int KuruczUseRef=0;   // 0 if spectrum is shifted, 1 if reference is shifted
@@ -297,7 +293,7 @@ void plot_curves( int page,
   free(plotdata);
  }
 
-double sum_of_squares(double *array, doas_spectrum *ranges) {
+static inline double sum_of_squares(const double *array, const doas_spectrum *ranges) {
   double sum = 0.;
   doas_iterator my_iterator;
   for( int i = iterator_start(&my_iterator, ranges); i != ITERATOR_FINISHED; i=iterator_next(&my_iterator))
@@ -305,8 +301,20 @@ double sum_of_squares(double *array, doas_spectrum *ranges) {
   return sum;
 }
 
-double root_mean_square(double * array, doas_spectrum *ranges) {
+static inline double root_mean_square(const double * array, const doas_spectrum *ranges) {
   return sqrt(sum_of_squares(array, ranges) / spectrum_length(ranges));
+}
+
+// Return the wavelength of the center pixel of the analysis window
+// (SvdPDeb + SvdPFin)/2.  If this is in the middle of 2 pixels,
+// return the average wavelength of those pixels.
+static inline double svd_center_pixel_wavelength(void) {
+  int i_centre = (SvdPDeb + SvdPFin)/2;
+  if ( (SvdPDeb + SvdPFin) %2) {
+    return 0.5*(ANALYSE_splineX[i_centre] + ANALYSE_splineX[1+i_centre]);
+  } else {
+    return ANALYSE_splineX[i_centre];
+  }
 }
 
 /*! Remove pixels with residuals above a certain threshold.
@@ -647,7 +655,7 @@ RC ShiftVector(const double *lambda, double *source, const double *deriv, double
 
   CROSS_REFERENCE *TabCross;
   INDEX i,j;
-  double j0,lambda0;
+  double lambda0;
   double x0,y,fwhm,deltaX;
   int fwhmFlag;
   RC rc;
@@ -662,10 +670,7 @@ RC ShiftVector(const double *lambda, double *source, const double *deriv, double
   fwhmFlag=((Feno->analysisType==ANALYSIS_TYPE_FWHM_NLFIT) && (fwhmDir!=0) && (Param!=NULL))?1:0;
   TabCross=Feno->TabCross;
 
-  j0=(double)(SvdPDeb+SvdPFin)*0.5;
-  lambda0=(fabs(j0-floor(j0))<(double)0.1)?
-    (double)ANALYSE_splineX[(INDEX)j0]:
-    (double)0.5*(ANALYSE_splineX[(INDEX)floor(j0)]+ANALYSE_splineX[(INDEX)floor(j0+1.)]);
+  lambda0 = svd_center_pixel_wavelength();
 
   rc=ERROR_ID_NO;
 
@@ -1610,7 +1615,7 @@ RC ANALYSE_SvdInit(SVD *pSvd)
   CROSS_REFERENCE *pTabCross;
   double deltaX,norm,norm1,norm2,swap,temp;
   INDEX i,j;
-  double j0,lambda0;
+  double lambda0;
   RC rc;
 
 #if defined(__DEBUG_) && __DEBUG_
@@ -1661,10 +1666,7 @@ RC ANALYSE_SvdInit(SVD *pSvd)
       SvdPDeb=spectrum_start(pSvd->specrange);
       SvdPFin=spectrum_end(pSvd->specrange);
 
-      j0=(double)(SvdPDeb+SvdPFin)*0.5;
-      lambda0=(fabs(j0-floor(j0))<(double)0.1)?
-        (double)ANALYSE_splineX[(INDEX)j0]:
-        (double)0.5*(ANALYSE_splineX[(INDEX)floor(j0)]+ANALYSE_splineX[(INDEX)floor(j0+1.)]);
+      lambda0 = svd_center_pixel_wavelength();
 
       Dim=0;
 
@@ -2129,7 +2131,7 @@ RC ANALYSE_Function( double * const spectrum_orig, double * const reference, dou
   MATRIX_OBJECT slit0,slit1;
   int NewDimC,offsetOrder;
   INDEX indexSvdA,indexSvdP,polyOrder,polyFlag;
-  double j0,lambda0;
+  double lambda0;
   RC rc;
 
 #if defined(__DEBUG_) && __DEBUG_
@@ -2146,10 +2148,7 @@ RC ANALYSE_Function( double * const spectrum_orig, double * const reference, dou
   polyFlag=0;
   NewDimC=DimC;
 
-  j0=(double)(SvdPDeb+SvdPFin)*0.5;
-  lambda0=(fabs(j0-floor(j0))<(double)0.1)?
-    (double)ANALYSE_splineX[(INDEX)j0]:
-    (double)0.5*(ANALYSE_splineX[(INDEX)floor(j0)]+ANALYSE_splineX[(INDEX)floor(j0+1.)]);
+  lambda0 = svd_center_pixel_wavelength();
 
   rc=ERROR_ID_NO;
 
@@ -3289,7 +3288,7 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
   doas_spectrum *old_range = NULL;
 
-  double j0,lambda0;
+  double lambda0;
 
   double *Spectre,                           // raw spectrum
     *SpectreK,                          // spectrum shifted on new calibration build by Kurucz
@@ -3723,10 +3722,7 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
                 (TabCross[Feno->indexOffsetOrder1].InitParam!=(double)0.) ||
                 (TabCross[Feno->indexOffsetOrder2].InitParam!=(double)0.)))
            {
-            j0=(double)(SvdPDeb+SvdPFin)*0.5;
-            lambda0=(fabs(j0-floor(j0))<(double)0.1)?
-              (double)ANALYSE_splineX[(INDEX)j0]:
-              (double)0.5*(ANALYSE_splineX[(INDEX)floor(j0)]+ANALYSE_splineX[(INDEX)floor(j0+1.)]);
+             lambda0=svd_center_pixel_wavelength();
 
             doas_iterator my_iterator;
             for (int l=iterator_start(&my_iterator, Feno->svd.specrange); l != ITERATOR_FINISHED; l=iterator_next(&my_iterator)) // log(I+offset)=log(I)+log(1+offset/I)
