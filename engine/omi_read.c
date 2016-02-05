@@ -197,7 +197,7 @@ static bool automatic_reference_ok[OMI_NUM_ROWS]; // array to keep track if auto
 
 int omiSwathOld=ITEM_NONE;
 
-static RC OmiOpen(struct omi_orbit_file *pOrbitFile,const char *swathName);
+static RC OmiOpen(struct omi_orbit_file *pOrbitFile,const char *swathName, const ENGINE_CONTEXT *pEngineContext);
 static void omi_free_swath_data(struct omi_swath_earth *pSwath);
 static void omi_calculate_wavelengths(float32 wavelength_coeff[], int16 refcol, int32 n_wavel, double* lambda);
 static void omi_make_double(int16 mantissa[], int8 exponent[], int32 n_wavel, double* result);
@@ -783,7 +783,7 @@ static RC setup_automatic_reference(ENGINE_CONTEXT *pEngineContext, void *respon
   // open each reference orbit file; find & read matching spectra in the file
   for(int i = 0; i < num_reference_orbit_files; i++) {
     struct omi_orbit_file *orbit_file = reference_orbit_files[i];
-    rc = OmiOpen(orbit_file,OMI_EarthSwaths[pEngineContext->project.instrumental.omi.spectralType]);
+    rc = OmiOpen(orbit_file,OMI_EarthSwaths[pEngineContext->project.instrumental.omi.spectralType], pEngineContext);
     if (rc)
       goto end_setup_automatic_reference;
     
@@ -920,7 +920,7 @@ static void tai_to_utc(double tai, float utc_seconds_in_day, struct tm *result, 
 //               ERROR_ID_BEAT otherwise
 // -----------------------------------------------------------------------------
 
-static RC OmiGetSwathData(struct omi_orbit_file *pOrbitFile)
+static RC OmiGetSwathData(struct omi_orbit_file *pOrbitFile, const ENGINE_CONTEXT *pEngineContext)
 {
   // Initializations
   struct omi_data *pData = &pOrbitFile->omiSwath->dataFields;
@@ -943,8 +943,7 @@ static RC OmiGetSwathData(struct omi_orbit_file *pOrbitFile)
       {"ViewingZenithAngle", pData->viewingZenithAngle},
       {"ViewingAzimuthAngle", pData->viewingAzimuthAngle},
       {"TerrainHeight", pData->terrainHeight},
-      {"GroundPixelQualityFlags", pData->groundPixelQualityFlags},
-      {"XTrackQualityFlags",pData->xtrackQualityFlags}
+      {"GroundPixelQualityFlags", pData->groundPixelQualityFlags}
     };
 
   int32 start[] = {0,0};
@@ -953,9 +952,19 @@ static RC OmiGetSwathData(struct omi_orbit_file *pOrbitFile)
   for (unsigned int i=0; i<sizeof(swathdata)/sizeof(swathdata[0]); i++) {
     swrc = SWreadfield(pOrbitFile->sw_id, (char *) swathdata[i].buffername, start, NULL, edge, swathdata[i].bufferptr);
     if (swrc == FAIL) {
-      rc = ERROR_SetLast("OmiGetSwathData",ERROR_TYPE_FATAL,ERROR_ID_HDFEOS,swathdata[i].buffername,pOrbitFile->omiFileName,"Can not read ", swathdata[i].buffername);
+      rc = ERROR_SetLast("OmiGetSwathData",ERROR_TYPE_FATAL,ERROR_ID_HDFEOS,swathdata[i].buffername,pOrbitFile->omiFileName,"Cannot read ", swathdata[i].buffername);
       break;
     }
+
+    // Older OMI files do not have "XTrackQualityFlags", so reading them is optional (if the project isn't configured to use XTrackQualityFlags)
+    if (!rc && pEngineContext->project.instrumental.omi.xtrack_mode != XTRACKQF_IGNORE) {
+      swrc = SWreadfield(pOrbitFile->sw_id, (char *)"XTrackQualityFlags", start, NULL, edge, pData->xtrackQualityFlags);
+      if (swrc == FAIL) {
+        rc = ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_HDFEOS, "XTrackQualityFlags", pOrbitFile->omiFileName,
+                           "Cannot read XTrackQualityFlags", "");
+      }
+    }
+
   }
 
   // normalize longitudes: should be in the range 0-360
@@ -969,14 +978,14 @@ static RC OmiGetSwathData(struct omi_orbit_file *pOrbitFile)
   return rc;
 }
 
-static RC OmiOpen(struct omi_orbit_file *pOrbitFile,const char *swathName)
+  static RC OmiOpen(struct omi_orbit_file *pOrbitFile,const char *swathName, const ENGINE_CONTEXT *pEngineContext)
 {
   RC rc = ERROR_ID_NO;
 
   // Open the file
   int32 swf_id = SWopen(pOrbitFile->omiFileName, DFACC_READ);
   if (swf_id == FAIL) {
-    rc = ERROR_SetLast("OmiOpen",ERROR_TYPE_FATAL,ERROR_ID_HDFEOS,"OmiOpen",pOrbitFile->omiFileName,"SWopen");
+    rc = ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_HDFEOS,__func__,pOrbitFile->omiFileName,"SWopen");
     goto end_OmiOpen;
   }
   pOrbitFile->swf_id = swf_id;
@@ -985,7 +994,7 @@ static RC OmiOpen(struct omi_orbit_file *pOrbitFile,const char *swathName)
   int32 strbufsize = 0;
   int nswath = SWinqswath(pOrbitFile->omiFileName, NULL, &strbufsize);
   if(nswath == FAIL) {
-    rc = ERROR_SetLast("OmiOpen", ERROR_TYPE_FATAL, ERROR_ID_HDFEOS, "SWinqswath", pOrbitFile->omiFileName);
+    rc = ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_HDFEOS, "SWinqswath", pOrbitFile->omiFileName);
     goto end_OmiOpen;
   } else {
     char swathlist[strbufsize+1];
@@ -998,7 +1007,7 @@ static RC OmiOpen(struct omi_orbit_file *pOrbitFile,const char *swathName)
     // (the complete name is needed to open the swath with SWattach)
     char *swath_full_name = strstr(swathlist,swathName);
     if (swath_full_name == NULL) {
-    rc = ERROR_SetLast("OmiOpen",ERROR_TYPE_FATAL,ERROR_ID_HDFEOS,"OmiOpen",pOrbitFile->omiFileName,"find swath");
+    rc = ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_HDFEOS,__func__,pOrbitFile->omiFileName,"find swath");
     goto end_OmiOpen;
     }
     char *end_name = strpbrk(swath_full_name,",");
@@ -1008,7 +1017,7 @@ static RC OmiOpen(struct omi_orbit_file *pOrbitFile,const char *swathName)
     
     int32 sw_id = SWattach(swf_id, swath_full_name); // attach the swath
     if (sw_id == FAIL) {
-      rc = ERROR_SetLast("OmiOpen", ERROR_TYPE_FATAL,ERROR_ID_HDFEOS,"OmiOpen",pOrbitFile->omiFileName,"SWattach");
+      rc = ERROR_SetLast(__func__, ERROR_TYPE_FATAL,ERROR_ID_HDFEOS,__func__,pOrbitFile->omiFileName,"SWattach");
       goto end_OmiOpen;
     }
     pOrbitFile->sw_id = sw_id;
@@ -1019,7 +1028,7 @@ static RC OmiOpen(struct omi_orbit_file *pOrbitFile,const char *swathName)
     char dimlist[520]; // 520 is a safe maximum length, see HDF-EOS ref for SWfieldinfo()
     intn swrc = SWfieldinfo(sw_id, (char *) "RadianceMantissa",&rank,dims,&numbertype , dimlist);
     if(swrc == FAIL) {
-      rc=ERROR_SetLast("OmiOpen", ERROR_TYPE_FATAL, ERROR_ID_FILE_EMPTY,pOrbitFile->omiFileName);
+      rc=ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_FILE_EMPTY,pOrbitFile->omiFileName);
       goto end_OmiOpen;
     }
 
@@ -1029,7 +1038,7 @@ static RC OmiOpen(struct omi_orbit_file *pOrbitFile,const char *swathName)
     
     pOrbitFile->specNumber=pOrbitFile->nMeasurements*pOrbitFile->nXtrack;
     if (!pOrbitFile->specNumber) {
-      return ERROR_SetLast("OmiOpen",ERROR_TYPE_FATAL,ERROR_ID_FILE_EMPTY,pOrbitFile->omiFileName);
+      return ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_FILE_EMPTY,pOrbitFile->omiFileName);
     }
 
     // Allocate data
@@ -1037,7 +1046,7 @@ static RC OmiOpen(struct omi_orbit_file *pOrbitFile,const char *swathName)
     
     if (!rc) {
       // Retrieve information on records from Data fields and Geolocation fields
-      rc=OmiGetSwathData(pOrbitFile);
+      rc=OmiGetSwathData(pOrbitFile, pEngineContext);
     }
     
     if (!rc) {
@@ -1318,7 +1327,7 @@ RC OMI_Set(ENGINE_CONTEXT *pEngineContext)
   current_orbit_file.specNumber=0;
 
   // Open the file
-  if (!(rc=OmiOpen(&current_orbit_file,OMI_EarthSwaths[pEngineContext->project.instrumental.omi.spectralType])))
+  if (!(rc=OmiOpen(&current_orbit_file,OMI_EarthSwaths[pEngineContext->project.instrumental.omi.spectralType], pEngineContext)))
     {
       pEngineContext->recordNumber=current_orbit_file.specNumber;
       pEngineContext->recordInfo.n_alongtrack=current_orbit_file.nMeasurements;
