@@ -1001,7 +1001,11 @@ static void OutputRegisterFields(const ENGINE_CONTEXT *pEngineContext, const cha
        register_field( (struct output_field) { .basic_fieldname = "Roll angle", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_roll_angle });
        break;
      case PRJCT_RESULTS_GOME2_MDR_NUMBER:
-       register_field( (struct output_field) { .basic_fieldname = "GOME2 MDR number", .memory_type = OUTPUT_INT, .resulttype = fieldtype, .format = "%#6d", .get_data = (func_void)&gome2_get_mdr_number });
+       register_field( (struct output_field) { .basic_fieldname = "GOME2 MDR index", .memory_type = OUTPUT_INT, .resulttype = fieldtype, .format = "%#6d", .get_data = (func_void)&gome2_get_mdr_number });
+       break;
+     case PRJCT_RESULTS_GOME2_OBSERVATION_INDEX:
+       register_field( (struct output_field) { .basic_fieldname = "GOME2 observation index", .memory_type = OUTPUT_INT, .resulttype = fieldtype, .format = "%#6d", .get_data = (func_void)&gome2_get_observation_index });
+       break;
      case PRJCT_RESULTS_GOME2_SCANDIRECTION:
        register_field( (struct output_field) { .basic_fieldname = "GOME2 scan direction", .memory_type = OUTPUT_INT, .resulttype = fieldtype, .format = "%#6d", .get_data = (func_void)&gome2_get_scan_direction });
        break;

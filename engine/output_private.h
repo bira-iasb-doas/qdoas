@@ -396,6 +396,10 @@ static inline void gome2_get_mdr_number(struct output_field *this_field __attrib
   *mdr_number = pEngineContext->recordInfo.gome2.mdrNumber;
 }
 
+static inline void gome2_get_observation_index(struct output_field *this_field __attribute__ ((unused)), int *observation_index, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
+  *observation_index = pEngineContext->recordInfo.gome2.observationIndex;
+}
+
 static inline void gome2_get_scan_direction(struct output_field *this_field __attribute__ ((unused)), int *scan_direction, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
   *scan_direction = pEngineContext->recordInfo.gome2.scanDirection;
 }

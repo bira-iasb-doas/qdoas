@@ -1568,6 +1568,7 @@ RC GOME2_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,INDEX fileIndex) {
 
         pRecord->satellite.orbit_number= pOrbitFile->gome2Info.orbitStart;
         pRecord->gome2.mdrNumber = indexMDR;
+        pRecord->gome2.observationIndex = (recordNo-mdrObs-1);
 
         if ((pEngineContext->project.spectra.cloudMin>=0.) &&
             (pEngineContext->project.spectra.cloudMax<=1.) &&
@@ -2302,8 +2303,6 @@ RC GOME2_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle) {
   RC rc;                                                                        // return code
 
   // Initializations
-
-//  DEBUG_Print(DOAS_logFile,"Enter GOME2_LoadAnalysis\n");
 
   pOrbitFile=&gome2OrbitFiles[gome2CurrentFileIndex];
   saveFlag= (int) pEngineContext->project.spectra.displayDataFlag;

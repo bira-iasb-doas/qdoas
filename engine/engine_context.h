@@ -284,6 +284,7 @@ typedef struct _gome2
   int    scanDirection;
   int    observationMode;
   int    mdrNumber;
+  int    observationIndex;
 }
 GOME2_DATA;
 
