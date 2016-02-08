@@ -183,6 +183,8 @@ bool CSelectorSubHandler::start(const QString &element, const QXmlAttributes &at
     d->selected[d->nSelected] = PRJCT_RESULTS_GOME2_SCANDIRECTION;
   else if (str == "gome2_mdr_number")
     d->selected[d->nSelected] = PRJCT_RESULTS_GOME2_MDR_NUMBER;
+  else if (str == "gome2_observation_index")
+    d->selected[d->nSelected] = PRJCT_RESULTS_GOME2_OBSERVATION_INDEX;
   else if (str == "gome2_observation_mode")
     d->selected[d->nSelected] = PRJCT_RESULTS_GOME2_OBSERVATION_MODE;
   else if (str == "saa_flag")

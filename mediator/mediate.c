@@ -1240,18 +1240,12 @@ int mediateRequestSetProject(void *engineContext,
 			     int operatingMode,
 			     void *responseHandle)
  {
-   // Declarations
-
-   ENGINE_CONTEXT *pEngineContext;                                               // engine context
-   PROJECT *pEngineProject;                                                      // project part of the engine
-   RC rc;                                                                        // return code
-
    // Initializations
 
-   pEngineContext=(ENGINE_CONTEXT *)engineContext;
-   pEngineProject=(PROJECT *)&pEngineContext->project;
+   ENGINE_CONTEXT *pEngineContext=(ENGINE_CONTEXT *)engineContext;
+   PROJECT * pEngineProject= &pEngineContext->project;
 
-   rc=ERROR_ID_NO;
+   RC rc=ERROR_ID_NO;
 
    // Release buffers allocated at the previous session
 
@@ -2051,17 +2045,16 @@ int mediateRequestNextMatchingSpectrum(ENGINE_CONTEXT *pEngineContext,void *resp
 
        int indexFenoColumn=(pEngineContext->recordNumber - 1) % ANALYSE_swathSize;
 
-       if (THRD_id!=THREAD_TYPE_EXPORT)
-        for (int indexFeno=0;indexFeno<NFeno;indexFeno++)
-       	 if (!TabFeno[indexFenoColumn][indexFeno].hidden)
-          TabFeno[indexFenoColumn][indexFeno].rc=ERROR_ID_FILE_RECORD;             // force the output to default values
+       for (int indexFeno=0;indexFeno<NFeno;indexFeno++)
+         if (!TabFeno[indexFenoColumn][indexFeno].hidden)
+           TabFeno[indexFenoColumn][indexFeno].rc=ERROR_ID_FILE_RECORD;             // force the output to default values
 
        OUTPUT_SaveResults(pEngineContext,indexFenoColumn);
      }
 
      // try the next record
      rec+=inc;
-    }
+   }
 
    if (rc != ERROR_ID_NO) {
     // search loop terminated due to fatal error - a message was already logged

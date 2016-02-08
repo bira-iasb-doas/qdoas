@@ -130,6 +130,7 @@ CWOutputSelector::CWOutputSelector(const data_select_list_t *d, QWidget *parent)
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_LAMBDA_CENTER, "Central pixel wavelength"));
 
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_GOME2_MDR_NUMBER,    "MDR number"         ));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_GOME2_OBSERVATION_INDEX,    "Index of observation within MDR"         ));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_GOME2_SCANDIRECTION,    "Scan direction"         ));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_GOME2_OBSERVATION_MODE, "Observation mode"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_GOME2_SAA,              "SAA flag"               ));
@@ -572,6 +573,7 @@ void getValidFieldFlags(int *validFlags, int instrument,bool exportFlag)
       validFlags[PRJCT_RESULTS_CLOUDTOPP]=1;
 
       validFlags[PRJCT_RESULTS_GOME2_MDR_NUMBER]=1;
+      validFlags[PRJCT_RESULTS_GOME2_OBSERVATION_INDEX]=1;
       validFlags[PRJCT_RESULTS_GOME2_SCANDIRECTION]=1;
       validFlags[PRJCT_RESULTS_GOME2_OBSERVATION_MODE]=1;
       validFlags[PRJCT_RESULTS_GOME2_SAA]=1;
